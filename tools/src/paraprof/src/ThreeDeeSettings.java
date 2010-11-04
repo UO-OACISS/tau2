@@ -38,7 +38,9 @@ public class ThreeDeeSettings implements Cloneable {
     private Metric[] scatterMetrics = { null, null, null, null };
     private ValueType[] scatterValueTypes = { ValueType.EXCLUSIVE, ValueType.EXCLUSIVE, ValueType.EXCLUSIVE, ValueType.EXCLUSIVE };
     private Function[] scatterFunctions = new Function[4];
-    private int[] topoValues = new int[3];
+    //private int[] topoRanges = new int[2];
+    private int minTopoRange=0;
+    private int maxTopoRange=100;
     
     private Metric topoMetric=null;
     private ValueType topoValueType = ValueType.EXCLUSIVE;
@@ -69,9 +71,9 @@ public class ThreeDeeSettings implements Cloneable {
 		this.topoCart = topoCart;
 	}
 
-	public void setTopoValues(int[] topoValues) {
-		this.topoValues = topoValues;
-	}
+//	public void setTopoRanges(int[] topoValues) {
+//		this.topoRanges = topoValues;
+//	}
 
 	private Thread selectedThread;
 
@@ -176,7 +178,9 @@ public class ThreeDeeSettings implements Cloneable {
         newSettings.scatterMetrics = (Metric[]) this.scatterMetrics.clone();
         newSettings.scatterValueTypes = (ValueType[]) this.scatterValueTypes.clone();
         newSettings.scatterFunctions = (Function[]) this.scatterFunctions.clone();
-        newSettings.topoValues = (int[]) this.topoValues.clone();
+        //newSettings.topoRanges = (int[]) this.topoRanges.clone();
+        newSettings.minTopoRange=this.minTopoRange;
+        newSettings.maxTopoRange=this.maxTopoRange;
 
         newSettings.topoMetric= this.topoMetric;
         newSettings.topoCart=this.topoCart;
@@ -222,17 +226,33 @@ public class ThreeDeeSettings implements Cloneable {
         this.axesEnabled = axesEnabled;
     }
 
-    public int[] getTopoValues(){
-        return topoValues;
-    }
-    public void setTopoValues(int value, int index) {
-        this.topoValues[index] = value;
-    }
+//    public int[] getTopoRanges(){
+//        return topoRanges;
+//    }
+//    public void setTopoRanges(int value, int index) {
+//        this.topoRanges[index] = value;
+//    }
     
     public Function getTopoFunction(){
     	return topoFunction;
     }
-    public void setTopoFunction(Function f){
+    public int getMinTopoRange() {
+		return minTopoRange;
+	}
+
+	public void setMinTopoRange(int minTopoRange) {
+		this.minTopoRange = minTopoRange;
+	}
+
+	public int getMaxTopoRange() {
+		return maxTopoRange;
+	}
+
+	public void setMaxTopoRange(int maxTopoRange) {
+		this.maxTopoRange = maxTopoRange;
+	}
+
+	public void setTopoFunction(Function f){
     	topoFunction=f;
     }
     
