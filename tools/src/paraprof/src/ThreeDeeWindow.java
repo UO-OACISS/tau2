@@ -1489,7 +1489,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
          axisNames.add("Y");
          axisNames.add("Z");
 
-         List<String>[] axisStrings = new List[4];
+         @SuppressWarnings("unchecked")
+		List<String>[] axisStrings = new List[4];
 
          for (int i = 0; i < 3; i++) {
              if (minScatterValues[i] == Float.MAX_VALUE) {
