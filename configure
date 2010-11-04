@@ -985,20 +985,23 @@ for arg in "$@"; do
   -jdk=*)
       java=yes
       jdkdir=`echo $arg | sed -e 's/-jdk=//'`
+      echo "jdkdir is $jdkdir"
       if [ ! -d $jdkdir ]
       then
         echo "Error: Cannot access JDK directory $jdkdir"
         exit 1
       fi 
-      jv=`$jdkdir/bin/java -version 2>&1 | grep version | awk '{ print $3; }'| sed -e s/\"//g`
-      eval major=${jv/./;minor=}
-      minor=`echo $minor | sed 's/\([0-9]*\).*/\1/g'`
+      jv=`${jdkdir}/bin/java -version 2>&1 | grep version | awk '{ print $3; }'| sed -e s/\"//g`
+      major=`echo $jv | sed 's/\([0-9]*\).*/\1/g'`
+      minor=`echo $jv | sed 's/'${major}'.\([0-9]*\).*/\1/g'`
       echo "major = $major, minor = $minor"
       if [ $major = 1 ]
       then
         if [ $minor -lt 5 ]
         then
           echo "Error: Please specify a JDK version 1.5 or later to use JVMTI based instrumentation"
+	else
+	  fixmakeargs="$fixmakeargs JVMTI jdkdir=$jdkdir"
         fi
       fi
 
