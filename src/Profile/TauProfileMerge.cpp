@@ -163,7 +163,7 @@ int Tau_mergeProfiles() {
 				   globalNumThreads, numEventThreads,
 				   &gExcl, &gIncl, &gNumCalls, &gNumSubr,
 				   &sExcl, &sIncl, &sNumCalls, &sNumSubr);
-  }
+  } /* TauEnv_get_stat_precompute() == 1 */
 #endif /* TAU_UNIFY */
       
   if (rank == 0) {
@@ -205,6 +205,11 @@ int Tau_mergeProfiles() {
     char tmpstr[256];
     sprintf(tmpstr, "%.4G seconds", ((double)(end-start))/1000000.0f);
     TAU_METADATA("TAU Profile Merge Time", tmpstr);
+    if (TauEnv_get_stat_precompute() == 1) {
+      TAU_METADATA("TAU_PRECOMPUTE", "on");
+    } else {
+      TAU_METADATA("TAU_PRECOMPUTE", "off");
+    }
     Tau_snapshot_writeMetaDataBlock();
 
     buf = Tau_snapshot_getBuffer();

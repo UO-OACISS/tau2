@@ -764,7 +764,12 @@ void TauEnv_initialize() {
     if (parse_bool(tmp, TAU_PRECOMPUTE_DEFAULT)) {
       env_stat_precompute = 1;
       TAU_VERBOSE("TAU: Precomputation of statistics Enabled\n");
-      TAU_METADATA("TAU_PRECOMPUTE", "on");
+      /* *CWL* PRECOMPUTE only makes sense in the context of merged output */
+      //      TAU_METADATA("TAU_PRECOMPUTE", "on");
+    } else {
+      env_stat_precompute = 0;
+      TAU_VERBOSE("TAU: Precomputation of statistics Disabled\n");
+      //      TAU_METADATA("TAU_PRECOMPUTE", "off");
     }
 #endif /* TAU_UNIFY && TAU_MPI */
 

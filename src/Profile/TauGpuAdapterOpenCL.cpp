@@ -161,7 +161,7 @@ void Tau_opencl_exit()
 	Tau_gpu_exit();
 }
 
-void Tau_opencl_enter_memcpy_event(const char *name, int id, int size, bool MemcpyType)
+void Tau_opencl_enter_memcpy_event(const char *name, int id, int size, int MemcpyType)
 {
 	openCLEventId *evId = new openCLEventId(id);
 	openCLGpuId *gId = new openCLGpuId(0);
@@ -171,7 +171,7 @@ void Tau_opencl_enter_memcpy_event(const char *name, int id, int size, bool Memc
 		Tau_gpu_enter_memcpy_event(name, evId, gId, size, MemcpyType);
 }
 
-void Tau_opencl_exit_memcpy_event(const char *name, int id, bool MemcpyType)
+void Tau_opencl_exit_memcpy_event(const char *name, int id, int MemcpyType)
 {
 	openCLEventId *evId = new openCLEventId(id);
 	openCLGpuId *gId = new openCLGpuId(0);
@@ -193,7 +193,7 @@ double stop)
 }
 
 void Tau_opencl_register_memcpy_event(const char *name, int id, double start, double stop, int
-transferSize, bool MemcpyType)
+transferSize, int MemcpyType)
 {
 	//printf("in Tau_open.\n");
 	openCLEventId *evId = new openCLEventId(id);
