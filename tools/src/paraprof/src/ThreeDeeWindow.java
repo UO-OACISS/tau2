@@ -352,6 +352,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         scatterPlot.setAxes(axes);
         scatterPlot.setValues(values);
         scatterPlot.setColorScale(colorScale);
+        scatterPlot.setVisRange(settings.getMinTopoRange(), settings.getMaxTopoRange());
         plot = scatterPlot;
     }
     
