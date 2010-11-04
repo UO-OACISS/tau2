@@ -84,7 +84,7 @@ void Tau_gpu_enter_event(const char* name, eventId *id)
 	TAU_START(name);
 }
 void Tau_gpu_enter_memcpy_event(const char *functionName, eventId *id, gpuId
-*device, int transferSize, bool memcpyType)
+*device, int transferSize, int memcpyType)
 {
 #ifdef DEBUG_PROF
 	//printf("entering cuMemcpy event: %s.\n", name);
@@ -95,9 +95,13 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, eventId *id, gpuId
 		if (memcpyType == MemcpyHtoD) {
 			functionName = "Memory copy Host to Device";
 		}
-		else
+		else if (memcpyType == MemcpyDtoH)
 		{
 			functionName = "Memory copy Device to Host";
+		}
+		else 
+		{
+			functionName = "Memory copy Device to Device";
 		}
 	}
 
@@ -120,7 +124,7 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, eventId *id, gpuId
 			counted_memcpys--;
 		}
 	}
-	else
+	else if (memcpyType == MemcpyDtoH)
 	{
 		if (transferSize != TAU_GPU_UNKNOW_TRANSFER_SIZE)
 		{
@@ -132,9 +136,10 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, eventId *id, gpuId
 			counted_memcpys--;
 		}
 	}
+  //TODO: else DtoD
 	
 }
-void Tau_gpu_exit_memcpy_event(const char * functionName, eventId *id, gpuId *device, bool
+void Tau_gpu_exit_memcpy_event(const char * functionName, eventId *id, gpuId *device, int
 memcpyType)
 {
 #ifdef DEBUG_PROF
@@ -146,10 +151,11 @@ memcpyType)
 		if (memcpyType == MemcpyHtoD) {
 			functionName = "Memory copy Host to Device";
 		}
-		else
+		else if (memcpyType == MemcpyDtoH)
 		{
 			functionName = "Memory copy Device to Host";
 		}
+		//TODO: else case
 	}
 
 	// Place the Message into the trace in when the memcpy in exited if this
@@ -245,17 +251,20 @@ void Tau_gpu_register_gpu_event(const char *name, eventId *id, double startTime,
 			endTime);
 }
 
-void Tau_gpu_register_memcpy_event(const char *functionName, eventId *id, gpuId *device, double startTime, double
-endTime, int transferSize, bool memcpyType)
+void Tau_gpu_register_memcpy_event(const char *functionName, eventId *id, gpuId *device, double startTime, double endTime, int transferSize, int memcpyType)
 {
 	if (functionName == TAU_GPU_USE_DEFAULT_NAME)
 	{
 		if (memcpyType == MemcpyHtoD) {
 			functionName = "Memory copy Host to Device";
 		}
-		else
+		else if (memcpyType == MemcpyDtoH)
 		{
 			functionName = "Memory copy Device to Host";
+		}
+		else 
+		{
+			functionName = "Memory copy Device to Device";
 		}
 	}
 
