@@ -57,11 +57,19 @@ public class ScatterPlot implements Plot {
     
     private int minVis = 0;
     private int maxVis = 100;
+    boolean isTopo=false;
 
+//    private void resetVisRange(){
+//    	minVis=0;
+//    	maxVis=100;
+//    }
     
     public ScatterPlot() {
     }
 
+    public void setIsTopo(boolean set){
+    	isTopo=set;
+    }
     public void setVisRange(int min, int max){
     	minVis = min;
     	maxVis = max;
@@ -87,6 +95,7 @@ public class ScatterPlot implements Plot {
     public void setValues(float values[][]) {
         this.values = values;
         processValues();
+        isTopo=false;
         this.dirty = true;
     }
 
@@ -268,7 +277,7 @@ public class ScatterPlot implements Plot {
             boolean useMaxCutoff = false;
             float mincut=0;
             float maxcut=0;
-            if(f==3)
+            if(isTopo&&f==3)
             {
             	if(minVis>0)
             	{
@@ -288,14 +297,31 @@ public class ScatterPlot implements Plot {
             for (int i = 0; i < values.length; i++) {
                 if (maxValue - minValue == 0) {
                     values[i][f] = 0;
+                    continue;
                 } 
-                else if(useMinCutoff&&values[i][f]<mincut){
-                			values[i][f]=Float.NaN;
+                
+                if(useMinCutoff&&values[i][f]<mincut){
+                	if(useMaxCutoff&&values[i][f]<maxcut&&mincut>maxcut){
+                		
+                	}
+                	else
+                	{
+                		values[i][f]=Float.NaN;
+                		continue;
+                	}
                 }
                 else if(useMaxCutoff&&values[i][f]>maxcut){
-                	values[i][f]=Float.NaN;
+                	if(useMinCutoff&&values[i][f]>mincut&&mincut>maxcut){
+                		
+                	}
+                	else
+                	{
+                		values[i][f]=Float.NaN;
+                		continue;
+                	}
                 }
-                else {
+                
+                {
                     if (normalized) {
                         values[i][f] = (values[i][f] - minValue) / (maxValue - minValue) * norms[f];
                     } else {
