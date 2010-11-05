@@ -196,6 +196,7 @@ void Tau_opencl_register_memcpy_event(const char *name, int id, double start, do
 transferSize, int MemcpyType)
 {
 	//printf("in Tau_open.\n");
+	//printf("Memcpy type is %d.\n", MemcpyType);
 	openCLEventId *evId = new openCLEventId(id);
 	openCLGpuId *gId = new openCLGpuId(0);
 	lock_callback();

@@ -35,7 +35,7 @@ while [ $trymem -gt 250 ] ; do
     oldmem=$trymem
     trymem=$(($trymem*3/4))
 
-    java -Xmx${oldmem}m -version 2&>1 /dev/null
+    java -Xmx${oldmem}m -version > /dev/null 2>&1
     if [ $? != 0  ] ; then
        continue;
     fi    
