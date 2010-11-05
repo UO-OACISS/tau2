@@ -618,6 +618,7 @@ public class InputLog implements base.drawable.InputAPI
 			if(remoteThread>-1)
 			{
 				sourceThreadToken=remoteThread;
+				remoteThread=-1;
 			}
 			else
 				sourceThreadToken=0;
