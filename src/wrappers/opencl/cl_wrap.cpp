@@ -23,7 +23,7 @@ void check_memory_init()
 		
 		Tau_get_context_userevent((void **) &MemoryCopyEventHtoD, "Bytes copied from Host to Device");
 		Tau_get_context_userevent((void **) &MemoryCopyEventDtoH, "Bytes copied from Device to Host");
-		Tau_get_context_userevent((void **) &MemoryCopyEventDtoD, "Bytes copied from Device to Device");
+		Tau_get_context_userevent((void **) &MemoryCopyEventDtoD, "Bytes copied (Other)");
 		
 		//Tau_get_context_userevent((void **) &MemoryCopyEvent, "Bytes copied");
 		init = true;
@@ -1614,7 +1614,7 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
 #ifdef TAU_ENABLE_CL_CALLBACK
 	memcpy_callback_data *mem_data = (memcpy_callback_data*) malloc(memcpy_data_size);
 	strcpy(mem_data->name, "CopyBuffer");
-	mem_data->memcpy_type = MemcpyHtoD;
+	mem_data->memcpy_type = MemcpyDtoD;
 	if (a9 == NULL)
 	{
 		//printf("cl_event is null.\n");
@@ -1622,11 +1622,11 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
 		a9 = &new_event;
 	}
 
-	Tau_opencl_enter_memcpy_event("cl_int clEnqueueCopyBuffer(cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *) C", 2, a6, MemcpyHtoD); 
+	Tau_opencl_enter_memcpy_event("cl_int clEnqueueCopyBuffer(cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *) C", 2, a6, MemcpyDtoD); 
 
   retval  =  (*clEnqueueCopyBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
 
-	Tau_opencl_exit_memcpy_event("cl_int clEnqueueCopyBuffer(cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *) C", 2, MemcpyHtoD);
+	Tau_opencl_exit_memcpy_event("cl_int clEnqueueCopyBuffer(cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *) C", 2, MemcpyDtoD);
 
 	clSetEventCallback((*a9), CL_COMPLETE, Tau_opencl_memcpy_callback, mem_data);
 

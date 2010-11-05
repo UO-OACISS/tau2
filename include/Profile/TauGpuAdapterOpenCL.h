@@ -15,15 +15,15 @@ void Tau_opencl_init();
 
 void Tau_opencl_exit();
 
-void Tau_opencl_enter_memcpy_event(const char *name, int id, int size, bool MemcpyType);
+void Tau_opencl_enter_memcpy_event(const char *name, int id, int size, int MemcpyType);
 
-void Tau_opencl_exit_memcpy_event(const char *name, int id, bool MemcpyType);
+void Tau_opencl_exit_memcpy_event(const char *name, int id, int MemcpyType);
 
 void Tau_opencl_register_gpu_event(const char *name, int id, double start,
 double stop);
 
 void Tau_opencl_register_memcpy_event(int id, double start, double stop, int
-transferSize, bool MemcpyType);
+transferSize, int MemcpyType);
 
 
 //Memcpy event callback
@@ -37,7 +37,7 @@ void CL_CALLBACK Tau_opencl_kernel_callback(cl_event event, cl_int command_stat,
 typedef struct memcpy_callback_data_t 
 {
 	char name[TAU_MAX_FUNCTIONNAME];
-	bool memcpy_type;
+	int memcpy_type;
 } memcpy_callback_data; 
 int memcpy_data_size = sizeof(memcpy_callback_data);
 

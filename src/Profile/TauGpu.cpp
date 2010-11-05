@@ -23,10 +23,12 @@
 
 void *main_ptr, *gpu_ptr;
 
-TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventHtoD, "Bytes copied from Host to Device");
-TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventDtoH, "Bytes copied from Device to Host");
+//TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventHtoD, "Bytes copied from Host to Device");
+//TAU_PROFILER_REGISTER_EVENT(MemoryCopyEventDtoH, "Bytes copied from Device to Host");
 
-static TauContextUserEvent *MemoryCopyEvent;
+static TauContextUserEvent *MemoryCopyEventHtoD;
+static TauContextUserEvent *MemoryCopyEventDtoH;
+static TauContextUserEvent *MemoryCopyEventDtoD;
 
 int gpuTask;
 bool firstEvent = true;
@@ -101,7 +103,7 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, eventId *id, gpuId
 		}
 		else 
 		{
-			functionName = "Memory copy Device to Device";
+			functionName = "Memory copy (Other)";
 		}
 	}
 
@@ -116,7 +118,7 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, eventId *id, gpuId
 		TauTraceOneSidedMsg(MESSAGE_SEND, device, transferSize, 0);
 		if (transferSize != TAU_GPU_UNKNOW_TRANSFER_SIZE)
 		{
-			TAU_CONTEXT_EVENT(MemoryCopyEvent, transferSize);
+			TAU_CONTEXT_EVENT(MemoryCopyEventHtoD, transferSize);
 			//TAU_EVENT(MemoryCopyEventHtoD(), transferSize);
 		}
 		else
@@ -128,7 +130,7 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, eventId *id, gpuId
 	{
 		if (transferSize != TAU_GPU_UNKNOW_TRANSFER_SIZE)
 		{
-			TAU_CONTEXT_EVENT(MemoryCopyEvent, transferSize);
+			TAU_CONTEXT_EVENT(MemoryCopyEventDtoH, transferSize);
 			//TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
 		}
 		else
@@ -136,7 +138,17 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, eventId *id, gpuId
 			counted_memcpys--;
 		}
 	}
-  //TODO: else DtoD
+  else
+	{
+		if (transferSize != TAU_GPU_UNKNOW_TRANSFER_SIZE)
+		{
+			TAU_CONTEXT_EVENT(MemoryCopyEventDtoD, transferSize);
+		}
+		else
+		{
+			counted_memcpys--;
+		}
+	}
 	
 }
 void Tau_gpu_exit_memcpy_event(const char * functionName, eventId *id, gpuId *device, int
@@ -155,7 +167,10 @@ memcpyType)
 		{
 			functionName = "Memory copy Device to Host";
 		}
-		//TODO: else case
+		else
+		{
+			functionName = "Memory copy (Other)";
+		}
 	}
 
 	// Place the Message into the trace in when the memcpy in exited if this
@@ -253,6 +268,8 @@ void Tau_gpu_register_gpu_event(const char *name, eventId *id, double startTime,
 
 void Tau_gpu_register_memcpy_event(const char *functionName, eventId *id, gpuId *device, double startTime, double endTime, int transferSize, int memcpyType)
 {
+	//printf("in Tau_gpu.\n");
+	//printf("Memcpy type is %d.\n", memcpyType);
 	if (functionName == TAU_GPU_USE_DEFAULT_NAME)
 	{
 		if (memcpyType == MemcpyHtoD) {
@@ -264,7 +281,7 @@ void Tau_gpu_register_memcpy_event(const char *functionName, eventId *id, gpuId 
 		}
 		else 
 		{
-			functionName = "Memory copy Device to Device";
+			functionName = "Memory copy (Other)";
 		}
 	}
 
@@ -279,7 +296,7 @@ void Tau_gpu_register_memcpy_event(const char *functionName, eventId *id, gpuId 
 		if (transferSize != TAU_GPU_UNKNOW_TRANSFER_SIZE)
 		{
 			counted_memcpys++;
-			TAU_CONTEXT_EVENT(MemoryCopyEvent, transferSize);
+			TAU_CONTEXT_EVENT(MemoryCopyEventHtoD, transferSize);
 			//TAU_EVENT(MemoryCopyEventHtoD(), transferSize);
 		//TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, transferSize, RtsLayer::myThread()); 
 #ifdef DEBUG_PROF		
@@ -291,14 +308,14 @@ void Tau_gpu_register_memcpy_event(const char *functionName, eventId *id, gpuId 
 				endTime);
 		TauTraceOneSidedMsg(MESSAGE_RECV, device, transferSize, gpuTask);
 	}
-	else {
+	else if (memcpyType == MemcpyDtoH) {
 		stage_gpu_event(functionName, 
 				startTime);
 		//TAU_REGISTER_EVENT(MemoryCopyEventDtoH, "Memory copied from Device to Host");
 		if (transferSize != TAU_GPU_UNKNOW_TRANSFER_SIZE)
 		{
 			counted_memcpys++;
-			TAU_CONTEXT_EVENT(MemoryCopyEvent, transferSize);
+			TAU_CONTEXT_EVENT(MemoryCopyEventDtoH, transferSize);
 			//TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
 #ifdef DEBUG_PROF		
 		printf("[%f] onesided event mem send: %f, id: %s\n", startTime, transferSize,
@@ -307,6 +324,25 @@ void Tau_gpu_register_memcpy_event(const char *functionName, eventId *id, gpuId 
 		}
 		//TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, transferSize, RtsLayer::myThread()); 
 		TauTraceOneSidedMsg(MESSAGE_SEND, device, transferSize, gpuTask);
+		break_gpu_event(functionName,
+				endTime);
+	}
+	else {
+		stage_gpu_event(functionName, 
+				startTime);
+		//TAU_REGISTER_EVENT(MemoryCopyEventDtoH, "Memory copied from Device to Host");
+		if (transferSize != TAU_GPU_UNKNOW_TRANSFER_SIZE)
+		{
+			counted_memcpys++;
+			TAU_CONTEXT_EVENT(MemoryCopyEventDtoD, transferSize);
+			//TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
+#ifdef DEBUG_PROF		
+		printf("[%f] onesided event mem send: %f, id: %s\n", startTime, transferSize,
+		device->printId());
+#endif
+		}
+		//TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, transferSize, RtsLayer::myThread()); 
+		//TauTraceOneSidedMsg(MESSAGE_SEND, device, transferSize, gpuTask);
 		break_gpu_event(functionName,
 				endTime);
 	}
@@ -322,7 +358,9 @@ int Tau_gpu_init(void)
 		//TAU_PROFILER_CREATE(main_ptr, "main", "", TAU_USER);
 
 		//init context event.
-		Tau_get_context_userevent((void **) &MemoryCopyEvent, "Bytes copied");
+		Tau_get_context_userevent((void **) &MemoryCopyEventHtoD, "Bytes copied from Host to Device");
+		Tau_get_context_userevent((void **) &MemoryCopyEventDtoH, "Bytes copied from Device to Host");
+		Tau_get_context_userevent((void **) &MemoryCopyEventDtoD, "Bytes copied (Other)");
 
 		TAU_PROFILER_CREATE(gpu_ptr, ".TAU application  ", "", TAU_USER);
 
