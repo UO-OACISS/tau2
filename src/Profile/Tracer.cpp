@@ -427,7 +427,7 @@ int TauTraceDumpEDF(int tid) {
   // id group tag "name type" parameters
   
   numEvents = TheFunctionDB().size() + TheEventDB().size();
-#ifdef TAU_CUDA 
+#ifdef TAU_GPU 
   numExtra = 13; // Added four ONESIDED msg events
 #else
   numExtra = 9; // Number of extra events
@@ -463,7 +463,7 @@ int TauTraceDumpEDF(int tid) {
   fprintf(fp,"%ld TAU_MESSAGE -7 \"MESSAGE_SEND\" par\n", (long) TAU_MESSAGE_SEND); 
   fprintf(fp,"%ld TAU_MESSAGE -8 \"MESSAGE_RECV\" par\n", (long) TAU_MESSAGE_RECV); 
 
-#ifdef TAU_CUDA
+#ifdef TAU_GPU
   fprintf(fp,"%ld TAUEVENT 0 \"ONESIDED_MESSAGE_SEND\" TriggerValue\n", (long)
 	TAU_ONESIDED_MESSAGE_SEND); 
   fprintf(fp,"%ld TAUEVENT 0 \"ONESIDED_MESSAGE_RECV\" TriggerValue\n", (long)

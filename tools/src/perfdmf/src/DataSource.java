@@ -69,6 +69,10 @@ public abstract class DataSource {
     protected Thread meanData = null;
     protected Thread totalData = null;
     protected Thread stddevData = null;
+    protected Thread meanDataAll = null;
+    protected Thread stddevDataAll = null;
+    protected Thread meanDataNoNull = null;
+    protected Thread stddevDataNoNull = null;
     private Map<Integer, Node> nodes = new TreeMap<Integer, Node>();
     private Map<String, Function> functions = new TreeMap<String, Function>();
     private Map<String, Group> groups = new TreeMap<String, Group>();
@@ -104,8 +108,17 @@ public abstract class DataSource {
     protected boolean hasContexts = true;
     protected boolean hasMPI = false;
     private int fileType = DataSource.TAUPROFILE;
+    protected boolean derivedProvided=false;
 
-    public int getFileType() {
+    public boolean isDerivedProvided() {
+		return derivedProvided;
+	}
+
+	public void setDerivedProvided(boolean derivedProvided) {
+		this.derivedProvided = derivedProvided;
+	}
+
+	public int getFileType() {
         return fileType;
     }
 
@@ -816,6 +829,17 @@ public abstract class DataSource {
          *     inclpercall = total.inclpercall
          */
 
+    	if(derivedProvided){
+    		if(meanIncludeNulls){
+    			meanData=meanDataAll;
+    			stddevData=stddevDataAll;
+    		}else{
+    			meanData=meanDataNoNull;
+    			stddevData=stddevDataNoNull;
+    		}
+    			
+    	}
+    	
         int numMetrics = this.getNumberOfMetrics();
         Thread firstThread = getAllThreads().get(0);
         if (meanData == null) {
@@ -887,6 +911,9 @@ public abstract class DataSource {
                 }
                 function.setStddevProfile(stddevProfile);
 
+                if(derivedProvided){
+                }
+                else{
                 int numEvents = 0;
                 double callSum = 0;
                 double subrSum = 0;
@@ -990,6 +1017,7 @@ public abstract class DataSource {
                     stddevProfile.setInclusive(snapshot, m, stdDev);
 
                 }
+                }//statisticsprovided
             }
         }
 

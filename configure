@@ -985,21 +985,23 @@ for arg in "$@"; do
   -jdk=*)
       java=yes
       jdkdir=`echo $arg | sed -e 's/-jdk=//'`
+      echo "jdkdir is $jdkdir"
       if [ ! -d $jdkdir ]
       then
         echo "Error: Cannot access JDK directory $jdkdir"
         exit 1
       fi 
-      jv=`$jdkdir/bin/java -version 2>&1 | grep version | awk '{ print $3; }'| sed -e s/\"//g`
-      eval major=${jv/./;minor=}
-      minor=`echo $minor | sed 's/\([0-9]*\).*/\1/g'`
+      jv=`${jdkdir}/bin/java -version 2>&1 | grep version | awk '{ print $3; }'| sed -e s/\"//g`
+      major=`echo $jv | sed 's/\([0-9]*\).*/\1/g'`
+      minor=`echo $jv | sed 's/'${major}'.\([0-9]*\).*/\1/g'`
       echo "major = $major, minor = $minor"
       if [ $major = 1 ]
       then
         if [ $minor -lt 5 ]
         then
-          echo "Error: Specify a JDK of version 1.5 or later"
-          exit 1
+          echo "Error: Please specify a JDK version 1.5 or later to use JVMTI based instrumentation"
+	else
+	  fixmakeargs="$fixmakeargs JVMTI jdkdir=$jdkdir"
         fi
       fi
 
@@ -1326,6 +1328,9 @@ for arg in "$@"; do
   -arch=*)
     tauarch=`echo $arg | sed -e 's/-arch=//' -e 's/ /_/g'`
     shift
+    if [ $tauarch = i386_linux ]; then
+      orig_useropt="$orig_useropt -m32"
+    fi
     ;;
 
   -pdtcompdir=*)
@@ -1558,6 +1563,9 @@ cp ${tauroot}/tools/src/contrib/postgresql.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/xerces.jar $JARTARGET
 cp ${tauroot}/tools/src/common/resources/tau16x16.gif $JARTARGET
 
+# install the perl script for ebs post-processing in the bin dir
+cp ${tauroot}/tools/src/tau_ebs_process.pl $BINTARGET
+
 case $machine in
     
     apple)
@@ -1571,6 +1579,7 @@ case $machine in
 	gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
 	gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_cg.so.gz > $JARTARGET/libjogl_cg.so
 	gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+
 	;;
     
     crayxmt)
@@ -4974,6 +4983,9 @@ fi
 if [ $bfd_worked = "no" ] ; then
     echo "failed"
     BFDLIBS="-lbfd -liberty"
+    if [ $tauarch = i386_linux ]; then 
+      BFDLIBS=""
+    fi
 else
     echo $BFDLIBS
 fi

@@ -7,9 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
-import java.util.Vector;
 
 public class GoogleDataSource extends DataSource {
 
@@ -20,9 +18,9 @@ public class GoogleDataSource extends DataSource {
     //    private int calledStart = 0;
     //    private int nameStart = 0;
     private int linenumber = 0;
-    private boolean fixLengths = true;
+    //private boolean fixLengths = true;
 
-    private String currentFile;
+    //private String currentFile;
     public static void main(String[] args){
 	String prefix = "/Users/somillstein/Desktop/irs_benchmark_code_google_perftools_output/irs_cpuprofile_0000";
 	String suffix = ".out.txt";
@@ -96,7 +94,7 @@ public class GoogleDataSource extends DataSource {
 
 	String inputString = null;
 
-	Function callPathFunction = null;
+	//Function callPathFunction = null;
 
 	//######
 	//End - Frequently used items.
@@ -104,7 +102,7 @@ public class GoogleDataSource extends DataSource {
 
 	for (int fIndex = 0; fIndex < files.length; fIndex++) {
 	    File file = files[fIndex];
-	    currentFile = files[fIndex].toString();
+	    //currentFile = files[fIndex].toString();
 
 	    //System.out.println("Processing " + file + ", please wait ......");
 	    FileInputStream fileIn = new FileInputStream(file);
@@ -123,7 +121,7 @@ public class GoogleDataSource extends DataSource {
 		// Time is the only metric tracked with google perftools.
 		this.addMetric("Time");
 
-		fixLengths = true;
+		//fixLengths = true;
 		linenumber = 2; //Already read in the first line
 		while ((inputString = br.readLine()) != null) {
 

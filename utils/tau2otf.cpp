@@ -22,6 +22,7 @@
 #include <stack>
 using namespace std;
 int debugPrint = 0;
+int remoteThread = -1;
 bool multiThreaded = false;
 #define dprintf if (debugPrint) printf
 
@@ -299,6 +300,9 @@ int EventTrigger( void *userData, double time,
   int cpuid = GlobalId (nodeToken, threadToken); /* GID */
   dprintf("EventTrigger: time %g, cpuid %d event id %d triggered value %lld \n", time, cpuid, userEventToken, userEventValue);
 
+	if(userEventToken==7004){
+		remoteThread=(int) userEventValue;
+	}
 
   /* write the sample data */
   OTF_Writer_writeCounter((OTF_Writer*)userData, TauGetClockTicksInGHz(time), cpuid, userEventToken, userEventValue); 
@@ -319,6 +323,12 @@ int SendMessage( void *userData, double time,
 		unsigned int messageTag, 
 		unsigned int messageComm)
 {
+
+	if(remoteThread>-1)
+	{
+		destinationThreadToken=remoteThread;
+		remoteThread=-1;
+	}
 
   int source = GlobalId(sourceNodeToken, sourceThreadToken);
   int dest   = GlobalId(destinationNodeToken, destinationThreadToken);
@@ -347,6 +357,12 @@ int RecvMessage( void *userData, double time,
 		unsigned int messageTag,
 		unsigned int messageComm)
 {
+
+	if(remoteThread>-1)
+	{
+		sourceThreadToken=remoteThread;
+		remoteThread=-1;
+	}
 
   int source = GlobalId(sourceNodeToken, sourceThreadToken);
   int dest   = GlobalId(destinationNodeToken, destinationThreadToken);
@@ -520,7 +536,7 @@ int main(int argc, char **argv)
 	cout <<"Read "<<recs_read<<" records"<<endl;
 #endif 
     }
-    while ((recs_read >=0) && (!EndOfTrace));
+    while ((recs_read >0) && (!EndOfTrace));
     
 
     /* reset the position of the trace to the first record */
@@ -654,7 +670,7 @@ int main(int argc, char **argv)
       cout <<"Read "<<recs_read<<" records"<<endl;
 #endif /* DEBUG */
   }
-  while ((recs_read >=0) && (!EndOfTrace));
+  while ((recs_read >0) && (!EndOfTrace));
 
   /* dummy records */
   Ttf_CloseFile(fh);
