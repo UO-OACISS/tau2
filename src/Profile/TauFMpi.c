@@ -6028,7 +6028,10 @@ MPI_Fint *ierr;
   TAU_DECL_ALLOC_LOCAL(MPI_Request, local_requests, *count);
   TAU_ALLOC_LOCAL(MPI_Status, local_statuses, *count);
   TAU_ASSIGN_VALUES(local_requests, array_of_requests, *count, MPI_Request_f2c);
-  TAU_ASSIGN_STATUS_F2C(local_statuses, array_of_statuses, *count, MPI_Status_f2c);
+  /* *CWL* Bugfix. This should be incorrect behavior and is caught by the
+     MPI implementation on ember.ncsa.illinois.edu. Am leaving original code
+     commented until the bugfix is confirmed rock-solid. */
+  /*  TAU_ASSIGN_STATUS_F2C(local_statuses, array_of_statuses, *count, MPI_Status_f2c); */
   *ierr = MPI_Waitall( *count, local_requests, local_statuses );
   TAU_ASSIGN_VALUES(array_of_requests, local_requests, *count, TAU_MPI_Request_c2f);
   TAU_ASSIGN_STATUS_C2F(array_of_statuses, local_statuses, *count, MPI_Status_c2f);

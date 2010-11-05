@@ -1,7 +1,66 @@
-To demonstrate the use of tau_wrap to create a wrapper library for HDF5, we use:
+To demonstrate the use of tau_wrap to create a wrapper library for HDF5 by re-directing and substituting the calls to a library (HDF5) with equivalent calls provided by a wrapper library using a pre-processor, we use:
 
 % make clean
 % make
 % ./checkhdf
 % pprof
 The profile has routines from HDF5.
+
+[sameer@zorak hdf5]$ make
+mkdir -p hdfwrapper; cp -r /usr/local/packages/hdf5-1.6.5/include/* hdfwrapper
+cp select.tau hdfwrapper
+cd hdfwrapper; /usr/local/packages/pdtoolkit-3.16/x86_64/bin/cparse hdf5.h;
+cd hdfwrapper; tau_wrap hdf5.h.pdb hdf5.h -o hdf5.inst.c -f select.tau -g hdf5
+cd hdfwrapper/wrapper; gmake  TAU_MAKEFILE=/home/users/sameer/tau2/x86_64/lib/Makefile.tau-pdt AR='ar             '
+gmake[1]: Entering directory `/home/sameer/tau2/examples/iowrappers/hdf5/hdfwrapper/wrapper'
+gcc    -DPROFILING_ON                        -DTAU_GNU -DTAU_DOT_H_LESS_HEADERS                      -DTAU_LINUX_TIMERS                                 -DTAU_LARGEFILE -D_LARGEFILE64_SOURCE                    -DTAU_BFD     -DHAVE_TR1_HASH_MAP     -I/home/users/sameer/tau2/include  -I..  -c hdf5.inst.c -o hdf5_wrap.o
+ar              rcv  libhdf5_wrap.a hdf5_wrap.o
+a - hdf5_wrap.o
+gmake[1]: Leaving directory `/home/sameer/tau2/examples/iowrappers/hdf5/hdfwrapper/wrapper'
+tau_cc.sh -tau_options='-optCompile=-I`pwd`/hdfwrapper/wrapper -optLinking="-L`pwd`/hdfwrapper/wrapper/ -lhdf5_wrap" '  -I/usr/local/packages/hdf5-1.6.5/include checkhdf.c -o checkhdf -L/usr/local/packages/hdf5-1.6.5/lib -lhdf5 -lm
+
+
+[sameer@zorak hdf5]$ ls
+checkhdf  checkhdf.c  checkhdf.o  hdfwrapper  Makefile  README  select.tau
+[sameer@zorak hdf5]$ ls hdfwrapper/
+H5ACpublic.h  H5FDgass.h      H5FDstdio.h   H5MMpublic.h  H5Zpublic.h
+H5api_adpt.h  H5FDlog.h       H5FDstream.h  H5Opublic.h   hdf5.h
+H5Apublic.h   H5FDmpi.h       H5Fpublic.h   H5Ppublic.h   hdf5.h.pdb
+H5Bpublic.h   H5FDmpio.h      H5Gpublic.h   H5pubconf.h   select.tau
+H5Cpublic.h   H5FDmpiposix.h  H5HGpublic.h  H5public.h    wrapper
+H5Dpublic.h   H5FDmulti.h     H5HLpublic.h  H5Rpublic.h
+H5Epublic.h   H5FDpublic.h    H5IM.h        H5Spublic.h
+H5FDcore.h    H5FDsec2.h      H5Ipublic.h   H5TA.h
+H5FDfamily.h  H5FDsrb.h       H5LT.h        H5Tpublic.h
+[sameer@zorak hdf5]$ ls hdfwrapper/wrapper/
+hdf5.h  hdf5.inst.c  hdf5_wrap.o  libhdf5_wrap.a  Makefile
+[sameer@zorak hdf5]$ ./checkhdf
+Initializing sigaction handlers
+[sameer@zorak hdf5]$ ls
+checkhdf    checkhdf.o  Makefile       README  select.tau
+checkhdf.c  hdfwrapper  profile.0.0.0  SDS.h5
+[sameer@zorak hdf5]$ pprof
+
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0        0.073            1           1          13       1548 int main(void) C 
+ 69.3            1            1           1           0       1072 hid_t H5Fcreate(const char *, unsigned int, hid_t, hid_t) C
+  9.9        0.154        0.154           1           0        154 herr_t H5Fclose(hid_t) C
+  6.2        0.096        0.096           1           0         96 hid_t H5Dcreate(hid_t, const char *, hid_t, hid_t, hid_t) C
+  4.1        0.063        0.063           1           0         63 herr_t H5Dclose(hid_t) C
+  2.9        0.045        0.045           1           0         45 herr_t H5Dwrite(hid_t, hid_t, hid_t, hid_t, hid_t, const void *) C
+  1.5        0.023        0.023           1           0         23 herr_t H5check_version(unsigned int, unsigned int, unsigned int) C
+  0.7        0.011        0.011           1           0         11 hid_t H5Screate_simple(int, const hsize_t *, const hsize_t *) C
+  0.2        0.003        0.003           1           0          3 herr_t H5Tset_order(hid_t, H5T_order_t) C
+  0.1        0.002        0.002           1           0          2 herr_t H5Sclose(hid_t) C
+  0.1        0.002        0.002           1           0          2 herr_t H5Tclose(hid_t) C
+  0.1        0.002        0.002           2           0          1 herr_t H5open(void) C
+  0.1        0.002        0.002           1           0          2 hid_t H5Tcopy(hid_t) C
+
+
+Here, the application is instrumented and while compiling it, we add the -I<wrapper> directory to the command line. The C pre-processor will substitute our hdf5.h that redirects references of a given HDF5 call at its callsite to a different wrapper call that internally calls the original HDF5 library routine (calling TAU timers around it). The static wrapper library is linked in to the application and the performance data is generated when it executes. 

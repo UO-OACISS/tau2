@@ -19,6 +19,7 @@ public class VisType {
     public static final VisType BAR_PLOT = new VisType("Bar Plot");
     public static final VisType SCATTER_PLOT = new VisType("Scatter Plot");
     public static final VisType CALLGRAPH = new VisType("Callgraph");
+    public static final VisType TOPO_PLOT = new VisType("Topology Plot");
     //public static final VisType KIVIAT_TUBE = new VisType("Kiviat Tube");
     
     

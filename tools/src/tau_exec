@@ -27,6 +27,8 @@ usage()
     echo "        -opencl  track GPU events via OpenCL"
     echo "        -armci   track ARMCI events via PARMCI"
     echo "        -ebs     enable Event-based sampling"
+    echo "        -ebs_period=<count> sampling period (default 1000)"
+    echo "        -ebs_source=<counter> counter (default itimer)"
     options=`tau-config --list-options`
     echo "        -T <$options> : specify TAU option"
     echo "        -loadlib=<file.so>   : specify additional load library"
@@ -66,6 +68,8 @@ track_cuda=false
 track_opencl=false
 track_armci=false
 tau_use_ebs=false
+tau_ebs_period=""
+tau_ebs_source=""
 qsub_mode=false
 TAU_PAPI_DEFAULT_DOMAIN=PAPI_DOM_USER
 extraloadlibs=""
@@ -109,6 +113,18 @@ for arg in "$@" ; do
 	      ;;
 	  -ebs)
 	      tau_use_ebs=true
+	      shift
+	      ;;
+	  -ebs_period=*)
+	      tau_use_ebs=true
+	      myarg=`echo $arg | sed 's/-ebs_period=//'`
+	      tau_ebs_period="$myarg"
+	      shift
+	      ;;
+	  -ebs_source=*)
+	      tau_use_ebs=true
+	      myarg=`echo $arg | sed 's/-ebs_source=//'`
+	      tau_ebs_source="$myarg"
 	      shift
 	      ;;
 	  -qsub)
@@ -250,6 +266,12 @@ if [ $tau_use_ebs = "true" ] ; then
     # Set TAU_SAMPLING=1 environment variable. Deferring the capability
     #    to enable HPCToolkit until later.
     export TAU_SAMPLING=1
+    if [ "x$tau_ebs_period" != "x" ] ; then
+	export TAU_EBS_PERIOD=$tau_ebs_period
+    fi
+    if [ "x$tau_ebs_source" != "x" ] ; then
+	export TAU_EBS_SOURCE=$tau_ebs_source
+    fi
 fi
 
 # add libraries specified by -loadlib=<foo.so>

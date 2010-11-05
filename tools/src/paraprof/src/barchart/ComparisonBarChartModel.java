@@ -146,6 +146,20 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
 
         rows.clear();
         rowMap.clear();
+        
+        
+        if(threads.get(0).getDataSource().isDerivedProvided())
+        {
+        	for(int i =0; i<threads.size();i++){
+        		Thread t = threads.get(i);
+        		if(t.getThreadID()==-1){
+        			threads.set(i, t.getDataSource().getMeanData());
+        		}
+        		else if(t.getThreadID()==-3){
+        			threads.set(i, t.getDataSource().getStdDevData());
+        		}
+        	}
+        }
 
         ParaProfTrial selectedTrial = ppTrials.get(0);
         Thread selectedThread = threads.get(0);

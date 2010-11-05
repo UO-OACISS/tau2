@@ -2,9 +2,10 @@
 #ifdef TAU_ENABLE_CL_CALLBACK
 #define TAU_OPENCL_LOCKING
 #endif
-#include "TauGpuAdapterOpenCL.h"
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
+#include "TauGpuAdapterOpenCL.h"
 #ifdef TAU_OPENCL_LOCKING
 #include <pthread.h>
 #else
@@ -60,6 +61,16 @@ class openCLEventId : public eventId
 extern cl_int clGetEventProfilingInfo_noinst(cl_event a1, cl_profiling_info a2, size_t
 a3, void * a4, size_t * a5);
 
+extern cl_mem clCreateBuffer_noinst(cl_context a1, cl_mem_flags a2, size_t a3, void *
+a4, cl_int * a5);
+
+extern cl_int clEnqueueWriteBuffer_noinst(cl_command_queue a1, cl_mem a2, cl_bool a3,
+size_t a4, size_t a5, const void * a6, cl_uint a7, const cl_event * a8, cl_event
+* a9);
+
+extern cl_int clWaitForEvents_noinst(cl_uint a1, const cl_event * a2);
+
+
 //Lock for the callbacks
 pthread_mutex_t callback_lock;
 
@@ -89,6 +100,55 @@ void release_callback()
 #endif
 }
 
+//The time in microseconds that the GPU is ahead of the CPU clock.
+double sync_offset = 0;
+
+double Tau_opencl_sync_clocks(cl_command_queue commandQueue, cl_context context)
+{
+	int d = 0;
+	void *data = &d;
+	cl_mem buffer;
+	cl_int err;
+	buffer = clCreateBuffer_noinst(context, CL_MEM_READ_WRITE |
+	CL_MEM_ALLOC_HOST_PTR, sizeof(void *), NULL, &err);
+	if (err != CL_SUCCESS)
+	{
+		printf("Cannot Create Sync Buffer.\n");
+	  exit(1);	
+	}
+
+	double cpu_timestamp;	
+  struct timeval tp;
+	cl_ulong gpu_timestamp;
+
+	cl_event sync_event;
+	err = clEnqueueWriteBuffer_noinst(commandQueue, buffer, CL_TRUE, 0, sizeof(void*), data,  0, NULL, &sync_event);
+	if (err != CL_SUCCESS)
+	{
+		printf("Cannot Enqueue Sync Kernel: %d.\n", err);
+	  exit(1);	
+	}
+
+	//clWaitForEvents_noinst(1, &sync_event);
+	//get CPU timestamp.
+  gettimeofday(&tp, 0);
+  cpu_timestamp = ((double)tp.tv_sec * 1e6 + tp.tv_usec);
+	//get GPU timestamp for finish.
+  err = clGetEventProfilingInfo_noinst(sync_event, CL_PROFILING_COMMAND_END,
+															 sizeof(cl_ulong), &gpu_timestamp, NULL);
+	if (err != CL_SUCCESS)
+	{
+		printf("Cannot get end time for Sync event.\n");
+	  exit(1);	
+	}
+
+	printf("SYNC: CPU= %f GPU= %f.\n", cpu_timestamp, ((double)gpu_timestamp/1e3)); 
+	sync_offset = (((double) gpu_timestamp)/1e3) - cpu_timestamp;
+
+	return sync_offset;
+}
+
+
 void Tau_opencl_init()
 {
 	//printf("in Tau_opencl_init().\n");
@@ -101,7 +161,7 @@ void Tau_opencl_exit()
 	Tau_gpu_exit();
 }
 
-void Tau_opencl_enter_memcpy_event(const char *name, int id, int size, bool MemcpyType)
+void Tau_opencl_enter_memcpy_event(const char *name, int id, int size, int MemcpyType)
 {
 	openCLEventId *evId = new openCLEventId(id);
 	openCLGpuId *gId = new openCLGpuId(0);
@@ -111,7 +171,7 @@ void Tau_opencl_enter_memcpy_event(const char *name, int id, int size, bool Memc
 		Tau_gpu_enter_memcpy_event(name, evId, gId, size, MemcpyType);
 }
 
-void Tau_opencl_exit_memcpy_event(const char *name, int id, bool MemcpyType)
+void Tau_opencl_exit_memcpy_event(const char *name, int id, int MemcpyType)
 {
 	openCLEventId *evId = new openCLEventId(id);
 	openCLGpuId *gId = new openCLGpuId(0);
@@ -127,20 +187,21 @@ double stop)
 	openCLEventId *evId = new openCLEventId(id);
 	lock_callback();
 	//printf("locked for: %s.\n", name);
-	Tau_gpu_register_gpu_event(name, evId, start/1e3, stop/1e3);
+	Tau_gpu_register_gpu_event(name, evId, start/1e3 - sync_offset, stop/1e3 - sync_offset);
 	//printf("released for: %s.\n", name);
 	release_callback();
 }
 
 void Tau_opencl_register_memcpy_event(const char *name, int id, double start, double stop, int
-transferSize, bool MemcpyType)
+transferSize, int MemcpyType)
 {
 	//printf("in Tau_open.\n");
+	//printf("Memcpy type is %d.\n", MemcpyType);
 	openCLEventId *evId = new openCLEventId(id);
 	openCLGpuId *gId = new openCLGpuId(0);
 	lock_callback();
 	//printf("locked for: %s.\n", name);
-	Tau_gpu_register_memcpy_event(name, evId, gId, start/1e3, stop/1e3, transferSize, MemcpyType);
+	Tau_gpu_register_memcpy_event(name, evId, gId, start/1e3 - sync_offset, stop/1e3 - sync_offset, transferSize, MemcpyType);
 	//printf("released for: %s.\n", name);
 	release_callback();
 
