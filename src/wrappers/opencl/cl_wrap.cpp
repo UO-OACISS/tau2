@@ -8,13 +8,11 @@
 const char * tau_orig_libname = "libOpenCL.so";
 static void *tau_handle = NULL;
 
-/*
-static TauUserEvent *MemoryCopyEventHtoD;
-static TauUserEvent *MemoryCopyEventDtoH;
-static TauUserEvent *MemoryCopyEventDtoD;
-*/
+static TauContextUserEvent *MemoryCopyEventHtoD;
+static TauContextUserEvent *MemoryCopyEventDtoH;
+static TauContextUserEvent *MemoryCopyEventDtoD;
 
-static TauContextUserEvent *MemoryCopyEvent;
+//static TauContextUserEvent *MemoryCopyEvent;
 
 void check_memory_init()
 {
@@ -22,12 +20,12 @@ void check_memory_init()
 	static bool init = false;
 	if (!init)
 	{
-		/*
-		MemoryCopyEventHtoD = (TauUserEvent *) Tau_get_userevent("Bytes copied from Host to Device");
-		MemoryCopyEventDtoH = (TauUserEvent *) Tau_get_userevent("Bytes copied from Device to Host");
-		MemoryCopyEventDtoD = (TauUserEvent *) Tau_get_userevent("Bytes copied from Device to Device");
-		*/
-		Tau_get_context_userevent((void **) &MemoryCopyEvent, "Bytes copied");
+		
+		Tau_get_context_userevent((void **) &MemoryCopyEventHtoD, "Bytes copied from Host to Device");
+		Tau_get_context_userevent((void **) &MemoryCopyEventDtoH, "Bytes copied from Device to Host");
+		Tau_get_context_userevent((void **) &MemoryCopyEventDtoD, "Bytes copied (Other)");
+		
+		//Tau_get_context_userevent((void **) &MemoryCopyEvent, "Bytes copied");
 		init = true;
 	}
 }
@@ -1510,7 +1508,7 @@ cl_int clEnqueueReadBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4
 #else
   TAU_PROFILE_START(t);
 	check_memory_init();
-	TAU_CONTEXT_EVENT(MemoryCopyEvent, a5);
+	TAU_CONTEXT_EVENT(MemoryCopyEventDtoH, a5);
   retval  =  (*clEnqueueReadBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
   TAU_PROFILE_STOP(t);
 #endif
@@ -1559,7 +1557,7 @@ cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a
 #else
   TAU_PROFILE_START(t);
 	check_memory_init();
-	TAU_CONTEXT_EVENT(MemoryCopyEvent, a5);
+	TAU_CONTEXT_EVENT(MemoryCopyEventDtoH, a5);
   retval  =  (*clEnqueueWriteBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
   TAU_PROFILE_STOP(t);
 #endif
@@ -1616,7 +1614,7 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
 #ifdef TAU_ENABLE_CL_CALLBACK
 	memcpy_callback_data *mem_data = (memcpy_callback_data*) malloc(memcpy_data_size);
 	strcpy(mem_data->name, "CopyBuffer");
-	mem_data->memcpy_type = MemcpyHtoD;
+	mem_data->memcpy_type = MemcpyDtoD;
 	if (a9 == NULL)
 	{
 		//printf("cl_event is null.\n");
@@ -1624,11 +1622,11 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
 		a9 = &new_event;
 	}
 
-	Tau_opencl_enter_memcpy_event("cl_int clEnqueueCopyBuffer(cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *) C", 2, a6, MemcpyHtoD); 
+	Tau_opencl_enter_memcpy_event("cl_int clEnqueueCopyBuffer(cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *) C", 2, a6, MemcpyDtoD); 
 
   retval  =  (*clEnqueueCopyBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
 
-	Tau_opencl_exit_memcpy_event("cl_int clEnqueueCopyBuffer(cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *) C", 2, MemcpyHtoD);
+	Tau_opencl_exit_memcpy_event("cl_int clEnqueueCopyBuffer(cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *) C", 2, MemcpyDtoD);
 
 	clSetEventCallback((*a9), CL_COMPLETE, Tau_opencl_memcpy_callback, mem_data);
 
@@ -1636,7 +1634,7 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
 
   TAU_PROFILE_START(t);
 	check_memory_init();
-	TAU_CONTEXT_EVENT(MemoryCopyEvent, a6);
+	TAU_CONTEXT_EVENT(MemoryCopyEventDtoD, a6);
   retval  =  (*clEnqueueCopyBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
   TAU_PROFILE_STOP(t);
 #endif
@@ -1824,7 +1822,7 @@ void * clEnqueueMapBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, cl_map_fla
 #endif
   TAU_PROFILE_START(t);
 	check_memory_init();
-	TAU_CONTEXT_EVENT(MemoryCopyEvent, a5);
+	TAU_CONTEXT_EVENT(MemoryCopyEventDtoH, a5);
   retval  =  (*clEnqueueMapBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9,  a10);
   TAU_PROFILE_STOP(t);
 #ifdef TAU_ENABLE_CL_CALLBACK

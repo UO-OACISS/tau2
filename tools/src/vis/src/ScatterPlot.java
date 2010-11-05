@@ -54,11 +54,27 @@ public class ScatterPlot implements Plot {
     // grr... get rid of these
     private int selectedRow = 5;
     private int selectedCol = 5;
+    
+    private int minVis = 0;
+    private int maxVis = 100;
+    boolean isTopo=false;
 
+//    private void resetVisRange(){
+//    	minVis=0;
+//    	maxVis=100;
+//    }
     
     public ScatterPlot() {
     }
 
+    public void setIsTopo(boolean set){
+    	isTopo=set;
+    }
+    public void setVisRange(int min, int max){
+    	minVis = min;
+    	maxVis = max;
+    }
+    
     public void setSize(float xSize, float ySize, float zSize) {
         this.xSize = xSize;
         this.ySize = ySize;
@@ -79,6 +95,7 @@ public class ScatterPlot implements Plot {
     public void setValues(float values[][]) {
         this.values = values;
         processValues();
+        isTopo=false;
         this.dirty = true;
     }
 
@@ -184,7 +201,7 @@ public class ScatterPlot implements Plot {
         gbc.weighty = 0.2;
 
         final JSlider sphereSizeSlider = new JSlider(0, 20, (int) (sphereSize * 10));
-        final JSlider sphereDetailSlider = new JSlider(3, 30, sphereDetail);
+        final JSlider sphereDetailSlider = new JSlider(2, 30, sphereDetail);
 
         sphereSizeSlider.addChangeListener(new ChangeListener() {
             public void stateChanged(ChangeEvent event) {
@@ -251,16 +268,60 @@ public class ScatterPlot implements Plot {
         for (int f = 0; f < 4; f++) {
             float maxValue = Float.MIN_VALUE;
             float minValue = Float.MAX_VALUE;
-
             for (int i = 0; i < values.length; i++) {
                 maxValue = Math.max(maxValue, values[i][f]);
                 minValue = Math.min(minValue, values[i][f]);
+            }
+            
+            boolean useMinCutoff = false;
+            boolean useMaxCutoff = false;
+            float mincut=0;
+            float maxcut=0;
+            if(isTopo&&f==3)
+            {
+            	if(minVis>0)
+            	{
+            		useMinCutoff=true;
+            		float tmp = maxValue-minValue;
+            		mincut=minValue+tmp*(minVis/100.0f);
+            	}
+            	if(maxVis<100){
+            		useMaxCutoff=true;
+            		float tmp = maxValue-minValue;
+            		maxcut=minValue+tmp*(maxVis/100.0f);
+            	}
+            
+
             }
 
             for (int i = 0; i < values.length; i++) {
                 if (maxValue - minValue == 0) {
                     values[i][f] = 0;
-                } else {
+                    continue;
+                } 
+                
+                if(useMinCutoff&&values[i][f]<mincut){
+                	if(useMaxCutoff&&values[i][f]<maxcut&&mincut>maxcut){
+                		
+                	}
+                	else
+                	{
+                		values[i][f]=Float.NaN;
+                		continue;
+                	}
+                }
+                else if(useMaxCutoff&&values[i][f]>maxcut){
+                	if(useMinCutoff&&values[i][f]>mincut&&mincut>maxcut){
+                		
+                	}
+                	else
+                	{
+                		values[i][f]=Float.NaN;
+                		continue;
+                	}
+                }
+                
+                {
                     if (normalized) {
                         values[i][f] = (values[i][f] - minValue) / (maxValue - minValue) * norms[f];
                     } else {
@@ -284,16 +345,23 @@ public class ScatterPlot implements Plot {
         // Set to red, in case there is no colorScale
         gl.glColor3f(1.0f, 0, 0);
 
-        if (sphereSize < 0.1f) {
+        if (sphereSize < 0.1f||sphereDetail<3) {
             gl.glDisable(GL.GL_LIGHTING);
-            gl.glPointSize(2.5f);
+            float actualSize=2.5f;
+            if(sphereSize>=0.1f){
+            	actualSize=sphereSize*30;
+            }
+            gl.glPointSize(actualSize);
             gl.glBegin(GL.GL_POINTS);
             for (int i = 0; i < values.length; i++) {
+            	if(Float.compare(values[i][3],Float.NaN)!=0){
                 if (colorScale != null) {
                     Color color = colorScale.getColor(values[i][3]);
                     gl.glColor3f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f);
                 }
                 gl.glVertex3f(values[i][0], values[i][1], values[i][2]);
+            	}
+
             }
             gl.glEnd();
         } else {
@@ -307,6 +375,7 @@ public class ScatterPlot implements Plot {
             glu.gluQuadricNormals(qobj, GLU.GLU_SMOOTH);
 
             for (int i = 0; i < values.length; i++) {
+            	if(Float.compare(values[i][3],Float.NaN)!=0){
                 gl.glPushMatrix();
                 gl.glTranslatef(values[i][0], values[i][1], values[i][2]);
                 if (colorScale != null) {
@@ -315,6 +384,7 @@ public class ScatterPlot implements Plot {
                 }
                 glu.gluSphere(qobj, sphereSize, sphereDetail, sphereDetail);
                 gl.glPopMatrix();
+            	}
             }
         }
 

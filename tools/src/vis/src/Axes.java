@@ -389,7 +389,7 @@ public class Axes implements Shape {
 			}
 		};
 
-		final JSlider fontScaleSlider = new JSlider(0, 4000,
+		final JSlider fontScaleSlider = new JSlider(0, 4550,
 				4600 - (int) getFontScale());
 		fontScaleSlider.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent event) {
@@ -893,7 +893,7 @@ public class Axes implements Shape {
 		}
 
 		// maxPoint is the extent of the labels
-		maxPoint = maxPoint * 0.003f;
+		maxPoint = (maxPoint * 0.003f)+2400/fontScale;
 
 		// Now draw the axis labels
 		gl.glPushMatrix();
