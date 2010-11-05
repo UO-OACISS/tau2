@@ -1,30 +1,29 @@
 package edu.uoregon.tau.paraprof.treetable;
 
-import java.awt.EventQueue;
 import java.awt.Point;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
-import java.awt.dnd.*;
+import java.awt.dnd.DropTarget;
+import java.awt.dnd.DropTargetContext;
+import java.awt.dnd.DropTargetDragEvent;
+import java.awt.dnd.DropTargetDropEvent;
+import java.awt.dnd.DropTargetEvent;
+import java.awt.dnd.DropTargetListener;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.ListIterator;
 
-import javax.swing.*;
-import javax.swing.tree.*;
+import javax.swing.JOptionPane;
+import javax.swing.JTree;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
 
-import org.jfree.ui.tabbedui.DetailEditor;
-
-import edu.uoregon.tau.paraprof.LoadTrialProgressWindow;
 import edu.uoregon.tau.paraprof.ParaProf;
 import edu.uoregon.tau.paraprof.ParaProfApplication;
 import edu.uoregon.tau.paraprof.ParaProfExperiment;
-import edu.uoregon.tau.paraprof.ParaProfMetric;
-import edu.uoregon.tau.paraprof.ParaProfTreeCellRenderer;
 import edu.uoregon.tau.paraprof.ParaProfTrial;
-import edu.uoregon.tau.paraprof.ParaProfUtils;
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.DBDataSource;
 import edu.uoregon.tau.perfdmf.DataSource;
@@ -33,8 +32,6 @@ import edu.uoregon.tau.perfdmf.Database;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.DatabaseException;
 import edu.uoregon.tau.perfdmf.Experiment;
-import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfdmf.database.DB;
 
 public class TreeDropTarget implements DropTargetListener {
 
