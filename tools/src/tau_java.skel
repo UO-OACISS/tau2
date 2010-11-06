@@ -1,26 +1,26 @@
 #!/bin/sh
-JDKDIR = @JDKDIR@
-JARTARGET = @JARTARGET@
-TAU_LIB_DIR = @JARTARGET@ #curiously enough the libs are in the same directory as the jars.
+JDKDIR=@JDKDIR@
+JARTARGET=@JARTARGET@
+TAU_LIB_DIR=@JARTARGET@ #curiously enough the libs are in the same directory as the jars.
 
-LD_LIBRARY_PATH = TAU_LIB_DIR:$(LD_LIBRARY_PATH)
+LD_LIBRARY_PATH=$TAU_LIB_DIR:$LD_LIBRARY_PATH
 
 usage(){
-    echo "The TauJVMTI profiling agent\n\n"
-    echo $0"[options] javaprogram \n\n";
-    echo("Options are semicolon separated (make sure to escape the semicolon!):\n");
-    echo("Within an options the arguments are comma separated:\n");
-    echo("\t help\t\t\t Print help information\n");
-    echo("\t include=item\t\t Only these classes/methods\n");
-    echo("\t exclude=item\t\t Exclude these classes/methods\n\n");
-    echo("item\t Qualified class and/or method names\n");
-    echo("\t\t e.g. (*.<init>;Foobar.method;sun.*)\n\n");
+    echo "The TauJVMTI profiling agent\n"
+    echo $0"[options] javaprogram \n";
+    echo "Options are semicolon separated (make sure to escape the semicolon!)"
+    echo "Within an options the arguments are comma separated."
+    echo "\t help\t\t\t Print help information"
+    echo "\t include=item\t\t Only these classes/methods"
+    echo "\t exclude=item\t\t Exclude these classes/methods\n"
+    echo "item\t Qualified class and/or method names"
+    echo "\t\t e.g. (*.<init>;Foobar.method;sun.*)\n"
 }
 
+echo  $JDKDIR/bin/java -Xbootclasspath/a:$JARTARGET -agentlib:libTAUsh-jdk=$1 $2
 
-if [$# != 3]
-then
-    usage()
+if [ $# != 2 ]; then
+    usage;
 else
-    $(JDKDIR)/bin/java -Xbootclasspath/a:JDKDIR agentlib=libTAUsh-jdk.so=$1 $2
+    $JDKDIR/bin/java -Xbootclasspath/a:$JARTARGET -agentlib:libTAUsh-jdk=$1 $2
 fi
