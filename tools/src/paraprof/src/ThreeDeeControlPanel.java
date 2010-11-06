@@ -481,8 +481,10 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 //
 //        return panel;
 //    }
-    
-    private JPanel createTopoMinRangeSelectionPanel(String name) {
+    boolean mySlide=false;
+    int lockDiff=0;
+    JSlider minTopoSlider;
+    private JPanel createTopoMinRangeSelectionPanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -492,39 +494,45 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         gbc.weightx = 0.1;
         gbc.weighty = 0.1;
         
-        final JSlider topoValue = new JSlider(JSlider.HORIZONTAL,0,100,0);
+        minTopoSlider = new JSlider(JSlider.HORIZONTAL,0,100,0);
 
      
-        	topoValue.setValue(settings.getMinTopoRange());
+        	minTopoSlider.setValue(settings.getMinTopoRange());
         ChangeListener topoSelector = new ChangeListener() {
-  
-
 			public void stateChanged(ChangeEvent e) {
-				 try {
-	                    settings.setMinTopoRange(topoValue.getValue());
+				if(mySlide)
+					return;
+				 try {					 
+					 if(lockBox.isSelected()){
+
+						 mySlide=true;
+						 maxTopoSlider.setValue(minTopoSlider.getValue()+lockDiff);
+						 settings.setMaxTopoRange(maxTopoSlider.getValue());
+						 mySlide=false;
+					 }
+	                    settings.setMinTopoRange(minTopoSlider.getValue());
 					 
 	                    window.redraw();
 	                } catch (Exception evt) {
 	                    ParaProfUtils.handleException(evt);
 	                }
-				
 			}
         };
         
-        topoValue.addChangeListener(topoSelector);
+        minTopoSlider.addChangeListener(topoSelector);
 
         gbc.insets = new Insets(1, 1, 1, 1);
 
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        addCompItem(panel, topoValue, gbc, 0, 0, 1, 1);
+        addCompItem(panel, minTopoSlider, gbc, 0, 0, 1, 1);
 
         return panel;
     }
     
-    
-    private JPanel createTopoMaxRangeSelectionPanel(String name) {
+    JSlider maxTopoSlider;
+    private JPanel createTopoMaxRangeSelectionPanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -536,16 +544,23 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
 
         
-        final JSlider topoValue = new JSlider(JSlider.HORIZONTAL,0,100,100);
+        maxTopoSlider = new JSlider(JSlider.HORIZONTAL,0,100,100);
 
 
-        	topoValue.setValue(settings.getMaxTopoRange());
+        	maxTopoSlider.setValue(settings.getMaxTopoRange());
         ChangeListener topoSelector = new ChangeListener() {
-  
-
 			public void stateChanged(ChangeEvent e) {
+				if(mySlide)
+					return;
 				 try {
-						 settings.setMaxTopoRange(topoValue.getValue());
+					 if(lockBox.isSelected()){
+
+						 mySlide=true;
+						 minTopoSlider.setValue(maxTopoSlider.getValue()-lockDiff);
+						 settings.setMinTopoRange(minTopoSlider.getValue());
+						 mySlide=false;
+					 }
+						 settings.setMaxTopoRange(maxTopoSlider.getValue());
 					 
 	                    window.redraw();
 	                } catch (Exception evt) {
@@ -555,14 +570,14 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 			}
         };
         
-        topoValue.addChangeListener(topoSelector);
+        maxTopoSlider.addChangeListener(topoSelector);
 
         gbc.insets = new Insets(1, 1, 1, 1);
 
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        addCompItem(panel, topoValue, gbc, 0, 0, 1, 1);
+        addCompItem(panel, maxTopoSlider, gbc, 0, 0, 1, 1);
 
         return panel;
     }
@@ -668,7 +683,8 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
     }
     
-    
+    JCheckBox lockBox;// = new JCheckBox();
+    //int lockDiff=0;
     private JPanel createTopoPanel() {
 
         JPanel panel = new JPanel();
@@ -692,18 +708,33 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 //        addCompItem(panel, new JLabel("Width/X"), gbc, 0, 0, 1, 1);
 //        addCompItem(panel, createTopoDimSelectionPanel("Width", 0), gbc, 1, 0, 1, 1);
 //        gbc.weightx = 0;
-        addCompItem(panel, new JLabel("Min Range"), gbc, 0, 0, 1, 1);
-        addCompItem(panel, createTopoMinRangeSelectionPanel("Min Range"), gbc, 1, 0, 1, 1);
+        addCompItem(panel, new JLabel("Minimum Visible"), gbc, 0, 0, 1, 1);
+        addCompItem(panel, createTopoMinRangeSelectionPanel(), gbc, 1, 0, 1, 1);
         gbc.weightx = 0;
-        addCompItem(panel, new JLabel("Max Range"), gbc, 0, 1, 1, 1);
-        addCompItem(panel, createTopoMaxRangeSelectionPanel("Max Range"), gbc, 1, 1, 1, 1);
+        addCompItem(panel, new JLabel("Maximum Visible"), gbc, 0, 1, 1, 1);
+        addCompItem(panel, createTopoMaxRangeSelectionPanel(), gbc, 1, 1, 1, 1);
+        addCompItem(panel, lockBox=new JCheckBox("Lock Range"),gbc,0,2,1,1);
+        
+        
+        ChangeListener lockSelector = new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				if(lockBox.isSelected()){
+					lockDiff=maxTopoSlider.getValue()-minTopoSlider.getValue();
+				}
+				else{
+					lockDiff=0;
+				}
+			}
+        };
+        
+        lockBox.addChangeListener(lockSelector);
         gbc.weightx = 0;
-        addCompItem(panel, new JLabel("Color"), gbc, 0, 2, 1, 1);
-        addCompItem(panel, createTopoColorSelectionPanel("Color"), gbc, 1, 2, 1, 1);
+        addCompItem(panel, new JLabel("Color"), gbc, 0, 3, 1, 1);
+        addCompItem(panel, createTopoColorSelectionPanel("Color"), gbc, 1, 3, 1, 1);
         
         gbc.weightx = 0;
-        addCompItem(panel, new JLabel("Topology"), gbc, 0, 3, 1, 1);
-        addCompItem(panel, createTopoSelectionPanel("Topology"), gbc, 1, 3, 1, 1);
+        addCompItem(panel, new JLabel("Topology"), gbc, 0, 4, 1, 1);
+        addCompItem(panel, createTopoSelectionPanel("Topology"), gbc, 1, 4, 1, 1);
 
         tabbedPane = new JTabbedPane();
 
