@@ -349,15 +349,16 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         }
 
         //scatterPlot.setSize(15, 15, 15);
+        scatterPlot.setSize(tsizes[0],tsizes[1], tsizes[2]);
         scatterPlot.setIsTopo(true);
         scatterPlot.setAxes(axes);
         scatterPlot.setValues(values);
         scatterPlot.setColorScale(colorScale);
-        scatterPlot.setVisRange(settings.getMinTopoRange(), settings.getMaxTopoRange());
+        scatterPlot.setVisRange(settings.getMinTopoRange(), settings.getMaxTopoRange() );
         plot = scatterPlot;
     }
     
-    
+    int[] tsizes=null;
     private float[][] defaultTopology(int numThreads){
     	float[][] values = new float[numThreads][4];
     	
@@ -368,13 +369,16 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     	 String size_key=prefix+" Size";
     	 
         	 String tsize = ppTrial.getDataSource().getMetaData().get(size_key);
-        	 int[] tsizes = parseTuple(tsize);
+        	 tsizes = parseTuple(tsize);
         	 for(int i=0;i<3;i++){
         		 maxScatterValues[i] = tsizes[i];
         	 	minScatterValues[i] = 0;
         	 }
-         scatterPlot.setSize(tsizes[0],tsizes[1], tsizes[2]);
+         //scatterPlot.setSize(tsizes[0],tsizes[1], tsizes[2]);
     	 
+         int minVis=settings.getMinTopoRange();
+         int maxVix=settings.getMaxTopoRange();
+         
     	 int threadIndex = 0;
     	 for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
              Thread thread = it.next();
@@ -397,6 +401,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             FunctionProfile functionProfile = thread.getFunctionProfile(topoFunction);
 
             if (functionProfile != null) {
+                	
+            	
                 values[threadIndex][3] = (float) topoValueType.getValue(functionProfile, topoMetricID,ppTrial.getSelectedSnapshot());
                 maxScatterValues[3] = Math.max(maxScatterValues[3], values[threadIndex][3]);
                 minScatterValues[3] = Math.min(minScatterValues[3], values[threadIndex][3]);
