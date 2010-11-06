@@ -562,7 +562,8 @@ parse_agent_options(char *options)
             stdout_message("\n");
             stdout_message(" java -agent:TauJVMTI[=options] ...\n");
             stdout_message("\n");
-            stdout_message("The options are comma separated:\n");
+	    stdout_message("Options are semicolon separated (make sure to escape it!):\n");
+            stdout_message("Within an options the arguments are comma separated:\n");
             stdout_message("\t help\t\t\t Print help information\n");
             stdout_message("\t max=n\t\t Only list top n classes\n");
             stdout_message("\t include=item\t\t Only these classes/methods\n");
@@ -572,17 +573,6 @@ parse_agent_options(char *options)
             stdout_message("\t\t e.g. (*.<init>;Foobar.method;sun.*)\n");
             stdout_message("\n");
             exit(0);
-        } else if ( strcmp(token,"max")==0 ) {
-            char number[MAX_TOKEN_LENGTH];
-
-            /* Get the numeric option */
-            next = get_token(next, ",=", number, (int)sizeof(number));
-            /* Check for token scan error */
-            if ( next==NULL ) {
-                fatal_error("ERROR: max=n option error\n");
-            }
-            /* Save numeric value */
-            gdata->max_count = atoi(number);
         } else if ( strcmp(token,"include")==0 ) {
             int   used;
             int   maxlen;
@@ -602,7 +592,7 @@ parse_agent_options(char *options)
                 fatal_error("ERROR: Out of malloc memory\n");
             }
             /* Add this item to the list */
-            next = get_token(next, ",=", gdata->include+used, maxlen);
+            next = get_token(next, ";=", gdata->include+used, maxlen);
             /* Check for token scan error */
             if ( next==NULL ) {
                 fatal_error("ERROR: include option error\n");
@@ -626,7 +616,7 @@ parse_agent_options(char *options)
                 fatal_error("ERROR: Out of malloc memory\n");
             }
             /* Add this item to the list */
-            next = get_token(next, ",=", gdata->exclude+used, maxlen);
+            next = get_token(next, ";=", gdata->exclude+used, maxlen);
             /* Check for token scan error */
             if ( next==NULL ) {
                 fatal_error("ERROR: exclude option error\n");
