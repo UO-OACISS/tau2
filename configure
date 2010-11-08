@@ -129,6 +129,7 @@ for arg in "$@"; do
     echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
     echo "-PROFILECALLPATH ......................... Generate call path profiles."
     echo "-PROFILEPARAM .... Generate profiles with parameter mapped event data ."
+    echo "-PROFILECOMMUNICATORS ... Generate profiles with MPI communicator info."
     echo "-PROFILEPHASE .......................... Generate phase based profiles."
     echo "-DEPTHLIMIT ........... Disable instrumentation beyond a certain depth."
     echo "-PROFILEMEMORY .. Track heap memory utilization at each function entry."
@@ -253,6 +254,7 @@ for arg in "$@"; do
     echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
     echo "-PROFILECALLPATH ......................... Generate call path profiles."
     echo "-PROFILEPARAM .... Generate profiles with parameter mapped event data ."
+    echo "-PROFILECOMMUNICATORS ... Generate profiles with MPI communicator info."
     echo "-PROFILEPHASE .......................... Generate phase based profiles."
     echo "-DEPTHLIMIT ........... Disable instrumentation beyond a certain depth."
     echo "-PROFILEMEMORY .. Track heap memory utilization at each function entry."
@@ -403,6 +405,7 @@ profilememory=no
 profileheadroom=no
 callpath=no
 profileparam=no
+profilecommunicators=no
 depthlimit=no
 phase=no
 trace=no
@@ -1248,6 +1251,13 @@ for arg in "$@"; do
     shift
     ;;
 
+  -PROFILECOMMUNICATORS)
+    profile=yes
+    profilecommunicators=yes
+    shift
+    ;;
+
+
   -DEPTHLIMIT)
     depthlimit=yes
     shift
@@ -1584,8 +1594,10 @@ chmod a+rx $BINTARGET/tau_java
 cp ${tauroot}/tools/src/paraprof/bin/paraprof.jar $JARTARGET
 cp ${tauroot}/tools/src/perfdmf/bin/perfdmf.jar $JARTARGET
 cp ${tauroot}/tools/src/perfexplorer/perfexplorer.jar $JARTARGET
-cp ${tauroot}/src/Profile/TAU.jar $JARTARGET
-cp ${tauroot}/src/Profile/TauJVMTI.jar $JARTARGET
+if [ $java = yes ]; then
+  cp ${tauroot}/src/Profile/TAU.jar $JARTARGET
+  cp ${tauroot}/src/Profile/TauJVMTI.jar $JARTARGET
+fi
 cp ${tauroot}/tools/src/perfexplorer/perfexplorer-1.4.jar $JARTARGET
 cp ${tauroot}/tools/src/vis/bin/vis.jar $JARTARGET
 cp ${tauroot}/tools/src/common/bin/tau-common.jar $JARTARGET
@@ -2279,6 +2291,11 @@ fi
 if [ $profileparam = yes ] ; then
     fixmakeargs="$fixmakeargs PROFILEPARAM"
     tauoptions="${tauoptions}-param"
+fi
+
+if [ $profilecommunicators = yes ] ; then
+    fixmakeargs="$fixmakeargs PROFILECOMMUNICATORS PROFILEPARAM"
+    tauoptions="${tauoptions}-communicators"
 fi
 
 if [ $depthlimit = yes ] ; then
