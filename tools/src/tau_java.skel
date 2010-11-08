@@ -17,8 +17,8 @@ usage(){
     echo "\t\t e.g. (*.<init>;Foobar.method;sun.*)\n"
 }
 
-if [ $# < 1 ]; then
+if [ $# -lt 1 ]; then
     usage;
 else
-    $JDKDIR/bin/java -Xbootclasspath/a:$JARTARGET -agentlib:TAUsh-jdk=$2 $1
+    $JDKDIR/bin/java -Xbootclasspath/a:$JARTARGET/TauJVMTI.jar -agentlib:TAUsh-jdk=$2 $1
 fi
