@@ -29,6 +29,9 @@
 #include <string.h>
 
 #define TAU_MAX_REQUESTS  4096
+#ifndef TAU_MAX_MPI_RANKS
+#define TAU_MAX_MPI_RANKS 8
+#endif /* ifndef */
 
 void TauSyncClocks();
 void TauSyncFinalClocks();
@@ -1108,6 +1111,7 @@ void tau_exp_track_comm_split (MPI_Comm oldcomm, MPI_Comm newcomm) {
   char buffer[16384];
   char catbuffer[2048];
   char namebuffer[512];
+  int limit;
 
   oldcommhandle = (void*)oldcomm;
   newcommhandle = (void*)newcomm;
@@ -1118,11 +1122,16 @@ void tau_exp_track_comm_split (MPI_Comm oldcomm, MPI_Comm newcomm) {
 
   /* initialize to empty */
   buffer[0] = 0;
-  for (i=0; i<newCommSize; i++) {
+
+  limit = (newCommSize < TAU_MAX_MPI_RANKS) ? newCommSize : TAU_MAX_MPI_RANKS;
+  for (i=0; i<limit; i++) {
     worldrank = translateRankToWorld(newcomm, i);
 /*     printf ("comm %p has world member %d\n", newcommhandle, worldrank); */
     sprintf (catbuffer, "%d ", worldrank);
     strcat(buffer, catbuffer);
+  }
+  if (limit < newCommSize) {
+    strcat(buffer, " ...");
   }
 
 /*   printf ("buffer is %s\n", buffer); */
@@ -3423,9 +3432,6 @@ int TauGetMpiRank(void)
   return rank;
 }
 
-#ifndef TAU_MAX_MPI_RANKS
-#define TAU_MAX_MPI_RANKS 8
-#endif /* ifndef */
 
 char * Tau_printRanks(void *comm_ptr) {
   /* Create an array of ranks and fill it in using MPI_Group_translate_ranks*/
