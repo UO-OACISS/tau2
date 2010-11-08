@@ -29,6 +29,18 @@
 #include <string.h>
 
 #define TAU_MAX_REQUESTS  4096
+#ifndef TAU_MAX_MPI_RANKS
+#define TAU_MAX_MPI_RANKS 8
+#endif /* ifndef */
+
+#ifdef TAU_EXP_TRACK_COMM 
+#define TAU_TRACK_COMM(c) \
+  void *commhandle; \
+  commhandle = (void*)c; \
+  TAU_PROFILE_PARAM1L((long)commhandle, "comm"); 
+#else
+#define TAU_TRACK_COMM(c) 
+#endif /* TAU_EXP_TRACK_COMM */
 
 void TauSyncClocks();
 void TauSyncFinalClocks();
@@ -486,6 +498,7 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Allgather()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Allgather( sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm );
   PMPI_Type_size( recvtype, &typesize );
   TAU_ALLGATHER_DATA(typesize*recvcount);
@@ -511,6 +524,7 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Allgatherv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Allgatherv( sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm );
   PMPI_Type_size( recvtype, &typesize );
 
@@ -535,6 +549,7 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Allreduce()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Allreduce( sendbuf, recvbuf, count, datatype, op, comm );
   PMPI_Type_size( datatype, &typesize );
   TAU_ALLREDUCE_DATA(typesize*count);
@@ -559,11 +574,7 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Alltoall()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
-#ifdef TAU_EXP_TRACK_COMM
-  void *commhandle;
-  commhandle = (void*)comm;
-  TAU_PROFILE_PARAM1L((long)commhandle, "comm");
-#endif /* TAU_EXP_TRACK_COMM */
+  TAU_TRACK_COMM(comm);
 
   returnVal = PMPI_Alltoall( sendbuf, sendcount, sendtype, recvbuf, recvcnt, recvtype, comm );
   PMPI_Type_size( sendtype, &typesize );
@@ -592,6 +603,7 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Alltoallv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Alltoallv( sendbuf, sendcnts, sdispls, sendtype, recvbuf, recvcnts, rdispls, recvtype, comm );
 
   tracksize = sum_array(sendcnts, sendtype, comm);
@@ -612,6 +624,7 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Barrier()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Barrier( comm );
 
   TAU_PROFILE_STOP(tautimer);
@@ -642,12 +655,7 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Bcast()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 
-#ifdef TAU_EXP_TRACK_COMM
-  void *commhandle;
-  commhandle = (void*)comm;
-  TAU_PROFILE_PARAM1L((long)commhandle, "comm");
-#endif /* TAU_EXP_TRACK_COMM */
-
+  TAU_TRACK_COMM(comm);
 
   returnVal = PMPI_Bcast( buffer, count, datatype, root, comm );
   PMPI_Type_size( datatype, &typesize );
@@ -697,6 +705,7 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Gather()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Gather( sendbuf, sendcnt, sendtype, recvbuf, recvcount, recvtype, root, comm );
 
   PMPI_Comm_rank ( comm, &rank );
@@ -729,6 +738,7 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Gatherv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Gatherv( sendbuf, sendcnt, sendtype, recvbuf, recvcnts, displs, recvtype, root, comm );
 
   track_vector(TAU_GATHER_DATA, recvcnts, recvtype);
@@ -784,6 +794,7 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Reduce_scatter()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Reduce_scatter( sendbuf, recvbuf, recvcnts, datatype, op, comm );
   PMPI_Type_size( datatype, &typesize );
   TAU_REDUCESCATTER_DATA(typesize*(*recvcnts));
@@ -808,6 +819,7 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Reduce()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Reduce( sendbuf, recvbuf, count, datatype, op, root, comm );
   PMPI_Type_size( datatype, &typesize );
   TAU_REDUCE_DATA(typesize*count);
@@ -831,6 +843,7 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Scan()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Scan( sendbuf, recvbuf, count, datatype, op, comm );
   PMPI_Type_size( datatype, &typesize );
   TAU_SCAN_DATA(typesize*count);
@@ -856,6 +869,7 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Scatter()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Scatter( sendbuf, sendcnt, sendtype, recvbuf, recvcnt, recvtype, root, comm );
   PMPI_Type_size( sendtype, &typesize );
   TAU_SCATTER_DATA(typesize*sendcnt);
@@ -881,6 +895,7 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Scatterv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Scatterv( sendbuf, sendcnts, displs, sendtype, recvbuf, recvcnt, recvtype, root, comm );
 
   track_vector(TAU_SCATTER_DATA, sendcnts, typesize);
@@ -917,6 +932,7 @@ int * flag;
   TAU_PROFILE_TIMER(tautimer, "MPI_Attr_get()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Attr_get( comm, keyval, attr_value, flag );
 
   TAU_PROFILE_STOP(tautimer);
@@ -934,6 +950,7 @@ void * attr_value;
   TAU_PROFILE_TIMER(tautimer, "MPI_Attr_put()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Attr_put( comm, keyval, attr_value );
 
   TAU_PROFILE_STOP(tautimer);
@@ -985,6 +1002,7 @@ MPI_Comm * comm_out;
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_dup()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Comm_dup( comm, comm_out );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1016,6 +1034,7 @@ MPI_Group * group;
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_group()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Comm_group( comm, group );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1032,6 +1051,7 @@ int * rank;
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_rank()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Comm_rank( comm, rank );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1054,6 +1074,7 @@ MPI_Group * group;
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_remote_group()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Comm_remote_group( comm, group );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1070,6 +1091,7 @@ int * size;
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_remote_size()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Comm_remote_size( comm, size );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1097,7 +1119,7 @@ int * size;
  Experimental routine to track communicator splits in metadata 
  This will create a metadata item such as:
    Name : MPI_Comm 102140608
-   Value : 0 2 4 6
+   Value : 0 2 4 6 ... 
 ***************************************************************************/
 #ifdef TAU_EXP_TRACK_COMM
 void tau_exp_track_comm_split (MPI_Comm oldcomm, MPI_Comm newcomm) {
@@ -1108,6 +1130,7 @@ void tau_exp_track_comm_split (MPI_Comm oldcomm, MPI_Comm newcomm) {
   char buffer[16384];
   char catbuffer[2048];
   char namebuffer[512];
+  int limit;
 
   oldcommhandle = (void*)oldcomm;
   newcommhandle = (void*)newcomm;
@@ -1118,11 +1141,16 @@ void tau_exp_track_comm_split (MPI_Comm oldcomm, MPI_Comm newcomm) {
 
   /* initialize to empty */
   buffer[0] = 0;
-  for (i=0; i<newCommSize; i++) {
+
+  limit = (newCommSize < TAU_MAX_MPI_RANKS) ? newCommSize : TAU_MAX_MPI_RANKS;
+  for (i=0; i<limit; i++) {
     worldrank = translateRankToWorld(newcomm, i);
 /*     printf ("comm %p has world member %d\n", newcommhandle, worldrank); */
     sprintf (catbuffer, "%d ", worldrank);
     strcat(buffer, catbuffer);
+  }
+  if (limit < newCommSize) {
+    strcat(buffer, " ...");
   }
 
 /*   printf ("buffer is %s\n", buffer); */
@@ -1162,6 +1190,7 @@ int * flag;
   TAU_PROFILE_TIMER(tautimer, "MPI_Comm_test_inter()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Comm_test_inter( comm, flag );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1388,6 +1417,7 @@ MPI_Comm * comm_out;
   TAU_PROFILE_TIMER(tautimer, "MPI_Intercomm_create()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(local_comm);
   returnVal = PMPI_Intercomm_create( local_comm, local_leader, peer_comm, remote_leader, tag, comm_out );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1405,6 +1435,7 @@ MPI_Comm * comm_out;
   TAU_PROFILE_TIMER(tautimer, "MPI_Intercomm_merge()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Intercomm_merge( comm, high, comm_out );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1460,6 +1491,7 @@ int errorcode;
   TAU_PROFILE_TIMER(tautimer, "MPI_Abort()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Abort( comm, errorcode );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1523,6 +1555,7 @@ MPI_Errhandler * errhandler;
   TAU_PROFILE_TIMER(tautimer, "MPI_Errhandler_get()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Errhandler_get( comm, errhandler );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1556,6 +1589,7 @@ MPI_Errhandler errhandler;
   TAU_PROFILE_TIMER(tautimer, "MPI_Errhandler_set()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Errhandler_set( comm, errhandler );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1800,6 +1834,7 @@ MPI_Comm comm;
       TAU_TRACE_SENDMSG(tag, translateRankToWorld(comm, dest), typesize*count);
     }
   }
+  TAU_TRACK_COMM(comm);
   
   returnVal = PMPI_Bsend( buf, count, datatype, dest, tag, comm );
 
@@ -1824,6 +1859,7 @@ MPI_Request * request;
   TAU_PROFILE_TIMER(tautimer, "MPI_Bsend_init()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Bsend_init( buf, count, datatype, dest, tag, comm, request );
 
   if (TauEnv_get_track_message()) {
@@ -1918,6 +1954,7 @@ MPI_Request * request;
   TAU_PROFILE_TIMER(tautimer, "MPI_Recv_init()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Recv_init( buf, count, datatype, source, tag, comm, request );
 
   TAU_PROFILE_STOP(tautimer);
@@ -1946,6 +1983,7 @@ MPI_Request * request;
   TAU_PROFILE_TIMER(tautimer, "MPI_Send_init()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Send_init( buf, count, datatype, dest, tag, comm, request );
 
   /* we need to store the request and associate it with the size/tag so MPI_Start can 
@@ -2015,6 +2053,7 @@ MPI_Request * request;
     }
   }
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Ibsend( buf, count, datatype, dest, tag, comm, request );
   TAU_PROFILE_STOP(tautimer);
   return returnVal;
@@ -2032,6 +2071,7 @@ MPI_Status * status;
   TAU_PROFILE_TIMER(tautimer, "MPI_Iprobe()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Iprobe( source, tag, comm, flag, status );
 
   TAU_PROFILE_STOP(tautimer);
@@ -2065,6 +2105,7 @@ MPI_Request * request;
   PMPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 #endif /* DEBUG */
 
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Irecv( buf, count, datatype, source, tag, comm, request );
 
 #ifdef DEBUG
@@ -2115,6 +2156,7 @@ if (TauEnv_get_track_message()) {
   }
 }
 
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Irsend( buf, count, datatype, dest, tag, comm, request );
 
 
@@ -2145,6 +2187,7 @@ MPI_Request * request;
     }
   }
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Isend( buf, count, datatype, dest, tag, comm, request );
   TAU_PROFILE_STOP(tautimer);
   return returnVal;
@@ -2172,6 +2215,7 @@ MPI_Request * request;
     }
   }
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Issend( buf, count, datatype, dest, tag, comm, request );
   TAU_PROFILE_STOP(tautimer);
   return returnVal;
@@ -2191,6 +2235,7 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Pack()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Pack( inbuf, incount, type, outbuf, outcount, position, comm );
 
   TAU_PROFILE_STOP(tautimer);
@@ -2209,6 +2254,7 @@ int * size;
   TAU_PROFILE_TIMER(tautimer, "MPI_Pack_size()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Pack_size( incount, datatype, comm, size );
 
   TAU_PROFILE_STOP(tautimer);
@@ -2227,6 +2273,7 @@ MPI_Status * status;
   TAU_PROFILE_TIMER(tautimer, "MPI_Probe()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Probe( source, tag, comm, status );
 
   TAU_PROFILE_STOP(tautimer);
@@ -2250,26 +2297,27 @@ MPI_Status * status;
   TAU_PROFILE_TIMER(tautimer, "MPI_Recv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 
-if (TauEnv_get_track_message()) {
-  if (status == MPI_STATUS_IGNORE) {
-    status = &local_status;
+  if (TauEnv_get_track_message()) {
+    if (status == MPI_STATUS_IGNORE) {
+      status = &local_status;
+    }
   }
-}
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Recv( buf, count, datatype, source, tag, comm, status );
 
-if (TauEnv_get_track_message()) {
-  if (source != MPI_PROC_NULL && returnVal == MPI_SUCCESS) {
-    PMPI_Get_count( status, MPI_BYTE, &size );
+  if (TauEnv_get_track_message()) {
+    if (source != MPI_PROC_NULL && returnVal == MPI_SUCCESS) {
+      PMPI_Get_count( status, MPI_BYTE, &size );
 
-    /* note that status->MPI_COMM must == comm */
-    TAU_TRACE_RECVMSG(status->MPI_TAG,  translateRankToWorld(comm, status->MPI_SOURCE), size);
-    /*
-    prof_recv( procid_0, status->MPI_SOURCE,
+      /* note that status->MPI_COMM must == comm */
+      TAU_TRACE_RECVMSG(status->MPI_TAG,  translateRankToWorld(comm, status->MPI_SOURCE), size);
+      /*
+      prof_recv( procid_0, status->MPI_SOURCE,
 	       status->MPI_TAG, size, "MPI_Recv" );
-    */
+      */
+    }
   }
-}
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
@@ -2295,6 +2343,7 @@ MPI_Comm comm;
     }
   }
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Rsend( buf, count, datatype, dest, tag, comm );
   TAU_PROFILE_STOP(tautimer);
   return returnVal;
@@ -2316,6 +2365,7 @@ MPI_Request * request;
   TAU_PROFILE_TIMER(tautimer, "MPI_Rsend_init()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Rsend_init( buf, count, datatype, dest, tag, comm, request );
 
 if (TauEnv_get_track_message()) {
@@ -2348,6 +2398,7 @@ MPI_Comm comm;
     }
   }
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Send( buf, count, datatype, dest, tag, comm );
   TAU_PROFILE_STOP(tautimer);
   return returnVal;
@@ -2387,6 +2438,7 @@ MPI_Status * status;
   }
   
 
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Sendrecv( sendbuf, sendcount, sendtype, dest, sendtag, recvbuf, recvcount, recvtype, source, recvtag, comm, status );
 
   if (TauEnv_get_track_message()) {
@@ -2430,6 +2482,7 @@ MPI_Status * status;
     }
   }
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Sendrecv_replace( buf, count, datatype, dest, sendtag, source, recvtag, comm, status );
   
   if (TauEnv_get_track_message()) {
@@ -2463,6 +2516,7 @@ MPI_Comm comm;
     }
   }
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Ssend( buf, count, datatype, dest, tag, comm );
   
   TAU_PROFILE_STOP(tautimer);
@@ -2486,6 +2540,7 @@ MPI_Request * request;
   TAU_PROFILE_TIMER(tautimer, "MPI_Ssend_init()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Ssend_init( buf, count, datatype, dest, tag, comm, request );
 
 if (TauEnv_get_track_message()) {
@@ -2928,6 +2983,7 @@ MPI_Comm comm;
   TAU_PROFILE_TIMER(tautimer, "MPI_Unpack()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Unpack( inbuf, insize, position, outbuf, outcount, type, comm );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3097,6 +3153,7 @@ int * coords;
   TAU_PROFILE_TIMER(tautimer, "MPI_Cart_coords()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Cart_coords( comm, rank, maxdims, coords );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3155,6 +3212,7 @@ int * newrank;
   TAU_PROFILE_TIMER(tautimer, "MPI_Cart_map()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm_old);
   returnVal = PMPI_Cart_map( comm_old, ndims, dims, periods, newrank );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3172,6 +3230,7 @@ int * rank;
   TAU_PROFILE_TIMER(tautimer, "MPI_Cart_rank()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Cart_rank( comm, coords, rank );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3208,6 +3267,7 @@ MPI_Comm * comm_new;
   TAU_PROFILE_TIMER(tautimer, "MPI_Cart_sub()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Cart_sub( comm, remain_dims, comm_new );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3224,6 +3284,7 @@ int * ndims;
   TAU_PROFILE_TIMER(tautimer, "MPI_Cartdim_get()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Cartdim_get( comm, ndims );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3261,6 +3322,7 @@ MPI_Comm * comm_graph;
   TAU_PROFILE_TIMER(tautimer, "MPI_Graph_create()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm_old);
   returnVal = PMPI_Graph_create( comm_old, nnodes, index, edges, reorder, comm_graph );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3280,6 +3342,7 @@ int * edges;
   TAU_PROFILE_TIMER(tautimer, "MPI_Graph_get()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Graph_get( comm, maxindex, maxedges, index, edges );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3317,6 +3380,7 @@ int * neighbors;
   TAU_PROFILE_TIMER(tautimer, "MPI_Graph_neighbors()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Graph_neighbors( comm, rank, maxneighbors, neighbors );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3334,6 +3398,7 @@ int * nneighbors;
   TAU_PROFILE_TIMER(tautimer, "MPI_Graph_neighbors_count()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Graph_neighbors_count( comm, rank, nneighbors );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3351,6 +3416,7 @@ int * nedges;
   TAU_PROFILE_TIMER(tautimer, "MPI_Graphdims_get()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Graphdims_get( comm, nnodes, nedges );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3367,6 +3433,7 @@ int * top_type;
   TAU_PROFILE_TIMER(tautimer, "MPI_Topo_test()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  TAU_TRACK_COMM(comm);
   returnVal = PMPI_Topo_test( comm, top_type );
 
   TAU_PROFILE_STOP(tautimer);
@@ -3423,9 +3490,6 @@ int TauGetMpiRank(void)
   return rank;
 }
 
-#ifndef TAU_MAX_MPI_RANKS
-#define TAU_MAX_MPI_RANKS 8
-#endif /* ifndef */
 
 char * Tau_printRanks(void *comm_ptr) {
   /* Create an array of ranks and fill it in using MPI_Group_translate_ranks*/
