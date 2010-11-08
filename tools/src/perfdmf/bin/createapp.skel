@@ -15,7 +15,7 @@ if [ "x$machine" = "xx86_64" ] ; then
     MEMORY=-Xmx2000m
 fi
 JAVA_VERSION=`java -version 2>&1 | head -1 | cut -d '.' -f2`
-if [ $JAVA_VERSION = "4" ] ; then
+if [ "x$JAVA_VERSION" = "x4" ] ; then
         echo ""
         echo "Java 1.5 or newer is required to run perfdmf_createapp."
         echo "Please update your Java SDK to a newer version to use the newest version."
