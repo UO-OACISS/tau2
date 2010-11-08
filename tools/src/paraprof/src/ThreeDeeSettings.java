@@ -42,7 +42,26 @@ public class ThreeDeeSettings implements Cloneable {
     private int minTopoRange=0;
     private int maxTopoRange=100;
     
-    private Metric topoMetric=null;
+    private int minTopoValue=0;
+    private int maxTopoValue=0;
+    
+    public int getMinTopoValue() {
+		return minTopoValue;
+	}
+
+	public void setMinTopoValue(int minTopoValue) {
+		this.minTopoValue = minTopoValue;
+	}
+
+	public int getMaxTopoValue() {
+		return maxTopoValue;
+	}
+
+	public void setMaxTopoValue(int maxTopoValue) {
+		this.maxTopoValue = maxTopoValue;
+	}
+
+	private Metric topoMetric=null;
     private ValueType topoValueType = ValueType.EXCLUSIVE;
     private Function topoFunction = null;
     private String topoCart = null;
@@ -181,6 +200,9 @@ public class ThreeDeeSettings implements Cloneable {
         //newSettings.topoRanges = (int[]) this.topoRanges.clone();
         newSettings.minTopoRange=this.minTopoRange;
         newSettings.maxTopoRange=this.maxTopoRange;
+        
+        newSettings.minTopoValue=this.minTopoValue;
+        newSettings.maxTopoValue=this.maxTopoValue;
 
         newSettings.topoMetric= this.topoMetric;
         newSettings.topoCart=this.topoCart;

@@ -28,7 +28,7 @@ redirect=http://www.cs.uoregon.edu/research/paracomp/tau/${redirectfile}
 
 # Test for java 1.4+
 JAVA_VERSION=`java -version 2>&1 | head -1 | cut -d '.' -f2`
-if [ $JAVA_VERSION = "4" ] ; then
+if [  "x$JAVA_VERSION" = "x4" ] ; then
         echo ""
         echo "Java 1.5 or newer is required to run PerfExplorer."
         echo "Please update your Java SDK to a newer version to use PerfExplorer 2.0."
