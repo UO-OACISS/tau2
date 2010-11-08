@@ -11,8 +11,8 @@ use IO::Handle;
 
 
 
-use otf;
-my $manager = otf::OTF_FileManager_open ( 100 );
+use ebs2otf;
+my $manager = ebs2otf::OTF_FileManager_open ( 100 );
 #print $manager;
 
 my $streams = 0;
@@ -20,15 +20,15 @@ my $streams = 0;
 my $processes = 4;
 my $counterid = 5;
 
-my $writer = otf::OTF_Writer_open ("ebstrace.otf", $streams, $manager);
+my $writer = ebs2otf::OTF_Writer_open ("ebstrace.otf", $streams, $manager);
 
 my $firstTimestamp = -1;
 
-otf::OTF_Writer_setBufferSizes( $writer, 10*1024 );
+ebs2otf::OTF_Writer_setBufferSizes( $writer, 10*1024 );
 
-otf::OTF_Writer_writeDefCounterGroup( $writer, 0, 63, "the counters");
-#otf::OTF_Writer_writeDefTimerResolution( $writer, 0, 1e6);
-otf::OTF_Writer_writeDefTimerResolution( $writer, 0, 1e6);
+ebs2otf::OTF_Writer_writeDefCounterGroup( $writer, 0, 63, "the counters");
+#ebs2otf::OTF_Writer_writeDefTimerResolution( $writer, 0, 1e6);
+ebs2otf::OTF_Writer_writeDefTimerResolution( $writer, 0, 1e6);
 
 
 my $aggregate_to_routine = 0;
@@ -218,7 +218,7 @@ sub process_trace {
   $cpuid = $cpuid + 1;
 
   my $process_name = "Node $node, thread $thread";
-  otf::OTF_Writer_writeDefProcess( $writer, 0, $cpuid, $process_name, 0);
+  ebs2otf::OTF_Writer_writeDefProcess( $writer, 0, $cpuid, $process_name, 0);
 
   my $lasttimestamp;
 
@@ -244,7 +244,7 @@ sub process_trace {
 
 	  my $counterid = 0;
 	  foreach my $metric (@metrics) {
-	    otf::OTF_Writer_writeDefCounter( $writer, 0, $counterid, $metric, $otf::OTF_COUNTER_TYPE_ACC | $otf::OTF_COUNTER_SCOPE_START, 63, "#");
+	    ebs2otf::OTF_Writer_writeDefCounter( $writer, 0, $counterid, $metric, $ebs2otf::OTF_COUNTER_TYPE_ACC | $ebs2otf::OTF_COUNTER_SCOPE_START, 63, "#");
 	    $counterid++;
 	  }
 	}
@@ -293,7 +293,7 @@ sub process_trace {
       my @metricValues = split(" ",$metrics);
 
       for (my $metric = 0; $metric <= $#metricValues; $metric++) {
-	$rc = otf::OTF_Writer_writeCounter( $writer, $timestamp, $cpuid, $metric, $metricValues[$metric] );
+	$rc = ebs2otf::OTF_Writer_writeCounter( $writer, $timestamp, $cpuid, $metric, $metricValues[$metric] );
 	if ($rc == 0) {
 	  die "error in OTF_Writer_writeCounter\n";
 	}
@@ -355,13 +355,13 @@ sub process_trace {
 	foreach my $e (@tostop) {
 #	  print "\nstopping $e\n";
 #	  my $event_id = getEventId($e);
-	  otf::OTF_Writer_writeLeave( $writer, $timestamp, $e, $cpuid, 0);
+	  ebs2otf::OTF_Writer_writeLeave( $writer, $timestamp, $e, $cpuid, 0);
 	}
 
 	foreach my $e (@tostart) {
 #	  print "\nstarting $e\n";
 #	  my $event_id = getEventId($e);
-	  otf::OTF_Writer_writeEnter( $writer, $timestamp, $e, $cpuid, 0);
+	  ebs2otf::OTF_Writer_writeEnter( $writer, $timestamp, $e, $cpuid, 0);
 	}
 
       }
@@ -381,7 +381,7 @@ sub process_trace {
 
   foreach my $e (@otf_callstack) {
     my $event_id = getEventId($e);
-    otf::OTF_Writer_writeLeave( $writer, $lasttimestamp, $event_id, $cpuid, 0);
+    ebs2otf::OTF_Writer_writeLeave( $writer, $lasttimestamp, $event_id, $cpuid, 0);
   }
 
 
@@ -415,7 +415,7 @@ sub main {
   my $groupidx = 20;
   my %grouphash;
 
-  otf::OTF_Writer_writeDefFunctionGroup( $writer, 0, 16, "standard functions");
+  ebs2otf::OTF_Writer_writeDefFunctionGroup( $writer, 0, 16, "standard functions");
 
   my ($name, $gid, $fid);
   while (($name, $fid) = each(%otf_function_map)) {
@@ -423,7 +423,7 @@ sub main {
 
 
     ## all in "standard functions"
-    #otf::OTF_Writer_writeDefFunction( $writer, 0, $fid, $name, 16, 0);
+    #ebs2otf::OTF_Writer_writeDefFunction( $writer, 0, $fid, $name, 16, 0);
 
     ## each in its own group
     # if ($name =~ m/\@\@\@/) {
@@ -431,8 +431,8 @@ sub main {
     #   $name = $func;
     # }
     # $gid = $fid + 100;
-    # otf::OTF_Writer_writeDefFunctionGroup( $writer, 0, $gid, $name);
-    # otf::OTF_Writer_writeDefFunction( $writer, 0, $fid, $name, $gid, 0);
+    # ebs2otf::OTF_Writer_writeDefFunctionGroup( $writer, 0, $gid, $name);
+    # ebs2otf::OTF_Writer_writeDefFunction( $writer, 0, $fid, $name, $gid, 0);
 
     ## per file
     $gid = 16;
@@ -448,18 +448,18 @@ sub main {
     	$groupidx = $groupidx+1;
     	$grouphash{$file} = $gid;
 
-    	otf::OTF_Writer_writeDefFunctionGroup( $writer, 0, $gid, $file);
+    	ebs2otf::OTF_Writer_writeDefFunctionGroup( $writer, 0, $gid, $file);
       }
     }
 
-    otf::OTF_Writer_writeDefFunction( $writer, 0, $fid, $name, $gid, 0);
+    ebs2otf::OTF_Writer_writeDefFunction( $writer, 0, $fid, $name, $gid, 0);
 
   }
 
 
 
 
-  otf::OTF_Writer_close( $writer );
+  ebs2otf::OTF_Writer_close( $writer );
 }
 
 main
