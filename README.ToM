@@ -1,13 +1,16 @@
 TAUoverMRNet 2.0-alpha build instructions:
 ==========================================
 By: Chee Wai Lee (cheelee@cs.uoregon.edu)
-Last Updated: 9/7/2010
+Last Updated: 11/8/2010
 
 Introduction:
 =============
      This documents the steps required to build the alpha re-engineered 
      implementation of TAUoverMRNet (ToM) with TAU and a beta (unreleased)
      copy of MRNet 3.0.
+
+     Please be reminded again. This feature set is still in alpha 
+     development and is not intended to be used and supported in production.
 
 Software Requirements:
 ======================
