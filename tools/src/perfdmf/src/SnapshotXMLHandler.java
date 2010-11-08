@@ -195,7 +195,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
     private void handleDefinitions(Attributes attributes) {
         String threadID = attributes.getValue("thread");
         if (threadID.equals("*")) {
-            System.out.println("Unified format found!");
+	    //            System.out.println("Unified format found!");
             unified = true;
             unifiedDefinitions = new ThreadData();
             currentThread = unifiedDefinitions;
