@@ -42,24 +42,58 @@ public class ThreeDeeSettings implements Cloneable {
     private int minTopoRange=0;
     private int maxTopoRange=100;
     
-    private int minTopoValue=0;
-    private int maxTopoValue=0;
+    private int[] topoAxesVisible={-1,-1,-1};
+    public int getTopoVisAxis(int dex){
+    	return topoAxesVisible[dex];
+    }
+    public void setTopoVisAxis(int axis,int dex){
+    	topoAxesVisible[dex]=axis;
+    }
     
-    public int getMinTopoValue() {
-		return minTopoValue;
-	}
+    public int[] getTopoVisAxes(){
+    	return topoAxesVisible;
+    }
+    
+    
+//    
+//    private int minTopoValue=0;
+//    private int maxTopoValue=0;
+    
+//    private float minTopoShown=0;
+//    private float maxTopoShown=0;
+//    
+//    
+//    public float getMinTopoShown() {
+//		return minTopoShown;
+//	}
+//
+//	public void setMinTopoShown(float minTopoShown) {
+//		this.minTopoShown = minTopoShown;
+//	}
+//
+//	public float getMaxTopoShown() {
+//		return maxTopoShown;
+//	}
+//
+//	public void setMaxTopoShown(float maxTopoShown) {
+//		this.maxTopoShown = maxTopoShown;
+//	}
 
-	public void setMinTopoValue(int minTopoValue) {
-		this.minTopoValue = minTopoValue;
-	}
-
-	public int getMaxTopoValue() {
-		return maxTopoValue;
-	}
-
-	public void setMaxTopoValue(int maxTopoValue) {
-		this.maxTopoValue = maxTopoValue;
-	}
+//	public int getMinTopoValue() {
+//		return minTopoValue;
+//	}
+//
+//	public void setMinTopoValue(int minTopoValue) {
+//		this.minTopoValue = minTopoValue;
+//	}
+//
+//	public int getMaxTopoValue() {
+//		return maxTopoValue;
+//	}
+//
+//	public void setMaxTopoValue(int maxTopoValue) {
+//		this.maxTopoValue = maxTopoValue;
+//	}
 
 	private Metric topoMetric=null;
     private ValueType topoValueType = ValueType.EXCLUSIVE;
@@ -201,8 +235,8 @@ public class ThreeDeeSettings implements Cloneable {
         newSettings.minTopoRange=this.minTopoRange;
         newSettings.maxTopoRange=this.maxTopoRange;
         
-        newSettings.minTopoValue=this.minTopoValue;
-        newSettings.maxTopoValue=this.maxTopoValue;
+//        newSettings.minTopoValue=this.minTopoValue;
+//        newSettings.maxTopoValue=this.maxTopoValue;
 
         newSettings.topoMetric= this.topoMetric;
         newSettings.topoCart=this.topoCart;
@@ -215,6 +249,7 @@ public class ThreeDeeSettings implements Cloneable {
         newSettings.scatterEye = this.scatterEye;
 
         newSettings.selections = (int[]) this.selections.clone();
+        newSettings.topoAxesVisible=(int[])this.topoAxesVisible.clone();
 
         return newSettings;
     }

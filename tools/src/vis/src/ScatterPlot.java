@@ -59,6 +59,15 @@ public class ScatterPlot implements Plot {
     private int maxVis = 100;
     boolean isTopo=false;
 
+    private float minShown;
+    private float maxShown;
+    public float getMinShown(){
+    	return minShown;
+    }
+    public float getMaxShown(){
+    	return maxShown;
+    }
+    
 //    private void resetVisRange(){
 //    	minVis=0;
 //    	maxVis=100;
@@ -75,6 +84,19 @@ public class ScatterPlot implements Plot {
     	maxVis = max;
     }
     
+//    float tmpMin;
+//    float tmpMax;
+//    public void setMinMax(float min, float max){
+//    	tmpMin=min;
+//    	tmpMax=max;
+//    }
+//    float rangeMin;
+//    float rangeMax;
+//    public void setVisRangeValues(float min, float max){
+//    	rangeMin=min;
+//    	rangeMax=max;
+//    }
+    
     public void setSize(float xSize, float ySize, float zSize) {
         this.xSize = xSize;
         this.ySize = ySize;
@@ -88,12 +110,26 @@ public class ScatterPlot implements Plot {
         this.dirty = true;
     }
 
+//    public void clearValues(){
+//    	this.values=null;
+//    }
+    float[][] origValues=null;
     /**
      * Sets the values.  The 2nd dimension must be of size 4 (one value for each axis).
      * @param values
      */
     public void setValues(float values[][]) {
         this.values = values;
+        
+        if(isTopo)
+        {
+        	origValues=new float[values.length][];
+        	for(int i=0;i<values.length;i++){
+        		origValues[i]=values[i].clone();
+        	}
+        }
+        else
+        	origValues=null;
         processValues();
         isTopo=false;
         this.dirty = true;
@@ -123,6 +159,11 @@ public class ScatterPlot implements Plot {
     public void setAxes(Axes axes) {
         this.axes = axes;
         axes.setSize(xSize, ySize, zSize);
+    }
+    
+    private int[] topoVis=null;
+    public void setTopoVis(final int [] tv){
+    	topoVis=tv;
     }
 
     /**
@@ -265,6 +306,8 @@ public class ScatterPlot implements Plot {
         norms[2] = zSize;
         norms[3] = 1.0f;
 
+        float mincut=0;
+        float maxcut=0;
         for (int f = 0; f < 4; f++) {
             float maxValue = Float.MIN_VALUE;
             float minValue = Float.MAX_VALUE;
@@ -273,10 +316,15 @@ public class ScatterPlot implements Plot {
                 minValue = Math.min(minValue, values[i][f]);
             }
             
+//            if(maxValue!=tmpMax)
+//            	System.out.println("Bad Max: "+maxValue+" vs. "+tmpMax);
+//            if(minValue!=tmpMin)
+//            	System.out.println("Bad Min: "+minValue+" vs. "+tmpMin);
+            
             boolean useMinCutoff = false;
             boolean useMaxCutoff = false;
-            float mincut=0;
-            float maxcut=0;
+            mincut=0;
+            maxcut=0;
             if(isTopo&&f==3)
             {
             	if(minVis>0)
@@ -285,11 +333,15 @@ public class ScatterPlot implements Plot {
             		float tmp = maxValue-minValue;
             		mincut=minValue+tmp*(minVis/100.0f);
             	}
+            	else
+            		mincut=minValue;
             	if(maxVis<100){
             		useMaxCutoff=true;
             		float tmp = maxValue-minValue;
             		maxcut=minValue+tmp*(maxVis/100.0f);
             	}
+            	else
+            		maxcut=maxValue;
             
 
             }
@@ -320,7 +372,10 @@ public class ScatterPlot implements Plot {
                 		continue;
                 	}
                 }
-                
+//                if(isTopo&&i>=0&&i<4){
+//                	continue;
+//                }
+//                else
                 {
                     if (normalized) {
                         values[i][f] = (values[i][f] - minValue) / (maxValue - minValue) * norms[f];
@@ -331,8 +386,26 @@ public class ScatterPlot implements Plot {
             }
 
         }
+        minShown=mincut;
+        maxShown=maxcut;
     }
 
+    private boolean showCoord(int dex){
+    	if(Float.compare(values[dex][3],Float.NaN)==0)
+    		return false;
+    	if(topoVis==null||origValues==null)
+    		return true;
+    	
+    	//System.out.println(topoVis[0]+" "+topoVis[1]+" "+topoVis[2]+" vs "+origValues[dex][0]+" "+origValues[dex][1]+" "+origValues[dex][2]);
+    	
+    	for(int i=0;i<3;i++){
+    		if(topoVis[i]!=-1&&topoVis[i]!=origValues[dex][i])
+    			return false;
+    	}
+    	
+    	return true;
+    }
+    
     private void privateRender(GLAutoDrawable glDrawable) {
         if (values == null)
             return;
@@ -354,7 +427,7 @@ public class ScatterPlot implements Plot {
             gl.glPointSize(actualSize);
             gl.glBegin(GL.GL_POINTS);
             for (int i = 0; i < values.length; i++) {
-            	if(Float.compare(values[i][3],Float.NaN)!=0){
+            	if(showCoord(i)){
                 if (colorScale != null) {
                     Color color = colorScale.getColor(values[i][3]);
                     gl.glColor3f(color.getRed() / 255.0f, color.getGreen() / 255.0f, color.getBlue() / 255.0f);
@@ -375,7 +448,7 @@ public class ScatterPlot implements Plot {
             glu.gluQuadricNormals(qobj, GLU.GLU_SMOOTH);
 
             for (int i = 0; i < values.length; i++) {
-            	if(Float.compare(values[i][3],Float.NaN)!=0){
+            	if(showCoord(i)){
                 gl.glPushMatrix();
                 gl.glTranslatef(values[i][0], values[i][1], values[i][2]);
                 if (colorScale != null) {
