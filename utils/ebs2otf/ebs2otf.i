@@ -1,5 +1,5 @@
-/* otf.i */
-%module otf
+/* ebs2otf.i */
+%module ebs2otf
 %{
   #include "otf.h"
 %}
@@ -26,4 +26,4 @@
 %include "OTF_HandlerArray.h"
 %include "OTF_RBuffer.h"
 %include "OTF_WBuffer.h"
-
+%include "OTF_KeyValue.h"
