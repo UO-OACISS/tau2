@@ -100,6 +100,9 @@ for arg in "$@"; do
     echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
     echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
     echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
+    echo "-otfinc=<dir> ....... Specify location of stand-alone OTF header files."
+    echo "-otflib=<dir> ...... Specify location of stand-alone OTF library files."
+    echo "-ebs2otf ............... Enable conversion of EBS traces to OTF format."
     echo "-nocomm  ........ Disable tracking communication events in MPI library."
     echo "-hpctoolkit-src-dir=<dir> .......... Specify patched HPCToolkit source."
     echo "-hpctoolkit-install-dir=<dir> . Specify patched HPCToolkit Install dir."
@@ -193,6 +196,9 @@ for arg in "$@"; do
     echo "-bfd=<dir | download> ............ Specify a BFD directory or download."
     echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
     echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
+    echo "-otfinc=<dir> ....... Specify location of stand-alone OTF header files."
+    echo "-otflib=<dir> ...... Specify location of stand-alone OTF library files."
+    echo "-ebs2otf ............... Enable conversion of EBS traces to OTF format."
     echo "-mpi .......................... Specify use of TAU MPI wrapper library."
     echo "-mpiinc=<dir> ............. Specify location of MPI include dir and use"
     echo "                           the TAU MPI Profiling and Tracing Interface."
@@ -425,6 +431,10 @@ pdt=no
 armci=no
 vtf=no
 otf=no
+otfdir=
+otfinc=
+otflib=
+ebs2otf=no
 opari=no
 epilog=no
 hpctoolkit=no
@@ -954,6 +964,31 @@ for arg in "$@"; do
       fi
     shift
     ;;
+
+  -otfinc=*)
+      otfinc=`echo $arg | sed -e 's/-otfinc=//'`
+      if [ ! -d $otfinc ]
+      then
+        echo "Error: Cannot access OTF include directory $otfinc"
+        exit 1
+      fi
+      shift
+      ;;
+
+  -otflib=*)
+      otflib=`echo $arg | sed -e 's/-otflib=//'`
+      if [ ! -d $otflib ]
+      then
+        echo "Error: Cannot access OTF library directory $otflib"
+        exit 1
+      fi
+      shift
+      ;;
+
+  -ebs2otf)
+      ebs2otf=yes
+      shift
+      ;;
 
   -dyninst=*)
       dyninst=yes
@@ -1542,11 +1577,15 @@ if [ ! -f $BINTARGET/jracy ] ; then
     cd $BINTARGET/; ln -s paraprof jracy; cd ${tauroot}; 
 fi
 
+#installs the tau_java handeler
+cat ${tauroot}/tools/src/tau_java.skel | sed -e 's,@JARTARGET@,'$JARTARGET',' -e 's,@JDKDIR@,'$jdkdir',' > $BINTARGET/tau_java
+chmod a+rx $BINTARGET/tau_java
 
 cp ${tauroot}/tools/src/paraprof/bin/paraprof.jar $JARTARGET
 cp ${tauroot}/tools/src/perfdmf/bin/perfdmf.jar $JARTARGET
 cp ${tauroot}/tools/src/perfexplorer/perfexplorer.jar $JARTARGET
 cp ${tauroot}/src/Profile/TAU.jar $JARTARGET
+cp ${tauroot}/src/Profile/TauJVMTI.jar $JARTARGET
 cp ${tauroot}/tools/src/perfexplorer/perfexplorer-1.4.jar $JARTARGET
 cp ${tauroot}/tools/src/vis/bin/vis.jar $JARTARGET
 cp ${tauroot}/tools/src/common/bin/tau-common.jar $JARTARGET
@@ -1563,8 +1602,9 @@ cp ${tauroot}/tools/src/contrib/postgresql.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/xerces.jar $JARTARGET
 cp ${tauroot}/tools/src/common/resources/tau16x16.gif $JARTARGET
 
-# install the perl script for ebs post-processing in the bin dir
+# install the perl scripts for ebs post-processing in the bin dir
 cp ${tauroot}/tools/src/tau_ebs_process.pl $BINTARGET
+cp ${tauroot}/utils/ebs2otf/tau_ebs2otf.pl $BINTARGET
 
 case $machine in
     
@@ -5213,6 +5253,41 @@ if [ $otf = yes ] ; then
   fi  
 fi
 
+if [ $ebs2otf = yes ] ; then
+  if [ -f utils/ebs2otf/ebs2otf.so ] ; then
+      touch utils/ebs2otf/ebs2otf.so
+  fi
+  if [ $otf = yes ] ; then
+      echo "Warning: -otf option enables TAU Tracing as a default. EBS will only work with TAU profiles. Please make sure Profiles are enabled before use."
+      if [ "$otflib" = "" ] ; then
+	  otflib="$otfdir/${architecture}/lib"
+	  echo "OTF Library implicitly set to $otflib"
+      fi
+      if [ "$otfinc" = "" ] ; then
+	  otfinc="$otfdir/include"
+	  echo "OTF Header directory implicitly set to $otfinc"
+      fi
+  fi 
+  if [ ! -d $otflib ]
+      then
+      echo "Error: No available OTF support. Library not found at $otflib."
+      exit 1
+  fi
+  if [ ! -d $otfinc ]
+      then
+      echo "Error: No available OTF support. Headers not found at $otfinc."
+      exit 1
+  fi
+  if [ ! -f $otfinc/OTF_Version.h ] ; then
+      echo "Error: OTF_Version.h cannot be found. EBS will not support this version of OTF."
+      exit 1
+      # *CWL* Need version control code here. Still trying to decide the
+      #    best way about it. The above conditional will at least trim away
+      #    ancient versions of OTF.
+  fi
+
+  fixmakeargs="$fixmakeargs EBS2OTF otflib=$otflib otfinc=$otfinc"
+fi
 
 if [ $pdt_cxx_compiler != default ] ; then
 # Check if they specified -pdt_c++=/usr/bin/g++ instead of just g++ 
