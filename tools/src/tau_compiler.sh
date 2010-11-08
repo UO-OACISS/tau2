@@ -1224,6 +1224,7 @@ if [ $optHeaderInst == $TRUE ]; then
 	    tauCmd="$tauCmd $optTau $optTauSelectFile"
 	    evalWithDebugMessage "$tauCmd" "Instrumenting header with TAU"
 	    $headerreplacer $pdbFile $header $headerInstDir/${id}_tau_${filebase} > $headerInstDir/${id}_tau_hr_${filebase}
+			cp $header $headerInstDir
 	    idcounter=idcounter+1
 	done
 
