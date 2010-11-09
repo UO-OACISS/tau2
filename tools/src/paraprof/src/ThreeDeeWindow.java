@@ -360,6 +360,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         scatterPlot.setColorScale(colorScale);
         scatterPlot.setVisRange(settings.getMinTopoRange(), settings.getMaxTopoRange() );
         plot = scatterPlot;
+        
         //settings.setMinTopoShown(scatterPlot.getMinShown());
         //settings.setMaxTopoShown(scatterPlot.getMaxShown());
     }
@@ -1411,6 +1412,22 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     }
     public String getSelectedMaxTopoValue(){
     	return getSelectedTopoValue(scatterPlot.getMaxShown());
+    }
+    
+    public String getStatMean(){
+    	if(scatterPlot!=null)
+    		return getSelectedTopoValue(scatterPlot.getStatMean());
+    	else return getSelectedTopoValue(Float.NaN);
+    }
+    public String getStatMax(){
+    	if(scatterPlot!=null)
+    		return getSelectedTopoValue(scatterPlot.getStatMax());
+    	else return getSelectedTopoValue(Float.NaN);
+    }
+    public String getStatMin(){
+    	if(scatterPlot!=null)
+    		return getSelectedTopoValue(scatterPlot.getStatMin());
+    	else return getSelectedTopoValue(Float.NaN);
     }
     
     private String getSelectedTopoValue(float val){
