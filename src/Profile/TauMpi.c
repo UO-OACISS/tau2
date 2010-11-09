@@ -316,6 +316,7 @@ char *note;
     othertag = status->MPI_TAG;
     /* post the receive message */
     TAU_TRACE_RECVMSG(othertag, translateRankToWorld(rq->comm, otherid), rq->size);
+    TAU_WAIT_DATA(rq->size);
   }
 
   if (rq->is_persistent == 0) {
@@ -3495,13 +3496,14 @@ char * Tau_printRanks(void *comm_ptr) {
   /* Create an array of ranks and fill it in using MPI_Group_translate_ranks*/
   /* Fill in a character array that we can append to the name and make it accessible using a map */
    
-  MPI_Comm comm = (MPI_Comm) comm_ptr;
   int i, limit, size;
   char name[16384];
   char rankbuffer[256];
   int worldrank;
+  MPI_Comm comm = (MPI_Comm) comm_ptr;
   memset(name, 0, 16384);
-  MPI_Comm_size(comm, &size);
+  
+  PMPI_Comm_size(comm, &size);
   limit = (size < TAU_MAX_MPI_RANKS) ? size : TAU_MAX_MPI_RANKS;
   for ( i = 0; i < limit; i++) {
     worldrank = translateRankToWorld(comm, i);
