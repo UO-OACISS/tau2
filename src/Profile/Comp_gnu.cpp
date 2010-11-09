@@ -576,13 +576,11 @@ extern "C" void _cyg_profile_func_enter(void* func, void* callsite) {
 }
 
 extern "C" void __pat_tp_func_entry(const void *ea, const void *ra) {
-  printf("__pat_tp_func_entry: ea = %p, ra = %p\n", ea, ra);
   __cyg_profile_func_enter((void *)ea, (void *)ra);
   
 }
 
 extern "C" void __pat_tp_func_return(const void *ea, const void *ra) {
-  printf("__pat_tp_func_return: ea = %p, ra = %p\n", ea, ra);
   __cyg_profile_func_enter((void *)ea, (void *)ra);
 }
 
