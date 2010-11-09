@@ -657,6 +657,9 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 	                    }else axisLabels[idex].setText(labelString+": "+val);
 	                    
 	                    topoValField.setText(window.getStatMean());
+	                    if(allAxesOn()){
+	                    	topoValLabel.setText(CV);
+	                    }else topoValLabel.setText(ACV);
 	                    		//"Min: "+window.getStatMin()+" Max: "+window.getStatMax()+" Mean: "+window.getStatMean());
 					 
 					 }
@@ -784,7 +787,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
     
     JCheckBox lockBox;// = new JCheckBox();
     JTextField topoValField;
-    //int lockDiff=0;
+    JLabel topoValLabel;
     private JPanel createTopoPanel() {
 
         JPanel panel = new JPanel();
@@ -839,10 +842,13 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         addCompItem(panel, axisLabels [2]=new JLabel("Z Axis"), gbc, 0, 5, 1, 1);
         addCompItem(panel, createTopoAxisSelectionPanel(2), gbc, 1, 5, 1, 1);
         
-        addCompItem(panel,new JLabel("Average Visible: "),gbc,0,6,1,1);
+        addCompItem(panel,topoValLabel=new JLabel("Average Color Value: "),gbc,0,6,1,1);
         addCompItem(panel,topoValField=new JTextField(),gbc,1,6,1,1);
         topoValField.setEditable(false);
         topoValField.setText(window.getStatMean());
+        if(allAxesOn()){
+        	topoValLabel.setText(CV);
+        }else topoValLabel.setText(ACV);
         //topoValField.setText("Min: "+window.getStatMin()+" Max: "+window.getStatMax()+" Mean: "+window.getStatMean());
         
         gbc.weightx = 0;
@@ -1163,6 +1169,27 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         minTopoField.setText(window.getSelectedMinTopoValue());
         maxTopoField.setText(window.getSelectedMaxTopoValue());
         topoValField.setText(window.getStatMean());
+        if(allAxesOn()){
+        	topoValLabel.setText(CV);
+        }else topoValLabel.setText(ACV);
+    }
+    private static final String CV = "Color Value: ";
+    private static final String ACV ="Avg Color Value: ";
+    private boolean allAxesOn(){
+    	int numdis=0;
+    	int numSet=0;
+    	for(int i=0;i<axisSliders.length;i++){
+    		if(!axisSliders[i].isEnabled())
+    			numdis++;//continue;
+    		if(axisSliders[i].getValue()>-1)
+    			numSet++;//return false;
+    	}
+
+    	if(numdis==axisSliders.length)return true;
+    	if(numSet==0)return false;
+    	if(axisSliders.length-numdis==numSet)
+    		return true;
+    	return false;
     }
 
     private void addCompItem(JPanel jPanel, Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
