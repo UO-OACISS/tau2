@@ -5507,6 +5507,9 @@ if [ $dyninst = yes ] ; then
     if [ ! -d $dyninstdir/$PLATFORM/lib/libcommon.so ] ; then
 	fixmakeargs="$fixmakeargs DYNINST6"
     fi
+    if [ ! -d $dyninstdir/$PLATFORM/lib/libparseAPI.so ] ; then
+	fixmakeargs="$fixmakeargs DYNINST7"
+    fi
     if [ `grep isStaticExecutable $dyninstdir/include/* | wc -l` = 0 ]; then
 	fixmakeargs="$fixmakeargs DYNINST_STATIC_REWRITING_UNSUPPORTED"
     fi
