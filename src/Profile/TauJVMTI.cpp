@@ -250,7 +250,9 @@ TAUJVMTI_native_exit(JNIEnv *env, jclass klass, jobject thread, jint cnum, jint 
             if (gdata->vm_is_initialized) {
 		int tid = JavaThreadLayer::GetThreadId(thread);
 		unique_method_id = make_unique_method_id(mnum, cnum);
-		TAU_MAPPING_PROFILE_STOP(tid);
+		TAU_MAPPING_OBJECT(TauMethodName=NULL);
+		TAU_MAPPING_LINK(TauMethodName, unique_method_id);
+		TAU_MAPPING_PROFILE_STOP_TIMER(TauMethodName, tid);
             }
         }
     } exit_critical_section(gdata->jvmti);
