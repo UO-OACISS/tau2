@@ -2,7 +2,7 @@
 **                      TAU Portable Profiling Package                     **
 **                      http://tau.uoregon.edu                             **
 *****************************************************************************
-**    Copyright 1997-2010						   **
+**    Copyright 1997-2011						   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Research Centre Juelich, Germany                                     **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
@@ -10,6 +10,18 @@
 
 Change log:
 ------------
+Version 2.20 changes (from 2.20):
+1. Added support for GPGPUs using tau_exec -cuda and tau_exec -opencl. Configure with -cuda=<dir>.
+2. Added support for 3D topology displays in paraprof. 
+3. Added support for tracking per-communicator performance data -PROFILECOMMUNICATORS.
+4. Added support for binary rewriting of static executables using DyninstAPI 7.0. 
+5. Added support for derived metrics, cut, copy and paste of metrics in paraprof, perfexplorer.
+6. Added support for sampling based measurements in tau_exec -ebs* (README.sampling).
+7. Added support for ARMCI profiling (GA v5.0) in tau_exec -armci. Configure with -armci=<dir>.
+8. Added support for loop level instrumentation in the binary rewriter (tau_run a.out -o a.i -f select.tau).
+9. Added preliminary support for Eclipse PTP remote components. 
+10. Integrated tau_exec and tau_wrap (tau_exec -loadlib=<dir>/libwrapped.so) for instrumenting an external library.
+
 Version 2.19 changes (from 2.18):
 1. Added support for Chapel.
 2. Added support for UPC (Berkeley upcc compiler, GASP, supports -optCompInst).
