@@ -3979,7 +3979,7 @@ case $machine in
 	;;
 
      default)
-	echo "fix make args $fixmakeargs"
+	#echo "fix make args $fixmakeargs"
 	fixmakeargs="arch=$machine $fixmakeargs"
 	;;
 
@@ -5504,14 +5504,17 @@ if [ $dyninst = yes ] ; then
     if [ ! -d $dyninstdir/lib ] ; then
 	fixmakeargs="$fixmakeargs DYNINST41"
     fi
-    if [ ! -d $dyninstdir/$PLATFORM/lib/libcommon.so ] ; then
-	fixmakeargs="$fixmakeargs DYNINST6"
-    fi
     if [ `grep isStaticExecutable $dyninstdir/include/* | wc -l` = 0 ]; then
 	fixmakeargs="$fixmakeargs DYNINST_STATIC_REWRITING_UNSUPPORTED"
     fi
     if [ ! -d $dyninstdir/src/include -o ! -d $dyninstdir/include ] ; then
 	fixmakeargs="$fixmakeargs DYNINST5.2"
+    fi
+    if [ -r $dyninstdir/$PLATFORM/lib/libcommon.so ] ; then
+	fixmakeargs="$fixmakeargs DYNINST6"
+    fi
+    if [ -r $dyninstdir/$PLATFORM/lib/libparseAPI.so ] ; then
+	fixmakeargs="$fixmakeargs DYNINST7"
     fi
 fi
 

@@ -103,6 +103,7 @@ SELECTFILE 	= tau_selectfile
 #DYNINST#DYNLIBS 	= -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -ldyninstAPI -liberty -lelf #ENDIF#
 #DYNINST5.2#DYNLIBS 	= -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -L$(DYNINSTDIR)/src/$(DYNINST_PLATFORM)/lib -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -ldyninstAPI -lelf -lcommon -lsymtabAPI $(DWARFOPTS) -ldwarf -liberty#ENDIF#
 #DYNINST6#DYNLIBS 	= -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -L$(DYNINSTDIR)/src/$(DYNINST_PLATFORM)/lib -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -ldyninstAPI -lelf -lcommon -lsymtabAPI $(DWARFOPTS) -ldwarf -liberty -linstructionAPI #ENDIF#
+#DYNINST7#DYNLIBS 	= -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -L$(DYNINSTDIR)/src/$(DYNINST_PLATFORM)/lib -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -ldyninstAPI -lelf -lcommon -lparseAPI -lsymtabAPI $(DWARFOPTS) -ldwarf -liberty -linstructionAPI #ENDIF#
 #SP1#DYNLIBS 	= -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -ldyninstAPI #ENDIF#
 #SGIMP#DYNLIBS 	= -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -ldyninstAPI $(DWARFOPTS) -ldwarf -lelf#ENDIF#
 # -lelf is for Solaris only
@@ -244,20 +245,26 @@ tau_instrumentor.o: tau_instrumentor.cpp
 tau_header_list: tau_header_list.cpp
 		$(PDT_CXX_COMP) $(PDT_CFLAGS) -I$(PDTDIR)/include tau_header_list.cpp -o $@ $(PDTOPTS) -lm $(LEXTRA) 
 
-tau_selectfile: tau_selectfile.cpp tau_selective_dyn.o
-		$(PDT_CXX_COMP) $(PDT_CFLAGS) -I$(PDTDIR)/include tau_selectfile.cpp tau_selective_dyn.o -o $@ $(PDTOPTS) -lm $(LEXTRA) 
+tau_selectfile: tau_selectfile.o tau_selective_dyn.o tau_instrument.dyn.o
+		$(PDT_CXX_COMP) tau_selectfile.o tau_selective_dyn.o tau_instrument.dyn.o -o $@ $(PDTOPTS) -lm $(LEXTRA) 
+
+tau_selectfile.o: tau_selectfile.cpp
+		$(PDT_CXX_COMP) $(PDT_CFLAGS) -I$(PDTDIR)/include -c tau_selectfile.cpp 
 
 tau_instrument.o: tau_instrument.cpp 
 		$(PDT_CXX_COMP) $(PDT_CFLAGS) -I$(PDTDIR)/include -c tau_instrument.cpp
 
+tau_instrument.dyn.o: tau_instrument.dyn.cpp 
+		$(PDT_CXX_COMP) $(PDT_CFLAGS) -DTAU_DYNINST -DTAU_DYNINST41PLUS -I$(PDTDIR)/include -c tau_instrument.dyn.cpp -o tau_instrument.dyn.o
+
 tau_selective.o: tau_selective.cpp 
 		$(PDT_CXX_COMP) $(PDT_CFLAGS) -I$(PDTDIR)/include -c tau_selective.cpp
 
-tau_selective_dyn.o: tau_selective.cpp 
-		$(PDT_CXX_COMP) $(PDT_CFLAGS) -DTAU_DYNINST -DTAU_DYNINST41PLUS  -I$(PDTDIR)/include -c tau_selective.cpp -o tau_selective_dyn.o
+tau_selective_dyn.o: tau_selective.dyn.cpp 
+		$(PDT_CXX_COMP) $(PDT_CFLAGS) -DTAU_DYNINST -DTAU_DYNINST41PLUS  -I$(PDTDIR)/include -c tau_selective.dyn.cpp -o tau_selective_dyn.o
 
-tau_run: 	tau_run.o tau_selective_dyn.o  
-		$(CXX) $(CFLAGS) tau_run.o tau_selective_dyn.o -o $@ $(DYNLIBS) $(LEXTRA) 
+tau_run: 	tau_run.o tau_selective_dyn.o  tau_instrument.dyn.o
+		$(CXX) $(CFLAGS) tau_run.o tau_selective_dyn.o tau_instrument.dyn.o -o $@ $(DYNLIBS) $(LEXTRA) 
 
 tau_run.o: 	tau_run.cpp
 		$(CXX) $(CFLAGS) $(DYNINC) -DTAU_DYNINST -DTAU_DYNINST41PLUS -c tau_run.cpp
