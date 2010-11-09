@@ -390,7 +390,44 @@ public class ScatterPlot implements Plot {
         maxShown=maxcut;
     }
 
+    
+    private float statMin=Float.MAX_VALUE;
+    private float statMax=Float.MIN_VALUE;
+    private int statCount=0;
+    private float statAcc=0;
+    
+    public float getStatMean(){
+    	if(statCount>0){
+    		return statAcc/(float)statCount;
+    	}
+    	else return Float.NaN;
+    }
+    public float getStatMax(){
+    	return statMax;
+    }
+    public float getStatMin(){
+    	return statMin;
+    }
+    
+    private void resetTopoVals(){
+        statMin=Float.MAX_VALUE;
+        statMax=Float.MIN_VALUE;
+        statCount=0;
+        statAcc=0;
+    }
+    
     private boolean showCoord(int dex){
+    	boolean use = checkCoord(dex);
+    	if(use&&origValues!=null){
+    		statCount++;
+    		statAcc+=origValues[dex][3];
+    		statMin=Math.min(origValues[dex][3], statMin);
+    		statMax=Math.max(origValues[dex][3], statMax);
+    	}
+    	return use;
+    }
+    
+    private boolean checkCoord(int dex){
     	if(Float.compare(values[dex][3],Float.NaN)==0)
     		return false;
     	if(topoVis==null||origValues==null)
@@ -417,6 +454,9 @@ public class ScatterPlot implements Plot {
 
         // Set to red, in case there is no colorScale
         gl.glColor3f(1.0f, 0, 0);
+
+
+        resetTopoVals();
 
         if (sphereSize < 0.1f||sphereDetail<3) {
             gl.glDisable(GL.GL_LIGHTING);

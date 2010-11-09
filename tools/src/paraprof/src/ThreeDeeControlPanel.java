@@ -349,6 +349,9 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                     settings.setTopoValueType((ValueType) valueBox.getSelectedItem());
                     settings.setTopoMetric((Metric) metricBox.getSelectedItem());
                     window.redraw();
+                    minTopoField.setText(window.getSelectedMinTopoValue());
+                    maxTopoField.setText(window.getSelectedMaxTopoValue());
+                    topoValField.setText(window.getStatMean());
                 } catch (Exception e) {
                     ParaProfUtils.handleException(e);
                 }
@@ -377,6 +380,9 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                         functionField.setText(fname);
                         functionField.setToolTipText(fname);
                         window.redraw();
+                        minTopoField.setText(window.getSelectedMinTopoValue());
+                        maxTopoField.setText(window.getSelectedMaxTopoValue());
+                        topoValField.setText(window.getStatMean());
                     }
 
                 } catch (Exception e) {
@@ -616,6 +622,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         return panel;
     }
     
+    JLabel[] axisLabels = new JLabel[3];
     JSlider[] axisSliders = new JSlider[3];
     boolean firstSet=false;
     private JPanel createTopoAxisSelectionPanel(int dex){
@@ -631,15 +638,28 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         axisSliders[dex] = new JSlider(JSlider.HORIZONTAL,-1,100,-1);
 
         final int idex = dex;
+        final String labelString;
+        if(dex==0)labelString="X Axis";
+        else if(dex==1)labelString="Y Axis";
+        else if(dex==2)labelString="Z Axis";
+        else labelString="Axis";
         axisSliders[dex].setValue(settings.getTopoVisAxis(dex));
         ChangeListener topoSelector = new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
 
 				 try {
 					 if(!firstSet){
-						 settings.setTopoVisAxis(axisSliders[idex].getValue(),idex);
+						 int val = axisSliders[idex].getValue();
+						 settings.setTopoVisAxis(val,idex);
+	                    window.redraw();
+	                    if(val==-1){
+	                    	axisLabels[idex].setText(labelString);
+	                    }else axisLabels[idex].setText(labelString+": "+val);
+	                    
+	                    topoValField.setText(window.getStatMean());
+	                    		//"Min: "+window.getStatMin()+" Max: "+window.getStatMax()+" Mean: "+window.getStatMean());
 					 
-	                    window.redraw();}
+					 }
 					 else
 						 firstSet=false;
 	                    
@@ -763,6 +783,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
     }
     
     JCheckBox lockBox;// = new JCheckBox();
+    JTextField topoValField;
     //int lockDiff=0;
     private JPanel createTopoPanel() {
 
@@ -809,23 +830,28 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         lockBox.addChangeListener(lockSelector);
         
         gbc.weightx = 0;
-        addCompItem(panel, new JLabel("X Axis"), gbc, 0, 3, 1, 1);
+        addCompItem(panel, axisLabels [0]=new JLabel("X Axis"), gbc, 0, 3, 1, 1);
         addCompItem(panel, createTopoAxisSelectionPanel(0), gbc, 1, 3, 1, 1);
         gbc.weightx = 0;
-        addCompItem(panel, new JLabel("Y Axis"), gbc, 0, 4, 1, 1);
+        addCompItem(panel, axisLabels [1]=new JLabel("Y Axis"), gbc, 0, 4, 1, 1);
         addCompItem(panel, createTopoAxisSelectionPanel(1), gbc, 1, 4, 1, 1);
         gbc.weightx = 0;
-        addCompItem(panel, new JLabel("Z Axis"), gbc, 0, 5, 1, 1);
+        addCompItem(panel, axisLabels [2]=new JLabel("Z Axis"), gbc, 0, 5, 1, 1);
         addCompItem(panel, createTopoAxisSelectionPanel(2), gbc, 1, 5, 1, 1);
         
+        addCompItem(panel,new JLabel("Average Visible: "),gbc,0,6,1,1);
+        addCompItem(panel,topoValField=new JTextField(),gbc,1,6,1,1);
+        topoValField.setEditable(false);
+        topoValField.setText(window.getStatMean());
+        //topoValField.setText("Min: "+window.getStatMin()+" Max: "+window.getStatMax()+" Mean: "+window.getStatMean());
         
         gbc.weightx = 0;
-        addCompItem(panel, new JLabel("Color"), gbc, 0, 6, 1, 1);
-        addCompItem(panel, createTopoColorSelectionPanel("Color"), gbc, 1, 6, 1, 1);
+        addCompItem(panel, new JLabel("Color"), gbc, 0, 7, 1, 1);
+        addCompItem(panel, createTopoColorSelectionPanel("Color"), gbc, 1, 7, 1, 1);
         
         gbc.weightx = 0;
-        addCompItem(panel, new JLabel("Topology"), gbc, 0, 7, 1, 1);
-        addCompItem(panel, createTopoSelectionPanel("Topology"), gbc, 1, 7, 1, 1);
+        addCompItem(panel, new JLabel("Topology"), gbc, 0, 8, 1, 1);
+        addCompItem(panel, createTopoSelectionPanel("Topology"), gbc, 1, 8, 1, 1);
 
         tabbedPane = new JTabbedPane();
 
@@ -842,7 +868,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         gbc.weightx = 0.5;
         gbc.weighty = 0.5;
 
-        addCompItem(panel, tabbedPane, gbc, 0, 8, 2, 1);
+        addCompItem(panel, tabbedPane, gbc, 0, 9, 2, 1);
         
         this.maxTopoField.setText(window.getSelectedMaxTopoValue());
         this.minTopoField.setText(window.getSelectedMinTopoValue());
@@ -1136,6 +1162,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         
         minTopoField.setText(window.getSelectedMinTopoValue());
         maxTopoField.setText(window.getSelectedMaxTopoValue());
+        topoValField.setText(window.getStatMean());
     }
 
     private void addCompItem(JPanel jPanel, Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
