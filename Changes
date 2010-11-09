@@ -21,6 +21,15 @@ Version 2.20 changes (from 2.20):
 8. Added support for loop level instrumentation in the binary rewriter (tau_run a.out -o a.i -f select.tau).
 9. Added preliminary support for Eclipse PTP remote components. 
 10. Integrated tau_exec and tau_wrap (tau_exec -loadlib=<dir>/libwrapped.so) for instrumenting an external library.
+11. Added support for pre-computing mean and std. dev. at the end of execution with TAU_PROFILE_FORMAT=merged.
+12. Added support for compiler-based instrumentation for Cray CCE compilers. 
+13. TAU ported to Cray XE6 with updated default directories (gemini).  
+14. Improved support for Cray Shmem. 
+15. Improved support for thread based communication in tau2otf and ParaVer support in tau_convert -paraver.
+16. Throttled functions are now marked explicitly in their names [THROTTLED]. 
+17. Before reverting to compiler based instrumentation the user is prompted unless -optRevert is specified. 
+18. Updates to memory and I/O tracking support for Mac OS X (in tau_exec).
+19. Added support for the Yorick programming language. 
 
 Version 2.19 changes (from 2.18):
 1. Added support for Chapel.
