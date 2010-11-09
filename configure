@@ -3979,7 +3979,7 @@ case $machine in
 	;;
 
      default)
-	echo "fix make args $fixmakeargs"
+	#echo "fix make args $fixmakeargs"
 	fixmakeargs="arch=$machine $fixmakeargs"
 	;;
 
