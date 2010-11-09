@@ -2112,11 +2112,11 @@ case $machine in
 	    fixmakeargs="$fixmakeargs CRAYCC"
 	    
 	    touch conf_test.c
-	    extradir=`CC -v conf_test.c 2>&1 | grep cray-c++ | sed -e 's/ /\n/g' | grep "/opt/cray/cce" | grep "lib/x86-64$" | uniq`
+	    extradir=`CC -v conf_test.c 2>&1 | grep cray-c++ | sed -e 's/ /\n/g' | grep "/opt/cray/cce" | grep "lib/x86-64$" | uniq | grep -v rpath`
 	    rm -f conf_test.c
 
 	    # not implemented yet
-#	    fixmakeargs="$fixmakeargs COMPINST_CRAYCC"
+	    fixmakeargs="$fixmakeargs COMPINST_CRAYCC"
 	fi
 	if [ $fortran_compiler = no ] ; then
 	    fortran_compiler=$default_fortran
