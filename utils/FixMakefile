@@ -1084,7 +1084,7 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      DYNINST6)
-	echo "NOTE: Using newer version DYNINST 5+ "
+	echo "NOTE: Using newer version DYNINST 6+ "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      DYNINST7)
