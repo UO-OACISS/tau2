@@ -109,7 +109,7 @@ void getLoopFileLineInfo(BPatch_image* mutateeImage,
 
   unsigned long baseAddr = (unsigned long)(*loopStartInst)[0]->getAddress();
   unsigned long lastAddr = (unsigned long)(*loopExitInst)[loopExitInst->size()-1]->getAddress();
-  printf("size of lastAddr = %d: baseAddr = %uld, lastAddr = %uld\n", loopExitInst->size(), baseAddr, lastAddr);
+  dprintf("Loop: size of lastAddr = %d: baseAddr = %uld, lastAddr = %uld\n", loopExitInst->size(), baseAddr, lastAddr);
 
 
 
@@ -149,32 +149,13 @@ void getLoopFileLineInfo(BPatch_image* mutateeImage,
       // loop. We then bump back a line. This is not a perfect solution, but we will work
       // with the Dyninst team to find something better.
       info2 = mutateeImage->getSourceLines((unsigned long) lastAddr, linesEnd );
-      printf("size of linesEnd = %d\n", linesEnd.size());
+      dprintf("size of linesEnd = %d\n", linesEnd.size());
       int i;
+/*
       for(i=0; i < linesEnd.size(); i++) { 
         printf("row=%d, col=%d\n", linesEnd[i].lineNumber(), linesEnd[i].lineOffset());
       }
-
-#ifdef OLD
-      unsigned long q = lastAddr + 1;
-
-      // Goes through all addresses starting at the last instructions in the loop until 
-      // we loop back around to the loop head.
-      do{
-	lines.clear();
-	mutateeImage->getSourceLines((unsigned long) (q) , lines );
-	q++;
-      }while(lines[0].lineNumber() != row1);
-      
-      // Goes through all the addresses that are located in the loop head.
-      do{
-	lines.clear();
-	mutateeImage->getSourceLines((unsigned long) (q) , lines );
-	q++;
-      }while(lines[0].lineNumber() == row1);
-      if( lines[0].lineNumber() != row1 ) info2 = true;
-#endif /* OLD */
-
+*/
 
 
       if (info2) {
