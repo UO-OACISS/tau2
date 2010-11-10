@@ -60,6 +60,7 @@ extern bool areFileIncludeExcludeListsEmpty(void);
 extern bool processFileForInstrumentation(const string& file_name); 
 extern void printExcludeList();
 extern bool instrumentEntity(const string& function_name);
+extern bool matchName(const string& str1, const string& str2);
 
 /* prototypes for routines below */
 int getFunctionFileLineInfo(BPatch_image* mutateeAddressSpace, 
@@ -102,11 +103,13 @@ void getLoopFileLineInfo(BPatch_image* mutateeImage,
   BPatch_type *returnType;
 
   BPatch_Vector<BPatch_point*>* loopStartInst = cfGraph->findLoopInstPoints(BPatch_locLoopStartIter, loopToInstrument);
-  BPatch_Vector<BPatch_point*>* loopExitInst = cfGraph->findLoopInstPoints(BPatch_locLoopExit, loopToInstrument);
+  BPatch_Vector<BPatch_point*>* loopExitInst = cfGraph->findLoopInstPoints(BPatch_locLoopEndIter, loopToInstrument);
+  //BPatch_Vector<BPatch_point*>* loopExitInst = cfGraph->findLoopInstPoints(BPatch_locLoopExit, loopToInstrument);
   
 
   unsigned long baseAddr = (unsigned long)(*loopStartInst)[0]->getAddress();
-  unsigned long lastAddr = (unsigned long)(*loopExitInst)[0]->getAddress();
+  unsigned long lastAddr = (unsigned long)(*loopExitInst)[loopExitInst->size()-1]->getAddress();
+  printf("size of lastAddr = %d: baseAddr = %uld, lastAddr = %uld\n", loopExitInst->size(), baseAddr, lastAddr);
 
 
 
@@ -122,6 +125,7 @@ void getLoopFileLineInfo(BPatch_image* mutateeImage,
 	typeName = "void";
  
   BPatch_Vector< BPatch_statement > lines;
+  BPatch_Vector< BPatch_statement > linesEnd;
 
   info1 = mutateeImage->getSourceLines(baseAddr, lines);
   
@@ -131,6 +135,7 @@ void getLoopFileLineInfo(BPatch_image* mutateeImage,
       row1 = lines[0].lineNumber();
       col1 = lines[0].lineOffset();
       if (col1 < 0) col1 = 0;
+      
       //      info2 = mutateeImage->getSourceLines((unsigned long) (lastAddr -1), lines);
 
 
@@ -143,6 +148,14 @@ void getLoopFileLineInfo(BPatch_image* mutateeImage,
       // goes through the addresses until it reaches the next instruction outside of the 
       // loop. We then bump back a line. This is not a perfect solution, but we will work
       // with the Dyninst team to find something better.
+      info2 = mutateeImage->getSourceLines((unsigned long) lastAddr, linesEnd );
+      printf("size of linesEnd = %d\n", linesEnd.size());
+      int i;
+      for(i=0; i < linesEnd.size(); i++) { 
+        printf("row=%d, col=%d\n", linesEnd[i].lineNumber(), linesEnd[i].lineOffset());
+      }
+
+#ifdef OLD
       unsigned long q = lastAddr + 1;
 
       // Goes through all addresses starting at the last instructions in the loop until 
@@ -159,13 +172,14 @@ void getLoopFileLineInfo(BPatch_image* mutateeImage,
 	mutateeImage->getSourceLines((unsigned long) (q) , lines );
 	q++;
       }while(lines[0].lineNumber() == row1);
-
       if( lines[0].lineNumber() != row1 ) info2 = true;
+#endif /* OLD */
+
 
 
       if (info2) {
-	row2 = lines[0].lineNumber() - 1;
-	col2 = lines[0].lineOffset();
+	row2 = linesEnd[0].lineNumber(); 
+	col2 = linesEnd[0].lineOffset();
 	if (col2 < 0) col2 = 0;
 	sprintf(newname, "Loop: %s %s() [{%s} {%d,%d}-{%d,%d}]", typeName, fname, filename, row1, col1, row2, col2);
       } else {
@@ -195,6 +209,7 @@ void insertTrace(BPatch_function* functionToInstrument,
 {
   char name[1024];
   char modname[1024];
+  int i;
 
 
 
@@ -225,9 +240,23 @@ void insertTrace(BPatch_function* functionToInstrument,
   BPatch_funcCallExpr entryTrace(*traceEntryFunc, entryTraceArgs);
   BPatch_funcCallExpr exitTrace(*traceExitFunc, traceArgs);
       
-  mutatee->insertSnippet(entryTrace, *loopEntr, BPatch_callBefore, BPatch_lastSnippet);
-  mutatee->insertSnippet(exitTrace, *loopExit, BPatch_callBefore, BPatch_lastSnippet);
+  if (loopEntr->size() == 0) {
+    printf("Failed to instrument loop entry in %s\n", name);
+  }
+  else {
+    for (i =0; i < loopEntr->size(); i++) {
+      mutatee->insertSnippet(entryTrace, loopEntr[i], BPatch_callBefore, BPatch_lastSnippet);
+    }
+  }
 
+  if (loopExit->size() == 0) {
+    printf("Failed to instrument loop exit in %s\n", name);
+  }
+  else {
+    for (i =0; i < loopExit->size(); i++) {
+      mutatee->insertSnippet(exitTrace, loopExit[i], BPatch_callBefore, BPatch_lastSnippet);
+    }
+  }
 }
 
 void insertTrace(BPatch_function* functionToInstrument,
@@ -872,7 +901,7 @@ int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, cha
       dprintf("Processing %s...\n", fname);
 
       bool okayToInstr = true;
-      bool instRoutine = true;
+      bool instRoutineAtLoopLevel = false;
 
 
 
@@ -885,10 +914,13 @@ int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, cha
 	  if( (*instIt)->getRoutineSpecified())
 	    {
 	      const char * instRName = (*instIt)->getRoutineName().c_str();
+	      dprintf("Examining %s... \n", instRName);
 
-	      if( strcmp((char *)instRName, fname) != 0 && strcmp(fname, "main") != 0 && strcmp(instRName, "#") != 0 && fname[0] != '_')
+	      //if( strcmp((char *)instRName, fname) != 0 && strcmp(fname, "main") != 0 && strcmp(instRName, "#") != 0 && fname[0] != '_')
+                if (matchName((*instIt)->getRoutineName(), string(fname)))
 		{
-		  instRoutine = false;
+		  instRoutineAtLoopLevel = true;
+	          dprintf("True: instrumenting %s at the loop level\n", instRName);
 		}
 	    }
 	}
@@ -912,9 +944,6 @@ int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, cha
         }
       }
 
-      BPatch_flowGraph *flow = (*it)->getCFG();
-      BPatch_Vector<BPatch_basicBlockLoop*> basicLoop;
-      flow->getOuterLoops(basicLoop);
 
       if (okayToInstr && !routineConstraint(fname) ) { // ok to instrument
 
@@ -925,13 +954,20 @@ int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, cha
 
       }
 
-      if(okayToInstr && !routineConstraint(fname) && instRoutine) // Only occurs when we've defined that the selective file is for loop instrumentation
+      if(okayToInstr && !routineConstraint(fname) && instRoutineAtLoopLevel) // Only occurs when we've defined that the selective file is for loop instrumentation
 	{
+	  dprintf("Generating CFG at loop level: %s\n", fname);
+          BPatch_flowGraph *flow = (*it)->getCFG();
+          BPatch_Vector<BPatch_basicBlockLoop*> basicLoop;
+	  dprintf("Generating outer loop info : %s\n", fname);
+          flow->getOuterLoops(basicLoop);
+	  dprintf("Before instrumenting at loop level: %s\n", fname);
 
 	  for(BPatch_Vector<BPatch_basicBlockLoop*>::iterator loopIt = basicLoop.begin(); 
 	      loopIt != basicLoop.end(); loopIt++)
 	    {
 
+	      dprintf("Instrumenting at the loop level: %s\n", fname);
 	      insertTrace(*it, mutateeAddressSpace, entryTrace, exitTrace, flow, *loopIt);
 	    }
 	}
