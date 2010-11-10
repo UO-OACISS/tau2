@@ -119,6 +119,9 @@ Other Options:
 -jdk=<dir>  Build a library for profiling Java code with specified jdk.
 -vtf=<dir> ......... Specify location of VTF3 Trace Generation Package.
 -otf=<dir> ....... Specify location of Open Trace Format (OTF) Package.
+-otfinc=<dir> ....... Specify location of stand-alone OTF header files.
+-otflib=<dir> ...... Specify location of stand-alone OTF library files.
+-ebs2otf ............... Enable conversion of EBS traces to OTF format.
 -nocomm  ........ Disable tracking communication events in MPI library.
 -scalasca=<dir>  ................ Specify location of SCALASCA package.
 -epilog=<dir>  ............ Specify location of EPILOG Tracing package.
@@ -296,6 +299,29 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    tool that links with the OTF library. OTF traces are hierarchical (multi-stream), 
    compact, support online compression, and can be read concurrently by a parallel trace
    analysis tool such as VNG [ Ref: http://www.vampir-ng.de, http://www.paratools.com/otf].
+
+-otfinc=<dir>
+   Specifies the location of stand-alone OTF header files. This is intended
+   for use with features orthogonal to the use of the -otf=<directory> option.
+   -otf has the side-effect of making tracing default in the TAU build. This
+   may not be the expected behavior for features like Event-based sampling,
+   which only needs to know the header and library locations of OTF in order
+   to provide conversion facilities for EBS to OTF traces.
+
+-otflib=<dir>
+   Specifies the location of stand-alone OTF library files. Please refer to
+   -otfinc for further notes on intended use.
+
+-ebs2otf
+   Enables the building of utilities that support the conversion of EBS 
+   traces to OTF format. This requires an appropriate version of OTF 
+   (currently 1.8) to be available either through -otf or through -otfinc
+   and -otflib options. Please note that this feature does not require the
+   conversion utilities to be built on the same machine the EBS traces are
+   generated. System administrators making pre-built versions of TAU for
+   their users do not have to enable this feature if the supporting 
+   software infrastructure is not available. Please read README.sampling
+   for more details.
 
 -slog2=<directory>
    Specifies the location of the SLOG2 SDK trace generation package. TAU's
