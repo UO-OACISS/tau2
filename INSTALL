@@ -138,6 +138,7 @@ Other Options:
 -MPITRACE ... Generate event traces for MPI events and their ancestors.
 -PROFILE ............ Generate profiles (summary statistics) (default).
 -PROFILECALLPATH ......................... Generate call path profiles.
+-PROFILECOMMUNICATORS ... Generate profiles with MPI communicator info.
 -PROFILEPARAM .... Generate profiles with parameter mapped event data .
 -PROFILEPHASE .......................... Generate phase based profiles.
 -DEPTHLIMIT ........... Disable instrumentation beyond a certain depth.
@@ -488,6 +489,11 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    This option is an extension of -PROFILE, the default profiling option. 
    Specifying TAU_CALLPATH_DEPTH environment variable, the user can vary the 
    depth of the callpath. See examples/calltree for further information.
+
+-PROFILECOMMUNICATORS 
+  
+   This option generates MPI information partitioned by communicators. TAU 
+   lists upto 8 ranks in each communicator in the listing. 
 
 -PROFILEPARAM
  
