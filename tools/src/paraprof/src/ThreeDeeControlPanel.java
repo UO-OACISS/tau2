@@ -446,8 +446,11 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         ActionListener topoSelector = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 try {
-                    settings.setTopoCart((String)valueBox.getSelectedItem());
+                    settings.setTopoCart((String)valueBox.getSelectedItem());//TODO: Reset topo labels when this changes!
+                    resetTopoAxisSliders(true);
                     window.redraw();
+                    resetTopoAxisSliders(true);
+                    
                 } catch (Exception e) {
                     ParaProfUtils.handleException(e);
                 }
@@ -624,6 +627,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
     
     JLabel[] axisLabels = new JLabel[3];
     JSlider[] axisSliders = new JSlider[3];
+    private static final String[] topoLabelStrings = {"X Axis", "Y Axis", "Z Axis"};
     boolean firstSet=false;
     private JPanel createTopoAxisSelectionPanel(int dex){
         JPanel panel = new JPanel();
@@ -638,11 +642,11 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         axisSliders[dex] = new JSlider(JSlider.HORIZONTAL,-1,100,-1);
 
         final int idex = dex;
-        final String labelString;
-        if(dex==0)labelString="X Axis";
-        else if(dex==1)labelString="Y Axis";
-        else if(dex==2)labelString="Z Axis";
-        else labelString="Axis";
+//        final String labelString;
+//        if(dex==0)labelString="X Axis";
+//        else if(dex==1)labelString="Y Axis";
+//        else if(dex==2)labelString="Z Axis";
+//        else labelString="Axis";
         axisSliders[dex].setValue(settings.getTopoVisAxis(dex));
         ChangeListener topoSelector = new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
@@ -653,8 +657,8 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 						 settings.setTopoVisAxis(val,idex);
 	                    window.redraw();
 	                    if(val==-1){
-	                    	axisLabels[idex].setText(labelString);
-	                    }else axisLabels[idex].setText(labelString+": "+val);
+	                    	axisLabels[idex].setText(topoLabelStrings[idex]);
+	                    }else axisLabels[idex].setText(topoLabelStrings[idex]+": "+val);
 	                    
 	                    topoValField.setText(window.getStatMean());
 	                    if(allAxesOn()){
@@ -706,7 +710,6 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         threadComboBox.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent e) {
-                // TODO Auto-generated method stub
                 settings.setSelectedThread((Thread) threadComboBox.getSelectedItem());
                 System.out.println("bargle");
                 window.redraw();
@@ -879,6 +882,13 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         this.maxTopoField.setText(window.getSelectedMaxTopoValue());
         this.minTopoField.setText(window.getSelectedMinTopoValue());
         
+        resetTopoAxisSliders(false);
+
+        return panel;
+
+    }
+    
+    private void resetTopoAxisSliders(boolean full){
         if(window.tsizes!=null){
         	for(int i=0;i<3;i++)
         	{
@@ -888,11 +898,14 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         			axisSliders[i].setEnabled(false);
         		}else
         			axisSliders[i].setEnabled(true);
+        		
+        		if(full){
+        			axisSliders[i].setValue(-1);
+        			settings.setTopoVisAxis(-1, i);
+        			axisLabels[i].setText(topoLabelStrings[i]);
+        		}
         	}
         }
-
-        return panel;
-
     }
 
     private JPanel createSelectorPanel(int min, int max, final List<String> names, final int index) {
