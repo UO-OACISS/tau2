@@ -112,13 +112,13 @@ for arg in "$@"; do
     echo "-epilogbin=<dir> ........... Specify full path to EPILOG bin directory."
     echo "-epiloginc=<dir> ....... Specify full path to EPILOG include directory."
     echo "-vampirtrace=<dir>  .. Specify location of VampirTrace Tracing package."
-    echo "-mon-mpi ..... Specify MPI as TAU monitoring transport layer.          "
-    echo "-mon-mrnet=<dir> .. Specify location to MRNet package as TAU monitoring"
-    echo "                    transport layer (ToM).                             "
-    echo "-mon-mrnet-lib=<dir> ............... Specify full path to MRNet library"
-    echo "                                     installation.                     "
-    echo "-mon-mrnet-use-lightweight ..... Instructs ToM to use MRNet lightweight"
-    echo "                                 interface.                            "
+#    echo "-mon-mpi ..... Specify MPI as TAU monitoring transport layer.          "
+#    echo "-mon-mrnet=<dir> .. Specify location to MRNet package as TAU monitoring"
+#    echo "                    transport layer (ToM).                             "
+#    echo "-mon-mrnet-lib=<dir> ............... Specify full path to MRNet library"
+#    echo "                                     installation.                     "
+#    echo "-mon-mrnet-use-lightweight ..... Instructs ToM to use MRNet lightweight"
+#    echo "                                 interface.                            "
     echo "-scorep=<dir>  .................... Specify location of SCOREP package."
     echo "-python .. Automatically choose python options based on Python in path."
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
@@ -129,6 +129,7 @@ for arg in "$@"; do
     echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
     echo "-PROFILECALLPATH ......................... Generate call path profiles."
     echo "-PROFILEPARAM .... Generate profiles with parameter mapped event data ."
+    echo "-PROFILECOMMUNICATORS ... Generate profiles with MPI communicator info."
     echo "-PROFILEPHASE .......................... Generate phase based profiles."
     echo "-DEPTHLIMIT ........... Disable instrumentation beyond a certain depth."
     echo "-PROFILEMEMORY .. Track heap memory utilization at each function entry."
@@ -222,13 +223,13 @@ for arg in "$@"; do
     echo "-epilogbin=<dir> ........... Specify full path to EPILOG bin directory."
     echo "-epiloginc=<dir> ....... Specify full path to EPILOG include directory."
     echo "-vampirtrace=<dir>  .. Specify location of VampirTrace Tracing package."
-    echo "-mon-mpi ..... Specify MPI as TAU monitoring transport layer.          "
-    echo "-mon-mrnet=<dir> .. Specify location to MRNet package as TAU monitoring"
-    echo "                    transport layer (ToM).                             "
-    echo "-mon-mrnet-lib=<dir> ............... Specify full path to MRNet library"
-    echo "                                     installation.                     "
-    echo "-mon-mrnet-use-lightweight ..... Instructs ToM to use MRNet lightweight"
-    echo "                                 interface.                            "
+#    echo "-mon-mpi ..... Specify MPI as TAU monitoring transport layer.          "
+#    echo "-mon-mrnet=<dir> .. Specify location to MRNet package as TAU monitoring"
+#    echo "                    transport layer (ToM).                             "
+#    echo "-mon-mrnet-lib=<dir> ............... Specify full path to MRNet library"
+#    echo "                                     installation.                     "
+#    echo "-mon-mrnet-use-lightweight ..... Instructs ToM to use MRNet lightweight"
+#    echo "                                 interface.                            "
     echo "-scorep=<dir>  .................... Specify location of SCOREP package."
     echo "-upcnetwork=<value> .. Specify network (mpi, udp,...) for Berkeley UPC."
     echo "-python .. Automatically choose python options based on Python in path."
@@ -253,6 +254,7 @@ for arg in "$@"; do
     echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
     echo "-PROFILECALLPATH ......................... Generate call path profiles."
     echo "-PROFILEPARAM .... Generate profiles with parameter mapped event data ."
+    echo "-PROFILECOMMUNICATORS ... Generate profiles with MPI communicator info."
     echo "-PROFILEPHASE .......................... Generate phase based profiles."
     echo "-DEPTHLIMIT ........... Disable instrumentation beyond a certain depth."
     echo "-PROFILEMEMORY .. Track heap memory utilization at each function entry."
@@ -403,6 +405,7 @@ profilememory=no
 profileheadroom=no
 callpath=no
 profileparam=no
+profilecommunicators=no
 depthlimit=no
 phase=no
 trace=no
@@ -1020,7 +1023,7 @@ for arg in "$@"; do
   -jdk=*)
       java=yes
       jdkdir=`echo $arg | sed -e 's/-jdk=//'`
-      echo "jdkdir is $jdkdir"
+      #echo "jdkdir is $jdkdir"
       if [ ! -d $jdkdir ]
       then
         echo "Error: Cannot access JDK directory $jdkdir"
@@ -1029,7 +1032,7 @@ for arg in "$@"; do
       jv=`${jdkdir}/bin/java -version 2>&1 | grep version | awk '{ print $3; }'| sed -e s/\"//g`
       major=`echo $jv | sed 's/\([0-9]*\).*/\1/g'`
       minor=`echo $jv | sed 's/'${major}'.\([0-9]*\).*/\1/g'`
-      echo "major = $major, minor = $minor"
+      #echo "major = $major, minor = $minor"
       if [ $major = 1 ]
       then
         if [ $minor -lt 5 ]
@@ -1247,6 +1250,13 @@ for arg in "$@"; do
     profileparam=yes
     shift
     ;;
+
+  -PROFILECOMMUNICATORS)
+    profile=yes
+    profilecommunicators=yes
+    shift
+    ;;
+
 
   -DEPTHLIMIT)
     depthlimit=yes
@@ -2102,11 +2112,11 @@ case $machine in
 	    fixmakeargs="$fixmakeargs CRAYCC"
 	    
 	    touch conf_test.c
-	    extradir=`CC -v conf_test.c 2>&1 | grep cray-c++ | sed -e 's/ /\n/g' | grep "/opt/cray/cce" | grep "lib/x86-64$" | uniq`
+	    extradir=`CC -v conf_test.c 2>&1 | grep cray-c++ | sed -e 's/ /\n/g' | grep "/opt/cray/cce" | grep "lib/x86-64$" | uniq | grep -v rpath`
 	    rm -f conf_test.c
 
 	    # not implemented yet
-#	    fixmakeargs="$fixmakeargs COMPINST_CRAYCC"
+	    fixmakeargs="$fixmakeargs COMPINST_CRAYCC"
 	fi
 	if [ $fortran_compiler = no ] ; then
 	    fortran_compiler=$default_fortran
@@ -2279,6 +2289,11 @@ fi
 if [ $profileparam = yes ] ; then
     fixmakeargs="$fixmakeargs PROFILEPARAM"
     tauoptions="${tauoptions}-param"
+fi
+
+if [ $profilecommunicators = yes ] ; then
+    fixmakeargs="$fixmakeargs PROFILECOMMUNICATORS PROFILEPARAM"
+    tauoptions="${tauoptions}-communicators"
 fi
 
 if [ $depthlimit = yes ] ; then
@@ -3964,7 +3979,7 @@ case $machine in
 	;;
 
      default)
-	echo "fix make args $fixmakeargs"
+	#echo "fix make args $fixmakeargs"
 	fixmakeargs="arch=$machine $fixmakeargs"
 	;;
 
@@ -5489,14 +5504,17 @@ if [ $dyninst = yes ] ; then
     if [ ! -d $dyninstdir/lib ] ; then
 	fixmakeargs="$fixmakeargs DYNINST41"
     fi
-    if [ ! -d $dyninstdir/$PLATFORM/lib/libcommon.so ] ; then
-	fixmakeargs="$fixmakeargs DYNINST6"
-    fi
     if [ `grep isStaticExecutable $dyninstdir/include/* | wc -l` = 0 ]; then
 	fixmakeargs="$fixmakeargs DYNINST_STATIC_REWRITING_UNSUPPORTED"
     fi
     if [ ! -d $dyninstdir/src/include -o ! -d $dyninstdir/include ] ; then
 	fixmakeargs="$fixmakeargs DYNINST5.2"
+    fi
+    if [ -r $dyninstdir/$PLATFORM/lib/libcommon.so ] ; then
+	fixmakeargs="$fixmakeargs DYNINST6"
+    fi
+    if [ -r $dyninstdir/$PLATFORM/lib/libparseAPI.so ] ; then
+	fixmakeargs="$fixmakeargs DYNINST7"
     fi
 fi
 

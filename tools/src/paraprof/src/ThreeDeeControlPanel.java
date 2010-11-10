@@ -1,11 +1,31 @@
 package edu.uoregon.tau.paraprof;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.*;
+import javax.swing.BorderFactory;
+import javax.swing.ButtonGroup;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import javax.swing.JSlider;
+import javax.swing.JTabbedPane;
+import javax.swing.JTextField;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicComboPopup;
@@ -15,8 +35,10 @@ import javax.swing.plaf.metal.MetalComboBoxUI;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.enums.VisType;
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.Function;
+import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Thread;
+import edu.uoregon.tau.perfdmf.UtilFncs;
 import edu.uoregon.tau.vis.Plot;
 import edu.uoregon.tau.vis.SteppedComboBox;
 import edu.uoregon.tau.vis.VisRenderer;
@@ -50,6 +72,9 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
     private JTextField heightValueField = new JTextField("");
     private JTextField colorValueField = new JTextField("");
+    
+    private JTextField minTopoField = new JTextField("");
+    private JTextField maxTopoField = new JTextField("");
 
     private int selectedTab;
     private JTabbedPane tabbedPane; // keep a handle to remember the selected tab
@@ -324,6 +349,9 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                     settings.setTopoValueType((ValueType) valueBox.getSelectedItem());
                     settings.setTopoMetric((Metric) metricBox.getSelectedItem());
                     window.redraw();
+                    minTopoField.setText(window.getSelectedMinTopoValue());
+                    maxTopoField.setText(window.getSelectedMaxTopoValue());
+                    topoValField.setText(window.getStatMean());
                 } catch (Exception e) {
                     ParaProfUtils.handleException(e);
                 }
@@ -352,6 +380,9 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                         functionField.setText(fname);
                         functionField.setToolTipText(fname);
                         window.redraw();
+                        minTopoField.setText(window.getSelectedMinTopoValue());
+                        maxTopoField.setText(window.getSelectedMaxTopoValue());
+                        topoValField.setText(window.getStatMean());
                     }
 
                 } catch (Exception e) {
@@ -415,8 +446,11 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         ActionListener topoSelector = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 try {
-                    settings.setTopoCart((String)valueBox.getSelectedItem());
+                    settings.setTopoCart((String)valueBox.getSelectedItem());//TODO: Reset topo labels when this changes!
+                    resetTopoAxisSliders(true);
                     window.redraw();
+                    resetTopoAxisSliders(true);
+                    
                 } catch (Exception e) {
                     ParaProfUtils.handleException(e);
                 }
@@ -495,6 +529,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         gbc.weighty = 0.1;
         
         minTopoSlider = new JSlider(JSlider.HORIZONTAL,0,100,0);
+        minTopoField.setEditable(false);
 
      
         	minTopoSlider.setValue(settings.getMinTopoRange());
@@ -513,6 +548,8 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 	                    settings.setMinTopoRange(minTopoSlider.getValue());
 					 
 	                    window.redraw();
+	                    minTopoField.setText(window.getSelectedMinTopoValue());
+	                    maxTopoField.setText(window.getSelectedMaxTopoValue());
 	                } catch (Exception evt) {
 	                    ParaProfUtils.handleException(evt);
 	                }
@@ -527,6 +564,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         addCompItem(panel, minTopoSlider, gbc, 0, 0, 1, 1);
+        addCompItem(panel,minTopoField,gbc,0,1,1,1);
 
         return panel;
     }
@@ -545,6 +583,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
         
         maxTopoSlider = new JSlider(JSlider.HORIZONTAL,0,100,100);
+        maxTopoField.setEditable(false);
 
 
         	maxTopoSlider.setValue(settings.getMaxTopoRange());
@@ -563,6 +602,9 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 						 settings.setMaxTopoRange(maxTopoSlider.getValue());
 					 
 	                    window.redraw();
+	                    minTopoField.setText(window.getSelectedMinTopoValue());
+	                    maxTopoField.setText(window.getSelectedMaxTopoValue());
+	                    
 	                } catch (Exception evt) {
 	                    ParaProfUtils.handleException(evt);
 	                }
@@ -578,6 +620,70 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         addCompItem(panel, maxTopoSlider, gbc, 0, 0, 1, 1);
+        addCompItem(panel,maxTopoField,gbc,0,1,1,1);
+
+        return panel;
+    }
+    
+    JLabel[] axisLabels = new JLabel[3];
+    JSlider[] axisSliders = new JSlider[3];
+    private static final String[] topoLabelStrings = {"X Axis", "Y Axis", "Z Axis"};
+    boolean firstSet=false;
+    private JPanel createTopoAxisSelectionPanel(int dex){
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weightx = 0.1;
+        gbc.weighty = 0.1;
+        
+        axisSliders[dex] = new JSlider(JSlider.HORIZONTAL,-1,100,-1);
+
+        final int idex = dex;
+//        final String labelString;
+//        if(dex==0)labelString="X Axis";
+//        else if(dex==1)labelString="Y Axis";
+//        else if(dex==2)labelString="Z Axis";
+//        else labelString="Axis";
+        axisSliders[dex].setValue(settings.getTopoVisAxis(dex));
+        ChangeListener topoSelector = new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+
+				 try {
+					 if(!firstSet){
+						 int val = axisSliders[idex].getValue();
+						 settings.setTopoVisAxis(val,idex);
+	                    window.redraw();
+	                    if(val==-1){
+	                    	axisLabels[idex].setText(topoLabelStrings[idex]);
+	                    }else axisLabels[idex].setText(topoLabelStrings[idex]+": "+val);
+	                    
+	                    topoValField.setText(window.getStatMean());
+	                    if(allAxesOn()){
+	                    	topoValLabel.setText(CV);
+	                    }else topoValLabel.setText(ACV);
+	                    		//"Min: "+window.getStatMin()+" Max: "+window.getStatMax()+" Mean: "+window.getStatMean());
+					 
+					 }
+					 else
+						 firstSet=false;
+	                    
+	                } catch (Exception evt) {
+	                    ParaProfUtils.handleException(evt);
+	                }
+			}
+        };
+        
+        axisSliders[dex].addChangeListener(topoSelector);
+
+        gbc.insets = new Insets(1, 1, 1, 1);
+
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        addCompItem(panel, axisSliders[dex], gbc, 0, 0, 1, 1);
 
         return panel;
     }
@@ -604,7 +710,6 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         threadComboBox.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent e) {
-                // TODO Auto-generated method stub
                 settings.setSelectedThread((Thread) threadComboBox.getSelectedItem());
                 System.out.println("bargle");
                 window.redraw();
@@ -684,7 +789,8 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
     }
     
     JCheckBox lockBox;// = new JCheckBox();
-    //int lockDiff=0;
+    JTextField topoValField;
+    JLabel topoValLabel;
     private JPanel createTopoPanel() {
 
         JPanel panel = new JPanel();
@@ -728,13 +834,33 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         };
         
         lockBox.addChangeListener(lockSelector);
-        gbc.weightx = 0;
-        addCompItem(panel, new JLabel("Color"), gbc, 0, 3, 1, 1);
-        addCompItem(panel, createTopoColorSelectionPanel("Color"), gbc, 1, 3, 1, 1);
         
         gbc.weightx = 0;
-        addCompItem(panel, new JLabel("Topology"), gbc, 0, 4, 1, 1);
-        addCompItem(panel, createTopoSelectionPanel("Topology"), gbc, 1, 4, 1, 1);
+        addCompItem(panel, axisLabels [0]=new JLabel("X Axis"), gbc, 0, 3, 1, 1);
+        addCompItem(panel, createTopoAxisSelectionPanel(0), gbc, 1, 3, 1, 1);
+        gbc.weightx = 0;
+        addCompItem(panel, axisLabels [1]=new JLabel("Y Axis"), gbc, 0, 4, 1, 1);
+        addCompItem(panel, createTopoAxisSelectionPanel(1), gbc, 1, 4, 1, 1);
+        gbc.weightx = 0;
+        addCompItem(panel, axisLabels [2]=new JLabel("Z Axis"), gbc, 0, 5, 1, 1);
+        addCompItem(panel, createTopoAxisSelectionPanel(2), gbc, 1, 5, 1, 1);
+        
+        addCompItem(panel,topoValLabel=new JLabel("Average Color Value: "),gbc,0,6,1,1);
+        addCompItem(panel,topoValField=new JTextField(),gbc,1,6,1,1);
+        topoValField.setEditable(false);
+        topoValField.setText(window.getStatMean());
+        if(allAxesOn()){
+        	topoValLabel.setText(CV);
+        }else topoValLabel.setText(ACV);
+        //topoValField.setText("Min: "+window.getStatMin()+" Max: "+window.getStatMax()+" Mean: "+window.getStatMean());
+        
+        gbc.weightx = 0;
+        addCompItem(panel, new JLabel("Color"), gbc, 0, 7, 1, 1);
+        addCompItem(panel, createTopoColorSelectionPanel("Color"), gbc, 1, 7, 1, 1);
+        
+        gbc.weightx = 0;
+        addCompItem(panel, new JLabel("Topology"), gbc, 0, 8, 1, 1);
+        addCompItem(panel, createTopoSelectionPanel("Topology"), gbc, 1, 8, 1, 1);
 
         tabbedPane = new JTabbedPane();
 
@@ -751,10 +877,35 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         gbc.weightx = 0.5;
         gbc.weighty = 0.5;
 
-        addCompItem(panel, tabbedPane, gbc, 0, 5, 2, 1);
+        addCompItem(panel, tabbedPane, gbc, 0, 9, 2, 1);
+        
+        this.maxTopoField.setText(window.getSelectedMaxTopoValue());
+        this.minTopoField.setText(window.getSelectedMinTopoValue());
+        
+        resetTopoAxisSliders(false);
 
         return panel;
 
+    }
+    
+    private void resetTopoAxisSliders(boolean full){
+        if(window.tsizes!=null){
+        	for(int i=0;i<3;i++)
+        	{
+        		firstSet=true;
+        		this.axisSliders[i].setMaximum(window.tsizes[i]-1);
+        		if(window.tsizes[i]<=1){
+        			axisSliders[i].setEnabled(false);
+        		}else
+        			axisSliders[i].setEnabled(true);
+        		
+        		if(full){
+        			axisSliders[i].setValue(-1);
+        			settings.setTopoVisAxis(-1, i);
+        			axisLabels[i].setText(topoLabelStrings[i]);
+        		}
+        	}
+        }
     }
 
     private JPanel createSelectorPanel(int min, int max, final List<String> names, final int index) {
@@ -1027,6 +1178,31 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         createSubPanel();
         heightValueField.setText(window.getSelectedHeightValue());
         colorValueField.setText(window.getSelectedColorValue());
+        
+        minTopoField.setText(window.getSelectedMinTopoValue());
+        maxTopoField.setText(window.getSelectedMaxTopoValue());
+        topoValField.setText(window.getStatMean());
+        if(allAxesOn()){
+        	topoValLabel.setText(CV);
+        }else topoValLabel.setText(ACV);
+    }
+    private static final String CV = "Color Value: ";
+    private static final String ACV ="Avg Color Value: ";
+    private boolean allAxesOn(){
+    	int numdis=0;
+    	int numSet=0;
+    	for(int i=0;i<axisSliders.length;i++){
+    		if(!axisSliders[i].isEnabled())
+    			numdis++;//continue;
+    		if(axisSliders[i].getValue()>-1)
+    			numSet++;//return false;
+    	}
+
+    	if(numdis==axisSliders.length)return true;
+    	if(numSet==0)return false;
+    	if(axisSliders.length-numdis==numSet)
+    		return true;
+    	return false;
     }
 
     private void addCompItem(JPanel jPanel, Component c, GridBagConstraints gbc, int x, int y, int w, int h) {
