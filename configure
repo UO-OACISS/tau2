@@ -3449,7 +3449,12 @@ then
     fi
     if [ $machine = craycnl ] 
     then
-      shmemincargs="-I/opt/mpt/default/xt/sma64/include/mpp"
+      if [ -r /opt/cray/mpt/default/xt/gemini/sma/include/mpp/shmem.h ]
+      then
+        shmemincargs="-I/opt/cray/mpt/default/xt/gemini/sma/include/mpp/"
+      else
+        shmemincargs="-I/opt/mpt/default/xt/sma64/include/mpp"
+      fi
     fi
   fi
   
@@ -3475,7 +3480,12 @@ then
     fi
     if [ $machine = craycnl ] 
     then
-      shmemlibargs="$shmemlibargs -L/opt/mpt/default/xt/sma64/lib"
+      if [ -r /opt/cray/mpt/default/xt/gemini/sma/lib64/libsma.a ]
+      then
+        shmemlibargs="$shmemlibargs -L/opt/cray/mpt/default/xt/gemini/sma/lib64/"
+      else
+        shmemlibargs="$shmemlibargs -L/opt/mpt/default/xt/sma64/lib"
+      fi
     fi
   fi
 
