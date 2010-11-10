@@ -2,7 +2,7 @@
 **			TAU Performance System(R)                          **
 **			http://tau.uoregon.edu                             **
 *****************************************************************************
-**    Copyright 1997-2010				   	   	   **
+**    Copyright 1997-2011				   	   	   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 **    Research Center Juelich, ZAM Germany			           **
@@ -10,7 +10,7 @@
 /*******************************************************************
  *                                                                 *
  *        Tuning and Analysis Utilities Installation Procedure     *
- *                           Version 2.19                          *
+ *                           Version 2.20                          *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
@@ -669,10 +669,10 @@ iii) To configure TAU under AIX, we strongly recommend using the -mpi option rat
    % configure -pdt=<dir> -arch=ibm64 -mpi ; make clean install
    for 64 bits. 
 
-iv) To configure TAU for Cray XT3 or IBM BGL/BGP,
+iv) To configure TAU for Cray XE6 or IBM BGL/BGP,
 
    First configure PDT using % configure -XLC ; make clean install
-   on BGL. On XT3 you will need to configure PDT using:
+   on BGL. On XE6 you will need to configure PDT using:
    % configure -GNU; make clean install
 
    Then, configure TAU using:
@@ -680,13 +680,14 @@ iv) To configure TAU for Cray XT3 or IBM BGL/BGP,
 	configures TAU with MPI and PDT on BGL. You may configure TAU using:
    % configure -arch=bgp -mpi -pdt=<dir> -pdt_c++=xlC 
         to configure TAU with MPI and PDT on IBM BG/P. 
-     Use -arch=xt3 -pdt_c++=g++ on
-	Cray XT3 (Catamount). Then configure for the frontend using 
+     Use -arch=craycnl -pdt_c++ on Cray CNL systems and 
+     Use -arch=xt3 -pdt_c++=g++ on Cray XT3 (Catamount). 
+	Then configure for the frontend using 
 	% ./configure This creates a backend library directory 
 	<taudir>/[bgl,xt3]/lib and a front-end 
         directory <taudir>/[rs6000,x86_64]/bin which should be put in your PATH. 
 
-   For Cray XT4/XT5 or systems running Cray Compute Node Linux (CNL) instead of 
+   For Cray XT4/XT5/XE6 or systems running Cray Compute Node Linux (CNL) instead of 
    Catamount on the backend nodes, you will need to configure TAU with the 
    -arch=craycnl configuration option. e.g., 
 
@@ -695,7 +696,7 @@ iv) To configure TAU for Cray XT3 or IBM BGL/BGP,
 
    TAU's -arch=xt3 configuration assumes Catamount and -arch=craycnl assumes 
    Cray Compute Node Linux on the backend nodes respectively. See TAU wiki for
-   further details and examples.
+   further details and examples. It is critical to use the -arch=craycnl for Cray systems.
 
 v) To configure TAU for SGI Altix system, you may use
    % ./configure -c++=icpc  -cc=icc -fortran=intel -mpi ...
@@ -711,9 +712,6 @@ vi) To configure TAU with VampirTrace using Intel Fortran compilers under Linux,
 
     % cd tau-2.<x>; ./configure -papi=/usr/local/packages/papi-3.5.0 -vampirtrace=/usr/local/packages/vampirtrace-5.2.5-mpich2 -cc=icc -c++=icpc -fortran=intel -pdt=/usr/local/packages/pdtoolkit-3.14 -mpiinc=/usr/local/packages/mpich2-1.0.4p1/intel-9.1/include -mpilib=/usr/local/packages/mpich2-1.0.4p1/intel-9.1/lib
     % make clean install
-
-vi) % ./configure -TRACE -PROFILE 
-   Enable both profiling and tracing.
 
 ***********************************************************************
    To install *multiple* (typical) configurations of TAU at a site, you may use the 
