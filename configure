@@ -5448,21 +5448,21 @@ fi
 if [ $scorep = yes ] ; then
     fixmakeargs="$fixmakeargs SCOREP scorepdir=$scorepdir"
     tauoptions="${tauoptions}-scorep"
-    scorepCommonLibs="-lbfd#-liberty#-lotf2#-lsilc_utilities"
+    scorepCommonLibs="-lbfd#-liberty#-lotf2#-lscorep_utilities"
     if [ $mpi = yes ] ; then 
       if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs SCOREPOMPI" 
-	scorepLibs="-L${scorepdir}/lib#-lsilc_mpi#$scorepCommonLibs"
+	scorepLibs="-L${scorepdir}/lib#-lscorep_mpi#$scorepCommonLibs"
       else
         fixmakeargs="$fixmakeargs SCOREPMPI"
-	scorepLibs="-L${scorepdir}/lib#-lsilc_mpi#$scorepCommonLibs"
+	scorepLibs="-L${scorepdir}/lib#-lscorep_mpi#$scorepCommonLibs"
       fi 
     else
       if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs SCOREPOMP" 
-	scorepLibs="-L${scorepdir}/lib#-lsilc_serial#$scorepCommonLibs"
+	scorepLibs="-L${scorepdir}/lib#-lscorep_serial#$scorepCommonLibs"
       else
-	scorepLibs="-L${scorepdir}/lib#-lsilc_serial#$scorepCommonLibs"
+	scorepLibs="-L${scorepdir}/lib#-lscorep_serial#$scorepCommonLibs"
       fi
     fi
 
