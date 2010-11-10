@@ -2112,11 +2112,11 @@ case $machine in
 	    fixmakeargs="$fixmakeargs CRAYCC"
 	    
 	    touch conf_test.c
-	    extradir=`CC -v conf_test.c 2>&1 | grep cray-c++ | sed -e 's/ /\n/g' | grep "/opt/cray/cce" | grep "lib/x86-64$" | uniq`
+	    extradir=`CC -v conf_test.c 2>&1 | grep cray-c++ | sed -e 's/ /\n/g' | grep "/opt/cray/cce" | grep "lib/x86-64$" | uniq | grep -v rpath`
 	    rm -f conf_test.c
 
 	    # not implemented yet
-#	    fixmakeargs="$fixmakeargs COMPINST_CRAYCC"
+	    fixmakeargs="$fixmakeargs COMPINST_CRAYCC"
 	fi
 	if [ $fortran_compiler = no ] ; then
 	    fortran_compiler=$default_fortran
@@ -3449,7 +3449,13 @@ then
     fi
     if [ $machine = craycnl ] 
     then
-      shmemincargs="-I/opt/mpt/default/xt/sma64/include/mpp"
+      if [ -r $MPT_DIR/sma/include/mpp/shmem.h ]
+      then
+        shmemincargs="-I$MPT_DIR/sma/include/mpp/"
+      else
+        shmemincargs="-I/opt/mpt/default/xt/sma64/include/mpp"
+# old options 
+      fi
     fi
   fi
   
@@ -3475,7 +3481,12 @@ then
     fi
     if [ $machine = craycnl ] 
     then
-      shmemlibargs="$shmemlibargs -L/opt/mpt/default/xt/sma64/lib"
+      if [ -r $MPT_DIR/sma/lib64/libsma.a ]
+      then
+        shmemlibargs="$shmemlibargs -L$MPT_DIR/sma/lib64/"
+      else
+        shmemlibargs="$shmemlibargs -L/opt/mpt/default/xt/sma64/lib"
+      fi
     fi
   fi
 
