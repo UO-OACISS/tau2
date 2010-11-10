@@ -689,6 +689,7 @@ int getFunctionFileLineInfo(BPatch_image* mutateeAddressSpace,
       row2 = lines[1].lineNumber();
       col2 = lines[1].lineOffset();
       if (col2 < 0) col2 = 0;
+      if (row2 < row1) row1 = row2;
       sprintf(newname, "%s %s() [{%s} {%d,%d}-{%d,%d}]", typeName, fname, filename, row1, col1, row2, col2);
     } else {
       sprintf(newname, "%s %s() [{%s} {%d,%d}]", typeName, fname, filename, row1, col1);
