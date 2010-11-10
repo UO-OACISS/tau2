@@ -132,6 +132,8 @@ Other Options:
 -pythoninc=<dir> ........ Specify location of Python include directory.
 -pythonlib=<dir> ............ Specify location of Python lib directory.
 -tag=<unique name> ........ Specify a tag to identify the installation.
+-cuda=<dir> .............Specify the location of the CUDA installation.
+-opencl=<dir> .........Specify the location of the OPENCL installation.
 -TRACE ..................................... Generate TAU event traces.
 -MPITRACE ... Generate event traces for MPI events and their ancestors.
 -PROFILE ............ Generate profiles (summary statistics) (default).
@@ -221,6 +223,16 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    library may be used with different versions of compilers.
    e.g., 
    % configure -c++=icpc -cc=icc -tag=intel71-vmi -mpiinc=/vmi2/mpich/include 
+
+-cuda=<dir>
+		Specifies the locate of the nVidia's CUDA installation. Assumes the header are 
+		in <dir>/include and libraries are in /usr/lib or another location accessible 
+		by the TAU linker.
+
+-opencl=<dir>
+		Specifies the locate of an OPENCL installation. Assumes the header are in
+		<dir>/CL/include and libraries are in /usr/lib or another location accessible 
+		by the TAU linker.
 
 -pthread
    
