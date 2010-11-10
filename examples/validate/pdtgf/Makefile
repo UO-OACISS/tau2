@@ -6,7 +6,8 @@ include $(TAU_TEST_MAKEFILE)
 # We use TAU_COMPILER (defined in the above stub Makefile) for instrumenting
 # the source code. We can pass it optional arguments. See tau_compiler.sh -help
 
-OPTS = -optVerbose -optCompile=$(TAU_F90_SUFFIX) -optKeepFiles -optLinkReset="$(TAU_LIBS) $(TAU_CXXLIBS)" -optNoRevert -optPdtGnuFortranParser
+OPTS = -optVerbose -optCompile=$(TAU_F90_SUFFIX) -optKeepFiles  -optNoRevert -optPdtGnuFortranParser
+#-optLinkReset="$(TAU_LIBS) $(TAU_CXXLIBS)" -optNoRevert -optPdtGnuFortranParser
 F90=$(TAU_COMPILER) $(OPTS) $(TAU_F90) 
 LIBS= 
 INCLUDE=
