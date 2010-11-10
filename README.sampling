@@ -83,6 +83,10 @@ As of this release, we support only OTF 1.8 (sturgeon):
 has the side-effect of turning on TAU tracing as a default. EBS traces
 currently work only with TAU profiles.
 
+   Currently, OTF has to be built with GCC compilers. If this is not 
+supported on your working machine, post-processing can be performed on
+the generated logs on another platform.
+
 2) Generate EBS traces as above.
 
 3) Make sure the environment variables PERL5LIB and LD_LIBRARY_PATH are

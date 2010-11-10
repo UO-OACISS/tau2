@@ -267,7 +267,7 @@ int Tau_metadata_fillMetaData() {
   if (Kernel_ProcessCount() > 1) {
     Tau_metadata_register("BGP Node Mode", "Virtual");
   } else {
-    sprintf(bgpbuffer, "Coprocessor (%d)", Kernel_ProcessCount);
+    sprintf(bgpbuffer, "Coprocessor (%d)", Kernel_ProcessCount());
     Tau_metadata_register("BGP Node Mode", bgpbuffer);
   }
 

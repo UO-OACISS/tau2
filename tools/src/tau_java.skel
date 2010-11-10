@@ -7,9 +7,9 @@ LD_LIBRARY_PATH=$TAU_LIB_DIR:$LD_LIBRARY_PATH
 
 usage(){
     echo "The TauJVMTI profiling agent\n"
-    echo $0"[options] javaprogram \n";
+    echo $0" javaprogram [options]\n";
     echo "Options are semicolon separated (make sure to escape the semicolon!)"
-    echo "Within an options the arguments are comma separated."
+    echo "Within an option the arguments are comma separated."
     echo "\t help\t\t\t Print help information"
     echo "\t include=item\t\t Only these classes/methods"
     echo "\t exclude=item\t\t Exclude these classes/methods\n"
@@ -17,10 +17,64 @@ usage(){
     echo "\t\t e.g. (*.<init>;Foobar.method;sun.*)\n"
 }
 
-echo  $JDKDIR/bin/java -Xbootclasspath/a:$JARTARGET -agentlib:libTAUsh-jdk=$1 $2
-
-if [ $# != 2 ]; then
+if [ $# = 0]; then
     usage;
-else
-    $JDKDIR/bin/java -Xbootclasspath/a:$JARTARGET -agentlib:libTAUsh-jdk=$1 $2
 fi
+
+verbose=false
+include=
+exclude=
+agentlib=
+java=
+
+
+for arg in "$@"; do
+  # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
+  # Thanks to sameer shende for pointing to this example.
+  modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
+  case $arg in
+      -h|-help|--help)
+	  usage
+	  ;;
+      -v|-verbose|--verbose)
+	  verbose=true
+	  shift
+	  ;;
+      -tau\:include=*)
+          include=`echo $arg | sed 's/-tau:include=//'`
+	  shift
+	  ;;
+      -tau\:exclude=*)
+          exclude=`echo $arg | sed 's/-tau:exclude=//'`
+          shift
+          ;;
+      -tau\:agentlib=*)
+          agentlib=`echo $arg | sed 's/-tau:agentlib=//'`
+          shift
+	  ;;
+      -tau\:java=*)
+          java=`echo $arg | sed 's/-tau:java=//'`
+          shift
+	  ;;
+      -*)
+	  echo "Unknown option: $arg" >&2
+	  exit 1
+	  ;;
+      *)
+	  break
+	  ;;
+      esac
+done
+
+if [ $verbose = "true"] ; then
+    echo ""
+    echo "Program to run : $@"
+    echo ""
+fi
+
+echo "Include is $include"
+echo "Exclude is $exclude"
+echo "AgentLib is $agentlib"
+echo "Java is $java"
+
+##
