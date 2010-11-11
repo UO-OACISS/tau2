@@ -32,6 +32,7 @@ Version 2.20 changes (from 2.20):
 19. Added support for the Yorick programming language. 
 20. Added Java profiling support using JVMTI.
 21. Added support for Score-P (www.score-p.org) measurement system. Configure with -scorep=<dir>.
+22. Added support for importing Google perftools performance data (paraprof -f google).
 
 Version 2.19 changes (from 2.18):
 1. Added support for Chapel.
