@@ -31,6 +31,7 @@ Version 2.20 changes (from 2.20):
 18. Updates to memory and I/O tracking support for Mac OS X (in tau_exec).
 19. Added support for the Yorick programming language. 
 20. Added Java profiling support using JVMTI.
+21. Added support for Score-P (www.score-p.org) measurement system. Configure with -scorep=<dir>.
 
 Version 2.19 changes (from 2.18):
 1. Added support for Chapel.
