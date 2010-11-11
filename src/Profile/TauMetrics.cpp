@@ -28,6 +28,9 @@
 #include "Profile/KtauCounters.h"
 #endif //TAUKTAU_SHCTR
 
+#ifdef TAU_GPU
+#include "Profile/TauGpuAdapterCupti.h"
+#endif
 
 void metric_read_nullClock(int tid, int idx, double values[]);
 void metric_write_userClock(int tid, double value);
@@ -323,6 +326,10 @@ static void initialize_functionArray() {
 #endif /* TAU_PAPI */
     } else if (compareMetricString(metricv[i], "TAUGPU_TIME")) {
       functionArray[pos++] = metric_read_cudatime;
+#ifdef TAU_GPU
+    } else if (compareMetricString(metricv[i], CUPTI_METRIC_INSTRUCTIONS)) {
+      functionArray[pos++] = metric_read_cupti_ins;
+#endif
     } else {
       if (papi_available && is_papi_metric(metricv[i])) {
         /* PAPI handled separately */

@@ -300,12 +300,15 @@ CRAY_PGI_HACK=
 #CRAYCNL#CRAY_PGI_HACK=$(INSTALLDEST)/libpgnod_prof.a #ENDIF#
 
 TAU_CUPTI_INC=$(TAU_CUPTI)/include
-ifneq ($(TAU_CUPTI_INC), )
+ifneq ($(TAU_CUPTI), )
 	TAU_GPU_LIB=libTAU-CUpti.so
 	TAU_GPU_OBJS=TauGpuAdapterCupti.o TauGpu.o
+	TAU_CUDA_DEF=-DTAU_GPU
 else
 	TAU_GPU_LIB=
 	TAU_GPU_OBJS=
+	TAU_CUPTI_INC=
+	TAU_CUDA_DEF=
 endif
 
 all:		$(TAU_TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI) $(TAUPYTHON) $(SHMEM_WRAPPER) $(POELIB) $(TAU_GPU_LIB)
@@ -531,8 +534,8 @@ ProfileParam.o   : ProfileParam.cpp $(HDRS)
 Tracer.o   	: Tracer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
-TauMetrics.o   	: TauMetrics.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+TauMetrics.o   	: TauMetrics.cpp $(HDRS) $(TAU_CUPTI_INC) $(TAU_CUDA_INC)
+	$(CXX) $(CXXFLAGS) $(TAU_CUDA_DEF) -I$(TAU_CUDA_INC) -I$(TAU_CUPTI_INC) -c $(@:.o=.cpp)
 
 TauReadMetrics.o : TauReadMetrics.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
