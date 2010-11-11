@@ -7,8 +7,20 @@
 #include <generated_driver_meta.h>
 #include <cuda.h>
 
+#define CUPTI_METRIC_INSTRUCTIONS "CUDA_INS"
+
+double metric_read_cupti(int type);
+void metric_read_cupti_ins(int tid, int idx, double values[]);
+
 #define CUDA_CHECK_ERROR(err, str) \
 	if (err != CUDA_SUCCESS) \
+  { \
+		fprintf(stderr, str); \
+		exit(1); \
+	} \
+
+#define CUPTI_CHECK_ERROR(err, str) \
+	if (err != CUPTI_SUCCESS) \
   { \
 		fprintf(stderr, str); \
 		exit(1); \
@@ -55,6 +67,11 @@
 		count = ((name##_params *) info->params)->ByteCount; \
 	}
 
+#define CAST_TO_DRIVER_CONTEXT_TYPE_AND_CALL(name, id, info, ctx) \
+	if ((id) == CUPTI_DRIVER_TRACE_CBID_##name) \
+	{ \
+		ctx = ((name##_params *) info->params)->pctx; \
+	}
 
 // Structure to hold data collected by callback
 typedef struct RuntimeApiTrace_st {

@@ -1,5 +1,9 @@
+#include <Profile/TauMetrics.h>
 #include <Profile/TauGpuAdapterCupti.h>
 #include <stdio.h>
+#include <string>
+using namespace std;
+
 
 class cudaGpuId : public gpuId {
 
@@ -53,6 +57,15 @@ bool functionIsMemcpy(int id)
 					  );
 }
 
+template<class APItype> void context(const APItype &info,
+																					CUpti_CallbackId id,
+																				  CUcontext *ctx)
+{
+	printf("in context template.\n");
+	ctx = ((cuCtxCreate_v2_params *) info->params)->pctx;
+  //CAST_TO_DRIVER_CONTEXT_TYPE_AND_CALL(cuCtxCreate, id, info, ctx)
+  //CAST_TO_DRIVER_CONTEXT_TYPE_AND_CALL(cuCtxCreate_v2, id, info, ctx)
+}
 template<class APItype> int callbacksite(const APItype &info)
 {
 	return info->callbacksite;
@@ -245,21 +258,59 @@ public:
 
 };*/
 
+bool cupti_metrics_initialized = false;
+bool track_instructions = false;
+
+CUpti_EventGroup eventGroup;
+CUpti_EventID eventId = 20;
+
+void cupti_metrics_init(CUcontext ctx)
+{
+	printf("2 initalizing metrics, context %d.\n", ctx);
+
+	printf("Event Group (before init): %d\n", eventGroup);
+	CUptiResult cuptiErr;
+	cuptiErr = cuptiEventGroupCreate(ctx, &eventGroup, 0);
+	CUPTI_CHECK_ERROR(cuptiErr, "cuptiEventGroupCreate");
+
+	printf("Event Group (1): %d\n", eventGroup);
+	cuptiErr = cuptiEventGroupAddEvent(eventGroup, eventId);
+	CUPTI_CHECK_ERROR(cuptiErr, "cuptiEventGroupAddEvent");
+
+	printf("Event Group (2): %d\n", eventGroup);
+	cuptiErr = cuptiEventGroupEnable(eventGroup);
+	CUPTI_CHECK_ERROR(cuptiErr, "cuptiEventGroupEnable");
+}
+
+void metric_read_cupti_ins(int tid, int idx, double values[])
+{
+	if (cupti_metrics_initialized)
+	{
+		printf("read cupti metric value.\n");
+	}
+
+	values[idx] = 0;
+}
+
+
 
 
 
 void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CUpti_CallbackId id, const void *params)
 {
 	//const CBInfo *cbInfo = new CBInfo();
+	//printf("in callback.\n");
 	const char *name;
 	int site;
 	bool memcpy;
 	int memcpyKind;
 	int memcpyCount;
 	int funcId;
+	CUcontext ctx;
 
 	if (domain == CUPTI_CB_DOMAIN_RUNTIME_API_TRACE)
 	{
+		printf("getting data form runtime API.\n");
 		const CUpti_RuntimeTraceApi *cbInfo = (CUpti_RuntimeTraceApi *) params;
 
 		funcId = functionId(cbInfo);
@@ -285,38 +336,25 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 			memcpyKind = kind(cbInfo, id, domain);
 			memcpyCount = count(cbInfo, id, domain);
 		}
+		//printf("id: %d. ctxCreate: %d.\n", id,
+		//CUPTI_DRIVER_TRACE_CBID_cuCtxCreate_v2);
+		// if cuCtxCreate()
+		if ((id == CUPTI_DRIVER_TRACE_CBID_cuCtxCreate || 
+		id == CUPTI_DRIVER_TRACE_CBID_cuCtxCreate_v2) && track_instructions)
+		{
+			const CUpti_DriverTraceApi *cbInfo = (CUpti_DriverTraceApi *) params;
+			cuCtxSynchronize();
+			context(cbInfo, id, &ctx); 
+			printf("1 initalizing metrics, context %d.\n", ctx);
+		}
 	}
-
-	/*if (domain == CUPTI_CB_DOMAIN_RUNTIME_API_TRACE)
-	{
-  	cbInfo = static_cast<const CBInfo*>(params);
-  	RuntimeApiTrace_t *traceData = (RuntimeApiTrace_t*)userdata;
-	}
-	else
-	{
-		const CBInfoDriver *cbInfo = new CBInfoRuntime(params);
-	}*/
 
 	CUptiResult err;
-	//const char *name = new char[strlen(cbInfo->functionName) + 13];
-	//sprintf(name, "%s (%s)",cbInfo->functionName, (domain ==
-	//CUPTI_CB_DOMAIN_RUNTIME_API_TRACE ? "RuntimeAPI" : "DriverAPI"));
-
-	//if (cbInfo->site == CUPTI_API_ENTER)
 	if (site == CUPTI_API_ENTER)
 	{
-		//printf("Enter: %s.\n", name);
-		//if (functionmemcpy(cbInfo->functionId))
+		printf("Enter: %s.\n", name);
 		if (memcpy)
 		{
-			//printf("Is memcpy: %d.\n", memcpyKind);
-			//cudaMemcpy_params params;
-			//memcpy(&params, (cudaMemcpy_params *) cbInfo->params,
-			//sizeof(cudaMemcpy_params));
-			//printf("Enter Memcpy: dest: %d, src: %d, count: %llu, kind: %d.\n",
-			//params.dst, params.src,
-			//params.count, params.kind);
-
 			//TODO: sort out GPU ids
 			//TODO: memory copies from device to device.
 			//printf("cuda D2D is: %d.\n", cudaMemcpyDeviceToDevice);
@@ -344,10 +382,6 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 	{
 		if (memcpy)
 		{
-			/*
-			cudaMemcpy_params params;
-			memcpy(&params, (cudaMemcpy_params *) cbInfo->params,
-			sizeof(cudaMemcpy_params));*/
 			if (memcpyKind == cudaMemcpyHostToDevice)
 			{
 				Tau_gpu_exit_memcpy_event(name,
@@ -372,13 +406,27 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 				Tau_gpu_exit();
 				return;
 			}
+			if ((id == CUPTI_DRIVER_TRACE_CBID_cuCtxCreate || 
+			id == CUPTI_DRIVER_TRACE_CBID_cuCtxCreate_v2) && track_instructions)
+			{
+				const CUpti_DriverTraceApi *cbInfo = (CUpti_DriverTraceApi *) params;
+				//CUcontext ctx;
+				//context(cbInfo, id, &ctx); 
+				//cupti_metrics_init(ctx);
+				//cupti_metrics_initialized = true;
+			  context(cbInfo, id, &ctx); 
+			  printf("2 initalizing metrics, context %d.\n", ctx);
+			}
 		}
 		//printf("Exit: %s:%d.\n", cbInfo->functionName, cbInfo->functionId);
 	}
 }
 
+
 CUpti_SubscriberHandle rtSubscriber;
+bool runtime_enabled = false;
 CUpti_SubscriberHandle drSubscriber;
+bool driver_enabled = false;
 
 void Tau_cuda_onload(void)
 {
@@ -413,14 +461,36 @@ void Tau_cuda_onload(void)
 	{
 		printf("TAU: Subscribing to RUNTIME API.\n");
 		err = cuptiEnableDomain(1, rtSubscriber,CUPTI_CB_DOMAIN_RUNTIME_API_TRACE);
+		runtime_enabled= true;
 	}
 	if (driver_api != NULL)
 	{
 		printf("TAU: Subscribing to DRIVER API.\n");
 		err = cuptiEnableDomain(1, drSubscriber,CUPTI_CB_DOMAIN_DRIVER_API_TRACE);
+		driver_enabled= true;
 	}
 	CUDA_CHECK_ERROR(err, "Cannot set Domain.\n");
 
+	const char *names;
+	const char **all_names;
+
+	int nmetrics;
+	TauMetrics_getCounterList(&all_names, &nmetrics);
+
+	printf("number of metrics: %d.\n", nmetrics);
+
+	for (int number = 0; number < nmetrics; number++)
+	{
+		names = TauMetrics_getMetricName(number);
+		printf("Metrics: %s. #%d\n", names, number);
+		string str (names);
+		if (str.find(CUPTI_METRIC_INSTRUCTIONS) != string::npos)
+		{
+			track_instructions = true;
+			printf("RECORDING number of instructions.\n");
+		}
+   
+	}
 	Tau_gpu_init();
 }
 
@@ -432,4 +502,13 @@ void Tau_cuda_onunload(void)
   err = cuptiUnsubscribe(drSubscriber);
   CUDA_CHECK_ERROR(err, "Cannot unsubscribe.\n");
 	
+	if (eventGroup != NULL)
+	{
+		CUptiResult cuptiErr;
+    cuptiErr = cuptiEventGroupDisable(eventGroup);
+    CUPTI_CHECK_ERROR(cuptiErr, "cuptiEventGroupDisable");
+
+    cuptiErr = cuptiEventGroupDestroy(eventGroup);
+    CUPTI_CHECK_ERROR(cuptiErr, "cuptiEventGroupDestroy");
+	}
 }
