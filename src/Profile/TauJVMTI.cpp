@@ -50,6 +50,7 @@ using namespace std;
 #include "TauJVMTI.h"
 #include "JavaThreadLayer.h"
 
+#define dprintf if (0) printf
 /* ------------------------------------------------------------------- */
 /* Some constant maximum sizes */
 
@@ -171,7 +172,8 @@ get_thread_name(jvmtiEnv *jvmti, jthread thread, char *tname, int maxlen)
         /* Copy the thread name into tname if it will fit */
         len = (int)strlen(info.name);
         if ( len < maxlen ) {
-            (void)strcpy(tname, info.name);
+//            (void)strcpy(tname, info.name);
+            sprintf(tname, "THREAD=%s; THREAD", info.name);
         }
 
         /* Every string allocated by JVMTI needs to be freed */
@@ -318,6 +320,7 @@ cbVMInit(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
         /* The VM has started. */
         get_thread_name(jvmti, thread, tname, sizeof(tname));
         DEBUGPROFMSG("DEBUGPROF:: VMInit " <<  tname << endl;);
+        dprintf("cbVMInit: tname = %s\n", tname);
 
 
         /* The VM is now initialized, at this time we make our requests
@@ -381,6 +384,7 @@ cbVMDeath(jvmtiEnv *jvmti, JNIEnv *env)
 
 void CreateTopLevelRoutine(char *name, char *type, char *groupname, int tid) {
   DEBUGPROFMSG("Inside CreateTopLevelRoutine: name = " << name << ", type = " << type  << ", group = " << groupname << ", tid = " << tid  << endl;);
+  dprintf("Top level routine: name = %s, type = %s, group = %s\n", name, type, groupname);
 
   /* Create a top-level routine that is always called. Use the thread name in it */
   TAU_MAPPING_CREATE(name, type, 1, groupname, tid); 
@@ -398,12 +402,14 @@ static void JNICALL
 cbThreadStart(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
 {
   int * tid;
+  dprintf("Thread Start!\n");
   enter_critical_section(jvmti); {
         /* It's possible we get here right after VmDeath event, be careful */
         if ( !gdata->vm_is_dead ) {
             char  tname[MAX_THREAD_NAME_LENGTH];
 
             get_thread_name(jvmti, thread, tname, sizeof(tname));
+	    dprintf("Before RegisterThread in cbThreadStart\n");
 	    tid = JavaThreadLayer::RegisterThread(thread);
 	    CreateTopLevelRoutine(tname, " ", "THREAD", *tid); 
         }
@@ -414,6 +420,7 @@ cbThreadStart(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
 static void JNICALL
 cbThreadEnd(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
 {
+  dprintf("Thread End!\n");
     enter_critical_section(jvmti); {
         /* It's possible we get here right after VmDeath event, be careful */
         if ( !gdata->vm_is_dead ) {
@@ -655,6 +662,8 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
      */
     (void)memset((void*)&data, 0, sizeof(data));
     gdata = &data;
+    dprintf("Agent_OnLoad\n");
+    gdata->exclude=strdup("sun,java,com/sun");
 
     /* First thing we need to do is get the jvmtiEnv* or JVMTI environment */
     res = vm->GetEnv((void **)&jvmti, JVMTI_VERSION_1);
@@ -686,7 +695,7 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
     /* Register the current thread, since the JVM makes calls with the first thread, before
      * calling cbThreadStart and we need to create the necessary locks and set it's thread ID.
      */
-    JavaThreadLayer::RegisterThread();
+    //JavaThreadLayer::RegisterThread();
 
     /* Parse any options supplied on java command line */
     parse_agent_options(options);
