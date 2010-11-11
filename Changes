@@ -30,6 +30,7 @@ Version 2.20 changes (from 2.20):
 17. Before reverting to compiler based instrumentation the user is prompted unless -optRevert is specified. 
 18. Updates to memory and I/O tracking support for Mac OS X (in tau_exec).
 19. Added support for the Yorick programming language. 
+20. Added Java profiling support using JVMTI.
 
 Version 2.19 changes (from 2.18):
 1. Added support for Chapel.
