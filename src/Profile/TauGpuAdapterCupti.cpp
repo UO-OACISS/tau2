@@ -503,12 +503,12 @@ void Tau_cuda_onload(void)
 	int nmetrics;
 	TauMetrics_getCounterList(&all_names, &nmetrics);
 
-	printf("number of metrics: %d.\n", nmetrics);
+	//printf("number of metrics: %d.\n", nmetrics);
 
 	for (int number = 0; number < nmetrics; number++)
 	{
 		names = TauMetrics_getMetricName(number);
-		printf("Metrics: %s. #%d\n", names, number);
+		//printf("Metrics: %s. #%d\n", names, number);
 		string str (names);
 		if (str.find(CUPTI_METRIC_INSTRUCTIONS) != string::npos)
 		{
