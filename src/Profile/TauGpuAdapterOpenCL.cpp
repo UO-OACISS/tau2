@@ -142,7 +142,7 @@ double Tau_opencl_sync_clocks(cl_command_queue commandQueue, cl_context context)
 	  exit(1);	
 	}
 
-	printf("SYNC: CPU= %f GPU= %f.\n", cpu_timestamp, ((double)gpu_timestamp/1e3)); 
+	//printf("SYNC: CPU= %f GPU= %f.\n", cpu_timestamp, ((double)gpu_timestamp/1e3)); 
 	sync_offset = (((double) gpu_timestamp)/1e3) - cpu_timestamp;
 
 	return sync_offset;

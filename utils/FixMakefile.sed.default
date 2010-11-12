@@ -38,6 +38,8 @@ s@^EXTRADIR=\(.*\)@EXTRADIR=@g
 s@^EXTRADIRCXX=\(.*\)@EXTRADIRCXX=@g
 s@^VTFDIR=\(.*\)@VTFDIR=@g
 s@^OTFDIR=\(.*\)@OTFDIR=@g
+s@^OTFINC=\(.*\)@OTFINC=@g
+s@^OTFLIB=\(.*\)@OTFLIB=@g
 s@^SLOG2DIR=\(.*\)@SLOG2DIR=@g
 s@^PYTHON_INCDIR=\(.*\)@PYTHON_INCDIR=@g
 s@^PYTHON_LIBDIR=\(.*\)@PYTHON_LIBDIR=@g

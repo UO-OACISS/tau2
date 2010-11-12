@@ -2,7 +2,7 @@
 **                      TAU Portable Profiling Package                     **
 **                      http://tau.uoregon.edu                             **
 *****************************************************************************
-**    Copyright 1997-2010						   **
+**    Copyright 1997-2011						   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Research Centre Juelich, Germany                                     **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
@@ -10,6 +10,30 @@
 
 Change log:
 ------------
+Version 2.20 changes (from 2.20):
+1. Added support for GPGPUs using tau_exec -cuda and tau_exec -opencl. Configure with -cuda=<dir>.
+2. Added support for 3D topology displays in paraprof. 
+3. Added support for tracking per-communicator performance data -PROFILECOMMUNICATORS.
+4. Added support for binary rewriting of static executables using DyninstAPI 7.0. 
+5. Added support for derived metrics, cut, copy and paste of metrics in paraprof, perfexplorer.
+6. Added support for sampling based measurements in tau_exec -ebs* (README.sampling).
+7. Added support for ARMCI profiling (GA v5.0) in tau_exec -armci. Configure with -armci=<dir>.
+8. Added support for loop level instrumentation in the binary rewriter (tau_run a.out -o a.i -f select.tau).
+9. Added preliminary support for Eclipse PTP remote components. 
+10. Integrated tau_exec and tau_wrap (tau_exec -loadlib=<dir>/libwrapped.so) for instrumenting an external library.
+11. Added support for pre-computing mean and std. dev. at the end of execution with TAU_PROFILE_FORMAT=merged.
+12. Added support for compiler-based instrumentation for Cray CCE compilers. 
+13. TAU ported to Cray XE6 with updated default directories (gemini).  
+14. Improved support for Cray Shmem. 
+15. Improved support for thread based communication in tau2otf and ParaVer support in tau_convert -paraver.
+16. Throttled functions are now marked explicitly in their names [THROTTLED]. 
+17. Before reverting to compiler based instrumentation the user is prompted unless -optRevert is specified. 
+18. Updates to memory and I/O tracking support for Mac OS X (in tau_exec).
+19. Added support for the Yorick programming language. 
+20. Added Java profiling support using JVMTI.
+21. Added support for Score-P (www.score-p.org) measurement system. Configure with -scorep=<dir>.
+22. Added support for importing Google perftools performance data (paraprof -f google).
+
 Version 2.19 changes (from 2.18):
 1. Added support for Chapel.
 2. Added support for UPC (Berkeley upcc compiler, GASP, supports -optCompInst).

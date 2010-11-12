@@ -92,6 +92,7 @@ SELECTFILE 	= tau_selectfile
 #OTF#INSTALLTAU2OTF 	= $(INSTALLDEST)/tau2otf #ENDIF#
 #OTF#OTFLIBS 	= -L$(OTFDIR)/$(TAU_ARCH)/lib -lotf $(TAU_TRACE_INPUT_LIB) #ENDIF#
 #OTFSRC#OTFLIBS 	= -L$(OTFDIR)/lib -lotf -lz $(TAU_TRACE_INPUT_LIB) #ENDIF#
+#EBS2OTF#INSTALL_EBS2OTF = $(INSTALLLIBDEST)/ebs2otf.so #ENDIF#
 #TAU2EPILOG#TAU2ELG = elgconverter/tau2elg #ENDIF#
 #TAU2EPILOG#INSTALLTAU2ELG = $(INSTALLDEST)/tau2elg #ENDIF#
 #PERFLIB#INSTALLPERF2TAU = $(INSTALLDEST)/perf2tau #ENDIF#
@@ -102,6 +103,7 @@ SELECTFILE 	= tau_selectfile
 #DYNINST#DYNLIBS 	= -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -ldyninstAPI -liberty -lelf #ENDIF#
 #DYNINST5.2#DYNLIBS 	= -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -L$(DYNINSTDIR)/src/$(DYNINST_PLATFORM)/lib -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -ldyninstAPI -lelf -lcommon -lsymtabAPI $(DWARFOPTS) -ldwarf -liberty#ENDIF#
 #DYNINST6#DYNLIBS 	= -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -L$(DYNINSTDIR)/src/$(DYNINST_PLATFORM)/lib -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -ldyninstAPI -lelf -lcommon -lsymtabAPI $(DWARFOPTS) -ldwarf -liberty -linstructionAPI #ENDIF#
+#DYNINST7#DYNLIBS 	= -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -L$(DYNINSTDIR)/src/$(DYNINST_PLATFORM)/lib -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -ldyninstAPI -lelf -lcommon -lparseAPI -lsymtabAPI $(DWARFOPTS) -ldwarf -liberty -linstructionAPI #ENDIF#
 #SP1#DYNLIBS 	= -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -ldyninstAPI #ENDIF#
 #SGIMP#DYNLIBS 	= -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -ldyninstAPI $(DWARFOPTS) -ldwarf -lelf#ENDIF#
 # -lelf is for Solaris only
@@ -147,11 +149,16 @@ INCLUDEPATH = $(SAGE1DIR)/lib/include
 SAGE1LIBS = $(SAGE1DIR)/lib/$(CONFIG_ARCH)
 
 INSTALLDEST	= $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin
+INSTALLLIBDEST	= $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 #PDT#INSTALLINSTR 	= $(INSTALLDEST)/tau_instrumentor #ENDIF#
 #PDT#INSTALLWRAP 	= $(INSTALLDEST)/tau_wrap #ENDIF#
 #PDT#INSTALLPDTOMPCHECK 	= $(INSTALLDEST)/tau_ompcheck #ENDIF#
 #PDT#INSTALLHEADERLIST = $(INSTALLDEST)/tau_header_list #ENDIF#
 INSTALLSELECTFILE = $(INSTALLDEST)/tau_selectfile
+
+# LIST ALL OTF-DEPENDENT UTILS HERE
+INSTALL_OTF_TOOLS = $(INSTALL_EBS2OTF)
+
 #OPARI#INSTALLTAUOMPCHECK 	= $(INSTALLPDTOMPCHECK) #ENDIF#
 #DYNINST#INSTALLTAURUN 	= $(INSTALLDEST)/tau_run #ENDIF#
 #DYNINST#INSTALLTAURUN 	= $(INSTALLDEST)/tau_run #ENDIF#
@@ -208,6 +215,9 @@ tau2otf: 	tau2otf.o
 tau2otf.o:	tau2otf.cpp
 		$(CXX) $(CFLAGS)  tau2otf.cpp -c -I$(OTFDIR)/include -I$(OTFDIR)/include/vampirtrace
 
+ebs2otf/ebs2otf.so:
+		cd ebs2otf ; $(MAKE)
+
 trace2profile/trace2profile:
 		cd trace2profile; $(MAKE) "MAKE=$(MAKE)" "CFLAGS=$(CFLAGS)"
 
@@ -235,20 +245,26 @@ tau_instrumentor.o: tau_instrumentor.cpp
 tau_header_list: tau_header_list.cpp
 		$(PDT_CXX_COMP) $(PDT_CFLAGS) -I$(PDTDIR)/include tau_header_list.cpp -o $@ $(PDTOPTS) -lm $(LEXTRA) 
 
-tau_selectfile: tau_selectfile.cpp tau_selective_dyn.o
-		$(PDT_CXX_COMP) $(PDT_CFLAGS) -I$(PDTDIR)/include tau_selectfile.cpp tau_selective_dyn.o -o $@ $(PDTOPTS) -lm $(LEXTRA) 
+tau_selectfile: tau_selectfile.o tau_selective_dyn.o tau_instrument.dyn.o
+		$(PDT_CXX_COMP) tau_selectfile.o tau_selective_dyn.o tau_instrument.dyn.o -o $@ $(PDTOPTS) -lm $(LEXTRA) 
+
+tau_selectfile.o: tau_selectfile.cpp
+		$(PDT_CXX_COMP) $(PDT_CFLAGS) -I$(PDTDIR)/include -c tau_selectfile.cpp 
 
 tau_instrument.o: tau_instrument.cpp 
 		$(PDT_CXX_COMP) $(PDT_CFLAGS) -I$(PDTDIR)/include -c tau_instrument.cpp
 
+tau_instrument.dyn.o: tau_instrument.dyn.cpp 
+		$(PDT_CXX_COMP) $(PDT_CFLAGS) -DTAU_DYNINST -DTAU_DYNINST41PLUS -I$(PDTDIR)/include -c tau_instrument.dyn.cpp -o tau_instrument.dyn.o
+
 tau_selective.o: tau_selective.cpp 
 		$(PDT_CXX_COMP) $(PDT_CFLAGS) -I$(PDTDIR)/include -c tau_selective.cpp
 
-tau_selective_dyn.o: tau_selective.cpp 
-		$(PDT_CXX_COMP) $(PDT_CFLAGS) -DTAU_DYNINST -DTAU_DYNINST41PLUS  -I$(PDTDIR)/include -c tau_selective.cpp -o tau_selective_dyn.o
+tau_selective_dyn.o: tau_selective.dyn.cpp 
+		$(PDT_CXX_COMP) $(PDT_CFLAGS) -DTAU_DYNINST -DTAU_DYNINST41PLUS  -I$(PDTDIR)/include -c tau_selective.dyn.cpp -o tau_selective_dyn.o
 
-tau_run: 	tau_run.o tau_selective_dyn.o  
-		$(CXX) $(CFLAGS) tau_run.o tau_selective_dyn.o -o $@ $(DYNLIBS) $(LEXTRA) 
+tau_run: 	tau_run.o tau_selective_dyn.o  tau_instrument.dyn.o
+		$(CXX) $(CFLAGS) tau_run.o tau_selective_dyn.o tau_instrument.dyn.o -o $@ $(DYNLIBS) $(LEXTRA) 
 
 tau_run.o: 	tau_run.cpp
 		$(CXX) $(CFLAGS) $(DYNINC) -DTAU_DYNINST -DTAU_DYNINST41PLUS -c tau_run.cpp
@@ -308,6 +324,7 @@ user_event_data.o:	user_event_data.cpp
 clean:
 		/bin/rm -rf *.o $(EXECUTABLES) *.dep lib*$(LSX) *.ii *.ti ti_files cxx_repository ii_files rii_files 
 		cd opari ; make clean
+		cd ebs2otf ; $(MAKE) clean
 
 $(INSTALLDEST)/pprof: pprof
 		@echo Installing $? in $(INSTALLDEST)
@@ -417,8 +434,15 @@ $(INSTALLDEST)/perf2tau: perf2tau
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) perf2tau $(INSTALLDEST)
 
+$(INSTALLLIBDEST)/ebs2otf.so: ebs2otf/ebs2otf.so
+		@echo Installing $? in $(INSTALLLIBDEST)
+		if [ -d $(INSTALLLIBDEST) ] ; then true; \
+                   else mkdir $(INSTALLLIBDEST) ;fi
+		$(TAU_INSTALL) ebs2otf/ebs2otf.so $(INSTALLLIBDEST)
+		$(TAU_INSTALL) ebs2otf/ebs2otf.pm $(INSTALLLIBDEST)
+		cd ebs2otf; $(MAKE) cleanup
 
-install:	$(INSTALLDEST)/pprof $(INSTALLDEST)/tau_reduce $(INSTALLDEST)/tau_merge $(INSTALLDEST)/tau_convert $(INSTALLDEST)/opari $(INSTALLTRACE2PROFILE) $(INSTALLTAU_TIMECORRECT) $(INSTALLPCXX) $(INSTALLINSTR) $(INSTALLTAURUN) $(INSTALLTAU2VTF) $(INSTALLVTF2PROFILE) $(INSTALLTAU2OTF) $(INSTALLTAU2ELG) $(INSTALLTAUOMPCHECK) $(INSTALLPERF2TAU) $(INSTALLWRAP) $(INSTALLHEADERLIST) $(INSTALLSELECTFILE)
+install:	$(INSTALLDEST)/pprof $(INSTALLDEST)/tau_reduce $(INSTALLDEST)/tau_merge $(INSTALLDEST)/tau_convert $(INSTALLDEST)/opari $(INSTALLTRACE2PROFILE) $(INSTALLTAU_TIMECORRECT) $(INSTALLPCXX) $(INSTALLINSTR) $(INSTALLTAURUN) $(INSTALLTAU2VTF) $(INSTALLVTF2PROFILE) $(INSTALLTAU2OTF) $(INSTALLTAU2ELG) $(INSTALLTAUOMPCHECK) $(INSTALLPERF2TAU) $(INSTALLWRAP) $(INSTALLHEADERLIST) $(INSTALLSELECTFILE) $(INSTALL_OTF_TOOLS)
 
 program:        $(PROGRAM)
 

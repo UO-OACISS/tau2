@@ -2,7 +2,7 @@
 **			TAU Performance System(R)                          **
 **			http://tau.uoregon.edu                             **
 *****************************************************************************
-**    Copyright 1997-2010				   	   	   **
+**    Copyright 1997-2011				   	   	   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 **    Research Center Juelich, ZAM Germany			           **
@@ -10,7 +10,7 @@
 /*******************************************************************
  *                                                                 *
  *        Tuning and Analysis Utilities Installation Procedure     *
- *                           Version 2.19                          *
+ *                           Version 2.20                          *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
@@ -119,6 +119,9 @@ Other Options:
 -jdk=<dir>  Build a library for profiling Java code with specified jdk.
 -vtf=<dir> ......... Specify location of VTF3 Trace Generation Package.
 -otf=<dir> ....... Specify location of Open Trace Format (OTF) Package.
+-otfinc=<dir> ....... Specify location of stand-alone OTF header files.
+-otflib=<dir> ...... Specify location of stand-alone OTF library files.
+-ebs2otf ............... Enable conversion of EBS traces to OTF format.
 -nocomm  ........ Disable tracking communication events in MPI library.
 -scalasca=<dir>  ................ Specify location of SCALASCA package.
 -epilog=<dir>  ............ Specify location of EPILOG Tracing package.
@@ -129,10 +132,13 @@ Other Options:
 -pythoninc=<dir> ........ Specify location of Python include directory.
 -pythonlib=<dir> ............ Specify location of Python lib directory.
 -tag=<unique name> ........ Specify a tag to identify the installation.
+-cuda=<dir> .............Specify the location of the CUDA installation.
+-opencl=<dir> .........Specify the location of the OPENCL installation.
 -TRACE ..................................... Generate TAU event traces.
 -MPITRACE ... Generate event traces for MPI events and their ancestors.
 -PROFILE ............ Generate profiles (summary statistics) (default).
 -PROFILECALLPATH ......................... Generate call path profiles.
+-PROFILECOMMUNICATORS ... Generate profiles with MPI communicator info.
 -PROFILEPARAM .... Generate profiles with parameter mapped event data .
 -PROFILEPHASE .......................... Generate phase based profiles.
 -DEPTHLIMIT ........... Disable instrumentation beyond a certain depth.
@@ -219,6 +225,16 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    e.g., 
    % configure -c++=icpc -cc=icc -tag=intel71-vmi -mpiinc=/vmi2/mpich/include 
 
+-cuda=<dir>
+		Specifies the locate of the nVidia's CUDA installation. Assumes the header are 
+		in <dir>/include and libraries are in /usr/lib or another location accessible 
+		by the TAU linker.
+
+-opencl=<dir>
+		Specifies the locate of an OPENCL installation. Assumes the header are in
+		<dir>/CL/include and libraries are in /usr/lib or another location accessible 
+		by the TAU linker.
+
 -pthread
    
    Specifies pthread as the thread package to be used. In the default mode, no 
@@ -296,6 +312,29 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    tool that links with the OTF library. OTF traces are hierarchical (multi-stream), 
    compact, support online compression, and can be read concurrently by a parallel trace
    analysis tool such as VNG [ Ref: http://www.vampir-ng.de, http://www.paratools.com/otf].
+
+-otfinc=<dir>
+   Specifies the location of stand-alone OTF header files. This is intended
+   for use with features orthogonal to the use of the -otf=<directory> option.
+   -otf has the side-effect of making tracing default in the TAU build. This
+   may not be the expected behavior for features like Event-based sampling,
+   which only needs to know the header and library locations of OTF in order
+   to provide conversion facilities for EBS to OTF traces.
+
+-otflib=<dir>
+   Specifies the location of stand-alone OTF library files. Please refer to
+   -otfinc for further notes on intended use.
+
+-ebs2otf
+   Enables the building of utilities that support the conversion of EBS 
+   traces to OTF format. This requires an appropriate version of OTF 
+   (currently 1.8) to be available either through -otf or through -otfinc
+   and -otflib options. Please note that this feature does not require the
+   conversion utilities to be built on the same machine the EBS traces are
+   generated. System administrators making pre-built versions of TAU for
+   their users do not have to enable this feature if the supporting 
+   software infrastructure is not available. Please read README.sampling
+   for more details.
 
 -slog2=<directory>
    Specifies the location of the SLOG2 SDK trace generation package. TAU's
@@ -450,6 +489,11 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    This option is an extension of -PROFILE, the default profiling option. 
    Specifying TAU_CALLPATH_DEPTH environment variable, the user can vary the 
    depth of the callpath. See examples/calltree for further information.
+
+-PROFILECOMMUNICATORS 
+  
+   This option generates MPI information partitioned by communicators. TAU 
+   lists upto 8 ranks in each communicator in the listing. 
 
 -PROFILEPARAM
  
@@ -631,10 +675,10 @@ iii) To configure TAU under AIX, we strongly recommend using the -mpi option rat
    % configure -pdt=<dir> -arch=ibm64 -mpi ; make clean install
    for 64 bits. 
 
-iv) To configure TAU for Cray XT3 or IBM BGL/BGP,
+iv) To configure TAU for Cray XE6 or IBM BGL/BGP,
 
    First configure PDT using % configure -XLC ; make clean install
-   on BGL. On XT3 you will need to configure PDT using:
+   on BGL. On XE6 you will need to configure PDT using:
    % configure -GNU; make clean install
 
    Then, configure TAU using:
@@ -642,13 +686,14 @@ iv) To configure TAU for Cray XT3 or IBM BGL/BGP,
 	configures TAU with MPI and PDT on BGL. You may configure TAU using:
    % configure -arch=bgp -mpi -pdt=<dir> -pdt_c++=xlC 
         to configure TAU with MPI and PDT on IBM BG/P. 
-     Use -arch=xt3 -pdt_c++=g++ on
-	Cray XT3 (Catamount). Then configure for the frontend using 
+     Use -arch=craycnl -pdt_c++ on Cray CNL systems and 
+     Use -arch=xt3 -pdt_c++=g++ on Cray XT3 (Catamount). 
+	Then configure for the frontend using 
 	% ./configure This creates a backend library directory 
 	<taudir>/[bgl,xt3]/lib and a front-end 
         directory <taudir>/[rs6000,x86_64]/bin which should be put in your PATH. 
 
-   For Cray XT4/XT5 or systems running Cray Compute Node Linux (CNL) instead of 
+   For Cray XT4/XT5/XE6 or systems running Cray Compute Node Linux (CNL) instead of 
    Catamount on the backend nodes, you will need to configure TAU with the 
    -arch=craycnl configuration option. e.g., 
 
@@ -657,7 +702,7 @@ iv) To configure TAU for Cray XT3 or IBM BGL/BGP,
 
    TAU's -arch=xt3 configuration assumes Catamount and -arch=craycnl assumes 
    Cray Compute Node Linux on the backend nodes respectively. See TAU wiki for
-   further details and examples.
+   further details and examples. It is critical to use the -arch=craycnl for Cray systems.
 
 v) To configure TAU for SGI Altix system, you may use
    % ./configure -c++=icpc  -cc=icc -fortran=intel -mpi ...
@@ -673,9 +718,6 @@ vi) To configure TAU with VampirTrace using Intel Fortran compilers under Linux,
 
     % cd tau-2.<x>; ./configure -papi=/usr/local/packages/papi-3.5.0 -vampirtrace=/usr/local/packages/vampirtrace-5.2.5-mpich2 -cc=icc -c++=icpc -fortran=intel -pdt=/usr/local/packages/pdtoolkit-3.14 -mpiinc=/usr/local/packages/mpich2-1.0.4p1/intel-9.1/include -mpilib=/usr/local/packages/mpich2-1.0.4p1/intel-9.1/lib
     % make clean install
-
-vi) % ./configure -TRACE -PROFILE 
-   Enable both profiling and tracing.
 
 ***********************************************************************
    To install *multiple* (typical) configurations of TAU at a site, you may use the 

@@ -279,6 +279,7 @@ extern "C" {
 #define TAU_SCATTER_DATA(data)                  Tau_scatter_data(data) 
 #define TAU_GATHER_DATA(data)  	                Tau_gather_data(data)
 #define TAU_ALLREDUCE_DATA(data)  	        Tau_allreduce_data(data)
+#define TAU_WAIT_DATA(data)  	        	Tau_wait_data(data)
 #define TAU_ALLGATHER_DATA(data)  	        Tau_allgather_data(data)
 #define TAU_REDUCESCATTER_DATA(data)  	        Tau_reducescatter_data(data)
 #define TAU_SCAN_DATA(data)  		        Tau_scan_data(data)
@@ -387,6 +388,7 @@ void TAUDECL Tau_scatter_data(int data);
 void TAUDECL Tau_gather_data(int data);
 void TAUDECL Tau_allreduce_data(int data);
 void TAUDECL Tau_allgather_data(int data);
+void TAUDECL Tau_wait_data(int data);
 void TAUDECL Tau_reducescatter_data(int data);
 void TAUDECL Tau_scan_data(int data);
 void TAUDECL Tau_set_node(int node);

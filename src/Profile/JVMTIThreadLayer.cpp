@@ -31,6 +31,8 @@ using namespace std;
 #include <Profile/TauJVMTI.h>
 #include <stdlib.h>
 
+#define dprintf if(0) printf
+
 
 /////////////////////////////////////////////////////////////////////////
 // Define the static private members of JavaThreadLayer  
@@ -41,7 +43,7 @@ jrawMonitorID JavaThreadLayer::tauNumThreadsLock ;
 jrawMonitorID JavaThreadLayer::tauDBMutex ;
 jrawMonitorID JavaThreadLayer::tauEnvMutex ;
 jvmtiEnv  * JavaThreadLayer::jvmti = NULL;
-
+extern void CreateTopLevelRoutine(char *name, char *type, char *groupname, int tid);
 
 extern GlobalAgentData * get_global_data();
 ////////////////////////////////////////////////////////////////////////
@@ -54,7 +56,8 @@ int * JavaThreadLayer::RegisterThread(jthread this_thread)
   static int initflag = JavaThreadLayer::InitializeThreadData();
   // if its in here the first time, setup mutexes etc.
 
-  int *threadId = new int;
+  dprintf("RegisterThread called\n");
+  int * threadId = new int;
 
   // Lock the mutex guarding the thread count before incrementing it.
   jvmti->RawMonitorEnter(tauNumThreadsLock); 
@@ -76,7 +79,8 @@ int * JavaThreadLayer::RegisterThread(jthread this_thread)
   // A thread should call this routine exactly once. 
 
   // Make this a thread specific data structure with the thread environment.
-  jvmti->SetThreadLocalStorage(this_thread, (void * )threadId); 
+  jvmti->SetThreadLocalStorage(this_thread, threadId); 
+  //dprintf("Setting thread local storage: %d, %d\n", tauThreadCount, *threadId);
 
   DEBUGPROFMSG("Thread id " <<  *threadId << " Created!\n";);
 
@@ -115,9 +119,18 @@ int JavaThreadLayer::GetThreadId(jthread this_thread)
 
   if (tidp == (int *) NULL)
   { // This thread needs to be registered
-    DEBUGPROFMSG("This thread dosn't apear to be registered.\n";);
+    DEBUGPROFMSG("This thread doesn't apear to be registered.\n";);
 
+    dprintf("getThreadID calls RegisterThread\n"); 
     tidp = JavaThreadLayer::RegisterThread(this_thread);
+    if ((*tidp) == 0) {
+     // Main JVM thread has tid 0, others have tid > 0
+      CreateTopLevelRoutine("THREAD=JVM-MainThread; THREAD GROUP=system", " ", "THREAD", (*tidp));
+    } else {
+    // Internal thread
+      CreateTopLevelRoutine("THREAD=JVM-InternalThread; THREAD GROUP=system", " ", "THREAD", (*tidp));
+
+    }
   }
   return (*tidp);
 
