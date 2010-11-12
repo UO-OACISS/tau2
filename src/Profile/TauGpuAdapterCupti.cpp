@@ -271,25 +271,40 @@ void cupti_metrics_init(CUcontext ctx)
 	printf("Event Group (before init): %d\n", eventGroup);
 	CUptiResult cuptiErr;
 	cuptiErr = cuptiEventGroupCreate(ctx, &eventGroup, 0);
-	CUPTI_CHECK_ERROR(cuptiErr, "cuptiEventGroupCreate");
+	CUPTI_CHECK_ERROR(cuptiErr, "cuptiEventGroupCreate\n");
 
 	printf("Event Group (1): %d\n", eventGroup);
 	cuptiErr = cuptiEventGroupAddEvent(eventGroup, eventId);
-	CUPTI_CHECK_ERROR(cuptiErr, "cuptiEventGroupAddEvent");
+	CUPTI_CHECK_ERROR(cuptiErr, "cuptiEventGroupAddEvent\n");
 
 	printf("Event Group (2): %d\n", eventGroup);
 	cuptiErr = cuptiEventGroupEnable(eventGroup);
-	CUPTI_CHECK_ERROR(cuptiErr, "cuptiEventGroupEnable");
+	printf("CUPTI_ERR: %d.\n", cuptiErr);
+	CUPTI_CHECK_ERROR(cuptiErr, "cuptiEventGroupEnable\n");
 }
 
 void metric_read_cupti_ins(int tid, int idx, double values[])
 {
-	if (cupti_metrics_initialized)
+	if (!cupti_metrics_initialized)
 	{
-		printf("read cupti metric value.\n");
+		values[idx] = 0;
 	}
-
-	values[idx] = 0;
+	else
+	{
+		
+		uint64_t eventVal;
+		size_t bytesRead = sizeof (uint64_t);
+    CUptiResult cuptiErr;
+		cuptiErr = cuptiEventGroupReadEvent(eventGroup, 
+																					CUPTI_EVENT_READ_FLAG_NONE, 
+																					eventId, &bytesRead, &eventVal);
+    CUPTI_CHECK_ERROR(cuptiErr, "cuptiEventGroupReadEvent");
+    //printf("CUDA INS value: %llu\n", (unsigned long long int) eventVal);
+    //printf("CUDA INS value: %f\n", (double) eventVal);
+		values[idx] = (double) eventVal;
+	  
+		//printf("read cupti metric value.\n");
+	}
 }
 
 
@@ -310,7 +325,7 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 
 	if (domain == CUPTI_CB_DOMAIN_RUNTIME_API_TRACE)
 	{
-		printf("getting data form runtime API.\n");
+		//printf("getting data form runtime API.\n");
 		const CUpti_RuntimeTraceApi *cbInfo = (CUpti_RuntimeTraceApi *) params;
 
 		funcId = functionId(cbInfo);
@@ -321,6 +336,23 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 		{
 			memcpyKind = kind(cbInfo, id, domain);
 			memcpyCount = count(cbInfo, id, domain);
+		}
+		if (id == CUPTI_RUNTIME_TRACE_CBID_cudaGetDevice_v3020 && track_instructions
+		&& !cupti_metrics_initialized)
+		{
+			const CUpti_RuntimeTraceApi *cbInfo = (CUpti_RuntimeTraceApi *) params;
+			//cuCtxSynchronize();
+			//context(cbInfo, id, &ctx);
+			//printf("creating context, %s.\n", name);
+			CUcontext ctx;
+			CUdevice device;
+			int *dId = ((cudaGetDevice_v3020_params *) cbInfo->params)->device;
+			//printf("device id: %d", *dId);
+			cuDeviceGet(&device, *dId);
+			cuCtxCreate(&ctx, 0, device);
+			cupti_metrics_init(ctx);
+			cupti_metrics_initialized = true;
+			//printf("1 initalizing metrics, context %d.\n", ctx);
 		}
 	}
 	else
@@ -339,20 +371,14 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 		//printf("id: %d. ctxCreate: %d.\n", id,
 		//CUPTI_DRIVER_TRACE_CBID_cuCtxCreate_v2);
 		// if cuCtxCreate()
-		if ((id == CUPTI_DRIVER_TRACE_CBID_cuCtxCreate || 
-		id == CUPTI_DRIVER_TRACE_CBID_cuCtxCreate_v2) && track_instructions)
-		{
-			const CUpti_DriverTraceApi *cbInfo = (CUpti_DriverTraceApi *) params;
-			cuCtxSynchronize();
-			context(cbInfo, id, &ctx); 
-			printf("1 initalizing metrics, context %d.\n", ctx);
-		}
+		//if ((id == CUPTI_DRIVER_TRACE_CBID_cuCtxCreate || 
+		//id == CUPTI_DRIVER_TRACE_CBID_cuCtxCreate_v2) && track_instructions)
+		//printf("Enter: %s.\n", name);
 	}
 
 	CUptiResult err;
 	if (site == CUPTI_API_ENTER)
 	{
-		printf("Enter: %s.\n", name);
 		if (memcpy)
 		{
 			//TODO: sort out GPU ids
@@ -414,8 +440,8 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 				//context(cbInfo, id, &ctx); 
 				//cupti_metrics_init(ctx);
 				//cupti_metrics_initialized = true;
-			  context(cbInfo, id, &ctx); 
-			  printf("2 initalizing metrics, context %d.\n", ctx);
+			  //context(cbInfo, id, &ctx); 
+			  //printf("2 initalizing metrics, context %d.\n", ctx);
 			}
 		}
 		//printf("Exit: %s:%d.\n", cbInfo->functionName, cbInfo->functionId);
@@ -488,6 +514,11 @@ void Tau_cuda_onload(void)
 		{
 			track_instructions = true;
 			printf("RECORDING number of instructions.\n");
+			if (runtime_api == NULL)
+			{
+				printf("ERROR CUPTI metrics require the Runtime layer to be enabled. Please set TAU_CUPTI_RUNTIME.\n");
+				exit(1);
+			}
 		}
    
 	}
