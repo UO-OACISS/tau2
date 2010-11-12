@@ -277,6 +277,16 @@ case $1 in
 	echo "s,^OTFDIR=.*$,OTFDIR=$otfdir,g" >> $sedout
 	;;
 
+     otflib=*)
+	otflib=`echo $1 | sed -e 's/^otflib=//'`
+	echo "s,^OTFLIB=.*$,OTFLIB=$otflib,g" >> $sedout
+	;;
+
+     otfinc=*)
+	otfinc=`echo $1 | sed -e 's/^otfinc=//'`
+	echo "s,^OTFINC=.*$,OTFINC=$otfinc,g" >> $sedout
+	;;
+
      pdtcompdir=*)
         pdtcompdir=`echo $1 | sed -e 's/^pdtcompdir=//'`
 	echo "s,^PDTCOMPDIR=.*$,PDTCOMPDIR=$pdtcompdir,g" >> $sedout
@@ -1074,7 +1084,11 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      DYNINST6)
-	echo "NOTE: Using newer version DYNINST 5+ "
+	echo "NOTE: Using newer version DYNINST 6+ "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     DYNINST7)
+	echo "NOTE: Using newer version DYNINST 7+ "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      DYNINST5.2)
@@ -1117,6 +1131,10 @@ case $1 in
 	echo "NOTE: Using Opari tool with OpenMP construct information ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     EBS2OTF)
+        echo "NOTE: Enable Conversion from Event-based Sampling Traces to Open Trace Format ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      VAMPIRTRACE)
 	echo "NOTE: Using VAMPIRTRACE Tracing Package ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1288,6 +1306,10 @@ case $1 in
 	;;
      PROFILEPARAM)
 	echo "NOTE: Using Parameter Mapped Profiles"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PROFILECOMMUNICATORS)
+	echo "NOTE: Tracking MPI calls based on MPI Communicators: PROFILECOMMUNICATORS"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PROFILEPHASE)

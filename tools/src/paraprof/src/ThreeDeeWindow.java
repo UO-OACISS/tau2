@@ -324,6 +324,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         maxScatterValues = new float[4];
         for (int f = 0; f < 4; f++) {
             minScatterValues[f] = Float.MAX_VALUE;
+            maxScatterValues[f] = Float.MIN_VALUE;
         }
 
 
@@ -349,15 +350,22 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         }
 
         //scatterPlot.setSize(15, 15, 15);
+//        //scatterPlot.clearValues();
+//        scatterPlot.setMinMax(minScatterValues[3], maxScatterValues[3]);
+        scatterPlot.setSize(tsizes[0],tsizes[1], tsizes[2]);
         scatterPlot.setIsTopo(true);
         scatterPlot.setAxes(axes);
+        scatterPlot.setTopoVis(settings.getTopoVisAxes());
         scatterPlot.setValues(values);
         scatterPlot.setColorScale(colorScale);
-        scatterPlot.setVisRange(settings.getMinTopoRange(), settings.getMaxTopoRange());
+        scatterPlot.setVisRange(settings.getMinTopoRange(), settings.getMaxTopoRange() );
         plot = scatterPlot;
+        
+        //settings.setMinTopoShown(scatterPlot.getMinShown());
+        //settings.setMaxTopoShown(scatterPlot.getMaxShown());
     }
     
-    
+    int[] tsizes=null;
     private float[][] defaultTopology(int numThreads){
     	float[][] values = new float[numThreads][4];
     	
@@ -368,13 +376,16 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     	 String size_key=prefix+" Size";
     	 
         	 String tsize = ppTrial.getDataSource().getMetaData().get(size_key);
-        	 int[] tsizes = parseTuple(tsize);
+        	 tsizes = parseTuple(tsize);
         	 for(int i=0;i<3;i++){
         		 maxScatterValues[i] = tsizes[i];
         	 	minScatterValues[i] = 0;
         	 }
-         scatterPlot.setSize(tsizes[0],tsizes[1], tsizes[2]);
+         //scatterPlot.setSize(tsizes[0],tsizes[1], tsizes[2]);
     	 
+//         int minVis=settings.getMinTopoRange();
+//         int maxVix=settings.getMaxTopoRange();
+         
     	 int threadIndex = 0;
     	 for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
              Thread thread = it.next();
@@ -397,6 +408,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
             FunctionProfile functionProfile = thread.getFunctionProfile(topoFunction);
 
             if (functionProfile != null) {
+                	
+            	
                 values[threadIndex][3] = (float) topoValueType.getValue(functionProfile, topoMetricID,ppTrial.getSelectedSnapshot());
                 maxScatterValues[3] = Math.max(maxScatterValues[3], values[threadIndex][3]);
                 minScatterValues[3] = Math.min(minScatterValues[3], values[threadIndex][3]);
@@ -1393,6 +1406,57 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         //return Double.toString(settings.getColorValue().getValue(fp, settings.getColorMetricID()));
 
     }
+    
+    public String getSelectedMinTopoValue(){
+    	return getSelectedTopoValue(scatterPlot.getMinShown());
+    }
+    public String getSelectedMaxTopoValue(){
+    	return getSelectedTopoValue(scatterPlot.getMaxShown());
+    }
+    
+    public String getStatMean(){
+    	if(scatterPlot!=null)
+    		return getSelectedTopoValue(scatterPlot.getStatMean());
+    	else return getSelectedTopoValue(Float.NaN);
+    }
+    public String getStatMax(){
+    	if(scatterPlot!=null)
+    		return getSelectedTopoValue(scatterPlot.getStatMax());
+    	else return getSelectedTopoValue(Float.NaN);
+    }
+    public String getStatMin(){
+    	if(scatterPlot!=null)
+    		return getSelectedTopoValue(scatterPlot.getStatMin());
+    	else return getSelectedTopoValue(Float.NaN);
+    }
+    
+    private String getSelectedTopoValue(float val){
+//    	if (threads == null || functionNames == null)
+//            return "";
+
+//        if (settings.getSelections()[1] < 0 || settings.getSelections()[0] < 0)
+//            return "";
+
+//        Thread thread = threads.get(settings.getSelections()[1]);
+//
+//        Function function = functions.get(settings.getSelections()[0]);
+//        FunctionProfile fp = thread.getFunctionProfile(function);
+//
+//        if (fp == null) {
+//            return "no value";
+//        }
+
+        int units = this.units;
+        ParaProfMetric ppMetric = (ParaProfMetric) settings.getTopoMetric();
+        if (!ppMetric.isTimeMetric() || !ValueType.isTimeUnits(settings.getTopoValueType())) {
+            units = 0;
+        }
+
+        return UtilFncs.getOutputString(units, val, 6,
+                ppMetric.isTimeDenominator()).trim()
+                + getUnitsString(units, settings.getTopoValueType(), ppMetric);
+
+    }
 
     private String getUnitsString(int units, ValueType valueType, ParaProfMetric ppMetric) {
         return valueType.getSuffix(units, ppMetric);
@@ -1499,11 +1563,11 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 
 
              axisStrings[i] = new ArrayList<String>();
-             axisStrings[i].add(minScatterValues[i]+"");
-             axisStrings[i].add(minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i]) * .25+"");
-             axisStrings[i].add(minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i]) * .50+"");
-             axisStrings[i].add(minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i]) * .75+"");
-             axisStrings[i].add(minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i]) +"");
+             axisStrings[i].add((int)minScatterValues[i]+"");
+             axisStrings[i].add((int)(minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i]) * .25)+"");
+             axisStrings[i].add((int)(minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i]) * .50)+"");
+             axisStrings[i].add((int)(minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i]) * .75)+"");
+             axisStrings[i].add((int)(minScatterValues[i] + (maxScatterValues[i] - minScatterValues[i])) +"");
          }
 
          ParaProfMetric ppMetric = (ParaProfMetric) settings.getTopoMetric();

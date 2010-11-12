@@ -241,6 +241,7 @@ TAU_SHLIB	= libTAUsh$(TAU_CONFIG)$(TAU_SHLIBX)
 #JAVA#TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB) #ENDIF#
 #JAVA#TAU_JAVA_INSTALLDIR = $(INSTALLDEST)/TAU #ENDIF#
 #JAVA#TAU_JAVA_CLASS1 = $(TAU_JAVA_INSTALLDIR)/Profile.class #ENDIF#
+#JVMTI#TAU_JAVA_CLASS2 = $(TAU_JAVA_INSTALLDIR)/TauJVMTI.jar #ENDIF#
 #DYNINST# TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB) #ENDIF#
 #USE_DECCXX# EXTRAOBJS=cxx_repository/*.o #ENDIF#
 #PYTHON#TAUPYTHON = pytau$(TAU_SHLIBX) #ENDIF#
@@ -394,6 +395,12 @@ $(TAU_JAVA_INSTALLDIR)/Profile.class: Profile.class
                    else mkdir -p $(TAU_JAVA_INSTALLDIR) ;fi
 		$(TAU_INSTALL) $? $(TAU_JAVA_INSTALLDIR)
 
+$(TAU_JAVA_INSTALLDIR)/TauJVMTI.jar: TauJVMTI.jar
+		@echo Installing $? in $(INSTALLDEST)
+		@if [ -d $(INSTALLDEST) ] ; then true; \
+                   else mkdir -p $(INSTALLDEST) ;fi
+		$(TAU_INSTALL) $? $(INSTALLDEST)
+
 $(TAU_SHAREDDIR)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
 		@echo Installing $(TAUPYTHON), ltau.py, and tau.py in $(INSTALLDEST)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
@@ -463,7 +470,7 @@ $(INSTALLDEST)/libmpi_r.a: libmpi_r.a
 	cd $(INSTALLDEST) && ln -s shared$(TAU_CONFIG) bindings$(TAU_CONFIG)
 	cd $(INSTALLDEST) && ln -s bindings$(TAU_CONFIG) bindings-default
 
-install:	 $(INSTALLDEST)/$(TAU_TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(INSTALLDEST)/$(TAU_GPU_LIB) $(MPI_INSTALL) $(TAU_SHLIB_INSTALL) $(TAU_JAVA_CLASS1) $(TAUPYTHON_INSTALL) $(SHMEM_INSTALL) $(POELIB_INSTALL) $(CRAY_PGI_HACK)
+install:	 $(INSTALLDEST)/$(TAU_TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(INSTALLDEST)/$(TAU_GPU_LIB) $(MPI_INSTALL) $(TAU_SHLIB_INSTALL) $(TAU_JAVA_CLASS1) $(TAU_JAVA_CLASS2) $(TAUPYTHON_INSTALL) $(SHMEM_INSTALL) $(POELIB_INSTALL) $(CRAY_PGI_HACK)
 
 TauForceMPI.o : TauForceMPI.c
 	$(CC) $(CFLAGS) -c $(@:.o=.c)
@@ -668,7 +675,7 @@ TauJVMTI.jar:  TauJVMTI.java
 	(cd classes; $(JDKDIR)/bin/jar cf ../$@ *)
 
 test_java: all
-	LD_LIBRARY_PATH=`pwd` $(JDKDIR)/bin/java -agentlib:TAUsh-jdk=exclude=java -Xbootclasspath/a:./TauJVMTI.jar Pi
+	LD_LIBRARY_PATH=`pwd` $(JDKDIR)/bin/java -agentlib:TAUsh-jdk=exclude=java/util/zip/ZipFile/init,java/util/jar/JarFile/init,sun/misc/URLClassPath*,java/net/URLClassLoader*,java/lang/ClassLoader* -Xbootclasspath/a:./TauJVMTI.jar Pi
 
 clean : 
 	$(RM) *.ii *.ti ti_files cxx_repository ii_files rii_files *.a *.o *$(TAU_SHLIBX) $(TAU_GPU_LIB) $(TAU_GPU_DEP)
