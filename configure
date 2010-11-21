@@ -1408,9 +1408,9 @@ for arg in "$@"; do
     fi
     if [ -f "$cudainclude/cuda.h" ] ; then
 			useropt="$useropt#-DTAU_MAX_THREADS=3"
-    	fixmakeargs="$fixmakeargs cudainclude=$cudainclude"
+    	fixmakeargs="$fixmakeargs TAU_USE_GPU cudainclude=$cudainclude"
 			if [ -f "$cudainclude/CL/cl.h" ] ; then
-    		fixmakeargs="$fixmakeargs openclinclude=$cudainclude"
+    		fixmakeargs="$fixmakeargs TAU_USE_GPU openclinclude=$cudainclude"
 			fi
 		else
 			echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"

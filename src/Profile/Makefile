@@ -170,7 +170,6 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 #SHMEM#SHMEM_INSTALL   = $(INSTALLDEST)/libTauShmem$(TAU_CONFIG)$(LSX)  #ENDIF#
 ##############################################
 
-
 ##############################################
 # For building TauLinuxTimers with gcc
 ##############################################
@@ -308,6 +307,8 @@ else
 	TAU_GPU_OBJS=
 	TAU_GPU_DEP=
 endif
+
+#TAU_USE_GPU#GPU_INSTALL   = $(INSTALLDEST)/$(TAU_GPU_LIB)#ENDIF#
 
 all:		$(TAU_TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI) $(TAUPYTHON) $(SHMEM_WRAPPER) $(POELIB) $(TAU_GPU_LIB)
 
@@ -463,7 +464,7 @@ $(INSTALLDEST)/libmpi_r.a: libmpi_r.a
 	cd $(INSTALLDEST) && ln -s shared$(TAU_CONFIG) bindings$(TAU_CONFIG)
 	cd $(INSTALLDEST) && ln -s bindings$(TAU_CONFIG) bindings-default
 
-install:	 $(INSTALLDEST)/$(TAU_TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(INSTALLDEST)/$(TAU_GPU_LIB) $(MPI_INSTALL) $(TAU_SHLIB_INSTALL) $(TAU_JAVA_CLASS1) $(TAUPYTHON_INSTALL) $(SHMEM_INSTALL) $(POELIB_INSTALL) $(CRAY_PGI_HACK)
+install:	 $(INSTALLDEST)/$(TAU_TARGET) $(INSTALLDEST)/$(TAU_DISABLE) $(MPI_INSTALL) $(GPU_INSTALL) $(TAU_SHLIB_INSTALL) $(TAU_JAVA_CLASS1) $(TAUPYTHON_INSTALL) $(SHMEM_INSTALL) $(POELIB_INSTALL) $(CRAY_PGI_HACK)
 
 TauForceMPI.o : TauForceMPI.c
 	$(CC) $(CFLAGS) -c $(@:.o=.c)
