@@ -2,7 +2,8 @@ include $(TAU_TEST_MAKEFILE)
 
 # I'm using -optLinkReset because I don't want to link in MPI, otherwise I may not
 # be able to run the resuling executable
-CC		= $(TAU_COMPILER) $(TAU_CC) -optKeepFiles -optNoRevert -optVerbose -optLinkReset="$(TAU_LIBS) $(TAU_CXXLIBS)" -optTauSelectFile=select.tau
+CC		= $(TAU_COMPILER) $(TAU_CC) -optKeepFiles -optNoRevert -optVerbose -optTauSelectFile=select.tau
+# -optLinkReset="$(TAU_LIBS) $(TAU_CXXLIBS)" -optTauSelectFile=select.tau
 RM 	      	= /bin/rm -f
 TARGET	      	= simple
 
