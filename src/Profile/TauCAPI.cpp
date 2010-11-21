@@ -751,6 +751,9 @@ extern "C" int& tau_totalnodes(int set_or_get, int value)
 #define TAU_GEN_EVENT(e, msg) TauUserEvent* e () { \
 	static TauUserEvent u(msg); return &u; } 
 
+#define TAU_GEN_CONTEXT_EVENT(e, msg) TauContextUserEvent* e () { \
+	static TauContextUserEvent ce(msg); return &ce; } 
+
 TAU_GEN_EVENT(TheSendEvent,"Message size sent to all nodes")
 TAU_GEN_EVENT(TheRecvEvent,"Message size received from all nodes")
 TAU_GEN_EVENT(TheBcastEvent,"Message size for broadcast")
@@ -762,7 +765,7 @@ TAU_GEN_EVENT(TheAlltoallEvent,"Message size for all-to-all")
 TAU_GEN_EVENT(TheScatterEvent,"Message size for scatter")
 TAU_GEN_EVENT(TheGatherEvent,"Message size for gather")
 TAU_GEN_EVENT(TheAllgatherEvent,"Message size for all-gather")
-TAU_GEN_EVENT(TheWaitEvent,"Message size received in wait")
+TAU_GEN_CONTEXT_EVENT(TheWaitEvent,"Message size received in wait")
 
 
 TauContextUserEvent**& TheMsgVolContextEvent() {
@@ -849,7 +852,7 @@ extern "C" void Tau_allgather_data(int data) {
 }
 
 extern "C" void Tau_wait_data(int data) {
-  TAU_EVENT(TheWaitEvent(), data);
+  TAU_CONTEXT_EVENT(TheWaitEvent(), data);
 }
 
 extern "C" void Tau_allreduce_data(int data) {

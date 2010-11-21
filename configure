@@ -92,6 +92,10 @@ for arg in "$@"; do
     echo "-shmemlibrary=<library> ............ Specify a different SHMEM library."
     echo "            e.g., -shmemlibrary=-lsmac                                 "
     echo ""
+    echo "GPGPU Options:"
+    echo "-cuda=<dir> ................ Specify location of the top level CUDA SDK"
+    echo "directory with include subdirectory. Enables OpenCL and CUDA profiling."
+    echo ""
     echo "Other Options:"
     echo "-iowrapper .................................... Build POSIX IO Wrapper."
     echo "-pthread .................................. Use pthread thread package."
@@ -215,6 +219,9 @@ for arg in "$@"; do
     echo "-shmemlibrary=<library> ............ Specify a different SHMEM library."
     echo "            e.g., -shmemlibrary=-lsmac                                 "
     echo "-nocomm  ........ Disable tracking communication events in MPI library."
+    echo "-cuda=<dir> ................ Specify location of the top level CUDA SDK"
+    echo "directory with include subdirectory. Enables OpenCL and CUDA profiling."
+    echo " "
     echo "-hpctoolkit-src-dir=<dir> .......... Specify patched HPCToolkit source."
     echo "-hpctoolkit-install-dir=<dir> . Specify patched HPCToolkit Install dir."
     echo "-scalasca=<dir>  ................ Specify location of SCALASCA package."
@@ -1595,7 +1602,6 @@ cp ${tauroot}/tools/src/paraprof/bin/paraprof.jar $JARTARGET
 cp ${tauroot}/tools/src/perfdmf/bin/perfdmf.jar $JARTARGET
 cp ${tauroot}/tools/src/perfexplorer/perfexplorer.jar $JARTARGET
 cp ${tauroot}/src/Profile/TAU.jar $JARTARGET
-cp ${tauroot}/src/Profile/TauJVMTI.jar $JARTARGET
 cp ${tauroot}/tools/src/perfexplorer/perfexplorer-1.4.jar $JARTARGET
 cp ${tauroot}/tools/src/vis/bin/vis.jar $JARTARGET
 cp ${tauroot}/tools/src/common/bin/tau-common.jar $JARTARGET
@@ -5448,27 +5454,27 @@ fi
 if [ $scorep = yes ] ; then
     fixmakeargs="$fixmakeargs SCOREP scorepdir=$scorepdir"
     tauoptions="${tauoptions}-scorep"
-    scorepCommonLibs="-lbfd#-liberty#-lotf2#-lsilc_utilities"
+    scorepCommonLibs="-lbfd#-liberty#-lotf2#-lscorep_utilities"
     if [ $mpi = yes ] ; then 
       if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs SCOREPOMPI" 
-	scorepLibs="-L${scorepdir}/lib#-lsilc_mpi#$scorepCommonLibs"
+	scorepLibs="-L${scorepdir}/lib#-lscorep_mpi#$scorepCommonLibs"
       else
         fixmakeargs="$fixmakeargs SCOREPMPI"
-	scorepLibs="-L${scorepdir}/lib#-lsilc_mpi#$scorepCommonLibs"
+	scorepLibs="-L${scorepdir}/lib#-lscorep_mpi#$scorepCommonLibs"
       fi 
     else
       if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs SCOREPOMP" 
-	scorepLibs="-L${scorepdir}/lib#-lsilc_serial#$scorepCommonLibs"
+	scorepLibs="-L${scorepdir}/lib#-lscorep_serial#$scorepCommonLibs"
       else
-	scorepLibs="-L${scorepdir}/lib#-lsilc_serial#$scorepCommonLibs"
+	scorepLibs="-L${scorepdir}/lib#-lscorep_serial#$scorepCommonLibs"
       fi
     fi
 
     fixmakeargs="$fixmakeargs scorepmpilibs=$scorepLibs"
     fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"
-    fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/silc"
+    fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/scorep"
 fi
 
 if [ $epilog = yes ] ; then
