@@ -88,14 +88,14 @@ public class SelectiveFileGenerator extends JFrame {
         for (Iterator<FunctionProfile> it = ppTrial.getMeanThread().getFunctionProfiles().iterator(); it.hasNext();) {
             FunctionProfile fp = it.next();
             if (excludeThrottled.isSelected() && fp.getFunction().isGroupMember(throttledGroup)) {
-                buffer.append(ParaProfUtils.removeSourceLocation(fp.getName()) + "\n");
+                buffer.append(ParaProfUtils.removeThrottledTag(ParaProfUtils.removeSourceLocation(fp.getName())) + "\n");
             } else if (excludeLightweight.isSelected() == true) {
 
                 if (!fp.getFunction().isGroupMember(mpiGroup) && !fp.getFunction().isGroupMember(callpathGroup)
                         && !fp.getFunction().isGroupMember(sampleGroup)) {
                     if (fp.getNumCalls() >= numcalls_value) {
                         if (fp.getInclusivePerCall(0) <= percall_value) {
-                            buffer.append(ParaProfUtils.removeSourceLocation(fp.getName()) + "\n");
+                            buffer.append(ParaProfUtils.removeThrottledTag(ParaProfUtils.removeSourceLocation(fp.getName())) + "\n");
                         }
                     }
                 }
