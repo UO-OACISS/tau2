@@ -1,0 +1,34 @@
+TAU with CUPTI verions 0.9
+
+== INSTALLATION ==
+
+Both the CUDA toolkit and the CUPTI toolkit must be installed to use this 
+version of TAU. To configure type:
+
+%> ./configure -cuda=<location of cuda> -cupti=<location of cupti>
+
+Then:
+
+%> make install
+
+Also set your library path to "<path to TAU>/<arch>/lib" and your path to <path to
+TAU>/<arch>/bin".
+
+== USE ==
+
+To load the TAU wrapper libraries at runtime use the tau_run script to run your
+application a.out:
+
+%> tau_run -cupti ./a.out 
+
+If this is a serial program, type:
+
+%> tau_run -T serial -cupti ./a.out
+
+The default behavior is to record only the overall runtime. To enable Runtime
+API tracking set the env. variable:
+
+TAU_CUPTI_RUNTIME=1 or/and TAU_CUPTI_DRIVER=1.
+
+In any case the performance data is written out as profile.* files. 
+Type 'pprof' to get a text display of the data or 'paraprof' for a graphic display.
