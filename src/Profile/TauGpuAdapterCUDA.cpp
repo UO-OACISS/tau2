@@ -1,6 +1,8 @@
 #include "TauGpuAdapterCUDA.h"
 #include <stdio.h>
 #include <queue>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/time.h>
 using namespace std;
 
@@ -53,6 +55,7 @@ class KernelEvent
 {
 
 	public: 
+	const char *name;
 	int id;
 	cudaStream_t stream;
 	cudaEvent_t startEvent;
@@ -141,6 +144,108 @@ transferSize, int MemcpyType)
 	Tau_gpu_register_memcpy_event(name, &cudaEventId(id), &cudaGpuId(id), start/1e3 + sync_offset, stop/1e3 + sync_offset, transferSize, MemcpyType);
 }
 
+#define TAU_KERNEL_STRING_SIZE 1024
+
+/* Function to parse CUDA kernel names. Borrowed from VampirTrace */
+
+const char *parse_kernel_name(const char *devFunc)
+{
+	char *kernelName;
+  int i = 0;       /* position in device function (source string) */
+  int nlength = 0; /* length of namespace or kernel */
+  int ePos = 0;    /* position in final kernel string */
+  char *curr_elem, kn_templates[TAU_KERNEL_STRING_SIZE];
+  char *tmpEnd, *tmpElemEnd;
+
+  /*printf("[CUDA] device funtion name: %s'", devFunc);*/
+
+  /* init for both cases: namespace available or not */
+  if(devFunc[2] == 'N'){
+    nlength = atoi(&devFunc[3]); /* get length of first namespace */
+    i = 4;
+  }else{
+    nlength = atoi(&devFunc[2]); /* get length of kernel */
+    i = 3;
+  }
+
+  /* unless string null termination */
+  while(devFunc[i] != '\0'){
+    /* found either namespace or kernel name (no digits) */
+    if(devFunc[i] < '0' || devFunc[i] > '9'){
+      /* copy name to kernel function */
+      if((ePos + nlength) < TAU_KERNEL_STRING_SIZE){
+        (void)strncpy(&kernelName[ePos], &devFunc[i], nlength);
+        ePos += nlength; /* set next position to write */
+      }else{
+        nlength = TAU_KERNEL_STRING_SIZE - ePos;
+        (void)strncpy(&kernelName[ePos], &devFunc[i], nlength);
+        printf("[CUDA]: kernel name '%s' contains more than %d chars!",
+                      devFunc, TAU_KERNEL_STRING_SIZE);
+        return "";
+      }
+
+      i += nlength; /* jump over name */
+      nlength = atoi(&devFunc[i]); /* get length of next namespace or kernel */
+
+      /* finish if no digit after namespace or kernel */
+      if(nlength == 0){
+        kernelName[ePos] = '\0'; /* set string termination */
+        break;
+      }else{
+        if((ePos + 3) < TAU_KERNEL_STRING_SIZE){
+          (void)strncpy(&kernelName[ePos], "::\0", 3);
+          ePos += 2;
+        }else{
+          printf("[CUDA]: kernel name '%s' contains more than %d chars!",
+                        devFunc, TAU_KERNEL_STRING_SIZE);
+          return "";
+        }
+      }
+    }else i++;
+  }
+
+  /* copy the end of the kernel name string to extract templates */
+  if(-1 == snprintf(kn_templates, TAU_KERNEL_STRING_SIZE, "%s", &devFunc[i+1]))
+    printf( "[CUDA]: Error parsing kernel '%s'", devFunc);
+  curr_elem = kn_templates; /* should be 'L' */
+
+  /* search templates (e.g. "_Z10cptCurrentILb1ELi10EEv6SField8SParListifff") */
+  tmpEnd=strstr(curr_elem,"EE");
+  /* check for templates: curr_elem[0] points to 'L' AND string contains "EE" */
+  if(tmpEnd != NULL && curr_elem[0]=='L'){ /* templates exist */
+    tmpEnd[1] = '\0'; /* set 2nd 'E' to \0 as string end marker */
+
+    /* write at postion 'I' with '<' */
+    /* elem->name[ePos]='<'; */
+    if(-1 == snprintf(&(kernelName[ePos]),TAU_KERNEL_STRING_SIZE-ePos,"<"))
+      printf("[CUDA] Parsing templates of kernel '%s' failed!", devFunc);
+    ePos++; /* continue with next character */
+
+    do{
+      int res;
+      curr_elem++; /* set pointer to template type length or template type */
+      /* find end of template element */
+      tmpElemEnd = strchr(curr_elem + atoi(curr_elem), 'E');
+      tmpElemEnd[0] = '\0'; /* set termination char after template element */
+      /* find next non-digit char */
+      while(*curr_elem >= '0' && *curr_elem <= '9') curr_elem++;
+      /* append template value to kernel name */
+      if(-1 == (res = snprintf(&(kernelName[ePos]),
+                               TAU_KERNEL_STRING_SIZE-ePos,"%s,",curr_elem)))
+        printf("[CUDA]: Parsing templates of kernel '%s' crashed!", devFunc);
+      ePos += res; /* continue after template value */
+      curr_elem =tmpElemEnd + 1; /* set current element to begin of next template */
+    }while(tmpElemEnd < tmpEnd);
+    if((ePos-1) < TAU_KERNEL_STRING_SIZE) (void)strncpy(&kernelName[ePos-1], ">\0", 2);
+    else printf("[CUDA]: Templates of '%s' too long for internal buffer!", devFunc);
+  } /* else: kernel has no templates */
+  printf("[CUDA] funtion name: %s'",kernelName);
+
+
+	return kernelName; 
+
+}
+
 
 KernelEvent curKernel;
 
@@ -153,6 +258,7 @@ void Tau_cuda_enqueue_kernel_enter_event(const char *name, int id)
 	curKernel.startEvent = startEvent;
 	curKernel.stopEvent = stopEvent;
 	curKernel.id = id;
+	curKernel.name = parse_kernel_name(name);
 
 	cudaError err = cudaStreamCreate(&curKernel.stream);
 	
