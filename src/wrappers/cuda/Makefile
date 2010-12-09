@@ -1,4 +1,4 @@
-TAUROOT=
+TAUROOT=/home/users/scottb/tau2
 include $(TAUROOT)/include/Makefile
 
 CC=$(TAU_CC) 
@@ -21,7 +21,7 @@ TAU_CUDA_INSTALL_CMD=cp $(TAU_CUDA_SHARED) $(INSTALLDEST)/shared$(TAU_CONFIG)
 $(TAU_CUDA_SHARED): cuda_wrap.o 
 	$(TAU_CXX) -g $(TAU_SHFLAGS) $@ $< $(TAU_SHLIBS) -ldl -L$(INSTALLDEST)/shared
 
-cuda_wrap.o: cuda_wrap.c
+cuda_wrap.o: cuda_wrap.cpp
 	$(TAU_CXX) $(CFLAGS) -I$(TAU_CUDA_INC) -c $< -o $@
 clean:
 	/bin/rm -f cuda_wrap.o libTAU_CUDA.so

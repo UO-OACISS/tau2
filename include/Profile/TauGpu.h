@@ -13,6 +13,7 @@
 
 #include<Profile/tau_types.h>
 
+
 /**********************************************
 	* Callback into the driver adapter to retrive information about the device ids
 	* and event ids 
@@ -65,6 +66,9 @@ endTime);
  * program. Times are pre-aligned to the CPU clock. */
 extern "C" void Tau_gpu_register_memcpy_event(const char *name, eventId *id, gpuId *device, double startTime, double endTime, int transferSize, int memcpyType);
 
+extern "C" void TauTraceOneSidedMsg(bool type, gpuId *gpu, int length, int thread);
+
 #endif // __cplusplus
 #endif // _TAU_GPU_INTERFACE
+
 
