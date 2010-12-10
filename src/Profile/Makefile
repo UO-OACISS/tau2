@@ -15,7 +15,7 @@
 #**      Documentation   : See http://www.cs.uoregon.edu/research/tau       **
 #****************************************************************************
 
-TAUROOT=/home/users/scottb/tau2
+TAUROOT=/home/scottb/tau2
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -120,8 +120,8 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauMemoryWrap.o \
 STATIC_OBJS   = Comp_gnu.o $(PGIACC_STATIC_O)
 SHARED_OBJS   = $(PGIACC_O)
 #SICORTEX#SHARED_OBJS = Comp_gnu.o #ENDIF#
-#TAU_BFDSHAREDLINK#SHARED_OBJS = Comp_gnu.o #ENDIF#
-#TAU_BFDSHAREDLINK#SHARED_LIBS = $(BFDLINK) -lbfd -liberty #ENDIF#
+SHARED_OBJS = Comp_gnu.o #ENDIF##TAU_BFDSHAREDLINK#
+SHARED_LIBS = $(BFDLINK) -lbfd -liberty #ENDIF##TAU_BFDSHAREDLINK#
 
 PRINT	      = pr
 
@@ -321,6 +321,12 @@ else
 endif
 
 GPU_INSTALL   = $(TAU_SHAREDDIR)/$(TAU_CUDA_LIB) $(TAU_SHAREDDIR)/$(TAU_OPENCL_LIB)#ENDIF##TAU_USE_GPU#
+
+$(TAU_SHAREDDIR)/$(TAU_CUDA_LIB): $(TAU_CUDA_LIB)
+	cp $(TAU_CUDA_LIB) $(TAU_SHAREDDIR)/$(TAU_CUDA_LIB)
+
+$(TAU_SHAREDDIR)/$(TAU_OPENCL_LIB): $(TAU_OPENCL_LIB)
+	cp $(TAU_OPENCL_LIB) $(TAU_SHAREDDIR)/$(TAU_OPENCL_LIB)
 
 all:		$(TAU_TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI) $(TAUPYTHON) $(SHMEM_WRAPPER) $(POELIB) $(TAU_CUDA_LIB) $(TAU_OPENCL_LIB)
 
