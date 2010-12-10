@@ -119,6 +119,8 @@ void Tau_cuda_init()
 void Tau_cuda_exit()
 {
 	//printf("in Tau_cuda_exit().\n");
+
+	Tau_cuda_register_sync_event();
 	Tau_gpu_exit();
 }
 
@@ -150,14 +152,25 @@ transferSize, int MemcpyType)
 
 const char *parse_kernel_name(const char *devFunc)
 {
+
 	char *kernelName;
+	kernelName = (char*) malloc(TAU_KERNEL_STRING_SIZE*sizeof(char));
+	sprintf(kernelName, "<addr=%p>", devFunc);
+
+	//printf("kernelName = %s.\n", kernelName);
+	return kernelName;
+
+/* May use this later */
+
+#ifdef FALSE 
+	char kernelName[TAU_KERNEL_STRING_SIZE];
   int i = 0;       /* position in device function (source string) */
   int nlength = 0; /* length of namespace or kernel */
   int ePos = 0;    /* position in final kernel string */
   char *curr_elem, kn_templates[TAU_KERNEL_STRING_SIZE];
   char *tmpEnd, *tmpElemEnd;
 
-  /*printf("[CUDA] device funtion name: %s'", devFunc);*/
+  printf("[CUDA] device funtion name: %s.\n", devFunc);
 
   /* init for both cases: namespace available or not */
   if(devFunc[2] == 'N'){
@@ -181,7 +194,7 @@ const char *parse_kernel_name(const char *devFunc)
         (void)strncpy(&kernelName[ePos], &devFunc[i], nlength);
         printf("[CUDA]: kernel name '%s' contains more than %d chars!",
                       devFunc, TAU_KERNEL_STRING_SIZE);
-        return "";
+        return kernelName;
       }
 
       i += nlength; /* jump over name */
@@ -198,7 +211,7 @@ const char *parse_kernel_name(const char *devFunc)
         }else{
           printf("[CUDA]: kernel name '%s' contains more than %d chars!",
                         devFunc, TAU_KERNEL_STRING_SIZE);
-          return "";
+          return kernelName;
         }
       }
     }else i++;
@@ -239,11 +252,11 @@ const char *parse_kernel_name(const char *devFunc)
     if((ePos-1) < TAU_KERNEL_STRING_SIZE) (void)strncpy(&kernelName[ePos-1], ">\0", 2);
     else printf("[CUDA]: Templates of '%s' too long for internal buffer!", devFunc);
   } /* else: kernel has no templates */
-  printf("[CUDA] funtion name: %s'",kernelName);
 
 
+  //printf("[CUDA] funtion name: %s",kernelName);
 	return kernelName; 
-
+#endif
 }
 
 
@@ -303,15 +316,15 @@ void Tau_cuda_register_sync_event()
 	while (!KernelBuffer.empty() && cudaEventQuery(KernelBuffer.front().stopEvent) == cudaSuccess)
 	{
 		KernelEvent kernel = KernelBuffer.front();
-		printf("kernel buffer size = %d.\n", KernelBuffer.size());
+		//printf("kernel buffer size = %d.\n", KernelBuffer.size());
 
 		cudaEventElapsedTime(&start_sec, lastEvent, kernel.startEvent);
-		printf("kernel event [start] = %f.\n", start_sec + lastEventTime);
+		//printf("kernel event [start] = %f.\n", start_sec + lastEventTime);
 
 		cudaEventElapsedTime(&stop_sec, lastEvent, kernel.stopEvent);
-		printf("kernel event [stop] = %f.\n", stop_sec + lastEventTime );
+		//printf("kernel event [stop] = %f.\n", stop_sec + lastEventTime );
 
-		Tau_cuda_register_gpu_event("Kernel", kernel.id, (double) start_sec,
+		Tau_cuda_register_gpu_event(kernel.name, kernel.id, (double) start_sec,
 		(double) stop_sec);
 
 		lastEvent = kernel.stopEvent;
