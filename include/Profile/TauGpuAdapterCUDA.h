@@ -4,6 +4,28 @@
 #define TAU_MAX_FUNCTIONNAME 200
 
 
+class cudaGpuId : public gpuId {
+	int device;
+	int stream;
+public:
+	cudaGpuId(const int d, const int s);
+	
+	cudaGpuId *getCopy();
+	char* printId();
+	x_uint64 id_p1() { return device; }
+	x_uint64 id_p2() { return stream; }
+	bool operator<(const cudaGpuId& other) const;
+	bool equals(const gpuId *other) const;
+};
+class cudaEventId : public eventId
+{
+	int id;
+public:
+	cudaEventId(const int a);
+	
+	bool operator<(const cudaEventId& A) const;
+};
+
 void Tau_cuda_init();
 
 void Tau_cuda_exit();

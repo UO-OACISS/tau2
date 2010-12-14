@@ -26,6 +26,15 @@ public:
 	openCLGpuId(const int i) {
 		id = i;
 	}
+	openCLGpuId *getCopy() { 
+			openCLGpuId *c = new openCLGpuId(*this);
+			return c;
+	}
+
+	bool equals(const gpuId *other) const
+	{
+		return id  == ((openCLGpuId *)other)->id;
+	}
 	
   char* printId();
 	x_uint64 id_p1() { return id; }
@@ -185,9 +194,10 @@ void Tau_opencl_register_gpu_event(const char *name, int id, double start,
 double stop)
 {
 	openCLEventId *evId = new openCLEventId(id);
+	openCLGpuId *gId = new openCLGpuId(0);
 	lock_callback();
 	//printf("locked for: %s.\n", name);
-	Tau_gpu_register_gpu_event(name, evId, start/1e3 - sync_offset, stop/1e3 - sync_offset);
+	Tau_gpu_register_gpu_event(name, evId, gId, start/1e3 - sync_offset, stop/1e3 - sync_offset);
 	//printf("released for: %s.\n", name);
 	release_callback();
 }
