@@ -9,47 +9,44 @@ using namespace std;
 //CPU timestamp at the first cuEvent.
 int sync_offset = 0;
 
-class cudaGpuId : public gpuId {
-
-	int id;
-
-public:
-/*	cudaGpuId(const NvU64 cId, const NvU32 dId) :
-		contextId(cId), deviceId(dId) {} */
-	
-	cudaGpuId(const int i) {
-		id = i;
-	}
-	
-  char* printId();
-	x_uint64 id_p1() { return id; }
-	x_uint64 id_p2() { return 0; }
-};
+cudaGpuId::cudaGpuId(const int d, const int s) {
+		device = d;
+		stream = s;
+}
+cudaGpuId *cudaGpuId::getCopy() { 
+		cudaGpuId *c = new cudaGpuId(*this);
+		return c;
+}
+bool cudaGpuId::operator<(const cudaGpuId& other) const
+{
+	printf("== < ==, device equal? %b.\n", device == other.device);
+	printf("== < ==, stream equal? %b.\n", stream == other.stream);
+	if (device == other.device)
+		return stream < other.stream;
+	else
+		return device < other.device;
+}
+bool cudaGpuId::equals(const gpuId *o) const 
+{
+	cudaGpuId *other = (cudaGpuId *) o;
+	return (this->device == other->device && this->stream == other->stream); 
+}
 
 char* cudaGpuId::printId() 
 {
-		/*char *r;
-		sprintf(r, "%d", id);
-		return r;*/
-		return "";
+		char *rtn = (char*) malloc(20*sizeof(char));
+		sprintf(rtn, "[%d:%d]", device, stream);
+		return rtn;
 }
 
-/* CUDA Event are uniquely identified as the pair of two other ids:
- * context and call (API).
- */
-class cudaEventId : public eventId
-{
-	int id;
-	public:
-	cudaEventId(const int a) :
+cudaEventId::cudaEventId(const int a) :
 		id(a) {}
 	
 	// for use in STL Maps	
-	bool operator<(const cudaEventId& A) const
-	{ 
-			return id<A.id; 
-	}
-};
+bool cudaEventId::operator<(const cudaEventId& A) const
+{ 
+		return id<A.id; 
+}
 
 class KernelEvent
 {
@@ -126,24 +123,24 @@ void Tau_cuda_exit()
 
 void Tau_cuda_enter_memcpy_event(const char *name, int id, int size, int MemcpyType)
 {
-	Tau_gpu_enter_memcpy_event(name, &cudaEventId(id), &cudaGpuId(0), size, MemcpyType);
+	Tau_gpu_enter_memcpy_event(name, &cudaEventId(id), &cudaGpuId(0,0), size, MemcpyType);
 }
 
 void Tau_cuda_exit_memcpy_event(const char *name, int id, int MemcpyType)
 {
-	Tau_gpu_exit_memcpy_event(name, &cudaEventId(id), &cudaGpuId(0), MemcpyType);
+	Tau_gpu_exit_memcpy_event(name, &cudaEventId(id), &cudaGpuId(0,0), MemcpyType);
 }
 
 void Tau_cuda_register_gpu_event(const char *name, int id, double start,
 double stop)
 {
-	Tau_gpu_register_gpu_event(name, &cudaEventId(id), start/1e3 + sync_offset, stop/1e3 + sync_offset);
+	Tau_gpu_register_gpu_event(name, &cudaEventId(id), &cudaGpuId(0,id), start/1e3 + sync_offset, stop/1e3 + sync_offset);
 }
 
 void Tau_cuda_register_memcpy_event(const char *name, int id, double start, double stop, int
 transferSize, int MemcpyType)
 {
-	Tau_gpu_register_memcpy_event(name, &cudaEventId(id), &cudaGpuId(id), start/1e3 + sync_offset, stop/1e3 + sync_offset, transferSize, MemcpyType);
+	Tau_gpu_register_memcpy_event(name, &cudaEventId(id), &cudaGpuId(0,id), start/1e3 + sync_offset, stop/1e3 + sync_offset, transferSize, MemcpyType);
 }
 
 #define TAU_KERNEL_STRING_SIZE 1024
