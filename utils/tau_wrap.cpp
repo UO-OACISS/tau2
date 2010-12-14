@@ -68,6 +68,7 @@ extern bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector        
 
 /* Globals */
 bool memory_flag = false;   /* by default, do not insert malloc.h in instrumented C/C++ files */
+bool strict_typing = false; /* by default unless --strict option is used. */
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -224,6 +225,7 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
   string macro("#define ");
   string func(r->name());
   string proto(r->name());
+  string protoname(r->name());
   string funchandle("_h) (");
   string rcalledfunc("(*"+r->name()+"_h)");
   string dltext;
@@ -233,6 +235,7 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
   func.append("(");
   rcalledfunc.append("(");
   proto.append("(");
+  protoname.append("_p");
   if ((grp = r->signature()->returnType()->isGroup()) != 0) { 
     returntypename = grp->name();
   } else {
@@ -312,22 +315,49 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
   func.append(")");
   proto.append(")");
   rcalledfunc.append(")");
-  funchandle.append(") = NULL;");
   impl<<") {" <<endl<<endl;
+	string funcprototype = funchandle + string(");");
+ 	funchandle.append(") = NULL;");
   if (runtime) {
     if (!isVoid) {
-      impl <<"  static "<<returntypename<<" (*"<<r->name()<<funchandle<<endl;
+			if (strict_typing)
+			{
+				impl << "  typedef " << returntypename << " (*"<<protoname<<funcprototype<<endl;
+				impl << "  static "  << protoname << "_h " << r->name() << "_h = NULL;"<<endl;
+			}
+			else
+			{
+      	impl <<"  static "<<returntypename<<" (*"<<r->name()<<funchandle<<endl;
+			}
       retstring = string("    return retval;");
     } else {
-      impl <<"  static void (*"<<r->name()<<funchandle<<endl;
+			if (strict_typing)
+			{
+				impl << "  typedef void (*"<<protoname<<funcprototype<<endl;
+				impl << "  static "  << protoname << "_h " << r->name() << "_h = NULL;"<<endl;
+			}
+			else
+			{
+      	impl <<"  static void (*"<<r->name()<<funchandle<<endl;
+			}
     }
+		string dlsym = "";
+		if (strict_typing)
+		{
+		  dlsym = r->name() + string("_h = (") + protoname + string("_h) dlsym(tau_handle,\"")+r->name() + string("\"); \n");
+		}
+		else	
+		{
+			dlsym = r->name() + string("_h = dlsym(tau_handle,\"")+r->name() +
+			string("\"); \n");
+		}
     dltext = string("  if (tau_handle == NULL) \n") + 
     string("    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); \n\n") + 
     string("  if (tau_handle == NULL) { \n") + 
     string("    perror(\"Error opening library in dlopen call\"); \n")+ retstring + string("\n") + 
     string("  } \n") + 
     string("  else { \n") + 
-    string("    if (") + r->name() + string("_h == NULL)\n\t") + r->name() + string("_h = dlsym(tau_handle,\"")+r->name() + string("\"); \n") + 
+    string("    if (") + r->name() + string("_h == NULL)\n\t") + dlsym + 
     string("    if (") + r->name() + string ("_h == NULL) {\n") + 
     string("      perror(\"Error obtaining symbol info from dlopen'ed lib\"); \n") + string("  ")+ retstring + string("\n    }\n");
 
@@ -503,8 +533,9 @@ int main(int argc, char **argv)
 
   if (argc < 3)
   {
-    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-r runtimelibname] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ]"<<endl;
+    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-r runtimelibname] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] [--strict]"<<endl;
     cout <<" To use runtime library interposition, -r <name> must be specified\n"<<endl;
+    cout <<" --strict enforces strict typing (no dynamic function pointer casting). \n"<<endl;
     cout<<"----------------------------------------------------------------------------------------------------------"<<endl;
   }
   PDB p(argv[1]); if ( !p ) return 1;
@@ -572,6 +603,13 @@ int main(int argc, char **argv)
           printf("Using instrumentation requests file: %s\n", argv[i]);
 #endif /* DEBUG */
         }
+        if (strcmp(argv[i], "--strict") == 0)
+				{
+					strict_typing = true;	
+#ifdef DEBUG
+          printf("Using strict typing. \n");
+#endif /* DEBUG */
+				}
         break; /* end of default case */
     }
   }
