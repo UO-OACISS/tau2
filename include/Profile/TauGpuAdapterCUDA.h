@@ -1,5 +1,6 @@
 #include "TauGpu.h"
 #include <cuda_runtime_api.h>
+#include <cuda.h>
 
 #define TAU_MAX_FUNCTIONNAME 200
 
@@ -7,8 +8,15 @@
 class cudaGpuId : public gpuId {
 	int device;
 	int stream;
+	CUstream dr_stream;
+	cudaStream_t rt_stream;
 public:
-	cudaGpuId(const int d, const int s);
+	cudaGpuId(const int d, cudaStream_t s)
+	{
+		device = d;
+		dr_stream = (CUstream) s;
+		rt_stream = (cudaStream_t) s;
+	}
 	
 	cudaGpuId *getCopy();
 	char* printId();
@@ -16,6 +24,8 @@ public:
 	x_uint64 id_p2() { return stream; }
 	bool operator<(const cudaGpuId& other) const;
 	bool equals(const gpuId *other) const;
+	CUstream get_dr_stream();
+	cudaStream_t get_rt_stream();
 };
 class cudaEventId : public eventId
 {
@@ -40,8 +50,10 @@ double stop);
 void Tau_cuda_register_memcpy_event(int id, double start, double stop, int
 transferSize, int MemcpyType);
 
-void Tau_cuda_enqueue_kernel_enter_event(const char *name, int id);
+void Tau_cuda_enqueue_kernel_enter_event(const char *name, 
+cudaStream_t s);
 
-void Tau_cuda_enqueue_kernel_exit_event(const char *name, int id);
+void Tau_cuda_enqueue_kernel_exit_event(const char *name, 
+cudaStream_t s);
 
 void Tau_cuda_register_sync_event();
