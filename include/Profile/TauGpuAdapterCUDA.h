@@ -7,21 +7,20 @@
 
 class cudaGpuId : public gpuId {
 	int device;
-	int stream;
-	CUstream dr_stream;
-	cudaStream_t rt_stream;
+	cudaStream_t stream;
 public:
 	cudaGpuId(const int d, cudaStream_t s)
 	{
 		device = d;
-		dr_stream = (CUstream) s;
-		rt_stream = (cudaStream_t) s;
+		//dr_stream = (CUstream) s;
+		//rt_stream = (cudaStream_t) s;
+		stream = s;
 	}
 	
 	cudaGpuId *getCopy();
 	char* printId();
-	x_uint64 id_p1() { return device; }
-	x_uint64 id_p2() { return stream; }
+	//x_uint64 id_p1() { return device; }
+	//x_uint64 id_p2() { return  stream; }
 	bool operator<(const cudaGpuId& other) const;
 	bool equals(const gpuId *other) const;
 	CUstream get_dr_stream();

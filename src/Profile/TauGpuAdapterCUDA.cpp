@@ -1,5 +1,6 @@
 #include "TauGpuAdapterCUDA.h"
 #include <stdio.h>
+#include <iostream>
 #include <queue>
 #include <stdlib.h>
 #include <string.h>
@@ -7,14 +8,9 @@
 using namespace std;
 
 //CPU timestamp at the first cuEvent.
-int sync_offset = 0;
+double sync_offset = 0;
 
 /*
-cudaGpuId::cudaGpuId(const int d, CUstream s) {
-		device = d;
-		stream = &s;
-		dr_stream = s;
-}
 cudaGpuId::cudaGpuId(const int d, cudaStream_t s) {
 		device = d;
 		stream = &s;
@@ -33,17 +29,18 @@ bool cudaGpuId::operator<(const cudaGpuId& other) const
 }
 bool cudaGpuId::equals(const gpuId *o) const 
 {
+	cout << "in equals." << endl;
 	cudaGpuId *other = (cudaGpuId *) o;
 	return (this->device == other->device && this->stream == other->stream); 
 }
 
 char* cudaGpuId::printId() 
 {
-		char *rtn = (char*) malloc(20*sizeof(char));
+		char *rtn = (char*) malloc(50*sizeof(char));
 		sprintf(rtn, "[%d:%d]", device, stream);
 		return rtn;
 }
-
+/*
 CUstream cudaGpuId::get_dr_stream(void)
 {
 	if (dr_stream != NULL)
@@ -70,7 +67,7 @@ cudaStream_t cudaGpuId::get_rt_stream(void)
 		cudaStreamCreate(&st);
 		return st;
 	}
-}
+}*/
 cudaEventId::cudaEventId(const int a) :
 		id(a) {}
 	
@@ -132,8 +129,8 @@ void Tau_cuda_init()
 	if (!init)
 	{
 		cudaEvent_t initEvent;
-		cudaStream_t stream;
-		cudaError err = cudaStreamCreate(&stream);
+		//cudaStream_t stream;
+		cudaError err; //= cudaStreamCreate(&stream);
 		
   	struct timeval tp;
 
@@ -162,7 +159,8 @@ void Tau_cuda_init()
 			printf("Error syncing Event, error #: %d.\n", err);
 			//exit(1);
 		}
-  	sync_offset = ((double)tp.tv_sec * 1e6 + tp.tv_usec);
+  	sync_offset = (double)(tp.tv_sec * 1e6 + tp.tv_usec);
+		printf("sync offset: %lf.\n", sync_offset);
 
 		lastEvent = initEvent;
 		init = true;
@@ -188,10 +186,11 @@ void Tau_cuda_exit_memcpy_event(const char *name, int id, int MemcpyType)
 	Tau_gpu_exit_memcpy_event(name, &cudaEventId(id), &cudaGpuId(0,0), MemcpyType);
 }
 
-void Tau_cuda_register_gpu_event(const char *name, cudaGpuId id, double start,
+void Tau_cuda_register_gpu_event(const char *name, cudaGpuId *id, double start,
 double stop)
 {
-	Tau_gpu_register_gpu_event(name, &cudaEventId(0), &id, start + sync_offset, stop + sync_offset);
+	printf("sync'ed \t start: %lf.\n \t \t \t stop: %lf.\n", start+sync_offset, stop+sync_offset);
+	Tau_gpu_register_gpu_event(name, &cudaEventId(0), id, start + sync_offset, stop + sync_offset);
 }
 
 void Tau_cuda_register_memcpy_event(const char *name, cudaGpuId id, double start, double stop, int
@@ -360,22 +359,27 @@ void Tau_cuda_register_sync_event()
 
 		cudaError_t err;
 		err = cudaEventElapsedTime(&start_sec, lastEvent, kernel.startEvent);
-		printf("kernel event [start] = %f.\n", start_sec + lastEventTime);
+		printf("kernel event [start] = %lf.\n", (((double) start_sec) + lastEventTime)*1e3);
 
 		err = cudaEventElapsedTime(&stop_sec, lastEvent, kernel.stopEvent);
-		printf("kernel event [stop] = %f.\n", stop_sec + lastEventTime );
+		printf("kernel event [stop] = %lf.\n", (((double) stop_sec) + lastEventTime)*1e3 );
 
 		if (err != cudaSuccess)
 		{
 			printf("Error calculating kernel event, error #: %d.\n", err);
 		}
 
-		Tau_cuda_register_gpu_event(kernel.name, cudaGpuId(0,kernel.stream), 
-															 (double) start_sec + lastEventTime,
-															 (double) stop_sec  + lastEventTime);
+		//Create cudaGpuId for stream.
+		cudaGpuId *id = new cudaGpuId(0, kernel.stream);
+		cout << "in sync event, stream id is: " << id->printId() << endl;
+		Tau_cuda_register_gpu_event(kernel.name, id, 
+															 (((double) start_sec) + lastEventTime)*1e3,
+															 (((double) stop_sec)  + lastEventTime)*1e3);
+
+		delete id;
 
 		lastEvent = kernel.stopEvent;
-		lastEventTime += stop_sec;
+		lastEventTime += (double) stop_sec;
 
 		KernelBuffer.pop();
 
