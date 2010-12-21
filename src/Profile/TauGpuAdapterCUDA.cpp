@@ -10,12 +10,7 @@ using namespace std;
 //CPU timestamp at the first cuEvent.
 double sync_offset = 0;
 
-/*
-cudaGpuId::cudaGpuId(const int d, cudaStream_t s) {
-		device = d;
-		stream = &s;
-		rt_stream = s;
-}*/
+
 cudaGpuId *cudaGpuId::getCopy() { 
 		cudaGpuId *c = new cudaGpuId(*this);
 		return c;
@@ -83,17 +78,17 @@ class KernelEvent
 	const char *name;
 	int blocksPerGrid;
 	int threadsPerBlock;
-	cudaStream_t stream;
+	cudaGpuId id;
 	cudaEvent_t startEvent;
 	cudaEvent_t stopEvent;
 
+	KernelEvent() {}
 
-	KernelEvent() {};
 	int enqueue_start_event()
 	{
 		cudaError_t err;
 		cudaEventCreate(&startEvent);
-		cudaEventRecord(startEvent, stream);
+		cudaEventRecord(startEvent, id.stream);
 		if (err != cudaSuccess)
 		{
 			printf("Error recording kernel event, error #: %d.\n", err);
@@ -105,7 +100,7 @@ class KernelEvent
 	{
 		cudaError_t err;
 		cudaEventCreate(&stopEvent);
-		cudaEventRecord(stopEvent, stream);
+		cudaEventRecord(stopEvent, id.stream);
 		if (err != cudaSuccess)
 		{
 			printf("Error recording kernel event, error #: %d.\n", err);
@@ -315,13 +310,13 @@ const char *parse_kernel_name(const char *devFunc)
 
 KernelEvent *curKernel;
 
-void Tau_cuda_enqueue_kernel_enter_event(const char *name, cudaStream_t curr_stream)
+void Tau_cuda_enqueue_kernel_enter_event(const char *name, cudaGpuId id)
 {
 	printf("recording start for %s.\n", parse_kernel_name(name));
 
 	curKernel = new KernelEvent();
 	curKernel->name = parse_kernel_name(name);
-	curKernel->stream = curr_stream;
+	curKernel->id = id;
 
 	curKernel->enqueue_start_event();
  
@@ -329,7 +324,7 @@ void Tau_cuda_enqueue_kernel_enter_event(const char *name, cudaStream_t curr_str
 
 }
 
-void Tau_cuda_enqueue_kernel_exit_event(const char* name, cudaStream_t curr_stream)
+void Tau_cuda_enqueue_kernel_exit_event(const char* name, cudaGpuId id)
 {
 
 	printf("recording stop for %s.\n", parse_kernel_name(name));
@@ -370,7 +365,7 @@ void Tau_cuda_register_sync_event()
 		}
 
 		//Create cudaGpuId for stream.
-		cudaGpuId *id = new cudaGpuId(0, kernel.stream);
+		cudaGpuId *id = new cudaGpuId(kernel.id.device, kernel.id.stream);
 		cout << "in sync event, stream id is: " << id->printId() << endl;
 		Tau_cuda_register_gpu_event(kernel.name, id, 
 															 (((double) start_sec) + lastEventTime)*1e3,

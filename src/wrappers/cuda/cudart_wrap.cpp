@@ -972,11 +972,13 @@ cudaError_t cudaLaunch(const char * a1) {
 		TAU_PROFILE_START(t);
 #ifdef TRACK_KERNEL
 		Tau_cuda_init();
-		Tau_cuda_enqueue_kernel_enter_event(a1, curr_stream);
+		int device;
+		cudaGetDevice(&device);
+		Tau_cuda_enqueue_kernel_enter_event(a1, cudaGpuId(device,curr_stream));
 #endif
 		retval  =  (*cudaLaunch_h)( a1);
 #ifdef TRACK_KERNEL
-		Tau_cuda_enqueue_kernel_exit_event(a1, curr_stream);
+		Tau_cuda_enqueue_kernel_exit_event(a1, cudaGpuId(device,curr_stream));
 #endif
 		TAU_PROFILE_STOP(t);
   }
