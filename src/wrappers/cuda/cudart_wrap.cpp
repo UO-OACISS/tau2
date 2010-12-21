@@ -4,6 +4,7 @@
 #include <dlfcn.h>
 #include <stdio.h>
 #include <queue>
+#include <iostream>
 using namespace std;
 
 #define TRACK_MEMORY
@@ -867,15 +868,19 @@ cudaError_t cudaConfigureCall(dim3 a1, dim3 a2, size_t a3, cudaStream_t a4) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-	
-	if (true)
+
+	cout << "in cudaConfigure... stream is " << a4 << endl;
+	/*
+	if (a4 == 0)
 	{
 		cudaStreamCreate(&curr_stream);
 	}
 	else
 	{
 		curr_stream = a4;
-	}
+	}*/
+
+	curr_stream = a4;
 	
   TAU_PROFILE_START(t);
   retval  =  (*cudaConfigureCall_h)( a1,  a2,  a3,  a4);
@@ -967,11 +972,11 @@ cudaError_t cudaLaunch(const char * a1) {
 		TAU_PROFILE_START(t);
 #ifdef TRACK_KERNEL
 		Tau_cuda_init();
-		Tau_cuda_enqueue_kernel_enter_event(a1, 0);
+		Tau_cuda_enqueue_kernel_enter_event(a1, curr_stream);
 #endif
 		retval  =  (*cudaLaunch_h)( a1);
 #ifdef TRACK_KERNEL
-		Tau_cuda_enqueue_kernel_exit_event(a1, 0);
+		Tau_cuda_enqueue_kernel_exit_event(a1, curr_stream);
 #endif
 		TAU_PROFILE_STOP(t);
   }
