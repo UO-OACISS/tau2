@@ -1,7 +1,10 @@
 #include <cuda.h>
 #include <Profile/Profiler.h>
+#include <Profile/TauGpuAdapterCUDA.h>
 #include <stdio.h>
 #include <dlfcn.h>
+
+#define TRACK_KERNEL
 
 const char * tau_orig_libname = "libcuda.so";
 static void *tau_handle = NULL;
@@ -365,6 +368,10 @@ CUresult cuCtxDetach(CUcontext a1) {
   TAU_PROFILE_START(t);
   retval  =  (*cuCtxDetach_h)( a1);
   TAU_PROFILE_STOP(t);
+
+#ifdef TRACK_KERNEL
+	Tau_cuda_exit();
+#endif
   }
   return retval;
 
@@ -475,6 +482,9 @@ CUresult cuCtxSynchronize() {
       return retval;
     }
   TAU_PROFILE_START(t);
+#ifdef TRACK_KERNEL
+	Tau_cuda_register_sync_event();
+#endif 
   retval  =  (*cuCtxSynchronize_h)();
   TAU_PROFILE_STOP(t);
   }
@@ -2239,6 +2249,9 @@ CUresult cuStreamSynchronize(CUstream a1) {
       return retval;
     }
   TAU_PROFILE_START(t);
+#ifdef TRACK_KERNEL
+	Tau_cuda_register_sync_event();
+#endif 
   retval  =  (*cuStreamSynchronize_h)( a1);
   TAU_PROFILE_STOP(t);
   }
@@ -2379,6 +2392,9 @@ CUresult cuEventSynchronize(CUevent a1) {
       return retval;
     }
   TAU_PROFILE_START(t);
+#ifdef TRACK_KERNEL
+	Tau_cuda_register_sync_event();
+#endif 
   retval  =  (*cuEventSynchronize_h)( a1);
   TAU_PROFILE_STOP(t);
   }
@@ -2687,7 +2703,14 @@ CUresult cuLaunch(CUfunction a1) {
       return retval;
     }
   TAU_PROFILE_START(t);
-  retval  =  (*cuLaunch_h)( a1);
+#ifdef TRACK_KERNEL
+		Tau_cuda_init();
+		Tau_cuda_enqueue_kernel_enter_event((const char*)a1, cudaGpuId(0,0));
+#endif
+  	retval  =  (*cuLaunch_h)( a1);
+#ifdef TRACK_KERNEL
+		Tau_cuda_enqueue_kernel_exit_event((const char*)a1, cudaGpuId(0,0));
+#endif
   TAU_PROFILE_STOP(t);
   }
   return retval;
@@ -2715,7 +2738,14 @@ CUresult cuLaunchGrid(CUfunction a1, int a2, int a3) {
       return retval;
     }
   TAU_PROFILE_START(t);
-  retval  =  (*cuLaunchGrid_h)( a1,  a2,  a3);
+#ifdef TRACK_KERNEL
+		Tau_cuda_init();
+		Tau_cuda_enqueue_kernel_enter_event((const char*)a1, cudaGpuId(0,0));
+#endif
+  	retval  =  (*cuLaunchGrid_h)( a1,  a2,  a3);
+#ifdef TRACK_KERNEL
+		Tau_cuda_enqueue_kernel_exit_event((const char*)a1, cudaGpuId(0,0));
+#endif
   TAU_PROFILE_STOP(t);
   }
   return retval;
@@ -2743,7 +2773,14 @@ CUresult cuLaunchGridAsync(CUfunction a1, int a2, int a3, CUstream a4) {
       return retval;
     }
   TAU_PROFILE_START(t);
-  retval  =  (*cuLaunchGridAsync_h)( a1,  a2,  a3,  a4);
+#ifdef TRACK_KERNEL
+		Tau_cuda_init();
+		Tau_cuda_enqueue_kernel_enter_event((const char*)a1, cudaGpuId(0,0));
+#endif
+  	retval  =  (*cuLaunchGridAsync_h)( a1,  a2,  a3,  a4);
+#ifdef TRACK_KERNEL
+		Tau_cuda_enqueue_kernel_exit_event((const char*)a1, cudaGpuId(0,0));
+#endif
   TAU_PROFILE_STOP(t);
   }
   return retval;

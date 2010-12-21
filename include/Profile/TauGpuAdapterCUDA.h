@@ -6,9 +6,14 @@
 
 
 class cudaGpuId : public gpuId {
+public:
 	int device;
 	cudaStream_t stream;
-public:
+	cudaGpuId()
+	{
+		device = 0;
+		stream = 0;
+	}
 	cudaGpuId(const int d, cudaStream_t s)
 	{
 		device = d;
@@ -50,9 +55,9 @@ void Tau_cuda_register_memcpy_event(int id, double start, double stop, int
 transferSize, int MemcpyType);
 
 void Tau_cuda_enqueue_kernel_enter_event(const char *name, 
-cudaStream_t s);
+cudaGpuId id);
 
 void Tau_cuda_enqueue_kernel_exit_event(const char *name, 
-cudaStream_t s);
+cudaGpuId id);
 
 void Tau_cuda_register_sync_event();
