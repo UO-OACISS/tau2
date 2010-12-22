@@ -15,7 +15,7 @@
 #**      Documentation   : See http://www.cs.uoregon.edu/research/tau       **
 #****************************************************************************
 
-TAUROOT=/home/users/scottb/tau2
+TAUROOT=
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -181,7 +181,7 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 ##############################################
 # For making libTAU.so Dynamic Shared Object
 ##############################################
-AR_SHFLAGS 		= -shared  	#ENDIF##GNU#
+#GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SUNX86_64#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SOL2CC#AR_SHFLAGS 		= -G  	#ENDIF#
 #USE_PATHCC#AR_SHFLAGS 		= -shared -fPIC  	#ENDIF#
@@ -320,7 +320,7 @@ else
 	TAU_CUDA_DEF=
 endif
 
-GPU_INSTALL   = $(TAU_SHAREDDIR)/$(TAU_CUDA_LIB) $(TAU_SHAREDDIR)/$(TAU_OPENCL_LIB)#ENDIF##TAU_USE_GPU#
+#TAU_USE_GPU#GPU_INSTALL   = $(TAU_SHAREDDIR)/$(TAU_CUDA_LIB) $(TAU_SHAREDDIR)/$(TAU_OPENCL_LIB)#ENDIF#
 
 all:		$(TAU_TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI) $(TAUPYTHON) $(SHMEM_WRAPPER) $(POELIB) $(TAU_CUDA_LIB) $(TAU_OPENCL_LIB)
 
@@ -328,6 +328,12 @@ $(TAU_TARGET):	$(OBJS) $(STATIC_OBJS)
 		$(PRELINK_PHASE)
 		$(AR) $(ARFLAGS) $(TAU_TARGET) $(OBJS) $(STATIC_OBJS) $(EXTRAOBJS)
 		$(TAU_RANLIB) $(TAU_TARGET)
+
+$(TAU_SHAREDDIR)/$(TAU_CUDA_LIB): $(TAU_CUDA_LIB)
+	cp $(TAU_CUDA_LIB) $(TAU_SHAREDDIR)/$(TAU_CUDA_LIB)
+
+$(TAU_SHAREDDIR)/$(TAU_OPENCL_LIB): $(TAU_OPENCL_LIB)
+	cp $(TAU_OPENCL_LIB) $(TAU_SHAREDDIR)/$(TAU_OPENCL_LIB)
 
 
 $(TAU_NULL)$(TAU_SHLIB): 	$(TAU_TARGET) $(OBJS) $(MPI_WRAPPER) $(TAU_FORCE_MPI) $(SHARED_OBJS)
