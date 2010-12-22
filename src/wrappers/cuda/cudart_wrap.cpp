@@ -4,14 +4,16 @@
 #include <dlfcn.h>
 #include <stdio.h>
 #include <queue>
+#include <iostream>
 using namespace std;
 
-#define TRACK_MEMORY true
-#define TRACK_KERNEL true
+#define TRACK_MEMORY
+#define TRACK_KERNEL
 #define KERNEL_EVENT_BUFFFER 4096
 
-const char * tau_orig_libname = "libcudart.so";
-static void *tau_handle = NULL;
+const char * cudart_orig_libname = "libcudart.so";
+static void *cudart_handle = NULL;
+cudaStream_t curr_stream;
 
 void tau_track_memory(int kind, int count)
 {
@@ -46,21 +48,21 @@ cudaError_t cudaThreadExit() {
   static cudaThreadExit_p cudaThreadExit_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaThreadExit(void) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaThreadExit_h == NULL)
-	cudaThreadExit_h = (cudaThreadExit_p) dlsym(tau_handle,"cudaThreadExit"); 
+	cudaThreadExit_h = (cudaThreadExit_p) dlsym(cudart_handle,"cudaThreadExit"); 
     if (cudaThreadExit_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-	printf("in Thread Exit, check for kernel events.\n");
+	//printf("in Thread Exit, check for kernel events.\n");
 #ifdef TRACK_KERNEL
 	Tau_cuda_register_sync_event();
 #endif 
@@ -68,7 +70,9 @@ cudaError_t cudaThreadExit() {
   retval  =  (*cudaThreadExit_h)();
   TAU_PROFILE_STOP(t);
 
+#ifdef TRACK_KERNEL
 	Tau_cuda_exit();
+#endif
   }
   return retval;
 
@@ -80,16 +84,16 @@ cudaError_t cudaThreadSynchronize() {
   static cudaThreadSynchronize_p cudaThreadSynchronize_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaThreadSynchronize(void) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaThreadSynchronize_h == NULL)
-	cudaThreadSynchronize_h = (cudaThreadSynchronize_p) dlsym(tau_handle,"cudaThreadSynchronize"); 
+	cudaThreadSynchronize_h = (cudaThreadSynchronize_p) dlsym(cudart_handle,"cudaThreadSynchronize"); 
     if (cudaThreadSynchronize_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -113,16 +117,16 @@ cudaError_t cudaThreadSetLimit(enum cudaLimit a1, size_t a2) {
   static cudaThreadSetLimit_p cudaThreadSetLimit_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaThreadSetLimit(enum cudaLimit, size_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaThreadSetLimit_h == NULL)
-	cudaThreadSetLimit_h = (cudaThreadSetLimit_p) dlsym(tau_handle,"cudaThreadSetLimit"); 
+	cudaThreadSetLimit_h = (cudaThreadSetLimit_p) dlsym(cudart_handle,"cudaThreadSetLimit"); 
     if (cudaThreadSetLimit_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -141,16 +145,16 @@ cudaError_t cudaThreadGetLimit(size_t * a1, enum cudaLimit a2) {
   static cudaThreadGetLimit_p cudaThreadGetLimit_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaThreadGetLimit(size_t *, enum cudaLimit) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaThreadGetLimit_h == NULL)
-	cudaThreadGetLimit_h = (cudaThreadGetLimit_p) dlsym(tau_handle,"cudaThreadGetLimit"); 
+	cudaThreadGetLimit_h = (cudaThreadGetLimit_p) dlsym(cudart_handle,"cudaThreadGetLimit"); 
     if (cudaThreadGetLimit_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -169,16 +173,16 @@ cudaError_t cudaThreadGetCacheConfig(enum cudaFuncCache * a1) {
   static cudaThreadGetCacheConfig_p cudaThreadGetCacheConfig_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaThreadGetCacheConfig(enum cudaFuncCache *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaThreadGetCacheConfig_h == NULL)
-	cudaThreadGetCacheConfig_h = (cudaThreadGetCacheConfig_p) dlsym(tau_handle,"cudaThreadGetCacheConfig"); 
+	cudaThreadGetCacheConfig_h = (cudaThreadGetCacheConfig_p) dlsym(cudart_handle,"cudaThreadGetCacheConfig"); 
     if (cudaThreadGetCacheConfig_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -197,16 +201,16 @@ cudaError_t cudaThreadSetCacheConfig(enum cudaFuncCache a1) {
   static cudaThreadSetCacheConfig_p cudaThreadSetCacheConfig_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaThreadSetCacheConfig(enum cudaFuncCache) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaThreadSetCacheConfig_h == NULL)
-	cudaThreadSetCacheConfig_h = (cudaThreadSetCacheConfig_p) dlsym(tau_handle,"cudaThreadSetCacheConfig"); 
+	cudaThreadSetCacheConfig_h = (cudaThreadSetCacheConfig_p) dlsym(cudart_handle,"cudaThreadSetCacheConfig"); 
     if (cudaThreadSetCacheConfig_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -225,16 +229,16 @@ cudaError_t cudaGetLastError() {
   static cudaGetLastError_p cudaGetLastError_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaGetLastError(void) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaGetLastError_h == NULL)
-	cudaGetLastError_h = (cudaGetLastError_p) dlsym(tau_handle,"cudaGetLastError"); 
+	cudaGetLastError_h = (cudaGetLastError_p) dlsym(cudart_handle,"cudaGetLastError"); 
     if (cudaGetLastError_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -253,16 +257,16 @@ cudaError_t cudaPeekAtLastError() {
   static cudaPeekAtLastError_p cudaPeekAtLastError_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaPeekAtLastError(void) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaPeekAtLastError_h == NULL)
-	cudaPeekAtLastError_h = (cudaPeekAtLastError_p) dlsym(tau_handle,"cudaPeekAtLastError"); 
+	cudaPeekAtLastError_h = (cudaPeekAtLastError_p) dlsym(cudart_handle,"cudaPeekAtLastError"); 
     if (cudaPeekAtLastError_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -281,16 +285,16 @@ const char * cudaGetErrorString(cudaError_t a1) {
   static cudaGetErrorString_p cudaGetErrorString_h = NULL;
   const char * retval;
   TAU_PROFILE_TIMER(t,"const char *cudaGetErrorString(cudaError_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaGetErrorString_h == NULL)
-	cudaGetErrorString_h = (cudaGetErrorString_p) dlsym(tau_handle,"cudaGetErrorString"); 
+	cudaGetErrorString_h = (cudaGetErrorString_p) dlsym(cudart_handle,"cudaGetErrorString"); 
     if (cudaGetErrorString_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -309,16 +313,16 @@ cudaError_t cudaGetDeviceCount(int * a1) {
   static cudaGetDeviceCount_p cudaGetDeviceCount_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaGetDeviceCount(int *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaGetDeviceCount_h == NULL)
-	cudaGetDeviceCount_h = (cudaGetDeviceCount_p) dlsym(tau_handle,"cudaGetDeviceCount"); 
+	cudaGetDeviceCount_h = (cudaGetDeviceCount_p) dlsym(cudart_handle,"cudaGetDeviceCount"); 
     if (cudaGetDeviceCount_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -337,16 +341,16 @@ cudaError_t cudaGetDeviceProperties(struct cudaDeviceProp * a1, int a2) {
   static cudaGetDeviceProperties_p cudaGetDeviceProperties_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaGetDeviceProperties(struct cudaDeviceProp *, int) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaGetDeviceProperties_h == NULL)
-	cudaGetDeviceProperties_h = (cudaGetDeviceProperties_p) dlsym(tau_handle,"cudaGetDeviceProperties"); 
+	cudaGetDeviceProperties_h = (cudaGetDeviceProperties_p) dlsym(cudart_handle,"cudaGetDeviceProperties"); 
     if (cudaGetDeviceProperties_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -365,16 +369,16 @@ cudaError_t cudaChooseDevice(int * a1, const struct cudaDeviceProp * a2) {
   static cudaChooseDevice_p cudaChooseDevice_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaChooseDevice(int *, const struct cudaDeviceProp *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaChooseDevice_h == NULL)
-	cudaChooseDevice_h = (cudaChooseDevice_p) dlsym(tau_handle,"cudaChooseDevice"); 
+	cudaChooseDevice_h = (cudaChooseDevice_p) dlsym(cudart_handle,"cudaChooseDevice"); 
     if (cudaChooseDevice_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -393,16 +397,16 @@ cudaError_t cudaSetDevice(int a1) {
   static cudaSetDevice_p cudaSetDevice_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaSetDevice(int) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaSetDevice_h == NULL)
-	cudaSetDevice_h = (cudaSetDevice_p) dlsym(tau_handle,"cudaSetDevice"); 
+	cudaSetDevice_h = (cudaSetDevice_p) dlsym(cudart_handle,"cudaSetDevice"); 
     if (cudaSetDevice_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -421,16 +425,16 @@ cudaError_t cudaGetDevice(int * a1) {
   static cudaGetDevice_p cudaGetDevice_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaGetDevice(int *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaGetDevice_h == NULL)
-	cudaGetDevice_h = (cudaGetDevice_p) dlsym(tau_handle,"cudaGetDevice"); 
+	cudaGetDevice_h = (cudaGetDevice_p) dlsym(cudart_handle,"cudaGetDevice"); 
     if (cudaGetDevice_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -449,16 +453,16 @@ cudaError_t cudaSetValidDevices(int * a1, int a2) {
   static cudaSetValidDevices_p cudaSetValidDevices_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaSetValidDevices(int *, int) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaSetValidDevices_h == NULL)
-	cudaSetValidDevices_h = (cudaSetValidDevices_p) dlsym(tau_handle,"cudaSetValidDevices"); 
+	cudaSetValidDevices_h = (cudaSetValidDevices_p) dlsym(cudart_handle,"cudaSetValidDevices"); 
     if (cudaSetValidDevices_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -477,16 +481,16 @@ cudaError_t cudaSetDeviceFlags(unsigned int a1) {
   static cudaSetDeviceFlags_p cudaSetDeviceFlags_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaSetDeviceFlags(unsigned int) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaSetDeviceFlags_h == NULL)
-	cudaSetDeviceFlags_h = (cudaSetDeviceFlags_p) dlsym(tau_handle,"cudaSetDeviceFlags"); 
+	cudaSetDeviceFlags_h = (cudaSetDeviceFlags_p) dlsym(cudart_handle,"cudaSetDeviceFlags"); 
     if (cudaSetDeviceFlags_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -505,16 +509,16 @@ cudaError_t cudaStreamCreate(cudaStream_t * a1) {
   static cudaStreamCreate_p cudaStreamCreate_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaStreamCreate(cudaStream_t *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaStreamCreate_h == NULL)
-	cudaStreamCreate_h = (cudaStreamCreate_p) dlsym(tau_handle,"cudaStreamCreate"); 
+	cudaStreamCreate_h = (cudaStreamCreate_p) dlsym(cudart_handle,"cudaStreamCreate"); 
     if (cudaStreamCreate_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -533,16 +537,16 @@ cudaError_t cudaStreamDestroy(cudaStream_t a1) {
   static cudaStreamDestroy_p cudaStreamDestroy_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaStreamDestroy(cudaStream_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaStreamDestroy_h == NULL)
-	cudaStreamDestroy_h = (cudaStreamDestroy_p) dlsym(tau_handle,"cudaStreamDestroy"); 
+	cudaStreamDestroy_h = (cudaStreamDestroy_p) dlsym(cudart_handle,"cudaStreamDestroy"); 
     if (cudaStreamDestroy_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -561,16 +565,16 @@ cudaError_t cudaStreamWaitEvent(cudaStream_t a1, cudaEvent_t a2, unsigned int a3
   static cudaStreamWaitEvent_p cudaStreamWaitEvent_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaStreamWaitEvent(cudaStream_t, cudaEvent_t, unsigned int) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaStreamWaitEvent_h == NULL)
-	cudaStreamWaitEvent_h = (cudaStreamWaitEvent_p) dlsym(tau_handle,"cudaStreamWaitEvent"); 
+	cudaStreamWaitEvent_h = (cudaStreamWaitEvent_p) dlsym(cudart_handle,"cudaStreamWaitEvent"); 
     if (cudaStreamWaitEvent_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -589,16 +593,16 @@ cudaError_t cudaStreamSynchronize(cudaStream_t a1) {
   static cudaStreamSynchronize_p cudaStreamSynchronize_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaStreamSynchronize(cudaStream_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaStreamSynchronize_h == NULL)
-	cudaStreamSynchronize_h = (cudaStreamSynchronize_p) dlsym(tau_handle,"cudaStreamSynchronize"); 
+	cudaStreamSynchronize_h = (cudaStreamSynchronize_p) dlsym(cudart_handle,"cudaStreamSynchronize"); 
     if (cudaStreamSynchronize_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -621,16 +625,16 @@ cudaError_t cudaStreamQuery(cudaStream_t a1) {
   static cudaStreamQuery_p cudaStreamQuery_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaStreamQuery(cudaStream_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaStreamQuery_h == NULL)
-	cudaStreamQuery_h = (cudaStreamQuery_p) dlsym(tau_handle,"cudaStreamQuery"); 
+	cudaStreamQuery_h = (cudaStreamQuery_p) dlsym(cudart_handle,"cudaStreamQuery"); 
     if (cudaStreamQuery_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -649,16 +653,16 @@ cudaError_t cudaEventCreate(cudaEvent_t * a1) {
   static cudaEventCreate_p cudaEventCreate_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaEventCreate(cudaEvent_t *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaEventCreate_h == NULL)
-	cudaEventCreate_h = (cudaEventCreate_p) dlsym(tau_handle,"cudaEventCreate"); 
+	cudaEventCreate_h = (cudaEventCreate_p) dlsym(cudart_handle,"cudaEventCreate"); 
     if (cudaEventCreate_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -677,16 +681,16 @@ cudaError_t cudaEventCreateWithFlags(cudaEvent_t * a1, unsigned int a2) {
   static cudaEventCreateWithFlags_p cudaEventCreateWithFlags_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaEventCreateWithFlags(cudaEvent_t *, unsigned int) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaEventCreateWithFlags_h == NULL)
-	cudaEventCreateWithFlags_h = (cudaEventCreateWithFlags_p) dlsym(tau_handle,"cudaEventCreateWithFlags"); 
+	cudaEventCreateWithFlags_h = (cudaEventCreateWithFlags_p) dlsym(cudart_handle,"cudaEventCreateWithFlags"); 
     if (cudaEventCreateWithFlags_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -705,16 +709,16 @@ cudaError_t cudaEventRecord(cudaEvent_t a1, cudaStream_t a2) {
   static cudaEventRecord_p cudaEventRecord_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaEventRecord(cudaEvent_t, cudaStream_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaEventRecord_h == NULL)
-	cudaEventRecord_h = (cudaEventRecord_p) dlsym(tau_handle,"cudaEventRecord"); 
+	cudaEventRecord_h = (cudaEventRecord_p) dlsym(cudart_handle,"cudaEventRecord"); 
     if (cudaEventRecord_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -733,16 +737,16 @@ cudaError_t cudaEventQuery(cudaEvent_t a1) {
   static cudaEventQuery_p cudaEventQuery_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaEventQuery(cudaEvent_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaEventQuery_h == NULL)
-	cudaEventQuery_h = (cudaEventQuery_p) dlsym(tau_handle,"cudaEventQuery"); 
+	cudaEventQuery_h = (cudaEventQuery_p) dlsym(cudart_handle,"cudaEventQuery"); 
     if (cudaEventQuery_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -761,16 +765,16 @@ cudaError_t cudaEventSynchronize(cudaEvent_t a1) {
   static cudaEventSynchronize_p cudaEventSynchronize_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaEventSynchronize(cudaEvent_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaEventSynchronize_h == NULL)
-	cudaEventSynchronize_h = (cudaEventSynchronize_p) dlsym(tau_handle,"cudaEventSynchronize"); 
+	cudaEventSynchronize_h = (cudaEventSynchronize_p) dlsym(cudart_handle,"cudaEventSynchronize"); 
     if (cudaEventSynchronize_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -794,16 +798,16 @@ cudaError_t cudaEventDestroy(cudaEvent_t a1) {
   static cudaEventDestroy_p cudaEventDestroy_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaEventDestroy(cudaEvent_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaEventDestroy_h == NULL)
-	cudaEventDestroy_h = (cudaEventDestroy_p) dlsym(tau_handle,"cudaEventDestroy"); 
+	cudaEventDestroy_h = (cudaEventDestroy_p) dlsym(cudart_handle,"cudaEventDestroy"); 
     if (cudaEventDestroy_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -822,16 +826,16 @@ cudaError_t cudaEventElapsedTime(float * a1, cudaEvent_t a2, cudaEvent_t a3) {
   static cudaEventElapsedTime_p cudaEventElapsedTime_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaEventElapsedTime(float *, cudaEvent_t, cudaEvent_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaEventElapsedTime_h == NULL)
-	cudaEventElapsedTime_h = (cudaEventElapsedTime_p) dlsym(tau_handle,"cudaEventElapsedTime"); 
+	cudaEventElapsedTime_h = (cudaEventElapsedTime_p) dlsym(cudart_handle,"cudaEventElapsedTime"); 
     if (cudaEventElapsedTime_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -850,20 +854,34 @@ cudaError_t cudaConfigureCall(dim3 a1, dim3 a2, size_t a3, cudaStream_t a4) {
   static cudaConfigureCall_p cudaConfigureCall_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaConfigureCall(dim3, dim3, size_t, cudaStream_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaConfigureCall_h == NULL)
-	cudaConfigureCall_h = (cudaConfigureCall_p) dlsym(tau_handle,"cudaConfigureCall"); 
+	cudaConfigureCall_h = (cudaConfigureCall_p) dlsym(cudart_handle,"cudaConfigureCall"); 
     if (cudaConfigureCall_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
+
+	cout << "in cudaConfigure... stream is " << a4 << endl;
+	/*
+	if (a4 == 0)
+	{
+		cudaStreamCreate(&curr_stream);
+	}
+	else
+	{
+		curr_stream = a4;
+	}*/
+
+	curr_stream = a4;
+	
   TAU_PROFILE_START(t);
   retval  =  (*cudaConfigureCall_h)( a1,  a2,  a3,  a4);
   TAU_PROFILE_STOP(t);
@@ -878,16 +896,16 @@ cudaError_t cudaSetupArgument(const void * a1, size_t a2, size_t a3) {
   static cudaSetupArgument_p cudaSetupArgument_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaSetupArgument(const void *, size_t, size_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaSetupArgument_h == NULL)
-	cudaSetupArgument_h = (cudaSetupArgument_p) dlsym(tau_handle,"cudaSetupArgument"); 
+	cudaSetupArgument_h = (cudaSetupArgument_p) dlsym(cudart_handle,"cudaSetupArgument"); 
     if (cudaSetupArgument_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -906,16 +924,16 @@ cudaError_t cudaFuncSetCacheConfig(const char * a1, enum cudaFuncCache a2) {
   static cudaFuncSetCacheConfig_p cudaFuncSetCacheConfig_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaFuncSetCacheConfig(const char *, enum cudaFuncCache) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaFuncSetCacheConfig_h == NULL)
-	cudaFuncSetCacheConfig_h = (cudaFuncSetCacheConfig_p) dlsym(tau_handle,"cudaFuncSetCacheConfig"); 
+	cudaFuncSetCacheConfig_h = (cudaFuncSetCacheConfig_p) dlsym(cudart_handle,"cudaFuncSetCacheConfig"); 
     if (cudaFuncSetCacheConfig_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -934,29 +952,33 @@ cudaError_t cudaLaunch(const char * a1) {
   static cudaLaunch_p cudaLaunch_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaLaunch(const char *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaLaunch_h == NULL)
-	cudaLaunch_h = (cudaLaunch_p) dlsym(tau_handle,"cudaLaunch"); 
+	cudaLaunch_h = (cudaLaunch_p) dlsym(cudart_handle,"cudaLaunch"); 
     if (cudaLaunch_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
+		
+		printf("in cudaLaunch, TAU wrap.\n");
   
 		TAU_PROFILE_START(t);
 #ifdef TRACK_KERNEL
 		Tau_cuda_init();
-		Tau_cuda_enqueue_kernel_enter_event(a1, 0);
+		int device;
+		cudaGetDevice(&device);
+		Tau_cuda_enqueue_kernel_enter_event(a1, cudaGpuId(device,curr_stream));
 #endif
 		retval  =  (*cudaLaunch_h)( a1);
 #ifdef TRACK_KERNEL
-		Tau_cuda_enqueue_kernel_exit_event(a1, 0);
+		Tau_cuda_enqueue_kernel_exit_event(a1, cudaGpuId(device,curr_stream));
 #endif
 		TAU_PROFILE_STOP(t);
   }
@@ -970,16 +992,16 @@ cudaError_t cudaFuncGetAttributes(struct cudaFuncAttributes * a1, const char * a
   static cudaFuncGetAttributes_p cudaFuncGetAttributes_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaFuncGetAttributes(struct cudaFuncAttributes *, const char *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaFuncGetAttributes_h == NULL)
-	cudaFuncGetAttributes_h = (cudaFuncGetAttributes_p) dlsym(tau_handle,"cudaFuncGetAttributes"); 
+	cudaFuncGetAttributes_h = (cudaFuncGetAttributes_p) dlsym(cudart_handle,"cudaFuncGetAttributes"); 
     if (cudaFuncGetAttributes_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -998,16 +1020,16 @@ cudaError_t cudaSetDoubleForDevice(double * a1) {
   static cudaSetDoubleForDevice_p cudaSetDoubleForDevice_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaSetDoubleForDevice(double *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaSetDoubleForDevice_h == NULL)
-	cudaSetDoubleForDevice_h = (cudaSetDoubleForDevice_p) dlsym(tau_handle,"cudaSetDoubleForDevice"); 
+	cudaSetDoubleForDevice_h = (cudaSetDoubleForDevice_p) dlsym(cudart_handle,"cudaSetDoubleForDevice"); 
     if (cudaSetDoubleForDevice_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1026,16 +1048,16 @@ cudaError_t cudaSetDoubleForHost(double * a1) {
   static cudaSetDoubleForHost_p cudaSetDoubleForHost_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaSetDoubleForHost(double *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaSetDoubleForHost_h == NULL)
-	cudaSetDoubleForHost_h = (cudaSetDoubleForHost_p) dlsym(tau_handle,"cudaSetDoubleForHost"); 
+	cudaSetDoubleForHost_h = (cudaSetDoubleForHost_p) dlsym(cudart_handle,"cudaSetDoubleForHost"); 
     if (cudaSetDoubleForHost_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1054,16 +1076,16 @@ cudaError_t cudaMalloc(void ** a1, size_t a2) {
   static cudaMalloc_p cudaMalloc_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMalloc(void **, size_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMalloc_h == NULL)
-	cudaMalloc_h = (cudaMalloc_p) dlsym(tau_handle,"cudaMalloc"); 
+	cudaMalloc_h = (cudaMalloc_p) dlsym(cudart_handle,"cudaMalloc"); 
     if (cudaMalloc_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1082,16 +1104,16 @@ cudaError_t cudaMallocHost(void ** a1, size_t a2) {
   static cudaMallocHost_p cudaMallocHost_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMallocHost(void **, size_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMallocHost_h == NULL)
-	cudaMallocHost_h = (cudaMallocHost_p) dlsym(tau_handle,"cudaMallocHost"); 
+	cudaMallocHost_h = (cudaMallocHost_p) dlsym(cudart_handle,"cudaMallocHost"); 
     if (cudaMallocHost_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1110,16 +1132,16 @@ cudaError_t cudaMallocPitch(void ** a1, size_t * a2, size_t a3, size_t a4) {
   static cudaMallocPitch_p cudaMallocPitch_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMallocPitch(void **, size_t *, size_t, size_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMallocPitch_h == NULL)
-	cudaMallocPitch_h = (cudaMallocPitch_p) dlsym(tau_handle,"cudaMallocPitch"); 
+	cudaMallocPitch_h = (cudaMallocPitch_p) dlsym(cudart_handle,"cudaMallocPitch"); 
     if (cudaMallocPitch_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1137,16 +1159,16 @@ cudaError_t cudaMallocArray(struct cudaArray ** a1, const struct cudaChannelForm
   static cudaMallocArray_p cudaMallocArray_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMallocArray(struct cudaArray **, const struct cudaChannelFormatDesc *, size_t, size_t, unsigned int) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMallocArray_h == NULL)
-	cudaMallocArray_h = (cudaMallocArray_p) dlsym(tau_handle,"cudaMallocArray"); 
+	cudaMallocArray_h = (cudaMallocArray_p) dlsym(cudart_handle,"cudaMallocArray"); 
     if (cudaMallocArray_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1164,16 +1186,16 @@ cudaError_t cudaFree(void * a1) {
   static cudaFree_p cudaFree_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaFree(void *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaFree_h == NULL)
-	cudaFree_h = (cudaFree_p) dlsym(tau_handle,"cudaFree"); 
+	cudaFree_h = (cudaFree_p) dlsym(cudart_handle,"cudaFree"); 
     if (cudaFree_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1192,16 +1214,16 @@ cudaError_t cudaFreeHost(void * a1) {
   static cudaFreeHost_p cudaFreeHost_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaFreeHost(void *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaFreeHost_h == NULL)
-	cudaFreeHost_h = (cudaFreeHost_p) dlsym(tau_handle,"cudaFreeHost"); 
+	cudaFreeHost_h = (cudaFreeHost_p) dlsym(cudart_handle,"cudaFreeHost"); 
     if (cudaFreeHost_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1220,16 +1242,16 @@ cudaError_t cudaFreeArray(struct cudaArray * a1) {
   static cudaFreeArray_p cudaFreeArray_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaFreeArray(struct cudaArray *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaFreeArray_h == NULL)
-	cudaFreeArray_h = (cudaFreeArray_p) dlsym(tau_handle,"cudaFreeArray"); 
+	cudaFreeArray_h = (cudaFreeArray_p) dlsym(cudart_handle,"cudaFreeArray"); 
     if (cudaFreeArray_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1248,16 +1270,16 @@ cudaError_t cudaHostAlloc(void ** a1, size_t a2, unsigned int a3) {
   static cudaHostAlloc_p cudaHostAlloc_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaHostAlloc(void **, size_t, unsigned int) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaHostAlloc_h == NULL)
-	cudaHostAlloc_h = (cudaHostAlloc_p) dlsym(tau_handle,"cudaHostAlloc"); 
+	cudaHostAlloc_h = (cudaHostAlloc_p) dlsym(cudart_handle,"cudaHostAlloc"); 
     if (cudaHostAlloc_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1276,16 +1298,16 @@ cudaError_t cudaHostGetDevicePointer(void ** a1, void * a2, unsigned int a3) {
   static cudaHostGetDevicePointer_p cudaHostGetDevicePointer_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaHostGetDevicePointer(void **, void *, unsigned int) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaHostGetDevicePointer_h == NULL)
-	cudaHostGetDevicePointer_h = (cudaHostGetDevicePointer_p) dlsym(tau_handle,"cudaHostGetDevicePointer"); 
+	cudaHostGetDevicePointer_h = (cudaHostGetDevicePointer_p) dlsym(cudart_handle,"cudaHostGetDevicePointer"); 
     if (cudaHostGetDevicePointer_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1304,16 +1326,16 @@ cudaError_t cudaHostGetFlags(unsigned int * a1, void * a2) {
   static cudaHostGetFlags_p cudaHostGetFlags_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaHostGetFlags(unsigned int *, void *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaHostGetFlags_h == NULL)
-	cudaHostGetFlags_h = (cudaHostGetFlags_p) dlsym(tau_handle,"cudaHostGetFlags"); 
+	cudaHostGetFlags_h = (cudaHostGetFlags_p) dlsym(cudart_handle,"cudaHostGetFlags"); 
     if (cudaHostGetFlags_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1332,16 +1354,16 @@ cudaError_t cudaMalloc3D(struct cudaPitchedPtr * a1, struct cudaExtent a2) {
   static cudaMalloc3D_p cudaMalloc3D_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMalloc3D(struct cudaPitchedPtr *, struct cudaExtent) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMalloc3D_h == NULL)
-	cudaMalloc3D_h = (cudaMalloc3D_p) dlsym(tau_handle,"cudaMalloc3D"); 
+	cudaMalloc3D_h = (cudaMalloc3D_p) dlsym(cudart_handle,"cudaMalloc3D"); 
     if (cudaMalloc3D_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1360,16 +1382,16 @@ cudaError_t cudaMalloc3DArray(struct cudaArray ** a1, const struct cudaChannelFo
   static cudaMalloc3DArray_p cudaMalloc3DArray_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMalloc3DArray(struct cudaArray **, const struct cudaChannelFormatDesc *, struct cudaExtent, unsigned int) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMalloc3DArray_h == NULL)
-	cudaMalloc3DArray_h = (cudaMalloc3DArray_p) dlsym(tau_handle,"cudaMalloc3DArray"); 
+	cudaMalloc3DArray_h = (cudaMalloc3DArray_p) dlsym(cudart_handle,"cudaMalloc3DArray"); 
     if (cudaMalloc3DArray_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1388,26 +1410,25 @@ cudaError_t cudaMemcpy3D(const struct cudaMemcpy3DParms * a1) {
   static cudaMemcpy3D_p cudaMemcpy3D_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy3D(const struct cudaMemcpy3DParms *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemcpy3D_h == NULL)
-	cudaMemcpy3D_h = (cudaMemcpy3D_p) dlsym(tau_handle,"cudaMemcpy3D"); 
+	cudaMemcpy3D_h = (cudaMemcpy3D_p) dlsym(cudart_handle,"cudaMemcpy3D"); 
     if (cudaMemcpy3D_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
 
   TAU_PROFILE_START(t);
-/* cannot find example of cudaMemcpy3D to test memory tracking
+// cannot find example of cudaMemcpy3D to test memory tracking
 #ifdef TRACK_MEMORY
 #endif //TRACK_MEMORY
-*/
   retval  =  (*cudaMemcpy3D_h)( a1);
   TAU_PROFILE_STOP(t);
   }
@@ -1421,16 +1442,16 @@ cudaError_t cudaMemcpy3DAsync(const struct cudaMemcpy3DParms * a1, cudaStream_t 
   static cudaMemcpy3DAsync_p cudaMemcpy3DAsync_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy3DAsync(const struct cudaMemcpy3DParms *, cudaStream_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemcpy3DAsync_h == NULL)
-	cudaMemcpy3DAsync_h = (cudaMemcpy3DAsync_p) dlsym(tau_handle,"cudaMemcpy3DAsync"); 
+	cudaMemcpy3DAsync_h = (cudaMemcpy3DAsync_p) dlsym(cudart_handle,"cudaMemcpy3DAsync"); 
     if (cudaMemcpy3DAsync_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1449,16 +1470,16 @@ cudaError_t cudaMemGetInfo(size_t * a1, size_t * a2) {
   static cudaMemGetInfo_p cudaMemGetInfo_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemGetInfo(size_t *, size_t *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemGetInfo_h == NULL)
-	cudaMemGetInfo_h = (cudaMemGetInfo_p) dlsym(tau_handle,"cudaMemGetInfo"); 
+	cudaMemGetInfo_h = (cudaMemGetInfo_p) dlsym(cudart_handle,"cudaMemGetInfo"); 
     if (cudaMemGetInfo_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1477,16 +1498,16 @@ cudaError_t cudaMemcpy(void * a1, const void * a2, size_t a3, enum cudaMemcpyKin
   static cudaMemcpy_p cudaMemcpy_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy(void *, const void *, size_t, enum cudaMemcpyKind) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemcpy_h == NULL)
-	cudaMemcpy_h = (cudaMemcpy_p) dlsym(tau_handle,"cudaMemcpy"); 
+	cudaMemcpy_h = (cudaMemcpy_p) dlsym(cudart_handle,"cudaMemcpy"); 
     if (cudaMemcpy_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1508,16 +1529,16 @@ cudaError_t cudaMemcpyToArray(struct cudaArray * a1, size_t a2, size_t a3, const
   static cudaMemcpyToArray_p cudaMemcpyToArray_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyToArray(struct cudaArray *, size_t, size_t, const void *, size_t, enum cudaMemcpyKind) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemcpyToArray_h == NULL)
-	cudaMemcpyToArray_h = (cudaMemcpyToArray_p) dlsym(tau_handle,"cudaMemcpyToArray"); 
+	cudaMemcpyToArray_h = (cudaMemcpyToArray_p) dlsym(cudart_handle,"cudaMemcpyToArray"); 
     if (cudaMemcpyToArray_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1539,16 +1560,16 @@ cudaError_t cudaMemcpyFromArray(void * a1, const struct cudaArray * a2, size_t a
   static cudaMemcpyFromArray_p cudaMemcpyFromArray_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyFromArray(void *, const struct cudaArray *, size_t, size_t, size_t, enum cudaMemcpyKind) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemcpyFromArray_h == NULL)
-	cudaMemcpyFromArray_h = (cudaMemcpyFromArray_p) dlsym(tau_handle,"cudaMemcpyFromArray"); 
+	cudaMemcpyFromArray_h = (cudaMemcpyFromArray_p) dlsym(cudart_handle,"cudaMemcpyFromArray"); 
     if (cudaMemcpyFromArray_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1570,16 +1591,16 @@ cudaError_t cudaMemcpyArrayToArray(struct cudaArray * a1, size_t a2, size_t a3, 
   static cudaMemcpyArrayToArray_p cudaMemcpyArrayToArray_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyArrayToArray(struct cudaArray *, size_t, size_t, const struct cudaArray *, size_t, size_t, size_t, enum cudaMemcpyKind) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemcpyArrayToArray_h == NULL)
-	cudaMemcpyArrayToArray_h = (cudaMemcpyArrayToArray_p) dlsym(tau_handle,"cudaMemcpyArrayToArray"); 
+	cudaMemcpyArrayToArray_h = (cudaMemcpyArrayToArray_p) dlsym(cudart_handle,"cudaMemcpyArrayToArray"); 
     if (cudaMemcpyArrayToArray_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1601,16 +1622,16 @@ cudaError_t cudaMemcpy2D(void * a1, size_t a2, const void * a3, size_t a4, size_
   static cudaMemcpy2D_p cudaMemcpy2D_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy2D(void *, size_t, const void *, size_t, size_t, size_t, enum cudaMemcpyKind) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemcpy2D_h == NULL)
-	cudaMemcpy2D_h = (cudaMemcpy2D_p) dlsym(tau_handle,"cudaMemcpy2D"); 
+	cudaMemcpy2D_h = (cudaMemcpy2D_p) dlsym(cudart_handle,"cudaMemcpy2D"); 
     if (cudaMemcpy2D_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1634,16 +1655,16 @@ cudaError_t cudaMemcpy2DToArray(struct cudaArray * a1, size_t a2, size_t a3, con
   static cudaMemcpy2DToArray_p cudaMemcpy2DToArray_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy2DToArray(struct cudaArray *, size_t, size_t, const void *, size_t, size_t, size_t, enum cudaMemcpyKind) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemcpy2DToArray_h == NULL)
-	cudaMemcpy2DToArray_h = (cudaMemcpy2DToArray_p) dlsym(tau_handle,"cudaMemcpy2DToArray"); 
+	cudaMemcpy2DToArray_h = (cudaMemcpy2DToArray_p) dlsym(cudart_handle,"cudaMemcpy2DToArray"); 
     if (cudaMemcpy2DToArray_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1666,16 +1687,16 @@ cudaError_t cudaMemcpy2DFromArray(void * a1, size_t a2, const struct cudaArray *
   static cudaMemcpy2DFromArray_p cudaMemcpy2DFromArray_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy2DFromArray(void *, size_t, const struct cudaArray *, size_t, size_t, size_t, size_t, enum cudaMemcpyKind) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemcpy2DFromArray_h == NULL)
-	cudaMemcpy2DFromArray_h = (cudaMemcpy2DFromArray_p) dlsym(tau_handle,"cudaMemcpy2DFromArray"); 
+	cudaMemcpy2DFromArray_h = (cudaMemcpy2DFromArray_p) dlsym(cudart_handle,"cudaMemcpy2DFromArray"); 
     if (cudaMemcpy2DFromArray_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1694,16 +1715,16 @@ cudaError_t cudaMemcpy2DArrayToArray(struct cudaArray * a1, size_t a2, size_t a3
   static cudaMemcpy2DArrayToArray_p cudaMemcpy2DArrayToArray_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy2DArrayToArray(struct cudaArray *, size_t, size_t, const struct cudaArray *, size_t, size_t, size_t, size_t, enum cudaMemcpyKind) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemcpy2DArrayToArray_h == NULL)
-	cudaMemcpy2DArrayToArray_h = (cudaMemcpy2DArrayToArray_p) dlsym(tau_handle,"cudaMemcpy2DArrayToArray"); 
+	cudaMemcpy2DArrayToArray_h = (cudaMemcpy2DArrayToArray_p) dlsym(cudart_handle,"cudaMemcpy2DArrayToArray"); 
     if (cudaMemcpy2DArrayToArray_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1722,16 +1743,16 @@ cudaError_t cudaMemcpyToSymbol(const char * a1, const void * a2, size_t a3, size
   static cudaMemcpyToSymbol_p cudaMemcpyToSymbol_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyToSymbol(const char *, const void *, size_t, size_t, enum cudaMemcpyKind) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemcpyToSymbol_h == NULL)
-	cudaMemcpyToSymbol_h = (cudaMemcpyToSymbol_p) dlsym(tau_handle,"cudaMemcpyToSymbol"); 
+	cudaMemcpyToSymbol_h = (cudaMemcpyToSymbol_p) dlsym(cudart_handle,"cudaMemcpyToSymbol"); 
     if (cudaMemcpyToSymbol_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1753,16 +1774,16 @@ cudaError_t cudaMemcpyFromSymbol(void * a1, const char * a2, size_t a3, size_t a
   static cudaMemcpyFromSymbol_p cudaMemcpyFromSymbol_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyFromSymbol(void *, const char *, size_t, size_t, enum cudaMemcpyKind) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemcpyFromSymbol_h == NULL)
-	cudaMemcpyFromSymbol_h = (cudaMemcpyFromSymbol_p) dlsym(tau_handle,"cudaMemcpyFromSymbol"); 
+	cudaMemcpyFromSymbol_h = (cudaMemcpyFromSymbol_p) dlsym(cudart_handle,"cudaMemcpyFromSymbol"); 
     if (cudaMemcpyFromSymbol_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1784,16 +1805,16 @@ cudaError_t cudaMemcpyAsync(void * a1, const void * a2, size_t a3, enum cudaMemc
   static cudaMemcpyAsync_p cudaMemcpyAsync_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyAsync(void *, const void *, size_t, enum cudaMemcpyKind, cudaStream_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemcpyAsync_h == NULL)
-	cudaMemcpyAsync_h = (cudaMemcpyAsync_p) dlsym(tau_handle,"cudaMemcpyAsync"); 
+	cudaMemcpyAsync_h = (cudaMemcpyAsync_p) dlsym(cudart_handle,"cudaMemcpyAsync"); 
     if (cudaMemcpyAsync_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1815,16 +1836,16 @@ cudaError_t cudaMemcpyToArrayAsync(struct cudaArray * a1, size_t a2, size_t a3, 
   static cudaMemcpyToArrayAsync_p cudaMemcpyToArrayAsync_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyToArrayAsync(struct cudaArray *, size_t, size_t, const void *, size_t, enum cudaMemcpyKind, cudaStream_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemcpyToArrayAsync_h == NULL)
-	cudaMemcpyToArrayAsync_h = (cudaMemcpyToArrayAsync_p) dlsym(tau_handle,"cudaMemcpyToArrayAsync"); 
+	cudaMemcpyToArrayAsync_h = (cudaMemcpyToArrayAsync_p) dlsym(cudart_handle,"cudaMemcpyToArrayAsync"); 
     if (cudaMemcpyToArrayAsync_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1846,16 +1867,16 @@ cudaError_t cudaMemcpyFromArrayAsync(void * a1, const struct cudaArray * a2, siz
   static cudaMemcpyFromArrayAsync_p cudaMemcpyFromArrayAsync_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyFromArrayAsync(void *, const struct cudaArray *, size_t, size_t, size_t, enum cudaMemcpyKind, cudaStream_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemcpyFromArrayAsync_h == NULL)
-	cudaMemcpyFromArrayAsync_h = (cudaMemcpyFromArrayAsync_p) dlsym(tau_handle,"cudaMemcpyFromArrayAsync"); 
+	cudaMemcpyFromArrayAsync_h = (cudaMemcpyFromArrayAsync_p) dlsym(cudart_handle,"cudaMemcpyFromArrayAsync"); 
     if (cudaMemcpyFromArrayAsync_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1877,16 +1898,16 @@ cudaError_t cudaMemcpy2DAsync(void * a1, size_t a2, const void * a3, size_t a4, 
   static cudaMemcpy2DAsync_p cudaMemcpy2DAsync_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy2DAsync(void *, size_t, const void *, size_t, size_t, size_t, enum cudaMemcpyKind, cudaStream_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemcpy2DAsync_h == NULL)
-	cudaMemcpy2DAsync_h = (cudaMemcpy2DAsync_p) dlsym(tau_handle,"cudaMemcpy2DAsync"); 
+	cudaMemcpy2DAsync_h = (cudaMemcpy2DAsync_p) dlsym(cudart_handle,"cudaMemcpy2DAsync"); 
     if (cudaMemcpy2DAsync_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1905,16 +1926,16 @@ cudaError_t cudaMemcpy2DToArrayAsync(struct cudaArray * a1, size_t a2, size_t a3
   static cudaMemcpy2DToArrayAsync_p cudaMemcpy2DToArrayAsync_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy2DToArrayAsync(struct cudaArray *, size_t, size_t, const void *, size_t, size_t, size_t, enum cudaMemcpyKind, cudaStream_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemcpy2DToArrayAsync_h == NULL)
-	cudaMemcpy2DToArrayAsync_h = (cudaMemcpy2DToArrayAsync_p) dlsym(tau_handle,"cudaMemcpy2DToArrayAsync"); 
+	cudaMemcpy2DToArrayAsync_h = (cudaMemcpy2DToArrayAsync_p) dlsym(cudart_handle,"cudaMemcpy2DToArrayAsync"); 
     if (cudaMemcpy2DToArrayAsync_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1933,16 +1954,16 @@ cudaError_t cudaMemcpy2DFromArrayAsync(void * a1, size_t a2, const struct cudaAr
   static cudaMemcpy2DFromArrayAsync_p cudaMemcpy2DFromArrayAsync_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy2DFromArrayAsync(void *, size_t, const struct cudaArray *, size_t, size_t, size_t, size_t, enum cudaMemcpyKind, cudaStream_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemcpy2DFromArrayAsync_h == NULL)
-	cudaMemcpy2DFromArrayAsync_h = (cudaMemcpy2DFromArrayAsync_p) dlsym(tau_handle,"cudaMemcpy2DFromArrayAsync"); 
+	cudaMemcpy2DFromArrayAsync_h = (cudaMemcpy2DFromArrayAsync_p) dlsym(cudart_handle,"cudaMemcpy2DFromArrayAsync"); 
     if (cudaMemcpy2DFromArrayAsync_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1961,16 +1982,16 @@ cudaError_t cudaMemcpyToSymbolAsync(const char * a1, const void * a2, size_t a3,
   static cudaMemcpyToSymbolAsync_p cudaMemcpyToSymbolAsync_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyToSymbolAsync(const char *, const void *, size_t, size_t, enum cudaMemcpyKind, cudaStream_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemcpyToSymbolAsync_h == NULL)
-	cudaMemcpyToSymbolAsync_h = (cudaMemcpyToSymbolAsync_p) dlsym(tau_handle,"cudaMemcpyToSymbolAsync"); 
+	cudaMemcpyToSymbolAsync_h = (cudaMemcpyToSymbolAsync_p) dlsym(cudart_handle,"cudaMemcpyToSymbolAsync"); 
     if (cudaMemcpyToSymbolAsync_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -1992,16 +2013,16 @@ cudaError_t cudaMemcpyFromSymbolAsync(void * a1, const char * a2, size_t a3, siz
   static cudaMemcpyFromSymbolAsync_p cudaMemcpyFromSymbolAsync_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyFromSymbolAsync(void *, const char *, size_t, size_t, enum cudaMemcpyKind, cudaStream_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemcpyFromSymbolAsync_h == NULL)
-	cudaMemcpyFromSymbolAsync_h = (cudaMemcpyFromSymbolAsync_p) dlsym(tau_handle,"cudaMemcpyFromSymbolAsync"); 
+	cudaMemcpyFromSymbolAsync_h = (cudaMemcpyFromSymbolAsync_p) dlsym(cudart_handle,"cudaMemcpyFromSymbolAsync"); 
     if (cudaMemcpyFromSymbolAsync_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -2023,16 +2044,16 @@ cudaError_t cudaMemset(void * a1, int a2, size_t a3) {
   static cudaMemset_p cudaMemset_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemset(void *, int, size_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemset_h == NULL)
-	cudaMemset_h = (cudaMemset_p) dlsym(tau_handle,"cudaMemset"); 
+	cudaMemset_h = (cudaMemset_p) dlsym(cudart_handle,"cudaMemset"); 
     if (cudaMemset_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -2051,16 +2072,16 @@ cudaError_t cudaMemset2D(void * a1, size_t a2, int a3, size_t a4, size_t a5) {
   static cudaMemset2D_p cudaMemset2D_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemset2D(void *, size_t, int, size_t, size_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemset2D_h == NULL)
-	cudaMemset2D_h = (cudaMemset2D_p) dlsym(tau_handle,"cudaMemset2D"); 
+	cudaMemset2D_h = (cudaMemset2D_p) dlsym(cudart_handle,"cudaMemset2D"); 
     if (cudaMemset2D_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -2079,16 +2100,16 @@ cudaError_t cudaMemset3D(struct cudaPitchedPtr a1, int a2, struct cudaExtent a3)
   static cudaMemset3D_p cudaMemset3D_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemset3D(struct cudaPitchedPtr, int, struct cudaExtent) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemset3D_h == NULL)
-	cudaMemset3D_h = (cudaMemset3D_p) dlsym(tau_handle,"cudaMemset3D"); 
+	cudaMemset3D_h = (cudaMemset3D_p) dlsym(cudart_handle,"cudaMemset3D"); 
     if (cudaMemset3D_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -2107,16 +2128,16 @@ cudaError_t cudaMemsetAsync(void * a1, int a2, size_t a3, cudaStream_t a4) {
   static cudaMemsetAsync_p cudaMemsetAsync_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemsetAsync(void *, int, size_t, cudaStream_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemsetAsync_h == NULL)
-	cudaMemsetAsync_h = (cudaMemsetAsync_p) dlsym(tau_handle,"cudaMemsetAsync"); 
+	cudaMemsetAsync_h = (cudaMemsetAsync_p) dlsym(cudart_handle,"cudaMemsetAsync"); 
     if (cudaMemsetAsync_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -2135,16 +2156,16 @@ cudaError_t cudaMemset2DAsync(void * a1, size_t a2, int a3, size_t a4, size_t a5
   static cudaMemset2DAsync_p cudaMemset2DAsync_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemset2DAsync(void *, size_t, int, size_t, size_t, cudaStream_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemset2DAsync_h == NULL)
-	cudaMemset2DAsync_h = (cudaMemset2DAsync_p) dlsym(tau_handle,"cudaMemset2DAsync"); 
+	cudaMemset2DAsync_h = (cudaMemset2DAsync_p) dlsym(cudart_handle,"cudaMemset2DAsync"); 
     if (cudaMemset2DAsync_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -2163,16 +2184,16 @@ cudaError_t cudaMemset3DAsync(struct cudaPitchedPtr a1, int a2, struct cudaExten
   static cudaMemset3DAsync_p cudaMemset3DAsync_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaMemset3DAsync(struct cudaPitchedPtr, int, struct cudaExtent, cudaStream_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaMemset3DAsync_h == NULL)
-	cudaMemset3DAsync_h = (cudaMemset3DAsync_p) dlsym(tau_handle,"cudaMemset3DAsync"); 
+	cudaMemset3DAsync_h = (cudaMemset3DAsync_p) dlsym(cudart_handle,"cudaMemset3DAsync"); 
     if (cudaMemset3DAsync_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -2191,16 +2212,16 @@ cudaError_t cudaGetSymbolAddress(void ** a1, const char * a2) {
   static cudaGetSymbolAddress_p cudaGetSymbolAddress_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaGetSymbolAddress(void **, const char *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaGetSymbolAddress_h == NULL)
-	cudaGetSymbolAddress_h = (cudaGetSymbolAddress_p) dlsym(tau_handle,"cudaGetSymbolAddress"); 
+	cudaGetSymbolAddress_h = (cudaGetSymbolAddress_p) dlsym(cudart_handle,"cudaGetSymbolAddress"); 
     if (cudaGetSymbolAddress_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -2219,16 +2240,16 @@ cudaError_t cudaGetSymbolSize(size_t * a1, const char * a2) {
   static cudaGetSymbolSize_p cudaGetSymbolSize_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaGetSymbolSize(size_t *, const char *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaGetSymbolSize_h == NULL)
-	cudaGetSymbolSize_h = (cudaGetSymbolSize_p) dlsym(tau_handle,"cudaGetSymbolSize"); 
+	cudaGetSymbolSize_h = (cudaGetSymbolSize_p) dlsym(cudart_handle,"cudaGetSymbolSize"); 
     if (cudaGetSymbolSize_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -2247,16 +2268,16 @@ cudaError_t cudaGraphicsUnregisterResource(cudaGraphicsResource_t a1) {
   static cudaGraphicsUnregisterResource_p cudaGraphicsUnregisterResource_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaGraphicsUnregisterResource(cudaGraphicsResource_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaGraphicsUnregisterResource_h == NULL)
-	cudaGraphicsUnregisterResource_h = (cudaGraphicsUnregisterResource_p) dlsym(tau_handle,"cudaGraphicsUnregisterResource"); 
+	cudaGraphicsUnregisterResource_h = (cudaGraphicsUnregisterResource_p) dlsym(cudart_handle,"cudaGraphicsUnregisterResource"); 
     if (cudaGraphicsUnregisterResource_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -2275,16 +2296,16 @@ cudaError_t cudaGraphicsResourceSetMapFlags(cudaGraphicsResource_t a1, unsigned 
   static cudaGraphicsResourceSetMapFlags_p cudaGraphicsResourceSetMapFlags_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaGraphicsResourceSetMapFlags(cudaGraphicsResource_t, unsigned int) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaGraphicsResourceSetMapFlags_h == NULL)
-	cudaGraphicsResourceSetMapFlags_h = (cudaGraphicsResourceSetMapFlags_p) dlsym(tau_handle,"cudaGraphicsResourceSetMapFlags"); 
+	cudaGraphicsResourceSetMapFlags_h = (cudaGraphicsResourceSetMapFlags_p) dlsym(cudart_handle,"cudaGraphicsResourceSetMapFlags"); 
     if (cudaGraphicsResourceSetMapFlags_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -2303,16 +2324,16 @@ cudaError_t cudaGraphicsMapResources(int a1, cudaGraphicsResource_t * a2, cudaSt
   static cudaGraphicsMapResources_p cudaGraphicsMapResources_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaGraphicsMapResources(int, cudaGraphicsResource_t *, cudaStream_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaGraphicsMapResources_h == NULL)
-	cudaGraphicsMapResources_h = (cudaGraphicsMapResources_p) dlsym(tau_handle,"cudaGraphicsMapResources"); 
+	cudaGraphicsMapResources_h = (cudaGraphicsMapResources_p) dlsym(cudart_handle,"cudaGraphicsMapResources"); 
     if (cudaGraphicsMapResources_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -2331,16 +2352,16 @@ cudaError_t cudaGraphicsUnmapResources(int a1, cudaGraphicsResource_t * a2, cuda
   static cudaGraphicsUnmapResources_p cudaGraphicsUnmapResources_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaGraphicsUnmapResources(int, cudaGraphicsResource_t *, cudaStream_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaGraphicsUnmapResources_h == NULL)
-	cudaGraphicsUnmapResources_h = (cudaGraphicsUnmapResources_p) dlsym(tau_handle,"cudaGraphicsUnmapResources"); 
+	cudaGraphicsUnmapResources_h = (cudaGraphicsUnmapResources_p) dlsym(cudart_handle,"cudaGraphicsUnmapResources"); 
     if (cudaGraphicsUnmapResources_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -2359,16 +2380,16 @@ cudaError_t cudaGraphicsResourceGetMappedPointer(void ** a1, size_t * a2, cudaGr
   static cudaGraphicsResourceGetMappedPointer_p cudaGraphicsResourceGetMappedPointer_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaGraphicsResourceGetMappedPointer(void **, size_t *, cudaGraphicsResource_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaGraphicsResourceGetMappedPointer_h == NULL)
-	cudaGraphicsResourceGetMappedPointer_h = (cudaGraphicsResourceGetMappedPointer_p) dlsym(tau_handle,"cudaGraphicsResourceGetMappedPointer"); 
+	cudaGraphicsResourceGetMappedPointer_h = (cudaGraphicsResourceGetMappedPointer_p) dlsym(cudart_handle,"cudaGraphicsResourceGetMappedPointer"); 
     if (cudaGraphicsResourceGetMappedPointer_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -2387,16 +2408,16 @@ cudaError_t cudaGraphicsSubResourceGetMappedArray(struct cudaArray ** a1, cudaGr
   static cudaGraphicsSubResourceGetMappedArray_p cudaGraphicsSubResourceGetMappedArray_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaGraphicsSubResourceGetMappedArray(struct cudaArray **, cudaGraphicsResource_t, unsigned int, unsigned int) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaGraphicsSubResourceGetMappedArray_h == NULL)
-	cudaGraphicsSubResourceGetMappedArray_h = (cudaGraphicsSubResourceGetMappedArray_p) dlsym(tau_handle,"cudaGraphicsSubResourceGetMappedArray"); 
+	cudaGraphicsSubResourceGetMappedArray_h = (cudaGraphicsSubResourceGetMappedArray_p) dlsym(cudart_handle,"cudaGraphicsSubResourceGetMappedArray"); 
     if (cudaGraphicsSubResourceGetMappedArray_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -2407,7 +2428,7 @@ cudaError_t cudaGraphicsSubResourceGetMappedArray(struct cudaArray ** a1, cudaGr
   }
   return retval;
 
-}*/
+}
 
 cudaError_t cudaGetChannelDesc(struct cudaChannelFormatDesc * a1, const struct cudaArray * a2) {
 
@@ -2415,16 +2436,16 @@ cudaError_t cudaGetChannelDesc(struct cudaChannelFormatDesc * a1, const struct c
   static cudaGetChannelDesc_p cudaGetChannelDesc_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaGetChannelDesc(struct cudaChannelFormatDesc *, const struct cudaArray *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaGetChannelDesc_h == NULL)
-	cudaGetChannelDesc_h = (cudaGetChannelDesc_p) dlsym(tau_handle,"cudaGetChannelDesc"); 
+	cudaGetChannelDesc_h = (cudaGetChannelDesc_p) dlsym(cudart_handle,"cudaGetChannelDesc"); 
     if (cudaGetChannelDesc_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -2443,16 +2464,16 @@ struct cudaChannelFormatDesc cudaCreateChannelDesc(int a1, int a2, int a3, int a
   static cudaCreateChannelDesc_p cudaCreateChannelDesc_h = NULL;
   struct cudaChannelFormatDesc retval;
   TAU_PROFILE_TIMER(t,"struct cudaChannelFormatDesc cudaCreateChannelDesc(int, int, int, int, enum cudaChannelFormatKind) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaCreateChannelDesc_h == NULL)
-	cudaCreateChannelDesc_h = (cudaCreateChannelDesc_p) dlsym(tau_handle,"cudaCreateChannelDesc"); 
+	cudaCreateChannelDesc_h = (cudaCreateChannelDesc_p) dlsym(cudart_handle,"cudaCreateChannelDesc"); 
     if (cudaCreateChannelDesc_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -2464,23 +2485,23 @@ struct cudaChannelFormatDesc cudaCreateChannelDesc(int a1, int a2, int a3, int a
   return retval;
 
 }
-*/
+
 cudaError_t cudaBindTexture(size_t * a1, const struct textureReference * a2, const void * a3, const struct cudaChannelFormatDesc * a4, size_t a5) {
 
   typedef cudaError_t (*cudaBindTexture_p) (size_t *, const struct textureReference *, const void *, const struct cudaChannelFormatDesc *, size_t);
   static cudaBindTexture_p cudaBindTexture_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaBindTexture(size_t *, const struct textureReference *, const void *, const struct cudaChannelFormatDesc *, size_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaBindTexture_h == NULL)
-	cudaBindTexture_h = (cudaBindTexture_p) dlsym(tau_handle,"cudaBindTexture"); 
+	cudaBindTexture_h = (cudaBindTexture_p) dlsym(cudart_handle,"cudaBindTexture"); 
     if (cudaBindTexture_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -2499,16 +2520,16 @@ cudaError_t cudaBindTexture2D(size_t * a1, const struct textureReference * a2, c
   static cudaBindTexture2D_p cudaBindTexture2D_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaBindTexture2D(size_t *, const struct textureReference *, const void *, const struct cudaChannelFormatDesc *, size_t, size_t, size_t) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaBindTexture2D_h == NULL)
-	cudaBindTexture2D_h = (cudaBindTexture2D_p) dlsym(tau_handle,"cudaBindTexture2D"); 
+	cudaBindTexture2D_h = (cudaBindTexture2D_p) dlsym(cudart_handle,"cudaBindTexture2D"); 
     if (cudaBindTexture2D_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -2527,16 +2548,16 @@ cudaError_t cudaBindTextureToArray(const struct textureReference * a1, const str
   static cudaBindTextureToArray_p cudaBindTextureToArray_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaBindTextureToArray(const struct textureReference *, const struct cudaArray *, const struct cudaChannelFormatDesc *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaBindTextureToArray_h == NULL)
-	cudaBindTextureToArray_h = (cudaBindTextureToArray_p) dlsym(tau_handle,"cudaBindTextureToArray"); 
+	cudaBindTextureToArray_h = (cudaBindTextureToArray_p) dlsym(cudart_handle,"cudaBindTextureToArray"); 
     if (cudaBindTextureToArray_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -2555,16 +2576,16 @@ cudaError_t cudaUnbindTexture(const struct textureReference * a1) {
   static cudaUnbindTexture_p cudaUnbindTexture_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaUnbindTexture(const struct textureReference *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaUnbindTexture_h == NULL)
-	cudaUnbindTexture_h = (cudaUnbindTexture_p) dlsym(tau_handle,"cudaUnbindTexture"); 
+	cudaUnbindTexture_h = (cudaUnbindTexture_p) dlsym(cudart_handle,"cudaUnbindTexture"); 
     if (cudaUnbindTexture_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -2583,16 +2604,16 @@ cudaError_t cudaGetTextureAlignmentOffset(size_t * a1, const struct textureRefer
   static cudaGetTextureAlignmentOffset_p cudaGetTextureAlignmentOffset_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaGetTextureAlignmentOffset(size_t *, const struct textureReference *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaGetTextureAlignmentOffset_h == NULL)
-	cudaGetTextureAlignmentOffset_h = (cudaGetTextureAlignmentOffset_p) dlsym(tau_handle,"cudaGetTextureAlignmentOffset"); 
+	cudaGetTextureAlignmentOffset_h = (cudaGetTextureAlignmentOffset_p) dlsym(cudart_handle,"cudaGetTextureAlignmentOffset"); 
     if (cudaGetTextureAlignmentOffset_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -2611,16 +2632,16 @@ cudaError_t cudaGetTextureReference(const struct textureReference ** a1, const c
   static cudaGetTextureReference_p cudaGetTextureReference_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaGetTextureReference(const struct textureReference **, const char *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaGetTextureReference_h == NULL)
-	cudaGetTextureReference_h = (cudaGetTextureReference_p) dlsym(tau_handle,"cudaGetTextureReference"); 
+	cudaGetTextureReference_h = (cudaGetTextureReference_p) dlsym(cudart_handle,"cudaGetTextureReference"); 
     if (cudaGetTextureReference_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -2639,16 +2660,16 @@ cudaError_t cudaBindSurfaceToArray(const struct surfaceReference * a1, const str
   static cudaBindSurfaceToArray_p cudaBindSurfaceToArray_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaBindSurfaceToArray(const struct surfaceReference *, const struct cudaArray *, const struct cudaChannelFormatDesc *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaBindSurfaceToArray_h == NULL)
-	cudaBindSurfaceToArray_h = (cudaBindSurfaceToArray_p) dlsym(tau_handle,"cudaBindSurfaceToArray"); 
+	cudaBindSurfaceToArray_h = (cudaBindSurfaceToArray_p) dlsym(cudart_handle,"cudaBindSurfaceToArray"); 
     if (cudaBindSurfaceToArray_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -2667,16 +2688,16 @@ cudaError_t cudaGetSurfaceReference(const struct surfaceReference ** a1, const c
   static cudaGetSurfaceReference_p cudaGetSurfaceReference_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaGetSurfaceReference(const struct surfaceReference **, const char *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaGetSurfaceReference_h == NULL)
-	cudaGetSurfaceReference_h = (cudaGetSurfaceReference_p) dlsym(tau_handle,"cudaGetSurfaceReference"); 
+	cudaGetSurfaceReference_h = (cudaGetSurfaceReference_p) dlsym(cudart_handle,"cudaGetSurfaceReference"); 
     if (cudaGetSurfaceReference_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -2695,16 +2716,16 @@ cudaError_t cudaDriverGetVersion(int * a1) {
   static cudaDriverGetVersion_p cudaDriverGetVersion_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaDriverGetVersion(int *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaDriverGetVersion_h == NULL)
-	cudaDriverGetVersion_h = (cudaDriverGetVersion_p) dlsym(tau_handle,"cudaDriverGetVersion"); 
+	cudaDriverGetVersion_h = (cudaDriverGetVersion_p) dlsym(cudart_handle,"cudaDriverGetVersion"); 
     if (cudaDriverGetVersion_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
@@ -2723,21 +2744,21 @@ cudaError_t cudaRuntimeGetVersion(int * a1) {
   static cudaRuntimeGetVersion_p cudaRuntimeGetVersion_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaRuntimeGetVersion(int *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaRuntimeGetVersion_h == NULL)
-	cudaRuntimeGetVersion_h = (cudaRuntimeGetVersion_p) dlsym(tau_handle,"cudaRuntimeGetVersion"); 
+	cudaRuntimeGetVersion_h = (cudaRuntimeGetVersion_p) dlsym(cudart_handle,"cudaRuntimeGetVersion"); 
     if (cudaRuntimeGetVersion_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-  /* needed for HMPP */
+  // needed for HMPP 
 	Tau_global_incr_insideTAU();
   Tau_create_top_level_timer_if_necessary();
   Tau_global_decr_insideTAU();
@@ -2757,16 +2778,16 @@ cudaError_t cudaGetExportTable(const void ** a1, const cudaUUID_t * a2) {
   static cudaGetExportTable_p cudaGetExportTable_h = NULL;
   cudaError_t retval;
   TAU_PROFILE_TIMER(t,"cudaError_t cudaGetExportTable(const void **, const cudaUUID_t *) C", "", TAU_USER);
-  if (tau_handle == NULL) 
-    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
-  if (tau_handle == NULL) { 
+  if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
     return retval;
   } 
   else { 
     if (cudaGetExportTable_h == NULL)
-	cudaGetExportTable_h = (cudaGetExportTable_p) dlsym(tau_handle,"cudaGetExportTable"); 
+	cudaGetExportTable_h = (cudaGetExportTable_p) dlsym(cudart_handle,"cudaGetExportTable"); 
     if (cudaGetExportTable_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
