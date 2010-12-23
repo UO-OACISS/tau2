@@ -3285,7 +3285,7 @@ if [ $vampirtrace = yes ] ; then
 	$echo "Checking version of VampirTrace... ${nnl}"
 	version=`$vampirtracedir/bin/vtcc -vt:version 2>&1`
 	echo "$version"
-	eval major=${version/./;minor=}
+	#eval major=${version/./;minor=}
 	minor=`echo $minor | sed 's/\([0-9]*\).*/\1/g'`
 
 	# check if 5.7 or later
