@@ -370,6 +370,7 @@ CUresult cuCtxDetach(CUcontext a1) {
   TAU_PROFILE_STOP(t);
 
 #ifdef TRACK_KERNEL
+	Tau_cuda_register_sync_event();
 	Tau_cuda_exit();
 #endif
   }
@@ -2705,11 +2706,18 @@ CUresult cuLaunch(CUfunction a1) {
   TAU_PROFILE_START(t);
 #ifdef TRACK_KERNEL
 		Tau_cuda_init();
-		Tau_cuda_enqueue_kernel_enter_event((const char*)a1, cudaGpuId(0,0));
+		int device;
+		cuCtxGetDevice(&device);
+		CUcontext ctx;
+		cuCtxPopCurrent(&ctx);
+		cuCtxPushCurrent(ctx);
+		Tau_cuda_enqueue_kernel_enter_event((const char*) a1, 
+																				&cudaDriverGpuId(device, ctx, 0));
 #endif
   	retval  =  (*cuLaunch_h)( a1);
 #ifdef TRACK_KERNEL
-		Tau_cuda_enqueue_kernel_exit_event((const char*)a1, cudaGpuId(0,0));
+		Tau_cuda_enqueue_kernel_exit_event((const char*) a1, 
+																			 &cudaDriverGpuId(device, ctx, 0));
 #endif
   TAU_PROFILE_STOP(t);
   }
@@ -2740,11 +2748,16 @@ CUresult cuLaunchGrid(CUfunction a1, int a2, int a3) {
   TAU_PROFILE_START(t);
 #ifdef TRACK_KERNEL
 		Tau_cuda_init();
-		Tau_cuda_enqueue_kernel_enter_event((const char*)a1, cudaGpuId(0,0));
+		int device;
+		cuCtxGetDevice(&device);
+		CUcontext ctx;
+		cuCtxPopCurrent(&ctx);
+		cuCtxPushCurrent(ctx);
+		Tau_cuda_enqueue_kernel_enter_event((const char*)a1, &cudaDriverGpuId(device,ctx,0));
 #endif
   	retval  =  (*cuLaunchGrid_h)( a1,  a2,  a3);
 #ifdef TRACK_KERNEL
-		Tau_cuda_enqueue_kernel_exit_event((const char*)a1, cudaGpuId(0,0));
+		Tau_cuda_enqueue_kernel_exit_event((const char*)a1, &cudaDriverGpuId(device,ctx,0));
 #endif
   TAU_PROFILE_STOP(t);
   }
@@ -2775,11 +2788,16 @@ CUresult cuLaunchGridAsync(CUfunction a1, int a2, int a3, CUstream a4) {
   TAU_PROFILE_START(t);
 #ifdef TRACK_KERNEL
 		Tau_cuda_init();
-		Tau_cuda_enqueue_kernel_enter_event((const char*)a1, cudaGpuId(0,0));
+		int device;
+		cuCtxGetDevice(&device);
+		CUcontext ctx;
+		cuCtxPopCurrent(&ctx);
+		cuCtxPushCurrent(ctx);
+		Tau_cuda_enqueue_kernel_enter_event((const char*)a1, &cudaDriverGpuId(device,ctx,a4));
 #endif
   	retval  =  (*cuLaunchGridAsync_h)( a1,  a2,  a3,  a4);
 #ifdef TRACK_KERNEL
-		Tau_cuda_enqueue_kernel_exit_event((const char*)a1, cudaGpuId(0,0));
+		Tau_cuda_enqueue_kernel_exit_event((const char*)a1, &cudaDriverGpuId(device,ctx,a4));
 #endif
   TAU_PROFILE_STOP(t);
   }
