@@ -7,30 +7,85 @@
 
 class cudaGpuId : public gpuId {
 public:
+	cudaGpuId() {}
+	
+	virtual cudaGpuId *getCopy() = 0;
+	virtual char* printId() = 0;
+	virtual x_uint64 id_p1() = 0;
+	virtual x_uint64 id_p2() = 0;
+	//virtual bool operator<(const cudaGpuId& other) const = 0;
+	virtual bool equals(const gpuId *other) const = 0;
+	virtual cudaStream_t getStream() = 0;
+	virtual int getDevice() = 0;
+	virtual CUcontext getContext() = 0;
+};
+
+class cudaRuntimeGpuId : public cudaGpuId {
+public:
 	int device;
 	cudaStream_t stream;
-	cudaGpuId()
+	cudaRuntimeGpuId()
 	{
 		device = 0;
 		stream = 0;
 	}
-	cudaGpuId(const int d, cudaStream_t s)
+	cudaRuntimeGpuId(const cudaRuntimeGpuId& cpy)
+	{
+		device = cpy.device;
+		stream = cpy.stream;
+	}
+	cudaRuntimeGpuId(const int d, cudaStream_t s)
 	{
 		device = d;
-		//dr_stream = (CUstream) s;
-		//rt_stream = (cudaStream_t) s;
 		stream = s;
 	}
 	
-	cudaGpuId *getCopy();
+	cudaRuntimeGpuId *getCopy();
 	char* printId();
-	//x_uint64 id_p1() { return device; }
-	//x_uint64 id_p2() { return  stream; }
-	bool operator<(const cudaGpuId& other) const;
+	x_uint64 id_p1(); 
+	x_uint64 id_p2();
+	//bool operator<(const cudaGpuId& other) const;
 	bool equals(const gpuId *other) const;
-	CUstream get_dr_stream();
-	cudaStream_t get_rt_stream();
+	cudaStream_t getStream();
+	int getDevice();
+	CUcontext getContext();
 };
+class cudaDriverGpuId : public cudaGpuId {
+public:
+	int device;
+	CUcontext context;
+	cudaStream_t stream;
+	cudaDriverGpuId()
+	{
+		device = 0;
+		stream = 0;
+		context = 0;
+	}
+	cudaDriverGpuId(const cudaDriverGpuId& cpy)
+	{
+		device = cpy.device;
+		stream = cpy.stream;
+		context = cpy.context;
+	}
+	cudaDriverGpuId(const int d, CUcontext c, cudaStream_t s)
+	{
+		device = d;
+		context = 0;
+		stream = s;
+	}
+	
+	cudaDriverGpuId *getCopy();
+	char* printId();
+	x_uint64 id_p1(); 
+	x_uint64 id_p2();
+	//bool operator<(const cudaGpuId& other) const;
+	bool equals(const gpuId *other) const;
+	cudaStream_t getStream();
+	int getDevice();
+	CUcontext getContext();
+};
+
+
 class cudaEventId : public eventId
 {
 	int id;
@@ -48,16 +103,16 @@ void Tau_cuda_enter_memcpy_event(const char *name, int id, int size, int MemcpyT
 
 void Tau_cuda_exit_memcpy_event(const char *name, int id, int MemcpyType);
 
-void Tau_cuda_register_gpu_event(const char *name, int id, double start,
+void Tau_cuda_register_gpu_event(const char *name, cudaGpuId* id, double start,
 double stop);
 
 void Tau_cuda_register_memcpy_event(int id, double start, double stop, int
 transferSize, int MemcpyType);
 
 void Tau_cuda_enqueue_kernel_enter_event(const char *name, 
-cudaGpuId id);
+cudaGpuId* id);
 
 void Tau_cuda_enqueue_kernel_exit_event(const char *name, 
-cudaGpuId id);
+cudaGpuId* id);
 
 void Tau_cuda_register_sync_event();
