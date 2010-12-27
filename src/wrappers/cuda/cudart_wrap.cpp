@@ -869,7 +869,7 @@ cudaError_t cudaConfigureCall(dim3 a1, dim3 a2, size_t a3, cudaStream_t a4) {
       return retval;
     }
 
-	cout << "in cudaConfigure... stream is " << a4 << endl;
+	//cout << "in cudaConfigure... stream is " << a4 << endl;
 	/*
 	if (a4 == 0)
 	{
@@ -967,18 +967,18 @@ cudaError_t cudaLaunch(const char * a1) {
       return retval;
     }
 		
-		printf("in cudaLaunch, TAU wrap.\n");
+		//printf("in cudaLaunch, TAU wrap.\n");
   
 		TAU_PROFILE_START(t);
 #ifdef TRACK_KERNEL
 		Tau_cuda_init();
 		int device;
 		cudaGetDevice(&device);
-		Tau_cuda_enqueue_kernel_enter_event(a1, cudaGpuId(device,curr_stream));
+		Tau_cuda_enqueue_kernel_enter_event(a1, &cudaRuntimeGpuId(device,curr_stream));
 #endif
 		retval  =  (*cudaLaunch_h)( a1);
 #ifdef TRACK_KERNEL
-		Tau_cuda_enqueue_kernel_exit_event(a1, cudaGpuId(device,curr_stream));
+		Tau_cuda_enqueue_kernel_exit_event(a1, &cudaRuntimeGpuId(device,curr_stream));
 #endif
 		TAU_PROFILE_STOP(t);
   }

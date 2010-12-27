@@ -799,6 +799,10 @@ extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
   TAU_EVENT(TheSendEvent(), length);
 
   if (TauEnv_get_comm_matrix()) {
+    if (destination >= tau_totalnodes(0,0)) {
+      fprintf(stderr, "TAU Error: Comm Matrix destination %d exceeds node count %d. Was MPI_Init wrapper never called?\n", destination, tau_totalnodes(0,0));
+      exit(-1);
+    }
     TheMsgVolContextEvent()[destination]->TriggerEvent(length, RtsLayer::myThread());
   }
 

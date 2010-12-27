@@ -15,7 +15,7 @@
 #**      Documentation   : See http://www.cs.uoregon.edu/research/tau       **
 #****************************************************************************
 
-TAUROOT=/home/scottb/tau2
+TAUROOT=
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -120,8 +120,8 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauMemoryWrap.o \
 STATIC_OBJS   = Comp_gnu.o $(PGIACC_STATIC_O)
 SHARED_OBJS   = $(PGIACC_O)
 #SICORTEX#SHARED_OBJS = Comp_gnu.o #ENDIF#
-SHARED_OBJS = Comp_gnu.o #ENDIF##TAU_BFDSHAREDLINK#
-SHARED_LIBS = $(BFDLINK) -lbfd -liberty #ENDIF##TAU_BFDSHAREDLINK#
+#TAU_BFDSHAREDLINK#SHARED_OBJS = Comp_gnu.o #ENDIF#
+#TAU_BFDSHAREDLINK#SHARED_LIBS = $(BFDLINK) -lbfd -liberty #ENDIF#
 
 PRINT	      = pr
 
@@ -689,7 +689,7 @@ $(TAUROOT)/src/Profile/TauPGIHelper.o 	: TauPGIHelper.cpp $(HDRS)
 TauGpu.o : TauGpu.cpp $(HDRS)
 	$(CXX) -DTAU_GPU $(CXXFLAGS) -c $(@:.o=.cpp)
 
-TauGpuAdapterCUDA.o : TauGpuAdapterCUDA.cpp $(HDRS)
+TauGpuAdapterCUDA.o : TauGpuAdapterCUDA.cpp $(HDRS) ../../include/Profile/TauGpuAdapterCUDA.h
 	$(CXX) $(CXXFLAGS) -g -I$(TAU_CUDA_INC) -c $(@:.o=.cpp)
 
 TauGpuAdapterOpenCL.o : TauGpuAdapterOpenCL.cpp $(HDRS)  $(INCDIR)/TauGpuAdapterOpenCL.h
