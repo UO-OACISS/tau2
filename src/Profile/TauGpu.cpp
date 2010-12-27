@@ -257,18 +257,20 @@ int get_task(gpuId *new_task)
 {
 	int task = 0;
 	for (int i=0; i<number_of_tasks;i++)
+#ifdef DEBUG_PROF
 		cout << "current Tasks[" << i << "]: " << Tasks[i]->printId() << endl;
-
+#endif
 	for (int i=0; i<number_of_tasks;i++)
 	{
-		cout << "checking task, id: " << new_task->printId() << " against: " <<
-		Tasks[i]->printId() << endl;
+		//cout << "checking task, id: " << new_task->printId() << " against: " <<
+		//Tasks[i]->printId() << endl;
 		//reference for comparision
-		if (new_task->equals(Tasks[i]))
+		gpuId *old_task = Tasks[i];
+		if (new_task->equals(old_task))
 		{
 			//found task.
 			task = i + 1;
-			cout << "found task! task id = " << task << endl;
+			//cout << "found task! task id = " << task << endl;
 			//break;
 		}
 		else
@@ -282,7 +284,7 @@ int get_task(gpuId *new_task)
 		gpuId *create_task = new_task->getCopy();
 		Tasks[number_of_tasks] = create_task;
 		TAU_CREATE_TASK(++number_of_tasks);
-		cout << "new task: " << Tasks[number_of_tasks-1]->printId() << endl;
+		//cout << "new task: " << Tasks[number_of_tasks-1]->printId() << endl;
 		task = number_of_tasks;
 	}
 
