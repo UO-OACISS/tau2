@@ -11,7 +11,10 @@
 #define TAU_GPU_UNKNOW_TRANSFER_SIZE -1
 #define TAU_GPU_USE_DEFAULT_NAME ""
 
+#define TAU_MAX_NUMBER_OF_GPU_THREADS TAU_MAX_THREADS
+
 #include<Profile/tau_types.h>
+
 
 /**********************************************
 	* Callback into the driver adapter to retrive information about the device ids
@@ -22,13 +25,17 @@
 class gpuId {
 
 public:
+	virtual gpuId *getCopy() = 0;
 	virtual char * printId() = 0;
 	virtual x_uint64 id_p1() = 0;
 	virtual x_uint64 id_p2() = 0;
+	virtual bool equals(const gpuId *other) const = 0;
+	//virtual bool operator<(const gpuId& A) const;
 };
 
 class eventId {
-
+public:
+	//virtual bool operator<(const eventId& A) const;
 };
 
 /************************************************************************
@@ -58,13 +65,16 @@ gpuId *device, int memcpyType);
 
 /* Callback for a GPU event that occurred earlier in the execution of the
  * program. Times are pre-aligned to the CPU clock. */
-extern "C" void Tau_gpu_register_gpu_event(const char *functionName, eventId *id, double startTime, double
+extern "C" void Tau_gpu_register_gpu_event(const char *functionName, eventId *id, gpuId *device, double startTime, double
 endTime);
 
 /* Callback for a Memcpy event that occurred earlier in the execution of the
  * program. Times are pre-aligned to the CPU clock. */
 extern "C" void Tau_gpu_register_memcpy_event(const char *name, eventId *id, gpuId *device, double startTime, double endTime, int transferSize, int memcpyType);
 
+extern "C" void TauTraceOneSidedMsg(bool type, gpuId *gpu, int length, int thread);
+
 #endif // __cplusplus
 #endif // _TAU_GPU_INTERFACE
+
 

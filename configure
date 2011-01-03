@@ -1414,10 +1414,10 @@ for arg in "$@"; do
       exit 1
     fi
     if [ -f "$cudainclude/cuda.h" ] ; then
-			useropt="$useropt#-DTAU_MAX_THREADS=3"
-    	fixmakeargs="$fixmakeargs cudainclude=$cudainclude"
+			useropt="$useropt#-DTAU_MAX_THREADS=32"
+    	fixmakeargs="$fixmakeargs TAU_USE_GPU cudainclude=$cudainclude"
 			if [ -f "$cudainclude/CL/cl.h" ] ; then
-    		fixmakeargs="$fixmakeargs openclinclude=$cudainclude"
+    		fixmakeargs="$fixmakeargs TAU_USE_GPU openclinclude=$cudainclude"
 			fi
 		else
 			echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
@@ -1432,7 +1432,7 @@ for arg in "$@"; do
       exit 1
     fi
 		if [ -f "$openclinclude/CL/cl.h" ] ; then
-			useropt="$useropt#-DTAU_MAX_THREADS=3"
+			useropt="$useropt#-DTAU_MAX_THREADS=32"
       fixmakeargs="$fixmakeargs openclinclude=$openclinclude"
 		else
 			echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
@@ -3285,7 +3285,7 @@ if [ $vampirtrace = yes ] ; then
 	$echo "Checking version of VampirTrace... ${nnl}"
 	version=`$vampirtracedir/bin/vtcc -vt:version 2>&1`
 	echo "$version"
-	eval major=${version/./;minor=}
+	#eval major=${version/./;minor=}
 	minor=`echo $minor | sed 's/\([0-9]*\).*/\1/g'`
 
 	# check if 5.7 or later

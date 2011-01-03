@@ -445,7 +445,7 @@ extern "C" int Tau_collate_writeProfile() {
   // timing info
   x_uint64 start, end;
   if (rank == 0) {
-    TAU_VERBOSE("TAU: Collating...\n");
+    TAU_VERBOSE("TAU: Starting Mon MPI operations ...\n");
     start = TauMetrics_getTimeOfDay();
   }
 
@@ -506,11 +506,11 @@ extern "C" int Tau_collate_writeProfile() {
 				numItems, globalEventMap);
 
   double ***gExcl, ***gIncl;
-  int **gNumCalls, **gNumSubr;
+  double **gNumCalls, **gNumSubr;
   gExcl = (double ***) TAU_UTIL_MALLOC(sizeof(double **) * NUM_COLLATE_STEPS);
   gIncl = (double ***) TAU_UTIL_MALLOC(sizeof(double **) * NUM_COLLATE_STEPS);
-  gNumCalls = (int **) TAU_UTIL_MALLOC(sizeof(int *) * NUM_COLLATE_STEPS);
-  gNumSubr = (int **) TAU_UTIL_MALLOC(sizeof(int *) * NUM_COLLATE_STEPS);
+  gNumCalls = (double **) TAU_UTIL_MALLOC(sizeof(double *) *NUM_COLLATE_STEPS);
+  gNumSubr = (double **) TAU_UTIL_MALLOC(sizeof(double *) * NUM_COLLATE_STEPS);
 
   double ***sExcl, ***sIncl;
   double **sNumCalls, **sNumSubr;
@@ -526,7 +526,7 @@ extern "C" int Tau_collate_writeProfile() {
 				 
   if (rank == 0) {
     end_aggregate = TauMetrics_getTimeOfDay();
-    TAU_VERBOSE("TAU: Collate: Aggregation Complete, duration = %.4G seconds\n", ((double)((double)end_aggregate-start_aggregate))/1000000.0f);
+    TAU_VERBOSE("TAU: Mon MPI: Aggregation Complete, duration = %.4G seconds\n", ((double)((double)end_aggregate-start_aggregate))/1000000.0f);
   }
 
   // now compute histograms
@@ -627,7 +627,7 @@ extern "C" int Tau_collate_writeProfile() {
   if (rank == 0) {
     fclose (histoFile);
     rename (histFileNameTmp, histFileName);
-    TAU_VERBOSE("TAU: Collate: Histogramming Complete, duration = %.4G seconds\n", ((double)((double)end_hist-start_hist))/1000000.0f);
+    TAU_VERBOSE("TAU: Mon MPI: Histogramming Complete, duration = %.4G seconds\n", ((double)((double)end_hist-start_hist))/1000000.0f);
   }
 
   if (rank == 0) {
@@ -696,7 +696,7 @@ extern "C" int Tau_collate_writeProfile() {
 
   if (rank == 0) {
     end = TauMetrics_getTimeOfDay();
-    TAU_VERBOSE("TAU: Collating Complete, duration = %.4G seconds\n", ((double)((double)end-start))/1000000.0f);
+    TAU_VERBOSE("TAU: Mon MPI: Operations complete, duration = %.4G seconds\n", ((double)((double)end-start))/1000000.0f);
   }
 
   /*
@@ -711,7 +711,9 @@ extern "C" int Tau_collate_writeProfile() {
  * For Dagstuhl demo 2010
  ********************************************************************/
 extern "C" void Tau_collate_onlineDump() {
-  TAU_VERBOSE("collate online dump called\n");
+  // Not scalable output, even for verbose output. This is not a one-time
+  //    operation.
+  //  TAU_VERBOSE("collate online dump called\n");
   Tau_collate_writeProfile();
 }
 

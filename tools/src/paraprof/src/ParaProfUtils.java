@@ -1387,6 +1387,16 @@ public class ParaProfUtils {
         }
         return str;
     }
+    
+    //remove the 'throttled' tag from the function name
+    public static String removeThrottledTag(String str){
+    	int dex=str.indexOf("  [THROTTLED]");
+    	if(dex>=0){
+    		str = str.substring(0,dex);
+    	}
+    	
+    	return str;
+    }
 
     // handles reversed callpaths
     public static String getDisplayName(Function function) {
