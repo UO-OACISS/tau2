@@ -15,11 +15,18 @@ import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Stack;
@@ -29,6 +36,11 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
+
+import com.graphbuilder.math.Expression;
+import com.graphbuilder.math.ExpressionTree;
+import com.graphbuilder.math.FuncMap;
+import com.graphbuilder.math.VarMap;
 
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
@@ -52,6 +64,7 @@ import edu.uoregon.tau.vis.ColorScale;
 import edu.uoregon.tau.vis.ExceptionHandler;
 import edu.uoregon.tau.vis.Plot;
 import edu.uoregon.tau.vis.ScatterPlot;
+import edu.uoregon.tau.vis.TopoPlot;
 import edu.uoregon.tau.vis.TriangleMeshPlot;
 import edu.uoregon.tau.vis.Vec;
 import edu.uoregon.tau.vis.VisCanvas;
@@ -92,6 +105,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     private TriangleMeshPlot triangleMeshPlot;
     private BarPlot barPlot;
     private ScatterPlot scatterPlot;
+    private TopoPlot topoPlot;
     private Axes fullDataPlotAxes;
     private Axes scatterPlotAxes;
 
@@ -128,7 +142,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         settings.setScatterMetric(ppTrial.getDefaultMetric(), 3);
         settings.setTopoMetric(ppTrial.getDefaultMetric());
         
-        String topoc = ppTrial.getTopologyArray()[0];
+        String topoc = ppTrial.getTopologyArray().get(0);
         if(topoc!=null)
         	settings.setTopoCart(topoc);
 
@@ -342,36 +356,191 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
          
          axes = scatterPlotAxes;
          
-        if (scatterPlot == null) {
-            scatterPlot = new ScatterPlot();
+        if (topoPlot == null) {
+            topoPlot = new TopoPlot();
             if (numThreads > defaultToScatter) {
-                scatterPlot.setSphereSize(0);
+                topoPlot.setSphereSize(0);
             }
         }
 
         //scatterPlot.setSize(15, 15, 15);
 //        //scatterPlot.clearValues();
 //        scatterPlot.setMinMax(minScatterValues[3], maxScatterValues[3]);
-        scatterPlot.setSize(tsizes[0],tsizes[1], tsizes[2]);
-        scatterPlot.setIsTopo(true);
-        scatterPlot.setAxes(axes);
-        scatterPlot.setTopoVis(settings.getTopoVisAxes());
-        scatterPlot.setValues(values);
-        scatterPlot.setColorScale(colorScale);
-        scatterPlot.setVisRange(settings.getMinTopoRange(), settings.getMaxTopoRange() );
-        plot = scatterPlot;
+        topoPlot.setSize(tsizes[0],tsizes[1], tsizes[2]);
+        topoPlot.setIsTopo(true);
+        topoPlot.setAxes(axes);
+        topoPlot.setTopoVis(settings.getTopoVisAxes());
+        topoPlot.setValues(values);
+        topoPlot.setColorScale(colorScale);
+        topoPlot.setVisRange(settings.getMinTopoRange(), settings.getMaxTopoRange() );
+        plot = topoPlot;
         
         //settings.setMinTopoShown(scatterPlot.getMinShown());
         //settings.setMaxTopoShown(scatterPlot.getMaxShown());
     }
     
-    int[] tsizes=null;
+    int[] tsizes={0,0,0};
     private float[][] defaultTopology(int numThreads){
     	float[][] values = new float[numThreads][4];
     	
     	 
     	 String prefix  = settings.getTopoCart();
         
+    	 if(prefix.equals("Custom")){
+    		 
+    		 Function topoFunction = settings.getTopoFunction();
+        	 ValueType topoValueType = settings.getTopoValueType();
+             Metric topoMetricID = settings.getTopoMetric();
+    		 
+    		 //int[] custTopoDims = null;
+    		 int xdim = settings.getCustomTopoAxis(0);
+    		 int ydim = settings.getCustomTopoAxis(1);
+    		 int zdim = settings.getCustomTopoAxis(2);
+    		 
+    		 //int xdim = topoValues[0];
+	            if(xdim<=0){
+	            	xdim=1;
+	            }
+	           ///int ydim = topoValues[1];
+	            if(ydim<=0){
+	            	ydim=1;
+	            }
+	            //int zdim = topoValues[2];
+	            if(ydim<=0){
+	            	ydim=1;
+	            }
+	            if(xdim*ydim*zdim<numThreads){
+	            	zdim=(int)Math.ceil((double)numThreads/(double)xdim/(double)ydim);
+	            }
+    		 
+    		 
+	            int threadIndex = 0;
+    	    	
+    	        for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
+    	            Thread thread = it.next();
+    	            
+    	            
+    	            
+    	            for (int f = 0; f < 4; f++) {
+    	                if(f==0){
+    	                	values[threadIndex][f] = threadIndex%xdim;
+    	                }
+    	                if(f==1)
+    	                {
+    	                	values[threadIndex][f] = (threadIndex/xdim)%ydim;// ycor;
+    	                }
+    	                else if(f==2)
+    	                {
+    	                	values[threadIndex][f] = (threadIndex/xdim/ydim)%zdim;
+    	                }
+    	                else if(f==3)
+    	                {
+    	                	
+    	                	if (topoFunction != null) {
+    	                        FunctionProfile functionProfile = thread.getFunctionProfile(topoFunction);
+
+    	                        if (functionProfile != null) {
+    	                            	
+    	                        	
+    	                            values[threadIndex][3] = (float) topoValueType.getValue(functionProfile, topoMetricID,ppTrial.getSelectedSnapshot());
+    	                            maxScatterValues[3] = Math.max(maxScatterValues[3], values[threadIndex][3]);
+    	                            minScatterValues[3] = Math.min(minScatterValues[3], values[threadIndex][3]);
+    	                        }
+    	                	}
+    	                }
+    	            	maxScatterValues[f] = Math.max(maxScatterValues[f], values[threadIndex][f]);
+    	                minScatterValues[f] = Math.min(minScatterValues[f], values[threadIndex][f]);
+    	            }
+    	            threadIndex++;
+    	        }
+    	        for(int i=0;i<3;i++)
+    	        	tsizes[i]=(int) maxScatterValues[i];
+    		 
+    		 
+    	 }else
+    		 if(settings.isCustomTopo()){
+    			 String fileLoc=settings.getTopoDefFile();//"/home/wspear/Code/JavaMath/test.txt";
+    			 //List<String> names = getCustomTopoNames(fileLoc);
+    	    		 Map<String,String>expressions = getExpressions(fileLoc,prefix);
+    	        	 Function topoFunction = settings.getTopoFunction();
+    	        	 ValueType topoValueType = settings.getTopoValueType();
+    	             Metric topoMetricID = settings.getTopoMetric();
+    	    		 
+    	    		 //int[] custTopoDims = null;
+    	    		 int xdim = settings.getCustomTopoAxis(0);
+    	    		 int ydim = settings.getCustomTopoAxis(1);
+    	    		 int zdim = settings.getCustomTopoAxis(2);
+    	    		 
+    	    		 //int xdim = topoValues[0];
+    		            if(xdim<=0){
+    		            	xdim=1;
+    		            }
+    		           ///int ydim = topoValues[1];
+    		            if(ydim<=0){
+    		            	ydim=1;
+    		            }
+    		            //int zdim = topoValues[2];
+    		            if(ydim<=0){
+    		            	ydim=1;
+    		            }
+    		            if(xdim*ydim*zdim<numThreads){
+    		            	zdim=(int)Math.ceil((double)numThreads/(double)xdim/(double)ydim);
+    		            }
+    	    		 
+    	    		 
+    		            int threadIndex = 0;
+    	    	    	
+    	    	        for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
+    	    	            Thread thread = it.next();
+    	    	            
+    	    	            //int sqrt =  (int) Math.sqrt(numThreads);
+    	    	            FunctionProfile functionProfile = thread.getFunctionProfile(topoFunction);
+    	    	            float colorValue = (float) topoValueType.getValue(functionProfile, topoMetricID,ppTrial.getSelectedSnapshot());
+    	    	            
+    	    	            double[] cords = getRankCoordinate(threadIndex,numThreads,colorValue,expressions);
+    	    	            
+    	    	            for (int f = 0; f < 4; f++) {
+    	    	            	
+    	    	            	//double theta=2f*Math.PI/sqrt*((float)(threadIndex%sqrt));
+    	    	            	//double phi = Math.PI/sqrt*((threadIndex/sqrt));
+//    	    	                if(f==0){
+//    	    	                	values[threadIndex][f] = (float) ((float) Math.cos(theta)*Math.sin(phi)*100);//threadIndex%xdim;
+//    	    	                }
+//    	    	                if(f==1)
+//    	    	                {
+//    	    	                	values[threadIndex][f] = (float) ((float) Math.sin(theta)*Math.sin(phi)*100);//(threadIndex/xdim)%ydim;// ycor;
+//    	    	                }
+//    	    	                else if(f==2)
+//    	    	                {
+//    	    	                	values[threadIndex][f] =  (float) Math.cos(phi)*100;//0;//(threadIndex/xdim/ydim)%zdim;
+//    	    	                }
+    	    	            	//if(f<3){
+    	    	            	values[threadIndex][f] = (float) cords[f];
+    	    	            	//}
+//    	    	                else if(f==3)
+//    	    	                {
+//    	    	                	
+//    	    	                	if (topoFunction != null) {
+//    	    	                        
+//
+//    	    	                        if (functionProfile != null) {
+//    	    	                        	values[threadIndex][3] = colorValue;
+//    	    	                            maxScatterValues[3] = Math.max(maxScatterValues[3], values[threadIndex][3]);
+//    	    	                            minScatterValues[3] = Math.min(minScatterValues[3], values[threadIndex][3]);
+//    	    	                        }
+//    	    	                	}
+//    	    	                }
+    	    	            	maxScatterValues[f] = Math.max(maxScatterValues[f], values[threadIndex][f]);
+    	    	                minScatterValues[f] = Math.min(minScatterValues[f], values[threadIndex][f]);
+    	    	            }
+    	    	            threadIndex++;
+    	    	        }
+    	    	        for(int i=0;i<3;i++)
+    	    	        	tsizes[i]=(int) maxScatterValues[i];
+    	    		 
+    		 }
+    		 else{
+    	 
     	 String coord_key=prefix+" Coords";
     	 String size_key=prefix+" Size";
     	 
@@ -419,8 +588,138 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     	 
     	 threadIndex++;
     	 }
+    	 
+    	 }
     	
     	return values;
+    }
+    
+    
+//    String[] expressions = {"sqrt(maxRank)","2*pi()/rootRanks*mod(rank,rootRanks)","pi()/rootRanks*(rank/rootRanks)","cos(theta)*sin(phi)*100","sin(theta)*sin(phi)*100","cos(phi)*100"};
+//    String[] ids = {"rootRanks","theta","phi","x","y","z"};
+   
+    static final String TOPOLOGY ="TOPOLOGY";
+    static final String END ="END_TOPOLOGY";
+    
+    public static List<String> getCustomTopoNames(String fileLoc){
+    	List<String> names = new ArrayList<String>();
+    	BufferedReader br;
+    	
+		try {
+			br = new BufferedReader(new FileReader(new File(fileLoc)));
+		
+
+		String s;
+		
+		 
+
+		while ((s = br.readLine()) != null) {
+			
+			if(s.startsWith(TOPOLOGY))
+			{	
+			
+			int x1 = s.indexOf('=');
+			//int x2 = s.indexOf('"', x1 + 1);
+
+			//String id = s.substring(0,x1);
+			String name= s.substring(x1+1);
+			names.add(name);//expressions.put(id, exp);
+			}
+
+		}
+		
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	
+    	return names;
+    }
+    
+    
+    private static String[] splitEQ(String s){
+    	String[] tuple = new String[2];
+    	
+    	int x1 = s.indexOf('=');
+
+		tuple[0] = s.substring(0,x1);
+		tuple[1] = s.substring(x1+1);
+    	
+    	return tuple;
+    }
+    
+    private static Map<String,String> getExpressions(String fileLoc,String expName){
+    	BufferedReader br;
+    	Map<String,String> expressions = new LinkedHashMap<String,String>();
+		try {
+			br = new BufferedReader(new FileReader(new File(fileLoc)));
+		
+
+		String s;
+		
+		 boolean foundExp=false;
+
+		while ((s = br.readLine()) != null) {
+			
+			if(!foundExp && s.startsWith(TOPOLOGY)){
+				if(splitEQ(s)[1].equals(expName))
+				{
+					foundExp=true;
+					continue;
+				}
+			}
+			
+			if(foundExp){
+				if(s.equals(END))
+					break;
+				
+				String[] tuple = splitEQ(s);
+				
+				expressions.put(tuple[0], tuple[1]);
+			}
+			
+
+		}
+		
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return expressions;
+    }
+   
+    
+    private static double[] getRankCoordinate(int rank,  int maxRank, float colorValue, Map<String,String> expressions){//String[] expressions, int rank,  int maxRank){
+    	double[] coords = new double[4];
+    	FuncMap fm = new FuncMap();
+		fm.loadDefaultFunctions();
+    	VarMap vm = new VarMap(false);
+    	vm.setValue("maxRank", maxRank);
+    	vm.setValue("rank", rank);
+    	vm.setValue("colorValue", colorValue);
+    	
+    	Expression x;
+    	double res;
+    	
+    	Iterator<Entry<String,String>> it = expressions.entrySet().iterator();
+    	
+    	while(it.hasNext()){
+    		Entry<String,String> e = it.next();
+    		x = ExpressionTree.parse(e.getValue());
+    		res = x.eval(vm,fm);
+    		vm.setValue(e.getKey(), res);
+    	}
+    	
+    	coords[0]=vm.getValue("x");
+    	coords[1]=vm.getValue("y");
+    	coords[2]=vm.getValue("z");
+    	coords[3]=colorValue;
+    	
+    	return coords;
     }
     
     private static int[] parseTuple(String tuple){
@@ -1408,25 +1707,25 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     }
     
     public String getSelectedMinTopoValue(){
-    	return getSelectedTopoValue(scatterPlot.getMinShown());
+    	return getSelectedTopoValue(topoPlot.getMinShown());
     }
     public String getSelectedMaxTopoValue(){
-    	return getSelectedTopoValue(scatterPlot.getMaxShown());
+    	return getSelectedTopoValue(topoPlot.getMaxShown());
     }
     
     public String getStatMean(){
-    	if(scatterPlot!=null)
-    		return getSelectedTopoValue(scatterPlot.getStatMean());
+    	if(topoPlot!=null)
+    		return getSelectedTopoValue(topoPlot.getStatMean());
     	else return getSelectedTopoValue(Float.NaN);
     }
     public String getStatMax(){
-    	if(scatterPlot!=null)
-    		return getSelectedTopoValue(scatterPlot.getStatMax());
+    	if(topoPlot!=null)
+    		return getSelectedTopoValue(topoPlot.getStatMax());
     	else return getSelectedTopoValue(Float.NaN);
     }
     public String getStatMin(){
-    	if(scatterPlot!=null)
-    		return getSelectedTopoValue(scatterPlot.getStatMin());
+    	if(topoPlot!=null)
+    		return getSelectedTopoValue(topoPlot.getStatMin());
     	else return getSelectedTopoValue(Float.NaN);
     }
     
