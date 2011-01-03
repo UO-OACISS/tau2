@@ -798,21 +798,24 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         return items;
     }
 
-	public String[] getTopologyArray() {
+	public Vector<String> getTopologyArray() {
 		Set<String> keys = getDataSource().getMetaData().keySet();
-		List<String> topos = new ArrayList<String>();
+		Vector<String> topos = new Vector<String>();
 		for(Iterator<String> it = keys.iterator(); it.hasNext();){
 			String key = it.next();
 			if(key.contains(" isTorus")){
 				topos.add(key.split(" ")[0]);
 			}
 		}
-		if(topos.size()==0){
-			return new String[]{null};
-		}
+//		if(topos.size()==0){
+//			return new String[]{null};
+//		}
 		
-		String[] a = new String[topos.size()];
-		return topos.toArray(a);
+//		topos.add("Sphere");
+//		topos.add("Custom");
+		
+		//String[] a = new String[topos.size()];
+		return topos;//topos.toArray(a);
 	}
 
 }
