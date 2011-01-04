@@ -1,7 +1,7 @@
 # Makefile for ParaProf
 
-CONFIG_ARCH=x86_64
-TAUROOT=/home/wspear/Workspaces/workspaceTAUGIT/tau2
+CONFIG_ARCH=default
+TAUROOT=
 
 BASE_SRC = $(wildcard src/enums/*.java) $(wildcard src/interfaces/*.java) $(wildcard src/treetable/*.java) $(wildcard src/barchart/*.java) $(wildcard src/util/*.java) $(wildcard src/script/*.java) $(wildcard src/sourceview/*.java) $(wildcard src/tablemodel/*.java) $(wildcard src/graph/*.java) $(wildcard src/*.java)
 
