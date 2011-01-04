@@ -1616,6 +1616,7 @@ cp ${tauroot}/tools/src/contrib/derby.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/mysql.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/postgresql.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/xerces.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/mesp.jar $JARTARGET
 cp ${tauroot}/tools/src/common/resources/tau16x16.gif $JARTARGET
 
 # install the perl scripts for ebs post-processing in the bin dir
