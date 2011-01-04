@@ -475,6 +475,8 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         topoComboBox.setPopupWidth(d.width);
         
         updateTopoList();
+        
+        settings.setTopoCart((String)topoComboBox.getSelectedItem());
 
         //topoComboBox.setSelectedItem(settings.getTopoValueType());
 
@@ -489,7 +491,8 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                     
                     for(int i=0;i<customAxisSliders.length;i++)
                     {
-                    	customAxisSliders[i].setEnabled(settings.getTopoCart().equals("Custom"));
+                    	if(customAxisSliders[i]!=null)
+                    		customAxisSliders[i].setEnabled(settings.getTopoCart().equals("Custom"));
                     }
                 } catch (Exception e) {
                     ParaProfUtils.handleException(e);
@@ -498,7 +501,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         };
 
         topoComboBox.addActionListener(topoSelector);
-
+        topoComboBox.setSelectedIndex(0);
         
         JButton topoFileButton = new JButton("...");
         

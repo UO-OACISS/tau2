@@ -142,9 +142,15 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         settings.setScatterMetric(ppTrial.getDefaultMetric(), 3);
         settings.setTopoMetric(ppTrial.getDefaultMetric());
         
-        String topoc = ppTrial.getTopologyArray().get(0);
+        List<String> tList=ppTrial.getTopologyArray();
+        
+        String topoc = null;
+        if(tList!=null&&tList.size()>0)
+        	topoc=tList.get(0);
         if(topoc!=null)
         	settings.setTopoCart(topoc);
+        else
+        	settings.setTopoCart("Custom");
 
         dataSorter = new DataSorter(ppTrial);
         dataSorter.setSortType(SortType.NAME);
@@ -386,7 +392,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     	 
     	 String prefix  = settings.getTopoCart();
         
-    	 if(prefix.equals("Custom")){
+    	 if(prefix==null||prefix.equals("Custom")){
     		 
     		 Function topoFunction = settings.getTopoFunction();
         	 ValueType topoValueType = settings.getTopoValueType();
