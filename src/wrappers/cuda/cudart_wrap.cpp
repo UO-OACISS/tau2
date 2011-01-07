@@ -946,6 +946,46 @@ cudaError_t cudaFuncSetCacheConfig(const char * a1, enum cudaFuncCache a2) {
 
 }*/
 
+char *kernelName = "";
+
+/*
+ * This function is being called before execution of a cuda program for every
+ * cuda kernel (host_runtime.h)
+ * Borrowed from VampirTrace.
+ */
+extern "C" void __cudaRegisterFunction(void ** a1, const char * a2, char * a3, const char * a4, int a5, uint3 * a6, uint3 * a7, dim3 * a8, dim3 * a9, int * a10);
+extern "C" void __cudaRegisterFunction(void ** a1, const char * a2, char * a3, const char * a4, int a5, uint3 * a6, uint3 * a7, dim3 * a8, dim3 * a9, int * a10) {
+
+	//printf("*** in __cudaRegisterFunction.\n");
+	//printf("Kernel name is: %s.\n", a3);
+
+  typedef void (*__cudaRegisterFunction_p_h) (void **, const char *, char *, const char *, int, uint3 *, uint3 *, dim3 *, dim3 *, int *);
+  static __cudaRegisterFunction_p_h __cudaRegisterFunction_h = NULL;
+  TAU_PROFILE_TIMER(t,"void __cudaRegisterFunction(void **, const char *, char *, const char *, int, uint3 *, uint3 *, dim3 *, dim3 *, int *) C", "", TAU_USER);
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
+
+  if (cudart_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return;
+  } 
+  else { 
+    if (__cudaRegisterFunction_h == NULL)
+	__cudaRegisterFunction_h = (__cudaRegisterFunction_p_h) dlsym(cudart_handle,"__cudaRegisterFunction"); 
+    if (__cudaRegisterFunction_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return;
+    }
+	
+	kernelName = a3;
+
+  TAU_PROFILE_START(t);
+  (*__cudaRegisterFunction_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9,  a10);
+  TAU_PROFILE_STOP(t);
+  }
+
+}
+
 cudaError_t cudaLaunch(const char * a1) {
 
   typedef cudaError_t (*cudaLaunch_p) (const char *);
@@ -974,11 +1014,11 @@ cudaError_t cudaLaunch(const char * a1) {
 		Tau_cuda_init();
 		int device;
 		cudaGetDevice(&device);
-		Tau_cuda_enqueue_kernel_enter_event(a1, &cudaRuntimeGpuId(device,curr_stream));
+		Tau_cuda_enqueue_kernel_enter_event(kernelName, &cudaRuntimeGpuId(device,curr_stream));
 #endif
 		retval  =  (*cudaLaunch_h)( a1);
 #ifdef TRACK_KERNEL
-		Tau_cuda_enqueue_kernel_exit_event(a1, &cudaRuntimeGpuId(device,curr_stream));
+		Tau_cuda_enqueue_kernel_exit_event(kernelName, &cudaRuntimeGpuId(device,curr_stream));
 #endif
 		TAU_PROFILE_STOP(t);
   }
