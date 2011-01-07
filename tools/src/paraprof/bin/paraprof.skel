@@ -7,7 +7,7 @@ BINDIR=${TAUROOT}/${MACHINE}/bin
 LIBDIR=${TAUROOT}/${MACHINE}/lib
 JARDIR=${TAUROOT}/${MACHINE}/lib
 
-JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis.jar:${JARDIR}/jogl.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-1.0.12.jar:${JARDIR}/jcommon-1.0.15.jar:${JARDIR}/jython.jar
+JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis.jar:${JARDIR}/jogl.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-1.0.12.jar:${JARDIR}/jcommon-1.0.15.jar:${JARDIR}/jython.jar:${JARDIR}/mesp.jar
 
 APPLE_OPTIONS=""
 if [ "$MACHINE" = "apple" ]; then
