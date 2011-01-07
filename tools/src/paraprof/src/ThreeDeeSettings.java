@@ -54,6 +54,18 @@ public class ThreeDeeSettings implements Cloneable {
     	return topoAxesVisible;
     }
     
+    private int[] customTopoAxes={-1,-1,-1};
+    public int getCustomTopoAxis(int dex){
+    	return customTopoAxes[dex];
+    }
+    public void setCustomTopoAxis(int axis,int dex){
+    	customTopoAxes[dex]=axis;
+    }
+    
+    public int[] getCustomTopoAxes(){
+    	return customTopoAxes;
+    }
+    
     
 //    
 //    private int minTopoValue=0;
@@ -123,10 +135,25 @@ public class ThreeDeeSettings implements Cloneable {
 	public void setTopoCart(String topoCart) {
 		this.topoCart = topoCart;
 	}
+	
+	private String topoDefFile=null;
 
-//	public void setTopoRanges(int[] topoValues) {
-//		this.topoRanges = topoValues;
-//	}
+	public String getTopoDefFile() {
+		return topoDefFile;
+	}
+	public void setTopoDefFile(String topoDefFile) {
+		this.topoDefFile = topoDefFile;
+	}
+	
+	private boolean customTopo=false;
+	
+
+	public boolean isCustomTopo() {
+		return customTopo;
+	}
+	public void setCustomTopo(boolean customTopo) {
+		this.customTopo = customTopo;
+	}
 
 	private Thread selectedThread;
 
