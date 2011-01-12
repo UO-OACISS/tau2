@@ -60,6 +60,8 @@ int PapiLayer::counterList[MAX_PAPI_COUNTERS];
 
 int tauSampEvent = 0;
 
+extern "C" int Tau_is_thread_fake(int tid);
+
 // Some versions of PAPI don't have these defined
 // so we'll define them to 0 and if the user tries to use them
 // we'll print out a warning
@@ -151,6 +153,9 @@ int PapiLayer::initializeThread(int tid) {
   dmesg(1, "TAU: PAPI: Initializing Thread Data for TID = %d\n", tid);
 #endif
 
+  /* Task API does not have a real thread associated with it. It is fake */
+  if (Tau_is_thread_fake(tid) == 1) tid = 0;
+
   if (tid >= TAU_MAX_THREADS) {
     fprintf (stderr, "TAU: Exceeded max thread count of TAU_MAX_THREADS\n");
     return -1;
@@ -228,7 +233,7 @@ int PapiLayer::initializeThread(int tid) {
   }
   
   if (rc != PAPI_OK) {
-    fprintf (stderr, "TAU: Error calling PAPI_start: %s\n", PAPI_strerror(rc));
+    fprintf (stderr, "TAU: Error calling PAPI_start: %s, tid = %d\n", PAPI_strerror(rc), tid);
     return -1;
   }
   
@@ -242,6 +247,9 @@ int PapiLayer::initializeThread(int tid) {
 long long *PapiLayer::getAllCounters(int tid, int *numValues) {
   int rc;
   long long tmpCounters[MAX_PAPI_COUNTERS];
+
+  /* Task API does not have a real thread associated with it. It is fake */
+  if (Tau_is_thread_fake(tid) == 1) tid = 0;
 
   if (!papiInitialized) {
     int rc = initializePAPI();
@@ -467,6 +475,7 @@ int PapiLayer::initializePapiLayer(bool lock) {
 #ifdef TAU_PAPI_DEBUG
   dmesg(1, "TAU: PAPI: Initializing PAPI Layer");
 #endif
+  initialized = true;
 
   if (lock) RtsLayer::LockDB();
   int rc = initializePAPI();
