@@ -802,6 +802,7 @@ HPCTOOLKIT_LINK=
 # Extra linker args (e.g. -Wl,-export-dynamic)
 ##############################################
 EXTRA_LINKER_ARGS= -Wl,--export-dynamic
+#COMPINST_CRAYCC#EXTRA_LINKER_ARGS= #ENDIF#
 #APPLECXX#EXTRA_LINKER_ARGS= -rdynamic #ENDIF#
 TAU_LINKER_OPT14=$(EXTRA_LINKER_ARGS)
 

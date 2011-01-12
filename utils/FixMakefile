@@ -624,7 +624,15 @@ case $1 in
 ###############################################################
      TAU_USE_GPU)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
-     ;;
+        ;;
+     CUDA)
+        echo "NOTE: Using the TAU's CUDA Profiling Interface "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     OPENCL)
+        echo "NOTE: Using the TAU's OPENCL Profiling Interface "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
 
      cudainclude=*)
         cudainclude=`echo $1 | sed -e 's/^cudainclude=//' -e 's/#/ /g'`
