@@ -28,7 +28,9 @@ struct timeval {
 #endif /* __GNUC__ */
 #endif // KAI
 
+#ifdef __cplusplus
 extern "C" {
+#endif /*__cplusplus */
 #ifndef __GNUC__
 int              getdtablesize(void);
 #ifndef KAI
@@ -37,7 +39,9 @@ int gettimeofday(struct timeval *, void *);
 #endif /* __GNUC__ */
 int  strncasecmp(const char *, const char *, size_t);
 int  strcasecmp(const char *, const char *);
+#ifdef __cplusplus 
 }
+#endif /* __cplusplus */
 /*
 extern "C" {
 //#include <sys/types.h>
