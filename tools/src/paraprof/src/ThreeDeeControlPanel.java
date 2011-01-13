@@ -9,6 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -25,9 +26,12 @@ import javax.swing.JRadioButton;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
+import javax.swing.JSpinner;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.SpinnerModel;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicComboPopup;
@@ -511,8 +515,11 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                 	JFileChooser tsDialog = new JFileChooser("Select a topology definition file");
                 	//tsDialog.setVisible(true);
                     tsDialog.showOpenDialog(window);
-                    settings.setTopoDefFile(tsDialog.getSelectedFile().getAbsolutePath());
-                    updateTopoList();
+                    File dFile = tsDialog.getSelectedFile();
+                    if(dFile!=null&&dFile.exists()&&dFile.canRead()){
+                    String path = dFile.getAbsolutePath();
+                    settings.setTopoDefFile(path);
+                    updateTopoList();}
                 } catch (Exception e) {
                     ParaProfUtils.handleException(e);
                 }
@@ -701,7 +708,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
     }
     
     JLabel[] customAxisLabels = new JLabel[3];
-    JSlider[] customAxisSliders = new JSlider[3]; 
+    JSpinner[] customAxisSliders = new JSpinner[3]; 
     
     JLabel[] selectAxisLabels = new JLabel[3];
     JSlider[] selectAxisSliders = new JSlider[3];
@@ -777,7 +784,12 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         gbc.weightx = 0.1;
         gbc.weighty = 0.1;
         
-        customAxisSliders[dex] = new JSlider(JSlider.HORIZONTAL,1,200,50);
+        customAxisSliders[dex] = new JSpinner();
+        SpinnerModel model = new SpinnerNumberModel(20, //initial value
+                                   0, //min
+                                   1000, //max
+                                   1);                //step
+        customAxisSliders[dex].setModel(model);
         customAxisSliders[dex].setEnabled(((String)topoComboBox.getSelectedItem()).equals("Custom"));
 
         final int idex = dex;
@@ -792,7 +804,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
 				 try {
 					 //if(!firstSet){
-						 int val = customAxisSliders[idex].getValue();
+						 int val = (Integer) customAxisSliders[idex].getModel().getValue();
 						 settings.setCustomTopoAxis(val,idex);
 	                    window.redraw();
 //	                    if(val==-1){
