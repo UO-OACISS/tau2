@@ -436,7 +436,7 @@ public class TopoPlot extends ScatterPlot {
     	//System.out.println(topoVis[0]+" "+topoVis[1]+" "+topoVis[2]+" vs "+origValues[dex][0]+" "+origValues[dex][1]+" "+origValues[dex][2]);
     	
     	for(int i=0;i<3;i++){
-    		if(topoVis[i]!=-1&&topoVis[i]!=origValues[dex][i])
+    		if(topoVis[i]!=-1&&(topoVis[i]<origValues[dex][i]||topoVis[i]>=origValues[dex][i]+1))//topoVis[i]!=origValues[dex][i])
     			return false;
     	}
     	
