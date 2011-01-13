@@ -91,6 +91,7 @@ static Profiler *Tau_global_stack[TAU_MAX_THREADS];
 static int Tau_global_stackdepth[TAU_MAX_THREADS];
 static int Tau_global_stackpos[TAU_MAX_THREADS];
 static int Tau_global_insideTAU[TAU_MAX_THREADS];
+static int Tau_is_thread_fake_for_task_api[TAU_MAX_THREADS];
 int lightsOut = 0;
 
 static void (*_profile_write_hook)(void) = NULL;
@@ -121,6 +122,7 @@ static void Tau_stack_checkInit() {
     Tau_global_stackpos[i] = -1;
     Tau_global_stack[i] = NULL;
     Tau_global_insideTAU[i] = 0;
+    Tau_is_thread_fake_for_task_api[i] = 0; /* by default all threads are real*/
   }
 }
 
@@ -134,6 +136,10 @@ extern "C" void Tau_global_setLightsOut() {
   lightsOut = 1;
 }
 
+/* the task API does not have a real thread associated with the tid */
+extern "C" int Tau_is_thread_fake(int tid) {
+  return Tau_is_thread_fake_for_task_api[tid]; 
+}
 
 extern "C" void Tau_stack_initialization() {
   Tau_stack_checkInit();
@@ -1463,10 +1469,15 @@ void Tau_destructor_trigger() {
 
 //////////////////////////////////////////////////////////////////////
 extern "C" int Tau_create_task(void) {
+  int taskid;
   if (TAU_MAX_THREADS == 1) {
     printf("TAU: ERROR: Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=100  and rebuild it to use the new TASK API\n");
   }
-  return RtsLayer::RegisterThread() - 1; /* it returns 1 .. N, we want 0 .. N-1 */
+  taskid= RtsLayer::RegisterThread() - 1; /* it returns 1 .. N, we want 0 .. N-1 */
+  /* specify taskid is a fake thread used in the Task API */
+  Tau_is_thread_fake_for_task_api[taskid] = 1; /* This thread is fake! */
+  
+  return taskid;
 }
 
 

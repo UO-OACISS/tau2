@@ -1415,9 +1415,9 @@ for arg in "$@"; do
     fi
     if [ -f "$cudainclude/cuda.h" ] ; then
 			useropt="$useropt#-DTAU_MAX_THREADS=32"
-    	fixmakeargs="$fixmakeargs TAU_USE_GPU cudainclude=$cudainclude"
+    	fixmakeargs="$fixmakeargs CUDA TAU_USE_GPU cudainclude=$cudainclude"
 			if [ -f "$cudainclude/CL/cl.h" ] ; then
-    		fixmakeargs="$fixmakeargs TAU_USE_GPU openclinclude=$cudainclude"
+    		fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$cudainclude"
 			fi
 		else
 			echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
@@ -1433,7 +1433,7 @@ for arg in "$@"; do
     fi
 		if [ -f "$openclinclude/CL/cl.h" ] ; then
 			useropt="$useropt#-DTAU_MAX_THREADS=32"
-      fixmakeargs="$fixmakeargs openclinclude=$openclinclude"
+      fixmakeargs="$fixmakeargs OPENCL openclinclude=$openclinclude"
 		else
 			echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
     fi
@@ -2116,7 +2116,6 @@ case $machine in
 	elif [ "x$PE_ENV" = xCRAY ] ; then
 	    tauoptions="${tauoptions}-cray"
 	    default_fortran=cray
-	    fixmakeargs="$fixmakeargs CRAYCC"
 	    
 	    touch conf_test.c
 	    extradir=`CC -v conf_test.c 2>&1 | grep cray-c++ | sed -e 's/ /\n/g' | grep "/opt/cray/cce" | grep "lib/x86-64$" | uniq | grep -v rpath`
