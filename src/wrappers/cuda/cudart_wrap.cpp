@@ -979,9 +979,7 @@ extern "C" void __cudaRegisterFunction(void ** a1, const char * a2, char * a3, c
 	
 	kernelName = a3;
 
-  TAU_PROFILE_START(t);
   (*__cudaRegisterFunction_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9,  a10);
-  TAU_PROFILE_STOP(t);
   }
 
 }
