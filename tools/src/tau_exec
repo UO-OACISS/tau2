@@ -250,15 +250,16 @@ if [ $track_memory = "true" ] ; then
 fi
 if [ $track_cuda = "true" ] ; then
     # Add the CUDA wrapper library to the LD_PRELOAD list
-    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDA.so:$TAUEX_LD_PRELOAD
+    #TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDA.so:$TAUEX_LD_PRELOAD
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDArt.so:$TAUEX_LD_PRELOAD
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP.so:$TAUEX_LD_PRELOAD
+		export TAU_METRICS=$TAU_METRICS:TAUGPU_TIME
 fi
 if [ $track_opencl = "true" ] ; then
     # Add the OpenCL wrapper library to the LD_PRELOAD list
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OpenCL.so:$TAUEX_LD_PRELOAD
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OCLci.so:$TAUEX_LD_PRELOAD
-		export TAU_METRICS=TAUGPU_TIME
+		export TAU_METRICS=$TAU_METRICS:TAUGPU_TIME
 fi
 
 if [ $track_armci = "true" ] ; then
