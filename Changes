@@ -35,6 +35,7 @@ Version 2.20 changes (from 2.20):
 22. Added support for importing Google perftools performance data (paraprof -f google).
 23. Added support for profiling CUDA kernels on a separate thread.
 24. Bug fixes (papi+tracing, profile merged with tau_exec -io, outer-loop level instrumentation dyinstAPI)
+25. Added support for topology display with user specified topologies loadable from a text file in paraprof. 
 
 Version 2.19 changes (from 2.18):
 1. Added support for Chapel.
