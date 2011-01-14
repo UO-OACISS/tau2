@@ -1062,6 +1062,7 @@ int pipe(int filedes[2]) {
  * Tau_get_socketname returns the name of the socket (AF_INET/AF_UNIX) 
  ********************************************************************/
 char * Tau_get_socket_name(const struct sockaddr *sa, char *s, size_t len) {
+  int i;
   Tau_iowrap_checkInit();
   char addr[256];
   switch (sa->sa_family) {
@@ -1071,6 +1072,9 @@ char * Tau_get_socket_name(const struct sockaddr *sa, char *s, size_t len) {
       break;
     case AF_INET6: 
       inet_ntop(AF_INET6, &(((struct sockaddr_in6 *) sa)->sin6_addr), addr, len);
+      for (i = 0; i < strlen(addr); i++) { 
+        if (addr[i] == ':' ) addr[i] = '.';
+      }
       sprintf(s,"%s,port=%d",addr,ntohs((((struct sockaddr_in6 *)sa)->sin6_port)));
       break;
     case AF_UNIX:

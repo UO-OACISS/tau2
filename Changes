@@ -33,6 +33,8 @@ Version 2.20 changes (from 2.20):
 20. Added Java profiling support using JVMTI.
 21. Added support for Score-P (www.score-p.org) measurement system. Configure with -scorep=<dir>.
 22. Added support for importing Google perftools performance data (paraprof -f google).
+23. Added support for profiling CUDA kernels on a separate thread.
+24. Bug fixes (papi+tracing, profile merged with tau_exec -io, outer-loop level instrumentation dyinstAPI)
 
 Version 2.19 changes (from 2.18):
 1. Added support for Chapel.
