@@ -1,11 +1,6 @@
 #include "TauGpu.h"
 #include <cuda_runtime_api.h>
 #include <cuda.h>
-#ifdef HAVE_GNU_DEMANGLE
-#define HAVE_DECL_BASENAME 1
-#include <bfd.h>
-#include <demangle.h>
-#endif
 
 #define TAU_MAX_FUNCTIONNAME 200
 
