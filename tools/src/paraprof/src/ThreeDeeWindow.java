@@ -399,9 +399,15 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
              Metric topoMetricID = settings.getTopoMetric();
     		 
     		 //int[] custTopoDims = null;
-    		 int xdim = settings.getCustomTopoAxis(0);
+             //int x,y,z;
+             
+    		 int xdim= settings.getCustomTopoAxis(0);
     		 int ydim = settings.getCustomTopoAxis(1);
-    		 int zdim = settings.getCustomTopoAxis(2);
+    		 int zdim= settings.getCustomTopoAxis(2);
+//    		 
+//    		 xdim=z;
+//    		 ydim=x;
+//    		 zdim=y;
     		 
     		 //int xdim = topoValues[0];
 	            if(xdim<=0){
@@ -651,8 +657,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     	
     	int x1 = s.indexOf('=');
 
-		tuple[0] = s.substring(0,x1);
-		tuple[1] = s.substring(x1+1);
+		tuple[0] = s.substring(0,x1).trim();
+		tuple[1] = s.substring(x1+1).trim();
     	
     	return tuple;
     }
@@ -681,6 +687,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 			if(foundExp){
 				if(s.equals(END))
 					break;
+				if(!s.contains("="))
+					continue;
 				
 				String[] tuple = splitEQ(s);
 				
