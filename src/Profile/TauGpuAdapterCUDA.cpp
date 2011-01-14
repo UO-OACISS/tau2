@@ -7,6 +7,15 @@
 #include <sys/time.h>
 using namespace std;
 
+#ifdef TAU_BFD
+#define HAVE_DECL_BASENAME 1
+#  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
+#    include <demangle.h>
+#  endif /* HAVE_GNU_DEMANGLE */
+#  include <bfd.h>
+#endif /* TAU_BFD */
+
+
 //CPU timestamp at the first cuEvent.
 double sync_offset = 0;
 
@@ -253,7 +262,8 @@ void Tau_cuda_enqueue_kernel_enter_event(const char *name, cudaGpuId* id)
 	curKernel = new KernelEvent();
 	
 	const char *dem_name = 0;
-#ifdef HAVE_GNU_DEMANGLE
+
+#if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
 	//printf("demangling name....\n");
 	dem_name = cplus_demangle(name, DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE |
 	DMGL_TYPES);
