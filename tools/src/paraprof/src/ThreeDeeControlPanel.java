@@ -512,7 +512,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         ActionListener topoFileSelector = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 try {
-                	JFileChooser tsDialog = new JFileChooser("Select a topology definition file");
+		    JFileChooser tsDialog = new JFileChooser(ParaProf.schemaLocation + File.separator + "topology");// "Select a topology definition file");
                 	//tsDialog.setVisible(true);
                     tsDialog.showOpenDialog(window);
                     File dFile = tsDialog.getSelectedFile();
