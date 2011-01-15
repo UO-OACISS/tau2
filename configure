@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh 
 #****************************************************************************
 #*			TAU Portable Profiling Package			   **
 #*			http://www.cs.uoregon.edu/research/tau	           **
@@ -1546,6 +1546,9 @@ cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.oracle ${targetdir}/etc/.
 cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.postgresql ${targetdir}/etc/.
 cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.db2 ${targetdir}/etc/.
 cp ${tauroot}/tools/src/perfexplorer/etc/java.policy ${targetdir}/etc/.
+if [ ! -d ${targetdir}/etc/topology ]; then
+  cp -r ${tauroot}/etc/topology ${targetdir}/etc
+fi
 
 # copy PerfDMF schema files
 cp ${tauroot}/tools/src/perfdmf/etc/* ${targetdir}/etc/.
@@ -3230,7 +3233,11 @@ if [ $epilog = yes -a $epiloginc = no -a $epilogdir != no ] ; then
     if [ -f $epilogdir/include/elg_rw.h ] ; then
 	epilogincdir=$epilogdir/include
     else
+      if [ -f $epilogdir/include/fe/elg_rw.h ] ; then
+	epilogincdir=$epilogdir/include/fe
+      else
 	epilogincdir=$epilogdir/src
+      fi
     fi
 fi
 
@@ -3245,6 +3252,9 @@ fi
 if [ $epilog = yes -a -f $epilogbindir/skin ] ; then
     fixmakeargs="$fixmakeargs SCALASCA"
     scalasca=yes
+  if [ $machine = craycnl -a -d $epilogdir/include/fe -a -d $epilogdir/lib/be ] ; then
+    epiloglibdir=$epilogdir/lib/be
+  fi
 fi
 
 if [ $epilog = yes -a $epiloglib = no -a $epilogdir != no ] ; then
@@ -4515,6 +4525,12 @@ if [ $mpi = yes ] ; then
         mpiflibargs="-lepk.ad.fmpi"
         wrapperlib="$wrapperlib -lepk.ad.fmpi"
       fi
+      if [ $epilog = yes -a $machine = craycnl ]; then
+        # None of these options matter. It uses the include/Makefile options
+        #echo "NOTE: ADDING -lfmpich to the Scalasca link line"
+        mpiflibargs="-lfmpich $mpiflibargs"
+        wrapperlib="$wrapperlib -lfmpich"
+      fi
       if [ $epilog = yes -a -f $epiloglibdir/libcubew3.a ] ; then
           wrapperlib="$wrapperlib -lcubew3"
       fi
@@ -5481,6 +5497,9 @@ if [ $epilog = yes ] ; then
 
     if [ -f $epiloglibdir/libcubew3.a ] ; then
       epilogextralinkcmd="$epilogextralinkcmd#-lcubew3"
+    fi
+    if [ $machine = craycnl ]; then 
+      epilogextralinkcmd="$epilogextralinkcmd#-lfmpich"
     fi
 
     if [ -f $epiloglibdir/libepk.util.a ] ; then
