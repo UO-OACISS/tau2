@@ -343,7 +343,7 @@ $(TAU_NULL)$(TAU_OPENCL_DEP) : TauGpuAdapterOpenCL.cpp
 $(TAU_NULL)$(TAU_OPENCL_LIB): $(TAU_OPENCL_OBJS) $(TAU_DSO) $(TAU_OPENCL_DEP)
 		$(PRELINK_PHASE)
 		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_OPENCL_LIB) $(TAU_OPENCL_OBJS) \
-		-L$(TAU_LIB_DIR) $(TAU_DSO) $(if $(shell grep pthread.h $(TAU_OPENCL_DEP)), -lpthread,)
+		-L$(TAU_LIB_DIR) $(TAU_DSO) $(if $(shell grep pthread $(TAU_OPENCL_DEP)), -lpthread,)
 		$(TAU_RANLIB) $(TAU_OPENCL_LIB)
 
 $(TAU_NULL)$(TAU_CUDA_LIB): $(TAU_CUDA_OBJS) $(TAU_DSO)
