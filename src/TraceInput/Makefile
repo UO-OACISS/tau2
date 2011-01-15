@@ -25,8 +25,12 @@ CC		= $(TAU_CC)
 #CRAYXMT#CC = $(TAU_CC_FE) $(ABI) $(ISA) #ENDIF#
 #CRAYXMT#CXX = $(TAU_CXX_FE) $(ABI) $(ISA) #ENDIF#
 
+#CRAYCNL#CC = $(TAU_CC_FE) $(ABI) $(ISA) #ENDIF#
+#CRAYCNL#CXX = $(TAU_CXX_FE) $(ABI) $(ISA) #ENDIF#
+
 AR		= $(TAU_AR)
 #CRAYXMT#AR		= /usr/bin/ar  #ENDIF#
+#CRAYCNL#AR		= /usr/bin/ar  #ENDIF#
 
 ARFLAGS         = rcv 
 
