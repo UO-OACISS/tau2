@@ -7,6 +7,15 @@
 #include <sys/time.h>
 using namespace std;
 
+#ifdef TAU_BFD
+#define HAVE_DECL_BASENAME 1
+#  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
+#    include <demangle.h>
+#  endif /* HAVE_GNU_DEMANGLE */
+#  include <bfd.h>
+#endif /* TAU_BFD */
+
+
 //CPU timestamp at the first cuEvent.
 double sync_offset = 0;
 
@@ -248,12 +257,13 @@ KernelEvent *curKernel;
 
 void Tau_cuda_enqueue_kernel_enter_event(const char *name, cudaGpuId* id)
 {
-	//printf("recording start for %s.\n", parse_kernel_name(name));
+	//printf("recording start for %s.\n", name);
 
 	curKernel = new KernelEvent();
 	
 	const char *dem_name = 0;
-#ifdef HAVE_GNU_DEMANGLE
+
+#if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
 	//printf("demangling name....\n");
 	dem_name = cplus_demangle(name, DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE |
 	DMGL_TYPES);
@@ -276,7 +286,7 @@ void Tau_cuda_enqueue_kernel_enter_event(const char *name, cudaGpuId* id)
 void Tau_cuda_enqueue_kernel_exit_event(const char* name, cudaGpuId* id)
 {
 
-	//printf("recording stop for %s.\n", parse_kernel_name(name));
+	//printf("recording stop for %s.\n", name);
 
 	curKernel->enqueue_stop_event();
 	KernelBuffer.push(*curKernel);
@@ -305,12 +315,17 @@ void Tau_cuda_register_sync_event()
 		err = cudaEventElapsedTime(&start_sec, lastEvent, kernel.startEvent);
 		//printf("kernel event [start] = %lf.\n", (((double) start_sec) + lastEventTime)*1e3);
 
+		if (err != cudaSuccess)
+		{
+			printf("Error calculating kernel event start, error #: %d.\n", err);
+		}
+
 		err = cudaEventElapsedTime(&stop_sec, lastEvent, kernel.stopEvent);
 		//printf("kernel event [stop] = %lf.\n", (((double) stop_sec) + lastEventTime)*1e3 );
 
 		if (err != cudaSuccess)
 		{
-			printf("Error calculating kernel event, error #: %d.\n", err);
+			printf("Error calculating kernel event stop, error #: %d.\n", err);
 		}
 
 		//Create cudaGpuId for stream.
