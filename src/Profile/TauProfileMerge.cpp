@@ -92,6 +92,7 @@ int Tau_mergeProfiles() {
   x_uint64 start, end;
   const char *profiledir = TauEnv_get_profiledir();
 
+  Tau_global_incr_insideTAU();
 #ifdef TAU_UNIFY
   Tau_unify_unifyDefinitions();
   Tau_snapshot_writeUnifiedBuffer();
@@ -116,7 +117,7 @@ int Tau_mergeProfiles() {
   buflen = Tau_snapshot_getBufferLength();
 
   int maxBuflen;
-  MPI_Reduce(&buflen, &maxBuflen, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
+  PMPI_Reduce(&buflen, &maxBuflen, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
 
 #ifdef TAU_UNIFY
   Tau_unify_object_t *functionUnifier;
@@ -318,6 +319,7 @@ int Tau_mergeProfiles() {
     /* send data */
     PMPI_Send(buf, buflen, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
   }
+  Tau_global_decr_insideTAU();  
   return 0;
 }
 
