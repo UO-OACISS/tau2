@@ -146,7 +146,7 @@ class KernelEvent
 	{
 		cudaError_t err;
 		cudaEventCreate(&startEvent);
-		cudaEventRecord(startEvent, id->getStream());
+		err = cudaEventRecord(startEvent, id->getStream());
 		if (err != cudaSuccess)
 		{
 			printf("Error recording kernel event, error #: %d.\n", err);
@@ -158,7 +158,7 @@ class KernelEvent
 	{
 		cudaError_t err;
 		cudaEventCreate(&stopEvent);
-		cudaEventRecord(stopEvent, id->getStream());
+		err = cudaEventRecord(stopEvent, id->getStream());
 		if (err != cudaSuccess)
 		{
 			printf("Error recording kernel event, error #: %d.\n", err);
