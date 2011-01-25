@@ -372,6 +372,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
         //scatterPlot.setSize(15, 15, 15);
 //        //scatterPlot.clearValues();
 //        scatterPlot.setMinMax(minScatterValues[3], maxScatterValues[3]);
+        topoPlot.setMinMax(minScatterValues, maxScatterValues);
         topoPlot.setSize(tsizes[0],tsizes[1], tsizes[2]);
         topoPlot.setIsTopo(true);
         topoPlot.setAxes(axes);
@@ -399,7 +400,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
              Metric topoMetricID = settings.getTopoMetric();
     		 
     		 //int[] custTopoDims = null;
-             //int x,y,z;
+             //int x,y,z;min
              
     		 int xdim= settings.getCustomTopoAxis(0);
     		 int ydim = settings.getCustomTopoAxis(1);
@@ -507,7 +508,10 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     	    	            
     	    	            //int sqrt =  (int) Math.sqrt(numThreads);
     	    	            FunctionProfile functionProfile = thread.getFunctionProfile(topoFunction);
-    	    	            float colorValue = (float) topoValueType.getValue(functionProfile, topoMetricID,ppTrial.getSelectedSnapshot());
+    	    	            float colorValue=0;//Float.NaN;//TODO: Support treating this as a non-value or 0.
+    	    	            if(functionProfile!=null){
+    	    	            	colorValue = (float) topoValueType.getValue(functionProfile, topoMetricID,ppTrial.getSelectedSnapshot());
+    	    	            }
     	    	            
     	    	            double[] cords = getRankCoordinate(threadIndex,numThreads,colorValue,expressions);
     	    	            
@@ -600,6 +604,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     	 
     	 threadIndex++;
     	 }
+//    	 maxScatterValues[3] = 365584000;
+//         minScatterValues[3] = 43460000;
     	 
     	 }
     	
