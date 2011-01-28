@@ -167,12 +167,12 @@ public class Axes implements Shape {
 	 */
 	public void setStrings(String xlabel, String ylabel, String zlabel,
 			List<String> xStrings, List<String> yStrings, List<String> zStrings) {
-		this.xlabel = xlabel;
-		this.ylabel = ylabel;
-		this.zlabel = zlabel;
-		this.xStrings = xStrings;
-		this.yStrings = yStrings;
-		this.zStrings = zStrings;
+		this.xOrigLabel=this.xlabel = xlabel;
+		this.yOrigLabel=this.ylabel = ylabel;
+		this.zOrigLabel=this.zlabel = zlabel;
+		this.xOrigStrings=this.xStrings = xStrings;
+		this.yOrigStrings=this.yStrings = yStrings;
+		this.zOrigStrings=this.zStrings = zStrings;
 		
 		if (this.xStrings == null)
 			this.xStrings = new ArrayList<String>();
