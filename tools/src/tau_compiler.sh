@@ -237,7 +237,7 @@ for arg in "$@" ; do
     else
 	
         case $arg in
-	    --help|-h)
+	    --help)
 		printUsage 0 
 		;;
 
