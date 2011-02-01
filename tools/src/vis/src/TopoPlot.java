@@ -58,7 +58,15 @@ public class TopoPlot extends ScatterPlot {
     private int minVis = 0;
     private int maxVis = 100;
     boolean isTopo=false;
+    
+    private float[] minValueArr={};
+    private float[] maxValueArr={};
 
+    public void setMinMax(float[] min,float[] max){
+    	minValueArr=min;
+    	maxValueArr=max;
+    }
+    
     private float minShown;
     private float maxShown;
     public float getMinShown(){
@@ -309,12 +317,12 @@ public class TopoPlot extends ScatterPlot {
         float mincut=0;
         float maxcut=0;
         for (int f = 0; f < 4; f++) {
-            float maxValue = Float.MIN_VALUE;
-            float minValue = Float.MAX_VALUE;
-            for (int i = 0; i < values.length; i++) {
-                maxValue = Math.max(maxValue, values[i][f]);
-                minValue = Math.min(minValue, values[i][f]);
-            }
+            float maxValue = maxValueArr[f];// Float.MIN_VALUE;
+            float minValue = minValueArr[f];//Float.MAX_VALUE;
+//            for (int i = 0; i < values.length; i++) {
+//                maxValue = Math.max(maxValue, values[i][f]);
+//                minValue = Math.min(minValue, values[i][f]);
+//            }
             
 //            if(maxValue!=tmpMax)
 //            	System.out.println("Bad Max: "+maxValue+" vs. "+tmpMax);

@@ -252,6 +252,7 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
   if (Tau_is_thread_fake(tid) == 1) tid = 0;
 
   if (!papiInitialized) {
+    printf("Before initializePAPI\n");
     int rc = initializePAPI();
     if (rc != 0) {
       return NULL;
