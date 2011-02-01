@@ -229,7 +229,10 @@ public abstract class DataSource {
     }
 
     public Function getFunction(String name) {
-        return functions.get(name.trim());
+    	Function f = functions.get(name.trim());
+    	if(f!=null)
+    		return f;
+        return functions.get(name.trim()+" [THROTTLED]");
     }
 
     public int getNumFunctions() {
@@ -1233,7 +1236,7 @@ public abstract class DataSource {
                     String phaseChild = UtilFncs.getRightSide(function.getName());
 
                     Function f = this.getFunction(phaseChild);
-                    if (f.isPhase()) {
+                    if (f!=null&&f.isPhase()) {
                         function.setPhase(true);
                         function.setActualPhase(f);
                     }
