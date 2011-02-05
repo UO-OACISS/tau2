@@ -392,7 +392,7 @@ void Tau_gpu_register_memcpy_event(const char *functionName, eventId *id, gpuId 
 */
 int Tau_gpu_init(void)
 {
-		TAU_PROFILE_SET_NODE(0);
+		//TAU_PROFILE_SET_NODE(0);
 		//TAU_PROFILER_CREATE(main_ptr, ".TAU application", "", TAU_USER);
 		//TAU_PROFILER_CREATE(main_ptr, "main", "", TAU_USER);
 
