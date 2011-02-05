@@ -54,6 +54,8 @@ declare -i optHeaderInst=$FALSE
 declare -i disableCompInst=$FALSE
 declare -i madeToLinkStep=$FALSE
 
+declare -i optFixHashIf=$FALSE
+
 headerInstDir=".tau_tmp_$$"
 headerInstFlag=""
 preprocessorOpts="-P  -traditional-cpp"
@@ -109,6 +111,7 @@ printUsage () {
     echo -e "  -optPDTInst\t\t\tUse PDT-based instrumentation."
     echo -e "  -optHeaderInst\t\tEnable instrumentation of headers"
     echo -e "  -optDisableHeaderInst\t\tDisable instrumentation of headers"
+    echo -e "  -optFixHashIf"
     
     if [ $1 == 0 ]; then #Means there are no other option passed with the myscript. It is better to exit then.
 	exit
@@ -582,6 +585,10 @@ for arg in "$@" ; do
 			optHeaderInst=$FALSE
 			echoIfDebug "\tDisabling Header Instrumentation"
 			;;
+		    -optFixHashIf)
+			optFixHashIf=$TRUE
+			echoIfDebug "\tFixing Hash-Ifs"
+			;;
 
 		esac #end case for parsing script Options
 		;;
@@ -870,6 +877,7 @@ while [ $tempCounter -lt $numFiles ]; do
 	arrFileName[$tempCounter]=$base$suf
 	echoIfDebug "Completed Preprocessing\n"
     fi
+
     # Before we pass it to Opari for OpenMP instrumentation
     # we should use tau_ompcheck to verify that OpenMP constructs are 
     # used correctly.
@@ -1160,6 +1168,9 @@ if [ $gotoNextStep == $TRUE -a $optCompInst == $FALSE -a $groupType != $group_up
 	    break
 	fi
 
+       if [ $optFixHashIf == $TRUE -a $groupType != $group_f_F ]; then
+           sed -e 's/#if \(.*\)}/}\n#if \1/g' $tempInstFileName > $tempInstFileName.fixiftmp; mv $tempInstFileName.fixiftmp $tempInstFileName
+       fi
 
 	if [ "x$TAU_GENERATE_TESTS" = "xyes" ] ; then
 	    test_source=${arrFileName[$tempCounter]}
@@ -1321,7 +1332,13 @@ if [ $gotoNextStep == $TRUE ]; then
             if [ $groupType == $group_upc ] ; then
                instrumentedFileForCompilation=${arrFileName[$tempCounter]}
             fi
-	    newCmd="$CMD $headerInstFlag -I${arrFileNameDirectory[$tempCounter]} $argsRemaining $instrumentedFileForCompilation $OUTPUTARGSFORTAU $optCompile $extraopt"
+
+            if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
+	       filePathInclude=-I${arrFileNameDirectory[$tempCounter]}
+            fi
+
+	    newCmd="$CMD $headerInstFlag $filePathInclude $argsRemaining $instrumentedFileForCompilation $OUTPUTARGSFORTAU $optCompile $extraopt"
+#-I${arrFileNameDirectory[$tempCounter]}
 
 	    echoIfDebug "cmd before appending the .o file is $newCmd"
 	    if [ $hasAnOutputFile == $TRUE ]; then
