@@ -1493,6 +1493,7 @@ int errorcode;
   TAU_PROFILE_START(tautimer);
   
   TAU_TRACK_COMM(comm);
+  TAU_PROFILE_EXIT("MPI_Abort");
   returnVal = PMPI_Abort( comm, errorcode );
 
   TAU_PROFILE_STOP(tautimer);
