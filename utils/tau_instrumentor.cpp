@@ -3193,6 +3193,7 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	/* Now look at instrumentation requests for that line */
         vector<itemRef *>::iterator it;
 	int write_upto = 0;
+        bool two_requests_on_same_line = false;
 	bool print_cr = true;
 	for(it = lit; ((it != itemvec.end()) && ((*it)->line == (*lit)->line));
  	    ++it)
@@ -3203,6 +3204,10 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 	    {
  	      write_upto = (*(it+1))->col - 1; 
 	      print_cr = false;
+#ifdef DEBUG
+              cout <<"Two instrumentation requests are on the same line: first write_upto = "<< write_upto<<endl;
+#endif /* DEBUG */
+              two_requests_on_same_line = true;
 	    }
 	    else
 	    {
@@ -3245,6 +3250,9 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 
 	      // write out the line up to the desired column
 	      for (i=0; i< ((*it)->col)-1; i++) {
+#ifdef DEBUG
+		cout <<"Writing (4): inbuf["<<i<<"] = " << inbuf[i];
+#endif /* DEBUG */
 		ostr << inbuf[i];
 	      }
 
@@ -3293,6 +3301,9 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 		
 		// write the rest of the original statement
 		for (k = (*it)->col-1; k < write_upto ; k++) {
+#ifdef DEBUG
+		cout <<"Writing (5): inbuf["<<k<<"] = " << inbuf[k];
+#endif /* DEBUG */
 		  ostr << inbuf[k];
 		}
 		if (print_cr) {
@@ -3673,7 +3684,21 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
 #endif /* DEBUG */
 
 		codesnippet = string("       call TAU_PROFILE_STOP(")+(*it)->snippet+")";
-		WRITE_SNIPPET((*it)->attribute, (*it)->col, write_upto, codesnippet, true);
+		if (two_requests_on_same_line && (*it)->attribute == AFTER) {
+#ifdef DEBUG
+		  cout <<"Two requests are on the same line. Need to start writing from col not 0!"<<endl;
+#endif /* DEBUG */
+                  for(i = (*it)->col; i < write_upto; i++) 
+                    ostr <<inbuf[i]; 
+                  if (print_cr) ostr<<endl; 
+                  ostr << codesnippet <<endl; 
+
+		  // This macro writes from 0
+		  //WRITE_SNIPPET((*it)->attribute, (*it)->col, write_upto, codesnippet, true);
+                }
+		else {
+		  WRITE_SNIPPET((*it)->attribute, (*it)->col, write_upto, codesnippet, true);
+		}
                 instrumented = true;
 	        /* We maintain the current outer loop level timer active. We need to pop the stack */
 		if (!current_timer.empty()) current_timer.pop_front();
@@ -3908,6 +3933,9 @@ bool instrumentFFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name)
   // For loop is over now flush out the remaining lines to the output file
   while (istr.getline(inbuf, INBUF_SIZE) )
   {
+#ifdef DEBUG
+    cout <<"Writing inbuf completely:"<<inbuf<<endl;
+#endif /* DEBUG */
     ostr << inbuf <<endl;
     strcpy(previousline, inbuf); /* save the current line. Hmm... not necessary here?  */
   }
