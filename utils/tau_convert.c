@@ -2176,10 +2176,10 @@ int main (int argc, char *argv[])
 				// get the MPI event type and value
 				mapMPINameToTypeValue(ev->name, &eventType, &eventValue, &eventState);
 				eventValue = 0;  // we are exiting, remember?
-			    isMPIEvent = 1;//true;
+			    isMPIEvent = TRUE;
 
 			    if (event_GetTi(&intrc,erec,0) > 0LL) {
-			      isMPIEvent = 1;//true;
+			      isMPIEvent = TRUE;
 			      int index = 0;
 			      if (threads) {
                     index = offset[event_GetNid(&intrc,erec,0)] + event_GetTid(&intrc,erec,0);
@@ -2250,10 +2250,10 @@ int main (int argc, char *argv[])
               if (strncmp(ev->name, "\"MPI_", 5) == 0) {
 				// get the MPI event type and value
 				mapMPINameToTypeValue(ev->name, &eventType, &eventValue, &eventState);
-			    isMPIEvent = 1;//true;
+			    isMPIEvent = TRUE;
 
                 if (event_GetTi(&intrc,erec,0) > 0LL) {
-			      isMPIEvent = 1;//true;
+			      isMPIEvent = TRUE;
 			      int index = 0;
 			      if (threads) {
                     index = offset[event_GetNid(&intrc,erec,0)] + event_GetTid(&intrc,erec,0);
