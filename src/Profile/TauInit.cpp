@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <unistd.h>
-#ifndef _AIX
+#if !defined(_AIX) && !defined(__sun)
 #include <execinfo.h>
 #endif /* _AIX */
 
@@ -68,7 +68,7 @@ static void wrap_up(int sig) {
   void *array[10];
   size_t size;
 
-#ifndef _AIX
+#if !defined(_AIX) && !defined(__sun)
   // get void*'s for all entries on the stack
   size = backtrace(array, 10);
 #endif /* _AIX */
@@ -76,7 +76,7 @@ static void wrap_up(int sig) {
   // print out all the frames to stderr
   fprintf (stderr, "TAU: signal %d on %d - calling TAU_PROFILE_EXIT()...\n", sig, RtsLayer::myNode());
 
-#ifndef _AIX
+#if !defined(_AIX) && !defined(__sun)
   backtrace_symbols_fd(array, size, 2);
 #endif /* _AIX */
   TAU_PROFILE_EXIT("signal");
