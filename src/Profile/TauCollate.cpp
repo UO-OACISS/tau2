@@ -35,7 +35,7 @@
 #include <float.h>
 
 #include <math.h>
-
+#include <strings.h>
 #include <stdarg.h>
 #include <assert.h>
 // #include <sstream>
