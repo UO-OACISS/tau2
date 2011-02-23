@@ -17,7 +17,7 @@
 # include <stdlib.h>
 # include <sys/types.h>
 # include <fcntl.h>
-# include <stdbool.h>
+//# include <stdbool.h>
 
 #ifdef TAU_WINDOWS
   #include <io.h>
@@ -2077,7 +2077,7 @@ int main (int argc, char *argv[])
 	  int eventType = PARAVER_USER_FUNCTION_TYPE; // User Function by default - if MPI, change later
 	  int eventValue = 0;
 	  int eventState = 0;
-	  bool isMPIEvent = false;
+	  int isMPIEvent = 0;//false
       if ((ev->tag != 0) || (dynamictrace))
         {
           if( (ev->tag == SEND_EVENT) && pvComm )
@@ -2176,10 +2176,10 @@ int main (int argc, char *argv[])
 				// get the MPI event type and value
 				mapMPINameToTypeValue(ev->name, &eventType, &eventValue, &eventState);
 				eventValue = 0;  // we are exiting, remember?
-			    isMPIEvent = true;
+			    isMPIEvent = TRUE;
 
 			    if (event_GetTi(&intrc,erec,0) > 0LL) {
-			      isMPIEvent = true;
+			      isMPIEvent = TRUE;
 			      int index = 0;
 			      if (threads) {
                     index = offset[event_GetNid(&intrc,erec,0)] + event_GetTid(&intrc,erec,0);
@@ -2250,10 +2250,10 @@ int main (int argc, char *argv[])
               if (strncmp(ev->name, "\"MPI_", 5) == 0) {
 				// get the MPI event type and value
 				mapMPINameToTypeValue(ev->name, &eventType, &eventValue, &eventState);
-			    isMPIEvent = true;
+			    isMPIEvent = TRUE;
 
                 if (event_GetTi(&intrc,erec,0) > 0LL) {
-			      isMPIEvent = true;
+			      isMPIEvent = TRUE;
 			      int index = 0;
 			      if (threads) {
                     index = offset[event_GetNid(&intrc,erec,0)] + event_GetTid(&intrc,erec,0);
@@ -2288,7 +2288,7 @@ int main (int argc, char *argv[])
 				event_GetTi(&intrc,erec,0)-intrc.firsttime,
 				eventType,
 				eventValue);
-              if(prvPCF[event_GetEv(&intrc,erec,0)-1] == 0 && !isMPIEvent){
+              if(prvPCF[event_GetEv(&intrc,erec,0)-1] == 0 && isMPIEvent==0){//!isMPIEvent
                 fprintf(pcffp,"%d       %s\n",event_GetEv(&intrc,erec,0),GetEventName(event_GetEv(&intrc,erec,0),&hasParam));
                 prvPCF[event_GetEv(&intrc,erec,0)-1] = 1;
               }
