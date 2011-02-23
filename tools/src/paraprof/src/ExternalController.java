@@ -93,7 +93,12 @@ public class ExternalController {
         File file = new File(location);
         File[] files = new File[1];
         files[0] = file;
-        DataSource dataSource = UtilFncs.initializeDataSource(files, DataSource.TAUPROFILE, false);
+        int type = DataSource.TAUPROFILE;
+        if(!file.isDirectory())
+        {	
+        	type = UtilFncs.identifyData(file);
+        }
+        DataSource dataSource = UtilFncs.initializeDataSource(files, type, false);
         dataSource.load();
 
         Trial trial = new Trial();
