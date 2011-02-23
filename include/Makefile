@@ -129,6 +129,7 @@ TAU_LIB_DIR=$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 #IBM64LINUX#IBM_GNU_ABI	     = -m64 		  #ENDIF#
 #SUNX86_64#SUN_GNU_ABI       = -m64		  #ENDIF#
 #SUNX86_64#SUN_CC_ABI        = -xarch=amd64       #ENDIF#
+#SUNX86_64#SUN_CC_ABI        = -m64       #ENDIF#
 #MIPS32LINUX#SC_GNU_ABI	     = -mabi=n32 	  #ENDIF#
 #MIPS32LINUX#SC_PATH_ABI     = -mabi=n32          #ENDIF#
 #MIPS64LINUX#SC_GNU_ABI	     = -mabi=64 	  #ENDIF#
@@ -749,6 +750,7 @@ TAU_LINKER_OPT4 = $(LEXTRA1)
 #APPLECXX#AR_SHFLAGS = $(TAU_APPLE_SHFLAGS)             #ENDIF#
 #SOL2#AR_SHFLAGS  		= -G 		        #ENDIF#
 #SUNCC#AR_SHFLAGS  		= -G 		        #ENDIF#
+#SOL2CC#AR_SHFLAGS  		= -G 		        #ENDIF#
 #CRAYCNL#AR_SHFLAGS  		= -shared 		#ENDIF#
 TAU_BGP_AR_SHFLAGS = -shared
 #USE_IBMXLC#AR_SHFLAGS          = -G 		        #ENDIF#
@@ -795,7 +797,7 @@ HPCTOOLKIT_LINK=
 ##############################################
 # Extra linker args (e.g. -Wl,-export-dynamic)
 ##############################################
-EXTRA_LINKER_ARGS= -Wl,--export-dynamic
+EXTRA_LINKER_ARGS=
 #APPLECXX#EXTRA_LINKER_ARGS= -rdynamic #ENDIF#
 TAU_LINKER_OPT14=$(UPCC_LINK_PREFIX)$(EXTRA_LINKER_ARGS)
 
