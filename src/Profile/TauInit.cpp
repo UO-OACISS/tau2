@@ -190,7 +190,6 @@ extern "C" int Tau_init_initializeTAU() {
   /* no more initialization necessary if using SCOREP */
   initialized = 1;
   SCOREP_Tau_InitMeasurement();
-  printf("After SCOREP_Tau_InitMeasurement()\n");
   SCOREP_Tau_RegisterExitCallback(Tau_profile_exit_all_threads); 
   return 0;
 #endif
