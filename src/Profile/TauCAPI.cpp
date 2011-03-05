@@ -459,6 +459,7 @@ extern "C" int Tau_profile_exit_all_threads() {
 		}
 	tid++;
 	}
+  Tau_disable_instrumentation();
   return 0;
 }
 
