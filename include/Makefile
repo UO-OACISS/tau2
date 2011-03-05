@@ -611,6 +611,7 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 #PGI#TAU_CXXLIBS        	= -lstd -lC       #ENDIF#
 #APPLEPGI#TAU_CXXLIBS        	= -lstd -lcpp       #ENDIF#
 #PGI_FORTRAN#TAU_CXXLIBS_PGI_CNL       	= -L$(EXTRADIR)/lib -lstd -lC     #ENDIF#
+#PGI_FORTRAN#TAU_CXXLIBS       	= -L$(EXTRADIR)/lib -lstd -lC -lstdc++     #ENDIF#
 #PATHSCALE_FORTRAN#TAU_CXXLIBS_PATHSCALE_CNL      	= -L$(EXTRADIR)/lib -lstdc++     #ENDIF#
 #GNU_GFORTRAN#TAU_CXXLIBS_GNU_CNL      	= -L$(EXTRADIR)/lib -lstdc++ -lgcc_eh    #ENDIF#
 #INTELIFORT#TAU_CXXLIBS_INTEL_CNL      	= -lstdc++   #ENDIF#
@@ -797,7 +798,7 @@ HPCTOOLKIT_LINK=
 ##############################################
 # Extra linker args (e.g. -Wl,-export-dynamic)
 ##############################################
-EXTRA_LINKER_ARGS=
+EXTRA_LINKER_ARGS= -Wl,--export-dynamic
 #APPLECXX#EXTRA_LINKER_ARGS= -rdynamic #ENDIF#
 TAU_LINKER_OPT14=$(UPCC_LINK_PREFIX)$(EXTRA_LINKER_ARGS)
 
