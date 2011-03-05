@@ -169,7 +169,6 @@ extern "C" int Tau_init_initializeTAU() {
 
   Tau_global_incr_insideTAU();
   
-  tau_initialized = 1;
   initialized = 1;
 
   /* initialize the Profiler stack */
@@ -250,6 +249,7 @@ extern "C" int Tau_init_initializeTAU() {
   sbrk(102400);
 #endif /* TAU_PGI */
 
+  tau_initialized = 1;
   Tau_global_decr_insideTAU();
   return 0;
 }
