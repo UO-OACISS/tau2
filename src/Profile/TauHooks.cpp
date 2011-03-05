@@ -342,6 +342,7 @@ void trace_register_func(char *func, int id)
 void traceEntry(int id)
 {
   int tid = RtsLayer::myThread();
+  if ( !RtsLayer::TheEnableInstrumentation()) return; 
   if (!tauDyninstEnabled[tid]) return;
   void *fi = TheTauBinDynFI()[id];
 
@@ -382,6 +383,7 @@ void traceExit(int id)
 {
   const char *strcurr;
   const char *strbin;
+  if ( !RtsLayer::TheEnableInstrumentation()) return; 
   int tid = RtsLayer::myThread();
   if (!tauDyninstEnabled[tid]) return;
   void *fi = TheTauBinDynFI()[id];
