@@ -49,6 +49,7 @@
 extern "C" void Tau_stack_initialization();
 extern "C" int Tau_compensate_initialization();
 extern "C" int Tau_profiler_initialization();
+extern "C" int Tau_profile_exit_all_threads(); 
 
 
 /* -- signal catching to flush event buffers ----------------- */
@@ -168,7 +169,6 @@ extern "C" int Tau_init_initializeTAU() {
 
   Tau_global_incr_insideTAU();
   
-  tau_initialized = 1;
   initialized = 1;
 
   /* initialize the Profiler stack */
@@ -189,6 +189,7 @@ extern "C" int Tau_init_initializeTAU() {
   /* no more initialization necessary if using SCOREP */
   initialized = 1;
   SCOREP_Tau_InitMeasurement();
+  SCOREP_Tau_RegisterExitCallback(Tau_profile_exit_all_threads); 
   return 0;
 #endif
 
@@ -248,6 +249,7 @@ extern "C" int Tau_init_initializeTAU() {
   sbrk(102400);
 #endif /* TAU_PGI */
 
+  tau_initialized = 1;
   Tau_global_decr_insideTAU();
   return 0;
 }
