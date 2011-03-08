@@ -404,7 +404,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 					"thumbnail, image_size, image, result_type from analysis_result where " + 
 					"analysis_settings = ? and result_type = ? order by id asc");
 			statement.setInt(1, analysisID);
-			statement.setString(2, ChartType.CORRELATION_SCATTERPLOT.toString());
+			statement.setInt(2,Integer.valueOf(ChartType.CORRELATION_SCATTERPLOT.toString()));
+			//statement.setString(2, ChartType.CORRELATION_SCATTERPLOT.toString());
 			//PerfExplorerOutput.println(statement.toString());
 			results = statement.executeQuery();
 			while (results.next() != false) {
@@ -427,7 +428,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				analysisResults.getThumbnails().add(thumbData);
 				analysisResults.getImages().add(imageData);
 			}
-			statement.close();
+
 
 			/* The following code was commented out for performance reasons.
 			 * If the raw performance results are desired, then uncomment
