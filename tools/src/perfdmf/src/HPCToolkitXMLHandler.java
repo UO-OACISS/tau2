@@ -109,12 +109,17 @@ public class HPCToolkitXMLHandler extends DefaultHandler {
 
     // given A => B => C, this retrieves the FP for C
     private FunctionProfile getFlatFunctionProfile(Thread thread, Function function) {
-	if (!function.isCallPathFunction()) {
-	    return null;
-	}
+//	if (!function.isCallPathFunction()) {
+//	    return null;
+//	}
+	Function childFunction;
+if(function.getName().lastIndexOf("=>")!= -1){
 	String childName = function.getName().substring(function.getName().lastIndexOf("=>") + 2).trim();
-	Function childFunction = dataSource.addFunction(childName);
-
+	 childFunction = dataSource.addFunction(childName);
+}else{
+	 childFunction = dataSource.addFunction(function.getName());
+    
+}
 	childFunction.addGroup(defaultGroup);
 
 	FunctionProfile childFP = thread.getFunctionProfile(childFunction);
@@ -195,7 +200,7 @@ public class HPCToolkitXMLHandler extends DefaultHandler {
 		    int thread = Integer.valueOf(m.group(2));
 		    Thread newThread;
 		    if(threads.size() <= thread){
-			newThread = dataSource.addThread(0, 0, thread);
+			newThread = dataSource.addThread(thread, 0, 0);
 			threads.add(newThread);
 		    }else{
 			newThread = threads.get(thread);

@@ -332,6 +332,7 @@ void Profiler::Start(int tid) {
 //////////////////////////////////////////////////////////////////////
 
 x_uint64 Tau_get_firstTimeStamp();
+#ifdef TAU_PERFSUITE
 static x_uint64 getTimeStamp() {
   x_uint64 timestamp;
 #ifdef TAU_WINDOWS
@@ -343,6 +344,7 @@ static x_uint64 getTimeStamp() {
 #endif
   return timestamp;
 }
+#endif /* TAU_PERFSUITE */
 
 
 void Profiler::Stop(int tid, bool useLastTimeStamp) {
@@ -1129,7 +1131,6 @@ extern "C" int Tau_profiler_initialization() {
 
 // Store profile data at the end of execution (when top level timer stops)
 int TauProfiler_StoreData(int tid) {
-  int i;
 
   profileWriteCount[tid]++;
   if ((tid !=0) && (profileWriteCount[tid] > 1)) return 0;

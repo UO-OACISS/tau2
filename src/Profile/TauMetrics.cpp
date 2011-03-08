@@ -429,6 +429,8 @@ int TauMetrics_getMetricUsed(int metric) {
  * Read the metrics
  ********************************************************************/
 void TauMetrics_getMetrics(int tid, double values[]) {
+  static bool initialized = false; 
+  if (!initialized) TauMetrics_init(); 
   for (int i = 0; i < nfunctions; i++) {
     functionArray[i](tid, i, values);
   }
