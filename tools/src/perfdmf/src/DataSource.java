@@ -69,6 +69,7 @@ public abstract class DataSource {
     protected Thread meanData = null;
     protected Thread totalData = null;
     protected Thread stddevData = null;
+    protected Thread sumsquaresData = null;
     protected Thread meanDataAll = null;
     protected Thread stddevDataAll = null;
     protected Thread meanDataNoNull = null;
@@ -381,6 +382,7 @@ public abstract class DataSource {
                 meanData.addMetric();
                 totalData.addMetric();
                 stddevData.addMetric();
+                sumsquaresData.addMetric();
             }
         }
 
@@ -686,6 +688,7 @@ public abstract class DataSource {
         this.meanData.setThreadDataAllMetrics();
         this.totalData.setThreadDataAllMetrics();
         this.stddevData.setThreadDataAllMetrics();
+        this.sumsquaresData.setThreadDataAllMetrics();
 
         this.generateUserEventStatistics();
 
@@ -708,6 +711,9 @@ public abstract class DataSource {
         return stdDev;
     }
 
+    
+    private boolean ueStatsGenerated=false;
+    
     private void generateUserEventStatistics() {
         // make sure that the allThreads list is initialized;
         this.initAllThreadsList();
@@ -716,11 +722,13 @@ public abstract class DataSource {
 
         int numProfiles[] = new int[getNumUserEvents() + 1];
 
-        for (int snapshot = 0; snapshot < numSnapshots; snapshot++) {
+        for (int snapshot = 0; snapshot < numSnapshots; snapshot++) {//For each snapshot
+        	
+        	
 
             for (int i = 0; i < numThreads; i++) { // for each thread
                 Thread thread = allThreads.get(i);
-                for (Iterator<UserEventProfile> it = thread.getUserEventProfiles(); it.hasNext();) {
+                for (Iterator<UserEventProfile> it = thread.getUserEventProfiles(); it.hasNext();) {//For each user event profile in the thread
                     UserEventProfile uep = it.next();
                     UserEvent ue = uep.getUserEvent();
 
@@ -738,6 +746,13 @@ public abstract class DataSource {
                         totalData.addUserEventProfile(totalProfile);
                     }
 
+                    // get/create the userEventProfile for sumsquares
+                    UserEventProfile sumsquaresProfile = sumsquaresData.getUserEventProfile(ue);
+                    if (sumsquaresProfile == null) {
+                    	sumsquaresProfile = new UserEventProfile(ue, numSnapshots);
+                        sumsquaresData.addUserEventProfile(sumsquaresProfile);
+                    }
+                    
                     // get/create the userEventProfile for stddev
                     UserEventProfile stddevProfile = stddevData.getUserEventProfile(ue);
                     if (stddevProfile == null) {
@@ -747,32 +762,45 @@ public abstract class DataSource {
 
                     numProfiles[ue.getID()]++;
 
+
+                    if(!ueStatsGenerated){
                     totalProfile.setNumSamples(totalProfile.getNumSamples() + uep.getNumSamples(snapshot), snapshot);
                     totalProfile.setMaxValue(totalProfile.getMaxValue() + uep.getMaxValue(snapshot), snapshot);
                     totalProfile.setMinValue(totalProfile.getMinValue() + uep.getMinValue(snapshot), snapshot);
                     totalProfile.setMeanValue(totalProfile.getMeanValue() + uep.getMeanValue(snapshot), snapshot);
                     totalProfile.setStdDev(totalProfile.getStdDev() + uep.getStdDev(snapshot), snapshot);
 
-                    stddevProfile.setNumSamples(stddevProfile.getNumSamples()
+                    sumsquaresProfile.setNumSamples(sumsquaresProfile.getNumSamples()
                             + (uep.getNumSamples(snapshot) * uep.getNumSamples(snapshot)), snapshot);
-                    stddevProfile.setMaxValue(stddevProfile.getMaxValue()
+                    
+                    if(thread.getThreadID()==0&&ue.getName().equals("free size (bytes) : .TAU application   => MAIN__ [{sp.f} {47,0}] ")){//TODO: Remove
+                    	System.out.println(uep.getNumSamples()+" toward "+stddevProfile.getNumSamples());
+                    }
+                    
+                    sumsquaresProfile.setMaxValue(sumsquaresProfile.getMaxValue()
                             + (uep.getMaxValue(snapshot) * uep.getMaxValue(snapshot)), snapshot);
-                    stddevProfile.setMinValue(stddevProfile.getMinValue()
+                    sumsquaresProfile.setMinValue(sumsquaresProfile.getMinValue()
                             + (uep.getMinValue(snapshot) * uep.getMinValue(snapshot)), snapshot);
-                    stddevProfile.setMeanValue(stddevProfile.getMeanValue()
+                    sumsquaresProfile.setMeanValue(sumsquaresProfile.getMeanValue()
                             + (uep.getMeanValue(snapshot) * uep.getMeanValue(snapshot)), snapshot);
-                    stddevProfile.setStdDev(stddevProfile.getStdDev() + (uep.getStdDev(snapshot) * uep.getStdDev(snapshot)),
+                    sumsquaresProfile.setStdDev(sumsquaresProfile.getStdDev() + (uep.getStdDev(snapshot) * uep.getStdDev(snapshot)),
                             snapshot);
+                    }
 
-                }
-            }
-
+                }//For each user event profile in the thread
+            }//For each thread
+            
             for (Iterator<UserEvent> it = this.getUserEvents(); it.hasNext();) {
                 UserEvent ue = it.next();
 
+                if(ue.getName().equals("free size (bytes) : .TAU application   => MAIN__ [{sp.f} {47,0}] ")){//TODO: Remove
+                	System.out.println(ue.getName());
+                }
+                
                 UserEventProfile meanProfile = meanData.getUserEventProfile(ue);
                 UserEventProfile totalProfile = totalData.getUserEventProfile(ue);
                 UserEventProfile stddevProfile = stddevData.getUserEventProfile(ue);
+                UserEventProfile sumsquaresProfile = sumsquaresData.getUserEventProfile(ue);
 
                 int divider = numThreads;
                 if (!meanIncludeNulls) { // do we include null values as zeroes in the computation or not?
@@ -785,19 +813,22 @@ public abstract class DataSource {
                 meanProfile.setMeanValue(totalProfile.getMeanValue(snapshot) / divider, snapshot);
                 meanProfile.setStdDev(totalProfile.getStdDev(snapshot) / divider, snapshot);
 
-                stddevProfile.setNumSamples(computeStdDev(stddevProfile.getNumSamples(snapshot),
+                stddevProfile.setNumSamples(computeStdDev(sumsquaresProfile.getNumSamples(snapshot),
                         meanProfile.getNumSamples(snapshot), divider), snapshot);
-                stddevProfile.setMaxValue(computeStdDev(stddevProfile.getMaxValue(snapshot), meanProfile.getMaxValue(snapshot),
+                stddevProfile.setMaxValue(computeStdDev(sumsquaresProfile.getMaxValue(snapshot), meanProfile.getMaxValue(snapshot),
                         divider), snapshot);
-                stddevProfile.setMinValue(computeStdDev(stddevProfile.getMinValue(snapshot), meanProfile.getMinValue(snapshot),
+                stddevProfile.setMinValue(computeStdDev(sumsquaresProfile.getMinValue(snapshot), meanProfile.getMinValue(snapshot),
                         divider), snapshot);
-                stddevProfile.setMeanValue(computeStdDev(stddevProfile.getMeanValue(snapshot),
+                stddevProfile.setMeanValue(computeStdDev(sumsquaresProfile.getMeanValue(snapshot),
                         meanProfile.getMeanValue(snapshot), divider), snapshot);
                 stddevProfile.setStdDev(
-                        computeStdDev(stddevProfile.getStdDev(snapshot), meanProfile.getStdDev(snapshot), divider), snapshot);
+                        computeStdDev(sumsquaresProfile.getStdDev(snapshot), meanProfile.getStdDev(snapshot), divider), snapshot);
+                if(ue.getName().equals("free size (bytes) : .TAU application   => MAIN__ [{sp.f} {47,0}] ")){//TODO: Remove
+                	System.out.println(sumsquaresProfile.getNumSamples(snapshot)+" by "+meanProfile.getNumSamples(snapshot)+" is "+stddevProfile.getNumSamples(snapshot));
+                }
             }
-        }
-
+        }//For each snapshot
+        ueStatsGenerated=true;
     }
 
     public void generateStatistics(int startMetric, int endMetric) {
@@ -859,6 +890,11 @@ public abstract class DataSource {
             stddevData = new Thread(-3, -3, -3, numMetrics, this);
             addDerivedSnapshots(firstThread, stddevData);
         }
+        
+        if (sumsquaresData == null) {
+            sumsquaresData = new Thread(-4, -4, -4, numMetrics, this);
+            addDerivedSnapshots(firstThread, sumsquaresData);
+        }
 
         double[] exclSum = new double[numMetrics];
         double[] inclSum = new double[numMetrics];
@@ -885,6 +921,7 @@ public abstract class DataSource {
                 totalData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
                 meanData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
                 stddevData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
+                sumsquaresData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
             }
 
             for (Iterator<Function> l = this.getFunctions(); l.hasNext();) { // for each function
