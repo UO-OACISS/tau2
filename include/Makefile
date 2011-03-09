@@ -129,6 +129,7 @@ TAU_LIB_DIR=$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 #IBM64LINUX#IBM_GNU_ABI	     = -m64 		  #ENDIF#
 #SUNX86_64#SUN_GNU_ABI       = -m64		  #ENDIF#
 #SUNX86_64#SUN_CC_ABI        = -xarch=amd64       #ENDIF#
+#SUNX86_64#SUN_CC_ABI        = -m64       #ENDIF#
 #MIPS32LINUX#SC_GNU_ABI	     = -mabi=n32 	  #ENDIF#
 #MIPS32LINUX#SC_PATH_ABI     = -mabi=n32          #ENDIF#
 #MIPS64LINUX#SC_GNU_ABI	     = -mabi=64 	  #ENDIF#
@@ -610,6 +611,7 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 #PGI#TAU_CXXLIBS        	= -lstd -lC       #ENDIF#
 #APPLEPGI#TAU_CXXLIBS        	= -lstd -lcpp       #ENDIF#
 #PGI_FORTRAN#TAU_CXXLIBS_PGI_CNL       	= -L$(EXTRADIR)/lib -lstd -lC     #ENDIF#
+#PGI_FORTRAN#TAU_CXXLIBS       	= -L$(EXTRADIR)/lib -lstd -lC -lstdc++     #ENDIF#
 #PATHSCALE_FORTRAN#TAU_CXXLIBS_PATHSCALE_CNL      	= -L$(EXTRADIR)/lib -lstdc++     #ENDIF#
 #GNU_GFORTRAN#TAU_CXXLIBS_GNU_CNL      	= -L$(EXTRADIR)/lib -lstdc++ -lgcc_eh    #ENDIF#
 #INTELIFORT#TAU_CXXLIBS_INTEL_CNL      	= -lstdc++   #ENDIF#
@@ -749,6 +751,7 @@ TAU_LINKER_OPT4 = $(LEXTRA1)
 #APPLECXX#AR_SHFLAGS = $(TAU_APPLE_SHFLAGS)             #ENDIF#
 #SOL2#AR_SHFLAGS  		= -G 		        #ENDIF#
 #SUNCC#AR_SHFLAGS  		= -G 		        #ENDIF#
+#SOL2CC#AR_SHFLAGS  		= -G 		        #ENDIF#
 #CRAYCNL#AR_SHFLAGS  		= -shared 		#ENDIF#
 TAU_BGP_AR_SHFLAGS = -shared
 #USE_IBMXLC#AR_SHFLAGS          = -G 		        #ENDIF#

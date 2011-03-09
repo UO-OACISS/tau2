@@ -73,7 +73,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
     private SteppedComboBox heightValueBox, heightMetricBox;
     private SteppedComboBox colorValueBox, colorMetricBox;
 
-    private JPanel subPanel;
+    private JScrollPane spane;//subPanel;
     private VisRenderer visRenderer;
 
     private JTextField heightValueField = new JTextField("");
@@ -173,12 +173,13 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
     }
 
     private void createSubPanel() {
-        if (subPanel != null) {
-            this.remove(subPanel);
+        if (spane != null) {
+            this.remove(spane);
         }
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
+        JPanel subPanel=null;
         if (settings.getVisType() == VisType.SCATTER_PLOT ) {
             subPanel = createScatterPanel();
         }else if(settings.getVisType() == VisType.TOPO_PLOT){
@@ -192,9 +193,16 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
-        addCompItem(this, subPanel, gbc, 0, 5, 1, 1);
+        Dimension subD = subPanel.getMinimumSize();
+        
+        subPanel.setPreferredSize(new Dimension((int)subD.getWidth(),(int)subD.getHeight()+100));
+        subPanel.setSize(subPanel.getPreferredSize());
+        
+        spane=new JScrollPane(subPanel);
+        addCompItem(this, spane, gbc, 0, 5, 1, 1);
         revalidate();
         validate();
+        spane.setMinimumSize(new Dimension((int)subD.getWidth()+25,(int)subD.getHeight()));
         this.setPreferredSize(this.getMinimumSize());
     }
 
@@ -880,7 +888,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         tabbedPane.addTab(plot.getName(), plot.getControlPanel(visRenderer));
         tabbedPane.addTab("ColorScale", window.getColorScale().getControlPanel(visRenderer));
         tabbedPane.addTab("Render", visRenderer.getControlPanel());
-        tabbedPane.setMinimumSize(new Dimension(300, 160));
+        tabbedPane.setMinimumSize(new Dimension(300, 200));
         tabbedPane.setSelectedIndex(0);
 
         gbc.fill = GridBagConstraints.BOTH;

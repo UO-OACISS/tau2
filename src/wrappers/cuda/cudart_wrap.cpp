@@ -42,6 +42,50 @@ void tau_track_memory(int kind, int count)
 		TAU_CONTEXT_EVENT(MemoryCopyEventDtoD, count);
 }	
 
+//cudaThreadExit is depercated to be replaced with cudaDeviceReset.
+
+#if CUDART_VERSION == 4000
+cudaError_t cudaDeviceReset() {
+
+  typedef cudaError_t (*cudaDeviceReset_p) ();
+  static cudaDeviceReset_p cudaDeviceReset_h = NULL;
+  cudaError_t retval;
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaDeviceReset(void) C", "", TAU_USER);
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
+
+  if (cudart_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cudaDeviceReset_h == NULL)
+	cudaDeviceReset_h = (cudaDeviceReset_p) dlsym(cudart_handle,"cudaDeviceReset"); 
+    if (cudaDeviceReset_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+	//printf("in cudaDeviceReset(), check for kernel events.\n");
+#ifdef TRACK_KERNEL
+	Tau_cuda_register_sync_event();
+#endif 
+  TAU_PROFILE_START(t);
+  retval  =  (*cudaDeviceReset_h)();
+  TAU_PROFILE_STOP(t);
+
+#ifdef TRACK_KERNEL
+	Tau_cuda_exit();
+#endif
+  }
+  return retval;
+
+}
+
+
+#endif
+
+
+
 cudaError_t cudaThreadExit() {
 
   typedef cudaError_t (*cudaThreadExit_p) ();
@@ -62,7 +106,7 @@ cudaError_t cudaThreadExit() {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-	//printf("in Thread Exit, check for kernel events.\n");
+	//printf("in cudaThreadExit(), check for kernel events.\n");
 #ifdef TRACK_KERNEL
 	Tau_cuda_register_sync_event();
 #endif 
@@ -1006,6 +1050,7 @@ cudaError_t cudaLaunch(const char * a1) {
     }
 		
 		//printf("in cudaLaunch, TAU wrap.\n");
+		//printf("cuda kernel: %s.\n", kernelName);
   
 		TAU_PROFILE_START(t);
 #ifdef TRACK_KERNEL
