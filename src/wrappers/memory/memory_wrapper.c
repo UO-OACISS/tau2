@@ -55,14 +55,6 @@ void *malloc (size_t size) {
   return ptr;
 }
 
-#ifndef TAU_VALLOC_AVAILABLE 
-#ifndef __APPLE__
-#define TAU_VALLOC_AVAILABLE 
-#endif /* APPLE */
-#endif /* TAU_VALLOC_AVAILABLE */
-
-#ifdef TAU_VALLOC_AVAILABLE
-#include <malloc.h>
 /*********************************************************************
  * valloc
  ********************************************************************/
@@ -111,8 +103,6 @@ void * memalign (size_t alignment, size_t size) {
   Tau_global_decr_insideTAU();
   return ret;
 }
-
-#endif /* TAU_VALLOC_AVAILABLE */
 
 
 /*********************************************************************
