@@ -10,6 +10,7 @@
 #define read(a,b,c) 	TauWrapperRead(a,b,c)
 #define write(a,b,c) 	TauWrapperWrite(a,b,c)
 #define fsync(a) 	TauWrapperFsync(a)
+#define open(a,b,...)   TauWrapperOpen(a,b)
 
 #include <sys/types.h>
 #ifdef __cplusplus
