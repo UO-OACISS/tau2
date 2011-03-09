@@ -59,13 +59,16 @@ struct s1 {
   char *rout;
 };
 
-
+extern "C"  int Tau_profile_exit_all_threads(void); 
+#define dprintf TAU_VERBOSE
 // called during termination
+#pragma save_all_regs
 extern "C" void __rouexit() {
   Tau_destructor_trigger();
 }
 
 // called during program initialization
+#pragma save_all_regs
 extern "C" void __rouinit() {
   Tau_init_initializeTAU();
   TheUsingCompInst() = 1;
@@ -73,10 +76,43 @@ extern "C" void __rouinit() {
   atexit(__rouexit);
 }
 
+int Tau_get_function_index_in_DB(FunctionInfo *fi) {
+  int i = TheFunctionDB().size();
+  for (vector<FunctionInfo*>::iterator it = TheFunctionDB().end();
+      it != TheFunctionDB().begin(); it--, i--) {
+    if (*it == fi)
+    {
+      dprintf("MATCH! i=%d, TheFunctionDB()[%d]->GetName() = %s, fi->GetName() = %s\n", i, i, TheFunctionDB()[i]->GetName(), fi->GetName());
+      return i;
+    }
+  }
+  return -1;
+}
+
+int Tau_ignore_count[TAU_MAX_THREADS]={0};
 // called at the beginning of each profiled routine
 #pragma save_all_gp_regs
 extern "C" void ___rouent2(struct s1 *p) {
   char routine[2048];
+  int isseen_local = p->isseen;
+
+  int tid = Tau_get_tid();
+  if (p->isseen == -1) {
+    Tau_ignore_count[tid] ++;  // the rouent2 shouldn't call stop
+    return;
+  }
+  if ((!Tau_init_check_initialized()) || (Tau_global_get_insideTAU() > 0 )) { 
+    //dprintf("TAU not initialized /inside TAU in __rouent2. Going to ignore this one!name = p->rout %s\n", p->rout);
+    Tau_ignore_count[tid] ++;  // the rouent2 shouldn't call stop
+    return;
+  }
+
+  /* Some routines like length__Q2_3std20char_traits__tm__2_cSFPCc are called
+     before main and get called repeatedly when <iostream> and cout are used
+     in a C++ application. We need to create a top level timer if necessary */
+  p->isseen = -1; 
+  Tau_create_top_level_timer_if_necessary(); 
+  p->isseen = isseen_local; 
 
   if (!p->isseen) {
     sprintf (routine, "%s [{%s} {%d,0}]", p->rout, p->file, p->lineno);
@@ -94,38 +130,50 @@ extern "C" void ___rouent2(struct s1 *p) {
       {
 	if (!p->isseen) {	
 	  void *handle=NULL;
+	  p->isseen ++;
 	  TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
 	  FunctionInfo *fi = (FunctionInfo*)handle;
-	  Tau_start_timer(fi,0, Tau_get_tid());
-	  p->rid = TheFunctionDB().size()-1;
-	  p->isseen = 1;
+	  Tau_start_timer(fi,0, tid);
+	  p->rid = Tau_get_function_index_in_DB(fi);
 	}
       }
     } else {
       void *handle=NULL;
+      p->isseen = -1;
       TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
       FunctionInfo *fi = (FunctionInfo*)handle;
-      Tau_start_timer(fi,0, Tau_get_tid());
-      p->rid = TheFunctionDB().size()-1;
-      p->isseen = 1;
+      Tau_start_timer(fi,0, tid);
+      p->rid = Tau_get_function_index_in_DB(fi);
+      p->isseen = isseen_local+1;
     }
 #else
     void *handle=NULL;
+    p->isseen = -1; // hold on, this is in the middle of creating a profiler
+    // if we re-enter this routine, just return so we can continue in the right
+    // place. 
     TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
     FunctionInfo *fi = (FunctionInfo*)handle;
-    Tau_start_timer(fi,0, Tau_get_tid());
-    p->rid = TheFunctionDB().size()-1;
-    p->isseen = 1;
+    Tau_start_timer(fi,0, tid);
+    p->rid = Tau_get_function_index_in_DB(fi);
+    p->isseen = isseen_local+1;
 #endif
   } else {
-    Tau_start_timer(TheFunctionDB()[p->rid],0, Tau_get_tid());
+    Tau_start_timer(TheFunctionDB()[p->rid],0, tid);
   }
 }
 
 // called at the end of each profiled routine
 #pragma save_all_regs
 extern "C" void ___rouret2(void) {
-  TAU_MAPPING_PROFILE_STOP(0);
+  int tid = Tau_get_tid();
+  if (Tau_ignore_count[tid] == 0) { 
+    TAU_MAPPING_PROFILE_STOP(0);
+  }
+  else {
+    Tau_ignore_count[tid]--;
+  }
 }
 
-extern "C" void ___linent2(void *l) {}
+#pragma save_used_gp_regs
+extern "C" void ___linent2(void *l) {
+}

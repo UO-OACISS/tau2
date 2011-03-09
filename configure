@@ -4021,7 +4021,7 @@ case $machine in
 	;;
     esac
 
-if [ $machine = x86_64 -o $machine = i386_linux -o $machine = ia64 ] ; then
+if [ $machine = x86_64 -o $machine = i386_linux -o $machine = ia64 -o $machine = suni386 -o $machine = sunx86_64 ] ; then
     if [ $cxx_compiler = CC ] ; then
         fixmakeargs="$fixmakeargs SUNCC"
         if [ $openmp = yes ] ; then

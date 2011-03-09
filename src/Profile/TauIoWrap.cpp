@@ -93,7 +93,8 @@ extern "C" void Tau_iowrap_registerEvents(int fid, const char *pathname) {
     sprintf(ename,"%s <file=%s>", iowrap_event_names[i], pathname);
     Tau_get_context_userevent(&event, (char*)ename);
 #else
-    string name = string(iowrap_event_names[i]) + " <file=\"" + pathname + "\">";
+    //    string name = string(iowrap_event_names[i]) + " <file=\"" + pathname + "\">";
+    string name = string(iowrap_event_names[i]) + " <file=" + pathname + ">";
     Tau_get_context_userevent(&event, strdup((char*)name.c_str()));
 #endif /* TAU_PGI */
 

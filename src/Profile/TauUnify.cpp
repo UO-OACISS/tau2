@@ -425,6 +425,7 @@ extern "C" int Tau_unify_unifyDefinitions() {
   functionUnifier = Tau_unify_unifyEvents(functionEventLister);
   AtomicEventLister *atomicEventLister = new AtomicEventLister();
   atomicUnifier = Tau_unify_unifyEvents(atomicEventLister);
+  return 0;
 }
 
 
