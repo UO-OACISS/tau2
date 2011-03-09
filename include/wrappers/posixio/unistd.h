@@ -27,4 +27,5 @@ ssize_t TauWrapperWrite(int fd, const void *buf, size_t nbytes);
 #endif /* __cplusplus */
 
 #include "/usr/include/unistd.h"
+#include "/usr/include/fcntl.h"
 #endif /* _TAU_UNISTD_H_ */
