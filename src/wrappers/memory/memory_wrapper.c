@@ -55,14 +55,6 @@ void *malloc (size_t size) {
   return ptr;
 }
 
-#ifndef TAU_VALLOC_AVAILABLE 
-#ifndef __APPLE__
-#define TAU_VALLOC_AVAILABLE 
-#endif /* APPLE */
-#endif /* TAU_VALLOC_AVAILABLE */
-
-#ifdef TAU_VALLOC_AVAILABLE
-#include <malloc.h>
 /*********************************************************************
  * valloc
  ********************************************************************/
@@ -112,13 +104,11 @@ void * memalign (size_t alignment, size_t size) {
   return ret;
 }
 
-#endif /* TAU_VALLOC_AVAILABLE */
-
 
 /*********************************************************************
  * calloc
  ********************************************************************/
-#define TAU_EXTRA_MEM_SIZE 1024
+#define TAU_EXTRA_MEM_SIZE 2048
 static char tau_calloc_mem[TAU_EXTRA_MEM_SIZE]; 
 static int tau_calloc_mem_size = 0;
 static int tau_calloc_used = 0;
@@ -128,6 +118,8 @@ void *calloc (size_t nmemb, size_t size) {
    static void* (*_calloc)(size_t nmemb, size_t size) = NULL;
 
    static int checkinit = 0;
+   static int numcalls = 0;
+   numcalls++;
    if (checkinit == 0) {
      checkinit = 1;
 
@@ -164,7 +156,10 @@ void *calloc (size_t nmemb, size_t size) {
    Tau_global_incr_insideTAU();
 
    void *ptr = _calloc(nmemb, size);
-   Tau_memorywrap_add_ptr(ptr, nmemb * size);
+   
+   if (!(numcalls == 3 && size == 1040)) {
+     Tau_memorywrap_add_ptr(ptr, nmemb * size);
+   }
    Tau_global_decr_insideTAU();
    return ptr;
 }
