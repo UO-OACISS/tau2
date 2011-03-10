@@ -798,7 +798,7 @@ HPCTOOLKIT_LINK=
 ##############################################
 # Extra linker args (e.g. -Wl,-export-dynamic)
 ##############################################
-EXTRA_LINKER_ARGS= -Wl,--export-dynamic
+EXTRA_LINKER_ARGS=
 #APPLECXX#EXTRA_LINKER_ARGS= -rdynamic #ENDIF#
 TAU_LINKER_OPT14=$(UPCC_LINK_PREFIX)$(EXTRA_LINKER_ARGS)
 
