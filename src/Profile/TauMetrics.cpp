@@ -52,6 +52,7 @@ extern "C" {
 
 
 int TauMetrics_init();
+int Tau_init_check_initialized(void); 
 
 static void metricv_add(const char *name);
 static void read_env_vars();
@@ -429,8 +430,7 @@ int TauMetrics_getMetricUsed(int metric) {
  * Read the metrics
  ********************************************************************/
 void TauMetrics_getMetrics(int tid, double values[]) {
-  static bool initialized = false; 
-  if (!initialized) TauMetrics_init(); 
+  if (!Tau_init_check_initialized()) TauMetrics_init();
   for (int i = 0; i < nfunctions; i++) {
     functionArray[i](tid, i, values);
   }
