@@ -36,7 +36,19 @@ Version 2.20 changes (from 2.20):
 23. Added support for profiling CUDA kernels on a separate thread.
 24. Bug fixes (papi+tracing, profile merged with tau_exec -io, outer-loop level instrumentation dyinstAPI)
 25. Added support for topology display with user specified topologies loadable from a text file in paraprof. 
+26. Added support for PGI 11.x compilers with support for accelerator primitives. 
+27. Added support for a scrollbar in the paraprof 3D window.
+28. CUDA 4.0 support added and tracking of gpgpu thread execution is now supported. 
+29. Bug fixes for PGI -optCompInst for C++, tau_exec -memory for Intel -optCompInst. 
+30. PostgreSQL jar file support updated in PerfDMF. 
+31. Added support for Score-P LD_PRELOAD'ing using tau_exec and tau_run.
+32. Added support for SOL2CC compiler for Solaris CC compiler. 
+33. Bug fixes for tau_instrumentor (single line Fortran DO loop instrumentation).
+34. Added support for Cray CCE -optCompInst for OpenMP.
+35. Bug fix for PAPI and TAU_TRACE=1 for initialization of papi. 
+36. Added support for demangling kernel names for CUDA executions. 
 
+-------------------------------
 Version 2.19 changes (from 2.18):
 1. Added support for Chapel.
 2. Added support for UPC (Berkeley upcc compiler, GASP, supports -optCompInst).
