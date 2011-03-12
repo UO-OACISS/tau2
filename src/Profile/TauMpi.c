@@ -1642,7 +1642,9 @@ int  MPI_Finalize(  )
     Tau_mergeProfiles();
   }
 
+#ifdef TAU_MONITORING
   Tau_mon_disconnect();
+#endif /* TAU_MONITORING */
 
   returnVal = PMPI_Finalize();
 
@@ -1684,7 +1686,9 @@ char *** argv;
   
   returnVal = PMPI_Init( argc, argv );
 
+#ifdef TAU_MONITORING
   Tau_mon_connect();
+#endif /* TAU_MONITORING */
 
   TAU_PROFILE_STOP(tautimer); 
 

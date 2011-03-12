@@ -486,7 +486,16 @@ void Tau_collate_compute_histograms(Tau_unify_object_t *functionUnifier,
 
 /* Only enable profile writing and dump operation if TAU MPI Monitoring
    is specified */
+#ifdef TAU_MONITORING
 #ifdef TAU_EXP_COLLATE
+
+extern "C" void Tau_mon_connect() {
+  /* Nothing needs to happen for MPI-based monitoring */
+}
+
+extern "C" void Tau_mon_disconnect() {
+  /* Nothing needs to happen for MPI-based monitoring */
+}
 
 /*********************************************************************
  * Write a profile with data from all nodes/threads
@@ -750,7 +759,7 @@ extern "C" int Tau_collate_writeProfile() {
 /*********************************************************************
  * For Dagstuhl demo 2010
  ********************************************************************/
-extern "C" void Tau_collate_onlineDump() {
+extern "C" void Tau_mon_internal_onlineDump() {
   // Not scalable output, even for verbose output. This is not a one-time
   //    operation.
   //  TAU_VERBOSE("collate online dump called\n");
@@ -758,6 +767,7 @@ extern "C" void Tau_collate_onlineDump() {
 }
 
 #endif /* TAU_EXP_COLLATE */
+#endif /* TAU_MONITORING */
 
 #endif /* TAU_UNIFY */
 #endif /* TAU_MPI */
