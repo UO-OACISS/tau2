@@ -487,7 +487,7 @@ void Tau_collate_compute_histograms(Tau_unify_object_t *functionUnifier,
 /* Only enable profile writing and dump operation if TAU MPI Monitoring
    is specified */
 #ifdef TAU_MONITORING
-#ifdef TAU_EXP_COLLATE
+#ifdef TAU_MON_MPI
 
 extern "C" void Tau_mon_connect() {
   /* Nothing needs to happen for MPI-based monitoring */
@@ -766,7 +766,7 @@ extern "C" void Tau_mon_internal_onlineDump() {
   Tau_collate_writeProfile();
 }
 
-#endif /* TAU_EXP_COLLATE */
+#endif /* TAU_MON_MPI */
 #endif /* TAU_MONITORING */
 
 #endif /* TAU_UNIFY */
