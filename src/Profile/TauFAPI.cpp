@@ -91,7 +91,6 @@ void Tau_dynamic_stop(char *name, int isPhase);
 char * Tau_append_iteration_to_name(int iteration, char *name);
 int Tau_get_tid(void);
 void Tau_profile_param1l(long data, const char *dataname);
-void Tau_collate_onlineDump();
 void Tau_mon_onlineDump();
 
 
@@ -1819,35 +1818,19 @@ void TAU_PROFILE_SNAPSHOT(char *name, int slen) {
 }
 
 void tau_online_dump_() {
-#ifdef TAU_MONITORING
   Tau_mon_onlineDump();
-#elif defined(TAU_EXP_COLLATE)
-  Tau_collate_onlineDump();
-#endif /* TAU_MONITORING */
 }
 
 void tau_online_dump() {
-#ifdef TAU_MONITORING
   Tau_mon_onlineDump();
-#elif defined(TAU_EXP_COLLATE)
-  Tau_collate_onlineDump();
-#endif /* TAU_MONITORING */
 }
 
 void tau_online_dump__() {
-#ifdef TAU_MONITORING
   Tau_mon_onlineDump();
-#elif defined(TAU_EXP_COLLATE)
-  Tau_collate_onlineDump();
-#endif /* TAU_MONITORING */
 }
 
 void TAU_ONLINE_DUMP() {
-#ifdef TAU_MONITORING
   Tau_mon_onlineDump();
-#elif defined(TAU_EXP_COLLATE)
-  Tau_collate_onlineDump();
-#endif /* TAU_MONITORING */
 }
 
 //////////////////////////////////////////////////////////////////////

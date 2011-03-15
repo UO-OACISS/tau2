@@ -2,6 +2,7 @@
 //   TauMon.h will define default empty functions and we do not want
 //   them interfering with one another.
 #ifdef TAU_MONITORING
+#ifdef TAU_MON_MRNET
 
 #include "Profile/TauMon.h"
 #include "Profile/TauMonMrnet.h"
@@ -703,7 +704,7 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
   }
 }
 
-extern "C" void Tau_mon_onlineDump() {
+extern "C" void Tau_mon_internal_onlineDump() {
   // *DEBUG* printf("Tau Mon data ready for dump.\n");
 
   // Need to get data loaded and computed from the stacks
@@ -848,4 +849,5 @@ double calcEuclideanDistance(double *vector, double *centroids,
 #endif /* MRNET_LIGHTWEIGHT */
 
 #endif /* TAU_UNIFY */
+#endif /* TAU_MON_MRNET */
 #endif /* TAU_MONITORING */
