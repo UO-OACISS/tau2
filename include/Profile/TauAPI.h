@@ -214,13 +214,11 @@ extern "C" {
 
 #define TAU_GLOBAL_PHASE_EXTERNAL(timer)  extern void * TauGlobalPhase##timer(void)
 
-#ifdef TAU_MONITORING
+/* *CWL* - temporary monitoring interface. These functions must be implemented
+   by the monitoring framework. The functions should be implemented in a way
+   that does nothing should TAU_MONITORING be unset.
+*/
 #define TAU_ONLINE_DUMP()                       Tau_mon_onlineDump()
-#elif defined(TAU_EXP_COLLATE)
-#define TAU_ONLINE_DUMP()                       Tau_collate_onlineDump()
-#else
-#define TAU_ONLINE_DUMP()
-#endif /* TAU_MONITORING */
 
 #define TAU_PROFILE_SNAPSHOT(name)              Tau_profile_snapshot(name);
 #define TAU_PROFILE_SNAPSHOT_1L(name, expr)     Tau_profile_snapshot_1l(name, expr);
