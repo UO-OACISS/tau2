@@ -10,6 +10,7 @@
 #define read(a,b,c) 	TauWrapperRead(a,b,c)
 #define write(a,b,c) 	TauWrapperWrite(a,b,c)
 #define fsync(a) 	TauWrapperFsync(a)
+#define open(a,b,...)   TauWrapperOpen(a,b)
 
 #include <sys/types.h>
 #ifdef __cplusplus
@@ -27,4 +28,5 @@ ssize_t TauWrapperWrite(int fd, const void *buf, size_t nbytes);
 #endif /* __cplusplus */
 
 #include "/usr/include/unistd.h"
+#include "/usr/include/fcntl.h"
 #endif /* _TAU_UNISTD_H_ */

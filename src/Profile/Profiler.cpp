@@ -1160,7 +1160,7 @@ int TauProfiler_StoreData(int tid) {
 #ifdef PTHREADS
   if (RtsLayer::myThread() == 0 && tid == 0) {
     /* clean up other threads? */
-    for (i =1; i < TAU_MAX_THREADS; i++) {
+    for (int i =1; i < TAU_MAX_THREADS; i++) {
       if (TauInternal_ParentProfiler(i) != (Profiler *) NULL) {
         TauProfiler_StoreData(i);
       }
