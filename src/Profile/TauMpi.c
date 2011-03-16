@@ -1634,7 +1634,7 @@ int  MPI_Finalize(  )
   /* Create a merged profile if requested */
   /* *CWL* This might be generalized to perform a final monitoring dump.
      For now, we should let merging handle the data.
-#ifdef TAU_EXP_COLLATE
+#ifdef TAU_MON_MPI
     Tau_collate_writeProfile();
 #else
   */
@@ -1642,7 +1642,9 @@ int  MPI_Finalize(  )
     Tau_mergeProfiles();
   }
 
+#ifdef TAU_MONITORING
   Tau_mon_disconnect();
+#endif /* TAU_MONITORING */
 
   returnVal = PMPI_Finalize();
 
@@ -1684,7 +1686,9 @@ char *** argv;
   
   returnVal = PMPI_Init( argc, argv );
 
+#ifdef TAU_MONITORING
   Tau_mon_connect();
+#endif /* TAU_MONITORING */
 
   TAU_PROFILE_STOP(tautimer); 
 

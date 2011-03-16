@@ -245,7 +245,7 @@ TAU_OPENMP_OPTION = -mp
 #SC_GFORTRAN#TAU_F90         = scgfortran              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #SGI_FORTRAN#TAU_F90         = f90              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #IBM_FORTRAN#TAU_F90         = xlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
-#BGP#TAU_F90         = mpixlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#BGP#TAU_F90         = /bgsys/drivers/ppcfloor/comm/bin/mpixlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #BGP_GFORTRAN#TAU_F90         = mpif90    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #BGL#TAU_F90         = blrts_xlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #IBM64_FORTRAN#TAU_F90       = xlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
@@ -444,8 +444,8 @@ MRNET_ROOT=
 MRNET_LW_OPTS=
 MRNET_INCLUDE=
 MRNET_LIBS=
-#MRNET#PROFILEOPT80 = -DTAU_UNIFY -DTAU_MONITORING ${MRNET_LW_OPTS} #ENDIF#
-#MON_MPI# PROFILEOPT81 = -DTAU_UNIFY -DTAU_EXP_COLLATE #ENDIF#
+#MRNET#PROFILEOPT80 = -DTAU_UNIFY -DTAU_MONITORING -DTAU_MON_MRNET ${MRNET_LW_OPTS} #ENDIF#
+#MON_MPI# PROFILEOPT81 = -DTAU_UNIFY -DTAU_MONITORING -DTAU_MON_MPI #ENDIF#
 
 ############# RENCI Scalable Trace Lib Options #############
 STFF_DIR=
@@ -610,7 +610,7 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 #NAGWARE_FORTRAN#TAU_CXXLIBS		= $(TAU_GNUCXXLIBS) /usr/lib/libc.a #ENDIF#
 #PGI#TAU_CXXLIBS        	= -lstd -lC       #ENDIF#
 #APPLEPGI#TAU_CXXLIBS        	= -lstd -lcpp       #ENDIF#
-#PGI_FORTRAN#TAU_CXXLIBS_PGI_CNL       	= -L$(EXTRADIR)/lib -lstd -lC     #ENDIF#
+#PGI_FORTRAN#TAU_CXXLIBS_PGI_CNL       	= -L$(EXTRADIR)/lib -lstd -lC -lstdc++     #ENDIF#
 #PGI_FORTRAN#TAU_CXXLIBS       	= -L$(EXTRADIR)/lib -lstd -lC -lstdc++     #ENDIF#
 #PATHSCALE_FORTRAN#TAU_CXXLIBS_PATHSCALE_CNL      	= -L$(EXTRADIR)/lib -lstdc++     #ENDIF#
 #GNU_GFORTRAN#TAU_CXXLIBS_GNU_CNL      	= -L$(EXTRADIR)/lib -lstdc++ -lgcc_eh    #ENDIF#
@@ -650,7 +650,7 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 #IBMXLCAPPLE#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/$(TAU_FORLIBDIR) -libmc++ -lstdc++       #ENDIF#
 #BGL#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/blrts_dev_lib -L$(EXTRADIRCXX)/blrts_lib -libmc++ -L/bgl/BlueLight/ppcfloor/blrts-gnu/powerpc-bgl-blrts-gnu/lib -lstdc++      #ENDIF#
 #BGP#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/bglib -libmc++ -lstdc++      #ENDIF#
-#SP1#TAU_XLCLIBS         = -lC            #ENDIF#
+#SP1#TAU_XLCLIBS         = -lC  -lm            #ENDIF#
 #USE_IBMXLC#TAU_CXXLIBS         = $(TAU_XLCLIBS) #ENDIF#
 #USE_DECCXX#TAU_CXXLIBS         = -lcxxstd -lcxx #ENDIF#
 #USE_INTELCXX#TAU_CXXLIBS_INTEL        = -lcprts -lPEPCF90 #ENDIF#
@@ -798,7 +798,7 @@ HPCTOOLKIT_LINK=
 ##############################################
 # Extra linker args (e.g. -Wl,-export-dynamic)
 ##############################################
-EXTRA_LINKER_ARGS= -Wl,--export-dynamic
+EXTRA_LINKER_ARGS=
 #APPLECXX#EXTRA_LINKER_ARGS= -rdynamic #ENDIF#
 TAU_LINKER_OPT14=$(UPCC_LINK_PREFIX)$(EXTRA_LINKER_ARGS)
 
