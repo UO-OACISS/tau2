@@ -534,6 +534,9 @@ TauSnapshot.o 	: TauSnapshot.cpp $(HDRS)
 TauUnify.o 	: TauUnify.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
 
+TauMonCommon.o	: TauMonCommon.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
+
 TauMonMrnet.o	: TauMonMrnet.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) $(MRNET_INCLUDE) -c $(@:.o=.cpp)
 
