@@ -121,8 +121,8 @@ cudaStream_t cudaGpuId::get_rt_stream(void)
 		return st;
 	}
 }*/
-cudaEventId::cudaEventId(const int a) :
-		id(a) {}
+//cudaEventId::cudaEventId(const int a) :
+//		id(a) {}
 	
 	// for use in STL Maps	
 bool cudaEventId::operator<(const cudaEventId& A) const
@@ -231,25 +231,29 @@ void Tau_cuda_exit()
 
 void Tau_cuda_enter_memcpy_event(const char *name, int id, int size, int MemcpyType)
 {
-	Tau_gpu_enter_memcpy_event(name, &cudaEventId(id), &cudaDriverGpuId(0,0,0), size, MemcpyType);
+	Tau_gpu_enter_memcpy_event(name, &cudaDriverGpuId(0,0,0), size, MemcpyType);
 }
 
 void Tau_cuda_exit_memcpy_event(const char *name, int id, int MemcpyType)
 {
-	Tau_gpu_exit_memcpy_event(name, &cudaEventId(id), &cudaDriverGpuId(0,0,0), MemcpyType);
+	Tau_gpu_exit_memcpy_event(name, &cudaDriverGpuId(0,0,0), MemcpyType);
 }
 
 void Tau_cuda_register_gpu_event(const char *name, cudaGpuId *id, double start,
 double stop)
 {
 	//printf("sync'ed \t start: %lf.\n \t \t \t stop: %lf.\n", start+sync_offset, stop+sync_offset);
-	Tau_gpu_register_gpu_event(name, &cudaEventId(0), id, start + sync_offset, stop + sync_offset);
+	FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::myNode())->ThisFunction;
+	eventId c = Tau_gpu_create_gpu_event(name, id, p);
+	Tau_gpu_register_gpu_event(&c, start + sync_offset, stop + sync_offset);
 }
 
 void Tau_cuda_register_memcpy_event(const char *name, cudaGpuId* id, double start, double stop, int
 transferSize, int MemcpyType)
 {
-	Tau_gpu_register_memcpy_event(name, &cudaEventId(0), id, start/1e3 + sync_offset, stop/1e3 + sync_offset, transferSize, MemcpyType);
+	FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::myNode())->ThisFunction;
+	eventId c = Tau_gpu_create_gpu_event(name, id, p);
+	Tau_gpu_register_memcpy_event(&c, start/1e3 + sync_offset, stop/1e3 + sync_offset, transferSize, MemcpyType);
 }
 
 

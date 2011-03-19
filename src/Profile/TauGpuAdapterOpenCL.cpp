@@ -56,8 +56,6 @@ class openCLEventId : public eventId
 {
 	int id;
 	public:
-	openCLEventId(const int a) :
-		id(a) {}
 	
 	// for use in STL Maps	
 	bool operator<(const openCLEventId& A) const
@@ -172,32 +170,31 @@ void Tau_opencl_exit()
 
 void Tau_opencl_enter_memcpy_event(const char *name, int id, int size, int MemcpyType)
 {
-	openCLEventId *evId = new openCLEventId(id);
 	openCLGpuId *gId = new openCLGpuId(0);
 	if (MemcpyType == MemcpyHtoD) 
-		Tau_gpu_enter_memcpy_event(name, evId, gId, size, MemcpyType);
+		Tau_gpu_enter_memcpy_event(name, gId, size, MemcpyType);
 	else
-		Tau_gpu_enter_memcpy_event(name, evId, gId, size, MemcpyType);
+		Tau_gpu_enter_memcpy_event(name, gId, size, MemcpyType);
 }
 
 void Tau_opencl_exit_memcpy_event(const char *name, int id, int MemcpyType)
 {
-	openCLEventId *evId = new openCLEventId(id);
 	openCLGpuId *gId = new openCLGpuId(0);
 	if (MemcpyType == MemcpyHtoD) 
-		Tau_gpu_exit_memcpy_event(name, evId, gId, MemcpyType);
+		Tau_gpu_exit_memcpy_event(name, gId, MemcpyType);
 	else
-		Tau_gpu_exit_memcpy_event(name, evId, gId, MemcpyType);
+		Tau_gpu_exit_memcpy_event(name, gId, MemcpyType);
 }
 
 void Tau_opencl_register_gpu_event(const char *name, int id, double start,
 double stop)
 {
-	openCLEventId *evId = new openCLEventId(id);
 	openCLGpuId *gId = new openCLGpuId(0);
 	lock_callback();
 	//printf("locked for: %s.\n", name);
-	Tau_gpu_register_gpu_event(name, evId, gId, start/1e3 - sync_offset, stop/1e3 - sync_offset);
+	Profiler p;
+	eventId evId = Tau_gpu_create_gpu_event(name, gId, p);
+	Tau_gpu_register_gpu_event(&evId, start/1e3 - sync_offset, stop/1e3 - sync_offset);
 	//printf("released for: %s.\n", name);
 	release_callback();
 }
@@ -207,11 +204,12 @@ transferSize, int MemcpyType)
 {
 	//printf("in Tau_open.\n");
 	//printf("Memcpy type is %d.\n", MemcpyType);
-	openCLEventId *evId = new openCLEventId(id);
 	openCLGpuId *gId = new openCLGpuId(0);
 	lock_callback();
 	//printf("locked for: %s.\n", name);
-	Tau_gpu_register_memcpy_event(name, evId, gId, start/1e3 - sync_offset, stop/1e3 - sync_offset, transferSize, MemcpyType);
+	Profiler p;
+	eventId evId = Tau_gpu_create_gpu_event(name, gId, p);
+	Tau_gpu_register_memcpy_event(&evId, start/1e3 - sync_offset, stop/1e3 - sync_offset, transferSize, MemcpyType);
 	//printf("released for: %s.\n", name);
 	release_callback();
 
