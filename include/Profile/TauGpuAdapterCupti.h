@@ -57,25 +57,25 @@ void metric_read_cupti_ins(int tid, int idx, double values[]);
 #define CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(name, id, info, kind, count) \
 	if ((id) == CUPTI_RUNTIME_TRACE_CBID_##name##_v3020) \
 	{ \
-		kind = ((name##_v3020_params *) info->params)->kind; \
-		count = ((name##_v3020_params *) info->params)->count; \
+		kind = ((name##_v3020_params *) info->functionParams)->kind; \
+		count = ((name##_v3020_params *) info->functionParams)->count; \
 	}
 			
 #define CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(name, id, info, kind, count) \
 	if ((id) == CUPTI_DRIVER_TRACE_CBID_##name) \
 	{ \
-		count = ((name##_params *) info->params)->ByteCount; \
+		count = ((name##_params *) info->functionParams)->ByteCount; \
 	}
 
 #define CAST_TO_DRIVER_CONTEXT_TYPE_AND_CALL(name, id, info, ctx) \
 	if ((id) == CUPTI_DRIVER_TRACE_CBID_##name) \
 	{ \
-		ctx = ((name##_params *) info->params)->pctx; \
+		ctx = ((name##_params *) info->functionParams)->pctx; \
 	}
 
 // Structure to hold data collected by callback
 typedef struct RuntimeApiTrace_st {
-    CUpti_RuntimeTraceApi traceInfo;
+    CUpti_CallbackData traceInfo;
     uint64_t startTimestamp;
     uint64_t endTimestamp;
     cudaMemcpy_v3020_params memcpy_params;
