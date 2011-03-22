@@ -875,6 +875,12 @@ int Tau_sampling_write_maps(int tid, int restart) {
   return 0;
 }
 
+extern "C" void Tau_sampling_init_if_necessary(void ) {
+  if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_init(RtsLayer::myThread());
+  }
+}
+
 /*********************************************************************
  * Finalize the sampling trace system
  ********************************************************************/
