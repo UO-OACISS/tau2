@@ -11,6 +11,9 @@ using namespace std;
 #define TRACK_KERNEL
 #define KERNEL_EVENT_BUFFFER 4096
 
+#define CUDART_API TAU_USER
+#define CUDA_SYNC TAU_USER
+
 const char * cudart_orig_libname = "libcudart.so";
 static void *cudart_handle = NULL;
 cudaStream_t curr_stream;
@@ -50,7 +53,7 @@ cudaError_t cudaDeviceReset() {
   typedef cudaError_t (*cudaDeviceReset_p) ();
   static cudaDeviceReset_p cudaDeviceReset_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaDeviceReset(void) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaDeviceReset(void) C", "", CUDA_SYNC);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -91,7 +94,7 @@ cudaError_t cudaThreadExit() {
   typedef cudaError_t (*cudaThreadExit_p) ();
   static cudaThreadExit_p cudaThreadExit_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaThreadExit(void) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaThreadExit(void) C", "", CUDA_SYNC);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -127,7 +130,7 @@ cudaError_t cudaThreadSynchronize() {
   typedef cudaError_t (*cudaThreadSynchronize_p) ();
   static cudaThreadSynchronize_p cudaThreadSynchronize_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaThreadSynchronize(void) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaThreadSynchronize(void) C", "", CUDA_SYNC);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -160,7 +163,7 @@ cudaError_t cudaThreadSetLimit(enum cudaLimit a1, size_t a2) {
   typedef cudaError_t (*cudaThreadSetLimit_p) (enum cudaLimit, size_t);
   static cudaThreadSetLimit_p cudaThreadSetLimit_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaThreadSetLimit(enum cudaLimit, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaThreadSetLimit(enum cudaLimit, size_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -188,7 +191,7 @@ cudaError_t cudaThreadGetLimit(size_t * a1, enum cudaLimit a2) {
   typedef cudaError_t (*cudaThreadGetLimit_p) (size_t *, enum cudaLimit);
   static cudaThreadGetLimit_p cudaThreadGetLimit_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaThreadGetLimit(size_t *, enum cudaLimit) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaThreadGetLimit(size_t *, enum cudaLimit) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -216,7 +219,7 @@ cudaError_t cudaThreadGetCacheConfig(enum cudaFuncCache * a1) {
   typedef cudaError_t (*cudaThreadGetCacheConfig_p) (enum cudaFuncCache *);
   static cudaThreadGetCacheConfig_p cudaThreadGetCacheConfig_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaThreadGetCacheConfig(enum cudaFuncCache *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaThreadGetCacheConfig(enum cudaFuncCache *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -244,7 +247,7 @@ cudaError_t cudaThreadSetCacheConfig(enum cudaFuncCache a1) {
   typedef cudaError_t (*cudaThreadSetCacheConfig_p) (enum cudaFuncCache);
   static cudaThreadSetCacheConfig_p cudaThreadSetCacheConfig_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaThreadSetCacheConfig(enum cudaFuncCache) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaThreadSetCacheConfig(enum cudaFuncCache) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -272,7 +275,7 @@ cudaError_t cudaGetLastError() {
   typedef cudaError_t (*cudaGetLastError_p) ();
   static cudaGetLastError_p cudaGetLastError_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaGetLastError(void) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaGetLastError(void) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -300,7 +303,7 @@ cudaError_t cudaPeekAtLastError() {
   typedef cudaError_t (*cudaPeekAtLastError_p) ();
   static cudaPeekAtLastError_p cudaPeekAtLastError_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaPeekAtLastError(void) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaPeekAtLastError(void) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -328,7 +331,7 @@ const char * cudaGetErrorString(cudaError_t a1) {
   typedef const char * (*cudaGetErrorString_p) (cudaError_t);
   static cudaGetErrorString_p cudaGetErrorString_h = NULL;
   const char * retval;
-  TAU_PROFILE_TIMER(t,"const char *cudaGetErrorString(cudaError_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"const char *cudaGetErrorString(cudaError_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -356,7 +359,7 @@ cudaError_t cudaGetDeviceCount(int * a1) {
   typedef cudaError_t (*cudaGetDeviceCount_p) (int *);
   static cudaGetDeviceCount_p cudaGetDeviceCount_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaGetDeviceCount(int *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaGetDeviceCount(int *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -384,7 +387,7 @@ cudaError_t cudaGetDeviceProperties(struct cudaDeviceProp * a1, int a2) {
   typedef cudaError_t (*cudaGetDeviceProperties_p) (struct cudaDeviceProp *, int);
   static cudaGetDeviceProperties_p cudaGetDeviceProperties_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaGetDeviceProperties(struct cudaDeviceProp *, int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaGetDeviceProperties(struct cudaDeviceProp *, int) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -412,7 +415,7 @@ cudaError_t cudaChooseDevice(int * a1, const struct cudaDeviceProp * a2) {
   typedef cudaError_t (*cudaChooseDevice_p) (int *, const struct cudaDeviceProp *);
   static cudaChooseDevice_p cudaChooseDevice_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaChooseDevice(int *, const struct cudaDeviceProp *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaChooseDevice(int *, const struct cudaDeviceProp *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -440,7 +443,7 @@ cudaError_t cudaSetDevice(int a1) {
   typedef cudaError_t (*cudaSetDevice_p) (int);
   static cudaSetDevice_p cudaSetDevice_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaSetDevice(int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaSetDevice(int) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -468,7 +471,7 @@ cudaError_t cudaGetDevice(int * a1) {
   typedef cudaError_t (*cudaGetDevice_p) (int *);
   static cudaGetDevice_p cudaGetDevice_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaGetDevice(int *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaGetDevice(int *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -496,7 +499,7 @@ cudaError_t cudaSetValidDevices(int * a1, int a2) {
   typedef cudaError_t (*cudaSetValidDevices_p) (int *, int);
   static cudaSetValidDevices_p cudaSetValidDevices_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaSetValidDevices(int *, int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaSetValidDevices(int *, int) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -524,7 +527,7 @@ cudaError_t cudaSetDeviceFlags(unsigned int a1) {
   typedef cudaError_t (*cudaSetDeviceFlags_p) (unsigned int);
   static cudaSetDeviceFlags_p cudaSetDeviceFlags_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaSetDeviceFlags(unsigned int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaSetDeviceFlags(unsigned int) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -552,7 +555,7 @@ cudaError_t cudaStreamCreate(cudaStream_t * a1) {
   typedef cudaError_t (*cudaStreamCreate_p) (cudaStream_t *);
   static cudaStreamCreate_p cudaStreamCreate_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaStreamCreate(cudaStream_t *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaStreamCreate(cudaStream_t *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -580,7 +583,7 @@ cudaError_t cudaStreamDestroy(cudaStream_t a1) {
   typedef cudaError_t (*cudaStreamDestroy_p) (cudaStream_t);
   static cudaStreamDestroy_p cudaStreamDestroy_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaStreamDestroy(cudaStream_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaStreamDestroy(cudaStream_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -608,7 +611,7 @@ cudaError_t cudaStreamWaitEvent(cudaStream_t a1, cudaEvent_t a2, unsigned int a3
   typedef cudaError_t (*cudaStreamWaitEvent_p) (cudaStream_t, cudaEvent_t, unsigned int);
   static cudaStreamWaitEvent_p cudaStreamWaitEvent_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaStreamWaitEvent(cudaStream_t, cudaEvent_t, unsigned int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaStreamWaitEvent(cudaStream_t, cudaEvent_t, unsigned int) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -636,7 +639,7 @@ cudaError_t cudaStreamSynchronize(cudaStream_t a1) {
   typedef cudaError_t (*cudaStreamSynchronize_p) (cudaStream_t);
   static cudaStreamSynchronize_p cudaStreamSynchronize_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaStreamSynchronize(cudaStream_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaStreamSynchronize(cudaStream_t) C", "", CUDA_SYNC);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -668,7 +671,7 @@ cudaError_t cudaStreamQuery(cudaStream_t a1) {
   typedef cudaError_t (*cudaStreamQuery_p) (cudaStream_t);
   static cudaStreamQuery_p cudaStreamQuery_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaStreamQuery(cudaStream_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaStreamQuery(cudaStream_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -696,7 +699,7 @@ cudaError_t cudaEventCreate(cudaEvent_t * a1) {
   typedef cudaError_t (*cudaEventCreate_p) (cudaEvent_t *);
   static cudaEventCreate_p cudaEventCreate_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaEventCreate(cudaEvent_t *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaEventCreate(cudaEvent_t *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -724,7 +727,7 @@ cudaError_t cudaEventCreateWithFlags(cudaEvent_t * a1, unsigned int a2) {
   typedef cudaError_t (*cudaEventCreateWithFlags_p) (cudaEvent_t *, unsigned int);
   static cudaEventCreateWithFlags_p cudaEventCreateWithFlags_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaEventCreateWithFlags(cudaEvent_t *, unsigned int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaEventCreateWithFlags(cudaEvent_t *, unsigned int) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -752,7 +755,7 @@ cudaError_t cudaEventRecord(cudaEvent_t a1, cudaStream_t a2) {
   typedef cudaError_t (*cudaEventRecord_p) (cudaEvent_t, cudaStream_t);
   static cudaEventRecord_p cudaEventRecord_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaEventRecord(cudaEvent_t, cudaStream_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaEventRecord(cudaEvent_t, cudaStream_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -780,7 +783,7 @@ cudaError_t cudaEventQuery(cudaEvent_t a1) {
   typedef cudaError_t (*cudaEventQuery_p) (cudaEvent_t);
   static cudaEventQuery_p cudaEventQuery_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaEventQuery(cudaEvent_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaEventQuery(cudaEvent_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -808,7 +811,7 @@ cudaError_t cudaEventSynchronize(cudaEvent_t a1) {
   typedef cudaError_t (*cudaEventSynchronize_p) (cudaEvent_t);
   static cudaEventSynchronize_p cudaEventSynchronize_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaEventSynchronize(cudaEvent_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaEventSynchronize(cudaEvent_t) C", "", CUDA_SYNC);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -841,7 +844,7 @@ cudaError_t cudaEventDestroy(cudaEvent_t a1) {
   typedef cudaError_t (*cudaEventDestroy_p) (cudaEvent_t);
   static cudaEventDestroy_p cudaEventDestroy_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaEventDestroy(cudaEvent_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaEventDestroy(cudaEvent_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -869,7 +872,7 @@ cudaError_t cudaEventElapsedTime(float * a1, cudaEvent_t a2, cudaEvent_t a3) {
   typedef cudaError_t (*cudaEventElapsedTime_p) (float *, cudaEvent_t, cudaEvent_t);
   static cudaEventElapsedTime_p cudaEventElapsedTime_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaEventElapsedTime(float *, cudaEvent_t, cudaEvent_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaEventElapsedTime(float *, cudaEvent_t, cudaEvent_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -897,7 +900,7 @@ cudaError_t cudaConfigureCall(dim3 a1, dim3 a2, size_t a3, cudaStream_t a4) {
   typedef cudaError_t (*cudaConfigureCall_p) (dim3, dim3, size_t, cudaStream_t);
   static cudaConfigureCall_p cudaConfigureCall_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaConfigureCall(dim3, dim3, size_t, cudaStream_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaConfigureCall(dim3, dim3, size_t, cudaStream_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -939,7 +942,7 @@ cudaError_t cudaSetupArgument(const void * a1, size_t a2, size_t a3) {
   typedef cudaError_t (*cudaSetupArgument_p) (const void *, size_t, size_t);
   static cudaSetupArgument_p cudaSetupArgument_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaSetupArgument(const void *, size_t, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaSetupArgument(const void *, size_t, size_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -967,7 +970,7 @@ cudaError_t cudaFuncSetCacheConfig(const char * a1, enum cudaFuncCache a2) {
   typedef cudaError_t (*cudaFuncSetCacheConfig_p) (const char *, enum cudaFuncCache);
   static cudaFuncSetCacheConfig_p cudaFuncSetCacheConfig_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaFuncSetCacheConfig(const char *, enum cudaFuncCache) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaFuncSetCacheConfig(const char *, enum cudaFuncCache) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1005,7 +1008,7 @@ extern "C" void __cudaRegisterFunction(void ** a1, const char * a2, char * a3, c
 
   typedef void (*__cudaRegisterFunction_p_h) (void **, const char *, char *, const char *, int, uint3 *, uint3 *, dim3 *, dim3 *, int *);
   static __cudaRegisterFunction_p_h __cudaRegisterFunction_h = NULL;
-  TAU_PROFILE_TIMER(t,"void __cudaRegisterFunction(void **, const char *, char *, const char *, int, uint3 *, uint3 *, dim3 *, dim3 *, int *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"void __cudaRegisterFunction(void **, const char *, char *, const char *, int, uint3 *, uint3 *, dim3 *, dim3 *, int *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1033,7 +1036,7 @@ cudaError_t cudaLaunch(const char * a1) {
   typedef cudaError_t (*cudaLaunch_p) (const char *);
   static cudaLaunch_p cudaLaunch_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaLaunch(const char *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaLaunch(const char *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1076,7 +1079,7 @@ cudaError_t cudaFuncGetAttributes(struct cudaFuncAttributes * a1, const char * a
   typedef cudaError_t (*cudaFuncGetAttributes_p) (struct cudaFuncAttributes *, const char *);
   static cudaFuncGetAttributes_p cudaFuncGetAttributes_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaFuncGetAttributes(struct cudaFuncAttributes *, const char *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaFuncGetAttributes(struct cudaFuncAttributes *, const char *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1104,7 +1107,7 @@ cudaError_t cudaSetDoubleForDevice(double * a1) {
   typedef cudaError_t (*cudaSetDoubleForDevice_p) (double *);
   static cudaSetDoubleForDevice_p cudaSetDoubleForDevice_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaSetDoubleForDevice(double *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaSetDoubleForDevice(double *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1132,7 +1135,7 @@ cudaError_t cudaSetDoubleForHost(double * a1) {
   typedef cudaError_t (*cudaSetDoubleForHost_p) (double *);
   static cudaSetDoubleForHost_p cudaSetDoubleForHost_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaSetDoubleForHost(double *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaSetDoubleForHost(double *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1160,7 +1163,7 @@ cudaError_t cudaMalloc(void ** a1, size_t a2) {
   typedef cudaError_t (*cudaMalloc_p) (void **, size_t);
   static cudaMalloc_p cudaMalloc_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMalloc(void **, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMalloc(void **, size_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1188,7 +1191,7 @@ cudaError_t cudaMallocHost(void ** a1, size_t a2) {
   typedef cudaError_t (*cudaMallocHost_p) (void **, size_t);
   static cudaMallocHost_p cudaMallocHost_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMallocHost(void **, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMallocHost(void **, size_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1216,7 +1219,7 @@ cudaError_t cudaMallocPitch(void ** a1, size_t * a2, size_t a3, size_t a4) {
   typedef cudaError_t (*cudaMallocPitch_p) (void **, size_t *, size_t, size_t);
   static cudaMallocPitch_p cudaMallocPitch_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMallocPitch(void **, size_t *, size_t, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMallocPitch(void **, size_t *, size_t, size_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1243,7 +1246,7 @@ cudaError_t cudaMallocArray(struct cudaArray ** a1, const struct cudaChannelForm
   typedef cudaError_t (*cudaMallocArray_p) (struct cudaArray **, const struct cudaChannelFormatDesc *, size_t, size_t, unsigned int);
   static cudaMallocArray_p cudaMallocArray_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMallocArray(struct cudaArray **, const struct cudaChannelFormatDesc *, size_t, size_t, unsigned int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMallocArray(struct cudaArray **, const struct cudaChannelFormatDesc *, size_t, size_t, unsigned int) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1270,7 +1273,7 @@ cudaError_t cudaFree(void * a1) {
   typedef cudaError_t (*cudaFree_p) (void *);
   static cudaFree_p cudaFree_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaFree(void *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaFree(void *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1298,7 +1301,7 @@ cudaError_t cudaFreeHost(void * a1) {
   typedef cudaError_t (*cudaFreeHost_p) (void *);
   static cudaFreeHost_p cudaFreeHost_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaFreeHost(void *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaFreeHost(void *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1326,7 +1329,7 @@ cudaError_t cudaFreeArray(struct cudaArray * a1) {
   typedef cudaError_t (*cudaFreeArray_p) (struct cudaArray *);
   static cudaFreeArray_p cudaFreeArray_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaFreeArray(struct cudaArray *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaFreeArray(struct cudaArray *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1354,7 +1357,7 @@ cudaError_t cudaHostAlloc(void ** a1, size_t a2, unsigned int a3) {
   typedef cudaError_t (*cudaHostAlloc_p) (void **, size_t, unsigned int);
   static cudaHostAlloc_p cudaHostAlloc_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaHostAlloc(void **, size_t, unsigned int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaHostAlloc(void **, size_t, unsigned int) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1382,7 +1385,7 @@ cudaError_t cudaHostGetDevicePointer(void ** a1, void * a2, unsigned int a3) {
   typedef cudaError_t (*cudaHostGetDevicePointer_p) (void **, void *, unsigned int);
   static cudaHostGetDevicePointer_p cudaHostGetDevicePointer_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaHostGetDevicePointer(void **, void *, unsigned int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaHostGetDevicePointer(void **, void *, unsigned int) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1410,7 +1413,7 @@ cudaError_t cudaHostGetFlags(unsigned int * a1, void * a2) {
   typedef cudaError_t (*cudaHostGetFlags_p) (unsigned int *, void *);
   static cudaHostGetFlags_p cudaHostGetFlags_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaHostGetFlags(unsigned int *, void *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaHostGetFlags(unsigned int *, void *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1438,7 +1441,7 @@ cudaError_t cudaMalloc3D(struct cudaPitchedPtr * a1, struct cudaExtent a2) {
   typedef cudaError_t (*cudaMalloc3D_p) (struct cudaPitchedPtr *, struct cudaExtent);
   static cudaMalloc3D_p cudaMalloc3D_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMalloc3D(struct cudaPitchedPtr *, struct cudaExtent) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMalloc3D(struct cudaPitchedPtr *, struct cudaExtent) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1466,7 +1469,7 @@ cudaError_t cudaMalloc3DArray(struct cudaArray ** a1, const struct cudaChannelFo
   typedef cudaError_t (*cudaMalloc3DArray_p) (struct cudaArray **, const struct cudaChannelFormatDesc *, struct cudaExtent, unsigned int);
   static cudaMalloc3DArray_p cudaMalloc3DArray_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMalloc3DArray(struct cudaArray **, const struct cudaChannelFormatDesc *, struct cudaExtent, unsigned int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMalloc3DArray(struct cudaArray **, const struct cudaChannelFormatDesc *, struct cudaExtent, unsigned int) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1494,7 +1497,7 @@ cudaError_t cudaMemcpy3D(const struct cudaMemcpy3DParms * a1) {
   typedef cudaError_t (*cudaMemcpy3D_p) (const struct cudaMemcpy3DParms *);
   static cudaMemcpy3D_p cudaMemcpy3D_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy3D(const struct cudaMemcpy3DParms *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy3D(const struct cudaMemcpy3DParms *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1526,7 +1529,7 @@ cudaError_t cudaMemcpy3DAsync(const struct cudaMemcpy3DParms * a1, cudaStream_t 
   typedef cudaError_t (*cudaMemcpy3DAsync_p) (const struct cudaMemcpy3DParms *, cudaStream_t);
   static cudaMemcpy3DAsync_p cudaMemcpy3DAsync_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy3DAsync(const struct cudaMemcpy3DParms *, cudaStream_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy3DAsync(const struct cudaMemcpy3DParms *, cudaStream_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1554,7 +1557,7 @@ cudaError_t cudaMemGetInfo(size_t * a1, size_t * a2) {
   typedef cudaError_t (*cudaMemGetInfo_p) (size_t *, size_t *);
   static cudaMemGetInfo_p cudaMemGetInfo_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemGetInfo(size_t *, size_t *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemGetInfo(size_t *, size_t *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1582,7 +1585,7 @@ cudaError_t cudaMemcpy(void * a1, const void * a2, size_t a3, enum cudaMemcpyKin
   typedef cudaError_t (*cudaMemcpy_p) (void *, const void *, size_t, enum cudaMemcpyKind);
   static cudaMemcpy_p cudaMemcpy_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy(void *, const void *, size_t, enum cudaMemcpyKind) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy(void *, const void *, size_t, enum cudaMemcpyKind) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1613,7 +1616,7 @@ cudaError_t cudaMemcpyToArray(struct cudaArray * a1, size_t a2, size_t a3, const
   typedef cudaError_t (*cudaMemcpyToArray_p) (struct cudaArray *, size_t, size_t, const void *, size_t, enum cudaMemcpyKind);
   static cudaMemcpyToArray_p cudaMemcpyToArray_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyToArray(struct cudaArray *, size_t, size_t, const void *, size_t, enum cudaMemcpyKind) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyToArray(struct cudaArray *, size_t, size_t, const void *, size_t, enum cudaMemcpyKind) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1644,7 +1647,7 @@ cudaError_t cudaMemcpyFromArray(void * a1, const struct cudaArray * a2, size_t a
   typedef cudaError_t (*cudaMemcpyFromArray_p) (void *, const struct cudaArray *, size_t, size_t, size_t, enum cudaMemcpyKind);
   static cudaMemcpyFromArray_p cudaMemcpyFromArray_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyFromArray(void *, const struct cudaArray *, size_t, size_t, size_t, enum cudaMemcpyKind) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyFromArray(void *, const struct cudaArray *, size_t, size_t, size_t, enum cudaMemcpyKind) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1675,7 +1678,7 @@ cudaError_t cudaMemcpyArrayToArray(struct cudaArray * a1, size_t a2, size_t a3, 
   typedef cudaError_t (*cudaMemcpyArrayToArray_p) (struct cudaArray *, size_t, size_t, const struct cudaArray *, size_t, size_t, size_t, enum cudaMemcpyKind);
   static cudaMemcpyArrayToArray_p cudaMemcpyArrayToArray_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyArrayToArray(struct cudaArray *, size_t, size_t, const struct cudaArray *, size_t, size_t, size_t, enum cudaMemcpyKind) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyArrayToArray(struct cudaArray *, size_t, size_t, const struct cudaArray *, size_t, size_t, size_t, enum cudaMemcpyKind) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1706,7 +1709,7 @@ cudaError_t cudaMemcpy2D(void * a1, size_t a2, const void * a3, size_t a4, size_
   typedef cudaError_t (*cudaMemcpy2D_p) (void *, size_t, const void *, size_t, size_t, size_t, enum cudaMemcpyKind);
   static cudaMemcpy2D_p cudaMemcpy2D_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy2D(void *, size_t, const void *, size_t, size_t, size_t, enum cudaMemcpyKind) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy2D(void *, size_t, const void *, size_t, size_t, size_t, enum cudaMemcpyKind) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1739,7 +1742,7 @@ cudaError_t cudaMemcpy2DToArray(struct cudaArray * a1, size_t a2, size_t a3, con
   typedef cudaError_t (*cudaMemcpy2DToArray_p) (struct cudaArray *, size_t, size_t, const void *, size_t, size_t, size_t, enum cudaMemcpyKind);
   static cudaMemcpy2DToArray_p cudaMemcpy2DToArray_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy2DToArray(struct cudaArray *, size_t, size_t, const void *, size_t, size_t, size_t, enum cudaMemcpyKind) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy2DToArray(struct cudaArray *, size_t, size_t, const void *, size_t, size_t, size_t, enum cudaMemcpyKind) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1771,7 +1774,7 @@ cudaError_t cudaMemcpy2DFromArray(void * a1, size_t a2, const struct cudaArray *
   typedef cudaError_t (*cudaMemcpy2DFromArray_p) (void *, size_t, const struct cudaArray *, size_t, size_t, size_t, size_t, enum cudaMemcpyKind);
   static cudaMemcpy2DFromArray_p cudaMemcpy2DFromArray_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy2DFromArray(void *, size_t, const struct cudaArray *, size_t, size_t, size_t, size_t, enum cudaMemcpyKind) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy2DFromArray(void *, size_t, const struct cudaArray *, size_t, size_t, size_t, size_t, enum cudaMemcpyKind) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1799,7 +1802,7 @@ cudaError_t cudaMemcpy2DArrayToArray(struct cudaArray * a1, size_t a2, size_t a3
   typedef cudaError_t (*cudaMemcpy2DArrayToArray_p) (struct cudaArray *, size_t, size_t, const struct cudaArray *, size_t, size_t, size_t, size_t, enum cudaMemcpyKind);
   static cudaMemcpy2DArrayToArray_p cudaMemcpy2DArrayToArray_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy2DArrayToArray(struct cudaArray *, size_t, size_t, const struct cudaArray *, size_t, size_t, size_t, size_t, enum cudaMemcpyKind) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy2DArrayToArray(struct cudaArray *, size_t, size_t, const struct cudaArray *, size_t, size_t, size_t, size_t, enum cudaMemcpyKind) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1827,7 +1830,7 @@ cudaError_t cudaMemcpyToSymbol(const char * a1, const void * a2, size_t a3, size
   typedef cudaError_t (*cudaMemcpyToSymbol_p) (const char *, const void *, size_t, size_t, enum cudaMemcpyKind);
   static cudaMemcpyToSymbol_p cudaMemcpyToSymbol_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyToSymbol(const char *, const void *, size_t, size_t, enum cudaMemcpyKind) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyToSymbol(const char *, const void *, size_t, size_t, enum cudaMemcpyKind) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1858,7 +1861,7 @@ cudaError_t cudaMemcpyFromSymbol(void * a1, const char * a2, size_t a3, size_t a
   typedef cudaError_t (*cudaMemcpyFromSymbol_p) (void *, const char *, size_t, size_t, enum cudaMemcpyKind);
   static cudaMemcpyFromSymbol_p cudaMemcpyFromSymbol_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyFromSymbol(void *, const char *, size_t, size_t, enum cudaMemcpyKind) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyFromSymbol(void *, const char *, size_t, size_t, enum cudaMemcpyKind) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1889,7 +1892,7 @@ cudaError_t cudaMemcpyAsync(void * a1, const void * a2, size_t a3, enum cudaMemc
   typedef cudaError_t (*cudaMemcpyAsync_p) (void *, const void *, size_t, enum cudaMemcpyKind, cudaStream_t);
   static cudaMemcpyAsync_p cudaMemcpyAsync_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyAsync(void *, const void *, size_t, enum cudaMemcpyKind, cudaStream_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyAsync(void *, const void *, size_t, enum cudaMemcpyKind, cudaStream_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1920,7 +1923,7 @@ cudaError_t cudaMemcpyToArrayAsync(struct cudaArray * a1, size_t a2, size_t a3, 
   typedef cudaError_t (*cudaMemcpyToArrayAsync_p) (struct cudaArray *, size_t, size_t, const void *, size_t, enum cudaMemcpyKind, cudaStream_t);
   static cudaMemcpyToArrayAsync_p cudaMemcpyToArrayAsync_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyToArrayAsync(struct cudaArray *, size_t, size_t, const void *, size_t, enum cudaMemcpyKind, cudaStream_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyToArrayAsync(struct cudaArray *, size_t, size_t, const void *, size_t, enum cudaMemcpyKind, cudaStream_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1951,7 +1954,7 @@ cudaError_t cudaMemcpyFromArrayAsync(void * a1, const struct cudaArray * a2, siz
   typedef cudaError_t (*cudaMemcpyFromArrayAsync_p) (void *, const struct cudaArray *, size_t, size_t, size_t, enum cudaMemcpyKind, cudaStream_t);
   static cudaMemcpyFromArrayAsync_p cudaMemcpyFromArrayAsync_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyFromArrayAsync(void *, const struct cudaArray *, size_t, size_t, size_t, enum cudaMemcpyKind, cudaStream_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyFromArrayAsync(void *, const struct cudaArray *, size_t, size_t, size_t, enum cudaMemcpyKind, cudaStream_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1982,7 +1985,7 @@ cudaError_t cudaMemcpy2DAsync(void * a1, size_t a2, const void * a3, size_t a4, 
   typedef cudaError_t (*cudaMemcpy2DAsync_p) (void *, size_t, const void *, size_t, size_t, size_t, enum cudaMemcpyKind, cudaStream_t);
   static cudaMemcpy2DAsync_p cudaMemcpy2DAsync_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy2DAsync(void *, size_t, const void *, size_t, size_t, size_t, enum cudaMemcpyKind, cudaStream_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy2DAsync(void *, size_t, const void *, size_t, size_t, size_t, enum cudaMemcpyKind, cudaStream_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2010,7 +2013,7 @@ cudaError_t cudaMemcpy2DToArrayAsync(struct cudaArray * a1, size_t a2, size_t a3
   typedef cudaError_t (*cudaMemcpy2DToArrayAsync_p) (struct cudaArray *, size_t, size_t, const void *, size_t, size_t, size_t, enum cudaMemcpyKind, cudaStream_t);
   static cudaMemcpy2DToArrayAsync_p cudaMemcpy2DToArrayAsync_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy2DToArrayAsync(struct cudaArray *, size_t, size_t, const void *, size_t, size_t, size_t, enum cudaMemcpyKind, cudaStream_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy2DToArrayAsync(struct cudaArray *, size_t, size_t, const void *, size_t, size_t, size_t, enum cudaMemcpyKind, cudaStream_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2038,7 +2041,7 @@ cudaError_t cudaMemcpy2DFromArrayAsync(void * a1, size_t a2, const struct cudaAr
   typedef cudaError_t (*cudaMemcpy2DFromArrayAsync_p) (void *, size_t, const struct cudaArray *, size_t, size_t, size_t, size_t, enum cudaMemcpyKind, cudaStream_t);
   static cudaMemcpy2DFromArrayAsync_p cudaMemcpy2DFromArrayAsync_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy2DFromArrayAsync(void *, size_t, const struct cudaArray *, size_t, size_t, size_t, size_t, enum cudaMemcpyKind, cudaStream_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpy2DFromArrayAsync(void *, size_t, const struct cudaArray *, size_t, size_t, size_t, size_t, enum cudaMemcpyKind, cudaStream_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2066,7 +2069,7 @@ cudaError_t cudaMemcpyToSymbolAsync(const char * a1, const void * a2, size_t a3,
   typedef cudaError_t (*cudaMemcpyToSymbolAsync_p) (const char *, const void *, size_t, size_t, enum cudaMemcpyKind, cudaStream_t);
   static cudaMemcpyToSymbolAsync_p cudaMemcpyToSymbolAsync_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyToSymbolAsync(const char *, const void *, size_t, size_t, enum cudaMemcpyKind, cudaStream_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyToSymbolAsync(const char *, const void *, size_t, size_t, enum cudaMemcpyKind, cudaStream_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2097,7 +2100,7 @@ cudaError_t cudaMemcpyFromSymbolAsync(void * a1, const char * a2, size_t a3, siz
   typedef cudaError_t (*cudaMemcpyFromSymbolAsync_p) (void *, const char *, size_t, size_t, enum cudaMemcpyKind, cudaStream_t);
   static cudaMemcpyFromSymbolAsync_p cudaMemcpyFromSymbolAsync_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyFromSymbolAsync(void *, const char *, size_t, size_t, enum cudaMemcpyKind, cudaStream_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemcpyFromSymbolAsync(void *, const char *, size_t, size_t, enum cudaMemcpyKind, cudaStream_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2128,7 +2131,7 @@ cudaError_t cudaMemset(void * a1, int a2, size_t a3) {
   typedef cudaError_t (*cudaMemset_p) (void *, int, size_t);
   static cudaMemset_p cudaMemset_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemset(void *, int, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemset(void *, int, size_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2156,7 +2159,7 @@ cudaError_t cudaMemset2D(void * a1, size_t a2, int a3, size_t a4, size_t a5) {
   typedef cudaError_t (*cudaMemset2D_p) (void *, size_t, int, size_t, size_t);
   static cudaMemset2D_p cudaMemset2D_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemset2D(void *, size_t, int, size_t, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemset2D(void *, size_t, int, size_t, size_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2184,7 +2187,7 @@ cudaError_t cudaMemset3D(struct cudaPitchedPtr a1, int a2, struct cudaExtent a3)
   typedef cudaError_t (*cudaMemset3D_p) (struct cudaPitchedPtr, int, struct cudaExtent);
   static cudaMemset3D_p cudaMemset3D_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemset3D(struct cudaPitchedPtr, int, struct cudaExtent) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemset3D(struct cudaPitchedPtr, int, struct cudaExtent) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2212,7 +2215,7 @@ cudaError_t cudaMemsetAsync(void * a1, int a2, size_t a3, cudaStream_t a4) {
   typedef cudaError_t (*cudaMemsetAsync_p) (void *, int, size_t, cudaStream_t);
   static cudaMemsetAsync_p cudaMemsetAsync_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemsetAsync(void *, int, size_t, cudaStream_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemsetAsync(void *, int, size_t, cudaStream_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2240,7 +2243,7 @@ cudaError_t cudaMemset2DAsync(void * a1, size_t a2, int a3, size_t a4, size_t a5
   typedef cudaError_t (*cudaMemset2DAsync_p) (void *, size_t, int, size_t, size_t, cudaStream_t);
   static cudaMemset2DAsync_p cudaMemset2DAsync_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemset2DAsync(void *, size_t, int, size_t, size_t, cudaStream_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemset2DAsync(void *, size_t, int, size_t, size_t, cudaStream_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2268,7 +2271,7 @@ cudaError_t cudaMemset3DAsync(struct cudaPitchedPtr a1, int a2, struct cudaExten
   typedef cudaError_t (*cudaMemset3DAsync_p) (struct cudaPitchedPtr, int, struct cudaExtent, cudaStream_t);
   static cudaMemset3DAsync_p cudaMemset3DAsync_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemset3DAsync(struct cudaPitchedPtr, int, struct cudaExtent, cudaStream_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaMemset3DAsync(struct cudaPitchedPtr, int, struct cudaExtent, cudaStream_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2296,7 +2299,7 @@ cudaError_t cudaGetSymbolAddress(void ** a1, const char * a2) {
   typedef cudaError_t (*cudaGetSymbolAddress_p) (void **, const char *);
   static cudaGetSymbolAddress_p cudaGetSymbolAddress_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaGetSymbolAddress(void **, const char *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaGetSymbolAddress(void **, const char *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2324,7 +2327,7 @@ cudaError_t cudaGetSymbolSize(size_t * a1, const char * a2) {
   typedef cudaError_t (*cudaGetSymbolSize_p) (size_t *, const char *);
   static cudaGetSymbolSize_p cudaGetSymbolSize_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaGetSymbolSize(size_t *, const char *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaGetSymbolSize(size_t *, const char *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2352,7 +2355,7 @@ cudaError_t cudaGraphicsUnregisterResource(cudaGraphicsResource_t a1) {
   typedef cudaError_t (*cudaGraphicsUnregisterResource_p) (cudaGraphicsResource_t);
   static cudaGraphicsUnregisterResource_p cudaGraphicsUnregisterResource_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaGraphicsUnregisterResource(cudaGraphicsResource_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaGraphicsUnregisterResource(cudaGraphicsResource_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2380,7 +2383,7 @@ cudaError_t cudaGraphicsResourceSetMapFlags(cudaGraphicsResource_t a1, unsigned 
   typedef cudaError_t (*cudaGraphicsResourceSetMapFlags_p) (cudaGraphicsResource_t, unsigned int);
   static cudaGraphicsResourceSetMapFlags_p cudaGraphicsResourceSetMapFlags_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaGraphicsResourceSetMapFlags(cudaGraphicsResource_t, unsigned int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaGraphicsResourceSetMapFlags(cudaGraphicsResource_t, unsigned int) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2408,7 +2411,7 @@ cudaError_t cudaGraphicsMapResources(int a1, cudaGraphicsResource_t * a2, cudaSt
   typedef cudaError_t (*cudaGraphicsMapResources_p) (int, cudaGraphicsResource_t *, cudaStream_t);
   static cudaGraphicsMapResources_p cudaGraphicsMapResources_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaGraphicsMapResources(int, cudaGraphicsResource_t *, cudaStream_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaGraphicsMapResources(int, cudaGraphicsResource_t *, cudaStream_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2436,7 +2439,7 @@ cudaError_t cudaGraphicsUnmapResources(int a1, cudaGraphicsResource_t * a2, cuda
   typedef cudaError_t (*cudaGraphicsUnmapResources_p) (int, cudaGraphicsResource_t *, cudaStream_t);
   static cudaGraphicsUnmapResources_p cudaGraphicsUnmapResources_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaGraphicsUnmapResources(int, cudaGraphicsResource_t *, cudaStream_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaGraphicsUnmapResources(int, cudaGraphicsResource_t *, cudaStream_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2464,7 +2467,7 @@ cudaError_t cudaGraphicsResourceGetMappedPointer(void ** a1, size_t * a2, cudaGr
   typedef cudaError_t (*cudaGraphicsResourceGetMappedPointer_p) (void **, size_t *, cudaGraphicsResource_t);
   static cudaGraphicsResourceGetMappedPointer_p cudaGraphicsResourceGetMappedPointer_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaGraphicsResourceGetMappedPointer(void **, size_t *, cudaGraphicsResource_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaGraphicsResourceGetMappedPointer(void **, size_t *, cudaGraphicsResource_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2492,7 +2495,7 @@ cudaError_t cudaGraphicsSubResourceGetMappedArray(struct cudaArray ** a1, cudaGr
   typedef cudaError_t (*cudaGraphicsSubResourceGetMappedArray_p) (struct cudaArray **, cudaGraphicsResource_t, unsigned int, unsigned int);
   static cudaGraphicsSubResourceGetMappedArray_p cudaGraphicsSubResourceGetMappedArray_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaGraphicsSubResourceGetMappedArray(struct cudaArray **, cudaGraphicsResource_t, unsigned int, unsigned int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaGraphicsSubResourceGetMappedArray(struct cudaArray **, cudaGraphicsResource_t, unsigned int, unsigned int) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2520,7 +2523,7 @@ cudaError_t cudaGetChannelDesc(struct cudaChannelFormatDesc * a1, const struct c
   typedef cudaError_t (*cudaGetChannelDesc_p) (struct cudaChannelFormatDesc *, const struct cudaArray *);
   static cudaGetChannelDesc_p cudaGetChannelDesc_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaGetChannelDesc(struct cudaChannelFormatDesc *, const struct cudaArray *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaGetChannelDesc(struct cudaChannelFormatDesc *, const struct cudaArray *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2548,7 +2551,7 @@ struct cudaChannelFormatDesc cudaCreateChannelDesc(int a1, int a2, int a3, int a
   typedef struct cudaChannelFormatDesc (*cudaCreateChannelDesc_p) (int, int, int, int, enum cudaChannelFormatKind);
   static cudaCreateChannelDesc_p cudaCreateChannelDesc_h = NULL;
   struct cudaChannelFormatDesc retval;
-  TAU_PROFILE_TIMER(t,"struct cudaChannelFormatDesc cudaCreateChannelDesc(int, int, int, int, enum cudaChannelFormatKind) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"struct cudaChannelFormatDesc cudaCreateChannelDesc(int, int, int, int, enum cudaChannelFormatKind) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2576,7 +2579,7 @@ cudaError_t cudaBindTexture(size_t * a1, const struct textureReference * a2, con
   typedef cudaError_t (*cudaBindTexture_p) (size_t *, const struct textureReference *, const void *, const struct cudaChannelFormatDesc *, size_t);
   static cudaBindTexture_p cudaBindTexture_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaBindTexture(size_t *, const struct textureReference *, const void *, const struct cudaChannelFormatDesc *, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaBindTexture(size_t *, const struct textureReference *, const void *, const struct cudaChannelFormatDesc *, size_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2604,7 +2607,7 @@ cudaError_t cudaBindTexture2D(size_t * a1, const struct textureReference * a2, c
   typedef cudaError_t (*cudaBindTexture2D_p) (size_t *, const struct textureReference *, const void *, const struct cudaChannelFormatDesc *, size_t, size_t, size_t);
   static cudaBindTexture2D_p cudaBindTexture2D_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaBindTexture2D(size_t *, const struct textureReference *, const void *, const struct cudaChannelFormatDesc *, size_t, size_t, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaBindTexture2D(size_t *, const struct textureReference *, const void *, const struct cudaChannelFormatDesc *, size_t, size_t, size_t) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2632,7 +2635,7 @@ cudaError_t cudaBindTextureToArray(const struct textureReference * a1, const str
   typedef cudaError_t (*cudaBindTextureToArray_p) (const struct textureReference *, const struct cudaArray *, const struct cudaChannelFormatDesc *);
   static cudaBindTextureToArray_p cudaBindTextureToArray_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaBindTextureToArray(const struct textureReference *, const struct cudaArray *, const struct cudaChannelFormatDesc *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaBindTextureToArray(const struct textureReference *, const struct cudaArray *, const struct cudaChannelFormatDesc *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2660,7 +2663,7 @@ cudaError_t cudaUnbindTexture(const struct textureReference * a1) {
   typedef cudaError_t (*cudaUnbindTexture_p) (const struct textureReference *);
   static cudaUnbindTexture_p cudaUnbindTexture_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaUnbindTexture(const struct textureReference *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaUnbindTexture(const struct textureReference *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2688,7 +2691,7 @@ cudaError_t cudaGetTextureAlignmentOffset(size_t * a1, const struct textureRefer
   typedef cudaError_t (*cudaGetTextureAlignmentOffset_p) (size_t *, const struct textureReference *);
   static cudaGetTextureAlignmentOffset_p cudaGetTextureAlignmentOffset_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaGetTextureAlignmentOffset(size_t *, const struct textureReference *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaGetTextureAlignmentOffset(size_t *, const struct textureReference *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2716,7 +2719,7 @@ cudaError_t cudaGetTextureReference(const struct textureReference ** a1, const c
   typedef cudaError_t (*cudaGetTextureReference_p) (const struct textureReference **, const char *);
   static cudaGetTextureReference_p cudaGetTextureReference_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaGetTextureReference(const struct textureReference **, const char *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaGetTextureReference(const struct textureReference **, const char *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2744,7 +2747,7 @@ cudaError_t cudaBindSurfaceToArray(const struct surfaceReference * a1, const str
   typedef cudaError_t (*cudaBindSurfaceToArray_p) (const struct surfaceReference *, const struct cudaArray *, const struct cudaChannelFormatDesc *);
   static cudaBindSurfaceToArray_p cudaBindSurfaceToArray_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaBindSurfaceToArray(const struct surfaceReference *, const struct cudaArray *, const struct cudaChannelFormatDesc *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaBindSurfaceToArray(const struct surfaceReference *, const struct cudaArray *, const struct cudaChannelFormatDesc *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2772,7 +2775,7 @@ cudaError_t cudaGetSurfaceReference(const struct surfaceReference ** a1, const c
   typedef cudaError_t (*cudaGetSurfaceReference_p) (const struct surfaceReference **, const char *);
   static cudaGetSurfaceReference_p cudaGetSurfaceReference_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaGetSurfaceReference(const struct surfaceReference **, const char *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaGetSurfaceReference(const struct surfaceReference **, const char *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2800,7 +2803,7 @@ cudaError_t cudaDriverGetVersion(int * a1) {
   typedef cudaError_t (*cudaDriverGetVersion_p) (int *);
   static cudaDriverGetVersion_p cudaDriverGetVersion_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaDriverGetVersion(int *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaDriverGetVersion(int *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2828,7 +2831,7 @@ cudaError_t cudaRuntimeGetVersion(int * a1) {
   typedef cudaError_t (*cudaRuntimeGetVersion_p) (int *);
   static cudaRuntimeGetVersion_p cudaRuntimeGetVersion_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaRuntimeGetVersion(int *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaRuntimeGetVersion(int *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -2862,7 +2865,7 @@ cudaError_t cudaGetExportTable(const void ** a1, const cudaUUID_t * a2) {
   typedef cudaError_t (*cudaGetExportTable_p) (const void **, const cudaUUID_t *);
   static cudaGetExportTable_p cudaGetExportTable_h = NULL;
   cudaError_t retval;
-  TAU_PROFILE_TIMER(t,"cudaError_t cudaGetExportTable(const void **, const cudaUUID_t *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaGetExportTable(const void **, const cudaUUID_t *) C", "", CUDART_API);
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 

@@ -6,6 +6,9 @@
 
 #define TRACK_KERNEL
 
+#define CUDA_API TAU_USER
+#define CUDA_SYNC TAU_USER
+
 const char * tau_orig_libname = "libcuda.so";
 static void *tau_handle = NULL;
 
@@ -14,7 +17,7 @@ CUresult cuInit(unsigned int a1) {
   typedef CUresult (*cuInit_p_h) (unsigned int);
   static cuInit_p_h cuInit_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuInit(unsigned int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuInit(unsigned int) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -42,7 +45,7 @@ CUresult cuDriverGetVersion(int * a1) {
   typedef CUresult (*cuDriverGetVersion_p_h) (int *);
   static cuDriverGetVersion_p_h cuDriverGetVersion_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuDriverGetVersion(int *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuDriverGetVersion(int *) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -70,7 +73,7 @@ CUresult cuDeviceGet(CUdevice * a1, int a2) {
   typedef CUresult (*cuDeviceGet_p_h) (CUdevice *, int);
   static cuDeviceGet_p_h cuDeviceGet_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuDeviceGet(CUdevice *, int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuDeviceGet(CUdevice *, int) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -98,7 +101,7 @@ CUresult cuDeviceGetCount(int * a1) {
   typedef CUresult (*cuDeviceGetCount_p_h) (int *);
   static cuDeviceGetCount_p_h cuDeviceGetCount_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuDeviceGetCount(int *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuDeviceGetCount(int *) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -126,7 +129,7 @@ CUresult cuDeviceGetName(char * a1, int a2, CUdevice a3) {
   typedef CUresult (*cuDeviceGetName_p_h) (char *, int, CUdevice);
   static cuDeviceGetName_p_h cuDeviceGetName_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuDeviceGetName(char *, int, CUdevice) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuDeviceGetName(char *, int, CUdevice) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -154,7 +157,7 @@ CUresult cuDeviceComputeCapability(int * a1, int * a2, CUdevice a3) {
   typedef CUresult (*cuDeviceComputeCapability_p_h) (int *, int *, CUdevice);
   static cuDeviceComputeCapability_p_h cuDeviceComputeCapability_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuDeviceComputeCapability(int *, int *, CUdevice) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuDeviceComputeCapability(int *, int *, CUdevice) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -182,7 +185,7 @@ CUresult cuDeviceTotalMem_v2(size_t * a1, CUdevice a2) {
   typedef CUresult (*cuDeviceTotalMem_v2_p_h) (size_t *, CUdevice);
   static cuDeviceTotalMem_v2_p_h cuDeviceTotalMem_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuDeviceTotalMem_v2(size_t *, CUdevice) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuDeviceTotalMem_v2(size_t *, CUdevice) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -210,7 +213,7 @@ CUresult cuDeviceGetProperties(CUdevprop * a1, CUdevice a2) {
   typedef CUresult (*cuDeviceGetProperties_p_h) (CUdevprop *, CUdevice);
   static cuDeviceGetProperties_p_h cuDeviceGetProperties_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuDeviceGetProperties(CUdevprop *, CUdevice) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuDeviceGetProperties(CUdevprop *, CUdevice) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -238,7 +241,7 @@ CUresult cuDeviceGetAttribute(int * a1, CUdevice_attribute a2, CUdevice a3) {
   typedef CUresult (*cuDeviceGetAttribute_p_h) (int *, CUdevice_attribute, CUdevice);
   static cuDeviceGetAttribute_p_h cuDeviceGetAttribute_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuDeviceGetAttribute(int *, CUdevice_attribute, CUdevice) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuDeviceGetAttribute(int *, CUdevice_attribute, CUdevice) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -266,7 +269,7 @@ CUresult cuCtxCreate_v2(CUcontext * a1, unsigned int a2, CUdevice a3) {
   typedef CUresult (*cuCtxCreate_v2_p_h) (CUcontext *, unsigned int, CUdevice);
   static cuCtxCreate_v2_p_h cuCtxCreate_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuCtxCreate_v2(CUcontext *, unsigned int, CUdevice) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuCtxCreate_v2(CUcontext *, unsigned int, CUdevice) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -294,7 +297,7 @@ CUresult cuCtxDestroy(CUcontext a1) {
   typedef CUresult (*cuCtxDestroy_p_h) (CUcontext);
   static cuCtxDestroy_p_h cuCtxDestroy_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuCtxDestroy(CUcontext) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuCtxDestroy(CUcontext) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -322,7 +325,7 @@ CUresult cuCtxAttach(CUcontext * a1, unsigned int a2) {
   typedef CUresult (*cuCtxAttach_p_h) (CUcontext *, unsigned int);
   static cuCtxAttach_p_h cuCtxAttach_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuCtxAttach(CUcontext *, unsigned int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuCtxAttach(CUcontext *, unsigned int) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -350,7 +353,7 @@ CUresult cuCtxDetach(CUcontext a1) {
   typedef CUresult (*cuCtxDetach_p_h) (CUcontext);
   static cuCtxDetach_p_h cuCtxDetach_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuCtxDetach(CUcontext) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuCtxDetach(CUcontext) C", "", CUDA_SYNC);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -383,7 +386,7 @@ CUresult cuCtxPushCurrent(CUcontext a1) {
   typedef CUresult (*cuCtxPushCurrent_p_h) (CUcontext);
   static cuCtxPushCurrent_p_h cuCtxPushCurrent_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuCtxPushCurrent(CUcontext) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuCtxPushCurrent(CUcontext) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -411,7 +414,7 @@ CUresult cuCtxPopCurrent(CUcontext * a1) {
   typedef CUresult (*cuCtxPopCurrent_p_h) (CUcontext *);
   static cuCtxPopCurrent_p_h cuCtxPopCurrent_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuCtxPopCurrent(CUcontext *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuCtxPopCurrent(CUcontext *) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -439,7 +442,7 @@ CUresult cuCtxGetDevice(CUdevice * a1) {
   typedef CUresult (*cuCtxGetDevice_p_h) (CUdevice *);
   static cuCtxGetDevice_p_h cuCtxGetDevice_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuCtxGetDevice(CUdevice *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuCtxGetDevice(CUdevice *) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -467,7 +470,7 @@ CUresult cuCtxSynchronize() {
   typedef CUresult (*cuCtxSynchronize_p_h) ();
   static cuCtxSynchronize_p_h cuCtxSynchronize_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuCtxSynchronize(void) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuCtxSynchronize(void) C", "", CUDA_SYNC);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -498,7 +501,7 @@ CUresult cuCtxSetLimit(CUlimit a1, size_t a2) {
   typedef CUresult (*cuCtxSetLimit_p_h) (CUlimit, size_t);
   static cuCtxSetLimit_p_h cuCtxSetLimit_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuCtxSetLimit(CUlimit, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuCtxSetLimit(CUlimit, size_t) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -526,7 +529,7 @@ CUresult cuCtxGetLimit(size_t * a1, CUlimit a2) {
   typedef CUresult (*cuCtxGetLimit_p_h) (size_t *, CUlimit);
   static cuCtxGetLimit_p_h cuCtxGetLimit_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuCtxGetLimit(size_t *, CUlimit) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuCtxGetLimit(size_t *, CUlimit) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -554,7 +557,7 @@ CUresult cuCtxGetCacheConfig(CUfunc_cache * a1) {
   typedef CUresult (*cuCtxGetCacheConfig_p_h) (CUfunc_cache *);
   static cuCtxGetCacheConfig_p_h cuCtxGetCacheConfig_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuCtxGetCacheConfig(CUfunc_cache *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuCtxGetCacheConfig(CUfunc_cache *) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -582,7 +585,7 @@ CUresult cuCtxSetCacheConfig(CUfunc_cache a1) {
   typedef CUresult (*cuCtxSetCacheConfig_p_h) (CUfunc_cache);
   static cuCtxSetCacheConfig_p_h cuCtxSetCacheConfig_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuCtxSetCacheConfig(CUfunc_cache) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuCtxSetCacheConfig(CUfunc_cache) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -610,7 +613,7 @@ CUresult cuCtxGetApiVersion(CUcontext a1, unsigned int * a2) {
   typedef CUresult (*cuCtxGetApiVersion_p_h) (CUcontext, unsigned int *);
   static cuCtxGetApiVersion_p_h cuCtxGetApiVersion_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuCtxGetApiVersion(CUcontext, unsigned int *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuCtxGetApiVersion(CUcontext, unsigned int *) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -638,7 +641,7 @@ CUresult cuModuleLoad(CUmodule * a1, const char * a2) {
   typedef CUresult (*cuModuleLoad_p_h) (CUmodule *, const char *);
   static cuModuleLoad_p_h cuModuleLoad_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuModuleLoad(CUmodule *, const char *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuModuleLoad(CUmodule *, const char *) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -666,7 +669,7 @@ CUresult cuModuleLoadData(CUmodule * a1, const void * a2) {
   typedef CUresult (*cuModuleLoadData_p_h) (CUmodule *, const void *);
   static cuModuleLoadData_p_h cuModuleLoadData_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuModuleLoadData(CUmodule *, const void *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuModuleLoadData(CUmodule *, const void *) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -694,7 +697,7 @@ CUresult cuModuleLoadDataEx(CUmodule * a1, const void * a2, unsigned int a3, CUj
   typedef CUresult (*cuModuleLoadDataEx_p_h) (CUmodule *, const void *, unsigned int, CUjit_option *, void **);
   static cuModuleLoadDataEx_p_h cuModuleLoadDataEx_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuModuleLoadDataEx(CUmodule *, const void *, unsigned int, CUjit_option *, void **) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuModuleLoadDataEx(CUmodule *, const void *, unsigned int, CUjit_option *, void **) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -722,7 +725,7 @@ CUresult cuModuleLoadFatBinary(CUmodule * a1, const void * a2) {
   typedef CUresult (*cuModuleLoadFatBinary_p_h) (CUmodule *, const void *);
   static cuModuleLoadFatBinary_p_h cuModuleLoadFatBinary_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuModuleLoadFatBinary(CUmodule *, const void *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuModuleLoadFatBinary(CUmodule *, const void *) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -750,7 +753,7 @@ CUresult cuModuleUnload(CUmodule a1) {
   typedef CUresult (*cuModuleUnload_p_h) (CUmodule);
   static cuModuleUnload_p_h cuModuleUnload_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuModuleUnload(CUmodule) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuModuleUnload(CUmodule) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -778,7 +781,7 @@ CUresult cuModuleGetFunction(CUfunction * a1, CUmodule a2, const char * a3) {
   typedef CUresult (*cuModuleGetFunction_p_h) (CUfunction *, CUmodule, const char *);
   static cuModuleGetFunction_p_h cuModuleGetFunction_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuModuleGetFunction(CUfunction *, CUmodule, const char *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuModuleGetFunction(CUfunction *, CUmodule, const char *) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -806,7 +809,7 @@ CUresult cuModuleGetGlobal_v2(CUdeviceptr * a1, size_t * a2, CUmodule a3, const 
   typedef CUresult (*cuModuleGetGlobal_v2_p_h) (CUdeviceptr *, size_t *, CUmodule, const char *);
   static cuModuleGetGlobal_v2_p_h cuModuleGetGlobal_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuModuleGetGlobal_v2(CUdeviceptr *, size_t *, CUmodule, const char *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuModuleGetGlobal_v2(CUdeviceptr *, size_t *, CUmodule, const char *) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -834,7 +837,7 @@ CUresult cuModuleGetTexRef(CUtexref * a1, CUmodule a2, const char * a3) {
   typedef CUresult (*cuModuleGetTexRef_p_h) (CUtexref *, CUmodule, const char *);
   static cuModuleGetTexRef_p_h cuModuleGetTexRef_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuModuleGetTexRef(CUtexref *, CUmodule, const char *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuModuleGetTexRef(CUtexref *, CUmodule, const char *) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -862,7 +865,7 @@ CUresult cuModuleGetSurfRef(CUsurfref * a1, CUmodule a2, const char * a3) {
   typedef CUresult (*cuModuleGetSurfRef_p_h) (CUsurfref *, CUmodule, const char *);
   static cuModuleGetSurfRef_p_h cuModuleGetSurfRef_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuModuleGetSurfRef(CUsurfref *, CUmodule, const char *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuModuleGetSurfRef(CUsurfref *, CUmodule, const char *) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -890,7 +893,7 @@ CUresult cuMemGetInfo_v2(size_t * a1, size_t * a2) {
   typedef CUresult (*cuMemGetInfo_v2_p_h) (size_t *, size_t *);
   static cuMemGetInfo_v2_p_h cuMemGetInfo_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemGetInfo_v2(size_t *, size_t *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemGetInfo_v2(size_t *, size_t *) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -918,7 +921,7 @@ CUresult cuMemAlloc_v2(CUdeviceptr * a1, size_t a2) {
   typedef CUresult (*cuMemAlloc_v2_p_h) (CUdeviceptr *, size_t);
   static cuMemAlloc_v2_p_h cuMemAlloc_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemAlloc_v2(CUdeviceptr *, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemAlloc_v2(CUdeviceptr *, size_t) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -946,7 +949,7 @@ CUresult cuMemAllocPitch_v2(CUdeviceptr * a1, size_t * a2, size_t a3, size_t a4,
   typedef CUresult (*cuMemAllocPitch_v2_p_h) (CUdeviceptr *, size_t *, size_t, size_t, unsigned int);
   static cuMemAllocPitch_v2_p_h cuMemAllocPitch_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemAllocPitch_v2(CUdeviceptr *, size_t *, size_t, size_t, unsigned int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemAllocPitch_v2(CUdeviceptr *, size_t *, size_t, size_t, unsigned int) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -974,7 +977,7 @@ CUresult cuMemFree_v2(CUdeviceptr a1) {
   typedef CUresult (*cuMemFree_v2_p_h) (CUdeviceptr);
   static cuMemFree_v2_p_h cuMemFree_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemFree_v2(CUdeviceptr) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemFree_v2(CUdeviceptr) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1002,7 +1005,7 @@ CUresult cuMemGetAddressRange_v2(CUdeviceptr * a1, size_t * a2, CUdeviceptr a3) 
   typedef CUresult (*cuMemGetAddressRange_v2_p_h) (CUdeviceptr *, size_t *, CUdeviceptr);
   static cuMemGetAddressRange_v2_p_h cuMemGetAddressRange_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemGetAddressRange_v2(CUdeviceptr *, size_t *, CUdeviceptr) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemGetAddressRange_v2(CUdeviceptr *, size_t *, CUdeviceptr) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1030,7 +1033,7 @@ CUresult cuMemAllocHost_v2(void ** a1, size_t a2) {
   typedef CUresult (*cuMemAllocHost_v2_p_h) (void **, size_t);
   static cuMemAllocHost_v2_p_h cuMemAllocHost_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemAllocHost_v2(void **, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemAllocHost_v2(void **, size_t) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1058,7 +1061,7 @@ CUresult cuMemFreeHost(void * a1) {
   typedef CUresult (*cuMemFreeHost_p_h) (void *);
   static cuMemFreeHost_p_h cuMemFreeHost_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemFreeHost(void *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemFreeHost(void *) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1086,7 +1089,7 @@ CUresult cuMemHostAlloc(void ** a1, size_t a2, unsigned int a3) {
   typedef CUresult (*cuMemHostAlloc_p_h) (void **, size_t, unsigned int);
   static cuMemHostAlloc_p_h cuMemHostAlloc_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemHostAlloc(void **, size_t, unsigned int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemHostAlloc(void **, size_t, unsigned int) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1114,7 +1117,7 @@ CUresult cuMemHostGetDevicePointer_v2(CUdeviceptr * a1, void * a2, unsigned int 
   typedef CUresult (*cuMemHostGetDevicePointer_v2_p_h) (CUdeviceptr *, void *, unsigned int);
   static cuMemHostGetDevicePointer_v2_p_h cuMemHostGetDevicePointer_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemHostGetDevicePointer_v2(CUdeviceptr *, void *, unsigned int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemHostGetDevicePointer_v2(CUdeviceptr *, void *, unsigned int) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1142,7 +1145,7 @@ CUresult cuMemHostGetFlags(unsigned int * a1, void * a2) {
   typedef CUresult (*cuMemHostGetFlags_p_h) (unsigned int *, void *);
   static cuMemHostGetFlags_p_h cuMemHostGetFlags_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemHostGetFlags(unsigned int *, void *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemHostGetFlags(unsigned int *, void *) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1170,7 +1173,7 @@ CUresult cuMemcpyHtoD_v2(CUdeviceptr a1, const void * a2, size_t a3) {
   typedef CUresult (*cuMemcpyHtoD_v2_p_h) (CUdeviceptr, const void *, size_t);
   static cuMemcpyHtoD_v2_p_h cuMemcpyHtoD_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyHtoD_v2(CUdeviceptr, const void *, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyHtoD_v2(CUdeviceptr, const void *, size_t) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1198,7 +1201,7 @@ CUresult cuMemcpyDtoH_v2(void * a1, CUdeviceptr a2, size_t a3) {
   typedef CUresult (*cuMemcpyDtoH_v2_p_h) (void *, CUdeviceptr, size_t);
   static cuMemcpyDtoH_v2_p_h cuMemcpyDtoH_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyDtoH_v2(void *, CUdeviceptr, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyDtoH_v2(void *, CUdeviceptr, size_t) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1226,7 +1229,7 @@ CUresult cuMemcpyDtoD_v2(CUdeviceptr a1, CUdeviceptr a2, size_t a3) {
   typedef CUresult (*cuMemcpyDtoD_v2_p_h) (CUdeviceptr, CUdeviceptr, size_t);
   static cuMemcpyDtoD_v2_p_h cuMemcpyDtoD_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyDtoD_v2(CUdeviceptr, CUdeviceptr, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyDtoD_v2(CUdeviceptr, CUdeviceptr, size_t) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1254,7 +1257,7 @@ CUresult cuMemcpyDtoA_v2(CUarray a1, size_t a2, CUdeviceptr a3, size_t a4) {
   typedef CUresult (*cuMemcpyDtoA_v2_p_h) (CUarray, size_t, CUdeviceptr, size_t);
   static cuMemcpyDtoA_v2_p_h cuMemcpyDtoA_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyDtoA_v2(CUarray, size_t, CUdeviceptr, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyDtoA_v2(CUarray, size_t, CUdeviceptr, size_t) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1282,7 +1285,7 @@ CUresult cuMemcpyAtoD_v2(CUdeviceptr a1, CUarray a2, size_t a3, size_t a4) {
   typedef CUresult (*cuMemcpyAtoD_v2_p_h) (CUdeviceptr, CUarray, size_t, size_t);
   static cuMemcpyAtoD_v2_p_h cuMemcpyAtoD_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyAtoD_v2(CUdeviceptr, CUarray, size_t, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyAtoD_v2(CUdeviceptr, CUarray, size_t, size_t) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1310,7 +1313,7 @@ CUresult cuMemcpyHtoA_v2(CUarray a1, size_t a2, const void * a3, size_t a4) {
   typedef CUresult (*cuMemcpyHtoA_v2_p_h) (CUarray, size_t, const void *, size_t);
   static cuMemcpyHtoA_v2_p_h cuMemcpyHtoA_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyHtoA_v2(CUarray, size_t, const void *, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyHtoA_v2(CUarray, size_t, const void *, size_t) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1338,7 +1341,7 @@ CUresult cuMemcpyAtoH_v2(void * a1, CUarray a2, size_t a3, size_t a4) {
   typedef CUresult (*cuMemcpyAtoH_v2_p_h) (void *, CUarray, size_t, size_t);
   static cuMemcpyAtoH_v2_p_h cuMemcpyAtoH_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyAtoH_v2(void *, CUarray, size_t, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyAtoH_v2(void *, CUarray, size_t, size_t) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1366,7 +1369,7 @@ CUresult cuMemcpyAtoA_v2(CUarray a1, size_t a2, CUarray a3, size_t a4, size_t a5
   typedef CUresult (*cuMemcpyAtoA_v2_p_h) (CUarray, size_t, CUarray, size_t, size_t);
   static cuMemcpyAtoA_v2_p_h cuMemcpyAtoA_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyAtoA_v2(CUarray, size_t, CUarray, size_t, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyAtoA_v2(CUarray, size_t, CUarray, size_t, size_t) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1394,7 +1397,7 @@ CUresult cuMemcpy2D_v2(const CUDA_MEMCPY2D * a1) {
   typedef CUresult (*cuMemcpy2D_v2_p_h) (const CUDA_MEMCPY2D *);
   static cuMemcpy2D_v2_p_h cuMemcpy2D_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemcpy2D_v2(const CUDA_MEMCPY2D *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpy2D_v2(const CUDA_MEMCPY2D *) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1422,7 +1425,7 @@ CUresult cuMemcpy2DUnaligned_v2(const CUDA_MEMCPY2D * a1) {
   typedef CUresult (*cuMemcpy2DUnaligned_v2_p_h) (const CUDA_MEMCPY2D *);
   static cuMemcpy2DUnaligned_v2_p_h cuMemcpy2DUnaligned_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemcpy2DUnaligned_v2(const CUDA_MEMCPY2D *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpy2DUnaligned_v2(const CUDA_MEMCPY2D *) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1450,7 +1453,7 @@ CUresult cuMemcpy3D_v2(const CUDA_MEMCPY3D * a1) {
   typedef CUresult (*cuMemcpy3D_v2_p_h) (const CUDA_MEMCPY3D *);
   static cuMemcpy3D_v2_p_h cuMemcpy3D_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemcpy3D_v2(const CUDA_MEMCPY3D *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpy3D_v2(const CUDA_MEMCPY3D *) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1478,7 +1481,7 @@ CUresult cuMemcpyHtoDAsync_v2(CUdeviceptr a1, const void * a2, size_t a3, CUstre
   typedef CUresult (*cuMemcpyHtoDAsync_v2_p_h) (CUdeviceptr, const void *, size_t, CUstream);
   static cuMemcpyHtoDAsync_v2_p_h cuMemcpyHtoDAsync_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyHtoDAsync_v2(CUdeviceptr, const void *, size_t, CUstream) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyHtoDAsync_v2(CUdeviceptr, const void *, size_t, CUstream) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1506,7 +1509,7 @@ CUresult cuMemcpyDtoHAsync_v2(void * a1, CUdeviceptr a2, size_t a3, CUstream a4)
   typedef CUresult (*cuMemcpyDtoHAsync_v2_p_h) (void *, CUdeviceptr, size_t, CUstream);
   static cuMemcpyDtoHAsync_v2_p_h cuMemcpyDtoHAsync_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyDtoHAsync_v2(void *, CUdeviceptr, size_t, CUstream) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyDtoHAsync_v2(void *, CUdeviceptr, size_t, CUstream) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1534,7 +1537,7 @@ CUresult cuMemcpyDtoDAsync_v2(CUdeviceptr a1, CUdeviceptr a2, size_t a3, CUstrea
   typedef CUresult (*cuMemcpyDtoDAsync_v2_p_h) (CUdeviceptr, CUdeviceptr, size_t, CUstream);
   static cuMemcpyDtoDAsync_v2_p_h cuMemcpyDtoDAsync_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyDtoDAsync_v2(CUdeviceptr, CUdeviceptr, size_t, CUstream) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyDtoDAsync_v2(CUdeviceptr, CUdeviceptr, size_t, CUstream) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1562,7 +1565,7 @@ CUresult cuMemcpyHtoAAsync_v2(CUarray a1, size_t a2, const void * a3, size_t a4,
   typedef CUresult (*cuMemcpyHtoAAsync_v2_p_h) (CUarray, size_t, const void *, size_t, CUstream);
   static cuMemcpyHtoAAsync_v2_p_h cuMemcpyHtoAAsync_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyHtoAAsync_v2(CUarray, size_t, const void *, size_t, CUstream) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyHtoAAsync_v2(CUarray, size_t, const void *, size_t, CUstream) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1590,7 +1593,7 @@ CUresult cuMemcpyAtoHAsync_v2(void * a1, CUarray a2, size_t a3, size_t a4, CUstr
   typedef CUresult (*cuMemcpyAtoHAsync_v2_p_h) (void *, CUarray, size_t, size_t, CUstream);
   static cuMemcpyAtoHAsync_v2_p_h cuMemcpyAtoHAsync_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyAtoHAsync_v2(void *, CUarray, size_t, size_t, CUstream) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpyAtoHAsync_v2(void *, CUarray, size_t, size_t, CUstream) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1618,7 +1621,7 @@ CUresult cuMemcpy2DAsync_v2(const CUDA_MEMCPY2D * a1, CUstream a2) {
   typedef CUresult (*cuMemcpy2DAsync_v2_p_h) (const CUDA_MEMCPY2D *, CUstream);
   static cuMemcpy2DAsync_v2_p_h cuMemcpy2DAsync_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemcpy2DAsync_v2(const CUDA_MEMCPY2D *, CUstream) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpy2DAsync_v2(const CUDA_MEMCPY2D *, CUstream) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1646,7 +1649,7 @@ CUresult cuMemcpy3DAsync_v2(const CUDA_MEMCPY3D * a1, CUstream a2) {
   typedef CUresult (*cuMemcpy3DAsync_v2_p_h) (const CUDA_MEMCPY3D *, CUstream);
   static cuMemcpy3DAsync_v2_p_h cuMemcpy3DAsync_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemcpy3DAsync_v2(const CUDA_MEMCPY3D *, CUstream) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemcpy3DAsync_v2(const CUDA_MEMCPY3D *, CUstream) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1674,7 +1677,7 @@ CUresult cuMemsetD8_v2(CUdeviceptr a1, unsigned char a2, size_t a3) {
   typedef CUresult (*cuMemsetD8_v2_p_h) (CUdeviceptr, unsigned char, size_t);
   static cuMemsetD8_v2_p_h cuMemsetD8_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD8_v2(CUdeviceptr, unsigned char, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD8_v2(CUdeviceptr, unsigned char, size_t) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1702,7 +1705,7 @@ CUresult cuMemsetD16_v2(CUdeviceptr a1, unsigned short a2, size_t a3) {
   typedef CUresult (*cuMemsetD16_v2_p_h) (CUdeviceptr, unsigned short, size_t);
   static cuMemsetD16_v2_p_h cuMemsetD16_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD16_v2(CUdeviceptr, unsigned short, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD16_v2(CUdeviceptr, unsigned short, size_t) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1730,7 +1733,7 @@ CUresult cuMemsetD32_v2(CUdeviceptr a1, unsigned int a2, size_t a3) {
   typedef CUresult (*cuMemsetD32_v2_p_h) (CUdeviceptr, unsigned int, size_t);
   static cuMemsetD32_v2_p_h cuMemsetD32_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD32_v2(CUdeviceptr, unsigned int, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD32_v2(CUdeviceptr, unsigned int, size_t) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1758,7 +1761,7 @@ CUresult cuMemsetD2D8_v2(CUdeviceptr a1, size_t a2, unsigned char a3, size_t a4,
   typedef CUresult (*cuMemsetD2D8_v2_p_h) (CUdeviceptr, size_t, unsigned char, size_t, size_t);
   static cuMemsetD2D8_v2_p_h cuMemsetD2D8_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD2D8_v2(CUdeviceptr, size_t, unsigned char, size_t, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD2D8_v2(CUdeviceptr, size_t, unsigned char, size_t, size_t) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1786,7 +1789,7 @@ CUresult cuMemsetD2D16_v2(CUdeviceptr a1, size_t a2, unsigned short a3, size_t a
   typedef CUresult (*cuMemsetD2D16_v2_p_h) (CUdeviceptr, size_t, unsigned short, size_t, size_t);
   static cuMemsetD2D16_v2_p_h cuMemsetD2D16_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD2D16_v2(CUdeviceptr, size_t, unsigned short, size_t, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD2D16_v2(CUdeviceptr, size_t, unsigned short, size_t, size_t) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1814,7 +1817,7 @@ CUresult cuMemsetD2D32_v2(CUdeviceptr a1, size_t a2, unsigned int a3, size_t a4,
   typedef CUresult (*cuMemsetD2D32_v2_p_h) (CUdeviceptr, size_t, unsigned int, size_t, size_t);
   static cuMemsetD2D32_v2_p_h cuMemsetD2D32_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD2D32_v2(CUdeviceptr, size_t, unsigned int, size_t, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD2D32_v2(CUdeviceptr, size_t, unsigned int, size_t, size_t) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1842,7 +1845,7 @@ CUresult cuMemsetD8Async(CUdeviceptr a1, unsigned char a2, size_t a3, CUstream a
   typedef CUresult (*cuMemsetD8Async_p_h) (CUdeviceptr, unsigned char, size_t, CUstream);
   static cuMemsetD8Async_p_h cuMemsetD8Async_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD8Async(CUdeviceptr, unsigned char, size_t, CUstream) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD8Async(CUdeviceptr, unsigned char, size_t, CUstream) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1870,7 +1873,7 @@ CUresult cuMemsetD16Async(CUdeviceptr a1, unsigned short a2, size_t a3, CUstream
   typedef CUresult (*cuMemsetD16Async_p_h) (CUdeviceptr, unsigned short, size_t, CUstream);
   static cuMemsetD16Async_p_h cuMemsetD16Async_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD16Async(CUdeviceptr, unsigned short, size_t, CUstream) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD16Async(CUdeviceptr, unsigned short, size_t, CUstream) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1898,7 +1901,7 @@ CUresult cuMemsetD32Async(CUdeviceptr a1, unsigned int a2, size_t a3, CUstream a
   typedef CUresult (*cuMemsetD32Async_p_h) (CUdeviceptr, unsigned int, size_t, CUstream);
   static cuMemsetD32Async_p_h cuMemsetD32Async_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD32Async(CUdeviceptr, unsigned int, size_t, CUstream) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD32Async(CUdeviceptr, unsigned int, size_t, CUstream) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1926,7 +1929,7 @@ CUresult cuMemsetD2D8Async(CUdeviceptr a1, size_t a2, unsigned char a3, size_t a
   typedef CUresult (*cuMemsetD2D8Async_p_h) (CUdeviceptr, size_t, unsigned char, size_t, size_t, CUstream);
   static cuMemsetD2D8Async_p_h cuMemsetD2D8Async_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD2D8Async(CUdeviceptr, size_t, unsigned char, size_t, size_t, CUstream) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD2D8Async(CUdeviceptr, size_t, unsigned char, size_t, size_t, CUstream) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1954,7 +1957,7 @@ CUresult cuMemsetD2D16Async(CUdeviceptr a1, size_t a2, unsigned short a3, size_t
   typedef CUresult (*cuMemsetD2D16Async_p_h) (CUdeviceptr, size_t, unsigned short, size_t, size_t, CUstream);
   static cuMemsetD2D16Async_p_h cuMemsetD2D16Async_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD2D16Async(CUdeviceptr, size_t, unsigned short, size_t, size_t, CUstream) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD2D16Async(CUdeviceptr, size_t, unsigned short, size_t, size_t, CUstream) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1982,7 +1985,7 @@ CUresult cuMemsetD2D32Async(CUdeviceptr a1, size_t a2, unsigned int a3, size_t a
   typedef CUresult (*cuMemsetD2D32Async_p_h) (CUdeviceptr, size_t, unsigned int, size_t, size_t, CUstream);
   static cuMemsetD2D32Async_p_h cuMemsetD2D32Async_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD2D32Async(CUdeviceptr, size_t, unsigned int, size_t, size_t, CUstream) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuMemsetD2D32Async(CUdeviceptr, size_t, unsigned int, size_t, size_t, CUstream) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2010,7 +2013,7 @@ CUresult cuArrayCreate_v2(CUarray * a1, const CUDA_ARRAY_DESCRIPTOR * a2) {
   typedef CUresult (*cuArrayCreate_v2_p_h) (CUarray *, const CUDA_ARRAY_DESCRIPTOR *);
   static cuArrayCreate_v2_p_h cuArrayCreate_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuArrayCreate_v2(CUarray *, const CUDA_ARRAY_DESCRIPTOR *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuArrayCreate_v2(CUarray *, const CUDA_ARRAY_DESCRIPTOR *) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2038,7 +2041,7 @@ CUresult cuArrayGetDescriptor_v2(CUDA_ARRAY_DESCRIPTOR * a1, CUarray a2) {
   typedef CUresult (*cuArrayGetDescriptor_v2_p_h) (CUDA_ARRAY_DESCRIPTOR *, CUarray);
   static cuArrayGetDescriptor_v2_p_h cuArrayGetDescriptor_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuArrayGetDescriptor_v2(CUDA_ARRAY_DESCRIPTOR *, CUarray) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuArrayGetDescriptor_v2(CUDA_ARRAY_DESCRIPTOR *, CUarray) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2066,7 +2069,7 @@ CUresult cuArrayDestroy(CUarray a1) {
   typedef CUresult (*cuArrayDestroy_p_h) (CUarray);
   static cuArrayDestroy_p_h cuArrayDestroy_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuArrayDestroy(CUarray) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuArrayDestroy(CUarray) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2094,7 +2097,7 @@ CUresult cuArray3DCreate_v2(CUarray * a1, const CUDA_ARRAY3D_DESCRIPTOR * a2) {
   typedef CUresult (*cuArray3DCreate_v2_p_h) (CUarray *, const CUDA_ARRAY3D_DESCRIPTOR *);
   static cuArray3DCreate_v2_p_h cuArray3DCreate_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuArray3DCreate_v2(CUarray *, const CUDA_ARRAY3D_DESCRIPTOR *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuArray3DCreate_v2(CUarray *, const CUDA_ARRAY3D_DESCRIPTOR *) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2122,7 +2125,7 @@ CUresult cuArray3DGetDescriptor_v2(CUDA_ARRAY3D_DESCRIPTOR * a1, CUarray a2) {
   typedef CUresult (*cuArray3DGetDescriptor_v2_p_h) (CUDA_ARRAY3D_DESCRIPTOR *, CUarray);
   static cuArray3DGetDescriptor_v2_p_h cuArray3DGetDescriptor_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuArray3DGetDescriptor_v2(CUDA_ARRAY3D_DESCRIPTOR *, CUarray) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuArray3DGetDescriptor_v2(CUDA_ARRAY3D_DESCRIPTOR *, CUarray) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2150,7 +2153,7 @@ CUresult cuStreamCreate(CUstream * a1, unsigned int a2) {
   typedef CUresult (*cuStreamCreate_p_h) (CUstream *, unsigned int);
   static cuStreamCreate_p_h cuStreamCreate_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuStreamCreate(CUstream *, unsigned int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuStreamCreate(CUstream *, unsigned int) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2178,7 +2181,7 @@ CUresult cuStreamWaitEvent(CUstream a1, CUevent a2, unsigned int a3) {
   typedef CUresult (*cuStreamWaitEvent_p_h) (CUstream, CUevent, unsigned int);
   static cuStreamWaitEvent_p_h cuStreamWaitEvent_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuStreamWaitEvent(CUstream, CUevent, unsigned int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuStreamWaitEvent(CUstream, CUevent, unsigned int) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2206,7 +2209,7 @@ CUresult cuStreamQuery(CUstream a1) {
   typedef CUresult (*cuStreamQuery_p_h) (CUstream);
   static cuStreamQuery_p_h cuStreamQuery_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuStreamQuery(CUstream) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuStreamQuery(CUstream) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2234,7 +2237,7 @@ CUresult cuStreamSynchronize(CUstream a1) {
   typedef CUresult (*cuStreamSynchronize_p_h) (CUstream);
   static cuStreamSynchronize_p_h cuStreamSynchronize_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuStreamSynchronize(CUstream) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuStreamSynchronize(CUstream) C", "", CUDA_SYNC);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2265,7 +2268,7 @@ CUresult cuStreamDestroy(CUstream a1) {
   typedef CUresult (*cuStreamDestroy_p_h) (CUstream);
   static cuStreamDestroy_p_h cuStreamDestroy_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuStreamDestroy(CUstream) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuStreamDestroy(CUstream) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2293,7 +2296,7 @@ CUresult cuEventCreate(CUevent * a1, unsigned int a2) {
   typedef CUresult (*cuEventCreate_p_h) (CUevent *, unsigned int);
   static cuEventCreate_p_h cuEventCreate_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuEventCreate(CUevent *, unsigned int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuEventCreate(CUevent *, unsigned int) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2321,7 +2324,7 @@ CUresult cuEventRecord(CUevent a1, CUstream a2) {
   typedef CUresult (*cuEventRecord_p_h) (CUevent, CUstream);
   static cuEventRecord_p_h cuEventRecord_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuEventRecord(CUevent, CUstream) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuEventRecord(CUevent, CUstream) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2349,7 +2352,7 @@ CUresult cuEventQuery(CUevent a1) {
   typedef CUresult (*cuEventQuery_p_h) (CUevent);
   static cuEventQuery_p_h cuEventQuery_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuEventQuery(CUevent) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuEventQuery(CUevent) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2377,7 +2380,7 @@ CUresult cuEventSynchronize(CUevent a1) {
   typedef CUresult (*cuEventSynchronize_p_h) (CUevent);
   static cuEventSynchronize_p_h cuEventSynchronize_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuEventSynchronize(CUevent) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuEventSynchronize(CUevent) C", "", CUDA_SYNC);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2408,7 +2411,7 @@ CUresult cuEventDestroy(CUevent a1) {
   typedef CUresult (*cuEventDestroy_p_h) (CUevent);
   static cuEventDestroy_p_h cuEventDestroy_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuEventDestroy(CUevent) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuEventDestroy(CUevent) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2436,7 +2439,7 @@ CUresult cuEventElapsedTime(float * a1, CUevent a2, CUevent a3) {
   typedef CUresult (*cuEventElapsedTime_p_h) (float *, CUevent, CUevent);
   static cuEventElapsedTime_p_h cuEventElapsedTime_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuEventElapsedTime(float *, CUevent, CUevent) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuEventElapsedTime(float *, CUevent, CUevent) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2464,7 +2467,7 @@ CUresult cuFuncSetBlockShape(CUfunction a1, int a2, int a3, int a4) {
   typedef CUresult (*cuFuncSetBlockShape_p_h) (CUfunction, int, int, int);
   static cuFuncSetBlockShape_p_h cuFuncSetBlockShape_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuFuncSetBlockShape(CUfunction, int, int, int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuFuncSetBlockShape(CUfunction, int, int, int) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2492,7 +2495,7 @@ CUresult cuFuncSetSharedSize(CUfunction a1, unsigned int a2) {
   typedef CUresult (*cuFuncSetSharedSize_p_h) (CUfunction, unsigned int);
   static cuFuncSetSharedSize_p_h cuFuncSetSharedSize_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuFuncSetSharedSize(CUfunction, unsigned int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuFuncSetSharedSize(CUfunction, unsigned int) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2520,7 +2523,7 @@ CUresult cuFuncGetAttribute(int * a1, CUfunction_attribute a2, CUfunction a3) {
   typedef CUresult (*cuFuncGetAttribute_p_h) (int *, CUfunction_attribute, CUfunction);
   static cuFuncGetAttribute_p_h cuFuncGetAttribute_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuFuncGetAttribute(int *, CUfunction_attribute, CUfunction) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuFuncGetAttribute(int *, CUfunction_attribute, CUfunction) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2548,7 +2551,7 @@ CUresult cuFuncSetCacheConfig(CUfunction a1, CUfunc_cache a2) {
   typedef CUresult (*cuFuncSetCacheConfig_p_h) (CUfunction, CUfunc_cache);
   static cuFuncSetCacheConfig_p_h cuFuncSetCacheConfig_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuFuncSetCacheConfig(CUfunction, CUfunc_cache) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuFuncSetCacheConfig(CUfunction, CUfunc_cache) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2576,7 +2579,7 @@ CUresult cuParamSetSize(CUfunction a1, unsigned int a2) {
   typedef CUresult (*cuParamSetSize_p_h) (CUfunction, unsigned int);
   static cuParamSetSize_p_h cuParamSetSize_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuParamSetSize(CUfunction, unsigned int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuParamSetSize(CUfunction, unsigned int) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2604,7 +2607,7 @@ CUresult cuParamSeti(CUfunction a1, int a2, unsigned int a3) {
   typedef CUresult (*cuParamSeti_p_h) (CUfunction, int, unsigned int);
   static cuParamSeti_p_h cuParamSeti_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuParamSeti(CUfunction, int, unsigned int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuParamSeti(CUfunction, int, unsigned int) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2632,7 +2635,7 @@ CUresult cuParamSetf(CUfunction a1, int a2, float a3) {
   typedef CUresult (*cuParamSetf_p_h) (CUfunction, int, float);
   static cuParamSetf_p_h cuParamSetf_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuParamSetf(CUfunction, int, float) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuParamSetf(CUfunction, int, float) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2660,7 +2663,7 @@ CUresult cuParamSetv(CUfunction a1, int a2, void * a3, unsigned int a4) {
   typedef CUresult (*cuParamSetv_p_h) (CUfunction, int, void *, unsigned int);
   static cuParamSetv_p_h cuParamSetv_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuParamSetv(CUfunction, int, void *, unsigned int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuParamSetv(CUfunction, int, void *, unsigned int) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2688,7 +2691,7 @@ CUresult cuLaunch(CUfunction a1) {
   typedef CUresult (*cuLaunch_p_h) (CUfunction);
   static cuLaunch_p_h cuLaunch_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuLaunch(CUfunction) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuLaunch(CUfunction) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2730,7 +2733,7 @@ CUresult cuLaunchGrid(CUfunction a1, int a2, int a3) {
   typedef CUresult (*cuLaunchGrid_p_h) (CUfunction, int, int);
   static cuLaunchGrid_p_h cuLaunchGrid_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuLaunchGrid(CUfunction, int, int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuLaunchGrid(CUfunction, int, int) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2772,7 +2775,7 @@ CUresult cuLaunchGridAsync(CUfunction a1, int a2, int a3, CUstream a4) {
   typedef CUresult (*cuLaunchGridAsync_p_h) (CUfunction, int, int, CUstream);
   static cuLaunchGridAsync_p_h cuLaunchGridAsync_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuLaunchGridAsync(CUfunction, int, int, CUstream) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuLaunchGridAsync(CUfunction, int, int, CUstream) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2814,7 +2817,7 @@ CUresult cuParamSetTexRef(CUfunction a1, int a2, CUtexref a3) {
   typedef CUresult (*cuParamSetTexRef_p_h) (CUfunction, int, CUtexref);
   static cuParamSetTexRef_p_h cuParamSetTexRef_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuParamSetTexRef(CUfunction, int, CUtexref) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuParamSetTexRef(CUfunction, int, CUtexref) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2842,7 +2845,7 @@ CUresult cuTexRefSetArray(CUtexref a1, CUarray a2, unsigned int a3) {
   typedef CUresult (*cuTexRefSetArray_p_h) (CUtexref, CUarray, unsigned int);
   static cuTexRefSetArray_p_h cuTexRefSetArray_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuTexRefSetArray(CUtexref, CUarray, unsigned int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefSetArray(CUtexref, CUarray, unsigned int) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2870,7 +2873,7 @@ CUresult cuTexRefSetAddress_v2(size_t * a1, CUtexref a2, CUdeviceptr a3, size_t 
   typedef CUresult (*cuTexRefSetAddress_v2_p_h) (size_t *, CUtexref, CUdeviceptr, size_t);
   static cuTexRefSetAddress_v2_p_h cuTexRefSetAddress_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuTexRefSetAddress_v2(size_t *, CUtexref, CUdeviceptr, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefSetAddress_v2(size_t *, CUtexref, CUdeviceptr, size_t) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2898,7 +2901,7 @@ CUresult cuTexRefSetAddress2D_v2(CUtexref a1, const CUDA_ARRAY_DESCRIPTOR * a2, 
   typedef CUresult (*cuTexRefSetAddress2D_v2_p_h) (CUtexref, const CUDA_ARRAY_DESCRIPTOR *, CUdeviceptr, size_t);
   static cuTexRefSetAddress2D_v2_p_h cuTexRefSetAddress2D_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuTexRefSetAddress2D_v2(CUtexref, const CUDA_ARRAY_DESCRIPTOR *, CUdeviceptr, size_t) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefSetAddress2D_v2(CUtexref, const CUDA_ARRAY_DESCRIPTOR *, CUdeviceptr, size_t) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2926,7 +2929,7 @@ CUresult cuTexRefSetFormat(CUtexref a1, CUarray_format a2, int a3) {
   typedef CUresult (*cuTexRefSetFormat_p_h) (CUtexref, CUarray_format, int);
   static cuTexRefSetFormat_p_h cuTexRefSetFormat_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuTexRefSetFormat(CUtexref, CUarray_format, int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefSetFormat(CUtexref, CUarray_format, int) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2954,7 +2957,7 @@ CUresult cuTexRefSetAddressMode(CUtexref a1, int a2, CUaddress_mode a3) {
   typedef CUresult (*cuTexRefSetAddressMode_p_h) (CUtexref, int, CUaddress_mode);
   static cuTexRefSetAddressMode_p_h cuTexRefSetAddressMode_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuTexRefSetAddressMode(CUtexref, int, CUaddress_mode) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefSetAddressMode(CUtexref, int, CUaddress_mode) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2982,7 +2985,7 @@ CUresult cuTexRefSetFilterMode(CUtexref a1, CUfilter_mode a2) {
   typedef CUresult (*cuTexRefSetFilterMode_p_h) (CUtexref, CUfilter_mode);
   static cuTexRefSetFilterMode_p_h cuTexRefSetFilterMode_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuTexRefSetFilterMode(CUtexref, CUfilter_mode) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefSetFilterMode(CUtexref, CUfilter_mode) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -3010,7 +3013,7 @@ CUresult cuTexRefSetFlags(CUtexref a1, unsigned int a2) {
   typedef CUresult (*cuTexRefSetFlags_p_h) (CUtexref, unsigned int);
   static cuTexRefSetFlags_p_h cuTexRefSetFlags_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuTexRefSetFlags(CUtexref, unsigned int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefSetFlags(CUtexref, unsigned int) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -3038,7 +3041,7 @@ CUresult cuTexRefGetAddress_v2(CUdeviceptr * a1, CUtexref a2) {
   typedef CUresult (*cuTexRefGetAddress_v2_p_h) (CUdeviceptr *, CUtexref);
   static cuTexRefGetAddress_v2_p_h cuTexRefGetAddress_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuTexRefGetAddress_v2(CUdeviceptr *, CUtexref) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefGetAddress_v2(CUdeviceptr *, CUtexref) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -3066,7 +3069,7 @@ CUresult cuTexRefGetArray(CUarray * a1, CUtexref a2) {
   typedef CUresult (*cuTexRefGetArray_p_h) (CUarray *, CUtexref);
   static cuTexRefGetArray_p_h cuTexRefGetArray_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuTexRefGetArray(CUarray *, CUtexref) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefGetArray(CUarray *, CUtexref) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -3094,7 +3097,7 @@ CUresult cuTexRefGetAddressMode(CUaddress_mode * a1, CUtexref a2, int a3) {
   typedef CUresult (*cuTexRefGetAddressMode_p_h) (CUaddress_mode *, CUtexref, int);
   static cuTexRefGetAddressMode_p_h cuTexRefGetAddressMode_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuTexRefGetAddressMode(CUaddress_mode *, CUtexref, int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefGetAddressMode(CUaddress_mode *, CUtexref, int) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -3122,7 +3125,7 @@ CUresult cuTexRefGetFilterMode(CUfilter_mode * a1, CUtexref a2) {
   typedef CUresult (*cuTexRefGetFilterMode_p_h) (CUfilter_mode *, CUtexref);
   static cuTexRefGetFilterMode_p_h cuTexRefGetFilterMode_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuTexRefGetFilterMode(CUfilter_mode *, CUtexref) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefGetFilterMode(CUfilter_mode *, CUtexref) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -3150,7 +3153,7 @@ CUresult cuTexRefGetFormat(CUarray_format * a1, int * a2, CUtexref a3) {
   typedef CUresult (*cuTexRefGetFormat_p_h) (CUarray_format *, int *, CUtexref);
   static cuTexRefGetFormat_p_h cuTexRefGetFormat_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuTexRefGetFormat(CUarray_format *, int *, CUtexref) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefGetFormat(CUarray_format *, int *, CUtexref) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -3178,7 +3181,7 @@ CUresult cuTexRefGetFlags(unsigned int * a1, CUtexref a2) {
   typedef CUresult (*cuTexRefGetFlags_p_h) (unsigned int *, CUtexref);
   static cuTexRefGetFlags_p_h cuTexRefGetFlags_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuTexRefGetFlags(unsigned int *, CUtexref) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefGetFlags(unsigned int *, CUtexref) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -3206,7 +3209,7 @@ CUresult cuTexRefCreate(CUtexref * a1) {
   typedef CUresult (*cuTexRefCreate_p_h) (CUtexref *);
   static cuTexRefCreate_p_h cuTexRefCreate_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuTexRefCreate(CUtexref *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefCreate(CUtexref *) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -3234,7 +3237,7 @@ CUresult cuTexRefDestroy(CUtexref a1) {
   typedef CUresult (*cuTexRefDestroy_p_h) (CUtexref);
   static cuTexRefDestroy_p_h cuTexRefDestroy_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuTexRefDestroy(CUtexref) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuTexRefDestroy(CUtexref) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -3262,7 +3265,7 @@ CUresult cuSurfRefSetArray(CUsurfref a1, CUarray a2, unsigned int a3) {
   typedef CUresult (*cuSurfRefSetArray_p_h) (CUsurfref, CUarray, unsigned int);
   static cuSurfRefSetArray_p_h cuSurfRefSetArray_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuSurfRefSetArray(CUsurfref, CUarray, unsigned int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuSurfRefSetArray(CUsurfref, CUarray, unsigned int) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -3290,7 +3293,7 @@ CUresult cuSurfRefGetArray(CUarray * a1, CUsurfref a2) {
   typedef CUresult (*cuSurfRefGetArray_p_h) (CUarray *, CUsurfref);
   static cuSurfRefGetArray_p_h cuSurfRefGetArray_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuSurfRefGetArray(CUarray *, CUsurfref) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuSurfRefGetArray(CUarray *, CUsurfref) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -3318,7 +3321,7 @@ CUresult cuGraphicsUnregisterResource(CUgraphicsResource a1) {
   typedef CUresult (*cuGraphicsUnregisterResource_p_h) (CUgraphicsResource);
   static cuGraphicsUnregisterResource_p_h cuGraphicsUnregisterResource_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuGraphicsUnregisterResource(CUgraphicsResource) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuGraphicsUnregisterResource(CUgraphicsResource) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -3346,7 +3349,7 @@ CUresult cuGraphicsSubResourceGetMappedArray(CUarray * a1, CUgraphicsResource a2
   typedef CUresult (*cuGraphicsSubResourceGetMappedArray_p_h) (CUarray *, CUgraphicsResource, unsigned int, unsigned int);
   static cuGraphicsSubResourceGetMappedArray_p_h cuGraphicsSubResourceGetMappedArray_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuGraphicsSubResourceGetMappedArray(CUarray *, CUgraphicsResource, unsigned int, unsigned int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuGraphicsSubResourceGetMappedArray(CUarray *, CUgraphicsResource, unsigned int, unsigned int) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -3374,7 +3377,7 @@ CUresult cuGraphicsResourceGetMappedPointer_v2(CUdeviceptr * a1, size_t * a2, CU
   typedef CUresult (*cuGraphicsResourceGetMappedPointer_v2_p_h) (CUdeviceptr *, size_t *, CUgraphicsResource);
   static cuGraphicsResourceGetMappedPointer_v2_p_h cuGraphicsResourceGetMappedPointer_v2_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuGraphicsResourceGetMappedPointer_v2(CUdeviceptr *, size_t *, CUgraphicsResource) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuGraphicsResourceGetMappedPointer_v2(CUdeviceptr *, size_t *, CUgraphicsResource) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -3402,7 +3405,7 @@ CUresult cuGraphicsResourceSetMapFlags(CUgraphicsResource a1, unsigned int a2) {
   typedef CUresult (*cuGraphicsResourceSetMapFlags_p_h) (CUgraphicsResource, unsigned int);
   static cuGraphicsResourceSetMapFlags_p_h cuGraphicsResourceSetMapFlags_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuGraphicsResourceSetMapFlags(CUgraphicsResource, unsigned int) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuGraphicsResourceSetMapFlags(CUgraphicsResource, unsigned int) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -3430,7 +3433,7 @@ CUresult cuGraphicsMapResources(unsigned int a1, CUgraphicsResource * a2, CUstre
   typedef CUresult (*cuGraphicsMapResources_p_h) (unsigned int, CUgraphicsResource *, CUstream);
   static cuGraphicsMapResources_p_h cuGraphicsMapResources_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuGraphicsMapResources(unsigned int, CUgraphicsResource *, CUstream) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuGraphicsMapResources(unsigned int, CUgraphicsResource *, CUstream) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -3458,7 +3461,7 @@ CUresult cuGraphicsUnmapResources(unsigned int a1, CUgraphicsResource * a2, CUst
   typedef CUresult (*cuGraphicsUnmapResources_p_h) (unsigned int, CUgraphicsResource *, CUstream);
   static cuGraphicsUnmapResources_p_h cuGraphicsUnmapResources_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuGraphicsUnmapResources(unsigned int, CUgraphicsResource *, CUstream) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuGraphicsUnmapResources(unsigned int, CUgraphicsResource *, CUstream) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -3486,7 +3489,7 @@ CUresult cuGetExportTable(const void ** a1, const CUuuid * a2) {
   typedef CUresult (*cuGetExportTable_p_h) (const void **, const CUuuid *);
   static cuGetExportTable_p_h cuGetExportTable_h = NULL;
   CUresult retval;
-  TAU_PROFILE_TIMER(t,"CUresult cuGetExportTable(const void **, const CUuuid *) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"CUresult cuGetExportTable(const void **, const CUuuid *) C", "", CUDA_API);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
