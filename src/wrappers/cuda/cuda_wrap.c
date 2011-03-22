@@ -2712,12 +2712,12 @@ CUresult cuLaunch(CUfunction a1) {
 		cuCtxPopCurrent(&ctx);
 		cuCtxPushCurrent(ctx);
 		Tau_cuda_enqueue_kernel_enter_event((const char*) a1, 
-																				&cudaDriverGpuId(device, ctx, 0));
+																				&cudaDriverGpuId(device, ctx, 0),
+					TauInternal_CurrentProfiler(RtsLayer::myNode())->CallPathFunction);
 #endif
   	retval  =  (*cuLaunch_h)( a1);
 #ifdef TRACK_KERNEL
-		Tau_cuda_enqueue_kernel_exit_event((const char*) a1, 
-																			 &cudaDriverGpuId(device, ctx, 0));
+		Tau_cuda_enqueue_kernel_exit_event(), 
 #endif
   TAU_PROFILE_STOP(t);
   }
@@ -2753,11 +2753,13 @@ CUresult cuLaunchGrid(CUfunction a1, int a2, int a3) {
 		CUcontext ctx;
 		cuCtxPopCurrent(&ctx);
 		cuCtxPushCurrent(ctx);
-		Tau_cuda_enqueue_kernel_enter_event((const char*)a1, &cudaDriverGpuId(device,ctx,0));
+		Tau_cuda_enqueue_kernel_enter_event((const char*)a1,
+			&cudaDriverGpuId(device,ctx,0),
+			TauInternal_CurrentProfiler(RtsLayer::myNode())->CallPathFunction);
 #endif
   	retval  =  (*cuLaunchGrid_h)( a1,  a2,  a3);
 #ifdef TRACK_KERNEL
-		Tau_cuda_enqueue_kernel_exit_event((const char*)a1, &cudaDriverGpuId(device,ctx,0));
+		Tau_cuda_enqueue_kernel_exit_event();
 #endif
   TAU_PROFILE_STOP(t);
   }
@@ -2793,11 +2795,13 @@ CUresult cuLaunchGridAsync(CUfunction a1, int a2, int a3, CUstream a4) {
 		CUcontext ctx;
 		cuCtxPopCurrent(&ctx);
 		cuCtxPushCurrent(ctx);
-		Tau_cuda_enqueue_kernel_enter_event((const char*)a1, &cudaDriverGpuId(device,ctx,a4));
+		Tau_cuda_enqueue_kernel_enter_event((const char*)a1,
+			&cudaDriverGpuId(device,ctx,a4),
+			TauInternal_CurrentProfiler(RtsLayer::myNode())->CallPathFunction);
 #endif
   	retval  =  (*cuLaunchGridAsync_h)( a1,  a2,  a3,  a4);
 #ifdef TRACK_KERNEL
-		Tau_cuda_enqueue_kernel_exit_event((const char*)a1, &cudaDriverGpuId(device,ctx,a4));
+		Tau_cuda_enqueue_kernel_exit_event();
 #endif
   TAU_PROFILE_STOP(t);
   }

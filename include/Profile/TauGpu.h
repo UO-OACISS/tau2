@@ -80,11 +80,11 @@ eventId Tau_gpu_create_gpu_event(const char* name, gpuId *device, FunctionInfo* 
 
 /* Callback for a GPU event that occurred earlier in the execution of the
  * program. Times are pre-aligned to the CPU clock. */
-extern "C" void Tau_gpu_register_gpu_event(eventId *id, double startTime, double endTime);
+extern "C" void Tau_gpu_register_gpu_event(eventId id, double startTime, double endTime);
 
 /* Callback for a Memcpy event that occurred earlier in the execution of the
  * program. Times are pre-aligned to the CPU clock. */
-extern "C" void Tau_gpu_register_memcpy_event(eventId *id, double startTime, double endTime, int transferSize, int memcpyType);
+extern "C" void Tau_gpu_register_memcpy_event(eventId id, double startTime, double endTime, int transferSize, int memcpyType);
 
 extern "C" void TauTraceOneSidedMsg(bool type, gpuId *gpu, int length, int thread);
 
