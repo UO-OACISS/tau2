@@ -230,7 +230,7 @@ FunctionInfo* parent)
 
 	check_gpu_event(gpuTask);
 	if (TauEnv_get_callpath()) {
-  	printf("Profiler: %s \n", parent->GetName());
+  	//printf("Profiler: %s \n", parent->GetName());
 		Tau_start_timer(parent, 0, gpuTask);
 	}
 	start_gpu_event(name, gpuTask);
@@ -259,7 +259,7 @@ FunctionInfo* parent)
 	metric_set_gpu_timestamp(gpuTask, stop_time);
 	stop_gpu_event(name, gpuTask);
 	if (TauEnv_get_callpath()) {
-  	printf("Profiler: %s \n", parent->GetName());
+  	//printf("Profiler: %s \n", parent->GetName());
 		double totalTime = 0; 
 		Tau_stop_timer(parent, gpuTask);
 	}	
