@@ -489,8 +489,6 @@ void Tau_collate_compute_histograms(Tau_unify_object_t *functionUnifier,
 #ifdef TAU_MONITORING
 #ifdef TAU_MON_MPI
 
-#include "Profile/TauMon.h"
-
 extern "C" void Tau_mon_connect() {
   /* Nothing needs to happen for MPI-based monitoring */
 }
@@ -766,18 +764,6 @@ extern "C" void Tau_mon_internal_onlineDump() {
   //    operation.
   //  TAU_VERBOSE("collate online dump called\n");
   Tau_collate_writeProfile();
-}
-
-extern "C" void Tau_mon_internal_writeAll() {
-  Tau_mon_internal_write(TAU_MON_ALL);
-}
-
-extern "C" void Tau_mon_internal_write(Tau_MonOp_t operation) {
-  Tau_mon_internal_getView(operation);
-}
-
-extern "C" void Tau_mon_internal_getView(Tau_MonOp_t operation) {
-  /* Do nothing for now */
 }
 
 #endif /* TAU_MON_MPI */
