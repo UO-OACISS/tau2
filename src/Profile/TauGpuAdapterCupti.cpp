@@ -62,13 +62,13 @@ template<class APItype> void context(const APItype &info,
 																				  CUcontext *ctx)
 {
 	printf("in context template.\n");
-	ctx = ((cuCtxCreate_v2_params *) info->params)->pctx;
+	ctx = ((cuCtxCreate_v2_params *) info->functionParams)->pctx;
   //CAST_TO_DRIVER_CONTEXT_TYPE_AND_CALL(cuCtxCreate, id, info, ctx)
   //CAST_TO_DRIVER_CONTEXT_TYPE_AND_CALL(cuCtxCreate_v2, id, info, ctx)
 }
 template<class APItype> int callbacksite(const APItype &info)
 {
-	return info->callbacksite;
+	return info->callbackSite;
 }
 template<class APItype> const char* functionName(const APItype &info,
 																								 CUpti_CallbackDomain domain)
@@ -76,12 +76,12 @@ template<class APItype> const char* functionName(const APItype &info,
 	const char *orig_name = info->functionName;
 	char *name = new char[strlen(orig_name) + 13];
 	sprintf(name, "%s (%s)",orig_name, (domain ==
-	CUPTI_CB_DOMAIN_RUNTIME_API_TRACE ? "RuntimeAPI" : "DriverAPI"));
+	CUPTI_CB_DOMAIN_RUNTIME_API ? "RuntimeAPI" : "DriverAPI"));
 	return name;
 }
-template<class APItype> int functionId(const APItype &info)
+int functionId(CUpti_CallbackId info)
 {
-	return info->functionId;
+	return info;
 }
 
 /*template<class MemcpyParam> void get_kind(const MemcpyParam &param, int &kind)
@@ -97,7 +97,7 @@ template<class APItype> void get_value_from_memcpy(const APItype &info,
 																									int &count)
 {
 	
-	if (domain == CUPTI_CB_DOMAIN_RUNTIME_API_TRACE)
+	if (domain == CUPTI_CB_DOMAIN_RUNTIME_API)
 	{
 		//CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(info->functionName, id, info, kind, count)
     CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(cudaMemcpy, id, info, kind, count)
@@ -184,7 +184,7 @@ template<class APItype> int kind(const APItype &info, CUpti_CallbackId id,
 	int kind = -1;
 	int count = 0;
 
-	if (domain == CUPTI_CB_DOMAIN_RUNTIME_API_TRACE)
+	if (domain == CUPTI_CB_DOMAIN_RUNTIME_API)
 	{
 		get_value_from_memcpy(info, id, domain, kind, count);
 	}
@@ -208,9 +208,9 @@ template<class APItype> int count(const APItype &info, CUpti_CallbackId id,
 	return count;
 	//return info->count;
 }
-template<class APItype> bool isMemcpy(const APItype &info)
+bool isMemcpy(CUpti_CallbackId id)
 {
-  return functionIsMemcpy(functionId(info));
+  return functionIsMemcpy(functionId(id));
 }
 
 /*
@@ -323,15 +323,17 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 	int funcId;
 	CUcontext ctx;
 
-	if (domain == CUPTI_CB_DOMAIN_RUNTIME_API_TRACE)
+	if (domain == CUPTI_CB_DOMAIN_RUNTIME_API)
 	{
 		//printf("getting data form runtime API.\n");
-		const CUpti_RuntimeTraceApi *cbInfo = (CUpti_RuntimeTraceApi *) params;
+		
+		const CUpti_CallbackData *cbInfo = (CUpti_CallbackData *) params;
 
-		funcId = functionId(cbInfo);
+		//Changed from: funcId = functionId(cbInfo);
+		funcId = functionId(id);
 		name = functionName(cbInfo, domain);
 		site = callbacksite(cbInfo);
-		memcpy = isMemcpy(cbInfo);
+		memcpy = isMemcpy(id);
 		if (memcpy)
 		{
 			memcpyKind = kind(cbInfo, id, domain);
@@ -340,13 +342,13 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 		if (id == CUPTI_RUNTIME_TRACE_CBID_cudaGetDevice_v3020 && track_instructions
 		&& !cupti_metrics_initialized)
 		{
-			const CUpti_RuntimeTraceApi *cbInfo = (CUpti_RuntimeTraceApi *) params;
+			const CUpti_CallbackData *cbInfo = (CUpti_CallbackData *) params;
 			//cuCtxSynchronize();
 			//context(cbInfo, id, &ctx);
 			//printf("creating context, %s.\n", name);
 			CUcontext ctx;
 			CUdevice device;
-			int *dId = ((cudaGetDevice_v3020_params *) cbInfo->params)->device;
+			int *dId = ((cudaGetDevice_v3020_params *) cbInfo->functionParams)->device;
 			//printf("device id: %d", *dId);
 			cuDeviceGet(&device, *dId);
 			cuCtxCreate(&ctx, 0, device);
@@ -357,12 +359,12 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 	}
 	else
 	{
-		const CUpti_DriverTraceApi *cbInfo = (CUpti_DriverTraceApi *) params;
+		const CUpti_CallbackData *cbInfo = (CUpti_CallbackData *) params;
 
-		funcId = functionId(cbInfo);
+		funcId = functionId(id);
 		name = functionName(cbInfo, domain);
 		site = callbacksite(cbInfo);
-		memcpy = isMemcpy(cbInfo);
+		memcpy = isMemcpy(id);
 		if (memcpy)
 		{
 			memcpyKind = kind(cbInfo, id, domain);
@@ -435,7 +437,7 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 			if ((id == CUPTI_DRIVER_TRACE_CBID_cuCtxCreate || 
 			id == CUPTI_DRIVER_TRACE_CBID_cuCtxCreate_v2) && track_instructions)
 			{
-				const CUpti_DriverTraceApi *cbInfo = (CUpti_DriverTraceApi *) params;
+				const CUpti_CallbackData *cbInfo = (CUpti_CallbackData *) params;
 				//CUcontext ctx;
 				//context(cbInfo, id, &ctx); 
 				//cupti_metrics_init(ctx);
@@ -461,7 +463,7 @@ void Tau_cuda_onload(void)
   CUdevice device = 0;
 	int computeCapabilityMajor=0;
 	int computeCapabilityMinor=0;
-  CUresult err;
+  CUptiResult err;
 
 	/* check removed, cannot call cuDeviceComputeCapability until some CUDA
 	 * initialization is completed.
@@ -486,13 +488,13 @@ void Tau_cuda_onload(void)
 	if (runtime_api != NULL)
 	{
 		printf("TAU: Subscribing to RUNTIME API.\n");
-		err = cuptiEnableDomain(1, rtSubscriber,CUPTI_CB_DOMAIN_RUNTIME_API_TRACE);
+		err = cuptiEnableDomain(1, rtSubscriber,CUPTI_CB_DOMAIN_RUNTIME_API);
 		runtime_enabled= true;
 	}
 	if (driver_api != NULL)
 	{
 		printf("TAU: Subscribing to DRIVER API.\n");
-		err = cuptiEnableDomain(1, drSubscriber,CUPTI_CB_DOMAIN_DRIVER_API_TRACE);
+		err = cuptiEnableDomain(1, drSubscriber,CUPTI_CB_DOMAIN_DRIVER_API);
 		driver_enabled= true;
 	}
 	CUDA_CHECK_ERROR(err, "Cannot set Domain.\n");
@@ -528,7 +530,7 @@ void Tau_cuda_onload(void)
 void Tau_cuda_onunload(void)
 {
 	//printf("in Tau_cuda_onunload.\n");
-  CUresult err;
+  CUptiResult err;
   err = cuptiUnsubscribe(rtSubscriber);
   err = cuptiUnsubscribe(drSubscriber);
   CUDA_CHECK_ERROR(err, "Cannot unsubscribe.\n");
