@@ -243,7 +243,12 @@ extern "C" int Tau_init_initializeTAU() {
 
   /* initialize sampling if requested */
   if (TauEnv_get_ebs_enabled()) {
+    /* Work-around for MVAPHICH 2 to move sampling initialization to 
+       after MPI_Init()
+    */
+#ifndef TAU_MPI
     Tau_sampling_init(0);
+#endif /* TAU_MPI */
   }
 #ifdef TAU_PGI
   sbrk(102400);

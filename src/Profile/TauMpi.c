@@ -1685,6 +1685,7 @@ char *** argv;
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Init( argc, argv );
+  Tau_sampling_init_if_necessary();
 
 #ifdef TAU_MONITORING
   Tau_mon_connect();
@@ -1730,6 +1731,7 @@ int *provided;
   TAU_PROFILE_START(tautimer);
  
   returnVal = PMPI_Init_thread( argc, argv, required, provided );
+  Tau_sampling_init_if_necessary();
 
   TAU_PROFILE_STOP(tautimer);
 
