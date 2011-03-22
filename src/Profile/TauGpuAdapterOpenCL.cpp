@@ -187,29 +187,28 @@ void Tau_opencl_exit_memcpy_event(const char *name, int id, int MemcpyType)
 }
 
 void Tau_opencl_register_gpu_event(const char *name, int id, double start,
-double stop)
+double stop, FunctionInfo* parent)
 {
 	openCLGpuId *gId = new openCLGpuId(0);
 	lock_callback();
 	//printf("locked for: %s.\n", name);
-	Profiler p;
-	eventId evId = Tau_gpu_create_gpu_event(name, gId, p);
-	Tau_gpu_register_gpu_event(&evId, start/1e3 - sync_offset, stop/1e3 - sync_offset);
+	eventId evId = Tau_gpu_create_gpu_event(name, gId, parent);
+	Tau_gpu_register_gpu_event(evId, start/1e3 - sync_offset, stop/1e3 - sync_offset);
 	//printf("released for: %s.\n", name);
 	release_callback();
 }
 
 void Tau_opencl_register_memcpy_event(const char *name, int id, double start, double stop, int
-transferSize, int MemcpyType)
+transferSize, int MemcpyType, FunctionInfo* parent)
 {
 	//printf("in Tau_open.\n");
 	//printf("Memcpy type is %d.\n", MemcpyType);
 	openCLGpuId *gId = new openCLGpuId(0);
 	lock_callback();
 	//printf("locked for: %s.\n", name);
-	Profiler p;
-	eventId evId = Tau_gpu_create_gpu_event(name, gId, p);
-	Tau_gpu_register_memcpy_event(&evId, start/1e3 - sync_offset, stop/1e3 - sync_offset, transferSize, MemcpyType);
+	FunctionInfo* p;
+	eventId evId = Tau_gpu_create_gpu_event(name, gId, parent);
+	Tau_gpu_register_memcpy_event(evId, start/1e3 - sync_offset, stop/1e3 - sync_offset, transferSize, MemcpyType);
 	//printf("released for: %s.\n", name);
 	release_callback();
 
@@ -240,7 +239,8 @@ void CL_CALLBACK Tau_opencl_memcpy_callback(cl_event event, cl_int command_stat,
 	}
 	//printf("DtoH calling Tau_open.\n");
 	Tau_opencl_register_memcpy_event(memcpy_data->name, 0, (double) startTime,
-	(double) endTime, TAU_GPU_UNKNOW_TRANSFER_SIZE, memcpy_data->memcpy_type);
+	(double) endTime, TAU_GPU_UNKNOW_TRANSFER_SIZE, memcpy_data->memcpy_type,
+	memcpy_data->callingSite);
 	
 	free(data);
 }
@@ -271,7 +271,7 @@ void CL_CALLBACK Tau_opencl_kernel_callback(cl_event event, cl_int command_stat,
 		//printf("OpenCL.cpp: start timestamp: %.7f stop time %.7f.", (double) startTime, (double)endTime);
 	  //printf("in TauGpuAdapt name: %s.\n", kernel_data->name);
 		Tau_opencl_register_gpu_event(kernel_data->name, 0, (double) startTime,
-		(double) endTime);
+		(double) endTime, kernel_data->callingSite);
 	free(data);
 }
 

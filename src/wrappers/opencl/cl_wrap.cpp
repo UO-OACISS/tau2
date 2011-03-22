@@ -1925,6 +1925,7 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
 	int err;
 	err = clGetKernelInfo(a2, CL_KERNEL_FUNCTION_NAME,
 	sizeof(char[TAU_MAX_FUNCTIONNAME]), kernel_data->name, NULL);
+	kernel_data->callingSite = TauInternal_CurrentProfiler(RtsLayer::myNode())->CallPathFunction;
 	if (err != CL_SUCCESS)
 	{
 		printf("Cannot get Kernel name.\n");

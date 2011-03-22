@@ -1057,11 +1057,13 @@ cudaError_t cudaLaunch(const char * a1) {
 		Tau_cuda_init();
 		int device;
 		cudaGetDevice(&device);
-		Tau_cuda_enqueue_kernel_enter_event(kernelName, &cudaRuntimeGpuId(device,curr_stream));
+		Tau_cuda_enqueue_kernel_enter_event(kernelName,
+			&cudaRuntimeGpuId(device,curr_stream),
+			TauInternal_CurrentProfiler(RtsLayer::myNode())->CallPathFunction);
 #endif
 		retval  =  (*cudaLaunch_h)( a1);
 #ifdef TRACK_KERNEL
-		Tau_cuda_enqueue_kernel_exit_event(kernelName, &cudaRuntimeGpuId(device,curr_stream));
+		Tau_cuda_enqueue_kernel_exit_event();
 #endif
 		TAU_PROFILE_STOP(t);
   }

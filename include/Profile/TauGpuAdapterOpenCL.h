@@ -37,6 +37,7 @@ void CL_CALLBACK Tau_opencl_kernel_callback(cl_event event, cl_int command_stat,
 typedef struct memcpy_callback_data_t 
 {
 	char name[TAU_MAX_FUNCTIONNAME];
+	FunctionInfo* callingSite;
 	int memcpy_type;
 } memcpy_callback_data; 
 int memcpy_data_size = sizeof(memcpy_callback_data);
@@ -44,6 +45,7 @@ int memcpy_data_size = sizeof(memcpy_callback_data);
 typedef struct kernel_callback_data_t 
 {
 	char name[TAU_MAX_FUNCTIONNAME];
+	FunctionInfo* callingSite;
 } kernel_callback_data;
 int kernel_data_size = sizeof(kernel_callback_data);
 
