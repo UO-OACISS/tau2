@@ -1440,6 +1440,31 @@ for arg in "$@"; do
     shift
     ;;
   
+  -cupti=*)
+    cupti=`echo $arg | sed -e 's/-cupti=//' -e 's/ /#/g'`
+    if [ ! -d $cupti ] ; then
+      echo "Error: Cannot access CUPTI include directory $cupti"
+      exit 1
+    fi
+		if [ -f "$cupti/include/cupti_events.h" ] ; then
+      fixmakeargs="$fixmakeargs cupti=$cupti"
+		else
+			echo "Error: Cannot find CUPTI headers."
+    fi
+    shift
+    ;;
+	default)
+    echo "Fixing Makefiles"
+    ;;	
+  '')
+    #echo "NULL switch!"
+    # Required for HP/Compaq Tru64 machines.
+    ;;
+  *)
+    echo "ERROR: Command line switch \`$arg' not recognized" 1>&2
+    echo "Run configure with -help to see a list of options" 1>&2
+    exit 1
+    ;;
 	default)
     echo "Fixing Makefiles"
     ;;	
