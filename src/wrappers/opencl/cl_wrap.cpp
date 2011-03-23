@@ -14,6 +14,8 @@ static TauContextUserEvent *MemoryCopyEventDtoD;
 
 //static TauContextUserEvent *MemoryCopyEvent;
 
+#define CL_API TAU_USER
+
 void check_memory_init()
 {
 
