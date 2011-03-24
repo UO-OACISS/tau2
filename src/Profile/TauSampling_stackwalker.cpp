@@ -90,7 +90,7 @@ void show_backtrace_stackwalker(void *pc) {
 }
 
 void Tau_sampling_outputTraceCallstack(int tid, void *pc,
-				       ucontext_t *context) {
+				       void *context) {
   int found = 0;
   std::vector<Frame> stackwalk;
   string s;

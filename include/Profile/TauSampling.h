@@ -66,15 +66,6 @@
 
 #include <tau_internal.h>
 
-#include <sys/time.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/types.h>
-#include <signal.h>
-#include <stdlib.h>
-#include <strings.h>
-#include <ucontext.h>
-
 #if (defined(TAU_CRAYXMT) || defined(TAU_BGL) || defined(TAU_DISABLE_SAMPLING))
 
 #define Tau_sampling_init(tid) 
@@ -107,8 +98,8 @@ extern "C" void Tau_sampling_resume();
 */
 extern "C" void Tau_sampling_init_if_necessary(void );
 
-void Tau_sampling_outputTraceCallpath(int tid, void *pc, ucontext_t *context);
-void Tau_sampling_outputTraceCallstack(int tid, void *pc, ucontext_t *context);
+void Tau_sampling_outputTraceCallpath(int tid);
+void Tau_sampling_outputTraceCallstack(int tid, void *pc, void *context);
 
 #endif /* TAU_CRAYXMT */
 
