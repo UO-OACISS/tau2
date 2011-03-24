@@ -95,7 +95,8 @@ PGIACC_O=
 #PGIACC#PGIACC_O = PgiAcc.o #ENDIF#
 #PGI#PGIACC_STATIC_O = PgiAcc.o #ENDIF#
 
-TAU_SAMPLING_O = TauSampling.o
+TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.o \
+		TauSampling_libunwind.o
 #BGL#TAU_SAMPLING_O= #ENDIF#
 #CATAMOUNT#TAU_SAMPLING_O= #ENDIF#
 #CRAYX1CC#TAU_SAMPLING_O= #ENDIF#
@@ -544,6 +545,15 @@ TauCollate.o 	: TauCollate.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
 
 TauSampling.o 	: TauSampling.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauSampling_hpctoolkit.o 	: TauSampling_hpctoolkit.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauSampling_stackwalker.o 	: TauSampling_stackwalker.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauSampling_libunwind.o 	: TauSampling_libunwind.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauEnv.o 	: TauEnv.cpp $(HDRS)

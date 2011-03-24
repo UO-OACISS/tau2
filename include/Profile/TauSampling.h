@@ -66,6 +66,15 @@
 
 #include <tau_internal.h>
 
+#include <sys/time.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/types.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <strings.h>
+#include <ucontext.h>
+
 #if (defined(TAU_CRAYXMT) || defined(TAU_BGL) || defined(TAU_DISABLE_SAMPLING))
 
 #define Tau_sampling_init(tid) 
@@ -73,8 +82,13 @@
 #define Tau_sampling_event_start(tid, address)
 #define Tau_sampling_event_stop(tid, stopTime)
 #define Tau_sampling_papi_overflow_handler(EventSet, address, overflow_vector, context)
+
 #define Tau_sampling_suspend()
 #define Tau_sampling_resume()
+
+#define Tau_sampling_init_if_necessary()
+#define Tau_sampling_outputTraceCallpath(tid, pc, context)
+#define Tau_sampling_outputTraceCallstack(tid, pc, context)
 
 #else
 int Tau_sampling_init(int tid);
@@ -88,11 +102,23 @@ void Tau_sampling_papi_overflow_handler(int EventSet, void *address,
 extern "C" void Tau_sampling_suspend();
 extern "C" void Tau_sampling_resume();
 
+/* For TauMpi.c workaround to handle conflict between EBS operation and
+   mvapich2 on Hera.
+*/
 extern "C" void Tau_sampling_init_if_necessary(void );
 
+void Tau_sampling_outputTraceCallpath(int tid, void *pc, ucontext_t *context);
+void Tau_sampling_outputTraceCallstack(int tid, void *pc, ucontext_t *context);
 
 #endif /* TAU_CRAYXMT */
 
 #define TAU_SAMP_NUM_ADDRESSES 7
+
+/* The trace for this node, mulithreaded execution currently not supported */
+extern FILE *ebsTrace[];
+
+#ifdef TAU_USE_HPCTOOLKIT
+extern int hpctoolkit_process_started;
+#endif /* TAU_USE_HPCTOOLKIT */
 
 #endif /* _TAU_SAMPLING_H_ */

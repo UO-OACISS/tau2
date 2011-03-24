@@ -63,48 +63,9 @@
 #define _XOPEN_SOURCE 600 /* Single UNIX Specification, Version 3 */
 #endif /* __APPLE__ */
 
-#include <sys/time.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/types.h>
-#include <signal.h>
-#include <stdlib.h>
-#include <strings.h>
-#include <ucontext.h>
-
 #include <TAU.h>
 #include <Profile/TauMetrics.h>
 #include <Profile/TauSampling.h>
-
-/* unwind */
-#ifdef TAU_USE_LIBUNWIND
-#define UNW_LOCAL_ONLY
-#include <libunwind.h>
-#endif
-
-/* stackwalker */
-#ifdef TAU_USE_STACKWALKER
-#include <walker.h>
-#include <frame.h>
-#include <steppergroup.h>
-using namespace Dyninst;
-using namespace Stackwalker;
-#include <iostream>
-#include <set>
-using namespace std;
-#endif
-
-#ifdef TAU_USE_HPCTOOLKIT
-extern "C" {
-  #include <unwind.h>
-}
-
-#include <setjmp.h>
-
-extern "C" sigjmp_buf *hpctoolkit_get_thread_jb();
-
-extern int hpctoolkit_process_started;
-#endif /* TAU_USE_HPCTOOLKIT */
 
 /*********************************************************************
  * Tau Sampling Record Definition
@@ -128,6 +89,28 @@ FILE *ebsTrace[TAU_MAX_THREADS];
 
 /* Sample processing enabled/disabled */
 int samplingEnabled[TAU_MAX_THREADS];
+class initEnableFlags {
+public:
+initEnableFlags() {
+  for (int i = 0; i < TAU_MAX_THREADS; i++) {
+    samplingEnabled[i] = 0;
+  }
+}
+};
+initEnableFlags enableFlagsInitializer = initEnableFlags();
+
+/* Sample processing suspended/resumed */
+int suspendSampling[TAU_MAX_THREADS];
+class initSuspendFlags {
+public:
+initSuspendFlags() {
+  for (int i = 0; i < TAU_MAX_THREADS; i++) {
+    suspendSampling[i] = 0;
+  }
+}
+};
+initSuspendFlags suspendFlagsInitializer = initSuspendFlags();
+
 
 /*********************************************************************
  * Get the architecture specific PC
@@ -140,8 +123,6 @@ int samplingEnabled[TAU_MAX_THREADS];
 #endif
 
 #define PPC_REG_PC 32
-
-
 
 
 static inline caddr_t get_pc(void *p) {
@@ -177,197 +158,10 @@ static inline caddr_t get_pc(void *p) {
   pc = (caddr_t)sc->regs->nip;
 # else
 #  error "profile handler not defined for this architecture"
-# endif
+# endif /* TAU_BGP */
   return pc;
 #endif /* sun */
 }
-
-/*********************************************************************
- * Initialization
- ********************************************************************/
-// int insideSignalHandler[TAU_MAX_THREADS];
-// class initflags {
-// public:
-// initflags() {
-//   for (int i = 0; i < TAU_MAX_THREADS; i++) {
-//     insideSignalHandler[i] = 0;
-//   }
-// }
-// };
-// initflags foobar = initflags();
-
-#ifdef TAU_USE_STACKWALKER
-
-extern "C" void *dlmalloc(size_t size);
-
-extern "C" void *dlcalloc(size_t nmemb, size_t size);
-
-extern "C" void dlfree(void *ptr);
-
-extern "C" void *dlrealloc(void *ptr, size_t size);
-
-extern "C" void *__libc_malloc(size_t size);
-
-extern "C" void *__libc_calloc(size_t nmemb, size_t size);
-
-extern "C" void __libc_free(void *ptr);
-
-extern "C" void *__libc_realloc(void *ptr, size_t size);
-
-void *malloc(size_t size) {
-  int tid = RtsLayer::myThread();
-  // return __libc_malloc(size);
-  if (insideSignalHandler[tid]) {
-    return dlmalloc(size);
-  } else {
-    return __libc_malloc(size);
-  }
-}
-
-void *calloc(size_t nmemb, size_t size) {
-  int tid = RtsLayer::myThread();
-//   printf ("Our calloc called!\n");
-// return __libc_malloc(size);
-  if (insideSignalHandler[tid]) {
-    return dlcalloc(nmemb, size);
-  } else {
-    return __libc_calloc(nmemb, size);
-  }
-}
-
-void free(void *ptr) {
-  int tid = RtsLayer::myThread();
-  // return __libc_malloc(size);
-  if (insideSignalHandler[tid]) {
-    dlfree(ptr);
-  } else {
-    __libc_free(ptr);
-  }
-}
-
-void *realloc(void *ptr, size_t size) {
-  int tid = RtsLayer::myThread();
-  // return __libc_malloc(size);
-  if (insideSignalHandler[tid]) {
-    return dlrealloc(ptr, size);
-  } else {
-    return __libc_realloc(ptr, size);
-  }
-}
-
-Walker *walker = Walker::newWalker();
-// Frame crapFrame(walker);
-// std::vector<Frame> stackwalk(2000, crapFrame);
-
-void show_backtrace_stackwalker(void *pc) {
-  std::vector<Frame> stackwalk;
-
-  RtsLayer::LockDB();
-  printf("====\n");
-  string s;
-  walker->walkStack(stackwalk);
-
-  for (unsigned i = 0; i < stackwalk.size(); i++) {
-    stackwalk[i].getName(s);
-    cout << "Found function " << s << endl;
-  }
-  RtsLayer::UnLockDB();
-  exit(0);
-}
-
-void Tau_sampling_output_callstack(int tid, void *pc) {
-  int found = 0;
-  std::vector<Frame> stackwalk;
-  string s;
-
-  // StackWalkerAPI is not thread-safe
-  RtsLayer::LockDB();
-
-  walker->walkStack(stackwalk);
-
-  fprintf(ebsTrace[tid], " |");
-
-  for (unsigned i = 0; i < stackwalk.size(); i++) {
-    void *ip = (void *)stackwalk[i].getRA();
-
-    if (found) {
-      fprintf(ebsTrace[tid], " %p", ip);
-    }
-    if (ip == pc) {
-      found = 1;
-    }
-  }
-
-  // StackWalkerAPI is not thread-safe
-  RtsLayer::UnLockDB();
-}
-
-#endif /* TAU_USE_STACKWALKER */
-
-#ifdef TAU_USE_LIBUNWIND
-void show_backtrace_unwind(void *pc) {
-  unw_cursor_t cursor;
-  unw_context_t uc;
-  unw_word_t ip, sp;
-  int found = 0;
-
-  unw_getcontext(&uc);
-  unw_init_local(&cursor, &uc);
-  while (unw_step(&cursor) > 0) {
-    unw_get_reg(&cursor, UNW_REG_IP, &ip);
-    // unw_get_reg(&cursor, UNW_REG_SP, &sp);
-    if (ip == (unw_word_t)pc) {
-      found = 1;
-    }
-    //    if (found) {
-    printf("ip = %lx, sp = %lx\n", (long)ip, (long)sp);
-    //    }
-  }
-}
-
-void Tau_sampling_output_callstack(int tid, void *pc) {
-  unw_cursor_t cursor;
-  unw_context_t uc;
-  unw_word_t ip, sp;
-  int found = 0;
-
-  fprintf(ebsTrace[tid], " |");
-
-  unw_getcontext(&uc);
-  unw_init_local(&cursor, &uc);
-  while (unw_step(&cursor) > 0) {
-    unw_get_reg(&cursor, UNW_REG_IP, &ip);
-    // unw_get_reg(&cursor, UNW_REG_SP, &sp);
-    if (found) {
-      fprintf(ebsTrace[tid], " %p", ip);
-    }
-    if (ip == (unw_word_t)pc) {
-      found = 1;
-    }
-  }
-}
-
-#endif /* TAU_USE_LIBUNWIND */
-
-int suspendSampling[TAU_MAX_THREADS];
-class initSuspendFlags {
-public:
-initSuspendFlags() {
-  for (int i = 0; i < TAU_MAX_THREADS; i++) {
-    suspendSampling[i] = 0;
-  }
-}
-};
-initSuspendFlags suspendFlagsInitializer = initSuspendFlags();
-
-/*
-   void Tau_sampling_suspend();
-   void Tau_sampling_resume();
-
-
-   extern "C" void Tau_sampling_suspend();
-   extern "C" void Tau_sampling_resume();
- */
 
 extern "C" void Tau_sampling_suspend() {
   int tid = RtsLayer::myThread();
@@ -385,92 +179,27 @@ extern "C" void Tau_sampling_dlopen() {
   fprintf(stderr, "TAU: got a dlopen\n");
 }
 
-#ifdef TAU_USE_HPCTOOLKIT
+/*******************************************
+ * EBS Tracing Input/Output Routines
+ *******************************************/
 
-void show_backtrace_unwind(void *pc) {
-  ucontext_t *context = (ucontext_t *)pc;
-  unw_cursor_t cursor;
-  unw_word_t ip, sp;
-  int found = 0;
-
-  unw_init_cursor(&cursor, context);
-
-  while (unw_step(&cursor) > 0) {
-    unw_get_reg(&cursor, UNW_REG_IP, &ip);
-    fprintf(stderr, "ip = %p ", ip);
+void Tau_sampling_outputTraceHeader(int tid) {
+  fprintf(ebsTrace[tid], "# Format version: 0.2\n");
+  fprintf(
+    ebsTrace[tid],
+    "# $ | <timestamp> | <delta-begin> | <delta-end> | <metric 1> ... <metric N> | <tau callpath> | <location> [ PC callstack ]\n");
+  fprintf(
+    ebsTrace[tid],
+    "# % | <delta-begin metric 1> ... <delta-begin metric N> | <delta-end metric 1> ... <delta-end metric N> | <tau callpath>\n");
+  fprintf(ebsTrace[tid], "# Metrics:");
+  for (int i = 0; i < Tau_Global_numCounters; i++) {
+    const char *name = TauMetrics_getMetricName(i);
+    fprintf(ebsTrace[tid], " %s", name);
   }
-  fprintf(stderr, "\n");
+  fprintf(ebsTrace[tid], "\n");
 }
 
-void debug_this_try(int tid, void *in_context) {
-  ucontext_t *context = (ucontext_t *)in_context;
-  unw_cursor_t cursor;
-  unw_word_t ip, sp;
-  int found = 1;
-
-  fprintf(stderr, "++++++++tid = %d+++++++++++\n", tid);
-  Profiler *profiler = TauInternal_CurrentProfiler(tid);
-  fprintf(stderr, "Function name is: %s\n", profiler->ThisFunction->GetName());
-
-  for (int i = 0; i < TAU_SAMP_NUM_ADDRESSES; i++) {
-    fprintf(stderr, "address[%d] = %p\n", i, profiler->address[i]);
-  }
-
-  // fprintf(stderr,"==========\n");
-  unw_init_cursor(&cursor, context);
-  while (unw_step(&cursor) > 0) {
-    unw_get_reg(&cursor, UNW_REG_IP, &ip);
-    fprintf(stderr, "step %p\n", ip);
-  }
-  fprintf(stderr, "+++++++++++++++++++\n");
-}
-
-void Tau_sampling_output_callstack(int tid, void *in_context) {
-  ucontext_t *context = (ucontext_t *)in_context;
-  unw_cursor_t cursor;
-  unw_word_t ip, sp;
-  int found = 1;
-
-  Profiler *profiler = TauInternal_CurrentProfiler(tid);
-
-  sigjmp_buf *jmpbuf = hpctoolkit_get_thread_jb();
-
-  int ljmp = sigsetjmp(*jmpbuf, 1);
-  if (ljmp == 0) {
-    // fprintf(stderr,"==========\n");
-    unw_init_cursor(&cursor, context);
-    while (unw_step(&cursor) > 0) {
-      unw_get_reg(&cursor, UNW_REG_IP, &ip);
-
-      for (int i = 0; i < TAU_SAMP_NUM_ADDRESSES; i++) {
-        if (ip == (unw_word_t)profiler->address[i]) {
-          return;
-        }
-      }
-      // fprintf(stderr,"step %p\n", ip);
-
-      fprintf(ebsTrace[tid], " %p", ip);
-    }
-  } else {
-    fprintf(stderr, "*** unhandled sample:\n");
-    return;
-  }
-
-  fprintf(stderr, "*** very strange, didn't find profiler\n");
-
-  debug_this_try(tid, in_context);
-
-// , profiler's address was %p\n",
-//         profiler->address);
-}
-
-#endif /* TAU_USE_HPCTOOLKIT */
-
-/*********************************************************************
- * Write out the TAU callpath
- ********************************************************************/
-
-void Tau_sampling_output_callpath(int tid) {
+void Tau_sampling_outputTraceCallpath(int tid) {
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
   if (profiler->CallPathFunction == NULL) {
     fprintf(ebsTrace[tid], "%ld", profiler->ThisFunction->GetFunctionId());
@@ -478,7 +207,7 @@ void Tau_sampling_output_callpath(int tid) {
     fprintf(ebsTrace[tid], "%ld", profiler->CallPathFunction->GetFunctionId());
   }
 }
-
+/*
 void Tau_sampling_output_callpath_old(int tid) {
   TAU_QUERY_DECLARE_EVENT(event);
   const char *str;
@@ -505,11 +234,17 @@ void Tau_sampling_output_callpath_old(int tid) {
     depth--;
   }
 }
+*/
 
-/*********************************************************************
- * Write out a single event record
- ********************************************************************/
-void Tau_sampling_flush_record(int tid, TauSamplingRecord *record, void *pc, ucontext_t *context) {
+#if !defined(TAU_USE_LIBUNWIND) && !defined(TAU_USE_STACKWALKER) && !defined(TAU_USE_HPCTOOLKIT)
+void Tau_sampling_outputTraceCallstack(int tid, void *pc, 
+				       ucontext_t *context) {
+  /* Default, do nothing */
+}
+#endif /* TAU_USE_LIBUNWIND */
+
+void Tau_sampling_flushTraceRecord(int tid, TauSamplingRecord *record, 
+				   void *pc, ucontext_t *context) {
   fprintf(ebsTrace[tid], "$ | %lld | ", record->timestamp);
 
 #ifdef TAU_EXP_DISABLE_DELTAS
@@ -526,86 +261,18 @@ void Tau_sampling_flush_record(int tid, TauSamplingRecord *record, void *pc, uco
 
   fprintf(ebsTrace[tid], "| ");
 
-  Tau_sampling_output_callpath(tid);
+  /* *CWL* - consider a check for TauEnv_get_callpath() here */
+  Tau_sampling_outputTraceCallpath(tid);
 
   fprintf(ebsTrace[tid], " | %p", record->pc);
 
-#ifdef TAU_USE_LIBUNWIND
-  Tau_sampling_output_callstack(tid, pc);
-#endif /* TAU_USE_LIBUNWIND */
-
-#ifdef TAU_USE_STACKWALKER
-  Tau_sampling_output_callstack(tid, pc);
-#endif /* TAU_USE_STACKWALKER */
-
-#ifdef TAU_USE_HPCTOOLKIT
-  Tau_sampling_output_callstack(tid, context);
-#endif /* TAU_USE_HPCTOOLKIT */
+  Tau_sampling_outputTraceCallstack(tid, pc, context);
 
   fprintf(ebsTrace[tid], "\n");
 }
 
-/*********************************************************************
- * Handler for event entry (start)
- ********************************************************************/
-void Tau_sampling_event_start(int tid, void **addresses) {
-  // fprintf (stderr, "[%d] SAMP: event start: ", tid);
-
-#ifdef TAU_USE_HPCTOOLKIT
-  ucontext_t context;
-  int ret = getcontext(&context);
-
-  if (ret != 0) {
-    fprintf(stderr, "TAU: Error getting context\n");
-    return;
-  }
-
-  if (hpctoolkit_process_started == 0) {
-    // fprintf(stderr, "nope, quitting\n");
-    return;
-  }
-
-  unw_cursor_t cursor;
-  unw_word_t ip, sp;
-  // fprintf (stderr,"$$$$$$$$$start$$$$$$$$$\n");
-  unw_init_cursor(&cursor, &context);
-  int idx = 0;
-
-  int skip = 1;
-  while (unw_step(&cursor) > 0 && idx < TAU_SAMP_NUM_ADDRESSES) {
-    unw_get_reg(&cursor, UNW_REG_IP, &ip);
-
-    if (skip > 0) {
-      // fprintf (stderr,"skipping address %p\n", ip);
-      skip--;
-    } else {
-      addresses[idx++] = ip;
-      // fprintf (stderr,"assigning address %p to index %d\n", ip, idx-1);
-    }
-  }
-
-  // fprintf (stderr, "\n");
-  // fprintf (stderr,"$$$$$$$$$$$$$$$$$$\n");
-#endif /* TAU_USE_HPCTOOLKIT */
-}
-
-/*********************************************************************
- * Handler for event exit (stop)
- ********************************************************************/
-int Tau_sampling_event_stop(int tid, double *stopTime) {
-#ifdef TAU_EXP_DISABLE_DELTAS
-  return 0;
-#endif
-
-  samplingEnabled[tid] = 0;
-
-  Profiler *profiler = TauInternal_CurrentProfiler(tid);
-
-  if (!profiler->needToRecordStop) {
-    samplingEnabled[tid] = 1;
-    return 0;
-  }
-
+void Tau_sampling_outputTraceStop(int tid, Profiler *profiler, 
+				  double *stopTime) {
   fprintf(ebsTrace[tid], "%% | ");
 
   for (int i = 0; i < Tau_Global_numCounters; i++) {
@@ -621,15 +288,137 @@ int Tau_sampling_event_stop(int tid, double *stopTime) {
   }
   fprintf(ebsTrace[tid], "| ");
 
-  Tau_sampling_output_callpath(tid);
+  Tau_sampling_outputTraceCallpath(tid);
   fprintf(ebsTrace[tid], "\n");
+}
+
+/*********************************************************************
+ * Write Maps file for EBS Traces
+ ********************************************************************/
+int Tau_sampling_write_maps(int tid, int restart) {
+  const char *profiledir = TauEnv_get_profiledir();
+
+  int node = RtsLayer::myNode();
+  node = 0;
+  char filename[4096];
+  sprintf(filename, "%s/ebstrace.map.%d.%d.%d.%d", profiledir, getpid(), node, RtsLayer::myContext(), tid);
+
+  FILE *output = fopen(filename, "a");
+
+  FILE *mapsfile = fopen("/proc/self/maps", "r");
+  if (mapsfile == NULL) {
+    return -1;
+  }
+
+  char line[4096];
+  while (!feof(mapsfile)) {
+    fgets(line, 4096, mapsfile);
+    // printf ("=> %s", line);
+    unsigned long start, end, offset;
+    char module[4096];
+    char perms[5];
+    module[0] = 0;
+
+    sscanf(line, "%lx-%lx %s %lx %*s %*u %[^\n]", &start, &end, perms, &offset, module);
+
+    if (*module && ((strcmp(perms, "r-xp") == 0) || (strcmp(perms, "rwxp") == 0))) {
+      // printf ("got %s, %p-%p (%d)\n", module, start, end, offset);
+      fprintf(output, "%s %p %p %d\n", module, start, end, offset);
+    }
+  }
+  fclose(output);
+
+  return 0;
+}
+
+void Tau_sampling_outputTraceDefinitions(int tid) {
+  const char *profiledir = TauEnv_get_profiledir();
+  char filename[4096];
+  int node = RtsLayer::myNode();
+  node = 0;
+  sprintf(filename, "%s/ebstrace.def.%d.%d.%d.%d", profiledir, getpid(), node, RtsLayer::myContext(), tid);
+
+  FILE *def = fopen(filename, "w");
+
+  fprintf(def, "# Format:\n");
+  fprintf(def, "# <id> | <name>\n");
+
+  for (vector<FunctionInfo *>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
+    FunctionInfo *fi = *it;
+    if (strlen(fi->GetType()) > 0) {
+      fprintf(def, "%ld | %s %s\n", fi->GetFunctionId(), fi->GetName(), fi->GetType());
+    } else {
+      fprintf(def, "%ld | %s\n", fi->GetFunctionId(), fi->GetName());
+    }
+  }
+  fclose(def);
+
+  /* write out the executable name at the end */
+  char buffer[4096];
+  bzero(buffer, 4096);
+  int rc = readlink("/proc/self/exe", buffer, 4096);
+  if (rc == -1) {
+    fprintf(stderr, "TAU Sampling: Error, unable to read /proc/self/exe\n");
+  } else {
+    buffer[rc] = 0;
+    fprintf(ebsTrace[tid], "# exe: %s\n", buffer);
+  }
+
+  /* write out the node number */
+  fprintf(ebsTrace[tid], "# node: %d\n", RtsLayer::myNode());
+  fprintf(ebsTrace[tid], "# thread: %d\n", tid);
+
+  fclose(ebsTrace[tid]);
+
+#ifndef TAU_BGP
+  Tau_sampling_write_maps(tid, 0);
+#endif
+
+}
+
+
+/*********************************************************************
+ * Event triggers
+ ********************************************************************/
+
+/* Various unwinders might have their own implementation */
+#ifndef TAU_USE_HPCTOOLKIT
+void Tau_sampling_event_start(int tid, void **addresses) {
+  /* empty default implementation */
+}
+#endif /* TAU_USE_HPCTOOLKIT */
+
+int Tau_sampling_event_stop(int tid, double *stopTime) {
+#ifdef TAU_EXP_DISABLE_DELTAS
+  return 0;
+#endif
+
+  samplingEnabled[tid] = 0;
+
+  Profiler *profiler = TauInternal_CurrentProfiler(tid);
+
+  if (!profiler->needToRecordStop) {
+    samplingEnabled[tid] = 1;
+    return 0;
+  }
+
+  /* *CWL* - In the new scheme, output tracing data only if TAU_TRACE
+     is enabled.
+   */
+#ifdef TAU_EXP_EBS_NEW_DEFAULTS
+  if (TauEnv_get_tracing()) {
+#endif /* TAU_EXP_EBS_NEW_DEFAULTS */
+    Tau_sampling_outputTraceStop(tid, profiler, stopTime);
+#ifdef TAU_EXP_EBS_NEW_DEFAULTS
+  }
+#endif /* TAU_EXP_EBS_NEW_DEFAULTS */
 
   samplingEnabled[tid] = 1;
   return 0;
 }
 
 /*********************************************************************
- * Handler a sample
+ * Sample Handling
  ********************************************************************/
 void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
   int tid = RtsLayer::myThread();
@@ -676,7 +465,16 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
     theRecord.counterDeltaStop[i] = 0;
   }
 
-  Tau_sampling_flush_record(tid, &theRecord, pc, context);
+  /* *CWL* - In the new scheme, output tracing data only if TAU_TRACE
+     is enabled.
+   */
+#ifdef TAU_EXP_EBS_NEW_DEFAULTS
+  if (TauEnv_get_tracing()) {
+#endif /* TAU_EXP_EBS_NEW_DEFAULTS */
+  Tau_sampling_flushTraceRecord(tid, &theRecord, pc, context);
+#ifdef TAU_EXP_EBS_NEW_DEFAULTS
+  }
+#endif /* TAU_EXP_EBS_NEW_DEFAULTS */
 
   /* set this to get the stop event */
   profiler->needToRecordStop = 1;
@@ -720,26 +518,6 @@ void Tau_sampling_papi_overflow_handler(int EventSet, void *address, x_int64 ove
 }
 
 /*********************************************************************
- * Output Format Header
- ********************************************************************/
-int Tau_sampling_outputHeader(int tid) {
-  fprintf(ebsTrace[tid], "# Format version: 0.2\n");
-  fprintf(
-    ebsTrace[tid],
-    "# $ | <timestamp> | <delta-begin> | <delta-end> | <metric 1> ... <metric N> | <tau callpath> | <location> [ PC callstack ]\n");
-  fprintf(
-    ebsTrace[tid],
-    "# % | <delta-begin metric 1> ... <delta-begin metric N> | <delta-end metric 1> ... <delta-end metric N> | <tau callpath>\n");
-  fprintf(ebsTrace[tid], "# Metrics:");
-  for (int i = 0; i < Tau_Global_numCounters; i++) {
-    const char *name = TauMetrics_getMetricName(i);
-    fprintf(ebsTrace[tid], " %s", name);
-  }
-  fprintf(ebsTrace[tid], "\n");
-  return 0;
-}
-
-/*********************************************************************
  * Initialize the sampling trace system
  ********************************************************************/
 int Tau_sampling_init(int tid) {
@@ -748,10 +526,6 @@ int Tau_sampling_init(int tid) {
 
   //  printf ("init called! tid = %d\n", tid);
   static struct itimerval itval;
-
-  // for (i=0; i<TAU_MAX_THREADS; i++) {
-  //   ebsTrace[i] = 0;
-  // }
 
   //int threshold = 1000;
   int threshold = TauEnv_get_ebs_period();
@@ -766,6 +540,12 @@ int Tau_sampling_init(int tid) {
   int node = RtsLayer::myNode();
   node = 0;
   char filename[4096];
+  /* *CWL* - In the new scheme, output tracing files only if TAU_TRACE
+     is enabled.
+   */
+#ifdef TAU_EXP_EBS_NEW_DEFAULTS
+  if (TauEnv_get_tracing()) {
+#endif /* TAU_EXP_EBS_NEW_DEFAULTS */
   sprintf(filename, "%s/ebstrace.raw.%d.%d.%d.%d", profiledir, getpid(), node, RtsLayer::myContext(), tid);
 
   ebsTrace[tid] = fopen(filename, "w");
@@ -774,7 +554,10 @@ int Tau_sampling_init(int tid) {
     exit(-1);
   }
 
-  Tau_sampling_outputHeader(tid);
+  Tau_sampling_outputTraceHeader(tid);
+#ifdef TAU_EXP_EBS_NEW_DEFAULTS
+  }
+#endif /* TAU_EXP_EBS_NEW_DEFAULTS */
 
 /*
    see:
@@ -789,6 +572,11 @@ int Tau_sampling_init(int tid) {
   // int which = ITIMER_PROF;
   // int alarmType = SIGPROF;
 
+  /*  *CWL* - NOTE: It is fine to establish the timer interrupts here
+      (and the PAPI overflow interrupts elsewhere) only because we
+      enable sample handling for each thread after init(tid) completes.
+      See Tau_sampling_handle_sample().
+   */
   if (strcmp(TauEnv_get_ebs_source(), "itimer") == 0) {
     int which = ITIMER_REAL;
     int alarmType = SIGALRM;
@@ -837,51 +625,6 @@ int Tau_sampling_init(int tid) {
 }
 
 /*********************************************************************
- * Write maps file
- ********************************************************************/
-int Tau_sampling_write_maps(int tid, int restart) {
-  const char *profiledir = TauEnv_get_profiledir();
-
-  int node = RtsLayer::myNode();
-  node = 0;
-  char filename[4096];
-  sprintf(filename, "%s/ebstrace.map.%d.%d.%d.%d", profiledir, getpid(), node, RtsLayer::myContext(), tid);
-
-  FILE *output = fopen(filename, "a");
-
-  FILE *mapsfile = fopen("/proc/self/maps", "r");
-  if (mapsfile == NULL) {
-    return -1;
-  }
-
-  char line[4096];
-  while (!feof(mapsfile)) {
-    fgets(line, 4096, mapsfile);
-    // printf ("=> %s", line);
-    unsigned long start, end, offset;
-    char module[4096];
-    char perms[5];
-    module[0] = 0;
-
-    sscanf(line, "%lx-%lx %s %lx %*s %*u %[^\n]", &start, &end, perms, &offset, module);
-
-    if (*module && ((strcmp(perms, "r-xp") == 0) || (strcmp(perms, "rwxp") == 0))) {
-      // printf ("got %s, %p-%p (%d)\n", module, start, end, offset);
-      fprintf(output, "%s %p %p %d\n", module, start, end, offset);
-    }
-  }
-  fclose(output);
-
-  return 0;
-}
-
-extern "C" void Tau_sampling_init_if_necessary(void ) {
-  if (TauEnv_get_ebs_enabled()) {
-    Tau_sampling_init(RtsLayer::myThread());
-  }
-}
-
-/*********************************************************************
  * Finalize the sampling trace system
  ********************************************************************/
 int Tau_sampling_finalize(int tid) {
@@ -905,47 +648,18 @@ int Tau_sampling_finalize(int tid) {
     /* ERROR */
   }
 
-  const char *profiledir = TauEnv_get_profiledir();
-  char filename[4096];
-  int node = RtsLayer::myNode();
-  node = 0;
-  sprintf(filename, "%s/ebstrace.def.%d.%d.%d.%d", profiledir, getpid(), node, RtsLayer::myContext(), tid);
-
-  FILE *def = fopen(filename, "w");
-
-  fprintf(def, "# Format:\n");
-  fprintf(def, "# <id> | <name>\n");
-
-  for (vector<FunctionInfo *>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
-    FunctionInfo *fi = *it;
-    if (strlen(fi->GetType()) > 0) {
-      fprintf(def, "%ld | %s %s\n", fi->GetFunctionId(), fi->GetName(), fi->GetType());
-    } else {
-      fprintf(def, "%ld | %s\n", fi->GetFunctionId(), fi->GetName());
-    }
-  }
-  fclose(def);
-
-  /* write out the executable name at the end */
-  char buffer[4096];
-  bzero(buffer, 4096);
-  int rc = readlink("/proc/self/exe", buffer, 4096);
-  if (rc == -1) {
-    fprintf(stderr, "TAU Sampling: Error, unable to read /proc/self/exe\n");
-  } else {
-    buffer[rc] = 0;
-    fprintf(ebsTrace[tid], "# exe: %s\n", buffer);
-  }
-
-  /* write out the node number */
-  fprintf(ebsTrace[tid], "# node: %d\n", RtsLayer::myNode());
-  fprintf(ebsTrace[tid], "# thread: %d\n", tid);
-
-  fclose(ebsTrace[tid]);
-
-#ifndef TAU_BGP
-  Tau_sampling_write_maps(tid, 0);
-#endif
+  Tau_sampling_outputTraceDefinitions(tid);
 
   return 0;
 }
+
+/* *CWL* - This is workaround code for MPI where mvapich2 on Hera was
+   found to conflict with EBS sampling operations if EBS was initialized
+   before MPI_Init()
+ */
+extern "C" void Tau_sampling_init_if_necessary(void ) {
+  if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_init(RtsLayer::myThread());
+  }
+}
+
