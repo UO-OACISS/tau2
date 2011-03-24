@@ -1447,7 +1447,7 @@ for arg in "$@"; do
       exit 1
     fi
 		if [ -f "$cupti/include/cupti_events.h" ] ; then
-      fixmakeargs="$fixmakeargs cupti=$cupti"
+      fixmakeargs="$fixmakeargs CUPTI cuptiinclude=$cupti/include"
 		else
 			echo "Error: Cannot find CUPTI headers."
     fi

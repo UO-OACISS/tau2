@@ -327,7 +327,7 @@ CRAY_PGI_HACK=
 #$(TAU_SHAREDDIR)/$(TAU_CUPTI_LIB): $(TAU_CUPTI_LIB)
 #	cp $(TAU_CUPTI_LIB) $(TAU_SHAREDDIR)/$(TAU_CUPTI_LIB)
 
-all:		$(TAU_TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI) $(TAUPYTHON) $(SHMEM_WRAPPER) $(POELIB) $(TAU_CUDA_LIB) $(TAU_OPENCL_LIB)
+all:		$(TAU_TARGET) $(TAU_DISABLE) $(MPI_WRAPPER) $(TAU_DSO) $(TAUJAPI) $(TAUPYTHON) $(SHMEM_WRAPPER) $(POELIB) $(TAU_CUDA_LIB) $(TAU_OPENCL_LIB) $(TAU_CUPTI_LIB)
 
 $(TAU_TARGET):	$(OBJS) $(STATIC_OBJS)
 		$(PRELINK_PHASE)
@@ -367,7 +367,7 @@ $(TAU_NULL)$(TAU_CUDA_LIB): $(TAU_CUDA_OBJS) $(TAU_DSO)
 $(TAU_NULL)$(TAU_CUPTI_LIB): $(TAU_CUPTI_OBJS) $(TAU_DSO)
 		$(PRELINK_PHASE)
 		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_CUPTI_LIB) $(TAU_CUPTI_OBJS) \
-		-L$(TAU_LIB_DIR) $(TAU_DSO)
+		-L$(TAU_LIB_DIR) $(TAU_DSO) -L$(TAU_CUPTI_INC)/../lib -lcupti
 		$(TAU_RANLIB) $(TAU_CUPTI_LIB)
 
 $(TAU_DISABLE): TauDisable.o $(TAU_DISABLE_SHARED) TauKojakOpariDisable.o
@@ -731,7 +731,7 @@ TauGpuAdapterOpenCL.o : TauGpuAdapterOpenCL.cpp $(HDRS)  $(INCDIR)/TauGpuAdapter
 	$(CXX) $(CXXFLAGS) -I$(TAU_OPENCL_INC) -g -c $(@:.o=.cpp)
 
 TauGpuAdapterCupti.o : TauGpuAdapterCupti.cpp $(HDRS) ../../include/Profile/TauGpuAdapterCupti.h
-	$(CXX) $(CXXFLAGS) -g -I$(TAU_CUPTI_INC) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) -g -I$(TAU_CUPTI_INC) -I$(TAU_CUDA_INC) -c $(@:.o=.cpp)
 
 jVMTIThreadLayer.o: JVMTIThreadLayer.cpp
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@

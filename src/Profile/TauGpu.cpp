@@ -78,14 +78,14 @@ void check_gpu_event(int gpuTask)
 /* create TAU callback routine to capture both CPU and GPU execution time 
 	takes the thread id as a argument. */
 
-void Tau_gpu_enter_event(const char* name, eventId *id)
+void Tau_gpu_enter_event(const char* name)
 {
 #ifdef DEBUG_PROF
 	printf("entering cu event: %s.\n", name);
 #endif
 	TAU_START(name);
 }
-void Tau_gpu_enter_memcpy_event(const char *functionName, eventId *id, gpuId
+void Tau_gpu_enter_memcpy_event(const char *functionName, gpuId
 *device, int transferSize, int memcpyType)
 {
 #ifdef DEBUG_PROF
@@ -151,7 +151,7 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, eventId *id, gpuId
 	}
 	
 }
-void Tau_gpu_exit_memcpy_event(const char * functionName, eventId *id, gpuId *device, int
+void Tau_gpu_exit_memcpy_event(const char * functionName, gpuId *device, int
 memcpyType)
 {
 #ifdef DEBUG_PROF
@@ -186,7 +186,7 @@ memcpyType)
 
 }
 
-void Tau_gpu_exit_event(const char *name, eventId *id)
+void Tau_gpu_exit_event(const char *name)
 {
 #ifdef DEBUG_PROF
 	printf("exit cu event: %s.\n", name);

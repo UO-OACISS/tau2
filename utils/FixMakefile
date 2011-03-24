@@ -633,6 +633,10 @@ case $1 in
         echo "NOTE: Using the TAU's OPENCL Profiling Interface "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     CUPTI)
+        echo "NOTE: Using the TAU's CUPTI Profiling Interface "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
 
      cudainclude=*)
         cudainclude=`echo $1 | sed -e 's/^cudainclude=//' -e 's/#/ /g'`
@@ -643,6 +647,11 @@ case $1 in
         openclinclude=`echo $1 | sed -e 's/^openclinclude=//' -e 's/#/ /g'`
       echo "NOTE: Using OPENCL for GPU analysis, source in $openclinclude"
 			echo "s@^TAU_OPENCL_INC=\(.*\)@TAU_OPENCL_INC=$openclinclude@g" >> $sedout
+		;;	
+		cuptiinclude=*)
+        cuptiinclude=`echo $1 | sed -e 's/^cuptiinclude=//' -e 's/#/ /g'`
+      echo "NOTE: Using CUPTI for GPU analysis, source in $cuptiinclude"
+			echo "s@^TAU_CUPTI_INC=\(.*\)@TAU_CUPTI_INC=$cuptiinclude@g" >> $sedout
 		;;	
 
 ###############################################################
