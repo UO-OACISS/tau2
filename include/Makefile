@@ -968,7 +968,7 @@ TAU_CCOMPILER     = $(TAU_CC)
 #############################################
 TAU_CUDA_INC=
 TAU_OPENCL_INC=
-TAU_CUPTI=
+TAU_CUPTI_INC=/usr/local/cuda/Tools/CUPTI/include
 #############################################
 
 

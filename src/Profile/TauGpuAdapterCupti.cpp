@@ -1,43 +1,57 @@
 #include <Profile/TauMetrics.h>
+#include <Profile/TauEnv.h>
+//#include <Profile/TauGpuAdapterCUDA.h>
 #include <Profile/TauGpuAdapterCupti.h>
 #include <stdio.h>
 #include <string>
 using namespace std;
 
-
-class cudaGpuId : public gpuId {
-
-	int contextId;
-	int deviceId;
+class cuptiGpuId : public gpuId
+{
+	uint64_t contextUid;
 
 public:
-	cudaGpuId(const int cId, const int dId) :
-	contextId(cId), deviceId(dId) {} 
-  
+	cuptiGpuId(uint64_t c);
+	cuptiGpuId* getCopy();
 	char* printId();
-	x_uint64 id_p1() { return contextId; }
-	x_uint64 id_p2() { return deviceId; }
+	x_uint64 id_p1();
+	x_uint64 id_p2();
+	bool equals(const gpuId *other) const;
 };
 
-char* cudaGpuId::printId() 
+cuptiGpuId::cuptiGpuId(uint64_t cid) { contextUid = cid; };
+
+cuptiGpuId* cuptiGpuId::getCopy()
 {
-		char *r;
-		sprintf(r, "%d:%d", contextId, deviceId);
-		return r;
+		cuptiGpuId *c = new cuptiGpuId(*this);
+		return c;
 }
 
-class cudaEventId : public eventId
+char* cuptiGpuId::printId()
 {
-	int id;
+	char *rtn = (char*) malloc(50*sizeof(char));
+	sprintf(rtn, "[%ld]", contextUid);
+	return rtn;
+};
+x_uint64 cuptiGpuId::id_p1() { return contextUid; };
+x_uint64 cuptiGpuId::id_p2() { return 0; };
+bool cuptiGpuId::equals(const gpuId *o) const
+{
+	cuptiGpuId *other = (cuptiGpuId*) o;
+	return this->contextUid == other->contextUid;
+}
+
+class cuptiEventId : public eventId
+{
 	public:
-	cudaEventId(const int a) :
-		id(a) {}
+	cuptiEventId(const char* name, cuptiGpuId* tmp, FunctionInfo* fi) :
+		eventId(name, tmp, fi) {}
 	
 	// for use in STL Maps	
-	bool operator<(const cudaEventId& A) const
+	/*bool operator<(const cuptiEventId& A) const
 	{ 
 			return id<A.id; 
-	}
+	}*/
 };
 
 
@@ -74,10 +88,10 @@ template<class APItype> const char* functionName(const APItype &info,
 																								 CUpti_CallbackDomain domain)
 {
 	const char *orig_name = info->functionName;
-	char *name = new char[strlen(orig_name) + 13];
+	/*char *name = new char[strlen(orig_name) + 13];
 	sprintf(name, "%s (%s)",orig_name, (domain ==
-	CUPTI_CB_DOMAIN_RUNTIME_API ? "RuntimeAPI" : "DriverAPI"));
-	return name;
+	CUPTI_CB_DOMAIN_RUNTIME_API ? "RuntimeAPI" : "DriverAPI"));*/
+	return orig_name;
 }
 int functionId(CUpti_CallbackId info)
 {
@@ -322,12 +336,13 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 	int memcpyCount;
 	int funcId;
 	CUcontext ctx;
+		
+	const CUpti_CallbackData *cbInfo = (CUpti_CallbackData *) params;
 
 	if (domain == CUPTI_CB_DOMAIN_RUNTIME_API)
 	{
 		//printf("getting data form runtime API.\n");
 		
-		const CUpti_CallbackData *cbInfo = (CUpti_CallbackData *) params;
 
 		//Changed from: funcId = functionId(cbInfo);
 		funcId = functionId(id);
@@ -359,7 +374,7 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 	}
 	else
 	{
-		const CUpti_CallbackData *cbInfo = (CUpti_CallbackData *) params;
+		//const CUpti_CallbackData *cbInfo = (CUpti_CallbackData *) params;
 
 		funcId = functionId(id);
 		name = functionName(cbInfo, domain);
@@ -383,18 +398,17 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 	{
 		if (memcpy)
 		{
-			//TODO: sort out GPU ids
 			//TODO: memory copies from device to device.
 			//printf("cuda D2D is: %d.\n", cudaMemcpyDeviceToDevice);
 			if (memcpyKind == cudaMemcpyHostToDevice)
 			{
 				Tau_gpu_enter_memcpy_event(name, 
-				&cudaEventId(funcId), &cudaGpuId(0,0), memcpyCount, MemcpyHtoD);
+					&cuptiGpuId(cbInfo->contextUid), memcpyCount, MemcpyHtoD);
 			}
 			else if (memcpyKind == cudaMemcpyDeviceToHost)
 			{
 				Tau_gpu_enter_memcpy_event(name,
-				&cudaEventId(funcId), &cudaGpuId(0,0), memcpyCount, MemcpyDtoH);
+					&cuptiGpuId(cbInfo->contextUid), memcpyCount, MemcpyDtoH);
 			}
 			else if (memcpyKind == cudaMemcpyDeviceToDevice)
 			{
@@ -403,7 +417,7 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 		}
 		else 
 		{
-			Tau_gpu_enter_event(name, &cudaEventId(funcId));
+			Tau_gpu_enter_event(name);
 		}
 	}
 	else if (site == CUPTI_API_EXIT)
@@ -413,12 +427,12 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 			if (memcpyKind == cudaMemcpyHostToDevice)
 			{
 				Tau_gpu_exit_memcpy_event(name,
-				&cudaEventId(funcId), &cudaGpuId(0,0), MemcpyHtoD);
+					&cuptiGpuId(cbInfo->contextUid), MemcpyHtoD);
 			}
 			else if (memcpyKind == cudaMemcpyDeviceToHost)
 			{
 				Tau_gpu_exit_memcpy_event(name,
-				&cudaEventId(funcId), &cudaGpuId(0,0), MemcpyDtoH);
+					&cuptiGpuId(cbInfo->contextUid), MemcpyDtoH);
 			}
 			else if (memcpyKind == cudaMemcpyDeviceToDevice)
 			{
@@ -427,7 +441,7 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 		}
 		else
 		{
-			Tau_gpu_exit_event(name, &cudaEventId(funcId));
+			Tau_gpu_exit_event(name);
 			//	Shutdown at Thread Exit
 			if (funcId == 123)
 			{
@@ -475,25 +489,28 @@ void Tau_cuda_onload(void)
 			printf("cupti supported only for Tesla\n");
 			exit(1);
 	}*/
-	err = cuptiSubscribe(&rtSubscriber, (CUpti_CallbackFunc)Tau_cuda_timestamp_callback , &trace);
-	err = cuptiSubscribe(&drSubscriber, (CUpti_CallbackFunc)Tau_cuda_timestamp_callback , &trace);
 	CUDA_CHECK_ERROR(err, "Cannot Subscribe.\n");
 
 	//Get env variables
-	char *runtime_api, *driver_api;
-	runtime_api = getenv("TAU_CUPTI_RUNTIME");
-	driver_api = getenv("TAU_CUPTI_DRIVER");
+	//char *runtime_api, *driver_api;
+	//runtime_api = getenv("TAU_CUPTI_RUNTIME");
+	//driver_api = getenv("TAU_CUPTI_DRIVER");
 	//printf("ENV: %s.\n", runtime_api);
 	//printf("ENV: %s.\n", driver_api);
-	if (runtime_api != NULL)
+	//printf("in adapter: %s.\n", TauEnv_get_cupti_api());
+  if (0 == strcasecmp(TauEnv_get_cupti_api(), "runtime") || 
+			0 == strcasecmp(TauEnv_get_cupti_api(), "both"))
 	{
-		printf("TAU: Subscribing to RUNTIME API.\n");
+		//printf("TAU: Subscribing to RUNTIME API.\n");
+		err = cuptiSubscribe(&rtSubscriber, (CUpti_CallbackFunc)Tau_cuda_timestamp_callback , &trace);
 		err = cuptiEnableDomain(1, rtSubscriber,CUPTI_CB_DOMAIN_RUNTIME_API);
 		runtime_enabled= true;
 	}
-	if (driver_api != NULL)
+  if (0 == strcasecmp(TauEnv_get_cupti_api(), "driver") || 
+			0 == strcasecmp(TauEnv_get_cupti_api(), "both")) 
 	{
-		printf("TAU: Subscribing to DRIVER API.\n");
+		//printf("TAU: Subscribing to DRIVER API.\n");
+		err = cuptiSubscribe(&drSubscriber, (CUpti_CallbackFunc)Tau_cuda_timestamp_callback , &trace);
 		err = cuptiEnableDomain(1, drSubscriber,CUPTI_CB_DOMAIN_DRIVER_API);
 		driver_enabled= true;
 	}
@@ -516,7 +533,7 @@ void Tau_cuda_onload(void)
 		{
 			track_instructions = true;
 			printf("RECORDING number of instructions.\n");
-			if (runtime_api == NULL)
+			if (0 != strcasecmp(TauEnv_get_cupti_api(), "runtime"))
 			{
 				printf("ERROR CUPTI metrics require the Runtime layer to be enabled. Please set TAU_CUPTI_RUNTIME.\n");
 				exit(1);
@@ -533,6 +550,7 @@ void Tau_cuda_onunload(void)
   CUptiResult err;
   err = cuptiUnsubscribe(rtSubscriber);
   err = cuptiUnsubscribe(drSubscriber);
+	//TODO: why can we unsubscribe?
   CUDA_CHECK_ERROR(err, "Cannot unsubscribe.\n");
 	
 	if (eventGroup != NULL)
