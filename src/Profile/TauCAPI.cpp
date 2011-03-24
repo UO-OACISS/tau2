@@ -455,7 +455,7 @@ extern "C" int Tau_profile_exit_all_threads() {
 		while (Tau_global_stackpos[tid] >= 0) {
 			Profiler *p = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
 			Tau_stop_timer(p->ThisFunction, Tau_get_tid());
-			Tau_global_stackpos[tid]--;
+			// DO NOT pop. It is popped in stop above: Tau_global_stackpos[tid]--;
 		}
 	tid++;
 	}
@@ -469,7 +469,7 @@ extern "C" int Tau_profile_exit() {
 	while (Tau_global_stackpos[tid] >= 0) {
 		Profiler *p = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
 		Tau_stop_timer(p->ThisFunction, Tau_get_tid());
-		Tau_global_stackpos[tid]--;
+		// DO NOT pop. It is popped in stop above: Tau_global_stackpos[tid]--;
 	}
   return 0;
 }
