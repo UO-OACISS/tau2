@@ -67,6 +67,15 @@
 #include <Profile/TauMetrics.h>
 #include <Profile/TauSampling.h>
 
+#include <sys/time.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/types.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <strings.h>
+#include <ucontext.h>
+
 /*********************************************************************
  * Tau Sampling Record Definition
  ********************************************************************/

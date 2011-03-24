@@ -27,7 +27,7 @@ void show_backtrace_unwind(void *pc) {
 }
 
 void Tau_sampling_outputTraceCallstack(int tid, void *pc, 
-				       ucontext_t *context) {
+				       void *context) {
   /* context is not used in libunwind */
   unw_cursor_t cursor;
   unw_context_t uc;

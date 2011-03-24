@@ -51,9 +51,10 @@ void debug_this_try(int tid, void *in_context) {
 }
 
 void Tau_sampling_outputTraceCallstack(int tid, void *pc, 
-				       ucontext_t *context) {
+				       void *context_in) {
   unw_cursor_t cursor;
   unw_word_t ip, sp;
+  ucontext_t *context = (ucontext_t *)context_in;
   int found = 1;
 
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
