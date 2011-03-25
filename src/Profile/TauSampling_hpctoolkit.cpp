@@ -1,5 +1,6 @@
 #ifdef TAU_USE_HPCTOOLKIT
 
+#include <stdio.h>
 #include <ucontext.h>
 
 #include <TAU.h>
