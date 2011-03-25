@@ -1,25 +1,37 @@
 #include <Profile/TauMetrics.h>
 #include <Profile/TauEnv.h>
-//#include <Profile/TauGpuAdapterCUDA.h>
+#include <Profile/TauGpuAdapterCUDA.h>
 #include <Profile/TauGpuAdapterCupti.h>
 #include <stdio.h>
 #include <string>
 using namespace std;
 
-class cuptiGpuId : public gpuId
+class cuptiGpuId : public cudaGpuId
 {
 	uint64_t contextUid;
+	cudaStream_t stream;
 
 public:
-	cuptiGpuId(uint64_t c);
+	cuptiGpuId(uint64_t c, cudaStream_t s);
 	cuptiGpuId* getCopy();
 	char* printId();
 	x_uint64 id_p1();
 	x_uint64 id_p2();
 	bool equals(const gpuId *other) const;
+	cudaStream_t getStream();
+	int getDevice();
+	CUcontext getContext();
 };
 
-cuptiGpuId::cuptiGpuId(uint64_t cid) { contextUid = cid; };
+cuptiGpuId::cuptiGpuId(uint64_t cid, cudaStream_t st) 
+{ 
+	contextUid = cid; 
+	stream = st;	
+};
+
+cudaStream_t cuptiGpuId::getStream() { return stream; };  
+int cuptiGpuId::getDevice() { return 0; };
+CUcontext cuptiGpuId::getContext() { return (CUcontext) contextUid; };
 
 cuptiGpuId* cuptiGpuId::getCopy()
 {
@@ -40,7 +52,7 @@ bool cuptiGpuId::equals(const gpuId *o) const
 	cuptiGpuId *other = (cuptiGpuId*) o;
 	return this->contextUid == other->contextUid;
 }
-
+	
 class cuptiEventId : public eventId
 {
 	public:
@@ -68,6 +80,27 @@ bool functionIsMemcpy(int id)
 						//driver API
 						id == 276 || id == 279 ||
 						id == 278 || id == 290
+					  );
+}
+
+bool functionIsLaunch(int id)
+{
+	return		(//runtime API
+						id == 13  ||
+						//driver API
+						id == 115 || id == 116 ||
+						id == 117 || id == 307 
+					  );
+}
+
+bool functionIsSync(int id)
+{
+	return		(//runtime API
+						id == 126  || id == 131 ||
+						id == 137  || id == 167 ||
+						//driver API
+						id == 121 || id == 126 ||
+						id == 17
 					  );
 }
 
@@ -186,6 +219,25 @@ template<class APItype> void get_value_from_memcpy(const APItype &info,
 
 	}
 	//printf("[1] kind is %d.\n", kind);
+}
+
+template<class APItype> void functionStream(const APItype &info,
+CUpti_CallbackId id, CUpti_CallbackDomain domain, cudaStream_t &stream)
+{
+
+	if (domain == CUPTI_CB_DOMAIN_RUNTIME_API)
+	{
+		//no support for stream tracking via the runtime API assume on stream 0.
+		stream = 0;
+
+	}
+	else
+	{
+		//return a stream id that cannot be used in cudaEventRecord();
+    //CAST_TO_DRIVER_LAUNCH_TYPE_AND_CALL(cuLaunchGridAsync, id, info, stream)
+		//TODO: add lots more async memcpys.
+		stream = 0;
+	}
 }
 
 template<class APItype> int kind(const APItype &info, CUpti_CallbackId id, 
@@ -336,6 +388,7 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 	int memcpyCount;
 	int funcId;
 	CUcontext ctx;
+	cudaStream_t stream;
 		
 	const CUpti_CallbackData *cbInfo = (CUpti_CallbackData *) params;
 
@@ -345,6 +398,7 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 		
 
 		//Changed from: funcId = functionId(cbInfo);
+		functionStream(cbInfo, id, domain, stream);
 		funcId = functionId(id);
 		name = functionName(cbInfo, domain);
 		site = callbacksite(cbInfo);
@@ -375,7 +429,7 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 	else
 	{
 		//const CUpti_CallbackData *cbInfo = (CUpti_CallbackData *) params;
-
+		functionStream(cbInfo, id, domain, stream);
 		funcId = functionId(id);
 		name = functionName(cbInfo, domain);
 		site = callbacksite(cbInfo);
@@ -403,12 +457,12 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 			if (memcpyKind == cudaMemcpyHostToDevice)
 			{
 				Tau_gpu_enter_memcpy_event(name, 
-					&cuptiGpuId(cbInfo->contextUid), memcpyCount, MemcpyHtoD);
+					&cuptiGpuId(cbInfo->contextUid, 0), memcpyCount, MemcpyHtoD);
 			}
 			else if (memcpyKind == cudaMemcpyDeviceToHost)
 			{
 				Tau_gpu_enter_memcpy_event(name,
-					&cuptiGpuId(cbInfo->contextUid), memcpyCount, MemcpyDtoH);
+					&cuptiGpuId(cbInfo->contextUid, 0), memcpyCount, MemcpyDtoH);
 			}
 			else if (memcpyKind == cudaMemcpyDeviceToDevice)
 			{
@@ -419,6 +473,22 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 		{
 			Tau_gpu_enter_event(name);
 		}
+		if (functionIsLaunch(funcId)) 
+		{
+			FunctionInfo* finfo;
+			if (TauInternal_CurrentProfiler(RtsLayer::myNode())->CallPathFunction !=
+			NULL)
+			{
+				finfo	= TauInternal_CurrentProfiler(RtsLayer::myNode())->CallPathFunction;
+			}
+			else
+			{
+				finfo	=	TauInternal_CurrentProfiler(RtsLayer::myNode())->ThisFunction;
+			}
+			/*Tau_cuda_enqueue_kernel_enter_event(cbInfo->symbolName,
+				&cuptiGpuId(cbInfo->contextUid, stream),
+				finfo);*/
+		}
 	}
 	else if (site == CUPTI_API_EXIT)
 	{
@@ -427,12 +497,12 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 			if (memcpyKind == cudaMemcpyHostToDevice)
 			{
 				Tau_gpu_exit_memcpy_event(name,
-					&cuptiGpuId(cbInfo->contextUid), MemcpyHtoD);
+					&cuptiGpuId(cbInfo->contextUid, stream), MemcpyHtoD);
 			}
 			else if (memcpyKind == cudaMemcpyDeviceToHost)
 			{
 				Tau_gpu_exit_memcpy_event(name,
-					&cuptiGpuId(cbInfo->contextUid), MemcpyDtoH);
+					&cuptiGpuId(cbInfo->contextUid, stream), MemcpyDtoH);
 			}
 			else if (memcpyKind == cudaMemcpyDeviceToDevice)
 			{
@@ -441,9 +511,17 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 		}
 		else
 		{
+		  if (functionIsLaunch(funcId))
+			{
+				//Tau_cuda_enqueue_kernel_exit_event();
+			}
+		  if (functionIsSync(funcId))
+			{
+				//Tau_cuda_register_sync_event();
+			}
 			Tau_gpu_exit_event(name);
 			//	Shutdown at Thread Exit
-			if (funcId == 123)
+			if (funcId == 123 || funcId == 164)
 			{
 				Tau_gpu_exit();
 				return;

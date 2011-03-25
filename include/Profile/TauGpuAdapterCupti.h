@@ -73,6 +73,19 @@ void metric_read_cupti_ins(int tid, int idx, double values[]);
 		ctx = ((name##_params *) info->functionParams)->pctx; \
 	}
 
+#define CAST_TO_RUNTIME_LAUNCH_TYPE_AND_CALL(name, id, info, kind, count) \
+	if ((id) == CUPTI_RUNTIME_TRACE_CBID_##name) \
+	{ \
+		stream = ((name##_params *) info->functionParams)->ByteCount; \
+	}
+
+#define CAST_TO_DRIVER_LAUNCH_TYPE_AND_CALL(name, id, info, stream) \
+	if ((id) == CUPTI_DRIVER_TRACE_CBID_##name) \
+	{ \
+		stream = ((name##_params *) info->functionParams)->hStream; \
+	}
+
+
 // Structure to hold data collected by callback
 typedef struct RuntimeApiTrace_st {
     CUpti_CallbackData traceInfo;
