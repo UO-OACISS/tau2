@@ -24,6 +24,7 @@ usage()
     echo "        -io      track I/O"
     echo "        -memory  track memory"
     echo "        -cuda    track GPU events via CUDA"
+    echo "        -cupti   track GPU events via CUPTI (Also set env. variable TAU_CUPTI_RUNTIME or TAU_CUPTI_DRIVER)"
     echo "        -opencl  track GPU events via OpenCL"
     echo "        -armci   track ARMCI events via PARMCI"
     echo "        -ebs     enable Event-based sampling"
@@ -67,6 +68,7 @@ binding_options=""
 track_io=false
 track_memory=false
 track_cuda=false
+track_cupti=false
 track_opencl=false
 track_armci=false
 tau_use_ebs=false
@@ -103,6 +105,10 @@ for arg in "$@" ; do
 	      ;;
 	  -cuda)
 	      track_cuda=true
+	      shift
+	      ;;
+	  -cupti)
+	      track_cupti=true
 	      shift
 	      ;;
 	  -opencl)
@@ -259,6 +265,11 @@ if [ $track_cuda = "true" ] ; then
 			export TAU_METRICS=$TAU_METRICS:TAUGPU_TIME
 		fi
 fi
+if [ $track_cupti = "true" ] ; then
+    # Add the memory wrapper library to the LD_PRELOAD list
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUpti.so:$TAUEX_LD_PRELOAD
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP.so:$TAUEX_LD_PRELOAD
+fi
 if [ $track_opencl = "true" ] ; then
     # Add the OpenCL wrapper library to the LD_PRELOAD list
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-OpenCL.so:$TAUEX_LD_PRELOAD
@@ -379,6 +390,7 @@ else
 	if [ $track_memory = "true" ] ; then
 	    echo "export TAU_MEMORY_WRAPPER_ENABLED=1"
 	fi
+
 	if [ $apple = 1 ]; then
 	    echo "export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH"
 	    echo "export DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD"
