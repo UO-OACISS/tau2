@@ -78,14 +78,14 @@ void check_gpu_event(int gpuTask)
 /* create TAU callback routine to capture both CPU and GPU execution time 
 	takes the thread id as a argument. */
 
-void Tau_gpu_enter_event(const char* name, eventId *id)
+void Tau_gpu_enter_event(const char* name)
 {
 #ifdef DEBUG_PROF
 	printf("entering cu event: %s.\n", name);
 #endif
 	TAU_START(name);
 }
-void Tau_gpu_enter_memcpy_event(const char *functionName, eventId *id, gpuId
+void Tau_gpu_enter_memcpy_event(const char *functionName, gpuId
 *device, int transferSize, int memcpyType)
 {
 #ifdef DEBUG_PROF
@@ -151,7 +151,7 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, eventId *id, gpuId
 	}
 	
 }
-void Tau_gpu_exit_memcpy_event(const char * functionName, eventId *id, gpuId *device, int
+void Tau_gpu_exit_memcpy_event(const char * functionName, gpuId *device, int
 memcpyType)
 {
 #ifdef DEBUG_PROF
@@ -186,7 +186,7 @@ memcpyType)
 
 }
 
-void Tau_gpu_exit_event(const char *name, eventId *id)
+void Tau_gpu_exit_event(const char *name)
 {
 #ifdef DEBUG_PROF
 	printf("exit cu event: %s.\n", name);
@@ -231,7 +231,9 @@ FunctionInfo* parent)
 	check_gpu_event(gpuTask);
 	if (TauEnv_get_callpath()) {
   	//printf("Profiler: %s \n", parent->GetName());
-		Tau_start_timer(parent, 0, gpuTask);
+		if (parent != NULL) {
+			Tau_start_timer(parent, 0, gpuTask);
+		}
 	}
 	start_gpu_event(name, gpuTask);
 }
@@ -260,8 +262,10 @@ FunctionInfo* parent)
 	stop_gpu_event(name, gpuTask);
 	if (TauEnv_get_callpath()) {
   	//printf("Profiler: %s \n", parent->GetName());
-		double totalTime = 0; 
-		Tau_stop_timer(parent, gpuTask);
+		double totalTime = 0;
+		if (parent != NULL) {
+			Tau_stop_timer(parent, gpuTask);
+		}
 	}	
 }
 int get_task(gpuId *new_task)

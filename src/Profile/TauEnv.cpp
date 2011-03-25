@@ -97,6 +97,8 @@
   #define TAU_SYNCHRONIZE_CLOCKS_DEFAULT 0
 #endif /* TAU_MPI */
 
+#define TAU_CUPTI_API_DEFAULT "runtime"
+
 /************************** tau.conf stuff, adapted from Scalasca ***********/
 
 /*********************************************************************
@@ -276,6 +278,7 @@ static double env_throttle_percall = 0;
 static const char *env_profiledir = NULL;
 static const char *env_tracedir = NULL;
 static const char *env_metrics = NULL;
+static const char *env_cupti_api = NULL;
 
 /*********************************************************************
  * Write to stderr if verbose mode is on
@@ -424,6 +427,10 @@ int TauEnv_get_stat_precompute() {
 
 int TauEnv_get_child_forkdirs(){
   return env_child_forkdirs;
+}
+
+const char* TauEnv_get_cupti_api(){
+  return env_cupti_api;
 }
 
 /*********************************************************************
@@ -798,6 +805,16 @@ void TauEnv_initialize() {
       TAU_METADATA("TAU_PROFILE", "off");*/
     }
 
+    env_cupti_api = getconf("TAU_CUPTI_API");
+    if (env_cupti_api == NULL || 0 == strcasecmp(env_cupti_api, "")) {
+      env_cupti_api = TAU_CUPTI_API_DEFAULT;
+      TAU_VERBOSE("TAU: CUPTI API tracking: %s\n", env_cupti_api);
+      TAU_METADATA("TAU_CUPTI_API", env_cupti_api);
+		}
+		else {
+      TAU_VERBOSE("TAU: CUPTI API tracking: %s\n", env_cupti_api);
+      TAU_METADATA("TAU_CUPTI_API", env_cupti_api);
+		}
 
   }
 }
