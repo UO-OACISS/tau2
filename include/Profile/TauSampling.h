@@ -64,6 +64,7 @@
 #ifndef _TAU_SAMPLING_H_
 #define _TAU_SAMPLING_H_
 
+#include <stdio.h>
 #include <tau_internal.h>
 
 #if (defined(TAU_CRAYXMT) || defined(TAU_BGL) || defined(TAU_DISABLE_SAMPLING))
