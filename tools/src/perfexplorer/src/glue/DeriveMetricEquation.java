@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Stack;
 import java.util.regex.Pattern;
 
-import sun.security.pkcs.ParsingException;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.client.PerfExplorerExpression;
 
