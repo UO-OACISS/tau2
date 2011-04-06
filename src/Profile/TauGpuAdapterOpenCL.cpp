@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
+#include <queue>
 #include "TauGpuAdapterOpenCL.h"
 #ifdef TAU_OPENCL_LOCKING
 #include <pthread.h>
@@ -15,6 +16,22 @@ overlapping timers errors.")
 void __attribute__ ((constructor)) Tau_opencl_init(void);
 //void __attribute__ ((destructor)) Tau_opencl_exit(void);
 
+// HACK need to not profile clGetEventProfilingInfo inside a callback.
+extern cl_int clGetEventProfilingInfo_noinst(cl_event a1, cl_profiling_info a2, size_t
+a3, void * a4, size_t * a5);
+
+extern cl_mem clCreateBuffer_noinst(cl_context a1, cl_mem_flags a2, size_t a3, void *
+a4, cl_int * a5);
+
+extern cl_int clEnqueueWriteBuffer_noinst(cl_command_queue a1, cl_mem a2, cl_bool a3,
+size_t a4, size_t a5, const void * a6, cl_uint a7, const cl_event * a8, cl_event
+* a9);
+
+extern cl_int clWaitForEvents_noinst(cl_uint a1, const cl_event * a2);
+
+extern cl_int clReleaseEvent_noinst(const cl_event a1);
+
+static queue<callback_data*> KernelBuffer;
 class openCLGpuId : public gpuId {
 
 	int id;
@@ -64,19 +81,30 @@ class openCLEventId : public eventId
 	}
 };
 
-// HACK need to not profile clGetEventProfilingInfo inside a callback.
-extern cl_int clGetEventProfilingInfo_noinst(cl_event a1, cl_profiling_info a2, size_t
-a3, void * a4, size_t * a5);
+callback_data::callback_data(char* n, FunctionInfo* cs, cl_event* ev)
+{
+	name  = n;
+	callingSite = cs;
+	event = ev;
+	memcpy_type = -1;
+}
+callback_data::callback_data(char* n, FunctionInfo* cs, cl_event* ev, int
+memtype)
+{
+	name  = n;
+	callingSite = cs;
+	event = ev;
+	memcpy_type = memtype;
+}
+callback_data::~callback_data()
+{
+	//clReleaseEvent_noinst(event);
+}
 
-extern cl_mem clCreateBuffer_noinst(cl_context a1, cl_mem_flags a2, size_t a3, void *
-a4, cl_int * a5);
-
-extern cl_int clEnqueueWriteBuffer_noinst(cl_command_queue a1, cl_mem a2, cl_bool a3,
-size_t a4, size_t a5, const void * a6, cl_uint a7, const cl_event * a8, cl_event
-* a9);
-
-extern cl_int clWaitForEvents_noinst(cl_uint a1, const cl_event * a2);
-
+bool callback_data::isMemcpy()
+{
+	return memcpy_type != -1;
+}
 
 //Lock for the callbacks
 pthread_mutex_t callback_lock;
@@ -165,6 +193,7 @@ void Tau_opencl_init()
 void Tau_opencl_exit()
 {
 	//printf("in Tau_opencl_exit().\n");
+	//delete &KernelBuffer;
 	Tau_gpu_exit();
 }
 
@@ -214,10 +243,88 @@ transferSize, int MemcpyType, FunctionInfo* parent)
 
 }
 
+
+void Tau_opencl_enqueue_event(callback_data* new_data)
+{
+	if (new_data->event == NULL)
+	{
+		//printf("null event in constructor!\n");
+	}
+	else
+	{
+		//printf("[TAU (opencl): adding kernel to buffer.\n");
+		KernelBuffer.push(new_data);	
+	}
+}
+
+bool buffer_front_is_complete()
+{
+  callback_data* front = KernelBuffer.front();
+  cl_event* event = front->event;
+
+  cl_int status, err;
+
+	err = clGetEventInfo(*event, CL_EVENT_COMMAND_EXECUTION_STATUS, sizeof(cl_int),
+	&status, NULL);
+	if (err != CL_SUCCESS)
+	{
+		printf("Fatel error: calling clGetEventInfo, exitiing.\n");
+		exit(1);
+	}
+	//printf("[TAU (opencl): event ready? %d.\n", status == CL_COMPLETE);
+
+	return status == CL_COMPLETE;
+}
+
+void Tau_opencl_register_sync_event()
+{
+	//printf("[TAU (opencl): registering sync.\n");
+	//printf("[TAU (opencl): empty buffer? %d.\n", KernelBuffer.empty());	
+	//printf("[TAU (opencl): size of buffer: %d.\n", KernelBuffer.size());	
+ while(!KernelBuffer.empty() 
+ 	 && buffer_front_is_complete())
+ {
+ 	 cl_ulong startTime, endTime;
+
+	 callback_data* kernel_data = KernelBuffer.front();
+	 cl_int err;
+	 err = clGetEventProfilingInfo_noinst(*kernel_data->event, CL_PROFILING_COMMAND_START,
+																	 sizeof(cl_ulong), &startTime, NULL);
+		if (err != CL_SUCCESS)
+		{
+			printf("Cannot get start time for Kernel event.\n");
+			exit(1);	
+		}
+
+		err = clGetEventProfilingInfo_noinst(*kernel_data->event, CL_PROFILING_COMMAND_END,
+																	 sizeof(cl_ulong), &endTime, NULL);
+		if (err != CL_SUCCESS)
+		{
+			printf("Cannot get end time for Kernel event.\n");
+			exit(1);	
+		}
+
+		if (kernel_data->isMemcpy())
+		{
+			//printf("TAU (opencl): isMemcpy!\n");
+			Tau_opencl_register_memcpy_event(kernel_data->name, 0, (double) startTime,
+			(double) endTime, TAU_GPU_UNKNOW_TRANSFER_SIZE, kernel_data->memcpy_type,
+			kernel_data->callingSite);
+		}
+		else
+		{
+			Tau_opencl_register_gpu_event(kernel_data->name, 0, (double) startTime,
+			(double) endTime, kernel_data->callingSite);
+		}
+		KernelBuffer.pop();
+
+	}
+}
+
 void CL_CALLBACK Tau_opencl_memcpy_callback(cl_event event, cl_int command_stat, void
 *data)
 {
-	memcpy_callback_data *memcpy_data = (memcpy_callback_data*) malloc(memcpy_data_size);
+	callback_data *memcpy_data = (callback_data*) malloc(memcpy_data_size);
 	memcpy(memcpy_data, data, memcpy_data_size);
 	//printf("in memcpy callback!\n");
 	//printf("in TauGpuAdapt, name: %s", memcpy_data->name);
@@ -245,10 +352,11 @@ void CL_CALLBACK Tau_opencl_memcpy_callback(cl_event event, cl_int command_stat,
 	free(data);
 }
 
+
 void CL_CALLBACK Tau_opencl_kernel_callback(cl_event event, cl_int command_stat, void
 *data)
 {
-	kernel_callback_data *kernel_data = (kernel_callback_data*) malloc(kernel_data_size);
+	callback_data *kernel_data = (callback_data*) malloc(kernel_data_size);
 	//printf("memcpy size  %d.\n", kernel_data_size);
 	memcpy(kernel_data, data, kernel_data_size);
 	//printf("in kernel callback!\n");

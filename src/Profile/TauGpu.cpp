@@ -386,6 +386,8 @@ void Tau_gpu_register_memcpy_event(eventId id, double startTime, double endTime,
 #endif
 		}
 		//TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, transferSize, RtsLayer::myThread()); 
+		//printf("TAU: putting message into trace file.\n");
+		//printf("[%f] onesided event mem send: %f.\n", startTime, transferSize);
 		TauTraceOneSidedMsg(MESSAGE_SEND, id.device, transferSize, task);
 		break_gpu_event(functionName, task,
 				endTime, id.callingSite);
