@@ -7,6 +7,7 @@
 #define MemcpyHtoD 0
 #define MemcpyDtoH 1
 #define MemcpyDtoD 2
+#define MemcpyUnknown 3
 
 #define TAU_GPU_UNKNOW_TRANSFER_SIZE -1
 #define TAU_GPU_USE_DEFAULT_NAME ""

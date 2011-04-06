@@ -252,8 +252,10 @@ cl_int clReleaseContext(cl_context a1) {
   TAU_PROFILE_START(t);
   retval  =  (*clReleaseContext_h)( a1);
   TAU_PROFILE_STOP(t);
-#ifdef TAU_ENABLE_CL_CALLBACK
+	//Tau_opencl_register_sync_event();
 	Tau_opencl_exit();
+#ifdef TAU_ENABLE_CL_CALLBACK
+	//Tau_opencl_exit();
 #endif
   }
   return retval;
@@ -371,9 +373,13 @@ cl_int clReleaseCommandQueue(cl_command_queue a1) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
+	//In order to capture events
+	clEnqueueBarrier(a1);
+
   TAU_PROFILE_START(t);
   retval  =  (*clReleaseCommandQueue_h)( a1);
   TAU_PROFILE_STOP(t);
+	//Tau_opencl_register_sync_event();
   }
   return retval;
 
@@ -1243,6 +1249,7 @@ cl_int clWaitForEvents(cl_uint a1, const cl_event * a2) {
   retval  =  (*clWaitForEvents_h)( a1,  a2);
   TAU_PROFILE_STOP(t);
 
+	Tau_opencl_register_sync_event();
 
   }
   return retval;
@@ -1325,6 +1332,31 @@ cl_int clRetainEvent(cl_event a1) {
   TAU_PROFILE_START(t);
   retval  =  (*clRetainEvent_h)( a1);
   TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+cl_int clReleaseEvent_noinst(cl_event a1) {
+
+  typedef cl_int (*clReleaseEvent_p) (cl_event);
+  static clReleaseEvent_p clReleaseEvent_h = NULL;
+  cl_int retval;
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (clReleaseEvent_h == NULL)
+	clReleaseEvent_h = (clReleaseEvent_p) dlsym(tau_handle,"clReleaseEvent"); 
+    if (clReleaseEvent_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  retval  =  (*clReleaseEvent_h)( a1);
   }
   return retval;
 
@@ -1462,6 +1494,8 @@ cl_int clFinish(cl_command_queue a1) {
   TAU_PROFILE_START(t);
   retval  =  (*clFinish_h)( a1);
   TAU_PROFILE_STOP(t);
+	
+	//Tau_opencl_register_sync_event();
   }
   return retval;
 
@@ -1494,7 +1528,7 @@ cl_int clEnqueueReadBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4
 		a9 = &new_event;
 	}
 #ifdef TAU_ENABLE_CL_CALLBACK
-	memcpy_callback_data *mem_data = (memcpy_callback_data*) malloc(memcpy_data_size);
+	callback_data *mem_data = (callback_data*) malloc(memcpy_data_size);
 	strcpy(mem_data->name, "ReadBuffer");
 	mem_data->memcpy_type = MemcpyDtoH;
 	//printf("name %s.\n", mem_data->name);
@@ -1508,12 +1542,26 @@ cl_int clEnqueueReadBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4
 	
 	clSetEventCallback((*a9), CL_COMPLETE, Tau_opencl_memcpy_callback, mem_data);
 #else
-  TAU_PROFILE_START(t);
-	check_memory_init();
-	TAU_CONTEXT_EVENT(MemoryCopyEventDtoH, a5);
+	FunctionInfo *callingSite;
+	int err;
+	char* name = "ReadBuffer";
+
+	callingSite = TauInternal_CurrentProfiler(RtsLayer::myNode())->CallPathFunction;
+	
+	callback_data *kernel_data = new callback_data(name,
+	callingSite, a9, MemcpyDtoH);
+	
+	Tau_opencl_enqueue_event(kernel_data);
+	Tau_opencl_enter_memcpy_event("cl_int clEnqueueReadBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *) C",
+	0, a5, MemcpyDtoH);
+	
   retval  =  (*clEnqueueReadBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
-  TAU_PROFILE_STOP(t);
-#endif
+	
+	Tau_opencl_exit_memcpy_event("cl_int clEnqueueReadBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *) C",
+	0, MemcpyDtoH);
+#endif 
+
+	Tau_opencl_register_sync_event();
   }
   return retval;
 
@@ -1540,7 +1588,7 @@ cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a
       return retval;
     }
 #ifdef TAU_ENABLE_CL_CALLBACK
-	memcpy_callback_data *mem_data = (memcpy_callback_data*) malloc(memcpy_data_size);
+	callback_data *mem_data = (callback_data*) malloc(memcpy_data_size);
 	strcpy(mem_data->name, "WriteBuffer");
 	mem_data->memcpy_type = MemcpyHtoD;
 	if (a9 == NULL)
@@ -1557,12 +1605,25 @@ cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a
 	
 	clSetEventCallback((*a9), CL_COMPLETE, Tau_opencl_memcpy_callback, mem_data);
 #else
-  TAU_PROFILE_START(t);
+	FunctionInfo *callingSite;
+	int err;
+	char* name = "WriteBuffer";
+
+	callingSite = TauInternal_CurrentProfiler(RtsLayer::myNode())->CallPathFunction;
+	
+	callback_data *kernel_data = new callback_data(name,
+	callingSite, a9, MemcpyHtoD);
+	
+	Tau_opencl_enqueue_event(kernel_data);
+	
 	check_memory_init();
-	TAU_CONTEXT_EVENT(MemoryCopyEventDtoH, a5);
+	TAU_CONTEXT_EVENT(MemoryCopyEventHtoD, a5);
+	Tau_opencl_enter_memcpy_event("cl_int clEnqueueWriteBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *) C", 1, a5, MemcpyHtoD); 
   retval  =  (*clEnqueueWriteBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
-  TAU_PROFILE_STOP(t);
+
+	Tau_opencl_exit_memcpy_event("cl_int clEnqueueWriteBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *) C", 1, MemcpyHtoD); 
 #endif
+	Tau_opencl_register_sync_event();
   }
   return retval;
 
@@ -1614,7 +1675,7 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
       return retval;
     }
 #ifdef TAU_ENABLE_CL_CALLBACK
-	memcpy_callback_data *mem_data = (memcpy_callback_data*) malloc(memcpy_data_size);
+	callback_data *mem_data = (callback_data*) malloc(memcpy_data_size);
 	strcpy(mem_data->name, "CopyBuffer");
 	mem_data->memcpy_type = MemcpyDtoD;
 	if (a9 == NULL)
@@ -1633,12 +1694,27 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
 	clSetEventCallback((*a9), CL_COMPLETE, Tau_opencl_memcpy_callback, mem_data);
 
 #else
+	FunctionInfo *callingSite;
+	int err;
+	char* name = "WriteBuffer";
 
-  TAU_PROFILE_START(t);
+	callingSite = TauInternal_CurrentProfiler(RtsLayer::myNode())->CallPathFunction;
+	
+	callback_data *kernel_data = new callback_data(name,
+	callingSite, a9, MemcpyDtoD);
+	
+	Tau_opencl_enqueue_event(kernel_data);
+	
 	check_memory_init();
 	TAU_CONTEXT_EVENT(MemoryCopyEventDtoD, a6);
-  retval  =  (*clEnqueueCopyBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
-  TAU_PROFILE_STOP(t);
+
+	Tau_opencl_enter_memcpy_event("cl_int clEnqueueCopyBuffer(cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *) C", 2, a6, MemcpyDtoD); 
+  
+	retval  =  (*clEnqueueCopyBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
+	
+	Tau_opencl_exit_memcpy_event("cl_int clEnqueueCopyBuffer(cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *) C", 2, MemcpyDtoD);
+	
+	Tau_opencl_register_sync_event();
 #endif
   }
   return retval;
@@ -1817,7 +1893,7 @@ void * clEnqueueMapBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, cl_map_fla
 		a9 = &new_event;
 	}
 #ifdef TAU_ENABLE_CL_CALLBACK
-	memcpy_callback_data *mem_data = (memcpy_callback_data*) malloc(memcpy_data_size);
+	callback_data *mem_data = (callback_data*) malloc(memcpy_data_size);
 	strcpy(mem_data->name, "MapBuffer");
 	mem_data->memcpy_type = MemcpyDtoH;
 	//printf("name %s.\n", mem_data->name);
@@ -1916,14 +1992,8 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
     }
 
 
-	if (a9 == NULL)
-	{
-		//printf("cl_event is null.\n");
-		cl_event new_event;
-		a9 = &new_event;
-	}
 #ifdef TAU_ENABLE_CL_CALLBACK
-	kernel_callback_data *kernel_data = (kernel_callback_data*) malloc(kernel_data_size);
+	callback_data *kernel_data = (callback_data*) malloc(kernel_data_size);
 	int err;
 	err = clGetKernelInfo(a2, CL_KERNEL_FUNCTION_NAME,
 	sizeof(char[TAU_MAX_FUNCTIONNAME]), kernel_data->name, NULL);
@@ -1940,8 +2010,30 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
   TAU_PROFILE_START(t);
   retval  =  (*clEnqueueNDRangeKernel_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
   TAU_PROFILE_STOP(t);
+	if (a9 == NULL)
+	{
+		printf("cl_event is null.\n");
+		cl_event new_event;
+		a9 = &new_event;
+	}
 #ifdef TAU_ENABLE_CL_CALLBACK
 	clSetEventCallback((*a9), CL_COMPLETE, Tau_opencl_kernel_callback, kernel_data);
+#else
+	char *name = (char*)malloc(sizeof(char)*TAU_MAX_FUNCTIONNAME);
+	FunctionInfo *callingSite;
+	int err;
+	
+	err = clGetKernelInfo(a2, CL_KERNEL_FUNCTION_NAME,
+		sizeof(char[TAU_MAX_FUNCTIONNAME]), name, NULL);
+	
+	callingSite = TauInternal_CurrentProfiler(RtsLayer::myNode())->CallPathFunction;
+	
+	callback_data *kernel_data = new callback_data(name,
+	callingSite, a9);
+	
+	Tau_opencl_enqueue_event(kernel_data);
+
+
 #endif
 	//free(kernel_data);
   }
@@ -2056,6 +2148,8 @@ cl_int clEnqueueWaitForEvents(cl_command_queue a1, cl_uint a2, const cl_event * 
   TAU_PROFILE_START(t);
   retval  =  (*clEnqueueWaitForEvents_h)( a1,  a2,  a3);
   TAU_PROFILE_STOP(t);
+
+	Tau_opencl_register_sync_event();
   }
   return retval;
 
@@ -2084,6 +2178,8 @@ cl_int clEnqueueBarrier(cl_command_queue a1) {
   TAU_PROFILE_START(t);
   retval  =  (*clEnqueueBarrier_h)( a1);
   TAU_PROFILE_STOP(t);
+	
+	Tau_opencl_register_sync_event();
   }
   return retval;
 

@@ -316,23 +316,24 @@ void Tau_cuda_enqueue_kernel_exit_event()
 
 void Tau_cuda_register_sync_event()
 {
-	//printf("in sync event, buffer size: %d.\n", KernelBuffer.size());	
+	printf("in sync event, buffer size: %d.\n", KernelBuffer.size());	
+	
 	if (KernelBuffer.size() > 0 && KernelBuffer.front().stopEvent != NULL)
 	{
-		//printf("buffer front stop: %d.\n", KernelBuffer.front().stopEvent == NULL);
+		printf("buffer front stop: %d.\n", KernelBuffer.front().stopEvent == NULL);
 		cudaError err = cudaEventQuery(KernelBuffer.front().stopEvent);
-		//printf("buffer front is: %d\n", err);
+		printf("buffer front is: %d\n", err);
 	}
 	float start_sec, stop_sec;
 
 	while (!KernelBuffer.empty() && cudaEventQuery(KernelBuffer.front().stopEvent) == cudaSuccess)
 	{
 		KernelEvent kernel = KernelBuffer.front();
-		//printf("kernel buffer size = %d.\n", KernelBuffer.size());
+		printf("kernel buffer size = %d.\n", KernelBuffer.size());
 
 		cudaError_t err;
 		err = cudaEventElapsedTime(&start_sec, lastEvent, kernel.startEvent);
-		//printf("kernel event [start] = %lf.\n", (((double) start_sec) + lastEventTime)*1e3);
+		printf("kernel event [start] = %lf.\n", (((double) start_sec) + lastEventTime)*1e3);
 
 		if (err != cudaSuccess)
 		{
@@ -340,7 +341,7 @@ void Tau_cuda_register_sync_event()
 		}
 
 		err = cudaEventElapsedTime(&stop_sec, lastEvent, kernel.stopEvent);
-		//printf("kernel event [stop] = %lf.\n", (((double) stop_sec) + lastEventTime)*1e3 );
+		printf("kernel event [stop] = %lf.\n", (((double) stop_sec) + lastEventTime)*1e3 );
 
 		if (err != cudaSuccess)
 		{
