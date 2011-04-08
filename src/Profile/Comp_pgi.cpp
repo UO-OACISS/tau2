@@ -91,7 +91,7 @@ int Tau_get_function_index_in_DB(FunctionInfo *fi) {
 
 int Tau_ignore_count[TAU_MAX_THREADS]={0};
 // called at the beginning of each profiled routine
-#pragma save_all_gp_regs
+#pragma save_all_regs
 extern "C" void ___rouent2(struct s1 *p) {
   char routine[2048];
   int isseen_local = p->isseen;
@@ -133,6 +133,10 @@ extern "C" void ___rouent2(struct s1 *p) {
 	  p->isseen ++;
 	  TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
 	  FunctionInfo *fi = (FunctionInfo*)handle;
+          if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
+	    Tau_ignore_count[tid]++; // the rouent2 shouldn't call stop
+            return;
+          }
 	  Tau_start_timer(fi,0, tid);
 	  p->rid = Tau_get_function_index_in_DB(fi);
 	}
@@ -142,6 +146,10 @@ extern "C" void ___rouent2(struct s1 *p) {
       p->isseen = -1;
       TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
       FunctionInfo *fi = (FunctionInfo*)handle;
+      if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
+	Tau_ignore_count[tid]++; // the rouent2 shouldn't call stop
+	return;
+      }
       Tau_start_timer(fi,0, tid);
       p->rid = Tau_get_function_index_in_DB(fi);
       p->isseen = isseen_local+1;
@@ -153,12 +161,21 @@ extern "C" void ___rouent2(struct s1 *p) {
     // place. 
     TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
     FunctionInfo *fi = (FunctionInfo*)handle;
+    if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
+      Tau_ignore_count[tid]++; // the rouent2 shouldn't call stop
+      return;
+    }
     Tau_start_timer(fi,0, tid);
     p->rid = Tau_get_function_index_in_DB(fi);
     p->isseen = isseen_local+1;
 #endif
   } else {
-    Tau_start_timer(TheFunctionDB()[p->rid],0, tid);
+    FunctionInfo *fi = (FunctionInfo*)(TheFunctionDB()[p->rid]);
+    if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
+      Tau_ignore_count[tid]++; // the rouent2 shouldn't call stop
+      return;
+    }
+    Tau_start_timer(fi, 0, tid);
   }
 }
 
