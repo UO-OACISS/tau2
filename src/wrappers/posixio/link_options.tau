@@ -1,0 +1,1 @@
+-Wl,-wrap,fsync -Wl,-wrap,open -Wl,-wrap,close -Wl,-wrap,read -Wl,-wrap,write -Wl,-wrap,select -lTauPosixWrap
