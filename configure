@@ -1617,6 +1617,9 @@ sed -e 's,@TAUROOT@,'$targetdir',' \
     > $BINTARGET/perfexplorer
 chmod a+rx $BINTARGET/perfexplorer
 
+# install tau_gen_wrapper
+cp ${tauroot}/tools/src/tau_gen_wrapper $BINTARGET
+
 
 if [ ! -f $BINTARGET/jracy ] ; then 
     cd $BINTARGET/; ln -s paraprof jracy; cd ${tauroot}; 
