@@ -817,9 +817,10 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		// metric name
 		obj = metric.getSelectedItem();
 		tmp = (String)obj;
-		if (tmp.equals("TIME"))
-			facade.setMetricName("%TIME%");
-		else
+//Not Sure why this was here, it's causing problems, so I have commented it out. Suzanne
+//		if (tmp.equals("TIME"))
+//			facade.setMetricName("%TIME%");
+//		else
 			facade.setMetricName(tmp);
 
 		// units name
