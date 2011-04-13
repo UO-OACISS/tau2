@@ -148,7 +148,10 @@ public class ChartPane extends JScrollPane implements ActionListener {
 	private static final String ATOMIC_EVENT_NAME = "atomic_event.name";
 	private static final String INTERVAL_EVENT_NAME = "interval_event.name";
 	private static final String INTERVAL_EVENT_GROUP_NAME = "interval_event.group_name";
-	//private static final String MEAN_INCLUSIVE = "mean.inclusive";
+
+	private static final String EXPERIMENT_NAME = "experiment.name";
+	
+//private static final String MEAN_INCLUSIVE = "mean.inclusive";
 	//private static final String MEAN_EXCLUSIVE = "mean.exclusive";
 	//private static final String ATOMIC_MEAN_VALUE = "atomic.mean_value";
 
@@ -920,6 +923,8 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			if (mainOnly.isSelected()) {
 				this.eventLabel.setEnabled(false);
 				this.event.setEnabled(false);
+				series.setSelectedItem(EXPERIMENT_NAME);
+				yaxisValue.setSelectedItem(INCLUSIVE);
 			} else {
 				this.eventLabel.setEnabled(true);
 				this.event.setEnabled(true);
