@@ -1,0 +1,77 @@
+#!/bin/sh
+usage()
+{
+    cmd=`basename $0`
+    echo ""
+    echo " $cmd - Generates a wrapper library that can intercept "
+    echo " at link time or at runtime routines specified in a header file"
+    echo " Usage: $cmd <headerfile> <library>  [-w (default) | -r] "
+    echo " -w (default): generates wrappers for re-linking the application"
+    echo " -r : generates wrappers that may be pre-loaded using tau_exec at runtime"
+    echo "NOTE: $cmd reads the TAU_MAKEFILE  environment variable to get PDT settings"
+    echo " Example: "
+    echo " % $cmd hdf5.h /usr/lib/libhdf5.a "
+    echo " generates a wrapper library that may be linked in using TAU_OPTIONS -optTauWrapFile=<wrapperdir>/link_options.tau"
+    echo "" 
+    exit 1
+}
+
+runtime_specified=0;
+headerfile=""
+library=""
+modarg=""
+if [ $# = 0 ] ; then
+    usage
+fi
+
+if [ $# -gt 1 ]; then
+  headerfile=$1
+  library=$2
+  shift;
+  shift;
+fi
+
+for arg in "$@"; do
+  case $arg in 
+    -r)
+      runtime_specified=1; 
+      shift; 
+      ;;
+  esac
+done
+
+if [ "x$TAU_MAKEFILE" = "x" ] ;then
+  echo "ERROR: Please set the TAU_MAKEFILE environment variable."
+  exit 1
+fi
+
+if [ ! -r $TAU_MAKEFILE ] ;then
+  echo "ERROR: environment variable TAU_MAKEFILE is set but the file is not readable"
+  exit 1
+fi
+
+
+pdtdir=`grep PDTDIR= $TAU_MAKEFILE | sed -e 's/PDTDIR=//g' `
+tauarch=`tau-config | grep TAUARCH | sed -e 's@TAUARCH=@@g' `
+
+parser=$pdtdir/$tauarch/bin/cxxparse
+if [ ! -x $parser ]; then
+  echo "ERROR: Can't execute $parser: Using PDT = $pdtdir, ARCH = $tauarch"
+  exit 1
+fi
+
+$pdtdir/$tauarch/bin/cxxparse $headerfile 
+if [ $runtime_specified = 1 ] ; then
+  runtimeopt='-r'
+else
+  runtimeopt='-w'
+fi
+
+#echo "tau_wrap $headerfile.pdb $headerfile -o wr.c $runtimeopt $library $*"
+tau_wrap $headerfile.pdb $headerfile -o wr.c $runtimeopt $library $*
+dirname=`basename ${headerfile} .h`_wrapper
+mkdir -p ${dirname}
+cd ${dirname}
+make
+cd ..
+rm -f ${headerfile}.pdb 
