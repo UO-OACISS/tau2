@@ -1468,10 +1468,10 @@ if [ $gotoNextStep == $TRUE ]; then
 	    optLinking="newCmd -lc"
 	fi
 
-        echo "trackIO = $trackIO, wrappers = $optWrappersDir/io_wrapper/link_options.tau "
+        echoIfDebug "trackIO = $trackIO, wrappers = $optWrappersDir/io_wrapper/link_options.tau "
         if [ $trackIO = $TRUE -a -r $optWrappersDir/io_wrapper/link_options.tau ] ; then
           newCmd="$newCmd `cat $optWrappersDir/io_wrapper/link_options.tau` $optLinking"
-          echo "Linkin command is $newCmd"
+          echoIfDebug "Linkin command is $newCmd"
         fi
 
 	madeToLinkStep=$TRUE
