@@ -86,7 +86,9 @@ size_t __wrap_read(int fd, void *buf, size_t nbytes)
   printf("TauWrapperRead: currentRead = %g\n", currentRead);
     }*/
 
-  TAU_CONTEXT_EVENT(re, (double) nbytes/currentRead);
+  if (currentRead > 1e-12) {
+    TAU_CONTEXT_EVENT(re, (double) nbytes/currentRead);
+  }
 
   TAU_CONTEXT_EVENT(bytesread, nbytes);
   if (TauEnv_get_track_io_params()) {
@@ -128,7 +130,9 @@ size_t __wrap_write(int fd, void *buf, size_t nbytes)
     printf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
     }*/
 
-  TAU_CONTEXT_EVENT(wb, (double) nbytes/currentWrite);
+  if (currentWrite > 1e-12) {
+    TAU_CONTEXT_EVENT(wb, (double) nbytes/currentWrite);
+  }
   TAU_CONTEXT_EVENT(byteswritten, nbytes);
   if (TauEnv_get_track_io_params()) {
     TAU_CONTEXT_EVENT(write_fd, fd);
