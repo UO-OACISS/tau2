@@ -393,7 +393,7 @@ for arg in "$@" ; do
 
 		    -optWrappersDir*)
 			optWrappersDir=${arg#"-optWrappersDir="}
-			echo "\tWrappers dir is: $optWrappersDir"
+			echoIfDebug "\tWrappers dir is: $optWrappersDir"
 			;;
 		
 		    -optTauSelectFile*)
@@ -1041,7 +1041,7 @@ if [ $numFiles == 0 ]; then
 
     echoIfDebug "trackIO = $trackIO, wrappers = $optWrappersDir/io_wrapper/link_options.tau "
     if [ $trackIO = $TRUE -a -r $optWrappersDir/io_wrapper/link_options.tau ] ; then 
-      linkCmd="$linkCmd `cat $optWrappersDir/io_wrapper/link_options.tau` "
+      linkCmd="$linkCmd `cat $optWrappersDir/io_wrapper/link_options.tau` $optLinking"
       echoIfDebug "Linkin command is $linkCmd"
     fi
     
@@ -1470,7 +1470,7 @@ if [ $gotoNextStep == $TRUE ]; then
 
         echo "trackIO = $trackIO, wrappers = $optWrappersDir/io_wrapper/link_options.tau "
         if [ $trackIO = $TRUE -a -r $optWrappersDir/io_wrapper/link_options.tau ] ; then
-          newCmd="$newCmd `cat $optWrappersDir/io_wrapper/link_options.tau` "
+          newCmd="$newCmd `cat $optWrappersDir/io_wrapper/link_options.tau` $optLinking"
           echo "Linkin command is $newCmd"
         fi
 
