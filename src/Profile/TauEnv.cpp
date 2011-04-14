@@ -90,6 +90,8 @@
 
 #define TAU_TRACK_MESSAGE_DEFAULT 0
 
+#define TAU_TRACK_IO_PARAMS_DEFAULT 0
+
 #define TAU_THROTTLE_DEFAULT 1
 #ifdef TAU_MPI
   #define TAU_SYNCHRONIZE_CLOCKS_DEFAULT 1
@@ -264,6 +266,7 @@ static int env_comm_matrix = 0;
 static int env_track_memory_heap = 0;
 static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
+static int env_track_io_params = 0;
 static int env_extras = 0;
 static int env_ebs_period = 0;
 static int env_ebs_inclusive = 0;
@@ -367,6 +370,10 @@ int TauEnv_get_track_memory_leaks() {
 
 int TauEnv_get_track_memory_headroom() {
   return env_track_memory_headroom;
+}
+
+int TauEnv_get_track_io_params() {
+  return env_track_io_params;
 }
 
 int TauEnv_get_extras() {
@@ -481,6 +488,18 @@ void TauEnv_initialize() {
       TAU_METADATA("TAU_TRACK_HEADROOM", "off");
       env_track_memory_headroom = 0;
     }
+
+    tmp = getconf("TAU_TRACK_IO_PARAMS");
+    if (parse_bool(tmp, env_track_memory_headroom)) {
+      TAU_VERBOSE("TAU: POSIX I/O wrapper parameter tracking enabled\n");
+      TAU_METADATA("TAU_TRACK_IO_PARAMS", "on");
+      env_track_io_params = 1;
+      env_extras = 1;
+    } else {
+      TAU_METADATA("TAU_TRACK_IO_PARAMS", "off");
+      env_track_memory_headroom = 0;
+    }
+
 
     /*** Options that can be used with Scalasca and VampirTrace need to go above this line ***/
 #ifdef TAU_EPILOG
