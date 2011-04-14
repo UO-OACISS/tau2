@@ -12,10 +12,12 @@
 
 #define TAU_READ TAU_IO
 #define TAU_WRITE TAU_IO
+extern void Tau_iowrap_checkInit(void);
 
 int __wrap_fsync( int fd)
 {
   int ret;
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "fsync()", " ", TAU_IO);
   TAU_REGISTER_CONTEXT_EVENT(fsync_fd, "FSYNC fd");
   TAU_REGISTER_CONTEXT_EVENT(fsync_ret, "FSYNC ret");
@@ -36,6 +38,7 @@ int __wrap_fsync( int fd)
 int __wrap_open(const char *pathname, int flags)
 {
   int ret;
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "open()", " ", TAU_IO);
   TAU_REGISTER_CONTEXT_EVENT(open_fd, "OPEN flags");
   TAU_REGISTER_CONTEXT_EVENT(open_ret, "OPEN ret");
@@ -58,6 +61,7 @@ size_t __wrap_read(int fd, void *buf, size_t nbytes)
   int ret;
   double currentRead = 0.0;
   struct timeval t1, t2; 
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "read()", " ", TAU_IO);
   TAU_REGISTER_CONTEXT_EVENT(re, "READ Bandwidth (MB/s)");
   TAU_REGISTER_CONTEXT_EVENT(read_fd, "READ fd");
@@ -98,6 +102,7 @@ size_t __wrap_write(int fd, void *buf, size_t nbytes)
   int ret;
   double currentWrite = 0.0;
   struct timeval t1, t2; 
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "write()", " ", TAU_IO);
   TAU_REGISTER_CONTEXT_EVENT(wb, "WRITE Bandwidth (MB/s)");
   TAU_REGISTER_CONTEXT_EVENT(byteswritten, "WRITE Bytes Written");
@@ -133,6 +138,7 @@ size_t __wrap_write(int fd, void *buf, size_t nbytes)
 size_t __wrap_close(int fd)
 {
   int ret;
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "close()", " ", TAU_IO);
   TAU_REGISTER_CONTEXT_EVENT(close_fd, "CLOSE fd");
   TAU_REGISTER_CONTEXT_EVENT(close_ret, "CLOSE ret");
@@ -154,6 +160,7 @@ int __wrap_select(int nfds, fd_set *readfds, fd_set *writefds,
   fd_set *exceptfds, const struct timeval *timeout)
 {
   int ret;
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "select()", " ", TAU_IO);
   TAU_REGISTER_CONTEXT_EVENT(select_nfds, "select nfds");
   TAU_REGISTER_CONTEXT_EVENT(select_ret, "select ret");
