@@ -992,7 +992,8 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
 	$(TAU_COMPILER_EXTRA_OPTIONS) \
         -optIncludeMemory="$(TAU_INCLUDE_MEMORY)"\
 	-optCompInstOption="$(TAU_COMPINST_OPTION) $(TAU_COMPINST_PTHREAD_OPTIONS)"\
-	-optCompInstLinking="$(TAU_COMPINST_LINKING)"
+	-optCompInstLinking="$(TAU_COMPINST_LINKING)"\
+	-optWrappersDir="$(TAU_LIB_DIR)/wrappers"
 #############################################
 
 TAU_SHAREDLIBS=$(TAUHELPER) -L$(TAU_LIB_DIR) -lTAU $(TAU_LINKER_OPTS) $(TAU_LINKER_SHOPTS)
