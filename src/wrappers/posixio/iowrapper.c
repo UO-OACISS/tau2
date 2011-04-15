@@ -5,6 +5,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define dprintf TAU_VERBOSE
+
 #define TAU_READ TAU_IO
 #define TAU_WRITE TAU_IO
 
@@ -12,18 +14,20 @@ int TauWrapperFsync( int fd)
 {
   int ret;
   TAU_PROFILE_TIMER(t, "fsync()", " ", TAU_IO);
-  TAU_REGISTER_CONTEXT_EVENT(fsync_fd, "FSYNC fd");
-  TAU_REGISTER_CONTEXT_EVENT(fsync_ret, "FSYNC ret");
   TAU_PROFILE_START(t);
 
   ret = fsync(fd);
 
-  TAU_CONTEXT_EVENT(fsync_fd, fd);
-  TAU_CONTEXT_EVENT(fsync_ret, ret);
+  if (TauEnv_get_track_io_params()) {
+    TAU_REGISTER_CONTEXT_EVENT(fsync_fd, "FSYNC fd");
+    TAU_REGISTER_CONTEXT_EVENT(fsync_ret, "FSYNC ret");
+    TAU_CONTEXT_EVENT(fsync_fd, fd);
+    TAU_CONTEXT_EVENT(fsync_ret, ret);
+  }
 
   TAU_PROFILE_STOP(t);
 
-  printf("Fsync call with fd %d ret %d\n", fd, ret);
+  dprintf("Fsync call with fd %d ret %d\n", fd, ret);
 
   return ret;
 }
@@ -32,18 +36,20 @@ int TauWrapperOpen(const char *pathname, int flags)
 {
   int ret;
   TAU_PROFILE_TIMER(t, "open()", " ", TAU_IO);
-  TAU_REGISTER_CONTEXT_EVENT(open_fd, "OPEN flags");
-  TAU_REGISTER_CONTEXT_EVENT(open_ret, "OPEN ret");
   TAU_PROFILE_START(t);
 
   ret = open(pathname, flags);
 
-  TAU_CONTEXT_EVENT(open_fd, flags);
-  TAU_CONTEXT_EVENT(open_ret, ret);
+  if (TauEnv_get_track_io_params()) {
+    TAU_REGISTER_CONTEXT_EVENT(open_fd, "OPEN flags");
+    TAU_REGISTER_CONTEXT_EVENT(open_ret, "OPEN ret");
+    TAU_CONTEXT_EVENT(open_fd, flags);
+    TAU_CONTEXT_EVENT(open_ret, ret);
+  }
 
   TAU_PROFILE_STOP(t);
 
-  printf("Open call with pathname %s and flags %d: ret %d\n", pathname, flags, ret);
+  dprintf("Open call with pathname %s and flags %d: ret %d\n", pathname, flags, ret);
 
   return ret;
 }
@@ -55,9 +61,7 @@ size_t TauWrapperRead(int fd, void *buf, size_t nbytes)
   struct timeval t1, t2; 
   TAU_PROFILE_TIMER(t, "read()", " ", TAU_IO);
   TAU_REGISTER_CONTEXT_EVENT(re, "READ Bandwidth (MB/s)");
-  TAU_REGISTER_CONTEXT_EVENT(read_fd, "READ fd");
   TAU_REGISTER_CONTEXT_EVENT(bytesread, "READ Bytes Read");
-  TAU_REGISTER_CONTEXT_EVENT(read_ret, "READ ret");
   TAU_PROFILE_START(t);
 
   gettimeofday(&t1, 0);
@@ -75,13 +79,19 @@ size_t TauWrapperRead(int fd, void *buf, size_t nbytes)
   printf("TauWrapperRead: currentRead = %g\n", currentRead);
     }*/
 
-  TAU_CONTEXT_EVENT(re, (double) nbytes/currentRead);
+  if (currentRead > 1e-12) {
+    TAU_CONTEXT_EVENT(re, (double) nbytes/currentRead);
+  }
 
   TAU_CONTEXT_EVENT(bytesread, nbytes);
-  TAU_CONTEXT_EVENT(read_fd, fd);
-  TAU_CONTEXT_EVENT(read_ret, ret);
+  if (TauEnv_get_track_io_params()) {
+    TAU_REGISTER_CONTEXT_EVENT(read_fd, "READ fd");
+    TAU_REGISTER_CONTEXT_EVENT(read_ret, "READ ret");
+    TAU_CONTEXT_EVENT(read_fd, fd);
+    TAU_CONTEXT_EVENT(read_ret, ret);
+  }
 
-  printf("Read fd %d nbytes %d buf %ld ret %d\n", fd, nbytes, (long)buf, ret);
+  dprintf("Read fd %d nbytes %d buf %ld ret %d\n", fd, nbytes, (long)buf, ret);
 
   TAU_PROFILE_STOP(t);
 
@@ -96,8 +106,6 @@ size_t TauWrapperWrite(int fd, void *buf, size_t nbytes)
   TAU_PROFILE_TIMER(t, "write()", " ", TAU_IO);
   TAU_REGISTER_CONTEXT_EVENT(wb, "WRITE Bandwidth (MB/s)");
   TAU_REGISTER_CONTEXT_EVENT(byteswritten, "WRITE Bytes Written");
-  TAU_REGISTER_CONTEXT_EVENT(write_fd, "WRITE fd");
-  TAU_REGISTER_CONTEXT_EVENT(write_ret, "WRITE ret");
   TAU_PROFILE_START(t);
 
   gettimeofday(&t1, 0);
@@ -114,12 +122,19 @@ size_t TauWrapperWrite(int fd, void *buf, size_t nbytes)
     printf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
     }*/
 
-  TAU_CONTEXT_EVENT(wb, (double) nbytes/currentWrite);
-  TAU_CONTEXT_EVENT(byteswritten, nbytes);
-  TAU_CONTEXT_EVENT(write_fd, fd);
-  TAU_CONTEXT_EVENT(write_ret, ret);
+  if (currentWrite > 1e-12) {
+    TAU_CONTEXT_EVENT(wb, (double) nbytes/currentWrite);
+    TAU_CONTEXT_EVENT(byteswritten, nbytes);
+  }
 
-  printf("Write fd %d nbytes %d buf %ld ret %d\n", fd, nbytes, (long)buf, ret);
+  if (TauEnv_get_track_io_params()) {
+    TAU_REGISTER_CONTEXT_EVENT(write_fd, "WRITE fd");
+    TAU_REGISTER_CONTEXT_EVENT(write_ret, "WRITE ret");
+    TAU_CONTEXT_EVENT(write_fd, fd);
+    TAU_CONTEXT_EVENT(write_ret, ret);
+  }
+
+  dprintf("Write fd %d nbytes %d buf %ld ret %d\n", fd, nbytes, (long)buf, ret);
 
   TAU_PROFILE_STOP(t);
 
@@ -129,16 +144,18 @@ size_t TauWrapperClose(int fd)
 {
   int ret;
   TAU_PROFILE_TIMER(t, "close()", " ", TAU_IO);
-  TAU_REGISTER_CONTEXT_EVENT(close_fd, "CLOSE fd");
-  TAU_REGISTER_CONTEXT_EVENT(close_ret, "CLOSE ret");
   TAU_PROFILE_START(t);
 
   ret = close(fd);
 
-  TAU_CONTEXT_EVENT(close_fd, fd);
-  TAU_CONTEXT_EVENT(close_ret, ret);
+  if (TauEnv_get_track_io_params()) {
+    TAU_REGISTER_CONTEXT_EVENT(close_fd, "CLOSE fd");
+    TAU_REGISTER_CONTEXT_EVENT(close_ret, "CLOSE ret");
+    TAU_CONTEXT_EVENT(close_fd, fd);
+    TAU_CONTEXT_EVENT(close_ret, ret);
+  }
 
-  printf("Close fd %d ret %d\n", fd, ret);
+  dprintf("Close fd %d ret %d\n", fd, ret);
 
   TAU_PROFILE_STOP(t);
 
