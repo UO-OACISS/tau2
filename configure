@@ -1617,6 +1617,9 @@ sed -e 's,@TAUROOT@,'$targetdir',' \
     > $BINTARGET/perfexplorer
 chmod a+rx $BINTARGET/perfexplorer
 
+# install tau_gen_wrapper
+cp ${tauroot}/tools/src/tau_gen_wrapper $BINTARGET
+
 
 if [ ! -f $BINTARGET/jracy ] ; then 
     cd $BINTARGET/; ln -s paraprof jracy; cd ${tauroot}; 
@@ -4983,42 +4986,49 @@ fi
 
 if [ "x$bfd" = "xyes" ] ; then
     if [ "x$bfddir" = xdownload ] ; then
-	bfddir=${targetdir}/${architecture}/binutils-2.20
-	if [ -r "$bfddir/lib/libbfd.a" ] ; then
-	    echo "BFD download already found, skipping"
-	else
-	    tempdir=".tmp_bfdbuild_$$"
-	    mkdir $tempdir
-	    cd $tempdir
-	    if [ "$machine" = "apple" ] ; then
-		curl http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz > binutils-2.20.tar.gz
-	    else 
-		wget http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz
-	    fi
-	    tar -xzf binutils-2.20.tar.gz
-	    cd binutils-2.20
-	    if [ $machine = "bgp" ] ; then
-                ./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir CC=powerpc-bgp-linux-gcc CXX=powerpc-bgp-linux-g++ --disable-nls --disable-werror
-		# have to run make twice, first one dies with illegal instruction
-		make
-		make
-		make install
-	    else
-                ./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir --disable-nls --disable-werror
-		make && make install
-            fi
-	    cp include/demangle.h $bfddir/include
-	    cp include/libiberty.h $bfddir/include
-	    
-	    # snow leopard
-	    if [ -r "$bfddir/lib/x86_64/libiberty.a" ] ; then
-		mv $bfddir/lib/x86_64/libiberty.a $bfddir/lib/libiberty.a
-	    fi
+		bfddir=${targetdir}/${architecture}/binutils-2.20
+		if [ -r "$bfddir/lib/libbfd.a" ] ; then
+			echo "BFD download already found, skipping"
+		else
+			tempdir=".tmp_bfdbuild_$$"
+			mkdir $tempdir
+			cd $tempdir
+			if [ "$machine" = "apple" ] ; then
+				curl http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz > binutils-2.20.tar.gz
+			else 
+				wget http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz
+			fi
+			if [ ! -d binutils-2.20.tar.gz ] ; then
+				echo "The BFD tarball did not download.  Please download it manually from: "
+				echo "http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz"
+				echo "Please enter the directory containing the tarball: ${nnl}" 
+				read RESPONSE
+				cp $RESPONSE/binutils-2.20.tar.gz .
+			fi
+			tar -xzf binutils-2.20.tar.gz
+			cd binutils-2.20
+			if [ $machine = "bgp" ] ; then
+				./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir CC=powerpc-bgp-linux-gcc CXX=powerpc-bgp-linux-g++ --disable-nls --disable-werror
+				# have to run make twice, first one dies with illegal instruction
+				make
+				make
+				make install
+			else
+				./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir --disable-nls --disable-werror
+				make && make install
+			fi
+			cp include/demangle.h $bfddir/include
+			cp include/libiberty.h $bfddir/include
+			
+			# snow leopard
+			if [ -r "$bfddir/lib/x86_64/libiberty.a" ] ; then
+				mv $bfddir/lib/x86_64/libiberty.a $bfddir/lib/libiberty.a
+			fi
 
-	    cd ..
-	    cd ..
-	    rm -rf $tempdir
-	fi
+			cd ..
+			cd ..
+			rm -rf $tempdir
+		fi
     fi
     bfdinclude="-I$bfddir/include"
     bfdlink="-L$bfddir/lib -L$bfddir/lib64"
@@ -5031,6 +5041,7 @@ if [ "x$bfd" = "xyes" ] ; then
 else
     fixmakeargs="$fixmakeargs bfdinclude= bfdlink= "
 fi
+
 
 
 
