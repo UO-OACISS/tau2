@@ -101,6 +101,10 @@ case $1 in
         taugcclibdir=`echo $1 | sed -e 's/^taugcclibdir=//'`
         echo "s,^TAUGCCLIBDIR=.*$,TAUGCCLIBDIR=$taugcclibdir,g" >> $sedout
         ;;
+     taugccstdcxxlibdir=*)
+        taugccstdcxxlibdir=`echo $1 | sed -e 's/^taugccstdcxxlibdir=//'`
+        echo "s,^TAUGCCSTDCXXLIBDIR=.*$,TAUGCCSTDCXXLIBDIR=$taugccstdcxxlibdir,g" >> $sedout
+        ;;
 
      ifortlibdir=*)
         ifortlibdir=`echo $1 | sed -e 's/^ifortlibdir=//'`
@@ -1550,7 +1554,7 @@ case $1 in
 	echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      NAGWARE_FORTRAN)
-	echo "NOTE: NAGWARE f95 compiler specific options used"
+	echo "NOTE: NAGWARE nagfor compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      FUJITSU_FORTRAN)
