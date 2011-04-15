@@ -1,0 +1,70 @@
+Here we demonstrate the use of TAU with linker based instrumentation using a selective instrumentation file (select.tau). 
+
+[hdf5_wrap]$ make
+cp /usr/local/packages/hdf5-1.6.5/include/*.h .
+tau_gen_wrapper hdf5.h /usr/local/packages/hdf5-1.6.5/lib/libhdf5.a -f select.tau
+headerfile = hdf5.h
+library = /usr/local/packages/hdf5-1.6.5/lib/libhdf5.a
+tau_wrap hdf5.h.pdb hdf5.h -o wr.c -w /usr/local/packages/hdf5-1.6.5/lib/libhdf5.a -f select.tau
+make[1]: Entering directory `/home/sameer/tau2/examples/iowrappers/hdf5_wrap/hdf5_wrapper'
+gcc    -DPROFILING_ON                        -DTAU_GNU -DTAU_DOT_H_LESS_HEADERS                      -DTAU_LINUX_TIMERS                                 -DTAU_LARGEFILE -D_LARGEFILE64_SOURCE                    -DTAU_BFD     -DHAVE_TR1_HASH_MAP      -fPIC  -I/home/users/sameer/tau2/include  -I..  -c wr.c -o hdf5_wrap.o
+wr.c: In function ‘__wrap_H5Eget_major’:
+wr.c:558: warning: assignment makes pointer from integer without a cast
+wr.c: In function ‘__wrap_H5Eget_minor’:
+wr.c:569: warning: assignment makes pointer from integer without a cast
+wr.c: In function ‘__wrap_H5FDopen’:
+wr.c:789: warning: assignment makes pointer from integer without a cast
+wr.c: In function ‘__wrap_H5Pget_class_name’:
+wr.c:1108: warning: assignment makes pointer from integer without a cast
+wr.c: In function ‘__wrap_H5Pget_driver_info’:
+wr.c:1548: warning: assignment makes pointer from integer without a cast
+wr.c: In function ‘__wrap_H5Tget_tag’:
+wr.c:2648: warning: assignment makes pointer from integer without a cast
+wr.c: In function ‘__wrap_H5Tget_member_name’:
+wr.c:2824: warning: assignment makes pointer from integer without a cast
+wr.c: In function ‘__wrap_H5Tfind’:
+wr.c:3077: warning: assignment makes pointer from integer without a cast
+wr.c: In function ‘__wrap_H5Tget_overflow’:
+wr.c:3099: warning: assignment makes pointer from integer without a cast
+ar              rcv  libhdf5_wrap.a hdf5_wrap.o
+a - hdf5_wrap.o
+make[1]: Leaving directory `/home/sameer/tau2/examples/iowrappers/hdf5_wrap/hdf5_wrapper'
+tau_cc.sh -optQuiet -c checkhdf.c -I/usr/local/packages/hdf5-1.6.5/include
+
+tau_cc.sh -optQuiet checkhdf.o /usr/local/packages/hdf5-1.6.5/lib/libhdf5.a -lz -o checkhdf @hdf5_wrapper/link_options.tau
+
+/bin/rm -f H*.h hdf*.h
+[hdf5_wrap]$ ls -lt
+total 3016
+-rwxrwxr-x  1 sameer sameer 3058328 Apr 12 20:48 checkhdf
+-rw-rw-r--  1 sameer sameer    3240 Apr 12 20:48 checkhdf.o
+drwxrwxr-x  2 sameer sameer    4096 Apr 12 20:48 hdf5_wrapper
+-rw-rw-r--  1 sameer sameer     487 Apr 12 20:47 Makefile
+-rw-rw-r--  1 sameer sameer      99 Apr 12 20:27 README
+-rw--w----  1 sameer sameer      98 Apr 12 20:25 select.tau
+-rw--w----  1 sameer sameer    2103 Apr 12 20:10 checkhdf.c
+[hdf5_wrap]$ ./checkhdf
+[hdf5_wrap]$ pprof
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0        0.048            1           1          13       1248 int main(void) C
+ 74.4        0.924        0.928           1           1        928 hid_t H5Fcreate(const char *, unsigned int, hid_t, hid_t) C
+  9.5        0.118        0.118           1           0        118 herr_t H5Fclose(hid_t) C
+  4.6        0.058        0.058           1           0         58 hid_t H5Dcreate(hid_t, const char *, hid_t, hid_t, hid_t) C
+  3.5        0.044        0.044           1           0         44 herr_t H5Dclose(hid_t) C
+  2.6        0.033        0.033           1           0         33 herr_t H5Dwrite(hid_t, hid_t, hid_t, hid_t, hid_t, const void *) C
+  0.6        0.007        0.007           1           0          7 hid_t H5Screate_simple(int, const hsize_t *, const hsize_t *) C
+  0.4        0.005        0.005           1           0          5 herr_t H5check_version(unsigned int, unsigned int, unsigned int) C
+  0.3        0.004        0.004           1           0          4 hid_t H5FD_sec2_init() C
+  0.2        0.002        0.002           1           0          2 herr_t H5Tset_order(hid_t, H5T_order_t) C
+  0.2        0.002        0.002           2           0          1 herr_t H5open() C
+  0.1        0.001        0.001           1           0          1 herr_t H5Sclose(hid_t) C
+  0.1        0.001        0.001           1           0          1 herr_t H5Tclose(hid_t) C
+  0.1        0.001        0.001           1           0          1 hid_t H5Tcopy(hid_t) C
+[hdf5_wrap]$
+

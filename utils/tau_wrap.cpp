@@ -220,7 +220,7 @@ bool isReturnTypeVoid(pdbRoutine *r)
      return false;
 }
 
-void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, string& group_name, bool runtime, string& runtime_libname)
+void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, string& group_name, int runtime, string& runtime_libname)
 {
   string macro("#define ");
   string func(r->name());
@@ -228,6 +228,7 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
   string protoname(r->name());
   string funchandle("_h) (");
   string rcalledfunc("(*"+r->name()+"_h)");
+  string wcalledfunc("__real_"+r->name());
   string dltext;
   string returntypename;
   string retstring("    return;");
@@ -241,10 +242,20 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
   } else {
     returntypename = r->signature()->returnType()->name();
   }
-  if (runtime)
-    impl<<returntypename<<" "; /* put in return type */
-  else
-    impl<<returntypename<<"  tau_"; /* put in return type */
+  switch (runtime) {
+    case 1: /* for runtime interception, put a blank, the name stays the same*/
+      impl<<returntypename<<" "; /* put in return type */
+      break;
+    case 0: /* for standard preprocessor redirection, bar becomes tau_bar */
+      impl<<returntypename<<"  tau_"; /* put in return type */
+      break;
+    case -1: /* for wrapper library interception, it becomes __wrap_bar */
+      impl<<returntypename<<"  __wrap_"; /* put in return type */
+      break;
+    default: /* hmmm, what about any other case? Just use __wrap_bar */
+      impl<<returntypename<<"  __wrap_"; /* put in return type */
+      break;
+  }
   impl<<func;
 #ifdef DEBUG
   cout <<"Examining "<<r->name()<<endl;
@@ -318,7 +329,7 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
   impl<<") {" <<endl<<endl;
 	string funcprototype = funchandle + string(");");
  	funchandle.append(") = NULL;");
-  if (runtime) {
+  if (runtime == 1) {
     if (!isVoid) {
 			if (strict_typing)
 			{
@@ -370,22 +381,26 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
   
   impl<<"  TAU_PROFILE_TIMER(t,\""<<r->fullName()<<"\", \"\", "
       <<group_name<<");"<<endl;
-  if (runtime)
+  if (runtime == 1)
     impl <<dltext;
   impl<<"  TAU_PROFILE_START(t);"<<endl;
   if (!isVoid)
   {
     impl<<"  retval  =";
   }
-  if (runtime) {
+  if (runtime == 1) {
     impl<<"  "<<rcalledfunc<<";"<<endl;
   }
   else {
-    impl<<"  "<<func<<";"<<endl;
+    if (runtime == -1) { /* link time instrumentation using -Wl,-wrap,bar */
+      impl<<"  __real_"<<func<<";"<<endl;
+    } else { /* default case when we use redirection of bar -> tau_bar */
+      impl<<"  "<<func<<";"<<endl;
+    }
   }
   impl<<"  TAU_PROFILE_STOP(t);"<<endl;
 
-  if (runtime) {
+  if (runtime == 1) {
     impl<<"  }"<<endl;
   }
 
@@ -396,15 +411,17 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
   impl<<endl;
 
   impl<<"}"<<endl<<endl;
-  macro.append(" "+func+" " +"tau_"+func);
+  if (runtime == 0) { /* preprocessor instrumentation */
+    macro.append(" "+func+" " +"tau_"+func);
 #ifdef DEBUG
-  cout <<"macro = "<<macro<<endl;
-  cout <<"func = "<<func<<endl;
+    cout <<"macro = "<<macro<<endl;
+    cout <<"func = "<<func<<endl;
 #endif /* DEBUG */
 
   /* The macro goes in header file, the implementation goes in the other file */
-  header <<macro<<endl;  
-  header <<"extern "<<returntypename<<" tau_"<<proto<<";"<<endl<<endl;
+    header <<macro<<endl;  
+    header <<"extern "<<returntypename<<" tau_"<<proto<<";"<<endl<<endl;
+  }
 
 }
 
@@ -428,7 +445,7 @@ void extractLibName(const char *filename, string& libname)
 /* -------------------------------------------------------------------------- */
 /* -- Instrumentation routine for a C program ------------------------------- */
 /* -------------------------------------------------------------------------- */
-bool instrumentCFile(PDB& pdb, pdbFile* f, ofstream& header, ofstream& impl, string& group_name, string& header_file, bool runtime, string& runtime_libname)
+bool instrumentCFile(PDB& pdb, pdbFile* f, ofstream& header, ofstream& impl, ofstream& linkoptsfile, string& group_name, string& header_file, int runtime, string& runtime_libname, string& libname)
 {
   //static int firsttime=0;
   string file(f->name());
@@ -454,13 +471,18 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, ofstream& header, ofstream& impl, str
          && (instrumentEntity((*rit)->fullName())) )
     {
        printRoutineInOutputFile(*rit, header, impl, group_name, runtime, runtime_libname);
+       if (runtime == -1) { /* -Wl,-wrap,<func>,-wrap,<func> */
+         linkoptsfile <<"-Wl,-wrap,"<<(*rit)->name()<<" ";
+       }
 
     }
   }
+  if (runtime == -1) {
+    linkoptsfile <<"-L"<<libname<<"_wrapper/ -l"<< libname<<"_wrap "<<runtime_libname<<endl;
+  }
   return true;
 
-}
-
+} 
 /* -------------------------------------------------------------------------- */
 /* -- Define a TAU group after <Profile/Profiler.h> ------------------------- */
 /* -------------------------------------------------------------------------- */
@@ -474,12 +496,12 @@ void defineTauGroup(ofstream& ostr, string& group_name)
   }
 }
 
-void generateMakefile(string& package, string &outFileName, bool runtime, string& runtime_libname)
+void generateMakefile(string& package, string &outFileName, int runtime, string& runtime_libname, string& libname)
 {
   string makefileName("Makefile");
-  ofstream makefile(string("wrapper/"+string(makefileName)).c_str());
+  ofstream makefile(string(libname+"_wrapper/"+string(makefileName)).c_str());
   
-  if (!runtime) {
+  if (runtime == 0) {
     string text("include ${TAU_MAKEFILE} \n\
 CC=$(TAU_CC) \n\
 CFLAGS=$(TAU_DEFS) $(TAU_INCLUDE)  -I.. \n\
@@ -497,8 +519,9 @@ clean:\n\
 ");
     makefile <<text<<endl;
   }
-  else {
-    string text("include ${TAU_MAKEFILE} \n\
+  else { 
+    if (runtime == 1) { 
+      string text("include ${TAU_MAKEFILE} \n\
 CC=$(TAU_CC) \n\
 CFLAGS=$(TAU_DEFS) $(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE)  -I.. \n\
 \n\
@@ -511,7 +534,26 @@ clean:\n\
 	/bin/rm -f "+package+"_wrap.o lib"+package+"_wrap.so\n\
 ");
 
-    makefile <<text<<endl;
+      makefile <<text<<endl;
+    } else { 
+      if (runtime == -1) {
+        string text("include ${TAU_MAKEFILE} \n\
+CC=$(TAU_CC) \n\
+ARFLAGS=rcv \n\
+CFLAGS=$(TAU_DEFS) $(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE)  -I.. \n\
+\n\
+lib"+package+"_wrap.a: "+package+"_wrap.o \n\
+	$(TAU_AR) $(ARFLAGS) $@ $< \n\
+\n\
+"+package+"_wrap.o: "+outFileName+"\n\
+	$(CC) $(CFLAGS) -c $< -o $@\n\
+clean:\n\
+	/bin/rm -f "+package+"_wrap.o lib"+package+"_wrap.a\n\
+");
+        makefile <<text<<endl;
+
+      }
+    }
   }
 }
 
@@ -527,15 +569,17 @@ int main(int argc, char **argv)
   string group_name("TAU_USER"); /* Default: if nothing else is defined */
   string runtime_libname("libc.so"); /* Default: if nothing else is defined */
   string header_file("Profile/Profiler.h");
-  bool runtime = false; /* by default generate PDT based re-direction library*/
+  int runtime = 0; /* by default generate PDT based re-direction library*/
   bool retval;
         /* Default: if nothing else is defined */
 
   if (argc < 3)
   {
-    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-r runtimelibname] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] [--strict]"<<endl;
+    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-w librarytobewrapped] [-r runtimelibname] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] [--strict]"<<endl;
     cout <<" To use runtime library interposition, -r <name> must be specified\n"<<endl;
     cout <<" --strict enforces strict typing (no dynamic function pointer casting). \n"<<endl;
+    cout <<" e.g., "<<endl;
+    cout <<" % tau_wrap hdf5.h.pdb hdf5.h libhdf5.a -o wrap_hdf5.c -w /usr/lib/libhdf5.a "; 
     cout<<"----------------------------------------------------------------------------------------------------------"<<endl;
   }
   PDB p(argv[1]); if ( !p ) return 1;
@@ -573,9 +617,19 @@ int main(int argc, char **argv)
         {
           ++i;
           runtime_libname = string(argv[i]);
-          runtime = true;
+          runtime = 1; /* 1 is for runtime interposition LD_PRELOAD */
 #ifdef DEBUG
           printf("Runtime library name: %s\n", runtime_libname.c_str());
+#endif /* DEBUG */
+        }
+
+        if (strcmp(argv[i], "-w") == 0)
+        {
+          ++i;
+          runtime_libname = string(argv[i]);
+          runtime = -1; /* -1 is for link time -Wl,-wrap,func interposition */
+#ifdef DEBUG
+          printf("Link time -Wl,-wrap library name: %s\n", runtime_libname.c_str());
 #endif /* DEBUG */
         }
 
@@ -619,9 +673,20 @@ int main(int argc, char **argv)
     outFileName = string(filename + string(".ins"));
   }
   /* should we make a directory and put it in there? */
-  system("mkdir -p wrapper");
-  ofstream impl(string("wrapper/"+outFileName).c_str()); /* actual implementation goes in here */
-  ofstream header(string("wrapper/"+string(filename)).c_str()); /* use the same file name as the original */
+  string libname;
+  extractLibName(filename, libname);
+  string dircmd("mkdir -p "+libname+"_wrapper");
+  //system("mkdir -p wrapper");
+  system(dircmd.c_str());
+  ofstream linkoptsfile(string(libname+"_wrapper/link_options.tau").c_str()); 
+  if (!linkoptsfile) {
+    cerr << "Error: Cannot open '" << libname+"_wrapper/link_options.tau" << "'" << endl;
+    return false;
+  }
+
+  system(dircmd.c_str());
+  ofstream impl(string(libname+"_wrapper/"+outFileName).c_str()); /* actual implementation goes in here */
+  ofstream header(string(libname+"_wrapper/"+string(filename)).c_str()); /* use the same file name as the original */
   if (!impl) {
     cerr << "Error: Cannot open '" << outFileName << "'" << endl;
     return false;
@@ -635,7 +700,7 @@ int main(int argc, char **argv)
   impl <<"#include <"<<filename<<">"<<endl;
   impl <<"#include <"<<header_file<<">"<<endl; /* Profile/Profiler.h */
 
-  if (runtime) {
+  if (runtime == 1) {
   /* add the runtime library calls */
      impl <<"#include <dlfcn.h>"<<endl<<endl;
      impl <<"const char * tau_orig_libname = "<<"\""<<
@@ -644,8 +709,6 @@ int main(int argc, char **argv)
   }
 
   defineTauGroup(impl, group_name); 
-  string libname;
-  extractLibName(filename, libname);
 
 #ifdef DEBUG
   cout <<"Library name is "<<libname<<endl;
@@ -673,7 +736,7 @@ int main(int argc, char **argv)
 */
      if (instrumentThisFile = processFileForInstrumentation(string(filename)))
      { /* should we instrument this file? Yes */
-       instrumentCFile(p, *it, header, impl, group_name, header_file, runtime, runtime_libname);
+       instrumentCFile(p, *it, header, impl, linkoptsfile, group_name, header_file, runtime, runtime_libname, libname);
      }
   }
   header <<"#ifdef __cplusplus"<<endl;
@@ -683,8 +746,8 @@ int main(int argc, char **argv)
 
   header.close();
 
-  if (runtime) {
-    string hfile = string("wrapper/"+string(filename));
+  if (runtime != 0) { /* 0 is for default preprocessor based wrapping */
+    string hfile = string(libname+"_wrapper/"+string(filename));
 #ifdef DEBUG
     cout <<"Deleting foo.h"<<endl;
 #endif /* DEBUG */
@@ -692,7 +755,7 @@ int main(int argc, char **argv)
     unlink(hfile.c_str());
   }
 
-  generateMakefile(libname, outFileName, runtime, runtime_libname);
+  generateMakefile(libname, outFileName, runtime, runtime_libname, libname);
 
 } /* end of main */
 
