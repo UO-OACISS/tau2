@@ -1,8 +1,7 @@
 # With TAU
 include ../../../include/Makefile
-TAUARCH=rs6000
-TAUMAKEFILE=$(TAU_PREFIX_INSTALL_DIR)/$(TAUARCH)/lib/Makefile.tau-pdt
-TAUOP='-optCompile=-I$(TAU_PREFIX_INSTALL_DIR)/include/wrappers/posixio -optLinking=-lTauIOWrapper'
+TAUMAKEFILE=$(TAU_PREFIX_INSTALL_DIR)/$(TAU_ARCH)/lib/Makefile.tau-pdt
+TAUOP='-optLinking=@../../../$(TAU_ARCH)/lib/wrappers/io_wrapper/link_options.tau'
 
 CC=tau_cc.sh -tau_makefile=$(TAUMAKEFILE) -tau_options=$(TAUOP)
 

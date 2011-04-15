@@ -127,6 +127,7 @@ extern "C" void ___rouent2(struct s1 *p) {
     
     if (omp_in_parallel()) {
 #pragma omp critical (tau_comp_pgi_1)
+      int returnFromBlock = 0;
       {
 	if (!p->isseen) {	
 	  void *handle=NULL;
@@ -135,11 +136,16 @@ extern "C" void ___rouent2(struct s1 *p) {
 	  FunctionInfo *fi = (FunctionInfo*)handle;
           if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
 	    Tau_ignore_count[tid]++; // the rouent2 shouldn't call stop
-            return;
-          }
-	  Tau_start_timer(fi,0, tid);
-	  p->rid = Tau_get_function_index_in_DB(fi);
+	    returnFromBlock = 1;
+            /* return; Not allowed inside an omp critical */
+          } else {
+	    Tau_start_timer(fi,0, tid);
+	    p->rid = Tau_get_function_index_in_DB(fi);
+	  }
 	}
+      }
+      if (returnFromBlock == 1) {
+	return;
       }
     } else {
       void *handle=NULL;
