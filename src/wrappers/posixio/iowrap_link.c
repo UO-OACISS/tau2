@@ -19,12 +19,12 @@ int __wrap_fsync( int fd)
   int ret;
   Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "fsync()", " ", TAU_IO);
-  TAU_REGISTER_CONTEXT_EVENT(fsync_fd, "FSYNC fd");
-  TAU_REGISTER_CONTEXT_EVENT(fsync_ret, "FSYNC ret");
   TAU_PROFILE_START(t);
   ret = __real_fsync(fd);
 
   if (TauEnv_get_track_io_params()) {
+    TAU_REGISTER_CONTEXT_EVENT(fsync_fd, "FSYNC fd");
+    TAU_REGISTER_CONTEXT_EVENT(fsync_ret, "FSYNC ret");
     TAU_CONTEXT_EVENT(fsync_fd, fd);
     TAU_CONTEXT_EVENT(fsync_ret, ret);
   }
@@ -40,14 +40,14 @@ int __wrap_open(const char *pathname, int flags)
   int ret;
   Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "open()", " ", TAU_IO);
-  TAU_REGISTER_CONTEXT_EVENT(open_fd, "OPEN flags");
-  TAU_REGISTER_CONTEXT_EVENT(open_ret, "OPEN ret");
   TAU_PROFILE_START(t);
 
   ret = __real_open(pathname, flags);
 
 
   if (TauEnv_get_track_io_params()) {
+    TAU_REGISTER_CONTEXT_EVENT(open_fd, "OPEN flags");
+    TAU_REGISTER_CONTEXT_EVENT(open_ret, "OPEN ret");
     TAU_CONTEXT_EVENT(open_fd, flags);
     TAU_CONTEXT_EVENT(open_ret, ret);
   }
@@ -64,11 +64,9 @@ size_t __wrap_read(int fd, void *buf, size_t nbytes)
   double currentRead = 0.0;
   struct timeval t1, t2; 
   Tau_iowrap_checkInit();
-  TAU_PROFILE_TIMER(t, "read()", " ", TAU_IO);
+  TAU_PROFILE_TIMER(t, "read()", " ", TAU_READ);
   TAU_REGISTER_CONTEXT_EVENT(re, "READ Bandwidth (MB/s)");
   TAU_REGISTER_CONTEXT_EVENT(bytesread, "READ Bytes Read");
-  TAU_REGISTER_CONTEXT_EVENT(read_fd, "READ fd");
-  TAU_REGISTER_CONTEXT_EVENT(read_ret, "READ ret");
   TAU_PROFILE_START(t);
 
   gettimeofday(&t1, 0);
@@ -92,6 +90,8 @@ size_t __wrap_read(int fd, void *buf, size_t nbytes)
 
   TAU_CONTEXT_EVENT(bytesread, nbytes);
   if (TauEnv_get_track_io_params()) {
+    TAU_REGISTER_CONTEXT_EVENT(read_fd, "READ fd");
+    TAU_REGISTER_CONTEXT_EVENT(read_ret, "READ ret");
     TAU_CONTEXT_EVENT(read_fd, fd);
     TAU_CONTEXT_EVENT(read_ret, ret);
   }
@@ -109,11 +109,9 @@ size_t __wrap_write(int fd, void *buf, size_t nbytes)
   double currentWrite = 0.0;
   struct timeval t1, t2; 
   Tau_iowrap_checkInit();
-  TAU_PROFILE_TIMER(t, "write()", " ", TAU_IO);
+  TAU_PROFILE_TIMER(t, "write()", " ", TAU_WRITE);
   TAU_REGISTER_CONTEXT_EVENT(wb, "WRITE Bandwidth (MB/s)");
   TAU_REGISTER_CONTEXT_EVENT(byteswritten, "WRITE Bytes Written");
-  TAU_REGISTER_CONTEXT_EVENT(write_fd, "WRITE fd");
-  TAU_REGISTER_CONTEXT_EVENT(write_ret, "WRITE ret");
   TAU_PROFILE_START(t);
 
   gettimeofday(&t1, 0);
@@ -135,6 +133,8 @@ size_t __wrap_write(int fd, void *buf, size_t nbytes)
   }
   TAU_CONTEXT_EVENT(byteswritten, nbytes);
   if (TauEnv_get_track_io_params()) {
+    TAU_REGISTER_CONTEXT_EVENT(write_fd, "WRITE fd");
+    TAU_REGISTER_CONTEXT_EVENT(write_ret, "WRITE ret");
     TAU_CONTEXT_EVENT(write_fd, fd);
     TAU_CONTEXT_EVENT(write_ret, ret);
   }
@@ -150,13 +150,13 @@ size_t __wrap_close(int fd)
   int ret;
   Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "close()", " ", TAU_IO);
-  TAU_REGISTER_CONTEXT_EVENT(close_fd, "CLOSE fd");
-  TAU_REGISTER_CONTEXT_EVENT(close_ret, "CLOSE ret");
   TAU_PROFILE_START(t);
 
   ret = __real_close(fd);
 
   if (TauEnv_get_track_io_params()) {
+    TAU_REGISTER_CONTEXT_EVENT(close_fd, "CLOSE fd");
+    TAU_REGISTER_CONTEXT_EVENT(close_ret, "CLOSE ret");
     TAU_CONTEXT_EVENT(close_fd, fd);
     TAU_CONTEXT_EVENT(close_ret, ret);
   }
@@ -174,13 +174,13 @@ int __wrap_select(int nfds, fd_set *readfds, fd_set *writefds,
   int ret;
   Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "select()", " ", TAU_IO);
-  TAU_REGISTER_CONTEXT_EVENT(select_nfds, "select nfds");
-  TAU_REGISTER_CONTEXT_EVENT(select_ret, "select ret");
   TAU_PROFILE_START(t);
 
   ret = __real_select(nfds, readfds, writefds, exceptfds, timeout); 
 
   if (TauEnv_get_track_io_params()) {
+    TAU_REGISTER_CONTEXT_EVENT(select_nfds, "select nfds");
+    TAU_REGISTER_CONTEXT_EVENT(select_ret, "select ret");
     TAU_CONTEXT_EVENT(select_nfds, nfds);
     TAU_CONTEXT_EVENT(select_ret, ret);
   }
