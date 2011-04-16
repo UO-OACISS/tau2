@@ -48,6 +48,10 @@ using namespace std;
 #  include <omp.h>
 #endif
 
+#ifndef TAU_MAX_SYMBOLS_TO_BE_RESOLVED
+#define TAU_MAX_SYMBOLS_TO_BE_RESOLVED 3000
+#endif /* TAU_MAX_SYMBOLS_TO_BE_RESOLVED */
+
 #ifdef TAU_BFD
 #define HAVE_DECL_BASENAME 1
 #  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
@@ -132,13 +136,17 @@ static HashNode* hash_get(unsigned long h) {
  * Get symbol table by using BFD
  */
 
+#ifdef TAU_BFD
+  asymbol **syms;
+  bfd * BfdImage = 0;
+  int nr_all_syms = 0;
+#endif /* TAU_BFD */
+
 static void get_symtab_bfd(const char *module, unsigned long offset) {
 #ifdef TAU_BFD
-  bfd * BfdImage = 0;
-  int nr_all_syms;
   int i; 
   size_t size;
-  asymbol **syms;
+  //asymbol **syms;
   int do_getsrc = 1;
 #if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
   int do_demangle = 1;
@@ -181,6 +189,7 @@ static void get_symtab_bfd(const char *module, unsigned long offset) {
     return;
   }
    
+  if ((nr_all_syms > TAU_MAX_SYMBOLS_TO_BE_RESOLVED) && (strcmp(module, "/proc/self/exe") == 0)) do_getsrc = 0; 
   for (i=0; i<nr_all_syms; ++i) {
     char* dem_name = 0;
     unsigned long addr;
@@ -207,7 +216,7 @@ static void get_symtab_bfd(const char *module, unsigned long offset) {
     addr = syms[i]->section->vma+syms[i]->value;
 
     /* use demangled name if possible */
-#if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
+#if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE 
     if ( do_demangle ) {
       dem_name = cplus_demangle(syms[i]->name,
 				DMGL_PARAMS | DMGL_ANSI 
@@ -236,8 +245,8 @@ static void get_symtab_bfd(const char *module, unsigned long offset) {
     }
   }
 
-  free(syms);
-  bfd_close(BfdImage);
+  /* free(syms); */
+  /* bfd_close(BfdImage); */
 #endif
   return;
 }
@@ -527,7 +536,16 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 	    filename = strchr(filename,'/')+1;
 	  }
 	} else {
-	  filename = "(unknown)";
+	  filename = "(unknown)"; 
+          for(i=0; i<nr_all_syms-1; i++) {
+            if (syms && syms[i] && ((void *)( syms[i]->section->vma+syms[i]->value) == funcptr)) { 
+              unsigned int linenumber;
+              bfd_find_nearest_line(BfdImage, bfd_get_section(syms[i]), syms,
+	        syms[i]->value, &filename, &hn->name, &linenumber);
+	      hn->lno = linenumber;
+	      break; /* come out of the for loop - we found the address that matched! */
+            }
+          }
 	}
 	
 	char *routine;
