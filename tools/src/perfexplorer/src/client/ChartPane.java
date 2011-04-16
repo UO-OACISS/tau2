@@ -536,7 +536,12 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		else {
 			events = new ArrayList<String>();
 		}
-		
+		if(!theModel.getEventNoCallpath()){
+			List<String> cpevents = server.getPotentialCallPathEvents(theModel);
+			for(String e: cpevents){
+				events.add(e);
+			}
+		}
 		this.event.removeAll();
 		//this.eventModel.addElement(all);
 		events.add(0, all);
@@ -936,6 +941,12 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				
 				refreshDynamicControls(false, true, false);
 			}
+		}else if(source == callPath){
+			facade.setChartEventNoCallPath(callPath.isSelected()?0:1);
+						
+				refreshDynamicControls(false, true, false);
+			
+			
 		} else if (source == dimension) {
 			if (dimension.getSelectedIndex() == 0) {
 				this.dimensionXLabel.setEnabled(false);
