@@ -6,13 +6,9 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+
 
 import java.util.Enumeration;
-import java.util.List;
 import java.util.ListIterator;
 
 import javax.swing.BorderFactory;
@@ -27,9 +23,7 @@ import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.border.TitledBorder;
-import javax.swing.plaf.basic.BasicComboPopup;
-import javax.swing.plaf.basic.ComboPopup;
-import javax.swing.plaf.metal.MetalComboBoxUI;
+
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
@@ -38,7 +32,7 @@ import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfexplorer.common.ScriptThread;
+
 
 public class DeriveMetricsPane extends JScrollPane implements ActionListener {
 
