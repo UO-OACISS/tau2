@@ -952,7 +952,92 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		}
 		return metrics;
 	}
-
+	/**
+	 * Get the events defined in these profiles.  The client passes in a model
+	 * with one or more experiments selected, and the code will get all the
+	 * events which are common among all trials for those experiemnts.
+	 * 
+	 * @param modelData
+	 * @return List
+	 */
+	public List<String> getPotentialCallPathEvents(RMIPerfExplorerModel modelData) {
+		//PerfExplorerOutput.println("getPotentialEvents()...");
+		List<String> events = new ArrayList<String>();
+		try {
+			DB db = this.getDB();
+			StringBuilder buf = new StringBuilder();
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append("select distinct cast (m.name as VARCHAR(256))");
+			} else {
+				buf.append("select distinct ie.name ");
+			}
+			buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
+			Object object = modelData.getCurrentSelection();
+			if (object instanceof RMIView) {
+				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
+			} else {
+				buf.append(" inner join experiment e on t.experiment = e.id ");
+				List<Object> selections = modelData.getMultiSelection();
+				if (selections == null) {
+					// just one selection
+					Object selection = modelData.getCurrentSelection();
+					if (selection instanceof Application) {
+						buf.append(" where e.application = ");
+						buf.append(modelData.getApplication().getID());
+					} else if (selection instanceof Experiment) {
+						buf.append(" where t.experiment = ");
+						buf.append(modelData.getExperiment().getID());
+					} else if (selection instanceof Trial) {
+						buf.append(" where t.id = ");
+						buf.append(modelData.getTrial().getID());
+					}
+				} else {
+					Object selection = modelData.getCurrentSelection();
+					if (selection instanceof Application) {
+						buf.append(" where e.application in (");
+						for (int i = 0 ; i < selections.size() ; i++) {
+							Application app = (Application)selections.get(i);
+							if (i > 0)
+								buf.append(",");
+							buf.append(app.getID());
+						}
+						buf.append(")");
+					} else if (selection instanceof Experiment) {
+						buf.append(" where t.experiment in (");
+						for (int i = 0 ; i < selections.size() ; i++) {
+							Experiment exp = (Experiment)selections.get(i);
+							if (i > 0)
+								buf.append(",");
+							buf.append(exp.getID());
+						}
+						buf.append(")");
+					} else if (selection instanceof Trial) {
+						buf.append(" where t.id in (");
+						for (int i = 0 ; i < selections.size() ; i++) {
+							Trial trial = (Trial)selections.get(i);
+							if (i > 0)
+								buf.append(",");
+							buf.append(trial.getID());
+						}
+						buf.append(")");
+					}
+				}
+			}
+			buf.append(" and (group_name is null or group_name like '%TAU_CALLPATH%') ");
+			PreparedStatement statement = db.prepareStatement(buf.toString());
+			//PerfExplorerOutput.println(statement.toString());
+			ResultSet results = statement.executeQuery();
+			while (results.next() != false) {
+				events.add(results.getString(1));
+			}
+			statement.close();
+		} catch (Exception e) {
+			String error = "ERROR: Couldn't select the events from the database!";
+			System.err.println(error);
+			e.printStackTrace();
+		}
+		return events;
+	}
 	/**
 	 * Get the events defined in these profiles.  The client passes in a model
 	 * with one or more experiments selected, and the code will get all the

@@ -150,6 +150,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 	private static final String INTERVAL_EVENT_GROUP_NAME = "interval_event.group_name";
 
 	private static final String EXPERIMENT_NAME = "experiment.name";
+	private static final String EXPERIMENT_ID = "experiment.id";
 	
 //private static final String MEAN_INCLUSIVE = "mean.inclusive";
 	//private static final String MEAN_EXCLUSIVE = "mean.exclusive";
@@ -591,21 +592,21 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			if (getMetrics) {
 				List<String> metrics = server.getPotentialMetrics(theModel);
 				//this.metric.setSelectedIndex(0);
-				boolean gotTime = false;
+//				boolean gotTime = false;
 				for (Iterator<String> itr = metrics.iterator() ; itr.hasNext() ; ) {
 					String next = itr.next();
-					if (next.toUpperCase().indexOf("TIME") > 0) {
-						gotTime = true;
-					}
+//					if (next.toUpperCase().indexOf("TIME") > 0) {
+//						gotTime = true;
+//					}
 					this.metric.addItem(next);
 					if (oldMetric.equals(next))
 						this.metric.setSelectedItem(next);
 				}
-				if (gotTime) {
-					this.metric.addItem("TIME");
-					if (oldMetric.equals("TIME"))
-						this.metric.setSelectedItem("TIME");
-				}
+//				if (gotTime) {
+//					this.metric.addItem("TIME");
+//					if (oldMetric.equals("TIME"))
+//						this.metric.setSelectedItem("TIME");
+//				}
 			} 
 			if (getEvents && !this.mainOnly.isSelected()) {
 				String seriesSelection = (String)series.getSelectedItem();
@@ -857,13 +858,14 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			tmp = (String)obj;
 			facade.setEventName(null);
 			facade.setGroupName(null);
-			if (tmp.equalsIgnoreCase(INTERVAL_EVENT_NAME)) {
+			if (tmp.equalsIgnoreCase(INTERVAL_EVENT_NAME) || tmp.equalsIgnoreCase(EXPERIMENT_NAME)|| tmp.equalsIgnoreCase(EXPERIMENT_ID)) {
 				setEvents(INTERVAL_EVENT_ALL);
 			} else if (tmp.equalsIgnoreCase(INTERVAL_EVENT_GROUP_NAME)) {
 				setEvents(INTERVAL_EVENT_GROUP_ALL);
 			} else if (tmp.equalsIgnoreCase(ATOMIC_EVENT_NAME)) {
 				setEvents(ATOMIC_EVENT_ALL);
 			}
+	
 		}
 
 		facade.setChartEventNoCallPath(this.callPath.isSelected()?0:1); //reversed logic
