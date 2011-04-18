@@ -537,6 +537,7 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 	  }
 	} else {
 	  filename = "(unknown)"; 
+#ifdef TAU_BFD
           for(i=0; i<nr_all_syms-1; i++) {
             if (syms && syms[i] && ((void *)( syms[i]->section->vma+syms[i]->value) == funcptr)) { 
               unsigned int linenumber;
@@ -546,6 +547,7 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 	      break; /* come out of the for loop - we found the address that matched! */
             }
           }
+#endif /* TAU_BFD */
 	}
 	
 	char *routine;
