@@ -367,35 +367,35 @@ public class SaveResultOperation extends AbstractPerformanceOperation {
 	//	statement.execute();
 	//	statement.close();		
     }
-
-    private int insertEvent(String event) throws SQLException {
-	int eventID = 0;
-	buf = new StringBuilder();
-	//event = event + ".kevin";
-	buf.append("select id from interval_event where trial = ? and name = ?");
-	statement = db.prepareStatement(buf.toString());
-	statement.setInt(1, trial.getID());
-	statement.setString(2, event);
-	//System.out.println(statement);
-	ResultSet results = statement.executeQuery();
-	if (results.next() != false) {
-	    eventID = results.getInt(1);
-	}
-	results.close();
-	statement.close();
-	// do we need to insert a new event?
-	if (eventID == 0) {
-	    buf = new StringBuilder();
-	    buf.append("insert into interval_event (trial, name) values (?, ?)");
-	    statement = db.prepareStatement(buf.toString());
-	    statement.setInt(1, trial.getID());
-	    statement.setString(2, event);
-	    //System.out.println(statement);
-	    statement.execute();			
-	    statement.close();		
-	}
-	return eventID;
-    }
+//Old method that was not fast enough 
+//    private int insertEvent(String event) throws SQLException {
+//	int eventID = 0;
+//	buf = new StringBuilder();
+//	//event = event + ".kevin";
+//	buf.append("select id from interval_event where trial = ? and name = ?");
+//	statement = db.prepareStatement(buf.toString());
+//	statement.setInt(1, trial.getID());
+//	statement.setString(2, event);
+//	//System.out.println(statement);
+//	ResultSet results = statement.executeQuery();
+//	if (results.next() != false) {
+//	    eventID = results.getInt(1);
+//	}
+//	results.close();
+//	statement.close();
+//	// do we need to insert a new event?
+//	if (eventID == 0) {
+//	    buf = new StringBuilder();
+//	    buf.append("insert into interval_event (trial, name) values (?, ?)");
+//	    statement = db.prepareStatement(buf.toString());
+//	    statement.setInt(1, trial.getID());
+//	    statement.setString(2, event);
+//	    //System.out.println(statement);
+//	    statement.execute();			
+//	    statement.close();		
+//	}
+//	return eventID;
+//    }
 
     /**
      * @param trial
