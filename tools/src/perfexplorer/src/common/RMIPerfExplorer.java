@@ -130,13 +130,21 @@ public interface RMIPerfExplorer extends Remote {
         throws RemoteException;
 
     /**
-     *
-     * @param model
-     * @return
-     * @throws RemoteException
-     */
-    public List<String> getPotentialEvents(RMIPerfExplorerModel model)
-        throws RemoteException;
+    *
+    * @param model
+    * @return
+    * @throws RemoteException
+    */
+   public List<String> getPotentialEvents(RMIPerfExplorerModel model)
+       throws RemoteException;
+   /**
+   *
+   * @param model
+   * @return
+   * @throws RemoteException
+   */
+  public List<String> getPotentialCallPathEvents(RMIPerfExplorerModel model)
+      throws RemoteException;
 
     /**
      * Requests the metadata for the specified table.
