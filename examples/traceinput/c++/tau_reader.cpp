@@ -17,6 +17,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <iostream>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
 #include <map>
 using namespace std;
 int debugPrint = 1;

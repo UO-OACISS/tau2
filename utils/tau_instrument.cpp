@@ -1517,7 +1517,11 @@ void addFortranIOInstrumentation(const pdbRoutine *ro, const pdbLoc& start, cons
   getTauEntityName("tio_", varname, start.line());
 
   string declaration1(string("      real*8 ")+varname+"_sz");
+#ifdef TAU_ALT_FORTRAN_INSTRUMENTATION
+  string declaration2(string("      integer, dimension(2) ::  ")+varname+"= (/ 0, 0 /)");
+#else
   string declaration2(string("      integer ")+varname+"(2) / 0, 0 /");
+#endif /*TAU_ALT_FORTRAN_INSTRUMENTATION*/
   string declaration3(string("      save ")+varname);
 
   /* now we create the call to create the timer */
@@ -2413,7 +2417,11 @@ it will not enter here. */
             cout <<"at line: "<<r->bodyBegin().line()<<", col"<< r->bodyBegin().col()<<"code = "<<endl;
 #endif /* DEBUG */
             list<string> dynamicDecls;
+#ifdef TAU_ALT_FORTRAN_INSTRUMENTATION
+            dynamicDecls.push_back(string("      integer, dimension(2) :: tau_iteration =(/ 0, 0 /)"));
+#else
             dynamicDecls.push_back(string("      integer tau_iteration(2) / 0, 0 /"));
+#endif /*TAU_ALT_FORTRAN_INSTRUMENTATION*/
             dynamicDecls.push_back(string("      save tau_iteration"));
 
             additionalDeclarations.push_back(pair<int, list<string> >(r->id(), 
