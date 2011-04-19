@@ -567,7 +567,7 @@ void Tau_cuda_onload(void)
 			printf("cupti supported only for Tesla\n");
 			exit(1);
 	}*/
-	CUDA_CHECK_ERROR(err, "Cannot Subscribe.\n");
+	//CUDA_CHECK_ERROR(err, "Cannot Subscribe.\n");
 
 	//Get env variables
 	//char *runtime_api, *driver_api;
