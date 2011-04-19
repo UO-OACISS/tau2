@@ -2012,7 +2012,7 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
   TAU_PROFILE_STOP(t);
 	if (a9 == NULL)
 	{
-		printf("cl_event is null.\n");
+		//printf("cl_event is null.\n");
 		cl_event new_event;
 		a9 = &new_event;
 	}
@@ -2026,7 +2026,7 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
 	err = clGetKernelInfo(a2, CL_KERNEL_FUNCTION_NAME,
 		sizeof(char[TAU_MAX_FUNCTIONNAME]), name, NULL);
 	
-	callingSite = TauInternal_CurrentProfiler(RtsLayer::myNode())->CallPathFunction;
+	callingSite = TauInternal_CurrentProfiler(RtsLayer::getTid())->CallPathFunction;
 	
 	callback_data *kernel_data = new callback_data(name,
 	callingSite, a9);
