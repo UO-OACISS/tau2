@@ -27,6 +27,10 @@ using namespace std;
 #include <stdlib.h>
 #include <stdio.h>
 
+#ifdef TAU_AT_FORK
+#include <pthread.h>
+#endif /* TAU_AT_FORK */
+
 extern "C" {
 #include "papi.h"
 }
@@ -106,6 +110,27 @@ static void dmesg(int level, char* format, ...) {
 #endif /* TAU_PAPI_DEBUG */
 }
 #endif
+
+#ifdef TAU_AT_FORK
+void Tau_prepare(void) {
+  TAU_VERBOSE("inside tau_prepare: pid = %d\n", getpid());
+}
+
+void Tau_parent(void) {
+  TAU_VERBOSE("inside tau_parent: pid = %d\n", getpid());
+}
+
+void Tau_child(void) {
+  TAU_VERBOSE("inside tau_child: pid = %d\n", getpid());
+  PapiLayer::reinitializePAPI() ;
+}
+
+int Tau_foo(int x) {
+  printf("Inside foo: x = %d\n", x);
+  pthread_atfork(Tau_prepare, Tau_parent, Tau_child);
+  return x;
+}
+#endif /* TAU_AT_FORK */
 
 
 /////////////////////////////////////////////////
@@ -252,7 +277,7 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
   if (Tau_is_thread_fake(tid) == 1) tid = 0;
 
   if (!papiInitialized) {
-    printf("Before initializePAPI\n");
+    //printf("Before initializePAPI\n");
     int rc = initializePAPI();
     if (rc != 0) {
       return NULL;
@@ -376,6 +401,11 @@ int PapiLayer::initializePAPI() {
 #ifdef TAU_PAPI_DEBUG
   dmesg(1, "TAU: PapiLayer::initializePAPI\n");
 #endif
+
+#ifdef TAU_AT_FORK
+  TAU_VERBOSE("TAU: PapiLayer::initializePAPI: before pthread_at_fork()");
+  pthread_atfork(Tau_prepare, Tau_parent, Tau_child);
+#endif /* TAU_AT_FORK */
 
   papiInitialized = true;
 
