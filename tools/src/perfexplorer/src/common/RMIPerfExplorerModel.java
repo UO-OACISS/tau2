@@ -52,6 +52,7 @@ public class RMIPerfExplorerModel implements Serializable {
 	protected String chartYAxisLabel = null;
 	protected String chartTitle = null;
 	protected boolean chartLogYAxis = false;
+	protected boolean chartLogXAxis = false;
 	protected boolean chartScalability = false;
 	protected boolean chartEfficiency = false;
 	protected boolean chartHorizontal = false;
@@ -123,6 +124,7 @@ public class RMIPerfExplorerModel implements Serializable {
 		this.chartYAxisLabel = source.chartYAxisLabel;
 		this.chartTitle = source.chartTitle;
 		this.chartLogYAxis = source.chartLogYAxis;
+		this.chartLogXAxis = source.chartLogXAxis;
 		this.chartScalability = source.chartScalability;
 		this.chartEfficiency = source.chartEfficiency;
 		this.chartHorizontal = source.chartHorizontal;
@@ -1082,6 +1084,15 @@ public class RMIPerfExplorerModel implements Serializable {
 	public boolean getChartLogYAxis() {
 		return this.chartLogYAxis;
 	}
+	
+    /**
+     * Get the log axis
+     *
+     * @return
+     */
+	public boolean getChartLogXAxis() {
+		return this.chartLogXAxis;
+	}
 
     /**
      * Get the log axis
@@ -1108,6 +1119,14 @@ public class RMIPerfExplorerModel implements Serializable {
      */
 	public void setChartLogYAxis(boolean logAxis) {
 		this.chartLogYAxis = logAxis;
+	}
+    /**
+     * Set the log axis
+     *
+     * @param seriesName
+     */
+	public void setChartLogXAxis(boolean logAxis) {
+		this.chartLogXAxis = logAxis;
 	}
 
     /**
