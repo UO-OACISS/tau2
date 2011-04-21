@@ -1524,8 +1524,8 @@ cl_int clEnqueueReadBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4
 	if (a9 == NULL)
 	{
 		//printf("cl_event is null.\n");
-		cl_event new_event;
-		a9 = &new_event;
+		cl_event* new_event = (cl_event*) malloc(sizeof(cl_event));
+		a9 = &(*new_event);
 	}
 #ifdef TAU_ENABLE_CL_CALLBACK
 	callback_data *mem_data = (callback_data*) malloc(memcpy_data_size);
@@ -1594,8 +1594,8 @@ cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a
 	if (a9 == NULL)
 	{
 		//printf("cl_event is null.\n");
-		cl_event new_event;
-		a9 = &new_event;
+		cl_event* new_event = (cl_event*) malloc(sizeof(cl_event));
+		a9 = &(*new_event);
 	}
 	
 	Tau_opencl_enter_memcpy_event("cl_int clEnqueueWriteBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *) C", 1, a5, MemcpyHtoD); 
@@ -1681,10 +1681,9 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
 	if (a9 == NULL)
 	{
 		//printf("cl_event is null.\n");
-		cl_event new_event;
-		a9 = &new_event;
+		cl_event* new_event = (cl_event*) malloc(sizeof(cl_event));
+		a9 = &(*new_event);
 	}
-
 	Tau_opencl_enter_memcpy_event("cl_int clEnqueueCopyBuffer(cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *) C", 2, a6, MemcpyDtoD); 
 
   retval  =  (*clEnqueueCopyBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
@@ -1889,8 +1888,8 @@ void * clEnqueueMapBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, cl_map_fla
 	if (a9 == NULL)
 	{
 		//printf("cl_event is null.\n");
-		cl_event new_event;
-		a9 = &new_event;
+		cl_event* new_event = (cl_event*) malloc(sizeof(cl_event));
+		a9 = &(*new_event);
 	}
 #ifdef TAU_ENABLE_CL_CALLBACK
 	callback_data *mem_data = (callback_data*) malloc(memcpy_data_size);
@@ -2007,15 +2006,15 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
 	//kernel_data.name = "NDRangeKernel";
 	//printf("name: %s.\n", kernel_data->name);
 #endif
-  TAU_PROFILE_START(t);
-  retval  =  (*clEnqueueNDRangeKernel_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
-  TAU_PROFILE_STOP(t);
 	if (a9 == NULL)
 	{
 		//printf("cl_event is null.\n");
-		cl_event new_event;
-		a9 = &new_event;
+		cl_event* new_event = (cl_event*) malloc(sizeof(cl_event));
+		a9 = &(*new_event);
 	}
+  TAU_PROFILE_START(t);
+  retval  =  (*clEnqueueNDRangeKernel_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
+  TAU_PROFILE_STOP(t);
 #ifdef TAU_ENABLE_CL_CALLBACK
 	clSetEventCallback((*a9), CL_COMPLETE, Tau_opencl_kernel_callback, kernel_data);
 #else
