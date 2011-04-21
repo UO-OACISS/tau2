@@ -41,6 +41,7 @@ public:
   static long long getVirtualTime(void);
   static int reinitializePAPI(void);
   static int addCounter(char *name);
+  static void PapiLayer::setPapiInitialized(bool value); 
 private:
   static int initializeSingleCounter();
   static int initializeThread(int tid);
