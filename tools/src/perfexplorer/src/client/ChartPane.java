@@ -132,6 +132,8 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 	private JCheckBox angleXLabels= new JCheckBox("Angle X Axis Labels");
 	private JCheckBox alwaysCategory= new JCheckBox("Categorical X Axis");
+	private JCheckBox  logX = new JCheckBox ("Log X");
+
 	private String[] unitOptions = {
 			"microseconds", 
 			"milliseconds", 
@@ -342,6 +344,11 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 		panel.add(Box.createVerticalStrut(10));
 		panel.add(this.alwaysCategory);
+		
+		panel.add(Box.createVerticalStrut(10));
+		panel.add(this.logX);
+		this.logX.setToolTipText("Use a Logarithmic X axis");
+		this.logX.addActionListener(this);
 
 		return (panel);
 	}
@@ -485,6 +492,8 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		this.mainOnly.setSelected(true);
 		this.callPath.setSelected(false);
 		this.logY.setSelected(false);
+		this.logX.setSelected(false);
+		this.exportdata.setSelected(false);
 		valueRB.setSelected(true);
 		weakScaling.setSelected(true);
 		this.horizontal.setSelected(false);
@@ -888,6 +897,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 		facade.setChartEventNoCallPath(this.callPath.isSelected()?0:1); //reversed logic
 		facade.setChartLogYAxis(this.logY.isSelected()?1:0);
+		facade.setChartLogXAxis(this.logX.isSelected()?1:0);
 		facade.setChartScalability(this.scalaRB.isSelected()?1:0);
 		facade.setChartEfficiency(this.efficRB.isSelected()?1:0);
 		facade.setChartConstantProblem(this.strongScaling.isSelected()?0:1);
@@ -1398,6 +1408,18 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			axis.setAllowNegativesFlag(true);
 			axis.setLog10TickLabelsFlag(true);
 			plot.setRangeAxis(0, axis);
+		}		
+		if (model.getChartLogXAxis()) {
+			LogarithmicAxis axis = new LogarithmicAxis(
+					PerfExplorerModel.getModel().getChartXAxisLabel());
+			if (model.getShowZero()) {
+				axis.setAutoRangeIncludesZero(true);
+			} else {
+				axis.setAutoRangeIncludesZero(false);
+			}
+			axis.setAllowNegativesFlag(true);
+			axis.setLog10TickLabelsFlag(true);
+			plot.setDomainAxis(0, axis);
 		}
 	}
 
@@ -1441,6 +1463,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			axis.setLog10TickLabelsFlag(true);
 			plot.setRangeAxis(0, axis);
 		}
+		
 
 		if (angleXLabels.isSelected()){//angledXaxis && !scalingChart) {
 			//CategoryPlot plot = chart.getCategoryPlot();
