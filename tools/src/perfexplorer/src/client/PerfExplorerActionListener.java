@@ -836,8 +836,14 @@ public class PerfExplorerActionListener implements ActionListener {
 		String event = theModel.getEventName();
 		if (forceIt || event == null) {
 			PerfExplorerConnection server = PerfExplorerConnection.getConnection();
-			List<String> metrics = server.getPotentialEvents(theModel);
-			Object[] options = metrics.toArray();
+			List<String> events = server.getPotentialEvents(theModel);
+			List<String> callpath = server.getPotentialCallPathEvents(theModel);
+			for(String cp: callpath){
+				events.add(cp);
+			}
+			
+			
+			Object[] options = events.toArray();
 			if (options.length > 0) {
 				if (options.length == 1) {
 					event = (String)options[0];
