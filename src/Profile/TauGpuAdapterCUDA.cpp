@@ -183,7 +183,7 @@ class KernelEvent : public eventId
 };
 
 static cudaEvent_t lastEvent;
-static float lastEventTime = 0;
+static double lastEventTime = 0;
 
 static queue<KernelEvent> KernelBuffer;
 
@@ -191,15 +191,21 @@ static queue<KernelEvent> KernelBuffer;
 
 void Tau_cuda_init()
 {
-	//printf("in Tau_cuda_init().\n");
 	static bool init = false;
 	if (!init)
 	{
+		//printf("in Tau_cuda_init().\n");
 		cudaEvent_t initEvent;
-		cudaError err; //= cudaStreamCreate(&stream);
+		//cudaStream_t stream;
+		cudaError err = cudaSuccess; //= cudaStreamCreate(&stream);
 		
   	struct timeval tp;
 
+		if (err != cudaSuccess)
+		{
+			printf("Error creating stream, error #: %d.\n", err);
+			//exit(1);
+		}
 		err = cudaEventCreate(&initEvent); 
 		if (err != cudaSuccess)
 		{
@@ -224,6 +230,8 @@ void Tau_cuda_init()
 		//printf("sync offset: %lf.\n", sync_offset);
 
 		lastEvent = initEvent;
+		lastEventTime = sync_offset / 1e3;  
+		//printf("last event time: %lf.\n", lastEventTime);
 		init = true;
 		Tau_gpu_init();
 	}
@@ -345,6 +353,8 @@ void Tau_cuda_register_sync_event()
 		//Create cudaGpuId for stream.
 		//cudaGpuId *id = new cudaGpuId(kernel.id.getDevice(), kernel.id.getContext(), kernel.id.getStream());
 		//cout << "in sync event, stream id is: " << id->printId() << endl;
+		//printf("last event time: %f.\n", lastEventTime);
+		//printf("stop time: %f.\n", stop_sec);
 		Tau_gpu_register_gpu_event(kernel, 
 															 (((double) start_sec) + lastEventTime)*1e3,
 															 (((double) stop_sec)  + lastEventTime)*1e3);
