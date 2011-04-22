@@ -450,6 +450,63 @@ size_t __wrap_read(int fd, void *buf, size_t nbytes)
   return ret;
 }
 
+/*********************************************************************
+ * fread
+ ********************************************************************/
+size_t __wrap_fread(void *ptr, size_t size, size_t nmemb, FILE *stream) 
+{
+  size_t ret;
+  double currentRead = 0.0;
+  struct timeval t1, t2; 
+  unsigned long long count; 
+  int fd;
+  fd = fileno(stream);
+  Tau_iowrap_checkInit();
+  if (Tau_iowrap_checkPassThrough()) {
+    return __real_fread(ptr, size, nmemb, stream);
+  }
+  Tau_global_incr_insideTAU();
+  TAU_PROFILE_TIMER(t, "fread()", " ", TAU_READ|TAU_IO);
+  TAU_GET_IOWRAP_EVENT(re, READ_BW, fd);
+  TAU_GET_IOWRAP_EVENT(bytesread, READ_BYTES, fd);
+  TAU_PROFILE_START(t);
+
+  gettimeofday(&t1, 0);
+  ret = __real_fread(ptr, size, nmemb, stream);
+  gettimeofday(&t2, 0);
+
+
+  /* calculate the time spent in operation */
+  currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
+  /* now we trigger the events */
+  count = ret * size; 
+
+  if ((currentRead > 1e-12) && (ret > 0)) {
+    TAU_CONTEXT_EVENT(re, (double) count/currentRead);
+    TAU_CONTEXT_EVENT(global_read_bandwidth, (double) count/currentRead);
+  } else {
+    dprintf("TauWrapperRead: currentRead = %g\n", ret);
+  }
+
+  if (ret > 0 ) {
+    TAU_CONTEXT_EVENT(bytesread, count);
+    TAU_CONTEXT_EVENT(global_bytes_read, count);
+  }
+
+  if (TauEnv_get_track_io_params()) {
+    TAU_REGISTER_CONTEXT_EVENT(read_fd, "FREAD fd");
+    TAU_REGISTER_CONTEXT_EVENT(read_ret, "FREAD ret");
+    TAU_CONTEXT_EVENT(read_fd, fileno(stream));
+    TAU_CONTEXT_EVENT(read_ret, ret);
+  }
+
+  TAU_PROFILE_STOP(t);
+  dprintf("fread fd=%d size=%d nmemb=%d ret=%d\n", fd, size, nmemb, ret);
+  Tau_global_decr_insideTAU();
+
+  return ret;
+}
+
 
 /*********************************************************************
  * readv
