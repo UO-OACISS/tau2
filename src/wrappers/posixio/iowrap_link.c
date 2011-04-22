@@ -18,6 +18,7 @@
 
 #define dprintf TAU_VERBOSE
 
+#define TAU_MAX_SOCKET_LEN 1024
 #define TAU_READ TAU_IO
 #define TAU_WRITE TAU_IO
 extern void Tau_iowrap_checkInit(void);
@@ -396,6 +397,208 @@ int __wrap_socket(int domain, int type, int protocol) {
 
   return ret;
 }
+
+/*********************************************************************
+ * socketpair
+ ********************************************************************/
+int __wrap_socketpair(int domain, int type, int protocol, int sv[2]) {
+  int ret;
+  Tau_iowrap_checkInit();
+
+  if (Tau_iowrap_checkPassThrough()) {
+    return __real_socketpair(domain, type, protocol, sv);
+  }
+  Tau_global_incr_insideTAU();
+
+  TAU_PROFILE_TIMER(t, "socketpair()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  ret = __real_socketpair(domain, type, protocol, sv);
+
+  if (ret == 0) {
+    Tau_iowrap_registerEvents(sv[0], "socketpair");
+    Tau_iowrap_registerEvents(sv[1], "socketpair");
+  }
+
+  if (TauEnv_get_track_io_params()) {
+    TAU_REGISTER_CONTEXT_EVENT(socket_domain, "socketpair domain");
+    TAU_REGISTER_CONTEXT_EVENT(socket_type, "socketpair type");
+    TAU_REGISTER_CONTEXT_EVENT(socket_protocol, "socketpair protocol");
+    TAU_REGISTER_CONTEXT_EVENT(socket_ret, "socketpair ret");
+    TAU_CONTEXT_EVENT(socket_domain, domain);
+    TAU_CONTEXT_EVENT(socket_type, type);
+    TAU_CONTEXT_EVENT(socket_protocol, protocol);
+    TAU_CONTEXT_EVENT(socket_ret, ret);
+  }
+  TAU_PROFILE_STOP(t);
+  Tau_global_decr_insideTAU();
+
+  dprintf("socketpair called domain = %d, type = %d, protocol = %d, sv[0]=%d, sv[1]=%d\n", domain, type, protocol, sv[0], sv[1]);
+
+  return ret;
+}
+
+
+/*********************************************************************
+ * bind
+ ********************************************************************/
+int __wrap_bind(int socket, const struct sockaddr *address, socklen_t address_len) 
+{
+  int ret;
+  Tau_iowrap_checkInit();
+  char socketname[TAU_MAX_SOCKET_LEN];
+
+  if (Tau_iowrap_checkPassThrough()) {
+    return __real_bind(socket, address, address_len);
+  }
+  Tau_global_incr_insideTAU();
+
+  TAU_PROFILE_TIMER(t, "bind()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  ret = __real_bind(socket, address, address_len);
+
+  if (ret == 0) {
+    Tau_wrapper_get_socket_name(address, (char *) socketname, address_len);
+    Tau_iowrap_registerEvents(socket, (const char *) socketname);
+  }
+
+  if (TauEnv_get_track_io_params()) {
+    TAU_REGISTER_CONTEXT_EVENT(bind_socket, "bind socket");
+    TAU_REGISTER_CONTEXT_EVENT(bind_ret, "bind ret");
+    TAU_CONTEXT_EVENT(bind_socket, socket);
+    TAU_CONTEXT_EVENT(bind_ret, ret);
+  }
+  TAU_PROFILE_STOP(t);
+  Tau_global_decr_insideTAU();
+
+  dprintf("bind called socket = %d, socketname = %s, ret = %d\n", socket, socketname, ret);
+
+  return ret;
+}
+
+
+
+/*********************************************************************
+ * connect
+ ********************************************************************/
+int __wrap_connect(int socket, struct sockaddr *address, socklen_t* address_len)
+{
+  int ret;
+  Tau_iowrap_checkInit();
+  char socketname[TAU_MAX_SOCKET_LEN];
+
+  if (Tau_iowrap_checkPassThrough()) {
+    return __real_connect(socket, address, address_len);
+  }
+  Tau_global_incr_insideTAU();
+
+  TAU_PROFILE_TIMER(t, "connect()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  ret = __real_connect(socket, address, address_len);
+
+  if (ret != -1) {
+    Tau_wrapper_get_socket_name(address, (char *) socketname, address_len);
+    Tau_iowrap_registerEvents(socket, (const char *) socketname);
+  }
+
+  if (TauEnv_get_track_io_params()) {
+    TAU_REGISTER_CONTEXT_EVENT(connect_socket, "connect socket");
+    TAU_REGISTER_CONTEXT_EVENT(connect_ret, "connect ret");
+    TAU_CONTEXT_EVENT(connect_socket, socket);
+    TAU_CONTEXT_EVENT(connect_ret, ret);
+  }
+  TAU_PROFILE_STOP(t);
+  Tau_global_decr_insideTAU();
+
+  dprintf("connect called socket = %d, socketname = %s, ret = %d\n", socket, socketname, ret);
+
+  return ret;
+}
+
+
+
+
+/*********************************************************************
+ * accept
+ ********************************************************************/
+int __wrap_accept(int socket, struct sockaddr *address, socklen_t* address_len)
+{
+  int ret;
+  Tau_iowrap_checkInit();
+  char socketname[TAU_MAX_SOCKET_LEN];
+
+  if (Tau_iowrap_checkPassThrough()) {
+    return __real_accept(socket, address, address_len);
+  }
+  Tau_global_incr_insideTAU();
+
+  TAU_PROFILE_TIMER(t, "accept()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  ret = __real_accept(socket, address, address_len);
+
+  if (ret != -1) {
+    Tau_wrapper_get_socket_name(address, (char *) socketname, address_len);
+    Tau_iowrap_registerEvents(ret, (const char *) socketname);
+  }
+
+  if (TauEnv_get_track_io_params()) {
+    TAU_REGISTER_CONTEXT_EVENT(accept_socket, "accept socket");
+    TAU_REGISTER_CONTEXT_EVENT(accept_ret, "accept ret");
+    TAU_CONTEXT_EVENT(accept_socket, socket);
+    TAU_CONTEXT_EVENT(accept_ret, ret);
+  }
+  TAU_PROFILE_STOP(t);
+  Tau_global_decr_insideTAU();
+
+  dprintf("accept called socket = %d, socketname = %s, ret = %d\n", socket, socketname, ret);
+
+  return ret;
+}
+
+/*********************************************************************
+ * fcntl
+ ********************************************************************/
+int __wrap_fcntl(int fd, int cmd, ...) 
+{
+  va_list ap;
+  void *arg;
+  int ret;
+
+  switch (cmd) {
+    /* No arg */
+    case F_GETFD : /* From kernel source fs/fcntl.c:do_fcntl() */
+    case F_GETFL :
+#if defined(F_GETOWN)
+    case F_GETOWN :
+#endif
+#if defined(F_GETSIG)
+    case F_GETSIG :
+#endif
+#if defined(F_GETLEASE)
+    case F_GETLEASE :
+#endif
+      ret = __real_fcntl(fd, cmd, 0);
+      break;
+    default :
+      va_start (ap, cmd);
+      arg = va_arg (ap, void *);
+      va_end (ap);
+      ret = __real_fcntl(fd, cmd, arg);
+      break;
+  }
+  switch (cmd) {
+    case F_DUPFD :
+      Tau_iowrap_checkInit();
+      Tau_iowrap_dupEvents(fd, ret);
+      break;
+  }
+  dprintf ("fcntl(fid=%d,cmd=%d...) called\n", fd, cmd);
+  return ret;
+}
+
 
 /*********************************************************************
  * read
