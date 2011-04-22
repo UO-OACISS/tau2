@@ -27,6 +27,10 @@ using namespace std;
 #include <stdlib.h>
 #include <stdio.h>
 
+#ifdef TAU_AT_FORK
+#include <pthread.h>
+#endif /* TAU_AT_FORK */
+
 extern "C" {
 #include "papi.h"
 }
@@ -61,6 +65,7 @@ int PapiLayer::counterList[MAX_PAPI_COUNTERS];
 int tauSampEvent = 0;
 
 extern "C" int Tau_is_thread_fake(int tid);
+extern "C" int TauMetrics_init(void);
 
 // Some versions of PAPI don't have these defined
 // so we'll define them to 0 and if the user tries to use them
@@ -107,6 +112,29 @@ static void dmesg(int level, char* format, ...) {
 }
 #endif
 
+#ifdef TAU_AT_FORK
+void Tau_prepare(void) {
+  TAU_VERBOSE("inside Tau_prepare: pid = %d\n", getpid());
+}
+
+void Tau_parent(void) {
+  TAU_VERBOSE("inside Tau_parent: pid = %d\n", getpid());
+#ifdef TAU_CRAYCNL
+//  TAU_DISABLE_INSTRUMENTATION();
+#endif /* TAU_CRAYCNL */
+}
+
+void Tau_child(void) {
+  TAU_VERBOSE("inside Tau_child: pid = %d\n", getpid());
+  PapiLayer::setPapiInitialized(false);
+  TAU_DB_PURGE();
+  TAU_VERBOSE("inside Tau_child before intializePapiLayer\n");
+  PapiLayer::initializePapiLayer(true);
+  TAU_VERBOSE("inside Tau_child after intializePapiLayer\n");
+}
+
+#endif /* TAU_AT_FORK */
+
 
 /////////////////////////////////////////////////
 int PapiLayer::addCounter(char *name) {
@@ -116,6 +144,7 @@ int PapiLayer::addCounter(char *name) {
   dmesg(1, "TAU: PAPI: Adding counter %s\n", name);
 #endif
 
+  TAU_VERBOSE("TAU: PAPI: Adding counter %s\n", name);
   rc = PAPI_event_name_to_code(name, &code);
 #ifndef TAU_COMPONENT_PAPI
   // There is currently a bug in PAPI-C 3.9 that causes the return code to not
@@ -192,7 +221,10 @@ int PapiLayer::initializeThread(int tid) {
     int comp = PAPI_COMPONENT_INDEX (counterList[i]);
     rc = PAPI_add_event(ThreadList[tid]->EventSet[comp], counterList[i]);
     if (rc != PAPI_OK) {
+#ifndef TAU_AT_FORK
       fprintf (stderr, "TAU: Error adding PAPI events: %s\n", PAPI_strerror(rc));
+#endif /* TAU_AT_FORK */
+    TAU_VERBOSE ("TAU PAPI Error: Error adding PAPI events: %s\n", PAPI_strerror(rc));
       return -1;
     }
     
@@ -252,7 +284,7 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
   if (Tau_is_thread_fake(tid) == 1) tid = 0;
 
   if (!papiInitialized) {
-    printf("Before initializePAPI\n");
+    //printf("Before initializePAPI\n");
     int rc = initializePAPI();
     if (rc != 0) {
       return NULL;
@@ -331,6 +363,7 @@ int PapiLayer::reinitializePAPI() {
   // We need to clean up the ThreadList and then reinitialize PAPI
 
   if (papiInitialized) {
+    TAU_VERBOSE("Reinitializing papi...");
     for(int i=0; i<TAU_MAX_THREADS; i++){
       if (ThreadList[i] != NULL) {
 	delete ThreadList[i]->CounterValues;
@@ -338,6 +371,7 @@ int PapiLayer::reinitializePAPI() {
       }
       ThreadList[i] = NULL;
     }
+    TauMetrics_init();
   }
   return initializePAPI();
 }
@@ -370,12 +404,22 @@ void PapiLayer::checkDomain(int domain, char *domainstr) {
   }
 }
 
+void PapiLayer::setPapiInitialized(bool value) {
+  papiInitialized = value;
+  TAU_VERBOSE("setPapiInitialized: papiInitialized = %d\n", papiInitialized);
+}
 
 /////////////////////////////////////////////////
 int PapiLayer::initializePAPI() {
 #ifdef TAU_PAPI_DEBUG
-  dmesg(1, "TAU: PapiLayer::initializePAPI\n");
+  dmesg(1, "TAU: PapiLayer::initializePAPI entry\n");
 #endif
+  TAU_VERBOSE("inside TAU: PapiLayer::initializePAPI entry\n");
+
+#ifdef TAU_AT_FORK
+  TAU_VERBOSE("TAU: PapiLayer::initializePAPI: before pthread_at_fork()");
+  pthread_atfork(Tau_prepare, Tau_parent, Tau_child);
+#endif /* TAU_AT_FORK */
 
   papiInitialized = true;
 
@@ -467,19 +511,22 @@ int PapiLayer::initializePAPI() {
 
 /////////////////////////////////////////////////
 int PapiLayer::initializePapiLayer(bool lock) { 
-  static bool initialized = false;
+  //static bool initialized = false;
 
-  if (initialized) {
+  TAU_VERBOSE("Inside TAU: PapiLayer::intializePapiLayer: papiInitialized = %d\n", papiInitialized); 
+  /* if (papiInitialized) {
     return 0;
   }
+  */
+  TAU_VERBOSE("[pid = %d] Inside TAU: ACtually initializing PapiLayer::intializePapiLayer: papiInitialized = %d\n", getpid(), papiInitialized); 
 
 #ifdef TAU_PAPI_DEBUG
-  dmesg(1, "TAU: PAPI: Initializing PAPI Layer");
+  dmesg(1, "TAU: PAPI: Initializing PAPI Layer: lock=%d", lock);
 #endif
-  initialized = true;
 
   if (lock) RtsLayer::LockDB();
   int rc = initializePAPI();
+  papiInitialized = true;
   if (lock) RtsLayer::UnLockDB();
 
   return rc;

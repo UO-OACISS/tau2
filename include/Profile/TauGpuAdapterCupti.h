@@ -4,7 +4,14 @@
 #include <cupti_runtime_cbid.h>
 #include <generated_cuda_runtime_api_meta.h>
 #include <cupti_driver_cbid.h>
-#include <generated_driver_meta.h>
+//Hack need to get this to compile on older version of g++.
+#define CUdeviceptr_v1 CUdeviceptr
+#define CUDA_MEMCPY2D_v1 CUDA_MEMCPY2D
+#define CUDA_MEMCPY3D_v1 CUDA_MEMCPY3D
+#define CUDA_ARRAY_DESCRIPTOR_v1 CUDA_ARRAY_DESCRIPTOR
+#define CUDA_ARRAY3D_DESCRIPTOR_v1 CUDA_ARRAY3D_DESCRIPTOR
+//end Hack
+#include <generated_cuda_meta.h>
 #include <cuda.h>
 
 #define CUPTI_METRIC_INSTRUCTIONS "CUDA_INS"
