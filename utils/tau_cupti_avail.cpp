@@ -3,7 +3,11 @@
 
 #include <stdio.h>
 #include <iostream>
+#include <sstream>
 #include <iomanip>
+#include <map>
+#include <string>
+#include <vector>
 using namespace std;
 /* Specific errors from CUDA lib */
 #define CHECK_CU_ERROR(err, cufunc) \
@@ -36,6 +40,7 @@ public:
 	string domain_name;
 	string event_name;
 	string event_description;
+	string tag; // string presented to the user.
 
 	CuptiCounterEvent(int device_n, int domain_n, int event_n)
 	{
@@ -109,8 +114,28 @@ public:
 		CHECK_CUPTI_ERROR( err, "cuptiEventGetAttribute, event_name" );
 		event_description = string(event_description_char);
 		
+		create_tag();
+	
 	}
 
+	void create_tag()
+	{
+		//cout << "device name: " << device_name << endl;
+		stringstream tag_stream("");
+		stringstream original_device_name(device_name);
+		string buffer;
+		tag_stream << "CUDA.";
+
+		original_device_name >> buffer;
+		tag_stream << buffer;
+		tag_stream << "_";
+		original_device_name >> buffer;
+		tag_stream << buffer;
+
+		tag_stream << "." << domain_name << "." << event_name;
+		tag = tag_stream.str();
+
+	}
 	static void printHeader()
 	{
 		//header
@@ -121,29 +146,22 @@ public:
 
 	void print()
 	{
-		//entry
-		//add newline + tab.
 		/*
-		string last_line = event_description;
-		for (int i=1; last_line.length() > 35; i++)
-		{
-			//cout << "string is:" << event_description << endl;
-			string newline;
-			//newline.append(45, ' ');
-			newline.append("\n");
-
-			event_description.insert(35*i, newline);
-			last_line.erase(0,35);
-    }
+		cout << "CUDA." << setw(15) << clean_device_name.str() << setw(10) << 
+			domain_name << setw(20) << event_name << setw(25) << event_description << 
+			endl << endl;
 		*/
-		cout << setw(15) << device_name << setw(10) << domain_name << setw(20) <<
-		event_name << setw(25) << event_description << endl << endl;
+		cout << setw(45) << tag << setw(25) << event_description << endl << endl;
 	}
+
+
 };
 
 CUdevice currDevice = -1;
 uint32_t num_domains = -1;
 CUpti_EventDomainID currDomain = -1;
+
+map<std::string, CuptiCounterEvent*> counter_map;
 
 int main(int argc, char **argv)
 {
@@ -191,7 +209,93 @@ int main(int argc, char **argv)
 				CuptiCounterEvent* ev = new CuptiCounterEvent(i,j,k);
 
 				ev->print();
+				counter_map.insert(std::make_pair(ev->tag, ev));
 			}
 		}
 	}
+	int c;
+	bool listCounters = true, checkCounters = false;
+	char* counter_list;
+	
+	while ((c = getopt(argc, argv, "hc:")) != -1 )
+	{
+		switch (c)
+		{
+			case 'h':
+				//printUsage()
+				break;
+			case 'c':
+				checkCounters = true;
+				listCounters = false;
+				counter_list = optarg;
+				break;
+			case '?':
+				if (optopt == 'c')
+				{
+					fprintf(stderr, "Error: Option -c require an argument.\n");
+					//printUsage();
+					exit(1);
+				}
+				else 
+				{
+					fprintf(stderr, "Error: could not parse arguments.\n");
+					//printUsage();
+					exit(1);
+				}
+			default:
+				exit(1);
+		}
+	}
+	if (checkCounters)
+	{
+		if (counter_list == NULL)
+		{
+			fprintf(stderr, "ERROR: counter list empty.\n");
+			exit(1);
+		}
+		//printf("conter list arg is: %s.\n", counter_list);
+		//split counter list by ':' delimiter.
+		string counter_list_str = string(counter_list);
+		
+		stringstream iss(counter_list_str);
+		string item;
+		vector<string> tags;
+		while(std::getline(iss, item, ':'))
+		{	tags.push_back(item); }
+
+
+		vector<string> tags_added;
+		vector<string> tags_failed;
+		vector<CuptiCounterEvent* > counters_added;
+
+
+		for(vector<string>::iterator it = tags.begin(); it != tags.end(); it++)
+		{
+			CuptiCounterEvent* ev = counter_map.find(*it)->second;
+			if (ev != NULL)
+			{
+				tags_added.push_back(*it);
+				counters_added.push_back(ev);
+			}
+			else
+			{
+				tags_failed.push_back(*it);
+			}
+		}
+			
+		cout << "Counters successfully set:" << endl;
+		for(vector<string>::iterator it = tags_added.begin(); it != tags_added.end(); it++)
+		{
+			cout << "\t * " << *it << endl;
+		}
+		cout << "Failed to set these counters:" << endl;
+		for(vector<string>::iterator it = tags_failed.begin(); it != tags_failed.end(); it++)
+		{
+			cout << "\t * " << *it << endl;
+		}
+
+
+	}	
+		
+
 }
