@@ -653,6 +653,7 @@ size_t __wrap_read(int fd, void *buf, size_t nbytes)
   return ret;
 }
 
+
 /*********************************************************************
  * fread
  ********************************************************************/
@@ -931,6 +932,220 @@ ssize_t __wrap_writev(int fd,  const struct iovec *vec, int count)
 
   return ret;
 }
+
+/*********************************************************************
+ * pwrite
+ ********************************************************************/
+ssize_t __wrap_pwrite(int fd, void *buf, size_t nbytes, off_t offset)
+{
+  ssize_t ret;
+  double currentWrite = 0.0;
+  struct timeval t1, t2; 
+  double bw = 0.0; 
+  Tau_iowrap_checkInit();
+  if (Tau_iowrap_checkPassThrough()) {
+    return __real_pwrite(fd, buf, nbytes, offset);
+  }
+  Tau_global_incr_insideTAU();
+  TAU_PROFILE_TIMER(t, "pwrite()", " ", TAU_WRITE|TAU_IO);
+  TAU_GET_IOWRAP_EVENT(wb, WRITE_BW, fd);
+  TAU_GET_IOWRAP_EVENT(byteswritten, WRITE_BYTES, fd);
+  TAU_PROFILE_START(t);
+
+  gettimeofday(&t1, 0);
+  ret = __real_pwrite(fd, buf, nbytes, offset);
+  gettimeofday(&t2, 0);
+
+  /* calculate the time spent in operation */
+  currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
+  /* now we trigger the events */
+  if ((currentWrite > 1e-12) && (ret > 0)) {
+    bw = (double) ret/currentWrite;
+    TAU_CONTEXT_EVENT(wb, bw);
+    TAU_CONTEXT_EVENT(global_write_bandwidth, bw);
+  } else {
+    dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
+  }
+  if (ret > 0) {
+    TAU_CONTEXT_EVENT(byteswritten, ret);
+    TAU_CONTEXT_EVENT(global_bytes_written, ret);
+  }
+
+  if (TauEnv_get_track_io_params()) {
+    TAU_REGISTER_CONTEXT_EVENT(write_fd, "PWRITE fd");
+    TAU_REGISTER_CONTEXT_EVENT(write_ret, "PWRITE ret");
+    TAU_CONTEXT_EVENT(write_fd, fd);
+    TAU_CONTEXT_EVENT(write_ret, ret);
+  }
+
+  TAU_PROFILE_STOP(t);
+  dprintf("Pwrite fd %d nbytes %d buf %ld ret %d\n", fd, nbytes, (long)buf, ret);
+  Tau_global_decr_insideTAU();
+
+  return ret;
+}
+
+/*********************************************************************
+ * pwrite64
+ ********************************************************************/
+ssize_t __wrap_pwrite64(int fd, void *buf, size_t nbytes, off64_t offset)
+{
+  ssize_t ret;
+  double currentWrite = 0.0;
+  struct timeval t1, t2;
+  double bw = 0.0;
+  Tau_iowrap_checkInit();
+  if (Tau_iowrap_checkPassThrough()) {
+    return __real_pwrite64(fd, buf, nbytes, offset);
+  }
+  Tau_global_incr_insideTAU();
+  TAU_PROFILE_TIMER(t, "pwrite64()", " ", TAU_WRITE|TAU_IO);
+  TAU_GET_IOWRAP_EVENT(wb, WRITE_BW, fd);
+  TAU_GET_IOWRAP_EVENT(byteswritten, WRITE_BYTES, fd);
+  TAU_PROFILE_START(t);
+
+  gettimeofday(&t1, 0);
+  ret = __real_pwrite64(fd, buf, nbytes, offset);
+  gettimeofday(&t2, 0);
+
+  /* calculate the time spent in operation */
+  currentWrite = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
+  /* now we trigger the events */
+  if ((currentWrite > 1e-12) && (ret > 0)) {
+    bw = (double) ret/currentWrite;
+    TAU_CONTEXT_EVENT(wb, bw);
+    TAU_CONTEXT_EVENT(global_write_bandwidth, bw);
+  } else {
+    dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
+  }
+  if (ret > 0) {
+    TAU_CONTEXT_EVENT(byteswritten, ret);
+    TAU_CONTEXT_EVENT(global_bytes_written, ret);
+  }
+
+  if (TauEnv_get_track_io_params()) {
+    TAU_REGISTER_CONTEXT_EVENT(write_fd, "PWRITE64 fd");
+    TAU_REGISTER_CONTEXT_EVENT(write_ret, "PWRITE64 ret");
+    TAU_CONTEXT_EVENT(write_fd, fd);
+    TAU_CONTEXT_EVENT(write_ret, ret);
+  }
+
+  TAU_PROFILE_STOP(t);
+  dprintf("Pwrite64 fd %d nbytes %d buf %ld ret %d\n", fd, nbytes, (long)buf, ret);
+  Tau_global_decr_insideTAU();
+
+  return ret;
+}
+
+
+
+/*********************************************************************
+ * pread
+ ********************************************************************/
+ssize_t __wrap_pread(int fd, void *buf, size_t nbytes, off_t offset)
+{
+  ssize_t ret;
+  double currentRead = 0.0;
+  struct timeval t1, t2; 
+  Tau_iowrap_checkInit();
+  if (Tau_iowrap_checkPassThrough()) {
+    return __real_pread(fd, buf, nbytes, offset);
+  }
+  Tau_global_incr_insideTAU();
+  TAU_PROFILE_TIMER(t, "pread()", " ", TAU_READ|TAU_IO);
+  TAU_GET_IOWRAP_EVENT(re, READ_BW, fd);
+  TAU_GET_IOWRAP_EVENT(bytesread, READ_BYTES, fd);
+  TAU_PROFILE_START(t);
+
+  gettimeofday(&t1, 0);
+  ret = __real_pread(fd, buf, nbytes, offset);
+  gettimeofday(&t2, 0);
+
+
+  /* calculate the time spent in operation */
+  currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
+  /* now we trigger the events */
+
+  if ((currentRead > 1e-12) && (ret > 0)) {
+    TAU_CONTEXT_EVENT(re, (double) ret/currentRead);
+    TAU_CONTEXT_EVENT(global_read_bandwidth, (double) ret/currentRead);
+  } else {
+    dprintf("TauWrapperRead: currentRead = %g\n", ret);
+  }
+
+  if (ret > 0 ) {
+    TAU_CONTEXT_EVENT(bytesread, ret);
+    TAU_CONTEXT_EVENT(global_bytes_read, ret);
+  }
+
+  if (TauEnv_get_track_io_params()) {
+    TAU_REGISTER_CONTEXT_EVENT(read_fd, "PREAD fd");
+    TAU_REGISTER_CONTEXT_EVENT(read_ret, "PREAD ret");
+    TAU_CONTEXT_EVENT(read_fd, fd);
+    TAU_CONTEXT_EVENT(read_ret, ret);
+  }
+
+  TAU_PROFILE_STOP(t);
+  dprintf("pread fd %d nbytes %d buf %ld ret %d\n", fd, nbytes, (long)buf, ret);
+  Tau_global_decr_insideTAU();
+
+  return ret;
+}
+
+
+/*********************************************************************
+ * pread64
+ ********************************************************************/
+ssize_t __wrap_pread64(int fd, void *buf, size_t nbytes, off64_t offset)
+{
+  ssize_t ret;
+  double currentRead = 0.0;
+  struct timeval t1, t2; 
+  Tau_iowrap_checkInit();
+  if (Tau_iowrap_checkPassThrough()) {
+    return __real_read64(fd, buf, nbytes, offset);
+  }
+  Tau_global_incr_insideTAU();
+  TAU_PROFILE_TIMER(t, "pread64()", " ", TAU_READ|TAU_IO);
+  TAU_GET_IOWRAP_EVENT(re, READ_BW, fd);
+  TAU_GET_IOWRAP_EVENT(bytesread, READ_BYTES, fd);
+  TAU_PROFILE_START(t);
+
+  gettimeofday(&t1, 0);
+  ret = __real_pread64(fd, buf, nbytes, offset);
+  gettimeofday(&t2, 0);
+
+
+  /* calculate the time spent in operation */
+  currentRead = (double) (t2.tv_sec - t1.tv_sec) * 1.0e6 + (t2.tv_usec - t1.tv_usec);
+  /* now we trigger the events */
+
+  if ((currentRead > 1e-12) && (ret > 0)) {
+    TAU_CONTEXT_EVENT(re, (double) ret/currentRead);
+    TAU_CONTEXT_EVENT(global_read_bandwidth, (double) ret/currentRead);
+  } else {
+    dprintf("TauWrapperRead: currentRead = %g\n", ret);
+  }
+
+  if (ret > 0 ) {
+    TAU_CONTEXT_EVENT(bytesread, ret);
+    TAU_CONTEXT_EVENT(global_bytes_read, ret);
+  }
+
+  if (TauEnv_get_track_io_params()) {
+    TAU_REGISTER_CONTEXT_EVENT(read_fd, "PREAD64 fd");
+    TAU_REGISTER_CONTEXT_EVENT(read_ret, "PREAD64 ret");
+    TAU_CONTEXT_EVENT(read_fd, fd);
+    TAU_CONTEXT_EVENT(read_ret, ret);
+  }
+
+  TAU_PROFILE_STOP(t);
+  dprintf("pread64 fd %d nbytes %d buf %ld ret %d\n", fd, nbytes, (long)buf, ret);
+  Tau_global_decr_insideTAU();
+
+  return ret;
+}
+
 
 
 
