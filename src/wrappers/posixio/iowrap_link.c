@@ -1103,7 +1103,7 @@ ssize_t __wrap_pread64(int fd, void *buf, size_t nbytes, off64_t offset)
   struct timeval t1, t2; 
   Tau_iowrap_checkInit();
   if (Tau_iowrap_checkPassThrough()) {
-    return __real_read64(fd, buf, nbytes, offset);
+    return __real_pread64(fd, buf, nbytes, offset);
   }
   Tau_global_incr_insideTAU();
   TAU_PROFILE_TIMER(t, "pread64()", " ", TAU_READ|TAU_IO);
