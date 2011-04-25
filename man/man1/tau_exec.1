@@ -2,7 +2,7 @@
 .\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
 .\" Instead of manually editing it, you probably should edit the DocBook XML
 .\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
-.TH "TAU_EXEC" "1" "06/11/2010" "" "Tools"
+.TH "TAU_EXEC" "1" "04/25/2011" "" "Tools"
 .\" disable hyphenation
 .nh
 .\" disable justification (adjust text to left margin only)
@@ -14,7 +14,7 @@ tau_exec \- TAU execution wrapping script
 \fBtau_exec\fR [\fIoptions\fR] [\-\-] {\fIexe\fR} [\fIexe\ options\fR]
 .SH "DESCRIPTION"
 .PP
-Use this script to perform memory or IO on either an instrumented or uninstrumented executable.
+Use this script to perform memory or IO tracking on either an instrumented or uninstrumented executable.
 .SH "OPTIONS"
 .TP
 \-v
@@ -29,14 +29,41 @@ track io
 \-memory
 track memory
 .TP
-\-T <option>
-Specify TAU option
+\-cuda
+track GPU events via CUDA (Must be configured with \-cuda=<dir>)
+.TP
+\-opencl
+track GPU events via OpenCL
+.TP
+\-armci
+track ARMCI events via PARMCI (Must be configured with \-armci=<dir>)
+.TP
+\-ebs
+enable Event\-based sampling. See README.sampling for more information
+.TP
+\-ebs_period=<count >
+sampling period (default 1000)
+.TP
+\-ebs_source=<counter>
+counter(default itimer)
+.TP
+\-T<option>
+: specify TAU option
+.TP
+\-loadlib=<file.so >
+: specify additional load library
 .TP
 \-XrunTAU\-<options>
 specify TAU library directly
 .SH "NOTES"
 .PP
-Defaults if unspecified: \-T MPI MPI is assumed unless SERIAL is specified
-.SH "EXAMPLE"
+Defaults if unspecified: \-T MPI. MPI is assumed unless SERIAL is specified
+.PP
+Limited CUDA kernel tracking is included, if the application has these properties: A CUDA SYNC call is made after each kernel launch.
+cudaThreadExit()
+is called before the exit of each thread that uses CUDA.
+.SH "EXAMPLES"
 .PP
 mpirun \-np 2 tau_exec \-io ./ring
+.PP
+mpirun \-np 8 tau_exec \-ebs \-ebs_period=1000000 \-ebs_source=PAPI_FP_INS ./ring
