@@ -40,10 +40,10 @@ int __wrap_fsync( int fd)
   ret = __real_fsync(fd);
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(fsync_fd, "FSYNC fd");
-    TAU_REGISTER_CONTEXT_EVENT(fsync_ret, "FSYNC ret");
-    TAU_CONTEXT_EVENT(fsync_fd, fd);
-    TAU_CONTEXT_EVENT(fsync_ret, ret);
+    TAU_REGISTER_EVENT(fsync_fd, "FSYNC fd");
+    TAU_REGISTER_EVENT(fsync_ret, "FSYNC ret");
+    TAU_EVENT(fsync_fd, fd);
+    TAU_EVENT(fsync_ret, ret);
   }
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
@@ -91,10 +91,10 @@ int __wrap_open(const char *pathname, int flags, ...)
   }
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(open_fd, "OPEN flags");
-    TAU_REGISTER_CONTEXT_EVENT(open_ret, "OPEN ret");
-    TAU_CONTEXT_EVENT(open_fd, flags);
-    TAU_CONTEXT_EVENT(open_ret, ret);
+    TAU_REGISTER_EVENT(open_fd, "OPEN flags");
+    TAU_REGISTER_EVENT(open_ret, "OPEN ret");
+    TAU_EVENT(open_fd, flags);
+    TAU_EVENT(open_ret, ret);
   }
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
@@ -142,10 +142,10 @@ int __wrap_open64(const char *pathname, int flags, ...)
   }
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(open_fd, "OPEN flags");
-    TAU_REGISTER_CONTEXT_EVENT(open_ret, "OPEN ret");
-    TAU_CONTEXT_EVENT(open_fd, flags);
-    TAU_CONTEXT_EVENT(open_ret, ret);
+    TAU_REGISTER_EVENT(open_fd, "OPEN flags");
+    TAU_REGISTER_EVENT(open_ret, "OPEN ret");
+    TAU_EVENT(open_fd, flags);
+    TAU_EVENT(open_ret, ret);
   }
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
@@ -178,10 +178,10 @@ int __wrap_creat(const char *pathname, mode_t mode)
   }
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(creat_fd, "CREAT mode");
-    TAU_REGISTER_CONTEXT_EVENT(creat_ret, "CREAT ret");
-    TAU_CONTEXT_EVENT(creat_fd, mode);
-    TAU_CONTEXT_EVENT(creat_ret, ret);
+    TAU_REGISTER_EVENT(creat_fd, "CREAT mode");
+    TAU_REGISTER_EVENT(creat_ret, "CREAT ret");
+    TAU_EVENT(creat_fd, mode);
+    TAU_EVENT(creat_ret, ret);
   }
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
@@ -214,10 +214,10 @@ int __wrap_creat64(const char *pathname, mode_t mode)
   }
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(creat_fd, "CREAT64 mode");
-    TAU_REGISTER_CONTEXT_EVENT(creat_ret, "CREAT64 ret");
-    TAU_CONTEXT_EVENT(creat_fd, mode);
-    TAU_CONTEXT_EVENT(creat_ret, ret);
+    TAU_REGISTER_EVENT(creat_fd, "CREAT64 mode");
+    TAU_REGISTER_EVENT(creat_ret, "CREAT64 ret");
+    TAU_EVENT(creat_fd, mode);
+    TAU_EVENT(creat_ret, ret);
   }
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
@@ -315,12 +315,12 @@ int __wrap_pipe(int filedes[2])
   }
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(pipe_fd0, "pipe fd[0]");
-    TAU_REGISTER_CONTEXT_EVENT(pipe_fd1, "pipe fd[1]");
-    TAU_REGISTER_CONTEXT_EVENT(pipe_ret, "pipe ret");
-    TAU_CONTEXT_EVENT(pipe_fd0, filedes[0]);
-    TAU_CONTEXT_EVENT(pipe_fd1, filedes[1]);
-    TAU_CONTEXT_EVENT(pipe_ret, ret);
+    TAU_REGISTER_EVENT(pipe_fd0, "pipe fd[0]");
+    TAU_REGISTER_EVENT(pipe_fd1, "pipe fd[1]");
+    TAU_REGISTER_EVENT(pipe_ret, "pipe ret");
+    TAU_EVENT(pipe_fd0, filedes[0]);
+    TAU_EVENT(pipe_fd1, filedes[1]);
+    TAU_EVENT(pipe_ret, ret);
   }
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
@@ -381,14 +381,14 @@ int __wrap_socket(int domain, int type, int protocol) {
   }
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(socket_domain, "socket domain");
-    TAU_REGISTER_CONTEXT_EVENT(socket_type, "socket type");
-    TAU_REGISTER_CONTEXT_EVENT(socket_protocol, "socket protocol");
-    TAU_REGISTER_CONTEXT_EVENT(socket_ret, "socket ret");
-    TAU_CONTEXT_EVENT(socket_domain, domain);
-    TAU_CONTEXT_EVENT(socket_type, type);
-    TAU_CONTEXT_EVENT(socket_protocol, protocol);
-    TAU_CONTEXT_EVENT(socket_ret, ret);
+    TAU_REGISTER_EVENT(socket_domain, "socket domain");
+    TAU_REGISTER_EVENT(socket_type, "socket type");
+    TAU_REGISTER_EVENT(socket_protocol, "socket protocol");
+    TAU_REGISTER_EVENT(socket_ret, "socket ret");
+    TAU_EVENT(socket_domain, domain);
+    TAU_EVENT(socket_type, type);
+    TAU_EVENT(socket_protocol, protocol);
+    TAU_EVENT(socket_ret, ret);
   }
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
@@ -421,14 +421,14 @@ int __wrap_socketpair(int domain, int type, int protocol, int sv[2]) {
   }
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(socket_domain, "socketpair domain");
-    TAU_REGISTER_CONTEXT_EVENT(socket_type, "socketpair type");
-    TAU_REGISTER_CONTEXT_EVENT(socket_protocol, "socketpair protocol");
-    TAU_REGISTER_CONTEXT_EVENT(socket_ret, "socketpair ret");
-    TAU_CONTEXT_EVENT(socket_domain, domain);
-    TAU_CONTEXT_EVENT(socket_type, type);
-    TAU_CONTEXT_EVENT(socket_protocol, protocol);
-    TAU_CONTEXT_EVENT(socket_ret, ret);
+    TAU_REGISTER_EVENT(socket_domain, "socketpair domain");
+    TAU_REGISTER_EVENT(socket_type, "socketpair type");
+    TAU_REGISTER_EVENT(socket_protocol, "socketpair protocol");
+    TAU_REGISTER_EVENT(socket_ret, "socketpair ret");
+    TAU_EVENT(socket_domain, domain);
+    TAU_EVENT(socket_type, type);
+    TAU_EVENT(socket_protocol, protocol);
+    TAU_EVENT(socket_ret, ret);
   }
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
@@ -464,10 +464,10 @@ int __wrap_bind(int socket, const struct sockaddr *address, socklen_t address_le
   }
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(bind_socket, "bind socket");
-    TAU_REGISTER_CONTEXT_EVENT(bind_ret, "bind ret");
-    TAU_CONTEXT_EVENT(bind_socket, socket);
-    TAU_CONTEXT_EVENT(bind_ret, ret);
+    TAU_REGISTER_EVENT(bind_socket, "bind socket");
+    TAU_REGISTER_EVENT(bind_ret, "bind ret");
+    TAU_EVENT(bind_socket, socket);
+    TAU_EVENT(bind_ret, ret);
   }
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
@@ -504,10 +504,10 @@ int __wrap_connect(int socket, struct sockaddr *address, socklen_t* address_len)
   }
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(connect_socket, "connect socket");
-    TAU_REGISTER_CONTEXT_EVENT(connect_ret, "connect ret");
-    TAU_CONTEXT_EVENT(connect_socket, socket);
-    TAU_CONTEXT_EVENT(connect_ret, ret);
+    TAU_REGISTER_EVENT(connect_socket, "connect socket");
+    TAU_REGISTER_EVENT(connect_ret, "connect ret");
+    TAU_EVENT(connect_socket, socket);
+    TAU_EVENT(connect_ret, ret);
   }
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
@@ -545,10 +545,10 @@ int __wrap_accept(int socket, struct sockaddr *address, socklen_t* address_len)
   }
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(accept_socket, "accept socket");
-    TAU_REGISTER_CONTEXT_EVENT(accept_ret, "accept ret");
-    TAU_CONTEXT_EVENT(accept_socket, socket);
-    TAU_CONTEXT_EVENT(accept_ret, ret);
+    TAU_REGISTER_EVENT(accept_socket, "accept socket");
+    TAU_REGISTER_EVENT(accept_ret, "accept ret");
+    TAU_EVENT(accept_socket, socket);
+    TAU_EVENT(accept_ret, ret);
   }
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
@@ -640,10 +640,10 @@ size_t __wrap_read(int fd, void *buf, size_t nbytes)
   }
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(read_fd, "READ fd");
-    TAU_REGISTER_CONTEXT_EVENT(read_ret, "READ ret");
-    TAU_CONTEXT_EVENT(read_fd, fd);
-    TAU_CONTEXT_EVENT(read_ret, ret);
+    TAU_REGISTER_EVENT(read_fd, "READ fd");
+    TAU_REGISTER_EVENT(read_ret, "READ ret");
+    TAU_EVENT(read_fd, fd);
+    TAU_EVENT(read_ret, ret);
   }
 
   TAU_PROFILE_STOP(t);
@@ -698,10 +698,10 @@ size_t __wrap_fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
   }
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(read_fd, "FREAD fd");
-    TAU_REGISTER_CONTEXT_EVENT(read_ret, "FREAD ret");
-    TAU_CONTEXT_EVENT(read_fd, fileno(stream));
-    TAU_CONTEXT_EVENT(read_ret, ret);
+    TAU_REGISTER_EVENT(read_fd, "FREAD fd");
+    TAU_REGISTER_EVENT(read_ret, "FREAD ret");
+    TAU_EVENT(read_fd, fileno(stream));
+    TAU_EVENT(read_ret, ret);
   }
 
   TAU_PROFILE_STOP(t);
@@ -758,10 +758,10 @@ ssize_t __wrap_readv(int fd, const struct iovec *vec, int count)
   }
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(read_fd, "READV fd");
-    TAU_REGISTER_CONTEXT_EVENT(read_ret, "READV ret");
-    TAU_CONTEXT_EVENT(read_fd, fd);
-    TAU_CONTEXT_EVENT(read_ret, ret);
+    TAU_REGISTER_EVENT(read_fd, "READV fd");
+    TAU_REGISTER_EVENT(read_ret, "READV ret");
+    TAU_EVENT(read_fd, fd);
+    TAU_EVENT(read_ret, ret);
   }
 
   TAU_PROFILE_STOP(t);
@@ -811,10 +811,10 @@ size_t __wrap_write(int fd, void *buf, size_t nbytes)
   }
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(write_fd, "WRITE fd");
-    TAU_REGISTER_CONTEXT_EVENT(write_ret, "WRITE ret");
-    TAU_CONTEXT_EVENT(write_fd, fd);
-    TAU_CONTEXT_EVENT(write_ret, ret);
+    TAU_REGISTER_EVENT(write_fd, "WRITE fd");
+    TAU_REGISTER_EVENT(write_ret, "WRITE ret");
+    TAU_EVENT(write_fd, fd);
+    TAU_EVENT(write_ret, ret);
   }
 
   TAU_PROFILE_STOP(t);
@@ -868,10 +868,10 @@ size_t __wrap_fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream)
   }
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(fwrite_fd, "FWRITE count");
-    TAU_REGISTER_CONTEXT_EVENT(fwrite_ret, "FWRITE ret");
-    TAU_CONTEXT_EVENT(fwrite_fd, count);
-    TAU_CONTEXT_EVENT(fwrite_ret, ret);
+    TAU_REGISTER_EVENT(fwrite_fd, "FWRITE count");
+    TAU_REGISTER_EVENT(fwrite_ret, "FWRITE ret");
+    TAU_EVENT(fwrite_fd, count);
+    TAU_EVENT(fwrite_ret, ret);
   }
 
   TAU_PROFILE_STOP(t);
@@ -920,10 +920,10 @@ ssize_t __wrap_writev(int fd,  const struct iovec *vec, int count)
   }
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(write_fd, "WRITEV fd");
-    TAU_REGISTER_CONTEXT_EVENT(write_ret, "WRITEV ret");
-    TAU_CONTEXT_EVENT(write_fd, fd);
-    TAU_CONTEXT_EVENT(write_ret, ret);
+    TAU_REGISTER_EVENT(write_fd, "WRITEV fd");
+    TAU_REGISTER_EVENT(write_ret, "WRITEV ret");
+    TAU_EVENT(write_fd, fd);
+    TAU_EVENT(write_ret, ret);
   }
 
   TAU_PROFILE_STOP(t);
@@ -972,10 +972,10 @@ ssize_t __wrap_pwrite(int fd, void *buf, size_t nbytes, off_t offset)
   }
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(write_fd, "PWRITE fd");
-    TAU_REGISTER_CONTEXT_EVENT(write_ret, "PWRITE ret");
-    TAU_CONTEXT_EVENT(write_fd, fd);
-    TAU_CONTEXT_EVENT(write_ret, ret);
+    TAU_REGISTER_EVENT(write_fd, "PWRITE fd");
+    TAU_REGISTER_EVENT(write_ret, "PWRITE ret");
+    TAU_EVENT(write_fd, fd);
+    TAU_EVENT(write_ret, ret);
   }
 
   TAU_PROFILE_STOP(t);
@@ -1024,10 +1024,10 @@ ssize_t __wrap_pwrite64(int fd, void *buf, size_t nbytes, off64_t offset)
   }
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(write_fd, "PWRITE64 fd");
-    TAU_REGISTER_CONTEXT_EVENT(write_ret, "PWRITE64 ret");
-    TAU_CONTEXT_EVENT(write_fd, fd);
-    TAU_CONTEXT_EVENT(write_ret, ret);
+    TAU_REGISTER_EVENT(write_fd, "PWRITE64 fd");
+    TAU_REGISTER_EVENT(write_ret, "PWRITE64 ret");
+    TAU_EVENT(write_fd, fd);
+    TAU_EVENT(write_ret, ret);
   }
 
   TAU_PROFILE_STOP(t);
@@ -1079,10 +1079,10 @@ ssize_t __wrap_pread(int fd, void *buf, size_t nbytes, off_t offset)
   }
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(read_fd, "PREAD fd");
-    TAU_REGISTER_CONTEXT_EVENT(read_ret, "PREAD ret");
-    TAU_CONTEXT_EVENT(read_fd, fd);
-    TAU_CONTEXT_EVENT(read_ret, ret);
+    TAU_REGISTER_EVENT(read_fd, "PREAD fd");
+    TAU_REGISTER_EVENT(read_ret, "PREAD ret");
+    TAU_EVENT(read_fd, fd);
+    TAU_EVENT(read_ret, ret);
   }
 
   TAU_PROFILE_STOP(t);
@@ -1133,10 +1133,10 @@ ssize_t __wrap_pread64(int fd, void *buf, size_t nbytes, off64_t offset)
   }
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(read_fd, "PREAD64 fd");
-    TAU_REGISTER_CONTEXT_EVENT(read_ret, "PREAD64 ret");
-    TAU_CONTEXT_EVENT(read_fd, fd);
-    TAU_CONTEXT_EVENT(read_ret, ret);
+    TAU_REGISTER_EVENT(read_fd, "PREAD64 fd");
+    TAU_REGISTER_EVENT(read_ret, "PREAD64 ret");
+    TAU_EVENT(read_fd, fd);
+    TAU_EVENT(read_ret, ret);
   }
 
   TAU_PROFILE_STOP(t);
@@ -1166,10 +1166,10 @@ size_t __wrap_close(int fd)
   ret = __real_close(fd);
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(close_fd, "CLOSE fd");
-    TAU_REGISTER_CONTEXT_EVENT(close_ret, "CLOSE ret");
-    TAU_CONTEXT_EVENT(close_fd, fd);
-    TAU_CONTEXT_EVENT(close_ret, ret);
+    TAU_REGISTER_EVENT(close_fd, "CLOSE fd");
+    TAU_REGISTER_EVENT(close_ret, "CLOSE ret");
+    TAU_EVENT(close_fd, fd);
+    TAU_EVENT(close_ret, ret);
   }
 
   TAU_PROFILE_STOP(t);
@@ -1200,10 +1200,10 @@ int __wrap_fclose(FILE *fp)
   ret = __real_close(fp);
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(close_fd, "CLOSE fd");
-    TAU_REGISTER_CONTEXT_EVENT(close_ret, "CLOSE ret");
-    TAU_CONTEXT_EVENT(close_fd, fd);
-    TAU_CONTEXT_EVENT(close_ret, ret);
+    TAU_REGISTER_EVENT(close_fd, "CLOSE fd");
+    TAU_REGISTER_EVENT(close_ret, "CLOSE ret");
+    TAU_EVENT(close_fd, fd);
+    TAU_EVENT(close_ret, ret);
   }
 
 
@@ -1233,10 +1233,10 @@ int __wrap_fdatasync(int fd)
   ret = __real_close(fd);
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(fsyncdata_fd, "FSYNCDATA fd");
-    TAU_REGISTER_CONTEXT_EVENT(fsyncdata_ret, "FSYNCDATA ret");
-    TAU_CONTEXT_EVENT(fsyncdata_fd, fd);
-    TAU_CONTEXT_EVENT(fsyncdata_ret, ret);
+    TAU_REGISTER_EVENT(fsyncdata_fd, "FSYNCDATA fd");
+    TAU_REGISTER_EVENT(fsyncdata_ret, "FSYNCDATA ret");
+    TAU_EVENT(fsyncdata_fd, fd);
+    TAU_EVENT(fsyncdata_ret, ret);
   }
 
 
@@ -1266,12 +1266,12 @@ off_t __wrap_lseek(int fd, off_t offset, int whence)
   ret = __real_lseek(fd, offset, whence);
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(lseek_fd, "LSEEK fd");
-    TAU_REGISTER_CONTEXT_EVENT(lseek_offset, "LSEEK offset");
-    TAU_REGISTER_CONTEXT_EVENT(lseek_whence, "LSEEK whence");
-    TAU_CONTEXT_EVENT(lseek_fd, fd);
-    TAU_CONTEXT_EVENT(lseek_offset, offset);
-    TAU_CONTEXT_EVENT(lseek_whence, whence);
+    TAU_REGISTER_EVENT(lseek_fd, "LSEEK fd");
+    TAU_REGISTER_EVENT(lseek_offset, "LSEEK offset");
+    TAU_REGISTER_EVENT(lseek_whence, "LSEEK whence");
+    TAU_EVENT(lseek_fd, fd);
+    TAU_EVENT(lseek_offset, offset);
+    TAU_EVENT(lseek_whence, whence);
   }
 
 
@@ -1304,12 +1304,12 @@ off64_t __wrap_lseek64(int fd, off64_t offset, int whence)
   ret = __real_lseek64(fd, offset, whence);
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(lseek64_fd, "LSEEK fd");
-    TAU_REGISTER_CONTEXT_EVENT(lseek64_offset, "LSEEK offset");
-    TAU_REGISTER_CONTEXT_EVENT(lseek64_whence, "LSEEK whence");
-    TAU_CONTEXT_EVENT(lseek64_fd, fd);
-    TAU_CONTEXT_EVENT(lseek64_offset, offset);
-    TAU_CONTEXT_EVENT(lseek64_whence, whence);
+    TAU_REGISTER_EVENT(lseek64_fd, "LSEEK fd");
+    TAU_REGISTER_EVENT(lseek64_offset, "LSEEK offset");
+    TAU_REGISTER_EVENT(lseek64_whence, "LSEEK whence");
+    TAU_EVENT(lseek64_fd, fd);
+    TAU_EVENT(lseek64_offset, offset);
+    TAU_EVENT(lseek64_whence, whence);
   }
 
   TAU_PROFILE_STOP(t);
@@ -1338,12 +1338,12 @@ off_t __wrap_fseek(FILE *stream, long offset, int whence)
   ret = __real_fseek(stream, offset, whence);
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(fseek_offset, "FSEEK offset");
-    TAU_REGISTER_CONTEXT_EVENT(fseek_whence, "FSEEK whence");
-    TAU_REGISTER_CONTEXT_EVENT(fseek_ret, "FSEEK ret");
-    TAU_CONTEXT_EVENT(fseek_offset, offset);
-    TAU_CONTEXT_EVENT(fseek_whence, whence);
-    TAU_CONTEXT_EVENT(fseek_ret, ret);
+    TAU_REGISTER_EVENT(fseek_offset, "FSEEK offset");
+    TAU_REGISTER_EVENT(fseek_whence, "FSEEK whence");
+    TAU_REGISTER_EVENT(fseek_ret, "FSEEK ret");
+    TAU_EVENT(fseek_offset, offset);
+    TAU_EVENT(fseek_whence, whence);
+    TAU_EVENT(fseek_ret, ret);
   }
 
 
@@ -1374,10 +1374,10 @@ int __wrap_select(int nfds, fd_set *readfds, fd_set *writefds,
   ret = __real_select(nfds, readfds, writefds, exceptfds, timeout); 
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_CONTEXT_EVENT(select_nfds, "select nfds");
-    TAU_REGISTER_CONTEXT_EVENT(select_ret, "select ret");
-    TAU_CONTEXT_EVENT(select_nfds, nfds);
-    TAU_CONTEXT_EVENT(select_ret, ret);
+    TAU_REGISTER_EVENT(select_nfds, "select nfds");
+    TAU_REGISTER_EVENT(select_ret, "select ret");
+    TAU_EVENT(select_nfds, nfds);
+    TAU_EVENT(select_ret, ret);
   }
 
   dprintf("Select nfds %d ret %d\n", nfds, ret);
