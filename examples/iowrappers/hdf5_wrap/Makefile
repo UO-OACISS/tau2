@@ -1,11 +1,11 @@
 CC=gcc
-CC=tau_cc.sh -optQuiet
+CC=tau_cc.sh -tau_options='-optTauWrapFile=headers/hdf5_wrapper/link_options.tau -optTrackIO '
+# Tracks both HDF5 and POSIX IO (TAU must be configured with -iowrapper)
 LD=$(CC)
 AR=ar
 ARFLAGS=rcv
-HDFDIR=/usr/local/packages/hdf5-1.6.5
 HDFDIR=/usr/local/packages/hdf5-1.8.6
-LDFLAGS=@headers/hdf5_wrapper/link_options.tau
+
 OBJS=hdf5_wrapper hyperslab_by_row.o 
 hyperslab_by_row: $(OBJS) 
 	$(LD) hyperslab_by_row.o $(HDFDIR)/lib/libhdf5.a -lz -o $@ $(LDFLAGS) 
