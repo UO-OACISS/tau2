@@ -1,0 +1,38 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_GEN_WRAP" "1" "04/25/2011" "" "Tools"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+tau_gen_wrap \- Generates a wrapper library that can intercept at link time or at runtime routines specified in a header file
+.SH "SYNOPSIS"
+.HP 13
+\fBtau_gen_wrap\fR {\fIheaderfile\fR} {\fIlibrary\fR} [\-w\ |\ \-r]
+.SH "OPTIONS"
+.TP
+headerfile
+Name of the headerfile to be wrapped
+.TP
+library
+Name of the library to wrap
+.TP
+\-w
+(default) generates wrappers for re\-linking the application
+.TP
+\-r
+generates wrappers that may be pre\-loaded using tau_exec at runtime
+.SH "EXAMPLES"
+.PP
+.nf
+%>  tau_gen_wrapper hdf5.h /usr/lib/libhdf5.a 
+.fi
+.sp
+.PP
+This generates a wrapper library that may be linked in using TAU_OPTIONS \-optTauWrapFile=<wrapperdir>/link_options.tau
+.SH "NOTES"
+.PP
+tau_gen_wrapper reads the TAU_MAKEFILE environment variable to get PDT settings
