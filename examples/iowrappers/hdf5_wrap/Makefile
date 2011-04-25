@@ -1,5 +1,6 @@
 CC=gcc
-CC=tau_cc.sh -tau_options='-optTauWrapFile=headers/hdf5_wrapper/link_options.tau -optTrackIO -optVerbose'
+CC=tau_cc.sh -tau_options='-optTauWrapFile=headers/hdf5_wrapper/link_options.tau -optTrackIO '
+# Tracks both HDF5 and POSIX IO (TAU must be configured with -iowrapper)
 LD=$(CC)
 AR=ar
 ARFLAGS=rcv
