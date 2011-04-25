@@ -38,6 +38,8 @@ usage()
     echo "   -tau:help            Show this help message"
     echo "   -tau:show            Do not invoke, just show what would be done"
     echo "   -tau:showcompiler    Show underlying compiler"
+    echo "   -tau:showincludes    Show header file options used by the compiler"
+    echo "   -tau:libs    	  Show libraries used by the compiler"
     echo ""
     echo "TAU_OPTIONS (passed to tau_compiler.sh):"
     echo ""
@@ -91,6 +93,18 @@ for arg in "$@" ; do
 	      invoke_with_tau=no
 	      NON_TAUARGS="$NON_TAUARGS $modarg"
               SHOW=show
+	      ;;
+	  -tau:showincludes)
+	      invoke_without_tau=yes
+	      invoke_with_tau=no
+	      NON_TAUARGS="$NON_TAUARGS $modarg"
+              SHOW=showincludes
+	      ;;
+	  -tau:showlibs)
+	      invoke_without_tau=yes
+	      invoke_with_tau=no
+	      NON_TAUARGS="$NON_TAUARGS $modarg"
+              SHOW=showlibs
 	      ;;
 	  -tau:showcompiler)
 	      invoke_without_tau=yes
@@ -178,9 +192,13 @@ include $MAKEFILE
 all:
 	@\$(TAU_RUN_CC) \$(TAU_MPI_INCLUDE) $NON_TAUARGS
 show:
-	@echo \$(TAU_RUN_CC) \$(TAU_INCLUDE) \$(TAU_DEFS) \$(TAU_MPI_FLIBS) \$(TAU_LIBS) \$(TAU_LDFLAGS) \$(TAU_CXXLIBS)
+	@echo \$(TAU_RUN_CC) \$(TAU_INCLUDE) \$(TAU_MPI_INCLUDE) \$(TAU_DEFS) \$(TAU_MPI_FLIBS) \$(TAU_LIBS) \$(TAU_LDFLAGS) \$(TAU_CXXLIBS)
 showcompiler:
 	@echo \$(TAU_RUN_CC)
+showincludes:
+	@echo \$(TAU_INCLUDE) \$(TAU_MPI_INCLUDE) 
+showlibs:
+	@echo \$(TAU_MPI_FLIBS) \$(TAU_LIBS) \$(TAU_CXXLIBS)
 EOF
 make -s -f /tmp/makefile.tau.$USER.$$ $SHOW
 retval=$?
