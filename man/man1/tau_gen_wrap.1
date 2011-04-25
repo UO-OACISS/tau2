@@ -11,7 +11,7 @@
 tau_gen_wrap \- Generates a wrapper library that can intercept at link time or at runtime routines specified in a header file
 .SH "SYNOPSIS"
 .HP 13
-\fBtau_gen_wrap\fR {\fIheaderfile\fR} {\fIlibrary\fR} [\-w\ |\ \-r]
+\fBtau_gen_wrap\fR {\fIheaderfile\fR} {\fIlibrary\fR} [\-w\ |\ \-d\ |\ \-r]
 .SH "OPTIONS"
 .TP
 headerfile
@@ -22,6 +22,9 @@ Name of the library to wrap
 .TP
 \-w
 (default) generates wrappers for re\-linking the application
+.TP
+\-d
+generates wrappers by redefining routines during compilation in header files
 .TP
 \-r
 generates wrappers that may be pre\-loaded using tau_exec at runtime
