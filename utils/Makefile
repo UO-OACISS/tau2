@@ -329,10 +329,10 @@ user_event_data.o:	user_event_data.cpp
 		$(CXX) $(CFLAGS) -c user_event_data.cpp
 
 $(TAU_CUPTI_AVAIL): tau_cupti_avail.o
-		$(CXX) -L$(TAU_CUPTI_INC)/../lib -lcupti -o $@ $<
+		$(CXX) -L$(TAU_CUPTI_INC)/../lib -lcupti -o $@ $< $(TAU_LIBS)
 
 tau_cupti_avail.o: tau_cupti_avail.cpp
-		$(CXX) $(CFLAGS) -I$(TAU_CUDA_INC) -I$(TAU_CUPTI_INC) -c $<
+		$(CXX) $(CFLAGS) -I$(TAU_CUDA_INC) -I$(TAU_CUPTI_INC) -I$(TAU_INC_DIR) -c $<
 
 clean:
 		/bin/rm -rf *.o $(EXECUTABLES) *.dep lib*$(LSX) *.ii *.ti ti_files cxx_repository ii_files rii_files 

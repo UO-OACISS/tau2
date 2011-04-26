@@ -47,6 +47,8 @@ extern "C" {
 }
 #endif /* TAU_PAPI */
 
+#include "Profile/CuptiLayer.h"
+
 #ifdef TAUKTAU_SHCTR
 #include "Profile/KtauCounters.h"
 #endif //TAUKTAU_SHCTR
@@ -278,4 +280,30 @@ void metric_read_cudatime(int tid, int idx, double values[]) {
   {
     values[idx] = gpu_timestamp[tid];
   }
+}
+
+void metric_read_cupti(int tid, int idx, double values[])
+{
+
+	printf("is the cupti layer is initialized? %d\n", Tau_CuptiLayer_initialized);
+	if (Tau_CuptiLayer_initialized)
+	{
+		uint64_t* counterDataBuffer = (uint64_t*) malloc (Tau_CuptiLayer_num_events*sizeof(uint64_t));
+		Tau_CuptiLayer_read_counters(counterDataBuffer);
+
+		if (counterDataBuffer)
+		{
+			for (int i=0; i<Tau_CuptiLayer_num_events; i++)
+			{
+				values[idx + i] = counterDataBuffer[i];
+			}
+		}
+	}
+	else
+	{
+		for (int i=0; i<Tau_CuptiLayer_num_events; i++)
+		{
+			values[idx + i] = 0;
+		}
+	}
 }

@@ -1,13 +1,13 @@
-#include "cupti_events.h"
-#include <cuda_runtime_api.h>
-
-#include <stdio.h>
-#include <iostream>
-#include <sstream>
-#include <iomanip>
-#include <map>
-#include <string>
-#include <vector>
+//#include "cupti_events.h"
+//#include <cuda_runtime_api.h>
+#include <Profile/CuptiLayer.h>
+//#include <stdio.h>
+//#include <iostream>
+//#include <sstream>
+//#include <iomanip>
+//#include <map>
+//#include <string>
+//#include <vector>
 using namespace std;
 /* Specific errors from CUDA lib */
 #define CHECK_CU_ERROR(err, cufunc) \
@@ -27,7 +27,7 @@ printf ("Error %d for CUPTI API function '%s'. cuptiQuery failed\n", err, cuptif
 #define TAU_CUPTI_MAX_DESCRIPTION 480
 #define TAU_CUPTI_MAX_EVENTS 160
 		
-
+/*
 class CuptiCounterEvent
 {
 
@@ -146,25 +146,23 @@ public:
 
 	void print()
 	{
-		/*
-		cout << "CUDA." << setw(15) << clean_device_name.str() << setw(10) << 
-			domain_name << setw(20) << event_name << setw(25) << event_description << 
-			endl << endl;
-		*/
+		//cout << "CUDA." << setw(15) << clean_device_name.str() << setw(10) << 
+	  //		domain_name << setw(20) << event_name << setw(25) << event_description << 
+		//	endl << endl;
 		cout << setw(45) << tag << setw(25) << event_description << endl << endl;
 	}
 
-
 };
+*/
 
-CUdevice currDevice = -1;
-uint32_t num_domains = -1;
-CUpti_EventDomainID currDomain = -1;
+//CUdevice currDevice = -1;
+//uint32_t num_domains = -1;
+//CUpti_EventDomainID currDomain = -1;
 
-map<std::string, CuptiCounterEvent*> counter_map;
 
 int main(int argc, char **argv)
 {
+/*
 	CUresult er;
 	CUptiResult err = CUPTI_SUCCESS;
 
@@ -173,7 +171,6 @@ int main(int argc, char **argv)
 	uint32_t domainCount;
 	uint32_t eventCount;
 	CuptiCounterEvent::printHeader();
-	/* for each device */
 	cuDeviceGetCount(&deviceCount);
 	for (int i=0; i<deviceCount; i++)
 	{
@@ -213,6 +210,9 @@ int main(int argc, char **argv)
 			}
 		}
 	}
+
+*/
+	
 	int c;
 	bool listCounters = true, checkCounters = false;
 	char* counter_list;
@@ -246,6 +246,18 @@ int main(int argc, char **argv)
 				exit(1);
 		}
 	}
+
+	if (listCounters)
+	{
+		CuptiCounterEvent::printHeader();
+		for(counter_map_it it = Tau_CuptiLayer_map().begin(); it != Tau_CuptiLayer_map().end(); it++)
+		{
+			CuptiCounterEvent* ev = it->second;
+			ev->print();
+		}
+
+	}
+
 	if (checkCounters)
 	{
 		if (counter_list == NULL)
@@ -253,7 +265,7 @@ int main(int argc, char **argv)
 			fprintf(stderr, "ERROR: counter list empty.\n");
 			exit(1);
 		}
-		//printf("conter list arg is: %s.\n", counter_list);
+		printf("conter list arg is: %s.\n", counter_list);
 		//split counter list by ':' delimiter.
 		string counter_list_str = string(counter_list);
 		
@@ -271,9 +283,12 @@ int main(int argc, char **argv)
 
 		for(vector<string>::iterator it = tags.begin(); it != tags.end(); it++)
 		{
-			CuptiCounterEvent* ev = counter_map.find(*it)->second;
-			if (ev != NULL)
+			//printf("size of available counters: %d.\n", Tau_CuptiLayer_map().size());
+			
+			if (Tau_CuptiLayer_map().count(*it) > 0)
 			{
+				CuptiCounterEvent* ev = Tau_CuptiLayer_map().find(*it)->second;
+				//ev->print();
 				tags_added.push_back(*it);
 				counters_added.push_back(ev);
 			}
