@@ -127,7 +127,7 @@ SHARED_OBJS   = $(PGIACC_O)
 #TAU_BFDSHAREDLINK#SHARED_OBJS = Comp_gnu.o #ENDIF#
 #TAU_BFDSHAREDLINK#SHARED_LIBS = $(BFDLINK) -lbfd -liberty #ENDIF#
 
-#TAU_CUPTI$SHARED_LIBS = -lcuda -L$(TAU_CUPTI_INC)/../lib -lcupti #ENDIF#
+#CUPTI#SHARED_LIBS = -lcuda -L$(TAU_CUPTI_INC)/../lib -lcupti #ENDIF#
 
 PRINT	      = pr
 
