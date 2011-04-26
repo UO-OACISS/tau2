@@ -1188,12 +1188,12 @@ int __wrap_fclose(FILE *fp)
   int ret;
   int fd; 
 
-  fd = fileno(fp);
   Tau_iowrap_checkInit();
   if (Tau_iowrap_checkPassThrough()) {
     return __real_fclose(fp);
   }
   Tau_global_incr_insideTAU();
+  fd = fileno(fp);
   TAU_PROFILE_TIMER(t, "fclose()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
