@@ -285,7 +285,7 @@ void metric_read_cudatime(int tid, int idx, double values[]) {
 void metric_read_cupti(int tid, int idx, double values[])
 {
 
-	printf("is the cupti layer is initialized? %d\n", Tau_CuptiLayer_is_initialized());
+	//printf("is the cupti layer is initialized? %d\n", Tau_CuptiLayer_is_initialized());
 	if (Tau_CuptiLayer_is_initialized())
 	{
 		uint64_t* counterDataBuffer = (uint64_t*) malloc
@@ -297,7 +297,7 @@ void metric_read_cupti(int tid, int idx, double values[])
 			for (int i=0; i<Tau_CuptiLayer_get_num_events(); i++)
 			{
 				values[idx + i] = (double) counterDataBuffer[i];
-				printf("cupti value %d is: %lf.\n", i, values[idx + i]);
+				//printf("cupti value %d is: %lf.\n", i, values[idx + i]);
 			}
 		}
 		free(counterDataBuffer);

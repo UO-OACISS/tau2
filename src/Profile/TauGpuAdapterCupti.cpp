@@ -1,5 +1,6 @@
 #include <Profile/TauMetrics.h>
 #include <Profile/TauEnv.h>
+#include <Profile/CuptiLayer.h>
 #include <Profile/TauGpuAdapterCUDA.h>
 #include <Profile/TauGpuAdapterCupti.h>
 #include <stdio.h>
@@ -408,6 +409,19 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 			memcpyKind = kind(cbInfo, id, domain);
 			memcpyCount = count(cbInfo, id, domain);
 		}
+		if ((id == CUPTI_RUNTIME_TRACE_CBID_cudaThreadExit_v3020 || 
+		    id == CUPTI_RUNTIME_TRACE_CBID_cudaDeviceReset_v3020))
+		{	
+			//printf("finalizing cupti layer.\n");
+			Tau_CuptiLayer_finalize();
+		}
+		if (id == CUPTI_RUNTIME_TRACE_CBID_cudaLaunch_v3020 &&
+		!Tau_CuptiLayer_is_initialized())
+		{	
+			//printf("initializing cupti layer.\n");
+			Tau_CuptiLayer_init();
+		}
+
 		if (id == CUPTI_RUNTIME_TRACE_CBID_cudaGetDevice_v3020 && track_instructions
 		&& !cupti_metrics_initialized)
 		{
@@ -423,6 +437,7 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 			cuCtxCreate(&ctx, 0, device);
 			cupti_metrics_init(ctx);
 			cupti_metrics_initialized = true;
+			Tau_CuptiLayer_init();
 			//printf("1 initalizing metrics, context %d.\n", ctx);
 		}
 	}
