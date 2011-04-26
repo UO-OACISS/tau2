@@ -301,7 +301,6 @@ static void initialize_functionArray() {
 
   for (int i = 0; i < nmetrics; i++) {
     found = 1;
-		TAU_VERBOSE("start iteration: %d.\n", i);
     if (compareMetricString(metricv[i], "LOGICAL_CLOCK")) {
       functionArray[pos++] = metric_read_logicalClock;
     } else if (compareMetricString(metricv[i], "USER_CLOCK")) {
@@ -326,10 +325,8 @@ static void initialize_functionArray() {
       functionArray[pos++] = metric_read_messagesize;
 		} else if (is_cupti_metric(metricv[i])) {
 			/* CUPTI handled separately */
-			TAU_VERBOSE("TAU: found cupti metric.\n");
 			/* setup CUPTI metrics */
 			functionArray[pos++] = metric_read_cupti;
-			TAU_VERBOSE("TAU: registering metric.\n");
 			Tau_CuptiLayer_register_counter(Tau_CuptiLayer_map()[metricv[i]]);
 #ifdef TAU_PAPI
     } else if (compareMetricString(metricv[i], "P_WALL_CLOCK_TIME")) {
