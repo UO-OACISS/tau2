@@ -119,18 +119,83 @@ void Tau_prepare(void) {
 
 void Tau_parent(void) {
   TAU_VERBOSE("inside Tau_parent: pid = %d\n", getpid());
-#ifdef TAU_CRAYCNL
-//  TAU_DISABLE_INSTRUMENTATION();
-#endif /* TAU_CRAYCNL */
+  TheSafeToDumpData() = 0;
 }
 
 void Tau_child(void) {
-  TAU_VERBOSE("inside Tau_child: pid = %d\n", getpid());
-  PapiLayer::setPapiInitialized(false);
-  TAU_DB_PURGE();
-  TAU_VERBOSE("inside Tau_child before intializePapiLayer\n");
-  PapiLayer::initializePapiLayer(true);
-  TAU_VERBOSE("inside Tau_child after intializePapiLayer\n");
+  int i, rc, numCounters;
+  int tid=Tau_get_tid();
+  numCounters=PapiLayer::numCounters;
+  Tau_global_incr_insideTAU();
+  int papi_ver = PAPI_library_init(PAPI_VER_CURRENT);
+  if (papi_ver != PAPI_VER_CURRENT) {
+    if (papi_ver > 0) {
+      fprintf(stderr, "TAU: Error initializing PAPI: version mismatch: %d\n", papi_ver);
+    } else {
+      fprintf(stderr, "TAU: Error initializing PAPI: %s\n", PAPI_strerror(papi_ver));
+    }
+    return ;
+  }
+
+  rc = PAPI_thread_init((unsigned long (*)(void))(RtsLayer::myThread));
+
+  if (tid >= TAU_MAX_THREADS) {     
+    fprintf (stderr, "TAU: Exceeded max thread count of TAU_MAX_THREADS\n");
+  } 
+
+  /* Check ThreadList */
+  if (PapiLayer::ThreadList[tid] == 0) {
+    PapiLayer::ThreadList[tid] = new ThreadValue;   
+  }
+  PapiLayer::ThreadList[tid]->ThreadID = tid;
+  PapiLayer::ThreadList[tid]->CounterValues = new long long[MAX_PAPI_COUNTERS];
+   for (i=0; i<MAX_PAPI_COUNTERS; i++) {
+    PapiLayer::ThreadList[tid]->CounterValues[i] = 0L;
+  }
+
+  for (i=0; i<TAU_PAPI_MAX_COMPONENTS; i++) {
+    PapiLayer::ThreadList[tid]->NumEvents[i] = 0;
+    PapiLayer::ThreadList[tid]->EventSet[i] = PAPI_NULL;
+    rc = PAPI_create_eventset(&(PapiLayer::ThreadList[tid]->EventSet[i]));
+    if (rc != PAPI_OK) {
+      fprintf (stderr, "TAU: Error creating PAPI event set: %s\n", PAPI_strerror(rc));
+      return ;
+    }
+  }
+
+  /* PAPI 3 support goes here */
+  for (i=0; i<numCounters; i++) {
+    int comp = PAPI_COMPONENT_INDEX (PapiLayer::counterList[i]);
+    rc = PAPI_add_event(PapiLayer::ThreadList[tid]->EventSet[comp], PapiLayer::counterList[i]);
+    if (rc != PAPI_OK) {
+      fprintf (stderr, "pid=%d, TAU: Error adding PAPI events: %s\n", getpid(), PAPI_strerror(rc));
+      return ;
+    }
+
+    // this creates a mapping from 'component', and index in that component back    // to the original index, since we return just a single array of values
+    PapiLayer::ThreadList[tid]->Comp2Metric[comp][PapiLayer::ThreadList[tid]->NumEvents[comp]++] = i;
+  }
+
+
+  for (i=0; i<TAU_PAPI_MAX_COMPONENTS; i++) {
+    if (PapiLayer::ThreadList[tid]->NumEvents[i] >= 1) { // if there were active counters for this component
+      rc = PAPI_start(PapiLayer::ThreadList[tid]->EventSet[i]);
+    }
+  }
+
+  if (rc != PAPI_OK) {
+    fprintf (stderr, "pid=%d: TAU: Error calling PAPI_start: %s, tid = %d\n", getpid(), PAPI_strerror(rc), tid);
+    return ;
+  }
+
+  // Before traversing the callstack. Reset any negative exclusive times for 
+  // papi counters
+  Profiler *curr = TauInternal_CurrentProfiler(tid);
+  while (curr != 0) {
+    curr->ThisFunction->ResetExclTimeIfNegative(tid);
+    curr = curr->ParentProfiler;
+  }
+  Tau_global_decr_insideTAU();
 }
 
 #endif /* TAU_AT_FORK */
@@ -221,8 +286,9 @@ int PapiLayer::initializeThread(int tid) {
     int comp = PAPI_COMPONENT_INDEX (counterList[i]);
     rc = PAPI_add_event(ThreadList[tid]->EventSet[comp], counterList[i]);
     if (rc != PAPI_OK) {
+      fprintf (stderr, "pid=%d, TAU: Error adding PAPI events: %s\n", getpid(), PAPI_strerror(rc));
 #ifndef TAU_AT_FORK
-      fprintf (stderr, "TAU: Error adding PAPI events: %s\n", PAPI_strerror(rc));
+      fprintf (stderr, "pid=%d, TAU: Error adding PAPI events: %s\n", getpid(), PAPI_strerror(rc));
 #endif /* TAU_AT_FORK */
     TAU_VERBOSE ("TAU PAPI Error: Error adding PAPI events: %s\n", PAPI_strerror(rc));
       return -1;
@@ -265,7 +331,7 @@ int PapiLayer::initializeThread(int tid) {
   }
   
   if (rc != PAPI_OK) {
-    fprintf (stderr, "TAU: Error calling PAPI_start: %s, tid = %d\n", PAPI_strerror(rc), tid);
+    fprintf (stderr, "pid=%d: TAU: Error calling PAPI_start: %s, tid = %d\n", getpid(), PAPI_strerror(rc), tid);
     return -1;
   }
   
@@ -345,7 +411,7 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
 #endif
 
   if (rc != PAPI_OK) {
-    fprintf (stderr, "TAU: Error reading PAPI counters: %s\n", PAPI_strerror(rc));
+    fprintf (stderr, "pid=%d, TAU: Error reading PAPI counters: %s\n", getpid(), PAPI_strerror(rc));
     return NULL;
   }
   
