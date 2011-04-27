@@ -97,10 +97,6 @@ SELECTFILE 	= tau_selectfile
 #TAU2EPILOG#INSTALLTAU2ELG = $(INSTALLDEST)/tau2elg #ENDIF#
 #PERFLIB#INSTALLPERF2TAU = $(INSTALLDEST)/perf2tau #ENDIF#
 #PERFLIB#PERF2TAU = perf2tau #ENDIF#
-
-#CUPTI# INSTALLTAU_CUPTI_AVAIL = $(INSTALLDEST)/tau_cupti_avail #ENDIF#
-#CUPTI# TAU_CUPTI_AVAIL = tau_cupti_avail #ENDIF#
-
 #DYNINST_STATIC_REWRITING_UNSUPPORTED#DYNINSTFLAGS=-DTAU_DYNINST_STATIC_REWRITING_UNSUPPORTED #ENDIF#
 #DYNINST#DYNINC 	= -I$(DYNINSTDIR)/core/dyninstAPI/h -I$(DYNINSTDIR)/core -I$(DYNINSTDIR)/src/core/dyninstAPI/h -I$(DYNINSTDIR)/src/core -I$(DYNINSTDIR)/src/include -I$(DYNINSTDIR)/include $(DYNINSTFLAGS) #ENDIF#
 #DYNINST#DYNLIBS 	= -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -ldyninstAPI -liberty -lelf #ENDIF#
@@ -181,14 +177,14 @@ MAKEFILE      = Makefile
 OBJS	      = tau_reduce.o pprof.o  tau_events.o tau_merge.o tau_selective.o \
 		tau_instrumentor.o tau_instrument.o user_event_data.o \
 		function_data.o pprof_elem.o tau_run.o \
-		tau_timecorrect.o tau_wrap.o tau_cupti_avail.o
+		tau_timecorrect.o tau_wrap.o
 
 PRINT	      = pr
 
 EXECUTABLES =	tau_reduce pprof tau_convert tau_merge $(RUNTIME1) $(RUNTIME2) $(RUNTIME3)\
 		$(RUNTIME4) $(RUNTIME5) $(INSTR) $(TAURUN) $(TRACE2PROFILE) \
 		$(TAU_TIMECORRECT) $(TAU2VTF) $(VTF2PROFILE) $(TAU2OTF) $(TAU2ELG) \
-		$(TAUOMPCHECK) $(PERF2TAU) $(WRAP) $(HEADERLIST) $(TAU_CUPTI_AVAIL)
+		$(TAUOMPCHECK) $(PERF2TAU) $(WRAP) $(HEADERLIST)
 
 all:		$(EXECUTABLES)
 
@@ -328,12 +324,6 @@ function_data.o:	function_data.cpp
 user_event_data.o:	user_event_data.cpp
 		$(CXX) $(CFLAGS) -c user_event_data.cpp
 
-$(TAU_CUPTI_AVAIL): tau_cupti_avail.o
-		$(CXX) -L$(TAU_CUPTI_INC)/../lib -lcupti -o $@ $< $(TAU_LIBS)
-
-tau_cupti_avail.o: tau_cupti_avail.cpp
-		$(CXX) $(CFLAGS) -I$(TAU_CUDA_INC) -I$(TAU_CUPTI_INC) -I$(TAU_INC_DIR) -c $<
-
 clean:
 		/bin/rm -rf *.o $(EXECUTABLES) *.dep lib*$(LSX) *.ii *.ti ti_files cxx_repository ii_files rii_files 
 		cd opari ; make clean
@@ -455,19 +445,12 @@ $(INSTALLLIBDEST)/ebs2otf.so: ebs2otf/ebs2otf.so
 		$(TAU_INSTALL) ebs2otf/ebs2otf.pm $(INSTALLLIBDEST)
 		cd ebs2otf; $(MAKE) cleanup
 
-$(INSTALLTAU_CUPTI_AVAIL): $(TAU_CUPTI_AVAIL)
-		@echo Installing $? in $(INSTALLDEST)
-		if [ -d $(INSTALLDEST) ] ; then true; \
-                   else mkdir $(INSTALLDEST) ;fi
-		$(TAU_INSTALL) $(TAU_CUPTI_AVAIL) $(INSTALLDEST)
-
 install:	$(INSTALLDEST)/pprof $(INSTALLDEST)/tau_reduce \
 $(INSTALLDEST)/tau_merge $(INSTALLDEST)/tau_convert $(INSTALLDEST)/opari \
 $(INSTALLTRACE2PROFILE) $(INSTALLTAU_TIMECORRECT) $(INSTALLPCXX) $(INSTALLINSTR) \
 $(INSTALLTAURUN) $(INSTALLTAU2VTF) $(INSTALLVTF2PROFILE) $(INSTALLTAU2OTF) \
 $(INSTALLTAU2ELG) $(INSTALLTAUOMPCHECK) $(INSTALLPERF2TAU) $(INSTALLWRAP) \
-$(INSTALLHEADERLIST) $(INSTALLSELECTFILE) $(INSTALL_OTF_TOOLS) \
-$(INSTALLTAU_CUPTI_AVAIL)
+$(INSTALLHEADERLIST) $(INSTALLSELECTFILE) $(INSTALL_OTF_TOOLS) 
 
 program:        $(PROGRAM)
 
