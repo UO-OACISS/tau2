@@ -5,7 +5,7 @@ CWD=`pwd`
 include ../../../include/Makefile
 TAU_MAKEFILE=$(TAU_LIB_DIR)/Makefile.tau$(TAU_CONFIG)
 include ${TAU_MAKEFILE}
-TAUOP='-optCompile=-I$(CWD)/hdfwrapper/hdf5_wrapper -optLinking="-L$(CWD)/hdfwrapper/hdf5_wrapper/ -lhdf5_wrap" '
+TAUOP='-optCompile=-I$(CWD)/hdfwrapper/hdf5_wrapper -optLinking="-L$(CWD)/hdfwrapper/hdf5_wrapper/ -lhdf5_wrap" -optVerbose '
 #CC = $(TAU_COMPILER) $(TAUOP) $(TAU_CC)
 CC = tau_cc.sh -tau_options=$(TAUOP) 
 
