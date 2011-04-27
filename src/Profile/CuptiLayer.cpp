@@ -110,6 +110,11 @@ void CuptiCounterEvent::create_tag()
 	original_device_name >> buffer;
 	tag_stream << buffer;
 	tag_stream << "_";
+
+	original_device_name >> buffer;
+	tag_stream << buffer;
+	tag_stream << "_";
+	
 	original_device_name >> buffer;
 	tag_stream << buffer;
 
