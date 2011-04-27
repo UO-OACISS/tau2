@@ -7,6 +7,10 @@ import java.awt.GridLayout;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -21,6 +25,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -48,9 +53,12 @@ import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.general.SeriesException;
 import org.jfree.data.xy.DefaultTableXYDataset;
 import org.jfree.data.xy.XYSeries;
+import org.python.antlr.base.mod;
 
+import edu.uoregon.tau.common.FileFilter;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.DataSource;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.common.ChartDataType;
@@ -76,16 +84,16 @@ public class ChartPane extends JScrollPane implements ActionListener {
 	private JCheckBox mainOnly = new JCheckBox  ("Main Only");
 	private JCheckBox  callPath = new JCheckBox  ("Call Paths");
 	private JCheckBox  logY = new JCheckBox ("Log Y");
-	
+
 	JRadioButton valueRB = new JRadioButton("Value Chart");
 	JRadioButton scalaRB = new JRadioButton("Scalability Chart");
 	JRadioButton efficRB = new JRadioButton("Efficency Chart");
 	ButtonGroup chartType = new ButtonGroup();
-	
+
 	JRadioButton strongScaling = new JRadioButton("Strong Scaling");
 	JRadioButton weakScaling = new JRadioButton("Weak Scaling");
 	ButtonGroup scalingType = new ButtonGroup();
-	
+
 	private JCheckBox  horizontal = new JCheckBox  ("Horizontal");
 	private JCheckBox  showZero = new JCheckBox  ("Show Y-Axis Zero");
 
@@ -110,8 +118,8 @@ public class ChartPane extends JScrollPane implements ActionListener {
 	private JTextField dimensionXValue = new MyJTextField(5);
 	private JLabel eventLabel = new JLabel("Interval Event:");
 	//private DefaultListModel eventModel = new DefaultListModel();
-   	private JList event = null;//new JList();
-   	private JScrollPane eventScrollPane = null;
+	private JList event = null;//new JList();
+	private JScrollPane eventScrollPane = null;
 	private JLabel metricLabel = new JLabel("Metric:");
 	private JComboBox metric = new MyJComboBox();
 	private JLabel unitsLabel = new JLabel("Units:");
@@ -124,6 +132,8 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 	private JCheckBox angleXLabels= new JCheckBox("Angle X Axis Labels");
 	private JCheckBox alwaysCategory= new JCheckBox("Categorical X Axis");
+	private JCheckBox  logX = new JCheckBox ("Log X");
+
 	private String[] unitOptions = {
 			"microseconds", 
 			"milliseconds", 
@@ -139,20 +149,23 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 
 	private JButton apply = null;
+	private JCheckBox exportdata = null;
 	private JButton reset = null;
-	
+
+	private JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
+
 	private static final String ATOMIC_EVENT_ALL = "All Atomic Events";
 	private static final String INTERVAL_EVENT_ALL = "All Events";
 	private static final String INTERVAL_EVENT_GROUP_ALL = "All Groups";
-	
+
 	private static final String ATOMIC_EVENT_NAME = "atomic_event.name";
 	private static final String INTERVAL_EVENT_NAME = "interval_event.name";
 	private static final String INTERVAL_EVENT_GROUP_NAME = "interval_event.group_name";
 
 	private static final String EXPERIMENT_NAME = "experiment.name";
 	private static final String EXPERIMENT_ID = "experiment.id";
-	
-//private static final String MEAN_INCLUSIVE = "mean.inclusive";
+
+	//private static final String MEAN_INCLUSIVE = "mean.inclusive";
 	//private static final String MEAN_EXCLUSIVE = "mean.exclusive";
 	//private static final String ATOMIC_MEAN_VALUE = "atomic.mean_value";
 
@@ -164,7 +177,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 	private static final String ATOMIC="atomic";
 	private static final String INCLUSIVE="inclusive";
 	private static final String EXCLUSIVE="exclusive";
-	
+
 	public static ChartPane getPane () {
 		if (thePane == null) {
 			JPanel mainPanel = new JPanel(new GridLayout(1,3,10,5));
@@ -187,29 +200,29 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		JPanel panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 		panel.add(createChartTypeMenu());
-		
+
 		panel.add(Box.createVerticalStrut(10));
 		panel.add(createDataMenu());
-		
+
 		panel.add(Box.createVerticalStrut(10));
 		panel.add(createButtonMenu());
-		
+
 		this.mainPanel.add(panel, BorderLayout.WEST);
-		
+
 		// create the middle options
 		panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 		panel.add(createXAxisMenu());
-		
+
 		panel.add(Box.createVerticalStrut(10));
 		panel.add(createYAxisMenu());
 		this.mainPanel.add(panel, BorderLayout.CENTER);
-		
+
 		// create the right options
 		panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 		panel.add(createSeriesMenu());
-		
+
 		panel.add(Box.createVerticalStrut(10));
 		panel.add(createDimensionReductionMenu());
 
@@ -233,7 +246,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		dimension.addActionListener(this);
 		this.dimension.addActionListener(this);
 		panel.add(dimension);
-		
+
 		panel.add(Box.createVerticalStrut(10));
 		panel.add(dimensionXLabel);
 		this.dimensionXValue.addActionListener(this);
@@ -241,8 +254,8 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 		return (panel);
 	}
-	
-	
+
+
 	private JPanel createDataMenu() {
 		// create a new panel, with a vertical box layout
 		JPanel panel = new JPanel();
@@ -255,7 +268,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		panel.add(titleLabel);
 		this.chartTitle.addActionListener(this);
 		panel.add(chartTitle);
-		
+
 		panel.add(Box.createVerticalStrut(10));
 		// metric of interest
 		panel.add(metricLabel);
@@ -275,7 +288,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		// event of interest
 		panel.add(eventLabel);
 		event = new JList();
-		
+
 		eventScrollPane = new JScrollPane(event);
 		JPanel eventPanel = new JPanel();
 		eventPanel.setLayout(new BorderLayout());
@@ -285,7 +298,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		//TODO: Does this need an action?
 		//this.event.addActionListener(this);
 		panel.add(eventPanel);
-		
+
 		panel.add(Box.createVerticalStrut(10));
 		this.mainOnly.setToolTipText("Only select the \"main\" event (i.e. maximum inclusive)");
 		this.mainOnly.addActionListener(this);
@@ -298,7 +311,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 		return (panel);
 	}
-	
+
 	private JPanel createXAxisMenu() {
 		// create a new panel, with a vertical box layout
 		JPanel panel = new JPanel();
@@ -311,14 +324,14 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		panel.add(xaxisNameLabel);
 		this.xaxisName.addActionListener(this);
 		panel.add(xaxisName);
-		
+
 		panel.add(Box.createVerticalStrut(10));
 		// x axis value
 		panel.add(xaxisValueLabel);
 		xaxisValue = new MyJComboBox(tableColumns.toArray());
 		xaxisValue.addActionListener(this);
 		panel.add(xaxisValue);
-		
+
 		panel.add(Box.createVerticalStrut(10));
 		// XML metadata
 		panel.add(xmlNameLabel);
@@ -328,42 +341,47 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 		panel.add(Box.createVerticalStrut(10));
 		panel.add(this.angleXLabels);
-		
+
 		panel.add(Box.createVerticalStrut(10));
 		panel.add(this.alwaysCategory);
+		
+		panel.add(Box.createVerticalStrut(10));
+		panel.add(this.logX);
+		this.logX.setToolTipText("Use a Logarithmic X axis");
+		this.logX.addActionListener(this);
 
 		return (panel);
 	}
-	
+
 	private JPanel createYAxisMenu() {
 		JPanel panel = new JPanel();
 		TitledBorder tb = BorderFactory.createTitledBorder("Y Axis");
 		panel.setBorder(tb);
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-		
+
 		panel.add(Box.createVerticalStrut(10));
 		// y axis name
 		panel.add(yaxisNameLabel);
 		this.yaxisName.addActionListener(this);
 		panel.add(yaxisName);
-		
+
 		panel.add(Box.createVerticalStrut(10));
-		
+
 		//y axis stat
 		panel.add(yaxisStatLabel);
 		String[] valueOptions = {"tmp"};// this will get reset in a few lines...
 		yaxisStat = new MyJComboBox(valueOptions);
 		this.yaxisStat.addActionListener(this);
 		//resetYAxisValues(true);  // ...right here!
-		
-		
-		
+
+
+
 		// y axis value
 
 		yaxisValue = new MyJComboBox(valueOptions);
 		this.yaxisValue.addActionListener(this);
 		resetYAxisValues(true);  // ...right here!
-		
+
 		panel.add(yaxisStat);
 		panel.add(yaxisValueLabel);
 		panel.add(yaxisValue);
@@ -382,7 +400,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 		return (panel);
 	}
-	
+
 	private JPanel createSeriesMenu() {
 		JPanel panel = new JPanel();
 		TitledBorder tb = BorderFactory.createTitledBorder("Series");
@@ -398,7 +416,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		series.addItem(ATOMIC_EVENT_NAME);
 		series.addActionListener(this);
 		panel.add(series);
-		
+
 		panel.add(Box.createVerticalStrut(10));
 		// series xml
 		panel.add(seriesXmlNameLabel);
@@ -409,18 +427,18 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 		return (panel);
 	}
-	
-	
+
+
 	private JPanel createChartTypeMenu() {
 		JPanel panel = new JPanel();
-		
+
 		TitledBorder tb = BorderFactory.createTitledBorder("Chart Type");
 		panel.setBorder(tb);
 		panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
 		//This is necessary to make this panel fill the column, but I'm not sure why...
 		panel.setAlignmentX(CENTER_ALIGNMENT);
-		
-		
+
+
 		panel.add(Box.createVerticalStrut(10));
 		panel.add(valueRB);
 		panel.add(scalaRB);
@@ -438,14 +456,20 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		this.horizontal.setToolTipText("Create a horizontal chart");
 		this.horizontal.addActionListener(this);
 		panel.add(this.horizontal);
-		
+
 		return (panel);
 	}
-	
-	
+
+
 	private JPanel createButtonMenu() {
 		JPanel panel = new JPanel();
 		panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+		// export button
+		exportdata = new JCheckBox ("Export");
+		exportdata.setToolTipText("Export chart data to file");
+		exportdata.addActionListener(this);
+		panel.add(exportdata);
+
 		
 		// apply button
 		apply = new JButton ("Apply");
@@ -453,20 +477,23 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		apply.addActionListener(this);
 		panel.add(apply);
 
+
 		// reset button
 		reset = new JButton ("Reset");
 		reset.setToolTipText("Change back to default settings");
 		reset.addActionListener(this);
 		panel.add(reset);
-		
+
 		return (panel);
 	}
-	
+
 	private void resetChartSettings() {
 		// top toggle buttons
 		this.mainOnly.setSelected(true);
 		this.callPath.setSelected(false);
 		this.logY.setSelected(false);
+		this.logX.setSelected(false);
+		this.exportdata.setSelected(false);
 		valueRB.setSelected(true);
 		weakScaling.setSelected(true);
 		this.horizontal.setSelected(false);
@@ -487,7 +514,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 		this.seriesXmlNameLabel.setEnabled(false);
 		this.seriesXmlName.setEnabled(false);
-		
+
 		// series name 
 		for (Iterator<String> itr = tableColumns.iterator() ; itr.hasNext() ; ) {
 			Object o = itr.next();
@@ -496,7 +523,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				this.series.setSelectedItem(o);
 			} else if (tmp.equalsIgnoreCase("trial.threads_of_execution")) {
 				//this.xaxisValue.setSelectedItem(o);
-			//} else if (tmp.equalsIgnoreCase("trial.xml_metadata")) {
+				//} else if (tmp.equalsIgnoreCase("trial.xml_metadata")) {
 				this.xaxisValue.setSelectedItem(o);
 			}
 		}
@@ -505,23 +532,23 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		refreshDynamicControls(true, true, false);
 	}
 
-	
+
 	private void refreshEventList(PerfExplorerModel theModel, String label, String all){
 
 		Object[] evt = null;
 		Object[] oldEvent = null;
-		
+
 		evt = this.event.getSelectedValues();
 		if (evt != null)
 			oldEvent = evt;
 		else{
 			oldEvent= new Object[0];
 		}
-		
+
 		int oldWidth=eventScrollPane.getWidth();
-		
+
 		List<String> events = null;
-		
+
 		if(all.equals(INTERVAL_EVENT_GROUP_ALL))
 		{
 			events=server.getPotentialGroups(theModel);
@@ -560,7 +587,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			dex++;
 		}
 	}
-	
+
 	public void refreshDynamicControls(boolean getMetrics, boolean getEvents, boolean getXML) {
 		PerfExplorerModel theModel = PerfExplorerModel.getModel();
 		Object selection = theModel.getCurrentSelection();
@@ -574,7 +601,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				oldMetric = (String)obj;
 			this.metric.removeAllItems();
 		}
-		
+
 		if (getXML) {
 			obj = this.xmlName.getSelectedItem();
 			if (obj != null)
@@ -592,21 +619,21 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			if (getMetrics) {
 				List<String> metrics = server.getPotentialMetrics(theModel);
 				//this.metric.setSelectedIndex(0);
-//				boolean gotTime = false;
+				//				boolean gotTime = false;
 				for (Iterator<String> itr = metrics.iterator() ; itr.hasNext() ; ) {
 					String next = itr.next();
-//					if (next.toUpperCase().indexOf("TIME") > 0) {
-//						gotTime = true;
-//					}
+					//					if (next.toUpperCase().indexOf("TIME") > 0) {
+					//						gotTime = true;
+					//					}
 					this.metric.addItem(next);
 					if (oldMetric.equals(next))
 						this.metric.setSelectedItem(next);
 				}
-//				if (gotTime) {
-//					this.metric.addItem("TIME");
-//					if (oldMetric.equals("TIME"))
-//						this.metric.setSelectedItem("TIME");
-//				}
+				//				if (gotTime) {
+				//					this.metric.addItem("TIME");
+				//					if (oldMetric.equals("TIME"))
+				//						this.metric.setSelectedItem("TIME");
+				//				}
 			} 
 			if (getEvents && !this.mainOnly.isSelected()) {
 				String seriesSelection = (String)series.getSelectedItem();
@@ -662,19 +689,19 @@ public class ChartPane extends JScrollPane implements ActionListener {
 	}
 
 	private void resetYAxisValues(boolean intervalEvent) {
-		
+
 		Object oldY = this.yaxisValue.getSelectedItem();
 		Object oldYStat = this.yaxisStat.getSelectedItem();
 		this.yaxisValue.removeAllItems();
 		this.yaxisStat.removeAllItems();
 		if (intervalEvent) {
-			
+
 			this.yaxisStat.addItem(MEAN);
 			this.yaxisStat.addItem(TOTAL);
 			this.yaxisStat.addItem(MAX);
 			this.yaxisStat.addItem(MIN);
 			this.yaxisStat.addItem(AVG);
-			
+
 			this.yaxisValue.addItem(INCLUSIVE);
 			this.yaxisValue.addItem(EXCLUSIVE);
 			this.yaxisValue.addItem("inclusive_percentage");
@@ -684,9 +711,9 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			this.yaxisValue.addItem("inclusive_per_call");
 			this.yaxisValue.addItem("sum_exclusive_squared");
 		} else {
-			
+
 			this.yaxisStat.addItem(ATOMIC);
-			
+
 			this.yaxisValue.addItem("sample_count");
 			this.yaxisValue.addItem("maximum_value");
 			this.yaxisValue.addItem("minimum_value");
@@ -699,15 +726,15 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		return;
 	}
 
-	
+
 	private void updateYAxis(){
 		// y axis
 		String label;
 		String series;
-		
+
 		String stat =  (String)yaxisStat.getSelectedItem();
 		String value = (String)yaxisValue.getSelectedItem();
-		
+
 		String tmp;// = stat+"."+value;
 		String operation = "avg";
 		if (stat.equals(ATOMIC)) {
@@ -729,9 +756,9 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				operation = "sum";
 			}
 		}
-		
+
 		tmp = operation + "(" + tmp + ")";
-	
+
 		label = yaxisName.getText();
 		if (label == null || label.length() == 0) {
 			series = (String)this.series.getSelectedItem();;
@@ -739,26 +766,26 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				label = (String)yaxisStat.getSelectedItem()+"."+(String)yaxisValue.getSelectedItem();
 			} else {
 				// build something intelligible
-				
+
 				String labStat=operation;
 				if(stat.equals(MEAN)){
 					labStat="Mean";
 				}else if(stat.equals(TOTAL)){
 					labStat="Total";
 				}
-				
+
 				label = labStat+" "+(String)this.metric.getSelectedItem();
-//				if (tmp.indexOf("mean") >= 0) {
-//					label = "Mean " + (String)this.metric.getSelectedItem();
-//				} else if (tmp.indexOf("total") >= 0) {
-//					label = "Total " + (String)this.metric.getSelectedItem();
-//				}
+				//				if (tmp.indexOf("mean") >= 0) {
+				//					label = "Mean " + (String)this.metric.getSelectedItem();
+				//				} else if (tmp.indexOf("total") >= 0) {
+				//					label = "Total " + (String)this.metric.getSelectedItem();
+				//				}
 			}
 		}
 		label += " - "  + (String)this.units.getSelectedItem();
 		facade.setChartYAxisName(tmp, label);
 	}
-	
+
 	private void updateChart () {
 		// the user has selected the application, experiment, trial 
 		// from the navigation tree.  Now set the other parameters.
@@ -793,7 +820,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			facade.setChartMetadataFieldName(tmp2);
 			tmp=tmp2;
 			facade.setChartSeriesXML(true);
-			
+
 		}
 		facade.setChartSeriesName(tmp);//TODO: Should this be tmp1?
 
@@ -826,11 +853,11 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		// metric name
 		obj = metric.getSelectedItem();
 		tmp = (String)obj;
-//Not Sure why this was here, it's causing problems, so I have commented it out. Suzanne
-//		if (tmp.equals("TIME"))
-//			facade.setMetricName("%TIME%");
-//		else
-			facade.setMetricName(tmp);
+		//Not Sure why this was here, it's causing problems, so I have commented it out. Suzanne
+		//		if (tmp.equals("TIME"))
+		//			facade.setMetricName("%TIME%");
+		//		else
+		facade.setMetricName(tmp);
 
 		// units name
 		obj = units.getSelectedItem();
@@ -865,11 +892,12 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			} else if (tmp.equalsIgnoreCase(ATOMIC_EVENT_NAME)) {
 				setEvents(ATOMIC_EVENT_ALL);
 			}
-	
+
 		}
 
 		facade.setChartEventNoCallPath(this.callPath.isSelected()?0:1); //reversed logic
 		facade.setChartLogYAxis(this.logY.isSelected()?1:0);
+		facade.setChartLogXAxis(this.logX.isSelected()?1:0);
 		facade.setChartScalability(this.scalaRB.isSelected()?1:0);
 		facade.setChartEfficiency(this.efficRB.isSelected()?1:0);
 		facade.setChartConstantProblem(this.strongScaling.isSelected()?0:1);
@@ -877,10 +905,10 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		facade.setShowZero(this.showZero.isSelected()?1:0);
 
 		// create the Chart
-		
+
 		try{
-		
-		doGeneralChart();
+
+			doGeneralChart();
 		}
 		catch (SeriesException e) {
 			// this shouldn't happen, but if it does, handle it gracefully.
@@ -906,7 +934,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			facade.setEventName(null);
 		}
 	}
-	
+
 	public void actionPerformed(ActionEvent e) {
 		// if action is "apply", update the chart
 		Object source = e.getSource();
@@ -935,20 +963,20 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			} else {
 				this.eventLabel.setEnabled(true);
 				this.event.setEnabled(true);
-				
+
 				series.setSelectedItem(INTERVAL_EVENT_NAME);
 				resetYAxisValues(true);
 				yaxisStat.setSelectedItem(MEAN);
 				yaxisValue.setSelectedItem(EXCLUSIVE);
-				
+
 				refreshDynamicControls(false, true, false);
 			}
 		}else if(source == callPath){
 			facade.setChartEventNoCallPath(callPath.isSelected()?0:1);
-						
-				refreshDynamicControls(false, true, false);
-			
-			
+
+			refreshDynamicControls(false, true, false);
+
+
 		} else if (source == dimension) {
 			if (dimension.getSelectedIndex() == 0) {
 				this.dimensionXLabel.setEnabled(false);
@@ -1030,6 +1058,8 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		}
 		drawChart();
 	}
+
+
 
 	public void drawChart() {
 		// draw the chart!
@@ -1210,8 +1240,9 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			if(ideal!=null){
 				xydataset.addSeries(ideal);
 			}
-
-
+			if(exportdata.isSelected()){
+				printData(xydataset);
+			}
 
 			if(!this.alwaysCategory.isSelected())
 			{	
@@ -1226,6 +1257,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 						true,                            // tooltips
 						false                            // urls
 				);
+
 				// set the chart to a common style
 				Utility.applyDefaultChartTheme(chart);
 				customizeLineChart(model,rawData, chart);
@@ -1274,8 +1306,68 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		}
 
 		PerfExplorerChart pec = new PerfExplorerChart(chart, model.getChartTitle());
-		
+
 		return pec;
+	}
+
+	private boolean getFiletoSave() {
+
+
+		int returnVal = fc.showSaveDialog(this);
+		if (returnVal == JFileChooser.APPROVE_OPTION) {
+			File savefile =  fc.getSelectedFile();
+			if(savefile.exists()){
+				int result = 	JOptionPane.showOptionDialog(this, 
+						"\""+savefile.getName()+"\" already exists. Do you want to replace it? ", "Replace File"
+						,JOptionPane.YES_NO_OPTION,JOptionPane.WARNING_MESSAGE, null, null, null);
+				if(result ==JOptionPane.NO_OPTION) 
+					return getFiletoSave();
+			}
+			return true;
+		}else 
+			return false;//user hit cancel 
+	}
+
+	private void printData(DefaultTableXYDataset xydataset)   {
+		if(getFiletoSave()){
+			try {
+				File savefile =  fc.getSelectedFile();
+				//File savefile = new File("/Users/somillstein/Desktop/chartdata");
+				FileOutputStream write;
+				write = new FileOutputStream(savefile);
+				PerfExplorerModel model = PerfExplorerModel.getModel();
+				writeln(model.getChartTitle(),write);
+				writeln(model.getChartXAxisLabel(),write);
+				writeln(model.getChartYAxisLabel(),write);
+				
+				for(int seriesID=0; seriesID<xydataset.getSeriesCount();seriesID++){
+					XYSeries series = xydataset.getSeries(seriesID);
+					writeln(series.getKey(), write);
+					for(int i=0;i<series.getItemCount();i++){
+						write(series.getX(i) + "\t", write);
+						writeln(series.getY(i)+ "\t", write);
+					}
+
+				}
+			} catch (FileNotFoundException e) {
+				StringBuilder sb = new StringBuilder();
+				sb.append("File not found.\n");
+				JOptionPane.showMessageDialog(PerfExplorerClient.getMainFrame(), sb.toString(),
+						"Selection Warning", JOptionPane.ERROR_MESSAGE);
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+
+	}
+	private void writeln(Object s, FileOutputStream write) throws IOException {
+		write(s+"\n",write);
+		
+	}
+
+	private void write(String s, FileOutputStream write) throws IOException{
+		write.write(s.getBytes());
 	}
 
 	private void customizeLineChart(PerfExplorerModel model,RMIGeneralChartData rawData, JFreeChart chart) {
@@ -1316,6 +1408,18 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			axis.setAllowNegativesFlag(true);
 			axis.setLog10TickLabelsFlag(true);
 			plot.setRangeAxis(0, axis);
+		}		
+		if (model.getChartLogXAxis()) {
+			LogarithmicAxis axis = new LogarithmicAxis(
+					PerfExplorerModel.getModel().getChartXAxisLabel());
+			if (model.getShowZero()) {
+				axis.setAutoRangeIncludesZero(true);
+			} else {
+				axis.setAutoRangeIncludesZero(false);
+			}
+			axis.setAllowNegativesFlag(true);
+			axis.setLog10TickLabelsFlag(true);
+			plot.setDomainAxis(0, axis);
 		}
 	}
 
@@ -1359,6 +1463,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			axis.setLog10TickLabelsFlag(true);
 			plot.setRangeAxis(0, axis);
 		}
+		
 
 		if (angleXLabels.isSelected()){//angledXaxis && !scalingChart) {
 			//CategoryPlot plot = chart.getCategoryPlot();
@@ -1369,18 +1474,18 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 
 	private String shortName(String longName) {
-		
+
 		int codeDex = longName.indexOf("[{");
 		//If this is somehow the first string, we don't want to make an empty string...
 		if(codeDex<1){
 			longName=longName.trim();
 			return longName;
 		}
-		
+
 		String shorter = longName.substring(0, codeDex).trim();
 		return shorter;
 	}
-	
+
 	class MyJTextField extends javax.swing.JTextField
 	{   
 		/**

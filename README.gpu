@@ -1,0 +1,60 @@
+Configure TAU with:
+
+./configure -cuda=<path to cuda toolkit> 
+
+or 
+
+./configure -opencl=<opencl headaers/libaries>
+
+Then:
+
+make install
+
+Add <arch>/bin to your path and add <arch>/lib to your LD_LIBRARY_PATH.
+
+Now to collect performance data run your application with tau_exec:
+
+tau_exec -T serial <-cuda|-opencl> ./a.out
+
+For traces type:
+
+export TAU_TRACE=1
+
+before the tau_exec command.
+
+Post-process the trace file with these commands:
+
+%> tau_multimerge
+%> tau2slog ...
+or 
+%> tau2otf ...
+
+== CUPTI callbacks ==
+
+CUPTI API calls can be tracking using the -cupti option to tau_exec:
+
+%> tau_exec -T serial -cupti ./a.out
+
+The default record the Runtime API. To track the Driver API calls type:
+
+TAU_CUPTI_API=driver or TAU_CUPTI_API=both.
+
+In any case the performance data is written out as profile.* files. 
+Type 'pprof' to get a text display of the data or 'paraprof' for a graphic display.
+
+Setting TAU_TRACE=1 will produce trace files, post-process then with:
+== GPU COUNTERS ==
+
+The CUPTI counters available for a given machine can assessed by typing:
+
+%> tau_cupti_avail
+
+Set the counters you wish to collect by exporting them as a colon separated list
+to the TAU_METRICS variable. ex:
+
+export TAU_METRICS=CUDA.GeForce_GT_240.domain_b.instructions
+
+then run with tau_exec:
+
+tau_exec (-cuda|-cupti) ./a.out.
+

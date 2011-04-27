@@ -507,6 +507,7 @@ extern "C" void Tau_init(int argc, char **argv) {
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_set_node(int node) {
+  if (node >= 0) TheSafeToDumpData()=1;
   RtsLayer::setMyNode(node);
 }
 

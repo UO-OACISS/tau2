@@ -321,6 +321,7 @@ static int parse_bool(const char *str, int default_value = 0) {
 }
 
 const char *TauEnv_get_metrics() {
+  if (env_metrics == NULL) TauEnv_initialize();
   return env_metrics;
 }
 

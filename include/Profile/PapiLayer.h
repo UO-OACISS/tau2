@@ -41,15 +41,16 @@ public:
   static long long getVirtualTime(void);
   static int reinitializePAPI(void);
   static int addCounter(char *name);
+  static void setPapiInitialized(bool value); 
+  static ThreadValue *ThreadList[TAU_MAX_THREADS];
+  static int numCounters;
+  static int counterList[TAU_MAX_COUNTERS];
 private:
   static int initializeSingleCounter();
   static int initializeThread(int tid);
   static int initializePAPI(void);
   static void checkDomain(int domain, char* domainstr);
   static bool papiInitialized;
-  static ThreadValue *ThreadList[TAU_MAX_THREADS];
-  static int numCounters;
-  static int counterList[TAU_MAX_COUNTERS];
 };
 
 #endif /* TAU_PAPI */

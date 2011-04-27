@@ -11,6 +11,7 @@
 #define write(a,b,c) 	TauWrapperWrite(a,b,c)
 #define fsync(a) 	TauWrapperFsync(a)
 #define open(a,b,...)   TauWrapperOpen(a,b)
+#define lseek(a,b,c)    TauWrapperLseek(a,b,c)
 
 #include <sys/types.h>
 #ifdef __cplusplus
@@ -22,6 +23,8 @@ int TauWrapperOpen(const char *pathname, int flags);
 int TauWrapperClose(int fd);
 ssize_t TauWrapperRead(int fd, void *buf, size_t nbytes);
 ssize_t TauWrapperWrite(int fd, const void *buf, size_t nbytes);
+off_t TauWrapperLseek(int fd, off_t offset, int whence);
+
 
 #ifdef __cplusplus
 }

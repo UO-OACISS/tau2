@@ -1251,7 +1251,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
 
 	char cwd[1024];
 	char *tst = getcwd(cwd, 1024);
-	TAU_VERBOSE("TAU: Writing profile %s, cwd = %s\n", dumpfile, cwd);
+	TAU_VERBOSE("[pid=%d] TAU: Writing profile %s, cwd = %s\n", getpid(), dumpfile, cwd);
 
       } else {
 	int flags = O_CREAT | O_EXCL | O_WRONLY;
@@ -1289,7 +1289,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
 	  }
 	  char cwd[1024];
 	  char *tst = getcwd(cwd, 1024);
-	  TAU_VERBOSE("TAU: Writing profile %s, cwd = %s\n", dumpfile, cwd);
+	  TAU_VERBOSE("[pid=%d], TAU: Writing profile %s, cwd = %s\n", getpid(), dumpfile, cwd);
 	}
       }
       writeProfile(fp, metricHeader, tid, i, inFuncs, numFuncs);
