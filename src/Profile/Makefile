@@ -106,6 +106,7 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 # Python Binding OBJECTS
 #############################################
 #PYTHON#PYTHON_O  = PyGroups.o PyExceptions.o PyDatabase.o PyBindings.o PyTimer.o PyTau.o PyMemory.o ctau_impl.o #ENDIF#
+#CUPTI#TAU_CUPTI_COUNTER_OBJS=CuptiLayer.o #ENDIF#
 
 
 OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauMemoryWrap.o \
@@ -118,13 +119,15 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauMemoryWrap.o \
 		$(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
 		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) $(TAU_SAMPLING_O) \
 		TauIoWrap.o TauCompensate.o $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
-		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_GASPU_O)
+		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_GASPU_O) $(TAU_CUPTI_COUNTER_OBJS)
 
 STATIC_OBJS   = Comp_gnu.o $(PGIACC_STATIC_O)
 SHARED_OBJS   = $(PGIACC_O)
 #SICORTEX#SHARED_OBJS = Comp_gnu.o #ENDIF#
 #TAU_BFDSHAREDLINK#SHARED_OBJS = Comp_gnu.o #ENDIF#
 #TAU_BFDSHAREDLINK#SHARED_LIBS = $(BFDLINK) -lbfd -liberty #ENDIF#
+
+#CUPTI#SHARED_LIBS = -lcuda -L$(TAU_CUPTI_INC)/../lib -lcupti #ENDIF#
 
 PRINT	      = pr
 
@@ -618,10 +621,10 @@ Tracer.o   	: Tracer.cpp $(HDRS)
 	$(CXX) -DTAU_GPU $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauMetrics.o   	: TauMetrics.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) -I$(TAU_CUPTI_INC) -I$(TAU_CUDA_INC) -c $(@:.o=.cpp)
 
 TauReadMetrics.o : TauReadMetrics.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) -I$(TAU_CUPTI_INC) -I$(TAU_CUDA_INC) -c $(@:.o=.cpp)
 
 PthreadLayer.o   : PthreadLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
@@ -735,12 +738,15 @@ TauGpu.o : TauGpu.cpp $(HDRS)
 	$(CXX) -DTAU_GPU $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauGpuAdapterCUDA.o : TauGpuAdapterCUDA.cpp $(HDRS) ../../include/Profile/TauGpuAdapterCUDA.h
-	$(CXX) $(CXXFLAGS) -g -I$(TAU_CUDA_INC) $(BFDINCLUDE) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) -g -I$(TAU_CUPTI_INC) -I$(TAU_CUDA_INC) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 TauGpuAdapterOpenCL.o : TauGpuAdapterOpenCL.cpp $(HDRS)  $(INCDIR)/TauGpuAdapterOpenCL.h
 	$(CXX) $(CXXFLAGS) -I$(TAU_OPENCL_INC) -g -c $(@:.o=.cpp)
 
 TauGpuAdapterCupti.o : TauGpuAdapterCupti.cpp $(HDRS) ../../include/Profile/TauGpuAdapterCupti.h
+	$(CXX) $(CXXFLAGS) -g -I$(TAU_CUPTI_INC) -I$(TAU_CUDA_INC) -c $(@:.o=.cpp)
+
+CuptiLayer.o : CuptiLayer.cpp $(HDRS) ../../include/Profile/CuptiLayer.h
 	$(CXX) $(CXXFLAGS) -g -I$(TAU_CUPTI_INC) -I$(TAU_CUDA_INC) -c $(@:.o=.cpp)
 
 jVMTIThreadLayer.o: JVMTIThreadLayer.cpp
