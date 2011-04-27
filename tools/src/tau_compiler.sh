@@ -1046,6 +1046,7 @@ if [ $numFiles == 0 ]; then
 
     echoIfDebug "trackIO = $trackIO, wrappers = $optWrappersDir/io_wrapper/link_options.tau "
     if [ $trackIO = $TRUE -a -r $optWrappersDir/io_wrapper/link_options.tau ] ; then 
+      optLinking=`echo $optLinking  | sed -e 's/Comp_gnu.o//g'`
       linkCmd="$linkCmd `cat $optWrappersDir/io_wrapper/link_options.tau` $optLinking"
       echoIfDebug "Linkin command is $linkCmd"
     fi
@@ -1480,6 +1481,7 @@ if [ $gotoNextStep == $TRUE ]; then
 
         echoIfDebug "trackIO = $trackIO, wrappers = $optWrappersDir/io_wrapper/link_options.tau "
         if [ $trackIO = $TRUE -a -r $optWrappersDir/io_wrapper/link_options.tau ] ; then
+          optLinking=`echo $optLinking  | sed -e 's/Comp_gnu.o//g'`
           newCmd="$newCmd `cat $optWrappersDir/io_wrapper/link_options.tau` $optLinking"
           echoIfDebug "Linking command is $newCmd"
         fi
