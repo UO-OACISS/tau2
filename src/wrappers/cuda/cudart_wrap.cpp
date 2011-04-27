@@ -14,6 +14,8 @@ using namespace std;
 #define CUDART_API TAU_USER
 #define CUDA_SYNC TAU_USER
 
+extern void Tau_CuptiLayer_finalize();
+
 const char * cudart_orig_libname = "libcudart.so";
 static void *cudart_handle = NULL;
 cudaStream_t curr_stream;
@@ -73,6 +75,7 @@ cudaError_t cudaDeviceReset() {
 	Tau_cuda_register_sync_event();
 #endif 
   TAU_PROFILE_START(t);
+	Tau_CuptiLayer_finalize();
   retval  =  (*cudaDeviceReset_h)();
   TAU_PROFILE_STOP(t);
 
@@ -114,6 +117,7 @@ cudaError_t cudaThreadExit() {
 	Tau_cuda_register_sync_event();
 #endif 
   TAU_PROFILE_START(t);
+	Tau_CuptiLayer_finalize();
   retval  =  (*cudaThreadExit_h)();
   TAU_PROFILE_STOP(t);
 
