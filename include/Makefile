@@ -972,6 +972,7 @@ TAU_CCOMPILER     = $(TAU_CC)
 TAU_CUDA_INC=
 TAU_OPENCL_INC=
 TAU_CUPTI_INC=/usr/local/packages/cupti-4.0/CUPTI//include
+#CUPTI#TAU_CUPTI_INCLUDE=-I$(TAU_CUPTI_INC) -I$(TAU_CUDA_INC)#ENDIF#
 #############################################
 
 #CUPTI#TAU_INTERNAL_FLAGS+=-DCUPTI #ENDIF#
