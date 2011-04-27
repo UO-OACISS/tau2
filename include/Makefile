@@ -870,7 +870,7 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 
 #USE_PATHCC#TAU_INTERNAL_FLAG1      = -fPIC #ENDIF#
 #USE_INTELCXX#TAU_INTERNAL_FLAG1    = -fPIC #ENDIF#
-TAU_INTERNAL_FLAGS = $(TAU_INTERNAL_FLAG1)
+TAU_INTERNAL_FLAGS += $(TAU_INTERNAL_FLAG1)
 
 ##############################################
 
@@ -970,10 +970,10 @@ TAU_CCOMPILER     = $(TAU_CC)
 #############################################
 TAU_CUDA_INC=
 TAU_OPENCL_INC=
-TAU_CUPTI_INC=/usr/local/cuda/Tools/CUPTI/include
+TAU_CUPTI_INC=/usr/local/packages/cupti-4.0/CUPTI//include
 #############################################
 
-
+#CUPTI#TAU_INTERNAL_FLAGS+=-DCUPTI #ENDIF#
 
 
 
