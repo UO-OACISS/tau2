@@ -75,11 +75,12 @@ static double calculateMean(int count, double sum) {
 
 static double calculateStdDev(int count, double sumsqr, double mean) {
   double ret = 0.0;
+  TAU_VERBOSE("Collate calculateStdDev count [%d] sumsqr [%.16G] meansqr [%.16G]\n", 
+	      count, sumsqr, mean*mean);
   assert(count > 0);
   assert(sumsqr >= 0.0);
   assert(mean >= 0.0);
   ret = (sumsqr/count) - (mean*mean);
-  //  printf("%.16G %.16G\n", sumsqr, mean*mean);
   assert(ret >= 0.0);
   return sqrt(ret);
 }
