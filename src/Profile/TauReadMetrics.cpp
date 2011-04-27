@@ -47,7 +47,9 @@ extern "C" {
 }
 #endif /* TAU_PAPI */
 
+#ifdef CUPTI
 #include "Profile/CuptiLayer.h"
+#endif //CUPTI
 
 #ifdef TAUKTAU_SHCTR
 #include "Profile/KtauCounters.h"
@@ -282,6 +284,7 @@ void metric_read_cudatime(int tid, int idx, double values[]) {
   }
 }
 
+#ifdef CUPTI
 void metric_read_cupti(int tid, int idx, double values[])
 {
 
@@ -310,3 +313,4 @@ void metric_read_cupti(int tid, int idx, double values[])
 		}
 	}
 }
+#endif //CUPTI
