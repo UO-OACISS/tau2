@@ -61,6 +61,7 @@ int __wrap_open(const char *pathname, int flags, ...)
   int ret;
   int mode = 0;
   int mode_specified = 0; 
+  TAU_VERBOSE("__wrap_open: pathname = %s\n", pathname); 
   Tau_iowrap_checkInit();
   if (flags & O_CREAT) {
     va_list arg;
@@ -227,6 +228,7 @@ int __wrap_creat64(const char *pathname, mode_t mode)
   return ret;
 }
 
+FILE * __real_fopen(const char *pathname, mode_t mode);
 /*********************************************************************
  * fopen
  ********************************************************************/
@@ -257,6 +259,7 @@ FILE * __wrap_fopen(const char *pathname, mode_t mode)
   return ret;
 }
 
+FILE*  __real_fopen64(const char *pathname, mode_t mode);
 /*********************************************************************
  * fopen64
  ********************************************************************/
@@ -499,7 +502,7 @@ int __wrap_connect(int socket, struct sockaddr *address, socklen_t* address_len)
   ret = __real_connect(socket, address, address_len);
 
   if (ret != -1) {
-    Tau_wrapper_get_socket_name(address, (char *) socketname, address_len);
+    Tau_wrapper_get_socket_name(address, (char *) socketname, (size_t) (*address_len));
     Tau_iowrap_registerEvents(socket, (const char *) socketname);
   }
 
@@ -540,7 +543,7 @@ int __wrap_accept(int socket, struct sockaddr *address, socklen_t* address_len)
   ret = __real_accept(socket, address, address_len);
 
   if (ret != -1) {
-    Tau_wrapper_get_socket_name(address, (char *) socketname, address_len);
+    Tau_wrapper_get_socket_name(address, (char *) socketname, (size_t) (*address_len));
     Tau_iowrap_registerEvents(ret, (const char *) socketname);
   }
 
