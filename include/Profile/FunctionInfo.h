@@ -205,7 +205,7 @@ public:
   inline void AddInclTimeForCounter(double value, int tid, int counter) { InclTime[tid][counter] += value; }
   inline void AddExclTimeForCounter(double value, int tid, int counter) { ExclTime[tid][counter] += value; }
   inline double GetInclTimeForCounter(int tid, int counter) { return InclTime[tid][counter]; }
-  inline double GetExclTimeForCounter(int tid, int counter) { return InclTime[tid][counter]; }
+  inline double GetExclTimeForCounter(int tid, int counter) { return ExclTime[tid][counter]; }
 
   TauGroup_t GetProfileGroup(int tid = RtsLayer::myThread()) const {return MyProfileGroup_[tid]; }
   void SetProfileGroup(TauGroup_t gr, int tid = RtsLayer::myThread()) {MyProfileGroup_[tid] = gr; }

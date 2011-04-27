@@ -242,6 +242,7 @@ TauGroup_t RtsLayer::resetProfileGroup(void) {
 
 /////////////////////////////////////////////////////////////////////////
 int RtsLayer::setMyNode(int NodeId, int tid) {
+  TAU_VERBOSE("pid [%d] RtsLayer::setMyNode: %d\n", getpid(), NodeId);
 #if (TAU_MAX_THREADS != 1)
   int oldid = TheNode();
   int newid = NodeId;
