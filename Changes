@@ -47,6 +47,16 @@ Version 2.20 changes (from 2.20):
 34. Added support for Cray CCE -optCompInst for OpenMP.
 35. Bug fix for PAPI and TAU_TRACE=1 for initialization of papi. 
 36. Added support for demangling kernel names for CUDA executions. 
+37. Added a new tool tau_gen_wrapper <header> <lib> that generates wrappers. 
+38. Fixed papi initialization bug with C++ static ctors on Cray XE6. 
+39. Scrollbars in paraprof 3D window. 
+40. Support for NAG Fortran.
+41. Update for tau_run rewriter for getting MPI rank from executable. 
+42. Sped up paraprof/perfexplorer's loading of trials and computing derived metrics. 
+43. Perfexplorer bugs fixed with custom charts. New charting option in custom charts for a single event in multiple experiments. 
+44. Collating performance data bug fixed. 
+
+
 
 -------------------------------
 Version 2.19 changes (from 2.18):
