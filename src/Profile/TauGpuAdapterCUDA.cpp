@@ -1,5 +1,7 @@
 #include "TauGpuAdapterCUDA.h"
+#ifdef CUPTI
 #include "CuptiLayer.h"
+#endif //CUPTI
 #include <stdio.h>
 #include <iostream>
 #include <queue>
@@ -235,7 +237,9 @@ void Tau_cuda_init()
 		//printf("last event time: %lf.\n", lastEventTime);
 		init = true;
 		Tau_gpu_init();
+#ifdef CUPTI
 		Tau_CuptiLayer_init();
+#endif
 	}
 }
 

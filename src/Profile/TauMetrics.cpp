@@ -23,7 +23,9 @@
 #include <tau_internal.h>
 #include <Profile/Profiler.h>
 #include <Profile/TauTrace.h>
+#ifdef CUPTI
 #include <Profile/CuptiLayer.h>
+#endif //CUPTI
 
 #ifdef TAUKTAU_SHCTR
 #include "Profile/KtauCounters.h"
@@ -269,6 +271,7 @@ static int is_papi_metric(char *str) {
   return 0;
 }
 
+#ifdef CUPTI
 /*********************************************************************
  * Query if a string is a CUPTI metric
  ********************************************************************/
@@ -281,6 +284,7 @@ static int is_cupti_metric(char *str) {
   }
   return 0;
 }
+#endif //CUPTI
 
 /*********************************************************************
  * Initialize the function array
@@ -323,11 +327,13 @@ static void initialize_functionArray() {
       functionArray[pos++] = metric_read_craytimers;
     } else if (compareMetricString(metricv[i], "TAU_MPI_MESSAGE_SIZE")) {
       functionArray[pos++] = metric_read_messagesize;
+#ifdef CUPTI
 		} else if (is_cupti_metric(metricv[i])) {
 			/* CUPTI handled separately */
 			/* setup CUPTI metrics */
 			functionArray[pos++] = metric_read_cupti;
 			Tau_CuptiLayer_register_counter(Tau_CuptiLayer_map()[metricv[i]]);
+#endif //CUPTI
 #ifdef TAU_PAPI
     } else if (compareMetricString(metricv[i], "P_WALL_CLOCK_TIME")) {
       usingPAPI = 1;
