@@ -262,7 +262,7 @@ if [ $track_cuda = "true" ] ; then
 		if [ `echo $TAU_METRICS | grep "TIME"` ]; then
 			export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
 		else
-			export TAU_METRICS=$TAU_METRICS:TAUGPU_TIME
+			export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS 
 		fi
 fi
 if [ $track_cupti = "true" ] ; then
