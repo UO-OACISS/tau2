@@ -621,10 +621,10 @@ Tracer.o   	: Tracer.cpp $(HDRS)
 	$(CXX) -DTAU_GPU $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauMetrics.o   	: TauMetrics.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -I$(TAU_CUPTI_INC) -I$(TAU_CUDA_INC) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
 
 TauReadMetrics.o : TauReadMetrics.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) -I$(TAU_CUPTI_INC) -I$(TAU_CUDA_INC) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
 
 PthreadLayer.o   : PthreadLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
@@ -738,16 +738,16 @@ TauGpu.o : TauGpu.cpp $(HDRS)
 	$(CXX) -DTAU_GPU $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauGpuAdapterCUDA.o : TauGpuAdapterCUDA.cpp $(HDRS) ../../include/Profile/TauGpuAdapterCUDA.h
-	$(CXX) $(CXXFLAGS) -g -I$(TAU_CUPTI_INC) -I$(TAU_CUDA_INC) $(BFDINCLUDE) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 TauGpuAdapterOpenCL.o : TauGpuAdapterOpenCL.cpp $(HDRS)  $(INCDIR)/TauGpuAdapterOpenCL.h
 	$(CXX) $(CXXFLAGS) -I$(TAU_OPENCL_INC) -g -c $(@:.o=.cpp)
 
 TauGpuAdapterCupti.o : TauGpuAdapterCupti.cpp $(HDRS) ../../include/Profile/TauGpuAdapterCupti.h
-	$(CXX) $(CXXFLAGS) -g -I$(TAU_CUPTI_INC) -I$(TAU_CUDA_INC) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
 
 CuptiLayer.o : CuptiLayer.cpp $(HDRS) ../../include/Profile/CuptiLayer.h
-	$(CXX) $(CXXFLAGS) -g -I$(TAU_CUPTI_INC) -I$(TAU_CUDA_INC) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
 
 jVMTIThreadLayer.o: JVMTIThreadLayer.cpp
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@
