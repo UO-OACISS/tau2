@@ -5875,7 +5875,9 @@ if [ $machine = ia64 -o $machine = x86_64 -o $machine = i386_linux -o $machine =
     extra_linker_args="${extralinker_args}#-Wl,--export-dynamic"
 else 
   if [ $machine = apple ]; then 
-    extra_linker_args="${extralinker_args}#-rdynamic"
+    #extra_linker_args="${extralinker_args}#-rdynamic"
+    extra_linker_args="${extralinker_args}"
+    # gcc 4.6 does not support this. 
   fi
 fi
 

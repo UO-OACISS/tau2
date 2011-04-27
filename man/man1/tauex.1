@@ -2,19 +2,19 @@
 .\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
 .\" Instead of manually editing it, you probably should edit the DocBook XML
 .\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
-.TH "TAUEX" "1" "12/12/2008" "" "Tools"
+.TH "TAUEX" "1" "04/25/2011" "" "Tools"
 .\" disable hyphenation
 .nh
 .\" disable justification (adjust text to left margin only)
 .ad l
 .SH "NAME"
-tauex \- Allows you to choose a tau configuration at runtime.
+tauex \- Allows you to choose a tau configuration at runtime
 .SH "SYNOPSIS"
 .HP 6
 \fBtauex\fR [\fIOPTION\fR] [\-\-] {\fIexecutable\fR} [\fIexecutable\ options\fR]
 .SH "DESCRIPTION"
 .PP
-Use this script o dynamically load a TAU profiling/tracing library or to select which papi events/domain to use during execuation of the application. At runtime tauex will set the LD_LIBRARY_PATH and pass any other parameters (or papi events) to the program and execute it with the specified TAU measurement options.
+Use this script to dynamically load a TAU profiling/tracing library or to select which papi events/domain to use during execuation of the application. At runtime tauex will set the LD_LIBRARY_PATH and pass any other parameters (or papi events) to the program and execute it with the specified TAU measurement options.
 .SH "OPTIONS"
 .TP
 \-d

@@ -888,7 +888,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         tabbedPane.addTab(plot.getName(), plot.getControlPanel(visRenderer));
         tabbedPane.addTab("ColorScale", window.getColorScale().getControlPanel(visRenderer));
         tabbedPane.addTab("Render", visRenderer.getControlPanel());
-        tabbedPane.setMinimumSize(new Dimension(300, 200));
+        tabbedPane.setMinimumSize(new Dimension(300, 250));
         tabbedPane.setSelectedIndex(0);
 
         gbc.fill = GridBagConstraints.BOTH;
@@ -939,7 +939,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         tabbedPane.addTab("Axes", plot.getAxes().getControlPanel(visRenderer));
         tabbedPane.addTab("ColorScale", window.getColorScale().getControlPanel(visRenderer));
         tabbedPane.addTab("Render", visRenderer.getControlPanel());
-        tabbedPane.setMinimumSize(new Dimension(300, 160));
+        tabbedPane.setMinimumSize(new Dimension(300, 250));
         selectedTab = Math.min(selectedTab, tabbedPane.getTabCount()-1);
         tabbedPane.setSelectedIndex(selectedTab);
 
@@ -1034,7 +1034,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         tabbedPane.addTab("Axes", plot.getAxes().getControlPanel(visRenderer));
         tabbedPane.addTab("ColorScale", window.getColorScale().getControlPanel(visRenderer));
         tabbedPane.addTab("Render", visRenderer.getControlPanel());
-        tabbedPane.setMinimumSize(new Dimension(300, 160));
+        tabbedPane.setMinimumSize(new Dimension(300, 250));
         selectedTab = Math.min(selectedTab, tabbedPane.getTabCount()-1);
         tabbedPane.setSelectedIndex(selectedTab);
 
@@ -1244,7 +1244,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         tabbedPane.addTab("Axes", plot.getAxes().getControlPanel(visRenderer));
         tabbedPane.addTab("Color", window.getColorScale().getControlPanel(visRenderer));
         tabbedPane.addTab("Render", visRenderer.getControlPanel());
-        tabbedPane.setMinimumSize(new Dimension(290, 160));
+        tabbedPane.setMinimumSize(new Dimension(300, 200));
         tabbedPane.setSelectedIndex(selectedTab);
 
         JPanel functionSelectorPanel = createSelectorPanel(-1, window.getFunctionNames().size(), window.getFunctionNames(), 0);

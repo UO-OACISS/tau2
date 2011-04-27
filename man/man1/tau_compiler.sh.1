@@ -2,7 +2,7 @@
 .\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
 .\" Instead of manually editing it, you probably should edit the DocBook XML
 .\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
-.TH "TAU_COMPILER.SH" "1" "12/12/2008" "" "Tools"
+.TH "TAU_COMPILER.SH" "1" "04/25/2011" "" "Tools"
 .\" disable hyphenation
 .nh
 .\" disable justification (adjust text to left margin only)
@@ -11,7 +11,7 @@
 tau_compiler.sh \- Instrumenting source files.
 .SH "SYNOPSIS"
 .HP 16
-\fBtau_compiler.sh\fR [\fB\-p\fR\ \fIprofile\fR] [\fB\-optVerbose\fR] [\fB\-optQuiet\fR] [\fB\-optPdtDir=\fR\fIdir\fR] [\fB\-optPdtF95Opts=\fR\fIopts\fR] [\fB\-optPdtF95Reset=\fR\fIopts\fR] [\fB\-optPdtCOpts=\fR\fIopts\fR] [\fB\-optPdtCReset=\fR\fIopts\fR] [\fB\-optPdtCxxOpts=\fR\fIopts\fR] [\fB\-optPdtCReset=\fR\fIopts\fR] [\fB\-optPdtF90Parser=\fR\fIparser\fR] [\fB\-optGnuFortranParser\fR] [\fB\-optGnuCleanscapeParser\fR] [\fB\-optPdtUser=\fR\fIopts\fR] [\fB\-optTauInstr=\fR\fIpath\fR] [\fB\-optDetectMemoryLeaks\fR] [\fB\-optIncludeMemory\fR] [\fB\-optPreProcess\fR] [\fB\-optCPP=\fR\fIpath\fR] [\fB\-optCPPOpts=\fR\fIoptions\fR] [\fB\-optCPPReset=\fR\fIoptions\fR] [\fB\-optTauSelectFile=\fR\fIfile\fR] [\fB\-optPDBFile=\fR\fIfile\fR] [\fB\-optTau=\fR\fIopts\fR] [\fB\-optCompile=\fR\fIopts\fR] [\fB\-optTauDefs=\fR\fIopts\fR] [\fB\-optTauIncludes=\fR\fIopts\fR] [\fB\-optReset=\fR\fIopts\fR] [\fB\-optLinking=\fR\fIopts\fR] [\fB\-optLinkReset=\fR\fIopts\fR] [\fB\-optTauCC=\fR\fIcc\fR] [\fB\-optOpariTool=\fR\fIpath/opari\fR] [\fB\-optOpariDir=\fR\fIpath\fR] [\fB\-optOpariOpts=\fR\fIopts\fR] [\fB\-optOpariReset=\fR\fIopts\fR] [\fB\-optNoMpi\fR] [\fB\-optMpi\fR] [\fB\-optNoRevert\fR] [\fB\-optRevert\fR] [\fB\-optKeepFiles\fR] [\fB\-optAppC\fR] [\fB\-optAppCXX\fR] [\fB\-optAppF90\fR] [\fB\-optShared\fR] [\fB\-optCompInst\fR] [\fB\-optPDTInst\fR] [\fB\-optDisableHeaderInst\fR] {\fIcompiler\fR} [\fIcompiler_options\fR]
+\fBtau_compiler.sh\fR [\fB\-p\fR\ \fIprofile\fR] [\fB\-optVerbose\fR] [\fB\-optQuiet\fR] [\fB\-optPdtDir=\fR\fIdir\fR] [\fB\-optPdtF95Opts=\fR\fIopts\fR] [\fB\-optPdtF95Reset=\fR\fIopts\fR] [\fB\-optPdtCOpts=\fR\fIopts\fR] [\fB\-optPdtCReset=\fR\fIopts\fR] [\fB\-optPdtCxxOpts=\fR\fIopts\fR] [\fB\-optPdtCReset=\fR\fIopts\fR] [\fB\-optPdtF90Parser=\fR\fIparser\fR] [\fB\-optGnuFortranParser\fR] [\fB\-optGnuCleanscapeParser\fR] [\fB\-optPdtUser=\fR\fIopts\fR] [\fB\-optTauInstr=\fR\fIpath\fR] [\fB\-optDetectMemoryLeaks\fR] [\fB\-optIncludeMemory\fR] [\fB\-optPreProcess\fR] [\fB\-optCPP=\fR\fIpath\fR] [\fB\-optCPPOpts=\fR\fIoptions\fR] [\fB\-optCPPReset=\fR\fIoptions\fR] [\fB\-optTauSelectFile=\fR\fIfile\fR] [\fB\-optPDBFile=\fR\fIfile\fR] [\fB\-optTau=\fR\fIopts\fR] [\fB\-optCompile=\fR\fIopts\fR] [\fB\-optTauDefs=\fR\fIopts\fR] [\fB\-optTauIncludes=\fR\fIopts\fR] [\fB\-optReset=\fR\fIopts\fR] [\fB\-optLinking=\fR\fIopts\fR] [\fB\-optLinkReset=\fR\fIopts\fR] [\fB\-optTauCC=\fR\fIcc\fR] [\fB\-optOpariTool=\fR\fIpath/opari\fR] [\fB\-optOpariDir=\fR\fIpath\fR] [\fB\-optOpariOpts=\fR\fIopts\fR] [\fB\-optOpariReset=\fR\fIopts\fR] [\fB\-optNoMpi\fR] [\fB\-optMpi\fR] [\fB\-optNoRevert\fR] [\fB\-optRevert\fR] [\fB\-optKeepFiles\fR] [\fB\-optAppC\fR] [\fB\-optAppCXX\fR] [\fB\-optAppF90\fR] [\fB\-optShared\fR] [\fB\-optCompInst\fR] [\fB\-optPDTInst\fR] [\fB\-optDisableHeaderInst\fR] {\fIcompiler\fR} [\fIcompiler_options\fR] [\fB\-optTauWrapFile=\fR\fIfilename\fR]
 .SH "DESCRIPTION"
 .PP
 The TAU Compiler provides a simple way to automatically instrument an entire project. The TAU Compiler can be used on C, C++, fixed form Fortran, and free form Fortran.
@@ -22,6 +22,9 @@ Turn on verbose debugging messages.
 .PP
 \fB\-optQuiet\fR
 Suppresses excessive output.
+.PP
+\fB\-optDetectMemoryLeaks\fR
+Instructs TAU to detect any memory leaks in C/C++ programs.TAU then tracks the source location of the memory leak as wellas the place in the callstack where the memory allocation wasmade.
 .PP
 \fB\-optPdtDir=<dir>\fR
 The PDT architecture directory. Typically
@@ -44,7 +47,7 @@ Reset options to the C parser to the given list
 Options for C++ parser in PDT (cxxparse). Typically
 \fB$(TAU_MPI_INCLUDE) $(TAU_INCLUDE) $(TAU_DEFS)\fR.
 .PP
-\fB\-optPdtCReset=<opts>\fR
+\fB\-optPdtCxxReset=<opts>\fR
 Reset options to the C++ parser to the given list
 .PP
 \fB\-optPdtF90Parser=<parser>\fR
@@ -71,9 +74,6 @@ Optional arguments for parsing source code.
 \fB\-optTauInstr=<path>\fR
 Specify location of tau_instrumentor. Typically
 \fB$(TAUROOT)/$(CONFIG_ARCH)/bin/tau_instrumentor\fR.
-.PP
-\fB\-optDetectMemoryLeaks\fR
-Instructs TAU to detect any memory leaks in C/C++ programs.TAU then tracks the source location of the memory leak as wellas the place in the callstack where the memory allocation wasmade.
 .PP
 \fB\-optIncludeMemory\fR
 Forinteral use only
@@ -159,7 +159,7 @@ and
 \fB.inst.*\fR
 files.
 .PP
-\fB\-optAppC\fR
+\fB\-optAppCC\fR
 Sets the failsafe C compiler.
 .PP
 \fB\-optAppCXX\fR
@@ -174,8 +174,28 @@ Use shared library version of TAU
 \fB\-optCompInst\fR
 Use compiler\-based instrumentation
 .PP
+\fB\-optNoCompInst\fR
+Do not revert to compiler instrumentation if source instrumentation fails.
+.PP
 \fB\-optPDTInst\fR
 Use PDT\-based instrumentation
 .PP
+\fB\-optHeaderInst\fR
+Enable instrumentation of headers
+.PP
 \fB\-optDisableHeaderInst\fR
 Disable instrumentation of headers
+.PP
+\fB\-optTrackIO\fR
+Specify wrapping of POSIX I/O calls at link time.
+.PP
+\fB\-optWrappersDir=""\fR
+Specify the location of the link wrappers directory.
+.PP
+\fB\-optTauUseCXXForC\fR
+Specifies the use of a C++ compiler for compiling C code
+.PP
+\fB\-optTauWrapFile=<filename>\fR
+Specify path to the link_options.tau file generated by tau_wrap
+.PP
+\fB\-optFixHashIf\fR
