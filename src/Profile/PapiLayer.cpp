@@ -127,6 +127,7 @@ void Tau_child(void) {
   numCounters=PapiLayer::numCounters;
   TAU_VERBOSE("inside Tau_child: pid = %d\n", getpid());
   TheSafeToDumpData() = 1; 
+  TAU_VERBOSE("--->[pid=%d, Rank=%d]: Setting TheSafeToDumpData=1\n", getpid(),RtsLayer::myNode());
   Tau_global_incr_insideTAU();
   int papi_ver = PAPI_library_init(PAPI_VER_CURRENT);
   if (papi_ver != PAPI_VER_CURRENT) {
@@ -487,6 +488,7 @@ int PapiLayer::initializePAPI() {
   TAU_VERBOSE("TAU: PapiLayer::initializePAPI: before pthread_at_fork()");
 #ifdef TAU_MPI
   TheSafeToDumpData() = 0; 
+  TAU_VERBOSE("[pid=%d, Rank=%d]: Setting TheSafeToDumpData=0\n", getpid(),RtsLayer::myNode());
   pthread_atfork(Tau_prepare, Tau_parent, Tau_child);
 #endif /* TAU_MPI */
 #endif /* TAU_AT_FORK */
