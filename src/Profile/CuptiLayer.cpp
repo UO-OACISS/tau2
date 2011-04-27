@@ -110,7 +110,7 @@ void CuptiCounterEvent::create_tag()
 	original_device_name >> buffer;
 	tag_stream << buffer;
 	tag_stream << "_";
-	int i=0;
+	
 	while (original_device_name)
 	{
 		//cout << "i=" << i << " " << original_device_name.str() << endl;
@@ -118,7 +118,6 @@ void CuptiCounterEvent::create_tag()
 		//buffer.append("_");
 		//tag_stream << buffer;
 		//tag_stream << "_";
-		i++;
 	}
 	//remove last '_'
 	//buffer.erase(buffer.length()-1, 1);
