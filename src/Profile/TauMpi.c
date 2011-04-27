@@ -3490,6 +3490,8 @@ int TauGetCpuSite(unsigned int *node, unsigned int *core, unsigned int *rank) {
   return 0;
 }
 
+/* moved over to TauUnify.o so ScoreP can use it with tau_run */
+/* 
 int TauGetMpiRank(void)
 {
   int rank;
@@ -3497,6 +3499,7 @@ int TauGetMpiRank(void)
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
   return rank;
 }
+*/
 
 
 char * Tau_printRanks(void *comm_ptr) {

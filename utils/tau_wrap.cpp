@@ -477,9 +477,6 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, ofstream& header, ofstream& impl, ofs
 
     }
   }
-  if (runtime == -1) {
-    linkoptsfile <<"-L"<<libname<<"_wrapper/ -l"<< libname<<"_wrap "<<runtime_libname<<endl;
-  }
   return true;
 
 } 
@@ -504,7 +501,7 @@ void generateMakefile(string& package, string &outFileName, int runtime, string&
   if (runtime == 0) {
     string text("include ${TAU_MAKEFILE} \n\
 CC=$(TAU_CC) \n\
-CFLAGS=$(TAU_DEFS) $(TAU_INCLUDE)  -I.. \n\
+CFLAGS=$(TAU_DEFS) $(TAU_INCLUDE) $(TAU_MPI_INCLUDE) -I.. \n\
 \n\
 AR=ar \n\
 ARFLAGS=rcv \n\
@@ -523,7 +520,7 @@ clean:\n\
     if (runtime == 1) { 
       string text("include ${TAU_MAKEFILE} \n\
 CC=$(TAU_CC) \n\
-CFLAGS=$(TAU_DEFS) $(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE)  -I.. \n\
+CFLAGS=$(TAU_DEFS) $(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE) $(TAU_MPI_INCLUDE)  -I.. \n\
 \n\
 lib"+package+"_wrap.so: "+package+"_wrap.o \n\
 	$(CC) $(TAU_SHFLAGS) $@ $< $(TAU_SHLIBS) -ldl\n\
@@ -540,7 +537,7 @@ clean:\n\
         string text("include ${TAU_MAKEFILE} \n\
 CC=$(TAU_CC) \n\
 ARFLAGS=rcv \n\
-CFLAGS=$(TAU_DEFS) $(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE)  -I.. \n\
+CFLAGS=$(TAU_DEFS) $(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE)  $(TAU_MPI_INCLUDE) -I.. \n\
 \n\
 lib"+package+"_wrap.a: "+package+"_wrap.o \n\
 	$(TAU_AR) $(ARFLAGS) $@ $< \n\
@@ -738,6 +735,13 @@ int main(int argc, char **argv)
      { /* should we instrument this file? Yes */
        instrumentCFile(p, *it, header, impl, linkoptsfile, group_name, header_file, runtime, runtime_libname, libname);
      }
+  }
+  if (runtime == -1) {
+    char * dirname = new char[1024]; 
+    char *dirnameptr; 
+    dirnameptr=getcwd(dirname, 1024); 
+    linkoptsfile <<"-L"<<dirnameptr<<"/"<<libname<<"_wrapper/ -l"<< libname<<"_wrap "<<runtime_libname<<endl;
+    delete[] dirname;
   }
   header <<"#ifdef __cplusplus"<<endl;
   header <<"}"<<endl;

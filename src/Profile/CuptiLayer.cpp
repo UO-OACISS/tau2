@@ -105,12 +105,27 @@ void CuptiCounterEvent::create_tag()
 	stringstream tag_stream("");
 	stringstream original_device_name(device_name);
 	string buffer;
+	string b;
 	tag_stream << "CUDA.";
 
-	original_device_name >> buffer;
-	tag_stream << buffer;
-	tag_stream << "_";
-	original_device_name >> buffer;
+	///original_device_name >> buffer;
+	//tag_stream << buffer;
+	//tag_stream << "_";
+	//cout << "buffer: " << buffer << endl;
+	
+	while (original_device_name)
+	{
+		//cout << "original: " << original_device_name.str() << endl;
+		buffer.append(b);
+		original_device_name >> b;
+		b.append("_");
+		//cout << "buffer: " << buffer << endl;
+		//tag_stream << buffer;
+		//tag_stream << "_";
+	}
+	//remove last '_'
+	buffer.erase(buffer.length()-1, 1);
+	//original_device_name >> buffer;
 	tag_stream << buffer;
 
 	tag_stream << "." << domain_name << "." << event_name;
@@ -121,8 +136,7 @@ void CuptiCounterEvent::printHeader()
 {
 	//header
 	cout << left;
-	cout << setw(15) << "Device" << setw(10) << "Domain" << setw(20) << 
-	"Event" << setw(25) << "Description" << endl << endl;
+	cout << setw(55) << "CUDA.Device.Domain.Event" << setw(15) << "Description" << endl << endl;
 }
 
 void CuptiCounterEvent::print()
@@ -130,7 +144,7 @@ void CuptiCounterEvent::print()
 	//cout << "CUDA." << setw(15) << clean_device_name.str() << setw(10) << 
 	//		domain_name << setw(20) << event_name << setw(25) << event_description << 
 	//	endl << endl;
-	cout << setw(45) << tag << setw(25) << event_description << endl << endl;
+	cout << setw(55) << tag << setw(15) << event_description << endl << endl;
 }
 
 /* lifted from PAPI. */

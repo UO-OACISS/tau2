@@ -2,16 +2,34 @@
 .\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
 .\" Instead of manually editing it, you probably should edit the DocBook XML
 .\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
-.TH "PERFDMF_CONFIGURE" "1" "12/12/2008" "" "Tools"
+.TH "PERFDMF_CONFIGURE" "1" "04/25/2011" "" "Tools"
 .\" disable hyphenation
 .nh
 .\" disable justification (adjust text to left margin only)
 .ad l
 .SH "NAME"
-perfdmf_configure \- This tool is design to interact with the TAU web portal (http://tau.nic.uoregon.edu). There are command for upload or download packed profile files form the TAU portal.
+perfdmf_configure \- Configuration program for a PerfDMF database.
 .SH "SYNOPSIS"
 .HP 18
-\fBperfdmf_configure\fR
+\fBperfdmf_configure\fR [\-h,\-\-help] [\-\-create\-default] [\-g,\ \-\-configFile\ \fIconfigFile\fR] [\-c,\ \-\-config\ \fIconfiguration_name\fR] [\-t,\ \-\-tauroot\ \fIpath\fR]
 .SH "DESCRIPTION"
 .PP
 This configuration script will create a new perfdmf database.
+.SH "OPTIONS"
+.PP
+\-h, \-\-help show help
+.PP
+\-\-create\-default creates a derby database with all the default values
+.PP
+\-g, \-\-configFile
+\fIconfigFile \fR
+specify the path to the file that defines the perfdmf configuration.
+.PP
+\-c, \-\-config
+\fIconfiguration_name \fR
+specify the name of the perfdmf configuration \-c foo is equalivent to \-g
+<home>/.ParaProf/perfdmf.cfg.foo.
+.PP
+\-t, \-\-tauroot
+\fIpath \fR
+Path to the root directory of tau.

@@ -2,45 +2,71 @@
 .\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
 .\" Instead of manually editing it, you probably should edit the DocBook XML
 .\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
-.TH "PERFDMF_LOADTRIAL" "1" "12/12/2008" "" "Tools"
+.TH "PERFDMF_LOADTRIAL" "1" "04/25/2011" "" "Tools"
 .\" disable hyphenation
 .nh
 .\" disable justification (adjust text to left margin only)
 .ad l
 .SH "NAME"
-perfdmf_loadtrial \- Command line tool to loada a trial into the perfdmf database.
+perfdmf_loadtrial \- Command line tool to load a trial into the perfdmf database.
 .SH "SYNOPSIS"
 .HP 18
-\fBperfdmf_loadtrial\fR [\-h,\ \-\-help] [\-g,\ \-\-configFile\ \fIconfigFile\fR] [\-c,\ \-\-config\ \fIconfiguration_name\fR] {\-e,\ \-\-experimentid\ \fIexperimentID\fR} {\-t,\ \-\-trialid\ \fItrialID\fR} {\-x,\ \-\-experimentname\ \fIexperimentName\fR} {\-m,\ \-\-metadata\ \fIfilename\fR} {\-f,\ \-\-fixnames} {\-n,\ \-\-name\ \fIname\fR}
+\fBperfdmf_loadtrial\fR {\-a\ \fIappName\fR} {\-x\ \fIexperimentName\fR} {\-n\ \fIname\fR} [options]
 .SH "DESCRIPTION"
 .PP
-This script will create a new experiment in the perfdmf database.
+This script will create a new trial in the perfdmf database.
 .SH "OPTIONS"
 .PP
-\-g, \-\-configFile
-\fIconfigFile \fR
-specify the path to the file that defines the perfdmf configuration.
+\-n, \-\-name
+\fIname \fR
+the name of the application.
 .PP
-\-c, \-\-config
-\fIconfiguration_name \fR
-specify the name of the perfdmf configuration \-c foo is equalivent to \-g <.
-.PP
-\-e, \-\-experimentid
-\fIexperimentID \fR
-specify the id number of the experiment to associate with the new trial.
-.PP
-\-t, \-\-trialid
-\fIexperimentID \fR
-specify the id number of the newly uploaded trial.
+\-a, \-\-applicationname
+\fI name \fR
+specify associated application name for this trial
 .PP
 \-x, \-\-experimentname
 \fIexperimentName \fR
 specify the name of the experiment to associate with newly uploaded trial.
 .PP
+\-e, \-\-experimentid
+\fIexperimentID \fR
+specify the id number of the experiment to associate with the new trial.
+.PP
+\-g, \-\-configFile
+\fIconfigFile \fR
+specify the path to the file that defines the perfdmf configuration. (overrides \-c)
+.PP
+\-c, \-\-config
+\fIconfiguration_name \fR
+specify the name of the perfdmf configuration \-c foo is equalivent to \-g <.
+.PP
+\-t, \-\-trialid
+\fIexperimentID \fR
+specify the id number of the newly uploaded trial.
+.PP
 \-m, \-\-metadata
 \fIfilename \fR
 specify the filename of the XML metadata for this trial.
 .PP
-\-n, \-\-name
-\fIname \fR
-the name of the application.
+\-f, \-\-filetype
+\fIfiletype\fR
+Specify type of performance data, options are: profiles (default), pprof, dynaprof, mpip, gprof, psrun, hpm, packed, cube, hpc, ompp, snap, perixml, gptl, paraver, ipm, google
+.PP
+\-i, \-\-fixnames Use the fixnames option for gprof
+.SH "NOTES"
+.PP
+For the TAU profiles type, you can specify either a specific set of profile files on the commandline, or you can specify a directory (by default the current directory). The specified directory will be searched for profile.*.*.* files, or, in the case of multiple counters, directories named MULTI_* containing profile data.
+.SH "EXAMPLES"
+.PP
+perfdmf_loadtrial \-e 12 \-n "Batch 001"
+.PP
+This will load profile.* (or multiple counters directories MULTI_*) into experiment 12 and give the trial the name "Batch 001"
+.PP
+perfdmf_loadtrial \-e 12 \-n "HPM data 01" \-f hpm perfhpm*
+.PP
+This will load perfhpm* files of type HPMToolkit into experiment 12 and give the trial the name "HPM data 01"
+.PP
+perfdmf_loadtrial \-a "NPB2.3" \-x "parametric" \-n "64" par64.ppk
+.PP
+This will load packed profile par64.ppk into the experiment named "parametric" under the application named "NPB2.3" and give the trial the name "64". The application and experiment will be created if not found.

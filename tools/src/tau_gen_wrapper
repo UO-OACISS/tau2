@@ -5,8 +5,9 @@ usage()
     echo ""
     echo " $cmd - Generates a wrapper library that can intercept "
     echo " at link time or at runtime routines specified in a header file"
-    echo " Usage: $cmd <headerfile> <library>  [-w (default) | -r] "
+    echo " Usage: $cmd <headerfile> <library>  [-w (default) | -d | -r] "
     echo " -w (default): generates wrappers for re-linking the application"
+    echo " -d : generates wrappers by redefining routines during compilation in header files"
     echo " -r : generates wrappers that may be pre-loaded using tau_exec at runtime"
     echo "NOTE: $cmd reads the TAU_MAKEFILE  environment variable to get PDT settings"
     echo " Example: "
@@ -17,6 +18,7 @@ usage()
 }
 
 runtime_specified=0;
+header_redirection_specified=0;
 headerfile=""
 library=""
 modarg=""
@@ -35,6 +37,10 @@ for arg in "$@"; do
   case $arg in 
     -r)
       runtime_specified=1; 
+      shift; 
+      ;;
+    -d)
+      header_redirection_specified=1; 
       shift; 
       ;;
   esac
@@ -60,11 +66,15 @@ if [ ! -x $parser ]; then
   exit 1
 fi
 
-$pdtdir/$tauarch/bin/cxxparse $headerfile 
+$parser $headerfile `tau_cc.sh -tau:showincludes`
 if [ $runtime_specified = 1 ] ; then
   runtimeopt='-r'
 else
-  runtimeopt='-w'
+  if [ $header_redirection_specified = 1 ]; then
+    runtimeopt=''
+  else 
+    runtimeopt='-w'
+  fi
 fi
 
 #echo "tau_wrap $headerfile.pdb $headerfile -o wr.c $runtimeopt $library $*"
