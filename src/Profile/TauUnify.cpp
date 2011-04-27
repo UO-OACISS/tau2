@@ -430,4 +430,16 @@ extern "C" int Tau_unify_unifyDefinitions() {
 
 
 #endif /* TAU_UNIFY */
+
+extern "C" int TauGetMpiRank(void)
+{
+  int rank;
+
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  return rank;
+}
+#else /* !TAU_MPI */
+extern "C" int TauGetMpiRank(void) {
+  return 0;
+}
 #endif /* TAU_MPI */
