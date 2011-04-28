@@ -525,7 +525,7 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 			}
 			else if (memcpyKind == cudaMemcpyDeviceToDevice)
 			{
-				printf("TODO: track DeviceToDevice MemCpys.\n");
+				//printf("TODO: track DeviceToDevice MemCpys.\n");
 			}
 		}
 		else
