@@ -4998,7 +4998,7 @@ if [ "x$bfd" = "xyes" ] ; then
 			else 
 				wget http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz
 			fi
-			if [ ! -d binutils-2.20.tar.gz ] ; then
+			if [ ! -f binutils-2.20.tar.gz ] ; then
 				echo "The BFD tarball did not download.  Please download it manually from: "
 				echo "http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz"
 				echo "Please enter the directory containing the tarball: ${nnl}" 
