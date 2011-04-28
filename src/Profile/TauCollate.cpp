@@ -77,12 +77,15 @@ static double calculateStdDev(int count, double sumsqr, double mean) {
   double ret = 0.0;
   TAU_VERBOSE("Collate calculateStdDev count [%d] sumsqr [%.16G] meansqr [%.16G]\n", 
 	      count, sumsqr, mean*mean);
+  if (count <= 0) return 0.0;
+  /*
   assert(count > 0);
   assert(sumsqr >= 0.0);
   assert(mean >= 0.0);
+  */
   ret = (sumsqr/count) - (mean*mean);
-  assert(ret >= 0.0);
-  return sqrt(ret);
+  // assert(ret >= 0.0);
+  return sqrt(fabs(ret));
 }
 
 static void assignDerivedStats(double ****eventType, double ****gEventType,
