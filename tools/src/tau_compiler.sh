@@ -1,4 +1,4 @@
-#!/bin/bash   
+#!/bin/bash
 
 declare -i FALSE=-1
 declare -i TRUE=1
@@ -584,6 +584,10 @@ for arg in "$@" ; do
 		        optCompInstOption="${arg#"-optCompInstOption="}"
 			echoIfDebug "\tCompiler-based Instrumentation option is: $optCompInstOption"
 			;;
+		    -optCompInstFortranOption=*)
+		        optCompInstFortranOption="${arg#"-optCompInstFortranOption="}"
+			echoIfDebug "\tCompiler-based Instrumentation option for Fortran is: $optCompInstFortranOption"
+			;;
 		    -optCompInstLinking=*)
 		        optCompInstLinking="${arg#"-optCompInstLinking="}"
 			echoIfDebug "\tCompiler-based Instrumentation linking is: $optCompInstLinking"
@@ -840,6 +844,7 @@ for arg in "$@" ; do
     fi
 done
 
+echoIfDebug "Using $optCompInstOption $optCompInstFortranOption for compiling Fortran Code"
 
 # on the first pass, we use PDT, on the 2nd, compiler instrumentation (if available and not disabled)
 declare -i passCount=0;
@@ -1358,6 +1363,10 @@ if [ $gotoNextStep == $TRUE ]; then
 		fi
 		if [ "$useCompInst" = yes ]; then
 		    extraopt=$optCompInstOption
+                   if [ $groupType == $group_f_F ]; then
+		     extraopt=$optCompInstFortranOption
+		     echoIfDebug "Using extraopt= $extraopt optCompInstFortranOption=$optCompInstFortranOption for compiling Fortran Code"
+                   fi
 		fi
 	    fi
 
@@ -1440,6 +1449,10 @@ if [ $gotoNextStep == $TRUE ]; then
 		fi
 		if [ "x$useCompInst" = "xyes" ]; then
 		    extraopt=$optCompInstOption
+                   if [ $groupType == $group_f_F ]; then
+		     extraopt=$optCompInstFortranOption
+		     echoIfDebug "Using extraopt= $extraopt optCompInstFortranOption=$optCompInstFortranOption for compiling Fortran Code"
+                   fi
 		fi
 	    fi
 	    
