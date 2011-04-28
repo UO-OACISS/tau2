@@ -269,6 +269,9 @@ if [ $track_cupti = "true" ] ; then
     # Add the memory wrapper library to the LD_PRELOAD list
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUpti.so:$TAUEX_LD_PRELOAD
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP.so:$TAUEX_LD_PRELOAD
+		if [ ! `echo $TAU_METRICS | grep "TIME"` ]; then
+			export TAU_METRICS=TIME:$TAU_METRICS 
+		fi
 fi
 if [ $track_opencl = "true" ] ; then
     # Add the OpenCL wrapper library to the LD_PRELOAD list
