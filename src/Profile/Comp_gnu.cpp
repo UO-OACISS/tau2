@@ -551,6 +551,7 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 	}
 	
 	char *routine;
+        if (filename == NULL) filename=strdup("unknown");
 	routine = (char*) malloc (strlen(hn->name)+strlen(filename)+1024);
 	sprintf (routine, "%s [{%s} {%d,0}]", hn->name, filename, hn->lno);
 	void *handle=NULL;
