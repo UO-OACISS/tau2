@@ -1200,7 +1200,7 @@ int __wrap_fclose(FILE *fp)
   TAU_PROFILE_TIMER(t, "fclose()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
-  ret = __real_close(fp);
+  ret = __real_fclose(fp);
 
   if (TauEnv_get_track_io_params()) {
     TAU_REGISTER_EVENT(close_fd, "CLOSE fd");
@@ -1233,7 +1233,7 @@ int __wrap_fdatasync(int fd)
   TAU_PROFILE_TIMER(t, "fdatasync()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
-  ret = __real_close(fd);
+  ret = __real_fdatasync(fd);
 
   if (TauEnv_get_track_io_params()) {
     TAU_REGISTER_EVENT(fsyncdata_fd, "FSYNCDATA fd");
