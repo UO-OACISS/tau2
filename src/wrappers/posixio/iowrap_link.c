@@ -485,7 +485,7 @@ int __wrap_bind(int socket, const struct sockaddr *address, socklen_t address_le
 /*********************************************************************
  * connect
  ********************************************************************/
-int __wrap_connect(int socket, struct sockaddr *address, socklen_t* address_len)
+int __wrap_connect(int socket, struct sockaddr *address, socklen_t address_len)
 {
   int ret;
   Tau_iowrap_checkInit();
@@ -502,7 +502,7 @@ int __wrap_connect(int socket, struct sockaddr *address, socklen_t* address_len)
   ret = __real_connect(socket, address, address_len);
 
   if (ret != -1) {
-    Tau_wrapper_get_socket_name(address, (char *) socketname, (size_t) (*address_len));
+    Tau_wrapper_get_socket_name(address, (char *) socketname, (size_t) address_len);
     Tau_iowrap_registerEvents(socket, (const char *) socketname);
   }
 
