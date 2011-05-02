@@ -126,8 +126,8 @@ extern "C" void ___rouent2(struct s1 *p) {
 #ifdef TAU_OPENMP
     
     if (omp_in_parallel()) {
-#pragma omp critical (tau_comp_pgi_1)
       int returnFromBlock = 0;
+#pragma omp critical (tau_comp_pgi_1)
       {
 	if (!p->isseen) {	
 	  void *handle=NULL;
