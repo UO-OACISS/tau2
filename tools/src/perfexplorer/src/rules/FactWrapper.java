@@ -4,6 +4,8 @@
  */
 package edu.uoregon.tau.perfexplorer.rules;
 
+import org.drools.FactHandle;
+
 /**
  * This class is used as a simple wrapper to create simple facts.
  * For more complex fact objects, implement the {@link SelfAsserting} interface.
@@ -17,6 +19,7 @@ public class FactWrapper {
 	private String factName = null;
 	private String factType = null;
 	private Object factData = null;
+	private FactHandle handle = null;
 	
 	/**
 	 * Constructor method.
@@ -89,6 +92,26 @@ public class FactWrapper {
 	 */
 	public void setFactType(String factType) {
 		this.factType = factType;
+	}
+
+	/**
+	 * Return the handle of the fact.
+	 *
+	 * @return the handle
+	 * @see #setFactHandle
+	 */
+	public FactHandle getFactHandle() {
+		return handle;
+	}
+
+	/**
+	 * Set the handle of the fact.
+	 *
+	 * @param handle the handle to set
+	 * @see #getFactHandle
+	 */
+	public void setFactHandle(FactHandle handle) {
+		this.handle = handle;
 	}
 
 }
