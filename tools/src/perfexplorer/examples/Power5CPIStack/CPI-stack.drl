@@ -1,0 +1,959 @@
+#created on: Aug 5, 2007
+package edu.uoregon.tau.perfexplorer.rules
+
+#list any import classes here.
+import edu.uoregon.tau.perfexplorer.glue.*
+import java.util.*
+import java.lang.*
+import java.lang.reflect.*
+import java.text.*
+import org.drools.FactHandle;
+
+#declare any global variables here
+global Double cpiThreshold;
+global Double gctThreshold;
+global Double completionThreshold;
+global Double stallThreshold;
+global Double branchStallThreshold;
+global Double longFPUStallThreshold;
+global Double flushThreshold;
+global Double instPerFlushThreshold1;
+global Double instPerFlushThreshold2;
+global Double instMixThreshold;
+global Double longFPUInstMixThreshold;
+global Double branchMixThreshold;
+global Double mispredictionThreshold;
+global Double mispredFlushThreshold;
+global Double completionRatioThreshold;
+global Double issueRateThreshold;
+
+function String formatDouble (double value) {
+    DecimalFormat df = new DecimalFormat("#.###");
+	return (df.format(value));
+}
+
+function String formatBigDouble (double value) {
+    DecimalFormat df = new DecimalFormat("#.#");
+	return (df.format(value));
+}
+
+function String formatPercent (double value) {
+    DecimalFormat df = new DecimalFormat("##.## %");
+	return (df.format(value));
+}
+
+function String formatString(String in) {
+	String blank = "                                   "; // 35 spaces
+	String out = (blank + in);
+	return (out.substring(out.length()-35, out.length()));
+}
+
+function void debugPrint (String str) {
+	System.out.println(str);
+	return;
+}
+
+function void dumpCPI (HashMap stack) {
+	Set tmp = stack.keySet();
+	List myList = new ArrayList(tmp); 
+	Collections.sort(myList);
+    DecimalFormat df = new DecimalFormat("#.###");
+	System.out.println("\n******************* DUMPING CPI *******************");
+	for (int i=0; i < myList.size(); i++) {
+		String name = (String)(myList.get(i));
+		if (name.indexOf("<") >= 0 || name.indexOf("CPI") == 0) {
+			double value = ((Double)stack.get(name)).doubleValue();
+			System.out.println(name + "\t: " + df.format(value));
+		}
+	}
+	System.out.println("******************* DUMPING CPI *******************\n");
+	return;
+}
+
+function void dumpOthers (HashMap stack) {
+	Set tmp = stack.keySet();
+	List myList = new ArrayList(tmp); 
+	Collections.sort(myList);
+    DecimalFormat df = new DecimalFormat("#.###");
+    DecimalFormat pct = new DecimalFormat("##.## %");
+	String blank = "                                   "; // 35 spaces
+	System.out.println("\n******************* DUMPING OTHERS *******************");
+	for (int i=0; i < myList.size(); i++) {
+		String name = (String)(myList.get(i));
+		if (name.indexOf("<") < 0 && name.indexOf("CPI") != 0) {
+			double value = ((Double)stack.get(name)).doubleValue();
+			name = (blank + name);
+			name = name.substring(name.length()-35, name.length());
+			if ((name.indexOf("%") >= 0) || (name.indexOf("Mix") >= 0) || (name.indexOf("Fraction of Total Duration") >= 0) || (name.indexOf("Full") >= 0)) {
+				System.out.println(name + ": " + pct.format(value));
+			} else {
+				System.out.println(name + ": " + df.format(value));
+			}
+		}
+	}
+	System.out.println("******************* DUMPING OTHERS *******************\n");
+	return;
+}
+
+####################################################################
+# Rules for the overall CPI
+####################################################################
+
+rule "CPI: Overall" salience 10
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Overall", factType == "CPI Stack")
+	then 
+		# get the CPI stack values
+		HashMap stack = (HashMap) f.getFactData();
+		# get the overall CPI
+		double cpi = ((Double)stack.get("CPI")).doubleValue();
+		double percent = ((Double)stack.get("Fraction of Total Duration")).doubleValue();
+
+		dumpCPI(stack);
+		dumpOthers(stack);
+
+		System.out.println(formatString("% of Total Runtime : ") + formatPercent(percent));
+		System.out.println(formatString("Overall CPI : ") + formatDouble(cpi));
+		# if the CPI is over our threshold, check the next level
+		if (cpi > cpiThreshold.doubleValue()) {
+			# assert in reverse order, they are processed like a stack
+			assert (new FactWrapper("Check C", "CPI Stack", stack));
+			assert (new FactWrapper("Check B", "CPI Stack", stack));
+			assert (new FactWrapper("Check A", "CPI Stack", stack));
+		} else {
+			assert (new FactWrapper("CPI OK", "CPI Stack", stack));
+		}
+end
+
+####################################################################
+# Rules for the A part - group completed cycles
+####################################################################
+
+rule "CPI: Check A"  salience 10
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check A", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("<A>")).doubleValue();
+		if (value > completionThreshold.doubleValue()) {
+			debugPrint(formatString("CPI <A>    : ") + formatDouble(value));
+			assert (new FactWrapper("Check A2", "CPI Stack", stack));
+			assert (new FactWrapper("Check A1", "CPI Stack", stack));
+			assert (new FactWrapper("A High", "CPI Stack", stack));
+		}
+end
+
+rule "CPI: Check A1" salience 10
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check A1", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("<A1>")).doubleValue();
+		if (value > completionThreshold.doubleValue()) {
+			debugPrint(formatString("CPI <A1>   : ") + formatDouble(value));
+			assert (new FactWrapper("A1 High", "CPI Stack", stack));
+		}
+end
+
+rule "CPI: Check A2" salience 10
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check A2", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("<A2>")).doubleValue();
+		if (value > completionThreshold.doubleValue()) {
+			debugPrint(formatString("CPI <A2>   : ") + formatDouble(value));
+			assert (new FactWrapper("A2 High", "CPI Stack", stack));
+		}
+end
+
+####################################################################
+# Rules for the B part - GCT empty cycles
+####################################################################
+
+rule "CPI: Check B" salience 10
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check B", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("<B>")).doubleValue();
+		if (value > gctThreshold.doubleValue()) {
+			debugPrint(formatString("CPI <B>    : ") + formatDouble(value));
+			assert (new FactWrapper("Check B4", "CPI Stack", stack));
+			assert (new FactWrapper("Check B2", "CPI Stack", stack));
+			assert (new FactWrapper("Check B1", "CPI Stack", stack));
+			assert (new FactWrapper("Check BRU Mispredictions", "CPI Stack", stack));
+			assert (new FactWrapper("Check Instructions per Pipeline Flush", "CPI Stack", stack));
+			assert (new FactWrapper("B High", "CPI Stack", stack));
+		}
+end
+
+rule "CPI: Check B1" salience 10
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check B1", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("<B1>")).doubleValue();
+		if (value > gctThreshold.doubleValue()) {
+			debugPrint(formatString("CPI <B1>   : ") + formatDouble(value));
+			assert (new FactWrapper("B1 High", "CPI Stack", stack));
+		}
+end
+
+rule "CPI: Check B2" salience 10
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check B2", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("<B2>")).doubleValue();
+		if (value > gctThreshold.doubleValue()) {
+			debugPrint(formatString("CPI <B2>   : ") + formatDouble(value));
+			assert (new FactWrapper("B2 High", "CPI Stack", stack));
+		}
+end
+
+rule "CPI: Check B4" salience 10
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check B4", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("<B4>")).doubleValue();
+		if (value > gctThreshold.doubleValue()) {
+			debugPrint(formatString("CPI <B4>   : ") + formatDouble(value));
+			assert (new FactWrapper("B4 High", "CPI Stack", stack));
+		}
+end
+
+rule "CPI: Check BRU Mispredictions" salience 0
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check BRU Mispredictions", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("BRU Misprediction %")).doubleValue();
+		if (value > mispredictionThreshold.doubleValue()) {
+			debugPrint(formatString("Misprediction % : ") + formatPercent(value));
+			assert (new FactWrapper("BRU Misprediction % High", "CPI Stack", stack));
+		}
+end
+
+rule "CPI: Check Mispredictions per Instruction" salience 0
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check Instructions per Pipeline Flush", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("Instructions per Mispred. Flush")).doubleValue();
+		if (value < mispredFlushThreshold.doubleValue()) {
+			debugPrint(formatString("Instructions per Mispred. : ") + formatBigDouble(value));
+			assert (new FactWrapper("Instructions per Misprediction Flush Low", "CPI Stack", stack));
+		}
+end
+
+####################################################################
+# Rules for the C part - Resource Stalls
+####################################################################
+
+rule "CPI: Check C" salience 10
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check C", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("<C>")).doubleValue();
+		debugPrint(formatString("CPI <C>    : ") + formatDouble(value));
+		if (value > stallThreshold.doubleValue()) {
+			assert (new FactWrapper("Check C4", "CPI Stack", stack));
+			assert (new FactWrapper("Check C3", "CPI Stack", stack));
+			assert (new FactWrapper("Check C2", "CPI Stack", stack));
+			assert (new FactWrapper("Check C1", "CPI Stack", stack));
+			assert (new FactWrapper("Check Instruction Completion %", "CPI Stack", stack));
+			assert (new FactWrapper("Check Instruction Issue Rate", "CPI Stack", stack));
+			assert (new FactWrapper("C High", "CPI Stack", stack));
+		}
+end
+
+####################################################################
+# Rules for the C part - Resource Stalls in the LSU
+####################################################################
+
+rule "CPI: Check C1" salience 10
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check C1", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("<C1>")).doubleValue();
+		if (value > stallThreshold.doubleValue()) {
+			debugPrint(formatString("CPI <C1>   : ") + formatDouble(value));
+			assert (new FactWrapper("Check C1C", "CPI Stack", stack));
+			assert (new FactWrapper("Check C1B", "CPI Stack", stack));
+			assert (new FactWrapper("Check C1A", "CPI Stack", stack));
+			assert (new FactWrapper("C1 High", "CPI Stack", stack));
+			assert (new FactWrapper("Check LSU Flush %", "CPI Stack", stack));
+		}
+end
+
+rule "CPI: Check C1A" salience 10
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check C1A", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("<C1A>")).doubleValue();
+		if (value > stallThreshold.doubleValue()) {
+			debugPrint(formatString("CPI <C1A>  : ") + formatDouble(value));
+			assert (new FactWrapper("Check C1A2", "CPI Stack", stack));
+			assert (new FactWrapper("Check C1A1", "CPI Stack", stack));
+			assert (new FactWrapper("C1A High", "CPI Stack", stack));
+		}
+end
+
+rule "CPI: Check C1A1" salience 10
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check C1A1", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("<C1A1>")).doubleValue();
+		if (value > stallThreshold.doubleValue()) {
+			debugPrint(formatString("CPI <C1A1> : ") + formatDouble(value));
+			assert (new FactWrapper("C1A1 High", "CPI Stack", stack));
+		}
+end
+
+rule "CPI: Check C1A2" salience 10
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check C1A2", factType == "CPI Stack" )
+		f2 : FactWrapper ( factName == "Check C1A", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("<C1A2>")).doubleValue();
+		if (value > stallThreshold.doubleValue()) {
+			debugPrint(formatString("CPI <C1A2> : ") + formatDouble(value));
+			assert (new FactWrapper("C1A2 High", "CPI Stack", stack));
+			retract (f2);
+		}
+end
+
+rule "CPI: Check C1B" salience 10
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check C1B", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("<C1B>")).doubleValue();
+		if (value > stallThreshold.doubleValue()) {
+			debugPrint(formatString("CPI <C1B>  : ") + formatDouble(value));
+			assert (new FactWrapper("C1B High", "CPI Stack", stack));
+		}
+end
+
+rule "CPI: Check C1C" salience 10
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check C1C", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("<C1C>")).doubleValue();
+		if (value > stallThreshold.doubleValue()) {
+			debugPrint(formatString("CPI <C1C>  : ") + formatDouble(value));
+			assert (new FactWrapper("C1C High", "CPI Stack", stack));
+		}
+end
+
+####################################################################
+# Rules for the C part - Resource Stalls in the FXU
+####################################################################
+
+rule "CPI: Check C2" salience 10
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check C2", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("<C2>")).doubleValue();
+		if (value > stallThreshold.doubleValue()) {
+			debugPrint(formatString("CPI <C2>   : ") + formatDouble(value));
+			assert (new FactWrapper("Check C2C", "CPI Stack", stack));
+			assert (new FactWrapper("Check C2A", "CPI Stack", stack));
+			assert (new FactWrapper("C2 High", "CPI Stack", stack));
+			assert (new FactWrapper("Check FXU Mix", "CPI Stack", stack));
+		}
+end
+
+rule "CPI: Check C2A" salience 10
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check C2A", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("<C2A>")).doubleValue();
+		if (value > stallThreshold.doubleValue()) {
+			debugPrint(formatString("CPI <C2A>  : ") + formatDouble(value));
+			assert (new FactWrapper("C2A High", "CPI Stack", stack));
+		}
+end
+
+rule "CPI: Check C2C" salience 10
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check C2C", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("<C2C>")).doubleValue();
+		if (value > stallThreshold.doubleValue()) {
+			debugPrint(formatString("CPI <C2C>  : ") + formatDouble(value));
+			assert (new FactWrapper("C2C High", "CPI Stack", stack));
+		}
+end
+
+####################################################################
+# Rules for the C part - Resource Stalls in the FPU
+####################################################################
+
+rule "CPI: Check C3" salience 10
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check C3", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("<C3>")).doubleValue();
+		if (value > stallThreshold.doubleValue()) {
+			debugPrint(formatString("CPI <C3>   : ") + formatDouble(value));
+			assert (new FactWrapper("Check C3B", "CPI Stack", stack));
+			assert (new FactWrapper("Check C3A", "CPI Stack", stack));
+			assert (new FactWrapper("C3 High", "CPI Stack", stack));
+			assert (new FactWrapper("Check FPU Mix", "CPI Stack", stack));
+			assert (new FactWrapper("Check Long FPU Mix", "CPI Stack", stack));
+		}
+end
+
+rule "CPI: Check C3A" salience 10
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check C3A", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("<C3A>")).doubleValue();
+		if (value > longFPUStallThreshold.doubleValue()) {
+			debugPrint(formatString("CPI <C3A>  : ") + formatDouble(value));
+			assert (new FactWrapper("C3A High", "CPI Stack", stack));
+		}
+end
+
+rule "CPI: Check C3B" salience 10
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check C3B", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("<C3B>")).doubleValue();
+		if (value > stallThreshold.doubleValue()) {
+			debugPrint(formatString("CPI <C3B>  : ") + formatDouble(value));
+			assert (new FactWrapper("C3B High", "CPI Stack", stack));
+		}
+end
+
+rule "CPI: Check FPU Mix" salience 0
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check FPU Mix", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("FPU Instruction Mix")).doubleValue();
+		if (value > instMixThreshold.doubleValue()) {
+			debugPrint(formatString("FPU Instruction Mix : ") + formatPercent(value));
+			assert (new FactWrapper("FPU Mix High", "CPI Stack", stack));
+		}
+end
+
+rule "CPI: Check Long FPU Mix" salience 0
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check Long FPU Mix", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("FPU Long Instruction Mix")).doubleValue();
+		if (value > longFPUInstMixThreshold.doubleValue()) {
+			debugPrint(formatString("FPU Long Instruction Mix : ") + formatPercent(value));
+			assert (new FactWrapper("FPU Long Mix High", "CPI Stack", stack));
+		}
+end
+
+rule "CPI: Check FXU Mix" salience 0
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check FXU Mix", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("FXU Instruction Mix")).doubleValue();
+		if (value > instMixThreshold.doubleValue()) {
+			debugPrint(formatString("FXU Instruction Mix : ") + formatPercent(value));
+			assert (new FactWrapper("FXU Mix High", "CPI Stack", stack));
+		}
+end
+
+rule "CPI: Check BRU Mix" salience 0
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check BRU Mix", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("BRU Instruction Mix")).doubleValue();
+		if (value > branchMixThreshold.doubleValue()) {
+			debugPrint(formatString("BRU Instruction Mix : ") + formatPercent(value));
+			assert (new FactWrapper("BRU Mix High", "CPI Stack", stack));
+		}
+end
+
+rule "CPI: Check Instruction Completion %" salience 0
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check Instruction Completion %", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("Instruction Completion %")).doubleValue();
+		if (value < completionRatioThreshold.doubleValue()) {
+			debugPrint(formatString("Instruction Completion % : ") + formatPercent(value));
+			assert (new FactWrapper("Instruction Completion % Low", "CPI Stack", stack));
+		}
+end
+
+rule "CPI: Check Instruction Issue Rate" salience 0
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check Instruction Issue Rate", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("Instruction Issue Rate")).doubleValue();
+		if (value < issueRateThreshold.doubleValue()) {
+			debugPrint(formatString("Instruction Issue Rate : ") + formatDouble(value));
+			assert (new FactWrapper("Instruction Issue Rate Low", "CPI Stack", stack));
+		}
+end
+
+rule "CPI: Check LSU Mix" salience 0
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check LSU Mix", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("LSU Instruction Mix (guess)")).doubleValue();
+		if (value > instMixThreshold.doubleValue()) {
+			debugPrint(formatString("LSU Instruction Mix : ") + formatPercent(value));
+			assert (new FactWrapper("LSU Mix High", "CPI Stack", stack));
+		}
+		double value2 = ((Double)stack.get("LSU Instruction Mix (overestimate)")).doubleValue();
+		if (value > 0.0 && value*10.0 < value2) {
+			debugPrint(formatString("LSU Reissue Rate : ") + formatBigDouble(value2/value));
+			//debugPrint(formatString("LSU Reissue Rate : ") + (value2/value));
+			assert (new FactWrapper("LSU Reissue Rate High", "CPI Stack", stack));
+		}
+end
+
+####################################################################
+# Rules for the C part - Resource Stalls in the BRU/CRU/other
+####################################################################
+
+rule "CPI: Check C4" salience 10
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check C4", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("<C4>")).doubleValue();
+		if (value > branchStallThreshold.doubleValue()) {
+			debugPrint(formatString("CPI <C4>   : ") + formatDouble(value));
+			assert (new FactWrapper("C4 High", "CPI Stack", stack));
+			assert (new FactWrapper("Check BRU Mix", "CPI Stack", stack));
+			assert (new FactWrapper("Check BRU Mispredictions", "CPI Stack", stack));
+			assert (new FactWrapper("Check Instructions per Pipeline Flush", "CPI Stack", stack));
+		}
+end
+
+####################################################################
+# Rules for the Memory subsystem
+####################################################################
+
+rule "CPI: Check LSU Flush %" salience 0
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check LSU Flush %", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("LSU Flush %")).doubleValue();
+		if (value > flushThreshold.doubleValue()) {
+			debugPrint(formatString("LSU Flush % : ") + formatPercent(value));
+			assert (new FactWrapper("LSU Flush % High", "CPI Stack", stack));
+			assert (new FactWrapper("Check Instructions per LSU Flush", "CPI Stack", stack));
+		}
+end
+
+rule "CPI: Check Instructions per LSU Flush" salience 0
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Check Instructions per LSU Flush", factType == "CPI Stack" )
+	then 
+		HashMap stack = (HashMap) f.getFactData();
+		double value = ((Double)stack.get("Instructions per LSU Flush")).doubleValue();
+		if (value < instPerFlushThreshold1.doubleValue()) {
+			debugPrint(formatString("Instructions per LSU Flush : ") + formatBigDouble(value));
+			assert (new FactWrapper("Instructions per LSU Flush Very Low", "CPI Stack", stack));
+		} else if (value < instPerFlushThreshold2.doubleValue()) {
+			debugPrint(formatString("Instructions per LSU Flush : ") + formatBigDouble(value));
+			assert (new FactWrapper("Instructions per LSU Flush Low", "CPI Stack", stack));
+		}
+end
+
+####################################################################
+# diagnosis conclusion rules - do these last, so have a lower salience
+####################################################################
+
+rule "CPI is OK" salience -1
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "CPI OK", factType == "CPI Stack" )
+	then
+		System.out.println("CPI for this cluster is OK.");
+end
+
+####################################################################
+
+rule "Diagnose Completion Cycles" salience -1
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "A High", factType == "CPI Stack" )
+		not FactWrapper ( factName == "A2 High", factType == "CPI Stack" )
+	then
+		System.out.println("  A1: The Completion Cycles counter is high.");
+		System.out.println("      Excessive stalls in the pipeline are reducing the number of");
+		System.out.println("      completed operations per cycle.");
+end
+
+rule "Instruction Cracking Overhead" salience -1
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "A2 High", factType == "CPI Stack" )
+	then
+		System.out.println("  A2: The overhead of cracking/microcoding and grouping instructions is high.");
+end
+
+####################################################################
+
+rule "Diagnose Empty Cycles" salience -10
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "B High", factType == "CPI Stack" )
+		not FactWrapper ( factName == "B1 High", factType == "CPI Stack" )
+		not FactWrapper ( factName == "B2 High", factType == "CPI Stack" )
+		not FactWrapper ( factName == "B4 High", factType == "CPI Stack" )
+	then
+		System.out.println("   B: The number of cycles the pipeline is empty is high.");
+end
+
+rule "Diagnose Instruction Cache Misses" salience -11
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "B1 High", factType == "CPI Stack" )
+	then
+		System.out.println("  B1: Instruction Cache Miss penalty is high.");
+end
+
+rule "Diagnose Branch Misprediction Penalty" salience -12
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "B2 High", factType == "CPI Stack" )
+	then
+		System.out.println("  B2: Branch Misprediction penalty is high.");
+end
+
+rule "Diagnose General Flush Penalty" salience -12
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "B4 High", factType == "CPI Stack" )
+	then
+		System.out.println("  B4: The number of cycles the pipeline is empty (caused by flush");
+		System.out.println("      penalty, etc. from branch misprediction) is high.");
+end
+
+####################################################################
+
+rule "Diagnose Resource Stalls" salience -20
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "C High", factType == "CPI Stack" )
+		not FactWrapper ( factName == "C1 High", factType == "CPI Stack" )
+		not FactWrapper ( factName == "C2 High", factType == "CPI Stack" )
+		not FactWrapper ( factName == "C3 High", factType == "CPI Stack" )
+		not FactWrapper ( factName == "C4 High", factType == "CPI Stack" )
+	then
+		System.out.println("   C: The accumulated Completion Stall Cycles value is high.");
+end
+
+rule "Diagnose LSU Resource Stalls" salience -22
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "C1 High", factType == "CPI Stack" )
+		not FactWrapper ( factName == "C1A High", factType == "CPI Stack" )
+		not FactWrapper ( factName == "C1B High", factType == "CPI Stack" )
+		not FactWrapper ( factName == "C1C High", factType == "CPI Stack" )
+	then
+		System.out.println("  C1: The Load/Store Unit (LSU) stalls are high.");
+end
+
+rule "Diagnose LSU Reject Stalls" salience -23
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "C1A High", factType == "CPI Stack" )
+		not FactWrapper ( factName == "C1A1 High", factType == "CPI Stack" )
+		not FactWrapper ( factName == "C1A2 High", factType == "CPI Stack" )
+	then
+		System.out.println(" C1A: LSU rejecting instructions due to internal conditions is high.");
+end
+
+rule "Diagnose TLB Stalls" salience -24
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "C1A1 High", factType == "CPI Stack" )
+	then
+		System.out.println("C1A1: Stalls caused by high TLB miss rates.");
+end
+
+rule "Diagnose LSU Other Reject Stalls" salience -25
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "C1A2 High", factType == "CPI Stack" )
+	then
+		System.out.println("C1A2: Stalls caused by contention for the memory bus or other memory resources.");
+end
+
+rule "Diagnose DCACHE Miss Stalls" salience -25
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "C1B High", factType == "CPI Stack" )
+	then
+		System.out.println(" C1B: Stalls caused by data cache misses.");
+end
+
+rule "Diagnose LSU Latency Stalls" salience -25
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "C1C High", factType == "CPI Stack" )
+	then
+		System.out.println(" C1C: Stalls caused by LSU basic latency.");
+end
+
+rule "Diagnose FXU Resource Stalls" salience -30
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "C2 High", factType == "CPI Stack" )
+		not FactWrapper ( factName == "C2A High", factType == "CPI Stack" )
+		not FactWrapper ( factName == "C2C High", factType == "CPI Stack" )
+	then
+		System.out.println("  C2: The Fixed Point Execution Unit (FXU) stalls are high.");
+end
+
+rule "Diagnose DIV/MTSPR/MFSPR Resource Stalls" salience -31
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "C2A High", factType == "CPI Stack" )
+	then
+		System.out.println(" C2A: FXU Divide and/or Special Purpose Register stalls are high.");
+end
+
+rule "Diagnose FXU Latency Stalls" salience -32
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "C2C High", factType == "CPI Stack" )
+	then
+		System.out.println(" C2C: FXU basic latency stalls are high.");
+end
+
+rule "Diagnose FPU Stalls" salience -40
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "C3 High", factType == "CPI Stack" )
+		not FactWrapper ( factName == "C3A High", factType == "CPI Stack" )
+		not FactWrapper ( factName == "C3B High", factType == "CPI Stack" )
+	then
+		System.out.println(" C3: The Floating Point Unit (FPU) stalls are high.");
+end
+
+rule "Diagnose FDIV/FSQRT Stalls" salience -41
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "C3A High", factType == "CPI Stack" )
+	then
+		System.out.println(" C3A: FPU Divide/Sqrt stalls are high.");
+end
+
+rule "Diagnose FPU Latency Stalls" salience -42
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "C3B High", factType == "CPI Stack" )
+	then
+		System.out.println(" C3B: FPU basic latency stalls are high.");
+end
+
+rule "Diagnose Other Stalls" salience -43
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "C4 High", factType == "CPI Stack" )
+	then
+		System.out.println("  C4: Other stalls (BRU/CRU inst, flush penalty) are high.");
+end
+
+####################################################################
+
+rule "Diagnose LSU Flush % High" salience -50
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "LSU Flush % High", factType == "CPI Stack" )
+	then
+		System.out.println(" LSU: A large fraction of flushes are caused by the LSU.");
+end
+
+rule "Diagnose Instructions per Flush Very Low" salience -51
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "Instructions per LSU Flush Very Low", factType == "CPI Stack" )
+		FactWrapper ( factName == "LSU Flush % High", factType == "CPI Stack" )
+	then
+		System.out.println(" LSU: The number of instructions per LSU flush is VERY low.");
+		System.out.println("      This indicates the cache subsystem has missed sequential cache lines");
+		System.out.println("      and the prefetch engine has been engaged. This may reduce cache misses");
+		System.out.println("      but it increases the memory subsystem overhead for large data structures.");
+end
+
+rule "Diagnose Instructions per Flush Low" salience -51
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "Instructions per LSU Flush Low", factType == "CPI Stack" )
+		FactWrapper ( factName == "LSU Flush % High", factType == "CPI Stack" )
+	then
+		System.out.println(" LSU: The number of instructions per LSU flush is low.");
+		System.out.println("      This indicates the memory access pattern is causing the memory system to flush");
+		System.out.println("      lines from the cache.");
+end
+
+rule "Diagnose FPU Mix High" salience -60
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "FPU Mix High", factType == "CPI Stack" )
+	then
+		System.out.println(" FPU: A large fraction of instructions are executed by the FPU");
+		System.out.println("      (but not necessarily retired).");
+end
+
+rule "Diagnose Long FPU Mix High" salience -60
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "FPU Long Mix High", factType == "CPI Stack" )
+	then
+		System.out.println(" FPU: A large fraction of high-latency instructions (DIV, SQRT) are executed");
+		System.out.println("      by the FPU (but not necessarily retired).");
+end
+
+rule "Diagnose FXU Mix High" salience -60
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "FXU Mix High", factType == "CPI Stack" )
+	then
+		System.out.println(" FXU: A large fraction of instructions are executed by the FXU");
+		System.out.println("      (but not necessarily retired).");
+end
+
+rule "Diagnose BRU Mix High" salience -60
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "BRU Mix High", factType == "CPI Stack" )
+	then
+		System.out.println(" BRU: A large fraction of instructions are executed by the BRU");
+		System.out.println("      (but not necessarily retired).");
+end
+
+rule "Diagnose LSU Mix High" salience -60
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "LSU Mix High", factType == "CPI Stack" )
+	then
+		System.out.println(" LSU: A large fraction of instructions are executed by the LSU");
+		System.out.println("      (but not necessarily retired).");
+end
+
+rule "Diagnose LSU Reissue Rate High" salience -60
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "LSU Reissue Rate High", factType == "CPI Stack" )
+	then
+		System.out.println(" LSU: The number of L1 references is more than 10x the number of Load+Store instructions.");
+		System.out.println("      This indicates a high amount of reissues (the memory subsystem is busy) or");
+		System.out.println("      prefetching triggered by streaming memory access.");
+end
+
+rule "Diagnose BRU Misprediction % High" salience -60
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "BRU Misprediction % High", factType == "CPI Stack" )
+	then
+		System.out.println(" BRU: The percentage of mispredicted branches is high.");
+end
+
+rule "Diagnose Instructions per Misprediction Flush Low" salience -51
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "Instructions per Misprediction Flush Low", factType == "CPI Stack" )
+		# FactWrapper ( factName == "BRU Misprediction Rate High", factType == "CPI Stack" )
+	then
+		System.out.println(" BRU: The number of instructions per branch misprediction flush is low.");
+		System.out.println("      This indicates ...");
+end
+
+rule "Diagnose Instructions Completion Rate Low" salience -51
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "Instruction Completion % Low", factType == "CPI Stack" )
+	then
+		System.out.println(" BRU: The ratio of retired instructions to dispatched instructions is low.");
+		# System.out.println("      This indicates excessive speculation and/or serialization in the processor.");
+		System.out.println("      This indicates excessive speculation in the processor.");
+end
+
+rule "Diagnose Instruction Issue Rate Low" salience -51
+	when
+		# we have detected problems!
+		FactWrapper ( factName == "Instruction Issue Rate Low", factType == "CPI Stack" )
+	then
+		System.out.println("ISSU: The rate at which instructions are issued is low.");
+		System.out.println("      This indicates excessive serialization in the processor, possibly caused");
+		System.out.println("      by downstream stalls or data dependencies.");
+end
+
+# if the CPI is bad, but neither the LSU nor BRU is not at fault, blame data dependency.
+rule "Diagnose Data Dependency" salience -100
+	when
+		# we have detected problems!
+		not FactWrapper ( factName == "C1 High", factType == "CPI Stack" )
+		not FactWrapper ( factName == "Instructions per Misprediction Flush Low", factType == "CPI Stack" )
+		not FactWrapper ( factName == "BRU Misprediction % High", factType == "CPI Stack" )
+		not FactWrapper ( factName == "BRU Mix High", factType == "CPI Stack" )
+		not FactWrapper ( factName == "Instructions per Misprediction Flush Low", factType == "CPI Stack" )
+		FactWrapper ( factName == "C High", factType == "CPI Stack" )
+	then
+		System.out.println("\nConclusion: Because stall cycles are excessive but the problem is not with memory");
+		System.out.println("accesses, stalls are likely caused by data dependencies which lead to serialization");
+		System.out.println("in the CPU. (is this true?)");
+end
+
+
+
