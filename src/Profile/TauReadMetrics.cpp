@@ -273,9 +273,13 @@ void metric_read_cudatime(int tid, int idx, double values[]) {
   //get time from the CPU clock
   if (tid == CPU_THREAD)
   { 
+#ifdef TAU_WINDOWS
+    values[idx] = TauWindowsUsecD();
+#else
     struct timeval tp;
     gettimeofday(&tp, 0);
     values[idx] = ((double)tp.tv_sec * 1e6 + tp.tv_usec);
+#endif
   }
   // get time from the callback API 
   else

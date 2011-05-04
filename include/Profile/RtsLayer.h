@@ -31,6 +31,9 @@
 
 typedef std::map<std::string, TauGroup_t, std::less<string> > ProfileMap_t;
 
+
+double TauWindowsUsecD(void);
+
 class RtsLayer {
   // Layer for Profiler to interact with the Runtime System
 public:

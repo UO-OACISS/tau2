@@ -129,10 +129,12 @@ int RtsLayer::RegisterThread() {
     fprintf(stderr, "TAU: RtsLayer: Max thread limit (%d) exceeded. Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=<higher limit>\n", numthreads);
   }
   UnLockEnv();
-  
+ 
+#ifndef TAU_WINDOWS 
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_init(numthreads-1);
   }
+#endif
 
 #ifdef PTHREADS
   PthreadLayer::RegisterThread();
