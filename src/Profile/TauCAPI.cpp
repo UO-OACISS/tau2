@@ -203,17 +203,21 @@ extern "C" Profiler *TauInternal_ParentProfiler(int tid) {
 extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   Tau_global_insideTAU[tid]++;
 
+#ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_suspend();
   }
+#endif
 
   //int tid = RtsLayer::myThread();
   FunctionInfo *fi = (FunctionInfo *) functionInfo; 
 
   if ( !RtsLayer::TheEnableInstrumentation() || !(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
+#ifndef TAU_WINDOWS
     if (TauEnv_get_ebs_enabled()) {
       Tau_sampling_resume();
     }
+#endif
     Tau_global_insideTAU[tid]--;
     return; /* disabled */
   }
@@ -316,14 +320,14 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   /*** Extras ***/
   /********************************************************************************/
 
-
+#ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_event_start(tid, p->address);
     Tau_sampling_resume();
   }
   Tau_global_insideTAU[tid]--;
+#endif
 }
-
 
 
 
@@ -338,20 +342,22 @@ static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   Tau_global_insideTAU[tid]++;
-
+#ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_suspend();
   }
-
+#endif
   FunctionInfo *fi = (FunctionInfo *) function_info; 
 
   //int tid = RtsLayer::myThread();
   Profiler *profiler;
 
   if ( !RtsLayer::TheEnableInstrumentation() || !(fi->GetProfileGroup()) & RtsLayer::TheProfileMask()) {
+#ifndef TAU_WINDOWS
     if (TauEnv_get_ebs_enabled()) {
       Tau_sampling_resume();
     }
+#endif
     Tau_global_insideTAU[tid]--;
     return 0; /* disabled */
   }
@@ -422,9 +428,11 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 
   Tau_global_stackpos[tid]--; /* pop */
 
+#ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_resume();
   }
+#endif
 
   Tau_global_insideTAU[tid]--;
   return 0;

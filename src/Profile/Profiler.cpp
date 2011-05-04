@@ -17,7 +17,9 @@
 //#define DEBUG_PROF
 #include <Profile/Profiler.h>
 #include <Profile/TauMetrics.h>
+#ifndef TAU_WINDOWS
 #include <Profile/TauSampling.h>
+#endif
 #include <Profile/TauSnapshot.h>
 
 //#include <tau_internal.h>
@@ -416,10 +418,11 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   RtsLayer::getUSecD(tid, CurrentTime);
 #endif /* TAU_TRACK_IDLE_THREADS */
 
-
+#ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_event_stop(tid, CurrentTime);
   }
+#endif
 
 #if defined(TAUKTAU)
 #ifdef KTAU_DEBUGPROF
@@ -1144,11 +1147,11 @@ int TauProfiler_StoreData(int tid) {
     RtsLayer::UnLockDB();
   }
   finalizeTrace(tid);
-  
+#ifndef TAU_WINDOWS  
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_finalize(tid);
   }
-
+#endif
   if (TauEnv_get_profiling()) {
 
     Tau_snapshot_writeFinal("final");

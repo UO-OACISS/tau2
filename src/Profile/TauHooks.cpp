@@ -98,7 +98,11 @@ void TauInitCode(char *arg, int isMPI)
 */
   for (j=1, str1 = arg; ; j++, str1 = NULL) 
   { 
+#ifdef TAU_WINDOWS
+    name = strtok(str1, "|");
+#else
     name = strtok_r(str1, "|", &saveptr);
+#endif
     if (name == NULL) 
       break;
     dprintf("After loop: name = %s\n", name);

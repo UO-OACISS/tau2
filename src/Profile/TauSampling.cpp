@@ -63,6 +63,8 @@
 #define _XOPEN_SOURCE 600 /* Single UNIX Specification, Version 3 */
 #endif /* __APPLE__ */
 
+#ifndef TAU_WINDOWS
+
 #include <TAU.h>
 #include <Profile/TauMetrics.h>
 #include <Profile/TauSampling.h>
@@ -74,7 +76,9 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <strings.h>
+#ifndef TAU_WINDOWS
 #include <ucontext.h>
+#endif
 
 /*********************************************************************
  * Tau Sampling Record Definition
@@ -672,3 +676,4 @@ extern "C" void Tau_sampling_init_if_necessary(void ) {
   }
 }
 
+#endif //TAU_WINDOWS

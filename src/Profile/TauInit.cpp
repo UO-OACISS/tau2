@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <unistd.h>
-#if !defined(_AIX) && !defined(__sun)
+#if !defined(_AIX) && !defined(__sun) && !defined(TAU_WINDOWS)
 #include <execinfo.h>
 #endif /* _AIX */
 
@@ -69,7 +69,7 @@ static void wrap_up(int sig) {
   void *array[10];
   size_t size;
 
-#if !defined(_AIX) && !defined(__sun)
+#if !defined(_AIX) && !defined(__sun) && !defined(TAU_WINDOWS)
   // get void*'s for all entries on the stack
   size = backtrace(array, 10);
 #endif /* _AIX */
@@ -77,7 +77,7 @@ static void wrap_up(int sig) {
   // print out all the frames to stderr
   fprintf (stderr, "TAU: signal %d on %d - calling TAU_PROFILE_EXIT()...\n", sig, RtsLayer::myNode());
 
-#if !defined(_AIX) && !defined(__sun)
+#if !defined(_AIX) && !defined(__sun) && !defined(TAU_WINDOWS) 
   backtrace_symbols_fd(array, size, 2);
 #endif /* _AIX */
   TAU_PROFILE_EXIT("signal");
@@ -246,9 +246,9 @@ extern "C" int Tau_init_initializeTAU() {
     /* Work-around for MVAPHICH 2 to move sampling initialization to 
        after MPI_Init()
     */
-#ifndef TAU_MPI
+#if !defined(TAU_MPI) && !defined(TAU_WINDOWS)
     Tau_sampling_init(0);
-#endif /* TAU_MPI */
+#endif /* TAU_MPI && TAU_WINDOWS */
   }
 #ifdef TAU_PGI
   sbrk(102400);
