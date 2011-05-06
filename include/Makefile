@@ -187,7 +187,7 @@ JDKARCH                 = linux
 # JAVA OBJECTS
 #############################################
 #JAVA#TAU_JAVA_O 	= TauJava.o TauJAPI.o  #ENDIF#
-#JVMTI#TAU_JAVA_O 	= agent_util.o java_crw_demo.o TauJVMTI.o JVMTIThreadLayer.o #ENDIF#
+#JVMTI#TAU_JAVA_O 	= agent_util.o java_crw_demo.o TauJVMTI.o JVMTIThreadLayer.o TauJAPI.o#ENDIF#
 #JAVA#TAUJAPI 	= Profile.class        #ENDIF#
 
 
