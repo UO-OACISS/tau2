@@ -22,7 +22,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
+
+#ifndef TAU_WINDOWS
 #include <unistd.h>
+#endif
 #if !defined(_AIX) && !defined(__sun) && !defined(TAU_WINDOWS)
 #include <execinfo.h>
 #endif /* _AIX */
