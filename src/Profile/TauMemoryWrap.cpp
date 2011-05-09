@@ -18,7 +18,10 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+
+#ifndef TAU_WINDOWS
 #include <unistd.h>
+#endif
   
 #include <TAU.h>
 #include <Profile/Profiler.h>
