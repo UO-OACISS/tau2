@@ -7,7 +7,7 @@ BINDIR=${TAUROOT}/${MACHINE}/bin
 LIBDIR=${TAUROOT}/${MACHINE}/lib
 JARDIR=${TAUROOT}/${MACHINE}/lib
 
-JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis.jar:${JARDIR}/jogl.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-1.0.12.jar:${JARDIR}/jcommon-1.0.15.jar:${JARDIR}/jython.jar
+JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis.jar:${JARDIR}/jogl.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-1.0.12.jar:${JARDIR}/jcommon-1.0.15.jar:${JARDIR}/jython.jar:${JARDIR}/mesp.jar
 
 APPLE_OPTIONS=""
 if [ "$MACHINE" = "apple" ]; then
@@ -42,7 +42,7 @@ fi
 
 # Test for java 1.4+
 JAVA_VERSION=`java -version 2>&1 | head -1 | cut -d '.' -f2`
-if [ $JAVA_VERSION = "4" ] ; then
+if [ "x$JAVA_VERSION" = "x4" ] ; then
         echo ""
         echo "Java 1.5 or newer is required to run ParaProf."
         echo "Please update your Java SDK to a newer version to use the latest ParaProf."
@@ -72,6 +72,10 @@ testmax=`$BINDIR/tau_javamax.sh`
 if [ "x$testmax" != "xfailed" -a "x$platform" != "xDarwin" ] ; then
     MEMORY="-Xmx${testmax}m"
 fi
+if [ "x$platform" = "xDarwin" -a $testmax -gt 819200 -a $testmax -lt 819200000 ] ; then
+    MEMORY="-Xmx2000m"
+fi
+
 
 
 # locate the java bin directory so that we can add it to the java.library.path.

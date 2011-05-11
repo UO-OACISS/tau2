@@ -1,0 +1,28 @@
+/* otf.i */
+%module otf
+%{
+  #include "otf.h"
+%}
+
+
+%apply unsigned int { uint32_t }
+%apply unsigned long long { uint64_t }
+
+%include "OTF_CopyHandler.h"
+%include "OTF_FileManager.h"
+%include "OTF_Reader.h"
+%include "OTF_Writer.h"
+%include "OTF_Definitions.h"
+%include "OTF_Filenames.h"
+%include "OTF_RStream.h"
+%include "OTF_WStream.h"
+%include "OTF_Keywords.h"
+%include "OTF_Parse.h"
+%include "OTF_Platform.h"
+%include "otf.h"
+%include "OTF_MasterControl.h"
+%include "OTF_File.h"
+%include "OTF_HandlerArray.h"
+%include "OTF_RBuffer.h"
+%include "OTF_WBuffer.h"
+

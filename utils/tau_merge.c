@@ -714,7 +714,7 @@ static void output(int fd, char *data, size_t l)
 int cannot_get_enough_fd(int need)
 {
 #ifdef TAU_WINDOWS
-  return false; /* no getdtablesize() in windows*/
+  return FALSE; /* no getdtablesize() in windows*/
 #else	
 # if defined(__hpux) || defined(sun)
   /* -- system supports get/setrlimit (RLIMIT_NOFILE) -- */

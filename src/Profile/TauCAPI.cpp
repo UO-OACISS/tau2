@@ -91,6 +91,7 @@ static Profiler *Tau_global_stack[TAU_MAX_THREADS];
 static int Tau_global_stackdepth[TAU_MAX_THREADS];
 static int Tau_global_stackpos[TAU_MAX_THREADS];
 static int Tau_global_insideTAU[TAU_MAX_THREADS];
+static int Tau_is_thread_fake_for_task_api[TAU_MAX_THREADS];
 int lightsOut = 0;
 
 static void (*_profile_write_hook)(void) = NULL;
@@ -121,6 +122,7 @@ static void Tau_stack_checkInit() {
     Tau_global_stackpos[i] = -1;
     Tau_global_stack[i] = NULL;
     Tau_global_insideTAU[i] = 0;
+    Tau_is_thread_fake_for_task_api[i] = 0; /* by default all threads are real*/
   }
 }
 
@@ -134,6 +136,10 @@ extern "C" void Tau_global_setLightsOut() {
   lightsOut = 1;
 }
 
+/* the task API does not have a real thread associated with the tid */
+extern "C" int Tau_is_thread_fake(int tid) {
+  return Tau_is_thread_fake_for_task_api[tid]; 
+}
 
 extern "C" void Tau_stack_initialization() {
   Tau_stack_checkInit();
@@ -197,17 +203,21 @@ extern "C" Profiler *TauInternal_ParentProfiler(int tid) {
 extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   Tau_global_insideTAU[tid]++;
 
+#ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_suspend();
   }
+#endif
 
   //int tid = RtsLayer::myThread();
   FunctionInfo *fi = (FunctionInfo *) functionInfo; 
 
   if ( !RtsLayer::TheEnableInstrumentation() || !(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
+#ifndef TAU_WINDOWS
     if (TauEnv_get_ebs_enabled()) {
       Tau_sampling_resume();
     }
+#endif
     Tau_global_insideTAU[tid]--;
     return; /* disabled */
   }
@@ -310,14 +320,14 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   /*** Extras ***/
   /********************************************************************************/
 
-
+#ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_event_start(tid, p->address);
     Tau_sampling_resume();
   }
   Tau_global_insideTAU[tid]--;
+#endif
 }
-
 
 
 
@@ -332,20 +342,22 @@ static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   Tau_global_insideTAU[tid]++;
-
+#ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_suspend();
   }
-
+#endif
   FunctionInfo *fi = (FunctionInfo *) function_info; 
 
   //int tid = RtsLayer::myThread();
   Profiler *profiler;
 
   if ( !RtsLayer::TheEnableInstrumentation() || !(fi->GetProfileGroup()) & RtsLayer::TheProfileMask()) {
+#ifndef TAU_WINDOWS
     if (TauEnv_get_ebs_enabled()) {
       Tau_sampling_resume();
     }
+#endif
     Tau_global_insideTAU[tid]--;
     return 0; /* disabled */
   }
@@ -416,9 +428,11 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 
   Tau_global_stackpos[tid]--; /* pop */
 
+#ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_resume();
   }
+#endif
 
   Tau_global_insideTAU[tid]--;
   return 0;
@@ -448,11 +462,12 @@ extern "C" int Tau_profile_exit_all_threads() {
 	{
 		while (Tau_global_stackpos[tid] >= 0) {
 			Profiler *p = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
-			p->Stop(tid, true);
-			Tau_global_stackpos[tid]--;
+			Tau_stop_timer(p->ThisFunction, Tau_get_tid());
+			// DO NOT pop. It is popped in stop above: Tau_global_stackpos[tid]--;
 		}
 	tid++;
 	}
+  Tau_disable_instrumentation();
   return 0;
 }
 
@@ -461,8 +476,8 @@ extern "C" int Tau_profile_exit() {
   int tid = RtsLayer::myThread();
 	while (Tau_global_stackpos[tid] >= 0) {
 		Profiler *p = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
-		p->Stop();
-		Tau_global_stackpos[tid]--;
+		Tau_stop_timer(p->ThisFunction, Tau_get_tid());
+		// DO NOT pop. It is popped in stop above: Tau_global_stackpos[tid]--;
 	}
   return 0;
 }
@@ -500,6 +515,7 @@ extern "C" void Tau_init(int argc, char **argv) {
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_set_node(int node) {
+  if (node >= 0) TheSafeToDumpData()=1;
   RtsLayer::setMyNode(node);
 }
 
@@ -751,6 +767,9 @@ extern "C" int& tau_totalnodes(int set_or_get, int value)
 #define TAU_GEN_EVENT(e, msg) TauUserEvent* e () { \
 	static TauUserEvent u(msg); return &u; } 
 
+#define TAU_GEN_CONTEXT_EVENT(e, msg) TauContextUserEvent* e () { \
+	static TauContextUserEvent ce(msg); return &ce; } 
+
 TAU_GEN_EVENT(TheSendEvent,"Message size sent to all nodes")
 TAU_GEN_EVENT(TheRecvEvent,"Message size received from all nodes")
 TAU_GEN_EVENT(TheBcastEvent,"Message size for broadcast")
@@ -762,6 +781,7 @@ TAU_GEN_EVENT(TheAlltoallEvent,"Message size for all-to-all")
 TAU_GEN_EVENT(TheScatterEvent,"Message size for scatter")
 TAU_GEN_EVENT(TheGatherEvent,"Message size for gather")
 TAU_GEN_EVENT(TheAllgatherEvent,"Message size for all-gather")
+TAU_GEN_CONTEXT_EVENT(TheWaitEvent,"Message size received in wait")
 
 
 TauContextUserEvent**& TheMsgVolContextEvent() {
@@ -795,6 +815,10 @@ extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
   TAU_EVENT(TheSendEvent(), length);
 
   if (TauEnv_get_comm_matrix()) {
+    if (destination >= tau_totalnodes(0,0)) {
+      fprintf(stderr, "TAU Error: Comm Matrix destination %d exceeds node count %d. Was MPI_Init wrapper never called?\n", destination, tau_totalnodes(0,0));
+      exit(-1);
+    }
     TheMsgVolContextEvent()[destination]->TriggerEvent(length, RtsLayer::myThread());
   }
 
@@ -845,6 +869,10 @@ extern "C" void Tau_gather_data(int data) {
 
 extern "C" void Tau_allgather_data(int data) {
   TAU_EVENT(TheAllgatherEvent(), data);
+}
+
+extern "C" void Tau_wait_data(int data) {
+  TAU_CONTEXT_EVENT(TheWaitEvent(), data);
 }
 
 extern "C" void Tau_allreduce_data(int data) {
@@ -1451,10 +1479,15 @@ void Tau_destructor_trigger() {
 
 //////////////////////////////////////////////////////////////////////
 extern "C" int Tau_create_task(void) {
+  int taskid;
   if (TAU_MAX_THREADS == 1) {
     printf("TAU: ERROR: Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=100  and rebuild it to use the new TASK API\n");
   }
-  return RtsLayer::RegisterThread() - 1; /* it returns 1 .. N, we want 0 .. N-1 */
+  taskid= RtsLayer::RegisterThread() - 1; /* it returns 1 .. N, we want 0 .. N-1 */
+  /* specify taskid is a fake thread used in the Task API */
+  Tau_is_thread_fake_for_task_api[taskid] = 1; /* This thread is fake! */
+  
+  return taskid;
 }
 
 

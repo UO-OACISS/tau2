@@ -50,9 +50,9 @@
 # define TAU_CALLPATH_DEFAULT 0
 #endif
 
-/* if we are doing EBS sampling, set the default sampling frequency */
+/* if we are doing EBS sampling, set the default sampling period */
 #define TAU_EBS_DEFAULT 0
-#define TAU_EBS_FREQUENCY_DEFAULT 1000
+#define TAU_EBS_PERIOD_DEFAULT 1000
 /* if we are doing EBS sampling, set whether we want inclusive samples */
 /* that is, main->foo->mpi_XXX is a sample for main, foo and mpi_xxx */
 #define TAU_EBS_INCLUSIVE_DEFAULT 0
@@ -60,9 +60,9 @@
 #define TAU_EBS_SOURCE_DEFAULT "itimer"
 
 /* Experimental feature - pre-computation of statistics */
-#if (defined(TAU_EXP_UNIFY) && defined(TAU_MPI))
-#define TAU_PRECOMPUTE_DEFAULT 0
-#endif /* TAU_EXP_UNIFY && TAU_MPI */
+#if (defined(TAU_UNIFY) && defined(TAU_MPI))
+#define TAU_PRECOMPUTE_DEFAULT 1
+#endif /* TAU_UNIFY && TAU_MPI */
 
 #ifdef TAU_COMPENSATE
 # define TAU_COMPENSATE_DEFAULT 1
@@ -90,12 +90,16 @@
 
 #define TAU_TRACK_MESSAGE_DEFAULT 0
 
+#define TAU_TRACK_IO_PARAMS_DEFAULT 0
+
 #define TAU_THROTTLE_DEFAULT 1
 #ifdef TAU_MPI
   #define TAU_SYNCHRONIZE_CLOCKS_DEFAULT 1
 #else
   #define TAU_SYNCHRONIZE_CLOCKS_DEFAULT 0
 #endif /* TAU_MPI */
+
+#define TAU_CUPTI_API_DEFAULT "runtime"
 
 /************************** tau.conf stuff, adapted from Scalasca ***********/
 
@@ -262,8 +266,9 @@ static int env_comm_matrix = 0;
 static int env_track_memory_heap = 0;
 static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
+static int env_track_io_params = 0;
 static int env_extras = 0;
-static int env_ebs_frequency = 0;
+static int env_ebs_period = 0;
 static int env_ebs_inclusive = 0;
 static int env_ebs_enabled = 0;
 static const char *env_ebs_source = "itimer";
@@ -276,6 +281,7 @@ static double env_throttle_percall = 0;
 static const char *env_profiledir = NULL;
 static const char *env_tracedir = NULL;
 static const char *env_metrics = NULL;
+static const char *env_cupti_api = NULL;
 
 /*********************************************************************
  * Write to stderr if verbose mode is on
@@ -315,6 +321,7 @@ static int parse_bool(const char *str, int default_value = 0) {
 }
 
 const char *TauEnv_get_metrics() {
+  if (env_metrics == NULL) TauEnv_initialize();
   return env_metrics;
 }
 
@@ -366,6 +373,10 @@ int TauEnv_get_track_memory_headroom() {
   return env_track_memory_headroom;
 }
 
+int TauEnv_get_track_io_params() {
+  return env_track_io_params;
+}
+
 int TauEnv_get_extras() {
   return env_extras;
 }
@@ -402,8 +413,8 @@ int TauEnv_get_profile_format() {
   return env_profile_format;
 }
 
-int TauEnv_get_ebs_frequency() {
-  return env_ebs_frequency;
+int TauEnv_get_ebs_period() {
+  return env_ebs_period;
 }
 
 int TauEnv_get_ebs_inclusive() {
@@ -424,6 +435,10 @@ int TauEnv_get_stat_precompute() {
 
 int TauEnv_get_child_forkdirs(){
   return env_child_forkdirs;
+}
+
+const char* TauEnv_get_cupti_api(){
+  return env_cupti_api;
 }
 
 /*********************************************************************
@@ -474,6 +489,18 @@ void TauEnv_initialize() {
       TAU_METADATA("TAU_TRACK_HEADROOM", "off");
       env_track_memory_headroom = 0;
     }
+
+    tmp = getconf("TAU_TRACK_IO_PARAMS");
+    if (parse_bool(tmp, env_track_memory_headroom)) {
+      TAU_VERBOSE("TAU: POSIX I/O wrapper parameter tracking enabled\n");
+      TAU_METADATA("TAU_TRACK_IO_PARAMS", "on");
+      env_track_io_params = 1;
+      env_extras = 1;
+    } else {
+      TAU_METADATA("TAU_TRACK_IO_PARAMS", "off");
+      env_track_memory_headroom = 0;
+    }
+
 
     /*** Options that can be used with Scalasca and VampirTrace need to go above this line ***/
 #ifdef TAU_EPILOG
@@ -723,18 +750,18 @@ void TauEnv_initialize() {
 
     if (TauEnv_get_ebs_enabled()) {
 
-      /* TAU sampling frequency */
-      const char *ebs_frequency = getconf("TAU_EBS_FREQUENCY");
-      env_ebs_frequency = TAU_EBS_FREQUENCY_DEFAULT;
-      if (ebs_frequency) {
-	env_ebs_frequency = atoi(ebs_frequency);
-	if (env_ebs_frequency < 0) {
-	  env_ebs_frequency = TAU_EBS_FREQUENCY_DEFAULT;
+      /* TAU sampling period */
+      const char *ebs_period = getconf("TAU_EBS_PERIOD");
+      env_ebs_period = TAU_EBS_PERIOD_DEFAULT;
+      if (ebs_period) {
+	env_ebs_period = atoi(ebs_period);
+	if (env_ebs_period < 0) {
+	  env_ebs_period = TAU_EBS_PERIOD_DEFAULT;
 	}
       }
-      TAU_VERBOSE("TAU: EBS frequency = %d usec\n", env_ebs_frequency);
-      sprintf(tmpstr, "%d usec", env_ebs_frequency);
-      TAU_METADATA("TAU_EBS_FREQUENCY", tmpstr);
+      TAU_VERBOSE("TAU: EBS period = %d \n", env_ebs_period);
+      sprintf(tmpstr, "%d", env_ebs_period);
+      TAU_METADATA("TAU_EBS_PERIOD", tmpstr);
       
       const char *ebs_inclusive = getconf("TAU_EBS_INCLUSIVE");
       env_ebs_inclusive = TAU_EBS_INCLUSIVE_DEFAULT;
@@ -753,20 +780,38 @@ void TauEnv_initialize() {
 	env_ebs_source = "itimer";
       }
       TAU_VERBOSE("TAU: EBS Source: %s\n", env_ebs_source);
-      
+
+      /* *CWL* TAU_EXP_EBS_NEW_DEFAULTS is a
+	 tentative measure to ensure the functionality we currently 
+	 have as the default does not break. This will allow development
+	 of EBS with proper orthogonal support for combinations of
+	 configurations involving TAU_TRACING, TAU_PROFILING, and
+	 TAU_CALLPATH.
+      */
+#ifdef TAU_EXP_EBS_NEW_DEFAULTS
+      if (TauEnv_get_tracing() && TauEnv_get_callpath()) {
+#endif /* TAU_EXP_EBS_NEW_DEFAULTS */
       env_callpath = 1;
       env_callpath_depth = 300;
       TAU_VERBOSE("TAU: EBS Overriding callpath settings, callpath enabled, depth = 300\n");
+#ifdef TAU_EXP_EBS_NEW_DEFAULTS
+      }
+#endif /* TAU_EXP_EBS_NEW_DEFAULTS */
     }
 
-#if (defined(TAU_EXP_UNIFY) && defined(TAU_MPI))
-    tmp = getconf("TAU_EXP_STAT_PRECOMPUTE");
+#if (defined(TAU_UNIFY) && defined(TAU_MPI))
+    tmp = getconf("TAU_STAT_PRECOMPUTE");
     if (parse_bool(tmp, TAU_PRECOMPUTE_DEFAULT)) {
       env_stat_precompute = 1;
       TAU_VERBOSE("TAU: Precomputation of statistics Enabled\n");
-      TAU_METADATA("TAU_PRECOMPUTE", "on");
+      /* *CWL* PRECOMPUTE only makes sense in the context of merged output */
+      //      TAU_METADATA("TAU_PRECOMPUTE", "on");
+    } else {
+      env_stat_precompute = 0;
+      TAU_VERBOSE("TAU: Precomputation of statistics Disabled\n");
+      //      TAU_METADATA("TAU_PRECOMPUTE", "off");
     }
-#endif /* TAU_EXP_UNIFY && TAU_MPI */
+#endif /* TAU_UNIFY && TAU_MPI */
 
     /* child fork directory */
     tmp = getconf("TAU_CHILD_FORKDIRS");
@@ -780,6 +825,16 @@ void TauEnv_initialize() {
       TAU_METADATA("TAU_PROFILE", "off");*/
     }
 
+    env_cupti_api = getconf("TAU_CUPTI_API");
+    if (env_cupti_api == NULL || 0 == strcasecmp(env_cupti_api, "")) {
+      env_cupti_api = TAU_CUPTI_API_DEFAULT;
+      TAU_VERBOSE("TAU: CUPTI API tracking: %s\n", env_cupti_api);
+      TAU_METADATA("TAU_CUPTI_API", env_cupti_api);
+		}
+		else {
+      TAU_VERBOSE("TAU: CUPTI API tracking: %s\n", env_cupti_api);
+      TAU_METADATA("TAU_CUPTI_API", env_cupti_api);
+		}
 
   }
 }

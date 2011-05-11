@@ -16,7 +16,7 @@ wrapper:
 # You will need PDT x86_64/bin directory in your path
 	cparse secret.h
 	tau_wrap secret.h.pdb secret.h -o secret_wrap.inst.c -r libsecret.so
-	cd wrapper; make
+	cd secret_wrapper; make
 	
 
 clean:

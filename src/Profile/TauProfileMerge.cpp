@@ -35,7 +35,7 @@
 extern "C" int TAUDECL Tau_RtsLayer_myThread();
 
 
-#ifdef TAU_EXP_UNIFY
+#ifdef TAU_UNIFY
 void Tau_profileMerge_writeDefinitions(FILE *f) {
 
   Tau_unify_object_t *functionUnifier, *atomicUnifier;
@@ -92,7 +92,8 @@ int Tau_mergeProfiles() {
   x_uint64 start, end;
   const char *profiledir = TauEnv_get_profiledir();
 
-#ifdef TAU_EXP_UNIFY
+  Tau_global_incr_insideTAU();
+#ifdef TAU_UNIFY
   Tau_unify_unifyDefinitions();
   Tau_snapshot_writeUnifiedBuffer();
 #else
@@ -116,9 +117,9 @@ int Tau_mergeProfiles() {
   buflen = Tau_snapshot_getBufferLength();
 
   int maxBuflen;
-  MPI_Reduce(&buflen, &maxBuflen, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
+  PMPI_Reduce(&buflen, &maxBuflen, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
 
-#ifdef TAU_EXP_UNIFY
+#ifdef TAU_UNIFY
   Tau_unify_object_t *functionUnifier;
   Tau_unify_object_t *atomicUnifier;
   int numEvents;
@@ -163,8 +164,8 @@ int Tau_mergeProfiles() {
 				   globalNumThreads, numEventThreads,
 				   &gExcl, &gIncl, &gNumCalls, &gNumSubr,
 				   &sExcl, &sIncl, &sNumCalls, &sNumSubr);
-  }
-#endif /* TAU_EXP_UNIFY */
+  } /* TauEnv_get_stat_precompute() == 1 */
+#endif /* TAU_UNIFY */
       
   if (rank == 0) {
     char *recv_buf = (char *) malloc (maxBuflen);
@@ -182,7 +183,7 @@ int Tau_mergeProfiles() {
       perror(errormsg);
     }
 
-#ifdef TAU_EXP_UNIFY
+#ifdef TAU_UNIFY
     Tau_profileMerge_writeDefinitions(f);
 #endif
 
@@ -205,13 +206,18 @@ int Tau_mergeProfiles() {
     char tmpstr[256];
     sprintf(tmpstr, "%.4G seconds", ((double)(end-start))/1000000.0f);
     TAU_METADATA("TAU Profile Merge Time", tmpstr);
+    if (TauEnv_get_stat_precompute() == 1) {
+      TAU_METADATA("TAU_PRECOMPUTE", "on");
+    } else {
+      TAU_METADATA("TAU_PRECOMPUTE", "off");
+    }
     Tau_snapshot_writeMetaDataBlock();
 
     buf = Tau_snapshot_getBuffer();
     buflen = Tau_snapshot_getBufferLength();
     fwrite (buf, buflen, 1, f);
 
-#ifdef TAU_EXP_UNIFY
+#ifdef TAU_UNIFY
     int envval = TauEnv_get_stat_precompute();
     if (envval == 1) {
       if (rank == 0) {
@@ -298,7 +304,7 @@ int Tau_mergeProfiles() {
 	}
       }
     }
-#endif /* TAU_EXP_UNIFY */
+#endif /* TAU_UNIFY */
 
     fclose(f);
 
@@ -313,6 +319,7 @@ int Tau_mergeProfiles() {
     /* send data */
     PMPI_Send(buf, buflen, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
   }
+  Tau_global_decr_insideTAU();  
   return 0;
 }
 

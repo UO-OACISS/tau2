@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh 
 #****************************************************************************
 #*			TAU Portable Profiling Package			   **
 #*			http://www.cs.uoregon.edu/research/tau	           **
@@ -92,6 +92,10 @@ for arg in "$@"; do
     echo "-shmemlibrary=<library> ............ Specify a different SHMEM library."
     echo "            e.g., -shmemlibrary=-lsmac                                 "
     echo ""
+    echo "GPGPU Options:"
+    echo "-cuda=<dir> ................ Specify location of the top level CUDA SDK"
+    echo "directory with include subdirectory. Enables OpenCL and CUDA profiling."
+    echo ""
     echo "Other Options:"
     echo "-iowrapper .................................... Build POSIX IO Wrapper."
     echo "-pthread .................................. Use pthread thread package."
@@ -100,6 +104,9 @@ for arg in "$@"; do
     echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
     echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
     echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
+    echo "-otfinc=<dir> ....... Specify location of stand-alone OTF header files."
+    echo "-otflib=<dir> ...... Specify location of stand-alone OTF library files."
+    echo "-ebs2otf ............... Enable conversion of EBS traces to OTF format."
     echo "-nocomm  ........ Disable tracking communication events in MPI library."
     echo "-hpctoolkit-src-dir=<dir> .......... Specify patched HPCToolkit source."
     echo "-hpctoolkit-install-dir=<dir> . Specify patched HPCToolkit Install dir."
@@ -109,13 +116,13 @@ for arg in "$@"; do
     echo "-epilogbin=<dir> ........... Specify full path to EPILOG bin directory."
     echo "-epiloginc=<dir> ....... Specify full path to EPILOG include directory."
     echo "-vampirtrace=<dir>  .. Specify location of VampirTrace Tracing package."
-    echo "-mon-mpi ..... Specify MPI as TAU monitoring transport layer.          "
-    echo "-mon-mrnet=<dir> .. Specify location to MRNet package as TAU monitoring"
-    echo "                    transport layer (ToM).                             "
-    echo "-mon-mrnet-lib=<dir> ............... Specify full path to MRNet library"
-    echo "                                     installation.                     "
-    echo "-mon-mrnet-use-lightweight ..... Instructs ToM to use MRNet lightweight"
-    echo "                                 interface.                            "
+#    echo "-mon-mpi ..... Specify MPI as TAU monitoring transport layer.          "
+#    echo "-mon-mrnet=<dir> .. Specify location to MRNet package as TAU monitoring"
+#    echo "                    transport layer (ToM).                             "
+#    echo "-mon-mrnet-lib=<dir> ............... Specify full path to MRNet library"
+#    echo "                                     installation.                     "
+#    echo "-mon-mrnet-use-lightweight ..... Instructs ToM to use MRNet lightweight"
+#    echo "                                 interface.                            "
     echo "-scorep=<dir>  .................... Specify location of SCOREP package."
     echo "-python .. Automatically choose python options based on Python in path."
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
@@ -126,6 +133,7 @@ for arg in "$@"; do
     echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
     echo "-PROFILECALLPATH ......................... Generate call path profiles."
     echo "-PROFILEPARAM .... Generate profiles with parameter mapped event data ."
+    echo "-PROFILECOMMUNICATORS ... Generate profiles with MPI communicator info."
     echo "-PROFILEPHASE .......................... Generate phase based profiles."
     echo "-DEPTHLIMIT ........... Disable instrumentation beyond a certain depth."
     echo "-PROFILEMEMORY .. Track heap memory utilization at each function entry."
@@ -161,7 +169,7 @@ for arg in "$@"; do
     echo "     options [cc|gcc|gcc4|scgcc|KCC|pgcc|guidec|*xlc*|ecc|pathcc|orcc]."
     echo "-fortran=<compiler> ..................... specify the Fortran compiler."
     echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
-    echo "       g95|open64|kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale}"
+    echo "   g95|open64|kai|nec|hitachi|intel|absoft|lahey|nag|nagware|pathscale}"
     echo "       gfortran|gfortran4]"
     echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
     echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
@@ -193,6 +201,9 @@ for arg in "$@"; do
     echo "-bfd=<dir | download> ............ Specify a BFD directory or download."
     echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
     echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
+    echo "-otfinc=<dir> ....... Specify location of stand-alone OTF header files."
+    echo "-otflib=<dir> ...... Specify location of stand-alone OTF library files."
+    echo "-ebs2otf ............... Enable conversion of EBS traces to OTF format."
     echo "-mpi .......................... Specify use of TAU MPI wrapper library."
     echo "-mpiinc=<dir> ............. Specify location of MPI include dir and use"
     echo "                           the TAU MPI Profiling and Tracing Interface."
@@ -208,6 +219,9 @@ for arg in "$@"; do
     echo "-shmemlibrary=<library> ............ Specify a different SHMEM library."
     echo "            e.g., -shmemlibrary=-lsmac                                 "
     echo "-nocomm  ........ Disable tracking communication events in MPI library."
+    echo "-cuda=<dir> ................ Specify location of the top level CUDA SDK"
+    echo "directory with include subdirectory. Enables OpenCL and CUDA profiling."
+    echo " "
     echo "-hpctoolkit-src-dir=<dir> .......... Specify patched HPCToolkit source."
     echo "-hpctoolkit-install-dir=<dir> . Specify patched HPCToolkit Install dir."
     echo "-scalasca=<dir>  ................ Specify location of SCALASCA package."
@@ -216,13 +230,13 @@ for arg in "$@"; do
     echo "-epilogbin=<dir> ........... Specify full path to EPILOG bin directory."
     echo "-epiloginc=<dir> ....... Specify full path to EPILOG include directory."
     echo "-vampirtrace=<dir>  .. Specify location of VampirTrace Tracing package."
-    echo "-mon-mpi ..... Specify MPI as TAU monitoring transport layer.          "
-    echo "-mon-mrnet=<dir> .. Specify location to MRNet package as TAU monitoring"
-    echo "                    transport layer (ToM).                             "
-    echo "-mon-mrnet-lib=<dir> ............... Specify full path to MRNet library"
-    echo "                                     installation.                     "
-    echo "-mon-mrnet-use-lightweight ..... Instructs ToM to use MRNet lightweight"
-    echo "                                 interface.                            "
+#    echo "-mon-mpi ..... Specify MPI as TAU monitoring transport layer.          "
+#    echo "-mon-mrnet=<dir> .. Specify location to MRNet package as TAU monitoring"
+#    echo "                    transport layer (ToM).                             "
+#    echo "-mon-mrnet-lib=<dir> ............... Specify full path to MRNet library"
+#    echo "                                     installation.                     "
+#    echo "-mon-mrnet-use-lightweight ..... Instructs ToM to use MRNet lightweight"
+#    echo "                                 interface.                            "
     echo "-scorep=<dir>  .................... Specify location of SCOREP package."
     echo "-upcnetwork=<value> .. Specify network (mpi, udp,...) for Berkeley UPC."
     echo "-python .. Automatically choose python options based on Python in path."
@@ -247,6 +261,7 @@ for arg in "$@"; do
     echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
     echo "-PROFILECALLPATH ......................... Generate call path profiles."
     echo "-PROFILEPARAM .... Generate profiles with parameter mapped event data ."
+    echo "-PROFILECOMMUNICATORS ... Generate profiles with MPI communicator info."
     echo "-PROFILEPHASE .......................... Generate phase based profiles."
     echo "-DEPTHLIMIT ........... Disable instrumentation beyond a certain depth."
     echo "-PROFILEMEMORY .. Track heap memory utilization at each function entry."
@@ -397,6 +412,7 @@ profilememory=no
 profileheadroom=no
 callpath=no
 profileparam=no
+profilecommunicators=no
 depthlimit=no
 phase=no
 trace=no
@@ -425,6 +441,10 @@ pdt=no
 armci=no
 vtf=no
 otf=no
+otfdir=
+otfinc=
+otflib=
+ebs2otf=no
 opari=no
 epilog=no
 hpctoolkit=no
@@ -554,14 +574,14 @@ for arg in "$@"; do
 
   -fortran=*)
     myarg=`echo $arg | sed 's/-fortran=//'`
-    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 ] ; then
+    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 ] ; then
 	if [ $myarg = gnu ] ; then
 	    fortran_compiler=gfortran
 	else
 	    fortran_compiler=$myarg
 	fi
     else
-	echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'nec' , 'absoft', 'lahey', 'nagware', 'pathscale', 'gfortran', 'g95', and 'open64'"
+	echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'g95', and 'open64'"
 	exit 1
     fi
     shift
@@ -955,6 +975,31 @@ for arg in "$@"; do
     shift
     ;;
 
+  -otfinc=*)
+      otfinc=`echo $arg | sed -e 's/-otfinc=//'`
+      if [ ! -d $otfinc ]
+      then
+        echo "Error: Cannot access OTF include directory $otfinc"
+        exit 1
+      fi
+      shift
+      ;;
+
+  -otflib=*)
+      otflib=`echo $arg | sed -e 's/-otflib=//'`
+      if [ ! -d $otflib ]
+      then
+        echo "Error: Cannot access OTF library directory $otflib"
+        exit 1
+      fi
+      shift
+      ;;
+
+  -ebs2otf)
+      ebs2otf=yes
+      shift
+      ;;
+
   -dyninst=*)
       dyninst=yes
       dyninstdir=`echo $arg | sed -e 's/-dyninst=//'`
@@ -985,21 +1030,23 @@ for arg in "$@"; do
   -jdk=*)
       java=yes
       jdkdir=`echo $arg | sed -e 's/-jdk=//'`
+      #echo "jdkdir is $jdkdir"
       if [ ! -d $jdkdir ]
       then
         echo "Error: Cannot access JDK directory $jdkdir"
         exit 1
       fi 
-      jv=`$jdkdir/bin/java -version 2>&1 | grep version | awk '{ print $3; }'| sed -e s/\"//g`
-      eval major=${jv/./;minor=}
-      minor=`echo $minor | sed 's/\([0-9]*\).*/\1/g'`
-      echo "major = $major, minor = $minor"
+      jv=`${jdkdir}/bin/java -version 2>&1 | grep version | awk '{ print $3; }'| sed -e s/\"//g`
+      major=`echo $jv | sed 's/\([0-9]*\).*/\1/g'`
+      minor=`echo $jv | sed 's/'${major}'.\([0-9]*\).*/\1/g'`
+      #echo "major = $major, minor = $minor"
       if [ $major = 1 ]
       then
         if [ $minor -lt 5 ]
         then
-          echo "Error: Specify a JDK of version 1.5 or later"
-          exit 1
+          echo "Error: Please specify a JDK version 1.5 or later to use JVMTI based instrumentation"
+	else
+	  fixmakeargs="$fixmakeargs JVMTI jdkdir=$jdkdir"
         fi
       fi
 
@@ -1211,6 +1258,13 @@ for arg in "$@"; do
     shift
     ;;
 
+  -PROFILECOMMUNICATORS)
+    profile=yes
+    profilecommunicators=yes
+    shift
+    ;;
+
+
   -DEPTHLIMIT)
     depthlimit=yes
     shift
@@ -1326,6 +1380,9 @@ for arg in "$@"; do
   -arch=*)
     tauarch=`echo $arg | sed -e 's/-arch=//' -e 's/ /_/g'`
     shift
+    if [ $tauarch = i386_linux ]; then
+      orig_useropt="$orig_useropt -m32"
+    fi
     ;;
 
   -pdtcompdir=*)
@@ -1357,10 +1414,10 @@ for arg in "$@"; do
       exit 1
     fi
     if [ -f "$cudainclude/cuda.h" ] ; then
-			useropt="$useropt#-DTAU_MAX_THREADS=3"
-    	fixmakeargs="$fixmakeargs cudainclude=$cudainclude"
+			useropt="$useropt#-DTAU_MAX_THREADS=32"
+    	fixmakeargs="$fixmakeargs CUDA TAU_USE_GPU cudainclude=$cudainclude"
 			if [ -f "$cudainclude/CL/cl.h" ] ; then
-    		fixmakeargs="$fixmakeargs openclinclude=$cudainclude"
+    		fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$cudainclude"
 			fi
 		else
 			echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
@@ -1375,14 +1432,39 @@ for arg in "$@"; do
       exit 1
     fi
 		if [ -f "$openclinclude/CL/cl.h" ] ; then
-			useropt="$useropt#-DTAU_MAX_THREADS=3"
-      fixmakeargs="$fixmakeargs openclinclude=$openclinclude"
+			useropt="$useropt#-DTAU_MAX_THREADS=32"
+      fixmakeargs="$fixmakeargs OPENCL openclinclude=$openclinclude"
 		else
 			echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
     fi
     shift
     ;;
   
+  -cupti=*)
+    cupti=`echo $arg | sed -e 's/-cupti=//' -e 's/ /#/g'`
+    if [ ! -d $cupti ] ; then
+      echo "Error: Cannot access CUPTI include directory $cupti"
+      exit 1
+    fi
+		if [ -f "$cupti/include/cupti_events.h" ] ; then
+      fixmakeargs="$fixmakeargs CUPTI cuptiinclude=$cupti/include"
+		else
+			echo "Error: Cannot find CUPTI headers."
+    fi
+    shift
+    ;;
+	default)
+    echo "Fixing Makefiles"
+    ;;	
+  '')
+    #echo "NULL switch!"
+    # Required for HP/Compaq Tru64 machines.
+    ;;
+  *)
+    echo "ERROR: Command line switch \`$arg' not recognized" 1>&2
+    echo "Run configure with -help to see a list of options" 1>&2
+    exit 1
+    ;;
 	default)
     echo "Fixing Makefiles"
     ;;	
@@ -1489,6 +1571,9 @@ cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.oracle ${targetdir}/etc/.
 cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.postgresql ${targetdir}/etc/.
 cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.db2 ${targetdir}/etc/.
 cp ${tauroot}/tools/src/perfexplorer/etc/java.policy ${targetdir}/etc/.
+if [ ! -d ${targetdir}/etc/topology ]; then
+  cp -r ${tauroot}/etc/topology ${targetdir}/etc
+fi
 
 # copy PerfDMF schema files
 cp ${tauroot}/tools/src/perfdmf/etc/* ${targetdir}/etc/.
@@ -1532,11 +1617,17 @@ sed -e 's,@TAUROOT@,'$targetdir',' \
     > $BINTARGET/perfexplorer
 chmod a+rx $BINTARGET/perfexplorer
 
+# install tau_gen_wrapper
+cp ${tauroot}/tools/src/tau_gen_wrapper $BINTARGET
+
 
 if [ ! -f $BINTARGET/jracy ] ; then 
     cd $BINTARGET/; ln -s paraprof jracy; cd ${tauroot}; 
 fi
 
+#installs the tau_java handeler
+cat ${tauroot}/tools/src/tau_java.skel | sed -e 's,@JARTARGET@,'$JARTARGET',' -e 's,@JDKDIR@,'$jdkdir',' > $BINTARGET/tau_java
+chmod a+rx $BINTARGET/tau_java
 
 cp ${tauroot}/tools/src/paraprof/bin/paraprof.jar $JARTARGET
 cp ${tauroot}/tools/src/perfdmf/bin/perfdmf.jar $JARTARGET
@@ -1556,7 +1647,12 @@ cp ${tauroot}/tools/src/contrib/derby.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/mysql.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/postgresql.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/xerces.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/mesp.jar $JARTARGET
 cp ${tauroot}/tools/src/common/resources/tau16x16.gif $JARTARGET
+
+# install the perl scripts for ebs post-processing in the bin dir
+cp ${tauroot}/tools/src/tau_ebs_process.pl $BINTARGET
+cp ${tauroot}/utils/ebs2otf/tau_ebs2otf.pl $BINTARGET
 
 case $machine in
     
@@ -1571,6 +1667,7 @@ case $machine in
 	gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
 	gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_cg.so.gz > $JARTARGET/libjogl_cg.so
 	gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+
 	;;
     
     crayxmt)
@@ -2032,7 +2129,7 @@ case $machine in
 	    #tauoptions="${tauoptions}-pgi"
 	    pgi=yes
 	    default_fortran=pgi
-	    fixmakeargs="$fixmakeargs COMPINST_PGI"
+	    fixmakeargs="$fixmakeargs PGI COMPINST_PGI"
 	elif [ "x$PE_ENV" = xGNU ] ; then
 	    gnu=yes
 	    tauoptions="${tauoptions}-gnu"
@@ -2050,14 +2147,13 @@ case $machine in
 	elif [ "x$PE_ENV" = xCRAY ] ; then
 	    tauoptions="${tauoptions}-cray"
 	    default_fortran=cray
-	    fixmakeargs="$fixmakeargs CRAYCC"
 	    
 	    touch conf_test.c
-	    extradir=`CC -v conf_test.c 2>&1 | grep cray-c++ | sed -e 's/ /\n/g' | grep "/opt/cray/cce" | grep "lib/x86-64$" | uniq`
+	    extradir=`CC -v conf_test.c 2>&1 | grep cray-c++ | sed -e 's/ /\n/g' | grep "/opt/cray/cce" | grep "lib/x86-64$" | uniq | grep -v rpath`
 	    rm -f conf_test.c
 
 	    # not implemented yet
-#	    fixmakeargs="$fixmakeargs COMPINST_CRAYCC"
+	    fixmakeargs="$fixmakeargs COMPINST_CRAYCC"
 	fi
 	if [ $fortran_compiler = no ] ; then
 	    fortran_compiler=$default_fortran
@@ -2230,6 +2326,11 @@ fi
 if [ $profileparam = yes ] ; then
     fixmakeargs="$fixmakeargs PROFILEPARAM"
     tauoptions="${tauoptions}-param"
+fi
+
+if [ $profilecommunicators = yes ] ; then
+    fixmakeargs="$fixmakeargs PROFILECOMMUNICATORS PROFILEPARAM"
+    tauoptions="${tauoptions}-communicators"
 fi
 
 if [ $depthlimit = yes ] ; then
@@ -2843,9 +2944,9 @@ case $fortran_compiler in
       fi
       ;;
 
-   nagware)
-      echo "Default Fortran compiler will be Nagware f95"
-      extradir=`which f95 | sed s@\/f95@\/..@`
+   nag*)
+      echo "Default Fortran compiler will be Nagware nagfor"
+      extradir=`which nagfor | sed s@\/nagfor@\/..@`
       fixmakeargs="$fixmakeargs NAGWARE_FORTRAN"
       ;;
 
@@ -3160,7 +3261,11 @@ if [ $epilog = yes -a $epiloginc = no -a $epilogdir != no ] ; then
     if [ -f $epilogdir/include/elg_rw.h ] ; then
 	epilogincdir=$epilogdir/include
     else
+      if [ -f $epilogdir/include/be/elg_rw.h ] ; then
+	epilogincdir=$epilogdir/include/be
+      else
 	epilogincdir=$epilogdir/src
+      fi
     fi
 fi
 
@@ -3175,6 +3280,9 @@ fi
 if [ $epilog = yes -a -f $epilogbindir/skin ] ; then
     fixmakeargs="$fixmakeargs SCALASCA"
     scalasca=yes
+  if [ $machine = craycnl -a -d $epilogdir/include/fe -a -d $epilogdir/lib/be ] ; then
+    epiloglibdir=$epilogdir/lib/be
+  fi
 fi
 
 if [ $epilog = yes -a $epiloglib = no -a $epilogdir != no ] ; then
@@ -3215,7 +3323,7 @@ if [ $vampirtrace = yes ] ; then
 	$echo "Checking version of VampirTrace... ${nnl}"
 	version=`$vampirtracedir/bin/vtcc -vt:version 2>&1`
 	echo "$version"
-	eval major=${version/./;minor=}
+	#eval major=${version/./;minor=}
 	minor=`echo $minor | sed 's/\([0-9]*\).*/\1/g'`
 
 	# check if 5.7 or later
@@ -3385,7 +3493,13 @@ then
     fi
     if [ $machine = craycnl ] 
     then
-      shmemincargs="-I/opt/mpt/default/xt/sma64/include/mpp"
+      if [ -r $MPT_DIR/sma/include/mpp/shmem.h ]
+      then
+        shmemincargs="-I$MPT_DIR/sma/include/mpp/"
+      else
+        shmemincargs="-I/opt/mpt/default/xt/sma64/include/mpp"
+# old options 
+      fi
     fi
   fi
   
@@ -3411,7 +3525,12 @@ then
     fi
     if [ $machine = craycnl ] 
     then
-      shmemlibargs="$shmemlibargs -L/opt/mpt/default/xt/sma64/lib"
+      if [ -r $MPT_DIR/sma/lib64/libsma.a ]
+      then
+        shmemlibargs="$shmemlibargs -L$MPT_DIR/sma/lib64/"
+      else
+        shmemlibargs="$shmemlibargs -L/opt/mpt/default/xt/sma64/lib"
+      fi
     fi
   fi
 
@@ -3573,7 +3692,9 @@ if [ $cxx_compiler = g++ -o $cxx_compiler = g++4 -o $cxx_compiler = egcs -o $cxx
     fi
     taugcclibdir=`$c_compiler -print-libgcc-file-name | sed -e 's,[^/]*$,,'`
     echo "Using GNU lib dir as $taugcclibdir"
-    fixmakeargs="$fixmakeargs taugcclibdir=$taugcclibdir" 
+    taugccstdcxxlibdir=`$c_compiler -print-file-name=libstdc++.a | sed -e 's,[^/]*$,,'`
+    echo "Using GNU stdc++ lib dir as $taugccstdcxxlibdir"
+    fixmakeargs="$fixmakeargs taugcclibdir=$taugcclibdir taugccstdcxxlibdir=$taugccstdcxxlibdir" 
 fi
 ######################################################################
 # TEST FOR ALL MACHINE TYPES
@@ -3915,7 +4036,7 @@ case $machine in
 	;;
 
      default)
-	echo "fix make args $fixmakeargs"
+	#echo "fix make args $fixmakeargs"
 	fixmakeargs="arch=$machine $fixmakeargs"
 	;;
 
@@ -3930,7 +4051,7 @@ case $machine in
 	;;
     esac
 
-if [ $machine = x86_64 -o $machine = i386_linux -o $machine = ia64 ] ; then
+if [ $machine = x86_64 -o $machine = i386_linux -o $machine = ia64 -o $machine = suni386 -o $machine = sunx86_64 ] ; then
     if [ $cxx_compiler = CC ] ; then
         fixmakeargs="$fixmakeargs SUNCC"
         if [ $openmp = yes ] ; then
@@ -4434,6 +4555,8 @@ if [ $mpi = yes ] ; then
         mpiflibargs="-lepk.ad.fmpi"
         wrapperlib="$wrapperlib -lepk.ad.fmpi"
       fi
+        # None of these options matter. It uses the include/Makefile options
+        #echo "NOTE: ADDING -lfmpich to the Scalasca link line"
       if [ $epilog = yes -a -f $epiloglibdir/libcubew3.a ] ; then
           wrapperlib="$wrapperlib -lcubew3"
       fi
@@ -4863,42 +4986,49 @@ fi
 
 if [ "x$bfd" = "xyes" ] ; then
     if [ "x$bfddir" = xdownload ] ; then
-	bfddir=${targetdir}/${architecture}/binutils-2.20
-	if [ -r "$bfddir/lib/libbfd.a" ] ; then
-	    echo "BFD download already found, skipping"
-	else
-	    tempdir=".tmp_bfdbuild_$$"
-	    mkdir $tempdir
-	    cd $tempdir
-	    if [ "$machine" = "apple" ] ; then
-		curl http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz > binutils-2.20.tar.gz
-	    else 
-		wget http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz
-	    fi
-	    tar -xzf binutils-2.20.tar.gz
-	    cd binutils-2.20
-	    if [ $machine = "bgp" ] ; then
-                ./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir CC=powerpc-bgp-linux-gcc CXX=powerpc-bgp-linux-g++ --disable-nls --disable-werror
-		# have to run make twice, first one dies with illegal instruction
-		make
-		make
-		make install
-	    else
-                ./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir --disable-nls --disable-werror
-		make && make install
-            fi
-	    cp include/demangle.h $bfddir/include
-	    cp include/libiberty.h $bfddir/include
-	    
-	    # snow leopard
-	    if [ -r "$bfddir/lib/x86_64/libiberty.a" ] ; then
-		mv $bfddir/lib/x86_64/libiberty.a $bfddir/lib/libiberty.a
-	    fi
+		bfddir=${targetdir}/${architecture}/binutils-2.20
+		if [ -r "$bfddir/lib/libbfd.a" ] ; then
+			echo "BFD download already found, skipping"
+		else
+			tempdir=".tmp_bfdbuild_$$"
+			mkdir $tempdir
+			cd $tempdir
+			if [ "$machine" = "apple" ] ; then
+				curl http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz > binutils-2.20.tar.gz
+			else 
+				wget http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz
+			fi
+			if [ ! -f binutils-2.20.tar.gz ] ; then
+				echo "The BFD tarball did not download.  Please download it manually from: "
+				echo "http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz"
+				echo "Please enter the directory containing the tarball: ${nnl}" 
+				read RESPONSE
+				cp $RESPONSE/binutils-2.20.tar.gz .
+			fi
+			tar -xzf binutils-2.20.tar.gz
+			cd binutils-2.20
+			if [ $machine = "bgp" ] ; then
+				./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir CC=powerpc-bgp-linux-gcc CXX=powerpc-bgp-linux-g++ --disable-nls --disable-werror
+				# have to run make twice, first one dies with illegal instruction
+				make
+				make
+				make install
+			else
+				./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir --disable-nls --disable-werror
+				make && make install
+			fi
+			cp include/demangle.h $bfddir/include
+			cp include/libiberty.h $bfddir/include
+			
+			# snow leopard
+			if [ -r "$bfddir/lib/x86_64/libiberty.a" ] ; then
+				mv $bfddir/lib/x86_64/libiberty.a $bfddir/lib/libiberty.a
+			fi
 
-	    cd ..
-	    cd ..
-	    rm -rf $tempdir
-	fi
+			cd ..
+			cd ..
+			rm -rf $tempdir
+		fi
     fi
     bfdinclude="-I$bfddir/include"
     bfdlink="-L$bfddir/lib -L$bfddir/lib64"
@@ -4914,11 +5044,17 @@ fi
 
 
 
+
 ######################################################################
 # Check for BFD
 ######################################################################
   cat <<EOF > conftest_bfd.c
 #include <bfd.h>
+#ifdef __APPLE__
+#include <crt_externs.h>
+char *** environ(void) { return (*_NSGetEnviron()); }
+#endif
+
 void foo() {
    bfd_init();
    bfd *BfdImage = bfd_openr("/proc/self/exe", 0);
@@ -4969,6 +5105,9 @@ fi
 if [ $bfd_worked = "no" ] ; then
     echo "failed"
     BFDLIBS="-lbfd -liberty"
+    if [ $tauarch = i386_linux ]; then 
+      BFDLIBS=""
+    fi
 else
     echo $BFDLIBS
 fi
@@ -5013,6 +5152,10 @@ cat <<EOF > conftest_bfd.c
 #    include <demangle.h>
 #  endif /* HAVE_GNU_DEMANGLE */
 
+#ifdef __APPLE__
+#include <crt_externs.h>
+char *** environ(void) { return (*_NSGetEnviron()); }
+#endif
 void foo() {
    bfd_init();
    bfd *BfdImage = bfd_openr("/proc/self/exe", 0);
@@ -5192,6 +5335,41 @@ if [ $otf = yes ] ; then
   fi  
 fi
 
+if [ $ebs2otf = yes ] ; then
+  if [ -f utils/ebs2otf/ebs2otf.so ] ; then
+      touch utils/ebs2otf/ebs2otf.so
+  fi
+  if [ $otf = yes ] ; then
+      echo "Warning: -otf option enables TAU Tracing as a default. EBS will only work with TAU profiles. Please make sure Profiles are enabled before use."
+      if [ "$otflib" = "" ] ; then
+	  otflib="$otfdir/${architecture}/lib"
+	  echo "OTF Library implicitly set to $otflib"
+      fi
+      if [ "$otfinc" = "" ] ; then
+	  otfinc="$otfdir/include"
+	  echo "OTF Header directory implicitly set to $otfinc"
+      fi
+  fi 
+  if [ ! -d $otflib ]
+      then
+      echo "Error: No available OTF support. Library not found at $otflib."
+      exit 1
+  fi
+  if [ ! -d $otfinc ]
+      then
+      echo "Error: No available OTF support. Headers not found at $otfinc."
+      exit 1
+  fi
+  if [ ! -f $otfinc/OTF_Version.h ] ; then
+      echo "Error: OTF_Version.h cannot be found. EBS will not support this version of OTF."
+      exit 1
+      # *CWL* Need version control code here. Still trying to decide the
+      #    best way about it. The above conditional will at least trim away
+      #    ancient versions of OTF.
+  fi
+
+  fixmakeargs="$fixmakeargs EBS2OTF otflib=$otflib otfinc=$otfinc"
+fi
 
 if [ $pdt_cxx_compiler != default ] ; then
 # Check if they specified -pdt_c++=/usr/bin/g++ instead of just g++ 
@@ -5326,27 +5504,27 @@ fi
 if [ $scorep = yes ] ; then
     fixmakeargs="$fixmakeargs SCOREP scorepdir=$scorepdir"
     tauoptions="${tauoptions}-scorep"
-    scorepCommonLibs="-lbfd#-liberty#-lotf2#-lsilc_utilities"
+    scorepCommonLibs="-lbfd#-liberty#-lotf2#-lscorep_utilities"
     if [ $mpi = yes ] ; then 
       if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs SCOREPOMPI" 
-	scorepLibs="-L${scorepdir}/lib#-lsilc_mpi#$scorepCommonLibs"
+	scorepLibs="-L${scorepdir}/lib#-lscorep_mpi#$scorepCommonLibs"
       else
         fixmakeargs="$fixmakeargs SCOREPMPI"
-	scorepLibs="-L${scorepdir}/lib#-lsilc_mpi#$scorepCommonLibs"
+	scorepLibs="-L${scorepdir}/lib#-lscorep_mpi#$scorepCommonLibs"
       fi 
     else
       if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs SCOREPOMP" 
-	scorepLibs="-L${scorepdir}/lib#-lsilc_serial#$scorepCommonLibs"
+	scorepLibs="-L${scorepdir}/lib#-lscorep_serial#$scorepCommonLibs"
       else
-	scorepLibs="-L${scorepdir}/lib#-lsilc_serial#$scorepCommonLibs"
+	scorepLibs="-L${scorepdir}/lib#-lscorep_serial#$scorepCommonLibs"
       fi
     fi
 
     fixmakeargs="$fixmakeargs scorepmpilibs=$scorepLibs"
     fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"
-    fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/silc"
+    fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/scorep"
 fi
 
 if [ $epilog = yes ] ; then
@@ -5393,14 +5571,17 @@ if [ $dyninst = yes ] ; then
     if [ ! -d $dyninstdir/lib ] ; then
 	fixmakeargs="$fixmakeargs DYNINST41"
     fi
-    if [ ! -d $dyninstdir/$PLATFORM/lib/libcommon.so ] ; then
-	fixmakeargs="$fixmakeargs DYNINST6"
-    fi
     if [ `grep isStaticExecutable $dyninstdir/include/* | wc -l` = 0 ]; then
 	fixmakeargs="$fixmakeargs DYNINST_STATIC_REWRITING_UNSUPPORTED"
     fi
     if [ ! -d $dyninstdir/src/include -o ! -d $dyninstdir/include ] ; then
 	fixmakeargs="$fixmakeargs DYNINST5.2"
+    fi
+    if [ -r $dyninstdir/$PLATFORM/lib/libcommon.so ] ; then
+	fixmakeargs="$fixmakeargs DYNINST6"
+    fi
+    if [ -r $dyninstdir/$PLATFORM/lib/libparseAPI.so ] ; then
+	fixmakeargs="$fixmakeargs DYNINST7"
     fi
 fi
 
@@ -5694,7 +5875,9 @@ if [ $machine = ia64 -o $machine = x86_64 -o $machine = i386_linux -o $machine =
     extra_linker_args="${extralinker_args}#-Wl,--export-dynamic"
 else 
   if [ $machine = apple ]; then 
-    extra_linker_args="${extralinker_args}#-rdynamic"
+    #extra_linker_args="${extralinker_args}#-rdynamic"
+    extra_linker_args="${extralinker_args}"
+    # gcc 4.6 does not support this. 
   fi
 fi
 

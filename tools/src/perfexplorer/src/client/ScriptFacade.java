@@ -25,10 +25,10 @@ public class ScriptFacade {
 	private final PerfExplorerConnection connection;
 	private final PerfExplorerModel model;
 
-    public ScriptFacade() {
+	public ScriptFacade() {
 		connection = PerfExplorerConnection.getConnection();
 		model = PerfExplorerModel.getModel();
-    }
+	}
 
 	public ScriptFacade(String configFile) {
 		PerfExplorerOutput.setQuiet(false);
@@ -42,132 +42,132 @@ public class ScriptFacade {
 	 * Test method for the facade class.
 	 * 
 	 */
-    public void doSomething() {
-        PerfExplorerOutput.println("Testing Script Facade");
-        return;
-    }
+	public void doSomething() {
+		PerfExplorerOutput.println("Testing Script Facade");
+		return;
+	}
 
-    /**
-     * Exit the application.
-     * 
-     */
-    public void exit() {
-    	System.exit(0);
-    }
-    
+	/**
+	 * Exit the application.
+	 * 
+	 */
+	public void exit() {
+		System.exit(0);
+	}
+
 	/**
 	 * Set the focus on the application specified.
 	 * 
 	 * @param name
 	 */
-    public Application setApplication(String name) {
-        Application app = null;
-        // check the argument
-        if (name == null)
-            throw new IllegalArgumentException("Application name cannot be null.");
-        if (name.equals(""))
-            throw new IllegalArgumentException("Application name cannot be an empty string.");
+	public Application setApplication(String name) {
+		Application app = null;
+		// check the argument
+		if (name == null)
+			throw new IllegalArgumentException("Application name cannot be null.");
+		if (name.equals(""))
+			throw new IllegalArgumentException("Application name cannot be an empty string.");
 
-        boolean found = false;
-        for (ListIterator<Application> apps = connection.getApplicationList(); apps.hasNext() && !found; ) {
-            app = apps.next();
-            if (app.getName().equals(name)) {
-                model.setCurrentSelection(app);;
-                found = true;
-            }
-        }
-        if (!found)
-            throw new NoSuchElementException("Application '" + name + "' not found.");
+		boolean found = false;
+		for (ListIterator<Application> apps = connection.getApplicationList(); apps.hasNext() && !found; ) {
+			app = apps.next();
+			if (app.getName().equals(name)) {
+				model.setCurrentSelection(app);;
+				found = true;
+			}
+		}
+		if (!found)
+			throw new NoSuchElementException("Application '" + name + "' not found.");
 		return app;
-    }
+	}
 
 	/**
 	 * Set the focus on the experiment specified.
 	 * 
 	 * @param name
 	 */
-    public Experiment setExperiment(String name) {
+	public Experiment setExperiment(String name) {
 		Experiment exp = null;
-        // check the argument
-        if (name == null)
-            throw new IllegalArgumentException("Experiment name cannot be null.");
-        if (name.equals(""))
-            throw new IllegalArgumentException("Experiment name cannot be an empty string.");
+		// check the argument
+		if (name == null)
+			throw new IllegalArgumentException("Experiment name cannot be null.");
+		if (name.equals(""))
+			throw new IllegalArgumentException("Experiment name cannot be an empty string.");
 
-        Application app = model.getApplication();
-        if (app == null)
-            throw new NullPointerException("Application selection is null. Please select an Application before setting the Experiment.");
-        boolean found = false;
-        for (ListIterator<Experiment> exps = connection.getExperimentList(app.getID());
-             exps.hasNext() && !found;) {
-            exp = exps.next();
-            if (exp.getName().equals(name)) {
-                model.setCurrentSelection(exp);
-                found = true;
-            }
-        }
-        if (!found)
-            throw new NoSuchElementException("Experiment '" + name + "' not found.");
+		Application app = model.getApplication();
+		if (app == null)
+			throw new NullPointerException("Application selection is null. Please select an Application before setting the Experiment.");
+		boolean found = false;
+		for (ListIterator<Experiment> exps = connection.getExperimentList(app.getID());
+		exps.hasNext() && !found;) {
+			exp = exps.next();
+			if (exp.getName().equals(name)) {
+				model.setCurrentSelection(exp);
+				found = true;
+			}
+		}
+		if (!found)
+			throw new NoSuchElementException("Experiment '" + name + "' not found.");
 		return exp;
-    }
+	}
 
 	/**
 	 * Set the focus on the trial specified.
 	 * 
 	 * @param name
 	 */
-    public Trial setTrial(String name) {
+	public Trial setTrial(String name) {
 		Trial trial = null;
-        // check the argument
-        if (name == null)
-            throw new IllegalArgumentException("Trial name cannot be null.");
-        if (name.equals(""))
-            throw new IllegalArgumentException("Trial name cannot be an empty string.");
+		// check the argument
+		if (name == null)
+			throw new IllegalArgumentException("Trial name cannot be null.");
+		if (name.equals(""))
+			throw new IllegalArgumentException("Trial name cannot be an empty string.");
 
-        Experiment exp = model.getExperiment();
-        if (exp == null)
-            throw new NullPointerException("Experiment selection is null.  Please select an Experiment before setting the Trial.");
-        boolean found = false;
-        for (ListIterator<Trial> trials = connection.getTrialList(exp.getID(),false);
-             trials.hasNext() && !found;) {
-            trial = trials.next();
-            if (trial.getName().equals(name)) {
-                model.setCurrentSelection(trial);
-                found = true;
-            }
-        }
-        if (!found)
-            throw new NoSuchElementException("Trial '" + name + "' not found.");
+		Experiment exp = model.getExperiment();
+		if (exp == null)
+			throw new NullPointerException("Experiment selection is null.  Please select an Experiment before setting the Trial.");
+		boolean found = false;
+		for (ListIterator<Trial> trials = connection.getTrialList(exp.getID(),false);
+		trials.hasNext() && !found;) {
+			trial = trials.next();
+			if (trial.getName().equals(name)) {
+				model.setCurrentSelection(trial);
+				found = true;
+			}
+		}
+		if (!found)
+			throw new NoSuchElementException("Trial '" + name + "' not found.");
 		return trial;
-    }
+	}
 
 	/**
 	 * Set the focus on the metric specified.
 	 * 
 	 * @param name
 	 */
-    public void setMetric(String name) {
-        // check the argument
-        if (name == null)
-            throw new IllegalArgumentException("Metric name cannot be null.");
-        if (name.equals(""))
-            throw new IllegalArgumentException("Metric name cannot be an empty string.");
+	public void setMetric(String name) {
+		// check the argument
+		if (name == null)
+			throw new IllegalArgumentException("Metric name cannot be null.");
+		if (name.equals(""))
+			throw new IllegalArgumentException("Metric name cannot be an empty string.");
 
-        Trial trial = model.getTrial();
-        if (trial == null)
-            throw new NullPointerException("Trial selection is null.  Please select a Trial before setting the Metric.");
-        boolean found = false;
-        List<Metric> metrics = trial.getMetrics();
-        for (int i = 0, size = metrics.size(); i < size && !found ; i++) {
-            Metric metric = metrics.get(i);
-            if (metric.getName().equals(name)) {
-                model.setCurrentSelection(metric);
-                found = true;
-            }
-        }
-        if (!found)
-            throw new NoSuchElementException("Metric '" + name + "' not found.");
-    }
+		Trial trial = model.getTrial();
+		if (trial == null)
+			throw new NullPointerException("Trial selection is null.  Please select a Trial before setting the Metric.");
+		boolean found = false;
+		List<Metric> metrics = trial.getMetrics();
+		for (int i = 0, size = metrics.size(); i < size && !found ; i++) {
+			Metric metric = metrics.get(i);
+			if (metric.getName().equals(name)) {
+				model.setCurrentSelection(metric);
+				found = true;
+			}
+		}
+		if (!found)
+			throw new NoSuchElementException("Metric '" + name + "' not found.");
+	}
 
 	/**
 	 * Choose the dimension reduction method.
@@ -175,44 +175,44 @@ public class ScriptFacade {
 	 * @param type
 	 * @param parameter
 	 */
-    public void setDimensionReduction(TransformationType type, String parameter) {
-        if (type == null)
-            throw new IllegalArgumentException("TransformationType type cannot be null.");
+	public void setDimensionReduction(TransformationType type, String parameter) {
+		if (type == null)
+			throw new IllegalArgumentException("TransformationType type cannot be null.");
 
-        model.setDimensionReduction(type);
-        if (type == TransformationType.OVER_X_PERCENT) {
-            if (parameter == null)
-                throw new IllegalArgumentException("Object parameter cannot be null.");
-            model.setXPercent(parameter);
-        }
-    }
+		model.setDimensionReduction(type);
+		if (type == TransformationType.OVER_X_PERCENT) {
+			if (parameter == null)
+				throw new IllegalArgumentException("Object parameter cannot be null.");
+			model.setXPercent(parameter);
+		}
+	}
 
 	/**
 	 * Set the analysis method.
 	 * 
 	 * @param type
 	 */
-    public void setAnalysisType(AnalysisType type) {
-        model.setClusterMethod(type);
-    }
+	public void setAnalysisType(AnalysisType type) {
+		model.setClusterMethod(type);
+	}
 
 	/**
 	 * Request the analysis configured.
 	 * 
 	 * @return
 	 */
-    public String requestAnalysis() {
-        return connection.requestAnalysis(model, true);
-    }
+	public String requestAnalysis() {
+		return connection.requestAnalysis(model, true);
+	}
 
 	/**
 	 * Request the ANOVA results.
 	 * 
 	 */
-    public void doANOVA() {
-    	PerfExplorerOutput.println("Doing ANOVA");
-    	return;
-    }
+	public void doANOVA() {
+		PerfExplorerOutput.println("Doing ANOVA");
+		return;
+	}
 
 	/**
 	 * Request a 3D view of correlation data
@@ -220,7 +220,7 @@ public class ScriptFacade {
 	 */
 	public void do3DCorrelationCube() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	/**
@@ -230,42 +230,42 @@ public class ScriptFacade {
 	 */
 	public void setMaximumNumberOfClusters(int max) {
 		// TODO Auto-generated method stub
-		
+
 	}
-	
+
 	/**
 	 * Create boxcharts, and display them
 	 *
 	 */
 	public void createBoxChart() {
 		// TODO Auto-generated method stub
-		
+
 	}
-	
+
 	/**
 	 * Create the data histograms
 	 *
 	 */
 	public void createHistograms() {
 		// TODO Auto-generated method stub
-		
+
 	}
-	
+
 	/**
 	 * Create the normal probability chart
 	 *
 	 */
 	public void createNormalProbabilityChart() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 
 	public void setChartSeriesXML(boolean chartSeriesXML) {
 		model.setChartSeriesXML(chartSeriesXML);
 	}
-	
-	
+
+
 	/**
 	 * Show the summary of the profile data
 	 *
@@ -299,7 +299,7 @@ public class ScriptFacade {
 				// if this is the event name, then output it, padded to no more than maxSize length
 				if (matrix[i][j] instanceof String) {
 					String s = (String)matrix[i][j];
-	      			s = (s.length() > maxSize ? s.substring(0, maxSize) : s);
+					s = (s.length() > maxSize ? s.substring(0, maxSize) : s);
 					PerfExplorerOutput.print(UtilFncs.pad(s, maxSize).toUpperCase() + " " );
 				}
 				// else, this is a value
@@ -314,7 +314,7 @@ public class ScriptFacade {
 	}
 
 	public Object[] getTrialList(String criteria, boolean getXMLMetadata) {
-        return connection.getTrialList(criteria,getXMLMetadata).toArray();
+		return connection.getTrialList(criteria,getXMLMetadata).toArray();
 	}
 
 	public void doGeneralChart() {
@@ -326,78 +326,78 @@ public class ScriptFacade {
 	 * 
 	 * @param name
 	 */
-    public void addApplication(String name) {
-        // check the argument
-        if (name == null)
-            throw new IllegalArgumentException("Application name cannot be null.");
-        if (name.equals(""))
-            throw new IllegalArgumentException("Application name cannot be an empty string.");
+	public void addApplication(String name) {
+		// check the argument
+		if (name == null)
+			throw new IllegalArgumentException("Application name cannot be null.");
+		if (name.equals(""))
+			throw new IllegalArgumentException("Application name cannot be an empty string.");
 
-        boolean found = false;
-        for (ListIterator<Application> apps = connection.getApplicationList();
-             apps.hasNext() && !found;) {
-            Application app = apps.next();
-            if (app.getName().equals(name)) {
-                model.addSelection(app);
-                found = true;
-            }
-        }
-        if (!found)
-            throw new NoSuchElementException("Application '" + name + "' not found.");
-    }
+		boolean found = false;
+		for (ListIterator<Application> apps = connection.getApplicationList();
+		apps.hasNext() && !found;) {
+			Application app = apps.next();
+			if (app.getName().equals(name)) {
+				model.addSelection(app);
+				found = true;
+			}
+		}
+		if (!found)
+			throw new NoSuchElementException("Application '" + name + "' not found.");
+	}
 
 	/**
 	 * Set the focus on the experiment specified.
 	 * 
 	 * @param name
 	 */
-    public void addExperiment(String name) {
-        // check the argument
-        if (name == null)
-            throw new IllegalArgumentException("Experiment name cannot be null.");
-        if (name.equals(""))
-            throw new IllegalArgumentException("Experiment name cannot be an empty string.");
+	public void addExperiment(String name) {
+		// check the argument
+		if (name == null)
+			throw new IllegalArgumentException("Experiment name cannot be null.");
+		if (name.equals(""))
+			throw new IllegalArgumentException("Experiment name cannot be an empty string.");
 
-        Application app = model.getApplication();
-        if (app == null)
-            throw new NullPointerException("Application selection is null. Please select an Application before setting the Experiment.");
-        boolean found = false;
-        for (ListIterator<Experiment> exps = connection.getExperimentList(app.getID());
-             exps.hasNext() && !found;) {
-            Experiment exp = exps.next();
-            if (exp.getName().equals(name)) {
-                model.addSelection(exp);
-                found = true;
-            }
-        }
-        if (!found)
-            throw new NoSuchElementException("Experiment '" + name + "' not found.");
-    }
+		Application app = model.getApplication();
+		if (app == null)
+			throw new NullPointerException("Application selection is null. Please select an Application before setting the Experiment.");
+		boolean found = false;
+		for (ListIterator<Experiment> exps = connection.getExperimentList(app.getID());
+		exps.hasNext() && !found;) {
+			Experiment exp = exps.next();
+			if (exp.getName().equals(name)) {
+				model.addSelection(exp);
+				found = true;
+			}
+		}
+		if (!found)
+			throw new NoSuchElementException("Experiment '" + name + "' not found.");
+	}
 
-    public void setEventName(String eventName) {
-    	model.setEventName(eventName);
-    }
+	public void setEventName(String eventName) {
+		model.setEventName(eventName);
+	}
 
-    public void addEventName(String eventName) {
-    	model.addEventName(eventName);
-    }
+	public void addEventName(String eventName) {
+		model.addEventName(eventName);
+	}
 
-    public void setGroupName(String groupName) {
-    	model.setGroupName(groupName);
-    }
+	public void setGroupName(String groupName) {
+		model.setGroupName(groupName);
+	}
 
-    public void addGroupName(String groupName) {
-    	model.addGroupName(groupName);
-    }
+	public void addGroupName(String groupName) {
+		model.addGroupName(groupName);
+	}
 
-    public void setMetricName(String metricName) {
-    	model.setMetricName(metricName);
-    }
+	public void setMetricName(String metricName) {
+		model.setMetricName(metricName);
+	}
 
-    //public void addMetricName(String metricName) {
-    	//model.addMetricName(metricName);
-    //}
-    
+	//public void addMetricName(String metricName) {
+	//model.addMetricName(metricName);
+	//}
+
 	public void setChartMetadataFieldName(String fieldName) {
 		model.setChartMetadataFieldName(fieldName);
 	}
@@ -453,6 +453,9 @@ public class ScriptFacade {
 		else
 			model.setChartLogYAxis(true);
 	}
+	public void setChartLogXAxis(int value) {
+		model.setChartLogXAxis((value != 0));
+	}
 
 	public void setChartScalability(int value) {
 		if (value == 0)
@@ -487,7 +490,7 @@ public class ScriptFacade {
 		model.setGroupName(null);
 		model.setMetricName(null);
 		model.setEventName(null);
-    	this.setDimensionReduction(TransformationType.NONE, null);
+		this.setDimensionReduction(TransformationType.NONE, null);
 		this.setChartMetadataFieldName(null);
 		this.setChartMetadataFieldValue(null);
 		this.setChartSeriesName(null);
@@ -519,7 +522,7 @@ public class ScriptFacade {
 	public ListIterator<RMISortableIntervalEvent> getEventList(Trial trial, int metricIndex) {
 		return connection.getEventList(trial.getID(), metricIndex);
 	}
-	
+
 	public void runComparisonRules(Trial baseline, Trial comparison) {
 		//RuleHarnessOld.processRules(baseline, comparison);
 	}
@@ -530,4 +533,6 @@ public class ScriptFacade {
 		else
 			model.setShowZero(true);
 	}
+
+
 }

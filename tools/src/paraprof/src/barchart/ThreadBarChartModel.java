@@ -92,6 +92,15 @@ public class ThreadBarChartModel extends AbstractBarChartModel {
     }
 
     public void reloadData() {
+    	if(ppThread.getThread().getDataSource().isDerivedProvided()){
+    		if(ppThread.getName().equals("mean")) {
+    			ppThread = new PPThread(ppThread.getThread().getDataSource().getMeanData(),this.ppTrial);
+    	}else if(ppThread.getName().equals("std. dev.")) {
+    		ppThread = new PPThread(ppThread.getThread().getDataSource().getStdDevData(),this.ppTrial);
+    	}
+    	
+    	}	
+    	
         list = ppThread.getSortedFunctionProfiles(dataSorter, false);
         fireModelChanged();
     }

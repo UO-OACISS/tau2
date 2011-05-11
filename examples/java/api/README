@@ -17,7 +17,7 @@ Now compile the JAVA application
 % javac Pi.java
 
 And run it
-% java -XrunTAU Pi 20000
+% tau_java Pi 20000
 
 % pprof
 

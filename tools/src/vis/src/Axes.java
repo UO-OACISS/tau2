@@ -167,12 +167,12 @@ public class Axes implements Shape {
 	 */
 	public void setStrings(String xlabel, String ylabel, String zlabel,
 			List<String> xStrings, List<String> yStrings, List<String> zStrings) {
-		this.xlabel = xlabel;
-		this.ylabel = ylabel;
-		this.zlabel = zlabel;
-		this.xStrings = xStrings;
-		this.yStrings = yStrings;
-		this.zStrings = zStrings;
+		this.xOrigLabel=this.xlabel = xlabel;
+		this.yOrigLabel=this.ylabel = ylabel;
+		this.zOrigLabel=this.zlabel = zlabel;
+		this.xOrigStrings=this.xStrings = xStrings;
+		this.yOrigStrings=this.yStrings = yStrings;
+		this.zOrigStrings=this.zStrings = zStrings;
 		
 		if (this.xStrings == null)
 			this.xStrings = new ArrayList<String>();
@@ -389,7 +389,7 @@ public class Axes implements Shape {
 			}
 		};
 
-		final JSlider fontScaleSlider = new JSlider(0, 4000,
+		final JSlider fontScaleSlider = new JSlider(0, 4550,
 				4600 - (int) getFontScale());
 		fontScaleSlider.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent event) {
@@ -893,7 +893,7 @@ public class Axes implements Shape {
 		}
 
 		// maxPoint is the extent of the labels
-		maxPoint = maxPoint * 0.003f;
+		maxPoint = (maxPoint * 0.003f)+2400/fontScale;
 
 		// Now draw the axis labels
 		gl.glPushMatrix();

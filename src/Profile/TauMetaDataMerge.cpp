@@ -16,7 +16,7 @@
 **                                                                         **
 ****************************************************************************/
 
-
+#ifdef TAU_MPI
 
 #include <mpi.h>
 #include <TAU.h>
@@ -74,3 +74,5 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
     Tau_metadata_removeDuplicates(Buffer, BufferSize);
   }
 }
+
+#endif

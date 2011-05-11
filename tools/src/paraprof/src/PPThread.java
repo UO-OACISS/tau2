@@ -105,7 +105,6 @@ public class PPThread {
 
         List<FunctionProfile> functionList = thread.getFunctionProfiles();
         newList = new ArrayList<PPFunctionProfile>();
-
         for (Iterator<FunctionProfile> e1 = functionList.iterator(); e1.hasNext();) {
             FunctionProfile functionProfile = e1.next();
             if (functionProfile != null) {

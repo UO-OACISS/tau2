@@ -23,6 +23,9 @@
 #include <tau_internal.h>
 #include <Profile/Profiler.h>
 #include <Profile/TauTrace.h>
+#ifdef CUPTI
+#include <Profile/CuptiLayer.h>
+#endif //CUPTI
 
 #ifdef TAUKTAU_SHCTR
 #include "Profile/KtauCounters.h"
@@ -44,6 +47,7 @@ void metric_read_papiwallclock(int tid, int idx, double values[]);
 void metric_read_papi(int tid, int idx, double values[]);
 void metric_read_ktau(int tid, int idx, double values[]);
 void metric_read_cudatime(int tid, int idx, double values[]);
+void metric_read_cupti(int tid, int idx, double values[]);
 
 
 #ifdef __cplusplus
@@ -52,6 +56,7 @@ extern "C" {
 
 
 int TauMetrics_init();
+int Tau_init_check_initialized(void); 
 
 static void metricv_add(const char *name);
 static void read_env_vars();
@@ -266,6 +271,21 @@ static int is_papi_metric(char *str) {
   return 0;
 }
 
+#ifdef CUPTI
+/*********************************************************************
+ * Query if a string is a CUPTI metric
+ ********************************************************************/
+static int is_cupti_metric(char *str) {
+  if (strncmp("CUDA", str, 4) == 0) {
+		if (Tau_CuptiLayer_map().count(string(str)) > 0)
+		{
+			return 1;
+		}
+  }
+  return 0;
+}
+#endif //CUPTI
+
 /*********************************************************************
  * Initialize the function array
  ********************************************************************/
@@ -307,6 +327,13 @@ static void initialize_functionArray() {
       functionArray[pos++] = metric_read_craytimers;
     } else if (compareMetricString(metricv[i], "TAU_MPI_MESSAGE_SIZE")) {
       functionArray[pos++] = metric_read_messagesize;
+#ifdef CUPTI
+		} else if (is_cupti_metric(metricv[i])) {
+			/* CUPTI handled separately */
+			/* setup CUPTI metrics */
+			functionArray[pos++] = metric_read_cupti;
+			Tau_CuptiLayer_register_counter(Tau_CuptiLayer_map()[metricv[i]]);
+#endif //CUPTI
 #ifdef TAU_PAPI
     } else if (compareMetricString(metricv[i], "P_WALL_CLOCK_TIME")) {
       usingPAPI = 1;
@@ -356,7 +383,7 @@ static void initialize_functionArray() {
       usingPAPI = 1;
       break;
     }
-  }
+	}
 
 #ifdef TAUKTAU_SHCTR
   for (int i = 0; i < nmetrics; i++) {
@@ -373,6 +400,7 @@ static void initialize_functionArray() {
     PapiLayer::initializePapiLayer();
 #endif
   }
+	
 
   for (int i = 0; i < nmetrics; i++) {
     if (is_papi_metric(metricv[i])) {
@@ -429,6 +457,7 @@ int TauMetrics_getMetricUsed(int metric) {
  * Read the metrics
  ********************************************************************/
 void TauMetrics_getMetrics(int tid, double values[]) {
+  if (!Tau_init_check_initialized()) TauMetrics_init();
   for (int i = 0; i < nfunctions; i++) {
     functionArray[i](tid, i, values);
   }
@@ -480,7 +509,7 @@ int TauMetrics_init() {
 
   initialize_functionArray();
 
-  Tau_Global_numCounters = nmetrics;
+	Tau_Global_numCounters = nmetrics;
 
   /* Create atomic events for tracing */
   if (TauEnv_get_tracing()) {

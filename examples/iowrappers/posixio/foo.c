@@ -6,12 +6,16 @@
 int main(int argc, char **argv)
 {
    int i, j;
+   int fd0;
    int fd;
    int buf[SIZE][SIZE];
 
 
    /* Create a new file */
-   fd = creat("out.dat", 0655); 
+   fd0 = creat("out.dat", 0655); 
+   fd = dup(fd0);
+
+   
 
    /* fill up our array with some dummy values */
    for (i=0; i < SIZE; i++) {

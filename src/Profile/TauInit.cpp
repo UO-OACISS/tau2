@@ -22,8 +22,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
+
+#ifndef TAU_WINDOWS
 #include <unistd.h>
+#endif
+#if !defined(_AIX) && !defined(__sun) && !defined(TAU_WINDOWS)
 #include <execinfo.h>
+#endif /* _AIX */
 
 #include <Profile/TauEnv.h>
 #include <Profile/TauMetrics.h>
@@ -47,6 +52,7 @@
 extern "C" void Tau_stack_initialization();
 extern "C" int Tau_compensate_initialization();
 extern "C" int Tau_profiler_initialization();
+extern "C" int Tau_profile_exit_all_threads(); 
 
 
 /* -- signal catching to flush event buffers ----------------- */
@@ -66,12 +72,17 @@ static void wrap_up(int sig) {
   void *array[10];
   size_t size;
 
+#if !defined(_AIX) && !defined(__sun) && !defined(TAU_WINDOWS)
   // get void*'s for all entries on the stack
   size = backtrace(array, 10);
+#endif /* _AIX */
 
   // print out all the frames to stderr
   fprintf (stderr, "TAU: signal %d on %d - calling TAU_PROFILE_EXIT()...\n", sig, RtsLayer::myNode());
+
+#if !defined(_AIX) && !defined(__sun) && !defined(TAU_WINDOWS) 
   backtrace_symbols_fd(array, size, 2);
+#endif /* _AIX */
   TAU_PROFILE_EXIT("signal");
   fprintf (stderr, "TAU: done.\n");
   exit (1);
@@ -161,7 +172,7 @@ extern "C" int Tau_init_initializeTAU() {
 
   Tau_global_incr_insideTAU();
   
-  tau_initialized = 1;
+  initialized = 1;
 
   /* initialize the Profiler stack */
   Tau_stack_initialization();
@@ -181,6 +192,7 @@ extern "C" int Tau_init_initializeTAU() {
   /* no more initialization necessary if using SCOREP */
   initialized = 1;
   SCOREP_Tau_InitMeasurement();
+  SCOREP_Tau_RegisterExitCallback(Tau_profile_exit_all_threads); 
   return 0;
 #endif
 
@@ -234,12 +246,18 @@ extern "C" int Tau_init_initializeTAU() {
 
   /* initialize sampling if requested */
   if (TauEnv_get_ebs_enabled()) {
+    /* Work-around for MVAPHICH 2 to move sampling initialization to 
+       after MPI_Init()
+    */
+#if !defined(TAU_MPI) && !defined(TAU_WINDOWS)
     Tau_sampling_init(0);
+#endif /* TAU_MPI && TAU_WINDOWS */
   }
 #ifdef TAU_PGI
   sbrk(102400);
 #endif /* TAU_PGI */
 
+  tau_initialized = 1;
   Tau_global_decr_insideTAU();
   return 0;
 }

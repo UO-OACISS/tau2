@@ -27,6 +27,10 @@ using namespace std;
 #include <stdlib.h>
 #include <stdio.h>
 
+#ifdef TAU_AT_FORK
+#include <pthread.h>
+#endif /* TAU_AT_FORK */
+
 extern "C" {
 #include "papi.h"
 }
@@ -59,6 +63,9 @@ int PapiLayer::numCounters = 0;
 int PapiLayer::counterList[MAX_PAPI_COUNTERS];
 
 int tauSampEvent = 0;
+
+extern "C" int Tau_is_thread_fake(int tid);
+extern "C" int TauMetrics_init(void);
 
 // Some versions of PAPI don't have these defined
 // so we'll define them to 0 and if the user tries to use them
@@ -105,6 +112,96 @@ static void dmesg(int level, char* format, ...) {
 }
 #endif
 
+#ifdef TAU_AT_FORK
+void Tau_prepare(void) {
+  TAU_VERBOSE("inside Tau_prepare: pid = %d\n", getpid());
+}
+
+void Tau_parent(void) {
+  TAU_VERBOSE("inside Tau_parent: pid = %d\n", getpid());
+}
+
+void Tau_child(void) {
+  int i, rc, numCounters;
+  int tid=Tau_get_tid();
+  numCounters=PapiLayer::numCounters;
+  TAU_VERBOSE("inside Tau_child: pid = %d\n", getpid());
+  TheSafeToDumpData() = 1; 
+  TAU_VERBOSE("--->[pid=%d, Rank=%d]: Setting TheSafeToDumpData=1\n", getpid(),RtsLayer::myNode());
+  Tau_global_incr_insideTAU();
+  int papi_ver = PAPI_library_init(PAPI_VER_CURRENT);
+  if (papi_ver != PAPI_VER_CURRENT) {
+    if (papi_ver > 0) {
+      fprintf(stderr, "TAU: Error initializing PAPI: version mismatch: %d\n", papi_ver);
+    } else {
+      fprintf(stderr, "TAU: Error initializing PAPI: %s\n", PAPI_strerror(papi_ver));
+    }
+    return ;
+  }
+
+  rc = PAPI_thread_init((unsigned long (*)(void))(RtsLayer::myThread));
+
+  if (tid >= TAU_MAX_THREADS) {     
+    fprintf (stderr, "TAU: Exceeded max thread count of TAU_MAX_THREADS\n");
+  } 
+
+  /* Check ThreadList */
+  if (PapiLayer::ThreadList[tid] == 0) {
+    PapiLayer::ThreadList[tid] = new ThreadValue;   
+  }
+  PapiLayer::ThreadList[tid]->ThreadID = tid;
+  PapiLayer::ThreadList[tid]->CounterValues = new long long[MAX_PAPI_COUNTERS];
+   for (i=0; i<MAX_PAPI_COUNTERS; i++) {
+    PapiLayer::ThreadList[tid]->CounterValues[i] = 0L;
+  }
+
+  for (i=0; i<TAU_PAPI_MAX_COMPONENTS; i++) {
+    PapiLayer::ThreadList[tid]->NumEvents[i] = 0;
+    PapiLayer::ThreadList[tid]->EventSet[i] = PAPI_NULL;
+    rc = PAPI_create_eventset(&(PapiLayer::ThreadList[tid]->EventSet[i]));
+    if (rc != PAPI_OK) {
+      fprintf (stderr, "TAU: Error creating PAPI event set: %s\n", PAPI_strerror(rc));
+      return ;
+    }
+  }
+
+  /* PAPI 3 support goes here */
+  for (i=0; i<numCounters; i++) {
+    int comp = PAPI_COMPONENT_INDEX (PapiLayer::counterList[i]);
+    rc = PAPI_add_event(PapiLayer::ThreadList[tid]->EventSet[comp], PapiLayer::counterList[i]);
+    if (rc != PAPI_OK) {
+      fprintf (stderr, "pid=%d, TAU: Error adding PAPI events: %s\n", getpid(), PAPI_strerror(rc));
+      return ;
+    }
+
+    // this creates a mapping from 'component', and index in that component back    // to the original index, since we return just a single array of values
+    PapiLayer::ThreadList[tid]->Comp2Metric[comp][PapiLayer::ThreadList[tid]->NumEvents[comp]++] = i;
+  }
+
+
+  for (i=0; i<TAU_PAPI_MAX_COMPONENTS; i++) {
+    if (PapiLayer::ThreadList[tid]->NumEvents[i] >= 1) { // if there were active counters for this component
+      rc = PAPI_start(PapiLayer::ThreadList[tid]->EventSet[i]);
+    }
+  }
+
+  if (rc != PAPI_OK) {
+    fprintf (stderr, "pid=%d: TAU: Error calling PAPI_start: %s, tid = %d\n", getpid(), PAPI_strerror(rc), tid);
+    return ;
+  }
+
+  // Before traversing the callstack. Reset any negative exclusive times for 
+  // papi counters
+  Profiler *curr = TauInternal_CurrentProfiler(tid);
+  while (curr != 0) {
+    curr->ThisFunction->ResetExclTimeIfNegative(tid);
+    curr = curr->ParentProfiler;
+  }
+  Tau_global_decr_insideTAU();
+}
+
+#endif /* TAU_AT_FORK */
+
 
 /////////////////////////////////////////////////
 int PapiLayer::addCounter(char *name) {
@@ -114,6 +211,7 @@ int PapiLayer::addCounter(char *name) {
   dmesg(1, "TAU: PAPI: Adding counter %s\n", name);
 #endif
 
+  TAU_VERBOSE("TAU: PAPI: Adding counter %s\n", name);
   rc = PAPI_event_name_to_code(name, &code);
 #ifndef TAU_COMPONENT_PAPI
   // There is currently a bug in PAPI-C 3.9 that causes the return code to not
@@ -151,6 +249,9 @@ int PapiLayer::initializeThread(int tid) {
   dmesg(1, "TAU: PAPI: Initializing Thread Data for TID = %d\n", tid);
 #endif
 
+  /* Task API does not have a real thread associated with it. It is fake */
+  if (Tau_is_thread_fake(tid) == 1) tid = 0;
+
   if (tid >= TAU_MAX_THREADS) {
     fprintf (stderr, "TAU: Exceeded max thread count of TAU_MAX_THREADS\n");
     return -1;
@@ -187,7 +288,11 @@ int PapiLayer::initializeThread(int tid) {
     int comp = PAPI_COMPONENT_INDEX (counterList[i]);
     rc = PAPI_add_event(ThreadList[tid]->EventSet[comp], counterList[i]);
     if (rc != PAPI_OK) {
-      fprintf (stderr, "TAU: Error adding PAPI events: %s\n", PAPI_strerror(rc));
+      fprintf (stderr, "pid=%d, TAU: Error adding PAPI events: %s\n", getpid(), PAPI_strerror(rc));
+#ifndef TAU_AT_FORK
+      fprintf (stderr, "pid=%d, TAU: Error adding PAPI events: %s\n", getpid(), PAPI_strerror(rc));
+#endif /* TAU_AT_FORK */
+    TAU_VERBOSE ("TAU PAPI Error: Error adding PAPI events: %s\n", PAPI_strerror(rc));
       return -1;
     }
     
@@ -203,7 +308,7 @@ int PapiLayer::initializeThread(int tid) {
   if (TauEnv_get_ebs_enabled()) {
     if (tauSampEvent != 0) {
       int comp = PAPI_COMPONENT_INDEX (tauSampEvent);
-      int threshold = TauEnv_get_ebs_frequency();
+      int threshold = TauEnv_get_ebs_period();
       TAU_VERBOSE("TAU: Setting PAPI overflow handler\n");
       rc = PAPI_overflow(ThreadList[tid]->EventSet[comp], tauSampEvent, threshold, 0, Tau_sampling_papi_overflow_handler);
       if (rc != PAPI_OK) {
@@ -228,7 +333,7 @@ int PapiLayer::initializeThread(int tid) {
   }
   
   if (rc != PAPI_OK) {
-    fprintf (stderr, "TAU: Error calling PAPI_start: %s\n", PAPI_strerror(rc));
+    fprintf (stderr, "pid=%d: TAU: Error calling PAPI_start: %s, tid = %d\n", getpid(), PAPI_strerror(rc), tid);
     return -1;
   }
   
@@ -243,7 +348,11 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
   int rc;
   long long tmpCounters[MAX_PAPI_COUNTERS];
 
+  /* Task API does not have a real thread associated with it. It is fake */
+  if (Tau_is_thread_fake(tid) == 1) tid = 0;
+
   if (!papiInitialized) {
+    //printf("Before initializePAPI\n");
     int rc = initializePAPI();
     if (rc != 0) {
       return NULL;
@@ -304,7 +413,7 @@ long long *PapiLayer::getAllCounters(int tid, int *numValues) {
 #endif
 
   if (rc != PAPI_OK) {
-    fprintf (stderr, "TAU: Error reading PAPI counters: %s\n", PAPI_strerror(rc));
+    fprintf (stderr, "pid=%d, TAU: Error reading PAPI counters: %s\n", getpid(), PAPI_strerror(rc));
     return NULL;
   }
   
@@ -322,6 +431,7 @@ int PapiLayer::reinitializePAPI() {
   // We need to clean up the ThreadList and then reinitialize PAPI
 
   if (papiInitialized) {
+    TAU_VERBOSE("Reinitializing papi...");
     for(int i=0; i<TAU_MAX_THREADS; i++){
       if (ThreadList[i] != NULL) {
 	delete ThreadList[i]->CounterValues;
@@ -329,6 +439,7 @@ int PapiLayer::reinitializePAPI() {
       }
       ThreadList[i] = NULL;
     }
+    TauMetrics_init();
   }
   return initializePAPI();
 }
@@ -361,12 +472,26 @@ void PapiLayer::checkDomain(int domain, char *domainstr) {
   }
 }
 
+void PapiLayer::setPapiInitialized(bool value) {
+  papiInitialized = value;
+  TAU_VERBOSE("setPapiInitialized: papiInitialized = %d\n", papiInitialized);
+}
 
 /////////////////////////////////////////////////
 int PapiLayer::initializePAPI() {
 #ifdef TAU_PAPI_DEBUG
-  dmesg(1, "TAU: PapiLayer::initializePAPI\n");
+  dmesg(1, "TAU: PapiLayer::initializePAPI entry\n");
 #endif
+  TAU_VERBOSE("inside TAU: PapiLayer::initializePAPI entry\n");
+
+#ifdef TAU_AT_FORK
+  TAU_VERBOSE("TAU: PapiLayer::initializePAPI: before pthread_at_fork()");
+#ifdef TAU_MPI
+  TheSafeToDumpData() = 0; 
+  TAU_VERBOSE("[pid=%d, Rank=%d]: Setting TheSafeToDumpData=0\n", getpid(),RtsLayer::myNode());
+  pthread_atfork(Tau_prepare, Tau_parent, Tau_child);
+#endif /* TAU_MPI */
+#endif /* TAU_AT_FORK */
 
   papiInitialized = true;
 
@@ -458,18 +583,22 @@ int PapiLayer::initializePAPI() {
 
 /////////////////////////////////////////////////
 int PapiLayer::initializePapiLayer(bool lock) { 
-  static bool initialized = false;
+  //static bool initialized = false;
 
-  if (initialized) {
+  TAU_VERBOSE("Inside TAU: PapiLayer::intializePapiLayer: papiInitialized = %d\n", papiInitialized); 
+  /* if (papiInitialized) {
     return 0;
   }
+  */
+  TAU_VERBOSE("[pid = %d] Inside TAU: ACtually initializing PapiLayer::intializePapiLayer: papiInitialized = %d\n", getpid(), papiInitialized); 
 
 #ifdef TAU_PAPI_DEBUG
-  dmesg(1, "TAU: PAPI: Initializing PAPI Layer");
+  dmesg(1, "TAU: PAPI: Initializing PAPI Layer: lock=%d", lock);
 #endif
 
   if (lock) RtsLayer::LockDB();
   int rc = initializePAPI();
+  papiInitialized = true;
   if (lock) RtsLayer::UnLockDB();
 
   return rc;

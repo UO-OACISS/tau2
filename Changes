@@ -2,7 +2,7 @@
 **                      TAU Portable Profiling Package                     **
 **                      http://tau.uoregon.edu                             **
 *****************************************************************************
-**    Copyright 1997-2010						   **
+**    Copyright 1997-2011						   **
 **    Department of Computer and Information Science, University of Oregon **
 **    Research Centre Juelich, Germany                                     **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
@@ -10,6 +10,55 @@
 
 Change log:
 ------------
+Version 2.20 changes (from 2.20):
+1. Added support for GPGPUs using tau_exec -cuda and tau_exec -opencl. Configure with -cuda=<dir>.
+2. Added support for 3D topology displays in paraprof. 
+3. Added support for tracking per-communicator performance data -PROFILECOMMUNICATORS.
+4. Added support for binary rewriting of static executables using DyninstAPI 7.0. 
+5. Added support for derived metrics, cut, copy and paste of metrics in paraprof, perfexplorer.
+6. Added support for sampling based measurements in tau_exec -ebs* (README.sampling).
+7. Added support for ARMCI profiling (GA v5.0) in tau_exec -armci. Configure with -armci=<dir>.
+8. Added support for loop level instrumentation in the binary rewriter (tau_run a.out -o a.i -f select.tau).
+9. Added preliminary support for Eclipse PTP remote components. 
+10. Integrated tau_exec and tau_wrap (tau_exec -loadlib=<dir>/libwrapped.so) for instrumenting an external library.
+11. Added support for pre-computing mean and std. dev. at the end of execution with TAU_PROFILE_FORMAT=merged.
+12. Added support for compiler-based instrumentation for Cray CCE compilers. 
+13. TAU ported to Cray XE6 with updated default directories (gemini).  
+14. Improved support for Cray Shmem. 
+15. Improved support for thread based communication in tau2otf and ParaVer support in tau_convert -paraver.
+16. Throttled functions are now marked explicitly in their names [THROTTLED]. 
+17. Before reverting to compiler based instrumentation the user is prompted unless -optRevert is specified. 
+18. Updates to memory and I/O tracking support for Mac OS X (in tau_exec).
+19. Added support for the Yorick programming language. 
+20. Added Java profiling support using JVMTI.
+21. Added support for Score-P (www.score-p.org) measurement system. Configure with -scorep=<dir>.
+22. Added support for importing Google perftools performance data (paraprof -f google).
+23. Added support for profiling CUDA kernels on a separate thread.
+24. Bug fixes (papi+tracing, profile merged with tau_exec -io, outer-loop level instrumentation dyinstAPI)
+25. Added support for topology display with user specified topologies loadable from a text file in paraprof. 
+26. Added support for PGI 11.x compilers with support for accelerator primitives. 
+27. Added support for a scrollbar in the paraprof 3D window.
+28. CUDA 4.0 support added and tracking of gpgpu thread execution is now supported. 
+29. Bug fixes for PGI -optCompInst for C++, tau_exec -memory for Intel -optCompInst. 
+30. PostgreSQL jar file support updated in PerfDMF. 
+31. Added support for Score-P LD_PRELOAD'ing using tau_exec and tau_run.
+32. Added support for SOL2CC compiler for Solaris CC compiler. 
+33. Bug fixes for tau_instrumentor (single line Fortran DO loop instrumentation).
+34. Added support for Cray CCE -optCompInst for OpenMP.
+35. Bug fix for PAPI and TAU_TRACE=1 for initialization of papi. 
+36. Added support for demangling kernel names for CUDA executions. 
+37. Added a new tool tau_gen_wrapper <header> <lib> that generates wrappers. 
+38. Fixed papi initialization bug with C++ static ctors on Cray XE6. 
+39. Scrollbars in paraprof 3D window. 
+40. Support for NAG Fortran.
+41. Update for tau_run rewriter for getting MPI rank from executable. 
+42. Sped up paraprof/perfexplorer's loading of trials and computing derived metrics. 
+43. Perfexplorer bugs fixed with custom charts. New charting option in custom charts for a single event in multiple experiments. 
+44. Collating performance data bug fixed. 
+
+
+
+-------------------------------
 Version 2.19 changes (from 2.18):
 1. Added support for Chapel.
 2. Added support for UPC (Berkeley upcc compiler, GASP, supports -optCompInst).

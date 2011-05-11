@@ -1,0 +1,4 @@
+This script will parse the cluster properties, and analyze them using the rules
+for CPI stack analysis of the IBM POWER5 architecture.
+
+The input data is the output from clustering of an Extrae/Paraver trace file.

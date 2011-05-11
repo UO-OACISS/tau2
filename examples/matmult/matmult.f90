@@ -40,7 +40,7 @@
       include "mpif.h"
 
       integer SIZE_OF_MATRIX
-      parameter (SIZE_OF_MATRIX = 2000) 
+      parameter (SIZE_OF_MATRIX = 1000) 
 ! try changing this value to 2000 to get rid of transient effects 
 ! at startup
       double precision a(SIZE_OF_MATRIX,SIZE_OF_MATRIX) 

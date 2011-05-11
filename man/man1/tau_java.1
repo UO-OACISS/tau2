@@ -1,0 +1,40 @@
+.\" ** You probably do not want to edit this file directly **
+.\" It was generated using the DocBook XSL Stylesheets (version 1.69.1).
+.\" Instead of manually editing it, you probably should edit the DocBook XML
+.\" source for it and then use the DocBook XSL Stylesheets to regenerate it.
+.TH "TAU_JAVA" "1" "04/25/2011" "" "Tools"
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.SH "NAME"
+tau_java \- Instruments java applications at runtime using JVMTI
+.SH "SYNOPSIS"
+.HP 9
+\fBtau_java\fR [\fIoptions\fR] javaprogram 
+       [\fIargs\fR]
+.SH "OPTIONS"
+.TP
+\fI\-help\fR
+Displays help information.
+.TP
+\fI\-verbose\fR
+Report the arguments of the script before it runs.
+.TP
+\fI\-tau:agentlib=<agentlib>\fR
+By default tau_java uses the most recently configured jdk, you can specify a different one here.
+.TP
+\fI\-tau:java=<javapath>\fR
+Path to a java binary, by default uses the one corresponding to the most recently configured jdk.
+.TP
+\fI\-tau:bootclasspath= <bootclasspath>\fR
+To modify the bootclasspath to point to a different jar, not usually necessary.
+.TP
+\fI\-tau:include=<item>\fR
+Only instrument these methods or classes. Separate multiple classes and methods with semicolons
+.TP
+\fI\-tau:exclude=<item>\fR
+Exclude the listed classes and methods. Separate multiple classes and methods with semicolons
+.TP
+\fIargs\fR
+the command line arguments of the java application.

@@ -50,6 +50,9 @@ using namespace std;
 #include "TauJVMTI.h"
 #include "JavaThreadLayer.h"
 
+extern "C" void Tau_profile_exit_all_threads(void);
+
+#define dprintf if (0) printf
 /* ------------------------------------------------------------------- */
 /* Some constant maximum sizes */
 
@@ -171,11 +174,51 @@ get_thread_name(jvmtiEnv *jvmti, jthread thread, char *tname, int maxlen)
         /* Copy the thread name into tname if it will fit */
         len = (int)strlen(info.name);
         if ( len < maxlen ) {
-            (void)strcpy(tname, info.name);
+//            (void)strcpy(tname, info.name);
+            sprintf(tname, "THREAD=%s", info.name);
         }
 
         /* Every string allocated by JVMTI needs to be freed */
         deallocate(jvmti, (void*)info.name);
+    }
+}
+
+/* Get a name for a jthread */
+static void
+get_thread_group_name(jvmtiEnv *jvmti, jthread thread, char *gname, int maxlen)
+{
+    jvmtiThreadGroupInfo group_info;
+    jvmtiThreadInfo thread_info;
+    jvmtiError      error, error_group;
+
+    /* Make sure the stack variables are garbage free */
+    (void)memset(&thread_info,0, sizeof(thread_info));
+    (void)memset(&group_info,0, sizeof(group_info));
+
+    /* Assume the name is unknown for now */
+    (void)strcpy(gname, "Unknown");
+
+    error = jvmti->GetThreadInfo(thread, &thread_info);
+    check_jvmti_error(jvmti, error, "Cannot get thread info");
+
+    /* Get the thread information, which includes the name */
+    error_group = jvmti->GetThreadGroupInfo(thread_info.thread_group, &group_info);
+    check_jvmti_error(jvmti, error_group, "Cannot get thread group info");
+
+    /* The thread might not have a name, be careful here. */
+    if ( group_info.name != NULL ) {
+        int len;
+
+        /* Copy the thread name into tname if it will fit */
+        len = (int)strlen(group_info.name);
+        if ( len < maxlen ) {
+//            (void)strcpy(gname, group_info.name);
+            sprintf(gname, "%s", group_info.name);
+        }
+
+        /* Every string allocated by JVMTI needs to be freed */
+        deallocate(jvmti, (void*)group_info.name);
+        deallocate(jvmti, (void*)thread_info.name);
     }
 }
 
@@ -250,7 +293,9 @@ TAUJVMTI_native_exit(JNIEnv *env, jclass klass, jobject thread, jint cnum, jint 
             if (gdata->vm_is_initialized) {
 		int tid = JavaThreadLayer::GetThreadId(thread);
 		unique_method_id = make_unique_method_id(mnum, cnum);
-		TAU_MAPPING_PROFILE_STOP(tid);
+		TAU_MAPPING_OBJECT(TauMethodName=NULL);
+		TAU_MAPPING_LINK(TauMethodName, unique_method_id);
+		TAU_MAPPING_PROFILE_STOP_TIMER(TauMethodName, tid);
             }
         }
     } exit_critical_section(gdata->jvmti);
@@ -316,6 +361,7 @@ cbVMInit(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
         /* The VM has started. */
         get_thread_name(jvmti, thread, tname, sizeof(tname));
         DEBUGPROFMSG("DEBUGPROF:: VMInit " <<  tname << endl;);
+        dprintf("cbVMInit: tname = %s\n", tname);
 
 
         /* The VM is now initialized, at this time we make our requests
@@ -379,6 +425,7 @@ cbVMDeath(jvmtiEnv *jvmti, JNIEnv *env)
 
 void CreateTopLevelRoutine(char *name, char *type, char *groupname, int tid) {
   DEBUGPROFMSG("Inside CreateTopLevelRoutine: name = " << name << ", type = " << type  << ", group = " << groupname << ", tid = " << tid  << endl;);
+  dprintf("Top level routine: name = %s, type = %s, group = %s\n", name, type, groupname);
 
   /* Create a top-level routine that is always called. Use the thread name in it */
   TAU_MAPPING_CREATE(name, type, 1, groupname, tid); 
@@ -396,14 +443,20 @@ static void JNICALL
 cbThreadStart(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
 {
   int * tid;
+  dprintf("Thread Start!\n");
   enter_critical_section(jvmti); {
         /* It's possible we get here right after VmDeath event, be careful */
         if ( !gdata->vm_is_dead ) {
             char  tname[MAX_THREAD_NAME_LENGTH];
+            char  final_thread_name[MAX_THREAD_NAME_LENGTH];
+            char  gname[MAX_THREAD_NAME_LENGTH];
 
             get_thread_name(jvmti, thread, tname, sizeof(tname));
+	    dprintf("Before RegisterThread in cbThreadStart\n");
 	    tid = JavaThreadLayer::RegisterThread(thread);
-	    CreateTopLevelRoutine(tname, " ", "THREAD", *tid); 
+            get_thread_group_name(jvmti, thread, gname, sizeof(gname));
+	    sprintf(final_thread_name,"%s GROUP=%s",tname, gname);
+	    CreateTopLevelRoutine(final_thread_name, " ", gname, *tid); 
         }
     } exit_critical_section(jvmti);
 }
@@ -412,6 +465,7 @@ cbThreadStart(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
 static void JNICALL
 cbThreadEnd(jvmtiEnv *jvmti, JNIEnv *env, jthread thread)
 {
+  dprintf("Thread End!\n");
     enter_critical_section(jvmti); {
         /* It's possible we get here right after VmDeath event, be careful */
         if ( !gdata->vm_is_dead ) {
@@ -562,7 +616,8 @@ parse_agent_options(char *options)
             stdout_message("\n");
             stdout_message(" java -agent:TauJVMTI[=options] ...\n");
             stdout_message("\n");
-            stdout_message("The options are comma separated:\n");
+	    stdout_message("Options are semicolon separated (make sure to escape it!):\n");
+            stdout_message("Within an options the arguments are comma separated:\n");
             stdout_message("\t help\t\t\t Print help information\n");
             stdout_message("\t max=n\t\t Only list top n classes\n");
             stdout_message("\t include=item\t\t Only these classes/methods\n");
@@ -572,17 +627,6 @@ parse_agent_options(char *options)
             stdout_message("\t\t e.g. (*.<init>;Foobar.method;sun.*)\n");
             stdout_message("\n");
             exit(0);
-        } else if ( strcmp(token,"max")==0 ) {
-            char number[MAX_TOKEN_LENGTH];
-
-            /* Get the numeric option */
-            next = get_token(next, ",=", number, (int)sizeof(number));
-            /* Check for token scan error */
-            if ( next==NULL ) {
-                fatal_error("ERROR: max=n option error\n");
-            }
-            /* Save numeric value */
-            gdata->max_count = atoi(number);
         } else if ( strcmp(token,"include")==0 ) {
             int   used;
             int   maxlen;
@@ -602,7 +646,7 @@ parse_agent_options(char *options)
                 fatal_error("ERROR: Out of malloc memory\n");
             }
             /* Add this item to the list */
-            next = get_token(next, ",=", gdata->include+used, maxlen);
+            next = get_token(next, ";=", gdata->include+used, maxlen);
             /* Check for token scan error */
             if ( next==NULL ) {
                 fatal_error("ERROR: include option error\n");
@@ -626,7 +670,7 @@ parse_agent_options(char *options)
                 fatal_error("ERROR: Out of malloc memory\n");
             }
             /* Add this item to the list */
-            next = get_token(next, ",=", gdata->exclude+used, maxlen);
+            next = get_token(next, ";=", gdata->exclude+used, maxlen);
             /* Check for token scan error */
             if ( next==NULL ) {
                 fatal_error("ERROR: exclude option error\n");
@@ -663,6 +707,19 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
      */
     (void)memset((void*)&data, 0, sizeof(data));
     gdata = &data;
+    dprintf("Agent_OnLoad\n");
+    gdata->exclude=strdup("sun,java,com/sun");
+
+// Give TAU some room for its data structures.
+#if (!defined(TAU_WINDOWS))
+
+    if (sizeof(void*) < 8) {
+      if ((sbrk(1024*1024*4)) == (void *) -1) {
+        fprintf(stdout, "TAU>ERROR: sbrk failed\n");
+      }
+    }
+#endif //TAU_WINDOWS
+
 
     /* First thing we need to do is get the jvmtiEnv* or JVMTI environment */
     res = vm->GetEnv((void **)&jvmti, JVMTI_VERSION_1);
@@ -689,12 +746,14 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
     //    JavaThreadLayer::InitializeEnvMutexData();
 
     Tau_init_initializeTAU();
+#ifndef TAU_MPI
     TAU_PROFILE_SET_NODE(0);
+#endif /* TAU_MPI */
 
     /* Register the current thread, since the JVM makes calls with the first thread, before
      * calling cbThreadStart and we need to create the necessary locks and set it's thread ID.
      */
-    JavaThreadLayer::RegisterThread();
+    //JavaThreadLayer::RegisterThread();
 
     /* Parse any options supplied on java command line */
     parse_agent_options(options);
@@ -762,8 +821,7 @@ Agent_OnLoad(JavaVM *vm, char *options, void *reserved)
 JNIEXPORT void JNICALL
 Agent_OnUnload(JavaVM *vm)
 {
-  //FIXME include necessary headers to run this
-  //Tau_profile_exit_all_threads();
+    Tau_profile_exit_all_threads();
       /* Make sure all malloc/calloc/strdup space is freed */
     if ( gdata->include != NULL ) {
         (void)free((void*)gdata->include);
