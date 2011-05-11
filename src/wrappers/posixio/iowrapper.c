@@ -5,8 +5,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define dprintf TAU_VERBOSE
-
 #define TAU_READ TAU_IO
 #define TAU_WRITE TAU_IO
 
@@ -27,7 +25,7 @@ int TauWrapperFsync( int fd)
 
   TAU_PROFILE_STOP(t);
 
-  dprintf("Fsync call with fd %d ret %d\n", fd, ret);
+  TAU_VERBOSE("Fsync call with fd %d ret %d\n", fd, ret);
 
   return ret;
 }
@@ -49,7 +47,7 @@ int TauWrapperOpen(const char *pathname, int flags)
 
   TAU_PROFILE_STOP(t);
 
-  dprintf("Open call with pathname %s and flags %d: ret %d\n", pathname, flags, ret);
+  TAU_VERBOSE("Open call with pathname %s and flags %d: ret %d\n", pathname, flags, ret);
 
   return ret;
 }
@@ -91,7 +89,7 @@ size_t TauWrapperRead(int fd, void *buf, size_t nbytes)
     TAU_EVENT(read_ret, ret);
   }
 
-  dprintf("Read fd %d nbytes %d buf %ld ret %d\n", fd, nbytes, (long)buf, ret);
+  TAU_VERBOSE("Read fd %d nbytes %d buf %ld ret %d\n", fd, nbytes, (long)buf, ret);
 
   TAU_PROFILE_STOP(t);
 
@@ -134,7 +132,7 @@ size_t TauWrapperWrite(int fd, void *buf, size_t nbytes)
     TAU_EVENT(write_ret, ret);
   }
 
-  dprintf("Write fd %d nbytes %d buf %ld ret %d\n", fd, nbytes, (long)buf, ret);
+  TAU_VERBOSE("Write fd %d nbytes %d buf %ld ret %d\n", fd, nbytes, (long)buf, ret);
 
   TAU_PROFILE_STOP(t);
 
@@ -155,7 +153,7 @@ size_t TauWrapperClose(int fd)
     TAU_EVENT(close_ret, ret);
   }
 
-  dprintf("Close fd %d ret %d\n", fd, ret);
+  TAU_VERBOSE("Close fd %d ret %d\n", fd, ret);
 
   TAU_PROFILE_STOP(t);
 
@@ -185,7 +183,7 @@ off_t TauWrapperLseek(int fd, off_t offset, int whence)
 
 
   TAU_PROFILE_STOP(t);
-  dprintf("lseek called\n");
+  TAU_VERBOSE("lseek called\n");
   Tau_global_decr_insideTAU();
 
   return ret;
