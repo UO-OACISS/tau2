@@ -617,6 +617,7 @@ public class ParaProfUtils {
 
         windowsMenu.add(threadWindows);
 
+	/*
         ActionListener mActionListener = new ActionListener() {
         	public void actionPerformed(ActionEvent evt) {
         		String arg = evt.getActionCommand();
@@ -664,7 +665,7 @@ public class ParaProfUtils {
 	    monWindows.add(monFunctionWindows);
 
 	    windowsMenu.add(monWindows);
-
+	*/
         windowsMenu.add(new JSeparator());
 
         menuItem = new JMenuItem("Function Legend");
@@ -1385,6 +1386,16 @@ public class ParaProfUtils {
             str = str.substring(0, a) + str.substring(b + 2);
         }
         return str;
+    }
+    
+    //remove the 'throttled' tag from the function name
+    public static String removeThrottledTag(String str){
+    	int dex=str.indexOf("  [THROTTLED]");
+    	if(dex>=0){
+    		str = str.substring(0,dex);
+    	}
+    	
+    	return str;
     }
 
     // handles reversed callpaths

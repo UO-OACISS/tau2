@@ -36,7 +36,7 @@ esac
 
 # check for right java version
 JAVA_VERSION=`java -version 2>&1 | head -1 | cut -d '.' -f2`
-if [ $JAVA_VERSION -gt "4" ] ; then
+if [ "x$JAVA_VERSION" -gt "x4" ] ; then
 	echo ""
 	echo "This is an old version that should only be used if Java 1.5 or later is "
 	echo "not available.  It is recommended that you use the newer version.  "

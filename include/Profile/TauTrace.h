@@ -21,7 +21,9 @@
 #define _TAU_TRACE_H_
 
 #include <tau_internal.h>
+#ifdef TAU_ENABLED
 #include <Profile/TauGpu.h>
+#endif // TAU_ENABLED
 
 /* TAU tracer events */
 #define TAU_EV_INIT         60000

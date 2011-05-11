@@ -32,6 +32,7 @@ public class CubeXMLHandler extends DefaultHandler {
     private String csiteID;
     private String cnodeID;
     private int threadID = -1;
+    int numThreads=0;
     private String callee;
     private String uom;
 
@@ -81,7 +82,54 @@ public class CubeXMLHandler extends DefaultHandler {
             this.rank = rank;
         }
     }
-
+    
+    List<CubeCart> carts = null;
+    String currentCoord=null;
+    
+//    private static class CubeCoord{
+//    	//int thrdID=-1;
+//    	int[] coords = null;
+//    	public CubeCoord(int coordDim){//int threadID, 
+//    		//thrdID=threadID;
+//    		coords=new int[coordDim];
+//    	}
+//    }
+    
+    private static class CubeCart{
+    	//String name;
+    	int ndims;
+    	String dimsize="(";
+    	String periodic="(";
+    	List<String> coords = null;
+    	
+    	private int numset = 0;
+    	
+    	public void setDim(String size, String isPeriodic){
+    		int p=0;
+    		if(isPeriodic.equals("true")){
+    			p = 1;
+    		}
+    		if(numset>0)
+    		{
+    			dimsize+=",";
+    	    	periodic+=",";
+    		}
+    		dimsize+=size;
+	    	periodic+=p;
+    		numset++;
+    		if(numset==ndims){
+    			dimsize+=")";
+    	    	periodic+=")";
+    		}
+    	}
+    	
+    	public CubeCart(int numThreads, int numdims, int numcarts){
+    		coords = new ArrayList<String>(numThreads);
+    		ndims = numdims;
+    		//name = "Cart"+numcarts+"_"+ndims+"D";
+    	}
+    }
+    
     private static class CubeThread {
         public int rank;
         public int id;
@@ -152,6 +200,7 @@ public class CubeXMLHandler extends DefaultHandler {
             } else {
                 threadID++;
             }
+            numThreads++;
         } else if (localName.equalsIgnoreCase("region")) {
             regionID = getInsensitiveValue(attributes, "id");
         } else if (localName.equalsIgnoreCase("csite")) {
@@ -199,6 +248,20 @@ public class CubeXMLHandler extends DefaultHandler {
             cubeProcess = new CubeProcess(-1);
             cubeProcesses.add(cubeProcess);
         }
+        else if(localName.equalsIgnoreCase("cart")){
+        	if(carts==null){
+        		carts = new ArrayList<CubeCart>();
+        	}
+        	carts.add(new CubeCart(numThreads,Integer.parseInt(getInsensitiveValue(attributes, "ndims")), carts.size()));
+        }
+        else if(localName.equalsIgnoreCase("dim")){
+        	int curcart = carts.size()-1;
+        	carts.get(curcart).setDim(getInsensitiveValue(attributes, "size"),getInsensitiveValue(attributes, "periodic"));
+        }
+//        else if(localName.equalsIgnoreCase("coord")){
+//        	int curcart = carts.size()-1;
+//        	//currentCoord = new CubeCoord(Integer.parseInt(getInsensitiveValue(attributes, "thrdID")),carts.get(curcart).ndims);
+//        }
 
     }
 
@@ -224,6 +287,14 @@ public class CubeXMLHandler extends DefaultHandler {
             cubeProcess.threads.add(cubeThread);
             rank = rankStack.pop();
         } else if (localName.equalsIgnoreCase("locations") || localName.equalsIgnoreCase("system")) {
+        	
+        	for(int c=0;c<carts.size();c++){
+        		String prefix = "Topo"+c;
+        		cubeDataSource.getMetaData().put(prefix+" Size", carts.get(c).dimsize);
+        		cubeDataSource.getMetaData().put(prefix+" isTorus", carts.get(c).periodic);
+        	}
+        	
+        	int curthread = 0;
             for (int i = 0; i < cubeProcesses.size(); i++) {
                 CubeProcess cubeProcess = cubeProcesses.get(i);
                 Node node = cubeDataSource.addNode(cubeProcess.rank);
@@ -231,11 +302,18 @@ public class CubeXMLHandler extends DefaultHandler {
                 for (int j = 0; j < cubeProcess.threads.size(); j++) {
                     CubeThread cubeThread = cubeProcess.threads.get(j);
                     Thread thread = context.addThread(cubeThread.rank, cubeDataSource.getNumberOfMetrics());
+                    
+                    for(int c =0;c<carts.size();c++)
+                    {
+                    	String prefix = "Topo"+c;
+                    	thread.getMetaData().put(prefix+" Coords", carts.get(c).coords.get(curthread));
+                    }
 
                     while (cubeThread.id >= threads.size()) {
                         threads.add(null);
                     }
                     threads.set(cubeThread.id, thread);
+                    curthread++;
                 }
             }
             numMetrics = cubeDataSource.getNumberOfMetrics();
@@ -353,6 +431,17 @@ public class CubeXMLHandler extends DefaultHandler {
                 }
                 index++;
             }
+        }
+        else if (localName.equalsIgnoreCase("coord")){
+        	String coords = accumulator.toString();
+        	String[] splitCoords = coords.split(" ");
+        	currentCoord="("+splitCoords[0];
+        	for(int i=1;i<splitCoords.length;i++){
+        		//currentCoord.coords[i]=Integer.parseInt(splitCoords[i]);
+        		currentCoord+=","+splitCoords[i];
+        	}
+        	currentCoord+=")";
+        	carts.get(carts.size()-1).coords.add(currentCoord);
         }
     }
 

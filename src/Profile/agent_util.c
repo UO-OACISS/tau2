@@ -168,6 +168,15 @@ covered_by_list(char const *list,  const char *cname, const char *mname)
 int
 interested(const char *cname, const char *mname, const char *include_list, const char *exclude_list)
 {
+//Ignore the TAU.Profile because it calls tau and should not be profiled.
+    const char *tauProfile= "TAU/Profile";
+    int cname_len;
+    cname_len = (int)strlen(cname);
+    int  len;
+    len = (int)strlen(tauProfile);
+    if (strncmp(cname, tauProfile, (len>cname_len?cname_len:len))==0 ) {
+        return 0;
+    }
     if ( exclude_list!=NULL && exclude_list[0]!=0 &&
             covered_by_list(exclude_list, cname, mname) ) {
         return 0;

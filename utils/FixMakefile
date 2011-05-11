@@ -101,6 +101,10 @@ case $1 in
         taugcclibdir=`echo $1 | sed -e 's/^taugcclibdir=//'`
         echo "s,^TAUGCCLIBDIR=.*$,TAUGCCLIBDIR=$taugcclibdir,g" >> $sedout
         ;;
+     taugccstdcxxlibdir=*)
+        taugccstdcxxlibdir=`echo $1 | sed -e 's/^taugccstdcxxlibdir=//'`
+        echo "s,^TAUGCCSTDCXXLIBDIR=.*$,TAUGCCSTDCXXLIBDIR=$taugccstdcxxlibdir,g" >> $sedout
+        ;;
 
      ifortlibdir=*)
         ifortlibdir=`echo $1 | sed -e 's/^ifortlibdir=//'`
@@ -275,6 +279,16 @@ case $1 in
      otfdir=*)
         otfdir=`echo $1 | sed -e 's/^otfdir=//'`
 	echo "s,^OTFDIR=.*$,OTFDIR=$otfdir,g" >> $sedout
+	;;
+
+     otflib=*)
+	otflib=`echo $1 | sed -e 's/^otflib=//'`
+	echo "s,^OTFLIB=.*$,OTFLIB=$otflib,g" >> $sedout
+	;;
+
+     otfinc=*)
+	otfinc=`echo $1 | sed -e 's/^otfinc=//'`
+	echo "s,^OTFINC=.*$,OTFINC=$otfinc,g" >> $sedout
 	;;
 
      pdtcompdir=*)
@@ -612,7 +626,23 @@ case $1 in
 ###############################################################
 # Set the TAU_GPU variables.
 ###############################################################
-		cudainclude=*)
+     TAU_USE_GPU)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     CUDA)
+        echo "NOTE: Using the TAU's CUDA Profiling Interface "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     OPENCL)
+        echo "NOTE: Using the TAU's OPENCL Profiling Interface "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     CUPTI)
+        echo "NOTE: Using the TAU's CUPTI Profiling Interface "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
+     cudainclude=*)
         cudainclude=`echo $1 | sed -e 's/^cudainclude=//' -e 's/#/ /g'`
       echo "NOTE: Using CUDA for GPU analysis, source in $cudainclude"
 			echo "s@^TAU_CUDA_INC=\(.*\)@TAU_CUDA_INC=$cudainclude@g" >> $sedout
@@ -621,6 +651,11 @@ case $1 in
         openclinclude=`echo $1 | sed -e 's/^openclinclude=//' -e 's/#/ /g'`
       echo "NOTE: Using OPENCL for GPU analysis, source in $openclinclude"
 			echo "s@^TAU_OPENCL_INC=\(.*\)@TAU_OPENCL_INC=$openclinclude@g" >> $sedout
+		;;	
+		cuptiinclude=*)
+        cuptiinclude=`echo $1 | sed -e 's/^cuptiinclude=//' -e 's/#/ /g'`
+      echo "NOTE: Using CUPTI for GPU analysis, source in $cuptiinclude"
+			echo "s@^TAU_CUPTI_INC=\(.*\)@TAU_CUPTI_INC=$cuptiinclude@g" >> $sedout
 		;;	
 
 ###############################################################
@@ -1074,7 +1109,11 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      DYNINST6)
-	echo "NOTE: Using newer version DYNINST 5+ "
+	echo "NOTE: Using newer version DYNINST 6+ "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     DYNINST7)
+	echo "NOTE: Using newer version DYNINST 7+ "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      DYNINST5.2)
@@ -1083,6 +1122,10 @@ case $1 in
 	;;
      JAVA)
 	echo "NOTE: Using Java Virtual Machine Instrumentation ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     JVMTI)
+	echo "NOTE: Using Java Virtual Machine Tool Interface (JVMTI) Instrumentation ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      OPENMP)
@@ -1113,6 +1156,10 @@ case $1 in
 	echo "NOTE: Using Opari tool with OpenMP construct information ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     EBS2OTF)
+        echo "NOTE: Enable Conversion from Event-based Sampling Traces to Open Trace Format ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      VAMPIRTRACE)
 	echo "NOTE: Using VAMPIRTRACE Tracing Package ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1284,6 +1331,10 @@ case $1 in
 	;;
      PROFILEPARAM)
 	echo "NOTE: Using Parameter Mapped Profiles"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PROFILECOMMUNICATORS)
+	echo "NOTE: Tracking MPI calls based on MPI Communicators: PROFILECOMMUNICATORS"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PROFILEPHASE)
@@ -1503,7 +1554,7 @@ case $1 in
 	echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      NAGWARE_FORTRAN)
-	echo "NOTE: NAGWARE f95 compiler specific options used"
+	echo "NOTE: NAGWARE nagfor compiler specific options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      FUJITSU_FORTRAN)

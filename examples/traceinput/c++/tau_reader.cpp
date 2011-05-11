@@ -15,7 +15,11 @@
 ***************************************************************************/
 #include <TAU_tf.h>
 #include <stdio.h>
+#include <string.h>
 #include <iostream>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
 #include <map>
 using namespace std;
 int debugPrint = 1;
@@ -154,7 +158,7 @@ int main(int argc, char **argv)
   {
     printf("Usage: %s <TAU trace> <edf file> [-nostate] [-nomessage]\n", 
 		    argv[0]);
-    exit(1);
+    return 1;
   }
   
   for (int i = 0; i < argc ; i++)
@@ -184,7 +188,7 @@ int main(int argc, char **argv)
   if (!fh)
   {
     printf("ERROR:Ttf_OpenFileForInput fails");
-    exit(1);
+    return 1;
   }
 
   Ttf_CallbacksT cb;

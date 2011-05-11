@@ -1,0 +1,59 @@
+This example illustrates the use of TAU with instrumenting uninstrumented 
+libraries using linker based instrumentation. We use
+
+% tau_gen_wrapper bar.h libbar.a
+and use the contents of the the wrapper library created using the file
+bar_wrapper/link_options.tau using the -Wl,@<file> or -@<file> option. 
+
+[iowrap]$ cat bar.h
+#ifndef _BAR_H_
+#define _BAR_H_
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+extern int bar(int x);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+#endif /* _BAR_H_ */
+
+[iowrap]$ make clean
+/bin/rm -rf bar_wrapper main.o foo.o libbar.a bar.o app
+[iowrap]$ make
+echo "Compiling bar.cpp without any TAU instrumentation!"
+Compiling bar.cpp without any TAU instrumentation!
+g++ -c bar.cpp
+ar rcv libbar.a bar.o
+a - bar.o
+tau_gen_wrapper bar.h libbar.a
+make[1]: Entering directory `/home/sameer/samples/iowrap/bar_wrapper'
+gcc    -DPROFILING_ON                        -DTAU_GNU -DTAU_DOT_H_LESS_HEADERS                      -DTAU_LINUX_TIMERS                                 -DTAU_LARGEFILE -D_LARGEFILE64_SOURCE                    -DTAU_BFD     -DHAVE_TR1_HASH_MAP      -fPIC  -I/home/users/sameer/tau2/include  -I..  -c wr.c -o bar_wrap.o
+ar              rcv  libbar_wrap.a bar_wrap.o
+a - bar_wrap.o
+make[1]: Leaving directory `/home/sameer/samples/iowrap/bar_wrapper'
+tau_cxx.sh -optQuiet -c main.cpp
+
+tau_cxx.sh -optQuiet -c foo.cpp
+
+tau_cxx.sh -optQuiet main.o foo.o -L. -lbar -o app @bar_wrapper/link_options.tau
+
+[iowrap]$ rm -f profile*
+rm: No match.
+[iowrap]$ ./app
+Inside bar: x = 4
+Inside bar: x = 31
+[iowrap]$ pprof
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call
+---------------------------------------------------------------------------------------
+100.0        0.004            3           1           1       3169 int main(int, char **)
+ 99.9        0.009            3           1           2       3165 int foo(int)
+ 99.6            3            3           2           0       1578 int bar(int) C
+
+
+Note: bar is instrumented while libbar.a has no TAU instrumentation. 

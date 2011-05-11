@@ -26,304 +26,313 @@ import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
 public class PerfExplorerConnection {
 
-    private static PerfExplorerConnection theConnection = null;
+	private static PerfExplorerConnection theConnection = null;
 
-    private RMIPerfExplorer server = null;
-    private static boolean standalone = true;
-    private static String configFile = null;
-    private static String tauHome = null;
-    private static String tauArch = null;
-    private int connectionIndex = 0;
+	private RMIPerfExplorer server = null;
+	private static boolean standalone = true;
+	private static String configFile = null;
+	private static String tauHome = null;
+	private static String tauArch = null;
+	private int connectionIndex = 0;
 
-    private PerfExplorerConnection () {
+	private PerfExplorerConnection () {
 		makeConnection();
-    }
+	}
 
 	private void makeConnection() {
 		if (standalone) {
-	    	server = PerfExplorerServer.getServer(configFile, tauHome, tauArch);
+			server = PerfExplorerServer.getServer(configFile, tauHome, tauArch);
 		} else {
-	    	if (System.getSecurityManager() == null) {
+			if (System.getSecurityManager() == null) {
 				System.setSecurityManager(new RMISecurityManager());
-	    	}
-	    	try {
+			}
+			try {
 				String hostname = System.getProperty("java.rmi.server.hostname");
 				String name = "PerfExplorerServer";
 				System.out.println("Connecting to rmi://" + hostname + "/" + name);
 				//server = (RMIPerfExplorer)Naming.lookup("//utonium.cs.uoregon.edu/" + name);
 				server = (RMIPerfExplorer)Naming.lookup("//" + hostname + "/" + name);
 				System.out.println("Bound to " + name);
-	    	} catch (Exception e) {
+			} catch (Exception e) {
 				System.err.println("createServer Exception: " + e.getMessage());
 				e.printStackTrace();
 				server = null;
-	    	}
+			}
 		}
 	}
 
-    public static void setStandalone (boolean standalone) {
-	PerfExplorerConnection.standalone = standalone;
-    }
-
-    public static void setConfigFile (String configFile) {
-	PerfExplorerConnection.configFile = configFile;
-    }
-
-    public static void setTauHome (String tauHome) {
-	PerfExplorerConnection.tauHome = tauHome;
-    }
-	
-    public static void setTauArch (String tauArch) {
-    	PerfExplorerConnection.tauArch = tauArch;
-    }
-    	
-    public static PerfExplorerConnection getConnection() {
-	if (theConnection == null) {
-	    theConnection = new PerfExplorerConnection();
+	public static void setStandalone (boolean standalone) {
+		PerfExplorerConnection.standalone = standalone;
 	}
-	if (theConnection.server == null) {
-	    return null;
-	}
-	return theConnection;
-    }
 
-    private void handleError (RemoteException e, String functionName) {
+	public static void setConfigFile (String configFile) {
+		PerfExplorerConnection.configFile = configFile;
+	}
+
+	public static void setTauHome (String tauHome) {
+		PerfExplorerConnection.tauHome = tauHome;
+	}
+
+	public static void setTauArch (String tauArch) {
+		PerfExplorerConnection.tauArch = tauArch;
+	}
+
+	public static PerfExplorerConnection getConnection() {
+		if (theConnection == null) {
+			theConnection = new PerfExplorerConnection();
+		}
+		if (theConnection.server == null) {
+			return null;
+		}
+		return theConnection;
+	}
+
+	private void handleError (RemoteException e, String functionName) {
 		System.out.println("PerfExplorerConnection." + functionName + " Exception: ");
 		System.out.println(e.getMessage());
 		e.printStackTrace();
 		JOptionPane.showMessageDialog(PerfExplorerClient.getMainFrame(), 
-			"An error occurred communicating with the server.", 
-			"Server Error", JOptionPane.ERROR_MESSAGE);
+				"An error occurred communicating with the server.", 
+				"Server Error", JOptionPane.ERROR_MESSAGE);
 		// try to reconnect
 		server = null;
 		makeConnection();
 		if (server == null) {
 			JOptionPane.showMessageDialog(PerfExplorerClient.getMainFrame(), 
-			"The connection could not be restored.\n" +
-			"Please check to make sure the server is running.", 
-			"Server Error", JOptionPane.ERROR_MESSAGE);
+					"The connection could not be restored.\n" +
+					"Please check to make sure the server is running.", 
+					"Server Error", JOptionPane.ERROR_MESSAGE);
 		} else {
 			JOptionPane.showMessageDialog(PerfExplorerClient.getMainFrame(),
-			"Connection restored - please try your request again.",
-			"Connection Restored", JOptionPane.INFORMATION_MESSAGE);
+					"Connection restored - please try your request again.",
+					"Connection Restored", JOptionPane.INFORMATION_MESSAGE);
 		}
-    }
-
-    public String sayHello() {
-	String tmpStr = null;
-	try {
-	    tmpStr = server.sayHello();
-	} catch (RemoteException e) {
-	    handleError(e, "sayHello()");
 	}
-	return tmpStr;
-    }
 
-    
-    public ListIterator<Application> getApplicationList() {
-	ListIterator<Application> tmpIterator = null;
-	try {
-	    tmpIterator = server.getApplicationList().listIterator();
-	} catch (RemoteException e) {
-	    handleError(e, "getApplicationList()");
-	}
-	return tmpIterator;
-    }
-
-    public ListIterator<Experiment> getExperimentList(int applicationID) {
-	ListIterator<Experiment> tmpIterator = null;
-	try {
-	    tmpIterator =
-		server.getExperimentList(applicationID).listIterator();
-	} catch (RemoteException e) {
-	    handleError(e, "getExperimentList(" + applicationID + ")");
-	}
-	return tmpIterator;
-    }
-
-    public ListIterator<Trial> getTrialList(int experimentID, boolean getXMLMetadata) {
-	ListIterator<Trial> tmpIterator = null;
-	try {
-	    tmpIterator =
-		server.getTrialList(experimentID,getXMLMetadata).listIterator();
-	} catch (RemoteException e) {
-	    handleError(e, "getTrialList(" + experimentID + ")");
-	}
-	return tmpIterator;
-    }
-
-    public String requestAnalysis(RMIPerfExplorerModel model, boolean force) {
-	String tmpString = null;
-	try {
-	    tmpString = server.requestAnalysis(model, force);
-	} catch (RemoteException e) {
-	    handleError(e, "requestAnalysis(" + model.toString() + ")");
-	}
-	return tmpString;
-    }
-
-    public RMIPerformanceResults getPerformanceResults(PerfExplorerModel model) {
-	RMIPerformanceResults results = null;
-	try {
-	    results = server.getPerformanceResults(model);
-	} catch (RemoteException e) {
-	    handleError(e, "getPerformanceResults(" + model.toString() + ")");
-	}
-	return results;
-    }
-
-    public RMIPerformanceResults getCorrelationResults(PerfExplorerModel model) {
-	RMIPerformanceResults results = null;
-	try {
-	    results = server.getCorrelationResults(model);
-	} catch (RemoteException e) {
-	    handleError(e, "getCorrelationResults(" + model.toString() + ")");
-	}
-	return results;
-    }
-
-    public void stopServer() {
-	try {
-	    server.stopServer();
-	} catch (RemoteException e) {
-	    handleError(e, "stopServer()");
-	}
-    }
-
-    public RMIChartData requestChartData(PerfExplorerModel model, ChartDataType dataType) {
-	RMIChartData data = null;
-	try {
-	    data = server.requestChartData(model, dataType);
-	} catch (RemoteException e) {
-	    handleError(e, "requestChartData(" + model.toString() + ")");
-	}
-	return data;
-    }
-
-    public RMIGeneralChartData requestGeneralChartData(PerfExplorerModel model, ChartDataType dataType) {
-	RMIGeneralChartData data = null;
-	try {
-	    data = server.requestGeneralChartData(model, dataType);
-	} catch (RemoteException e) {
-	    handleError(e, "requestGeneralChartData(" + model.toString() + ")");
-	}
-	return data;
-    }
-
-    public List<String> getPotentialGroups(PerfExplorerModel model) {
-	List<String> groups = null;
-	try {
-	    groups = server.getPotentialGroups(model);
-	} catch (RemoteException e) {
-	    handleError(e, "getPotentialGroups(" + model.toString() + ")");
-	}
-	return groups;
-    }
-
-    public List<String> getPotentialMetrics(PerfExplorerModel model) {
-	List<String> metrics = null;
-	try {
-	    metrics = server.getPotentialMetrics(model);
-	} catch (RemoteException e) {
-	    handleError(e, "getPotentialGroups(" + model.toString() + ")");
-	}
-	return metrics;
-    }
-
-    public List<String> getPotentialEvents(PerfExplorerModel model) {
-	List<String> events = null;
-	try {
-	    events = server.getPotentialEvents(model);
-	} catch (RemoteException e) {
-	    handleError(e, "getPotentialEvents(" + model.toString() + ")");
-	}
-	return events;
-    }
-
-    public String[] getMetaData(String tableName) {
-	String[] columns = null;
-	try {
-	    columns = server.getMetaData(tableName);
-	} catch (RemoteException e) {
-	    handleError(e, "getMetaData(" + tableName + ")");
-	}
-	return columns;
-    }
-
-    public List<String> getPossibleValues(String tableName, String columnName) {
-	List<String> values = null;
-	try {
-	    values = server.getPossibleValues(tableName, columnName);
-	} catch (RemoteException e) {
-	    handleError(e, "getPossibleValues(" + tableName + ", " + columnName + ")");
-	}
-	return values;
-    }
-
-    public int createNewView (String name, int parent, String tableName, String columnName, String oper, String value) {
-	int viewID = 0;
-	try {
-	    viewID = server.createNewView(name, parent, tableName, columnName, oper, value);
-	} catch (RemoteException e) {
-	    handleError(e, "createNewView(" + tableName + ", " + columnName + ", " + value + ")");
-	}
-	return viewID;
-    }
-
-    public void deleteView (String id) {
+	public String sayHello() {
+		String tmpStr = null;
 		try {
-	    	server.deleteView(id);
+			tmpStr = server.sayHello();
 		} catch (RemoteException e) {
-	    	handleError(e, "deleteView(" + id + ")");
+			handleError(e, "sayHello()");
 		}
-    }
-
-    public List<RMIView> getViews(int parent) {
-	List<RMIView> views = null;
-	try {
-	    views = server.getViews(parent);
-	} catch (RemoteException e) {
-	    handleError(e, "getViews(" + parent + ")");
+		return tmpStr;
 	}
-	return views;
-    }
 
-    public ListIterator<Trial> getTrialsForView(List<RMIView> views, boolean getXMLMetadata) {
-	ListIterator<Trial> trials = null;
-	try {
-	    trials = server.getTrialsForView(views,getXMLMetadata).listIterator();
-	} catch (RemoteException e) {
-	    handleError(e, "getTrialsForView(" + views + ")");
-	}
-	return trials;
-    }
 
-    public RMIVarianceData requestVariationAnalysis(PerfExplorerModel model) {
-	RMIVarianceData results = null;
-	try {
-	    results = server.getVariationAnalysis(model);
-	} catch (RemoteException e) {
-	    handleError(e, "getVariationAnalysis(" + model.toString() + ")");
+	public ListIterator<Application> getApplicationList() {
+		ListIterator<Application> tmpIterator = null;
+		try {
+			tmpIterator = server.getApplicationList().listIterator();
+		} catch (RemoteException e) {
+			handleError(e, "getApplicationList()");
+		}
+		return tmpIterator;
 	}
-	return results;
-    }
 
-    public RMICubeData requestCubeData(PerfExplorerModel model, int numFunctions) {
-	RMICubeData results = null;
-	try {
-	    results = server.getCubeData(model, numFunctions);
-	} catch (RemoteException e) {
-	    handleError(e, "getCubeData(" + model.toString() + ")");
+	public ListIterator<Experiment> getExperimentList(int applicationID) {
+		ListIterator<Experiment> tmpIterator = null;
+		try {
+			tmpIterator =
+				server.getExperimentList(applicationID).listIterator();
+		} catch (RemoteException e) {
+			handleError(e, "getExperimentList(" + applicationID + ")");
+		}
+		return tmpIterator;
 	}
-	return results;
-    }
+
+	public ListIterator<Trial> getTrialList(int experimentID, boolean getXMLMetadata) {
+		ListIterator<Trial> tmpIterator = null;
+		try {
+			tmpIterator =
+				server.getTrialList(experimentID,getXMLMetadata).listIterator();
+		} catch (RemoteException e) {
+			handleError(e, "getTrialList(" + experimentID + ")");
+		}
+		return tmpIterator;
+	}
+
+	public String requestAnalysis(RMIPerfExplorerModel model, boolean force) {
+		String tmpString = null;
+		try {
+			tmpString = server.requestAnalysis(model, force);
+		} catch (RemoteException e) {
+			handleError(e, "requestAnalysis(" + model.toString() + ")");
+		}
+		return tmpString;
+	}
+
+	public RMIPerformanceResults getPerformanceResults(PerfExplorerModel model) {
+		RMIPerformanceResults results = null;
+		try {
+			results = server.getPerformanceResults(model);
+		} catch (RemoteException e) {
+			handleError(e, "getPerformanceResults(" + model.toString() + ")");
+		}
+		return results;
+	}
+
+	public RMIPerformanceResults getCorrelationResults(PerfExplorerModel model) {
+		RMIPerformanceResults results = null;
+		try {
+			results = server.getCorrelationResults(model);
+		} catch (RemoteException e) {
+			handleError(e, "getCorrelationResults(" + model.toString() + ")");
+		}
+		return results;
+	}
+
+	public void stopServer() {
+		try {
+			server.stopServer();
+		} catch (RemoteException e) {
+			handleError(e, "stopServer()");
+		}
+	}
+
+	public RMIChartData requestChartData(PerfExplorerModel model, ChartDataType dataType) {
+		RMIChartData data = null;
+		try {
+			data = server.requestChartData(model, dataType);
+		} catch (RemoteException e) {
+			handleError(e, "requestChartData(" + model.toString() + ")");
+		}
+		return data;
+	}
+
+	public RMIGeneralChartData requestGeneralChartData(PerfExplorerModel model, ChartDataType dataType) {
+		RMIGeneralChartData data = null;
+		try {
+			data = server.requestGeneralChartData(model, dataType);
+		} catch (RemoteException e) {
+			handleError(e, "requestGeneralChartData(" + model.toString() + ")");
+		}
+		return data;
+	}
+
+	public List<String> getPotentialGroups(PerfExplorerModel model) {
+		List<String> groups = null;
+		try {
+			groups = server.getPotentialGroups(model);
+		} catch (RemoteException e) {
+			handleError(e, "getPotentialGroups(" + model.toString() + ")");
+		}
+		return groups;
+	}
+
+	public List<String> getPotentialMetrics(PerfExplorerModel model) {
+		List<String> metrics = null;
+		try {
+			metrics = server.getPotentialMetrics(model);
+		} catch (RemoteException e) {
+			handleError(e, "getPotentialGroups(" + model.toString() + ")");
+		}
+		return metrics;
+	}
+
+	public List<String> getPotentialEvents(PerfExplorerModel model) {
+		List<String> events = null;
+		try {
+			events = server.getPotentialEvents(model);
+		} catch (RemoteException e) {
+			handleError(e, "getPotentialEvents(" + model.toString() + ")");
+		}
+		return events;
+	}
+	public List<String> getPotentialCallPathEvents(PerfExplorerModel model) {
+		List<String> events = null;
+		try {
+			events = server.getPotentialCallPathEvents(model);
+		} catch (RemoteException e) {
+			handleError(e, "getPotentialCallPathEvents(" + model.toString() + ")");
+		}
+		return events;
+	}
+
+	public String[] getMetaData(String tableName) {
+		String[] columns = null;
+		try {
+			columns = server.getMetaData(tableName);
+		} catch (RemoteException e) {
+			handleError(e, "getMetaData(" + tableName + ")");
+		}
+		return columns;
+	}
+
+	public List<String> getPossibleValues(String tableName, String columnName) {
+		List<String> values = null;
+		try {
+			values = server.getPossibleValues(tableName, columnName);
+		} catch (RemoteException e) {
+			handleError(e, "getPossibleValues(" + tableName + ", " + columnName + ")");
+		}
+		return values;
+	}
+
+	public int createNewView (String name, int parent, String tableName, String columnName, String oper, String value) {
+		int viewID = 0;
+		try {
+			viewID = server.createNewView(name, parent, tableName, columnName, oper, value);
+		} catch (RemoteException e) {
+			handleError(e, "createNewView(" + tableName + ", " + columnName + ", " + value + ")");
+		}
+		return viewID;
+	}
+
+	public void deleteView (String id) {
+		try {
+			server.deleteView(id);
+		} catch (RemoteException e) {
+			handleError(e, "deleteView(" + id + ")");
+		}
+	}
+
+	public List<RMIView> getViews(int parent) {
+		List<RMIView> views = null;
+		try {
+			views = server.getViews(parent);
+		} catch (RemoteException e) {
+			handleError(e, "getViews(" + parent + ")");
+		}
+		return views;
+	}
+
+	public ListIterator<Trial> getTrialsForView(List<RMIView> views, boolean getXMLMetadata) {
+		ListIterator<Trial> trials = null;
+		try {
+			trials = server.getTrialsForView(views,getXMLMetadata).listIterator();
+		} catch (RemoteException e) {
+			handleError(e, "getTrialsForView(" + views + ")");
+		}
+		return trials;
+	}
+
+	public RMIVarianceData requestVariationAnalysis(PerfExplorerModel model) {
+		RMIVarianceData results = null;
+		try {
+			results = server.getVariationAnalysis(model);
+		} catch (RemoteException e) {
+			handleError(e, "getVariationAnalysis(" + model.toString() + ")");
+		}
+		return results;
+	}
+
+	public RMICubeData requestCubeData(PerfExplorerModel model, int numFunctions) {
+		RMICubeData results = null;
+		try {
+			results = server.getCubeData(model, numFunctions);
+		} catch (RemoteException e) {
+			handleError(e, "getCubeData(" + model.toString() + ")");
+		}
+		return results;
+	}
 
 	public String getConnectionString() {
 		String conn = null;
 		try {
-	    	conn = server.getConnectionString();
+			conn = server.getConnectionString();
 		} catch (RemoteException e) {
-	    	handleError(e, "getConnectionString()");
+			handleError(e, "getConnectionString()");
 		}
 		return conn;
 	}
@@ -331,9 +340,9 @@ public class PerfExplorerConnection {
 	public List<String> getConnectionStrings() {
 		List<String> conns = null;
 		try {
-	    	conns = server.getConnectionStrings();
+			conns = server.getConnectionStrings();
 		} catch (RemoteException e) {
-	    	handleError(e, "getConnectionStrings()");
+			handleError(e, "getConnectionStrings()");
 		}
 		return conns;
 	}
@@ -341,29 +350,29 @@ public class PerfExplorerConnection {
 	public List<String> getConfigNames() {
 		List<String> conns = null;
 		try {
-	    	conns = server.getConfigNames();
+			conns = server.getConfigNames();
 		} catch (RemoteException e) {
-	    	handleError(e, "getConfigNames()");
+			handleError(e, "getConfigNames()");
 		}
 		return conns;
 	}
 
-    public ListIterator<RMISortableIntervalEvent> getEventList(int trialID, int metricIndex) {
-	ListIterator<RMISortableIntervalEvent> tmpIterator = null;
-	try {
-	    tmpIterator = server.getEventList(trialID, metricIndex).listIterator();
-	} catch (RemoteException e) {
-	    handleError(e, "getEventList(" + trialID + ")");
+	public ListIterator<RMISortableIntervalEvent> getEventList(int trialID, int metricIndex) {
+		ListIterator<RMISortableIntervalEvent> tmpIterator = null;
+		try {
+			tmpIterator = server.getEventList(trialID, metricIndex).listIterator();
+		} catch (RemoteException e) {
+			handleError(e, "getEventList(" + trialID + ")");
+		}
+		return tmpIterator;
 	}
-	return tmpIterator;
-    }
 
 	public List<Trial> getTrialList(String criteria, boolean getXMLMetadata) {
 		List<Trial> list = null;
 		try {
 			list = server.getTrialList(criteria,getXMLMetadata);
 		} catch (RemoteException e) {
-	    	handleError(e, "getTrialList(" + criteria + ")");
+			handleError(e, "getTrialList(" + criteria + ")");
 		}
 		return list;
 	}
@@ -373,20 +382,20 @@ public class PerfExplorerConnection {
 		try {
 			list = server.getChartFieldNames();
 		} catch (RemoteException e) {
-	    	handleError(e, "getChartFieldNames()");
+			handleError(e, "getChartFieldNames()");
 		}
 		return list;
 	}
 
-    public List<String> getXMLFields(PerfExplorerModel model) {
+	public List<String> getXMLFields(PerfExplorerModel model) {
 		List<String> results = null;
 		try {
-	    	results = server.getXMLFields(model);
+			results = server.getXMLFields(model);
 		} catch (RemoteException e) {
-	    	handleError(e, "getXMLFields(" + model.toString() + ")");
+			handleError(e, "getXMLFields(" + model.toString() + ")");
 		}
 		return results;
-    }
+	}
 
 	/**
 	 * @return the connectionIndex
@@ -404,7 +413,7 @@ public class PerfExplorerConnection {
 			server.setConnectionIndex(connectionIndex);
 			PerfExplorerModel.getModel().setConnectionIndex(connectionIndex);
 		} catch (RemoteException e) {
-	    	handleError(e, "setConnectionIndex(" + connectionIndex + ")");
+			handleError(e, "setConnectionIndex(" + connectionIndex + ")");
 		}
 	}
 
@@ -412,27 +421,27 @@ public class PerfExplorerConnection {
 		try {
 			server.resetServer();
 		} catch (RemoteException e) {
-	    	handleError(e, "setConnectionIndex(" + connectionIndex + ")");
+			handleError(e, "setConnectionIndex(" + connectionIndex + ")");
 		}
-		
+
 	}
 
 	public List<String> getPotentialAtomicEvents(PerfExplorerModel model) {
 		List<String> events = null;
 		try {
-		    events = server.getPotentialAtomicEvents(model);
+			events = server.getPotentialAtomicEvents(model);
 		} catch (RemoteException e) {
-		    handleError(e, "getPotentialEvents(" + model.toString() + ")");
+			handleError(e, "getPotentialEvents(" + model.toString() + ")");
 		}
 		return events;
-    }
+	}
 
 	public Map<String, Integer> checkScalabilityChartData(RMIPerfExplorerModel model) {
 		Map<String, Integer> counts = null;
 		try {
-		    counts = server.checkScalabilityChartData(model);
+			counts = server.checkScalabilityChartData(model);
 		} catch (RemoteException e) {
-		    handleError(e, "checkScalabilityChartData(" + model.toString() + ")");
+			handleError(e, "checkScalabilityChartData(" + model.toString() + ")");
 		}
 		return counts;
 	}
@@ -440,9 +449,9 @@ public class PerfExplorerConnection {
 	public Map<String, double[][]> getUserEventData(RMIPerfExplorerModel model) {
 		Map<String, double[][]> userEvents = null;
 		try {
-		    userEvents = server.getUserEventData(model);
+			userEvents = server.getUserEventData(model);
 		} catch (RemoteException e) {
-		    handleError(e, "getUserEventData(" + model.toString() + ")");
+			handleError(e, "getUserEventData(" + model.toString() + ")");
 		}
 		return userEvents;
 	}

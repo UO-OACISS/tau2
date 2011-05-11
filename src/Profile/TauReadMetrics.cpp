@@ -47,6 +47,10 @@ extern "C" {
 }
 #endif /* TAU_PAPI */
 
+#ifdef CUPTI
+#include "Profile/CuptiLayer.h"
+#endif //CUPTI
+
 #ifdef TAUKTAU_SHCTR
 #include "Profile/KtauCounters.h"
 #endif //TAUKTAU_SHCTR
@@ -269,9 +273,13 @@ void metric_read_cudatime(int tid, int idx, double values[]) {
   //get time from the CPU clock
   if (tid == CPU_THREAD)
   { 
+#ifdef TAU_WINDOWS
+    values[idx] = TauWindowsUsecD();
+#else
     struct timeval tp;
     gettimeofday(&tp, 0);
     values[idx] = ((double)tp.tv_sec * 1e6 + tp.tv_usec);
+#endif
   }
   // get time from the callback API 
   else
@@ -279,3 +287,34 @@ void metric_read_cudatime(int tid, int idx, double values[]) {
     values[idx] = gpu_timestamp[tid];
   }
 }
+
+#ifdef CUPTI
+void metric_read_cupti(int tid, int idx, double values[])
+{
+
+	//printf("is the cupti layer is initialized? %d\n", Tau_CuptiLayer_is_initialized());
+	if (Tau_CuptiLayer_is_initialized())
+	{
+		uint64_t* counterDataBuffer = (uint64_t*) malloc
+			(Tau_CuptiLayer_get_num_events()*sizeof(uint64_t));
+		Tau_CuptiLayer_read_counters(counterDataBuffer);
+
+		if (counterDataBuffer)
+		{
+			for (int i=0; i<Tau_CuptiLayer_get_num_events(); i++)
+			{
+				values[idx + i] = (double) counterDataBuffer[i];
+				//printf("cupti value %d is: %lf.\n", i, values[idx + i]);
+			}
+		}
+		free(counterDataBuffer);
+	}
+	else
+	{
+		for (int i=0; i<Tau_CuptiLayer_get_num_events(); i++)
+		{
+			values[idx + i] = 0;
+		}
+	}
+}
+#endif //CUPTI

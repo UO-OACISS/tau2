@@ -214,13 +214,11 @@ extern "C" {
 
 #define TAU_GLOBAL_PHASE_EXTERNAL(timer)  extern void * TauGlobalPhase##timer(void)
 
-#ifdef TAU_MONITORING
+/* *CWL* - temporary monitoring interface. These functions must be implemented
+   by the monitoring framework. The functions should be implemented in a way
+   that does nothing should TAU_MONITORING be unset.
+*/
 #define TAU_ONLINE_DUMP()                       Tau_mon_onlineDump()
-#elif defined(TAU_EXP_COLLATE)
-#define TAU_ONLINE_DUMP()                       Tau_collate_onlineDump()
-#else
-#define TAU_ONLINE_DUMP()
-#endif /* TAU_MONITORING */
 
 #define TAU_PROFILE_SNAPSHOT(name)              Tau_profile_snapshot(name);
 #define TAU_PROFILE_SNAPSHOT_1L(name, expr)     Tau_profile_snapshot_1l(name, expr);
@@ -279,6 +277,7 @@ extern "C" {
 #define TAU_SCATTER_DATA(data)                  Tau_scatter_data(data) 
 #define TAU_GATHER_DATA(data)  	                Tau_gather_data(data)
 #define TAU_ALLREDUCE_DATA(data)  	        Tau_allreduce_data(data)
+#define TAU_WAIT_DATA(data)  	        	Tau_wait_data(data)
 #define TAU_ALLGATHER_DATA(data)  	        Tau_allgather_data(data)
 #define TAU_REDUCESCATTER_DATA(data)  	        Tau_reducescatter_data(data)
 #define TAU_SCAN_DATA(data)  		        Tau_scan_data(data)
@@ -387,6 +386,7 @@ void TAUDECL Tau_scatter_data(int data);
 void TAUDECL Tau_gather_data(int data);
 void TAUDECL Tau_allreduce_data(int data);
 void TAUDECL Tau_allgather_data(int data);
+void TAUDECL Tau_wait_data(int data);
 void TAUDECL Tau_reducescatter_data(int data);
 void TAUDECL Tau_scan_data(int data);
 void TAUDECL Tau_set_node(int node);

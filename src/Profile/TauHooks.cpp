@@ -98,7 +98,11 @@ void TauInitCode(char *arg, int isMPI)
 */
   for (j=1, str1 = arg; ; j++, str1 = NULL) 
   { 
+#ifdef TAU_WINDOWS
+    name = strtok(str1, "|");
+#else
     name = strtok_r(str1, "|", &saveptr);
+#endif
     if (name == NULL) 
       break;
     dprintf("After loop: name = %s\n", name);
@@ -342,6 +346,7 @@ void trace_register_func(char *func, int id)
 void traceEntry(int id)
 {
   int tid = RtsLayer::myThread();
+  if ( !RtsLayer::TheEnableInstrumentation()) return; 
   if (!tauDyninstEnabled[tid]) return;
   void *fi = TheTauBinDynFI()[id];
 
@@ -382,6 +387,7 @@ void traceExit(int id)
 {
   const char *strcurr;
   const char *strbin;
+  if ( !RtsLayer::TheEnableInstrumentation()) return; 
   int tid = RtsLayer::myThread();
   if (!tauDyninstEnabled[tid]) return;
   void *fi = TheTauBinDynFI()[id];

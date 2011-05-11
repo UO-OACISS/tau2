@@ -17,7 +17,7 @@
 
 
 #ifdef TAU_MPI
-#ifdef TAU_EXP_UNIFY
+#ifdef TAU_UNIFY
 #include <mpi.h>
 
 #include <TauUtil.h>
@@ -425,8 +425,21 @@ extern "C" int Tau_unify_unifyDefinitions() {
   functionUnifier = Tau_unify_unifyEvents(functionEventLister);
   AtomicEventLister *atomicEventLister = new AtomicEventLister();
   atomicUnifier = Tau_unify_unifyEvents(atomicEventLister);
+  return 0;
 }
 
 
-#endif /* TAU_EXP_UNIFY */
+#endif /* TAU_UNIFY */
+
+extern "C" int TauGetMpiRank(void)
+{
+  int rank;
+
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  return rank;
+}
+#else /* !TAU_MPI */
+extern "C" int TauGetMpiRank(void) {
+  return 0;
+}
 #endif /* TAU_MPI */

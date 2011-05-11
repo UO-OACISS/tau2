@@ -1,4 +1,4 @@
-TAU_HOME	= /home/scottb/tau2
+TAU_HOME	= /home/users/sameer/tau2
 
 TAUIL_HOME	= $(TAU_HOME)/tools/src/TauIL
 

@@ -16,7 +16,13 @@ package edu.uoregon.tau.paraprof;
 
 import java.awt.EventQueue;
 import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Observable;
+import java.util.Observer;
+import java.util.Set;
+import java.util.Vector;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
@@ -25,8 +31,16 @@ import edu.uoregon.tau.paraprof.script.ParaProfScript;
 import edu.uoregon.tau.paraprof.script.ParaProfTrialScript;
 import edu.uoregon.tau.paraprof.util.FileMonitor;
 import edu.uoregon.tau.paraprof.util.FileMonitorListener;
-import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.DataSource;
+import edu.uoregon.tau.perfdmf.Database;
+import edu.uoregon.tau.perfdmf.DatabaseAPI;
+import edu.uoregon.tau.perfdmf.FileList;
+import edu.uoregon.tau.perfdmf.Function;
+import edu.uoregon.tau.perfdmf.Group;
+import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Thread;
+import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfdmf.UserEvent;
 
 public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObject {
 
@@ -783,5 +797,25 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
         return items;
     }
+
+	public Vector<String> getTopologyArray() {
+		Set<String> keys = getDataSource().getMetaData().keySet();
+		Vector<String> topos = new Vector<String>();
+		for(Iterator<String> it = keys.iterator(); it.hasNext();){
+			String key = it.next();
+			if(key.contains(" isTorus")){
+				topos.add(key.split(" ")[0]);
+			}
+		}
+//		if(topos.size()==0){
+//			return new String[]{null};
+//		}
+		
+//		topos.add("Sphere");
+//		topos.add("Custom");
+		
+		//String[] a = new String[topos.size()];
+		return topos;//topos.toArray(a);
+	}
 
 }

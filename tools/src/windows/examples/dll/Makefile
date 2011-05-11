@@ -1,8 +1,8 @@
 
 
-INC=-I..\..\include
-PROFILELIB=..\..\lib\tau-profile.lib
-PROFILEDLL=..\..\lib\tau-profile.dll
+INC=-I..\..\..\..\..\include
+PROFILELIB=..\..\..\..\..\win32\lib\tau-profile.lib
+PROFILEDLL=..\..\..\..\..\win32\lib\tau-profile.dll
 
 all: profile
 

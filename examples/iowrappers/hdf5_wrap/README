@@ -1,0 +1,326 @@
+Here we demonstrate the use of TAU with linker based instrumentation using a selective instrumentation file (select.tau). 
+
+[hdf5_wrap]$ make
+mkdir -p headers; cp /usr/local/packages/hdf5-1.8.6/include/*.h headers
+cd headers; tau_gen_wrapper hdf5.h /usr/local/packages/hdf5-1.8.6/lib/libhdf5.a -f ../select.tau
+make[1]: Entering directory `/home/sameer/tau2/examples/iowrappers/hdf5_wrap/headers/hdf5_wrapper'
+gcc    -DPROFILING_ON                        -DTAU_GNU -DTAU_DOT_H_LESS_HEADERS                 -DTAU_MPI -DTAU_UNIFY -DTAU_MPI_THREADED      -DTAU_LINUX_TIMERS                   -DTAU_MPIGREQUEST     -DTAU_MPIDATAREP    -DTAU_MPIERRHANDLER     -DTAU_MPIATTRFUNCTION    -DTAU_MPITYPEEX    -DTAU_MPIADDERROR         -DTAU_LARGEFILE -D_LARGEFILE64_SOURCE                    -DTAU_BFD  -DTAU_MPIFILE   -DHAVE_TR1_HASH_MAP      -fPIC  -I/home/users/sameer/tau2/include  -I/usr/local/packages/openmpi-1.2/gnu-4.2.0/include -I/usr/local/packages/openmpi-1.2/gnu-4.2.0/include/openmpi -I/usr/local/packages/openmpi-1.2/gnu-4.2.0/include/openmpi/ompi -I..  -c wr.c -o hdf5_wrap.o
+wr.c: In function ‘__wrap_H5Iobject_verify’:
+wr.c:437: warning: assignment makes pointer from integer without a cast
+wr.c: In function ‘__wrap_H5Iremove_verify’:
+wr.c:448: warning: assignment makes pointer from integer without a cast
+wr.c: In function ‘__wrap_H5Isearch’:
+wr.c:591: warning: assignment makes pointer from integer without a cast
+wr.c: In function ‘__wrap_H5Tget_tag’:
+wr.c:1086: warning: assignment makes pointer from integer without a cast
+wr.c: In function ‘__wrap_H5Tget_member_name’:
+wr.c:1262: warning: assignment makes pointer from integer without a cast
+wr.c: In function ‘__wrap_H5Tfind’:
+wr.c:1515: warning: assignment makes pointer from integer without a cast
+wr.c: In function ‘__wrap_H5Eget_major’:
+wr.c:2340: warning: assignment makes pointer from integer without a cast
+wr.c: In function ‘__wrap_H5Eget_minor’:
+wr.c:2351: warning: assignment makes pointer from integer without a cast
+wr.c: In function ‘__wrap_H5FDopen’:
+wr.c:2637: warning: assignment makes pointer from integer without a cast
+wr.c: In function ‘__wrap_H5Pget_class_name’:
+wr.c:3055: warning: assignment makes pointer from integer without a cast
+wr.c: In function ‘__wrap_H5Pget_driver_info’:
+wr.c:3649: warning: assignment makes pointer from integer without a cast
+wr.c: In function ‘__wrap_H5FD_mpi_get_comm’:
+wr.c:5216: warning: assignment makes pointer from integer without a cast
+ar              rcv  libhdf5_wrap.a hdf5_wrap.o
+a - hdf5_wrap.o
+make[1]: Leaving directory `/home/sameer/tau2/examples/iowrappers/hdf5_wrap/headers/hdf5_wrapper'
+tau_cc.sh -tau_options='-optTauWrapFile=headers/hdf5_wrapper/link_options.tau -optTrackIO ' -c hyperslab_by_row.c -I/usr/local/packages/hdf5-1.8.6/include
+
+tau_cc.sh -tau_options='-optTauWrapFile=headers/hdf5_wrapper/link_options.tau -optTrackIO ' hyperslab_by_row.o /usr/local/packages/hdf5-1.8.6/lib/libhdf5.a -lz -o hyperslab_by_row
+
+[hdf5_wrap]$ mpirun -np 2 ./hyperslab_by_row
+[hdf5_wrap]$ pprof
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0        0.085        1,039           1           1    1039646 .TAU application 
+100.0        0.119        1,039           1          27    1039561 int main(int, char **) C 
+ 98.9        1,027        1,027           1           0    1027818 MPI_Init() 
+  0.4        0.907            3           1          14       3923 hid_t H5Fcreate(const char *, unsigned int, hid_t, hid_t) C
+  0.3            3            3           1           6       3177 MPI_Finalize() 
+  0.3            2            2           1           0       2872 MPI_File_open()
+  0.2        0.364            2           1          20       2168 herr_t H5Fclose(hid_t) C
+  0.2            1            1           1           0       1611 MPI_File_sync()
+  0.1        0.068            1           1          21       1109 herr_t H5Dwrite(hid_t, hid_t, hid_t, hid_t, hid_t, const void *) C
+  0.1        0.766        0.781           4           1        195 herr_t H5open() C
+  0.1        0.758        0.763           1           3        763 MPI_File_write_at_all()
+  0.0        0.005        0.255           2           2        128 herr_t H5FD_mpi_comm_info_dup(MPI_Comm, MPI_Info, MPI_Comm *, MPI_Info *) C
+  0.0        0.013        0.252           1           1        252 herr_t H5Pset_fapl_mpio(hid_t, MPI_Comm, MPI_Info) C
+  0.0         0.25         0.25           2           0        125 MPI_Comm_dup() 
+  0.0        0.193        0.193           2           0         96 MPI_File_set_view()
+  0.0        0.096        0.096           2           0         48 MPI_File_set_size()
+  0.0        0.084        0.085           1           1         85 hid_t H5Dcreate2(hid_t, const char *, hid_t, hid_t, hid_t, hid_t, hid_t) C
+  0.0        0.068        0.068           4           0         17 MPI_Barrier() 
+  0.0        0.066        0.067           3           3         22 MPI_File_write_at()
+  0.0        0.025        0.067           2           1         34 herr_t H5Pclose(hid_t) C
+  0.0        0.066        0.066           3           0         22 fopen() 
+  0.0        0.056        0.056           1           0         56 MPI_File_close()
+  0.0        0.002        0.047           2           2         24 herr_t H5FD_mpi_comm_info_free(MPI_Comm *, MPI_Info *) C
+  0.0        0.045        0.045           2           0         22 MPI_Comm_free() 
+  0.0        0.029        0.029           1           0         29 MPI_Allreduce() 
+  0.0         0.02         0.02           2           0         10 hid_t H5Pcreate(hid_t) C
+  0.0        0.015        0.015           1           0         15 hid_t H5FD_sec2_init() C
+  0.0        0.014        0.014           1           0         14 MPI_File_get_size()
+  0.0        0.012        0.012           2           0          6 hid_t H5Screate_simple(int, const hsize_t *, const hsize_t *) C
+  0.0        0.009        0.009           1           0          9 MPI_Type_contiguous() 
+  0.0        0.009        0.009           1           0          9 herr_t H5FD_mpi_teardown_collective(hid_t) C
+  0.0        0.009        0.009           1           0          9 herr_t H5Sselect_hyperslab(hid_t, H5S_seloper_t, const hsize_t *, const hsize_t *, const hsize_t *, const hsize_t *) C
+  0.0        0.008        0.009           1           2          9 hid_t H5FD_mpiposix_init() C
+  0.0        0.008        0.008           1           0          8 MPI_Bcast() 
+  0.0        0.008        0.008           1           0          8 herr_t H5Dclose(hid_t) C
+  0.0        0.007        0.007           3           0          2 MPI_Type_free() 
+  0.0        0.006        0.006           6           0          1 MPI_Status_set_elements()
+  0.0        0.005        0.005           1           0          5 MPI_Type_vector() 
+  0.0        0.005        0.005           3           0          2 fclose() 
+  0.0        0.005        0.005           1           0          5 herr_t H5Pset_dxpl_mpio(hid_t, H5FD_mpio_xfer_t) C
+  0.0        0.005        0.005           1           0          5 herr_t H5check_version(unsigned int, unsigned int, unsigned int) C
+  0.0        0.004        0.004           1           0          4 MPI_Type_struct() 
+  0.0        0.004        0.004           1           0          4 herr_t H5FD_mpi_setup_collective(hid_t, MPI_Datatype, MPI_Datatype) C
+  0.0        0.003        0.003           4           0          1 MPI_Get_elements() 
+  0.0        0.003        0.003           1           0          3 MPI_Type_commit() 
+  0.0        0.003        0.003           1           0          3 MPI_Type_extent() 
+  0.0        0.002        0.002           2           0          1 MPI_Comm_size() 
+  0.0        0.002        0.002           5           0          0 hid_t H5FD_mpio_init() C
+  0.0        0.002        0.002           1           0          2 int H5FD_mpi_get_rank(const H5FD_t *) C
+  0.0        0.001        0.001           2           0          0 H5I_type_t H5Iget_type(hid_t) C
+  0.0        0.001        0.001           2           0          0 MPI_Comm_rank() 
+  0.0        0.001        0.001           5           0          0 herr_t H5FD_mpi_haddr_to_MPIOff(haddr_t, MPI_Offset *) C
+  0.0        0.001        0.001           3           0          0 herr_t H5Sclose(hid_t) C
+  0.0        0.001        0.001           1           0          1 hid_t H5Dget_space(hid_t) C
+  0.0        0.001        0.001           1           0          1 int H5FD_mpi_get_size(const H5FD_t *) C
+  0.0            0            0           2           0          0 MPI_Comm H5FD_mpi_get_comm(const H5FD_t *) C
+  0.0            0            0           4           0          0 MPI_Type_size() 
+  0.0            0            0           1           0          0 haddr_t H5FD_mpi_MPIOff_to_haddr(MPI_Offset) C
+---------------------------------------------------------------------------------------
+
+USER EVENTS Profile :NODE 0, CONTEXT 0, THREAD 0
+---------------------------------------------------------------------------------------
+NumSamples   MaxValue   MinValue  MeanValue  Std. Dev.  Event Name
+---------------------------------------------------------------------------------------
+         4        544         40        190      205.4  MPI-IO Bytes Written
+         1         80         80         80          0  MPI-IO Bytes Written : herr_t H5Dwrite(hid_t, hid_t, hid_t, hid_t, hid_t, const void *) C => MPI_File_write_at_all() 
+         3        544         40      226.7      225.6  MPI-IO Bytes Written : herr_t H5Fclose(hid_t) C => MPI_File_write_at() 
+         4      108.8      0.108      28.55      46.35  MPI-IO Write Bandwidth (MB/s)
+         1      0.108      0.108      0.108  2.281E-09  MPI-IO Write Bandwidth (MB/s) : herr_t H5Dwrite(hid_t, hid_t, hid_t, hid_t, hid_t, const void *) C => MPI_File_write_at_all() 
+         3      108.8        1.6      38.03      50.05  MPI-IO Write Bandwidth (MB/s) : herr_t H5Fclose(hid_t) C => MPI_File_write_at() 
+         1          4          4          4          0  Message size for all-reduce
+         1          8          8          8          0  Message size for broadcast
+---------------------------------------------------------------------------------------
+
+NODE 1;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0        0.088        1,038           1           1    1038397 .TAU application 
+100.0        0.125        1,038           1          27    1038309 int main(int, char **) C 
+ 98.9        1,026        1,026           1           0    1026690 MPI_Init() 
+  0.4        0.915            3           1          13       3936 hid_t H5Fcreate(const char *, unsigned int, hid_t, hid_t) C
+  0.3            3            3           1           6       3103 MPI_Finalize() 
+  0.3            2            2           1           0       2873 MPI_File_open()
+  0.2        0.303            2           1          20       2154 herr_t H5Fclose(hid_t) C
+  0.2            1            1           1           0       1607 MPI_File_sync()
+  0.1        0.082            1           1          21       1109 herr_t H5Dwrite(hid_t, hid_t, hid_t, hid_t, hid_t, const void *) C
+  0.1        0.808        0.813           1           3        813 MPI_File_write_at_all()
+  0.1        0.795          0.8           4           1        200 herr_t H5open() C
+  0.0        0.004        0.176           2           2         88 herr_t H5FD_mpi_comm_info_dup(MPI_Comm, MPI_Info, MPI_Comm *, MPI_Info *) C
+  0.0        0.172        0.172           2           0         86 MPI_Comm_dup() 
+  0.0        0.013         0.17           1           1        170 herr_t H5Pset_fapl_mpio(hid_t, MPI_Comm, MPI_Info) C
+  0.0        0.167        0.167           2           0         84 MPI_File_set_size()
+  0.0        0.139        0.139           2           0         70 MPI_File_set_view()
+  0.0         0.09         0.09           1           1         90 hid_t H5Dcreate2(hid_t, const char *, hid_t, hid_t, hid_t, hid_t, hid_t) C
+  0.0        0.078         0.08           3           3         27 MPI_File_write_at()
+  0.0        0.078        0.078           3           0         26 fopen() 
+  0.0        0.027        0.069           2           1         34 herr_t H5Pclose(hid_t) C
+  0.0        0.064        0.064           1           0         64 MPI_File_close()
+  0.0        0.002        0.047           2           2         24 herr_t H5FD_mpi_comm_info_free(MPI_Comm *, MPI_Info *) C
+  0.0        0.045        0.045           2           0         22 MPI_Comm_free() 
+  0.0        0.027        0.027           4           0          7 MPI_Barrier() 
+  0.0        0.024        0.024           1           0         24 MPI_Bcast() 
+  0.0        0.022        0.022           2           0         11 hid_t H5Pcreate(hid_t) C
+  0.0        0.016        0.016           1           0         16 MPI_Allreduce() 
+  0.0        0.012        0.012           1           0         12 herr_t H5FD_mpi_teardown_collective(hid_t) C
+  0.0         0.01         0.01           1           0         10 MPI_Type_contiguous() 
+  0.0         0.01         0.01           2           0          5 hid_t H5Screate_simple(int, const hsize_t *, const hsize_t *) C
+  0.0        0.008        0.008           1           0          8 herr_t H5Dclose(hid_t) C
+  0.0        0.008        0.008           1           0          8 herr_t H5Sselect_hyperslab(hid_t, H5S_seloper_t, const hsize_t *, const hsize_t *, const hsize_t *, const hsize_t *) C
+  0.0        0.007        0.008           1           2          8 hid_t H5FD_mpiposix_init() C
+  0.0        0.007        0.007           6           0          1 MPI_Status_set_elements()
+  0.0        0.006        0.006           3           0          2 MPI_Type_free() 
+  0.0        0.005        0.005           1           0          5 MPI_Type_struct() 
+  0.0        0.005        0.005           1           0          5 MPI_Type_vector() 
+  0.0        0.005        0.005           1           0          5 herr_t H5Pset_dxpl_mpio(hid_t, H5FD_mpio_xfer_t) C
+  0.0        0.005        0.005           1           0          5 herr_t H5check_version(unsigned int, unsigned int, unsigned int) C
+  0.0        0.005        0.005           1           0          5 hid_t H5FD_sec2_init() C
+  0.0        0.004        0.004           1           0          4 MPI_Type_commit() 
+  0.0        0.004        0.004           3           0          1 fclose() 
+  0.0        0.003        0.003           4           0          1 MPI_Get_elements() 
+  0.0        0.003        0.003           1           0          3 MPI_Type_extent() 
+  0.0        0.003        0.003           1           0          3 herr_t H5FD_mpi_setup_collective(hid_t, MPI_Datatype, MPI_Datatype) C
+  0.0        0.003        0.003           3           0          1 herr_t H5Sclose(hid_t) C
+  0.0        0.002        0.002           2           0          1 MPI_Comm H5FD_mpi_get_comm(const H5FD_t *) C
+  0.0        0.002        0.002           1           0          2 int H5FD_mpi_get_rank(const H5FD_t *) C
+  0.0        0.001        0.001           2           0          0 H5I_type_t H5Iget_type(hid_t) C
+  0.0        0.001        0.001           2           0          0 MPI_Comm_rank() 
+  0.0        0.001        0.001           4           0          0 MPI_Type_size() 
+  0.0        0.001        0.001           5           0          0 herr_t H5FD_mpi_haddr_to_MPIOff(haddr_t, MPI_Offset *) C
+  0.0        0.001        0.001           1           0          1 hid_t H5Dget_space(hid_t) C
+  0.0            0            0           2           0          0 MPI_Comm_size() 
+  0.0            0            0           1           0          0 haddr_t H5FD_mpi_MPIOff_to_haddr(MPI_Offset) C
+  0.0            0            0           5           0          0 hid_t H5FD_mpio_init() C
+  0.0            0            0           1           0          0 int H5FD_mpi_get_size(const H5FD_t *) C
+---------------------------------------------------------------------------------------
+
+USER EVENTS Profile :NODE 1, CONTEXT 0, THREAD 0
+---------------------------------------------------------------------------------------
+NumSamples   MaxValue   MinValue  MeanValue  Std. Dev.  Event Name
+---------------------------------------------------------------------------------------
+         4        328         80        200      102.9  MPI-IO Bytes Written
+         1         80         80         80          0  MPI-IO Bytes Written : herr_t H5Dwrite(hid_t, hid_t, hid_t, hid_t, hid_t, const void *) C => MPI_File_write_at_all() 
+         3        328        120        240      87.88  MPI-IO Bytes Written : herr_t H5Fclose(hid_t) C => MPI_File_write_at() 
+         4      45.33     0.1022      15.37      17.69  MPI-IO Write Bandwidth (MB/s)
+         1     0.1022     0.1022     0.1022  2.634E-09  MPI-IO Write Bandwidth (MB/s) : herr_t H5Dwrite(hid_t, hid_t, hid_t, hid_t, hid_t, const void *) C => MPI_File_write_at_all() 
+         3      45.33      5.455      20.46      17.71  MPI-IO Write Bandwidth (MB/s) : herr_t H5Fclose(hid_t) C => MPI_File_write_at() 
+         1          4          4          4          0  Message size for all-reduce
+         1          8          8          8          0  Message size for broadcast
+---------------------------------------------------------------------------------------
+
+FUNCTION SUMMARY (total):
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0        0.173        2,078           2           2    1039022 .TAU application 
+100.0        0.244        2,077           2          54    1038935 int main(int, char **) C 
+ 98.9        2,054        2,054           2           0    1027254 MPI_Init() 
+  0.4            1            7           2          27       3930 hid_t H5Fcreate(const char *, unsigned int, hid_t, hid_t) C
+  0.3            6            6           2          12       3140 MPI_Finalize() 
+  0.3            5            5           2           0       2872 MPI_File_open()
+  0.2        0.667            4           2          40       2161 herr_t H5Fclose(hid_t) C
+  0.2            3            3           2           0       1609 MPI_File_sync()
+  0.1         0.15            2           2          42       1109 herr_t H5Dwrite(hid_t, hid_t, hid_t, hid_t, hid_t, const void *) C
+  0.1            1            1           8           2        198 herr_t H5open() C
+  0.1            1            1           2           6        788 MPI_File_write_at_all()
+  0.0        0.009        0.431           4           4        108 herr_t H5FD_mpi_comm_info_dup(MPI_Comm, MPI_Info, MPI_Comm *, MPI_Info *) C
+  0.0        0.422        0.422           4           0        106 MPI_Comm_dup() 
+  0.0        0.026        0.422           2           2        211 herr_t H5Pset_fapl_mpio(hid_t, MPI_Comm, MPI_Info) C
+  0.0        0.332        0.332           4           0         83 MPI_File_set_view()
+  0.0        0.263        0.263           4           0         66 MPI_File_set_size()
+  0.0        0.174        0.175           2           2         88 hid_t H5Dcreate2(hid_t, const char *, hid_t, hid_t, hid_t, hid_t, hid_t) C
+  0.0        0.144        0.147           6           6         24 MPI_File_write_at()
+  0.0        0.144        0.144           6           0         24 fopen() 
+  0.0        0.052        0.136           4           2         34 herr_t H5Pclose(hid_t) C
+  0.0         0.12         0.12           2           0         60 MPI_File_close()
+  0.0        0.095        0.095           8           0         12 MPI_Barrier() 
+  0.0        0.004        0.094           4           4         24 herr_t H5FD_mpi_comm_info_free(MPI_Comm *, MPI_Info *) C
+  0.0         0.09         0.09           4           0         22 MPI_Comm_free() 
+  0.0        0.045        0.045           2           0         22 MPI_Allreduce() 
+  0.0        0.042        0.042           4           0         10 hid_t H5Pcreate(hid_t) C
+  0.0        0.032        0.032           2           0         16 MPI_Bcast() 
+  0.0        0.022        0.022           4           0          6 hid_t H5Screate_simple(int, const hsize_t *, const hsize_t *) C
+  0.0        0.021        0.021           2           0         10 herr_t H5FD_mpi_teardown_collective(hid_t) C
+  0.0         0.02         0.02           2           0         10 hid_t H5FD_sec2_init() C
+  0.0        0.019        0.019           2           0         10 MPI_Type_contiguous() 
+  0.0        0.017        0.017           2           0          8 herr_t H5Sselect_hyperslab(hid_t, H5S_seloper_t, const hsize_t *, const hsize_t *, const hsize_t *, const hsize_t *) C
+  0.0        0.015        0.017           2           4          8 hid_t H5FD_mpiposix_init() C
+  0.0        0.016        0.016           2           0          8 herr_t H5Dclose(hid_t) C
+  0.0        0.014        0.014           1           0         14 MPI_File_get_size()
+  0.0        0.013        0.013          12           0          1 MPI_Status_set_elements()
+  0.0        0.013        0.013           6           0          2 MPI_Type_free() 
+  0.0         0.01         0.01           2           0          5 MPI_Type_vector() 
+  0.0         0.01         0.01           2           0          5 herr_t H5Pset_dxpl_mpio(hid_t, H5FD_mpio_xfer_t) C
+  0.0         0.01         0.01           2           0          5 herr_t H5check_version(unsigned int, unsigned int, unsigned int) C
+  0.0        0.009        0.009           2           0          4 MPI_Type_struct() 
+  0.0        0.009        0.009           6           0          2 fclose() 
+  0.0        0.007        0.007           2           0          4 MPI_Type_commit() 
+  0.0        0.007        0.007           2           0          4 herr_t H5FD_mpi_setup_collective(hid_t, MPI_Datatype, MPI_Datatype) C
+  0.0        0.006        0.006           8           0          1 MPI_Get_elements() 
+  0.0        0.006        0.006           2           0          3 MPI_Type_extent() 
+  0.0        0.004        0.004           6           0          1 herr_t H5Sclose(hid_t) C
+  0.0        0.004        0.004           2           0          2 int H5FD_mpi_get_rank(const H5FD_t *) C
+  0.0        0.002        0.002           4           0          0 H5I_type_t H5Iget_type(hid_t) C
+  0.0        0.002        0.002           4           0          0 MPI_Comm H5FD_mpi_get_comm(const H5FD_t *) C
+  0.0        0.002        0.002           4           0          0 MPI_Comm_rank() 
+  0.0        0.002        0.002           4           0          0 MPI_Comm_size() 
+  0.0        0.002        0.002          10           0          0 herr_t H5FD_mpi_haddr_to_MPIOff(haddr_t, MPI_Offset *) C
+  0.0        0.002        0.002           2           0          1 hid_t H5Dget_space(hid_t) C
+  0.0        0.002        0.002          10           0          0 hid_t H5FD_mpio_init() C
+  0.0        0.001        0.001           8           0          0 MPI_Type_size() 
+  0.0        0.001        0.001           2           0          0 int H5FD_mpi_get_size(const H5FD_t *) C
+  0.0            0            0           2           0          0 haddr_t H5FD_mpi_MPIOff_to_haddr(MPI_Offset) C
+
+FUNCTION SUMMARY (mean):
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0       0.0865        1,039           1           1    1039022 .TAU application 
+100.0        0.122        1,038           1          27    1038935 int main(int, char **) C 
+ 98.9        1,027        1,027           1           0    1027254 MPI_Init() 
+  0.4        0.911            3           1        13.5       3930 hid_t H5Fcreate(const char *, unsigned int, hid_t, hid_t) C
+  0.3            3            3           1           6       3140 MPI_Finalize() 
+  0.3            2            2           1           0       2872 MPI_File_open()
+  0.2        0.334            2           1          20       2161 herr_t H5Fclose(hid_t) C
+  0.2            1            1           1           0       1609 MPI_File_sync()
+  0.1        0.075            1           1          21       1109 herr_t H5Dwrite(hid_t, hid_t, hid_t, hid_t, hid_t, const void *) C
+  0.1         0.78         0.79           4           1        198 herr_t H5open() C
+  0.1        0.783        0.788           1           3        788 MPI_File_write_at_all()
+  0.0       0.0045        0.215           2           2        108 herr_t H5FD_mpi_comm_info_dup(MPI_Comm, MPI_Info, MPI_Comm *, MPI_Info *) C
+  0.0        0.211        0.211           2           0        106 MPI_Comm_dup() 
+  0.0        0.013        0.211           1           1        211 herr_t H5Pset_fapl_mpio(hid_t, MPI_Comm, MPI_Info) C
+  0.0        0.166        0.166           2           0         83 MPI_File_set_view()
+  0.0        0.132        0.132           2           0         66 MPI_File_set_size()
+  0.0        0.087       0.0875           1           1         88 hid_t H5Dcreate2(hid_t, const char *, hid_t, hid_t, hid_t, hid_t, hid_t) C
+  0.0        0.072       0.0735           3           3         24 MPI_File_write_at()
+  0.0        0.072        0.072           3           0         24 fopen() 
+  0.0        0.026        0.068           2           1         34 herr_t H5Pclose(hid_t) C
+  0.0         0.06         0.06           1           0         60 MPI_File_close()
+  0.0       0.0475       0.0475           4           0         12 MPI_Barrier() 
+  0.0        0.002        0.047           2           2         24 herr_t H5FD_mpi_comm_info_free(MPI_Comm *, MPI_Info *) C
+  0.0        0.045        0.045           2           0         22 MPI_Comm_free() 
+  0.0       0.0225       0.0225           1           0         22 MPI_Allreduce() 
+  0.0        0.021        0.021           2           0         10 hid_t H5Pcreate(hid_t) C
+  0.0        0.016        0.016           1           0         16 MPI_Bcast() 
+  0.0        0.011        0.011           2           0          6 hid_t H5Screate_simple(int, const hsize_t *, const hsize_t *) C
+  0.0       0.0105       0.0105           1           0         10 herr_t H5FD_mpi_teardown_collective(hid_t) C
+  0.0         0.01         0.01           1           0         10 hid_t H5FD_sec2_init() C
+  0.0       0.0095       0.0095           1           0         10 MPI_Type_contiguous() 
+  0.0       0.0085       0.0085           1           0          8 herr_t H5Sselect_hyperslab(hid_t, H5S_seloper_t, const hsize_t *, const hsize_t *, const hsize_t *, const hsize_t *) C
+  0.0       0.0075       0.0085           1           2          8 hid_t H5FD_mpiposix_init() C
+  0.0        0.008        0.008           1           0          8 herr_t H5Dclose(hid_t) C
+  0.0        0.007        0.007         0.5           0         14 MPI_File_get_size()
+  0.0       0.0065       0.0065           6           0          1 MPI_Status_set_elements()
+  0.0       0.0065       0.0065           3           0          2 MPI_Type_free() 
+  0.0        0.005        0.005           1           0          5 MPI_Type_vector() 
+  0.0        0.005        0.005           1           0          5 herr_t H5Pset_dxpl_mpio(hid_t, H5FD_mpio_xfer_t) C
+  0.0        0.005        0.005           1           0          5 herr_t H5check_version(unsigned int, unsigned int, unsigned int) C
+  0.0       0.0045       0.0045           1           0          4 MPI_Type_struct() 
+  0.0       0.0045       0.0045           3           0          2 fclose() 
+  0.0       0.0035       0.0035           1           0          4 MPI_Type_commit() 
+  0.0       0.0035       0.0035           1           0          4 herr_t H5FD_mpi_setup_collective(hid_t, MPI_Datatype, MPI_Datatype) C
+  0.0        0.003        0.003           4           0          1 MPI_Get_elements() 
+  0.0        0.003        0.003           1           0          3 MPI_Type_extent() 
+  0.0        0.002        0.002           3           0          1 herr_t H5Sclose(hid_t) C
+  0.0        0.002        0.002           1           0          2 int H5FD_mpi_get_rank(const H5FD_t *) C
+  0.0        0.001        0.001           2           0          0 H5I_type_t H5Iget_type(hid_t) C
+  0.0        0.001        0.001           2           0          0 MPI_Comm H5FD_mpi_get_comm(const H5FD_t *) C
+  0.0        0.001        0.001           2           0          0 MPI_Comm_rank() 
+  0.0        0.001        0.001           2           0          0 MPI_Comm_size() 
+  0.0        0.001        0.001           5           0          0 herr_t H5FD_mpi_haddr_to_MPIOff(haddr_t, MPI_Offset *) C
+  0.0        0.001        0.001           1           0          1 hid_t H5Dget_space(hid_t) C
+  0.0        0.001        0.001           5           0          0 hid_t H5FD_mpio_init() C
+  0.0       0.0005       0.0005           4           0          0 MPI_Type_size() 
+  0.0       0.0005       0.0005           1           0          0 int H5FD_mpi_get_size(const H5FD_t *) C
+  0.0            0            0           1           0          0 haddr_t H5FD_mpi_MPIOff_to_haddr(MPI_Offset) C

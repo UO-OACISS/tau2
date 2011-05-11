@@ -17,7 +17,9 @@
 //#define DEBUG_PROF
 #include <Profile/Profiler.h>
 #include <Profile/TauMetrics.h>
+#ifndef TAU_WINDOWS
 #include <Profile/TauSampling.h>
+#endif
 #include <Profile/TauSnapshot.h>
 
 //#include <tau_internal.h>
@@ -332,6 +334,7 @@ void Profiler::Start(int tid) {
 //////////////////////////////////////////////////////////////////////
 
 x_uint64 Tau_get_firstTimeStamp();
+#ifdef TAU_PERFSUITE
 static x_uint64 getTimeStamp() {
   x_uint64 timestamp;
 #ifdef TAU_WINDOWS
@@ -343,6 +346,7 @@ static x_uint64 getTimeStamp() {
 #endif
   return timestamp;
 }
+#endif /* TAU_PERFSUITE */
 
 
 void Profiler::Stop(int tid, bool useLastTimeStamp) {
@@ -414,10 +418,11 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   RtsLayer::getUSecD(tid, CurrentTime);
 #endif /* TAU_TRACK_IDLE_THREADS */
 
-
+#ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_event_stop(tid, CurrentTime);
   }
+#endif
 
 #if defined(TAUKTAU)
 #ifdef KTAU_DEBUGPROF
@@ -563,6 +568,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
       /* Putting AddInclFlag means we can't throttle recursive calls */
       ThisFunction->SetProfileGroup(TAU_DISABLE, tid);
       ThisFunction->SetPrimaryGroupName("TAU_DISABLE");
+      //const char *func_type = ThisFunction->GetType();
+      string ftype(string("[THROTTLED]"));
+      ThisFunction->SetType(ftype);
       //cout <<"TAU<"<<RtsLayer::myNode()<<">: Throttle: Disabling "<<ThisFunction->GetName()<<endl;
       TAU_VERBOSE("TAU<%d,%d>: Throttle: Disabling %s\n", RtsLayer::myNode(), RtsLayer::myThread(), ThisFunction->GetName());
       RtsLayer::UnLockDB();
@@ -1126,7 +1134,6 @@ extern "C" int Tau_profiler_initialization() {
 
 // Store profile data at the end of execution (when top level timer stops)
 int TauProfiler_StoreData(int tid) {
-  int i;
 
   profileWriteCount[tid]++;
   if ((tid !=0) && (profileWriteCount[tid] > 1)) return 0;
@@ -1140,11 +1147,11 @@ int TauProfiler_StoreData(int tid) {
     RtsLayer::UnLockDB();
   }
   finalizeTrace(tid);
-  
+#ifndef TAU_WINDOWS  
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_finalize(tid);
   }
-
+#endif
   if (TauEnv_get_profiling()) {
 
     Tau_snapshot_writeFinal("final");
@@ -1156,7 +1163,7 @@ int TauProfiler_StoreData(int tid) {
 #ifdef PTHREADS
   if (RtsLayer::myThread() == 0 && tid == 0) {
     /* clean up other threads? */
-    for (i =1; i < TAU_MAX_THREADS; i++) {
+    for (int i =1; i < TAU_MAX_THREADS; i++) {
       if (TauInternal_ParentProfiler(i) != (Profiler *) NULL) {
         TauProfiler_StoreData(i);
       }
@@ -1247,7 +1254,9 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
 
 	char cwd[1024];
 	char *tst = getcwd(cwd, 1024);
-	TAU_VERBOSE("TAU: Writing profile %s, cwd = %s\n", dumpfile, cwd);
+#ifndef TAU_WINDOWS
+	TAU_VERBOSE("[pid=%d] TAU: Writing profile %s, cwd = %s\n", getpid(), dumpfile, cwd);
+#endif
 
       } else {
 	int flags = O_CREAT | O_EXCL | O_WRONLY;
@@ -1285,7 +1294,9 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
 	  }
 	  char cwd[1024];
 	  char *tst = getcwd(cwd, 1024);
-	  TAU_VERBOSE("TAU: Writing profile %s, cwd = %s\n", dumpfile, cwd);
+#ifndef TAU_WINDOWS
+	  TAU_VERBOSE("[pid=%d], TAU: Writing profile %s, cwd = %s\n", getpid(), dumpfile, cwd);
+#endif
 	}
       }
       writeProfile(fp, metricHeader, tid, i, inFuncs, numFuncs);

@@ -45,9 +45,10 @@ extern "C" {
   int  TAUDECL TauEnv_get_track_memory_heap();
   int  TAUDECL TauEnv_get_track_memory_leaks();
   int  TAUDECL TauEnv_get_track_memory_headroom();
+  int  TAUDECL TauEnv_get_track_io_params();
   int  TAUDECL TauEnv_get_extras();
   int  TAUDECL TauEnv_get_ebs_enabled();
-  int  TAUDECL TauEnv_get_ebs_frequency();
+  int  TAUDECL TauEnv_get_ebs_period();
   int  TAUDECL TauEnv_get_ebs_inclusive();
   int  TAUDECL TauEnv_get_stat_precompute();
   int  TAUDECL TauEnv_get_child_forkdirs();
@@ -58,6 +59,7 @@ extern "C" {
   const char* TAUDECL TauEnv_get_profiledir();
   const char* TAUDECL TauEnv_get_tracedir();
   const char* TAUDECL TauEnv_get_metrics();
+  const char* TAUDECL TauEnv_get_cupti_api();
 
 
 #define TAU_FORMAT_PROFILE 1

@@ -1,5 +1,6 @@
 #include <mpi.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define SIZE 10
 
@@ -30,11 +31,13 @@ void func(int me, int proc) {
 int main(int argc, char **argv) {
   int proc, me;
 
+  sleep(2);
   MPI_Init (&argc, & argv);
+  sleep(3);
   MPI_Comm_size (MPI_COMM_WORLD, &proc);
   MPI_Comm_rank (MPI_COMM_WORLD, &me);
 
-  func(me, proc);
+  //func(me, proc);
     
   MPI_Finalize ();
 }

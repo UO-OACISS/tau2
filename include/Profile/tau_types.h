@@ -19,10 +19,11 @@
 #define _TAU_TYPES_H_
 
 #ifdef TAU_WINDOWS
+//#include <inttypes.h>
 typedef char x_int8;
 typedef short x_int16;
 typedef int x_int32;
-typedef __int64 x_int64;
+typedef _int64 x_int64;
 
 typedef unsigned char x_uint8;
 typedef unsigned short x_uint16;

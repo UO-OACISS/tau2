@@ -78,23 +78,32 @@ TRACE2PROFILE=utils/trace2profile
 
 TAUPRELOAD=src/wrappers/taupreload
 TAUCUDA=src/wrappers/cuda
+#CUPTI#TAU_CUPTI_AVAIL=utils/tau_cupti_avail #ENDIF#
 TAUOPENCL=src/wrappers/opencl
 MEMORYWRAPPER=src/wrappers/memory
 
 # Subdirectories to make resursively
 SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(VTFCONVERTER) \
           $(ELGCONVERTER) $(TRACE2PROFILE) $(IOWRAPPER) $(TAUPRELOAD) \
-			$(MEMORYWRAPPER) $(TAUCUDA) $(TAUOPENCL) $(ARMCIWRAPPER)
+			$(MEMORYWRAPPER) $(TAUCUDA) $(TAU_CUPTI_AVAIL) $(TAUOPENCL) $(ARMCIWRAPPER)
+
+
+CONFIGQUERY=`utils/ConfigQuery -arch`
+
+#SUN386I#CONFIGQUERY=`/bin/bash utils/ConfigQuery -arch` #ENDIF#
+
+#SUNX86_64#CONFIGQUERY=`/bin/bash utils/ConfigQuery -arch` #ENDIF#
+
 
 all:
 	@echo "At the installation root, use \"make install\" "
 
 exports : 
 	@echo "Determining Configuration..."
-	@if [ x`utils/ConfigQuery -arch` = xdefault ] ; then \
+	@if [ x${CONFIGQUERY} = xdefault ] ; then \
           (echo Run the configure script before attempting to compile ; \
            exit 1) ; \
-         else echo System previously configured as a `utils/ConfigQuery -arch` ; fi
+         else echo System previously configured as a ${CONFIGQUERY} ; fi
 	@echo "*********** RECURSIVELY MAKING SUBDIRECTORIES ***********"
 	@for i in ${EXPORTS}; do (echo "*** COMPILING $$i DIRECTORY"; cd $$i;\
              $(MAKE) "MAKE=$(MAKE)" "CC=$(CC)" "CXX=$(CXX)" "LINKER=$(LINKER)" ); done
@@ -102,10 +111,10 @@ exports :
 
 tests: 
 	@echo "Determining Configuration..."
-	@if [ x`utils/ConfigQuery -arch` = xdefault ] ; then \
+	@if [ x${CONFIGQUERY} = xdefault ] ; then \
           (echo Run the configure script before attempting to compile ; \
            exit 1) ; \
-         else echo System previously configured as a `utils/ConfigQuery -arch` ; fi
+         else echo System previously configured as a ${CONFIGQUERY} ; fi
 	@echo "*********** RECURSIVELY MAKING SUBDIRECTORIES ***********"
 	@for i in ${EXAMPLES}; do (echo "*** COMPILING $$i DIRECTORY"; cd $$i;\
              $(MAKE) "MAKE=$(MAKE)" "CC=$(CC)" "CXX=$(CXX)" "LINKER=$(LINKER)" ) || exit $$?; done
@@ -113,10 +122,10 @@ tests:
 
 install: .clean
 	@echo "Determining Configuration..."
-	@if [ x`utils/ConfigQuery -arch` = xdefault ] ; then \
+	@if [ x${CONFIGQUERY} = xdefault ] ; then \
           (echo Run the configure script before attempting to compile ; \
            exit 1) ; \
-         else echo System previously configured as a `utils/ConfigQuery -arch` ; fi
+         else echo System previously configured as a ${CONFIGQUERY} ; fi
 	@echo "*********** RECURSIVELY MAKING SUBDIRECTORIES ***********"
 	@for i in ${SUBDIR}; do (echo "*** COMPILING $$i DIRECTORY"; cd $$i;\
              $(MAKE) "MAKE=$(MAKE)" install ) || exit $$?; done

@@ -8,6 +8,11 @@ declare testfail
 numpass=0;
 numfail=0;
 numrun=0;
+if [ `uname -s` = Darwin ] ; then
+  extralib=-ldl
+else
+  extralib=-lrt
+fi
 
 CC=gcc
 CXX=g++
@@ -50,7 +55,7 @@ check_output()
 export TAU_METRICS=TIME
 unset TAU_VERBOSE
 
-export TAU_OPTIONS="-optCompInst"
+export TAU_OPTIONS="-optCompInst -optShared"
 
 for i in test_*.c ; do
 #for i in test_multiple.c ; do
@@ -63,9 +68,9 @@ for i in test_*.c ; do
     check_output
 
 
-    echo -n "  link with -lrt -lpthread...  "
+    echo -n "  link with $extralib -lpthread...  "
     cleanup
-    $CC -o simple $i -lrt -lpthread
+    $CC -o simple $i $extralib -lpthread
     tau_exec -io -T serial ./simple
     check_output
 
@@ -76,9 +81,9 @@ for i in test_*.c ; do
     tau_exec -io -T serial ./simple
     check_output
 
-    echo -n "  built with TAU and linked with -lrt -lpthread...  "
+    echo -n "  built with TAU and linked with $extralib -lpthread...  "
     cleanup
-    tau_cc.sh -o simple $i -lrt -lpthread  &> /dev/null
+    tau_cc.sh -o simple $i $extralib -lpthread  &> /dev/null
     tau_exec -io -T serial ./simple
     check_output
 

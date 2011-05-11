@@ -19,7 +19,7 @@
 #ifdef TAU_MPI
 // The subsequent guards are for existing dependencies. These may go away as we
 //   expand TAUmon MPI capabilities.
-#ifdef TAU_EXP_UNIFY
+#ifdef TAU_UNIFY
 
 #include <mpi.h>
 #include <TAU.h>
@@ -35,7 +35,7 @@
 #include <float.h>
 
 #include <math.h>
-
+#include <strings.h>
 #include <stdarg.h>
 #include <assert.h>
 // #include <sstream>
@@ -75,13 +75,17 @@ static double calculateMean(int count, double sum) {
 
 static double calculateStdDev(int count, double sumsqr, double mean) {
   double ret = 0.0;
+  TAU_VERBOSE("Collate calculateStdDev count [%d] sumsqr [%.16G] meansqr [%.16G]\n", 
+	      count, sumsqr, mean*mean);
+  if (count <= 0) return 0.0;
+  /*
   assert(count > 0);
   assert(sumsqr >= 0.0);
   assert(mean >= 0.0);
+  */
   ret = (sumsqr/count) - (mean*mean);
-  //  printf("%.16G %.16G\n", sumsqr, mean*mean);
-  assert(ret >= 0.0);
-  return sqrt(ret);
+  // assert(ret >= 0.0);
+  return sqrt(fabs(ret));
 }
 
 static void assignDerivedStats(double ****eventType, double ****gEventType,
@@ -277,19 +281,37 @@ void Tau_collate_freeBuffers(double ***excl, double ***incl,
   free(*incl);
 }
 
-static void Tau_collate_incrementHistogram(int *histogram, double min, double max, double value, int numBins) {
-  double range = max-min;
-  double binWidth = range / (numBins-1);
-  int mybin = (int)((value - min) / binWidth);
-  if (binWidth == 0) {
-    mybin = 0;
-  }
+/* Parallel operation to acquire total number of threads for each event */
+void Tau_collate_get_total_threads(int *globalNumThreads, 
+				   int **numEventThreads,
+				   int numEvents, int *globalEventMap) {
+  int rank;
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   
-  if (mybin < 0 || mybin >= numBins) {
-    TAU_ABORT("TAU: Error computing histogram, non-existent bin=%d\n", mybin);
-  }
+  int *numThreadsGlobal = (int *)TAU_UTIL_MALLOC(sizeof(int)*(numEvents+1));
+  int *numThreadsLocal = (int *)TAU_UTIL_MALLOC(sizeof(int)*(numEvents+1));
+  
+  int numThreads = RtsLayer::getNumThreads();
 
-  histogram[mybin]++;
+  /* For each event, determine contributing threads */
+  for (int i=0; i<numEvents; i++) {
+    numThreadsLocal[i] = numThreads;
+    if (globalEventMap[i] == -1) {
+      numThreadsLocal[i] = 0;
+    }
+  }
+  /* Extra slot in array indicates number of threads on rank */
+  numThreadsLocal[numEvents] = numThreads;
+  PMPI_Reduce(numThreadsLocal, numThreadsGlobal, numEvents+1, 
+	      MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+
+  /* Now rank 0 knows all about global thread counts */
+  if (rank == 0) {
+    for (int i=0; i<numEvents; i++) {
+      (*numEventThreads)[i] = numThreadsGlobal[i];
+    }
+    *globalNumThreads = numThreadsGlobal[numEvents];
+  }
 }
 
 /***
@@ -400,36 +422,84 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
   PMPI_Op_free(&min_op);
 }
 
-void Tau_collate_get_total_threads(int *globalNumThreads, 
-				   int **numEventThreads,
-				   int numEvents, int *globalEventMap) {
+static void Tau_collate_incrementHistogram(int *histogram, double min, 
+					   double max, double value, 
+					   int numBins) {
+  double range = max-min;
+  double binWidth = range / (numBins-1);
+
+  int mybin = (int)((value - min) / binWidth);
+  if (binWidth == 0) {
+    mybin = 0;
+  }
+  
+  if (mybin < 0 || mybin >= numBins) {
+    TAU_ABORT("TAU: Error computing histogram, non-existent bin=%d\n", mybin);
+  }
+
+  histogram[mybin]++;
+}
+
+void Tau_collate_compute_histograms(Tau_unify_object_t *functionUnifier,
+				    int *globalEventMap, int numItems,
+				    int numBins, int numHistograms,
+				    int e, int **outHistogram,
+				    double ***gExcl, double ***gIncl,
+				    double **gNumCalls, double **gNumSubr) {
+  // two for each metric (excl, incl) and numCalls/numSubr;
+  int histogramBufSize = sizeof(int) * numBins * numHistograms;
+  int *histogram = (int *) TAU_UTIL_MALLOC(histogramBufSize);
+  bzero(histogram, histogramBufSize);
+
   int rank;
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   
-  int *numThreadsGlobal = (int *)TAU_UTIL_MALLOC(sizeof(int)*(numEvents+1));
-  int *numThreadsLocal = (int *)TAU_UTIL_MALLOC(sizeof(int)*(numEvents+1));
-  
-  int numThreads = RtsLayer::getNumThreads();
-  for (int i=0; i<numEvents; i++) {
-    numThreadsLocal[i] = numThreads;
-    if (globalEventMap[i] == -1) {
-      numThreadsLocal[i] = 0;
+  if (globalEventMap[e] != -1) { // if it occurred in our rank
+    int local_index = functionUnifier->sortMap[globalEventMap[e]];
+    FunctionInfo *fi = TheFunctionDB()[local_index];
+    
+    double min, max;
+    int numThreads = RtsLayer::getNumThreads();
+    for (int tid = 0; tid<numThreads; tid++) { // for each thread
+      for (int m=0; m<Tau_Global_numCounters; m++) {
+	Tau_collate_incrementHistogram(&(histogram[(m*2)*numBins]), 
+				       gExcl[step_min][m][e], 
+				       gExcl[step_max][m][e], 
+				       fi->getDumpExclusiveValues(tid)[m], 
+				       numBins);
+	Tau_collate_incrementHistogram(&(histogram[(m*2+1)*numBins]), 
+				       gIncl[step_min][m][e], 
+				       gIncl[step_max][m][e], 
+				       fi->getDumpInclusiveValues(tid)[m], 
+				       numBins);
+      }
+      Tau_collate_incrementHistogram(&(histogram[(Tau_Global_numCounters*2)*
+						   numBins]), 
+				     gNumCalls[step_min][e], 
+				     gNumCalls[step_max][e], 
+				     fi->GetCalls(tid), numBins);
+      Tau_collate_incrementHistogram(&(histogram[(Tau_Global_numCounters*2+1)*numBins]), 
+				     gNumSubr[step_min][e], 
+				     gNumSubr[step_max][e], 
+				     fi->GetSubrs(tid), numBins);
     }
-  }
-  numThreadsLocal[numEvents] = numThreads;
-  PMPI_Reduce(numThreadsLocal, numThreadsGlobal, numEvents+1, 
-	      MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-  if (rank == 0) {
-    for (int i=0; i<numEvents; i++) {
-      (*numEventThreads)[i] = numThreadsGlobal[i];
-    }
-    *globalNumThreads = numThreadsGlobal[numEvents];
-  }
+  }    
+  PMPI_Reduce (histogram, *outHistogram, 
+	       numBins*numHistograms, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 }
 
 /* Only enable profile writing and dump operation if TAU MPI Monitoring
    is specified */
-#ifdef TAU_EXP_COLLATE
+#ifdef TAU_MONITORING
+#ifdef TAU_MON_MPI
+
+extern "C" void Tau_mon_connect() {
+  /* Nothing needs to happen for MPI-based monitoring */
+}
+
+extern "C" void Tau_mon_disconnect() {
+  /* Nothing needs to happen for MPI-based monitoring */
+}
 
 /*********************************************************************
  * Write a profile with data from all nodes/threads
@@ -445,7 +515,7 @@ extern "C" int Tau_collate_writeProfile() {
   // timing info
   x_uint64 start, end;
   if (rank == 0) {
-    TAU_VERBOSE("TAU: Collating...\n");
+    TAU_VERBOSE("TAU: Starting Mon MPI operations ...\n");
     start = TauMetrics_getTimeOfDay();
   }
 
@@ -506,11 +576,11 @@ extern "C" int Tau_collate_writeProfile() {
 				numItems, globalEventMap);
 
   double ***gExcl, ***gIncl;
-  int **gNumCalls, **gNumSubr;
+  double **gNumCalls, **gNumSubr;
   gExcl = (double ***) TAU_UTIL_MALLOC(sizeof(double **) * NUM_COLLATE_STEPS);
   gIncl = (double ***) TAU_UTIL_MALLOC(sizeof(double **) * NUM_COLLATE_STEPS);
-  gNumCalls = (int **) TAU_UTIL_MALLOC(sizeof(int *) * NUM_COLLATE_STEPS);
-  gNumSubr = (int **) TAU_UTIL_MALLOC(sizeof(int *) * NUM_COLLATE_STEPS);
+  gNumCalls = (double **) TAU_UTIL_MALLOC(sizeof(double *) *NUM_COLLATE_STEPS);
+  gNumSubr = (double **) TAU_UTIL_MALLOC(sizeof(double *) * NUM_COLLATE_STEPS);
 
   double ***sExcl, ***sIncl;
   double **sNumCalls, **sNumSubr;
@@ -526,19 +596,23 @@ extern "C" int Tau_collate_writeProfile() {
 				 
   if (rank == 0) {
     end_aggregate = TauMetrics_getTimeOfDay();
-    TAU_VERBOSE("TAU: Collate: Aggregation Complete, duration = %.4G seconds\n", ((double)((double)end_aggregate-start_aggregate))/1000000.0f);
+    TAU_VERBOSE("TAU: Mon MPI: Aggregation Complete, duration = %.4G seconds\n", ((double)((double)end_aggregate-start_aggregate))/1000000.0f);
   }
 
   // now compute histograms
   x_uint64 start_hist, end_hist;
 
   int numBins = 20;
+  int numHistograms = (Tau_Global_numCounters * 2) + 2; 
+  int histogramBufSize = sizeof(int) * numBins * numHistograms;
+  int *outHistogram = (int *) TAU_UTIL_MALLOC(histogramBufSize);
 
   const char *profiledir = TauEnv_get_profiledir();
 
   FILE *histoFile;
   char histFileNameTmp[512];
   char histFileName[512];
+
 
   if (rank == 0) {
     sprintf (histFileName, "%s/tau.histograms.%d", profiledir, 
@@ -562,41 +636,18 @@ extern "C" int Tau_collate_writeProfile() {
     start_hist = TauMetrics_getTimeOfDay();
   }
 
-  int numHistoGrams = (Tau_Global_numCounters * 2) + 2; // two for each metric (excl, incl) and numCalls/numSubr;
-  int histogramBufSize = sizeof(int) * numBins * numHistoGrams;
-  int *histogram = (int *) TAU_UTIL_MALLOC(histogramBufSize);
-  int *outHistogram = (int *) TAU_UTIL_MALLOC(histogramBufSize);
-  for (int e=0; e<numItems; e++) { // for each event
-    bzero (histogram, histogramBufSize);
-    if (globalEventMap[e] != -1) { // if it occurred in our rank
-
-      int local_index = functionUnifier->sortMap[globalEventMap[e]];
-      FunctionInfo *fi = TheFunctionDB()[local_index];
-      
-      double min, max;
-      for (int tid = 0; tid<numThreads; tid++) { // for each thread
-  	for (int m=0; m<Tau_Global_numCounters; m++) {
-	  Tau_collate_incrementHistogram(&(histogram[(m*2)*numBins]), 
-					 gExcl[step_min][m][e], gExcl[step_max][m][e], fi->getDumpExclusiveValues(tid)[m], numBins);
-	  Tau_collate_incrementHistogram(&(histogram[(m*2+1)*numBins]), 
-					 gIncl[step_min][m][e], gIncl[step_max][m][e], fi->getDumpInclusiveValues(tid)[m], numBins);
-  	}
-	Tau_collate_incrementHistogram(&(histogram[(Tau_Global_numCounters*2)*numBins]), 
-				       gNumCalls[step_min][e], gNumCalls[step_max][e], fi->GetCalls(tid), numBins);
-	Tau_collate_incrementHistogram(&(histogram[(Tau_Global_numCounters*2+1)*numBins]), 
-				       gNumSubr[step_min][e], gNumSubr[step_max][e], fi->GetSubrs(tid), numBins);
-      }
-    }
-
-    PMPI_Reduce (histogram, outHistogram, numBins * numHistoGrams, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
-
-    if (rank == 0) {
-      end_hist = TauMetrics_getTimeOfDay();
-    }
-
+  for (int e=0; e<numItems; e++) {
+    // make parallel histogram call.
+    bzero(outHistogram, histogramBufSize);
+    Tau_collate_compute_histograms(functionUnifier,
+				   globalEventMap, numItems,
+				   numBins, numHistograms,
+				   e, &outHistogram,
+				   gExcl, gIncl,
+				   gNumCalls, gNumSubr);
     if (rank == 0) {
       fprintf (histoFile, "%s\n", functionUnifier->globalStrings[e]);
-
+      
       for (int m=0; m<Tau_Global_numCounters; m++) {
 	fprintf (histoFile, "%.16G %.16G ", gExcl[step_min][m][e], gExcl[step_max][m][e]);
 	for (int j=0;j<numBins;j++) {
@@ -621,13 +672,15 @@ extern "C" int Tau_collate_writeProfile() {
 	fprintf (histoFile, "%d ", outHistogram[(Tau_Global_numCounters*2+1)*numBins+j]);
       }
       fprintf (histoFile, "\n");
-    }
+    }    
   }
 
   if (rank == 0) {
+    end_hist = TauMetrics_getTimeOfDay();
+  
     fclose (histoFile);
     rename (histFileNameTmp, histFileName);
-    TAU_VERBOSE("TAU: Collate: Histogramming Complete, duration = %.4G seconds\n", ((double)((double)end_hist-start_hist))/1000000.0f);
+    TAU_VERBOSE("TAU: Mon MPI: Histogramming Complete, duration = %.4G seconds\n", ((double)((double)end_hist-start_hist))/1000000.0f);
   }
 
   if (rank == 0) {
@@ -696,7 +749,7 @@ extern "C" int Tau_collate_writeProfile() {
 
   if (rank == 0) {
     end = TauMetrics_getTimeOfDay();
-    TAU_VERBOSE("TAU: Collating Complete, duration = %.4G seconds\n", ((double)((double)end-start))/1000000.0f);
+    TAU_VERBOSE("TAU: Mon MPI: Operations complete, duration = %.4G seconds\n", ((double)((double)end-start))/1000000.0f);
   }
 
   /*
@@ -710,12 +763,15 @@ extern "C" int Tau_collate_writeProfile() {
 /*********************************************************************
  * For Dagstuhl demo 2010
  ********************************************************************/
-extern "C" void Tau_collate_onlineDump() {
-  TAU_VERBOSE("collate online dump called\n");
+extern "C" void Tau_mon_internal_onlineDump() {
+  // Not scalable output, even for verbose output. This is not a one-time
+  //    operation.
+  //  TAU_VERBOSE("collate online dump called\n");
   Tau_collate_writeProfile();
 }
 
-#endif /* TAU_EXP_COLLATE */
+#endif /* TAU_MON_MPI */
+#endif /* TAU_MONITORING */
 
-#endif /* TAU_EXP_UNIFY */
+#endif /* TAU_UNIFY */
 #endif /* TAU_MPI */

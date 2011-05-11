@@ -59,9 +59,9 @@ public class RuleHarness {
 
     public void processRules() {
         try {
-        	System.out.println("Firing rules...\n");
+        	System.out.println("\nFiring rules...\n");
             this.workingMemory.fireAllRules();   
-        	System.out.println("...done with rules.");
+        	System.out.println("\n...done with rules.\n");
         } catch (Throwable t) {
             t.printStackTrace();
         }
@@ -76,10 +76,12 @@ public class RuleHarness {
 	    		SelfAsserting selfAsserting = (SelfAsserting)object;
 	    		selfAsserting.assertFacts(harness);
 	    	}
-    	}
+    	} else {
+			System.err.println("ERROR! RuleHarness instance does not exist!");
+		}
     	return handle;
     }
-    
+
     public static void retractObject(FactHandle handle) {
     	RuleHarness harness = RuleHarness.getInstance();
     	if (harness != null) {
@@ -156,4 +158,7 @@ public class RuleHarness {
 		return instance;
 	}
 
+	public void setGlobal(String identifier, Object value) {
+		workingMemory.setGlobal(identifier, value);
+	}
 }

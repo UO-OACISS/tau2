@@ -1,7 +1,7 @@
 #include <jni.h>
 #include "Profile/Profiler.h"
 #include "Profile/TauJAPI.h"
-#include "Profile/TauJava.h"
+#include <Profile/TauJVMTI.h>
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
 using namespace std;
@@ -25,7 +25,6 @@ JNIEXPORT void JNICALL Java_TAU_Profile_NativeProfile
   const char *blockName = env->GetStringUTFChars(name, 0);
   const char *blockType = env->GetStringUTFChars(type, 0);
   const char *blockGroup = env->GetStringUTFChars(groupname, 0);
-
   /* create a new FunctionInfo object by passing these to it */
   FunctionInfo *f = new FunctionInfo(blockName, blockType, (TauGroup_t) group, 
 	blockGroup, true);
@@ -91,7 +90,7 @@ JNIEXPORT void JNICALL Java_TAU_Profile_NativeStart
  */
 JNIEXPORT void JNICALL Java_TAU_Profile_NativeStop
   (JNIEnv * env, jobject obj) {
-  TAU_GLOBAL_TIMER_STOP();
+ TAU_GLOBAL_TIMER_STOP();
 }
 
 /* EOF Profile.cpp */
