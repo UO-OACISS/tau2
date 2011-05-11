@@ -7,10 +7,11 @@ x = pytau.profileTimer("A Sleep for excl 5 secs")
 y = pytau.profileTimer("B Sleep for excl 2 secs")
 pytau.start(x)
 print "Sleeping for 5 secs ..."
-sleep(5)
+sleep(1)
 pytau.start(y)
 print "Sleeping for 2 secs ..."
-sleep(2)
+z = 3 
+sleep(1)
 pytau.stop(y)
 pytau.dbDump()
 pytau.stop(x)

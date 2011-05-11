@@ -36,6 +36,6 @@
       CALL MPI_Comm_size (MPI_COMM_WORLD, proc, err)
       CALL MPI_Comm_rank (MPI_COMM_WORLD, me, err)
 
-      CALL FUNC(me, proc)
+      !CALL FUNC(me, proc)
       CALL MPI_Finalize (err)
       END

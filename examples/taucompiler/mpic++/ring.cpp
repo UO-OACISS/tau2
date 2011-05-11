@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <TAU.h>
 
 #ifndef MPICH_IGNORE_CXX_SEEK
 #define MPICH_IGNORE_CXX_SEEK
