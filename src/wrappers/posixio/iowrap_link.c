@@ -16,8 +16,6 @@
 #include <sys/socket.h>
 #include <Profile/TauIoWrap.h>
 
-#define dprintf TAU_VERBOSE
-
 #define TAU_MAX_SOCKET_LEN 1024
 #define TAU_READ TAU_IO
 #define TAU_WRITE TAU_IO
@@ -48,7 +46,7 @@ int __wrap_fsync( int fd)
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
 
-  dprintf("Fsync call with fd %d ret %d\n", fd, ret);
+  TAU_VERBOSE("Fsync call with fd %d ret %d\n", fd, ret);
 
   return ret;
 }
@@ -100,7 +98,7 @@ int __wrap_open(const char *pathname, int flags, ...)
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
 
-  dprintf("Open call with pathname %s and flags %d: ret %d\n", pathname, flags, ret);
+  TAU_VERBOSE("Open call with pathname %s and flags %d: ret %d\n", pathname, flags, ret);
 
   return ret;
 }
@@ -151,7 +149,7 @@ int __wrap_open64(const char *pathname, int flags, ...)
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
 
-  dprintf("Open call with pathname %s and flags %d: ret %d\n", pathname, flags, ret);
+  TAU_VERBOSE("Open call with pathname %s and flags %d: ret %d\n", pathname, flags, ret);
 
   return ret;
 }
@@ -187,7 +185,7 @@ int __wrap_creat(const char *pathname, mode_t mode)
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
 
-  dprintf("creat called on pathname %s with mode %d: ret %d\n", pathname, mode, ret);
+  TAU_VERBOSE("creat called on pathname %s with mode %d: ret %d\n", pathname, mode, ret);
 
   return ret;
 }
@@ -223,7 +221,7 @@ int __wrap_creat64(const char *pathname, mode_t mode)
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
 
-  dprintf("creat called on pathname %s with mode %d: ret %d\n", pathname, mode, ret);
+  TAU_VERBOSE("creat called on pathname %s with mode %d: ret %d\n", pathname, mode, ret);
 
   return ret;
 }
@@ -254,7 +252,7 @@ FILE * __wrap_fopen(const char *pathname, mode_t mode)
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
 
-  dprintf("fopen called with pathname=%s, mode=%d\n", pathname, mode);
+  TAU_VERBOSE("fopen called with pathname=%s, mode=%d\n", pathname, mode);
 
   return ret;
 }
@@ -285,7 +283,7 @@ FILE * __wrap_fopen64(const char *pathname, mode_t mode)
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
 
-  dprintf("fopen64 called with pathname=%s, mode=%d\n", pathname, mode);
+  TAU_VERBOSE("fopen64 called with pathname=%s, mode=%d\n", pathname, mode);
 
   return ret;
 }
@@ -328,7 +326,7 @@ int __wrap_pipe(int filedes[2])
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
 
-  dprintf("pipe called with filedes[0]= %d, filedes[1]=%d: ret %d\n", filedes[0], filedes[1], ret);
+  TAU_VERBOSE("pipe called with filedes[0]= %d, filedes[1]=%d: ret %d\n", filedes[0], filedes[1], ret);
 
   return ret;
 }
@@ -396,7 +394,7 @@ int __wrap_socket(int domain, int type, int protocol) {
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
 
-  dprintf("socket called domain = %d, type = %d, protocol = %d\n", domain, type, protocol);
+  TAU_VERBOSE("socket called domain = %d, type = %d, protocol = %d\n", domain, type, protocol);
 
   return ret;
 }
@@ -436,7 +434,7 @@ int __wrap_socketpair(int domain, int type, int protocol, int sv[2]) {
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
 
-  dprintf("socketpair called domain = %d, type = %d, protocol = %d, sv[0]=%d, sv[1]=%d\n", domain, type, protocol, sv[0], sv[1]);
+  TAU_VERBOSE("socketpair called domain = %d, type = %d, protocol = %d, sv[0]=%d, sv[1]=%d\n", domain, type, protocol, sv[0], sv[1]);
 
   return ret;
 }
@@ -475,7 +473,7 @@ int __wrap_bind(int socket, const struct sockaddr *address, socklen_t address_le
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
 
-  dprintf("bind called socket = %d, socketname = %s, ret = %d\n", socket, socketname, ret);
+  TAU_VERBOSE("bind called socket = %d, socketname = %s, ret = %d\n", socket, socketname, ret);
 
   return ret;
 }
@@ -515,7 +513,7 @@ int __wrap_connect(int socket, struct sockaddr *address, socklen_t address_len)
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
 
-  dprintf("connect called socket = %d, socketname = %s, ret = %d\n", socket, socketname, ret);
+  TAU_VERBOSE("connect called socket = %d, socketname = %s, ret = %d\n", socket, socketname, ret);
 
   return ret;
 }
@@ -556,7 +554,7 @@ int __wrap_accept(int socket, struct sockaddr *address, socklen_t* address_len)
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
 
-  dprintf("accept called socket = %d, socketname = %s, ret = %d\n", socket, socketname, ret);
+  TAU_VERBOSE("accept called socket = %d, socketname = %s, ret = %d\n", socket, socketname, ret);
 
   return ret;
 }
@@ -598,7 +596,7 @@ int __wrap_fcntl(int fd, int cmd, ...)
       Tau_iowrap_dupEvents(fd, ret);
       break;
   }
-  dprintf ("fcntl(fid=%d,cmd=%d...) called\n", fd, cmd);
+  TAU_VERBOSE ("fcntl(fid=%d,cmd=%d...) called\n", fd, cmd);
   return ret;
 }
 
@@ -634,7 +632,7 @@ size_t __wrap_read(int fd, void *buf, size_t nbytes)
     TAU_CONTEXT_EVENT(re, (double) ret/currentRead);
     TAU_CONTEXT_EVENT(global_read_bandwidth, (double) ret/currentRead);
   } else {
-    dprintf("TauWrapperRead: currentRead = %g\n", ret);
+    TAU_VERBOSE("TauWrapperRead: currentRead = %g\n", ret);
   }
 
   if (ret > 0 ) {
@@ -650,7 +648,7 @@ size_t __wrap_read(int fd, void *buf, size_t nbytes)
   }
 
   TAU_PROFILE_STOP(t);
-  dprintf("Read fd %d nbytes %d buf %ld ret %d\n", fd, nbytes, (long)buf, ret);
+  TAU_VERBOSE("Read fd %d nbytes %d buf %ld ret %d\n", fd, nbytes, (long)buf, ret);
   Tau_global_decr_insideTAU();
 
   return ret;
@@ -692,7 +690,7 @@ size_t __wrap_fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
     TAU_CONTEXT_EVENT(re, (double) count/currentRead);
     TAU_CONTEXT_EVENT(global_read_bandwidth, (double) count/currentRead);
   } else {
-    dprintf("TauWrapperRead: currentRead = %g\n", ret);
+    TAU_VERBOSE("TauWrapperRead: currentRead = %g\n", ret);
   }
 
   if (ret > 0 ) {
@@ -708,7 +706,7 @@ size_t __wrap_fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
   }
 
   TAU_PROFILE_STOP(t);
-  dprintf("fread fd=%d size=%d nmemb=%d ret=%d\n", fd, size, nmemb, ret);
+  TAU_VERBOSE("fread fd=%d size=%d nmemb=%d ret=%d\n", fd, size, nmemb, ret);
   Tau_global_decr_insideTAU();
 
   return ret;
@@ -752,7 +750,7 @@ ssize_t __wrap_readv(int fd, const struct iovec *vec, int count)
     TAU_CONTEXT_EVENT(re, (double) ret/currentRead);
     TAU_CONTEXT_EVENT(global_read_bandwidth, (double) ret/currentRead);
   } else {
-    dprintf("TauWrapperRead: currentRead = %g\n", ret);
+    TAU_VERBOSE("TauWrapperRead: currentRead = %g\n", ret);
   }
 
   if (ret > 0 ) {
@@ -768,7 +766,7 @@ ssize_t __wrap_readv(int fd, const struct iovec *vec, int count)
   }
 
   TAU_PROFILE_STOP(t);
-  dprintf("Readv fd %d ret %d\n", fd, ret);
+  TAU_VERBOSE("Readv fd %d ret %d\n", fd, ret);
   Tau_global_decr_insideTAU();
 
   return ret;
@@ -806,7 +804,7 @@ size_t __wrap_write(int fd, void *buf, size_t nbytes)
     TAU_CONTEXT_EVENT(wb, bw);
     TAU_CONTEXT_EVENT(global_write_bandwidth, bw);
   } else {
-    dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
+    TAU_VERBOSE("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
   if (ret > 0) {
     TAU_CONTEXT_EVENT(byteswritten, ret);
@@ -821,7 +819,7 @@ size_t __wrap_write(int fd, void *buf, size_t nbytes)
   }
 
   TAU_PROFILE_STOP(t);
-  dprintf("Write fd %d nbytes %d buf %ld ret %d\n", fd, nbytes, (long)buf, ret);
+  TAU_VERBOSE("Write fd %d nbytes %d buf %ld ret %d\n", fd, nbytes, (long)buf, ret);
   Tau_global_decr_insideTAU();
 
   return ret;
@@ -863,7 +861,7 @@ size_t __wrap_fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream)
     TAU_CONTEXT_EVENT(wb, bw);
     TAU_CONTEXT_EVENT(global_write_bandwidth, bw);
   } else {
-    dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
+    TAU_VERBOSE("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
   if (ret > 0) {
     TAU_CONTEXT_EVENT(byteswritten, count);
@@ -878,7 +876,7 @@ size_t __wrap_fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream)
   }
 
   TAU_PROFILE_STOP(t);
-  dprintf("fwrite size = %d nmemb %d ret %d\n", size, nmemb, ret);
+  TAU_VERBOSE("fwrite size = %d nmemb %d ret %d\n", size, nmemb, ret);
   Tau_global_decr_insideTAU();
 
   return ret;
@@ -915,7 +913,7 @@ ssize_t __wrap_writev(int fd,  const struct iovec *vec, int count)
     TAU_CONTEXT_EVENT(wb, bw);
     TAU_CONTEXT_EVENT(global_write_bandwidth, bw);
   } else {
-    dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
+    TAU_VERBOSE("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
   if (ret > 0) {
     TAU_CONTEXT_EVENT(byteswritten, ret);
@@ -930,7 +928,7 @@ ssize_t __wrap_writev(int fd,  const struct iovec *vec, int count)
   }
 
   TAU_PROFILE_STOP(t);
-  dprintf("Writev fd %d ret %d\n", fd, ret);  
+  TAU_VERBOSE("Writev fd %d ret %d\n", fd, ret);  
   Tau_global_decr_insideTAU();
 
   return ret;
@@ -967,7 +965,7 @@ ssize_t __wrap_pwrite(int fd, void *buf, size_t nbytes, off_t offset)
     TAU_CONTEXT_EVENT(wb, bw);
     TAU_CONTEXT_EVENT(global_write_bandwidth, bw);
   } else {
-    dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
+    TAU_VERBOSE("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
   if (ret > 0) {
     TAU_CONTEXT_EVENT(byteswritten, ret);
@@ -982,7 +980,7 @@ ssize_t __wrap_pwrite(int fd, void *buf, size_t nbytes, off_t offset)
   }
 
   TAU_PROFILE_STOP(t);
-  dprintf("Pwrite fd %d nbytes %d buf %ld ret %d\n", fd, nbytes, (long)buf, ret);
+  TAU_VERBOSE("Pwrite fd %d nbytes %d buf %ld ret %d\n", fd, nbytes, (long)buf, ret);
   Tau_global_decr_insideTAU();
 
   return ret;
@@ -1019,7 +1017,7 @@ ssize_t __wrap_pwrite64(int fd, void *buf, size_t nbytes, off64_t offset)
     TAU_CONTEXT_EVENT(wb, bw);
     TAU_CONTEXT_EVENT(global_write_bandwidth, bw);
   } else {
-    dprintf("TauWrapperWrite: currentWrite = %g\n", currentWrite);
+    TAU_VERBOSE("TauWrapperWrite: currentWrite = %g\n", currentWrite);
   }
   if (ret > 0) {
     TAU_CONTEXT_EVENT(byteswritten, ret);
@@ -1034,7 +1032,7 @@ ssize_t __wrap_pwrite64(int fd, void *buf, size_t nbytes, off64_t offset)
   }
 
   TAU_PROFILE_STOP(t);
-  dprintf("Pwrite64 fd %d nbytes %d buf %ld ret %d\n", fd, nbytes, (long)buf, ret);
+  TAU_VERBOSE("Pwrite64 fd %d nbytes %d buf %ld ret %d\n", fd, nbytes, (long)buf, ret);
   Tau_global_decr_insideTAU();
 
   return ret;
@@ -1073,7 +1071,7 @@ ssize_t __wrap_pread(int fd, void *buf, size_t nbytes, off_t offset)
     TAU_CONTEXT_EVENT(re, (double) ret/currentRead);
     TAU_CONTEXT_EVENT(global_read_bandwidth, (double) ret/currentRead);
   } else {
-    dprintf("TauWrapperRead: currentRead = %g\n", ret);
+    TAU_VERBOSE("TauWrapperRead: currentRead = %g\n", ret);
   }
 
   if (ret > 0 ) {
@@ -1089,7 +1087,7 @@ ssize_t __wrap_pread(int fd, void *buf, size_t nbytes, off_t offset)
   }
 
   TAU_PROFILE_STOP(t);
-  dprintf("pread fd %d nbytes %d buf %ld ret %d\n", fd, nbytes, (long)buf, ret);
+  TAU_VERBOSE("pread fd %d nbytes %d buf %ld ret %d\n", fd, nbytes, (long)buf, ret);
   Tau_global_decr_insideTAU();
 
   return ret;
@@ -1127,7 +1125,7 @@ ssize_t __wrap_pread64(int fd, void *buf, size_t nbytes, off64_t offset)
     TAU_CONTEXT_EVENT(re, (double) ret/currentRead);
     TAU_CONTEXT_EVENT(global_read_bandwidth, (double) ret/currentRead);
   } else {
-    dprintf("TauWrapperRead: currentRead = %g\n", ret);
+    TAU_VERBOSE("TauWrapperRead: currentRead = %g\n", ret);
   }
 
   if (ret > 0 ) {
@@ -1143,7 +1141,7 @@ ssize_t __wrap_pread64(int fd, void *buf, size_t nbytes, off64_t offset)
   }
 
   TAU_PROFILE_STOP(t);
-  dprintf("pread64 fd %d nbytes %d buf %ld ret %d\n", fd, nbytes, (long)buf, ret);
+  TAU_VERBOSE("pread64 fd %d nbytes %d buf %ld ret %d\n", fd, nbytes, (long)buf, ret);
   Tau_global_decr_insideTAU();
 
   return ret;
@@ -1176,7 +1174,7 @@ size_t __wrap_close(int fd)
   }
 
   TAU_PROFILE_STOP(t);
-  dprintf("Close fd %d ret %d\n", fd, ret);
+  TAU_VERBOSE("Close fd %d ret %d\n", fd, ret);
   Tau_global_decr_insideTAU();
 
   return ret;
@@ -1211,7 +1209,7 @@ int __wrap_fclose(FILE *fp)
 
 
   TAU_PROFILE_STOP(t);
-  dprintf("fclose called on fd %d ret %d\n", fd, ret);
+  TAU_VERBOSE("fclose called on fd %d ret %d\n", fd, ret);
   Tau_global_decr_insideTAU();
 
   return ret;
@@ -1244,7 +1242,7 @@ int __wrap_fdatasync(int fd)
 
 
   TAU_PROFILE_STOP(t);
-  dprintf("fdatasync called on fd %d ret %d\n", fd, ret);
+  TAU_VERBOSE("fdatasync called on fd %d ret %d\n", fd, ret);
   Tau_global_decr_insideTAU();
 
   return ret;
@@ -1279,7 +1277,7 @@ off_t __wrap_lseek(int fd, off_t offset, int whence)
 
 
   TAU_PROFILE_STOP(t);
-  dprintf("lseek called\n");
+  TAU_VERBOSE("lseek called\n");
   Tau_global_decr_insideTAU();
 
   return ret;
@@ -1316,7 +1314,7 @@ off64_t __wrap_lseek64(int fd, off64_t offset, int whence)
   }
 
   TAU_PROFILE_STOP(t);
-  dprintf("lseek64 called\n");
+  TAU_VERBOSE("lseek64 called\n");
   Tau_global_decr_insideTAU();
 
   return ret;
@@ -1351,7 +1349,7 @@ off_t __wrap_fseek(FILE *stream, long offset, int whence)
 
 
   TAU_PROFILE_STOP(t);
-  dprintf("fseek called\n");
+  TAU_VERBOSE("fseek called\n");
   Tau_global_decr_insideTAU();
 
   return ret;
@@ -1383,7 +1381,7 @@ int __wrap_select(int nfds, fd_set *readfds, fd_set *writefds,
     TAU_EVENT(select_ret, ret);
   }
 
-  dprintf("Select nfds %d ret %d\n", nfds, ret);
+  TAU_VERBOSE("Select nfds %d ret %d\n", nfds, ret);
 
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
