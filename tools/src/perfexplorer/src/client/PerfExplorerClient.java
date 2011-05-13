@@ -217,6 +217,16 @@ public class PerfExplorerClient extends JFrame implements ImageExport {
 					String slash = System.getProperty("file.separator");
 					configFile = home + slash + ".ParaProf" + slash + "perfdmf.cfg." + config;
 				}
+			} 
+			
+			if (config == "NO_DATABASE") {
+				// if the user does not have a database configuration, only
+				// let them run with command line access to the script
+				if (!noGUI.booleanValue() && scriptName == null) {
+					System.err.println("The NO_DATABASE configuration option is only valid when running a script in command line mode.");
+					System.err.println(USAGE);
+					System.exit(-1);
+				}
 			}
 		}
 
