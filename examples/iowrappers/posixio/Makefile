@@ -1,6 +1,6 @@
 # With TAU
 include ../../../include/Makefile
-TAUMAKEFILE=$(TAU_PREFIX_INSTALL_DIR)/$(TAU_ARCH)/lib/Makefile.tau-pdt
+TAUMAKEFILE=../../../include/Makefile
 TAUOP='-optLinking=@../../../$(TAU_ARCH)/lib/wrappers/io_wrapper/link_options.tau'
 
 CC=tau_cc.sh -tau_makefile=$(TAUMAKEFILE) -tau_options=$(TAUOP)
