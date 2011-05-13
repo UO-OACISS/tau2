@@ -15,8 +15,9 @@
 MPICFLAGS= /O2 /Gz /nologo /EHsc -I . -DPROFILING_ON -DTAU_WINDOWS
 CFLAGS= $(CFLAGS) /O2 /Gd /nologo /TP /EHsc -I .
 CC=cl
-INCLUDES=-Iinclude -I../include -I"C:\Program Files\Microsoft Compute Cluster Pack\Include"
-DEFINES=-DTAU_WINDOWS -DTAU_DOT_H_LESS_HEADERS -DTAU_LIBRARY_SOURCE -DTAU_DISABLE_SIGUSR -DTAU_MPI -DTAU_SYNCHRONIZE_CLOCKS
+INCLUDES=-Iinclude -I../include -Iinclude/Profile -I"C:\Program Files\Microsoft Compute Cluster Pack\Include"
+DEFINES=-DTAU_WINDOWS -DTAU_DOT_H_LESS_HEADERS -DTAU_LIBRARY_SOURCE -DTAU_DISABLE_SIGUSR -DTAU_SYNCHRONIZE_CLOCKS
+#DEFINES=-DTAU_WINDOWS -DTAU_DOT_H_LESS_HEADERS -DTAU_LIBRARY_SOURCE -DTAU_DISABLE_SIGUSR -DTAU_MPI -DTAU_SYNCHRONIZE_CLOCKS
 CFLAGS=$(CFLAGS) $(DEFINES) $(INCLUDES)
 MPICFLAGS=$(MPICFLAGS) $(DEFINES) $(INCLUDES)
 LD=link
@@ -24,17 +25,50 @@ LDFLAGS=
 O=.obj
 
 
-TAU_PROFILE_SRCS= src\Profile\TauInit.cpp src\Profile\TauEnv.cpp src\profile\TauCallPath.cpp src\profile\FunctionInfo.cpp src\profile\Profiler.cpp src\profile\RtsLayer.cpp src\profile\RtsThread.cpp src\profile\TauCAPI.cpp src\profile\TauFAPI.cpp src\profile\TauHandler.cpp src\profile\TauHooks.cpp src\profile\TauMapping.cpp src\profile\TauMemory.cpp src\profile\UserEvent.cpp src\profile\WindowsThreadLayer.cpp src\profile\MetaData.cpp src\profile\TauMetrics.cpp src\profile\TauReadMetrics.cpp src\profile\Tracer.cpp src\profile\TauCompensate.cpp
+TAU_PROFILE_SRCS =\
+src/Profile/FunctionInfo.cpp \
+src/Profile/Profiler.cpp \
+src/Profile/RtsLayer.cpp \
+src/Profile/RtsThread.cpp \
+src/Profile/TauCAPI.cpp \
+src/Profile/TauCallPath.cpp \
+src/Profile/TauCollate.cpp \
+src/Profile/TauCompensate.cpp \
+src/Profile/TauEnv.cpp \
+src/Profile/TauFAPI.cpp \
+src/Profile/TauHandler.cpp \
+src/Profile/TauHooks.cpp \
+src/Profile/TauInit.cpp \
+src/Profile/TauIoWrap.cpp \
+src/Profile/TauMapping.cpp \
+src/Profile/TauMemory.cpp \
+src/Profile/TauMemoryWrap.cpp \
+src/Profile/TauMetaData.cpp \
+src/Profile/TauMetaDataMerge.cpp \
+src/Profile/TauMetrics.cpp \
+src/Profile/TauMonCommon.cpp \
+src/Profile/TauMonMrnet.cpp \
+src/Profile/TauProfileMerge.cpp \
+src/Profile/TauReadMetrics.cpp \
+src/Profile/TauSnapshot.cpp \
+src/Profile/TauUtil.cpp \
+src/Profile/TauXML.cpp \
+src/Profile/Tracer.cpp \
+src/Profile/UserEvent.cpp \
+src/Profile/WindowsThreadLayer.cpp
+
+#TAU_PROFILE_SRCS= src\Profile\TauInit.cpp src\Profile\TauEnv.cpp src\profile\TauCallPath.cpp src\profile\FunctionInfo.cpp src\profile\Profiler.cpp src\profile\RtsLayer.cpp src\profile\RtsThread.cpp src\profile\TauCAPI.cpp src\profile\TauFAPI.cpp src\profile\TauHandler.cpp src\profile\TauHooks.cpp src\profile\TauMapping.cpp src\profile\TauMemory.cpp src\profile\UserEvent.cpp src\profile\WindowsThreadLayer.cpp src\profile\TauMetaData.cpp src\profile\TauMetrics.cpp src\profile\TauReadMetrics.cpp src\profile\Tracer.cpp src\profile\TauCompensate.cpp
 TAU_JAVA_SRC= src\profile\JavaThreadLayer.cpp src\profile\TauJava.cpp src\profile\TauJAPI.cpp src\profile\MetaData.cpp
-TAU_MPI_SRC= src\profile\TauMpi.c src\profile\ClockSync.c src\profile\ProfileMerge.c
+TAU_MPI_SRC= src\profile\TauUnify.cpp src\profile\TauMpi.c src\profile\ClockSync.c src\profile\ProfileMerge.c
 
 TAU_PROFILE_OBJS= $(TAU_PROFILE_SRCS:.cpp=.obj) 
 TAU_CALLPATH_OBJS= $(TAU_PROFILE_SRCS:.cpp=.obj) 
 TAU_JAVA_OBJS= $(TAU_JAVA_SRC:.cpp=.obj)
 #TAU_MPI_OBJS= $(TAU_MPI_SRC:.c=.obj)
 
-all : win32 pprof tau_convert tau_merge tau_reduce libs mpi
-
+#all : win32 pprof tau_convert tau_merge tau_reduce libs mpi
+all : win32 pprof tau_convert tau_reduce libs
+#all : libs
 
 java :
 	-md win32\java
@@ -117,6 +151,9 @@ ClockSync.obj: src\Profile\ClockSync.c
 	$(CC) $(FLAGS) $(MPICFLAGS) /Fo$@ -c src\Profile\ClockSync.c
 
 ProfileMerge.obj: src\Profile\ProfileMerge.c
+	$(CC) $(FLAGS) $(MPICFLAGS) /Fo$@ -c src\Profile\ProfileMerge.c
+
+TauUnify.obj: src\Profile\TauUnify.cpp
 	$(CC) $(FLAGS) $(MPICFLAGS) /Fo$@ -c src\Profile\ProfileMerge.c
 
 TauMpi.lib : TauMpi.obj ClockSync.obj ProfileMerge.obj

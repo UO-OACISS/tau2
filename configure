@@ -2129,7 +2129,7 @@ case $machine in
 	    #tauoptions="${tauoptions}-pgi"
 	    pgi=yes
 	    default_fortran=pgi
-	    fixmakeargs="$fixmakeargs COMPINST_PGI"
+	    fixmakeargs="$fixmakeargs PGI COMPINST_PGI"
 	elif [ "x$PE_ENV" = xGNU ] ; then
 	    gnu=yes
 	    tauoptions="${tauoptions}-gnu"

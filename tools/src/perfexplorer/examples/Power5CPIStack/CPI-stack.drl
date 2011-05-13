@@ -43,9 +43,9 @@ function String formatPercent (double value) {
 }
 
 function String formatString(String in) {
-	String blank = "                                   "; // 35 spaces
+	String blank = "                                        "; // 40 spaces
 	String out = (blank + in);
-	return (out.substring(out.length()-35, out.length()));
+	return (out.substring(out.length()-40, out.length()));
 }
 
 function void debugPrint (String str) {
@@ -110,9 +110,6 @@ rule "CPI: Overall" salience 10
 		double cpi = ((Double)stack.get("CPI")).doubleValue();
 		double percent = ((Double)stack.get("Fraction of Total Duration")).doubleValue();
 
-		dumpCPI(stack);
-		dumpOthers(stack);
-
 		System.out.println(formatString("% of Total Runtime : ") + formatPercent(percent));
 		System.out.println(formatString("Overall CPI : ") + formatDouble(cpi));
 		# if the CPI is over our threshold, check the next level
@@ -124,6 +121,17 @@ rule "CPI: Overall" salience 10
 		} else {
 			assert (new FactWrapper("CPI OK", "CPI Stack", stack));
 		}
+end
+
+rule "Dump CPI" salience 10
+	when
+		# a CPI stack fact has been asserted
+		f : FactWrapper ( factName == "Dump CPI", factType == "CPI Stack")
+	then 
+		# get the CPI stack values
+		HashMap stack = (HashMap) f.getFactData();
+		dumpCPI(stack);
+		dumpOthers(stack);
 end
 
 ####################################################################

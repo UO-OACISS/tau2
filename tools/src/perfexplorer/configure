@@ -11,10 +11,10 @@ echo $* >> .all_configs
 arguments=$*
 
 # Default compilers and options
-tauroot=/home/users/scottb/tau2
+tauroot=/home/users/sameer/tau2
 architecture=default
 taushell=sh
-targetdir=/home/users/scottb/tau2
+targetdir=/home/users/sameer/tau2
 serverhostname=localhost
 objectport=9999
 registryport=1099

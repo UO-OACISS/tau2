@@ -1,4 +1,6 @@
-CC=tau_cc.sh -tau_makefile=../../../include/Makefile -tau_options='-optTauSelectFile=select.tau -optVerbose -optKeepFiles '
+include $(HOME)/tau2/x86_64/lib/Makefile.tau-pdt
+#CC=tau_cc.sh -tau_makefile=$(HOME)/tau2/x86_64/lib/Makefile.tau-pdt -tau_options='-optTauSelectFile=select.tau -optVerbose -optKeepFiles '
+CC=$(TAU_COMPILER) gcc 
 
 APP=loop_test
 $(APP): $(APP).o

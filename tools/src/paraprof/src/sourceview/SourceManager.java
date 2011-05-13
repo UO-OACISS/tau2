@@ -208,11 +208,10 @@ public class SourceManager extends JFrame {
         button.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent e) {
-                SourceManager.this.setVisible(false);
                 if (toFind != null) {
                     showSourceCode(toFind);
                 }
-
+                SourceManager.this.setVisible(false);
             }
         });
         addCompItem(button, gbc, 1, 3, 1, 1);

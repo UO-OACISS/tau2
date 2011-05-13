@@ -1,7 +1,6 @@
 #!/bin/bash
 
-if [ $# -lt 1 ]
-then
+if [ $# -lt 1 ] ; then
   echo ""
   echo "Usage: "
   echo ""
@@ -14,7 +13,12 @@ then
   exit 1
 fi
 
+verbose="no"
+if [ $# -eq 2 ] ; then
+  verbose="yes"
+fi
+
 working_path=`echo $0 | sed 's/runit//'`
 rules="${working_path}CPI-stack.drl"
 
-eval perfexplorer -c perfexplorer_working -n -i ${working_path}processCPI.py -p "inputData=$1,rules=$rules"
+eval perfexplorer -c NO_DATABASE -n -i ${working_path}processCPI.py -p "inputData=$1,rules=$rules,verbose=$verbose"

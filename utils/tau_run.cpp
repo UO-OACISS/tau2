@@ -545,6 +545,7 @@ int routineConstraint(char *fname){ // fname is the function name
       (strncmp(fname, "The", 3) == 0) ||
       // The following functions show up in static executables
       (strncmp(fname, "__mmap", 6) == 0) ||
+      (strncmp(fname, "__mmap", 6) == 0) ||
       (strncmp(fname, "_IO_printf", 10) == 0) ||
       (strncmp(fname, "__write", 7) == 0) ||
       (strncmp(fname, "__munmap", 8) == 0) || 
@@ -804,6 +805,7 @@ int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, cha
   if( isStaticExecutable ) {
     bool result1 = mutateeAddressSpace->loadLibrary(staticlibname);
     bool result2 = mutateeAddressSpace->loadLibrary(staticmpilibname);
+    dprintf("staticlibname loaded result1 = %d result2=%d\n", result1, result2); 
     assert(result1);
   }else{
     bool result = mutateeAddressSpace->loadLibrary(libname);
