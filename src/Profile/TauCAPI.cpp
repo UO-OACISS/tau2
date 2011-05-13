@@ -325,8 +325,8 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
     Tau_sampling_event_start(tid, p->address);
     Tau_sampling_resume();
   }
-  Tau_global_insideTAU[tid]--;
 #endif
+  Tau_global_insideTAU[tid]--;
 }
 
 
