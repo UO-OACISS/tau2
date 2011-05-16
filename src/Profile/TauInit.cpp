@@ -122,7 +122,7 @@ static void TauInitialize_kill_handlers() {
 extern int tauPrintAddr(int i, char *token1, unsigned long addr);
 //static void tauBacktraceHandler(int sig) {
 void tauBacktraceHandler(int sig, siginfo_t *si, void *context) {
-  fprintf(stderr, "TAU: Caught signal %d, dumping profile with stack trace: ... \n", sig);
+
 #ifdef TAU_EXECINFO
   static void *addresses[TAU_MAXSTACK];
   int n = backtrace( addresses, TAU_MAXSTACK );
@@ -143,6 +143,8 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context) {
       TAU_VERBOSE("found it: addr = %lx\n", addr);
       tauPrintAddr(i, token1, addr);
     }
+    fprintf(stderr, "TAU: Caught signal %d [%s], dumping profile with stack trace: [rank=%d, pid=%d, tid=%d]... \n", sig, strsignal(sig), RtsLayer::myNode(), getpid(), Tau_get_tid(), sig);
+    TAU_METADATA("SIGNAL", strsignal(sig));
     TAU_PROFILE_EXIT("none");
 
     free(names);
