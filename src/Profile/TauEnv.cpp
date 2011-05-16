@@ -92,6 +92,8 @@
 
 #define TAU_TRACK_IO_PARAMS_DEFAULT 0
 
+#define TAU_TRACK_SIGNALS_DEFAULT 0
+
 #define TAU_THROTTLE_DEFAULT 1
 #ifdef TAU_MPI
   #define TAU_SYNCHRONIZE_CLOCKS_DEFAULT 1
@@ -267,6 +269,7 @@ static int env_track_memory_heap = 0;
 static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
 static int env_track_io_params = 0;
+static int env_track_signals = 0;
 static int env_extras = 0;
 static int env_ebs_period = 0;
 static int env_ebs_inclusive = 0;
@@ -355,6 +358,10 @@ int TauEnv_get_compensate() {
 
 int TauEnv_get_comm_matrix() {
   return env_comm_matrix;
+}
+
+int TauEnv_get_track_signals() {
+  return env_track_signals;
 }
 
 int TauEnv_get_track_message() {
@@ -498,7 +505,18 @@ void TauEnv_initialize() {
       env_extras = 1;
     } else {
       TAU_METADATA("TAU_TRACK_IO_PARAMS", "off");
-      env_track_memory_headroom = 0;
+      env_track_io_params = 0;
+    }
+
+    tmp = getconf("TAU_TRACK_SIGNALS");
+    if (parse_bool(tmp, env_track_signals)) {
+      TAU_VERBOSE("TAU: Tracking SIGNALS enabled\n");
+      TAU_METADATA("TAU_TRACK_SIGNALS", "on");
+      env_track_signals = 1;
+      env_extras = 1;
+    } else {
+      TAU_METADATA("TAU_TRACK_SIGNALS", "off");
+      env_track_signals = 0;
     }
 
 
