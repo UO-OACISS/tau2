@@ -199,6 +199,31 @@ int Tau_init_epilog(void) {
 #endif /* TAU_EPILOG */
 
 
+int Tau_add_signal(int alarmType) {
+    int ret = 0;
+
+    struct sigaction act;
+    memset(&act, 0, sizeof(struct sigaction));
+    ret = sigemptyset(&act.sa_mask);
+    if (ret != 0) {
+      printf("TAU: Signal error: %s\n", strerror(ret));
+      return -1;
+    }
+
+    ret = sigaddset(&act.sa_mask, alarmType);
+    if (ret != 0) {
+      printf("TAU: Signal error: %s\n", strerror(ret));
+      return -1;
+    }
+    act.sa_sigaction = tauBacktraceHandler;
+    act.sa_flags     = SA_SIGINFO;
+
+    ret = sigaction(alarmType, &act, NULL);
+    if (ret != 0) {
+      printf("TAU: error adding signal in sigaction: %s\n", strerror(ret));
+      return -1;
+    }
+}
 //////////////////////////////////////////////////////////////////////
 // Initialize signal handling routines
 //////////////////////////////////////////////////////////////////////
@@ -227,30 +252,11 @@ int Tau_signal_initialization() {
     }
 */
 
-    int alarmType = SIGFPE;
-    int ret = 0;
-
-    struct sigaction act;
-    memset(&act, 0, sizeof(struct sigaction));
-    ret = sigemptyset(&act.sa_mask);
-    if (ret != 0) {
-      printf("TAU: Signal error: %s\n", strerror(ret));
-      return -1;
-    }
-
-    ret = sigaddset(&act.sa_mask, alarmType);
-    if (ret != 0) {
-      printf("TAU: Signal error: %s\n", strerror(ret));
-      return -1;
-    }
-    act.sa_sigaction = tauBacktraceHandler;
-    act.sa_flags     = SA_SIGINFO;
-
-    ret = sigaction(alarmType, &act, NULL);
-    if (ret != 0) {
-      printf("TAU: Signal error: %s\n", strerror(ret));
-      return -1;
-    }
+    Tau_add_signal(SIGILL);
+    Tau_add_signal(SIGSEGV);
+    Tau_add_signal(SIGABRT);
+    Tau_add_signal(SIGFPE);
+    Tau_add_signal(SIGBUS);
 
   } /* TAU_TRACK_SIGNALS=1 */
 }
