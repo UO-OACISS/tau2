@@ -401,47 +401,48 @@ int tauPrintAddr(int i, char *token, unsigned long addr) {
   }
   char field[2048];
   char metadata[256];
-  char *dem_name = token;
+  char *dem_name = NULL;
   char demangled_name[2048], line_info[2048];
+  char cmd[2048]; 
+  FILE *pipe_fp;
   addrmap *map = getAddressMap(addr);
   line_info[0]=0; 
 
 #if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE 
    dem_name = cplus_demangle(token, DMGL_AUTO);
    if (dem_name == (char *) NULL)  { 
-      dem_name = token;
-      dem_name = cplus_demangle(token, DMGL_GNU);
-      if (dem_name == (char *) NULL)  { 
-        char cmd[2048]; 
-        char *subs=strtok(token,"(+");
-        subs = strtok(NULL,"+");
-       sprintf(cmd, "c++filt %s", subs);
-       TAU_VERBOSE("popen %s\n", cmd);
-       FILE *pipe_fp = popen(cmd, "r");
-       fscanf(pipe_fp,"%s", demangled_name);
-       TAU_VERBOSE("name = %s, Demangled name = %s\n", token, demangled_name);
-       pclose(pipe_fp);
-       dem_name = demangled_name;
-       if (dem_name == (char *) NULL) dem_name = token; 
-       if (map && map->loaded==0) { /* now get the line number */
-         sprintf(cmd, "addr2line -e %s 0x%lx", map->name, addr);
-         TAU_VERBOSE("popen %s\n", cmd);
-         pipe_fp = popen(cmd, "r");
-         fscanf(pipe_fp,"%s", line_info);
-         TAU_VERBOSE("cmd = %s, line number = %s\n", cmd, line_info);
-         pclose(pipe_fp);
-       }
+     dem_name = token;
+     if (dem_name == (char *) NULL) {
+       dem_name = cplus_demangle(token, DMGL_GNU);
      }
    }
-#else
-   TAU_VERBOSE("DEMANGLE not available: dem_name = %s, configure TAU with -bfd=download to get more detailed info\n", dem_name);
 #endif /* HAVE_GNU_DEMANGLE */
+  /* Do we have a demangled name? */
+  if (dem_name == (char *) NULL)  { 
+    char *subs=strtok(token,"(+");
+    subs = strtok(NULL,"+");
+    sprintf(cmd, "c++filt %s", subs);
+    TAU_VERBOSE("popen %s\n", cmd);
+    pipe_fp = popen(cmd, "r");
+    fscanf(pipe_fp,"%s", demangled_name);
+    TAU_VERBOSE("name = %s, Demangled name = %s\n", token, demangled_name);
+    pclose(pipe_fp);
+    dem_name = demangled_name;
+    if (dem_name == (char *) NULL) dem_name = token; 
+  }
+
   if (map && map->loaded == 0) {
     //printf("map = %p, map->start = %p, name = %s\n", map, map->start, map->name);
 
+    sprintf(cmd, "addr2line -e %s 0x%lx", map->name, addr);
+    TAU_VERBOSE("popen %s\n", cmd);
+    pipe_fp = popen(cmd, "r");
+    fscanf(pipe_fp,"%s", line_info);
+    TAU_VERBOSE("cmd = %s, line number = %s\n", cmd, line_info);
+    pclose(pipe_fp);
     sprintf(field, "[%s] [%s] [%s]", dem_name, line_info, map->name);
   } else {
-    sprintf(field, "[%s] ", dem_name);
+    sprintf(field, "[%s] [addr=%p]", dem_name, addr);
   }
   sprintf(metadata, "BACKTRACE %3d", i-1);
   TAU_METADATA(metadata, field);
