@@ -143,7 +143,7 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context) {
       TAU_VERBOSE("found it: addr = %lx\n", addr);
       tauPrintAddr(i, token1, addr);
     }
-    fprintf(stderr, "TAU: Caught signal %d [%s], dumping profile with stack trace: [rank=%d, pid=%d, tid=%d]... \n", sig, strsignal(sig), RtsLayer::myNode(), getpid(), Tau_get_tid(), sig);
+    fprintf(stderr, "TAU: Caught signal %d (%s), dumping profile with stack trace: [rank=%d, pid=%d, tid=%d]... \n", sig, strsignal(sig), RtsLayer::myNode(), getpid(), Tau_get_tid(), sig);
     TAU_METADATA("SIGNAL", strsignal(sig));
     TAU_PROFILE_EXIT("none");
 
@@ -230,29 +230,12 @@ int Tau_add_signal(int alarmType) {
 int Tau_signal_initialization() {
   if (TauEnv_get_track_signals()) {
     TAU_VERBOSE("TAU: Enable tracking of signals\n");
-/*
-    if (signal(SIGILL, tauBacktraceHandler) == SIG_ERR) {
-      perror("failed to register TAU backtrace signal handler for SIGILL");
-    }
-
-    if (signal(SIGSEGV, tauBacktraceHandler) == SIG_ERR) {
-      perror("failed to register TAU backtrace signal handler for SIGSEGV");
-    }
-
-    if (signal(SIGABRT, tauBacktraceHandler) == SIG_ERR) {
-      perror("failed to register TAU backtrace signal handler for SIGABRT");
-    }
-
-    if (signal(SIGFPE, tauBacktraceHandler) == SIG_ERR) {
-      perror("failed to register TAU backtrace signal handler for SIGFPE");
-    }
-
-    if (signal(SIGBUS, tauBacktraceHandler) == SIG_ERR) {
-      perror("failed to register TAU backtrace signal handler for SIGBUS");
-    }
-*/
 
     Tau_add_signal(SIGILL);
+    Tau_add_signal(SIGINT);
+    Tau_add_signal(SIGQUIT);
+    Tau_add_signal(SIGTERM);
+    Tau_add_signal(SIGPIPE);
     Tau_add_signal(SIGSEGV);
     Tau_add_signal(SIGABRT);
     Tau_add_signal(SIGFPE);
