@@ -22,12 +22,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
+#include <string.h>
 
 #ifndef TAU_WINDOWS
 #include <unistd.h>
 #endif
+
 #if !defined(_AIX) && !defined(__sun) && !defined(TAU_WINDOWS)
 #include <execinfo.h>
+#define TAU_EXECINFO 1
 #endif /* _AIX */
 
 #include <Profile/TauEnv.h>
@@ -49,11 +52,14 @@
 #endif
 
 
+#define TAU_MAXSTACK 1024
+
 extern "C" void Tau_stack_initialization();
 extern "C" int Tau_compensate_initialization();
 extern "C" int Tau_profiler_initialization();
 extern "C" int Tau_profile_exit_all_threads(); 
 
+extern "C" char *strsignal(int sig);
 
 /* -- signal catching to flush event buffers ----------------- */
 #if defined (__cplusplus) || defined (__STDC__) || defined (_AIX) || (defined (__mips) && defined (_SYSTYPE_SVR4))
@@ -72,17 +78,17 @@ static void wrap_up(int sig) {
   void *array[10];
   size_t size;
 
-#if !defined(_AIX) && !defined(__sun) && !defined(TAU_WINDOWS)
+#ifdef TAU_EXECINFO
   // get void*'s for all entries on the stack
   size = backtrace(array, 10);
-#endif /* _AIX */
+#endif /* TAU_EXECINFO = !(_AIX || sun || windows) */
 
   // print out all the frames to stderr
   fprintf (stderr, "TAU: signal %d on %d - calling TAU_PROFILE_EXIT()...\n", sig, RtsLayer::myNode());
 
-#if !defined(_AIX) && !defined(__sun) && !defined(TAU_WINDOWS) 
+#ifdef TAU_EXECINFO
   backtrace_symbols_fd(array, size, 2);
-#endif /* _AIX */
+#endif /* TAU_EXECINFO */
   TAU_PROFILE_EXIT("signal");
   fprintf (stderr, "TAU: done.\n");
   exit (1);
@@ -115,7 +121,39 @@ static void TauInitialize_kill_handlers() {
 # endif
 }
 
+extern int tauPrintAddr(int i, char *token1, unsigned long addr);
+//static void tauBacktraceHandler(int sig) {
+void tauBacktraceHandler(int sig, siginfo_t *si, void *context) {
 
+#ifdef TAU_EXECINFO
+  static void *addresses[TAU_MAXSTACK];
+  int n = backtrace( addresses, TAU_MAXSTACK );
+
+  if (n < 2){
+    printf("TAU: Backtrace not available!\n" );
+  } else {
+    TAU_VERBOSE("TAU: Backtrace:\n");
+    char **names = backtrace_symbols( addresses, n );
+    for ( int i = 2; i < n; i++ )
+    {
+      TAU_VERBOSE("stacktrace %s\n",names[i]);
+      char *token1 = strtok(names[i],"[]");
+      TAU_VERBOSE("found it: token1 = %s\n", token1);
+      char *token2 = strtok(NULL,"[]");
+      unsigned long addr;
+      sscanf(token2,"%lx", &addr);
+      TAU_VERBOSE("found it: addr = %lx\n", addr);
+      tauPrintAddr(i, token1, addr);
+    }
+    fprintf(stderr, "TAU: Caught signal %d (%s), dumping profile with stack trace: [rank=%d, pid=%d, tid=%d]... \n", sig, strsignal(sig), RtsLayer::myNode(), getpid(), Tau_get_tid(), sig);
+    TAU_METADATA("SIGNAL", strsignal(sig));
+    TAU_PROFILE_EXIT("none");
+
+    free(names);
+    exit(1);
+  }
+#endif /* TAU_EXECINFO */ 
+}
 
 static void tauSignalHandler(int sig) {
   fprintf (stderr, "Caught SIGUSR1, dumping TAU profile data\n");
@@ -162,6 +200,51 @@ int Tau_init_epilog(void) {
 }
 #endif /* TAU_EPILOG */
 
+
+int Tau_add_signal(int alarmType) {
+    int ret = 0;
+
+    struct sigaction act;
+    memset(&act, 0, sizeof(struct sigaction));
+    ret = sigemptyset(&act.sa_mask);
+    if (ret != 0) {
+      printf("TAU: Signal error: %s\n", strerror(ret));
+      return -1;
+    }
+
+    ret = sigaddset(&act.sa_mask, alarmType);
+    if (ret != 0) {
+      printf("TAU: Signal error: %s\n", strerror(ret));
+      return -1;
+    }
+    act.sa_sigaction = tauBacktraceHandler;
+    act.sa_flags     = SA_SIGINFO;
+
+    ret = sigaction(alarmType, &act, NULL);
+    if (ret != 0) {
+      printf("TAU: error adding signal in sigaction: %s\n", strerror(ret));
+      return -1;
+    }
+}
+//////////////////////////////////////////////////////////////////////
+// Initialize signal handling routines
+//////////////////////////////////////////////////////////////////////
+int Tau_signal_initialization() {
+  if (TauEnv_get_track_signals()) {
+    TAU_VERBOSE("TAU: Enable tracking of signals\n");
+
+    Tau_add_signal(SIGILL);
+    Tau_add_signal(SIGINT);
+    Tau_add_signal(SIGQUIT);
+    Tau_add_signal(SIGTERM);
+    Tau_add_signal(SIGPIPE);
+    Tau_add_signal(SIGSEGV);
+    Tau_add_signal(SIGABRT);
+    Tau_add_signal(SIGFPE);
+    Tau_add_signal(SIGBUS);
+
+  } /* TAU_TRACK_SIGNALS=1 */
+}
 
 extern "C" int Tau_init_initializeTAU() {
   static int initialized = 0;
@@ -219,6 +302,7 @@ extern "C" int Tau_init_initializeTAU() {
 #endif
 
 
+
   Tau_profiler_initialization();
 
   /********************************************/
@@ -227,6 +311,8 @@ extern "C" int Tau_init_initializeTAU() {
 
   /* initialize the metrics we will be counting */
   TauMetrics_init();
+
+  Tau_signal_initialization();
 
   /* TAU must me marked as initialized BEFORE Tau_compensate_initialize is called
      Otherwise re-entry to this function will take place and bad things will happen */
