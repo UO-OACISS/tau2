@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
+#include <string.h>
 
 #ifndef TAU_WINDOWS
 #include <unistd.h>
@@ -58,6 +59,7 @@ extern "C" int Tau_compensate_initialization();
 extern "C" int Tau_profiler_initialization();
 extern "C" int Tau_profile_exit_all_threads(); 
 
+extern "C" char *strsignal(int sig);
 
 /* -- signal catching to flush event buffers ----------------- */
 #if defined (__cplusplus) || defined (__STDC__) || defined (_AIX) || (defined (__mips) && defined (_SYSTYPE_SVR4))
