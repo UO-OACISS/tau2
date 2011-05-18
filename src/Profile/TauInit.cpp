@@ -231,7 +231,7 @@ int Tau_add_signal(int alarmType) {
 //////////////////////////////////////////////////////////////////////
 // Initialize signal handling routines
 //////////////////////////////////////////////////////////////////////
-int Tau_signal_initialization() {
+extern "C" int Tau_signal_initialization() {
   if (TauEnv_get_track_signals()) {
     TAU_VERBOSE("TAU: Enable tracking of signals\n");
 
@@ -246,6 +246,7 @@ int Tau_signal_initialization() {
     Tau_add_signal(SIGBUS);
 
   } /* TAU_TRACK_SIGNALS=1 */
+  return 0; 
 }
 
 extern "C" int Tau_init_initializeTAU() {
