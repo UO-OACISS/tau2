@@ -984,8 +984,26 @@ extern "C" void Tau_event_disable_stddev(void *ue) {
 
 extern "C" void Tau_profile_c_timer(void **ptr, const char *name, const char *type, TauGroup_t group, 
 	const char *group_name) {
+  // For TAU internal thread re-entrancy into this function 
+  //   while in the process of TAU initialization.
+  // Current thread owning the lock
+  static int lock_owner = -1337; // no one
+  // Depth of the re-entrancy by the current thread's owner.
+  static int owner_lock_access_count = 0;
+
   if (*ptr == 0) {
-    RtsLayer::LockEnv();
+    // If I am not the owner, attempt to acquire the lock. If I am,
+    //   then it should be safe to enter the critical section as
+    //   the same thread.
+    if (lock_owner != RtsLayer::myThread()) {
+      RtsLayer::LockEnv();
+      // If successful (eg. lock relinquished by another thread),
+      //   establish ownership
+      lock_owner = RtsLayer::myThread();
+    }
+    // Increment re-entrancy count each time the owner is within the
+    //   critical section.
+    owner_lock_access_count++;
     if (*ptr == 0) {  
       Tau_global_incr_insideTAU();
       // remove garbage characters from the end of name
@@ -1000,7 +1018,17 @@ extern "C" void Tau_profile_c_timer(void **ptr, const char *name, const char *ty
       free (fixedname);
       Tau_global_decr_insideTAU();
     }
-    RtsLayer::UnLockEnv();
+    // Decrement re-entrancy count when done.
+    owner_lock_access_count--;
+    // When leaving the critical section for the final time.
+    if (owner_lock_access_count == 0) {
+      // reset the ownership so the current thread does not immediately
+      //   somehow get out and thinks it owns the lock. For all other
+      //   threads waiting or about to acquire the lock, this changes
+      //   nothing.
+      lock_owner = -1337;
+      RtsLayer::UnLockEnv();
+    }
   }
   return;
 }
