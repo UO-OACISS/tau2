@@ -118,9 +118,14 @@ private:
   static void threadLockDB(void);
   static void threadUnLockDB(void);
 
+  static void threadLockEnv(void);
+  static void threadUnLockEnv(void);
+
   static int lockDBcount[TAU_MAX_THREADS];
+  static int lockEnvCount[TAU_MAX_THREADS];
 
   static bool initLocks();
+  static bool initEnvLocks();
   static int *numThreads();
 
 }; 
