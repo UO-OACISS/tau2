@@ -59,7 +59,9 @@ extern "C" int Tau_compensate_initialization();
 extern "C" int Tau_profiler_initialization();
 extern "C" int Tau_profile_exit_all_threads(); 
 
+#ifndef TAU_PATHSCALE
 extern "C" char *strsignal(int sig);
+#endif /* TAU_PATHSCALE */
 
 /* -- signal catching to flush event buffers ----------------- */
 #if defined (__cplusplus) || defined (__STDC__) || defined (_AIX) || (defined (__mips) && defined (_SYSTYPE_SVR4))
@@ -229,7 +231,7 @@ int Tau_add_signal(int alarmType) {
 //////////////////////////////////////////////////////////////////////
 // Initialize signal handling routines
 //////////////////////////////////////////////////////////////////////
-int Tau_signal_initialization() {
+extern "C" int Tau_signal_initialization() {
   if (TauEnv_get_track_signals()) {
     TAU_VERBOSE("TAU: Enable tracking of signals\n");
 
@@ -244,6 +246,7 @@ int Tau_signal_initialization() {
     Tau_add_signal(SIGBUS);
 
   } /* TAU_TRACK_SIGNALS=1 */
+  return 0; 
 }
 
 extern "C" int Tau_init_initializeTAU() {
