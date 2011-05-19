@@ -47,7 +47,7 @@ void TraceCallStack(int tid, Profiler *current);
 
 
 int RtsLayer::lockDBcount[TAU_MAX_THREADS];
-
+int RtsLayer::lockEnvCount[TAU_MAX_THREADS];
 
 //////////////////////////////////////////////////////////////////////
 // myNode() returns the current node id (0..N-1)
@@ -269,6 +269,15 @@ bool RtsLayer::initLocks(void) {
   return true;
 }
 
+bool RtsLayer::initEnvLocks(void) {
+  threadLockEnv();
+  for (int i=0; i<TAU_MAX_THREADS; i++) {
+    lockEnvCount[i] = 0;
+  }
+  threadUnLockEnv();
+  return true;
+}
+
 //////////////////////////////////////////////////////////////////////
 // This ensure that the FunctionDB (global) is locked while updating
 //////////////////////////////////////////////////////////////////////
@@ -342,11 +351,29 @@ void RtsLayer::threadUnLockDB(void) {
   return;
 }
 
+void RtsLayer::LockEnv(void) {
+  static bool init = initEnvLocks();
+  int tid=myThread();
+  if (lockEnvCount[tid] == 0) {
+    threadLockEnv();
+  }
+  lockEnvCount[tid]++;
+  return;
+}
+
+void RtsLayer::UnLockEnv(void) {
+  int tid=myThread();
+  lockEnvCount[tid]--;
+  if (lockEnvCount[tid] == 0) {
+    threadUnLockEnv();
+  }
+}
+
 //////////////////////////////////////////////////////////////////////
 // This ensure that the FunctionEnv (global) is locked while updating
 //////////////////////////////////////////////////////////////////////
 
-void RtsLayer::LockEnv(void)
+void RtsLayer::threadLockEnv(void)
 {
 #ifdef PTHREADS
   PthreadLayer::LockEnv();
@@ -370,7 +397,7 @@ void RtsLayer::LockEnv(void)
 //////////////////////////////////////////////////////////////////////
 // This ensure that the FunctionEnv (global) is locked while updating
 //////////////////////////////////////////////////////////////////////
-void RtsLayer::UnLockEnv(void)
+void RtsLayer::threadUnLockEnv(void)
 {
 #ifdef PTHREADS
   PthreadLayer::UnLockEnv();
