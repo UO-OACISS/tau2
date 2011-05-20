@@ -323,7 +323,6 @@ int Tau_mergeProfiles() {
   return 0;
 }
 
-
 #else /* TAU_MPI */
 int Tau_mergeProfiles() {
   return 0;
