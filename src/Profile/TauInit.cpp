@@ -123,19 +123,47 @@ static void TauInitialize_kill_handlers() {
 # endif
 }
 
+extern "C" int Tau_get_backtrace_off_by_one_correction(void) {
+  return 1; /* offset address by one */
+}
 extern int tauPrintAddr(int i, char *token1, unsigned long addr);
 //static void tauBacktraceHandler(int sig) {
 void tauBacktraceHandler(int sig, siginfo_t *si, void *context) {
 
+          char str[100+4096];
+          char path[4096];
+          char gdb_in_file[256];
+          char gdb_out_file[256];
+          path[readlink("/proc/self/exe", path, -1+ sizeof(path))] = '\0';
+          //sprintf(str, "echo 'bt\ndetach\nquit\n' | gdb -batch -x /dev/stdin %s -p %d \n",
+                  //path, (int)getpid() );
+          sprintf(gdb_in_file, "tau_gdb_cmds_%d.txt", getpid());
+          sprintf(gdb_out_file, "tau_gdb_out_%d.txt", getpid());
+          FILE *gdb_fp=fopen(gdb_in_file, "w+"); 
+          fprintf(gdb_fp, "set logging on %s\nbt\nq\n", gdb_out_file);
+          fclose(gdb_fp);
+	  //sprintf(str,"echo set logging on %s\nbt\nq > %s",gdb_out_file, gdb_in_file);
+          //system(str); // create gdbcmds
+          sprintf(str, "gdb -batch -x %s %s -p %d >/dev/null\n", gdb_in_file,
+                  path, (int)getpid() );
+          TAU_VERBOSE("Calling: str=%s\n", str);
+          system(str);
+
+  /* NOW Trigger a context event */
+  char eventname[1024];
+  sprintf(eventname,"TAU_SIGNAL (%s)", strsignal(sig)); 
+  TAU_REGISTER_CONTEXT_EVENT(evt, eventname);
+  TAU_CONTEXT_EVENT(evt, 1); 
 #ifdef TAU_EXECINFO
   static void *addresses[TAU_MAXSTACK];
   int n = backtrace( addresses, TAU_MAXSTACK );
 
   if (n < 2){
-    printf("TAU: Backtrace not available!\n" );
+    TAU_VERBOSE("TAU: ERROR: Backtrace not available!\n" );
   } else {
     TAU_VERBOSE("TAU: Backtrace:\n");
     char **names = backtrace_symbols( addresses, n );
+
     for ( int i = 2; i < n; i++ )
     {
       TAU_VERBOSE("stacktrace %s\n",names[i]);
@@ -145,6 +173,11 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context) {
       unsigned long addr;
       sscanf(token2,"%lx", &addr);
       TAU_VERBOSE("found it: addr = %lx\n", addr);
+      if (i > 2) { /* first address is correct */
+        addr=addr-Tau_get_backtrace_off_by_one_correction(); 
+      }
+      // Backtrace messes up and gives you the address of the next instruction.
+      // We subtract one to compensate for the off-by-one error.
       tauPrintAddr(i, token1, addr);
     }
     fprintf(stderr, "TAU: Caught signal %d (%s), dumping profile with stack trace: [rank=%d, pid=%d, tid=%d]... \n", sig, strsignal(sig), RtsLayer::myNode(), getpid(), Tau_get_tid(), sig);
@@ -152,7 +185,8 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context) {
     TAU_PROFILE_EXIT("none");
 
     free(names);
-    exit(1);
+    sleep(4);  // give the other tasks some time to process the handler and exit
+    exit(1);     
   }
 #endif /* TAU_EXECINFO */ 
 }

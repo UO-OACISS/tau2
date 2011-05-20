@@ -34,6 +34,7 @@
 #include <TAU.h>
 #include <Profile/TauInit.h>
 #include <vector>
+#include <cxxabi.h>
 using namespace std;
 
 
@@ -140,7 +141,14 @@ static HashNode* hash_get(unsigned long h) {
   asymbol **syms;
   bfd * BfdImage = 0;
   int nr_all_syms = 0;
+  static const char *tau_filename;
+  static const char *tau_funcname;
+  static unsigned int tau_line_no;
+  static int tau_symbol_found; 
+  static bfd_vma tau_pc;
 #endif /* TAU_BFD */
+extern "C" int Tau_get_backtrace_off_by_one_correction(void);
+
 
 static void get_symtab_bfd(const char *module, unsigned long offset) {
 #ifdef TAU_BFD
@@ -153,6 +161,7 @@ static void get_symtab_bfd(const char *module, unsigned long offset) {
 #endif /* HAVE_GNU_DEMANGLE */
 
   /* initialize BFD */
+  TAU_VERBOSE("Before BFD_INIT!\n");
   bfd_init();
 
   /* get executable image */
@@ -393,6 +402,84 @@ static addrmap *getAddressMap(unsigned long addr) {
 }
 
 
+static void tauLocateAddress(bfd *bfdptr, asection *section, PTR data)
+{
+  bfd_vma tau_vma; 
+  if (tau_symbol_found) 
+    return; 
+
+  
+  if ((bfd_get_section_flags(bfdptr, section) & SEC_ALLOC) == 0) return;
+  
+  tau_vma = bfd_get_section_vma(bfdptr, section); 
+  TAU_VERBOSE("Inside tauLocateAddress: tau_pc = %x tau_vma = %x\n", tau_pc, tau_vma); 
+
+  if (tau_pc < tau_vma) return;
+ 
+  tau_symbol_found = bfd_find_nearest_line(bfdptr, section, syms, 
+    tau_pc - tau_vma, & tau_filename, &tau_funcname, 
+    &tau_line_no);    
+  if (tau_filename == (char *) NULL) tau_symbol_found = 0;
+  TAU_VERBOSE("AFTER bfd_find_nearest_line: tau_symbol_found = %d, filename = %s, funcname=%s, line_no=%d\n", tau_symbol_found, tau_filename, tau_funcname, tau_line_no);
+}
+
+
+
+int tauGetFilenameAndLineNo(char *module, unsigned long addr) {
+  /* get the upper bound number of symbols */
+  TAU_VERBOSE("tauGetFilenameAndLineNo: addr = %x, addr=%p\n", addr, addr);
+  if (BfdImage) bfd_close(BfdImage); 
+  bfd_init(); 
+  BfdImage = bfd_openr(module, 0 );
+  if ( ! BfdImage ) {
+    fprintf (stderr,"TAU: BFD: bfd_openr(%s): failed\n", module);
+    return 0;
+  }
+
+  /* check image format */
+  if ( ! bfd_check_format(BfdImage, bfd_object) ) {
+    fprintf(stderr,"TAU: BFD: bfd_check_format(%s): failed\n", module);
+    return 0;
+  }
+  /* return if file has no symbols at all */
+  if ( ! ( bfd_get_file_flags(BfdImage) & HAS_SYMS ) ) {
+    fprintf(stderr,"TAU: BFD: bfd_get_file_flags(%s): no symbols found\n", module);
+    return 0;
+  }
+
+  TAU_VERBOSE("module = %s\n", module);
+  size_t size = bfd_get_symtab_upper_bound(BfdImage);
+  //size_t size = 1024; /* arbitrary size */
+
+  syms = (asymbol **)malloc(size);
+  nr_all_syms = bfd_canonicalize_symtab(BfdImage, syms);
+  if ( nr_all_syms < 1 ) {
+    fprintf(stderr,"TAU: BFD: No symbols found in module %s' (did you compile with -g?) : bfd_canonicalize_symtab(): < 1\n", module);
+    return 0;
+  }
+  TAU_VERBOSE("TAU: nr_all_syms found in %s is %d\n", module, nr_all_syms);
+    /* get filename and linenumber from debug info */
+    /* needs -g */
+    asection *p;
+    char addr_hex[100];
+    sprintf(addr_hex,"%p", addr);
+    //tau_pc = addr; 
+    tau_pc = bfd_scan_vma(addr_hex, NULL, 16); 
+    //tau_pc = addr; 
+    tau_symbol_found = 0;
+    TAU_VERBOSE("addr = %p, tau_pc=%p\n", addr, tau_pc);
+    bfd_map_over_sections(BfdImage, tauLocateAddress, 0);
+    TAU_VERBOSE("After bfd_map_over_sections: tau_symbol_found = %d\n", tau_symbol_found); 
+    if (tau_symbol_found && tau_funcname && tau_filename)
+    {
+      TAU_VERBOSE("FOUND funcname = %s, filename=%s, lno = %d\n", tau_funcname, tau_filename, tau_line_no);
+    }
+    //bfd_close(BfdImage);  
+    // IT IS VERY IMPORTANT THAT WE NOT CLOSE BFD AT THIS STAGE. SEE BfdInit.
+    // Otherwise tau_filename and tau_line_no get bad values and we can't print
+    // these values in the metadata field. 
+}
+
 int tauPrintAddr(int i, char *token, unsigned long addr) {
   static int flag = 0;
   if (flag == 0) { 
@@ -409,6 +496,7 @@ int tauPrintAddr(int i, char *token, unsigned long addr) {
   line_info[0]=0; 
 
 #if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE 
+/*
    dem_name = cplus_demangle(token, DMGL_AUTO);
    if (dem_name == (char *) NULL)  { 
      dem_name = token;
@@ -416,24 +504,44 @@ int tauPrintAddr(int i, char *token, unsigned long addr) {
        dem_name = cplus_demangle(token, DMGL_GNU);
      }
    }
+*/
 #endif /* HAVE_GNU_DEMANGLE */
   /* Do we have a demangled name? */
   if (dem_name == (char *) NULL)  { 
-    char *subs=strtok(token,"(+");
+    char *subtoken=token; 
+    int i = 0;
+    while (*subtoken!= '(' && i  < strlen(token)) {
+      subtoken++; i++;
+    }
+    subtoken--; /* move the pointer to before the ( so we can use strtok */
+    TAU_VERBOSE("Subtoken=%s\n", subtoken);
+    char *subs=strtok(subtoken,"(+");
     subs = strtok(NULL,"+");
+    if (subs == (char *) NULL) subs = token;
+/*
     sprintf(cmd, "c++filt %s", subs);
     TAU_VERBOSE("popen %s\n", cmd);
     pipe_fp = popen(cmd, "r");
-    fscanf(pipe_fp,"%s", demangled_name);
-    TAU_VERBOSE("name = %s, Demangled name = %s\n", token, demangled_name);
+    //fscanf(pipe_fp,"%s", demangled_name);
+    int ret = fread(demangled_name, 1, 1024, pipe_fp);
+    TAU_VERBOSE("name = %s, Demangled name = %s, ret = %d\n", token, demangled_name, ret);
     pclose(pipe_fp);
     dem_name = demangled_name;
-    if (dem_name == (char *) NULL) dem_name = token; 
+*/
+    std::size_t len=1024;
+    int stat;
+    char *out_buf= (char *) malloc (len);
+    char *name = abi::__cxa_demangle(subs, out_buf, &len, &stat);
+    if (stat == 0) dem_name = out_buf; 
+    else dem_name = subs; 
+    TAU_VERBOSE("DEM_NAME subs= %s dem_name= %s, name = %s, len = %d, stat=%d\n", subs, dem_name, name, len, stat);
+
   }
+  if (dem_name == (char *) NULL) dem_name = token; 
 
-  if (map && map->loaded == 0) {
-    //printf("map = %p, map->start = %p, name = %s\n", map, map->start, map->name);
+  if (map && map->loaded == 0) { 
 
+#ifdef TAU_EXE 
     sprintf(cmd, "addr2line -e %s 0x%lx", map->name, addr);
     TAU_VERBOSE("popen %s\n", cmd);
     pipe_fp = popen(cmd, "r");
@@ -441,8 +549,29 @@ int tauPrintAddr(int i, char *token, unsigned long addr) {
     TAU_VERBOSE("cmd = %s, line number = %s\n", cmd, line_info);
     pclose(pipe_fp);
     sprintf(field, "[%s] [%s] [%s]", dem_name, line_info, map->name);
+#endif /* TAU_EXE */
+    tauGetFilenameAndLineNo(map->name, addr);
+    if (tau_symbol_found) 
+    {
+      if (tau_line_no && dem_name && map && map->name) { 
+        TAU_VERBOSE("dem_name=%s\n", dem_name);
+        TAU_VERBOSE("tau_filename=%s\n", tau_filename);
+        TAU_VERBOSE("tau_line_no=%d\n", tau_line_no);
+        TAU_VERBOSE("map->name=%s\n", map->name);
+        sprintf(field, "[%s] [%s:%d] [%s]", dem_name, tau_filename, tau_line_no, map->name);
+      } else { 
+        // Get address from gdb if possible
+        sprintf(field, "[%s] [Addr=%p] [%s]", dem_name, 
+	  addr+Tau_get_backtrace_off_by_one_correction(), map->name);
+      } 
+      TAU_VERBOSE("AFTER FIELD: %s\n", field);
+    }
+    else
+      sprintf(field, "[%s] [addr=%p] [%s]", dem_name, 
+	addr+Tau_get_backtrace_off_by_one_correction(), map->name);
   } else {
-    sprintf(field, "[%s] [addr=%p]", dem_name, addr);
+    sprintf(field, "[%s] [addr=%p]", dem_name, 
+	addr+Tau_get_backtrace_off_by_one_correction());
   }
   sprintf(metadata, "BACKTRACE %3d", i-1);
   TAU_METADATA(metadata, field);
