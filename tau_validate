@@ -251,6 +251,8 @@ class Test:
           else:
              self.error("Error: run succeeded, but no trace found")
              self.runresult = "fail"
+       elif usesOption(self.makefile, "scorep") == True:
+          self.runresult = "pass"
        else:
           self.error("Error: run succeeded, but no profiles found")
           self.runresult = "fail"
@@ -737,6 +739,7 @@ def cleanup():
     chdir(TEST_ROOT)
     system("find . -name \"build-*\" | xargs rm -rf")
     system("find . -name \"profile.*\" | xargs rm -f")
+    system("find . -name \"scorep*\" | xargs rm -rf")
     system("find . -name \"*.trc\" | xargs rm -f")
     system("find . -name \"*.edf\" | xargs rm -f")
     system("find . -name \"*.pdb\" | xargs rm -f")

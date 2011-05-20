@@ -36,7 +36,7 @@ PERFSUITELINK=
 HPCTOOLKIT_INCLUDE=
 HPCTOOLKIT_LINK=
 
-
+#TAU_WINDOWS#TAU_WINDOWS_OBJ=WindowsThreadLayer.o #ENDIF#
 
 CEXTRA =  
 ############# For KAI KCC compiler, use --one_instantiation_per_object ##
@@ -120,7 +120,7 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauMemoryWrap.o \
 		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) $(TAU_SAMPLING_O) \
 		TauIoWrap.o TauCompensate.o $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
 		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_GASPU_O) $(TAU_CUPTI_COUNTER_OBJS) \
-                WindowsThreadLayer.o
+		$(TAU_WINDOWS_OBJ)
 
 STATIC_OBJS   = Comp_gnu.o $(PGIACC_STATIC_O)
 SHARED_OBJS   = $(PGIACC_O)
