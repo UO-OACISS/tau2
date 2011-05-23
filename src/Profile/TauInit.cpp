@@ -120,6 +120,9 @@ static void TauInitialize_kill_handlers() {
 }
 
 extern int tauPrintAddr(int i, char *token1, unsigned long addr);
+
+#ifndef TAU_DISABLE_SIGUSR
+
 //static void tauBacktraceHandler(int sig) {
 void tauBacktraceHandler(int sig, siginfo_t *si, void *context) {
 
@@ -167,6 +170,7 @@ static void tauToggleInstrumentationHandler(int sig) {
   }
 }
 
+#endif //TAU_DISABLE_SIGUSR
 
 static int tau_initialized = 0;
 
@@ -198,6 +202,7 @@ int Tau_init_epilog(void) {
 }
 #endif /* TAU_EPILOG */
 
+#ifndef TAU_DISABLE_SIGUSR
 
 int Tau_add_signal(int alarmType) {
     int ret = 0;
@@ -243,6 +248,8 @@ int Tau_signal_initialization() {
 
   } /* TAU_TRACK_SIGNALS=1 */
 }
+
+#endif // TAU_DISABLE_SIGUSR
 
 extern "C" int Tau_init_initializeTAU() {
   static int initialized = 0;
@@ -310,7 +317,9 @@ extern "C" int Tau_init_initializeTAU() {
   /* initialize the metrics we will be counting */
   TauMetrics_init();
 
+#ifndef TAU_DISABLE_SIGUSR
   Tau_signal_initialization();
+#endif // TAU_DISABLE_SIGUSR
 
   /* TAU must me marked as initialized BEFORE Tau_compensate_initialize is called
      Otherwise re-entry to this function will take place and bad things will happen */
