@@ -69,8 +69,8 @@ using namespace std;
 
 #ifdef TAU_WINDOWS
 //include the header for windows time functions.
-#include <Windows.h>	//Various defines needed in Winbase.h.
-#include <Winbase.h>	//For QueryPerformanceCounter/Frequency function (down to microsecond
+#include <windows.h>	//Various defines needed in Winbase.h.
+#include <winbase.h>	//For QueryPerformanceCounter/Frequency function (down to microsecond
                         //resolution depending on the platform. 
 #include <sys/timeb.h>	//For _ftime function (millisecond resolution).
 //Map strncasecmp and strcasecmp to strnicmp and stricmp.
