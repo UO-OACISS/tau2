@@ -334,7 +334,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 
 ///////////////////////////////////////////////////////////////////////////
 static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller) {
-  printf("[%d:%d-%d] TAU: Runtime overlap: found %s (%p) on the stack, but stop called on %s (%p)\n", 
+  fprintf(stderr, "[%d:%d-%d] TAU: Runtime overlap: found %s (%p) on the stack, but stop called on %s (%p)\n", 
 	 RtsLayer::getPid(), RtsLayer::getTid(), RtsLayer::myThread(),
 	 stack->GetName(), stack, caller->GetName(), caller);
 }
