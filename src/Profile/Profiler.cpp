@@ -1260,7 +1260,11 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
 
       } else {
 	int flags = O_CREAT | O_EXCL | O_WRONLY;
+#ifdef TAU_DISABLE_SIGUSR
+	int mode = 0;
+#else
 	int mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
+#endif
 	int node = RtsLayer::myNode();
 	sprintf(dumpfile,"%s/%s%s.%d.%d.%d", profileLocation, selectivePrefix, prefix, 
 		node, RtsLayer::myContext(), tid);
