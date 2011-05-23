@@ -34,7 +34,9 @@
 #include <TAU.h>
 #include <Profile/TauInit.h>
 #include <vector>
+#ifdef __GNUC__
 #include <cxxabi.h>
+#endif /* __GNUC__ */
 using namespace std;
 
 
@@ -402,6 +404,7 @@ static addrmap *getAddressMap(unsigned long addr) {
 }
 
 
+#ifdef TAU_BFD
 static void tauLocateAddress(bfd *bfdptr, asection *section, PTR data)
 {
   bfd_vma tau_vma; 
@@ -479,6 +482,7 @@ int tauGetFilenameAndLineNo(char *module, unsigned long addr) {
     // Otherwise tau_filename and tau_line_no get bad values and we can't print
     // these values in the metadata field. 
 }
+#endif /* TAU_BFD */
 
 int tauPrintAddr(int i, char *token, unsigned long addr) {
   static int flag = 0;
@@ -518,7 +522,7 @@ int tauPrintAddr(int i, char *token, unsigned long addr) {
     char *subs=strtok(subtoken,"(+");
     subs = strtok(NULL,"+");
     if (subs == (char *) NULL) subs = token;
-/*
+#ifndef __GNUC__
     sprintf(cmd, "c++filt %s", subs);
     TAU_VERBOSE("popen %s\n", cmd);
     pipe_fp = popen(cmd, "r");
@@ -527,7 +531,7 @@ int tauPrintAddr(int i, char *token, unsigned long addr) {
     TAU_VERBOSE("name = %s, Demangled name = %s, ret = %d\n", token, demangled_name, ret);
     pclose(pipe_fp);
     dem_name = demangled_name;
-*/
+#else /* __GNUC__ */
     std::size_t len=1024;
     int stat;
     char *out_buf= (char *) malloc (len);
@@ -535,6 +539,7 @@ int tauPrintAddr(int i, char *token, unsigned long addr) {
     if (stat == 0) dem_name = out_buf; 
     else dem_name = subs; 
     TAU_VERBOSE("DEM_NAME subs= %s dem_name= %s, name = %s, len = %d, stat=%d\n", subs, dem_name, name, len, stat);
+#endif /* __GNUC__ */
 
   }
   if (dem_name == (char *) NULL) dem_name = token; 
