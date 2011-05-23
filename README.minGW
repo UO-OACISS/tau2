@@ -1,0 +1,23 @@
+== Info for Building TAU with the minGW cross-compilers for use on
+32-bit Windows ==
+
+Requirements:
+
+* i586-mingw32msvc-gcc
+* i586-mingw32msvc-g++
+* i586-mingw32msvc-ar
+
+in your path.
+
+Limitations:
+
+* Only static libraries
+* No symbol demangling
+* No signal processing
+
+Instructions:
+
+%> ./configure -DISABLESHARED
+%> patch include/Makefile minGW.patch
+
+Libraries will be placed in 'mingw32/lib'.
