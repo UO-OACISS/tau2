@@ -555,6 +555,7 @@ int tauPrintAddr(int i, char *token, unsigned long addr) {
     pclose(pipe_fp);
     sprintf(field, "[%s] [%s] [%s]", dem_name, line_info, map->name);
 #endif /* TAU_EXE */
+#ifdef TAU_BFD
     tauGetFilenameAndLineNo(map->name, addr);
     if (tau_symbol_found) 
     {
@@ -572,8 +573,11 @@ int tauPrintAddr(int i, char *token, unsigned long addr) {
       TAU_VERBOSE("AFTER FIELD: %s\n", field);
     }
     else
+#endif /* TAU_BFD */
+    {
       sprintf(field, "[%s] [addr=%p] [%s]", dem_name, 
 	addr+Tau_get_backtrace_off_by_one_correction(), map->name);
+    }
   } else {
     sprintf(field, "[%s] [addr=%p]", dem_name, 
 	addr+Tau_get_backtrace_off_by_one_correction());
