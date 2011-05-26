@@ -435,6 +435,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
     private SteppedComboBox topoComboBox;// = new SteppedComboBox();
     private int customTopoDex=-1;
+    private int selectedTopoDex=0;
     
     private void updateTopoList(){
     	int maxDex = topoComboBox.getItemCount()-1;
@@ -481,7 +482,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
         //topoComboBox.addItem("Custom");
         //valueBox.addItem("Sphere");
-        topoComboBox.setSelectedIndex(0);
+        topoComboBox.setSelectedIndex(selectedTopoDex);
         d = topoComboBox.getPreferredSize();
         topoComboBox.setMinimumSize(new Dimension(100, topoComboBox.getMinimumSize().height));
         topoComboBox.setPopupWidth(d.width);
@@ -497,6 +498,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                 try {
                     settings.setTopoCart((String)topoComboBox.getSelectedItem());//TODO: Reset topo labels when this changes!
                     settings.setCustomTopo(topoComboBox.getSelectedIndex()>customTopoDex);
+                    selectedTopoDex=topoComboBox.getSelectedIndex();
                     resetTopoAxisSliders(true);
                     window.redraw();
                     resetTopoAxisSliders(true);
@@ -513,7 +515,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         };
 
         topoComboBox.addActionListener(topoSelector);
-        topoComboBox.setSelectedIndex(0);
+        topoComboBox.setSelectedIndex(selectedTopoDex);
         
         JButton topoFileButton = new JButton("...");
         
