@@ -85,3 +85,10 @@ x=mod(rank,xdim)+16*floor(rank/2048)
 y=mod(floor(rank/xdim),ydim)
 z=mod(floor(rank/xdim/ydim),zdim)
 END_TOPOLOGY
+
+TOPOLOGY_MAP=ScatterTest
+restrictDim=1
+x=scatter0
+y=scatter1
+z=scatter2
+END_TOPOLOGY

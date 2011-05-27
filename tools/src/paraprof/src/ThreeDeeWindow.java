@@ -521,7 +521,15 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     	    	            
     	    	            float[] scatterVals = {0,0,0};
     	    	            for(int i=0;i<3;i++){
-    	    	            	scatterVals[i]=(float)settings.getScatterValueTypes()[i].getValue(thread.getFunctionProfile(settings.getScatterFunctions()[i]), settings.getScatterMetrics()[i],ppTrial.getSelectedSnapshot());
+    	    	            	Function f = settings.getScatterFunctions()[i];
+    	    	            	if(f!=null){
+    	    	            		FunctionProfile fp = thread.getFunctionProfile(f);
+    	    	            		if(fp!=null){
+    	    	            			Metric m = settings.getScatterMetrics()[i];
+    	    	            			ValueType vt = settings.getScatterValueTypes()[i];
+    	    	            			scatterVals[i]=(float)vt.getValue(fp, m,ppTrial.getSelectedSnapshot());
+    	    	            		}
+    	    	            	}
     	    	            }
     	    	            
     	    	            vm = getEvaluation(rankIndex,numThreads,thread.getNodeID(),thread.getContextID(),thread.getThreadID(),ppTrial.getDataSource().getNumberOfNodes(),ppTrial.getDataSource().getNumberOfContexts(thread.getNodeID()),ppTrial.getDataSource().getNumberOfThreads(thread.getNodeID(),thread.getContextID()),scatterVals,colorValue,expressions);
