@@ -883,9 +883,9 @@ size_t __wrap_fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream)
   }
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_EVENT(fwrite_fd, "FWRITE count");
+    TAU_REGISTER_EVENT(fwrite_fd, "FWRITE fd");
     TAU_REGISTER_EVENT(fwrite_ret, "FWRITE ret");
-    TAU_EVENT(fwrite_fd, count);
+    TAU_EVENT(fwrite_fd, fileno(stream));
     TAU_EVENT(fwrite_ret, ret);
   }
 
