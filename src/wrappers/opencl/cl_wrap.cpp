@@ -1,6 +1,8 @@
 #include <dlfcn.h>
 #include <stdio.h>
 #include <CL/cl.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include <Profile/Profiler.h>
 #include <Profile/TauGpuAdapterOpenCL.h>
