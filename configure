@@ -1441,6 +1441,7 @@ for arg in "$@"; do
     ;;
   
   -cupti=*)
+    tauoptions="${tauoptions}-papi"
     cupti=`echo $arg | sed -e 's/-cupti=//' -e 's/ /#/g'`
     if [ ! -d $cupti ] ; then
       echo "Error: Cannot access CUPTI include directory $cupti"
@@ -1450,6 +1451,7 @@ for arg in "$@"; do
       fixmakeargs="$fixmakeargs CUPTI cuptiinclude=$cupti/include"
 		else
 			echo "Error: Cannot find CUPTI headers."
+      exit 1
     fi
     shift
     ;;
