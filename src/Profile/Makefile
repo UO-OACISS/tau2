@@ -528,6 +528,7 @@ $(INSTALLDEST)/libmpi_r.a: libmpi_r.a
 	$(RM) -f $(INSTALLDEST)/libmpi_r.a
 	cp libmpi_r.a $(TAU_SHAREDDIR)
 	$(RM) -f $(INSTALLDEST)/bindings-default
+	$(RM) -f $(INSTALLDEST)/bindings$(TAU_CONFIG)
 	cd $(INSTALLDEST) && ln -s shared$(TAU_CONFIG) bindings$(TAU_CONFIG)
 	cd $(INSTALLDEST) && ln -s bindings$(TAU_CONFIG) bindings-default
 
