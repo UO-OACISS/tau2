@@ -1408,7 +1408,6 @@ for arg in "$@"; do
     ;;
 
   -cuda=*)
-    tauoptions="${tauoptions}-cuda"
     cudainclude=`echo $arg | sed -e 's/-cuda=//' -e 's/ /#/g'`/include
     if [ ! -d $cudainclude ] ; then
       echo "Error: Cannot access GPU include directory $cudainclude"
@@ -1427,7 +1426,6 @@ for arg in "$@"; do
     ;;
 
   -opencl=*)
-    tauoptions="${tauoptions}-opencl"
     openclinclude=`echo $arg | sed -e 's/-opencl=//' -e 's/ /#/g'`/include
     if [ ! -d $openclinclude ] ; then
       echo "Error: Cannot access GPU include directory $openclinclude"
