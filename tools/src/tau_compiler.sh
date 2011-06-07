@@ -545,7 +545,7 @@ for arg in "$@" ; do
 			echoIfDebug "\tOpari Opts used: $optOpariOpts"
 			;;
 		    -optOpariReset*)
-			optOpariOpts="${arg#"-optOpariOpts="}"
+			optOpariOpts="${arg#"-optOpariReset="}"
 			echoIfDebug "\tOpari Tool used: $optOpariOpts"
 			;;
 
