@@ -18,14 +18,12 @@ import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
-import javax.swing.ButtonGroup;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -141,7 +139,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
 
     private void setupMenus() {
         JMenuBar mainMenu = new JMenuBar();
-        JMenu subMenu = null;
+        JMenu subMenu = ParaProfUtils.createMetricSelectionMenu(ppTrial, "Select Metric...", false, false, dataSorter, null,this, true);//null;
 
         // options menu
         JMenu optionsMenu = new JMenu("Options");
@@ -149,14 +147,15 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         slidersCheckBox = new JCheckBoxMenuItem("Show Number of Bins Slider", false);
         slidersCheckBox.addActionListener(this);
         optionsMenu.add(slidersCheckBox);
-
-        ButtonGroup group = null;
-        JRadioButtonMenuItem button = null;
+        
+        
 
         // units submenu
         unitsSubMenu = ParaProfUtils.createUnitsMenu(this, units, true);
         optionsMenu.add(unitsSubMenu);
-
+/*
+  		ButtonGroup group = null;
+        JRadioButtonMenuItem button = null;
         //Set the value type options.
         subMenu = new JMenu("Select Value Type");
         group = new ButtonGroup();
@@ -190,7 +189,7 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
         button.addActionListener(this);
         group.add(button);
         subMenu.add(button);
-
+*/
         optionsMenu.add(subMenu);
 
         optionsMenu.addMenuListener(this);
@@ -206,6 +205,10 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
     }
 
     public void actionPerformed(ActionEvent evt) {
+    	if(evt==null){
+    		sortLocalData();
+    		return;
+    	}
         try {
             Object EventSrc = evt.getSource();
 
@@ -285,11 +288,12 @@ public class HistogramWindow extends JFrame implements ActionListener, MenuListe
 
     public void menuSelected(MenuEvent evt) {
         try {
-            if (ppTrial.isTimeMetric()) {
-                unitsSubMenu.setEnabled(true);
-            } else {
-                unitsSubMenu.setEnabled(false);
-            }
+        	
+        	 if (dataSorter.isTimeMetric()) {
+                 unitsSubMenu.setEnabled(true);
+             } else {
+                 unitsSubMenu.setEnabled(false);
+             }
         } catch (Exception e) {
             ParaProfUtils.handleException(e);
         }
