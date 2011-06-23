@@ -127,7 +127,11 @@ static void TauInitialize_kill_handlers() {
 extern "C" int Tau_get_backtrace_off_by_one_correction(void) {
   return 1; /* offset address by one */
 }
+
+// **CWL** Added to be consistent for operation with Comp_gnu.cpp
+#ifndef TAU_XLC
 extern int tauPrintAddr(int i, char *token1, unsigned long addr);
+#endif /* TAU_XLC */
 
 #ifndef TAU_DISABLE_SIGUSR
 
@@ -182,7 +186,11 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context) {
       }
       // Backtrace messes up and gives you the address of the next instruction.
       // We subtract one to compensate for the off-by-one error.
+
+// **CWL** For correct operation with Comp_gnu.cpp
+#ifndef TAU_XLC
       tauPrintAddr(i, token1, addr);
+#endif /* TAU_XLC */
     }
     fprintf(stderr, "TAU: Caught signal %d (%s), dumping profile with stack trace: [rank=%d, pid=%d, tid=%d]... \n", sig, strsignal(sig), RtsLayer::myNode(), getpid(), Tau_get_tid(), sig);
     TAU_METADATA("SIGNAL", strsignal(sig));

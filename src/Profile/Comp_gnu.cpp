@@ -49,7 +49,7 @@ using namespace std;
 #include <unistd.h>
 #ifdef TAU_OPENMP
 #  include <omp.h>
-#endif
+#endif /* TAU_OPENMP */
 
 #ifndef TAU_MAX_SYMBOLS_TO_BE_RESOLVED
 #define TAU_MAX_SYMBOLS_TO_BE_RESOLVED 3000
@@ -66,7 +66,7 @@ using namespace std;
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
-#endif
+#endif /* __APPLE__ */
 
 
 static int gnu_init = 1;       /* is initialization needed? */
@@ -258,7 +258,7 @@ static void get_symtab_bfd(const char *module, unsigned long offset) {
 
   /* free(syms); */
   /* bfd_close(BfdImage); */
-#endif
+#endif /* TAU_BFD */
   return;
 }
 
