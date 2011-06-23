@@ -59,9 +59,10 @@ extern "C" int Tau_compensate_initialization();
 extern "C" int Tau_profiler_initialization();
 extern "C" int Tau_profile_exit_all_threads(); 
 
-#ifndef TAU_PATHSCALE
+// **CWL** BGP has strsignal declared in string.h and will conflict.
+#if (!(defined(TAU_PATHSCALE)) && !(defined(TAU_BGP)))
 extern "C" char *strsignal(int sig);
-#endif /* TAU_PATHSCALE */
+#endif /* TAU_PATHSCALE && TAU_BGP */
 
 /* -- signal catching to flush event buffers ----------------- */
 #if defined (__cplusplus) || defined (__STDC__) || defined (_AIX) || (defined (__mips) && defined (_SYSTYPE_SVR4))
@@ -266,6 +267,8 @@ int Tau_add_signal(int alarmType) {
       printf("TAU: error adding signal in sigaction: %s\n", strerror(ret));
       return -1;
     }
+
+    return ret;
 }
 //////////////////////////////////////////////////////////////////////
 // Initialize signal handling routines
