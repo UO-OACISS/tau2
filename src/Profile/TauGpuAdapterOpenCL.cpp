@@ -35,14 +35,21 @@ static queue<callback_data*> KernelBuffer;
 
 static map<cl_command_queue, openCLGpuId*> IdentityMap;
 
+double Tau_opencl_sync_clocks(cl_command_queue commandQueue, cl_context
+context);
+
 char* openCLGpuId::printId() 
-{
-		/*char *r;
+{	
+		printf("in printId, id: %d.\n", id);
+		char r[20];
 		sprintf(r, "%d", id);
-		return r;*/
-		return "";
+		return r;
 }
 
+double openCLGpuId::syncOffset()
+{
+	return sync_offset;
+}
 /* CUDA Event are uniquely identified as the pair of two other ids:
  * context and call (API).
  */
@@ -58,19 +65,54 @@ class openCLEventId : public eventId
 	}
 };
 
-openCLGpuId::openCLGpuId(cl_command_queue q)
+openCLGpuId::openCLGpuId(cl_device_id i, double sync)
 {
+	id = i;
+	sync_offset = sync;
+}
+
+openCLGpuId *Tau_opencl_retrive_gpu(cl_command_queue q)
+{
+	//printf("Adapter: command queue is: %d.\n", q);
+	if (q == NULL)
+	{	printf("NULL command queue passed. exiting.\n");
+		exit(1); }
+	//map<cl_command_queue, openCLGpuId*>::iterator it = IdentityMap.end();
 	map<cl_command_queue, openCLGpuId*>::iterator it = IdentityMap.find(q);
 	if (it != IdentityMap.end())
 	{
-	  id = ((openCLGpuId *) it->second)->id;
+		//printf("found GPU returning.\n");
+		return it->second;
 	}
 	else
-	{		
-		clGetCommandQueueInfo(q, CL_QUEUE_DEVICE, sizeof(cl_device_id), id, NULL);
+	{	
+	  cl_device_id id;
+		cl_context context;
+		cl_int err;
+		cl_uint vendor;
+		err = clGetCommandQueueInfo(q, CL_QUEUE_DEVICE, sizeof(cl_device_id), &id, NULL);
+		if (err != CL_SUCCESS)
+		{	
+			printf("error in clGetCommandQueueInfo DEVICE.\n"); 
+			if (err == CL_INVALID_COMMAND_QUEUE)
+				printf("invalid command queue.\n");
+		}
+		//err = clGetDeviceInfo(id, CL_DEVICE_VENDOR_ID, sizeof(cl_uint), &vendor, NULL);
 
-		IdentityMap[q] = this;
 
+		//printf("device id: %d.\n", id);
+		//printf("vendor id: %d.\n", vendor);
+		clGetCommandQueueInfo(q, CL_QUEUE_CONTEXT, sizeof(cl_context), &context, NULL);
+		if (err != CL_SUCCESS)
+		{	printf("error in clGetCommandQueueInfo CONTEXT.\n"); }
+	
+		double sync_offset;
+		sync_offset = Tau_opencl_sync_clocks(q, context);
+	
+		openCLGpuId *gId = new openCLGpuId(id, sync_offset);
+		IdentityMap[q] = gId;
+		
+		return gId;
 		//printf("New device id found: %d.\n", id);
 	}
 }
@@ -144,7 +186,11 @@ double Tau_opencl_sync_clocks(cl_command_queue commandQueue, cl_context context)
 	CL_MEM_ALLOC_HOST_PTR, sizeof(void *), NULL, &err);
 	if (err != CL_SUCCESS)
 	{
-		printf("Cannot Create Sync Buffer.\n");
+		printf("Cannot Create Sync Buffer: %d.\n", err);
+		if (err == CL_INVALID_CONTEXT)
+		{
+			printf("Invalid context.\n");
+		}
 	  exit(1);	
 	}
 
@@ -174,7 +220,7 @@ double Tau_opencl_sync_clocks(cl_command_queue commandQueue, cl_context context)
 	}
 
 	//printf("SYNC: CPU= %f GPU= %f.\n", cpu_timestamp, ((double)gpu_timestamp/1e3)); 
-	sync_offset = (((double) gpu_timestamp)/1e3) - cpu_timestamp;
+	sync_offset = cpu_timestamp - (((double) gpu_timestamp)/1e3);
 
 	return sync_offset;
 }
@@ -195,7 +241,7 @@ void Tau_opencl_exit()
 
 void Tau_opencl_enter_memcpy_event(const char *name, int id, int size, int MemcpyType)
 {
-	openCLGpuId *gId = new openCLGpuId(0);
+	openCLGpuId *gId = new openCLGpuId(0,0);
 	if (MemcpyType == MemcpyHtoD) 
 		Tau_gpu_enter_memcpy_event(name, gId, size, MemcpyType);
 	else
@@ -204,7 +250,7 @@ void Tau_opencl_enter_memcpy_event(const char *name, int id, int size, int Memcp
 
 void Tau_opencl_exit_memcpy_event(const char *name, int id, int MemcpyType)
 {
-	openCLGpuId *gId = new openCLGpuId(0);
+	openCLGpuId *gId = new openCLGpuId(0,0);
 	if (MemcpyType == MemcpyHtoD) 
 		Tau_gpu_exit_memcpy_event(name, gId, MemcpyType);
 	else
@@ -217,7 +263,7 @@ double stop, FunctionInfo* parent)
 	lock_callback();
 	//printf("locked for: %s.\n", name);
 	eventId evId = Tau_gpu_create_gpu_event(name, gId, parent);
-	Tau_gpu_register_gpu_event(evId, start/1e3 - sync_offset, stop/1e3 - sync_offset);
+	Tau_gpu_register_gpu_event(evId, start/1e3, stop/1e3);
 	//printf("released for: %s.\n", name);
 	release_callback();
 }
@@ -231,7 +277,7 @@ transferSize, int MemcpyType, FunctionInfo* parent)
 	//printf("locked for: %s.\n", name);
 	FunctionInfo* p;
 	eventId evId = Tau_gpu_create_gpu_event(name, gId, parent);
-	Tau_gpu_register_memcpy_event(evId, start/1e3 - sync_offset, stop/1e3 - sync_offset, transferSize, MemcpyType);
+	Tau_gpu_register_memcpy_event(evId, start/1e3, stop/1e3, transferSize, MemcpyType);
 	//printf("released for: %s.\n", name);
 	release_callback();
 

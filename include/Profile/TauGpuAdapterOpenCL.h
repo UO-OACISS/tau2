@@ -14,12 +14,13 @@ using namespace std;
 class openCLGpuId : public gpuId {
 
 	cl_device_id id;
+	double sync_offset;
 
 public:
 /*	cudaGpuId(const NvU64 cId, const NvU32 dId) :
 		contextId(cId), deviceId(dId) {} */
 	
-	openCLGpuId(cl_command_queue q);
+	openCLGpuId(cl_device_id id, double sync);
 	openCLGpuId *getCopy() { 
 			openCLGpuId *c = new openCLGpuId(*this);
 			return c;
@@ -29,6 +30,7 @@ public:
 	{
 		return id  == ((openCLGpuId *)other)->id;
 	}
+	double syncOffset();
 	
   char* printId();
 	x_uint64 id_p1() { return (x_uint64) id; }
@@ -75,6 +77,7 @@ void Tau_opencl_enqueue_event(callback_data* new_data);
 
 void Tau_opencl_register_sync_event();
 
+openCLGpuId *Tau_opencl_retrive_gpu(cl_command_queue cq);
 
 //Memcpy event callback
 
