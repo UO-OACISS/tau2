@@ -22,6 +22,9 @@ using namespace std;
 //CPU timestamp at the first cuEvent.
 double sync_offset = 0;
 
+static cudaEvent_t lastEvent;
+static double lastEventTime = 0;
+
 
 cudaRuntimeGpuId *cudaRuntimeGpuId::getCopy() { 
 		//printf("in runtime, getCopy.\n");
@@ -44,6 +47,11 @@ bool cudaRuntimeGpuId::equals(const gpuId *o) const
 	//cout << "in equals." << endl;
 	cudaRuntimeGpuId *other = (cudaRuntimeGpuId *) o;
 	return (this->device == other->device && this->stream == other->stream);
+}
+
+double cudaRuntimeGpuId::syncOffset()
+{
+	return sync_offset;
 }
 
 char* cudaRuntimeGpuId::printId() 
@@ -83,6 +91,11 @@ bool cudaDriverGpuId::equals(const gpuId *o) const
 	cudaDriverGpuId *other = (cudaDriverGpuId *) o;
 	return (this->device == other->device && this->stream == other->stream &&
 					this->context == other->context); 
+}
+
+double cudaDriverGpuId::syncOffset()
+{
+  return sync_offset;
 }
 
 char* cudaDriverGpuId::printId() 
@@ -185,9 +198,6 @@ class KernelEvent : public eventId
 	}
 };
 
-static cudaEvent_t lastEvent;
-static double lastEventTime = 0;
-
 static queue<KernelEvent> KernelBuffer;
 
 
@@ -275,7 +285,7 @@ transferSize, int MemcpyType)
 {
 	FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::myNode())->ThisFunction;
 	eventId c = Tau_gpu_create_gpu_event(name, id, p);
-	Tau_gpu_register_memcpy_event(c, start/1e3 + sync_offset, stop/1e3 + sync_offset, transferSize, MemcpyType);
+	Tau_gpu_register_memcpy_event(c, start/1e3, stop/1e3, transferSize, MemcpyType);
 }
 
 
@@ -361,17 +371,19 @@ void Tau_cuda_register_sync_event()
 		//cout << "in sync event, stream id is: " << id->printId() << endl;
 		//printf("last event time: %f.\n", lastEventTime);
 		//printf("stop time: %f.\n", stop_sec);
+		lastEvent = kernel.stopEvent;
+		lastEventTime += (double) stop_sec;
+
+		//kernel.device->sync_offset = lastEventTime * 1e3;
+
 		Tau_gpu_register_gpu_event(kernel, 
-															 (((double) start_sec) + lastEventTime)*1e3,
-															 (((double) stop_sec)  + lastEventTime)*1e3);
+															 ((double) start_sec)*1e3,
+															 ((double) stop_sec)*1e3);
 		//Tau_cuda_register_gpu_event(kernel.name, kernel.id, 
 		//													 (((double) start_sec) + lastEventTime)*1e3,
 		//													 (((double) stop_sec)  + lastEventTime)*1e3);
 
 		//delete id;
-
-		lastEvent = kernel.stopEvent;
-		lastEventTime += (double) stop_sec;
 
 		KernelBuffer.pop();
 

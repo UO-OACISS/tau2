@@ -1,13 +1,13 @@
-TOPOLOGY_EQUATION=Sphere
+BEGIN_VIZ=Sphere
 rootRanks=sqrt(maxRank)
 theta=2*pi()/rootRanks*mod(rank,rootRanks)
 phi=pi()/rootRanks*(ceil(rank/rootRanks))
 x=cos(theta)*sin(phi)*100
 y=sin(theta)*sin(phi)*100
 z=cos(phi)*100
-END_TOPOLOGY
+END_VIZ
 
-TOPOLOGY_MAP=Cylinder
+BEGIN_VIZ=Cylinder
 theta=2*pi()/sqrt(maxRank)*mod(rank,sqrt(maxRank))
 radius=sqrt(maxRank)/2
 offsetx=radius
@@ -16,21 +16,21 @@ maxheight=sqrt(maxRank)
 x = cos(theta)*radius+offsetx
 y=sin(theta)*radius+offsety
 z=floor(rank/maxHeight)
-END_TOPOLOGY
+END_VIZ
 
-TOPOLOGY_MAP=Random
+BEGIN_VIZ=Random
 x=rand()*100
 y=rand()*100
 z=rand()*100
-END_TOPOLOGY
+END_VIZ
 
-TOPOLOGY_MAP=4Process1024line
+BEGIN_VIZ=4Process1024line
 x=floor(rank/1024)
 y=mod(rank,1024)
 z=0
-END_TOPOLOGY
+END_VIZ
 
-TOPOLOGY_MAP=4Process1024_32x32Plane
+BEGIN_VIZ=4Process1024_32x32Plane
 xdim=32
 ydim=32
 zdim=1
@@ -38,9 +38,9 @@ zdim=1
 x=mod(rank,xdim)+32*floor(rank/1024)
 y=mod(floor(rank/xdim),ydim)
 z=mod(floor(rank/xdim/ydim),zdim)
-END_TOPOLOGY
+END_VIZ
 
-TOPOLOGY_MAP=4Process1024_8x8x16Block
+BEGIN_VIZ=4Process1024_8x8x16Block
 xdim=8
 ydim=8
 zdim=16
@@ -48,9 +48,9 @@ zdim=16
 x=mod(rank,xdim)+16*floor(rank/1024)
 y=mod(floor(rank/xdim),ydim)
 z=mod(floor(rank/xdim/ydim),zdim)
-END_TOPOLOGY
+END_VIZ
 
-TOPOLOGY_MAP=4Process1024_8x8x16Block
+BEGIN_VIZ=4Process1024_8x8x16Block
 xdim=8
 ydim=8
 zdim=16
@@ -58,9 +58,9 @@ zdim=16
 x=mod(rank,xdim)+16*floor(rank/1024)
 y=mod(floor(rank/xdim),ydim)
 z=mod(floor(rank/xdim/ydim),zdim)
-END_TOPOLOGY
+END_VIZ
 
-TOPOLOGY_MAP=4Process1024_8x8x16BlockMerged
+BEGIN_VIZ=4Process1024_8x8x16BlockMerged
 xdim=8
 ydim=8
 zdim=16
@@ -74,9 +74,9 @@ coreid=floor(rank/1024)
 x=xloc+coreid
 y=yloc
 z=zloc
-END_TOPOLOGY
+END_VIZ
 
-TOPOLOGY_MAP=4Process1024_8x8x32Block
+BEGIN_VIZ=4Process1024_8x8x32Block
 xdim=8
 ydim=8
 zdim=32
@@ -84,11 +84,41 @@ zdim=32
 x=mod(rank,xdim)+16*floor(rank/2048)
 y=mod(floor(rank/xdim),ydim)
 z=mod(floor(rank/xdim/ydim),zdim)
-END_TOPOLOGY
+END_VIZ
 
-TOPOLOGY_MAP=ScatterTest
+BEGIN_VIZ=ScatterTest
 restrictDim=1
-x=scatter0
-y=scatter1
-z=scatter2
-END_TOPOLOGY
+x=event0.val
+y=event1.val
+z=event2.val
+END_VIZ
+
+BEGIN_VIZ=MinMax
+restrictDim=1
+x=(event0.val-event0.min)/(event0.max-event0.min)
+y=(event1.val-event1.min)/(event1.max-event1.min)
+z=(event2.val-event2.min)/(event2.max-event2.min)
+END_VIZ
+
+BEGIN_VIZ=MinMaxMean
+restrictDim=1
+x=max(event0.val,event0.mean)
+y=max(event1.val,event1.mean)
+z=max(event2.val,event2.mean)
+END_VIZ
+
+BEGIN_VIZ=atomic
+x=rank
+y=0
+z=atomic
+END_VIZ
+
+BEGIN_VIZ=AtomicSphere
+rootRanks=sqrt(maxRank)
+theta=2*pi()/rootRanks*mod(rank,rootRanks)
+phi=pi()/rootRanks*(ceil(rank/rootRanks))
+x=cos(theta)*sin(phi)*100
+y=sin(theta)*sin(phi)*100
+z=cos(phi)*100
+color=atomic
+END_VIZ

@@ -1453,6 +1453,7 @@ for arg in "$@"; do
     ;;
   
   -cupti=*)
+    tauoptions="${tauoptions}-cupti"
     cupti=`echo $arg | sed -e 's/-cupti=//' -e 's/ /#/g'`
     if [ ! -d $cupti ] ; then
       echo "Error: Cannot access CUPTI include directory $cupti"
@@ -1462,6 +1463,7 @@ for arg in "$@"; do
       fixmakeargs="$fixmakeargs CUPTI cuptiinclude=$cupti/include"
 		else
 			echo "Error: Cannot find CUPTI headers."
+      exit 1
     fi
     shift
     ;;
@@ -5105,15 +5107,15 @@ $echo "Checking for linking dependencies for libbfd... ${nnl}"
 BFDLIBS="-lbfd"
 
 bfd_worked="no"
-if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c -fPIC $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
+if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
     bfd_worked="yes"
 else
     BFDLIBS="-lbfd -liberty"
-    if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c -fPIC $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
+    if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
 	bfd_worked="yes"
     else    
 	BFDLIBS="-lbfd -liberty -lz"
-	if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c -fPIC $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
+	if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
 	    bfd_worked="yes"
 	fi
     fi

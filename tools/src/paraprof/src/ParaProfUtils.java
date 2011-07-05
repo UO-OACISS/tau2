@@ -1537,7 +1537,7 @@ public class ParaProfUtils {
     }
 
     private static Component createMetricMenu(ParaProfTrial ppTrial, final ValueType valueType, boolean enabled,
-            ButtonGroup group, final boolean sort, final DataSorter dataSorter, final SortListener sortListener) {
+            ButtonGroup group, final boolean sort, final DataSorter dataSorter, final SortListener sortListener, final ActionListener al) {
         JRadioButtonMenuItem button = null;
 
         if (ppTrial.getNumberOfMetrics() == 1) {
@@ -1552,7 +1552,12 @@ public class ParaProfUtils {
                     } else {
                         dataSorter.setValueType(valueType);
                     }
-                    sortListener.resort();
+                    if(sortListener!=null)
+                    	sortListener.resort();
+                    	
+                    else{
+                    	al.actionPerformed(null);
+                    }
                 }
             });
             group.add(button);
@@ -1588,7 +1593,13 @@ public class ParaProfUtils {
                             dataSorter.setSelectedMetric(useMetric);
                             dataSorter.setValueType(valueType);
                         }
-                        sortListener.resort();
+                        if(sortListener!=null)
+                        	sortListener.resort();
+                        	
+                        else{
+                        	al.actionPerformed(null);
+                        }
+                        //sortListener.resort();
                     }
                 });
                 group.add(button);
@@ -1598,90 +1609,134 @@ public class ParaProfUtils {
         }
     }
 
-    public static JMenu createMetricSelectionMenu(ParaProfTrial ppTrial, String name, final boolean sort, boolean nct,
+    static class SortAction implements ActionListener{
+
+    	DataSorter dataSorter;
+    	SortListener sortListener;
+    	
+    	SortAction(final DataSorter ds, final SortListener sortListener){
+    		dataSorter=ds;
+    		this.sortListener=sortListener;
+    	}
+    	
+		public void actionPerformed(ActionEvent e) {
+			String arg = e.getActionCommand();
+			if(arg.equals("Same as Visible Metric")){
+				dataSorter.setSortType(SortType.VALUE);
+                dataSorter.setSortByVisible(true);
+			}else if(arg.equals("Sort By N,C,T")){
+                dataSorter.setSortType(SortType.NCT);
+			}else if(arg.equals("Name")){
+				dataSorter.setSortType(SortType.NAME);
+			}else if(arg.equals("Number of Calls")){
+                dataSorter.setSortByVisible(false);
+                dataSorter.setSortType(SortType.VALUE);
+                dataSorter.setSortValueType(ValueType.NUMCALLS);
+			}else if(arg.equals("Number of Child Calls")){
+                dataSorter.setSortByVisible(false);
+                dataSorter.setSortType(SortType.VALUE);
+                dataSorter.setSortValueType(ValueType.NUMSUBR);
+			}
+            sortListener.resort();
+		}
+    	
+    }
+    
+    static class MetricAction implements ActionListener{
+
+    	DataSorter dataSorter;
+    	SortListener sortListener;
+    	
+    	MetricAction(final DataSorter ds, final SortListener sortListener){
+    		dataSorter=ds;
+    		this.sortListener=sortListener;
+    	}
+    	
+		public void actionPerformed(ActionEvent e) {
+			String arg = e.getActionCommand();
+			 if(arg.equals("Number of Calls")){
+	                dataSorter.setValueType(ValueType.NUMCALLS);
+				}else if(arg.equals("Number of Child Calls")){
+	                dataSorter.setValueType(ValueType.NUMSUBR);
+				}
+			 sortListener.resort();
+		}
+    	
+    }
+    
+    class HistogramAction implements ActionListener{
+
+    	
+		public void actionPerformed(ActionEvent e) {
+			// TODO Auto-generated method stub
+			
+		}
+    	
+    }
+    
+    public static JMenu createMetricSelectionMenu(final ParaProfTrial ppTrial, String name, final boolean sort, boolean nct,
             final DataSorter dataSorter, final SortListener sortListener, boolean visibleMetric) {
+    	
+        ActionListener al=null;
+        if(sort){
+        	al = new SortAction(dataSorter,sortListener);
+        }else{
+        	al = new MetricAction(dataSorter,sortListener);
+        }
+        
+        return createMetricSelectionMenu(ppTrial,name,sort,nct,dataSorter,sortListener,al,visibleMetric);
+    }
+        
+        public static JMenu createMetricSelectionMenu(final ParaProfTrial ppTrial, String name, final boolean sort, boolean nct,
+                final DataSorter dataSorter, final SortListener sortListener, final ActionListener al, boolean visibleMetric) {
+    	
         JRadioButtonMenuItem button;
         JMenu subMenu = new JMenu(name);
         ButtonGroup group = new ButtonGroup();
+
 
         if (sort) {
 
             if (visibleMetric) {
                 button = new JRadioButtonMenuItem("Same as Visible Metric", dataSorter.getSortByVisible());
-                button.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent evt) {
-                        dataSorter.setSortType(SortType.VALUE);
-                        dataSorter.setSortByVisible(true);
-                        sortListener.resort();
-                    }
-                });
+                button.addActionListener(al);
                 group.add(button);
                 subMenu.add(button);
             }
 
             if (nct) {
                 button = new JRadioButtonMenuItem("Sort By N,C,T", dataSorter.getSortType() == SortType.NCT);
-                button.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        dataSorter.setSortType(SortType.NCT);
-                        sortListener.resort();
-                    }
-                });
+                button.addActionListener(al);
                 group.add(button);
                 subMenu.add(button);
             } else {
                 button = new JRadioButtonMenuItem("Name", dataSorter.getSortType() == SortType.NAME);
-                button.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        dataSorter.setSortType(SortType.NAME);
-                        sortListener.resort();
-                    }
-                });
+                button.addActionListener(al);
                 group.add(button);
                 subMenu.add(button);
             }
         }
 
         subMenu.add(createMetricMenu(ppTrial, ValueType.EXCLUSIVE, dataSorter.getValueType() == ValueType.EXCLUSIVE
-                || dataSorter.getValueType() == ValueType.EXCLUSIVE_PERCENT, group, sort, dataSorter, sortListener));
+                || dataSorter.getValueType() == ValueType.EXCLUSIVE_PERCENT, group, sort, dataSorter, sortListener,al));
         subMenu.add(createMetricMenu(ppTrial, ValueType.INCLUSIVE, dataSorter.getValueType() == ValueType.INCLUSIVE
-                || dataSorter.getValueType() == ValueType.INCLUSIVE_PERCENT, group, sort, dataSorter, sortListener));
+                || dataSorter.getValueType() == ValueType.INCLUSIVE_PERCENT, group, sort, dataSorter, sortListener,al));
         subMenu.add(createMetricMenu(ppTrial, ValueType.EXCLUSIVE_PER_CALL,
-                dataSorter.getValueType() == ValueType.EXCLUSIVE_PER_CALL, group, sort, dataSorter, sortListener));
+                dataSorter.getValueType() == ValueType.EXCLUSIVE_PER_CALL, group, sort, dataSorter, sortListener,al));
         subMenu.add(createMetricMenu(ppTrial, ValueType.INCLUSIVE_PER_CALL,
-                dataSorter.getValueType() == ValueType.INCLUSIVE_PER_CALL, group, sort, dataSorter, sortListener));
+                dataSorter.getValueType() == ValueType.INCLUSIVE_PER_CALL, group, sort, dataSorter, sortListener,al));
 
         button = new JRadioButtonMenuItem("Number of Calls", dataSorter.getValueType() == ValueType.NUMCALLS);
-        button.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                if (sort) {
-                    dataSorter.setSortByVisible(false);
-                    dataSorter.setSortType(SortType.VALUE);
-                    dataSorter.setSortValueType(ValueType.NUMCALLS);
-                } else {
-                    dataSorter.setValueType(ValueType.NUMCALLS);
-                }
-                sortListener.resort();
-            }
-        });
+        button.addActionListener(al);
         group.add(button);
         subMenu.add(button);
 
         button = new JRadioButtonMenuItem("Number of Child Calls", dataSorter.getValueType() == ValueType.NUMSUBR);
-        button.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent evt) {
-                if (sort) {
-                    dataSorter.setSortByVisible(false);
-                    dataSorter.setSortType(SortType.VALUE);
-                    dataSorter.setSortValueType(ValueType.NUMSUBR);
-                } else {
-                    dataSorter.setValueType(ValueType.NUMSUBR);
-                }
-                sortListener.resort();
-            }
-        });
+        button.addActionListener(al);
         group.add(button);
         subMenu.add(button);
+        //if(ppTrial.metricButton!=null)
+        	//group.setSelected(ppTrial.metricButton.getModel(), true);
         return subMenu;
     }
 
