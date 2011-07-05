@@ -187,6 +187,11 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   TheFunctionDB().push_back(this);
   FunctionId = RtsLayer::GenerateUniqueId();
 
+  // Initialize EBS structures. These will be created as and when necessary.
+  pcHistogram = NULL;
+  ebsIntermediate = NULL;
+  parentTauContext = NULL;
+
 #ifdef TAU_VAMPIRTRACE
   string tau_vt_name(string(Name)+" "+string(Type));
   FunctionId = TAU_VT_DEF_REGION(tau_vt_name.c_str(), VT_NO_ID, VT_NO_LNO,
@@ -481,6 +486,21 @@ string *FunctionInfo::GetFullName() {
 
   }
   return FullName;
+}
+
+/* EBS Sampling Profiles */
+
+void FunctionInfo::addPcSample(caddr_t pc) {
+  if (pcHistogram == NULL) {
+    pcHistogram = new map<caddr_t, unsigned int>();
+  }
+  map<caddr_t, unsigned int>::iterator it;
+  it = pcHistogram->find(pc);
+  if (it == pcHistogram->end()) {
+    pcHistogram->insert(pair<caddr_t, unsigned int>(pc,1));
+  } else {
+    (*pcHistogram)[pc] = it->second++;
+  }
 }
 
 /***************************************************************************
