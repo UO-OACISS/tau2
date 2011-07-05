@@ -151,7 +151,7 @@ extern "C" int Tau_get_backtrace_off_by_one_correction(void);
 static void issueBfdWarningIfNecessary() {
   static bool warningIssued = false;
   if (!warningIssued) {
-    fprintf(stderr,"TAU Warning: Comp_gnu - BFD is not available. Symbols may not be resolved!\n");
+    fprintf(stderr,"TAU Warning: Comp_gnu - BFD is not available during TAU build. Symbols may not be resolved!\n");
     warningIssued = true;
   }
 }
@@ -227,7 +227,7 @@ static TauBfdAddrMap *getAddressMap(unsigned long addr) {
 
 bool tauGetFilenameAndLineNo(unsigned long addr) {
   bool success = false;
-  TAU_VERBOSE("tauGetFilenameAndLineNo: addr = %x, addr=%p\n", addr, addr);
+  TAU_VERBOSE("tauGetFilenameAndLineNo: addr=%p\n", addr);
   if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
     bfdUnitHandle = Tau_bfd_registerUnit(TAU_BFD_REUSE_GLOBALS);
   }
@@ -308,9 +308,9 @@ int tauPrintAddr(int i, char *token, unsigned long addr) {
   }
   if (dem_name == (char *) NULL) dem_name = token; 
   TAU_VERBOSE("tauPrintAddr: final demangled name [%s]\n", dem_name);
-  if (map != NULL) { 
 
 #ifdef TAU_EXE 
+  if (map != NULL) { 
     sprintf(cmd, "addr2line -e %s 0x%lx", map->name, addr);
     TAU_VERBOSE("popen %s\n", cmd);
     pipe_fp = popen(cmd, "r");
@@ -318,37 +318,30 @@ int tauPrintAddr(int i, char *token, unsigned long addr) {
     TAU_VERBOSE("cmd = %s, line number = %s\n", cmd, line_info);
     pclose(pipe_fp);
     sprintf(field, "[%s] [%s] [%s]", dem_name, line_info, map->name);
-#endif /* TAU_EXE */
-    /* The reason the TAU_BFD tag is still here is to allow for alternatives */
-#ifdef TAU_BFD
-    tauGetFilenameAndLineNo(addr);
-    if (tau_symbol_found) 
-    {
-      if (tau_line_no && dem_name && map && map->name) { 
-        TAU_VERBOSE("dem_name=%s\n", dem_name);
-        TAU_VERBOSE("tau_filename=%s\n", tau_filename);
-        TAU_VERBOSE("tau_line_no=%d\n", tau_line_no);
-        TAU_VERBOSE("map->name=%s\n", map->name);
-        sprintf(field, "[%s] [%s:%d] [%s]", dem_name, tau_filename, tau_line_no, map->name);
-      } else { 
-        // Get address from gdb if possible
-        sprintf(field, "[%s] [Addr=%p] [%s]", dem_name, 
-	  addr+Tau_get_backtrace_off_by_one_correction(), map->name);
-      } 
-      TAU_VERBOSE("AFTER FIELD: %s\n", field);
-    }
-    else
-    {
-      sprintf(field, "[%s] [addr=%p] [%s]", dem_name, 
-	addr+Tau_get_backtrace_off_by_one_correction(), map->name);
-    }
-#else
-    issueBfdWarningIfNecessary();
-#endif /* TAU_BFD */
-  } else {
-    sprintf(field, "[%s] [addr=%p]", dem_name, 
-	addr+Tau_get_backtrace_off_by_one_correction());
   }
+#endif /* TAU_EXE */
+  /* The reason the TAU_BFD tag is still here is to allow for alternatives */
+#ifdef TAU_BFD
+  tauGetFilenameAndLineNo(addr);
+  if (tau_symbol_found) {
+    TAU_VERBOSE("tauPrintAddr: Symbol found for [addr=%p]\n", addr);
+    sprintf(field, "[%s] [%s:%d] [%s]", tau_funcname, tau_filename, tau_line_no, map->name);
+  } else { 
+    TAU_VERBOSE("tauPrintAddr: Symbol for [addr=%p] not found\n", addr);
+    if (dem_name != NULL && map != NULL) {
+      // Get address from gdb if possible
+      TAU_VERBOSE("tauPrintAddr: Getting information from GDB instead\n");
+      sprintf(field, "[%s] [Addr=%p] [%s]", dem_name, 
+	      addr+Tau_get_backtrace_off_by_one_correction(), map->name);
+    } else {
+      TAU_VERBOSE("tauPrintAddr: No Information Available\n");
+      sprintf(field, "[%s] [addr=%p]", dem_name, 
+	      addr+Tau_get_backtrace_off_by_one_correction());
+    }
+  } 
+#else
+  issueBfdWarningIfNecessary();
+#endif /* TAU_BFD */
   sprintf(metadata, "BACKTRACE %3d", i-1);
   TAU_METADATA(metadata, field);
   return 0;
