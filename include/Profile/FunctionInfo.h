@@ -43,6 +43,12 @@ extern "C" int Tau_Global_numCounters;
 #include "Profile/RenciSTFF.h"
 #endif //RENCI_STFF
 
+// For EBS Sampling Profiles
+#include <sys/types.h>
+#include <unistd.h>
+#include <map>
+using namespace std;
+
 class TauUserEvent; 
 
 class FunctionInfo
@@ -133,6 +139,17 @@ public:
   char *AllGroups;
   long FunctionId;
   string *FullName;
+
+  /* For EBS Sampling Profiles */
+
+  map<caddr_t, unsigned int> *pcHistogram;
+  // For Intermediate FunctionInfo objects for groups of samples
+  FunctionInfo *ebsIntermediate;
+  // For FunctionInfo objects created specially for sample-based profiling 
+  FunctionInfo *parentTauContext;
+
+  /* EBS Sampling Profiles */
+  void addPcSample(caddr_t pc);
 
   inline double *getDumpExclusiveValues(int tid) {
     return dumpExclusiveValues[tid];
