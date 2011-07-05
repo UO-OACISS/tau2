@@ -85,6 +85,7 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 	 	$(INCDIR)/TauUtil.h $(INCDIR)/TauXML.h $(INCDIR)/TauUnify.h $(INCDIR)/TauCollate.h \
 		$(INCDIR)/TauMonMrnet.h $(INCDIR)/TauMon.h \
 		$(INCDIR)/TauMemoryWrap.h $(INCDIR)/TauIoWrap.h		\
+		$(INCDIR)/TauBfd.h \
 		$(INCDIR)/agent_util.h	$(INCDIR)/java_crw_demo.h \
 
 LDFLAGS	      =
@@ -112,7 +113,8 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauMemoryWrap.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
 		TauHooks.o TauHandler.o TauMemory.o TauMetaData.o TauEnv.o \
-		TauInit.o Comp_intel9.o Comp_pgi.o Comp_xl.o TauCallPath.o \
+		TauInit.o Comp_intel9.o Comp_pgi.o Comp_xl.o Comp_gnu.o \
+		TauCallPath.o \
                 TauXML.o TauUtil.o TauSnapshot.o TauUnify.o TauCollate.o \
 		TauMonCommon.o TauMonMrnet.o \
 		$(PARAM_O) Tracer.o TauMetrics.o TauReadMetrics.o $(THR_O) \
@@ -122,10 +124,17 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauMemoryWrap.o \
 		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_GASPU_O) $(TAU_CUPTI_COUNTER_OBJS) \
 		$(TAU_WINDOWS_OBJ)
 
-STATIC_OBJS   = Comp_gnu.o $(PGIACC_STATIC_O)
-SHARED_OBJS   = $(PGIACC_O)
-#SICORTEX#SHARED_OBJS = Comp_gnu.o #ENDIF#
-#TAU_BFDSHAREDLINK#SHARED_OBJS = Comp_gnu.o #ENDIF#
+# CWL - BFD Functionality for libTAU.so is faked if no shared BFD object can
+#       be built. The same is true for static builds of TAU if BFD is 
+#       not available.
+TAU_BFD_STATIC_O = TauBfdUnimplemented.o
+#TAU_BFD#TAU_BFD_STATIC_O = TauBfd.o #ENDIF#
+TAU_BFD_SHARED_O = TauBfdUnimplemented.o
+STATIC_OBJS   = $(TAU_BFD_STATIC_O) $(PGIACC_STATIC_O)
+SHARED_OBJS   = $(TAU_BFD_SHARED_O) $(PGIACC_O)
+#SICORTEX#SHARED_OBJS = TauBfd.o #ENDIF#
+#TAU_BFDSHAREDLINK#TAU_BFD_SHARED_O = TauBfd.o #ENDIF#
+#TAU_BFDSHAREDLINK#SHARED_OBJS = $(TAU_BFD_SHARED_O) $(PGIACC_O) #ENDIF#
 #TAU_BFDSHAREDLINK#SHARED_LIBS = $(BFDLINK) $(BFDLIBS) -liberty #ENDIF#
 
 #CUPTI#SHARED_LIBS = -lcuda -L$(TAU_CUPTI_INC)/../lib -lcupti #ENDIF#
@@ -584,6 +593,12 @@ TauSampling_stackwalker.o 	: TauSampling_stackwalker.cpp $(HDRS)
 TauSampling_libunwind.o 	: TauSampling_libunwind.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
+TauBfdUnimplemented.o:	TauBfdUnimplemented.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauBfd.o 	: TauBfd.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) $(BFDINCLUDE) -c $(@:.o=.cpp)
+
 TauEnv.o 	: TauEnv.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
@@ -597,7 +612,7 @@ FunctionInfo.o 	: FunctionInfo.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 Comp_gnu.o 	: Comp_gnu.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) $(BFDINCLUDE) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 Comp_intel9.o 	: Comp_intel9.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)

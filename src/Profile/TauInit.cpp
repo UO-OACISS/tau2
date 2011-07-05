@@ -137,11 +137,11 @@ extern int tauPrintAddr(int i, char *token1, unsigned long addr);
 
 //static void tauBacktraceHandler(int sig) {
 void tauBacktraceHandler(int sig, siginfo_t *si, void *context) {
-
           char str[100+4096];
           char path[4096];
           char gdb_in_file[256];
           char gdb_out_file[256];
+
           path[readlink("/proc/self/exe", path, -1+ sizeof(path))] = '\0';
           //sprintf(str, "echo 'bt\ndetach\nquit\n' | gdb -batch -x /dev/stdin %s -p %d \n",
                   //path, (int)getpid() );
@@ -155,7 +155,22 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context) {
           sprintf(str, "gdb -batch -x %s %s -p %d >/dev/null\n", gdb_in_file,
                   path, (int)getpid() );
           TAU_VERBOSE("Calling: str=%s\n", str);
-          system(str);
+
+	  int systemRet = 0;
+          systemRet = system(str);
+	  // Success returns the pid which we are not interested with.
+	  if (systemRet == -1) {
+	    // Even in failure, we still want to output the TAU profile.
+	    TAU_VERBOSE("tauBacktraceHandler: Call failed executing %s\n",
+			str);
+	    // give the other tasks some time to process the handler and exit
+	    fprintf(stderr, "TAU: Caught signal %d (%s), dumping profile with stack trace: [rank=%d, pid=%d, tid=%d]... \n", sig, strsignal(sig), RtsLayer::myNode(), getpid(), Tau_get_tid(), sig);
+	    TAU_METADATA("SIGNAL", strsignal(sig));
+	    TAU_PROFILE_EXIT("none");
+	    sleep(4);  
+	    exit(1);     
+	    
+	  }
 
   /* NOW Trigger a context event */
   char eventname[1024];
@@ -224,8 +239,6 @@ static int tau_initialized = 0;
 extern "C" int Tau_init_check_initialized() {
   return tau_initialized;
 }
-
-
 
 #ifdef TAU_VAMPIRTRACE
 //////////////////////////////////////////////////////////////////////

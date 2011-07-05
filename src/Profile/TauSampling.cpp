@@ -68,6 +68,7 @@
 #include <TAU.h>
 #include <Profile/TauMetrics.h>
 #include <Profile/TauSampling.h>
+#include <Profile/TauBfd.h>
 
 #include <sys/time.h>
 #include <stdio.h>
@@ -93,9 +94,29 @@ typedef struct {
   x_uint64 deltaStop;
 } TauSamplingRecord;
 
+typedef struct {
+  caddr_t pc; // should be a list for callsite paths
+  unsigned int sampleCount;
+  FunctionInfo *tauContext;
+} CallSiteCandidate;
+
+typedef struct {
+  caddr_t pc; // should be a list for callsite paths
+  caddr_t relative_pc;
+  int moduleIdx;
+  char *name;
+} CallSiteInfo;
+
 /*********************************************************************
  * Global Variables
  ********************************************************************/
+
+// map for pc to FunctionInfo objects
+static map<caddr_t, FunctionInfo *> *pc2FuncInfoMap[TAU_MAX_THREADS];
+static map<string, FunctionInfo *> *callsite2FuncInfoMap[TAU_MAX_THREADS];
+
+// For BFD-based name resolution
+static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
 
 /* The trace for this node, mulithreaded execution currently not supported */
 FILE *ebsTrace[TAU_MAX_THREADS];
@@ -389,52 +410,9 @@ void Tau_sampling_outputTraceDefinitions(int tid) {
 
 }
 
-
-/*********************************************************************
- * Event triggers
- ********************************************************************/
-
-/* Various unwinders might have their own implementation */
-#ifndef TAU_USE_HPCTOOLKIT
-void Tau_sampling_event_start(int tid, void **addresses) {
-  /* empty default implementation */
-}
-#endif /* TAU_USE_HPCTOOLKIT */
-
-int Tau_sampling_event_stop(int tid, double *stopTime) {
-#ifdef TAU_EXP_DISABLE_DELTAS
-  return 0;
-#endif
-
-  samplingEnabled[tid] = 0;
-
-  Profiler *profiler = TauInternal_CurrentProfiler(tid);
-
-  if (!profiler->needToRecordStop) {
-    samplingEnabled[tid] = 1;
-    return 0;
-  }
-
-  /* *CWL* - In the new scheme, output tracing data only if TAU_TRACE
-     is enabled.
-   */
-#ifdef TAU_EXP_EBS_NEW_DEFAULTS
-  if (TauEnv_get_tracing()) {
-#endif /* TAU_EXP_EBS_NEW_DEFAULTS */
-    Tau_sampling_outputTraceStop(tid, profiler, stopTime);
-#ifdef TAU_EXP_EBS_NEW_DEFAULTS
-  }
-#endif /* TAU_EXP_EBS_NEW_DEFAULTS */
-
-  samplingEnabled[tid] = 1;
-  return 0;
-}
-
-/*********************************************************************
- * Sample Handling
- ********************************************************************/
-void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
+void Tau_sampling_handle_sampleTrace(void *pc, ucontext_t *context) {
   int tid = RtsLayer::myThread();
+  Tau_global_incr_insideTAU_tid(tid);
 
 #ifdef TAU_USE_HPCTOOLKIT
   if (hpctoolkit_process_started == 0) {
@@ -443,18 +421,10 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
   }
 #endif
 
-  if (suspendSampling[tid]) {
-    return;
-  }
-
   TauSamplingRecord theRecord;
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
 
-  // printf ("[tid=%d] sample on %x\n", tid, pc);
-
-  // fprintf  (stderr, "[%d] sample :");
-  // show_backtrace_unwind(context);
-  //show_backtrace_stackwalker(pc);
+  TAU_VERBOSE("[tid=%d] trace sample with pc %p\n", tid, pc);
 
   struct timeval tp;
   gettimeofday(&tp, 0);
@@ -478,28 +448,325 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
     theRecord.counterDeltaStop[i] = 0;
   }
 
-  /* *CWL* - In the new scheme, output tracing data only if TAU_TRACE
-     is enabled.
-   */
-#ifdef TAU_EXP_EBS_NEW_DEFAULTS
-  if (TauEnv_get_tracing()) {
-#endif /* TAU_EXP_EBS_NEW_DEFAULTS */
   Tau_sampling_flushTraceRecord(tid, &theRecord, pc, context);
-#ifdef TAU_EXP_EBS_NEW_DEFAULTS
-  }
-#endif /* TAU_EXP_EBS_NEW_DEFAULTS */
 
   /* set this to get the stop event */
   profiler->needToRecordStop = 1;
 
-/* if we are doing EBS sampling, set whether we want inclusive samples */
-/* that is, main->foo->mpi_XXX is a sample for main, foo and mpi_xxx */
+  /* if we are doing EBS sampling, set whether we want inclusive samples */
+  /* that is, main->foo->mpi_XXX is a sample for main, foo and mpi_xxx */
   if (TauEnv_get_ebs_inclusive() > 0) {
     profiler = (Profiler *)Tau_query_parent_event(profiler);
     while (profiler != NULL) {
       profiler->needToRecordStop = 1;
       profiler = (Profiler *)Tau_query_parent_event(profiler);
     }
+  }
+
+  Tau_global_decr_insideTAU_tid(tid);
+}
+
+/*********************************************************************
+ * EBS Profiling Functions
+ ********************************************************************/
+
+void Tau_sampling_internal_initPc2FuncInfoMapIfNecessary() {
+  static bool pc2FuncInfoMapInitialized = false;
+  if (!pc2FuncInfoMapInitialized) {
+    RtsLayer::LockEnv();
+    for (int i=0; i<TAU_MAX_THREADS; i++) {
+      pc2FuncInfoMap[i] = NULL;
+    }
+    pc2FuncInfoMapInitialized = true;
+    RtsLayer::UnLockEnv();
+  }
+}
+
+void Tau_sampling_internal_initCallsite2FuncInfoMapIfNecessary() {
+  static bool callsite2FuncInfoMapInitialized = false;
+  if (!callsite2FuncInfoMapInitialized) {
+    RtsLayer::LockEnv();
+    for (int i=0; i<TAU_MAX_THREADS; i++) {
+      callsite2FuncInfoMap[i] = NULL;
+    }
+    callsite2FuncInfoMapInitialized = true;
+    RtsLayer::UnLockEnv();
+  }
+}
+
+CallSiteInfo *Tau_sampling_resolveCallSite(caddr_t addr) {
+  CallSiteInfo *callsite;
+  bool resolved = false;
+
+  char resolvedBuffer[4096];
+
+  callsite = (CallSiteInfo *)malloc(sizeof(CallSiteInfo));
+
+  callsite->pc = addr;
+  // map current address to the corresponding module
+  
+  // resolved = Tau_sampling_resolveName(addr, &name, &resolvedModuleIdx);
+  TauBfdInfo *resolvedInfo = NULL;
+#ifdef TAU_BFD
+  resolvedInfo = 
+    Tau_bfd_resolveBfdInfo(bfdUnitHandle, (unsigned long)addr);
+  if (resolvedInfo == NULL) {
+      resolvedInfo = 
+	  Tau_bfd_resolveBfdExecInfo(bfdUnitHandle, (unsigned long)addr);
+  }
+#endif /* TAU_BFD */
+  if (resolvedInfo != NULL) {
+    sprintf(resolvedBuffer, "SAMPLE %s [{%s} {%d,%d}-{%d,%d}]",
+	    resolvedInfo->funcname,
+	    resolvedInfo->filename,
+	    resolvedInfo->lineno, 0,
+	    resolvedInfo->lineno, 0);
+  } else {
+    sprintf(resolvedBuffer, "SAMPLE UNRESOLVED ADDR %p", (unsigned long)addr);
+  }
+  callsite->name = strdup(resolvedBuffer);
+  TAU_VERBOSE("Tau_sampling_resolveCallSite: Callsite name resolved to [%s]\n",
+	      callsite->name);
+  return callsite;
+}
+
+void Tau_sampling_eventStopProfile(int tid, Profiler *profiler,
+				   double *stopTime) {
+  // No activity required for Sampling Profiling at event stop for now.
+}
+
+char *Tau_sampling_internal_stripCallPath(const char *callpath) {
+  char *pointer = NULL;
+  char *temp = (char *)callpath;
+  do {
+    pointer = temp;
+    temp = strstr(pointer,"=>");
+    if (temp != NULL) {
+      temp += 2;  // strip off the "=>"
+      if (temp == NULL) {
+	// takes care of case where string terminates with "=>"
+	pointer = NULL;
+      }
+    }
+  } while (temp != NULL);
+
+  return strdup(pointer);
+}
+
+void Tau_sampling_finalizeProfile(int tid) {
+  TAU_VERBOSE("Tau_sampling_finalizeProfile with tid=%d\n", tid);
+  // Resolve all unresolved PC values.
+  //
+  // For resolution, each PC resolves to a unique CallSite tuple:
+  //     filename X funcname X lineno
+  // Each CallSite tuple maps to its own FunctionInfo object
+  //
+
+  // NOTE: This code ought to be at the start of a dlopen trap as well
+  //       to take care of epoch changes.
+
+#ifdef TAU_BFD
+  if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
+    bfdUnitHandle = Tau_bfd_registerUnit(TAU_BFD_KEEP_GLOBALS);
+  }
+#endif /* TAU_BFD */
+
+  // Iterate through all known FunctionInfo to acquire candidate callsites
+  // for resolution.
+  vector<CallSiteCandidate *> *candidates =
+    new vector<CallSiteCandidate *>();
+    
+  RtsLayer::LockDB();
+  // *CWL* NOTE: Cannot create intermediate FunctionInfo objects while
+  //       we iterate TheFunctionDB()! Hence the candidates!
+  for (vector<FunctionInfo *>::iterator fI_iter = TheFunctionDB().begin();
+       fI_iter != TheFunctionDB().end(); fI_iter++) {
+    FunctionInfo *parentTauContext = *fI_iter;
+    if ((parentTauContext->pcHistogram == NULL) ||
+	(parentTauContext->pcHistogram->size() == 0)) {
+      // No samples encountered in this TAU context.
+      //   Continue to next TAU context.
+      TAU_VERBOSE("Tau Context %s has no samples.\n",
+		  parentTauContext->GetName());
+      continue;
+    }
+    map<caddr_t, unsigned int>::iterator it;
+    for (it = parentTauContext->pcHistogram->begin();
+	 it != parentTauContext->pcHistogram->end(); it++) {
+      caddr_t addr = (caddr_t)it->first;
+      CallSiteCandidate *candidate = new CallSiteCandidate();
+      candidate->pc = addr;
+      candidate->sampleCount = (unsigned int)it->second;
+      candidate->tauContext = parentTauContext;
+      candidates->push_back(candidate);
+    }
+  }
+  RtsLayer::UnLockDB();
+
+  vector<CallSiteCandidate *>::iterator cs_it;
+  for (cs_it = candidates->begin(); cs_it != candidates->end(); cs_it++) {
+    // For each encountered sample PC in the non-empty TAU context,
+    //    resolve to the unique CallSite name as follows:
+    //
+    //       <TAU Callpath Name> => <CallSite Path>
+    //
+    //    where <CallSite Path> is <CallSite> (=> <CallSite>)* and
+    //       <CallSite> is:
+    //
+    //       SAMPLE <funcname> [{filename} {lineno:colno}-{lineno:colno}]
+    // 
+    CallSiteCandidate *candidate = *cs_it;
+    CallSiteInfo *callsite = 
+      Tau_sampling_resolveCallSite(candidate->pc);
+    char call_site_key[4096];
+
+    // If there was a candidate, there is at least one sample.
+    if (candidate->tauContext->ebsIntermediate == NULL) {
+      // create the intermediate FunctionInfo object
+      char intermediateName[4096];
+      RtsLayer::LockDB();
+      sprintf(intermediateName, "%s => INTERMEDIATE %s",
+	      candidate->tauContext->GetName(),
+	      Tau_sampling_internal_stripCallPath(candidate->tauContext->GetName()));
+      TAU_VERBOSE("Tau_sampling_finalizeProfile: created intermediate node [%s]\n", intermediateName);
+      string grname = string("SAMPLE | ") + 
+	RtsLayer::PrimaryGroup(candidate->tauContext->GetAllGroups()); 
+      candidate->tauContext->ebsIntermediate =
+	new FunctionInfo((const char*)intermediateName, "",
+			 candidate->tauContext->GetProfileGroup(),
+			 (const char*)grname.c_str(), true);
+      RtsLayer::UnLockDB();
+    }
+    sprintf(call_site_key,"%s => %s => %s",
+	    candidate->tauContext->GetName(),
+	    candidate->tauContext->ebsIntermediate->GetName(),
+	    callsite->name);
+    // try to find the key
+    string *callSiteName = new string(call_site_key);
+    // See if the callsite has been previously encountered.
+    Tau_sampling_internal_initCallsite2FuncInfoMapIfNecessary();
+    if (callsite2FuncInfoMap[tid] == NULL) {
+      callsite2FuncInfoMap[tid] = new map<string, FunctionInfo *>();
+    }
+    map<string, FunctionInfo *>::iterator fi_it;
+    FunctionInfo *sampledContextFuncInfo;
+    fi_it = callsite2FuncInfoMap[tid]->find(*callSiteName);
+    if (fi_it == callsite2FuncInfoMap[tid]->end()) {
+      // not found - create new FunctionInfo object to be associated with
+      //   newly resolved name.
+      RtsLayer::LockDB();
+      string grname = string("SAMPLE | ") + 
+	RtsLayer::PrimaryGroup(candidate->tauContext->GetAllGroups()); 
+      sampledContextFuncInfo =
+	new FunctionInfo((const char*)callSiteName->c_str(), "",
+			 candidate->tauContext->GetProfileGroup(),
+			 (const char*)grname.c_str(), true);
+      RtsLayer::UnLockDB();
+    } else {
+      // found.
+      sampledContextFuncInfo = ((FunctionInfo *)fi_it->second);
+    }
+    // Accumulate the histogram into the located FunctionInfo object
+    double *totalTime = 
+      (double *)malloc(Tau_Global_numCounters*sizeof(double));
+    for (int i=0; i<Tau_Global_numCounters; i++) {
+      totalTime[i] = 0.0;
+    }
+    // work only with gtod for now
+    unsigned int binFreq = candidate->sampleCount;
+    totalTime[0] = binFreq*TauEnv_get_ebs_period();
+    // Update the count and time for the group of sampled events.
+    sampledContextFuncInfo->SetCalls(tid, binFreq);
+    sampledContextFuncInfo->AddInclTime(totalTime, tid);
+    sampledContextFuncInfo->AddExclTime(totalTime, tid);
+    // Accumulate the count and time into the intermediate object
+    FunctionInfo *intermediate = 
+      candidate->tauContext->ebsIntermediate;
+    intermediate->SetCalls(tid, intermediate->GetCalls(tid)+binFreq);
+    intermediate->AddInclTime(totalTime, tid);
+    intermediate->AddExclTime(totalTime, tid);
+  }
+}
+
+void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
+  int tid = RtsLayer::myThread();
+  Tau_global_incr_insideTAU_tid(tid);
+
+  TAU_VERBOSE("[tid=%d] EBS profile sample with pc %p\n", tid, (caddr_t)pc);
+  Profiler *profiler = TauInternal_CurrentProfiler(tid);
+  FunctionInfo *callSiteContext;
+
+  if (TauEnv_get_callpath() && (profiler->CallPathFunction != NULL)) {
+    callSiteContext = profiler->CallPathFunction;
+  } else {
+    callSiteContext = profiler->ThisFunction;
+  }
+  callSiteContext->addPcSample((caddr_t)pc);
+
+  Tau_global_decr_insideTAU_tid(tid);
+}
+
+/*********************************************************************
+ * Event triggers
+ ********************************************************************/
+
+/* Various unwinders might have their own implementation */
+void Tau_sampling_event_start(int tid, void **addresses) {
+#ifdef TAU_USE_HPCTOOLKIT
+  Tau_sampling_event_startHpctoolkit(tid, addresses);
+#endif /* TAU_USE_HPCTOOLKIT */
+
+  if (TauEnv_get_profiling()) {
+    // nothing for now
+  }
+}
+
+int Tau_sampling_event_stop(int tid, double *stopTime) {
+#ifdef TAU_EXP_DISABLE_DELTAS
+  return 0;
+#endif
+
+  samplingEnabled[tid] = 0;
+
+  Profiler *profiler = TauInternal_CurrentProfiler(tid);
+
+  if (TauEnv_get_tracing()) {
+    if (!profiler->needToRecordStop) {
+      samplingEnabled[tid] = 1;
+      return 0;
+    }
+    Tau_sampling_outputTraceStop(tid, profiler, stopTime);
+  }
+
+  if (TauEnv_get_profiling()) {
+    Tau_sampling_eventStopProfile(tid, profiler, stopTime);
+  }
+
+  samplingEnabled[tid] = 1;
+  return 0;
+}
+
+/*********************************************************************
+ * Sample Handling
+ ********************************************************************/
+void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
+  int tid = RtsLayer::myThread();
+
+  /* Never sample anything internal to TAU */
+  if (Tau_global_get_insideTAU_tid(tid) > 0) {
+    return;
+  }
+
+  if (suspendSampling[tid]) {
+    return;
+  }
+
+  if (TauEnv_get_tracing()) {
+    Tau_sampling_handle_sampleTrace(pc, context);
+  }
+
+  if (TauEnv_get_profiling()) {
+    Tau_sampling_handle_sampleProfile(pc, context);
   }
 
 }
@@ -553,24 +820,22 @@ int Tau_sampling_init(int tid) {
   int node = RtsLayer::myNode();
   node = 0;
   char filename[4096];
-  /* *CWL* - In the new scheme, output tracing files only if TAU_TRACE
-     is enabled.
-   */
-#ifdef TAU_EXP_EBS_NEW_DEFAULTS
+
   if (TauEnv_get_tracing()) {
-#endif /* TAU_EXP_EBS_NEW_DEFAULTS */
-  sprintf(filename, "%s/ebstrace.raw.%d.%d.%d.%d", profiledir, getpid(), node, RtsLayer::myContext(), tid);
-
-  ebsTrace[tid] = fopen(filename, "w");
-  if (ebsTrace[tid] == NULL) {
-    fprintf(stderr, "Tau Sampling Error: Unable to open %s for writing\n", filename);
-    exit(-1);
+    sprintf(filename, "%s/ebstrace.raw.%d.%d.%d.%d", profiledir, getpid(), node, RtsLayer::myContext(), tid);
+    
+    ebsTrace[tid] = fopen(filename, "w");
+    if (ebsTrace[tid] == NULL) {
+      fprintf(stderr, "Tau Sampling Error: Unable to open %s for writing\n", filename);
+      exit(-1);
+    }
+    
+    Tau_sampling_outputTraceHeader(tid);
   }
 
-  Tau_sampling_outputTraceHeader(tid);
-#ifdef TAU_EXP_EBS_NEW_DEFAULTS
+  if (TauEnv_get_profiling()) {
+    // Do nothing for now.
   }
-#endif /* TAU_EXP_EBS_NEW_DEFAULTS */
 
 /*
    see:
@@ -641,11 +906,14 @@ int Tau_sampling_init(int tid) {
  * Finalize the sampling trace system
  ********************************************************************/
 int Tau_sampling_finalize(int tid) {
-  if (ebsTrace[tid] == 0) {
-    return 0;
-  }
+  TAU_VERBOSE("Tau_sampling_finalize tid=%d\n", tid);
+  //  printf("Tau_sampling_finalize tid=%d\n", tid);
 
-  //printf ("finalize called!\n");
+  if (TauEnv_get_tracing()) {
+    if (ebsTrace[tid] == 0) {
+      return 0;
+    }
+  }
 
   /* Disable sampling first */
   samplingEnabled[tid] = 0;
@@ -661,7 +929,13 @@ int Tau_sampling_finalize(int tid) {
     /* ERROR */
   }
 
-  Tau_sampling_outputTraceDefinitions(tid);
+  if (TauEnv_get_tracing()) {
+    Tau_sampling_outputTraceDefinitions(tid);
+  }
+
+  if (TauEnv_get_profiling()) {
+    Tau_sampling_finalizeProfile(tid);
+  }
 
   return 0;
 }
