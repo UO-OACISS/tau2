@@ -106,6 +106,7 @@ for arg in "$@"; do
     echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
     echo "-otfinc=<dir> ....... Specify location of stand-alone OTF header files."
     echo "-otflib=<dir> ...... Specify location of stand-alone OTF library files."
+    echo "-darshan=<dir> ............... Specify location of Darshan I/O package."
     echo "-ebs2otf ............... Enable conversion of EBS traces to OTF format."
     echo "-nocomm  ........ Disable tracking communication events in MPI library."
     echo "-hpctoolkit-src-dir=<dir> .......... Specify patched HPCToolkit source."
@@ -387,6 +388,7 @@ setnode0=no
 compensate=no
 smarts=no
 papi=no
+darshan=no
 perfsuite=no
 perfsuitedir=
 bfd=no
@@ -765,6 +767,16 @@ for arg in "$@"; do
       papidir=`echo $arg | sed -e 's/-papi=//'`
       if [ ! -d $papidir ] ; then
           echo "Error: Cannot access PAPI directory $papidir"
+          exit 1
+      fi
+      shift
+      ;;
+
+  -darshan=*)
+      darshan=yes
+      darshandir=`echo $arg | sed -e 's/-darshan=//'`
+      if [ ! -d $darshandir ] ; then
+          echo "Error: Cannot access Darshan directory $papidir"
           exit 1
       fi
       shift
@@ -3457,6 +3469,11 @@ EOF
 	  fi
 	  /bin/rm -f tau_papi_test.c tau_papi_test
       fi		
+fi
+
+if [ $darshan = yes ] ; then
+    fixmakeargs="$fixmakeargs DARSHAN darshandir=$darshandir"
+    tauoptions="${tauoptions}-darshan"
 fi
 
 
