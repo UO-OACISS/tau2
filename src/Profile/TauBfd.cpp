@@ -136,6 +136,7 @@ bool Tau_bfd_checkHandle(tau_bfd_handle_t handle) {
     TAU_VERBOSE("TauBfd: Warning - invalid BFD unit handle %d, max value %d\n", handle, bfdUnitCount);
     return false;
   }
+  TAU_VERBOSE("TauBfd: Valid BFD Handle\n");
   return true;
 }
 
