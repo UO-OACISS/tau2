@@ -3,6 +3,7 @@
 #include <TAU.h>
 #include <Profile/TauBfd.h>
 #if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
+#define HAVE_DECL_BASENAME 1
 #include <demangle.h>
 #endif /* HAVE_GNU_DEMANGLE */
 #include <bfd.h>
