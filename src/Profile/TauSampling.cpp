@@ -625,7 +625,7 @@ void Tau_sampling_finalizeProfile(int tid) {
       // create the intermediate FunctionInfo object
       char intermediateName[4096];
       RtsLayer::LockDB();
-      sprintf(intermediateName, "%s => INTERMEDIATE %s",
+      sprintf(intermediateName, "%s => [INTERMEDIATE] %s",
 	      candidate->tauContext->GetName(),
 	      Tau_sampling_internal_stripCallPath(candidate->tauContext->GetName()));
       TAU_VERBOSE("Tau_sampling_finalizeProfile: created intermediate node [%s]\n", intermediateName);
