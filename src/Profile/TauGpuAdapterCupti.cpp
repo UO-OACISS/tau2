@@ -27,6 +27,7 @@ public:
 	CUcontext getContext();
 };
 
+double cuptiGpuId::syncOffset() { return 0; };
 cuptiGpuId::cuptiGpuId(uint64_t cid, cudaStream_t st) 
 { 
 	contextUid = cid; 
