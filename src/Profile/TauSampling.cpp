@@ -692,7 +692,8 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
   int tid = RtsLayer::myThread();
   Tau_global_incr_insideTAU_tid(tid);
 
-  TAU_VERBOSE("[tid=%d] EBS profile sample with pc %p\n", tid, (caddr_t)pc);
+  // *CWL* - Too "noisy" and useless a verbose output.
+  //TAU_VERBOSE("[tid=%d] EBS profile sample with pc %p\n", tid, (caddr_t)pc);
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
   FunctionInfo *callSiteContext;
 
