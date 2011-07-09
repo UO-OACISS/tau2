@@ -516,13 +516,13 @@ CallSiteInfo *Tau_sampling_resolveCallSite(caddr_t addr) {
   }
 #endif /* TAU_BFD */
   if (resolvedInfo != NULL) {
-    sprintf(resolvedBuffer, "SAMPLE %s [{%s} {%d,%d}-{%d,%d}]",
+    sprintf(resolvedBuffer, "[SAMPLE] %s [{%s} {%d,%d}-{%d,%d}]",
 	    resolvedInfo->funcname,
 	    resolvedInfo->filename,
 	    resolvedInfo->lineno, 0,
 	    resolvedInfo->lineno, 0);
   } else {
-    sprintf(resolvedBuffer, "SAMPLE UNRESOLVED ADDR %p", (unsigned long)addr);
+    sprintf(resolvedBuffer, "[SAMPLE] UNRESOLVED ADDR %p", (unsigned long)addr);
   }
   callsite->name = strdup(resolvedBuffer);
   TAU_VERBOSE("Tau_sampling_resolveCallSite: Callsite name resolved to [%s]\n",
@@ -625,21 +625,25 @@ void Tau_sampling_finalizeProfile(int tid) {
       // create the intermediate FunctionInfo object
       char intermediateName[4096];
       RtsLayer::LockDB();
-      sprintf(intermediateName, "%s => [INTERMEDIATE] %s",
+      sprintf(intermediateName, "%s %s => [INTERMEDIATE] %s",
 	      candidate->tauContext->GetName(),
+	      candidate->tauContext->GetType(),
 	      Tau_sampling_internal_stripCallPath(candidate->tauContext->GetName()));
       TAU_VERBOSE("Tau_sampling_finalizeProfile: created intermediate node [%s]\n", intermediateName);
       string grname = string("SAMPLE | ") + 
 	RtsLayer::PrimaryGroup(candidate->tauContext->GetAllGroups()); 
       candidate->tauContext->ebsIntermediate =
-	new FunctionInfo((const char*)intermediateName, "",
+	new FunctionInfo((const char*)intermediateName,
+			 candidate->tauContext->GetType(),
 			 candidate->tauContext->GetProfileGroup(),
 			 (const char*)grname.c_str(), true);
       RtsLayer::UnLockDB();
     }
-    sprintf(call_site_key,"%s => %s => %s",
+    sprintf(call_site_key,"%s %s => %s %s => %s",
 	    candidate->tauContext->GetName(),
+	    candidate->tauContext->GetType(),
 	    candidate->tauContext->ebsIntermediate->GetName(),
+	    candidate->tauContext->GetType(),
 	    callsite->name);
     // try to find the key
     string *callSiteName = new string(call_site_key);
