@@ -3,6 +3,7 @@
 #include <TAU.h>
 #include <Profile/TauBfd.h>
 #if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
+#define HAVE_DECL_BASENAME 1
 #include <demangle.h>
 #endif /* HAVE_GNU_DEMANGLE */
 #include <bfd.h>
@@ -136,6 +137,7 @@ bool Tau_bfd_checkHandle(tau_bfd_handle_t handle) {
     TAU_VERBOSE("TauBfd: Warning - invalid BFD unit handle %d, max value %d\n", handle, bfdUnitCount);
     return false;
   }
+  TAU_VERBOSE("TauBfd: Valid BFD Handle\n");
   return true;
 }
 
