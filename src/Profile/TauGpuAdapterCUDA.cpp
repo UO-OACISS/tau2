@@ -243,7 +243,7 @@ void Tau_cuda_init()
 		//printf("sync offset: %lf.\n", sync_offset);
 
 		lastEvent = initEvent;
-		lastEventTime = sync_offset / 1e3;  
+		//lastEventTime = sync_offset / 1e3;  
 		//printf("last event time: %lf.\n", lastEventTime);
 		init = true;
 		Tau_gpu_init();
@@ -351,7 +351,8 @@ void Tau_cuda_register_sync_event()
 
 		cudaError_t err;
 		err = cudaEventElapsedTime(&start_sec, lastEvent, kernel.startEvent);
-		//printf("kernel event [start] = %lf.\n", (((double) start_sec) + lastEventTime)*1e3);
+		//printf("kernel event [start] = %lf.\n", (((double) start_sec))*1e3);
+		//printf("w last event [start] = %lf.\n", (((double) start_sec) + lastEventTime)*1e3);
 
 		if (err != cudaSuccess)
 		{
@@ -359,31 +360,33 @@ void Tau_cuda_register_sync_event()
 		}
 
 		err = cudaEventElapsedTime(&stop_sec, lastEvent, kernel.stopEvent);
-		//printf("kernel event [stop] = %lf.\n", (((double) stop_sec) + lastEventTime)*1e3 );
+		//printf("kernel event [stop]  = %lf.\n", (((double) stop_sec))*1e3 );
+		//printf("w last event [stop]  = %lf.\n", (((double) stop_sec) + lastEventTime)*1e3 );
 
 		if (err != cudaSuccess)
 		{
 			printf("Error calculating kernel event stop, error #: %d.\n", err);
 		}
+		//printf("kernel event [sync]  = %lf.\n", kernel.device->syncOffset());
 
 		//Create cudaGpuId for stream.
 		//cudaGpuId *id = new cudaGpuId(kernel.id.getDevice(), kernel.id.getContext(), kernel.id.getStream());
 		//cout << "in sync event, stream id is: " << id->printId() << endl;
 		//printf("last event time: %f.\n", lastEventTime);
 		//printf("stop time: %f.\n", stop_sec);
-		lastEvent = kernel.stopEvent;
-		lastEventTime += (double) stop_sec;
 
 		//kernel.device->sync_offset = lastEventTime * 1e3;
 
 		Tau_gpu_register_gpu_event(kernel, 
-															 ((double) start_sec)*1e3,
-															 ((double) stop_sec)*1e3);
+															 ((double) start_sec + lastEventTime)*1e3,
+															 ((double) stop_sec + lastEventTime)*1e3);
 		//Tau_cuda_register_gpu_event(kernel.name, kernel.id, 
 		//													 (((double) start_sec) + lastEventTime)*1e3,
 		//													 (((double) stop_sec)  + lastEventTime)*1e3);
 
 		//delete id;
+		lastEvent = kernel.stopEvent;
+		lastEventTime += (double) stop_sec;
 
 		KernelBuffer.pop();
 

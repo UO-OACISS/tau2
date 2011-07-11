@@ -15,8 +15,11 @@ fi
 ver=`java -version 2>&1 | tail -1 | awk '{print $1 $2}'`
 
 if [ "x$ver" != "xJavaHotSpot(TM)" ] ; then
-    echo "failed"
-    exit
+    GCJ=`java -showversion 2>&1 | grep -i OpenJDK` 
+    if [ "x$GCJ" = "x" ] ; then
+       echo "failed"
+       exit
+    fi
 fi
 
 if [ $(uname) = "Darwin" ]; then

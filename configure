@@ -2373,7 +2373,11 @@ if [ $comm = no ] ; then
 fi
 
 if [ $iowrapper = yes ] ; then
-    fixmakeargs="$fixmakeargs IOWRAPPER"
+    if [ $machine = rs6000 -o $machine = ibm64 ] ; then
+        echo "WARNING!! Architecture does not support iowrapper"
+    else
+        fixmakeargs="$fixmakeargs IOWRAPPER"
+    fi
 fi    
 
 if [ $stff = yes ] ; then
