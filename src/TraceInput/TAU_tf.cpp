@@ -650,7 +650,7 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
 	/* If the application is multithreaded, insert call for matching sends/recvs here */
 	otherTid = 0;
 	if (*callbacks.SendMessage) 
-	  (*callbacks.SendMessage)(callbacks.UserData, ts, nid, tid, otherNid, otherTid, msgLen, msgTag, comm);
+	  (*callbacks.SendMessage)(callbacks.UserData, ts, event_GetNid(tFile,traceBuffer, i), tid, otherNid, otherTid, msgLen, msgTag, comm);
 	/* the args are user, time, source nid (my), source tid (my), dest nid (other), dest
 	 * tid (other), size, tag */
 
@@ -675,7 +675,7 @@ int Ttf_ReadNumEvents( Ttf_FileHandleT fileHandle, Ttf_CallbacksT callbacks,
 	  /* If the application is multithreaded, insert call for matching sends/recvs here */
 	  otherTid = 0;
 	  if (*callbacks.RecvMessage) 
-	    (*callbacks.RecvMessage)(callbacks.UserData, ts, otherNid, otherTid, nid, tid, msgLen, msgTag, comm);
+	    (*callbacks.RecvMessage)(callbacks.UserData, ts, otherNid, otherTid, event_GetNid(tFile,traceBuffer, i), tid, msgLen, msgTag, comm);
 	  /* the args are user, time, source nid (my), source tid (my), dest nid (other), dest
 	   * tid (other), size, tag */
 
