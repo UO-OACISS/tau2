@@ -14,4 +14,4 @@ simple: simple.cpp
 	$(CXX) $(INCLUDE)  simple.cpp -o simple $(LIB)
 
 clean:
-	rm simple
+	/bin/rm -rf simple.o simple *.trc *.edf profile* MULT*
