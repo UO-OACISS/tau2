@@ -3495,16 +3495,24 @@ then
   else
     if [ $catamount = yes ] 
     then
-      shmemincargs="-I/opt/xt-mpt/default/include/mpp"
+      shmemincargs="-I/opt/xt-mpt/default/include/mpp#-I/opt/xt-mpt/default/include"
     fi
     if [ $machine = craycnl ] 
     then
-      if [ -r $MPT_DIR/sma/include/mpp/shmem.h ]
+      if [ "x$MPT_DIR" = "x" -a "x$CRAY_SHMEM_BASEDIR" != "x" ] 
       then
-        shmemincargs="-I$MPT_DIR/sma/include/mpp/"
+        if [ -r $CRAY_SHMEM_BASEDIR/sma/include/mpp/shmem.h ]
+        then
+          shmemincargs="-I$CRAY_SHMEM_BASEDIR/sma/include/mpp/#-I$CRAY_SHMEM_BASEDIR/sma/include"
+        fi
       else
-        shmemincargs="-I/opt/mpt/default/xt/sma64/include/mpp"
+        if [ -r $MPT_DIR/sma/include/mpp/shmem.h ]
+        then
+          shmemincargs="-I$MPT_DIR/sma/include/mpp/#-I$MPT_DIR/sma/include/"
+        else
+          shmemincargs="-I/opt/mpt/default/xt/sma64/include/mpp#-I/opt/mpt/default/xt/sma64/include"
 # old options 
+        fi
       fi
     fi
   fi
