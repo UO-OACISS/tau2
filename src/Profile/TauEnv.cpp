@@ -607,7 +607,7 @@ void TauEnv_initialize() {
       }
     }
 
-#ifdef TAU_MPI
+#if (defined(TAU_MPI) || defined(TAU_SHMEM))
     /* track comm (opposite of old -nocomm option) */
     tmp = getconf("TAU_TRACK_MESSAGE");
     if (parse_bool(tmp, env_track_message)) {
@@ -636,7 +636,7 @@ void TauEnv_initialize() {
       TAU_VERBOSE("TAU: Message Tracking Disabled\n");
       TAU_METADATA("TAU_TRACK_MESSAGE", "off");
     }
-#endif
+#endif /* TAU_MPI || TAU_SHMEM */
 
     /* clock synchronization */
     if (env_tracing == 0) {
