@@ -243,6 +243,11 @@ extern "C" {
 #define TAU_TRACE_RECVMSG(type, source, length) \
         Tau_trace_recvmsg(type, source, length);
 
+#define TAU_TRACE_SENDMSG_REMOTE(type, destination, length, remoteid) \
+        Tau_trace_sendmsg_remote(type, destination, length, remoteid);
+#define TAU_TRACE_RECVMSG_REMOTE(type, source, length, remoteid) \
+        Tau_trace_recvmsg_remote(type, source, length, remoteid);
+
 
 
 
@@ -323,6 +328,7 @@ void Tau_get_exclusive_values(void *handle, double* values, int tid);
 void Tau_set_exclusive_values(void *handle, double* values, int tid);
 void Tau_get_counter_info(const char ***counterlist, int *numcounters);
 int TAUDECL Tau_get_tid(void);
+int TAUDECL Tau_get_node(void);
 int  Tau_create_task(void);
 void Tau_destructor_trigger();
 
@@ -394,6 +400,8 @@ void TAUDECL Tau_start_timer(void *profiler, int phase, int tid);
 int TAUDECL Tau_stop_timer(void *profiler, int tid); 
 void TAUDECL Tau_trace_sendmsg(int type, int destination, int length);
 void TAUDECL Tau_trace_recvmsg(int type, int source, int length);
+void TAUDECL Tau_trace_recvmsg_remote(int type, int source, int length, int remoteid);
+void TAUDECL Tau_trace_sendmsg_remote(int type, int destination, int length, int remoteid);
 void TAUDECL Tau_create_top_level_timer_if_necessary(void);
 void TAUDECL Tau_stop_top_level_timer_if_necessary(void);
 void TAUDECL Tau_metadata(char *name, const char *value);
