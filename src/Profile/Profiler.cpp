@@ -85,8 +85,6 @@ void esd_exit (elg_ui4 rid);
 #include "Profile/RenciSTFF.h"
 #endif // RENCI_STFF
 
-
-
 static int writeUserEvents(FILE *fp, int tid);
 static int matchFunction(FunctionInfo *fi, const char **inFuncs, int numFuncs);
 extern "C" int Tau_get_usesMPI();
@@ -1181,8 +1179,18 @@ static int getProfileLocation(int metric, char *str) {
   if (Tau_Global_numCounters <= 1) { 
     sprintf (str, "%s", profiledir);
   } else {
-    const char *metricName = TauMetrics_getMetricName(metric);
-    sprintf (str, "%s/MULTI__%s", profiledir, metricName);
+    string metricStr = string(TauMetrics_getMetricName(metric));
+		
+		//sanitize metricName before creating a directory name from it.
+		string illegalChars("/\\?%*:|\"<> ");
+		size_t found;
+		found=metricStr.find_first_of(illegalChars, 0);
+		while (found!=string::npos)
+		{
+			metricStr[found] = '_';
+			found=metricStr.find_first_of(illegalChars,found+1);
+		}
+    sprintf (str, "%s/MULTI__%s", profiledir, metricStr.c_str());
   }
 
   return 0;
@@ -1332,15 +1340,9 @@ bool TauProfiler_createDirectories() {
   if (flag && Tau_Global_numCounters > 1) {
     for (int i=0;i<Tau_Global_numCounters;i++) {
       if (TauMetrics_getMetricUsed(i)) {
-	const char * tmpChar = TauMetrics_getMetricName(i);
 	char *newdirname = new char[1024];
-	//char *rmdircommand = new char[1024];
 	char *mkdircommand = new char[1024];
-	
-	const char *dirname = TauEnv_get_profiledir();
-	
-	sprintf(newdirname,"%s/MULTI__%s",dirname,tmpChar);
-	//sprintf(rmdircommand,"rm -rf %s",newdirname);
+	getProfileLocation(i,	newdirname);
 	sprintf(mkdircommand,"mkdir -p %s",newdirname);
 	
 	//system(rmdircommand);

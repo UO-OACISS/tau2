@@ -106,6 +106,7 @@ for arg in "$@"; do
     echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
     echo "-otfinc=<dir> ....... Specify location of stand-alone OTF header files."
     echo "-otflib=<dir> ...... Specify location of stand-alone OTF library files."
+    echo "-darshan=<dir> ............... Specify location of Darshan I/O package."
     echo "-ebs2otf ............... Enable conversion of EBS traces to OTF format."
     echo "-nocomm  ........ Disable tracking communication events in MPI library."
     echo "-hpctoolkit-src-dir=<dir> .......... Specify patched HPCToolkit source."
@@ -387,6 +388,7 @@ setnode0=no
 compensate=no
 smarts=no
 papi=no
+darshan=no
 perfsuite=no
 perfsuitedir=
 bfd=no
@@ -765,6 +767,16 @@ for arg in "$@"; do
       papidir=`echo $arg | sed -e 's/-papi=//'`
       if [ ! -d $papidir ] ; then
           echo "Error: Cannot access PAPI directory $papidir"
+          exit 1
+      fi
+      shift
+      ;;
+
+  -darshan=*)
+      darshan=yes
+      darshandir=`echo $arg | sed -e 's/-darshan=//'`
+      if [ ! -d $darshandir ] ; then
+          echo "Error: Cannot access Darshan directory $papidir"
           exit 1
       fi
       shift
@@ -2361,7 +2373,11 @@ if [ $comm = no ] ; then
 fi
 
 if [ $iowrapper = yes ] ; then
-    fixmakeargs="$fixmakeargs IOWRAPPER"
+    if [ $machine = rs6000 -o $machine = ibm64 ] ; then
+        echo "WARNING!! Architecture does not support iowrapper"
+    else
+        fixmakeargs="$fixmakeargs IOWRAPPER"
+    fi
 fi    
 
 if [ $stff = yes ] ; then
@@ -3461,6 +3477,11 @@ EOF
       fi		
 fi
 
+if [ $darshan = yes ] ; then
+    fixmakeargs="$fixmakeargs DARSHAN darshandir=$darshandir"
+    tauoptions="${tauoptions}-darshan"
+fi
+
 
 
 ######################################################################
@@ -3491,16 +3512,24 @@ then
   else
     if [ $catamount = yes ] 
     then
-      shmemincargs="-I/opt/xt-mpt/default/include/mpp"
+      shmemincargs="-I/opt/xt-mpt/default/include/mpp#-I/opt/xt-mpt/default/include"
     fi
     if [ $machine = craycnl ] 
     then
-      if [ -r $MPT_DIR/sma/include/mpp/shmem.h ]
+      if [ "x$MPT_DIR" = "x" -a "x$CRAY_SHMEM_BASEDIR" != "x" ] 
       then
-        shmemincargs="-I$MPT_DIR/sma/include/mpp/"
+        if [ -r $CRAY_SHMEM_BASEDIR/sma/include/mpp/shmem.h ]
+        then
+          shmemincargs="-I$CRAY_SHMEM_BASEDIR/sma/include/mpp/#-I$CRAY_SHMEM_BASEDIR/sma/include"
+        fi
       else
-        shmemincargs="-I/opt/mpt/default/xt/sma64/include/mpp"
+        if [ -r $MPT_DIR/sma/include/mpp/shmem.h ]
+        then
+          shmemincargs="-I$MPT_DIR/sma/include/mpp/#-I$MPT_DIR/sma/include/"
+        else
+          shmemincargs="-I/opt/mpt/default/xt/sma64/include/mpp#-I/opt/mpt/default/xt/sma64/include"
 # old options 
+        fi
       fi
     fi
   fi
@@ -5090,15 +5119,15 @@ $echo "Checking for linking dependencies for libbfd... ${nnl}"
 BFDLIBS="-lbfd"
 
 bfd_worked="no"
-if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c -fPIC $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
+if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
     bfd_worked="yes"
 else
     BFDLIBS="-lbfd -liberty"
-    if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c -fPIC $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
+    if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
 	bfd_worked="yes"
     else    
 	BFDLIBS="-lbfd -liberty -lz"
-	if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c -fPIC $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
+	if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
 	    bfd_worked="yes"
 	fi
     fi

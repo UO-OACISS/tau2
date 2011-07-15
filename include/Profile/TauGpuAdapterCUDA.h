@@ -15,6 +15,7 @@ public:
 	virtual x_uint64 id_p2() = 0;
 	//virtual bool operator<(const cudaGpuId& other) const = 0;
 	virtual bool equals(const gpuId *other) const = 0;
+	virtual double syncOffset() = 0;
 	virtual cudaStream_t getStream() = 0;
 	virtual int getDevice() = 0;
 	virtual CUcontext getContext() = 0;
@@ -46,6 +47,7 @@ public:
 	x_uint64 id_p2();
 	//bool operator<(const cudaGpuId& other) const;
 	bool equals(const gpuId *other) const;
+	virtual double syncOffset();
 	cudaStream_t getStream();
 	int getDevice();
 	CUcontext getContext();
@@ -80,6 +82,7 @@ public:
 	x_uint64 id_p2();
 	//bool operator<(const cudaGpuId& other) const;
 	bool equals(const gpuId *other) const;
+	virtual double syncOffset();
 	cudaStream_t getStream();
 	int getDevice();
 	CUcontext getContext();

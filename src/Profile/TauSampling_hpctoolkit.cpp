@@ -94,7 +94,7 @@ void Tau_sampling_outputTraceCallstack(int tid, void *pc,
 /*********************************************************************
  * Handler for event entry (start)
  ********************************************************************/
-void Tau_sampling_event_start(int tid, void **addresses) {
+extern "C" void Tau_sampling_event_startHpctoolkit(int tid, void **addresses) {
   // fprintf (stderr, "[%d] SAMP: event start: ", tid);
 
   ucontext_t context;
