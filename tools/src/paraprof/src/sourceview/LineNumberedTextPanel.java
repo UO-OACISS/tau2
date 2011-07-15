@@ -32,9 +32,9 @@ public class LineNumberedTextPanel extends JPanel  {
 
     public LineNumberedTextPanel() {
         super();
-        setMinimumSize(new Dimension(30, 30));
-        setPreferredSize(new Dimension(30, 30));
-        setMinimumSize(new Dimension(30, 30));
+        setMinimumSize(new Dimension(60, 30));
+        setPreferredSize(new Dimension(60, 30));
+        setMinimumSize(new Dimension(60, 30));
         pane = new NoWrapTextPane() {
             /**
 			 * 
