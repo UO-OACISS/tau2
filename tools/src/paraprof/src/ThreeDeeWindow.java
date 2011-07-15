@@ -15,18 +15,11 @@ import java.awt.image.BufferedImage;
 import java.awt.image.ImageObserver;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.Stack;
@@ -37,9 +30,6 @@ import javax.swing.JMenuBar;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 
-import com.graphbuilder.math.Expression;
-import com.graphbuilder.math.ExpressionTree;
-import com.graphbuilder.math.FuncMap;
 import com.graphbuilder.math.VarMap;
 
 import edu.uoregon.tau.paraprof.enums.SortType;
@@ -486,7 +476,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     		 if(settings.isCustomTopo()){
     			 String fileLoc=settings.getTopoDefFile();//"/home/wspear/Code/JavaMath/test.txt";
     			 //List<String> names = getCustomTopoNames(fileLoc);
-    	    		 Map<String,String>expressions = getExpressions(fileLoc,prefix);
+    	    		 Map<String,String>expressions = ThreeDeeGeneralPlotUtils.getExpressions(fileLoc,prefix);
     	        	 //Function topoFunction = settings.getTopoFunction(3);
     	        	 //ValueType topoValueType = settings.getTopoValueType(3);
     	             //Metric topoMetricID = settings.getTopoMetric(3);
@@ -558,6 +548,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 	    	            
     		            int rankIndex = 0;
     	    	    	VarMap vm = null;
+    	    	    	int pointsPerRank=-1;
+    	    	    	int loopPoints=1;
     	    	        for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
     	    	            Thread thread = it.next();
     	    	            
@@ -594,9 +586,18 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     	    	            }
     	    	            }
     	    	            
-    	    	            vm = getEvaluation(rankIndex,numThreads,thread.getNodeID(),thread.getContextID(),thread.getThreadID(),ppTrial.getDataSource().getNumberOfNodes(),ppTrial.getDataSource().getNumberOfContexts(thread.getNodeID()),ppTrial.getDataSource().getNumberOfThreads(thread.getNodeID(),thread.getContextID()),topoVals,varMins,varMaxs,varMeans,ueVal,expressions);
-    	    	            double[] cords = getRankCoordinate(vm);
+    	    	            vm = ThreeDeeGeneralPlotUtils.getEvaluation(rankIndex,numThreads,thread.getNodeID(),thread.getContextID(),thread.getThreadID(),ppTrial.getDataSource().getNumberOfNodes(),ppTrial.getDataSource().getNumberOfContexts(thread.getNodeID()),ppTrial.getDataSource().getNumberOfThreads(thread.getNodeID(),thread.getContextID()),topoVals,varMins,varMaxs,varMeans,ueVal,expressions);
     	    	            
+    	    	            if(pointsPerRank==-1){
+    	    	            	pointsPerRank = ThreeDeeGeneralPlotUtils.getPointsPerRank(vm);
+    	    	            	if(pointsPerRank>1){
+    	    	            		values = new float[numThreads*pointsPerRank][4];
+    	    	            		loopPoints=pointsPerRank;
+    	    	            	}
+    	    	            }
+    	    	            boolean multiColor=ThreeDeeGeneralPlotUtils.checkSet(vm,"color0");
+    	    	            double[][] cords = ThreeDeeGeneralPlotUtils.getRankCoordinate(vm, pointsPerRank,multiColor);
+    	    	            for(int ppn=0;ppn<loopPoints;ppn++){
     	    	            for (int f = 0; f < 4; f++) {
     	    	            	
     	    	            	//double theta=2f*Math.PI/sqrt*((float)(threadIndex%sqrt));
@@ -613,7 +614,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 //    	    	                	values[threadIndex][f] =  (float) Math.cos(phi)*100;//0;//(threadIndex/xdim/ydim)%zdim;
 //    	    	                }
     	    	            	//if(f<3){
-    	    	            	values[rankIndex][f] = (float) cords[f];
+    	    	            	values[rankIndex+ppn][f] = (float) cords[ppn][f];
     	    	            	//}
 //    	    	                else if(f==3)
 //    	    	                {
@@ -628,12 +629,13 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 //    	    	                        }
 //    	    	                	}
 //    	    	                }
-    	    	            	maxScatterValues[f] = Math.max(maxScatterValues[f], values[rankIndex][f]);
-    	    	                minScatterValues[f] = Math.min(minScatterValues[f], values[rankIndex][f]);
+    	    	            	maxScatterValues[f] = Math.max(maxScatterValues[f], values[rankIndex+ppn][f]);
+    	    	                minScatterValues[f] = Math.min(minScatterValues[f], values[rankIndex+ppn][f]);
     	    	            }
-    	    	            rankIndex++;
+    	    	            }
+    	    	            rankIndex+=loopPoints;
     	    	        }
-    	    	        restrict = checkSet(vm,"restrictDim");
+    	    	        restrict = ThreeDeeGeneralPlotUtils.checkSet(vm,"restrictDim");
     	    	        for(int i=0;i<3;i++){
     	    	        	tsizes[i]=(int) maxScatterValues[i];
     	    	        	//System.out.println(tsizes[i]);
@@ -646,7 +648,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
     	 String size_key=prefix+" Size";
     	 
         	 String tsize = ppTrial.getDataSource().getMetaData().get(size_key);
-        	 tsizes = parseTuple(tsize);
+        	 tsizes = ThreeDeeGeneralPlotUtils.parseTuple(tsize);
         	 for(int i=0;i<3;i++){
         		 maxScatterValues[i] = tsizes[i];
         	 	minScatterValues[i] = 0;
@@ -662,7 +664,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
              
              
     	 String coord = thread.getMetaData().get(coord_key);
-    	 int[] coords = parseTuple(coord);
+    	 int[] coords = ThreeDeeGeneralPlotUtils.parseTuple(coord);
     	 
     	 
     	 values[threadIndex][0]=coords[0];
@@ -701,185 +703,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener, KeyListene
 //    String[] expressions = {"sqrt(maxRank)","2*pi()/rootRanks*mod(rank,rootRanks)","pi()/rootRanks*(rank/rootRanks)","cos(theta)*sin(phi)*100","sin(theta)*sin(phi)*100","cos(phi)*100"};
 //    String[] ids = {"rootRanks","theta","phi","x","y","z"};
    
-    static final String BEGIN ="BEGIN_VIZ";
-    static final String END ="END_VIZ";
-    
-    public static List<String> getCustomTopoNames(String fileLoc){
-    	List<String> names = new ArrayList<String>();
-    	BufferedReader br;
-    	
-		try {
-			br = new BufferedReader(new FileReader(new File(fileLoc)));
-		
 
-		String s;
-		
-		 
-
-		while ((s = br.readLine()) != null) {
-			
-			if(s.startsWith(BEGIN))
-			{	
-			
-			int x1 = s.indexOf('=');
-			//int x2 = s.indexOf('"', x1 + 1);
-
-			//String id = s.substring(0,x1);
-			String name= s.substring(x1+1);
-			names.add(name);//expressions.put(id, exp);
-			}
-
-		}
-		
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    	
-    	return names;
-    }
-    
-    
-    private static String[] splitEQ(String s){
-    	String[] tuple = new String[2];
-    	
-    	int x1 = s.indexOf('=');
-
-		tuple[0] = s.substring(0,x1).trim();
-		tuple[1] = s.substring(x1+1).trim();
-    	
-    	return tuple;
-    }
-    
-    private static Map<String,String> getExpressions(String fileLoc,String expName){
-    	BufferedReader br;
-    	Map<String,String> expressions = new LinkedHashMap<String,String>();
-		try {
-			br = new BufferedReader(new FileReader(new File(fileLoc)));
-		
-
-		String s;
-		
-		 boolean foundExp=false;
-
-		while ((s = br.readLine()) != null) {
-			
-			if(!foundExp && s.startsWith(BEGIN)){
-				if(splitEQ(s)[1].equals(expName))
-				{
-					foundExp=true;
-					continue;
-				}
-			}
-			
-			if(foundExp){
-				if(s.equals(END))
-					break;
-				if(!s.contains("=")||s.startsWith("#"))
-					continue;
-				
-				String[] tuple = splitEQ(s);
-				
-				expressions.put(tuple[0], tuple[1]);
-			}
-			
-
-		}
-		
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return expressions;
-    }
-   
-    private static boolean checkSet(VarMap vm, String var){
-    	String[] names = vm.getVariableNames();
-    	for(int i=0;i<names.length;i++){
-    		if(names[i].equals(var)){
-    			return vm.getValue(var)!=0;
-    		}
-    	}
-    	return false;
-    }
-    
-    private static double[] getRankCoordinate(VarMap vm){
-    	double[] coords = new double[4];
-    	coords[0]=vm.getValue("x");
-    	coords[1]=vm.getValue("y");
-    	coords[2]=vm.getValue("z");
-    	coords[3]=vm.getValue("color");
-    	//System.out.println(coords[0]+" "+coords[1]+" "+coords[2]+" "+coords[3]+" ");
-    	return coords;
-    }
-    
-    private static VarMap getEvaluation(int rank,  int maxRank, int node, int context, int thread, int maxNode, int maxContext, int maxThread, float[] topoVals, float[] varMins, float varMaxs[], float varMeans[], float[] atomValue, Map<String,String> expressions){//String[] expressions, int rank,  int maxRank){
-    	
-    	FuncMap fm = new FuncMap();
-		fm.loadDefaultFunctions();
-    	VarMap vm = new VarMap(false);
-    	vm.setValue("maxRank", maxRank);
-    	vm.setValue("rank", rank);
-    	vm.setValue("color", topoVals[3]);
-    	vm.setValue("node", node);
-    	vm.setValue("context", context);
-    	vm.setValue("thread", thread);
-    	vm.setValue("event0.val", topoVals[0]);
-    	vm.setValue("event1.val", topoVals[1]);
-    	vm.setValue("event2.val", topoVals[2]);
-    	vm.setValue("event3.val", topoVals[3]);
-    	vm.setValue("event0.min", varMins[0]);
-    	vm.setValue("event1.min", varMins[1]);
-    	vm.setValue("event2.min", varMins[2]);
-    	vm.setValue("event3.min", varMins[3]);
-    	vm.setValue("event0.max", varMaxs[0]);
-    	vm.setValue("event1.max", varMaxs[1]);
-    	vm.setValue("event2.max", varMaxs[2]);
-    	vm.setValue("event3.max", varMaxs[3]);
-    	vm.setValue("event0.mean", varMeans[0]);
-    	vm.setValue("event1.mean", varMeans[1]);
-    	vm.setValue("event2.mean", varMeans[2]);
-    	vm.setValue("event3.mean", varMeans[3]);
-    	vm.setValue("atomic0", atomValue[0]);
-    	vm.setValue("atomic1", atomValue[1]);
-    	vm.setValue("atomic2", atomValue[2]);
-    	vm.setValue("atomic3", atomValue[3]);
-    	
-    	Expression x;
-    	double res;
-    	
-    	Iterator<Entry<String,String>> it = expressions.entrySet().iterator();
-    	
-    	while(it.hasNext()){
-    		Entry<String,String> e = it.next();
-    		x = ExpressionTree.parse(e.getValue());
-    		res = x.eval(vm,fm);
-    		vm.setValue(e.getKey(), res);
-    	}
-    	return vm;
-    	
-    }
-    
-    private static int[] parseTuple(String tuple){
-    	
-    	
-    	tuple = tuple.substring(1,tuple.length()-1);
-    	String[] tmp =  tuple.split(",");
-    	int[] tres = new int[3];
-    	for(int i=0;i<tmp.length;i++){
-    		if(i<=tmp.length)
-    			tres[i]=Integer.parseInt(tmp[i]);
-    		else
-    			tres[i]=0;
-    	}
-    	
-    	return tres;
-    }
-    
     
 //    private float[][] customTopology(int numThreads){
 //    	

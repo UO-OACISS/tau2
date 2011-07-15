@@ -18,6 +18,29 @@ y=sin(theta)*radius+offsety
 z=floor(rank/maxHeight)
 END_VIZ
 
+
+
+BEGIN_VIZ=2Random
+x0=rand()*100
+y0=rand()*100
+z0=rand()*100
+color0=rand()*100
+
+
+x1=x0+110
+y1=y0+110
+z1=z0+110
+color1=rand()*100
+
+x2=x0+220
+y2=y0+220
+z2=z0+220
+color2=rand()*100
+
+END_VIZ
+
+
+
 BEGIN_VIZ=Random
 x=rand()*100
 y=rand()*100
@@ -86,6 +109,17 @@ y=mod(floor(rank/xdim),ydim)
 z=mod(floor(rank/xdim/ydim),zdim)
 END_VIZ
 
+
+BEGIN_VIZ=12Process10240_32x32x10Block
+xdim=32
+ydim=32
+zdim=10
+
+x=mod(rank,xdim)+64*floor(rank/20480)
+y=mod(floor(rank/xdim),ydim)
+z=mod(floor(rank/xdim/ydim),zdim)
+END_VIZ
+
 BEGIN_VIZ=ScatterTest
 restrictDim=1
 x=event0.val
@@ -100,25 +134,4 @@ y=(event1.val-event1.min)/(event1.max-event1.min)
 z=(event2.val-event2.min)/(event2.max-event2.min)
 END_VIZ
 
-BEGIN_VIZ=MinMaxMean
-restrictDim=1
-x=max(event0.val,event0.mean)
-y=max(event1.val,event1.mean)
-z=max(event2.val,event2.mean)
-END_VIZ
 
-BEGIN_VIZ=atomic
-x=rank
-y=0
-z=atomic
-END_VIZ
-
-BEGIN_VIZ=AtomicSphere
-rootRanks=sqrt(maxRank)
-theta=2*pi()/rootRanks*mod(rank,rootRanks)
-phi=pi()/rootRanks*(ceil(rank/rootRanks))
-x=cos(theta)*sin(phi)*100
-y=sin(theta)*sin(phi)*100
-z=cos(phi)*100
-color=atomic
-END_VIZ

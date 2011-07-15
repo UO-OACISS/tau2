@@ -450,9 +450,13 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         final JTextField functionField;
 
         String fname = "   <none>";
-        if (settings.getTopoFunction(i) != null) {
-            fname = settings.getTopoFunction(i).getName();
+        //String fname = "   <none>";
+        if (settings.getScatterFunctions()[i] != null) {
+            fname = settings.getScatterFunctions()[i].getName();
         }
+//        if (settings.getTopoFunction(i) != null) {
+//            fname = settings.getTopoFunction(i).getName();
+//        }
 
         functionField = new JTextField(fname);
         functionField.setToolTipText(fname);
@@ -563,7 +567,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
     	
     	String defFile = settings.getTopoDefFile();
     	if(defFile!=null){
-    		List<String> tnames = ThreeDeeWindow.getCustomTopoNames(defFile);
+    		List<String> tnames = ThreeDeeGeneralPlotUtils.getCustomTopoNames(defFile);
     		for(int i =0;i<tnames.size();i++){
     			topoComboBox.addItem(tnames.get(i));
     		}
@@ -1159,6 +1163,8 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
          gbc.weightx = 0.1;
          //addCompItem(panel, new JLabel("Topology"), gbc, 0, 8, 1, 1);
          addCompItem(panel, createTopoSelectionPanel("Topology"), gbc, 0, 7, 2, 1);
+         
+         this.topoComboBox.setSelectedIndex(0);
     	
          return panel;
     	
