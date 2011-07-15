@@ -110,7 +110,8 @@ void Tau_sampling_outputTraceCallstack(int tid, void *pc, void *context);
 extern FILE *ebsTrace[];
 
 #ifdef TAU_USE_HPCTOOLKIT
-extern int hpctoolkit_process_started;
+extern int hpctoolkit_process_started; // this is defined in hpctoolkit patch
+extern "C" void Tau_sampling_event_startHpctoolkit(int tid, void **address);
 #endif /* TAU_USE_HPCTOOLKIT */
 
 #endif /* _TAU_SAMPLING_H_ */

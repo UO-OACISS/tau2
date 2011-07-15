@@ -187,6 +187,19 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   TheFunctionDB().push_back(this);
   FunctionId = RtsLayer::GenerateUniqueId();
 
+  // Initialize EBS structures. These will be created as and when necessary.
+  //  pcHistogram = NULL;
+  // *CWL* - this is an attempt to minimize the scenario where a sample
+  //         requires the use of an actual malloc
+  //         while in the middle of some other malloc call.
+  pcHistogram = NULL;
+  if (TauEnv_get_ebs_enabled()) {
+    // create structure only if EBS is required.
+    pcHistogram = new map<caddr_t, unsigned int, std::less<caddr_t>, ss_allocator< std::pair<caddr_t, unsigned int> > >();
+  }
+  ebsIntermediate = NULL;
+  parentTauContext = NULL;
+
 #ifdef TAU_VAMPIRTRACE
   string tau_vt_name(string(Name)+" "+string(Type));
   FunctionId = TAU_VT_DEF_REGION(tau_vt_name.c_str(), VT_NO_ID, VT_NO_LNO,
@@ -481,6 +494,28 @@ string *FunctionInfo::GetFullName() {
 
   }
   return FullName;
+}
+
+/* EBS Sampling Profiles */
+
+void FunctionInfo::addPcSample(caddr_t pc) {
+  if (!TauEnv_get_ebs_enabled()) {
+    // This should be an error! We'll ignore it for now!
+    return;
+  }
+  if (pcHistogram == NULL) {
+    // *CWL* - this should never happen.
+    pcHistogram = new map<caddr_t, unsigned int, 
+      std::less<caddr_t>, ss_allocator< std::pair<caddr_t, unsigned int> > >();
+  }
+  map<caddr_t, unsigned int,
+    std::less<caddr_t>, ss_allocator< std::pair<caddr_t, unsigned int> > >::iterator it;
+  it = pcHistogram->find(pc);
+  if (it == pcHistogram->end()) {
+    pcHistogram->insert(std::pair<caddr_t, unsigned int>(pc,1));
+  } else {
+    (*pcHistogram)[pc] = it->second++;
+  }
 }
 
 /***************************************************************************

@@ -293,28 +293,18 @@ void metric_read_cupti(int tid, int idx, double values[])
 {
 
 	//printf("is the cupti layer is initialized? %d\n", Tau_CuptiLayer_is_initialized());
-	if (Tau_CuptiLayer_is_initialized())
-	{
-		uint64_t* counterDataBuffer = (uint64_t*) malloc
-			(Tau_CuptiLayer_get_num_events()*sizeof(uint64_t));
-		Tau_CuptiLayer_read_counters(counterDataBuffer);
+	uint64_t* counterDataBuffer = (uint64_t*) malloc
+		(Tau_CuptiLayer_get_num_events()*sizeof(uint64_t));
+	Tau_CuptiLayer_read_counters(counterDataBuffer);
 
-		if (counterDataBuffer)
-		{
-			for (int i=0; i<Tau_CuptiLayer_get_num_events(); i++)
-			{
-				values[idx + i] = (double) counterDataBuffer[i];
-				//printf("cupti value %d is: %lf.\n", i, values[idx + i]);
-			}
-		}
-		free(counterDataBuffer);
-	}
-	else
+	if (counterDataBuffer)
 	{
 		for (int i=0; i<Tau_CuptiLayer_get_num_events(); i++)
 		{
-			values[idx + i] = 0;
+			values[idx + i] = (double) counterDataBuffer[i];
+			//printf("cupti value %d is: %lf.\n", i, values[idx + i]);
 		}
 	}
+	free(counterDataBuffer);
 }
 #endif //CUPTI
