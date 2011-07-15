@@ -3067,6 +3067,17 @@ then
           fi
           additional_mpiincs="$additional_mpiincs $mpiincf90dir"
         fi
+
+        if [ -r /opt/ibmhpc/ppe.poe/include/ibmmpi/mpi.h ]
+        then
+          mpiinc=/opt/ibmhpc/ppe.poe/include/ibmmpi
+          mpiincf90dir='-I/opt/ibmhpc/ppe.poe/include/ibmmpi/thread'
+          if [ $machine = ibm64linux ]
+          then
+            mpiincf90dir='-I/opt/ibmhpc/ppe.poe/include/ibmmpi/thread64'
+          fi
+          additional_mpiincs="$additional_mpiincs $mpiincf90dir"
+        fi
         ;;
   rs6000|ibm64)
 	mpiinc=/usr/lpp/ppe.poe/include
@@ -3183,6 +3194,22 @@ then
           mpilib=/opt/ibmhpc/ppe.poe/lib/libmpi64
           additional_mpilibs='-lpoe -llapi'
           mpilibrary="-lmpi_ibm $additional_mpilibs"
+        fi
+
+        if [ -r /opt/ibmhpc/ppe.poe/lib64/libmpi_ibm.so ]
+        then
+          mpilib=/opt/ibmhpc/ppe.poe/lib64/
+          additional_mpilibs='-lpoe -llapi'
+          mpilibrary="-lmpi_ibm $additional_mpilibs"
+          echo "Adding MPI libs from $mpilib"
+          # Cases
+          if [ -r $mpilib/libmpi_ibm.so ]; then
+            echo "NOTE: IBM MPI found!"
+            if [ -f $mpilib/libmpif90.a -o -f $mpilib/libmpif90.so ] ; then
+              echo "Fortran libmpif90.* found"
+              mpiflibargs="-L$mpilib -lmpif90 "
+            fi
+          fi
         fi
         ;;
        
