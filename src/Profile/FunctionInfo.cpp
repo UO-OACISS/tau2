@@ -195,7 +195,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   pcHistogram = NULL;
   if (TauEnv_get_ebs_enabled()) {
     // create structure only if EBS is required.
-    pcHistogram = new map<caddr_t, unsigned int, std::less<caddr_t>, ss_allocator< std::pair<caddr_t, unsigned int> > >();
+    pcHistogram = new map<caddr_t, unsigned int, std::less<caddr_t>, SS_ALLOCATOR< std::pair<caddr_t, unsigned int> > >();
   }
   ebsIntermediate = NULL;
   parentTauContext = NULL;
@@ -506,10 +506,10 @@ void FunctionInfo::addPcSample(caddr_t pc) {
   if (pcHistogram == NULL) {
     // *CWL* - this should never happen.
     pcHistogram = new map<caddr_t, unsigned int, 
-      std::less<caddr_t>, ss_allocator< std::pair<caddr_t, unsigned int> > >();
+      std::less<caddr_t>, SS_ALLOCATOR< std::pair<caddr_t, unsigned int> > >();
   }
   map<caddr_t, unsigned int,
-    std::less<caddr_t>, ss_allocator< std::pair<caddr_t, unsigned int> > >::iterator it;
+    std::less<caddr_t>, SS_ALLOCATOR< std::pair<caddr_t, unsigned int> > >::iterator it;
   it = pcHistogram->find(pc);
   if (it == pcHistogram->end()) {
     pcHistogram->insert(std::pair<caddr_t, unsigned int>(pc,1));

@@ -600,7 +600,7 @@ void Tau_sampling_finalizeProfile(int tid) {
     }
     map<caddr_t, unsigned int,
       std::less<caddr_t>, 
-      ss_allocator< std::pair<caddr_t, unsigned int> > >::iterator it;
+      SS_ALLOCATOR< std::pair<caddr_t, unsigned int> > >::iterator it;
     for (it = parentTauContext->pcHistogram->begin();
 	 it != parentTauContext->pcHistogram->end(); it++) {
       caddr_t addr = (caddr_t)it->first;
