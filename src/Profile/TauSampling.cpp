@@ -159,18 +159,26 @@ initSuspendFlags suspendFlagsInitializer = initSuspendFlags();
 #define PPC_REG_PC 32
 
 
+void issueUnavailableWarningIfNecessary(char *text) {
+  static bool warningIssued = false;
+  if (!warningIssued) {
+    fprintf(stderr, text);
+    warningIssued = true;
+  }
+}
+
 static inline caddr_t get_pc(void *p) {
   struct ucontext *uc = (struct ucontext *)p;
   caddr_t pc;
 
 #ifdef sun
-  fprintf(stderr, "Warning, TAU Sampling does not work on solaris\n");
+  issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on solaris\n");
   return 0;
 #elif __APPLE__
-  fprintf(stderr, "Warning, TAU Sampling does not work on apple\n");
+  issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on apple\n");
   return 0;
 #elif _AIX
-  fprintf(stderr, "Warning, TAU Sampling does not work on AIX\n");
+  issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on AIX\n");
   return 0;
 #else
   struct sigcontext *sc;
@@ -200,13 +208,13 @@ static inline caddr_t get_pc(void *p) {
 extern "C" void Tau_sampling_suspend() {
   int tid = RtsLayer::myThread();
   suspendSampling[tid] = 1;
-//   fprintf (stderr, "suspended sampling on thread %d\n", tid);
+  TAU_VERBOSE("Tau_sampling_suspend: on thread %d\n", tid);
 }
 
 extern "C" void Tau_sampling_resume() {
   int tid = RtsLayer::myThread();
   suspendSampling[tid] = 0;
-//   fprintf (stderr, "resumed sampling on thread %d\n", tid);
+  TAU_VERBOSE("Tau_sampling_resume: on thread %d\n", tid);
 }
 
 extern "C" void Tau_sampling_dlopen() {
