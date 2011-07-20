@@ -11,6 +11,32 @@
 
 using namespace std;
 
+class openCLGpuId : public gpuId {
+
+	cl_device_id id;
+	double sync_offset;
+
+public:
+/*	cudaGpuId(const NvU64 cId, const NvU32 dId) :
+		contextId(cId), deviceId(dId) {} */
+	
+	openCLGpuId(cl_device_id id, double sync);
+	openCLGpuId *getCopy() { 
+			openCLGpuId *c = new openCLGpuId(*this);
+			return c;
+	}
+
+	bool equals(const gpuId *other) const
+	{
+		return id  == ((openCLGpuId *)other)->id;
+	}
+	double syncOffset();
+	
+  char* printId();
+	x_uint64 id_p1() { return (x_uint64) id; }
+	x_uint64 id_p2() { return 0; }
+};
+
 class callback_data
 {
 	public:
@@ -19,9 +45,10 @@ class callback_data
 	FunctionInfo* callingSite;
 	cl_event* event;
 	int memcpy_type;
+	openCLGpuId *id;
 
-	callback_data(char* n, FunctionInfo* cs, cl_event* ev);
-	callback_data(char* n, FunctionInfo* cs, cl_event* ev, int memtype);
+	callback_data(char* n, openCLGpuId *id, FunctionInfo* cs, cl_event* ev);
+	callback_data(char* n, openCLGpuId *id, FunctionInfo* cs, cl_event* ev, int memtype);
 	bool isMemcpy();
 	~callback_data();
 };
@@ -40,16 +67,17 @@ void Tau_opencl_enter_memcpy_event(const char *name, int id, int size, int Memcp
 
 void Tau_opencl_exit_memcpy_event(const char *name, int id, int MemcpyType);
 
-void Tau_opencl_register_gpu_event(const char *name, int id, double start,
+void Tau_opencl_register_gpu_event(const char *name, openCLGpuId *id, double start,
 double stop);
 
-void Tau_opencl_register_memcpy_event(int id, double start, double stop, int
+void Tau_opencl_register_memcpy_event(const char *name, openCLGpuId *id, double start, double stop, int
 transferSize, int MemcpyType);
 
 void Tau_opencl_enqueue_event(callback_data* new_data);
 
 void Tau_opencl_register_sync_event();
 
+openCLGpuId *Tau_opencl_retrive_gpu(cl_command_queue cq);
 
 //Memcpy event callback
 

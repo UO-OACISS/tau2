@@ -1,3 +1,17 @@
+###############################################################################
+#
+# processCPI.py 
+# PerfExplorer Script for processing the Power5 CPI stack
+#
+# usage: 
+#    perfexplorer \
+#       -c perfexplorer_working \
+#       -n \
+#       -i <full-path>/processCPI.py \
+#       -p "inputData=<BurstCluster-cluster-info.csv>,rules=<full-path>/CPI-Stack.drl"
+#
+###############################################################################
+
 from edu.uoregon.tau.perfexplorer.glue import *
 from edu.uoregon.tau.perfexplorer.rules import *
 from edu.uoregon.tau.perfexplorer.client import *
@@ -12,9 +26,10 @@ True = 1
 False = 0
 inputData = "cpi.csv"
 rules = "./CPI-Stack.drl"
-fractionThreshold = 01.0        # ignore clusters smaller than this fraction of runtime
+verbose = "no"
+fractionThreshold = 10.0        # ignore clusters smaller than this fraction of runtime
                                 # Why: only examine significant clusters
-cpiThreshold = 1.00             # ignore clusters with CPI smaller than this
+cpiThreshold = 0.80             # ignore clusters with CPI smaller than this
                                 # Why: no need to examine good CPI clusters
 completionThreshold = 0.3       # ignore completion stalls less than this
                                 # Why: should be .25, higher value means pipeline stalled
@@ -60,12 +75,14 @@ issueRateThreshold = 2.0        # ignore issue rates more than this
 def getParameters():
 	global inputData
 	global rules
+	global verbose
 	parameterMap = PerfExplorerModel.getModel().getScriptParameters()
 	keys = parameterMap.keySet()
-	for key in keys:
-		print key, parameterMap.get(key)
+	#for key in keys:
+	#	print key, parameterMap.get(key)
 	inputData = parameterMap.get("inputData")
 	rules = parameterMap.get("rules")
+	verbose = parameterMap.get("verbose")
 
 #########################################################################################
 
@@ -124,6 +141,7 @@ def parseCounters(info, threshold):
 	percentDurations=[]
 	counters={} # this will be a dictionary of lists
 	maxClusters=0
+	localThreshold=fractionThreshold/100.0
 
 	for line in i.readlines():
 		tokens = line.strip().split(',')
@@ -146,6 +164,8 @@ def parseCounters(info, threshold):
 			counts=[]
 			for j in range(1,len(tokens)):
 				if tokens[j] == "nan" or tokens[j] == "-nan":
+					if percentDurations[j-1] >= localThreshold:
+						print "! WARNING ! 'nan' encountered for ", tokens[0].strip("\""), "- results are not trustworthy for cluster", j-1
 					counts.append(0)
 				else:
 					counts.append(int(tokens[j]))
@@ -332,6 +352,8 @@ def computeCPIStats(names, percentDurations, counters, currentCluster):
 	cpiStack.put(String("LSU Instruction Mix (overestimate)"),Double(float(handleNone(counters,"PM_LD_REF_L1",j)+handleNone(counters,"PM_LD_REF_L1",j))/divisor))
 	# Groups completed per instruction
 	cpiStack.put(String("Groups per Instruction"),Double(float(handleNone(counters,"PM_GRP_CMPL",j))/divisor))
+	# Instructions Completed per Group - the inverse of Groups completed per instruction
+	cpiStack.put(String("Instructions per Group"),Double(divisor/(float(handleNone1(counters,"PM_GRP_CMPL",j)))))
 	
 	# branch misprediction rate
 	divisor = float(handleNone1(counters,"PM_BR_ISSUED",j))
@@ -343,6 +365,7 @@ def computeCPIStats(names, percentDurations, counters, currentCluster):
 
 def processRules(cpiStack):
 	global rules
+	global verbose
 	ruleHarness = RuleHarness.useGlobalRules(rules)
 	# have to use assertObject2, for some reason - why is the rule harness instance null?
 	ruleHarness.setGlobal("cpiThreshold",Double(cpiThreshold))
@@ -364,6 +387,11 @@ def processRules(cpiStack):
 	fact = FactWrapper("Overall", "CPI Stack", cpiStack)
 	handle = ruleHarness.assertObject(fact)
 	fact.setFactHandle(handle)
+	print verbose
+	if verbose == "yes":
+		factDebug = FactWrapper("Dump CPI", "CPI Stack", cpiStack)
+		handleDebug = ruleHarness.assertObject(factDebug)
+		factDebug.setFactHandle(handleDebug)
 	ruleHarness.processRules()
 
 	return

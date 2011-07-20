@@ -72,8 +72,10 @@ testmax=`$BINDIR/tau_javamax.sh`
 if [ "x$testmax" != "xfailed" -a "x$platform" != "xDarwin" ] ; then
     MEMORY="-Xmx${testmax}m"
 fi
-if [ "x$platform" = "xDarwin" -a $testmax -gt 819200 -a $testmax -lt 819200000 ] ; then
-    MEMORY="-Xmx2000m"
+if [ "x$platform" = "xDarwin" ] ; then 
+   if [ $testmax -gt 819200 -a $testmax -lt 819200000 ] ; then
+      MEMORY="-Xmx2000m"
+   fi
 fi
 
 

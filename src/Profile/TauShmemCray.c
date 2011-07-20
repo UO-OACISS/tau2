@@ -1,5 +1,10 @@
 #include <TAU.h>
 #include <shmem.h>
+int TAUDECL tau_totalnodes(int set_or_get, int value);
+int tau_shmem_tagid=0 ; 
+#define TAU_SHMEM_TAGID tau_shmem_tagid
+#define TAU_SHMEM_TAGID_NEXT (++tau_shmem_tagid) % 256
+
 /******************************************************/
 /******************************************************/
 
@@ -1299,7 +1304,6 @@ void shmem_int_put__( int * trg, const int * src, size_t len, int pe)
 /******************************************************/
 /******************************************************/
 
-
 /******************************************************
 ***      shmem_long_put wrapper function 
 ******************************************************/
@@ -1308,11 +1312,13 @@ void shmem_long_put( long * trg, const long * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_long_put()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(long)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_long_put( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_long_put( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(long)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -9676,6 +9682,7 @@ void shmem_init( )
 #else /* !TAU_P_SHMEM */ 
   pshmem_init( ) ; 
 #endif /* TAU_P_SHMEM */ 
+  tau_totalnodes(1,shmem_n_pes());
   TAU_PROFILE_STOP(t); 
   return ; 
 }

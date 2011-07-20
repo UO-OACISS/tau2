@@ -13,19 +13,19 @@ if [ ! -d "$1" ] ; then
     exit 1
 fi
 
-if [ ! -d "$1"/plugins/ ] ; then
-    echo "Warning: No plugins directory in eclipse root.  Creating directory"
-    mkdir $1/plugins/
+if [ ! -d "$1"/dropins/ ] ; then
+    echo "Warning: No dropins directory in eclipse root.  Creating directory"
+    mkdir $1/dropins/
 fi
 
 CURRENT_DIR=`pwd`
 
-cd $1/plugins/
+cd $1/dropins/
 PLUG_DIR=`pwd`
 cd $CURRENT_DIR
 
 cd `dirname $0`
-echo "Installing to $1/plugins"
+echo "Installing to $1/dropins"
 echo "..."
 
 tar -zxf ./plugins.tgz

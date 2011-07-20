@@ -761,9 +761,15 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 		label = yaxisName.getText();
 		if (label == null || label.length() == 0) {
-			series = (String)this.series.getSelectedItem();;
-			if (series.equalsIgnoreCase(ATOMIC_EVENT_NAME)) {
+			series = (String)this.series.getSelectedItem();
+			if(this.scalaRB.isSelected()){
+				label = "Speedup Factor";
+			}else if(this.efficRB.isSelected()){
+				label = "Efficiency (%) ";
+			}else if (series.equalsIgnoreCase(ATOMIC_EVENT_NAME)) {
 				label = (String)yaxisStat.getSelectedItem()+"."+(String)yaxisValue.getSelectedItem();
+				label += " - "  + (String)this.units.getSelectedItem();
+
 			} else {
 				// build something intelligible
 
@@ -780,8 +786,9 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				//				} else if (tmp.indexOf("total") >= 0) {
 				//					label = "Total " + (String)this.metric.getSelectedItem();
 				//				}
+				label += " - "  + (String)this.units.getSelectedItem();
 			}
-		}
+		}else
 		label += " - "  + (String)this.units.getSelectedItem();
 		facade.setChartYAxisName(tmp, label);
 	}
@@ -804,6 +811,20 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			} else {
 				title = (String)metric.getSelectedItem();
 			}
+			String scaling;
+			if(this.strongScaling.isSelected()){
+			 scaling = "(Strong Scaling): "; 
+			}else{
+				scaling = "(Weak Scaling): ";
+			}
+			if(this.scalaRB.isSelected()){
+				title = "Relative Speedup "+scaling+ title;
+			}else if(this.efficRB.isSelected()){
+				title = "Efficiency "+scaling+ title;
+			}else{
+				title = "Value Chart: "+ title;
+			}
+			
 		}
 		facade.setChartTitle(title);
 
@@ -860,9 +881,11 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		facade.setMetricName(tmp);
 
 		// units name
-		obj = units.getSelectedItem();
-		tmp = (String)obj;
-		facade.setChartUnits(tmp);
+		
+			obj = units.getSelectedItem();
+			tmp = (String)obj;
+			facade.setChartUnits(tmp);
+		
 
 		// dimension reduction
 		obj = dimension.getSelectedItem();
@@ -1180,7 +1203,8 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 				// get the baseline values
 				edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData.CategoryDataRow baseline = rawData.getRowData(0);
-
+			
+				
 				// iterate through the values
 				for (int i = 0 ; i < rawData.getRows() ; i++) {
 					edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
@@ -1192,15 +1216,14 @@ public class ChartPane extends JScrollPane implements ActionListener {
 					if(s==null){
 						s=new XYSeries(shortName(row.series), true, false);
 						labelMap.put(row.series, s);
-
 					}
 
 					if (model.getConstantProblem().booleanValue()) {
-						dataset.addValue(baseline.value / row.value, shortName(row.series), row.categoryInteger);
-						s.add(row.categoryInteger.doubleValue(), baseline.value / row.value);
+						dataset.addValue(baseline.value / row.value * 100, shortName(row.series), row.categoryInteger);
+						s.add(row.categoryInteger.doubleValue(), baseline.value / row.value *100);
 					} else {
-						dataset.addValue((baseline.value * baseline.categoryInteger.doubleValue())/ (row.value * row.categoryInteger.doubleValue()), shortName(row.series), row.categoryInteger);
-						s.add(row.categoryInteger.doubleValue(), (baseline.value * baseline.categoryInteger.doubleValue())/ (row.value * row.categoryInteger.doubleValue()));
+						dataset.addValue((baseline.value * baseline.categoryInteger.doubleValue())/ (row.value * row.categoryInteger.doubleValue())*100, shortName(row.series), row.categoryInteger);
+						s.add(row.categoryInteger.doubleValue(), (baseline.value * baseline.categoryInteger.doubleValue())/ (row.value * row.categoryInteger.doubleValue())*100);
 					}
 				}
 				ideal=new XYSeries(IDEAL, true, false);
@@ -1210,8 +1233,8 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				List<Integer> keys = dataset.getColumnKeys();
 				for (int i = 0 ; i < keys.size() ; i++) {
 					Integer key = (Integer)keys.get(i);
-					dataset.addValue(1.0, IDEAL, key);
-					ideal.add(key.doubleValue(),1.0);
+					dataset.addValue(100, IDEAL, key);
+					ideal.add(key.doubleValue(),100);
 				}
 
 			} else {
