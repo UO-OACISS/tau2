@@ -237,6 +237,15 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
   rcalledfunc.append("(");
   proto.append("(");
   protoname.append("_p");
+
+  if (r->signature()->hasEllipsis()) {
+    // For a full discussion of why vararg functions are difficult to wrap
+    // please see: http://www.swig.org/Doc1.3/Varargs.html#Varargs
+ 
+    impl <<"#warning \"TAU: Not generating wrapper for vararg function "<<r->name()<<"\""<<endl;
+    cout <<"TAU: Not generating wrapper for vararg function "<<r->name()<<endl;
+    return;
+  }
   if ((grp = r->signature()->returnType()->isGroup()) != 0) { 
     returntypename = grp->name();
   } else {
@@ -472,7 +481,9 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, ofstream& header, ofstream& impl, ofs
     {
        printRoutineInOutputFile(*rit, header, impl, group_name, runtime, runtime_libname);
        if (runtime == -1) { /* -Wl,-wrap,<func>,-wrap,<func> */
-         linkoptsfile <<"-Wl,-wrap,"<<(*rit)->name()<<" ";
+	 if (!(*rit)->signature()->hasEllipsis()) { /* does not have varargs */
+           linkoptsfile <<"-Wl,-wrap,"<<(*rit)->name()<<" ";
+         }
        }
 
     }

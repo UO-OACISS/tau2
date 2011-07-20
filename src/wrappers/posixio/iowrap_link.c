@@ -227,11 +227,11 @@ int __wrap_creat64(const char *pathname, mode_t mode)
   return ret;
 }
 
-FILE * __real_fopen(const char *pathname, mode_t mode);
+FILE * __real_fopen(const char *pathname, const char * mode);
 /*********************************************************************
  * fopen
  ********************************************************************/
-FILE * __wrap_fopen(const char *pathname, mode_t mode)
+FILE * __wrap_fopen(const char *pathname, const char * mode)
 {
   FILE * ret;
   Tau_iowrap_checkInit();
@@ -249,6 +249,12 @@ FILE * __wrap_fopen(const char *pathname, mode_t mode)
   if (ret != NULL) {
     Tau_iowrap_registerEvents(fileno(ret), pathname);
   }
+/* We can't track mode (const char *) or ret (FILE *) in fopen:
+  if (TauEnv_get_track_io_params()) {
+    TAU_REGISTER_EVENT(fopen_ret, "FOPEN ret");
+    TAU_EVENT(fopen_ret, ret);
+  }
+*/
 
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
@@ -258,11 +264,11 @@ FILE * __wrap_fopen(const char *pathname, mode_t mode)
   return ret;
 }
 
-FILE*  __real_fopen64(const char *pathname, mode_t mode);
+FILE*  __real_fopen64(const char *pathname, const char * mode);
 /*********************************************************************
  * fopen64
  ********************************************************************/
-FILE * __wrap_fopen64(const char *pathname, mode_t mode)
+FILE * __wrap_fopen64(const char *pathname, const char * mode)
 {
   FILE * ret;
   Tau_iowrap_checkInit();
@@ -280,6 +286,13 @@ FILE * __wrap_fopen64(const char *pathname, mode_t mode)
   if (ret != NULL) {
     Tau_iowrap_registerEvents(fileno(ret), pathname);
   }
+
+/* We can't track mode (const char *) or ret (FILE *) in fopen64:
+  if (TauEnv_get_track_io_params()) {
+    TAU_REGISTER_EVENT(fopen64_ret, "FOPEN64 ret");
+    TAU_EVENT(fopen64_ret, ret);
+  }
+*/
 
   TAU_PROFILE_STOP(t);
   Tau_global_decr_insideTAU();
@@ -700,10 +713,10 @@ size_t __wrap_fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
   }
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_EVENT(read_fd, "FREAD fd");
-    TAU_REGISTER_EVENT(read_ret, "FREAD ret");
-    TAU_EVENT(read_fd, fileno(stream));
-    TAU_EVENT(read_ret, ret);
+    TAU_REGISTER_EVENT(fread_fd, "FREAD fd");
+    TAU_REGISTER_EVENT(fread_ret, "FREAD ret");
+    TAU_EVENT(fread_fd, fileno(stream));
+    TAU_EVENT(fread_ret, ret);
   }
 
   TAU_PROFILE_STOP(t);
@@ -870,9 +883,9 @@ size_t __wrap_fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream)
   }
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_EVENT(fwrite_fd, "FWRITE count");
+    TAU_REGISTER_EVENT(fwrite_fd, "FWRITE fd");
     TAU_REGISTER_EVENT(fwrite_ret, "FWRITE ret");
-    TAU_EVENT(fwrite_fd, count);
+    TAU_EVENT(fwrite_fd, fileno(stream));
     TAU_EVENT(fwrite_ret, ret);
   }
 
@@ -974,10 +987,12 @@ ssize_t __wrap_pwrite(int fd, void *buf, size_t nbytes, off_t offset)
   }
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_EVENT(write_fd, "PWRITE fd");
-    TAU_REGISTER_EVENT(write_ret, "PWRITE ret");
-    TAU_EVENT(write_fd, fd);
-    TAU_EVENT(write_ret, ret);
+    TAU_REGISTER_EVENT(pwrite_fd, "PWRITE fd");
+    TAU_REGISTER_EVENT(pwrite_ret, "PWRITE ret");
+    TAU_REGISTER_EVENT(pwrite_offset, "PWRITE offset");
+    TAU_EVENT(pwrite_fd, fd);
+    TAU_EVENT(pwrite_ret, ret);
+    TAU_EVENT(pwrite_ret, offset);
   }
 
   TAU_PROFILE_STOP(t);
@@ -1081,10 +1096,12 @@ ssize_t __wrap_pread(int fd, void *buf, size_t nbytes, off_t offset)
   }
 
   if (TauEnv_get_track_io_params()) {
-    TAU_REGISTER_EVENT(read_fd, "PREAD fd");
-    TAU_REGISTER_EVENT(read_ret, "PREAD ret");
-    TAU_EVENT(read_fd, fd);
-    TAU_EVENT(read_ret, ret);
+    TAU_REGISTER_EVENT(pread_fd, "PREAD fd");
+    TAU_REGISTER_EVENT(pread_ret, "PREAD ret");
+    TAU_REGISTER_EVENT(pread_offset, "PREAD offset");
+    TAU_EVENT(pread_fd, fd);
+    TAU_EVENT(pread_ret, ret);
+    TAU_EVENT(pread_offset, offset);
   }
 
   TAU_PROFILE_STOP(t);
@@ -1388,9 +1405,40 @@ int __wrap_stat(const char *path, struct stat *buf)
 }
 
 /*********************************************************************
+ * stat64
+ ********************************************************************/
+int __wrap_stat64(const char *path, struct stat *buf)
+{
+  int ret;
+
+  Tau_iowrap_checkInit();
+  if (Tau_iowrap_checkPassThrough()) {
+    return __real_stat64(path, buf);
+  }
+  Tau_global_incr_insideTAU();
+  TAU_PROFILE_TIMER(t, "stat64()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  ret = __real_stat64(path, buf);
+
+  if (TauEnv_get_track_io_params()) {
+    TAU_REGISTER_EVENT(stat64_ret, "STAT64 ret");
+    TAU_EVENT(stat64_ret, ret);
+  }
+
+
+  TAU_PROFILE_STOP(t);
+  TAU_VERBOSE("stat64 called: path=%s\n", path);
+  Tau_global_decr_insideTAU();
+
+  return ret;
+
+}
+
+/*********************************************************************
  * fstat
  ********************************************************************/
-int __wrap_fstat(int filedes, struct stat *buf)
+int __wrap_fstat(int filedes, struct stat64 *buf)
 {
   int ret;
 
@@ -1413,6 +1461,38 @@ int __wrap_fstat(int filedes, struct stat *buf)
 
   TAU_PROFILE_STOP(t);
   TAU_VERBOSE("fstat called: filedes=%d\n", filedes);
+  Tau_global_decr_insideTAU();
+
+  return ret;
+
+}
+
+/*********************************************************************
+ * fstat64
+ ********************************************************************/
+int __wrap_fstat64(int filedes, struct stat64 *buf)
+{
+  int ret;
+
+  Tau_iowrap_checkInit();
+  if (Tau_iowrap_checkPassThrough()) {
+    return __real_fstat64(filedes, buf);
+  }
+  Tau_global_incr_insideTAU();
+  TAU_PROFILE_TIMER(t, "fstat64()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  ret = __real_fstat64(filedes, buf);
+
+  if (TauEnv_get_track_io_params()) {
+    TAU_REGISTER_EVENT(fstat64_filedes, "FSTAT64 filedes");
+    TAU_REGISTER_EVENT(fstat64_ret, "FSTAT64 ret");
+    TAU_EVENT(fstat64_filedes, filedes);
+    TAU_EVENT(fstat64_ret, ret);
+  }
+
+  TAU_PROFILE_STOP(t);
+  TAU_VERBOSE("fstat64 called: filedes=%d\n", filedes);
   Tau_global_decr_insideTAU();
 
   return ret;
@@ -1443,6 +1523,36 @@ int __wrap_lstat(const char *path, struct stat *buf)
 
   TAU_PROFILE_STOP(t);
   TAU_VERBOSE("lstat called: path=%s\n", path);
+  Tau_global_decr_insideTAU();
+
+  return ret;
+
+}
+
+/*********************************************************************
+ * lstat64
+ ********************************************************************/
+int __wrap_lstat64(const char *path, struct stat64 *buf)
+{
+  int ret;
+
+  Tau_iowrap_checkInit();
+  if (Tau_iowrap_checkPassThrough()) {
+    return __real_lstat64(path, buf);
+  }
+  Tau_global_incr_insideTAU();
+  TAU_PROFILE_TIMER(t, "lstat64()", " ", TAU_IO);
+  TAU_PROFILE_START(t);
+
+  ret = __real_lstat64(path, buf);
+
+  if (TauEnv_get_track_io_params()) {
+    TAU_REGISTER_EVENT(lstat64_ret, "LSTAT64 ret");
+    TAU_EVENT(lstat64_ret, ret);
+  }
+
+  TAU_PROFILE_STOP(t);
+  TAU_VERBOSE("lstat64 called: path=%s\n", path);
   Tau_global_decr_insideTAU();
 
   return ret;

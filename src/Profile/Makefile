@@ -36,7 +36,7 @@ PERFSUITELINK=
 HPCTOOLKIT_INCLUDE=
 HPCTOOLKIT_LINK=
 
-
+#TAU_WINDOWS#TAU_WINDOWS_OBJ=WindowsThreadLayer.o #ENDIF#
 
 CEXTRA =  
 ############# For KAI KCC compiler, use --one_instantiation_per_object ##
@@ -85,6 +85,7 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 	 	$(INCDIR)/TauUtil.h $(INCDIR)/TauXML.h $(INCDIR)/TauUnify.h $(INCDIR)/TauCollate.h \
 		$(INCDIR)/TauMonMrnet.h $(INCDIR)/TauMon.h \
 		$(INCDIR)/TauMemoryWrap.h $(INCDIR)/TauIoWrap.h		\
+		$(INCDIR)/TauBfd.h \
 		$(INCDIR)/agent_util.h	$(INCDIR)/java_crw_demo.h \
 
 LDFLAGS	      =
@@ -112,7 +113,8 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauMemoryWrap.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
 		TauHooks.o TauHandler.o TauMemory.o TauMetaData.o TauEnv.o \
-		TauInit.o Comp_intel9.o Comp_pgi.o Comp_xl.o TauCallPath.o \
+		TauInit.o Comp_intel9.o Comp_pgi.o Comp_xl.o Comp_gnu.o \
+		TauCallPath.o \
                 TauXML.o TauUtil.o TauSnapshot.o TauUnify.o TauCollate.o \
 		TauMonCommon.o TauMonMrnet.o \
 		$(PARAM_O) Tracer.o TauMetrics.o TauReadMetrics.o $(THR_O) \
@@ -120,13 +122,19 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauMemoryWrap.o \
 		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) $(TAU_SAMPLING_O) \
 		TauIoWrap.o TauCompensate.o $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
 		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_GASPU_O) $(TAU_CUPTI_COUNTER_OBJS) \
-                WindowsThreadLayer.o
+		$(TAU_WINDOWS_OBJ)
 
-STATIC_OBJS   = Comp_gnu.o $(PGIACC_STATIC_O)
-SHARED_OBJS   = $(PGIACC_O)
-#SICORTEX#SHARED_OBJS = Comp_gnu.o #ENDIF#
-#TAU_BFDSHAREDLINK#SHARED_OBJS = Comp_gnu.o #ENDIF#
-#TAU_BFDSHAREDLINK#SHARED_LIBS = $(BFDLINK) -lbfd -liberty #ENDIF#
+# CWL - BFD Functionality for libTAU.so is faked if no shared BFD object can
+#       be built. The same is true for static builds of TAU if BFD is 
+#       not available.
+TAU_BFD_STATIC_O = TauBfdUnimplemented.o
+#TAU_BFD#TAU_BFD_STATIC_O = TauBfd.o #ENDIF#
+TAU_BFD_SHARED_O = TauBfdUnimplemented.o
+#TAU_BFDSHAREDLINK#TAU_BFD_SHARED_O = TauBfd.o #ENDIF#
+STATIC_OBJS   = $(TAU_BFD_STATIC_O) $(PGIACC_STATIC_O)
+SHARED_OBJS   = $(TAU_BFD_SHARED_O) $(PGIACC_O)
+#SICORTEX#SHARED_OBJS = TauBfd.o #ENDIF#
+#TAU_BFDSHAREDLINK#SHARED_LIBS = $(BFDLINK) $(BFDLIBS) -liberty #ENDIF#
 
 #CUPTI#SHARED_LIBS = -lcuda -L$(TAU_CUPTI_INC)/../lib -lcupti #ENDIF#
 
@@ -339,19 +347,20 @@ $(TAU_TARGET):	$(OBJS) $(STATIC_OBJS)
 		$(AR) $(ARFLAGS) $(TAU_TARGET) $(OBJS) $(STATIC_OBJS) $(EXTRAOBJS)
 		$(TAU_RANLIB) $(TAU_TARGET)
 
-$(TAU_SHAREDDIR)/$(TAU_CUDA_LIB): $(TAU_CUDA_LIB)
-	cp $(TAU_CUDA_LIB) $(TAU_SHAREDDIR)/$(TAU_CUDA_LIB)
-
-$(TAU_SHAREDDIR)/$(TAU_OPENCL_LIB): $(TAU_OPENCL_LIB)
-	cp $(TAU_OPENCL_LIB) $(TAU_SHAREDDIR)/$(TAU_OPENCL_LIB)
-
-$(TAU_SHAREDDIR)/$(TAU_CUPTI_LIB): $(TAU_CUPTI_LIB)
-	cp $(TAU_CUPTI_LIB) $(TAU_SHAREDDIR)/$(TAU_CUPTI_LIB)
+#$(TAU_SHAREDDIR)/$(TAU_CUDA_LIB): $(TAU_SHAREDDIR) $(TAU_CUDA_LIB)
+#	@echo "copying CUDA_LIB."
+#	cp $(TAU_CUDA_LIB) $(TAU_SHAREDDIR)/$(TAU_CUDA_LIB)
+#
+#$(TAU_SHAREDDIR)/$(TAU_OPENCL_LIB): $(TAU_SHAREDDIR) $(TAU_OPENCL_LIB)
+#	cp $(TAU_OPENCL_LIB) $(TAU_SHAREDDIR)/$(TAU_OPENCL_LIB)
+#
+#$(TAU_SHAREDDIR)/$(TAU_CUPTI_LIB): $(TAU_SHAREDDIR) $(TAU_CUPTI_LIB)
+#	cp $(TAU_CUPTI_LIB) $(TAU_SHAREDDIR)/$(TAU_CUPTI_LIB)
 
 
 $(TAU_NULL)$(TAU_SHLIB): 	$(TAU_TARGET) $(OBJS) $(MPI_WRAPPER) $(TAU_FORCE_MPI) $(SHARED_OBJS)
 		$(PRELINK_PHASE)
-		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_SHLIB) $(OBJS) $(SHARED_OBJS) $(SHARED_LIBS) $(EXTRAOBJS) $(TAU_MPI_FOR_SHARED) $(TAU_MPI_LIB) $(TAU_MPI_FLIB) $(EXTRA_LIBS) $(LEXTRA1) $(TAU_PAPI_EXTRA_FLAGS) $(TAU_EXTRA_LIBRARY_FLAGS) $(TAUEXTRASHLIBOPTS)
+		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_SHLIB) $(OBJS) $(SHARED_OBJS) $(SHARED_LIBS) $(EXTRAOBJS) $(TAU_MPI_FOR_SHARED) $(TAU_MPI_LIB) $(TAU_MPI_FLIB) $(EXTRA_LIBS) $(LEXTRA1) $(TAU_PAPI_EXTRA_FLAGS) $(TAU_EXTRA_LIBRARY_FLAGS) $(TAUEXTRASHLIBOPTS) $(TAU_SHLIB_EXTRA_CXXLIBS)
 		$(TAU_CREATE_SYMLINKS)
 
 $(TAU_NULL)$(TAU_OPENCL_DEP) : TauGpuAdapterOpenCL.cpp
@@ -411,19 +420,19 @@ $(TAU_SHAREDDIR)/$(TAU_CUDA_LIB): $(TAU_CUDA_LIB)
 		@echo Installing $? in $(TAU_SHAREDDIR)
 		@if [ -d $(TAU_SHAREDDIR) ] ; then true; \
 			else mkdir -p $(TAU_SHAREDDIR) ;fi
-		$(TAU_INSTALL) $? $(TAU_SHAREDDIR)
+		@if [ -e "$?" ]; then $(TAU_INSTALL) $? $(TAU_SHAREDDIR) ;fi
 
-$(TAU_SHAREDDIR)/$(TAU_OPENCL_LIB): $(TAU_OPENCL_LIB)
+$(TAU_SHAREDDIR)/$(TAU_OPENCL_LIB): $(TAU_OPENCL_LIB) 
 		@echo Installing $? in $(TAU_SHAREDDIR)
 		@if [ -d $(TAU_SHAREDDIR) ] ; then true; \
 			else mkdir -p $(TAU_SHAREDDIR) ;fi
-		$(TAU_INSTALL) $? $(TAU_SHAREDDIR)
+		@if [ -e "$?" ]; then $(TAU_INSTALL) $? $(TAU_SHAREDDIR) ;fi 
 
 $(TAU_SHAREDDIR)/$(TAU_CUPTI_LIB): $(TAU_CUPTI_LIB)
 		@echo Installing $? in $(TAU_SHAREDDIR)
 		@if [ -d $(TAU_SHAREDDIR) ] ; then true; \
 			else mkdir -p $(TAU_SHAREDDIR) ;fi
-		$(TAU_INSTALL) $? $(TAU_SHAREDDIR)
+		@if [ -e "$?" ]; then $(TAU_INSTALL) $? $(TAU_SHAREDDIR) ;fi
 
 $(INSTALLDEST)/$(TAU_SHLIB): $(TAU_SHLIB) 
 		@echo Installing $? in $(INSTALLDEST)
@@ -528,6 +537,7 @@ $(INSTALLDEST)/libmpi_r.a: libmpi_r.a
 	$(RM) -f $(INSTALLDEST)/libmpi_r.a
 	cp libmpi_r.a $(TAU_SHAREDDIR)
 	$(RM) -f $(INSTALLDEST)/bindings-default
+	$(RM) -f $(INSTALLDEST)/bindings$(TAU_CONFIG)
 	cd $(INSTALLDEST) && ln -s shared$(TAU_CONFIG) bindings$(TAU_CONFIG)
 	cd $(INSTALLDEST) && ln -s bindings$(TAU_CONFIG) bindings-default
 
@@ -582,6 +592,12 @@ TauSampling_stackwalker.o 	: TauSampling_stackwalker.cpp $(HDRS)
 TauSampling_libunwind.o 	: TauSampling_libunwind.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
+TauBfdUnimplemented.o:	TauBfdUnimplemented.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauBfd.o 	: TauBfd.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) $(BFDINCLUDE) -c $(@:.o=.cpp)
+
 TauEnv.o 	: TauEnv.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
@@ -595,7 +611,7 @@ FunctionInfo.o 	: FunctionInfo.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 Comp_gnu.o 	: Comp_gnu.cpp $(HDRS)
-	$(CXX) $(CXXFLAGS) $(BFDINCLUDE) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 Comp_intel9.o 	: Comp_intel9.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)

@@ -34,6 +34,9 @@
 #include <TAU.h>
 #include <Profile/TauInit.h>
 #include <vector>
+#ifdef __GNUC__
+#include <cxxabi.h>
+#endif /* __GNUC__ */
 using namespace std;
 
 
@@ -41,34 +44,29 @@ using namespace std;
 
 #include <stdlib.h>
 #include <string.h>
-#include <dirent.h>
+// #include <dirent.h>
 #include <sys/types.h>
 #include <unistd.h>
 #ifdef TAU_OPENMP
 #  include <omp.h>
-#endif
+#endif /* TAU_OPENMP */
 
 #ifndef TAU_MAX_SYMBOLS_TO_BE_RESOLVED
 #define TAU_MAX_SYMBOLS_TO_BE_RESOLVED 3000
 #endif /* TAU_MAX_SYMBOLS_TO_BE_RESOLVED */
 
-#ifdef TAU_BFD
-#define HAVE_DECL_BASENAME 1
-#  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
-#    include <demangle.h>
-#  endif /* HAVE_GNU_DEMANGLE */
-#  include <bfd.h>
-#endif /* TAU_BFD */
-
+#include <Profile/TauBfd.h>
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
-#endif
+#endif /* __APPLE__ */
 
 
 static int gnu_init = 1;       /* is initialization needed? */
 
 static int compInstDisabled[TAU_MAX_THREADS];
+
+static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
 
 /*
  *-----------------------------------------------------------------------------
@@ -94,8 +92,15 @@ static HashNode* htab[HASH_MAX];
  * Stores function name `n' under hash code `h'
  */
 
-static void hash_put(unsigned long h, const char* n, const char* fn, int lno) {
-//   printf ("put with %s\n", n);
+static HashNode* hash_get(unsigned long h);
+
+// This version is used for when the FI cannot be immediately resolved.
+static void hash_put(unsigned long h, const char* n, const char* fn, int lno,
+		     int excluded = 0) {
+    // already found, do not add.
+    if (hash_get(h) != NULL) {
+	return;
+    }
   long id = h % HASH_MAX;
   HashNode *add = (HashNode*)malloc(sizeof(HashNode));
   add->id = h;
@@ -103,7 +108,7 @@ static void hash_put(unsigned long h, const char* n, const char* fn, int lno) {
   add->fname = fn ? (const char*)strdup(fn) : fn;
   add->lno   = lno;
   add->fi = NULL;
-  add->excluded = 0;
+  add->excluded = excluded;
   add->next = htab[id];
   htab[id] = add;
 }
@@ -136,251 +141,77 @@ static HashNode* hash_get(unsigned long h) {
  * Get symbol table by using BFD
  */
 
-#ifdef TAU_BFD
-  asymbol **syms;
-  bfd * BfdImage = 0;
-  int nr_all_syms = 0;
-#endif /* TAU_BFD */
+static const char *tau_filename;
+static const char *tau_funcname;
+static unsigned int tau_line_no;
+static int tau_symbol_found; 
 
-static void get_symtab_bfd(const char *module, unsigned long offset) {
-#ifdef TAU_BFD
-  int i; 
-  size_t size;
-  //asymbol **syms;
-  int do_getsrc = 1;
-#if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
-  int do_demangle = 1;
-#endif /* HAVE_GNU_DEMANGLE */
+extern "C" int Tau_get_backtrace_off_by_one_correction(void);
 
-  /* initialize BFD */
-  bfd_init();
-
-  /* get executable image */
-  BfdImage = bfd_openr(module, 0 );
-  if ( ! BfdImage ) {
-    fprintf (stderr,"TAU: BFD: bfd_openr(%s): failed\n", module);
-    return;
+static void issueBfdWarningIfNecessary() {
+  static bool warningIssued = false;
+  if (!warningIssued) {
+    fprintf(stderr,"TAU Warning: Comp_gnu - BFD is not available during TAU build. Symbols may not be resolved!\n");
+    warningIssued = true;
   }
-
-  /* check image format */
-  if ( ! bfd_check_format(BfdImage, bfd_object) ) { 
-    fprintf(stderr,"TAU: BFD: bfd_check_format(%s): failed\n", module);
-    return;
-  }
-  /* return if file has no symbols at all */
-  if ( ! ( bfd_get_file_flags(BfdImage) & HAS_SYMS ) ) {
-    fprintf(stderr,"TAU: BFD: bfd_get_file_flags(%s): no symbols found\n", module);
-    return;
-  }
-   
-  /* get the upper bound number of symbols */
-  size = bfd_get_symtab_upper_bound(BfdImage);
-   
-  /* HAS_SYMS can be set even with no symbols in the file! */
-  if ( size < 1 ) {
-    fprintf(stderr,"TAU: BFD: bfd_get_symtab_upper_bound(): < 1\n");
-  }
-   
-  /* read canonicalized symbols */
-  syms = (asymbol **)malloc(size);
-  nr_all_syms = bfd_canonicalize_symtab(BfdImage, syms);
-  if ( nr_all_syms < 1 ) {
-    fprintf(stderr,"TAU: BFD: No symbols found in '%s' (did you compile with -g?) : bfd_canonicalize_symtab(): < 1\n", module);
-    return;
-  }
-   
-  if ((nr_all_syms > TAU_MAX_SYMBOLS_TO_BE_RESOLVED) && (strcmp(module, "/proc/self/exe") == 0)) do_getsrc = 0; 
-  for (i=0; i<nr_all_syms; ++i) {
-    char* dem_name = 0;
-    unsigned long addr;
-    const char* filename;
-    const char* funcname;
-    unsigned int lno;
-      
-    //       /* ignore system functions */
-    //       if ( strncmp(syms[i]->name, "__", 2) == 0 ||
-    // 	   strncmp(syms[i]->name, "bfd_", 4) == 0 ||
-    // 	   strstr(syms[i]->name, "@@") != NULL ) continue;
-
-
-    /* get filename and linenumber from debug info */
-    /* needs -g */
-    filename = NULL;
-    lno = 0;
-    if ( do_getsrc ) {
-      bfd_find_nearest_line(BfdImage, bfd_get_section(syms[i]), syms,
-			    syms[i]->value, &filename, &funcname, &lno);
-    }
-
-    /* calculate function address */
-    addr = syms[i]->section->vma+syms[i]->value;
-
-    /* use demangled name if possible */
-#if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE 
-    if ( do_demangle ) {
-      dem_name = cplus_demangle(syms[i]->name,
-				DMGL_PARAMS | DMGL_ANSI 
-				| DMGL_VERBOSE | DMGL_TYPES);
-    }
-#endif /* HAVE_GNU_DEMANGLE */
-
-
-    const char *name = syms[i]->name;
-    if (dem_name) {
-      name = dem_name;
-    }
-    hash_put(offset+addr, name, filename, lno);
-
-    if (strstr(name, "Tau_Profile_Wrapper")) {
-      HashNode *hn = hash_get(offset+addr);
-      if (hn) {
-	hn->excluded = 1;
-      }
-    } else if (strcmp(name, "__sti__$E") == 0) {
-      /* exclude intel compiler static initializer */
-      HashNode *hn = hash_get(offset+addr);
-      if (hn) {
-	hn->excluded = 1;
-      }
-    }
-  }
-
-  /* free(syms); */
-  /* bfd_close(BfdImage); */
-#endif
-  return;
 }
 
-
-int getBGPJobID(const char *path, char *name) {
-  DIR *pdir = NULL;
-  pdir = opendir(path);
-  if (pdir == NULL) {
-    return -1;
+void updateHashTable(unsigned long addr,
+		     const char *funcname, const char *filename,
+		     int lineno) {
+  // Simply hash encountered symbol information while excluding
+  //    certain symbols.
+  if ((strstr(funcname, "Tau_Profile_Wrapper")) ||
+      (strcmp(funcname, "__sti__$E") == 0)) {
+    /* exclude Tau Profile wrappers */ 
+    /* exclude intel compiler static initializer */
+    hash_put(addr, funcname, filename, lineno, 1);
+  } else {
+    hash_put(addr, funcname, filename, lineno);
   }
-
-  struct dirent *pent = NULL;
-  int i;
-  for (i=0; i < 3; i++) {
-    pent = readdir(pdir);
-    if (pent == NULL) {
-      return -1;
-    }
-  }
-
-  strcpy(name, pent->d_name);
-  closedir(pdir);
-  return 0;
 }
-
-int getBGPExePath(char *path) {
-  int rc;
-  char jobid[256];
-  rc = getBGPJobID("/jobs", jobid);
-  if (rc != 0) {
-    return -1;
-  }
-
-  sprintf (path, "/jobs/%s/exe", jobid);
-  return 0;
-}
-
 
 /*
  * Get symbol table either by using BFD or by parsing nm-file
  */
 static void get_symtab(void) {
-  char path[4096];
-  int rc;
-
-#ifndef TAU_BFD
-  fprintf(stderr, "TAU: Warning! BFD not found, symbols will not be resolved\n");
-  fprintf(stderr, "Please re-configure TAU with -bfd=download to support runtime symbol resolution using the BFD library.\n");
-  return;
-#endif
-
-  /* System dependent methods to find the executable */
-
-  /* Default: Linux systems */
-  sprintf (path, "/proc/self/exe");
-  
-#ifdef TAU_AIX
-  sprintf (path, "/proc/%d/object/a.out", getpid());
-#endif
-  
-#ifdef TAU_BGP
-  rc = getBGPExePath(path);
-  if (rc != 0) {
-    fprintf(stderr, "TAU: Warning! BFD not found, symbols will not be resolved\n");
-    return;
+  if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
+    bfdUnitHandle = Tau_bfd_registerUnit(TAU_BFD_REUSE_GLOBALS);
   }
-#endif
-  
-#ifdef __APPLE__
-  uint32_t size = sizeof(path);
-  _NSGetExecutablePath(path, &size);
-#endif
-  
+  /*  char *path = Tau_bfd_getExecutablePath(bfdUnitHandle); */
   /* Open the executable path */
-  get_symtab_bfd(path, 0);
+  /*  get_symtab_bfd(path, 0); */
+  TAU_VERBOSE("Comp_gnu: get_symtab loading executable symbol table\n");
+  // Pre-process each of the executable's symbols up to a limit
+  Tau_bfd_processBfdExecInfo(bfdUnitHandle,
+			     TAU_MAX_SYMBOLS_TO_BE_RESOLVED,     
+			     updateHashTable);
 }
 
-typedef struct addrmap_t {
-  unsigned long start, end, offset;
-  int loaded;
-  char name[256];
-} addrmap;
+vector<TauBfdAddrMap> *addressMap = NULL;
 
-
-vector<addrmap> *addressMap = NULL;
-
-static int updateMaps() {
-
-  if (addressMap == NULL) {
-    addressMap = new vector<addrmap>();
+static TauBfdAddrMap *getAddressMap(unsigned long addr) {
+  if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
+    bfdUnitHandle = Tau_bfd_registerUnit(TAU_BFD_REUSE_GLOBALS);
   }
-  addressMap->clear();
-
-  FILE *mapsfile = fopen ("/proc/self/maps", "r");
-  if (mapsfile == NULL) {
-    return -1;
-  }
-  
-  char line[4096];
-  while (!feof(mapsfile)) {
-    fgets(line, 4096, mapsfile);
-    //printf ("=> %s", line);
-    unsigned long start, end, offset;
-    char module[4096];
-    char perms[5];
-    module[0] = 0;
-    sscanf(line, "%lx-%lx %s %lx %*s %*u %[^\n]", &start, &end, perms, &offset, module);
-
-    if (*module && ((strcmp(perms, "r-xp") == 0) || (strcmp(perms, "rwxp") == 0))) {
-      //printf ("got %s, %p-%p (%p)\n", module, start, end, offset);
-      addrmap entry;
-      entry.start = start;
-      entry.end = end;
-      entry.offset = offset;
-      entry.loaded = 0;
-      sprintf (entry.name, module);
-      addressMap->push_back(entry);
-    }
-  }
-  return 0;
-}
-
-
-
-static addrmap *getAddressMap(unsigned long addr) {
+  // if Tau_bfd_registerUnit has been called, maps have been previously loaded
+  addressMap = Tau_bfd_getAddressMaps(bfdUnitHandle);
   for (unsigned int i=0;i<addressMap->size();i++) {
     if (addr >= (*addressMap)[i].start && addr <= (*addressMap)[i].end) {
       return &((*addressMap)[i]);
     }
   }
 
-  // Wasn't found in any ranges, try updating the maps
-  updateMaps();
+  // Wasn't found in any ranges, try updating the maps.
+  // NOTE: *CWL* - This simplified means of detecting epoch changes will
+  //       suffer from pathological cases where a function's address in
+  //       one dynamically loaded module can coincide with another
+  //       function's address in another dynamically loaded module.
+  //
+  //       Sampling CANNOT take this approach to epoch changes. It must
+  //       rely on traps to dlopen calls.
+  Tau_bfd_updateAddressMaps(bfdUnitHandle);
+  addressMap = Tau_bfd_getAddressMaps(bfdUnitHandle);
 
   for (unsigned int i=0;i<addressMap->size();i++) {
     if (addr >= (*addressMap)[i].start && addr <= (*addressMap)[i].end) {
@@ -388,66 +219,194 @@ static addrmap *getAddressMap(unsigned long addr) {
     }
   }
 
+  TAU_VERBOSE("Comp_gnu: getAddressMap - failed to find address [%p] after 2 tries\n", addr);
   // Still not found?  Give up
   return NULL;
 }
 
 
+bool tauGetFilenameAndLineNo(unsigned long addr) {
+  bool success = false;
+  TAU_VERBOSE("tauGetFilenameAndLineNo: addr=%p\n", addr);
+  if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
+    bfdUnitHandle = Tau_bfd_registerUnit(TAU_BFD_REUSE_GLOBALS);
+  }
+  TauBfdInfo *resolvedInfo = 
+    Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr);
+  if (resolvedInfo == NULL) {
+      // Try again with the executable module.
+      resolvedInfo = Tau_bfd_resolveBfdExecInfo(bfdUnitHandle, addr);
+  }
+  if (resolvedInfo != NULL) {
+    success = true;
+    tau_symbol_found = true; 
+    tau_line_no = resolvedInfo->lineno;
+    if (resolvedInfo->funcname != NULL) {
+      tau_funcname = strdup(resolvedInfo->funcname);
+    } else {
+      tau_funcname = NULL;
+    }
+    if (resolvedInfo->filename != NULL) {
+      tau_filename = strdup(resolvedInfo->filename);
+    } else {
+      tau_filename = NULL;
+    }
+  } else {
+    tau_symbol_found = false;
+    tau_line_no = 0;
+    tau_funcname = NULL;
+    tau_filename = NULL;
+  }
+  return success;
+}
+
 int tauPrintAddr(int i, char *token, unsigned long addr) {
   static int flag = 0;
   if (flag == 0) { 
-    updateMaps();
     flag = 1;
   }
   char field[2048];
   char metadata[256];
-  addrmap *map = getAddressMap(addr);
-  if (map && map->loaded == 0) {
-    //printf("map = %p, map->start = %p, name = %s\n", map, map->start, map->name);
-    sprintf(field, "[%s] [%s]", token, map->name);
-  } else {
-    sprintf(field, "[%s] ", token);
+  char *dem_name = NULL;
+  char demangled_name[2048], line_info[2048];
+  char cmd[2048]; 
+  FILE *pipe_fp;
+  TauBfdAddrMap *map = getAddressMap(addr);
+  line_info[0]=0; 
+
+  /* Do we have a demangled name? */
+  if (dem_name == (char *) NULL)  { 
+    char *subtoken=token; 
+    int i = 0;
+    while (*subtoken!= '(' && i  < strlen(token)) {
+      subtoken++; i++;
+    }
+    subtoken--; /* move the pointer to before the ( so we can use strtok */
+    TAU_VERBOSE("Subtoken=%s\n", subtoken);
+    char *subs=strtok(subtoken,"(+");
+    subs = strtok(NULL,"+");
+    if (subs == (char *) NULL) subs = token;
+#ifndef __GNUC__
+    sprintf(cmd, "c++filt %s", subs);
+    TAU_VERBOSE("popen %s\n", cmd);
+    pipe_fp = popen(cmd, "r");
+    //fscanf(pipe_fp,"%s", demangled_name);
+    int ret = fread(demangled_name, 1, 1024, pipe_fp);
+    TAU_VERBOSE("name = %s, Demangled name = %s, ret = %d\n", token, demangled_name, ret);
+    pclose(pipe_fp);
+    dem_name = demangled_name;
+#else /* __GNUC__ */
+    std::size_t len=1024;
+    int stat;
+    char *out_buf= (char *) malloc (len);
+    char *name = abi::__cxa_demangle(subs, out_buf, &len, &stat);
+    if (stat == 0) dem_name = out_buf; 
+    else dem_name = subs; 
+    TAU_VERBOSE("DEM_NAME subs= %s dem_name= %s, name = %s, len = %d, stat=%d\n", subs, dem_name, name, len, stat);
+#endif /* __GNUC__ */
+
   }
+  if (dem_name == (char *) NULL) dem_name = token; 
+  TAU_VERBOSE("tauPrintAddr: final demangled name [%s]\n", dem_name);
+
+#ifdef TAU_EXE 
+  if (map != NULL) { 
+    sprintf(cmd, "addr2line -e %s 0x%lx", map->name, addr);
+    TAU_VERBOSE("popen %s\n", cmd);
+    pipe_fp = popen(cmd, "r");
+    fscanf(pipe_fp,"%s", line_info);
+    TAU_VERBOSE("cmd = %s, line number = %s\n", cmd, line_info);
+    pclose(pipe_fp);
+    sprintf(field, "[%s] [%s] [%s]", dem_name, line_info, map->name);
+  }
+#endif /* TAU_EXE */
+  /* The reason the TAU_BFD tag is still here is to allow for alternatives */
+#ifdef TAU_BFD
+  tauGetFilenameAndLineNo(addr);
+  if (tau_symbol_found) {
+    TAU_VERBOSE("tauPrintAddr: Symbol found for [addr=%p]\n", addr);
+    sprintf(field, "[%s] [%s:%d] [%s]", tau_funcname, tau_filename, tau_line_no, map->name);
+  } else { 
+    TAU_VERBOSE("tauPrintAddr: Symbol for [addr=%p] not found\n", addr);
+    if (dem_name != NULL && map != NULL) {
+      // Get address from gdb if possible
+      TAU_VERBOSE("tauPrintAddr: Getting information from GDB instead\n");
+      sprintf(field, "[%s] [Addr=%p] [%s]", dem_name, 
+	      addr+Tau_get_backtrace_off_by_one_correction(), map->name);
+    } else {
+      TAU_VERBOSE("tauPrintAddr: No Information Available\n");
+      sprintf(field, "[%s] [addr=%p]", dem_name, 
+	      addr+Tau_get_backtrace_off_by_one_correction());
+    }
+  } 
+#else
+  issueBfdWarningIfNecessary();
+#endif /* TAU_BFD */
   sprintf(metadata, "BACKTRACE %3d", i-1);
   TAU_METADATA(metadata, field);
   return 0;
 }
 
-
-   
-static HashNode *createHashNode(long addr) {
-  addrmap *map = getAddressMap(addr);
-
-  if (map && map->loaded == 0) {
-    get_symtab_bfd(map->name, map->start);
-    map->loaded = true;
-    
+static HashNode *createHashNode(unsigned long addr) {
+  // Pre-condition: hn will ALWAYS be NULL on initial entry.
+  //      This function is only called if addr cannot be found in
+  //        some HashNode.
+  TAU_VERBOSE("createHashNode: addr = [%p]\n", addr);
+  if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
+    bfdUnitHandle = Tau_bfd_registerUnit(TAU_BFD_REUSE_GLOBALS);
+  }
+  tau_bfd_module_handle_t moduleHandle = 
+    Tau_bfd_getModuleHandle(bfdUnitHandle, addr);
+  if (moduleHandle != TAU_BFD_NULL_MODULE_HANDLE) {
+      TAU_VERBOSE("createHashNode: Trying Module %d for address [%p]\n",
+		  moduleHandle, addr);
+    int result;
+    result = Tau_bfd_processBfdModuleInfo(bfdUnitHandle, moduleHandle,
+					  TAU_MAX_SYMBOLS_TO_BE_RESOLVED,
+					  updateHashTable);
+    if (result == TAU_BFD_SYMTAB_LOAD_FAILED) {
+	// try again with the executable.
+	TAU_VERBOSE("createHashNode: Failed to load symtab, trying again with executable.\n");
+	Tau_bfd_processBfdExecInfo(bfdUnitHandle,
+				   TAU_MAX_SYMBOLS_TO_BE_RESOLVED,
+				   updateHashTable);
+    }
     HashNode *hn = hash_get(addr);
-    if (hn) {
-      if ( hn->fi == NULL) {
-
+    if (hn != NULL) {
+      if (hn->fi == NULL) {
 	// remove the path
 	const char *filename = hn->fname;
-        if (filename) {
+	if (filename) {
 	  while (strchr(filename,'/') != NULL) {
 	    filename = strchr(filename,'/')+1;
 	  }
-        } else {
-          filename = "(unknown)";
-        }
-	
+	} else {
+	  filename = "(unknown)";
+	  // No name! Attempt to resolve the address
+	  TauBfdInfo *info = Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr);
+	  // If the general solution fails, we try the executable-only
+	  if (info == NULL) {
+	      info = Tau_bfd_resolveBfdExecInfo(bfdUnitHandle, addr);
+	  }
+	  if (info->filename != NULL) {
+	    filename = strdup(info->filename);
+	  }
+	  if ((info->funcname != NULL) && (hn->name == NULL)) {
+	    hn->name = strdup(info->funcname);
+	  }
+	  hn->lno = info->lineno;
+	}
 	char routine[2048];
 	sprintf (routine, "%s [{%s} {%d,0}]", hn->name, filename, hn->lno);
 	void *handle=NULL;
 	TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
 	hn->fi = (FunctionInfo*) handle;
-      } 
+      }
       return hn;
     }
   }
-
-
-  // Unknown
+  // Unmapped or subsequently unresolved Address - 
+  //    Unknown name for FI based on addr
   char routine[2048];
   sprintf (routine, "addr=<%p>", (void*)addr);
   void *handle=NULL;
@@ -471,13 +430,16 @@ void runOnExit() {
   Tau_destructor_trigger();
 }
 
-
 #if (defined(TAU_SICORTEX) || defined(TAU_SCOREP))
 #pragma weak __cyg_profile_func_enter
 #endif /* SICORTEX || TAU_SCOREP */
 extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
   int i;
   int tid;
+
+#ifndef TAU_BFD
+  issueBfdWarningIfNecessary();
+#endif /* TAU_BFD */
 
   if (executionFinished) {
     return;
@@ -501,13 +463,16 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 
     Tau_init_initializeTAU();
     Tau_global_incr_insideTAU_tid(tid);
+    if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
+      bfdUnitHandle = Tau_bfd_registerUnit(TAU_BFD_REUSE_GLOBALS);
+    }
+    // If we have registered, we should have a map.
+    addressMap = Tau_bfd_getAddressMaps(bfdUnitHandle);
     get_symtab();
     TheUsingCompInst() = 1;
     TAU_PROFILE_SET_NODE(0);
-    updateMaps();
     Tau_global_decr_insideTAU_tid(tid);
   }
-
 
   // prevent re-entry of this routine on a per thread basis
   Tau_global_incr_insideTAU_tid(tid);
@@ -517,7 +482,7 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
   }
   compInstDisabled[tid] = 1;
 
-  if ((hn = hash_get((long)funcptr))) {
+  if ((hn = hash_get((unsigned long)funcptr))) {
     if (hn->excluded) {
       // finished in this routine, allow entry
       compInstDisabled[tid] = 0;
@@ -527,7 +492,9 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
     if (hn->fi == NULL) {
 
       RtsLayer::LockDB(); // lock, then check again
-      
+      // *CWL* - why? Because another thread could be creating this now.
+      //         Lock-and-check-again is more efficient than 
+      //            Lock-first-check-later.
       if ( hn->fi == NULL) {
 	// remove the path
 	const char *filename = hn->fname;
@@ -536,18 +503,44 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 	    filename = strchr(filename,'/')+1;
 	  }
 	} else {
+	  // *CWL* - filename can be NULL for a hashed address when it
+	  //    is considered too expensive to resolve ALL symbols in an
+	  //    executable or module when creating the hashtable for caching
+	  //    purposes. In this case, we fall back to resolving the symbol
+	  //    as and when the address is encountered.
 	  filename = "(unknown)"; 
-#ifdef TAU_BFD
+	  if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
+	    bfdUnitHandle = Tau_bfd_registerUnit(TAU_BFD_REUSE_GLOBALS);
+	  }
+	  TauBfdInfo *info = Tau_bfd_resolveBfdInfo(bfdUnitHandle, 
+						    (unsigned long)funcptr);
+	  if (info == NULL) {
+	      // Try again with executable
+	      info = Tau_bfd_resolveBfdExecInfo(bfdUnitHandle, 
+						(unsigned long)funcptr);
+	  }
+	  if (info != NULL) {
+	      if (info->filename != NULL) {
+		  filename = strdup(info->filename);
+	      }
+	      if (info->funcname != NULL) {
+		  hn->name = strdup(info->funcname);
+	      }
+	      hn->lno = info->lineno;
+	      free(info);
+	  }
+	  /*
           for(i=0; i<nr_all_syms-1; i++) {
             if (syms && syms[i] && ((void *)( syms[i]->section->vma+syms[i]->value) == funcptr)) { 
               unsigned int linenumber;
               bfd_find_nearest_line(BfdImage, bfd_get_section(syms[i]), syms,
 	        syms[i]->value, &filename, &hn->name, &linenumber);
 	      hn->lno = linenumber;
-	      break; /* come out of the for loop - we found the address that matched! */
+	      break;
             }
           }
-#endif /* TAU_BFD */
+	  */
+	  
 	}
 	
 	char *routine;
@@ -566,10 +559,11 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 
     RtsLayer::LockDB(); // lock, then check again
     
-    if ( (hn = hash_get((long)funcptr))) {
+    if ( (hn = hash_get((unsigned long)funcptr))) {
       Tau_start_timer(hn->fi, 0, tid);
     } else {
-      HashNode *node = createHashNode((long)funcptr);
+      TAU_VERBOSE("Previously unhashed funcptr [%p]\n",(unsigned long)funcptr);
+      HashNode *node = createHashNode((unsigned long)funcptr);
       Tau_start_timer(node->fi, 0, tid);
     }
     
@@ -601,9 +595,6 @@ extern "C" void __pat_tp_func_entry(const void *ea, const void *ra) {
   
 }
 
-extern "C" void __pat_tp_func_return(const void *ea, const void *ra) {
-  __cyg_profile_func_enter((void *)ea, (void *)ra);
-}
 
 extern "C" void ___cyg_profile_func_enter(void* func, void* callsite) {
   __cyg_profile_func_enter(func, callsite);
@@ -615,6 +606,10 @@ extern "C" void ___cyg_profile_func_enter(void* func, void* callsite) {
 #endif /* SICORTEX || TAU_SCOREP */
 extern "C" void __cyg_profile_func_exit(void* func, void* callsite) {
   int tid;
+
+#ifndef TAU_BFD
+  issueBfdWarningIfNecessary();
+#endif /* TAU_BFD */
 
   tid = Tau_get_tid();
   Tau_global_incr_insideTAU_tid(tid);
@@ -634,7 +629,7 @@ extern "C" void __cyg_profile_func_exit(void* func, void* callsite) {
   funcptr = *( void ** )func;
 #endif
 
-  if ( (hn = hash_get((long)funcptr)) ) {
+  if ( (hn = hash_get((unsigned long)funcptr)) ) {
     if (hn->excluded) {
       Tau_global_decr_insideTAU_tid(tid);
       return;
@@ -653,6 +648,10 @@ extern "C" void _cyg_profile_func_exit(void* func, void* callsite) {
 
 extern "C" void ___cyg_profile_func_exit(void* func, void* callsite) {
   __cyg_profile_func_exit(func, callsite);
+}
+
+extern "C" void __pat_tp_func_return(const void *ea, const void *ra) {
+  __cyg_profile_func_exit((void *)ea, (void *)ra);
 }
 
 #endif /* TAU_XLC */

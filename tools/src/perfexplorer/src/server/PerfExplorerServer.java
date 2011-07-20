@@ -167,10 +167,13 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		// this is how you replace 1 backslash with 2 backslashes for use later 
 		// as a regular expression...
 		prefix = prefix.replaceAll("\\\\", "\\\\\\\\");
-		System.out.println(prefix);
+		//System.out.println(prefix);
 		for (Iterator<String> iter = configFiles.iterator() ; iter.hasNext() ; ) {
 			DatabaseAPI api = null;
 			String tmpFile = iter.next();
+			if (tmpFile.contains("NO_DATABASE")) {
+				break;
+			}
 			PerfExplorerOutput.print("Connecting...");
 			try {
 				api = new DatabaseAPI();

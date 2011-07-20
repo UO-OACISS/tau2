@@ -92,6 +92,8 @@
 
 #define TAU_TRACK_IO_PARAMS_DEFAULT 0
 
+#define TAU_TRACK_SIGNALS_DEFAULT 0
+
 #define TAU_THROTTLE_DEFAULT 1
 #ifdef TAU_MPI
   #define TAU_SYNCHRONIZE_CLOCKS_DEFAULT 1
@@ -267,6 +269,7 @@ static int env_track_memory_heap = 0;
 static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
 static int env_track_io_params = 0;
+static int env_track_signals = 0;
 static int env_extras = 0;
 static int env_ebs_period = 0;
 static int env_ebs_inclusive = 0;
@@ -355,6 +358,10 @@ int TauEnv_get_compensate() {
 
 int TauEnv_get_comm_matrix() {
   return env_comm_matrix;
+}
+
+int TauEnv_get_track_signals() {
+  return env_track_signals;
 }
 
 int TauEnv_get_track_message() {
@@ -498,7 +505,18 @@ void TauEnv_initialize() {
       env_extras = 1;
     } else {
       TAU_METADATA("TAU_TRACK_IO_PARAMS", "off");
-      env_track_memory_headroom = 0;
+      env_track_io_params = 0;
+    }
+
+    tmp = getconf("TAU_TRACK_SIGNALS");
+    if (parse_bool(tmp, env_track_signals)) {
+      TAU_VERBOSE("TAU: Tracking SIGNALS enabled\n");
+      TAU_METADATA("TAU_TRACK_SIGNALS", "on");
+      env_track_signals = 1;
+      env_extras = 1;
+    } else {
+      TAU_METADATA("TAU_TRACK_SIGNALS", "off");
+      env_track_signals = 0;
     }
 
 
@@ -589,7 +607,7 @@ void TauEnv_initialize() {
       }
     }
 
-#ifdef TAU_MPI
+#if (defined(TAU_MPI) || defined(TAU_SHMEM))
     /* track comm (opposite of old -nocomm option) */
     tmp = getconf("TAU_TRACK_MESSAGE");
     if (parse_bool(tmp, env_track_message)) {
@@ -618,7 +636,7 @@ void TauEnv_initialize() {
       TAU_VERBOSE("TAU: Message Tracking Disabled\n");
       TAU_METADATA("TAU_TRACK_MESSAGE", "off");
     }
-#endif
+#endif /* TAU_MPI || TAU_SHMEM */
 
     /* clock synchronization */
     if (env_tracing == 0) {
@@ -781,22 +799,11 @@ void TauEnv_initialize() {
       }
       TAU_VERBOSE("TAU: EBS Source: %s\n", env_ebs_source);
 
-      /* *CWL* TAU_EXP_EBS_NEW_DEFAULTS is a
-	 tentative measure to ensure the functionality we currently 
-	 have as the default does not break. This will allow development
-	 of EBS with proper orthogonal support for combinations of
-	 configurations involving TAU_TRACING, TAU_PROFILING, and
-	 TAU_CALLPATH.
-      */
-#ifdef TAU_EXP_EBS_NEW_DEFAULTS
-      if (TauEnv_get_tracing() && TauEnv_get_callpath()) {
-#endif /* TAU_EXP_EBS_NEW_DEFAULTS */
-      env_callpath = 1;
-      env_callpath_depth = 300;
-      TAU_VERBOSE("TAU: EBS Overriding callpath settings, callpath enabled, depth = 300\n");
-#ifdef TAU_EXP_EBS_NEW_DEFAULTS
+      if (TauEnv_get_tracing()) {
+	env_callpath = 1;
+	env_callpath_depth = 300;
+	TAU_VERBOSE("TAU: EBS Overriding callpath settings, callpath enabled, depth = 300\n");
       }
-#endif /* TAU_EXP_EBS_NEW_DEFAULTS */
     }
 
 #if (defined(TAU_UNIFY) && defined(TAU_MPI))

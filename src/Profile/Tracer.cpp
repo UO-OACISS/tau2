@@ -149,7 +149,7 @@ static int checkTraceFileInitialized(int tid) {
     if (TraceBuffer[tid][0].ev == TAU_EV_INIT) { 
       /* first record is init */
       for (int iter = 0; iter < TauCurrentEvent[tid]; iter ++) {
-	TraceBuffer[tid][iter].nid = RtsLayer::myNode();
+	//TraceBuffer[tid][iter].nid = RtsLayer::myNode();
       }
     }
   }
@@ -277,7 +277,7 @@ void TauTraceEventSimple(long int ev, x_int64 par, int tid) {
 
 
 /* Write event to buffer */
-void TauTraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts) {
+void TauTraceEventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts, int node_id) {
   int i;
   int records_created = TauTraceInit(tid);
   TAU_EV *event = &TraceBuffer[tid][TauCurrentEvent[tid]];  
@@ -327,13 +327,18 @@ void TauTraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts) {
     event->ti = TauTraceGetTimeStamp(tid);
   }
   event->par = par;
-  event->nid = RtsLayer::myNode();
+  event->nid = node_id;
   event->tid = tid ;
   TauCurrentEvent[tid]++;
 
   if (TauCurrentEvent[tid] >= TAU_MAX_RECORDS-1) {
     TauTraceFlushBuffer(tid); 
   }
+}
+
+/* Write event to buffer */
+void TauTraceEvent(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts) {
+  TauTraceEventWithNodeId(ev, par, tid, ts, use_ts, RtsLayer::myNode());
 }
 
 /* Close the trace */
@@ -567,7 +572,7 @@ void TauTraceOneSidedMsg(bool type, gpuId *gpu, int length, int threadId)
 //////////////////////////////////////////////////////////////////////
 // TraceSendMsg traces the message send
 //////////////////////////////////////////////////////////////////////
-void TauTraceSendMsg(int type, int destination, int length) {
+void TauTraceSendMsgOld(int type, int destination, int length) {
   x_int64 parameter;
   x_uint64 xother, xtype, xlength, xcomm;
 
@@ -620,7 +625,7 @@ void TauTraceSendMsg(int type, int destination, int length) {
 //////////////////////////////////////////////////////////////////////
 // TraceRecvMsg traces the message recv
 //////////////////////////////////////////////////////////////////////
-void TauTraceRecvMsg(int type, int source, int length) {
+extern "C" void TauTraceMsg(int send_or_recv, int type, int other_id, int length, x_uint64 ts, int use_ts, int node_id) {
   x_int64 parameter;
   x_uint64 xother, xtype, xlength, xcomm;
 
@@ -629,11 +634,34 @@ void TauTraceRecvMsg(int type, int source, int length) {
     /* for recv, othernode is sender or source*/
     xtype = type;
     xlength = length;
-    xother = source;
+    xother = other_id;
     xcomm = 0;
 
-    // see TraceSendMsg for documentation
 
+    /* Format for parameter is
+       63 ..... 56 55 ..... 48 47............. 32
+          other       type          length
+
+       These are the high order bits, below are the low order bits
+
+       31 ..... 24 23 ..... 16 15..............0
+          other       type          length       
+
+       e.g.
+
+       xtype = 0xAABB;
+       xother = 0xCCDD;
+       xlength = 0xDEADBEEF;
+       result = 0xccaaDEADdddbbBEEF
+
+     parameter = ((xlength >> 16) << 32) | 
+       ((xtype >> 8 & 0xFF) << 48) |
+       ((xother >> 8 & 0xFF) << 56) |
+       (xlength & 0xFFFF) | 
+       ((xtype & 0xFF)  << 16) | 
+       ((xother & 0xFF) << 24);
+
+     */
     parameter = (xlength >> 16 << 54 >> 22) |
       ((xtype >> 8 & 0xFF) << 48) |
       ((xother >> 8 & 0xFF) << 56) |
@@ -642,7 +670,40 @@ void TauTraceRecvMsg(int type, int source, int length) {
       ((xother & 0xFF) << 24) |
       (xcomm << 58 >> 16);
 
-    TauTraceEventSimple(TAU_MESSAGE_RECV, parameter, RtsLayer::myThread()); 
+    TauTraceEventWithNodeId(send_or_recv, parameter, RtsLayer::myThread(), ts, use_ts, node_id); 
   }
+}
+
+//////////////////////////////////////////////////////////////////////
+// TauTraceRecvMsg traces the message recv
+//////////////////////////////////////////////////////////////////////
+void TauTraceRecvMsg(int type, int source, int length) {
+  TauTraceMsg(TAU_MESSAGE_RECV, type, source, length, 0, 0, RtsLayer::myNode()); 
+  /* 0, 0 is for ts and use_ts so TAU generates the timestamp */
+}
+
+//////////////////////////////////////////////////////////////////////
+// TraceSendMsg traces the message send
+//////////////////////////////////////////////////////////////////////
+void TauTraceSendMsg(int type, int destination, int length) {
+  TauTraceMsg(TAU_MESSAGE_SEND, type, destination, length, 0, 0, RtsLayer::myNode()); 
+  /* 0, 0 is for ts and use_ts so TAU generates the timestamp */
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// TauTraceRecvMsgRemote traces the message recv for a remote RMA operation
+//////////////////////////////////////////////////////////////////////
+void TauTraceRecvMsgRemote(int type, int source, int length, int remote_id) {
+  TauTraceMsg(TAU_MESSAGE_RECV, type, source, length, 0, 0, remote_id); 
+  /* 0, 0 is for ts and use_ts so TAU generates the timestamp */
+}
+
+//////////////////////////////////////////////////////////////////////
+// TraceSendMsgRemote traces the message send for a remote RMA operation
+//////////////////////////////////////////////////////////////////////
+void TauTraceSendMsgRemote(int type, int destination, int length, int remote_id) {
+  TauTraceMsg(TAU_MESSAGE_SEND, type, destination, length, 0, 0, remote_id);
+  /* 0, 0 is for ts and use_ts so TAU generates the timestamp */
 }
 

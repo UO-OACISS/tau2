@@ -33,6 +33,7 @@ public:
 	virtual x_uint64 id_p1() = 0;
 	virtual x_uint64 id_p2() = 0;
 	virtual bool equals(const gpuId *other) const = 0;
+	virtual double syncOffset() = 0;
 	//virtual bool operator<(const gpuId& A) const;
 };
 
