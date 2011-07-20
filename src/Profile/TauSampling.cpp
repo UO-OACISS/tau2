@@ -591,7 +591,8 @@ void Tau_sampling_finalizeProfile(int tid) {
       continue;
     }
     map<caddr_t, unsigned int,
-      std::less<caddr_t>, ss_allocator< std::pair<caddr_t, unsigned int> > >::iterator it;
+      std::less<caddr_t>, 
+      ss_allocator< std::pair<caddr_t, unsigned int> > >::iterator it;
     for (it = parentTauContext->pcHistogram->begin();
 	 it != parentTauContext->pcHistogram->end(); it++) {
       caddr_t addr = (caddr_t)it->first;
@@ -631,8 +632,11 @@ void Tau_sampling_finalizeProfile(int tid) {
 	      candidate->tauContext->GetType(),
 	      Tau_sampling_internal_stripCallPath(candidate->tauContext->GetName()));
       TAU_VERBOSE("Tau_sampling_finalizeProfile: created intermediate node [%s]\n", intermediateName);
+      /*
       string grname = string("SAMPLE | ") + 
 	RtsLayer::PrimaryGroup(candidate->tauContext->GetAllGroups()); 
+      */
+      string grname = string("SAMPLE");
       candidate->tauContext->ebsIntermediate =
 	new FunctionInfo((const char*)intermediateName,
 			 candidate->tauContext->GetType(),
@@ -640,9 +644,10 @@ void Tau_sampling_finalizeProfile(int tid) {
 			 (const char*)grname.c_str(), true);
       RtsLayer::UnLockDB();
     }
-    sprintf(call_site_key,"%s %s => %s %s => %s",
-	    candidate->tauContext->GetName(),
-	    candidate->tauContext->GetType(),
+    sprintf(call_site_key,"%s %s => %s",
+	    // *CWL* - ALREADY THERE in the intermediate nodes!
+	    //	    candidate->tauContext->GetName(),
+	    //	    candidate->tauContext->GetType(),
 	    candidate->tauContext->ebsIntermediate->GetName(),
 	    candidate->tauContext->GetType(),
 	    callsite->name);
@@ -660,8 +665,11 @@ void Tau_sampling_finalizeProfile(int tid) {
       // not found - create new FunctionInfo object to be associated with
       //   newly resolved name.
       RtsLayer::LockDB();
+      /*
       string grname = string("SAMPLE | ") + 
 	RtsLayer::PrimaryGroup(candidate->tauContext->GetAllGroups()); 
+      */
+      string grname = string("SAMPLE"); 
       sampledContextFuncInfo =
 	new FunctionInfo((const char*)callSiteName->c_str(), "",
 			 candidate->tauContext->GetProfileGroup(),
