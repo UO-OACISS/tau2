@@ -5271,20 +5271,22 @@ fi
 #include <time.h>
 #include <stdio.h>
 int main() {
-  int time_value = 0;
+  double time_value = 0.0;
   struct timespec timeVal;
   int ret = clock_getres(CLOCK_REALTIME, &timeVal);
   if (ret != 0) {
     printf("-1");
     return -1;
   }
-  time_value = (int)((double)(timeVal.tv_sec)*1000000 +
-                     (double)(timeVal.tv_nsec)/1000.0);
+  time_value = (double)(timeVal.tv_sec)*1000000 +
+               (double)(timeVal.tv_nsec)/1000.0;
   if (time_value <= 0) {
     printf("-1");
     return -1;
+  } else if (time_value < 1.0) {
+    time_value = 1.0; // 1us is the smallest resolution we will support
   }
-  printf("%d", time_value);
+  printf("%ld", (long)time_value);
 }
 EOF
 $echo "Checking for Real Time Library support... ${nnl}"
@@ -5300,7 +5302,7 @@ if [ $ebs_has_rt = "yes" ] ; then
     ebs_has_rt=no
     echo "No Sane Clock Signal Resolution. No effective Real Time support."
   else
-    echo "Smallest Sane Clock Signal Resolution = ${ebs_clock_res}"
+    echo "Smallest Sane Clock Signal Resolution = ${ebs_clock_res} microseconds"
   fi
 fi
 #echo $tau_rt_value
