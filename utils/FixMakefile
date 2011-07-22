@@ -291,6 +291,11 @@ case $1 in
 	echo "s,^OTFINC=.*$,OTFINC=$otfinc,g" >> $sedout
 	;;
 
+     ebs_clock_res=*)
+	ebs_clock_res=`echo $1 | sed -e 's/^ebs_clock_res=//'`
+	echo "s,^EBS_CLOCK_RES=.*$,EBS_CLOCK_RES=$ebs_clock_res,g" >> $sedout
+        ;;
+
      pdtcompdir=*)
         pdtcompdir=`echo $1 | sed -e 's/^pdtcompdir=//'`
 	echo "s,^PDTCOMPDIR=.*$,PDTCOMPDIR=$pdtcompdir,g" >> $sedout
@@ -1163,6 +1168,9 @@ case $1 in
 	;;
      EBS2OTF)
         echo "NOTE: Enable Conversion from Event-based Sampling Traces to Open Trace Format ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     EBS_HAS_RT)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      VAMPIRTRACE)
