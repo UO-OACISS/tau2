@@ -59,7 +59,9 @@ fi
 
 
 # Default to 800m heap space
-MEMORY=-Xmx800m
+#MEMORY=-Xmx800m
+#This default value gives an error, so let java pick a "good" value
+MEMORY=
 
 # Check machine type for a heap space boost
 machine=`uname -m`
