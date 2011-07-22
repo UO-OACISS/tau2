@@ -447,6 +447,8 @@ otfdir=
 otfinc=
 otflib=
 ebs2otf=no
+ebs_has_rt=no
+ebs_clock_res="-1"
 opari=no
 epilog=no
 hpctoolkit=no
@@ -5240,7 +5242,7 @@ fi
 ######################################################################
 
 ######################################################################
-# Check that allocator code is supported by compiler
+# Check that the Sampling allocator code is supported by compiler
 ######################################################################
   cat <<EOF > conftest_ss_alloc.cpp
 #include <Profile/TauSsAllocator.h>
@@ -5260,6 +5262,51 @@ else
     echo "no"
 fi
 /bin/rm -f conftest_ss_alloc.o conftest_ss_alloc.cpp
+######################################################################
+
+######################################################################
+# Check that the Real Time interface is supported by this system
+######################################################################
+  cat <<EOF > conftest_rt_test.cpp
+#include <time.h>
+#include <stdio.h>
+int main() {
+  int time_value = 0;
+  struct timespec timeVal;
+  int ret = clock_getres(CLOCK_REALTIME, &timeVal);
+  if (ret != 0) {
+    printf("-1");
+    return -1;
+  }
+  time_value = (int)((double)(timeVal.tv_sec)*1000000 +
+                     (double)(timeVal.tv_nsec)/1000.0);
+  if (time_value <= 0) {
+    printf("-1");
+    return -1;
+  }
+  printf("%d", time_value);
+}
+EOF
+$echo "Checking for Real Time Library support... ${nnl}"
+if $cxx_compiler $orig_useropt -o conftest_rt_test conftest_rt_test.cpp -lrt 1> /dev/null 2>&1 ; then
+    ebs_has_rt=yes
+    echo "yes"
+else
+    echo "no"
+fi
+if [ $ebs_has_rt = "yes" ] ; then
+  ebs_clock_res=`./conftest_rt_test`
+  if [ $ebs_clock_res -le 0 ] ; then
+    ebs_has_rt=no
+    echo "No Sane Clock Signal Resolution. No effective Real Time support."
+  else
+    echo "Smallest Sane Clock Signal Resolution = ${ebs_clock_res}"
+  fi
+fi
+#echo $tau_rt_value
+#echo $?
+
+/bin/rm -f conftest_rt_test conftest_rt_test.cpp
 ######################################################################
 
 ######################################################################
@@ -5448,6 +5495,10 @@ if [ $ebs2otf = yes ] ; then
   fi
 
   fixmakeargs="$fixmakeargs EBS2OTF otflib=$otflib otfinc=$otfinc"
+fi
+
+if [ $ebs_has_rt = yes ] ; then
+  fixmakeargs="$fixmakeargs EBS_HAS_RT ebs_clock_res=$ebs_clock_res"
 fi
 
 if [ $pdt_cxx_compiler != default ] ; then

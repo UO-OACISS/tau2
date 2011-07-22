@@ -833,7 +833,16 @@ BFDLIBS=
 #MRNET#TAU_LINKER_OPT15=$(MRNET_LIBS) #ENDIF#
 TAU_FORTRAN_COMPINST_OPTION=$(TAU_COMPINST_OPTION)
 #NAGWARE_FORTRAN#TAU_FORTRAN_COMPINST_OPTION=-Wc,-finstrument-functions#ENDIF#
+
+##############################################
+# Various Sampling Support Options
+##############################################
 #TAU_SS_ALLOC_SUPPORT#PROFILEOPT82 = -DTAU_SS_ALLOC_SUPPORT #ENDIF#
+# *CWL* - Watch out for potential snafus for this. Right now, if EBS_HAS_RT
+#         is set, EBS_CLOCK_RES must have a valid value.
+EBS_CLOCK_RES=
+#EBS_HAS_RT#PROFILEOPT83 = -DEBS_CLOCK_RES=$(EBS_CLOCK_RES) #ENDIF#
+
 ##############################################
 
 
@@ -860,7 +869,7 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 	      $(PROFILEOPT69) $(PROFILEOPT70) $(PROFILEOPT71) $(PROFILEOPT72) \
 	      $(PROFILEOPT73) $(PROFILEOPT74) $(PROFILEOPT75) $(PROFILEOPT76) \
 	      $(PROFILEOPT77) $(PROFILEOPT78) $(PROFILEOPT79) $(PROFILEOPT80) \
-              $(PROFILEOPT81) $(PROFILEOPT82) $(TRACEOPT)
+              $(PROFILEOPT81) $(PROFILEOPT82) $(PROFILEOPT83) $(TRACEOPT)
 
 
 ##############################################

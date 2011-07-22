@@ -123,28 +123,25 @@ FILE *ebsTrace[TAU_MAX_THREADS];
 
 /* Sample processing enabled/disabled */
 int samplingEnabled[TAU_MAX_THREADS];
-class initEnableFlags {
-public:
-initEnableFlags() {
-  for (int i = 0; i < TAU_MAX_THREADS; i++) {
-    samplingEnabled[i] = 0;
-  }
-}
-};
-initEnableFlags enableFlagsInitializer = initEnableFlags();
-
 /* Sample processing suspended/resumed */
 int suspendSampling[TAU_MAX_THREADS];
-class initSuspendFlags {
-public:
-initSuspendFlags() {
-  for (int i = 0; i < TAU_MAX_THREADS; i++) {
-    suspendSampling[i] = 0;
-  }
-}
-};
-initSuspendFlags suspendFlagsInitializer = initSuspendFlags();
+long long numSamples[TAU_MAX_THREADS];
+long long samplesDroppedTau[TAU_MAX_THREADS];
+long long samplesDroppedSuspended[TAU_MAX_THREADS];
 
+class initSamplingThreadStructs {
+public:
+  initSamplingThreadStructs() {
+    for (int i = 0; i < TAU_MAX_THREADS; i++) {
+      samplingEnabled[i] = 0;
+      suspendSampling[i] = 0;
+      numSamples[i] = 0;
+      samplesDroppedTau[i] = 0;
+      samplesDroppedSuspended[i] = 0;
+    }
+  }
+};
+initSamplingThreadStructs initializer = initSamplingThreadStructs();
 
 /*********************************************************************
  * Get the architecture specific PC
@@ -157,7 +154,6 @@ initSuspendFlags suspendFlagsInitializer = initSuspendFlags();
 #endif
 
 #define PPC_REG_PC 32
-
 
 void issueUnavailableWarningIfNecessary(char *text) {
   static bool warningIssued = false;
@@ -208,13 +204,13 @@ static inline caddr_t get_pc(void *p) {
 extern "C" void Tau_sampling_suspend() {
   int tid = RtsLayer::myThread();
   suspendSampling[tid] = 1;
-  TAU_VERBOSE("Tau_sampling_suspend: on thread %d\n", tid);
+  //  TAU_VERBOSE("Tau_sampling_suspend: on thread %d\n", tid);
 }
 
 extern "C" void Tau_sampling_resume() {
   int tid = RtsLayer::myThread();
   suspendSampling[tid] = 0;
-  TAU_VERBOSE("Tau_sampling_resume: on thread %d\n", tid);
+  //TAU_VERBOSE("Tau_sampling_resume: on thread %d\n", tid);
 }
 
 extern "C" void Tau_sampling_dlopen() {
@@ -707,6 +703,70 @@ void Tau_sampling_finalizeProfile(int tid) {
     intermediate->AddInclTime(totalTime, tid);
     intermediate->AddExclTime(totalTime, tid);
   }
+  // *CWL* - create special entries for samples dropped and add total
+  //         number of samples taken to the metadata.
+
+  /* *CWL* currently unclear if it is useful to add the dropped samples
+     and times into the profiles proper. Better to add into metadata.
+
+  FunctionInfo *ebsDroppedSamplesTau =
+    new FunctionInfo("[SAMPLE] Dropped while in TAU", "",
+		     TAU_DEFAULT,
+		     "SAMPLE", true);
+  double *droppedTauTime =
+    (double *)malloc(Tau_Global_numCounters*sizeof(double));
+  for (int i=0; i<Tau_Global_numCounters; i++) {
+    droppedTauTime[i] = 0.0;
+  }
+  droppedTauTime[0] = 
+    (double)samplesDroppedTau[tid]*TauEnv_get_ebs_period();
+  ebsDroppedSamplesTau->SetCalls(tid, samplesDroppedTau[tid]);
+  ebsDroppedSamplesTau->AddInclTime(droppedTauTime, tid);
+  ebsDroppedSamplesTau->AddExclTime(droppedTauTime, tid);
+
+  FunctionInfo *ebsDroppedSamplesSuspended =
+    new FunctionInfo("[SAMPLE] Dropped while Suspended", "",
+		     TAU_DEFAULT,
+		     "SAMPLE", true);
+  double *droppedSuspendTime =
+    (double *)malloc(Tau_Global_numCounters*sizeof(double));
+  for (int i=0; i<Tau_Global_numCounters; i++) {
+    droppedSuspendTime[i] = 0.0;
+  }
+  droppedSuspendTime[0] = 
+    (double)samplesDroppedSuspended[tid]*TauEnv_get_ebs_period();
+  ebsDroppedSamplesSuspended->SetCalls(tid, samplesDroppedSuspended[tid]);
+  ebsDroppedSamplesSuspended->AddInclTime(droppedSuspendTime, tid);
+  ebsDroppedSamplesSuspended->AddExclTime(droppedSuspendTime, tid);
+  */
+
+  char tmpstr[512];
+  char tmpname[512];
+
+  // *CWL* - overload node numbers (not scalable in ParaProf display) in
+  //         preparation for a more scalable way of displaying per-node
+  //         metadata information.
+
+  //sprintf(tmpname, "TAU_EBS_SAMPLES_TAKEN_%d_%d", RtsLayer::myNode(), tid);
+  sprintf(tmpname, "TAU_EBS_SAMPLES_TAKEN_%d", tid);
+  sprintf(tmpstr, "%lld", numSamples[tid]);
+  TAU_METADATA(tmpname, tmpstr);
+
+  /*
+  sprintf(tmpname, "TAU_EBS_SAMPLES_DROPPED_TAU_%d_%d", RtsLayer::myNode(), 
+	  tid);
+  */
+  sprintf(tmpname, "TAU_EBS_SAMPLES_DROPPED_TAU_%d", tid);
+  sprintf(tmpstr, "%lld", samplesDroppedTau[tid]);
+  TAU_METADATA(tmpname, tmpstr);
+
+  /*
+  sprintf(tmpname, "TAU_EBS_SAMPLES_DROPPED_SUSPENDED_%d_%d", 
+	  RtsLayer::myNode(), tid);
+  */
+  sprintf(tmpname, "TAU_EBS_SAMPLES_DROPPED_SUSPENDED_%d", tid);
+  sprintf(tmpstr, "%lld", samplesDroppedSuspended[tid]);
+  TAU_METADATA(tmpname, tmpstr);
 }
 
 void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
@@ -773,13 +833,16 @@ int Tau_sampling_event_stop(int tid, double *stopTime) {
  ********************************************************************/
 void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
   int tid = RtsLayer::myThread();
+  numSamples[tid]++;
 
   /* Never sample anything internal to TAU */
   if (Tau_global_get_insideTAU_tid(tid) > 0) {
+    samplesDroppedTau[tid]++;
     return;
   }
 
   if (suspendSampling[tid]) {
+    samplesDroppedSuspended[tid]++;
     return;
   }
 
@@ -826,11 +889,12 @@ int Tau_sampling_init(int tid) {
   int ret;
   int i;
 
-  //  printf ("init called! tid = %d\n", tid);
   static struct itimerval itval;
 
   //int threshold = 1000;
   int threshold = TauEnv_get_ebs_period();
+  TAU_VERBOSE("Tau_sampling_init: tid = %d with threshold %d\n", 
+	      tid, threshold);
 
   samplingEnabled[tid] = 0;
 
@@ -902,7 +966,7 @@ int Tau_sampling_init(int tid) {
       return -1;
     }
 
-    struct itimerval ovalue, pvalue;
+    struct itimerval ovalue, pvalue, try_value;
     getitimer(which, &pvalue);
 
     ret = setitimer(which, &itval, &ovalue);
@@ -931,6 +995,8 @@ int Tau_sampling_finalize(int tid) {
   TAU_VERBOSE("Tau_sampling_finalize tid=%d\n", tid);
   //  printf("Tau_sampling_finalize tid=%d\n", tid);
 
+  //  printf("Total samples encountered = %lld\n", numSamples);
+  
   if (TauEnv_get_tracing()) {
     if (ebsTrace[tid] == 0) {
       return 0;

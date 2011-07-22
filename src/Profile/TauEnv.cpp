@@ -420,6 +420,15 @@ int TauEnv_get_profile_format() {
   return env_profile_format;
 }
 
+  // *CWL* Only to be by TAU whenever the desired ebs period violates
+  //       system-supported thresholds.
+void TauEnv_force_set_ebs_period(int period) {
+  char tmpstr[512];
+  env_ebs_period = period;
+  sprintf(tmpstr, "%d", env_ebs_period);
+  TAU_METADATA("TAU_EBS_PERIOD (FORCED)", tmpstr);
+}
+
 int TauEnv_get_ebs_period() {
   return env_ebs_period;
 }
@@ -780,6 +789,21 @@ void TauEnv_initialize() {
       TAU_VERBOSE("TAU: EBS period = %d \n", env_ebs_period);
       sprintf(tmpstr, "%d", env_ebs_period);
       TAU_METADATA("TAU_EBS_PERIOD", tmpstr);
+
+      bool ebs_period_forced = false;
+#ifdef EBS_CLOCK_RES
+      // *CWL* - force the clock period to be of a sane value
+      //         if the desired (or default) value is not
+      //         supported by the machine.
+      if (env_ebs_period < EBS_CLOCK_RES) {
+	env_ebs_period = EBS_CLOCK_RES;
+	ebs_period_forced = true;
+      }
+#endif
+      if (ebs_period_forced) {
+	sprintf(tmpstr, "%d", env_ebs_period);
+	TAU_METADATA("TAU_EBS_PERIOD (FORCED)", tmpstr);
+      }
       
       const char *ebs_inclusive = getconf("TAU_EBS_INCLUSIVE");
       env_ebs_inclusive = TAU_EBS_INCLUSIVE_DEFAULT;
