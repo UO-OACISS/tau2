@@ -17,11 +17,13 @@ void shmem_get16( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_get16()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 2*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_get16( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_get16( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 2*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -34,11 +36,13 @@ void SHMEM_GET16( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_get16()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 2*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_get16( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_get16( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 2*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -51,11 +55,13 @@ void shmem_get16_( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_get16()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 2*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_get16( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_get16( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 2*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -68,11 +74,13 @@ void shmem_get16__( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_get16()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 2*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_get16( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_get16( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 2*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -89,11 +97,13 @@ void shmem_get32( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_get32()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 4*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_get32( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_get32( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 4*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -106,11 +116,13 @@ void SHMEM_GET32( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_get32()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 4*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_get32( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_get32( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 4*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -123,11 +135,13 @@ void shmem_get32_( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_get32()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 4*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_get32( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_get32( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 4*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -140,11 +154,13 @@ void shmem_get32__( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_get32()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 4*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_get32( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_get32( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 4*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -161,11 +177,13 @@ void shmem_get64( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_get64()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 8*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_get64( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_get64( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 8*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -178,11 +196,13 @@ void SHMEM_GET64( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_get64()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 8*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_get64( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_get64( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 8*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -195,11 +215,13 @@ void shmem_get64_( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_get64()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 8*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_get64( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_get64( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 8*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -212,11 +234,13 @@ void shmem_get64__( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_get64()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 8*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_get64( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_get64( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 8*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -233,11 +257,13 @@ void shmem_get128( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_get128()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 16*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_get128( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_get128( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 16*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -250,11 +276,13 @@ void SHMEM_GET128( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_get128()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 16*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_get128( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_get128( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 16*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -267,11 +295,13 @@ void shmem_get128_( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_get128()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 16*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_get128( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_get128( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 16*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -284,11 +314,13 @@ void shmem_get128__( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_get128()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 16*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_get128( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_get128( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 16*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -305,11 +337,13 @@ void shmem_getmem( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_getmem()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_getmem( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_getmem( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -322,11 +356,13 @@ void SHMEM_GETMEM( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_getmem()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_getmem( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_getmem( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -339,11 +375,13 @@ void shmem_getmem_( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_getmem()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_getmem( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_getmem( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -356,11 +394,13 @@ void shmem_getmem__( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_getmem()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_getmem( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_getmem( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -377,11 +417,13 @@ void shmem_short_get( short * trg, const short * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_short_get()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(short)*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_short_get( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_short_get( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(short)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -394,11 +436,13 @@ void SHMEM_SHORT_GET( short * trg, const short * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_short_get()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(short)*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_short_get( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_short_get( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(short)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -411,11 +455,13 @@ void shmem_short_get_( short * trg, const short * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_short_get()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(short)*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_short_get( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_short_get( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(short)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -428,11 +474,13 @@ void shmem_short_get__( short * trg, const short * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_short_get()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(short)*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_short_get( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_short_get( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(short)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -449,11 +497,13 @@ void shmem_int_get( int * trg, const int * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_int_get()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(int)*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_int_get( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_int_get( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(int)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -466,11 +516,13 @@ void SHMEM_INT_GET( int * trg, const int * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_int_get()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(int)*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_int_get( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_int_get( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(int)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -483,11 +535,13 @@ void shmem_int_get_( int * trg, const int * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_int_get()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(int)*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_int_get( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_int_get( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(int)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -500,11 +554,13 @@ void shmem_int_get__( int * trg, const int * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_int_get()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(int)*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_int_get( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_int_get( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(int)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -521,11 +577,13 @@ void shmem_long_get( long * trg, const long * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_long_get()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(long)*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_long_get( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_long_get( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(long)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -538,11 +596,13 @@ void SHMEM_LONG_GET( long * trg, const long * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_long_get()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(long)*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_long_get( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_long_get( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(long)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -555,11 +615,13 @@ void shmem_long_get_( long * trg, const long * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_long_get()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(long)*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_long_get( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_long_get( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(long)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -572,11 +634,13 @@ void shmem_long_get__( long * trg, const long * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_long_get()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(long)*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_long_get( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_long_get( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(long)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -593,11 +657,13 @@ void shmem_longlong_get( long long * trg, const long long * src, size_t len, int
 
   TAU_PROFILE_TIMER(t, "shmem_longlong_get()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(long long)*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_longlong_get( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_longlong_get( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(long long)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -610,11 +676,13 @@ void SHMEM_LONGLONG_GET( long long * trg, const long long * src, size_t len, int
 
   TAU_PROFILE_TIMER(t, "shmem_longlong_get()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(long long)*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_longlong_get( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_longlong_get( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(long long)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -627,11 +695,13 @@ void shmem_longlong_get_( long long * trg, const long long * src, size_t len, in
 
   TAU_PROFILE_TIMER(t, "shmem_longlong_get()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(long long)*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_longlong_get( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_longlong_get( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(long long)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -644,11 +714,13 @@ void shmem_longlong_get__( long long * trg, const long long * src, size_t len, i
 
   TAU_PROFILE_TIMER(t, "shmem_longlong_get()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(long long)*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_longlong_get( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_longlong_get( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(long long)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -665,11 +737,13 @@ void shmem_float_get( float * trg, const float * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_float_get()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(float)*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_float_get( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_float_get( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(float)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -682,11 +756,13 @@ void SHMEM_FLOAT_GET( float * trg, const float * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_float_get()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(float)*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_float_get( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_float_get( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(float)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -699,11 +775,13 @@ void shmem_float_get_( float * trg, const float * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_float_get()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(float)*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_float_get( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_float_get( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(float)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -716,11 +794,13 @@ void shmem_float_get__( float * trg, const float * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_float_get()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(float)*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_float_get( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_float_get( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(float)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -737,11 +817,13 @@ void shmem_double_get( double * trg, const double * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_double_get()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(double)*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_double_get( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_double_get( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(double)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -754,11 +836,13 @@ void SHMEM_DOUBLE_GET( double * trg, const double * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_double_get()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(double)*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_double_get( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_double_get( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(double)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -771,11 +855,13 @@ void shmem_double_get_( double * trg, const double * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_double_get()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(double)*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_double_get( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_double_get( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(double)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -788,11 +874,13 @@ void shmem_double_get__( double * trg, const double * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_double_get()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(double)*len, pe);
 #ifdef TAU_P_SHMEM 
   __p__shmem_double_get( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_double_get( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(double)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -809,11 +897,14 @@ void shmem_put16( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_put16()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 2*len);
 #ifdef TAU_P_SHMEM 
   __p__shmem_put16( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put16( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 2*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -826,11 +917,13 @@ void SHMEM_PUT16( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_put16()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 2*len);
 #ifdef TAU_P_SHMEM 
   __p__shmem_put16( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put16( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 2*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -843,11 +936,13 @@ void shmem_put16_( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_put16()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 2*len);
 #ifdef TAU_P_SHMEM 
   __p__shmem_put16( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put16( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 2*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -860,11 +955,13 @@ void shmem_put16__( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_put16()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 2*len);
 #ifdef TAU_P_SHMEM 
   __p__shmem_put16( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put16( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 2*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -881,11 +978,13 @@ void shmem_put32( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_put32()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 4*len);
 #ifdef TAU_P_SHMEM 
   __p__shmem_put32( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put32( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 4*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -898,11 +997,13 @@ void SHMEM_PUT32( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_put32()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 4*len);
 #ifdef TAU_P_SHMEM 
   __p__shmem_put32( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put32( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 4*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -915,11 +1016,13 @@ void shmem_put32_( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_put32()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 4*len);
 #ifdef TAU_P_SHMEM 
   __p__shmem_put32( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put32( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 4*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -932,11 +1035,13 @@ void shmem_put32__( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_put32()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 4*len);
 #ifdef TAU_P_SHMEM 
   __p__shmem_put32( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put32( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 4*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -953,11 +1058,13 @@ void shmem_put64( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_put64()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 8*len); /* 64 = 8 bytes */
 #ifdef TAU_P_SHMEM 
   __p__shmem_put64( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put64( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 8*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -970,11 +1077,13 @@ void SHMEM_PUT64( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_put64()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 8*len); /* 64 = 8 bytes */
 #ifdef TAU_P_SHMEM 
   __p__shmem_put64( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put64( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 8*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -987,11 +1096,13 @@ void shmem_put64_( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_put64()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 8*len); /* 64 = 8 bytes */
 #ifdef TAU_P_SHMEM 
   __p__shmem_put64( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put64( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 8*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1004,11 +1115,13 @@ void shmem_put64__( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_put64()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 8*len); /* 64 = 8 bytes */
 #ifdef TAU_P_SHMEM 
   __p__shmem_put64( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put64( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 8*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1025,11 +1138,13 @@ void shmem_put128( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_put128()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 16*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_put128( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put128( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 16*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1042,11 +1157,13 @@ void SHMEM_PUT128( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_put128()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 16*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_put128( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put128( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 16*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1059,11 +1176,13 @@ void shmem_put128_( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_put128()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 16*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_put128( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put128( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 16*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1076,11 +1195,13 @@ void shmem_put128__( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_put128()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 16*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_put128( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put128( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 16*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1097,11 +1218,13 @@ void shmem_putmem( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_putmem()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_putmem( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_putmem( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1114,11 +1237,13 @@ void SHMEM_PUTMEM( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_putmem()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_putmem( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_putmem( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1131,11 +1256,13 @@ void shmem_putmem_( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_putmem()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_putmem( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_putmem( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1148,11 +1275,13 @@ void shmem_putmem__( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_putmem()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_putmem( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_putmem( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1169,11 +1298,13 @@ void shmem_short_put( short * trg, const short * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_short_put()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(short)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_short_put( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_short_put( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(short)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1186,11 +1317,13 @@ void SHMEM_SHORT_PUT( short * trg, const short * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_short_put()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(short)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_short_put( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_short_put( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(short)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1203,11 +1336,13 @@ void shmem_short_put_( short * trg, const short * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_short_put()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(short)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_short_put( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_short_put( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(short)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1220,11 +1355,13 @@ void shmem_short_put__( short * trg, const short * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_short_put()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(short)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_short_put( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_short_put( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(short)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1241,11 +1378,13 @@ void shmem_int_put( int * trg, const int * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_int_put()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(int)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_int_put( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_int_put( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(int)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1258,11 +1397,13 @@ void SHMEM_INT_PUT( int * trg, const int * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_int_put()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(int)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_int_put( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_int_put( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(int)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1275,11 +1416,13 @@ void shmem_int_put_( int * trg, const int * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_int_put()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(int)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_int_put( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_int_put( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(int)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1292,11 +1435,13 @@ void shmem_int_put__( int * trg, const int * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_int_put()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(int)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_int_put( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_int_put( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(int)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1331,11 +1476,13 @@ void SHMEM_LONG_PUT( long * trg, const long * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_long_put()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(long)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_long_put( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_long_put( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(long)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1348,11 +1495,13 @@ void shmem_long_put_( long * trg, const long * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_long_put()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(long)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_long_put( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_long_put( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(long)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1365,11 +1514,13 @@ void shmem_long_put__( long * trg, const long * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_long_put()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(long)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_long_put( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_long_put( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(long)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1386,11 +1537,13 @@ void shmem_longlong_put( long long * trg, const long long * src, size_t len, int
 
   TAU_PROFILE_TIMER(t, "shmem_longlong_put()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(long long)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_longlong_put( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_longlong_put( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(long long)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1403,11 +1556,13 @@ void SHMEM_LONGLONG_PUT( long long * trg, const long long * src, size_t len, int
 
   TAU_PROFILE_TIMER(t, "shmem_longlong_put()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(long long)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_longlong_put( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_longlong_put( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(long long)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1420,11 +1575,13 @@ void shmem_longlong_put_( long long * trg, const long long * src, size_t len, in
 
   TAU_PROFILE_TIMER(t, "shmem_longlong_put()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(long long)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_longlong_put( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_longlong_put( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(long long)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1437,11 +1594,13 @@ void shmem_longlong_put__( long long * trg, const long long * src, size_t len, i
 
   TAU_PROFILE_TIMER(t, "shmem_longlong_put()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(long long)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_longlong_put( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_longlong_put( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(long long)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1458,11 +1617,13 @@ void shmem_float_put( float * trg, const float * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_float_put()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(float)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_float_put( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_float_put( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(float)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1475,11 +1636,13 @@ void SHMEM_FLOAT_PUT( float * trg, const float * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_float_put()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(float)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_float_put( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_float_put( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(float)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1492,11 +1655,13 @@ void shmem_float_put_( float * trg, const float * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_float_put()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(float)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_float_put( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_float_put( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(float)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1509,11 +1674,13 @@ void shmem_float_put__( float * trg, const float * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_float_put()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(float)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_float_put( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_float_put( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(float)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1530,11 +1697,13 @@ void shmem_double_put( double * trg, const double * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_double_put()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(double)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_double_put( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_double_put( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(double)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1547,11 +1716,13 @@ void SHMEM_DOUBLE_PUT( double * trg, const double * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_double_put()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(double)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_double_put( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_double_put( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(double)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1564,11 +1735,13 @@ void shmem_double_put_( double * trg, const double * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_double_put()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(double)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_double_put( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_double_put( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(double)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1581,11 +1754,13 @@ void shmem_double_put__( double * trg, const double * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_double_put()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(double)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_double_put( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_double_put( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(double)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1602,11 +1777,13 @@ void shmem_put16_nb( void * trg, const void * src, size_t len, int pe, void ** t
 
   TAU_PROFILE_TIMER(t, "shmem_put16_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 2*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_put16_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put16_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 2*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1619,11 +1796,13 @@ void SHMEM_PUT16_NB( void * trg, const void * src, size_t len, int pe, void ** t
 
   TAU_PROFILE_TIMER(t, "shmem_put16_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 2*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_put16_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put16_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 2*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1636,11 +1815,13 @@ void shmem_put16_nb_( void * trg, const void * src, size_t len, int pe, void ** 
 
   TAU_PROFILE_TIMER(t, "shmem_put16_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 2*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_put16_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put16_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 2*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1653,11 +1834,13 @@ void shmem_put16_nb__( void * trg, const void * src, size_t len, int pe, void **
 
   TAU_PROFILE_TIMER(t, "shmem_put16_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 2*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_put16_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put16_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 2*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1674,11 +1857,13 @@ void shmem_put32_nb( void * trg, const void * src, size_t len, int pe, void ** t
 
   TAU_PROFILE_TIMER(t, "shmem_put32_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 4*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_put32_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put32_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 4*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1691,11 +1876,13 @@ void SHMEM_PUT32_NB( void * trg, const void * src, size_t len, int pe, void ** t
 
   TAU_PROFILE_TIMER(t, "shmem_put32_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 4*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_put32_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put32_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 4*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1708,11 +1895,13 @@ void shmem_put32_nb_( void * trg, const void * src, size_t len, int pe, void ** 
 
   TAU_PROFILE_TIMER(t, "shmem_put32_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 4*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_put32_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put32_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 4*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1725,11 +1914,13 @@ void shmem_put32_nb__( void * trg, const void * src, size_t len, int pe, void **
 
   TAU_PROFILE_TIMER(t, "shmem_put32_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 4*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_put32_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put32_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 4*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1746,11 +1937,13 @@ void shmem_put64_nb( void * trg, const void * src, size_t len, int pe, void ** t
 
   TAU_PROFILE_TIMER(t, "shmem_put64_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 8*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_put64_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put64_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 8*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1763,11 +1956,13 @@ void SHMEM_PUT64_NB( void * trg, const void * src, size_t len, int pe, void ** t
 
   TAU_PROFILE_TIMER(t, "shmem_put64_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 8*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_put64_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put64_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 8*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1780,11 +1975,13 @@ void shmem_put64_nb_( void * trg, const void * src, size_t len, int pe, void ** 
 
   TAU_PROFILE_TIMER(t, "shmem_put64_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 8*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_put64_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put64_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 8*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1797,11 +1994,13 @@ void shmem_put64_nb__( void * trg, const void * src, size_t len, int pe, void **
 
   TAU_PROFILE_TIMER(t, "shmem_put64_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 8*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_put64_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put64_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 8*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1818,11 +2017,13 @@ void shmem_put128_nb( void * trg, const void * src, size_t len, int pe, void ** 
 
   TAU_PROFILE_TIMER(t, "shmem_put128_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 16*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_put128_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put128_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 16*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1835,11 +2036,13 @@ void SHMEM_PUT128_NB( void * trg, const void * src, size_t len, int pe, void ** 
 
   TAU_PROFILE_TIMER(t, "shmem_put128_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 16*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_put128_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put128_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 16*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1852,11 +2055,13 @@ void shmem_put128_nb_( void * trg, const void * src, size_t len, int pe, void **
 
   TAU_PROFILE_TIMER(t, "shmem_put128_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 16*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_put128_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put128_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 16*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1869,11 +2074,13 @@ void shmem_put128_nb__( void * trg, const void * src, size_t len, int pe, void *
 
   TAU_PROFILE_TIMER(t, "shmem_put128_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, 16*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_put128_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put128_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), 16*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1890,11 +2097,13 @@ void shmem_putmem_nb( void * trg, const void * src, size_t len, int pe, void ** 
 
   TAU_PROFILE_TIMER(t, "shmem_putmem_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_putmem_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_putmem_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1907,11 +2116,13 @@ void SHMEM_PUTMEM_NB( void * trg, const void * src, size_t len, int pe, void ** 
 
   TAU_PROFILE_TIMER(t, "shmem_putmem_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_putmem_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_putmem_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1924,11 +2135,13 @@ void shmem_putmem_nb_( void * trg, const void * src, size_t len, int pe, void **
 
   TAU_PROFILE_TIMER(t, "shmem_putmem_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_putmem_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_putmem_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1941,11 +2154,13 @@ void shmem_putmem_nb__( void * trg, const void * src, size_t len, int pe, void *
 
   TAU_PROFILE_TIMER(t, "shmem_putmem_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_putmem_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_putmem_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1962,11 +2177,13 @@ void shmem_short_put_nb( short * trg, const short * src, size_t len, int pe, voi
 
   TAU_PROFILE_TIMER(t, "shmem_short_put_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(short)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_short_put_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_short_put_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(short)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1979,11 +2196,13 @@ void SHMEM_SHORT_PUT_NB( short * trg, const short * src, size_t len, int pe, voi
 
   TAU_PROFILE_TIMER(t, "shmem_short_put_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(short)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_short_put_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_short_put_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(short)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -1996,11 +2215,13 @@ void shmem_short_put_nb_( short * trg, const short * src, size_t len, int pe, vo
 
   TAU_PROFILE_TIMER(t, "shmem_short_put_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(short)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_short_put_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_short_put_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(short)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2013,11 +2234,13 @@ void shmem_short_put_nb__( short * trg, const short * src, size_t len, int pe, v
 
   TAU_PROFILE_TIMER(t, "shmem_short_put_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(short)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_short_put_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_short_put_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(short)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2034,11 +2257,13 @@ void shmem_int_put_nb( int * trg, const int * src, size_t len, int pe, void ** t
 
   TAU_PROFILE_TIMER(t, "shmem_int_put_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(int)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_int_put_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_int_put_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(int)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2051,11 +2276,13 @@ void SHMEM_INT_PUT_NB( int * trg, const int * src, size_t len, int pe, void ** t
 
   TAU_PROFILE_TIMER(t, "shmem_int_put_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(int)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_int_put_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_int_put_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(int)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2068,11 +2295,13 @@ void shmem_int_put_nb_( int * trg, const int * src, size_t len, int pe, void ** 
 
   TAU_PROFILE_TIMER(t, "shmem_int_put_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(int)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_int_put_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_int_put_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(int)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2085,11 +2314,13 @@ void shmem_int_put_nb__( int * trg, const int * src, size_t len, int pe, void **
 
   TAU_PROFILE_TIMER(t, "shmem_int_put_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(int)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_int_put_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_int_put_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(int)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2106,11 +2337,13 @@ void shmem_long_put_nb( long * trg, const long * src, size_t len, int pe, void *
 
   TAU_PROFILE_TIMER(t, "shmem_long_put_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(long)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_long_put_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_long_put_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(long)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2123,11 +2356,13 @@ void SHMEM_LONG_PUT_NB( long * trg, const long * src, size_t len, int pe, void *
 
   TAU_PROFILE_TIMER(t, "shmem_long_put_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(long)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_long_put_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_long_put_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(long)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2140,11 +2375,13 @@ void shmem_long_put_nb_( long * trg, const long * src, size_t len, int pe, void 
 
   TAU_PROFILE_TIMER(t, "shmem_long_put_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(long)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_long_put_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_long_put_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(long)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2157,11 +2394,13 @@ void shmem_long_put_nb__( long * trg, const long * src, size_t len, int pe, void
 
   TAU_PROFILE_TIMER(t, "shmem_long_put_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(long)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_long_put_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_long_put_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(long)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2178,11 +2417,13 @@ void shmem_longlong_put_nb( long long * trg, const long long * src, size_t len, 
 
   TAU_PROFILE_TIMER(t, "shmem_longlong_put_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(long long)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_longlong_put_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_longlong_put_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(long long)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2195,11 +2436,13 @@ void SHMEM_LONGLONG_PUT_NB( long long * trg, const long long * src, size_t len, 
 
   TAU_PROFILE_TIMER(t, "shmem_longlong_put_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(long long)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_longlong_put_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_longlong_put_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(long long)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2212,11 +2455,13 @@ void shmem_longlong_put_nb_( long long * trg, const long long * src, size_t len,
 
   TAU_PROFILE_TIMER(t, "shmem_longlong_put_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(long long)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_longlong_put_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_longlong_put_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(long long)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2229,11 +2474,13 @@ void shmem_longlong_put_nb__( long long * trg, const long long * src, size_t len
 
   TAU_PROFILE_TIMER(t, "shmem_longlong_put_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(long long)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_longlong_put_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_longlong_put_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(long long)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2250,11 +2497,13 @@ void shmem_float_put_nb( float * trg, const float * src, size_t len, int pe, voi
 
   TAU_PROFILE_TIMER(t, "shmem_float_put_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(float)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_float_put_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_float_put_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(float)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2267,11 +2516,13 @@ void SHMEM_FLOAT_PUT_NB( float * trg, const float * src, size_t len, int pe, voi
 
   TAU_PROFILE_TIMER(t, "shmem_float_put_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(float)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_float_put_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_float_put_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(float)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2284,11 +2535,13 @@ void shmem_float_put_nb_( float * trg, const float * src, size_t len, int pe, vo
 
   TAU_PROFILE_TIMER(t, "shmem_float_put_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(float)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_float_put_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_float_put_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(float)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2301,11 +2554,13 @@ void shmem_float_put_nb__( float * trg, const float * src, size_t len, int pe, v
 
   TAU_PROFILE_TIMER(t, "shmem_float_put_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(float)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_float_put_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_float_put_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(float)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2322,11 +2577,13 @@ void shmem_double_put_nb( double * trg, const double * src, size_t len, int pe, 
 
   TAU_PROFILE_TIMER(t, "shmem_double_put_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(double)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_double_put_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_double_put_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(double)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2339,11 +2596,13 @@ void SHMEM_DOUBLE_PUT_NB( double * trg, const double * src, size_t len, int pe, 
 
   TAU_PROFILE_TIMER(t, "shmem_double_put_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(double)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_double_put_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_double_put_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(double)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2356,11 +2615,13 @@ void shmem_double_put_nb_( double * trg, const double * src, size_t len, int pe,
 
   TAU_PROFILE_TIMER(t, "shmem_double_put_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(double)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_double_put_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_double_put_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(double)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2373,11 +2634,13 @@ void shmem_double_put_nb__( double * trg, const double * src, size_t len, int pe
 
   TAU_PROFILE_TIMER(t, "shmem_double_put_nb()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(double)*len); 
 #ifdef TAU_P_SHMEM 
   __p__shmem_double_put_nb( trg, src, len, pe, transfer_handle) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_double_put_nb( trg, src, len, pe, transfer_handle) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(double)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2394,11 +2657,13 @@ void shmem_short_iget( short * trg, const short * src, ptrdiff_t tst, ptrdiff_t 
 
   TAU_PROFILE_TIMER(t, "shmem_short_iget()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(short)*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_short_iget( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_short_iget( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(short)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2411,11 +2676,14 @@ void SHMEM_SHORT_IGET( short * trg, const short * src, ptrdiff_t tst, ptrdiff_t 
 
   TAU_PROFILE_TIMER(t, "shmem_short_iget()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(short)*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_short_iget( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_short_iget( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(short)*len);
+
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2428,11 +2696,13 @@ void shmem_short_iget_( short * trg, const short * src, ptrdiff_t tst, ptrdiff_t
 
   TAU_PROFILE_TIMER(t, "shmem_short_iget()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(short)*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_short_iget( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_short_iget( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(short)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2445,11 +2715,13 @@ void shmem_short_iget__( short * trg, const short * src, ptrdiff_t tst, ptrdiff_
 
   TAU_PROFILE_TIMER(t, "shmem_short_iget()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(short)*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_short_iget( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_short_iget( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(short)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2466,11 +2738,13 @@ void shmem_int_iget( int * trg, const int * src, ptrdiff_t tst, ptrdiff_t sst, s
 
   TAU_PROFILE_TIMER(t, "shmem_int_iget()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(int)*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_int_iget( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_int_iget( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(int)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2483,11 +2757,13 @@ void SHMEM_INT_IGET( int * trg, const int * src, ptrdiff_t tst, ptrdiff_t sst, s
 
   TAU_PROFILE_TIMER(t, "shmem_int_iget()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(int)*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_int_iget( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_int_iget( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(int)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2500,11 +2776,13 @@ void shmem_int_iget_( int * trg, const int * src, ptrdiff_t tst, ptrdiff_t sst, 
 
   TAU_PROFILE_TIMER(t, "shmem_int_iget()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(int)*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_int_iget( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_int_iget( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(int)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2517,11 +2795,13 @@ void shmem_int_iget__( int * trg, const int * src, ptrdiff_t tst, ptrdiff_t sst,
 
   TAU_PROFILE_TIMER(t, "shmem_int_iget()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(int)*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_int_iget( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_int_iget( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(int)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2538,11 +2818,13 @@ void shmem_long_iget( long * trg, const long * src, ptrdiff_t tst, ptrdiff_t sst
 
   TAU_PROFILE_TIMER(t, "shmem_long_iget()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(long)*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_long_iget( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_long_iget( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(long)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2555,11 +2837,13 @@ void SHMEM_LONG_IGET( long * trg, const long * src, ptrdiff_t tst, ptrdiff_t sst
 
   TAU_PROFILE_TIMER(t, "shmem_long_iget()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(long)*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_long_iget( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_long_iget( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(long)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2572,11 +2856,13 @@ void shmem_long_iget_( long * trg, const long * src, ptrdiff_t tst, ptrdiff_t ss
 
   TAU_PROFILE_TIMER(t, "shmem_long_iget()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(long)*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_long_iget( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_long_iget( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(long)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2589,11 +2875,13 @@ void shmem_long_iget__( long * trg, const long * src, ptrdiff_t tst, ptrdiff_t s
 
   TAU_PROFILE_TIMER(t, "shmem_long_iget()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(long)*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_long_iget( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_long_iget( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(long)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2610,11 +2898,13 @@ void shmem_longlong_iget( long long * trg, const long long * src, ptrdiff_t tst,
 
   TAU_PROFILE_TIMER(t, "shmem_longlong_iget()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(long long)*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_longlong_iget( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_longlong_iget( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(long long)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2627,11 +2917,13 @@ void SHMEM_LONGLONG_IGET( long long * trg, const long long * src, ptrdiff_t tst,
 
   TAU_PROFILE_TIMER(t, "shmem_longlong_iget()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(long long)*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_longlong_iget( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_longlong_iget( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(long long)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2644,11 +2936,13 @@ void shmem_longlong_iget_( long long * trg, const long long * src, ptrdiff_t tst
 
   TAU_PROFILE_TIMER(t, "shmem_longlong_iget()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(long long)*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_longlong_iget( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_longlong_iget( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(long long)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2661,11 +2955,13 @@ void shmem_longlong_iget__( long long * trg, const long long * src, ptrdiff_t ts
 
   TAU_PROFILE_TIMER(t, "shmem_longlong_iget()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(long long)*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_longlong_iget( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_longlong_iget( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(long long)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2682,11 +2978,13 @@ void shmem_float_iget( float * trg, const float * src, ptrdiff_t tst, ptrdiff_t 
 
   TAU_PROFILE_TIMER(t, "shmem_float_iget()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(float)*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_float_iget( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_float_iget( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(float)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2699,11 +2997,13 @@ void SHMEM_FLOAT_IGET( float * trg, const float * src, ptrdiff_t tst, ptrdiff_t 
 
   TAU_PROFILE_TIMER(t, "shmem_float_iget()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(float)*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_float_iget( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_float_iget( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(float)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2716,11 +3016,13 @@ void shmem_float_iget_( float * trg, const float * src, ptrdiff_t tst, ptrdiff_t
 
   TAU_PROFILE_TIMER(t, "shmem_float_iget()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(float)*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_float_iget( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_float_iget( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(float)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2733,11 +3035,13 @@ void shmem_float_iget__( float * trg, const float * src, ptrdiff_t tst, ptrdiff_
 
   TAU_PROFILE_TIMER(t, "shmem_float_iget()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(float)*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_float_iget( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_float_iget( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(float)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2754,11 +3058,13 @@ void shmem_double_iget( double * trg, const double * src, ptrdiff_t tst, ptrdiff
 
   TAU_PROFILE_TIMER(t, "shmem_double_iget()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(double)*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_double_iget( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_double_iget( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(double)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2771,11 +3077,13 @@ void SHMEM_DOUBLE_IGET( double * trg, const double * src, ptrdiff_t tst, ptrdiff
 
   TAU_PROFILE_TIMER(t, "shmem_double_iget()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(double)*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_double_iget( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_double_iget( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(double)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2788,11 +3096,13 @@ void shmem_double_iget_( double * trg, const double * src, ptrdiff_t tst, ptrdif
 
   TAU_PROFILE_TIMER(t, "shmem_double_iget()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(double)*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_double_iget( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_double_iget( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(double)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2805,11 +3115,13 @@ void shmem_double_iget__( double * trg, const double * src, ptrdiff_t tst, ptrdi
 
   TAU_PROFILE_TIMER(t, "shmem_double_iget()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(double)*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_double_iget( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_double_iget( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(double)*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2826,11 +3138,13 @@ void shmem_iget16( void * trg, const void * src, ptrdiff_t tst, ptrdiff_t sst, s
 
   TAU_PROFILE_TIMER(t, "shmem_iget16()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 2*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_iget16( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_iget16( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 2*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2843,11 +3157,13 @@ void SHMEM_IGET16( void * trg, const void * src, ptrdiff_t tst, ptrdiff_t sst, s
 
   TAU_PROFILE_TIMER(t, "shmem_iget16()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 2*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_iget16( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_iget16( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 2*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2860,11 +3176,13 @@ void shmem_iget16_( void * trg, const void * src, ptrdiff_t tst, ptrdiff_t sst, 
 
   TAU_PROFILE_TIMER(t, "shmem_iget16()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 2*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_iget16( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_iget16( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 2*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2877,11 +3195,13 @@ void shmem_iget16__( void * trg, const void * src, ptrdiff_t tst, ptrdiff_t sst,
 
   TAU_PROFILE_TIMER(t, "shmem_iget16()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 2*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_iget16( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_iget16( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 2*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2898,11 +3218,13 @@ void shmem_iget32( void * trg, const void * src, ptrdiff_t tst, ptrdiff_t sst, s
 
   TAU_PROFILE_TIMER(t, "shmem_iget32()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 4*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_iget32( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_iget32( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 4*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2915,11 +3237,13 @@ void SHMEM_IGET32( void * trg, const void * src, ptrdiff_t tst, ptrdiff_t sst, s
 
   TAU_PROFILE_TIMER(t, "shmem_iget32()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 4*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_iget32( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_iget32( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 4*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2932,11 +3256,13 @@ void shmem_iget32_( void * trg, const void * src, ptrdiff_t tst, ptrdiff_t sst, 
 
   TAU_PROFILE_TIMER(t, "shmem_iget32()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 4*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_iget32( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_iget32( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 4*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2949,11 +3275,13 @@ void shmem_iget32__( void * trg, const void * src, ptrdiff_t tst, ptrdiff_t sst,
 
   TAU_PROFILE_TIMER(t, "shmem_iget32()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 4*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_iget32( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_iget32( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 4*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2970,11 +3298,13 @@ void shmem_iget64( void * trg, const void * src, ptrdiff_t tst, ptrdiff_t sst, s
 
   TAU_PROFILE_TIMER(t, "shmem_iget64()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 4*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_iget64( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_iget64( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 4*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -2987,11 +3317,13 @@ void SHMEM_IGET64( void * trg, const void * src, ptrdiff_t tst, ptrdiff_t sst, s
 
   TAU_PROFILE_TIMER(t, "shmem_iget64()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 4*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_iget64( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_iget64( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 4*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -3004,11 +3336,13 @@ void shmem_iget64_( void * trg, const void * src, ptrdiff_t tst, ptrdiff_t sst, 
 
   TAU_PROFILE_TIMER(t, "shmem_iget64()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 4*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_iget64( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_iget64( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 4*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -3021,11 +3355,13 @@ void shmem_iget64__( void * trg, const void * src, ptrdiff_t tst, ptrdiff_t sst,
 
   TAU_PROFILE_TIMER(t, "shmem_iget64()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 4*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_iget64( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_iget64( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 4*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -3042,12 +3378,13 @@ void shmem_iget128( void * trg, const void * src, ptrdiff_t tst, ptrdiff_t sst, 
 
   TAU_PROFILE_TIMER(t, "shmem_iget128()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 16*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_iget128( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_iget128( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
-  TAU_PROFILE_STOP(t); 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 16*len); 
   return ; 
 }
 
@@ -3059,11 +3396,13 @@ void SHMEM_IGET128( void * trg, const void * src, ptrdiff_t tst, ptrdiff_t sst, 
 
   TAU_PROFILE_TIMER(t, "shmem_iget128()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 16*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_iget128( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_iget128( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 16*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -3076,11 +3415,13 @@ void shmem_iget128_( void * trg, const void * src, ptrdiff_t tst, ptrdiff_t sst,
 
   TAU_PROFILE_TIMER(t, "shmem_iget128()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 16*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_iget128( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_iget128( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 16*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -3093,11 +3434,13 @@ void shmem_iget128__( void * trg, const void * src, ptrdiff_t tst, ptrdiff_t sst
 
   TAU_PROFILE_TIMER(t, "shmem_iget128()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), 16*len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_iget128( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_iget128( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, 16*len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -3114,11 +3457,13 @@ void shmem_short_iput( short * trg, const short * src, ptrdiff_t tst, ptrdiff_t 
 
   TAU_PROFILE_TIMER(t, "shmem_short_iput()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(short)*len);
 #ifdef TAU_P_SHMEM 
   __p__shmem_short_iput( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_short_iput( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(short)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -3131,11 +3476,13 @@ void SHMEM_SHORT_IPUT( short * trg, const short * src, ptrdiff_t tst, ptrdiff_t 
 
   TAU_PROFILE_TIMER(t, "shmem_short_iput()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(short)*len);
 #ifdef TAU_P_SHMEM 
   __p__shmem_short_iput( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_short_iput( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(short)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -3148,11 +3495,13 @@ void shmem_short_iput_( short * trg, const short * src, ptrdiff_t tst, ptrdiff_t
 
   TAU_PROFILE_TIMER(t, "shmem_short_iput()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(short)*len);
 #ifdef TAU_P_SHMEM 
   __p__shmem_short_iput( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_short_iput( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(short)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -3165,11 +3514,13 @@ void shmem_short_iput__( short * trg, const short * src, ptrdiff_t tst, ptrdiff_
 
   TAU_PROFILE_TIMER(t, "shmem_short_iput()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(short)*len);
 #ifdef TAU_P_SHMEM 
   __p__shmem_short_iput( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_short_iput( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(short)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -3186,11 +3537,13 @@ void shmem_int_iput( int * trg, const int * src, ptrdiff_t tst, ptrdiff_t sst, s
 
   TAU_PROFILE_TIMER(t, "shmem_int_iput()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(int)*len);
 #ifdef TAU_P_SHMEM 
   __p__shmem_int_iput( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_int_iput( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(int)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -3203,11 +3556,13 @@ void SHMEM_INT_IPUT( int * trg, const int * src, ptrdiff_t tst, ptrdiff_t sst, s
 
   TAU_PROFILE_TIMER(t, "shmem_int_iput()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(int)*len);
 #ifdef TAU_P_SHMEM 
   __p__shmem_int_iput( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_int_iput( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(int)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -3220,11 +3575,13 @@ void shmem_int_iput_( int * trg, const int * src, ptrdiff_t tst, ptrdiff_t sst, 
 
   TAU_PROFILE_TIMER(t, "shmem_int_iput()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(int)*len);
 #ifdef TAU_P_SHMEM 
   __p__shmem_int_iput( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_int_iput( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(int)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -3237,11 +3594,13 @@ void shmem_int_iput__( int * trg, const int * src, ptrdiff_t tst, ptrdiff_t sst,
 
   TAU_PROFILE_TIMER(t, "shmem_int_iput()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(int)*len);
 #ifdef TAU_P_SHMEM 
   __p__shmem_int_iput( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_int_iput( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(int)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -3258,11 +3617,13 @@ void shmem_long_iput( long * trg, const long * src, ptrdiff_t tst, ptrdiff_t sst
 
   TAU_PROFILE_TIMER(t, "shmem_long_iput()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(long)*len);
 #ifdef TAU_P_SHMEM 
   __p__shmem_long_iput( trg, src, tst, sst, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_long_iput( trg, src, tst, sst, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(long)*len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -10428,11 +10789,13 @@ void shmem_get( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_get()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), len, pe)
 #ifdef TAU_P_SHMEM 
   __p__shmem_get( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_get( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, len);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
@@ -10517,11 +10880,13 @@ void SHMEM_PUT( void * trg, const void * src, size_t len, int pe)
 
   TAU_PROFILE_TIMER(t, "shmem_put()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, len);
 #ifdef TAU_P_SHMEM 
   __p__shmem_put( trg, src, len, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   pshmem_put( trg, src, len, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), len, pe);
   TAU_PROFILE_STOP(t); 
   return ; 
 }
