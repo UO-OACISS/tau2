@@ -33,6 +33,8 @@
 
 #include <Profile/TauEnv.h>
 #include <TAU.h>
+#include <tauroot.h>
+#include <fcntl.h>
 
 #define MAX_LN_LEN 2048
 
@@ -42,6 +44,8 @@
 #define TAU_CALLPATH_DEPTH_DEFAULT  2
 
 #define TAU_DEPTH_LIMIT_DEFAULT INT_MAX
+
+#define TAU_DISABLE_INSTRUMENTATION_DEFAULT 0
 
 /* If TAU is built with -PROFILECALLPATH, we turn callpath profiling on by default */
 #ifdef TAU_CALLPATH
@@ -237,6 +241,16 @@ static int TauConf_read() {
     TauConf_parse(cfgFile, tmp);
     fclose(cfgFile);
   }
+  else {
+    char conf_file_name[1024]; 
+    sprintf(conf_file_name,"%s/../tau_system_defaults/tau.conf", TAUROOT);
+    cfgFile = fopen(conf_file_name, "r");
+    if (cfgFile) {
+      TauConf_parse(cfgFile, tmp);
+      fclose(cfgFile);
+      TAU_VERBOSE("TAU: Read systemwide default configuration settings from %s\n", conf_file_name);
+    }
+  }
   return 0;
 }
 
@@ -251,12 +265,50 @@ static const char *getconf(const char *key) {
   return getenv(key);
 }
 
+/*********************************************************************
+ * Local Tau_check_dirname routine
+ ********************************************************************/
+static  char * Tau_check_dirname(const char * dir) {
+  if (strcmp(dir, "$TAU_LOG_DIR") == 0) {
+    TAU_VERBOSE("Using PROFILEDIR=%s\n", dir);
+    const char *logdir= getconf("TAU_LOG_PATH");
+    const char *jobid= getconf("COBALT_JOBID");
+    TAU_VERBOSE("jobid = %s\n", jobid);
+    time_t theTime = time(NULL);
+    struct tm *thisTime = gmtime(&theTime);
+    thisTime = localtime(&theTime);
+    const char *user = getenv("USER");
+    int ret;
+
+    char logfiledir[2048]; 
+    ret = sprintf(logfiledir, "%s/%d/%d/%d/%s_id%s_%d-%d-%d",  
+	logdir, (thisTime->tm_year+1900),(thisTime->tm_mon+1), 
+	thisTime->tm_mday, user, jobid, (thisTime->tm_mon+1), thisTime->tm_mday,
+	(thisTime->tm_hour*60*60 + thisTime->tm_min*60 + thisTime->tm_sec));
+    TAU_VERBOSE("Using logdir = %s\n", logfiledir);
+#ifdef TAU_WINDOWS
+    mkdir(logfiledir);
+#else
+    char mkdircmd[2048];
+    sprintf(mkdircmd, "mkdir -p %s", logfiledir); 
+    system(mkdircmd); 
+#endif 
+    return strdup(logfiledir);
+  }
+  return (char *)dir;
+   
+}
+
+
+
 /****************************************************************************/
 
 extern "C" { /* C linkage */
 static int env_synchronize_clocks = 0;
 static int env_verbose = 0;
 static int env_throttle = 0;
+static int env_disable_instrumentation = 0;
+static double env_max_records = 0;
 static int env_callpath = 0;
 static int env_compensate = 0;
 static int env_profiling = 0;
@@ -348,6 +400,13 @@ int TauEnv_get_throttle() {
   return env_throttle;
 }
 
+int TauEnv_get_disable_instrumentation() {
+  return env_disable_instrumentation;
+}
+
+double TauEnv_get_max_records() {
+  return env_max_records;
+}
 int TauEnv_get_callpath() {
   return env_callpath;
 }
@@ -554,11 +613,13 @@ void TauEnv_initialize() {
     if ((env_profiledir = getconf("PROFILEDIR")) == NULL) {
       env_profiledir = ".";   /* current directory */
     }
+    env_profiledir=Tau_check_dirname(env_profiledir);
     TAU_VERBOSE("TAU: PROFILEDIR is \"%s\"\n", env_profiledir);
 
     if ((env_tracedir = getconf("TRACEDIR")) == NULL) {
       env_tracedir = ".";   /* current directory */
     }
+    env_tracedir=Tau_check_dirname(env_tracedir);
     TAU_VERBOSE("TAU: TRACEDIR is \"%s\"\n", env_tracedir);
 
     int profiling_default = TAU_PROFILING_DEFAULT;
@@ -714,6 +775,17 @@ void TauEnv_initialize() {
       TAU_METADATA("TAU_THROTTLE", "off");
     }
 
+    /* Throttle */
+    tmp = getconf("TAU_DISABLE_INSTRUMENTATION");
+    if (parse_bool(tmp, TAU_DISABLE_INSTRUMENTATION_DEFAULT)) {
+      env_disable_instrumentation = 1;
+      TAU_DISABLE_INSTRUMENTATION(); 
+      TAU_VERBOSE("TAU: Instrumentation Disabled\n");
+      TAU_METADATA("TAU_DISABLE_INSTRUMENTATION", "on");
+    } else { /* default: instrumentation is enabled */
+      env_disable_instrumentation = 0;
+    }
+
     const char *percall = getconf("TAU_THROTTLE_PERCALL");
     env_throttle_percall = TAU_THROTTLE_PERCALL_DEFAULT;
     if (percall) {
@@ -724,6 +796,12 @@ void TauEnv_initialize() {
     env_throttle_numcalls = TAU_THROTTLE_NUMCALLS_DEFAULT;
     if (numcalls) {
       env_throttle_numcalls = strtod(numcalls, 0);
+    }
+    const char *max_records = getconf("TAU_MAX_RECORDS");
+    env_max_records = TAU_MAX_RECORDS;
+    if (max_records) {
+      env_max_records = strtod(max_records, 0);
+      TAU_VERBOSE("TAU: TAU_MAX_RECORDS = %g\n", env_max_records);
     }
 
     if (env_throttle) {
