@@ -273,6 +273,7 @@ static  char * Tau_check_dirname(const char * dir) {
     TAU_VERBOSE("Using PROFILEDIR=%s\n", dir);
     const char *logdir= getconf("TAU_LOG_PATH");
     const char *jobid= getconf("COBALT_JOBID");
+    if (jobid == (const char *) NULL) jobid=strdup("0");
     TAU_VERBOSE("jobid = %s\n", jobid);
     time_t theTime = time(NULL);
     struct tm *thisTime = gmtime(&theTime);
