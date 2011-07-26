@@ -463,6 +463,10 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 
     Tau_init_initializeTAU();
     Tau_global_incr_insideTAU_tid(tid);
+		//GNU has some internal routines that occur before main in entered. To
+		//ensure that a single top-level timer is present start the dummy '.TAU
+		//application' timer. -SB
+    Tau_create_top_level_timer_if_necessary();
     if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
       bfdUnitHandle = Tau_bfd_registerUnit(TAU_BFD_REUSE_GLOBALS);
     }
