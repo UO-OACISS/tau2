@@ -154,12 +154,15 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 
   //Need to keep track of all the groups this function is a member of.
   AllGroups = strip_tau_group(ProfileGroupName);
+
+  RtsLayer::LockDB();
+  // Use LockDB to avoid a possible race condition.
+
   GroupName = strdup(RtsLayer::PrimaryGroup(AllGroups).c_str());
 
   // Since FunctionInfo constructor is called once for each function (static)
   // we know that it couldn't be already on the call stack.
-  RtsLayer::LockDB();
-  // Use LockDB to avoid a possible race condition.
+
   
   //Add function name to the name list.
   TauProfiler_theFunctionList(NULL, NULL, true, (const char *)GetName());
