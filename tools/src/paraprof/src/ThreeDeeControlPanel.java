@@ -451,8 +451,12 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 
         String fname = "   <none>";
         //String fname = "   <none>";
-        if (settings.getScatterFunctions()[i] != null) {
-            fname = settings.getScatterFunctions()[i].getName();
+        if(settings.getTopoFunction(i)==null&&settings.getScatterFunctions()[i] != null){
+        	settings.setTopoFunction(settings.getScatterFunctions()[i], i);
+        }
+        
+        if (settings.getTopoFunction(i) != null) {
+            fname = settings.getTopoFunction(i).getName();
         }
 //        if (settings.getTopoFunction(i) != null) {
 //            fname = settings.getTopoFunction(i).getName();
