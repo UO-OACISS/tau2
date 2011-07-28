@@ -640,7 +640,7 @@ void Tau_sampling_finalizeProfile(int tid) {
       string grname = string("SAMPLE | ") + 
 	RtsLayer::PrimaryGroup(candidate->tauContext->GetAllGroups()); 
       */
-      string grname = string("SAMPLE");
+      string grname = string("SAMPLE_INTERMEDIATE");
       candidate->tauContext->ebsIntermediate =
 	new FunctionInfo((const char*)intermediateName,
 			 candidate->tauContext->GetType(),
