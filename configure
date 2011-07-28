@@ -5296,7 +5296,8 @@ if $cxx_compiler $orig_useropt -o conftest_rt_test conftest_rt_test.cpp -lrt 1> 
 else
     echo "no"
 fi
-if [ $ebs_has_rt = "yes" ] ; then
+# CWL - bgp does not have an accurate return value for clock_getres()
+if [ $ebs_has_rt = "yes" -a $machine != "bgp" ] ; then
   ebs_clock_res=`./conftest_rt_test`
   if [ $ebs_clock_res -le 0 ] ; then
     ebs_has_rt=no
