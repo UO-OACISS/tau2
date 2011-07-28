@@ -704,7 +704,8 @@ void Tau_sampling_finalizeProfile(int tid) {
     // *CWL* Intermediate objects represent the sum of all
     //       its samples. By definition, it cannot have any
     //       exclusive time.
-    intermediate->AddExclTime(0, tid);
+    totalTime[0] = 0.0;
+    intermediate->AddExclTime(totalTime, tid);
   }
   // *CWL* - create special entries for samples dropped and add total
   //         number of samples taken to the metadata.
