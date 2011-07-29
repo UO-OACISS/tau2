@@ -5256,8 +5256,14 @@ new map<int, int, std::less<int>, tau_ss_allocator< std::pair<int, int> > >();
 EOF
 $echo "Checking for ss_allocator support... ${nnl}"
 if $cxx_compiler $orig_useropt -c conftest_ss_alloc.cpp -I$tauroot/include 1> /dev/null 2>&1 ; then
-    fixmakeargs="$fixmakeargs TAU_SS_ALLOC_SUPPORT"
-    echo "yes"
+    if [ $cxx_compiler = "pgCC" ]
+    then
+      # PGI compilers do not play nice with the current allocator.
+      echo "no"
+    else
+      fixmakeargs="$fixmakeargs TAU_SS_ALLOC_SUPPORT"
+      echo "yes"
+    fi
 else
     echo "no"
 fi
