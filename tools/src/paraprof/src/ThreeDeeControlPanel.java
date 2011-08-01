@@ -1193,44 +1193,44 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
     	
         
         gbc.weightx = 0;
-        addCompItem(panel, new JLabel("Width"), gbc, 0, 0, 1, 1);
+        addCompItem(panel, new JLabel("event0"), gbc, 0, 0, 1, 1);
         gbc.weightx = 0.1;
-        addCompItem(panel, createTopoIntervalSelectionPanel("Width", 0), gbc, 1, 0, 1, 1);
+        addCompItem(panel, createTopoIntervalSelectionPanel("event0", 0), gbc, 1, 0, 1, 1);
         
         gbc.weightx = 0;
-        addCompItem(panel, new JLabel("Height"), gbc, 0, 1, 1, 1);
+        addCompItem(panel, new JLabel("event1"), gbc, 0, 1, 1, 1);
         gbc.weightx = 0.1;
-        addCompItem(panel, createTopoIntervalSelectionPanel("Height", 1), gbc, 1, 1, 1, 1);
+        addCompItem(panel, createTopoIntervalSelectionPanel("event1", 1), gbc, 1, 1, 1, 1);
         
         gbc.weightx = 0;
-        addCompItem(panel, new JLabel("Depth"), gbc, 0, 2, 1, 1);
+        addCompItem(panel, new JLabel("event2"), gbc, 0, 2, 1, 1);
         gbc.weightx = 0.1;
-        addCompItem(panel, createTopoIntervalSelectionPanel("Depth", 2), gbc, 1, 2, 1, 1);
+        addCompItem(panel, createTopoIntervalSelectionPanel("event2", 2), gbc, 1, 2, 1, 1);
         
     	 gbc.weightx = 0;
-         addCompItem(panel, new JLabel("Color"), gbc, 0, 3, 1, 1);
+         addCompItem(panel, new JLabel("event3"), gbc, 0, 3, 1, 1);
          gbc.weightx = 0.1;
-         addCompItem(panel, createTopoIntervalSelectionPanel("Color", 3), gbc, 1, 3, 1, 1);
+         addCompItem(panel, createTopoIntervalSelectionPanel("event3", 3), gbc, 1, 3, 1, 1);
          
          gbc.weightx = 0;
-         addCompItem(panel, new JLabel("Atomic-0"), gbc, 0, 4, 1, 1);
+         addCompItem(panel, new JLabel("atomic0"), gbc, 0, 4, 1, 1);
          gbc.weightx = 0.1;
-         addCompItem(panel, createTopoAtomicSelectionPanel("Atomic-0", 0), gbc, 1, 4, 1, 1);
+         addCompItem(panel, createTopoAtomicSelectionPanel("atomic0", 0), gbc, 1, 4, 1, 1);
          
          gbc.weightx = 0;
-         addCompItem(panel, new JLabel("Atomic-1"), gbc, 0, 5, 1, 1);
+         addCompItem(panel, new JLabel("atomic1"), gbc, 0, 5, 1, 1);
          gbc.weightx = 0.1;
-         addCompItem(panel, createTopoAtomicSelectionPanel("Atomic-1", 1), gbc, 1, 5, 1, 1);
+         addCompItem(panel, createTopoAtomicSelectionPanel("atomic1", 1), gbc, 1, 5, 1, 1);
          
          gbc.weightx = 0;
-         addCompItem(panel, new JLabel("Atomic-2"), gbc, 0, 6, 1, 1);
+         addCompItem(panel, new JLabel("atomic2"), gbc, 0, 6, 1, 1);
          gbc.weightx = 0.1;
-         addCompItem(panel, createTopoAtomicSelectionPanel("Atomic-2", 2), gbc, 1, 6, 1, 1);
+         addCompItem(panel, createTopoAtomicSelectionPanel("atomic2", 2), gbc, 1, 6, 1, 1);
          
          gbc.weightx = 0;
-         addCompItem(panel, new JLabel("Atomic-3"), gbc, 0, 7, 1, 1);
+         addCompItem(panel, new JLabel("atomic3"), gbc, 0, 7, 1, 1);
          gbc.weightx = 0.1;
-         addCompItem(panel, createTopoAtomicSelectionPanel("Atomic-3", 3), gbc, 1, 7, 1, 1);
+         addCompItem(panel, createTopoAtomicSelectionPanel("atomic3", 3), gbc, 1, 7, 1, 1);
          
          
          return panel;
