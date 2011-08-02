@@ -5304,12 +5304,21 @@ else
 fi
 # CWL - bgp does not have an accurate return value for clock_getres()
 if [ $ebs_has_rt = "yes" -a $machine != "bgp" ] ; then
-  ebs_clock_res=`./conftest_rt_test`
-  if [ $ebs_clock_res -le 0 ] ; then
+  # CWL - watch out for the lack of awk support on rare platforms.
+  #       This is necessary to check that the compiled config test
+  #       returns either the empty string "" or some numeric value.
+  ebs_clock_res=`./conftest_rt_test | awk '/^[0-9]+$/'`
+  # CWL - we cannot assume the above command actually succeeds
+  if [ x$ebs_clock_res != "x" ] ; then
+    if [ $ebs_clock_res -le 0 ] ; then
+      ebs_has_rt=no
+      echo "No Sane Clock Signal Resolution. No effective Real Time support."
+    else
+      echo "Smallest Sane Clock Signal Resolution = ${ebs_clock_res} microseconds"
+    fi
+  else
     ebs_has_rt=no
     echo "No Sane Clock Signal Resolution. No effective Real Time support."
-  else
-    echo "Smallest Sane Clock Signal Resolution = ${ebs_clock_res} microseconds"
   fi
 fi
 #echo $tau_rt_value
