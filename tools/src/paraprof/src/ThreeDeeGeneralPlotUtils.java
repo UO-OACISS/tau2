@@ -24,8 +24,8 @@ public class ThreeDeeGeneralPlotUtils {
     static final String END ="END_VIZ";
     
 	
- public static VarMap getEvaluation(int rank,  int maxRank, int node, int context, int thread, int maxNode, int maxContext, int maxThread, float[] topoVals, float[] varMins, float varMaxs[], float varMeans[], float[] atomValue, Map<String,String> expressions){//String[] expressions, int rank,  int maxRank){
-    	
+ public static VarMap getEvaluation(int rank,  int maxRank, int node, int context, int thread, int maxNode, int maxContext, int maxThread, float[] topoVals, float[] varMins, float varMaxs[], float varMeans[], float[] atomValue,int[] axisDim, Map<String,String> expressions){//String[] expressions, int rank,  int maxRank){
+    	//System.out.println(rank);
     	FuncMap fm = new FuncMap();
 		fm.loadDefaultFunctions();
     	VarMap vm = new VarMap(false);
@@ -55,6 +55,9 @@ public class ThreeDeeGeneralPlotUtils {
     	vm.setValue("atomic1", atomValue[1]);
     	vm.setValue("atomic2", atomValue[2]);
     	vm.setValue("atomic3", atomValue[3]);
+    	vm.setValue("axisDimX",axisDim[0]);
+    	vm.setValue("axisDimY",axisDim[1]);
+    	vm.setValue("axisDimZ",axisDim[2]);
     	
     	Expression x;
     	double res;
@@ -65,6 +68,7 @@ public class ThreeDeeGeneralPlotUtils {
     		Entry<String,String> e = it.next();
     		x = ExpressionTree.parse(e.getValue());
     		res = x.eval(vm,fm);
+    		//System.out.println(e.getKey()+" "+res);
     		vm.setValue(e.getKey(), res);
     	}
     	return vm;
@@ -79,7 +83,7 @@ public class ThreeDeeGeneralPlotUtils {
 
 		tuple[0] = s.substring(0,x1).trim();
 		tuple[1] = s.substring(x1+1).trim();
- 	
+ 	//System.out.println(s+" "+tuple[0]+" "+tuple[1]);
  	return tuple;
  }
  
@@ -130,7 +134,7 @@ public class ThreeDeeGeneralPlotUtils {
  	String[] names = vm.getVariableNames();
  	for(int i=0;i<names.length;i++){
  		if(names[i].equals(var)){
- 			return vm.getValue(var)!=0;
+ 			return true;//vm.getValue(var)!=0;
  		}
  	}
  	return false;
@@ -139,10 +143,11 @@ public class ThreeDeeGeneralPlotUtils {
  public static int getPointsPerRank(VarMap vm){
  	int ppm=0;
  	boolean has=checkSet(vm,"x");
-
+ 	//System.out.println(has);
  	if(!has){
  		has=true;
  		while(has){
+ 			//System.out.println(ppm);
  			has = checkSet(vm,"x"+ppm);
  			if(has)
  				ppm++;
@@ -176,9 +181,10 @@ public class ThreeDeeGeneralPlotUtils {
  				coords[i][3]=vm.getValue("color"+i);
  			else
  				coords[i][3]=vm.getValue("color");
+ 			//System.out.println(coords[i][0]+" "+coords[i][1]+" "+coords[i][2]+" "+coords[i][3]);
  		}
  	}
- 	//System.out.println(coords[0]+" "+coords[1]+" "+coords[2]+" "+coords[3]+" ");
+ 	//System.out.println(coords[0][0]+" "+coords[0][1]+" "+coords[0][2]+" "+coords[0][3]);
  	return coords;
  }
  
