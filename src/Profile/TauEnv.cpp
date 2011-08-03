@@ -280,12 +280,14 @@ static  char * Tau_check_dirname(const char * dir) {
     time_t theTime = time(NULL);
     struct tm *thisTime = gmtime(&theTime);
     thisTime = localtime(&theTime);
-    const char user[1024] = {0};
+    char user[1024]; 
     int ret;
 
 
     char logfiledir[2048]; 
-    cuserid(user);
+    if (cuserid(user) == NULL) {
+      sprintf(user,"unknown");
+    }
     ret = sprintf(logfiledir, "%s/%d/%d/%d/%s_id%s_%d-%d-%d",  
 	logdir, (thisTime->tm_year+1900),(thisTime->tm_mon+1), 
 	thisTime->tm_mday, user, jobid, (thisTime->tm_mon+1), thisTime->tm_mday,
