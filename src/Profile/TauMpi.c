@@ -1639,7 +1639,14 @@ int  MPI_Finalize(  )
     Tau_collate_writeProfile();
 #else
   */
+
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
+    if (TauEnv_get_ebs_enabled()) {
+      // **CWL** - Attempt BFD resolution before merging format output.
+      // TODO - make unification a thread-aware process so sampling
+      //        finalization is congruent with respect to it.
+      Tau_sampling_finalizeNode();
+    }
     Tau_mergeProfiles();
   }
 

@@ -29,6 +29,11 @@ Post-process the trace file with these commands:
 or 
 %> tau2otf ...
 
+NOTE: TAU requires a call be made to cudaThreadExit()/cudaDeviceReset() or
+clReleaseContext() and the end of execution. If this is not present in the code
+you are wishing to instrument you will have to add it.
+
+
 == CUPTI callbacks ==
 
 CUPTI API calls can be tracking using the -cupti option to tau_exec:
