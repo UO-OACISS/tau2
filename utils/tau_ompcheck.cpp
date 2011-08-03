@@ -871,7 +871,7 @@ class CompleteDirectives
 			{
 				printf("WARNING: OMP directives at line: %d maybe be mismatched.\n", s->stmtBegin().line());
 				directives.pop_front();
-				addDirectives.splice(addDirectives.end(),findOMPStmt(state, s, block, loop, pdb));
+				addDirectives.splice(addDirectives.end(),findOMPStmt(STATE_CLOSED, s, block, loop, pdb));
 			}
 					//printf("back in check returning true...\n");
 			return true;

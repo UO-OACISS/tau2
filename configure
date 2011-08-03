@@ -5256,8 +5256,14 @@ new map<int, int, std::less<int>, tau_ss_allocator< std::pair<int, int> > >();
 EOF
 $echo "Checking for ss_allocator support... ${nnl}"
 if $cxx_compiler $orig_useropt -c conftest_ss_alloc.cpp -I$tauroot/include 1> /dev/null 2>&1 ; then
-    fixmakeargs="$fixmakeargs TAU_SS_ALLOC_SUPPORT"
-    echo "yes"
+    if [ $cxx_compiler = "pgCC" ]
+    then
+      # PGI compilers do not play nice with the current allocator.
+      echo "no"
+    else
+      fixmakeargs="$fixmakeargs TAU_SS_ALLOC_SUPPORT"
+      echo "yes"
+    fi
 else
     echo "no"
 fi
@@ -5296,13 +5302,23 @@ if $cxx_compiler $orig_useropt -o conftest_rt_test conftest_rt_test.cpp -lrt 1> 
 else
     echo "no"
 fi
-if [ $ebs_has_rt = "yes" ] ; then
-  ebs_clock_res=`./conftest_rt_test`
-  if [ $ebs_clock_res -le 0 ] ; then
+# CWL - bgp does not have an accurate return value for clock_getres()
+if [ $ebs_has_rt = "yes" -a $machine != "bgp" ] ; then
+  # CWL - watch out for the lack of awk support on rare platforms.
+  #       This is necessary to check that the compiled config test
+  #       returns either the empty string "" or some numeric value.
+  ebs_clock_res=`./conftest_rt_test | awk '/^[0-9]+$/'`
+  # CWL - we cannot assume the above command actually succeeds
+  if [ x$ebs_clock_res != "x" ] ; then
+    if [ $ebs_clock_res -le 0 ] ; then
+      ebs_has_rt=no
+      echo "No Sane Clock Signal Resolution. No effective Real Time support."
+    else
+      echo "Smallest Sane Clock Signal Resolution = ${ebs_clock_res} microseconds"
+    fi
+  else
     ebs_has_rt=no
     echo "No Sane Clock Signal Resolution. No effective Real Time support."
-  else
-    echo "Smallest Sane Clock Signal Resolution = ${ebs_clock_res} microseconds"
   fi
 fi
 #echo $tau_rt_value

@@ -32,7 +32,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <limits.h>
-
+#include <time.h>
 #include <Profile/TauEnv.h>
 #include <TAU.h>
 #include <tauroot.h>
