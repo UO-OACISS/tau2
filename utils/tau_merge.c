@@ -1214,7 +1214,7 @@ int main(int argc, char *argv[])
     nativeEvent.tid = event_GetTid(trcdes+source,trcdes[source].erec,0);
     nativeEvent.par = event_GetPar(trcdes+source,trcdes[source].erec,0);
     nativeEvent.ti = event_GetTi(trcdes+source,trcdes[source].erec,0);
-/*     printf ("writing out record with ev = %d\n", nativeEvent.ev); */
+    /* printf ("writing out record with ev = %d, nid = %d\n", nativeEvent.ev, nativeEvent.nid);  */
     output (outfd, (char *) &nativeEvent, sizeof(TAU_EV));
 
     numrec++;
@@ -1242,8 +1242,11 @@ int main(int argc, char *argv[])
           /* -- correct nid event field (only the first time) --------------- */
           if ( trcdes[source].nid != -1 ) {
 	    /*erec->nid = trcdes[source].nid;*/
-
-	    event_SetNid(trcdes+source,erec,0,trcdes[source].nid);
+	    /* Removed code to explicitly set the node id to the node id of 
+	the trace. This hinders merging traces that have remote one-sided events
+	where a given trace has events that take place on a remote node as in 
+	send or receive in one-sided put operations. */
+	    /*event_SetNid(trcdes+source,erec,0,trcdes[source].nid); */
 	  }
 
           /* -- correct clock ----------------------------------------------- */
