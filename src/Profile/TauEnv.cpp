@@ -20,6 +20,8 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #ifndef TAU_WINDOWS
 #include <strings.h>
 #else
@@ -243,7 +245,7 @@ static int TauConf_read() {
   }
   else {
     char conf_file_name[1024]; 
-    sprintf(conf_file_name,"%s/../tau_system_defaults/tau.conf", TAUROOT);
+    sprintf(conf_file_name,"%s/tau_system_defaults/tau.conf", TAUROOT);
     cfgFile = fopen(conf_file_name, "r");
     if (cfgFile) {
       TauConf_parse(cfgFile, tmp);
@@ -269,7 +271,7 @@ static const char *getconf(const char *key) {
  * Local Tau_check_dirname routine
  ********************************************************************/
 static  char * Tau_check_dirname(const char * dir) {
-  if (strcmp(dir, "$TAU_LOG_DIR") == 0) {
+  if ((strcmp(dir, "$TAU_LOG_DIR") == 0) && (RtsLayer::myNode() == 0)) {
     TAU_VERBOSE("Using PROFILEDIR=%s\n", dir);
     const char *logdir= getconf("TAU_LOG_PATH");
     const char *jobid= getconf("COBALT_JOBID");
@@ -278,10 +280,12 @@ static  char * Tau_check_dirname(const char * dir) {
     time_t theTime = time(NULL);
     struct tm *thisTime = gmtime(&theTime);
     thisTime = localtime(&theTime);
-    const char *user = getenv("USER");
+    const char user[1024] = {0};
     int ret;
 
+
     char logfiledir[2048]; 
+    cuserid(user);
     ret = sprintf(logfiledir, "%s/%d/%d/%d/%s_id%s_%d-%d-%d",  
 	logdir, (thisTime->tm_year+1900),(thisTime->tm_mon+1), 
 	thisTime->tm_mday, user, jobid, (thisTime->tm_mon+1), thisTime->tm_mday,
@@ -290,9 +294,12 @@ static  char * Tau_check_dirname(const char * dir) {
 #ifdef TAU_WINDOWS
     mkdir(logfiledir);
 #else
+    mkdir(logfiledir, 0775);
+/*
     char mkdircmd[2048];
     sprintf(mkdircmd, "mkdir -p %s", logfiledir); 
     system(mkdircmd); 
+*/
 #endif 
     return strdup(logfiledir);
   }
