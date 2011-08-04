@@ -298,7 +298,7 @@ static  char * Tau_check_dirname(const char * dir) {
     struct passwd *pwInfo = getpwuid(geteuid());
     if ((pwInfo != NULL) &&
         (pwInfo->pw_name != NULL)) {
-      user = strdup(pwInfo->pw_name);
+      strcpy(user, pwInfo->pw_name);
     } else {
       sprintf(user,"unknown");
     }
