@@ -271,7 +271,7 @@ static const char *getconf(const char *key) {
  * Local Tau_check_dirname routine
  ********************************************************************/
 static  char * Tau_check_dirname(const char * dir) {
-  if ((strcmp(dir, "$TAU_LOG_DIR") == 0) && (RtsLayer::myNode() == 0)) {
+  if (strcmp(dir, "$TAU_LOG_DIR") == 0){
     TAU_VERBOSE("Using PROFILEDIR=%s\n", dir);
     const char *logdir= getconf("TAU_LOG_PATH");
     const char *jobid= getconf("COBALT_JOBID");
@@ -285,6 +285,7 @@ static  char * Tau_check_dirname(const char * dir) {
 
 
     char logfiledir[2048]; 
+    char scratchdir[2048]; 
     if (cuserid(user) == NULL) {
       sprintf(user,"unknown");
     }
@@ -293,16 +294,26 @@ static  char * Tau_check_dirname(const char * dir) {
 	thisTime->tm_mday, user, jobid, (thisTime->tm_mon+1), thisTime->tm_mday,
 	(thisTime->tm_hour*60*60 + thisTime->tm_min*60 + thisTime->tm_sec));
     TAU_VERBOSE("Using logdir = %s\n", logfiledir);
+    if (RtsLayer::myNode() < 1) { 
 #ifdef TAU_WINDOWS
-    mkdir(logfiledir);
+      mkdir(logfiledir);
 #else
-    mkdir(logfiledir, 0775);
-/*
-    char mkdircmd[2048];
-    sprintf(mkdircmd, "mkdir -p %s", logfiledir); 
-    system(mkdircmd); 
-*/
+
+      mkdir(logdir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
+      sprintf(scratchdir, "%s/%d", logdir, (thisTime->tm_year+1900));
+      mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
+      sprintf(scratchdir, "%s/%d/%d", logdir, (thisTime->tm_year+1900), 
+	(thisTime->tm_mon+1));
+      mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
+      sprintf(scratchdir, "%s/%d/%d/%d", logdir, (thisTime->tm_year+1900), 
+	(thisTime->tm_mon+1), thisTime->tm_mday);
+      mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
+      TAU_VERBOSE("mkdir %s\n", scratchdir);
+
+      mkdir(logfiledir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
+      TAU_VERBOSE("mkdir %s\n", logfiledir);
 #endif 
+    }
     return strdup(logfiledir);
   }
   return (char *)dir;
