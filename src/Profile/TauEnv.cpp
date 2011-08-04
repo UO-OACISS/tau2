@@ -38,6 +38,10 @@
 #include <tauroot.h>
 #include <fcntl.h>
 
+#ifndef TAU_BGP
+#include <pwd.h>
+#endif /* TAU_BGP */
+
 #define MAX_LN_LEN 2048
 
 /* We should throttle if number n > a && percall < b .a and b are given below */
@@ -286,9 +290,19 @@ static  char * Tau_check_dirname(const char * dir) {
 
     char logfiledir[2048]; 
     char scratchdir[2048]; 
+#ifdef TAU_BGP
     if (cuserid(user) == NULL) {
       sprintf(user,"unknown");
     }
+#else
+    struct passwd *pwInfo = getpwuid(geteuid());
+    if ((pwInfo != NULL) &&
+        (pwInfo->pw_name != NULL)) {
+      user = strdup(pwInfo->pw_name);
+    } else {
+      sprintf(user,"unknown");
+    }
+#endif /* TAU_BGP */
     ret = sprintf(logfiledir, "%s/%d/%d/%d/%s_id%s_%d-%d-%d",  
 	logdir, (thisTime->tm_year+1900),(thisTime->tm_mon+1), 
 	thisTime->tm_mday, user, jobid, (thisTime->tm_mon+1), thisTime->tm_mday,
