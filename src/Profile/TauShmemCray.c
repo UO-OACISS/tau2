@@ -5307,12 +5307,20 @@ long shmem_long_swap( long * addr, long value, int pe)
   long retvalue; 
 
   TAU_PROFILE_TIMER(t, "shmem_long_swap()", "", TAU_MESSAGE); 
-  TAU_PROFILE_START(t); 
+  TAU_PROFILE_START(t);  
+  
+  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), sizeof(long), pe);
+
 #ifdef TAU_P_SHMEM 
   retvalue = __p__shmem_long_swap( addr, value, pe) ; 
 #else /* !TAU_P_SHMEM */ 
   retvalue = pshmem_long_swap( addr, value, pe) ; 
 #endif /* TAU_P_SHMEM */ 
+  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, pe, sizeof(long));
+  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, pe, sizeof(long));
+  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID,Tau_get_node(), sizeof(long), pe);
+
+
   TAU_PROFILE_STOP(t); 
   return retvalue; 
 }
