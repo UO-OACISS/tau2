@@ -1195,8 +1195,8 @@ for arg in "$@"; do
 
   -python)
     pythonbin=`which python | sed 's,[^/]*$,,'`
-    pythoninc=`echo ${pythonbin}../include/python*`
-    pythonlib=`echo ${pythonbin}../lib/python*`
+    pythoninc=`echo ${pythonbin}../include/python* | sed -e 's/ .*//g'`
+    pythonlib=`echo ${pythonbin}../lib/python* | sed -e 's/ .*//g'`
     if [ ! -d $pythoninc ] ; then
 	echo "Error: Cannot access Python include directory $pythoninc"
 	exit 1
