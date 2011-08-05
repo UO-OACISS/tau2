@@ -1068,7 +1068,7 @@ cudaError_t cudaLaunch(const char * a1) {
 		TAU_PROFILE_START(t);
 #ifdef TRACK_KERNEL
 		//printf("tracking kernel on node: %d.\n", RtsLayer::myNode());
-		FunctionInfo* parent;
+		/*FunctionInfo* parent;
 		if (TauInternal_CurrentProfiler(RtsLayer::getTid()) == NULL)
 		{
 			parent = NULL;
@@ -1076,12 +1076,12 @@ cudaError_t cudaLaunch(const char * a1) {
 		else
 		{
 			parent = TauInternal_CurrentProfiler(RtsLayer::getTid())->CallPathFunction;
-		}
+		}*/
 		Tau_cuda_init();
 		int device;
 		cudaGetDevice(&device);
 		Tau_cuda_enqueue_kernel_enter_event(kernelName,
-			&cudaRuntimeGpuId(device,curr_stream), parent);
+			&cudaRuntimeGpuId(device,curr_stream));
 		/*Tau_cuda_enqueue_kernel_enter_event(kernelName,
 			&cudaRuntimeGpuId(device,curr_stream),
 			TauInternal_CurrentProfiler(RtsLayer::myNode())->CallPathFunction);*/
