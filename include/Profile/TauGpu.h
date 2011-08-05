@@ -4,10 +4,13 @@
 #define MESSAGE_SEND 0
 #define MESSAGE_RECV 1
 
+/*
 #define MemcpyHtoD 0
 #define MemcpyDtoH 1
 #define MemcpyDtoD 2
 #define MemcpyUnknown 3
+*/
+enum Memcpy { MemcpyHtoD = 0, MemcpyDtoH = 1, MemcpyDtoD = 2, MemcpyUnknown = 3 };
 
 #define TAU_GPU_UNKNOW_TRANSFER_SIZE -1
 #define TAU_GPU_USE_DEFAULT_NAME ""

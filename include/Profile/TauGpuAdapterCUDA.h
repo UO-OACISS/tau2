@@ -109,10 +109,10 @@ void Tau_cuda_exit_memcpy_event(const char *name, int id, int MemcpyType);
 void Tau_cuda_register_gpu_event(const char *name, cudaGpuId* id, double start,
 double stop);
 
-void Tau_cuda_register_memcpy_event(int id, double start, double stop, int
+void Tau_cuda_register_memcpy_event(const char* name, cudaGpuId* id, double start, double stop, int
 transferSize, int MemcpyType);
 
-void Tau_cuda_enqueue_kernel_enter_event(const char *name, cudaGpuId* id, FunctionInfo* f);
+void Tau_cuda_enqueue_kernel_enter_event(const char *name, cudaGpuId* id);
 
 void Tau_cuda_enqueue_kernel_exit_event();
 
