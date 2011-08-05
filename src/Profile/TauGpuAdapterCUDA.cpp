@@ -204,6 +204,7 @@ static queue<KernelEvent> KernelBuffer;
 
 void Tau_cuda_init()
 {
+	//printf("in Tau_cuda_init.\n");
 	static bool init = false;
 	if (!init)
 	{
@@ -291,23 +292,29 @@ transferSize, int MemcpyType)
 
 KernelEvent *curKernel;
 
-void Tau_cuda_enqueue_kernel_enter_event(const char *name, cudaGpuId* id,
-FunctionInfo* callingSite)
+void Tau_cuda_enqueue_kernel_enter_event(const char *name, cudaGpuId* id)
 {
+	FunctionInfo* callingSite;
+	if (TauInternal_CurrentProfiler(RtsLayer::getTid()) == NULL)
+	{
+		callingSite = NULL;
+	}
+	else
+	{
+		callingSite = TauInternal_CurrentProfiler(RtsLayer::getTid())->CallPathFunction;
+	}
 	//printf("recording start for %s.\n", name);
 
 	curKernel = new KernelEvent(name, id, callingSite);
 	
 	const char *dem_name = 0;
-
-#if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
+#if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE && false
 	//printf("demangling name....\n");
 	dem_name = cplus_demangle(name, DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE |
 	DMGL_TYPES);
 #else
 	dem_name = name;
 #endif /* HAVE_GPU_DEMANGLE */
-
 
 	//printf("final kernel name is: %s.\n", dem_name);
 
@@ -360,6 +367,7 @@ void Tau_cuda_register_sync_event()
 		}
 
 		err = cudaEventElapsedTime(&stop_sec, lastEvent, kernel.stopEvent);
+		//printf("kernel event [name]  = %s.\n", kernel.name);
 		//printf("kernel event [stop]  = %lf.\n", (((double) stop_sec))*1e3 );
 		//printf("w last event [stop]  = %lf.\n", (((double) stop_sec) + lastEventTime)*1e3 );
 
@@ -377,9 +385,11 @@ void Tau_cuda_register_sync_event()
 
 		//kernel.device->sync_offset = lastEventTime * 1e3;
 
+	  //printf("in tau_cuda_register_sync_event #1");
 		Tau_gpu_register_gpu_event(kernel, 
 															 ((double) start_sec + lastEventTime)*1e3,
 															 ((double) stop_sec + lastEventTime)*1e3);
+	  //printf("in tau_cuda_register_sync_event #2");
 		//Tau_cuda_register_gpu_event(kernel.name, kernel.id, 
 		//													 (((double) start_sec) + lastEventTime)*1e3,
 		//													 (((double) stop_sec)  + lastEventTime)*1e3);
