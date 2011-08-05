@@ -495,6 +495,7 @@ sddfdir=
 iowrapper=no
 zepto=no
 zeptodir=
+cuda=no
 
 # Reset include/Makefile before starting anything else
 for i in include/Makefile ; do
@@ -1433,6 +1434,7 @@ for arg in "$@"; do
 			if [ -f "$cudainclude/CL/cl.h" ] ; then
     		fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$cudainclude"
 			fi
+		cuda=yes
 		else
 			echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
     fi
@@ -5431,6 +5433,23 @@ if [ $python = yes ] ; then
       echo "ERROR: For IBM systems, please specify the -pythonlib=<dir> flag where *.py files and the config directory are located!"
       exit 1
     fi
+fi
+
+if [ $python = yes -a $cuda = yes ] ; then
+	#We need the boost/python libraries to build the TAU's pycuda interface.
+	echo "Checking for boost/python ... ${nnl}"
+  cat <<EOF>boost.cpp
+#include "boost/python.hpp"
+EOF
+	pythoninc_cmd=$(echo $pythoninc | sed -e "s/ / -I/g")
+	#echo $cxx_compiler -I$pythoninc_cmd -c boost.cpp
+  if $cxx_compiler -I$pythoninc_cmd -c boost.cpp 1>/dev/null 2>&1 ; then
+		echo "yes"
+		fixmakeargs="$fixmakeargs PYCUDA"
+  else
+		echo "boost/python libraries not found, skipping TAU's pycuda interface"
+		exit 1
+  fi	
 fi
 
 if [ $zepto = yes ] ; then
