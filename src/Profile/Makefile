@@ -103,6 +103,15 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 #CRAYX1CC#TAU_SAMPLING_O= #ENDIF#
 #CRAYXMT#TAU_SAMPLING_O= #ENDIF#
 
+##############################################
+#SHMEM#SHMEM_WRAPPER   = libTauShmem$(TAU_CONFIG)$(LSX)  #ENDIF#
+#CRAYCNL#SHMEM_WRAPPER   =  #ENDIF#
+#SHMEM#SHMEM_INSTALL   = $(INSTALLDEST)/libTauShmem$(TAU_CONFIG)$(LSX)  #ENDIF#
+#CRAYCNL#SHMEM_INSTALL   =  #ENDIF#
+#CRAYCNL#SHMEM_OBJS   = TauShmemCrayC.o  #ENDIF#
+#SHMEM#TAU_SHMEM_OBJS   = $(SHMEM_OBJS) #ENDIF#
+##############################################
+
 #############################################
 # Python Binding OBJECTS
 #############################################
@@ -122,7 +131,7 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauMemoryWrap.o \
 		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) $(TAU_SAMPLING_O) \
 		TauIoWrap.o TauCompensate.o $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
 		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_GASPU_O) $(TAU_CUPTI_COUNTER_OBJS) \
-		$(TAU_WINDOWS_OBJ)
+		$(TAU_WINDOWS_OBJ) $(TAU_SHMEM_OBJS)
 
 # CWL - BFD Functionality for libTAU.so is faked if no shared BFD object can
 #       be built. The same is true for static builds of TAU if BFD is 
@@ -180,10 +189,6 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 #MPI#MPI_INSTALL   = $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF#
 ##############################################
 
-##############################################
-#SHMEM#SHMEM_WRAPPER   = libTauShmem$(TAU_CONFIG)$(LSX)  #ENDIF#
-#SHMEM#SHMEM_INSTALL   = $(INSTALLDEST)/libTauShmem$(TAU_CONFIG)$(LSX)  #ENDIF#
-##############################################
 
 ##############################################
 # For building TauLinuxTimers with gcc
@@ -366,7 +371,7 @@ $(TAU_TARGET):	$(OBJS) $(STATIC_OBJS)
 
 $(TAU_NULL)$(TAU_SHLIB): 	$(TAU_TARGET) $(OBJS) $(MPI_WRAPPER) $(TAU_FORCE_MPI) $(SHARED_OBJS)
 		$(PRELINK_PHASE)
-		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_SHLIB) $(OBJS) $(SHARED_OBJS) $(SHARED_LIBS) $(EXTRAOBJS) $(TAU_MPI_FOR_SHARED) $(TAU_MPI_LIB) $(TAU_MPI_FLIB) $(EXTRA_LIBS) $(LEXTRA1) $(TAU_PAPI_EXTRA_FLAGS) $(TAU_EXTRA_LIBRARY_FLAGS) $(TAUEXTRASHLIBOPTS) $(TAU_SHLIB_EXTRA_CXXLIBS)
+		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_SHLIB) $(OBJS) $(SHARED_OBJS) $(SHARED_LIBS) $(EXTRAOBJS) $(TAU_MPI_FOR_SHARED) $(TAU_MPI_LIB) $(TAU_MPI_FLIB) $(EXTRA_LIBS) $(LEXTRA1) $(TAU_PAPI_EXTRA_FLAGS) $(TAU_EXTRA_LIBRARY_FLAGS) $(TAUEXTRASHLIBOPTS) $(TAU_SHLIB_EXTRA_CXXLIBS) 
 		$(TAU_CREATE_SYMLINKS)
 
 $(TAU_NULL)$(TAU_OPENCL_DEP) : TauGpuAdapterOpenCL.cpp
@@ -575,6 +580,9 @@ Profiler.o 	: Profiler.cpp $(HDRS)
 
 TauMetaData.o 	: TauMetaData.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)
+
+TauShmemCrayC.o  : TauShmemCrayC.c $(HDRS)
+	$(CC) $(CFLAGS) $(TAU_SHMEM_INC) -c $(@:.o=.c)
 
 TauXML.o 	: TauXML.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
