@@ -812,7 +812,9 @@ extern "C" int shmem_n_pes(void);
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
   static int initialize = register_events();
+#ifdef DEBUG_PROF
   printf("Inside Tau_trace_sendmsg length = %d, totalnodes=%d\n", length, tau_totalnodes(0,0));
+#endif /* DEBUG_PROF */
 
 #ifdef TAU_PROFILEPARAM
 #ifndef TAU_DISABLE_PROFILEPARAM_IN_MPI
