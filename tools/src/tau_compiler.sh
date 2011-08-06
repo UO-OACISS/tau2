@@ -245,7 +245,7 @@ for arg in "$@" ; do
     else
 	
         case $arg in
-	    --help|-h)
+	    --help)   # Do not use -h as Cray compilers specifie -h upc -h ... 
 		printUsage 0 
 		;;
 
