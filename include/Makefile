@@ -969,6 +969,7 @@ TAU_TRACE_INPUT_LIB = -L$(TAU_LIB_DIR) -lTAU_traceinput$(TAU_CONFIG)
 #SP1#TAUMPIFLIBS     = $(TAU_MPI_FLIBS)	#ENDIF#
 #############################################
 #SHMEM#TAU_SHMEM_OBJS		     = TauShmemCray.o	  #ENDIF#
+#SGI_MPT_SHMEM#TAU_SHMEM_OBJS		     = TauShmemSgiC.o     #ENDIF#
 #SP1#TAU_SHMEM_OBJS		     = TauShmemTurbo.o	  #ENDIF#
 #GPSHMEM#TAU_SHMEM_OBJS		     = TauShmemGpshmem.o  #ENDIF#
 
@@ -980,6 +981,7 @@ TAU_CCOMPILER     = $(TAU_CC)
 
 #SHMEM#TAU_SHMEM_LIBS	= -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/ -lTauShmem$(TAU_CONFIG) $(TAU_SHMEM_LIB) #ENDIF#
 #CRAYCNL#TAU_SHMEM_LIBS	= #ENDIF#
+#SGI_MPT_SHMEM#TAU_SHMEM_LIBS	= $(TAU_SHMEM_LIB) #ENDIF#
 
 #############################################
 # TAU GPU LIBRARIES
