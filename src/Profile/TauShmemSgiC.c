@@ -2344,6 +2344,38 @@ void shmem_group_inquire(int a1, shmem_group_t * a2) {
 
 
 /**********************************************************
+   shmalloc
+ **********************************************************/
+
+void * shmalloc(size_t a1) {
+
+  void * retval;
+  TAU_PROFILE_TIMER(t,"void *shmalloc(size_t) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  retval  =   _shmalloc(a1);
+  TAU_PROFILE_STOP(t);
+  return retval;
+
+}
+
+
+/**********************************************************
+   shmalloc_nb
+ **********************************************************/
+
+void * shmalloc_nb(size_t a1) {
+
+  void * retval;
+  TAU_PROFILE_TIMER(t,"void *shmalloc_nb(size_t) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  retval  =   _shmalloc_nb(a1);
+  TAU_PROFILE_STOP(t);
+  return retval;
+
+}
+
+
+/**********************************************************
    shfree
  **********************************************************/
 
@@ -2353,6 +2385,54 @@ void shfree(void * a1) {
   TAU_PROFILE_START(t);
    _shfree(a1);
   TAU_PROFILE_STOP(t);
+
+}
+
+
+/**********************************************************
+   shrealloc
+ **********************************************************/
+
+void * shrealloc(void * a1, size_t a2) {
+
+  void * retval;
+  TAU_PROFILE_TIMER(t,"void *shrealloc(void *, size_t) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  retval  =   _shrealloc(a1, a2);
+  TAU_PROFILE_STOP(t);
+  return retval;
+
+}
+
+
+/**********************************************************
+   shmemalign
+ **********************************************************/
+
+void * shmemalign(size_t a1, size_t a2) {
+
+  void * retval;
+  TAU_PROFILE_TIMER(t,"void *shmemalign(size_t, size_t) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  retval  =   _shmemalign(a1, a2);
+  TAU_PROFILE_STOP(t);
+  return retval;
+
+}
+
+
+/**********************************************************
+   shmem_ptr
+ **********************************************************/
+
+void * shmem_ptr(void * a1, int a2) {
+
+  void * retval;
+  TAU_PROFILE_TIMER(t,"void *shmem_ptr(void *, int) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+  retval  =   _shmem_ptr(a1, a2);
+  TAU_PROFILE_STOP(t);
+  return retval;
 
 }
 
