@@ -3579,7 +3579,7 @@ then
           if [ $shmemlibrary = no -a "x$shmemlib" = "x" ] 
           then
             shmemlib="$shmemlibdir"
-            shmemlibrary=-lsma
+            shmemlibrary=-lsma#-lmpi
           fi
         fi
       fi
