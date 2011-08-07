@@ -3565,12 +3565,12 @@ then
     fi
     if [ $machine = x86_64 -o $machine = ia64 ]
     then
-      mpiexec_mpt_var=`which mpiexec_mpt`
-      if [ -r $mpiexec_mpt_var ] 
+      mpiexec_mpt_var=`which mpiexec_mpt 2>/dev/null`
+      if [ "x$mpiexec_mpt_var" != "x" ] 
       then
         libsmafile=`echo $mpiexec_mpt_var | sed -e 's@bin/mpiexec_mpt@lib/libsma.so@g'`
         shmeminclude=`echo $mpiexec_mpt_var | sed -e 's@bin/mpiexec_mpt@include@g'`
-        if [ -r $libsmafile -a -d $shmeminclude ]
+        if [ -r $libsmafile -a -d $shmeminclude -a "x$shmeminclude" != "x" ]
         then
           shmemlibdir=`echo $mpiexec_mpt_var | sed -e 's@bin/mpiexec_mpt@lib@g'`
           echo "Detected SGI MPT: Using $shmeminclude as include dir and $shmemlibdir as SHMEM lib dir"
