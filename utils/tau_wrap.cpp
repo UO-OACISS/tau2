@@ -313,9 +313,13 @@ void  printShmemMessageBeforeRoutine(pdbRoutine *r, ofstream& impl, int len_argu
     sprintf(processor_arg, "a%d", pe_argument_no);
   }
 
+#ifdef DEBUG
   printf("Size = %d, name = %s\n", routine_len, rname);
+#endif /* DEBUG */
   getMultiplierString(rname, multiplier_string); 
+#ifdef DEBUG
   printf("Multiplier string = %s\n", multiplier_string.c_str());
+#endif /* DEBUG */
   if (len_argument_no != 0) {
     if (fortran_interface) {
       sprintf(length_string, "%s (*a%d)", multiplier_string.c_str(), len_argument_no);
@@ -328,11 +332,15 @@ void  printShmemMessageBeforeRoutine(pdbRoutine *r, ofstream& impl, int len_argu
   
   if ((doesRoutineNameContainGet(rname, routine_len) == true) || 
       (doesRoutineNameContainFetchOp(rname, routine_len) == true)) { /* Get */
+#ifdef DEBUG
     printf("Routine name %s contains Get variant\n", rname);
+#endif /* DEBUG */
     impl <<"  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), "<<length_string<<", "<<processor_arg<<");"<<endl;
   }
   if (doesRoutineNameContainPut(rname, routine_len) == true) {
+#ifdef DEBUG
     printf("Routine name %s contains Put variant\n", rname);
+#endif /* DEBUG */
     impl <<"  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, "<<processor_arg<<", "<<length_string<<");"<<endl;
   }
    
@@ -357,9 +365,13 @@ void  printShmemMessageAfterRoutine(pdbRoutine *r, ofstream& impl, int len_argum
     sprintf(processor_arg, "a%d", pe_argument_no);
   }
 
+#ifdef DEBUG
   printf("Size = %d, name = %s\n", routine_len, rname);
+#endif /* DEBUG */
   getMultiplierString(rname, multiplier_string);
+#ifdef DEBUG
   printf("Multiplier string = %s\n", multiplier_string.c_str());
+#endif /* DEBUG */
   if (len_argument_no != 0) {
     if (fortran_interface) {
       sprintf(length_string, "%s (*a%d)", multiplier_string.c_str(), len_argument_no);
@@ -374,18 +386,27 @@ void  printShmemMessageAfterRoutine(pdbRoutine *r, ofstream& impl, int len_argum
   is_it_a_cond_fetchop = doesRoutineNameContainCondFetchOp(rname, routine_len); 
 
   if (strstr(rname, "start_pes") != 0) {
-     impl << "  tau_totalnodes(1,pshmem_n_pes());"<<endl;
-     impl << "  TAU_PROFILE_SET_NODE(pshmem_my_pe());"<<endl;
+     if (pshmem_use_underscore_instead_of_p) {
+       impl << "  tau_totalnodes(1,_shmem_n_pes());"<<endl;
+       impl << "  TAU_PROFILE_SET_NODE(_shmem_my_pe());"<<endl;
+     } else {
+       impl << "  tau_totalnodes(1,pshmem_n_pes());"<<endl;
+       impl << "  TAU_PROFILE_SET_NODE(pshmem_my_pe());"<<endl;
+     }
   }
 
   if (is_it_a_get || is_it_a_fetchop ) { /* Get */
+#ifdef DEBUG
     printf("Routine name %s contains Get variant\n", rname);
+#endif /* DEBUG */
     impl <<"  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, "<<processor_arg<<", "<<length_string<<");"<<endl;
   }
   if (is_it_a_cond_fetchop || is_it_a_fetchop) { /* add condition */
     if (is_it_a_cond_fetchop && (cond_argument_no == 0)) {
+#ifdef DEBUG
       printf("WARNING: in fetchop function %s, cond_argument_no is 0???\n", 
 	rname); 
+#endif /* DEBUG */
     }
     string indent(""); /* no indent by default */
     if (is_it_a_cond_fetchop) {
@@ -404,7 +425,9 @@ void  printShmemMessageAfterRoutine(pdbRoutine *r, ofstream& impl, int len_argum
     }
   }
   if (doesRoutineNameContainPut(rname, routine_len) == true) {
+#ifdef DEBUG
     printf("Routine name %s contains Put variant\n", rname);
+#endif /* DEBUG */
     impl <<"  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID, Tau_get_node(), "<<length_string<<", "<<processor_arg<<");"<<endl;
   }
 
@@ -487,16 +510,22 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
 #endif /* DEBUG */
 
     if (shmem_wrapper) {
+#ifdef DEBUG
       cout <<"Argument "<<(*argsit).name()<<" Type "<<(*argsit).type()->name()<<endl;
+#endif /* DEBUG */
       if (strcmp((*argsit).name().c_str(), "len") == 0) {
+#ifdef DEBUG
         printf("Argcount = %d for len\n", argcount); 
+#endif /* DEBUG */
         shmem_len_argcount = argcount; 
         if ((*argsit).type()->kind() == pdbItem::TY_PTR) {
           fortran_interface = true;
         }
       }
       if (strcmp((*argsit).name().c_str(), "pe") == 0) {
+#ifdef DEBUG
         printf("Argcount = %d for pe\n", argcount); 
+#endif /* DEBUG */
         shmem_pe_argcount = argcount; 
         if ((*argsit).type()->kind() == pdbItem::TY_PTR) {
           fortran_interface = true;
@@ -504,7 +533,9 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
       }
       if ((strcmp((*argsit).name().c_str(), "match") == 0) || 
          (strcmp((*argsit).name().c_str(), "cond") == 0)) {
+#ifdef DEBUG
         printf("Argcount = %d for match/cond\n", argcount); 
+#endif /* DEBUG */
         shmem_cond_argcount = argcount; 
       }
     }
