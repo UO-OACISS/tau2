@@ -2204,50 +2204,8 @@ void start_pes(int a1) {
   TAU_PROFILE_TIMER(t,"void start_pes(int) C", "", TAU_USER);
   TAU_PROFILE_START(t);
    _start_pes(a1);
-  tau_totalnodes(1,pshmem_n_pes());
-  TAU_PROFILE_SET_NODE(pshmem_my_pe());
-  TAU_PROFILE_STOP(t);
-
-}
-
-
-/**********************************************************
-   shmem_set_cache_inv
- **********************************************************/
-
-void shmem_set_cache_inv() {
-
-  TAU_PROFILE_TIMER(t,"void shmem_set_cache_inv() C", "", TAU_USER);
-  TAU_PROFILE_START(t);
-   _shmem_set_cache_inv();
-  TAU_PROFILE_STOP(t);
-
-}
-
-
-/**********************************************************
-   shmem_set_cache_line_inv
- **********************************************************/
-
-void shmem_set_cache_line_inv(void * a1) {
-
-  TAU_PROFILE_TIMER(t,"void shmem_set_cache_line_inv(void *) C", "", TAU_USER);
-  TAU_PROFILE_START(t);
-   _shmem_set_cache_line_inv(a1);
-  TAU_PROFILE_STOP(t);
-
-}
-
-
-/**********************************************************
-   shmem_clear_cache_inv
- **********************************************************/
-
-void shmem_clear_cache_inv() {
-
-  TAU_PROFILE_TIMER(t,"void shmem_clear_cache_inv() C", "", TAU_USER);
-  TAU_PROFILE_START(t);
-   _shmem_clear_cache_inv();
+  tau_totalnodes(1,_shmem_n_pes());
+  TAU_PROFILE_SET_NODE(_shmem_my_pe());
   TAU_PROFILE_STOP(t);
 
 }
@@ -2309,20 +2267,6 @@ int shmem_my_pe() {
   retval  =   _shmem_my_pe();
   TAU_PROFILE_STOP(t);
   return retval;
-
-}
-
-
-/**********************************************************
-   shmem_stack
- **********************************************************/
-
-void shmem_stack(void * a1) {
-
-  TAU_PROFILE_TIMER(t,"void shmem_stack(void *) C", "", TAU_USER);
-  TAU_PROFILE_START(t);
-   _shmem_stack(a1);
-  TAU_PROFILE_STOP(t);
 
 }
 
