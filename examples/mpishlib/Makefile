@@ -19,7 +19,7 @@ CXX		= $(TAU_CXX)
 
 CC		= $(TAU_CC)
 
-CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE) 
+CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE)  -fPIC -g 
 
 LIBS            = ./libring.so $(TAU_MPI_LIBS) $(TAU_SHLIBS) -lm
 
@@ -51,7 +51,7 @@ libring.so: ring.o
 	$(CXX) $(TAU_SHFLAGS) libring.so ring.o $(TAU_MPI_LIBS) $(TAU_SHLIBS)
 
 ring.o: ring.cpp
-	$(CXX) $(CFLAGS) -c ring.cpp
+	$(CXX) $(CFLAGS) -c ring.cpp 
 
 clean: 	
 	$(RM) $(TARGET).o $(TARGET) ring.o libring.so 
