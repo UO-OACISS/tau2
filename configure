@@ -3276,6 +3276,11 @@ if [ "x$mpiinc" != "x" ] ; then
 	additional_mpiincs="-I$mpiinc/openmpi -I$mpiinc/openmpi/ompi"
     fi
     
+    if [ -r $mpilib/mpi.mod ]; then 
+        echo "NOTE: Found mpi.mod in $mpilib, adding to include path"
+        additional_mpiincs="$additional_mpiincs -I$mpilib"
+    fi 
+
     if [ -d $mpiinc ] ; then
         #echo "Include dir found. adding -I$mpiinc to INC"
 	mpiincargs="$mpiincargs -I$mpiinc $additional_mpiincs"
@@ -4518,7 +4523,7 @@ EOF
       fixmakeargs="$fixmakeargs MPIFILE"
   else
       echo "MPI-2 MPI_File functions are NOT defined..."
-      echo $mpicompiler $orig_useropt $mpi_include -c mpi2file.$msuf
+      #echo $mpicompiler $orig_useropt $mpi_include -c mpi2file.$msuf
   fi
 
   if $mpicompiler $orig_useropt $mpi_include -c mpi2typeex.$msuf  1> /dev/null 2>&1 ; then
