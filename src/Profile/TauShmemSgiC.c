@@ -2360,22 +2360,6 @@ void * shmalloc(size_t a1) {
 
 
 /**********************************************************
-   shmalloc_nb
- **********************************************************/
-
-void * shmalloc_nb(size_t a1) {
-
-  void * retval;
-  TAU_PROFILE_TIMER(t,"void *shmalloc_nb(size_t) C", "", TAU_USER);
-  TAU_PROFILE_START(t);
-  retval  =   _shmalloc_nb(a1);
-  TAU_PROFILE_STOP(t);
-  return retval;
-
-}
-
-
-/**********************************************************
    shfree
  **********************************************************/
 
