@@ -39,7 +39,7 @@
 #include <fcntl.h>
 
 #ifndef TAU_BGP
-#include <pwd.h>
+//#include <pwd.h>
 #endif /* TAU_BGP */
 
 #define MAX_LN_LEN 2048
@@ -295,13 +295,18 @@ static  char * Tau_check_dirname(const char * dir) {
       sprintf(user,"unknown");
     }
 #else
-    struct passwd *pwInfo = getpwuid(geteuid());
+    /*    struct passwd *pwInfo = getpwuid(geteuid());
     if ((pwInfo != NULL) &&
         (pwInfo->pw_name != NULL)) {
       strcpy(user, pwInfo->pw_name);
+    */
+    char *temp = getlogin();
+    if (temp != NULL) {
+      sprintf(user, temp);
     } else {
       sprintf(user,"unknown");
     }
+    free(temp);
 #endif /* TAU_BGP */
     ret = sprintf(logfiledir, "%s/%d/%d/%d/%s_id%s_%d-%d-%d",  
 	logdir, (thisTime->tm_year+1900),(thisTime->tm_mon+1), 
