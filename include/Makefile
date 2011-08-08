@@ -969,10 +969,10 @@ TAU_TRACE_INPUT_LIB = -L$(TAU_LIB_DIR) -lTAU_traceinput$(TAU_CONFIG)
 #SP1#TAUMPILIBS      = $(TAU_MPI_LIBS) 	#ENDIF#
 #SP1#TAUMPIFLIBS     = $(TAU_MPI_FLIBS)	#ENDIF#
 #############################################
-#SHMEM#TAU_SHMEM_OBJS		     = TauShmemCray.o	  #ENDIF#
-#SGI_MPT_SHMEM#TAU_SHMEM_OBJS		     = TauShmemSgiC.o     #ENDIF#
-#SP1#TAU_SHMEM_OBJS		     = TauShmemTurbo.o	  #ENDIF#
-#GPSHMEM#TAU_SHMEM_OBJS		     = TauShmemGpshmem.o  #ENDIF#
+#SHMEM#SHMEM_OBJS		     = TauShmemCray.o	  #ENDIF#
+#SGI_MPT_SHMEM#SHMEM_OBJS		     = TauShmemSgiC.o     #ENDIF#
+#SP1#SHMEM_OBJS		     = TauShmemTurbo.o	  #ENDIF#
+#GPSHMEM#SHMEM_OBJS		     = TauShmemGpshmem.o  #ENDIF#
 
 TAU_CCOMPILER     = $(TAU_CC)
 #UPCC#TAU_CCOMPILER     = $(TAU_UPCC)  #ENDIF#

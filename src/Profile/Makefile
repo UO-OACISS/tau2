@@ -108,10 +108,8 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 #CRAYCNL#SHMEM_WRAPPER   =  #ENDIF#
 #SHMEM#SHMEM_INSTALL   = $(INSTALLDEST)/libTauShmem$(TAU_CONFIG)$(LSX)  #ENDIF#
 #CRAYCNL#SHMEM_INSTALL   =  #ENDIF#
-#CRAYCNL#SHMEM_OBJS   = TauShmemCrayC.o  #ENDIF#
 #SGI_MPT_SHMEM#SHMEM_INSTALL   =  #ENDIF#
 #SGI_MPT_SHMEM#SHMEM_WRAPPER   =  #ENDIF#
-#SGI_MPT_SHMEM#SHMEM_OBJS   = TauShmemSgiC.o  #ENDIF#
 #SHMEM#TAU_SHMEM_OBJS   = $(SHMEM_OBJS) #ENDIF#
 ##############################################
 
