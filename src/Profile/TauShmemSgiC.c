@@ -1340,6 +1340,20 @@ void shmem_longlong_add(long long * a1, long long a2, int a3) {
 
 
 /**********************************************************
+   shmem_barrier_ps
+ **********************************************************/
+
+void shmem_barrier_ps(int a1, int a2, int a3, long * a4) {
+
+  TAU_PROFILE_TIMER(t,"void shmem_barrier_ps(int, int, int, long *) C", "", TAU_USER);
+  TAU_PROFILE_START(t);
+   _shmem_barrier_ps(a1, a2, a3, a4);
+  TAU_PROFILE_STOP(t);
+
+}
+
+
+/**********************************************************
    shmem_barrier_all
  **********************************************************/
 
