@@ -429,7 +429,8 @@ void Tau_sampling_handle_sampleTrace(void *pc, ucontext_t *context) {
   TauSamplingRecord theRecord;
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
 
-  TAU_VERBOSE("[tid=%d] trace sample with pc %p\n", tid, pc);
+  // *CWL* - allow for debug only. Too much info.
+  //  TAU_VERBOSE("[tid=%d] trace sample with pc %p\n", tid, pc);
 
   struct timeval tp;
   gettimeofday(&tp, 0);
@@ -587,8 +588,8 @@ void Tau_sampling_finalizeProfile(int tid) {
   for (vector<FunctionInfo *>::iterator fI_iter = TheFunctionDB().begin();
        fI_iter != TheFunctionDB().end(); fI_iter++) {
     FunctionInfo *parentTauContext = *fI_iter;
-    if ((parentTauContext->pcHistogram == NULL) ||
-	(parentTauContext->pcHistogram->size() == 0)) {
+    if ((parentTauContext->pcHistogram[tid] == NULL) ||
+	(parentTauContext->pcHistogram[tid]->size() == 0)) {
       // No samples encountered in this TAU context.
       //   Continue to next TAU context.
       TAU_VERBOSE("Tau Context %s has no samples.\n",
@@ -598,8 +599,8 @@ void Tau_sampling_finalizeProfile(int tid) {
     map<caddr_t, unsigned int,
       std::less<caddr_t>, 
       SS_ALLOCATOR< std::pair<caddr_t, unsigned int> > >::iterator it;
-    for (it = parentTauContext->pcHistogram->begin();
-	 it != parentTauContext->pcHistogram->end(); it++) {
+    for (it = parentTauContext->pcHistogram[tid]->begin();
+	 it != parentTauContext->pcHistogram[tid]->end(); it++) {
       caddr_t addr = (caddr_t)it->first;
       CallSiteCandidate *candidate = new CallSiteCandidate();
       candidate->pc = addr;
@@ -807,7 +808,7 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
   } else {
     callSiteContext = profiler->ThisFunction;
   }
-  callSiteContext->addPcSample((caddr_t)pc);
+  callSiteContext->addPcSample((caddr_t)pc, tid);
 
   Tau_global_decr_insideTAU_tid(tid);
 }
@@ -857,6 +858,8 @@ int Tau_sampling_event_stop(int tid, double *stopTime) {
  ********************************************************************/
 void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
   int tid = RtsLayer::myThread();
+  TAU_VERBOSE("Tau_sampling_handle_sample: tid=%d got sample [%p]\n",
+	      tid, (unsigned long)pc);
   numSamples[tid]++;
 
   /* Never sample anything internal to TAU */
