@@ -17,12 +17,12 @@ def usage():
   
   Commands are:           Options are:                                    Arguments:
   upload (up)             -u,--username, -p,--password, -w,--workspace    ppk file, ...
-                          -e,--experiment
+                          -e,--experiment, -s,--summary_only
   download (down)         -u,--username, -p,--password, -w,--workspace    trial name
                           -e,--experiment
   synchronize (sync)      -u,--username, -p,--password, -w,--workspace,  
                           -a,--application, -e,--experiment, 
-                          --portal-only, --perfdmf-only
+                          --portal-only, --perfdmf-only -s,--summary_only 
   list_workspaces (work)  -u,--username, -p,--password  
   list_trials (trial)     -u,--username, -p,--password, -w,--workspace  
                           -e,--experiment
@@ -57,6 +57,8 @@ def main():
   default=True, help="only transfer trials to the TAU portal")
   parser.add_option('--perfdmf-only', action="store_false", dest="transfer_to_portal", 
   default=True, help="only transfer trials to the PerfDMF database")
+  parser.add_option('-s','--summary', action="store_true", dest="summary",
+	default=False, help="upload only the summary information to the Portal.")
 
   options, args = parser.parse_args(sys.argv[2:])
   #print sys.argv[1] 
@@ -79,7 +81,7 @@ def main():
     for trial in args:
       trial_list.append(open(trial, 'r'))
     print portal.upload(options.username, options.password, options.workspace,
-    options.experiment, trial_list, options.host)
+    options.experiment, trial_list, options.host, options.summary)
     #print "upload"
   elif (sys.argv[1] in ["download", "down"]):
     file = portal.download(options.username, options.password,
@@ -98,7 +100,7 @@ def main():
       options.application = "Portal"
     portal.sync(options.username, options.password, options.workspace, 
     options.application, options.experiment, options.transfer_to_perfdmf,
-    options.transfer_to_portal, options.host)
+    options.transfer_to_portal, options.host, options.summary)
     #print "sync"
   elif (sys.argv[1] in ["list_workspaces", "work"]):
     for workspace in portal.get_workspaces(options.username, options.password):
