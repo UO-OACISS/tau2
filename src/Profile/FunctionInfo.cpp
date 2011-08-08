@@ -195,10 +195,12 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   // *CWL* - this is an attempt to minimize the scenario where a sample
   //         requires the use of an actual malloc
   //         while in the middle of some other malloc call.
-  pcHistogram = NULL;
-  if (TauEnv_get_ebs_enabled()) {
-    // create structure only if EBS is required.
-    pcHistogram = new map<caddr_t, unsigned int, std::less<caddr_t>, SS_ALLOCATOR< std::pair<caddr_t, unsigned int> > >();
+  for (int i=0; i<TAU_MAX_THREADS; i++) {
+    pcHistogram[i] = NULL;
+    if (TauEnv_get_ebs_enabled()) {
+      // create structure only if EBS is required.
+      pcHistogram[i] = new map<caddr_t, unsigned int, std::less<caddr_t>, SS_ALLOCATOR< std::pair<caddr_t, unsigned int> > >();
+    }
   }
   ebsIntermediate = NULL;
   parentTauContext = NULL;
@@ -501,23 +503,27 @@ string *FunctionInfo::GetFullName() {
 
 /* EBS Sampling Profiles */
 
-void FunctionInfo::addPcSample(caddr_t pc) {
+void FunctionInfo::addPcSample(caddr_t pc, int tid) {
   if (!TauEnv_get_ebs_enabled()) {
     // This should be an error! We'll ignore it for now!
     return;
   }
-  if (pcHistogram == NULL) {
-    // *CWL* - this should never happen.
-    pcHistogram = new map<caddr_t, unsigned int, 
+  // *CWL* - pcHistogram should never be NULL but ...
+  if (pcHistogram[tid] == NULL) {
+    pcHistogram[tid] = new map<caddr_t, unsigned int, 
       std::less<caddr_t>, SS_ALLOCATOR< std::pair<caddr_t, unsigned int> > >();
   }
   map<caddr_t, unsigned int,
     std::less<caddr_t>, SS_ALLOCATOR< std::pair<caddr_t, unsigned int> > >::iterator it;
-  it = pcHistogram->find(pc);
-  if (it == pcHistogram->end()) {
-    pcHistogram->insert(std::pair<caddr_t, unsigned int>(pc,1));
+  it = pcHistogram[tid]->find(pc);
+  if (it == pcHistogram[tid]->end()) {
+    /* *CWL* - Too verbose, use for debug only.
+      TAU_VERBOSE("FunctionInfo::addPcSample [tid=%d] inserting sample [%p]\n", 
+		tid, (unsigned long)pc);
+    */
+    pcHistogram[tid]->insert(std::pair<caddr_t, unsigned int>(pc,1));
   } else {
-    (*pcHistogram)[pc] = it->second++;
+    (*pcHistogram[tid])[pc] = it->second++;
   }
 }
 
