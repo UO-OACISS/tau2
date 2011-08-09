@@ -658,10 +658,14 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
     {
       impl<<"  retval  =";
     }
-    if (pshmem_use_underscore_instead_of_p) {
-      impl <<"   _"<<func<<";"<<endl;
+    if (runtime == 1) {
+      impl<<"  "<<rcalledfunc<<";"<<endl;
     } else {
-      impl <<"   p"<<func<<";"<<endl;
+      if (pshmem_use_underscore_instead_of_p) {
+        impl <<"   _"<<func<<";"<<endl;
+      } else {
+        impl <<"   p"<<func<<";"<<endl;
+      }
     }
     printShmemMessageAfterRoutine(r, impl, shmem_len_argcount, shmem_pe_argcount, shmem_cond_argcount, fortran_interface);
   }
@@ -993,9 +997,9 @@ int main(int argc, char **argv)
   impl <<"#include <"<<header_file<<">"<<endl; /* Profile/Profiler.h */
   if (shmem_wrapper) {
     impl <<"int TAUDECL tau_totalnodes(int set_or_get, int value);"<<endl;
-    impl <<"int tau_shmem_tagid=0 ; "<<endl;
-    impl <<"#define TAU_SHMEM_TAGID tau_shmem_tagid"<<endl;
-    impl <<"#define TAU_SHMEM_TAGID_NEXT (++tau_shmem_tagid) % 256 "<<endl;
+    impl <<"static int tau_shmem_tagid_f=0 ; "<<endl;
+    impl <<"#define TAU_SHMEM_TAGID tau_shmem_tagid_f"<<endl;
+    impl <<"#define TAU_SHMEM_TAGID_NEXT (++tau_shmem_tagid_f) % 256 "<<endl;
   }
 
 
