@@ -971,7 +971,7 @@ TAU_TRACE_INPUT_LIB = -L$(TAU_LIB_DIR) -lTAU_traceinput$(TAU_CONFIG)
 #############################################
 #SHMEM#SHMEM_OBJS		     = TauShmemCray.o	  #ENDIF#
 #CRAYCNL#SHMEM_OBJS		     = TauShmemCrayC.o TauShmemCrayF.o  #ENDIF#
-#SGI_MPT_SHMEM#SHMEM_OBJS		     = TauShmemSgiC.o     #ENDIF#
+#SGI_MPT_SHMEM#SHMEM_OBJS	= TauShmemSgiC.o TauShmemSgiF.o     #ENDIF#
 #SP1#SHMEM_OBJS		     = TauShmemTurbo.o	  #ENDIF#
 #GPSHMEM#SHMEM_OBJS		     = TauShmemGpshmem.o  #ENDIF#
 
