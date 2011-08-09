@@ -20,11 +20,13 @@ import java.util.Observer;
 
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTree;
 import javax.swing.table.TableColumn;
 import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.TreePath;
 
 import edu.uoregon.tau.common.ImageExport;
 import edu.uoregon.tau.common.Utility;
@@ -36,6 +38,7 @@ import edu.uoregon.tau.paraprof.ParaProfUtils;
 import edu.uoregon.tau.paraprof.WindowPlacer;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.perfdmf.Thread;
+import edu.uoregon.tau.perfdmf.UserEvent;
 
 public class ContextEventWindow extends JFrame implements Observer, ParaProfWindow, Printable, ImageExport {
 
@@ -78,9 +81,8 @@ public class ContextEventWindow extends JFrame implements Observer, ParaProfWind
             this.setTitle("TAU: ParaProf: Std. Dev. Context Events - "
                     + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         } else {
-            this.setTitle("TAU: ParaProf: Context Events for thread: " + "n,c,t, " + thread.getNodeID() + ","
-                    + thread.getContextID() + "," + thread.getThreadID() + " - "
-                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+            this.setTitle("TAU: ParaProf: Context Events for: " + ParaProfUtils.getThreadLabel(thread)+ " - "
+                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));//+ "n,c,t, " +thread.getNodeID() + ","+ thread.getContextID() + "," + thread.getThreadID() +
         }
         ParaProfUtils.setFrameIcon(this);
 
@@ -114,13 +116,39 @@ public class ContextEventWindow extends JFrame implements Observer, ParaProfWind
 
     private void createTreeTable(AbstractTreeTableModel model) {
         treeTable = new JTreeTable(model, true, true);
-
-       //final JTree tree = 
+        //final JComponent localThis = this;
+       final JTree tree = 
         	treeTable.getTree();
 
         // Add a mouse listener for this tree.
         MouseListener ml = new MouseAdapter() {
             public void mousePressed(MouseEvent evt) {
+                try {
+                    //int selRow = tree.getRowForLocation(evt.getX(), evt.getY());
+                    TreePath path = tree.getPathForLocation(evt.getX(), evt.getY());
+                    if (path != null) {
+                    	//Object o = path.getLastPathComponent();
+                        ContextEventTreeNode node =  (ContextEventTreeNode) path.getLastPathComponent();
+                        if (ParaProfUtils.rightClick(evt)) {
+                            //JPopupMenu popup;
+                            if (node.getUserEventProfile() != null) {
+                                //popup = 
+                                		ParaProfUtils.handleUserEventClick(ppTrial, node.getUserEventProfile().getUserEvent(), treeTable, evt);
+                                		//.createFunctionClickPopUp(node.getModel().getPPTrial(),node.getFunctionProfile().getFunction(), getThread(), treeTable);
+                               // popup.show(treeTable, evt.getX(), evt.getY());
+                            } else {
+                                //popup = new JPopupMenu();
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    ParaProfUtils.handleException(e);
+                }
+            	
+            	
+            	
+            	
+            	
             //                try {
             //                    int selRow = tree.getRowForLocation(evt.getX(), evt.getY());
             //                    TreePath path = tree.getPathForLocation(evt.getX(), evt.getY());
@@ -261,6 +289,12 @@ public class ContextEventWindow extends JFrame implements Observer, ParaProfWind
     }
 
     public void update(Observable o, Object arg) {
+    	
+    	if(thread.getNodeID()>=0){
+    		this.setTitle("TAU: ParaProf: Context Events for: " + ParaProfUtils.getThreadLabel(thread)+ " - "
+                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+    	}
+    	
         treeTable.repaint();
         //setupData();
     }
