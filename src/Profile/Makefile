@@ -585,6 +585,9 @@ TauMetaData.o 	: TauMetaData.cpp $(HDRS)
 TauShmemCrayC.o  : TauShmemCrayC.c $(HDRS)
 	$(CC) $(CFLAGS) $(TAU_SHMEM_INC) -c $(@:.o=.c)
 
+TauShmemCrayF.o  : TauShmemCrayF.c $(HDRS)
+	$(CC) $(CFLAGS) $(TAU_SHMEM_INC) -c $(@:.o=.c)
+
 TauShmemSgiC.o  : TauShmemSgiC.c $(HDRS)
 	$(CC) $(CFLAGS) $(TAU_SHMEM_INC) -c $(@:.o=.c)
 
