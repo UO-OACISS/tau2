@@ -591,6 +591,9 @@ TauShmemCrayF.o  : TauShmemCrayF.c $(HDRS)
 TauShmemSgiC.o  : TauShmemSgiC.c $(HDRS)
 	$(CC) $(CFLAGS) $(TAU_SHMEM_INC) -c $(@:.o=.c)
 
+TauShmemSgiF.o  : TauShmemSgiF.c $(HDRS)
+	$(CC) $(CFLAGS) $(TAU_SHMEM_INC) -c $(@:.o=.c)
+
 TauXML.o 	: TauXML.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
