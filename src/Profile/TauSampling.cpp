@@ -733,14 +733,23 @@ void Tau_sampling_finalizeProfile(int tid) {
     }
 
     // Accumulate the histogram into the appropriate FunctionInfo objects
+    // "totalTime" is really a misnomer. It represents the array for all 
+    // metric values.
     double *totalTime = 
       (double *)malloc(Tau_Global_numCounters*sizeof(double));
     for (int i=0; i<Tau_Global_numCounters; i++) {
       totalTime[i] = 0.0;
     }
-    // work only with gtod for now
+    // Determine the EBS_SOURCE metric index and update the appropriate
+    //   sample approximations.
+    int ebsSourceMetricIndex = 
+      TauMetrics_getMetricIndexFromName(TauEnv_get_ebs_source());
+    if (ebsSourceMetricIndex == -1) {
+      // *CWL* - Force it to be 0 and hope for the best.
+      ebsSourceMetricIndex = 0;
+    }
     unsigned int binFreq = candidate->sampleCount;
-    totalTime[0] = binFreq*TauEnv_get_ebs_period();
+    totalTime[ebsSourceMetricIndex] = binFreq*TauEnv_get_ebs_period();
     // Update the count and time for the group of sampled events.
     sampledContextFuncInfo->SetCalls(tid, binFreq);
     sampledContextFuncInfo->AddInclTime(totalTime, tid);
@@ -858,8 +867,14 @@ int Tau_sampling_event_stop(int tid, double *stopTime) {
  ********************************************************************/
 void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
   int tid = RtsLayer::myThread();
+  /* *CWL* too fine-grained for anything but debug.
   TAU_VERBOSE("Tau_sampling_handle_sample: tid=%d got sample [%p]\n",
 	      tid, (unsigned long)pc);
+  */
+  if (samplingEnabled[tid] == 0) {
+    // Do not track counts when sampling is not enabled.
+    return;
+  }
   numSamples[tid]++;
 
   /* Never sample anything internal to TAU */
