@@ -3552,11 +3552,11 @@ then
     fi
     if [ $machine = craycnl ] 
     then
-      if [ "x$MPT_DIR" = "x" -a "x$CRAY_SHMEM_BASEDIR" != "x" ] 
+      if [ "x$MPT_DIR" = "x" -a "x$CRAY_SHMEM_DIR" != "x" ] 
       then
-        if [ -r $CRAY_SHMEM_BASEDIR/sma/include/mpp/shmem.h ]
+        if [ -r $CRAY_SHMEM_DIR/include/mpp/shmem.h ]
         then
-          shmemincargs="-I$CRAY_SHMEM_BASEDIR/sma/include/mpp/#-I$CRAY_SHMEM_BASEDIR/sma/include"
+          shmemincargs="-I$CRAY_SHMEM_DIR/include/mpp/#-I$CRAY_SHMEM_DIR/include"
         fi
       else
         if [ -r $MPT_DIR/sma/include/mpp/shmem.h ]
