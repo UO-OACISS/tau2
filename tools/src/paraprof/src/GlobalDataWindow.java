@@ -306,8 +306,18 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
             return "Phase: " + phase + "\nMetric: " + ppTrial.getDefaultMetric().getName() + "\nValue: "
                     + "Exclusive" + "\n";
         } else {
-            return "Metric: " + dataSorter.getSelectedMetric().getName() + "\nValue: "
+            String header = "Metric: " + dataSorter.getSelectedMetric().getName() + "\nValue: "
                     + dataSorter.getValueType() + "\n";
+            	if(dataSorter.getSortType()==SortType.NAME){
+            		header+="Sorted By: Name";
+            	}
+            	else if(!dataSorter.getSortByVisible()){
+            		header+="Sorted By: "+dataSorter.getSortValueType().toString();
+            		if(dataSorter.getSortMetric()!=dataSorter.getSelectedMetric()){
+            			header+=" ("+dataSorter.getSortMetric()+")";
+            		}
+            	}
+            	return header;
         }
     }
 

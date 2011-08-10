@@ -895,13 +895,44 @@ void TauEnv_initialize() {
 
     if (TauEnv_get_ebs_enabled()) {
 
+      // *CWL* Acquire the sampling source. This has to be done first
+      //       because the default EBS_PERIOD will depend on whether
+      //       the specified source relies on timer interrupts or
+      //       PAPI overflow interrupts or some other future 
+      //       mechanisms for triggering samples. The key problem with
+      //       EBS_PERIOD defaults are that they are source-semantic
+      //       sensitive (ie. 1000 microseconds is fine for timer
+      //       interrutps, but 1000 PAPI_TOT_CYC is way too small).
+      if ((env_ebs_source = getconf("TAU_EBS_SOURCE")) == NULL) {
+	env_ebs_source = "itimer";
+      }
+      TAU_VERBOSE("TAU: EBS Source: %s\n", env_ebs_source);
+
       /* TAU sampling period */
       const char *ebs_period = getconf("TAU_EBS_PERIOD");
-      env_ebs_period = TAU_EBS_PERIOD_DEFAULT;
+      int default_ebs_period = TAU_EBS_PERIOD_DEFAULT;
+      // *CWL* - adopting somewhat saner period values for PAPI-based
+      //         EBS sample sources. The code obviously has to be more
+      //         adaptive to account for the widely-varying semantics,
+      //         but we will use a one-size-fits-all mid-sized prime
+      //         number for now. The reason for a prime number? So we
+      //         do not get into cyclical sampling problems on sources
+      //         like L1 cache misses.
+      // 
+      //         The check for PAPI sources will be extremely naive for
+      //         now.
+      if (strncmp(env_ebs_source, "PAPI", 4) == 0) {
+	default_ebs_period = 133337;
+      }
+      env_ebs_period = default_ebs_period;
       if (ebs_period) {
+	// Try setting it to the user value.
 	env_ebs_period = atoi(ebs_period);
-	if (env_ebs_period < 0) {
-	  env_ebs_period = TAU_EBS_PERIOD_DEFAULT;
+	// *CWL* - 0 is not a valid ebs_period. Plus atoi() returns 0
+	//         if the string is not a number.
+	if (env_ebs_period <= 0) {
+	  // go back to default on failure or bad value.
+	  env_ebs_period = default_ebs_period;
 	}
       }
       TAU_VERBOSE("TAU: EBS period = %d \n", env_ebs_period);
@@ -910,12 +941,15 @@ void TauEnv_initialize() {
 
       bool ebs_period_forced = false;
 #ifdef EBS_CLOCK_RES
-      // *CWL* - force the clock period to be of a sane value
-      //         if the desired (or default) value is not
-      //         supported by the machine.
-      if (env_ebs_period < EBS_CLOCK_RES) {
-	env_ebs_period = EBS_CLOCK_RES;
-	ebs_period_forced = true;
+      if (strcmp(env_ebs_source, "itimer") != 0) {
+	// *CWL* - force the clock period to be of a sane value
+	//         if the desired (or default) value is not
+	//         supported by the machine. ONLY valid for "itimer"
+	//         EBS_SOURCE.
+	if (env_ebs_period < EBS_CLOCK_RES) {
+	  env_ebs_period = EBS_CLOCK_RES;
+	  ebs_period_forced = true;
+	}
       }
 #endif
       if (ebs_period_forced) {
@@ -936,11 +970,6 @@ void TauEnv_initialize() {
       TAU_METADATA("TAU_EBS_INCLUSIVE", tmpstr);
       
       
-      if ((env_ebs_source = getconf("TAU_EBS_SOURCE")) == NULL) {
-	env_ebs_source = "itimer";
-      }
-      TAU_VERBOSE("TAU: EBS Source: %s\n", env_ebs_source);
-
       if (TauEnv_get_tracing()) {
 	env_callpath = 1;
 	env_callpath_depth = 300;

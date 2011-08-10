@@ -114,7 +114,7 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
         } else if (nodeID == -3) {
             title = "TAU: ParaProf: Standard Deviation Statistics: ";
         } else {
-            title = "TAU: ParaProf: n,c,t, " + nodeID + "," + contextID + "," + threadID;
+            title = "TAU: ParaProf: "+ ParaProfUtils.getThreadLabel(thread);//n,c,t, " + nodeID + "," + contextID + "," + threadID;
         }
 
         title = title + " - " + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse());
@@ -431,6 +431,15 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
     public void update(Observable o, Object arg) {
         String tmpString = (String) arg;
         if (tmpString.equals("prefEvent")) {
+        	if(nodeID>=0){
+        		String phaseName="";
+        		 if (phase != null) {
+        	            phaseName= " Phase: " + phase.getName();
+        	        }
+        	this.setTitle("TAU: ParaProf: Context Events for: " + ParaProfUtils.getThreadLabel(thread)+ " - "
+                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse())+phaseName);
+        	}
+        	
             this.setHeader();
             panel.repaint();
         }
