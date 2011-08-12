@@ -605,6 +605,9 @@ case $1 in
      mpilib=*)
         mpilibdir=`echo $1 | sed -e 's/^mpilib=//'`
 	echo "s@^TAU_MPILIB_DIR=\(.*\)@TAU_MPILIB_DIR=$mpilibdir@g" >> $sedout
+	if [ "x$mpilibdir" != "x" ] ; then
+	  echo "s@^TAU_MPILIB_DIRLIB=\(.*\)@TAU_MPILIB_DIRLIB=-L$mpilibdir@g" >> $sedout
+	fi
         #echo "TAU_MPILIB_DIR=$mpilibdir" 
         ;;
 
