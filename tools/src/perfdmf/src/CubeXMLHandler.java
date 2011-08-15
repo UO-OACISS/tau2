@@ -287,7 +287,7 @@ public class CubeXMLHandler extends DefaultHandler {
             cubeProcess.threads.add(cubeThread);
             rank = rankStack.pop();
         } else if (localName.equalsIgnoreCase("locations") || localName.equalsIgnoreCase("system")) {
-        	
+                if( carts != null)	
         	for(int c=0;c<carts.size();c++){
         		String prefix = "Topo"+c;
         		cubeDataSource.getMetaData().put(prefix+" Size", carts.get(c).dimsize);
@@ -303,9 +303,11 @@ public class CubeXMLHandler extends DefaultHandler {
                     CubeThread cubeThread = cubeProcess.threads.get(j);
                     Thread thread = context.addThread(cubeThread.rank, cubeDataSource.getNumberOfMetrics());
                     
+                    if(carts != null)
                     for(int c =0;c<carts.size();c++)
                     {
                     	String prefix = "Topo"+c;
+                        if(carts.get(c).coords != null && curthread < carts.get(c).coords.size())
                     	thread.getMetaData().put(prefix+" Coords", carts.get(c).coords.get(curthread));
                     }
 
