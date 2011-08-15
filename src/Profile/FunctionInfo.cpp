@@ -195,6 +195,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   // *CWL* - this is an attempt to minimize the scenario where a sample
   //         requires the use of an actual malloc
   //         while in the middle of some other malloc call.
+#ifndef TAU_WINDOWS
   for (int i=0; i<TAU_MAX_THREADS; i++) {
     pcHistogram[i] = NULL;
     if (TauEnv_get_ebs_enabled()) {
@@ -204,6 +205,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   }
   ebsIntermediate = NULL;
   parentTauContext = NULL;
+#endif // TAU_WINDOWS
 
 #ifdef TAU_VAMPIRTRACE
   string tau_vt_name(string(Name)+" "+string(Type));
@@ -503,6 +505,7 @@ string *FunctionInfo::GetFullName() {
 
 /* EBS Sampling Profiles */
 
+#ifndef TAU_WINDOWS
 void FunctionInfo::addPcSample(caddr_t pc, int tid) {
   if (!TauEnv_get_ebs_enabled()) {
     // This should be an error! We'll ignore it for now!
@@ -526,7 +529,7 @@ void FunctionInfo::addPcSample(caddr_t pc, int tid) {
     (*pcHistogram[tid])[pc] = it->second++;
   }
 }
-
+#endif // TAU_WINDOWS
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
  * $Revision: 1.84 $   $Date: 2010/04/27 23:13:55 $
