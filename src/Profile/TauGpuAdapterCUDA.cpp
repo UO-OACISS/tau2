@@ -25,6 +25,8 @@ double sync_offset = 0;
 static cudaEvent_t lastEvent;
 static double lastEventTime = 0;
 
+//call to cudaEventQuery that does not register a sync event.
+extern cudaError_t cudaEventQuery_nosync(cudaEvent_t a);
 
 cudaRuntimeGpuId *cudaRuntimeGpuId::getCopy() { 
 		//printf("in runtime, getCopy.\n");
@@ -346,12 +348,12 @@ void Tau_cuda_register_sync_event()
 	if (KernelBuffer.size() > 0 && KernelBuffer.front().stopEvent != NULL)
 	{
 		//printf("buffer front stop: %d.\n", KernelBuffer.front().stopEvent == NULL);
-		cudaError err = cudaEventQuery(KernelBuffer.front().stopEvent);
+		cudaError err = cudaEventQuery_nosync(KernelBuffer.front().stopEvent);
 		//printf("buffer front is: %d\n", err);
 	}
 	float start_sec, stop_sec;
 
-	while (!KernelBuffer.empty() && cudaEventQuery(KernelBuffer.front().stopEvent) == cudaSuccess)
+	while (!KernelBuffer.empty() && cudaEventQuery_nosync(KernelBuffer.front().stopEvent) == cudaSuccess)
 	{
 		KernelEvent kernel = KernelBuffer.front();
 		//printf("kernel buffer size = %d.\n", KernelBuffer.size());
