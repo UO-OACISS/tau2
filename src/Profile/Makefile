@@ -340,6 +340,8 @@ CRAY_PGI_HACK=
 #CUPTI#TAU_CUPTI_OBJS=TauGpuAdapterCupti.o TauGpu.o #ENDIF#
 #CUPTI#TAU_CUPTI_DEF=-DTAU_GPU #ENDIF#
 
+CXXFLAGS+= $(TAU_CUDA_DEF) $(TAU_CUPTI_DEF)
+
 GPU_INSTALL   = $(TAU_SHAREDDIR)/$(TAU_CUDA_LIB) $(TAU_SHAREDDIR)/$(TAU_OPENCL_LIB) $(TAU_SHAREDDIR)/$(TAU_CUPTI_LIB) $(TAU_PYCUDA_LIB)#ENDIF#
 
 #$(TAU_SHAREDDIR)/$(TAU_CUDA_LIB): $(TAU_CUDA_LIB)
@@ -673,7 +675,7 @@ ProfileParam.o   : ProfileParam.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 Tracer.o   	: Tracer.cpp $(HDRS)
-	$(CXX) -DTAU_GPU $(CXXFLAGS) -c $(@:.o=.cpp)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauMetrics.o   	: TauMetrics.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
