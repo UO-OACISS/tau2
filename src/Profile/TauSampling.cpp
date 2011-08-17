@@ -502,7 +502,7 @@ void Tau_sampling_internal_initName2FuncInfoMapIfNecessary() {
 
 CallSiteInfo *Tau_sampling_resolveCallSite(caddr_t addr) {
   CallSiteInfo *callsite;
-  bool resolved = false;
+  //  bool resolved = false;
 
   char resolvedBuffer[4096];
 
@@ -828,6 +828,9 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
 
 /* Various unwinders might have their own implementation */
 void Tau_sampling_event_start(int tid, void **addresses) {
+
+  Tau_global_incr_insideTAU_tid(tid);
+
 #ifdef TAU_USE_HPCTOOLKIT
   Tau_sampling_event_startHpctoolkit(tid, addresses);
 #endif /* TAU_USE_HPCTOOLKIT */
@@ -835,12 +838,15 @@ void Tau_sampling_event_start(int tid, void **addresses) {
   if (TauEnv_get_profiling()) {
     // nothing for now
   }
+  Tau_global_decr_insideTAU_tid(tid);
 }
 
 int Tau_sampling_event_stop(int tid, double *stopTime) {
 #ifdef TAU_EXP_DISABLE_DELTAS
   return 0;
 #endif
+
+  Tau_global_incr_insideTAU_tid(tid);
 
   samplingEnabled[tid] = 0;
 
@@ -859,6 +865,7 @@ int Tau_sampling_event_stop(int tid, double *stopTime) {
   }
 
   samplingEnabled[tid] = 1;
+  Tau_global_decr_insideTAU_tid(tid);
   return 0;
 }
 
@@ -867,10 +874,9 @@ int Tau_sampling_event_stop(int tid, double *stopTime) {
  ********************************************************************/
 void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
   int tid = RtsLayer::myThread();
-  /* *CWL* too fine-grained for anything but debug.
+  /* *CWL* too fine-grained for anything but debug.*/
   TAU_VERBOSE("Tau_sampling_handle_sample: tid=%d got sample [%p]\n",
-	      tid, (unsigned long)pc);
-  */
+  	      tid, (unsigned long)pc);
   if (samplingEnabled[tid] == 0) {
     // Do not track counts when sampling is not enabled.
     return;
@@ -888,6 +894,7 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
     return;
   }
 
+  Tau_global_incr_insideTAU_tid(tid);
   if (TauEnv_get_tracing()) {
     Tau_sampling_handle_sampleTrace(pc, context);
   }
@@ -895,7 +902,7 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
   if (TauEnv_get_profiling()) {
     Tau_sampling_handle_sampleProfile(pc, context);
   }
-
+  Tau_global_decr_insideTAU_tid(tid);
 }
 
 /*********************************************************************
@@ -929,9 +936,10 @@ void Tau_sampling_papi_overflow_handler(int EventSet, void *address, x_int64 ove
  ********************************************************************/
 int Tau_sampling_init(int tid) {
   int ret;
-  int i;
 
   static struct itimerval itval;
+
+  Tau_global_incr_insideTAU_tid(tid);
 
   //int threshold = 1000;
   int threshold = TauEnv_get_ebs_period();
@@ -961,10 +969,12 @@ int Tau_sampling_init(int tid) {
     Tau_sampling_outputTraceHeader(tid);
   }
 
+  // Nothing currently requires initialization work for sampling into
+  //   profiles.
+  /*
   if (TauEnv_get_profiling()) {
-    // Do nothing for now.
   }
-
+  */
 /*
    see:
    http://ftp.gnu.org/old-gnu/Manuals/glibc-2.2.3/html_node/libc_463.html#SEC473
@@ -983,50 +993,53 @@ int Tau_sampling_init(int tid) {
       enable sample handling for each thread after init(tid) completes.
       See Tau_sampling_handle_sample().
    */
-  if (strcmp(TauEnv_get_ebs_source(), "itimer") == 0) {
-    int which = ITIMER_REAL;
-    int alarmType = SIGALRM;
+  if (tid == 0) {
+    if (strcmp(TauEnv_get_ebs_source(), "itimer") == 0) {
+      int which = ITIMER_REAL;
+      int alarmType = SIGALRM;
+      
+      struct sigaction act;
+      memset(&act, 0, sizeof(struct sigaction));
+      ret = sigemptyset(&act.sa_mask);
+      if (ret != 0) {
+	printf("TAU: Sampling error: %s\n", strerror(ret));
+	return -1;
+      }
+      ret = sigaddset(&act.sa_mask, alarmType);
+      if (ret != 0) {
+	printf("TAU: Sampling error: %s\n", strerror(ret));
+	return -1;
+      }
+      act.sa_sigaction = Tau_sampling_handler;
+      act.sa_flags     = SA_SIGINFO;
+      
+      ret = sigaction(alarmType, &act, NULL);
+      if (ret != 0) {
+	printf("TAU: Sampling error: %s\n", strerror(ret));
+	return -1;
+      }
+      
+      struct itimerval ovalue, pvalue;
+      getitimer(which, &pvalue);
+      
+      ret = setitimer(which, &itval, &ovalue);
+      if (ret != 0) {
+	printf("TAU: Sampling error: %s\n", strerror(ret));
+	return -1;
+      }
 
-    struct sigaction act;
-    memset(&act, 0, sizeof(struct sigaction));
-    ret = sigemptyset(&act.sa_mask);
-    if (ret != 0) {
-      printf("TAU: Sampling error: %s\n", strerror(ret));
-      return -1;
-    }
-    ret = sigaddset(&act.sa_mask, alarmType);
-    if (ret != 0) {
-      printf("TAU: Sampling error: %s\n", strerror(ret));
-      return -1;
-    }
-    act.sa_sigaction = Tau_sampling_handler;
-    act.sa_flags     = SA_SIGINFO;
-
-    ret = sigaction(alarmType, &act, NULL);
-    if (ret != 0) {
-      printf("TAU: Sampling error: %s\n", strerror(ret));
-      return -1;
-    }
-
-    struct itimerval ovalue, pvalue, try_value;
-    getitimer(which, &pvalue);
-
-    ret = setitimer(which, &itval, &ovalue);
-    if (ret != 0) {
-      printf("TAU: Sampling error: %s\n", strerror(ret));
-      return -1;
-    }
-
-    if (ovalue.it_interval.tv_sec != pvalue.it_interval.tv_sec  ||
-        ovalue.it_interval.tv_usec != pvalue.it_interval.tv_usec ||
-        ovalue.it_value.tv_sec != pvalue.it_value.tv_sec ||
-        ovalue.it_value.tv_usec != pvalue.it_value.tv_usec) {
-      printf("TAU: Sampling error: Real time interval timer mismatch\n");
-      return -1;
+      if (ovalue.it_interval.tv_sec != pvalue.it_interval.tv_sec  ||
+	  ovalue.it_interval.tv_usec != pvalue.it_interval.tv_usec ||
+	  ovalue.it_value.tv_sec != pvalue.it_value.tv_sec ||
+	  ovalue.it_value.tv_usec != pvalue.it_value.tv_usec) {
+	printf("TAU [tid = %d]: Sampling error - Real time interval timer mismatch.\n", tid);
+	return -1;
+      }
     }
   }
 
   samplingEnabled[tid] = 1;
+  Tau_global_decr_insideTAU_tid(tid);
   return 0;
 }
 
@@ -1039,11 +1052,14 @@ int Tau_sampling_finalize(int tid) {
 
   //  printf("Total samples encountered = %lld\n", numSamples);
   
+
   if (TauEnv_get_tracing()) {
     if (ebsTrace[tid] == 0) {
       return 0;
     }
   }
+
+  Tau_global_incr_insideTAU_tid(tid);
 
   /* Disable sampling first */
   samplingEnabled[tid] = 0;
@@ -1066,6 +1082,8 @@ int Tau_sampling_finalize(int tid) {
   if (TauEnv_get_profiling()) {
     Tau_sampling_finalizeProfile(tid);
   }
+
+  Tau_global_decr_insideTAU_tid(tid);
 
   return 0;
 }
