@@ -3552,11 +3552,11 @@ then
     fi
     if [ $machine = craycnl ] 
     then
-      if [ "x$MPT_DIR" = "x" -a "x$CRAY_SHMEM_BASEDIR" != "x" ] 
+      if [ "x$MPT_DIR" = "x" -a "x$CRAY_SHMEM_DIR" != "x" ] 
       then
-        if [ -r $CRAY_SHMEM_BASEDIR/sma/include/mpp/shmem.h ]
+        if [ -r $CRAY_SHMEM_DIR/include/mpp/shmem.h ]
         then
-          shmemincargs="-I$CRAY_SHMEM_BASEDIR/sma/include/mpp/#-I$CRAY_SHMEM_BASEDIR/sma/include"
+          shmemincargs="-I$CRAY_SHMEM_DIR/include/mpp/#-I$CRAY_SHMEM_DIR/include"
         fi
       else
         if [ -r $MPT_DIR/sma/include/mpp/shmem.h ]
@@ -5483,7 +5483,7 @@ if [ $python = yes -a $cuda = yes ] ; then
   cat <<EOF>boost.cpp
 #include "boost/python.hpp"
 EOF
-	pythoninc_cmd=$(echo $pythoninc | sed -e "s/ / -I/g")
+	pythoninc_cmd="$(echo $pythoninc | sed -e "s/ / -I/g")"
 	#echo $cxx_compiler -I$pythoninc_cmd -c boost.cpp
   if $cxx_compiler -I$pythoninc_cmd -c boost.cpp 1>/dev/null 2>&1 ; then
 		echo "yes"

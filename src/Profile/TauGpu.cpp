@@ -317,7 +317,7 @@ void Tau_gpu_register_gpu_event(eventId id, double startTime, double endTime)
 {
 	int task = get_task(id.device);
   
-	//printf("in TauGpu.cpp.\n");
+	//printf("in TauGpu.cpp, registering gpu event.\n");
 	//printf("Tau gpu name: %s.\n", name);
 	stage_gpu_event(id.name, task,
 		startTime + id.device->syncOffset(), id.callingSite);
@@ -459,7 +459,7 @@ void Tau_gpu_exit(void)
 		}
 #ifdef DEBUG_PROF
 		cerr << "stopping first gpu event.\n" << endl;
-		printf("stopping level 0.\n");
+		printf("stopping level %d tasks.\n", number_of_tasks);
 #endif
 		for (int i=0; i<number_of_tasks; i++)
 		{

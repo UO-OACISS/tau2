@@ -118,7 +118,7 @@ cudaError_t cudaThreadExit() {
     }
 	//printf("in cudaThreadExit(), check for kernel events.\n");
 #ifdef TRACK_KERNEL
-	Tau_cuda_register_sync_event();
+	//Tau_cuda_register_sync_event();
 #endif 
   TAU_PROFILE_START(t);
 #ifdef CUPTI
@@ -699,6 +699,9 @@ cudaError_t cudaStreamQuery(cudaStream_t a1) {
   TAU_PROFILE_START(t);
   retval  =  (*cudaStreamQuery_h)( a1);
   TAU_PROFILE_STOP(t);
+#ifdef TRACK_KERNEL
+	Tau_cuda_register_sync_event();
+#endif
   }
   return retval;
 
@@ -788,6 +791,34 @@ cudaError_t cudaEventRecord(cudaEvent_t a1, cudaStream_t a2) {
 
 }
 
+cudaError_t cudaEventQuery_nosync(cudaEvent_t a1) {
+
+  typedef cudaError_t (*cudaEventQuery_p) (cudaEvent_t);
+  static cudaEventQuery_p cudaEventQuery_h = NULL;
+  cudaError_t retval;
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaEventQuery(cudaEvent_t) C", "", CUDART_API);
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
+
+  if (cudart_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cudaEventQuery_h == NULL)
+	cudaEventQuery_h = (cudaEventQuery_p) dlsym(cudart_handle,"cudaEventQuery"); 
+    if (cudaEventQuery_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cudaEventQuery_h)( a1);
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
 cudaError_t cudaEventQuery(cudaEvent_t a1) {
 
   typedef cudaError_t (*cudaEventQuery_p) (cudaEvent_t);
@@ -811,6 +842,9 @@ cudaError_t cudaEventQuery(cudaEvent_t a1) {
   TAU_PROFILE_START(t);
   retval  =  (*cudaEventQuery_h)( a1);
   TAU_PROFILE_STOP(t);
+#ifdef TRACK_KERNEL
+	Tau_cuda_register_sync_event();
+#endif
   }
   return retval;
 
