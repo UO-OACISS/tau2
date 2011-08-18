@@ -306,7 +306,10 @@ public class CubeXMLHandler extends DefaultHandler {
                     for(int c =0;c<carts.size();c++)
                     {
                     	String prefix = "Topo"+c;
-                    	thread.getMetaData().put(prefix+" Coords", carts.get(c).coords.get(curthread));
+                    	if(curthread<carts.get(c).coords.size()){
+                    		String coords = carts.get(c).coords.get(curthread);
+                    		thread.getMetaData().put(prefix+" Coords", coords);
+                    	}
                     }
 
                     while (cubeThread.id >= threads.size()) {
