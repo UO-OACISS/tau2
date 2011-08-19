@@ -643,7 +643,7 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
   }
 
   if (!isVoid) {
-    impl<<"  "<<returntypename<< " retval;"<<endl;
+    impl<<"  "<<returntypename<< " retval = 0;"<<endl;
   }
   /* Now put in the body of the routine */
   
@@ -998,8 +998,8 @@ int main(int argc, char **argv)
   if (shmem_wrapper) {
     impl <<"int TAUDECL tau_totalnodes(int set_or_get, int value);"<<endl;
     impl <<"static int tau_shmem_tagid_f=0 ; "<<endl;
-    impl <<"#define TAU_SHMEM_TAGID tau_shmem_tagid_f"<<endl;
-    impl <<"#define TAU_SHMEM_TAGID_NEXT (++tau_shmem_tagid_f) % 256 "<<endl;
+    impl <<"#define TAU_SHMEM_TAGID tau_shmem_tagid_f=tau_shmem_tagid_f%250"<<endl;
+    impl <<"#define TAU_SHMEM_TAGID_NEXT (++tau_shmem_tagid_f) % 250 "<<endl;
   }
 
 

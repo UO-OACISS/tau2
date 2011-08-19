@@ -1208,7 +1208,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         addCompItem(panel, createTopoIntervalSelectionPanel("event2", 2), gbc, 1, 2, 1, 1);
         
     	 gbc.weightx = 0;
-         addCompItem(panel, new JLabel("event3"), gbc, 0, 3, 1, 1);
+         addCompItem(panel, new JLabel("event3 (Color)"), gbc, 0, 3, 1, 1);
          gbc.weightx = 0.1;
          addCompItem(panel, createTopoIntervalSelectionPanel("event3", 3), gbc, 1, 3, 1, 1);
          

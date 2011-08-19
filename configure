@@ -5483,7 +5483,7 @@ if [ $python = yes -a $cuda = yes ] ; then
   cat <<EOF>boost.cpp
 #include "boost/python.hpp"
 EOF
-	pythoninc_cmd=$(echo $pythoninc | sed -e "s/ / -I/g")
+	pythoninc_cmd="$(echo $pythoninc | sed -e "s/ / -I/g")"
 	#echo $cxx_compiler -I$pythoninc_cmd -c boost.cpp
   if $cxx_compiler -I$pythoninc_cmd -c boost.cpp 1>/dev/null 2>&1 ; then
 		echo "yes"
