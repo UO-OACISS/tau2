@@ -295,12 +295,17 @@ static  char * Tau_check_dirname(const char * dir) {
       sprintf(user,"unknown");
     }
 #else
+
+#ifdef TAU_WINDOWS
+		char *temp = "unknown";
+#else
     /*    struct passwd *pwInfo = getpwuid(geteuid());
     if ((pwInfo != NULL) &&
         (pwInfo->pw_name != NULL)) {
       strcpy(user, pwInfo->pw_name);
     */
     char *temp = getlogin();
+#endif // TAU_WINDOWS
     if (temp != NULL) {
       sprintf(user, temp);
     } else {

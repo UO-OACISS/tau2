@@ -44,6 +44,7 @@ extern "C" int Tau_Global_numCounters;
 #endif //RENCI_STFF
 
 // For EBS Sampling Profiles with custom allocator support
+#ifndef TAU_WINDOWS
 #include <sys/types.h>
 #include <unistd.h>
 #include <map>
@@ -53,8 +54,8 @@ extern "C" int Tau_Global_numCounters;
 #define SS_ALLOCATOR tau_ss_allocator
 #else
 #define SS_ALLOCATOR std::allocator
-#endif
-
+#endif //TAU_SS_ALLOC_SUPPORT
+#endif //TAU_WINDOWS
 using namespace std;
 class TauUserEvent; 
 
@@ -153,6 +154,7 @@ public:
   //         They will also potentially need per-counter information
   //         eventually.
   //  map<caddr_t, unsigned int> *pcHistogram;
+#ifndef TAU_WINDOWS
   map<caddr_t, unsigned int, std::less<caddr_t>, SS_ALLOCATOR< std::pair<caddr_t, unsigned int> > > *pcHistogram[TAU_MAX_THREADS];
   // For Intermediate FunctionInfo objects for groups of samples
   FunctionInfo *ebsIntermediate;
@@ -161,6 +163,7 @@ public:
 
   /* EBS Sampling Profiles */
   void addPcSample(caddr_t pc, int tid);
+#endif // TAU_WINDOWS
 
   inline double *getDumpExclusiveValues(int tid) {
     return dumpExclusiveValues[tid];
