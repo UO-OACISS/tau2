@@ -151,7 +151,13 @@ static int checkTraceFileInitialized(int tid) {
     if (TraceBuffer[tid][0].ev == TAU_EV_INIT) { 
       /* first record is init */
       for (int iter = 0; iter < TauCurrentEvent[tid]; iter ++) {
-	//TraceBuffer[tid][iter].nid = RtsLayer::myNode();
+        int mynodeid = RtsLayer::myNode();
+	if ((mynodeid > 0) && (TraceBuffer[tid][iter].nid == 0)) {
+          TraceBuffer[tid][iter].nid = RtsLayer::myNode();
+        } else {
+            if ((mynodeid > 0) && (TraceBuffer[tid][iter].nid > 0))
+	      break;
+        }
       }
     }
   }
