@@ -92,7 +92,7 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, gpuId
 	//printf("entering cuMemcpy event: %s.\n", name);
 #endif
 
-	if (functionName == TAU_GPU_USE_DEFAULT_NAME)
+	if (strcmp(functionName, TAU_GPU_USE_DEFAULT_NAME) == 0)
 	{
 		if (memcpyType == MemcpyHtoD) {
 			functionName = "Memory copy Host to Device";
@@ -105,6 +105,7 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, gpuId
 		{
 			functionName = "Memory copy (Other)";
 		}
+		printf("using default name: %s.\n", functionName);
 	}
 
 	TAU_START(functionName);
@@ -158,7 +159,7 @@ memcpyType)
 	//printf("exiting cuMemcpy event: %s.\n", name);
 #endif
 
-	if (functionName == TAU_GPU_USE_DEFAULT_NAME)
+	if (strcmp(functionName, TAU_GPU_USE_DEFAULT_NAME) == 0)
 	{
 		if (memcpyType == MemcpyHtoD) {
 			functionName = "Memory copy Host to Device";
@@ -171,6 +172,7 @@ memcpyType)
 		{
 			functionName = "Memory copy (Other)";
 		}
+		printf("using default name: %s.\n", functionName);
 	}
 
 	// Place the Message into the trace in when the memcpy in exited if this
@@ -332,9 +334,9 @@ void Tau_gpu_register_memcpy_event(eventId id, double startTime, double endTime,
 {
 	int task = get_task(id.device);
 	//printf("in Tau_gpu.\n");
-	//printf("Memcpy type is %d.\n", memcpyType);
+	printf("Memcpy type is %d.\n", memcpyType);
 	const char* functionName = id.name;
-	if (functionName == TAU_GPU_USE_DEFAULT_NAME)
+	if (strcmp(functionName, TAU_GPU_USE_DEFAULT_NAME) == 0)
 	{
 		if (memcpyType == MemcpyHtoD) {
 			functionName = "Memory copy Host to Device";
@@ -347,6 +349,7 @@ void Tau_gpu_register_memcpy_event(eventId id, double startTime, double endTime,
 		{
 			functionName = "Memory copy (Other)";
 		}
+		printf("using default name: %s.\n", functionName);
 	}
 
 #ifdef DEBUG_PROF		
