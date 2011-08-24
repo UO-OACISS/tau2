@@ -7,15 +7,19 @@
 #include <iostream>
 using namespace std;
 
-#define TRACK_MEMORY
-#define TRACK_KERNEL
+//#define TRACK_MEMORY
+//#define TRACK_KERNEL
 #define KERNEL_EVENT_BUFFFER 4096
 
 #define CUDART_API TAU_USER
 #define CUDA_SYNC TAU_USER
 
+#define REGISTER_SYNC() Tau_cupti_register_sync_event()
+//#define REGISTER_SYNC() REGISTER_SYNC()
+
 #ifdef CUPTI
 extern void Tau_CuptiLayer_finalize();
+extern void Tau_cupti_register_sync_event();
 #endif //CUPTI
 
 const char * cudart_orig_libname = "libcudart.so";
@@ -73,9 +77,9 @@ cudaError_t cudaDeviceReset() {
       return retval;
     }
 	//printf("in cudaDeviceReset(), check for kernel events.\n");
-#ifdef TRACK_KERNEL
-	Tau_cuda_register_sync_event();
-#endif 
+//#ifdef TRACK_KERNEL
+	REGISTER_SYNC();
+//#endif 
   TAU_PROFILE_START(t);
 #ifdef CUPTI
 	Tau_CuptiLayer_finalize();
@@ -83,9 +87,7 @@ cudaError_t cudaDeviceReset() {
   retval  =  (*cudaDeviceReset_h)();
   TAU_PROFILE_STOP(t);
 
-#ifdef TRACK_KERNEL
 	Tau_cuda_exit();
-#endif
   }
   return retval;
 
@@ -117,9 +119,9 @@ cudaError_t cudaThreadExit() {
       return retval;
     }
 	//printf("in cudaThreadExit(), check for kernel events.\n");
-#ifdef TRACK_KERNEL
-	//Tau_cuda_register_sync_event();
-#endif 
+//#ifdef TRACK_KERNEL
+	//REGISTER_SYNC();
+//#endif 
   TAU_PROFILE_START(t);
 #ifdef CUPTI
 	Tau_CuptiLayer_finalize();
@@ -127,9 +129,7 @@ cudaError_t cudaThreadExit() {
   retval  =  (*cudaThreadExit_h)();
   TAU_PROFILE_STOP(t);
 
-#ifdef TRACK_KERNEL
 	Tau_cuda_exit();
-#endif
   }
   return retval;
 
@@ -159,9 +159,9 @@ cudaError_t cudaThreadSynchronize() {
   retval  =  (*cudaThreadSynchronize_h)();
   TAU_PROFILE_STOP(t);
 
-#ifdef TRACK_KERNEL
-	Tau_cuda_register_sync_event();
-#endif
+//#ifdef TRACK_KERNEL
+	REGISTER_SYNC();
+//#endif
 
   }
   return retval;
@@ -668,9 +668,9 @@ cudaError_t cudaStreamSynchronize(cudaStream_t a1) {
   retval  =  (*cudaStreamSynchronize_h)( a1);
   TAU_PROFILE_STOP(t);
 	
-#ifdef TRACK_KERNEL
-	Tau_cuda_register_sync_event();
-#endif
+//#ifdef TRACK_KERNEL
+	REGISTER_SYNC();
+//#endif
   }
   return retval;
 
@@ -699,9 +699,9 @@ cudaError_t cudaStreamQuery(cudaStream_t a1) {
   TAU_PROFILE_START(t);
   retval  =  (*cudaStreamQuery_h)( a1);
   TAU_PROFILE_STOP(t);
-#ifdef TRACK_KERNEL
-	Tau_cuda_register_sync_event();
-#endif
+//#ifdef TRACK_KERNEL
+	REGISTER_SYNC();
+//#endif
   }
   return retval;
 
@@ -842,9 +842,9 @@ cudaError_t cudaEventQuery(cudaEvent_t a1) {
   TAU_PROFILE_START(t);
   retval  =  (*cudaEventQuery_h)( a1);
   TAU_PROFILE_STOP(t);
-#ifdef TRACK_KERNEL
-	Tau_cuda_register_sync_event();
-#endif
+//#ifdef TRACK_KERNEL
+	REGISTER_SYNC();
+//#endif
   }
   return retval;
 
@@ -874,9 +874,9 @@ cudaError_t cudaEventSynchronize(cudaEvent_t a1) {
   retval  =  (*cudaEventSynchronize_h)( a1);
   TAU_PROFILE_STOP(t);
 
-#ifdef TRACK_KERNEL
-	Tau_cuda_register_sync_event();
-#endif
+//#ifdef TRACK_KERNEL
+	REGISTER_SYNC();
+//#endif
 
   }
   return retval;

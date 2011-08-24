@@ -310,7 +310,7 @@ void Tau_cuda_enqueue_kernel_enter_event(const char *name, cudaGpuId* id)
 	curKernel = new KernelEvent(name, id, callingSite);
 	
 	const char *dem_name = 0;
-#if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE && false
+#if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
 	//printf("demangling name....\n");
 	dem_name = cplus_demangle(name, DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE |
 	DMGL_TYPES);

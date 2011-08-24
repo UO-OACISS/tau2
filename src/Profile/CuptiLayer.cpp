@@ -1,4 +1,22 @@
+
 #include "Profile/CuptiLayer.h"
+
+int Tau_CuptiLayer_get_num_events() {}
+
+bool Tau_CuptiLayer_is_initialized() { return false;}
+
+void Tau_CuptiLayer_init() {}
+
+void Tau_CuptiLayer_finalize() {}
+
+void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev) {}
+
+void Tau_CuptiLayer_read_counters(uint64_t * cBuffer) {}
+
+counter_map_t Tau_CuptiLayer_Counter_Map;
+counter_map_t Tau_CuptiLayer_map() {return Tau_CuptiLayer_Counter_Map;}
+
+#ifdef FALSE
 
 counter_map_t Tau_CuptiLayer_Counter_Map;
 counter_vec_t Tau_CuptiLayer_Added_counters;
@@ -351,4 +369,4 @@ counter_map_t Tau_CuptiLayer_map()
 	return Tau_CuptiLayer_Counter_Map;
 }
 
-
+#endif
