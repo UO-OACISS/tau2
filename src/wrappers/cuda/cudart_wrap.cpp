@@ -7,7 +7,7 @@
 #include <iostream>
 using namespace std;
 
-//#define TRACK_MEMORY
+#define TRACK_MEMORY
 //#define TRACK_KERNEL
 #define KERNEL_EVENT_BUFFFER 4096
 
@@ -15,7 +15,7 @@ using namespace std;
 #define CUDA_SYNC TAU_USER
 
 #define REGISTER_SYNC() Tau_cupti_register_sync_event()
-//#define REGISTER_SYNC() REGISTER_SYNC()
+//#define REGISTER_SYNC() Tau_cuda_register_sync_event()
 
 #ifdef CUPTI
 extern void Tau_CuptiLayer_finalize();
@@ -1344,6 +1344,9 @@ cudaError_t cudaFree(void * a1) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
+
+	REGISTER_SYNC();
+
   TAU_PROFILE_START(t);
   retval  =  (*cudaFree_h)( a1);
   TAU_PROFILE_STOP(t);
