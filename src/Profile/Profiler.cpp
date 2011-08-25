@@ -22,7 +22,7 @@
 #endif
 #include <Profile/TauSnapshot.h>
 #ifdef TAU_GPU
-#include <Profile/TauGpu.h>
+extern "C" int Tau_profile_exit_all_tasks();
 #endif
 //#include <tau_internal.h>
 
@@ -595,7 +595,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 #ifdef TAU_GPU
 		//Stop all other running tasks.
 		if (tid == 0) {
-		  Tau_gpu_exit();
+		  Tau_profile_exit_all_tasks();
 		}
 #endif
 #ifndef TAU_WINDOWS

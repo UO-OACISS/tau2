@@ -456,6 +456,25 @@ extern "C" int Tau_stop_current_timer() {
 ///////////////////////////////////////////////////////////////////////////
 
 
+extern "C" int Tau_profile_exit_all_tasks() {
+	int tid = 1;
+	while (tid < TAU_MAX_THREADS)
+	{
+		while (Tau_global_stackpos[tid] >= 0) {
+			Profiler *p = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
+			if (Tau_is_thread_fake(tid))
+			{
+				Tau_stop_timer(p->ThisFunction, tid);
+			}
+			// DO NOT pop. It is popped in stop above: Tau_global_stackpos[tid]--;
+		}
+	tid++;
+	}
+  Tau_disable_instrumentation();
+  return 0;
+}
+
+
 extern "C" int Tau_profile_exit_all_threads() {
 	int tid = 0;
 	while (tid < TAU_MAX_THREADS)
