@@ -2165,7 +2165,26 @@ case $machine in
 	elif [ "x$PE_ENV" = xCRAY ] ; then
 	    tauoptions="${tauoptions}-cray"
 	    default_fortran=cray
-	    
+
+	    # *CWL* - if bfd path is not explicitly specified, point
+	    #         to the correct preset bfd path.
+	    if [ "x$bfd" = "xno" ] ; then
+		if [ "x$bfddir" = "x" ] ; then
+		    bfddir="$CRAY_BINUTILS_ROOT"
+		    # Do not try to enable bfd implicitly if we cannot
+		    #    find a preset path for Cray compilers. Instead
+		    #    disable implicit support for BFD. Cray compilers
+		    #    currently have a problem with its library search
+		    #    path in that it is different when the -shared
+		    #    flag is used. As a result, the -lbfd link flags
+		    #    previously discovered at configure time fail
+		    #    at build time.
+		    if [ "x$bfddir" != "x" ] ; then
+			bfd=yes
+                    fi
+                fi
+	    fi
+
 	    touch conf_test.c
 	    extradir=`CC -v conf_test.c 2>&1 | grep cray-c++ | sed -e 's/ /\n/g' | grep "/opt/cray/cce" | grep "lib/x86-64$" | uniq | grep -v rpath`
 	    rm -f conf_test.c
@@ -5202,7 +5221,15 @@ fi
 
 BFDLIBS=`echo $BFDLIBS | sed -e 's/ /#/g'`
 
-fixmakeargs="$fixmakeargs bfdlibs=$BFDLIBS"
+# *CWL* - We do not want to use the discovered libraries if we are
+#         using the Cray compilers *and* fail to find the preset
+#         directories. The explanation for this can be found in
+#         the script section for craycnl.
+if [ "x$PE_ENV" = xCRAY -a "x$bfddir" = x ] ; then
+    echo "WARNING: Failed to find BFD path for CCE compiler. Implicit BFD support disabled."
+else
+    fixmakeargs="$fixmakeargs bfdlibs=$BFDLIBS"
+fi
 
 /bin/rm -f conftest_bfd.o conftest_bfd.c conftest_bfd
 ######################################################################
