@@ -836,6 +836,8 @@ BFDLIBS=
 TAU_FORTRAN_COMPINST_OPTION=$(TAU_COMPINST_OPTION)
 #NAGWARE_FORTRAN#TAU_FORTRAN_COMPINST_OPTION=-Wc,-finstrument-functions#ENDIF#
 
+TAU_LINKER_OPT16= -lrt
+
 ##############################################
 # Various Sampling Support Options
 ##############################################
@@ -896,7 +898,7 @@ TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
                   $(TAU_LINKER_OPT7) $(TAU_LINKER_OPT8) $(TAU_LINKER_OPT9) \
                   $(TAU_LINKER_OPT10) $(TAU_LINKER_OPT11) $(TAU_LINKER_OPT12) \
 		  $(TAU_LINKER_OPT13) $(PERFSUITELINK) $(VAMPIRTRACELIBS) $(SCOREPLIBS) $(HPCTOOLKIT_LINK) \
-		  $(TAU_LINKER_OPT14) $(TAU_LINKER_OPT15)
+		  $(TAU_LINKER_OPT14) $(TAU_LINKER_OPT15) $(TAU_LINKER_OPT16)
 
 ##############################################
 

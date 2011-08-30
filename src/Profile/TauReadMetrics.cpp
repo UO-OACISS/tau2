@@ -122,6 +122,17 @@ void metric_read_gettimeofday(int tid, int idx, double values[]) {
 #endif
 }
 
+/* clock that uses clock_gettime */
+void metric_read_clock_gettime(int tid, int idx, double values[]) {
+#ifdef TAU_WINDOWS
+  timestamp = TauWindowsUsecD();
+#else
+  struct timespec tm;
+  clock_gettime(CLOCK_MONOTONIC, &tm);
+  values[idx] = ((double)tm.tv_sec * 1e6 + (tm.tv_nsec*1e-3));
+#endif
+}
+
 /* bgl/bgp timers */
 void metric_read_bgtimers(int tid, int idx, double values[]) {
 #ifdef TAU_BGL
