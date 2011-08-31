@@ -21,6 +21,7 @@
 
 /* for getrusage */
 #ifndef TAU_WINDOWS
+#include <time.h>
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <unistd.h>
