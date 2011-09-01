@@ -806,10 +806,10 @@ HPCTOOLKIT_LINK=
 # Extra linker args (e.g. -Wl,-export-dynamic)
 ##############################################
 # *CWL* NOTE: The extra space between EXTRA_LINKER_ARGS and "=" in the 
-#       case of #APPLECXX# is necessary so FixMakefile.sed.default will not
+#       case of APPLECXX is necessary so FixMakefile.sed.default will not
 #       blow that entry away. It does so currently and I believe it may
 #       be because the order of the sed commands are not being respected
-#       by Mac OS X. Given the order, all #ENDIF# replacements should have
+#       by Mac OS X. Given the order, all ENDIF replacements should have
 #       been taken care of before any restoration attempts are taken for
 #       other variables like EXTRA_LINKER_ARGS. We are going to have to
 #       continually keep an eye on similar situations for Mac OS X until
