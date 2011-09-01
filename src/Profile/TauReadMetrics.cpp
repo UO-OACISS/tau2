@@ -21,7 +21,6 @@
 
 /* for getrusage */
 #ifndef TAU_WINDOWS
-#include <time.h>
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <unistd.h>
@@ -127,7 +126,11 @@ void metric_read_gettimeofday(int tid, int idx, double values[]) {
 void metric_read_clock_gettime(int tid, int idx, double values[]) {
 #ifdef TAU_WINDOWS
   timestamp = TauWindowsUsecD();
+#elif __APPLE__
+  /* Mac OS X currently (up to 10.6.8) does not support clock_gettime. */
+  metric_read_gettimeofday(tid, idx, values);
 #else
+#include <time.h>
   struct timespec tm;
   clock_gettime(CLOCK_MONOTONIC, &tm);
   values[idx] = ((double)tm.tv_sec * 1e6 + (tm.tv_nsec*1e-3));
