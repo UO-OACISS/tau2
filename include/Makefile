@@ -805,8 +805,17 @@ HPCTOOLKIT_LINK=
 ##############################################
 # Extra linker args (e.g. -Wl,-export-dynamic)
 ##############################################
+# *CWL* NOTE: The extra space between EXTRA_LINKER_ARGS and "=" in the 
+#       case of #APPLECXX# is necessary so FixMakefile.sed.default will not
+#       blow that entry away. It does so currently and I believe it may
+#       be because the order of the sed commands are not being respected
+#       by Mac OS X. Given the order, all #ENDIF# replacements should have
+#       been taken care of before any restoration attempts are taken for
+#       other variables like EXTRA_LINKER_ARGS. We are going to have to
+#       continually keep an eye on similar situations for Mac OS X until
+#       we can find a permanent fix.
 EXTRA_LINKER_ARGS=
-#APPLECXX#EXTRA_LINKER_ARGS= -rdynamic #ENDIF#
+#APPLECXX#EXTRA_LINKER_ARGS = -rdynamic#ENDIF#
 TAU_LINKER_OPT14=$(UPCC_LINK_PREFIX)$(EXTRA_LINKER_ARGS)
 
 
@@ -836,7 +845,7 @@ BFDLIBS=
 TAU_FORTRAN_COMPINST_OPTION=$(TAU_COMPINST_OPTION)
 #NAGWARE_FORTRAN#TAU_FORTRAN_COMPINST_OPTION=-Wc,-finstrument-functions#ENDIF#
 
-TAU_LINKER_OPT16= -lrt
+#TAU_LINKS_RT#TAU_LINKER_OPT16= -lrt#ENDIF#
 
 ##############################################
 # Various Sampling Support Options
