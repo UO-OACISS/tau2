@@ -13,14 +13,14 @@ using namespace std;
 #define CHECK_CU_ERROR(err, cufunc) \
 if (err != CUDA_SUCCESS) \
 { \
-printf ("Error %d for CUDA Driver API function '%s'. cuptiQuery failed\n", err, cufunc); \
+printf ("[%s:%d] Error %d for CUDA Driver API function '%s'. cuptiQuery failed\n", __FILE__, __LINE__, err, cufunc); \
 }
 
 /* Specific errors from CuPTI lib */
 #define CHECK_CUPTI_ERROR(err, cuptifunc) \
 if (err != CUPTI_SUCCESS) \
 { \
-printf ("Error %d for CUPTI API function '%s'. cuptiQuery failed\n", err, cuptifunc); \
+printf ("[%s:%d] Error %d for CUPTI API function '%s'. cuptiQuery failed\n", __FILE__, __LINE__, err, cuptifunc); \
 }
 
 #define TAU_CUPTI_MAX_NAME 40

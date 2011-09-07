@@ -10,19 +10,21 @@
 //#include <vector>
 using namespace std;
 /* Specific errors from CUDA lib */
+/*
 #define CHECK_CU_ERROR(err, cufunc) \
 if (err != CUDA_SUCCESS) \
 { \
 printf ("Error %d for CUDA Driver API function '%s'. cuptiQuery failed\n", err, cufunc); \
 }
-
+*/
 /* Specific errors from CuPTI lib */
+/*
 #define CHECK_CUPTI_ERROR(err, cuptifunc) \
 if (err != CUPTI_SUCCESS) \
 { \
 printf ("Error %d for CUPTI API function '%s'. cuptiQuery failed\n", err, cuptifunc); \
 }
-
+*/
 #define TAU_CUPTI_MAX_NAME 40
 #define TAU_CUPTI_MAX_DESCRIPTION 480
 #define TAU_CUPTI_MAX_EVENTS 160

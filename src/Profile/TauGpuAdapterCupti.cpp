@@ -1,4 +1,6 @@
 #include <Profile/TauGpuAdapterCupti.h>
+#include <iostream>
+using namespace std;
 
 void Tau_cupti_onload()
 {
@@ -22,6 +24,7 @@ void Tau_cupti_onload()
 	}
 
 	err = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_SYNCHRONIZE); 
+	//err = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_RESOURCE); 
 
 	CUDA_CHECK_ERROR(err, "Cannot set Domain.\n");
 
@@ -41,9 +44,10 @@ void Tau_cupti_onunload()
 	//if we have not yet registered any sync do so.
 	//if we have registered a sync then Tau_profile_exit_all_threads will write
 	//out the thread profiles already, do not attempt another sync.
+	//cudaDeviceSynchronize();
 	if (!registered_sync)
 	{
-		Tau_cupti_register_sync_event();
+		//Tau_cupti_register_sync_event();
 	}
   CUptiResult err;
   err = cuptiUnsubscribe(subscriber);
@@ -51,7 +55,24 @@ void Tau_cupti_onunload()
 
 void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_CallbackId id, const void *params)
 {
-	if (domain == CUPTI_CB_DOMAIN_SYNCHRONIZE)
+  if (domain == CUPTI_CB_DOMAIN_RESOURCE && id == CUPTI_CBID_RESOURCE_CONTEXT_DESTROY_STARTING)
+	{
+		printf("in callback domain = %d.\n", domain);
+		Tau_cupti_register_sync_event();
+		/*
+	  CUptiResult err;
+		printf("in resource stream create callback.\n");
+		CUpti_ResourceData* resource = (CUpti_ResourceData*) params;
+		CUstream stream = (CUstream) resource->resourceHandle.stream;
+		printf("in resource callback, stream retrieved.\n");
+		uint32_t streamId;
+		cuptiGetStreamId(resource->context, stream, &streamId);
+		err = cuptiActivityEnqueueBuffer(resource->context, streamId, activityBuffer, ACTIVITY_BUFFER_SIZE);
+	  CUDA_CHECK_ERROR(err, "Cannot enqueue buffer.\n");
+		printf("in resource callback, enqueued buffer.\n");
+		*/
+	}
+	else if (domain == CUPTI_CB_DOMAIN_SYNCHRONIZE)
 	{
 		Tau_cupti_register_sync_event();
 	}
@@ -160,6 +181,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 		{
 			//find FunctionInfo object from FunctionInfoMap
       CUpti_ActivityKernel *kernel = (CUpti_ActivityKernel *)record;
+			cout << "recording kernel, " << kernel->end - kernel->start << "ns.\n" << endl;
 			Tau_gpu_register_gpu_event(
 				cuptiRecord(demangleName(kernel->name), kernel->streamId, kernel->correlationId), 
 				kernel->start / 1e3,
@@ -171,13 +193,15 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 
 bool function_is_sync(CUpti_CallbackId id)
 {
-	return (
+	//return false;
+	return (	
+		//unstable results otherwise(
 		//runtimeAPI
-		id == CUPTI_RUNTIME_TRACE_CBID_cudaFree_v3020 ||
-		id == CUPTI_RUNTIME_TRACE_CBID_cudaFreeArray_v3020 ||
-		id == CUPTI_RUNTIME_TRACE_CBID_cudaFreeHost_v3020
+		//id == CUPTI_RUNTIME_TRACE_CBID_cudaFree_v3021 ||
+		//id == CUPTI_RUNTIME_TRACE_CBID_cudaFreeArray_v3020 ||
+		//id == CUPTI_RUNTIME_TRACE_CBID_cudaFreeHost_v3020
 		//id == CUPTI_RUNTIME_TRACE_CBID_cudaEventRecord_v3020
-		//id == CUPTI_RUNTIME_TRACE_CBID_cudaStreamQuery_v3020 ||
+		id == CUPTI_RUNTIME_TRACE_CBID_cudaStreamQuery_v3020
 		//id == CUPTI_RUNTIME_TRACE_CBID_cudaEventQuery_v3020
 		//driverAPI
 

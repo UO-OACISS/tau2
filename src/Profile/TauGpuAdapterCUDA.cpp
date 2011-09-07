@@ -343,7 +343,7 @@ void Tau_cuda_enqueue_kernel_exit_event()
 
 void Tau_cuda_register_sync_event()
 {
-	//printf("in sync event, buffer size: %d.\n", KernelBuffer.size());	
+	printf("in sync event, buffer size: %d.\n", KernelBuffer.size());	
 	
 	if (KernelBuffer.size() > 0 && KernelBuffer.front().stopEvent != NULL)
 	{
