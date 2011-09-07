@@ -2,8 +2,8 @@
 #include <Profile/Profiler.h>
 int TAUDECL tau_totalnodes(int set_or_get, int value);
 static int tau_shmem_tagid_f=0 ; 
-#define TAU_SHMEM_TAGID tau_shmem_tagid_f
-#define TAU_SHMEM_TAGID_NEXT (++tau_shmem_tagid_f) % 256 
+#define TAU_SHMEM_TAGID tau_shmem_tagid_f=tau_shmem_tagid_f%250
+#define TAU_SHMEM_TAGID_NEXT (++tau_shmem_tagid_f) % 250 
 #include <dlfcn.h>
 
 const char * tau_orig_libname = "libsma.so";

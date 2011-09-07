@@ -666,6 +666,9 @@ UnitListener, SortListener, VisCanvasListener, ThreeDeeImageProvider {
 
 
 					String coord = thread.getMetaData().get(coord_key);
+					if(coord==null){
+						continue;
+					}
 					int[] coords = ThreeDeeGeneralPlotUtils.parseTuple(coord);
 
 
