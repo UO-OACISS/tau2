@@ -907,7 +907,7 @@ while [ $tempCounter -lt $numFiles ]; do
     # Before we pass it to Opari for OpenMP instrumentation
     # we should use tau_ompcheck to verify that OpenMP constructs are 
     # used correctly.
-    if [ $opari == $TRUE -a $pdtUsed == $TRUE ]; then
+    if [ $opari == $TRUE ]; then
 	
 	case $groupType in
 	    $group_f_F)
@@ -1339,11 +1339,11 @@ if [ $gotoNextStep == $TRUE ]; then
 	    fi
 
             # remove the .pomp from the name of the output file
-	    if [ $opari == $TRUE -a $pdtUsed == $TRUE ]; then
+	    if [ $opari == $TRUE ]; then
 		outputFile=`echo $outputFile | sed -e 's/\.chk\.pomp//'`
 	    fi
-	    
-	    
+  
+
             #echoIfDebug "\n\nThe output file passed is $passedOutputFile"
 	    #echoIfDebug "The output file generated locally is $outputFile"
 
