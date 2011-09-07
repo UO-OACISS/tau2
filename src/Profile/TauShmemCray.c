@@ -2,8 +2,8 @@
 #include <shmem.h>
 int TAUDECL tau_totalnodes(int set_or_get, int value);
 int tau_shmem_tagid=0 ; 
-#define TAU_SHMEM_TAGID tau_shmem_tagid
-#define TAU_SHMEM_TAGID_NEXT (++tau_shmem_tagid) % 256
+#define TAU_SHMEM_TAGID tau_shmem_tagid=tau_shmem_tagid%250
+#define TAU_SHMEM_TAGID_NEXT (++tau_shmem_tagid) % 250
 
 /******************************************************/
 /******************************************************/

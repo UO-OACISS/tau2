@@ -805,8 +805,17 @@ HPCTOOLKIT_LINK=
 ##############################################
 # Extra linker args (e.g. -Wl,-export-dynamic)
 ##############################################
+# *CWL* NOTE: The extra space between EXTRA_LINKER_ARGS and "=" in the 
+#       case of APPLECXX is necessary so FixMakefile.sed.default will not
+#       blow that entry away. It does so currently and I believe it may
+#       be because the order of the sed commands are not being respected
+#       by Mac OS X. Given the order, all ENDIF replacements should have
+#       been taken care of before any restoration attempts are taken for
+#       other variables like EXTRA_LINKER_ARGS. We are going to have to
+#       continually keep an eye on similar situations for Mac OS X until
+#       we can find a permanent fix.
 EXTRA_LINKER_ARGS=
-#APPLECXX#EXTRA_LINKER_ARGS= -rdynamic #ENDIF#
+#APPLECXX#EXTRA_LINKER_ARGS = -rdynamic#ENDIF#
 TAU_LINKER_OPT14=$(UPCC_LINK_PREFIX)$(EXTRA_LINKER_ARGS)
 
 
@@ -835,6 +844,8 @@ BFDLIBS=
 #MRNET#TAU_LINKER_OPT15=$(MRNET_LIBS) #ENDIF#
 TAU_FORTRAN_COMPINST_OPTION=$(TAU_COMPINST_OPTION)
 #NAGWARE_FORTRAN#TAU_FORTRAN_COMPINST_OPTION=-Wc,-finstrument-functions#ENDIF#
+
+#TAU_LINKS_RT#TAU_LINKER_OPT16= -lrt#ENDIF#
 
 ##############################################
 # Various Sampling Support Options
@@ -896,7 +907,7 @@ TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
                   $(TAU_LINKER_OPT7) $(TAU_LINKER_OPT8) $(TAU_LINKER_OPT9) \
                   $(TAU_LINKER_OPT10) $(TAU_LINKER_OPT11) $(TAU_LINKER_OPT12) \
 		  $(TAU_LINKER_OPT13) $(PERFSUITELINK) $(VAMPIRTRACELIBS) $(SCOREPLIBS) $(HPCTOOLKIT_LINK) \
-		  $(TAU_LINKER_OPT14) $(TAU_LINKER_OPT15)
+		  $(TAU_LINKER_OPT14) $(TAU_LINKER_OPT15) $(TAU_LINKER_OPT16)
 
 ##############################################
 
@@ -983,7 +994,7 @@ TAU_CCOMPILER     = $(TAU_CC)
 #SHMEM#TAU_SHMEM_INCLUDE	= $(TAU_SHMEM_INC) #ENDIF#
 
 #SHMEM#TAU_SHMEM_LIBS	= -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/ -lTauShmem$(TAU_CONFIG) $(TAU_SHMEM_LIB) #ENDIF#
-#CRAYCNL#TAU_SHMEM_LIBS	= #ENDIF#
+#CRAYCNL#TAU_SHMEM_LIBS	= $(TAU_SHMEM_LIB) #ENDIF#
 #SGI_MPT_SHMEM#TAU_SHMEM_LIBS	= $(TAU_SHMEM_LIB) #ENDIF#
 
 #############################################

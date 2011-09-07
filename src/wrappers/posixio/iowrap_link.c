@@ -22,6 +22,10 @@
 #define TAU_WRITE TAU_IO
 extern void Tau_iowrap_checkInit(void);
 
+/* FIX for Apple: */
+#ifdef __APPLE__
+typedef int64_t               off64_t;
+#endif /* __APPLE__ */
 
 /*********************************************************************
  * fsync
@@ -1304,10 +1308,6 @@ off_t __wrap_lseek(int fd, off_t offset, int whence)
 /*********************************************************************
  * lseek64
  ********************************************************************/
-/* FIX for Apple: */
-#ifdef __APPLE__
-typedef int64_t               off64_t;
-#endif /* __APPLE__ */
 off64_t __wrap_lseek64(int fd, off64_t offset, int whence)
 {
   int ret;

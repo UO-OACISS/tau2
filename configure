@@ -449,6 +449,7 @@ otflib=
 ebs2otf=no
 ebs_has_rt=no
 ebs_clock_res="-1"
+tau_links_rt=no
 opari=no
 epilog=no
 hpctoolkit=no
@@ -2165,7 +2166,26 @@ case $machine in
 	elif [ "x$PE_ENV" = xCRAY ] ; then
 	    tauoptions="${tauoptions}-cray"
 	    default_fortran=cray
-	    
+
+	    # *CWL* - if bfd path is not explicitly specified, point
+	    #         to the correct preset bfd path.
+	    if [ "x$bfd" = "xno" ] ; then
+		if [ "x$bfddir" = "x" ] ; then
+		    bfddir="$CRAY_BINUTILS_ROOT"
+		    # Do not try to enable bfd implicitly if we cannot
+		    #    find a preset path for Cray compilers. Instead
+		    #    disable implicit support for BFD. Cray compilers
+		    #    currently have a problem with its library search
+		    #    path in that it is different when the -shared
+		    #    flag is used. As a result, the -lbfd link flags
+		    #    previously discovered at configure time fail
+		    #    at build time.
+		    if [ "x$bfddir" != "x" ] ; then
+			bfd=yes
+                    fi
+                fi
+	    fi
+
 	    touch conf_test.c
 	    extradir=`CC -v conf_test.c 2>&1 | grep cray-c++ | sed -e 's/ /\n/g' | grep "/opt/cray/cce" | grep "lib/x86-64$" | uniq | grep -v rpath`
 	    rm -f conf_test.c
@@ -5202,7 +5222,15 @@ fi
 
 BFDLIBS=`echo $BFDLIBS | sed -e 's/ /#/g'`
 
-fixmakeargs="$fixmakeargs bfdlibs=$BFDLIBS"
+# *CWL* - We do not want to use the discovered libraries if we are
+#         using the Cray compilers *and* fail to find the preset
+#         directories. The explanation for this can be found in
+#         the script section for craycnl.
+if [ "x$PE_ENV" = xCRAY -a "x$bfddir" = x ] ; then
+    echo "WARNING: Failed to find BFD path for CCE compiler. Implicit BFD support disabled."
+else
+    fixmakeargs="$fixmakeargs bfdlibs=$BFDLIBS"
+fi
 
 /bin/rm -f conftest_bfd.o conftest_bfd.c conftest_bfd
 ######################################################################
@@ -5299,8 +5327,30 @@ fi
 ######################################################################
 
 ######################################################################
-# Check that the Real Time interface is supported by this system
+# Check that basic librt linkage is supported by this system
+#    Precise functionality support is system-dependent and should
+#    be controlled by macros inside code accordingly.
 ######################################################################
+  cat <<EOF > conftest_rt_link_test.cpp
+int main() {
+}
+EOF
+$echo "Checking for librt linkage support ... ${nnl}"
+if $cxx_compiler $orig_useropt -o conftest_rt_link_test conftest_rt_link_test.cpp -lrt 1> /dev/null 2>&1 ; then
+    tau_links_rt=yes
+    fixmakeargs="$fixmakeargs TAU_LINKS_RT"
+    echo "yes"
+else
+    echo "no"
+fi
+/bin/rm -f conftest_rt_link_test conftest_rt_link_test.cpp
+
+######################################################################
+# Check that basic librt functionality is supported by this system
+######################################################################
+# *CWL* Don't bother checking for functionality if we cannot even link
+#       the library.
+if [ $tau_links_rt = "yes" ] ; then
   cat <<EOF > conftest_rt_test.cpp
 #include <time.h>
 #include <stdio.h>
@@ -5323,7 +5373,7 @@ int main() {
   printf("%ld", (long)time_value);
 }
 EOF
-$echo "Checking for Real Time Library support... ${nnl}"
+$echo "Checking for Basic librt Real Time Clock Signal support... ${nnl}"
 if $cxx_compiler $orig_useropt -o conftest_rt_test conftest_rt_test.cpp -lrt 1> /dev/null 2>&1 ; then
     ebs_has_rt=yes
     echo "yes"
@@ -5353,6 +5403,7 @@ fi
 #echo $?
 
 /bin/rm -f conftest_rt_test conftest_rt_test.cpp
+fi
 ######################################################################
 
 ######################################################################
