@@ -37,6 +37,7 @@ void metric_write_userClock(int tid, double value);
 void metric_read_userClock(int tid, int idx, double values[]);
 void metric_read_logicalClock(int tid, int idx, double values[]);
 void metric_read_gettimeofday(int tid, int idx, double values[]);
+void metric_read_clock_gettime(int tid, int idx, double values[]);
 void metric_read_linuxtimers(int tid, int idx, double values[]);
 void metric_read_bgtimers(int tid, int idx, double values[]);
 void metric_read_craytimers(int tid, int idx, double values[]);
@@ -311,6 +312,8 @@ static void initialize_functionArray() {
       functionArray[pos++] = metric_read_userClock;
     } else if (compareMetricString(metricv[i], "GET_TIME_OF_DAY")) {
       functionArray[pos++] = metric_read_gettimeofday;
+    } else if (compareMetricString(metricv[i], "CLOCK_GET_TIME")) {
+      functionArray[pos++] = metric_read_clock_gettime;
     } else if (compareMetricString(metricv[i], "TIME")) {
       functionArray[pos++] = metric_read_gettimeofday;
     } else if (compareMetricString(metricv[i], "CPU_TIME")) {
@@ -480,7 +483,6 @@ extern "C" x_uint64 TauMetrics_getTimeOfDay() {
 #endif
   return timestamp;
 }
-
 
 /*********************************************************************
  * Initialize the metrics module
