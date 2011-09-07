@@ -36,10 +36,13 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener {
 	private static final long serialVersionUID = 7442413865642013151L;
 	//private ParaProfManagerWindow paraProfManager = null;
     private JProgressBar progressBar = null;
+    private JLabel progressMessage = null;// advaced progress load feature : progress status message
     private DataSource dataSource = null;
     private ParaProfTrial ppTrial = null;
     private boolean aborted = false;
     private JLabel label;
+
+
     private boolean dbUpload = false;
     private javax.swing.Timer jTimer;
 
@@ -51,8 +54,8 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener {
         //this.paraProfManager = paraProfManager;
 
         //Window Stuff.
-        int windowWidth = 300;
-        int windowHeight = 120;
+        int windowWidth = 800;
+        int windowHeight = 220;
 
         //Grab paraProfManager position and size.
         Point parentPosition = paraProfManager.getLocationOnScreen();
@@ -84,18 +87,18 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener {
         GridBagLayout gbl = new GridBagLayout();
         contentPane.setLayout(gbl);
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(2, 2, 2, 2);
+        gbc.insets = new Insets(1, 1, 1, 1);
 
         gbc.fill = GridBagConstraints.NONE;
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.weightx = 0;
         gbc.weighty = 0;
         label = new JLabel("Loading Profile Data...");
+	label.setPreferredSize(new Dimension(760, 20));
         addCompItem(label, gbc, 0, 0, 1, 1);
 
         progressBar = new JProgressBar(0, 100);
-
-        progressBar.setPreferredSize(new Dimension(200, 14));
+        progressBar.setPreferredSize(new Dimension(760, 14));
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         addCompItem(progressBar, gbc, 0, 1, 1, 1);
@@ -107,7 +110,16 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener {
 
         JButton jButton = new JButton("Cancel");
         jButton.addActionListener(this);
-        addCompItem(jButton, gbc, 0, 3, 1, 1);
+        addCompItem(jButton, gbc, 0, 2, 1, 1);
+
+	if (dataSource.getClass().getName().equalsIgnoreCase("edu.uoregon.tau.perfdmf.CubeDataSource"))
+	{
+		progressMessage = new JLabel("");
+		addCompItem(progressMessage, gbc, 0, 3, 1, 1);
+		progressMessage.setPreferredSize(new Dimension(760, 100));
+		progressMessage.setMinimumSize(new Dimension(760, 100));
+		progressMessage.setVerticalAlignment(JLabel.TOP);
+	}
 
         jTimer = new javax.swing.Timer(200, this);
         jTimer.start();
@@ -214,10 +226,15 @@ public class LoadTrialProgressWindow extends JFrame implements ActionListener {
             }
 
         } else {
-            int progress = (int) dataSource.getProgress();
-            if (progress > 100)
-                progress = 100;
-            progressBar.setValue(progress);
+		if (dataSource.getClass().getName().equalsIgnoreCase("edu.uoregon.tau.perfdmf.CubeDataSource"))
+			progressMessage.setText("<html>"+((edu.uoregon.tau.perfdmf.CubeDataSource)(dataSource)).getProgressMessage().replaceAll("\n","<br>").replaceAll(" ", "&nbsp;") );
+// 			System.out.println(((edu.uoregon.tau.perfdmf.Cube4DataSource)(dataSource)).getProgressMessage());
+		int progress = (int) dataSource.getProgress();
+		if (progress > 100)
+			progress = 100;
+		progressBar.setValue(progress);
+
+		doLayout();
         }
     }
 
