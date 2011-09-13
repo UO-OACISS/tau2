@@ -497,6 +497,7 @@ iowrapper=no
 zepto=no
 zeptodir=
 cuda=no
+strsignal_ok=no
 
 # Reset include/Makefile before starting anything else
 for i in include/Makefile ; do
@@ -5000,6 +5001,25 @@ else
 fi 
 rm -f /tmp/tau$$.C tau$$.o
 
+#####################################################################
+# Test for explicit strsignal support in string library (TauInit.cpp)
+#####################################################################
+$echo "Check if valid to declare strsignal with <string.h>... ${nnl}"
+cat <<EOF > /tmp/tau$$.cpp
+#include <string.h>
+extern "C" char *strsignal(int sig);
+EOF
+
+if $cxx_compiler -c /tmp/tau$$.cpp 1> /dev/null 2>&1 ; then 
+    echo "yes"
+    strsignal_ok=yes
+    fixmakeargs="$fixmakeargs TAU_STRSIGNAL_OK"
+else
+    echo "no"
+fi 
+rm -f /tmp/tau$$.cpp tau$$.o
+
+
 
 #####################################################################
 # Check Runtime type info
@@ -6005,6 +6025,15 @@ if [ $cxx_compiler = icpc ] ; then
     fi
     if [ ! -d "$var" ] ; then
 	echo "Error: Unable to identify ifort lib directory"
+    fi
+    if   [ -f "$libdir/for_main.o" ] ; then
+        :
+    elif [ -f "$libdir/intel64/for_main.o" ] ; then
+        libdir="$libdir/intel64"
+    elif [ -f "$libdir/ia32/for_main.o" ] ; then
+        libdir="$libdir/ia32"
+    elif [ -f "$libdir/ia64/for_main.o" ] ; then
+        libdir="$libdir/ia64"
     fi
 
     fixmakeargs="$fixmakeargs ifortlibdir=$libdir" 
