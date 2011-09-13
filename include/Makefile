@@ -857,8 +857,9 @@ EBS_CLOCK_RES=
 #EBS_HAS_RT#PROFILEOPT83 = -DEBS_CLOCK_RES=$(EBS_CLOCK_RES) #ENDIF#
 
 ##############################################
-
-
+# Support for non-portable features
+##############################################
+#TAU_STRSIGNAL_OK#PROFILEOPT84 = -DTAU_STRSIGNAL_OK#ENDIF#
 
 ##############################################
 
@@ -882,7 +883,8 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 	      $(PROFILEOPT69) $(PROFILEOPT70) $(PROFILEOPT71) $(PROFILEOPT72) \
 	      $(PROFILEOPT73) $(PROFILEOPT74) $(PROFILEOPT75) $(PROFILEOPT76) \
 	      $(PROFILEOPT77) $(PROFILEOPT78) $(PROFILEOPT79) $(PROFILEOPT80) \
-              $(PROFILEOPT81) $(PROFILEOPT82) $(PROFILEOPT83) $(TRACEOPT)
+              $(PROFILEOPT81) $(PROFILEOPT82) $(PROFILEOPT83) $(PROFILEOPT84) \
+              $(TRACEOPT)
 
 
 ##############################################
