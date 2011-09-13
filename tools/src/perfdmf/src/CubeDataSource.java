@@ -143,7 +143,7 @@ public class CubeDataSource extends DataSource
 			{
 				if (JOptionPane.showConfirmDialog(
 					null,
-					new String("Topology " + num + "( "+cart.get_name()+") has different number of coordinates ("+ cart.get_ndim()+") than 3. \n Add to TAU profile or skip?"),
+					new String("Topology " + num + "( "+cart.get_name()+") has different number of coordinates ("+ cart.get_ndim()+") than 3. \n Visualization of this topology will fail. \n Add to TAU profile anyway?"),
 					"Not supported topologies are detected",
 					JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) continue;
 
@@ -160,9 +160,9 @@ public class CubeDataSource extends DataSource
 			num++;
 		}
 		progress_message = "Cube object filled with data...";
- 		progress_value = 0.4; // sofar 50% done
+ 		progress_value = 0.55; // sofar 50% done
 	// now feed with faked data
-		double progress_step = (0.3)/( (calls_are_in_cube)?(metrics.size()):(metrics.size()+1)); // if there no visits in cube, one run more is needed
+		double progress_step = (0.45)/( (calls_are_in_cube)?(metrics.size()):(metrics.size()+1)); // if there no visits in cube, one run more is needed
 		int metric_number = 0;
 		for (scalasca.cubex.cube.Metric met : interval_events)
 		{
@@ -285,7 +285,7 @@ public class CubeDataSource extends DataSource
 		progress_message = "Postprocessing...(set group names)";
 		this.setGroupNamesPresent(true);
 		progress_message = "Generate derived data...";
-		progress_value = 0.8;
+		progress_value = 0.95;
 		this.generateDerivedData();
 		progress_value = 1.;
 		progress_message = "Generate derived data...done";
@@ -433,6 +433,7 @@ public class CubeDataSource extends DataSource
 	{
 
 		// add numcalls to numsubr of parent (and its flat profile)
+		// just parents, not parents-of-parents-of-parents-of...
 		FunctionProfile parent = getParent(thread, fp.getFunction());
 		if (parent != null)
 		{
@@ -445,11 +446,11 @@ public class CubeDataSource extends DataSource
 		}
 
 		// recurse to A => B if this is A => B => C
-// 		FunctionProfile parent = getParent(thread, fp.getFunction());
-		if (parent != null)
-		{
-			addCallsToParent(thread, parent, value);
-		}
+		// If propagation to parent-of-parent is wished, uncomment below
+// 		if (parent != null)
+// 		{
+// 			addCallsToParent(thread, parent, value);
+// 		}
 
 	}
 
