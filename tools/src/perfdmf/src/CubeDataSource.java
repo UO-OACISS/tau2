@@ -86,226 +86,227 @@ public class CubeDataSource extends DataSource
 	static public FileFilter getFilesFilter() { return scalasca.cubex.cube.Cube.getCubeFilesFilter(); }
 
     
-    public void load() throws FileNotFoundException, IOException, DataSourceException, SQLException {
-        try {
-            long time = System.currentTimeMillis();
+	public void load() throws FileNotFoundException, IOException, DataSourceException, SQLException
+	{
+		try {
+		long time = System.currentTimeMillis();
 
-		progress_message = "Start loading...";
+			progress_message = "Start loading...";
 
-		cube = new Cube();
-		progress_message = "Cube object created...";
+			cube = new Cube();
+			progress_message = "Cube object created...";
 
-		cube.openCubeReport(file.getPath());
-		progress_message = "Construct TAU dimensions out of CUBE dimensions...";
- 		progress_value = 0.3; // sofar 50% done
+			cube.openCubeReport(file.getPath());
+			progress_message = "Construct TAU dimensions out of CUBE dimensions...";
+			progress_value = 0.3; // sofar 50% done
 
-		ArrayList<scalasca.cubex.cube.Metric> metrics = cube.get_metv();
-		ArrayList<scalasca.cubex.cube.Metric> root_metrics = cube.get_root_metv();
-		ArrayList<scalasca.cubex.cube.Region> regions = cube.get_regionv();
-		ArrayList<scalasca.cubex.cube.Cnode> cnodes = cube.get_cnodev();
-		ArrayList<scalasca.cubex.cube.Cnode> root_cnodes = cube.get_root_cnodev();
-		ArrayList<scalasca.cubex.cube.Machine> machines = cube.get_machv();
-		ArrayList<scalasca.cubex.cube.Node> nodes = cube.get_nodev();
-		ArrayList<scalasca.cubex.cube.Process> processes = cube.get_procv();
-		ArrayList<scalasca.cubex.cube.Thread> threads = cube.get_thrdv();
-		ArrayList<scalasca.cubex.cube.Cartesian> topologies = cube.get_cartv();
+			ArrayList<scalasca.cubex.cube.Metric> metrics = cube.get_metv();
+			ArrayList<scalasca.cubex.cube.Metric> root_metrics = cube.get_root_metv();
+			ArrayList<scalasca.cubex.cube.Region> regions = cube.get_regionv();
+			ArrayList<scalasca.cubex.cube.Cnode> cnodes = cube.get_cnodev();
+			ArrayList<scalasca.cubex.cube.Cnode> root_cnodes = cube.get_root_cnodev();
+			ArrayList<scalasca.cubex.cube.Machine> machines = cube.get_machv();
+			ArrayList<scalasca.cubex.cube.Node> nodes = cube.get_nodev();
+			ArrayList<scalasca.cubex.cube.Process> processes = cube.get_procv();
+			ArrayList<scalasca.cubex.cube.Thread> threads = cube.get_thrdv();
+			ArrayList<scalasca.cubex.cube.Cartesian> topologies = cube.get_cartv();
 
-		ArrayList<scalasca.cubex.cube.Metric> context_events = new ArrayList<scalasca.cubex.cube.Metric>(); // collect metrics from cube, which carries context events for further processing.
-		ArrayList<scalasca.cubex.cube.Metric> interval_events = new ArrayList<scalasca.cubex.cube.Metric>(); // collect metrics from cube, which carries context events for further processing.
+			ArrayList<scalasca.cubex.cube.Metric> context_events = new ArrayList<scalasca.cubex.cube.Metric>(); // collect metrics from cube, which carries context events for further processing.
+			ArrayList<scalasca.cubex.cube.Metric> interval_events = new ArrayList<scalasca.cubex.cube.Metric>(); // collect metrics from cube, which carries context events for further processing.
 
-		progress_message = "Construct TAU metrics out of CUBE metrics...";
- 		progress_value = 0.32; // sofar 50% done
-		for (scalasca.cubex.cube.Metric met : root_metrics)
-		{
-			 addMetrics(context_events, interval_events, met, "");
-		}
-
-		progress_message = "Construct TAU functions out of CUBE calltree...";
- 		progress_value = 0.34; // sofar 50% done
-		for (scalasca.cubex.cube.Cnode cnode : root_cnodes)
-		{
-			addCnodes(cnode, "");
-		}
-
-		progress_message = "Construct TAU threads out of CUBE system tree...";
- 		progress_value = 0.34; // sofar 50% done
-		for (scalasca.cubex.cube.Process process : processes)
-		{
-			addProcess(process);
-		}
-
-		progress_message = "Construct TAU topologies out of CUBE topologies...";
- 		progress_value = 0.34; // sofar 50% done
-		int num =1;
-		for (scalasca.cubex.cube.Cartesian cart: topologies)
-		{
-			if (cart.get_ndim() != 3)
+			progress_message = "Construct TAU metrics out of CUBE metrics...";
+			progress_value = 0.32; // sofar 50% done
+			for (scalasca.cubex.cube.Metric met : root_metrics)
 			{
-				if (JOptionPane.showConfirmDialog(
-					null,
-					new String("Topology " + num + "( "+cart.get_name()+") has different number of coordinates ("+ cart.get_ndim()+") than 3. \n Visualization of this topology will fail. \n Add to TAU profile anyway?"),
-					"Not supported topologies are detected",
-					JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) continue;
-
+				addMetrics(context_events, interval_events, met, "");
 			}
-        		String prefix = "Topo"+num;
-        		getMetaData().put(prefix+" Name", cart.get_name());
-        		getMetaData().put(prefix+" Size", createDimString(cart.get_dimv()));
-        		getMetaData().put(prefix+" isTorus", createPeriodicityString(cart.get_periodv()));
 
-			for (scalasca.cubex.cube.Thread thread : threads)
+			progress_message = "Construct TAU functions out of CUBE calltree...";
+			progress_value = 0.34; // sofar 50% done
+			for (scalasca.cubex.cube.Cnode cnode : root_cnodes)
 			{
-				addThreadCoordinates(prefix, cart, thread);
+				addCnodes(cnode, "");
 			}
-			num++;
-		}
-		progress_message = "Cube object filled with data...";
- 		progress_value = 0.55; // sofar 50% done
-	// now feed with faked data
-		double progress_step = (0.45)/( (calls_are_in_cube)?(metrics.size()):(metrics.size()+1)); // if there no visits in cube, one run more is needed
-		int metric_number = 0;
-		for (scalasca.cubex.cube.Metric met : interval_events)
-		{
-			metric_number++;	
-			progress_message = "Load data from CUBE to TAU for metric: "+met.getDisplayName() + " ( " + metric_number+ "/"+interval_events.size() +  ")";
 
-			for (scalasca.cubex.cube.Cnode cnode : cnodes)
+			progress_message = "Construct TAU threads out of CUBE system tree...";
+			progress_value = 0.34; // sofar 50% done
+			for (scalasca.cubex.cube.Process process : processes)
 			{
-				for (scalasca.cubex.cube.Thread thread : threads)
+				addProcess(process);
+			}
+
+			progress_message = "Construct TAU topologies out of CUBE topologies...";
+			progress_value = 0.34; // sofar 50% done
+			int num =1;
+			for (scalasca.cubex.cube.Cartesian cart: topologies)
+			{
+				if (cart.get_ndim() != 3)
 				{
- 					double value = cube.get_sev(met, cnode, thread);
+					if (JOptionPane.showConfirmDialog(
+						null,
+						new String("Topology " + num + "( "+cart.get_name()+") has different number of coordinates ("+ cart.get_ndim()+") than 3. \n Visualization of this topology will fail. \n Add to TAU profile anyway?"),
+						"Not supported topologies are detected",
+						JOptionPane.YES_NO_OPTION) == JOptionPane.NO_OPTION) continue;
 
-					Thread _thread  = cube2tau_threads.get(thread);
-					Function _function  = cube2tau_cnodes.get(cnode);
-					FunctionProfile _fp = _thread.getFunctionProfile(_function);
-					Metric _met  = cube2tau_metrics.get(met);
-
-					if (_fp == null)
-					{
-						_fp = new FunctionProfile(_function, getNumberOfMetrics());
-						_thread.addFunctionProfile(_fp);
-					}
-					addValueToProfile(_met, _fp, _function, _thread, value*((met.getUOM().equalsIgnoreCase("sec"))?1000*1000:1));
 				}
-			}
-			progress_value += progress_step;
+				String prefix = "Topo"+num;
+				getMetaData().put(prefix+" Name", cart.get_name());
+				getMetaData().put(prefix+" Size", createDimString(cart.get_dimv()));
+				getMetaData().put(prefix+" isTorus", createPeriodicityString(cart.get_periodv()));
 
-
-		}
-
-
-		if (!calls_are_in_cube)
-		{
-			progress_message = "Create visits for TAU (becuse Cube is missing the metric \"Visits\")";
-			for (scalasca.cubex.cube.Cnode cnode : cnodes)
-			{
 				for (scalasca.cubex.cube.Thread thread : threads)
 				{
- 					double value = 1.;
-
-					Thread _thread  = cube2tau_threads.get(thread);
-					Function _function  = cube2tau_cnodes.get(cnode);
-					FunctionProfile _fp = _thread.getFunctionProfile(_function);
-
-					if (_fp == null) // actually all cnodes shoud be have been visited and created in previous part above
-					{
-						_fp = new FunctionProfile(_function, getNumberOfMetrics());
-						_thread.addFunctionProfile(_fp);
-					}
-					addValueToProfile(calls, _fp, _function, _thread, value);
+					addThreadCoordinates(prefix, cart, thread);
 				}
+				num++;
 			}
-			progress_value += progress_step;
-		
-		}
-
-
-
-		metric_number=0;
-		for (scalasca.cubex.cube.Metric context_event : context_events)
-		{
-			metric_number++;
-			progress_message = "Load context events "+context_event.getDisplayName() +" from CUBE to TAU :  ( " + metric_number+ "/"+context_events.size() +  ")";
-			for (scalasca.cubex.cube.Cnode cnode : cnodes)
+			progress_message = "Cube object filled with data...";
+			progress_value = 0.55; // sofar 50% done
+		// now feed with faked data
+			double progress_step = (0.45)/( (calls_are_in_cube)?(metrics.size()):(metrics.size()+1)); // if there no visits in cube, one run more is needed
+			int metric_number = 0;
+			for (scalasca.cubex.cube.Metric met : interval_events)
 			{
-				for (scalasca.cubex.cube.Thread thread : threads)
-				{
- 					CubeTauAtomicMetric value = (CubeTauAtomicMetric)cube.get_sev_adv(context_event, cnode, thread);
+				metric_number++;
+				progress_message = "Load data from CUBE to TAU for metric: "+met.getDisplayName() + " ( " + metric_number+ "/"+interval_events.size() +  ")";
 
-					if (value.getN() != 0)
+				for (scalasca.cubex.cube.Cnode cnode : cnodes)
+				{
+					for (scalasca.cubex.cube.Thread thread : threads)
 					{
+						double value = cube.get_sev(met, cnode, thread);
 
 						Thread _thread  = cube2tau_threads.get(thread);
 						Function _function  = cube2tau_cnodes.get(cnode);
+						FunctionProfile _fp = _thread.getFunctionProfile(_function);
+						Metric _met  = cube2tau_metrics.get(met);
 
-						String name =  context_event.getDisplayName() + " : " + _function.toString();
-						UserEvent userEvent  = this.addUserEvent	(name);
-						UserEventProfile  uep = _thread.getUserEventProfile(userEvent);
-						if (uep == null)
+						if (_fp == null)
 						{
-							uep = new UserEventProfile(userEvent);
-							_thread.addUserEventProfile(uep);
+							_fp = new FunctionProfile(_function, getNumberOfMetrics());
+							_thread.addFunctionProfile(_fp);
+						}
+						addValueToProfile(_met, _fp, _function, _thread, value*((met.getUOM().equalsIgnoreCase("sec"))?1000*1000:1));
+					}
+				}
+				progress_value += progress_step;
 
-							uep.setNumSamples(value.getN());
-							uep.setMaxValue(value.getMax());
-							uep.setMinValue(value.getMin());
-							uep.setMeanValue(value.getAvg());
-							uep.setSumSquared(value.getSum2());
-							uep.updateMax();
+
+			}
+
+
+			if (!calls_are_in_cube)
+			{
+				progress_message = "Create visits for TAU (becuse Cube is missing the metric \"Visits\")";
+				for (scalasca.cubex.cube.Cnode cnode : cnodes)
+				{
+					for (scalasca.cubex.cube.Thread thread : threads)
+					{
+						double value = 1.;
+
+						Thread _thread  = cube2tau_threads.get(thread);
+						Function _function  = cube2tau_cnodes.get(cnode);
+						FunctionProfile _fp = _thread.getFunctionProfile(_function);
+
+						if (_fp == null) // actually all cnodes shoud be have been visited and created in previous part above
+						{
+							_fp = new FunctionProfile(_function, getNumberOfMetrics());
+							_thread.addFunctionProfile(_fp);
+						}
+						addValueToProfile(calls, _fp, _function, _thread, value);
+					}
+				}
+				progress_value += progress_step;
+
+			}
+
+
+
+			metric_number=0;
+			for (scalasca.cubex.cube.Metric context_event : context_events)
+			{
+				metric_number++;
+				progress_message = "Load context events "+context_event.getDisplayName() +" from CUBE to TAU :  ( " + metric_number+ "/"+context_events.size() +  ")";
+				for (scalasca.cubex.cube.Cnode cnode : cnodes)
+				{
+					for (scalasca.cubex.cube.Thread thread : threads)
+					{
+						CubeTauAtomicMetric value = (CubeTauAtomicMetric)cube.get_sev_adv(context_event, cnode, thread);
+
+						if (value.getN() != 0)
+						{
+
+							Thread _thread  = cube2tau_threads.get(thread);
+							Function _function  = cube2tau_cnodes.get(cnode);
+
+							String name =  context_event.getDisplayName() + " : " + _function.toString();
+							UserEvent userEvent  = this.addUserEvent	(name);
+							UserEventProfile  uep = _thread.getUserEventProfile(userEvent);
+							if (uep == null)
+							{
+								uep = new UserEventProfile(userEvent);
+								_thread.addUserEventProfile(uep);
+
+								uep.setNumSamples(value.getN());
+								uep.setMaxValue(value.getMax());
+								uep.setMinValue(value.getMin());
+								uep.setMeanValue(value.getAvg());
+								uep.setSumSquared(value.getSum2());
+								uep.updateMax();
+							}
 						}
 					}
 				}
+				progress_value += progress_step;
 			}
-			progress_value += progress_step;
+
+
+
+			progress_message = "Postprocessing...(releade memory)";
+			cube= null;
+			metrics = null;
+			root_metrics = null;
+			regions = null;
+			cnodes = null;
+			root_cnodes = null;
+			machines = null;
+			nodes = null;
+			processes = null;
+			threads = null;
+			topologies = null;
+			cube2tau_cnodes=null;
+			cube2tau_metrics=null;
+			cube2tau_threads=null;
+			parentMap = null;
+			flatMap = null;
+			context_events = null;
+			interval_events = null;
+			System.gc();
+
+			progress_message = "Postprocessing...(set group names)";
+			this.setGroupNamesPresent(true);
+			progress_message = "Generate derived data...";
+			progress_value = 0.95;
+			this.generateDerivedData();
+			progress_value = 1.;
+			progress_message = "Generate derived data...done";
+			time = (System.currentTimeMillis()) - time;
+			System.out.println("Time to process (in milliseconds): " + time);
+		}
+		catch(BadSyntaxException e)
+		{
+		throw new DataSourceException(e);
+		}
+		catch(NotEnumeratedCnodeException e)
+		{
+		throw new DataSourceException(e);
+		}
+		catch(BadCubeReportLayoutException e)
+		{
+		throw new DataSourceException(e);
 		}
 
-
-	
-		progress_message = "Postprocessing...(releade memory)";
-		cube= null;
-		metrics = null;
-		root_metrics = null;
-		regions = null;
-		cnodes = null;
-		root_cnodes = null;
-		machines = null;
-		nodes = null;
-		processes = null;
-		threads = null;
-		topologies = null;
-		cube2tau_cnodes=null;
-		cube2tau_metrics=null;
-		cube2tau_threads=null;
-		parentMap = null;
-		flatMap = null;
-		context_events = null;
-		interval_events = null;
-		System.gc();
-
-		progress_message = "Postprocessing...(set group names)";
-		this.setGroupNamesPresent(true);
-		progress_message = "Generate derived data...";
-		progress_value = 0.95;
-		this.generateDerivedData();
-		progress_value = 1.;
-		progress_message = "Generate derived data...done";
-		time = (System.currentTimeMillis()) - time;
-		System.out.println("Time to process (in milliseconds): " + time);
 	}
-	catch(BadSyntaxException e)
-	{
-            throw new DataSourceException(e);
-	}
-	catch(NotEnumeratedCnodeException e)
-	{
-            throw new DataSourceException(e);
-	}
-	catch(BadCubeReportLayoutException e)
-	{
-            throw new DataSourceException(e);
-	}
-
-    }
 
 
 
