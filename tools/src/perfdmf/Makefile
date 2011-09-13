@@ -5,7 +5,7 @@ TAUROOT=
 # these are classpaths for the build.  The second classpath is for the 
 # loader directory.  The first is for everything else.
 CLASSPATH=./classes
-CUBE_JAVA_READER=@CUBECLASSPATH@
+CUBE_JAVA_READER=../contrib/CubeReader.jar
 LOADER_CLASSPATH=$(CLASSPATH):../contrib/jargs.jar:../contrib/xerces.jar:../common/bin/tau-common.jar:$(CUBE_JAVA_READER)
 
 # These are class and source targets.

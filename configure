@@ -69,7 +69,7 @@ if test "x$cubedir" != "xown"; then
 
 else
 # select the own classpath
-	cubeclasspath='${TAUROOT}/x86_64/lib/CubeReader.jar'
+	cubeclasspath='${TAUROOT}/${MACHINE}/lib/CubeReader.jar'
 	makecubeclasspath="../contrib/CubeReader.jar"
 fi
 return 0
