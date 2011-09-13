@@ -31,6 +31,18 @@
 #****************************************************************************
 
 
+restore_perfdmf_and_paraprof()
+{
+	restore_paraprof
+	restore_perfdmf
+}
+
+
+correction_perfdmf_and_paraprof()
+{
+	correction_paraprof
+	correction_perfdmf
+}
 
 
 
@@ -38,12 +50,8 @@ copy_own_cube_reader_if_selected()
 {
 if test "x$cubedir" = "xown"; then
 	confirmation_copy_of_own_jar_file
-	cubeclasspath="$JARTARGET/CubeReader.jar"
 fi
-	correction_paraprof
-	correction_perfdmf
-
-}
+	}
 
 
 
@@ -58,14 +66,12 @@ if test "x$cubedir" != "xown"; then
 	if test "x$cubedir" = "x"; then
 		warning_about_missing_cube_installation
 	fi
-#	cubedir=$another_cube_dir
-#	cuberoot=$cubedir
-#	cubeclasspath=`$cuberoot/bin/cube_config.sh --classpath`
-#	confirm_proper_cube_installation $cubedir
-#	else
 
+else
+# select the own classpath
+	cubeclasspath='${TAUROOT}/x86_64/lib/CubeReader.jar'
+	makecubeclasspath="../contrib/CubeReader.jar"
 fi
-
 return 0
 }
 
@@ -106,6 +112,9 @@ check_cube_installation()
 
 # check if cubedir points to CUBE
 if test "x$cubedir" != "x"; then
+if test "x$cubedir" = "xext"; then
+cubedir=$another_cube_dir
+fi
 	testline=`$cubedir/bin/cube_config.sh --name 2>&1`
 	cuberoot=$cubedir
 	#in the case one spezified /lib/directory of CUBE installation
@@ -116,6 +125,7 @@ if test "x$cubedir" != "x"; then
 	if test "x$testline" = "xCUBE"; then
 		#check if the cube installation was done with java reader
 		cubeclasspath=`$cuberoot/bin/cube_config.sh --classpath`
+		makecubeclasspath=$cubeclasspath
 		if test "x$cubeclasspath" != "x" && test -e $cuberoot/lib/CubeReader.jar; then
 			confirm_proper_cube_installation $cuberoot
 		fi
@@ -130,23 +140,60 @@ return 0
 
 correction_paraprof()
 {
-cat   ${tauroot}/tools/src/paraprof/bin/paraprof.skel |
-sed -e 's,@CUBECLASSPATH@,'$cubeclasspath','  >  ${tauroot}/tools/src/paraprof/bin/paraprof.new
-mv  ${tauroot}/tools/src/paraprof/bin/paraprof.new  ${tauroot}/tools/src/paraprof/bin/paraprof.skel
+# assuming configure is called from same directory
+# tau's configure doesn't work anyway from another directory
+_tauroot="."
+echo "Adjust ParaProf to use CubeReader..."
+cat    ${_tauroot}/tools/src/paraprof/bin/paraprof.skel |
+sed -e 's,@CUBECLASSPATH@,'$cubeclasspath','  >   ${_tauroot}/tools/src/paraprof/bin/paraprof.new
+mv   ${_tauroot}/tools/src/paraprof/bin/paraprof.new   ${_tauroot}/tools/src/paraprof/bin/paraprof.skel
 
-cat  ${targetdir}/tools/src/paraprof/Makefile |
-sed -e 's,@CUBECLASSPATH@,'$cubeclasspath','  > ${targetdir}/tools/src/paraprof/Makefile.new
-mv ${targetdir}/tools/src/paraprof/Makefile.new ${targetdir}/tools/src/paraprof/Makefile
+cat   ${_tauroot}/tools/src/paraprof/Makefile |
+sed -e 's,@CUBECLASSPATH@,'$makecubeclasspath','  >  ${_tauroot}/tools/src/paraprof/Makefile.new
+mv ${_tauroot}/tools/src/paraprof/Makefile.new  ${_tauroot}/tools/src/paraprof/Makefile
 
 
 }
 
 correction_perfdmf()
 {
-cat  ${targetdir}/tools/src/perfdmf/Makefile |
-sed -e 's,@CUBECLASSPATH@,'$cubeclasspath','  > ${targetdir}/tools/src/perfdmf/Makefile.new
-mv ${targetdir}/tools/src/perfdmf/Makefile.new ${targetdir}/tools/src/perfdmf/Makefile
+echo "Adjust PerfDmf to use CubeReader..."
+cat  ${_tauroot}/tools/src/perfdmf/Makefile |
+sed -e 's,@CUBECLASSPATH@,'$makecubeclasspath','  >${_tauroot}/tools/src/perfdmf/Makefile.new
+mv ${_tauroot}/tools/src/perfdmf/Makefile.new ${_tauroot}/tools/src/perfdmf/Makefile
 }
+
+
+
+restore_paraprof()
+{
+# assuming configure is called from same directory
+# tau's configure doesn't work anyway from another directory
+_tauroot="."
+echo "Unset ParaProf's cubeclasspath..."
+cat   ${_tauroot}/tools/src/paraprof/bin/paraprof.skel |
+sed -e 's,^CUBE_JAVA_READER=.*$,CUBE_JAVA_READER=@CUBECLASSPATH@,'  >  ${_tauroot}/tools/src/paraprof/bin/paraprof.new
+mv  ${_tauroot}/tools/src/paraprof/bin/paraprof.new  ${_tauroot}/tools/src/paraprof/bin/paraprof.skel
+
+cat  ${_tauroot}/tools/src/paraprof/Makefile |
+sed -e 's,^CUBE_JAVA_READER=.*$,CUBE_JAVA_READER=@CUBECLASSPATH@,'  > ${_tauroot}/tools/src/paraprof/Makefile.new
+mv ${_tauroot}/tools/src/paraprof/Makefile.new ${_tauroot}/tools/src/paraprof/Makefile
+
+
+}
+
+restore_perfdmf()
+{
+# assuming configure is called from same directory
+# tau's configure doesn't work anyway from another directory
+_tauroot="."
+_tauroot="."
+echo "Unset Perfdmf cubeclasspath..."
+cat  ${_tauroot}/tools/src/perfdmf/Makefile |
+sed -e 's,^CUBE_JAVA_READER=.*$,CUBE_JAVA_READER=@CUBECLASSPATH@,'  > ${_tauroot}/tools/src/perfdmf/Makefile.new
+cp ${_tauroot}/tools/src/perfdmf/Makefile.new ${_tauroot}/tools/src/perfdmf/Makefile
+}
+
 
 
 
@@ -271,7 +318,7 @@ for arg in "$@"; do
     echo "-papithread .................................. Use PAPI thread package."
     echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
     echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
-    echo "-cube=<dir> | own........... Specify location of CUBE or use TAU's jar."
+    echo "-cube=<dir> | own | ext..... Specify location of CUBE or use TAU's jar."
     echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
     echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
     echo "-otfinc=<dir> ....... Specify location of stand-alone OTF header files."
@@ -370,7 +417,7 @@ for arg in "$@"; do
     echo "-dyninst=<dir> ................... Specify location of DynInst Package."
     echo "-dwarf=<dir> ................ Specify location of the libdwarf Package."
     echo "-bfd=<dir | download> ............ Specify a BFD directory or download."
-    echo "-cube=<dir> | own........... Specify location of CUBE or use TAU's jar."
+    echo "-cube=<dir> | own.| ext..... Specify location of CUBE or use TAU's jar."
     echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
     echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
     echo "-otfinc=<dir> ....... Specify location of stand-alone OTF header files."
@@ -675,6 +722,9 @@ for i in include/Makefile ; do
     sed -f utils/FixMakefile.sed.default < ${i} > ${i}~~0
     mv ${i}~~0 ${i}
 done
+
+restore_perfdmf_and_paraprof
+
 
 
 ###############################################################
@@ -1787,7 +1837,6 @@ JARTARGET=${targetdir}/${architecture}/lib
 #it needed JARTARGET
 #it modifies paraprof.skel
 copy_own_cube_reader_if_selected
-
 
 
   # install paraprof
@@ -6329,9 +6378,9 @@ if [ $sicortex = yes ] ; then
 fi
 
 
-
 #selection of cube reader, external installation or provided .jar file
 select_cube_reader_jar
+correction_perfdmf_and_paraprof
 
 
 echo "***********************************************************************"
@@ -6370,6 +6419,7 @@ fi
 
 BINTARGET=${targetdir}/${architecture}/bin
 JARTARGET=${targetdir}/${architecture}/lib
+
 
 # Install tau_compiler.sh 
 if [ ! -f /bin/bash ] ; then
