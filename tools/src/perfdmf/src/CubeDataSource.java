@@ -115,28 +115,28 @@ public class CubeDataSource extends DataSource
 			ArrayList<scalasca.cubex.cube.Metric> interval_events = new ArrayList<scalasca.cubex.cube.Metric>(); // collect metrics from cube, which carries context events for further processing.
 
 			progress_message = "Construct TAU metrics out of CUBE metrics...";
-			progress_value = 0.32; // sofar 50% done
+			progress_value = 0.32; // sofar 32% done
 			for (scalasca.cubex.cube.Metric met : root_metrics)
 			{
 				addMetrics(context_events, interval_events, met, "");
 			}
 
 			progress_message = "Construct TAU functions out of CUBE calltree...";
-			progress_value = 0.34; // sofar 50% done
+			progress_value = 0.34; // sofar 34% done
 			for (scalasca.cubex.cube.Cnode cnode : root_cnodes)
 			{
 				addCnodes(cnode, "");
 			}
 
 			progress_message = "Construct TAU threads out of CUBE system tree...";
-			progress_value = 0.34; // sofar 50% done
+			progress_value = 0.36; // sofar 36% done
 			for (scalasca.cubex.cube.Process process : processes)
 			{
 				addProcess(process);
 			}
 
 			progress_message = "Construct TAU topologies out of CUBE topologies...";
-			progress_value = 0.34; // sofar 50% done
+			progress_value = 0.40; // sofar 40% done
 			int num =1;
 			for (scalasca.cubex.cube.Cartesian cart: topologies)
 			{
@@ -161,9 +161,8 @@ public class CubeDataSource extends DataSource
 				num++;
 			}
 			progress_message = "Cube object filled with data...";
-			progress_value = 0.55; // sofar 50% done
-		// now feed with faked data
-			double progress_step = (0.45)/( (calls_are_in_cube)?(metrics.size()):(metrics.size()+1)); // if there no visits in cube, one run more is needed
+			progress_value = 0.55; // sofar 55% done
+			double progress_step = (0.40)/( (calls_are_in_cube)?(metrics.size()):(metrics.size()+1)); // if there no visits in cube, one run more is needed
 			int metric_number = 0;
 			for (scalasca.cubex.cube.Metric met : interval_events)
 			{
@@ -286,9 +285,9 @@ public class CubeDataSource extends DataSource
 			progress_message = "Postprocessing...(set group names)";
 			this.setGroupNamesPresent(true);
 			progress_message = "Generate derived data...";
-			progress_value = 0.95;
+			progress_value = 0.95; //95% is done 
 			this.generateDerivedData();
-			progress_value = 1.;
+			progress_value = 1.; // finish
 			progress_message = "Generate derived data...done";
 			time = (System.currentTimeMillis()) - time;
 			System.out.println("Time to process (in milliseconds): " + time);
