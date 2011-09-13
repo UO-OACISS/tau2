@@ -31,6 +31,11 @@
 #****************************************************************************
 
 
+fix_tilde_at_the_start_of_cube_path()
+{
+cubedir=`echo $cubedir | sed -e "s,^~,$HOME,"g`
+}
+
 restore_perfdmf_and_paraprof()
 {
 	restore_paraprof
@@ -119,6 +124,9 @@ if test "x$cubedir" != "x"; then
 			cubedir=$another_cube_dir
 		fi
 	fi
+
+	fix_tilde_at_the_start_of_cube_path
+
 	testline=`$cubedir/bin/cube_config.sh --name 2>&1`
 	cuberoot=$cubedir
 	#in the case one spezified /lib/directory of CUBE installation
