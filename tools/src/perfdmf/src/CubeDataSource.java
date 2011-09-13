@@ -185,7 +185,7 @@ public class CubeDataSource extends DataSource
 						_fp = new FunctionProfile(_function, getNumberOfMetrics());
 						_thread.addFunctionProfile(_fp);
 					}
-					addValueToProfile(_met, _fp, _function, _thread, value);
+					addValueToProfile(_met, _fp, _function, _thread, value*((met.getUOM().equalsIgnoreCase("sec"))?1000*1000:1));
 				}
 			}
 			progress_value += progress_step;
