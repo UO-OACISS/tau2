@@ -15,7 +15,7 @@
  */
 /****************************************************************************
 **  SCALASCA    http://www.scalasca.org/                                   **
-**  KOJAK       http://www.fz-juelich.de/jsc/kojak/                        **
+**  KOJAK       http://www.fz-juelich.de/jsc/kojak/            ///            **
 *****************************************************************************
 **  Copyright (c) 1998-2009                                                **
 **  Forschungszentrum Juelich, Juelich Supercomputing Centre               **
@@ -303,7 +303,7 @@ void TauStopOpenMPRegionTimer(my_pomp2_region  *r, int index)
     TauGroup_t gr = f->GetProfileGroup();
 
     int tid = RtsLayer::myThread(); 
-    tau::Profiler *p =TauInternal_CurrentProfiler(tid); 
+    Profiler *p =TauInternal_CurrentProfiler(tid); 
     if (p->ThisFunction == f) {
       Tau_stop_timer(f, Tau_get_tid());
     } else {
@@ -357,7 +357,7 @@ POMP2_Init()
         pomp2_init_called = 1;
 
         atexit( POMP2_Finalize );
-        fprintf( stderr, "  0: init this is the cpp tau code\n" );
+        fprintf( stderr, "  0: init  code\n" );
 
         /* Allocate memory for your POMP2_Get_num_regions() regions */
         my_pomp2_regions = (my_pomp2_region *)(calloc( POMP2_Get_num_regions(),
