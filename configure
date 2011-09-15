@@ -138,7 +138,7 @@ if test "x$cubedir" != "x"; then
 		#check if the cube installation was done with java reader
 		cubeclasspath=`$cuberoot/bin/cube_config.sh --classpath`
 		makecubeclasspath=$cubeclasspath
-		if test "x$cubeclasspath" != "x" && test -e $cuberoot/lib/CubeReader.jar; then
+		if [ "x$cubeclasspath" != "x" -a  -f $cuberoot/lib/CubeReader.jar ] ; then
 			confirm_proper_cube_installation $cuberoot
 		fi
 	else
@@ -212,7 +212,7 @@ cp ${_tauroot}/tools/src/perfdmf/Makefile.new ${_tauroot}/tools/src/perfdmf/Make
 confirmation_copy_of_own_jar_file()
 {
 echo "===================================================="
-if test -e ${tauroot}/tools/src/contrib/CubeReader.jar; then
+if [ -f ${tauroot}/tools/src/contrib/CubeReader.jar ]  ; then
 echo " Copy ${tauroot}/tools/src/contrib/CubeReader.jar to $JARTARGET"
 cp ${tauroot}/tools/src/contrib/CubeReader.jar $JARTARGET
 else
