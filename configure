@@ -31,6 +31,243 @@
 #****************************************************************************
 
 
+fix_tilde_at_the_start_of_cube_path()
+{
+cubedir=`echo $cubedir | sed -e "s,^~,$HOME,"g`
+}
+
+restore_perfdmf_and_paraprof()
+{
+	restore_paraprof
+	restore_perfdmf
+}
+
+
+correction_perfdmf_and_paraprof()
+{
+	correction_paraprof
+	correction_perfdmf
+}
+
+
+
+copy_own_cube_reader_if_selected()
+{
+if test "x$cubedir" = "xown"; then
+	confirmation_copy_of_own_jar_file
+fi
+	}
+
+
+
+select_cube_reader_jar()
+{
+if test "x$cubedir" != "xown"; then
+
+	check_another_cube_installation
+	check_cube_installation
+
+	#at that point cubedir is either correct or empty
+	if test "x$cubedir" = "x"; then
+		warning_about_missing_cube_installation
+	fi
+
+else
+# select the own classpath
+	cubeclasspath='${TAUROOT}/${MACHINE}/lib/CubeReader.jar'
+	makecubeclasspath="../contrib/CubeReader.jar"
+fi
+return 0
+}
+
+
+check_another_cube_installation()
+{
+# check if CUBE in PATH
+testline=`cube_config.sh --name 2>&1`
+another_cube_present="no"
+if test "x$testline" = "xCUBE"; then
+	another_cube_present="yes"
+	another_cube_dir=`cube_config.sh --cube-dir`
+	if test "x$another_cube_dir" != "x$cubedir"; then
+		warning_about_another_cube_installation $another_cube_dir
+		return 1
+	fi
+fi
+
+# check if CUBE is not in PATH , but CUBE_DIR is set
+if test "x$CUBE_DIR" != "x"; then
+	testline=`$CUBE_DIR/bin/cube_config.sh --name 2>&1`
+	another_cube_present="no"
+	if test "x$testline" = "xCUBE"; then
+		another_cube_present="yes"
+		another_cube_dir=`$CUBE_DIR/bin/cube_config.sh --cube-dir`
+		if test "x$another_cube_dir" != "x$cubedir"; then
+			warning_about_another_cube_installation $another_cube_dir
+			return 1
+		fi
+	fi
+fi
+return 0
+}
+
+
+check_cube_installation()
+{
+
+# check if cubedir points to CUBE
+if test "x$cubedir" != "x"; then
+	if test "x$cubedir" = "xext"; then
+		if test "x$another_cube_dir" = "x"; then
+			warning_about_general_missing_cube_installation 
+		else
+			cubedir=$another_cube_dir
+		fi
+	fi
+
+	fix_tilde_at_the_start_of_cube_path
+
+	testline=`$cubedir/bin/cube_config.sh --name 2>&1`
+	cuberoot=$cubedir
+	#in the case one spezified /lib/directory of CUBE installation
+	if test "x$testline" != "xCUBE"; then
+		testline=`$cubedir/../bin/cube_config.sh --name 2>&1`
+		cuberoot=$cubedir/../
+	fi
+	if test "x$testline" = "xCUBE"; then
+		#check if the cube installation was done with java reader
+		cubeclasspath=`$cuberoot/bin/cube_config.sh --classpath`
+		makecubeclasspath=$cubeclasspath
+		if [ "x$cubeclasspath" != "x" -a  -f $cuberoot/lib/CubeReader.jar ] ; then
+			confirm_proper_cube_installation $cuberoot
+		fi
+	else
+		warning_about_missing_cube_installation $cubedir
+	fi
+fi
+return 0
+}
+
+
+
+correction_paraprof()
+{
+# assuming configure is called from same directory
+# tau's configure doesn't work anyway from another directory
+_tauroot="."
+echo "Adjust ParaProf to use CubeReader..."
+cat    ${_tauroot}/tools/src/paraprof/bin/paraprof.skel |
+sed -e 's,@CUBECLASSPATH@,'$cubeclasspath','  >   ${_tauroot}/tools/src/paraprof/bin/paraprof.new
+mv   ${_tauroot}/tools/src/paraprof/bin/paraprof.new   ${_tauroot}/tools/src/paraprof/bin/paraprof.skel
+
+cat   ${_tauroot}/tools/src/paraprof/Makefile |
+sed -e 's,@CUBECLASSPATH@,'$makecubeclasspath','  >  ${_tauroot}/tools/src/paraprof/Makefile.new
+mv ${_tauroot}/tools/src/paraprof/Makefile.new  ${_tauroot}/tools/src/paraprof/Makefile
+
+
+}
+
+correction_perfdmf()
+{
+echo "Adjust PerfDmf to use CubeReader..."
+cat  ${_tauroot}/tools/src/perfdmf/Makefile |
+sed -e 's,@CUBECLASSPATH@,'$makecubeclasspath','  >${_tauroot}/tools/src/perfdmf/Makefile.new
+mv ${_tauroot}/tools/src/perfdmf/Makefile.new ${_tauroot}/tools/src/perfdmf/Makefile
+}
+
+
+
+restore_paraprof()
+{
+# assuming configure is called from same directory
+# tau's configure doesn't work anyway from another directory
+_tauroot="."
+echo "Unset ParaProf's cubeclasspath..."
+cat   ${_tauroot}/tools/src/paraprof/bin/paraprof.skel |
+sed -e 's,^CUBE_JAVA_READER=.*$,CUBE_JAVA_READER=@CUBECLASSPATH@,'  >  ${_tauroot}/tools/src/paraprof/bin/paraprof.new
+mv  ${_tauroot}/tools/src/paraprof/bin/paraprof.new  ${_tauroot}/tools/src/paraprof/bin/paraprof.skel
+
+cat  ${_tauroot}/tools/src/paraprof/Makefile |
+sed -e 's,^CUBE_JAVA_READER=.*$,CUBE_JAVA_READER=@CUBECLASSPATH@,'  > ${_tauroot}/tools/src/paraprof/Makefile.new
+mv ${_tauroot}/tools/src/paraprof/Makefile.new ${_tauroot}/tools/src/paraprof/Makefile
+
+
+}
+
+restore_perfdmf()
+{
+# assuming configure is called from same directory
+# tau's configure doesn't work anyway from another directory
+_tauroot="."
+_tauroot="."
+echo "Unset Perfdmf cubeclasspath..."
+cat  ${_tauroot}/tools/src/perfdmf/Makefile |
+sed -e 's,^CUBE_JAVA_READER=.*$,CUBE_JAVA_READER=@CUBECLASSPATH@,'  > ${_tauroot}/tools/src/perfdmf/Makefile.new
+cp ${_tauroot}/tools/src/perfdmf/Makefile.new ${_tauroot}/tools/src/perfdmf/Makefile
+}
+
+
+
+
+confirmation_copy_of_own_jar_file()
+{
+echo "===================================================="
+if [ -f ${tauroot}/tools/src/contrib/CubeReader.jar ]  ; then
+echo " Copy ${tauroot}/tools/src/contrib/CubeReader.jar to $JARTARGET"
+cp ${tauroot}/tools/src/contrib/CubeReader.jar $JARTARGET
+else
+echo "ERROR: Tau doesn't have own copy of CabeReader.jar under ${tauroot}/tools/src/contrib/"
+echo "       Please check the recent TAU distribution and report this bug to tau-bugs@cs.uoregon.edu"
+exit -1
+fi
+echo "===================================================="
+return 0
+
+}
+
+
+
+warning_about_another_cube_installation()
+{
+echo "===================================================="
+echo "WARNING: CUBE is detected under $1"
+echo "===================================================="
+return 0
+}
+
+
+confirm_proper_cube_installation()
+{
+echo "===================================================="
+echo "CUBE Reader is found under $1/lib."
+echo "CLASSPATH of it is $cubeclasspath"
+echo "===================================================="
+return 0
+}
+
+warning_about_missing_cube_installation()
+{
+echo "===================================================="
+echo "ERROR: Cannot find CUBE installation under $1"
+echo "       Please check your option -cube=$cubedir"
+echo "Abort."
+echo "===================================================="
+exit -1
+}
+
+warning_about_general_missing_cube_installation()
+{
+echo "===================================================="
+echo "ERROR: Cannot find CUBE installation."
+echo "       Please specify precise place of CUBE using option -cube=$cubedir"
+echo "Abort."
+echo "===================================================="
+exit -1
+}
+
+
+
+
 default=false
 
 for arg in "$@"; do
@@ -102,6 +339,7 @@ for arg in "$@"; do
     echo "-papithread .................................. Use PAPI thread package."
     echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
     echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
+    echo "-cube=<dir> | own | ext..... Specify location of CUBE or use TAU's jar."
     echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
     echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
     echo "-otfinc=<dir> ....... Specify location of stand-alone OTF header files."
@@ -200,6 +438,7 @@ for arg in "$@"; do
     echo "-dyninst=<dir> ................... Specify location of DynInst Package."
     echo "-dwarf=<dir> ................ Specify location of the libdwarf Package."
     echo "-bfd=<dir | download> ............ Specify a BFD directory or download."
+    echo "-cube=<dir> | own.| ext..... Specify location of CUBE or use TAU's jar."
     echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
     echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
     echo "-otfinc=<dir> ....... Specify location of stand-alone OTF header files."
@@ -446,6 +685,7 @@ otf=no
 otfdir=
 otfinc=
 otflib=
+cubedir=own
 ebs2otf=no
 ebs_has_rt=no
 ebs_clock_res="-1"
@@ -497,12 +737,16 @@ iowrapper=no
 zepto=no
 zeptodir=
 cuda=no
+strsignal_ok=no
 
 # Reset include/Makefile before starting anything else
 for i in include/Makefile ; do
     sed -f utils/FixMakefile.sed.default < ${i} > ${i}~~0
     mv ${i}~~0 ${i}
 done
+
+restore_perfdmf_and_paraprof
+
 
 
 ###############################################################
@@ -976,6 +1220,11 @@ for arg in "$@"; do
         echo "Error: Cannot access VTF3 directory $vtfdir"
         exit 1
       fi
+    shift
+    ;;
+
+  -cube=*)
+      cubedir=`echo $arg | sed -e 's/-cube=//'`
     shift
     ;;
 
@@ -1504,7 +1753,6 @@ done
 
 
 
-
 # -- some functions
 
 configure_java () {
@@ -1607,6 +1855,12 @@ cp ${tauroot}/tools/src/perfdmf/etc/dbschema*.txt ${targetdir}/tools/src/perfdmf
 BINTARGET=${targetdir}/${architecture}/bin
 JARTARGET=${targetdir}/${architecture}/lib
 
+
+#it needed JARTARGET
+#it modifies paraprof.skel
+copy_own_cube_reader_if_selected
+
+
   # install paraprof
 cat ${tauroot}/tools/src/paraprof/bin/paraprof.skel | 
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' > $BINTARGET/paraprof
@@ -1647,6 +1901,8 @@ fi
 #installs the tau_java handeler
 cat ${tauroot}/tools/src/tau_java.skel | sed -e 's,@JARTARGET@,'$JARTARGET',' -e 's,@JDKDIR@,'$jdkdir',' > $BINTARGET/tau_java
 chmod a+rx $BINTARGET/tau_java
+
+
 
 cp ${tauroot}/tools/src/paraprof/bin/paraprof.jar $JARTARGET
 cp ${tauroot}/tools/src/perfdmf/bin/perfdmf.jar $JARTARGET
@@ -5000,6 +5256,25 @@ else
 fi 
 rm -f /tmp/tau$$.C tau$$.o
 
+#####################################################################
+# Test for explicit strsignal support in string library (TauInit.cpp)
+#####################################################################
+$echo "Check if valid to declare strsignal with <string.h>... ${nnl}"
+cat <<EOF > /tmp/tau$$.cpp
+#include <string.h>
+extern "C" char *strsignal(int sig);
+EOF
+
+if $cxx_compiler -c /tmp/tau$$.cpp 1> /dev/null 2>&1 ; then 
+    echo "yes"
+    strsignal_ok=yes
+    fixmakeargs="$fixmakeargs TAU_STRSIGNAL_OK"
+else
+    echo "no"
+fi 
+rm -f /tmp/tau$$.cpp tau$$.o
+
+
 
 #####################################################################
 # Check Runtime type info
@@ -6006,6 +6281,15 @@ if [ $cxx_compiler = icpc ] ; then
     if [ ! -d "$var" ] ; then
 	echo "Error: Unable to identify ifort lib directory"
     fi
+    if   [ -f "$libdir/for_main.o" ] ; then
+        :
+    elif [ -f "$libdir/intel64/for_main.o" ] ; then
+        libdir="$libdir/intel64"
+    elif [ -f "$libdir/ia32/for_main.o" ] ; then
+        libdir="$libdir/ia32"
+    elif [ -f "$libdir/ia64/for_main.o" ] ; then
+        libdir="$libdir/ia64"
+    fi
 
     fixmakeargs="$fixmakeargs ifortlibdir=$libdir" 
 fi
@@ -6144,6 +6428,10 @@ if [ $sicortex = yes ] ; then
 fi
 
 
+#selection of cube reader, external installation or provided .jar file
+select_cube_reader_jar
+correction_perfdmf_and_paraprof
+
 
 echo "***********************************************************************"
 echo "Installing utilities..."
@@ -6181,6 +6469,7 @@ fi
 
 BINTARGET=${targetdir}/${architecture}/bin
 JARTARGET=${targetdir}/${architecture}/lib
+
 
 # Install tau_compiler.sh 
 if [ ! -f /bin/bash ] ; then
@@ -6475,8 +6764,6 @@ fi
 echo '   Type "make install" to begin compilation'
 
 exit 0
-
-
 
 
 
