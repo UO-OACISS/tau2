@@ -38,7 +38,7 @@ public abstract class DataSource {
     public static final int GPROF = 5;
     public static final int PSRUN = 6;
     public static final int PPROF = 7;
-    public static final int CUBE = 8;
+    public static final int CUBE = 8;    // using CubeReader.jar from Cube package
     public static final int HPCTOOLKIT = 9;
     public static final int SNAP = 10;
     public static final int OMPP = 11;
@@ -47,6 +47,7 @@ public abstract class DataSource {
     public static final int PARAVER = 14; // Statistical output from Paraver - Jesus LeBarta
     public static final int IPM = 15; // Data from IPM/NERSC
     public static final int GOOGLE = 16; //Google PerfTools
+    public static final int CUBE3 = 17; // old version of cube3 parser ( own implementation ) 
     public static final int GYRO = 100;
     public static final int GAMESS = 101; // application log data
     public static final String FILE_TYPE_INDEX = "File Type Index";
@@ -54,7 +55,7 @@ public abstract class DataSource {
 
     public static String formatTypeStrings[] = { "ParaProf Packed Profile", "Tau profiles", "Dynaprof", "MpiP", "HPMToolkit",
             "Gprof", "PSRun", "Tau pprof.dat", "Cube", "HPCToolkit", "TAU Snapshot", "ompP", "PERI-XML",
-            "General Purpose Timing Library (GPTL)", "Paraver", "IPM", "Google PerfTools" };
+            "General Purpose Timing Library (GPTL)", "Paraver", "IPM", "Google PerfTools", "Cube 3 (Old parser)" };
 
     private static boolean meanIncludeNulls = true;
 
