@@ -24,7 +24,7 @@
 		exit(1); \
 	} \
 
-#define ACTIVITY_BUFFER_SIZE (4096 * 32)
+#define ACTIVITY_BUFFER_SIZE (4096 * 1024)
 
 uint8_t *activityBuffer;
 CUpti_SubscriberHandle subscriber;

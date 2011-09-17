@@ -57,8 +57,8 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 {
   if (domain == CUPTI_CB_DOMAIN_RESOURCE && id == CUPTI_CBID_RESOURCE_CONTEXT_DESTROY_STARTING)
 	{
-		printf("in callback domain = %d.\n", domain);
-		Tau_cupti_register_sync_event();
+		//printf("in callback domain = %d.\n", domain);
+		//Tau_cupti_register_sync_event();
 		/*
 	  CUptiResult err;
 		printf("in resource stream create callback.\n");
@@ -103,6 +103,12 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 					&cuptiGpuId(cbInfo->contextUid, cbInfo->correlationId),
 					getMemcpyType(kind)
 				);
+				if (function_is_sync(id))
+				{
+					printf("sync function name: %s.\n", cbInfo->functionName);
+					//cuCtxSynchronize();
+					Tau_cupti_register_sync_event();
+				}
 			}
 		}
 		else
@@ -120,7 +126,11 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 			{
 				Tau_gpu_exit_event(cbInfo->functionName);
 				if (function_is_sync(id))
+				{
+					printf("sync function name: %s.\n", cbInfo->functionName);
+					//cuCtxSynchronize();
 					Tau_cupti_register_sync_event();
+				}
 			}
 		}
 	}
@@ -137,7 +147,7 @@ void Tau_cupti_register_sync_event()
 	err = cuptiActivityDequeueBuffer(NULL, 0, &activityBuffer, &bufferSize);
 	//printf("activity buffer size: %d.\n", bufferSize);
 	CUDA_CHECK_ERROR(err, "Cannot dequeue buffer.\n");
-
+	
 	do {
 		status = cuptiActivityGetNextRecord(activityBuffer, bufferSize, &record);
 		if (status == CUPTI_SUCCESS) {
@@ -148,7 +158,7 @@ void Tau_cupti_register_sync_event()
 			break;
 		}	
 	} while (status != CUPTI_ERROR_MAX_LIMIT_REACHED);
-	
+		
 	size_t number_dropped;
 	err = cuptiActivityGetNumDroppedRecords(NULL, 0, &number_dropped);
 
@@ -201,13 +211,14 @@ bool function_is_sync(CUpti_CallbackId id)
 		//id == CUPTI_RUNTIME_TRACE_CBID_cudaFreeArray_v3020 ||
 		//id == CUPTI_RUNTIME_TRACE_CBID_cudaFreeHost_v3020
 		//id == CUPTI_RUNTIME_TRACE_CBID_cudaEventRecord_v3020
-		id == CUPTI_RUNTIME_TRACE_CBID_cudaStreamQuery_v3020
-		//id == CUPTI_RUNTIME_TRACE_CBID_cudaEventQuery_v3020
+		//id == CUPTI_RUNTIME_TRACE_CBID_cudaThreadExit_v3020 || 
+		//id == CUPTI_RUNTIME_TRACE_CBID_cudaDeviceReset_v3020 ||
+		id == CUPTI_RUNTIME_TRACE_CBID_cudaMemcpy_v3020 ||
+		id == CUPTI_RUNTIME_TRACE_CBID_cudaEventSynchronize_v3020 ||
+		id == CUPTI_RUNTIME_TRACE_CBID_cudaEventQuery_v3020
 		//driverAPI
 
 				 );
-
-	
 }
 bool function_is_launch(CUpti_CallbackId id) { 
 	return id == CUPTI_RUNTIME_TRACE_CBID_cudaLaunch_v3020;

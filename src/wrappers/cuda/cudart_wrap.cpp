@@ -14,8 +14,8 @@ using namespace std;
 #define CUDART_API TAU_USER
 #define CUDA_SYNC TAU_USER
 
-//#define REGISTER_SYNC() Tau_cupti_register_sync_event()
-#define REGISTER_SYNC() Tau_cuda_register_sync_event()
+#define REGISTER_SYNC() Tau_cupti_register_sync_event()
+//#define REGISTER_SYNC() Tau_cuda_register_sync_event()
 
 #ifdef CUPTI
 extern void Tau_CuptiLayer_finalize();
@@ -1578,6 +1578,7 @@ cudaError_t cudaMemcpy3D(const struct cudaMemcpy3DParms * a1) {
 #endif //TRACK_MEMORY
   retval  =  (*cudaMemcpy3D_h)( a1);
   TAU_PROFILE_STOP(t);
+
   }
   return retval;
 
@@ -1665,6 +1666,7 @@ cudaError_t cudaMemcpy(void * a1, const void * a2, size_t a3, enum cudaMemcpyKin
 #endif //TRACK_MEMORY
   retval  =  (*cudaMemcpy_h)( a1,  a2,  a3,  a4);
   TAU_PROFILE_STOP(t);
+	REGISTER_SYNC();
   }
   return retval;
 
