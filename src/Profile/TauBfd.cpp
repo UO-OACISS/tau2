@@ -282,6 +282,23 @@ tau_bfd_module_handle_t Tau_bfd_getModuleHandle(tau_bfd_handle_t handle,
   }
 }
 
+int Tau_bfd_getAddressMap(tau_bfd_handle_t handle, 
+			  unsigned long probe_addr, TauBfdAddrMap *mapInfo) {
+  if (!Tau_bfd_checkHandle(handle)) {
+    return 0;
+  }
+  TAU_VERBOSE("Tau_bfd_updateAddressMaps: Updating object maps\n");
+  TauBfdUnit *unit = bfdUnits[handle];
+  int matchingIdx = Tau_bfd_internal_getModuleIndex(unit, probe_addr);
+  if (matchingIdx == -1) {
+    return TAU_BFD_NULL_MODULE_HANDLE;
+  }
+  mapInfo->start = (*unit->addressMaps)[matchingIdx].start;
+  mapInfo->end = (*unit->addressMaps)[matchingIdx].end;
+  mapInfo->offset = (*unit->addressMaps)[matchingIdx].offset;
+  strcpy(mapInfo->name, (*unit->addressMaps)[matchingIdx].name);
+}
+
 // Probe for BFD information given a single address.
 TauBfdInfo *Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle,
 				   unsigned long probe_addr) {
