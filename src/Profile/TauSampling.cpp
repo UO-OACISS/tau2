@@ -502,10 +502,10 @@ void Tau_sampling_internal_initName2FuncInfoMapIfNecessary() {
 
 CallSiteInfo *Tau_sampling_resolveCallSite(caddr_t addr) {
   CallSiteInfo *callsite;
+  int bfdRet;
   //  bool resolved = false;
 
   char resolvedBuffer[4096];
-
   callsite = (CallSiteInfo *)malloc(sizeof(CallSiteInfo));
 
   callsite->pc = addr;
@@ -513,12 +513,20 @@ CallSiteInfo *Tau_sampling_resolveCallSite(caddr_t addr) {
   
   // resolved = Tau_sampling_resolveName(addr, &name, &resolvedModuleIdx);
   TauBfdInfo *resolvedInfo = NULL;
+  // backup information in case we fail to resolve the address to specific
+  //   line numbers.
+  TauBfdAddrMap addressMap;
+  sprintf(addressMap.name, "%s", "UNKNOWN");
 #ifdef TAU_BFD
   resolvedInfo = 
     Tau_bfd_resolveBfdInfo(bfdUnitHandle, (unsigned long)addr);
+  // backup info
+  bfdRet = Tau_bfd_getAddressMap(bfdUnitHandle, (unsigned long)addr,
+				 &addressMap);
   if (resolvedInfo == NULL) {
       resolvedInfo = 
 	  Tau_bfd_resolveBfdExecInfo(bfdUnitHandle, (unsigned long)addr);
+      sprintf(addressMap.name, "%s", "EXEC");
   }
 #endif /* TAU_BFD */
   if (resolvedInfo != NULL) {
@@ -528,7 +536,13 @@ CallSiteInfo *Tau_sampling_resolveCallSite(caddr_t addr) {
 	    resolvedInfo->lineno, 0,
 	    resolvedInfo->lineno, 0);
   } else {
-    sprintf(resolvedBuffer, "[SAMPLE] UNRESOLVED ADDR %p", (unsigned long)addr);
+    if (TauEnv_get_ebs_keep_unresolved_addr()) {
+      sprintf(resolvedBuffer, "[SAMPLE] UNRESOLVED %s ADDR %p", 
+	      addressMap.name, (unsigned long)addr);
+    } else {
+      sprintf(resolvedBuffer, "[SAMPLE] UNRESOLVED %s", 
+	      addressMap.name);
+    }
   }
   callsite->name = strdup(resolvedBuffer);
   TAU_VERBOSE("Tau_sampling_resolveCallSite: Callsite name resolved to [%s]\n",

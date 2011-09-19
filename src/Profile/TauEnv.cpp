@@ -62,6 +62,7 @@
 
 /* if we are doing EBS sampling, set the default sampling period */
 #define TAU_EBS_DEFAULT 0
+#define TAU_EBS_KEEP_UNRESOLVED_ADDR_DEFAULT 0
 #define TAU_EBS_PERIOD_DEFAULT 1000
 /* if we are doing EBS sampling, set whether we want inclusive samples */
 /* that is, main->foo->mpi_XXX is a sample for main, foo and mpi_xxx */
@@ -368,6 +369,8 @@ static int env_track_memory_headroom = 0;
 static int env_track_io_params = 0;
 static int env_track_signals = 0;
 static int env_extras = 0;
+/* This is a malleable default */
+static int env_ebs_keep_unresolved_addr = 0;
 static int env_ebs_period = 0;
 static int env_ebs_inclusive = 0;
 static int env_ebs_enabled = 0;
@@ -524,7 +527,11 @@ int TauEnv_get_profile_format() {
   return env_profile_format;
 }
 
-  // *CWL* Only to be by TAU whenever the desired ebs period violates
+int TauEnv_get_ebs_keep_unresolved_addr() {
+  return env_ebs_keep_unresolved_addr;
+}
+
+  // *CWL* Only to be used by TAU whenever the desired ebs period violates
   //       system-supported thresholds.
 void TauEnv_force_set_ebs_period(int period) {
   char tmpstr[512];
@@ -885,7 +892,6 @@ void TauEnv_initialize() {
       TAU_VERBOSE("TAU: METRICS is \"%s\"\n", env_metrics);
     }
 
-
     tmp = getconf("TAU_SAMPLING");
     if (parse_bool(tmp, TAU_EBS_DEFAULT)) {
       env_ebs_enabled = 1;
@@ -896,8 +902,16 @@ void TauEnv_initialize() {
       TAU_VERBOSE("TAU: Sampling Disabled\n");
       TAU_METADATA("TAU_SAMPLING", "off");
     }
-    
 
+    tmp = getconf("TAU_EBS_KEEP_UNRESOLVED_ADDR");
+    if (parse_bool(tmp, TAU_EBS_KEEP_UNRESOLVED_ADDR_DEFAULT)) {
+      env_ebs_keep_unresolved_addr = 1;
+      TAU_METADATA("TAU_EBS_KEEP_UNRESOLVED_ADDR", "on");
+    } else {
+      env_ebs_keep_unresolved_addr = 0;
+      TAU_METADATA("TAU_EBS_KEEP_UNRESOLVED_ADDR", "off");
+    }
+    
     if (TauEnv_get_ebs_enabled()) {
 
       // *CWL* Acquire the sampling source. This has to be done first
