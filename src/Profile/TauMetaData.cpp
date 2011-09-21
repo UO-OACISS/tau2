@@ -528,7 +528,7 @@ int Tau_metadata_writeMetaData(Tau_util_outputDevice *out) {
   return 0;
 #endif
 
-  Tau_metadata_fillMetaData();
+  //Tau_metadata_fillMetaData();
   return writeMetaData(out, true, -1);
 }
 
@@ -537,7 +537,7 @@ int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int counter) {
   return 0;
 #endif
 
-  Tau_metadata_fillMetaData();
+  //Tau_metadata_fillMetaData();
   int retval;
   retval = writeMetaData(out, false, counter);
   return retval;
