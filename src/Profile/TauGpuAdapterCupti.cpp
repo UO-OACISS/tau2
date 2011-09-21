@@ -10,6 +10,7 @@ void Tau_cupti_onload()
   
 	if (0 == strcasecmp(TauEnv_get_cupti_api(), "runtime") || 
 			0 == strcasecmp(TauEnv_get_cupti_api(), "both"))
+	if (cupti_api_runtime())
 	{
 		//printf("TAU: Subscribing to RUNTIME API.\n");
 		err = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_RUNTIME_API);
@@ -17,6 +18,7 @@ void Tau_cupti_onload()
 	}
   if (0 == strcasecmp(TauEnv_get_cupti_api(), "driver") || 
 			0 == strcasecmp(TauEnv_get_cupti_api(), "both")) 
+	if (cupti_api_driver())
 	{
 		//printf("TAU: Subscribing to DRIVER API.\n");
 		err = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_DRIVER_API);
@@ -86,9 +88,8 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 			get_values_from_memcpy(cbInfo, id, domain, kind, count);
 			if (cbInfo->callbackSite == CUPTI_API_ENTER)
 			{
-				FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::myNode())->ThisFunction;
+				FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::getTid())->ThisFunction;
 				functionInfoMap[cbInfo->correlationId] = p;	
-
 				Tau_gpu_enter_memcpy_event(
 					cbInfo->functionName,
 					&cuptiGpuId(cbInfo->contextUid, cbInfo->correlationId),
@@ -105,7 +106,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 				);
 				if (function_is_sync(id))
 				{
-					printf("sync function name: %s.\n", cbInfo->functionName);
+					//printf("sync function name: %s.\n", cbInfo->functionName);
 					//cuCtxSynchronize();
 					Tau_cupti_register_sync_event();
 				}
@@ -117,8 +118,9 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 			{
 				if (function_is_launch(id))
 				{
-					FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::myNode())->ThisFunction;
+					FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::getTid())->ThisFunction;
 					functionInfoMap[cbInfo->correlationId] = p;	
+					//printf("at launch id: %d.\n", cbInfo->correlationId);
 				}
 				Tau_gpu_enter_event(cbInfo->functionName);
 			}
@@ -127,7 +129,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 				Tau_gpu_exit_event(cbInfo->functionName);
 				if (function_is_sync(id))
 				{
-					printf("sync function name: %s.\n", cbInfo->functionName);
+					//printf("sync function name: %s.\n", cbInfo->functionName);
 					//cuCtxSynchronize();
 					Tau_cupti_register_sync_event();
 				}
@@ -179,23 +181,38 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       CUpti_ActivityMemcpy *memcpy = (CUpti_ActivityMemcpy *)record;
 			//printf("recording memcpy: \n stream %d, start %d, stop %d, bytes %d, kind, %d.\n",
 			//	memcpy->streamId, memcpy->start, memcpy->end, memcpy->bytes, memcpy->copyKind);
+			/*	
 			Tau_gpu_register_memcpy_event(
 				cuptiRecord(TAU_GPU_USE_DEFAULT_NAME, memcpy->streamId, memcpy->runtimeCorrelationId), 
 				memcpy->start / 1e3, 
 				memcpy->end / 1e3, 
 				TAU_GPU_UNKNOW_TRANSFER_SIZE, 
 				getMemcpyType(memcpy->copyKind));
+			*/	
 				break;
 		}
   	case CUPTI_ACTIVITY_KIND_KERNEL:
 		{
 			//find FunctionInfo object from FunctionInfoMap
       CUpti_ActivityKernel *kernel = (CUpti_ActivityKernel *)record;
-			cout << "recording kernel, " << kernel->end - kernel->start << "ns.\n" << endl;
+			//cout << "recording kernel: " << kernel->name << ", " << kernel->end - kernel->start << "ns.\n" << endl;
+			const char* name;
+			int id;
+			if (cupti_api_runtime())
+			{
+				id = kernel->runtimeCorrelationId;
+			}
+			else
+			{
+				id = kernel->correlationId;
+				//printf("correlationid: %d.\n", id);
+			}
+			name = demangleName(kernel->name);
 			Tau_gpu_register_gpu_event(
-				cuptiRecord(demangleName(kernel->name), kernel->streamId, kernel->correlationId), 
+				cuptiRecord(name, kernel->streamId, id), 
 				kernel->start / 1e3,
 				kernel->end / 1e3);
+				
 				break;
 		}
 	}
@@ -215,13 +232,25 @@ bool function_is_sync(CUpti_CallbackId id)
 		//id == CUPTI_RUNTIME_TRACE_CBID_cudaDeviceReset_v3020 ||
 		id == CUPTI_RUNTIME_TRACE_CBID_cudaMemcpy_v3020 ||
 		id == CUPTI_RUNTIME_TRACE_CBID_cudaEventSynchronize_v3020 ||
-		id == CUPTI_RUNTIME_TRACE_CBID_cudaEventQuery_v3020
+		id == CUPTI_RUNTIME_TRACE_CBID_cudaEventQuery_v3020 ||
 		//driverAPI
+		id == CUPTI_DRIVER_TRACE_CBID_cuMemcpy_v2 ||
+		id == CUPTI_DRIVER_TRACE_CBID_cuMemcpyHtoD_v2 ||
+		id == CUPTI_DRIVER_TRACE_CBID_cuMemcpyDtoH_v2 ||
+		id == CUPTI_DRIVER_TRACE_CBID_cuMemcpyDtoD_v2 ||
+		id == CUPTI_DRIVER_TRACE_CBID_cuMemcpyAtoH_v2 ||
+		id == CUPTI_DRIVER_TRACE_CBID_cuMemcpyAtoD_v2 ||
+		id == CUPTI_DRIVER_TRACE_CBID_cuMemcpyHtoA_v2 ||
+		id == CUPTI_DRIVER_TRACE_CBID_cuMemcpyDtoA_v2 ||
+		id == CUPTI_DRIVER_TRACE_CBID_cuMemcpyAtoA_v2 ||
+		id == CUPTI_DRIVER_TRACE_CBID_cuEventSynchronize ||
+		id == CUPTI_DRIVER_TRACE_CBID_cuEventQuery
 
 				 );
 }
 bool function_is_launch(CUpti_CallbackId id) { 
-	return id == CUPTI_RUNTIME_TRACE_CBID_cudaLaunch_v3020;
+	return id == CUPTI_RUNTIME_TRACE_CBID_cudaLaunch_v3020 ||
+		     id == CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel;
 }
 
 bool function_is_memcpy(CUpti_CallbackId id) { 
@@ -285,12 +314,31 @@ int getMemcpyType(int kind)
 const char *demangleName(const char* name)
 {
 	const char *dem_name = 0;
+	//printf("demangling: %s.\n", name);
 #if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
 	//printf("demangling name....\n");
 	dem_name = cplus_demangle(name, DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE |
 	DMGL_TYPES);
+	//check to see if demangling failed (name was not mangled).
+	if (dem_name == NULL)
+	{
+		dem_name = name;
+	}
 #else
 	dem_name = name;
 #endif /* HAVE_GPU_DEMANGLE */
+	//printf("demanged: %s.\n", dem_name);
 	return dem_name;
+}
+
+
+bool cupti_api_runtime()
+{
+	return (0 == strcasecmp(TauEnv_get_cupti_api(), "runtime") || 
+			0 == strcasecmp(TauEnv_get_cupti_api(), "both"));
+}
+bool cupti_api_driver()
+{
+	return (0 == strcasecmp(TauEnv_get_cupti_api(), "driver") || 
+			0 == strcasecmp(TauEnv_get_cupti_api(), "both")); 
 }

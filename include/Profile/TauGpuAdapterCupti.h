@@ -51,6 +51,9 @@ bool function_is_launch(CUpti_CallbackId id);
 
 bool registered_sync = false;
 
+bool cupti_api_runtime();
+bool cupti_api_driver();
+
 map<uint32_t, FunctionInfo*> functionInfoMap;
 
 class cuptiGpuId : public gpuId
