@@ -137,7 +137,7 @@ bool Tau_bfd_checkHandle(tau_bfd_handle_t handle) {
     TAU_VERBOSE("TauBfd: Warning - invalid BFD unit handle %d, max value %d\n", handle, bfdUnitCount);
     return false;
   }
-  TAU_VERBOSE("TauBfd: Valid BFD Handle\n");
+  //  TAU_VERBOSE("TauBfd: Valid BFD Handle\n");
   return true;
 }
 
@@ -230,7 +230,7 @@ void Tau_bfd_updateAddressMaps(tau_bfd_handle_t handle) {
   if (!Tau_bfd_checkHandle(handle)) {
     return;
   }
-  TAU_VERBOSE("Tau_bfd_updateAddressMaps: Updating object maps\n");
+  //  TAU_VERBOSE("Tau_bfd_updateAddressMaps: Updating object maps\n");
   TauBfdUnit *unit = bfdUnits[handle];
 
   // Clear old information from vector. This relies on the fact that
@@ -287,7 +287,7 @@ int Tau_bfd_getAddressMap(tau_bfd_handle_t handle,
   if (!Tau_bfd_checkHandle(handle)) {
     return 0;
   }
-  TAU_VERBOSE("Tau_bfd_updateAddressMaps: Updating object maps\n");
+  //  TAU_VERBOSE("Tau_bfd_updateAddressMaps: Updating object maps\n");
   TauBfdUnit *unit = bfdUnits[handle];
   int matchingIdx = Tau_bfd_internal_getModuleIndex(unit, probe_addr);
   if (matchingIdx == -1) {
@@ -307,7 +307,7 @@ TauBfdInfo *Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle,
   }
   TauBfdUnit *unit = bfdUnits[handle];
   int matchingIdx = Tau_bfd_internal_getModuleIndex(unit, probe_addr);
-  TAU_VERBOSE("Tau_bfd_resolveBfdInfo: Matching module index %d for addr [%p]\n", matchingIdx, probe_addr);
+  //  TAU_VERBOSE("Tau_bfd_resolveBfdInfo: Matching module index %d for addr [%p]\n", matchingIdx, probe_addr);
 
   if (matchingIdx == -1) {
       return NULL;
@@ -355,9 +355,11 @@ TauBfdInfo *Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle,
     module->demangled_funcname =
       cplus_demangle(module->located_funcname,
                      DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE | DMGL_TYPES);
+    /*
     TAU_VERBOSE("Tau_bfd_resolveBfdInfo: [%s] demangles to [%s]\n",
                 module->located_funcname,
 		module->demangled_funcname);
+    */
 #endif /* HAVE_GNU_DEMANGLE */
     TauBfdInfo *info = (TauBfdInfo *)malloc(sizeof(TauBfdInfo));
     if (module->located_filename != NULL) {
