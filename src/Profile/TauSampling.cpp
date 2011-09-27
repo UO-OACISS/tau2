@@ -888,9 +888,10 @@ int Tau_sampling_event_stop(int tid, double *stopTime) {
  ********************************************************************/
 void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
   int tid = RtsLayer::myThread();
-  /* *CWL* too fine-grained for anything but debug.*/
+  /* *CWL* too fine-grained for anything but debug.
   TAU_VERBOSE("Tau_sampling_handle_sample: tid=%d got sample [%p]\n",
   	      tid, (unsigned long)pc);
+  */
   if (samplingEnabled[tid] == 0) {
     // Do not track counts when sampling is not enabled.
     return;

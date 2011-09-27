@@ -1642,9 +1642,11 @@ int  MPI_Finalize(  )
 
   /* Shutdown EBS after Finalize to allow Profiles to be written
      out correctly. */
+#ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_finalizeNode();
   }
+#endif /* TAU_WINDOWS */
 
 #ifdef TAU_MONITORING
   Tau_mon_disconnect();
