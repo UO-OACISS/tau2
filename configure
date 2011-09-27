@@ -4459,6 +4459,9 @@ make_directories
 # Is LINUXTIMERS available?
 #####################################################################
 
+if [ $cxx_compiler = x86_64-w64-mingw32-g++ ] ; then
+  linuxtimers=no
+fi
 if [ $linuxtimers = yes ] ; then
   echo "LINUX_TIMERS enabled"
   fixmakeargs="$fixmakeargs LINUXTIMERS"
