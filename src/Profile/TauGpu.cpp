@@ -45,18 +45,18 @@ extern void metric_set_gpu_timestamp(int tid, double value);
 using namespace std;
 
 double cpu_start_time;
-
+/*
 struct EventName {
 		const char *name;
 		EventName(const char* n) :
 			name(n) {}	
 		bool operator<(const EventName &c1) const { return strcmp(name,c1.name) < 0; }
 };
-
+*/
 //typedef map<eventId, bool> doubleMap;
 //doubleMap MemcpyEventMap;
 
-map<EventName, void*> events;
+//map<EventName, void*> events;
 
 extern void metric_set_gpu_timestamp(int tid, double value);
 
@@ -209,6 +209,7 @@ void start_gpu_event(const char *name, int gpuTask)
 #ifdef DEBUG_PROF
 	printf("staring %s event.\n", name);
 #endif
+	/*
 	map<EventName, void*>::iterator it = events.find(name);
 	if (it == events.end())
 	{
@@ -221,6 +222,8 @@ void start_gpu_event(const char *name, int gpuTask)
 		void *ptr = (*it).second;
 		TAU_PROFILER_START_TASK(ptr, gpuTask);
 	}
+	*/
+	TAU_START_TASK(name, gpuTask);
 }
 void stage_gpu_event(const char *name, int gpuTask, double start_time,
 FunctionInfo* parent)
@@ -244,6 +247,7 @@ void stop_gpu_event(const char *name, int gpuTask)
 #ifdef DEBUG_PROF
 	printf("stopping %s event.\n", name);
 #endif
+/*
 	map<EventName,void*>::iterator it = events.find(name);
 	if (it == events.end())
 	{
@@ -253,6 +257,8 @@ void stop_gpu_event(const char *name, int gpuTask)
 		void *ptr = (*it).second;
 		TAU_PROFILER_STOP_TASK(ptr, gpuTask);
 	}
+*/
+	TAU_STOP_TASK(name, gpuTask);
 }
 void break_gpu_event(const char *name, int gpuTask, double stop_time,
 FunctionInfo* parent)

@@ -33,12 +33,15 @@ int Tau_CuptiLayer_get_num_events()
 
 bool Tau_CuptiLayer_initialized = false;
 bool Tau_CuptiLayer_finalized = false;
+bool Tau_CuptiLayer_enabled = true;
 bool Tau_CuptiLayer_is_initialized()
 {
 	return Tau_CuptiLayer_initialized;
 }
 void Tau_CuptiLayer_finalize()
 {
+	cuptiEventGroupDisable(eventGroup);
+	cuptiEventGroupDestroy(eventGroup);
 	Tau_CuptiLayer_finalized = true;
 }
 //running total for each counter.
@@ -46,7 +49,7 @@ uint64_t* lastDataBuffer;
 
 CuptiCounterEvent::CuptiCounterEvent(int device_n, int domain_n, int event_n)
 {
-	printf("creating counter event from ids: %d:%d:%d.\n");
+	//printf("creating counter event from ids: %d:%d:%d.\n", device_n, domain_n, event_n);
 	CUresult er;
 	CUptiResult err = CUPTI_SUCCESS;
 	size_t size;
@@ -89,11 +92,11 @@ CuptiCounterEvent::CuptiCounterEvent(int device_n, int domain_n, int event_n)
 	//Event
 	
 	uint32_t num_events;
-	size = sizeof ( CUpti_EventDomainID ) * num_domains;
-	err = cuptiEventDomainGetAttribute( domain,
-										CUPTI_EVENT_DOMAIN_ATTR_INSTANCE_COUNT,
-										&size, ( void * ) &num_events );
-	CHECK_CUPTI_ERROR( err, "cuptiEventDomainGetAttribute" );
+	//size = sizeof ( CUpti_EventDomainID ) * num_domains;
+	//size = sizeof(num_events);
+	err = cuptiEventDomainGetNumEvents( domain,
+										&num_events );
+	CHECK_CUPTI_ERROR( err, "cuptiEventDomainGetNumEvents" );
 	
 	
 	
@@ -115,7 +118,7 @@ CuptiCounterEvent::CuptiCounterEvent(int device_n, int domain_n, int event_n)
 	err = cuptiEventGetAttribute(
 									event, CUPTI_EVENT_ATTR_SHORT_DESCRIPTION,
 									&size, event_description_char );
-	CHECK_CUPTI_ERROR( err, "cuptiEventGetAttribute, event_name" );
+	CHECK_CUPTI_ERROR( err, "cuptiEventGetAttribute, event_short_desc" );
 	event_description = string(event_description_char);
 	
 	create_tag();
@@ -166,7 +169,9 @@ void CuptiCounterEvent::print()
 	//cout << "CUDA." << setw(15) << clean_device_name.str() << setw(10) << 
 	//		domain_name << setw(20) << event_name << setw(25) << event_description << 
 	//	endl << endl;
-	cout << setw(55) << tag << setw(15) << event_description << endl << endl;
+	cout << setw(54) << tag << " " <<
+					setw(15) << event_description <<
+					endl << endl;
 }
 
 /* lifted from PAPI. */
@@ -174,7 +179,7 @@ void Tau_CuptiLayer_init()
 {
 	//printf("in Tau_CuptiLayer_init.\n");
 	//No counters set, nothing to initialize
-	if (!Tau_CuptiLayer_Added_counters.empty())
+	if (!Tau_CuptiLayer_Added_counters.empty() && !Tau_CuptiLayer_is_initialized())
 	{
 		CUptiResult cuptiErr = CUPTI_SUCCESS;
 		CUresult cuErr = CUDA_SUCCESS;
@@ -235,6 +240,16 @@ void Tau_CuptiLayer_init()
 	}
 }
 
+void Tau_CuptiLayer_disable()
+{
+	Tau_CuptiLayer_enabled = false;
+}
+
+void Tau_CuptiLayer_enable()
+{
+	Tau_CuptiLayer_enabled = true;
+}
+
 void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev)
 {	
 		Tau_CuptiLayer_Added_counters.push_back(ev);	
@@ -243,15 +258,15 @@ void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev)
    Tau_CuptiLayer_num_events * sizeof ( uint64_t ); */
 void Tau_CuptiLayer_read_counters(uint64_t* counterDataBuffer)
 {	
-	if (Tau_CuptiLayer_is_initialized())
+	if (Tau_CuptiLayer_is_initialized() && Tau_CuptiLayer_enabled)
 	{
 		CUresult cuErr;
 		CUcontext cuCtx;
-		cuErr = cuCtxGetCurrent( &cuCtx );
+		//cuErr = cuCtxGetCurrent( &cuCtx );
 		// check if there is a current context
 		//printf("cupti layer finalized? %d context current? %d.\n",
 			//Tau_CuptiLayer_finalized, cuErr == CUDA_SUCCESS);
-		if (Tau_CuptiLayer_finalized && cuErr == CUDA_SUCCESS)
+		if (Tau_CuptiLayer_finalized)
 		{
 			for (int i=0; i<Tau_CuptiLayer_get_num_events(); i++)
 			{
@@ -326,6 +341,7 @@ void retrieve_available_counters()
 	for (int i=0; i<deviceCount; i++)
 	{
 		er = cuDeviceGet(&currDevice, i);
+		//printf("looping, i=%d, currDevice=%d.\n", i, currDevice);
 		CHECK_CU_ERROR( er, "cuDeviceGet" );
 		err = cuptiDeviceGetNumEventDomains(currDevice, &domainCount );
 		CHECK_CUPTI_ERROR( err, "cuptiDeviceGetNumEventDomains" );
@@ -336,8 +352,12 @@ void retrieve_available_counters()
 	
 		for (int j=0; j<domainCount; j++)
 		{
-			printf("looping, j=%d.\n", j);
-			err = cuptiDeviceGetNumEventDomains((const CUdevice) currDevice, &num_domains );
+			
+			er = cuDeviceGet(&currDevice, i);
+			CHECK_CU_ERROR( er, "cuDeviceGet" );
+			//printf("looping, j=%d.\n", j);
+			//printf("(1) currDevice=%d.\n", currDevice);
+			err = cuptiDeviceGetNumEventDomains(currDevice, &num_domains );
 			CHECK_CUPTI_ERROR( err, "cuptiDeviceGetNumEventDomains" );
 			if ( num_domains == 0 ) {
 				printf( "No domain is exposed by dev = %d\n", currDevice );
@@ -345,13 +365,15 @@ void retrieve_available_counters()
 			}
 			
 			size_t size = sizeof ( CUpti_EventDomainID ) * num_domains;
+		  //printf("(2) currDevice=%d.\n", currDevice);
 			err = cuptiDeviceEnumEventDomains(currDevice, &size, &currDomain);
 			CHECK_CUPTI_ERROR( err, "cuptiDeviceEnumEventDomains" );
 			currDomain = (&currDomain)[j];
 
     	err = cuptiEventDomainGetNumEvents(currDomain, &eventCount);
 			CHECK_CUPTI_ERROR( err, "cuptiEventDomainGetEnumEvent" );
-			
+		
+
 			for (int k=0; k<eventCount; k++)
 			{
 
@@ -362,6 +384,9 @@ void retrieve_available_counters()
 			}
 		}
 	}
+	//CuptiCounterEvent* ev = new CuptiCounterEvent(1,1,7);
+	//Tau_CuptiLayer_Counter_Map.insert(std::make_pair(ev->tag, ev));
+	//ev->print();
 }
 
 /* Fills in the Tau_CuptiLayer_Counter_Map */
@@ -369,6 +394,7 @@ counter_map_t Tau_CuptiLayer_map()
 {
 	if (Tau_CuptiLayer_Counter_Map.empty())
 	{
+		//printf("create...\n");
 		retrieve_available_counters();
 	}
 	return Tau_CuptiLayer_Counter_Map;
