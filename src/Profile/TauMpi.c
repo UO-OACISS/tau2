@@ -1643,7 +1643,9 @@ int  MPI_Finalize(  )
   /* Shutdown EBS after Finalize to allow Profiles to be written
      out correctly. */
   if (TauEnv_get_ebs_enabled()) {
+#ifndef TAU_WINDOWS 
     Tau_sampling_finalizeNode();
+#endif /* TAU_WINDOWS */
   }
 
 #ifdef TAU_MONITORING
@@ -1689,7 +1691,9 @@ char *** argv;
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Init( argc, argv );
+#ifndef TAU_WINDOWS
   Tau_sampling_init_if_necessary();
+#endif /* TAU_WINDOWS */
 #ifndef TAU_DISABLE_SIGUSR
   Tau_signal_initialization(); 
 #endif
@@ -1740,7 +1744,9 @@ int *provided;
 #ifndef TAU_DISABLE_SIGUSR
   Tau_signal_initialization(); 
 #endif
+#ifndef TAU_WINDOWS
   Tau_sampling_init_if_necessary();
+#endif /* TAU_WINDOWS */
 
   TAU_PROFILE_STOP(tautimer);
 
