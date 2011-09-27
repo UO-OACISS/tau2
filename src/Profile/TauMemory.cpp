@@ -251,7 +251,7 @@ void Tau_malloc_after(TauVoidPointer ptr, size_t size, TAU_USER_EVENT_TYPE *e)
 #endif
   /* store the size of memory allocated with the address of the pointer */
   //TheTauPointerSizeMap()[(long)p1] = pair<size_t, long>(size, (long) e); 
-  TheTauPointerSizeMap().insert(pair<const long, pair<size_t, long> >((long)p1, pair<size_t, long>(size, (long) e->contextevent))); 
+  TheTauPointerSizeMap().insert(pair<const long, pair<size_t, long> >(Tau_convert_ptr_to_long(p1), pair<size_t, long>(size, Tau_convert_ptr_to_long(e->contextevent)))); 
   return;
 }
 
@@ -341,7 +341,7 @@ size_t TauGetMemoryAllocatedSize(TauVoidPointer p)
 
   typedef multimap<TAU_POINTER_SIZE_MAP_TYPE >::iterator I;
 
-  I it = TheTauPointerSizeMap().find((long)p1);
+  I it = TheTauPointerSizeMap().find(Tau_convert_ptr_to_long(p1));
   I it2, found_it;
   TAU_USER_EVENT_TYPE *e;
 
@@ -350,13 +350,13 @@ size_t TauGetMemoryAllocatedSize(TauVoidPointer p)
   else
   {
     found_it = it;  /* initialize */
-    if (TheTauPointerSizeMap().count((long)p1) > 1)
+    if (TheTauPointerSizeMap().count(Tau_convert_ptr_to_long(p1)) > 1)
     { /* Intel compiler reuses addresses that have leaks */
 #ifdef DEBUG
       printf("Found more than one occurence of p1 in TauGetMemoryAllocatedSize\n");
 #endif /* DEBUG */
 
-      pair<I,I> range = TheTauPointerSizeMap().equal_range((long)p1);
+      pair<I,I> range = TheTauPointerSizeMap().equal_range(Tau_convert_ptr_to_long(p1));
 
       for (I it = range.first; it != range.second; ++it) {
 	found_it = it;
@@ -482,13 +482,13 @@ int TauDetectMemoryLeaks(void)
     sz, e->GetEventName());
 #endif /* DEBUGPROF */
     /* Have we seen e before? */
-    map<TAU_MEMORY_LEAK_MAP_TYPE >::iterator it = TheTauMemoryLeakMap().find((long) e);
+    map<TAU_MEMORY_LEAK_MAP_TYPE >::iterator it = TheTauMemoryLeakMap().find(Tau_convert_ptr_to_long(e));
     if (it == TheTauMemoryLeakMap().end())
     { /* didn't find it! */
       string s (string("MEMORY LEAK! ")+e->GetEventName());
       TauUserEvent *leakevent = new TauUserEvent(s.c_str());
 
-      TheTauMemoryLeakMap()[(long)e] = leakevent; 
+      TheTauMemoryLeakMap()[Tau_convert_ptr_to_long(e)] = leakevent; 
       leakevent->TriggerEvent(sz);
     }
     else

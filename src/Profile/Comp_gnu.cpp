@@ -691,7 +691,7 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
   }
   compInstDisabled[tid] = 1;
 
-  if ((hn = hash_get((long)funcptr))) {
+  if ((hn = hash_get(Tau_convert_ptr_to_long(funcptr)))) {
     if (hn->excluded) {
       // finished in this routine, allow entry
       compInstDisabled[tid] = 0;
@@ -740,10 +740,10 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 
     RtsLayer::LockDB(); // lock, then check again
     
-    if ( (hn = hash_get((long)funcptr))) {
+    if ( (hn = hash_get(Tau_convert_ptr_to_long(funcptr)))) {
       Tau_start_timer(hn->fi, 0, tid);
     } else {
-      HashNode *node = createHashNode((long)funcptr);
+      HashNode *node = createHashNode(Tau_convert_ptr_to_long(funcptr));
       Tau_start_timer(node->fi, 0, tid);
     }
     
@@ -808,7 +808,7 @@ extern "C" void __cyg_profile_func_exit(void* func, void* callsite) {
   funcptr = *( void ** )func;
 #endif
 
-  if ( (hn = hash_get((long)funcptr)) ) {
+  if ( (hn = hash_get(Tau_convert_ptr_to_long(funcptr))) ) {
     if (hn->excluded) {
       Tau_global_decr_insideTAU_tid(tid);
       return;

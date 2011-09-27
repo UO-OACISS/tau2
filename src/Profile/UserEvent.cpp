@@ -538,12 +538,12 @@ long* TauFormulateContextComparisonArray(Profiler *p, TauUserEvent *uevent) {
   int index = 1; /* start writing to index 1, we fill in the depth after */
 
   while (current != NULL && depth != 0) {
-    ary[index++] = (long) current->ThisFunction;
+    ary[index++] = Tau_convert_ptr_to_long(current->ThisFunction);
     depth--;
     current = current->ParentProfiler;
   }
   
-  ary[index++] = (long) uevent;
+  ary[index++] = Tau_convert_ptr_to_long(uevent);
   ary[0] = index-1; /* set the depth */
   return ary;
 }
