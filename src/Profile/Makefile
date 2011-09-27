@@ -37,6 +37,7 @@ HPCTOOLKIT_INCLUDE=
 HPCTOOLKIT_LINK=
 
 #TAU_WINDOWS#TAU_WINDOWS_OBJ=WindowsThreadLayer.o #ENDIF#
+#TAU_MINGW#TAU_WINDOWS_OBJ=WindowsThreadLayer.o #ENDIF#
 
 CEXTRA =  
 ############# For KAI KCC compiler, use --one_instantiation_per_object ##
