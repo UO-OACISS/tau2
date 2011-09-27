@@ -1257,6 +1257,14 @@ case $1 in
 	echo "NOTE: Using KAI KCC options"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     TAU_WINDOWS)
+	echo "NOTE: Using TAU's Windows options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     MINGW)
+	echo "NOTE: Using TAU's MINGW options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      SGICOUNTERS)
 	echo "NOTE: Using SGI R10000 Hardware Counters for Profiling"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

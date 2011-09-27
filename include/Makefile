@@ -776,7 +776,8 @@ TAU_RANLIB_FE = echo "Built"
 #CRAYXMT#TAU_RANLIB_FE   = /usr/bin/ranlib   #ENDIF#
 
 ##############################################
-TAU_AR                 = x86_64-w64-mingw32-ar #ENDIF#
+TAU_AR                 = ar
+#MINGW#TAU_AR          = x86_64-w64-mingw32-ar #ENDIF#
 #SP1#TAU_AR            = ar -X32        #ENDIF#
 #IBM64#TAU_AR          = ar -X64        #ENDIF#
 #PPC64#TAU_AR          = ar 		#ENDIF#
