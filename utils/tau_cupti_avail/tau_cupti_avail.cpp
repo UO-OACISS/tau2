@@ -254,8 +254,8 @@ int main(int argc, char **argv)
 		CuptiCounterEvent::printHeader();
 		for(counter_map_it it = Tau_CuptiLayer_map().begin(); it != Tau_CuptiLayer_map().end(); it++)
 		{
-			CuptiCounterEvent* ev = it->second;
-			ev->print();
+			it->second->print();
+			//ev->print();
 		}
 
 	}

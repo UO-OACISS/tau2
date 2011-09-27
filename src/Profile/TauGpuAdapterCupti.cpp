@@ -1,4 +1,5 @@
 #include <Profile/TauGpuAdapterCupti.h>
+#include <Profile/CuptiLayer.h>
 #include <iostream>
 using namespace std;
 
@@ -42,17 +43,14 @@ void Tau_cupti_onload()
 
 void Tau_cupti_onunload()
 {
+	//Tau_CuptiLayer_finalize();
 	//printf("in onunload.\n");
 	//if we have not yet registered any sync do so.
 	//if we have registered a sync then Tau_profile_exit_all_threads will write
 	//out the thread profiles already, do not attempt another sync.
 	//cudaDeviceSynchronize();
-	if (!registered_sync)
-	{
-		//Tau_cupti_register_sync_event();
-	}
-  CUptiResult err;
-  err = cuptiUnsubscribe(subscriber);
+  //CUptiResult err;
+  //err = cuptiUnsubscribe(subscriber);
 }
 
 void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_CallbackId id, const void *params)
@@ -106,8 +104,11 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 				);
 				if (function_is_sync(id))
 				{
-					//printf("sync function name: %s.\n", cbInfo->functionName);
-					//cuCtxSynchronize();
+					//cerr << "sync function name: " << cbInfo->functionName << endl;
+					//Disable counter tracking during the sync.
+					Tau_CuptiLayer_disable();
+					cuCtxSynchronize();
+					Tau_CuptiLayer_enable();
 					Tau_cupti_register_sync_event();
 				}
 			}
@@ -121,6 +122,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 					FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::getTid())->ThisFunction;
 					functionInfoMap[cbInfo->correlationId] = p;	
 					//printf("at launch id: %d.\n", cbInfo->correlationId);
+					Tau_CuptiLayer_init();
 				}
 				Tau_gpu_enter_event(cbInfo->functionName);
 			}
@@ -129,7 +131,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 				Tau_gpu_exit_event(cbInfo->functionName);
 				if (function_is_sync(id))
 				{
-					//printf("sync function name: %s.\n", cbInfo->functionName);
+					//cerr << "sync function name: " << cbInfo->functionName << endl;
 					//cuCtxSynchronize();
 					Tau_cupti_register_sync_event();
 				}
@@ -179,23 +181,22 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
   	case CUPTI_ACTIVITY_KIND_MEMCPY:
 		{	
       CUpti_ActivityMemcpy *memcpy = (CUpti_ActivityMemcpy *)record;
-			//printf("recording memcpy: \n stream %d, start %d, stop %d, bytes %d, kind, %d.\n",
-			//	memcpy->streamId, memcpy->start, memcpy->end, memcpy->bytes, memcpy->copyKind);
-			/*	
+			//cerr << "recording memcpy: " << memcpy->end - memcpy->start << "ns.\n" << endl;
+				
 			Tau_gpu_register_memcpy_event(
 				cuptiRecord(TAU_GPU_USE_DEFAULT_NAME, memcpy->streamId, memcpy->runtimeCorrelationId), 
 				memcpy->start / 1e3, 
 				memcpy->end / 1e3, 
 				TAU_GPU_UNKNOW_TRANSFER_SIZE, 
 				getMemcpyType(memcpy->copyKind));
-			*/	
+				
 				break;
 		}
   	case CUPTI_ACTIVITY_KIND_KERNEL:
 		{
 			//find FunctionInfo object from FunctionInfoMap
       CUpti_ActivityKernel *kernel = (CUpti_ActivityKernel *)record;
-			//cout << "recording kernel: " << kernel->name << ", " << kernel->end - kernel->start << "ns.\n" << endl;
+			//cerr << "recording kernel: " << kernel->name << ", " << kernel->end - kernel->start << "ns.\n" << endl;
 			const char* name;
 			int id;
 			if (cupti_api_runtime())
