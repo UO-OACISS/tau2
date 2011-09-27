@@ -507,6 +507,7 @@ string *FunctionInfo::GetFullName() {
 
 #ifndef TAU_WINDOWS
 void FunctionInfo::addPcSample(caddr_t pc, int tid) {
+  //  static int numSamples = 0;
   if (!TauEnv_get_ebs_enabled()) {
     // This should be an error! We'll ignore it for now!
     return;
@@ -519,6 +520,7 @@ void FunctionInfo::addPcSample(caddr_t pc, int tid) {
   map<caddr_t, unsigned int,
     std::less<caddr_t>, SS_ALLOCATOR< std::pair<caddr_t, unsigned int> > >::iterator it;
   it = pcHistogram[tid]->find(pc);
+  //  numSamples++;
   if (it == pcHistogram[tid]->end()) {
     /* *CWL* - Too verbose, use for debug only.
       TAU_VERBOSE("FunctionInfo::addPcSample [tid=%d] inserting sample [%p]\n", 
@@ -526,7 +528,10 @@ void FunctionInfo::addPcSample(caddr_t pc, int tid) {
     */
     pcHistogram[tid]->insert(std::pair<caddr_t, unsigned int>(pc,1));
   } else {
-    (*pcHistogram[tid])[pc] = it->second++;
+    // *CWL* PGI does NOT like the following code.
+    //    (*pcHistogram[tid])[pc] = it->second++;
+    (it->second)++;
+    //    printf("Num Samples = %d, local samples = %d\n", numSamples, it->second);
   }
 }
 #endif // TAU_WINDOWS
