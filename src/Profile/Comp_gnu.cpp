@@ -517,11 +517,11 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 	    bfdUnitHandle = Tau_bfd_registerUnit(TAU_BFD_REUSE_GLOBALS);
 	  }
 	  TauBfdInfo *info = Tau_bfd_resolveBfdInfo(bfdUnitHandle, 
-						    (unsigned long)funcptr);
+			Tau_convert_ptr_to_unsigned_long(funcptr));
 	  if (info == NULL) {
 	      // Try again with executable
 	      info = Tau_bfd_resolveBfdExecInfo(bfdUnitHandle, 
-						(unsigned long)funcptr);
+			Tau_convert_ptr_to_unsigned_long(funcptr));
 	  }
 	  if (info != NULL) {
 	      if (info->filename != NULL) {
