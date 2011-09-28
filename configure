@@ -632,6 +632,7 @@ perfsuite=no
 perfsuitedir=
 bfd=no
 bfddir=
+turnbfdoff=no
 perf=no
 perfincdir=
 perflibdir=
@@ -2418,7 +2419,8 @@ case $machine in
 	elif [ "x$PE_ENV" = xINTEL ] ; then
 	    tauoptions="${tauoptions}-intel"
 	    default_fortran=intel
-	    fixmakeargs="$fixmakeargs COMPINST_GNU"
+	    turnbfdoff=yes
+	    fixmakeargs="$fixmakeargs COMPINST_INTEL9"
 	elif [ "x$PE_ENV" = xCRAY ] ; then
 	    tauoptions="${tauoptions}-cray"
 	    default_fortran=cray
@@ -2441,6 +2443,13 @@ case $machine in
                     fi
                 fi
 	    fi
+
+	    # *CWL* - this is a horrid hack, but the CCE compilers on 
+	    #         the Cray XE6 behave differently when building
+	    #         shared objects (see above) and it is not happy
+	    #         with -lmpichcxx which is static. -lmpichcxx_cray
+	    #         has to be used instead.
+	    fixmakeargs="$fixmakeargs CRAYCNL_CCE"
 
 	    touch conf_test.c
 	    extradir=`CC -v conf_test.c 2>&1 | grep cray-c++ | sed -e 's/ /\n/g' | grep "/opt/cray/cce" | grep "lib/x86-64$" | uniq | grep -v rpath`
@@ -5453,8 +5462,16 @@ void foo() {
 EOF
 $echo "Checking for bfd.h... ${nnl}"
 if $c_compiler $orig_useropt -c conftest_bfd.c $bfdinclude 1> /dev/null 2>&1 ; then
-    fixmakeargs="$fixmakeargs TAU_BFD"
-    echo "yes"
+    if [ "$turnbfdoff" = "yes" ] ; then
+      # *CWL* this is for systems where BFD cannot be supported because
+      # of whatever reasons. An example is the Cray XE6 (hopper) where
+      # the Intel environment introduces a conflict between its own
+      # stdio.h and libiberty.h
+      echo "no"
+    else 
+      fixmakeargs="$fixmakeargs TAU_BFD"
+      echo "yes"
+    fi
 else
     echo "no"
 fi
