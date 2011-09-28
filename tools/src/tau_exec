@@ -1,6 +1,7 @@
-#!/bin/sh 
+#!/bin/bash 
 
-export LANG=C
+LANG="C"
+export LANG
 
 eval `tau-config`
 
@@ -208,7 +209,11 @@ if [ "x$binding_specified" = "x" ] ; then
         # Add MPI by default
 	serial=`echo $binding_options | grep serial`
 	if [ $? != 0 ] ; then
-	    binding_options="$binding_options mpi"
+           # add mpi if shmem is not specified
+	    shmem=`echo $binding_options | grep shmem`
+	    if [ $? != 0 ] ; then
+	        binding_options="$binding_options mpi"
+            fi
 	fi
     fi
     theBinding=`tau-config --binding $binding_options`

@@ -1,5 +1,5 @@
 	PROGRAM REDUCTION
-               INCLUDE 'shmem.fh'
+               INCLUDE 'mpp/shmem.fh'
                REAL VALUES, SUM
                COMMON /C/ VALUES
                REAL WORK
@@ -11,8 +11,8 @@
                   CALL SHMEM_GET(WORK, VALUES, 1, I)   ! Get next value
                   SUM = SUM + WORK                     ! Sum it
                ENDDO
-               PRINT*,'PE ',SHMEM_MY_PE(),' COMPUTED       SUM=',SUM
                CALL SHMEM_BARRIER_ALL
+               PRINT*,'PE ',SHMEM_MY_PE(),' COMPUTED       SUM=',SUM
                CALL SHMEM_FINALIZE
        END
 

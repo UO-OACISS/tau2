@@ -37,6 +37,7 @@ void metric_write_userClock(int tid, double value);
 void metric_read_userClock(int tid, int idx, double values[]);
 void metric_read_logicalClock(int tid, int idx, double values[]);
 void metric_read_gettimeofday(int tid, int idx, double values[]);
+void metric_read_clock_gettime(int tid, int idx, double values[]);
 void metric_read_linuxtimers(int tid, int idx, double values[]);
 void metric_read_bgtimers(int tid, int idx, double values[]);
 void metric_read_craytimers(int tid, int idx, double values[]);
@@ -311,6 +312,8 @@ static void initialize_functionArray() {
       functionArray[pos++] = metric_read_userClock;
     } else if (compareMetricString(metricv[i], "GET_TIME_OF_DAY")) {
       functionArray[pos++] = metric_read_gettimeofday;
+    } else if (compareMetricString(metricv[i], "CLOCK_GET_TIME")) {
+      functionArray[pos++] = metric_read_clock_gettime;
     } else if (compareMetricString(metricv[i], "TIME")) {
       functionArray[pos++] = metric_read_gettimeofday;
     } else if (compareMetricString(metricv[i], "CPU_TIME")) {
@@ -481,7 +484,6 @@ extern "C" x_uint64 TauMetrics_getTimeOfDay() {
   return timestamp;
 }
 
-
 /*********************************************************************
  * Initialize the metrics module
  ********************************************************************/
@@ -491,6 +493,9 @@ int TauMetrics_init() {
   initialTimeStamp = TauMetrics_getTimeOfDay();
 
   if (TauEnv_get_ebs_enabled()) {
+    // *CWL* - keep an eye on this. *must* we do this? Or can we
+    //         keep PAPI overflow signal triggers separate from
+    //         user-selected metrics to be measured.
     if (strcmp(TauEnv_get_ebs_source(),"itimer")!=0) {
       metricv_add(TauEnv_get_ebs_source());
     }
@@ -566,6 +571,39 @@ double TauMetrics_getTraceMetricValue(int tid) {
   double values[TAU_MAX_COUNTERS];
   TauMetrics_getMetrics(tid, values);
   return values[traceMetric];
+}
+
+/**********************************************************************
+ * Returns the index in the metric vector of a particular metric string
+ *    *CWL* Intended for EBS to resolve the index location of the metric
+ *    source at data output time. This assumes the metric vector does
+ *    not change between the time it is read and when it is used. This
+ *    is not true, I believe, so we need to keep an eye on this.
+ *    There are also other issues of name matching ... EBS (this ought
+ *    to be changed) uses "itimer" instead of "TIME". So, we are going
+ *    to do the unethical practice of assuming it is TIME if there is
+ *    a failure to match the presented name against the names in the
+ *    metric vector.
+ **********************************************************************/
+int TauMetrics_getMetricIndexFromName(const char *metricString) {
+  for (int i=0; i<nmetrics; i++) {
+    if (compareMetricString(metricv[i], metricString) == 1) {
+      return i;
+    }
+  }
+  /* EBS ONLY:
+     Try again assuming TIME. The reason we loop again is because in the
+     general case, TIME isn't necessarily in position 0. */
+  if (TauEnv_get_ebs_enabled()) {
+    for (int i=0; i<nmetrics; i++) {
+      if (compareMetricString(metricv[i], "TIME") == 1) {
+	return i;
+      }
+    }
+  }
+  /* This is a bad failure value. EBS cannot handle this. Other features
+     might. */
+  return -1;
 }
 
 

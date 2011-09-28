@@ -75,6 +75,8 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
     private boolean monitored;
     //private Timer monitorTimer;
+    
+    //JRadioButtonMenuItem metricButton = null;
 
     private List<Observer> obs = new ArrayList<Observer>();
 

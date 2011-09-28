@@ -245,7 +245,7 @@ for arg in "$@" ; do
     else
 	
         case $arg in
-	    --help|-h)
+	    --help)   # Do not use -h as Cray compilers specifie -h upc -h ... 
 		printUsage 0 
 		;;
 
@@ -545,7 +545,7 @@ for arg in "$@" ; do
 			echoIfDebug "\tOpari Opts used: $optOpariOpts"
 			;;
 		    -optOpariReset*)
-			optOpariOpts="${arg#"-optOpariOpts="}"
+			optOpariOpts="${arg#"-optOpariReset="}"
 			echoIfDebug "\tOpari Tool used: $optOpariOpts"
 			;;
 
@@ -1341,9 +1341,11 @@ if [ $gotoNextStep == $TRUE ]; then
             # remove the .pomp from the name of the output file
 	    if [ $opari == $TRUE -a $pdtUsed == $TRUE ]; then
 		outputFile=`echo $outputFile | sed -e 's/\.chk\.pomp//'`
+			else
+		outputFile=`echo $outputFile | sed -e 's/\.pomp//'`
 	    fi
-	    
-	    
+  
+
             #echoIfDebug "\n\nThe output file passed is $passedOutputFile"
 	    #echoIfDebug "The output file generated locally is $outputFile"
 

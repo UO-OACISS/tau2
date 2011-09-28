@@ -21,6 +21,7 @@ my $ProfileSpecified="false";
 my $TraceSpecified="false";
 my $DisableSpecified="false";
 my $SerialSpecified="false";
+my $ShmemSpecified="false";
 my $MPISpecified="false";
 my $listoptions="false";
 
@@ -70,6 +71,9 @@ foreach my $argnum (0 .. $#ARGV) {
         $getbinding="true";
     } elsif ($arg eq "serial") {
         $SerialSpecified="true";
+    } elsif ($arg eq "shmem") {
+        $ShmemSpecified="true";
+	$TauOptions="$TauOptions $arg";
     } elsif ($arg eq "mpi") {
         $MPISpecified="true";
 	$TauOptions="$TauOptions $arg";
@@ -90,7 +94,7 @@ if ($SerialSpecified eq "true") {
 }
 
 # if neither mpi or serial is specified, assume mpi
-if ($MPISpecified eq "false" && $SerialSpecified eq "false") {
+if ($MPISpecified eq "false" && $SerialSpecified eq "false" && $ShmemSpecified eq "false") {
     $TauOptions="$TauOptions mpi";
 }
 

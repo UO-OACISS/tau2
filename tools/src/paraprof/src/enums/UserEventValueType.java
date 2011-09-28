@@ -93,5 +93,5 @@ public abstract class UserEventValueType {
 
     //public abstract double getMaxValue(UserEvent ue);
     
-    
+    public static UserEventValueType[] VALUES = { MAX, MEAN, MIN, NUMSAMPLES, STDDEV, TOTAL  };
 }

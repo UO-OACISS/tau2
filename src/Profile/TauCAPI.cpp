@@ -456,6 +456,25 @@ extern "C" int Tau_stop_current_timer() {
 ///////////////////////////////////////////////////////////////////////////
 
 
+extern "C" int Tau_profile_exit_all_tasks() {
+	int tid = 1;
+	while (tid < TAU_MAX_THREADS)
+	{
+		while (Tau_global_stackpos[tid] >= 0) {
+			Profiler *p = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
+			if (Tau_is_thread_fake(tid))
+			{
+				Tau_stop_timer(p->ThisFunction, tid);
+			}
+			// DO NOT pop. It is popped in stop above: Tau_global_stackpos[tid]--;
+		}
+	tid++;
+	}
+  Tau_disable_instrumentation();
+  return 0;
+}
+
+
 extern "C" int Tau_profile_exit_all_threads() {
 	int tid = 0;
 	while (tid < TAU_MAX_THREADS)
@@ -763,7 +782,7 @@ extern "C" int& tau_totalnodes(int set_or_get, int value)
 }
 
 
-#ifdef TAU_MPI
+#if (defined(TAU_MPI) || defined(TAU_SHMEM))
 #define TAU_GEN_EVENT(e, msg) TauUserEvent* e () { \
 	static TauUserEvent u(msg); return &u; } 
 
@@ -790,10 +809,11 @@ TauContextUserEvent**& TheMsgVolContextEvent() {
 }
 
 int register_events(void) {
+  
   if (TauEnv_get_comm_matrix()) {
     char str[256];
     int i;
-    
+      
     TheMsgVolContextEvent() = (TauContextUserEvent **) malloc(sizeof(TauContextUserEvent *)*tau_totalnodes(0,0));
     for (i =0; i < tau_totalnodes(0,0); i++) {
       sprintf(str, "Message size sent to node %d", i);
@@ -802,9 +822,18 @@ int register_events(void) {
   }
   return 0;
 }
+
+///////////////////////////////////////////////////////////////////////////
+#ifdef TAU_SHMEM 
+extern "C" int shmem_n_pes(void); 
+#endif /* TAU_SHMEM */
+
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
   static int initialize = register_events();
+#ifdef DEBUG_PROF
+  printf("Inside Tau_trace_sendmsg length = %d, totalnodes=%d\n", length, tau_totalnodes(0,0));
+#endif /* DEBUG_PROF */
 
 #ifdef TAU_PROFILEPARAM
 #ifndef TAU_DISABLE_PROFILEPARAM_IN_MPI
@@ -816,8 +845,13 @@ extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
 
   if (TauEnv_get_comm_matrix()) {
     if (destination >= tau_totalnodes(0,0)) {
-      fprintf(stderr, "TAU Error: Comm Matrix destination %d exceeds node count %d. Was MPI_Init wrapper never called?\n", destination, tau_totalnodes(0,0));
+#ifdef TAU_SHMEM
+      tau_totalnodes(1,shmem_n_pes());
+      register_events();
+#else /* TAU_SHMEM */
+      fprintf(stderr, "TAU Error: Comm Matrix destination %d exceeds node count %d. Was MPI_Init/shmem_init wrapper never called? Please disable TAU_COMM_MATRIX or add calls to the init function in your source code.\n", destination, tau_totalnodes(0,0));
       exit(-1);
+#endif /* TAU_SHMEM */
     }
     TheMsgVolContextEvent()[destination]->TriggerEvent(length, RtsLayer::myThread());
   }
@@ -846,6 +880,27 @@ extern "C" void Tau_trace_recvmsg(int type, int source, int length) {
     }
   }
 }
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_trace_recvmsg_remote(int type, int source, int length, int remoteid) {
+
+  if (TauEnv_get_tracing()) {
+    if (source >= 0) {
+      TauTraceRecvMsgRemote(type, source, length, remoteid);
+    }
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_trace_sendmsg_remote(int type, int destination, int length, int remoteid) {
+
+  if (TauEnv_get_tracing()) {
+    if (destination >= 0) {
+      TauTraceSendMsgRemote(type, destination, length, remoteid);
+    }
+  }
+}
+
 
 extern "C" void Tau_bcast_data(int data) {
   TAU_EVENT(TheBcastEvent(), data);
@@ -886,16 +941,25 @@ extern "C" void Tau_scan_data(int data) {
 extern "C" void Tau_reducescatter_data(int data) {
   TAU_EVENT(TheReduceScatterEvent(), data);
 }
-#else /* !TAU_MPI */
+#else /* !(TAU_MPI || TAU_SHMEM)*/
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
+  printf("Isnide the other trace_sendmsg: dest= %d\n", destination);
   TauTraceSendMsg(type, destination, length);
+}
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_trace_sendmsg_remote(int type, int destination, int length, int remoteid) {
+  TauTraceSendMsgRemote(type, destination, length, remoteid);
 }
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_recvmsg(int type, int source, int length) {
   TauTraceRecvMsg(type, source, length);
 }
-#endif /* TAU_MPI */
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_trace_recvmsg_remote(int type, int source, int length, int remoteid) {
+  TauTraceRecvMsgRemote(type, source, length, remoteid);
+}
+#endif /* TAU_MPI || TAU_SHMEM*/
 
 ///////////////////////////////////////////////////////////////////////////
 // User Defined Events 
@@ -1537,6 +1601,12 @@ extern "C" void Tau_set_user_clock_thread(double value, int tid) {
 extern "C" long Tau_convert_ptr_to_long(void *ptr) {
   long long a = (long long) ptr;
   long ret = (long) a;
+  return ret;
+}
+
+extern "C" unsigned long Tau_convert_ptr_to_unsigned_long(void *ptr) {
+  unsigned long long a = (unsigned long long) ptr;
+  unsigned long ret = (unsigned long) a;
   return ret;
 }
 

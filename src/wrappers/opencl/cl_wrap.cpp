@@ -1,6 +1,8 @@
 #include <dlfcn.h>
 #include <stdio.h>
 #include <CL/cl.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include <Profile/Profiler.h>
 #include <Profile/TauGpuAdapterOpenCL.h>
@@ -318,7 +320,7 @@ cl_command_queue clCreateCommandQueue(cl_context a1, cl_device_id a2, cl_command
   retval  =  (*clCreateCommandQueue_h)( a1,  a2,  a3,  a4);
   TAU_PROFILE_STOP(t);
 
-	static double sync_set = Tau_opencl_sync_clocks(retval, a1);
+	//static double sync_set = Tau_opencl_sync_clocks(retval, a1);
 
   }
   return retval;
@@ -1546,19 +1548,21 @@ cl_int clEnqueueReadBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4
 	int err;
 	char* name = "ReadBuffer";
 
-	callingSite = TauInternal_CurrentProfiler(RtsLayer::myNode())->CallPathFunction;
-	
-	callback_data *kernel_data = new callback_data(name,
+	callingSite = TauInternal_CurrentProfiler(RtsLayer::getTid())->CallPathFunction;
+	//callingSite = NULL;
+
+	openCLGpuId *gId = Tau_opencl_retrive_gpu(a1);
+	callback_data *kernel_data = new callback_data(name, gId,
 	callingSite, a9, MemcpyDtoH);
 	
 	Tau_opencl_enqueue_event(kernel_data);
 	Tau_opencl_enter_memcpy_event("cl_int clEnqueueReadBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *) C",
-	0, a5, MemcpyDtoH);
+	gId, a5, MemcpyDtoH);
 	
   retval  =  (*clEnqueueReadBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
 	
 	Tau_opencl_exit_memcpy_event("cl_int clEnqueueReadBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *) C",
-	0, MemcpyDtoH);
+	gId, MemcpyDtoH);
 #endif 
 
 	Tau_opencl_register_sync_event();
@@ -1587,16 +1591,16 @@ cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-#ifdef TAU_ENABLE_CL_CALLBACK
-	callback_data *mem_data = (callback_data*) malloc(memcpy_data_size);
-	strcpy(mem_data->name, "WriteBuffer");
-	mem_data->memcpy_type = MemcpyHtoD;
 	if (a9 == NULL)
 	{
 		//printf("cl_event is null.\n");
 		cl_event* new_event = (cl_event*) malloc(sizeof(cl_event));
 		a9 = &(*new_event);
 	}
+#ifdef TAU_ENABLE_CL_CALLBACK
+	callback_data *mem_data = (callback_data*) malloc(memcpy_data_size);
+	strcpy(mem_data->name, "WriteBuffer");
+	mem_data->memcpy_type = MemcpyHtoD;
 	
 	Tau_opencl_enter_memcpy_event("cl_int clEnqueueWriteBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *) C", 1, a5, MemcpyHtoD); 
   retval  =  (*clEnqueueWriteBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
@@ -1608,20 +1612,24 @@ cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a
 	FunctionInfo *callingSite;
 	int err;
 	char* name = "WriteBuffer";
+	//printf("name: %s.\n", name);
 
-	callingSite = TauInternal_CurrentProfiler(RtsLayer::myNode())->CallPathFunction;
+	callingSite = TauInternal_CurrentProfiler(RtsLayer::getTid())->CallPathFunction;
+	//callingSite = NULL;
 	
-	callback_data *kernel_data = new callback_data(name,
+	//printf("CL WRAP: command queue is: %d.\n", a1);
+	openCLGpuId *gId = Tau_opencl_retrive_gpu(a1);
+	callback_data *kernel_data = new callback_data(name, gId,
 	callingSite, a9, MemcpyHtoD);
 	
 	Tau_opencl_enqueue_event(kernel_data);
 	
 	check_memory_init();
 	TAU_CONTEXT_EVENT(MemoryCopyEventHtoD, a5);
-	Tau_opencl_enter_memcpy_event("cl_int clEnqueueWriteBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *) C", 1, a5, MemcpyHtoD); 
+	Tau_opencl_enter_memcpy_event("cl_int clEnqueueWriteBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *) C", gId, a5, MemcpyHtoD); 
   retval  =  (*clEnqueueWriteBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
 
-	Tau_opencl_exit_memcpy_event("cl_int clEnqueueWriteBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *) C", 1, MemcpyHtoD); 
+	Tau_opencl_exit_memcpy_event("cl_int clEnqueueWriteBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *) C", gId, MemcpyHtoD); 
 #endif
 	Tau_opencl_register_sync_event();
   }
@@ -1695,11 +1703,13 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
 #else
 	FunctionInfo *callingSite;
 	int err;
-	char* name = "WriteBuffer";
+	char* name = "CopyBuffer";
 
-	callingSite = TauInternal_CurrentProfiler(RtsLayer::myNode())->CallPathFunction;
+	callingSite = TauInternal_CurrentProfiler(RtsLayer::getTid())->CallPathFunction;
+	//callingSite = NULL;
 	
-	callback_data *kernel_data = new callback_data(name,
+	openCLGpuId *gId = Tau_opencl_retrive_gpu(a1);
+	callback_data *kernel_data = new callback_data(name, gId,
 	callingSite, a9, MemcpyDtoD);
 	
 	Tau_opencl_enqueue_event(kernel_data);
@@ -1707,11 +1717,11 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
 	check_memory_init();
 	TAU_CONTEXT_EVENT(MemoryCopyEventDtoD, a6);
 
-	Tau_opencl_enter_memcpy_event("cl_int clEnqueueCopyBuffer(cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *) C", 2, a6, MemcpyDtoD); 
+	Tau_opencl_enter_memcpy_event("cl_int clEnqueueCopyBuffer(cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *) C", gId, a6, MemcpyDtoD); 
   
 	retval  =  (*clEnqueueCopyBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
 	
-	Tau_opencl_exit_memcpy_event("cl_int clEnqueueCopyBuffer(cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *) C", 2, MemcpyDtoD);
+	Tau_opencl_exit_memcpy_event("cl_int clEnqueueCopyBuffer(cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *) C", gId, MemcpyDtoD);
 	
 	Tau_opencl_register_sync_event();
 #endif
@@ -1996,13 +2006,13 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
 	int err;
 	err = clGetKernelInfo(a2, CL_KERNEL_FUNCTION_NAME,
 	sizeof(char[TAU_MAX_FUNCTIONNAME]), kernel_data->name, NULL);
-	kernel_data->callingSite = TauInternal_CurrentProfiler(RtsLayer::myNode())->CallPathFunction;
+	kernel_data->callingSite = TauInternal_CurrentProfiler(RtsLayer::getTid())->CallPathFunction;
 	if (err != CL_SUCCESS)
 	{
 		printf("Cannot get Kernel name.\n");
 	  exit(1);	
 	}
-	//printf("name returned from KernelInfo: %s.\n", name_returned);
+	//printf("name returned from KernelInfo: %s.\n", kernel_data->name);
 	//kernel_data.name = "NDRangeKernel";
 	//printf("name: %s.\n", kernel_data->name);
 #endif
@@ -2024,10 +2034,14 @@ cl_int clEnqueueNDRangeKernel(cl_command_queue a1, cl_kernel a2, cl_uint a3, con
 	
 	err = clGetKernelInfo(a2, CL_KERNEL_FUNCTION_NAME,
 		sizeof(char[TAU_MAX_FUNCTIONNAME]), name, NULL);
-	
+	//printf("kernel name: %s.\n", name);	
 	callingSite = TauInternal_CurrentProfiler(RtsLayer::getTid())->CallPathFunction;
-	
-	callback_data *kernel_data = new callback_data(name,
+	//callingSite = NULL;
+
+	//printf("CL WRAP: command queue is: %d.\n", a1);
+	openCLGpuId *gId = Tau_opencl_retrive_gpu(a1);
+
+	callback_data *kernel_data = new callback_data(name, gId,
 	callingSite, a9);
 	
 	Tau_opencl_enqueue_event(kernel_data);

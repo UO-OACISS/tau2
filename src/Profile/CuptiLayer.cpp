@@ -221,58 +221,68 @@ void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev)
    Tau_CuptiLayer_num_events * sizeof ( uint64_t ); */
 void Tau_CuptiLayer_read_counters(uint64_t* counterDataBuffer)
 {	
-	CUresult cuErr;
-	CUcontext cuCtx;
-	cuErr = cuCtxGetCurrent( &cuCtx );
-	// check if there is a current context
-	//printf("cupti layer finalized? %d context current? %d.\n",
-		//Tau_CuptiLayer_finalized, cuErr == CUDA_SUCCESS);
-	if (Tau_CuptiLayer_finalized && cuErr == CUDA_SUCCESS)
+	if (Tau_CuptiLayer_is_initialized())
 	{
-		for (int i=0; i<Tau_CuptiLayer_get_num_events(); i++)
+		CUresult cuErr;
+		CUcontext cuCtx;
+		cuErr = cuCtxGetCurrent( &cuCtx );
+		// check if there is a current context
+		//printf("cupti layer finalized? %d context current? %d.\n",
+			//Tau_CuptiLayer_finalized, cuErr == CUDA_SUCCESS);
+		if (Tau_CuptiLayer_finalized && cuErr == CUDA_SUCCESS)
 		{
-			counterDataBuffer[i] = lastDataBuffer[i];
+			for (int i=0; i<Tau_CuptiLayer_get_num_events(); i++)
+			{
+				counterDataBuffer[i] = lastDataBuffer[i];
+			}
 		}
+		else
+		{
+			CUptiResult cuptiErr = CUPTI_SUCCESS;
+			size_t events_read, bufferSizeBytes, arraySizeBytes, i;
+			CUpti_EventID *eventIDArray;
+			int j;
+
+			bufferSizeBytes = Tau_CuptiLayer_num_events * sizeof ( uint64_t );
+			//counterDataBuffer = ( uint64_t * ) malloc( bufferSizeBytes );
+
+			arraySizeBytes = Tau_CuptiLayer_num_events * sizeof ( CUpti_EventID );
+			eventIDArray = ( CUpti_EventID * ) malloc( arraySizeBytes );
+
+			/* read counter data for the specified event from the CuPTI eventGroup */
+			cuptiErr = cuptiEventGroupReadAllEvents( eventGroup,
+													 CUPTI_EVENT_READ_FLAG_NONE,
+													 &bufferSizeBytes,
+													 counterDataBuffer, &arraySizeBytes,
+													 eventIDArray, &events_read );
+			CHECK_CUPTI_ERROR( cuptiErr, "cuptiEventGroupReadAllEvents" );
+
+			//if ( events_read != ( size_t ) Tau_CuptiLayer_num_events )
+				//TODO error return -1;
+
+			//accumulate counter values.
+			//printf("cupti last values %llu.\n", events_read,
+			//lastDataBuffer[0]);
+
+			for (int i=0; i<Tau_CuptiLayer_get_num_events(); i++)
+			{
+				counterDataBuffer[i] += lastDataBuffer[i];
+				lastDataBuffer[i] = counterDataBuffer[i];
+			}
+
+			//printf("cupti read %d events, values %llu.\n", events_read,
+			//counterDataBuffer[0]);
+
+			//free( counterDataBuffer );
+			free( eventIDArray );
+	  }
 	}
 	else
 	{
-		CUptiResult cuptiErr = CUPTI_SUCCESS;
-		size_t events_read, bufferSizeBytes, arraySizeBytes, i;
-		CUpti_EventID *eventIDArray;
-		int j;
-
-		bufferSizeBytes = Tau_CuptiLayer_num_events * sizeof ( uint64_t );
-		//counterDataBuffer = ( uint64_t * ) malloc( bufferSizeBytes );
-
-		arraySizeBytes = Tau_CuptiLayer_num_events * sizeof ( CUpti_EventID );
-		eventIDArray = ( CUpti_EventID * ) malloc( arraySizeBytes );
-
-		/* read counter data for the specified event from the CuPTI eventGroup */
-		cuptiErr = cuptiEventGroupReadAllEvents( eventGroup,
-												 CUPTI_EVENT_READ_FLAG_NONE,
-												 &bufferSizeBytes,
-												 counterDataBuffer, &arraySizeBytes,
-												 eventIDArray, &events_read );
-		CHECK_CUPTI_ERROR( cuptiErr, "cuptiEventGroupReadAllEvents" );
-
-		//if ( events_read != ( size_t ) Tau_CuptiLayer_num_events )
-			//TODO error return -1;
-
-		//accumulate counter values.
-		//printf("cupti last values %llu.\n", events_read,
-		//lastDataBuffer[0]);
-
 		for (int i=0; i<Tau_CuptiLayer_get_num_events(); i++)
 		{
-			counterDataBuffer[i] += lastDataBuffer[i];
-			lastDataBuffer[i] = counterDataBuffer[i];
+			counterDataBuffer[i] = 0;
 		}
-
-		//printf("cupti read %d events, values %llu.\n", events_read,
-		//counterDataBuffer[0]);
-
-		//free( counterDataBuffer );
-		free( eventIDArray );
 	}
 }
 void retrieve_available_counters()

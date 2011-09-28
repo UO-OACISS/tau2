@@ -48,7 +48,7 @@ int Tau_mergeProfiles();
 void TAUDECL Tau_set_usesMPI(int value);
 int TAUDECL tau_totalnodes(int set_or_get, int value);
 char * Tau_printRanks(void * comm_ptr);
-int Tau_signal_initialization();
+extern int Tau_signal_initialization();
 
 
 /* This file uses the MPI Profiling Interface with TAU instrumentation.
@@ -1639,8 +1639,11 @@ int  MPI_Finalize(  )
     Tau_collate_writeProfile();
 #else
   */
-  if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
-    Tau_mergeProfiles();
+
+  /* Shutdown EBS after Finalize to allow Profiles to be written
+     out correctly. */
+  if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_finalizeNode();
   }
 
 #ifdef TAU_MONITORING
@@ -1687,8 +1690,9 @@ char *** argv;
   
   returnVal = PMPI_Init( argc, argv );
   Tau_sampling_init_if_necessary();
-
+#ifndef TAU_DISABLE_SIGUSR
   Tau_signal_initialization(); 
+#endif
 #ifdef TAU_MONITORING
   Tau_mon_connect();
 #endif /* TAU_MONITORING */
@@ -1733,8 +1737,9 @@ int *provided;
   TAU_PROFILE_START(tautimer);
  
   returnVal = PMPI_Init_thread( argc, argv, required, provided );
-
+#ifndef TAU_DISABLE_SIGUSR
   Tau_signal_initialization(); 
+#endif
   Tau_sampling_init_if_necessary();
 
   TAU_PROFILE_STOP(tautimer);
