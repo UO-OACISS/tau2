@@ -129,7 +129,7 @@ private ParaProfManagerWindow paraProfManager = null;
       gbc.weighty = 0;
       addCompItem(times, gbc, 2, 2, 1, 1);
 
-      JButton divide = new JButton("/");
+      JButton divide = new JButton("/ "); //Space is so that it is rendered correctly for fedora
       divide.addActionListener(this);
       gbc.fill = GridBagConstraints.NONE;
       gbc.anchor = GridBagConstraints.CENTER;
@@ -331,7 +331,7 @@ private ArrayList<Object> collectTrials(DefaultMutableTreeNode sel) {
    }
    public void actionPerformed(ActionEvent evt) {
       try {
-         String arg = evt.getActionCommand();
+         String arg = evt.getActionCommand().trim();
          if (arg.equals("Apply")) {
             applyOperation();
          }else if(arg.equals("Clear")){

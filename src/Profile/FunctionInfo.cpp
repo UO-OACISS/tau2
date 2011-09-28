@@ -154,12 +154,15 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 
   //Need to keep track of all the groups this function is a member of.
   AllGroups = strip_tau_group(ProfileGroupName);
+
+  RtsLayer::LockDB();
+  // Use LockDB to avoid a possible race condition.
+
   GroupName = strdup(RtsLayer::PrimaryGroup(AllGroups).c_str());
 
   // Since FunctionInfo constructor is called once for each function (static)
   // we know that it couldn't be already on the call stack.
-  RtsLayer::LockDB();
-  // Use LockDB to avoid a possible race condition.
+
   
   //Add function name to the name list.
   TauProfiler_theFunctionList(NULL, NULL, true, (const char *)GetName());
@@ -186,6 +189,23 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   // Important in the presence of concurrent threads.
   TheFunctionDB().push_back(this);
   FunctionId = RtsLayer::GenerateUniqueId();
+
+  // Initialize EBS structures. These will be created as and when necessary.
+  //  pcHistogram = NULL;
+  // *CWL* - this is an attempt to minimize the scenario where a sample
+  //         requires the use of an actual malloc
+  //         while in the middle of some other malloc call.
+#ifndef TAU_WINDOWS
+  for (int i=0; i<TAU_MAX_THREADS; i++) {
+    pcHistogram[i] = NULL;
+    if (TauEnv_get_ebs_enabled()) {
+      // create structure only if EBS is required.
+      pcHistogram[i] = new map<caddr_t, unsigned int, std::less<caddr_t>, SS_ALLOCATOR< std::pair<caddr_t, unsigned int> > >();
+    }
+  }
+  ebsIntermediate = NULL;
+  parentTauContext = NULL;
+#endif // TAU_WINDOWS
 
 #ifdef TAU_VAMPIRTRACE
   string tau_vt_name(string(Name)+" "+string(Type));
@@ -483,6 +503,33 @@ string *FunctionInfo::GetFullName() {
   return FullName;
 }
 
+/* EBS Sampling Profiles */
+
+#ifndef TAU_WINDOWS
+void FunctionInfo::addPcSample(caddr_t pc, int tid) {
+  if (!TauEnv_get_ebs_enabled()) {
+    // This should be an error! We'll ignore it for now!
+    return;
+  }
+  // *CWL* - pcHistogram should never be NULL but ...
+  if (pcHistogram[tid] == NULL) {
+    pcHistogram[tid] = new map<caddr_t, unsigned int, 
+      std::less<caddr_t>, SS_ALLOCATOR< std::pair<caddr_t, unsigned int> > >();
+  }
+  map<caddr_t, unsigned int,
+    std::less<caddr_t>, SS_ALLOCATOR< std::pair<caddr_t, unsigned int> > >::iterator it;
+  it = pcHistogram[tid]->find(pc);
+  if (it == pcHistogram[tid]->end()) {
+    /* *CWL* - Too verbose, use for debug only.
+      TAU_VERBOSE("FunctionInfo::addPcSample [tid=%d] inserting sample [%p]\n", 
+		tid, (unsigned long)pc);
+    */
+    pcHistogram[tid]->insert(std::pair<caddr_t, unsigned int>(pc,1));
+  } else {
+    (*pcHistogram[tid])[pc] = it->second++;
+  }
+}
+#endif // TAU_WINDOWS
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
  * $Revision: 1.84 $   $Date: 2010/04/27 23:13:55 $

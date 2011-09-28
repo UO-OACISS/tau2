@@ -79,6 +79,8 @@ extern "C" {
 
   void TAUDECL TauTraceSendMsg(int type, int destination, int length);
   void TAUDECL TauTraceRecvMsg(int type, int source, int length);
+  void TAUDECL TauTraceSendMsgRemote(int type, int destination, int length, int remoteid);
+  void TAUDECL TauTraceRecvMsgRemote(int type, int source, int length, int remoteid);
 #if TAU_GPU
   void TAUDECL TauTraceOneSidedMsg(bool type, gpuId *gpu, int length, int thread);
 #endif // TAU_GPU

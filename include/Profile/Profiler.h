@@ -140,6 +140,10 @@ int tau_track_pthread_barrier_wait(pthread_barrier_t *barrier);
 #include <Profile/TauMapping.h>
 #include <Profile/TauSampling.h>
 
+#ifndef TAU_WINDOWS
+#include <sys/types.h>
+#endif
+
 #if defined(TAUKTAU)
 class KtauProfiler;
 #ifdef TAUKTAU_MERGE
@@ -195,7 +199,6 @@ public:
   
   double StartTime[TAU_MAX_COUNTERS];
 
-
   /* Compensate for instrumentation overhead based on total number of 
      child calls executed under the given timer */
   long NumChildren;
@@ -224,7 +227,7 @@ public:
   /* For EBS sampling */
   int needToRecordStop;
   void *address[TAU_SAMP_NUM_ADDRESSES];
-
+  
 };
 }
 #ifdef TAU_LIBRARY_SOURCE

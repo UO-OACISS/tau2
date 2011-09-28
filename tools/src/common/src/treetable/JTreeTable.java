@@ -215,6 +215,9 @@ public class JTreeTable extends JTable implements MouseListener {
             // If not shaded, match the table's background
             c.setBackground(getBackground());
         }
+        //Keep it black to that it is visable
+        c.setForeground(Color.BLACK);
+
         return c;
     }
 

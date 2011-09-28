@@ -16,7 +16,7 @@
 #ifndef _TAU_H_
 #define _TAU_H_
 
-#define TAU_VERSION "2.20-git"
+#define TAU_VERSION "2.20.2-git"
 #define TAU_MAKEFILE "default"
 
 
@@ -129,6 +129,8 @@ extern void Tau_pure_stop_task(const char *name, int tid);
 
 #define TAU_TRACE_SENDMSG(type, destination, length) 
 #define TAU_TRACE_RECVMSG(type, source, length)
+#define TAU_TRACE_RECVMSG_REMOTE(type, source, length, remoteid)
+#define TAU_TRACE_SENDMSG_REMOTE(type, destination, length, remoteid)
 
 #define TAU_MAPPING(stmt, group) stmt
 #define TAU_MAPPING_OBJECT(FuncInfoVar) 

@@ -49,10 +49,14 @@ extern "C" {
   int  TAUDECL TauEnv_get_track_signals();
   int  TAUDECL TauEnv_get_extras();
   int  TAUDECL TauEnv_get_ebs_enabled();
+  int  TAUDECL TauEnv_get_ebs_keep_unresolved_addr();
+  void  TAUDECL TauEnv_force_set_ebs_period(int period);
   int  TAUDECL TauEnv_get_ebs_period();
   int  TAUDECL TauEnv_get_ebs_inclusive();
   int  TAUDECL TauEnv_get_stat_precompute();
   int  TAUDECL TauEnv_get_child_forkdirs();
+  double TAUDECL TauEnv_get_max_records(); 
+  int TAUDECL TauEnv_get_disable_instrumentation(); 
 
   const char* TAUDECL TauEnv_get_ebs_source();
   double      TAUDECL TauEnv_get_throttle_numcalls();
@@ -67,6 +71,7 @@ extern "C" {
 #define TAU_FORMAT_SNAPSHOT 2
 #define TAU_FORMAT_MERGED 3
 #define TAU_FORMAT_NONE 4
+#define TAU_MAX_RECORDS 64*1024
   int  TAUDECL TauEnv_get_profile_format();
   
 #ifdef __cplusplus

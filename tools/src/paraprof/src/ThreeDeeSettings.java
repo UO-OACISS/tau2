@@ -1,10 +1,12 @@
 package edu.uoregon.tau.paraprof;
 
+import edu.uoregon.tau.paraprof.enums.UserEventValueType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.enums.VisType;
 import edu.uoregon.tau.perfdmf.Function;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Thread;
+import edu.uoregon.tau.perfdmf.UserEvent;
 import edu.uoregon.tau.vis.Vec;
 import edu.uoregon.tau.vis.Axes.Orientation;
 
@@ -38,6 +40,10 @@ public class ThreeDeeSettings implements Cloneable {
     private Metric[] scatterMetrics = { null, null, null, null };
     private ValueType[] scatterValueTypes = { ValueType.EXCLUSIVE, ValueType.EXCLUSIVE, ValueType.EXCLUSIVE, ValueType.EXCLUSIVE };
     private Function[] scatterFunctions = new Function[4];
+    
+    
+    //TOPOLOGY SETTINGS
+    
     //private int[] topoRanges = new int[2];
     private int minTopoRange=0;
     private int maxTopoRange=100;
@@ -66,7 +72,100 @@ public class ThreeDeeSettings implements Cloneable {
     	return customTopoAxes;
     }
     
-    
+    private Metric[] topoMetric= new Metric[4];
+    private ValueType[] topoValueType = {ValueType.EXCLUSIVE,ValueType.EXCLUSIVE,ValueType.EXCLUSIVE,ValueType.EXCLUSIVE};
+    private Function[] topoFunction = new Function[4];
+    private String topoCart = null;
+
+    public Metric getTopoMetric(int i) {
+		return topoMetric[i];
+	}
+
+	public void setTopoMetric(Metric topoMetric,int i) {
+		this.topoMetric[i] = topoMetric;
+	}
+
+	public ValueType getTopoValueType(int i) {
+		return topoValueType[i];
+	}
+
+	public void setTopoValueType(ValueType topoValueType, int i) {
+		this.topoValueType[i] = topoValueType;
+	}
+
+	public String getTopoCart() {
+		return topoCart;
+	}
+
+	public void setTopoCart(String topoCart) {
+		this.topoCart = topoCart;
+	}
+	
+	private String topoDefFile=null;
+
+	public String getTopoDefFile() {
+		return topoDefFile;
+	}
+	public void setTopoDefFile(String topoDefFile) {
+		this.topoDefFile = topoDefFile;
+	}
+	
+	private boolean customTopo=false;
+	
+
+	public boolean isCustomTopo() {
+		return customTopo;
+	}
+	public void setCustomTopo(boolean customTopo) {
+		this.customTopo = customTopo;
+	}
+
+//  public int[] getTopoRanges(){
+//  return topoRanges;
+//}
+//public void setTopoRanges(int value, int index) {
+//  this.topoRanges[index] = value;
+//}
+
+private UserEvent[] topoUserEvent=new UserEvent[4];
+public UserEvent getTopoAtomic(int i){
+	return topoUserEvent[i];
+}
+public void setTopoAtomic(UserEvent ue, int i){
+	topoUserEvent[i]=ue;
+}
+
+private UserEventValueType[] topoUserEventValueType = {UserEventValueType.MAX,UserEventValueType.MAX,UserEventValueType.MAX,UserEventValueType.MAX};
+public UserEventValueType getTopoUserEventValueType(int i){
+	return topoUserEventValueType[i];
+}
+public void setTopoUserEventValueType(UserEventValueType uevt, int i){
+	topoUserEventValueType[i] = uevt;
+}
+
+public Function getTopoFunction(int i){
+	return topoFunction[i];
+}
+public void setTopoFunction(Function f, int i){
+	topoFunction[i]=f;
+}
+public int getMinTopoRange() {
+	return minTopoRange;
+}
+
+public void setMinTopoRange(int minTopoRange) {
+	this.minTopoRange = minTopoRange;
+}
+
+public int getMaxTopoRange() {
+	return maxTopoRange;
+}
+
+public void setMaxTopoRange(int maxTopoRange) {
+	this.maxTopoRange = maxTopoRange;
+}
+
+	
 //    
 //    private int minTopoValue=0;
 //    private int maxTopoValue=0;
@@ -107,53 +206,8 @@ public class ThreeDeeSettings implements Cloneable {
 //		this.maxTopoValue = maxTopoValue;
 //	}
 
-	private Metric topoMetric=null;
-    private ValueType topoValueType = ValueType.EXCLUSIVE;
-    private Function topoFunction = null;
-    private String topoCart = null;
-
-    public Metric getTopoMetric() {
-		return topoMetric;
-	}
-
-	public void setTopoMetric(Metric topoMetric) {
-		this.topoMetric = topoMetric;
-	}
-
-	public ValueType getTopoValueType() {
-		return topoValueType;
-	}
-
-	public void setTopoValueType(ValueType topoValueType) {
-		this.topoValueType = topoValueType;
-	}
-
-	public String getTopoCart() {
-		return topoCart;
-	}
-
-	public void setTopoCart(String topoCart) {
-		this.topoCart = topoCart;
-	}
 	
-	private String topoDefFile=null;
-
-	public String getTopoDefFile() {
-		return topoDefFile;
-	}
-	public void setTopoDefFile(String topoDefFile) {
-		this.topoDefFile = topoDefFile;
-	}
-	
-	private boolean customTopo=false;
-	
-
-	public boolean isCustomTopo() {
-		return customTopo;
-	}
-	public void setCustomTopo(boolean customTopo) {
-		this.customTopo = customTopo;
-	}
+//END OF TOPO
 
 	private Thread selectedThread;
 
@@ -280,6 +334,8 @@ public class ThreeDeeSettings implements Cloneable {
 
         return newSettings;
     }
+    
+    
 
     //    public Plot getPlot() {
     //        return plot;
@@ -310,35 +366,8 @@ public class ThreeDeeSettings implements Cloneable {
         this.axesEnabled = axesEnabled;
     }
 
-//    public int[] getTopoRanges(){
-//        return topoRanges;
-//    }
-//    public void setTopoRanges(int value, int index) {
-//        this.topoRanges[index] = value;
-//    }
-    
-    public Function getTopoFunction(){
-    	return topoFunction;
-    }
-    public int getMinTopoRange() {
-		return minTopoRange;
-	}
 
-	public void setMinTopoRange(int minTopoRange) {
-		this.minTopoRange = minTopoRange;
-	}
 
-	public int getMaxTopoRange() {
-		return maxTopoRange;
-	}
-
-	public void setMaxTopoRange(int maxTopoRange) {
-		this.maxTopoRange = maxTopoRange;
-	}
-
-	public void setTopoFunction(Function f){
-    	topoFunction=f;
-    }
     
     public Function[] getScatterFunctions() {
         return scatterFunctions;

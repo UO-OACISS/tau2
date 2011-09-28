@@ -55,7 +55,14 @@ Version 2.20 changes (from 2.20):
 42. Sped up paraprof/perfexplorer's loading of trials and computing derived metrics. 
 43. Perfexplorer bugs fixed with custom charts. New charting option in custom charts for a single event in multiple experiments. 
 44. Collating performance data bug fixed. 
-
+45. Cray CCE -optCompInst bug fixed.
+46. Added support for SHMEM communication tracking (profiling + tracing).
+47. Added API in TAU to track one sided communication from a remote node.
+48. Enhancements and bug fixes in tau_wrap.
+49. EBS: Added profiling support for event based sampling.
+50. Added support for system wide TAU configuration based on <taudir>/tau_system_defaults/tau.conf file. Support job id tracking in file name (PROFILEDIR). 
+51. Cleaned up GPGPU support with CUPTI.
+52. Updated Paraprof 3D topology display with interval event and atomic event selection. 
 
 
 -------------------------------

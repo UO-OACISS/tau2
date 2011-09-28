@@ -22,6 +22,11 @@ using namespace std;
 //CPU timestamp at the first cuEvent.
 double sync_offset = 0;
 
+static cudaEvent_t lastEvent;
+static double lastEventTime = 0;
+
+//call to cudaEventQuery that does not register a sync event.
+extern cudaError_t cudaEventQuery_nosync(cudaEvent_t a);
 
 cudaRuntimeGpuId *cudaRuntimeGpuId::getCopy() { 
 		//printf("in runtime, getCopy.\n");
@@ -44,6 +49,11 @@ bool cudaRuntimeGpuId::equals(const gpuId *o) const
 	//cout << "in equals." << endl;
 	cudaRuntimeGpuId *other = (cudaRuntimeGpuId *) o;
 	return (this->device == other->device && this->stream == other->stream);
+}
+
+double cudaRuntimeGpuId::syncOffset()
+{
+	return sync_offset;
 }
 
 char* cudaRuntimeGpuId::printId() 
@@ -83,6 +93,11 @@ bool cudaDriverGpuId::equals(const gpuId *o) const
 	cudaDriverGpuId *other = (cudaDriverGpuId *) o;
 	return (this->device == other->device && this->stream == other->stream &&
 					this->context == other->context); 
+}
+
+double cudaDriverGpuId::syncOffset()
+{
+  return sync_offset;
 }
 
 char* cudaDriverGpuId::printId() 
@@ -185,15 +200,13 @@ class KernelEvent : public eventId
 	}
 };
 
-static cudaEvent_t lastEvent;
-static double lastEventTime = 0;
-
 static queue<KernelEvent> KernelBuffer;
 
 
 
 void Tau_cuda_init()
 {
+	//printf("in Tau_cuda_init.\n");
 	static bool init = false;
 	if (!init)
 	{
@@ -233,7 +246,7 @@ void Tau_cuda_init()
 		//printf("sync offset: %lf.\n", sync_offset);
 
 		lastEvent = initEvent;
-		lastEventTime = sync_offset / 1e3;  
+		//lastEventTime = sync_offset / 1e3;  
 		//printf("last event time: %lf.\n", lastEventTime);
 		init = true;
 		Tau_gpu_init();
@@ -273,23 +286,30 @@ double stop)
 void Tau_cuda_register_memcpy_event(const char *name, cudaGpuId* id, double start, double stop, int
 transferSize, int MemcpyType)
 {
-	FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::myNode())->ThisFunction;
+	FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::getTid())->ThisFunction;
 	eventId c = Tau_gpu_create_gpu_event(name, id, p);
-	Tau_gpu_register_memcpy_event(c, start/1e3 + sync_offset, stop/1e3 + sync_offset, transferSize, MemcpyType);
+	Tau_gpu_register_memcpy_event(c, start/1e3, stop/1e3, transferSize, MemcpyType);
 }
 
 
 KernelEvent *curKernel;
 
-void Tau_cuda_enqueue_kernel_enter_event(const char *name, cudaGpuId* id,
-FunctionInfo* callingSite)
+void Tau_cuda_enqueue_kernel_enter_event(const char *name, cudaGpuId* id)
 {
+	FunctionInfo* callingSite;
+	if (TauInternal_CurrentProfiler(RtsLayer::getTid()) == NULL)
+	{
+		callingSite = NULL;
+	}
+	else
+	{
+		callingSite = TauInternal_CurrentProfiler(RtsLayer::getTid())->CallPathFunction;
+	}
 	//printf("recording start for %s.\n", name);
 
 	curKernel = new KernelEvent(name, id, callingSite);
 	
 	const char *dem_name = 0;
-
 #if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
 	//printf("demangling name....\n");
 	dem_name = cplus_demangle(name, DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE |
@@ -297,7 +317,6 @@ FunctionInfo* callingSite)
 #else
 	dem_name = name;
 #endif /* HAVE_GPU_DEMANGLE */
-
 
 	//printf("final kernel name is: %s.\n", dem_name);
 
@@ -313,7 +332,7 @@ FunctionInfo* callingSite)
 void Tau_cuda_enqueue_kernel_exit_event()
 {
 
-	//printf("recording stop for %s.\n", name);
+	//printf("recording stop.");
 
 	curKernel->enqueue_stop_event();
 	KernelBuffer.push(*curKernel);
@@ -329,19 +348,20 @@ void Tau_cuda_register_sync_event()
 	if (KernelBuffer.size() > 0 && KernelBuffer.front().stopEvent != NULL)
 	{
 		//printf("buffer front stop: %d.\n", KernelBuffer.front().stopEvent == NULL);
-		cudaError err = cudaEventQuery(KernelBuffer.front().stopEvent);
+		cudaError err = cudaEventQuery_nosync(KernelBuffer.front().stopEvent);
 		//printf("buffer front is: %d\n", err);
 	}
 	float start_sec, stop_sec;
 
-	while (!KernelBuffer.empty() && cudaEventQuery(KernelBuffer.front().stopEvent) == cudaSuccess)
+	while (!KernelBuffer.empty() && cudaEventQuery_nosync(KernelBuffer.front().stopEvent) == cudaSuccess)
 	{
 		KernelEvent kernel = KernelBuffer.front();
 		//printf("kernel buffer size = %d.\n", KernelBuffer.size());
 
 		cudaError_t err;
 		err = cudaEventElapsedTime(&start_sec, lastEvent, kernel.startEvent);
-		//printf("kernel event [start] = %lf.\n", (((double) start_sec) + lastEventTime)*1e3);
+		//printf("kernel event [start] = %lf.\n", (((double) start_sec))*1e3);
+		//printf("w last event [start] = %lf.\n", (((double) start_sec) + lastEventTime)*1e3);
 
 		if (err != cudaSuccess)
 		{
@@ -349,27 +369,34 @@ void Tau_cuda_register_sync_event()
 		}
 
 		err = cudaEventElapsedTime(&stop_sec, lastEvent, kernel.stopEvent);
-		//printf("kernel event [stop] = %lf.\n", (((double) stop_sec) + lastEventTime)*1e3 );
+		//printf("kernel event [name]  = %s.\n", kernel.name);
+		//printf("kernel event [stop]  = %lf.\n", (((double) stop_sec))*1e3 );
+		//printf("w last event [stop]  = %lf.\n", (((double) stop_sec) + lastEventTime)*1e3 );
 
 		if (err != cudaSuccess)
 		{
 			printf("Error calculating kernel event stop, error #: %d.\n", err);
 		}
+		//printf("kernel event [sync]  = %lf.\n", kernel.device->syncOffset());
 
 		//Create cudaGpuId for stream.
 		//cudaGpuId *id = new cudaGpuId(kernel.id.getDevice(), kernel.id.getContext(), kernel.id.getStream());
 		//cout << "in sync event, stream id is: " << id->printId() << endl;
 		//printf("last event time: %f.\n", lastEventTime);
 		//printf("stop time: %f.\n", stop_sec);
+
+		//kernel.device->sync_offset = lastEventTime * 1e3;
+
+	  //printf("in tau_cuda_register_sync_event #1");
 		Tau_gpu_register_gpu_event(kernel, 
-															 (((double) start_sec) + lastEventTime)*1e3,
-															 (((double) stop_sec)  + lastEventTime)*1e3);
+															 ((double) start_sec + lastEventTime)*1e3,
+															 ((double) stop_sec + lastEventTime)*1e3);
+	  //printf("in tau_cuda_register_sync_event #2");
 		//Tau_cuda_register_gpu_event(kernel.name, kernel.id, 
 		//													 (((double) start_sec) + lastEventTime)*1e3,
 		//													 (((double) stop_sec)  + lastEventTime)*1e3);
 
 		//delete id;
-
 		lastEvent = kernel.stopEvent;
 		lastEventTime += (double) stop_sec;
 
