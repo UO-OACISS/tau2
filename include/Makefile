@@ -632,9 +632,9 @@ TAU_MPICHCXX_CNL_SHARED_LIB = -lmpichcxx
 #CRAYX1CC#TAU_CXXLIBS        	= -L/opt/ctl/CC/CC/lib -lC       #ENDIF#
 
 ## Set the gfortran options on BGP
-#BGP_GFORTRAN#TAU_CXXLIBS		= -lstdc++ #ENDIF#
-#BGP_GFORTRAN#TAU_GNULIBS		= -lstdc++ #ENDIF#
-#BGP_GFORTRAN#TAU_CXXLIBS_GNU_CNL	= -lstdc++ #ENDIF#
+#BGP_GFORTRAN#TAU_CXXLIBS		= -lstdc++ -lm #ENDIF#
+#BGP_GFORTRAN#TAU_GNULIBS		= -lstdc++ -lm #ENDIF#
+#BGP_GFORTRAN#TAU_CXXLIBS_GNU_CNL	= -lstdc++ -lm #ENDIF#
 
 ## Set the gfortran options on Zepto BGP
 #ZEPTO_GFORTRAN#TAU_CXXLIBS		= -lstdc++ #ENDIF#
