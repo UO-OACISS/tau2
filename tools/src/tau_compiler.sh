@@ -98,7 +98,8 @@ printUsage () {
     echo -e "  -optLinkReset=\"\"\t\tReset options to the linker to the given list"
     echo -e "  -optTauCC=\"<cc>\"\t\tSpecifies the C compiler used by TAU"
     echo -e "  -optTauUseCXXForC\t\tSpecifies the use of a C++ compiler for compiling C code"
-    echo -e "  -optOpariTool=\"<path/opari>\"\tSpecifies the location of the Opari tool"
+    echo -e "  -optOpariTool=\"<path/opari2>\"\tSpecifies the location of the Opari tool"
+    echo -e "  -optOpariConfigTool=\"<path/opari2_config>\"\tSpecifies the location of the Opari Config tool"
     echo -e "  -optOpariDir=\"<path>\"\t\tSpecifies the location of the Opari directory"
     echo -e "  -optOpariOpts=\"\"\t\tSpecifies optional arguments to the Opari tool"
     echo -e "  -optOpariReset=\"\"\t\tResets options passed to the Opari tool"
@@ -218,7 +219,7 @@ echoIfDebug "The compiler being read is $CMD \n"
 ####################################################################
 # Initialize optOpariOpts 
 ####################################################################
-optOpariOpts="-nosrc -table opari.tab.c"
+optOpariOpts=" --nosrc "
 
 ####################################################################
 #Parsing all the Tokens of the Command passed
@@ -529,6 +530,15 @@ for arg in "$@" ; do
 		    -optOpariDir*)
 			optOpariDir="${arg#"-optOpariDir="}"
 			echoIfDebug "\tOpari Dir used: $optOpariDir"
+			;;
+		    -optOpariConfigTool*)
+			optOpariConfigTool="${arg#"-optOpariConfigTool="}"
+			echoIfDebug "\tOpari Config Tool used: $optOpariConfigTool"
+			if [ "x$optOpariConfigTool" == "x" ] ; then
+			    opari=$FALSE
+			else
+			    opari=$TRUE
+			fi
 			;;
 		    -optOpariTool*)
 			optOpariTool="${arg#"-optOpariTool="}"
@@ -1043,10 +1053,17 @@ if [ $numFiles == 0 ]; then
     fi	
 
     if [ $opari == $TRUE ]; then
-	evalWithDebugMessage "/bin/rm -f opari.rc" "Removing opari.rc"
-	cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} opari.tab.c"
-	evalWithDebugMessage "$cmdCompileOpariTab" "Compiling opari.tab.c"
-	linkCmd="$linkCmd opari.tab.o"
+	NM=`${optOpariConfigTool} --nm`
+	AWK=`${optOpariConfigTool} --awk_cmd`
+	AWK_SCRIPT=`${optOpariConfigTool} --awk_script`
+	GREP=`${optOpariConfigTool} --egrep`
+	
+	evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
+
+	 ${NM} example_f.mod.o | ${GREP} -i POMP2_Init_regions | ${AWK} -f ${AWK_SCRIPT} > pompregions.c
+	cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
+	evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
+	linkCmd="$linkCmd pompregions.o"
     fi
 
     echoIfDebug "trackIO = $trackIO, wrappers = $optWrappersDir/io_wrapper/link_options.tau "
@@ -1078,7 +1095,7 @@ if [ $numFiles == 0 ]; then
     fi
     gotoNextStep=$FALSE
     if [ $opari == $TRUE -a $needToCleanPdbInstFiles == $TRUE ]; then
-	evalWithDebugMessage "/bin/rm -f opari.tab.c opari.tab.o *.opari.inc" "Removing opari.tab.c opari.tab.o *.opari.inc"
+	evalWithDebugMessage "/bin/rm -f pompregions.c pompregions.o *.opari.inc" "Removing pompregions.c pompregions.o *.opari.inc"
 	if [ $pdtUsed == $TRUE ]; then
 	    evalWithDebugMessage "/bin/rm -f *.comment.pdb *.chk.* *.pomp.* *.pp.pdb *.comment.pdb" "Removing *.chk *.pomp.* *.comment.pdb *.pp.pdb"
 	fi
@@ -1477,11 +1494,19 @@ if [ $gotoNextStep == $TRUE ]; then
 	fi
 	
 	if [ $opari == $TRUE ]; then
-	    evalWithDebugMessage "/bin/rm -f opari.rc" "Removing opari.rc"
-	    cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} opari.tab.c"
+	    #evalWithDebugMessage "/bin/rm -f opari.rc" "Removing pompregions.c"
+	    NM=`${optOpariConfigTool} --nm`
+            AWK=`${optOpariConfigTool} --awk_cmd`
+            AWK_SCRIPT=`${optOpariConfigTool} --awk_script`
+            GREP=`${optOpariConfigTool} --egrep`
+
+
+            cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
+	    ${NM} example_c.mod.o | ${GREP} -i POMP2_Init_regions | ${GREP} " T " | ${AWK} -f ${AWK_SCRIPT} > pompregions.c
+
 
 	    evalWithDebugMessage "$cmdCompileOpariTab" "Compiling opari.tab.c"
-	    objectFilesForLinking="$objectFilesForLinking opari.tab.o"
+	    objectFilesForLinking="$objectFilesForLinking pompregions.o"
 	fi
 
 
@@ -1515,7 +1540,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	fi
 	
 	if [ $opari == $TRUE -a $needToCleanPdbInstFiles == $TRUE ]; then
-	    evalWithDebugMessage "/bin/rm -f opari.tab.c opari.tab.o *.opari.inc" "Removing opari.tab.c opari.tab.o *.opari.inc"
+	    evalWithDebugMessage "/bin/rm -f pompregions.c pompregions.o *.opari.inc" "Removing opari.tab.c opari.tab.o *.opari.inc"
 	fi
     fi
 
