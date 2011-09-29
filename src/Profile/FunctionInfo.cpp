@@ -200,7 +200,13 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
     pcHistogram[i] = NULL;
     if (TauEnv_get_ebs_enabled()) {
       // create structure only if EBS is required.
-      pcHistogram[i] = new map<caddr_t, unsigned int, std::less<caddr_t>, SS_ALLOCATOR< std::pair<caddr_t, unsigned int> > >();
+      /* *CWL* Pathscale compilers on Cray XE6 does not like this form
+	 of instantiating the data. */
+#ifndef TAU_PATHSCALE
+      pcHistogram[i] = new map<caddr_t, unsigned int, std::less<caddr_t>, SS_ALLOCATOR< std::pair<const caddr_t, unsigned int> > >();
+#else
+      pcHistogram[i] = new map<caddr_t, unsigned int>();
+#endif /* TAU_PATHSCALE */
     }
   }
   ebsIntermediate = NULL;
@@ -514,11 +520,17 @@ void FunctionInfo::addPcSample(caddr_t pc, int tid) {
   }
   // *CWL* - pcHistogram should never be NULL but ...
   if (pcHistogram[tid] == NULL) {
+    /* *CWL* - Pathscale unhappiness ... */
+#ifndef TAU_PATHSCALE
     pcHistogram[tid] = new map<caddr_t, unsigned int, 
-      std::less<caddr_t>, SS_ALLOCATOR< std::pair<caddr_t, unsigned int> > >();
+      std::less<caddr_t>, 
+      SS_ALLOCATOR< std::pair<const caddr_t, unsigned int> > >();
+#else
+    pcHistogram[tid] = new map<caddr_t, unsigned int>();
+#endif /* TAU_PATHSCALE */
   }
   map<caddr_t, unsigned int,
-    std::less<caddr_t>, SS_ALLOCATOR< std::pair<caddr_t, unsigned int> > >::iterator it;
+    std::less<caddr_t>, SS_ALLOCATOR< std::pair<const caddr_t, unsigned int> > >::iterator it;
   it = pcHistogram[tid]->find(pc);
   //  numSamples++;
   if (it == pcHistogram[tid]->end()) {
@@ -526,7 +538,7 @@ void FunctionInfo::addPcSample(caddr_t pc, int tid) {
       TAU_VERBOSE("FunctionInfo::addPcSample [tid=%d] inserting sample [%p]\n", 
 		tid, (unsigned long)pc);
     */
-    pcHistogram[tid]->insert(std::pair<caddr_t, unsigned int>(pc,1));
+    pcHistogram[tid]->insert(std::pair<const caddr_t, unsigned int>(pc,1));
   } else {
     // *CWL* PGI does NOT like the following code.
     //    (*pcHistogram[tid])[pc] = it->second++;
