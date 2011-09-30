@@ -396,8 +396,8 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 
   
   // first initialize the CurrentTime
-  double CurrentTime[TAU_MAX_COUNTERS];
-  double TotalTime[TAU_MAX_COUNTERS];
+  double CurrentTime[TAU_MAX_COUNTERS] = {0};
+  double TotalTime[TAU_MAX_COUNTERS] = {0};
 
 #ifdef TAU_TRACK_IDLE_THREADS
   int i;
