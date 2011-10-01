@@ -31,6 +31,243 @@
 #****************************************************************************
 
 
+fix_tilde_at_the_start_of_cube_path()
+{
+cubedir=`echo $cubedir | sed -e "s,^~,$HOME,"g`
+}
+
+restore_perfdmf_and_paraprof()
+{
+	restore_paraprof
+	restore_perfdmf
+}
+
+
+correction_perfdmf_and_paraprof()
+{
+	correction_paraprof
+	correction_perfdmf
+}
+
+
+
+copy_own_cube_reader_if_selected()
+{
+if test "x$cubedir" = "xown"; then
+	confirmation_copy_of_own_jar_file
+fi
+	}
+
+
+
+select_cube_reader_jar()
+{
+if test "x$cubedir" != "xown"; then
+
+	check_another_cube_installation
+	check_cube_installation
+
+	#at that point cubedir is either correct or empty
+	if test "x$cubedir" = "x"; then
+		warning_about_missing_cube_installation
+	fi
+
+else
+# select the own classpath
+	cubeclasspath='${TAUROOT}/${MACHINE}/lib/CubeReader.jar'
+	makecubeclasspath="../contrib/CubeReader.jar"
+fi
+return 0
+}
+
+
+check_another_cube_installation()
+{
+# check if CUBE in PATH
+testline=`cube_config.sh --name 2>&1`
+another_cube_present="no"
+if test "x$testline" = "xCUBE"; then
+	another_cube_present="yes"
+	another_cube_dir=`cube_config.sh --cube-dir`
+	if test "x$another_cube_dir" != "x$cubedir"; then
+		warning_about_another_cube_installation $another_cube_dir
+		return 1
+	fi
+fi
+
+# check if CUBE is not in PATH , but CUBE_DIR is set
+if test "x$CUBE_DIR" != "x"; then
+	testline=`$CUBE_DIR/bin/cube_config.sh --name 2>&1`
+	another_cube_present="no"
+	if test "x$testline" = "xCUBE"; then
+		another_cube_present="yes"
+		another_cube_dir=`$CUBE_DIR/bin/cube_config.sh --cube-dir`
+		if test "x$another_cube_dir" != "x$cubedir"; then
+			warning_about_another_cube_installation $another_cube_dir
+			return 1
+		fi
+	fi
+fi
+return 0
+}
+
+
+check_cube_installation()
+{
+
+# check if cubedir points to CUBE
+if test "x$cubedir" != "x"; then
+	if test "x$cubedir" = "xext"; then
+		if test "x$another_cube_dir" = "x"; then
+			warning_about_general_missing_cube_installation 
+		else
+			cubedir=$another_cube_dir
+		fi
+	fi
+
+	fix_tilde_at_the_start_of_cube_path
+
+	testline=`$cubedir/bin/cube_config.sh --name 2>&1`
+	cuberoot=$cubedir
+	#in the case one spezified /lib/directory of CUBE installation
+	if test "x$testline" != "xCUBE"; then
+		testline=`$cubedir/../bin/cube_config.sh --name 2>&1`
+		cuberoot=$cubedir/../
+	fi
+	if test "x$testline" = "xCUBE"; then
+		#check if the cube installation was done with java reader
+		cubeclasspath=`$cuberoot/bin/cube_config.sh --classpath`
+		makecubeclasspath=$cubeclasspath
+		if [ "x$cubeclasspath" != "x" -a  -f $cuberoot/lib/CubeReader.jar ] ; then
+			confirm_proper_cube_installation $cuberoot
+		fi
+	else
+		warning_about_missing_cube_installation $cubedir
+	fi
+fi
+return 0
+}
+
+
+
+correction_paraprof()
+{
+# assuming configure is called from same directory
+# tau's configure doesn't work anyway from another directory
+_tauroot="."
+echo "Adjust ParaProf to use CubeReader..."
+cat    ${_tauroot}/tools/src/paraprof/bin/paraprof.skel |
+sed -e 's,@CUBECLASSPATH@,'$cubeclasspath','  >   ${_tauroot}/tools/src/paraprof/bin/paraprof.new
+mv   ${_tauroot}/tools/src/paraprof/bin/paraprof.new   ${_tauroot}/tools/src/paraprof/bin/paraprof.skel
+
+cat   ${_tauroot}/tools/src/paraprof/Makefile |
+sed -e 's,@CUBECLASSPATH@,'$makecubeclasspath','  >  ${_tauroot}/tools/src/paraprof/Makefile.new
+mv ${_tauroot}/tools/src/paraprof/Makefile.new  ${_tauroot}/tools/src/paraprof/Makefile
+
+
+}
+
+correction_perfdmf()
+{
+echo "Adjust PerfDmf to use CubeReader..."
+cat  ${_tauroot}/tools/src/perfdmf/Makefile |
+sed -e 's,@CUBECLASSPATH@,'$makecubeclasspath','  >${_tauroot}/tools/src/perfdmf/Makefile.new
+mv ${_tauroot}/tools/src/perfdmf/Makefile.new ${_tauroot}/tools/src/perfdmf/Makefile
+}
+
+
+
+restore_paraprof()
+{
+# assuming configure is called from same directory
+# tau's configure doesn't work anyway from another directory
+_tauroot="."
+echo "Unset ParaProf's cubeclasspath..."
+cat   ${_tauroot}/tools/src/paraprof/bin/paraprof.skel |
+sed -e 's,^CUBE_JAVA_READER=.*$,CUBE_JAVA_READER=@CUBECLASSPATH@,'  >  ${_tauroot}/tools/src/paraprof/bin/paraprof.new
+mv  ${_tauroot}/tools/src/paraprof/bin/paraprof.new  ${_tauroot}/tools/src/paraprof/bin/paraprof.skel
+
+cat  ${_tauroot}/tools/src/paraprof/Makefile |
+sed -e 's,^CUBE_JAVA_READER=.*$,CUBE_JAVA_READER=@CUBECLASSPATH@,'  > ${_tauroot}/tools/src/paraprof/Makefile.new
+mv ${_tauroot}/tools/src/paraprof/Makefile.new ${_tauroot}/tools/src/paraprof/Makefile
+
+
+}
+
+restore_perfdmf()
+{
+# assuming configure is called from same directory
+# tau's configure doesn't work anyway from another directory
+_tauroot="."
+_tauroot="."
+echo "Unset Perfdmf cubeclasspath..."
+cat  ${_tauroot}/tools/src/perfdmf/Makefile |
+sed -e 's,^CUBE_JAVA_READER=.*$,CUBE_JAVA_READER=@CUBECLASSPATH@,'  > ${_tauroot}/tools/src/perfdmf/Makefile.new
+cp ${_tauroot}/tools/src/perfdmf/Makefile.new ${_tauroot}/tools/src/perfdmf/Makefile
+}
+
+
+
+
+confirmation_copy_of_own_jar_file()
+{
+echo "===================================================="
+if [ -f ${tauroot}/tools/src/contrib/CubeReader.jar ]  ; then
+echo " Copy ${tauroot}/tools/src/contrib/CubeReader.jar to $JARTARGET"
+cp ${tauroot}/tools/src/contrib/CubeReader.jar $JARTARGET
+else
+echo "ERROR: Tau doesn't have own copy of CabeReader.jar under ${tauroot}/tools/src/contrib/"
+echo "       Please check the recent TAU distribution and report this bug to tau-bugs@cs.uoregon.edu"
+exit -1
+fi
+echo "===================================================="
+return 0
+
+}
+
+
+
+warning_about_another_cube_installation()
+{
+echo "===================================================="
+echo "WARNING: CUBE is detected under $1"
+echo "===================================================="
+return 0
+}
+
+
+confirm_proper_cube_installation()
+{
+echo "===================================================="
+echo "CUBE Reader is found under $1/lib."
+echo "CLASSPATH of it is $cubeclasspath"
+echo "===================================================="
+return 0
+}
+
+warning_about_missing_cube_installation()
+{
+echo "===================================================="
+echo "ERROR: Cannot find CUBE installation under $1"
+echo "       Please check your option -cube=$cubedir"
+echo "Abort."
+echo "===================================================="
+exit -1
+}
+
+warning_about_general_missing_cube_installation()
+{
+echo "===================================================="
+echo "ERROR: Cannot find CUBE installation."
+echo "       Please specify precise place of CUBE using option -cube=$cubedir"
+echo "Abort."
+echo "===================================================="
+exit -1
+}
+
+
+
+
 default=false
 
 for arg in "$@"; do
@@ -102,6 +339,7 @@ for arg in "$@"; do
     echo "-papithread .................................. Use PAPI thread package."
     echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
     echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
+    echo "-cube=<dir> | own | ext..... Specify location of CUBE or use TAU's jar."
     echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
     echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
     echo "-otfinc=<dir> ....... Specify location of stand-alone OTF header files."
@@ -200,6 +438,7 @@ for arg in "$@"; do
     echo "-dyninst=<dir> ................... Specify location of DynInst Package."
     echo "-dwarf=<dir> ................ Specify location of the libdwarf Package."
     echo "-bfd=<dir | download> ............ Specify a BFD directory or download."
+    echo "-cube=<dir> | own.| ext..... Specify location of CUBE or use TAU's jar."
     echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
     echo "-otf=<dir> ....... Specify location of Open Trace Format (OTF) Package."
     echo "-otfinc=<dir> ....... Specify location of stand-alone OTF header files."
@@ -393,6 +632,7 @@ perfsuite=no
 perfsuitedir=
 bfd=no
 bfddir=
+turnbfdoff=no
 perf=no
 perfincdir=
 perflibdir=
@@ -446,9 +686,11 @@ otf=no
 otfdir=
 otfinc=
 otflib=
+cubedir=own
 ebs2otf=no
 ebs_has_rt=no
 ebs_clock_res="-1"
+tau_links_rt=no
 opari=no
 epilog=no
 hpctoolkit=no
@@ -496,12 +738,16 @@ iowrapper=no
 zepto=no
 zeptodir=
 cuda=no
+strsignal_ok=no
 
 # Reset include/Makefile before starting anything else
 for i in include/Makefile ; do
     sed -f utils/FixMakefile.sed.default < ${i} > ${i}~~0
     mv ${i}~~0 ${i}
 done
+
+restore_perfdmf_and_paraprof
+
 
 
 ###############################################################
@@ -512,7 +758,7 @@ for arg in "$@"; do
 
   -cc=*)
     myarg=`echo $arg | sed 's/-cc=//'`
-    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc-bgp-linux-gcc ]
+    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc ]
       then
         c_compiler=$myarg
       else
@@ -520,7 +766,7 @@ for arg in "$@"; do
         testmp=`echo $myarg | sed -e 's/^mp//'`
         if [ "y$testxlc" = "y$myarg"  -a "y$testmp" = "y$myarg" ]
         then
-          echo "WARNING: valid options for cc are 'cc', 'gcc', 'gcc4', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', 'orcc', 'qk-pgcc', 'powerpc-bgp-linux-gcc', and 'pgcc' "
+          echo "WARNING: valid options for cc are 'cc', 'gcc', 'gcc4', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', 'orcc', 'qk-pgcc', 'powerpc-bgp-linux-gcc', 'x86_64-w64-mingw32-gcc', and 'pgcc' "
 #       exit 1
         else
 	  if [ "y$testxlc" != "y$myarg" ]
@@ -536,7 +782,7 @@ for arg in "$@"; do
 
   -c++=*)
     myarg=`echo $arg | sed 's/-c++=//'`
-    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = mpicxx ] 
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++ ] 
       then
         cxx_compiler=$myarg
       else
@@ -544,7 +790,7 @@ for arg in "$@"; do
         testmp=`echo $myarg | sed -e 's/^mp//'`
 	if [ "y$testxlc" = "y$myarg" -a "y$testmp" = "y$myarg" ]
         then
-          echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'g++4', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'pgcpp', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'pathCC', 'c++', 'qk-pgCC', and 'orCC'"
+          echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'g++4', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'pgcpp', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'pathCC', 'c++', 'qk-pgCC', 'x86_64-w64-mingw32-g++', and 'orCC'"
 #       exit 1
         else
 	  if [ "y$testxlc" != "y$myarg" ]
@@ -975,6 +1221,11 @@ for arg in "$@"; do
         echo "Error: Cannot access VTF3 directory $vtfdir"
         exit 1
       fi
+    shift
+    ;;
+
+  -cube=*)
+      cubedir=`echo $arg | sed -e 's/-cube=//'`
     shift
     ;;
 
@@ -1503,7 +1754,6 @@ done
 
 
 
-
 # -- some functions
 
 configure_java () {
@@ -1606,6 +1856,12 @@ cp ${tauroot}/tools/src/perfdmf/etc/dbschema*.txt ${targetdir}/tools/src/perfdmf
 BINTARGET=${targetdir}/${architecture}/bin
 JARTARGET=${targetdir}/${architecture}/lib
 
+
+#it needed JARTARGET
+#it modifies paraprof.skel
+copy_own_cube_reader_if_selected
+
+
   # install paraprof
 cat ${tauroot}/tools/src/paraprof/bin/paraprof.skel | 
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' > $BINTARGET/paraprof
@@ -1646,6 +1902,8 @@ fi
 #installs the tau_java handeler
 cat ${tauroot}/tools/src/tau_java.skel | sed -e 's,@JARTARGET@,'$JARTARGET',' -e 's,@JDKDIR@,'$jdkdir',' > $BINTARGET/tau_java
 chmod a+rx $BINTARGET/tau_java
+
+
 
 cp ${tauroot}/tools/src/paraprof/bin/paraprof.jar $JARTARGET
 cp ${tauroot}/tools/src/perfdmf/bin/perfdmf.jar $JARTARGET
@@ -2161,11 +2419,38 @@ case $machine in
 	elif [ "x$PE_ENV" = xINTEL ] ; then
 	    tauoptions="${tauoptions}-intel"
 	    default_fortran=intel
-	    fixmakeargs="$fixmakeargs COMPINST_GNU"
+	    turnbfdoff=yes
+	    fixmakeargs="$fixmakeargs COMPINST_INTEL9"
 	elif [ "x$PE_ENV" = xCRAY ] ; then
 	    tauoptions="${tauoptions}-cray"
 	    default_fortran=cray
-	    
+
+	    # *CWL* - if bfd path is not explicitly specified, point
+	    #         to the correct preset bfd path.
+	    if [ "x$bfd" = "xno" ] ; then
+		if [ "x$bfddir" = "x" ] ; then
+		    bfddir="$CRAY_BINUTILS_ROOT"
+		    # Do not try to enable bfd implicitly if we cannot
+		    #    find a preset path for Cray compilers. Instead
+		    #    disable implicit support for BFD. Cray compilers
+		    #    currently have a problem with its library search
+		    #    path in that it is different when the -shared
+		    #    flag is used. As a result, the -lbfd link flags
+		    #    previously discovered at configure time fail
+		    #    at build time.
+		    if [ "x$bfddir" != "x" ] ; then
+			bfd=yes
+                    fi
+                fi
+	    fi
+
+	    # *CWL* - this is a horrid hack, but the CCE compilers on 
+	    #         the Cray XE6 behave differently when building
+	    #         shared objects (see above) and it is not happy
+	    #         with -lmpichcxx which is static. -lmpichcxx_cray
+	    #         has to be used instead.
+	    fixmakeargs="$fixmakeargs CRAYCNL_CCE"
+
 	    touch conf_test.c
 	    extradir=`CC -v conf_test.c 2>&1 | grep cray-c++ | sed -e 's/ /\n/g' | grep "/opt/cray/cce" | grep "lib/x86-64$" | uniq | grep -v rpath`
 	    rm -f conf_test.c
@@ -2514,6 +2799,10 @@ if [ $machine = ibm64 -o $machine = ibm64linux ] ; then
     fi
   fi
 fi
+
+if [ $cxx_compiler = x86_64-w64-mingw32-g++ ]; then
+    fixmakeargs="$fixmakeargs TAU_WINDOWS MINGW GNU"
+fi 
 
 if [ $machine = t3e -a $cxx_compiler = KCC ] ; then
     fixmakeargs="$fixmakeargs CRAYKAI"
@@ -3768,7 +4057,7 @@ then
 fi
 
 ######################################################################
-if [ $cxx_compiler = g++ -o $cxx_compiler = g++4 -o $cxx_compiler = egcs -o $cxx_compiler = powerpc64-linux-g++ -o $cxx_compiler = c++ -o $cxx_compiler = scg++ -o $cxx_compiler = mips64el-gentoo-linux-gnu-g++  -o $cxx_compiler = powerpc-bgp-linux-g++ ]
+if [ $cxx_compiler = g++ -o $cxx_compiler = g++4 -o $cxx_compiler = egcs -o $cxx_compiler = powerpc64-linux-g++ -o $cxx_compiler = c++ -o $cxx_compiler = scg++ -o $cxx_compiler = mips64el-gentoo-linux-gnu-g++  -o $cxx_compiler = powerpc-bgp-linux-g++ -o $cxx_compiler = x86_64-w64-mingw32-g++ ]
   then
     if [ $machine != crayxmt ] 
     then
@@ -4179,6 +4468,9 @@ make_directories
 # Is LINUXTIMERS available?
 #####################################################################
 
+if [ $cxx_compiler = x86_64-w64-mingw32-g++ ] ; then
+  linuxtimers=no
+fi
 if [ $linuxtimers = yes ] ; then
   echo "LINUX_TIMERS enabled"
   fixmakeargs="$fixmakeargs LINUXTIMERS"
@@ -4980,6 +5272,25 @@ else
 fi 
 rm -f /tmp/tau$$.C tau$$.o
 
+#####################################################################
+# Test for explicit strsignal support in string library (TauInit.cpp)
+#####################################################################
+$echo "Check if valid to declare strsignal with <string.h>... ${nnl}"
+cat <<EOF > /tmp/tau$$.cpp
+#include <string.h>
+extern "C" char *strsignal(int sig);
+EOF
+
+if $cxx_compiler -c /tmp/tau$$.cpp 1> /dev/null 2>&1 ; then 
+    echo "yes"
+    strsignal_ok=yes
+    fixmakeargs="$fixmakeargs TAU_STRSIGNAL_OK"
+else
+    echo "no"
+fi 
+rm -f /tmp/tau$$.cpp tau$$.o
+
+
 
 #####################################################################
 # Check Runtime type info
@@ -5151,8 +5462,16 @@ void foo() {
 EOF
 $echo "Checking for bfd.h... ${nnl}"
 if $c_compiler $orig_useropt -c conftest_bfd.c $bfdinclude 1> /dev/null 2>&1 ; then
-    fixmakeargs="$fixmakeargs TAU_BFD"
-    echo "yes"
+    if [ "$turnbfdoff" = "yes" ] ; then
+      # *CWL* this is for systems where BFD cannot be supported because
+      # of whatever reasons. An example is the Cray XE6 (hopper) where
+      # the Intel environment introduces a conflict between its own
+      # stdio.h and libiberty.h
+      echo "no"
+    else 
+      fixmakeargs="$fixmakeargs TAU_BFD"
+      echo "yes"
+    fi
 else
     echo "no"
 fi
@@ -5202,7 +5521,15 @@ fi
 
 BFDLIBS=`echo $BFDLIBS | sed -e 's/ /#/g'`
 
-fixmakeargs="$fixmakeargs bfdlibs=$BFDLIBS"
+# *CWL* - We do not want to use the discovered libraries if we are
+#         using the Cray compilers *and* fail to find the preset
+#         directories. The explanation for this can be found in
+#         the script section for craycnl.
+if [ "x$PE_ENV" = xCRAY -a "x$bfddir" = x ] ; then
+    echo "WARNING: Failed to find BFD path for CCE compiler. Implicit BFD support disabled."
+else
+    fixmakeargs="$fixmakeargs bfdlibs=$BFDLIBS"
+fi
 
 /bin/rm -f conftest_bfd.o conftest_bfd.c conftest_bfd
 ######################################################################
@@ -5299,8 +5626,30 @@ fi
 ######################################################################
 
 ######################################################################
-# Check that the Real Time interface is supported by this system
+# Check that basic librt linkage is supported by this system
+#    Precise functionality support is system-dependent and should
+#    be controlled by macros inside code accordingly.
 ######################################################################
+  cat <<EOF > conftest_rt_link_test.cpp
+int main() {
+}
+EOF
+$echo "Checking for librt linkage support ... ${nnl}"
+if $cxx_compiler $orig_useropt -o conftest_rt_link_test conftest_rt_link_test.cpp -lrt 1> /dev/null 2>&1 ; then
+    tau_links_rt=yes
+    fixmakeargs="$fixmakeargs TAU_LINKS_RT"
+    echo "yes"
+else
+    echo "no"
+fi
+/bin/rm -f conftest_rt_link_test conftest_rt_link_test.cpp
+
+######################################################################
+# Check that basic librt functionality is supported by this system
+######################################################################
+# *CWL* Don't bother checking for functionality if we cannot even link
+#       the library.
+if [ $tau_links_rt = "yes" ] ; then
   cat <<EOF > conftest_rt_test.cpp
 #include <time.h>
 #include <stdio.h>
@@ -5323,7 +5672,7 @@ int main() {
   printf("%ld", (long)time_value);
 }
 EOF
-$echo "Checking for Real Time Library support... ${nnl}"
+$echo "Checking for Basic librt Real Time Clock Signal support... ${nnl}"
 if $cxx_compiler $orig_useropt -o conftest_rt_test conftest_rt_test.cpp -lrt 1> /dev/null 2>&1 ; then
     ebs_has_rt=yes
     echo "yes"
@@ -5353,6 +5702,7 @@ fi
 #echo $?
 
 /bin/rm -f conftest_rt_test conftest_rt_test.cpp
+fi
 ######################################################################
 
 ######################################################################
@@ -5955,6 +6305,15 @@ if [ $cxx_compiler = icpc ] ; then
     if [ ! -d "$var" ] ; then
 	echo "Error: Unable to identify ifort lib directory"
     fi
+    if   [ -f "$libdir/for_main.o" ] ; then
+        :
+    elif [ -f "$libdir/intel64/for_main.o" ] ; then
+        libdir="$libdir/intel64"
+    elif [ -f "$libdir/ia32/for_main.o" ] ; then
+        libdir="$libdir/ia32"
+    elif [ -f "$libdir/ia64/for_main.o" ] ; then
+        libdir="$libdir/ia64"
+    fi
 
     fixmakeargs="$fixmakeargs ifortlibdir=$libdir" 
 fi
@@ -6093,6 +6452,10 @@ if [ $sicortex = yes ] ; then
 fi
 
 
+#selection of cube reader, external installation or provided .jar file
+select_cube_reader_jar
+correction_perfdmf_and_paraprof
+
 
 echo "***********************************************************************"
 echo "Installing utilities..."
@@ -6130,6 +6493,7 @@ fi
 
 BINTARGET=${targetdir}/${architecture}/bin
 JARTARGET=${targetdir}/${architecture}/lib
+
 
 # Install tau_compiler.sh 
 if [ ! -f /bin/bash ] ; then
@@ -6424,8 +6788,6 @@ fi
 echo '   Type "make install" to begin compilation'
 
 exit 0
-
-
 
 
 

@@ -1044,15 +1044,18 @@ char *kernelName = "";
  * cuda kernel (host_runtime.h)
  * Borrowed from VampirTrace.
  */
+
 extern "C" void __cudaRegisterFunction(void ** a1, const char * a2, char * a3, const char * a4, int a5, uint3 * a6, uint3 * a7, dim3 * a8, dim3 * a9, int * a10);
 extern "C" void __cudaRegisterFunction(void ** a1, const char * a2, char * a3, const char * a4, int a5, uint3 * a6, uint3 * a7, dim3 * a8, dim3 * a9, int * a10) {
 
 	//printf("*** in __cudaRegisterFunction.\n");
 	//printf("Kernel name is: %s.\n", a3);
+	kernelName = a3;
 
   typedef void (*__cudaRegisterFunction_p_h) (void **, const char *, char *, const char *, int, uint3 *, uint3 *, dim3 *, dim3 *, int *);
   static __cudaRegisterFunction_p_h __cudaRegisterFunction_h = NULL;
-  TAU_PROFILE_TIMER(t,"void __cudaRegisterFunction(void **, const char *, char *, const char *, int, uint3 *, uint3 *, dim3 *, dim3 *, int *) C", "", CUDART_API);
+  //TAU_PROFILE_TIMER(t,"void __cudaRegisterFunction(void **, const char *, char *, const char *, int, uint3 *, uint3 *, dim3 *, dim3 *, int *) C", "", CUDART_API);
+	/*
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
@@ -1067,12 +1070,10 @@ extern "C" void __cudaRegisterFunction(void ** a1, const char * a2, char * a3, c
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return;
     }
-	
-	kernelName = a3;
-
   (*__cudaRegisterFunction_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9,  a10);
   }
-
+	*/
+  
 }
 
 cudaError_t cudaLaunch(const char * a1) {

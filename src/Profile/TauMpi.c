@@ -1640,15 +1640,13 @@ int  MPI_Finalize(  )
 #else
   */
 
-  if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
-    if (TauEnv_get_ebs_enabled()) {
-      // **CWL** - Attempt BFD resolution before merging format output.
-      // TODO - make unification a thread-aware process so sampling
-      //        finalization is congruent with respect to it.
-      Tau_sampling_finalizeNode();
-    }
-    Tau_mergeProfiles();
+  /* Shutdown EBS after Finalize to allow Profiles to be written
+     out correctly. */
+#ifndef TAU_WINDOWS
+  if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_finalizeNode();
   }
+#endif /* TAU_WINDOWS */
 
 #ifdef TAU_MONITORING
   Tau_mon_disconnect();
@@ -1693,7 +1691,9 @@ char *** argv;
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Init( argc, argv );
+#ifndef TAU_WINDOWS
   Tau_sampling_init_if_necessary();
+#endif /* TAU_WINDOWS */
 #ifndef TAU_DISABLE_SIGUSR
   Tau_signal_initialization(); 
 #endif
@@ -1744,7 +1744,9 @@ int *provided;
 #ifndef TAU_DISABLE_SIGUSR
   Tau_signal_initialization(); 
 #endif
+#ifndef TAU_WINDOWS
   Tau_sampling_init_if_necessary();
+#endif /* TAU_WINDOWS */
 
   TAU_PROFILE_STOP(tautimer);
 

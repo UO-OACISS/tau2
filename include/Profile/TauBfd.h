@@ -51,6 +51,8 @@ int Tau_bfd_processBfdExecInfo(tau_bfd_handle_t handle,
 
 /* Query functions */
 vector<TauBfdAddrMap> *Tau_bfd_getAddressMaps(tau_bfd_handle_t handle);
+int Tau_bfd_getAddressMap(tau_bfd_handle_t handle, 
+			  unsigned long probe_addr, TauBfdAddrMap *mapInfo);
 tau_bfd_module_handle_t Tau_bfd_getModuleHandle(tau_bfd_handle_t handle,
 						unsigned long probe_addr);
 
