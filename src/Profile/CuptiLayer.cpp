@@ -40,8 +40,8 @@ bool Tau_CuptiLayer_is_initialized()
 }
 void Tau_CuptiLayer_finalize()
 {
-	cuptiEventGroupDisable(eventGroup);
-	cuptiEventGroupDestroy(eventGroup);
+	//cuptiEventGroupDisable(eventGroup);
+	//cuptiEventGroupDestroy(eventGroup);
 	Tau_CuptiLayer_finalized = true;
 }
 //running total for each counter.
@@ -225,6 +225,11 @@ void Tau_CuptiLayer_init()
 		//printf("in Tau_CuptiLayer_init 6.\n");
 		cuptiErr = cuptiEventGroupEnable(eventGroup);
 		CHECK_CUPTI_ERROR( cuptiErr, "cuptiEventGroupEnable" );
+		if (cuptiErr == CUPTI_ERROR_HARDWARE)
+		{
+			printf("TAU ERROR: Cannot enable hardware counter(s), device is busy.\n");
+			exit(1);
+		}
 		//printf("in Tau_CuptiLayer_init 7.\n");
 		
 		lastDataBuffer = (uint64_t*) malloc
@@ -258,7 +263,7 @@ void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev)
    Tau_CuptiLayer_num_events * sizeof ( uint64_t ); */
 void Tau_CuptiLayer_read_counters(uint64_t* counterDataBuffer)
 {	
-	if (Tau_CuptiLayer_is_initialized() && Tau_CuptiLayer_enabled)
+	if (Tau_CuptiLayer_is_initialized())
 	{
 		CUresult cuErr;
 		CUcontext cuCtx;
@@ -266,7 +271,7 @@ void Tau_CuptiLayer_read_counters(uint64_t* counterDataBuffer)
 		// check if there is a current context
 		//printf("cupti layer finalized? %d context current? %d.\n",
 			//Tau_CuptiLayer_finalized, cuErr == CUDA_SUCCESS);
-		if (Tau_CuptiLayer_finalized)
+		if (Tau_CuptiLayer_finalized || !Tau_CuptiLayer_enabled)
 		{
 			for (int i=0; i<Tau_CuptiLayer_get_num_events(); i++)
 			{
@@ -298,21 +303,22 @@ void Tau_CuptiLayer_read_counters(uint64_t* counterDataBuffer)
 				//TODO error return -1;
 
 			//accumulate counter values.
-			//printf("cupti last values %llu.\n", events_read,
-			//lastDataBuffer[0]);
-
 			for (int i=0; i<Tau_CuptiLayer_get_num_events(); i++)
 			{
 				counterDataBuffer[i] += lastDataBuffer[i];
 				lastDataBuffer[i] = counterDataBuffer[i];
 			}
 
-			//printf("cupti read %d events, values %llu.\n", events_read,
-			//counterDataBuffer[0]);
-
 			//free( counterDataBuffer );
 			free( eventIDArray );
 	  }
+		/*
+		printf("cupti last values    %llu.\n",
+		lastDataBuffer[0]);
+
+		printf("cupti events, values %llu.\n",
+		counterDataBuffer[0]);
+		*/
 	}
 	else
 	{

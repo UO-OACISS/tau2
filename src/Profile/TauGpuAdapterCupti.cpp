@@ -74,6 +74,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 	}
 	else if (domain == CUPTI_CB_DOMAIN_SYNCHRONIZE)
 	{
+		//printf("register sync from callback.\n");
 		Tau_cupti_register_sync_event();
 	}
 	else
@@ -117,7 +118,12 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 		{
 			if (cbInfo->callbackSite == CUPTI_API_ENTER)
 			{
-				if (function_is_launch(id))
+				if (function_is_exit(id))
+				{
+					//Stop collecting cupti counters.
+					Tau_CuptiLayer_finalize();
+				}
+				else if (function_is_launch(id))
 				{
 					FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::getTid())->ThisFunction;
 					functionInfoMap[cbInfo->correlationId] = p;	
@@ -132,7 +138,9 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 				if (function_is_sync(id))
 				{
 					//cerr << "sync function name: " << cbInfo->functionName << endl;
-					//cuCtxSynchronize();
+					Tau_CuptiLayer_disable();
+					cuCtxSynchronize();
+					Tau_CuptiLayer_enable();
 					Tau_cupti_register_sync_event();
 				}
 			}
@@ -221,7 +229,6 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 
 bool function_is_sync(CUpti_CallbackId id)
 {
-	//return false;
 	return (	
 		//unstable results otherwise(
 		//runtimeAPI
@@ -233,7 +240,7 @@ bool function_is_sync(CUpti_CallbackId id)
 		//id == CUPTI_RUNTIME_TRACE_CBID_cudaDeviceReset_v3020 ||
 		id == CUPTI_RUNTIME_TRACE_CBID_cudaMemcpy_v3020 ||
 		id == CUPTI_RUNTIME_TRACE_CBID_cudaEventSynchronize_v3020 ||
-		id == CUPTI_RUNTIME_TRACE_CBID_cudaEventQuery_v3020 ||
+		//id == CUPTI_RUNTIME_TRACE_CBID_cudaEventQuery_v3020 ||
 		//driverAPI
 		id == CUPTI_DRIVER_TRACE_CBID_cuMemcpy_v2 ||
 		id == CUPTI_DRIVER_TRACE_CBID_cuMemcpyHtoD_v2 ||
@@ -244,10 +251,20 @@ bool function_is_sync(CUpti_CallbackId id)
 		id == CUPTI_DRIVER_TRACE_CBID_cuMemcpyHtoA_v2 ||
 		id == CUPTI_DRIVER_TRACE_CBID_cuMemcpyDtoA_v2 ||
 		id == CUPTI_DRIVER_TRACE_CBID_cuMemcpyAtoA_v2 ||
-		id == CUPTI_DRIVER_TRACE_CBID_cuEventSynchronize ||
-		id == CUPTI_DRIVER_TRACE_CBID_cuEventQuery
+		id == CUPTI_DRIVER_TRACE_CBID_cuEventSynchronize //||
+		//id == CUPTI_DRIVER_TRACE_CBID_cuEventQuery
 
 				 );
+}
+bool function_is_exit(CUpti_CallbackId id)
+{
+	
+	return (
+		id == CUPTI_RUNTIME_TRACE_CBID_cudaThreadExit_v3020 || 
+		id == CUPTI_RUNTIME_TRACE_CBID_cudaDeviceReset_v3020
+		//driverAPI
+				 );
+	
 }
 bool function_is_launch(CUpti_CallbackId id) { 
 	return id == CUPTI_RUNTIME_TRACE_CBID_cudaLaunch_v3020 ||
