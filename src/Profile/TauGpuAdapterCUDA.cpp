@@ -286,7 +286,7 @@ double stop)
 void Tau_cuda_register_memcpy_event(const char *name, cudaGpuId* id, double start, double stop, int
 transferSize, int MemcpyType)
 {
-	FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::myNode())->ThisFunction;
+	FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::getTid())->ThisFunction;
 	eventId c = Tau_gpu_create_gpu_event(name, id, p);
 	Tau_gpu_register_memcpy_event(c, start/1e3, stop/1e3, transferSize, MemcpyType);
 }
@@ -332,7 +332,7 @@ void Tau_cuda_enqueue_kernel_enter_event(const char *name, cudaGpuId* id)
 void Tau_cuda_enqueue_kernel_exit_event()
 {
 
-	//printf("recording stop for %s.\n", name);
+	//printf("recording stop.");
 
 	curKernel->enqueue_stop_event();
 	KernelBuffer.push(*curKernel);

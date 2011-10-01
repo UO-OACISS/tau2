@@ -1341,9 +1341,11 @@ if [ $gotoNextStep == $TRUE ]; then
             # remove the .pomp from the name of the output file
 	    if [ $opari == $TRUE -a $pdtUsed == $TRUE ]; then
 		outputFile=`echo $outputFile | sed -e 's/\.chk\.pomp//'`
+			else
+		outputFile=`echo $outputFile | sed -e 's/\.pomp//'`
 	    fi
-	    
-	    
+  
+
             #echoIfDebug "\n\nThe output file passed is $passedOutputFile"
 	    #echoIfDebug "The output file generated locally is $outputFile"
 

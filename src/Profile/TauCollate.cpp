@@ -449,7 +449,10 @@ void Tau_collate_compute_histograms(Tau_unify_object_t *functionUnifier,
   // two for each metric (excl, incl) and numCalls/numSubr;
   int histogramBufSize = sizeof(int) * numBins * numHistograms;
   int *histogram = (int *) TAU_UTIL_MALLOC(histogramBufSize);
+
+#ifndef TAU_WINDOWS
   bzero(histogram, histogramBufSize);
+#endif /* TAU_WINDOWS */
 
   int rank;
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);

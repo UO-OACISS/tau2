@@ -60,10 +60,14 @@ extern "C" int Tau_compensate_initialization();
 extern "C" int Tau_profiler_initialization();
 extern "C" int Tau_profile_exit_all_threads(); 
 
-// **CWL** BGP has strsignal declared in string.h and will conflict.
-#if (!(defined(TAU_PATHSCALE)) && !(defined(TAU_BGP)))
+// **CWL** 20110912 NOTE: strsignal is NOT portable!
+//         A number of systems has strsignal declared in string.h and this 
+//         will conflict with an explicit extern declaration of this nature.
+//
+//         This is now determined at configure time.
+#if defined(TAU_STRSIGNAL_OK)
 extern "C" char *strsignal(int sig);
-#endif /* TAU_PATHSCALE && TAU_BGP */
+#endif /* TAU_STRSIGNAL_OK */
 
 /* -- signal catching to flush event buffers ----------------- */
 #if defined (__cplusplus) || defined (__STDC__) || defined (_AIX) || (defined (__mips) && defined (_SYSTYPE_SVR4))

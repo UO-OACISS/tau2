@@ -21,6 +21,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import edu.uoregon.tau.perfdmf.DataSource;
+import edu.uoregon.tau.perfdmf.CubeDataSource;
+
 
 /**
  * A window that lets the user select a profile format and launch a JFileChooser
@@ -188,14 +190,31 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
                 JFileChooser jFileChooser = new JFileChooser(lastDirectory);
                 jFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
-                if (trialTypes.getSelectedIndex() == DataSource.PPK || trialTypes.getSelectedIndex() == DataSource.MPIP
-                        || trialTypes.getSelectedIndex() == DataSource.PPROF || trialTypes.getSelectedIndex() == DataSource.CUBE) {
+                if (	   trialTypes.getSelectedIndex() == DataSource.PPK 
+			|| trialTypes.getSelectedIndex() == DataSource.MPIP
+                        || trialTypes.getSelectedIndex() == DataSource.PPROF 
+			|| trialTypes.getSelectedIndex() == DataSource.CUBE3
+			|| trialTypes.getSelectedIndex() == DataSource.CUBE
+		    ) 
+		{
                     // These formats are in a single file only
                     jFileChooser.setMultiSelectionEnabled(false);
                 } else {
                     // others may have multiple files
                     jFileChooser.setMultiSelectionEnabled(true);
                 }
+
+                if ( trialTypes.getSelectedIndex() == DataSource.CUBE
+		    )
+		{
+                    // These formats are in a single file only
+                    jFileChooser.addChoosableFileFilter(CubeDataSource.getFilesFilter());
+                } else {
+                    // others may have multiple files
+                    jFileChooser.setMultiSelectionEnabled(true);
+                }
+
+
                 if (trialTypes.getSelectedIndex() == DataSource.PPK) {
                     jFileChooser.setFileFilter(new ParaProfFileFilter(ParaProfFileFilter.PPK));
                 }

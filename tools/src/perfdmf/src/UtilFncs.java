@@ -441,6 +441,9 @@ public class UtilFncs {
         if (filename.toLowerCase().endsWith(".ppk")) {
             return DataSource.PPK;
         }
+        if (filename.toLowerCase().endsWith(".cubex")) {
+            return DataSource.CUBE;
+        }
         if (filename.toLowerCase().endsWith(".cube")) {
             return DataSource.CUBE;
         }
@@ -591,6 +594,23 @@ public class UtilFncs {
             }
 
             dataSource = new CubeDataSource(sourceFiles[0]);
+            break;
+        case DataSource.CUBE3:
+            if (sourceFiles.length != 1) {
+                throw new DataSourceException("Cube type : you must specify exactly one file");
+            }
+            if (sourceFiles[0].isDirectory()) {
+                throw new DataSourceException("Cube type: you must specify a file, not a directory");
+            }
+
+            try {
+                //Class c = 
+                	Class.forName("org.xml.sax.SAXException");
+            } catch (ClassNotFoundException cnfe) {
+                throw new DataSourceException("Sorry, cube format requires Java >=1.4");
+            }
+
+            dataSource = new Cube3DataSource(sourceFiles[0]);
             break;
         case DataSource.HPCTOOLKIT:
             if (sourceFiles.length != 1) {
