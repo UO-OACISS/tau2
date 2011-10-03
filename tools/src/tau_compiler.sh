@@ -1060,7 +1060,7 @@ if [ $numFiles == 0 ]; then
 	
 	evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
 
-	 ${NM} example_f.mod.o | ${GREP} -i POMP2_Init_regions | ${AWK} -f ${AWK_SCRIPT} > pompregions.c
+	 ${NM} ${objectFilesForLinking} | ${GREP} -i POMP2_Init_regions | ${AWK} -f ${AWK_SCRIPT} > pompregions.c
 	cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
 	evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
 	linkCmd="$linkCmd pompregions.o"
@@ -1502,8 +1502,7 @@ if [ $gotoNextStep == $TRUE ]; then
 
 
             cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
-	    ${NM} example_c.mod.o | ${GREP} -i POMP2_Init_regions | ${GREP} " T " | ${AWK} -f ${AWK_SCRIPT} > pompregions.c
-
+	    ${NM}  ${objectFilesForLinking} | ${GREP} -i POMP2_Init_regions | ${GREP} " T " | ${AWK} -f ${AWK_SCRIPT} > pompregions.c
 
 	    evalWithDebugMessage "$cmdCompileOpariTab" "Compiling opari.tab.c"
 	    objectFilesForLinking="$objectFilesForLinking pompregions.o"
