@@ -587,6 +587,14 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
       TauDetectMemoryLeaks(); /* the last event should be before final exit */
     }
 
+/* On Crays with -iowrapper, rank 0 is spawned by the clone syscall. This
+    creates a parent thread (rank = -1) that tries to write data at the end
+    of execution and crashes. This fixes it and disables profile output from
+    rank -1. */
+#if (defined (TAU_MPI) && defined(TAU_CRAYCNL))
+    if (RtsLayer::myNode() == -1) TheSafeToDumpData() = 0;
+#endif /* TAU_MPI && TAU_CRAYCNL */
+
     // For Dyninst. tcf gets called after main and all the data structures may not be accessible
     // after main exits. Still needed on Linux - we use TauProgramTermination()
     if (strcmp(ThisFunction->GetName(), "_fini") == 0) {
