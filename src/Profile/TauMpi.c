@@ -1632,7 +1632,15 @@ int  MPI_Finalize(  )
   // merge TAU metadata
   Tau_metadataMerge_mergeMetaData();
 
-  /* Create a merged profile if requested */
+  /* Shutdown EBS after Finalize to allow Profiles to be written out
+     correctly. Also allows profile merging (or unification) to be
+     done correctly. */
+#ifndef TAU_WINDOWS
+  if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_finalizeNode();
+  }
+#endif /* TAU_WINDOWS */
+
   /* *CWL* This might be generalized to perform a final monitoring dump.
      For now, we should let merging handle the data.
 #ifdef TAU_MON_MPI
@@ -1640,14 +1648,11 @@ int  MPI_Finalize(  )
 #else
   */
 
-  /* Shutdown EBS after Finalize to allow Profiles to be written
-     out correctly. */
-#ifndef TAU_WINDOWS
-  if (TauEnv_get_ebs_enabled()) {
-    Tau_sampling_finalizeNode();
+  /* Create a merged profile if requested */
+  if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
+    Tau_mergeProfiles();
   }
-#endif /* TAU_WINDOWS */
-
+  
 #ifdef TAU_MONITORING
   Tau_mon_disconnect();
 #endif /* TAU_MONITORING */
