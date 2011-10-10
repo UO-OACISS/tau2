@@ -351,4 +351,12 @@ counter_map_t Tau_CuptiLayer_map()
 	return Tau_CuptiLayer_Counter_Map;
 }
 
+bool Tau_CuptiLayer_is_cupti_counter(char* str)
+{
+	return Tau_CuptiLayer_map().count(string(str)) > 0;
+}
 
+void Tau_CuptiLayer_register_string(char *str)
+{
+	Tau_CuptiLayer_register_counter(Tau_CuptiLayer_map()[str]);
+}
