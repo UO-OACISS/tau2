@@ -266,12 +266,12 @@ void Tau_cuda_exit()
 
 void Tau_cuda_enter_memcpy_event(const char *name, int id, int size, int MemcpyType)
 {
-	Tau_gpu_enter_memcpy_event(name, &cudaDriverGpuId(0,0,0), size, MemcpyType);
+	//Tau_gpu_enter_memcpy_event(name, &cudaDriverGpuId(0,0,0), size, MemcpyType);
 }
 
 void Tau_cuda_exit_memcpy_event(const char *name, int id, int MemcpyType)
 {
-	Tau_gpu_exit_memcpy_event(name, &cudaDriverGpuId(0,0,0), MemcpyType);
+	//Tau_gpu_exit_memcpy_event(name, &cudaDriverGpuId(0,0,0), MemcpyType);
 }
 
 /*void Tau_cuda_register_gpu_event(KernelEvent k, double start,

@@ -477,13 +477,15 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 			//printf("cuda D2D is: %d.\n", cudaMemcpyDeviceToDevice);
 			if (memcpyKind == cudaMemcpyHostToDevice)
 			{
+				cuptiGpuId *new_id = new cuptiGpuId(cbInfo->contextUid, 0);
 				Tau_gpu_enter_memcpy_event(name, 
-					&cuptiGpuId(cbInfo->contextUid, 0), memcpyCount, MemcpyHtoD);
+					new_id, memcpyCount, MemcpyHtoD);
 			}
 			else if (memcpyKind == cudaMemcpyDeviceToHost)
 			{
+				cuptiGpuId *new_id = new cuptiGpuId(cbInfo->contextUid, 0);
 				Tau_gpu_enter_memcpy_event(name,
-					&cuptiGpuId(cbInfo->contextUid, 0), memcpyCount, MemcpyDtoH);
+					new_id, memcpyCount, MemcpyDtoH);
 			}
 			else if (memcpyKind == cudaMemcpyDeviceToDevice)
 			{
@@ -517,13 +519,15 @@ void Tau_cuda_timestamp_callback(void *userdata, CUpti_CallbackDomain domain, CU
 		{
 			if (memcpyKind == cudaMemcpyHostToDevice)
 			{
+				cuptiGpuId *new_id = new cuptiGpuId(cbInfo->contextUid, stream);
 				Tau_gpu_exit_memcpy_event(name,
-					&cuptiGpuId(cbInfo->contextUid, stream), MemcpyHtoD);
+					new_id, MemcpyHtoD);
 			}
 			else if (memcpyKind == cudaMemcpyDeviceToHost)
 			{
+				cuptiGpuId *new_id = new cuptiGpuId(cbInfo->contextUid, stream);
 				Tau_gpu_exit_memcpy_event(name,
-					&cuptiGpuId(cbInfo->contextUid, stream), MemcpyDtoH);
+					new_id, MemcpyDtoH);
 			}
 			else if (memcpyKind == cudaMemcpyDeviceToDevice)
 			{
