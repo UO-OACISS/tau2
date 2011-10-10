@@ -286,7 +286,7 @@ double stop)
 void Tau_cuda_register_memcpy_event(const char *name, cudaGpuId* id, double start, double stop, int
 transferSize, int MemcpyType)
 {
-	FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::getTid())->ThisFunction;
+	FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->ThisFunction;
 	eventId c = Tau_gpu_create_gpu_event(name, id, p);
 	Tau_gpu_register_memcpy_event(c, start/1e3, stop/1e3, transferSize, MemcpyType);
 }
@@ -297,13 +297,13 @@ KernelEvent *curKernel;
 void Tau_cuda_enqueue_kernel_enter_event(const char *name, cudaGpuId* id)
 {
 	FunctionInfo* callingSite;
-	if (TauInternal_CurrentProfiler(RtsLayer::getTid()) == NULL)
+	if (TauInternal_CurrentProfiler(Tau_RtsLayer_getTid()) == NULL)
 	{
 		callingSite = NULL;
 	}
 	else
 	{
-		callingSite = TauInternal_CurrentProfiler(RtsLayer::getTid())->CallPathFunction;
+		callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
 	}
 	//printf("recording start for %s.\n", name);
 
