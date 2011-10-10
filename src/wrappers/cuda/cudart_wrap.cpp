@@ -35,9 +35,9 @@ void tau_track_memory(int kind, int count)
 	if (!init)
 	{
 		
-		Tau_get_context_userevent((void **) &MemoryCopyEventHtoD, "Bytes copied from Host to Device");
-		Tau_get_context_userevent((void **) &MemoryCopyEventDtoH, "Bytes copied from Device to Host");
-		Tau_get_context_userevent((void **) &MemoryCopyEventDtoD, "Bytes copied (Other)");
+		Tau_get_context_userevent((void **) &MemoryCopyEventHtoD, string("Bytes copied from Host to Device").c_str());
+		Tau_get_context_userevent((void **) &MemoryCopyEventDtoH, string("Bytes copied from Device to Host").c_str());
+		Tau_get_context_userevent((void **) &MemoryCopyEventDtoD, string("Bytes copied (Other)").c_str());
 		init = true;
 	}
 	/*printf("initalize counters. Number of events: %ld, %ld, %ld.\n", 

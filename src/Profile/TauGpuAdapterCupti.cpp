@@ -89,9 +89,10 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 			{
 				FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::getTid())->ThisFunction;
 				functionInfoMap[cbInfo->correlationId] = p;	
+				cuptiGpuId *new_id = new cuptiGpuId(cbInfo->contextUid, cbInfo->correlationId);
 				Tau_gpu_enter_memcpy_event(
 					cbInfo->functionName,
-					&cuptiGpuId(cbInfo->contextUid, cbInfo->correlationId),
+					new_id,
 					count,
 					getMemcpyType(kind)
 				);
