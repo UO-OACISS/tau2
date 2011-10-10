@@ -278,7 +278,7 @@ static int is_papi_metric(char *str) {
  ********************************************************************/
 static int is_cupti_metric(char *str) {
   if (strncmp("CUDA", str, 4) == 0) {
-		if (Tau_CuptiLayer_map().count(string(str)) > 0)
+		if (Tau_CuptiLayer_is_cupti_counter(str))
 		{
 			return 1;
 		}
@@ -335,7 +335,7 @@ static void initialize_functionArray() {
 			/* CUPTI handled separately */
 			/* setup CUPTI metrics */
 			functionArray[pos++] = metric_read_cupti;
-			Tau_CuptiLayer_register_counter(Tau_CuptiLayer_map()[metricv[i]]);
+			Tau_CuptiLayer_register_string(metricv[i]);
 #endif //CUPTI
 #ifdef TAU_PAPI
     } else if (compareMetricString(metricv[i], "P_WALL_CLOCK_TIME")) {

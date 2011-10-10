@@ -414,6 +414,12 @@ int RtsLayer::getPid() {
 // _syscall0(pid_t,gettid)
 // #endif
 
+// C interface.
+extern "C" int Tau_RtsLayer_getTid()
+{
+	return RtsLayer::getTid();
+}
+
 int RtsLayer::getTid() {
 #ifdef __linux
   //  return gettid();
