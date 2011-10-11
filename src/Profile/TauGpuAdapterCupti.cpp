@@ -92,7 +92,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 				cuptiGpuId *new_id = new cuptiGpuId(cbInfo->contextUid, cbInfo->correlationId);
 				Tau_gpu_enter_memcpy_event(
 					cbInfo->functionName,
-					new_id,
+					&cuptiGpuId(cbInfo->contextUid, cbInfo->correlationId),
 					count,
 					getMemcpyType(kind)
 				);
