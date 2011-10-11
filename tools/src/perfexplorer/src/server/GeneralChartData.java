@@ -490,7 +490,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 			buf.append("interval_mean_summary.interval_event = interval_event.id ");
 			buf.append("inner join temp_metric ");
 			buf.append("on interval_mean_summary.metric = temp_metric.id ");
-			if (db.getDBType().compareTo("derby") == 0) {
+			if (db.getDBType().compareTo("derby") == 0 || db.getDBType().compareTo("h2") == 0) {
 				buf.append("group by temp_trial.id, temp_metric.id) mr ");
 			} else {
 				buf.append("group by 1, 2) mr ");

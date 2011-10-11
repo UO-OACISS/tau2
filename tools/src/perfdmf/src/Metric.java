@@ -169,6 +169,7 @@ public class Metric implements Serializable {
             DatabaseMetaData dbMeta = db.getMetaData();
 
             if ((db.getDBType().compareTo("oracle") == 0) || (db.getDBType().compareTo("derby") == 0)
+                    || (db.getDBType().compareTo("h2") == 0)
                     || (db.getDBType().compareTo("db2") == 0)) {
                 resultSet = dbMeta.getColumns(null, null, "METRIC", "%");
             } else {
