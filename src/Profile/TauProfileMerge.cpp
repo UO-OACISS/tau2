@@ -301,7 +301,6 @@ int Tau_mergeProfiles() {
 	}
 	fprintf(f, "</derivedinterval_data>\n");
 	  
-	// *CWL* TODO - now write the user events
 	
 	// close
 	fprintf(f,"</derivedprofile>\n");
@@ -324,21 +323,18 @@ int Tau_mergeProfiles() {
 	    fprintf(f,"\n");
 	  }
 
-	  // *CWL* TODO - now write the user events. Print for now.
-	  /*
-	  printf("<derivedatomic derivedentity=\"%s\">\n", stat_names[s]);
+	  fprintf(f, "</derivedinterval_data>\n");
+	  fprintf(f,"<derivedatomic derivedentity=\"%s\">\n", stat_names[s]);
 	  for (int i=0; i<numAtomicEvents; i++) {
 	    // output order = num calls, max, min, mean, sumsqr
-	    printf("%d %.16G %.16G %.16G %.16G %.16G\n", i,
+	    fprintf(f,"%d %.16G %.16G %.16G %.16G %.16G\n", i,
 		   sAtomicCalls[s][i], 
 		   sAtomicMax[s][i],
 		   sAtomicMin[s][i], 
 		   sAtomicMean[s][i],
 		   sAtomicSumSqr[s][i]);
 	  }
-	  printf("</derivedatomic>\n");
-	  */
-	  fprintf(f, "</derivedinterval_data>\n");
+	  fprintf(f,"</derivedatomic>\n");
 	  
 
 	  // close
