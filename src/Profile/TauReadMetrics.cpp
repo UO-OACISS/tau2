@@ -126,7 +126,7 @@ void metric_read_gettimeofday(int tid, int idx, double values[]) {
 /* clock that uses clock_gettime */
 void metric_read_clock_gettime(int tid, int idx, double values[]) {
 #ifdef TAU_WINDOWS
-  timestamp = TauWindowsUsecD();
+  values[idx] = TauWindowsUsecD();
 #elif __APPLE__
   /* Mac OS X currently (up to 10.6.8) does not support clock_gettime. */
   metric_read_gettimeofday(tid, idx, values);

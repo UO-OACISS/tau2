@@ -632,6 +632,7 @@ perfsuite=no
 perfsuitedir=
 bfd=no
 bfddir=
+turnbfdoff=no
 perf=no
 perfincdir=
 perflibdir=
@@ -757,7 +758,7 @@ for arg in "$@"; do
 
   -cc=*)
     myarg=`echo $arg | sed 's/-cc=//'`
-    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc-bgp-linux-gcc ]
+    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc ]
       then
         c_compiler=$myarg
       else
@@ -765,7 +766,7 @@ for arg in "$@"; do
         testmp=`echo $myarg | sed -e 's/^mp//'`
         if [ "y$testxlc" = "y$myarg"  -a "y$testmp" = "y$myarg" ]
         then
-          echo "WARNING: valid options for cc are 'cc', 'gcc', 'gcc4', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', 'orcc', 'qk-pgcc', 'powerpc-bgp-linux-gcc', and 'pgcc' "
+          echo "WARNING: valid options for cc are 'cc', 'gcc', 'gcc4', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', 'orcc', 'qk-pgcc', 'powerpc-bgp-linux-gcc', 'x86_64-w64-mingw32-gcc', and 'pgcc' "
 #       exit 1
         else
 	  if [ "y$testxlc" != "y$myarg" ]
@@ -781,7 +782,7 @@ for arg in "$@"; do
 
   -c++=*)
     myarg=`echo $arg | sed 's/-c++=//'`
-    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = mpicxx ] 
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++ ] 
       then
         cxx_compiler=$myarg
       else
@@ -789,7 +790,7 @@ for arg in "$@"; do
         testmp=`echo $myarg | sed -e 's/^mp//'`
 	if [ "y$testxlc" = "y$myarg" -a "y$testmp" = "y$myarg" ]
         then
-          echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'g++4', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'pgcpp', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'pathCC', 'c++', 'qk-pgCC', and 'orCC'"
+          echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'g++4', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'pgcpp', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'pathCC', 'c++', 'qk-pgCC', 'x86_64-w64-mingw32-g++', and 'orCC'"
 #       exit 1
         else
 	  if [ "y$testxlc" != "y$myarg" ]
@@ -1833,6 +1834,7 @@ if [ ! -d ${targetdir}/etc ] ; then
 fi
 cp ${tauroot}/tools/src/perfexplorer/bin/perfexplorer.skel ${targetdir}/etc/.
 cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.derby ${targetdir}/etc/.
+cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.h2 ${targetdir}/etc/.
 cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.mysql ${targetdir}/etc/.
 cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.oracle ${targetdir}/etc/.
 cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.postgresql ${targetdir}/etc/.
@@ -1919,6 +1921,7 @@ cp ${tauroot}/tools/src/contrib/jgraph.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/jython.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/jogl/jogl.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/derby.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/h2.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/mysql.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/postgresql.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/xerces.jar $JARTARGET
@@ -2418,7 +2421,8 @@ case $machine in
 	elif [ "x$PE_ENV" = xINTEL ] ; then
 	    tauoptions="${tauoptions}-intel"
 	    default_fortran=intel
-	    fixmakeargs="$fixmakeargs COMPINST_GNU"
+	    turnbfdoff=yes
+	    fixmakeargs="$fixmakeargs COMPINST_INTEL9"
 	elif [ "x$PE_ENV" = xCRAY ] ; then
 	    tauoptions="${tauoptions}-cray"
 	    default_fortran=cray
@@ -2441,6 +2445,13 @@ case $machine in
                     fi
                 fi
 	    fi
+
+	    # *CWL* - this is a horrid hack, but the CCE compilers on 
+	    #         the Cray XE6 behave differently when building
+	    #         shared objects (see above) and it is not happy
+	    #         with -lmpichcxx which is static. -lmpichcxx_cray
+	    #         has to be used instead.
+	    fixmakeargs="$fixmakeargs CRAYCNL_CCE"
 
 	    touch conf_test.c
 	    extradir=`CC -v conf_test.c 2>&1 | grep cray-c++ | sed -e 's/ /\n/g' | grep "/opt/cray/cce" | grep "lib/x86-64$" | uniq | grep -v rpath`
@@ -2790,6 +2801,10 @@ if [ $machine = ibm64 -o $machine = ibm64linux ] ; then
     fi
   fi
 fi
+
+if [ $cxx_compiler = x86_64-w64-mingw32-g++ ]; then
+    fixmakeargs="$fixmakeargs TAU_WINDOWS MINGW GNU"
+fi 
 
 if [ $machine = t3e -a $cxx_compiler = KCC ] ; then
     fixmakeargs="$fixmakeargs CRAYKAI"
@@ -4044,7 +4059,7 @@ then
 fi
 
 ######################################################################
-if [ $cxx_compiler = g++ -o $cxx_compiler = g++4 -o $cxx_compiler = egcs -o $cxx_compiler = powerpc64-linux-g++ -o $cxx_compiler = c++ -o $cxx_compiler = scg++ -o $cxx_compiler = mips64el-gentoo-linux-gnu-g++  -o $cxx_compiler = powerpc-bgp-linux-g++ ]
+if [ $cxx_compiler = g++ -o $cxx_compiler = g++4 -o $cxx_compiler = egcs -o $cxx_compiler = powerpc64-linux-g++ -o $cxx_compiler = c++ -o $cxx_compiler = scg++ -o $cxx_compiler = mips64el-gentoo-linux-gnu-g++  -o $cxx_compiler = powerpc-bgp-linux-g++ -o $cxx_compiler = x86_64-w64-mingw32-g++ ]
   then
     if [ $machine != crayxmt ] 
     then
@@ -4455,6 +4470,9 @@ make_directories
 # Is LINUXTIMERS available?
 #####################################################################
 
+if [ $cxx_compiler = x86_64-w64-mingw32-g++ ] ; then
+  linuxtimers=no
+fi
 if [ $linuxtimers = yes ] ; then
   echo "LINUX_TIMERS enabled"
   fixmakeargs="$fixmakeargs LINUXTIMERS"
@@ -5446,8 +5464,16 @@ void foo() {
 EOF
 $echo "Checking for bfd.h... ${nnl}"
 if $c_compiler $orig_useropt -c conftest_bfd.c $bfdinclude 1> /dev/null 2>&1 ; then
-    fixmakeargs="$fixmakeargs TAU_BFD"
-    echo "yes"
+    if [ "$turnbfdoff" = "yes" ] ; then
+      # *CWL* this is for systems where BFD cannot be supported because
+      # of whatever reasons. An example is the Cray XE6 (hopper) where
+      # the Intel environment introduces a conflict between its own
+      # stdio.h and libiberty.h
+      echo "no"
+    else 
+      fixmakeargs="$fixmakeargs TAU_BFD"
+      echo "yes"
+    fi
 else
     echo "no"
 fi

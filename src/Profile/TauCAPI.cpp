@@ -1579,7 +1579,7 @@ void *Tau_query_parent_event(void *event) {
   if (event == topOfStack) {
     return NULL;
   } else {
-    long loc = (long)event;
+    long loc = Tau_convert_ptr_to_long(event);
     return (void*)(loc - (sizeof(Profiler)));
   }
 }
@@ -1596,6 +1596,18 @@ extern "C" void Tau_set_user_clock(double value) {
 
 extern "C" void Tau_set_user_clock_thread(double value, int tid) {
   metric_write_userClock(tid, value);
+}
+
+extern "C" long Tau_convert_ptr_to_long(void *ptr) {
+  long long a = (long long) ptr;
+  long ret = (long) a;
+  return ret;
+}
+
+extern "C" unsigned long Tau_convert_ptr_to_unsigned_long(void *ptr) {
+  unsigned long long a = (unsigned long long) ptr;
+  unsigned long ret = (unsigned long) a;
+  return ret;
 }
 
 //////////////////////////////////////////////////////////////////////

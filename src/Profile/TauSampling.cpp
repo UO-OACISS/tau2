@@ -612,7 +612,7 @@ void Tau_sampling_finalizeProfile(int tid) {
     }
     map<caddr_t, unsigned int,
       std::less<caddr_t>, 
-      SS_ALLOCATOR< std::pair<caddr_t, unsigned int> > >::iterator it;
+      SS_ALLOCATOR< std::pair<const caddr_t, unsigned int> > >::iterator it;
     for (it = parentTauContext->pcHistogram[tid]->begin();
 	 it != parentTauContext->pcHistogram[tid]->end(); it++) {
       caddr_t addr = (caddr_t)it->first;
@@ -888,9 +888,10 @@ int Tau_sampling_event_stop(int tid, double *stopTime) {
  ********************************************************************/
 void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
   int tid = RtsLayer::myThread();
-  /* *CWL* too fine-grained for anything but debug.*/
+  /* *CWL* too fine-grained for anything but debug.
   TAU_VERBOSE("Tau_sampling_handle_sample: tid=%d got sample [%p]\n",
   	      tid, (unsigned long)pc);
+  */
   if (samplingEnabled[tid] == 0) {
     // Do not track counts when sampling is not enabled.
     return;
