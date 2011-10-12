@@ -309,11 +309,11 @@ int Tau_mergeProfiles() {
 	// write profile blocks for each stat
 	// *CWL* Tentatively not writing out min_all and max_all
 	for (int s=0; s<NUM_STAT_TYPES; s++) {
-          if (s > NUM_STAT_TYPES-3) fprintf(f,"<!--\n");
+          //if (s > NUM_STAT_TYPES-3) fprintf(f,"<!--\n");
 	  fprintf(f,"<profile_xml>\n");
-	  fprintf(f,"<derivedentity id=\"%s\">\n", stat_names[s]);
-	  fprintf(f,"</derivedentity>\n");
-	  fprintf(f,"<derivedprofile derivedentity=\"%s\">\n", stat_names[s]);
+	  fprintf(f,"<%s_derivedentity>\n", stat_names[s]);
+	  fprintf(f,"</%s_derivedentity>\n",stat_names[s]);
+	  fprintf(f,"<%s_derivedprofile>\n", stat_names[s]);
 	  
 	  fprintf(f,"<derivedinterval_data metrics=\"%s\">\n", metricList);
 	  for (int i=0; i<numEvents; i++) {
@@ -325,7 +325,7 @@ int Tau_mergeProfiles() {
 	  }
 
 	  fprintf(f, "</derivedinterval_data>\n");
-	  fprintf(f,"<derivedatomic derivedentity=\"%s\">\n", stat_names[s]);
+	  fprintf(f,"<derivedatomic_data>\n");
 	  for (int i=0; i<numAtomicEvents; i++) {
 	    // output order = num calls, max, min, mean, sumsqr
 	    fprintf(f,"%d %.16G %.16G %.16G %.16G %.16G\n", i,
@@ -335,13 +335,13 @@ int Tau_mergeProfiles() {
 		   sAtomicMean[s][i],
 		   sAtomicSumSqr[s][i]);
 	  }
-	  fprintf(f,"</derivedatomic>\n");
+	  fprintf(f,"</derivedatomic_data>\n");
 	  
 
 	  // close
-	  fprintf(f,"</derivedprofile>\n");
+	  fprintf(f,"</%s_derivedprofile>\n",stat_names[s]);
 	  fprintf(f,"\n</profile_xml>\n");
-          if (s > NUM_STAT_TYPES -3) fprintf(f,"-->\n");
+          //if (s > NUM_STAT_TYPES -3) fprintf(f,"-->\n");
 	}
 	// *CWL* Free allocated structures.
 	free(globalEventMap);
