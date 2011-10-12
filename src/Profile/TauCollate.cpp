@@ -101,6 +101,8 @@ static void assignDerivedStats(double ****eventType, double ****gEventType,
   (*eventType)[stat_stddev_exist][m][i] =
     calculateStdDev(numEventThreads[i],(*gEventType)[step_sumsqr][m][i],
 		    (*eventType)[stat_mean_exist][m][i]);
+  (*eventType)[stat_min_all][m][i] =(*gEventType)[step_min][m][i];
+  (*eventType)[stat_max_all][m][i] =(*gEventType)[step_max][m][i];
 }
 
 static void assignDerivedStats(double ***eventType, double ***gEventType,
@@ -118,6 +120,8 @@ static void assignDerivedStats(double ***eventType, double ***gEventType,
     calculateStdDev(numEventThreads[i],
 		    (*gEventType)[step_sumsqr][i],
 		    (*eventType)[stat_mean_exist][i]);
+  (*eventType)[stat_min_all][i] = (*gEventType)[step_min][i];
+  (*eventType)[stat_max_all][i] = (*gEventType)[step_max][i];
 }
 
 /*********************************************************************
