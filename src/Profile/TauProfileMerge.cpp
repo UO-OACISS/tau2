@@ -231,8 +231,8 @@ int Tau_mergeProfiles() {
 	}
 
 	// *CWL* Not particularly elegant. Try to look into it sometime.
-	const char* stat_names[NUM_COLLATE_STEPS] = {
-	  "mean_all", "mean_no_null", "stddev_all", "stddev_no_null"
+	const char* stat_names[NUM_STAT_TYPES] = {
+	  "mean_all", "mean_no_null", "stddev_all", "stddev_no_null", "min_all", "max_all"
 	};
 
 	// write profile blocks for total value
@@ -260,7 +260,7 @@ int Tau_mergeProfiles() {
 	fprintf(f,"\n</profile_xml>\n");
 
 	// write profile blocks for each stat
-	for (int s=0; s<NUM_STAT_TYPES; s++) {
+	for (int s=0; s<NUM_STAT_TYPES-2; s++) { // Not writing min and max yet. 4 instead of 6. 
 	  fprintf(f,"<profile_xml>\n");
 	  fprintf(f,"<derivedentity id=\"%s\">\n", stat_names[s]);
 	  fprintf(f,"</derivedentity>\n");
