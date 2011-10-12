@@ -197,7 +197,7 @@ tau_timecorrect:	tau_timecorrect.o
 		$(CXX) $(CFLAGS) tau_timecorrect.o -o tau_timecorrect -lm $(LEXTRA) $(TAU_TRACE_INPUT_LIB)
 
 opari2-2.0/bin/opari2:
-		cd opari2-2.0 ; ./configure -prefix=. ; $(MAKE) ; make install
+		cd opari2-2.0 ; ./configure -prefix=$(TAU_PREFIX_INSTALL_DIR)/utils/opari2-2.0 ; $(MAKE) ; make install
 
 tau_timecorrect.o:	tau_timecorrect.cpp
 		$(CXX) $(CFLAGS) tau_timecorrect.cpp -c
