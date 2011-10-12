@@ -32,11 +32,13 @@ typedef enum {
   stat_mean_all,
   stat_mean_exist,
   stat_stddev_all,
-  stat_stddev_exist
+  stat_stddev_exist,
+  stat_min_all,
+  stat_max_all
 } stat_derived_type;
 
 const int NUM_COLLATE_STEPS = 4;
-const int NUM_STAT_TYPES = 4;
+const int NUM_STAT_TYPES = 6;
 
 /* Modular Internal Operation headers */
 void Tau_collate_allocateBuffers(double ***excl, double ***incl, 
