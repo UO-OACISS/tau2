@@ -127,6 +127,8 @@ public class ParseConfig implements Serializable {
         String connectionString;
         if (getDBType().equals("derby")) {
             connectionString = "jdbc:" + getDBType() + ":" + getDBName();
+        } else if (getDBType().equals("h2")) {
+            connectionString = "jdbc:" + getDBType() + ":" + getDBName() + ";AUTO_SERVER=TRUE";
         } else {
             if (getDBType().equals("oracle")) {
                 connectionString = "jdbc:oracle:thin:@//" + getDBHost() + ":" + getDBPort() + "/" + getDBName();

@@ -18,7 +18,15 @@
 #ifndef _TAU_COLLATE_H_
 #define _TAU_COLLATE_H_
 
+// To allow the use of Tau_unify_object_t in the interface.
 #include <TauUnify.h>
+
+#define NUM_COLLATE_OP_TYPES 2
+#define COLLATE_OP_BASIC 0
+#define COLLATE_OP_DERIVED 1
+
+#define NUM_COLLATE_STEPS 4
+#define NUM_STAT_TYPES 6
 
 /* For Internal TAU C++ use only */
 typedef enum {
@@ -32,27 +40,64 @@ typedef enum {
   stat_mean_all,
   stat_mean_exist,
   stat_stddev_all,
-  stat_stddev_exist
+  stat_stddev_exist,
+  stat_min_all,
+  stat_max_all  
 } stat_derived_type;
 
-const int NUM_COLLATE_STEPS = 4;
-const int NUM_STAT_TYPES = 4;
+extern "C" const int collate_num_op_items[NUM_COLLATE_OP_TYPES];
+extern "C" const char *collate_step_names[NUM_COLLATE_STEPS];
+extern "C" const char *stat_names[NUM_STAT_TYPES];
+extern "C" const char **collate_op_names[NUM_COLLATE_OP_TYPES];
 
 /* Modular Internal Operation headers */
-void Tau_collate_allocateBuffers(double ***excl, double ***incl, 
-				 int **numCalls, int **numSubr, 
-				 int numItems);
-void Tau_collate_allocateBuffers(double ***excl, double ***incl, 
-				 double **numCalls, double **numSubr, 
-				 int numItems);
-void Tau_collate_freeBuffers(double ***excl, double ***incl,
-			     int **numCalls, int **numSubr);
-void Tau_collate_freeBuffers(double ***excl, double ***incl,
-			     double **numCalls, double **numSubr);
+void Tau_collate_allocateFunctionBuffers(double ****excl, double ****incl,
+					 double ***numCalls, double ***numSubr,
+					 int numEvents,
+					 int numMetrics,
+					 int collateOpType);
+void Tau_collate_allocateAtomicBuffers(double ***atomicMin, double ***atomicMax,
+				       double ***atomicSum, double ***atomicMean,
+				       double ***atomicSumSqr,
+				       int numEvents,
+				       int collateOpType);
+void Tau_collate_allocateUnitFunctionBuffer(double ***excl, double ***incl,
+					    double **numCalls, double **numSubr,
+					    int numEvents, 
+					    int numMetrics);
+void Tau_collate_allocateUnitAtomicBuffer(double **atomicMin, double **atomicMax,
+					  double **atomicSum, double **atomicMean,
+					  double **atomicSumSqr,
+					  int numEvents);
+
+void Tau_collate_freeFunctionBuffers(double ****excl, double ****incl,
+				     double ***numCalls, double ***numSubr,
+				     int numMetrics,
+				     int collateOpType);
+void Tau_collate_freeAtomicBuffers(double ***atomicMin, double ***atomicMax,
+				   double ***atomicSum, double ***atomicMean,
+				   double ***atomicSumSqr,
+				   int collateOpType);
+void Tau_collate_freeUnitFunctionBuffer(double ***excl, double ***incl,
+					double **numCalls, double **numSubr,
+					int numMetrics);
+void Tau_collate_freeUnitAtomicBuffer(double **atomicMin, double **atomicMax,
+				      double **atomicSum, double **atomicMean,
+				      double **atomicSumSqr);
 
 void Tau_collate_get_total_threads(int *globalNumThreads, 
 				   int **numEventThreads,
 				   int numItems, int *globalmap);
+
+void Tau_collate_compute_atomicStatistics(Tau_unify_object_t *atomicUnifier,
+					  int *globalEventMap, int numItems,
+					  int globalNumThreads, int *numEventThreads,
+					  double ***gAtomicMin, double ***gAtomicMax,
+					  double ***gAtomicSum, double ***gAtomicMean,
+					  double ***gAtomicSumSqr,
+					  double ***sAtomicMin, double ***sAtomicMax,
+					  double ***sAtomicSum, double ***sAtomicMean,
+					  double ***sAtomicSumSqr);
 void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
 				    int *globalmap, int numItems, 
 				    int globalNumThreads, 

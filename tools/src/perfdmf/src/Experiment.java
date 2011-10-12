@@ -83,6 +83,7 @@ public class Experiment implements Serializable, Comparable<Experiment> {
             DatabaseMetaData dbMeta = db.getMetaData();
 
             if ((db.getDBType().compareTo("oracle") == 0) || (db.getDBType().compareTo("derby") == 0)
+                    || (db.getDBType().compareTo("h2") == 0)
                     || (db.getDBType().compareTo("db2") == 0)) {
                 resultSet = dbMeta.getColumns(null, null, "EXPERIMENT", "%");
             } else {
@@ -362,6 +363,8 @@ public class Experiment implements Serializable, Comparable<Experiment> {
             } else if (db.getDBType().compareTo("db2") == 0) {
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM experiment";
             } else if (db.getDBType().compareTo("derby") == 0) {
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM experiment";
+            } else if (db.getDBType().compareTo("h2") == 0) {
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM experiment";
             } else if (db.getDBType().compareTo("oracle") == 0) {
                 tmpStr = "select " + db.getSchemaPrefix() + "experiment_id_seq.currval FROM dual";

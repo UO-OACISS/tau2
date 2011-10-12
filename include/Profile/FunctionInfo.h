@@ -155,7 +155,7 @@ public:
   //         eventually.
   //  map<caddr_t, unsigned int> *pcHistogram;
 #ifndef TAU_WINDOWS
-  map<caddr_t, unsigned int, std::less<caddr_t>, SS_ALLOCATOR< std::pair<caddr_t, unsigned int> > > *pcHistogram[TAU_MAX_THREADS];
+  std::map<caddr_t, unsigned int, std::less<caddr_t>, SS_ALLOCATOR< std::pair<const caddr_t, unsigned int> > > *pcHistogram[TAU_MAX_THREADS];
   // For Intermediate FunctionInfo objects for groups of samples
   FunctionInfo *ebsIntermediate;
   // For FunctionInfo objects created specially for sample-based profiling 

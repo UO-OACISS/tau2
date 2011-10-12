@@ -1632,7 +1632,15 @@ int  MPI_Finalize(  )
   // merge TAU metadata
   Tau_metadataMerge_mergeMetaData();
 
-  /* Create a merged profile if requested */
+  /* Shutdown EBS after Finalize to allow Profiles to be written out
+     correctly. Also allows profile merging (or unification) to be
+     done correctly. */
+#ifndef TAU_WINDOWS
+  if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_finalizeNode();
+  }
+#endif /* TAU_WINDOWS */
+
   /* *CWL* This might be generalized to perform a final monitoring dump.
      For now, we should let merging handle the data.
 #ifdef TAU_MON_MPI
@@ -1640,16 +1648,11 @@ int  MPI_Finalize(  )
 #else
   */
 
+  /* Create a merged profile if requested */
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
-    if (TauEnv_get_ebs_enabled()) {
-      // **CWL** - Attempt BFD resolution before merging format output.
-      // TODO - make unification a thread-aware process so sampling
-      //        finalization is congruent with respect to it.
-      Tau_sampling_finalizeNode();
-    }
     Tau_mergeProfiles();
   }
-
+  
 #ifdef TAU_MONITORING
   Tau_mon_disconnect();
 #endif /* TAU_MONITORING */
@@ -1693,7 +1696,9 @@ char *** argv;
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Init( argc, argv );
+#ifndef TAU_WINDOWS
   Tau_sampling_init_if_necessary();
+#endif /* TAU_WINDOWS */
 #ifndef TAU_DISABLE_SIGUSR
   Tau_signal_initialization(); 
 #endif
@@ -1744,7 +1749,9 @@ int *provided;
 #ifndef TAU_DISABLE_SIGUSR
   Tau_signal_initialization(); 
 #endif
+#ifndef TAU_WINDOWS
   Tau_sampling_init_if_necessary();
+#endif /* TAU_WINDOWS */
 
   TAU_PROFILE_STOP(tautimer);
 

@@ -2272,6 +2272,8 @@ void shmem_init() {
   TAU_PROFILE_TIMER(t,"void shmem_init() C", "", TAU_USER);
   TAU_PROFILE_START(t);
    pshmem_init();
+  tau_totalnodes(1,pshmem_n_pes());
+  TAU_PROFILE_SET_NODE(pshmem_my_pe());
   TAU_PROFILE_STOP(t);
 
 }
@@ -2392,6 +2394,8 @@ void shmem_init_thread(int a1, int * a2) {
   TAU_PROFILE_TIMER(t,"void shmem_init_thread(int, int *) C", "", TAU_USER);
   TAU_PROFILE_START(t);
    pshmem_init_thread(a1, a2);
+  tau_totalnodes(1,pshmem_n_pes());
+  TAU_PROFILE_SET_NODE(pshmem_my_pe());
   TAU_PROFILE_STOP(t);
 
 }

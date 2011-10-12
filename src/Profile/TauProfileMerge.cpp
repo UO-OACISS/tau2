@@ -121,7 +121,6 @@ int Tau_mergeProfiles() {
 
 #ifdef TAU_UNIFY
   Tau_unify_object_t *functionUnifier;
-  Tau_unify_object_t *atomicUnifier;
   int numEvents;
   int globalNumThreads;
   int *numEventThreads;
@@ -131,10 +130,22 @@ int Tau_mergeProfiles() {
   double **gNumCalls, **gNumSubr;
   double ***sExcl, ***sIncl;
   double **sNumCalls, **sNumSubr;
+
+  Tau_unify_object_t *atomicUnifier;
+  int numAtomicEvents;
+  int *numAtomicEventThreads;
+  int *globalAtomicEventMap;
+  
+  double **gAtomicMin, **gAtomicMax;
+  double **gAtomicCalls, **gAtomicMean;
+  double **gAtomicSumSqr;
+  double **sAtomicMin, **sAtomicMax;
+  double **sAtomicCalls, **sAtomicMean;
+  double **sAtomicSumSqr;
+
   if (TauEnv_get_stat_precompute() == 1) {
     // Unification must already be called.
     functionUnifier = Tau_unify_getFunctionUnifier();
-    atomicUnifier = Tau_unify_getAtomicUnifier();
     numEvents = functionUnifier->globalNumItems;
     numEventThreads = (int*)TAU_UTIL_MALLOC(numEvents*sizeof(int));
     globalEventMap = (int*)TAU_UTIL_MALLOC(numEvents*sizeof(int));
@@ -149,21 +160,64 @@ int Tau_mergeProfiles() {
     Tau_collate_get_total_threads(&globalNumThreads, &numEventThreads,
 				  numEvents, globalEventMap);
     
-    gExcl = (double ***)TAU_UTIL_MALLOC(sizeof(double **)*NUM_COLLATE_STEPS);
-    gIncl = (double ***)TAU_UTIL_MALLOC(sizeof(double **)*NUM_COLLATE_STEPS);
-    gNumCalls = (double **)TAU_UTIL_MALLOC(sizeof(double *)*NUM_COLLATE_STEPS);
-    gNumSubr = (double **)TAU_UTIL_MALLOC(sizeof(double *)*NUM_COLLATE_STEPS);
+    Tau_collate_allocateFunctionBuffers(&gExcl, &gIncl,
+					&gNumCalls, &gNumSubr,
+					numEvents,
+					Tau_Global_numCounters,
+					COLLATE_OP_BASIC);
     if (rank == 0) {
-      sExcl = (double ***)TAU_UTIL_MALLOC(sizeof(double **)*NUM_STAT_TYPES);
-      sIncl = (double ***)TAU_UTIL_MALLOC(sizeof(double **)*NUM_STAT_TYPES);
-      sNumCalls = (double **)TAU_UTIL_MALLOC(sizeof(double *)*NUM_STAT_TYPES);
-      sNumSubr = (double **)TAU_UTIL_MALLOC(sizeof(double *)*NUM_STAT_TYPES);
+      Tau_collate_allocateFunctionBuffers(&sExcl, &sIncl,
+					  &sNumCalls, &sNumSubr,
+					  numEvents,
+					  Tau_Global_numCounters,
+					  COLLATE_OP_DERIVED);
     }
     Tau_collate_compute_statistics(functionUnifier, globalEventMap, 
 				   numEvents, 
 				   globalNumThreads, numEventThreads,
 				   &gExcl, &gIncl, &gNumCalls, &gNumSubr,
 				   &sExcl, &sIncl, &sNumCalls, &sNumSubr);
+
+    atomicUnifier = Tau_unify_getAtomicUnifier();
+    numAtomicEvents = atomicUnifier->globalNumItems;
+    numAtomicEventThreads = 
+      (int*)TAU_UTIL_MALLOC(numAtomicEvents*sizeof(int));
+    globalAtomicEventMap = (int*)TAU_UTIL_MALLOC(numAtomicEvents*sizeof(int));
+    // initialize all to -1
+    for (int i=0; i<numAtomicEvents; i++) { 
+      // -1 indicates that the event did not occur for this rank
+      globalAtomicEventMap[i] = -1; 
+    }
+    for (int i=0; i<atomicUnifier->localNumItems; i++) {
+      // set reverse mapping
+      globalAtomicEventMap[atomicUnifier->mapping[i]] = i;
+    }
+    Tau_collate_get_total_threads(&globalNumThreads, &numAtomicEventThreads,
+				  numAtomicEvents, globalAtomicEventMap);
+    
+    Tau_collate_allocateAtomicBuffers(&gAtomicMin, &gAtomicMax,
+				      &gAtomicCalls, &gAtomicMean,
+				      &gAtomicSumSqr,
+				      numAtomicEvents,
+				      COLLATE_OP_BASIC);
+    if (rank == 0) {
+      Tau_collate_allocateAtomicBuffers(&sAtomicMin, &sAtomicMax,
+					&sAtomicCalls, &sAtomicMean,
+					&sAtomicSumSqr,
+					numAtomicEvents,
+					COLLATE_OP_DERIVED);
+    }
+    Tau_collate_compute_atomicStatistics(atomicUnifier, globalAtomicEventMap, 
+					 numAtomicEvents, 
+					 globalNumThreads, 
+					 numAtomicEventThreads,
+					 &gAtomicMin, &gAtomicMax, 
+					 &gAtomicCalls, &gAtomicMean,
+					 &gAtomicSumSqr,
+					 &sAtomicMin, &sAtomicMax, 
+					 &sAtomicCalls, &sAtomicMean,
+					 &sAtomicSumSqr);
+
   } /* TauEnv_get_stat_precompute() == 1 */
 #endif /* TAU_UNIFY */
       
@@ -218,8 +272,7 @@ int Tau_mergeProfiles() {
     fwrite (buf, buflen, 1, f);
 
 #ifdef TAU_UNIFY
-    int envval = TauEnv_get_stat_precompute();
-    if (envval == 1) {
+    if (TauEnv_get_stat_precompute() == 1) {
       if (rank == 0) {
 	// *CWL* Now write the computed statistics out in their own special
 	//   profile and definition blocks.
@@ -229,11 +282,6 @@ int Tau_mergeProfiles() {
 	for (int m=0; m<Tau_Global_numCounters; m++) {
 	  loc += sprintf(loc,"%d ", m);
 	}
-
-	// *CWL* Not particularly elegant. Try to look into it sometime.
-	const char* stat_names[NUM_COLLATE_STEPS] = {
-	  "mean_all", "mean_no_null", "stddev_all", "stddev_no_null"
-	};
 
 	// write profile blocks for total value
 	fprintf(f,"<profile_xml>\n");
@@ -253,18 +301,19 @@ int Tau_mergeProfiles() {
 	}
 	fprintf(f, "</derivedinterval_data>\n");
 	  
-	// *CWL* TODO - now write the user events
 	
 	// close
 	fprintf(f,"</derivedprofile>\n");
 	fprintf(f,"\n</profile_xml>\n");
 
 	// write profile blocks for each stat
+	// *CWL* Tentatively not writing out min_all and max_all
 	for (int s=0; s<NUM_STAT_TYPES; s++) {
+          //if (s > NUM_STAT_TYPES-3) fprintf(f,"<!--\n");
 	  fprintf(f,"<profile_xml>\n");
-	  fprintf(f,"<derivedentity id=\"%s\">\n", stat_names[s]);
-	  fprintf(f,"</derivedentity>\n");
-	  fprintf(f,"<derivedprofile derivedentity=\"%s\">\n", stat_names[s]);
+	  fprintf(f,"<%s_derivedentity>\n", stat_names[s]);
+	  fprintf(f,"</%s_derivedentity>\n",stat_names[s]);
+	  fprintf(f,"<%s_derivedprofile>\n", stat_names[s]);
 	  
 	  fprintf(f,"<derivedinterval_data metrics=\"%s\">\n", metricList);
 	  for (int i=0; i<numEvents; i++) {
@@ -274,35 +323,37 @@ int Tau_mergeProfiles() {
 	    }	  
 	    fprintf(f,"\n");
 	  }
+
 	  fprintf(f, "</derivedinterval_data>\n");
+	  fprintf(f,"<derivedatomic_data>\n");
+	  for (int i=0; i<numAtomicEvents; i++) {
+	    // output order = num calls, max, min, mean, sumsqr
+	    fprintf(f,"%d %.16G %.16G %.16G %.16G %.16G\n", i,
+		   sAtomicCalls[s][i], 
+		   sAtomicMax[s][i],
+		   sAtomicMin[s][i], 
+		   sAtomicMean[s][i],
+		   sAtomicSumSqr[s][i]);
+	  }
+	  fprintf(f,"</derivedatomic_data>\n");
 	  
-	  // *CWL* TODO - now write the user events
 
 	  // close
-	  fprintf(f,"</derivedprofile>\n");
+	  fprintf(f,"</%s_derivedprofile>\n",stat_names[s]);
 	  fprintf(f,"\n</profile_xml>\n");
+          //if (s > NUM_STAT_TYPES -3) fprintf(f,"-->\n");
 	}
 	// *CWL* Free allocated structures.
 	free(globalEventMap);
-	for (int s=0; s<NUM_COLLATE_STEPS; s++) {
-	  Tau_collate_freeBuffers(&(gExcl[s]), &(gIncl[s]), 
-				  &(gNumCalls[s]), &(gNumSubr[s]));
-	}
-	free(gExcl);
-	free(gIncl);
-	free(gNumCalls);
-	free(gNumSubr);
-	if (rank == 0) {
-	  for (int s=0; s<NUM_STAT_TYPES; s++) {
-	    Tau_collate_freeBuffers(&(sExcl[s]), &(sIncl[s]), 
-				    &(sNumCalls[s]), &(sNumSubr[s]));
-	  }
-	  free(sExcl);
-	  free(sIncl);
-	  free(sNumCalls);
-	  free(sNumSubr);
-	}
-      }
+	Tau_collate_freeFunctionBuffers(&sExcl, &sIncl,
+					&sNumCalls, &sNumSubr,
+					Tau_Global_numCounters,
+					COLLATE_OP_DERIVED);
+      }  /* rank == 0 */
+      Tau_collate_freeFunctionBuffers(&gExcl, &gIncl,
+				      &gNumCalls, &gNumSubr,
+				      Tau_Global_numCounters,
+				      COLLATE_OP_BASIC);
     }
 #endif /* TAU_UNIFY */
 
