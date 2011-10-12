@@ -21,7 +21,7 @@ import org.xml.sax.helpers.DefaultHandler;
  * @author  Alan Morris
  * @version $Revision: 1.9 $
  */
-public class CubeXMLHandler extends DefaultHandler {
+public class Cube3XMLHandler extends DefaultHandler {
 
     private StringBuffer accumulator;
 
@@ -45,7 +45,7 @@ public class CubeXMLHandler extends DefaultHandler {
     private Map<String, Function> cnodeMap = new HashMap<String, Function>(); // map cube cnodeId Strings to csiteId Strings
     private Map<Metric, String> uomMap = new HashMap<Metric, String>(); // map cube metricId Strings to uom (unit of measure) Strings
 
-    private CubeDataSource cubeDataSource;
+    private Cube3DataSource cubeDataSource;
 
     private String name;
     private Stack<String> nameStack = new Stack<String>();
@@ -140,7 +140,7 @@ public class CubeXMLHandler extends DefaultHandler {
         }
     }
 
-    public CubeXMLHandler(CubeDataSource cubeDataSource) {
+    public Cube3XMLHandler(Cube3DataSource cubeDataSource) {
         super();
         this.cubeDataSource = cubeDataSource;
     }

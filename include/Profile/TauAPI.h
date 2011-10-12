@@ -353,6 +353,9 @@ int Tau_global_decr_insideTAU_tid(int tid);
 int Tau_global_getLightsOut();
 void Tau_global_setLightsOut();
 
+long Tau_convert_ptr_to_long(void *ptr);
+unsigned long Tau_convert_ptr_to_unsigned_long(void *ptr);
+
 
 /* Runtime "context" access */
 void *Tau_query_current_event();

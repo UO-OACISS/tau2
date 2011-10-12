@@ -475,6 +475,10 @@ case $1 in
 	echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+     TAU_LINKS_RT)
+	echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
 
 ###############################################################
 # Set up MPI stuff if possible
@@ -1282,6 +1286,14 @@ case $1 in
 	echo "NOTE: Using KAI KCC options"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     TAU_WINDOWS)
+	echo "NOTE: Using TAU's Windows options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     MINGW)
+	echo "NOTE: Using TAU's MINGW options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      SGICOUNTERS)
 	echo "NOTE: Using SGI R10000 Hardware Counters for Profiling"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1312,6 +1324,9 @@ case $1 in
 	;;
      CRAYCNL)
 	echo "NOTE: Using Cray Compute Node Linux options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     CRAYCNL_CCE)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CRAYCNL_SHARED)
@@ -1464,6 +1479,9 @@ case $1 in
 	;;
      GNU)
 	echo "NOTE: GNU g++ options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     TAU_STRSIGNAL_OK)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      RTTI)

@@ -321,6 +321,7 @@ TAU_F77 = $(TAU_F90)
 #CRAYKAI#PROFILEOPT12	       = -DCRAYKAI	       #ENDIF#
 #HP_FORTRAN#PROFILEOPT12       = -DHP_FORTRAN	       #ENDIF#
 #CRAYCC#PROFILEOPT13	       = -h instantiate=used -DCRAYCC -DTAU_DOT_H_LESS_HEADERS  #ENDIF#
+#MINGW#PROFILEOPT13	       = -DTAU_WINDOWS -DTAU_DISABLE_SIGUSR -DTAU_MINGW -DTAU_ENABLE  -DTAU_GNU #ENDIF#
 #COMPINST_CRAYCC#PROFILEOPT13          =  -DCRAYCC -DTAU_DOT_H_LESS_HEADERS  #ENDIF#
 #CRAYX1CC#PROFILEOPT13	       = -DTAU_DOT_H_LESS_HEADERS #ENDIF#
 #SGICC#TAU_CXX = $(CONFIG_CXX) $(ABI) $(ISA) $(USER_OPT) -LANG:std  #ENDIF#
@@ -437,6 +438,7 @@ PROFILEOPT24 =
 #MIPS32LINUX#PROFILEOPT74 = -DTAU_SICORTEX #ENDIF#
 #MIPS64LINUX#PROFILEOPT74 = -DTAU_SICORTEX #ENDIF#
 #TAU_BFD#PROFILEOPT75 = -DTAU_BFD #ENDIF#
+#MINGW#PROFILEOPT75 = #ENDIF#
 
 #MPIFILE#PROFILEOPT76  = -DTAU_MPIFILE   #ENDIF#
 #TAU_DEMANGLE#PROFILEOPT77 = -DHAVE_GNU_DEMANGLE #ENDIF#
@@ -621,16 +623,18 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 #PATHSCALE_FORTRAN#TAU_CXXLIBS_PATHSCALE_CNL      	= -L$(EXTRADIR)/lib -lstdc++     #ENDIF#
 #GNU_GFORTRAN#TAU_CXXLIBS_GNU_CNL      	= -L$(EXTRADIR)/lib -lstdc++ -lgcc_eh    #ENDIF#
 #INTELIFORT#TAU_CXXLIBS_INTEL_CNL      	= -lstdc++   #ENDIF#
-#MPI#TAU_MPICHCXX_CRAY_CNL_LIBS = $(TAU_MPILIB_DIRLIB) -lmpichcxx #ENDIF#
+TAU_MPICHCXX_CNL_SHARED_LIB = -lmpichcxx
+#CRAYCNL_CCE#TAU_MPICHCXX_CNL_SHARED_LIB = -lmpichcxx_cray #ENDIF#
+#MPI#TAU_MPICHCXX_CRAY_CNL_LIBS = $(TAU_MPILIB_DIRLIB) $(TAU_MPICHCXX_CNL_SHARED_LIB) #ENDIF#
 #CRAY_FORTRAN#TAU_CXXLIBS_CRAY_CNL = -L$(EXTRADIR) -lcray-c++-rts -lstdc++ -lgcc_eh $(TAU_MPICHCXX_CRAY_CNL_LIBS) #ENDIF#
 #CRAYCNL#TAU_CXXLIBS       	= $(TAU_CXXLIBS_PGI_CNL) $(TAU_CXXLIBS_PATHSCALE_CNL) $(TAU_CXXLIBS_GNU_CNL) $(TAU_CXXLIBS_INTEL_CNL) $(TAU_CXXLIBS_CRAY_CNL) #ENDIF#
 #CATAMOUNT#TAU_CXXLIBS       	= $(TAU_CXXLIBS_PGI_CNL) $(TAU_CXXLIBS_PATHSCALE_CNL) $(TAU_CXXLIBS_GNU_CNL)   #ENDIF#
 #CRAYX1CC#TAU_CXXLIBS        	= -L/opt/ctl/CC/CC/lib -lC       #ENDIF#
 
 ## Set the gfortran options on BGP
-#BGP_GFORTRAN#TAU_CXXLIBS		= -lstdc++ #ENDIF#
-#BGP_GFORTRAN#TAU_GNULIBS		= -lstdc++ #ENDIF#
-#BGP_GFORTRAN#TAU_CXXLIBS_GNU_CNL	= -lstdc++ #ENDIF#
+#BGP_GFORTRAN#TAU_CXXLIBS		= -lstdc++ -lm #ENDIF#
+#BGP_GFORTRAN#TAU_GNULIBS		= -lstdc++ -lm #ENDIF#
+#BGP_GFORTRAN#TAU_CXXLIBS_GNU_CNL	= -lstdc++ -lm #ENDIF#
 
 ## Set the gfortran options on Zepto BGP
 #ZEPTO_GFORTRAN#TAU_CXXLIBS		= -lstdc++ #ENDIF#
@@ -780,7 +784,8 @@ TAU_RANLIB_FE = echo "Built"
 #CRAYXMT#TAU_RANLIB_FE   = /usr/bin/ranlib   #ENDIF#
 
 ##############################################
-TAU_AR                 = ar             #ENDIF#
+TAU_AR                 = ar
+#MINGW#TAU_AR          = x86_64-w64-mingw32-ar #ENDIF#
 #SP1#TAU_AR            = ar -X32        #ENDIF#
 #IBM64#TAU_AR          = ar -X64        #ENDIF#
 #PPC64#TAU_AR          = ar 		#ENDIF#
@@ -805,8 +810,17 @@ HPCTOOLKIT_LINK=
 ##############################################
 # Extra linker args (e.g. -Wl,-export-dynamic)
 ##############################################
+# *CWL* NOTE: The extra space between EXTRA_LINKER_ARGS and "=" in the 
+#       case of APPLECXX is necessary so FixMakefile.sed.default will not
+#       blow that entry away. It does so currently and I believe it may
+#       be because the order of the sed commands are not being respected
+#       by Mac OS X. Given the order, all ENDIF replacements should have
+#       been taken care of before any restoration attempts are taken for
+#       other variables like EXTRA_LINKER_ARGS. We are going to have to
+#       continually keep an eye on similar situations for Mac OS X until
+#       we can find a permanent fix.
 EXTRA_LINKER_ARGS=
-#APPLECXX#EXTRA_LINKER_ARGS= -rdynamic #ENDIF#
+#APPLECXX#EXTRA_LINKER_ARGS = -rdynamic#ENDIF#
 TAU_LINKER_OPT14=$(UPCC_LINK_PREFIX)$(EXTRA_LINKER_ARGS)
 
 
@@ -836,6 +850,8 @@ BFDLIBS=
 TAU_FORTRAN_COMPINST_OPTION=$(TAU_COMPINST_OPTION)
 #NAGWARE_FORTRAN#TAU_FORTRAN_COMPINST_OPTION=-Wc,-finstrument-functions#ENDIF#
 
+#TAU_LINKS_RT#TAU_LINKER_OPT16= -lrt#ENDIF#
+
 ##############################################
 # Various Sampling Support Options
 ##############################################
@@ -846,8 +862,9 @@ EBS_CLOCK_RES=
 #EBS_HAS_RT#PROFILEOPT83 = -DEBS_CLOCK_RES=$(EBS_CLOCK_RES) #ENDIF#
 
 ##############################################
-
-
+# Support for non-portable features
+##############################################
+#TAU_STRSIGNAL_OK#PROFILEOPT84 = -DTAU_STRSIGNAL_OK#ENDIF#
 
 ##############################################
 
@@ -871,7 +888,8 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 	      $(PROFILEOPT69) $(PROFILEOPT70) $(PROFILEOPT71) $(PROFILEOPT72) \
 	      $(PROFILEOPT73) $(PROFILEOPT74) $(PROFILEOPT75) $(PROFILEOPT76) \
 	      $(PROFILEOPT77) $(PROFILEOPT78) $(PROFILEOPT79) $(PROFILEOPT80) \
-              $(PROFILEOPT81) $(PROFILEOPT82) $(PROFILEOPT83) $(TRACEOPT)
+              $(PROFILEOPT81) $(PROFILEOPT82) $(PROFILEOPT83) $(PROFILEOPT84) \
+              $(TRACEOPT)
 
 
 ##############################################
@@ -896,7 +914,7 @@ TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
                   $(TAU_LINKER_OPT7) $(TAU_LINKER_OPT8) $(TAU_LINKER_OPT9) \
                   $(TAU_LINKER_OPT10) $(TAU_LINKER_OPT11) $(TAU_LINKER_OPT12) \
 		  $(TAU_LINKER_OPT13) $(PERFSUITELINK) $(VAMPIRTRACELIBS) $(SCOREPLIBS) $(HPCTOOLKIT_LINK) \
-		  $(TAU_LINKER_OPT14) $(TAU_LINKER_OPT15)
+		  $(TAU_LINKER_OPT14) $(TAU_LINKER_OPT15) $(TAU_LINKER_OPT16)
 
 ##############################################
 
@@ -936,7 +954,10 @@ TAU_LIBS	= $(TAUHELPER) -L$(TAU_LIB_DIR) -ltau$(TAU_CONFIG) $(TAU_LINKER_OPTS)
 
 #PERFLIB#TAU_LIBS = #ENDIF#
 
-TAU_SHLIBS	= $(TAUHELPER) -L$(TAU_LIB_DIR) -lTAUsh$(TAU_CONFIG) $(TAU_LINKER_OPTS) $(TAU_LINKER_SHOPTS) $(TAU_MPI_LIB) -ldl
+TAU_LIBDL=-ldl
+#TAU_WINDOWS#TAU_LIBDL=  #ENDIF#
+
+TAU_SHLIBS	= $(TAUHELPER) -L$(TAU_LIB_DIR) -lTAUsh$(TAU_CONFIG) $(TAU_LINKER_OPTS) $(TAU_LINKER_SHOPTS) $(TAU_MPI_LIB) $(TAU_LIBDL)
 #PERFLIB#TAU_SHLIBS = #ENDIF#
 TAU_EXLIBS	= $(TAUHELPER) -lTAU $(TAU_LINKER_OPTS) $(TAU_LINKER_SHOPTS) $(TAU_MPI_LIB)
 

@@ -286,7 +286,7 @@ double stop)
 void Tau_cuda_register_memcpy_event(const char *name, cudaGpuId* id, double start, double stop, int
 transferSize, int MemcpyType)
 {
-	FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::myNode())->ThisFunction;
+	FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::getTid())->ThisFunction;
 	eventId c = Tau_gpu_create_gpu_event(name, id, p);
 	Tau_gpu_register_memcpy_event(c, start/1e3, stop/1e3, transferSize, MemcpyType);
 }
@@ -310,7 +310,7 @@ void Tau_cuda_enqueue_kernel_enter_event(const char *name, cudaGpuId* id)
 	curKernel = new KernelEvent(name, id, callingSite);
 	
 	const char *dem_name = 0;
-#if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE && false
+#if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
 	//printf("demangling name....\n");
 	dem_name = cplus_demangle(name, DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE |
 	DMGL_TYPES);
@@ -332,7 +332,7 @@ void Tau_cuda_enqueue_kernel_enter_event(const char *name, cudaGpuId* id)
 void Tau_cuda_enqueue_kernel_exit_event()
 {
 
-	//printf("recording stop for %s.\n", name);
+	//printf("recording stop.");
 
 	curKernel->enqueue_stop_event();
 	KernelBuffer.push(*curKernel);

@@ -486,7 +486,7 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
   }
   compInstDisabled[tid] = 1;
 
-  if ((hn = hash_get((unsigned long)funcptr))) {
+  if ((hn = hash_get(Tau_convert_ptr_to_unsigned_long(funcptr)))) {
     if (hn->excluded) {
       // finished in this routine, allow entry
       compInstDisabled[tid] = 0;
@@ -517,11 +517,11 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 	    bfdUnitHandle = Tau_bfd_registerUnit(TAU_BFD_REUSE_GLOBALS);
 	  }
 	  TauBfdInfo *info = Tau_bfd_resolveBfdInfo(bfdUnitHandle, 
-						    (unsigned long)funcptr);
+			Tau_convert_ptr_to_unsigned_long(funcptr));
 	  if (info == NULL) {
 	      // Try again with executable
 	      info = Tau_bfd_resolveBfdExecInfo(bfdUnitHandle, 
-						(unsigned long)funcptr);
+			Tau_convert_ptr_to_unsigned_long(funcptr));
 	  }
 	  if (info != NULL) {
 	      if (info->filename != NULL) {
@@ -563,11 +563,11 @@ extern "C" void __cyg_profile_func_enter(void* func, void* callsite) {
 
     RtsLayer::LockDB(); // lock, then check again
     
-    if ( (hn = hash_get((unsigned long)funcptr))) {
+    if ( (hn = hash_get(Tau_convert_ptr_to_unsigned_long(funcptr)))) {
       Tau_start_timer(hn->fi, 0, tid);
     } else {
-      TAU_VERBOSE("Previously unhashed funcptr [%p]\n",(unsigned long)funcptr);
-      HashNode *node = createHashNode((unsigned long)funcptr);
+      TAU_VERBOSE("Previously unhashed funcptr [%p]\n",Tau_convert_ptr_to_unsigned_long(funcptr));
+      HashNode *node = createHashNode(Tau_convert_ptr_to_unsigned_long(funcptr));
       Tau_start_timer(node->fi, 0, tid);
     }
     
@@ -633,7 +633,7 @@ extern "C" void __cyg_profile_func_exit(void* func, void* callsite) {
   funcptr = *( void ** )func;
 #endif
 
-  if ( (hn = hash_get((unsigned long)funcptr)) ) {
+  if ( (hn = hash_get(Tau_convert_ptr_to_unsigned_long(funcptr))) ) {
     if (hn->excluded) {
       Tau_global_decr_insideTAU_tid(tid);
       return;

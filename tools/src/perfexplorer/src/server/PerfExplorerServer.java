@@ -719,6 +719,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		   	tmpStr = "select IDENTITY_VAL_LOCAL() FROM analysis_settings";
 			} else if (db.getDBType().compareTo("derby") == 0) {
 		   	tmpStr = "select IDENTITY_VAL_LOCAL() FROM analysis_settings";
+			} else if (db.getDBType().compareTo("h2") == 0) {
+		   	tmpStr = "select IDENTITY_VAL_LOCAL() FROM analysis_settings";
 			} else if (db.getDBType().compareTo("oracle") == 0) {
 		   	tmpStr = "SELECT as_id_seq.currval FROM DUAL";
 			} else { // postgresql 
@@ -1332,6 +1334,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			} else if (db.getDBType().compareTo("db2") == 0) {
 				tmpStr = "select IDENTITY_VAL_LOCAL() FROM trial_view";
 			} else if (db.getDBType().compareTo("derby") == 0) {
+				tmpStr = "select IDENTITY_VAL_LOCAL() FROM trial_view";
+			} else if (db.getDBType().compareTo("h2") == 0) {
 				tmpStr = "select IDENTITY_VAL_LOCAL() FROM trial_view";
 			} else if (db.getDBType().compareTo("oracle") == 0) {
 				tmpStr = "SELECT " + db.getSchemaPrefix() + "tv_id_seq.currval FROM DUAL";

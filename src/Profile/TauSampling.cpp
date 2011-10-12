@@ -502,10 +502,10 @@ void Tau_sampling_internal_initName2FuncInfoMapIfNecessary() {
 
 CallSiteInfo *Tau_sampling_resolveCallSite(caddr_t addr) {
   CallSiteInfo *callsite;
+  int bfdRet;
   //  bool resolved = false;
 
   char resolvedBuffer[4096];
-
   callsite = (CallSiteInfo *)malloc(sizeof(CallSiteInfo));
 
   callsite->pc = addr;
@@ -513,12 +513,20 @@ CallSiteInfo *Tau_sampling_resolveCallSite(caddr_t addr) {
   
   // resolved = Tau_sampling_resolveName(addr, &name, &resolvedModuleIdx);
   TauBfdInfo *resolvedInfo = NULL;
+  // backup information in case we fail to resolve the address to specific
+  //   line numbers.
+  TauBfdAddrMap addressMap;
+  sprintf(addressMap.name, "%s", "UNKNOWN");
 #ifdef TAU_BFD
   resolvedInfo = 
     Tau_bfd_resolveBfdInfo(bfdUnitHandle, (unsigned long)addr);
+  // backup info
+  bfdRet = Tau_bfd_getAddressMap(bfdUnitHandle, (unsigned long)addr,
+				 &addressMap);
   if (resolvedInfo == NULL) {
       resolvedInfo = 
 	  Tau_bfd_resolveBfdExecInfo(bfdUnitHandle, (unsigned long)addr);
+      sprintf(addressMap.name, "%s", "EXEC");
   }
 #endif /* TAU_BFD */
   if (resolvedInfo != NULL) {
@@ -528,7 +536,13 @@ CallSiteInfo *Tau_sampling_resolveCallSite(caddr_t addr) {
 	    resolvedInfo->lineno, 0,
 	    resolvedInfo->lineno, 0);
   } else {
-    sprintf(resolvedBuffer, "[SAMPLE] UNRESOLVED ADDR %p", (unsigned long)addr);
+    if (TauEnv_get_ebs_keep_unresolved_addr()) {
+      sprintf(resolvedBuffer, "[SAMPLE] UNRESOLVED %s ADDR %p", 
+	      addressMap.name, (unsigned long)addr);
+    } else {
+      sprintf(resolvedBuffer, "[SAMPLE] UNRESOLVED %s", 
+	      addressMap.name);
+    }
   }
   callsite->name = strdup(resolvedBuffer);
   TAU_VERBOSE("Tau_sampling_resolveCallSite: Callsite name resolved to [%s]\n",
@@ -598,7 +612,7 @@ void Tau_sampling_finalizeProfile(int tid) {
     }
     map<caddr_t, unsigned int,
       std::less<caddr_t>, 
-      SS_ALLOCATOR< std::pair<caddr_t, unsigned int> > >::iterator it;
+      SS_ALLOCATOR< std::pair<const caddr_t, unsigned int> > >::iterator it;
     for (it = parentTauContext->pcHistogram[tid]->begin();
 	 it != parentTauContext->pcHistogram[tid]->end(); it++) {
       caddr_t addr = (caddr_t)it->first;
@@ -874,9 +888,10 @@ int Tau_sampling_event_stop(int tid, double *stopTime) {
  ********************************************************************/
 void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
   int tid = RtsLayer::myThread();
-  /* *CWL* too fine-grained for anything but debug.*/
+  /* *CWL* too fine-grained for anything but debug.
   TAU_VERBOSE("Tau_sampling_handle_sample: tid=%d got sample [%p]\n",
   	      tid, (unsigned long)pc);
+  */
   if (samplingEnabled[tid] == 0) {
     // Do not track counts when sampling is not enabled.
     return;
@@ -1011,7 +1026,7 @@ int Tau_sampling_init(int tid) {
 	return -1;
       }
       act.sa_sigaction = Tau_sampling_handler;
-      act.sa_flags     = SA_SIGINFO;
+      act.sa_flags     = SA_SIGINFO|SA_RESTART;
       
       ret = sigaction(alarmType, &act, NULL);
       if (ret != 0) {
@@ -1047,6 +1062,17 @@ int Tau_sampling_init(int tid) {
  * Finalize the sampling trace system
  ********************************************************************/
 int Tau_sampling_finalize(int tid) {
+  /* *CWL* - The reason for the following code is that we have multiple
+     places in TAU from which finalization happens. We respect only the
+     first instance. Right now, we should not have issues with the
+     fact that this is not a per-thread construct.
+  */
+  static bool ebsFinalized = false;
+  if (ebsFinalized) {
+    return 0;
+  }
+  ebsFinalized = true;
+  
   TAU_VERBOSE("Tau_sampling_finalize tid=%d\n", tid);
   //  printf("Tau_sampling_finalize tid=%d\n", tid);
 
@@ -1103,8 +1129,17 @@ extern "C" void Tau_sampling_init_if_necessary(void ) {
    MPI_Finalize before the process of TAU event unification.
  */
 extern "C" void Tau_sampling_finalizeNode(void) {
-  // Nothing yet. This is rather subtle as I have to understand how
-  //   hybrid data gets generated for TAU in general.
+  static bool nodeFinalized = false;
+  int tid = RtsLayer::myThread();
+  if (!nodeFinalized) {
+    nodeFinalized = true;
+    /* *CWL* This is not really a problem for now, but in the future,
+       there might be cases where we need a model for activating the
+       finalization of TAU Sampling on each thread of a process instead.
+     */
+    Tau_sampling_finalize(tid);
+    return;
+  }
 }
 
 

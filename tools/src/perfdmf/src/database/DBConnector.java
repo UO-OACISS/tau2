@@ -415,12 +415,21 @@ public class DBConnector implements DB {
     //     }
 
     public static boolean isReadAbleType(int type) {
-        if (type == java.sql.Types.VARCHAR || type == java.sql.Types.CLOB || type == java.sql.Types.INTEGER
-                || type == java.sql.Types.DECIMAL || type == java.sql.Types.DOUBLE || type == java.sql.Types.FLOAT
-                || type == java.sql.Types.LONGVARCHAR || type == java.sql.Types.TIME || type == java.sql.Types.TIMESTAMP
+        if (type == java.sql.Types.VARCHAR 
+            || type == java.sql.Types.CLOB 
+            || type == java.sql.Types.INTEGER
+            || type == java.sql.Types.BIGINT
+            || type == java.sql.Types.DECIMAL 
+            || type == java.sql.Types.DOUBLE 
+            || type == java.sql.Types.FLOAT
+            || type == java.sql.Types.LONGVARCHAR 
+            || type == java.sql.Types.TIME 
+            || type == java.sql.Types.TIMESTAMP
                 // added binary types for XML_METADATA_GZ processing
-                || type == java.sql.Types.BINARY || type == java.sql.Types.VARBINARY || type == java.sql.Types.LONGVARBINARY
-                || type == java.sql.Types.BLOB)
+            || type == java.sql.Types.BINARY 
+            || type == java.sql.Types.VARBINARY 
+            || type == java.sql.Types.LONGVARBINARY
+            || type == java.sql.Types.BLOB)
             return true;
         return false;
     }
@@ -463,7 +472,9 @@ public class DBConnector implements DB {
         boolean checks[] = new boolean[columns.length];
 
         ResultSet resultSet = null;
-        if ((this.getDBType().compareTo("oracle") == 0) || (this.getDBType().compareTo("derby") == 0)
+        if ((this.getDBType().compareTo("oracle") == 0) 
+		|| (this.getDBType().compareTo("derby") == 0)
+                || (this.getDBType().compareTo("h2") == 0)
                 || (this.getDBType().compareTo("db2") == 0)) {
             resultSet = dbMeta.getColumns(null, null, tableName.toUpperCase(), "%");
         } else {
@@ -474,13 +485,14 @@ public class DBConnector implements DB {
 
             int ctype = resultSet.getInt("DATA_TYPE");
             String cname = resultSet.getString("COLUMN_NAME");
-            //String typename = resultSet.getString("TYPE_NAME");
+            String typename = resultSet.getString("TYPE_NAME");
 
             //System.out.println ("table: " + tableName + ", found: " + cname + ", type: " + ctype + ", typename = " + typename);
 
             if (DBConnector.isReadAbleType(ctype)) {
 
                 for (int i = 0; i < columns.length; i++) {
+            		//System.out.println (cname.toUpperCase() + ", " + columns[i].toUpperCase());
                     if (columns[i].toUpperCase().compareTo(cname.toUpperCase()) == 0) {
                         checks[i] = true;
                     }
