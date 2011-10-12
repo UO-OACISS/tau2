@@ -309,12 +309,14 @@ int Tau_mergeProfiles() {
 	// write profile blocks for each stat
 	// *CWL* Tentatively not writing out min_all and max_all
 	for (int s=0; s<NUM_STAT_TYPES; s++) {
-          //if (s > NUM_STAT_TYPES-3) fprintf(f,"<!--\n");
 	  fprintf(f,"<profile_xml>\n");
-	  fprintf(f,"<%s_derivedentity>\n", stat_names[s]);
-	  fprintf(f,"</%s_derivedentity>\n",stat_names[s]);
-	  fprintf(f,"<%s_derivedprofile>\n", stat_names[s]);
-	  
+          fprintf(f,"<derivedentity id=\"%s\">\n", stat_names[s]);
+	  fprintf(f,"</derivedentity>\n");
+          if (s > NUM_STAT_TYPES-3) {
+            fprintf(f,"<%s_derivedprofile derivedentity=\"%s\">\n", stat_names[s], stat_names[s]);
+          } else {
+            fprintf(f,"<derivedprofile derivedentity=\"%s\">\n", stat_names[s]);
+          }
 	  fprintf(f,"<derivedinterval_data metrics=\"%s\">\n", metricList);
 	  for (int i=0; i<numEvents; i++) {
 	    fprintf(f, "%d %.16G %.16G ", i, sNumCalls[s][i], sNumSubr[s][i]);
@@ -339,9 +341,12 @@ int Tau_mergeProfiles() {
 	  
 
 	  // close
-	  fprintf(f,"</%s_derivedprofile>\n",stat_names[s]);
+          if (s > NUM_STAT_TYPES -3) { // min & max 
+	    fprintf(f,"</%s_derivedprofile>\n",stat_names[s]);
+          } else {
+	    fprintf(f,"</derivedprofile>\n");
+          }
 	  fprintf(f,"\n</profile_xml>\n");
-          //if (s > NUM_STAT_TYPES -3) fprintf(f,"-->\n");
 	}
 	// *CWL* Free allocated structures.
 	free(globalEventMap);
