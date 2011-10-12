@@ -40,6 +40,15 @@
 #include <assert.h>
 // #include <sstream>
 
+const int collate_num_op_items[NUM_COLLATE_OP_TYPES] =
+  { NUM_COLLATE_STEPS, NUM_STAT_TYPES };
+const char * collate_step_names[NUM_COLLATE_STEPS] =
+  { "min", "max", "sum", "sum_of_squares" };
+const char * stat_names[NUM_STAT_TYPES] =
+  { "mean_all", "mean_no_null", "stddev_all", "stddev_no_null", "min_all", "max_all" };
+const char** collate_op_names[NUM_COLLATE_OP_TYPES] = 
+  { collate_step_names, stat_names };
+
 //#define DEBUG
 #ifdef DEBUG
 
@@ -64,7 +73,7 @@ void TAU_MPI_DEBUG0(const char *format, ...) {
 #endif
 
 // Default reduction operations. These will be set appropriately later.
-MPI_Op collate_op[NUM_COLLATE_STEPS] = {MPI_MIN, MPI_MAX, MPI_SUM, MPI_SUM};
+MPI_Op collate_op[NUM_COLLATE_STEPS] = { MPI_MIN, MPI_MAX, MPI_SUM, MPI_SUM };
 
 static double calculateMean(int count, double sum) {
   double ret = 0.0;
@@ -120,8 +129,8 @@ static void assignDerivedStats(double ***eventType, double ***gEventType,
     calculateStdDev(numEventThreads[i],
 		    (*gEventType)[step_sumsqr][i],
 		    (*eventType)[stat_mean_exist][i]);
-  (*eventType)[stat_min_all][i] = (*gEventType)[step_min][i];
-  (*eventType)[stat_max_all][i] = (*gEventType)[step_max][i];
+  (*eventType)[stat_min_all][i] =(*gEventType)[step_min][i];
+  (*eventType)[stat_max_all][i] =(*gEventType)[step_max][i];
 }
 
 /*********************************************************************
@@ -235,37 +244,123 @@ static void stat_min (void *i, void *o, int *len,  MPI_Datatype *type) {
   }
 }
 
-void Tau_collate_allocateBuffers(double ***excl, double ***incl, int **numCalls, int **numSubr, int numItems) {
-  *excl = (double **) TAU_UTIL_MALLOC(sizeof(double *) * Tau_Global_numCounters);
-  *incl = (double **) TAU_UTIL_MALLOC(sizeof(double *) * Tau_Global_numCounters);
-  // Please note the use of Calloc
-  for (int m=0; m<Tau_Global_numCounters; m++) {
-    (*excl)[m] = (double *) TAU_UTIL_CALLOC(sizeof(double) * numItems);
-    (*incl)[m] = (double *) TAU_UTIL_CALLOC(sizeof(double) * numItems);
+void Tau_collate_allocateFunctionBuffers(double ****excl, double ****incl,
+					 double ***numCalls, double ***numSubr,
+					 int numEvents,
+					 int numMetrics,
+					 int collateOpType) {
+  *excl = (double ***)TAU_UTIL_MALLOC(sizeof(double **)*
+				      collate_num_op_items[collateOpType]);
+  *incl = (double ***)TAU_UTIL_MALLOC(sizeof(double **)*
+				      collate_num_op_items[collateOpType]);
+  *numCalls = (double **)TAU_UTIL_MALLOC(sizeof(double *)*
+					 collate_num_op_items[collateOpType]);
+  *numSubr = (double **)TAU_UTIL_MALLOC(sizeof(double *)*
+					collate_num_op_items[collateOpType]);
+  for (int s=0; s<collate_num_op_items[collateOpType]; s++) {
+    Tau_collate_allocateUnitFunctionBuffer(&((*excl)[s]), &((*incl)[s]),
+					   &((*numCalls)[s]), &((*numSubr)[s]),
+					   numEvents, numMetrics);
   }
-  *numCalls = (int *) TAU_UTIL_CALLOC(sizeof(int) * numItems);
-  *numSubr = (int *) TAU_UTIL_CALLOC(sizeof(int) * numItems);
 }
 
-void Tau_collate_allocateBuffers(double ***excl, double ***incl, 
-				 double **numCalls, double **numSubr, 
-				 int numItems) {
-  *excl = (double **)TAU_UTIL_MALLOC(sizeof(double *)*Tau_Global_numCounters);
-  *incl = (double **)TAU_UTIL_MALLOC(sizeof(double *)*Tau_Global_numCounters);
-  // Please note the use of Calloc
-  for (int m=0; m<Tau_Global_numCounters; m++) {
-    (*excl)[m] = (double *)TAU_UTIL_CALLOC(sizeof(double)*numItems);
-    (*incl)[m] = (double *)TAU_UTIL_CALLOC(sizeof(double)*numItems);
+void Tau_collate_allocateAtomicBuffers(double ***atomicMin, 
+				       double ***atomicMax,
+				       double ***atomicCalls, 
+				       double ***atomicMean,
+				       double ***atomicSumSqr,
+				       int numEvents,
+				       int collateOpType) {
+  *atomicMin = 
+    (double **)TAU_UTIL_MALLOC(sizeof(double *)*
+			       collate_num_op_items[collateOpType]);
+  *atomicMax = 
+    (double **)TAU_UTIL_MALLOC(sizeof(double *)*
+			       collate_num_op_items[collateOpType]);
+  *atomicCalls = 
+    (double **)TAU_UTIL_MALLOC(sizeof(double *)*
+			       collate_num_op_items[collateOpType]);
+  *atomicMean = 
+    (double **)TAU_UTIL_MALLOC(sizeof(double *)*
+			       collate_num_op_items[collateOpType]);
+  *atomicSumSqr = 
+    (double **)TAU_UTIL_MALLOC(sizeof(double *)*
+			       collate_num_op_items[collateOpType]);
+  
+  for (int s=0; s<collate_num_op_items[collateOpType]; s++) {
+    (*atomicMin)[s] = (double *)TAU_UTIL_CALLOC(sizeof(double)*numEvents);
+    (*atomicMax)[s] = (double *)TAU_UTIL_CALLOC(sizeof(double)*numEvents);
+    (*atomicCalls)[s] = (double *)TAU_UTIL_CALLOC(sizeof(double)*numEvents);
+    (*atomicMean)[s] = (double *)TAU_UTIL_CALLOC(sizeof(double)*numEvents);
+    (*atomicSumSqr)[s] = (double *)TAU_UTIL_CALLOC(sizeof(double)*numEvents);
   }
-  *numCalls = (double *)TAU_UTIL_CALLOC(sizeof(double)*numItems);
-  *numSubr = (double *)TAU_UTIL_CALLOC(sizeof(double)*numItems);
 }
 
-void Tau_collate_freeBuffers(double ***excl, double ***incl, 
-			     int **numCalls, int **numSubr) {
+void Tau_collate_allocateUnitFunctionBuffer(double ***excl, double ***incl, 
+					    double **numCalls, 
+					    double **numSubr, 
+					    int numEvents, int numMetrics) {
+  *excl = (double **)TAU_UTIL_MALLOC(sizeof(double *)*numMetrics);
+  *incl = (double **)TAU_UTIL_MALLOC(sizeof(double *)*numMetrics);
+  // Please note the use of Calloc
+  for (int m=0; m<numMetrics; m++) {
+    (*excl)[m] = (double *)TAU_UTIL_CALLOC(sizeof(double)*numEvents);
+    (*incl)[m] = (double *)TAU_UTIL_CALLOC(sizeof(double)*numEvents);
+  }
+  *numCalls = (double *)TAU_UTIL_CALLOC(sizeof(double)*numEvents);
+  *numSubr = (double *)TAU_UTIL_CALLOC(sizeof(double)*numEvents);
+}
+
+void Tau_collate_allocateUnitAtomicBuffer(double **atomicMin, 
+					  double **atomicMax,
+					  double **atomicCalls, 
+					  double **atomicMean,
+					  double **atomicSumSqr,
+					  int numEvents) {
+  *atomicMin = (double *)TAU_UTIL_CALLOC(sizeof(double)*numEvents);
+  *atomicMax = (double *)TAU_UTIL_CALLOC(sizeof(double)*numEvents);
+  *atomicCalls = (double *)TAU_UTIL_CALLOC(sizeof(double)*numEvents);
+  *atomicMean = (double *)TAU_UTIL_CALLOC(sizeof(double)*numEvents);
+  *atomicSumSqr = (double *)TAU_UTIL_CALLOC(sizeof(double)*numEvents);
+}
+
+void Tau_collate_freeFunctionBuffers(double ****excl, double ****incl,
+				     double ***numCalls, double ***numSubr,
+				     int numMetrics,
+				     int collateOpType) {
+  for (int s=0; s<collate_num_op_items[collateOpType]; s++) {
+    Tau_collate_freeUnitFunctionBuffer(&((*excl)[s]), &((*incl)[s]),
+				       &((*numCalls)[s]), &((*numSubr)[s]),
+				       numMetrics);
+  }
   free(*numCalls);
   free(*numSubr);
-  for (int m=0; m<Tau_Global_numCounters; m++) {
+  free(*excl);
+  free(*incl);
+}
+
+void Tau_collate_freeAtomicBuffers(double ***atomicMin, double ***atomicMax,
+				   double ***atomicCalls, double ***atomicMean,
+				   double ***atomicSumSqr,
+				   int collateOpType) {
+  for (int s=0; s<collate_num_op_items[collateOpType]; s++) {
+    Tau_collate_freeUnitAtomicBuffer(&((*atomicMin)[s]), &((*atomicMax)[s]),
+				     &((*atomicCalls)[s]), &((*atomicMean)[s]),
+				     &((*atomicSumSqr)[s]));
+  }
+  free(*atomicMin);
+  free(*atomicMax);
+  free(*atomicCalls);
+  free(*atomicMean);
+  free(*atomicSumSqr);
+}
+
+void Tau_collate_freeUnitFunctionBuffer(double ***excl, double ***incl, 
+					double **numCalls, double **numSubr,
+					int numMetrics) {
+  free(*numCalls);
+  free(*numSubr);
+  for (int m=0; m<numMetrics; m++) {
     free((*excl)[m]);
     free((*incl)[m]);
   }
@@ -273,16 +368,15 @@ void Tau_collate_freeBuffers(double ***excl, double ***incl,
   free(*incl);
 }
 
-void Tau_collate_freeBuffers(double ***excl, double ***incl, 
-			     double **numCalls, double **numSubr) {
-  free(*numCalls);
-  free(*numSubr);
-  for (int m=0; m<Tau_Global_numCounters; m++) {
-    free((*excl)[m]);
-    free((*incl)[m]);
-  }
-  free(*excl);
-  free(*incl);
+void Tau_collate_freeUnitAtomicBuffer(double **atomicMin, double **atomicMax,
+				      double **atomicCalls, 
+				      double **atomicMean,
+				      double **atomicSumSqr) {
+  free(*atomicMin);
+  free(*atomicMax);
+  free(*atomicCalls);
+  free(*atomicMean);
+  free(*atomicSumSqr);
 }
 
 /* Parallel operation to acquire total number of threads for each event */
@@ -319,6 +413,110 @@ void Tau_collate_get_total_threads(int *globalNumThreads,
 }
 
 /***
+ *  2011-10-10 *CWL*
+ *  Computation of statistics for Atomic Events. These have to be handled differently
+ *    because of the different internal representations for now.
+ */
+void Tau_collate_compute_atomicStatistics(Tau_unify_object_t *atomicUnifier,
+					  int *globalEventMap, int numItems,
+					  int globalNumThreads, 
+					  int *numEventThreads,
+					  double ***gAtomicMin, 
+					  double ***gAtomicMax,
+					  double ***gAtomicCalls, 
+					  double ***gAtomicMean,
+					  double ***gAtomicSumSqr,
+					  double ***sAtomicMin, 
+					  double ***sAtomicMax,
+					  double ***sAtomicCalls, 
+					  double ***sAtomicMean,
+					  double ***sAtomicSumSqr) {
+  int rank;
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  
+  MPI_Op min_op;
+  PMPI_Op_create(stat_min, 1, &min_op);
+  collate_op[step_min] = min_op;
+
+  // allocate memory for values to fill with performance data and sent to
+  //   the root node
+  double *atomicMin, *atomicMax;
+  double *atomicCalls, *atomicMean, *atomicSumSqr;
+  Tau_collate_allocateUnitAtomicBuffer(&atomicMin, &atomicMax, 
+				       &atomicCalls, &atomicMean,
+				       &atomicSumSqr,
+				       numItems);
+  for (int s=0; s<NUM_COLLATE_STEPS; s++) {
+    // Initialize to -1 only for step_min to handle unrepresented values for
+    //   minimum.
+    double fillDbl = 0.0;
+    if (s == step_min) {
+      fillDbl = -1.0;
+    }
+    for (int i=0; i<numItems; i++) {
+      atomicMin[i] = fillDbl;
+      atomicMax[i] = fillDbl;
+      atomicCalls[i] = fillDbl;
+      atomicMean[i] = fillDbl;
+      atomicSumSqr[i] = fillDbl;
+    }
+
+    for (int i=0; i<numItems; i++) { // for each event
+      if (globalEventMap[i] != -1) { // if it occurred in our rank
+	int local_index = atomicUnifier->sortMap[globalEventMap[i]];
+	TauUserEvent *event = TheEventDB()[local_index];
+	int numThreads = RtsLayer::getNumThreads();
+	for (int tid = 0; tid<numThreads; tid++) { // for each thread
+	  atomicMin[i] = getStepValue((collate_step)s, atomicMin[i],
+				      (double)event->GetMin(tid));
+	  atomicMax[i] = getStepValue((collate_step)s, atomicMax[i],
+				      (double)event->GetMax(tid));
+	  atomicCalls[i] = getStepValue((collate_step)s, atomicCalls[i],
+					(double)event->GetNumEvents(tid));
+	  atomicMean[i] = getStepValue((collate_step)s, atomicMean[i],
+				       (double)event->GetMean(tid));
+	  atomicSumSqr[i] = getStepValue((collate_step)s, atomicSumSqr[i],
+					 (double)event->GetSumSqr(tid));
+	}
+      }
+    }
+
+    // reduce data to rank 0
+    PMPI_Reduce(atomicMin, (*gAtomicMin)[s], numItems, MPI_DOUBLE, 
+		collate_op[s], 0, MPI_COMM_WORLD);
+    PMPI_Reduce(atomicMax, (*gAtomicMax)[s], numItems, MPI_DOUBLE, 
+		collate_op[s], 0, MPI_COMM_WORLD);
+    PMPI_Reduce(atomicCalls, (*gAtomicCalls)[s], numItems, MPI_DOUBLE, 
+		collate_op[s], 0, MPI_COMM_WORLD);
+    PMPI_Reduce(atomicMean, (*gAtomicMean)[s], numItems, MPI_DOUBLE, 
+		collate_op[s], 0, MPI_COMM_WORLD);
+    PMPI_Reduce(atomicSumSqr, (*gAtomicSumSqr)[s], numItems, MPI_DOUBLE, 
+		collate_op[s], 0, MPI_COMM_WORLD);
+  }    
+  // free memory for basic information
+  Tau_collate_freeUnitAtomicBuffer(&atomicMin, &atomicMax, 
+				   &atomicCalls, &atomicMean, 
+				   &atomicSumSqr);
+  
+  // Compute derived statistics on rank 0
+  if (rank == 0) {
+    for (int i=0; i<numItems; i++) { // for each event
+      assignDerivedStats(sAtomicMin, gAtomicMin, i,
+			 globalNumThreads, numEventThreads);
+      assignDerivedStats(sAtomicMax, gAtomicMax, i,
+			 globalNumThreads, numEventThreads);
+      assignDerivedStats(sAtomicCalls, gAtomicCalls, i,
+			 globalNumThreads, numEventThreads);
+      assignDerivedStats(sAtomicMean, gAtomicMean, i,
+			 globalNumThreads, numEventThreads);
+      assignDerivedStats(sAtomicSumSqr, gAtomicSumSqr, i,
+			 globalNumThreads, numEventThreads);
+    }    
+  }
+  PMPI_Op_free(&min_op);
+}
+
+/***
  *  2010-10-08 *CWL*
  *  Modularization of monitoring functionality for other non-TauMon
  *    purposes.
@@ -342,7 +540,10 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
   //   the root node
   double **excl, **incl;
   double *numCalls, *numSubr;
-  Tau_collate_allocateBuffers(&excl, &incl, &numCalls, &numSubr, numItems);
+  Tau_collate_allocateUnitFunctionBuffer(&excl, &incl, 
+					 &numCalls, &numSubr, 
+					 numItems, Tau_Global_numCounters);
+
   // Fill the data, once for each basic statistic
   for (int s=0; s<NUM_COLLATE_STEPS; s++) {
     // Initialize to -1 only for step_min to handle unrepresented values for
@@ -359,10 +560,6 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
       numCalls[i] = fillDbl;
       numSubr[i] = fillDbl;
     }
-    Tau_collate_allocateBuffers(&((*gExcl)[s]), &((*gIncl)[s]), 
-				&((*gNumCalls)[s]), &((*gNumSubr)[s]), 
-				numItems);
-
     for (int i=0; i<numItems; i++) { // for each event
       if (globalEventMap[i] != -1) { // if it occurred in our rank
 	int local_index = functionUnifier->sortMap[globalEventMap[i]];
@@ -396,17 +593,12 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
 		collate_op[s], 0, MPI_COMM_WORLD);
   }
   // Free allocated memory for basic info.
-  Tau_collate_freeBuffers(&excl, &incl, &numCalls, &numSubr);
+  Tau_collate_freeUnitFunctionBuffer(&excl, &incl, &numCalls, &numSubr, Tau_Global_numCounters);
 
   // Now compute the actual statistics on rank 0 only. The assumption
   //   is that at least one thread would be active across the node-space
   //   and so negative values should never show up after reduction.
   if (rank == 0) {
-    for (int s=0; s<NUM_STAT_TYPES; s++) {
-      Tau_collate_allocateBuffers(&((*sExcl)[s]), &((*sIncl)[s]), 
-				  &((*sNumCalls)[s]), &((*sNumSubr)[s]), 
-				  numItems);
-    }
     // *CWL* TODO - abstract the operations to avoid this nasty coding
     //     of individual operations.
     for (int i=0; i<numItems; i++) { // for each event
@@ -422,7 +614,6 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
 			 globalNumThreads, numEventThreads);
     }    
   }
-
   PMPI_Op_free(&min_op);
 }
 
@@ -584,18 +775,18 @@ extern "C" int Tau_collate_writeProfile() {
 
   double ***gExcl, ***gIncl;
   double **gNumCalls, **gNumSubr;
-  gExcl = (double ***) TAU_UTIL_MALLOC(sizeof(double **) * NUM_COLLATE_STEPS);
-  gIncl = (double ***) TAU_UTIL_MALLOC(sizeof(double **) * NUM_COLLATE_STEPS);
-  gNumCalls = (double **) TAU_UTIL_MALLOC(sizeof(double *) *NUM_COLLATE_STEPS);
-  gNumSubr = (double **) TAU_UTIL_MALLOC(sizeof(double *) * NUM_COLLATE_STEPS);
-
   double ***sExcl, ***sIncl;
   double **sNumCalls, **sNumSubr;
-  sExcl = (double ***)TAU_UTIL_MALLOC(sizeof(double **)*NUM_STAT_TYPES);
-  sIncl = (double ***)TAU_UTIL_MALLOC(sizeof(double **)*NUM_STAT_TYPES);
-  sNumCalls = (double **)TAU_UTIL_MALLOC(sizeof(double *)*NUM_STAT_TYPES);
-  sNumSubr = (double **)TAU_UTIL_MALLOC(sizeof(double *)*NUM_STAT_TYPES);
-
+  Tau_collate_allocateFunctionBuffers(&gExcl, &gIncl,
+				      &gNumCalls, &gNumSubr,
+				      numItems,
+				      Tau_Global_numCounters,
+				      COLLATE_OP_BASIC);
+  Tau_collate_allocateFunctionBuffers(&sExcl, &sIncl,
+				      &sNumCalls, &sNumSubr,
+				      numItems,
+				      Tau_Global_numCounters,
+				      COLLATE_OP_DERIVED);
   Tau_collate_compute_statistics(functionUnifier, globalEventMap, numItems, 
 				 globalNumThreads, numEventThreads,
 				 &gExcl, &gIncl, &gNumCalls, &gNumSubr,
