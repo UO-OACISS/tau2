@@ -308,7 +308,8 @@ int Tau_mergeProfiles() {
 
 	// write profile blocks for each stat
 	// *CWL* Tentatively not writing out min_all and max_all
-	for (int s=0; s<NUM_STAT_TYPES-2; s++) {
+	for (int s=0; s<NUM_STAT_TYPES; s++) {
+          if (s > NUM_STAT_TYPES-3) fprintf(f,"<!--\n");
 	  fprintf(f,"<profile_xml>\n");
 	  fprintf(f,"<derivedentity id=\"%s\">\n", stat_names[s]);
 	  fprintf(f,"</derivedentity>\n");
@@ -340,6 +341,7 @@ int Tau_mergeProfiles() {
 	  // close
 	  fprintf(f,"</derivedprofile>\n");
 	  fprintf(f,"\n</profile_xml>\n");
+          if (s > NUM_STAT_TYPES -3) fprintf(f,"-->\n");
 	}
 	// *CWL* Free allocated structures.
 	free(globalEventMap);
