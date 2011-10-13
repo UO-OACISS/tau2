@@ -19,6 +19,8 @@
 
 #include <TAU.h>
 
+extern "C" int Tau_is_thread_fake(int t);
+
 /* for getrusage */
 #ifndef TAU_WINDOWS
 #include <time.h>
@@ -286,7 +288,7 @@ void metric_set_gpu_timestamp(int tid, double value)
 void metric_read_cudatime(int tid, int idx, double values[]) {
 
   //get time from the CPU clock
-  if (tid == CPU_THREAD)
+  if (!Tau_is_thread_fake(tid))
   { 
 #ifdef TAU_WINDOWS
     values[idx] = TauWindowsUsecD();
