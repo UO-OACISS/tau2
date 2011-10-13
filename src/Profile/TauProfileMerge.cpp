@@ -250,7 +250,9 @@ int Tau_mergeProfiles() {
 
       /* receive buffer */
       PMPI_Recv(recv_buf, buflen, MPI_CHAR, i, 0, MPI_COMM_WORLD, &status);
-      fwrite (recv_buf, buflen, 1, f);
+      if (!TauEnv_get_summary_only()) { /* write each rank? */
+        fwrite (recv_buf, buflen, 1, f);
+      } 
     }
     free (recv_buf);
 
