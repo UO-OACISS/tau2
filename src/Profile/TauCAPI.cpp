@@ -462,11 +462,7 @@ extern "C" int Tau_profile_exit_all_tasks() {
 	{
 		while (Tau_global_stackpos[tid] >= 0) {
 			Profiler *p = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
-			if (Tau_is_thread_fake(tid))
-			{
-				Tau_stop_timer(p->ThisFunction, tid);
-			}
-			// DO NOT pop. It is popped in stop above: Tau_global_stackpos[tid]--;
+			Tau_stop_timer(p->ThisFunction, tid);
 		}
 	tid++;
 	}
@@ -1550,7 +1546,7 @@ extern "C" int Tau_create_task(void) {
   taskid= RtsLayer::RegisterThread() - 1; /* it returns 1 .. N, we want 0 .. N-1 */
   /* specify taskid is a fake thread used in the Task API */
   Tau_is_thread_fake_for_task_api[taskid] = 1; /* This thread is fake! */
-  
+ 	//printf("create task with id: %d.\n", taskid); 
   return taskid;
 }
 
