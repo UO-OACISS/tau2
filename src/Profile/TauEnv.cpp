@@ -664,6 +664,18 @@ void TauEnv_initialize() {
       env_summary_only = 0;
     }
 
+    tmp = getconf("TAU_IBM_BG_HWP_COUNTERS");
+    if (parse_bool(tmp, env_ibm_bg_hwp_counters)) {
+      TAU_VERBOSE("TAU: IBM UPC HWP counter data collection enabled\n");
+      TAU_METADATA("TAU_IBM_BG_HWP_COUNTERS", "on");
+      env_ibm_bg_hwp_counters = 1;
+      env_extras = 1;
+    } else {
+      TAU_METADATA("TAU_IBM_BG_HWP_COUNTERS", "off");
+      env_ibm_bg_hwp_counters = 0;
+    }
+
+
 
     /*** Options that can be used with Scalasca and VampirTrace need to go above this line ***/
 #ifdef TAU_EPILOG
