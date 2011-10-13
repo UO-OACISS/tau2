@@ -1613,6 +1613,11 @@ int  MPI_Finalize(  )
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
 
+  /* BGP counters */
+  int numCounters, mode, upcErr;
+  uint64_t counterVals[256];
+
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
@@ -1624,10 +1629,25 @@ int  MPI_Finalize(  )
   PMPI_Get_processor_name(procname, &procnamelength);
   TAU_METADATA("MPI Processor Name", procname);
 
-  /* Grab the node id, we don't always wrap mpi_init */
-  PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
-  TAU_PROFILE_SET_NODE(procid_0 ); 
-  Tau_set_usesMPI(1);
+
+  if (Tau_get_node() < 0) {
+    /* Grab the node id, we don't always wrap mpi_init */
+    PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
+    TAU_PROFILE_SET_NODE(procid_0 ); 
+    Tau_set_usesMPI(1);
+  }
+
+#ifdef TAU_BGP
+  if (TauEnv_get_ibm_hwp_counters()) {
+    PMPI_Barrier(MPI_COMM_WORLD); 
+    Tau_Bg_hwp_counters_stop(&numCounters, counterVals, &mode, &upcErr);
+    if (upcErr != 0) {
+      printf("  ** Error stopping UPC performance counters");
+    }
+
+    Tau_Bg_hwp_counters_output(&numCounters, counterVals, &mode, &upcErr);
+  }
+#endif /* TAU_BGP */
 
   // merge TAU metadata
   Tau_metadataMerge_mergeMetaData();
@@ -1706,6 +1726,16 @@ char *** argv;
   Tau_mon_connect();
 #endif /* TAU_MONITORING */
 
+#ifdef TAU_BGP
+  if (TauEnv_get_ibm_bg_hwp_counters()) {
+    int upcErr; 
+    Tau_Bg_hwp_counters_start(&upcErr); 
+    if (upcErr != 0) {
+      printf("TAU ERROR: ** Error starting IBM BGP UPC hardware performance counters\n");
+    }
+    PMPI_Barrier(MPI_COMM_WORLD);
+  }
+#endif /* TAU_BGP */
   TAU_PROFILE_STOP(tautimer); 
 
   PMPI_Comm_rank( MPI_COMM_WORLD, &procid_0 );
@@ -1752,6 +1782,17 @@ int *provided;
 #ifndef TAU_WINDOWS
   Tau_sampling_init_if_necessary();
 #endif /* TAU_WINDOWS */
+
+#ifdef TAU_BGP
+  if (TauEnv_get_ibm_bg_hwp_counters()) {
+    int upcErr;
+    Tau_Bg_hwp_counters_start(&upcErr);
+    if (upcErr != 0) {
+      printf("TAU ERROR: ** Error starting IBM BGP UPC hardware performance counters\n");
+    }
+    PMPI_Barrier(MPI_COMM_WORLD);
+  }
+#endif /* TAU_BGP */
 
   TAU_PROFILE_STOP(tautimer);
 
