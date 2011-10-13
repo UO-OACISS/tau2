@@ -1615,7 +1615,7 @@ int  MPI_Finalize(  )
 
   /* BGP counters */
   int numCounters, mode, upcErr;
-  uint64_t counterVals[256];
+  uint64_t counterVals[1024];
 
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
@@ -1638,7 +1638,7 @@ int  MPI_Finalize(  )
   }
 
 #ifdef TAU_BGP
-  if (TauEnv_get_ibm_hwp_counters()) {
+  if (TauEnv_get_ibm_bg_hwp_counters()) {
     PMPI_Barrier(MPI_COMM_WORLD); 
     Tau_Bg_hwp_counters_stop(&numCounters, counterVals, &mode, &upcErr);
     if (upcErr != 0) {
