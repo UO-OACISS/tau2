@@ -265,6 +265,7 @@ TAU_SHLIB	= libTAUsh$(TAU_CONFIG)$(TAU_SHLIBX)
 #JVMTI#TAU_JAVA_CLASS2 = $(TAU_JAVA_INSTALLDIR)/TauJVMTI.jar #ENDIF#
 #DYNINST# TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB) #ENDIF#
 #USE_DECCXX# EXTRAOBJS=cxx_repository/*.o #ENDIF#
+#IBM_BGP# EXTRAOBJS=TauBgHwpCounters.o #ENDIF#
 #PYTHON#TAUPYTHON = pytau$(TAU_SHLIBX) #ENDIF#
 #PYTHON#TAUPYTHON_INSTALL = $(TAU_SHAREDDIR)/pytau$(TAU_SHLIBX) #ENDIF#
 ##############################################
@@ -782,6 +783,9 @@ TauGASP.o : TauGASP.c $(HDRS)
 TauGASPU.o : TauGASPU.upc $(HDRS)
 	$(TAU_UPCC) $(UPCFLAGS) -c $(@:.o=.upc)
 
+TauBgHwpCounters.o : TauBgHwpCounters.cpp $(HDRS) 
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
 ktau_syscall.o : ktau_syscall.c $(HDRS)
 	$(CC) $(CXXFLAGS) -c $(@:.o=.c)
 
@@ -811,6 +815,7 @@ TauGpuAdapterCupti.o : TauGpuAdapterCupti.cpp $(HDRS) ../../include/Profile/TauG
 
 CuptiLayer.o : CuptiLayer.cpp $(HDRS) ../../include/Profile/CuptiLayer.h
 	$(CXX) $(CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
+
 
 jVMTIThreadLayer.o: JVMTIThreadLayer.cpp
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@
