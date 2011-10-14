@@ -1645,6 +1645,16 @@ int *tau_pomp_rd_table = 0;
 // #endif
 #endif
 
+#ifndef TAU_BGP
+extern "C" void Tau_Bg_hwp_counters_start(int *error) {
+}
+
+extern "C" void Tau_Bg_hwp_counters_stop(int* numCounters, uint64_t counters[], int* mode, int *error) {
+}
+
+extern "C" void Tau_Bg_hwp_counters_output(int* numCounters, uint64_t counters[], int* mode, int* error) {
+}
+#endif /* TAU_BGP */
                     
 
 /***************************************************************************
