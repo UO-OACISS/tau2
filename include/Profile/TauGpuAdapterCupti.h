@@ -2,6 +2,8 @@
 #include <cuda.h>
 #include <cupti.h>
 
+#if CUPTI_API_VERSION >= 2
+
 #ifdef TAU_BFD
 #define HAVE_DECL_BASENAME 1
 #  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
@@ -121,3 +123,4 @@ public:
 		count = ((name##_v3020_params *) info->functionParams)->count; \
 	}
 
+#endif

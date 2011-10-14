@@ -3,6 +3,8 @@
 #include <iostream>
 using namespace std;
 
+#if CUPTI_API_VERSION >= 2
+
 void Tau_cupti_onload()
 {
 	//printf("in onload.\n");
@@ -361,3 +363,5 @@ bool cupti_api_driver()
 	return (0 == strcasecmp(TauEnv_get_cupti_api(), "driver") || 
 			0 == strcasecmp(TauEnv_get_cupti_api(), "both")); 
 }
+
+#endif

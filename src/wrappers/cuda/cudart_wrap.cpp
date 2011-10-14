@@ -14,8 +14,8 @@ using namespace std;
 #define CUDART_API TAU_USER
 #define CUDA_SYNC TAU_USER
 
-#define REGISTER_SYNC() Tau_cupti_register_sync_event()
-//#define REGISTER_SYNC() Tau_cuda_register_sync_event()
+//#define REGISTER_SYNC() Tau_cupti_register_sync_event()
+#define REGISTER_SYNC() Tau_cuda_register_sync_event()
 
 #ifdef CUPTI
 extern void Tau_CuptiLayer_finalize();
