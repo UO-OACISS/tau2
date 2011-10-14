@@ -1,4 +1,5 @@
 #ifdef __GNUC__
+#include "cupti_version.h"
 #include "cupti_events.h"
 #include <cuda_runtime_api.h>
 

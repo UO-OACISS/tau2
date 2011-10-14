@@ -738,6 +738,7 @@ iowrapper=no
 zepto=no
 zeptodir=
 cuda=no
+cupti=no
 strsignal_ok=no
 
 # Reset include/Makefile before starting anything else
@@ -5843,6 +5844,24 @@ EOF
 		exit 1
   fi	
 fi
+
+cat <<EOF > cupti_version.C
+#include <cupti_version.h> 
+#if CUPTI_API_VERSION >= 2
+#error CUPTI version >= 4.1 found.
+#endif
+EOF
+
+if [ ! $cupti = no ]; then
+	echo "Checking CUPTI version at $cupti/include ... ${nnl}"
+	if $cxx_compiler -I$cupti/include -c cupti_version.C 1>/dev/null 2>&1 ; then 
+			echo "CUPTI version 4.0 found."	
+	else
+			echo "CUPTI version >= 4.1 found."	
+			fixmakeargs="$fixmakeargs CUPTI_ACTIVITY"
+	fi
+fi
+
 
 if [ $zepto = yes ] ; then
     tauoptions="${tauoptions}-zepto"
