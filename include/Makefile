@@ -118,7 +118,8 @@ TAU_LIB_DIR=$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
 #######################################################################
 
-#OPARI#TAU_OPARI_TOOL=$(TAU_BIN_DIR)/opari        #ENDIF#
+#OPARI#TAU_OPARI_TOOL=$(TAU_BIN_DIR)/opari2        #ENDIF#
+#OPARI#TAU_OPARI_CONFIG_TOOL=$(TAU_BIN_DIR)/opari2_config        #ENDIF#
 #ENABLE64BIT#ABI 	     = -mabi=64		  #ENDIF#
 #ENABLEN32BIT#ABI 	     = -mabi=n32	  #ENDIF#
 #ENABLE32BIT#ABI 	     = -mabi=32		  #ENDIF#
@@ -203,7 +204,7 @@ JDKARCH                 = linux
 #############################################
 OPARI_O 	= TauKojakOpariDisable.o #ENDIF#
 #OPARI#OPARI_O 	= TauOpari.o #ENDIF#
-#KOJAKOPARI#OPARI_O 	= TauKojakOpari.o #ENDIF#
+#KOJAKOPARI#OPARI_O 	= pomp2_lib.o pomp2_region_info.o pomp2_fwrapper.o pomp2_fwrapper_base.o#ENDIF#
 #EPILOG#OPARI_O 	=  #ENDIF#
 #VAMPIRTRACE#OPARI_O 	=  #ENDIF#
 
@@ -1021,7 +1022,7 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
         -optPdtCxxOpts="$(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE) $(TAU_SHMEM_INCLUDE)"\
         -optTauInstr="$(TAU_BIN_DIR)/tau_instrumentor" \
         -optNoMpi \
-	-optOpariDir="$(OPARIDIR)" -optOpariTool="$(TAU_OPARI_TOOL)" \
+	-optOpariDir="$(OPARIDIR)" -optOpari2Tool="$(TAU_OPARI_TOOL)" -optOpari2ConfigTool="$(TAU_OPARI_CONFIG_TOOL)"  \
 	-optTauCC="$(TAU_CCOMPILER)" \
 	-optTauIncludes="$(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(TAU_SHMEM_INCLUDE)" \
 	-optTauDefs="$(TAU_DEFS)" $(TAU_IBM_NOCOMPINST) \
