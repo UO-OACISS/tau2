@@ -1134,10 +1134,10 @@ if [ $numFiles == 0 ]; then
 	linkCmd="$linkCmd opari.tab.o"
     fi
     if [ $opari2 == $TRUE ]; then
-       NM=`${optOpariConfig2Tool} --nm`
-        AWK=`${optOpariConfig2Tool} --awk_cmd`
-        AWK_SCRIPT=`${optOpariConfig2Tool} --awk_script`
-        GREP=`${optOpariConfig2Tool} --egrep`
+       NM=`${optOpari2ConfigTool} --nm`
+        AWK=`${optOpari2ConfigTool} --awk_cmd`
+        AWK_SCRIPT=`${optOpari2ConfigTool} --awk_script`
+        GREP=`${optOpari2ConfigTool} --egrep`
          
         evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
       
