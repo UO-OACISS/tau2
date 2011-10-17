@@ -252,7 +252,17 @@ int Tau_mergeProfiles() {
       PMPI_Recv(recv_buf, buflen, MPI_CHAR, i, 0, MPI_COMM_WORLD, &status);
       if (!TauEnv_get_summary_only()) { /* write each rank? */
         fwrite (recv_buf, buflen, 1, f);
-      } 
+      } else {
+	// If Summary is desired, write only rank 1's data along with rank 0.
+	// *CWL* NOTE: This is done so as to trick paraprof into displaying
+	//             statistics-based data that we generate using
+	//             pre-compute. This hack should be safe to remove after
+	//             paraprof has been fixed to handle pure summary-only
+	//             data.
+	if (i == 1) {
+	  fwrite (recv_buf, buflen, 1, f);
+	}
+      }
     }
     free (recv_buf);
 
