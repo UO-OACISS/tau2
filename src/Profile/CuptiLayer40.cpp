@@ -1,12 +1,8 @@
 #include "Profile/CuptiLayer.h"
+
 #include <sys/time.h>
 #include <tau_types.h>
-
-
 #if CUPTI_API_VERSION == 1
-
-#pragma warning(CUPTI VERSION 4.0)
-
 counter_map_t Tau_CuptiLayer_Counter_Map;
 counter_vec_t Tau_CuptiLayer_Added_counters;
 CUpti_EventGroup eventGroup;	
@@ -366,4 +362,13 @@ counter_map_t Tau_CuptiLayer_map()
 	return Tau_CuptiLayer_Counter_Map;
 }
 
+bool Tau_CuptiLayer_is_cupti_counter(char* str)
+{
+	return Tau_CuptiLayer_map().count(string(str)) > 0;
+}
+
+void Tau_CuptiLayer_register_string(char *str)
+{
+	Tau_CuptiLayer_register_counter(Tau_CuptiLayer_map()[str]);
+}
 #endif
