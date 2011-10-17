@@ -183,6 +183,8 @@ class KernelEvent : public eventId
 			printf("Error recording kernel event, error #: %d.\n", err);
 			return 1;
 		}
+		//clear error buffer.
+		err == cudaGetLastError();
 		return 0;
 	}
 	int enqueue_stop_event()
@@ -196,6 +198,8 @@ class KernelEvent : public eventId
 			printf("Error recording kernel event, error #: %d.\n", err);
 			return 1;
 		}
+		//clear error buffer.
+		err == cudaGetLastError();
 		return 0;
 	}
 };
