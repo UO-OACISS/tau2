@@ -204,7 +204,8 @@ JDKARCH                 = linux
 #############################################
 OPARI_O 	= TauKojakOpariDisable.o #ENDIF#
 #OPARI#OPARI_O 	= TauOpari.o #ENDIF#
-#KOJAKOPARI#OPARI_O 	= pomp2_lib.o pomp2_region_info.o pomp2_fwrapper.o pomp2_fwrapper_base.o#ENDIF#
+#KOJAKOPARI#OPARI_O 	= TauKojakOpari.o#ENDIF#
+#OPARI2#OPARI_O 	= pomp2_lib.o pomp2_region_info.o pomp2_fwrapper.o pomp2_fwrapper_base.o#ENDIF#
 #EPILOG#OPARI_O 	=  #ENDIF#
 #VAMPIRTRACE#OPARI_O 	=  #ENDIF#
 
