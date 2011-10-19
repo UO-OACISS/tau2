@@ -343,7 +343,9 @@ POMP2_Finalize()
     if ( !pomp2_finalize_called )
     {
         pomp2_finalize_called = 1;
+#ifdef DEBUG_PROF
         fprintf( stderr, "  0: finalize\n" );
+#endif /* DEBUG_PROF */
     }
 }
 
@@ -357,7 +359,9 @@ POMP2_Init()
         pomp2_init_called = 1;
 
         atexit( POMP2_Finalize );
+#ifdef DEBUG_PROF
         fprintf( stderr, "  0: init  code\n" );
+#endif /* DEBUG_PROF */
 
         /* Allocate memory for your POMP2_Get_num_regions() regions */
         my_pomp2_regions = (my_pomp2_region *)(calloc( POMP2_Get_num_regions(),
@@ -402,11 +406,14 @@ POMP2_Begin( POMP2_Region_handle* pomp2_handle )
   TauStartOpenMPRegionTimer(region, TAU_OMP_INST_BE); 
 #endif /* TAU_OPENMP_REGION_VIEW */
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: begin region %s\n",
                  omp_get_thread_num(), region->name );
     }
+#endif /* DEBUG_PROF */
+
 }
 
 void
@@ -428,11 +435,13 @@ POMP2_End( POMP2_Region_handle* pomp2_handle )
   TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: end   region %s\n",
                  omp_get_thread_num(), region->name );
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -446,7 +455,9 @@ POMP2_Assign_handle( POMP2_Region_handle* pomp2_handle, const char ctc_string[] 
 
     initDummyRegionFromPOMP2RegionInfo( &my_pomp2_regions[ count ], &pomp2RegionInfo );
     my_pomp2_regions[ count ].id = count;
+#ifdef DEBUG_PROF
     printf( "assign_handle %d %s\n", ( int )count, my_pomp2_regions[ count ].rtype );
+#endif /* DEBUG_PROF */
 
     *pomp2_handle = &my_pomp2_regions[ count ];
 
@@ -471,10 +482,12 @@ POMP2_Atomic_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
   TauStartOpenMPRegionTimer(( my_pomp2_region*) *pomp2_handle,TAU_OMP_ATOMIC); 
 #endif /* TAU_OPENMP_REGION_VIEW */
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: enter atomic\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -493,11 +506,12 @@ POMP2_Atomic_exit( POMP2_Region_handle* pomp2_handle )
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
-
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: exit  atomic\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -532,6 +546,7 @@ POMP2_Barrier_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[] 
   TauStartOpenMPRegionTimer(region, TAU_OMP_BARRIER); 
 #endif /* TAU_OPENMP_REGION_VIEW */
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         if ( region->rtype[ 0 ] == 'b' )
@@ -544,6 +559,7 @@ POMP2_Barrier_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[] 
                      omp_get_thread_num(), region->rtype );
         }
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -565,6 +581,7 @@ POMP2_Barrier_exit( POMP2_Region_handle* pomp2_handle )
   TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         if ( region->rtype[ 0 ] == 'b' )
@@ -577,6 +594,7 @@ POMP2_Barrier_exit( POMP2_Region_handle* pomp2_handle )
                      omp_get_thread_num(), region->rtype );
         }
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -598,10 +616,12 @@ POMP2_Flush_enter( POMP2_Region_handle* pomp2_handle,
   TauStartOpenMPRegionTimer(region, TAU_OMP_FLUSH_EE);
 #endif /* TAU_OPENMP_REGION_VIEW */
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: enter flush\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -622,10 +642,12 @@ POMP2_Flush_exit( POMP2_Region_handle* pomp2_handle )
   TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: exit  flush\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -644,11 +666,13 @@ POMP2_Critical_begin( POMP2_Region_handle* pomp2_handle )
 #ifdef TAU_OPENMP_REGION_VIEW
   TauStartOpenMPRegionTimer(region, TAU_OMP_CRITICAL_BE); 
 #endif /* TAU_OPENMP_REGION_VIEW */
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: begin critical %s\n",
                  omp_get_thread_num(), region->rtype );
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -670,11 +694,13 @@ POMP2_Critical_end( POMP2_Region_handle* pomp2_handle )
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
   
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: end   critical %s\n",
                  omp_get_thread_num(), region->name );
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -697,11 +723,13 @@ POMP2_Critical_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[]
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: enter critical %s\n",
                  omp_get_thread_num(), region->name );
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -725,11 +753,13 @@ POMP2_Critical_exit( POMP2_Region_handle* pomp2_handle )
 
 
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: exit  critical %s\n",
                  omp_get_thread_num(), region->name );
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -749,10 +779,12 @@ POMP2_For_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
   TauStartOpenMPRegionTimer(region, TAU_OMP_FOR_EE); 
 #endif /* TAU_OPENMP_REGION_VIEW */
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: enter for\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -774,10 +806,12 @@ POMP2_For_exit( POMP2_Region_handle* pomp2_handle )
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
   // as in a stack. lifo
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: exit  for\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -799,10 +833,12 @@ POMP2_Master_begin( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: begin master\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -823,10 +859,12 @@ POMP2_Master_end( POMP2_Region_handle* pomp2_handle )
   TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: end   master\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -847,10 +885,12 @@ POMP2_Parallel_begin( POMP2_Region_handle* pomp2_handle )
   TauStartOpenMPRegionTimer(region, TAU_OMP_PAR_BE); 
 #endif /* TAU_OPENMP_REGION_VIEW */
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: begin parallel\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -872,10 +912,12 @@ POMP2_Parallel_end( POMP2_Region_handle* pomp2_handle )
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: end   parallel\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -898,10 +940,12 @@ POMP2_Parallel_fork( POMP2_Region_handle* pomp2_handle,
   TauStartOpenMPRegionTimer(region, TAU_OMP_PAR_FJ); 
 #endif /* TAU_OPENMP_REGION_VIEW */
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: fork  parallel\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -922,10 +966,12 @@ POMP2_Parallel_join( POMP2_Region_handle* pomp2_handle )
   TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: join  parallel\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -946,10 +992,12 @@ POMP2_Section_begin( POMP2_Region_handle* pomp2_handle, const char ctc_string[] 
   TauStartOpenMPRegionTimer(region, TAU_OMP_SECTION_BE); 
 #endif /* TAU_OPENMP_REGION_VIEW */
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: begin section\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -970,10 +1018,12 @@ POMP2_Section_end( POMP2_Region_handle* pomp2_handle )
   TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: end   section\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -994,11 +1044,13 @@ POMP2_Sections_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[]
   TauStartOpenMPRegionTimer(region, TAU_OMP_SECTION_EE); 
 #endif /* TAU_OPENMP_REGION_VIEW */
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: enter sections (%d)\n",
                  omp_get_thread_num(), region->num_sections );
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -1019,10 +1071,12 @@ POMP2_Sections_exit( POMP2_Region_handle* pomp2_handle )
   TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: exit  sections\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -1043,10 +1097,12 @@ POMP2_Single_begin( POMP2_Region_handle* pomp2_handle )
   TauStartOpenMPRegionTimer(region, TAU_OMP_SINGLE_BE); 
 #endif /* TAU_OPENMP_REGION_VIEW */
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: begin single\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -1067,10 +1123,12 @@ POMP2_Single_end( POMP2_Region_handle* pomp2_handle )
   TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: end   single\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -1091,10 +1149,12 @@ POMP2_Single_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
   TauStartOpenMPRegionTimer(region, TAU_OMP_SINGLE_EE); 
 #endif /* TAU_OPENMP_REGION_VIEW */
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: enter single\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -1115,10 +1175,12 @@ POMP2_Single_exit( POMP2_Region_handle* pomp2_handle )
   TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: exit  single\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -1139,10 +1201,12 @@ POMP2_Workshare_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[
   TauStartOpenMPRegionTimer(region, TAU_OMP_WORK_EE); 
 #endif /* TAU_OPENMP_REGION_VIEW */
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: enter workshare\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
 }
 
 void
@@ -1163,10 +1227,12 @@ POMP2_Workshare_exit( POMP2_Region_handle* pomp2_handle )
   TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: exit  workshare\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
 }
 
 /*
@@ -1180,10 +1246,12 @@ POMP2_Init_lock( omp_lock_t* s )
 {
   TAU_PROFILE("omp_init_lock", "[OpenMP]", OpenMP);
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: init lock\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
     omp_init_lock( s );
 }
 
@@ -1192,10 +1260,12 @@ POMP2_Destroy_lock( omp_lock_t* s )
 {
   TAU_PROFILE("omp_destroy_lock", "[OpenMP]", OpenMP);
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: destroy lock\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
     omp_destroy_lock( s );
 }
 
@@ -1204,10 +1274,12 @@ POMP2_Set_lock( omp_lock_t* s )
 {
   TAU_PROFILE("omp_set_lock", "[OpenMP]", OpenMP);
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: set lock\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
     omp_set_lock( s );
 }
 
@@ -1216,10 +1288,12 @@ POMP2_Unset_lock( omp_lock_t* s )
 {
   TAU_PROFILE("omp_unset_lock", "[OpenMP]", OpenMP);
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: unset lock\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
     omp_unset_lock( s );
 }
 
@@ -1228,10 +1302,12 @@ POMP2_Test_lock( omp_lock_t* s )
 {
   TAU_PROFILE("omp_test_lock", "[OpenMP]", OpenMP);
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: test lock\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
     return omp_test_lock( s );
 }
 
@@ -1240,10 +1316,12 @@ POMP2_Init_nest_lock( omp_nest_lock_t* s )
 {
   TAU_PROFILE("omp_init_nest_lock", "[OpenMP]", OpenMP);
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: init nestlock\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
     omp_init_nest_lock( s );
 }
 
@@ -1252,10 +1330,12 @@ POMP2_Destroy_nest_lock( omp_nest_lock_t* s )
 {
   TAU_PROFILE("omp_destroy_nest_lock", "[OpenMP]", OpenMP);
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: destroy nestlock\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
     omp_destroy_nest_lock( s );
 }
 
@@ -1264,10 +1344,12 @@ POMP2_Set_nest_lock( omp_nest_lock_t* s )
 {
   TAU_PROFILE("omp_set_nest_lock", "[OpenMP]", OpenMP);
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: set nestlock\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
     omp_set_nest_lock( s );
 }
 
@@ -1276,10 +1358,12 @@ POMP2_Unset_nest_lock( omp_nest_lock_t* s )
 {
   TAU_PROFILE("omp_unset_nest_lock", "[OpenMP]", OpenMP);
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: unset nestlock\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
     omp_unset_nest_lock( s );
 }
 
@@ -1288,10 +1372,12 @@ POMP2_Test_nest_lock( omp_nest_lock_t* s )
 {
   TAU_PROFILE("omp_test_nest_lock", "[OpenMP]", OpenMP);
 
+#ifdef DEBUG_PROF
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: test nestlock\n", omp_get_thread_num() );
     }
+#endif /* DEBUG_PROF */
     return omp_test_nest_lock( s );
 }
 
