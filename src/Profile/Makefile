@@ -132,7 +132,7 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauMemoryWrap.o \
 		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) $(TAU_SAMPLING_O) \
 		TauIoWrap.o TauCompensate.o $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
 		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_GASPU_O) $(TAU_CUPTI_COUNTER_OBJS) \
-		$(TAU_WINDOWS_OBJ) $(TAU_SHMEM_OBJS)
+		$(TAU_WINDOWS_OBJ) $(TAU_SHMEM_OBJS) $(TAU_IBM_BG_HWP_OBJS)
 
 # CWL - BFD Functionality for libTAU.so is faked if no shared BFD object can
 #       be built. The same is true for static builds of TAU if BFD is 
@@ -186,7 +186,7 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 
 ##############################################
 #MPI#MPI_WRAPPER   = libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF#
-#MPI#TAU_MPI_OBJS = TauMpi.o ClockSync.o TauProfileMerge.o TauMetaDataMerge.o $(FWRAPPER) $(MPI2EXTENSIONS)  #ENDIF#
+#MPI#TAU_MPI_OBJS = TauMpi.o ClockSync.o TauProfileMerge.o TauMetaDataMerge.o $(FWRAPPER) $(MPI2EXTENSIONS) #ENDIF#
 #MPI#MPI_INSTALL   = $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX)  #ENDIF#
 ##############################################
 
@@ -265,6 +265,7 @@ TAU_SHLIB	= libTAUsh$(TAU_CONFIG)$(TAU_SHLIBX)
 #JVMTI#TAU_JAVA_CLASS2 = $(TAU_JAVA_INSTALLDIR)/TauJVMTI.jar #ENDIF#
 #DYNINST# TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB) #ENDIF#
 #USE_DECCXX# EXTRAOBJS=cxx_repository/*.o #ENDIF#
+#BGP#TAU_IBM_BG_HWP_OBJS=TauBgHwpCounters.o #ENDIF#
 #PYTHON#TAUPYTHON = pytau$(TAU_SHLIBX) #ENDIF#
 #PYTHON#TAUPYTHON_INSTALL = $(TAU_SHAREDDIR)/pytau$(TAU_SHLIBX) #ENDIF#
 ##############################################
@@ -782,6 +783,9 @@ TauGASP.o : TauGASP.c $(HDRS)
 TauGASPU.o : TauGASPU.upc $(HDRS)
 	$(TAU_UPCC) $(UPCFLAGS) -c $(@:.o=.upc)
 
+TauBgHwpCounters.o : TauBgHwpCounters.c $(HDRS) 
+	$(CC) $(CFLAGS) -c $(@:.o=.c)
+
 ktau_syscall.o : ktau_syscall.c $(HDRS)
 	$(CC) $(CXXFLAGS) -c $(@:.o=.c)
 
@@ -811,6 +815,7 @@ TauGpuAdapterCupti.o : TauGpuAdapterCupti.cpp $(HDRS) ../../include/Profile/TauG
 
 CuptiLayer.o : CuptiLayer.cpp $(HDRS) ../../include/Profile/CuptiLayer.h
 	$(TAU_CUDA_CXX) $(CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
+
 
 jVMTIThreadLayer.o: JVMTIThreadLayer.cpp
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@

@@ -125,6 +125,7 @@ public class Machine implements Serializable {
 
             if ((db.getDBType().compareTo("oracle") == 0) || 
 				(db.getDBType().compareTo("derby") == 0) || 
+				(db.getDBType().compareTo("h2") == 0) || 
 				(db.getDBType().compareTo("db2") == 0)) {
                 resultSet = dbMeta.getColumns(null, null, "MACHINE_THREAD_MAP", "%");
             } else {
@@ -435,6 +436,8 @@ public class Machine implements Serializable {
             } else if (db.getDBType().compareTo("db2") == 0) {
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM Machine";
             } else if (db.getDBType().compareTo("derby") == 0) {
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM Machine";
+            } else if (db.getDBType().compareTo("h2") == 0) {
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM Machine";
             } else if (db.getDBType().compareTo("oracle") == 0) {
                 tmpStr = "select " + db.getSchemaPrefix() + "Machine_id_seq.currval FROM dual";
