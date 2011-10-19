@@ -78,7 +78,9 @@ public:
 	x_uint64 id_p1() {
 		return correlationId;
 	};
-	x_uint64 id_p2() { return 0; };
+	x_uint64 id_p2() { 
+		return RtsLayer::myNode(); 
+	};
 
 	bool equals(const gpuId *other) const
 	{
