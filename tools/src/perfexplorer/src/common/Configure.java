@@ -156,6 +156,8 @@ public class Configure {
                         filename = tau_root + File.separator + "dbschema.oracle";
                     } else if (db.getDBType().compareTo("derby") == 0) {
                         filename = tau_root + File.separator + "dbschema.derby";
+                    } else if (db.getDBType().compareTo("h2") == 0) {
+                        filename = tau_root + File.separator + "dbschema.h2";
                     } else if (db.getDBType().compareTo("mysql") == 0) {
                         filename = tau_root + File.separator + "dbschema.mysql";
                     } else if (db.getDBType().compareTo("postgresql") == 0) {

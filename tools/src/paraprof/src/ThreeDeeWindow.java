@@ -32,6 +32,7 @@ import javax.swing.JSplitPane;
 
 import com.graphbuilder.math.VarMap;
 
+import edu.uoregon.tau.paraprof.ThreeDeeGeneralPlotUtils.CoordMap;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
@@ -472,7 +473,61 @@ UnitListener, SortListener, VisCanvasListener, ThreeDeeImageProvider {
 				tsizes[i]=(int) maxScatterValues[i];
 
 
-		}else
+		}else if(prefix.equals("Map")){
+			String fileLoc=settings.getTopoMapFile();
+			if(fileLoc==null)
+				return null;
+			CoordMap map = ThreeDeeGeneralPlotUtils.parseMapFile(fileLoc);
+			
+			for(int i=0;i<3;i++){
+				maxScatterValues[i] = tsizes[i]=map.max[i];
+				minScatterValues[i] = map.min[i];
+			}
+			//scatterPlot.setSize(tsizes[0],tsizes[1], tsizes[2]);
+
+			//         int minVis=settings.getMinTopoRange();
+			//         int maxVix=settings.getMaxTopoRange();
+
+			int threadIndex = 0;
+			for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
+				Thread thread = it.next();
+
+
+				//String coord = thread.getMetaData().get(coord_key);
+				//if(coord==null){
+				//	continue;
+				//}
+				//int[] coords = ThreeDeeGeneralPlotUtils.parseTuple(coord);
+
+
+				values[threadIndex][0]=map.coords[threadIndex][0];//coords[0];
+				values[threadIndex][1]=map.coords[threadIndex][1];
+				values[threadIndex][2]=map.coords[threadIndex][2];
+
+
+				Function topoFunction = settings.getTopoFunction(3);
+				ValueType topoValueType = settings.getTopoValueType(3);
+				Metric topoMetricID = settings.getTopoMetric(3);
+
+				if (topoFunction != null) {
+					FunctionProfile functionProfile = thread.getFunctionProfile(topoFunction);
+
+					if (functionProfile != null) {
+
+
+						values[threadIndex][3] = (float) topoValueType.getValue(functionProfile, topoMetricID,ppTrial.getSelectedSnapshot());
+						maxScatterValues[3] = Math.max(maxScatterValues[3], values[threadIndex][3]);
+						minScatterValues[3] = Math.min(minScatterValues[3], values[threadIndex][3]);
+					}
+				}
+
+
+				threadIndex++;
+			}
+			
+			
+		}
+		else
 			if(settings.isCustomTopo()){
 				String fileLoc=settings.getTopoDefFile();//"/home/wspear/Code/JavaMath/test.txt";
 				//List<String> names = getCustomTopoNames(fileLoc);
