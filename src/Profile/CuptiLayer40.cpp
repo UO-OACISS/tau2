@@ -222,8 +222,10 @@ void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev)
 }
 /* counterDataBuffer is assumed to be pointing to a memory location of size:
    Tau_CuptiLayer_num_events * sizeof ( uint64_t ); */
-void Tau_CuptiLayer_read_counters(uint64_t* counterDataBuffer)
+void Tau_CuptiLayer_read_counters(void* cb)
 {	
+	uint64_t* counterDataBuffer = (uint64_t *) cb;
+
   /*struct timeval tp;
   gettimeofday(&tp, 0);
   x_uint64 startTime = ((x_uint64)tp.tv_sec * (x_uint64)1e6 +
