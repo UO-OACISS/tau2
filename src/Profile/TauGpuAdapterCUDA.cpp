@@ -103,7 +103,7 @@ double cudaDriverGpuId::syncOffset()
 char* cudaDriverGpuId::printId() 
 {
 		char *rtn = (char*) malloc(50*sizeof(char));
-		sprintf(rtn, "[%d:%d:%d]", device, context, stream);
+		sprintf(rtn, "%d:%d:%d (Device,Context,Stream)", device, context, stream);
 		return rtn;
 }
 x_uint64 cudaDriverGpuId::id_p1(void) { return device; }
@@ -175,27 +175,49 @@ class KernelEvent : public eventId
 	int enqueue_start_event()
 	{
 		cudaError_t err;
-		cudaEventCreate(&startEvent);
+		err = cudaEventCreate(&startEvent);
+		if (err != cudaSuccess)
+		{
+			printf("Error creating kernel event, error #: %d.\n", err);
+			return 1;
+		}
 		err = cudaEventRecord(startEvent, 0);
+		if (err != cudaSuccess)
+		{
+			printf("Error recording kernel event (0), error #: %d.\n", err);
+			return 1;
+		}
 		err = cudaEventRecord(startEvent, getStream());
 		if (err != cudaSuccess)
 		{
 			printf("Error recording kernel event, error #: %d.\n", err);
 			return 1;
 		}
+		//cudaGetLastError();
 		return 0;
 	}
 	int enqueue_stop_event()
 	{
 		cudaError_t err;
-		cudaEventCreate(&stopEvent);
+		err = cudaEventCreate(&stopEvent);
+		if (err != cudaSuccess)
+		{
+			printf("Error creating kernel event, error #: %d.\n", err);
+			return 1;
+		}
 		err = cudaEventRecord(stopEvent, 0);
+		if (err != cudaSuccess)
+		{
+			printf("Error recording kernel event (0), error #: %d.\n", err);
+			return 1;
+		}
 		err = cudaEventRecord(stopEvent, getStream());
 		if (err != cudaSuccess)
 		{
 			printf("Error recording kernel event, error #: %d.\n", err);
 			return 1;
 		}
+		//cudaGetLastError();
 		return 0;
 	}
 };
