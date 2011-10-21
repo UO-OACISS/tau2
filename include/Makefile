@@ -35,6 +35,8 @@ CONFIG_CXX=g++
 TAU_CC_FE=$(CONFIG_CC)
 TAU_CXX_FE=$(CONFIG_CXX)
 
+TAU_CUDA_CXX=g++
+
 # Front end C/C++ Compilers
 #BGL#TAU_CC_FE=gcc #ENDIF#
 #BGL#TAU_CXX_FE=g++ #ENDIF#

@@ -19,6 +19,7 @@
 #include <TauInit.h>
 #include <stdio.h>
 #include <iostream>
+#include <Profile/OpenMPLayer.h>
 
 void *main_ptr, *gpu_ptr;
 
@@ -299,11 +300,16 @@ int get_task(gpuId *new_task)
 	{
 		gpuId *create_task = new_task->getCopy();
 		Tasks[number_of_tasks] = create_task;
-		TAU_CREATE_TASK(++number_of_tasks);
-		//printf("new task: %s.\n", Tasks[number_of_tasks-1]->printId());
+		number_of_tasks++;
+		TAU_CREATE_TASK(task);
+		//printf("new task: %s id: %d.\n", Tasks[number_of_tasks-1]->printId(), number_of_tasks);
 		task = number_of_tasks;
 	}
 
+//OpenMP thread offset
+#ifdef TAU_OPENMP
+	task += OpenMPLayer::numThreads() - 1;
+#endif
 	return task;
 }
 
