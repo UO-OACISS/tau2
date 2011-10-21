@@ -85,7 +85,7 @@
  * Tau Sampling Record Definition
  ********************************************************************/
 typedef struct {
-  unsigned long pc;
+  caddr_t pc;
   x_uint64 timestamp;
   double counters[TAU_MAX_COUNTERS];
   double counterDeltaStart[TAU_MAX_COUNTERS];
@@ -95,14 +95,14 @@ typedef struct {
 } TauSamplingRecord;
 
 typedef struct {
-  unsigned long pc; // should be a list for callsite paths
+  caddr_t pc; // should be a list for callsite paths
   unsigned int sampleCount;
   FunctionInfo *tauContext;
 } CallSiteCandidate;
 
 typedef struct {
-  unsigned long pc; // should be a list for callsite paths
-  unsigned long relative_pc;
+  caddr_t pc; // should be a list for callsite paths
+  caddr_t relative_pc;
   int moduleIdx;
   char *name;
 } CallSiteInfo;
@@ -112,7 +112,7 @@ typedef struct {
  ********************************************************************/
 
 // map for pc to FunctionInfo objects
-static map<unsigned long, FunctionInfo *> *pc2FuncInfoMap[TAU_MAX_THREADS];
+static map<caddr_t, FunctionInfo *> *pc2FuncInfoMap[TAU_MAX_THREADS];
 // map for sample callsite/intermediate names to FunctionInfo objects
 static map<string, FunctionInfo *> *name2FuncInfoMap[TAU_MAX_THREADS];
 
@@ -164,9 +164,9 @@ void issueUnavailableWarningIfNecessary(char *text) {
   }
 }
 
-static inline unsigned long get_pc(void *p) {
+static inline caddr_t get_pc(void *p) {
   struct ucontext *uc = (struct ucontext *)p;
-  unsigned long pc;
+  caddr_t pc;
 
 #ifdef sun
   issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on solaris\n");
@@ -181,20 +181,20 @@ static inline unsigned long get_pc(void *p) {
   struct sigcontext *sc;
   sc = (struct sigcontext *)&uc->uc_mcontext;
 #ifdef TAU_BGP
-  //  pc = (unsigned long)sc->uc_regs->gregs[PPC_REG_PC];
-  pc = (unsigned long)UCONTEXT_REG(uc, PPC_REG_PC);
+  //  pc = (caddr_t)sc->uc_regs->gregs[PPC_REG_PC];
+  pc = (caddr_t)UCONTEXT_REG(uc, PPC_REG_PC);
 # elif __x86_64__
-  pc = (unsigned long)sc->rip;
+  pc = (caddr_t)sc->rip;
 # elif i386
-  pc = (unsigned long)sc->eip;
+  pc = (caddr_t)sc->eip;
 # elif __ia64__
-  pc = (unsigned long)sc->sc_ip;
+  pc = (caddr_t)sc->sc_ip;
 # elif __powerpc64__
   // it could possibly be "link" - but that is supposed to be the return address.
-  pc = (unsigned long)sc->regs->nip;
+  pc = (caddr_t)sc->regs->nip;
 # elif __powerpc__
   // it could possibly be "link" - but that is supposed to be the return address.
-  pc = (unsigned long)sc->regs->nip;
+  pc = (caddr_t)sc->regs->nip;
 # else
 #  error "profile handler not defined for this architecture"
 # endif /* TAU_BGP */
@@ -437,7 +437,7 @@ void Tau_sampling_handle_sampleTrace(void *pc, ucontext_t *context) {
   x_uint64 timestamp = ((x_uint64)tp.tv_sec * (x_uint64)1e6 + (x_uint64)tp.tv_usec);
 
   theRecord.timestamp = timestamp;
-  theRecord.pc = (unsigned long)pc;
+  theRecord.pc = (caddr_t)pc;
   theRecord.deltaStart = 0;
   theRecord.deltaStop = 0;
 
@@ -500,10 +500,8 @@ void Tau_sampling_internal_initName2FuncInfoMapIfNecessary() {
   }
 }
 
-CallSiteInfo *Tau_sampling_resolveCallSite(unsigned long addr) {
+CallSiteInfo *Tau_sampling_resolveCallSite(caddr_t addr) {
   CallSiteInfo *callsite;
-  int bfdRet;
-  //  bool resolved = false;
 
   char resolvedBuffer[4096];
   callsite = (CallSiteInfo *)malloc(sizeof(CallSiteInfo));
@@ -511,37 +509,31 @@ CallSiteInfo *Tau_sampling_resolveCallSite(unsigned long addr) {
   callsite->pc = addr;
   // map current address to the corresponding module
   
-  // resolved = Tau_sampling_resolveName(addr, &name, &resolvedModuleIdx);
-  TauBfdInfo *resolvedInfo = NULL;
-  // backup information in case we fail to resolve the address to specific
-  //   line numbers.
-  TauBfdAddrMap addressMap;
-  sprintf(addressMap.name, "%s", "UNKNOWN");
+  TauBfdInfo info;
+  bool resolved = false;
+  char const * mapName = "UNKNOWN";
+
 #ifdef TAU_BFD
-  resolvedInfo = 
-    Tau_bfd_resolveBfdInfo(bfdUnitHandle, (unsigned long)addr);
-  // backup info
-  bfdRet = Tau_bfd_getAddressMap(bfdUnitHandle, (unsigned long)addr,
-				 &addressMap);
-  if (resolvedInfo == NULL) {
-      resolvedInfo = 
-	  Tau_bfd_resolveBfdExecInfo(bfdUnitHandle, (unsigned long)addr);
-      sprintf(addressMap.name, "%s", "EXEC");
+  resolved = Tau_bfd_resolveBfdInfo(bfdUnitHandle, (uintptr_t)addr, info);
+  TauBfdAddrMap const * addressMap =
+		  Tau_bfd_getAddressMap(bfdUnitHandle, (uintptr_t)addr);
+  if (resolved) {
+	  mapName = addressMap->name;
+  } else {
+      resolved = Tau_bfd_resolveBfdExecInfo(bfdUnitHandle, (uintptr_t)addr, info);
+      mapName = "EXEC";
   }
 #endif /* TAU_BFD */
-  if (resolvedInfo != NULL) {
-    sprintf(resolvedBuffer, "[SAMPLE] %s [{%s} {%d,%d}-{%d,%d}]",
-	    resolvedInfo->funcname,
-	    resolvedInfo->filename,
-	    resolvedInfo->lineno, 0,
-	    resolvedInfo->lineno, 0);
+
+  if (resolved) {
+    sprintf(resolvedBuffer, "[SAMPLE] %s [{%s} {%d,0}]",
+	    info.funcname, info.filename, info.lno);
   } else {
     if (TauEnv_get_ebs_keep_unresolved_addr()) {
-      sprintf(resolvedBuffer, "[SAMPLE] UNRESOLVED %s ADDR %p", 
-	      addressMap.name, (unsigned long)addr);
+      sprintf(resolvedBuffer, "[SAMPLE] UNRESOLVED %s ADDR %p", mapName,
+    		  (void*)(uintptr_t)addr);
     } else {
-      sprintf(resolvedBuffer, "[SAMPLE] UNRESOLVED %s", 
-	      addressMap.name);
+      sprintf(resolvedBuffer, "[SAMPLE] UNRESOLVED %s", mapName);
     }
   }
   callsite->name = strdup(resolvedBuffer);
@@ -587,7 +579,7 @@ void Tau_sampling_finalizeProfile(int tid) {
 
 #ifdef TAU_BFD
   if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
-    bfdUnitHandle = Tau_bfd_registerUnit(TAU_BFD_KEEP_GLOBALS);
+    bfdUnitHandle = Tau_bfd_registerUnit();
   }
 #endif /* TAU_BFD */
 
@@ -610,12 +602,12 @@ void Tau_sampling_finalizeProfile(int tid) {
 		  parentTauContext->GetName());
       continue;
     }
-    map<unsigned long, unsigned int,
-      std::less<unsigned long>, 
-      SS_ALLOCATOR< std::pair<const unsigned long, unsigned int> > >::iterator it;
+    map<caddr_t, unsigned int,
+      std::less<caddr_t>, 
+      SS_ALLOCATOR< std::pair<const caddr_t, unsigned int> > >::iterator it;
     for (it = parentTauContext->pcHistogram[tid]->begin();
 	 it != parentTauContext->pcHistogram[tid]->end(); it++) {
-      unsigned long addr = (unsigned long)it->first;
+      caddr_t addr = (caddr_t)it->first;
       CallSiteCandidate *candidate = new CallSiteCandidate();
       candidate->pc = addr;
       candidate->sampleCount = (unsigned int)it->second;
@@ -822,7 +814,7 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
   Tau_global_incr_insideTAU_tid(tid);
 
   // *CWL* - Too "noisy" and useless a verbose output.
-  //TAU_VERBOSE("[tid=%d] EBS profile sample with pc %p\n", tid, (unsigned long)pc);
+  //TAU_VERBOSE("[tid=%d] EBS profile sample with pc %p\n", tid, (caddr_t)pc);
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
   FunctionInfo *callSiteContext;
 
@@ -831,7 +823,7 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
   } else {
     callSiteContext = profiler->ThisFunction;
   }
-  callSiteContext->addPcSample((unsigned long)pc, tid);
+  callSiteContext->addPcSample((caddr_t)pc, tid);
 
   Tau_global_decr_insideTAU_tid(tid);
 }
@@ -924,10 +916,10 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
  * Handler for itimer interrupt
  ********************************************************************/
 void Tau_sampling_handler(int signum, siginfo_t *si, void *context) {
-  unsigned long pc;
+  caddr_t pc;
   pc = get_pc(context);
 
-  Tau_sampling_handle_sample((void *)pc, (ucontext_t *)context);
+  Tau_sampling_handle_sample(pc, (ucontext_t *)context);
 }
 
 /*********************************************************************

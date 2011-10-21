@@ -105,10 +105,6 @@
 
 #define TAU_TRACK_SIGNALS_DEFAULT 0
 
-#define TAU_SUMMARY_DEFAULT 0
-
-#define TAU_IBM_BG_HWP_COUNTERS 0
-
 #define TAU_THROTTLE_DEFAULT 1
 #ifdef TAU_MPI
   #define TAU_SYNCHRONIZE_CLOCKS_DEFAULT 1
@@ -372,8 +368,6 @@ static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
 static int env_track_io_params = 0;
 static int env_track_signals = 0;
-static int env_summary_only = 0;
-static int env_ibm_bg_hwp_counters = 0;
 static int env_extras = 0;
 /* This is a malleable default */
 static int env_ebs_keep_unresolved_addr = 0;
@@ -403,6 +397,7 @@ void TAU_VERBOSE(const char *format, ...) {
   va_start(args, format);
   vfprintf(stderr, format, args);
   va_end(args);
+  fflush(stderr);
 }
 
 /*********************************************************************
@@ -499,14 +494,6 @@ int TauEnv_get_track_io_params() {
 
 int TauEnv_get_extras() {
   return env_extras;
-}
-
-int TauEnv_get_summary_only() {
-  return env_summary_only;
-}
-
-int TauEnv_get_ibm_bg_hwp_counters() {
-  return env_ibm_bg_hwp_counters;
 }
 
 int TauEnv_get_profiling() {
@@ -652,29 +639,6 @@ void TauEnv_initialize() {
       TAU_METADATA("TAU_TRACK_SIGNALS", "off");
       env_track_signals = 0;
     }
-
-    tmp = getconf("TAU_SUMMARY");
-    if (parse_bool(tmp, env_summary_only)) {
-      TAU_VERBOSE("TAU: Generating only summary data: TAU_SUMMARY enabled\n");
-      TAU_METADATA("TAU_SUMMARY", "on");
-      env_summary_only = 1;
-      env_extras = 1;
-    } else {
-      TAU_METADATA("TAU_SUMMARY", "off");
-      env_summary_only = 0;
-    }
-
-    tmp = getconf("TAU_IBM_BG_HWP_COUNTERS");
-    if (parse_bool(tmp, env_ibm_bg_hwp_counters)) {
-      TAU_VERBOSE("TAU: IBM UPC HWP counter data collection enabled\n");
-      TAU_METADATA("TAU_IBM_BG_HWP_COUNTERS", "on");
-      env_ibm_bg_hwp_counters = 1;
-      env_extras = 1;
-    } else {
-      TAU_METADATA("TAU_IBM_BG_HWP_COUNTERS", "off");
-      env_ibm_bg_hwp_counters = 0;
-    }
-
 
 
     /*** Options that can be used with Scalasca and VampirTrace need to go above this line ***/
