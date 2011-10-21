@@ -103,7 +103,7 @@ double cudaDriverGpuId::syncOffset()
 char* cudaDriverGpuId::printId() 
 {
 		char *rtn = (char*) malloc(50*sizeof(char));
-		sprintf(rtn, "[%d:%d:%d]", device, context, stream);
+		sprintf(rtn, "%d:%d:%d (Device,Context,Stream)", device, context, stream);
 		return rtn;
 }
 x_uint64 cudaDriverGpuId::id_p1(void) { return device; }
@@ -175,27 +175,49 @@ class KernelEvent : public eventId
 	int enqueue_start_event()
 	{
 		cudaError_t err;
-		cudaEventCreate(&startEvent);
+		err = cudaEventCreate(&startEvent);
+		if (err != cudaSuccess)
+		{
+			printf("Error creating kernel event, error #: %d.\n", err);
+			return 1;
+		}
 		err = cudaEventRecord(startEvent, 0);
+		if (err != cudaSuccess)
+		{
+			printf("Error recording kernel event (0), error #: %d.\n", err);
+			return 1;
+		}
 		err = cudaEventRecord(startEvent, getStream());
 		if (err != cudaSuccess)
 		{
 			printf("Error recording kernel event, error #: %d.\n", err);
 			return 1;
 		}
+		//cudaGetLastError();
 		return 0;
 	}
 	int enqueue_stop_event()
 	{
 		cudaError_t err;
-		cudaEventCreate(&stopEvent);
+		err = cudaEventCreate(&stopEvent);
+		if (err != cudaSuccess)
+		{
+			printf("Error creating kernel event, error #: %d.\n", err);
+			return 1;
+		}
 		err = cudaEventRecord(stopEvent, 0);
+		if (err != cudaSuccess)
+		{
+			printf("Error recording kernel event (0), error #: %d.\n", err);
+			return 1;
+		}
 		err = cudaEventRecord(stopEvent, getStream());
 		if (err != cudaSuccess)
 		{
 			printf("Error recording kernel event, error #: %d.\n", err);
 			return 1;
 		}
+		//cudaGetLastError();
 		return 0;
 	}
 };
@@ -266,12 +288,12 @@ void Tau_cuda_exit()
 
 void Tau_cuda_enter_memcpy_event(const char *name, int id, int size, int MemcpyType)
 {
-	Tau_gpu_enter_memcpy_event(name, &cudaDriverGpuId(0,0,0), size, MemcpyType);
+	//Tau_gpu_enter_memcpy_event(name, &cudaDriverGpuId(0,0,0), size, MemcpyType);
 }
 
 void Tau_cuda_exit_memcpy_event(const char *name, int id, int MemcpyType)
 {
-	Tau_gpu_exit_memcpy_event(name, &cudaDriverGpuId(0,0,0), MemcpyType);
+	//Tau_gpu_exit_memcpy_event(name, &cudaDriverGpuId(0,0,0), MemcpyType);
 }
 
 /*void Tau_cuda_register_gpu_event(KernelEvent k, double start,
@@ -286,7 +308,7 @@ double stop)
 void Tau_cuda_register_memcpy_event(const char *name, cudaGpuId* id, double start, double stop, int
 transferSize, int MemcpyType)
 {
-	FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::getTid())->ThisFunction;
+	FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->ThisFunction;
 	eventId c = Tau_gpu_create_gpu_event(name, id, p);
 	Tau_gpu_register_memcpy_event(c, start/1e3, stop/1e3, transferSize, MemcpyType);
 }
@@ -297,13 +319,13 @@ KernelEvent *curKernel;
 void Tau_cuda_enqueue_kernel_enter_event(const char *name, cudaGpuId* id)
 {
 	FunctionInfo* callingSite;
-	if (TauInternal_CurrentProfiler(RtsLayer::getTid()) == NULL)
+	if (TauInternal_CurrentProfiler(Tau_RtsLayer_getTid()) == NULL)
 	{
 		callingSite = NULL;
 	}
 	else
 	{
-		callingSite = TauInternal_CurrentProfiler(RtsLayer::getTid())->CallPathFunction;
+		callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
 	}
 	//printf("recording start for %s.\n", name);
 

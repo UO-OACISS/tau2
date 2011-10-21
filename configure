@@ -6295,9 +6295,11 @@ if [ $cxx_compiler = icpc ] ; then
     echo "Checking version (10.0+) of Intel compilers"
     version=`icpc -v 2>&1`
     t="Version 1"
+    t1="icpc version 1"
     testarg=${version#$t}
+    testarg1=${version#$t1}
 
-    if [ "y$testarg" != "y$version" ] ; then
+    if [ "y$testarg" != "y$version" -o "y$testarg1" != "y$version" ] ; then
         echo "Intel v10.0+ compilers found"
         fixmakeargs="$fixmakeargs INTEL10FIX COMPINST_GNU" 
     else
