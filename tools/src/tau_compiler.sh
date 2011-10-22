@@ -1141,7 +1141,8 @@ if [ $numFiles == 0 ]; then
          
         evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
       
-         ${NM} ${objectFilesForLinking} | ${GREP} -i POMP2_Init_regions | ${AWK} -f ${AWK_SCRIPT} > pompregions.c
+        cmdCreatePompRegions="${NM} ${objectFilesForLinking} | ${GREP} -i POMP2_Init_regions | ${AWK} -f ${AWK_SCRIPT} > pompregions.c"
+        evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
         cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
         evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
         linkCmd="$linkCmd pompregions.o"
@@ -1598,7 +1599,8 @@ if [ $gotoNextStep == $TRUE ]; then
          
             evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
       
-         ${NM} ${objectFilesForLinking} | ${GREP} -i POMP2_Init_regions | ${AWK} -f ${AWK_SCRIPT} > pompregions.c
+        evalWithDebugMessage="${NM} ${objectFilesForLinking} | ${GREP} -i POMP2_Init_regions | ${AWK} -f ${AWK_SCRIPT} > pompregions.c"
+        evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
         cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
         evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
         linkCmd="$linkCmd pompregions.o"
