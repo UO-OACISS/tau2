@@ -196,6 +196,8 @@ tau_convert: 	tau_convert.c
 
 tau_timecorrect:	tau_timecorrect.o
 		$(CXX) $(CFLAGS) tau_timecorrect.o -o tau_timecorrect -lm $(LEXTRA) $(TAU_TRACE_INPUT_LIB)
+opari/opari:
+		cd opari ; $(MAKE) opari
 
 opari2-2.0/bin/opari2:
 		cd opari2-2.0 ; ./configure -prefix=$(TAU_PREFIX_INSTALL_DIR)/utils/opari2-2.0 ; $(MAKE) ; make install
@@ -323,6 +325,7 @@ user_event_data.o:	user_event_data.cpp
 
 clean:
 		/bin/rm -rf *.o $(EXECUTABLES) *.dep lib*$(LSX) *.ii *.ti ti_files cxx_repository ii_files rii_files 
+		cd opari ; make clean
 		cd opari2-2.0 ; make clean
 		cd ebs2otf ; $(MAKE) clean
 
@@ -416,6 +419,12 @@ $(INSTALLDEST)/vtf2profile: vtfconverter/vtf2profile
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) vtfconverter/vtf2profile $(INSTALLDEST)
 
+$(INSTALLDEST)/opari: opari/opari
+		@echo Installing $? in $(INSTALLDEST)
+		if [ -d $(INSTALLDEST) ] ; then true; \
+                   else mkdir $(INSTALLDEST) ;fi
+		$(TAU_INSTALL) opari/opari $(INSTALLDEST)
+
 $(INSTALLDEST)/opari2_config: opari2-2.0/bin/opari2
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
@@ -448,7 +457,7 @@ $(INSTALLLIBDEST)/ebs2otf.so: ebs2otf/ebs2otf.so
 		cd ebs2otf; $(MAKE) cleanup
 
 install:	$(INSTALLDEST)/pprof $(INSTALLDEST)/tau_reduce \
-$(INSTALLDEST)/tau_merge $(INSTALLDEST)/tau_convert $(INSTALLDEST)/opari2 \
+$(INSTALLDEST)/tau_merge $(INSTALLDEST)/tau_convert $(INSTALLDEST)/opari  $(INSTALLDEST)/opari2 \
 $(INSTALLTRACE2PROFILE) $(INSTALLTAU_TIMECORRECT) $(INSTALLPCXX) $(INSTALLINSTR) \
 $(INSTALLTAURUN) $(INSTALLTAU2VTF) $(INSTALLVTF2PROFILE) $(INSTALLTAU2OTF) \
 $(INSTALLTAU2ELG) $(INSTALLTAUOMPCHECK) $(INSTALLPERF2TAU) $(INSTALLWRAP) \
