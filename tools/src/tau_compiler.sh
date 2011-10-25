@@ -1030,33 +1030,6 @@ while [ $tempCounter -lt $numFiles ]; do
     arrPdb[$tempCounter]="${PDBARGSFORTAU}${newFile}"
     tempCounter=tempCounter+1
 
-    if [ $optCompInst == $FALSE ] ; then
-        newFile=${base}.inst${suf}
-    else
-        newFile=${arrFileName[$tempCounter]}
-    fi
-    arrTau[$tempCounter]="${OUTPUTARGSFORTAU}${newFile}"
-    arrPdbForTau[$tempCounter]="${PDBARGSFORTAU}${newFile}"
-    if [ $pdbFileSpecified == $FALSE ]; then
-        newFile=${base}.pdb
-
-        # if we are using cxxparse for a .c file, cxxparse spits out a .c.pdb file
-        if [ "x$defaultParser" = "xcxxparse" -a "x$suf" = "x.c" ] ; then
-            newFile=${arrFileName[$tempCounter]}.pdb
-        fi
-        if [ "x$groupType" = "x$group_f_F" -a "x$suf" = "x.for" ] ; then
-            newFile=${arrFileName[$tempCounter]}.pdb
-        fi
-        if [ "x$groupType" = "x$group_f_F" -a "x$suf" = "x.FOR" ] ; then
-            newFile=${arrFileName[$tempCounter]}.pdb
-        fi
-
-    else
-        newFile=$optPDBFile;
-    fi
-    arrPdb[$tempCounter]="${PDBARGSFORTAU}${newFile}"
-    tempCounter=tempCounter+1
-
 done
 echoIfDebug "Completed Parsing\n"
 
