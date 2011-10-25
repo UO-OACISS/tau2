@@ -17,8 +17,10 @@
 
 
 #ifdef TAU_MPI
-#ifdef TAU_UNIFY
+
 #include <mpi.h>
+
+#ifdef TAU_UNIFY
 
 #include <TauUtil.h>
 #include <TauMetrics.h>

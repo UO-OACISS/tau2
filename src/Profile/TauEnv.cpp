@@ -403,6 +403,7 @@ void TAU_VERBOSE(const char *format, ...) {
   va_start(args, format);
   vfprintf(stderr, format, args);
   va_end(args);
+  fflush(stderr);     
 }
 
 /*********************************************************************
