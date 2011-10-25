@@ -316,7 +316,8 @@ for arg in "$@"; do
     echo ""
     echo "OpenMP Options:"
     echo "-openmp ........................................... Use OpenMP threads."
-    echo "-opari ..................................................... Use Opari."
+    echo "-opari .................................................... Use Opari2."
+    echo "-opari1 .................................................... Use Opari."
     echo "-opari_region ......... Report performance data for all OpenMP regions."
     echo "-opari_construct ... Report performance data for all OpenMP constructs."
     echo ""
@@ -429,7 +430,8 @@ for arg in "$@"; do
     echo "-charm=<dir> .............................. Use charm++ thread package."
     echo "-sproc .................................. Use SGI sproc thread package."
     echo "-openmp ........................................... Use OpenMP threads."
-    echo "-opari ..................................................... Use Opari."
+    echo "-opari .................................................... Use Opari2."
+    echo "-opari1 .................................................... Use Opari."
     echo "-opari_region ......... Report performance data for all OpenMP regions."
     echo "-opari_construct ... Report performance data for all OpenMP constructs."
     echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
@@ -692,6 +694,7 @@ ebs_has_rt=no
 ebs_clock_res="-1"
 tau_links_rt=no
 opari=no
+opari1=no
 epilog=no
 hpctoolkit=no
 hpctoolkit_src_dir=
@@ -1085,6 +1088,17 @@ for arg in "$@"; do
 
   -opari=*)
       opari=yes
+      openmp=yes
+      shift
+      ;;
+  -opari1)
+      opari1=yes
+      openmp=yes
+      shift
+      ;;
+
+  -opari1=*)
+      opari1=yes
       openmp=yes
       shift
       ;;
@@ -6037,9 +6051,14 @@ if [ $openmp = yes ] ; then
     tauoptions="${tauoptions}-openmp"
 fi
 
-if [ $opari = yes ] ; then
+if [ $opari1 = yes ] ; then
     fixmakeargs="$fixmakeargs KOJAKOPARI"
     fixmakeargs="$fixmakeargs OPARI oparidir=$oparidir"
+    tauoptions="${tauoptions}-opari"
+fi
+if [ $opari = yes ] ; then
+    fixmakeargs="$fixmakeargs OPARI2"
+    fixmakeargs="$fixmakeargs oparidir=$oparidir"
     tauoptions="${tauoptions}-opari"
 fi
 
@@ -6159,6 +6178,19 @@ if [ $papi = yes ] ; then
 fi
 
 if [ $opari = yes ] ; then
+    if [ $pthread = yes -o $smarts = yes -o $java = yes ] ; then
+      echo "ERROR: -opari option requires OpenMP threads package."
+      echo "*****************************************************"
+      exit 1
+    fi
+    if [ $opari_construct = yes -a $opari_region = no ] ; then
+      fixmakeargs="$fixmakeargs OPARI_CONSTRUCT"
+    fi
+    if [ $opari_construct = no -a $opari_region = yes ] ; then
+      fixmakeargs="$fixmakeargs OPARI_REGION"
+    fi
+fi
+if [ $opari1 = yes ] ; then
     if [ $pthread = yes -o $smarts = yes -o $java = yes ] ; then
       echo "ERROR: -opari option requires OpenMP threads package."
       echo "*****************************************************"
@@ -6705,7 +6737,7 @@ if [ $mpi = yes ] ; then
   fi
 fi
 
-if [ $opari = yes ] ; then
+if [ $opari1 = yes ] ; then
   exampleslist="$exampleslist opari/c++/Makefile"
   if [ $pdt = yes -a $fortran_compiler != no ] ; then 
     exampleslist="$exampleslist opari/pdt_f90/Makefile"
