@@ -850,7 +850,8 @@ for arg in "$@" ; do
 		listOfObjectFiles="$listOfObjectFiles $arg"
 			#List of object Files is simply passed
 			#at the linking stage. It is not
-			#processed anywhere.
+			#processed anywhere, unless opari2 is used.
+                        #the object files are need to create pompregions.c
 		temp=$counterForOutput+1
 
 		if [ $temp == $tempCounter ]; then
@@ -1114,7 +1115,11 @@ if [ $numFiles == 0 ]; then
          
         evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
       
-        cmdCreatePompRegions="${NM} ${objectFilesForLinking} | ${GREP} -i POMP2_Init_regions | ${AWK} -f ${AWK_SCRIPT} > pompregions.c"
+        #cmdCreatePompRegions="${NM} ${listOfObjectFiles} | ${GREP} -i POMP2_Init_regions | ${AWK} -f ${AWK_SCRIPT} > pompregions.c"
+
+cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${listOfObjectFiles} | `${optOpari2ConfigTool} --egrep` -i \"pomp2_init_regions\" | `${optOpari2ConfigTool} --egrep` \" T \" | `${optOpari2ConfigTool} --awk_cmd` -f `${optOpari2ConfigTool} --awk_script` > pompregions.c"
+
+
         evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
         cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
         evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
@@ -1565,14 +1570,9 @@ if [ $gotoNextStep == $TRUE ]; then
 	    objectFilesForLinking="$objectFilesForLinking opari.tab.o"
 	fi
 	if [ $opari2 == $TRUE ]; then
-            NM=`${optOpari2ConfigTool} --nm`
-            AWK=`${optOpari2ConfigTool} --awk_cmd`
-            AWK_SCRIPT=`${optOpari2ConfigTool} --awk_script`
-            GREP=`${optOpari2ConfigTool} --egrep`
-         
             evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
       
-        cmdCreatePompRegions="${NM} ${objectFilesForLinking} | ${GREP} -i POMP2_Init_regions | ${AWK} -f ${AWK_SCRIPT} > pompregions.c"
+cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} | `${optOpari2ConfigTool} --egrep` -i \"pomp2_init_regions\" | `${optOpari2ConfigTool} --egrep` \" T \" | `${optOpari2ConfigTool} --awk_cmd` -f `${optOpari2ConfigTool} --awk_script` > pompregions.c"
         evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
         cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
         evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
