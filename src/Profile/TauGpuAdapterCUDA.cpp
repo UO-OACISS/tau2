@@ -314,6 +314,11 @@ void Tau_cuda_enqueue_kernel_enter_event(const char *name, cudaGpuId* id)
 	//printf("demangling name....\n");
 	dem_name = cplus_demangle(name, DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE |
 	DMGL_TYPES);
+  //revert to original string if demangle fails.
+  if (dem_name == NULL)
+  {
+    dem_name = name;
+  }
 #else
 	dem_name = name;
 #endif /* HAVE_GPU_DEMANGLE */
@@ -341,19 +346,26 @@ void Tau_cuda_enqueue_kernel_exit_event()
 	//printf("Successfully recorded stop.\n");
 }
 
+static int in_sync_event = 0;
+
 void Tau_cuda_register_sync_event()
 {
+	if (in_sync_event)
+	{
+		return;
+	}
+	in_sync_event = 1;
 	//printf("in sync event, buffer size: %d.\n", KernelBuffer.size());	
 	
 	if (KernelBuffer.size() > 0 && KernelBuffer.front().stopEvent != NULL)
 	{
 		//printf("buffer front stop: %d.\n", KernelBuffer.front().stopEvent == NULL);
-		cudaError err = cudaEventQuery_nosync(KernelBuffer.front().stopEvent);
+		cudaError err = cudaEventQuery(KernelBuffer.front().stopEvent);
 		//printf("buffer front is: %d\n", err);
 	}
 	float start_sec, stop_sec;
 
-	while (!KernelBuffer.empty() && cudaEventQuery_nosync(KernelBuffer.front().stopEvent) == cudaSuccess)
+	while (!KernelBuffer.empty() && cudaEventQuery(KernelBuffer.front().stopEvent) == cudaSuccess)
 	{
 		KernelEvent kernel = KernelBuffer.front();
 		//printf("kernel buffer size = %d.\n", KernelBuffer.size());
@@ -401,6 +413,7 @@ void Tau_cuda_register_sync_event()
 		lastEventTime += (double) stop_sec;
 
 		KernelBuffer.pop();
+		in_sync_event = 0;
 
 	}
 	
