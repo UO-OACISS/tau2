@@ -5507,8 +5507,22 @@ else
 	BFDLIBS="-lbfd -liberty -lz"
 	if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
 	    bfd_worked="yes"
+        else
+	    BFDLIBS="-lbfd -liberty -lintl"
+	    if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
+	        bfd_worked="yes"
+            else
+	        BFDLIBS="-lbfd -liberty -lintl -lz"
+	        if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
+	            bfd_worked="yes"
+                fi
+            fi
 	fi
     fi
+fi
+
+if [ $cxx_compiler = x86_64-w64-mingw32-g++ ]; then
+    BFDLIBS="$BFDLIBS -lpsapi"
 fi
 
 if [ $bfd_worked = "no" ] ; then
@@ -6281,9 +6295,11 @@ if [ $cxx_compiler = icpc ] ; then
     echo "Checking version (10.0+) of Intel compilers"
     version=`icpc -v 2>&1`
     t="Version 1"
+    t1="icpc version 1"
     testarg=${version#$t}
+    testarg1=${version#$t1}
 
-    if [ "y$testarg" != "y$version" ] ; then
+    if [ "y$testarg" != "y$version" -o "y$testarg1" != "y$version" ] ; then
         echo "Intel v10.0+ compilers found"
         fixmakeargs="$fixmakeargs INTEL10FIX COMPINST_GNU" 
     else
