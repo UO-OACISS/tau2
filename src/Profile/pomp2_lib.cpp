@@ -249,9 +249,9 @@ int tau_openmp_init(void)
 }
 
 
+  int tau_openmp_initialized = tau_openmp_init();
 void TauStartOpenMPRegionTimer(my_pomp2_region *r, int index)
 {
-  int tau_openmp_initialized = tau_openmp_init();
 /* For any region, create a mapping between a region r and timer t and
    start the timer. */
 
