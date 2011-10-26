@@ -316,7 +316,6 @@ static  char * Tau_check_dirname(const char * dir) {
     } else {
       sprintf(user,"unknown");
     }
-    free(temp);
 #endif /* TAU_BGP */
     ret = sprintf(logfiledir, "%s/%d/%d/%d/%s_id%s_%d-%d-%d",  
 	logdir, (thisTime->tm_year+1900),(thisTime->tm_mon+1), 

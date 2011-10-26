@@ -440,8 +440,9 @@ $(INSTALLDEST)/$(TAU_DISABLE): $(TAU_DISABLE) $(TAU_DISABLE_SHARED)
 		cd $(INSTALLDEST)
 		@if [ -d $(TAU_DISABLE_SHAREDDIR) ] ; then true; \
 		    else mkdir $(TAU_DISABLE_SHAREDDIR); fi
-		cd $(TAU_DISABLE_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX)
+		cd $(TAU_DISABLE_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX) TAU.dll
 		cd $(TAU_DISABLE_SHAREDDIR) ; ln -s ../$(TAU_DISABLE_SHARED) libTAU$(TAU_SHLIBX)
+		cd $(TAU_DISABLE_SHAREDDIR) ; ln -s ../$(TAU_DISABLE_SHARED) TAU.dll
 
 $(TAU_SHAREDDIR)/$(TAU_CUDA_LIB): $(TAU_CUDA_LIB)
 		@echo Installing $? in $(TAU_SHAREDDIR)
@@ -478,12 +479,14 @@ $(INSTALLDEST)/$(TAU_SHLIB): $(TAU_SHLIB)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
-		$(RM) $(INSTALLDEST)/libTAU$(TAU_SHLIBX)
+		$(RM) $(INSTALLDEST)/libTAU$(TAU_SHLIBX) $(INSTALLDEST)/TAU.dll
 		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) libTAU$(TAU_SHLIBX)
+		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) TAU.dll
 		@if [ -d $(TAU_SHAREDDIR) ] ; then true; \
 		    else mkdir $(TAU_SHAREDDIR); fi
-		cd $(TAU_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX)
+		cd $(TAU_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX) TAU.dll
 		cd $(TAU_SHAREDDIR) ; ln -s ../$(TAU_SHLIB) libTAU$(TAU_SHLIBX)
+		cd $(TAU_SHAREDDIR) ; ln -s ../$(TAU_SHLIB) TAU.dll
 		ls $(TAU_SHAREDDIR)
 
 $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX): libTauMpi$(TAU_CONFIG)$(LSX)
@@ -525,8 +528,9 @@ $(TAU_SHAREDDIR)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
 		$(RM) $(TAU_SHAREDDIR)/*
 		cd $(TAU_SHAREDDIR) && ln -s ../$(TAU_SHLIB) $(TAUPYTHON) && ln -s ../$(TAU_SHLIB) ctau_impl$(TAU_SHLIBX)
 		cd $(TAU_SHAREDDIR) && ln -s ../tau.py . && ln -s ../ltau.py .
-		cd $(TAU_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX)
+		cd $(TAU_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX) TAU.dll
 		cd $(TAU_SHAREDDIR) && ln -s ../$(TAU_SHLIB) libTAU$(TAU_SHLIBX)
+		cd $(TAU_SHAREDDIR) && ln -s ../$(TAU_SHLIB) TAU.dll
 		cd $(INSTALLDEST) && ln -s shared$(TAU_CONFIG) bindings$(TAU_CONFIG)
 
 $(INSTALLDEST)/libpgnod_prof.a : 
