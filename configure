@@ -6483,6 +6483,10 @@ else
   fi
 fi
 
+if [ $cxx_compiler = x86_64-w64-mingw32-g++ ]; then
+    extra_linker_args="${extralinker_args}#-Wl,--enable-auto-image-base"
+fi
+
 fixmakeargs="$fixmakeargs extra_linker_args=$extra_linker_args"
 
 
