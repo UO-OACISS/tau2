@@ -68,9 +68,10 @@ Usage: configure [OPTIONS]
 Compiler Options:
 -c++=<compiler>  ............................ specify the C++ compiler.
     options [CC|KCC|g++|*xlC*|cxx|pgCC|pgcpp|FCC|guidec++|aCC|c++|ecpc|
-                                      icpc|scgcc|scpathCC|pathCC|orCC].
+               icpc|scgcc|scpathCC|pathCC|orCC|x86_64-w64-mingw32-g++].
 -cc=<compiler> ................................ specify the C compiler.
-          options [cc|gcc|scgcc|KCC|pgcc|guidec|*xlc*|ecc|pathcc|orcc].
+           options [cc|gcc|scgcc|KCC|pgcc|guidec|*xlc*|ecc|pathcc|orcc|
+                                               x86_64-w64-mingw32-gcc].
 -fortran=<compiler> ..................... specify the Fortran compiler.
    options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|
        g95|open64|kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale]

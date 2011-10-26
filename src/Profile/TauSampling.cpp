@@ -500,55 +500,41 @@ void Tau_sampling_internal_initName2FuncInfoMapIfNecessary() {
   }
 }
 
-/* *CWL* - EBS doesn't work with MINGW, so no point trying to 
-           mess around with the modified BFD interface. Settle
-	   for an empty call. Just make TAU build.
-*/
-#ifdef TAU_MINGW
-CallSiteInfo *Tau_sampling_resolveCallSite(unsigned long addr) {
-  return NULL;
-}
-#else /* TAU_MINGW */
-CallSiteInfo *Tau_sampling_resolveCallSite(unsigned long addr) {
+CallSiteInfo *Tau_sampling_resolveCallSite(unsigned long addr)
+{
   CallSiteInfo *callsite;
   int bfdRet;
-  //  bool resolved = false;
   char resolvedBuffer[4096];
   callsite = (CallSiteInfo *)malloc(sizeof(CallSiteInfo));
 
   callsite->pc = addr;
   // map current address to the corresponding module
-  // resolved = Tau_sampling_resolveName(addr, &name, &resolvedModuleIdx);
-  TauBfdInfo *resolvedInfo = NULL;
-  // backup information in case we fail to resolve the address to specific
-  //   line numbers.
-  TauBfdAddrMap addressMap;
-  sprintf(addressMap.name, "%s", "UNKNOWN");
+
+  TauBfdInfo resolvedInfo;
+  char const * mapName = "UNKNOWN";
+  TauBfdAddrMap const * addressMap;
+  bool resolved = false;
+
 #ifdef TAU_BFD
-  resolvedInfo =
-    Tau_bfd_resolveBfdInfo(bfdUnitHandle, (unsigned long)addr);
+  resolved = Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, resolvedInfo);
   // backup info
-  bfdRet = Tau_bfd_getAddressMap(bfdUnitHandle, (unsigned long)addr,
-                                 &addressMap);
-  if (resolvedInfo == NULL) {
-      resolvedInfo =
-	Tau_bfd_resolveBfdExecInfo(bfdUnitHandle, (unsigned long)addr);
-      sprintf(addressMap.name, "%s", "EXEC");
+  addressMap = Tau_bfd_getAddressMap(bfdUnitHandle, (unsigned long)addr);
+  if(addressMap) {
+	  mapName = addressMap->name;
   }
 #endif /* TAU_BFD */
-  if (resolvedInfo != NULL) {
+
+  if (resolved) {
     sprintf(resolvedBuffer, "[SAMPLE] %s [{%s} {%d,%d}-{%d,%d}]",
-            resolvedInfo->funcname,
-            resolvedInfo->filename,
-            resolvedInfo->lineno, 0,
-            resolvedInfo->lineno, 0);
+            resolvedInfo.funcname,
+            resolvedInfo.filename,
+            resolvedInfo.lineno, 0,
+            resolvedInfo.lineno, 0);
   } else {
     if (TauEnv_get_ebs_keep_unresolved_addr()) {
-      sprintf(resolvedBuffer, "[SAMPLE] UNRESOLVED %s ADDR %p",
-              addressMap.name, (void *)addr);
+      sprintf(resolvedBuffer, "[SAMPLE] UNRESOLVED %s ADDR %p", mapName, (void*)addr);
     } else {
-      sprintf(resolvedBuffer, "[SAMPLE] UNRESOLVED %s",
-              addressMap.name);
+      sprintf(resolvedBuffer, "[SAMPLE] UNRESOLVED %s", mapName);
     }
   }
   callsite->name = strdup(resolvedBuffer);
@@ -556,7 +542,6 @@ CallSiteInfo *Tau_sampling_resolveCallSite(unsigned long addr) {
               callsite->name);
   return callsite;
 }
-#endif /* TAU_MINGW */
 
 void Tau_sampling_eventStopProfile(int tid, Profiler *profiler,
 				   double *stopTime) {
@@ -595,10 +580,7 @@ void Tau_sampling_finalizeProfile(int tid) {
 
 #ifdef TAU_BFD
   if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
-    /* *CWL* We don't care if MINGW is active. EBS will not work with it. */
-#ifndef TAU_MINGW
-    bfdUnitHandle = Tau_bfd_registerUnit(TAU_BFD_KEEP_GLOBALS);
-#endif /* TAU_MINGW */
+    bfdUnitHandle = Tau_bfd_registerUnit();
   }
 #endif /* TAU_BFD */
 
