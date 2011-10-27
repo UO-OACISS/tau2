@@ -91,13 +91,13 @@ struct TauBfdInfo
 	// Makes all fields safe to query
 	void secure(unsigned long addr) {
 		probeAddr = addr;
-		lineno = 0;
 		if(funcname == NULL) {
 			char routine[256];
 			sprintf(routine, "addr=<%p>", addr);
 			funcname = strdup(routine);
 		}
 		if(filename == NULL) filename = "(unknown)";
+		if(lineno < 0) lineno = 0;
 	}
 
 	unsigned long probeAddr;
