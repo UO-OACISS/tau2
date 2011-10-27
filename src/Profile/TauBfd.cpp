@@ -78,6 +78,9 @@ struct TauBfdModule
 		nr_all_syms = bfd_canonicalize_symtab(bfdImage, syms);
 		bfdOpen = nr_all_syms > 0;
 
+		TAU_VERBOSE("loadSymbolTable: %s contains %d canonical symbols\n",
+				path, nr_all_syms);
+
 		return bfdOpen;
 	}
 
@@ -140,8 +143,6 @@ static int Tau_bfd_internal_getModuleIndex(
 		TauBfdUnit *unit, unsigned long probe_addr);
 static TauBfdModule * Tau_bfd_internal_getModuleFromIdx(
 		TauBfdUnit *unit, int moduleIndex);
-static unsigned long Tau_bfd_internal_getOffsetAddress(
-		TauBfdUnit *unit, int moduleIndex, unsigned long probe_addr);
 static void Tau_bfd_internal_addExeAddressMap();
 static void Tau_bfd_internal_locateAddress(
 		bfd *bfdptr, asection *section, void *data ATTRIBUTE_UNUSED);
@@ -423,6 +424,19 @@ Tau_bfd_getAddressMap(tau_bfd_handle_t handle, unsigned long probe_addr)
 	return unit->addressMaps[matchingIdx];
 }
 
+static char const *
+Tau_bfd_internal_tryDemangle(bfd * bfdImage, char const * funcname)
+{
+	char const * demangled = NULL;
+#if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
+	if(funcname && bfdImage) {
+		demangled = bfd_demangle(bfdImage, funcname, DEMANGLE_FLAGS);
+	}
+#endif
+	if(demangled) return demangled;
+	return funcname;
+}
+
 // Probe for BFD information given a single address.
 bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle,
 		unsigned long probeAddr, TauBfdInfo & info)
@@ -449,9 +463,9 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle,
 		// Calculate search addresses for module search
 #if defined(TAU_WINDOWS) && defined(TAU_MINGW)
 		addr0 = probeAddr;
-		addr1 = Tau_bfd_internal_getOffsetAddress(unit, matchingIdx, probeAddr);
+		addr1 = probeAddr - unit->addressMaps[matchingIdx]->start;
 #else
-		addr0 = Tau_bfd_internal_getOffsetAddress(unit, matchingIdx, probeAddr);
+		addr0 = probeAddr - unit->addressMaps[matchingIdx]->start;
 		addr1 = probeAddr;
 #endif
 	} else {
@@ -497,20 +511,23 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle,
 
 	bool resolved = data.found && (info.funcname != NULL);
 	if (resolved) {
-#if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
-		char const * demangled =
-				bfd_demangle(module->bfdImage, info.funcname, DEMANGLE_FLAGS);
-		if (demangled) {
-			info.funcname = demangled;
-		}
+		info.funcname = Tau_bfd_internal_tryDemangle(
+				module->bfdImage, info.funcname);
 		if(info.filename == NULL) {
 			info.filename = "(unknown)";
 		}
-#endif
 	} else {
 		// Couldn't resolve the address.
 		// Fill in fields as best we can.
-		info.secure(info.probeAddr);
+		if(info.funcname == NULL) {
+			info.funcname = (char*)malloc(128);
+			sprintf((char*)info.funcname, "addr=<%p>", probeAddr);
+		}
+		if(info.filename == NULL) {
+			info.filename = unit->addressMaps[matchingIdx]->name;
+		}
+		info.probeAddr = probeAddr;
+		info.lineno = 0;
 	}
 	return resolved;
 }
@@ -651,15 +668,6 @@ static int Tau_bfd_internal_getModuleIndex(
 			return i;
 	}
 	return -1;
-}
-
-static unsigned long Tau_bfd_internal_getOffsetAddress(
-		TauBfdUnit *unit, int moduleIndex, unsigned long probe_addr)
-{
-	if (moduleIndex == TAU_BFD_NULL_MODULE_HANDLE) {
-		return probe_addr;
-	}
-	return (probe_addr - unit->addressMaps[moduleIndex]->start);
 }
 
 static TauBfdModule *
