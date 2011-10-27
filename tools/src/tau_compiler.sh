@@ -994,7 +994,8 @@ while [ $tempCounter -lt $numFiles ]; do
 	arrFileName[$tempCounter]=$base$suf
     fi
     # pass it on to opari2 for OpenMP programs.
-    if [ $opari2 = $TRUE ]; then
+    # if this is the second pass, then opari was already run, don't do it again
+    if [ $opari2 == $TRUE -a $passCount  == 1 ]; then
         base=${base}.pomp
         cmdToExecute="${optOpari2Tool} $optOpari2Opts ${arrFileName[$tempCounter]} $base$suf"
         evalWithDebugMessage "$cmdToExecute" "Parsing with Opari2"
@@ -1107,12 +1108,9 @@ if [ $numFiles == 0 ]; then
 	evalWithDebugMessage "$cmdCompileOpariTab" "Compiling opari.tab.c"
 	linkCmd="$linkCmd opari.tab.o"
     fi
-    if [ $opari2 == $TRUE ]; then
-       NM=`${optOpari2ConfigTool} --nm`
-        AWK=`${optOpari2ConfigTool} --awk_cmd`
-        AWK_SCRIPT=`${optOpari2ConfigTool} --awk_script`
-        GREP=`${optOpari2ConfigTool} --egrep`
-         
+   
+    #If this is the second pass, opari was already used, don't do it again`
+    if [ $opari2 == $TRUE -a $passCount == 1 ]; then
         evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
       
         #cmdCreatePompRegions="${NM} ${listOfObjectFiles} | ${GREP} -i POMP2_Init_regions | ${AWK} -f ${AWK_SCRIPT} > pompregions.c"
@@ -1624,7 +1622,7 @@ if [ $needToCleanPdbInstFiles == $TRUE ]; then
     while [ $tempCounter -lt $numFiles -a $disablePdtStep == $FALSE ]; do
 	evalWithDebugMessage "/bin/rm -f ${arrTau[$tempCounter]##*/}" "cleaning inst file"
 	if [ $preprocess == $TRUE -a $groupType == $group_f_F ]; then
-	    if [ $opari == $TRUE ]; then
+	    if [ $opari == $TRUE -o $opari2 == $TRUE ]; then
 		secondSource=`echo ${arrTau[$tempCounter]##*/} | sed -e 's/\.chk\.pomp\.inst//'`
 	    else
 		secondSource=`echo ${arrTau[$tempCounter]##*/} | sed -e 's/\.inst//'`
@@ -1638,7 +1636,7 @@ if [ $needToCleanPdbInstFiles == $TRUE ]; then
 		evalWithDebugMessage "/bin/rm -f $secondPDB" "cleaning PDB file"
 	    fi
 	fi
-	if [ $opari == $TRUE ]; then
+	if [ $opari == $TRUE -o $opari2 == $TRUE]; then
 	    evalWithDebugMessage "/bin/rm -f ${arrFileName[$tempCounter]}" "cleaning opari file"
 	fi
 	tempCounter=tempCounter+1
