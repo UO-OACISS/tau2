@@ -117,14 +117,6 @@ void updateHashTable(unsigned long addr, const char *funcname)
 			(strcmp(funcname, "__sti__$E") == 0)
 			// Tau Profile wrappers
 			|| strstr(funcname, "Tau_Profile_Wrapper")
-			// GNU libstdc++ symbols
-			|| strstr(funcname, "__gnu_cxx")
-#if defined(TAU_WINDOWS) && defined(TAU_MINGW)
-			// MinGW symbols
-			|| strstr(funcname, "__mingw_")
-			|| strstr(funcname, "__w64-mingw")
-			|| strstr(funcname, "___w64-mingw")
-#endif
 			);
 }
 
@@ -415,14 +407,12 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 
 				// Tau_bfd_resolveBfdInfo should have made all fields non-NULL,
 				// but we're going to be extra safe in case something changes
-				if(__builtin_expect(hn.info.funcname == NULL, 0)) {
-					TAU_VERBOSE("Unexpected NULL pointer! %s (%s:%d).",
-							__PRETTY_FUNCTION__, __FILE__, __LINE__);
+				if(hn.info.funcname == NULL) {
+					TAU_VERBOSE("Unexpected NULL pointer!\n");
 					hn.info.funcname = "(unknown)";
 				}
-				if(__builtin_expect(hn.info.filename == NULL, 0)) {
-					TAU_VERBOSE("Unexpected NULL pointer! %s (%s:%d)!",
-							__PRETTY_FUNCTION__, __FILE__, __LINE__);
+				if(hn.info.filename == NULL) {
+					TAU_VERBOSE("Unexpected NULL pointer!\n");
 					hn.info.filename = "(unknown)";
 				}
 
@@ -486,7 +476,7 @@ void __cyg_profile_func_exit(void* func, void* callsite)
 #endif
 
 	HashNode & hn = htab[Tau_convert_ptr_to_unsigned_long(funcptr)];
-	if (!hn.excluded) {
+	if (!hn.excluded && hn.fi) {
 		Tau_stop_timer(hn.fi, tid);
 	}
 	Tau_global_decr_insideTAU_tid(tid);
