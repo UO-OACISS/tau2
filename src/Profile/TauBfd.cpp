@@ -760,6 +760,10 @@ static void Tau_bfd_internal_locateAddress(bfd * bfdptr,
 	if (data.info.probeAddr >= vma + size) return;
 
 	// The section contains this address, so try to resolve info
+	// Note that data.info is a reference, so this call sets the
+	// TauBfdInfo fields without an extra copy.  This also means
+	// that the pointers in TauBfdInfo must never be deleted
+	// since they point directly into the module's BFD.
 	data.found = bfd_find_nearest_line(bfdptr, section,
 			data.module->syms, (data.info.probeAddr - vma),
 			&data.info.filename, &data.info.funcname,
@@ -940,12 +944,6 @@ int Tau_bfd_processBfdExecInfo(tau_bfd_handle_t handle, int maxProbe,
 		return TAU_BFD_SYMTAB_LOAD_UNRESOLVED;
 	}
 }
-
-//
-// Deprecated query functions maintained for backwards compatibility.
-// These should be phased out soon since they do unnecessary work and
-// have lead to memory leaks.
-//
 
 int Tau_bfd_getAddressMap(tau_bfd_handle_t handle, unsigned long probe_addr,
 		TauBfdAddrMap * mapInfo)

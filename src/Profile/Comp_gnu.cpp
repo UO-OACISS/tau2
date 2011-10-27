@@ -85,48 +85,6 @@ struct HashNode
 	bool excluded;			///< Is function excluded from profiling?
 };
 
-#if 0
-class AddressNameHash
-{
-
-public:
-
-	typedef std::map<unsigned long, HashNode*> map_type;
-
-	HashNode * put(unsigned long addr, char const * n, char const * fn,
-			int lno, bool excluded = false)
-	{
-		// Don't add if already found
-		map_type::iterator it = map.find(addr);
-		if(it != map.end()) return it->second;
-		return (map[addr] = new HashNode(addr, n, fn, lno, NULL, excluded));
-	}
-
-	HashNode * get(unsigned long addr) const
-	{
-		map_type::const_iterator it = map.find(addr);
-		if(it != map.end()) return it->second;
-		return NULL;
-	}
-
-	HashNode * get(void * addr) const
-	{
-		return get(Tau_convert_ptr_to_unsigned_long(addr));
-	}
-
-	size_t size() const {
-		return map.size();
-	}
-
-private:
-
-	map_type map;
-
-};
-
-static AddressNameHash htab;
-#endif
-
 typedef std::map<unsigned long, HashNode> HashTable;
 HashTable htab;
 
@@ -225,13 +183,13 @@ bool tauGetFilenameAndLineNo(unsigned long addr)
 	if (tau_symbol_found) {
 		tau_line_no = info.lineno;
 		if (info.funcname) {
-			// Is this leaking memory?
+			// TODO: Is this leaking memory?
 			tau_funcname = strdup(info.funcname);
 		} else {
 			tau_funcname = NULL;
 		}
 		if (info.filename) {
-			// Is this leaking memory?
+			// TODO: Is this leaking memory?
 			tau_filename = strdup(info.filename);
 		} else {
 			tau_filename = NULL;
@@ -453,6 +411,19 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 				// Resolve function info if it hasn't already been retrieved
 				if(hn.info.probeAddr == 0) {
 					Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, hn.info);
+				}
+
+				// Tau_bfd_resolveBfdInfo should have made all fields non-NULL,
+				// but we're going to be extra safe in case something changes
+				if(__builtin_expect(hn.info.funcname == NULL, 0)) {
+					TAU_VERBOSE("Unexpected NULL pointer! %s (%s:%d).",
+							__PRETTY_FUNCTION__, __FILE__, __LINE__);
+					hn.info.funcname = "(unknown)";
+				}
+				if(__builtin_expect(hn.info.filename == NULL, 0)) {
+					TAU_VERBOSE("Unexpected NULL pointer! %s (%s:%d)!",
+							__PRETTY_FUNCTION__, __FILE__, __LINE__);
+					hn.info.filename = "(unknown)";
 				}
 
 				char routine[strlen(hn.info.funcname) + strlen(hn.info.filename) + 128];
