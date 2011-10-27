@@ -92,9 +92,8 @@ struct TauBfdInfo
 	void secure(unsigned long addr) {
 		probeAddr = addr;
 		if(funcname == NULL) {
-			char routine[256];
-			sprintf(routine, "addr=<%p>", addr);
-			funcname = strdup(routine);
+			funcname = (char*)malloc(64);
+			sprintf((char*)funcname, "addr=<%p>", addr);
 		}
 		if(filename == NULL) filename = "(unknown)";
 		if(lineno < 0) lineno = 0;
