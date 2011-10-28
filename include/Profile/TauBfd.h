@@ -3,6 +3,12 @@
 
 #include <vector>
 #include <stdint.h>
+/* *CWL* - you will need these headers for portability if you 
+   have code in this header that depends on external modules.
+ */
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 #define TAU_BFD_SYMTAB_LOAD_FAILED		(0)
 #define TAU_BFD_SYMTAB_LOAD_SUCCESS		(1)

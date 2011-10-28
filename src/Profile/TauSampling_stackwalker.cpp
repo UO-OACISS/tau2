@@ -1,6 +1,7 @@
 #ifdef TAU_USE_STACKWALKER
 
-#include "Profile/TauSampling.h"
+#include "Profile/TauSampling_unwind.h"
+#include <TAU.h>
 #include <ucontext.h>
 
 #include <walker.h>
@@ -27,6 +28,9 @@ extern "C" void *__libc_calloc(size_t nmemb, size_t size);
 extern "C" void __libc_free(void *ptr);
 
 extern "C" void *__libc_realloc(void *ptr, size_t size);
+
+/* *CWL* Seems like massive hackery going on here. Gonna disable until I can figure if this
+   is some solution to the malloc-re-entrancy issues I've faced.
 
 void *malloc(size_t size) {
   int tid = RtsLayer::myThread();
@@ -68,6 +72,8 @@ void *realloc(void *ptr, size_t size) {
     return __libc_realloc(ptr, size);
   }
 }
+*/
+
 
 Walker *walker = Walker::newWalker();
 // Frame crapFrame(walker);
@@ -116,4 +122,9 @@ void Tau_sampling_outputTraceCallstack(int tid, void *pc,
   // StackWalkerAPI is not thread-safe
   RtsLayer::UnLockDB();
 }
+
+void Tau_sampling_unwindTauContext(int tid, void **addresses) {
+  
+}
+
 #endif /* TAU_USE_STACKWALKER */
