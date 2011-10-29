@@ -5994,7 +5994,31 @@ EOF
       fixmakeargs="$fixmakeargs PDTNOFSTMTS"
   fi
   /bin/rm -f checkpdt.o checkpdt.cpp
+
+# Check if PDT has UPC statement level information
+  cat <<EOF > checkpdt.cpp
+  #include <pdbAll.h>
+
+  int IsUPCStmt(pdbStmt::stmt_t k)
+  {
+        if (k == pdbStmt::ST_UPC_FORALL) return 1;
+        else return 0;
+  }
+EOF
+  if [ $machine = alpha -a $cxx_compiler = cxx ]; then
+    orig_useropt="$orig_useropt -x c++ -D__USE_STD_IOSTREAM"
+  fi
+  if $cxx_compiler $orig_useropt -I$pdtdir/include -c checkpdt.cpp 1> /dev/null 2>&1 ; then
+      echo "PDT supports UPC information"
+  else
+      echo "IMPORTANT NOTE: Your PDT does not support UPC statement level information."
+      echo "***************You may want to upgrade to a newer release."
+      echo "See http://www.cs.uoregon.edu/research/pdt"
+      fixmakeargs="$fixmakeargs PDTNOUPC"
+  fi
+  /bin/rm -f checkpdt.o checkpdt.cpp
 fi
+
 
 if [ $armci = yes ]; then
    cat <<EOF>armcitest.c
