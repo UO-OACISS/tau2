@@ -6,13 +6,13 @@
 #include <string>
 using std::string;
 
-enum instrumentKind_t { TAU_LOOPS, TAU_LINE, TAU_ROUTINE_DECL, TAU_ROUTINE_ENTRY, TAU_ROUTINE_EXIT, TAU_ABORT, TAU_NOT_SPECIFIED, TAU_IO, TAU_MEMORY, TAU_TIMER, TAU_PHASE, TAU_INIT };
+enum instrumentKind_t { TAU_LOOPS, TAU_LINE, TAU_ROUTINE_DECL, TAU_ROUTINE_ENTRY, TAU_ROUTINE_EXIT, TAU_ABORT, TAU_NOT_SPECIFIED, TAU_IO, TAU_MEMORY, TAU_TIMER, TAU_PHASE, TAU_INIT, TAU_FORALL, TAU_BARRIER, TAU_FENCE, TAU_NOTIFY };
 
 /* For C instrumentation */
 enum itemKind_t { ROUTINE, BODY_BEGIN, FIRST_EXECSTMT, BODY_END, RETURN, EXIT, INSTRUMENTATION_POINT, START_TIMER, STOP_TIMER, START_DO_TIMER, GOTO_STOP_TIMER, START_LOOP_TIMER, STOP_LOOP_TIMER, ALLOCATE_STMT, DEALLOCATE_STMT, IO_STMT };
 enum itemAttr_t { BEFORE, AFTER, NOT_APPLICABLE};
 enum itemQualifier_t { STATIC, DYNAMIC, NOT_SPECIFIED};
-enum tau_language_t { tau_c, tau_cplusplus, tau_fortran };
+enum tau_language_t { tau_c, tau_cplusplus, tau_fortran, tau_upc };
 
 #ifndef TAU_DYNINST
 #include <pdbAll.h>
