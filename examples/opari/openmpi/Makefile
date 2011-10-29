@@ -11,19 +11,15 @@
 ##  Indiana University  University of Oregon  University of Rennes   ##
 #######################################################################
  
-TAUROOTDIR	= ../../..
+CXX		= tau_cxx.sh
 
-include $(TAUROOTDIR)/include/Makefile
+CC		= tau_cc.sh
 
-CXX		= $(TAU_CXX)
+CFLAGS          = 
 
-CC		= $(TAU_CC)
+LIBS            = 
 
-CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS)  $(TAU_MPI_INCLUDE)
-
-LIBS            = $(TAU_MPI_LIBS) $(TAU_LIBS) $(LEXTRA1) $(EXTRALIBS)  -lm
-
-LDFLAGS	      	= $(USER_OPT)  $(TAU_LDFLAGS)
+LDFLAGS	      	= $(CFLAGS)
 
 MAKEFILE      	= Makefile
 
@@ -41,19 +37,11 @@ all:		$(TARGET)
 
 install: 	$(TARGET)
 
-$(TARGET):	$(TARGET).mod.o opari.tab.o
-	$(CXX) $(LDFLAGS) $(TARGET).mod.o opari.tab.o -o $@ $(LIBS)
+$(TARGET):	$(TARGET).c 
+	$(CC) $(LDFLAGS) $(TARGET).c  -o $@ $(LIBS)
 
-$(TARGET).mod.o : $(TARGET).mod.c
-	$(CC) $(CFLAGS) -c $(TARGET).mod.c
 
-$(TARGET).mod.c : $(TARGET).c
-	$(RM) opari.rc
-	$(TAU_OPARI_TOOL) -table opari.tab.c $(TARGET).c
-
-opari.tab.o: opari.tab.c $(TARGET).mod.c
-	$(CC) $(CFLAGS) -c opari.tab.c
 
 clean: 	
-	$(RM) $(TARGET).mod.o $(TARGET) $(TARGET).mod.c opari.tab.c *.pv *.trc *.edf profile.* opari.rc *.inc opari.tab.o
+	$(RM) *.o $(TARGET) 
 ##############################################
