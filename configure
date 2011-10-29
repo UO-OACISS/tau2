@@ -692,6 +692,11 @@ cubedir=own
 ebs2otf=no
 ebs_has_rt=no
 ebs_clock_res="-1"
+ebs_unwinder="none"
+ebs_unwind_inc=
+ebs_unwind_lib=
+ebs_unwind_flag=
+ebs_unwind_lib_flag=
 tau_links_rt=no
 opari=no
 opari1=no
@@ -1050,6 +1055,34 @@ for arg in "$@"; do
   -bfd=*)
       bfd=yes
       bfddir=`echo $arg | sed -e 's/-bfd=//'`
+      shift
+      ;;
+
+  -ebs_unwinder=*)
+      ebs_unwinder=`echo $arg | sed -e 's/-ebs_unwinder=//'`
+      if [ "x$ebs_unwinder" = "xlibunwind" ] ; then
+          ebs_unwind_flag="-DTAU_USE_LIBUNWIND"
+          ebs_unwind_lib_flag="-lunwind"
+      elif [ "x$ebs_unwinder" = "xstackwalker" ] ; then
+          ebs_unwind_flag="-DTAU_USE_STACKWALKER"
+          ebs_unwind_lib_flag="-lstackwalk"
+      elif [ "x$ebs_unwinder" = "xnone" ] ; then
+          echo "No EBS Unwinding."
+      else
+          echo "Error: Invalid EBS stack unwinder $ebs_unwinder. Valid options are:"
+          echo "libunwind, stackwalker, none (default)."
+          exit 1
+      fi
+      shift
+      ;;
+
+  -ebs_unwind_inc=*)
+      ebs_unwind_inc=`echo $arg | sed -e 's/-ebs_unwind_inc=//'`
+      shift
+      ;;
+
+  -ebs_unwind_lib=*)
+      ebs_unwind_lib=`echo $arg | sed -e 's/-ebs_unwind_lib=//'`
       shift
       ;;
 
@@ -5902,6 +5935,10 @@ if [ $otf = yes ] ; then
   if [ ! -d $otfdir/${architecture} ] ; then
     fixmakeargs="$fixmakeargs OTFSRC"
   fi  
+fi
+
+if [ "x$ebs_unwinder" != "xnone" ] ; then
+    fixmakeargs="$fixmakeargs TAU_EBS_UNWIND ebs_unwind_flag=$ebs_unwind_flag ebs_unwind_inc=$ebs_unwind_inc ebs_unwind_lib=$ebs_unwind_lib ebs_unwind_lib_flag=$ebs_unwind_lib_flag"
 fi
 
 if [ $ebs2otf = yes ] ; then
