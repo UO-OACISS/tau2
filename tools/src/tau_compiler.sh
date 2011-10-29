@@ -1636,7 +1636,7 @@ if [ $needToCleanPdbInstFiles == $TRUE ]; then
 		evalWithDebugMessage "/bin/rm -f $secondPDB" "cleaning PDB file"
 	    fi
 	fi
-	if [ $opari == $TRUE -o $opari2 == $TRUE]; then
+	if [ $opari == $TRUE -o $opari2 == $TRUE ]; then
 	    evalWithDebugMessage "/bin/rm -f ${arrFileName[$tempCounter]}" "cleaning opari file"
 	fi
 	tempCounter=tempCounter+1
