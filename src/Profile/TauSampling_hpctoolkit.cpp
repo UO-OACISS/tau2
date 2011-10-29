@@ -1,10 +1,10 @@
 #ifdef TAU_USE_HPCTOOLKIT
 
+#include "Profile/TauSampling_unwind.h"
 #include <stdio.h>
 #include <ucontext.h>
 
 #include <TAU.h>
-#include "Profile/TauSampling.h"
 
 extern "C" {
   #include <unwind.h>
@@ -93,6 +93,49 @@ void Tau_sampling_outputTraceCallstack(int tid, void *pc,
 
 /*********************************************************************
  * Handler for event entry (start)
+ ********************************************************************/
+void Tau_sampling_unwindTauContext(int tid, void **addresses) {
+  // fprintf (stderr, "[%d] SAMP: event start: ", tid);
+
+  ucontext_t context;
+  int ret = getcontext(&context);
+
+  if (ret != 0) {
+    fprintf(stderr, "TAU: Error getting context\n");
+    return;
+  }
+
+  if (hpctoolkit_process_started == 0) {
+    // fprintf(stderr, "nope, quitting\n");
+    return;
+  }
+
+  unw_cursor_t cursor;
+  unw_word_t ip, sp;
+  // fprintf (stderr,"$$$$$$$$$start$$$$$$$$$\n");
+  unw_init_cursor(&cursor, &context);
+  int idx = 0;
+
+  int skip = 1;
+  while (unw_step(&cursor) > 0 && idx < TAU_SAMP_NUM_ADDRESSES) {
+    unw_get_reg(&cursor, UNW_REG_IP, &ip);
+
+    if (skip > 0) {
+      // fprintf (stderr,"skipping address %p\n", ip);
+      skip--;
+    } else {
+      addresses[idx++] = (void *)ip;
+      // fprintf (stderr,"assigning address %p to index %d\n", ip, idx-1);
+    }
+  }
+
+  // fprintf (stderr, "\n");
+  // fprintf (stderr,"$$$$$$$$$$$$$$$$$$\n");
+}
+
+/*********************************************************************
+ * Handler for event entry (start)
+ * *CWL* - DEPRECATED. Use new interface Tau_sampling_unwindTauContext.
  ********************************************************************/
 extern "C" void Tau_sampling_event_startHpctoolkit(int tid, void **addresses) {
   // fprintf (stderr, "[%d] SAMP: event start: ", tid);
