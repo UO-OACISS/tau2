@@ -4304,10 +4304,12 @@ int main(int argc, char **argv) {
 	  tau_language = tau_c;
 	  instrumentCFile(p, *it, outFileName, group_name, header_file);
 	}
+#ifndef PDT_NO_UPC
 	if (l == PDB::LA_UPC) {
 	  tau_language = tau_upc;
 	  instrumentCFile(p, *it, outFileName, group_name, header_file);
         }
+#endif /* PDT_NO_UPC */
 	if (l == PDB::LA_FORTRAN) {
 	  tau_language = tau_fortran;
 	  instrumentFFile(p, *it, outFileName, group_name);
@@ -4384,10 +4386,12 @@ int main(int argc, char **argv) {
           tau_language = tau_c;
 	  instrumentCFile(p, *it, outFileName, group_name, header_file);
 	}
+#ifndef PDT_NO_UPC
 	if (l == PDB::LA_UPC) {
 	  tau_language = tau_upc;
 	  instrumentCFile(p, *it, outFileName, group_name, header_file);
 	}
+#endif /* PDT_NO_UPC */
 	if (l == PDB::LA_FORTRAN) {
           tau_language = tau_fortran;
 	  instrumentFFile(p, *it, outFileName, group_name);
