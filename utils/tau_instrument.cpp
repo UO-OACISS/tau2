@@ -1955,9 +1955,9 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
 
           if (!use_spec &&
               (language == PDB::LA_CXX ||
-#ifndef TAU_NO_UPC
+#ifndef PDT_NO_UPC
                language == PDB::LA_UPC || 
-#endif /* TAU_NO_UPC */
+#endif /* PDT_NO_UPC */
                language == PDB::LA_C_or_CXX))
           {
 	    itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col()+1, (*it)->getCode(), BEFORE));
@@ -1987,9 +1987,9 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
 
             if (!use_spec &&
               (language == PDB::LA_CXX ||
-#ifndef TAU_NO_UPC
+#ifndef PDT_NO_UPC
                language == PDB::LA_UPC || 
-#endif /* TAU_NO_UPC */
+#endif /* PDT_NO_UPC */
                language == PDB::LA_C_or_CXX))
             {
 	      itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rlit)->line(), (*rlit)->col(), (*it)->getCode(), BEFORE));
@@ -2009,9 +2009,9 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
           {
             if (!use_spec &&
               (language == PDB::LA_CXX ||
-#ifndef TAU_NO_UPC
+#ifndef PDT_NO_UPC
                language == PDB::LA_UPC || 
-#endif /* TAU_NO_UPC */
+#endif /* PDT_NO_UPC */
                language == PDB::LA_C_or_CXX))
             {
               itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rit)->bodyEnd().line(), (*rit)->bodyEnd().col(), (*it)->getCode(), BEFORE));
@@ -2074,9 +2074,9 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
         {
           if (!use_spec &&
               (language == PDB::LA_CXX ||
-#ifndef TAU_NO_UPC
+#ifndef PDT_NO_UPC
                language == PDB::LA_UPC || 
-#endif /* TAU_NO_UPC */
+#endif /* PDT_NO_UPC */
                language == PDB::LA_C_or_CXX))
           {
 	    itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col()+1, (*it)->getCode(), BEFORE));
@@ -2577,9 +2577,9 @@ it will not enter here. */
         case PDB::LA_C :
         case PDB::LA_CXX:
         case PDB::LA_C_or_CXX:
-#ifndef TAU_NO_UPC
+#ifndef PDT_NO_UPC
         case PDB::LA_UPC:
-#endif /* TAU_NO_UPC */
+#endif /* PDT_NO_UPC */
 #ifdef DEBUG
 	  cout <<"C routine!"<<endl; 
 #endif /* DEBUG */
@@ -2719,10 +2719,10 @@ int parseLanguageString(const string& str)
       language |= PDB::LA_C;
     else if (0 == lang.compare("c++"))
       language |= PDB::LA_CXX;
-#ifndef TAU_NO_UPC
+#ifndef PDT_NO_UPC
     else if (0 == lang.compare("upc"))
       language |= PDB::LA_UPC;
-#endif /* TAU_NO_UPC */
+#endif /* PDT_NO_UPC */
     else if (0 == lang.compare("fortran"))
       language |= PDB::LA_FORTRAN;
     else
