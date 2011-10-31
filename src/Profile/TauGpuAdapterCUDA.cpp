@@ -372,6 +372,7 @@ static int in_sync_event = 0;
 
 void Tau_cuda_register_sync_event()
 {
+	//printf("sync flag: %d.\n", in_sync_event);
 	if (in_sync_event)
 	{
 		return;
@@ -435,8 +436,8 @@ void Tau_cuda_register_sync_event()
 		lastEventTime += (double) stop_sec;
 
 		KernelBuffer.pop();
-		in_sync_event = 0;
 
 	}
+		in_sync_event = 0;
 	
 }
