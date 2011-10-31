@@ -3,6 +3,12 @@
 
 #include <vector>
 #include <stdint.h>
+/* *CWL* - you will need these headers for portability if you 
+   have code in this header that depends on external modules.
+ */
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 #define TAU_BFD_SYMTAB_LOAD_FAILED		(0)
 #define TAU_BFD_SYMTAB_LOAD_SUCCESS		(1)
@@ -92,9 +98,8 @@ struct TauBfdInfo
 	void secure(unsigned long addr) {
 		probeAddr = addr;
 		if(funcname == NULL) {
-			char routine[256];
-			sprintf(routine, "addr=<%p>", addr);
-			funcname = strdup(routine);
+			funcname = (char*)malloc(64);
+			sprintf((char*)funcname, "addr=<%p>", addr);
 		}
 		if(filename == NULL) filename = "(unknown)";
 		if(lineno < 0) lineno = 0;

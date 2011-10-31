@@ -618,6 +618,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 
 	// Write profile data
 	TauProfiler_StoreData(tid);
+        TAU_VERBOSE("TAU: <Node=%d.Thread=%d>:<pid=%d>: %s initiated TauProfile_StoreData\n",
+          RtsLayer::myNode(), RtsLayer::myThread(), getpid(), ThisFunction->GetName());
+
 	  
 #if defined(TAUKTAU) 
 	//AN Removed - New func inside 

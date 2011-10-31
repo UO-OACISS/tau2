@@ -924,6 +924,9 @@ bool instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name
   	          ostr <<"  TAU_PROFILE_SET_NODE(0);" <<endl; // set node 0
   	          ostr <<"#endif /* TAU_SHMEM */" <<endl; // set node 0
   	          ostr <<"#endif /* TAU_MPI */" <<endl; // set node 0
+		  if (tau_language == tau_upc) {
+  	            ostr <<"  TAU_PROFILE_SET_NODE(MYTHREAD);" <<endl; // set node 0
+                  } 
   	        }
   	        else 
   	        {
@@ -1298,6 +1301,9 @@ void processBodyBegin(ostream& ostr, itemRef *i, string& group_name) {
       ostr <<"  TAU_PROFILE_SET_NODE(0);" <<endl; // set node 0
       ostr <<"#endif /* TAU_SHMEM */" <<endl; // set node 0
       ostr <<"#endif /* TAU_MPI */" <<endl; // set node 0
+      if (tau_language == tau_upc) {
+        ostr <<"  TAU_PROFILE_SET_NODE(MYTHREAD);" <<endl; // set node 0
+      }
     } else {
       ostr <<group_name<<");" <<endl; // give an additional line
     }
@@ -4130,6 +4136,13 @@ int main(int argc, char **argv) {
 	lang_specified = true;
 	tau_language = tau_fortran;
       }
+      if (strcmp(argv[i], "-upc")==0) {
+#ifdef DEBUG
+	printf("Language explicitly specified as UPC\n");
+#endif /* DEBUG */
+	lang_specified = true;
+	tau_language = tau_upc;
+      }
       if (strcmp(argv[i], "-g") == 0) {
 	++i;
 	group_name = string("TAU_GROUP_")+string(argv[i]);
@@ -4291,6 +4304,12 @@ int main(int argc, char **argv) {
 	  tau_language = tau_c;
 	  instrumentCFile(p, *it, outFileName, group_name, header_file);
 	}
+#ifndef PDT_NO_UPC
+	if (l == PDB::LA_UPC) {
+	  tau_language = tau_upc;
+	  instrumentCFile(p, *it, outFileName, group_name, header_file);
+        }
+#endif /* PDT_NO_UPC */
 	if (l == PDB::LA_FORTRAN) {
 	  tau_language = tau_fortran;
 	  instrumentFFile(p, *it, outFileName, group_name);
@@ -4350,6 +4369,7 @@ int main(int argc, char **argv) {
 	}
       } else { /* implicit detection of language */
 	if (l == PDB::LA_CXX) {
+          tau_language = tau_cplusplus;
 	  if (use_spec) {
 	    instrumentCFile(p, *it, outFileName, group_name, header_file);
 	  } else {
@@ -4362,10 +4382,18 @@ int main(int argc, char **argv) {
 	    }
 	  }
 	}
-	if (l == PDB::LA_C) {
+	if (l == PDB::LA_C ) {
+          tau_language = tau_c;
 	  instrumentCFile(p, *it, outFileName, group_name, header_file);
 	}
+#ifndef PDT_NO_UPC
+	if (l == PDB::LA_UPC) {
+	  tau_language = tau_upc;
+	  instrumentCFile(p, *it, outFileName, group_name, header_file);
+	}
+#endif /* PDT_NO_UPC */
 	if (l == PDB::LA_FORTRAN) {
+          tau_language = tau_fortran;
 	  instrumentFFile(p, *it, outFileName, group_name);
 	}
       }
