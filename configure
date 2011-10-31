@@ -692,6 +692,11 @@ cubedir=own
 ebs2otf=no
 ebs_has_rt=no
 ebs_clock_res="-1"
+ebs_unwinder="none"
+ebs_unwind_inc=
+ebs_unwind_lib=
+ebs_unwind_flag=
+ebs_unwind_lib_flag=
 tau_links_rt=no
 opari=no
 opari1=no
@@ -1050,6 +1055,34 @@ for arg in "$@"; do
   -bfd=*)
       bfd=yes
       bfddir=`echo $arg | sed -e 's/-bfd=//'`
+      shift
+      ;;
+
+  -ebs_unwinder=*)
+      ebs_unwinder=`echo $arg | sed -e 's/-ebs_unwinder=//'`
+      if [ "x$ebs_unwinder" = "xlibunwind" ] ; then
+          ebs_unwind_flag="-DTAU_USE_LIBUNWIND"
+          ebs_unwind_lib_flag="-lunwind"
+      elif [ "x$ebs_unwinder" = "xstackwalker" ] ; then
+          ebs_unwind_flag="-DTAU_USE_STACKWALKER"
+          ebs_unwind_lib_flag="-lstackwalk"
+      elif [ "x$ebs_unwinder" = "xnone" ] ; then
+          echo "No EBS Unwinding."
+      else
+          echo "Error: Invalid EBS stack unwinder $ebs_unwinder. Valid options are:"
+          echo "libunwind, stackwalker, none (default)."
+          exit 1
+      fi
+      shift
+      ;;
+
+  -ebs_unwind_inc=*)
+      ebs_unwind_inc=`echo $arg | sed -e 's/-ebs_unwind_inc=//'`
+      shift
+      ;;
+
+  -ebs_unwind_lib=*)
+      ebs_unwind_lib=`echo $arg | sed -e 's/-ebs_unwind_lib=//'`
       shift
       ;;
 
@@ -5904,6 +5937,10 @@ if [ $otf = yes ] ; then
   fi  
 fi
 
+if [ "x$ebs_unwinder" != "xnone" ] ; then
+    fixmakeargs="$fixmakeargs TAU_EBS_UNWIND ebs_unwind_flag=$ebs_unwind_flag ebs_unwind_inc=$ebs_unwind_inc ebs_unwind_lib=$ebs_unwind_lib ebs_unwind_lib_flag=$ebs_unwind_lib_flag"
+fi
+
 if [ $ebs2otf = yes ] ; then
   if [ -f utils/ebs2otf/ebs2otf.so ] ; then
       touch utils/ebs2otf/ebs2otf.so
@@ -5994,7 +6031,31 @@ EOF
       fixmakeargs="$fixmakeargs PDTNOFSTMTS"
   fi
   /bin/rm -f checkpdt.o checkpdt.cpp
+
+# Check if PDT has UPC statement level information
+  cat <<EOF > checkpdt.cpp
+  #include <pdbAll.h>
+
+  int IsUPCStmt(pdbStmt::stmt_t k)
+  {
+        if (k == pdbStmt::ST_UPC_FORALL) return 1;
+        else return 0;
+  }
+EOF
+  if [ $machine = alpha -a $cxx_compiler = cxx ]; then
+    orig_useropt="$orig_useropt -x c++ -D__USE_STD_IOSTREAM"
+  fi
+  if $cxx_compiler $orig_useropt -I$pdtdir/include -c checkpdt.cpp 1> /dev/null 2>&1 ; then
+      echo "PDT supports UPC information"
+  else
+      echo "IMPORTANT NOTE: Your PDT does not support UPC statement level information."
+      echo "***************You may want to upgrade to a newer release."
+      echo "See http://www.cs.uoregon.edu/research/pdt"
+      fixmakeargs="$fixmakeargs PDTNOUPC"
+  fi
+  /bin/rm -f checkpdt.o checkpdt.cpp
 fi
+
 
 if [ $armci = yes ]; then
    cat <<EOF>armcitest.c

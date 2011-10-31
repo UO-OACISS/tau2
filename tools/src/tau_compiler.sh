@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 
 declare -i FALSE=-1
 declare -i TRUE=1
@@ -685,13 +685,15 @@ for arg in "$@" ; do
 		;;
 	    
 	    *.upc)
+		pdtParserType=upcparse
 		fileName=$arg
 		arrFileName[$numFiles]=$arg
 		arrFileNameDirectory[$numFiles]=`dirname $arg`
 		numFiles=numFiles+1
-		gotoNextStep=$TRUE
-		disablePdtStep=$TRUE
+		#gotoNextStep=$TRUE
+		#disablePdtStep=$TRUE
 		groupType=$group_upc
+                optTau=" "
                 ;;
 
 	    *.f|*.F|*.f90|*.F90|*.f77|*.F77|*.f95|*.F95|*.for|*.FOR)
@@ -994,7 +996,8 @@ while [ $tempCounter -lt $numFiles ]; do
 	arrFileName[$tempCounter]=$base$suf
     fi
     # pass it on to opari2 for OpenMP programs.
-    if [ $opari2 = $TRUE ]; then
+    # if this is the second pass, then opari was already run, don't do it again
+    if [ $opari2 == $TRUE -a $passCount  == 1 ]; then
         base=${base}.pomp
         cmdToExecute="${optOpari2Tool} $optOpari2Opts ${arrFileName[$tempCounter]} $base$suf"
         evalWithDebugMessage "$cmdToExecute" "Parsing with Opari2"
@@ -1107,12 +1110,9 @@ if [ $numFiles == 0 ]; then
 	evalWithDebugMessage "$cmdCompileOpariTab" "Compiling opari.tab.c"
 	linkCmd="$linkCmd opari.tab.o"
     fi
-    if [ $opari2 == $TRUE ]; then
-       NM=`${optOpari2ConfigTool} --nm`
-        AWK=`${optOpari2ConfigTool} --awk_cmd`
-        AWK_SCRIPT=`${optOpari2ConfigTool} --awk_script`
-        GREP=`${optOpari2ConfigTool} --egrep`
-         
+   
+    #If this is the second pass, opari was already used, don't do it again`
+    if [ $opari2 == $TRUE -a $passCount == 1 ]; then
         evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
       
         #cmdCreatePompRegions="${NM} ${listOfObjectFiles} | ${GREP} -i POMP2_Init_regions | ${AWK} -f ${AWK_SCRIPT} > pompregions.c"
@@ -1202,6 +1202,13 @@ if [ $gotoNextStep == $TRUE ]; then
 	    optCompile="$optCompile $optDefs $optIncludes"
 	    ;;
 
+	    $group_upc)
+	    pdtCmd="$optPdtDir""/$pdtParserType"
+	    pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
+	    pdtCmd="$pdtCmd $optPdtCFlags $optPdtUser "
+	    optCompile="$optCompile $optDefs $optIncludes"
+	    ;;
+
 	    $group_C)
 	    pdtCmd="$optPdtDir""/$pdtParserType"
 	    pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
@@ -1231,9 +1238,6 @@ if [ $gotoNextStep == $TRUE ]; then
 		    evalWithDebugMessage "$pdtCmd" "Parsing with PDT Parser"
 		fi
 	    else
-                if [ $groupType == $group_upc ] ; then
-                  errorStatus=0
-                else
 		  echo ""
 		  echo "WARNING: Disabling instrumentation of source code."
 		  echo "         Please either configure with -pdt=<dir> option"
@@ -1241,7 +1245,6 @@ if [ $gotoNextStep == $TRUE ]; then
 		  echo ""
 		  gotoNextStep=$FALSE
 		  errorStatus=$TRUE
-                fi
 	    fi
 	fi
 
@@ -1260,7 +1263,7 @@ fi
 ####################################################################
 # Instrumenting the Code
 ####################################################################
-if [ $gotoNextStep == $TRUE -a $optCompInst == $FALSE -a $groupType != $group_upc ]; then
+if [ $gotoNextStep == $TRUE -a $optCompInst == $FALSE ]; then
 
     tempCounter=0
     while [ $tempCounter -lt $numFiles ]; do
@@ -1458,10 +1461,6 @@ if [ $gotoNextStep == $TRUE ]; then
 	    fi
 
             # We cannot parse UPC files. Leave them alone. Do not change filename
-            if [ $groupType == $group_upc ] ; then
-               instrumentedFileForCompilation=${arrFileName[$tempCounter]}
-            fi
-
             if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
 	       filePathInclude=-I${arrFileNameDirectory[$tempCounter]}
             fi
@@ -1478,11 +1477,8 @@ if [ $gotoNextStep == $TRUE ]; then
 	    echoIfDebug "PassedOutFile: $passedOutputFile outputFile: $outputFile"
 	    #echoIfDebug "cmd after appending the .o file is $newCmd"
 
-            if [ $groupType == $group_upc ]; then 
-	      evalWithDebugMessage "$newCmd" "Compiling UPC Code"
-            else
-	      evalWithDebugMessage "$newCmd" "Compiling with Instrumented Code"
-            fi 
+	    evalWithDebugMessage "$newCmd" "Compiling with Instrumented Code"
+
 	    echoIfVerbose "Looking for file: $outputFile "
 	    if [ $hasAnOutputFile == $TRUE ]; then
 		if [  ! -e $passedOutputFile ]; then
@@ -1514,10 +1510,6 @@ if [ $gotoNextStep == $TRUE ]; then
 
 	    tempTauFileName=${arrTau[$tempCounter]##*/}
 	    instrumentedFileForCompilation=" $tempTauFileName"
-            # We cannot parse UPC files. Leave them alone. Do not change filename
-            if [ $groupType == $group_upc ] ; then
-               instrumentedFileForCompilation=${arrFileName[$tempCounter]}
-            fi
 
 	    # Should we use compiler-based instrumentation on this file?
 	    extraopt=
@@ -1624,7 +1616,7 @@ if [ $needToCleanPdbInstFiles == $TRUE ]; then
     while [ $tempCounter -lt $numFiles -a $disablePdtStep == $FALSE ]; do
 	evalWithDebugMessage "/bin/rm -f ${arrTau[$tempCounter]##*/}" "cleaning inst file"
 	if [ $preprocess == $TRUE -a $groupType == $group_f_F ]; then
-	    if [ $opari == $TRUE ]; then
+	    if [ $opari == $TRUE -o $opari2 == $TRUE ]; then
 		secondSource=`echo ${arrTau[$tempCounter]##*/} | sed -e 's/\.chk\.pomp\.inst//'`
 	    else
 		secondSource=`echo ${arrTau[$tempCounter]##*/} | sed -e 's/\.inst//'`
@@ -1638,7 +1630,7 @@ if [ $needToCleanPdbInstFiles == $TRUE ]; then
 		evalWithDebugMessage "/bin/rm -f $secondPDB" "cleaning PDB file"
 	    fi
 	fi
-	if [ $opari == $TRUE ]; then
+	if [ $opari == $TRUE -o $opari2 == $TRUE ]; then
 	    evalWithDebugMessage "/bin/rm -f ${arrFileName[$tempCounter]}" "cleaning opari file"
 	fi
 	tempCounter=tempCounter+1
