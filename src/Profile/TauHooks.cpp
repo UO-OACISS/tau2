@@ -30,10 +30,10 @@ using namespace std;
 #include <stdlib.h>
 
 //#define DEBUG_PROF
-//int debugPrint = 0;
+//int debugPrint = 1;
 // control debug printf statements
 //#define dprintf if (debugPrint) printf
-//#define dprintf printf
+#define dprintf TAU_VERBOSE
 #ifdef DEBUG_PROF
 #define dprintf printf
 #else // DEBUG_PROF 
@@ -44,6 +44,7 @@ using namespace std;
 #define TAUDYNVEC 1
 //extern "C" void Tau_get_func_name(long addr, char * fname, char *filename);
 
+extern "C" void tau_dyninst_init(int isMPI);
 
 #ifndef __ia64
 int TheFlag[TAU_MAX_THREADS] ;
@@ -296,14 +297,22 @@ int TauRenameTimer(char *oldName, char *newName)
 }
 
 
-static int tauFiniID; 
+static int tauFiniID = -1; 
 static int tauDyninstEnabled[TAU_MAX_THREADS];
 void trace_register_func(char *func, int id)
 {
   static int invocations = 0;
+  dprintf("trace_register_func: func = %s, id = %d\n", func, id); 
+  if (invocations == 0) {
+#ifdef TAU_MPI
+    tau_dyninst_init(1); 
+#else
+    tau_dyninst_init(0); 
+#endif /* TAU_MPI */
+  }
+    
   int tid = RtsLayer::myThread();
   if (!tauDyninstEnabled[tid]) return;
-  dprintf("trace_register_func: func = %s, id = %d\n", func, id);
 
   void *taufi;
   TAU_PROFILER_CREATE(taufi, func, " ", TAU_DEFAULT);
@@ -341,6 +350,7 @@ void trace_register_func(char *func, int id)
     TheTauBinDynFI()[id] = taufi;
   } 
   invocations ++;
+  dprintf("Exiting trace_register_func\n");
 }
 
 void traceEntry(int id)
@@ -387,6 +397,8 @@ void traceExit(int id)
 {
   const char *strcurr;
   const char *strbin;
+  dprintf("Inside traceExit: id = %d\n", id);  
+  
   if ( !RtsLayer::TheEnableInstrumentation()) return; 
   int tid = RtsLayer::myThread();
   if (!tauDyninstEnabled[tid]) return;
