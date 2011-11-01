@@ -80,7 +80,8 @@ static HashNode *register_region(char *func, char *file, int lno) {
   void *handle=NULL;
   TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
   FunctionInfo *fi = (FunctionInfo*)handle;
-  nhn = hash_put((long) func, fi);
+  //nhn = hash_put((long) func, fi);
+  nhn = hash_put(Tau_convert_ptr_to_long(func), fi);
   return nhn;
 }
 
@@ -100,7 +101,7 @@ extern "C" void __func_trace_enter(char* name, char* fname, int lno) {
   if (strchr(name, '@') != NULL ) return;
 
   // look up in the hash table
-  if ((hn = hash_get((long) name)) == 0 ) {
+  if ((hn = hash_get(Tau_convert_ptr_to_long(name))) == 0 ) {
     // not found, register the region
 #   ifdef TAU_OPENMP
     if (omp_in_parallel()) {
@@ -128,7 +129,7 @@ extern "C" void __func_trace_exit(char* name, char *fname, int lno) {
   // ignore IBM OMP runtime functions
   if ( strchr(name, '@') != NULL ) return;
 
-  hn = hash_get((long) name);
+  hn = hash_get(Tau_convert_ptr_to_long(name));
   Tau_stop_timer(hn->fi, Tau_get_tid());
 
   //TAU_STOP(name);

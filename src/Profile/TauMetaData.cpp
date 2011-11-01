@@ -92,6 +92,10 @@ map<string,string> &Tau_metadata_getMetaData() {
 
 
 extern "C" void Tau_metadata(char *name, const char *value) {
+#ifdef TAU_DISABLE_METADATA
+  return;
+#endif
+
   // make copies
   char *myName = strdup(name);
   char *myValue = strdup(value);
@@ -115,6 +119,13 @@ void Tau_metadata_register(char *name, const char *value) {
 
 
 int Tau_metadata_fillMetaData() {
+
+
+#ifdef TAU_DISABLE_METADATA
+  return 0;
+#else
+
+
   static int filled = 0;
 
   if (filled) {
@@ -415,6 +426,7 @@ int Tau_metadata_fillMetaData() {
   }
 
   return 0;
+#endif
 
 }
 
@@ -460,6 +472,11 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter) 
 
 
 extern "C" void Tau_context_metadata(char *name, char *value) {
+
+#ifdef TAU_DISABLE_METADATA
+  return;
+#endif
+
   // get the current calling context
   Profiler *current = TauInternal_CurrentProfiler(RtsLayer::getTid());
   FunctionInfo *fi = current->ThisFunction;
@@ -474,6 +491,11 @@ extern "C" void Tau_context_metadata(char *name, char *value) {
 }
 
 extern "C" void Tau_phase_metadata(char *name, char *value) {
+
+#ifdef TAU_DISABLE_METADATA
+  return;
+#endif
+
   #ifdef TAU_PROFILEPHASE
   // get the current calling context
   Profiler *current = TauInternal_CurrentProfiler(RtsLayer::getTid());
@@ -501,6 +523,11 @@ extern "C" void Tau_phase_metadata(char *name, char *value) {
 
 
 int Tau_metadata_writeMetaData(Tau_util_outputDevice *out) {
+
+#ifdef TAU_DISABLE_METADATA
+  return 0;
+#endif
+
   Tau_metadata_fillMetaData();
   return writeMetaData(out, true, -1);
 }

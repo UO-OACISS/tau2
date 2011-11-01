@@ -85,11 +85,22 @@ run in sequence, allowing the definition of a multi-step processing procedure.  
 	<analyze/>
 </tool>
 
-<tool name="CAT">
+<tool name="ECHO">
+        <compile>
+                <CC command="mpicc" group="mpi">
+                </CC>
+                <CXX command="mpicxx" group="mpi">
+                </CXX>
+                <F90 command="mpif90" group="mpi">
+                </F90>
+	</compile>
         <execute>
                 <!-- Use this line only if valgrind is a shell script.  The plugin can not execute scripts natively -->
-                <utility command="cat" group="cat"/>
+                <utility command="echo" group="echo"/>
         </execute>
+	<analyze>
+                <utility command="ls" group="bin"/>
+        </analyze>
 </tool>
 
 </toolset.01>

@@ -450,9 +450,17 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         final JTextField functionField;
 
         String fname = "   <none>";
+        //String fname = "   <none>";
+        if(settings.getTopoFunction(i)==null&&settings.getScatterFunctions()[i] != null){
+        	settings.setTopoFunction(settings.getScatterFunctions()[i], i);
+        }
+        
         if (settings.getTopoFunction(i) != null) {
             fname = settings.getTopoFunction(i).getName();
         }
+//        if (settings.getTopoFunction(i) != null) {
+//            fname = settings.getTopoFunction(i).getName();
+//        }
 
         functionField = new JTextField(fname);
         functionField.setToolTipText(fname);
@@ -556,14 +564,14 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
     
     private void updateTopoList(){
     	int maxDex = topoComboBox.getItemCount()-1;
-    	for(int i=maxDex;i>customTopoDex;i--)
+    	for(int i=maxDex;i>customTopoDex+1;i--)
     	{
     		topoComboBox.removeItemAt(i);
     	}
     	
     	String defFile = settings.getTopoDefFile();
     	if(defFile!=null){
-    		List<String> tnames = ThreeDeeWindow.getCustomTopoNames(defFile);
+    		List<String> tnames = ThreeDeeGeneralPlotUtils.getCustomTopoNames(defFile);
     		for(int i =0;i<tnames.size();i++){
     			topoComboBox.addItem(tnames.get(i));
     		}
@@ -594,6 +602,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         //String[] a = new String[topos.size()];
         topos.add("Custom");
         customTopoDex=topos.size()-1;
+        topos.add("Map");
 		//return topos;//topos.toArray(a);
         
         topoComboBox = new SteppedComboBox(topos);
@@ -620,7 +629,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
             public void actionPerformed(ActionEvent evt) {
                 try {
                     settings.setTopoCart((String)topoComboBox.getSelectedItem());//TODO: Reset topo labels when this changes!
-                    settings.setCustomTopo(topoComboBox.getSelectedIndex()>customTopoDex);
+                    settings.setCustomTopo(topoComboBox.getSelectedIndex()>customTopoDex+1);
                     selectedTopoDex=topoComboBox.getSelectedIndex();
                     resetTopoAxisSliders(true);
                     window.redraw();
@@ -668,6 +677,36 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         
         topoFileButton.addActionListener(topoFileSelector);
 
+        
+JButton mapFileButton = new JButton("map");
+        
+        ActionListener mapFileSelector = new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                try {
+                	JFileChooser tsDialog = new JFileChooser("Select a topology map file");
+//                	if(ParaProf.schemaLocation!=null){
+//                		File topoDir = new File(ParaProf.schemaLocation+File.separatorChar+"topology");
+//                		if (topoDir.canRead()){
+//                			tsDialog.setCurrentDirectory(topoDir);
+//                		}
+//                	}
+                	//tsDialog.setVisible(true);
+                    tsDialog.showOpenDialog(window);
+                    File dFile = tsDialog.getSelectedFile();
+                    if(dFile!=null&&dFile.exists()&&dFile.canRead()){
+                    String path = dFile.getAbsolutePath();
+                    settings.setTopoMapFile(path);
+                    //updateTopoList();
+                    }
+                } catch (Exception e) {
+                    ParaProfUtils.handleException(e);
+                }
+            }
+        };
+        
+        mapFileButton.addActionListener(mapFileSelector);
+        
+        
         JPanel subPanel = new JPanel();
         subPanel.setLayout(new GridBagLayout());
 
@@ -689,6 +728,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         gbc.weightx = 0.0;
         gbc.fill = GridBagConstraints.NONE;
         addCompItem(panel, topoFileButton, gbc, 2, 1, 1, 1);
+        addCompItem(panel, mapFileButton, gbc, 3, 1, 1, 1);
         
         gbc.weighty = 0;
         gbc.weightx = 0;
@@ -1159,6 +1199,8 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
          gbc.weightx = 0.1;
          //addCompItem(panel, new JLabel("Topology"), gbc, 0, 8, 1, 1);
          addCompItem(panel, createTopoSelectionPanel("Topology"), gbc, 0, 7, 2, 1);
+         
+         this.topoComboBox.setSelectedIndex(0);
     	
          return panel;
     	
@@ -1183,44 +1225,44 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
     	
         
         gbc.weightx = 0;
-        addCompItem(panel, new JLabel("Width"), gbc, 0, 0, 1, 1);
+        addCompItem(panel, new JLabel("event0"), gbc, 0, 0, 1, 1);
         gbc.weightx = 0.1;
-        addCompItem(panel, createTopoIntervalSelectionPanel("Width", 0), gbc, 1, 0, 1, 1);
+        addCompItem(panel, createTopoIntervalSelectionPanel("event0", 0), gbc, 1, 0, 1, 1);
         
         gbc.weightx = 0;
-        addCompItem(panel, new JLabel("Height"), gbc, 0, 1, 1, 1);
+        addCompItem(panel, new JLabel("event1"), gbc, 0, 1, 1, 1);
         gbc.weightx = 0.1;
-        addCompItem(panel, createTopoIntervalSelectionPanel("Height", 1), gbc, 1, 1, 1, 1);
+        addCompItem(panel, createTopoIntervalSelectionPanel("event1", 1), gbc, 1, 1, 1, 1);
         
         gbc.weightx = 0;
-        addCompItem(panel, new JLabel("Depth"), gbc, 0, 2, 1, 1);
+        addCompItem(panel, new JLabel("event2"), gbc, 0, 2, 1, 1);
         gbc.weightx = 0.1;
-        addCompItem(panel, createTopoIntervalSelectionPanel("Depth", 2), gbc, 1, 2, 1, 1);
+        addCompItem(panel, createTopoIntervalSelectionPanel("event2", 2), gbc, 1, 2, 1, 1);
         
     	 gbc.weightx = 0;
-         addCompItem(panel, new JLabel("Color"), gbc, 0, 3, 1, 1);
+         addCompItem(panel, new JLabel("event3 (Color)"), gbc, 0, 3, 1, 1);
          gbc.weightx = 0.1;
-         addCompItem(panel, createTopoIntervalSelectionPanel("Color", 3), gbc, 1, 3, 1, 1);
+         addCompItem(panel, createTopoIntervalSelectionPanel("event3", 3), gbc, 1, 3, 1, 1);
          
          gbc.weightx = 0;
-         addCompItem(panel, new JLabel("Atomic-0"), gbc, 0, 4, 1, 1);
+         addCompItem(panel, new JLabel("atomic0"), gbc, 0, 4, 1, 1);
          gbc.weightx = 0.1;
-         addCompItem(panel, createTopoAtomicSelectionPanel("Atomic-0", 0), gbc, 1, 4, 1, 1);
+         addCompItem(panel, createTopoAtomicSelectionPanel("atomic0", 0), gbc, 1, 4, 1, 1);
          
          gbc.weightx = 0;
-         addCompItem(panel, new JLabel("Atomic-1"), gbc, 0, 5, 1, 1);
+         addCompItem(panel, new JLabel("atomic1"), gbc, 0, 5, 1, 1);
          gbc.weightx = 0.1;
-         addCompItem(panel, createTopoAtomicSelectionPanel("Atomic-1", 1), gbc, 1, 5, 1, 1);
+         addCompItem(panel, createTopoAtomicSelectionPanel("atomic1", 1), gbc, 1, 5, 1, 1);
          
          gbc.weightx = 0;
-         addCompItem(panel, new JLabel("Atomic-2"), gbc, 0, 6, 1, 1);
+         addCompItem(panel, new JLabel("atomic2"), gbc, 0, 6, 1, 1);
          gbc.weightx = 0.1;
-         addCompItem(panel, createTopoAtomicSelectionPanel("Atomic-2", 2), gbc, 1, 6, 1, 1);
+         addCompItem(panel, createTopoAtomicSelectionPanel("atomic2", 2), gbc, 1, 6, 1, 1);
          
          gbc.weightx = 0;
-         addCompItem(panel, new JLabel("Atomic-3"), gbc, 0, 7, 1, 1);
+         addCompItem(panel, new JLabel("atomic3"), gbc, 0, 7, 1, 1);
          gbc.weightx = 0.1;
-         addCompItem(panel, createTopoAtomicSelectionPanel("Atomic-3", 3), gbc, 1, 7, 1, 1);
+         addCompItem(panel, createTopoAtomicSelectionPanel("atomic3", 3), gbc, 1, 7, 1, 1);
          
          
          return panel;

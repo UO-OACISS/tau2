@@ -154,12 +154,15 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 
   //Need to keep track of all the groups this function is a member of.
   AllGroups = strip_tau_group(ProfileGroupName);
+
+  RtsLayer::LockDB();
+  // Use LockDB to avoid a possible race condition.
+
   GroupName = strdup(RtsLayer::PrimaryGroup(AllGroups).c_str());
 
   // Since FunctionInfo constructor is called once for each function (static)
   // we know that it couldn't be already on the call stack.
-  RtsLayer::LockDB();
-  // Use LockDB to avoid a possible race condition.
+
   
   //Add function name to the name list.
   TauProfiler_theFunctionList(NULL, NULL, true, (const char *)GetName());
@@ -192,9 +195,25 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   // *CWL* - this is an attempt to minimize the scenario where a sample
   //         requires the use of an actual malloc
   //         while in the middle of some other malloc call.
-  pcHistogram = new map<caddr_t, unsigned int, std::less<caddr_t>, ss_allocator< std::pair<caddr_t, unsigned int> > >();
-  ebsIntermediate = NULL;
+#ifndef TAU_WINDOWS
+  for (int i=0; i<TAU_MAX_THREADS; i++) {
+    pcHistogram[i] = NULL;
+    if (TauEnv_get_ebs_enabled()) {
+      // create structure only if EBS is required.
+      /* *CWL* Pathscale compilers on Cray XE6 does not like this form
+	 of instantiating the data. */
+#ifndef TAU_PATHSCALE
+      //      pcHistogram[i] = new map<unsigned long, unsigned int, std::less<unsigned long>, SS_ALLOCATOR< std::pair<const unsigned long, unsigned int> > >();
+      pcHistogram[i] = new map< vector<unsigned long>, unsigned int, 
+	std::less< vector<unsigned long> >, 
+	SS_ALLOCATOR< std::pair<const vector<unsigned long>, unsigned int> > >();
+#else
+      pcHistogram[i] = new map< vector<unsigned long>, unsigned int>();
+#endif /* TAU_PATHSCALE */
+    }
+  }
   parentTauContext = NULL;
+#endif // TAU_WINDOWS
 
 #ifdef TAU_VAMPIRTRACE
   string tau_vt_name(string(Name)+" "+string(Type));
@@ -494,22 +513,43 @@ string *FunctionInfo::GetFullName() {
 
 /* EBS Sampling Profiles */
 
-void FunctionInfo::addPcSample(caddr_t pc) {
-  if (pcHistogram == NULL) {
-    // *CWL* - this should never happen.
-    pcHistogram = new map<caddr_t, unsigned int, 
-      std::less<caddr_t>, ss_allocator< std::pair<caddr_t, unsigned int> > >();
+#ifndef TAU_WINDOWS
+void FunctionInfo::addPcSample(vector<unsigned long> *pcStack, int tid) {
+  //  static int numSamples = 0;
+  if (!TauEnv_get_ebs_enabled()) {
+    // This should be an error! We'll ignore it for now!
+    return;
   }
-  map<caddr_t, unsigned int,
-    std::less<caddr_t>, ss_allocator< std::pair<caddr_t, unsigned int> > >::iterator it;
-  it = pcHistogram->find(pc);
-  if (it == pcHistogram->end()) {
-    pcHistogram->insert(std::pair<caddr_t, unsigned int>(pc,1));
+  // *CWL* - pcHistogram should never be NULL but ...
+  if (pcHistogram[tid] == NULL) {
+    /* *CWL* - Pathscale unhappiness ... */
+#ifndef TAU_PATHSCALE
+    pcHistogram[tid] = new map< vector<unsigned long>, unsigned int, 
+      std::less< vector<unsigned long> >, 
+      SS_ALLOCATOR< std::pair<const vector<unsigned long>, unsigned int> > >();
+#else
+    pcHistogram[tid] = new map< vector<unsigned long>, unsigned int>();
+#endif /* TAU_PATHSCALE */
+  }
+  map< vector<unsigned long>, unsigned int,
+    std::less< vector<unsigned long> >, 
+    SS_ALLOCATOR< std::pair<const vector<unsigned long>, unsigned int> > >::iterator it;
+  it = pcHistogram[tid]->find(*pcStack);
+  //  numSamples++;
+  if (it == pcHistogram[tid]->end()) {
+    /* *CWL* - Too verbose, use for debug only.
+      TAU_VERBOSE("FunctionInfo::addPcSample [tid=%d] inserting sample [%p]\n", 
+		tid, (unsigned long)pc);
+    */
+    pcHistogram[tid]->insert(std::pair<const vector<unsigned long>, unsigned int>(*pcStack,1));
   } else {
-    (*pcHistogram)[pc] = it->second++;
+    // *CWL* PGI does NOT like the following code.
+    //    (*pcHistogram[tid])[pc] = it->second++;
+    (it->second)++;
+    //    printf("Num Samples = %d, local samples = %d\n", numSamples, it->second);
   }
 }
-
+#endif // TAU_WINDOWS
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
  * $Revision: 1.84 $   $Date: 2010/04/27 23:13:55 $

@@ -35,6 +35,8 @@ CONFIG_CXX=g++
 TAU_CC_FE=$(CONFIG_CC)
 TAU_CXX_FE=$(CONFIG_CXX)
 
+TAU_CUDA_CXX=g++
+
 # Front end C/C++ Compilers
 #BGL#TAU_CC_FE=gcc #ENDIF#
 #BGL#TAU_CXX_FE=g++ #ENDIF#
@@ -105,6 +107,7 @@ TAU_MPI_INC=
 TAU_MPI_LIB=
 TAU_MPI_FLIB=
 TAU_MPILIB_DIR=
+TAU_MPILIB_DIRLIB=
 TAU_MPI_NOWRAP_LIB=
 TAU_MPI_NOWRAP_FLIB=
 FULL_CXX=
@@ -115,9 +118,16 @@ TAU_BIN_DIR=$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin
 TAU_INC_DIR=$(TAU_PREFIX_INSTALL_DIR)/include
 TAU_LIB_DIR=$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
+EBS_UNWIND_FLAG=
+EBS_UNWIND_INC=
+EBS_UNWIND_LIB=
+EBS_UNWIND_LIB_FLAG=
+
 #######################################################################
 
 #OPARI#TAU_OPARI_TOOL=$(TAU_BIN_DIR)/opari        #ENDIF#
+#OPARI2#TAU_OPARI2_TOOL=$(TAU_BIN_DIR)/opari2        #ENDIF#
+#OPARI2#TAU_OPARI_CONFIG_TOOL=$(TAU_BIN_DIR)/opari2_config        #ENDIF#
 #ENABLE64BIT#ABI 	     = -mabi=64		  #ENDIF#
 #ENABLEN32BIT#ABI 	     = -mabi=n32	  #ENDIF#
 #ENABLE32BIT#ABI 	     = -mabi=32		  #ENDIF#
@@ -202,7 +212,8 @@ JDKARCH                 = linux
 #############################################
 OPARI_O 	= TauKojakOpariDisable.o #ENDIF#
 #OPARI#OPARI_O 	= TauOpari.o #ENDIF#
-#KOJAKOPARI#OPARI_O 	= TauKojakOpari.o #ENDIF#
+#KOJAKOPARI#OPARI_O 	= TauKojakOpari.o#ENDIF#
+#OPARI2#OPARI_O 	= pomp2_lib.o pomp2_region_info.o pomp2_fwrapper.o pomp2_fwrapper_base.o#ENDIF#
 #EPILOG#OPARI_O 	=  #ENDIF#
 #VAMPIRTRACE#OPARI_O 	=  #ENDIF#
 
@@ -320,6 +331,7 @@ TAU_F77 = $(TAU_F90)
 #CRAYKAI#PROFILEOPT12	       = -DCRAYKAI	       #ENDIF#
 #HP_FORTRAN#PROFILEOPT12       = -DHP_FORTRAN	       #ENDIF#
 #CRAYCC#PROFILEOPT13	       = -h instantiate=used -DCRAYCC -DTAU_DOT_H_LESS_HEADERS  #ENDIF#
+#MINGW#PROFILEOPT13	       = -DTAU_WINDOWS -DTAU_DISABLE_SIGUSR -DTAU_MINGW -DTAU_ENABLE  -DTAU_GNU #ENDIF#
 #COMPINST_CRAYCC#PROFILEOPT13          =  -DCRAYCC -DTAU_DOT_H_LESS_HEADERS  #ENDIF#
 #CRAYX1CC#PROFILEOPT13	       = -DTAU_DOT_H_LESS_HEADERS #ENDIF#
 #SGICC#TAU_CXX = $(CONFIG_CXX) $(ABI) $(ISA) $(USER_OPT) -LANG:std  #ENDIF#
@@ -420,6 +432,7 @@ PROFILEOPT24 =
 #BGP#PROFILEOPT60           = -DTAU_LARGEFILE -D_LARGEFILE64_SOURCE #ENDIF#
 # Omit the -D_LARGETFILE64_SOURCE till we can check the IBM crash
 #SHMEM#PROFILEOPT61           = -DTAU_SHMEM #ENDIF#
+#SGI_MPT_SHMEM#PROFILEOPT61           = -DTAU_SHMEM -DTAU_SGI_MPT_SHMEM #ENDIF#
 #KTAU#PROFILEOPT62  = -DTAUKTAU -DKTAU_USER_SRC_COMPILE -I$(KTAU_INCDIR) -I$(KTAU_INCUSERDIR) -DKTAU_INCUSERDIR=\"$(KTAU_INCUSERDIR)\" -DKTAU_KALLSYMS_PATH=\"$(KTAU_KALLSYMS_PATH)\" #ENDIF#
 #KTAU_MERGE#PROFILEOPT63  = -DTAUKTAU_MERGE -DKTAU_USER_SRC_COMPILE -I$(KTAU_INCDIR) -DKTAU_INCUSERDIR=\"$(KTAU_INCUSERDIR)\" -DKTAU_KALLSYMS_PATH=\"$(KTAU_KALLSYMS_PATH)\" #ENDIF#
 #FREEBSD#PROFILEOPT64  = -DTAU_FREEBSD #ENDIF#
@@ -619,16 +632,18 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 #PATHSCALE_FORTRAN#TAU_CXXLIBS_PATHSCALE_CNL      	= -L$(EXTRADIR)/lib -lstdc++     #ENDIF#
 #GNU_GFORTRAN#TAU_CXXLIBS_GNU_CNL      	= -L$(EXTRADIR)/lib -lstdc++ -lgcc_eh    #ENDIF#
 #INTELIFORT#TAU_CXXLIBS_INTEL_CNL      	= -lstdc++   #ENDIF#
-#MPI#TAU_MPICHCXX_CRAY_CNL_LIBS = -lmpichcxx #ENDIF#
+TAU_MPICHCXX_CNL_SHARED_LIB = -lmpichcxx
+#CRAYCNL_CCE#TAU_MPICHCXX_CNL_SHARED_LIB = -lmpichcxx_cray #ENDIF#
+#MPI#TAU_MPICHCXX_CRAY_CNL_LIBS = $(TAU_MPILIB_DIRLIB) $(TAU_MPICHCXX_CNL_SHARED_LIB) #ENDIF#
 #CRAY_FORTRAN#TAU_CXXLIBS_CRAY_CNL = -L$(EXTRADIR) -lcray-c++-rts -lstdc++ -lgcc_eh $(TAU_MPICHCXX_CRAY_CNL_LIBS) #ENDIF#
 #CRAYCNL#TAU_CXXLIBS       	= $(TAU_CXXLIBS_PGI_CNL) $(TAU_CXXLIBS_PATHSCALE_CNL) $(TAU_CXXLIBS_GNU_CNL) $(TAU_CXXLIBS_INTEL_CNL) $(TAU_CXXLIBS_CRAY_CNL) #ENDIF#
 #CATAMOUNT#TAU_CXXLIBS       	= $(TAU_CXXLIBS_PGI_CNL) $(TAU_CXXLIBS_PATHSCALE_CNL) $(TAU_CXXLIBS_GNU_CNL)   #ENDIF#
 #CRAYX1CC#TAU_CXXLIBS        	= -L/opt/ctl/CC/CC/lib -lC       #ENDIF#
 
 ## Set the gfortran options on BGP
-#BGP_GFORTRAN#TAU_CXXLIBS		= -lstdc++ #ENDIF#
-#BGP_GFORTRAN#TAU_GNULIBS		= -lstdc++ #ENDIF#
-#BGP_GFORTRAN#TAU_CXXLIBS_GNU_CNL	= -lstdc++ #ENDIF#
+#BGP_GFORTRAN#TAU_CXXLIBS		= -lstdc++ -lm #ENDIF#
+#BGP_GFORTRAN#TAU_GNULIBS		= -lstdc++ -lm #ENDIF#
+#BGP_GFORTRAN#TAU_CXXLIBS_GNU_CNL	= -lstdc++ -lm #ENDIF#
 
 ## Set the gfortran options on Zepto BGP
 #ZEPTO_GFORTRAN#TAU_CXXLIBS		= -lstdc++ #ENDIF#
@@ -778,7 +793,8 @@ TAU_RANLIB_FE = echo "Built"
 #CRAYXMT#TAU_RANLIB_FE   = /usr/bin/ranlib   #ENDIF#
 
 ##############################################
-TAU_AR                 = ar             #ENDIF#
+TAU_AR                 = ar
+#MINGW#TAU_AR          = x86_64-w64-mingw32-ar #ENDIF#
 #SP1#TAU_AR            = ar -X32        #ENDIF#
 #IBM64#TAU_AR          = ar -X64        #ENDIF#
 #PPC64#TAU_AR          = ar 		#ENDIF#
@@ -803,8 +819,18 @@ HPCTOOLKIT_LINK=
 ##############################################
 # Extra linker args (e.g. -Wl,-export-dynamic)
 ##############################################
+# *CWL* NOTE: The extra space between EXTRA_LINKER_ARGS and "=" in the 
+#       case of APPLECXX is necessary so FixMakefile.sed.default will not
+#       blow that entry away. It does so currently and I believe it may
+#       be because the order of the sed commands are not being respected
+#       by Mac OS X. Given the order, all ENDIF replacements should have
+#       been taken care of before any restoration attempts are taken for
+#       other variables like EXTRA_LINKER_ARGS. We are going to have to
+#       continually keep an eye on similar situations for Mac OS X until
+#       we can find a permanent fix.
 EXTRA_LINKER_ARGS=
-#APPLECXX#EXTRA_LINKER_ARGS= -rdynamic #ENDIF#
+#MINGW#EXTRA_LINKER_ARGS=-Wl,--enable-auto-image-base	#ENDIF#
+#APPLECXX#EXTRA_LINKER_ARGS = -rdynamic#ENDIF#
 TAU_LINKER_OPT14=$(UPCC_LINK_PREFIX)$(EXTRA_LINKER_ARGS)
 
 
@@ -820,6 +846,7 @@ BFDLIBS=
 #COMPINST_INTEL9#TAU_COMPINST_OPTION=$(UPCC_C_PREFIX)-tcollect #ENDIF#
 #COMPINST_INTEL9#TAU_COMPINST_LINKING= #ENDIF#
 #COMPINST_GNU#TAU_COMPINST_OPTION=$(UPCC_PREFIX)-g $(UPCC_C_PREFIX)-finstrument-functions #ENDIF#
+#MINGW#TAU_COMPINST_OPTION=$(UPCC_PREFIX)-gstabs3 $(UPCC_C_PREFIX)-finstrument-functions #ENDIF#
 #TAU_BFD#TAU_LINKER_OPT13=$(TAU_BFDLIB) #ENDIF#
 #COMPINST_PGI#TAU_COMPINST_OPTION=$(UPCC_C_PREFIX)-Mprof=func #ENDIF#
 #COMPINST_PGI#TAU_COMPINST_LINKING=$(UPCC_LINK_PREFIX)-Mprof=func #ENDIF#
@@ -833,9 +860,28 @@ BFDLIBS=
 #MRNET#TAU_LINKER_OPT15=$(MRNET_LIBS) #ENDIF#
 TAU_FORTRAN_COMPINST_OPTION=$(TAU_COMPINST_OPTION)
 #NAGWARE_FORTRAN#TAU_FORTRAN_COMPINST_OPTION=-Wc,-finstrument-functions#ENDIF#
+
+#TAU_LINKS_RT#TAU_LINKER_OPT16= -lrt#ENDIF#
+
 ##############################################
+# Various Sampling Support Options
+##############################################
+#TAU_SS_ALLOC_SUPPORT#PROFILEOPT82 = -DTAU_SS_ALLOC_SUPPORT #ENDIF#
+# *CWL* - Watch out for potential snafus for this. Right now, if EBS_HAS_RT
+#         is set, EBS_CLOCK_RES must have a valid value.
+EBS_CLOCK_RES=
+#EBS_HAS_RT#PROFILEOPT83 = -DEBS_CLOCK_RES=$(EBS_CLOCK_RES) #ENDIF#
 
+##############################################
+# Support for non-portable features
+##############################################
+#TAU_STRSIGNAL_OK#PROFILEOPT84 = -DTAU_STRSIGNAL_OK#ENDIF#
 
+##############################################
+# TAU EBS Unwinder flags                      
+##############################################
+#TAU_EBS_UNWIND#PROFILEOPT85 = -DTAU_UNWIND $(EBS_UNWIND_FLAG) -I$(EBS_UNWIND_INC) #ENDIF#
+#TAU_EBS_UNWIND#  TAU_LINKER_OPT17 = -L$(EBS_UNWIND_LIB) $(EBS_UNWIND_LIB_FLAG)#ENDIF#
 
 ##############################################
 
@@ -859,7 +905,9 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 	      $(PROFILEOPT69) $(PROFILEOPT70) $(PROFILEOPT71) $(PROFILEOPT72) \
 	      $(PROFILEOPT73) $(PROFILEOPT74) $(PROFILEOPT75) $(PROFILEOPT76) \
 	      $(PROFILEOPT77) $(PROFILEOPT78) $(PROFILEOPT79) $(PROFILEOPT80) \
-              $(PROFILEOPT81) $(TRACEOPT)
+              $(PROFILEOPT81) $(PROFILEOPT82) $(PROFILEOPT83) $(PROFILEOPT84) \
+              $(PROFILEOPT85) \
+              $(TRACEOPT)
 
 
 ##############################################
@@ -884,7 +932,8 @@ TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
                   $(TAU_LINKER_OPT7) $(TAU_LINKER_OPT8) $(TAU_LINKER_OPT9) \
                   $(TAU_LINKER_OPT10) $(TAU_LINKER_OPT11) $(TAU_LINKER_OPT12) \
 		  $(TAU_LINKER_OPT13) $(PERFSUITELINK) $(VAMPIRTRACELIBS) $(SCOREPLIBS) $(HPCTOOLKIT_LINK) \
-		  $(TAU_LINKER_OPT14) $(TAU_LINKER_OPT15)
+		  $(TAU_LINKER_OPT14) $(TAU_LINKER_OPT15) $(TAU_LINKER_OPT16) \
+                  $(TAU_LINKER_OPT17)
 
 ##############################################
 
@@ -924,7 +973,10 @@ TAU_LIBS	= $(TAUHELPER) -L$(TAU_LIB_DIR) -ltau$(TAU_CONFIG) $(TAU_LINKER_OPTS)
 
 #PERFLIB#TAU_LIBS = #ENDIF#
 
-TAU_SHLIBS	= $(TAUHELPER) -L$(TAU_LIB_DIR) -lTAUsh$(TAU_CONFIG) $(TAU_LINKER_OPTS) $(TAU_LINKER_SHOPTS) $(TAU_MPI_LIB) -ldl
+TAU_LIBDL=-ldl
+#TAU_WINDOWS#TAU_LIBDL=  #ENDIF#
+
+TAU_SHLIBS	= $(TAUHELPER) -L$(TAU_LIB_DIR) -lTAUsh$(TAU_CONFIG) $(TAU_LINKER_OPTS) $(TAU_LINKER_SHOPTS) $(TAU_MPI_LIB) $(TAU_LIBDL)
 #PERFLIB#TAU_SHLIBS = #ENDIF#
 TAU_EXLIBS	= $(TAUHELPER) -lTAU $(TAU_LINKER_OPTS) $(TAU_LINKER_SHOPTS) $(TAU_MPI_LIB)
 
@@ -958,9 +1010,11 @@ TAU_TRACE_INPUT_LIB = -L$(TAU_LIB_DIR) -lTAU_traceinput$(TAU_CONFIG)
 #SP1#TAUMPILIBS      = $(TAU_MPI_LIBS) 	#ENDIF#
 #SP1#TAUMPIFLIBS     = $(TAU_MPI_FLIBS)	#ENDIF#
 #############################################
-#SHMEM#TAU_SHMEM_OBJS		     = TauShmemCray.o	  #ENDIF#
-#SP1#TAU_SHMEM_OBJS		     = TauShmemTurbo.o	  #ENDIF#
-#GPSHMEM#TAU_SHMEM_OBJS		     = TauShmemGpshmem.o  #ENDIF#
+#SHMEM#SHMEM_OBJS		     = TauShmemCray.o	  #ENDIF#
+#CRAYCNL#SHMEM_OBJS		     = TauShmemCrayC.o TauShmemCrayF.o  #ENDIF#
+#SGI_MPT_SHMEM#SHMEM_OBJS	= TauShmemSgiC.o TauShmemSgiF.o     #ENDIF#
+#SP1#SHMEM_OBJS		     = TauShmemTurbo.o	  #ENDIF#
+#GPSHMEM#SHMEM_OBJS		     = TauShmemGpshmem.o  #ENDIF#
 
 TAU_CCOMPILER     = $(TAU_CC)
 #UPCC#TAU_CCOMPILER     = $(TAU_UPCC)  #ENDIF#
@@ -969,6 +1023,8 @@ TAU_CCOMPILER     = $(TAU_CC)
 #SHMEM#TAU_SHMEM_INCLUDE	= $(TAU_SHMEM_INC) #ENDIF#
 
 #SHMEM#TAU_SHMEM_LIBS	= -L$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/ -lTauShmem$(TAU_CONFIG) $(TAU_SHMEM_LIB) #ENDIF#
+#CRAYCNL#TAU_SHMEM_LIBS	= $(TAU_SHMEM_LIB) #ENDIF#
+#SGI_MPT_SHMEM#TAU_SHMEM_LIBS	= $(TAU_SHMEM_LIB) #ENDIF#
 
 #############################################
 # TAU GPU LIBRARIES
@@ -992,12 +1048,13 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
         -optPdtCxxOpts="$(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE) $(TAU_SHMEM_INCLUDE)"\
         -optTauInstr="$(TAU_BIN_DIR)/tau_instrumentor" \
         -optNoMpi \
-	-optOpariDir="$(OPARIDIR)" -optOpariTool="$(TAU_OPARI_TOOL)" \
+	-optOpariDir="$(OPARIDIR)" -optOpari2Tool="$(TAU_OPARI2_TOOL)" -optOpari2ConfigTool="$(TAU_OPARI_CONFIG_TOOL)"  \
+	-optOpariTool="$(TAU_OPARI_TOOL)"  \
 	-optTauCC="$(TAU_CCOMPILER)" \
 	-optTauIncludes="$(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(TAU_SHMEM_INCLUDE)" \
 	-optTauDefs="$(TAU_DEFS)" $(TAU_IBM_NOCOMPINST) \
         -optTauCompile="$(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(TAU_DEFS) "\
-        -optLinking="$(TAU_MPI_FLIBS) $(TAU_SHMEM_LIBS) $(TAU_LIBS) $(TAU_LDFLAGS) $(TAU_CXXLIBS)"\
+        -optLinking="$(TAU_MPI_FLIBS) $(TAU_LIBS) $(TAU_LDFLAGS) $(TAU_CXXLIBS) $(TAU_SHMEM_LIBS) "\
         -optSharedLinking="-L$(TAU_LIB_DIR)/shared$(TAU_CONFIG) $(TAU_MPI_FLIBS)  $(TAU_SHMEM_LIBS) $(TAU_EXLIBS) $(TAU_LDFLAGS) $(TAU_CXXLIBS)"\
 	$(TAU_COMPILER_EXTRA_OPTIONS) \
         -optIncludeMemory="$(TAU_INCLUDE_MEMORY)"\

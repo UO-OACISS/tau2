@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash 
 
 declare -i FALSE=-1
 declare -i TRUE=1
@@ -31,6 +31,7 @@ declare -i isDebug=$FALSE
 #Set isDebug=$TRUE for printing debug messages.
 
 declare -i opari=$FALSE
+declare -i opari2=$FALSE
 
 declare -i errorStatus=$FALSE
 declare -i gotoNextStep=$TRUE
@@ -102,6 +103,10 @@ printUsage () {
     echo -e "  -optOpariDir=\"<path>\"\t\tSpecifies the location of the Opari directory"
     echo -e "  -optOpariOpts=\"\"\t\tSpecifies optional arguments to the Opari tool"
     echo -e "  -optOpariReset=\"\"\t\tResets options passed to the Opari tool"
+    echo -e "  -optOpari2Tool=\"<path/opari2>\"\tSpecifies the location of the Opari tool"
+    echo -e "  -optOpari2ConfigTool=\"<path/opari2_config>\"\tSpecifies the location of the Opari tool"
+    echo -e "  -optOpari2Opts=\"\"\t\tSpecifies optional arguments to the Opari tool"
+    echo -e "  -optOpari2Reset=\"\"\t\tResets options passed to the Opari tool"
     echo -e "  -optNoMpi\t\t\tRemoves -l*mpi* libraries during linking"
     echo -e "  -optMpi\t\t\tDoes not remove -l*mpi* libraries during linking (default)"
     echo -e "  -optNoRevert\t\t\tExit on error. Does not revert to the original compilation rule on error."
@@ -219,6 +224,7 @@ echoIfDebug "The compiler being read is $CMD \n"
 # Initialize optOpariOpts 
 ####################################################################
 optOpariOpts="-nosrc -table opari.tab.c"
+optOpari2Opts="--nosrc "
 
 ####################################################################
 #Parsing all the Tokens of the Command passed
@@ -245,7 +251,7 @@ for arg in "$@" ; do
     else
 	
         case $arg in
-	    --help|-h)
+	    --help)   # Do not use -h as Cray compilers specifie -h upc -h ... 
 		printUsage 0 
 		;;
 
@@ -526,27 +532,59 @@ for arg in "$@" ; do
 			echoIfDebug "\tOption to remove *.inst.* and *.pdb files being passed"
 			needToCleanPdbInstFiles=$FALSE
 			;;
-		    -optOpariDir*)
-			optOpariDir="${arg#"-optOpariDir="}"
-			echoIfDebug "\tOpari Dir used: $optOpariDir"
+                    -optOpariDir*)
+                        optOpariDir="${arg#"-optOpariDir="}"
+                        echoIfDebug "\tOpari Dir used: $optOpariDir"
+                        ;;
+                    -optOpariTool*)
+                        optOpariTool="${arg#"-optOpariTool="}"
+                        echoIfDebug "\tOpari Tool used: $optOpariTool"
+                        if [ "x$optOpariTool" == "x" ] ; then
+                            opari=$FALSE
+                        else
+                            opari=$TRUE
+                        fi
+                        ;;
+                    -optOpariOpts*)
+                        currentopt="${arg#"-optOpariOpts="}"
+                        optOpariOpts="$currentopt $optOpariOpts"
+                        echoIfDebug "\tOpari Opts used: $optOpariOpts"
+                        ;;
+                    -optOpariReset*)
+                        optOpariOpts="${arg#"-optOpariReset="}"
+                        echoIfDebug "\tOpari Tool used: $optOpariOpts"
+                        ;;
+
+		    -optOpari2Dir*)
+			optOpari2Dir="${arg#"-optOpari2Dir="}"
+			echoIfDebug "\tOpari2 Dir used: $optOpari2Dir"
 			;;
-		    -optOpariTool*)
-			optOpariTool="${arg#"-optOpariTool="}"
-			echoIfDebug "\tOpari Tool used: $optOpariTool"
-			if [ "x$optOpariTool" == "x" ] ; then
-			    opari=$FALSE
+		    -optOpari2Tool*)
+			optOpari2Tool="${arg#"-optOpari2Tool="}"
+			echoIfDebug "\tOpari2 Tool used: $optOpari2Tool"
+			if [ "x$optOpari2Tool" == "x" ] ; then
+			    opari2=$FALSE
 			else
-			    opari=$TRUE
+			    opari2=$TRUE
 			fi
 			;;
-		    -optOpariOpts*)
-			currentopt="${arg#"-optOpariOpts="}"
-			optOpariOpts="$currentopt $optOpariOpts"
-			echoIfDebug "\tOpari Opts used: $optOpariOpts"
+		    -optOpari2ConfigTool*)
+			optOpari2ConfigTool="${arg#"-optOpari2ConfigTool="}"
+			echoIfDebug "\tOpari2 Config Tool used: $optOpari2ConfigTool"
+			if [ "x$optOpari2ConfigTool" == "x" ] ; then
+			    opari2=$FALSE
+			else
+			    opari2=$TRUE
+			fi
 			;;
-		    -optOpariReset*)
-			optOpariOpts="${arg#"-optOpariReset="}"
-			echoIfDebug "\tOpari Tool used: $optOpariOpts"
+		    -optOpari2Opts*)
+			currentopt="${arg#"-optOpari2Opts="}"
+			optOpari2Opts="$currentopt $optOpari2Opts"
+			echoIfDebug "\tOpari2 Opts used: $optOpari2Opts"
+			;;
+		    -optOpari2Reset*)
+			optOpari2Opts="${arg#"-optOpari2Reset="}"
+			echoIfDebug "\tOpari Tool used: $optOpari2Opts"
 			;;
 
 		    -optAppCC*)
@@ -647,13 +685,15 @@ for arg in "$@" ; do
 		;;
 	    
 	    *.upc)
+		pdtParserType=upcparse
 		fileName=$arg
 		arrFileName[$numFiles]=$arg
 		arrFileNameDirectory[$numFiles]=`dirname $arg`
 		numFiles=numFiles+1
-		gotoNextStep=$TRUE
-		disablePdtStep=$TRUE
+		#gotoNextStep=$TRUE
+		#disablePdtStep=$TRUE
 		groupType=$group_upc
+                optTau=" "
                 ;;
 
 	    *.f|*.F|*.f90|*.F90|*.f77|*.F77|*.f95|*.F95|*.for|*.FOR)
@@ -812,7 +852,8 @@ for arg in "$@" ; do
 		listOfObjectFiles="$listOfObjectFiles $arg"
 			#List of object Files is simply passed
 			#at the linking stage. It is not
-			#processed anywhere.
+			#processed anywhere, unless opari2 is used.
+                        #the object files are need to create pompregions.c
 		temp=$counterForOutput+1
 
 		if [ $temp == $tempCounter ]; then
@@ -878,6 +919,14 @@ if [ $opari == $TRUE ]; then
     optPdtCFlags="$optPdtCFlags -D_OPENMP"
 else
     echoIfDebug "Opari is off!"
+fi
+
+if [ $opari2 == $TRUE ]; then
+    echoIfDebug "Opari2 is on!"
+    optPdtCxxFlags="$optPdtCxxFlags -D_OPENMP"
+    optPdtCFlags="$optPdtCFlags -D_OPENMP"
+else
+    echoIfDebug "Opari2 is off!"
 fi
 
 
@@ -946,6 +995,18 @@ while [ $tempCounter -lt $numFiles ]; do
         fi
 	arrFileName[$tempCounter]=$base$suf
     fi
+    # pass it on to opari2 for OpenMP programs.
+    # if this is the second pass, then opari was already run, don't do it again
+    if [ $opari2 == $TRUE -a $passCount  == 1 ]; then
+        base=${base}.pomp
+        cmdToExecute="${optOpari2Tool} $optOpari2Opts ${arrFileName[$tempCounter]} $base$suf"
+        evalWithDebugMessage "$cmdToExecute" "Parsing with Opari2"
+        if [ ! -f $base$suf ]; then
+            echoIfVerbose "ERROR: Did not generate .pomp file"
+            printError "$optOpari2Tool" "$cmdToExecute"
+        fi
+        arrFileName[$tempCounter]=$base$suf
+    fi
     if [ $optCompInst == $FALSE ] ; then
 	newFile=${base}.inst${suf}
     else
@@ -972,6 +1033,7 @@ while [ $tempCounter -lt $numFiles ]; do
     fi
     arrPdb[$tempCounter]="${PDBARGSFORTAU}${newFile}"
     tempCounter=tempCounter+1
+
 done
 echoIfDebug "Completed Parsing\n"
 
@@ -1048,6 +1110,22 @@ if [ $numFiles == 0 ]; then
 	evalWithDebugMessage "$cmdCompileOpariTab" "Compiling opari.tab.c"
 	linkCmd="$linkCmd opari.tab.o"
     fi
+   
+    #If this is the second pass, opari was already used, don't do it again`
+    if [ $opari2 == $TRUE -a $passCount == 1 ]; then
+        evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
+      
+        #cmdCreatePompRegions="${NM} ${listOfObjectFiles} | ${GREP} -i POMP2_Init_regions | ${AWK} -f ${AWK_SCRIPT} > pompregions.c"
+
+cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${listOfObjectFiles} | `${optOpari2ConfigTool} --egrep` -i \"pomp2_init_regions\" | `${optOpari2ConfigTool} --egrep` \" T \" | `${optOpari2ConfigTool} --awk_cmd` -f `${optOpari2ConfigTool} --awk_script` > pompregions.c"
+
+
+        evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
+        cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
+        evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
+        linkCmd="$linkCmd pompregions.o"
+    fi
+
 
     echoIfDebug "trackIO = $trackIO, wrappers = $optWrappersDir/io_wrapper/link_options.tau "
     if [ $trackIO = $TRUE -a -r $optWrappersDir/io_wrapper/link_options.tau ] ; then 
@@ -1083,6 +1161,13 @@ if [ $numFiles == 0 ]; then
 	    evalWithDebugMessage "/bin/rm -f *.comment.pdb *.chk.* *.pomp.* *.pp.pdb *.comment.pdb" "Removing *.chk *.pomp.* *.comment.pdb *.pp.pdb"
 	fi
     fi
+    if [ $opari2 == $TRUE -a $needToCleanPdbInstFiles == $TRUE ]; then
+        evalWithDebugMessage "/bin/rm -f pompregions.c pompregions.o *.opari.inc" "Removing pompregions.c pompregions.o *.opari.inc"
+        if [ $pdtUsed == $TRUE ]; then
+            evalWithDebugMessage "/bin/rm -f *.comment.pdb *.chk.* *.pomp.* *.pp.pdb *.comment.pdb" "Removing *.chk *.pomp.* *.comment.pdb *.pp.pdb"
+        fi
+    fi
+
 fi
 
 
@@ -1111,6 +1196,13 @@ if [ $gotoNextStep == $TRUE ]; then
 	    ;;
 
 	    $group_c)
+	    pdtCmd="$optPdtDir""/$pdtParserType"
+	    pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
+	    pdtCmd="$pdtCmd $optPdtCFlags $optPdtUser "
+	    optCompile="$optCompile $optDefs $optIncludes"
+	    ;;
+
+	    $group_upc)
 	    pdtCmd="$optPdtDir""/$pdtParserType"
 	    pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
 	    pdtCmd="$pdtCmd $optPdtCFlags $optPdtUser "
@@ -1146,9 +1238,6 @@ if [ $gotoNextStep == $TRUE ]; then
 		    evalWithDebugMessage "$pdtCmd" "Parsing with PDT Parser"
 		fi
 	    else
-                if [ $groupType == $group_upc ] ; then
-                  errorStatus=0
-                else
 		  echo ""
 		  echo "WARNING: Disabling instrumentation of source code."
 		  echo "         Please either configure with -pdt=<dir> option"
@@ -1156,7 +1245,6 @@ if [ $gotoNextStep == $TRUE ]; then
 		  echo ""
 		  gotoNextStep=$FALSE
 		  errorStatus=$TRUE
-                fi
 	    fi
 	fi
 
@@ -1175,7 +1263,7 @@ fi
 ####################################################################
 # Instrumenting the Code
 ####################################################################
-if [ $gotoNextStep == $TRUE -a $optCompInst == $FALSE -a $groupType != $group_upc ]; then
+if [ $gotoNextStep == $TRUE -a $optCompInst == $FALSE ]; then
 
     tempCounter=0
     while [ $tempCounter -lt $numFiles ]; do
@@ -1341,9 +1429,11 @@ if [ $gotoNextStep == $TRUE ]; then
             # remove the .pomp from the name of the output file
 	    if [ $opari == $TRUE -a $pdtUsed == $TRUE ]; then
 		outputFile=`echo $outputFile | sed -e 's/\.chk\.pomp//'`
+			else
+		outputFile=`echo $outputFile | sed -e 's/\.pomp//'`
 	    fi
-	    
-	    
+  
+
             #echoIfDebug "\n\nThe output file passed is $passedOutputFile"
 	    #echoIfDebug "The output file generated locally is $outputFile"
 
@@ -1371,10 +1461,6 @@ if [ $gotoNextStep == $TRUE ]; then
 	    fi
 
             # We cannot parse UPC files. Leave them alone. Do not change filename
-            if [ $groupType == $group_upc ] ; then
-               instrumentedFileForCompilation=${arrFileName[$tempCounter]}
-            fi
-
             if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
 	       filePathInclude=-I${arrFileNameDirectory[$tempCounter]}
             fi
@@ -1391,11 +1477,8 @@ if [ $gotoNextStep == $TRUE ]; then
 	    echoIfDebug "PassedOutFile: $passedOutputFile outputFile: $outputFile"
 	    #echoIfDebug "cmd after appending the .o file is $newCmd"
 
-            if [ $groupType == $group_upc ]; then 
-	      evalWithDebugMessage "$newCmd" "Compiling UPC Code"
-            else
-	      evalWithDebugMessage "$newCmd" "Compiling with Instrumented Code"
-            fi 
+	    evalWithDebugMessage "$newCmd" "Compiling with Instrumented Code"
+
 	    echoIfVerbose "Looking for file: $outputFile "
 	    if [ $hasAnOutputFile == $TRUE ]; then
 		if [  ! -e $passedOutputFile ]; then
@@ -1427,10 +1510,6 @@ if [ $gotoNextStep == $TRUE ]; then
 
 	    tempTauFileName=${arrTau[$tempCounter]##*/}
 	    instrumentedFileForCompilation=" $tempTauFileName"
-            # We cannot parse UPC files. Leave them alone. Do not change filename
-            if [ $groupType == $group_upc ] ; then
-               instrumentedFileForCompilation=${arrFileName[$tempCounter]}
-            fi
 
 	    # Should we use compiler-based instrumentation on this file?
 	    extraopt=
@@ -1474,6 +1553,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	    passedOutputFile="a.out"
 	fi
 	
+
 	if [ $opari == $TRUE ]; then
 	    evalWithDebugMessage "/bin/rm -f opari.rc" "Removing opari.rc"
 	    cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} opari.tab.c"
@@ -1481,7 +1561,16 @@ if [ $gotoNextStep == $TRUE ]; then
 	    evalWithDebugMessage "$cmdCompileOpariTab" "Compiling opari.tab.c"
 	    objectFilesForLinking="$objectFilesForLinking opari.tab.o"
 	fi
-
+	if [ $opari2 == $TRUE ]; then
+            evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
+      
+cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} | `${optOpari2ConfigTool} --egrep` -i \"pomp2_init_regions\" | `${optOpari2ConfigTool} --egrep` \" T \" | `${optOpari2ConfigTool} --awk_cmd` -f `${optOpari2ConfigTool} --awk_script` > pompregions.c"
+        evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
+        cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
+        evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
+        linkCmd="$linkCmd pompregions.o"
+	   objectFilesForLinking="$objectFilesForLinking pompregions.o"
+	fi
 
 	newCmd="$CMD $listOfObjectFiles $objectFilesForLinking $argsRemaining $OUTPUTARGSFORTAU $optLinking -o $passedOutputFile"
 
@@ -1515,6 +1604,9 @@ if [ $gotoNextStep == $TRUE ]; then
 	if [ $opari == $TRUE -a $needToCleanPdbInstFiles == $TRUE ]; then
 	    evalWithDebugMessage "/bin/rm -f opari.tab.c opari.tab.o *.opari.inc" "Removing opari.tab.c opari.tab.o *.opari.inc"
 	fi
+	if [ $opari2 == $TRUE -a $needToCleanPdbInstFiles == $TRUE ]; then
+	    evalWithDebugMessage "/bin/rm -f pompregions.c pompregions.o *.opari.inc" "Removing pompregions.c pompregions.o *.opari.inc"
+	fi
     fi
 
 fi
@@ -1524,7 +1616,7 @@ if [ $needToCleanPdbInstFiles == $TRUE ]; then
     while [ $tempCounter -lt $numFiles -a $disablePdtStep == $FALSE ]; do
 	evalWithDebugMessage "/bin/rm -f ${arrTau[$tempCounter]##*/}" "cleaning inst file"
 	if [ $preprocess == $TRUE -a $groupType == $group_f_F ]; then
-	    if [ $opari == $TRUE ]; then
+	    if [ $opari == $TRUE -o $opari2 == $TRUE ]; then
 		secondSource=`echo ${arrTau[$tempCounter]##*/} | sed -e 's/\.chk\.pomp\.inst//'`
 	    else
 		secondSource=`echo ${arrTau[$tempCounter]##*/} | sed -e 's/\.inst//'`
@@ -1538,7 +1630,7 @@ if [ $needToCleanPdbInstFiles == $TRUE ]; then
 		evalWithDebugMessage "/bin/rm -f $secondPDB" "cleaning PDB file"
 	    fi
 	fi
-	if [ $opari == $TRUE ]; then
+	if [ $opari == $TRUE -o $opari2 == $TRUE ]; then
 	    evalWithDebugMessage "/bin/rm -f ${arrFileName[$tempCounter]}" "cleaning opari file"
 	fi
 	tempCounter=tempCounter+1

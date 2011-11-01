@@ -692,6 +692,53 @@ void POMP_FLUSH_EXIT(int* id) {
   if ( omp_tracing ) POMP_Flush_exit(pomp_rd_table[*id]);
 }
 
+void pomp_init_lock(omp_lock_t *s) {
+  if ( omp_tracing ) POMP_Init_lock(s);
+}
+
+void pomp_init_lock_(omp_lock_t *s) {
+  if ( omp_tracing ) POMP_Init_lock(s);
+}
+
+void pomp_init_lock__(omp_lock_t *s) {
+  if ( omp_tracing ) POMP_Init_lock(s);
+}
+
+void POMP_INIT_LOCK(omp_lock_t *s) {
+  if ( omp_tracing ) POMP_Init_lock(s);
+}
+
+void pomp_set_lock(omp_lock_t *s) {
+  if ( omp_tracing ) POMP_Set_lock(s);
+}
+
+void pomp_set_lock_(omp_lock_t *s) {
+  if ( omp_tracing ) POMP_Set_lock(s);
+}
+
+void pomp_set_lock__(omp_lock_t *s) {
+  if ( omp_tracing ) POMP_Set_lock(s);
+}
+
+void POMP_SET_LOCK(omp_lock_t *s) {
+  if ( omp_tracing ) POMP_Set_lock(s);
+}
+
+void pomp_unset_lock(omp_lock_t *s) {
+  if ( omp_tracing ) POMP_Unset_lock(s);
+}
+
+void pomp_unset_lock_(omp_lock_t *s) {
+  if ( omp_tracing ) POMP_Unset_lock(s);
+}
+
+void pomp_unset_lock__(omp_lock_t *s) {
+  if ( omp_tracing ) POMP_Unset_lock(s);
+}
+
+void POMP_UNSET_LOCK(omp_lock_t *s) {
+  if ( omp_tracing ) POMP_Unset_lock(s);
+}
 /****************************/
 } /* extern "C" */
 
@@ -712,6 +759,8 @@ void TauStartOpenMPRegionTimer(struct ompregdescr *r, int index)
   static int tau_openmp_initialized = tau_openmp_init();
 /* For any region, create a mapping between a region r and timer t and
    start the timer. */
+
+	//printf("starting openMP region timer.\n");
 
   omp_set_lock(&tau_ompregdescr_lock);
 
@@ -753,6 +802,9 @@ void TauStartOpenMPRegionTimer(struct ompregdescr *r, int index)
 void TauStopOpenMPRegionTimer(struct ompregdescr *r, int index)
 {
 
+	//printf("stopping openMP region timer.\n");
+
+
 #ifdef TAU_OPENMP_PARTITION_REGION
     FunctionInfo *f = ((FunctionInfo **)r->data)[index];
 #else
@@ -762,7 +814,7 @@ void TauStopOpenMPRegionTimer(struct ompregdescr *r, int index)
 
     int tid = RtsLayer::myThread(); 
     Profiler *p =TauInternal_CurrentProfiler(tid); 
-    if (p->ThisFunction == f) {
+    if (p != NULL && p->ThisFunction == f) {
       Tau_stop_timer(f, Tau_get_tid());
     } else {
       // nothing, it must have been disabled/throttled
