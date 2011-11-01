@@ -1,0 +1,7 @@
+BEGIN_INSTRUMENT_SECTION
+forall routine="#"
+loops routine="#"
+barrier routine="#"
+fence routine="#"
+notify routine="#"
+END_INSTRUMENT_SECTION
