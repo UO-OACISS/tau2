@@ -99,6 +99,9 @@ extern "C" void Tau_sampling_resume();
 */
 extern "C" void Tau_sampling_init_if_necessary(void );
 
+/* For TauMpi.c to invoke sampling finalization at MPI_Finalize */
+extern "C" void Tau_sampling_finalizeNode();
+
 void Tau_sampling_outputTraceCallpath(int tid);
 void Tau_sampling_outputTraceCallstack(int tid, void *pc, void *context);
 

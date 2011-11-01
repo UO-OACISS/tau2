@@ -87,6 +87,26 @@ case $1 in
 	echo "s,^BFDINCLUDE=.*$,BFDINCLUDE=$bfdinclude,g" >> $sedout
 	;;
 
+     ebs_unwind_flag=*)
+       ebs_unwind_flag=`echo $1 | sed -e 's/^ebs_unwind_flag=//'`
+        echo "s,^EBS_UNWIND_FLAG=.*$,EBS_UNWIND_FLAG=$ebs_unwind_flag,g" >> $sedout
+        ;;
+
+     ebs_unwind_inc=*)
+       ebs_unwind_inc=`echo $1 | sed -e 's/^ebs_unwind_inc=//'`
+        echo "s,^EBS_UNWIND_INC=.*$,EBS_UNWIND_INC=$ebs_unwind_inc,g" >> $sedout
+        ;;
+
+     ebs_unwind_lib=*)
+        ebs_unwind_lib=`echo $1 | sed -e 's/^ebs_unwind_lib=//'`
+        echo "s,^EBS_UNWIND_LIB=.*$,EBS_UNWIND_LIB=$ebs_unwind_lib,g" >> $sedout
+        ;;
+
+     ebs_unwind_lib_flag=*)
+        ebs_unwind_lib_flag=`echo $1 | sed -e 's/^ebs_unwind_lib_flag=//'`
+       echo "s,^EBS_UNWIND_LIB_FLAG=.*$,EBS_UNWIND_LIB_FLAG=$ebs_unwind_lib_flag,g" >> $sedout
+        ;;
+
      perfsuitelink=*)
         perfsuitelink=`echo $1 | sed -e 's/^perfsuitelink=//' -e 's/#/ /g'`
 	echo "s,^PERFSUITELINK=.*$,PERFSUITELINK=$perfsuitelink,g" >> $sedout
@@ -291,6 +311,11 @@ case $1 in
 	echo "s,^OTFINC=.*$,OTFINC=$otfinc,g" >> $sedout
 	;;
 
+     ebs_clock_res=*)
+	ebs_clock_res=`echo $1 | sed -e 's/^ebs_clock_res=//'`
+	echo "s,^EBS_CLOCK_RES=.*$,EBS_CLOCK_RES=$ebs_clock_res,g" >> $sedout
+        ;;
+
      pdtcompdir=*)
         pdtcompdir=`echo $1 | sed -e 's/^pdtcompdir=//'`
 	echo "s,^PDTCOMPDIR=.*$,PDTCOMPDIR=$pdtcompdir,g" >> $sedout
@@ -448,6 +473,10 @@ case $1 in
         echo NOTE: Using BFD support
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     TAU_EBS_UNWIND)
+        echo NOTE: Enabling EBS Stack Unwinding support
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      TAU_DEMANGLE)
         echo NOTE: Using DEMANGLE support
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -463,6 +492,15 @@ case $1 in
      TAU_PERFSUITE)
         echo NOTE: Using PerfSuite support
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
+     TAU_SS_ALLOC_SUPPORT)
+	echo NOTE: Compiler supports Sampling Allocator
+	echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
+     TAU_LINKS_RT)
+	echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
 
@@ -595,6 +633,9 @@ case $1 in
      mpilib=*)
         mpilibdir=`echo $1 | sed -e 's/^mpilib=//'`
 	echo "s@^TAU_MPILIB_DIR=\(.*\)@TAU_MPILIB_DIR=$mpilibdir@g" >> $sedout
+	if [ "x$mpilibdir" != "x" ] ; then
+	  echo "s@^TAU_MPILIB_DIRLIB=\(.*\)@TAU_MPILIB_DIRLIB=-L$mpilibdir@g" >> $sedout
+	fi
         #echo "TAU_MPILIB_DIR=$mpilibdir" 
         ;;
 
@@ -603,6 +644,11 @@ case $1 in
 ###############################################################
      SHMEM)
         echo NOTE: Using the TAU SHMEM Profiling Interface 
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
+     SGI_MPT_SHMEM)
+        echo NOTE: Using the TAU SGI MPT SHMEM Profiling Interface 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
@@ -801,6 +847,10 @@ case $1 in
 	;;
      PDTNOFSTMTS)
 	echo NOTE: Disabling loop level instrumentation for Fortran
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PDTNOUPC)
+	echo NOTE: Disabling UPC statement level instrumentation 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      PDTALPHACXX)
@@ -1064,6 +1114,10 @@ case $1 in
 	echo "NOTE: Using TAU Python bindings ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     PYCUDA)
+	echo "NOTE: Building TAU PyCUDA interface ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      MULTIPLECOUNTERS)
 	echo "NOTE: Using multiple counters for measurement ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1136,6 +1190,10 @@ case $1 in
 	echo "NOTE: Using Opari OpenMP directive rewriting tool ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     OPARI2)
+	echo "NOTE: Using Opari2 OpenMP directive rewriting tooln ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      KOJAKOPARI)
 	echo "NOTE: Using KOJAK's Opari implementation ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1158,6 +1216,9 @@ case $1 in
 	;;
      EBS2OTF)
         echo "NOTE: Enable Conversion from Event-based Sampling Traces to Open Trace Format ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     EBS_HAS_RT)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      VAMPIRTRACE)
@@ -1257,6 +1318,14 @@ case $1 in
 	echo "NOTE: Using KAI KCC options"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     TAU_WINDOWS)
+	echo "NOTE: Using TAU's Windows options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     MINGW)
+	echo "NOTE: Using TAU's MINGW options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      SGICOUNTERS)
 	echo "NOTE: Using SGI R10000 Hardware Counters for Profiling"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1287,6 +1356,9 @@ case $1 in
 	;;
      CRAYCNL)
 	echo "NOTE: Using Cray Compute Node Linux options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     CRAYCNL_CCE)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CRAYCNL_SHARED)
@@ -1439,6 +1511,9 @@ case $1 in
 	;;
      GNU)
 	echo "NOTE: GNU g++ options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     TAU_STRSIGNAL_OK)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      RTTI)

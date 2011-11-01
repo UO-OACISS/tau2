@@ -21,7 +21,9 @@
 #include <Profile/TauSampling.h>
 #endif
 #include <Profile/TauSnapshot.h>
-
+#ifdef TAU_GPU
+extern "C" int Tau_profile_exit_all_tasks();
+#endif
 //#include <tau_internal.h>
 
 #ifdef TAU_PERFSUITE
@@ -585,12 +587,25 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
       TauDetectMemoryLeaks(); /* the last event should be before final exit */
     }
 
+/* On Crays with -iowrapper, rank 0 is spawned by the clone syscall. This
+    creates a parent thread (rank = -1) that tries to write data at the end
+    of execution and crashes. This fixes it and disables profile output from
+    rank -1. */
+#if (defined (TAU_MPI) && defined(TAU_CRAYCNL))
+    if (RtsLayer::myNode() == -1) TheSafeToDumpData() = 0;
+#endif /* TAU_MPI && TAU_CRAYCNL */
+
     // For Dyninst. tcf gets called after main and all the data structures may not be accessible
     // after main exits. Still needed on Linux - we use TauProgramTermination()
     if (strcmp(ThisFunction->GetName(), "_fini") == 0) {
       TheSafeToDumpData() = 0;
     }
-
+#ifdef TAU_GPU
+		//Stop all other running tasks.
+		if (tid == 0) {
+		  Tau_profile_exit_all_tasks();
+		}
+#endif
 #ifndef TAU_WINDOWS
     if (tid == 0) {
       atexit(TauAppShutdown);
@@ -603,6 +618,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 
 	// Write profile data
 	TauProfiler_StoreData(tid);
+        TAU_VERBOSE("TAU: <Node=%d.Thread=%d>:<pid=%d>: %s initiated TauProfile_StoreData\n",
+          RtsLayer::myNode(), RtsLayer::myThread(), getpid(), ThisFunction->GetName());
+
 	  
 #if defined(TAUKTAU) 
 	//AN Removed - New func inside 

@@ -111,8 +111,13 @@ int RtsLayer::getNumThreads() {
 }
 
 int *RtsLayer::numThreads() {
+#ifdef TAU_OPENMP
+	static int numthreads = OpenMPLayer::numThreads();
+#else
   static int numthreads = 1;
-  return &numthreads;
+#endif
+	return &numthreads;
+
 }
 
 

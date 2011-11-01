@@ -38,7 +38,7 @@ public abstract class DataSource {
     public static final int GPROF = 5;
     public static final int PSRUN = 6;
     public static final int PPROF = 7;
-    public static final int CUBE = 8;
+    public static final int CUBE = 8;    // using CubeReader.jar from Cube package
     public static final int HPCTOOLKIT = 9;
     public static final int SNAP = 10;
     public static final int OMPP = 11;
@@ -47,6 +47,7 @@ public abstract class DataSource {
     public static final int PARAVER = 14; // Statistical output from Paraver - Jesus LeBarta
     public static final int IPM = 15; // Data from IPM/NERSC
     public static final int GOOGLE = 16; //Google PerfTools
+    public static final int CUBE3 = 17; // old version of cube3 parser ( own implementation ) 
     public static final int GYRO = 100;
     public static final int GAMESS = 101; // application log data
     public static final String FILE_TYPE_INDEX = "File Type Index";
@@ -54,7 +55,7 @@ public abstract class DataSource {
 
     public static String formatTypeStrings[] = { "ParaProf Packed Profile", "Tau profiles", "Dynaprof", "MpiP", "HPMToolkit",
             "Gprof", "PSRun", "Tau pprof.dat", "Cube", "HPCToolkit", "TAU Snapshot", "ompP", "PERI-XML",
-            "General Purpose Timing Library (GPTL)", "Paraver", "IPM", "Google PerfTools" };
+            "General Purpose Timing Library (GPTL)", "Paraver", "IPM", "Google PerfTools", "Cube 3 (Old parser)" };
 
     private static boolean meanIncludeNulls = true;
 
@@ -109,6 +110,8 @@ public abstract class DataSource {
     protected boolean hasMPI = false;
     private int fileType = DataSource.TAUPROFILE;
     protected boolean derivedProvided=false;
+
+	protected boolean derivedAtomicProvided=false;
 
     public boolean isDerivedProvided() {
 		return derivedProvided;
@@ -687,7 +690,7 @@ public abstract class DataSource {
         this.totalData.setThreadDataAllMetrics();
         this.stddevData.setThreadDataAllMetrics();
 
-        this.generateUserEventStatistics();
+        this.generateAtomicEventStatistics();
 
         finishPhaseAnalysis();
 
@@ -708,8 +711,13 @@ public abstract class DataSource {
         return stdDev;
     }
 
-    private void generateUserEventStatistics() {
+    private void generateAtomicEventStatistics() {
         // make sure that the allThreads list is initialized;
+    	
+    	if(derivedAtomicProvided){
+    		return;
+    	}
+    	
         this.initAllThreadsList();
         int numThreads = allThreads.size();
         int numSnapshots = meanData.getNumSnapshots();
@@ -720,7 +728,7 @@ public abstract class DataSource {
 
             for (int i = 0; i < numThreads; i++) { // for each thread
                 Thread thread = allThreads.get(i);
-                for (Iterator<UserEventProfile> it = thread.getUserEventProfiles(); it.hasNext();) {
+                for (Iterator<UserEventProfile> it = thread.getUserEventProfiles(); it.hasNext();) {//For reach user event in the thread
                     UserEventProfile uep = it.next();
                     UserEvent ue = uep.getUserEvent();
 
@@ -914,9 +922,7 @@ public abstract class DataSource {
                 }
                 function.setStddevProfile(stddevProfile);
 
-                if(derivedProvided){
-                }
-                else{
+                if(!derivedProvided){
                 int numEvents = 0;
                 double callSum = 0;
                 double subrSum = 0;

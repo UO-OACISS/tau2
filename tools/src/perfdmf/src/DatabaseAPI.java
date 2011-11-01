@@ -649,6 +649,8 @@ public class DatabaseAPI {
             tmpStr = "select IDENTITY_VAL_LOCAL() FROM metric";
         else if (db.getDBType().compareTo("derby") == 0)
             tmpStr = "select IDENTITY_VAL_LOCAL() FROM metric";
+        else if (db.getDBType().compareTo("h2") == 0)
+            tmpStr = "select IDENTITY_VAL_LOCAL() FROM metric";
         else if (db.getDBType().compareTo("oracle") == 0)
             tmpStr = "select " + db.getSchemaPrefix() + "metric_id_seq.currval FROM dual";
         else
@@ -1034,6 +1036,8 @@ public class DatabaseAPI {
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM metric";
             else if (db.getDBType().compareTo("derby") == 0)
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM metric";
+            else if (db.getDBType().compareTo("h2") == 0)
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM metric";
             else if (db.getDBType().compareTo("oracle") == 0)
                 tmpStr = "select " + db.getSchemaPrefix() + "metric_id_seq.currval FROM dual";
             else
@@ -1083,6 +1087,8 @@ public class DatabaseAPI {
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM interval_event";
             else if (db.getDBType().compareTo("derby") == 0)
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM interval_event";
+            else if (db.getDBType().compareTo("h2") == 0)
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM interval_event";
             else if (db.getDBType().compareTo("oracle") == 0)
                 tmpStr = "select " + db.getSchemaPrefix() + "interval_event_id_seq.currval FROM dual";
             else
@@ -1120,6 +1126,8 @@ public class DatabaseAPI {
             else if (db.getDBType().compareTo("db2") == 0)
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM atomic_event";
             else if (db.getDBType().compareTo("derby") == 0)
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM atomic_event";
+            else if (db.getDBType().compareTo("h2") == 0)
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM atomic_event";
             else if (db.getDBType().compareTo("oracle") == 0)
                 tmpStr = "select " + db.getSchemaPrefix() + "atomic_event_id_seq.currval FROM dual";

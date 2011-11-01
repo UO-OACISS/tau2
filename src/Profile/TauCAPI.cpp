@@ -456,6 +456,21 @@ extern "C" int Tau_stop_current_timer() {
 ///////////////////////////////////////////////////////////////////////////
 
 
+extern "C" int Tau_profile_exit_all_tasks() {
+	int tid = 1;
+	while (tid < TAU_MAX_THREADS)
+	{
+		while (Tau_global_stackpos[tid] >= 0) {
+			Profiler *p = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
+			Tau_stop_timer(p->ThisFunction, tid);
+		}
+	tid++;
+	}
+  Tau_disable_instrumentation();
+  return 0;
+}
+
+
 extern "C" int Tau_profile_exit_all_threads() {
 	int tid = 0;
 	while (tid < TAU_MAX_THREADS)
@@ -812,7 +827,9 @@ extern "C" int shmem_n_pes(void);
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
   static int initialize = register_events();
+#ifdef DEBUG_PROF
   printf("Inside Tau_trace_sendmsg length = %d, totalnodes=%d\n", length, tau_totalnodes(0,0));
+#endif /* DEBUG_PROF */
 
 #ifdef TAU_PROFILEPARAM
 #ifndef TAU_DISABLE_PROFILEPARAM_IN_MPI
@@ -1529,7 +1546,7 @@ extern "C" int Tau_create_task(void) {
   taskid= RtsLayer::RegisterThread() - 1; /* it returns 1 .. N, we want 0 .. N-1 */
   /* specify taskid is a fake thread used in the Task API */
   Tau_is_thread_fake_for_task_api[taskid] = 1; /* This thread is fake! */
-  
+ 	//printf("create task with id: %d.\n", taskid); 
   return taskid;
 }
 
@@ -1558,7 +1575,7 @@ void *Tau_query_parent_event(void *event) {
   if (event == topOfStack) {
     return NULL;
   } else {
-    long loc = (long)event;
+    long loc = Tau_convert_ptr_to_long(event);
     return (void*)(loc - (sizeof(Profiler)));
   }
 }
@@ -1575,6 +1592,18 @@ extern "C" void Tau_set_user_clock(double value) {
 
 extern "C" void Tau_set_user_clock_thread(double value, int tid) {
   metric_write_userClock(tid, value);
+}
+
+extern "C" long Tau_convert_ptr_to_long(void *ptr) {
+  long long a = (long long) ptr;
+  long ret = (long) a;
+  return ret;
+}
+
+extern "C" unsigned long Tau_convert_ptr_to_unsigned_long(void *ptr) {
+  unsigned long long a = (unsigned long long) ptr;
+  unsigned long ret = (unsigned long) a;
+  return ret;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -1612,6 +1641,16 @@ int *tau_pomp_rd_table = 0;
 // #endif
 #endif
 
+#ifndef TAU_BGP
+extern "C" void Tau_Bg_hwp_counters_start(int *error) {
+}
+
+extern "C" void Tau_Bg_hwp_counters_stop(int* numCounters, uint64_t counters[], int* mode, int *error) {
+}
+
+extern "C" void Tau_Bg_hwp_counters_output(int* numCounters, uint64_t counters[], int* mode, int* error) {
+}
+#endif /* TAU_BGP */
                     
 
 /***************************************************************************
