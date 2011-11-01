@@ -48,8 +48,10 @@ pid_t tau_fork (void);
 #define pthread_exit(arg) \
         tau_pthread_exit(arg)
 
+#ifdef TAU_PTHREAD_BARRIER_AVAILABLE
 #define pthread_barrier_wait(barrier) \
   tau_track_pthread_barrier_wait(barrier)
+#endif /* TAU_PTHREAD_BARRIER_AVAILABLE */
 
 #ifdef __cplusplus
 extern "C" {

@@ -168,6 +168,38 @@ cudaError_t cudaThreadSynchronize() {
   return retval;
 
 }
+cudaError_t cudaDeviceSynchronize() {
+
+  typedef cudaError_t (*cudaDeviceSynchronize_p) ();
+  static cudaDeviceSynchronize_p cudaDeviceSynchronize_h = NULL;
+  cudaError_t retval;
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaDeviceSynchronize(void) C", "", CUDA_SYNC);
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
+
+  if (cudart_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cudaDeviceSynchronize_h == NULL)
+	cudaDeviceSynchronize_h = (cudaDeviceSynchronize_p) dlsym(cudart_handle,"cudaDeviceSynchronize"); 
+    if (cudaDeviceSynchronize_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cudaDeviceSynchronize_h)();
+  TAU_PROFILE_STOP(t);
+
+#ifdef TRACK_KERNEL
+	Tau_cuda_register_sync_event();
+#endif
+
+  }
+  return retval;
+
+}
 /*
 cudaError_t cudaThreadSetLimit(enum cudaLimit a1, size_t a2) {
 
