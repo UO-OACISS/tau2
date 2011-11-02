@@ -45,7 +45,7 @@ const int collate_num_op_items[NUM_COLLATE_OP_TYPES] =
 const char * collate_step_names[NUM_COLLATE_STEPS] =
   { "min", "max", "sum", "sum_of_squares" };
 const char * stat_names[NUM_STAT_TYPES] =
-  { "mean_all", "mean_no_null", "stddev_all", "stddev_no_null", "min_all", "max_all" };
+  { "mean_all", "mean_no_null", "stddev_all", "stddev_no_null", "min_no_null", "max_no_null" };
 const char** collate_op_names[NUM_COLLATE_OP_TYPES] = 
   { collate_step_names, stat_names };
 
@@ -110,8 +110,8 @@ static void assignDerivedStats(double ****eventType, double ****gEventType,
   (*eventType)[stat_stddev_exist][m][i] =
     calculateStdDev(numEventThreads[i],(*gEventType)[step_sumsqr][m][i],
 		    (*eventType)[stat_mean_exist][m][i]);
-  (*eventType)[stat_min_all][m][i] =(*gEventType)[step_min][m][i];
-  (*eventType)[stat_max_all][m][i] =(*gEventType)[step_max][m][i];
+  (*eventType)[stat_min_exist][m][i] =(*gEventType)[step_min][m][i];
+  (*eventType)[stat_max_exist][m][i] =(*gEventType)[step_max][m][i];
 }
 
 static void assignDerivedStats(double ***eventType, double ***gEventType,
@@ -129,8 +129,8 @@ static void assignDerivedStats(double ***eventType, double ***gEventType,
     calculateStdDev(numEventThreads[i],
 		    (*gEventType)[step_sumsqr][i],
 		    (*eventType)[stat_mean_exist][i]);
-  (*eventType)[stat_min_all][i] =(*gEventType)[step_min][i];
-  (*eventType)[stat_max_all][i] =(*gEventType)[step_max][i];
+  (*eventType)[stat_min_exist][i] =(*gEventType)[step_min][i];
+  (*eventType)[stat_max_exist][i] =(*gEventType)[step_max][i];
 }
 
 /*********************************************************************
