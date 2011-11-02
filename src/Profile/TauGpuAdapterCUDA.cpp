@@ -315,6 +315,8 @@ transferSize, int MemcpyType)
 
 
 KernelEvent *curKernel;
+//needed for pycuda for some reason.
+string curName;
 
 void Tau_cuda_enqueue_kernel_enter_event(const char *name, cudaGpuId* id)
 {
@@ -351,16 +353,18 @@ void Tau_cuda_enqueue_kernel_enter_event(const char *name, cudaGpuId* id)
 	curKernel->device = id->getCopy();
 
 	curKernel->enqueue_start_event();
- 
+	curName = string(dem_name); 
 	//printf("Successfully recorded start.\n");
+	//KernelBuffer.push(*curKernel);
 
 }
 
 void Tau_cuda_enqueue_kernel_exit_event()
 {
 
-	//printf("recording stop.");
+	//printf("recording stop for: %s.\n", curName.c_str());
 
+	curKernel->name = curName.c_str();
 	curKernel->enqueue_stop_event();
 	KernelBuffer.push(*curKernel);
 
@@ -372,6 +376,7 @@ static int in_sync_event = 0;
 
 void Tau_cuda_register_sync_event()
 {
+	//printf("sync flag: %d.\n", in_sync_event);
 	if (in_sync_event)
 	{
 		return;
@@ -435,8 +440,8 @@ void Tau_cuda_register_sync_event()
 		lastEventTime += (double) stop_sec;
 
 		KernelBuffer.pop();
-		in_sync_event = 0;
 
 	}
+		in_sync_event = 0;
 	
 }

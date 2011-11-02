@@ -970,6 +970,9 @@ int Tau_bfd_getAddressMap(tau_bfd_handle_t handle, unsigned long probe_addr,
 	mapInfo->end = unit->addressMaps[matchingIdx]->end;
 	mapInfo->offset = unit->addressMaps[matchingIdx]->offset;
 	strcpy(mapInfo->name, unit->addressMaps[matchingIdx]->name);
+	// *CWL* - This implementation is not 100% satisfactory. It is unclear
+	//         what we should do with the return index of 0.
+	return matchingIdx;
 }
 
 #endif /* TAU_BFD */
