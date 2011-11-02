@@ -1,4 +1,4 @@
-#include <shmem.h>
+#include <mpp/shmem.h>
 #include <stdio.h>
 /* Copyright: This example is taken from the Cray man shmem command on XT3 */
 int main(int argc, char **argv)
