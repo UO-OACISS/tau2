@@ -35,9 +35,9 @@ public class Configure {
     private String configuration_name = "";
     private String jardir;
     private String schemadir;
-    private String jdbc_db_jarfile = "derby.jar";
-    private String jdbc_db_driver = "org.apache.derby.jdbc.EmbeddedDriver";
-    private String jdbc_db_type = "derby";
+    private String jdbc_db_jarfile = "h2.jar";
+    private String jdbc_db_driver = "org.h2.Driver";
+    private String jdbc_db_type = "h2";
     private String db_hostname = "";
     private String db_portnum = "";
     private String db_dbname = "perfdmf";
@@ -45,7 +45,7 @@ public class Configure {
     private String db_password = "";
     private String db_schemaprefix = "";
     private boolean store_db_password = false;
-    private String db_schemafile = "dbschema.derby.txt";
+    private String db_schemafile = "dbschema.h2.txt";
     private String xml_parser = "xerces.jar";
     private ParseConfig parser;
     private boolean configFileFound = false;
@@ -133,10 +133,10 @@ public class Configure {
 
     public void useDefaults() {
         //String os = System.getProperty("os.name").toLowerCase();
-        jdbc_db_jarfile = jardir + File.separator + "derby.jar";
-        db_dbname = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf";
-        jdbc_db_driver = "org.apache.derby.jdbc.EmbeddedDriver";
-        db_schemafile = schemadir + File.separator + "dbschema.derby.txt";
+        jdbc_db_jarfile = jardir + File.separator + "h2.jar";
+        db_dbname = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf/perfdmf";
+        jdbc_db_driver = "org.h2.Driver";
+        db_schemafile = schemadir + File.separator + "dbschema.h2.txt";
         db_hostname = "";
         db_portnum = "";
         store_db_password = true;
