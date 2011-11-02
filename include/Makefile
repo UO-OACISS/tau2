@@ -118,9 +118,16 @@ TAU_BIN_DIR=$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin
 TAU_INC_DIR=$(TAU_PREFIX_INSTALL_DIR)/include
 TAU_LIB_DIR=$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
+EBS_UNWIND_FLAG=
+EBS_UNWIND_INC=
+EBS_UNWIND_LIB=
+EBS_UNWIND_LIB_FLAG=
+
 #######################################################################
 
 #OPARI#TAU_OPARI_TOOL=$(TAU_BIN_DIR)/opari        #ENDIF#
+#OPARI2#TAU_OPARI2_TOOL=$(TAU_BIN_DIR)/opari2        #ENDIF#
+#OPARI2#TAU_OPARI_CONFIG_TOOL=$(TAU_BIN_DIR)/opari2_config        #ENDIF#
 #ENABLE64BIT#ABI 	     = -mabi=64		  #ENDIF#
 #ENABLEN32BIT#ABI 	     = -mabi=n32	  #ENDIF#
 #ENABLE32BIT#ABI 	     = -mabi=32		  #ENDIF#
@@ -205,7 +212,8 @@ JDKARCH                 = linux
 #############################################
 OPARI_O 	= TauKojakOpariDisable.o #ENDIF#
 #OPARI#OPARI_O 	= TauOpari.o #ENDIF#
-#KOJAKOPARI#OPARI_O 	= TauKojakOpari.o #ENDIF#
+#KOJAKOPARI#OPARI_O 	= TauKojakOpari.o#ENDIF#
+#OPARI2#OPARI_O 	= pomp2_lib.o pomp2_region_info.o pomp2_fwrapper.o pomp2_fwrapper_base.o#ENDIF#
 #EPILOG#OPARI_O 	=  #ENDIF#
 #VAMPIRTRACE#OPARI_O 	=  #ENDIF#
 
@@ -821,7 +829,7 @@ HPCTOOLKIT_LINK=
 #       continually keep an eye on similar situations for Mac OS X until
 #       we can find a permanent fix.
 EXTRA_LINKER_ARGS=
-#MINGW#EXTRA_LINKER_ARGS=--enable-auto-image-base	#ENDIF#
+#MINGW#EXTRA_LINKER_ARGS=-Wl,--enable-auto-image-base	#ENDIF#
 #APPLECXX#EXTRA_LINKER_ARGS = -rdynamic#ENDIF#
 TAU_LINKER_OPT14=$(UPCC_LINK_PREFIX)$(EXTRA_LINKER_ARGS)
 
@@ -838,6 +846,7 @@ BFDLIBS=
 #COMPINST_INTEL9#TAU_COMPINST_OPTION=$(UPCC_C_PREFIX)-tcollect #ENDIF#
 #COMPINST_INTEL9#TAU_COMPINST_LINKING= #ENDIF#
 #COMPINST_GNU#TAU_COMPINST_OPTION=$(UPCC_PREFIX)-g $(UPCC_C_PREFIX)-finstrument-functions #ENDIF#
+#MINGW#TAU_COMPINST_OPTION=$(UPCC_PREFIX)-gstabs3 $(UPCC_C_PREFIX)-finstrument-functions #ENDIF#
 #TAU_BFD#TAU_LINKER_OPT13=$(TAU_BFDLIB) #ENDIF#
 #COMPINST_PGI#TAU_COMPINST_OPTION=$(UPCC_C_PREFIX)-Mprof=func #ENDIF#
 #COMPINST_PGI#TAU_COMPINST_LINKING=$(UPCC_LINK_PREFIX)-Mprof=func #ENDIF#
@@ -869,6 +878,12 @@ EBS_CLOCK_RES=
 #TAU_STRSIGNAL_OK#PROFILEOPT84 = -DTAU_STRSIGNAL_OK#ENDIF#
 
 ##############################################
+# TAU EBS Unwinder flags                      
+##############################################
+#TAU_EBS_UNWIND#PROFILEOPT85 = -DTAU_UNWIND $(EBS_UNWIND_FLAG) -I$(EBS_UNWIND_INC) #ENDIF#
+#TAU_EBS_UNWIND#  TAU_LINKER_OPT17 = -L$(EBS_UNWIND_LIB) $(EBS_UNWIND_LIB_FLAG)#ENDIF#
+
+##############################################
 
 PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT5)  $(PROFILEOPT6)  $(PROFILEOPT7)  $(PROFILEOPT8)  \
@@ -891,6 +906,7 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 	      $(PROFILEOPT73) $(PROFILEOPT74) $(PROFILEOPT75) $(PROFILEOPT76) \
 	      $(PROFILEOPT77) $(PROFILEOPT78) $(PROFILEOPT79) $(PROFILEOPT80) \
               $(PROFILEOPT81) $(PROFILEOPT82) $(PROFILEOPT83) $(PROFILEOPT84) \
+              $(PROFILEOPT85) \
               $(TRACEOPT)
 
 
@@ -916,7 +932,8 @@ TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
                   $(TAU_LINKER_OPT7) $(TAU_LINKER_OPT8) $(TAU_LINKER_OPT9) \
                   $(TAU_LINKER_OPT10) $(TAU_LINKER_OPT11) $(TAU_LINKER_OPT12) \
 		  $(TAU_LINKER_OPT13) $(PERFSUITELINK) $(VAMPIRTRACELIBS) $(SCOREPLIBS) $(HPCTOOLKIT_LINK) \
-		  $(TAU_LINKER_OPT14) $(TAU_LINKER_OPT15) $(TAU_LINKER_OPT16)
+		  $(TAU_LINKER_OPT14) $(TAU_LINKER_OPT15) $(TAU_LINKER_OPT16) \
+                  $(TAU_LINKER_OPT17)
 
 ##############################################
 
@@ -1031,7 +1048,8 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
         -optPdtCxxOpts="$(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE) $(TAU_SHMEM_INCLUDE)"\
         -optTauInstr="$(TAU_BIN_DIR)/tau_instrumentor" \
         -optNoMpi \
-	-optOpariDir="$(OPARIDIR)" -optOpariTool="$(TAU_OPARI_TOOL)" \
+	-optOpariDir="$(OPARIDIR)" -optOpari2Tool="$(TAU_OPARI2_TOOL)" -optOpari2ConfigTool="$(TAU_OPARI_CONFIG_TOOL)"  \
+	-optOpariTool="$(TAU_OPARI_TOOL)"  \
 	-optTauCC="$(TAU_CCOMPILER)" \
 	-optTauIncludes="$(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(TAU_SHMEM_INCLUDE)" \
 	-optTauDefs="$(TAU_DEFS)" $(TAU_IBM_NOCOMPINST) \

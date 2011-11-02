@@ -48,6 +48,9 @@ CEXTRA =
 #PGINOPRELINK#PRELINK_PHASE = #ENDIF#
 #############################################
 
+OPARI2_INCLUDE = -I$(TAU_PREFIX_INSTALL_DIR)/utils/opari2-2.0/src/ -I$(TAU_PREFIX_INSTALL_DIR)/utils/opari2-2.0/build-frontend -DHAVE_CONFIG_H  -DFRONTEND_BUILD -DCROSS_BUILD
+
+
 DEFINES = -DTAU_LIBRARY_SOURCE
 
 
@@ -57,12 +60,12 @@ INSTALLDEST   = $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
 TAUINC	      = -I$(TAUROOT)/include -I$(TAUROOT)/include/Profile
 
-CXXFLAGS      = $(DEFINES) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_INTERNAL_FLAGS) $(PERFSUITE_OPT) $(PERFSUITEINCLUDE) $(HPCTOOLKIT_OPT) $(HPCTOOLKIT_INCLUDE)
+CXXFLAGS      = $(DEFINES) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_INTERNAL_FLAGS) $(PERFSUITE_OPT) $(PERFSUITEINCLUDE) $(HPCTOOLKIT_OPT) $(HPCTOOLKIT_INCLUDE) $(OPARI2_INCLUDE)
 
 TAU_UPC_FPIC= -Wc,-fPIC
 UPCFLAGS      = $(TAUINC) $(subst -fPIC,$(TAU_UPC_FPIC), $(PROFILEOPTS) )
 
-CFLAGS        = $(DEFINES) $(TAU_MPI_INCLUDE) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_INTERNAL_FLAGS)   
+CFLAGS        = $(DEFINES) $(TAU_MPI_INCLUDE) $(CEXTRA) $(USER_OPT) $(TAUINC) $(PROFILEOPTS) $(TAU_INTERNAL_FLAGS) $(OPARI2_INCLUDE)
 
 INCDIR	      = $(TAUROOT)/include/Profile
 
@@ -325,6 +328,7 @@ CRAY_PGI_HACK=
 
 #OPENCL#TAU_OPENCL_LIB=libTAU-OCLci.so #ENDIF#
 #OPENCL#TAU_OPENCL_OBJS=TauGpuAdapterOpenCL.o TauGpu.o #ENDIF#
+#OPENCL#TAU_OPENCL_DEF=-DTAU_GPU #ENDIF#
 #OPENCL#TAU_OPENCL_DEP=TauGpuAdapterOpenCL.d #ENDIF#
 #OPENCL#GPU_INSTALL+=$(TAU_SHAREDDIR)/$(TAU_OPENCL_LIB)  #ENDIF#
 
@@ -346,7 +350,7 @@ CRAY_PGI_HACK=
 #CUPTI#TAU_CUPTI_DEF=-DTAU_GPU #ENDIF#
 #CUPTI#GPU_INSTALL+=$(TAU_SHAREDDIR)/$(TAU_CUPTI_LIB)  #ENDIF#
 
-CXXFLAGS+= $(TAU_CUDA_DEF) $(TAU_CUPTI_DEF)
+CXXFLAGS+= $(TAU_CUDA_DEF) $(TAU_CUPTI_DEF) $(TAU_OPENCL_DEF)
 
 
 #$(TAU_SHAREDDIR)/$(TAU_CUDA_LIB): $(TAU_CUDA_LIB)
@@ -437,8 +441,9 @@ $(INSTALLDEST)/$(TAU_DISABLE): $(TAU_DISABLE) $(TAU_DISABLE_SHARED)
 		cd $(INSTALLDEST)
 		@if [ -d $(TAU_DISABLE_SHAREDDIR) ] ; then true; \
 		    else mkdir $(TAU_DISABLE_SHAREDDIR); fi
-		cd $(TAU_DISABLE_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX)
+		cd $(TAU_DISABLE_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX) TAU.dll
 		cd $(TAU_DISABLE_SHAREDDIR) ; ln -s ../$(TAU_DISABLE_SHARED) libTAU$(TAU_SHLIBX)
+		cd $(TAU_DISABLE_SHAREDDIR) ; ln -s ../$(TAU_DISABLE_SHARED) TAU.dll
 
 $(TAU_SHAREDDIR)/$(TAU_CUDA_LIB): $(TAU_CUDA_LIB)
 		@echo Installing $? in $(TAU_SHAREDDIR)
@@ -475,12 +480,14 @@ $(INSTALLDEST)/$(TAU_SHLIB): $(TAU_SHLIB)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
-		$(RM) $(INSTALLDEST)/libTAU$(TAU_SHLIBX)
+		$(RM) $(INSTALLDEST)/libTAU$(TAU_SHLIBX) $(INSTALLDEST)/TAU.dll
 		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) libTAU$(TAU_SHLIBX)
+		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) TAU.dll
 		@if [ -d $(TAU_SHAREDDIR) ] ; then true; \
 		    else mkdir $(TAU_SHAREDDIR); fi
-		cd $(TAU_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX)
+		cd $(TAU_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX) TAU.dll
 		cd $(TAU_SHAREDDIR) ; ln -s ../$(TAU_SHLIB) libTAU$(TAU_SHLIBX)
+		cd $(TAU_SHAREDDIR) ; ln -s ../$(TAU_SHLIB) TAU.dll
 		ls $(TAU_SHAREDDIR)
 
 $(INSTALLDEST)/libTauMpi$(TAU_CONFIG)$(LSX): libTauMpi$(TAU_CONFIG)$(LSX)
@@ -522,8 +529,9 @@ $(TAU_SHAREDDIR)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
 		$(RM) $(TAU_SHAREDDIR)/*
 		cd $(TAU_SHAREDDIR) && ln -s ../$(TAU_SHLIB) $(TAUPYTHON) && ln -s ../$(TAU_SHLIB) ctau_impl$(TAU_SHLIBX)
 		cd $(TAU_SHAREDDIR) && ln -s ../tau.py . && ln -s ../ltau.py .
-		cd $(TAU_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX)
+		cd $(TAU_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX) TAU.dll
 		cd $(TAU_SHAREDDIR) && ln -s ../$(TAU_SHLIB) libTAU$(TAU_SHLIBX)
+		cd $(TAU_SHAREDDIR) && ln -s ../$(TAU_SHLIB) TAU.dll
 		cd $(INSTALLDEST) && ln -s shared$(TAU_CONFIG) bindings$(TAU_CONFIG)
 
 $(INSTALLDEST)/libpgnod_prof.a : 
@@ -738,6 +746,18 @@ OpenMPLayer.o 	: OpenMPLayer.cpp $(HDRS)
 
 TauOpari.o 	: TauOpari.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+pomp2_lib.o : pomp2_lib.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+pomp2_fwrapper_base.o : pomp2_fwrapper_base.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+pomp2_fwrapper.o : pomp2_fwrapper.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+pomp2_region_info.o : pomp2_region_info.c $(HDRS)
+	$(CC) $(CFLAGS) -c $(@:.o=.c)
 
 TauKojakOpari.o : TauKojakOpari.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)

@@ -139,7 +139,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
         savePassword.setSelected(true);
         savePassword.addChangeListener(this);
 
-        adapter.setSelectedItem("derby");
+        adapter.setSelectedItem("h2");
         host.setEnabled(false);
         host.setText("");
         databasePassword.setEditable(false);
@@ -392,15 +392,15 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
                 this.jarfile.setText(filename);
             } else if (arg.equals("New Configuration")) {
                 name.setText("");
-                adapter.setSelectedItem("derby");
+                adapter.setSelectedItem("h2");
                 host.setText("");
                 databaseName.setText("perfdmf");
                 databaseUser.setText("");
                 databasePassword.setText("");
                 port.setText("");
-                driver.setText("org.apache.derby.jdbc.EmbeddedDriver");
-                jarfile.setText("derby.jar");
-                schema.setText("dbschema.derby.txt");
+                driver.setText("org.h2.Driver");
+                jarfile.setText("h2.jar");
+                schema.setText("dbschema.h2.txt");
                 host.setEnabled(false);
                 host.setText("");
                 databasePassword.setEditable(false);

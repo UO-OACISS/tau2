@@ -11,17 +11,13 @@
 ##  Indiana University  University of Oregon  University of Rennes   ##
 #######################################################################
  
-TAUROOTDIR	= ../../..
+CXX		= tau_cxx.sh
 
-include $(TAUROOTDIR)/include/Makefile
+CC		= tau_cc.sh
 
-CXX		= $(TAU_CXX)
+CFLAGS          = 
 
-CC		= $(TAU_CC)
-
-CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS) -DSTD_COMPLEX
-
-LIBS            = $(TAU_LIBS) 
+LIBS            = 
 
 LDFLAGS	      	= $(CFLAGS)
 
@@ -41,18 +37,11 @@ all:		$(TARGET)
 
 install: 	$(TARGET)
 
-$(TARGET):	$(TARGET).mod.o mytimer.o ppmwrite.o opari.tab.o
-	$(CXX) $(LDFLAGS) $(TARGET).mod.o opari.tab.o mytimer.o ppmwrite.o -o $@ $(LIBS)
+$(TARGET):	$(TARGET).o mytimer.o ppmwrite.o 
+	$(CXX) $(LDFLAGS) $(TARGET).o mytimer.o ppmwrite.o -o $@ $(LIBS)
 
-$(TARGET).mod.o : $(TARGET).mod.cpp
-	$(CXX) $(CFLAGS) -c $(TARGET).mod.cpp
-
-$(TARGET).mod.cpp : $(TARGET).cpp
-	$(RM) opari.rc
-	$(TAU_OPARI_TOOL) -table opari.tab.c $(TARGET).cpp
-
-opari.tab.o: opari.tab.c $(TARGET).mod.cpp 
-	$(CC) $(CFLAGS) -c opari.tab.c
+$(TARGET).o : $(TARGET).cpp
+	$(CXX) $(CFLAGS) -c $(TARGET).cpp
 
 mytimer.o : mytimer.c
 	$(CC) -c $<
@@ -61,6 +50,5 @@ ppmwrite.o : ppmwrite.cpp
 	$(CXX) $(CFLAGS) -c $<
 
 clean: 	
-	$(RM) $(TARGET).mod.o $(TARGET).cpp.opari.inc $(TARGET).mod.cpp \
-	$(TARGET) ppmwrite.o mytimer.o opari.rc opari.tab.c opari.tab.o 
+	$(RM) *.o $(TARGET) 
 ##############################################

@@ -69,6 +69,8 @@
 #define TAU_EBS_INCLUSIVE_DEFAULT 0
 
 #define TAU_EBS_SOURCE_DEFAULT "itimer"
+#define TAU_EBS_UNWIND_DEFAULT 0
+#define TAU_EBS_UNWIND_DEPTH_DEFAULT 10
 
 /* Experimental feature - pre-computation of statistics */
 #if (defined(TAU_UNIFY) && defined(TAU_MPI))
@@ -381,6 +383,9 @@ static int env_ebs_period = 0;
 static int env_ebs_inclusive = 0;
 static int env_ebs_enabled = 0;
 static const char *env_ebs_source = "itimer";
+static int env_ebs_unwind_enabled = 0;
+static int env_ebs_unwind_depth = TAU_EBS_UNWIND_DEPTH_DEFAULT;
+
 static int env_stat_precompute = 0;
 static int env_child_forkdirs = 0;
 
@@ -403,7 +408,7 @@ void TAU_VERBOSE(const char *format, ...) {
   va_start(args, format);
   vfprintf(stderr, format, args);
   va_end(args);
-  fflush(stderr);     
+  fflush(stderr);
 }
 
 /*********************************************************************
@@ -565,6 +570,14 @@ int TauEnv_get_ebs_inclusive() {
 
 int TauEnv_get_ebs_enabled() {
   return env_ebs_enabled;
+}
+
+int TauEnv_get_ebs_unwind() {
+  return env_ebs_unwind_enabled;
+}
+
+int TauEnv_get_ebs_unwind_depth() {
+  return env_ebs_unwind_depth;
 }
 
 const char *TauEnv_get_ebs_source() {
@@ -1026,6 +1039,27 @@ void TauEnv_initialize() {
       sprintf(tmpstr, "%d usec", env_ebs_inclusive);
       TAU_METADATA("TAU_EBS_INCLUSIVE", tmpstr);
       
+#ifdef TAU_UNWIND
+      tmp = getconf("TAU_EBS_UNWIND");
+      if (parse_bool(tmp, TAU_EBS_UNWIND_DEFAULT)) {
+	env_ebs_unwind_enabled = 1;
+	TAU_METADATA("TAU_EBS_UNWIND", "on");
+      } else {
+	env_ebs_unwind_enabled = 0;
+	TAU_METADATA("TAU_EBS_UNWIND", "off");
+      }
+
+      if (env_ebs_unwind_enabled == 1) {
+	const char *depth = getconf("TAU_EBS_UNWIND_DEPTH");
+	env_ebs_unwind_depth = TAU_EBS_UNWIND_DEPTH_DEFAULT;
+	if (depth) {
+	  env_ebs_unwind_depth = atoi(depth);
+	  if (env_ebs_unwind_depth < 0) {
+	    env_ebs_unwind_depth = TAU_CALLPATH_DEPTH_DEFAULT;
+	  }
+	}
+      }
+#endif /* TAU_UNWIND */
       
       if (TauEnv_get_tracing()) {
 	env_callpath = 1;
