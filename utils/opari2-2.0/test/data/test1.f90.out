@@ -1,0 +1,117 @@
+#ifdef _POMP2
+#  undef _POMP2
+#endif
+#define _POMP2 200110
+
+#line 1 "test1.f90"
+! * This file is part of the Score-P software (http://www.score-p.org)
+! *
+! * Copyright (c) 2009-2011,
+! *    RWTH Aachen University, Germany
+! *    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+! *    Technische Universitaet Dresden, Germany
+! *    University of Oregon, Eugene, USA
+! *    Forschungszentrum Juelich GmbH, Germany
+! *    German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+! *    Technische Universitaet Muenchen, Germany
+! *
+! * See the COPYING file in the package base directory for details.
+! *
+! * Testfile for automated testing of OPARI2
+! *
+! * @authors Bernd Mohr, Peter Philippen
+! *
+! * @brief Test the parsers ability to find directives and filter strings and comments.
+
+program test1
+!************************************************
+!* The following pragmas should be instrumented *
+!************************************************
+      include 'test1.f90.opari.inc'
+      pomp_num_threads = pomp_get_max_threads000()
+      call POMP2_Parallel_fork(pomp2_region_1, pomp_num_threads, &
+         "62*regionType=parallel*sscl=test1.f90:24:24*escl=test1.f90:0:0**" )
+#line 24 "test1.f90"
+  !$omp parallel num_threads(pomp_num_threads) 
+      call POMP2_Parallel_begin(pomp2_region_1)
+#line 25 "test1.f90"
+      call POMP2_Barrier_enter(pomp2_region_2, &
+         "61*regionType=barrier*sscl=test1.f90:25:25*escl=test1.f90:0:0**" )
+#line 25 "test1.f90"
+  !$omp barrier
+      call POMP2_Barrier_exit(pomp2_region_2)
+#line 26 "test1.f90"
+      call POMP2_Implicit_barrier_enter(pomp2_region_1)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(pomp2_region_1)
+      call POMP2_Parallel_end(pomp2_region_1)
+#line 26 "test1.f90"
+     !$omp end parallel
+      call POMP2_Parallel_join(pomp2_region_1)
+#line 27 "test1.f90"
+
+      pomp_num_threads = pomp_get_max_threads000()
+      call POMP2_Parallel_fork(pomp2_region_3, pomp_num_threads, &
+         "62*regionType=parallel*sscl=test1.f90:28:29*escl=test1.f90:0:0**" )
+#line 28 "test1.f90"
+  !$omp    parallel  &
+  !$omp&   default(shared) num_threads(pomp_num_threads) 
+      call POMP2_Parallel_begin(pomp2_region_3)
+#line 30 "test1.f90"
+      call POMP2_Implicit_barrier_enter(pomp2_region_3)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(pomp2_region_3)
+      call POMP2_Parallel_end(pomp2_region_3)
+#line 30 "test1.f90"
+  !$omp    end   &
+  !$omp&   parallel
+      call POMP2_Parallel_join(pomp2_region_3)
+#line 32 "test1.f90"
+  
+      pomp_num_threads = pomp_get_max_threads000()
+      call POMP2_Parallel_fork(pomp2_region_4, pomp_num_threads, &
+         "62*regionType=parallel*sscl=test1.f90:33:34*escl=test1.f90:0:0**" )
+#line 33 "test1.f90"
+  !$omp   parallel &
+  !$omp&  default(shared) num_threads(pomp_num_threads) 
+      call POMP2_Parallel_begin(pomp2_region_4)
+#line 35 "test1.f90"
+      call POMP2_Implicit_barrier_enter(pomp2_region_4)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(pomp2_region_4)
+      call POMP2_Parallel_end(pomp2_region_4)
+#line 35 "test1.f90"
+  !$omp end & ! some comment
+  !$omp& parallel
+      call POMP2_Parallel_join(pomp2_region_4)
+#line 37 "test1.f90"
+
+!**************************************
+!* The following should be ignored    *
+!**************************************
+
+! comment $omp
+! comment !$omp parallel
+!!$omp mo
+! $ omp parallel
+  write(*,*) "!$omp parallel"
+  write(*,*) """!$omp parallel"""
+end program test1
+
+      integer function pomp_get_max_threads000()
+         integer omp_get_max_threads
+         pomp_get_max_threads000=omp_get_max_threads()
+         return
+      end
+
+      subroutine POMP2_Init_regions_000()
+         include 'test1.f90.opari.inc'
+         call POMP2_Assign_handle( pomp2_region_1, &
+         "64*regionType=parallel*sscl=test1.f90:24:24*escl=test1.f90:26:26**" )
+         call POMP2_Assign_handle( pomp2_region_2, &
+         "61*regionType=barrier*sscl=test1.f90:25:25*escl=test1.f90:0:0**" )
+         call POMP2_Assign_handle( pomp2_region_3, &
+         "64*regionType=parallel*sscl=test1.f90:28:29*escl=test1.f90:30:31**" )
+         call POMP2_Assign_handle( pomp2_region_4, &
+         "64*regionType=parallel*sscl=test1.f90:33:34*escl=test1.f90:35:36**" )
+      end

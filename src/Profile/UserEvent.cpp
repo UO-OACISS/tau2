@@ -54,6 +54,13 @@ using namespace std;
 #include "elg_trc.h"
 #endif /* TAU_EPILOG */
 
+#ifdef TAU_SCOREP
+#include <scorep/SCOREP_User.h>
+#include <scorep/SCOREP_User_Types.h>
+#include <scorep/SCOREP_User_Functions.h>
+#include <scorep/SCOREP_PublicTypes.h>
+#endif
+
 #include <TauTrace.h>
 #include <TauInit.h>
 
@@ -81,6 +88,7 @@ vector<TauUserEvent*>& TheEventDB(void) {
   if (flag) {
     flag = 0;
     Tau_init_initializeTAU();
+
   }
 
   return EventDB;
@@ -98,6 +106,13 @@ void TauUserEvent::AddEventToDB() {
   uint32_t gid = vt_def_counter_group("TAU Events");
   EventId = vt_def_counter(GetEventName(), OTF_COUNTER_TYPE_ABS|OTF_COUNTER_SCOPE_NEXT, gid, "#");
 #endif /* TAU_VAMPIRTRACE */
+
+#ifdef TAU_SCOREP
+SCOREP_SamplingSetHandle handel = SCOREP_INVALID_SAMPLING_SET;
+
+SCOREP_User_InitMetric( &handel, GetEventName(), "units",SCOREP_USER_METRIC_TYPE_DOUBLE,  SCOREP_USER_METRIC_CONTEXT_GLOBAL );
+EventId=handel;
+#endif
   RtsLayer::UnLockDB();
   return;
 }
@@ -250,6 +265,12 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
 #endif /* TAU_EPILOG */
   /* Timestamp is 0, and use_ts is 0, so tracing layer gets timestamp */
 #endif /* TAU_VAMPIRTRACE */
+
+#ifdef TAU_SCOREP
+ SCOREP_User_TriggerMetricDouble( GetEventId(), (x_uint64) data );
+#endif /*TAU_SCOREP*/
+
+
 
 #ifdef PROFILING_ON
   // Record this value  

@@ -35,9 +35,9 @@ public class Configure {
     private String configuration_name = "";
     private String jardir;
     private String schemadir;
-    private String jdbc_db_jarfile = "derby.jar";
-    private String jdbc_db_driver = "org.apache.derby.jdbc.EmbeddedDriver";
-    private String jdbc_db_type = "derby";
+    private String jdbc_db_jarfile = "h2.jar";
+    private String jdbc_db_driver = "org.h2.Driver";
+    private String jdbc_db_type = "h2";
     private String db_hostname = "";
     private String db_portnum = "";
     private String db_dbname = "perfdmf";
@@ -45,7 +45,7 @@ public class Configure {
     private String db_password = "";
     private String db_schemaprefix = "";
     private boolean store_db_password = false;
-    private String db_schemafile = "dbschema.derby.txt";
+    private String db_schemafile = "dbschema.h2.txt";
     private String xml_parser = "xerces.jar";
     private ParseConfig parser;
     private boolean configFileFound = false;
@@ -133,10 +133,10 @@ public class Configure {
 
     public void useDefaults() {
         //String os = System.getProperty("os.name").toLowerCase();
-        jdbc_db_jarfile = jardir + File.separator + "derby.jar";
-        db_dbname = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf";
-        jdbc_db_driver = "org.apache.derby.jdbc.EmbeddedDriver";
-        db_schemafile = schemadir + File.separator + "dbschema.derby.txt";
+        jdbc_db_jarfile = jardir + File.separator + "h2.jar";
+        db_dbname = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf/perfdmf";
+        jdbc_db_driver = "org.h2.Driver";
+        db_schemafile = schemadir + File.separator + "dbschema.h2.txt";
         db_hostname = "";
         db_portnum = "";
         store_db_password = true;
@@ -178,12 +178,16 @@ public class Configure {
 
             while (!valid) {
                 // Prompt for database type
-                System.out.println("Please enter the database vendor (oracle, postgresql, mysql, db2 or derby).");
+                System.out.println("Please enter the database vendor (oracle, postgresql, mysql, db2, derby or h2).");
                 System.out.print("(" + jdbc_db_type + "):");
                 tmpString = reader.readLine();
-                if (tmpString.compareTo("oracle") == 0 || tmpString.compareTo("postgresql") == 0
-                        || tmpString.compareTo("mysql") == 0 || tmpString.compareTo("derby") == 0
-                        || tmpString.compareTo("db2") == 0 || tmpString.length() == 0) {
+                if (tmpString.compareTo("oracle") == 0 
+                   || tmpString.compareTo("postgresql") == 0
+                   || tmpString.compareTo("mysql") == 0 
+                   || tmpString.compareTo("derby") == 0
+                   || tmpString.compareTo("db2") == 0 
+                   || tmpString.compareTo("h2") == 0 
+                   || tmpString.length() == 0) {
                     if (tmpString.length() > 0) {
                         jdbc_db_type = tmpString;
                     }
@@ -223,6 +227,15 @@ public class Configure {
                     jdbc_db_driver = "org.apache.derby.jdbc.EmbeddedDriver";
                     db_schemafile = schemadir + File.separator + "dbschema.derby.txt";
                     db_dbname = jardir + File.separator + "perfdmf";
+                    db_hostname = "";
+                    db_portnum = "";
+                 } else if (jdbc_db_type.compareTo("h2") == 0 && old_jdbc_db_type.compareTo("h2") != 0) {
+                    // if the user has chosen h2 and the config file is not already set for it
+                    //String os = System.getProperty("os.name").toLowerCase();
+                    jdbc_db_jarfile = jardir + File.separator + "h2.jar";
+                    jdbc_db_driver = "org.h2.Driver";
+                    db_schemafile = schemadir + File.separator + "dbschema.h2.txt";
+                    db_dbname = jardir + File.separator + configuration_name;
                     db_hostname = "";
                     db_portnum = "";
                 } else if (jdbc_db_type.compareTo("db2") == 0 && old_jdbc_db_type.compareTo("db2") != 0) {
@@ -279,6 +292,14 @@ public class Configure {
                     jdbc_db_driver = "org.apache.derby.jdbc.EmbeddedDriver";
                     db_schemafile = "dbschema.derby.txt";
                     db_dbname = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf";
+                    db_hostname = "";
+                    db_portnum = "";
+                 } else if (jdbc_db_type.compareTo("h2") == 0) {
+                    // if the user has chosen h2 and the config file is not already set for it
+                    jdbc_db_jarfile = "h2.jar";
+                    jdbc_db_driver = "org.h2.Driver";
+                    db_schemafile = "dbschema.h2.txt";
+                    db_dbname = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + configuration_name;
                     db_hostname = "";
                     db_portnum = "";
                 } else if (jdbc_db_type.compareTo("db2") == 0) {
@@ -427,7 +448,7 @@ public class Configure {
             if (tmpString.length() > 0)
                 jdbc_db_driver = tmpString;
 
-            if (jdbc_db_type.compareTo("derby") != 0) {
+            if ((jdbc_db_type.compareTo("derby") != 0) && (jdbc_db_type.compareTo("h2") != 0)){
                 // Prompt for database hostname
                 System.out.print("Please enter the hostname for the database server.\n(" + db_hostname + "):");
                 tmpString = reader.readLine();
@@ -447,13 +468,15 @@ public class Configure {
                 System.out.print("Please enter the oracle TCP service name.\n(" + db_dbname + "):");
             } else if (jdbc_db_type.compareTo("derby") == 0) {
                 System.out.print("Please enter the path to the database directory.\n(" + db_dbname + "):");
+            } else if (jdbc_db_type.compareTo("h2") == 0) {
+                System.out.print("Please enter the path to the database directory.\n(" + db_dbname + "):");
             } else {
                 System.out.print("Please enter the database name.\n(" + db_dbname + "):");
             }
             tmpString = reader.readLine();
             if (tmpString.length() > 0) {
                 // if the user used the ~ shortcut, expand it to $HOME.
-                if (jdbc_db_type.compareTo("derby") == 0) {
+                if ((jdbc_db_type.compareTo("derby") == 0) || (jdbc_db_type.compareTo("h2") == 0)) {
                     db_dbname = tmpString.replaceAll("~", System.getProperty("user.home"));
                 } else {
                     db_dbname = tmpString;
@@ -473,6 +496,22 @@ public class Configure {
                                 + "If you are trying to create a new Derby database, please specify a path that does not exist\n\n");
                     }
                 }
+            }
+
+            if (jdbc_db_type.compareTo("h2") == 0) {
+                File f = new File(db_dbname);
+                if (f.exists()) {
+                    File f2 = new File(f + File.separator + "perfdmf.h2.db");
+                    System.out.println(f2);
+                    if (!f2.exists()) {
+                        System.out.println("\n\nWarning!  Directory \""
+                                + db_dbname
+                                + "\" exists and does not appear to be a h2 database.\n"
+                                + "Connection will most likely fail\n\n"
+                                + "If you are trying to create a new h2 database, please specify a path that does not exist\n\n");
+                    }
+                }
+                db_dbname = db_dbname + File.separator + "perfdmf";
             }
 
             if ((jdbc_db_type.compareTo("oracle") == 0) || (jdbc_db_type.compareTo("db2") == 0)) {

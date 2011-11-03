@@ -12,8 +12,8 @@
 //   using std::atoi;
 //   using std::exit;
 #include <stdlib.h>
-#include <Profile/Profiler.h>
-#include <iostream.h>
+#include <iostream>
+using namespace std;
 
 
 extern "C" void mytimer_(int *);
@@ -40,8 +40,6 @@ field iterations;
 int main(int argc, char *argv[]) {
   double xmin, xmax, ymin, ymax;
   int maxiter;
-  TAU_PROFILE("main()", "int (int, char **)", TAU_DEFAULT);
-  TAU_PROFILE_SET_NODE(0);
   // --- init input parameter
   //     -1.5 0.5 -1.0 1.0
   //     -.59 -.54 -.58 -.53

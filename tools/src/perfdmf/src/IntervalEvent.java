@@ -265,6 +265,8 @@ public class IntervalEvent {
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM interval_event";
             else if (db.getDBType().compareTo("derby") == 0)
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM interval_event";
+            else if (db.getDBType().compareTo("h2") == 0)
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM interval_event";
             else if (db.getDBType().compareTo("oracle") == 0)
                 tmpStr = "select " + db.getSchemaPrefix() + "interval_event_id_seq.currval FROM dual";
             else // postgres
@@ -323,6 +325,7 @@ public class IntervalEvent {
             DatabaseMetaData dbMeta = db.getMetaData();
 
             if ((db.getDBType().compareTo("oracle") == 0) || (db.getDBType().compareTo("derby") == 0)
+                    || (db.getDBType().compareTo("h2") == 0)
                     || (db.getDBType().compareTo("db2") == 0)) {
                 resultSet = dbMeta.getColumns(null, null, "INTERVAL_EVENT", "%");
             } else {

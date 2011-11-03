@@ -44,7 +44,7 @@ void Tau_pycuda_enqueue_kernel_exit_event()
 	Tau_cuda_enqueue_kernel_exit_event();
 }
 
-BOOST_PYTHON_MODULE(libtau_pycuda)
+BOOST_PYTHON_MODULE(pytau_cuda)
 {
 	using namespace boost::python;
 
