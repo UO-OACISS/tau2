@@ -110,9 +110,8 @@ void TauUserEvent::AddEventToDB() {
 #ifdef TAU_SCOREP
 SCOREP_SamplingSetHandle handel = SCOREP_INVALID_SAMPLING_SET;
 
-SCOREP_User_InitMetric( &handel, GetEventName(), "units",SCOREP_USER_METRIC_TYPE_UINT64,  SCOREP_USER_METRIC_CONTEXT_GLOBAL );
+SCOREP_User_InitMetric( &handel, GetEventName(), "units",SCOREP_USER_METRIC_TYPE_DOUBLE,  SCOREP_USER_METRIC_CONTEXT_GLOBAL );
 EventId=handel;
-printf("My handel is %d\n", handel);
 #endif
   RtsLayer::UnLockDB();
   return;
@@ -268,8 +267,7 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
 #endif /* TAU_VAMPIRTRACE */
 
 #ifdef TAU_SCOREP
-printf("My id is %d \n",GetEventId());
- SCOREP_User_TriggerMetricInt64( GetEventId(), (x_uint64) data );
+ SCOREP_User_TriggerMetricDouble( GetEventId(), (x_uint64) data );
 #endif /*TAU_SCOREP*/
 
 
