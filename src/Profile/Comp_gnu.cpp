@@ -419,7 +419,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 				// Build routine name for TAU function info
 				unsigned int size = strlen(hn.info.funcname) +
 						strlen(hn.info.filename) + 128;
-				char const * routine = malloc(size);
+				char * routine = (char*)malloc(size);
 				sprintf(routine, "%s [{%s} {%d,0}]", hn.info.funcname,
 						hn.info.filename, hn.info.lineno);
 
