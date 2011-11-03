@@ -260,14 +260,10 @@ if [ $track_memory = "true" ] ; then
     export TAU_MEMORY_WRAPPER_ENABLED=1
 fi
 if [ $track_cuda = "true" ] ; then
-		if [ -f $BASEDIR/lib/$theBinding/libTAU-CUptiAQ.so ]; then
-			TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUptiAQ.so:$TAUEX_LD_PRELOAD
-		else
-			# Add the CUDA wrapper library to the LD_PRELOAD list
-			#TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDA.so:$TAUEX_LD_PRELOAD
-			TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDArt.so:$TAUEX_LD_PRELOAD
-			TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP.so:$TAUEX_LD_PRELOAD
-		fi
+		# Add the CUDA wrapper library to the LD_PRELOAD list
+		#TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDA.so:$TAUEX_LD_PRELOAD
+		TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDArt.so:$TAUEX_LD_PRELOAD
+		TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP.so:$TAUEX_LD_PRELOAD
 		if [ `echo $TAU_METRICS | grep "TIME"` ]; then
 			export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
 		else
@@ -275,13 +271,9 @@ if [ $track_cuda = "true" ] ; then
 		fi
 fi
 if [ $track_cupti = "true" ] ; then
-		if [ -f $BASEDIR/lib/$theBinding/libTAU-CUptiAQ.so ]; then
-			TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUptiAQ.so:$TAUEX_LD_PRELOAD
-		else
-			# Add the memory wrapper library to the LD_PRELOAD list
-			TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUpti.so:$TAUEX_LD_PRELOAD
-			TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP.so:$TAUEX_LD_PRELOAD
-		fi
+		# Add the memory wrapper library to the LD_PRELOAD list
+		TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUpti.so:$TAUEX_LD_PRELOAD
+		TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP.so:$TAUEX_LD_PRELOAD
 		if [ `echo $TAU_METRICS | grep "TIME"` ]; then
 			export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
 		else
