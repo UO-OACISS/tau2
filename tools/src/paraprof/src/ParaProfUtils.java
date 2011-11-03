@@ -1433,7 +1433,13 @@ public class ParaProfUtils {
             return "Total";
         } else if (thread.getNodeID() == -3) {
             return "Std. Dev.";
-        } else {
+        }
+        else if (thread.getNodeID() == -4) {
+            return "Min";
+        }
+        else if (thread.getNodeID() == -5) {
+            return "Max";
+        }else {
             if (ParaProf.preferences.getAutoLabels()) {
                 DataSource dataSource = thread.getDataSource();
                 if (dataSource.getHasContexts() == false && dataSource.getHasThreads() == false) {

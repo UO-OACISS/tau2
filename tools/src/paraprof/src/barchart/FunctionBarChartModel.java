@@ -56,6 +56,10 @@ public class FunctionBarChartModel extends AbstractBarChartModel {
                 barString = "total";
             } else if (ppFunctionProfile.getNodeID() == -3) {
                 barString = "std. dev.";
+            }else if (ppFunctionProfile.getNodeID() == -4) {
+                barString = "min";
+            }else if (ppFunctionProfile.getNodeID() == -5) {
+                barString = "max";
             } else {
                 barString = ParaProfUtils.getThreadLabel(ppFunctionProfile.getThread());
             }
