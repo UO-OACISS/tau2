@@ -3597,6 +3597,10 @@ then
         ;;
   *)    
         mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/lib
+        if [ ! -d $mpilib ] ; then
+         # Try the ".../lib64" directory instead of ".../lib"
+         mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/lib64
+        fi
         if [ -d $mpilib ] ; then
           echo "Using MPI lib directory $mpilib"
         fi
