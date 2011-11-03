@@ -110,6 +110,16 @@ public class ThreeDeeSettings implements Cloneable {
 		this.topoDefFile = topoDefFile;
 	}
 	
+	
+	private String topoMapFile=null;
+
+	public String getTopoMapFile() {
+		return topoMapFile;
+	}
+	public void setTopoMapFile(String topoMapFile) {
+		this.topoMapFile = topoMapFile;
+	}
+	
 	private boolean customTopo=false;
 	
 

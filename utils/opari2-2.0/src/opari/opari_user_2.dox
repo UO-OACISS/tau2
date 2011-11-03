@@ -1,0 +1,48 @@
+Usage: opari2 [OPTION] ... infile [outfile]
+            
+with following options and parameters:
+[--f77|--f90|--c|--c++] [OPTIONAL] Specifies the programming language of the
+                        input source file. This option is only necessary if 
+                        the automatic language detection based on the input
+                        file suffix fails.  
+
+[--nosrc]               [OPTIONAL] If specified, OPARI2 does not generate
+                        #line constructs in the transformation process which
+                        allow to preserve the original source file and line
+                        number information. This option might be necessary if
+                        the OpenMP compiler does not understand #line
+                        constructs.  The default is to generate #line
+                        constructs.
+
+[--tpd]                 [OPTIONAL] Adds the clause 'copyin(<pomp_tpd>)' to any
+                        parallel construct. This allowes to pass data from the
+                        creating thread to its children. The variable is
+                        declared externally in all files, so it needs to be
+                        defined by the pomp library.
+
+[--disable constructs]  [OPTIONAL] Disable the instrumentation of the more 
+                        fine-grained OpenMP constructs such as !$OMP ATOMIC.
+                        constructs is a comma separated list of the constructs
+                        for which the instrumentation should be disabled.
+                        Accepted tokens are atomic, critical, master, flush,
+                        single or locks as well as sync to disable all of
+                        them.
+
+[--tpd-mangling         [OPTIONAL] If programming languages are mixed (C and 
+ gnu|intel|sun|pgi|ibm] Fortran), the <pomp_tpd> needs to use the Fortran 
+                        mangled name also in C files. This option specifies to
+                        use the mangling scheme of the gnu, intel, sun, pgi or
+                        ibm compiler. The default is to use the mangling
+                        scheme of the compiler used to build opari2.
+
+[--version]             [OPTIONAL] Prints version information.
+
+[--help]                [OPTIONAL] Prints this help text.
+
+infile                  Input file name.
+
+[outfile]               [OPTIONAL] Output file name. If not specified, opari2 
+                        uses the name infile.mod.suffix if the input file is 
+                        called infile.suffix.
+
+Report bugs to <zih-silc-dev@groups.tu-dresden.de>.

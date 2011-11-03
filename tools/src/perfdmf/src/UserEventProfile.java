@@ -175,8 +175,15 @@ public class UserEventProfile {
         }
 
         data[SUM_SQR + (snapshot * SNAPSHOT_SIZE)] = inDouble;
+        double numSamp=getNumSamples(snapshot);
+        if(numSamp==0){
+        	data[STDDEV + (snapshot * SNAPSHOT_SIZE)]=0;
+        }
+        else{
         data[STDDEV + (snapshot * SNAPSHOT_SIZE)] = java.lang.Math.sqrt(java.lang.Math.abs((getSumSquared(snapshot) / getNumSamples(snapshot))
                 - (getMeanValue(snapshot) * getMeanValue(snapshot))));
+        }
+        
     }
 
     public double getSumSquared() {

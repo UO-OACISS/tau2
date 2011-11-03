@@ -199,7 +199,7 @@ public class ConfigureTest {
         try {
 
             Database database = new Database(configFileName);
-            if (jdbc_db_type.equals("derby")) {
+            if (jdbc_db_type.equals("derby") || jdbc_db_type.equals("h2")) {
                 // check to see if the directory exists.  If not, create the database.
                 if (!(new File(db_dbname).exists())) {
                     if (db_password != null) {
@@ -247,7 +247,7 @@ public class ConfigureTest {
         try {
 
             Database database = new Database(configFileName);
-            if (jdbc_db_type.equals("derby")) {
+            if (jdbc_db_type.equals("derby") || jdbc_db_type.equals("h2")) {
                 // check to see if the directory exists.  If not, create the database.
                 if (!(new File(db_dbname).exists())) {
                     if (db_password != null) {

@@ -69,6 +69,8 @@
 #define TAU_EBS_INCLUSIVE_DEFAULT 0
 
 #define TAU_EBS_SOURCE_DEFAULT "itimer"
+#define TAU_EBS_UNWIND_DEFAULT 0
+#define TAU_EBS_UNWIND_DEPTH_DEFAULT 10
 
 /* Experimental feature - pre-computation of statistics */
 #if (defined(TAU_UNIFY) && defined(TAU_MPI))
@@ -104,6 +106,10 @@
 #define TAU_TRACK_IO_PARAMS_DEFAULT 0
 
 #define TAU_TRACK_SIGNALS_DEFAULT 0
+
+#define TAU_SUMMARY_DEFAULT 0
+
+#define TAU_IBM_BG_HWP_COUNTERS 0
 
 #define TAU_THROTTLE_DEFAULT 1
 #ifdef TAU_MPI
@@ -368,6 +374,8 @@ static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
 static int env_track_io_params = 0;
 static int env_track_signals = 0;
+static int env_summary_only = 0;
+static int env_ibm_bg_hwp_counters = 0;
 static int env_extras = 0;
 /* This is a malleable default */
 static int env_ebs_keep_unresolved_addr = 0;
@@ -375,6 +383,9 @@ static int env_ebs_period = 0;
 static int env_ebs_inclusive = 0;
 static int env_ebs_enabled = 0;
 static const char *env_ebs_source = "itimer";
+static int env_ebs_unwind_enabled = 0;
+static int env_ebs_unwind_depth = TAU_EBS_UNWIND_DEPTH_DEFAULT;
+
 static int env_stat_precompute = 0;
 static int env_child_forkdirs = 0;
 
@@ -397,6 +408,7 @@ void TAU_VERBOSE(const char *format, ...) {
   va_start(args, format);
   vfprintf(stderr, format, args);
   va_end(args);
+  fflush(stderr);
 }
 
 /*********************************************************************
@@ -495,6 +507,14 @@ int TauEnv_get_extras() {
   return env_extras;
 }
 
+int TauEnv_get_summary_only() {
+  return env_summary_only;
+}
+
+int TauEnv_get_ibm_bg_hwp_counters() {
+  return env_ibm_bg_hwp_counters;
+}
+
 int TauEnv_get_profiling() {
   return env_profiling;
 }
@@ -550,6 +570,14 @@ int TauEnv_get_ebs_inclusive() {
 
 int TauEnv_get_ebs_enabled() {
   return env_ebs_enabled;
+}
+
+int TauEnv_get_ebs_unwind() {
+  return env_ebs_unwind_enabled;
+}
+
+int TauEnv_get_ebs_unwind_depth() {
+  return env_ebs_unwind_depth;
 }
 
 const char *TauEnv_get_ebs_source() {
@@ -638,6 +666,29 @@ void TauEnv_initialize() {
       TAU_METADATA("TAU_TRACK_SIGNALS", "off");
       env_track_signals = 0;
     }
+
+    tmp = getconf("TAU_SUMMARY");
+    if (parse_bool(tmp, env_summary_only)) {
+      TAU_VERBOSE("TAU: Generating only summary data: TAU_SUMMARY enabled\n");
+      TAU_METADATA("TAU_SUMMARY", "on");
+      env_summary_only = 1;
+      env_extras = 1;
+    } else {
+      TAU_METADATA("TAU_SUMMARY", "off");
+      env_summary_only = 0;
+    }
+
+    tmp = getconf("TAU_IBM_BG_HWP_COUNTERS");
+    if (parse_bool(tmp, env_ibm_bg_hwp_counters)) {
+      TAU_VERBOSE("TAU: IBM UPC HWP counter data collection enabled\n");
+      TAU_METADATA("TAU_IBM_BG_HWP_COUNTERS", "on");
+      env_ibm_bg_hwp_counters = 1;
+      env_extras = 1;
+    } else {
+      TAU_METADATA("TAU_IBM_BG_HWP_COUNTERS", "off");
+      env_ibm_bg_hwp_counters = 0;
+    }
+
 
 
     /*** Options that can be used with Scalasca and VampirTrace need to go above this line ***/
@@ -988,6 +1039,27 @@ void TauEnv_initialize() {
       sprintf(tmpstr, "%d usec", env_ebs_inclusive);
       TAU_METADATA("TAU_EBS_INCLUSIVE", tmpstr);
       
+#ifdef TAU_UNWIND
+      tmp = getconf("TAU_EBS_UNWIND");
+      if (parse_bool(tmp, TAU_EBS_UNWIND_DEFAULT)) {
+	env_ebs_unwind_enabled = 1;
+	TAU_METADATA("TAU_EBS_UNWIND", "on");
+      } else {
+	env_ebs_unwind_enabled = 0;
+	TAU_METADATA("TAU_EBS_UNWIND", "off");
+      }
+
+      if (env_ebs_unwind_enabled == 1) {
+	const char *depth = getconf("TAU_EBS_UNWIND_DEPTH");
+	env_ebs_unwind_depth = TAU_EBS_UNWIND_DEPTH_DEFAULT;
+	if (depth) {
+	  env_ebs_unwind_depth = atoi(depth);
+	  if (env_ebs_unwind_depth < 0) {
+	    env_ebs_unwind_depth = TAU_CALLPATH_DEPTH_DEFAULT;
+	  }
+	}
+      }
+#endif /* TAU_UNWIND */
       
       if (TauEnv_get_tracing()) {
 	env_callpath = 1;

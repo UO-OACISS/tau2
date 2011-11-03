@@ -87,6 +87,26 @@ case $1 in
 	echo "s,^BFDINCLUDE=.*$,BFDINCLUDE=$bfdinclude,g" >> $sedout
 	;;
 
+     ebs_unwind_flag=*)
+       ebs_unwind_flag=`echo $1 | sed -e 's/^ebs_unwind_flag=//'`
+        echo "s,^EBS_UNWIND_FLAG=.*$,EBS_UNWIND_FLAG=$ebs_unwind_flag,g" >> $sedout
+        ;;
+
+     ebs_unwind_inc=*)
+       ebs_unwind_inc=`echo $1 | sed -e 's/^ebs_unwind_inc=//'`
+        echo "s,^EBS_UNWIND_INC=.*$,EBS_UNWIND_INC=$ebs_unwind_inc,g" >> $sedout
+        ;;
+
+     ebs_unwind_lib=*)
+        ebs_unwind_lib=`echo $1 | sed -e 's/^ebs_unwind_lib=//'`
+        echo "s,^EBS_UNWIND_LIB=.*$,EBS_UNWIND_LIB=$ebs_unwind_lib,g" >> $sedout
+        ;;
+
+     ebs_unwind_lib_flag=*)
+        ebs_unwind_lib_flag=`echo $1 | sed -e 's/^ebs_unwind_lib_flag=//'`
+       echo "s,^EBS_UNWIND_LIB_FLAG=.*$,EBS_UNWIND_LIB_FLAG=$ebs_unwind_lib_flag,g" >> $sedout
+        ;;
+
      perfsuitelink=*)
         perfsuitelink=`echo $1 | sed -e 's/^perfsuitelink=//' -e 's/#/ /g'`
 	echo "s,^PERFSUITELINK=.*$,PERFSUITELINK=$perfsuitelink,g" >> $sedout
@@ -451,6 +471,10 @@ case $1 in
         ;;
      TAU_BFD)
         echo NOTE: Using BFD support
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     TAU_EBS_UNWIND)
+        echo NOTE: Enabling EBS Stack Unwinding support
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      TAU_DEMANGLE)
@@ -830,6 +854,10 @@ case $1 in
 	echo NOTE: Disabling loop level instrumentation for Fortran
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     PDTNOUPC)
+	echo NOTE: Disabling UPC statement level instrumentation 
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      PDTALPHACXX)
 	echo NOTE: Using -D__USE_STD_IOSTREAM option for tau_instrumentor
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1165,6 +1193,10 @@ case $1 in
 	;;
      OPARI)
 	echo "NOTE: Using Opari OpenMP directive rewriting tool ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     OPARI2)
+	echo "NOTE: Using Opari2 OpenMP directive rewriting tooln ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      KOJAKOPARI)

@@ -184,6 +184,7 @@ off_t TauWrapperLseek(int fd, off_t offset, int whence)
 
   TAU_PROFILE_STOP(t);
   TAU_VERBOSE("lseek called\n");
+  // *CWL* - Bug?
   Tau_global_decr_insideTAU();
 
   return ret;

@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <queue>
 #include <iostream>
+#include<map>
 using namespace std;
 
 #define TRACK_MEMORY
@@ -162,6 +163,38 @@ cudaError_t cudaThreadSynchronize() {
 //#ifdef TRACK_KERNEL
 	REGISTER_SYNC();
 //#endif
+
+  }
+  return retval;
+
+}
+cudaError_t cudaDeviceSynchronize() {
+
+  typedef cudaError_t (*cudaDeviceSynchronize_p) ();
+  static cudaDeviceSynchronize_p cudaDeviceSynchronize_h = NULL;
+  cudaError_t retval;
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaDeviceSynchronize(void) C", "", CUDA_SYNC);
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
+
+  if (cudart_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cudaDeviceSynchronize_h == NULL)
+	cudaDeviceSynchronize_h = (cudaDeviceSynchronize_p) dlsym(cudart_handle,"cudaDeviceSynchronize"); 
+    if (cudaDeviceSynchronize_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cudaDeviceSynchronize_h)();
+  TAU_PROFILE_STOP(t);
+
+#ifdef TRACK_KERNEL
+	Tau_cuda_register_sync_event();
+#endif
 
   }
   return retval;
@@ -1037,7 +1070,7 @@ cudaError_t cudaFuncSetCacheConfig(const char * a1, enum cudaFuncCache a2) {
 
 }*/
 
-char *kernelName = "";
+map<const char*, const char*> kernelNames;
 
 /*
  * This function is being called before execution of a cuda program for every
@@ -1045,35 +1078,39 @@ char *kernelName = "";
  * Borrowed from VampirTrace.
  */
 
-extern "C" void __cudaRegisterFunction(void ** a1, const char * a2, char * a3, const char * a4, int a5, uint3 * a6, uint3 * a7, dim3 * a8, dim3 * a9, int * a10);
-extern "C" void __cudaRegisterFunction(void ** a1, const char * a2, char * a3, const char * a4, int a5, uint3 * a6, uint3 * a7, dim3 * a8, dim3 * a9, int * a10) {
+
+//extern "C" void __cudaRegisterFunction(void ** a1, const char * a2, char * a3, const char * a4, int a5, uint3 * a6, uint3 * a7, dim3 * a8, dim3 * a9, int * a10);
+
+extern "C" {
+
+void __cudaRegisterFunction(void ** a1, const char * a2, char * a3, const char * a4, int a5, uint3 * a6, uint3 * a7, dim3 * a8, dim3 * a9, int * a10) {
 
 	//printf("*** in __cudaRegisterFunction.\n");
 	//printf("Kernel name is: %s.\n", a3);
-	kernelName = a3;
-
   typedef void (*__cudaRegisterFunction_p_h) (void **, const char *, char *, const char *, int, uint3 *, uint3 *, dim3 *, dim3 *, int *);
   static __cudaRegisterFunction_p_h __cudaRegisterFunction_h = NULL;
-  //TAU_PROFILE_TIMER(t,"void __cudaRegisterFunction(void **, const char *, char *, const char *, int, uint3 *, uint3 *, dim3 *, dim3 *, int *) C", "", CUDART_API);
-	/*
+	
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
   if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
-    return;
   } 
   else { 
     if (__cudaRegisterFunction_h == NULL)
-	__cudaRegisterFunction_h = (__cudaRegisterFunction_p_h) dlsym(cudart_handle,"__cudaRegisterFunction"); 
+			__cudaRegisterFunction_h = (__cudaRegisterFunction_p_h) dlsym(cudart_handle,"__cudaRegisterFunction"); 
     if (__cudaRegisterFunction_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return;
     }
-  (*__cudaRegisterFunction_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9,  a10);
-  }
-	*/
-  
+	(*__cudaRegisterFunction_h)(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+	} 
+
+	//printf("host name: %s.\n", a2);
+	//printf("dev  name: %s.\n", a3);
+	kernelNames[a2] = a3;
+
+}
+
 }
 
 cudaError_t cudaLaunch(const char * a1) {
@@ -1103,23 +1140,21 @@ cudaError_t cudaLaunch(const char * a1) {
 		TAU_PROFILE_START(t);
 #ifdef TRACK_KERNEL
 		//printf("tracking kernel on node: %d.\n", RtsLayer::myNode());
-		/*FunctionInfo* parent;
-		if (TauInternal_CurrentProfiler(RtsLayer::getTid()) == NULL)
-		{
-			parent = NULL;
-		}
-		else
-		{
-			parent = TauInternal_CurrentProfiler(RtsLayer::getTid())->CallPathFunction;
-		}*/
+		
 		Tau_cuda_init();
 		int device;
 		cudaGetDevice(&device);
-		Tau_cuda_enqueue_kernel_enter_event(kernelName,
-			&cudaRuntimeGpuId(device,curr_stream));
-		/*Tau_cuda_enqueue_kernel_enter_event(kernelName,
-			&cudaRuntimeGpuId(device,curr_stream),
-			TauInternal_CurrentProfiler(RtsLayer::myNode())->CallPathFunction);*/
+		//printf("lookup, host name: %s.\n", a1);
+		map<const char*, const char*>::iterator it = kernelNames.find(a1);
+		if (it == kernelNames.end())
+		{
+			printf("TAU ERROR: could not find registration for CUDA kernel.\n");
+		}
+		else
+		{
+			Tau_cuda_enqueue_kernel_enter_event(it->second,
+				&cudaRuntimeGpuId(device,curr_stream));
+		}
 #endif
 		retval  =  (*cudaLaunch_h)( a1);
 #ifdef TRACK_KERNEL

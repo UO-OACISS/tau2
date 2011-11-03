@@ -111,6 +111,8 @@ public abstract class DataSource {
     private int fileType = DataSource.TAUPROFILE;
     protected boolean derivedProvided=false;
 
+	protected boolean derivedAtomicProvided=false;
+
     public boolean isDerivedProvided() {
 		return derivedProvided;
 	}
@@ -688,7 +690,7 @@ public abstract class DataSource {
         this.totalData.setThreadDataAllMetrics();
         this.stddevData.setThreadDataAllMetrics();
 
-        this.generateUserEventStatistics();
+        this.generateAtomicEventStatistics();
 
         finishPhaseAnalysis();
 
@@ -709,8 +711,13 @@ public abstract class DataSource {
         return stdDev;
     }
 
-    private void generateUserEventStatistics() {
+    private void generateAtomicEventStatistics() {
         // make sure that the allThreads list is initialized;
+    	
+    	if(derivedAtomicProvided){
+    		return;
+    	}
+    	
         this.initAllThreadsList();
         int numThreads = allThreads.size();
         int numSnapshots = meanData.getNumSnapshots();
@@ -721,7 +728,7 @@ public abstract class DataSource {
 
             for (int i = 0; i < numThreads; i++) { // for each thread
                 Thread thread = allThreads.get(i);
-                for (Iterator<UserEventProfile> it = thread.getUserEventProfiles(); it.hasNext();) {
+                for (Iterator<UserEventProfile> it = thread.getUserEventProfiles(); it.hasNext();) {//For reach user event in the thread
                     UserEventProfile uep = it.next();
                     UserEvent ue = uep.getUserEvent();
 
@@ -915,9 +922,7 @@ public abstract class DataSource {
                 }
                 function.setStddevProfile(stddevProfile);
 
-                if(derivedProvided){
-                }
-                else{
+                if(!derivedProvided){
                 int numEvents = 0;
                 double callSum = 0;
                 double subrSum = 0;

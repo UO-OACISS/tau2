@@ -153,16 +153,16 @@ public:
   //         the data values above.
   //         They will also potentially need per-counter information
   //         eventually.
-  //  map<caddr_t, unsigned int> *pcHistogram;
+  //  map<unsigned long, unsigned int> *pcHistogram;
 #ifndef TAU_WINDOWS
-  std::map<caddr_t, unsigned int, std::less<caddr_t>, SS_ALLOCATOR< std::pair<const caddr_t, unsigned int> > > *pcHistogram[TAU_MAX_THREADS];
-  // For Intermediate FunctionInfo objects for groups of samples
-  FunctionInfo *ebsIntermediate;
+  std::map< vector<unsigned long>, unsigned int, 
+    std::less< vector<unsigned long> >, 
+    SS_ALLOCATOR< std::pair<const vector<unsigned long>, unsigned int> > > *pcHistogram[TAU_MAX_THREADS];
   // For FunctionInfo objects created specially for sample-based profiling 
   FunctionInfo *parentTauContext;
 
   /* EBS Sampling Profiles */
-  void addPcSample(caddr_t pc, int tid);
+  void addPcSample(vector<unsigned long> *pc, int tid);
 #endif // TAU_WINDOWS
 
   inline double *getDumpExclusiveValues(int tid) {
