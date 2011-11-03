@@ -41,8 +41,8 @@ typedef enum {
   stat_mean_exist,
   stat_stddev_all,
   stat_stddev_exist,
-  stat_min_all,
-  stat_max_all  
+  stat_min_exist,
+  stat_max_exist  
 } stat_derived_type;
 
 extern "C" const int collate_num_op_items[NUM_COLLATE_OP_TYPES];
