@@ -193,7 +193,8 @@ class KernelEvent : public eventId
 			printf("Error recording kernel event, error #: %d.\n", err);
 			return 1;
 		}
-		//cudaGetLastError();
+		//clear error buffer.
+		err == cudaGetLastError();
 		return 0;
 	}
 	int enqueue_stop_event()
@@ -217,7 +218,8 @@ class KernelEvent : public eventId
 			printf("Error recording kernel event, error #: %d.\n", err);
 			return 1;
 		}
-		//cudaGetLastError();
+		//clear error buffer.
+		err == cudaGetLastError();
 		return 0;
 	}
 };
@@ -288,12 +290,12 @@ void Tau_cuda_exit()
 
 void Tau_cuda_enter_memcpy_event(const char *name, int id, int size, int MemcpyType)
 {
-	//Tau_gpu_enter_memcpy_event(name, &cudaDriverGpuId(0,0,0), size, MemcpyType);
+	Tau_gpu_enter_memcpy_event(name, &cudaDriverGpuId(0,0,0), size, MemcpyType);
 }
 
 void Tau_cuda_exit_memcpy_event(const char *name, int id, int MemcpyType)
 {
-	//Tau_gpu_exit_memcpy_event(name, &cudaDriverGpuId(0,0,0), MemcpyType);
+	Tau_gpu_exit_memcpy_event(name, &cudaDriverGpuId(0,0,0), MemcpyType);
 }
 
 /*void Tau_cuda_register_gpu_event(KernelEvent k, double start,
@@ -364,7 +366,9 @@ void Tau_cuda_enqueue_kernel_exit_event()
 
 	//printf("recording stop for: %s.\n", curName.c_str());
 
-	curKernel->name = curName.c_str();
+	char device_name[4096];
+	strcpy(device_name, curName.c_str());
+	curKernel->name = device_name;
 	curKernel->enqueue_stop_event();
 	KernelBuffer.push(*curKernel);
 

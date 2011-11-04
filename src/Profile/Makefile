@@ -48,7 +48,7 @@ CEXTRA =
 #PGINOPRELINK#PRELINK_PHASE = #ENDIF#
 #############################################
 
-OPARI2_INCLUDE = -I$(TAU_PREFIX_INSTALL_DIR)/utils/opari2-2.0/src/ -I$(TAU_PREFIX_INSTALL_DIR)/utils/opari2-2.0/build-frontend -DHAVE_CONFIG_H  -DFRONTEND_BUILD -DCROSS_BUILD
+OPARI2_INCLUDE = -I$(TAUROOT)/utils/opari2-2.0/src/ -I$(TAUROOT)/utils/opari2-2.0/build-frontend -DHAVE_CONFIG_H  -DFRONTEND_BUILD -DCROSS_BUILD
 
 
 DEFINES = -DTAU_LIBRARY_SOURCE
@@ -120,7 +120,8 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 # Python Binding OBJECTS
 #############################################
 #PYTHON#PYTHON_O  = PyGroups.o PyExceptions.o PyDatabase.o PyBindings.o PyTimer.o PyTau.o PyMemory.o ctau_impl.o #ENDIF#
-#CUPTI#TAU_CUPTI_COUNTER_OBJS=CuptiLayer.o #ENDIF#
+#CUPTI#TAU_CUPTI_COUNTER_OBJS=CuptiLayer40.o #ENDIF#
+#CUPTI_ACTIVITY#TAU_CUPTI_COUNTER_OBJS=CuptiLayer.o #ENDIF#
 
 
 OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauMemoryWrap.o \
@@ -149,7 +150,7 @@ SHARED_OBJS   = $(TAU_BFD_SHARED_O) $(PGIACC_O)
 #SICORTEX#SHARED_OBJS = TauBfd.o #ENDIF#
 #TAU_BFDSHAREDLINK#SHARED_LIBS = $(BFDLINK) $(BFDLIBS) -liberty #ENDIF#
 
-#CUPTI#SHARED_LIBS = -L$(TAU_CUDA_INC)/../lib -L$(TAU_CUDA_INC)/../lib64 -lcudart -L$(TAU_CUPTI_INC)/../lib -lcupti #ENDIF#
+#CUPTI#SHARED_LIBS = -L$(TAU_CUDA_INC)/../lib -L$(TAU_CUDA_INC)/../lib -L$(TAU_CUDA_INC)/../lib64 -lcudart -L$(TAU_CUPTI_INC)/../lib -lcupti #ENDIF#
 
 PRINT	      = pr
 
@@ -344,9 +345,10 @@ CRAY_PGI_HACK=
 #PYCUDA#GPU_INSTALL+=$(INSTALLDEST)/$(TAU_CUDA_LIB)  #ENDIF#
 #PYCUDA#GPU_INSTALL+=$(INSTALLDEST)/$(TAU_PYCUDA_LIB)  #ENDIF#
 
-
 #CUPTI#TAU_CUPTI_LIB=libTAU-CUpti.so #ENDIF#
-#CUPTI#TAU_CUPTI_OBJS=TauGpuAdapterCupti.o TauGpu.o #ENDIF#
+#CUPTI#TAU_CUPTI_OBJS=TauGpuAdapterCupti40.o TauGpu.o #ENDIF#
+#CUPTI_ACTIVITY#TAU_CUPTI_LIB=libTAU-CUpti.so #ENDIF#
+#CUPTI_ACTIVITY#TAU_CUPTI_OBJS=TauGpuAdapterCupti.o TauGpu.o #ENDIF#
 #CUPTI#TAU_CUPTI_DEF=-DTAU_GPU #ENDIF#
 #CUPTI#GPU_INSTALL+=$(TAU_SHAREDDIR)/$(TAU_CUPTI_LIB)  #ENDIF#
 
@@ -398,7 +400,7 @@ $(TAU_NULL)$(TAU_OPENCL_LIB): $(TAU_OPENCL_OBJS) $(TAU_DSO) $(TAU_OPENCL_DEP)
 $(TAU_NULL)$(TAU_CUDA_LIB): $(TAU_CUDA_OBJS) $(TAU_DSO)
 		$(PRELINK_PHASE)
 		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_CUDA_LIB) $(TAU_CUDA_OBJS) \
-		-L$(TAU_LIB_DIR) $(TAU_DSO) -L$(TAU_CUDA_INC)/../lib64 -lcudart
+		-L$(TAU_LIB_DIR) $(TAU_DSO) $(SHARED_LIBS)
 		$(TAU_RANLIB) $(TAU_CUDA_LIB)
 
 $(TAU_NULL)$(TAU_PYCUDA_LIB): $(TAU_PYCUDA_OBJS) $(TAU_CUDA_LIB) $(TAU_DSO)
@@ -829,7 +831,7 @@ TauGpu.o : TauGpu.cpp $(HDRS)
 	$(CXX) -DTAU_GPU $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauGpuAdapterCUDA.o : TauGpuAdapterCUDA.cpp $(HDRS) ../../include/Profile/TauGpuAdapterCUDA.h
-	$(TAU_CUDA_CXX) $(CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
+	$(TAU_CUDA_CXX) $(CXXFLAGS) -fpermissive -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 $(TAU_PYCUDA_OBJS): TauGpuAdapterPyCuda.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_CUDA_INCLUDE) -I$(PYTHON_INCDIR) -c $<
@@ -838,11 +840,16 @@ TauGpuAdapterOpenCL.o : TauGpuAdapterOpenCL.cpp $(HDRS)  $(INCDIR)/TauGpuAdapter
 	$(CXX) $(CXXFLAGS) -I$(TAU_OPENCL_INC) -g -c $(@:.o=.cpp)
 
 TauGpuAdapterCupti.o : TauGpuAdapterCupti.cpp $(HDRS) ../../include/Profile/TauGpuAdapterCupti.h
-	$(TAU_CUDA_CXX) $(CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
+	$(TAU_CUDA_CXX) $(CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
+
+TauGpuAdapterCupti40.o : TauGpuAdapterCupti40.cpp $(HDRS) ../../include/Profile/TauGpuAdapterCupti40.h
+	$(TAU_CUDA_CXX) $(CXXFLAGS) -fpermissive -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 CuptiLayer.o : CuptiLayer.cpp $(HDRS) ../../include/Profile/CuptiLayer.h
 	$(TAU_CUDA_CXX) $(CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
 
+CuptiLayer40.o : CuptiLayer40.cpp $(HDRS) ../../include/Profile/CuptiLayer.h
+	$(TAU_CUDA_CXX) $(CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) -c $(@:.o=.cpp)
 
 jVMTIThreadLayer.o: JVMTIThreadLayer.cpp
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp) -o $@
