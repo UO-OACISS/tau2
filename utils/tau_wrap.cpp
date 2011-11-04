@@ -385,7 +385,7 @@ void  printShmemMessageAfterRoutine(pdbRoutine *r, ofstream& impl, int len_argum
   is_it_a_fetchop = doesRoutineNameContainFetchOp(rname, routine_len); 
   is_it_a_cond_fetchop = doesRoutineNameContainCondFetchOp(rname, routine_len); 
 
-  if (strstr(rname, "start_pes") != 0) {
+  if ((strstr(rname, "start_pes") != 0) || (strstr(rname, "shmem_init") != 0)) { /* if it is either of these */
      if (pshmem_use_underscore_instead_of_p) {
        impl << "  tau_totalnodes(1,_shmem_n_pes());"<<endl;
        impl << "  TAU_PROFILE_SET_NODE(_shmem_my_pe());"<<endl;
@@ -433,63 +433,18 @@ void  printShmemMessageAfterRoutine(pdbRoutine *r, ofstream& impl, int len_argum
 
 }
 
-void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, string& group_name, int runtime, string& runtime_libname)
-{
-  string macro("#define ");
-  string func(r->name());
-  string proto(r->name());
-  string protoname(r->name());
-  string funchandle("_h) (");
-  string rcalledfunc("(*"+r->name()+"_h)");
-  string wcalledfunc("__real_"+r->name());
-  string dltext;
-  string returntypename;
-  string retstring("    return;");
-  const pdbGroup *grp;
+void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, const char * prefix, string& returntypename, int& shmem_len_argcount, int& shmem_pe_argcount, int& shmem_cond_argcount, bool& fortran_interface, string& func, string& proto, string& funchandle, string& rcalledfunc) {
+  /* First put the return type */
+  impl <<returntypename<<prefix; 
+  func = r->name();
+  proto = r->name();
+  funchandle = string("_h) (");
+  rcalledfunc = string("(*"+r->name()+"_h)");
+
   func.append("(");
   rcalledfunc.append("(");
   proto.append("(");
-  protoname.append("_p");
-  bool fortran_interface = false; /* if *len or *pe appears in the arglist */
 
-  if (r->signature()->hasEllipsis()) {
-    // For a full discussion of why vararg functions are difficult to wrap
-    // please see: http://www.swig.org/Doc1.3/Varargs.html#Varargs
- 
-    impl <<"#warning \"TAU: Not generating wrapper for vararg function "<<r->name()<<"\""<<endl;
-    cout <<"TAU: Not generating wrapper for vararg function "<<r->name()<<endl;
-    return;
-  }
-  if ((grp = r->signature()->returnType()->isGroup()) != 0) { 
-    returntypename = grp->name();
-  } else {
-    returntypename = r->signature()->returnType()->name();
-  }
-
-  impl << endl; 
-  impl << "/**********************************************************"<<endl;
-  impl << "   "<<r->name()<< endl;
-  impl << " **********************************************************/"<<endl<<endl;
-
-  if (shmem_wrapper == true) {
-    impl << returntypename << " "; /* nothing else */
-  }
-  else {
-    switch (runtime) {
-    case 1: /* for runtime interception, put a blank, the name stays the same*/
-      impl<<returntypename<<" "; /* put in return type */
-      break;
-    case 0: /* for standard preprocessor redirection, bar becomes tau_bar */
-      impl<<returntypename<<"  tau_"; /* put in return type */
-      break;
-    case -1: /* for wrapper library interception, it becomes __wrap_bar */
-      impl<<returntypename<<"  __wrap_"; /* put in return type */
-      break;
-    default: /* hmmm, what about any other case? Just use __wrap_bar */
-      impl<<returntypename<<"  __wrap_"; /* put in return type */
-      break;
-    }
-  }
   impl<<func;
 #ifdef DEBUG
   cout <<"Examining "<<r->name()<<endl;
@@ -497,10 +452,6 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
 #endif /* DEBUG */
   pdbType::argvec av = r->signature()->arguments();
   int argcount = 1;
-  bool isVoid = isReturnTypeVoid(r);
-  int shmem_len_argcount = 0; 
-  int shmem_pe_argcount = 0; 
-  int shmem_cond_argcount = 0; 
   for(pdbType::argvec::const_iterator argsit = av.begin();
       argsit != av.end(); argsit++, argcount++)
   {
@@ -594,7 +545,82 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
   func.append(")");
   proto.append(")");
   rcalledfunc.append(")");
-  impl<<") {" <<endl<<endl;
+  impl<<") ";
+
+}
+
+void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, string& group_name, int runtime, string& runtime_libname)
+{
+  string macro("#define ");
+  string func(r->name());
+  string proto(r->name());
+  string protoname(r->name());
+  string funchandle("_h) (");
+  string rcalledfunc("(*"+r->name()+"_h)");
+  string wcalledfunc("__real_"+r->name());
+  string dltext;
+  string returntypename;
+  string retstring("    return;");
+  const pdbGroup *grp;
+  func.append("(");
+  proto.append("(");
+  protoname.append("_p");
+  bool fortran_interface = false; /* if *len or *pe appears in the arglist */
+  int shmem_len_argcount = 0; 
+  int shmem_pe_argcount = 0; 
+  int shmem_cond_argcount = 0; 
+
+  if (r->signature()->hasEllipsis()) {
+    // For a full discussion of why vararg functions are difficult to wrap
+    // please see: http://www.swig.org/Doc1.3/Varargs.html#Varargs
+ 
+    impl <<"#warning \"TAU: Not generating wrapper for vararg function "<<r->name()<<"\""<<endl;
+    cout <<"TAU: Not generating wrapper for vararg function "<<r->name()<<endl;
+    return;
+  }
+  if ((grp = r->signature()->returnType()->isGroup()) != 0) { 
+    returntypename = grp->name();
+  } else {
+    returntypename = r->signature()->returnType()->name();
+  }
+
+  impl << endl; 
+  impl << "/**********************************************************"<<endl;
+  impl << "   "<<r->name()<< endl;
+  impl << " **********************************************************/"<<endl<<endl;
+
+  bool isVoid = isReturnTypeVoid(r);
+  if (runtime == -1) { /* linker-based instrumentation */
+    printFunctionNameInOutputFile(r, impl, "  __real_", returntypename, shmem_len_argcount, shmem_pe_argcount, shmem_cond_argcount, fortran_interface, func, proto, funchandle, rcalledfunc);
+    impl <<";"<<endl;
+  }
+
+  if (shmem_wrapper == true) {
+    //impl << returntypename << " "; /* nothing else */
+    printFunctionNameInOutputFile(r, impl, " ", returntypename, shmem_len_argcount, shmem_pe_argcount, shmem_cond_argcount, fortran_interface, func, proto, funchandle, rcalledfunc);
+  }
+  else {
+    switch (runtime) {
+    case 1: /* for runtime interception, put a blank, the name stays the same*/
+      //impl<<returntypename<<" "; /* put in return type */
+      printFunctionNameInOutputFile(r, impl, " ", returntypename, shmem_len_argcount, shmem_pe_argcount, shmem_cond_argcount, fortran_interface, func, proto, funchandle, rcalledfunc);
+      break;
+    case 0: /* for standard preprocessor redirection, bar becomes tau_bar */
+      //impl<<returntypename<<"  tau_"; /* put in return type */
+      printFunctionNameInOutputFile(r, impl, "  tau_", returntypename, shmem_len_argcount, shmem_pe_argcount, shmem_cond_argcount, fortran_interface, func, proto, funchandle, rcalledfunc);
+      break;
+    case -1: /* for wrapper library interception, it becomes __wrap_bar */
+      //impl<<returntypename<<"  __wrap_"; /* put in return type */
+      printFunctionNameInOutputFile(r, impl, "  __wrap_", returntypename, shmem_len_argcount, shmem_pe_argcount, shmem_cond_argcount, fortran_interface, func, proto, funchandle, rcalledfunc);
+      break;
+    default: /* hmmm, what about any other case? Just use __wrap_bar */
+      //impl<<returntypename<<"  __wrap_"; /* put in return type */
+      printFunctionNameInOutputFile(r, impl, "  __wrap_", returntypename, shmem_len_argcount, shmem_pe_argcount, shmem_cond_argcount, fortran_interface, func, proto, funchandle, rcalledfunc);
+      break;
+    }
+  }
+
+  impl<<" {" <<endl<<endl;
 	string funcprototype = funchandle + string(");");
  	funchandle.append(") = NULL;");
   if (runtime == 1) {
