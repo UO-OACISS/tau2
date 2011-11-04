@@ -320,8 +320,15 @@ public class DataSourceExport {
         for (Iterator<Thread> it = threads.iterator(); it.hasNext();) {
             Thread thread = it.next();
 
-            File file = new File(root + "/profile." + thread.getNodeID() + "." + thread.getContextID() + "."
-                    + thread.getThreadID());
+            String suffix=null;
+            if(thread.getNodeID()>=0){
+            	suffix=thread.getNodeID() + "." + thread.getContextID() + "." + thread.getThreadID();
+            }
+            else
+            {
+            	suffix=thread.toString().replace(" ", "");
+            }
+            File file = new File(root + "/profile." + suffix);
 
             FileOutputStream out = new FileOutputStream(file);
             OutputStreamWriter outWriter = new OutputStreamWriter(out);
@@ -410,6 +417,10 @@ public class DataSourceExport {
 
     public static void writeProfiles(DataSource dataSource, File directory) throws IOException {
         writeProfiles(dataSource, directory, dataSource.getAllThreads());
+    }
+    
+    public static void writeAggProfiles(DataSource dataSource, File directory) throws IOException {
+        writeProfiles(dataSource, directory, dataSource.getAggThreads());
     }
 
     public static void writeProfiles(DataSource dataSource, File directory, List<Thread> threads) throws IOException {

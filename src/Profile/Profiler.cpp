@@ -396,8 +396,8 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 
   
   // first initialize the CurrentTime
-  double CurrentTime[TAU_MAX_COUNTERS];
-  double TotalTime[TAU_MAX_COUNTERS];
+  double CurrentTime[TAU_MAX_COUNTERS] = {0};
+  double TotalTime[TAU_MAX_COUNTERS] = {0};
 
 #ifdef TAU_TRACK_IDLE_THREADS
   int i;
@@ -603,6 +603,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 #ifdef TAU_GPU
 		//Stop all other running tasks.
 		if (tid == 0) {
+			//printf("exiting all tasks....\n");
 		  Tau_profile_exit_all_tasks();
 		}
 #endif
@@ -618,6 +619,12 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 
 	// Write profile data
 	TauProfiler_StoreData(tid);
+#ifndef TAU_WINDOWS
+        // getpid() not available on Windows
+        TAU_VERBOSE("TAU: <Node=%d.Thread=%d>:<pid=%d>: %s initiated TauProfile_StoreData\n",
+          RtsLayer::myNode(), RtsLayer::myThread(), getpid(), ThisFunction->GetName());
+#endif
+
 	  
 #if defined(TAUKTAU) 
 	//AN Removed - New func inside 

@@ -14,23 +14,19 @@ char ColorTable::operator()(int i, base b) const {
 }
 
 ColorTable::~ColorTable() {
-  TAU_PROFILE("ColorTable::~ColorTable()", "void ()", TAU_DEFAULT);
   delete [] tab;
 }
 
 int ColorTable::numColors() const {
-  TAU_PROFILE("ColorTable::numColors()", "int (void)", TAU_DEFAULT);
   return num;
 }
 
 int ColorTable::shades() const {
-  TAU_PROFILE("ColorTable::shades()", "int (void)", TAU_DEFAULT);
   return sds; 
 }
 
 ColorTable::ColorTable(int shades, int numColors)
                       : sds(shades), num(numColors) {
-  TAU_PROFILE("ColorTable::ColorTable()", "void (int, int)", TAU_DEFAULT);
     tab = new Color[num];
 }
 
@@ -40,8 +36,6 @@ ColorTable::ColorTable(int shades, int numColors)
 PermutationColorTable::
 PermutationColorTable(int shades, direction d, base b1, base b2, base b3)
                      : ColorTable(shades, shades*shades*shades) {
-  TAU_PROFILE("PermutationColorTable::PermutationColorTable()", 
-	"void (int, direction, base, base, base)", TAU_DEFAULT);
   int count = d==fwd ? 0 : numColors()-1;
   for (int ix=0; ix<shades; ++ix) {
     for (int iy=0; iy<shades; ++iy) {
@@ -61,8 +55,6 @@ PermutationColorTable(int shades, direction d, base b1, base b2, base b3)
 SmoothColorTable::
 SmoothColorTable(int shades, direction d, base b1, base b2, base b3)
                 : ColorTable(shades, 7*(shades-1)+1) {
-  TAU_PROFILE("SmoothColorTable::SmoothColorTable()", 
-	"void (int, direction, base, base, base)", TAU_DEFAULT);
   int S = shades - 1;
   int i;
 
@@ -127,8 +119,6 @@ SmoothColorTable(int shades, direction d, base b1, base b2, base b3)
  */
 void ppmwrite(char *fname, field iterations, int maxiter,
               const ColorTable& table) {
-  TAU_PROFILE("ppmwrite()", "void (char *, field, int, const ColorTable&)", 
-	TAU_DEFAULT);
   int out = creat(fname, 0666);
  
   if ( out == -1 ) {

@@ -104,7 +104,7 @@ public class FunctionProfile {
                 return 0;
             }
             return getInclusive(snapshot, metric) / dividend;
-        } else if (thread.getNodeID() == Thread.TOTAL || thread.getNodeID() == Thread.MEAN) {
+        } else if (thread.getNodeID() == Thread.TOTAL || thread.getNodeID() == Thread.MEAN|| thread.getNodeID() == Thread.MIN|| thread.getNodeID() == Thread.MAX) {
             double dividend = thread.getPercentDivider(metric, snapshot);
             if (dividend == 0) {
                 return 0;
@@ -132,14 +132,21 @@ public class FunctionProfile {
                 return 0;
             }
             return getExclusive(snapshot, metric) / dividend;
-        } else if (thread.getNodeID() == Thread.TOTAL || thread.getNodeID() == Thread.MEAN) {
+        } else if (thread.getNodeID() == Thread.TOTAL || thread.getNodeID() == Thread.MEAN || thread.getNodeID() == Thread.MIN || thread.getNodeID() == Thread.MAX) {
             double dividend = thread.getPercentDivider(metric, snapshot);
             if (dividend == 0) {
                 return 0;
             }
             if (thread.getNodeID() == Thread.TOTAL) {
                 return function.getTotalProfile().getExclusive(snapshot, metric) / dividend;
-            } else {
+            } 
+            else if(thread.getNodeID()==Thread.MIN){
+            	 return function.getMinProfile().getExclusive(snapshot, metric) / dividend;
+            }
+            else if(thread.getNodeID()==Thread.MAX){
+            	 return function.getMaxProfile().getExclusive(snapshot, metric) / dividend;
+            }
+            else {
                 dividend /= thread.getDataSource().getAllThreads().size();
                 return function.getMeanProfile().getExclusive(snapshot, metric) / dividend;
             }

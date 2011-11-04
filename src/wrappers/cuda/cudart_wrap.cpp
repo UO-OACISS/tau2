@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <queue>
 #include <iostream>
+#include<map>
 using namespace std;
 
 #define TRACK_MEMORY
@@ -14,8 +15,12 @@ using namespace std;
 #define CUDART_API TAU_USER
 #define CUDA_SYNC TAU_USER
 
+//#define REGISTER_SYNC() Tau_cupti_register_sync_event()
+#define REGISTER_SYNC() Tau_cuda_register_sync_event()
+
 #ifdef CUPTI
 extern void Tau_CuptiLayer_finalize();
+extern void Tau_cupti_register_sync_event();
 #endif //CUPTI
 
 const char * cudart_orig_libname = "libcudart.so";
@@ -73,9 +78,9 @@ cudaError_t cudaDeviceReset() {
       return retval;
     }
 	//printf("in cudaDeviceReset(), check for kernel events.\n");
-#ifdef TRACK_KERNEL
-	Tau_cuda_register_sync_event();
-#endif 
+//#ifdef TRACK_KERNEL
+	REGISTER_SYNC();
+//#endif 
   TAU_PROFILE_START(t);
 #ifdef CUPTI
 	Tau_CuptiLayer_finalize();
@@ -83,9 +88,7 @@ cudaError_t cudaDeviceReset() {
   retval  =  (*cudaDeviceReset_h)();
   TAU_PROFILE_STOP(t);
 
-#ifdef TRACK_KERNEL
 	Tau_cuda_exit();
-#endif
   }
   return retval;
 
@@ -117,9 +120,9 @@ cudaError_t cudaThreadExit() {
       return retval;
     }
 	//printf("in cudaThreadExit(), check for kernel events.\n");
-#ifdef TRACK_KERNEL
-	//Tau_cuda_register_sync_event();
-#endif 
+//#ifdef TRACK_KERNEL
+	//REGISTER_SYNC();
+//#endif 
   TAU_PROFILE_START(t);
 #ifdef CUPTI
 	Tau_CuptiLayer_finalize();
@@ -127,9 +130,7 @@ cudaError_t cudaThreadExit() {
   retval  =  (*cudaThreadExit_h)();
   TAU_PROFILE_STOP(t);
 
-#ifdef TRACK_KERNEL
 	Tau_cuda_exit();
-#endif
   }
   return retval;
 
@@ -157,6 +158,38 @@ cudaError_t cudaThreadSynchronize() {
     }
   TAU_PROFILE_START(t);
   retval  =  (*cudaThreadSynchronize_h)();
+  TAU_PROFILE_STOP(t);
+
+//#ifdef TRACK_KERNEL
+	REGISTER_SYNC();
+//#endif
+
+  }
+  return retval;
+
+}
+cudaError_t cudaDeviceSynchronize() {
+
+  typedef cudaError_t (*cudaDeviceSynchronize_p) ();
+  static cudaDeviceSynchronize_p cudaDeviceSynchronize_h = NULL;
+  cudaError_t retval;
+  TAU_PROFILE_TIMER(t,"cudaError_t cudaDeviceSynchronize(void) C", "", CUDA_SYNC);
+  if (cudart_handle == NULL) 
+    cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
+
+  if (cudart_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cudaDeviceSynchronize_h == NULL)
+	cudaDeviceSynchronize_h = (cudaDeviceSynchronize_p) dlsym(cudart_handle,"cudaDeviceSynchronize"); 
+    if (cudaDeviceSynchronize_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+  retval  =  (*cudaDeviceSynchronize_h)();
   TAU_PROFILE_STOP(t);
 
 #ifdef TRACK_KERNEL
@@ -668,9 +701,9 @@ cudaError_t cudaStreamSynchronize(cudaStream_t a1) {
   retval  =  (*cudaStreamSynchronize_h)( a1);
   TAU_PROFILE_STOP(t);
 	
-#ifdef TRACK_KERNEL
-	Tau_cuda_register_sync_event();
-#endif
+//#ifdef TRACK_KERNEL
+	REGISTER_SYNC();
+//#endif
   }
   return retval;
 
@@ -699,9 +732,9 @@ cudaError_t cudaStreamQuery(cudaStream_t a1) {
   TAU_PROFILE_START(t);
   retval  =  (*cudaStreamQuery_h)( a1);
   TAU_PROFILE_STOP(t);
-#ifdef TRACK_KERNEL
-	Tau_cuda_register_sync_event();
-#endif
+//#ifdef TRACK_KERNEL
+	REGISTER_SYNC();
+//#endif
   }
   return retval;
 
@@ -842,9 +875,9 @@ cudaError_t cudaEventQuery(cudaEvent_t a1) {
   TAU_PROFILE_START(t);
   retval  =  (*cudaEventQuery_h)( a1);
   TAU_PROFILE_STOP(t);
-#ifdef TRACK_KERNEL
-	Tau_cuda_register_sync_event();
-#endif
+//#ifdef TRACK_KERNEL
+	REGISTER_SYNC();
+//#endif
   }
   return retval;
 
@@ -874,9 +907,9 @@ cudaError_t cudaEventSynchronize(cudaEvent_t a1) {
   retval  =  (*cudaEventSynchronize_h)( a1);
   TAU_PROFILE_STOP(t);
 
-#ifdef TRACK_KERNEL
-	Tau_cuda_register_sync_event();
-#endif
+//#ifdef TRACK_KERNEL
+	REGISTER_SYNC();
+//#endif
 
   }
   return retval;
@@ -1037,7 +1070,14 @@ cudaError_t cudaFuncSetCacheConfig(const char * a1, enum cudaFuncCache a2) {
 
 }*/
 
-char *kernelName = "";
+typedef struct kernelName_t
+{
+	const char* host;
+	const char* dev;
+	struct kernelName_t *next;
+} kernelName;
+
+kernelName *kernelNamesHead = NULL;
 
 /*
  * This function is being called before execution of a cuda program for every
@@ -1045,35 +1085,44 @@ char *kernelName = "";
  * Borrowed from VampirTrace.
  */
 
-extern "C" void __cudaRegisterFunction(void ** a1, const char * a2, char * a3, const char * a4, int a5, uint3 * a6, uint3 * a7, dim3 * a8, dim3 * a9, int * a10);
-extern "C" void __cudaRegisterFunction(void ** a1, const char * a2, char * a3, const char * a4, int a5, uint3 * a6, uint3 * a7, dim3 * a8, dim3 * a9, int * a10) {
+
+//extern "C" void __cudaRegisterFunction(void ** a1, const char * a2, char * a3, const char * a4, int a5, uint3 * a6, uint3 * a7, dim3 * a8, dim3 * a9, int * a10);
+
+extern "C" {
+
+void __cudaRegisterFunction(void ** a1, const char * a2, char * a3, const char * a4, int a5, uint3 * a6, uint3 * a7, dim3 * a8, dim3 * a9, int * a10) {
 
 	//printf("*** in __cudaRegisterFunction.\n");
 	//printf("Kernel name is: %s.\n", a3);
-	kernelName = a3;
-
   typedef void (*__cudaRegisterFunction_p_h) (void **, const char *, char *, const char *, int, uint3 *, uint3 *, dim3 *, dim3 *, int *);
   static __cudaRegisterFunction_p_h __cudaRegisterFunction_h = NULL;
-  //TAU_PROFILE_TIMER(t,"void __cudaRegisterFunction(void **, const char *, char *, const char *, int, uint3 *, uint3 *, dim3 *, dim3 *, int *) C", "", CUDART_API);
-	/*
+	
   if (cudart_handle == NULL) 
     cudart_handle = (void *) dlopen(cudart_orig_libname, RTLD_NOW); 
 
   if (cudart_handle == NULL) { 
     perror("Error opening library in dlopen call"); 
-    return;
   } 
   else { 
     if (__cudaRegisterFunction_h == NULL)
-	__cudaRegisterFunction_h = (__cudaRegisterFunction_p_h) dlsym(cudart_handle,"__cudaRegisterFunction"); 
+			__cudaRegisterFunction_h = (__cudaRegisterFunction_p_h) dlsym(cudart_handle,"__cudaRegisterFunction"); 
     if (__cudaRegisterFunction_h == NULL) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
-      return;
     }
-  (*__cudaRegisterFunction_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9,  a10);
-  }
-	*/
-  
+	(*__cudaRegisterFunction_h)(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+	} 
+
+	//printf("adding pair, host: %d .\n", a2);
+	//printf("adding pair, dev: %s .\n", a3);
+
+	kernelName *new_name_pair = (kernelName*) malloc(sizeof(kernelName));
+	new_name_pair->host = a2;
+	new_name_pair->dev = a3;
+	new_name_pair->next = kernelNamesHead;
+	kernelNamesHead = new_name_pair;
+
+}
+
 }
 
 cudaError_t cudaLaunch(const char * a1) {
@@ -1103,23 +1152,40 @@ cudaError_t cudaLaunch(const char * a1) {
 		TAU_PROFILE_START(t);
 #ifdef TRACK_KERNEL
 		//printf("tracking kernel on node: %d.\n", RtsLayer::myNode());
-		/*FunctionInfo* parent;
-		if (TauInternal_CurrentProfiler(RtsLayer::getTid()) == NULL)
-		{
-			parent = NULL;
-		}
-		else
-		{
-			parent = TauInternal_CurrentProfiler(RtsLayer::getTid())->CallPathFunction;
-		}*/
+		
 		Tau_cuda_init();
 		int device;
 		cudaGetDevice(&device);
-		Tau_cuda_enqueue_kernel_enter_event(kernelName,
-			&cudaRuntimeGpuId(device,curr_stream));
-		/*Tau_cuda_enqueue_kernel_enter_event(kernelName,
-			&cudaRuntimeGpuId(device,curr_stream),
-			TauInternal_CurrentProfiler(RtsLayer::myNode())->CallPathFunction);*/
+		//printf("lookup, host name: %s.\n", a1);
+		kernelName *found = NULL;
+		
+		found = kernelNamesHead;
+
+		//printf("looking for %d .\n", a1);
+
+		while (found != NULL)
+		{
+			if (a1 == found->host)
+			{
+				break;
+			}
+			found = found->next;
+		}
+		if (found == NULL)
+		{
+			printf("TAU: ERROR cannot find kernel name.\n");
+		}
+		else
+		{
+			//printf("found host %d .\n", found->host);
+			//printf("found  dev %s .\n", found->dev);
+
+			//make copy.
+			//char device_name[1024];
+			//strcpy(device_name, found->dev);
+			Tau_cuda_enqueue_kernel_enter_event(found->dev,
+				&cudaRuntimeGpuId(device,curr_stream));
+		}
 #endif
 		retval  =  (*cudaLaunch_h)( a1);
 #ifdef TRACK_KERNEL
@@ -1345,6 +1411,9 @@ cudaError_t cudaFree(void * a1) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
+
+	REGISTER_SYNC();
+
   TAU_PROFILE_START(t);
   retval  =  (*cudaFree_h)( a1);
   TAU_PROFILE_STOP(t);
@@ -1576,6 +1645,7 @@ cudaError_t cudaMemcpy3D(const struct cudaMemcpy3DParms * a1) {
 #endif //TRACK_MEMORY
   retval  =  (*cudaMemcpy3D_h)( a1);
   TAU_PROFILE_STOP(t);
+
   }
   return retval;
 
@@ -1663,6 +1733,7 @@ cudaError_t cudaMemcpy(void * a1, const void * a2, size_t a3, enum cudaMemcpyKin
 #endif //TRACK_MEMORY
   retval  =  (*cudaMemcpy_h)( a1,  a2,  a3,  a4);
   TAU_PROFILE_STOP(t);
+	REGISTER_SYNC();
   }
   return retval;
 

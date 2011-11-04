@@ -39,6 +39,15 @@ public class OSSWriter {
             // add total and mean meta-threads only if there is more than one actual thread
             threads.add(dataSource.getTotalData());
             threads.add(dataSource.getMeanData());
+            threads.add(dataSource.getStdDevData());
+            Thread tmp = null;
+            tmp = dataSource.getMaxData();
+            if(tmp!=null)
+            	threads.add(tmp);
+            tmp = dataSource.getMinData();
+            if(tmp!=null)
+            	threads.add(tmp);
+            
         }
 
         for (int i = 0; i < threads.size(); i++) {

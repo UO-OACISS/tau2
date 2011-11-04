@@ -1,0 +1,101 @@
+#ifdef _POMP2
+#  undef _POMP2
+#endif
+#define _POMP2 200110
+
+#line 1 "test7.f90"
+! * This file is part of the Score-P software (http://www.score-p.org)
+! *
+! * Copyright (c) 2009-2011,
+! *    RWTH Aachen University, Germany
+! *    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+! *    Technische Universitaet Dresden, Germany
+! *    University of Oregon, Eugene, USA
+! *    Forschungszentrum Juelich GmbH, Germany
+! *    German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+! *    Technische Universitaet Muenchen, Germany
+! *
+! * See the COPYING file in the package base directory for details.
+! *
+! * Testfile for automated testing of OPARI2
+! *
+! * @authors Bernd Mohr, Peter Philippen
+! *
+! * @brief Tests user instrumentation directives and selective instrumentation.
+
+program test7
+      include 'test7.f90.opari.inc'
+      call POMP2_Init()
+#line 22 "test7.f90"
+
+      call POMP2_Off()
+#line 24 "test7.f90"
+
+      call POMP2_Begin(pomp2_region_1)
+#line 26 "test7.f90"
+
+      pomp_num_threads = pomp_get_max_threads000()
+      call POMP2_Parallel_fork(pomp2_region_2, pomp_num_threads, &
+         "62*regionType=parallel*sscl=test7.f90:27:27*escl=test7.f90:0:0**" )
+#line 27 "test7.f90"
+  !$omp parallel num_threads(pomp_num_threads) 
+      call POMP2_Parallel_begin(pomp2_region_2)
+#line 28 "test7.f90"
+  i = 1
+      call POMP2_Implicit_barrier_enter(pomp2_region_2)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(pomp2_region_2)
+      call POMP2_Parallel_end(pomp2_region_2)
+#line 29 "test7.f90"
+  !$omp end parallel
+      call POMP2_Parallel_join(pomp2_region_2)
+#line 30 "test7.f90"
+
+      call POMP2_End(pomp2_region_1)
+#line 32 "test7.f90"
+
+      call POMP2_On()
+#line 34 "test7.f90"
+
+#line 36 "test7.f90"
+  !$omp parallel
+  i = 2
+  !$omp end parallel
+#line 40 "test7.f90"
+
+      pomp_num_threads = pomp_get_max_threads000()
+      call POMP2_Parallel_fork(pomp2_region_3, pomp_num_threads, &
+         "62*regionType=parallel*sscl=test7.f90:41:41*escl=test7.f90:0:0**" )
+#line 41 "test7.f90"
+  !$omp parallel num_threads(pomp_num_threads) 
+      call POMP2_Parallel_begin(pomp2_region_3)
+#line 42 "test7.f90"
+  i = 3
+      call POMP2_Implicit_barrier_enter(pomp2_region_3)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(pomp2_region_3)
+      call POMP2_Parallel_end(pomp2_region_3)
+#line 43 "test7.f90"
+  !$omp end parallel
+      call POMP2_Parallel_join(pomp2_region_3)
+#line 44 "test7.f90"
+
+      call POMP2_Finalize()
+#line 46 "test7.f90"
+end program test7
+
+      integer function pomp_get_max_threads000()
+         integer omp_get_max_threads
+         pomp_get_max_threads000=omp_get_max_threads()
+         return
+      end
+
+      subroutine POMP2_Init_regions_000()
+         include 'test7.f90.opari.inc'
+         call POMP2_Assign_handle( pomp2_region_1, &
+         "81*regionType=region*sscl=test7.f90:25:25*escl=test7.f90:31:31*userRegionName=foo**" )
+         call POMP2_Assign_handle( pomp2_region_2, &
+         "64*regionType=parallel*sscl=test7.f90:27:27*escl=test7.f90:29:29**" )
+         call POMP2_Assign_handle( pomp2_region_3, &
+         "64*regionType=parallel*sscl=test7.f90:41:41*escl=test7.f90:43:43**" )
+      end

@@ -74,6 +74,8 @@ public abstract class DataSource {
     protected Thread stddevDataAll = null;
     protected Thread meanDataNoNull = null;
     protected Thread stddevDataNoNull = null;
+    protected Thread minData = null;
+    protected Thread maxData = null;
     private Map<Integer, Node> nodes = new TreeMap<Integer, Node>();
     private Map<String, Function> functions = new TreeMap<String, Function>();
     private Map<String, Group> groups = new TreeMap<String, Group>();
@@ -110,6 +112,8 @@ public abstract class DataSource {
     protected boolean hasMPI = false;
     private int fileType = DataSource.TAUPROFILE;
     protected boolean derivedProvided=false;
+
+	protected boolean derivedAtomicProvided=false;
 
     public boolean isDerivedProvided() {
 		return derivedProvided;
@@ -184,6 +188,14 @@ public abstract class DataSource {
 
     public Thread getTotalData() {
         return totalData;
+    }
+    
+    public Thread getMaxData() {
+        return maxData;
+    }
+    
+    public Thread getMinData() {
+    	return minData;
     }
 
     private void setCallPathDataPresent(boolean callPathDataPresent) {
@@ -382,6 +394,11 @@ public abstract class DataSource {
                 meanData.addMetric();
                 totalData.addMetric();
                 stddevData.addMetric();
+                
+                if(maxData!=null&&minData!=null){
+                	maxData.addMetric();
+                	minData.addMetric();
+                }
             }
         }
 
@@ -687,8 +704,12 @@ public abstract class DataSource {
         this.meanData.setThreadDataAllMetrics();
         this.totalData.setThreadDataAllMetrics();
         this.stddevData.setThreadDataAllMetrics();
+        if(this.maxData!=null)
+        	this.maxData.setThreadDataAllMetrics();
+        if(this.minData!=null)
+        	this.minData.setThreadDataAllMetrics();
 
-        this.generateUserEventStatistics();
+        this.generateAtomicEventStatistics();
 
         finishPhaseAnalysis();
 
@@ -709,8 +730,13 @@ public abstract class DataSource {
         return stdDev;
     }
 
-    private void generateUserEventStatistics() {
+    private void generateAtomicEventStatistics() {
         // make sure that the allThreads list is initialized;
+    	
+    	if(derivedAtomicProvided){
+    		return;
+    	}
+    	
         this.initAllThreadsList();
         int numThreads = allThreads.size();
         int numSnapshots = meanData.getNumSnapshots();
@@ -721,7 +747,7 @@ public abstract class DataSource {
 
             for (int i = 0; i < numThreads; i++) { // for each thread
                 Thread thread = allThreads.get(i);
-                for (Iterator<UserEventProfile> it = thread.getUserEventProfiles(); it.hasNext();) {
+                for (Iterator<UserEventProfile> it = thread.getUserEventProfiles(); it.hasNext();) {//For reach user event in the thread
                     UserEventProfile uep = it.next();
                     UserEvent ue = uep.getUserEvent();
 
@@ -886,6 +912,10 @@ public abstract class DataSource {
                 totalData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
                 meanData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
                 stddevData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
+                if(minData!=null)
+                	minData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
+                if(maxData!=null)
+                	maxData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
             }
 
             for (Iterator<Function> l = this.getFunctions(); l.hasNext();) { // for each function
@@ -914,10 +944,26 @@ public abstract class DataSource {
                     stddevData.addFunctionProfile(stddevProfile);
                 }
                 function.setStddevProfile(stddevProfile);
-
-                if(derivedProvided){
+                
+                if(minData!=null){
+                FunctionProfile minProfile = minData.getFunctionProfile(function);
+                if (minProfile == null) {
+                    minProfile = new FunctionProfile(function, numMetrics, meanData.getNumSnapshots());
+                    minData.addFunctionProfile(minProfile);
                 }
-                else{
+                function.setMinProfile(minProfile);
+                }
+                
+                if(maxData!=null){
+                FunctionProfile maxProfile = maxData.getFunctionProfile(function);
+                if (maxProfile == null) {
+                    maxProfile = new FunctionProfile(function, numMetrics, meanData.getNumSnapshots());
+                    maxData.addFunctionProfile(maxProfile);
+                }
+                function.setMaxProfile(maxProfile);
+                }
+
+                if(!derivedProvided){
                 int numEvents = 0;
                 double callSum = 0;
                 double subrSum = 0;
@@ -1189,6 +1235,26 @@ public abstract class DataSource {
                 }
             }
         }
+    }
+    
+    
+    private void initAggThreadsList(){
+    	aggThreads = new ArrayList<Thread>();
+    	aggThreads.add(meanData);
+    	aggThreads.add(stddevData);
+    	aggThreads.add(totalData);
+    	if(maxData!=null)
+    		aggThreads.add(maxData);
+    	if(minData!=null)
+    		aggThreads.add(minData);
+    }
+    
+    private List<Thread> aggThreads = null;
+    public List<Thread> getAggThreads(){
+    	if(aggThreads==null){
+    		initAggThreadsList();
+    	}
+    	return aggThreads;
     }
 
     public List<Thread> getAllThreads() {

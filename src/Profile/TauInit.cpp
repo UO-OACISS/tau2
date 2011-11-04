@@ -37,6 +37,7 @@
 #include <Profile/TauMetrics.h>
 #include <Profile/TauSampling.h>
 #include <Profile/TauSnapshot.h>
+#include <Profile/TauMetaData.h>
 
 
 #ifdef TAU_VAMPIRTRACE 
@@ -416,6 +417,10 @@ extern "C" int Tau_init_initializeTAU() {
 #ifdef TAU_PGI
   sbrk(102400);
 #endif /* TAU_PGI */
+
+#ifndef TAU_DISABLE_METADATA
+	Tau_metadata_fillMetaData();
+#endif
 
   tau_initialized = 1;
   Tau_global_decr_insideTAU();

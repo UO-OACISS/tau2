@@ -103,7 +103,7 @@ double cudaDriverGpuId::syncOffset()
 char* cudaDriverGpuId::printId() 
 {
 		char *rtn = (char*) malloc(50*sizeof(char));
-		sprintf(rtn, "[%d:%d:%d]", device, context, stream);
+		sprintf(rtn, "%d:%d:%d (Device,Context,Stream)", device, context, stream);
 		return rtn;
 }
 x_uint64 cudaDriverGpuId::id_p1(void) { return device; }
@@ -175,27 +175,51 @@ class KernelEvent : public eventId
 	int enqueue_start_event()
 	{
 		cudaError_t err;
-		cudaEventCreate(&startEvent);
+		err = cudaEventCreate(&startEvent);
+		if (err != cudaSuccess)
+		{
+			printf("Error creating kernel event, error #: %d.\n", err);
+			return 1;
+		}
 		err = cudaEventRecord(startEvent, 0);
+		if (err != cudaSuccess)
+		{
+			printf("Error recording kernel event (0), error #: %d.\n", err);
+			return 1;
+		}
 		err = cudaEventRecord(startEvent, getStream());
 		if (err != cudaSuccess)
 		{
 			printf("Error recording kernel event, error #: %d.\n", err);
 			return 1;
 		}
+		//clear error buffer.
+		err == cudaGetLastError();
 		return 0;
 	}
 	int enqueue_stop_event()
 	{
 		cudaError_t err;
-		cudaEventCreate(&stopEvent);
+		err = cudaEventCreate(&stopEvent);
+		if (err != cudaSuccess)
+		{
+			printf("Error creating kernel event, error #: %d.\n", err);
+			return 1;
+		}
 		err = cudaEventRecord(stopEvent, 0);
+		if (err != cudaSuccess)
+		{
+			printf("Error recording kernel event (0), error #: %d.\n", err);
+			return 1;
+		}
 		err = cudaEventRecord(stopEvent, getStream());
 		if (err != cudaSuccess)
 		{
 			printf("Error recording kernel event, error #: %d.\n", err);
 			return 1;
 		}
+		//clear error buffer.
+		err == cudaGetLastError();
 		return 0;
 	}
 };
@@ -286,24 +310,26 @@ double stop)
 void Tau_cuda_register_memcpy_event(const char *name, cudaGpuId* id, double start, double stop, int
 transferSize, int MemcpyType)
 {
-	FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::getTid())->ThisFunction;
+	FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->ThisFunction;
 	eventId c = Tau_gpu_create_gpu_event(name, id, p);
 	Tau_gpu_register_memcpy_event(c, start/1e3, stop/1e3, transferSize, MemcpyType);
 }
 
 
 KernelEvent *curKernel;
+//needed for pycuda for some reason.
+string curName;
 
 void Tau_cuda_enqueue_kernel_enter_event(const char *name, cudaGpuId* id)
 {
 	FunctionInfo* callingSite;
-	if (TauInternal_CurrentProfiler(RtsLayer::getTid()) == NULL)
+	if (TauInternal_CurrentProfiler(Tau_RtsLayer_getTid()) == NULL)
 	{
 		callingSite = NULL;
 	}
 	else
 	{
-		callingSite = TauInternal_CurrentProfiler(RtsLayer::getTid())->CallPathFunction;
+		callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
 	}
 	//printf("recording start for %s.\n", name);
 
@@ -314,6 +340,11 @@ void Tau_cuda_enqueue_kernel_enter_event(const char *name, cudaGpuId* id)
 	//printf("demangling name....\n");
 	dem_name = cplus_demangle(name, DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE |
 	DMGL_TYPES);
+  //revert to original string if demangle fails.
+  if (dem_name == NULL)
+  {
+    dem_name = name;
+  }
 #else
 	dem_name = name;
 #endif /* HAVE_GPU_DEMANGLE */
@@ -324,16 +355,20 @@ void Tau_cuda_enqueue_kernel_enter_event(const char *name, cudaGpuId* id)
 	curKernel->device = id->getCopy();
 
 	curKernel->enqueue_start_event();
- 
+	curName = string(dem_name); 
 	//printf("Successfully recorded start.\n");
+	//KernelBuffer.push(*curKernel);
 
 }
 
 void Tau_cuda_enqueue_kernel_exit_event()
 {
 
-	//printf("recording stop.");
+	//printf("recording stop for: %s.\n", curName.c_str());
 
+	char device_name[4096];
+	strcpy(device_name, curName.c_str());
+	curKernel->name = device_name;
 	curKernel->enqueue_stop_event();
 	KernelBuffer.push(*curKernel);
 
@@ -341,19 +376,27 @@ void Tau_cuda_enqueue_kernel_exit_event()
 	//printf("Successfully recorded stop.\n");
 }
 
+static int in_sync_event = 0;
+
 void Tau_cuda_register_sync_event()
 {
+	//printf("sync flag: %d.\n", in_sync_event);
+	if (in_sync_event)
+	{
+		return;
+	}
+	in_sync_event = 1;
 	//printf("in sync event, buffer size: %d.\n", KernelBuffer.size());	
 	
 	if (KernelBuffer.size() > 0 && KernelBuffer.front().stopEvent != NULL)
 	{
 		//printf("buffer front stop: %d.\n", KernelBuffer.front().stopEvent == NULL);
-		cudaError err = cudaEventQuery_nosync(KernelBuffer.front().stopEvent);
+		cudaError err = cudaEventQuery(KernelBuffer.front().stopEvent);
 		//printf("buffer front is: %d\n", err);
 	}
 	float start_sec, stop_sec;
 
-	while (!KernelBuffer.empty() && cudaEventQuery_nosync(KernelBuffer.front().stopEvent) == cudaSuccess)
+	while (!KernelBuffer.empty() && cudaEventQuery(KernelBuffer.front().stopEvent) == cudaSuccess)
 	{
 		KernelEvent kernel = KernelBuffer.front();
 		//printf("kernel buffer size = %d.\n", KernelBuffer.size());
@@ -403,5 +446,6 @@ void Tau_cuda_register_sync_event()
 		KernelBuffer.pop();
 
 	}
+		in_sync_event = 0;
 	
 }
