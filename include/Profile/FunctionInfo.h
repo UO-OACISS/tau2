@@ -145,7 +145,7 @@ public:
   char *Type;
   char *GroupName;
   char *AllGroups;
-  long FunctionId;
+  uint64_t FunctionId;
   string *FullName;
 
   /* For EBS Sampling Profiles */
@@ -193,7 +193,7 @@ public:
   string *GetFullName(); /* created on demand, cached */
 
 
-  long GetFunctionId() ;
+  uint64_t GetFunctionId() ;
   long GetCalls(int tid) { return NumCalls[tid]; }
   void SetCalls(int tid, long calls) { NumCalls[tid] = calls; }
   long GetSubrs(int tid) { return NumSubrs[tid]; }
