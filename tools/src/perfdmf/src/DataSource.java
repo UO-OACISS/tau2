@@ -74,6 +74,8 @@ public abstract class DataSource {
     protected Thread stddevDataAll = null;
     protected Thread meanDataNoNull = null;
     protected Thread stddevDataNoNull = null;
+    protected Thread minData = null;
+    protected Thread maxData = null;
     private Map<Integer, Node> nodes = new TreeMap<Integer, Node>();
     private Map<String, Function> functions = new TreeMap<String, Function>();
     private Map<String, Group> groups = new TreeMap<String, Group>();
@@ -186,6 +188,14 @@ public abstract class DataSource {
 
     public Thread getTotalData() {
         return totalData;
+    }
+    
+    public Thread getMaxData() {
+        return maxData;
+    }
+    
+    public Thread getMinData() {
+    	return minData;
     }
 
     private void setCallPathDataPresent(boolean callPathDataPresent) {
@@ -384,6 +394,11 @@ public abstract class DataSource {
                 meanData.addMetric();
                 totalData.addMetric();
                 stddevData.addMetric();
+                
+                if(maxData!=null&&minData!=null){
+                	maxData.addMetric();
+                	minData.addMetric();
+                }
             }
         }
 
@@ -689,6 +704,10 @@ public abstract class DataSource {
         this.meanData.setThreadDataAllMetrics();
         this.totalData.setThreadDataAllMetrics();
         this.stddevData.setThreadDataAllMetrics();
+        if(this.maxData!=null)
+        	this.maxData.setThreadDataAllMetrics();
+        if(this.minData!=null)
+        	this.minData.setThreadDataAllMetrics();
 
         this.generateAtomicEventStatistics();
 
@@ -893,6 +912,10 @@ public abstract class DataSource {
                 totalData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
                 meanData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
                 stddevData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
+                if(minData!=null)
+                	minData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
+                if(maxData!=null)
+                	maxData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
             }
 
             for (Iterator<Function> l = this.getFunctions(); l.hasNext();) { // for each function
@@ -921,6 +944,24 @@ public abstract class DataSource {
                     stddevData.addFunctionProfile(stddevProfile);
                 }
                 function.setStddevProfile(stddevProfile);
+                
+                if(minData!=null){
+                FunctionProfile minProfile = minData.getFunctionProfile(function);
+                if (minProfile == null) {
+                    minProfile = new FunctionProfile(function, numMetrics, meanData.getNumSnapshots());
+                    minData.addFunctionProfile(minProfile);
+                }
+                function.setMinProfile(minProfile);
+                }
+                
+                if(maxData!=null){
+                FunctionProfile maxProfile = maxData.getFunctionProfile(function);
+                if (maxProfile == null) {
+                    maxProfile = new FunctionProfile(function, numMetrics, meanData.getNumSnapshots());
+                    maxData.addFunctionProfile(maxProfile);
+                }
+                function.setMaxProfile(maxProfile);
+                }
 
                 if(!derivedProvided){
                 int numEvents = 0;
