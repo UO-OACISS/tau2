@@ -10,6 +10,18 @@
 
 #include <TAU.h>
 
+#ifdef TAU_GNU
+/* *CWL* - ULLONG_MAX relies on c99 in limits.h. 
+           Intrepid's GNU implementation does not appear to support 
+	   this version. The best option appears to be explicitly defining
+	   the value. Redefining __STDC_VERSION__ is not the way to go and is
+           added here only as a note.
+*/
+/* #define __STDC_VERSION__ 199901L */
+/* #define ULLONG_MAX 18446744073709551615 */
+#define ULLONG_MAX 18446744073709551615ULL
+#endif /* TAU_GNU */
+
 #ifndef COUNTER_REDUCE
 #define COUNTER_REDUCE 1
 #endif /* COUNTER_REDUCE */

@@ -63,6 +63,10 @@ int OpenMPLayer::RegisterThread(void)
   return 0;
 }
 
+int OpenMPLayer::numThreads()
+{
+	return omp_get_max_threads(); 
+}
 
 ////////////////////////////////////////////////////////////////////////
 // GetThreadId returns an id in the range 0..N-1 by looking at the 

@@ -38,6 +38,7 @@ class OpenMPLayer
 	~OpenMPLayer () { } 
 
 	static int RegisterThread(void); // called before any profiling code
+	static int numThreads(void); // max number of OpenMP threads.
         static int InitializeThreadData(void);     // init thread mutexes
         static int InitializeDBMutexData(void);     // init tauDB mutex
         static int InitializeEnvMutexData(void);     // init tauEnv mutex

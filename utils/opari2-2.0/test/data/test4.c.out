@@ -1,0 +1,94 @@
+#ifdef _POMP2
+#  undef _POMP2
+#endif
+#define _POMP2 200110
+
+#include "test4.c.opari.inc"
+#line 1 "test4.c"
+/*
+ * This file is part of the Score-P software (http://www.score-p.org)
+ *
+ * Copyright (c) 2009-2011,
+ *    RWTH Aachen University, Germany
+ *    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+ *    Technische Universitaet Dresden, Germany
+ *    University of Oregon, Eugene, USA
+ *    Forschungszentrum Juelich GmbH, Germany
+ *    German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+ *    Technische Universitaet Muenchen, Germany
+ *
+ * See the COPYING file in the package base directory for details.
+ *
+ * Testfile for automated testing of OPARI2
+ *
+ * @authors Bernd Mohr, Peter Philippen
+ *
+ * @brief Test the nowait clause
+ */
+
+#include <stdio.h>
+#ifdef _OPENMP
+#endif
+
+int main() {
+  int i;
+
+{
+int pomp_num_threads = omp_get_max_threads();
+    POMP2_Parallel_fork(&pomp2_region_1, pomp_num_threads, "58*regionType=parallel*sscl=test4.c:30:30*escl=test4.c:0:0**" );
+#line 30 "test4.c"
+ #pragma omp parallel POMP2_DLIST_00001 num_threads(pomp_num_threads) 
+{ POMP2_Parallel_begin(&pomp2_region_1);
+#line 31 "test4.c"
+ {
+   printf("parallel\n");
+    POMP2_For_enter(&pomp2_region_2, "53*regionType=for*sscl=test4.c:33:33*escl=test4.c:0:0**" );
+#line 33 "test4.c"
+   #pragma omp for nowait
+   for(i=0; i<4; ++i) {
+     printf("for nowait %d\n", i);
+   }
+POMP2_For_exit(&pomp2_region_2);
+#line 37 "test4.c"
+
+    POMP2_Sections_enter(&pomp2_region_3, "72*regionType=sections*sscl=test4.c:38:38*escl=test4.c:0:0*numSections=0**" );
+#line 38 "test4.c"
+   #pragma omp sections nowait
+   {
+#line 40 "test4.c"
+     #pragma omp section
+    { POMP2_Section_begin(&pomp2_region_3, "72*regionType=sections*sscl=test4.c:38:38*escl=test4.c:0:0*numSections=0**" );
+#line 41 "test4.c"
+     printf("section nowait 1\n");
+POMP2_Section_end(&pomp2_region_3); }
+#line 42 "test4.c"
+     #pragma omp section
+    { POMP2_Section_begin(&pomp2_region_3, "72*regionType=sections*sscl=test4.c:38:38*escl=test4.c:0:0*numSections=1**" );
+#line 43 "test4.c"
+     { printf("section nowait 2\n"); }
+POMP2_Section_end(&pomp2_region_3); }
+#line 44 "test4.c"
+   }
+POMP2_Sections_exit(&pomp2_region_3);
+#line 45 "test4.c"
+
+    POMP2_Single_enter(&pomp2_region_4, "56*regionType=single*sscl=test4.c:46:46*escl=test4.c:0:0**" );
+#line 46 "test4.c"
+   #pragma omp single nowait
+{ POMP2_Single_begin(&pomp2_region_4);
+#line 47 "test4.c"
+   {
+     printf("single nowait\n");
+   }
+POMP2_Single_end(&pomp2_region_4); }
+POMP2_Single_exit(&pomp2_region_4);
+#line 50 "test4.c"
+ }
+POMP2_Implicit_barrier_enter(&pomp2_region_1);
+#pragma omp barrier
+POMP2_Implicit_barrier_exit(&pomp2_region_1);
+POMP2_Parallel_end(&pomp2_region_1); }
+POMP2_Parallel_join(&pomp2_region_1);
+ }
+#line 51 "test4.c"
+}

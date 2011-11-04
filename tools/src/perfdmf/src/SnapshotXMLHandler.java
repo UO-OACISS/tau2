@@ -21,6 +21,9 @@ import org.xml.sax.helpers.DefaultHandler;
 public class SnapshotXMLHandler extends DefaultHandler {
 
     private SnapshotDataSource dataSource;
+    
+    //private static final String[] DERIVED_TYPES={"total","mean_all","mean_no_null","stddev_all","stddev_no_null"};
+    private static final String TNR=" t\n\r";
 
     private Map<String, ThreadData> threadMap = new HashMap<String, ThreadData>();
    // private Map<String, ThreadData> entityMap = new HashMap<String, ThreadData>();
@@ -96,7 +99,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
     }
 
     private void handleThread(Attributes attributes) {
-        String threadName = attributes.getValue("id");
+        String threadName = attributes.getValue(ID);
         int nodeID = Integer.parseInt(attributes.getValue("node"));
         int contextID = Integer.parseInt(attributes.getValue("context"));
         int threadID = Integer.parseInt(attributes.getValue("thread"));
@@ -117,8 +120,9 @@ public class SnapshotXMLHandler extends DefaultHandler {
     private boolean tSet=false;
     private boolean sDSet=false;
     private boolean sDNNSet=false;
+    private boolean unknownDerivedProfile=false;
     private void handleDerivedEntity(Attributes attributes){
-    	String entityName = attributes.getValue("id");
+    	String entityName = attributes.getValue(ID);
     	if(entityName.equals("mean_all")){
     		ThreadData data = new ThreadData();
     		//It is unified so:
@@ -187,6 +191,37 @@ public class SnapshotXMLHandler extends DefaultHandler {
                     currentThread = data;
                     sDNNSet=true;
             	}
+            	else
+                	if(entityName.equals("min_no_null")){
+                		ThreadData data = new ThreadData();
+                		//It is unified so:
+                		{
+                			data.eventMap = unifiedDefinitions.eventMap;
+                            data.userEventMap = unifiedDefinitions.userEventMap;
+                            data.metricMap = unifiedDefinitions.metricMap;
+                		}
+                		data.thread = dataSource.minData = new Thread(-4, -4, -4, dataSource.getNumberOfMetrics(), dataSource); //dataSource.addThread(-3, -3, -3);
+                        threadMap.put(entityName, data);
+                        currentThread = data;
+                        sDNNSet=true;
+                	}
+    	else
+    	if(entityName.equals("max_no_null")){
+    		ThreadData data = new ThreadData();
+    		//It is unified so:
+    		{
+    			data.eventMap = unifiedDefinitions.eventMap;
+                data.userEventMap = unifiedDefinitions.userEventMap;
+                data.metricMap = unifiedDefinitions.metricMap;
+    		}
+    		data.thread = dataSource.maxData = new Thread(-5, -5, -5, dataSource.getNumberOfMetrics(), dataSource); //dataSource.addThread(-3, -3, -3);
+            threadMap.put(entityName, data);
+            currentThread = data;
+            sDNNSet=true;
+    	}
+//            	else{
+//            		unknownDerivedEntity=true;
+//            	}
     	if(mSet&&tSet&&sDSet&&sDNNSet&&mNNSet)
     		dataSource.derivedProvided=true;
     }
@@ -211,15 +246,20 @@ public class SnapshotXMLHandler extends DefaultHandler {
     }
     
     private void handleDerivedProfile(Attributes attributes) {
-        String threadID = attributes.getValue("derivedentity");
+        String threadID = attributes.getValue(DERIVEDENTITY);
         currentThread = threadMap.get(threadID);
+        if(currentThread==null)
+        {
+        	unknownDerivedProfile=true;
+        	return;
+        }
         currentSnapshot = currentThread.thread.addSnapshot("");
     }
 
     private void handleIntervalData(Attributes attributes) {
         String metrics = attributes.getValue("metrics");
 
-        StringTokenizer tokenizer = new StringTokenizer(metrics, " \t\n\r");
+        StringTokenizer tokenizer = new StringTokenizer(metrics, TNR);
 
         currentMetrics = new int[tokenizer.countTokens()];
         int index = 0;
@@ -232,10 +272,15 @@ public class SnapshotXMLHandler extends DefaultHandler {
     private void handleAtomicDataEnd() {
         String data = accumulator.toString();
 
-        StringTokenizer tokenizer = new StringTokenizer(data, " \t\n\r");
+        StringTokenizer tokenizer = new StringTokenizer(data, TNR);
 
         while (tokenizer.hasMoreTokens()) {
             int eventID = Integer.parseInt(tokenizer.nextToken());
+            if(eventID<0||eventID>currentThread.userEventMap.size()-1)
+            {	
+            	System.out.println("Skipping undefined atomic event, id# "+eventID);
+            	return;
+            }
             UserEvent userEvent = currentThread.userEventMap.get(eventID);
 
             UserEventProfile uep = currentThread.thread.getUserEventProfile(userEvent);
@@ -260,10 +305,15 @@ public class SnapshotXMLHandler extends DefaultHandler {
     private void handleIntervalDataEnd() {
         String data = accumulator.toString();
 
-        StringTokenizer tokenizer = new StringTokenizer(data, " \t\n\r");
+        StringTokenizer tokenizer = new StringTokenizer(data, TNR);
 
         while (tokenizer.hasMoreTokens()) {
             int eventID = Integer.parseInt(tokenizer.nextToken());
+            
+            if(eventID<0||eventID>currentThread.eventMap.size()-1){
+            	System.out.println("Skipping undefined interval event, id# "+eventID);
+            	return;
+            }
 
             Function function = currentThread.eventMap.get(eventID);
 
@@ -289,11 +339,21 @@ public class SnapshotXMLHandler extends DefaultHandler {
             fp.setNumSubr(numsubr);
         }
     }
+    
+    
+    private static final String THREAD="thread";
+    private static final String ID="id";
+    private static final String DERIVEDENTITY="derivedentity";
+    private static final String DERIVEDPROFILE="derivedprofile";
 
     public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+    	if(unknownDerivedProfile){
+        	return;
+        }
+    	
         //System.out.println("startElement: uri:" + uri + ", localName:"+localName+", qName:"+qName);
 
-        if (localName.equals("thread")) {
+        if (localName.equals(THREAD)) {
             handleThread(attributes);
         } else if (localName.equals("name")) {
             accumulator = new StringBuffer();
@@ -308,11 +368,11 @@ public class SnapshotXMLHandler extends DefaultHandler {
         } else if (localName.equals("definitions")) {
             handleDefinitions(attributes);
         } else if (localName.equals("metric")) {
-            currentId = Integer.parseInt(attributes.getValue("id"));
+            currentId = Integer.parseInt(attributes.getValue(ID));
         } else if (localName.equals("event")) {
-            currentId = Integer.parseInt(attributes.getValue("id"));
+            currentId = Integer.parseInt(attributes.getValue(ID));
         } else if (localName.equals("userevent")) {
-            currentId = Integer.parseInt(attributes.getValue("id"));
+            currentId = Integer.parseInt(attributes.getValue(ID));
         } else if (localName.equals("profile")) {
             handleProfile(attributes);
         } else if (localName.equals("interval_data")||localName.equals("derivedinterval_data")) {
@@ -320,15 +380,24 @@ public class SnapshotXMLHandler extends DefaultHandler {
             accumulator = new StringBuffer();
         } else if (localName.equals("atomic_data")||localName.equals("derivedatomic_data")) {
             accumulator = new StringBuffer();
-        } else if(localName.equals("derivedentity")){
+        } else if(localName.equals(DERIVEDENTITY)){
         	handleDerivedEntity(attributes);
-        }else if(localName.equals("derivedprofile")){
+        }else if(localName.equals(DERIVEDPROFILE)){
         	handleDerivedProfile(attributes);
         }
 
     }
 
     public void endElement(String uri, String localName, String qName) throws SAXException {
+    	
+    	
+        if(unknownDerivedProfile){
+        	if(localName.equals(DERIVEDPROFILE)){
+        		unknownDerivedProfile=false;
+        	}
+        	return;
+        }
+    	
         //System.out.println("endElement: uri:" + uri + ", localName:"+localName+", qName:"+qName);
         if (localName.equals("thread_definition")) {
             currentThread = null;
@@ -358,8 +427,12 @@ public class SnapshotXMLHandler extends DefaultHandler {
             currentThread.thread.getMetaData().put(currentName, currentValue);
         } else if (localName.equals("interval_data")||localName.equals("derivedinterval_data")) {
             handleIntervalDataEnd();
-        } else if (localName.equals("atomic_data")||localName.equals("derivedatomic_data")) {
+        } else if (localName.equals("atomic_data")) {
             handleAtomicDataEnd();
+        }
+        else if (localName.equals("derivedatomic_data")){
+        	handleAtomicDataEnd();
+        	dataSource.derivedAtomicProvided=true;
         }
 
     }

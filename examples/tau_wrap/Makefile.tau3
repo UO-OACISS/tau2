@@ -1,0 +1,23 @@
+CC=gcc
+CFLAGS=-fPIC -I.
+LIBS = -L. -lsecret
+LDFLAGS = -shared
+
+run: app
+	./app
+	pprof
+app: app.o libsecret.so secret_wrapper/link_options.tau
+	tau_cc.sh -o app app.o $(LIBS) -tau_options='-optTauWrapFile=secret_wrapper/link_options.tau'
+libsecret.so: secret.o
+	$(CC) $(LDFLAGS) -o $@ $<
+secret.o: secret.c
+	$(CC) $(CFLAGS) -c $<
+app.o: app.c
+	tau_cc.sh $(CFLAGS) -c $<
+
+secret_wrapper/link_options.tau: secret.h libsecret.so
+	/bin/rm -rf secret_wrapper
+	tau_gen_wrapper secret.h libsecret.so 
+
+clean:
+	/bin/rm -rf app.o app libsecret.so secret.o wrapper secret_wrapper

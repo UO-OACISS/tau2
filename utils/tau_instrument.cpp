@@ -190,6 +190,18 @@ ostream& tauInstrument::print(ostream& ostr) const
 	 case TAU_LOOPS:
 		 ostr<<"loops: ";
 		 break;
+	 case TAU_FORALL:
+		 ostr<<"forall: ";
+		 break;
+	 case TAU_BARRIER:
+		 ostr<<"barrier: ";
+		 break;
+	 case TAU_FENCE:
+		 ostr<<"fence: ";
+		 break;
+	 case TAU_NOTIFY:
+		 ostr<<"notify: ";
+		 break;
 	 case TAU_IO:
 		 ostr<<"io: ";
 		 break;
@@ -433,12 +445,12 @@ void parseInstrumentationCommand(char *line, int lineno)
   char pcode[INBUF_SIZE]; /* parsed code */
   char plang[INBUF_SIZE]; /* parsed language */
   int language = tauInstrument::LA_ANY;
-  int m1, m2, m3, m4; 
+  int m1, m2, m3, m4, m5, m6, m7, m8; 
   int startlineno, stoplineno;
   startlineno = stoplineno = 0;
   instrumentKind_t kind = TAU_NOT_SPECIFIED;
  
-  m1 = m2 = m3 = m4 = 1; /* does not match by default -- for matching loops/io/mem */
+  m1 = m2 = m3 = m4 = m5 = m6 = m7 = m8 = 1; /* does not match by default -- for matching loops/io/mem */
 
 #ifdef DEBUG
   printf("Inside parseInstrumentationCommand: line %s lineno: %d\n",
@@ -774,7 +786,12 @@ void parseInstrumentationCommand(char *line, int lineno)
       	  m1 = strncmp(line, "loops", 5);
 	  m2 = strncmp(line, "io", 2);
 	  m3 = strncmp(line, "memory", 6);
-          if ((m1 == 0) || (m2 == 0) || (m3 == 0)) {
+	  m5 = strncmp(line, "forall", 6);
+	  m6 = strncmp(line, "barrier", 7);
+	  m7 = strncmp(line, "fence", 5);
+	  m8 = strncmp(line, "notify", 6);
+          if ((m1 == 0) || (m2 == 0) || (m3 == 0) || (m5 == 0) || (m6 ==0) 
+            ||(m7 == 0) || (m8 == 0)) {
 	    if (m1 == 0) { 
 	      kind = TAU_LOOPS; 
 	      line += 5; /* move the pointer 5 spaces (loops) for next token */
@@ -789,6 +806,29 @@ void parseInstrumentationCommand(char *line, int lineno)
 	          kind = TAU_MEMORY;
 	          line += 6;/* move the pointer 6 spaces (memory) for next token */
 	        }
+                else {
+                  if (m5 == 0) { 
+	            kind = TAU_FORALL;
+	            line += 6;/* move the pointer 6 spaces (forall) for next token */
+                  } else {
+                    if (m6 == 0) { 
+	              kind = TAU_BARRIER;
+	              line += 7;/* move the pointer 7 spaces (barrier) for next token */
+                    } else {
+                      if (m7 == 0) { 
+	                kind = TAU_FENCE;
+	                line += 5;/* move the pointer 6 spaces (fetch) for next token */
+                      } else {
+	                if (m8 == 0) {
+                          kind = TAU_NOTIFY;
+	                  line += 6;/* move the pointer 6 spaces (notify) for next token */
+                        }
+                      }
+                    }
+
+                  }
+                }
+                
 	      }
 	    }
 
@@ -1382,6 +1422,28 @@ int labelOutsideStatementBoundary(const pdbStmt *labelstmt, const pdbStmt *paren
 }
 
 /* Add request for instrumentation for C/C++ loops */
+void addRequestForUPCInstrumentation(const char *entityName, const pdbRoutine *ro, const pdbLoc& start, int stop_row, int stop_col, vector<itemRef *>& itemvec)
+{
+  const pdbFile *f = start.file();
+  char lines[256];
+  sprintf(lines, "{%d,%d}-{%d,%d}",
+        start.line(), start.col(), stop_row, stop_col);
+
+#ifdef DEBUG 
+  printf("addRequestForUPCInstrumentation: entityName = %s\n", entityName);
+#endif /* DEBUG */
+  const char *filename = f->name().c_str();
+  while (strchr(filename,TAU_DIR_CHARACTER)) { // remove path
+    filename = strchr(filename,TAU_DIR_CHARACTER)+1;
+  }
+  string *timername = new string(string(entityName+ ro->fullName()
+                                        + " [{"+string(filename)+ "} "+ lines + "]"));
+
+  itemvec.push_back( new itemRef((const pdbItem *)ro, START_LOOP_TIMER, start.line(), start.col(), *timername, BEFORE));
+  itemvec.push_back( new itemRef((const pdbItem *)ro, STOP_LOOP_TIMER, stop_row, stop_col+1, *timername, AFTER));
+}
+
+/* Add request for instrumentation for C/C++ loops */
 void addRequestForLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start, const pdbLoc& stop, vector<itemRef *>& itemvec)
 {
   const pdbFile *f = start.file();
@@ -1656,9 +1718,11 @@ int processIOBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& it
 #endif /* PDT_NOFSTMTS */
 
 }
+
+
 /* Process Block to examine the routine */
-int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& itemvec,
-		int level, const pdbStmt *parentDO)
+int processBlockStatements(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& itemvec,
+		int level, const pdbStmt *parentDO, instrumentKind_t inst_request)
 {
   pdbLoc start, stop; /* the location of start and stop timer statements */
   
@@ -1670,6 +1734,7 @@ int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& item
   pdbStmt::stmt_t k = s->kind();
 
 #ifdef DEBUG
+    printf("INSIDE PROCESS BLOCK for LOOP: inst_request = %d!\n", inst_request);
     if (parentDO)
     printf("Examining statement parentDo line=%d\n", parentDO->stmtEnd().line());
 #endif /* DEBUG */
@@ -1692,7 +1757,7 @@ int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& item
         printf("start=<%d:%d> - end=<%d:%d>\n",
           start.line(), start.col(), stop.line(), stop.col());
 #endif /* DEBUG */
-	if (level == 1)
+	if (level == 1 && inst_request == TAU_LOOPS)
 	{
           /* C++/C or Fortran instrumentation? */
 #ifndef PDT_NOFSTMTS
@@ -1705,13 +1770,35 @@ int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& item
 	if (s->downStmt())
 	{
 	  if (level == 1)
-  	    processBlock(s->downStmt(), ro, itemvec, level+1, s);
+  	    processBlockStatements(s->downStmt(), ro, itemvec, level+1, s, inst_request);
  	  else 
-  	    processBlock(s->downStmt(), ro, itemvec, level+1, parentDO);
+  	    processBlockStatements(s->downStmt(), ro, itemvec, level+1, parentDO, inst_request);
 	/* NOTE: We are passing s as the parentDO argument for subsequent 
 	 * processing of the DO loop. We also increment the level by 1 */
         }
         break;
+#ifndef PDT_NO_UPC
+      case pdbStmt::ST_UPC_FORALL:
+        if (inst_request == TAU_FORALL) 
+          addRequestForUPCInstrumentation("UPC_FORALL: ",ro, s->stmtBegin(), 
+			s->stmtEnd().line(), s->stmtEnd().col(), itemvec);
+	break;
+      case pdbStmt::ST_UPC_BARRIER:
+        if (inst_request == TAU_BARRIER) 
+          addRequestForUPCInstrumentation("UPC_BARRIER: ",ro, s->stmtBegin(), 
+			s->stmtEnd().line(), s->stmtEnd().col(), itemvec);
+	break;
+      case pdbStmt::ST_UPC_FENCE:
+        if (inst_request == TAU_FENCE) 
+          addRequestForUPCInstrumentation("UPC_FENCE: ",ro, s->stmtBegin(), 
+			s->stmtEnd().line(), s->stmtEnd().col(), itemvec);
+	break;
+      case pdbStmt::ST_UPC_NOTIFY:
+        if (inst_request == TAU_NOTIFY) 
+          addRequestForUPCInstrumentation("UPC_NOTIFY: ",ro, s->stmtBegin(), 
+			s->stmtEnd().line(), s->stmtEnd().col(), itemvec);
+	break;
+#endif /* PDT_NO_UPC */
       case pdbStmt::ST_GOTO:
 
 #ifndef PDT_NOFSTMTS
@@ -1721,7 +1808,7 @@ int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& item
       case pdbStmt::ST_FCYCLE:
       case pdbStmt::ST_FWHERE:
         if (s->downStmt())
-          processBlock(s->downStmt(), ro, itemvec, level, parentDO);
+          processBlockStatements(s->downStmt(), ro, itemvec, level, parentDO, inst_request);
         break; /* don't go into extraStmt for Fortran EXIT to avoid looping */
 #endif /* PDB_FORTRAN_EXTENDED_STATEMENTS_LEVEL_1 */
 //       case pdbStmt::ST_FCYCLE:
@@ -1757,9 +1844,9 @@ int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& item
 
       default:
         if (s->downStmt())
-          processBlock(s->downStmt(), ro, itemvec, level, parentDO);
+          processBlockStatements(s->downStmt(), ro, itemvec, level, parentDO, inst_request);
         if (s->extraStmt())
-          processBlock(s->extraStmt(), ro, itemvec, level, parentDO);
+          processBlockStatements(s->extraStmt(), ro, itemvec, level, parentDO, inst_request);
 	/* We only process down and extra statements for the default statements
 	   that are not loops. When a loop is encountered, its down is not
 	   processed. That way we retain outer loop level instrumentation */
@@ -1770,12 +1857,11 @@ int processBlock(const pdbStmt *s, const pdbRoutine *ro, vector<itemRef *>& item
     }
   /* and then process the next statement */
   if (s->nextStmt())
-    return processBlock(s->nextStmt(), ro, itemvec, level, parentDO);
+    return processBlockStatements(s->nextStmt(), ro, itemvec, level, parentDO, inst_request);
   else
     return 1;
 
 }
-
 /* Process list of C routines */
 bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& it, vector<itemRef *>& itemvec, pdbFile *file) 
 {
@@ -1868,7 +1954,11 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
 #endif /* DEBUG */
 
           if (!use_spec &&
-              (language == PDB::LA_CXX || language == PDB::LA_C_or_CXX))
+              (language == PDB::LA_CXX ||
+#ifndef PDT_NO_UPC
+               language == PDB::LA_UPC || 
+#endif /* PDT_NO_UPC */
+               language == PDB::LA_C_or_CXX))
           {
 	    itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col()+1, (*it)->getCode(), BEFORE));
           }
@@ -1896,7 +1986,11 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
 #endif /* DEBUG */
 
             if (!use_spec &&
-                (language == PDB::LA_CXX || language == PDB::LA_C_or_CXX))
+              (language == PDB::LA_CXX ||
+#ifndef PDT_NO_UPC
+               language == PDB::LA_UPC || 
+#endif /* PDT_NO_UPC */
+               language == PDB::LA_C_or_CXX))
             {
 	      itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rlit)->line(), (*rlit)->col(), (*it)->getCode(), BEFORE));
             }
@@ -1914,7 +2008,11 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
           if (isVoidRoutine(*rit))
           {
             if (!use_spec &&
-                (language == PDB::LA_CXX || language == PDB::LA_C_or_CXX))
+              (language == PDB::LA_CXX ||
+#ifndef PDT_NO_UPC
+               language == PDB::LA_UPC || 
+#endif /* PDT_NO_UPC */
+               language == PDB::LA_C_or_CXX))
             {
               itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rit)->bodyEnd().line(), (*rit)->bodyEnd().col(), (*it)->getCode(), BEFORE));
             }
@@ -1975,7 +2073,11 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
         if ((*it)->getKind() == TAU_INIT)
         {
           if (!use_spec &&
-              (language == PDB::LA_CXX || language == PDB::LA_C_or_CXX))
+              (language == PDB::LA_CXX ||
+#ifndef PDT_NO_UPC
+               language == PDB::LA_UPC || 
+#endif /* PDT_NO_UPC */
+               language == PDB::LA_C_or_CXX))
           {
 	    itemvec.push_back( new itemRef((pdbItem *)NULL, INSTRUMENTATION_POINT, (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col()+1, (*it)->getCode(), BEFORE));
           }
@@ -2027,7 +2129,13 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
       }
       if ((*it)->getKind() == TAU_LOOPS)
       { /* we need to instrument all outer loops in this routine */
-	processBlock((*rit)->body(), (*rit), itemvec, 1, NULL);
+	processBlockStatements((*rit)->body(), (*rit), itemvec, 1, NULL, (*it)->getKind());
+	/* level = 1 */
+      }
+      if ((*it)->getKind() == TAU_FORALL || (*it)->getKind() == TAU_BARRIER ||
+	  (*it)->getKind() == TAU_FENCE || (*it)->getKind() == TAU_NOTIFY )
+      { /* we need to instrument all outer loops in this routine */
+	processBlockStatements((*rit)->body(), (*rit), itemvec, 1, NULL, (*it)->getKind());
 	/* level = 1 */
       }
       if ((*it)->getKind() == TAU_IO)
@@ -2213,7 +2321,7 @@ bool processFRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
       }
       if ((*it)->getKind() == TAU_LOOPS)
       { /* we need to instrument all outer loops in this routine */
-	processBlock((*rit)->body(), (*rit), itemvec, 1, NULL); /* level = 1 */
+	processBlockStatements((*rit)->body(), (*rit), itemvec, 1, NULL, (*it)->getKind()); /* level = 1 */
       }
       if ((*it)->getKind() == TAU_IO)
       { /* we need to instrument all io statements in this routine */
@@ -2469,6 +2577,9 @@ it will not enter here. */
         case PDB::LA_C :
         case PDB::LA_CXX:
         case PDB::LA_C_or_CXX:
+#ifndef PDT_NO_UPC
+        case PDB::LA_UPC:
+#endif /* PDT_NO_UPC */
 #ifdef DEBUG
 	  cout <<"C routine!"<<endl; 
 #endif /* DEBUG */
@@ -2608,6 +2719,10 @@ int parseLanguageString(const string& str)
       language |= PDB::LA_C;
     else if (0 == lang.compare("c++"))
       language |= PDB::LA_CXX;
+#ifndef PDT_NO_UPC
+    else if (0 == lang.compare("upc"))
+      language |= PDB::LA_UPC;
+#endif /* PDT_NO_UPC */
     else if (0 == lang.compare("fortran"))
       language |= PDB::LA_FORTRAN;
     else

@@ -1,23 +1,16 @@
 #include <Profile/TauGpu.h>
-#include <cupti_events.h>
-#include <cupti_callbacks.h>
-#include <cupti_runtime_cbid.h>
-#include <generated_cuda_runtime_api_meta.h>
-#include <cupti_driver_cbid.h>
-//Hack need to get this to compile on older version of g++.
-#define CUdeviceptr_v1 CUdeviceptr
-#define CUDA_MEMCPY2D_v1 CUDA_MEMCPY2D
-#define CUDA_MEMCPY3D_v1 CUDA_MEMCPY3D
-#define CUDA_ARRAY_DESCRIPTOR_v1 CUDA_ARRAY_DESCRIPTOR
-#define CUDA_ARRAY3D_DESCRIPTOR_v1 CUDA_ARRAY3D_DESCRIPTOR
-//end Hack
-#include <generated_cuda_meta.h>
 #include <cuda.h>
+#include <cupti.h>
 
-#define CUPTI_METRIC_INSTRUCTIONS "CUDA_INS"
+#if CUPTI_API_VERSION >= 2
 
-double metric_read_cupti(int type);
-void metric_read_cupti_ins(int tid, int idx, double values[]);
+#ifdef TAU_BFD
+#define HAVE_DECL_BASENAME 1
+#  if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
+#    include <demangle.h>
+#  endif /* HAVE_GNU_DEMANGLE */
+#  include <bfd.h>
+#endif /* TAU_BFD */
 
 #define CUDA_CHECK_ERROR(err, str) \
 	if (err != CUDA_SUCCESS) \
@@ -33,33 +26,97 @@ void metric_read_cupti_ins(int tid, int idx, double values[]);
 		exit(1); \
 	} \
 
-// Structure to hold API parameters
-//#define cudaMemcpy cudaMemcpy
-/*typedef struct cudaMemcpy_params_st {
-    void *dst;
-    const void *src;
-    size_t count;
-    unsigned int kind;
-}cudaMemcpy_params;*/
+#define ACTIVITY_BUFFER_SIZE (4096 * 1024)
 
-//#define cudaMemcpyToArray cudaMemcpyToArray
-/*typedef struct cudaMemcpyToArray_params_st {
-    void *dst;
-		size_t wOffset;
-		size_t hOffset;
-    const void *src;
-    size_t count;
-    unsigned int kind;
-}cudaMemcpyToArray_params;*/
+uint8_t *activityBuffer;
+CUpti_SubscriberHandle subscriber;
 
-//#define cudaMemcpyToSymbol cudaMemcpyToSymbol
-/*typedef struct cudaMemcpyToSymbol_params_st {
-    void *symbol;
-    const void *src;
-    size_t count;
-		size_t offset;
-    unsigned int kind;
-}cudaMemcpyToSymbol_params;*/
+void Tau_cupti_register_sync_event();
+
+void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_CallbackId id, const void *params);
+
+void Tau_cupti_record_activity(CUpti_Activity *record);
+
+void __attribute__ ((constructor)) Tau_cupti_onload(void);
+void __attribute__ ((destructor)) Tau_cupti_onunload(void);
+
+void get_values_from_memcpy(const CUpti_CallbackData *info, CUpti_CallbackId id, CUpti_CallbackDomain domain, int &kind, int &count);
+
+int getMemcpyType(int kind);
+const char* demangleName(const char *n);
+
+int getParentFunction(uint32_t id);
+
+bool function_is_sync(CUpti_CallbackId id);
+bool function_is_memcpy(CUpti_CallbackId id);
+bool function_is_launch(CUpti_CallbackId id);
+bool function_is_exit(CUpti_CallbackId id);
+
+bool registered_sync = false;
+
+bool cupti_api_runtime();
+bool cupti_api_driver();
+
+map<uint32_t, FunctionInfo*> functionInfoMap;
+
+class cuptiGpuId : public gpuId
+{
+	uint32_t streamId;
+	uint32_t correlationId;
+public:
+
+	cuptiGpuId(uint32_t s, uint32_t c) { streamId = s; correlationId = c; };
+	cuptiGpuId *getCopy() { 
+		cuptiGpuId *c = new cuptiGpuId(*this);
+		return c; 
+	};
+	char* printId() {
+		char *rtn = (char*) malloc(50*sizeof(char));
+		sprintf(rtn, "%d/%d", streamId, correlationId);
+		return rtn;
+	};
+	x_uint64 id_p1() {
+		return correlationId;
+	};
+	x_uint64 id_p2() { 
+		return RtsLayer::myNode(); 
+	};
+
+	bool equals(const gpuId *other) const
+	{
+		return streamId == ((cuptiGpuId *)other)->stream();
+	};
+
+	double syncOffset() { return 0; };
+	uint32_t stream() { return streamId; };
+};
+
+
+class cuptiRecord : public eventId {
+
+	cuptiGpuId *device;
+	const char *name;
+	FunctionInfo *callingSite;
+
+public:
+	cuptiRecord(const char* n, cuptiGpuId *id, FunctionInfo *site) : eventId(n, id, site)
+	{
+	};
+	cuptiRecord(const char* n, uint32_t stream, uint32_t correlation) : eventId(n, &cuptiGpuId(stream, correlation), getParentFunction(correlation)) {};
+
+	FunctionInfo* getParentFunction(uint32_t id)
+	{
+		FunctionInfo *funcInfo = NULL;
+		map<uint32_t, FunctionInfo*>::iterator it = functionInfoMap.find(id);
+		if (it != functionInfoMap.end())
+		{
+			funcInfo = it->second;
+		}
+		return funcInfo;
+	};
+
+
+};
 
 #define CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(name, id, info, kind, count) \
 	if ((id) == CUPTI_RUNTIME_TRACE_CBID_##name##_v3020) \
@@ -67,40 +124,5 @@ void metric_read_cupti_ins(int tid, int idx, double values[]);
 		kind = ((name##_v3020_params *) info->functionParams)->kind; \
 		count = ((name##_v3020_params *) info->functionParams)->count; \
 	}
-			
-#define CAST_TO_DRIVER_MEMCPY_TYPE_AND_CALL(name, id, info, kind, count) \
-	if ((id) == CUPTI_DRIVER_TRACE_CBID_##name) \
-	{ \
-		count = ((name##_params *) info->functionParams)->ByteCount; \
-	}
 
-#define CAST_TO_DRIVER_CONTEXT_TYPE_AND_CALL(name, id, info, ctx) \
-	if ((id) == CUPTI_DRIVER_TRACE_CBID_##name) \
-	{ \
-		ctx = ((name##_params *) info->functionParams)->pctx; \
-	}
-
-#define CAST_TO_RUNTIME_LAUNCH_TYPE_AND_CALL(name, id, info, kind, count) \
-	if ((id) == CUPTI_RUNTIME_TRACE_CBID_##name) \
-	{ \
-		stream = ((name##_params *) info->functionParams)->ByteCount; \
-	}
-
-#define CAST_TO_DRIVER_LAUNCH_TYPE_AND_CALL(name, id, info, stream) \
-	if ((id) == CUPTI_DRIVER_TRACE_CBID_##name) \
-	{ \
-		stream = ((name##_params *) info->functionParams)->hStream; \
-	}
-
-
-// Structure to hold data collected by callback
-typedef struct RuntimeApiTrace_st {
-    CUpti_CallbackData traceInfo;
-    uint64_t startTimestamp;
-    uint64_t endTimestamp;
-    cudaMemcpy_v3020_params memcpy_params;
-} RuntimeApiTrace_t;
-
-
-enum launchOrder{ MEMCPY_H2D1, MEMCPY_H2D2, MEMCPY_D2H, KERNEL, THREAD_SYNC, LAUNCH_LAST};
-
+#endif

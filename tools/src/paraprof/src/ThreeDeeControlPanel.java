@@ -564,7 +564,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
     
     private void updateTopoList(){
     	int maxDex = topoComboBox.getItemCount()-1;
-    	for(int i=maxDex;i>customTopoDex;i--)
+    	for(int i=maxDex;i>customTopoDex+1;i--)
     	{
     		topoComboBox.removeItemAt(i);
     	}
@@ -602,6 +602,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         //String[] a = new String[topos.size()];
         topos.add("Custom");
         customTopoDex=topos.size()-1;
+        topos.add("Map");
 		//return topos;//topos.toArray(a);
         
         topoComboBox = new SteppedComboBox(topos);
@@ -628,7 +629,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
             public void actionPerformed(ActionEvent evt) {
                 try {
                     settings.setTopoCart((String)topoComboBox.getSelectedItem());//TODO: Reset topo labels when this changes!
-                    settings.setCustomTopo(topoComboBox.getSelectedIndex()>customTopoDex);
+                    settings.setCustomTopo(topoComboBox.getSelectedIndex()>customTopoDex+1);
                     selectedTopoDex=topoComboBox.getSelectedIndex();
                     resetTopoAxisSliders(true);
                     window.redraw();
@@ -676,6 +677,36 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         
         topoFileButton.addActionListener(topoFileSelector);
 
+        
+JButton mapFileButton = new JButton("map");
+        
+        ActionListener mapFileSelector = new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                try {
+                	JFileChooser tsDialog = new JFileChooser("Select a topology map file");
+//                	if(ParaProf.schemaLocation!=null){
+//                		File topoDir = new File(ParaProf.schemaLocation+File.separatorChar+"topology");
+//                		if (topoDir.canRead()){
+//                			tsDialog.setCurrentDirectory(topoDir);
+//                		}
+//                	}
+                	//tsDialog.setVisible(true);
+                    tsDialog.showOpenDialog(window);
+                    File dFile = tsDialog.getSelectedFile();
+                    if(dFile!=null&&dFile.exists()&&dFile.canRead()){
+                    String path = dFile.getAbsolutePath();
+                    settings.setTopoMapFile(path);
+                    //updateTopoList();
+                    }
+                } catch (Exception e) {
+                    ParaProfUtils.handleException(e);
+                }
+            }
+        };
+        
+        mapFileButton.addActionListener(mapFileSelector);
+        
+        
         JPanel subPanel = new JPanel();
         subPanel.setLayout(new GridBagLayout());
 
@@ -697,6 +728,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         gbc.weightx = 0.0;
         gbc.fill = GridBagConstraints.NONE;
         addCompItem(panel, topoFileButton, gbc, 2, 1, 1, 1);
+        addCompItem(panel, mapFileButton, gbc, 3, 1, 1, 1);
         
         gbc.weighty = 0;
         gbc.weightx = 0;

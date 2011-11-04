@@ -316,7 +316,8 @@ for arg in "$@"; do
     echo ""
     echo "OpenMP Options:"
     echo "-openmp ........................................... Use OpenMP threads."
-    echo "-opari ..................................................... Use Opari."
+    echo "-opari .................................................... Use Opari2."
+    echo "-opari1 .................................................... Use Opari."
     echo "-opari_region ......... Report performance data for all OpenMP regions."
     echo "-opari_construct ... Report performance data for all OpenMP constructs."
     echo ""
@@ -429,7 +430,8 @@ for arg in "$@"; do
     echo "-charm=<dir> .............................. Use charm++ thread package."
     echo "-sproc .................................. Use SGI sproc thread package."
     echo "-openmp ........................................... Use OpenMP threads."
-    echo "-opari ..................................................... Use Opari."
+    echo "-opari .................................................... Use Opari2."
+    echo "-opari1 .................................................... Use Opari."
     echo "-opari_region ......... Report performance data for all OpenMP regions."
     echo "-opari_construct ... Report performance data for all OpenMP constructs."
     echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
@@ -690,8 +692,14 @@ cubedir=own
 ebs2otf=no
 ebs_has_rt=no
 ebs_clock_res="-1"
+ebs_unwinder="none"
+ebs_unwind_inc=
+ebs_unwind_lib=
+ebs_unwind_flag=
+ebs_unwind_lib_flag=
 tau_links_rt=no
 opari=no
+opari1=no
 epilog=no
 hpctoolkit=no
 hpctoolkit_src_dir=
@@ -738,6 +746,7 @@ iowrapper=no
 zepto=no
 zeptodir=
 cuda=no
+cupti=no
 strsignal_ok=no
 
 # Reset include/Makefile before starting anything else
@@ -1050,6 +1059,34 @@ for arg in "$@"; do
       shift
       ;;
 
+  -ebs_unwinder=*)
+      ebs_unwinder=`echo $arg | sed -e 's/-ebs_unwinder=//'`
+      if [ "x$ebs_unwinder" = "xlibunwind" ] ; then
+          ebs_unwind_flag="-DTAU_USE_LIBUNWIND"
+          ebs_unwind_lib_flag="-lunwind"
+      elif [ "x$ebs_unwinder" = "xstackwalker" ] ; then
+          ebs_unwind_flag="-DTAU_USE_STACKWALKER"
+          ebs_unwind_lib_flag="-lstackwalk"
+      elif [ "x$ebs_unwinder" = "xnone" ] ; then
+          echo "No EBS Unwinding."
+      else
+          echo "Error: Invalid EBS stack unwinder $ebs_unwinder. Valid options are:"
+          echo "libunwind, stackwalker, none (default)."
+          exit 1
+      fi
+      shift
+      ;;
+
+  -ebs_unwind_inc=*)
+      ebs_unwind_inc=`echo $arg | sed -e 's/-ebs_unwind_inc=//'`
+      shift
+      ;;
+
+  -ebs_unwind_lib=*)
+      ebs_unwind_lib=`echo $arg | sed -e 's/-ebs_unwind_lib=//'`
+      shift
+      ;;
+
   -perfinc=*)
       perf=yes
       perfincdir=`echo $arg | sed -e 's/-perfinc=//'`
@@ -1085,6 +1122,17 @@ for arg in "$@"; do
 
   -opari=*)
       opari=yes
+      openmp=yes
+      shift
+      ;;
+  -opari1)
+      opari1=yes
+      openmp=yes
+      shift
+      ;;
+
+  -opari1=*)
+      opari1=yes
       openmp=yes
       shift
       ;;
@@ -1700,7 +1748,7 @@ for arg in "$@"; do
     fi
 		if [ -f "$openclinclude/CL/cl.h" ] ; then
 			useropt="$useropt#-DTAU_MAX_THREADS=32"
-      fixmakeargs="$fixmakeargs OPENCL openclinclude=$openclinclude"
+      fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$openclinclude"
 		else
 			echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
     fi
@@ -3550,6 +3598,10 @@ then
         ;;
   *)    
         mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/lib
+        if [ ! -d $mpilib ] ; then
+         # Try the ".../lib64" directory instead of ".../lib"
+         mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/lib64
+        fi
         if [ -d $mpilib ] ; then
           echo "Using MPI lib directory $mpilib"
         fi
@@ -5507,8 +5559,22 @@ else
 	BFDLIBS="-lbfd -liberty -lz"
 	if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
 	    bfd_worked="yes"
+        else
+	    BFDLIBS="-lbfd -liberty -lintl"
+	    if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
+	        bfd_worked="yes"
+            else
+	        BFDLIBS="-lbfd -liberty -lintl -lz"
+	        if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
+	            bfd_worked="yes"
+                fi
+            fi
 	fi
     fi
+fi
+
+if [ $cxx_compiler = x86_64-w64-mingw32-g++ ]; then
+    BFDLIBS="$BFDLIBS -lpsapi"
 fi
 
 if [ $bfd_worked = "no" ] ; then
@@ -5846,6 +5912,24 @@ EOF
   fi	
 fi
 
+cat <<EOF > cupti_version.C
+#include <cupti_version.h> 
+#if CUPTI_API_VERSION >= 2
+#error CUPTI version >= 4.1 found.
+#endif
+EOF
+
+if [ ! $cupti = no ]; then
+	echo "Checking CUPTI version at $cupti/include ... ${nnl}"
+	if $cxx_compiler -I$cupti/include -c cupti_version.C 1>/dev/null 2>&1 ; then 
+			echo "CUPTI version 4.0 found."	
+	else
+			echo "CUPTI version >= 4.1 found."	
+			fixmakeargs="$fixmakeargs CUPTI_ACTIVITY"
+	fi
+fi
+
+
 if [ $zepto = yes ] ; then
     tauoptions="${tauoptions}-zepto"
 fi
@@ -5874,6 +5958,10 @@ if [ $otf = yes ] ; then
   if [ ! -d $otfdir/${architecture} ] ; then
     fixmakeargs="$fixmakeargs OTFSRC"
   fi  
+fi
+
+if [ "x$ebs_unwinder" != "xnone" ] ; then
+    fixmakeargs="$fixmakeargs TAU_EBS_UNWIND ebs_unwind_flag=$ebs_unwind_flag ebs_unwind_inc=$ebs_unwind_inc ebs_unwind_lib=$ebs_unwind_lib ebs_unwind_lib_flag=$ebs_unwind_lib_flag"
 fi
 
 if [ $ebs2otf = yes ] ; then
@@ -5966,7 +6054,31 @@ EOF
       fixmakeargs="$fixmakeargs PDTNOFSTMTS"
   fi
   /bin/rm -f checkpdt.o checkpdt.cpp
+
+# Check if PDT has UPC statement level information
+  cat <<EOF > checkpdt.cpp
+  #include <pdbAll.h>
+
+  int IsUPCStmt(pdbStmt::stmt_t k)
+  {
+        if (k == pdbStmt::ST_UPC_FORALL) return 1;
+        else return 0;
+  }
+EOF
+  if [ $machine = alpha -a $cxx_compiler = cxx ]; then
+    orig_useropt="$orig_useropt -x c++ -D__USE_STD_IOSTREAM"
+  fi
+  if $cxx_compiler $orig_useropt -I$pdtdir/include -c checkpdt.cpp 1> /dev/null 2>&1 ; then
+      echo "PDT supports UPC information"
+  else
+      echo "IMPORTANT NOTE: Your PDT does not support UPC statement level information."
+      echo "***************You may want to upgrade to a newer release."
+      echo "See http://www.cs.uoregon.edu/research/pdt"
+      fixmakeargs="$fixmakeargs PDTNOUPC"
+  fi
+  /bin/rm -f checkpdt.o checkpdt.cpp
 fi
+
 
 if [ $armci = yes ]; then
    cat <<EOF>armcitest.c
@@ -6023,9 +6135,14 @@ if [ $openmp = yes ] ; then
     tauoptions="${tauoptions}-openmp"
 fi
 
-if [ $opari = yes ] ; then
+if [ $opari1 = yes ] ; then
     fixmakeargs="$fixmakeargs KOJAKOPARI"
     fixmakeargs="$fixmakeargs OPARI oparidir=$oparidir"
+    tauoptions="${tauoptions}-opari"
+fi
+if [ $opari = yes ] ; then
+    fixmakeargs="$fixmakeargs OPARI2"
+    fixmakeargs="$fixmakeargs oparidir=$oparidir"
     tauoptions="${tauoptions}-opari"
 fi
 
@@ -6145,6 +6262,19 @@ if [ $papi = yes ] ; then
 fi
 
 if [ $opari = yes ] ; then
+    if [ $pthread = yes -o $smarts = yes -o $java = yes ] ; then
+      echo "ERROR: -opari option requires OpenMP threads package."
+      echo "*****************************************************"
+      exit 1
+    fi
+    if [ $opari_construct = yes -a $opari_region = no ] ; then
+      fixmakeargs="$fixmakeargs OPARI_CONSTRUCT"
+    fi
+    if [ $opari_construct = no -a $opari_region = yes ] ; then
+      fixmakeargs="$fixmakeargs OPARI_REGION"
+    fi
+fi
+if [ $opari1 = yes ] ; then
     if [ $pthread = yes -o $smarts = yes -o $java = yes ] ; then
       echo "ERROR: -opari option requires OpenMP threads package."
       echo "*****************************************************"
@@ -6281,9 +6411,11 @@ if [ $cxx_compiler = icpc ] ; then
     echo "Checking version (10.0+) of Intel compilers"
     version=`icpc -v 2>&1`
     t="Version 1"
+    t1="icpc version 1"
     testarg=${version#$t}
+    testarg1=${version#$t1}
 
-    if [ "y$testarg" != "y$version" ] ; then
+    if [ "y$testarg" != "y$version" -o "y$testarg1" != "y$version" ] ; then
         echo "Intel v10.0+ compilers found"
         fixmakeargs="$fixmakeargs INTEL10FIX COMPINST_GNU" 
     else
@@ -6433,6 +6565,10 @@ else
     extra_linker_args="${extralinker_args}"
     # gcc 4.6 does not support this. 
   fi
+fi
+
+if [ $cxx_compiler = x86_64-w64-mingw32-g++ ]; then
+    extra_linker_args="${extralinker_args}#-Wl,--enable-auto-image-base"
 fi
 
 fixmakeargs="$fixmakeargs extra_linker_args=$extra_linker_args"
@@ -6689,7 +6825,7 @@ if [ $mpi = yes ] ; then
   fi
 fi
 
-if [ $opari = yes ] ; then
+if [ $opari1 = yes ] ; then
   exampleslist="$exampleslist opari/c++/Makefile"
   if [ $pdt = yes -a $fortran_compiler != no ] ; then 
     exampleslist="$exampleslist opari/pdt_f90/Makefile"

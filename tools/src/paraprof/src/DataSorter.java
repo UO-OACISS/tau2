@@ -358,8 +358,17 @@ public class DataSorter implements Comparator<FunctionProfile> {
         ArrayList<Thread> threads = new ArrayList<Thread>();
         if (ppTrial.getDataSource().getAllThreads().size() > 1) {
             threads.add(ppTrial.getDataSource().getStdDevData());
-            //threads.add(ppTrial.getDataSource().getTotalData());
+            
             threads.add(ppTrial.getDataSource().getMeanData());
+            threads.add(ppTrial.getDataSource().getTotalData());
+            
+            Thread maxData=ppTrial.getDataSource().getMaxData();
+            if(maxData!=null)
+            	threads.add(maxData);
+            Thread minData=ppTrial.getDataSource().getMinData();
+            if(minData!=null)
+            	threads.add(minData);
+            
         }
 
         // add all the other threads
@@ -384,6 +393,22 @@ public class DataSorter implements Comparator<FunctionProfile> {
                     PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
                     newList.add(ppFunctionProfile);
                 }
+                
+                
+                thread=ppTrial.getDataSource().getMinData();
+                functionProfile = thread.getFunctionProfile(function);
+                if(thread!=null){
+                	PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
+                    newList.add(ppFunctionProfile);
+                }
+                
+                thread=ppTrial.getDataSource().getMaxData();
+                functionProfile = thread.getFunctionProfile(function);
+                if(thread!=null){
+                	PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
+                    newList.add(ppFunctionProfile);
+                }
+                
             }
 
             if (includeStdDev) {
