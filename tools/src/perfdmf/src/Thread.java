@@ -89,6 +89,12 @@ public class Thread implements Comparable<Thread> {
         if (nodeID == -3) {
             return "Standard Deviation";
         }
+        if (nodeID == -4) {
+            return "Min";
+        }
+        if (nodeID == -5) {
+            return "Max";
+        }
         return "n,c,t " + nodeID + "," + contextID + "," + threadID;
     }
 
