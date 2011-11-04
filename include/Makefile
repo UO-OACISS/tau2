@@ -821,7 +821,7 @@ HPCTOOLKIT_LINK=
 #       we can find a permanent fix.
 EXTRA_LINKER_ARGS=
 #APPLECXX#EXTRA_LINKER_ARGS = -rdynamic#ENDIF#
-TAU_LINKER_OPT14=$(UPCC_LINK_PREFIX)$(EXTRA_LINKER_ARGS)
+TAU_LINKER_OPT14=$(EXTRA_LINKER_ARGS)
 
 
 ##############################################
