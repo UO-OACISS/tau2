@@ -61,7 +61,7 @@ public:
  */
 
 /* Initialization to be executed at the start of the application */
-extern "C" int Tau_gpu_init(void);
+extern "C" void Tau_gpu_init(void);
 
 /* Stuff to be performed at the end of the application */
 extern "C" void Tau_gpu_exit(void);

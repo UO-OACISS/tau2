@@ -1,4 +1,5 @@
 #ifdef __GNUC__
+#include "cupti_version.h"
 #include "cupti_events.h"
 #include <cuda_runtime_api.h>
 
@@ -15,20 +16,21 @@ using namespace std;
 #define CHECK_CU_ERROR(err, cufunc) \
 if (err != CUDA_SUCCESS) \
 { \
-printf ("Error %d for CUDA Driver API function '%s'. cuptiQuery failed\n", err, cufunc); \
+printf ("[%s:%d] Error %d for CUDA Driver API function '%s'. cuptiQuery failed\n", __FILE__, __LINE__, err, cufunc); \
 }
 
 /* Specific errors from CuPTI lib */
 #define CHECK_CUPTI_ERROR(err, cuptifunc) \
 if (err != CUPTI_SUCCESS) \
 { \
-printf ("Error %d for CUPTI API function '%s'. cuptiQuery failed\n", err, cuptifunc); \
+printf ("[%s:%d] Error %d for CUPTI API function '%s'. cuptiQuery failed\n", __FILE__, __LINE__, err, cuptifunc); \
 }
 
 #define TAU_CUPTI_MAX_NAME 40
 #define TAU_CUPTI_MAX_DESCRIPTION 480
 #define TAU_CUPTI_MAX_EVENTS 160
 		
+//#define DISABLE_CUPTI
 
 class CuptiCounterEvent
 {
@@ -57,7 +59,32 @@ typedef map<std::string, CuptiCounterEvent*> counter_map_t;
 typedef vector<CuptiCounterEvent*> counter_vec_t;
 typedef map<std::string, CuptiCounterEvent*>::iterator counter_map_it; 
 
+#ifdef DISABLE_CUPTI
+
+extern int Tau_CuptiLayer_get_num_events() {}
+
+extern bool Tau_CuptiLayer_is_initialized() { return false;}
+
+extern void Tau_CuptiLayer_init() {}
+
+extern void Tau_CuptiLayer_finalize() {}
+
+extern void Tau_CuptiLayer_enable() {}
+
+extern void Tau_CuptiLayer_disable() {}
+
+extern void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev) {}
+
+counter_map_t Tau_CuptiLayer_Counter_Map;
+extern counter_map_t Tau_CuptiLayer_map() {return Tau_CuptiLayer_Counter_Map;}
+
+#else
+
 extern bool Tau_CuptiLayer_is_initialized();
+
+extern void Tau_CuptiLayer_enable();
+
+extern void Tau_CuptiLayer_disable();
 
 extern void Tau_CuptiLayer_init();
 
@@ -65,10 +92,9 @@ extern void Tau_CuptiLayer_finalize();
 
 extern void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev);
 
-extern void Tau_CuptiLayer_read_counters(uint64_t * cBuffer);
-
 extern counter_map_t Tau_CuptiLayer_map();
 
+#endif
 #endif //__GNUC__
 
 /*

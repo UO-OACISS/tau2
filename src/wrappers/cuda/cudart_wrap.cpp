@@ -15,8 +15,12 @@ using namespace std;
 #define CUDART_API TAU_USER
 #define CUDA_SYNC TAU_USER
 
+//#define REGISTER_SYNC() Tau_cupti_register_sync_event()
+#define REGISTER_SYNC() Tau_cuda_register_sync_event()
+
 #ifdef CUPTI
 extern void Tau_CuptiLayer_finalize();
+extern void Tau_cupti_register_sync_event();
 #endif //CUPTI
 
 const char * cudart_orig_libname = "libcudart.so";
@@ -32,9 +36,9 @@ void tau_track_memory(int kind, int count)
 	if (!init)
 	{
 		
-		Tau_get_context_userevent((void **) &MemoryCopyEventHtoD, string("Bytes copied from Host to Device").c_str());
-		Tau_get_context_userevent((void **) &MemoryCopyEventDtoH, string("Bytes copied from Device to Host").c_str());
-		Tau_get_context_userevent((void **) &MemoryCopyEventDtoD, string("Bytes copied (Other)").c_str());
+		Tau_get_context_userevent((void **) &MemoryCopyEventHtoD, "Bytes copied from Host to Device");
+		Tau_get_context_userevent((void **) &MemoryCopyEventDtoH, "Bytes copied from Device to Host");
+		Tau_get_context_userevent((void **) &MemoryCopyEventDtoD, "Bytes copied (Other)");
 		init = true;
 	}
 	/*printf("initalize counters. Number of events: %ld, %ld, %ld.\n", 
@@ -74,9 +78,9 @@ cudaError_t cudaDeviceReset() {
       return retval;
     }
 	//printf("in cudaDeviceReset(), check for kernel events.\n");
-#ifdef TRACK_KERNEL
-	Tau_cuda_register_sync_event();
-#endif 
+//#ifdef TRACK_KERNEL
+	REGISTER_SYNC();
+//#endif 
   TAU_PROFILE_START(t);
 #ifdef CUPTI
 	Tau_CuptiLayer_finalize();
@@ -84,9 +88,7 @@ cudaError_t cudaDeviceReset() {
   retval  =  (*cudaDeviceReset_h)();
   TAU_PROFILE_STOP(t);
 
-#ifdef TRACK_KERNEL
 	Tau_cuda_exit();
-#endif
   }
   return retval;
 
@@ -118,9 +120,9 @@ cudaError_t cudaThreadExit() {
       return retval;
     }
 	//printf("in cudaThreadExit(), check for kernel events.\n");
-#ifdef TRACK_KERNEL
-	//Tau_cuda_register_sync_event();
-#endif 
+//#ifdef TRACK_KERNEL
+	//REGISTER_SYNC();
+//#endif 
   TAU_PROFILE_START(t);
 #ifdef CUPTI
 	Tau_CuptiLayer_finalize();
@@ -128,9 +130,7 @@ cudaError_t cudaThreadExit() {
   retval  =  (*cudaThreadExit_h)();
   TAU_PROFILE_STOP(t);
 
-#ifdef TRACK_KERNEL
 	Tau_cuda_exit();
-#endif
   }
   return retval;
 
@@ -160,9 +160,9 @@ cudaError_t cudaThreadSynchronize() {
   retval  =  (*cudaThreadSynchronize_h)();
   TAU_PROFILE_STOP(t);
 
-#ifdef TRACK_KERNEL
-	Tau_cuda_register_sync_event();
-#endif
+//#ifdef TRACK_KERNEL
+	REGISTER_SYNC();
+//#endif
 
   }
   return retval;
@@ -701,9 +701,9 @@ cudaError_t cudaStreamSynchronize(cudaStream_t a1) {
   retval  =  (*cudaStreamSynchronize_h)( a1);
   TAU_PROFILE_STOP(t);
 	
-#ifdef TRACK_KERNEL
-	Tau_cuda_register_sync_event();
-#endif
+//#ifdef TRACK_KERNEL
+	REGISTER_SYNC();
+//#endif
   }
   return retval;
 
@@ -732,9 +732,9 @@ cudaError_t cudaStreamQuery(cudaStream_t a1) {
   TAU_PROFILE_START(t);
   retval  =  (*cudaStreamQuery_h)( a1);
   TAU_PROFILE_STOP(t);
-#ifdef TRACK_KERNEL
-	Tau_cuda_register_sync_event();
-#endif
+//#ifdef TRACK_KERNEL
+	REGISTER_SYNC();
+//#endif
   }
   return retval;
 
@@ -875,9 +875,9 @@ cudaError_t cudaEventQuery(cudaEvent_t a1) {
   TAU_PROFILE_START(t);
   retval  =  (*cudaEventQuery_h)( a1);
   TAU_PROFILE_STOP(t);
-#ifdef TRACK_KERNEL
-	Tau_cuda_register_sync_event();
-#endif
+//#ifdef TRACK_KERNEL
+	REGISTER_SYNC();
+//#endif
   }
   return retval;
 
@@ -907,9 +907,9 @@ cudaError_t cudaEventSynchronize(cudaEvent_t a1) {
   retval  =  (*cudaEventSynchronize_h)( a1);
   TAU_PROFILE_STOP(t);
 
-#ifdef TRACK_KERNEL
-	Tau_cuda_register_sync_event();
-#endif
+//#ifdef TRACK_KERNEL
+	REGISTER_SYNC();
+//#endif
 
   }
   return retval;
@@ -1070,7 +1070,14 @@ cudaError_t cudaFuncSetCacheConfig(const char * a1, enum cudaFuncCache a2) {
 
 }*/
 
-map<const char*, const char*> kernelNames;
+typedef struct kernelName_t
+{
+	const char* host;
+	const char* dev;
+	struct kernelName_t *next;
+} kernelName;
+
+kernelName *kernelNamesHead = NULL;
 
 /*
  * This function is being called before execution of a cuda program for every
@@ -1105,9 +1112,14 @@ void __cudaRegisterFunction(void ** a1, const char * a2, char * a3, const char *
 	(*__cudaRegisterFunction_h)(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
 	} 
 
-	//printf("host name: %s.\n", a2);
-	//printf("dev  name: %s.\n", a3);
-	kernelNames[a2] = a3;
+	//printf("adding pair, host: %d .\n", a2);
+	//printf("adding pair, dev: %s .\n", a3);
+
+	kernelName *new_name_pair = (kernelName*) malloc(sizeof(kernelName));
+	new_name_pair->host = a2;
+	new_name_pair->dev = a3;
+	new_name_pair->next = kernelNamesHead;
+	kernelNamesHead = new_name_pair;
 
 }
 
@@ -1145,14 +1157,33 @@ cudaError_t cudaLaunch(const char * a1) {
 		int device;
 		cudaGetDevice(&device);
 		//printf("lookup, host name: %s.\n", a1);
-		map<const char*, const char*>::iterator it = kernelNames.find(a1);
-		if (it == kernelNames.end())
+		kernelName *found = NULL;
+		
+		found = kernelNamesHead;
+
+		//printf("looking for %d .\n", a1);
+
+		while (found != NULL)
 		{
-			printf("TAU ERROR: could not find registration for CUDA kernel.\n");
+			if (a1 == found->host)
+			{
+				break;
+			}
+			found = found->next;
+		}
+		if (found == NULL)
+		{
+			printf("TAU: ERROR cannot find kernel name.\n");
 		}
 		else
 		{
-			Tau_cuda_enqueue_kernel_enter_event(it->second,
+			//printf("found host %d .\n", found->host);
+			//printf("found  dev %s .\n", found->dev);
+
+			//make copy.
+			//char device_name[1024];
+			//strcpy(device_name, found->dev);
+			Tau_cuda_enqueue_kernel_enter_event(found->dev,
 				&cudaRuntimeGpuId(device,curr_stream));
 		}
 #endif
@@ -1380,6 +1411,9 @@ cudaError_t cudaFree(void * a1) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
+
+	REGISTER_SYNC();
+
   TAU_PROFILE_START(t);
   retval  =  (*cudaFree_h)( a1);
   TAU_PROFILE_STOP(t);
@@ -1611,6 +1645,7 @@ cudaError_t cudaMemcpy3D(const struct cudaMemcpy3DParms * a1) {
 #endif //TRACK_MEMORY
   retval  =  (*cudaMemcpy3D_h)( a1);
   TAU_PROFILE_STOP(t);
+
   }
   return retval;
 
@@ -1698,6 +1733,7 @@ cudaError_t cudaMemcpy(void * a1, const void * a2, size_t a3, enum cudaMemcpyKin
 #endif //TRACK_MEMORY
   retval  =  (*cudaMemcpy_h)( a1,  a2,  a3,  a4);
   TAU_PROFILE_STOP(t);
+	REGISTER_SYNC();
   }
   return retval;
 

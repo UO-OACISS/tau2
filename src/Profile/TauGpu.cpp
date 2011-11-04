@@ -46,18 +46,18 @@ extern void metric_set_gpu_timestamp(int tid, double value);
 using namespace std;
 
 double cpu_start_time;
-
+/*
 struct EventName {
 		const char *name;
 		EventName(const char* n) :
 			name(n) {}	
 		bool operator<(const EventName &c1) const { return strcmp(name,c1.name) < 0; }
 };
-
+*/
 //typedef map<eventId, bool> doubleMap;
 //doubleMap MemcpyEventMap;
 
-map<EventName, void*> events;
+//map<EventName, void*> events;
 
 extern void metric_set_gpu_timestamp(int tid, double value);
 
@@ -93,7 +93,7 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, gpuId
 	//printf("entering cuMemcpy event: %s.\n", name);
 #endif
 
-	if (functionName == TAU_GPU_USE_DEFAULT_NAME)
+	if (strcmp(functionName, TAU_GPU_USE_DEFAULT_NAME) == 0)
 	{
 		if (memcpyType == MemcpyHtoD) {
 			functionName = "Memory copy Host to Device";
@@ -106,17 +106,22 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, gpuId
 		{
 			functionName = "Memory copy (Other)";
 		}
+		printf("using default name: %s.\n", functionName);
 	}
 
 	TAU_START(functionName);
-	
-	// Place the Message into the trace in when the memcpy in entered if this
-	// thread initiates the send otherwise wait until this event is exited.
-	// This is too make the message lines in the trace to always point forward in
-	// time.
+
+	//Inorder to capture the entire memcpy transaction time start the send/recived
+	//at the start of the event
+	if (memcpyType == MemcpyDtoH) {
+		TauTraceOneSidedMsg(MESSAGE_RECV, device, -1, 0);
+	}
+	else
+	{
+		TauTraceOneSidedMsg(MESSAGE_SEND, device, transferSize, 0);
+	}
 
 	if (memcpyType == MemcpyHtoD) {
-		TauTraceOneSidedMsg(MESSAGE_SEND, device, transferSize, 0);
 		if (transferSize != TAU_GPU_UNKNOW_TRANSFER_SIZE)
 		{
 			TAU_CONTEXT_EVENT(MemoryCopyEventHtoD, transferSize);
@@ -159,7 +164,7 @@ memcpyType)
 	//printf("exiting cuMemcpy event: %s.\n", name);
 #endif
 
-	if (functionName == TAU_GPU_USE_DEFAULT_NAME)
+	if (strcmp(functionName, TAU_GPU_USE_DEFAULT_NAME) == 0)
 	{
 		if (memcpyType == MemcpyHtoD) {
 			functionName = "Memory copy Host to Device";
@@ -172,6 +177,7 @@ memcpyType)
 		{
 			functionName = "Memory copy (Other)";
 		}
+		printf("using default name: %s.\n", functionName);
 	}
 
 	// Place the Message into the trace in when the memcpy in exited if this
@@ -179,10 +185,6 @@ memcpyType)
 	// This is too make the message lines in the trace to always point forward in
 	// time.
 
-	if (memcpyType == MemcpyDtoH) {
-		TauTraceOneSidedMsg(MESSAGE_RECV, device, -1, 0);
-	}
-	
 	TAU_STOP(functionName);
 
 }
@@ -208,6 +210,7 @@ void start_gpu_event(const char *name, int gpuTask)
 #ifdef DEBUG_PROF
 	printf("staring %s event.\n", name);
 #endif
+	/*
 	map<EventName, void*>::iterator it = events.find(name);
 	if (it == events.end())
 	{
@@ -220,6 +223,8 @@ void start_gpu_event(const char *name, int gpuTask)
 		void *ptr = (*it).second;
 		TAU_PROFILER_START_TASK(ptr, gpuTask);
 	}
+	*/
+	TAU_START_TASK(name, gpuTask);
 }
 void stage_gpu_event(const char *name, int gpuTask, double start_time,
 FunctionInfo* parent)
@@ -243,6 +248,7 @@ void stop_gpu_event(const char *name, int gpuTask)
 #ifdef DEBUG_PROF
 	printf("stopping %s event.\n", name);
 #endif
+/*
 	map<EventName,void*>::iterator it = events.find(name);
 	if (it == events.end())
 	{
@@ -252,6 +258,8 @@ void stop_gpu_event(const char *name, int gpuTask)
 		void *ptr = (*it).second;
 		TAU_PROFILER_STOP_TASK(ptr, gpuTask);
 	}
+*/
+	TAU_STOP_TASK(name, gpuTask);
 }
 void break_gpu_event(const char *name, int gpuTask, double stop_time,
 FunctionInfo* parent)
@@ -340,7 +348,7 @@ void Tau_gpu_register_memcpy_event(eventId id, double startTime, double endTime,
 	//printf("in Tau_gpu.\n");
 	//printf("Memcpy type is %d.\n", memcpyType);
 	const char* functionName = id.name;
-	if (functionName == TAU_GPU_USE_DEFAULT_NAME)
+	if (strcmp(functionName, TAU_GPU_USE_DEFAULT_NAME) == 0)
 	{
 		if (memcpyType == MemcpyHtoD) {
 			functionName = "Memory copy Host to Device";
@@ -353,6 +361,7 @@ void Tau_gpu_register_memcpy_event(eventId id, double startTime, double endTime,
 		{
 			functionName = "Memory copy (Other)";
 		}
+		//printf("using default name: %s.\n", functionName);
 	}
 
 #ifdef DEBUG_PROF		
@@ -376,6 +385,8 @@ void Tau_gpu_register_memcpy_event(eventId id, double startTime, double endTime,
 		}
 		break_gpu_event(functionName, task,
 				endTime + id.device->syncOffset(), id.callingSite);
+		//Inorder to capture the entire memcpy transaction time start the send/recived
+		//at the start of the event
 		TauTraceOneSidedMsg(MESSAGE_RECV, id.device, transferSize, task);
 	}
 	else if (memcpyType == MemcpyDtoH) {
@@ -392,12 +403,13 @@ void Tau_gpu_register_memcpy_event(eventId id, double startTime, double endTime,
 		device->printId());
 #endif
 		}
-		//TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, transferSize, RtsLayer::myThread()); 
 		//printf("TAU: putting message into trace file.\n");
 		//printf("[%f] onesided event mem send: %f.\n", startTime, transferSize);
-		TauTraceOneSidedMsg(MESSAGE_SEND, id.device, transferSize, task);
 		break_gpu_event(functionName, task,
 				endTime + id.device->syncOffset(), id.callingSite);
+		//Inorder to capture the entire memcpy transaction time start the send/recived
+		//at the start of the event
+		TauTraceOneSidedMsg(MESSAGE_SEND, id.device, transferSize, task);
 	}
 	else {
 		stage_gpu_event(functionName, task,
@@ -423,7 +435,7 @@ void Tau_gpu_register_memcpy_event(eventId id, double startTime, double endTime,
 /*
 	Initialization routine for TAU
 */
-int Tau_gpu_init(void)
+void Tau_gpu_init(void)
 {
 		//TAU_PROFILE_SET_NODE(0);
 		//TAU_PROFILER_CREATE(main_ptr, ".TAU application", "", TAU_USER);
