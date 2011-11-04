@@ -3,7 +3,10 @@ CFLAGS=-fPIC -I.
 LIBS = -L. -lsecret
 LDFLAGS = -shared
 
-app: app.o libsecret.so wrapper
+run: app
+	tau_exec -T serial,pdt -loadlib=`pwd`/secret_wrapper/libsecret_wrap.so ./app 
+	pprof
+app: app.o libsecret.so secret_wrapper/libsecret_wrap.so
 	tau_cc.sh -o app app.o $(LIBS)
 libsecret.so: secret.o
 	$(CC) $(LDFLAGS) -o $@ $<
@@ -12,12 +15,9 @@ secret.o: secret.c
 app.o: app.c
 	tau_cc.sh $(CFLAGS) -c $<
 
-wrapper:  
-# You will need PDT x86_64/bin directory in your path
-	cparse secret.h
-	tau_wrap secret.h.pdb secret.h -o secret_wrap.inst.c -r libsecret.so
-	cd secret_wrapper; make
-	
+secret_wrapper/libsecret_wrap.so: secret.h libsecret.so
+	/bin/rm -rf secret_wrapper
+	tau_gen_wrapper secret.h libsecret.so -r 
 
 clean:
-	/bin/rm -rf app.o app libsecret.so secret.o wrapper
+	/bin/rm -rf app.o app libsecret.so secret.o wrapper secret_wrapper
