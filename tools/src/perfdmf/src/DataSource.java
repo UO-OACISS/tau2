@@ -1236,6 +1236,26 @@ public abstract class DataSource {
             }
         }
     }
+    
+    
+    private void initAggThreadsList(){
+    	aggThreads = new ArrayList<Thread>();
+    	aggThreads.add(meanData);
+    	aggThreads.add(stddevData);
+    	aggThreads.add(totalData);
+    	if(maxData!=null)
+    		aggThreads.add(maxData);
+    	if(minData!=null)
+    		aggThreads.add(minData);
+    }
+    
+    private List<Thread> aggThreads = null;
+    public List<Thread> getAggThreads(){
+    	if(aggThreads==null){
+    		initAggThreadsList();
+    	}
+    	return aggThreads;
+    }
 
     public List<Thread> getAllThreads() {
         if (allThreads == null) {

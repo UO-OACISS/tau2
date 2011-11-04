@@ -22,7 +22,10 @@ public abstract class ValueType {
     public abstract double getValue(FunctionProfile functionProfile, int metric, int snapshot);
 
     public double getValue(FunctionProfile functionProfile, Metric metric, int snapshot) {
-        return getValue (functionProfile, metric.getID(), snapshot);
+    	int mid = 0;
+    	if (metric!=null)
+    		mid=metric.getID();
+        return getValue (functionProfile, mid, snapshot);
     }
 
     public double getValue(FunctionProfile functionProfile, int metric) {
