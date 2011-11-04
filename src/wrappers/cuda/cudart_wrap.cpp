@@ -1070,7 +1070,14 @@ cudaError_t cudaFuncSetCacheConfig(const char * a1, enum cudaFuncCache a2) {
 
 }*/
 
-map<const char*, const char*> kernelNames;
+typedef struct kernelName_t
+{
+	const char* host;
+	const char* dev;
+	struct kernelName_t *next;
+} kernelName;
+
+kernelName *kernelNamesHead = NULL;
 
 /*
  * This function is being called before execution of a cuda program for every
@@ -1105,9 +1112,14 @@ void __cudaRegisterFunction(void ** a1, const char * a2, char * a3, const char *
 	(*__cudaRegisterFunction_h)(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
 	} 
 
-	//printf("host name: %s.\n", a2);
-	//printf("dev  name: %s.\n", a3);
-	kernelNames[a2] = a3;
+	//printf("adding pair, host: %d .\n", a2);
+	//printf("adding pair, dev: %s .\n", a3);
+
+	kernelName *new_name_pair = (kernelName*) malloc(sizeof(kernelName));
+	new_name_pair->host = a2;
+	new_name_pair->dev = a3;
+	new_name_pair->next = kernelNamesHead;
+	kernelNamesHead = new_name_pair;
 
 }
 
@@ -1145,14 +1157,33 @@ cudaError_t cudaLaunch(const char * a1) {
 		int device;
 		cudaGetDevice(&device);
 		//printf("lookup, host name: %s.\n", a1);
-		map<const char*, const char*>::iterator it = kernelNames.find(a1);
-		if (it == kernelNames.end())
+		kernelName *found = NULL;
+		
+		found = kernelNamesHead;
+
+		//printf("looking for %d .\n", a1);
+
+		while (found != NULL)
 		{
-			printf("TAU ERROR: could not find registration for CUDA kernel.\n");
+			if (a1 == found->host)
+			{
+				break;
+			}
+			found = found->next;
+		}
+		if (found == NULL)
+		{
+			printf("TAU: ERROR cannot find kernel name.\n");
 		}
 		else
 		{
-			Tau_cuda_enqueue_kernel_enter_event(it->second,
+			//printf("found host %d .\n", found->host);
+			//printf("found  dev %s .\n", found->dev);
+
+			//make copy.
+			//char device_name[1024];
+			//strcpy(device_name, found->dev);
+			Tau_cuda_enqueue_kernel_enter_event(found->dev,
 				&cudaRuntimeGpuId(device,curr_stream));
 		}
 #endif
