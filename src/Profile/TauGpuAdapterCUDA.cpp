@@ -366,7 +366,9 @@ void Tau_cuda_enqueue_kernel_exit_event()
 
 	//printf("recording stop for: %s.\n", curName.c_str());
 
-	curKernel->name = curName.c_str();
+	char device_name[4096];
+	strcpy(device_name, curName.c_str());
+	curKernel->name = device_name;
 	curKernel->enqueue_stop_event();
 	KernelBuffer.push(*curKernel);
 
