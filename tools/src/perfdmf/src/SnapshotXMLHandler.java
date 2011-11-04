@@ -191,6 +191,34 @@ public class SnapshotXMLHandler extends DefaultHandler {
                     currentThread = data;
                     sDNNSet=true;
             	}
+            	else
+                	if(entityName.equals("min_no_null")){
+                		ThreadData data = new ThreadData();
+                		//It is unified so:
+                		{
+                			data.eventMap = unifiedDefinitions.eventMap;
+                            data.userEventMap = unifiedDefinitions.userEventMap;
+                            data.metricMap = unifiedDefinitions.metricMap;
+                		}
+                		data.thread = dataSource.minData = new Thread(-4, -4, -4, dataSource.getNumberOfMetrics(), dataSource); //dataSource.addThread(-3, -3, -3);
+                        threadMap.put(entityName, data);
+                        currentThread = data;
+                        sDNNSet=true;
+                	}
+    	else
+    	if(entityName.equals("max_no_null")){
+    		ThreadData data = new ThreadData();
+    		//It is unified so:
+    		{
+    			data.eventMap = unifiedDefinitions.eventMap;
+                data.userEventMap = unifiedDefinitions.userEventMap;
+                data.metricMap = unifiedDefinitions.metricMap;
+    		}
+    		data.thread = dataSource.maxData = new Thread(-5, -5, -5, dataSource.getNumberOfMetrics(), dataSource); //dataSource.addThread(-3, -3, -3);
+            threadMap.put(entityName, data);
+            currentThread = data;
+            sDNNSet=true;
+    	}
 //            	else{
 //            		unknownDerivedEntity=true;
 //            	}

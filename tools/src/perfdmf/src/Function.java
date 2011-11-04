@@ -42,6 +42,8 @@ public class Function implements Serializable, Comparable<Function> {
     private FunctionProfile meanProfile;
     private FunctionProfile stddevProfile;
     private FunctionProfile totalProfile;
+    private FunctionProfile minProfile;
+    private FunctionProfile maxProfile;
 
     // color settings
     private boolean colorFlag = false;
@@ -461,6 +463,21 @@ public class Function implements Serializable, Comparable<Function> {
         return totalProfile;
     }
 
+    
+    public FunctionProfile getMinProfile(){
+    	return minProfile;
+    }
+    public void setMinProfile(FunctionProfile fp) {
+        this.minProfile = fp;
+    }
+    
+    public FunctionProfile getMaxProfile(){
+    	return maxProfile;
+    }
+    public void setMaxProfile(FunctionProfile fp) {
+        this.maxProfile = fp;
+    }
+    
     public int compareTo(Function o) {
         return this.id -  o.getID();
     }
