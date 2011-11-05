@@ -498,12 +498,25 @@ public class UtilFncs {
     public static DataSource initializeDataSource(File[] sourceFiles, int fileType, boolean fixGprofNames, String range)
             throws DataSourceException {
         DataSource dataSource = null;
-
         List<File[]> v = new ArrayList<File[]>();
+        /**
+         * This is ugly and inefficient. Need to avoid multiple reads of the file system here.
+         */
+        
+        if(fileType==DataSource.TAUPROFILE&&range==null&&sourceFiles.length < 1){
+        	 FileList fl=new FileList();
+        	 File[] list = fl.helperFindSnapshots(System.getProperty("user.dir"));
+        	 if(list.length>0){
+             		fileType=DataSource.SNAP;
+             		sourceFiles=list;
+
+             	}
+        }
         //File filelist[];
         switch (fileType) {
         case DataSource.TAUPROFILE: // TAU Profiles
             FileList fl;
+          
             if(range!=null)
             	fl= new FileList(range);
             else
@@ -529,9 +542,11 @@ public class UtilFncs {
                 }
 
             }
+            
 
             dataSource = new TauDataSource(v);
             break;
+            
         case DataSource.PPROF:
             if (sourceFiles.length != 1) {
                 throw new DataSourceException("pprof type: you must specify exactly one file");

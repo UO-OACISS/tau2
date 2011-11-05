@@ -333,6 +333,45 @@ UnitListener, SortListener, VisCanvasListener, ThreeDeeImageProvider {
 		plot = scatterPlot;
 	}
 
+	
+	private float getColorValue(Thread thread){
+		
+		float color = Float.NaN;
+		
+		if(!settings.getAtomic(3))
+		{
+		Function topoFunction = settings.getTopoFunction(3);
+		ValueType topoValueType = settings.getTopoValueType(3);
+		Metric topoMetricID = settings.getTopoMetric(3);
+		
+		
+		if (topoFunction != null) {
+		FunctionProfile functionProfile = thread.getFunctionProfile(topoFunction);
+
+		if (functionProfile != null) {
+			color = (float) topoValueType.getValue(functionProfile, topoMetricID,ppTrial.getSelectedSnapshot());
+		}
+		}
+		}
+		else
+		{
+			UserEvent ue = settings.getTopoAtomic(3);
+			if(ue!=null){
+				UserEventProfile uep = thread.getUserEventProfile(ue);
+				if(uep!=null)
+				{
+					UserEventValueType uevt = settings.getTopoUserEventValueType(3);
+					if(uevt!=null)
+						color = (float)uevt.getValue(uep, ppTrial.getSelectedSnapshot());
+				}
+			}
+		}
+		
+		
+		
+		return color;
+	}
+	
 	private void generateGeneralPlot(boolean autoSize, ThreeDeeSettings settings) {
 
 
@@ -398,9 +437,7 @@ UnitListener, SortListener, VisCanvasListener, ThreeDeeImageProvider {
 
 		if(prefix==null||prefix.equals("Custom")){
 
-			Function topoFunction = settings.getTopoFunction(3);
-			ValueType topoValueType = settings.getTopoValueType(3);
-			Metric topoMetricID = settings.getTopoMetric(3);
+
 
 			//int[] custTopoDims = null;
 			//int x,y,z;min
@@ -451,18 +488,26 @@ UnitListener, SortListener, VisCanvasListener, ThreeDeeImageProvider {
 					}
 					else if(f==3)
 					{
-
-						if (topoFunction != null) {
-							FunctionProfile functionProfile = thread.getFunctionProfile(topoFunction);
-
-							if (functionProfile != null) {
-
-
-								values[threadIndex][3] = (float) topoValueType.getValue(functionProfile, topoMetricID,ppTrial.getSelectedSnapshot());
-								maxScatterValues[3] = Math.max(maxScatterValues[3], values[threadIndex][3]);
-								minScatterValues[3] = Math.min(minScatterValues[3], values[threadIndex][3]);
-							}
+						
+						float color = getColorValue(thread);
+						if(color!=Float.NaN)
+						{
+							values[threadIndex][3] = color;
+							maxScatterValues[3] = Math.max(maxScatterValues[3], values[threadIndex][3]);
+							minScatterValues[3] = Math.min(minScatterValues[3], values[threadIndex][3]);
 						}
+
+//						if (topoFunction != null) {
+//							FunctionProfile functionProfile = thread.getFunctionProfile(topoFunction);
+//
+//							if (functionProfile != null) {
+//
+//
+//								values[threadIndex][3] = (float) topoValueType.getValue(functionProfile, topoMetricID,ppTrial.getSelectedSnapshot());
+//								maxScatterValues[3] = Math.max(maxScatterValues[3], values[threadIndex][3]);
+//								minScatterValues[3] = Math.min(minScatterValues[3], values[threadIndex][3]);
+//							}
+//						}
 					}
 					maxScatterValues[f] = Math.max(maxScatterValues[f], values[threadIndex][f]);
 					minScatterValues[f] = Math.min(minScatterValues[f], values[threadIndex][f]);
@@ -505,21 +550,29 @@ UnitListener, SortListener, VisCanvasListener, ThreeDeeImageProvider {
 				values[threadIndex][2]=map.coords[threadIndex][2];
 
 
-				Function topoFunction = settings.getTopoFunction(3);
-				ValueType topoValueType = settings.getTopoValueType(3);
-				Metric topoMetricID = settings.getTopoMetric(3);
-
-				if (topoFunction != null) {
-					FunctionProfile functionProfile = thread.getFunctionProfile(topoFunction);
-
-					if (functionProfile != null) {
-
-
-						values[threadIndex][3] = (float) topoValueType.getValue(functionProfile, topoMetricID,ppTrial.getSelectedSnapshot());
-						maxScatterValues[3] = Math.max(maxScatterValues[3], values[threadIndex][3]);
-						minScatterValues[3] = Math.min(minScatterValues[3], values[threadIndex][3]);
-					}
+//				Function topoFunction = settings.getTopoFunction(3);
+//				ValueType topoValueType = settings.getTopoValueType(3);
+//				Metric topoMetricID = settings.getTopoMetric(3);
+				
+				float color = getColorValue(thread);
+				if(color!=Float.NaN)
+				{
+					values[threadIndex][3] = color;
+					maxScatterValues[3] = Math.max(maxScatterValues[3], values[threadIndex][3]);
+					minScatterValues[3] = Math.min(minScatterValues[3], values[threadIndex][3]);
 				}
+
+//				if (topoFunction != null) {
+//					FunctionProfile functionProfile = thread.getFunctionProfile(topoFunction);
+//
+//					if (functionProfile != null) {
+//
+//
+//						values[threadIndex][3] = (float) topoValueType.getValue(functionProfile, topoMetricID,ppTrial.getSelectedSnapshot());
+//						maxScatterValues[3] = Math.max(maxScatterValues[3], values[threadIndex][3]);
+//						minScatterValues[3] = Math.min(minScatterValues[3], values[threadIndex][3]);
+//					}
+//				}
 
 
 				threadIndex++;
@@ -618,6 +671,7 @@ UnitListener, SortListener, VisCanvasListener, ThreeDeeImageProvider {
 
 					float[] topoVals = {0,0,0,0};
 					for(int i=0;i<4;i++){
+						if(!settings.getAtomic(i)){
 						Function f = settings.getTopoFunction(i);
 						if(f!=null){
 							FunctionProfile fp = thread.getFunctionProfile(f);
@@ -627,22 +681,35 @@ UnitListener, SortListener, VisCanvasListener, ThreeDeeImageProvider {
 								topoVals[i]=(float)vt.getValue(fp, m,ppTrial.getSelectedSnapshot());
 							}
 						}
-					}
-					float[] ueVal={0,0,0,0};
-					for(int i=0;i<4;i++){
-						UserEvent ue = settings.getTopoAtomic(i);
-						if(ue!=null){
-							UserEventProfile uep = thread.getUserEventProfile(ue);
-							if(uep!=null)
-							{
-								UserEventValueType uevt = settings.getTopoUserEventValueType(i);
-								if(uevt!=null)
-									ueVal[i] = (float)uevt.getValue(uep, ppTrial.getSelectedSnapshot());
+						}
+						else{
+							UserEvent ue = settings.getTopoAtomic(i);
+							if(ue!=null){
+								UserEventProfile uep = thread.getUserEventProfile(ue);
+								if(uep!=null)
+								{
+									UserEventValueType uevt = settings.getTopoUserEventValueType(i);
+									if(uevt!=null)
+										topoVals[i] = (float)uevt.getValue(uep, ppTrial.getSelectedSnapshot());
+								}
 							}
 						}
 					}
+					//float[] ueVal={0,0,0,0};
+//					for(int i=0;i<4;i++){
+//						UserEvent ue = settings.getTopoAtomic(i);
+//						if(ue!=null){
+//							UserEventProfile uep = thread.getUserEventProfile(ue);
+//							if(uep!=null)
+//							{
+//								UserEventValueType uevt = settings.getTopoUserEventValueType(i);
+//								if(uevt!=null)
+//									ueVal[i] = (float)uevt.getValue(uep, ppTrial.getSelectedSnapshot());
+//							}
+//						}
+//					}
 
-					vm = ThreeDeeGeneralPlotUtils.getEvaluation(rankIndex,numThreads,thread.getNodeID(),thread.getContextID(),thread.getThreadID(),ppTrial.getDataSource().getNumberOfNodes(),ppTrial.getDataSource().getNumberOfContexts(thread.getNodeID()),ppTrial.getDataSource().getNumberOfThreads(thread.getNodeID(),thread.getContextID()),topoVals,varMins,varMaxs,varMeans,ueVal,settings.getCustomTopoAxes(),expressions);
+					vm = ThreeDeeGeneralPlotUtils.getEvaluation(rankIndex,numThreads,thread.getNodeID(),thread.getContextID(),thread.getThreadID(),ppTrial.getDataSource().getNumberOfNodes(),ppTrial.getDataSource().getNumberOfContexts(thread.getNodeID()),ppTrial.getDataSource().getNumberOfThreads(thread.getNodeID(),thread.getContextID()),topoVals,varMins,varMaxs,varMeans,settings.getCustomTopoAxes(),expressions);
 
 					if(pointsPerRank==-1){
 						pointsPerRank = ThreeDeeGeneralPlotUtils.getPointsPerRank(vm);
