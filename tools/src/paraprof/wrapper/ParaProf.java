@@ -54,7 +54,7 @@ public class ParaProf implements ActionListener {
 	}
     }
 
-    private final static String VERSION = "Thu Nov  3 16:51:20 PDT 2011";
+    private final static String VERSION = "Fri Nov  4 20:07:13 PDT 2011";
 
     public static int defaultNumberPrecision = 6;
 
@@ -395,6 +395,7 @@ public class ParaProf implements ActionListener {
 	CmdLineParser.Option mergeOpt = parser.addStringOption('a', "merge");
 	CmdLineParser.Option packOpt = parser.addStringOption('a', "pack");
 	CmdLineParser.Option unpackOpt = parser.addBooleanOption('u', "dump");
+	CmdLineParser.Option unpackSummOpt = parser.addBooleanOption('y', "dumpsummary");
 	CmdLineParser.Option unpackRankOpt = parser.addStringOption('r', "dumprank");
 	CmdLineParser.Option ossOpt = parser.addBooleanOption('o', "oss");
 	CmdLineParser.Option overwriteOpt = parser.addBooleanOption('w', "overwrite");
@@ -421,9 +422,10 @@ public class ParaProf implements ActionListener {
 	String merge = (String) parser.getOptionValue(mergeOpt);
 	String pack = (String) parser.getOptionValue(packOpt);
 	Boolean unpack = (Boolean) parser.getOptionValue(unpackOpt);
+	Boolean unpackSumm = (Boolean) parser.getOptionValue(unpackSummOpt);
 	Boolean overwrite = (Boolean) parser.getOptionValue(overwriteOpt);
 	String unpackrank = (String) parser.getOptionValue(unpackRankOpt);
-	if (unpackrank != null) {
+	if (unpackrank != null||unpackSumm!=null) {
 	    unpack = Boolean.TRUE;
 	}
 	Boolean oss = (Boolean) parser.getOptionValue(ossOpt);
@@ -600,7 +602,9 @@ public class ParaProf implements ActionListener {
 		    int rank = Integer.parseInt(unpackrank);
 		    Node node = dataSource.getNode(rank);
 		    DataSourceExport.writeProfiles(dataSource, new File("."), node.getThreads());
-		} else {
+		}else if(unpackSumm !=null){
+			DataSourceExport.writeAggProfiles(dataSource, new File("."));
+		}else {
 		    DataSourceExport.writeProfiles(dataSource, new File("."));
 		}
 

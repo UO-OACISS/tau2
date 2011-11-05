@@ -25,9 +25,9 @@ public class ThreeDeeGeneralPlotUtils {
 	public static VarMap getEvaluation(int rank, int maxRank, int node,
 			int context, int thread, int maxNode, int maxContext,
 			int maxThread, float[] topoVals, float[] varMins, float varMaxs[],
-			float varMeans[], float[] atomValue, int[] axisDim,
+			float varMeans[],  int[] axisDim,
 			Map<String, String> expressions) {// String[] expressions, int rank,
-												// int maxRank){
+												// int maxRank){  float[] atomValue,
 		// System.out.println(rank);
 		FuncMap fm = new FuncMap();
 		fm.loadDefaultFunctions();
@@ -54,10 +54,10 @@ public class ThreeDeeGeneralPlotUtils {
 		vm.setValue("event1.mean", varMeans[1]);
 		vm.setValue("event2.mean", varMeans[2]);
 		vm.setValue("event3.mean", varMeans[3]);
-		vm.setValue("atomic0", atomValue[0]);
-		vm.setValue("atomic1", atomValue[1]);
-		vm.setValue("atomic2", atomValue[2]);
-		vm.setValue("atomic3", atomValue[3]);
+//		vm.setValue("atomic0", atomValue[0]);
+//		vm.setValue("atomic1", atomValue[1]);
+//		vm.setValue("atomic2", atomValue[2]);
+//		vm.setValue("atomic3", atomValue[3]);
 		vm.setValue("axisDimX", axisDim[0]);
 		vm.setValue("axisDimY", axisDim[1]);
 		vm.setValue("axisDimZ", axisDim[2]);
