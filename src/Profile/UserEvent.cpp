@@ -55,10 +55,7 @@ using namespace std;
 #endif /* TAU_EPILOG */
 
 #ifdef TAU_SCOREP
-#include <scorep/SCOREP_User.h>
-#include <scorep/SCOREP_User_Types.h>
-#include <scorep/SCOREP_User_Functions.h>
-#include <scorep/SCOREP_PublicTypes.h>
+#include <scorep/SCOREP_Tau.h>
 #endif
 
 #include <TauTrace.h>
@@ -108,10 +105,10 @@ void TauUserEvent::AddEventToDB() {
 #endif /* TAU_VAMPIRTRACE */
 
 #ifdef TAU_SCOREP
-SCOREP_SamplingSetHandle handel = SCOREP_INVALID_SAMPLING_SET;
+ SCOREP_Tau_MetricHandle handle = SCOREP_TAU_INIT_METRIC_HANDLE; 
 
-SCOREP_User_InitMetric( &handel, GetEventName(), "units",SCOREP_USER_METRIC_TYPE_DOUBLE,  SCOREP_USER_METRIC_CONTEXT_GLOBAL );
-EventId=handel;
+SCOREP_Tau_InitMetric( &handle, GetEventName(), "units");
+EventId=handle;
 #endif
   RtsLayer::UnLockDB();
   return;
@@ -267,7 +264,7 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
 #endif /* TAU_VAMPIRTRACE */
 
 #ifdef TAU_SCOREP
- SCOREP_User_TriggerMetricDouble( GetEventId(), data );
+ SCOREP_Tau_TriggerMetricDouble( GetEventId(), data );
 #endif /*TAU_SCOREP*/
 
 
