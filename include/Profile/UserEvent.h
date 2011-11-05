@@ -32,7 +32,7 @@ class TauUserEvent {
     TAU_STORAGE(long, NumEvents);
     bool DisableMin, DisableMax, DisableMean, DisableStdDev, MonotonicallyIncreasing;
     string EventName;
-    long EventId;
+    uint64_t EventId;
     TauContextUserEvent *ctxevt;
 
     void AddEventToDB();
@@ -50,7 +50,7 @@ class TauUserEvent {
     double  GetSumSqr(int tid = RtsLayer::myThread());
     long    GetNumEvents(int tid = RtsLayer::myThread());
     const char *  GetEventName (void) const;
-    long GetEventId(void);
+    uint64_t GetEventId(void);
     void SetEventName(const char * newname); 
     void SetEventName(string newname); 
     bool GetDisableMin(void);

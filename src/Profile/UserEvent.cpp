@@ -117,11 +117,11 @@ EventId=handel;
   return;
 }
 
-long TauUserEvent::GetEventId(void) {
+uint64_t TauUserEvent::GetEventId(void) {
   return EventId;
 }
 
-extern "C" long TauUserEvent_GetEventId(TauUserEvent *evt) {
+extern "C" uint64_t TauUserEvent_GetEventId(TauUserEvent *evt) {
   return evt->GetEventId();
 }
 
@@ -267,7 +267,7 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
 #endif /* TAU_VAMPIRTRACE */
 
 #ifdef TAU_SCOREP
- SCOREP_User_TriggerMetricDouble( GetEventId(), (x_uint64) data );
+ SCOREP_User_TriggerMetricDouble( GetEventId(), data );
 #endif /*TAU_SCOREP*/
 
 
