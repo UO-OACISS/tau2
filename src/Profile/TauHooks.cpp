@@ -319,6 +319,7 @@ void trace_register_func(char *func, int id)
     if (!isprint(func[i])) {
       dprintf("func=%s - isprint is false at i = %d\n", func, i);
       func[i] = '\0';
+      if (i == 0) strcpy(func, "<unknown>");
     }
   }
     
