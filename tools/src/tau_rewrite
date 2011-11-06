@@ -382,13 +382,18 @@ then
   echo "smaqao batch=on module=instrumenter mode=instrument input=tau_rewrite.lua"
 else
   eval `$maqao_bin batch=on module=instrumenter mode=instrument input=tau_rewrite.lua <tau_empty.in &> tau_instr.log `
-  echo "$0: Binary instrumentation done through MAQAO Multi-Architecture 
-Disassembler, Rewriter and ASsembler technology"
+  echo "$0: Binary instrumentation done through MAQAO Multi-Architecture Disassembler, Rewriter and ASsembler technology"
   if [ $verbose = true ] 
   then
     cat tau_instr.log
   fi
 # Move the output to the outputfile. 
-  mv  `ls -t *_0.run | head -1 ` $outfile
-  /bin/rm -f tau_instr.log tau_empty.in
+  ls -t *_0.run &> /dev/null
+  if [ $? = 1 ]
+  then
+    echo "TAU: There was a problem instrumenting the executable using MAQAO. Please rerun the command with the -v option for further details"
+  else
+    mv  `ls -t *_0.run | head -1 ` $outfile
+    /bin/rm -f tau_instr.log tau_empty.in
+  fi
 fi
