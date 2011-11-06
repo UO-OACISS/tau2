@@ -5,7 +5,7 @@ export LANG
 
 eval `tau-config`
 
-if [ ! -x $BASEDIR/bin/pdt_maqao ] 
+if [ ! -x $BASEDIR/bin/tau_maqao ] 
 then
   echo "$0: Couldn't locate smaqao in PDT"
   if [ -x $BASEDIR/bin/tau_run ]
@@ -18,7 +18,7 @@ then
     exit 1; 
   fi
 else
-  maqao_bin=$BASEDIR/bin/pdt_maqao
+  maqao_bin=$BASEDIR/bin/tau_maqao
 fi
 
 
