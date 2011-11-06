@@ -1140,6 +1140,13 @@ int main(int argc, char **argv){
         sprintf(staticmpilibname,"libTauMpi%s.a", bindings);
         dprintf("staticmpilibname = %s\n", staticmpilibname);
         sprintf(libname, "libTAUsh%s.so", bindings);
+        /* if (isStaticExecutable) {
+          fprintf(stderr, "%s> Loading %s ...\n", mutname, staticlibname);
+          fprintf(stderr, "%s> Loading %s ...\n", mutname, staticmpilibname);
+        } else { 
+        */
+          fprintf(stderr, "%s> Loading %s ...\n", mutname, libname);
+        /* } */
       }
     }
     
