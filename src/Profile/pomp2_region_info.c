@@ -215,13 +215,13 @@ initRegionInfo( CTCData* obj )
     obj->mRegionInfo->mEndFileName     = 0;
     obj->mRegionInfo->mEndLine1        = 0;
     obj->mRegionInfo->mEndLine2        = 0;
-    obj->mRegionInfo->mHasCopyIn       = false;
-    obj->mRegionInfo->mHasCopyPrivate  = false;
-    obj->mRegionInfo->mHasFirstPrivate = false;
-    obj->mRegionInfo->mHasLastPrivate  = false;
-    obj->mRegionInfo->mHasNoWait       = false;
-    obj->mRegionInfo->mHasOrdered      = false;
-    obj->mRegionInfo->mHasReduction    = false;
+    obj->mRegionInfo->mHasCopyIn       = 0;
+    obj->mRegionInfo->mHasCopyPrivate  = 0;
+    obj->mRegionInfo->mHasFirstPrivate = 0;
+    obj->mRegionInfo->mHasLastPrivate  = 0;
+    obj->mRegionInfo->mHasNoWait       = 0;
+    obj->mRegionInfo->mHasOrdered      = 0;
+    obj->mRegionInfo->mHasReduction    = 0;
     obj->mRegionInfo->mScheduleType    = POMP2_No_schedule;
     obj->mRegionInfo->mNumSections     = 0;
     obj->mRegionInfo->mCriticalName    = 0;
@@ -238,8 +238,8 @@ copyCTCStringToInternalMemory( CTCData*    obj,
     assert( obj->mCTCStringForErrorMsg == 0 );
 
     const size_t nBytes = strlen( source ) * sizeof( char ) + 1;
-    obj->mCTCStringMemory      = malloc( nBytes );
-    obj->mCTCStringForErrorMsg = malloc( nBytes );
+    obj->mCTCStringMemory      = (char *)malloc( nBytes );
+    obj->mCTCStringForErrorMsg = (char *)malloc( nBytes );
     strcpy( obj->mCTCStringMemory, source );
     strcpy( obj->mCTCStringForErrorMsg, source );
     obj->mCTCStringToParse = obj->mCTCStringMemory;
@@ -289,7 +289,7 @@ typedef enum
 
 static void
 ignoreLengthField( CTCData* obj );
-static bool
+static int
 getKeyValuePair( CTCData* obj,
                  char**   key,
                  char**   value );
@@ -306,7 +306,7 @@ assignSourceCodeLocation( CTCData*  obj,
                           char*     value );
 static void
 assignHasClause( CTCData*    obj,
-                 bool*       hasClause,
+                 int*       hasClause,
                  const char* value );
 static void
 assignScheduleType( CTCData*    obj,
@@ -415,11 +415,11 @@ ignoreLengthField( CTCData* obj )
     }
 }
 
-static bool
+static int
 extractNextToken( char**     string,
                   const char tokenDelimiter );
 
-static bool
+static int
 getKeyValuePair( CTCData* obj,
                  char**   key,
                  char**   value )
@@ -427,12 +427,12 @@ getKeyValuePair( CTCData* obj,
     /* We expect ctcString to look like "key=value*...**" or "*".   */
     if ( *( obj->mCTCStringToParse ) == '*' )
     {
-        return false; /* end of ctc string */
+        return 0; /* end of ctc string */
     }
 
     if ( *( obj->mCTCStringToParse ) == '\0' )
     {
-        return false; /* also end of ctc string. we don't force the second "*" */
+        return 0; /* also end of ctc string. we don't force the second "*" */
     }
 
     *key = obj->mCTCStringToParse;
@@ -454,21 +454,21 @@ getKeyValuePair( CTCData* obj,
     {
         ctcError( obj, CTC_ERROR_Zero_length_value, 0 );
     }
-    return true;
+    return 1;
 }
 
-static bool
+static int
 extractNextToken( char**     string,
                   const char tokenDelimiter )
 {
     *string = strchr( *string, tokenDelimiter );
     if ( !( *string && **string == tokenDelimiter ) )
     {
-        return false;
+        return 0;
     }
     **string = '\0'; /* extraction */
     ++( *string );
-    return true;
+    return 1;
 }
 
 /** @brief matching between string description and CTC token*/
@@ -632,12 +632,12 @@ assignSourceCodeLocation( CTCData*  obj,
     char* token    = value;
     int   line1Tmp = -1;
     int   line2Tmp = -1;
-    bool  continueExtraction;
+    int  continueExtraction;
     assert( *filename == 0 );
 
     if ( ( continueExtraction = extractNextToken( &value, ':' ) ) )
     {
-        *filename = malloc( strlen( token ) * sizeof( char ) + 1 );
+        *filename =(char *) malloc( strlen( token ) * sizeof( char ) + 1 );
         strcpy( *filename, token );
     }
     token = value;
@@ -669,7 +669,7 @@ assignSourceCodeLocation( CTCData*  obj,
 
 static void
 assignHasClause( CTCData*    obj,
-                 bool*       hasClause,
+                 int*       hasClause,
                  const char* value )
 {
     if ( !isdigit( *value ) )
@@ -716,14 +716,14 @@ static void
 assignString( char**      aString,
               const char* value )
 {
-    *aString = malloc( strlen( value ) * sizeof( char ) + 1 );
+    *aString = (char *)malloc( strlen( value ) * sizeof( char ) + 1 );
     strcpy( *aString, value );
 }
 
 static void
 checkConsistency( CTCData* obj )
 {
-    bool requiredAttributesFound;
+    int requiredAttributesFound;
 
     if ( obj->mRegionInfo->mRegionType == POMP2_No_type )
     {
