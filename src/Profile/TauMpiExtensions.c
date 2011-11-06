@@ -6570,6 +6570,7 @@ void mpi_info_create__( MPI_Fint * info, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Info_set wrapper function 
 ******************************************************/
+/*
 int MPI_Info_set( MPI_Info Info, TAU_CONST char * key, TAU_CONST char * value)
 {
   int retvalue; 
@@ -6579,44 +6580,48 @@ int MPI_Info_set( MPI_Info Info, TAU_CONST char * key, TAU_CONST char * value)
   TAU_PROFILE_STOP(t); 
   return retvalue; 
 }
-
+*/
 /******************************************************
 ***      MPI_Info_set wrapper function 
 ******************************************************/
+/*
 void MPI_INFO_SET( MPI_Fint *  Info, TAU_CONST char * key, TAU_CONST char * value, MPI_Fint * ierr)
 {
   MPI_Info local_info = MPI_Info_f2c(*Info);
   *ierr = MPI_Info_set( local_info, key, value) ; 
   return ; 
 }
-
+*/
 /******************************************************
 ***      MPI_Info_set wrapper function 
 ******************************************************/
+ /*
 void mpi_info_set( MPI_Fint *  Info, TAU_CONST char * key, TAU_CONST char * value, MPI_Fint * ierr)
 {
   MPI_INFO_SET( Info, key, value, ierr) ; 
   return ; 
 }
-
+*/
 /******************************************************
 ***      MPI_Info_set wrapper function 
 ******************************************************/
+  /*
 void mpi_info_set_( MPI_Fint *  Info, TAU_CONST char * key, TAU_CONST char * value, MPI_Fint * ierr)
 {
   MPI_INFO_SET( Info, key, value, ierr) ; 
   return ; 
 }
-
+  */
 /******************************************************
 ***      MPI_Info_set wrapper function 
 ******************************************************/
+   /*
 void mpi_info_set__( MPI_Fint *  Info, TAU_CONST char * key, TAU_CONST char * value, MPI_Fint * ierr)
 {
   MPI_INFO_SET( Info, key, value, ierr) ; 
   return ; 
 }
-
+   */
 /******************************************************/
 /******************************************************/
 
@@ -6678,53 +6683,65 @@ void mpi_info_delete__( MPI_Fint *  info, TAU_CONST char * key, MPI_Fint * ierr)
 /******************************************************
 ***      MPI_Info_get wrapper function 
 ******************************************************/
+/*
 int MPI_Info_get( MPI_Info info, TAU_CONST char * key, int valuelen, char * value, int * flag)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Info_get()", "", TAU_MESSAGE); 
   TAU_PROFILE_START(t); 
+  printf("C wrapper: incoming key [%s] with length %d\n", key, valuelen);
   retvalue = PMPI_Info_get( info, key, valuelen, value, flag) ; 
+  printf("C wrapper: got flag %d with key [%s]\n", *flag, key);
   TAU_PROFILE_STOP(t); 
   return retvalue; 
 }
-
+*/
 /******************************************************
 ***      MPI_Info_get wrapper function 
 ******************************************************/
+ /*
 void MPI_INFO_GET( MPI_Fint *  info, TAU_CONST char * key, MPI_Fint *  valuelen, TAU_CONST char * value, MPI_Fint *  flag, MPI_Fint * ierr)
 {
   MPI_Info local_info = MPI_Info_f2c(*info);
+  printf("F wrapper: incoming key [%s] with length %d\n", key, *valuelen);
   *ierr = MPI_Info_get( local_info, key, *valuelen, value, flag) ; 
+  printf("F wrapper: got flag %d with key [%s]\n", *flag, key);
   return ; 
 }
-
+ */
 /******************************************************
 ***      MPI_Info_get wrapper function 
 ******************************************************/
+  /*
 void mpi_info_get( MPI_Fint *  info, TAU_CONST char * key, MPI_Fint *  valuelen, TAU_CONST char * value, MPI_Fint *  flag, MPI_Fint * ierr)
 {
+  printf("F invocation: incoming key [%s] with length %d\n", key, *valuelen);
   MPI_INFO_GET( info, key, valuelen, value, flag, ierr) ; 
   return ; 
 }
-
+*/
 /******************************************************
 ***      MPI_Info_get wrapper function 
 ******************************************************/
+   /*
 void mpi_info_get_( MPI_Fint *  info, TAU_CONST char * key, MPI_Fint *  valuelen, TAU_CONST char * value, MPI_Fint *  flag, MPI_Fint * ierr)
 {
+  printf("F invocation: incoming key [%s] with length %d\n", key, *valuelen);
   MPI_INFO_GET( info, key, valuelen, value, flag, ierr) ; 
   return ; 
 }
-
+   */
 /******************************************************
 ***      MPI_Info_get wrapper function 
 ******************************************************/
+    /*
 void mpi_info_get__( MPI_Fint *  info, TAU_CONST char * key, MPI_Fint *  valuelen, TAU_CONST char * value, MPI_Fint *  flag, MPI_Fint * ierr)
 {
+  printf("F invocation: incoming key [%s] with length %d\n", key, *valuelen);
   MPI_INFO_GET( info, key, valuelen, value, flag, ierr) ; 
   return ; 
 }
-
+    */
 /******************************************************/
 /******************************************************/
 
