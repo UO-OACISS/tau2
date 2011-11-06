@@ -6658,6 +6658,7 @@ cp ${tauroot}/tools/src/tauf90 $BINTARGET
 cp ${tauroot}/tools/src/tauex.multiple $BINTARGET
 cp ${tauroot}/tools/src/tau_cxx.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_cc.sh $BINTARGET
+cp ${tauroot}/tools/src/tau_rewrite $BINTARGET
 cp ${tauroot}/tools/src/tau_f90.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_f77.sh $BINTARGET
 cp ${tauroot}/tools/src/contrib/tcollect10.ini $BINTARGET
@@ -6667,6 +6668,12 @@ if [ $pdt = yes ] ; then
     cat ${tauroot}/tools/src/tau_header_inst.sh | sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@ARCH@,'$architecture',' \
 	-e 's,@PDTROOTDIR@,'$pdtdir',' -e 's,@PDTARCH@, '$pdtcompdir',' > ${targetdir}/${architecture}/bin/tau_header_inst.sh
     chmod a+rx ${targetdir}/${architecture}/bin/tau_header_inst.sh
+    if [ -x ${pdtdir}/${pdtcompdir}/bin/smaqao ]
+    then
+      echo "TAU: PDT: Using binary rewriting capabilities from MAQAO in tau_rewrite"
+      rm -f ${targetdir}/${architecture}/bin/tau_maqao
+      ln -s ${pdtdir}/${pdtcompdir}/bin/smaqao ${targetdir}/${architecture}/bin/tau_maqao
+    fi
 fi
 
 # Copy over tau_load.sh
