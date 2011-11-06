@@ -22,22 +22,10 @@
 **                                                                         **
 **  See the file COPYRIGHT in the package base directory for details       **
 ****************************************************************************/
-/** @internal
- *
- *  @file       pomp2_lib.c
- *  @status     alpha
- *
- *  @maintainer Dirk Schmidl <schmidl@rz.rwth-aachen.de>
- *
- *  @brief      Dummy implementation of all POMP2 Functions. These functions
- *              only print out messages and do not measure anything.*/
 
 #include <config.h>
 #include "pomp2_lib.h"
 
-/* *INDENT-OFF*  */
-/** todo include again if c part is ready */
-/* #include "pomp2_fwrapper_def.h" */
 
 #include "pomp2_region_info.h"
 #include <assert.h>
