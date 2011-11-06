@@ -673,7 +673,7 @@ papiwallclock=no
 papivirtual=no
 use_ansic=no
 tauarch=unknown
-pdtcompdir=unknown
+pdtcompdir=
 pdtarchdir=unknown
 tauprefix=unknown
 execprefix=unknown
@@ -6024,7 +6024,7 @@ fi
 if [ $pdt = yes ] ; then
   fixmakeargs="$fixmakeargs PDT pdtdir=$pdtdir"
   tauoptions="${tauoptions}-pdt"
-  if [ $pdtcompdir != unknown ] ; then
+  if [ "x$pdtcompdir" != "x" ] ; then
     fixmakeargs="$fixmakeargs PDTARCH pdtcompdir=$pdtcompdir"
   fi
 
@@ -6663,16 +6663,22 @@ cp ${tauroot}/tools/src/tau_f90.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_f77.sh $BINTARGET
 cp ${tauroot}/tools/src/contrib/tcollect10.ini $BINTARGET
 
+if [ $pdtarchdir != unknown ]
+then
+  pdtarchcompdir=${pdtarchdir}/${pdtcompdir}
+else
+  pdtarchcompdir=${architecture}
+fi
 #copy over tau_header_inst.sh
 if [ $pdt = yes ] ; then
     cat ${tauroot}/tools/src/tau_header_inst.sh | sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@ARCH@,'$architecture',' \
-	-e 's,@PDTROOTDIR@,'$pdtdir',' -e 's,@PDTARCH@, '$pdtcompdir',' > ${targetdir}/${architecture}/bin/tau_header_inst.sh
+	-e 's,@PDTROOTDIR@,'$pdtdir',' -e 's,@PDTARCH@, '$pdtarch',' > ${targetdir}/${architecture}/bin/tau_header_inst.sh
     chmod a+rx ${targetdir}/${architecture}/bin/tau_header_inst.sh
-    if [ -x ${pdtdir}/${pdtcompdir}/bin/smaqao ]
+    if [ -x ${pdtdir}/${pdtarchcompdir}/bin/smaqao ]
     then
       echo "TAU: PDT: Using binary rewriting capabilities from MAQAO in tau_rewrite"
       rm -f ${targetdir}/${architecture}/bin/tau_maqao
-      ln -s ${pdtdir}/${pdtcompdir}/bin/smaqao ${targetdir}/${architecture}/bin/tau_maqao
+      ln -s ${pdtdir}/${pdtarchcompdir}/bin/smaqao ${targetdir}/${architecture}/bin/tau_maqao
     fi
 fi
 
