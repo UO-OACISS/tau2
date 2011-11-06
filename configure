@@ -1927,6 +1927,8 @@ cat ${tauroot}/tools/src/tau_portal/bin/portal.py.skel | sed -e 's,@BINDIR@,'$BI
 cp ${tauroot}/tools/src/tau_portal/bin/tau_portal.py $BINTARGET
 chmod a+rx $BINTARGET/tau_portal.py $BINTARGET/portal.py $BINTARGET/perfdmfdb.py
 
+echo "#define TAU_BIN_DIR \"$BINTARGET\"" >> include/tauarch.h 
+
 cat ${tauroot}/tools/src/perfexplorer/bin/perfexplorer.skel |
 sed -e 's,@TAUROOT@,'$targetdir',' \
     -e 's,@TAUSHELL@,'$taushell',' \
