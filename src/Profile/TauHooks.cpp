@@ -302,16 +302,27 @@ static int tauDyninstEnabled[TAU_MAX_THREADS];
 void trace_register_func(char *func, int id)
 {
   static int invocations = 0;
+  int i;
+  int tid = RtsLayer::myThread();
   dprintf("trace_register_func: func = %s, id = %d\n", func, id); 
   if (invocations == 0) {
+    if (!tauDyninstEnabled[tid]) {
 #ifdef TAU_MPI
-    tau_dyninst_init(1); 
+      tau_dyninst_init(1); 
 #else
-    tau_dyninst_init(0); 
+      tau_dyninst_init(0); 
 #endif /* TAU_MPI */
+    }
+  }
+  int len = strlen(func); 
+  for (i=0; i < len; i++) {
+    if (!isprint(func[i])) {
+      dprintf("func=%s - isprint is false at i = %d\n", func, i);
+      func[i] = '\0';
+      if (i == 0) strcpy(func, "<unknown>");
+    }
   }
     
-  int tid = RtsLayer::myThread();
   if (!tauDyninstEnabled[tid]) return;
 
   void *taufi;
