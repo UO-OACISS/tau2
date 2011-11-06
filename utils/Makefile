@@ -203,7 +203,7 @@ opari/opari:
 		cd opari ; $(MAKE) opari
 
 opari2-2.0/bin/opari2:
-		cd opari2-2.0 ; ./configure -prefix=`pwd` ; $(MAKE) ; make install
+		cd opari2-2.0 ; CXX=$(CONFIG_CXX) CC=$(CONFIG_CC) ./configure -prefix=`pwd` ; $(MAKE) ; make install
 
 tau_timecorrect.o:	tau_timecorrect.cpp
 		$(CXX) $(CFLAGS) tau_timecorrect.cpp -c
