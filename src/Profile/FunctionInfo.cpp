@@ -237,7 +237,6 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 				   SCOREP_TAU_REGION_FUNCTION
 				   );
 
-  printf("FunctionId = %d\n", FunctionId);
 #endif /* TAU_SCOREP */
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
