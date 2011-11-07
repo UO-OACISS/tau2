@@ -5918,6 +5918,7 @@ if [ ! $cupti = no ]; then
 			echo "CUPTI version >= 4.1 found."	
 			fixmakeargs="$fixmakeargs CUPTI_ACTIVITY"
 	fi
+	rm -f cupti_version.C cupti_version.o
 fi
 
 
