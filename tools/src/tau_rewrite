@@ -327,7 +327,7 @@ luafile="return {
         },
         path= \"$outputdir/$baseinfile\",
         output_suffix = \"_inst\",
-        output_name = \"bin_inst\",
+        output_name = \"$baseinfile.tau_rewritten\",
         fct_entries={
           {
             name = \"traceEntry\",
@@ -410,7 +410,16 @@ else
   then
     echo "TAU: There was a problem instrumenting the executable using MAQAO. Please rerun the command with the -v option for further details"
   else
-    mv  `ls -t *_0.run | head -1 ` $outfile
+    mv  `ls -t *_0.run | head -1 ` $outfile~
+    echo "#!/bin/sh
+          if test \"x\$LD_PRELOAD\" = \"x\" ; then 
+             export LD_PRELOAD=$TAU_INST_LIBRARY
+          else
+             export LD_PRELOAD=$TAU_INST_LIBRARY:\$LD_PRELOAD
+          fi" > $outfile_1~
+    cat $outfile_1~ $outfile~ > $outfile
+    chmod +x $outfile
+    /bin/rm -f $outfile_1~ $outfile~
     /bin/rm -f tau_instr.log tau_empty.in
   fi
 fi
