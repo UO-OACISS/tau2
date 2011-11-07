@@ -399,7 +399,7 @@ then
   echo "smaqao batch=on module=instrumenter mode=instrument input=tau_rewrite.lua"
 else
   eval `$maqao_bin batch=on module=instrumenter mode=instrument input=tau_rewrite.lua <tau_empty.in &> tau_instr.log `
-  echo "$0: Binary instrumentation done through MAQAO Multi-Architecture Disassembler, Rewriter and ASsembler technology"
+  echo "tau_rewrite: Binary instrumentation done through MAQAO Multi-Architecture Disassembler, Rewriter and ASsembler technology"
   if [ $verbose = true ] 
   then
     cat tau_instr.log
