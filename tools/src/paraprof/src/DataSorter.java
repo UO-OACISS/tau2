@@ -396,15 +396,19 @@ public class DataSorter implements Comparator<FunctionProfile> {
                 
                 
                 thread=ppTrial.getDataSource().getMinData();
-                functionProfile = thread.getFunctionProfile(function);
+                
                 if(thread!=null){
+                
+                functionProfile = thread.getFunctionProfile(function);
+                
                 	PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
                     newList.add(ppFunctionProfile);
                 }
                 
                 thread=ppTrial.getDataSource().getMaxData();
-                functionProfile = thread.getFunctionProfile(function);
                 if(thread!=null){
+                	
+                    functionProfile = thread.getFunctionProfile(function);
                 	PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
                     newList.add(ppFunctionProfile);
                 }

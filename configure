@@ -816,19 +816,8 @@ for arg in "$@"; do
   -pdt_c++=*)
     pdt_cxx_full_path=`echo $arg | sed 's@-pdt_c++=@@g'`
     myarg=`echo $arg |  echo $arg | sed 's@-pdt_c++=@@g' | sed 's@.*/@@g'`
-    if [  $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ ]
-      then
-        pdt_cxx_compiler=$myarg
-      else
-        testxlc=`echo $myarg | sed -e 's/xl//'`
-        if [ "y$testxlc" = "y$myarg" ]
-        then
-          echo "WARNING: valid options for pdt_c++ are 'CC', 'KCC', 'g++', '*xlC*', 'cxx' , 'egcs', 'pgCC', 'pgcpp', 'FCC', 'guidec++', 'aCC', 'c++', and 'orCC'"
-#       exit 1
-        else
-          pdt_cxx_compiler=$myarg
-        fi
-    fi
+    pdt_cxx_compiler=$myarg
+    
     shift
     ;;
 
@@ -5929,6 +5918,7 @@ if [ ! $cupti = no ]; then
 			echo "CUPTI version >= 4.1 found."	
 			fixmakeargs="$fixmakeargs CUPTI_ACTIVITY"
 	fi
+	rm -f cupti_version.C cupti_version.o
 fi
 
 
