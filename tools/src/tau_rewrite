@@ -11,7 +11,24 @@ then
   if [ -x $BASEDIR/bin/tau_run ]
   then 
     echo "$0: Using DyinstAPI for binary rewriting" 
-    $BASEDIR/bin/tau_run $* 
+    arglist=""
+    lastarg=""
+    output_file_specified=false
+    for arg in "$@"
+    do 
+      arglist="$arglist $lastarg"
+      lastarg=$arg
+      if [ $arg = "-o" ]
+      then
+        output_file_specified=true
+      fi
+    done
+    if [ $output_file_specified = false ] 
+    then
+      arglist="$arglist -o"
+    fi
+    arglist="$arglist $lastarg" 
+    $BASEDIR/bin/tau_run $arglist
     exit 1;
   else
     echo "$0: To use TAU's binary rewriting capabilities, please install MAQAO from PDT v3.17+ (x86_64 only at present) or DyninstAPI"
