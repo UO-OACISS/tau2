@@ -1086,7 +1086,7 @@ int main(int argc, char **argv){
   char bindir[]=TAU_BIN_DIR; 
   dprintf("mutatee name = %s\n", mutname);
   if (tvalue != (char *) NULL) {
-    dprintf("-X <options> specified\n");
+    dprintf("-T <options> specified\n");
     sprintf(cmd, "echo %s | sed -e 's@,@ @g' | tr '[A-Z]' '[a-z]' | xargs %s/tau-config --binding | sed -e 's@shared@@g'", tvalue, bindir);
     FILE *fp; 
     fp = popen(cmd, "r"); 
