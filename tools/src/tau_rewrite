@@ -278,7 +278,7 @@ then
   echoIfShortVerbose "infile=$infile, arg = $arg"
   if [ "x$infile" = "x$arg" ] 
   then 
-    outfile="$infile.tau_rewritten"
+    outfile="$infile.tau_inst"
     echo "$0: Output file written to $outfile"
   else
     outfile=$arg
@@ -327,7 +327,7 @@ luafile="return {
         },
         path= \"$outputdir/$baseinfile\",
         output_suffix = \"_inst\",
-        output_name = \"bin_inst\",
+        output_name = \"$baseinfile.tau_rewritten\",
         fct_entries={
           {
             name = \"traceEntry\",
@@ -399,7 +399,7 @@ then
   echo "smaqao batch=on module=instrumenter mode=instrument input=tau_rewrite.lua"
 else
   eval `$maqao_bin batch=on module=instrumenter mode=instrument input=tau_rewrite.lua <tau_empty.in &> tau_instr.log `
-  echo "$0: Binary instrumentation done through MAQAO Multi-Architecture Disassembler, Rewriter and ASsembler technology"
+  echo "tau_rewrite: Binary instrumentation done through MAQAO Multi-Architecture Disassembler, Rewriter and ASsembler technology"
   if [ $verbose = true ] 
   then
     cat tau_instr.log
@@ -410,7 +410,20 @@ else
   then
     echo "TAU: There was a problem instrumenting the executable using MAQAO. Please rerun the command with the -v option for further details"
   else
-    mv  `ls -t *_0.run | head -1 ` $outfile
+    mv  `ls -t *_0.run | head -1 ` $outfile~
+    echo "#!/bin/sh
+          if test \"x\$LD_PRELOAD\" = \"x\" ; then 
+             export LD_PRELOAD=$TAU_INST_LIBRARY
+          else
+             export LD_PRELOAD=$TAU_INST_LIBRARY:\$LD_PRELOAD
+          fi" > $outfile_1~
+    cat $outfile_1~ $outfile~ > $outfile
+    chmod +x $outfile
+    /bin/rm -f $outfile_1~ $outfile~
+    if [ $shortverbose = "false" -a $verbose = "false" ]
+    then
+      /bin/rm -f instru_sessions.lua madras_trace.log tau_instr.log tau_rewrite.lua
+    fi
     /bin/rm -f tau_instr.log tau_empty.in
   fi
 fi
