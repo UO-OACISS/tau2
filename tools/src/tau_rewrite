@@ -278,7 +278,7 @@ then
   echoIfShortVerbose "infile=$infile, arg = $arg"
   if [ "x$infile" = "x$arg" ] 
   then 
-    outfile="$infile.tau_rewritten"
+    outfile="$infile.tau_inst"
     echo "$0: Output file written to $outfile"
   else
     outfile=$arg
@@ -420,6 +420,10 @@ else
     cat $outfile_1~ $outfile~ > $outfile
     chmod +x $outfile
     /bin/rm -f $outfile_1~ $outfile~
+    if [ $shortverbose = "false" -a $verbose = "false" ]
+    then
+      /bin/rm -f instru_sessions.lua madras_trace.log tau_instr.log tau_rewrite.lua
+    fi
     /bin/rm -f tau_instr.log tau_empty.in
   fi
 fi
