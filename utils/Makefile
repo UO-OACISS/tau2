@@ -329,7 +329,6 @@ user_event_data.o:	user_event_data.cpp
 clean:
 		/bin/rm -rf *.o $(EXECUTABLES) *.dep lib*$(LSX) *.ii *.ti ti_files cxx_repository ii_files rii_files 
 		cd opari ; make clean
-		cd opari2 ; make clean
 		cd ebs2otf ; $(MAKE) clean
 
 $(INSTALLDEST)/pprof: pprof
