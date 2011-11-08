@@ -1,4 +1,0 @@
-MPICC="mpicc"
-MPICXX="mpicxx"
-MPIF77="mpif77"
-MPIFC="mpif90"

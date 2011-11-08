@@ -1,6 +1,0 @@
-#include <pomp2_lib.h>
-
-
-void POMP2_Init_regions_000()
-{
-}
