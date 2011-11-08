@@ -376,7 +376,7 @@ cl_int clReleaseCommandQueue(cl_command_queue a1) {
       return retval;
     }
 	//In order to capture events
-	clEnqueueBarrier(a1);
+	//clEnqueueBarrier(a1);
 
   TAU_PROFILE_START(t);
   retval  =  (*clReleaseCommandQueue_h)( a1);
@@ -1384,6 +1384,12 @@ cl_int clReleaseEvent(cl_event a1) {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
+
+	//clReleaseEvent is rather nasty, we will need to flush our event buffer in
+	//case one of them is being released.
+	Tau_opencl_flush();
+	//Tau_opencl_register_sync_event();
+
   TAU_PROFILE_START(t);
   retval  =  (*clReleaseEvent_h)( a1);
   TAU_PROFILE_STOP(t);
@@ -1497,7 +1503,7 @@ cl_int clFinish(cl_command_queue a1) {
   retval  =  (*clFinish_h)( a1);
   TAU_PROFILE_STOP(t);
 	
-	//Tau_opencl_register_sync_event();
+	Tau_opencl_register_sync_event();
   }
   return retval;
 
@@ -1563,9 +1569,11 @@ cl_int clEnqueueReadBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a4
 	
 	Tau_opencl_exit_memcpy_event("cl_int clEnqueueReadBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, void *, cl_uint, const cl_event *, cl_event *) C",
 	gId, MemcpyDtoH);
+	
+	Tau_opencl_register_sync_event();
 #endif 
 
-	Tau_opencl_register_sync_event();
+	
   }
   return retval;
 
@@ -1630,9 +1638,11 @@ cl_int clEnqueueWriteBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, size_t a
   retval  =  (*clEnqueueWriteBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
 
 	Tau_opencl_exit_memcpy_event("cl_int clEnqueueWriteBuffer(cl_command_queue, cl_mem, cl_bool, size_t, size_t, const void *, cl_uint, const cl_event *, cl_event *) C", gId, MemcpyHtoD); 
-#endif
+	
 	Tau_opencl_register_sync_event();
+#endif
   }
+	
   return retval;
 
 }
@@ -1716,7 +1726,7 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
 	
 	check_memory_init();
 	TAU_CONTEXT_EVENT(MemoryCopyEventDtoD, a6);
-
+	
 	Tau_opencl_enter_memcpy_event("cl_int clEnqueueCopyBuffer(cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *) C", gId, a6, MemcpyDtoD); 
   
 	retval  =  (*clEnqueueCopyBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
@@ -1726,7 +1736,8 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
 	Tau_opencl_register_sync_event();
 #endif
   }
-  return retval;
+  
+	return retval;
 
 }
 
