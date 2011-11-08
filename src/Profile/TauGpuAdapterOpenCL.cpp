@@ -362,6 +362,18 @@ void Tau_opencl_register_sync_event()
 	}
 }
 
+//flush all kernel events whether or not they can be recorded.
+void Tau_opencl_flush()
+{
+	//Tau_opencl_register_sync_event();
+
+	//remove remaining events.
+	while (!KernelBuffer.empty())
+	{
+		KernelBuffer.pop();
+	}
+}
+
 void CL_CALLBACK Tau_opencl_memcpy_callback(cl_event event, cl_int command_stat, void
 *data)
 {

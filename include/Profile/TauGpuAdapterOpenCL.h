@@ -77,6 +77,8 @@ void Tau_opencl_enqueue_event(callback_data* new_data);
 
 void Tau_opencl_register_sync_event();
 
+void Tau_opencl_flush();
+
 openCLGpuId *Tau_opencl_retrive_gpu(cl_command_queue cq);
 
 //Memcpy event callback
