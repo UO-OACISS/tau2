@@ -104,7 +104,7 @@ printUsage () {
     echo -e "  -optOpariOpts=\"\"\t\tSpecifies optional arguments to the Opari tool"
     echo -e "  -optOpariReset=\"\"\t\tResets options passed to the Opari tool"
     echo -e "  -optOpari2Tool=\"<path/opari2>\"\tSpecifies the location of the Opari tool"
-    echo -e "  -optOpari2ConfigTool=\"<path/opari2_config>\"\tSpecifies the location of the Opari tool"
+    echo -e "  -optOpari2ConfigTool=\"<path/opari2-config>\"\tSpecifies the location of the Opari tool"
     echo -e "  -optOpari2Opts=\"\"\t\tSpecifies optional arguments to the Opari tool"
     echo -e "  -optOpari2Reset=\"\"\t\tResets options passed to the Opari tool"
     echo -e "  -optNoMpi\t\t\tRemoves -l*mpi* libraries during linking"
