@@ -22,9 +22,10 @@
 **                                                                         **
 **  See the file COPYRIGHT in the package base directory for details       **
 ****************************************************************************/
- #ifdef __cplusplus
- extern "C" {
- #endif
+  #ifdef __cplusplus
+  extern "C" {
+  #endif
+
 
 #ifndef POMP2_REGION_INFO_H
 #define POMP2_REGION_INFO_H
@@ -42,7 +43,7 @@
  *
  */
 
-//#include <stdint.h>
+#include <stdbool.h>
 
 /**
  * POMP2_Region_type
@@ -58,6 +59,7 @@ typedef enum /* POMP2_Region_type */
     POMP2_Flush,
     POMP2_For,
     POMP2_Master,
+    POMP2_Ordered,
     POMP2_Parallel,
     POMP2_Parallel_do,
     POMP2_Parallel_for,
@@ -65,6 +67,9 @@ typedef enum /* POMP2_Region_type */
     POMP2_Parallel_workshare,
     POMP2_Sections,
     POMP2_Single,
+    POMP2_Task,
+    POMP2_Taskuntied,
+    POMP2_Taskwait,
     POMP2_User_region,
     POMP2_Workshare
 } POMP2_Region_type;
@@ -124,19 +129,23 @@ typedef struct
      */
     /*@{*/
     /**true if a copyin clause is present*/
-    int                mHasCopyIn;
+    bool                mHasCopyIn;
     /**true if a copyprivate clause is present*/
-    int                mHasCopyPrivate;
+    bool                mHasCopyPrivate;
+    /**true if an if clause is present*/
+    bool                mHasIf;
     /**true if a firstprivate clause is present*/
-    int                mHasFirstPrivate;
+    bool                mHasFirstPrivate;
     /**true if a lastprivate clause is present*/
-    int                mHasLastPrivate;
+    bool                mHasLastPrivate;
     /**true if a nowait clause is present*/
-    int                mHasNoWait;
+    bool                mHasNoWait;
+    /**true if a numThreads clause is present*/
+    bool                mHasNumThreads;
     /**true if an ordered clause is present*/
-    int                mHasOrdered;
+    bool                mHasOrdered;
     /**true if a reduction clause is present*/
-    int                mHasReduction;
+    bool                mHasReduction;
     /** schedule type in the schedule clause*/
     POMP2_Schedule_type mScheduleType;
     /** user group name*/
@@ -202,7 +211,7 @@ freePOMP2RegionInfoMembers( POMP2_Region_info* regionInfo );
 
 
 #endif /* POMP2_REGION_INFO_H */
+ #ifdef __cplusplus
+  }
+  #endif
 
-#ifdef __cplusplus
- }
- #endif
