@@ -702,6 +702,11 @@ void TauEnv_initialize() {
     return;
 #endif
 
+#ifdef TAU_SCOREP
+    TAU_VERBOSE("[%d] TAU: SCOREP active! (TAU measurement disabled)\n", getpid());
+    return;
+#endif
+
     tmp = getconf("TAU_TRACK_MEMORY_LEAKS");
     if (parse_bool(tmp, env_track_memory_leaks)) {
       TAU_VERBOSE("TAU: Entry/Exit Memory tracking Enabled\n");
