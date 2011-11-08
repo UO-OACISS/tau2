@@ -428,11 +428,11 @@ $(INSTALLDEST)/opari: opari/opari
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) opari/opari $(INSTALLDEST)
 
-$(INSTALLDEST)/opari2_config: opari2/bin/opari2
+$(INSTALLDEST)/opari2-config: opari2/bin/opari2
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
-		$(TAU_INSTALL) opari2/bin/opari2_config $(INSTALLDEST)
+		$(TAU_INSTALL) opari2/bin/opari2-config $(INSTALLDEST)
 $(INSTALLDEST)/opari2: opari2/bin/opari2
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
