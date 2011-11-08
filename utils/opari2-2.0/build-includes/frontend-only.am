@@ -1,6 +1,0 @@
-## -*- mode: makefile -*-
-
-include ../src/opari/Makefile.inc.am
-include ../src/pomp-lib-dummy/Makefile.inc.am
-
-include ../test/Makefile.inc.am 

@@ -1,8 +1,0 @@
-      INTEGER*8 pomp2_region_1
-      INTEGER*8 pomp2_region_2
-      INTEGER*8 pomp2_region_3
-      integer pomp_get_max_threads000
-      integer pomp_num_threads 
-      common /cb000/ pomp2_region_1,
-     &          pomp2_region_2,
-     &          pomp2_region_3
