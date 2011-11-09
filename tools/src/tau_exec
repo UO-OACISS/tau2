@@ -25,7 +25,7 @@ usage()
     echo "        -io      track I/O"
     echo "        -memory  track memory"
     echo "        -cuda    track GPU events via CUDA"
-    echo "        -cupti   track GPU events via CUPTI (Also set env. variable TAU_CUPTI_RUNTIME or TAU_CUPTI_DRIVER)"
+    echo "        -cupti   track GPU events via CUPTI (Also see env. variable TAU_CUPTI_RUNTIME or TAU_CUPTI_DRIVER)"
     echo "        -opencl  track GPU events via OpenCL"
     echo "        -armci   track ARMCI events via PARMCI"
     echo "        -ebs     enable Event-based sampling"
@@ -271,13 +271,21 @@ if [ $track_cuda = "true" ] ; then
 		fi
 fi
 if [ $track_cupti = "true" ] ; then
-		# Add the memory wrapper library to the LD_PRELOAD list
-		TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUpti.so:$TAUEX_LD_PRELOAD
-		TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP.so:$TAUEX_LD_PRELOAD
-		if [ `echo $TAU_METRICS | grep "TIME"` ]; then
-			export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+		echo "test -f $BASEDIR/lib/$theBinding/libTAU-CUpti.so -a -f $BASEDIR/lib/$theBinding/libTAU-CudaQP.so"
+		cupti_exists=`test -f $BASEDIR/lib/$theBinding/libTAU-CUpti.so -a -f $BASEDIR/lib/$theBinding/libTAU-CudaQP.so`
+		if [ $? != 0 ] ; then
+			#tell the user to add cupti to bindings list.
+			echo "ERROR: CUPTI library not found. Please ensure that 'cupti' is on the list of bindings specified with the '-T' option."
+			exit
 		else
-			export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS 
+			# Add the memory wrapper library to the LD_PRELOAD list
+			TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUpti.so:$TAUEX_LD_PRELOAD
+			TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP.so:$TAUEX_LD_PRELOAD
+			if [ `echo $TAU_METRICS | grep "TIME"` ]; then
+				export TAU_METRICS=`echo $TAU_METRICS | sed -e 's/TIME/TAUGPU_TIME/'`
+			else
+				export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS 
+			fi
 		fi
 fi
 if [ $track_opencl = "true" ] ; then
