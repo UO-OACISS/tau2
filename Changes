@@ -22,6 +22,9 @@ Version 2.21 changes (from 2.20):
 9. Added a new view for visualizing atomic and context events in 3D topology display in ParaProf.
 10. Added Opari2 for OpenMP instrumentation (with support for OpenMP 3.0 constructs). 
 11. Added support for CUBE4 reader in ParaProf. 
+12. Added debugging support with TAU_TRACK_SIGNALS=1 to capture callstack as metadata at point of failure.
+13. Added TAU_SUMMARY=1 and pprof -f profile.Min/Max with paraprof -dumpsummary to generate just min/max/stddev/mean statistics instead of per-node data.
+14. Added support for systemwide tracking using tau.conf. 
 
 Version 2.20 changes (from 2.19):
 1. Added support for GPGPUs using tau_exec -cuda and tau_exec -opencl. Configure with -cuda=<dir>.
