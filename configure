@@ -1916,7 +1916,11 @@ cat ${tauroot}/tools/src/tau_portal/bin/portal.py.skel | sed -e 's,@BINDIR@,'$BI
 cp ${tauroot}/tools/src/tau_portal/bin/tau_portal.py $BINTARGET
 chmod a+rx $BINTARGET/tau_portal.py $BINTARGET/portal.py $BINTARGET/perfdmfdb.py
 
-echo "#define TAU_BIN_DIR \"$BINTARGET\"" >> include/tauarch.h 
+if [ $default = "true" ] ; then
+  echo "#define TAU_BIN_DIR \"default\"" >> include/tauarch.h 
+else
+  echo "#define TAU_BIN_DIR \"$BINTARGET\"" >> include/tauarch.h 
+fi
 
 cat ${tauroot}/tools/src/perfexplorer/bin/perfexplorer.skel |
 sed -e 's,@TAUROOT@,'$targetdir',' \
@@ -2494,7 +2498,7 @@ case $machine in
 
 	    touch conf_test.c
 	    extradir=`CC -v conf_test.c 2>&1 | grep cray-c++ | sed -e 's/ /\n/g' | grep "/opt/cray/cce" | grep "lib/x86-64$" | uniq | grep -v rpath`
-	    rm -f conf_test.c
+	    rm -f conf_test.c conf_test.o
 
 	    # not implemented yet
 	    fixmakeargs="$fixmakeargs COMPINST_CRAYCC"
@@ -5899,19 +5903,18 @@ EOF
 		fixmakeargs="$fixmakeargs PYCUDA"
   else
 		echo "boost/python libraries not found, skipping TAU's pycuda interface"
-		exit 1
   fi	
+  rm -f boost.cpp boost.o
 fi
 
+if [ ! $cupti = no ]; then
+	echo "Checking CUPTI version at $cupti/include ... ${nnl}"
 cat <<EOF > cupti_version.C
 #include <cupti_version.h> 
 #if CUPTI_API_VERSION >= 2
 #error CUPTI version >= 4.1 found.
 #endif
 EOF
-
-if [ ! $cupti = no ]; then
-	echo "Checking CUPTI version at $cupti/include ... ${nnl}"
 	if $cxx_compiler -I$cupti/include -c cupti_version.C 1>/dev/null 2>&1 ; then 
 			echo "CUPTI version 4.0 found."	
 	else
@@ -5920,7 +5923,6 @@ if [ ! $cupti = no ]; then
 	fi
 	rm -f cupti_version.C cupti_version.o
 fi
-
 
 if [ $zepto = yes ] ; then
     tauoptions="${tauoptions}-zepto"

@@ -106,6 +106,8 @@
 #define TAU_TRACK_IO_PARAMS_DEFAULT 0
 
 #define TAU_TRACK_SIGNALS_DEFAULT 0
+/* In TAU_TRACK_SIGNALS operations, do we invoke gdb? */
+#define TAU_SIGNALS_GDB_DEFAULT 0
 
 #define TAU_SUMMARY_DEFAULT 0
 
@@ -374,6 +376,7 @@ static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
 static int env_track_io_params = 0;
 static int env_track_signals = 0;
+static int env_signals_gdb = 0;
 static int env_summary_only = 0;
 static int env_ibm_bg_hwp_counters = 0;
 static int env_extras = 0;
@@ -481,6 +484,10 @@ int TauEnv_get_comm_matrix() {
 
 int TauEnv_get_track_signals() {
   return env_track_signals;
+}
+
+int TauEnv_get_signals_gdb() {
+  return env_signals_gdb;
 }
 
 int TauEnv_get_track_message() {
@@ -662,8 +669,18 @@ void TauEnv_initialize() {
       TAU_METADATA("TAU_TRACK_SIGNALS", "on");
       env_track_signals = 1;
       env_extras = 1;
+      tmp = getconf("TAU_SIGNALS_GDB");
+      if (parse_bool(tmp, env_signals_gdb)) {
+	TAU_VERBOSE("TAU: SIGNALS GDB output enabled\n");
+	TAU_METADATA("TAU_SIGNALS_GDB", "on");
+	env_signals_gdb = 1;
+      } else {
+	TAU_METADATA("TAU_SIGNALS_GDB", "off");
+	env_signals_gdb = 0;
+      }
     } else {
       TAU_METADATA("TAU_TRACK_SIGNALS", "off");
+      TAU_METADATA("TAU_SIGNALS_GDB", "off");
       env_track_signals = 0;
     }
 

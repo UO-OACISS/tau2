@@ -1,0 +1,36 @@
+      INTEGER( KIND=8 ) :: pomp2_region_1
+      INTEGER( KIND=8 ) :: pomp2_region_2
+      INTEGER( KIND=8 ) :: pomp2_region_3
+      INTEGER( KIND=8 ) :: pomp2_region_4
+      INTEGER( KIND=8 ) :: pomp2_region_5
+      INTEGER( KIND=8 ) :: pomp2_region_6
+      INTEGER( KIND=8 ) :: pomp2_region_7
+      INTEGER( KIND=8 ) :: pomp2_region_8
+      INTEGER( KIND=8 ) :: pomp2_region_9
+      INTEGER( KIND=8 ) :: pomp2_region_10
+      INTEGER( KIND=8 ) :: pomp2_region_11
+      INTEGER( KIND=8 ) :: pomp2_region_12
+      INTEGER( KIND=8 ) :: pomp2_region_13
+      INTEGER( KIND=8 ) :: pomp2_region_14
+      INTEGER( KIND=8 ) :: pomp2_region_15
+      INTEGER( KIND=8 ) :: pomp2_region_16
+      integer pomp_get_max_threads000
+      integer ( kind=8 ) :: pomp2_old_task, pomp2_new_task 
+      logical :: pomp_if 
+      integer pomp_num_threads 
+      common /cb000/ pomp2_region_1,&
+              pomp2_region_2,&
+              pomp2_region_3,&
+              pomp2_region_4,&
+              pomp2_region_5,&
+              pomp2_region_6,&
+              pomp2_region_7,&
+              pomp2_region_8,&
+              pomp2_region_9,&
+              pomp2_region_10,&
+              pomp2_region_11,&
+              pomp2_region_12,&
+              pomp2_region_13,&
+              pomp2_region_14,&
+              pomp2_region_15,&
+              pomp2_region_16

@@ -72,15 +72,25 @@ TAU_GLOBAL_TIMER(tsingleb, "single begin/end", "[OpenMP]", OpenMP);
 TAU_GLOBAL_TIMER(tsinglee, "single enter/exit", "[OpenMP]", OpenMP); 
 TAU_GLOBAL_TIMER(tworkshare, "workshare enter/exit", "[OpenMP]", OpenMP); 
 TAU_GLOBAL_TIMER(tregion, "inst region begin/end", "[OpenMP]", OpenMP); 
+TAU_GLOBAL_TIMER( torderedb , "ordered begin/end", "[OpenMP]", OpenMP);
+TAU_GLOBAL_TIMER( torderede , "ordered enter/exit", "[OpenMP]", OpenMP);
+TAU_GLOBAL_TIMER( ttaskcreate , "task create begin/create end", "[OpenMP]", OpenMP);
+TAU_GLOBAL_TIMER( ttask , "task begin/end", "[OpenMP]", OpenMP);
+TAU_GLOBAL_TIMER( tuntiedcreate , "untied task create begin/end", "[OpenMP]", OpenMP);
+TAU_GLOBAL_TIMER( tuntied , "untied task begin/end", "[OpenMP]", OpenMP);
+TAU_GLOBAL_TIMER( ttaskwait , "taskwait begin/end", "[OpenMP]", OpenMP);
 
 
-#define NUM_OMP_TYPES 15
+#define NUM_OMP_TYPES 22
 
-static string  omp_names[15] = {"atomic enter/exit", "barrier enter/exit", "critical begin/end", 
+static string  omp_names[22] = {"atomic enter/exit", "barrier enter/exit", "critical begin/end", 
 			     "critical enter/exit", "for enter/exit", "master begin/end",
 			     "parallel begin/end", "parallel fork/join", "section begin/end",
 			     "sections enter/exit", "single begin/end", "single enter/exit",
-			      "workshare enter/exit", "inst region begin/end", "flush enter/exit" };
+			      "workshare enter/exit", "inst region begin/end", "flush enter/exit",
+			     "ordered begin/end","ordered enter/exit","task create begin/end",
+			"task begin/end","untied task create begin/end","untied task begin/end",
+			"taskwait begin/end" };
 
 
 #define TAU_OMP_ATOMIC      0
@@ -98,6 +108,15 @@ static string  omp_names[15] = {"atomic enter/exit", "barrier enter/exit", "crit
 #define TAU_OMP_WORK_EE    12
 #define TAU_OMP_INST_BE    13
 #define TAU_OMP_FLUSH_EE   14
+#define TAU_OMP_ORDERED_BE 15
+#define TAU_OMP_ORDERED_EE 16
+#define TAU_OMP_TASK_CREATE 17
+#define TAU_OMP_TASK       18
+#define TAU_OMP_UNTIED_TASK_CREATE_BE 19
+#define TAU_OMP_UNTIED_TASK_BE 20
+#define TAU_OMP_TASKWAIT_BE  21
+
+
 
 static int omp_tracing    = 1;
 static int omp_fin_called = 0;
@@ -163,6 +182,21 @@ typedef struct
     void* data; 
 
 } my_pomp2_region;
+
+
+/** Id of the currently executing task*/
+POMP2_Task_handle pomp2_current_task = 0;
+#pragma omp threadprivate(pomp2_current_task)
+
+/** Counter of tasks used to determine task ids for newly created ta*/
+POMP2_Task_handle pomp2_task_counter = 1;
+#pragma omp threadprivate(pomp2_task_counter)
+
+POMP2_Task_handle
+POMP2_Get_new_task_handle()
+{
+    return ( ( POMP2_Task_handle )omp_get_thread_num() << 32 ) + pomp2_task_counter++;
+}
 
 static void
 free_my_pomp2_region_member( char** member )
@@ -503,21 +537,23 @@ POMP2_Atomic_exit( POMP2_Region_handle* pomp2_handle )
 }
 
 void
-POMP2_Implicit_barrier_enter( POMP2_Region_handle* pomp2_handle )
+POMP2_Implicit_barrier_enter( POMP2_Region_handle* pomp2_handle,POMP2_Task_handle*   pomp2_old_task )
 {
-    POMP2_Barrier_enter( pomp2_handle, "" );
+    POMP2_Barrier_enter( pomp2_handle, pomp2_old_task,  "" );
 }
 
 extern void
-POMP2_Implicit_barrier_exit( POMP2_Region_handle* pomp2_handle )
+POMP2_Implicit_barrier_exit( POMP2_Region_handle* pomp2_handle, POMP2_Task_handle   pomp2_old_task )
 {
-    POMP2_Barrier_exit( pomp2_handle );
+    POMP2_Barrier_exit( pomp2_handle, pomp2_old_task );
 }
 
 
 void
-POMP2_Barrier_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
+POMP2_Barrier_enter( POMP2_Region_handle* pomp2_handle, POMP2_Task_handle*   pomp2_old_task, const char ctc_string[] )
 {
+    *pomp2_old_task = pomp2_current_task;
+
 #pragma omp critical
     if ( *pomp2_handle == NULL )
     {
@@ -551,8 +587,10 @@ POMP2_Barrier_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[] 
 }
 
 void
-POMP2_Barrier_exit( POMP2_Region_handle* pomp2_handle )
+POMP2_Barrier_exit( POMP2_Region_handle* pomp2_handle, POMP2_Task_handle    pomp2_old_task  )
 {
+    pomp2_old_task = pomp2_current_task;
+
 #pragma omp critical
     if ( *pomp2_handle == NULL )
     {
@@ -910,9 +948,13 @@ POMP2_Parallel_end( POMP2_Region_handle* pomp2_handle )
 
 void
 POMP2_Parallel_fork( POMP2_Region_handle* pomp2_handle,
+                     int                  if_clause, 
                      int                  num_threads,
+                     POMP2_Task_handle*   pomp2_old_task,
                      const char           ctc_string[] )
 {
+    *pomp2_old_task = pomp2_current_task;
+
 #pragma omp critical
     if ( *pomp2_handle == NULL )
     {
@@ -937,8 +979,10 @@ POMP2_Parallel_fork( POMP2_Region_handle* pomp2_handle,
 }
 
 void
-POMP2_Parallel_join( POMP2_Region_handle* pomp2_handle )
+POMP2_Parallel_join( POMP2_Region_handle* pomp2_handle, POMP2_Task_handle   pomp2_old_task )
 {
+    pomp2_old_task = pomp2_current_task;
+
 #pragma omp critical
     if ( *pomp2_handle == NULL )
     {
@@ -1222,6 +1266,386 @@ POMP2_Workshare_exit( POMP2_Region_handle* pomp2_handle )
     }
 #endif /* DEBUG_PROF */
 }
+
+void
+POMP2_Ordered_begin( POMP2_Region_handle* pomp2_handle )
+{
+#pragma omp critical
+    if ( *pomp2_handle == NULL )
+    {
+        POMP2_Init();
+    }
+
+    my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStopOpenMPRegionTimer(region, TAU_OMP_ORDERED_BE);
+#endif /* TAU_OPENMP_REGION_VIEW */
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef DEBUG_PROF
+
+    if ( pomp2_tracing )
+    {
+        fprintf( stderr, "%3d: begin ordered\n", omp_get_thread_num() );
+    }
+#endif /*DEBUG_PROF*/
+}
+
+void
+POMP2_Ordered_end( POMP2_Region_handle* pomp2_handle )
+{
+#pragma omp critical
+    if ( *pomp2_handle == NULL )
+    {
+        POMP2_Init();
+    }
+    my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStopOpenMPRegionTimer(region, TAU_OMP_ORDERED_BE);
+#endif /* TAU_OPENMP_REGION_VIEW */
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef DEBUG_PROF
+
+
+    if ( pomp2_tracing )
+    {
+        fprintf( stderr, "%3d: end ordered\n", omp_get_thread_num() );
+    }
+#endif /*DEBUG_PROF*/
+}
+
+void
+POMP2_Ordered_enter( POMP2_Region_handle* pomp2_handle,
+                    const char           ctc_string[] )
+{
+#pragma omp critical
+    if ( *pomp2_handle == NULL )
+    {
+        POMP2_Init();
+    }
+
+    my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStopOpenMPRegionTimer(region, TAU_OMP_ORDERED_EE);
+#endif /* TAU_OPENMP_REGION_VIEW */
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef DEBUG_PROF
+
+
+    if ( pomp2_tracing )
+    {
+        fprintf( stderr, "%3d: enter ordered\n", omp_get_thread_num() );
+    }
+#endif /*DEBUG_PROF*/
+}
+
+void
+POMP2_Ordered_exit( POMP2_Region_handle* pomp2_handle )
+{
+#pragma omp critical
+    if ( *pomp2_handle == NULL )
+    {
+        POMP2_Init();
+    }
+
+    my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStopOpenMPRegionTimer(region, TAU_OMP_ORDERED_EE);
+#endif /* TAU_OPENMP_REGION_VIEW */
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef DEBUG_PROF
+
+    if ( pomp2_tracing )
+    {
+        fprintf( stderr, "%3d: exit ordered\n", omp_get_thread_num() );
+    }
+#endif /*DEBUG_PROF*/
+}
+
+
+void
+POMP2_Task_create_begin( POMP2_Region_handle* pomp2_handle,
+                         POMP2_Task_handle*   pomp2_old_task,
+                         int                  pomp2_if,
+                         const char           ctc_string[])
+{
+    *pomp2_old_task = pomp2_current_task;
+    pomp2_current_task = POMP2_Get_new_task_handle();
+
+    my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStopOpenMPRegionTimer(region, TAU_OMP_TASK_CREATE);
+#endif /* TAU_OPENMP_REGION_VIEW */
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef DEBUG_PROF
+
+
+    if ( pomp2_tracing )
+    {
+        fprintf( stderr, "%3d: task create begin\n", omp_get_thread_num() );
+    }
+#endif /*DEBUG_PROF*/
+}
+
+void
+POMP2_Task_create_end( POMP2_Region_handle* pomp2_handle,
+                       POMP2_Task_handle    pomp2_old_task )
+{
+    pomp2_current_task = pomp2_old_task;
+    my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStopOpenMPRegionTimer(region, TAU_OMP_TASK_CREATE);
+#endif /* TAU_OPENMP_REGION_VIEW */
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef DEBUG_PROF
+ 
+
+   if ( pomp2_tracing )
+    {
+        fprintf( stderr, "%3d: task create end\n", omp_get_thread_num() );
+    }
+#endif /*DEBUG_PROF*/
+}
+
+void
+POMP2_Task_begin( POMP2_Region_handle* pomp2_handle,
+                  POMP2_Task_handle    pomp2_new_task )
+{
+    pomp2_current_task = pomp2_new_task;
+
+    my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStopOpenMPRegionTimer(region, TAU_OMP_TASK);
+#endif /* TAU_OPENMP_REGION_VIEW */
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef DEBUG_PROF
+
+
+    if ( pomp2_tracing )
+    {
+        fprintf( stderr, "%3d: task begin\n", omp_get_thread_num() );
+    }
+#endif /*DEBUG_PROF*/
+}
+
+void
+POMP2_Task_end( POMP2_Region_handle* pomp2_handle )
+{
+
+    my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStopOpenMPRegionTimer(region, TAU_OMP_TASK);
+#endif /* TAU_OPENMP_REGION_VIEW */
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef DEBUG_PROF
+
+    if ( pomp2_tracing )
+    {
+        fprintf( stderr, "%3d: task end\n", omp_get_thread_num());
+    }
+#endif /*DEBUG_PROF*/
+}
+
+void
+POMP2_Untied_task_create_begin( POMP2_Region_handle* pomp2_handle,
+                                POMP2_Task_handle*   pomp2_old_task,
+                                int                  pomp2_if,
+                                const char           ctc_string[] )
+{
+    *pomp2_old_task = pomp2_current_task;
+    pomp2_current_task = POMP2_Get_new_task_handle();
+
+    my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStopOpenMPRegionTimer(region, TAU_OMP_UNTIED_TASK_CREATE_BE);
+#endif /* TAU_OPENMP_REGION_VIEW */
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef DEBUG_PROF
+
+
+    if ( pomp2_tracing )
+    {
+        fprintf( stderr, "%3d: create  untied task\n", omp_get_thread_num() );
+        fprintf( stderr, "%3d:         suspend task %lld\n", omp_get_thread_num(), pomp2_current_task );
+    }
+#endif /*DEBUG_PROF*/
+}
+
+void
+POMP2_Untied_task_create_end( POMP2_Region_handle* pomp2_handle,
+                              POMP2_Task_handle    pomp2_old_task )
+{
+    pomp2_current_task = pomp2_old_task;
+
+    my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStopOpenMPRegionTimer(region, TAU_OMP_UNTIED_TASK_CREATE_BE);
+#endif /* TAU_OPENMP_REGION_VIEW */
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef DEBUG_PROF
+
+
+    if ( pomp2_tracing )
+    {
+        fprintf( stderr, "%3d: created  untied task\n", omp_get_thread_num() );
+        fprintf( stderr, "%3d:          resume task %lld\n", omp_get_thread_num(), pomp2_current_task );
+    }
+#endif /*DEBUG_PROF*/
+}
+
+void
+POMP2_Untied_task_begin( POMP2_Region_handle* pomp2_handle,
+                         POMP2_Task_handle    pomp2_new_task )
+{
+    pomp2_current_task = pomp2_new_task;
+
+
+    my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStopOpenMPRegionTimer(region, TAU_OMP_UNTIED_TASK_BE);
+#endif /* TAU_OPENMP_REGION_VIEW */
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef DEBUG_PROF
+
+    if ( pomp2_tracing )
+    {
+        fprintf( stderr, "%3d: start  untied task %lld\n", omp_get_thread_num(), pomp2_current_task );
+    }
+#endif /*DEBUG_PROF*/
+}
+
+void
+POMP2_Untied_task_end( POMP2_Region_handle* pomp2_handle )
+{
+
+    my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStopOpenMPRegionTimer(region, TAU_OMP_UNTIED_TASK_BE);
+#endif /* TAU_OPENMP_REGION_VIEW */
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef DEBUG_PROF
+
+    if ( pomp2_tracing )
+    {
+        fprintf( stderr, "%3d: end  untied task %lld\n", omp_get_thread_num(), pomp2_current_task );
+    }
+#endif /*DEBUG_PROF*/
+}
+
+void
+POMP2_Taskwait_begin( POMP2_Region_handle* pomp2_handle,
+                      POMP2_Task_handle*   pomp2_old_task,
+                      const char           ctc_string[] )
+{
+    *pomp2_old_task = pomp2_current_task;
+
+    my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStopOpenMPRegionTimer(region, TAU_OMP_TASKWAIT_BE);
+#endif /* TAU_OPENMP_REGION_VIEW */
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef DEBUG_PROF
+
+
+    if ( pomp2_tracing )
+    {
+        fprintf( stderr, "%3d: begin  taskwait\n", omp_get_thread_num() );
+        fprintf( stderr, "%3d:  suspend task: %lld\n", omp_get_thread_num(), pomp2_current_task );
+    }
+#endif /*DEBUG_PROF*/
+}
+
+void
+POMP2_Taskwait_end( POMP2_Region_handle* pomp2_handle,
+                    POMP2_Task_handle    pomp2_old_task )
+{
+    pomp2_current_task = pomp2_old_task;
+    my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
+
+#ifdef TAU_OPENMP_REGION_VIEW
+  TauStopOpenMPRegionTimer(region, TAU_OMP_TASKWAIT_BE);
+#endif /* TAU_OPENMP_REGION_VIEW */
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+  TAU_GLOBAL_TIMER_STOP(); /* global timer stop */
+#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
+#ifdef DEBUG_PROF
+
+
+
+    if ( pomp2_tracing )
+    {
+        fprintf( stderr, "%3d: end  taskwait\n", omp_get_thread_num() );
+        fprintf( stderr, "%3d: resume task: %lld\n", omp_get_thread_num(), pomp2_current_task );
+    }
+#endif /*DEBUG_PROF*/
+}
+
 
 /*
    *----------------------------------------------------------------

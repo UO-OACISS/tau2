@@ -1,0 +1,309 @@
+## -*- mode: makefile -*-
+
+## 
+## This file is part of the Score-P software (http://www.score-p.org)
+##
+## Copyright (c) 2009-2011, 
+##    RWTH Aachen, Germany
+##    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+##    Technische Universitaet Dresden, Germany
+##    University of Oregon, Eugene, USA
+##    Forschungszentrum Juelich GmbH, Germany
+##    German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+##    Technische Universitaet Muenchen, Germany
+##
+## See the COPYING file in the package base directory for details.
+##
+
+## file       vendor/common/build-config/Makefile.inc.am
+## maintainer Christian Roessel <c.roessel@fz-juelich.de>
+
+EXTRA_DIST =
+CLEANFILES =
+DISTCLEANFILES =
+
+# Create platform entries for EXTRA_DIST using e.g.:
+# cd vendor/common/build-config/platforms
+# for i in *; do echo "              \$(srcdir)/vendor/common/build-config/platforms/$i \\"; done
+
+EXTRA_DIST += $(srcdir)/vendor/common/build-config/process_arguments.awk \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-frontend-gcc  \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-frontend-ibm  \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-frontend-intel  \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-frontend-pathscale  \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-frontend-pgi  \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-frontend-studio  \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-mpi-impi  \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-mpi-mpich2  \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-mpi-openmpi  \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-nocross-gcc  \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-nocross-ibm  \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-nocross-intel  \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-nocross-pathscale  \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-nocross-pgi  \
+              $(srcdir)/vendor/common/build-config/platforms/compiler-nocross-studio  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-altix  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-bgl  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-bgp  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-crayx1  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-crayxt  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-ibm  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-linux  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-mac  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-necsx  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-sicortex  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-sun  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-backend-user-provided  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-altix  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-bgl  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-bgp  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-crayx1  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-crayxt  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-ibm  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-linux  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-mac  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-necsx  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-sicortex  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-sun  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-user-provided  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-altix  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-bgl  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-bgp  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-crayx1  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-crayxt  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-ibm  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-linux  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-mac  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-necsx  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-sicortex  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-sun  \
+              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-user-provided \
+              $(srcdir)/vendor/common/cutest/CuTest.c \
+              $(srcdir)/vendor/common/cutest/CuTest.h
+
+CLEANFILES += $(builddir)/user_provided_configure_args \
+              $(builddir)/mpi_compiler_suite           \
+              $(builddir)/mpi_compiler_suite_to_source
+
+DISTCLEANFILES += $(builddir)/config.summary
+
+prohibit-svn-files-in-dist:
+	@find $(top_distdir) -type d | grep "\.svn"; \
+	if [ $$? -eq 0 ]; then \
+            echo "ERROR: subversion files found in distrubution. This is usually caused by";  \
+            echo "referencing directories in EXTRA_DIST. Please specify the files that need"; \
+            echo "to go into the distribution explicitly."; \
+            exit 1; \
+        fi
+
+
+
+###############################################################################
+## doxygen related targets 
+##
+
+## In the following conditional we must distinguish if we are in "developer
+## mode", i.e. if we are working on a svn working copy, or if we are in "user
+## mode", i.e. we are working on a tarball.
+##
+## In developer mode we can create doxygen and pdf user documentation (make
+## doxygen-user) that will be (automatically) included in the distribution at
+## make dist. When creating a distribution, the developer should make sure
+## that she has doxygen and related tools e.g. pdflatex in PATH in order to
+## generate a complete documentation, see also
+## vendor/common/build-config/m4/ac_scorep_doxygen.m4.
+##
+## make install is ignorant of documentation issues in developer mode.
+##
+## The user gets ready to install documentation in the tarball, i.e. there is no
+## need to run doxygen and pdflatex in user mode. In user mode the provided
+## documentation is just copied to a subdirectory of $prefix.
+
+if SVN_CONTROLLED #-----------------------------------------------------------
+
+USER_DOC_DIR = $(top_distdir)$(ac_scorep_doxygen_distdir)/doc
+
+doxygen-user-install:
+
+doxygen-user-uninstall:
+
+doxygen-user-generate: doxygen-user-pdf doxygen-user-html-compress copy-revision-file-to-dist
+
+update-revision:
+	echo `svnversion $(srcdir)` > "$(srcdir)/build-config/REVISION"
+
+copy-revision-file-to-dist:
+	$(MKDIR_P) "$(distdir)/build-config/"
+	cp -p "$(srcdir)/build-config/REVISION" "$(distdir)/build-config/"
+	if grep -E [A-Z] "$(srcdir)/build-config/REVISION" ||                               \
+           grep "-" "$(srcdir)/build-config/REVISION"; then                                 \
+            echo "WARNING: distribution does not match a single, unmodified revision." >&2; \
+        fi
+
+doxygen-user-html-compress:
+	if test -d "$(USER_DOC_DIR)/html"; then                               \
+	    cd "$(USER_DOC_DIR)"; tar czvf html.tar.gz html; rm -rf html/;    \
+	fi
+
+doxygen-project-number: update-revision
+	echo "PROJECT_NUMBER = \"@PACKAGE_VERSION@ (revision `cat $(srcdir)/build-config/REVISION`)\"" > doc/doxygen-project-number.cfg
+
+CLEANFILES += doc/doxygen-project-number.cfg
+
+doxygen-user-clean:
+	rm -rf $(USER_DOC_DIR)/*
+
+
+if HAVE_DOXYGEN #-----------------------------------------------------
+
+doxygen-user: doxygen-project-number doc/doxygen-user/main.dox
+	$(MKDIR_P) "$(USER_DOC_DIR)/tags"
+	echo "OUTPUT_DIRECTORY = $(USER_DOC_DIR)" > doc/doxygen-user-at-make-time.cfg
+	echo "GENERATE_TAGFILE = $(USER_DOC_DIR)/tags/@PACKAGE_NAME@.tag" >> doc/doxygen-user-at-make-time.cfg
+	cat doc/doxygen-project-number.cfg doc/doxygen-user-at-make-time.cfg doc/doxygen-user-common.cfg doc/doxygen-user-component.cfg > doc/doxygen-user.cfg
+	doxygen doc/doxygen-user.cfg
+
+CLEANFILES += doc/doxygen-user.cfg doc/doxygen-user-at-make-time.cfg doxygen.err
+
+else # i.e. ! HAVE_DOXYGEN -------------------------------------------
+
+doxygen-user:
+	echo "WARNING: doxygen not available. Can not generate documentation." >&2
+
+endif # HAVE_DOXYGEN -------------------------------------------------
+
+if HAVE_DOXYGEN_LATEX #-----------------------------------------------
+
+doxygen-user-pdf: doxygen-user
+	cat doc/doxygen-user.cfg > doc/doxygen-user-pdf.cfg
+	echo "ENABLED_SECTIONS = LATEX" >> doc/doxygen-user-pdf.cfg
+	echo "GENERATE_LATEX   = YES"   >> doc/doxygen-user-pdf.cfg
+	echo "GENERATE_HTML    = NO"    >> doc/doxygen-user-pdf.cfg
+	cp $(abs_srcdir)/vendor/common/build_related/doxygen/scorep.sty $(USER_DOC_DIR)/pdf/
+	doxygen doc/doxygen-user-pdf.cfg
+	cd "$(USER_DOC_DIR)/pdf"; \
+	make;                     \
+	mv refman.pdf ../;        \
+	rm -f *;                  \
+	mv ../refman.pdf @PACKAGE_NAME@.pdf
+
+else # i.e. ! HAVE_DOXYGEN_LATEX -------------------------------------
+
+doxygen-user-pdf: doxygen-user
+	echo "WARNING: pdflatex not available. Can not generate doxygen pdf documentation." >&2
+	if test -d "$(USER_DOC_DIR)/pdf"; then rm -rf "$(USER_DOC_DIR)/pdf"; fi
+
+endif # HAVE_DOXYGEN_LATEX -------------------------------------------
+
+else # i.e. ! SVN_CONTROLLED -------------------------------------------------
+
+DOC_SRC_DIR = $(srcdir)/doc
+
+doxygen-user-clean:
+
+doxygen-user-generate:
+
+doxygen-user-pdf:
+
+doxygen-user-install:
+	if test -f "$(DOC_SRC_DIR)/html.tar.gz"; then                            \
+            $(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc;                  \
+            $(INSTALL_DATA) $(DOC_SRC_DIR)/html.tar.gz                           \
+                            $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/html.tar.gz; \
+	    cd $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc;                          \
+            tar xzvf html.tar.gz;                                                \
+	    rm -f html.tar.gz;                                                   \
+	fi
+	if test -d "$(DOC_SRC_DIR)"; then                                                       \
+            cd $(DOC_SRC_DIR);                                                                  \
+            dirs=`find . -type d`;                                                              \
+            cd -;                                                                               \
+            for i in $$dirs; do                                                                 \
+                $(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/$$i;                         \
+            done;                                                                               \
+	    cd $(DOC_SRC_DIR);                                                                  \
+            files=`find . -type f`;                                                             \
+            cd -;                                                                               \
+            for i in $$files; do                                                                \
+                $(INSTALL_DATA) $(DOC_SRC_DIR)/$$i $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/$$i; \
+            done;                                                                               \
+            rm -rf $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/doxygen-user;                        \
+            rm -rf $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/doxygen-dev;                         \
+        fi
+
+doxygen-user-uninstall:
+	rm -rf $(DESTDIR)$(datadir)/@PACKAGE_NAME@
+
+endif # SVN_CONTROLLED 
+                                                                             ##
+                                                                             ##
+###############################################################################
+
+
+
+
+###############################################################################
+## code beautification targets 
+##
+if SVN_CONTROLLED
+if HAVE_UNCRUSTIFY
+
+beautify:
+	@fail= failcom='exit 1'; \
+	for f in x $$MAKEFLAGS; do \
+	  case $$f in \
+	    *=* | --[!k]*);; \
+	    *k*) failcom='fail=yes';; \
+	  esac; \
+	done; \
+        for subdir in $(SUBDIRS); do \
+            ($(am__cd) $$subdir && $(MAKE) $(AM_MAKEFLAGS) $@) || eval $$failcom; \
+        done; \
+        test -z "$$fail"
+	cd $(srcdir); ./vendor/common/beautifier/beautify
+
+beautify-clean:
+	find $(srcdir) -name "*.unc-backup*" -exec rm '{}' \;
+
+endif # HAVE_UNCRUSTIFY
+endif # SVN_CONTROLLED 
+                                                                             ##
+                                                                             ##
+###############################################################################
+
+
+###############################################################################
+## bitten targets, intended to be used from bitten only
+##
+
+bitten-copy-tarball-to-prefix: $(distdir).tar.gz
+	$(MKDIR_P) $(DESTDIR)$(prefix)
+	$(INSTALL_DATA) $(distdir).tar.gz $(DESTDIR)$(prefix)/
+
+bitten-print-environment:
+	env
+                                                                             ##
+                                                                             ##
+###############################################################################
+
+
+###############################################################################
+## trigger build of check_* targets here and in subdirectories.
+##
+
+check-build: $(BUILT_SOURCES) all $(check_PROGRAMS) $(check_LTLIBRARIES)
+	@fail= failcom='exit 1'; \
+	for f in x $$MAKEFLAGS; do \
+	  case $$f in \
+	    *=* | --[!k]*);; \
+	    *k*) failcom='fail=yes';; \
+	  esac; \
+	done; \
+        for subdir in $(SUBDIRS); do \
+            ($(am__cd) $$subdir && $(MAKE) $(AM_MAKEFLAGS) $@) || eval $$failcom; \
+        done; \
+        test -z "$$fail"
+
+                                                                             ##
+                                                                             ##
+###############################################################################
