@@ -21,6 +21,7 @@ Version 2.21 changes (from 2.20):
 8. Added support for CUDA and CUPTI v4.1 for NVIDIA. 
 9. Added a new view for visualizing atomic and context events in 3D topology display in ParaProf.
 10. Added Opari2 for OpenMP instrumentation (with support for OpenMP 3.0 constructs). 
+11. Added support for CUBE4 reader in ParaProf. 
 
 Version 2.20 changes (from 2.19):
 1. Added support for GPGPUs using tau_exec -cuda and tau_exec -opencl. Configure with -cuda=<dir>.
