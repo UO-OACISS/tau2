@@ -15,10 +15,5 @@ int main(int argc, char **argv)
 
         shmem_barrier_all();  /* sync sender and receiver */
         printf("target[0] on PE %d is %d\n", shmem_my_pe(), target[0]);
-#ifndef TAU_SGI_MPT_SHMEM
-#ifndef TAU_OPENSHMEM
-        shmem_finalize();
-#endif /* TAU_OPENSHMEM */
-#endif /* TAU_SGI_MPT_SHMEM */
 }
 

@@ -3372,6 +3372,15 @@ esac
 # Encode the full path of the C++/C compiler in the stub Makefile
 full_cxx_compiler=`which $cxx_compiler`
 full_cc_compiler=`which $c_compiler`
+if [ $shmem = yes ]
+then
+  oshcc_var=`which oshcc`
+  if [ "x$oshcc_var" != "x" -a $? = 0 ]
+  then 
+    full_cxx_compiler=`which oshCC`
+    full_cc_compiler=`which oshcc`
+  fi
+fi
 fixmakeargs="$fixmakeargs fullcxx=$full_cxx_compiler fullcc=$full_cc_compiler"
 
 
@@ -3884,6 +3893,18 @@ then
       fi
     fi
   else
+    openshmem=no
+    oshcc_var=`which oshcc 2>/dev/null`
+    if [ "x$oshcc_var" != "x" -a $? = 0 ]
+    then
+      openshmem_include_dir=`echo $oshcc_var | sed -e 's@bin/oshcc@include@g'`
+      if [ -r $openshmem_include_dir/mpp/shmem.h ] 
+      then
+        shmemincargs="-I$openshmem_include_dir#-I$openshmem_include_dir/mpp"
+        openshmem=yes
+        fixmakeargs="$fixmakeargs OPENSHMEM"
+      fi
+    fi
     if [ $catamount = yes ] 
     then
       shmemincargs="-I/opt/xt-mpt/default/include/mpp#-I/opt/xt-mpt/default/include"
@@ -3937,6 +3958,25 @@ then
       shmemlibrary=-lgpshmem
     fi
   fi
+  if [ "x$oshcc_var" = "x" ]
+  then
+    oshcc_var=`which oshcc  2>/dev/null`
+    if [ "x$oshcc_var" != "x" -a "$?" = 0 ]
+    then
+      fixmakeargs="$fixmakeargs OPENSHMEM"
+      openshmem=yes
+    fi
+  fi
+  if [ "x$oshcc_var" != "x" ]
+  then
+    openshmem_lib_dir=`echo $oshcc_var | sed -e 's@bin/oshcc@lib@g'`
+    if [ -r $openshmem_lib_dir/libopenshmem.so -o -r $openshmem_lib_dir/libopenshmem.a ] 
+    then
+      shmemlibargs="$shmemlibargs -L$openshmem_lib_dir"
+      shmemlibrary=-lopenshmem
+    fi
+  fi
+   
   if [ "x$shmemlib" != "x" ]
   then 
     if [ -d $shmemlib ]
