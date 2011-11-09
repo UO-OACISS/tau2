@@ -464,7 +464,7 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, const char * p
 #ifdef DEBUG
       cout <<"Argument "<<(*argsit).name()<<" Type "<<(*argsit).type()->name()<<endl;
 #endif /* DEBUG */
-      if (strcmp((*argsit).name().c_str(), "len") == 0) {
+      if ((strcmp((*argsit).name().c_str(), "len") == 0) || (strcmp((*argsit).name().c_str(), "nelems") == 0)) {
 #ifdef DEBUG
         printf("Argcount = %d for len\n", argcount); 
 #endif /* DEBUG */

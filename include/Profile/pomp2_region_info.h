@@ -43,7 +43,7 @@
  *
  */
 
-#include <stdbool.h>
+//#include <stdint.h>
 
 /**
  * POMP2_Region_type
@@ -129,23 +129,23 @@ typedef struct
      */
     /*@{*/
     /**true if a copyin clause is present*/
-    bool                mHasCopyIn;
+    int                mHasCopyIn;
     /**true if a copyprivate clause is present*/
-    bool                mHasCopyPrivate;
+    int                mHasCopyPrivate;
     /**true if an if clause is present*/
-    bool                mHasIf;
+    int                mHasIf;
     /**true if a firstprivate clause is present*/
-    bool                mHasFirstPrivate;
+    int                mHasFirstPrivate;
     /**true if a lastprivate clause is present*/
-    bool                mHasLastPrivate;
+    int                mHasLastPrivate;
     /**true if a nowait clause is present*/
-    bool                mHasNoWait;
+    int                mHasNoWait;
     /**true if a numThreads clause is present*/
-    bool                mHasNumThreads;
+    int                mHasNumThreads;
     /**true if an ordered clause is present*/
-    bool                mHasOrdered;
+    int                mHasOrdered;
     /**true if a reduction clause is present*/
-    bool                mHasReduction;
+    int                mHasReduction;
     /** schedule type in the schedule clause*/
     POMP2_Schedule_type mScheduleType;
     /** user group name*/
