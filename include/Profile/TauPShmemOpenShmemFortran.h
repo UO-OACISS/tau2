@@ -38,8 +38,10 @@ void shmem_get4_(void* target, void* source, int* len, int* pe);
 void shmem_get64_(void* target, void* source, int* len, int* pe);
 void shmem_get8_(void* target, void* source, int* len, int* pe);
 void shmem_getmem_(void* target, void* source, int* len, int* pe);
+/*
 void shmem_group_create_strided_(int* pestart, int* pestride, int* pesize, int* racom, int* isync, int* handle);
 void shmem_group_delete_(int* handle);
+*/
 void shmem_iget128_(void* target, void* source, int* tst, int* sst, int* len, int* pe);
 void shmem_iget16_(void* target, void* source, int* tst, int* sst, int* len, int* pe);
 void shmem_iget32_(void* target, void* source, int* tst, int* sst, int* len, int* pe);
@@ -88,7 +90,9 @@ void shmem_integer_iget_(void* target, void* source, int* tst, int* sst, int* le
 void shmem_integer_iput_(void* target, void* source, int* tst, int* sst, int* len, int*  pe);
 void shmem_integer_put_(void* target, void* source, int* len, int* pe);
 void shmem_iput128_(void* target, void* source, int* tst, int* sst, int* len, int* pe);
+/*
 void shmem_iput16_(void* target, void* source, int* tst, int* sst, int* len, int* pe);
+*/
 void shmem_iput32_(void* target, void* source, int* tst, int* sst, int* len, int* pe);
 void shmem_iput4_(void* target, void* source, int* tst, int* sst, int* len, int* pe);
 void shmem_iput64_(void* target, void* source, int* tst, int* sst, int* len, int* pe);
@@ -102,7 +106,9 @@ int shmem_n_pes_(void);
 int shmem_pe_accessible_(int* pe);
 void shmem_ptr_(void* target, int* pe);
 void shmem_put128_(void* target, void* source, int* len, int* pe);
+/*
 void shmem_put16_(void* target, void* source, int* len, int* pe);
+*/
 void shmem_put32_(void* target, void* source, int* len, int* pe);
 void shmem_put4_(void* target, void* source, int* len, int* pe);
 void shmem_put64_(void* target, void* source, int* len, int* pe);
