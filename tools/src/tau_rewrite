@@ -304,6 +304,18 @@ fi
 # Now we write to the $outfile
 luafile="return {
   run_dir = \"$outputdir\",
+  functions_global_blacklist = {
+                {subtype = \"string\",value = \"call_gmon_start\"},
+                {subtype = \"string\",value = \"_init\"},
+                {subtype = \"string\",value = \"_fini\"},
+                {subtype = \"string\",value = \"_start\"},
+                {subtype = \"string\",value = \"frame_dummy\"},
+                {subtype = \"regexp\",value = \"^irc__.*\"},
+                {subtype = \"regexp\",value = \"^__do_global_.*\"},
+                {subtype = \"regexp\",value = \"^__libc_csu_.*\"},
+                {subtype = \"regexp\",value = \"^__intel_.*\"},
+                {subtype = \"regexp\",value = \"^__pthread_.*\"}
+  },
   at_entry={
       {
             name = \"trace_register_func\",
@@ -323,7 +335,8 @@ luafile="return {
   },
   main_bin = {
         properties={
-                synchronize_beforeandafter_calls = true
+          disable_callsite_instrumentation = true,
+          disable_loop_instrumentation = true
         },
         path= \"$outputdir/$baseinfile\",
         output_suffix = \"_inst\",
@@ -355,7 +368,10 @@ for extralibs in ${extraloadlibs}
 do
   luafile=",  libs = {
         {
-                properties={},
+                properties={
+                  disable_callsite_instrumentation = true,
+                  disable_loop_instrumentation = true
+                },
                 path = \"$extralibs\",
                 output_suffix = \"_inst\",
                 output_name = \"lib_inst.so\",
