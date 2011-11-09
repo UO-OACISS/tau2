@@ -5903,7 +5903,6 @@ EOF
 		fixmakeargs="$fixmakeargs PYCUDA"
   else
 		echo "boost/python libraries not found, skipping TAU's pycuda interface"
-		exit 1
   fi	
   rm -f boost.cpp boost.o
 fi
