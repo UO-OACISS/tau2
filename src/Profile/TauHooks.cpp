@@ -316,7 +316,8 @@ void trace_register_func(char *func, int id)
   }
 
   int len = strlen(func); 
-  int startbracket, stopbracket = 0;
+  int startbracket = 0; 
+  int stopbracket = 0;
   for (i=0; i < len; i++) {
     if (func[i] == '[') startbracket = i; 
     if (func[i] == ']') stopbracket = i; 
@@ -331,6 +332,7 @@ void trace_register_func(char *func, int id)
     func[startbracket] = '\0'; /* chop it off - no need to show the name */
     dprintf("func=%s, after chopping off the bracket! \n", func);
   }
+
 
     
   if (!tauDyninstEnabled[tid]) return;
