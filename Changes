@@ -10,7 +10,25 @@
 
 Change log:
 ------------
-Version 2.20 changes (from 2.20):
+Version 2.21 changes (from 2.20):
+1. Added support for rewriting binaries using Maqao (tau_rewrite) using PDT 3.17+.
+2. Added support for event based sampling based on unwinding (TAU_EBS_UNWIND=1).
+3. Added support for OpenSHMEM.
+4. Added support for context events and atomic events in Score-P.
+5. Added support for H2 database in PerfDMF/PerfExplorer. 
+6. Added support for Eclipse remote component. 
+7. Added support for UPC instrumentation in TAU. 
+8. Added support for CUDA and CUPTI v4.1 for NVIDIA. 
+9. Added a new view for visualizing atomic and context events in 3D topology display in ParaProf.
+10. Added Opari2 for OpenMP instrumentation (with support for OpenMP 3.0 constructs). 
+11. Added support for CUBE4 reader in ParaProf. 
+12. Added debugging support with TAU_TRACK_SIGNALS=1 to capture callstack as metadata at point of failure.
+13. Added TAU_SUMMARY=1 and pprof -f profile.Min/Max with paraprof -dumpsummary to generate just min/max/stddev/mean statistics instead of per-node data.
+14. Added support for systemwide tracking using tau.conf. 
+15. Added support for MINGW compiler to create binaries for Windows.
+
+
+Version 2.20 changes (from 2.19):
 1. Added support for GPGPUs using tau_exec -cuda and tau_exec -opencl. Configure with -cuda=<dir>.
 2. Added support for 3D topology displays in paraprof. 
 3. Added support for tracking per-communicator performance data -PROFILECOMMUNICATORS.
