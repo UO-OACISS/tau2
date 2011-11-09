@@ -29,6 +29,10 @@
  *
  *  @maintainer Dirk Schmidl <schmidl@rz.rwth-aachen.de>
  *
+ *  @authors    Bernd Mohr <b.mohr@fz-juelich.de>
+ *              Dirk Schmidl <schmidl@rz-rwth-aachen.de>
+ *              Peter Philippen <p.philippen@fz-juelich.de>
+ *
  *  @brief      This file contains fortran wrapper functions.*/
 
 #include <config.h>
@@ -39,11 +43,13 @@
 #include "pomp2_lib.h"
 #include "pomp2_fwrapper_def.h"
 
+extern "C"{
+
+
 /*
  * Fortran wrappers calling the C versions
  */
 /* *INDENT-OFF*  */
-extern "C" {
 void FSUB(POMP2_Atomic_enter)(POMP2_Region_handle* regionHandle, char* ctc_string) {
    POMP2_Atomic_enter(regionHandle, ctc_string);
 }
@@ -52,20 +58,25 @@ void FSUB(POMP2_Atomic_exit)(POMP2_Region_handle* regionHandle ) {
    POMP2_Atomic_exit(regionHandle );
 }
 
-void FSUB(POMP2_Implicit_barrier_enter)(POMP2_Region_handle* regionHandle ) {
-   POMP2_Implicit_barrier_enter(regionHandle );
+void FSUB(POMP2_Implicit_barrier_enter)( POMP2_Region_handle* regionHandle,
+                                         POMP2_Task_handle*   pomp2_old_task) {
+  POMP2_Implicit_barrier_enter( regionHandle, pomp2_old_task );
 }
 
-void FSUB(POMP2_Implicit_barrier_exit)(POMP2_Region_handle* regionHandle ) {
-   POMP2_Implicit_barrier_exit(regionHandle );
+void FSUB(POMP2_Implicit_barrier_exit)( POMP2_Region_handle* regionHandle,
+                                        POMP2_Task_handle*   pomp2_old_task) {
+  POMP2_Implicit_barrier_exit( regionHandle, *pomp2_old_task );
 }
 
-void FSUB(POMP2_Barrier_enter)(POMP2_Region_handle* regionHandle, char* ctc_string) {
-   POMP2_Barrier_enter(regionHandle, ctc_string);
+void FSUB(POMP2_Barrier_enter)( POMP2_Region_handle* regionHandle,
+                                POMP2_Task_handle*   pomp2_old_task,
+                                char*                ctc_string) {
+  POMP2_Barrier_enter( regionHandle, pomp2_old_task, ctc_string);
 }
 
-void FSUB(POMP2_Barrier_exit)(POMP2_Region_handle* regionHandle ) {
-   POMP2_Barrier_exit(regionHandle );
+void FSUB(POMP2_Barrier_exit)( POMP2_Region_handle* regionHandle,
+                               POMP2_Task_handle*   pomp2_old_task ) {
+  POMP2_Barrier_exit( regionHandle, *pomp2_old_task );
 }
 
 void FSUB(POMP2_Flush_enter)(POMP2_Region_handle* regionHandle, char* ctc_string ) {
@@ -100,6 +111,16 @@ void FSUB(POMP2_Do_exit)(POMP2_Region_handle* regionHandle ) {
    POMP2_For_exit(regionHandle );
 }
 
+void FSUB(POMP2_Parallel_begin)( POMP2_Region_handle* regionHandle,
+                                 POMP2_Task_handle*   newTask,
+                                 char*                ctc_string ){
+  POMP2_Parallel_begin(regionHandle);
+}
+
+void FSUB(POMP2_Parallel_end)(POMP2_Region_handle* regionHandle) {
+   POMP2_Parallel_end(regionHandle);
+}
+
 void FSUB(POMP2_Master_begin)(POMP2_Region_handle* regionHandle, char* ctc_string ) {
   POMP2_Master_begin(regionHandle, ctc_string );
 }
@@ -108,20 +129,17 @@ void FSUB(POMP2_Master_end)(POMP2_Region_handle* regionHandle ) {
    POMP2_Master_end(regionHandle );
 }
 
-void FSUB(POMP2_Parallel_begin)(POMP2_Region_handle* regionHandle ) {
-   POMP2_Parallel_begin(regionHandle );
+void FSUB(POMP2_Parallel_fork)(POMP2_Region_handle* regionHandle,
+                               int*                 if_clause,
+                               int*                 num_threads,
+                               POMP2_Task_handle*   pomp2_old_task,
+                               char*                ctc_string) {
+  POMP2_Parallel_fork(regionHandle, *if_clause, *num_threads, pomp2_old_task, "dummy");
 }
 
-void FSUB(POMP2_Parallel_end)(POMP2_Region_handle* regionHandle ) {
-   POMP2_Parallel_end(regionHandle );
-}
-
-void FSUB(POMP2_Parallel_fork)(POMP2_Region_handle* regionHandle, int *num_threads, char* ctc_string) {
-  POMP2_Parallel_fork(regionHandle, *num_threads, "dummy");
-}
-
-void FSUB(POMP2_Parallel_join)(POMP2_Region_handle* regionHandle ) {
-   POMP2_Parallel_join(regionHandle );
+void FSUB(POMP2_Parallel_join)(POMP2_Region_handle* regionHandle,
+                               POMP2_Task_handle*   pomp2_old_task ) {
+  POMP2_Parallel_join(regionHandle, *pomp2_old_task );
 }
 
 void FSUB(POMP2_Section_begin)(POMP2_Region_handle* regionHandle, char* ctc_string ) {
@@ -152,8 +170,77 @@ void FSUB(POMP2_Single_enter)(POMP2_Region_handle* regionHandle, char* ctc_strin
    POMP2_Single_enter(regionHandle, ctc_string);
 }
 
+void FSUB(POMP2_Ordered_exit)(POMP2_Region_handle* regionHandle ) {
+   POMP2_Ordered_exit(regionHandle );
+}
+
+void FSUB(POMP2_Ordered_begin)(POMP2_Region_handle* regionHandle ) {
+   POMP2_Ordered_begin(regionHandle );
+}
+
+void FSUB(POMP2_Ordered_end)(POMP2_Region_handle* regionHandle ) {
+   POMP2_Ordered_end(regionHandle );
+}
+
+void FSUB(POMP2_Ordered_enter)(POMP2_Region_handle* regionHandle, char* ctc_string) {
+   POMP2_Ordered_enter(regionHandle, ctc_string);
+}
+
 void FSUB(POMP2_Single_exit)(POMP2_Region_handle* regionHandle ) {
    POMP2_Single_exit(regionHandle );
+}
+
+void FSUB(POMP2_Task_create_begin)(POMP2_Region_handle* regionHandle,
+                                   POMP2_Task_handle*   pomp2_old_task,
+                                   int*                 pomp2_if,
+                                   char*                ctc_string){
+  POMP2_Task_create_begin(regionHandle, pomp2_old_task, *pomp2_if, ctc_string);
+}
+
+void FSUB(POMP2_Task_create_end)(POMP2_Region_handle* regionHandle,
+                                 POMP2_Task_handle*   pomp2_old_task ){
+  POMP2_Task_create_end(regionHandle, *pomp2_old_task);
+}
+
+void FSUB(POMP2_Task_begin)( POMP2_Region_handle* regionHandle,
+                             POMP2_Task_handle* pomp2_new_task ){
+  POMP2_Task_begin(regionHandle, *pomp2_new_task);
+}
+
+void FSUB(POMP2_Task_end)(POMP2_Region_handle* regionHandle){
+  POMP2_Task_end(regionHandle);
+}
+
+void FSUB(POMP2_Untied_task_create_begin)(POMP2_Region_handle* regionHandle,
+                                          POMP2_Task_handle*   pomp2_old_task,
+                                          int*                 pomp2_if,
+                                          char*                ctc_string){
+  POMP2_Task_create_begin(regionHandle, pomp2_old_task, *pomp2_if, ctc_string);
+}
+
+void FSUB(POMP2_Untied_task_create_end)(POMP2_Region_handle* regionHandle,
+                                        POMP2_Task_handle*   pomp2_old_task ){
+    POMP2_Task_create_end(regionHandle, *pomp2_old_task);
+}
+
+void FSUB(POMP2_Untied_task_begin)( POMP2_Region_handle* regionHandle,
+                                    POMP2_Task_handle*   pomp2_new_task ){
+  POMP2_Task_begin(regionHandle, *pomp2_new_task);
+}
+
+void FSUB(POMP2_Untied_task_end)(POMP2_Region_handle* regionHandle){
+  POMP2_Task_end(regionHandle);
+}
+
+void FSUB(POMP2_Taskwait_begin)(POMP2_Region_handle* regionHandle,
+                                POMP2_Task_handle*   pomp2_old_task,
+                                char*                ctc_string ){
+  POMP2_Taskwait_begin(regionHandle, pomp2_old_task, ctc_string );
+}
+
+void FSUB(POMP2_Taskwait_end)(POMP2_Region_handle* regionHandle,
+                              POMP2_Task_handle*   pomp2_old_task ){
+  POMP2_Taskwait_end(regionHandle, *pomp2_old_task);
 }
 
 void FSUB(POMP2_Workshare_enter)(POMP2_Region_handle* regionHandle, char* ctc_string) {

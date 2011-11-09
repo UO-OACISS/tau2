@@ -160,7 +160,7 @@ INSTALL_OTF_TOOLS = $(INSTALL_EBS2OTF)
 
 #OPARI#INSTALLTAUOMPCHECK 	= $(INSTALLPDTOMPCHECK) #ENDIF#
 #OPARI2#INSTALLOPARI2 	=$(INSTALLDEST)/opari2  #ENDIF#
-#OPARI2#INSTALLOPARI2CONFIG 	=$(INSTALLDEST)/opari2_config  #ENDIF#
+#OPARI2#INSTALLOPARI2CONFIG 	=$(INSTALLDEST)/opari2-config  #ENDIF#
 #DYNINST#INSTALLTAURUN 	= $(INSTALLDEST)/tau_run #ENDIF#
 #DYNINST#INSTALLTAURUN 	= $(INSTALLDEST)/tau_run #ENDIF#
 #SP1#LARGEFILEOPT = -DTAU_LARGEFILE -D_LARGEFILE64_SOURCE -D_LARGE_FILE_API #ENDIF#
@@ -202,8 +202,8 @@ tau_timecorrect:	tau_timecorrect.o
 opari/opari:
 		cd opari ; $(MAKE) opari
 
-opari2-2.0/bin/opari2:
-		cd opari2-2.0 ; CXX=$(CONFIG_CXX) CC=$(CONFIG_CC) ./configure -prefix=`pwd` ; $(MAKE) ; make install
+opari2/bin/opari2:
+		cd opari2 ; CXX=$(CONFIG_CXX) CC=$(CONFIG_CC) ./configure -prefix=`pwd` ; $(MAKE) ; make install
 
 tau_timecorrect.o:	tau_timecorrect.cpp
 		$(CXX) $(CFLAGS) tau_timecorrect.cpp -c
@@ -329,7 +329,6 @@ user_event_data.o:	user_event_data.cpp
 clean:
 		/bin/rm -rf *.o $(EXECUTABLES) *.dep lib*$(LSX) *.ii *.ti ti_files cxx_repository ii_files rii_files 
 		cd opari ; make clean
-		cd opari2-2.0 ; make clean
 		cd ebs2otf ; $(MAKE) clean
 
 $(INSTALLDEST)/pprof: pprof
@@ -428,16 +427,16 @@ $(INSTALLDEST)/opari: opari/opari
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) opari/opari $(INSTALLDEST)
 
-$(INSTALLDEST)/opari2_config: opari2-2.0/bin/opari2
+$(INSTALLDEST)/opari2-config: opari2/bin/opari2
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
-		$(TAU_INSTALL) opari2-2.0/bin/opari2_config $(INSTALLDEST)
-$(INSTALLDEST)/opari2: opari2-2.0/bin/opari2
+		$(TAU_INSTALL) opari2/bin/opari2-config $(INSTALLDEST)
+$(INSTALLDEST)/opari2: opari2/bin/opari2
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
-		$(TAU_INSTALL) opari2-2.0/bin/opari2 $(INSTALLDEST)
+		$(TAU_INSTALL) opari2/bin/opari2 $(INSTALLDEST)
 
 $(INSTALLDEST)/tau2elg: elgconverter/tau2elg
 		@echo Installing $? in $(INSTALLDEST)

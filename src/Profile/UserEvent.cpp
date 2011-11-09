@@ -599,11 +599,12 @@ TauContextUserEvent::TauContextUserEvent(const char *EName, bool MonoIncr) {
   uevent = new TauUserEvent(EName, MonoIncr);
   DisableContext = false; /* context tracking is enabled by default */
 
+#ifndef TAU_SCOREP 
   int depth = TauEnv_get_callpath_depth();
   if (depth == 0) {
     DisableContext = true;
   }
-
+#endif /*TAU_SCOREP*/
   MonotonicallyIncreasing = MonoIncr;
 }
 
