@@ -54,7 +54,7 @@ public class ParaProf implements ActionListener {
 	}
     }
 
-    private final static String VERSION = "Tue Nov  8 12:38:21 PST 2011";
+    private final static String VERSION = "Tue Nov  8 16:06:49 PST 2011";
 
     public static int defaultNumberPrecision = 6;
 
@@ -135,6 +135,7 @@ public class ParaProf implements ActionListener {
 		+ "  --pack <file>                   Pack the data into packed (.ppk) format\n"
 		+ "  --dump                          Dump profile data to TAU profile format\n"
 		+ "  --dumprank <rank>               Dump profile data for <rank> to TAU profile format\n"
+		+ "  -y, --dumpsummary               Dump derived statistical data to TAU profile format\n"
 		+ "  --overwrite                     Allow overwriting of profiles\n"
 		+ "  -o, --oss                       Print profile data in OSS style text output\n"
 		+ "  -s, --summary                   Print only summary statistics\n"
