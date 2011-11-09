@@ -53,6 +53,7 @@ void shmem_barrier_all_()  {
    shmem_barrier_ps_
  **********************************************************/
 
+#ifdef TAU_OPENSHMEM_EXTENDED
 void shmem_barrier_ps_(int * a1, int * a2, int * a3, long * a4)  {
 
   TAU_PROFILE_TIMER(t,"void shmem_barrier_ps_(int *, int *, int *, long *) C", "", TAU_USER);
@@ -61,6 +62,7 @@ void shmem_barrier_ps_(int * a1, int * a2, int * a3, long * a4)  {
   TAU_PROFILE_STOP(t);
 
 }
+#endif /* TAU_OPENSHMEM_EXTENDED */
 
 
 /**********************************************************
@@ -311,6 +313,7 @@ void shmem_complex_get_(void * a1, void * a2, int * a3, int * a4)  {
    shmem_complex_iget_
  **********************************************************/
 
+#ifdef TAU_OPENSHMEM_EXTENDED
 void shmem_complex_iget_(void * a1, void * a2, int * a3, int * a4, int * a5, int * a6)  {
 
   TAU_PROFILE_TIMER(t,"void shmem_complex_iget_(void *, void *, int *, int *, int *, int *) C", "", TAU_USER);
@@ -321,12 +324,14 @@ void shmem_complex_iget_(void * a1, void * a2, int * a3, int * a4, int * a5, int
   TAU_PROFILE_STOP(t);
 
 }
+#endif /* TAU_OPENSHMEM_EXTENDED */
 
 
 /**********************************************************
    shmem_complex_iput_
  **********************************************************/
 
+#ifdef TAU_OPENSHMEM_EXTENDED
 void shmem_complex_iput_(void * a1, void * a2, int * a3, int * a4, int * a5, int * a6)  {
 
   TAU_PROFILE_TIMER(t,"void shmem_complex_iput_(void *, void *, int *, int *, int *, int *) C", "", TAU_USER);
@@ -337,6 +342,7 @@ void shmem_complex_iput_(void * a1, void * a2, int * a3, int * a4, int * a5, int
   TAU_PROFILE_STOP(t);
 
 }
+#endif /* TAU_OPENSHMEM_EXTENDED */
 
 
 /**********************************************************
@@ -509,6 +515,7 @@ void shmem_get128_(void * a1, void * a2, int * a3, int * a4)  {
    shmem_get16_
  **********************************************************/
 
+#ifdef TAU_OPENSHMEM_EXTENDED
 void shmem_get16_(void * a1, void * a2, int * a3, int * a4)  {
 
   TAU_PROFILE_TIMER(t,"void shmem_get16_(void *, void *, int *, int *) C", "", TAU_USER);
@@ -519,6 +526,7 @@ void shmem_get16_(void * a1, void * a2, int * a3, int * a4)  {
   TAU_PROFILE_STOP(t);
 
 }
+#endif /* TAU_OPENSHMEM_EXTENDED */
 
 
 /**********************************************************
@@ -605,6 +613,7 @@ void shmem_getmem_(void * a1, void * a2, int * a3, int * a4)  {
    shmem_group_create_strided_
  **********************************************************/
 
+#ifdef TAU_OPENSHMEM_EXTENDED
 void shmem_group_create_strided_(int * a1, int * a2, int * a3, int * a4, int * a5, int * a6)  {
 
   TAU_PROFILE_TIMER(t,"void shmem_group_create_strided_(int *, int *, int *, int *, int *, int *) C", "", TAU_USER);
@@ -613,12 +622,14 @@ void shmem_group_create_strided_(int * a1, int * a2, int * a3, int * a4, int * a
   TAU_PROFILE_STOP(t);
 
 }
+#endif /* TAU_OPENSHMEM_EXTENDED */
 
 
 /**********************************************************
    shmem_group_delete_
  **********************************************************/
 
+#ifdef TAU_OPENSHMEM_EXTENDED
 void shmem_group_delete_(int * a1)  {
 
   TAU_PROFILE_TIMER(t,"void shmem_group_delete_(int *) C", "", TAU_USER);
@@ -627,6 +638,7 @@ void shmem_group_delete_(int * a1)  {
   TAU_PROFILE_STOP(t);
 
 }
+#endif /* TAU_OPENSHMEM_EXTENDED */
 
 
 /**********************************************************
@@ -649,6 +661,7 @@ void shmem_iget128_(void * a1, void * a2, int * a3, int * a4, int * a5, int * a6
    shmem_iget16_
  **********************************************************/
 
+#ifdef TAU_OPENSHMEM_EXTENDED
 void shmem_iget16_(void * a1, void * a2, int * a3, int * a4, int * a5, int * a6)  {
 
   TAU_PROFILE_TIMER(t,"void shmem_iget16_(void *, void *, int *, int *, int *, int *) C", "", TAU_USER);
@@ -659,6 +672,7 @@ void shmem_iget16_(void * a1, void * a2, int * a3, int * a4, int * a5, int * a6)
   TAU_PROFILE_STOP(t);
 
 }
+#endif /* TAU_OPENSHMEM_EXTENDED */
 
 
 /**********************************************************
@@ -1379,6 +1393,7 @@ void shmem_iput128_(void * a1, void * a2, int * a3, int * a4, int * a5, int * a6
    shmem_iput16_
  **********************************************************/
 
+#ifdef TAU_OPENSHMEM_EXTENDED
 void shmem_iput16_(void * a1, void * a2, int * a3, int * a4, int * a5, int * a6)  {
 
   TAU_PROFILE_TIMER(t,"void shmem_iput16_(void *, void *, int *, int *, int *, int *) C", "", TAU_USER);
@@ -1389,6 +1404,7 @@ void shmem_iput16_(void * a1, void * a2, int * a3, int * a4, int * a5, int * a6)
   TAU_PROFILE_STOP(t);
 
 }
+#endif /* TAU_OPENSHMEM_EXTENDED */
 
 
 /**********************************************************
@@ -1520,15 +1536,15 @@ void shmem_logical_put_(void * a1, void * a2, int * a3, int * a4)  {
 
 
 /**********************************************************
-   shmem_my_pe_
+   shmemp_my_pe_
  **********************************************************/
 
-int shmem_my_pe_()  {
+int shmemp_my_pe_()  {
 
   int retval = 0;
-  TAU_PROFILE_TIMER(t,"int shmem_my_pe_(void) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"int shmemp_my_pe_(void) C", "", TAU_USER);
   TAU_PROFILE_START(t);
-  retval  =   pshmem_my_pe_();
+  retval  =   p_my_pe_();
   TAU_PROFILE_STOP(t);
   return retval;
 
@@ -1536,15 +1552,15 @@ int shmem_my_pe_()  {
 
 
 /**********************************************************
-   shmem_n_pes_
+   shmemp_num_pes
  **********************************************************/
 
-int shmem_n_pes_()  {
+int shmemp_num_pes()  {
 
   int retval = 0;
-  TAU_PROFILE_TIMER(t,"int shmem_n_pes_(void) C", "", TAU_USER);
+  TAU_PROFILE_TIMER(t,"int shmemp_num_pes(void) C", "", TAU_USER);
   TAU_PROFILE_START(t);
-  retval  =   pshmem_n_pes_();
+  retval  =   p_num_pes();
   TAU_PROFILE_STOP(t);
   return retval;
 
@@ -1571,6 +1587,7 @@ int shmem_pe_accessible_(int * a1)  {
    shmem_ptr_
  **********************************************************/
 
+#ifdef TAU_OPENSHMEM_EXTENDED
 void shmem_ptr_(void * a1, int * a2)  {
 
   TAU_PROFILE_TIMER(t,"void shmem_ptr_(void *, int *) C", "", TAU_USER);
@@ -1579,6 +1596,7 @@ void shmem_ptr_(void * a1, int * a2)  {
   TAU_PROFILE_STOP(t);
 
 }
+#endif /* TAU_OPENSHMEM_EXTENDED */
 
 
 /**********************************************************
@@ -1601,6 +1619,7 @@ void shmem_put128_(void * a1, void * a2, int * a3, int * a4)  {
    shmem_put16_
  **********************************************************/
 
+#ifdef TAU_OPENSHMEM_EXTENDED
 void shmem_put16_(void * a1, void * a2, int * a3, int * a4)  {
 
   TAU_PROFILE_TIMER(t,"void shmem_put16_(void *, void *, int *, int *) C", "", TAU_USER);
@@ -1612,6 +1631,7 @@ void shmem_put16_(void * a1, void * a2, int * a3, int * a4)  {
 
 }
 
+#endif /* TAU_OPENSHMEM_EXTENDED */
 
 /**********************************************************
    shmem_put32_
@@ -2122,8 +2142,8 @@ void start_pes_(int * a1)  {
   TAU_PROFILE_TIMER(t,"void start_pes_(int *) C", "", TAU_USER);
   TAU_PROFILE_START(t);
    pstart_pes_(a1);
-  tau_totalnodes(1,pshmem_n_pes());
-  TAU_PROFILE_SET_NODE(pshmem_my_pe());
+  tau_totalnodes(1,p_num_pes());
+  TAU_PROFILE_SET_NODE(p_my_pe());
   TAU_PROFILE_STOP(t);
 
 }
