@@ -335,8 +335,7 @@ luafile="return {
   },
   main_bin = {
         properties={
-          disable_callsite_instrumentation = true,
-          disable_loop_instrumentation = true
+          enable_function_instrumentation = true
         },
         path= \"$outputdir/$baseinfile\",
         output_suffix = \"_inst\",
@@ -369,8 +368,7 @@ do
   luafile=",  libs = {
         {
                 properties={
-                  disable_callsite_instrumentation = true,
-                  disable_loop_instrumentation = true
+                  enable_function_instrumentation = true
                 },
                 path = \"$extralibs\",
                 output_suffix = \"_inst\",
