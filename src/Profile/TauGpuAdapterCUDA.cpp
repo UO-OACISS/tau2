@@ -366,7 +366,7 @@ void Tau_cuda_enqueue_kernel_exit_event()
 
 	//printf("recording stop for: %s.\n", curName.c_str());
 
-	char device_name[4096];
+	char *device_name = (char*) malloc(sizeof(char) * (curName.length() + 1));
 	strcpy(device_name, curName.c_str());
 	curKernel->name = device_name;
 	curKernel->enqueue_stop_event();
@@ -431,9 +431,17 @@ void Tau_cuda_register_sync_event()
 		//kernel.device->sync_offset = lastEventTime * 1e3;
 
 	  //printf("in tau_cuda_register_sync_event #1");
-		Tau_gpu_register_gpu_event(kernel, 
-															 ((double) start_sec + lastEventTime)*1e3,
-															 ((double) stop_sec + lastEventTime)*1e3);
+		
+		size_t f1, f2;
+		string s = string(kernel.name);
+		f1 = s.find('(');
+		f2 = s.find(')');
+		if (f1 != string::npos && f2 != string::npos)	
+		{
+			Tau_gpu_register_gpu_event(kernel, 
+																 ((double) start_sec + lastEventTime)*1e3,
+																 ((double) stop_sec + lastEventTime)*1e3);
+		}
 	  //printf("in tau_cuda_register_sync_event #2");
 		//Tau_cuda_register_gpu_event(kernel.name, kernel.id, 
 		//													 (((double) start_sec) + lastEventTime)*1e3,
@@ -443,6 +451,7 @@ void Tau_cuda_register_sync_event()
 		lastEvent = kernel.stopEvent;
 		lastEventTime += (double) stop_sec;
 
+		free(kernel.name);
 		KernelBuffer.pop();
 
 	}
