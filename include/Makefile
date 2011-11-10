@@ -831,7 +831,6 @@ HPCTOOLKIT_LINK=
 #       continually keep an eye on similar situations for Mac OS X until
 #       we can find a permanent fix.
 EXTRA_LINKER_ARGS=
-#MINGW#EXTRA_LINKER_ARGS=-Wl,--enable-auto-image-base	#ENDIF#
 #APPLECXX#EXTRA_LINKER_ARGS = -rdynamic#ENDIF#
 TAU_LINKER_OPT14=$(EXTRA_LINKER_ARGS)
 
