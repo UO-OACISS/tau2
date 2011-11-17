@@ -1094,6 +1094,7 @@ void * shmem_ptr(void * a1, int a2)  {
    shmalloc
  **********************************************************/
 
+/*
 void * shmalloc(size_t a1)  {
 
   void * retval = 0;
@@ -1104,12 +1105,14 @@ void * shmalloc(size_t a1)  {
   return retval;
 
 }
+*/
 
 
 /**********************************************************
    shfree
  **********************************************************/
 
+/*
 void shfree(void * a1)  {
 
   TAU_PROFILE_TIMER(t,"void shfree(void *) C", "", TAU_USER);
@@ -1118,12 +1121,14 @@ void shfree(void * a1)  {
   TAU_PROFILE_STOP(t);
 
 }
+*/
 
 
 /**********************************************************
    shrealloc
  **********************************************************/
 
+/*
 void * shrealloc(void * a1, size_t a2)  {
 
   void * retval = 0;
@@ -1134,12 +1139,14 @@ void * shrealloc(void * a1, size_t a2)  {
   return retval;
 
 }
+*/
 
 
 /**********************************************************
    shmemalign
  **********************************************************/
 
+/*
 void * shmemalign(size_t a1, size_t a2)  {
 
   void * retval = 0;
@@ -1150,6 +1157,7 @@ void * shmemalign(size_t a1, size_t a2)  {
   return retval;
 
 }
+*/
 
 
 /**********************************************************
@@ -2596,6 +2604,7 @@ int shmem_n_pes()  {
    shmem_nodename
  **********************************************************/
 
+/*
 char * shmem_nodename()  {
 
   char * retval = 0;
@@ -2606,6 +2615,7 @@ char * shmem_nodename()  {
   return retval;
 
 }
+*/
 
 
 /**********************************************************
@@ -2690,6 +2700,7 @@ void * shmem_memalign(size_t a1, size_t a2)  {
    sherror
  **********************************************************/
 
+
 char * sherror()  {
 
   char * retval = 0;
@@ -2700,6 +2711,7 @@ char * sherror()  {
   return retval;
 
 }
+
 
 
 /**********************************************************
