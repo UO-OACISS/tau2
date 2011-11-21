@@ -477,7 +477,7 @@ int TauTraceDumpEDF(int tid) {
   fprintf(fp,"# FunctionId Group Tag \"Name Type\" Parameters\n");
   
   for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
-    fprintf(fp, "%ld %s 0 \"%s %s\" EntryExit\n", (*it)->GetFunctionId(),
+    fprintf(fp, "%ld %s 0 \"%s %s\" EntryExit\n", (long)((*it)->GetFunctionId()),
 	    (*it)->GetPrimaryGroup(), (*it)->GetName(), (*it)->GetType() );
   }
   
@@ -487,7 +487,7 @@ int TauTraceDumpEDF(int tid) {
     if ((*uit)->GetMonotonicallyIncreasing()) { 
       monoInc = 1;
     }
-    fprintf(fp, "%ld TAUEVENT %d \"%s\" TriggerValue\n", (*uit)->GetEventId(), monoInc, (*uit)->GetEventName());
+    fprintf(fp, "%ld TAUEVENT %d \"%s\" TriggerValue\n", (long)((*uit)->GetEventId()), monoInc, (*uit)->GetEventName());
   }
 
   // Now add the nine extra events 
