@@ -208,33 +208,47 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context) {
     // For dealing with badly implemented backtrace calls
     TAU_VERBOSE("TAU: ERROR: Backtrace not available!\n" );
   } else {
-    TAU_VERBOSE("TAU: Backtrace:\n");
+    TAU_VERBOSE("TAU: ::BACKTRACE:: has %d addresses:\n", n);
     char **names = backtrace_symbols( addresses, n );
     for ( int i = 2; i < n; i++ )
     {
-      TAU_VERBOSE("stacktrace %s\n",names[i]);
-      char *token1 = strtok(names[i],"[]");
-      TAU_VERBOSE("found it: token1 = %s\n", token1);
-      // *CWL* - This shouldn't be necessary. The expected format is [<addr>].
-      //         If this is not the absolute format, then some fancier parsing
-      //         is required.
-      //
-      //      char *token2 = strtok(NULL,"[]");
+      TAU_VERBOSE("**STACKTRACE** Entry %d = %s\n", i, names[i]);
+      char *temp = NULL;
+      char *token = NULL;
       unsigned long addr;
-      //sscanf(token2,"%lx", &addr);
-      sscanf(token1,"%lx", &addr);
-      TAU_VERBOSE("found it: addr = %lx\n", addr);
-      if (i > 2) { /* first address is correct */
-        addr=addr-Tau_get_backtrace_off_by_one_correction(); 
+      //  UPDATE 11/20: token2 is required if we encounter shared code in which
+      //         case the format is <path>(<func_name>+<offset>) [<addr>].
+      //         This is extremely fragile code and is at the mercy of backtrace
+      //         not changing its output formats over a wide variety of machines.
+      //         We must keep an eye on this. This has the potential to (it has
+      //         already) blow up in our faces repeatedly.
+      //
+      //  For now, the correct way to do this is to look for the last token.
+      temp = strtok(names[i],"[]");
+      while (temp != NULL) {
+	token = temp;
+	temp = strtok(NULL, "[]");
       }
-      // Backtrace messes up and gives you the address of the next instruction.
-      // We subtract one to compensate for the off-by-one error.
-
+      if (token == NULL) {
+	// If the backtrace string is completely invalid, then set to 0 and allow
+	//   tauPrintAddr to fail. Issue a verbose warning.
+	TAU_VERBOSE("No valid token in backtrace string!\n");
+	addr = 0;
+      } else {
+	TAU_VERBOSE("Found Address Token = %s\n", token);
+	sscanf(token,"%lx", &addr);
+	TAU_VERBOSE("Backtrace Address determined to be %p\n", addr);
+	if (i > 2) { /* first address is correct */
+	  // Backtrace messes up and gives you the address of the next instruction.
+	  // We subtract one to compensate for the off-by-one error.
+	  addr=addr-Tau_get_backtrace_off_by_one_correction(); 
+	}
+      }
 // **CWL** For correct operation with Comp_gnu.cpp
 #ifndef TAU_XLC
       // Map the addresses found in backtrace to actual code symbols and line information
       //   for addition to TAU_METADATA.
-      tauPrintAddr(i, token1, addr);
+      tauPrintAddr(i, names[i], addr);
 #endif /* TAU_XLC */
     }
     free(names);
