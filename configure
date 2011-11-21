@@ -5980,12 +5980,10 @@ if [ $ktau = yes ] ; then
     tauoptions="${tauoptions}-ktau"
 fi
 
-#voorhees
-if [ $ktau_ng = yes] ; then
+if [ $ktau_ng = yes ] ; then
     fixmakeargs="$fixmakeargs KTAU_NG"
     tauoptions="${tauoptions}-ktau-ng"
 fi
-
 
 if [ $ktau_merge = yes ] ; then
     fixmakeargs="$fixmakeargs KTAU_MERGE ktauinc=$ktauinc ktauincuser=$ktauincuser ktaulib=$ktaulib ktausym=$ktausym"
