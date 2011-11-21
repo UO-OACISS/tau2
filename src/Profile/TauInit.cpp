@@ -248,7 +248,7 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context) {
 #ifndef TAU_XLC
       // Map the addresses found in backtrace to actual code symbols and line information
       //   for addition to TAU_METADATA.
-      tauPrintAddr(i, token, addr);
+      tauPrintAddr(i, names[i], addr);
 #endif /* TAU_XLC */
     }
     free(names);
