@@ -67,12 +67,6 @@ using namespace std;
 #include <time.h>
 #include <stdlib.h>
 
-#ifdef __linux //To make gettid work for ktau style file naming
-#include <unistd.h>
-#include <sys/syscall.h>
-#include <sys/types.h>
-#endif
-
 #ifdef TAU_WINDOWS
 //include the header for windows time functions.
 #include <windows.h>	//Various defines needed in Winbase.h.
@@ -428,11 +422,8 @@ extern "C" int Tau_RtsLayer_getTid()
 
 int RtsLayer::getTid() {
 #ifdef __linux
-  pid_t tid;
-  printf("called gettid!");
-  tid =  syscall(SYS_gettid);
-  printf("the tid of this process is %d\n", tid);
-  return tid;
+  //  return gettid();
+  return 0;
 #else
   return 0;
 #endif
