@@ -37,7 +37,7 @@ main()
     {
         printf( "parallel\n" );
 
-#pragma omp for reduction(+:k) schedule(dynamic) collapse(1)
+#pragma omp for reduction(+:k) schedule(dynamic,5) collapse(1)
         for ( i = 0; i < 4; ++i )
         {
             printf( "for %d\n", i );

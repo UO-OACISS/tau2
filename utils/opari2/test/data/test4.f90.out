@@ -97,7 +97,8 @@ program test4
 #line 47 "test4.f90"
   
       pomp_if = .true.
-      call POMP2_Untied_task_create_begin(pomp2_region_6, pomp2_old_task, pomp_if, &
+      call POMP2_Untied_task_create_begin(pomp2_region_6, pomp2_old_task, 
+     &pomp_if, &
         "70*regionType=task*sscl=test4.f90:48:48*escl=test4.f90:0:0*hasUntied=1**" )
 #line 48 "test4.f90"
   !$omp task untied if(pomp_if) firstprivate(pomp2_old_task)&
