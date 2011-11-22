@@ -1546,7 +1546,12 @@ $(builddir)/opari2_config.dat:
 @OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_builddir)/../build-frontend/.libs/libpomp.*                                 $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/
 @OPENMP_SUPPORTED_TRUE@	rm -f $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/libpomp.la
 
-install-data-local: install-example
+install-pomp2_region_info:
+	$(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE_NAME@/devel
+	$(INSTALL_DATA) $(abs_srcdir)/../src/pomp-lib-dummy/pomp2_region_info.c $(DESTDIR)$(datadir)/@PACKAGE_NAME@/devel/
+	$(INSTALL_DATA) $(abs_srcdir)/../src/pomp-lib-dummy/pomp2_region_info.h $(DESTDIR)$(datadir)/@PACKAGE_NAME@/devel/
+
+install-data-local: install-example install-pomp2_region_info
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

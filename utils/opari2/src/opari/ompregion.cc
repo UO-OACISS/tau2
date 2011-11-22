@@ -276,7 +276,7 @@ OMPRegion::generate_ctc_string( Language lang )
     }
     if ( has_schedule )
     {
-        stream1 << "hasSchedule=1*";
+        stream1 << "scheduleType=" << arg_schedule << "*";
     }
     if ( has_collapse )
     {

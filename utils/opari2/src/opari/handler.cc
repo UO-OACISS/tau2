@@ -332,7 +332,7 @@ generate_call_save_task_id( const char* event,
         {
             if ( r->name == "task" )
             {
-                os << ", pomp_if";
+                os << ", \n     &pomp_if";
             }
             if ( lang & L_F77 )
             {
@@ -706,10 +706,9 @@ h_parallel( OMPragma* p,
     int        n = r->id;
     p->add_descr( n );
     r->has_num_threads = p->find_numthreads();
-    r->has_if          =          p->find_if();
-    r->has_reduction   =   p->find_reduction();
-    r->has_schedule    =    p->find_schedule();
-
+    r->has_if          = p->find_if();
+    r->has_reduction   = p->find_reduction();
+    r->has_schedule    = p->find_schedule( &( r->arg_schedule ) );
     generate_fork_call( "fork", "parallel", n, os, p, r );
     print_pragma_task( p, os );
     generate_call( "begin", "parallel", n, os, NULL );
@@ -749,9 +748,9 @@ h_for( OMPragma* p,
         r->noWaitAdded = true;
     }
     r->has_reduction = p->find_reduction();
-    r->has_schedule  =  p->find_schedule();
-    r->has_collapse  =  p->find_collapse();
-    r->has_ordered   =   p->find_ordered();
+    r->has_schedule  = p->find_schedule( &( r->arg_schedule ) );
+    r->has_collapse  = p->find_collapse();
+    r->has_ordered   = p->find_ordered();
 
     generate_call( "enter", "for", n, os, r );
     print_pragma( p, os );
@@ -781,10 +780,10 @@ h_do( OMPragma* p,
 {
     OMPRegion* r = REnter( p );
     int        n = r->id;
-    r->has_ordered   =     p->find_ordered();
-    r->has_collapse  =    p->find_collapse();
-    r->has_schedule  =    p->find_schedule();
-    r->has_reduction =   p->find_reduction();
+    r->has_ordered   = p->find_ordered();
+    r->has_collapse  = p->find_collapse();
+    r->has_schedule  = p->find_schedule( &( r->arg_schedule ) );
+    r->has_reduction = p->find_reduction();
 
     generate_call( "enter", "do", n, os, r );
     print_pragma( p, os );
@@ -1109,7 +1108,7 @@ h_parallelfor( OMPragma* p,
     r->has_num_threads = p->find_numthreads();
     r->has_if          =          p->find_if();
     r->has_reduction   =   p->find_reduction();
-    r->has_schedule    =    p->find_schedule();
+    r->has_schedule    =    p->find_schedule( &( r->arg_schedule ) );
     r->has_ordered     =     p->find_ordered();
     r->has_collapse    =    p->find_collapse();
 
@@ -1147,7 +1146,7 @@ h_paralleldo( OMPragma* p,
     r->has_num_threads = p->find_numthreads();
     r->has_if          =          p->find_if();
     r->has_reduction   =   p->find_reduction();
-    r->has_schedule    =    p->find_schedule();
+    r->has_schedule    =    p->find_schedule( &( r->arg_schedule ) );
     r->has_ordered     =     p->find_ordered();
     r->has_collapse    =    p->find_collapse();
 
@@ -1387,11 +1386,9 @@ h_ordered( OMPragma* p,
     OMPRegion* r = REnter( p );
     int        n = r->id;
 
-    p->add_descr( n );
-
-    generate_call( "begin", "ordered", n, os, r );
-    print_pragma_task( p, os );
-    generate_call( "enter", "ordered", n, os, NULL );
+    generate_call( "enter", "ordered", n, os, r );
+    print_pragma( p, os );
+    generate_call( "begin", "ordered", n, os, NULL );
     if ( keepSrcInfo )
     {
         reset_src_info( p, os );
