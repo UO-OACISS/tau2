@@ -1,0 +1,271 @@
+\endverbatim
+
+If you run Opari2 on the input file \c example.c it will create two files:
+
+\li \c example.mod.c is the instrumented version of \c example.c,
+i.e. it contains the original code plus calls to the \link pomp2_lib.h
+POMP2 API \endlink referencing handles to the OpenMP regions
+identified by Opari2.
+
+\li \c example.c.opari.inc contains the OpenMP region handle
+definitions accompanied with all the relevant data needed by the
+handles. This compile time context (CTC) information is encoded into a
+string for maximum portability. For each region, the tuple
+(region_handle, ctc_string) is passed to an initializing function
+(POMP2_Assign_handle()). All calls to these initializing functions are
+gathered in a function named POMP2_Init_regions_XXX_YY, where XXX_YY is
+unique for each compilation unit.
+
+At some point during the runtime of the instrumented application, the
+region handles need to be initialized using the information stored in
+the CTC string. This can be done in one of of two ways:
+
+\li during \e startup of the measurement/POMP2 system, or
+\li during \e runtime when a region handle is accessed for the first time.
+
+We \e highly recommend using the first option as it incurs much less
+runtime overhead than the second one (no locking, no lookup
+needed). In this case all POMP2_Init_regions_XXX_YY functions
+introduced by opari2 need to be called. See \ref LINKING for further
+details. For runtime initialization the ctc string as
+argument to the relevant \link pomp2_lib.h POMP2 function
+calls\endlink is provided as an argument.
+
+\section CTC_STRING CTC string decoding
+
+As mentioned above, we pass ctc strings to different POMP2
+functions. These functions need to parse the string in order to
+process the encoded information. With POMP2_Region_info and
+ctcString2RegionInfo() the opari2 package provides means of doing
+this, see pomp2_region_info.h.
+
+The CTC string is a string in the format
+"length*key=value*key=value*[key=value]**, for example:
+
+\e *82*regionType=parallel*sscl=xmpl.c:61:61*escl=xmpl.c:66:66*hasIf=1**
+
+Mandatory keys are:
+\li \e regionType Type of the region (here parallel)
+\li \e sscl First line of the region (usually with full path to file)
+\li \e escl Last line of the region
+
+Optional keys are
+\li \e hasNumThreads Set if a numThreads clause is used in the OpenMP directive
+\li \e hasIf Set if an if clause is used
+\li \e hasOrdered Set if an ordered clause is used
+\li \e hasReduction Set if a reduction clause is used
+\li \e hasSchedule Set if a schedule clause is used
+\li \e hasCollapse Set if a collapse clause is used
+
+The optional values are set to 0 by default, i.e. the presence of the
+key denotes the presence of the respective clause.
+
+You can use the function ctcString2RegionInfo() to decode CTC strings.
+It can be found in pomp2_region_info.c and pomp2_region_info.h, installed
+under <opari-prefix>/share/opari2/devel. 
+
+\section LINKING LINKING (startup initialization only)
+
+For startup initialization all POMP2_Init_regions_XXX_YY functions
+that can be found in the object files and libraries of the application
+are called. This is done by creating an additional compilation unit
+that contains calls to following POMP2 functions:
+
+\li POMP2_Init_regions(),
+\li POMP2_Get_num_regions(), and
+\li POMP2_Get_opari2_version().
+
+The resulting object file is linked to the application. During startup
+of the measurement system the only thing to be done is to call
+POMP2_Init_regions() which then calls all POMP2_Init_regions_XXX_YY
+functions.
+
+In order to create the additional compilation unit (for example \c
+pomp2_init_file.c) the following command sequence can be used:
+
+\verbatim
+% `opari2-config --nm` <objs_and_libs> |            \
+  `opari2-config --egrep` -i "pomp2_init_regions" | \
+  `opari2-config --egrep` " T " |                   \
+  `opari2-config --awk_cmd` -f                      \
+  `opari2-config --awk_script` > pomp2_init_file.c
+\endverbatim
+
+Here, &lt;objs_and_libs&gt; denotes the entire set of object files and libraries
+that were instrumented by opari2. 
+
+Due to portability reasons \c nm, \c egrep and \c awk are not called
+directly but via the provided \c opari2-config tool.
+
+
+\section POMP_user_instrumentation POMP user instrumentation
+
+For manual user instrumentation the following pragmas are provided.
+
+C/C++:
+\verbatim
+   #pragma pomp inst init
+   #pragma pomp inst begin(region_name)
+   #pragma pomp inst altend(region_name)
+   #pragma pomp inst end(region_name)
+\endverbatim
+
+Fortran:
+\verbatim
+   !$POMP INST INIT
+   !$POMP INST BEGIN(region_name)
+   !$POMP INST ALTEND(region_name)
+   !$POMP INST END(region_name)
+\endverbatim
+
+Users can specify code regions, like functions for example, with \c INST \c BEGIN  and 
+\c INST \c END. 
+If a region contains several exit points like return/break/exit/... 
+all but the last need to be marked with \c INST \c ALTEND pragmas.
+The \c INST \c INIT pragma should be used for initialization in the beginning of main,
+if no other initialization method is used. 
+See the \ref EXAMPLE section for an example on how to use user instrumentation.
+
+\section EXAMPLE EXAMPLE
+
+The directory &lt;prefix&gt;/share/opari/doc/example contains the following
+files:
+
+\verbatim
+  example.c
+  example.f
+  Makefile
+\endverbatim
+
+The Makefile contains all required information for building the instrumented
+and uninstrumented binaries. It demonstrates the compilation and linking steps
+as described above.
+
+
+Additional examples which illustrate the use of user instrumentation can be found
+in &lt;prefix&gt;/share/opari/doc/example_user_instrumentation.
+The folder contains the following files:
+
+\verbatim
+   example_user_instrumentation.c
+   example_user_instrumentation.f
+   Makefile
+\endverbatim
+
+\section NEWS News
+
+\subsection LINK_STEP LINK STEP
+
+Opari2 uses a new mechanism to link files. The main advantage is,
+that no opari.rc file is needed anymore. Libraries
+can now be preinstrumented and parallel builds are supported. To achieve
+this, the handles for parallel regions are instrumented using a
+ctc_string.
+
+\subsection POMP2 POMP2
+
+The POMP2 interface is not compatible with the original POMP
+interface. All functions of the new API begin with POMP2_. The
+declaration prototypes can be found in pomp2_lib.h.
+
+\subsection POMP2_Parallel_fork POMP2_Parallel_fork
+
+The POMP2_Parallel_fork() call has an additional argument to pass the
+requested number of threads to the POMP2 library. This allows the library to
+prepare data structures and allocate memory for the threads before they are
+created. The value passed to the library is determined as follows:
+
+\li If a \c num_threads clause is present, the expression inside this
+clause is evaluated into a local variable \c pomp_num_threads. This
+variable is afterwards passed in the call to POMP2_Parallel_fork() and
+in the num_threads clause itself.
+
+\li If no num_threads clause is present, omp_get_max_threads() is used to
+determine the requested value for the next parallel region. This value is
+stored in \c pomp_num_threads and passed to the POMP2_Parallel_fork() call.
+
+In Fortran, instead of omp_get_max_threads(), a wrapper function
+pomp_get_max_threads_XXX_X is used. This function is needed to avoid multiple
+definitions of omp_get_max_threads() since we do not know whether it is
+defined in the user code or not. Removing all definitions in the user code
+would require much more Fortran parsing than is done with opari2, since
+function definitions cannot easily be distinguished from variable definitions.
+
+\subsection pomp_tpd pomp_tpd
+
+If it is necessary for the POMP2 library to pass information from the
+master thread to its children, the option \c --tpd can be used. Opari2
+uses the copyin clause to pass a threadprivate variable \c pomp_tpd to
+the newly spawned threads at the beginning of a parallel region. This
+is a 64 bit integer variable, since Fortran does not allow
+pointers. However a pointer can be stored in this variable, passed to
+child threads with the copyin clause (in C/C++ or Fortran) and later
+on be cast back to a pointer in the pomp library.
+
+To support mixed programming (C/Fortran) the variable name depends on
+the name mangling of the Fortran compiler. This means, for GNU, Sun,
+Intel and PGI C compilers the variable is called pomp_tpd_ and for IBM
+it is called pomp_tpd in C. In Fortran it is of course always called
+pomp_tpd. The --tpd-mangling option can be used to change this.  The
+variable is declared extern in all program units, so the pomp library
+contains the actual variable declaration of pomp_tpd as a 64 bit
+integer.
+
+\subsection TASKING Tasking construct
+
+In \e OpenMP \e 3.0 the new tasking construct was introduced. All
+parts of a program are now implicitly executed as tasks and the user
+gets the possibility of creating tasks that can be scheduled for
+asynchronous execution. Furthermore these tasks can be interrupted at
+certain scheduling points and resumed later on (see the OpenMP API 3.0
+for more detailed information).
+
+Opari2 instruments functions POMP2_Task_create_begin and 
+POMP2_Task_create_end to allow the recording of the task creation time.
+For the task execution time, the functions \ref POMP2_Task_begin and
+\ref POMP2_Task_end are instrumented in the code. 
+To correctly record a profile or a trace of a program execution these
+different instances of tasks need to be differentiated. Since OpenMP
+does not provide Task ids, the performance measurement system needs to
+create and maintain own task ids. This cannot be
+done by code instrumentation as done by \e Opari2 alone but
+requires some administration of task ids during runtime.
+To allow the measurement system to administrate these ids, additional
+task id parameters (pomp_old_task/pomp_new_task) were added to all 
+functions belonging to OpenMP constructs which are task scheduling points.
+With this package there is a "dummy" library, which can be used as an 
+adapter to your measurement system. This library contains all the relevant
+functionality to keep track of the different instances of tasks and it
+is highly recommended to use it as a template to implement your own
+adapter for your measurement system.
+
+For more detailed information on this mechanism see:\n
+"How to Reconcile Event-Based Performance Analysis with Tasking in OpenMP"\n
+by Daniel Lorenz, Bernd Mohr, Christian R&ouml;ssel, Dirk Schmidl, and Felix Wolf\n
+In: Proc. of 6th Int. Workshop of OpenMP (IWOMP), LNCS, vol. 6132, pp. 109121\n
+DOI: 10.1007/978-3-642-13217-9_9
+
+\section SUMMARY
+
+The typical usage of OPARI2 consists of the following steps: 
+
+1. Call OPARI2 for each input source file 
+\verbatim
+    % opari2 file1.f90
+    ...
+    % opari2 fileN.f90
+\endverbatim
+
+2. Compile all modified output files *.mod.* using the OpenMP compiler     
+
+3. Generate the initialization file 
+\verbatim
+% `opari2-config --nm` file1.mod.o ... fileN.mod.o | \
+  `opari2-config --egrep` -i "pomp2_init_regions" |  \
+  `opari2-config --egrep` " T " |                    \
+  `opari2-config --awk_cmd` -f                       \
+  `opari2-config --awk_script` > pomp2_init_file.c
+\endverbatim
+
+4. Link the resulting object files against the pomp2 runtime measurement library. 
+*/

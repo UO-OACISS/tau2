@@ -1,0 +1,56 @@
+.SUFFIXES: .cc .o
+
+OPT = -O
+
+# -- generic / Hitachi / KAI KCC 3.x or 4.x 
+CXX = KCC
+#CXX = KCC-4.0
+CCFLAGS = $(OPT) --strict #-DEBUG
+#CCFLAGS = $(OPT) --linux_strict #-DEBUG
+
+# -- generic / GNU g++ 2.95.x or 3.x
+CXX = g++
+CCFLAGS = $(OPT) -Wall -ansi -pedantic #-DEBUG
+
+# -- IBM / AIX xlC 5.x
+#CXX = xlC
+#CCFLAGS = $(OPT)
+
+# -- SGI / IRIX CC 7.3.1
+#CXX = CC
+#CCFLAGS = $(OPT) -LANG:std -Ifixinc
+
+# -- SUN / Solaris CC 6.1
+#CXX = CC
+#CCFLAGS = $(OPT)
+
+# -- Intel 6.0
+#CXX = icpc
+#CCFLAGS = $(OPT)
+
+OBJS = opari2.o process_c.o process_f.o process_omp.o \
+	ompragma.o ompragma_c.o ompragma_f.o handler.o
+
+opari2: $(OBJS)
+	$(CXX) $(CCFLAGS) -o opari $(OBJS)
+
+.cc.o:
+	$(CXX) $(CCFLAGS) -c $*.cc
+
+clean:
+	rm -rf core a.out *.o opari out
+	rm -rf Templates.DB tempinc ti_files ii_files rii_files *.ti
+	rm -rf SunWS_cache cxx_repository
+	(cd Test; make clean)
+
+test: opari2
+	(cd Test; make test)
+
+handler.o: handler.cc handler.h opari.h ompragma.h ompregion.h
+ompragma.o: ompragma.cc ompragma.h
+ompragma_f.o: ompragma_f.cc ompragma.h
+ompragma_c.o: ompragma_c.cc ompragma.h
+opari2.o: opari.cc opari.h ompragma.h handler.h
+process_c.o: process_c.cc opari.h ompragma.h handler.h
+process_f.o: process_f.cc opari.h ompragma.h handler.h
+process_omp.o: process_omp.cc opari.h ompragma.h handler.h

@@ -161,6 +161,8 @@ doxygen-user: doxygen-project-number doc/doxygen-user/main.dox
 	echo "OUTPUT_DIRECTORY = $(USER_DOC_DIR)" > doc/doxygen-user-at-make-time.cfg
 	echo "GENERATE_TAGFILE = $(USER_DOC_DIR)/tags/@PACKAGE_NAME@.tag" >> doc/doxygen-user-at-make-time.cfg
 	cat doc/doxygen-project-number.cfg doc/doxygen-user-at-make-time.cfg doc/doxygen-user-common.cfg doc/doxygen-user-component.cfg > doc/doxygen-user.cfg
+	$(MKDIR_P) "$(USER_DOC_DIR)/html"
+	cp $(abs_srcdir)/doc/images/* $(USER_DOC_DIR)/html
 	doxygen doc/doxygen-user.cfg
 
 CLEANFILES += doc/doxygen-user.cfg doc/doxygen-user-at-make-time.cfg doxygen.err

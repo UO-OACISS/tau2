@@ -283,7 +283,7 @@ SYMBOL_CACHE_SIZE      = 0
 # Private class members and static file members will be hidden unless 
 # the EXTRACT_PRIVATE and EXTRACT_STATIC tags are set to YES
 
-EXTRACT_ALL            = YES
+EXTRACT_ALL            = NO
 
 # If the EXTRACT_PRIVATE tag is set to YES all private members of a class 
 # will be included in the documentation.
@@ -322,7 +322,7 @@ EXTRACT_ANON_NSPACES   = YES
 # various overviews, but no documentation section is generated. 
 # This option has no effect if EXTRACT_ALL is enabled.
 
-HIDE_UNDOC_MEMBERS     = NO
+HIDE_UNDOC_MEMBERS     = YES
 
 # If the HIDE_UNDOC_CLASSES tag is set to YES, Doxygen will hide all 
 # undocumented classes that are normally visible in the class hierarchy. 
@@ -462,7 +462,7 @@ SHOW_DIRECTORIES       = NO
 # This will remove the Files entry from the Quick Index and from the 
 # Folder Tree View (if specified). The default is YES.
 
-SHOW_FILES             = NO
+SHOW_FILES             = YES
 
 # Set the SHOW_NAMESPACES tag to NO to disable the generation of the 
 # Namespaces page. 
@@ -1527,14 +1527,14 @@ ALIASES                = scorep=Score-P \
                          necsx="NEC SX" \
                          papi=PAPI \
                          seclabel{1}="\latexonly\label{sec:\1} \endlatexonly" \
-                         secref{1}="\if LATEX \latexonly~\ref{sec:\1}\xspace \endlatexonly \else '@ref \1' \endif" \
+                         secref{1}="\if LATEX \latexonly~\ref{sec:\1}\xspace \endlatexonly \else &thinsp; '@ref \1' &thinsp; \endif" \
                          verb{1}="\latexonly\verb+\1+\endlatexonly\htmlonly<tt>\1</tt>\endhtmlonly" \
-                         tabref{1}="\if LATEX \latexonly~\ref{tab:\1}\xspace \endlatexonly \else @ref \1 \endif" \
+                         tabref{1}="\if LATEX \latexonly~\ref{tab:\1}\xspace \endlatexonly \else &thinsp; @ref \1 &thinsp; \endif" \
                          tablabel{1}="\latexonly\label{tab:\1}\endlatexonly" \
-                         htmlimg{3}="@anchor \2 @image html \"@abs_top_srcdir@/doc/images/\1\" \"\3\"" \
+                         htmlimg{3}="@anchor \2 @image html \1 \"Figure \2: \3\"" \
                          teximg{4}="\latexonly\begin{figure}[hbt]\begin{center}\includegraphics[\4]{@abs_top_srcdir@/doc/images/\1}\caption{\3}\label{fig:\2}\end{center}\end{figure}\endlatexonly" \
                          img{4}="\if LATEX @teximg{\1,\2,\3,\4} \else @htmlimg{\1,\2,\3} \endif" \
-                         figref{1}="\if LATEX \latexonly~\ref{fig:\1}\xspace \endlatexonly \else @ref \1 \endif" \
+                         figref{1}="\if LATEX \latexonly~\ref{fig:\1}\xspace \endlatexonly \else &thinsp; @ref \1 &thinsp; \endif" \
 			 href{2}="<a href=\"\1\">\2</a>" \
                          emph{1}="<i>\1</i>"
 
