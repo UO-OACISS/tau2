@@ -44,9 +44,10 @@ DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(top_srcdir)/test/f77_test.sh.in \
 	$(top_srcdir)/test/f90_test.sh.in \
 	$(top_srcdir)/vendor/common/build_related/doxygen/doxygen-user-common.cfg.in \
-	AUTHORS COPYING ChangeLog INSTALL NEWS \
+	AUTHORS COPYING ChangeLog INSTALL NEWS build-config/compile \
 	build-config/config.guess build-config/config.sub \
-	build-config/install-sh build-config/missing
+	build-config/depcomp build-config/install-sh \
+	build-config/ltmain.sh build-config/missing
 @SVN_CONTROLLED_TRUE@am__append_1 = doc/doxygen-project-number.cfg
 @HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@am__append_2 = doc/doxygen-user.cfg doc/doxygen-user-at-make-time.cfg doxygen.err
 @CROSS_BUILD_FALSE@am__append_3 = $(srcdir)/build-frontend/configure.ac \
@@ -839,6 +840,8 @@ prohibit-svn-files-in-dist:
 @HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	echo "OUTPUT_DIRECTORY = $(USER_DOC_DIR)" > doc/doxygen-user-at-make-time.cfg
 @HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	echo "GENERATE_TAGFILE = $(USER_DOC_DIR)/tags/@PACKAGE_NAME@.tag" >> doc/doxygen-user-at-make-time.cfg
 @HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	cat doc/doxygen-project-number.cfg doc/doxygen-user-at-make-time.cfg doc/doxygen-user-common.cfg doc/doxygen-user-component.cfg > doc/doxygen-user.cfg
+@HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	$(MKDIR_P) "$(USER_DOC_DIR)/html"
+@HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	cp $(abs_srcdir)/doc/images/* $(USER_DOC_DIR)/html
 @HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	doxygen doc/doxygen-user.cfg
 
 @HAVE_DOXYGEN_FALSE@@SVN_CONTROLLED_TRUE@doxygen-user:

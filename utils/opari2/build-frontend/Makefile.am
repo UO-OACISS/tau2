@@ -89,4 +89,9 @@ install-example:
 	rm -f $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/libpomp.la
 endif
 
-install-data-local: install-example
+install-pomp2_region_info:
+	$(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE_NAME@/devel
+	$(INSTALL_DATA) $(abs_srcdir)/../src/pomp-lib-dummy/pomp2_region_info.c $(DESTDIR)$(datadir)/@PACKAGE_NAME@/devel/
+	$(INSTALL_DATA) $(abs_srcdir)/../src/pomp-lib-dummy/pomp2_region_info.h $(DESTDIR)$(datadir)/@PACKAGE_NAME@/devel/
+
+install-data-local: install-example install-pomp2_region_info

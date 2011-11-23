@@ -467,6 +467,11 @@ public class ParaProf implements ActionListener {
 	sourceFiles = new File[sourceFilenames.length];
 	for (int i = 0; i < sourceFilenames.length; i++) {
 	    sourceFiles[i] = new File(sourceFilenames[i]);
+//	    if(!sourceFiles[i].exists()){
+//	    	sourceFiles= new File[0];
+//	    	fileTypeString="profiles";
+//	    	break;
+//	    }
 	}
 
 	if (fixNames != null)
