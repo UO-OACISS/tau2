@@ -59,6 +59,7 @@ typedef int64_t POMP2_Task_handle;
  * The instrumenter scans all opari-created include files with nm and greps
  * the POMP2_INIT_uuid_numRegions() function calls. Here we return the sum of
  * all numRegions.
+ * @return number of instrumented regions
  */
 extern size_t
 POMP2_Get_num_regions();
@@ -74,11 +75,14 @@ POMP2_Init_regions();
 
 /**
  * Returns the opari version.
+ * @return version string
  */
 extern const char*
 POMP2_Get_opari2_version();
 
 /*@}*/
+/** Function that returns a new task handle.
+ * @return new task handle */
 
 extern POMP2_Task_handle
 POMP2_Get_new_task_handle();
@@ -460,9 +464,11 @@ extern void
 POMP2_Task_create_end( POMP2_Region_handle* pomp2_handle,
                        POMP2_Task_handle    pomp2_old_task );
 
-/** \e OpenMp \e 3.0: Marks the beginning of the execution of a task.
+/** \e OpenMP \e 3.0: Marks the beginning of the execution of a task.
 
     @param pomp2_handle The region handle.
+    @param pomp2_new_task handle of the tas
+    @param pomp2_new_task handle of the taskk
  */
 extern void
 POMP2_Task_begin( POMP2_Region_handle* pomp2_handle,
@@ -517,6 +523,7 @@ POMP2_Untied_task_create_end( POMP2_Region_handle* pomp2_handle,
     untied task.
 
     @param pomp2_handle   The region handle.
+    @param pomp2_new_task handle of the beginning task
  */
 void
 POMP2_Untied_task_begin( POMP2_Region_handle* pomp2_handle,
@@ -585,7 +592,8 @@ extern void
 POMP2_Unset_lock( omp_lock_t* s );
 
 /** Wraps the omp_test_lock function
- *  @param s the OpenMP lock to test for.*/
+*  @param s the OpenMP lock to test for.
+*  @return result of omp_test_lock*/
 extern int
 POMP2_Test_lock( omp_lock_t* s );
 
@@ -610,7 +618,8 @@ extern void
 POMP2_Unset_nest_lock( omp_nest_lock_t* s );
 
 /** Wraps the omp_test_nest_lock function
- *  @param s The nested OpenMP lock to test for.*/
+*  @param s The nested OpenMP lock to test for.
+*  @return result of omp_test_nest_lock*/
 extern int
 POMP2_Test_nest_lock( omp_nest_lock_t* s );
 

@@ -13,19 +13,19 @@
  * See the COPYING file in the package base directory for details.
  *
  */
-/****************************************************************************  
-**  SCALASCA    http://www.scalasca.org/                                   **  
-**  KOJAK       http://www.fz-juelich.de/jsc/kojak/                        **  
-*****************************************************************************  
-**  Copyright (c) 1998-2009                                                **  
-**  Forschungszentrum Juelich, Juelich Supercomputing Centre               **  
-**                                                                         **  
-**  See the file COPYRIGHT in the package base directory for details       **  
+/****************************************************************************
+**  SCALASCA    http://www.scalasca.org/                                   **
+**  KOJAK       http://www.fz-juelich.de/jsc/kojak/                        **
+*****************************************************************************
+**  Copyright (c) 1998-2009                                                **
+**  Forschungszentrum Juelich, Juelich Supercomputing Centre               **
+**                                                                         **
+**  See the file COPYRIGHT in the package base directory for details       **
 ****************************************************************************/
 /** @internal
  *
  *  @file       process_f.cc
- *  @status     beta 
+ *  @status     beta
  *
  *  @maintainer Dirk Schmidl <schmidl@rz.rwth-aachen.de>
  *
@@ -99,93 +99,103 @@ look_for( const string&              lowline,
     }
 }
 
-/**@brief Check if the line belonges to the header of a subroutine or function. 
+/**@brief Check if the line belonges to the header of a subroutine or function.
  *        After lines in the header, we ca insert our variable definitions.*/
 bool
-isSubUnitHeader( string& lowline , bool inHeader)
+isSubUnitHeader( string& lowline, bool inHeader )
 {
-	string line;
-	bool result;
-	static int openbrackets=0;
-	int pos;
-	pos=lowline.find_first_not_of(" \t");
- 
-	/*string is empty*/
-	if( pos == string::npos ) 
-	{
-	     pos = 0;
-	     line.clear();
-	}
-	else
-	{
-	     line = lowline.substr( pos );
-	}
-	//search for words indicating, that we did not reach a point where
-	//we can insert varable definitions, these keywords are:
-	//program, function, result, subroutine, save, implicit, parameter,
-	//and use
-	if(  line[0] == 'p' && line[1] == 'r' && line[2] == 'o' &&
-	     line[3] == 'g' && line[4] == 'r' && line[5] == 'a' &&
-     	     line[6] == 'm' 
-	   ||
-	     line[0] == 'f' && line[1] == 'u' && line[2] == 'n' &&
-	     line[3] == 'c' && line[4] == 't' && line[5] == 'i' &&
-     	     line[6] == 'o' && line[7] == 'n'
-	   ||
-	     line[0] == 'r' && line[1] == 'e' && line[2] == 's' &&
-	     line[3] == 'u' && line[4] == 'l' && line[5] == 't' 
-	   ||
-	     line[0] == 's' && line[1] == 'u' && line[2] == 'b' &&
-	     line[3] == 'r' && line[4] == 'o' && line[5] == 'u' &&
-     	     line[6] == 't' && line[7] == 'i' && line[8] == 'n' &&
-	     line[9] == 'e'	     
-	   ||
-             line[0] == 's' && line[1] == 'a' && line[2] == 'v' &&
-	     line[3] == 'e' && inHeader
-	   ||
-	     line[0] == 'i' && line[1] == 'm' && line[2] == 'p' &&
-	     line[3] == 'l' && line[4] == 'i' && line[5] == 'c' &&
-     	     line[6] == 'i' && line[7] == 't' && inHeader
-	   ||
-	     line[0] == 'p' && line[1] == 'a' && line[2] == 'r' &&
-	     line[3] == 'a' && line[4] == 'm' && line[5] == 'e' &&
-     	     line[6] == 't' && line[7] == 'e' && line[8] == 'r' && 
-	     inHeader
-	   ||
-	     line[0] == 'u' && line[1] == 's' && line[2] == 'e' &&
-	     inHeader
-	   ||
-	     line[0] == '#' && inHeader
-	   ||
-	     line.empty()  && inHeader 
-	   ||
-	     openbrackets!=0 && inHeader
-	   )
+    string     line;
+    bool       result;
+    static int openbrackets = 0;
+    int        pos;
+    pos = lowline.find_first_not_of( " \t" );
 
-	{
-		result=true;
-	}
-	else
-	{
-		result=false;
-	}
-	/*count open brackets, to see if a functionheader is split across different lines*/
-	for (int i=0 ; i < lowline.length() ; i++)
-	{
-		if( lowline[i]=='(' ) openbrackets++;
-		if( lowline[i]==')' ) openbrackets--;
-	}
-	return result;
+    /*string is empty*/
+    if ( pos == string::npos )
+    {
+        pos = 0;
+        line.clear();
+    }
+    else
+    {
+        line = lowline.substr( pos );
+    }
+    //search for words indicating, that we did not reach a point where
+    //we can insert varable definitions, these keywords are:
+    //program, function, result, subroutine, save, implicit, parameter,
+    //and use
+    if (  line[ 0 ] == 'p' && line[ 1 ] == 'r' && line[ 2 ] == 'o' &&
+          line[ 3 ] == 'g' && line[ 4 ] == 'r' && line[ 5 ] == 'a' &&
+          line[ 6 ] == 'm'
+          ||
+          line[ 0 ] == 'f' && line[ 1 ] == 'u' && line[ 2 ] == 'n' &&
+          line[ 3 ] == 'c' && line[ 4 ] == 't' && line[ 5 ] == 'i' &&
+          line[ 6 ] == 'o' && line[ 7 ] == 'n'
+          ||
+          line[ 0 ] == 'r' && line[ 1 ] == 'e' && line[ 2 ] == 's' &&
+          line[ 3 ] == 'u' && line[ 4 ] == 'l' && line[ 5 ] == 't'
+          ||
+          line[ 0 ] == 's' && line[ 1 ] == 'u' && line[ 2 ] == 'b' &&
+          line[ 3 ] == 'r' && line[ 4 ] == 'o' && line[ 5 ] == 'u' &&
+          line[ 6 ] == 't' && line[ 7 ] == 'i' && line[ 8 ] == 'n' &&
+          line[ 9 ] == 'e'
+          ||
+          line[ 0 ] == 's' && line[ 1 ] == 'a' && line[ 2 ] == 'v' &&
+          line[ 3 ] == 'e' && inHeader
+          ||
+          line[ 0 ] == 'i' && line[ 1 ] == 'm' && line[ 2 ] == 'p' &&
+          line[ 3 ] == 'l' && line[ 4 ] == 'i' && line[ 5 ] == 'c' &&
+          line[ 6 ] == 'i' && line[ 7 ] == 't' && inHeader
+          ||
+          line[ 0 ] == 'p' && line[ 1 ] == 'a' && line[ 2 ] == 'r' &&
+          line[ 3 ] == 'a' && line[ 4 ] == 'm' && line[ 5 ] == 'e' &&
+          line[ 6 ] == 't' && line[ 7 ] == 'e' && line[ 8 ] == 'r' &&
+          inHeader
+          ||
+          line[ 0 ] == 'u' && line[ 1 ] == 's' && line[ 2 ] == 'e' &&
+          inHeader
+          ||
+          line[ 0 ] == 'i' && line[ 1 ] == 'n' && line[ 2 ] == 'c' &&
+          line[ 3 ] == 'l' && line[ 4 ] == 'u' && line[ 5 ] == 'd' &&
+          line[ 6 ] == 'e' && inHeader
+          ||
+          line[ 0 ] == '#' && inHeader
+          ||
+          line.empty()  && inHeader
+          ||
+          openbrackets != 0 && inHeader
+          )
+
+    {
+        result = true;
+    }
+    else
+    {
+        result = false;
+    }
+    /*count open brackets, to see if a functionheader is split across different lines*/
+    for ( int i = 0; i < lowline.length(); i++ )
+    {
+        if ( lowline[ i ] == '(' )
+        {
+            openbrackets++;
+        }
+        if ( lowline[ i ] == ')' )
+        {
+            openbrackets--;
+        }
+    }
+    return result;
 }
 
 /**@brief check if this line is a comment line*/
 bool
 is_comment_line( string&  lowline,
                  string&  line,
-		 Language lang)
+                 Language lang )
 {
     if ( lowline[ 0 ] == '!' ||
-	 ( ( lang & L_F77 ) && ( lowline[ 0 ] == '*' || lowline[ 0 ] == 'c' ) ) )
+         ( ( lang & L_F77 ) && ( lowline[ 0 ] == '*' || lowline[ 0 ] == 'c' ) ) )
     {
         // fixed form comment
 
@@ -257,10 +267,10 @@ is_loop_start( string& lowline,
 
     // is there a 'do '
     string::size_type pstart = lowline.find( "do" );
-    if ( pstart == string::npos || 
-         ( lowline[pstart+2] != '\0' && 
-           lowline[pstart+2] != ' '  && 
-           lowline[pstart+2] != '\t'    ) )
+    if ( pstart == string::npos ||
+         ( lowline[ pstart + 2 ] != '\0' &&
+           lowline[ pstart + 2 ] != ' '  &&
+           lowline[ pstart + 2 ] != '\t'    ) )
     {
         return false;
     }
@@ -284,10 +294,10 @@ is_loop_start( string& lowline,
 
     //check again, if pos now start of do, otherwise not a correct do statement
     pstart = lowline.find( "do", pos );
-    if ( pstart != pos || 
-         ( lowline[pstart+2] != '\0' && 
-           lowline[pstart+2] != ' '  && 
-           lowline[pstart+2] != '\t'    ) )
+    if ( pstart != pos ||
+         ( lowline[ pstart + 2 ] != '\0' &&
+           lowline[ pstart + 2 ] != ' '  &&
+           lowline[ pstart + 2 ] != '\t'    ) )
     {
         return false;
     }
@@ -300,7 +310,7 @@ is_loop_start( string& lowline,
         poslab = pos;
         pos    = lowline.find_first_not_of( "0123456789", pos );
         //         cerr << "2pos: " << pos << ", poslab: " << poslab << std::endl;
-        label  = line.substr( poslab, pos - poslab );
+        label = line.substr( poslab, pos - poslab );
     }
 
     //    cerr << label << "\n\n";
@@ -535,24 +545,24 @@ del_strings_and_comments( string& lowline,
     }
 }
 
-/** @brief Delete comments in directive lines to avoid finding                                                                 
+/** @brief Delete comments in directive lines to avoid finding
     keywords.*/
 void
 del_inline_comments( string& lowline )
 {
-  // find first !                                                                                                            
-  int c = lowline.find( "!" );
-  // zero out string constants and free form comments                                                                        
-  for ( unsigned i = c+1; i < lowline.size(); ++i )
+    // find first !
+    int c = lowline.find( "!" );
+    // zero out string constants and free form comments
+    for ( unsigned i = c + 1; i < lowline.size(); ++i )
     {
-      if ( lowline[ i ] == '!' )
+        if ( lowline[ i ] == '!' )
         {
-          /* -- zero out partial line F90 comments -- */
-          for (; i < lowline.size(); ++i )
+            /* -- zero out partial line F90 comments -- */
+            for (; i < lowline.size(); ++i )
             {
-              lowline[ i ] = ' ';
+                lowline[ i ] = ' ';
             }
-          break;
+            break;
         }
     }
 }
@@ -599,9 +609,9 @@ void
 process_fortran( istream&    is,
                  const char* infile,
                  ostream&    os,
-                 bool        addSharedDecl, 
-		 char*       incfile,
-		 Language    lang)
+                 bool        addSharedDecl,
+                 char*       incfile,
+                 Language    lang )
 {
     string            line;
     int               lineno     = 0;
@@ -624,7 +634,7 @@ process_fortran( istream&    is,
 
     while ( getline( is, line ) )
     {
-      //                  std::cerr << line << '\n';
+        //                  std::cerr << line << '\n';
         /* workaround for bogus getline implementations */
         if ( line.size() == 1 && line[ 0 ] == '\0' )
         {
@@ -632,27 +642,30 @@ process_fortran( istream&    is,
         }
 
         /* remove extra \r from Windows source files */
-        if ( line.size() && *(line.end()-1) == '\r' ) line.erase(line.end()-1);
+        if ( line.size() && *( line.end() - 1 ) == '\r' )
+        {
+            line.erase( line.end() - 1 );
+        }
 
         ++lineno;
         string lowline( line );
         transform( line.begin(), line.end(), lowline.begin(), fo_tolower() );
-	if ( ! is_comment_line( lowline, line, lang ) )
-	{
-	    if ( isSubUnitHeader( lowline, inHeader ) )
-	    {
-		inHeader=true;
-	    }
-	    else if (inHeader == true)
-	    {
-		inHeader = false;
-	        os << "      include \'" << incfile << "\'" << std::endl;
-	    }	
-	}
+        if ( !is_comment_line( lowline, line, lang ) )
+        {
+            if ( isSubUnitHeader( lowline, inHeader ) )
+            {
+                inHeader = true;
+            }
+            else if ( inHeader == true )
+            {
+                inHeader = false;
+                os << "      include \'" << incfile << "\'" << std::endl;
+            }
+        }
 
         if ( inString )
         {
-  	  if ( !is_comment_line( lowline, line, lang ) )
+            if ( !is_comment_line( lowline, line, lang ) )
             {
                 del_strings_and_comments( lowline, inString );
                 if (  instrument_locks() )
@@ -670,10 +683,10 @@ process_fortran( istream&    is,
                       ( lowline[ 1 ] == '$' &&
                         (
                             ( lowline[ 2 ] == 'p' && lowline[ 3 ] == 'o' &&
-                 lowline[ 4 ] == 'm' && lowline[ 5 ] == 'p' )
+                              lowline[ 4 ] == 'm' && lowline[ 5 ] == 'p' )
                             ||
                             ( lowline[ 2 ] == 'o' &&
-                 lowline[ 3 ] == 'm' && lowline[ 4 ] == 'p' ) ) )
+                              lowline[ 3 ] == 'm' && lowline[ 4 ] == 'p' ) ) )
                       ||
                       ( lowline[ 1 ] == 'p' && lowline[ 2 ] == 'o' &&
                         lowline[ 3 ] == 'm' && lowline[ 4 ] == 'p' && lowline[ 5 ] == '$' ) ) && (
@@ -682,12 +695,12 @@ process_fortran( istream&    is,
 
                       ) )
         {
-	    /*insert include before first OpenMP pragma*/
-	    if (inHeader == true)
-	    {
-		inHeader = false;
-	        os << "      include \'" << incfile << "\'" << std::endl;
-	    }
+            /*insert include before first OpenMP pragma*/
+            if ( inHeader == true )
+            {
+                inHeader = false;
+                os << "      include \'" << incfile << "\'" << std::endl;
+            }
 
             int pomp = ( ( lowline[ 1 ] == 'p' ) || ( lowline[ 2 ] == 'p' ) );
 
@@ -737,12 +750,12 @@ process_fortran( istream&    is,
         {
             int pomp = ( ( lowline[ pstart + 1 ] == 'p' ) || ( lowline[ pstart + 2 ] == 'p' ) );
             pragma_indent = pstart;
-	    /*insert include before first OpenMP pragma*/
-	    if (inHeader == true)
-	    {
-		inHeader = false;
-	        os << "      include \'" << incfile << "\'" << std::endl;
-	    }
+            /*insert include before first OpenMP pragma*/
+            if ( inHeader == true )
+            {
+                inHeader = false;
+                os << "      include \'" << incfile << "\'" << std::endl;
+            }
 
             /*
              * free form omp directive
@@ -796,7 +809,7 @@ process_fortran( istream&    is,
                      << ": ERROR: missing continuation line\n";
                 cleanup_and_exit();
             }
-            else if ( currPragma && !isComment)
+            else if ( currPragma && !isComment )
             {
                 // if necessary process last complete directive
                 typeOfLastLine = check_pragma( currPragma );
@@ -810,13 +823,13 @@ process_fortran( istream&    is,
             if ( isComment )
             {
                 // normal line: comment but not directly after OMP pragma line
-                if ( !currPragma)
-                  {
+                if ( !currPragma )
+                {
                     os << line << '\n';
 #       ifdef EBUG
-                cerr << setw( 3 ) << lineno << ":C : " << line << '\n';
+                    cerr << setw( 3 ) << lineno << ":C : " << line << '\n';
 #       endif
-                  }
+                }
             }
             else if ( line.size() == 0 ||
                       lowline.find_first_not_of( " \t" ) == string::npos )
@@ -838,10 +851,10 @@ process_fortran( istream&    is,
                 test_and_insert_ompenddo( os, typeOfLastLine, waitforOMPEndDo,
                                           infile, lineno, pragma_indent, 0,
                                           addSharedDecl );
-		//print line, if it is not an include 'omp_lib.h' or use omp_lib, since this is inserted automatically for every file, two includes cause an error
-		//if (line.find("omp_lib")==string::npos && line.find("OMP_LIB")==string::npos){
-                	os << line << '\n';
-		//}
+                //print line, if it is not an include 'omp_lib.h' or use omp_lib, since this is inserted automatically for every file, two includes cause an error
+                //if (line.find("omp_lib")==string::npos && line.find("OMP_LIB")==string::npos){
+                os << line << '\n';
+                //}
                 extra_handler( lineno, os );
 
                 // search for loop start statement

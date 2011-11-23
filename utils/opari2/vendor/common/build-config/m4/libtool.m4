@@ -4017,18 +4017,12 @@ m4_if([$1], [CXX], [
 	    _LT_TAGVAR(lt_prog_compiler_static, $1)='-qstaticlink'
 	    ;;
 	  *)
-	    case `$CC -V 2>&1` in
+	    case `$CC -V 2>&1 | sed 5q` in
 	    *Sun\ C*)
 	      # Sun C++ 5.9
 	      _LT_TAGVAR(lt_prog_compiler_pic, $1)='-KPIC'
 	      _LT_TAGVAR(lt_prog_compiler_static, $1)='-Bstatic'
 	      _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Qoption ld '
-	      ;;
-	    *Portland\ Group*)
-              # Portland Group C++ compiler
-	      _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
-	      _LT_TAGVAR(lt_prog_compiler_pic, $1)='-fpic'
-	      _LT_TAGVAR(lt_prog_compiler_static, $1)='-Bstatic'
 	      ;;
 	    esac
 	    ;;
@@ -4326,17 +4320,12 @@ m4_if([$1], [CXX], [
 	_LT_TAGVAR(lt_prog_compiler_static, $1)='-qstaticlink'
 	;;
       *)
-	case `$CC -V 2>&1` in
-	*Sun\ Ceres\ Fortran* | *Sun*Fortran*\ [[1-7]].* | *Sun*Fortran*\ 8.[[0-3]]*)
+	case `$CC -V 2>&1 | sed 5q` in
+	*Sun\ F* | *Sun*Fortran*)
 	  # Sun Fortran 8.3 passes all unrecognized flags to the linker
 	  _LT_TAGVAR(lt_prog_compiler_pic, $1)='-KPIC'
 	  _LT_TAGVAR(lt_prog_compiler_static, $1)='-Bstatic'
 	  _LT_TAGVAR(lt_prog_compiler_wl, $1)=''
-	  ;;
-	*Sun\ F* | *Sun*Fortran*)
-	  _LT_TAGVAR(lt_prog_compiler_pic, $1)='-KPIC'
-	  _LT_TAGVAR(lt_prog_compiler_static, $1)='-Bstatic'
-	  _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Qoption ld '
 	  ;;
 	*Sun\ C*)
 	  # Sun C 5.9
@@ -4744,10 +4733,6 @@ _LT_EOF
 	tmp_sharedflag='-shared'
 	case $cc_basename,$host_cpu in
         pgcc*)				# Portland Group C compiler
-	  _LT_TAGVAR(whole_archive_flag_spec, $1)='${wl}--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` ${wl}--no-whole-archive'
-	  tmp_addflag=' $pic_flag'
-	  ;;
-        pgCC*)				# Portland Group C++ compiler
 	  _LT_TAGVAR(whole_archive_flag_spec, $1)='${wl}--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` ${wl}--no-whole-archive'
 	  tmp_addflag=' $pic_flag'
 	  ;;
@@ -6422,7 +6407,7 @@ if test "$_lt_caught_CXX_error" != yes; then
 	      ;;
 	    esac
 
-	    _LT_TAGVAR(hardcode_libdir_flag_spec, $1)='${wl}-rpath ${wl}$libdir'
+	    _LT_TAGVAR(hardcode_libdir_flag_spec, $1)='${wl}--rpath ${wl}$libdir'
 	    _LT_TAGVAR(export_dynamic_flag_spec, $1)='${wl}--export-dynamic'
 	    _LT_TAGVAR(whole_archive_flag_spec, $1)='${wl}--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` ${wl}--no-whole-archive'
             ;;
@@ -6458,7 +6443,7 @@ if test "$_lt_caught_CXX_error" != yes; then
 	    fi
 	    ;;
 	  *)
-	    case `$CC -V 2>&1` in
+	    case `$CC -V 2>&1 | sed 5q` in
 	    *Sun\ C*)
 	      # Sun C++ 5.9
 	      _LT_TAGVAR(no_undefined_flag, $1)=' -zdefs'
@@ -6479,38 +6464,6 @@ if test "$_lt_caught_CXX_error" != yes; then
 	      # in the archive.
 	      _LT_TAGVAR(old_archive_cmds, $1)='$CC -xar -o $oldlib $oldobjs'
 	      ;;
-            *pgCC* | *pgcpp*)
-              # Portland Group C++ compiler
-              case `$CC -V` in
-              *pgCC\ [[1-5]].* | *pgcpp\ [[1-5]].*)
-                _LT_TAGVAR(prelink_cmds, $1)='tpldir=Template.dir~
-                  rm -rf $tpldir~
-                  $CC --prelink_objects --instantiation_dir $tpldir $objs $libobjs $compile_deplibs~
-                  compile_command="$compile_command `find $tpldir -name \*.o | sort | $NL2SP`"'
-                _LT_TAGVAR(old_archive_cmds, $1)='tpldir=Template.dir~
-                  rm -rf $tpldir~
-                  $CC --prelink_objects --instantiation_dir $tpldir $oldobjs$old_deplibs~
-                  $AR $AR_FLAGS $oldlib$oldobjs$old_deplibs `find $tpldir -name \*.o | sort | $NL2SP`~
-                  $RANLIB $oldlib'
-                _LT_TAGVAR(archive_cmds, $1)='tpldir=Template.dir~
-                  rm -rf $tpldir~
-                  $CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
-                  $CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
-                _LT_TAGVAR(archive_expsym_cmds, $1)='tpldir=Template.dir~
-                  rm -rf $tpldir~
-                  $CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
-                  $CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
-                ;;
-              *) # Version 6 and above use weak symbols
-                _LT_TAGVAR(archive_cmds, $1)='$CC -shared $pic_flag $predep_objects $libobjs $deplibs $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
-                _LT_TAGVAR(archive_expsym_cmds, $1)='$CC -shared $pic_flag $predep_objects $libobjs $deplibs $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
-                ;;
-              esac
-
-              _LT_TAGVAR(hardcode_libdir_flag_spec, $1)='${wl}-rpath ${wl}$libdir'
-              _LT_TAGVAR(export_dynamic_flag_spec, $1)='${wl}--export-dynamic'
-              _LT_TAGVAR(whole_archive_flag_spec, $1)='${wl}--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` ${wl}--no-whole-archive'
-              ;;
 	    esac
 	    ;;
 	esac

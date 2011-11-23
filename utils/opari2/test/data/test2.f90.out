@@ -68,11 +68,11 @@ program test2
 #line 37 "test2.f90"
   !$omp do ordered
   do i=1,4
-      call POMP2_Ordered_begin(pomp2_region_5, &
+      call POMP2_Ordered_enter(pomp2_region_5, &
         "61*regionType=ordered*sscl=test2.f90:39:39*escl=test2.f90:0:0**" )
 #line 39 "test2.f90"
      !$omp ordered
-      call POMP2_Ordered_enter(pomp2_region_5)
+      call POMP2_Ordered_begin(pomp2_region_5)
 #line 40 "test2.f90"
      write(*,*) "do",i
       call POMP2_Ordered_end(pomp2_region_5)
@@ -218,7 +218,8 @@ program test2
       call POMP2_Parallel_begin(pomp2_region_14)
 #line 81 "test2.f90"
       pomp_if = .true.
-      call POMP2_Task_create_begin(pomp2_region_15, pomp2_old_task, pomp_if, &
+      call POMP2_Task_create_begin(pomp2_region_15, pomp2_old_task, 
+     &pomp_if, &
         "58*regionType=task*sscl=test2.f90:81:81*escl=test2.f90:0:0**" )
 #line 81 "test2.f90"
   !$omp task if(pomp_if) firstprivate(pomp2_old_task)&

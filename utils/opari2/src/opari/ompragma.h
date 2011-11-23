@@ -101,7 +101,7 @@ public:
 
     /** evaluate if there is a schedule clause */
     bool
-    find_schedule();
+    find_schedule( string* reg_arg_schedule );
 
     /** evaluate if there is a reduction clause */
     bool
