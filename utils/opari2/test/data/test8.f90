@@ -27,7 +27,7 @@ program test8
   !$omp parallel if(k.eq.0) num_threads(4) reduction(+:k)
   write(*,*) "parallel"
 
-  !$omp do reduction(+:k) schedule(dynamic) collapse(1)
+  !$omp do reduction(+:k) schedule(dynamic,5) collapse(1)
   do i=1,4
      write(*,*) "do",i
      k = k + 1

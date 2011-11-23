@@ -527,6 +527,13 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         		String fname=null;
         		
         		if(atomic.isSelected()){
+        			
+        			int numUE = ppTrial.getDataSource().getNumUserEvents();
+        			if(numUE<1){
+        				atomic.setSelected(false);
+        				return;
+        			}
+        			
         			metricBox.setEnabled(false);
         			valueBox.removeAllItems();
         			for(int i=0;i<UserEventValueType.VALUES.length;i++){
@@ -534,7 +541,9 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         			}
         			valueBox.setSelectedIndex(settings.atomicETDex[dex]);
         			if(settings.getTopoAtomic(dex)==null){
-        				settings.setTopoAtomic(ppTrial.getDataSource().getUserEvents().next(), dex);
+        				
+        				UserEvent tmpUE = ppTrial.getDataSource().getUserEvents().next();
+        				settings.setTopoAtomic(tmpUE, dex);
         			}
         			fname=settings.getTopoAtomic(dex).getName();
         		}
@@ -1402,7 +1411,7 @@ JButton mapFileButton = new JButton("map");
          return panel;
          
     }
-    
+    private boolean topoCreated=false;
     private JPanel createTopoPanel() {
 
         JPanel panel = new JPanel();
@@ -1452,7 +1461,7 @@ JButton mapFileButton = new JButton("map");
         resetTopoAxisSliders(false);
 
         switchTopoSelectPanels(topoComboBox.getSelectedItem().equals(CUSTOM));
-        
+        topoCreated=true;
         return panel;
 
     }
@@ -1748,12 +1757,14 @@ JButton mapFileButton = new JButton("map");
         heightValueField.setText(window.getSelectedHeightValue());
         colorValueField.setText(window.getSelectedColorValue());
         
+        if(topoCreated){
         minTopoField.setText(window.getSelectedMinTopoValue());
         maxTopoField.setText(window.getSelectedMaxTopoValue());
         topoValField.setText(window.getStatMean());
         if(allAxesOn()){
         	topoValLabel.setText(CV);
         }else topoValLabel.setText(ACV);
+        }
     }
     private static final String CV = "Color Value: ";
     private static final String ACV ="Avg Color Value: ";

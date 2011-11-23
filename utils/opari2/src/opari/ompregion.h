@@ -148,6 +148,8 @@ public:
     bool       has_reduction;
     /** has schedule clause */
     bool       has_schedule;
+    /** argument of schedule clause */
+    string     arg_schedule;
     /** has collapse clause */
     bool       has_collapse;
     /** has ordered clause */

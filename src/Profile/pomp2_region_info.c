@@ -715,7 +715,18 @@ static void
 assignScheduleType( CTCData*    obj,
                     const char* value )
 {
-    obj->mRegionInfo->mScheduleType = getScheduleTypeFromString( value );
+    char* token = NULL;
+
+    token = strtok( value, "," );
+
+    if ( token )
+    {
+        obj->mRegionInfo->mScheduleType = getScheduleTypeFromString( token );
+    }
+    else
+    {
+        obj->mRegionInfo->mScheduleType = getScheduleTypeFromString( value );
+    }
     if ( obj->mRegionInfo->mScheduleType ==  POMP2_No_schedule )
     {
         ctcError( obj, CTC_ERROR_Unknown_schedule_type, value );
@@ -788,8 +799,12 @@ checkConsistency( CTCData* obj )
         ctcError( obj, CTC_ERROR_Inconsistent_line_numbers, 0 );
         return;
     }
-
-    if ( obj->mRegionInfo->mStartLine2 > obj->mRegionInfo->mEndLine1 )
+/* A barrier, taskwait and flush does not have an end line number, since it
+ * is not associated to a region.*/
+    if ( obj->mRegionInfo->mStartLine2 > obj->mRegionInfo->mEndLine1 &&
+         obj->mRegionInfo->mRegionType != POMP2_Barrier &&
+         obj->mRegionInfo->mRegionType != POMP2_Taskwait &&
+         obj->mRegionInfo->mRegionType != POMP2_Flush )
     {
         ctcError( obj, CTC_ERROR_Inconsistent_line_numbers, 0 );
         return;
@@ -855,16 +870,15 @@ static int
 scheduleTypesMapCompare( const void* searchKey,
                          const void* mapElem );
 
-/* currently not used because opari does not provide this information yet */
+/* @brief Assigns a schedule type according to an entry in the ctc string */
 static POMP2_Schedule_type
 getScheduleTypeFromString( const char* key )
 {
-    ScheduleTypesMapValueType* mapElem = ( ScheduleTypesMapValueType* )bsearch(
-        key,
-        &scheduleTypesMap,
-        scheduleTypesMapSize,
-        sizeof( ScheduleTypesMapValueType ),
-        scheduleTypesMapCompare );
+    ScheduleTypesMapValueType* mapElem = ( ScheduleTypesMapValueType* )bsearch( key,
+                                                                                &scheduleTypesMap,
+                                                                                scheduleTypesMapSize,
+                                                                                sizeof( ScheduleTypesMapValueType ),
+                                                                                scheduleTypesMapCompare );
 
     if ( mapElem )
     {

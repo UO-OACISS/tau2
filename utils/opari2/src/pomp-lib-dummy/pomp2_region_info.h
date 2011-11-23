@@ -70,7 +70,8 @@ typedef enum /* POMP2_Region_type */
 } POMP2_Region_type;
 
 /** converts regionType into a string
- * @param regionType The regionType to be converted.*/
+ * @param regionType The regionType to be converted.
+ * @return string representation of the region type*/
 const char*
 pomp2RegionType2String( POMP2_Region_type regionType );
 
@@ -89,7 +90,8 @@ typedef enum
 } POMP2_Schedule_type;
 
 /** converts scheduleType into a string
- *  @param scheduleType The scheduleType to be converted.*/
+ *  @param scheduleType The scheduleType to be converted.
+ *  @return string representation of the scheduleType*/
 const char*
 pomp2ScheduleType2String( POMP2_Schedule_type scheduleType );
 
