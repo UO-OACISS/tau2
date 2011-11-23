@@ -779,8 +779,19 @@ extern "C" int& tau_totalnodes(int set_or_get, int value)
 
 
 #if (defined(TAU_MPI) || defined(TAU_SHMEM))
+
+
+
+#ifdef TAU_SYSTEMWIDE_TRACK_MSG_SIZE_AS_CTX_EVENT 
+#define TAU_GEN_EVENT(e, msg) TauContextUserEvent* e () { \
+        static TauContextUserEvent ce(msg); return &ce; }
+#undef TAU_EVENT
+#define TAU_EVENT(event,data) Tau_context_userevent(event, data);
+#else
 #define TAU_GEN_EVENT(e, msg) TauUserEvent* e () { \
 	static TauUserEvent u(msg); return &u; } 
+#endif /* TAU_SYSTEMWIDE_TRACK_MSG_SIZE_AS_CTX_EVENT */
+
 
 #define TAU_GEN_CONTEXT_EVENT(e, msg) TauContextUserEvent* e () { \
 	static TauContextUserEvent ce(msg); return &ce; } 
