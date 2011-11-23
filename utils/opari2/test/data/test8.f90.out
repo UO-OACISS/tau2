@@ -43,9 +43,9 @@ program test8
   write(*,*) "parallel"
 
       call POMP2_Do_enter(pomp2_region_2, &
-        "112*regionType=do*sscl=test8.f90:30:30*escl=test8.f90:0:0*hasReduction=1*hasSchedule=1*hasCollapse=1*hasOrdered=1**" )
+        "121*regionType=do*sscl=test8.f90:30:30*escl=test8.f90:0:0*hasReduction=1*scheduleType=dynamic,5*hasCollapse=1*hasOrdered=1**" )
 #line 30 "test8.f90"
-  !$omp do reduction(+:k) schedule(dynamic) collapse(1)
+  !$omp do reduction(+:k) schedule(dynamic,5) collapse(1)
   do i=1,4
      write(*,*) "do",i
      k = k + 1
@@ -106,7 +106,8 @@ program test8
       call POMP2_Parallel_begin(pomp2_region_4)
 #line 47 "test8.f90"
       pomp_if = .true.
-      call POMP2_Untied_task_create_begin(pomp2_region_5, pomp2_old_task, pomp_if, &
+      call POMP2_Untied_task_create_begin(pomp2_region_5, pomp2_old_task, 
+     &pomp_if, &
         "70*regionType=task*sscl=test8.f90:47:47*escl=test8.f90:0:0*hasUntied=1**" )
 #line 47 "test8.f90"
   !$omp task untied if(pomp_if) firstprivate(pomp2_old_task)&
@@ -132,7 +133,7 @@ program test8
       pomp_if = ( .true. )
       call POMP2_Parallel_fork(pomp2_region_6,&
       pomp_if, pomp_num_threads, pomp2_old_task, &
-        "144*regionType=paralleldo*sscl=test8.f90:52:52*escl=test8.f90:0:0*hasIf=1*hasNumThreads=1*hasReduction=1*hasSchedule=1*hasCollapse=1*hasOrdered=1**" )
+        "150*regionType=paralleldo*sscl=test8.f90:52:52*escl=test8.f90:0:0*hasIf=1*hasNumThreads=1*hasReduction=1*scheduleType=static*hasCollapse=1*hasOrdered=1**" )
 #line 52 "test8.f90"
   !$omp parallel                              reduction(+:k)                                     &
   !$omp firstprivate(pomp2_old_task) private(pomp2_new_task)&
@@ -140,15 +141,15 @@ program test8
   !$omp shared(/cb000/)
       call POMP2_Parallel_begin(pomp2_region_6)
       call POMP2_Do_enter(pomp2_region_6, &
-        "144*regionType=paralleldo*sscl=test8.f90:52:52*escl=test8.f90:0:0*hasIf=1*hasNumThreads=1*hasReduction=1*hasSchedule=1*hasCollapse=1*hasOrdered=1**" )
+        "150*regionType=paralleldo*sscl=test8.f90:52:52*escl=test8.f90:0:0*hasIf=1*hasNumThreads=1*hasReduction=1*scheduleType=static*hasCollapse=1*hasOrdered=1**" )
 #line 52 "test8.f90"
   !$omp          do                                          schedule(static) collapse(1) ordered
   do i=1,4
-      call POMP2_Ordered_begin(pomp2_region_7, &
+      call POMP2_Ordered_enter(pomp2_region_7, &
         "61*regionType=ordered*sscl=test8.f90:54:54*escl=test8.f90:0:0**" )
 #line 54 "test8.f90"
      !$omp ordered
-      call POMP2_Ordered_enter(pomp2_region_7)
+      call POMP2_Ordered_begin(pomp2_region_7)
 #line 55 "test8.f90"
      write(*,*) "do",i
       call POMP2_Ordered_end(pomp2_region_7)
@@ -245,7 +246,7 @@ end program test8
          call POMP2_Assign_handle( pomp2_region_1, &
         "103*regionType=parallel*sscl=test8.f90:27:27*escl=test8.f90:44:44*hasIf=1*hasNumThreads=1*hasReduction=1**" )
          call POMP2_Assign_handle( pomp2_region_2, &
-        "114*regionType=do*sscl=test8.f90:30:30*escl=test8.f90:35:35*hasReduction=1*hasSchedule=1*hasCollapse=1*hasOrdered=1**" )
+        "123*regionType=do*sscl=test8.f90:30:30*escl=test8.f90:35:35*hasReduction=1*scheduleType=dynamic,5*hasCollapse=1*hasOrdered=1**" )
          call POMP2_Assign_handle( pomp2_region_3, &
         "78*regionType=sections*sscl=test8.f90:37:37*escl=test8.f90:42:42*numSections=2**" )
          call POMP2_Assign_handle( pomp2_region_4, &
@@ -253,7 +254,7 @@ end program test8
          call POMP2_Assign_handle( pomp2_region_5, &
         "72*regionType=task*sscl=test8.f90:47:47*escl=test8.f90:49:49*hasUntied=1**" )
          call POMP2_Assign_handle( pomp2_region_6, &
-        "146*regionType=paralleldo*sscl=test8.f90:52:52*escl=test8.f90:59:59*hasIf=1*hasNumThreads=1*hasReduction=1*hasSchedule=1*hasCollapse=1*hasOrdered=1**" )
+        "152*regionType=paralleldo*sscl=test8.f90:52:52*escl=test8.f90:59:59*hasIf=1*hasNumThreads=1*hasReduction=1*scheduleType=static*hasCollapse=1*hasOrdered=1**" )
          call POMP2_Assign_handle( pomp2_region_7, &
         "63*regionType=ordered*sscl=test8.f90:54:54*escl=test8.f90:56:56**" )
          call POMP2_Assign_handle( pomp2_region_8, &

@@ -80,12 +80,12 @@
 #line 41 "test2.f"
 !$omp do ordered
       do i=1,4
-      call POMP2_Ordered_begin(pomp2_region_6,
+      call POMP2_Ordered_enter(pomp2_region_6,
      &"58*regionType=ordered*sscl=test2.f:43:43*escl=test2.f:0:0**"//
      &"" )
 #line 43 "test2.f"
 !$omp ordered
-      call POMP2_Ordered_enter(pomp2_region_6)
+      call POMP2_Ordered_begin(pomp2_region_6)
 #line 44 "test2.f"
          write(*,*) "do",i
       call POMP2_Ordered_end(pomp2_region_6)
@@ -234,7 +234,8 @@
        call POMP2_Parallel_begin(pomp2_region_14)
 #line 83 "test2.f"
       pomp_if = .true.
-      call POMP2_Task_create_begin(pomp2_region_15, pomp2_old_task, pomp_if,
+      call POMP2_Task_create_begin(pomp2_region_15, pomp2_old_task, 
+     &pomp_if,
      &"55*regionType=task*sscl=test2.f:83:83*escl=test2.f:0:0**" )
 #line 83 "test2.f"
 !$omp task

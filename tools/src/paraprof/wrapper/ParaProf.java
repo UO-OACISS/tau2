@@ -54,7 +54,7 @@ public class ParaProf implements ActionListener {
 	}
     }
 
-    private final static String VERSION = "Wed Nov  9 12:38:10 PST 2011";
+    private final static String VERSION = "Wed Nov 23 11:35:38 PST 2011";
 
     public static int defaultNumberPrecision = 6;
 
@@ -467,6 +467,11 @@ public class ParaProf implements ActionListener {
 	sourceFiles = new File[sourceFilenames.length];
 	for (int i = 0; i < sourceFilenames.length; i++) {
 	    sourceFiles[i] = new File(sourceFilenames[i]);
+//	    if(!sourceFiles[i].exists()){
+//	    	sourceFiles= new File[0];
+//	    	fileTypeString="profiles";
+//	    	break;
+//	    }
 	}
 
 	if (fixNames != null)
