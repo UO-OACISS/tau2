@@ -347,7 +347,7 @@ TAU_F77 = $(TAU_F90)
 #KTAU_MERGE#KTAU_MERGE_O      	= KtauFuncInfo.o KtauMergeInfo.o ktau_syscall.o  #ENDIF#
 #KTAU_SHCTR#KTAU_SHCTR_O      	= KtauCounters.o  #ENDIF#
 #MPITRACE#TRACEOPT	 = -DTAU_MPITRACE -DTRACING_ON #ENDIF#
-#PTHREAD_AVAILABLE#THR_O       = PthreadLayer.o        #ENDIF#
+#PTHREAD_AVAILABLE#THR_O       = PthreadLayer.o TauWrapSyscalls.o        #ENDIF#
 #TAU_PAPI_THREADS#THR_O       = PapiThreadLayer.o        #ENDIF#
 #TAU_SPROC#THR_O       	       = SprocLayer.o        #ENDIF#
 #JAVA#THR_O       	       = JavaThreadLayer.o     #ENDIF#
@@ -885,6 +885,13 @@ EBS_CLOCK_RES=
 #TAU_EBS_UNWIND#  TAU_LINKER_OPT17 = -L$(EBS_UNWIND_LIB) $(EBS_UNWIND_LIB_FLAG)#ENDIF#
 
 ##############################################
+# KTAU-NG!!
+##############################################
+#KTAU_NG#PROFILEOPT85 = -DKTAU_NG -DTAU_TID_AS_NODE#ENDIF#
+
+
+
+##############################################
 
 PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT5)  $(PROFILEOPT6)  $(PROFILEOPT7)  $(PROFILEOPT8)  \
@@ -907,7 +914,7 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 	      $(PROFILEOPT73) $(PROFILEOPT74) $(PROFILEOPT75) $(PROFILEOPT76) \
 	      $(PROFILEOPT77) $(PROFILEOPT78) $(PROFILEOPT79) $(PROFILEOPT80) \
               $(PROFILEOPT81) $(PROFILEOPT82) $(PROFILEOPT83) $(PROFILEOPT84) \
-              $(PROFILEOPT85) \
+              $(PROFILEOPT85) $(PROFILEOPTS86)\
               $(TRACEOPT)
 
 

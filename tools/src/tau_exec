@@ -271,7 +271,6 @@ if [ $track_cuda = "true" ] ; then
 		fi
 fi
 if [ $track_cupti = "true" ] ; then
-		echo "test -f $BASEDIR/lib/$theBinding/libTAU-CUpti.so -a -f $BASEDIR/lib/$theBinding/libTAU-CudaQP.so"
 		cupti_exists=`test -f $BASEDIR/lib/$theBinding/libTAU-CUpti.so -a -f $BASEDIR/lib/$theBinding/libTAU-CudaQP.so`
 		if [ $? != 0 ] ; then
 			#tell the user to add cupti to bindings list.

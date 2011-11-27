@@ -204,6 +204,7 @@ int kill(pid_t pid, int sig) {
 static int (*_pthread_create) (pthread_t* thread, const pthread_attr_t* attr, 
 			       void *(*start_routine)(void*), void* arg) = NULL;
 static void (*_pthread_exit) (void *value_ptr) = NULL;
+static int (*_pthread_join) (pthread_t thread, void ** retval) = NULL;
 extern void *tau_pthread_function (void *arg);
 typedef struct tau_pthread_pack {
   void *(*start_routine) (void *);
@@ -229,11 +230,23 @@ extern int pthread_create (pthread_t* thread, const pthread_attr_t* attr,
   return _pthread_create(thread, (pthread_attr_t*) attr, tau_pthread_function, (void*)pack);
 }
 
+extern int pthread_join (pthread_t thread, void **retval) {
+  int ret;
+  if (_pthread_join == NULL) {
+    _pthread_join = (int (*) (pthread_t, void **)) dlsym(RTLD_NEXT, "pthread_join"); 
+  }
+   TAU_PROFILE_TIMER(timer, "pthread_join()", "", TAU_DEFAULT);
+   TAU_PROFILE_START(timer);
+   ret= _pthread_join(thread, retval); 
+   TAU_PROFILE_STOP(timer);
+   return ret;
+}
 extern void pthread_exit (void *value_ptr) {
 
   if (_pthread_exit == NULL) {
     _pthread_exit = (void (*) (void *value_ptr)) dlsym(RTLD_NEXT, "pthread_exit");
   }
+
   TAU_PROFILE_EXIT("pthread_exit");
   _pthread_exit(value_ptr);
 }

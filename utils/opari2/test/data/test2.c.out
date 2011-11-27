@@ -79,10 +79,10 @@ int main() {
 #line 48 "test2.c"
    #pragma omp for ordered nowait
    for(i=0; i<4; ++i) {
-    { POMP2_Ordered_begin( &pomp2_region_6, "57*regionType=ordered*sscl=test2.c:50:50*escl=test2.c:0:0**" );
+    { POMP2_Ordered_enter( &pomp2_region_6, "57*regionType=ordered*sscl=test2.c:50:50*escl=test2.c:0:0**" );
 #line 50 "test2.c"
-     #pragma omp ordered POMP2_DLIST_00006
-{   POMP2_Ordered_enter( &pomp2_region_6 );
+     #pragma omp ordered
+{   POMP2_Ordered_begin( &pomp2_region_6 );
 #line 51 "test2.c"
      {
        printf("for %d\n", i);
