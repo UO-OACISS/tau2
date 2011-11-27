@@ -1,0 +1,6 @@
+SHELL=/bin/bash
+MAILTO=c.roessel@fz-juelich.de
+
+0 * * * * go_chroot -c deb32 -C /home/roessel/bitten/bin/start_bitten_slaves_32bit.sh
+0 * * * * go_chroot -c deb32 -C /home/roessel/bitten/bin/start_bitten_slaves_32bit_mpi.sh
+@reboot go_chroot -c deb32 -C /opt/packages/impi/4.0.0.028/bin/mpd &

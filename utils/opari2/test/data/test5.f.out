@@ -34,26 +34,26 @@
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_1,
      &pomp_if, pomp_num_threads, pomp2_old_task,
-     &"75*regionType=paralleldo*sscl=test5.f:29:37*escl=test5.f:0:"//
-     &"0*hasSchedule=1**" )
+     &"82*regionType=paralleldo*sscl=test5.f:29:37*escl=test5.f:0:"//
+     &"0*scheduleType=dynamic**" )
 #line 29 "test5.f"
-!$omp  parallel
-!$omp+ private(i,j)
+!$omp parallel
+!$omp+private(i,j)
 !$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
 !$omp& if(pomp_if) num_threads(pomp_num_threads) 
 !$omp& shared(/cb000/)
        call POMP2_Parallel_begin(pomp2_region_1)
       call POMP2_Do_enter(pomp2_region_1,
-     &"75*regionType=paralleldo*sscl=test5.f:29:37*escl=test5.f:0:"//
-     &"0*hasSchedule=1**" )
+     &"82*regionType=paralleldo*sscl=test5.f:29:37*escl=test5.f:0:"//
+     &"0*scheduleType=dynamic**" )
 #line 29 "test5.f"
-!$omp  do
-!$omp+ lastprivate(k)
-!$omp+ lastprivate
-!$omp+ (
-!$omp+   l
-!$omp+ ) schedule(dynamic
-!$omp+ )
+!$omp do
+!$omp+lastprivate(k)
+!$omp+lastprivate
+!$omp+(
+!$omp+  l
+!$omp+) schedule(dynamic
+!$omp+)
       do i=1,4
          write(*,*) "parallel do ", i
          k=k+i
@@ -159,8 +159,8 @@
       subroutine POMP2_Init_regions_000()
          include 'test5.f.opari.inc'
          call POMP2_Assign_handle( pomp2_region_1, 
-     &"77*regionType=paralleldo*sscl=test5.f:29:37*escl=test5.f:42"//
-     &":42*hasSchedule=1**" )
+     &"84*regionType=paralleldo*sscl=test5.f:29:37*escl=test5.f:42"//
+     &":42*scheduleType=dynamic**" )
          call POMP2_Assign_handle( pomp2_region_2, 
      &"108*regionType=parallelsections*sscl=test5.f:45:46*escl=tes"//
      &"t5.f:53:53*hasIf=1*hasNumThreads=1*hasReduction=1**" )

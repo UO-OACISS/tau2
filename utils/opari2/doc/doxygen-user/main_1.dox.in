@@ -1,0 +1,47 @@
+/**
+@mainpage Opari2
+\manonly
+@page Opari2
+\endmanonly
+
+\e Opari2 is a tool to automatically instrument C, C++ and Fortran
+source code files in which OpenMP is used. Function calls to a \link
+pomp2_lib.h POMP2 API \endlink are inserted around OpenMP
+directives. By implementing this API, detailed measurements regarding
+the runtime behavior of an OpenMP application can be made. A
+conforming POMP2 implementation needs to implement all POMP2
+functions, see pomp2_lib.h for a list of those.
+
+OpenMP 3.0 introduced tasking to OpenMP. To support this feature the
+POMP2 adapter needs to do some bookkeeping in regard to specific task
+IDs. The pomp2_lib.c provided with this package includes the necessary
+code so it is strongly advised to use it as a basis for writing an
+adapter to your own tool.
+
+A detailed description of the first Opari version has been published by Mohr 
+et al. in "Design and prototype of a performance tool interface for OpenMP" 
+(Journal of supercomputing, 23, 2002).
+
+\section INSTALLATION INSTALLATION
+
+\e Opari2 was developed with Autotools. After downloading and
+unpacking, change into your build directory and perform the following steps:
+
+-# ./configure \n
+            [--prefix=<\e installation \e directory>] \n
+            [--with-compiler-suite=<\e gcc|ibm|intel|pathscale|pgi|studio>]
+-# make
+-# make install
+
+See the file INSTALL for further information.
+
+\section USAGE USAGE 
+
+To create an instrumented version of an OpenMP application, each file
+of interest is transformed by the OPARI2 tool. The application is then
+linked against the POMP2 runtime measurement library and optionally to
+a special initialization file (see section \ref LINKING and \ref
+SUMMARY for further details).
+
+A call to Opari2 has the following syntax:
+\verbatim

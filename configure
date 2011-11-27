@@ -730,6 +730,7 @@ ibmxlc=no
 ibmxlc_r=no 
 fortran_compiler=no
 ktau=no
+ktau_ng=no
 ktau_merge=no
 ktau_shctr=no
 ktauinc=
@@ -912,11 +913,16 @@ for arg in "$@"; do
     shift
     ;;
 
-
   -ktau)
       ktau=yes
     shift
     ;;
+
+#voorhees
+  -ktau-ng)
+     ktau_ng=yes
+   shift
+   ;;
 
   -ktau_merge)
       ktau_merge=no
@@ -966,6 +972,7 @@ for arg in "$@"; do
     fi
     shift
     ;;
+
 
   -mon-mpi)
     mon_mpi=yes
@@ -5971,6 +5978,11 @@ fi
 if [ $ktau = yes ] ; then
     fixmakeargs="$fixmakeargs KTAU ktauinc=$ktauinc ktauincuser=$ktauincuser ktaulib=$ktaulib ktausym=$ktausym"
     tauoptions="${tauoptions}-ktau"
+fi
+
+if [ $ktau_ng = yes ] ; then
+    fixmakeargs="$fixmakeargs KTAU_NG"
+    tauoptions="${tauoptions}-ktau-ng"
 fi
 
 if [ $ktau_merge = yes ] ; then

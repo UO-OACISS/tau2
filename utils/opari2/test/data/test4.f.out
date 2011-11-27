@@ -103,7 +103,8 @@
 #line 47 "test4.f"
 
       pomp_if = .true.
-      call POMP2_Task_create_begin(pomp2_region_6, pomp2_old_task, pomp_if,
+      call POMP2_Task_create_begin(pomp2_region_6, pomp2_old_task, 
+     &pomp_if,
      &"67*regionType=task*sscl=test4.f:48:48*escl=test4.f:0:0*hasU"//
      &"ntied=1**" )
 #line 48 "test4.f"

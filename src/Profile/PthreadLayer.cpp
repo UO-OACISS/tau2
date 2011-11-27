@@ -233,13 +233,17 @@ typedef struct tau_pthread_pack {
 } tau_pthread_pack;
 
 extern "C" void *tau_pthread_function (void *arg) {
+  void *ret; 
   tau_pthread_pack *pack = (tau_pthread_pack*)arg;
   if (pack->id != -1) {
     TAU_PROFILE_SET_THREAD(pack->id);
   } else {
     TAU_REGISTER_THREAD();
   }
-  return pack->start_routine(pack->arg);
+  TAU_START(".TAU application  ");
+  ret = pack->start_routine(pack->arg);
+  TAU_STOP(".TAU application  ");
+  return ret; 
 }
 
 extern "C" int tau_pthread_create (pthread_t * threadp,
