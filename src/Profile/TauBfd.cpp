@@ -151,7 +151,27 @@ static void Tau_bfd_internal_updateProcSelfMaps(TauBfdUnit *unit);
 static void Tau_bfd_internal_updateBGPMaps(TauBfdUnit *unit);
 
 // BFD units (e.g. executables and their dynamic libraries)
-vector<TauBfdUnit*> bfdUnits;
+//vector<TauBfdUnit*> bfdUnits;
+//////////////////////////////////////////////////////////////////////
+// Instead of using a global var., use static inside a function  to
+// ensure that non-local static variables are initialised before being
+// used (Ref: Scott Meyers, Item 47 Eff. C++).
+//////////////////////////////////////////////////////////////////////
+std::vector<TauBfdUnit*>& ThebfdUnits(void)
+{ // FunctionDB contains pointers to each FunctionInfo static object
+
+  // we now use the above FIvector, which subclasses vector
+  //static vector<FunctionInfo*> FunctionDB;
+  static std::vector<TauBfdUnit*> internal_bfd_units;
+
+  static int flag = 1;
+  if (flag) {
+    flag = 0;
+  }
+
+  return internal_bfd_units;
+}
+
 
 //
 // Main interface functions
@@ -167,8 +187,8 @@ void Tau_bfd_initializeBfdIfNecessary() {
 
 tau_bfd_handle_t Tau_bfd_registerUnit()
 {
-	tau_bfd_handle_t ret = bfdUnits.size();
-	bfdUnits.push_back(new TauBfdUnit);
+	tau_bfd_handle_t ret = ThebfdUnits().size();
+	ThebfdUnits().push_back(new TauBfdUnit);
 
 	TAU_VERBOSE("Tau_bfd_registerUnit: Unit %d registered and initialized\n", ret);
 
@@ -184,12 +204,13 @@ bool Tau_bfd_checkHandle(tau_bfd_handle_t handle)
     TAU_VERBOSE("TauBfd: Warning - attempt to use uninitialized BFD handle\n");
     return false;
   }
-  if (handle >= bfdUnits.size()) {
+  if (handle >= ThebfdUnits().size()) {
     TAU_VERBOSE("TauBfd: Warning - invalid BFD unit handle %d, max value %d\n",
-    		handle, bfdUnits.size());
+    		handle, ThebfdUnits().size());
     return false;
   }
   //  TAU_VERBOSE("TauBfd: Valid BFD Handle\n");
+  if (handle < 0) return false; 
   return true;
 }
 
@@ -369,7 +390,7 @@ void Tau_bfd_updateAddressMaps(tau_bfd_handle_t handle)
 	}
 
 	TAU_VERBOSE("Tau_bfd_updateAddressMaps: Updating object maps\n");
-	TauBfdUnit * unit = bfdUnits[handle];
+	TauBfdUnit * unit = ThebfdUnits()[handle];
 
 	unit->ClearMaps();
 	unit->ClearModules();
@@ -390,7 +411,7 @@ vector<TauBfdAddrMap*> const &
 Tau_bfd_getAddressMaps(tau_bfd_handle_t handle)
 {
 	Tau_bfd_checkHandle(handle);
-	return bfdUnits[handle]->addressMaps;
+	return ThebfdUnits()[handle]->addressMaps;
 }
 
 tau_bfd_module_handle_t Tau_bfd_getModuleHandle(tau_bfd_handle_t handle,
@@ -399,7 +420,7 @@ tau_bfd_module_handle_t Tau_bfd_getModuleHandle(tau_bfd_handle_t handle,
 	if (!Tau_bfd_checkHandle(handle)) {
 		return TAU_BFD_INVALID_MODULE;
 	}
-	TauBfdUnit *unit = bfdUnits[handle];
+	TauBfdUnit *unit = ThebfdUnits()[handle];
 
 	int matchingIdx = Tau_bfd_internal_getModuleIndex(unit, probeAddr);
 	if (matchingIdx != -1) {
@@ -415,7 +436,7 @@ Tau_bfd_getAddressMap(tau_bfd_handle_t handle, unsigned long probe_addr)
 		return NULL;
 	}
 
-	TauBfdUnit *unit = bfdUnits[handle];
+	TauBfdUnit *unit = ThebfdUnits()[handle];
 	int matchingIdx = Tau_bfd_internal_getModuleIndex(unit, probe_addr);
 	if (matchingIdx == -1) {
 		return NULL;
@@ -446,7 +467,7 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle,
 		return false;
 	}
 
-	TauBfdUnit * unit = bfdUnits[handle];
+	TauBfdUnit * unit = ThebfdUnits()[handle];
 	TauBfdModule * module;
 	unsigned long addr0;
 	unsigned long addr1;
@@ -567,7 +588,7 @@ int Tau_bfd_processBfdExecInfo(tau_bfd_handle_t handle, TauBfdIterFn fn)
 	if (!Tau_bfd_checkHandle(handle)) {
 		return TAU_BFD_SYMTAB_LOAD_FAILED;
 	}
-	TauBfdUnit * unit = bfdUnits[handle];
+	TauBfdUnit * unit = ThebfdUnits()[handle];
 
 	char const * execName = unit->executablePath;
 	TauBfdModule * module = unit->executableModule;
@@ -600,7 +621,7 @@ int Tau_bfd_processBfdModuleInfo(tau_bfd_handle_t handle,
 	if (!Tau_bfd_checkHandle(handle)) {
 		return TAU_BFD_SYMTAB_LOAD_FAILED;
 	}
-	TauBfdUnit * unit = bfdUnits[handle];
+	TauBfdUnit * unit = ThebfdUnits()[handle];
 
 	unsigned int moduleIdx = (unsigned int)moduleHandle;
 	TauBfdModule * module = Tau_bfd_internal_getModuleFromIdx(unit, moduleIdx);
@@ -821,7 +842,7 @@ int Tau_bfd_processBfdModuleInfo(tau_bfd_handle_t handle,
 	if (!Tau_bfd_checkHandle(handle)) {
 		return TAU_BFD_SYMTAB_LOAD_FAILED;
 	}
-	TauBfdUnit *unit = bfdUnits[handle];
+	TauBfdUnit *unit = ThebfdUnits()[handle];
 
 	int moduleIndex = (int) moduleHandle;
 	char const * moduleName = unit->addressMaps[moduleIndex]->name;
@@ -892,7 +913,7 @@ int Tau_bfd_processBfdExecInfo(tau_bfd_handle_t handle, int maxProbe,
 	if (!Tau_bfd_checkHandle(handle)) {
 		return TAU_BFD_SYMTAB_LOAD_FAILED;
 	}
-	TauBfdUnit *unit = bfdUnits[handle];
+	TauBfdUnit *unit = ThebfdUnits()[handle];
 	char const * execName = unit->executablePath;
 	unsigned long offset = 0;
 	TauBfdModule *module = unit->executableModule;
@@ -960,7 +981,7 @@ int Tau_bfd_getAddressMap(tau_bfd_handle_t handle, unsigned long probe_addr,
 		return 0;
 	}
 
-	TauBfdUnit * unit = bfdUnits[handle];
+	TauBfdUnit * unit = ThebfdUnits()[handle];
 	int matchingIdx = Tau_bfd_internal_getModuleIndex(unit, probe_addr);
 	if (matchingIdx == -1) {
 		return TAU_BFD_NULL_MODULE_HANDLE;

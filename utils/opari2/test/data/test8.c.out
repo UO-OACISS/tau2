@@ -48,9 +48,9 @@ main()
     {
         printf( "parallel\n" );
 
-    { POMP2_For_enter( &pomp2_region_2, "109*regionType=for*sscl=test8.c:40:40*escl=test8.c:0:0*hasReduction=1*hasSchedule=1*hasCollapse=1*hasOrdered=1**" );
+    { POMP2_For_enter( &pomp2_region_2, "118*regionType=for*sscl=test8.c:40:40*escl=test8.c:0:0*hasReduction=1*scheduleType=dynamic,5*hasCollapse=1*hasOrdered=1**" );
 #line 40 "test8.c"
-#pragma omp for reduction(+:k) schedule(dynamic) collapse(1) nowait
+#pragma omp for reduction(+:k) schedule(dynamic,5) collapse(1) nowait
         for ( i = 0; i < 4; ++i )
         {
             printf( "for %d\n", i );
@@ -147,10 +147,10 @@ main()
 #pragma omp          for                                        schedule(static) collapse(1) ordered nowait
 for ( i = 0; i < 4; ++i )
 {
-    { POMP2_Ordered_begin( &pomp2_region_7, "57*regionType=ordered*sscl=test8.c:69:69*escl=test8.c:0:0**" );
+    { POMP2_Ordered_enter( &pomp2_region_7, "57*regionType=ordered*sscl=test8.c:69:69*escl=test8.c:0:0**" );
 #line 69 "test8.c"
-     #pragma omp ordered POMP2_DLIST_00007
-{   POMP2_Ordered_enter( &pomp2_region_7 );
+     #pragma omp ordered
+{   POMP2_Ordered_begin( &pomp2_region_7 );
 #line 70 "test8.c"
     printf( "for %d\n", i );
   POMP2_Ordered_end( &pomp2_region_7 ); }

@@ -1,0 +1,115 @@
+#include "pomp_lib.h"
+
+
+extern struct ompregdescr omp_rd_1;
+extern struct ompregdescr omp_rd_2;
+extern struct ompregdescr omp_rd_3;
+extern struct ompregdescr omp_rd_4;
+extern struct ompregdescr omp_rd_5;
+extern struct ompregdescr omp_rd_6;
+extern struct ompregdescr omp_rd_7;
+extern struct ompregdescr omp_rd_8;
+extern struct ompregdescr omp_rd_9;
+extern struct ompregdescr omp_rd_10;
+extern struct ompregdescr omp_rd_11;
+extern struct ompregdescr omp_rd_12;
+extern struct ompregdescr omp_rd_13;
+extern struct ompregdescr omp_rd_14;
+extern struct ompregdescr omp_rd_15;
+extern struct ompregdescr omp_rd_16;
+extern struct ompregdescr omp_rd_17;
+extern struct ompregdescr omp_rd_18;
+extern struct ompregdescr omp_rd_19;
+extern struct ompregdescr omp_rd_20;
+extern struct ompregdescr omp_rd_21;
+extern struct ompregdescr omp_rd_22;
+extern struct ompregdescr omp_rd_23;
+extern struct ompregdescr omp_rd_24;
+extern struct ompregdescr omp_rd_25;
+extern struct ompregdescr omp_rd_26;
+extern struct ompregdescr omp_rd_27;
+extern struct ompregdescr omp_rd_28;
+extern struct ompregdescr omp_rd_29;
+extern struct ompregdescr omp_rd_30;
+extern struct ompregdescr omp_rd_31;
+extern struct ompregdescr omp_rd_32;
+extern struct ompregdescr omp_rd_33;
+extern struct ompregdescr omp_rd_34;
+extern struct ompregdescr omp_rd_35;
+extern struct ompregdescr omp_rd_36;
+extern struct ompregdescr omp_rd_37;
+extern struct ompregdescr omp_rd_38;
+extern struct ompregdescr omp_rd_39;
+extern struct ompregdescr omp_rd_40;
+extern struct ompregdescr omp_rd_41;
+extern struct ompregdescr omp_rd_42;
+extern struct ompregdescr omp_rd_43;
+extern struct ompregdescr omp_rd_44;
+extern struct ompregdescr omp_rd_45;
+extern struct ompregdescr omp_rd_46;
+extern struct ompregdescr omp_rd_47;
+extern struct ompregdescr omp_rd_48;
+extern struct ompregdescr omp_rd_49;
+extern struct ompregdescr omp_rd_50;
+extern struct ompregdescr omp_rd_51;
+extern struct ompregdescr omp_rd_52;
+extern struct ompregdescr omp_rd_53;
+
+int POMP_MAX_ID = 54;
+
+struct ompregdescr* pomp_rd_table[54] = {
+  0,
+  &omp_rd_1,
+  &omp_rd_2,
+  &omp_rd_3,
+  &omp_rd_4,
+  &omp_rd_5,
+  &omp_rd_6,
+  &omp_rd_7,
+  &omp_rd_8,
+  &omp_rd_9,
+  &omp_rd_10,
+  &omp_rd_11,
+  &omp_rd_12,
+  &omp_rd_13,
+  &omp_rd_14,
+  &omp_rd_15,
+  &omp_rd_16,
+  &omp_rd_17,
+  &omp_rd_18,
+  &omp_rd_19,
+  &omp_rd_20,
+  &omp_rd_21,
+  &omp_rd_22,
+  &omp_rd_23,
+  &omp_rd_24,
+  &omp_rd_25,
+  &omp_rd_26,
+  &omp_rd_27,
+  &omp_rd_28,
+  &omp_rd_29,
+  &omp_rd_30,
+  &omp_rd_31,
+  &omp_rd_32,
+  &omp_rd_33,
+  &omp_rd_34,
+  &omp_rd_35,
+  &omp_rd_36,
+  &omp_rd_37,
+  &omp_rd_38,
+  &omp_rd_39,
+  &omp_rd_40,
+  &omp_rd_41,
+  &omp_rd_42,
+  &omp_rd_43,
+  &omp_rd_44,
+  &omp_rd_45,
+  &omp_rd_46,
+  &omp_rd_47,
+  &omp_rd_48,
+  &omp_rd_49,
+  &omp_rd_50,
+  &omp_rd_51,
+  &omp_rd_52,
+  &omp_rd_53,
+};
