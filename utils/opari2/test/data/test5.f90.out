@@ -34,7 +34,7 @@ program test5
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_1,&
       pomp_if, pomp_num_threads, pomp2_old_task, &
-        "78*regionType=paralleldo*sscl=test5.f90:29:37*escl=test5.f90:0:0*hasSchedule=1**" )
+        "82*regionType=paralleldo*sscl=test5.f90:29:37*escl=test5.f90:0:0*scheduleType=dynamic & **" )
 #line 29 "test5.f90"
   !$omp   parallel            &            
   !$omp & private(i,j)                     &
@@ -43,7 +43,7 @@ program test5
   !$omp shared(/cb000/)
       call POMP2_Parallel_begin(pomp2_region_1)
       call POMP2_Do_enter(pomp2_region_1, &
-        "78*regionType=paralleldo*sscl=test5.f90:29:37*escl=test5.f90:0:0*hasSchedule=1**" )
+        "82*regionType=paralleldo*sscl=test5.f90:29:37*escl=test5.f90:0:0*scheduleType=dynamic & **" )
 #line 29 "test5.f90"
   !$omp   do                  &        
   !$omp & lastprivate(k)      &           
@@ -151,7 +151,7 @@ end program test5
       subroutine POMP2_Init_regions_000()
          include 'test5.f90.opari.inc'
          call POMP2_Assign_handle( pomp2_region_1, &
-        "80*regionType=paralleldo*sscl=test5.f90:29:37*escl=test5.f90:42:42*hasSchedule=1**" )
+        "84*regionType=paralleldo*sscl=test5.f90:29:37*escl=test5.f90:42:42*scheduleType=dynamic & **" )
          call POMP2_Assign_handle( pomp2_region_2, &
         "111*regionType=parallelsections*sscl=test5.f90:45:46*escl=test5.f90:53:53*hasIf=1*hasNumThreads=1*hasReduction=1**" )
          call POMP2_Assign_handle( pomp2_region_3, &

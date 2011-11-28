@@ -181,15 +181,17 @@ OMPragma::find_reduction()
  *         schedule clause is deleted in the pragma string and
  *         stored in the arg_schedule member variable.*/
 bool
-OMPragma::find_schedule()
+OMPragma::find_schedule( string* reg_arg_schedule )
 {
     unsigned          line = 0;
     string::size_type pos  = 0;
 
     if (  find_word( "schedule", line, pos ) )
     {
-        pos          = lines[ line ].find( '(', pos );
-        arg_schedule = find_arguments( line, pos, false );
+        pos = lines[ line ].find( '(', pos );
+        pos++;
+        arg_schedule      = find_arguments( line, pos, false );
+        *reg_arg_schedule = arg_schedule;
 
         return true;
     }

@@ -779,8 +779,19 @@ extern "C" int& tau_totalnodes(int set_or_get, int value)
 
 
 #if (defined(TAU_MPI) || defined(TAU_SHMEM))
+
+
+
+#ifdef TAU_SYSTEMWIDE_TRACK_MSG_SIZE_AS_CTX_EVENT 
+#define TAU_GEN_EVENT(e, msg) TauContextUserEvent* e () { \
+        static TauContextUserEvent ce(msg); return &ce; }
+#undef TAU_EVENT
+#define TAU_EVENT(event,data) Tau_context_userevent(event, data);
+#else
 #define TAU_GEN_EVENT(e, msg) TauUserEvent* e () { \
 	static TauUserEvent u(msg); return &u; } 
+#endif /* TAU_SYSTEMWIDE_TRACK_MSG_SIZE_AS_CTX_EVENT */
+
 
 #define TAU_GEN_CONTEXT_EVENT(e, msg) TauContextUserEvent* e () { \
 	static TauContextUserEvent ce(msg); return &ce; } 
@@ -805,16 +816,21 @@ TauContextUserEvent**& TheMsgVolContextEvent() {
 }
 
 int register_events(void) {
+  static int flag = 0; 
   
-  if (TauEnv_get_comm_matrix()) {
-    char str[256];
-    int i;
+  if (flag == 0) {
+
+    if (TauEnv_get_comm_matrix()) {
+      char str[256];
+      int i;
       
-    TheMsgVolContextEvent() = (TauContextUserEvent **) malloc(sizeof(TauContextUserEvent *)*tau_totalnodes(0,0));
-    for (i =0; i < tau_totalnodes(0,0); i++) {
-      sprintf(str, "Message size sent to node %d", i);
-      TheMsgVolContextEvent()[i] = (TauContextUserEvent *) new TauContextUserEvent((const char *)str);
+      TheMsgVolContextEvent() = (TauContextUserEvent **) malloc(sizeof(TauContextUserEvent *)*tau_totalnodes(0,0));
+      for (i =0; i < tau_totalnodes(0,0); i++) {
+        sprintf(str, "Message size sent to node %d", i);
+        TheMsgVolContextEvent()[i] = (TauContextUserEvent *) new TauContextUserEvent((const char *)str);
+      }
     }
+    flag = 1;
   }
   return 0;
 }
@@ -894,6 +910,34 @@ extern "C" void Tau_trace_sendmsg_remote(int type, int destination, int length, 
     if (destination >= 0) {
       TauTraceSendMsgRemote(type, destination, length, remoteid);
     }
+  }
+  if (TauEnv_get_comm_matrix())  {
+  static int initialize = register_events();
+#ifdef DEBUG_PROF
+  printf("Inside Tau_trace_sendmsg_remote length = %d, totalnodes=%d\n", length, tau_totalnodes(0,0));
+#endif /* DEBUG_PROF */
+
+#ifdef TAU_PROFILEPARAM
+#ifndef TAU_DISABLE_PROFILEPARAM_IN_MPI
+  TAU_PROFILE_PARAM1L(length, "message size");
+#endif /* TAU_DISABLE_PROFILEPARAM_IN_MPI */
+#endif  /* TAU_PROFILEPARAM */
+
+  //TAU_EVENT(TheSendEvent(), length); 
+
+  if (TauEnv_get_comm_matrix()) {
+    if (destination >= tau_totalnodes(0,0)) {
+#ifdef TAU_SHMEM
+      tau_totalnodes(1,shmem_n_pes());
+      register_events();
+#else /* TAU_SHMEM */
+      fprintf(stderr, "TAU Error: Comm Matrix destination %d exceeds node count %d. Was MPI_Init/shmem_init wrapper never called? Please disable TAU_COMM_MATRIX or add calls to the init function in your source code.\n", destination, tau_totalnodes(0,0));
+      exit(-1);
+#endif /* TAU_SHMEM */
+    }
+    TheMsgVolContextEvent()[remoteid]->TriggerEvent(length, RtsLayer::myThread());
+  }
+
   }
 }
 

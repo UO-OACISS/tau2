@@ -10861,17 +10861,12 @@ lt_prog_compiler_static=
 	lt_prog_compiler_static='-qstaticlink'
 	;;
       *)
-	case `$CC -V 2>&1` in
-	*Sun\ Ceres\ Fortran* | *Sun*Fortran*\ [1-7].* | *Sun*Fortran*\ 8.[0-3]*)
+	case `$CC -V 2>&1 | sed 5q` in
+	*Sun\ F* | *Sun*Fortran*)
 	  # Sun Fortran 8.3 passes all unrecognized flags to the linker
 	  lt_prog_compiler_pic='-KPIC'
 	  lt_prog_compiler_static='-Bstatic'
 	  lt_prog_compiler_wl=''
-	  ;;
-	*Sun\ F* | *Sun*Fortran*)
-	  lt_prog_compiler_pic='-KPIC'
-	  lt_prog_compiler_static='-Bstatic'
-	  lt_prog_compiler_wl='-Qoption ld '
 	  ;;
 	*Sun\ C*)
 	  # Sun C 5.9
@@ -11455,10 +11450,6 @@ _LT_EOF
 	tmp_sharedflag='-shared'
 	case $cc_basename,$host_cpu in
         pgcc*)				# Portland Group C compiler
-	  whole_archive_flag_spec='${wl}--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` ${wl}--no-whole-archive'
-	  tmp_addflag=' $pic_flag'
-	  ;;
-        pgCC*)				# Portland Group C++ compiler
 	  whole_archive_flag_spec='${wl}--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` ${wl}--no-whole-archive'
 	  tmp_addflag=' $pic_flag'
 	  ;;
@@ -15180,7 +15171,7 @@ fi
 	      ;;
 	    esac
 
-	    hardcode_libdir_flag_spec_CXX='${wl}-rpath ${wl}$libdir'
+	    hardcode_libdir_flag_spec_CXX='${wl}--rpath ${wl}$libdir'
 	    export_dynamic_flag_spec_CXX='${wl}--export-dynamic'
 	    whole_archive_flag_spec_CXX='${wl}--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` ${wl}--no-whole-archive'
             ;;
@@ -15216,7 +15207,7 @@ fi
 	    fi
 	    ;;
 	  *)
-	    case `$CC -V 2>&1` in
+	    case `$CC -V 2>&1 | sed 5q` in
 	    *Sun\ C*)
 	      # Sun C++ 5.9
 	      no_undefined_flag_CXX=' -zdefs'
@@ -15237,38 +15228,6 @@ fi
 	      # in the archive.
 	      old_archive_cmds_CXX='$CC -xar -o $oldlib $oldobjs'
 	      ;;
-            *pgCC* | *pgcpp*)
-              # Portland Group C++ compiler
-              case `$CC -V` in
-              *pgCC\ [1-5].* | *pgcpp\ [1-5].*)
-                prelink_cmds_CXX='tpldir=Template.dir~
-                  rm -rf $tpldir~
-                  $CC --prelink_objects --instantiation_dir $tpldir $objs $libobjs $compile_deplibs~
-                  compile_command="$compile_command `find $tpldir -name \*.o | sort | $NL2SP`"'
-                old_archive_cmds_CXX='tpldir=Template.dir~
-                  rm -rf $tpldir~
-                  $CC --prelink_objects --instantiation_dir $tpldir $oldobjs$old_deplibs~
-                  $AR $AR_FLAGS $oldlib$oldobjs$old_deplibs `find $tpldir -name \*.o | sort | $NL2SP`~
-                  $RANLIB $oldlib'
-                archive_cmds_CXX='tpldir=Template.dir~
-                  rm -rf $tpldir~
-                  $CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
-                  $CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
-                archive_expsym_cmds_CXX='tpldir=Template.dir~
-                  rm -rf $tpldir~
-                  $CC --prelink_objects --instantiation_dir $tpldir $predep_objects $libobjs $deplibs $convenience $postdep_objects~
-                  $CC -shared $pic_flag $predep_objects $libobjs $deplibs `find $tpldir -name \*.o | sort | $NL2SP` $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
-                ;;
-              *) # Version 6 and above use weak symbols
-                archive_cmds_CXX='$CC -shared $pic_flag $predep_objects $libobjs $deplibs $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname -o $lib'
-                archive_expsym_cmds_CXX='$CC -shared $pic_flag $predep_objects $libobjs $deplibs $postdep_objects $compiler_flags ${wl}-soname ${wl}$soname ${wl}-retain-symbols-file ${wl}$export_symbols -o $lib'
-                ;;
-              esac
-
-              hardcode_libdir_flag_spec_CXX='${wl}-rpath ${wl}$libdir'
-              export_dynamic_flag_spec_CXX='${wl}--export-dynamic'
-              whole_archive_flag_spec_CXX='${wl}--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` ${wl}--no-whole-archive'
-              ;;
 	    esac
 	    ;;
 	esac
@@ -16031,18 +15990,12 @@ lt_prog_compiler_static_CXX=
 	    lt_prog_compiler_static_CXX='-qstaticlink'
 	    ;;
 	  *)
-	    case `$CC -V 2>&1` in
+	    case `$CC -V 2>&1 | sed 5q` in
 	    *Sun\ C*)
 	      # Sun C++ 5.9
 	      lt_prog_compiler_pic_CXX='-KPIC'
 	      lt_prog_compiler_static_CXX='-Bstatic'
 	      lt_prog_compiler_wl_CXX='-Qoption ld '
-	      ;;
-	    *Portland\ Group*)
-              # Portland Group C++ compiler
-	      lt_prog_compiler_wl_CXX='-Wl,'
-	      lt_prog_compiler_pic_CXX='-fpic'
-	      lt_prog_compiler_static_CXX='-Bstatic'
 	      ;;
 	    esac
 	    ;;
@@ -17710,17 +17663,12 @@ lt_prog_compiler_static_F77=
 	lt_prog_compiler_static_F77='-qstaticlink'
 	;;
       *)
-	case `$CC -V 2>&1` in
-	*Sun\ Ceres\ Fortran* | *Sun*Fortran*\ [1-7].* | *Sun*Fortran*\ 8.[0-3]*)
+	case `$CC -V 2>&1 | sed 5q` in
+	*Sun\ F* | *Sun*Fortran*)
 	  # Sun Fortran 8.3 passes all unrecognized flags to the linker
 	  lt_prog_compiler_pic_F77='-KPIC'
 	  lt_prog_compiler_static_F77='-Bstatic'
 	  lt_prog_compiler_wl_F77=''
-	  ;;
-	*Sun\ F* | *Sun*Fortran*)
-	  lt_prog_compiler_pic_F77='-KPIC'
-	  lt_prog_compiler_static_F77='-Bstatic'
-	  lt_prog_compiler_wl_F77='-Qoption ld '
 	  ;;
 	*Sun\ C*)
 	  # Sun C 5.9
@@ -18289,10 +18237,6 @@ _LT_EOF
 	tmp_sharedflag='-shared'
 	case $cc_basename,$host_cpu in
         pgcc*)				# Portland Group C compiler
-	  whole_archive_flag_spec_F77='${wl}--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` ${wl}--no-whole-archive'
-	  tmp_addflag=' $pic_flag'
-	  ;;
-        pgCC*)				# Portland Group C++ compiler
 	  whole_archive_flag_spec_F77='${wl}--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` ${wl}--no-whole-archive'
 	  tmp_addflag=' $pic_flag'
 	  ;;
@@ -20589,17 +20533,12 @@ lt_prog_compiler_static_FC=
 	lt_prog_compiler_static_FC='-qstaticlink'
 	;;
       *)
-	case `$CC -V 2>&1` in
-	*Sun\ Ceres\ Fortran* | *Sun*Fortran*\ [1-7].* | *Sun*Fortran*\ 8.[0-3]*)
+	case `$CC -V 2>&1 | sed 5q` in
+	*Sun\ F* | *Sun*Fortran*)
 	  # Sun Fortran 8.3 passes all unrecognized flags to the linker
 	  lt_prog_compiler_pic_FC='-KPIC'
 	  lt_prog_compiler_static_FC='-Bstatic'
 	  lt_prog_compiler_wl_FC=''
-	  ;;
-	*Sun\ F* | *Sun*Fortran*)
-	  lt_prog_compiler_pic_FC='-KPIC'
-	  lt_prog_compiler_static_FC='-Bstatic'
-	  lt_prog_compiler_wl_FC='-Qoption ld '
 	  ;;
 	*Sun\ C*)
 	  # Sun C 5.9
@@ -21168,10 +21107,6 @@ _LT_EOF
 	tmp_sharedflag='-shared'
 	case $cc_basename,$host_cpu in
         pgcc*)				# Portland Group C compiler
-	  whole_archive_flag_spec_FC='${wl}--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` ${wl}--no-whole-archive'
-	  tmp_addflag=' $pic_flag'
-	  ;;
-        pgCC*)				# Portland Group C++ compiler
 	  whole_archive_flag_spec_FC='${wl}--whole-archive`for conv in $convenience\"\"; do test  -n \"$conv\" && new_convenience=\"$new_convenience,$conv\"; done; func_echo_all \"$new_convenience\"` ${wl}--no-whole-archive'
 	  tmp_addflag=' $pic_flag'
 	  ;;

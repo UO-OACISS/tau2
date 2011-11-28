@@ -1,0 +1,141 @@
+#!/bin/sh
+
+# NAME
+#     pre-commit
+#
+# DESCRIPTION
+#     Subversion runs this script prior to a commit. If this script exits
+#     with 0, the commit is performed, otherwise rejected.
+#     Currently this script checks if
+#     - a non-empty log message is provided
+#     - source files comply to our coding standard, i.e. if they have
+#       been beautified before the commit.
+#
+# ARGUMENTS
+#     Subversion passes the following arguments to this script:
+#       $1 REPOS-PATH   (the path to this repository)
+#       $2 TXN-NAME     (the name of the transcation about to be committed)
+#      ***  NOTE: THE HOOK PROGRAM MUST NOT MODIFY THE TXN, EXCEPT  ***
+#      ***  FOR REVISION PROPERTIES (like svn:log or svn:author).   ***
+#
+# CONFIGURATION
+#     As subversion runs with an empty environment, you need to specify
+#     absolute paths to applications awk, ..., tail. See below.
+#
+# SEE ALSO
+#     pre-commit.tmpl in the same directory
+#
+# AUTHORS
+#     Christian Roessel <c.roessel@fz-juelich.de>
+#     Markus Geimer <m.geimer@fz.juelich.de>
+
+REPOS="$1"
+TXN="$2"
+
+AWK=/usr/bin/awk
+BEAUTIFY=/usr/local/bin/uncrustify
+COMPARE=/usr/bin/cmp
+DIFF=/usr/bin/diff
+GREP=/usr/bin/grep
+SVNLOOK=/usr/bin/svnlook
+TAIL=/usr/bin/tail
+
+#### Clean-up handler: begin ###################################################
+# Start all temporary filenames with '/tmp/$$.', so that they get removed 
+# at exit.
+
+cleanup()
+{
+    rm -f /tmp/$$.* 2>/dev/null
+}
+
+trap 'cleanup' EXIT
+#### Clean-up handler: end #####################################################
+
+
+#### Log message check: begin ##################################################
+# Log message must contain some text
+$SVNLOOK log -t "$TXN" "$REPOS" | grep "[a-zA-Z0-9]" > /dev/null
+if [ $? -ne 0 ]; then
+    echo "Commit rejected: Please provide a meaningful commit message and try again." 1>&2
+    exit 1
+fi
+#### Log message check: end ####################################################
+
+
+#### Coding standard validation: begin #########################################
+# General idea:
+# For all commit-candidates:
+#     Compare the commit-candidate with a beautified version of the
+#     commit-candidate. If they differ, reject the commit.
+
+COMMIT_CANDIDATES=/tmp/$$.commit-canditades
+
+# Retrieve each commit-candidate from the repository and compare it against
+# the beautified version.
+$SVNLOOK changed $REPOS --transaction $TXN > $COMMIT_CANDIDATES
+
+if [ -s $COMMIT_CANDIDATES ]; then
+
+    # temporary files
+    CANDIDATE=/tmp/$$.unbeautified
+    CANDIDATE_BEAUTIFIED=/tmp/$$.beautified
+    BEAUTIFY_CONFIG=/tmp/$$.beautify.cfg
+    CANDIDATES_DIFFER=/tmp/$$.canditades_differ
+
+    # Retrieve the beautifier config file from the common repository and store it
+    # in a temporary file.
+    $SVNLOOK cat /svn-base/common-root trunk/beautifier/beautify.cfg > $BEAUTIFY_CONFIG
+    if [ $? -ne 0 ]; then
+        echo "Commit rejected: Can't find file beautify.cfg in common repository." 1>&2
+        echo "                 Please report this to the administrator." 1>&2
+        exit 1
+    fi
+
+    old_IFS="$IFS"
+    IFS=
+    while read CANDIDATE_LINE; do
+
+        # The path begins with the 5th character, therefore remove the first 4
+        cand="${CANDIDATE_LINE#????}"
+
+        # Only check common source code files
+        case "$cand" in
+        (*.c | *.h | *.cpp | *.hpp) : accept ;;
+        (*) continue ;;
+        esac
+
+        SUFFIX=${cand##*.}
+        $SVNLOOK cat $REPOS $cand --transaction $TXN > $CANDIDATE.$SUFFIX
+        if [ ! -s $CANDIDATE.$SUFFIX ]; then # file is zero size
+            rm $CANDIDATE.$SUFFIX
+            continue
+        fi
+
+        # Generate expected result
+        $BEAUTIFY -c $BEAUTIFY_CONFIG -f $CANDIDATE.$SUFFIX -o $CANDIDATE_BEAUTIFIED.$SUFFIX 1>&2
+        if [ $? -ne 0 ]; then
+            echo "Commit rejected: Can't run \"beautify\"." 1>&2
+            echo "                 Please report this to the administrator." 1>&2
+            exit 1
+        fi
+
+        # Compare expected result with commit canditate
+        if ! $DIFF -u --label "unbeautified/$cand" --label "beautified/$cand" $CANDIDATE.$SUFFIX $CANDIDATE_BEAUTIFIED.$SUFFIX 1>&2; then
+            $BEAUTIFY --version 1>&2
+            echo "Commit rejected: File \"$cand\" does not comply to the coding standard." 1>&2
+            echo "$cand" >> $CANDIDATES_DIFFER
+        fi
+    done < $COMMIT_CANDIDATES
+    IFS="$old_IFS"
+
+    if [ -s $CANDIDATES_DIFFER ]; then
+        echo "Commit rejected: Please run \"make beautify\" and try again!" 1>&2
+        exit 1
+    fi
+fi
+#### Coding standard validation: end ###########################################
+
+
+# All checks passed, so allow the commit.
+exit 0
