@@ -209,10 +209,10 @@ doxygen-user-pdf:
 
 doxygen-user-install:
 	if test -f "$(DOC_SRC_DIR)/html.tar.gz"; then                            \
-            $(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc;                  \
+            $(MKDIR_P) $(DESTDIR)$(pkgdatadir)/doc;                  \
             $(INSTALL_DATA) $(DOC_SRC_DIR)/html.tar.gz                           \
-                            $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/html.tar.gz; \
-	    cd $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc;                          \
+                            $(DESTDIR)$(pkgdatadir)/doc/html.tar.gz; \
+	    cd $(DESTDIR)$(pkgdatadir)/doc;                          \
             tar xzvf html.tar.gz;                                                \
 	    rm -f html.tar.gz;                                                   \
 	fi
@@ -221,20 +221,20 @@ doxygen-user-install:
             dirs=`find . -type d`;                                                              \
             cd -;                                                                               \
             for i in $$dirs; do                                                                 \
-                $(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/$$i;                         \
+                $(MKDIR_P) $(DESTDIR)$(pkgdatadir)/doc/$$i;                         \
             done;                                                                               \
 	    cd $(DOC_SRC_DIR);                                                                  \
             files=`find . -type f`;                                                             \
             cd -;                                                                               \
             for i in $$files; do                                                                \
-                $(INSTALL_DATA) $(DOC_SRC_DIR)/$$i $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/$$i; \
+                $(INSTALL_DATA) $(DOC_SRC_DIR)/$$i $(DESTDIR)$(pkgdatadir)/doc/$$i; \
             done;                                                                               \
-            rm -rf $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/doxygen-user;                        \
-            rm -rf $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/doxygen-dev;                         \
+            rm -rf $(DESTDIR)$(pkgdatadir)/doc/doxygen-user;                        \
+            rm -rf $(DESTDIR)$(pkgdatadir)/doc/doxygen-dev;                         \
         fi
 
 doxygen-user-uninstall:
-	rm -rf $(DESTDIR)$(datadir)/@PACKAGE_NAME@
+	rm -rf $(DESTDIR)$(pkgdatadir)/doc
 
 endif # SVN_CONTROLLED 
                                                                              ##

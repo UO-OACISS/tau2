@@ -33,7 +33,7 @@ int j;
 int
 main()
 {
-    int i;
+    int i = 5;
     int k = 0;
 
 {
@@ -50,7 +50,7 @@ main()
 
     { POMP2_For_enter( &pomp2_region_2, "118*regionType=for*sscl=test8.c:40:40*escl=test8.c:0:0*hasReduction=1*scheduleType=dynamic,5*hasCollapse=1*hasOrdered=1**" );
 #line 40 "test8.c"
-#pragma omp for reduction(+:k) schedule(dynamic,5) collapse(1) nowait
+#pragma omp for reduction(+:k) schedule(dynamic, 5 ) collapse(1) nowait
         for ( i = 0; i < 4; ++i )
         {
             printf( "for %d\n", i );
@@ -136,15 +136,15 @@ main()
 
 {
   int pomp_num_threads = 4;
-  int pomp_if = (int)( true );
+  int pomp_if = (int)( 1 );
   POMP2_Task_handle pomp2_old_task;
-    POMP2_Parallel_fork(&pomp2_region_6, pomp_if, pomp_num_threads, &pomp2_old_task, "113*regionType=parallelfor*sscl=test8.c:66:66*escl=test8.c:0:0*hasIf=1*hasNumThreads=1*hasReduction=1*hasOrdered=1**" );
+    POMP2_Parallel_fork(&pomp2_region_6, pomp_if, pomp_num_threads, &pomp2_old_task, "155*regionType=parallelfor*sscl=test8.c:66:66*escl=test8.c:0:0*hasIf=1*hasNumThreads=1*hasReduction=1*scheduleType=static,chunkif*hasCollapse=1*hasOrdered=1**" );
 #line 66 "test8.c"
-#pragma omp parallel                             reduction(+:k)                                      POMP2_DLIST_00006 firstprivate(pomp2_old_task) if(pomp_if) num_threads(pomp_num_threads)
+#pragma omp parallel                     reduction(+:k)                                                    POMP2_DLIST_00006 firstprivate(pomp2_old_task) if(pomp_if) num_threads(pomp_num_threads)
 {   POMP2_Parallel_begin( &pomp2_region_6 );
-    { POMP2_For_enter( &pomp2_region_6, "113*regionType=parallelfor*sscl=test8.c:66:66*escl=test8.c:0:0*hasIf=1*hasNumThreads=1*hasReduction=1*hasOrdered=1**" );
+    { POMP2_For_enter( &pomp2_region_6, "155*regionType=parallelfor*sscl=test8.c:66:66*escl=test8.c:0:0*hasIf=1*hasNumThreads=1*hasReduction=1*scheduleType=static,chunkif*hasCollapse=1*hasOrdered=1**" );
 #line 66 "test8.c"
-#pragma omp          for                                        schedule(static) collapse(1) ordered nowait
+#pragma omp          for                                schedule(static,chunkif) collapse(1) ordered                         nowait
 for ( i = 0; i < 4; ++i )
 {
     { POMP2_Ordered_enter( &pomp2_region_7, "57*regionType=ordered*sscl=test8.c:69:69*escl=test8.c:0:0**" );
@@ -172,15 +172,15 @@ for ( i = 0; i < 4; ++i )
 
 {
   int pomp_num_threads = 4;
-  int pomp_if = (int)( true );
+  int pomp_if = (int)( (i+k)>5 );
   POMP2_Task_handle pomp2_old_task;
     POMP2_Parallel_fork(&pomp2_region_8, pomp_if, pomp_num_threads, &pomp2_old_task, "105*regionType=parallelsections*sscl=test8.c:75:75*escl=test8.c:0:0*hasIf=1*hasNumThreads=1*hasReduction=1**" );
 #line 75 "test8.c"
-#pragma omp parallel                                  reduction(+:k) POMP2_DLIST_00008 firstprivate(pomp2_old_task) if(pomp_if) num_threads(pomp_num_threads)
+#pragma omp parallel                                     reduction(+:k) POMP2_DLIST_00008 firstprivate(pomp2_old_task) if(pomp_if) num_threads(pomp_num_threads)
 {   POMP2_Parallel_begin( &pomp2_region_8 );
     { POMP2_Sections_enter( &pomp2_region_8, "105*regionType=parallelsections*sscl=test8.c:75:75*escl=test8.c:0:0*hasIf=1*hasNumThreads=1*hasReduction=1**" );
 #line 75 "test8.c"
-#pragma omp          sections                                        nowait
+#pragma omp          sections                                                             nowait
 {
 #line 77 "test8.c"
      #pragma omp section

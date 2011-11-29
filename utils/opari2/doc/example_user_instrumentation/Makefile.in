@@ -9,7 +9,7 @@ OPENMP_F_FLAG=@OPENMP_FFLAGS@
 ######################################################
 #  OPARI & DUMMY LIBRARY                             #
 ######################################################
-POMP_INC=-I@abs_srcdir@/../../src/pomp-lib-dummy 
+POMP_INC=-I@abs_srcdir@/../../include/opari2
 POMPLIBDIR=@abs_builddir@/../../build-frontend/.libs/ 
 POMPLIB=-L${POMPLIBDIR} -lpomp 
 

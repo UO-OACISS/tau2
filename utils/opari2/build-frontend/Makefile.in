@@ -155,7 +155,7 @@ LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
 libpomp_la_LIBADD =
 am__libpomp_la_SOURCES_DIST =  \
 	$(SRC_ROOT)src/pomp-lib-dummy/pomp2_lib.c \
-	$(SRC_ROOT)src/pomp-lib-dummy/pomp2_lib.h \
+	$(PUBLIC_INC_SRC)pomp2_lib.h \
 	$(SRC_ROOT)src/pomp-lib-dummy/pomp2_region_info.c \
 	$(SRC_ROOT)src/pomp-lib-dummy/pomp2_region_info.h \
 	$(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper.c \
@@ -191,7 +191,7 @@ am_opari2_OBJECTS = opari2-handler.$(OBJEXT) opari2-ompragma.$(OBJEXT) \
 	opari2-process_omp.$(OBJEXT)
 opari2_OBJECTS = $(am_opari2_OBJECTS)
 opari2_LDADD = $(LDADD)
-am_opari2_config_OBJECTS = opari2_config-opari2_config.$(OBJEXT)
+am_opari2_config_OBJECTS = opari2_config.$(OBJEXT)
 opari2_config_OBJECTS = $(am_opari2_config_OBJECTS)
 opari2_config_LDADD = $(LDADD)
 SCRIPTS = $(dist_bin_SCRIPTS)
@@ -434,7 +434,7 @@ PUBLIC_INC_DIR = $(INC_ROOT)include
 LIB_ROOT = 
 lib_LTLIBRARIES = 
 noinst_LTLIBRARIES = $(am__append_1)
-nobase_include_HEADERS = 
+nobase_include_HEADERS = $(PUBLIC_INC_SRC)pomp2_lib.h
 BUILT_SOURCES = create-config-tool-headers opari2_usage.h \
 	$(am__append_3)
 CLEANFILES = opari2_usage.h $(am__append_4)
@@ -471,14 +471,8 @@ opari2_CPPFLAGS = $(AM_CPPFLAGS) -DPACKAGE_VERSION="\"@PACKAGE_VERSION@\""
 opari2_config_SOURCES = $(SRC_ROOT)src/opari/opari2_config.cc \
                          $(SRC_ROOT)src/opari/opari2_config.h
 
-opari2_config_CPPFLAGS = $(AM_CPPFLAGS) \
-                         -DNM="\"@NM@\"" \
-                         -DAWK="\"@AWK@\"" \
-                         -DINIT_SCRIPT="\"./pomp2_parse_init_regions.awk\"" \
-                         -DEGREP="\"@EGREP@\""
-
 @OPENMP_SUPPORTED_TRUE@libpomp_la_SOURCES = $(SRC_ROOT)src/pomp-lib-dummy/pomp2_lib.c \
-@OPENMP_SUPPORTED_TRUE@	$(SRC_ROOT)src/pomp-lib-dummy/pomp2_lib.h \
+@OPENMP_SUPPORTED_TRUE@	$(PUBLIC_INC_SRC)pomp2_lib.h \
 @OPENMP_SUPPORTED_TRUE@	$(SRC_ROOT)src/pomp-lib-dummy/pomp2_region_info.c \
 @OPENMP_SUPPORTED_TRUE@	$(SRC_ROOT)src/pomp-lib-dummy/pomp2_region_info.h \
 @OPENMP_SUPPORTED_TRUE@	$(am__append_2)
@@ -489,6 +483,7 @@ opari2_config_CPPFLAGS = $(AM_CPPFLAGS) \
 
 # CFLAGS are sufficient here, CPPFLAGS would cause duplication
 @OPENMP_SUPPORTED_TRUE@libpomp_la_CFLAGS = $(AM_CFLAGS) $(OPENMP_CFLAGS)
+@OPENMP_SUPPORTED_TRUE@libpomp_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(PUBLIC_INC_DIR)
 @OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@getfname_SOURCES = \
 @OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@    $(SRC_ROOT)src/pomp-lib-dummy/foos.c     \
 @OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@    $(SRC_ROOT)src/pomp-lib-dummy/getfname.f
@@ -738,7 +733,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/opari2-process_c.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/opari2-process_f.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/opari2-process_omp.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/opari2_config-opari2_config.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/opari2_config.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -765,36 +760,36 @@ distclean-compile:
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
 
 libpomp_la-pomp2_lib.lo: $(SRC_ROOT)src/pomp-lib-dummy/pomp2_lib.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpomp_la_CFLAGS) $(CFLAGS) -MT libpomp_la-pomp2_lib.lo -MD -MP -MF $(DEPDIR)/libpomp_la-pomp2_lib.Tpo -c -o libpomp_la-pomp2_lib.lo `test -f '$(SRC_ROOT)src/pomp-lib-dummy/pomp2_lib.c' || echo '$(srcdir)/'`$(SRC_ROOT)src/pomp-lib-dummy/pomp2_lib.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpomp_la_CPPFLAGS) $(CPPFLAGS) $(libpomp_la_CFLAGS) $(CFLAGS) -MT libpomp_la-pomp2_lib.lo -MD -MP -MF $(DEPDIR)/libpomp_la-pomp2_lib.Tpo -c -o libpomp_la-pomp2_lib.lo `test -f '$(SRC_ROOT)src/pomp-lib-dummy/pomp2_lib.c' || echo '$(srcdir)/'`$(SRC_ROOT)src/pomp-lib-dummy/pomp2_lib.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libpomp_la-pomp2_lib.Tpo $(DEPDIR)/libpomp_la-pomp2_lib.Plo
 @am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(SRC_ROOT)src/pomp-lib-dummy/pomp2_lib.c' object='libpomp_la-pomp2_lib.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpomp_la_CFLAGS) $(CFLAGS) -c -o libpomp_la-pomp2_lib.lo `test -f '$(SRC_ROOT)src/pomp-lib-dummy/pomp2_lib.c' || echo '$(srcdir)/'`$(SRC_ROOT)src/pomp-lib-dummy/pomp2_lib.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpomp_la_CPPFLAGS) $(CPPFLAGS) $(libpomp_la_CFLAGS) $(CFLAGS) -c -o libpomp_la-pomp2_lib.lo `test -f '$(SRC_ROOT)src/pomp-lib-dummy/pomp2_lib.c' || echo '$(srcdir)/'`$(SRC_ROOT)src/pomp-lib-dummy/pomp2_lib.c
 
 libpomp_la-pomp2_region_info.lo: $(SRC_ROOT)src/pomp-lib-dummy/pomp2_region_info.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpomp_la_CFLAGS) $(CFLAGS) -MT libpomp_la-pomp2_region_info.lo -MD -MP -MF $(DEPDIR)/libpomp_la-pomp2_region_info.Tpo -c -o libpomp_la-pomp2_region_info.lo `test -f '$(SRC_ROOT)src/pomp-lib-dummy/pomp2_region_info.c' || echo '$(srcdir)/'`$(SRC_ROOT)src/pomp-lib-dummy/pomp2_region_info.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpomp_la_CPPFLAGS) $(CPPFLAGS) $(libpomp_la_CFLAGS) $(CFLAGS) -MT libpomp_la-pomp2_region_info.lo -MD -MP -MF $(DEPDIR)/libpomp_la-pomp2_region_info.Tpo -c -o libpomp_la-pomp2_region_info.lo `test -f '$(SRC_ROOT)src/pomp-lib-dummy/pomp2_region_info.c' || echo '$(srcdir)/'`$(SRC_ROOT)src/pomp-lib-dummy/pomp2_region_info.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libpomp_la-pomp2_region_info.Tpo $(DEPDIR)/libpomp_la-pomp2_region_info.Plo
 @am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(SRC_ROOT)src/pomp-lib-dummy/pomp2_region_info.c' object='libpomp_la-pomp2_region_info.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpomp_la_CFLAGS) $(CFLAGS) -c -o libpomp_la-pomp2_region_info.lo `test -f '$(SRC_ROOT)src/pomp-lib-dummy/pomp2_region_info.c' || echo '$(srcdir)/'`$(SRC_ROOT)src/pomp-lib-dummy/pomp2_region_info.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpomp_la_CPPFLAGS) $(CPPFLAGS) $(libpomp_la_CFLAGS) $(CFLAGS) -c -o libpomp_la-pomp2_region_info.lo `test -f '$(SRC_ROOT)src/pomp-lib-dummy/pomp2_region_info.c' || echo '$(srcdir)/'`$(SRC_ROOT)src/pomp-lib-dummy/pomp2_region_info.c
 
 libpomp_la-pomp2_fwrapper.lo: $(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpomp_la_CFLAGS) $(CFLAGS) -MT libpomp_la-pomp2_fwrapper.lo -MD -MP -MF $(DEPDIR)/libpomp_la-pomp2_fwrapper.Tpo -c -o libpomp_la-pomp2_fwrapper.lo `test -f '$(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper.c' || echo '$(srcdir)/'`$(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpomp_la_CPPFLAGS) $(CPPFLAGS) $(libpomp_la_CFLAGS) $(CFLAGS) -MT libpomp_la-pomp2_fwrapper.lo -MD -MP -MF $(DEPDIR)/libpomp_la-pomp2_fwrapper.Tpo -c -o libpomp_la-pomp2_fwrapper.lo `test -f '$(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper.c' || echo '$(srcdir)/'`$(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libpomp_la-pomp2_fwrapper.Tpo $(DEPDIR)/libpomp_la-pomp2_fwrapper.Plo
 @am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper.c' object='libpomp_la-pomp2_fwrapper.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpomp_la_CFLAGS) $(CFLAGS) -c -o libpomp_la-pomp2_fwrapper.lo `test -f '$(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper.c' || echo '$(srcdir)/'`$(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpomp_la_CPPFLAGS) $(CPPFLAGS) $(libpomp_la_CFLAGS) $(CFLAGS) -c -o libpomp_la-pomp2_fwrapper.lo `test -f '$(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper.c' || echo '$(srcdir)/'`$(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper.c
 
 libpomp_la-pomp2_fwrapper_base.lo: $(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper_base.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpomp_la_CFLAGS) $(CFLAGS) -MT libpomp_la-pomp2_fwrapper_base.lo -MD -MP -MF $(DEPDIR)/libpomp_la-pomp2_fwrapper_base.Tpo -c -o libpomp_la-pomp2_fwrapper_base.lo `test -f '$(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper_base.c' || echo '$(srcdir)/'`$(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper_base.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpomp_la_CPPFLAGS) $(CPPFLAGS) $(libpomp_la_CFLAGS) $(CFLAGS) -MT libpomp_la-pomp2_fwrapper_base.lo -MD -MP -MF $(DEPDIR)/libpomp_la-pomp2_fwrapper_base.Tpo -c -o libpomp_la-pomp2_fwrapper_base.lo `test -f '$(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper_base.c' || echo '$(srcdir)/'`$(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper_base.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libpomp_la-pomp2_fwrapper_base.Tpo $(DEPDIR)/libpomp_la-pomp2_fwrapper_base.Plo
 @am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper_base.c' object='libpomp_la-pomp2_fwrapper_base.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libpomp_la_CFLAGS) $(CFLAGS) -c -o libpomp_la-pomp2_fwrapper_base.lo `test -f '$(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper_base.c' || echo '$(srcdir)/'`$(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper_base.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libpomp_la_CPPFLAGS) $(CPPFLAGS) $(libpomp_la_CFLAGS) $(CFLAGS) -c -o libpomp_la-pomp2_fwrapper_base.lo `test -f '$(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper_base.c' || echo '$(srcdir)/'`$(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper_base.c
 
 foos.o: $(SRC_ROOT)src/pomp-lib-dummy/foos.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT foos.o -MD -MP -MF $(DEPDIR)/foos.Tpo -c -o foos.o `test -f '$(SRC_ROOT)src/pomp-lib-dummy/foos.c' || echo '$(srcdir)/'`$(SRC_ROOT)src/pomp-lib-dummy/foos.c
@@ -980,21 +975,21 @@ opari2-process_omp.obj: $(SRC_ROOT)src/opari/process_omp.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opari2_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o opari2-process_omp.obj `if test -f '$(SRC_ROOT)src/opari/process_omp.cc'; then $(CYGPATH_W) '$(SRC_ROOT)src/opari/process_omp.cc'; else $(CYGPATH_W) '$(srcdir)/$(SRC_ROOT)src/opari/process_omp.cc'; fi`
 
-opari2_config-opari2_config.o: $(SRC_ROOT)src/opari/opari2_config.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opari2_config_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT opari2_config-opari2_config.o -MD -MP -MF $(DEPDIR)/opari2_config-opari2_config.Tpo -c -o opari2_config-opari2_config.o `test -f '$(SRC_ROOT)src/opari/opari2_config.cc' || echo '$(srcdir)/'`$(SRC_ROOT)src/opari/opari2_config.cc
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/opari2_config-opari2_config.Tpo $(DEPDIR)/opari2_config-opari2_config.Po
+opari2_config.o: $(SRC_ROOT)src/opari/opari2_config.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT opari2_config.o -MD -MP -MF $(DEPDIR)/opari2_config.Tpo -c -o opari2_config.o `test -f '$(SRC_ROOT)src/opari/opari2_config.cc' || echo '$(srcdir)/'`$(SRC_ROOT)src/opari/opari2_config.cc
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/opari2_config.Tpo $(DEPDIR)/opari2_config.Po
 @am__fastdepCXX_FALSE@	$(AM_V_CXX) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$(SRC_ROOT)src/opari/opari2_config.cc' object='opari2_config-opari2_config.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$(SRC_ROOT)src/opari/opari2_config.cc' object='opari2_config.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opari2_config_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o opari2_config-opari2_config.o `test -f '$(SRC_ROOT)src/opari/opari2_config.cc' || echo '$(srcdir)/'`$(SRC_ROOT)src/opari/opari2_config.cc
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o opari2_config.o `test -f '$(SRC_ROOT)src/opari/opari2_config.cc' || echo '$(srcdir)/'`$(SRC_ROOT)src/opari/opari2_config.cc
 
-opari2_config-opari2_config.obj: $(SRC_ROOT)src/opari/opari2_config.cc
-@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opari2_config_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT opari2_config-opari2_config.obj -MD -MP -MF $(DEPDIR)/opari2_config-opari2_config.Tpo -c -o opari2_config-opari2_config.obj `if test -f '$(SRC_ROOT)src/opari/opari2_config.cc'; then $(CYGPATH_W) '$(SRC_ROOT)src/opari/opari2_config.cc'; else $(CYGPATH_W) '$(srcdir)/$(SRC_ROOT)src/opari/opari2_config.cc'; fi`
-@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/opari2_config-opari2_config.Tpo $(DEPDIR)/opari2_config-opari2_config.Po
+opari2_config.obj: $(SRC_ROOT)src/opari/opari2_config.cc
+@am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT opari2_config.obj -MD -MP -MF $(DEPDIR)/opari2_config.Tpo -c -o opari2_config.obj `if test -f '$(SRC_ROOT)src/opari/opari2_config.cc'; then $(CYGPATH_W) '$(SRC_ROOT)src/opari/opari2_config.cc'; else $(CYGPATH_W) '$(srcdir)/$(SRC_ROOT)src/opari/opari2_config.cc'; fi`
+@am__fastdepCXX_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/opari2_config.Tpo $(DEPDIR)/opari2_config.Po
 @am__fastdepCXX_FALSE@	$(AM_V_CXX) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$(SRC_ROOT)src/opari/opari2_config.cc' object='opari2_config-opari2_config.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$(SRC_ROOT)src/opari/opari2_config.cc' object='opari2_config.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(opari2_config_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o opari2_config-opari2_config.obj `if test -f '$(SRC_ROOT)src/opari/opari2_config.cc'; then $(CYGPATH_W) '$(SRC_ROOT)src/opari/opari2_config.cc'; else $(CYGPATH_W) '$(srcdir)/$(SRC_ROOT)src/opari/opari2_config.cc'; fi`
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o opari2_config.obj `if test -f '$(SRC_ROOT)src/opari/opari2_config.cc'; then $(CYGPATH_W) '$(SRC_ROOT)src/opari/opari2_config.cc'; else $(CYGPATH_W) '$(srcdir)/$(SRC_ROOT)src/opari/opari2_config.cc'; fi`
 
 .f.o:
 	$(AM_V_F77) @AM_BACKSLASH@
@@ -1495,9 +1490,7 @@ beautify:
 
 check-build: $(BUILT_SOURCES) all $(check_PROGRAMS) $(check_LTLIBRARIES)
 
-.PHONY: opari2_usage.h
-
-opari2_usage.h:
+opari2_usage.h: $(INC_ROOT)doc/doxygen-user/opari2_usage.dox.in
 	$(AWK) '{print "\"" $$0 "\\n\""}' $(INC_ROOT)doc/doxygen-user/opari2_usage.dox.in > opari2_usage.h
 
 @OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@pomp2_fwrapper_def.h: Makefile getfname$(EXEEXT)
@@ -1535,13 +1528,13 @@ $(builddir)/opari2_config.dat:
 @OPENMP_SUPPORTED_TRUE@install-example:
 @OPENMP_SUPPORTED_TRUE@	$(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example
 @OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_srcdir)/../doc/example/example.*            $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example/
-@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_srcdir)/../src/pomp-lib-dummy/pomp2_lib.h   $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example/
+@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_srcdir)/../include/opari2/pomp2_lib.h       $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example/
 @OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_builddir)/../doc/example/Makefile           $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example/
 @OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_builddir)/../build-frontend/.libs/libpomp.* $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example/
 @OPENMP_SUPPORTED_TRUE@	rm -f $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example/libpomp.la
 @OPENMP_SUPPORTED_TRUE@	$(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation
 @OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_srcdir)/../doc/example_user_instrumentation/example_user_instrumentation.*  $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/
-@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_srcdir)/../src/pomp-lib-dummy/pomp2_lib.h                                   $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/
+@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_srcdir)/../include/opari2/pomp2_lib.h                                       $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/
 @OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_builddir)/../doc/example_user_instrumentation/Makefile                      $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/
 @OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_builddir)/../build-frontend/.libs/libpomp.*                                 $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/
 @OPENMP_SUPPORTED_TRUE@	rm -f $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/libpomp.la

@@ -37,8 +37,8 @@
      &"82*regionType=paralleldo*sscl=test5.f:29:37*escl=test5.f:0:"//
      &"0*scheduleType=dynamic**" )
 #line 29 "test5.f"
-!$omp parallel
-!$omp+private(i,j)
+!$omp  parallel
+!$omp+ private(i,j)
 !$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
 !$omp& if(pomp_if) num_threads(pomp_num_threads) 
 !$omp& shared(/cb000/)
@@ -47,13 +47,13 @@
      &"82*regionType=paralleldo*sscl=test5.f:29:37*escl=test5.f:0:"//
      &"0*scheduleType=dynamic**" )
 #line 29 "test5.f"
-!$omp do
-!$omp+lastprivate(k)
-!$omp+lastprivate
-!$omp+(
-!$omp+  l
-!$omp+) schedule(dynamic
-!$omp+)
+!$omp  do
+!$omp+ lastprivate(k)
+!$omp+ lastprivate
+!$omp+ (
+!$omp+   l                 
+!$omp+ ) schedule(dynamic
+!$omp+ )
       do i=1,4
          write(*,*) "parallel do ", i
          k=k+i

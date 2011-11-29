@@ -10,7 +10,7 @@ PROJECT_NAME           = "Opari 2"
 
 INPUT                  = doc/doxygen-user \
                          @abs_top_srcdir@/doc/doxygen-user \
-                         @abs_top_srcdir@/src/pomp-lib-dummy/pomp2_lib.h \
+                         @abs_top_srcdir@/include/opari2 \
                          @abs_top_srcdir@/src/pomp-lib-dummy/pomp2_region_info.h
 
 # The HTML_COLORSTYLE_HUE tag controls the color of the HTML output. Doxygen

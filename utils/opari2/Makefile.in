@@ -44,10 +44,9 @@ DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(top_srcdir)/test/f77_test.sh.in \
 	$(top_srcdir)/test/f90_test.sh.in \
 	$(top_srcdir)/vendor/common/build_related/doxygen/doxygen-user-common.cfg.in \
-	AUTHORS COPYING ChangeLog INSTALL NEWS build-config/compile \
+	AUTHORS COPYING ChangeLog INSTALL NEWS \
 	build-config/config.guess build-config/config.sub \
-	build-config/depcomp build-config/install-sh \
-	build-config/ltmain.sh build-config/missing
+	build-config/install-sh build-config/missing
 @SVN_CONTROLLED_TRUE@am__append_1 = doc/doxygen-project-number.cfg
 @HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@am__append_2 = doc/doxygen-user.cfg doc/doxygen-user-at-make-time.cfg doxygen.err
 @CROSS_BUILD_FALSE@am__append_3 = $(srcdir)/build-frontend/configure.ac \
