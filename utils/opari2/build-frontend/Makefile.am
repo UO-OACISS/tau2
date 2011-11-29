@@ -77,13 +77,13 @@ if OPENMP_SUPPORTED
 install-example:
 	$(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example
 	$(INSTALL_DATA) $(abs_srcdir)/../doc/example/example.*            $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example/
-	$(INSTALL_DATA) $(abs_srcdir)/../src/pomp-lib-dummy/pomp2_lib.h   $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example/
+	$(INSTALL_DATA) $(abs_srcdir)/../include/opari2/pomp2_lib.h       $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example/
 	$(INSTALL_DATA) $(abs_builddir)/../doc/example/Makefile           $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example/
 	$(INSTALL_DATA) $(abs_builddir)/../build-frontend/.libs/libpomp.* $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example/
 	rm -f $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example/libpomp.la
 	$(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation
 	$(INSTALL_DATA) $(abs_srcdir)/../doc/example_user_instrumentation/example_user_instrumentation.*  $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/
-	$(INSTALL_DATA) $(abs_srcdir)/../src/pomp-lib-dummy/pomp2_lib.h                                   $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/
+	$(INSTALL_DATA) $(abs_srcdir)/../include/opari2/pomp2_lib.h                                       $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/
 	$(INSTALL_DATA) $(abs_builddir)/../doc/example_user_instrumentation/Makefile                      $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/
 	$(INSTALL_DATA) $(abs_builddir)/../build-frontend/.libs/libpomp.*                                 $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/
 	rm -f $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/libpomp.la

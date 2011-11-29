@@ -181,7 +181,7 @@ main( int    argc,
                       << app.awk << " -f " << app.script << " > pompregions_c.c";
             break;
         case ACTION_VERSION:
-            std::cout << app.version;
+            std::cout << app.version << "\n";
             std::cout.flush();
             break;
 

@@ -44,6 +44,8 @@
 #include <sstream>
 #include "common.h"
 
+#include "opari2.h"
+
 string
 OMPragmaC::find_next_word()
 {
@@ -78,19 +80,47 @@ OMPragmaC::find_next_word()
 
 /** @brief Returns true if word in line.*/
 bool
-OMPragmaC::find_word( const char*        word,
+OMPragmaC::find_word( const string       word,
                       unsigned&          line,
                       string::size_type& pos )
 {
     for ( unsigned i = line; i < lines.size(); ++i )
     {
         string::size_type w = lines[ i ].find( word );
-        if ( w != string::npos )
+        while ( w != string::npos )
         {
-            line = i;
-            pos  = w;
-            return true;
-        }
+            char b = lines[ i ][ w - 1 ];
+            char a;
+            if ( lines[ i ].length() > w + word.length() )
+            {
+                a = lines[ i ][ w + word.length() ];
+            }
+            else
+            {
+                a = ' ';
+            }
+            if ( ( b == ' ' || b == '\t' || b == '/' || b == ')' || b == ',' || b == '#' ) &&
+                 ( a == ' ' || a == '\t' || a == '/' || a == '(' || a == ',' ) )
+            {
+                line = i;
+                pos  = w;
+                return true;
+            }
+            else
+            {
+                w++;
+                if ( w != string::npos )
+                {
+                    w = lines[ i ].find( word, w );
+                }
+            }
+        } /*
+             if ( w != string::npos )
+             {
+             line = i;
+             pos  = w;
+             return true;
+             }*/
         pos = 0;
     }
     return false;
@@ -100,12 +130,43 @@ OMPragmaC::find_word( const char*        word,
 string
 OMPragmaC::find_arguments( unsigned&          line,
                            string::size_type& pos,
-                           bool               remove )
+                           bool               remove,
+                           string             clause )
 {
     string arguments;
+    int    bracket_counter = 0;
+    bool   inComment       = false;
 
-    while ( lines[ line ][ pos ] != ')' )
+    for ( int i = 0; i < clause.length(); i++ )
     {
+        if ( remove )
+        {
+            lines[ line ][ pos ] = ' ';
+        }
+        pos++;
+    }
+    pos = lines[ line ].find_first_not_of( " \t", pos );
+    if ( lines[ line ][ pos ] == '(' )
+    {
+        bracket_counter++;
+        if ( remove )
+        {
+            lines[ line ][ pos ] = ' ';
+        }
+        pos++;
+    }
+    else
+    {
+        std::cerr << filename << ":" << lineno << ": ERROR: Expecting argument for "
+                  << clause << " clause\n" << std::endl;
+        cleanup_and_exit();
+    }
+    while ( bracket_counter > 0 )
+    {
+        if ( lines[ line ][ pos ] == '(' )
+        {
+            bracket_counter++;
+        }
         if ( lines[ line ][ pos ] == '\\' )
         {
             pos = lines[ line ].length();
@@ -125,11 +186,31 @@ OMPragmaC::find_arguments( unsigned&          line,
             line++;
             if ( line >= lines.size() )
             {
-                std::cerr << "ERROR: Missing )\n";
-                break;
+                std::cerr << lines[ line - 1 ] << std::endl;
+                std::cerr << filename << ":" << lineno << ": ERROR: Missing ) for "
+                          << clause << " clause\n";
+                cleanup_and_exit();
             }
             pos = 0;
         }
+        if (  lines[ line ][ pos ] == ')' )
+        {
+            bracket_counter--;
+        }
+    }
+
+    //remove last bracket if necessary
+    if ( remove )
+    {
+        lines[ line ][ pos ] = ' ';
+    }
+
+    size_t p;
+    p = arguments.find( ' ' );
+    while ( p != string::npos )
+    {
+        arguments.erase( p, 1 );
+        p = arguments.find( ' ' );
     }
 
     return arguments;

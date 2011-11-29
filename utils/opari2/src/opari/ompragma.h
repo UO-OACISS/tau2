@@ -69,7 +69,8 @@ public:
     virtual string
     find_arguments( unsigned&          line,
                     string::size_type& pos,
-                    bool               remove ) = 0;
+                    bool               remove,
+                    string             clause ) = 0;
 
     /** is a nowait clause present?*/
     bool
@@ -158,7 +159,7 @@ private:
     virtual string
     find_next_word() = 0;
     virtual bool
-    find_word( const char*        word,
+    find_word( const string       word,
                unsigned&          line,
                string::size_type& pos ) = 0;
 };
@@ -182,7 +183,8 @@ public:
     virtual string
     find_arguments( unsigned&          line,
                     string::size_type& pos,
-                    bool               remove );
+                    bool               remove,
+                    string             clause );
     virtual void
     add_nowait();
     virtual void
@@ -194,7 +196,7 @@ private:
     virtual string
     find_next_word();
     virtual bool
-    find_word( const char*        word,
+    find_word( const string       word,
                unsigned&          line,
                string::size_type& pos );
     void
@@ -221,7 +223,8 @@ public:
     virtual string
     find_arguments( unsigned&          line,
                     string::size_type& pos,
-                    bool               remove );
+                    bool               remove,
+                    string             clause );
     virtual void
     add_nowait();
     virtual void
@@ -233,7 +236,7 @@ private:
     virtual string
     find_next_word();
     virtual bool
-    find_word( const char*        word,
+    find_word( const string       word,
                unsigned&          line,
                string::size_type& pos );
     void

@@ -7,6 +7,6 @@ static POMP2_Region_handle pomp2_region_2 = NULL;
 
 void POMP2_Init_regions_000()
 {
-    POMP2_Assign_handle( &pomp2_region_1, "63*regionType=parallelfor*sscl=test5.c:31:39*escl=test5.c:43:43**" );
+    POMP2_Assign_handle( &pomp2_region_1, "84*regionType=parallelfor*sscl=test5.c:31:39*escl=test5.c:43:43*scheduleType=dynamic**" );
     POMP2_Assign_handle( &pomp2_region_2, "107*regionType=parallelsections*sscl=test5.c:45:45*escl=test5.c:59:59*hasIf=1*hasNumThreads=1*hasReduction=1**" );
 }

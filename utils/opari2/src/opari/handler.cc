@@ -1100,10 +1100,8 @@ void
 h_parallelfor( OMPragma* p,
                ostream&  os )
 {
-    OMPRegion* r         = REnter( p, true );
-    int        n         = r->id;
-    OMPragma*  forPragma = p->split_combined();
-    forPragma->add_nowait();
+    OMPRegion* r = REnter( p, true );
+    int        n = r->id;
     p->add_descr( n );
     r->has_num_threads = p->find_numthreads();
     r->has_if          =          p->find_if();
@@ -1111,6 +1109,9 @@ h_parallelfor( OMPragma* p,
     r->has_schedule    =    p->find_schedule( &( r->arg_schedule ) );
     r->has_ordered     =     p->find_ordered();
     r->has_collapse    =    p->find_collapse();
+
+    OMPragma* forPragma = p->split_combined();
+    forPragma->add_nowait();
 
     generate_fork_call( "fork", "parallel", n, os, p, r );
     print_pragma_task( p, os );
@@ -1182,14 +1183,15 @@ void
 h_parallelsections_c( OMPragma* p,
                       ostream&  os )
 {
-    OMPRegion* r         = REnter( p, true );
-    int        n         = r->id;
-    OMPragma*  secPragma = p->split_combined();
-    secPragma->add_nowait();
+    OMPRegion* r = REnter( p, true );
+    int        n = r->id;
     p->add_descr( n );
     r->has_num_threads = p->find_numthreads();
     r->has_if          =          p->find_if();
     r->has_reduction   =   p->find_reduction();
+
+    OMPragma* secPragma = p->split_combined();
+    secPragma->add_nowait();
 
     generate_fork_call( "fork", "parallel", n, os, p, r );
 
@@ -1220,13 +1222,14 @@ void
 h_parallelsections( OMPragma* p,
                     ostream&  os )
 {
-    OMPRegion* r         = REnter( p, true );
-    int        n         = r->id;
-    OMPragma*  secPragma = p->split_combined();
+    OMPRegion* r = REnter( p, true );
+    int        n = r->id;
     p->add_descr( n );
     r->has_num_threads = p->find_numthreads();
     r->has_if          =          p->find_if();
     r->has_reduction   =   p->find_reduction();
+
+    OMPragma* secPragma = p->split_combined();
 
     generate_fork_call( "fork", "parallel", n, os, p, r );
 

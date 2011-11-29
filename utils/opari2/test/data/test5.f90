@@ -32,7 +32,7 @@ program test5
   !$omp & private(i,j)        &   !schedule
   !$omp & lastprivate         &
   !$omp & (                   &
-  !$omp &   l                 &
+  !$omp &   l                 &   !comment inside argument
   !$omp & ) schedule(dynamic  &
   !$omp & )
   do i=1,4
