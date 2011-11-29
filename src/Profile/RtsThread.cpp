@@ -137,7 +137,8 @@ int RtsLayer::RegisterThread() {
  
 #ifndef TAU_WINDOWS 
   if (TauEnv_get_ebs_enabled()) {
-    Tau_sampling_init(numthreads-1);
+    //    Tau_sampling_init(numthreads-1);
+    Tau_sampling_init_if_necessary();
   }
 #endif
 

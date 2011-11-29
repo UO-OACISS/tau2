@@ -1169,7 +1169,8 @@ int TauProfiler_StoreData(int tid) {
   finalizeTrace(tid);
 #ifndef TAU_WINDOWS  
   if (TauEnv_get_ebs_enabled()) {
-    Tau_sampling_finalize(tid);
+    // Tau_sampling_finalize(tid);
+    Tau_sampling_finalize_if_necessary();
   }
 #endif
   if (TauEnv_get_profiling()) {
