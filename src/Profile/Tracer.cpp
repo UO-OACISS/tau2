@@ -351,19 +351,19 @@ void TauTraceEventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts, int
   TauCurrentEvent[tid]++;
 
   if (TauCurrentEvent[tid] >= TauMaxTraceRecords-2) {
-    //TauTraceEventSimple (TAU_EV_FLUSH_ENTER, 0, tid);
+    //TauTraceEventSimple (TAU_EV_FLUSH, 0, tid);
     event = &TraceBuffer[tid][TauCurrentEvent[tid]];
-    event->ev = TAU_EV_FLUSH_ENTER;  event->ti = timestamp; event->par = 0;
+    event->ev = TAU_EV_FLUSH;  event->ti = timestamp; event->par = 1;
     event->nid = node_id; event->tid = tid; 
     TauCurrentEvent[tid]++;
 
     // Flush the buffer! 
     TauTraceFlushBuffer(tid); 
 
-    //TauTraceEventSimple (TAU_EV_FLUSH_EXIT, 0, tid);
+    //TauTraceEventSimple (TAU_EV_FLUSH, 0, tid);
     timestamp = TauTraceGetTimeStamp(tid);
     event = &TraceBuffer[tid][TauCurrentEvent[tid]];
-    event->ev = TAU_EV_FLUSH_EXIT;  event->ti = timestamp; event->par = 0;
+    event->ev = TAU_EV_FLUSH;  event->ti = timestamp; event->par = -1;
     event->nid = node_id; event->tid = tid; 
     TauCurrentEvent[tid]++;
   }
@@ -492,8 +492,8 @@ int TauTraceDumpEDF(int tid) {
 
   // Now add the nine extra events 
   fprintf(fp,"%ld TRACER 0 \"EV_INIT\" none\n", (long) TAU_EV_INIT); 
-  fprintf(fp,"%ld TRACER 0 \"FLUSH_ENTER\" none\n", (long) TAU_EV_FLUSH_ENTER); 
-  fprintf(fp,"%ld TRACER 0 \"FLUSH_EXIT\" none\n", (long) TAU_EV_FLUSH_EXIT); 
+  fprintf(fp,"%ld TRACER 0 \"FLUSH\" EntryExit\n", (long) TAU_EV_FLUSH); 
+//  fprintf(fp,"%ld TRACER 0 \"FLUSH_EXIT\" none\n", (long) TAU_EV_FLUSH_EXIT); 
   fprintf(fp,"%ld TRACER 0 \"FLUSH_CLOSE\" none\n", (long) TAU_EV_CLOSE); 
   fprintf(fp,"%ld TRACER 0 \"FLUSH_INITM\" none\n", (long) TAU_EV_INITM); 
   fprintf(fp,"%ld TRACER 0 \"WALL_CLOCK\" none\n", (long) TAU_EV_WALL_CLOCK); 
