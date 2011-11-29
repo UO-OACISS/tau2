@@ -54,6 +54,10 @@ using namespace std;
 #include "elg_trc.h"
 #endif /* TAU_EPILOG */
 
+#ifdef TAU_SCOREP
+#include <scorep/SCOREP_Tau.h>
+#endif
+
 #include <TauTrace.h>
 #include <TauInit.h>
 
@@ -81,6 +85,7 @@ vector<TauUserEvent*>& TheEventDB(void) {
   if (flag) {
     flag = 0;
     Tau_init_initializeTAU();
+
   }
 
   return EventDB;
@@ -98,15 +103,22 @@ void TauUserEvent::AddEventToDB() {
   uint32_t gid = vt_def_counter_group("TAU Events");
   EventId = vt_def_counter(GetEventName(), OTF_COUNTER_TYPE_ABS|OTF_COUNTER_SCOPE_NEXT, gid, "#");
 #endif /* TAU_VAMPIRTRACE */
+
+#ifdef TAU_SCOREP
+ SCOREP_Tau_MetricHandle handle = SCOREP_TAU_INIT_METRIC_HANDLE; 
+
+SCOREP_Tau_InitMetric( &handle, GetEventName(), "units");
+EventId=handle;
+#endif
   RtsLayer::UnLockDB();
   return;
 }
 
-long TauUserEvent::GetEventId(void) {
+uint64_t TauUserEvent::GetEventId(void) {
   return EventId;
 }
 
-extern "C" long TauUserEvent_GetEventId(TauUserEvent *evt) {
+extern "C" uint64_t TauUserEvent_GetEventId(TauUserEvent *evt) {
   return evt->GetEventId();
 }
 
@@ -250,6 +262,12 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
 #endif /* TAU_EPILOG */
   /* Timestamp is 0, and use_ts is 0, so tracing layer gets timestamp */
 #endif /* TAU_VAMPIRTRACE */
+
+#ifdef TAU_SCOREP
+ SCOREP_Tau_TriggerMetricDouble( GetEventId(), data );
+#endif /*TAU_SCOREP*/
+
+
 
 #ifdef PROFILING_ON
   // Record this value  
@@ -538,12 +556,12 @@ long* TauFormulateContextComparisonArray(Profiler *p, TauUserEvent *uevent) {
   int index = 1; /* start writing to index 1, we fill in the depth after */
 
   while (current != NULL && depth != 0) {
-    ary[index++] = (long) current->ThisFunction;
+    ary[index++] = Tau_convert_ptr_to_long(current->ThisFunction);
     depth--;
     current = current->ParentProfiler;
   }
   
-  ary[index++] = (long) uevent;
+  ary[index++] = Tau_convert_ptr_to_long(uevent);
   ary[0] = index-1; /* set the depth */
   return ary;
 }
@@ -581,11 +599,12 @@ TauContextUserEvent::TauContextUserEvent(const char *EName, bool MonoIncr) {
   uevent = new TauUserEvent(EName, MonoIncr);
   DisableContext = false; /* context tracking is enabled by default */
 
+#ifndef TAU_SCOREP 
   int depth = TauEnv_get_callpath_depth();
   if (depth == 0) {
     DisableContext = true;
   }
-
+#endif /*TAU_SCOREP*/
   MonotonicallyIncreasing = MonoIncr;
 }
 

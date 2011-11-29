@@ -132,9 +132,8 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
             this.setTitle("TAU: ParaProf: Std. Dev. Statistics - "
                     + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         } else {
-            this.setTitle("TAU: ParaProf: Thread Statistics: " + "n,c,t, " + thread.getNodeID() + "," + thread.getContextID()
-                    + "," + thread.getThreadID() + " - "
-                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+            this.setTitle("TAU: ParaProf: Statistics for: " + ParaProfUtils.getThreadLabel(thread) //"n,c,t, " + thread.getNodeID() + "," + thread.getContextID()  + "," + thread.getThreadID() 
+            		+ " - "+ ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         }
         ParaProfUtils.setFrameIcon(this);
 
@@ -514,6 +513,9 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
     }
 
     public void update(Observable o, Object arg) {
+    	if(thread.getNodeID()>=0){
+    		this.setTitle("TAU: ParaProf: Statistics for: " + ParaProfUtils.getThreadLabel(thread) + " - "+ ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
+    	}
         setupData();
     }
 

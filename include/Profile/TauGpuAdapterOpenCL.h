@@ -63,9 +63,9 @@ void Tau_opencl_init();
 
 void Tau_opencl_exit();
 
-void Tau_opencl_enter_memcpy_event(const char *name, int id, int size, int MemcpyType);
+void Tau_opencl_enter_memcpy_event(const char *name, openCLGpuId *id, int size, int MemcpyType);
 
-void Tau_opencl_exit_memcpy_event(const char *name, int id, int MemcpyType);
+void Tau_opencl_exit_memcpy_event(const char *name, openCLGpuId *id, int MemcpyType);
 
 void Tau_opencl_register_gpu_event(const char *name, openCLGpuId *id, double start,
 double stop);
@@ -76,6 +76,8 @@ transferSize, int MemcpyType);
 void Tau_opencl_enqueue_event(callback_data* new_data);
 
 void Tau_opencl_register_sync_event();
+
+void Tau_opencl_flush();
 
 openCLGpuId *Tau_opencl_retrive_gpu(cl_command_queue cq);
 

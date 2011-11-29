@@ -1,11 +1,7 @@
-include ../../../include/Makefile
-F90=$(TAU_COMPILER) $(TAU_F90)
-
-INCLUDE=$(TAU_SHMEM_INCLUDE) 
-LIB=$(TAU_SHMEM_LIBS)
+F90=tau_f90.sh -tau_makefile=../../../include/Makefile
 
 simple: simple.f90
 	$(F90) $(INCLUDE)  simple.f90 -o simple $(LIB)
 
 clean:
-	/bin/rm -f simple simple.o
+	/bin/rm -rf simple.o simple *.trc *.edf profile* MULT*

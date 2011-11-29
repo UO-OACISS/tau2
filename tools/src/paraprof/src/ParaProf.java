@@ -135,6 +135,7 @@ public class ParaProf implements ActionListener {
 		+ "  --pack <file>                   Pack the data into packed (.ppk) format\n"
 		+ "  --dump                          Dump profile data to TAU profile format\n"
 		+ "  --dumprank <rank>               Dump profile data for <rank> to TAU profile format\n"
+		+ "  -v, --dumpsummary               Dump derived statistical data to TAU profile format\n"
 		+ "  --overwrite                     Allow overwriting of profiles\n"
 		+ "  -o, --oss                       Print profile data in OSS style text output\n"
 		+ "  -s, --summary                   Print only summary statistics\n"
@@ -395,6 +396,8 @@ public class ParaProf implements ActionListener {
 	CmdLineParser.Option mergeOpt = parser.addStringOption('a', "merge");
 	CmdLineParser.Option packOpt = parser.addStringOption('a', "pack");
 	CmdLineParser.Option unpackOpt = parser.addBooleanOption('u', "dump");
+	CmdLineParser.Option unpackSummOpt = parser.addBooleanOption('v', "dumpsummary");
+	CmdLineParser.Option unpackMPISummOpt = parser.addBooleanOption('q', "dumpmpisummary");
 	CmdLineParser.Option unpackRankOpt = parser.addStringOption('r', "dumprank");
 	CmdLineParser.Option ossOpt = parser.addBooleanOption('o', "oss");
 	CmdLineParser.Option overwriteOpt = parser.addBooleanOption('w', "overwrite");
@@ -421,9 +424,11 @@ public class ParaProf implements ActionListener {
 	String merge = (String) parser.getOptionValue(mergeOpt);
 	String pack = (String) parser.getOptionValue(packOpt);
 	Boolean unpack = (Boolean) parser.getOptionValue(unpackOpt);
+	Boolean unpackSumm = (Boolean) parser.getOptionValue(unpackSummOpt);
+	Boolean unpackMPISumm = (Boolean) parser.getOptionValue(unpackMPISummOpt);
 	Boolean overwrite = (Boolean) parser.getOptionValue(overwriteOpt);
 	String unpackrank = (String) parser.getOptionValue(unpackRankOpt);
-	if (unpackrank != null) {
+	if (unpackrank != null||unpackSumm!=null||unpackMPISumm!=null) {
 	    unpack = Boolean.TRUE;
 	}
 	Boolean oss = (Boolean) parser.getOptionValue(ossOpt);
@@ -464,6 +469,11 @@ public class ParaProf implements ActionListener {
 	sourceFiles = new File[sourceFilenames.length];
 	for (int i = 0; i < sourceFilenames.length; i++) {
 	    sourceFiles[i] = new File(sourceFilenames[i]);
+//	    if(!sourceFiles[i].exists()){
+//	    	sourceFiles= new File[0];
+//	    	fileTypeString="profiles";
+//	    	break;
+//	    }
 	}
 
 	if (fixNames != null)
@@ -585,7 +595,7 @@ public class ParaProf implements ActionListener {
 		FileList fl = new FileList();
 		List<File[]> v = fl.helperFindProfiles(".");
 
-		if (overwrite == null) {
+		if (overwrite == null&&!unpackMPISumm) {
 		    if (v.size() != 0) {
 			System.err.println("Error: profiles found in current directory, please remove first");
 			return;
@@ -600,7 +610,11 @@ public class ParaProf implements ActionListener {
 		    int rank = Integer.parseInt(unpackrank);
 		    Node node = dataSource.getNode(rank);
 		    DataSourceExport.writeProfiles(dataSource, new File("."), node.getThreads());
-		} else {
+		}else if(unpackSumm !=null){
+			DataSourceExport.writeAggProfiles(dataSource, new File("."));
+		}else if(unpackMPISumm !=null){
+			DataSourceExport.writeAggMPISummary(dataSource);
+		}else {
 		    DataSourceExport.writeProfiles(dataSource, new File("."));
 		}
 

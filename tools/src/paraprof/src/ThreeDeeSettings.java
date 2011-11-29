@@ -72,6 +72,13 @@ public class ThreeDeeSettings implements Cloneable {
     	return customTopoAxes;
     }
     
+    /**Index of selected atomic event data type**/
+    public int[] atomicETDex={0,0,0,0};
+    
+    /**Index of selected interval event data type**/
+    public int[] intervalETDex={0,0,0,0};
+    
+    
     private Metric[] topoMetric= new Metric[4];
     private ValueType[] topoValueType = {ValueType.EXCLUSIVE,ValueType.EXCLUSIVE,ValueType.EXCLUSIVE,ValueType.EXCLUSIVE};
     private Function[] topoFunction = new Function[4];
@@ -110,6 +117,16 @@ public class ThreeDeeSettings implements Cloneable {
 		this.topoDefFile = topoDefFile;
 	}
 	
+	
+	private String topoMapFile=null;
+
+	public String getTopoMapFile() {
+		return topoMapFile;
+	}
+	public void setTopoMapFile(String topoMapFile) {
+		this.topoMapFile = topoMapFile;
+	}
+	
 	private boolean customTopo=false;
 	
 
@@ -133,6 +150,16 @@ public UserEvent getTopoAtomic(int i){
 }
 public void setTopoAtomic(UserEvent ue, int i){
 	topoUserEvent[i]=ue;
+}
+
+
+private boolean[] atomic ={false,false,false,false};
+public boolean getAtomic(int i){
+	return atomic[i];
+}
+public void setAtomic(boolean b, int i)
+{
+	atomic[i]=b;
 }
 
 private UserEventValueType[] topoUserEventValueType = {UserEventValueType.MAX,UserEventValueType.MAX,UserEventValueType.MAX,UserEventValueType.MAX};

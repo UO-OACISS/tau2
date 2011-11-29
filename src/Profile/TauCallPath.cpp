@@ -127,7 +127,8 @@ one then it is the top level profiler */
 #else /* TAU_PROFILEPHASE */
     int index = 1;
     while (current != NULL && depth != 0) {
-      ary[index++] = (long) current->ThisFunction; 
+      //ary[index++] = (long) current->ThisFunction; 
+      ary[index++] = Tau_convert_ptr_to_long(current->ThisFunction); 
       depth--;
       current = current->ParentProfiler;
     }

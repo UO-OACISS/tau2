@@ -1,0 +1,66 @@
+  3: begin parallel
+  3: enter for
+  3: enter implicit barrier of paralleldo
+  3: exit  implicit barrier of paralleldo
+  3: exit  for
+  3: end   parallel
+  3: begin parallel
+  3: enter for
+  3: enter implicit barrier of do
+  3: exit  implicit barrier of do
+  3: exit  for
+  3: enter for
+  3: enter implicit barrier of do
+  3: exit  implicit barrier of do
+  3: exit  for
+  3: enter implicit barrier of parallel
+  3: exit  implicit barrier of parallel
+  3: end   parallel
+  3: begin parallel
+  3: enter for
+  3: enter implicit barrier of do
+  3: exit  implicit barrier of do
+  3: exit  for
+  3: enter for
+  3: enter implicit barrier of do
+  3: exit  implicit barrier of do
+  3: exit  for
+  3: enter implicit barrier of parallel
+  3: exit  implicit barrier of parallel
+  3: end   parallel
+  3: begin parallel
+  3: enter for
+  3: enter implicit barrier of do
+  3: exit  implicit barrier of do
+  3: exit  for
+  3: enter for
+  3: enter implicit barrier of do
+  3: exit  implicit barrier of do
+  3: exit  for
+  3: enter implicit barrier of parallel
+  3: exit  implicit barrier of parallel
+  3: end   parallel
+  3: begin parallel
+  3: enter for
+  3: enter implicit barrier of do
+  3: exit  implicit barrier of do
+  3: exit  for
+  3: enter for
+  3: enter implicit barrier of do
+  3: exit  implicit barrier of do
+  3: exit  for
+  3: enter implicit barrier of parallel
+  3: exit  implicit barrier of parallel
+  3: end   parallel
+  3: begin parallel
+  3: enter for
+  3: enter implicit barrier of do
+  3: exit  implicit barrier of do
+  3: exit  for
+  3: enter for
+  3: enter implicit barrier of do
+  3: exit  implicit barrier of do
+  3: exit  for
+  3: enter implicit barrier of parallel
+  3: exit  implicit barrier of parallel
+  3: end   parallel

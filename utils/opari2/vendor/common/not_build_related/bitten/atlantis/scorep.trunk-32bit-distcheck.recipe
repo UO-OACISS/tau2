@@ -1,0 +1,34 @@
+<build xmlns:python="http://bitten.edgewall.org/tools/python"
+       xmlns:svn="http://bitten.edgewall.org/tools/svn"
+       xmlns:sh="http://bitten.edgewall.org/tools/sh"
+       xmlns:c="http://bitten.edgewall.org/tools/c">
+
+  <step id="remove old tarball" description="Remove old tarball">
+    <sh:exec executable="rm" args="-rf /opt/packages/scorep-latest-tarball/" />
+  </step>
+
+  <step id="checkout" description="Checkout source from repository">
+    <svn:checkout url="https://silc.zih.tu-dresden.de/svn/silc-root" path="${scorep.path}" revision="${revision}" />
+  </step>
+
+  <step id="boostrap" description="Bootstrap the project">
+    <sh:exec executable="./bootstrap" />
+  </step>
+
+  <step id="configure" description="Configure the project">
+    <sh:exec executable="./configure" args="--prefix=/opt/packages/scorep-latest-tarball --enable-debug" />
+  </step>
+
+  <step id="bitten environment" description="Make bitten-print-environment">
+    <c:make target="bitten-print-environment" />
+  </step>
+
+  <step id="make distcheck" description="Make distcheck">
+    <c:make target="distcheck" />
+  </step>
+
+  <step id="make bitten-copy-tarball-to-prefix" description="Copy tarball to prefix directory">
+    <c:make target="bitten-copy-tarball-to-prefix" />
+  </step>
+
+</build>

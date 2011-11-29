@@ -1,0 +1,332 @@
+
+#line 1 "test2.f"
+! * This file is part of the Score-P software (http://www.score-p.org)
+! *
+! * Copyright (c) 2009-2011,
+! *    RWTH Aachen University, Germany
+! *    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
+! *    Technische Universitaet Dresden, Germany
+! *    University of Oregon, Eugene, USA
+! *    Forschungszentrum Juelich GmbH, Germany
+! *    German Research School for Simulation Sciences GmbH, Juelich/Aachen, Germany
+! *    Technische Universitaet Muenchen, Germany
+! *
+! * See the COPYING file in the package base directory for details.
+! *
+! * Testfile for automated testing of OPARI2
+! *
+! * @authors Bernd Mohr, Peter Philippen
+! *
+! * @brief Test the basic instrumentation of all directives.
+
+      program test2
+      include 'test2.f.opari.inc'
+      integer i
+      integer k
+      
+      integer, save :: j
+#line 25 "test2.f"
+!$omp threadprivate(j)
+
+      pomp_num_threads = pomp_get_max_threads000()
+      pomp_if = .true.
+      call POMP2_Parallel_fork(pomp2_region_1,
+     &pomp_if, pomp_num_threads, pomp2_old_task,
+     &"59*regionType=parallel*sscl=test2.f:27:27*escl=test2.f:0:0*"//
+     &"*" )
+#line 27 "test2.f"
+!$omp parallel
+!$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
+!$omp& if(pomp_if) num_threads(pomp_num_threads) 
+!$omp& shared(/cb000/)
+       call POMP2_Parallel_begin(pomp2_region_1)
+#line 28 "test2.f"
+      write(*,*) "parallel"
+      
+      call POMP2_Do_enter(pomp2_region_2,
+     &"53*regionType=do*sscl=test2.f:30:30*escl=test2.f:0:0**" )
+#line 30 "test2.f"
+!$omp do
+      do i=1,4
+         write(*,*) "do",i
+         k = k + 1
+      enddo
+#line 35 "test2.f"
+!$omp end do nowait
+      call POMP2_Implicit_barrier_enter(pomp2_region_2, pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(pomp2_region_2, pomp2_old_task)
+      call POMP2_Do_exit(pomp2_region_2)
+#line 36 "test2.f"
+      
+      call POMP2_Flush_enter(pomp2_region_3,
+     &"56*regionType=flush*sscl=test2.f:37:37*escl=test2.f:0:0**" "//
+     &")
+#line 37 "test2.f"
+!$omp flush(k)
+      call POMP2_Flush_exit(pomp2_region_3)
+#line 38 "test2.f"
+
+      call POMP2_Barrier_enter(pomp2_region_4, pomp2_old_task,
+     &"58*regionType=barrier*sscl=test2.f:39:39*escl=test2.f:0:0**"//
+     &"" )
+#line 39 "test2.f"
+!$omp barrier
+      call POMP2_Barrier_exit(pomp2_region_4, pomp2_old_task)
+#line 40 "test2.f"
+
+      call POMP2_Do_enter(pomp2_region_5,
+     &"53*regionType=do*sscl=test2.f:41:41*escl=test2.f:0:0**" )
+#line 41 "test2.f"
+!$omp do ordered
+      do i=1,4
+      call POMP2_Ordered_enter(pomp2_region_6,
+     &"58*regionType=ordered*sscl=test2.f:43:43*escl=test2.f:0:0**"//
+     &"" )
+#line 43 "test2.f"
+!$omp ordered
+      call POMP2_Ordered_begin(pomp2_region_6)
+#line 44 "test2.f"
+         write(*,*) "do",i
+      call POMP2_Ordered_end(pomp2_region_6)
+#line 45 "test2.f"
+!$omp end ordered
+      call POMP2_Ordered_exit(pomp2_region_6)
+#line 46 "test2.f"
+      enddo
+#line 47 "test2.f"
+!$omp end do nowait
+      call POMP2_Implicit_barrier_enter(pomp2_region_5, pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(pomp2_region_5, pomp2_old_task)
+      call POMP2_Do_exit(pomp2_region_5)
+#line 48 "test2.f"
+
+      call POMP2_Sections_enter(pomp2_region_7,
+     &"73*regionType=sections*sscl=test2.f:49:49*escl=test2.f:0:0*"//
+     &"numSections=0**" )
+#line 49 "test2.f"
+!$omp sections
+#line 50 "test2.f"
+!$omp section
+      call POMP2_Section_begin(pomp2_region_7,
+     &"73*regionType=sections*sscl=test2.f:49:49*escl=test2.f:0:0*"//
+     &"numSections=0**" )
+#line 51 "test2.f"
+      write(*,*) "section 1"
+      call POMP2_Section_end(pomp2_region_7)
+#line 52 "test2.f"
+!$omp section
+      call POMP2_Section_begin(pomp2_region_7,
+     &"73*regionType=sections*sscl=test2.f:49:49*escl=test2.f:0:0*"//
+     &"numSections=1**" )
+#line 53 "test2.f"
+      write(*,*) "section 2"
+      call POMP2_Section_end(pomp2_region_7)
+#line 54 "test2.f"
+!$omp end sections nowait
+      call POMP2_Implicit_barrier_enter(pomp2_region_7, pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(pomp2_region_7, pomp2_old_task)
+      call POMP2_Sections_exit(pomp2_region_7)
+#line 55 "test2.f"
+      
+#line 56 "test2.f"
+!$omp master
+      call POMP2_Master_begin(pomp2_region_8,
+     &"57*regionType=master*sscl=test2.f:56:56*escl=test2.f:0:0**""//
+     &" )
+#line 57 "test2.f"
+      write(*,*) "master"
+      call POMP2_Master_end(pomp2_region_8)
+#line 58 "test2.f"
+!$omp end master
+      
+      call POMP2_Critical_enter(pomp2_region_9,
+     &"59*regionType=critical*sscl=test2.f:60:60*escl=test2.f:0:0*"//
+     &"*" )
+#line 60 "test2.f"
+!$omp critical
+      call POMP2_Critical_begin(pomp2_region_9)
+#line 61 "test2.f"
+      write(*,*) "critical"
+      call POMP2_Critical_end(pomp2_region_9)
+#line 62 "test2.f"
+!$omp end critical
+      call POMP2_Critical_exit(pomp2_region_9)
+#line 63 "test2.f"
+      
+      call POMP2_Critical_enter(pomp2_region_10,
+     &"79*regionType=critical*sscl=test2.f:64:64*escl=test2.f:0:0*"//
+     &"criticalName=foobar**" )
+#line 64 "test2.f"
+!$omp critical(foobar)
+      call POMP2_Critical_begin(pomp2_region_10)
+#line 65 "test2.f"
+      write(*,*) "critical(foobar)"
+      call POMP2_Critical_end(pomp2_region_10)
+#line 66 "test2.f"
+!$omp end critical(foobar)
+      call POMP2_Critical_exit(pomp2_region_10)
+#line 67 "test2.f"
+      
+! do this atomic
+      call POMP2_Atomic_enter(pomp2_region_11,
+     &"57*regionType=atomic*sscl=test2.f:69:69*escl=test2.f:0:0**""//
+     &" )
+#line 69 "test2.f"
+!$omp atomic
+      i = i + 1
+      call POMP2_Atomic_exit(pomp2_region_11)
+#line 71 "test2.f"
+      
+      call POMP2_Single_enter(pomp2_region_12,
+     &"57*regionType=single*sscl=test2.f:72:72*escl=test2.f:0:0**""//
+     &" )
+#line 72 "test2.f"
+!$omp single
+      call POMP2_Single_begin(pomp2_region_12)
+#line 73 "test2.f"
+      write(*,*) "single"
+      call POMP2_Single_end(pomp2_region_12)
+#line 74 "test2.f"
+!$omp end single nowait
+      call POMP2_Implicit_barrier_enter(pomp2_region_12, pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(pomp2_region_12, pomp2_old_task)
+      call POMP2_Single_exit(pomp2_region_12)
+#line 75 "test2.f"
+      
+      call POMP2_Workshare_enter(pomp2_region_13,
+     &"60*regionType=workshare*sscl=test2.f:76:76*escl=test2.f:0:0"//
+     &"**" )
+#line 76 "test2.f"
+!$omp workshare
+      a = b + c
+#line 78 "test2.f"
+!$omp end workshare nowait
+      call POMP2_Implicit_barrier_enter(pomp2_region_13, pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(pomp2_region_13, pomp2_old_task)
+      call POMP2_Workshare_exit(pomp2_region_13)
+#line 79 "test2.f"
+
+      call POMP2_Implicit_barrier_enter(pomp2_region_1, pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(pomp2_region_1, pomp2_old_task)
+      call POMP2_Parallel_end(pomp2_region_1)
+#line 80 "test2.f"
+!$omp end parallel
+      call POMP2_Parallel_join(pomp2_region_1, pomp2_old_task)
+#line 81 "test2.f"
+
+      pomp_num_threads = pomp_get_max_threads000()
+      pomp_if = .true.
+      call POMP2_Parallel_fork(pomp2_region_14,
+     &pomp_if, pomp_num_threads, pomp2_old_task,
+     &"59*regionType=parallel*sscl=test2.f:82:82*escl=test2.f:0:0*"//
+     &"*" )
+#line 82 "test2.f"
+!$omp parallel
+!$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
+!$omp& if(pomp_if) num_threads(pomp_num_threads) 
+!$omp& shared(/cb000/)
+       call POMP2_Parallel_begin(pomp2_region_14)
+#line 83 "test2.f"
+      pomp_if = .true.
+      call POMP2_Task_create_begin(pomp2_region_15, pomp2_old_task, 
+     &pomp_if,
+     &"55*regionType=task*sscl=test2.f:83:83*escl=test2.f:0:0**" )
+#line 83 "test2.f"
+!$omp task
+!$omp& if(pomp_if) firstprivate(pomp2_old_task)
+!$omp& shared(/cb000/)
+       call POMP2_Task_begin(pomp2_region_15, pomp2_old_task)
+#line 84 "test2.f"
+      write(*,*) "task"
+      call POMP2_Task_end(pomp2_region_15)
+#line 85 "test2.f"
+!$omp end task
+      call POMP2_Task_create_end(pomp2_region_15, pomp2_old_task)
+#line 86 "test2.f"
+
+#line 87 "test2.f"
+!$omp this should be ignored by opari and the compiler
+
+      call POMP2_Taskwait_begin(pomp2_region_16, pomp2_old_task,
+     &"59*regionType=taskwait*sscl=test2.f:90:90*escl=test2.f:0:0*"//
+     &"*" )
+#line 90 "test2.f"
+!$omp taskwait
+      call POMP2_Taskwait_end(pomp2_region_16, pomp2_old_task)
+#line 91 "test2.f"
+      call POMP2_Implicit_barrier_enter(pomp2_region_14, pomp2_old_task)
+!$omp barrier
+      call POMP2_Implicit_barrier_exit(pomp2_region_14, pomp2_old_task)
+      call POMP2_Parallel_end(pomp2_region_14)
+#line 91 "test2.f"
+!$omp end parallel
+      call POMP2_Parallel_join(pomp2_region_14, pomp2_old_task)
+#line 92 "test2.f"
+
+! $ omp this should be ignored by opari and the compiler
+! $ this too
+
+      end program test2
+      
+
+      integer function pomp_get_max_threads000()
+         integer omp_get_max_threads
+         pomp_get_max_threads000=omp_get_max_threads()
+         return
+      end
+
+      subroutine POMP2_Init_regions_000()
+         include 'test2.f.opari.inc'
+         call POMP2_Assign_handle( pomp2_region_1, 
+     &"61*regionType=parallel*sscl=test2.f:27:27*escl=test2.f:80:8"//
+     &"0**" )
+         call POMP2_Assign_handle( pomp2_region_2, 
+     &"55*regionType=do*sscl=test2.f:30:30*escl=test2.f:35:35**" )
+         call POMP2_Assign_handle( pomp2_region_3, 
+     &"56*regionType=flush*sscl=test2.f:37:37*escl=test2.f:0:0**" "//
+     &")
+         call POMP2_Assign_handle( pomp2_region_4, 
+     &"58*regionType=barrier*sscl=test2.f:39:39*escl=test2.f:0:0**"//
+     &"" )
+         call POMP2_Assign_handle( pomp2_region_5, 
+     &"55*regionType=do*sscl=test2.f:41:41*escl=test2.f:47:47**" )
+         call POMP2_Assign_handle( pomp2_region_6, 
+     &"60*regionType=ordered*sscl=test2.f:43:43*escl=test2.f:45:45"//
+     &"**" )
+         call POMP2_Assign_handle( pomp2_region_7, 
+     &"75*regionType=sections*sscl=test2.f:49:49*escl=test2.f:54:5"//
+     &"4*numSections=2**" )
+         call POMP2_Assign_handle( pomp2_region_8, 
+     &"59*regionType=master*sscl=test2.f:56:56*escl=test2.f:58:58*"//
+     &"*" )
+         call POMP2_Assign_handle( pomp2_region_9, 
+     &"61*regionType=critical*sscl=test2.f:60:60*escl=test2.f:62:6"//
+     &"2**" )
+         call POMP2_Assign_handle( pomp2_region_10, 
+     &"81*regionType=critical*sscl=test2.f:64:64*escl=test2.f:66:6"//
+     &"6*criticalName=foobar**" )
+         call POMP2_Assign_handle( pomp2_region_11, 
+     &"59*regionType=atomic*sscl=test2.f:69:69*escl=test2.f:70:70*"//
+     &"*" )
+         call POMP2_Assign_handle( pomp2_region_12, 
+     &"59*regionType=single*sscl=test2.f:72:72*escl=test2.f:74:74*"//
+     &"*" )
+         call POMP2_Assign_handle( pomp2_region_13, 
+     &"62*regionType=workshare*sscl=test2.f:76:76*escl=test2.f:78:"//
+     &"78**" )
+         call POMP2_Assign_handle( pomp2_region_14, 
+     &"61*regionType=parallel*sscl=test2.f:82:82*escl=test2.f:91:9"//
+     &"1**" )
+         call POMP2_Assign_handle( pomp2_region_15, 
+     &"57*regionType=task*sscl=test2.f:83:83*escl=test2.f:85:85**""//
+     &" )
+         call POMP2_Assign_handle( pomp2_region_16, 
+     &"59*regionType=taskwait*sscl=test2.f:90:90*escl=test2.f:0:0*"//
+     &"*" )
+      end

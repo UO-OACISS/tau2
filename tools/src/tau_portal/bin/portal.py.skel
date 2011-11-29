@@ -74,7 +74,8 @@ transfer_to_perfdmf, transfer_to_portal, host = "tau.nic.uoregon.edu"):
         os.popen("@BINDIR@/perfdmfdb.py download '" + application + "' '" + experiment +
         "' " + trial)
         to_portal_list.append(open("/tmp/" + trial, 'r')) 
-      upload(username, password, workspace, experiment, to_portal_list, host)
+      upload(username, password, workspace, experiment, to_portal_list, host,
+			False)	
 
       threads_running_lock.acquire()
       threads_running = False
@@ -215,7 +216,7 @@ def get_workspaces(username, password, host = "tau.nic.uoregon.edu"):
   return final_list
 
 def upload(username, password, workspace, experiment, iostreams, host =
-"tau.nic.uoregon.edu"):
+"tau.nic.uoregon.edu", summary = False):
 
   params = {}
   for io in iostreams:
@@ -236,6 +237,9 @@ def upload(username, password, workspace, experiment, iostreams, host =
   params['password'] = password
   #print "workspace: " + workspace
   params['workspace'] = workspace
+  #print "summary: ", summary
+  if (summary):
+ 	  params['summary'] = True
   #print params
   if (not experiment is None):
     params['experiment'] = experiment  

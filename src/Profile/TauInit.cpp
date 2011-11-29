@@ -37,6 +37,7 @@
 #include <Profile/TauMetrics.h>
 #include <Profile/TauSampling.h>
 #include <Profile/TauSnapshot.h>
+#include <Profile/TauMetaData.h>
 
 
 #ifdef TAU_VAMPIRTRACE 
@@ -59,10 +60,14 @@ extern "C" int Tau_compensate_initialization();
 extern "C" int Tau_profiler_initialization();
 extern "C" int Tau_profile_exit_all_threads(); 
 
-// **CWL** BGP has strsignal declared in string.h and will conflict.
-#if (!(defined(TAU_PATHSCALE)) && !(defined(TAU_BGP)))
+// **CWL** 20110912 NOTE: strsignal is NOT portable!
+//         A number of systems has strsignal declared in string.h and this 
+//         will conflict with an explicit extern declaration of this nature.
+//
+//         This is now determined at configure time.
+#if defined(TAU_STRSIGNAL_OK)
 extern "C" char *strsignal(int sig);
-#endif /* TAU_PATHSCALE && TAU_BGP */
+#endif /* TAU_STRSIGNAL_OK */
 
 /* -- signal catching to flush event buffers ----------------- */
 #if defined (__cplusplus) || defined (__STDC__) || defined (_AIX) || (defined (__mips) && defined (_SYSTYPE_SVR4))
@@ -142,6 +147,26 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context) {
           char gdb_in_file[256];
           char gdb_out_file[256];
 
+#ifndef TAU_WINDOWS
+	  if (TauEnv_get_ebs_enabled()) {
+	    // *CWL* - If sampling is active, get it to stop and finalize immediately,
+	    //         we are about to halt execution!
+	    int tid = RtsLayer::myThread();
+	    Tau_sampling_finalize(tid);
+	  }
+#endif /* TAU_WINDOWS */
+
+  // Start by triggering a context event
+  char eventname[1024];
+  sprintf(eventname,"TAU_SIGNAL (%s)", strsignal(sig)); 
+  TAU_REGISTER_CONTEXT_EVENT(evt, eventname);
+  TAU_CONTEXT_EVENT(evt, 1); 
+
+  // Attempt to generate backtrace text information via GDB
+  // *CWL* - Shouldn't we make use of the information (via parsing?) as an alternative
+  //         to backtrace in case the latter fails (as in the case with PrgEnv-cray)?
+  //         Something to keep in mind for later.
+  if (TauEnv_get_signals_gdb()) {
           path[readlink("/proc/self/exe", path, -1+ sizeof(path))] = '\0';
           //sprintf(str, "echo 'bt\ndetach\nquit\n' | gdb -batch -x /dev/stdin %s -p %d \n",
                   //path, (int)getpid() );
@@ -158,64 +183,84 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context) {
 
 	  int systemRet = 0;
           systemRet = system(str);
-	  // Success returns the pid which we are not interested with.
+	  // Success returns the pid. We check for failure (-1) here.
 	  if (systemRet == -1) {
-	    // Even in failure, we still want to output the TAU profile.
+	    // We still want to output the TAU profile.
 	    TAU_VERBOSE("tauBacktraceHandler: Call failed executing %s\n",
 			str);
 	    // give the other tasks some time to process the handler and exit
-	    fprintf(stderr, "TAU: Caught signal %d (%s), dumping profile with stack trace: [rank=%d, pid=%d, tid=%d]... \n", sig, strsignal(sig), RtsLayer::myNode(), getpid(), Tau_get_tid(), sig);
+	    fprintf(stderr, "TAU: Caught signal %d (%s), dumping profile without stack trace (GDB failure): [rank=%d, pid=%d, tid=%d]... \n", sig, strsignal(sig), RtsLayer::myNode(), getpid(), Tau_get_tid(), sig);
 	    TAU_METADATA("SIGNAL", strsignal(sig));
 	    TAU_PROFILE_EXIT("none");
 	    sleep(4);  
 	    exit(1);     
 	    
 	  }
+  }
 
-  /* NOW Trigger a context event */
-  char eventname[1024];
-  sprintf(eventname,"TAU_SIGNAL (%s)", strsignal(sig)); 
-  TAU_REGISTER_CONTEXT_EVENT(evt, eventname);
-  TAU_CONTEXT_EVENT(evt, 1); 
+  // Attempt to generate metadata information about backtraces if the backtrace calls are
+  //   supported on the system.
 #ifdef TAU_EXECINFO
   static void *addresses[TAU_MAXSTACK];
   int n = backtrace( addresses, TAU_MAXSTACK );
 
-  if (n < 2){
+  if (n < 2) {
+    // For dealing with badly implemented backtrace calls
     TAU_VERBOSE("TAU: ERROR: Backtrace not available!\n" );
   } else {
-    TAU_VERBOSE("TAU: Backtrace:\n");
+    TAU_VERBOSE("TAU: ::BACKTRACE:: has %d addresses:\n", n);
     char **names = backtrace_symbols( addresses, n );
-
     for ( int i = 2; i < n; i++ )
     {
-      TAU_VERBOSE("stacktrace %s\n",names[i]);
-      char *token1 = strtok(names[i],"[]");
-      TAU_VERBOSE("found it: token1 = %s\n", token1);
-      char *token2 = strtok(NULL,"[]");
+      TAU_VERBOSE("**STACKTRACE** Entry %d = %s\n", i, names[i]);
+      char *temp = NULL;
+      char *token = NULL;
       unsigned long addr;
-      sscanf(token2,"%lx", &addr);
-      TAU_VERBOSE("found it: addr = %lx\n", addr);
-      if (i > 2) { /* first address is correct */
-        addr=addr-Tau_get_backtrace_off_by_one_correction(); 
+      //  UPDATE 11/20: token2 is required if we encounter shared code in which
+      //         case the format is <path>(<func_name>+<offset>) [<addr>].
+      //         This is extremely fragile code and is at the mercy of backtrace
+      //         not changing its output formats over a wide variety of machines.
+      //         We must keep an eye on this. This has the potential to (it has
+      //         already) blow up in our faces repeatedly.
+      //
+      //  For now, the correct way to do this is to look for the last token.
+      temp = strtok(names[i],"[]");
+      while (temp != NULL) {
+	token = temp;
+	temp = strtok(NULL, "[]");
       }
-      // Backtrace messes up and gives you the address of the next instruction.
-      // We subtract one to compensate for the off-by-one error.
-
+      if (token == NULL) {
+	// If the backtrace string is completely invalid, then set to 0 and allow
+	//   tauPrintAddr to fail. Issue a verbose warning.
+	TAU_VERBOSE("No valid token in backtrace string!\n");
+	addr = 0;
+      } else {
+	TAU_VERBOSE("Found Address Token = %s\n", token);
+	sscanf(token,"%lx", &addr);
+	TAU_VERBOSE("Backtrace Address determined to be %p\n", addr);
+	if (i > 2) { /* first address is correct */
+	  // Backtrace messes up and gives you the address of the next instruction.
+	  // We subtract one to compensate for the off-by-one error.
+	  addr=addr-Tau_get_backtrace_off_by_one_correction(); 
+	}
+      }
 // **CWL** For correct operation with Comp_gnu.cpp
 #ifndef TAU_XLC
-      tauPrintAddr(i, token1, addr);
+      // Map the addresses found in backtrace to actual code symbols and line information
+      //   for addition to TAU_METADATA.
+      tauPrintAddr(i, names[i], addr);
 #endif /* TAU_XLC */
     }
-    fprintf(stderr, "TAU: Caught signal %d (%s), dumping profile with stack trace: [rank=%d, pid=%d, tid=%d]... \n", sig, strsignal(sig), RtsLayer::myNode(), getpid(), Tau_get_tid(), sig);
-    TAU_METADATA("SIGNAL", strsignal(sig));
-    TAU_PROFILE_EXIT("none");
-
     free(names);
-    sleep(4);  // give the other tasks some time to process the handler and exit
-    exit(1);     
   }
 #endif /* TAU_EXECINFO */ 
+
+  // **CWL** We must always allow the handler to write out data and invoke exit.
+  fprintf(stderr, "TAU: Caught signal %d (%s), dumping profile with stack trace: [rank=%d, pid=%d, tid=%d]... \n", sig, strsignal(sig), RtsLayer::myNode(), getpid(), Tau_get_tid(), sig);
+  TAU_METADATA("SIGNAL", strsignal(sig));
+  TAU_PROFILE_EXIT("none");
+  sleep(4);  // give the other tasks some time to process the handler and exit
+  exit(1);     
 }
 
 static void tauSignalHandler(int sig) {
@@ -412,6 +457,10 @@ extern "C" int Tau_init_initializeTAU() {
 #ifdef TAU_PGI
   sbrk(102400);
 #endif /* TAU_PGI */
+
+#ifndef TAU_DISABLE_METADATA
+	Tau_metadata_fillMetaData();
+#endif
 
   tau_initialized = 1;
   Tau_global_decr_insideTAU();

@@ -128,7 +128,9 @@ private:
   static bool initEnvLocks();
   static int *numThreads();
 
-}; 
+};
+
+extern "C" int Tau_RtsLayer_getTid();
 
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************

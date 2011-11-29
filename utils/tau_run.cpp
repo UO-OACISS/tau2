@@ -19,6 +19,7 @@
 #include "BPatch_process.h"
 #include "BPatch_snippet.h" 
 #include "BPatch_statement.h" 
+#include <tauarch.h>
 
 //#include <iostream.h>
 //#include <stdio.h>
@@ -1010,6 +1011,7 @@ int main(int argc, char **argv){
   // commandline option processing args
   int vflag = 0;
   char *xvalue = NULL;
+  char *tvalue = NULL;
   char *fvalue = NULL;
   char *ovalue = NULL;
   int index;
@@ -1032,7 +1034,7 @@ int main(int argc, char **argv){
   else{
     opterr = 0; 
      
-    while ((c = getopt (argc, argv, "vX:o:f:d:")) != -1)
+    while ((c = getopt (argc, argv, "vT:X:o:f:d:")) != -1)
       switch (c)
 	{
         case 'v':
@@ -1042,6 +1044,10 @@ int main(int argc, char **argv){
         case 'X':
           xvalue = optarg;
 	  loadlib = true; /* load an external measurement library */
+          break;
+        case 'T':
+	  tvalue = optarg;
+          loadlib = true; /* load an external measurement library */
           break;
         case 'f':
           fvalue = optarg; /* choose a selective instrumentation file */
@@ -1067,45 +1073,96 @@ int main(int argc, char **argv){
 	  errflag=1;
         }
      
-    dprintf ("vflag = %d, xvalue = %s, ovalue = %s, fvalue = %s\n",
-	     vflag, xvalue, ovalue, fvalue);
+    dprintf ("vflag = %d, xvalue = %s, ovalue = %s, fvalue = %s, tvalue = %s\n",
+	     vflag, xvalue, ovalue, fvalue, tvalue);
      
     strncpy(mutname, argv[optind],strlen(argv[optind])+1);
     for (index = optind; index < argc; index++)
       dprintf ("Non-option argument %s\n", argv[index]);
   }
 
+  char bindings[1024]; 
+  char cmd[1024]; 
+  char bindir[]=TAU_BIN_DIR; 
   dprintf("mutatee name = %s\n", mutname);
+  if (tvalue != (char *) NULL) {
+    dprintf("-T <options> specified\n");
+    sprintf(cmd, "echo %s | sed -e 's@,@ @g' | tr '[A-Z]' '[a-z]' | xargs %s/tau-config --binding | sed -e 's@shared@@g'", tvalue, bindir);
+    FILE *fp; 
+    fp = popen(cmd, "r"); 
+    if (fp == NULL) {
+      perror("tau_run: Error launching tau-config to get bindings");
+      return 1;
+    }
+
+    if ((fgets(bindings, 1024, fp)) != NULL) {
+      int len = strlen(bindings);
+      if (strstr(bindings,"Error") != 0) {
+        printf("tau_error: %s\n", bindings); 
+        return 1; 
+      }
+      if (bindings[len - 1] == '\n') {
+        bindings[len - 1 ] = '\0';
+      }
+      /* we have the bindings: print it */
+      dprintf("bindings: %s\n", bindings); 
+    } else {
+      perror("tau_run: Error reading from pipe to get bindings from tau-config");
+      return 1;
+    }
+    pclose(fp);
+                                         
+
+  }
   
   //did we load a library?  if not, load the default
   if(!loadlib){
     sprintf(staticlibname,"libtau-mpi-pdt.a");
-    sprintf(staticlibname,"libTauMpi-mpi-pdt.a");
+    sprintf(staticmpilibname,"libTauMpi-mpi-pdt.a");
     sprintf(libname, "libTAU.so");
     loadlib=true;
   }//if
   else {
-    sprintf(staticlibname,"lib%s.a", &xvalue[3]);
-    sprintf(staticmpilibname,"libTauMpi%s.a", &xvalue[6]);
-    dprintf("staticmpilibname = %s\n", staticmpilibname);
-    sprintf(libname, "lib%s.so", &xvalue[3]);
-    if (xvalue[3] == 'T') {
-      fprintf(stderr, "%s> Loading %s ...\n", mutname, libname);
+    if (xvalue != (char *) NULL) { /* -Xrun<Options> specified */
+      sprintf(staticlibname,"lib%s.a", &xvalue[3]);
+      sprintf(staticmpilibname,"libTauMpi%s.a", &xvalue[6]);
+      dprintf("staticmpilibname = %s\n", staticmpilibname);
+      sprintf(libname, "lib%s.so", &xvalue[3]);
+      if (xvalue[3] == 'T') {
+        fprintf(stderr, "%s> Loading %s ...\n", mutname, libname);
+      } else {
+        fprintf(stderr, "%s> Loading %s ...\n", mutname, staticlibname);
+        fprintf(stderr, "%s> Loading %s ...\n", mutname, staticmpilibname);
+      }
     } else {
-      fprintf(stderr, "%s> Loading %s ...\n", mutname, staticlibname);
-      fprintf(stderr, "%s> Loading %s ...\n", mutname, staticmpilibname);
+      if (tvalue != (char *) NULL) { /* -T <bindings> specified */
+        sprintf(staticlibname,"libtau%s.a", bindings);
+        sprintf(staticmpilibname,"libTauMpi%s.a", bindings);
+        dprintf("staticmpilibname = %s\n", staticmpilibname);
+        sprintf(libname, "libTAUsh%s.so", bindings);
+        /* if (isStaticExecutable) {
+          fprintf(stderr, "%s> Loading %s ...\n", mutname, staticlibname);
+          fprintf(stderr, "%s> Loading %s ...\n", mutname, staticmpilibname);
+        } else { 
+        */
+          fprintf(stderr, "%s> Loading %s ...\n", mutname, libname);
+        /* } */
+      }
     }
+    
   }
 
   //has an error occured in the command line arguments?
   if(errflag){
-    fprintf (stderr, "usage: %s [-Xrun<Taulibrary> ] [-v] [-o outfile] [-f <inst_req> ] <application> [args]\n", argv[0]);
+    fprintf (stderr, "usage: %s [-Xrun<Taulibrary> | -T <bindings_options> ] [-v] [-o outfile] [-f <inst_req> ] <application> [args]\n", argv[0]);
     fprintf (stderr, "%s instruments and executes <application> to generate performance data\n", argv[0]);
     fprintf (stderr, "-v is an optional verbose option\n"); 
     fprintf (stderr, "-o <outfile> is for binary rewriting\n");
     fprintf (stderr, "e.g., \n");
     fprintf (stderr, "%%%s -XrunTAU -f sel.dat a.out 100 \n", argv[0]);
     fprintf (stderr, "Loads libTAU.so from $LD_LIBRARY_PATH, loads selective instrumentation requests from file sel.dat and executes a.out \n"); 
+    fprintf (stderr, "%%%s -T scorep,papi,pdt -f sel.dat a.out 100 \n", argv[0]);
+    fprintf (stderr, "Loads libTAUsh-papi-mpi-scorep-pdt.so from $LD_LIBRARY_PATH, loads selective instrumentation requests from file sel.dat and executes a.out \n"); 
     exit (1);
   }//if(errflag)
 

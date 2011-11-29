@@ -66,7 +66,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
     private JTextField name = new JTextField(15);
     private JPanel configurations = new JPanel();
     private JPanel editConfiguration = new JPanel();
-    private String[] adapters = { "mysql", "postgresql", "oracle", "derby", "db2" };
+    private String[] adapters = { "mysql", "postgresql", "oracle", "derby", "db2", "h2" };
     private JComboBox adapter = new JComboBox(adapters);
     private JTextField driver = new JTextField(15);
     private JTextField host = new JTextField(15);
@@ -433,7 +433,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
                 driver.setText("");
                 jarfile.setText("");
                 schema.setText("");
-                adapter.setSelectedItem("derby");
+                adapter.setSelectedItem("h2");
                 host.setEnabled(false);
                 host.setText("");
                 databasePassword.setEditable(false);
@@ -701,6 +701,36 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
             else
             {
             	this.jarfile.setText(fileLoc+"derby.jar");
+            }
+         } else if (newAdapter.compareTo("h2") == 0) {
+            host.setEnabled(false);
+            host.setText("");
+            databasePassword.setEditable(false);
+            databasePassword.setEnabled(false);
+            databasePassword.setText("");
+            savePassword.setEnabled(false);
+            port.setEnabled(false);
+            port.setText("");
+        	download.setEnabled(false);
+        	labelDatabaseName.setText("Path to Database:");
+            this.driver.setText("org.h2.Driver");
+            String jarlocation;
+            if (System.getProperty("os.name").startsWith("Windows"))
+            {
+            	jarlocation = home + File.separator + "bin" + File.separator + "h2.jar";
+            }
+            else
+            {
+            	jarlocation = home + File.separator + "tools" + File.separator + "src" + File.separator + "contrib" + File.separator + "h2.jar";
+            }
+            File jar = new File(jarlocation);
+            if (jar.exists() && home != null && arch != null)
+            {
+            	this.jarfile.setText(jarlocation);
+            }
+            else
+            {
+            	this.jarfile.setText(fileLoc+"h2.jar");
             }
         } else if (newAdapter.compareTo("db2") == 0) {
             download.setEnabled(false);

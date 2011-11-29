@@ -499,7 +499,7 @@ public class Trial implements Serializable, Comparable<Trial> {
 
             DatabaseMetaData dbMeta = db.getMetaData();
 
-            if ((db.getDBType().compareTo("oracle") == 0) || (db.getDBType().compareTo("derby") == 0)
+            if ((db.getDBType().compareTo("oracle") == 0) || (db.getDBType().compareTo("derby") == 0) || (db.getDBType().compareTo("h2") == 0)
                     || (db.getDBType().compareTo("db2") == 0)) {
                 resultSet = dbMeta.getColumns(null, null, "TRIAL", "%");
             } else {
@@ -834,6 +834,8 @@ public class Trial implements Serializable, Comparable<Trial> {
                     tmpStr = "select IDENTITY_VAL_LOCAL() FROM trial";
                 else if (db.getDBType().compareTo("derby") == 0)
                     tmpStr = "select IDENTITY_VAL_LOCAL() FROM trial";
+                else if (db.getDBType().compareTo("h2") == 0)
+                    tmpStr = "select IDENTITY_VAL_LOCAL() FROM trial";
                 else if (db.getDBType().compareTo("oracle") == 0)
                     tmpStr = "select " + db.getSchemaPrefix() + "trial_id_seq.currval FROM dual";
                 else
@@ -1075,6 +1077,8 @@ public class Trial implements Serializable, Comparable<Trial> {
                 sql.append(" CLOB"); // defaults to 4 GB max
             } else if (db.getDBType().equalsIgnoreCase("derby")) {
                 sql.append(" CLOB"); // defaults to 1 MB max
+            } else if (db.getDBType().equalsIgnoreCase("h2")) {
+                sql.append(" CLOB"); // defaults to 1 MB max
             } else if (db.getDBType().equalsIgnoreCase("db2")) {
                 sql.append(" CLOB"); // defaults to 1 GB max
             } else if (db.getDBType().equalsIgnoreCase("mysql")) {
@@ -1110,6 +1114,8 @@ public class Trial implements Serializable, Comparable<Trial> {
             if (db.getDBType().equalsIgnoreCase("oracle")) {
                 sql.append(" BLOB"); // defaults to 4 GB max
             } else if (db.getDBType().equalsIgnoreCase("derby")) {
+                sql.append(" BLOB"); // defaults to 1 MB max
+            } else if (db.getDBType().equalsIgnoreCase("h2")) {
                 sql.append(" BLOB"); // defaults to 1 MB max
             } else if (db.getDBType().equalsIgnoreCase("db2")) {
                 sql.append(" BLOB"); // defaults to 1 GB max

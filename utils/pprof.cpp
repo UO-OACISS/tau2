@@ -11,6 +11,8 @@
 /*  Indiana University  University of Oregon  University of Rennes   */
 /*********************************************************************/
 
+//#define DEBUG 1
+
 /*
  * pprof.c : parallel profile data files printer
  * Modified by Sameer Shende (sameer@cs.uoregon.edu)
@@ -76,6 +78,8 @@ static struct p_prof_elem {
 /* MIMD extension to identify top level function in each thread */
 int top_level_function; /* id for the top level function */
 double max_thread_cumusec = 0.0; 
+bool read_summary_files = false;
+char summary_prefix[1024];
 static struct p_coll_descr {
   int numelem;
   int dim;
@@ -376,7 +380,15 @@ int FillFunctionDB(int node, int ctx, int thr, char *prefix){
   char *userEventName; //need a separate string otherwise it stores only one ptr
   map<const char*, function_data, ltstr>::iterator it;
   map<const char*, user_event_data, ltstr>::iterator uit;  
-  sprintf(filename,"%s.%d.%d.%d",prefix, node, ctx, thr);
+  if (read_summary_files) {
+    static int invocation = 0;
+    if (invocation > 0) return 0; 
+    strcpy(filename, prefix);
+    invocation++;
+  }
+  else {
+    sprintf(filename,"%s.%d.%d.%d",prefix, node, ctx, thr);
+  }
 #ifdef DEBUG
   printf("Inside FillFunctionDB : Filename %s\n",filename);
 #endif /* DEBUG */
@@ -685,7 +697,15 @@ int ProcessFileDynamic(int node, int ctx, int thr, int max, char *prefix){
   FILE *fp;
   map<const char*, function_data, ltstr>::iterator it;
   int numberOfUserEvents;
-  sprintf(filename,"%s.%d.%d.%d",prefix, node, ctx, thr);     /*  create the file name  */
+
+  if (read_summary_files) {
+    static int invocations = 0;
+    if (invocations > 0) return 0; 
+    invocations++;
+    sprintf(filename,prefix);
+  } else {
+    sprintf(filename,"%s.%d.%d.%d",prefix, node, ctx, thr);     /*  create the file name  */
+  }
 
   //attempt to open the file and read -- if we can't report an error, and return 0
   if ((fp = fopen(filename, "r")) == NULL) {
@@ -1037,9 +1057,13 @@ int FunctionSummaryInfo(int no, int ctx, int thr, int max){
       if (hpcxx_flag == FALSE)
         printf ("\nNODE %d: \n", no);
       else{
-	printf ("\nNODE %d;", no);
-	printf ("CONTEXT %d;", ctx);
-	printf ("THREAD %d:\n", thr);
+        if (read_summary_files) {
+          printf("\n%s\n", summary_prefix);
+        } else {
+	  printf ("\nNODE %d;", no);
+	  printf ("CONTEXT %d;", ctx);
+	  printf ("THREAD %d:\n", thr);
+        }
       }//else
       PrintFuncTab (p_prof_tbl, total, max);
     }//else
@@ -1308,7 +1332,11 @@ void UserEventSummaryInfo(int node, int ctx, int thr){
     }//if
     else{
       printf("---------------------------------------------------------------------------------------\n");
-      printf("\nUSER EVENTS Profile :NODE %d, CONTEXT %d, THREAD %d\n", node, ctx, thr);
+      if (read_summary_files) {
+        printf("\nUSER EVENTS: %s\n", summary_prefix);
+      } else {
+        printf("\nUSER EVENTS Profile :NODE %d, CONTEXT %d, THREAD %d\n", node, ctx, thr);
+      }
       printf("---------------------------------------------------------------------------------------\n");
       printf("NumSamples   MaxValue   MinValue  MeanValue  Std. Dev.  Event Name\n");
       printf("---------------------------------------------------------------------------------------\n");
@@ -1877,6 +1905,9 @@ static int ProcessFile (int no, int ctx, int thr, int longname, int max, char pr
     sprintf (proffile, "%s.%d", prefix, no);
   else  /* hpc++ profile.0.0.0 etc. */
     sprintf (proffile, "%s.%d.%d.%d", prefix, no, ctx, thr);
+  if (read_summary_files) {
+    strcpy(proffile, prefix);
+  }
 
   /* -- read profile data file and set profile data tables ------------------ */
   /* ------------------------------------------------------------------------ */
@@ -2135,9 +2166,13 @@ static int ProcessFile (int no, int ctx, int thr, int longname, int max, char pr
       if (hpcxx_flag == FALSE)
       	printf ("\nNODE %d: \n", no);
       else{
-	printf ("\nNODE %d;", no);
-        printf ("CONTEXT %d;", ctx);
-        printf ("THREAD %d:\n", thr);
+        if (read_summary_files) {
+	  printf ("\n%s\n", summary_prefix);
+        } else {
+	  printf ("\nNODE %d;", no);
+          printf ("CONTEXT %d;", ctx);
+          printf ("THREAD %d:\n", thr);
+        }
       }
       PrintFuncTab (p_prof_tbl, total, max);
     }
@@ -2437,6 +2472,7 @@ int main (int argc, char *argv[]){
   if(dir != NULL) {
     file = strsave(strcat(strcat(dir,"/"),file));
   } 
+
 #ifdef TAU_WINDOWS
   /* -- parse command line arguments ---------------------------------------- */  
   errflag = FALSE;
@@ -2649,12 +2685,22 @@ int main (int argc, char *argv[]){
   if (!dump) // This statement not in the dump protocol 
     printf("Reading Profile files in %s.*\n", file); 
 
+  if (strstr(file, "profile.")!= 0 && strlen(file) > 10) {
+    strcpy(proffile, file);
+    strcpy(summary_prefix,file);
+    read_summary_files=true;
+  }
+
   //now, determine if we are using dynamic profiling or not
   if (IsDynamicProfiling(proffile)) { /* we don't need to read .ftab files */
     //now, fill up the funcDB
-    if ( optind == argc)/* files not specified by specific node nos list on command line */
-      for(argno = 0; FillFunctionDBInNode(argno, 0, 0, file); argno++) ;
-    else { /* 4 45 68 ... - process this list of node nos. */
+    if ( optind == argc) {/* files not specified by specific node nos list on command line */
+      if (read_summary_files) 
+        FillFunctionDBInNode(0,0,0, file); 
+      else { 
+        for(argno = 0; FillFunctionDBInNode(argno, 0, 0, file); argno++) ;
+      }
+    } else { /* 4 45 68 ... - process this list of node nos. */
       for (argno = optind; argno < argc; argno++)
 	FillFunctionDBInNode(atoi(argv[argno]), 0, 0, file);
     }//else

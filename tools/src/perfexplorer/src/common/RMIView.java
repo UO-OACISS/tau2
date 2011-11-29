@@ -49,6 +49,8 @@ public class RMIView implements Serializable {
 					resultSet = dbMeta.getColumns(null, null, "TRIAL_VIEW", "%");
 				} else if (db.getDBType().compareTo("derby") == 0) {
 					resultSet = dbMeta.getColumns(null, null, "TRIAL_VIEW", "%");
+				} else if (db.getDBType().compareTo("h2") == 0) {
+					resultSet = dbMeta.getColumns(null, null, "TRIAL_VIEW", "%");
 				} else if (db.getDBType().compareTo("db2") == 0) {
 					resultSet = dbMeta.getColumns(null, null, "TRIAL_VIEW", "%");
 				} else {

@@ -1,0 +1,82 @@
+#include "pomp_lib.h"
+
+
+#include "./test1.f90.opari.inc"
+#include "./test2.f90.opari.inc"
+#include "./test3.f90.opari.inc"
+#include "./test4.f90.opari.inc"
+#include "./test5.f90.opari.inc"
+#include "./test6.f90.opari.inc"
+#include "./test7.f90.opari.inc"
+#include "./test8.f90.opari.inc"
+#include "./test9.f90.opari.inc"
+#include "./testA.f90.opari.inc"
+#include "./testC.f90.opari.inc"
+#include "./testD.f90.opari.inc"
+#include "./testF.f90.opari.inc"
+#include "./test1.f.opari.inc"
+#include "./test3.f.opari.inc"
+#include "./test5.f.opari.inc"
+#include "./testG.f.opari.inc"
+
+int POMP_MAX_ID = 57;
+
+struct ompregdescr* pomp_rd_table[57] = {
+  0,
+  &omp_rd_1,
+  &omp_rd_2,
+  &omp_rd_3,
+  &omp_rd_4,
+  &omp_rd_5,
+  &omp_rd_6,
+  &omp_rd_7,
+  &omp_rd_8,
+  &omp_rd_9,
+  &omp_rd_10,
+  &omp_rd_11,
+  &omp_rd_12,
+  &omp_rd_13,
+  &omp_rd_14,
+  &omp_rd_15,
+  &omp_rd_16,
+  &omp_rd_17,
+  &omp_rd_18,
+  &omp_rd_19,
+  &omp_rd_20,
+  &omp_rd_21,
+  &omp_rd_22,
+  &omp_rd_23,
+  &omp_rd_24,
+  &omp_rd_25,
+  &omp_rd_26,
+  &omp_rd_27,
+  &omp_rd_28,
+  &omp_rd_29,
+  &omp_rd_30,
+  &omp_rd_31,
+  &omp_rd_32,
+  &omp_rd_33,
+  &omp_rd_34,
+  &omp_rd_35,
+  &omp_rd_36,
+  &omp_rd_37,
+  &omp_rd_38,
+  &omp_rd_39,
+  &omp_rd_40,
+  &omp_rd_41,
+  &omp_rd_42,
+  &omp_rd_43,
+  &omp_rd_44,
+  &omp_rd_45,
+  &omp_rd_46,
+  &omp_rd_47,
+  &omp_rd_48,
+  &omp_rd_49,
+  &omp_rd_50,
+  &omp_rd_51,
+  &omp_rd_52,
+  &omp_rd_53,
+  &omp_rd_54,
+  &omp_rd_55,
+  &omp_rd_56,
+};
