@@ -624,6 +624,22 @@ public class DataSourceExport {
         	}
         }
         
+        for(int i =0;i<3;i++){
+    		
+    		if(minMaxMean[i]==null)
+    		{
+    			String missing = "Min";
+            	
+        		if(i==1){
+        			missing="Max";
+        		}else
+        			if(i==2){
+        				missing="Mean";
+        			}
+    			System.out.println("No "+missing+" data available.");
+    		}
+        }
+        
 //        for (int i = 0; i < functions.length; i++) {
 //            FunctionProfile fp = minMaxMean[0].getFunctionProfile(functions[i]);
 //            if (fp != null) {
@@ -705,6 +721,11 @@ public class DataSourceExport {
             	String fName="";
             	for(int m = 0;m<minMaxMean.length;m++)
             	{
+            	if(minMaxMean[m]==null){
+
+            		continue;
+            	}
+            		
                 FunctionProfile fp = minMaxMean[m].getFunctionProfile(functions[i]);
 
                 if (fp != null) {
