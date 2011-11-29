@@ -63,6 +63,12 @@ void TauMetrics_getCounterList(const char ***counterNames, int *numCounters);
  */
 double TauMetrics_getTraceMetricIndex();
 
+/* *CWL* This needs to be distinguished from 
+         TauMetrics_getTraceMetricIndex which appears to be doing something
+	 very specific to traces.
+*/
+int TauMetrics_getMetricIndexFromName(const char *metricString);
+
 /**
  * Returns the index of the trace metric
  */

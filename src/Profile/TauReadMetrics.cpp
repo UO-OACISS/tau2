@@ -19,8 +19,11 @@
 
 #include <TAU.h>
 
+extern "C" int Tau_is_thread_fake(int t);
+
 /* for getrusage */
 #ifndef TAU_WINDOWS
+#include <time.h>
 #include <sys/time.h>
 #include <sys/resource.h>
 #include <unistd.h>
@@ -119,6 +122,20 @@ void metric_read_gettimeofday(int tid, int idx, double values[]) {
   struct timeval tp;
   gettimeofday(&tp, 0);
   values[idx] = ((double)tp.tv_sec * 1e6 + tp.tv_usec);
+#endif
+}
+
+/* clock that uses clock_gettime */
+void metric_read_clock_gettime(int tid, int idx, double values[]) {
+#ifdef TAU_WINDOWS
+  values[idx] = TauWindowsUsecD();
+#elif __APPLE__
+  /* Mac OS X currently (up to 10.6.8) does not support clock_gettime. */
+  metric_read_gettimeofday(tid, idx, values);
+#else
+  struct timespec tm;
+  clock_gettime(CLOCK_MONOTONIC, &tm);
+  values[idx] = ((double)tm.tv_sec * 1e6 + (tm.tv_nsec*1e-3));
 #endif
 }
 
@@ -271,7 +288,7 @@ void metric_set_gpu_timestamp(int tid, double value)
 void metric_read_cudatime(int tid, int idx, double values[]) {
 
   //get time from the CPU clock
-  if (tid == CPU_THREAD)
+  if (!Tau_is_thread_fake(tid))
   { 
 #ifdef TAU_WINDOWS
     values[idx] = TauWindowsUsecD();

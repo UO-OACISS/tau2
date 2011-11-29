@@ -10,6 +10,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -49,26 +50,57 @@ public class SourceManager extends JFrame {
         return list;
     }
 
-    private boolean match(String s1, String s2) {
+//    private boolean match(String s1, String s2) {
+//        //System.out.println("comparing " + s1 + " to " + s2);
+//        if (s1.equals(s2)) {
+//            return true;
+//        }
+//
+//        return false;
+//    }
+    
+    private boolean matchFiles(String s1, String s2) {
         //System.out.println("comparing " + s1 + " to " + s2);
-        if (s1.equals(s2)) {
-            return true;
-        }
-
+    	
+    	if(s1==null || s2==null)
+    		return false;
+    	
+    	if(s1.equals(s2))
+    		return true;
+    	
+    	File f1=new File(s1);
+    	File f2=new File(s2);
+    	
+    	if(f1.exists()&&f2.exists())
+    	{
+        try {
+			if (f1.getCanonicalFile().equals(f2.getCanonicalFile())) {
+			    return true;
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    	}
         return false;
     }
 
+    private void launchSourceViewer(File sourceFile,SourceRegion region){
+        SourceViewer sourceViewer = sourceViewers.get(sourceFile);
+        if (sourceViewer == null) {
+            sourceViewer = new SourceViewer(sourceFile);
+            sourceViewers.put(sourceFile, sourceViewer);
+        }
+        sourceViewer.highlightRegion(region);
+        sourceViewer.setVisible(true);
+    }
+    
     private boolean searchLocations(SourceRegion region, File[] list, boolean recurse) {
+    	if(list==null)
+    		return false;
         for (int j = 0; j < list.length; j++) {
-            if (match(region.getFilename(), list[j].getName())) {
+            if (matchFiles(region.getFilename(), list[j].getName())) {
                 //System.out.println("found it");
-                SourceViewer sourceViewer = sourceViewers.get(list[j]);
-                if (sourceViewer == null) {
-                    sourceViewer = new SourceViewer(list[j]);
-                    sourceViewers.put(list[j], sourceViewer);
-                }
-                sourceViewer.highlightRegion(region);
-                sourceViewer.setVisible(true);
+            	launchSourceViewer(list[j],region);
                 return true;
             }
         }
@@ -90,6 +122,14 @@ public class SourceManager extends JFrame {
 
         String filename = region.getFilename();
 
+        
+        File rfile = new File(filename);
+        if(rfile.exists())
+        {
+        	this.launchSourceViewer(rfile, region);
+        	return;
+        }
+        
         File cwd = new File(".");
 
         if (searchLocations(region, cwd.listFiles(), false)) {
@@ -133,7 +173,7 @@ public class SourceManager extends JFrame {
         gbc.weighty = 0;
 
         // First add the label.
-        JLabel titleLabel = new JLabel("Current Source Directories (directories are search recursively)");
+        JLabel titleLabel = new JLabel("Current Source Directories (directories are searched recursively)");
         titleLabel.setFont(new Font("SansSerif", Font.PLAIN, 14));
         addCompItem(titleLabel, gbc, 0, 0, 1, 1);
 

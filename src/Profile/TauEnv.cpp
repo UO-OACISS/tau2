@@ -20,6 +20,8 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #ifndef TAU_WINDOWS
 #include <strings.h>
 #else
@@ -30,9 +32,15 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <limits.h>
-
+#include <time.h>
 #include <Profile/TauEnv.h>
 #include <TAU.h>
+#include <tauroot.h>
+#include <fcntl.h>
+
+#ifndef TAU_BGP
+//#include <pwd.h>
+#endif /* TAU_BGP */
 
 #define MAX_LN_LEN 2048
 
@@ -43,6 +51,8 @@
 
 #define TAU_DEPTH_LIMIT_DEFAULT INT_MAX
 
+#define TAU_DISABLE_INSTRUMENTATION_DEFAULT 0
+
 /* If TAU is built with -PROFILECALLPATH, we turn callpath profiling on by default */
 #ifdef TAU_CALLPATH
 # define TAU_CALLPATH_DEFAULT 1
@@ -52,12 +62,15 @@
 
 /* if we are doing EBS sampling, set the default sampling period */
 #define TAU_EBS_DEFAULT 0
+#define TAU_EBS_KEEP_UNRESOLVED_ADDR_DEFAULT 0
 #define TAU_EBS_PERIOD_DEFAULT 1000
 /* if we are doing EBS sampling, set whether we want inclusive samples */
 /* that is, main->foo->mpi_XXX is a sample for main, foo and mpi_xxx */
 #define TAU_EBS_INCLUSIVE_DEFAULT 0
 
 #define TAU_EBS_SOURCE_DEFAULT "itimer"
+#define TAU_EBS_UNWIND_DEFAULT 0
+#define TAU_EBS_UNWIND_DEPTH_DEFAULT 10
 
 /* Experimental feature - pre-computation of statistics */
 #if (defined(TAU_UNIFY) && defined(TAU_MPI))
@@ -93,6 +106,12 @@
 #define TAU_TRACK_IO_PARAMS_DEFAULT 0
 
 #define TAU_TRACK_SIGNALS_DEFAULT 0
+/* In TAU_TRACK_SIGNALS operations, do we invoke gdb? */
+#define TAU_SIGNALS_GDB_DEFAULT 0
+
+#define TAU_SUMMARY_DEFAULT 0
+
+#define TAU_IBM_BG_HWP_COUNTERS 0
 
 #define TAU_THROTTLE_DEFAULT 1
 #ifdef TAU_MPI
@@ -237,6 +256,16 @@ static int TauConf_read() {
     TauConf_parse(cfgFile, tmp);
     fclose(cfgFile);
   }
+  else {
+    char conf_file_name[1024]; 
+    sprintf(conf_file_name,"%s/tau_system_defaults/tau.conf", TAUROOT);
+    cfgFile = fopen(conf_file_name, "r");
+    if (cfgFile) {
+      TauConf_parse(cfgFile, tmp);
+      fclose(cfgFile);
+      TAU_VERBOSE("TAU: Read systemwide default configuration settings from %s\n", conf_file_name);
+    }
+  }
   return 0;
 }
 
@@ -251,12 +280,89 @@ static const char *getconf(const char *key) {
   return getenv(key);
 }
 
+/*********************************************************************
+ * Local Tau_check_dirname routine
+ ********************************************************************/
+static  char * Tau_check_dirname(const char * dir) {
+  if (strcmp(dir, "$TAU_LOG_DIR") == 0){
+    TAU_VERBOSE("Using PROFILEDIR=%s\n", dir);
+    const char *logdir= getconf("TAU_LOG_PATH");
+    const char *jobid= getconf("COBALT_JOBID");
+    if (jobid == (const char *) NULL) jobid=strdup("0");
+    TAU_VERBOSE("jobid = %s\n", jobid);
+    time_t theTime = time(NULL);
+    struct tm *thisTime = gmtime(&theTime);
+    thisTime = localtime(&theTime);
+    char user[1024]; 
+    int ret;
+
+
+    char logfiledir[2048]; 
+    char scratchdir[2048]; 
+#ifdef TAU_BGP
+    if (cuserid(user) == NULL) {
+      sprintf(user,"unknown");
+    }
+#else
+
+#ifdef TAU_WINDOWS
+		char *temp = "unknown";
+#else
+    /*    struct passwd *pwInfo = getpwuid(geteuid());
+    if ((pwInfo != NULL) &&
+        (pwInfo->pw_name != NULL)) {
+      strcpy(user, pwInfo->pw_name);
+    */
+    char *temp = getlogin();
+#endif // TAU_WINDOWS
+    if (temp != NULL) {
+      sprintf(user, temp);
+    } else {
+      sprintf(user,"unknown");
+    }
+    free(temp);
+#endif /* TAU_BGP */
+    ret = sprintf(logfiledir, "%s/%d/%d/%d/%s_id%s_%d-%d-%d",  
+	logdir, (thisTime->tm_year+1900),(thisTime->tm_mon+1), 
+	thisTime->tm_mday, user, jobid, (thisTime->tm_mon+1), thisTime->tm_mday,
+	(thisTime->tm_hour*60*60 + thisTime->tm_min*60 + thisTime->tm_sec));
+    TAU_VERBOSE("Using logdir = %s\n", logfiledir);
+    if (RtsLayer::myNode() < 1) { 
+#ifdef TAU_WINDOWS
+      mkdir(logfiledir);
+#else
+
+      mkdir(logdir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
+      sprintf(scratchdir, "%s/%d", logdir, (thisTime->tm_year+1900));
+      mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
+      sprintf(scratchdir, "%s/%d/%d", logdir, (thisTime->tm_year+1900), 
+	(thisTime->tm_mon+1));
+      mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
+      sprintf(scratchdir, "%s/%d/%d/%d", logdir, (thisTime->tm_year+1900), 
+	(thisTime->tm_mon+1), thisTime->tm_mday);
+      mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
+      TAU_VERBOSE("mkdir %s\n", scratchdir);
+
+      mkdir(logfiledir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
+      TAU_VERBOSE("mkdir %s\n", logfiledir);
+#endif 
+    }
+    return strdup(logfiledir);
+  }
+  return (char *)dir;
+   
+}
+
+
+
 /****************************************************************************/
 
 extern "C" { /* C linkage */
 static int env_synchronize_clocks = 0;
 static int env_verbose = 0;
 static int env_throttle = 0;
+static int env_disable_instrumentation = 0;
+static double env_max_records = 0;
 static int env_callpath = 0;
 static int env_compensate = 0;
 static int env_profiling = 0;
@@ -270,11 +376,19 @@ static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
 static int env_track_io_params = 0;
 static int env_track_signals = 0;
+static int env_signals_gdb = 0;
+static int env_summary_only = 0;
+static int env_ibm_bg_hwp_counters = 0;
 static int env_extras = 0;
+/* This is a malleable default */
+static int env_ebs_keep_unresolved_addr = 0;
 static int env_ebs_period = 0;
 static int env_ebs_inclusive = 0;
 static int env_ebs_enabled = 0;
 static const char *env_ebs_source = "itimer";
+static int env_ebs_unwind_enabled = 0;
+static int env_ebs_unwind_depth = TAU_EBS_UNWIND_DEPTH_DEFAULT;
+
 static int env_stat_precompute = 0;
 static int env_child_forkdirs = 0;
 
@@ -297,6 +411,7 @@ void TAU_VERBOSE(const char *format, ...) {
   va_start(args, format);
   vfprintf(stderr, format, args);
   va_end(args);
+  fflush(stderr);
 }
 
 /*********************************************************************
@@ -348,6 +463,13 @@ int TauEnv_get_throttle() {
   return env_throttle;
 }
 
+int TauEnv_get_disable_instrumentation() {
+  return env_disable_instrumentation;
+}
+
+double TauEnv_get_max_records() {
+  return env_max_records;
+}
 int TauEnv_get_callpath() {
   return env_callpath;
 }
@@ -362,6 +484,10 @@ int TauEnv_get_comm_matrix() {
 
 int TauEnv_get_track_signals() {
   return env_track_signals;
+}
+
+int TauEnv_get_signals_gdb() {
+  return env_signals_gdb;
 }
 
 int TauEnv_get_track_message() {
@@ -386,6 +512,14 @@ int TauEnv_get_track_io_params() {
 
 int TauEnv_get_extras() {
   return env_extras;
+}
+
+int TauEnv_get_summary_only() {
+  return env_summary_only;
+}
+
+int TauEnv_get_ibm_bg_hwp_counters() {
+  return env_ibm_bg_hwp_counters;
 }
 
 int TauEnv_get_profiling() {
@@ -420,6 +554,19 @@ int TauEnv_get_profile_format() {
   return env_profile_format;
 }
 
+int TauEnv_get_ebs_keep_unresolved_addr() {
+  return env_ebs_keep_unresolved_addr;
+}
+
+  // *CWL* Only to be used by TAU whenever the desired ebs period violates
+  //       system-supported thresholds.
+void TauEnv_force_set_ebs_period(int period) {
+  char tmpstr[512];
+  env_ebs_period = period;
+  sprintf(tmpstr, "%d", env_ebs_period);
+  TAU_METADATA("TAU_EBS_PERIOD (FORCED)", tmpstr);
+}
+
 int TauEnv_get_ebs_period() {
   return env_ebs_period;
 }
@@ -430,6 +577,14 @@ int TauEnv_get_ebs_inclusive() {
 
 int TauEnv_get_ebs_enabled() {
   return env_ebs_enabled;
+}
+
+int TauEnv_get_ebs_unwind() {
+  return env_ebs_unwind_enabled;
+}
+
+int TauEnv_get_ebs_unwind_depth() {
+  return env_ebs_unwind_depth;
 }
 
 const char *TauEnv_get_ebs_source() {
@@ -514,10 +669,43 @@ void TauEnv_initialize() {
       TAU_METADATA("TAU_TRACK_SIGNALS", "on");
       env_track_signals = 1;
       env_extras = 1;
+      tmp = getconf("TAU_SIGNALS_GDB");
+      if (parse_bool(tmp, env_signals_gdb)) {
+	TAU_VERBOSE("TAU: SIGNALS GDB output enabled\n");
+	TAU_METADATA("TAU_SIGNALS_GDB", "on");
+	env_signals_gdb = 1;
+      } else {
+	TAU_METADATA("TAU_SIGNALS_GDB", "off");
+	env_signals_gdb = 0;
+      }
     } else {
       TAU_METADATA("TAU_TRACK_SIGNALS", "off");
+      TAU_METADATA("TAU_SIGNALS_GDB", "off");
       env_track_signals = 0;
     }
+
+    tmp = getconf("TAU_SUMMARY");
+    if (parse_bool(tmp, env_summary_only)) {
+      TAU_VERBOSE("TAU: Generating only summary data: TAU_SUMMARY enabled\n");
+      TAU_METADATA("TAU_SUMMARY", "on");
+      env_summary_only = 1;
+      env_extras = 1;
+    } else {
+      TAU_METADATA("TAU_SUMMARY", "off");
+      env_summary_only = 0;
+    }
+
+    tmp = getconf("TAU_IBM_BG_HWP_COUNTERS");
+    if (parse_bool(tmp, env_ibm_bg_hwp_counters)) {
+      TAU_VERBOSE("TAU: IBM UPC HWP counter data collection enabled\n");
+      TAU_METADATA("TAU_IBM_BG_HWP_COUNTERS", "on");
+      env_ibm_bg_hwp_counters = 1;
+      env_extras = 1;
+    } else {
+      TAU_METADATA("TAU_IBM_BG_HWP_COUNTERS", "off");
+      env_ibm_bg_hwp_counters = 0;
+    }
+
 
 
     /*** Options that can be used with Scalasca and VampirTrace need to go above this line ***/
@@ -528,6 +716,11 @@ void TauEnv_initialize() {
 
 #ifdef TAU_VAMPIRTRACE
     TAU_VERBOSE("[%d] TAU: VampirTrace active! (TAU measurement disabled)\n", getpid());
+    return;
+#endif
+
+#ifdef TAU_SCOREP
+    TAU_VERBOSE("[%d] TAU: SCOREP active! (TAU measurement disabled)\n", getpid());
     return;
 #endif
 
@@ -545,11 +738,13 @@ void TauEnv_initialize() {
     if ((env_profiledir = getconf("PROFILEDIR")) == NULL) {
       env_profiledir = ".";   /* current directory */
     }
+    env_profiledir=Tau_check_dirname(env_profiledir);
     TAU_VERBOSE("TAU: PROFILEDIR is \"%s\"\n", env_profiledir);
 
     if ((env_tracedir = getconf("TRACEDIR")) == NULL) {
       env_tracedir = ".";   /* current directory */
     }
+    env_tracedir=Tau_check_dirname(env_tracedir);
     TAU_VERBOSE("TAU: TRACEDIR is \"%s\"\n", env_tracedir);
 
     int profiling_default = TAU_PROFILING_DEFAULT;
@@ -705,6 +900,17 @@ void TauEnv_initialize() {
       TAU_METADATA("TAU_THROTTLE", "off");
     }
 
+    /* Throttle */
+    tmp = getconf("TAU_DISABLE_INSTRUMENTATION");
+    if (parse_bool(tmp, TAU_DISABLE_INSTRUMENTATION_DEFAULT)) {
+      env_disable_instrumentation = 1;
+      TAU_DISABLE_INSTRUMENTATION(); 
+      TAU_VERBOSE("TAU: Instrumentation Disabled\n");
+      TAU_METADATA("TAU_DISABLE_INSTRUMENTATION", "on");
+    } else { /* default: instrumentation is enabled */
+      env_disable_instrumentation = 0;
+    }
+
     const char *percall = getconf("TAU_THROTTLE_PERCALL");
     env_throttle_percall = TAU_THROTTLE_PERCALL_DEFAULT;
     if (percall) {
@@ -715,6 +921,12 @@ void TauEnv_initialize() {
     env_throttle_numcalls = TAU_THROTTLE_NUMCALLS_DEFAULT;
     if (numcalls) {
       env_throttle_numcalls = strtod(numcalls, 0);
+    }
+    const char *max_records = getconf("TAU_MAX_RECORDS");
+    env_max_records = TAU_MAX_RECORDS;
+    if (max_records) {
+      env_max_records = strtod(max_records, 0);
+      TAU_VERBOSE("TAU: TAU_MAX_RECORDS = %g\n", env_max_records);
     }
 
     if (env_throttle) {
@@ -753,7 +965,6 @@ void TauEnv_initialize() {
       TAU_VERBOSE("TAU: METRICS is \"%s\"\n", env_metrics);
     }
 
-
     tmp = getconf("TAU_SAMPLING");
     if (parse_bool(tmp, TAU_EBS_DEFAULT)) {
       env_ebs_enabled = 1;
@@ -764,22 +975,79 @@ void TauEnv_initialize() {
       TAU_VERBOSE("TAU: Sampling Disabled\n");
       TAU_METADATA("TAU_SAMPLING", "off");
     }
-    
 
+    tmp = getconf("TAU_EBS_KEEP_UNRESOLVED_ADDR");
+    if (parse_bool(tmp, TAU_EBS_KEEP_UNRESOLVED_ADDR_DEFAULT)) {
+      env_ebs_keep_unresolved_addr = 1;
+      TAU_METADATA("TAU_EBS_KEEP_UNRESOLVED_ADDR", "on");
+    } else {
+      env_ebs_keep_unresolved_addr = 0;
+      TAU_METADATA("TAU_EBS_KEEP_UNRESOLVED_ADDR", "off");
+    }
+    
     if (TauEnv_get_ebs_enabled()) {
+
+      // *CWL* Acquire the sampling source. This has to be done first
+      //       because the default EBS_PERIOD will depend on whether
+      //       the specified source relies on timer interrupts or
+      //       PAPI overflow interrupts or some other future 
+      //       mechanisms for triggering samples. The key problem with
+      //       EBS_PERIOD defaults are that they are source-semantic
+      //       sensitive (ie. 1000 microseconds is fine for timer
+      //       interrutps, but 1000 PAPI_TOT_CYC is way too small).
+      if ((env_ebs_source = getconf("TAU_EBS_SOURCE")) == NULL) {
+	env_ebs_source = "itimer";
+      }
+      TAU_VERBOSE("TAU: EBS Source: %s\n", env_ebs_source);
 
       /* TAU sampling period */
       const char *ebs_period = getconf("TAU_EBS_PERIOD");
-      env_ebs_period = TAU_EBS_PERIOD_DEFAULT;
+      int default_ebs_period = TAU_EBS_PERIOD_DEFAULT;
+      // *CWL* - adopting somewhat saner period values for PAPI-based
+      //         EBS sample sources. The code obviously has to be more
+      //         adaptive to account for the widely-varying semantics,
+      //         but we will use a one-size-fits-all mid-sized prime
+      //         number for now. The reason for a prime number? So we
+      //         do not get into cyclical sampling problems on sources
+      //         like L1 cache misses.
+      // 
+      //         The check for PAPI sources will be extremely naive for
+      //         now.
+      if (strncmp(env_ebs_source, "PAPI", 4) == 0) {
+	default_ebs_period = 133337;
+      }
+      env_ebs_period = default_ebs_period;
       if (ebs_period) {
+	// Try setting it to the user value.
 	env_ebs_period = atoi(ebs_period);
-	if (env_ebs_period < 0) {
-	  env_ebs_period = TAU_EBS_PERIOD_DEFAULT;
+	// *CWL* - 0 is not a valid ebs_period. Plus atoi() returns 0
+	//         if the string is not a number.
+	if (env_ebs_period <= 0) {
+	  // go back to default on failure or bad value.
+	  env_ebs_period = default_ebs_period;
 	}
       }
       TAU_VERBOSE("TAU: EBS period = %d \n", env_ebs_period);
       sprintf(tmpstr, "%d", env_ebs_period);
       TAU_METADATA("TAU_EBS_PERIOD", tmpstr);
+
+      bool ebs_period_forced = false;
+#ifdef EBS_CLOCK_RES
+      if (strcmp(env_ebs_source, "itimer") != 0) {
+	// *CWL* - force the clock period to be of a sane value
+	//         if the desired (or default) value is not
+	//         supported by the machine. ONLY valid for "itimer"
+	//         EBS_SOURCE.
+	if (env_ebs_period < EBS_CLOCK_RES) {
+	  env_ebs_period = EBS_CLOCK_RES;
+	  ebs_period_forced = true;
+	}
+      }
+#endif
+      if (ebs_period_forced) {
+	sprintf(tmpstr, "%d", env_ebs_period);
+	TAU_METADATA("TAU_EBS_PERIOD (FORCED)", tmpstr);
+      }
       
       const char *ebs_inclusive = getconf("TAU_EBS_INCLUSIVE");
       env_ebs_inclusive = TAU_EBS_INCLUSIVE_DEFAULT;
@@ -793,12 +1061,28 @@ void TauEnv_initialize() {
       sprintf(tmpstr, "%d usec", env_ebs_inclusive);
       TAU_METADATA("TAU_EBS_INCLUSIVE", tmpstr);
       
-      
-      if ((env_ebs_source = getconf("TAU_EBS_SOURCE")) == NULL) {
-	env_ebs_source = "itimer";
+#ifdef TAU_UNWIND
+      tmp = getconf("TAU_EBS_UNWIND");
+      if (parse_bool(tmp, TAU_EBS_UNWIND_DEFAULT)) {
+	env_ebs_unwind_enabled = 1;
+	TAU_METADATA("TAU_EBS_UNWIND", "on");
+      } else {
+	env_ebs_unwind_enabled = 0;
+	TAU_METADATA("TAU_EBS_UNWIND", "off");
       }
-      TAU_VERBOSE("TAU: EBS Source: %s\n", env_ebs_source);
 
+      if (env_ebs_unwind_enabled == 1) {
+	const char *depth = getconf("TAU_EBS_UNWIND_DEPTH");
+	env_ebs_unwind_depth = TAU_EBS_UNWIND_DEPTH_DEFAULT;
+	if (depth) {
+	  env_ebs_unwind_depth = atoi(depth);
+	  if (env_ebs_unwind_depth < 0) {
+	    env_ebs_unwind_depth = TAU_CALLPATH_DEPTH_DEFAULT;
+	  }
+	}
+      }
+#endif /* TAU_UNWIND */
+      
       if (TauEnv_get_tracing()) {
 	env_callpath = 1;
 	env_callpath_depth = 300;

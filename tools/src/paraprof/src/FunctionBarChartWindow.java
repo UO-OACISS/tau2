@@ -103,7 +103,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     private boolean comparisonChart;
 
     private boolean defaultPercentValue;
-
+    private String phaseString;
     // we keep these around to speed things up
     private JTextArea jTextArea;
     private Component headerView;
@@ -169,12 +169,12 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
 
         panel.getBarChart().setLeftJustified(false);
 
-        String phaseString = "";
+        phaseString = "";
         if (phase != null) {
             phaseString = " Phase: " + phase.getName();
         }
 
-        this.setTitle("TAU: ParaProf: " + ppThread.getFullName() + " - "
+        this.setTitle("TAU: ParaProf: " + ParaProfUtils.getThreadLabel(thread) + " - "
                 + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()) + phaseString);
         ParaProfUtils.setFrameIcon(this);
 
@@ -447,8 +447,17 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     public void update(Observable o, Object arg) {
         String tmpString = (String) arg;
         if (tmpString.equals("prefEvent")) {
+        	if(this.comparisonChart==false){
+        	this.setTitle("TAU: ParaProf: " + ParaProfUtils.getThreadLabel(ppThread.getThread()) + " - "
+                    + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()) + phaseString);
+        	}
+        	
+        	
             this.setHeader();
             panel.repaint();
+            
+            
+            
         } else if (tmpString.equals("colorEvent")) {
             panel.repaint();
         } else if (tmpString.equals("dataEvent")) {
@@ -625,11 +634,23 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
 
             if ((dataSorter.getValueType() == ValueType.NUMCALLS || dataSorter.getValueType() == ValueType.NUMSUBR)
                     || showValuesAsPercent.isSelected()) {
-                return starter + "\n";
+                starter += "\n";
             } else {
-                return starter + "\nUnits: "
+                starter += "\nUnits: "
                         + UtilFncs.getUnitsString(units, dataSorter.isTimeMetric(), dataSorter.isDerivedMetric()) + "\n";
             }
+            
+            if(dataSorter.getSortType()==SortType.NAME){
+        		starter+="Sorted By: Name";
+        	}
+        	else if(!dataSorter.getSortByVisible()){
+        		starter+="Sorted By: "+dataSorter.getSortValueType().toString();
+        		if(dataSorter.getSortMetric()!=dataSorter.getSelectedMetric()){
+        			starter+=" ("+dataSorter.getSortMetric()+")";
+        		}
+        	}
+            
+            return starter;
         }
     }
 

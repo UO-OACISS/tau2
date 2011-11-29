@@ -320,8 +320,15 @@ public class DataSourceExport {
         for (Iterator<Thread> it = threads.iterator(); it.hasNext();) {
             Thread thread = it.next();
 
-            File file = new File(root + "/profile." + thread.getNodeID() + "." + thread.getContextID() + "."
-                    + thread.getThreadID());
+            String suffix=null;
+            if(thread.getNodeID()>=0){
+            	suffix=thread.getNodeID() + "." + thread.getContextID() + "." + thread.getThreadID();
+            }
+            else
+            {
+            	suffix=thread.toString().replace(" ", "");
+            }
+            File file = new File(root + "/profile." + suffix);
 
             FileOutputStream out = new FileOutputStream(file);
             OutputStreamWriter outWriter = new OutputStreamWriter(out);
@@ -411,6 +418,14 @@ public class DataSourceExport {
     public static void writeProfiles(DataSource dataSource, File directory) throws IOException {
         writeProfiles(dataSource, directory, dataSource.getAllThreads());
     }
+    
+    public static void writeAggProfiles(DataSource dataSource, File directory) throws IOException {
+        writeProfiles(dataSource, directory, dataSource.getAggThreads());
+    }
+    
+    public static void writeAggMPISummary(DataSource dataSource) throws IOException {
+        writeMPISummary(dataSource, dataSource.getAggThreads());
+    }
 
     public static void writeProfiles(DataSource dataSource, File directory, List<Thread> threads) throws IOException {
 
@@ -487,12 +502,315 @@ public class DataSourceExport {
                 String name = "MULTI__" + createSafeMetricName(dataSource.getMetricName(i));
                 boolean success = (new File(name).mkdir());
                 if (!success) {
-                    System.err.println("Failed to create directory: " + name);
+                    System.err.print("Failed to create directory: " + name);
                 } else {
                     writeMetric(new File(directory + "/" + name), dataSource, i, functions, groupStrings, userEvents, threads);
                 }
             }
         }
     }
+    
+    
+    public static void writeMPISummary(DataSource dataSource, List<Thread> threads) throws IOException {
+
+        int numMetrics = dataSource.getNumberOfMetrics();
+        int numUserEvents = dataSource.getNumUserEvents();
+//        int numGroups = dataSource.getNumGroups();
+
+        int idx = 0;
+
+        Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
+
+        int numFunctions = 0;
+        for (Iterator<Function> it = dataSource.getFunctions(); it.hasNext();) {
+            Function function = it.next();
+            if (function.isGroupMember(derived)) {
+                continue;
+            }
+            numFunctions++;
+        }
+
+//        // write out group names
+//        Group groups[] = new Group[numGroups];
+//        for (Iterator<Group> it = dataSource.getGroups(); it.hasNext();) {
+//            Group group = it.next();
+//            //String groupName = group.getName();
+//            groups[idx++] = group;
+//        }
+
+        Function functions[] = new Function[numFunctions];
+        String groupStrings[] = new String[numFunctions];
+        idx = 0;
+
+        // write out function names
+        for (Iterator<Function> it = dataSource.getFunctions(); it.hasNext();) {
+            Function function = it.next();
+
+            if (!function.isGroupMember(derived)) {
+                functions[idx] = function;
+
+                List<Group> thisGroups = function.getGroups();
+
+                if (thisGroups == null) {
+                    groupStrings[idx] = "";
+                } else {
+                    groupStrings[idx] = "";
+
+                    for (int i = 0; i < thisGroups.size(); i++) {
+                        Group group = thisGroups.get(i);
+                        if (i == 0) {
+                            groupStrings[idx] = group.getName();
+                        } else {
+                            groupStrings[idx] = groupStrings[idx] + " | " + group.getName();
+                        }
+                    }
+
+                    groupStrings[idx] = groupStrings[idx].trim();
+                }
+                idx++;
+            }
+        }
+
+        UserEvent userEvents[] = new UserEvent[numUserEvents];
+        idx = 0;
+        // collect user event names
+        for (Iterator<UserEvent> it = dataSource.getUserEvents(); it.hasNext();) {
+            UserEvent userEvent = it.next();
+            userEvents[idx++] = userEvent;
+        }
+
+        if (numMetrics == 1) {
+            writeMPIMetric(dataSource, 0, functions, groupStrings, userEvents, threads);
+        } else {
+            for (int i = 0; i < numMetrics; i++) {
+                String name = "MULTI__" + createSafeMetricName(dataSource.getMetricName(i));
+                System.out.print(name);
+//                boolean success = (new File(name).mkdir());
+//                if (!success) {
+//                    System.err.print("Failed to create directory: " + name);
+//                } else {
+                    writeMPIMetric(dataSource, i, functions, groupStrings, userEvents, threads);
+//                }
+            }
+        }
+    }
+    
+    
+
+    
+    private static void writeMPIMetric(DataSource dataSource, int metricID, Function[] functions, String[] groupStrings,
+            UserEvent[] userEvents, List<Thread> threads) throws IOException {
+
+        //int numMetrics = dataSource.getNumberOfMetrics();
+        int numUserEvents = dataSource.getNumUserEvents();
+        //int numGroups = dataSource.getNumGroups();
+        //int count = 0;
+        
+        Thread[] minMaxMean = new Thread[3];
+        for(int i =0;i<threads.size();i++){
+        	if(threads.get(i).getThreadID()==Thread.MIN)
+        	{
+        		minMaxMean[0]=threads.get(i);
+        	}
+        	else
+        	if(threads.get(i).getThreadID()==Thread.MAX)
+        	{
+        		minMaxMean[1]=threads.get(i);
+        	}
+        	else
+        	if(threads.get(i).getThreadID()==Thread.MEAN)
+        	{
+        		minMaxMean[2]=threads.get(i);
+        	}
+        }
+        
+//        for (int i = 0; i < functions.length; i++) {
+//            FunctionProfile fp = minMaxMean[0].getFunctionProfile(functions[i]);
+//            if (fp != null) {
+//                count++;
+//            }
+//        }
+
+        String metType="Time";
+        
+//        //System.out.print("\n\n\n"+suffix+"\n");
+//        if (dataSource.getNumberOfMetrics() == 1 && dataSource.getMetricName(metricID).toLowerCase().equals("time")) {
+//            System.out.print(count + " templated_functions\n");
+//        } else 
+        System.out.println();
+        if (dataSource.getNumberOfMetrics() != 1)
+        {
+        	System.out.print("MULTI_" + dataSource.getMetricName(metricID) + "\n");
+        	if(metricID!=0){
+        		metType="Count";
+        	}
+        }
+        
+//        if (dataSource.getMetaData() != null) {
+            //System.out.print("    Calls                    Subroutines                       Exclusive "+metType+"                              Inclusive "+metType+ "                                     Bytes                        Name \n");
+        	
+            System.out.format("%-24s%-24s%-48s%-48s%-48s%-8s", "   Calls","   Child Calls","   Exclusive "+metType,"   Inclusive "+metType,"   Bytes Transferred","   Name");
+            System.out.println();
+            
+            //System.out.print("     Min   Max      Mean      Min   Max   Mean        Min   Max   Mean          Min   Max   Mean            Min   Max   Mean        \n");
+        	String[] header = new String[15];
+        	for(int i = 0;i<header.length;i++){
+        		if(i%3==0){
+        			header[i]="   Min";
+        		}
+        		else if(i%3==1){
+        			header[i]="   Max";
+        		}else if(i%3==2){
+        			header[i]="   Mean";
+        		}
+        	}
+        	
+        	System.out.format("%-8s%-8s%-8s%-8s%-8s%-8s%-16s%-16s%-16s%-16s%-16s%-16s%-16s%-16s%-16s", (Object[])header);
+        	System.out.println();
+        	
+//            writeXMLSnippet(bw, dataSource.getMetaData());
+//            writeXMLSnippet(bw, thread.getMetaData());
+//            bw.write("</metadata>\n");
+//            
+//        } else {
+//            bw.write("# Name Calls Subrs Excl Incl ProfileCalls\n");
+//        }
+        
+        double[] values = new double[15];
+        //String[] names = new String[1];
+        
+//        for (Iterator<Thread> it = threads.iterator(); it.hasNext();) {
+//            Thread thread = it.next();
+//
+//            String suffix=null;
+//            if(thread.getNodeID()>=0){
+//            	suffix=thread.getNodeID() + "." + thread.getContextID() + "." + thread.getThreadID();
+//            }
+//            else
+//            {
+//            	suffix=thread.toString().replace(" ", "");
+//            }
+            //File file = new File(root + "/profile." + suffix);
+
+            //FileOutputStream out = new FileOutputStream(file);
+            //OutputStreamWriter outWriter = new OutputStreamWriter(out);
+            //BufferedWriter bw = new BufferedWriter(outWriter);
+
+            // count function profiles
+
+
+            
+            // write out function profiles
+            for (int i = 0; i < functions.length; i++) {
+            	String fName="";
+            	for(int m = 0;m<minMaxMean.length;m++)
+            	{
+                FunctionProfile fp = minMaxMean[m].getFunctionProfile(functions[i]);
+
+                if (fp != null) {
+                	fName = functions[i].getName();
+                	
+                	values[m]=fp.getNumCalls();//+"";
+                			
+                	//System.out.print((int) fp.getNumCalls() + " ");
+                	
+                	values[m+3]=fp.getNumSubr();//+"";
+                	
+                	//System.out.print((int) fp.getNumSubr() + " ");
+                	
+                	values[m+6]=fp.getExclusive(metricID);//+"";
+                	//System.out.print(fp.getExclusive(metricID) + " ");
+                	
+                	values[m+9]=fp.getInclusive(metricID);//+"";
+                	//System.out.print(fp.getInclusive(metricID) + " ");
+                    
+                    boolean gotComm=false;
+                    for (int j = 0; j < numUserEvents; j++) {
+                        UserEventProfile uep =  minMaxMean[m].getUserEventProfile(userEvents[j]);
+
+                        if (uep != null) {
+                        	
+                        	String ueName = userEvents[j].getName();
+                        	
+                        	if(ueName.contains(fName)){
+                        	
+                        		if(m==0){
+                        			values[m+12]=uep.getMinValue();// + "";
+                        		}
+                        		else if(m==1){
+                        			values[m+12]=uep.getMaxValue();// + "";
+                        		}else if(m==2){
+                        			values[m+12]=uep.getMeanValue();// + "";
+                        		}
+                        		
+//                          System.out.print(uep.getMaxValue() + " ");
+//                          System.out.print(uep.getMinValue() + " ");
+//                          System.out.print(uep.getMeanValue() + " ");
+                          gotComm=true;
+                          break;
+                        	}
+                        }
+                    }
+                    if(!gotComm){
+                    	values[m+12]=0;//"-";
+                    }
+                    
+                  //System.out.print("0 " + "GROUP=\"" + groupStrings[i] + "\" ");
+                  
+                  //System.out.print('"' + fName + "\" \n");
+//                  if(m==0){
+//                	  values[15]=fName;
+//                  }
+                  
+                }
+            }
+            	
+            	printValues(values, fName);
+            	
+            }
+//            // count user event profiles
+//            count = 0;
+//            for (int i = 0; i < numUserEvents; i++) {
+//                UserEventProfile uep = thread.getUserEventProfile(userEvents[i]);
+//                if (uep != null) {
+//                    count++;
+//                }
+//            }
+//
+//            if (count > 0) {
+//              System.out.print(count + " userevents\n");
+//              System.out.print("# numevents max min mean sumsqr eventname\n");
+//
+//                // write out user event profiles
+//                for (int i = 0; i < numUserEvents; i++) {
+//                    UserEventProfile uep = thread.getUserEventProfile(userEvents[i]);
+//
+//                    if (uep != null) {
+//                        
+//                      System.out.print(uep.getNumSamples() + " ");
+//                      System.out.print(uep.getMaxValue() + " ");
+//                      System.out.print(uep.getMinValue() + " ");
+//                      System.out.print(uep.getMeanValue() + " ");
+//                      System.out.print(uep.getSumSquared() + " ");
+//                      System.out.print('"' + userEvents[i].getName() + "\" \n");
+//                    }
+//                }
+//            }
+
+        }
+    private static void printValues(double[] values, String name){
+    	//for(int i=0;i<values.length;i++)
+    	//{
+    		//int arr=5;
+    		System.out.format("%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%16.5f%16.5f%16.5f%16.5f%16.5f%16.5f%16.5f%16.5f%16.5f", values[0],values[1],values[2],values[3],values[4],values[5],values[6],values[7],values[8],values[9],values[10],values[11],values[12],values[13],values[14]);
+    		System.out.print("   "+name);
+    		//System.out.print(values[i]+"   ");
+    		
+    	//}
+    	System.out.println();
+    }
+    
+
+    //}
 
 }

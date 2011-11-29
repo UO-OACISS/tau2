@@ -30,10 +30,10 @@ using namespace std;
 #include <stdlib.h>
 
 //#define DEBUG_PROF
-//int debugPrint = 0;
+//int debugPrint = 1;
 // control debug printf statements
 //#define dprintf if (debugPrint) printf
-//#define dprintf printf
+#define dprintf TAU_VERBOSE
 #ifdef DEBUG_PROF
 #define dprintf printf
 #else // DEBUG_PROF 
@@ -44,6 +44,7 @@ using namespace std;
 #define TAUDYNVEC 1
 //extern "C" void Tau_get_func_name(long addr, char * fname, char *filename);
 
+extern "C" void tau_dyninst_init(int isMPI);
 
 #ifndef __ia64
 int TheFlag[TAU_MAX_THREADS] ;
@@ -296,14 +297,45 @@ int TauRenameTimer(char *oldName, char *newName)
 }
 
 
-static int tauFiniID; 
+static int tauFiniID = -1; 
 static int tauDyninstEnabled[TAU_MAX_THREADS];
 void trace_register_func(char *func, int id)
 {
   static int invocations = 0;
+  int i;
   int tid = RtsLayer::myThread();
+  dprintf("trace_register_func: func = %s, id = %d\n", func, id); 
+  if (invocations == 0) {
+    if (!tauDyninstEnabled[tid]) {
+#ifdef TAU_MPI
+      tau_dyninst_init(1); 
+#else
+      tau_dyninst_init(0); 
+#endif /* TAU_MPI */
+    }
+  }
+
+  int len = strlen(func); 
+  int startbracket = 0; 
+  int stopbracket = 0;
+  for (i=0; i < len; i++) {
+    if (func[i] == '[') startbracket = i; 
+    if (func[i] == ']') stopbracket = i; 
+    if (!isprint(func[i])) {
+      dprintf("TauHooks.cpp: trace_register_func(): func=%s - isprint is false at i = %d\n", func, i);
+      func[i] = '\0';
+      if (i == 0) strcpy(func, "<unknown>");
+    }
+  }
+  if (startbracket > 0 && stopbracket == 0) { /* didn't find stop bracket */
+    dprintf("func=%s, before chopping off the bracket! \n", func);
+    func[startbracket] = '\0'; /* chop it off - no need to show the name */
+    dprintf("func=%s, after chopping off the bracket! \n", func);
+  }
+
+
+    
   if (!tauDyninstEnabled[tid]) return;
-  dprintf("trace_register_func: func = %s, id = %d\n", func, id);
 
   void *taufi;
   TAU_PROFILER_CREATE(taufi, func, " ", TAU_DEFAULT);
@@ -338,9 +370,11 @@ void trace_register_func(char *func, int id)
     TheTauBinDynFI().push_back(taufi);
   else {
     printf("WARNING: trace_register_func: id does not match invocations\n");
+    TheTauBinDynFI().resize(id+1);
     TheTauBinDynFI()[id] = taufi;
   } 
   invocations ++;
+  dprintf("Exiting trace_register_func\n");
 }
 
 void traceEntry(int id)
@@ -387,11 +421,16 @@ void traceExit(int id)
 {
   const char *strcurr;
   const char *strbin;
+  dprintf("Inside traceExit: id = %d\n", id);  
+  
   if ( !RtsLayer::TheEnableInstrumentation()) return; 
   int tid = RtsLayer::myThread();
   if (!tauDyninstEnabled[tid]) return;
   void *fi = TheTauBinDynFI()[id];
-  dprintf("traceExit: Name = %s, %lx\n", ((FunctionInfo *)fi)->GetName(), fi);
+  if (fi) 
+    dprintf("traceExit: Name = %s, %lx\n", ((FunctionInfo *)fi)->GetName(), fi);
+  else
+    return;
 
   TAU_QUERY_DECLARE_EVENT(curr);
   TAU_QUERY_GET_CURRENT_EVENT(curr);

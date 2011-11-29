@@ -19,6 +19,12 @@
 #include "TAU_tf_headers.h"
 #include <Profile/tau_types.h>
 
+extern "C" long Tau_convert_ptr_to_long_trc(void *ptr) {
+  long long a = (long long) ptr;
+  long ret = (long) a;
+  return ret;
+}
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -301,7 +307,7 @@ extern "C" {
     Ttf_fileT *tFile = (Ttf_fileT*)file;
 
     if (tFile->forWriting == false) {
-      return (int)((long)Ttf_CloseFile(tFile));
+      return (int)(Tau_convert_ptr_to_long_trc(Ttf_CloseFile(tFile)));
     }
 
     for (NidTidMapT::iterator it = tFile->NidTidMap->begin(); it != tFile->NidTidMap->end(); ++it) {

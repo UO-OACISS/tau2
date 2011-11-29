@@ -2,7 +2,7 @@ TAUROOT=
 include $(TAUROOT)/include/Makefile
 
 CC=$(TAU_CC) 
-CFLAGS=$(TAU_DEFS) $(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE) -I.
+CFLAGS=$(TAU_DEFS) $(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE) -I. -fpermissive
 
 INSTALLDEST = $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 #CUDA#TAU_CUDA_SHARED=libTAU-CUDA$(TAU_SHLIBX) #ENDIF#
@@ -18,16 +18,16 @@ install: $(TAU_CUDA_SHARED) $(TAU_CUDART_SHARED)
 	$(TAU_CUDA_INSTALL_CMD) 
 
 $(TAU_CUDART_SHARED): cudart_wrap.o 
-	$(TAU_CXX) -g $(TAU_SHFLAGS) $@ $< $(TAU_SHLIBS) -ldl -L$(INSTALLDEST)/shared
+	$(TAU_CUDA_CXX) -g $(TAU_SHFLAGS) $@ $< $(TAU_SHLIBS) -ldl -L$(INSTALLDEST)/shared
 
 cudart_wrap.o: cudart_wrap.cpp
-	$(TAU_CXX) $(TAU_INTERNAL_FLAGS) $(CFLAGS) -I$(TAU_CUDA_INC) -c $< -o $@
+	$(TAU_CUDA_CXX) -g $(TAU_INTERNAL_FLAGS) $(CFLAGS) -I$(TAU_CUDA_INC) -c $< -o $@
 
 $(TAU_CUDA_SHARED): cuda_wrap.o
-	$(TAU_CXX) -g $(TAU_SHFLAGS) $@ $< $(TAU_SHLIBS) -ldl -L$(INSTALLDEST)/shared
+	$(TAU_CUDA_CXX) -g $(TAU_SHFLAGS) $@ $< $(TAU_SHLIBS) -ldl -L$(INSTALLDEST)/shared
 
 cuda_wrap.o: cuda_wrap.c
-	$(TAU_CXX) $(TAU_INTERNAL_FLAGS) $(CFLAGS) -I$(TAU_CUDA_INC) -c $< -o $@
+	$(TAU_CUDA_CXX) -g $(TAU_INTERNAL_FLAGS) $(CFLAGS) -I$(TAU_CUDA_INC) -c $< -o $@
 clean:
 	/bin/rm -f cudart_wrap.o libTAU_CUDArt.so
 

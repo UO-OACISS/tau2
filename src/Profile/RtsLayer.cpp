@@ -352,13 +352,13 @@ double TauWindowsUsecD(void) {
       //but need to be on the safe side!
       if (Frequency.QuadPart != 0) {
 	Multiplier = (double) 1000000/Frequency.QuadPart;
-	cout << "The value of the multiplier is: " << Multiplier << endl;
+	DEBUGPROFMSG("The value of the multiplier is: " << Multiplier << endl;);
       } else {
-	cout << "There was a problem with the counter ... should not have happened!!" << endl;
+	DEBUGPROFMSG("There was a problem with the counter ... should not have happened!!" << endl;);
 	return -1;
       }
     } else {
-      cout << "No performace clock available ... using millisecond timers." << endl;
+      DEBUGPROFMSG("No performace clock available ... using millisecond timers." << endl;);
     }
   }
 
@@ -368,7 +368,7 @@ double TauWindowsUsecD(void) {
       //As mentioned above, assuming double value.
       return Multiplier * (double) ClockValue.QuadPart;
     } else {
-      cout << "There was a problem with the counter ... should not have happened!!" << endl;
+      DEBUGPROFMSG("There was a problem with the counter ... should not have happened!!" << endl;);
       return -1;
     }
   } else {
@@ -413,6 +413,12 @@ int RtsLayer::getPid() {
 // #include <linux/unistd.h>
 // _syscall0(pid_t,gettid)
 // #endif
+
+// C interface.
+extern "C" int Tau_RtsLayer_getTid()
+{
+	return RtsLayer::getTid();
+}
 
 int RtsLayer::getTid() {
 #ifdef __linux

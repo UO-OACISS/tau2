@@ -441,6 +441,9 @@ public class UtilFncs {
         if (filename.toLowerCase().endsWith(".ppk")) {
             return DataSource.PPK;
         }
+        if (filename.toLowerCase().endsWith(".cubex")) {
+            return DataSource.CUBE;
+        }
         if (filename.toLowerCase().endsWith(".cube")) {
             return DataSource.CUBE;
         }
@@ -495,12 +498,25 @@ public class UtilFncs {
     public static DataSource initializeDataSource(File[] sourceFiles, int fileType, boolean fixGprofNames, String range)
             throws DataSourceException {
         DataSource dataSource = null;
-
         List<File[]> v = new ArrayList<File[]>();
+        /**
+         * This is ugly and inefficient. Need to avoid multiple reads of the file system here.
+         */
+        
+        if(fileType==DataSource.TAUPROFILE&&range==null&&sourceFiles.length < 1){
+        	 FileList fl=new FileList();
+        	 File[] list = fl.helperFindSnapshots(System.getProperty("user.dir"));
+        	 if(list.length>0){
+             		fileType=DataSource.SNAP;
+             		sourceFiles=list;
+
+             	}
+        }
         //File filelist[];
         switch (fileType) {
         case DataSource.TAUPROFILE: // TAU Profiles
             FileList fl;
+          
             if(range!=null)
             	fl= new FileList(range);
             else
@@ -526,9 +542,11 @@ public class UtilFncs {
                 }
 
             }
+            
 
             dataSource = new TauDataSource(v);
             break;
+            
         case DataSource.PPROF:
             if (sourceFiles.length != 1) {
                 throw new DataSourceException("pprof type: you must specify exactly one file");
@@ -591,6 +609,23 @@ public class UtilFncs {
             }
 
             dataSource = new CubeDataSource(sourceFiles[0]);
+            break;
+        case DataSource.CUBE3:
+            if (sourceFiles.length != 1) {
+                throw new DataSourceException("Cube type : you must specify exactly one file");
+            }
+            if (sourceFiles[0].isDirectory()) {
+                throw new DataSourceException("Cube type: you must specify a file, not a directory");
+            }
+
+            try {
+                //Class c = 
+                	Class.forName("org.xml.sax.SAXException");
+            } catch (ClassNotFoundException cnfe) {
+                throw new DataSourceException("Sorry, cube format requires Java >=1.4");
+            }
+
+            dataSource = new Cube3DataSource(sourceFiles[0]);
             break;
         case DataSource.HPCTOOLKIT:
             if (sourceFiles.length != 1) {

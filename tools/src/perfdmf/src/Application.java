@@ -94,8 +94,10 @@ public class Application implements Serializable {
 
             DatabaseMetaData dbMeta = db.getMetaData();
 
-            if ((db.getDBType().compareTo("oracle") == 0) || (db.getDBType().compareTo("derby") == 0)
-                    || (db.getDBType().compareTo("db2") == 0)) {
+            if ((db.getDBType().compareTo("oracle") == 0) || 
+                (db.getDBType().compareTo("derby") == 0) || 
+                (db.getDBType().compareTo("h2") == 0) || 
+                (db.getDBType().compareTo("db2") == 0)) {
                 resultSet = dbMeta.getColumns(null, null, "APPLICATION", "%");
             } else {
                 resultSet = dbMeta.getColumns(null, null, "application", "%");
@@ -371,6 +373,8 @@ public class Application implements Serializable {
             } else if (db.getDBType().compareTo("db2") == 0) {
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM application";
             } else if (db.getDBType().compareTo("derby") == 0) {
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM application";
+            } else if (db.getDBType().compareTo("h2") == 0) {
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM application";
             } else if (db.getDBType().compareTo("oracle") == 0) {
                 tmpStr = "SELECT " + db.getSchemaPrefix() + "application_id_seq.currval FROM DUAL";

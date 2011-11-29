@@ -31,6 +31,8 @@ public class Thread implements Comparable<Thread> {
     public static final int MEAN = -1;
     public static final int TOTAL = -2;
     public static final int STDDEV = -3;
+    public static final int MIN = -4;
+    public static final int MAX = -5;
 
     private List<Snapshot> snapshots = new ArrayList<Snapshot>();
     private Map<String,String> metaData = new TreeMap<String,String>();
@@ -86,6 +88,12 @@ public class Thread implements Comparable<Thread> {
         }
         if (nodeID == -3) {
             return "Standard Deviation";
+        }
+        if (nodeID == -4) {
+            return "Min";
+        }
+        if (nodeID == -5) {
+            return "Max";
         }
         return "n,c,t " + nodeID + "," + contextID + "," + threadID;
     }
