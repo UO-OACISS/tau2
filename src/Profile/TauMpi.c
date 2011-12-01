@@ -1657,7 +1657,8 @@ int  MPI_Finalize(  )
      done correctly. */
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
-    Tau_sampling_finalizeNode();
+    //    Tau_sampling_finalizeNode();
+    Tau_sampling_finalize_if_necessary();
   }
 #endif /* TAU_WINDOWS */
 
