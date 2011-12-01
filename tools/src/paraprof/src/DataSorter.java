@@ -356,10 +356,11 @@ public class DataSorter implements Comparator<FunctionProfile> {
 
     
     boolean filterThread(Thread thread,int[] exList){
-    	if(exList==null)
-    		return true;
     	if(thread==null)
     		return false;
+    	if(exList==null)
+    		return true;
+
     	for(int i=0;i<exList.length;i++){
     		if(thread.getThreadID()==exList[i])
     			return false;
