@@ -380,6 +380,7 @@ OMPragmaF::remove_empties()
 OMPragma*
 OMPragmaF::split_combined()
 {
+    remove_commas();
     OMPragmaF* inner = new OMPragmaF( filename, lineno, 0,
                                       string( lines[ 0 ].size(), ' ' ),
                                       ( slen == 6 ), asd );

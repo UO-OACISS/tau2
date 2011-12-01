@@ -293,7 +293,11 @@ bitten-print-environment:
 ## trigger build of check_* targets here and in subdirectories.
 ##
 
-check-build: $(BUILT_SOURCES) all $(check_PROGRAMS) $(check_LTLIBRARIES)
+check-build-sp: $(BUILT_SOURCES) all-am $(check_PROGRAMS) $(check_LTLIBRARIES)
+check-build: check-build-recursive
+check-build-recursive:
+## Using $failcom allows "-k" to keep its natural meaning when running a
+## recursive rule.
 	@fail= failcom='exit 1'; \
 	for f in x $$MAKEFLAGS; do \
 	  case $$f in \
@@ -301,10 +305,22 @@ check-build: $(BUILT_SOURCES) all $(check_PROGRAMS) $(check_LTLIBRARIES)
 	    *k*) failcom='fail=yes';; \
 	  esac; \
 	done; \
-        for subdir in $(SUBDIRS); do \
-            ($(am__cd) $$subdir && $(MAKE) $(AM_MAKEFLAGS) $@) || eval $$failcom; \
-        done; \
-        test -z "$$fail"
+	dot_seen=no; \
+	target=`echo $@ | sed s/-recursive//`; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    dot_seen=yes; \
+	    local_target="$$target-sp"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  ($(am__cd) $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	  || eval $$failcom; \
+	done; \
+	if test "$$dot_seen" = "no"; then \
+	  $(MAKE) $(AM_MAKEFLAGS) "$$target-sp" || exit 1; \
+	fi; test -z "$$fail"
 
                                                                              ##
                                                                              ##

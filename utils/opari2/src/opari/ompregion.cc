@@ -101,7 +101,7 @@ OMPRegion::OMPRegion( const OMPRegion& parent,
 void
 OMPRegion::generate_header_c( ostream& os )
 {
-    os << "#include <pomp2_lib.h>\n\n";
+    os << "#include <opari2/pomp2_lib.h>\n\n";
     if ( copytpd )
     {
         os << "#include <stdint.h>\n";
@@ -113,7 +113,7 @@ OMPRegion::generate_header_c( ostream& os )
 void
 OMPRegion::generate_header_cxx( ostream& os )
 {
-    os << "#include <pomp2_lib.h>\n\n";
+    os << "#include <opari2/pomp2_lib.h>\n\n";
     if ( copytpd )
     {
         os << "#include <stdint.h>\n";
@@ -133,12 +133,6 @@ OMPRegion::generate_init_handle_calls_f( ostream& os, const char* incfile )
 
     if ( OMPRegion::init_handle_calls.rdbuf()->in_avail() != 0 )
     {
-        //add the wrapper function pomp_get_max_threads_XXXXXX in every file.
-        os << "\n      integer function pomp_get_max_threads" << compiletime.tv_sec << compiletime.tv_usec << "()\n"
-           <<  "         integer omp_get_max_threads\n"
-           <<  "         pomp_get_max_threads" << compiletime.tv_sec << compiletime.tv_usec << "=omp_get_max_threads()\n"
-           <<  "         return\n"
-           <<  "      end\n";
         //add a Function to initialize the handles at the end of the file
         os << "\n      subroutine POMP2_Init_regions_"
            << compiletime.tv_sec << compiletime.tv_usec
@@ -148,7 +142,19 @@ OMPRegion::generate_init_handle_calls_f( ostream& os, const char* incfile )
            << "      end\n";
     }
 }
-
+/** @brief Generate the wrapper function pomp_get_max_threads_XXXXXX in every file. */
+void
+OMPRegion::generate_pomp_max_threads_wrapper_f( ostream& os )
+{
+    if ( OMPRegion::init_handle_calls.rdbuf()->in_avail() != 0 )
+    {
+        os << "\n      integer function pomp_get_max_threads" << compiletime.tv_sec << compiletime.tv_usec << "()\n"
+           <<  "         integer omp_get_max_threads\n"
+           <<  "         pomp_get_max_threads" << compiletime.tv_sec << compiletime.tv_usec << "=omp_get_max_threads()\n"
+           <<  "         return\n"
+           <<  "      end\n";
+    }
+}
 /** @brief Generate a function to allow initialization of all ompregion handles for C++.
  *         The function uses extern "C" to avoid complicate name mangling issues.*/
 void

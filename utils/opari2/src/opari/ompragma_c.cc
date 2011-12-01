@@ -341,6 +341,7 @@ OMPragmaC::remove_empties()
 OMPragma*
 OMPragmaC::split_combined()
 {
+    remove_commas();
     // make empty copy with continuation characters
     vector<string> innerLines;
     for ( unsigned i = 0; i < lines.size(); ++i )

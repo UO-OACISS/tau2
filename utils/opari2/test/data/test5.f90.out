@@ -50,7 +50,7 @@ program test5
   !$omp & lastprivate         &
   !$omp & (                   &
   !$omp &   l                 &                           
-  !$omp & ) schedule(dynamic  &
+  !$omp & )  schedule(dynamic &
   !$omp & )
   do i=1,4
      write(*,*) "parallel do ", i

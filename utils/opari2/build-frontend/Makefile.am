@@ -50,6 +50,7 @@ $(CONFIG_HEADER_FRONTEND): $(builddir)/opari2_config.dat
 	@echo "#define SCRIPT  \"$(prefix)/bin/pomp2_parse_init_regions.awk\"" >> $(CONFIG_HEADER_FRONTEND)
 	@echo "#define EGREP   \"$(EGREP)\""            >> $(CONFIG_HEADER_FRONTEND)
 	@echo "#define VERSION \"$(PACKAGE_VERSION)\""  >> $(CONFIG_HEADER_FRONTEND)
+	@echo "#define CFLAGS  \"$(prefix)/include\""   >> $(CONFIG_HEADER_FRONTEND)
 
 $(builddir)/opari2_config.dat:
 	@echo "Creating $(builddir)/opari2_config.dat"
@@ -58,6 +59,8 @@ $(builddir)/opari2_config.dat:
 	@echo OPARI_SCRIPT=\"$(PWD)/../build-frontend/pomp2_parse_init_regions.awk\"  >> $(builddir)/opari2_config.dat
 	@echo VERSION=\"$(PACKAGE_VERSION)\" >> $(builddir)/opari2_config.dat
 	@echo EGREP=\"$(EGREP)\"             >> $(builddir)/opari2_config.dat
+	@echo CFLAGS=\"$(abs_srcdir)/../include\" >> $(builddir)/opari2_config.dat
+
 
 if SCOREP_HAVE_F77
 if OPENMP_SUPPORTED

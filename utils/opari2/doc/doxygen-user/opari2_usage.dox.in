@@ -23,10 +23,10 @@ with following options and parameters:
                          in all files, so it needs to be defined by
                          the pomp library.
 
-[--disable constructs]   [OPTIONAL] Disable the instrumentation of
+[--disable=<constructs>] [OPTIONAL] Disable the instrumentation of
                          manually-annotated POMP regions or the
                          more fine-grained OpenMP constructs such as
-                         !$OMP ATOMIC.  constructs is a comma
+                         !$OMP ATOMIC. <constructs> is a comma
                          separated list of the constructs for which
                          the instrumentation should be disabled.
                          Accepted tokens are atomic, critical, master,
@@ -50,7 +50,7 @@ with following options and parameters:
                          keep:    Do not remove the untied attribute.
                          no-warn: Do not print out a warning.
 
-[--tpd-mangling          [OPTIONAL] If programming languages are mixed
+[--tpd-mangling=         [OPTIONAL] If programming languages are mixed
  gnu|intel|sun|pgi|      (C and Fortran), the <pomp_tpd> needs to use
  ibm|cray]               the Fortran mangled name also in C files.
                          This option specifies to use the mangling
