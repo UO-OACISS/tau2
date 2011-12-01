@@ -65,6 +65,10 @@ public:
     void
     find_name();
 
+    /** @brief Removes all unnecessary commas. */
+    void
+    remove_commas();
+
     /** @brief Returns the arguments of a clause. */
     virtual string
     find_arguments( unsigned&          line,

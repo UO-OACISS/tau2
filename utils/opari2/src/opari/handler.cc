@@ -1825,6 +1825,10 @@ finalize_handler( const char* incfile, ostream&    os )
                 regions[ i ]->generate_descr_f( incs, lang );
             }
         }
+        if ( enabled & C_OMP )
+        {
+            OMPRegion::generate_pomp_max_threads_wrapper_f( os );
+        }
         OMPRegion::generate_init_handle_calls_f( os, incfile );
         OMPRegion::finalize_descrs( incs, lang );
     }

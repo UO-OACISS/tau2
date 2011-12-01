@@ -40,7 +40,7 @@
 #include "ompragma.h"
 #include <iostream>
 
-/** brief Find the pragma name.*/
+/** @brief Find the pragma name.*/
 void
 OMPragma::find_name()
 {
@@ -79,6 +79,32 @@ OMPragma::find_name()
     else if ( name == "no" || name == "inst" )   /*INST*/
     {
         name += find_next_word();                /*INST*/
+    }
+}
+
+/** @brief Removes all unnecessary commas. */
+void
+OMPragma::remove_commas()
+{
+    int bracket_counter = 0;
+
+    for ( int line = 0; line < lines.size(); line++ )
+    {
+        for ( int c = 0; c < lines[ line ].length(); c++ )
+        {
+            if ( lines[ line ][ c ] == '(' )
+            {
+                bracket_counter++;
+            }
+            if ( lines[ line ][ c ] == ')' )
+            {
+                bracket_counter--;
+            }
+            if ( bracket_counter == 0 && lines[ line ][ c ] == ',' )
+            {
+                lines[ line ][ c ] = ' ';
+            }
+        }
     }
 }
 
@@ -122,12 +148,7 @@ OMPragma::find_numthreads()
 
     if (  find_word( "num_threads", line, pos ) )
     {
-        //        lines[ line ].replace( pos, 11, "           " );
-        //        pos                    = lines[ line ].find( '(', pos );
-        //        lines[ line ][ pos++ ] = ' ';
         arg_num_threads = find_arguments( line, pos, true, "num_threads" );
-        //        lines[ line ][ pos++ ] = ' ';
-
         return true;
     }
     return false;
@@ -144,12 +165,7 @@ OMPragma::find_if()
 
     if (  find_word( "if", line, pos ) )
     {
-        //        lines[ line ].replace( pos, 2, "  " );
-        //        pos                    = lines[ line ].find( '(', pos );
-        //        lines[ line ][ pos++ ] = ' ';
         arg_if = find_arguments( line, pos, true, "if" );
-        //        lines[ line ][ pos++ ] = ' ';
-
         return true;
     }
     return false;
@@ -166,13 +182,7 @@ OMPragma::find_reduction()
 
     if (  find_word( "reduction", line, pos ) )
     {
-        //      lines[ line ].replace( pos, 9, "         " );
-        //        pos = lines[ line ].find( '(', pos );
-        //      lines[ line ][ pos++ ] = ' ';
-        //        pos++;
         arg_reduction = find_arguments( line, pos, false, "reduction" );
-        //      lines[ line ][ pos++ ] = ' ';
-
         return true;
     }
     return false;
@@ -189,10 +199,8 @@ OMPragma::find_schedule( string* reg_arg_schedule )
 
     if ( find_word( "schedule", line, pos ) )
     {
-        //        pos = lines[ line ].find( '(', pos );
         arg_schedule      = find_arguments( line, pos, false, "schedule" );
         *reg_arg_schedule = arg_schedule;
-
         return true;
     }
     return false;
@@ -222,9 +230,7 @@ OMPragma::find_collapse()
 
     if (  find_word( "collapse", line, pos ) )
     {
-        //        pos          = lines[ line ].find( '(', pos );
         arg_collapse = find_arguments( line, pos, false, "collapse" );
-
         return true;
     }
     return false;
