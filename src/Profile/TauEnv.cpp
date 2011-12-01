@@ -945,9 +945,15 @@ void TauEnv_initialize() {
       TAU_VERBOSE("TAU: Output Format: snapshot\n");
       TAU_METADATA("TAU_PROFILE_FORMAT", "snapshot");
     } else if (profileFormat != NULL && 0 == strcasecmp(profileFormat, "merged")) {
+#ifdef TAU_MPI
       env_profile_format = TAU_FORMAT_MERGED;
       TAU_VERBOSE("TAU: Output Format: merged\n");
       TAU_METADATA("TAU_PROFILE_FORMAT", "merged");
+#else
+      env_profile_format = TAU_FORMAT_PROFILE;
+      TAU_VERBOSE("TAU: Output Format: merged format not supported without MPI, reverting to profile\n");
+      TAU_METADATA("TAU_PROFILE_FORMAT", "profile");
+#endif /* TAU_MPI */
     } else if (profileFormat != NULL && 0 == strcasecmp(profileFormat, "none")) {
       env_profile_format = TAU_FORMAT_NONE;
       TAU_VERBOSE("TAU: Output Format: none\n");
