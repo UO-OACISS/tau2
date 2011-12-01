@@ -151,8 +151,9 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context) {
 	  if (TauEnv_get_ebs_enabled()) {
 	    // *CWL* - If sampling is active, get it to stop and finalize immediately,
 	    //         we are about to halt execution!
-	    int tid = RtsLayer::myThread();
-	    Tau_sampling_finalize(tid);
+	    //	    int tid = RtsLayer::myThread();
+	    //	    Tau_sampling_finalize(tid);
+	    Tau_sampling_finalize_if_necessary();
 	  }
 #endif /* TAU_WINDOWS */
 
@@ -451,7 +452,7 @@ extern "C" int Tau_init_initializeTAU() {
        after MPI_Init()
     */
 #if !defined(TAU_MPI) && !defined(TAU_WINDOWS)
-    Tau_sampling_init(0);
+    Tau_sampling_init_if_necessary();
 #endif /* TAU_MPI && TAU_WINDOWS */
   }
 #ifdef TAU_PGI
