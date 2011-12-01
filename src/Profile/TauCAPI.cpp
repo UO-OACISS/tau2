@@ -205,6 +205,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_init_if_necessary();
     Tau_sampling_suspend();
   }
 #endif
@@ -233,6 +234,11 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 
 #ifdef TAU_EPILOG
   esd_enter(fi->GetFunctionId());
+#ifndef TAU_WINDOWS
+  if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_resume();
+  }
+#endif
   Tau_global_insideTAU[tid]--;
   return;
 #endif
@@ -240,6 +246,11 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 #ifdef TAU_VAMPIRTRACE 
   x_uint64 TimeStamp = vt_pform_wtime();
   vt_enter((uint64_t *) &TimeStamp, fi->GetFunctionId());
+#ifndef TAU_WINDOWS
+  if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_resume();
+  }
+#endif
   Tau_global_insideTAU[tid]--;
   return;
 #endif
@@ -286,6 +297,11 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   static int userspecifieddepth = TauEnv_get_depth_limit();
   int mydepth = Tau_global_stackpos[tid];
   if (mydepth >= userspecifieddepth) { 
+#ifndef TAU_WINDOWS
+    if (TauEnv_get_ebs_enabled()) {
+      Tau_sampling_resume();
+    }
+#endif
     Tau_global_insideTAU[tid]--;
     return; 
   }
@@ -322,8 +338,8 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
-    Tau_sampling_event_start(tid, p->address);
     Tau_sampling_resume();
+    Tau_sampling_event_start(tid, p->address);
   }
 #endif
   Tau_global_insideTAU[tid]--;
@@ -385,6 +401,11 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 
 #ifdef TAU_EPILOG
   esd_exit(fi->GetFunctionId());
+#ifndef TAU_WINDOWS
+    if (TauEnv_get_ebs_enabled()) {
+      Tau_sampling_resume();
+    }
+#endif
   Tau_global_insideTAU[tid]--;
   return 0;
 #endif
@@ -392,6 +413,11 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 #ifdef TAU_VAMPIRTRACE 
   x_uint64 TimeStamp = vt_pform_wtime();
   vt_exit((uint64_t *)&TimeStamp);
+#ifndef TAU_WINDOWS
+    if (TauEnv_get_ebs_enabled()) {
+      Tau_sampling_resume();
+    }
+#endif
   Tau_global_insideTAU[tid]--;
   return 0;
 #endif
@@ -402,6 +428,11 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 
 
   if (Tau_global_stackpos[tid] < 0) { 
+#ifndef TAU_WINDOWS
+    if (TauEnv_get_ebs_enabled()) {
+      Tau_sampling_resume();
+    }
+#endif
     Tau_global_insideTAU[tid]--;
     return 0; 
   }
@@ -418,6 +449,11 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   int mydepth = Tau_global_stackpos[tid];
   if (mydepth >= userspecifieddepth) { 
     Tau_global_stackpos[tid]--; /* pop */
+#ifndef TAU_WINDOWS
+    if (TauEnv_get_ebs_enabled()) {
+      Tau_sampling_resume();
+    }
+#endif
     Tau_global_insideTAU[tid]--;
     return 0; 
   }

@@ -167,9 +167,15 @@ long long numSamples[TAU_MAX_THREADS];
 long long samplesDroppedTau[TAU_MAX_THREADS];
 long long samplesDroppedSuspended[TAU_MAX_THREADS];
 
+// *CWL* This technique does NOT work when you have to rely on tau_exec for initialization
+//   through the preload mechanism. Essentially, sampling initialization relies on
+//   these thread variables initialized before its own operations. Unfortunately,
+//   with tau_exec preload, sampling initialization will happen before static initializers
+//   are invoked by the C++ runtime.
 class initSamplingThreadStructs {
 public:
   initSamplingThreadStructs() {
+    TAU_VERBOSE("Initializing thread-specific variables\n");
     for (int i = 0; i < TAU_MAX_THREADS; i++) {
       samplingEnabled[i] = 0;
       suspendSampling[i] = 0;
@@ -179,7 +185,23 @@ public:
     }
   }
 };
-initSamplingThreadStructs initializer = initSamplingThreadStructs();
+// initSamplingThreadStructs initializer = initSamplingThreadStructs();
+
+void init_thread_variables_if_necessary(void) {
+  static bool thread_variables_initialized = false;
+  if (!thread_variables_initialized) {
+    TAU_VERBOSE("Initializing thread-specific variables\n");
+    for (int i = 0; i < TAU_MAX_THREADS; i++) {
+      samplingEnabled[i] = 0;
+      suspendSampling[i] = 0;
+      numSamples[i] = 0;
+      samplesDroppedTau[i] = 0;
+      samplesDroppedSuspended[i] = 0;
+    }
+    thread_variables_initialized = true;
+  }
+}
+
 
 /*********************************************************************
  * Get the architecture specific PC
@@ -242,13 +264,13 @@ static inline unsigned long get_pc(void *p) {
 extern "C" void Tau_sampling_suspend() {
   int tid = RtsLayer::myThread();
   suspendSampling[tid] = 1;
-  //  TAU_VERBOSE("Tau_sampling_suspend: on thread %d\n", tid);
+  TAU_VERBOSE("Tau_sampling_suspend: on thread %d\n", tid);
 }
 
 extern "C" void Tau_sampling_resume() {
   int tid = RtsLayer::myThread();
   suspendSampling[tid] = 0;
-  //TAU_VERBOSE("Tau_sampling_resume: on thread %d\n", tid);
+  TAU_VERBOSE("Tau_sampling_resume: on thread %d\n", tid);
 }
 
 extern "C" void Tau_sampling_dlopen() {
@@ -952,6 +974,8 @@ void Tau_sampling_event_start(int tid, void **addresses) {
 
   Tau_global_incr_insideTAU_tid(tid);
 
+  TAU_VERBOSE("Tau_sampling_event_start: tid = %d address = %p\n", tid, addresses);
+
   //#ifdef TAU_USE_HPCTOOLKIT
   //  Tau_sampling_event_startHpctoolkit(tid, addresses);
   //#endif /* TAU_USE_HPCTOOLKIT */
@@ -1008,6 +1032,7 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
   */
   if (samplingEnabled[tid] == 0) {
     // Do not track counts when sampling is not enabled.
+    TAU_VERBOSE("Tau_sampling_handle_sample: sampling not enabled\n");
     return;
   }
   numSamples[tid]++;
@@ -1041,6 +1066,7 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *context) {
   unsigned long pc;
   pc = get_pc(context);
 
+  //   TAU_VERBOSE("Tau_sampling_handler invoked\n");
   Tau_sampling_handle_sample((void *)pc, (ucontext_t *)context);
 }
 
@@ -1074,7 +1100,7 @@ int Tau_sampling_init(int tid) {
   int threshold = TauEnv_get_ebs_period();
   TAU_VERBOSE("Tau_sampling_init: tid = %d with threshold %d\n", 
 	      tid, threshold);
-
+  init_thread_variables_if_necessary();
   samplingEnabled[tid] = 0;
 
   itval.it_interval.tv_usec = itval.it_value.tv_usec = threshold % 1000000;
@@ -1122,49 +1148,48 @@ int Tau_sampling_init(int tid) {
       enable sample handling for each thread after init(tid) completes.
       See Tau_sampling_handle_sample().
    */
-  if (tid == 0) {
-    if (strcmp(TauEnv_get_ebs_source(), "itimer") == 0) {
-      int which = ITIMER_REAL;
-      int alarmType = SIGALRM;
-      
-      struct sigaction act;
-      memset(&act, 0, sizeof(struct sigaction));
-      ret = sigemptyset(&act.sa_mask);
-      if (ret != 0) {
-	printf("TAU: Sampling error: %s\n", strerror(ret));
-	return -1;
-      }
-      ret = sigaddset(&act.sa_mask, alarmType);
-      if (ret != 0) {
-	printf("TAU: Sampling error: %s\n", strerror(ret));
-	return -1;
-      }
-      act.sa_sigaction = Tau_sampling_handler;
-      act.sa_flags     = SA_SIGINFO|SA_RESTART;
-      
-      ret = sigaction(alarmType, &act, NULL);
-      if (ret != 0) {
-	printf("TAU: Sampling error: %s\n", strerror(ret));
-	return -1;
-      }
-      
-      struct itimerval ovalue, pvalue;
-      getitimer(which, &pvalue);
-      
-      ret = setitimer(which, &itval, &ovalue);
-      if (ret != 0) {
-	printf("TAU: Sampling error: %s\n", strerror(ret));
-	return -1;
-      }
-
-      if (ovalue.it_interval.tv_sec != pvalue.it_interval.tv_sec  ||
-	  ovalue.it_interval.tv_usec != pvalue.it_interval.tv_usec ||
-	  ovalue.it_value.tv_sec != pvalue.it_value.tv_sec ||
-	  ovalue.it_value.tv_usec != pvalue.it_value.tv_usec) {
-	printf("TAU [tid = %d]: Sampling error - Real time interval timer mismatch.\n", tid);
-	return -1;
-      }
+  if (strcmp(TauEnv_get_ebs_source(), "itimer") == 0) {
+    int which = ITIMER_REAL;
+    int alarmType = SIGALRM;
+    
+    struct sigaction act;
+    memset(&act, 0, sizeof(struct sigaction));
+    ret = sigemptyset(&act.sa_mask);
+    if (ret != 0) {
+      printf("TAU: Sampling error: %s\n", strerror(ret));
+      return -1;
     }
+    ret = sigaddset(&act.sa_mask, alarmType);
+    if (ret != 0) {
+      printf("TAU: Sampling error: %s\n", strerror(ret));
+      return -1;
+    }
+    act.sa_sigaction = Tau_sampling_handler;
+    act.sa_flags     = SA_SIGINFO|SA_RESTART;
+    
+    ret = sigaction(alarmType, &act, NULL);
+    if (ret != 0) {
+      printf("TAU: Sampling error: %s\n", strerror(ret));
+      return -1;
+    }
+    
+    struct itimerval ovalue, pvalue;
+    getitimer(which, &pvalue);
+    
+    ret = setitimer(which, &itval, &ovalue);
+    if (ret != 0) {
+      printf("TAU: Sampling error: %s\n", strerror(ret));
+      return -1;
+    }
+    
+    if (ovalue.it_interval.tv_sec != pvalue.it_interval.tv_sec  ||
+	ovalue.it_interval.tv_usec != pvalue.it_interval.tv_usec ||
+	ovalue.it_value.tv_sec != pvalue.it_value.tv_sec ||
+	ovalue.it_value.tv_usec != pvalue.it_value.tv_usec) {
+      printf("TAU [tid = %d]: Sampling error - Real time interval timer mismatch.\n", tid);
+      return -1;
+    }
+    TAU_VERBOSE("Tau_sampling_init: pid = %d, tid = %d Signals set up.\n", getpid(), tid);
   }
 
   samplingEnabled[tid] = 1;
@@ -1230,11 +1255,18 @@ int Tau_sampling_finalize(int tid) {
 
 /* *CWL* - This is workaround code for MPI where mvapich2 on Hera was
    found to conflict with EBS sampling operations if EBS was initialized
-   before MPI_Init()
+   before MPI_Init().
+
+   Assume no threading in this debug version.
  */
-extern "C" void Tau_sampling_init_if_necessary(void ) {
-  if (TauEnv_get_ebs_enabled()) {
-    Tau_sampling_init(RtsLayer::myThread());
+extern "C" void Tau_sampling_init_if_necessary(void) {
+  static bool nodeInitialized = false;
+  if (!nodeInitialized) {
+    nodeInitialized = true;
+    if (TauEnv_get_ebs_enabled()) {
+      Tau_sampling_init(RtsLayer::myThread());
+    }
+    return;
   }
 }
 
@@ -1242,16 +1274,17 @@ extern "C" void Tau_sampling_init_if_necessary(void ) {
    sampling finalization and name resolution for all threads through
    MPI_Finalize before the process of TAU event unification.
  */
-extern "C" void Tau_sampling_finalizeNode(void) {
+extern "C" void Tau_sampling_finalize_if_necessary(void) {
   static bool nodeFinalized = false;
-  int tid = RtsLayer::myThread();
   if (!nodeFinalized) {
     nodeFinalized = true;
     /* *CWL* This is not really a problem for now, but in the future,
        there might be cases where we need a model for activating the
        finalization of TAU Sampling on each thread of a process instead.
      */
-    Tau_sampling_finalize(tid);
+    if (TauEnv_get_ebs_enabled()) {
+      Tau_sampling_finalize(RtsLayer::myThread());
+    }
     return;
   }
 }
