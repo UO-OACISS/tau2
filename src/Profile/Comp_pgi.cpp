@@ -72,7 +72,13 @@ extern "C" void __rouexit() {
 extern "C" void __rouinit() {
   Tau_init_initializeTAU();
   TheUsingCompInst() = 1;
-  TAU_PROFILE_SET_NODE(0);
+#if (defined (TAU_MPI) && defined(TAU_CRAYCNL))
+  // If I am the master process spawned by aprun on the Cray,
+  //  don't set it to 0.
+  if (RtsLayer::myNode() != -1) {
+    TAU_PROFILE_SET_NODE(0);
+  }
+#endif /* TAU_MPI */
   atexit(__rouexit);
 }
 
