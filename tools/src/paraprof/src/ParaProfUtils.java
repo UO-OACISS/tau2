@@ -71,6 +71,7 @@ import edu.uoregon.tau.perfdmf.Function;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.PhaseConvertedDataSource;
 import edu.uoregon.tau.perfdmf.Snapshot;
+import edu.uoregon.tau.perfdmf.SourceRegion;
 import edu.uoregon.tau.perfdmf.Thread;
 import edu.uoregon.tau.perfdmf.UserEvent;
 import edu.uoregon.tau.perfdmf.UtilFncs;
@@ -739,6 +740,94 @@ public class ParaProfUtils {
         g2.translate(tx, ty);
         g2.scale(scale, scale);
     }
+    
+    private static SourceRegion getBacktraceSourceLink(String btTuple){
+    	SourceRegion sourceLink = new SourceRegion();
+    	
+    	int fb = btTuple.indexOf('[',1);
+    	if(fb==-1)
+    		return null;
+    	if(fb==1)
+    		fb = btTuple.indexOf('[',fb+1);
+    	if(fb==-1)
+    		return null;
+    	
+    	int endb=btTuple.indexOf(']',fb+1);
+    	if(endb==-1)
+    		return null;
+    	
+    	String src = btTuple.substring(fb+1, endb);
+    	if(src==null)
+    		return null;
+    	
+    	String[]chunks=src.split(":");
+    	if(chunks.length!=2)
+    		return null;
+    	
+    	if(chunks[0].equals("(unknown)"))
+    		return null;
+    	
+    	sourceLink.setFilename(chunks[0]);
+    	int line = Integer.parseInt(chunks[1]);
+    	sourceLink.setStartLine(line);
+    	sourceLink.setEndLine(line);
+    	
+    	return sourceLink;
+    }
+    
+    public static JPopupMenu createMetadataClickPopUp(final String fName,
+            final Component owner) {
+    	
+    	 final SourceRegion sr = getBacktraceSourceLink(fName);
+    	
+        ActionListener actionListener = new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                try {
+
+                    String arg = evt.getActionCommand();
+
+                     if (arg.equals("Show Source Code")) {
+
+                        if (ParaProf.controlMode) {
+                            ExternalController.outputCommand("sourcecode " + sr);
+                        } 
+//                        else if (ParaProf.insideEclipse) {
+//                            ParaProf.eclipseHandler.openSourceLocation(ppTrial, function);
+//                        } 
+                        else {
+                            // use internal viewer
+                            ParaProf.getDirectoryManager().showSourceCode(sr);
+                        }
+                    }
+
+                } catch (Exception e) {
+                    ParaProfUtils.handleException(e);
+                }
+            }
+
+        };
+
+        JPopupMenu functionPopup = new JPopupMenu();
+
+        
+       
+        
+        if (sr != null) {
+            JMenuItem functionDetailsItem = new JMenuItem("Show Source Code");
+            functionDetailsItem.addActionListener(actionListener);
+            functionPopup.add(functionDetailsItem);
+        }
+        else{
+        	return null;
+        }
+
+
+
+        return functionPopup;
+
+    }
+    
+    
 
     public static JPopupMenu createFunctionClickPopUp(final ParaProfTrial ppTrial, final Function function, final Thread thread,
             final Component owner) {
