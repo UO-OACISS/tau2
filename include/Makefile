@@ -129,7 +129,7 @@ EBS_UNWIND_LIB_FLAG=
 #OPARI#TAU_OPARI_TOOL=$(TAU_BIN_DIR)/opari        #ENDIF#
 #OPARI2#TAU_OPARI2_TOOL=$(TAU_BIN_DIR)/opari2        #ENDIF#
 #OPARI2#TAU_OPARI_CONFIG_TOOL=$(TAU_BIN_DIR)/opari2-config        #ENDIF#
-#OPARI2#OPARIINCDIR=$(TAUROOT)/utils/opari2/include #ENDIF#
+#OPARI2#OPARIINCDIR=-I$(TAUROOT)/utils/opari2/include #ENDIF#
 #ENABLE64BIT#ABI 	     = -mabi=64		  #ENDIF#
 #ENABLEN32BIT#ABI 	     = -mabi=n32	  #ENDIF#
 #ENABLE32BIT#ABI 	     = -mabi=32		  #ENDIF#
@@ -1055,14 +1055,14 @@ TAU_CUPTI_INC=
 #############################################
 # TAU COMPILER SHELL SCRIPT OPTIONS
 TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
-        -optPdtCOpts="$(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE) $(TAU_SHMEM_INCLUDE) -I$(OPARIINCDIR)"\
-        -optPdtCxxOpts="$(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE) $(TAU_SHMEM_INCLUDE) -I$(OPARIINCDIR)"\
+        -optPdtCOpts="$(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE) $(TAU_SHMEM_INCLUDE) $(OPARIINCDIR)"\
+        -optPdtCxxOpts="$(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE) $(TAU_SHMEM_INCLUDE) $(OPARIINCDIR)"\
         -optTauInstr="$(TAU_BIN_DIR)/tau_instrumentor" \
         -optNoMpi \
 	-optOpariDir="$(OPARIDIR)" -optOpari2Tool="$(TAU_OPARI2_TOOL)" -optOpari2ConfigTool="$(TAU_OPARI_CONFIG_TOOL)"  \
 	-optOpariTool="$(TAU_OPARI_TOOL)"  \
 	-optTauCC="$(TAU_CCOMPILER)" \
-	-optTauIncludes="$(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(TAU_SHMEM_INCLUDE) -I$(OPARIINCDIR)" \
+	-optTauIncludes="$(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(TAU_SHMEM_INCLUDE) $(OPARIINCDIR)" \
 	-optTauDefs="$(TAU_DEFS)" $(TAU_IBM_NOCOMPINST) \
         -optTauCompile="$(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(TAU_DEFS) "\
         -optLinking="$(TAU_MPI_FLIBS) $(TAU_LIBS) $(TAU_LDFLAGS) $(TAU_CXXLIBS) $(TAU_SHMEM_LIBS) "\
