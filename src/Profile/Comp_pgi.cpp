@@ -78,6 +78,8 @@ extern "C" void __rouinit() {
   if (RtsLayer::myNode() != -1) {
     TAU_PROFILE_SET_NODE(0);
   }
+#else
+  TAU_PROFILE_SET_NODE(0);
 #endif /* TAU_MPI */
   atexit(__rouexit);
 }
