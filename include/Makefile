@@ -979,7 +979,8 @@ TAU_INCLUDE_MEMORY = -I$(TAU_INC_DIR)/Memory
 
 #TAU_LIBS	= $(TAUHELPER) -L$(TAU_LIB_DIR) -ltau$(TAU_CONFIG) $(TAU_LINKER_OPTS) -L/usr/local/packages/sw1.2beta1/x86_64-unknown-linux2.4/lib -lstackwalk -lsymtabAPI -lcommon -L/usr/local/packages/libdwarf-20091230/lib -ldwarf -lelf -liberty -ldlmalloc
 
-TAU_LIBS	= $(TAUHELPER) -L$(TAU_LIB_DIR) -ltau$(TAU_CONFIG) $(TAU_LINKER_OPTS)
+#GNU46PLUS#TAU_EXTRA_MPI_LIBRARIES_FOR_GCC=$(TAU_MPI_NOWRAP_LIB) -ldl -lm #ENDIF#
+TAU_LIBS	= $(TAUHELPER) -L$(TAU_LIB_DIR) -ltau$(TAU_CONFIG) $(TAU_LINKER_OPTS) $(TAU_EXTRA_MPI_LIBRARIES_FOR_GCC)
 
 #PERFLIB#TAU_LIBS = #ENDIF#
 
