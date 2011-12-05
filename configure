@@ -5505,13 +5505,13 @@ if [ "x$bfd" = "xyes" ] ; then
 			mkdir $tempdir
 			cd $tempdir
 			if [ "$machine" = "apple" ] ; then
-				curl http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz > binutils-2.20.tar.gz
+				curl http://www.cs.uoregon.edu/Research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz > binutils-2.20.tar.gz
 			else 
-				wget http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz
+				wget http://www.cs.uoregon.edu/Research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz
 			fi
 			if [ ! -f binutils-2.20.tar.gz ] ; then
 				echo "The BFD tarball did not download.  Please download it manually from: "
-				echo "http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz"
+				echo "http://www.cs.uoregon.edu/Research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz"
 				echo "Please enter the directory containing the tarball: ${nnl}" 
 				read RESPONSE
 				cp $RESPONSE/binutils-2.20.tar.gz .
