@@ -245,7 +245,11 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 
 #ifdef TAU_VAMPIRTRACE 
   x_uint64 TimeStamp = vt_pform_wtime();
+#ifdef TAU_VAMPIRTRACE_5_12_API
+  vt_enter(VT_CURRENT_THREAD, (uint64_t *) &TimeStamp, fi->GetFunctionId());
+#else
   vt_enter((uint64_t *) &TimeStamp, fi->GetFunctionId());
+#endif /* TAU_VAMPIRTRACE_5_12_API */
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_resume();
@@ -412,7 +416,13 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 
 #ifdef TAU_VAMPIRTRACE 
   x_uint64 TimeStamp = vt_pform_wtime();
+
+#ifdef TAU_VAMPIRTRACE_5_12_API
+  vt_exit(VT_CURRENT_THREAD, (uint64_t *)&TimeStamp);
+#else 
   vt_exit((uint64_t *)&TimeStamp);
+#endif /* TAU_VAMPIRTRACE_5_12_API */
+
 #ifndef TAU_WINDOWS
     if (TauEnv_get_ebs_enabled()) {
       Tau_sampling_resume();

@@ -100,8 +100,13 @@ void TauUserEvent::AddEventToDB() {
   /* Set user event id */
   EventId = RtsLayer::GenerateUniqueId();
 #ifdef TAU_VAMPIRTRACE
+#ifdef TAU_VAMPIRTRACE_5_12_API
+  uint32_t gid = vt_def_counter_group(VT_CURRENT_THREAD, "TAU Events");
+  EventId = vt_def_counter(VT_CURRENT_THREAD, GetEventName(), OTF_COUNTER_TYPE_ABS|OTF_COUNTER_SCOPE_NEXT, gid, "#");
+#else
   uint32_t gid = vt_def_counter_group("TAU Events");
   EventId = vt_def_counter(GetEventName(), OTF_COUNTER_TYPE_ABS|OTF_COUNTER_SCOPE_NEXT, gid, "#");
+#endif /* TAU_VAMPIRTRACE_5_12_API */
 #endif /* TAU_VAMPIRTRACE */
 
 #ifdef TAU_SCOREP
@@ -247,11 +252,24 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
   int id = GetEventId();
   time = vt_pform_wtime();
   cval = (uint64_t) data;
+#ifdef TAU_VAMPIRTRACE_5_12_API
+  vt_count(VT_CURRENT_THREAD, &time, id, 0);
+#else
   vt_count(&time, id, 0);
+#endif /* TAU_VAMPIRTRACE_5_12_API */
   time = vt_pform_wtime();
+#ifdef TAU_VAMPIRTRACE_5_12_API
+  vt_count(VT_CURRENT_THREAD, &time, id, cval);
+#else
   vt_count(&time, id, cval);
+#endif /* TAU_VAMPIRTRACE_5_12_API */
   time = vt_pform_wtime();
+#ifdef TAU_VAMPIRTRACE_5_12_API
+  vt_count(VT_CURRENT_THREAD, &time, id, 0);
+#else
   vt_count(&time, id, 0);
+#endif /* TAU_VAMPIRTRACE_5_12_API */
+
 #else /* TAU_VAMPIRTRACE */
 #ifndef TAU_EPILOG
   if (TauEnv_get_tracing()) {
