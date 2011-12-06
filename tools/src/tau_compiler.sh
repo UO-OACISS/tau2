@@ -8,6 +8,7 @@ declare -i group_f_F=1
 declare -i group_c=2
 declare -i group_C=3
 declare -i group_upc=4
+declare -i berkeley_upcc=$FALSE
 
 declare -i disablePdtStep=$FALSE
 declare -i hasAnOutputFile=$FALSE
@@ -198,6 +199,10 @@ for arg in "$@"; do
 	    if [ $tempCounter == 0 ]; then
 		CMD=$arg
 			#The first command (immediately) after the -opt sequence is the compiler.
+                if [ $CMD == upcc ]; then
+                  berkeley_upcc=$TRUE
+                  echoIfDebug "Berkeley UPCC: TRUE!"
+                fi
 	    fi
 
                 # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
@@ -1050,6 +1055,10 @@ if [ $optCompInst == $TRUE ]; then
     optLinking="$optLinking $optCompInstLinking"
 fi
 
+if [ $berkeley_upcc == $TRUE ]; then
+   optLinking=`echo $optLinking| sed -e 's@-Wl@-Wl,-Wl@g'`
+   echoIfDebug "optLinking modified to accomodate -Wl,-Wl for upcc. optLinking=$optLinking"
+fi
 
 
 

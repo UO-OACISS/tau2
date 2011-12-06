@@ -291,6 +291,8 @@ for arg in "$@"; do
     echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
     echo "       g95|open64|kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale}"
     echo "       gfortran|gfortran4]"
+    echo "-upc=<compiler> ............................. specify the UPC compiler."
+    echo "     options [upc|gcc(GNU UPC) |upcc (Berkeley UPC) | cc (Cray CCE UPC)"
     echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
     echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
     echo "    options [CC|KCC|g++|*xlC*|cxx|pgCC|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
@@ -411,6 +413,8 @@ for arg in "$@"; do
     echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
     echo "   g95|open64|kai|nec|hitachi|intel|absoft|lahey|nag|nagware|pathscale}"
     echo "       gfortran|gfortran4]"
+    echo "-upc=<compiler> ............................. specify the UPC compiler."
+    echo "     options [upc|gcc(GNU UPC) |upcc (Berkeley UPC) | cc (Cray CCE UPC)"
     echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
     echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
     echo "    options [CC|KCC|g++|*xlC*|cxx|pgCC|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
@@ -618,6 +622,7 @@ extrashlibopts=
 pthread=no
 papithread=no
 papipfm=no
+gnu_upc=no
 papiperfctr=no
 papisubdir=
 charm=no
@@ -719,6 +724,7 @@ vampirtrace=no
 vampirtraceshow=no
 upnetwork=unknown
 upc=no
+upc_compiler=default
 forceshared=no
 opari_region=no
 opari_construct=no
@@ -832,6 +838,18 @@ for arg in "$@"; do
 	fi
     else
 	echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'g95', and 'open64'"
+	exit 1
+    fi
+    shift
+    ;;
+  -upc=*)
+    myarg=`echo $arg | sed 's/-upc=//'`
+    if [ $myarg = cc -o $myarg = upc -o $myarg = gcc -o $myarg = upcc ]
+      then
+        upc_compiler=$myarg
+        upc=yes
+      else
+	echo "WARNING: valid options for upc are 'cc (Cray CCE UPC compiler)', 'upc (GNU UPC compiler)', 'upcc (Berkeley UPC compiler)', and 'gcc'"
 	exit 1
     fi
     shift
@@ -4031,6 +4049,10 @@ if [ $c_compiler != gcc ]
 #    echo $gcclibdir
 fi
 
+if [ $upc_compiler = gcc -o $upc_compiler = upc ] 
+then
+  gnu_upc=yes
+fi
 if [ $c_compiler != gcc4 ]
   then
     echo Default C compiler will be $c_compiler
@@ -6353,14 +6375,28 @@ if [ $opari1 = yes ] ; then
     fi
 fi
 
-   if [ $upc = yes ]; then
-     tauoptions="${tauoptions}-upc"
-    # If MPI is used -mpi already appears in the name. If it is not, add it
-     if [ "x$upcnetwork" != "xmpi" ]; then
-       tauoptions="${tauoptions}-$upcnetwork"
-     fi
-     fixmakeargs="$fixmakeargs UPCC upcnetwork=$upcnetwork"
-   fi
+if [ $upc_compiler = cc -o $upc_compiler = default ]; then 
+  if [ $machine = craycnl -a "x$PE_ENV" = xCRAY ]; then
+    fixmakeargs="$fixmakeargs CRAY_UPC"
+  fi
+fi
+
+if [ $upc = yes ]; then
+  tauoptions="${tauoptions}-upc"
+  # If MPI is used -mpi already appears in the name. If it is not, add it
+  if [ "x$upcnetwork" != "xmpi" -a $upc_compiler = upcc ]; then
+    tauoptions="${tauoptions}-$upcnetwork"
+  fi
+  if [ $upc_compiler = upcc ] 
+  then
+    fixmakeargs="$fixmakeargs UPCC upcnetwork=$upcnetwork"
+  fi
+
+  if [ $upc_compiler = gcc -o $upc_compiler = upc ]; then
+    tauoptions="${tauoptions}-gnuupc"
+    fixmakeargs="$fixmakeargs GNU_UPC"
+  fi
+fi
 
 if [ $trace = yes ] ; then
     if [ $profile = yes ] ; then
@@ -6726,6 +6762,7 @@ cp ${tauroot}/tools/src/tau_cc.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_rewrite $BINTARGET
 cp ${tauroot}/tools/src/tau_f90.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_f77.sh $BINTARGET
+cp ${tauroot}/tools/src/tau_upc.sh $BINTARGET
 cp ${tauroot}/tools/src/contrib/tcollect10.ini $BINTARGET
 
 if [ $pdtarchdir != unknown ]
