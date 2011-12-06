@@ -40,7 +40,12 @@ if [ `uname -s ` = "HI-UX/MPP" ]; then
 else
   if [ "x$ARCH" = "x" ]; then
 # ARCH has not been assigned yet.
-      ARCH=`$TAU_CCOM -w -E $ARCHTESTFILE | sed -e '/^#/d' -e '/^[ ]*$/d' -e 's/^ARCH//'` 
+    if [ "x$PE_ENV" = "xCRAY" ]; then
+      TAU_W_FLAG="" 
+    else
+      TAU_W_FLAG=-w
+    fi
+    ARCH=`$TAU_CCOM $TAU_W_FLAG -E $ARCHTESTFILE | sed -e '/^#/d' -e '/^[ ]*$/d' -e 's/^ARCH//'` 
       if [ "x$ARCH" = "x" ] ; then 
 	  exit
       fi
