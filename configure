@@ -291,6 +291,8 @@ for arg in "$@"; do
     echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
     echo "       g95|open64|kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale}"
     echo "       gfortran|gfortran4]"
+    echo "-upc=<compiler> ............................. specify the UPC compiler."
+    echo "     options [upc|gcc(GNU UPC) |upcc (Berkeley UPC) | cc (Cray CCE UPC)"
     echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
     echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
     echo "    options [CC|KCC|g++|*xlC*|cxx|pgCC|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
@@ -411,6 +413,8 @@ for arg in "$@"; do
     echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
     echo "   g95|open64|kai|nec|hitachi|intel|absoft|lahey|nag|nagware|pathscale}"
     echo "       gfortran|gfortran4]"
+    echo "-upc=<compiler> ............................. specify the UPC compiler."
+    echo "     options [upc|gcc(GNU UPC) |upcc (Berkeley UPC) | cc (Cray CCE UPC)"
     echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
     echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
     echo "    options [CC|KCC|g++|*xlC*|cxx|pgCC|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
@@ -481,7 +485,6 @@ for arg in "$@"; do
 #    echo "                                 interface.                            "
     echo "-scorep=<dir>  .................... Specify location of SCOREP package."
     echo "-upcnetwork=<value> .. Specify network (mpi, udp,...) for Berkeley UPC."
-    echo "-GNUUPC Specify the use of Intrepid Technology Inc.'s GNU UPC compiler."
     echo "-python .. Automatically choose python options based on Python in path."
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
@@ -721,6 +724,7 @@ vampirtrace=no
 vampirtraceshow=no
 upnetwork=unknown
 upc=no
+upc_compiler=default
 forceshared=no
 opari_region=no
 opari_construct=no
@@ -834,6 +838,18 @@ for arg in "$@"; do
 	fi
     else
 	echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'g95', and 'open64'"
+	exit 1
+    fi
+    shift
+    ;;
+  -upc=*)
+    myarg=`echo $arg | sed 's/-upc=//'`
+    if [ $myarg = cc -o $myarg = upc -o $myarg = gcc -o $myarg = upcc ]
+      then
+        upc_compiler=$myarg
+        upc=yes
+      else
+	echo "WARNING: valid options for upc are 'cc (Cray CCE UPC compiler)', 'upc (GNU UPC compiler)', 'upcc (Berkeley UPC compiler)', and 'gcc'"
 	exit 1
     fi
     shift
@@ -1159,11 +1175,6 @@ for arg in "$@"; do
   -upcnetwork=*)
       upc=yes
       upcnetwork=`echo $arg | sed -e 's/-upcnetwork=//'`
-      shift
-      ;;
-
-  -GNUUPC)
-      gnu_upc=yes
       shift
       ;;
 
@@ -4038,6 +4049,10 @@ if [ $c_compiler != gcc ]
 #    echo $gcclibdir
 fi
 
+if [ $upc_compiler = gcc -o $upc_compiler = upc ] 
+then
+  gnu_upc=yes
+fi
 if [ $c_compiler != gcc4 ]
   then
     echo Default C compiler will be $c_compiler
@@ -6369,7 +6384,11 @@ fi
      fixmakeargs="$fixmakeargs UPCC upcnetwork=$upcnetwork"
    fi
 
-   if [ $gnu_upc = yes ]; then
+   if [ $upc_compiler = cc -a $machine = craycnl ]; then
+     fixmakeargs="$fixmakeargs CRAY_UPC"
+   fi
+
+   if [ $upc_compiler = gcc -o $upc_compiler = upc ]; then
      tauoptions="${tauoptions}-gnuupc"
      fixmakeargs="$fixmakeargs GNU_UPC"
    fi
