@@ -481,6 +481,7 @@ for arg in "$@"; do
 #    echo "                                 interface.                            "
     echo "-scorep=<dir>  .................... Specify location of SCOREP package."
     echo "-upcnetwork=<value> .. Specify network (mpi, udp,...) for Berkeley UPC."
+    echo "-GNUUPC Specify the use of Intrepid Technology Inc.'s GNU UPC compiler."
     echo "-python .. Automatically choose python options based on Python in path."
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
@@ -618,6 +619,7 @@ extrashlibopts=
 pthread=no
 papithread=no
 papipfm=no
+gnu_upc=no
 papiperfctr=no
 papisubdir=
 charm=no
@@ -1157,6 +1159,11 @@ for arg in "$@"; do
   -upcnetwork=*)
       upc=yes
       upcnetwork=`echo $arg | sed -e 's/-upcnetwork=//'`
+      shift
+      ;;
+
+  -GNUUPC)
+      gnu_upc=yes
       shift
       ;;
 
@@ -6362,6 +6369,11 @@ fi
      fixmakeargs="$fixmakeargs UPCC upcnetwork=$upcnetwork"
    fi
 
+   if [ $gnu_upc = yes ]; then
+     tauoptions="${tauoptions}-gnuupc"
+     fixmakeargs="$fixmakeargs GNU_UPC"
+   fi
+
 if [ $trace = yes ] ; then
     if [ $profile = yes ] ; then
         tauoptions="${tauoptions}-profile"
@@ -6726,6 +6738,7 @@ cp ${tauroot}/tools/src/tau_cc.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_rewrite $BINTARGET
 cp ${tauroot}/tools/src/tau_f90.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_f77.sh $BINTARGET
+cp ${tauroot}/tools/src/tau_upc.sh $BINTARGET
 cp ${tauroot}/tools/src/contrib/tcollect10.ini $BINTARGET
 
 if [ $pdtarchdir != unknown ]
