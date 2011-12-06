@@ -6378,19 +6378,24 @@ fi
    if [ $upc = yes ]; then
      tauoptions="${tauoptions}-upc"
     # If MPI is used -mpi already appears in the name. If it is not, add it
-     if [ "x$upcnetwork" != "xmpi" ]; then
+     if [ "x$upcnetwork" != "xmpi" -a $upc_compiler = upcc ]; then
        tauoptions="${tauoptions}-$upcnetwork"
      fi
-     fixmakeargs="$fixmakeargs UPCC upcnetwork=$upcnetwork"
-   fi
+     if [ $upc_compiler = upcc ] 
+     then
+       fixmakeargs="$fixmakeargs UPCC upcnetwork=$upcnetwork"
+     fi
 
-   if [ $upc_compiler = cc -a $machine = craycnl ]; then
-     fixmakeargs="$fixmakeargs CRAY_UPC"
-   fi
+     if [ $upc_compiler = cc -o $upc_compiler = default ]; then 
+       if [ $machine = craycnl -a "x$PE_ENV" = xCRAY ]; then
+         fixmakeargs="$fixmakeargs CRAY_UPC"
+       fi
+     fi
 
-   if [ $upc_compiler = gcc -o $upc_compiler = upc ]; then
-     tauoptions="${tauoptions}-gnuupc"
-     fixmakeargs="$fixmakeargs GNU_UPC"
+     if [ $upc_compiler = gcc -o $upc_compiler = upc ]; then
+       tauoptions="${tauoptions}-gnuupc"
+       fixmakeargs="$fixmakeargs GNU_UPC"
+     fi
    fi
 
 if [ $trace = yes ] ; then
