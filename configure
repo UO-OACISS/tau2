@@ -3381,7 +3381,7 @@ full_cxx_compiler=`which $cxx_compiler`
 full_cc_compiler=`which $c_compiler`
 if [ $shmem = yes ]
 then
-  oshcc_var=`which oshcc`
+  oshcc_var=`which oshcc 2>/dev/null`
   if [ "x$oshcc_var" != "x" -a $? = 0 ]
   then 
     full_cxx_compiler=`which oshCC`
