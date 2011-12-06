@@ -174,15 +174,19 @@ F90_ABI	= $(ABI)
 ##############################################
 #UPCC#UPCC_C_PREFIX=-Wc,#ENDIF#
 #UPCC#UPCC_LINK_PREFIX=-Wl,#ENDIF#
-#UPCC#TAU_UPCC= upcc "-inst-toolname=gasp-tau" -inst -network=$(UPCNETWORK) #ENDIF#
+#UPCC#TAU_UPCC= upcc $(UPCC_C_PREFIX)-fPIC "-inst-toolname=gasp-tau" -inst -network=$(UPCNETWORK) #ENDIF#
+#GNU_UPC#TAU_UPCC= upc $(UPCC_C_PREFIX)-fPIC -inst #ENDIF#
 
 #UPCC#TAU_GASP_O=TauGASP.o #ENDIF#
 #UPCC#TAU_GASPU_O=TauGASPU.o #ENDIF#
+#GNU_UPC#TAU_GASP_O=TauGASP.o #ENDIF#
+#GNU_UPC#TAU_GASPU_O=TauGASPU.o #ENDIF#
 ############# Standard Defines ##############
 TAU_CC = $(CONFIG_CC) $(ABI) $(ISA)
 TAU_CXX = $(CONFIG_CXX) $(ABI) $(ISA)
 TAU_RUN_CC = $(FULL_CC) $(ABI) $(ISA)
 #UPCC#TAU_RUN_CC = $(TAU_UPCC) #ENDIF#
+#GNU_UPC#TAU_RUN_CC = $(TAU_UPCC) #ENDIF#
 TAU_RUN_CXX = $(FULL_CXX) $(ABI) $(ISA)
 TAU_INSTALL = /bin/cp
 TAU_SHELL = /bin/sh
@@ -1031,6 +1035,7 @@ TAU_TRACE_INPUT_LIB = -L$(TAU_LIB_DIR) -lTAU_traceinput$(TAU_CONFIG)
 
 TAU_CCOMPILER     = $(TAU_CC)
 #UPCC#TAU_CCOMPILER     = $(TAU_UPCC)  #ENDIF#
+#GNU_UPC#TAU_CCOMPILER     = $(TAU_UPCC)  #ENDIF#
 
 
 #SHMEM#TAU_SHMEM_INCLUDE	= $(TAU_SHMEM_INC) #ENDIF#
