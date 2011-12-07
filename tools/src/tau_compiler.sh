@@ -15,6 +15,7 @@ declare -i hasAnOutputFile=$FALSE
 declare -i fortranParserDefined=$FALSE
 declare -i gfparseUsed=$FALSE
 declare -i pdtUsed=$FALSE
+declare -i roseUsed=$FALSE
 declare -i isForCompilation=$FALSE
 declare -i hasAnObjectOutputFile=$FALSE
 declare -i removeMpi=$FALSE
@@ -100,6 +101,7 @@ printUsage () {
     echo -e "  -optLinkReset=\"\"\t\tReset options to the linker to the given list"
     echo -e "  -optTauCC=\"<cc>\"\t\tSpecifies the C compiler used by TAU"
     echo -e "  -optTauUseCXXForC\t\tSpecifies the use of a C++ compiler for compiling C code"
+    echo -e "  -optUseReturnFix\t\tSpecifies the use of a bug fix with ROSE parser using EDG v3.8"
     echo -e "  -optOpariTool=\"<path/opari>\"\tSpecifies the location of the Opari tool"
     echo -e "  -optOpariDir=\"<path>\"\t\tSpecifies the location of the Opari directory"
     echo -e "  -optOpariOpts=\"\"\t\tSpecifies optional arguments to the Opari tool"
@@ -370,9 +372,17 @@ for arg in "$@" ; do
 			echoIfDebug "\tTau now uses a C++ compiler to compile C code isCXXUsedForC: $isCXXUsedForC"
 			;;
 
+		    -optUseReturnFix)
+			  roseUsed=$TRUE
+			;;
+
 		    -optDefaultParser=*)
 		        defaultParser="${arg#"-optDefaultParser="}"
 			pdtParserType=$defaultParser
+			if [ $pdtParserType = roseparse -o $pdtParserType = upcparse ] ; then
+			  roseUsed=$TRUE
+			fi
+
 			if [ $pdtParserType = cxxparse ] ; then
 			    groupType=$group_C
 			    isCXXUsedForC=$TRUE
@@ -967,7 +977,7 @@ while [ $tempCounter -lt $numFiles ]; do
 	    $group_f_F)
 	    pdtParserCmd="$pdtParserF ${arrFileName[$tempCounter]} $optPdtUser ${optPdtF95} $optIncludes"
 	    ;;
-	    $group_c)
+	    $group_c | $group_upc)
 	    pdtParserCmd="$optPdtDir/$pdtParserType ${arrFileName[$tempCounter]} $optPdtCFlags $optPdtUser $optDefines $optIncludes"
 	    ;;
 	    $group_C)
@@ -1204,18 +1214,15 @@ if [ $gotoNextStep == $TRUE ]; then
 	    optCompile="$optCompile $optIncludes"
 	    ;;
 
-	    $group_c)
+	    $group_c | $group_upc)
 	    pdtCmd="$optPdtDir""/$pdtParserType"
 	    pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
 	    pdtCmd="$pdtCmd $optPdtCFlags $optPdtUser "
 	    optCompile="$optCompile $optDefs $optIncludes"
-	    ;;
 
-	    $group_upc)
-	    pdtCmd="$optPdtDir""/$pdtParserType"
-	    pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
-	    pdtCmd="$pdtCmd $optPdtCFlags $optPdtUser "
-	    optCompile="$optCompile $optDefs $optIncludes"
+            if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]} ]; then
+		evalWithDebugMessage "mv ${arrFileName[$tempCounter]} ${arrFileName[$tempCounter]}~; sed -e 's@return\([ \t]*\);@{return \1;}@g' ${arrFileName[$tempCounter]}~ > ${arrFileName[$tempCounter]};" "Making temporary file for parsing with ROSE"
+	    fi
 	    ;;
 
 	    $group_C)
@@ -1223,6 +1230,10 @@ if [ $gotoNextStep == $TRUE ]; then
 	    pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
 	    pdtCmd="$pdtCmd $optPdtCxxFlags $optPdtUser "
 	    optCompile="$optCompile $optDefs $optIncludes"
+
+            if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]} ]; then
+		evalWithDebugMessage "mv ${arrFileName[$tempCounter]} ${arrFileName[$tempCounter]}~; sed -e 's@return\([ \t]*\);@{return \1;}@g' ${arrFileName[$tempCounter]}~ > ${arrFileName[$tempCounter]};" "Making temporary file for parsing with ROSE"
+	    fi
 	    ;;
 
 	esac
@@ -1286,6 +1297,9 @@ if [ $gotoNextStep == $TRUE -a $optCompInst == $FALSE ]; then
 
 	if [ $disablePdtStep == $FALSE ]; then
 	    evalWithDebugMessage "$tauCmd" "Instrumenting with TAU"
+	    if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]}~ ]; then
+	      evalWithDebugMessage "mv ${arrFileName[$tempCounter]}~ ${arrFileName[$tempCounter]}" "Moving temporary file"
+            fi
 	else
 	    echoIfDebug "Not instrumenting source code. PDT not available."
 	fi
