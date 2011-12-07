@@ -1741,18 +1741,14 @@ for arg in "$@"; do
       echo "Error: Cannot access GPU include directory $cudainclude"
       exit 1
     fi
-    if [ -f "$cudainclude/cuda.h" ] ; then
-			useropt="$useropt#-DTAU_MAX_THREADS=32"
-    	fixmakeargs="$fixmakeargs CUDA TAU_USE_GPU cudainclude=$cudainclude"
-			if [ -f "$cudainclude/CL/cl.h" ] ; then
-    		fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$cudainclude"
-			fi
 		cuda=yes
-		else
-			echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
-    fi
     shift
     ;;
+
+	-DISABLE_OPENCL)
+		opencl=disable
+		shift
+		;;
 
   -opencl=*)
     openclinclude=`echo $arg | sed -e 's/-opencl=//' -e 's/ /#/g'`/include
@@ -5976,6 +5972,20 @@ if [ $python = yes ] ; then
       echo "ERROR: For IBM systems, please specify the -pythonlib=<dir> flag where *.py files and the config directory are located!"
       exit 1
     fi
+fi
+
+if [ $cuda = yes ] ; then
+	if [ -f "$cudainclude/cuda.h" ] ; then
+		useropt="$useropt#-DTAU_MAX_THREADS=32"
+		fixmakeargs="$fixmakeargs CUDA TAU_USE_GPU cudainclude=$cudainclude"
+		if [ "$machine" != "craycnl" -a "$opencl" != "disable" ] ; then
+			if [ -f "$cudainclude/CL/cl.h" ] ; then
+				fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$cudainclude"
+			fi
+		fi
+	else
+		echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
+	fi
 fi
 
 if [ $python = yes -a $cuda = yes ] ; then
