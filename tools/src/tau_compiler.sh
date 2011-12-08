@@ -1176,8 +1176,8 @@ cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${listOfObjectFiles} | `${op
     fi
 
     if [ $trackDMAPP == $TRUE -a -r $optWrappersDir/dmapp_wrapper/link_options.tau ] ; then 
-      linkCmd="$linkCmd `cat $optWrappersDir/dmapp_wrapper/link_options.tau` $optLinking"
-      echoIfDebug "Linking command is $linkCmd"
+      linkCmd="$linkCmd `cat $optWrappersDir/dmapp_wrapper/link_options.tau`"
+      echoIfDebug "Linking command is $linkCmd "
     fi
     
     if [ "x$tauWrapFile" != "x" ]; then
@@ -1655,7 +1655,7 @@ cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} | `
         fi
 
         if [ $trackDMAPP == $TRUE -a -r $optWrappersDir/dmapp_wrapper/link_options.tau ] ; then 
-          newCmd="$newCmd `cat $optWrappersDir/dmapp_wrapper/link_options.tau` $optLinking"
+          newCmd="$newCmd `cat $optWrappersDir/dmapp_wrapper/link_options.tau`"
           echoIfDebug "Linking command is $linkCmd"
         fi
 
