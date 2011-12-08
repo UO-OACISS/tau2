@@ -127,6 +127,9 @@ static void TauInitialize_kill_handlers() {
 # ifdef SIGSEGV
   sighdlr[SIGSEGV] = signal (SIGSEGV, wrap_up);
 # endif
+# ifdef SIGCHLD
+  sighdlr[SIGCHLD] = signal (SIGCHLD, wrap_up);
+# endif
 }
 
 extern "C" int Tau_get_backtrace_off_by_one_correction(void) {
