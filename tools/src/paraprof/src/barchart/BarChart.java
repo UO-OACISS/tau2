@@ -93,6 +93,8 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
 
     // normalized or not
     private boolean normalized = true;
+    
+    
 
     // single line means that the bars go along one line
     // the comparison window is the only one not using singleLine
@@ -921,6 +923,8 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
         this.normalized = normalized;
         this.preferredSizeSet = false;
     }
+    
+
 
     public boolean getStacked() {
         return stacked;

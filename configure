@@ -291,6 +291,8 @@ for arg in "$@"; do
     echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
     echo "       g95|open64|kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale}"
     echo "       gfortran|gfortran4]"
+    echo "-upc=<compiler> ............................. specify the UPC compiler."
+    echo "     options [upc|gcc(GNU UPC) |upcc (Berkeley UPC) | cc (Cray CCE UPC)"
     echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
     echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
     echo "    options [CC|KCC|g++|*xlC*|cxx|pgCC|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
@@ -336,6 +338,7 @@ for arg in "$@"; do
     echo ""
     echo "Other Options:"
     echo "-iowrapper .................................... Build POSIX IO Wrapper."
+    echo "-dmapp ...................................... Build Cray DMAPP Wrapper."
     echo "-pthread .................................. Use pthread thread package."
     echo "-papithread .................................. Use PAPI thread package."
     echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
@@ -411,6 +414,8 @@ for arg in "$@"; do
     echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
     echo "   g95|open64|kai|nec|hitachi|intel|absoft|lahey|nag|nagware|pathscale}"
     echo "       gfortran|gfortran4]"
+    echo "-upc=<compiler> ............................. specify the UPC compiler."
+    echo "     options [upc|gcc(GNU UPC) |upcc (Berkeley UPC) | cc (Cray CCE UPC)"
     echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
     echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
     echo "    options [CC|KCC|g++|*xlC*|cxx|pgCC|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
@@ -618,6 +623,7 @@ extrashlibopts=
 pthread=no
 papithread=no
 papipfm=no
+gnu_upc=no
 papiperfctr=no
 papisubdir=
 charm=no
@@ -719,6 +725,7 @@ vampirtrace=no
 vampirtraceshow=no
 upnetwork=unknown
 upc=no
+upc_compiler=default
 forceshared=no
 opari_region=no
 opari_construct=no
@@ -744,6 +751,7 @@ stffdir=
 sddf=no
 sddfdir=
 iowrapper=no
+dmapp=no
 zepto=no
 zeptodir=
 cuda=no
@@ -836,6 +844,18 @@ for arg in "$@"; do
     fi
     shift
     ;;
+  -upc=*)
+    myarg=`echo $arg | sed 's/-upc=//'`
+    if [ $myarg = cc -o $myarg = upc -o $myarg = gcc -o $myarg = upcc ]
+      then
+        upc_compiler=$myarg
+        upc=yes
+      else
+	echo "WARNING: valid options for upc are 'cc (Cray CCE UPC compiler)', 'upc (GNU UPC compiler)', 'upcc (Berkeley UPC compiler)', and 'gcc'"
+	exit 1
+    fi
+    shift
+    ;;
 
   -gnu)
       c_compiler=gcc
@@ -891,6 +911,11 @@ for arg in "$@"; do
 
   -iowrapper)
       iowrapper=yes
+      shift
+      ;;
+
+  -dmapp)
+      dmapp=yes
       shift
       ;;
 
@@ -1723,18 +1748,14 @@ for arg in "$@"; do
       echo "Error: Cannot access GPU include directory $cudainclude"
       exit 1
     fi
-    if [ -f "$cudainclude/cuda.h" ] ; then
-			useropt="$useropt#-DTAU_MAX_THREADS=32"
-    	fixmakeargs="$fixmakeargs CUDA TAU_USE_GPU cudainclude=$cudainclude"
-			if [ -f "$cudainclude/CL/cl.h" ] ; then
-    		fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$cudainclude"
-			fi
 		cuda=yes
-		else
-			echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
-    fi
     shift
     ;;
+
+	-DISABLE_OPENCL)
+		opencl=disable
+		shift
+		;;
 
   -opencl=*)
     openclinclude=`echo $arg | sed -e 's/-opencl=//' -e 's/ /#/g'`/include
@@ -2476,6 +2497,9 @@ case $machine in
 	elif [ "x$PE_ENV" = xCRAY ] ; then
 	    tauoptions="${tauoptions}-cray"
 	    default_fortran=cray
+	    if [ dmapp = no ]; then
+	      fixmakeargs="$fixmakeargs DMAPP"
+            fi
 
 	    # *CWL* - if bfd path is not explicitly specified, point
 	    #         to the correct preset bfd path.
@@ -2720,6 +2744,15 @@ if [ $iowrapper = yes ] ; then
         fixmakeargs="$fixmakeargs IOWRAPPER"
     fi
 fi    
+
+if [ $dmapp = yes ]; then
+    if [ "x$CRAY_DMAPP_INCLUDE_OPTS" = "x" ] ; then
+        echo "TAU: Please load the dmapp module on Cray to set CRAY_DMAPP_INCLUDE_OPTS environment variable and reconfigure TAU with the -dmapp configure option"
+    else
+        fixmakeargs="$fixmakeargs DMAPP"
+    fi
+fi
+
 
 if [ $stff = yes ] ; then
       fixmakeargs="$fixmakeargs RENCI_STFF stffdir=${stffdir} sddfdir=${sddfdir}"
@@ -3381,7 +3414,7 @@ full_cxx_compiler=`which $cxx_compiler`
 full_cc_compiler=`which $c_compiler`
 if [ $shmem = yes ]
 then
-  oshcc_var=`which oshcc`
+  oshcc_var=`which oshcc 2>/dev/null`
   if [ "x$oshcc_var" != "x" -a $? = 0 ]
   then 
     full_cxx_compiler=`which oshCC`
@@ -3731,12 +3764,15 @@ if [ $vampirtrace = yes ] ; then
 	$echo "Checking version of VampirTrace... ${nnl}"
 	version=`$vampirtracedir/bin/vtcc -vt:version 2>&1`
 	echo "$version"
-	#eval major=${version/./;minor=}
+	eval major=${version/./;minor=}
 	minor=`echo $minor | sed 's/\([0-9]*\).*/\1/g'`
 
 	# check if 5.7 or later
 	if [ "x$major" = "x5" -a "x$minor" = "x7" ] ; then
 	    fixmakeargs="$fixmakeargs VAMPIRTRACE_5_7_API" 
+	fi
+	if [ "x$major" = "x5" -a "x$minor" = "x12" ] ; then
+	    fixmakeargs="$fixmakeargs VAMPIRTRACE_5_12_API" 
 	fi
 
 	vtserchk="seq"
@@ -4028,6 +4064,10 @@ if [ $c_compiler != gcc ]
 #    echo $gcclibdir
 fi
 
+if [ $upc_compiler = gcc -o $upc_compiler = upc ] 
+then
+  gnu_upc=yes
+fi
 if [ $c_compiler != gcc4 ]
   then
     echo Default C compiler will be $c_compiler
@@ -4078,6 +4118,22 @@ fi
 rm -f get_stdinc.C find_stdinc.awk
 
 
+######################################################################
+# Checking gcc 4.6+ version. It needs -lmpi to be added after -ltau
+cat << EOF > gcc46test.C
+#if ((__GNUC__ >= 4 ) && (__GNUC_MINOR__ >= 6)) 
+#error "Using GCC 4.6+"
+#endif 
+EOF
+
+if $cxx_compiler $orig_useropt -c gcc46test.C 1> /dev/null 2>&1 
+then
+  echo "Not using GNU 4.6+ fixes" > /dev/null
+else
+  echo "NOTE: Using GNU 4.6+ fixes" > /dev/null
+  fixmakeargs="$fixmakeargs GNU46PLUS"
+fi
+/bin/rm -f gcc46test.*
 
 
 ######################################################################
@@ -5489,13 +5545,13 @@ if [ "x$bfd" = "xyes" ] ; then
 			mkdir $tempdir
 			cd $tempdir
 			if [ "$machine" = "apple" ] ; then
-				curl http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz > binutils-2.20.tar.gz
+				curl http://www.cs.uoregon.edu/Research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz > binutils-2.20.tar.gz
 			else 
-				wget http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz
+				wget http://www.cs.uoregon.edu/Research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz
 			fi
 			if [ ! -f binutils-2.20.tar.gz ] ; then
 				echo "The BFD tarball did not download.  Please download it manually from: "
-				echo "http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz"
+				echo "http://www.cs.uoregon.edu/Research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz"
 				echo "Please enter the directory containing the tarball: ${nnl}" 
 				read RESPONSE
 				cp $RESPONSE/binutils-2.20.tar.gz .
@@ -5937,6 +5993,20 @@ if [ $python = yes ] ; then
     fi
 fi
 
+if [ $cuda = yes ] ; then
+	if [ -f "$cudainclude/cuda.h" ] ; then
+		useropt="$useropt#-DTAU_MAX_THREADS=32"
+		fixmakeargs="$fixmakeargs CUDA TAU_USE_GPU cudainclude=$cudainclude"
+		if [ "$machine" != "craycnl" -a "$opencl" != "disable" ] ; then
+			if [ -f "$cudainclude/CL/cl.h" ] ; then
+				fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$cudainclude"
+			fi
+		fi
+	else
+		echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
+	fi
+fi
+
 if [ $python = yes -a $cuda = yes ] ; then
 	#We need the boost/python libraries to build the TAU's pycuda interface.
 	echo "Checking for boost/python ... ${nnl}"
@@ -6334,14 +6404,28 @@ if [ $opari1 = yes ] ; then
     fi
 fi
 
-   if [ $upc = yes ]; then
-     tauoptions="${tauoptions}-upc"
-    # If MPI is used -mpi already appears in the name. If it is not, add it
-     if [ "x$upcnetwork" != "xmpi" ]; then
-       tauoptions="${tauoptions}-$upcnetwork"
-     fi
-     fixmakeargs="$fixmakeargs UPCC upcnetwork=$upcnetwork"
-   fi
+if [ $upc_compiler = cc -o $upc_compiler = default ]; then 
+  if [ $machine = craycnl -a "x$PE_ENV" = xCRAY ]; then
+    fixmakeargs="$fixmakeargs CRAY_UPC"
+  fi
+fi
+
+if [ $upc = yes ]; then
+  tauoptions="${tauoptions}-upc"
+  # If MPI is used -mpi already appears in the name. If it is not, add it
+  if [ "x$upcnetwork" != "xmpi" -a $upc_compiler = upcc ]; then
+    tauoptions="${tauoptions}-$upcnetwork"
+  fi
+  if [ $upc_compiler = upcc ] 
+  then
+    fixmakeargs="$fixmakeargs UPCC upcnetwork=$upcnetwork"
+  fi
+
+  if [ $upc_compiler = gcc -o $upc_compiler = upc ]; then
+    tauoptions="${tauoptions}-gnuupc"
+    fixmakeargs="$fixmakeargs GNU_UPC"
+  fi
+fi
 
 if [ $trace = yes ] ; then
     if [ $profile = yes ] ; then
@@ -6700,6 +6784,7 @@ cp ${tauroot}/tools/src/tau_exec $BINTARGET
 cp ${tauroot}/tools/src/tauex $BINTARGET
 cp ${tauroot}/tools/src/taucc $BINTARGET
 cp ${tauroot}/tools/src/taucxx $BINTARGET
+cp ${tauroot}/tools/src/tauupc $BINTARGET
 cp ${tauroot}/tools/src/tauf90 $BINTARGET
 cp ${tauroot}/tools/src/tauex.multiple $BINTARGET
 cp ${tauroot}/tools/src/tau_cxx.sh $BINTARGET
@@ -6707,6 +6792,7 @@ cp ${tauroot}/tools/src/tau_cc.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_rewrite $BINTARGET
 cp ${tauroot}/tools/src/tau_f90.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_f77.sh $BINTARGET
+cp ${tauroot}/tools/src/tau_upc.sh $BINTARGET
 cp ${tauroot}/tools/src/contrib/tcollect10.ini $BINTARGET
 
 if [ $pdtarchdir != unknown ]

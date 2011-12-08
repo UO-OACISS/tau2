@@ -87,4 +87,6 @@ public:
     std::string version;
     /** awk script to use */
     std::string script;
+    /** include path for installed headers */
+    std::string cflags;
 };

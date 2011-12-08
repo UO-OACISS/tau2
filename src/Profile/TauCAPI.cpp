@@ -205,6 +205,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_init_if_necessary();
     Tau_sampling_suspend();
   }
 #endif
@@ -233,13 +234,27 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 
 #ifdef TAU_EPILOG
   esd_enter(fi->GetFunctionId());
+#ifndef TAU_WINDOWS
+  if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_resume();
+  }
+#endif
   Tau_global_insideTAU[tid]--;
   return;
 #endif
 
 #ifdef TAU_VAMPIRTRACE 
   x_uint64 TimeStamp = vt_pform_wtime();
+#ifdef TAU_VAMPIRTRACE_5_12_API
+  vt_enter(VT_CURRENT_THREAD, (uint64_t *) &TimeStamp, fi->GetFunctionId());
+#else
   vt_enter((uint64_t *) &TimeStamp, fi->GetFunctionId());
+#endif /* TAU_VAMPIRTRACE_5_12_API */
+#ifndef TAU_WINDOWS
+  if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_resume();
+  }
+#endif
   Tau_global_insideTAU[tid]--;
   return;
 #endif
@@ -286,6 +301,11 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   static int userspecifieddepth = TauEnv_get_depth_limit();
   int mydepth = Tau_global_stackpos[tid];
   if (mydepth >= userspecifieddepth) { 
+#ifndef TAU_WINDOWS
+    if (TauEnv_get_ebs_enabled()) {
+      Tau_sampling_resume();
+    }
+#endif
     Tau_global_insideTAU[tid]--;
     return; 
   }
@@ -322,8 +342,8 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
-    Tau_sampling_event_start(tid, p->address);
     Tau_sampling_resume();
+    Tau_sampling_event_start(tid, p->address);
   }
 #endif
   Tau_global_insideTAU[tid]--;
@@ -385,13 +405,29 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 
 #ifdef TAU_EPILOG
   esd_exit(fi->GetFunctionId());
+#ifndef TAU_WINDOWS
+    if (TauEnv_get_ebs_enabled()) {
+      Tau_sampling_resume();
+    }
+#endif
   Tau_global_insideTAU[tid]--;
   return 0;
 #endif
 
 #ifdef TAU_VAMPIRTRACE 
   x_uint64 TimeStamp = vt_pform_wtime();
+
+#ifdef TAU_VAMPIRTRACE_5_12_API
+  vt_exit(VT_CURRENT_THREAD, (uint64_t *)&TimeStamp);
+#else 
   vt_exit((uint64_t *)&TimeStamp);
+#endif /* TAU_VAMPIRTRACE_5_12_API */
+
+#ifndef TAU_WINDOWS
+    if (TauEnv_get_ebs_enabled()) {
+      Tau_sampling_resume();
+    }
+#endif
   Tau_global_insideTAU[tid]--;
   return 0;
 #endif
@@ -402,6 +438,11 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 
 
   if (Tau_global_stackpos[tid] < 0) { 
+#ifndef TAU_WINDOWS
+    if (TauEnv_get_ebs_enabled()) {
+      Tau_sampling_resume();
+    }
+#endif
     Tau_global_insideTAU[tid]--;
     return 0; 
   }
@@ -418,6 +459,11 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   int mydepth = Tau_global_stackpos[tid];
   if (mydepth >= userspecifieddepth) { 
     Tau_global_stackpos[tid]--; /* pop */
+#ifndef TAU_WINDOWS
+    if (TauEnv_get_ebs_enabled()) {
+      Tau_sampling_resume();
+    }
+#endif
     Tau_global_insideTAU[tid]--;
     return 0; 
   }
@@ -778,7 +824,7 @@ extern "C" int& tau_totalnodes(int set_or_get, int value)
 }
 
 
-#if (defined(TAU_MPI) || defined(TAU_SHMEM))
+#if (defined(TAU_MPI) || defined(TAU_SHMEM) || defined(TAU_DMAPP) )
 
 
 
@@ -842,9 +888,9 @@ extern "C" int shmem_n_pes(void);
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
+  if (!RtsLayer::TheEnableInstrumentation()) return; 
   static int initialize = register_events();
 #ifdef DEBUG_PROF
-  printf("Inside Tau_trace_sendmsg length = %d, totalnodes=%d\n", length, tau_totalnodes(0,0));
 #endif /* DEBUG_PROF */
 
 #ifdef TAU_PROFILEPARAM
@@ -857,7 +903,7 @@ extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
 
   if (TauEnv_get_comm_matrix()) {
     if (destination >= tau_totalnodes(0,0)) {
-#ifdef TAU_SHMEM
+#if (defined (TAU_SHMEM))
       tau_totalnodes(1,shmem_n_pes());
       register_events();
 #else /* TAU_SHMEM */
@@ -896,6 +942,7 @@ extern "C" void Tau_trace_recvmsg(int type, int source, int length) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_recvmsg_remote(int type, int source, int length, int remoteid) {
 
+  if (!RtsLayer::TheEnableInstrumentation()) return; 
   if (TauEnv_get_tracing()) {
     if (source >= 0) {
       TauTraceRecvMsgRemote(type, source, length, remoteid);
@@ -905,6 +952,7 @@ extern "C" void Tau_trace_recvmsg_remote(int type, int source, int length, int r
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_sendmsg_remote(int type, int destination, int length, int remoteid) {
+  if (!RtsLayer::TheEnableInstrumentation()) return; 
 
   if (TauEnv_get_tracing()) {
     if (destination >= 0) {
@@ -914,7 +962,6 @@ extern "C" void Tau_trace_sendmsg_remote(int type, int destination, int length, 
   if (TauEnv_get_comm_matrix())  {
   static int initialize = register_events();
 #ifdef DEBUG_PROF
-  printf("Inside Tau_trace_sendmsg_remote length = %d, totalnodes=%d\n", length, tau_totalnodes(0,0));
 #endif /* DEBUG_PROF */
 
 #ifdef TAU_PROFILEPARAM
@@ -927,7 +974,8 @@ extern "C" void Tau_trace_sendmsg_remote(int type, int destination, int length, 
 
   if (TauEnv_get_comm_matrix()) {
     if (destination >= tau_totalnodes(0,0)) {
-#ifdef TAU_SHMEM
+     
+#if (defined (TAU_SHMEM))
       tau_totalnodes(1,shmem_n_pes());
       register_events();
 #else /* TAU_SHMEM */
@@ -981,10 +1029,9 @@ extern "C" void Tau_scan_data(int data) {
 extern "C" void Tau_reducescatter_data(int data) {
   TAU_EVENT(TheReduceScatterEvent(), data);
 }
-#else /* !(TAU_MPI || TAU_SHMEM)*/
+#else /* !(TAU_MPI || TAU_SHMEM || TAU_DMAPP)*/
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
-  printf("Isnide the other trace_sendmsg: dest= %d\n", destination);
   TauTraceSendMsg(type, destination, length);
 }
 ///////////////////////////////////////////////////////////////////////////

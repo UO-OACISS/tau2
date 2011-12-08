@@ -69,8 +69,8 @@
 
 #if (defined(TAU_CRAYXMT) || defined(TAU_BGL) || defined(TAU_DISABLE_SAMPLING))
 
-#define Tau_sampling_init(tid) 
-#define Tau_sampling_finalize(tid)
+/* #define Tau_sampling_init(tid)  */
+/* #define Tau_sampling_finalize(tid) */
 #define Tau_sampling_event_start(tid, address)
 #define Tau_sampling_event_stop(tid, stopTime)
 #define Tau_sampling_papi_overflow_handler(EventSet, address, overflow_vector, context)
@@ -79,12 +79,13 @@
 #define Tau_sampling_resume()
 
 #define Tau_sampling_init_if_necessary()
+#define Tau_sampling_finalize_if_necessary()
 #define Tau_sampling_outputTraceCallpath(tid, pc, context)
 #define Tau_sampling_outputTraceCallstack(tid, pc, context)
 
 #else
-int Tau_sampling_init(int tid);
-int Tau_sampling_finalize(int tid);
+/* int Tau_sampling_init(int tid); */
+/* int Tau_sampling_finalize(int tid); */
 void Tau_sampling_event_start(int tid, void** address);
 int Tau_sampling_event_stop(int tid, double* stopTime);
 void Tau_sampling_papi_overflow_handler(int EventSet, void *address, 
@@ -97,10 +98,10 @@ extern "C" void Tau_sampling_resume();
 /* For TauMpi.c workaround to handle conflict between EBS operation and
    mvapich2 on Hera.
 */
-extern "C" void Tau_sampling_init_if_necessary(void );
+extern "C" void Tau_sampling_init_if_necessary(void);
 
 /* For TauMpi.c to invoke sampling finalization at MPI_Finalize */
-extern "C" void Tau_sampling_finalizeNode();
+extern "C" void Tau_sampling_finalize_if_necessary(void);
 
 void Tau_sampling_outputTraceCallpath(int tid);
 void Tau_sampling_outputTraceCallstack(int tid, void *pc, void *context);

@@ -202,8 +202,8 @@ tau_timecorrect:	tau_timecorrect.o
 opari/opari:
 		cd opari ; $(MAKE) opari
 
-opari2/bin/opari2:
-		cd opari2 ; CXX=$(CONFIG_CXX) CC=$(CONFIG_CC) ./configure -prefix=`pwd` ; $(MAKE) ; make install
+opari2/_build/bin/opari2:
+		cd opari2 ;mkdir _build; cd _build; CXX=$(CONFIG_CXX) CC=$(CONFIG_CC) ../configure -prefix=`pwd` ; $(MAKE) ; make install
 
 tau_timecorrect.o:	tau_timecorrect.cpp
 		$(CXX) $(CFLAGS) tau_timecorrect.cpp -c
@@ -427,16 +427,16 @@ $(INSTALLDEST)/opari: opari/opari
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) opari/opari $(INSTALLDEST)
 
-$(INSTALLDEST)/opari2-config: opari2/bin/opari2
+$(INSTALLDEST)/opari2-config: opari2/_build/bin/opari2
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
-		$(TAU_INSTALL) opari2/bin/opari2-config $(INSTALLDEST)
-$(INSTALLDEST)/opari2: opari2/bin/opari2
+		$(TAU_INSTALL) opari2/_build/bin/opari2-config $(INSTALLDEST)
+$(INSTALLDEST)/opari2: opari2/_build/bin/opari2
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
-		$(TAU_INSTALL) opari2/bin/opari2 $(INSTALLDEST)
+		$(TAU_INSTALL) opari2/_build/bin/opari2 $(INSTALLDEST)
 
 $(INSTALLDEST)/tau2elg: elgconverter/tau2elg
 		@echo Installing $? in $(INSTALLDEST)

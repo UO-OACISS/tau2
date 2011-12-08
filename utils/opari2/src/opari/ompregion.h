@@ -98,6 +98,10 @@ public:
     generate_init_handle_calls_f( ostream&    os,
                                   const char* incfile );
 
+    /** Generate the wrapper function pomp_get_max_threads_XXXXXX in every file. */
+    static void
+    generate_pomp_max_threads_wrapper_f( ostream& os );
+
     /** generate a CTC String*/
     string
     generate_ctc_string( Language lang );
