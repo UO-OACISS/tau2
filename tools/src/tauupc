@@ -103,7 +103,7 @@ for arg in "$@" ; do
 	      command_options="$command_options -optPDTInst -optDefaultParser=upcparse -optTau=-upc -optTrackDMAPP"
 	      ;;
 	  -tau:compinst)
-	      command_options="$command_options -optCompInst"
+	      command_options="$command_options -optCompInst -optTrackDMAPP"
 	      ;;
 	  -tau:headerinst)
 	      command_options="$command_options -optHeaderInst"
