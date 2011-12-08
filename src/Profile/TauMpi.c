@@ -1649,9 +1649,6 @@ int  MPI_Finalize(  )
   }
 #endif /* TAU_BGP */
 
-  // merge TAU metadata
-  Tau_metadataMerge_mergeMetaData();
-
   /* Shutdown EBS after Finalize to allow Profiles to be written out
      correctly. Also allows profile merging (or unification) to be
      done correctly. */
@@ -1668,6 +1665,9 @@ int  MPI_Finalize(  )
     Tau_collate_writeProfile();
 #else
   */
+
+  // merge TAU metadata
+  Tau_metadataMerge_mergeMetaData();
 
   /* Create a merged profile if requested */
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {

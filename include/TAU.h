@@ -16,7 +16,7 @@
 #ifndef _TAU_H_
 #define _TAU_H_
 
-#define TAU_VERSION "2.21-git"
+#define TAU_VERSION "2.21.1-git"
 #define TAU_MAKEFILE "default"
 
 
