@@ -73,7 +73,7 @@ TRACE2PROFILE=utils/trace2profile
 #TAU2EPILOG#ELGCONVERTER=utils/elgconverter #ENDIF#
 
 #IOWRAPPER#IOWRAPPER=src/wrappers/posixio#ENDIF#
-#COMPINST_CRAYCC#DMAPPWRAPPER=src/wrappers/dmapp#ENDIF#
+#DMAPP#DMAPPWRAPPER=src/wrappers/dmapp#ENDIF#
 
 #ARMCI#ARMCIWRAPPER=src/wrappers/armci#ENDIF#
 
