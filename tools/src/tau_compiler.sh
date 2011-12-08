@@ -1666,6 +1666,10 @@ if [ $needToCleanPdbInstFiles == $TRUE ]; then
     if [ "x$filesToClean" != "x" ] ; then
 	evalWithDebugMessage "/bin/rm -f $filesToClean" "cleaning inst file"
     fi
+
+    if [ "x$PE_ENV" == "xCRAY" -a -r Comp_gnu.o ] ; then
+	evalWithDebugMessage "/bin/rm -f Comp_gnu.o" "cleaning Comp_gnu.o"
+    fi
 fi
 
 
