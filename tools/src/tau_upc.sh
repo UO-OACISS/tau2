@@ -182,7 +182,7 @@ if [ $options_specified = no ] ; then
     fi
 fi
 
-TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optDefaultParser=upcparse -optTau=-upc"
+TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optDefaultParser=upcparse -optTau=-upc -optTrackDMAPP"
 
 retval=0
 

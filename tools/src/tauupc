@@ -100,7 +100,7 @@ for arg in "$@" ; do
 	      ;;
 	  -tau:pdtinst)
 	      binding_options="$binding_options pdt"
-	      command_options="$command_options -optPDTInst -optDefaultParser=upcparse -optTau=-upc"
+	      command_options="$command_options -optPDTInst -optDefaultParser=upcparse -optTau=-upc -optTrackDMAPP"
 	      ;;
 	  -tau:compinst)
 	      command_options="$command_options -optCompInst"
