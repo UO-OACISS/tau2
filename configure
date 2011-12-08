@@ -338,6 +338,7 @@ for arg in "$@"; do
     echo ""
     echo "Other Options:"
     echo "-iowrapper .................................... Build POSIX IO Wrapper."
+    echo "-dmapp ...................................... Build Cray DMAPP Wrapper."
     echo "-pthread .................................. Use pthread thread package."
     echo "-papithread .................................. Use PAPI thread package."
     echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
@@ -750,6 +751,7 @@ stffdir=
 sddf=no
 sddfdir=
 iowrapper=no
+dmapp=no
 zepto=no
 zeptodir=
 cuda=no
@@ -909,6 +911,11 @@ for arg in "$@"; do
 
   -iowrapper)
       iowrapper=yes
+      shift
+      ;;
+
+  -dmapp)
+      dmapp=yes
       shift
       ;;
 
@@ -2490,6 +2497,9 @@ case $machine in
 	elif [ "x$PE_ENV" = xCRAY ] ; then
 	    tauoptions="${tauoptions}-cray"
 	    default_fortran=cray
+	    if [ dmapp = no ]; then
+	      fixmakeargs="$fixmakeargs DMAPP"
+            fi
 
 	    # *CWL* - if bfd path is not explicitly specified, point
 	    #         to the correct preset bfd path.
@@ -2734,6 +2744,15 @@ if [ $iowrapper = yes ] ; then
         fixmakeargs="$fixmakeargs IOWRAPPER"
     fi
 fi    
+
+if [ $dmapp = yes ]; then
+    if [ "x$CRAY_DMAPP_INCLUDE_OPTS" = "x" ] ; then
+        echo "TAU: Please load the dmapp module on Cray to set CRAY_DMAPP_INCLUDE_OPTS environment variable and reconfigure TAU with the -dmapp configure option"
+    else
+        fixmakeargs="$fixmakeargs DMAPP"
+    fi
+fi
+
 
 if [ $stff = yes ] ; then
       fixmakeargs="$fixmakeargs RENCI_STFF stffdir=${stffdir} sddfdir=${sddfdir}"
