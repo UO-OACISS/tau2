@@ -373,7 +373,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
   // the local object
   unify_object_t *object = (*unifyObjects)[0];
 
-  MPI_Bcast (&globalNumItems, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  PMPI_Bcast (&globalNumItems, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
   Tau_unify_object_t *tau_unify_object = (Tau_unify_object_t*) TAU_UTIL_MALLOC(sizeof(Tau_unify_object_t));
   tau_unify_object->globalNumItems = globalNumItems;
@@ -437,7 +437,7 @@ extern "C" int TauGetMpiRank(void)
 {
   int rank;
 
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   return rank;
 }
 #else /* !TAU_MPI */
