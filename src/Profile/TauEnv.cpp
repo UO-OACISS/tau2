@@ -805,7 +805,7 @@ void TauEnv_initialize() {
       }
     }
 
-#if (defined(TAU_MPI) || defined(TAU_SHMEM))
+#if (defined(TAU_MPI) || defined(TAU_SHMEM) || defined(TAU_DMAPP))
     /* track comm (opposite of old -nocomm option) */
     tmp = getconf("TAU_TRACK_MESSAGE");
     if (parse_bool(tmp, env_track_message)) {
@@ -834,7 +834,7 @@ void TauEnv_initialize() {
       TAU_VERBOSE("TAU: Message Tracking Disabled\n");
       TAU_METADATA("TAU_TRACK_MESSAGE", "off");
     }
-#endif /* TAU_MPI || TAU_SHMEM */
+#endif /* TAU_MPI || TAU_SHMEM || TAU_DMAPP */
 
     /* clock synchronization */
     if (env_tracing == 0) {
@@ -948,9 +948,15 @@ void TauEnv_initialize() {
       TAU_VERBOSE("TAU: Output Format: snapshot\n");
       TAU_METADATA("TAU_PROFILE_FORMAT", "snapshot");
     } else if (profileFormat != NULL && 0 == strcasecmp(profileFormat, "merged")) {
+#ifdef TAU_MPI
       env_profile_format = TAU_FORMAT_MERGED;
       TAU_VERBOSE("TAU: Output Format: merged\n");
       TAU_METADATA("TAU_PROFILE_FORMAT", "merged");
+#else
+      env_profile_format = TAU_FORMAT_PROFILE;
+      TAU_VERBOSE("TAU: Output Format: merged format not supported without MPI, reverting to profile\n");
+      TAU_METADATA("TAU_PROFILE_FORMAT", "profile");
+#endif /* TAU_MPI */
     } else if (profileFormat != NULL && 0 == strcasecmp(profileFormat, "none")) {
       env_profile_format = TAU_FORMAT_NONE;
       TAU_VERBOSE("TAU: Output Format: none\n");

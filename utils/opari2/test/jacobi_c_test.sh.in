@@ -17,10 +17,11 @@ NM="`$OPARI2_CONFIG --nm`"
 
 rm -rf $test_dir/jacobi/C
 mkdir -p $test_dir/jacobi/C
-cp -r $test_data_dir/jacobi/C/jacobi.c                            $test_dir/jacobi/C
-cp -r $test_data_dir/jacobi/C/jacobi.h                            $test_dir/jacobi/C
-cp -r $test_data_dir/jacobi/C/main.c                              $test_dir/jacobi/C
-cp @abs_srcdir@/../src/pomp-lib-dummy/pomp2_lib.h                 $test_dir/jacobi/C/
+mkdir -p $test_dir/jacobi/C/opari2
+cp -r $test_data_dir/jacobi/C/jacobi.c        $test_dir/jacobi/C/
+cp -r $test_data_dir/jacobi/C/jacobi.h        $test_dir/jacobi/C/
+cp -r $test_data_dir/jacobi/C/main.c          $test_dir/jacobi/C/
+cp @abs_srcdir@/../include/opari2/pomp2_lib.h $test_dir/jacobi/C/opari2
 
 cd $test_dir/jacobi/C
 # instrument

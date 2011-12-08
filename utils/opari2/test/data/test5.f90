@@ -29,11 +29,11 @@ program test5
   !$omp   parallel            &   !parallel
   !$omp & do                  &   !do  
   !$omp & lastprivate(k)      &   !comment
-  !$omp & private(i,j)        &   !schedule
+  !$omp & private(i,j),       &   !schedule
   !$omp & lastprivate         &
   !$omp & (                   &
-  !$omp &   l                 &
-  !$omp & ) schedule(dynamic  &
+  !$omp &   l                 &   !comment inside argument
+  !$omp & ), schedule(dynamic &
   !$omp & )
   do i=1,4
      write(*,*) "parallel do ", i

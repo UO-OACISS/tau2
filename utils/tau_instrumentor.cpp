@@ -4275,6 +4275,11 @@ int main(int argc, char **argv) {
 	    }
 	  }
 	  break;
+#ifndef PDT_NO_UPC
+	case tau_upc:
+	  instrumentCFile(p, *it, outFileName, group_name, header_file);
+          break;
+#endif /* PDT_NO_UPC */
 	case tau_c :
 	  instrumentCFile(p, *it, outFileName, group_name, header_file);
 	  break;
@@ -4357,6 +4362,11 @@ int main(int argc, char **argv) {
 	    }
 	  }
 	  break;
+#ifndef PDT_NO_UPC
+	case tau_upc:
+	  instrumentCFile(p, *it, outFileName, group_name, header_file);
+          break;
+#endif /* PDT_NO_UPC */
 	case tau_c :
 	  instrumentCFile(p, *it, outFileName, group_name, header_file);
 	  break;

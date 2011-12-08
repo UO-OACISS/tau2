@@ -624,6 +624,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
         TAU_VERBOSE("TAU: <Node=%d.Thread=%d>:<pid=%d>: %s initiated TauProfile_StoreData\n",
           RtsLayer::myNode(), RtsLayer::myThread(), getpid(), ThisFunction->GetName());
 #endif
+#ifdef TAU_DMAPP
+	TAU_DISABLE_INSTRUMENTATION(); 
+#endif /* TAU_DMAPP */
 
 	  
 #if defined(TAUKTAU) 
@@ -1169,7 +1172,8 @@ int TauProfiler_StoreData(int tid) {
   finalizeTrace(tid);
 #ifndef TAU_WINDOWS  
   if (TauEnv_get_ebs_enabled()) {
-    Tau_sampling_finalize(tid);
+    // Tau_sampling_finalize(tid);
+    Tau_sampling_finalize_if_necessary();
   }
 #endif
   if (TauEnv_get_profiling()) {

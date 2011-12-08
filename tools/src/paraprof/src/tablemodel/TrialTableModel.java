@@ -8,13 +8,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.tree.DefaultTreeModel;
 
+import edu.uoregon.tau.paraprof.ParaProf;
 import edu.uoregon.tau.paraprof.ParaProfManagerWindow;
 import edu.uoregon.tau.paraprof.ParaProfTrial;
+import edu.uoregon.tau.paraprof.ParaProfUtils;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
+import edu.uoregon.tau.perfdmf.Function;
+import edu.uoregon.tau.perfdmf.SourceRegion;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.database.DBConnector;
 
@@ -148,11 +153,28 @@ public class TrialTableModel extends AbstractTableModel {
         return new MouseListener() {
 
             public void mouseClicked(MouseEvent e) {
-//                if (ParaProfUtils.rightClick(e)) {
-//                    int row = table.rowAtPoint(e.getPoint());
-//                    int column = table.columnAtPoint(e.getPoint());
-//                    //System.out.println("you clicked on (" + column + "," + row + ") = " + getValueAt(row, column));
-//                }
+                if (ParaProfUtils.rightClick(e)) {
+                    int row = table.rowAtPoint(e.getPoint());
+                    int column = table.columnAtPoint(e.getPoint());
+                    
+                    if(getValueAt(row,0).toString().startsWith("BACKTRACE"))
+                    {
+                    
+                    	//System.out.println("you clicked on (" + column + "," + row + ") = " + getValueAt(row, column));
+                    	
+                    	
+                    	JPopupMenu popup = ParaProfUtils.createMetadataClickPopUp(getValueAt(row, column).toString(), table);
+                        
+                    	if(popup!=null)
+                    		popup.show(table, e.getX(), e.getY());
+                    	
+                    	
+                    
+                    	
+                    }
+                    
+                    
+                }
             }
 
             public void mouseEntered(MouseEvent e) {

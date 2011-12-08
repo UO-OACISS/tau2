@@ -36,12 +36,13 @@ int main() {
   int pomp_num_threads = omp_get_max_threads();
   int pomp_if = 1;
   POMP2_Task_handle pomp2_old_task;
-    POMP2_Parallel_fork(&pomp2_region_1, pomp_if, pomp_num_threads, &pomp2_old_task, "61*regionType=parallelfor*sscl=test5.c:31:39*escl=test5.c:0:0**" );
+    POMP2_Parallel_fork(&pomp2_region_1, pomp_if, pomp_num_threads, &pomp2_old_task, "82*regionType=parallelfor*sscl=test5.c:31:39*escl=test5.c:0:0*scheduleType=dynamic**" );
 #line 31 "test5.c"
   #pragma omp parallel                        \
-      private(i,j)                              POMP2_DLIST_00001 firstprivate(pomp2_old_task) if(pomp_if) num_threads(pomp_num_threads)
+      private(i,j)                                \
+        POMP2_DLIST_00001 firstprivate(pomp2_old_task) if(pomp_if) num_threads(pomp_num_threads)
 {   POMP2_Parallel_begin( &pomp2_region_1 );
-    { POMP2_For_enter( &pomp2_region_1, "61*regionType=parallelfor*sscl=test5.c:31:39*escl=test5.c:0:0**" );
+    { POMP2_For_enter( &pomp2_region_1, "82*regionType=parallelfor*sscl=test5.c:31:39*escl=test5.c:0:0*scheduleType=dynamic**" );
 #line 31 "test5.c"
   #pragma omp                                 \
       for                                \
@@ -49,8 +50,8 @@ int main() {
       lastprivate                        \
       (                                  \
         l                                \
-      ) schedule(dynamic                 \
-      ) nowait
+      )  schedule(dynamic                     \
+      )                   nowait
   for(i=0; i<4;++i) {
     printf("parallel for %d\n", i);
     k+=i;
@@ -75,7 +76,7 @@ int main() {
 {   POMP2_Parallel_begin( &pomp2_region_2 );
     { POMP2_Sections_enter( &pomp2_region_2, "105*regionType=parallelsections*sscl=test5.c:45:45*escl=test5.c:0:0*hasIf=1*hasNumThreads=1*hasReduction=1**" );
 #line 45 "test5.c"
-#pragma omp          sections                      lastprivate(i)                                                          nowait
+#pragma omp          sections                      lastprivate(i)                                                                            nowait
   {
 #line 47 "test5.c"
     #pragma omp section

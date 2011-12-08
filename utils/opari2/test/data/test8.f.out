@@ -48,7 +48,7 @@
      &"duction=1*scheduleType=dynamic,5*hasCollapse=1*hasOrdered=1"//
      &"**" )
 #line 30 "test8.f"
-!$omp do reduction(+:k) schedule(dynamic,5) collapse(1)
+!$omp do reduction(+:k) schedule(dynamic, 5) collapse(1)
       do i=1,4
          write(*,*) "do",i
          k = k + 1
@@ -142,35 +142,36 @@
       pomp_if = ( .true. )
       call POMP2_Parallel_fork(pomp2_region_6,
      &pomp_if, pomp_num_threads, pomp2_old_task,
-     &"147*regionType=paralleldo*sscl=test8.f:52:52*escl=test8.f:0"//
+     &"155*regionType=paralleldo*sscl=test8.f:52:53*escl=test8.f:0"//
      &":0*hasIf=1*hasNumThreads=1*hasReduction=1*scheduleType=stat"//
-     &"ic*hasCollapse=1*hasOrdered=1**" )
+     &"ic,chunkif*hasCollapse=1*hasOrdered=1**" )
 #line 52 "test8.f"
-!$omp parallel                              reduction(+:k)                                     
+!$omp  parallel                   reduction(+:k)
 !$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
 !$omp& if(pomp_if) num_threads(pomp_num_threads) 
 !$omp& shared(/cb000/)
        call POMP2_Parallel_begin(pomp2_region_6)
       call POMP2_Do_enter(pomp2_region_6,
-     &"147*regionType=paralleldo*sscl=test8.f:52:52*escl=test8.f:0"//
+     &"155*regionType=paralleldo*sscl=test8.f:52:53*escl=test8.f:0"//
      &":0*hasIf=1*hasNumThreads=1*hasReduction=1*scheduleType=stat"//
-     &"ic*hasCollapse=1*hasOrdered=1**" )
+     &"ic,chunkif*hasCollapse=1*hasOrdered=1**" )
 #line 52 "test8.f"
-!$omp          do                                          schedule(static) collapse(1) ordered
+!$omp           do                              
+!$omp+ schedule(static,chunkif) collapse(1) ordered           
       do i=1,4
       call POMP2_Ordered_enter(pomp2_region_7,
-     &"58*regionType=ordered*sscl=test8.f:54:54*escl=test8.f:0:0**"//
+     &"58*regionType=ordered*sscl=test8.f:55:55*escl=test8.f:0:0**"//
      &"" )
-#line 54 "test8.f"
+#line 55 "test8.f"
 !$omp ordered
       call POMP2_Ordered_begin(pomp2_region_7)
-#line 55 "test8.f"
+#line 56 "test8.f"
          write(*,*) "do",i
       call POMP2_Ordered_end(pomp2_region_7)
-#line 56 "test8.f"
+#line 57 "test8.f"
 !$omp end ordered
       call POMP2_Ordered_exit(pomp2_region_7)
-#line 57 "test8.f"
+#line 58 "test8.f"
          k = k + 1
       enddo
 !$omp end do nowait
@@ -181,37 +182,37 @@
       call POMP2_Parallel_end(pomp2_region_6)
 !$omp end parallel
       call POMP2_Parallel_join(pomp2_region_6, pomp2_old_task)
-#line 60 "test8.f"
+#line 61 "test8.f"
 
       pomp_num_threads = 4
-      pomp_if = ( .true. )
+      pomp_if = ( (i+k)>5 )
       call POMP2_Parallel_fork(pomp2_region_8,
      &pomp_if, pomp_num_threads, pomp2_old_task,
-     &"106*regionType=parallelsections*sscl=test8.f:61:61*escl=tes"//
+     &"106*regionType=parallelsections*sscl=test8.f:62:62*escl=tes"//
      &"t8.f:0:0*hasIf=1*hasNumThreads=1*hasReduction=1**" )
-#line 61 "test8.f"
-!$omp parallel                                    reduction(+:k)
+#line 62 "test8.f"
+!$omp parallel                                     reduction(+:k)
 !$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
 !$omp& if(pomp_if) num_threads(pomp_num_threads) 
 !$omp& shared(/cb000/)
        call POMP2_Parallel_begin(pomp2_region_8)
       call POMP2_Sections_enter(pomp2_region_8)
-#line 61 "test8.f"
-!$omp          sections                                         
 #line 62 "test8.f"
+!$omp          sections                                          
+#line 63 "test8.f"
 !$omp section
       call POMP2_Section_begin(pomp2_region_8,
-     &"106*regionType=parallelsections*sscl=test8.f:61:61*escl=tes"//
+     &"106*regionType=parallelsections*sscl=test8.f:62:62*escl=tes"//
      &"t8.f:0:0*hasIf=1*hasNumThreads=1*hasReduction=1**" )
-#line 63 "test8.f"
+#line 64 "test8.f"
       write(*,*) "section 1"
       call POMP2_Section_end(pomp2_region_8)
-#line 64 "test8.f"
+#line 65 "test8.f"
 !$omp section
       call POMP2_Section_begin(pomp2_region_8,
-     &"106*regionType=parallelsections*sscl=test8.f:61:61*escl=tes"//
+     &"106*regionType=parallelsections*sscl=test8.f:62:62*escl=tes"//
      &"t8.f:0:0*hasIf=1*hasNumThreads=1*hasReduction=1**" )
-#line 65 "test8.f"
+#line 66 "test8.f"
       write(*,*) "section 2"
       call POMP2_Section_end(pomp2_region_8)
 !$omp end sections nowait
@@ -222,24 +223,24 @@
       call POMP2_Parallel_end(pomp2_region_8)
 !$omp end parallel
       call POMP2_Parallel_join(pomp2_region_8, pomp2_old_task)
-#line 67 "test8.f"
+#line 68 "test8.f"
 
       pomp_num_threads = 4
       pomp_if = ( .true. )
       call POMP2_Parallel_fork(pomp2_region_9,
      &pomp_if, pomp_num_threads, pomp2_old_task,
-     &"107*regionType=parallelworkshare*sscl=test8.f:68:68*escl=te"//
+     &"107*regionType=parallelworkshare*sscl=test8.f:69:69*escl=te"//
      &"st8.f:0:0*hasIf=1*hasNumThreads=1*hasReduction=1**" )
-#line 68 "test8.f"
+#line 69 "test8.f"
 !$omp parallel                                     reduction(+:k)
 !$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
 !$omp& if(pomp_if) num_threads(pomp_num_threads) 
 !$omp& shared(/cb000/)
        call POMP2_Parallel_begin(pomp2_region_9)
       call POMP2_Workshare_enter(pomp2_region_9,
-     &"107*regionType=parallelworkshare*sscl=test8.f:68:68*escl=te"//
+     &"107*regionType=parallelworkshare*sscl=test8.f:69:69*escl=te"//
      &"st8.f:0:0*hasIf=1*hasNumThreads=1*hasReduction=1**" )
-#line 68 "test8.f"
+#line 69 "test8.f"
 !$omp          workshare                                         
       write(*,*) "workshare"
 !$omp end workshare nowait
@@ -250,7 +251,7 @@
       call POMP2_Parallel_end(pomp2_region_9)
 !$omp end parallel
       call POMP2_Parallel_join(pomp2_region_9, pomp2_old_task)
-#line 71 "test8.f"
+#line 72 "test8.f"
       end program test2
       
 
@@ -279,16 +280,16 @@
      &"69*regionType=task*sscl=test8.f:47:47*escl=test8.f:49:49*ha"//
      &"sUntied=1**" )
          call POMP2_Assign_handle( pomp2_region_6, 
-     &"149*regionType=paralleldo*sscl=test8.f:52:52*escl=test8.f:5"//
-     &"9:59*hasIf=1*hasNumThreads=1*hasReduction=1*scheduleType=st"//
-     &"atic*hasCollapse=1*hasOrdered=1**" )
+     &"157*regionType=paralleldo*sscl=test8.f:52:53*escl=test8.f:6"//
+     &"0:60*hasIf=1*hasNumThreads=1*hasReduction=1*scheduleType=st"//
+     &"atic,chunkif*hasCollapse=1*hasOrdered=1**" )
          call POMP2_Assign_handle( pomp2_region_7, 
-     &"60*regionType=ordered*sscl=test8.f:54:54*escl=test8.f:56:56"//
+     &"60*regionType=ordered*sscl=test8.f:55:55*escl=test8.f:57:57"//
      &"**" )
          call POMP2_Assign_handle( pomp2_region_8, 
-     &"108*regionType=parallelsections*sscl=test8.f:61:61*escl=tes"//
-     &"t8.f:66:66*hasIf=1*hasNumThreads=1*hasReduction=1**" )
+     &"108*regionType=parallelsections*sscl=test8.f:62:62*escl=tes"//
+     &"t8.f:67:67*hasIf=1*hasNumThreads=1*hasReduction=1**" )
          call POMP2_Assign_handle( pomp2_region_9, 
-     &"109*regionType=parallelworkshare*sscl=test8.f:68:68*escl=te"//
-     &"st8.f:70:70*hasIf=1*hasNumThreads=1*hasReduction=1**" )
+     &"109*regionType=parallelworkshare*sscl=test8.f:69:69*escl=te"//
+     &"st8.f:71:71*hasIf=1*hasNumThreads=1*hasReduction=1**" )
       end

@@ -39,6 +39,7 @@
 #define ACTION_EGREP   4
 #define ACTION_VERSION 5
 #define ACTION_NM2AWK  6
+#define ACTION_CFLAGS  7
 
 void
 opari2_print_help( char** argv )
@@ -52,6 +53,7 @@ opari2_print_help( char** argv )
               << "   --egrep              Prints the egrep command.\n"
               << "   --create_pompregions Prints the whole command necessary\n"
               << "                        for creating the initialization file.\n"
+              << "   --cflags             Prints compiler options to include installed headers.\n"
               << "   --version            Prints the Version number.\n\n"
               << "and following options:\n"
               << "   --help                  Prints this help text.\n"
@@ -97,6 +99,11 @@ main( int    argc,
         {
             action = ACTION_EGREP;
         }
+        else if ( strcmp( argv[ i ], "--cflags" ) == 0 )
+        {
+            action = ACTION_CFLAGS;
+        }
+
         else if ( strcmp( argv[ i ], "--create_pompregions" ) == 0 )
         {
             int j = 0;
@@ -170,6 +177,11 @@ main( int    argc,
             std::cout.flush();
             break;
 
+        case ACTION_CFLAGS:
+            std::cout << app.cflags;
+            std::cout.flush();
+            break;
+
         case ACTION_NM2AWK:
             std::cout << app.nm << " ";
             for ( int i = 0; i < n_obj_files; i++ )
@@ -181,7 +193,7 @@ main( int    argc,
                       << app.awk << " -f " << app.script << " > pompregions_c.c";
             break;
         case ACTION_VERSION:
-            std::cout << app.version;
+            std::cout << app.version << "\n";
             std::cout.flush();
             break;
 
@@ -199,6 +211,7 @@ OPARI_Config::OPARI_Config()
     egrep   = EGREP;
     version = VERSION;
     script  = SCRIPT;
+    cflags  = CFLAGS;
 }
 
 OPARI_Config::~OPARI_Config()
@@ -248,6 +261,10 @@ OPARI_Config::set_value( std::string key, std::string value )
     else if ( key == "OPARI_SCRIPT" )
     {
         script = value;
+    }
+    else if ( key == "CFLAGS" )
+    {
+        cflags = value;
     }
     /* Ignore unknown entries */
 }

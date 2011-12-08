@@ -224,6 +224,7 @@ public class ChartData extends RMIChartData {
 		}
 	}
 
+ 
 	/**
 	 * The buildStatment method will construct the query to get the chart
 	 * data, customizing it to the type of data desired.
@@ -258,8 +259,22 @@ public class ChartData extends RMIChartData {
 			if (object instanceof RMIView) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
-				buf.append("where t.experiment = ");
-				buf.append(model.getExperiment().getID() + " ");
+				buf.append("where t.experiment in (");
+				
+    List<Object> selections = model.getMultiSelection();
+				if (selections == null) {
+					// just one selection
+					buf.append (model.getExperiment().getID());
+				} else {
+					for (int i = 0 ; i < selections.size() ; i++) {
+						Experiment exp = (Experiment)selections.get(i);
+						if (i > 0)
+							buf.append(",");
+						buf.append(exp.getID());
+					}
+				}
+				buf.append(")"); 
+				
 			}
 			if (db.getDBType().compareTo("db2") == 0) {
 				buf.append(" and m.name like ? ");
@@ -310,6 +325,7 @@ public class ChartData extends RMIChartData {
 			} else {
 				buf.append("inner join experiment e on t.experiment = e.id ");
 				buf.append("where t.experiment in (");
+     selections = model.getMultiSelection();
 				if (selections == null) {
 					// just one selection
 					buf.append (model.getExperiment().getID());
@@ -461,8 +477,21 @@ public class ChartData extends RMIChartData {
 			if (object instanceof RMIView) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
-				buf.append("where t.experiment = ");
-				buf.append(model.getExperiment().getID() + " ");
+			
+			buf.append("where t.experiment in (");
+    List<Object> selections = model.getMultiSelection();
+				if (selections == null) {
+					// just one selection
+					buf.append (model.getExperiment().getID());
+				} else {
+					for (int i = 0 ; i < selections.size() ; i++) {
+						Experiment exp = (Experiment)selections.get(i);
+						if (i > 0)
+							buf.append(",");
+						buf.append(exp.getID());
+					}
+				}
+				buf.append(")");
 			}
 			if (db.getDBType().compareTo("db2") == 0) {
 				buf.append(" and m.name like ? ");
@@ -532,8 +561,20 @@ public class ChartData extends RMIChartData {
 			if (object instanceof RMIView) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
-				buf.append("where t.experiment = ");
-				buf.append(model.getExperiment().getID() + " ");
+buf.append("where t.experiment in (");
+    List<Object> selections = model.getMultiSelection();
+				if (selections == null) {
+					// just one selection
+					buf.append (model.getExperiment().getID());
+				} else {
+					for (int i = 0 ; i < selections.size() ; i++) {
+						Experiment exp = (Experiment)selections.get(i);
+						if (i > 0)
+							buf.append(",");
+						buf.append(exp.getID());
+					}
+				}
+				buf.append(")");
 			}
 
 			if (db.getDBType().compareTo("db2") == 0) {
@@ -584,7 +625,7 @@ public class ChartData extends RMIChartData {
 			} else {
 				buf.append("inner join experiment e on t.experiment = e.id ");
 				buf.append("where t.experiment in (");
-				List<Object> selections = model.getMultiSelection();
+    List<Object> selections = model.getMultiSelection();
 				if (selections == null) {
 					// just one selection
 					buf.append (model.getExperiment().getID());
@@ -709,8 +750,20 @@ public class ChartData extends RMIChartData {
 			if (object instanceof RMIView) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
-				buf.append("where t.experiment = ");
-				buf.append(model.getExperiment().getID() + " ");
+				buf.append("where t.experiment in (");
+				List<Object> selections = model.getMultiSelection();
+				if (selections == null) {
+					// just one selection
+					buf.append (model.getExperiment().getID());
+				} else {
+					for (int i = 0 ; i < selections.size() ; i++) {
+						Experiment exp = (Experiment)selections.get(i);
+						if (i > 0)
+							buf.append(",");
+						buf.append(exp.getID());
+					}
+				}
+				buf.append(")");
 			}
 
 			if (db.getDBType().compareTo("db2") == 0) {
@@ -809,8 +862,9 @@ public class ChartData extends RMIChartData {
 			statement = db.prepareStatement(buf.toString());
 			statement.setInt(1, model.getTrial().getID());
 			statement.setInt(2, model.getMetric().getID());
-			System.out.println(statement.toString());
+			//System.out.println(statement.toString());
 		}
+			//System.out.println(statement.toString());
 		return statement;
 	}
 
@@ -833,8 +887,21 @@ public class ChartData extends RMIChartData {
 			if (object instanceof RMIView) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
-				buf.append("where t.experiment = ");
-				buf.append(model.getExperiment().getID() + " ");
+		buf.append("where t.experiment in (");
+    List<Object> selections = model.getMultiSelection();
+
+				if (selections == null) {
+					// just one selection
+					buf.append (model.getExperiment().getID());
+				} else {
+					for (int i = 0 ; i < selections.size() ; i++) {
+						Experiment exp = (Experiment)selections.get(i);
+						if (i > 0)
+							buf.append(",");
+						buf.append(exp.getID());
+					}
+				}
+				buf.append(")");
 			}
 			if (db.getDBType().compareTo("db2") == 0) {
 				buf.append(" and m.name like ? ");
@@ -901,8 +968,20 @@ public class ChartData extends RMIChartData {
 			if (object instanceof RMIView) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
-				buf.append("where t.experiment = ");
-				buf.append(model.getExperiment().getID() + " ");
+    List<Object> selections = model.getMultiSelection();
+	buf.append("where t.experiment in (");
+				if (selections == null) {
+					// just one selection
+					buf.append (model.getExperiment().getID());
+				} else {
+					for (int i = 0 ; i < selections.size() ; i++) {
+						Experiment exp = (Experiment)selections.get(i);
+						if (i > 0)
+							buf.append(",");
+						buf.append(exp.getID());
+					}
+				}
+				buf.append(")");
 			}
 			
 			if (db.getDBType().compareTo("db2") == 0) {
@@ -941,8 +1020,20 @@ public class ChartData extends RMIChartData {
 			if (object instanceof RMIView) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
-				buf.append("where t.experiment = ");
-				buf.append(model.getExperiment().getID() + " ");
+	buf.append("where t.experiment in (");
+    List<Object> selections = model.getMultiSelection();
+				if (selections == null) {
+					// just one selection
+					buf.append (model.getExperiment().getID());
+				} else {
+					for (int i = 0 ; i < selections.size() ; i++) {
+						Experiment exp = (Experiment)selections.get(i);
+						if (i > 0)
+							buf.append(",");
+						buf.append(exp.getID());
+					}
+				}
+				buf.append(")");
 			}
 			if (db.getDBType().compareTo("db2") == 0) {
 				buf.append(" and m.name like ? ");

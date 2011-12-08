@@ -31,11 +31,11 @@ int main() {
   #pragma omp parallel         /* parallel */ \
       for                      /* for */ \
       lastprivate(k)           /* for */ \
-      private(i,j)             /* parallel */ \
+      private(i,j),             /* parallel */    \
       lastprivate              /* for */ \
       (                        /* for */ \
         l                      /* for */ \
-      ) schedule(dynamic       /* for */ \
+      ), schedule(dynamic      /* for */      \
       )
   for(i=0; i<4;++i) {
     printf("parallel for %d\n", i);
