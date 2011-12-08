@@ -624,6 +624,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
         TAU_VERBOSE("TAU: <Node=%d.Thread=%d>:<pid=%d>: %s initiated TauProfile_StoreData\n",
           RtsLayer::myNode(), RtsLayer::myThread(), getpid(), ThisFunction->GetName());
 #endif
+#ifdef TAU_DMAPP
+	TAU_DISABLE_INSTRUMENTATION(); 
+#endif /* TAU_DMAPP */
 
 	  
 #if defined(TAUKTAU) 

@@ -528,6 +528,8 @@ void Tau_sampling_internal_initPc2CallSiteMapIfNecessary() {
 
 CallSiteInfo *Tau_sampling_resolveCallSite(unsigned long addr, 
 					   const char *tag,
+					   const char *callee,
+					   char **funcName,
 					   bool addAddress) {
   CallSiteInfo *callsite;
   int bfdRet;
@@ -554,15 +556,26 @@ CallSiteInfo *Tau_sampling_resolveCallSite(unsigned long addr,
       resolvedInfo = 
 	  Tau_bfd_resolveBfdExecInfo(bfdUnitHandle, (unsigned long)addr);
       sprintf(addressMap.name, "%s", "EXEC");
+      *funcName = NULL;
   }
 #endif /* TAU_BFD */
   if (resolvedInfo != NULL) {
-    sprintf(resolvedBuffer, "[%s] %s [{%s} {%d,%d}-{%d,%d}]",
-	    tag,
-	    resolvedInfo->funcname,
-	    resolvedInfo->filename,
-	    resolvedInfo->lineno, 0,
-	    resolvedInfo->lineno, 0);
+    if (!strcmp(tag, "SAMPLE")) {
+      sprintf(resolvedBuffer, "[%s] %s [{%s} {%d,%d}-{%d,%d}]",
+	      tag,
+	      resolvedInfo->funcname,
+	      resolvedInfo->filename,
+	      resolvedInfo->lineno, 0,
+	      resolvedInfo->lineno, 0);
+    } else { /* if an "UNWIND" node which behaves like a callpath node */
+      sprintf(resolvedBuffer, "[%s] %s [{%s} {%d,%d}-{%d,%d}]",
+	      tag,
+	      callee,
+	      resolvedInfo->filename,
+	      resolvedInfo->lineno, 0,
+	      resolvedInfo->lineno, 0);
+    }
+    *funcName = strdup(resolvedInfo->funcname);
   } else {
     if (addAddress) {
       sprintf(resolvedBuffer, "[%s] UNRESOLVED %s ADDR %p", 
@@ -618,6 +631,8 @@ CallStackInfo *Tau_sampling_resolveCallSites(vector<unsigned long> *addresses) {
   }
 
   vector<unsigned long>::iterator it;
+  char *currentFuncName = NULL;
+  char *previousFuncName = NULL;
   for (it = addresses->begin(); it != addresses->end(); it++) {
     // *CWL*
     // The mechanism of addAddress allows us the flexibility of 
@@ -628,11 +643,24 @@ CallStackInfo *Tau_sampling_resolveCallSites(vector<unsigned long> *addresses) {
     if (it == addresses->begin()) {
       callStack->callSites->push_back(Tau_sampling_resolveCallSite(*it, 
 								   "SAMPLE",
+								   NULL,
+								   &currentFuncName,
 								   addAddress));
     } else {
       callStack->callSites->push_back(Tau_sampling_resolveCallSite(*it,
 								   "UNWIND",
+								   previousFuncName,
+								   &currentFuncName,
 								   addAddress));
+    }
+    if (previousFuncName != NULL) {
+      free(previousFuncName);
+      previousFuncName = NULL;
+    }
+    if (currentFuncName != NULL) {
+      previousFuncName = strdup(currentFuncName);
+      free(currentFuncName);
+      currentFuncName = NULL;
     }
   }
 

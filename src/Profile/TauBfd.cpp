@@ -25,6 +25,10 @@
 #include <link.h>
 #endif /* TAU_BGP */
 
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
+
 #if defined(TAU_WINDOWS) && defined(TAU_MINGW)
 #include <windows.h>
 #include <psapi.h>
