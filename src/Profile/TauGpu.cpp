@@ -320,7 +320,9 @@ int get_task(gpuId *new_task)
 #endif
 #ifdef PTHREADS
 	task += 1;
+#ifdef DEBUG_PROF
 	printf("task # choosen: %d.\n");
+#endif /* DEBUG_PROF */
 #endif
 	return task;
 }
