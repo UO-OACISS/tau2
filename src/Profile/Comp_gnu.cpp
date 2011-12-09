@@ -369,7 +369,13 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 		Tau_bfd_processBfdExecInfo(bfdUnitHandle, updateHashTable);
 
 		TheUsingCompInst() = 1;
-		//TAU_PROFILE_SET_NODE(0);
+		// *CWL* - CompGnu's interactions with UPC originally blew away UPC's
+		//         settings. Unfortunately, it cannot also be removed. The
+		//         compromise is to check that the value is -1 (uninitialized)
+		//         and set it to 0 if so.
+		if (RtsLayer::myNode() == -1) {
+		  TAU_PROFILE_SET_NODE(0);
+		}
 		Tau_global_decr_insideTAU_tid(tid);
 
 		// we register this here at the end so that it is called

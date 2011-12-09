@@ -100,7 +100,9 @@ public:
   static int getPid();
   static int getTid();
 
+#ifdef KTAU_NG
   static int getLinuxKernelTid();
+#endif /* KTAU_NG */
 
   static int RegisterThread();
 	
