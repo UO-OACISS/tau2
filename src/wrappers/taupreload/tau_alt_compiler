@@ -1,0 +1,5 @@
+#!/bin/sh
+. $MODULESHOME/init/bash
+module switch PrgEnv-pgi PrgEnv-gnu
+cc $*
+module switch PrgEnv-gnu PrgEnv-pgi

@@ -160,7 +160,33 @@ main( int   argc,
         {
             copytpd = true;
         }
-        else if ( strncmp( argv[ a ], "--task", 6 ) == 0 )
+        else if ( strncmp( argv[ a ], "--tpd-mangling=", 15 ) == 0 )
+        {
+            char* tpd_arg = strtok( argv[ a ], "=" );
+            tpd_arg = strtok( NULL, "=" );
+            if ( tpd_arg != "" )
+            {
+                if ( strcmp( tpd_arg, "gnu" ) == 0 || strcmp( tpd_arg, "sun" ) == 0 || strcmp( tpd_arg, "intel" ) == 0 || strcmp( tpd_arg, "pgi" ) == 0 || strcmp( tpd_arg, "cray" ) == 0 )
+                {
+                    pomp_tpd = "pomp_tpd_";
+                }
+                else if ( strcmp( tpd_arg, "ibm" ) == 0 )
+                {
+                    pomp_tpd = "pomp_tpd";
+                }
+                else
+                {
+                    cerr << "ERROR: unknown option for --tpd-mangling\n";
+                    errFlag = true;
+                }
+            }
+            else
+            {
+                cerr << "ERROR: missing value for option --tpd-mangling\n";
+                errFlag = true;
+            }
+        }
+        else if ( strncmp( argv[ a ], "--task=", 7 ) == 0 )
         {
             char* token = strtok( argv[ a ], "=" );
             token = strtok( NULL, "," );
@@ -186,7 +212,7 @@ main( int   argc,
                 token = strtok( NULL, "," );
             }
         }
-        else if ( strncmp( argv[ a ], "--untied", 8 ) == 0 )
+        else if ( strncmp( argv[ a ], "--untied=", 9 ) == 0 )
         {
             char* token = strtok( argv[ a ], "=" );
             token = strtok( NULL, "," );
@@ -213,8 +239,47 @@ main( int   argc,
             }
             while ( token != NULL );
         }
-        else if ( strcmp( argv[ a ], "--disable" ) == 0 )
+        else if ( strncmp( argv[ a ], "--disable", 9 ) == 0 )
         {
+            if ( strlen( argv[ a ] ) > 9 )
+            {
+                disabled = strtok( argv[ a ], "=" );
+                disabled = strtok( NULL, "=" );
+                if ( disabled != "" )
+                {
+                    if ( set_disabled( disabled ) )
+                    {
+                        errFlag = true;
+                    }
+                }
+                else
+                {
+                    cerr << "ERROR: missing value for option -disable\n";
+                    errFlag = true;
+                }
+            }
+            //*** Deprecated options that are still active due to compatibility reasons
+            else
+            {
+                cerr << "WARNING: Option \"--disable <comma separated list>\" is deprecated please use --disable=<comma separated list> for future compatibilty.\n";
+                if ( ( a + 1 ) < argc )
+                {
+                    disabled = argv[ ++a ];
+                    if ( set_disabled( disabled ) )
+                    {
+                        errFlag = true;
+                    }
+                }
+                else
+                {
+                    cerr << "ERROR: missing value for option -disable\n";
+                    errFlag = true;
+                }
+            }
+        }
+        else if ( strcmp( argv[ a ], "-disable" ) == 0 )
+        {
+            cerr << "WARNING: Option -disable is deprecated please use --disable=<comma separated list> for future compatibilty.\n";
             if ( ( a + 1 ) < argc )
             {
                 disabled = argv[ ++a ];
@@ -225,7 +290,7 @@ main( int   argc,
             }
             else
             {
-                cerr << "ERROR: missing value for option --disable\n";
+                cerr << "ERROR: missing value for option -disable\n";
                 errFlag = true;
             }
         }
@@ -233,6 +298,7 @@ main( int   argc,
         {
             if ( ( a + 1 ) < argc )
             {
+                cerr << "WARNING: Option \"--tpd-mangling <comp>\" is deprecated please use \"--tpd-mangling=<comp>\" for future compatibilty.\n";
                 a++;
                 if ( strcmp( argv[ a ], "gnu" ) == 0 || strcmp( argv[ a ], "sun" ) == 0 || strcmp( argv[ a ], "intel" ) == 0 || strcmp( argv[ a ], "pgi" ) == 0 || strcmp( argv[ a ], "cray" ) == 0 )
                 {
@@ -254,6 +320,36 @@ main( int   argc,
                 errFlag = true;
             }
         }
+        else if ( strcmp( argv[ a ], "-f77" ) == 0 )
+        {
+            cerr << "WARNING: Option \"-f77\" is deprecated please use \"--f77\" for future compatibilty.\n";
+            lang = L_F77;
+        }
+        else if ( strcmp( argv[ a ], "-f90" ) == 0 )
+        {
+            cerr << "WARNING: Option \"-f90\" is deprecated please use \"--f90\" for future compatibilty.\n";
+            lang = L_F90;
+        }
+        else if ( strcmp( argv[ a ], "-c++" ) == 0 )
+        {
+            cerr << "WARNING: Option \"-c++\" is deprecated please use \"--c++\" for future compatibilty.\n";
+            lang = L_CXX;
+        }
+        else if ( strcmp( argv[ a ], "-c" ) == 0 )
+        {
+            cerr << "WARNING: Option \"-c\" is deprecated please use \"--c\" for future compatibilty.\n";
+            lang = L_C;
+        }
+        else if ( strcmp( argv[ a ], "-rcfile" ) == 0 )
+        {
+            cerr << "WARNING: Option \"-rcfile\" is deprecated and ignored.\n";
+        }
+        else if ( strcmp( argv[ a ], "-table" ) == 0 )
+        {
+            cerr << "WARNING: Option \"-table\" is deprecated and ignored.\n";
+        }
+        //*** End of deprecated options
+
         else
         {
             cerr << "ERROR: unknown option " << argv[ a ] << "\n";

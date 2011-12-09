@@ -50,6 +50,7 @@ $(CONFIG_HEADER_FRONTEND): $(builddir)/opari2_config.dat
 	@echo "#define SCRIPT  \"$(prefix)/bin/pomp2_parse_init_regions.awk\"" >> $(CONFIG_HEADER_FRONTEND)
 	@echo "#define EGREP   \"$(EGREP)\""            >> $(CONFIG_HEADER_FRONTEND)
 	@echo "#define VERSION \"$(PACKAGE_VERSION)\""  >> $(CONFIG_HEADER_FRONTEND)
+	@echo "#define CFLAGS  \"$(prefix)/include\""   >> $(CONFIG_HEADER_FRONTEND)
 
 $(builddir)/opari2_config.dat:
 	@echo "Creating $(builddir)/opari2_config.dat"
@@ -58,6 +59,8 @@ $(builddir)/opari2_config.dat:
 	@echo OPARI_SCRIPT=\"$(PWD)/../build-frontend/pomp2_parse_init_regions.awk\"  >> $(builddir)/opari2_config.dat
 	@echo VERSION=\"$(PACKAGE_VERSION)\" >> $(builddir)/opari2_config.dat
 	@echo EGREP=\"$(EGREP)\"             >> $(builddir)/opari2_config.dat
+	@echo CFLAGS=\"$(abs_srcdir)/../include\" >> $(builddir)/opari2_config.dat
+
 
 if SCOREP_HAVE_F77
 if OPENMP_SUPPORTED
@@ -77,13 +80,13 @@ if OPENMP_SUPPORTED
 install-example:
 	$(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example
 	$(INSTALL_DATA) $(abs_srcdir)/../doc/example/example.*            $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example/
-	$(INSTALL_DATA) $(abs_srcdir)/../src/pomp-lib-dummy/pomp2_lib.h   $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example/
+	$(INSTALL_DATA) $(abs_srcdir)/../include/opari2/pomp2_lib.h       $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example/
 	$(INSTALL_DATA) $(abs_builddir)/../doc/example/Makefile           $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example/
 	$(INSTALL_DATA) $(abs_builddir)/../build-frontend/.libs/libpomp.* $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example/
 	rm -f $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example/libpomp.la
 	$(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation
 	$(INSTALL_DATA) $(abs_srcdir)/../doc/example_user_instrumentation/example_user_instrumentation.*  $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/
-	$(INSTALL_DATA) $(abs_srcdir)/../src/pomp-lib-dummy/pomp2_lib.h                                   $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/
+	$(INSTALL_DATA) $(abs_srcdir)/../include/opari2/pomp2_lib.h                                       $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/
 	$(INSTALL_DATA) $(abs_builddir)/../doc/example_user_instrumentation/Makefile                      $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/
 	$(INSTALL_DATA) $(abs_builddir)/../build-frontend/.libs/libpomp.*                                 $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/
 	rm -f $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/libpomp.la

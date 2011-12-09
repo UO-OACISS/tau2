@@ -209,10 +209,10 @@ doxygen-user-pdf:
 
 doxygen-user-install:
 	if test -f "$(DOC_SRC_DIR)/html.tar.gz"; then                            \
-            $(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc;                  \
+            $(MKDIR_P) $(DESTDIR)$(pkgdatadir)/doc;                  \
             $(INSTALL_DATA) $(DOC_SRC_DIR)/html.tar.gz                           \
-                            $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/html.tar.gz; \
-	    cd $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc;                          \
+                            $(DESTDIR)$(pkgdatadir)/doc/html.tar.gz; \
+	    cd $(DESTDIR)$(pkgdatadir)/doc;                          \
             tar xzvf html.tar.gz;                                                \
 	    rm -f html.tar.gz;                                                   \
 	fi
@@ -221,20 +221,20 @@ doxygen-user-install:
             dirs=`find . -type d`;                                                              \
             cd -;                                                                               \
             for i in $$dirs; do                                                                 \
-                $(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/$$i;                         \
+                $(MKDIR_P) $(DESTDIR)$(pkgdatadir)/doc/$$i;                         \
             done;                                                                               \
 	    cd $(DOC_SRC_DIR);                                                                  \
             files=`find . -type f`;                                                             \
             cd -;                                                                               \
             for i in $$files; do                                                                \
-                $(INSTALL_DATA) $(DOC_SRC_DIR)/$$i $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/$$i; \
+                $(INSTALL_DATA) $(DOC_SRC_DIR)/$$i $(DESTDIR)$(pkgdatadir)/doc/$$i; \
             done;                                                                               \
-            rm -rf $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/doxygen-user;                        \
-            rm -rf $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/doxygen-dev;                         \
+            rm -rf $(DESTDIR)$(pkgdatadir)/doc/doxygen-user;                        \
+            rm -rf $(DESTDIR)$(pkgdatadir)/doc/doxygen-dev;                         \
         fi
 
 doxygen-user-uninstall:
-	rm -rf $(DESTDIR)$(datadir)/@PACKAGE_NAME@
+	rm -rf $(DESTDIR)$(pkgdatadir)/doc
 
 endif # SVN_CONTROLLED 
                                                                              ##
@@ -293,7 +293,11 @@ bitten-print-environment:
 ## trigger build of check_* targets here and in subdirectories.
 ##
 
-check-build: $(BUILT_SOURCES) all $(check_PROGRAMS) $(check_LTLIBRARIES)
+check-build-sp: $(BUILT_SOURCES) all-am $(check_PROGRAMS) $(check_LTLIBRARIES)
+check-build: check-build-recursive
+check-build-recursive:
+## Using $failcom allows "-k" to keep its natural meaning when running a
+## recursive rule.
 	@fail= failcom='exit 1'; \
 	for f in x $$MAKEFLAGS; do \
 	  case $$f in \
@@ -301,10 +305,22 @@ check-build: $(BUILT_SOURCES) all $(check_PROGRAMS) $(check_LTLIBRARIES)
 	    *k*) failcom='fail=yes';; \
 	  esac; \
 	done; \
-        for subdir in $(SUBDIRS); do \
-            ($(am__cd) $$subdir && $(MAKE) $(AM_MAKEFLAGS) $@) || eval $$failcom; \
-        done; \
-        test -z "$$fail"
+	dot_seen=no; \
+	target=`echo $@ | sed s/-recursive//`; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    dot_seen=yes; \
+	    local_target="$$target-sp"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  ($(am__cd) $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	  || eval $$failcom; \
+	done; \
+	if test "$$dot_seen" = "no"; then \
+	  $(MAKE) $(AM_MAKEFLAGS) "$$target-sp" || exit 1; \
+	fi; test -z "$$fail"
 
                                                                              ##
                                                                              ##

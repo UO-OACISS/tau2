@@ -147,7 +147,7 @@ ctcError( CTCData*       obj,
             printf( "Schedule type \"%s\" not known.\n", info1 );
             break;
         case CTC_ERROR_Inconsistent_line_numbers:
-            printf( "Line numbers not valid. Expected startLineNo1 <= startLineNo2 <= endLineNo1 <= endLineNo2 \n", info1 );
+            printf( "Line numbers not valid. Expected startLineNo1 <= startLineNo2 <= endLineNo1 <= endLineNo2 \n" );
         case CTC_ERROR_SCL_error:
             printf( "Error parsing source code location, "
                     "expecting \"filename:lineNo1:lineNo2\".\n" );
@@ -318,8 +318,8 @@ assignHasClause( CTCData*    obj,
                  int*       hasClause,
                  const char* value );
 static void
-assignScheduleType( CTCData*    obj,
-                    const char* value );
+assignScheduleType( CTCData*       obj,
+                    char* value );
 static void
 assignUnsigned( CTCData*    obj,
                 unsigned*   anUnsigned,
@@ -712,8 +712,8 @@ static POMP2_Schedule_type
 getScheduleTypeFromString( const char* key );
 
 static void
-assignScheduleType( CTCData*    obj,
-                    const char* value )
+assignScheduleType( CTCData*       obj,
+                    char* value )
 {
     char* token = NULL;
 

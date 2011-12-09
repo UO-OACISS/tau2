@@ -1649,15 +1649,13 @@ int  MPI_Finalize(  )
   }
 #endif /* TAU_BGP */
 
-  // merge TAU metadata
-  Tau_metadataMerge_mergeMetaData();
-
   /* Shutdown EBS after Finalize to allow Profiles to be written out
      correctly. Also allows profile merging (or unification) to be
      done correctly. */
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
-    Tau_sampling_finalizeNode();
+    //    Tau_sampling_finalizeNode();
+    Tau_sampling_finalize_if_necessary();
   }
 #endif /* TAU_WINDOWS */
 
@@ -1667,6 +1665,9 @@ int  MPI_Finalize(  )
     Tau_collate_writeProfile();
 #else
   */
+
+  // merge TAU metadata
+  Tau_metadataMerge_mergeMetaData();
 
   /* Create a merged profile if requested */
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
@@ -3522,16 +3523,16 @@ int TauGetCpuSite(unsigned int *node, unsigned int *core, unsigned int *rank) {
   
   int nprocs, namelen,n,bytes;
   
-  MPI_Comm_rank(MPI_COMM_WORLD, rank);
-  MPI_Comm_size(MPI_COMM_WORLD, &nprocs);
-  MPI_Get_processor_name(host_name,&namelen);
+  PMPI_Comm_rank(MPI_COMM_WORLD, rank);
+  PMPI_Comm_size(MPI_COMM_WORLD, &nprocs);
+  PMPI_Get_processor_name(host_name,&namelen);
   bytes = nprocs * sizeof(char[MPI_MAX_PROCESSOR_NAME]);
   
   host_names = (char (*)[MPI_MAX_PROCESSOR_NAME]) malloc(bytes);
   
   strcpy(host_names[*rank], host_name);
   for (n=0; n<nprocs; n++) {
-    MPI_Bcast(&(host_names[n]),MPI_MAX_PROCESSOR_NAME, MPI_CHAR, n, MPI_COMM_WORLD); 
+    PMPI_Bcast(&(host_names[n]),MPI_MAX_PROCESSOR_NAME, MPI_CHAR, n, MPI_COMM_WORLD); 
   }
   
   unsigned int color;
@@ -3542,12 +3543,12 @@ int TauGetCpuSite(unsigned int *node, unsigned int *core, unsigned int *rank) {
     if(strcmp(host_name, host_names[n]) == 0) break;
   }
   
-  MPI_Comm_split(MPI_COMM_WORLD, color, *rank, &internode);
-  MPI_Comm_rank(internode,core);
+  PMPI_Comm_split(MPI_COMM_WORLD, color, *rank, &internode);
+  PMPI_Comm_rank(internode,core);
   
-  MPI_Comm_split(MPI_COMM_WORLD, *core, *rank, &intranode);
+  PMPI_Comm_split(MPI_COMM_WORLD, *core, *rank, &intranode);
   
-  MPI_Comm_rank(intranode,node);
+  PMPI_Comm_rank(intranode,node);
   return 0;
 }
 
@@ -3557,7 +3558,7 @@ int TauGetMpiRank(void)
 {
   int rank;
 
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   return rank;
 }
 */

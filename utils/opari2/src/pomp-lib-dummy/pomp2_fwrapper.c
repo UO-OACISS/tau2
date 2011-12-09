@@ -40,7 +40,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "pomp2_lib.h"
+#include <opari2/pomp2_lib.h>
 #include "pomp2_fwrapper_def.h"
 
 /*
