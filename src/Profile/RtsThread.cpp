@@ -57,6 +57,9 @@ int RtsLayer::myNode(void)
 #ifdef TAU_PID_AS_NODE
   return getpid();
 #endif
+#ifdef TAU_TID_AS_NODE
+  return RtsLayer::getLinuxKernelTid(); //voorhees
+#endif
   return TheNode();
 }
 
