@@ -246,9 +246,9 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 #ifdef TAU_VAMPIRTRACE 
   x_uint64 TimeStamp = vt_pform_wtime();
 #ifdef TAU_VAMPIRTRACE_5_12_API
-  vt_enter(VT_CURRENT_THREAD, (uint64_t *) &TimeStamp, fi->GetFunctionId());
+  vt_enter(VT_CURRENT_THREAD, (x_uint64 *) &TimeStamp, fi->GetFunctionId());
 #else
-  vt_enter((uint64_t *) &TimeStamp, fi->GetFunctionId());
+  vt_enter((x_uint64 *) &TimeStamp, fi->GetFunctionId());
 #endif /* TAU_VAMPIRTRACE_5_12_API */
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
@@ -418,9 +418,9 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   x_uint64 TimeStamp = vt_pform_wtime();
 
 #ifdef TAU_VAMPIRTRACE_5_12_API
-  vt_exit(VT_CURRENT_THREAD, (uint64_t *)&TimeStamp);
+  vt_exit(VT_CURRENT_THREAD, (x_uint64 *)&TimeStamp);
 #else 
-  vt_exit((uint64_t *)&TimeStamp);
+  vt_exit((x_uint64 *)&TimeStamp);
 #endif /* TAU_VAMPIRTRACE_5_12_API */
 
 #ifndef TAU_WINDOWS
@@ -1736,10 +1736,10 @@ int *tau_pomp_rd_table = 0;
 extern "C" void Tau_Bg_hwp_counters_start(int *error) {
 }
 
-extern "C" void Tau_Bg_hwp_counters_stop(int* numCounters, uint64_t counters[], int* mode, int *error) {
+extern "C" void Tau_Bg_hwp_counters_stop(int* numCounters, x_uint64 counters[], int* mode, int *error) {
 }
 
-extern "C" void Tau_Bg_hwp_counters_output(int* numCounters, uint64_t counters[], int* mode, int* error) {
+extern "C" void Tau_Bg_hwp_counters_output(int* numCounters, x_uint64 counters[], int* mode, int* error) {
 }
 #endif /* TAU_BGP */
                     
