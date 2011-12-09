@@ -67,6 +67,12 @@ using namespace std;
 #include <time.h>
 #include <stdlib.h>
 
+#ifdef __linux //To make getLinuxKernelTid work for ktau style file naming
+#include <unistd.h>
+#include <sys/syscall.h>
+#include <sys/types.h>
+#endif
+
 #ifdef TAU_WINDOWS
 //include the header for windows time functions.
 #include <windows.h>	//Various defines needed in Winbase.h.
@@ -427,6 +433,12 @@ int RtsLayer::getTid() {
 #else
   return 0;
 #endif
+}
+
+int RtsLayer::getLinuxKernelTid(){
+ pid_t tid;
+ tid =  syscall(SYS_gettid);
+ return tid;
 }
 
 const char *RtsLayer::getCounterName(int i) {
