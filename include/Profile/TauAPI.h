@@ -16,6 +16,8 @@
 #ifndef _TAU_API_H_
 #define _TAU_API_H_
 
+#include <Profile/tau_types.h>
+
 #ifdef TAU_ENABLED
 #include <stdint.h> /* uint64_t */
 
@@ -413,8 +415,8 @@ void TAUDECL Tau_phase_metadata(char *name, char *value);
 void TAUDECL Tau_context_metadata(char *name, char *value);
 
 void TAUDECL Tau_Bg_hwp_counters_start(int *error); 
-void TAUDECL Tau_Bg_hwp_counters_stop(int* numCounters, uint64_t counters[], int* mode, int *error); 
-void TAUDECL Tau_Bg_hwp_counters_output(int* numCounters, uint64_t counters[], int* mode, int* error);
+void TAUDECL Tau_Bg_hwp_counters_stop(int* numCounters, x_uint64 counters[], int* mode, int *error); 
+void TAUDECL Tau_Bg_hwp_counters_output(int* numCounters, x_uint64 counters[], int* mode, int* error);
 
 void Tau_set_user_clock(double value);
 void Tau_set_user_clock_thread(double value, int tid);
