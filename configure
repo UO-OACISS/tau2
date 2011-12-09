@@ -1748,6 +1748,7 @@ for arg in "$@"; do
       echo "Error: Cannot access GPU include directory $cudainclude"
       exit 1
     fi
+		useropt="$useropt#-DTAU_MAX_THREADS=32"
 		cuda=yes
     shift
     ;;
@@ -5995,7 +5996,6 @@ fi
 
 if [ $cuda = yes ] ; then
 	if [ -f "$cudainclude/cuda.h" ] ; then
-		useropt="$useropt#-DTAU_MAX_THREADS=32"
 		fixmakeargs="$fixmakeargs CUDA TAU_USE_GPU cudainclude=$cudainclude"
 		if [ "$machine" != "craycnl" -a "$opencl" != "disable" ] ; then
 			if [ -f "$cudainclude/CL/cl.h" ] ; then
