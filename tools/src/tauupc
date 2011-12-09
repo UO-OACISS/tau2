@@ -217,7 +217,7 @@ if [ "$SICORTEX" = "yes" ] ; then
     TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optOpariOpts=-nodecl"
 else
     # default only for non-sicortex platforms
-    TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optCompInst"
+    TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optCompInst -optTrackDMAPP"
 fi
 
 TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS $command_options"
