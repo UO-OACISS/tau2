@@ -318,6 +318,12 @@ int get_task(gpuId *new_task)
 #ifdef TAU_OPENMP
 	task += OpenMPLayer::numThreads() - 1;
 #endif
+#ifdef PTHREADS
+	task += 1;
+#ifdef DEBUG_PROF
+	printf("task # choosen: %d.\n");
+#endif /* DEBUG_PROF */
+#endif
 	return task;
 }
 

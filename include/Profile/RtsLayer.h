@@ -100,6 +100,8 @@ public:
   static int getPid();
   static int getTid();
 
+  static int getLinuxKernelTid();
+
   static int RegisterThread();
 	
   static void RegisterFork(int nodeid, enum TauFork_t opcode);
