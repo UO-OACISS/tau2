@@ -803,6 +803,10 @@ case $1 in
 	echo NOTE: Building POSIX I/O wrapper
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     DMAPP)
+	echo NOTE: Building Cray DMAPP wrapper
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      ARMCI)
 	echo NOTE: Building ARMCI wrapper
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -889,6 +893,10 @@ case $1 in
         ;;
      SGIGNU)
 	echo NOTE: Using GNU C++ compiler on SGI
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     GNU46PLUS)
+	echo NOTE: Using fixes for GNU 4.6+ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CRAYCC)
@@ -1251,6 +1259,10 @@ case $1 in
 	echo "NOTE: Using VAMPIRTRACE 5.7 API ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     VAMPIRTRACE_5_12_API)
+	echo "NOTE: Using VAMPIRTRACE 5.12 API ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      VAMPIRTRACEINTS)
 	echo "NOTE: Using -DTAU_64BITTYPES_NEEDED -DHAVE_INTTYPES_H for VampirTrace ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1325,7 +1337,15 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      UPCC)
-	echo "NOTE: Enabled UPC GASP support in TAU."
+	echo "NOTE: Enabled Berkeley UPC (upcc) GASP support in TAU."
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     GNU_UPC)
+	echo "NOTE: Enabled GNU UPC GASP support in TAU"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     CRAY_UPC)
+	echo "NOTE: Enabled Cray UPC support in TAU"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      KAI)

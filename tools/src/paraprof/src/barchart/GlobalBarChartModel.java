@@ -39,6 +39,14 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
     private FunctionOrdering functionOrder;
     private List<Thread> theThreads;
 
+    
+    private boolean hideTotal = false;
+    
+    
+    public void setHideTotal(boolean hideTotal) {
+        this.hideTotal=hideTotal;
+    }
+    
     public GlobalBarChartModel(GlobalDataWindow window, DataSorter dataSorter, ParaProfTrial ppTrial) {
         this.window = window;
         this.dataSorter = dataSorter;
@@ -275,7 +283,15 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
 
     public void reloadData() {
         functionOrder = dataSorter.getOrdering();
-        theThreads = dataSorter.getThreads();
+        if(hideTotal)
+        {
+        	int[] ex = {Thread.TOTAL};
+        	theThreads = dataSorter.getThreads(ex);
+        }
+        else{
+        	theThreads = dataSorter.getThreads();
+        }
+        
         //        
         //        threads = dataSorter.getAllFunctionProfilesMinimal();
         //        

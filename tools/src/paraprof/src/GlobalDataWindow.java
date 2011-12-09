@@ -58,6 +58,7 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
     private JMenu optionsMenu;
     private JCheckBoxMenuItem nameCheckBox = new JCheckBoxMenuItem("Sort By Name", false);
     private JCheckBoxMenuItem normalizeCheckBox = new JCheckBoxMenuItem("Normalize Bars", true);
+    private JCheckBoxMenuItem hideTotalCheckBox = new JCheckBoxMenuItem("Hide Total", false);
     private JCheckBoxMenuItem orderByMeanCheckBox = new JCheckBoxMenuItem("Order By Mean", true);
     private JCheckBoxMenuItem orderCheckBox = new JCheckBoxMenuItem("Descending Order", true);
     private JCheckBoxMenuItem stackBarsCheckBox = new JCheckBoxMenuItem("Stack Bars Together", true);
@@ -171,6 +172,9 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
 
         normalizeCheckBox.addActionListener(this);
         optionsMenu.add(normalizeCheckBox);
+        
+        hideTotalCheckBox.addActionListener(this);
+        optionsMenu.add(hideTotalCheckBox);
 
         //        orderByMeanCheckBox.addActionListener(this);
         //        optionsMenu.add(orderByMeanCheckBox);
@@ -217,6 +221,8 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
                     showWidthSlider(slidersCheckBox.isSelected());
                 } else if (arg.equals("Show Meta Data in Panel")) {
                     setShowMetaData(metaDataCheckBox.isSelected());
+                }else if (arg.equals("Hide Total")) {
+                    setHideTotal(hideTotalCheckBox.isSelected());
                 }
             }
         } catch (Exception e) {
@@ -451,6 +457,13 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
         normalizeCheckBox.setSelected(value);
         panel.getBarChart().setNormalized(normalizeCheckBox.isSelected());
         panel.repaint();
+    }
+    
+    public void setHideTotal(boolean value) {
+        hideTotalCheckBox.setSelected(value);
+        ((GlobalBarChartModel)model).setHideTotal(hideTotalCheckBox.isSelected());
+        model.reloadData();
+        //panel.repaint();
     }
 
     public boolean getSortByMean() {
