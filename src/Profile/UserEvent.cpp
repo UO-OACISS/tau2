@@ -119,11 +119,11 @@ EventId=handle;
   return;
 }
 
-uint64_t TauUserEvent::GetEventId(void) {
+x_uint64 TauUserEvent::GetEventId(void) {
   return EventId;
 }
 
-extern "C" uint64_t TauUserEvent_GetEventId(TauUserEvent *evt) {
+extern "C" x_uint64 TauUserEvent_GetEventId(TauUserEvent *evt) {
   return evt->GetEventId();
 }
 
@@ -247,11 +247,11 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid) {
 
 void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timestamp, int use_ts) { 
 #ifdef TAU_VAMPIRTRACE
-  uint64_t time;
-  uint64_t cval;
+  x_uint64 time;
+  x_uint64 cval;
   int id = GetEventId();
   time = vt_pform_wtime();
-  cval = (uint64_t) data;
+  cval = (x_uint64) data;
 #ifdef TAU_VAMPIRTRACE_5_12_API
   vt_count(VT_CURRENT_THREAD, &time, id, 0);
 #else
