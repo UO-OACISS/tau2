@@ -16,10 +16,9 @@
 #ifndef _TAU_API_H_
 #define _TAU_API_H_
 
-#include <Profile/tau_types.h>
 
 #ifdef TAU_ENABLED
-#include <stdint.h> /* uint64_t */
+#include <Profile/tau_types.h>
 
 #if (defined(TAU_WINDOWS))
 #pragma warning( disable : 4786 )
