@@ -284,7 +284,6 @@ static const char *getconf(const char *key) {
  * Local Tau_check_dirname routine
  ********************************************************************/
 static  char * Tau_check_dirname(const char * dir) {
-  mode_t oldmode;
   if (strcmp(dir, "$TAU_LOG_DIR") == 0){
     TAU_VERBOSE("Using PROFILEDIR=%s\n", dir);
     const char *logdir= getconf("TAU_LOG_PATH");
@@ -333,6 +332,7 @@ static  char * Tau_check_dirname(const char * dir) {
       mkdir(logfiledir);
 #else
 
+      mode_t oldmode;
       oldmode=umask(0);
       mkdir(logdir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
       sprintf(scratchdir, "%s/%d", logdir, (thisTime->tm_year+1900));
