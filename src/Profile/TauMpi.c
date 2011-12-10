@@ -1615,7 +1615,7 @@ int  MPI_Finalize(  )
 
   /* BGP counters */
   int numCounters, mode, upcErr;
-  uint64_t counterVals[1024];
+  x_uint64 counterVals[1024];
 
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
