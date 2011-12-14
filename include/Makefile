@@ -894,7 +894,7 @@ EBS_CLOCK_RES=
 ##############################################
 # KTAU-NG!!
 ##############################################
-#KTAU_NG#PROFILEOPT86 = -DKTAU_NG -DTAU_TID_AS_NODE#ENDIF#
+#KTAU_NG#PROFILEOPT86 = -DKTAU_NG #ENDIF#
 
 
 
