@@ -57,11 +57,9 @@ int RtsLayer::myNode(void)
 #ifdef TAU_PID_AS_NODE
   return getpid();
 #endif
-#ifdef KTAU_NG
 #ifdef TAU_TID_AS_NODE
   return RtsLayer::getLinuxKernelTid(); //voorhees
 #endif /* TAU_TID_AS_NODE */
-#endif /* KTAU_NG */
   return TheNode();
 }
 
@@ -71,6 +69,9 @@ int RtsLayer::myNode(void)
 //////////////////////////////////////////////////////////////////////
 int RtsLayer::myContext(void)
 {
+#ifdef KTAU_NG
+  return RtsLayer::getLinuxKernelTid(); //voorhees
+#endif /* KTAU_NG */
   return TheContext(); 
 }
 

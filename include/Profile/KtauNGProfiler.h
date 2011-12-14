@@ -1,0 +1,7 @@
+#ifndef KTAUNG_PROFILER_H
+#define KTAUNG_PROFILER_H
+
+#define KTAU_NG_PREFIX "Tau"
+#define KTAU_NG_PREFIX_LEN 3
+
+#endif /* KTAUNG_PROFILER_H */
