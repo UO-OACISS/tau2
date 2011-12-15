@@ -41,6 +41,11 @@ public:
   RtsLayer () { }  // defaults
   ~RtsLayer () { } 
 
+	static int createThread(void);
+	static void destroyThread(int id);
+	static void recycleThread(int id);
+
+
   static TauGroup_t & TheProfileMask(void);
   static bool& TheEnableInstrumentation(void);
   static bool& TheShutdown(void);
