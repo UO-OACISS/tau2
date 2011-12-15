@@ -52,72 +52,82 @@ int RtsLayer::lockEnvCount[TAU_MAX_THREADS];
 //////////////////////////////////////////////////////////////////////
 // Thread struct 
 //////////////////////////////////////////////////////////////////////
-typedef struct TauThread_t
+class RtsThread
 {
+public:
+
+	static int num_threads;
 	int thread_rank;
 	bool recyclable;
 	bool active;
-	TauThread_t* next_available;
-} TauThread;
+	int next_available;
 
-TauThread TheThreadList[TAU_MAX_THREADS];
-
-static TauThread* nextThread;
-
-int initializeThreads()
-{
-	TauThread last = (TauThread){TAU_MAX_THREADS-1,false,false, NULL};
-	printf("index: %d \n\t rank: %d next_rank: n/a.\n", TAU_MAX_THREADS-1, TAU_MAX_THREADS-1);
-	TheThreadList[TAU_MAX_THREADS-1] = last;
-	for (int i=TAU_MAX_THREADS-2;i>0;i--)
+	RtsThread()
 	{
-		printf("index: %d \n\t rank: %d next_rank %d.\n", i, i, last.thread_rank);
-		TheThreadList[i] = (TauThread){i,false,false, &TheThreadList[i+1]};
-		last = TheThreadList[i];
+		thread_rank = ++num_threads;
+		recyclable = false;
+		active = true;
+		next_available = thread_rank + 1;
+	  //printf("creating new thread obj, rank: %d, next: %d.\n", thread_rank,
+			//next_available);
 	}
-	nextThread = &TheThreadList[1];
-	return 0;
+
+};
+
+int RtsThread::num_threads = 0;
+
+vector<RtsThread*>& TheThreadList(void)
+{
+	static vector<RtsThread*> ThreadList;
+
+	return ThreadList;
 }
+
+
+static int nextThread = 1;
 
 int RtsLayer::createThread()
 {
+
   LockEnv();
 
-	static int i = initializeThreads();
-
-	if (nextThread == NULL)
+	RtsThread* newThread;
+	
+	if (nextThread > TheThreadList().size())
 	{
-		printf("error exceeded TAU_MAX_THREADS.\n");
+		newThread = new RtsThread();
+		TheThreadList().push_back(newThread);
+		nextThread = newThread->next_available;
 	}
-
-	TauThread newThread = *nextThread;
-
-	newThread.recyclable = false;
-	newThread.active = true;
-	nextThread = newThread.next_available;
-  
-	printf("creating thread: %d.\n", newThread.thread_rank);
+	else
+	{
+		newThread = TheThreadList().at(nextThread);
+		newThread->active = true;
+		nextThread = newThread->next_available;
+	}
 	UnLockEnv();
+	//printf("creating thread: %d.\n", newThread->thread_rank);
 
-	return newThread.thread_rank;
+	return newThread->thread_rank;
 }
 
 void RtsLayer::recycleThread(int id)
 {
   LockEnv();
 	
-	TheThreadList[id].active = false;
-	TheThreadList[id].next_available = nextThread;
-	nextThread = &TheThreadList[id];	
+	TheThreadList().at(id-1)->active = false;
+	TheThreadList().at(id-1)->next_available = nextThread;
+	nextThread = id-1;	
   
-	printf("recycling thread: %d.\n", TheThreadList[id].thread_rank);
+	printf("recycling thread: %d.\n", TheThreadList().at(id-1)->thread_rank);
 	UnLockEnv();
 }
 
 int RtsLayer::myThread() { return 0; }
 int RtsLayer::setMyThread(int i) { return 0; }
-int RtsLayer::getNumThreads() { return 1; } 
-int* RtsLayer::numThreads() { static int i = 1; return &i; } 
+int RtsLayer::getNumThreads() { return TheThreadList().size(); } 
+int* RtsLayer::numThreads() { static int i = TheThreadList().size(); return &i; } 
+
 //////////////////////////////////////////////////////////////////////
 // myNode() returns the current node id (0..N-1)
 //////////////////////////////////////////////////////////////////////
