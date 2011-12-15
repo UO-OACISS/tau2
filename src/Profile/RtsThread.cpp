@@ -50,6 +50,75 @@ int RtsLayer::lockDBcount[TAU_MAX_THREADS];
 int RtsLayer::lockEnvCount[TAU_MAX_THREADS];
 
 //////////////////////////////////////////////////////////////////////
+// Thread struct 
+//////////////////////////////////////////////////////////////////////
+typedef struct TauThread_t
+{
+	int thread_rank;
+	bool recyclable;
+	bool active;
+	TauThread_t* next_available;
+} TauThread;
+
+TauThread TheThreadList[TAU_MAX_THREADS];
+
+static TauThread* nextThread;
+
+int initializeThreads()
+{
+	TauThread last = (TauThread){TAU_MAX_THREADS-1,false,false, NULL};
+	printf("index: %d \n\t rank: %d next_rank: n/a.\n", TAU_MAX_THREADS-1, TAU_MAX_THREADS-1);
+	TheThreadList[TAU_MAX_THREADS-1] = last;
+	for (int i=TAU_MAX_THREADS-2;i>0;i--)
+	{
+		printf("index: %d \n\t rank: %d next_rank %d.\n", i, i, last.thread_rank);
+		TheThreadList[i] = (TauThread){i,false,false, &TheThreadList[i+1]};
+		last = TheThreadList[i];
+	}
+	nextThread = &TheThreadList[1];
+	return 0;
+}
+
+int RtsLayer::createThread()
+{
+  LockEnv();
+
+	static int i = initializeThreads();
+
+	if (nextThread == NULL)
+	{
+		printf("error exceeded TAU_MAX_THREADS.\n");
+	}
+
+	TauThread newThread = *nextThread;
+
+	newThread.recyclable = false;
+	newThread.active = true;
+	nextThread = newThread.next_available;
+  
+	printf("creating thread: %d.\n", newThread.thread_rank);
+	UnLockEnv();
+
+	return newThread.thread_rank;
+}
+
+void RtsLayer::recycleThread(int id)
+{
+  LockEnv();
+	
+	TheThreadList[id].active = false;
+	TheThreadList[id].next_available = nextThread;
+	nextThread = &TheThreadList[id];	
+  
+	printf("recycling thread: %d.\n", TheThreadList[id].thread_rank);
+	UnLockEnv();
+}
+
+int RtsLayer::myThread() { return 0; }
+int RtsLayer::setMyThread(int i) { return 0; }
+int RtsLayer::getNumThreads() { return 1; } 
+int* RtsLayer::numThreads() { static int i = 1; return &i; } 
+//////////////////////////////////////////////////////////////////////
 // myNode() returns the current node id (0..N-1)
 //////////////////////////////////////////////////////////////////////
 int RtsLayer::myNode(void)
@@ -72,57 +141,6 @@ int RtsLayer::myNode(void)
 int RtsLayer::myContext(void)
 {
   return TheContext(); 
-}
-
-extern "C" int Tau_RtsLayer_myThread(void) {
-  return RtsLayer::myThread();
-}
-
-
-//////////////////////////////////////////////////////////////////////
-// myNode() returns the current node id (0..N-1)
-//////////////////////////////////////////////////////////////////////
-int RtsLayer::myThread(void)
-{
-#ifdef PTHREADS
-  return PthreadLayer::GetThreadId();
-#elif  TAU_SPROC
-  return SprocLayer::GetThreadId();
-#elif  TAU_WINDOWS
-  return WindowsThreadLayer::GetThreadId();
-#elif  TULIPTHREADS
-  return TulipThreadLayer::GetThreadId();
-#elif JAVA
-  return JavaThreadLayer::GetThreadId(); 
-	// C++ app shouldn't use this unless there's a VM
-#elif TAU_OPENMP
-  return OpenMPLayer::GetThreadId();
-#elif TAU_PAPI_THREADS
-  return PapiThreadLayer::GetThreadId();
-#else  // if no other thread package is available 
-  return 0;
-#endif // PTHREADS
-}
-
-int RtsLayer::setMyThread(int tid) {
-#ifdef PTHREADS
-  PthreadLayer::SetThreadId(tid);
-#endif // PTHREADS
-  return 0;
-}
-
-int RtsLayer::getNumThreads() {
-  return *(RtsLayer::numThreads());
-}
-
-int *RtsLayer::numThreads() {
-#ifdef TAU_OPENMP
-	static int numthreads = OpenMPLayer::numThreads();
-#else
-  static int numthreads = 1;
-#endif
-	return &numthreads;
-
 }
 
 
