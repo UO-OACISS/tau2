@@ -1208,9 +1208,17 @@ static int getProfileLocation(int metric, char *str) {
 #ifndef KTAU_NG
   const char *profiledir = TauEnv_get_profiledir();
 #else
-  char profiledir[KTAU_NG_PREFIX_LEN + (Tau_metadata_getMetaData()["Hostname"]).length() + 1];
-  sprintf(profiledir, "%s.%s", KTAU_NG_PREFIX, Tau_metadata_getMetaData()["Hostname"].c_str());
-
+  static char *profiledir;
+  if(profiledir == NULL){
+    int written_bytes = 0;
+    unsigned int profile_dir_len = KTAU_NG_PREFIX_LEN + HOSTNAME_LEN;
+    profiledir = new char[profile_dir_len];
+    written_bytes = sprintf(profiledir, "%s.", KTAU_NG_PREFIX);
+    gethostname(profiledir + written_bytes, profile_dir_len - written_bytes);
+    
+    // profiledir = new char[KTAU_NG_PREFIX_LEN + (Tau_metadata_getMetaData()["Hostname"]).length() + 1]; //This will remain in memory until TAU closes since their is no corresponding delete.
+    // sprintf(profiledir, "%s.%s", KTAU_NG_PREFIX, Tau_metadata_getMetaData()["Hostname"].c_str());
+  }
 #endif
 
   if (Tau_Global_numCounters <= 1) { 
