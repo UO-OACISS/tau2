@@ -332,6 +332,8 @@ static  char * Tau_check_dirname(const char * dir) {
       mkdir(logfiledir);
 #else
 
+      mode_t oldmode;
+      oldmode=umask(0);
       mkdir(logdir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
       sprintf(scratchdir, "%s/%d", logdir, (thisTime->tm_year+1900));
       mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
@@ -345,6 +347,7 @@ static  char * Tau_check_dirname(const char * dir) {
 
       mkdir(logfiledir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
       TAU_VERBOSE("mkdir %s\n", logfiledir);
+      umask(oldmode);
 #endif 
     }
     return strdup(logfiledir);

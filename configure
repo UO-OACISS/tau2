@@ -1748,6 +1748,7 @@ for arg in "$@"; do
       echo "Error: Cannot access GPU include directory $cudainclude"
       exit 1
     fi
+		useropt="$useropt#-DTAU_MAX_THREADS=32"
 		cuda=yes
     shift
     ;;
@@ -2497,7 +2498,7 @@ case $machine in
 	elif [ "x$PE_ENV" = xCRAY ] ; then
 	    tauoptions="${tauoptions}-cray"
 	    default_fortran=cray
-	    if [ dmapp = no ]; then
+	    if [ $dmapp = no ]; then
 	      fixmakeargs="$fixmakeargs DMAPP"
             fi
 
@@ -2745,7 +2746,7 @@ if [ $iowrapper = yes ] ; then
     fi
 fi    
 
-if [ $dmapp = yes ]; then
+if [ "x$PE_ENV" = "xCRAY" -o $dmapp = yes ]; then
     if [ "x$CRAY_DMAPP_INCLUDE_OPTS" = "x" ] ; then
         echo "TAU: Please load the dmapp module on Cray to set CRAY_DMAPP_INCLUDE_OPTS environment variable and reconfigure TAU with the -dmapp configure option"
     else
@@ -5545,7 +5546,9 @@ if [ "x$bfd" = "xyes" ] ; then
 			mkdir $tempdir
 			cd $tempdir
 			if [ "$machine" = "apple" ] ; then
-				curl http://www.cs.uoregon.edu/Research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz > binutils-2.20.tar.gz
+                                # this is a little tricky - we WANT it to be called 2.20 for now.
+                                #   after untar, we will want to rename the package to 2.20 too.
+				curl http://www.cs.uoregon.edu/Research/paracomp/tau/tauprofile/dist/binutils-2.22.tar.gz > binutils-2.20.tar.gz
 			else 
 				wget http://www.cs.uoregon.edu/Research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz
 			fi
@@ -5557,6 +5560,9 @@ if [ "x$bfd" = "xyes" ] ; then
 				cp $RESPONSE/binutils-2.20.tar.gz .
 			fi
 			tar -xzf binutils-2.20.tar.gz
+			if [ "$machine" = "apple" ] ; then
+			    mv binutils-2.22 binutils-2.20
+			fi
 			cd binutils-2.20
 			if [ $machine = "bgp" ] ; then
 				./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir CC=powerpc-bgp-linux-gcc CXX=powerpc-bgp-linux-g++ --disable-nls --disable-werror
@@ -5995,7 +6001,6 @@ fi
 
 if [ $cuda = yes ] ; then
 	if [ -f "$cudainclude/cuda.h" ] ; then
-		useropt="$useropt#-DTAU_MAX_THREADS=32"
 		fixmakeargs="$fixmakeargs CUDA TAU_USE_GPU cudainclude=$cudainclude"
 		if [ "$machine" != "craycnl" -a "$opencl" != "disable" ] ; then
 			if [ -f "$cudainclude/CL/cl.h" ] ; then

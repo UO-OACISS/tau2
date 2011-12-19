@@ -50,33 +50,79 @@ int RtsLayer::lockDBcount[TAU_MAX_THREADS];
 int RtsLayer::lockEnvCount[TAU_MAX_THREADS];
 
 //////////////////////////////////////////////////////////////////////
-// myNode() returns the current node id (0..N-1)
+// Thread struct 
 //////////////////////////////////////////////////////////////////////
-int RtsLayer::myNode(void)
+class RtsThread
 {
-#ifdef TAU_PID_AS_NODE
-  return getpid();
-#endif
-  return TheNode();
-}
+public:
 
+	static int num_threads;
+	int thread_rank;
+	bool recyclable;
+	bool active;
+	int next_available;
 
-//////////////////////////////////////////////////////////////////////
-// myContext() returns the current context id (0..N-1)
-//////////////////////////////////////////////////////////////////////
-int RtsLayer::myContext(void)
+	RtsThread()
+	{
+		thread_rank = ++num_threads;
+		recyclable = false;
+		active = true;
+		next_available = thread_rank + 1;
+	  //printf("creating new thread obj, rank: %d, next: %d.\n", thread_rank,
+			//next_available);
+	}
+
+};
+
+int RtsThread::num_threads = 0;
+
+vector<RtsThread*>& TheThreadList(void)
 {
-  return TheContext(); 
+	static vector<RtsThread*> ThreadList;
+
+	return ThreadList;
 }
 
-extern "C" int Tau_RtsLayer_myThread(void) {
-  return RtsLayer::myThread();
+
+static int nextThread = 1;
+
+int RtsLayer::createThread()
+{
+
+  LockEnv();
+
+	RtsThread* newThread;
+	
+	if (nextThread > TheThreadList().size())
+	{
+		newThread = new RtsThread();
+		TheThreadList().push_back(newThread);
+		nextThread = newThread->next_available;
+	}
+	else
+	{
+		newThread = TheThreadList().at(nextThread);
+		newThread->active = true;
+		nextThread = newThread->next_available;
+	}
+	UnLockEnv();
+	//printf("creating thread: %d.\n", newThread->thread_rank);
+
+	return newThread->thread_rank;
 }
 
+void RtsLayer::recycleThread(int id)
+{
+  LockEnv();
+	
+	TheThreadList().at(id-1)->active = false;
+	TheThreadList().at(id-1)->next_available = nextThread;
+	nextThread = id-1;	
+  
+	printf("recycling thread: %d.\n", TheThreadList().at(id-1)->thread_rank);
+	UnLockEnv();
+}
 
-//////////////////////////////////////////////////////////////////////
-// myNode() returns the current node id (0..N-1)
-//////////////////////////////////////////////////////////////////////
 int RtsLayer::myThread(void)
 {
 #ifdef PTHREADS
@@ -99,25 +145,38 @@ int RtsLayer::myThread(void)
 #endif // PTHREADS
 }
 
-int RtsLayer::setMyThread(int tid) {
+int RtsLayer::setMyThread(int i) { 
 #ifdef PTHREADS
-  PthreadLayer::SetThreadId(tid);
-#endif // PTHREADS
-  return 0;
-}
-
-int RtsLayer::getNumThreads() {
-  return *(RtsLayer::numThreads());
-}
-
-int *RtsLayer::numThreads() {
-#ifdef TAU_OPENMP
-	static int numthreads = OpenMPLayer::numThreads();
-#else
-  static int numthreads = 1;
+	PthreadLayer::SetThreadId(i);
 #endif
-	return &numthreads;
+	return 0;
+}
+int RtsLayer::getNumThreads() { return 1; } 
+int* RtsLayer::numThreads() { static int i = 1; return &i; } 
 
+//////////////////////////////////////////////////////////////////////
+// myNode() returns the current node id (0..N-1)
+//////////////////////////////////////////////////////////////////////
+int RtsLayer::myNode(void)
+{
+#ifdef TAU_PID_AS_NODE
+  return getpid();
+#endif
+#ifdef KTAU_NG
+#ifdef TAU_TID_AS_NODE
+  return RtsLayer::getLinuxKernelTid(); //voorhees
+#endif /* TAU_TID_AS_NODE */
+#endif /* KTAU_NG */
+  return TheNode();
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// myContext() returns the current context id (0..N-1)
+//////////////////////////////////////////////////////////////////////
+int RtsLayer::myContext(void)
+{
+  return TheContext(); 
 }
 
 
