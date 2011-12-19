@@ -322,6 +322,12 @@ int get_task(gpuId *new_task)
 	printf("numThreads: %d.\n", RtsLayer::getNumThreads());
 	printf("task id: %d.\n", task);
 #endif
+#ifdef PTHREADS
+	task += 1;
+#ifdef DEBUG_PROF
+	printf("task # choosen: %d.\n");
+#endif /* DEBUG_PROF */
+#endif
 	return task;
 }
 

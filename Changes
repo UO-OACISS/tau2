@@ -31,6 +31,8 @@ Version 2.21 changes (from 2.20):
 18. Updated Opari2. 
 19. Added EBS based on callstack unwinding.
 20. Added Cray DMAPP library wrapper (configure -dmapp, -optTrackDMAPP TAU_OPTIONS).
+21. Added -useropt=-DTAU_SYSTEMWIDE_TRACK_MSG_SIZE_AS_CTX_EVENT for tracking message size with context events.
+22. Added -optLinkOnly for compiling .o file without instrumentation, then linking in TAU libraries.
 
 
 

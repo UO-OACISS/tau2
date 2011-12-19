@@ -103,7 +103,7 @@ for arg in "$@" ; do
 	      command_options="$command_options -optPDTInst -optDefaultParser=upcparse -optTau=-upc -optTrackDMAPP"
 	      ;;
 	  -tau:compinst)
-	      command_options="$command_options -optCompInst"
+	      command_options="$command_options -optCompInst -optTrackDMAPP"
 	      ;;
 	  -tau:headerinst)
 	      command_options="$command_options -optHeaderInst"
@@ -217,7 +217,7 @@ if [ "$SICORTEX" = "yes" ] ; then
     TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optOpariOpts=-nodecl"
 else
     # default only for non-sicortex platforms
-    TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optCompInst"
+    TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS -optCompInst -optTrackDMAPP"
 fi
 
 TAUCOMPILER_OPTIONS="$TAUCOMPILER_OPTIONS $command_options"

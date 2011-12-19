@@ -549,7 +549,11 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle,
 			sprintf((char*)info.funcname, "addr=<%p>", probeAddr);
 		}
 		if(info.filename == NULL) {
+		  if (matchingIdx != -1) {
 			info.filename = unit->addressMaps[matchingIdx]->name;
+		  } else {
+		    info.filename = unit->executablePath;
+		  }
 		}
 		info.probeAddr = probeAddr;
 		info.lineno = 0;

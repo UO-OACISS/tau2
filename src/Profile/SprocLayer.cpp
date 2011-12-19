@@ -88,7 +88,7 @@ int SprocLayer::RegisterThread(void)
   if (uspsema(tauThreadCountMutex) == -1)
     perror("TAU ERROR: SprocLayer.cpp: SprocLayer::RegisterThread uspsema");
   
-  TheTauPidSprocMap()[getpid()] = ++SprocLayer::tauThreadCount;
+  TheTauPidSprocMap()[getpid()] = RtsLayer::createThread();
   
   if (usvsema(tauThreadCountMutex) == -1)
     perror("TAU ERROR: SprocLayer.cpp: SprocLayer::RegisterThread usvsema");

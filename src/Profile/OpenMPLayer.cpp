@@ -26,6 +26,7 @@ using namespace std;
 #else /* TAU_DOT_H_LESS_HEADERS */
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
+#include "Profile/Profiler.h"
 #include "Profile/OpenMPLayer.h"
 
 
@@ -59,8 +60,9 @@ static int threadCount = 0;
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::RegisterThread(void)
 {
+	return RtsLayer::createThread();
   // Not needed for OpenMP programs! 
-  return 0;
+  //return 0;
 }
 
 int OpenMPLayer::numThreads()
