@@ -317,6 +317,10 @@ int get_task(gpuId *new_task)
 //OpenMP thread offset
 #ifdef TAU_OPENMP
 	task += OpenMPLayer::numThreads() - 1;
+#elif PTHREADS
+	task += RtsLayer::getNumThreads() - 2;
+	printf("numThreads: %d.\n", RtsLayer::getNumThreads());
+	printf("task id: %d.\n", task);
 #endif
 	return task;
 }
@@ -380,7 +384,7 @@ void Tau_gpu_register_memcpy_event(eventId id, double startTime, double endTime,
 		//TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, transferSize, RtsLayer::myThread()); 
 #ifdef DEBUG_PROF		
 		printf("[%f] onesided event mem recv: %f, id: %s.\n", startTime, transferSize,
-		device->printId());
+		id.device->printId());
 #endif
 		}
 		break_gpu_event(functionName, task,
@@ -400,7 +404,7 @@ void Tau_gpu_register_memcpy_event(eventId id, double startTime, double endTime,
 			//TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
 #ifdef DEBUG_PROF		
 		printf("[%f] onesided event mem send: %f, id: %s\n", startTime, transferSize,
-		device->printId());
+		id.device->printId());
 #endif
 		}
 		//printf("TAU: putting message into trace file.\n");
@@ -422,7 +426,7 @@ void Tau_gpu_register_memcpy_event(eventId id, double startTime, double endTime,
 			//TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
 #ifdef DEBUG_PROF		
 		printf("[%f] onesided event mem send: %f, id: %s\n", startTime, transferSize,
-		device->printId());
+		id.device->printId());
 #endif
 		}
 		//TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, transferSize, RtsLayer::myThread()); 
