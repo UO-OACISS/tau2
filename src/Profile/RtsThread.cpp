@@ -123,10 +123,36 @@ void RtsLayer::recycleThread(int id)
 	UnLockEnv();
 }
 
-int RtsLayer::myThread() { return 0; }
-int RtsLayer::setMyThread(int i) { return 0; }
-int RtsLayer::getNumThreads() { return TheThreadList().size(); } 
-int* RtsLayer::numThreads() { static int i = TheThreadList().size(); return &i; } 
+int RtsLayer::myThread(void)
+{
+#ifdef PTHREADS
+  return PthreadLayer::GetThreadId();
+#elif  TAU_SPROC
+  return SprocLayer::GetThreadId();
+#elif  TAU_WINDOWS
+  return WindowsThreadLayer::GetThreadId();
+#elif  TULIPTHREADS
+  return TulipThreadLayer::GetThreadId();
+#elif JAVA
+  return JavaThreadLayer::GetThreadId(); 
+	// C++ app shouldn't use this unless there's a VM
+#elif TAU_OPENMP
+  return OpenMPLayer::GetThreadId();
+#elif TAU_PAPI_THREADS
+  return PapiThreadLayer::GetThreadId();
+#else  // if no other thread package is available 
+  return 0;
+#endif // PTHREADS
+}
+
+int RtsLayer::setMyThread(int i) { 
+#ifdef PTHREADS
+	PthreadLayer::SetThreadId(i);
+#endif
+	return 0;
+}
+int RtsLayer::getNumThreads() { return 1; } 
+int* RtsLayer::numThreads() { static int i = 1; return &i; } 
 
 //////////////////////////////////////////////////////////////////////
 // myNode() returns the current node id (0..N-1)
