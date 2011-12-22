@@ -21,9 +21,9 @@
 #include <Profile/TauSampling.h>
 #endif
 #include <Profile/TauSnapshot.h>
-#ifdef TAU_GPU
+//#ifdef TAU_GPU
 extern "C" int Tau_profile_exit_all_tasks();
-#endif
+//#endif
 //#include <tau_internal.h>
 
 #ifdef TAU_PERFSUITE
@@ -605,6 +605,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
     if (strcmp(ThisFunction->GetName(), "_fini") == 0) {
       TheSafeToDumpData() = 0;
     }
+		if (tid == 0) {
+	  	Tau_profile_exit_all_tasks();
+		}
 #ifdef TAU_GPU
 		//Stop all other running tasks.
 		if (tid == 0) {
