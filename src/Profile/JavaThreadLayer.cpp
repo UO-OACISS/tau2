@@ -77,9 +77,10 @@ int * JavaThreadLayer::RegisterThread(JNIEnv *env_id)
   }
 
   // Increment the number of threads present
-  (*threadId) = tauThreadCount ++;
+  (*threadId) = RtsLayer::createThread();
+  //(*threadId) = tauThreadCount ++;
 
-  DEBUGPROFMSG("Thread id "<< tauThreadCount<< " Created! "<<endl);
+  DEBUGPROFMSG("Thread id "<< *threadId << " Created! "<<endl);
   // Unlock it now 
   tau_jvmpi_interface->RawMonitorExit(tauNumThreadsLock); 
   // A thread should call this routine exactly once. 
