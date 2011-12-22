@@ -503,7 +503,6 @@ extern "C" int Tau_stop_current_timer() {
 
 
 extern "C" int Tau_profile_exit_all_tasks() {
-	printf("stopping all tasks...\n");
 	int tid = 1;
 	while (tid < TAU_MAX_THREADS)
 	{
