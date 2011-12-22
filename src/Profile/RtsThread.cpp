@@ -123,6 +123,10 @@ void RtsLayer::recycleThread(int id)
 	UnLockEnv();
 }
 
+extern "C" int Tau_RtsLayer_myThread(void) {
+  return RtsLayer::myThread();
+}
+
 int RtsLayer::myThread(void)
 {
 #ifdef PTHREADS
