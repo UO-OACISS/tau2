@@ -18,6 +18,7 @@ using namespace std;
 #include <unistd.h>
 #endif	//TAU_WINDOWS
 #include <stdio.h>
+#include <stdlib.h>
 #ifdef TAU_WINDOWS
 #include <windows.h>
 #endif	//TAU_WINDOWS
