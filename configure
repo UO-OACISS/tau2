@@ -3712,7 +3712,7 @@ if [ $epilog = yes -a $epiloginc = no -a $epilogdir != no ] ; then
 fi
 
 if [ $epilog = yes -a $epilogbin = no -a $epilogdir != no ] ; then
-    if [ -f $epilogdir/bin/opari ] ; then
+    if [ -f $epilogdir/bin/opari -o -f $epilogdir/bin/opari2 ] ; then
 	epilogbindir=$epilogdir/bin
     else
 	epilogbindir=$epilogdir/src
