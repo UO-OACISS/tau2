@@ -1158,7 +1158,7 @@ if [ $numFiles == 0 ]; then
       
         #cmdCreatePompRegions="${NM} ${listOfObjectFiles} | ${GREP} -i POMP2_Init_regions | ${AWK} -f ${AWK_SCRIPT} > pompregions.c"
 
-cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${listOfObjectFiles} | `${optOpari2ConfigTool} --egrep` -i \"pomp2_init_regions\" | `${optOpari2ConfigTool} --egrep` \" T \" | `${optOpari2ConfigTool} --awk_cmd` -f `${optOpari2ConfigTool} --awk_script` > pompregions.c"
+cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${listOfObjectFiles} | `${optOpari2ConfigTool} --egrep` -i \"pomp2_init_regions\" | `${optOpari2ConfigTool} --egrep` \" T \" | `${optOpari2ConfigTool} --awk-cmd` -f `${optOpari2ConfigTool} --awk-script` > pompregions.c"
 
 
         evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
@@ -1630,7 +1630,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	if [ $opari2 == $TRUE ]; then
             evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
       
-cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} | `${optOpari2ConfigTool} --egrep` -i \"pomp2_init_regions\" | `${optOpari2ConfigTool} --egrep` \" T \" | `${optOpari2ConfigTool} --awk_cmd` -f `${optOpari2ConfigTool} --awk_script` > pompregions.c"
+cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} | `${optOpari2ConfigTool} --egrep` -i \"pomp2_init_regions\" | `${optOpari2ConfigTool} --egrep` \" T \" | `${optOpari2ConfigTool} --awk-cmd` -f `${optOpari2ConfigTool} --awk-script` > pompregions.c"
         evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
         cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
         evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
