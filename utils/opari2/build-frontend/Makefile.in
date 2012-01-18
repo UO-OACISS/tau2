@@ -85,6 +85,7 @@ DIST_COMMON = $(am__configure_deps) $(dist_bin_SCRIPTS) \
 bin_PROGRAMS = opari2$(EXEEXT) opari2-config$(EXEEXT)
 noinst_PROGRAMS = $(am__EXEEXT_1)
 check_PROGRAMS =
+XFAIL_TESTS =
 @OPENMP_SUPPORTED_TRUE@am__append_1 = libpomp.la
 @OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@am__append_2 = \
 @OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@    $(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper.c      \
@@ -1478,7 +1479,6 @@ uninstall-am: uninstall-binPROGRAMS uninstall-dist_binSCRIPTS \
 	uninstall-binPROGRAMS uninstall-dist_binSCRIPTS \
 	uninstall-libLTLIBRARIES uninstall-nobase_includeHEADERS
 
-# XFAIL_TESTS =
 # TESTS_ENVIRONMENT = 
 
 .PHONY: $(PHONY_TARGETS)
@@ -1488,7 +1488,7 @@ libtool: $(LIBTOOL_DEPS)
 
 beautify:
 
-check-build: $(BUILT_SOURCES) all $(check_PROGRAMS) $(check_LTLIBRARIES)
+check-build: $(BUILT_SOURCES) all-am $(check_PROGRAMS) $(check_LTLIBRARIES)
 
 opari2_usage.h: $(INC_ROOT)doc/doxygen-user/opari2_usage.dox.in
 	$(AWK) '{print "\"" $$0 "\\n\""}' $(INC_ROOT)doc/doxygen-user/opari2_usage.dox.in > opari2_usage.h
@@ -1509,7 +1509,8 @@ $(CONFIG_HEADER_FRONTEND): $(builddir)/opari2_config.dat
 	@echo "#define SCRIPT  \"$(prefix)/bin/pomp2_parse_init_regions.awk\"" >> $(CONFIG_HEADER_FRONTEND)
 	@echo "#define EGREP   \"$(EGREP)\""            >> $(CONFIG_HEADER_FRONTEND)
 	@echo "#define VERSION \"$(PACKAGE_VERSION)\""  >> $(CONFIG_HEADER_FRONTEND)
-	@echo "#define CFLAGS  \"$(prefix)/include\""   >> $(CONFIG_HEADER_FRONTEND)
+	@echo "#define POMP2_API_VERSION \"$(LIBRARY_INTERFACE_VERSION)\""  >> $(CONFIG_HEADER_FRONTEND)
+	@echo "#define CFLAGS  \"-I$(prefix)/include\""   >> $(CONFIG_HEADER_FRONTEND)
 
 $(builddir)/opari2_config.dat:
 	@echo "Creating $(builddir)/opari2_config.dat"
@@ -1518,7 +1519,7 @@ $(builddir)/opari2_config.dat:
 	@echo OPARI_SCRIPT=\"$(PWD)/../build-frontend/pomp2_parse_init_regions.awk\"  >> $(builddir)/opari2_config.dat
 	@echo VERSION=\"$(PACKAGE_VERSION)\" >> $(builddir)/opari2_config.dat
 	@echo EGREP=\"$(EGREP)\"             >> $(builddir)/opari2_config.dat
-	@echo CFLAGS=\"$(abs_srcdir)/../include\" >> $(builddir)/opari2_config.dat
+	@echo CFLAGS=\"-I$(abs_srcdir)/../include\" >> $(builddir)/opari2_config.dat
 
 @OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@installcheck-local:
 @OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@	(cd $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example/ && $(MAKE) $(AM_MAKEFLAGS)) || exit 1;
@@ -1540,6 +1541,7 @@ $(builddir)/opari2_config.dat:
 @OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_builddir)/../doc/example_user_instrumentation/Makefile                      $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/
 @OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_builddir)/../build-frontend/.libs/libpomp.*                                 $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/
 @OPENMP_SUPPORTED_TRUE@	rm -f $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/libpomp.la
+@OPENMP_SUPPORTED_FALSE@install-example:
 
 install-pomp2_region_info:
 	$(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE_NAME@/devel

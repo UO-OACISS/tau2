@@ -256,3 +256,22 @@ void FSUB(POMP2_Assign_handle)(POMP2_Region_handle* regionHandle, char* ctc_stri
   POMP2_Assign_handle(regionHandle,str);
   free(str);
 }
+
+/*
+   *----------------------------------------------------------------
+ * Wrapper for omp_get_max_threads used in instrumentation
+ *
+ * In Fortran a wrapper function
+ * pomp2_get_max_threads() is used, since it is not possible to
+ * ensure, that omp_get_max_threads is not used in the user
+ * program. We would need to parse much more of the Fortran
+ * Syntax to detect these cases.  The Wrapper function avoids
+ * double definition of this function and avoids errors.
+ *
+ ******----------------------------------------------------------------
+ */
+int
+FSUB(POMP2_Lib_get_max_threads)()
+{
+  return omp_get_max_threads();
+}

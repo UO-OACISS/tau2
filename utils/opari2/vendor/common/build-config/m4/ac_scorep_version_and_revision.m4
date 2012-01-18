@@ -40,8 +40,17 @@ AC_DEFUN([AC_SCOREP_REVISION],
         AC_MSG_WARN([distribution does not match a single, unmodified revision, but $scorep_revision.])
     fi
 
-    AC_SUBST([LIBRARY_CURRENT],  m4_esyscmd([sed -n -e 's/library.current=\+// p' build-config/VERSION]))
-    AC_SUBST([LIBRARY_REVISION], m4_esyscmd([sed -n -e 's/library.revision=\+// p' build-config/VERSION]))
-    AC_SUBST([LIBRARY_AGE],      m4_esyscmd([sed -n -e 's/library.age=\+// p' build-config/VERSION]))
+    AC_SUBST([PACKAGE_MAJOR],
+             m4_esyscmd([vendor/common/build-config/generate-package-version.sh build-config/VERSION "echo \$major"]))
+    AC_SUBST([PACKAGE_MINOR],
+             m4_esyscmd([vendor/common/build-config/generate-package-version.sh build-config/VERSION "echo \$minor"]))
+    AC_SUBST([PACKAGE_BUGFIX],
+             m4_esyscmd([vendor/common/build-config/generate-package-version.sh build-config/VERSION "echo \$bugfix"]))
 
+    AC_SUBST([LIBRARY_CURRENT],
+             m4_esyscmd([vendor/common/build-config/generate-library-version.sh build-config/VERSION "echo \$current"]))
+    AC_SUBST([LIBRARY_REVISION],
+             m4_esyscmd([vendor/common/build-config/generate-library-version.sh build-config/VERSION "echo \$revision"]))
+    AC_SUBST([LIBRARY_AGE],
+             m4_esyscmd([vendor/common/build-config/generate-library-version.sh build-config/VERSION "echo \$age"]))
 ])

@@ -202,7 +202,7 @@ generate_num_threads( ostream&   os,
         }
         else
         {
-            os << "      pomp_num_threads = pomp_get_max_threads" << compiletime.tv_sec << compiletime.tv_usec << "()\n";
+            os << "      pomp_num_threads = pomp2_lib_get_max_threads()\n";
         }
     }
     else
@@ -390,12 +390,7 @@ generate_call_restore_task_id( const char* event,
  *         used to pass the number of requested threads for the
  *         parallel region to the POMP library. It is either the
  *         result of omp_get_max_threads() or of the num_threads()
- *         clause, if present. In Fortran a wrapper function
- *         pomp_get_max_threads() is used, since it is not possible to
- *         ensure, that omp_get_max_threads is not used in the user
- *         program. We would need to parse much more of the Fortran
- *         Syntax to detect these cases.  The Wrapper function avoids
- *         double definition of this function and avoids errors.*/
+ *         clause, if present.*/
 void
 generate_fork_call( const char* event,
                     const char* type,
@@ -535,16 +530,16 @@ print_pragma_task( OMPragma* p,
             {
                 if ( copytpd )
                 {
-                    os << p->lines.back() << "&\n";
-                    os << "  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task)&\n";
-                    os << "  !$omp if(pomp_if) num_threads(pomp_num_threads) copyin(" << pomp_tpd << ")&\n";
+                    os << p->lines.back() << " &\n";
+                    os << "  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &\n";
+                    os << "  !$omp if(pomp_if) num_threads(pomp_num_threads) copyin(" << pomp_tpd << ") &\n";
                     os << "  !$omp shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)\n";
                 }
                 else
                 {
-                    os << p->lines.back() << "&\n";
-                    os << "  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task)&\n";
-                    os << "  !$omp if(pomp_if) num_threads(pomp_num_threads)&\n";
+                    os << p->lines.back() << " &\n";
+                    os << "  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &\n";
+                    os << "  !$omp if(pomp_if) num_threads(pomp_num_threads) &\n";
                     os << "  !$omp shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)\n";
                 }
             }
@@ -723,8 +718,7 @@ void
 h_endparallel( OMPragma* p,
                ostream&  os )
 {
-    OMPRegion* r = RTop( p );
-    int        n =        RExit( p, true );
+    int n =        RExit( p, true );
 
     generate_barrier( n, os );
     generate_call( "end", "parallel", n, os, NULL );
@@ -1799,7 +1793,7 @@ init_handler( const char* inf,
 }
 
 void
-finalize_handler( const char* incfile, ostream&    os )
+finalize_handler( const char* incfile, char* incfileNoPath, ostream&    os )
 {
     // check region stack
     if ( !regStack.empty() )
@@ -1825,11 +1819,7 @@ finalize_handler( const char* incfile, ostream&    os )
                 regions[ i ]->generate_descr_f( incs, lang );
             }
         }
-        if ( enabled & C_OMP )
-        {
-            OMPRegion::generate_pomp_max_threads_wrapper_f( os );
-        }
-        OMPRegion::generate_init_handle_calls_f( os, incfile );
+        OMPRegion::generate_init_handle_calls_f( os, incfileNoPath );
         OMPRegion::finalize_descrs( incs, lang );
     }
     else

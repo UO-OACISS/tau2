@@ -107,7 +107,7 @@ isSubUnitHeader( string& lowline, bool inHeader )
     string     line;
     bool       result;
     static int openbrackets = 0;
-    int        pos;
+    size_t     pos;
     pos = lowline.find_first_not_of( " \t" );
 
     /*string is empty*/
@@ -124,47 +124,47 @@ isSubUnitHeader( string& lowline, bool inHeader )
     //we can insert varable definitions, these keywords are:
     //program, function, result, subroutine, save, implicit, parameter,
     //and use
-    if (  line[ 0 ] == 'p' && line[ 1 ] == 'r' && line[ 2 ] == 'o' &&
-          line[ 3 ] == 'g' && line[ 4 ] == 'r' && line[ 5 ] == 'a' &&
-          line[ 6 ] == 'm'
-          ||
-          line[ 0 ] == 'f' && line[ 1 ] == 'u' && line[ 2 ] == 'n' &&
-          line[ 3 ] == 'c' && line[ 4 ] == 't' && line[ 5 ] == 'i' &&
-          line[ 6 ] == 'o' && line[ 7 ] == 'n'
-          ||
-          line[ 0 ] == 'r' && line[ 1 ] == 'e' && line[ 2 ] == 's' &&
-          line[ 3 ] == 'u' && line[ 4 ] == 'l' && line[ 5 ] == 't'
-          ||
-          line[ 0 ] == 's' && line[ 1 ] == 'u' && line[ 2 ] == 'b' &&
-          line[ 3 ] == 'r' && line[ 4 ] == 'o' && line[ 5 ] == 'u' &&
-          line[ 6 ] == 't' && line[ 7 ] == 'i' && line[ 8 ] == 'n' &&
-          line[ 9 ] == 'e'
-          ||
-          line[ 0 ] == 's' && line[ 1 ] == 'a' && line[ 2 ] == 'v' &&
-          line[ 3 ] == 'e' && inHeader
-          ||
-          line[ 0 ] == 'i' && line[ 1 ] == 'm' && line[ 2 ] == 'p' &&
-          line[ 3 ] == 'l' && line[ 4 ] == 'i' && line[ 5 ] == 'c' &&
-          line[ 6 ] == 'i' && line[ 7 ] == 't' && inHeader
-          ||
-          line[ 0 ] == 'p' && line[ 1 ] == 'a' && line[ 2 ] == 'r' &&
-          line[ 3 ] == 'a' && line[ 4 ] == 'm' && line[ 5 ] == 'e' &&
-          line[ 6 ] == 't' && line[ 7 ] == 'e' && line[ 8 ] == 'r' &&
-          inHeader
-          ||
-          line[ 0 ] == 'u' && line[ 1 ] == 's' && line[ 2 ] == 'e' &&
-          inHeader
-          ||
-          line[ 0 ] == 'i' && line[ 1 ] == 'n' && line[ 2 ] == 'c' &&
-          line[ 3 ] == 'l' && line[ 4 ] == 'u' && line[ 5 ] == 'd' &&
-          line[ 6 ] == 'e' && inHeader
-          ||
-          line[ 0 ] == '#' && inHeader
-          ||
-          line.empty()  && inHeader
-          ||
-          openbrackets != 0 && inHeader
-          )
+    if ( ( line[ 0 ] == 'p' && line[ 1 ] == 'r' && line[ 2 ] == 'o' &&
+           line[ 3 ] == 'g' && line[ 4 ] == 'r' && line[ 5 ] == 'a' &&
+           line[ 6 ] == 'm' )
+         ||
+         ( line[ 0 ] == 'f' && line[ 1 ] == 'u' && line[ 2 ] == 'n' &&
+           line[ 3 ] == 'c' && line[ 4 ] == 't' && line[ 5 ] == 'i' &&
+           line[ 6 ] == 'o' && line[ 7 ] == 'n' )
+         ||
+         ( line[ 0 ] == 'r' && line[ 1 ] == 'e' && line[ 2 ] == 's' &&
+           line[ 3 ] == 'u' && line[ 4 ] == 'l' && line[ 5 ] == 't' )
+         ||
+         ( line[ 0 ] == 's' && line[ 1 ] == 'u' && line[ 2 ] == 'b' &&
+           line[ 3 ] == 'r' && line[ 4 ] == 'o' && line[ 5 ] == 'u' &&
+           line[ 6 ] == 't' && line[ 7 ] == 'i' && line[ 8 ] == 'n' &&
+           line[ 9 ] == 'e' )
+         ||
+         ( line[ 0 ] == 's' && line[ 1 ] == 'a' && line[ 2 ] == 'v' &&
+           line[ 3 ] == 'e' && inHeader )
+         ||
+         ( line[ 0 ] == 'i' && line[ 1 ] == 'm' && line[ 2 ] == 'p' &&
+           line[ 3 ] == 'l' && line[ 4 ] == 'i' && line[ 5 ] == 'c' &&
+           line[ 6 ] == 'i' && line[ 7 ] == 't' && inHeader )
+         ||
+         ( line[ 0 ] == 'p' && line[ 1 ] == 'a' && line[ 2 ] == 'r' &&
+           line[ 3 ] == 'a' && line[ 4 ] == 'm' && line[ 5 ] == 'e' &&
+           line[ 6 ] == 't' && line[ 7 ] == 'e' && line[ 8 ] == 'r' &&
+           inHeader )
+         ||
+         ( line[ 0 ] == 'u' && line[ 1 ] == 's' && line[ 2 ] == 'e' &&
+           inHeader )
+         ||
+         ( line[ 0 ] == 'i' && line[ 1 ] == 'n' && line[ 2 ] == 'c' &&
+           line[ 3 ] == 'l' && line[ 4 ] == 'u' && line[ 5 ] == 'd' &&
+           line[ 6 ] == 'e' && inHeader )
+         ||
+         ( line[ 0 ] == '#' && inHeader )
+         ||
+         ( line.empty()  && inHeader )
+         ||
+         ( openbrackets != 0 && inHeader )
+         )
 
     {
         result = true;
@@ -174,7 +174,7 @@ isSubUnitHeader( string& lowline, bool inHeader )
         result = false;
     }
     /*count open brackets, to see if a functionheader is split across different lines*/
-    for ( int i = 0; i < lowline.length(); i++ )
+    for ( unsigned int i = 0; i < lowline.length(); i++ )
     {
         if ( lowline[ i ] == '(' )
         {

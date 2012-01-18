@@ -88,9 +88,9 @@ OMPragma::remove_commas()
 {
     int bracket_counter = 0;
 
-    for ( int line = 0; line < lines.size(); line++ )
+    for ( unsigned int line = 0; line < lines.size(); line++ )
     {
-        for ( int c = 0; c < lines[ line ].length(); c++ )
+        for ( unsigned int c = 0; c < lines[ line ].length(); c++ )
         {
             if ( lines[ line ][ c ] == '(' )
             {
@@ -213,7 +213,7 @@ OMPragma::find_ordered()
     unsigned          line = 0;
     string::size_type pos  = 0;
 
-    if (  find_word( "reduction", line, pos ) )
+    if (  find_word( "ordered", line, pos ) )
     {
         return true;
     }

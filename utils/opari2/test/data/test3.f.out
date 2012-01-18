@@ -23,7 +23,7 @@
       include 'test3.f.opari.inc'
       integer i, j, k
 
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_1,
      &pomp_if, pomp_num_threads, pomp2_old_task,
@@ -59,7 +59,7 @@ c$omp end parallel
       call POMP2_Parallel_join(pomp2_region_1, pomp2_old_task)
 #line 29 "test3.f"
 
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_3,
      &pomp_if, pomp_num_threads, pomp2_old_task,
@@ -89,7 +89,7 @@ c$omp          do
 !$omp end parallel
       call POMP2_Parallel_join(pomp2_region_3, pomp2_old_task)
 #line 36 "test3.f"
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_4,
      &pomp_if, pomp_num_threads, pomp2_old_task,
@@ -133,7 +133,7 @@ c$omp end parallel
       call POMP2_Parallel_join(pomp2_region_4, pomp2_old_task)
 #line 43 "test3.f"
 
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_7,
      &pomp_if, pomp_num_threads, pomp2_old_task,
@@ -161,7 +161,7 @@ c$omp          do
 !$omp end parallel
       call POMP2_Parallel_join(pomp2_region_7, pomp2_old_task)
 #line 48 "test3.f"
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_8,
      &pomp_if, pomp_num_threads, pomp2_old_task,
@@ -188,7 +188,7 @@ c$omp end parallel
 ! * nested parallelism *
 ! **********************
 
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_9,
      &pomp_if, pomp_num_threads, pomp2_old_task,
@@ -201,7 +201,7 @@ c$omp end parallel
 !$omp& shared(/cb000/)
        call POMP2_Parallel_begin(pomp2_region_9)
 #line 56 "test3.f"
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_10,
      &pomp_if, pomp_num_threads, pomp2_old_task,
@@ -214,7 +214,7 @@ c$omp end parallel
 !$omp& shared(/cb000/)
        call POMP2_Parallel_begin(pomp2_region_10)
 #line 57 "test3.f"
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_11,
      &pomp_if, pomp_num_threads, pomp2_old_task,
@@ -227,7 +227,7 @@ c$omp end parallel
 !$omp& shared(/cb000/)
        call POMP2_Parallel_begin(pomp2_region_11)
 #line 58 "test3.f"
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_12,
      &pomp_if, pomp_num_threads, pomp2_old_task,
@@ -284,7 +284,7 @@ c$omp end parallel
 ! *******************************************
 ! * end pragma substitution in nested loops *
 ! *******************************************
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_13,
      &pomp_if, pomp_num_threads, pomp2_old_task,
@@ -316,7 +316,7 @@ c$omp          do
       call POMP2_Parallel_join(pomp2_region_13, pomp2_old_task)
 #line 77 "test3.f"
       do 17,i = 1,8
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_14,
      &pomp_if, pomp_num_threads, pomp2_old_task,
@@ -347,7 +347,7 @@ c$omp          do
 #line 82 "test3.f"
  17   continue
 
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_15,
      &pomp_if, pomp_num_threads, pomp2_old_task,
@@ -380,12 +380,6 @@ c$omp          do
 #line 90 "test3.f"
       end program test3
       
-
-      integer function pomp_get_max_threads000()
-         integer omp_get_max_threads
-         pomp_get_max_threads000=omp_get_max_threads()
-         return
-      end
 
       subroutine POMP2_Init_regions_000()
          include 'test3.f.opari.inc'

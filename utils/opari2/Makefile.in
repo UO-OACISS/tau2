@@ -49,7 +49,8 @@ DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	build-config/install-sh build-config/missing
 @SVN_CONTROLLED_TRUE@am__append_1 = doc/doxygen-project-number.cfg
 @HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@am__append_2 = doc/doxygen-user.cfg doc/doxygen-user-at-make-time.cfg doxygen.err
-@CROSS_BUILD_FALSE@am__append_3 = $(srcdir)/build-frontend/configure.ac \
+@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@am__append_3 = beautify-recursive
+@CROSS_BUILD_FALSE@am__append_4 = $(srcdir)/build-frontend/configure.ac \
 @CROSS_BUILD_FALSE@              $(srcdir)/build-frontend/aclocal.m4   \
 @CROSS_BUILD_FALSE@              $(srcdir)/build-frontend/Makefile.am  \
 @CROSS_BUILD_FALSE@              $(srcdir)/build-frontend/Makefile.in  \
@@ -162,7 +163,10 @@ LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
 MKDIR_P = @MKDIR_P@
 PACKAGE = @PACKAGE@
+PACKAGE_BUGFIX = @PACKAGE_BUGFIX@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
+PACKAGE_MAJOR = @PACKAGE_MAJOR@
+PACKAGE_MINOR = @PACKAGE_MINOR@
 PACKAGE_NAME = @PACKAGE_NAME@
 PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
@@ -299,7 +303,7 @@ EXTRA_DIST =  \
 	$(srcdir)/doc/example_user_instrumentation/example_user_instrumentation.c \
 	$(srcdir)/doc/example_user_instrumentation/example_user_instrumentation.f \
 	$(srcdir)/doc/doxygen-user/opari2_usage.dox.in \
-	$(srcdir)/test/data $(am__append_3)
+	$(srcdir)/test/data $(am__append_4)
 CLEANFILES = $(builddir)/user_provided_configure_args \
 	$(builddir)/mpi_compiler_suite \
 	$(builddir)/mpi_compiler_suite_to_source $(am__append_1) \
@@ -309,6 +313,9 @@ DISTCLEANFILES = $(builddir)/config.summary
 ###############################################################################
 @SVN_CONTROLLED_TRUE@USER_DOC_DIR = $(top_distdir)$(ac_scorep_doxygen_distdir)/doc
 @SVN_CONTROLLED_FALSE@DOC_SRC_DIR = $(srcdir)/doc
+
+###############################################################################
+SCOREP_RECURSIVE_TARGETS = $(am__append_3) check-build-recursive
 all: all-recursive
 
 .SUFFIXES:
@@ -900,24 +907,12 @@ prohibit-svn-files-in-dist:
 
 ###############################################################################
 
-###############################################################################
-
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@beautify:
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@	@fail= failcom='exit 1'; \
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@	for f in x $$MAKEFLAGS; do \
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@	  case $$f in \
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@	    *=* | --[!k]*);; \
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@	    *k*) failcom='fail=yes';; \
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@	  esac; \
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@	done; \
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@        for subdir in $(SUBDIRS); do \
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@            ($(am__cd) $$subdir && $(MAKE) $(AM_MAKEFLAGS) $@) || eval $$failcom; \
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@        done; \
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@        test -z "$$fail"
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@	cd $(srcdir); ./vendor/common/beautifier/beautify
+@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@beautify-sp:
+@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@	@$(am__cd) $(srcdir) && ./vendor/common/beautifier/beautify
+@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@beautify: beautify-recursive
 
 @HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@beautify-clean:
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@	find $(srcdir) -name "*.unc-backup*" -exec rm '{}' \;
+@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@	@find $(srcdir) -name "*.unc-backup*" -exec rm '{}' \;
 
 ###############################################################################
 
@@ -935,7 +930,10 @@ bitten-print-environment:
 
 check-build-sp: $(BUILT_SOURCES) all-am $(check_PROGRAMS) $(check_LTLIBRARIES)
 check-build: check-build-recursive
-check-build-recursive:
+
+###############################################################################
+
+$(SCOREP_RECURSIVE_TARGETS):
 	@fail= failcom='exit 1'; \
 	for f in x $$MAKEFLAGS; do \
 	  case $$f in \
@@ -959,8 +957,6 @@ check-build-recursive:
 	if test "$$dot_seen" = "no"; then \
 	  $(MAKE) $(AM_MAKEFLAGS) "$$target-sp" || exit 1; \
 	fi; test -z "$$fail"
-
-###############################################################################
 
 .PHONY: doc/doxygen-user/main.dox remove-svn-files-from-dist
 

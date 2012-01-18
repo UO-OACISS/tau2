@@ -44,9 +44,8 @@
       write(*,*) "parallel"
       
       call POMP2_Do_enter(pomp2_region_2,
-     &"118*regionType=do*sscl=test8.f:30:30*escl=test8.f:0:0*hasRe"//
-     &"duction=1*scheduleType=dynamic,5*hasCollapse=1*hasOrdered=1"//
-     &"**" )
+     &"105*regionType=do*sscl=test8.f:30:30*escl=test8.f:0:0*hasRe"//
+     &"duction=1*scheduleType=dynamic,5*hasCollapse=1**" )
 #line 30 "test8.f"
 !$omp do reduction(+:k) schedule(dynamic, 5) collapse(1)
       do i=1,4
@@ -99,7 +98,7 @@
       call POMP2_Parallel_join(pomp2_region_1, pomp2_old_task)
 #line 45 "test8.f"
 
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_4,
      &pomp_if, pomp_num_threads, pomp2_old_task,
@@ -255,21 +254,14 @@
       end program test2
       
 
-      integer function pomp_get_max_threads000()
-         integer omp_get_max_threads
-         pomp_get_max_threads000=omp_get_max_threads()
-         return
-      end
-
       subroutine POMP2_Init_regions_000()
          include 'test8.f.opari.inc'
          call POMP2_Assign_handle( pomp2_region_1, 
      &"100*regionType=parallel*sscl=test8.f:27:27*escl=test8.f:44:"//
      &"44*hasIf=1*hasNumThreads=1*hasReduction=1**" )
          call POMP2_Assign_handle( pomp2_region_2, 
-     &"120*regionType=do*sscl=test8.f:30:30*escl=test8.f:35:35*has"//
-     &"Reduction=1*scheduleType=dynamic,5*hasCollapse=1*hasOrdered"//
-     &"=1**" )
+     &"107*regionType=do*sscl=test8.f:30:30*escl=test8.f:35:35*has"//
+     &"Reduction=1*scheduleType=dynamic,5*hasCollapse=1**" )
          call POMP2_Assign_handle( pomp2_region_3, 
      &"75*regionType=sections*sscl=test8.f:37:37*escl=test8.f:42:4"//
      &"2*numSections=2**" )

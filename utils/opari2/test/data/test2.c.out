@@ -75,7 +75,7 @@ int main() {
   POMP2_Barrier_exit( &pomp2_region_4, pomp2_old_task ); }
 #line 47 "test2.c"
 
-    { POMP2_For_enter( &pomp2_region_5, "53*regionType=for*sscl=test2.c:48:48*escl=test2.c:0:0**" );
+    { POMP2_For_enter( &pomp2_region_5, "66*regionType=for*sscl=test2.c:48:48*escl=test2.c:0:0*hasOrdered=1**" );
 #line 48 "test2.c"
    #pragma omp for ordered nowait
    for(i=0; i<4; ++i) {

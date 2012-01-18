@@ -54,11 +54,11 @@
         gsub("/([^/]*/)*","",$0)
         print $0
     }
-    else if(match($0,"get_max_threads")){
+#    else if(match($0,"get_max_threads")){
         #remove timestamp based function specifier
-        gsub("pomp_get_max_threads[0-9_]*", "pomp_get_max_threads000", $0)
-        print $0
-    }
+#        gsub("pomp_get_max_threads[0-9_]*", "pomp_get_max_threads000", $0)
+#        print $0
+#    }
     else if(match($0,"/cb")){
         #remove timestamp based common block identifier
         gsub("cb[0-9_]*", "cb000", $0)

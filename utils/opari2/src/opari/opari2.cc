@@ -162,11 +162,13 @@ main( int   argc,
         }
         else if ( strncmp( argv[ a ], "--tpd-mangling=", 15 ) == 0 )
         {
-            char* tpd_arg = strtok( argv[ a ], "=" );
-            tpd_arg = strtok( NULL, "=" );
-            if ( tpd_arg != "" )
+            char* tpd_arg = strchr( argv[ a ], '=' );
+            if ( tpd_arg != NULL )
             {
-                if ( strcmp( tpd_arg, "gnu" ) == 0 || strcmp( tpd_arg, "sun" ) == 0 || strcmp( tpd_arg, "intel" ) == 0 || strcmp( tpd_arg, "pgi" ) == 0 || strcmp( tpd_arg, "cray" ) == 0 )
+                tpd_arg++;
+                if ( strcmp( tpd_arg, "gnu" )   == 0 || strcmp( tpd_arg, "sun" ) == 0 ||
+                     strcmp( tpd_arg, "intel" ) == 0 || strcmp( tpd_arg, "pgi" ) == 0 ||
+                     strcmp( tpd_arg, "cray" )  == 0 )
                 {
                     pomp_tpd = "pomp_tpd_";
                 }
@@ -243,10 +245,10 @@ main( int   argc,
         {
             if ( strlen( argv[ a ] ) > 9 )
             {
-                disabled = strtok( argv[ a ], "=" );
-                disabled = strtok( NULL, "=" );
-                if ( disabled != "" )
+                disabled = strchr( argv[ a ], '=' );
+                if ( disabled != NULL )
                 {
+                    disabled++;
                     if ( set_disabled( disabled ) )
                     {
                         errFlag = true;
@@ -320,24 +322,34 @@ main( int   argc,
                 errFlag = true;
             }
         }
+        else if ( strcmp( argv[ a ], "-nosrc" ) == 0 )
+        {
+            cerr << "WARNING: Option \"-nosrc\" is deprecated, please use \"--nosrc\" for future compatibilty.\n";
+            keepSrcInfo = false;
+        }
+        else if ( strcmp( argv[ a ], "-nodecl" ) == 0 )
+        {
+            cerr << "WARNING: Option \"-nodecl\" is deprecated, please use \"--nodecl\" for future compatibilty.\n";
+            addSharedDecl = false;
+        }
         else if ( strcmp( argv[ a ], "-f77" ) == 0 )
         {
-            cerr << "WARNING: Option \"-f77\" is deprecated please use \"--f77\" for future compatibilty.\n";
+            cerr << "WARNING: Option \"-f77\" is deprecated, please use \"--f77\" for future compatibilty.\n";
             lang = L_F77;
         }
         else if ( strcmp( argv[ a ], "-f90" ) == 0 )
         {
-            cerr << "WARNING: Option \"-f90\" is deprecated please use \"--f90\" for future compatibilty.\n";
+            cerr << "WARNING: Option \"-f90\" is deprecated, please use \"--f90\" for future compatibilty.\n";
             lang = L_F90;
         }
         else if ( strcmp( argv[ a ], "-c++" ) == 0 )
         {
-            cerr << "WARNING: Option \"-c++\" is deprecated please use \"--c++\" for future compatibilty.\n";
+            cerr << "WARNING: Option \"-c++\" is deprecated, please use \"--c++\" for future compatibilty.\n";
             lang = L_CXX;
         }
         else if ( strcmp( argv[ a ], "-c" ) == 0 )
         {
-            cerr << "WARNING: Option \"-c\" is deprecated please use \"--c\" for future compatibilty.\n";
+            cerr << "WARNING: Option \"-c\" is deprecated, please use \"--c\" for future compatibilty.\n";
             lang = L_C;
         }
         else if ( strcmp( argv[ a ], "-rcfile" ) == 0 )
@@ -482,29 +494,28 @@ main( int   argc,
     }
 
     // generate opari include file name
-    // C: in directory of C/C++ base file
-    // F: in rcfile directory
-    char* incfile = 0;
+    char* incfile       = 0;
+    char* incfileNoPath = 0;
+
     if ( lang & L_FORTRAN )
     {
-        // only need base filename without path
+        // only need base filename without path for include statement
+        // in Fortran files
         const char* dirsep = strrchr( infile, '/' );
         if ( dirsep )
         {
-            incfile = new char[ strlen( dirsep ) + 12 ];
-            sprintf( incfile, "%s.opari.inc", dirsep + 1 );
+            incfileNoPath = new char[ strlen( dirsep ) + 12 ];
+            sprintf( incfileNoPath, "%s.opari.inc", dirsep + 1 );
         }
         else
         {
-            incfile = new char[ strlen( infile ) + 13 ];
-            sprintf( incfile, "%s.opari.inc", infile );
+            incfileNoPath = new char[ strlen( infile ) + 13 ];
+            sprintf( incfileNoPath, "%s.opari.inc", infile );
         }
     }
-    else
-    {
-        incfile = new char[ strlen( infile ) + 12 ];
-        sprintf( incfile, "%s.opari.inc", infile );
-    }
+
+    incfile = new char[ strlen( infile ) + 12 ];
+    sprintf( incfile, "%s.opari.inc", infile );
 
     // transform
     do_transform = true;
@@ -518,7 +529,7 @@ main( int   argc,
         {
             os << "#line 1 \"" << infile << "\"" << "\n";
         }
-        process_fortran( is, infile, os, addSharedDecl, incfile, lang );
+        process_fortran( is, infile, os, addSharedDecl, incfileNoPath, lang );
     }
     else
     {
@@ -538,9 +549,10 @@ main( int   argc,
         }
         process_c_or_cxx( is, infile, os, addSharedDecl );
     }
-    finalize_handler( incfile, os );
+    finalize_handler( incfile, incfileNoPath, os );
     delete[] infile;
     delete[] incfile;
+    delete[] incfileNoPath;
 
     return 0;
 }
