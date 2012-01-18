@@ -23,15 +23,15 @@ program test3
       include 'test3.f90.opari.inc'
   integer i, j, k
 
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_1,&
       pomp_if, pomp_num_threads, pomp2_old_task, &
         "62*regionType=parallel*sscl=test3.f90:23:23*escl=test3.f90:0:0**" )
 #line 23 "test3.f90"
-   !$omp parallel &
-  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task)&
-  !$omp if(pomp_if) num_threads(pomp_num_threads)&
+   !$omp parallel  &
+  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
+  !$omp if(pomp_if) num_threads(pomp_num_threads) &
   !$omp shared(/cb000/)
       call POMP2_Parallel_begin(pomp2_region_1)
 #line 24 "test3.f90"
@@ -58,15 +58,15 @@ program test3
       call POMP2_Parallel_join(pomp2_region_1, pomp2_old_task)
 #line 29 "test3.f90"
      
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_3,&
       pomp_if, pomp_num_threads, pomp2_old_task, &
         "64*regionType=paralleldo*sscl=test3.f90:30:30*escl=test3.f90:0:0**" )
 #line 30 "test3.f90"
-   !$omp parallel   &
-  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task)&
-  !$omp if(pomp_if) num_threads(pomp_num_threads)&
+   !$omp parallel    &
+  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
+  !$omp if(pomp_if) num_threads(pomp_num_threads) &
   !$omp shared(/cb000/)
       call POMP2_Parallel_begin(pomp2_region_3)
       call POMP2_Do_enter(pomp2_region_3, &
@@ -86,15 +86,15 @@ program test3
 !$omp end parallel
       call POMP2_Parallel_join(pomp2_region_3, pomp2_old_task)
 #line 36 "test3.f90"
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_4,&
       pomp_if, pomp_num_threads, pomp2_old_task, &
         "62*regionType=parallel*sscl=test3.f90:35:35*escl=test3.f90:0:0**" )
 #line 35 "test3.f90"
-   !$omp parallel &
-  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task)&
-  !$omp if(pomp_if) num_threads(pomp_num_threads)&
+   !$omp parallel  &
+  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
+  !$omp if(pomp_if) num_threads(pomp_num_threads) &
   !$omp shared(/cb000/)
       call POMP2_Parallel_begin(pomp2_region_4)
 #line 36 "test3.f90"
@@ -128,15 +128,15 @@ program test3
       call POMP2_Parallel_join(pomp2_region_4, pomp2_old_task)
 #line 43 "test3.f90"
            
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_7,&
       pomp_if, pomp_num_threads, pomp2_old_task, &
         "64*regionType=paralleldo*sscl=test3.f90:44:44*escl=test3.f90:0:0**" )
 #line 44 "test3.f90"
-   !$omp parallel   &
-  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task)&
-  !$omp if(pomp_if) num_threads(pomp_num_threads)&
+   !$omp parallel    &
+  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
+  !$omp if(pomp_if) num_threads(pomp_num_threads) &
   !$omp shared(/cb000/)
       call POMP2_Parallel_begin(pomp2_region_7)
       call POMP2_Do_enter(pomp2_region_7, &
@@ -154,15 +154,15 @@ program test3
 !$omp end parallel
       call POMP2_Parallel_join(pomp2_region_7, pomp2_old_task)
 #line 48 "test3.f90"
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_8,&
       pomp_if, pomp_num_threads, pomp2_old_task, &
         "62*regionType=parallel*sscl=test3.f90:47:47*escl=test3.f90:0:0**" )
 #line 47 "test3.f90"
-      !$omp parallel private(me,glob)&
-  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task)&
-  !$omp if(pomp_if) num_threads(pomp_num_threads)&
+      !$omp parallel private(me,glob) &
+  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
+  !$omp if(pomp_if) num_threads(pomp_num_threads) &
   !$omp shared(/cb000/)
       call POMP2_Parallel_begin(pomp2_region_8)
 #line 48 "test3.f90"
@@ -180,51 +180,51 @@ program test3
 ! * nested parallelism *
 ! **********************
 
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_9,&
       pomp_if, pomp_num_threads, pomp2_old_task, &
         "62*regionType=parallel*sscl=test3.f90:55:55*escl=test3.f90:0:0**" )
 #line 55 "test3.f90"
-  !$omp parallel&
-  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task)&
-  !$omp if(pomp_if) num_threads(pomp_num_threads)&
+  !$omp parallel &
+  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
+  !$omp if(pomp_if) num_threads(pomp_num_threads) &
   !$omp shared(/cb000/)
       call POMP2_Parallel_begin(pomp2_region_9)
 #line 56 "test3.f90"
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_10,&
       pomp_if, pomp_num_threads, pomp2_old_task, &
         "62*regionType=parallel*sscl=test3.f90:56:56*escl=test3.f90:0:0**" )
 #line 56 "test3.f90"
-  !$omp parallel&
-  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task)&
-  !$omp if(pomp_if) num_threads(pomp_num_threads)&
+  !$omp parallel &
+  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
+  !$omp if(pomp_if) num_threads(pomp_num_threads) &
   !$omp shared(/cb000/)
       call POMP2_Parallel_begin(pomp2_region_10)
 #line 57 "test3.f90"
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_11,&
       pomp_if, pomp_num_threads, pomp2_old_task, &
         "62*regionType=parallel*sscl=test3.f90:57:57*escl=test3.f90:0:0**" )
 #line 57 "test3.f90"
-  !$omp parallel&
-  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task)&
-  !$omp if(pomp_if) num_threads(pomp_num_threads)&
+  !$omp parallel &
+  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
+  !$omp if(pomp_if) num_threads(pomp_num_threads) &
   !$omp shared(/cb000/)
       call POMP2_Parallel_begin(pomp2_region_11)
 #line 58 "test3.f90"
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_12,&
       pomp_if, pomp_num_threads, pomp2_old_task, &
         "64*regionType=paralleldo*sscl=test3.f90:58:58*escl=test3.f90:0:0**" )
 #line 58 "test3.f90"
-  !$omp parallel   &
-  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task)&
-  !$omp if(pomp_if) num_threads(pomp_num_threads)&
+  !$omp parallel    &
+  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
+  !$omp if(pomp_if) num_threads(pomp_num_threads) &
   !$omp shared(/cb000/)
       call POMP2_Parallel_begin(pomp2_region_12)
       call POMP2_Do_enter(pomp2_region_12, &
@@ -272,15 +272,15 @@ program test3
 ! *******************************************
 ! * end pragma substitution in nested loops *
 ! *******************************************
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_13,&
       pomp_if, pomp_num_threads, pomp2_old_task, &
         "64*regionType=paralleldo*sscl=test3.f90:71:71*escl=test3.f90:0:0**" )
 #line 71 "test3.f90"
-   !$omp parallel   &
-  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task)&
-  !$omp if(pomp_if) num_threads(pomp_num_threads)&
+   !$omp parallel    &
+  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
+  !$omp if(pomp_if) num_threads(pomp_num_threads) &
   !$omp shared(/cb000/)
       call POMP2_Parallel_begin(pomp2_region_13)
       call POMP2_Do_enter(pomp2_region_13, &
@@ -302,15 +302,15 @@ program test3
       call POMP2_Parallel_join(pomp2_region_13, pomp2_old_task)
 #line 78 "test3.f90"
    do 17,i = 1,8
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_14,&
       pomp_if, pomp_num_threads, pomp2_old_task, &
         "64*regionType=paralleldo*sscl=test3.f90:78:78*escl=test3.f90:0:0**" )
 #line 78 "test3.f90"
-      !$omp parallel   &
-  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task)&
-  !$omp if(pomp_if) num_threads(pomp_num_threads)&
+      !$omp parallel    &
+  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
+  !$omp if(pomp_if) num_threads(pomp_num_threads) &
   !$omp shared(/cb000/)
       call POMP2_Parallel_begin(pomp2_region_14)
       call POMP2_Do_enter(pomp2_region_14, &
@@ -331,15 +331,15 @@ program test3
 #line 83 "test3.f90"
 17 continue
 
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_15,&
       pomp_if, pomp_num_threads, pomp2_old_task, &
         "64*regionType=paralleldo*sscl=test3.f90:84:84*escl=test3.f90:0:0**" )
 #line 84 "test3.f90"
-   !$omp parallel   &
-  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task)&
-  !$omp if(pomp_if) num_threads(pomp_num_threads)&
+   !$omp parallel    &
+  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
+  !$omp if(pomp_if) num_threads(pomp_num_threads) &
   !$omp shared(/cb000/)
       call POMP2_Parallel_begin(pomp2_region_15)
       call POMP2_Do_enter(pomp2_region_15, &
@@ -361,15 +361,15 @@ program test3
 !$omp end parallel
       call POMP2_Parallel_join(pomp2_region_15, pomp2_old_task)
 #line 92 "test3.f90"
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_16,&
       pomp_if, pomp_num_threads, pomp2_old_task, &
         "64*regionType=paralleldo*sscl=test3.f90:91:91*escl=test3.f90:0:0**" )
 #line 91 "test3.f90"
-   !$omp parallel   &
-  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task)&
-  !$omp if(pomp_if) num_threads(pomp_num_threads)&
+   !$omp parallel    &
+  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
+  !$omp if(pomp_if) num_threads(pomp_num_threads) &
   !$omp shared(/cb000/)
       call POMP2_Parallel_begin(pomp2_region_16)
       call POMP2_Do_enter(pomp2_region_16, &
@@ -390,12 +390,6 @@ program test3
       call POMP2_Parallel_join(pomp2_region_16, pomp2_old_task)
 #line 97 "test3.f90"
    end program test3
-
-      integer function pomp_get_max_threads000()
-         integer omp_get_max_threads
-         pomp_get_max_threads000=omp_get_max_threads()
-         return
-      end
 
       subroutine POMP2_Init_regions_000()
          include 'test3.f90.opari.inc'

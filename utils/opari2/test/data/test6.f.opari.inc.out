@@ -1,1 +1,4 @@
-      integer pomp_get_max_threads000
+
+      integer pomp2_lib_get_max_threads
+      integer pomp2_test_lock
+      integer pomp2_test_nest_lock

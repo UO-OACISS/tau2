@@ -48,7 +48,7 @@ main()
     {
         printf( "parallel\n" );
 
-    { POMP2_For_enter( &pomp2_region_2, "118*regionType=for*sscl=test8.c:40:40*escl=test8.c:0:0*hasReduction=1*scheduleType=dynamic,5*hasCollapse=1*hasOrdered=1**" );
+    { POMP2_For_enter( &pomp2_region_2, "105*regionType=for*sscl=test8.c:40:40*escl=test8.c:0:0*hasReduction=1*scheduleType=dynamic,5*hasCollapse=1**" );
 #line 40 "test8.c"
 #pragma omp for reduction(+:k) schedule(dynamic, 5 ) collapse(1) nowait
         for ( i = 0; i < 4; ++i )

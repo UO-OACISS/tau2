@@ -571,6 +571,16 @@ extern void
 POMP2_Taskwait_end( POMP2_Region_handle* pomp2_handle,
                     POMP2_Task_handle    pomp2_old_task );
 
+/** Wraps the omp_get_max_threads function.
+ *
+ *  Needed for the instrumentation of parallel regions
+ *  where the num_threads clause is used with the return
+ *  value of the omp_get_max_threads function. This can't
+ *  be used directly because the user may have declared
+ *  it himself. Double declarations are not allowed. */
+extern int
+POMP2_Lib_get_max_threads();
+
 /** Wraps the omp_init_lock function.
  * @param s The OpenMP lock to initialize.*/
 extern void

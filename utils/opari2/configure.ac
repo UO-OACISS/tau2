@@ -23,8 +23,8 @@ AC_CONFIG_MACRO_DIR([vendor/common/build-config/m4])
 AC_PREFIX_DEFAULT([/opt/scorep])
 
 ## Call not before AC_CONFIG_MACRO_DIR
-AM_INIT_AUTOMAKE([foreign silent-rules color-tests 1.11.1 -Wall tar-pax])
-
+AM_INIT_AUTOMAKE([foreign color-tests 1.11.1 -Wall tar-pax])
+AM_SILENT_RULES([yes])
 
 
 # don't detect and load defaults in nested configures (e.g. otf2)

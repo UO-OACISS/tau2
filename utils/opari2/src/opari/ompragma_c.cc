@@ -135,9 +135,8 @@ OMPragmaC::find_arguments( unsigned&          line,
 {
     string arguments;
     int    bracket_counter = 0;
-    bool   inComment       = false;
 
-    for ( int i = 0; i < clause.length(); i++ )
+    for ( unsigned int i = 0; i < clause.length(); i++ )
     {
         if ( remove )
         {

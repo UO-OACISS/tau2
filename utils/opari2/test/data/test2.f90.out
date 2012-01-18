@@ -28,15 +28,15 @@ program test2
 #line 25 "test2.f90"
   !$omp threadprivate(j)
 
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_1,&
       pomp_if, pomp_num_threads, pomp2_old_task, &
         "62*regionType=parallel*sscl=test2.f90:27:27*escl=test2.f90:0:0**" )
 #line 27 "test2.f90"
-  !$omp parallel&
-  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task)&
-  !$omp if(pomp_if) num_threads(pomp_num_threads)&
+  !$omp parallel &
+  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
+  !$omp if(pomp_if) num_threads(pomp_num_threads) &
   !$omp shared(/cb000/)
       call POMP2_Parallel_begin(pomp2_region_1)
 #line 28 "test2.f90"
@@ -64,7 +64,7 @@ program test2
 #line 36 "test2.f90"
   
       call POMP2_Do_enter(pomp2_region_4, &
-        "56*regionType=do*sscl=test2.f90:37:37*escl=test2.f90:0:0**" )
+        "69*regionType=do*sscl=test2.f90:37:37*escl=test2.f90:0:0*hasOrdered=1**" )
 #line 37 "test2.f90"
   !$omp do ordered
   do i=1,4
@@ -205,15 +205,15 @@ program test2
       call POMP2_Parallel_join(pomp2_region_1, pomp2_old_task)
 #line 79 "test2.f90"
 
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_14,&
       pomp_if, pomp_num_threads, pomp2_old_task, &
         "62*regionType=parallel*sscl=test2.f90:80:80*escl=test2.f90:0:0**" )
 #line 80 "test2.f90"
-  !$omp parallel&
-  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task)&
-  !$omp if(pomp_if) num_threads(pomp_num_threads)&
+  !$omp parallel &
+  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
+  !$omp if(pomp_if) num_threads(pomp_num_threads) &
   !$omp shared(/cb000/)
       call POMP2_Parallel_begin(pomp2_region_14)
 #line 81 "test2.f90"
@@ -252,12 +252,6 @@ program test2
   ! $ this too
    end program test2
 
-      integer function pomp_get_max_threads000()
-         integer omp_get_max_threads
-         pomp_get_max_threads000=omp_get_max_threads()
-         return
-      end
-
       subroutine POMP2_Init_regions_000()
          include 'test2.f90.opari.inc'
          call POMP2_Assign_handle( pomp2_region_1, &
@@ -267,7 +261,7 @@ program test2
          call POMP2_Assign_handle( pomp2_region_3, &
         "59*regionType=flush*sscl=test2.f90:35:35*escl=test2.f90:0:0**" )
          call POMP2_Assign_handle( pomp2_region_4, &
-        "58*regionType=do*sscl=test2.f90:37:37*escl=test2.f90:43:43**" )
+        "71*regionType=do*sscl=test2.f90:37:37*escl=test2.f90:43:43*hasOrdered=1**" )
          call POMP2_Assign_handle( pomp2_region_5, &
         "63*regionType=ordered*sscl=test2.f90:39:39*escl=test2.f90:41:41**" )
          call POMP2_Assign_handle( pomp2_region_6, &

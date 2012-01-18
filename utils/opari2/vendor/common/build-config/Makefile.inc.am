@@ -242,6 +242,7 @@ endif # SVN_CONTROLLED
 ###############################################################################
 
 
+SCOREP_RECURSIVE_TARGETS=
 
 
 ###############################################################################
@@ -250,22 +251,13 @@ endif # SVN_CONTROLLED
 if SVN_CONTROLLED
 if HAVE_UNCRUSTIFY
 
-beautify:
-	@fail= failcom='exit 1'; \
-	for f in x $$MAKEFLAGS; do \
-	  case $$f in \
-	    *=* | --[!k]*);; \
-	    *k*) failcom='fail=yes';; \
-	  esac; \
-	done; \
-        for subdir in $(SUBDIRS); do \
-            ($(am__cd) $$subdir && $(MAKE) $(AM_MAKEFLAGS) $@) || eval $$failcom; \
-        done; \
-        test -z "$$fail"
-	cd $(srcdir); ./vendor/common/beautifier/beautify
+beautify-sp:
+	@$(am__cd) $(srcdir) && ./vendor/common/beautifier/beautify
+beautify: beautify-recursive
+SCOREP_RECURSIVE_TARGETS += beautify-recursive
 
 beautify-clean:
-	find $(srcdir) -name "*.unc-backup*" -exec rm '{}' \;
+	@find $(srcdir) -name "*.unc-backup*" -exec rm '{}' \;
 
 endif # HAVE_UNCRUSTIFY
 endif # SVN_CONTROLLED 
@@ -295,7 +287,13 @@ bitten-print-environment:
 
 check-build-sp: $(BUILT_SOURCES) all-am $(check_PROGRAMS) $(check_LTLIBRARIES)
 check-build: check-build-recursive
-check-build-recursive:
+SCOREP_RECURSIVE_TARGETS += check-build-recursive
+
+                                                                             ##
+                                                                             ##
+###############################################################################
+
+$(SCOREP_RECURSIVE_TARGETS):
 ## Using $failcom allows "-k" to keep its natural meaning when running a
 ## recursive rule.
 	@fail= failcom='exit 1'; \
@@ -321,7 +319,3 @@ check-build-recursive:
 	if test "$$dot_seen" = "no"; then \
 	  $(MAKE) $(AM_MAKEFLAGS) "$$target-sp" || exit 1; \
 	fi; test -z "$$fail"
-
-                                                                             ##
-                                                                             ##
-###############################################################################

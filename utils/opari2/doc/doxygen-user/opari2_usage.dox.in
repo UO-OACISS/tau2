@@ -16,6 +16,14 @@ with following options and parameters:
                          constructs.  The default is to generate #line
                          constructs.
 
+[--nodecl]               [OPTIONAL] Disables the generation of 
+                         POMP2_DLISTXXXXX macros. These are used in the
+                         parallel directives of the instrumentation to 
+                         make the region handles shared. By using this
+                         option the shared clause is used directly on
+                         the parallel directive with the resprective
+                         region handles.
+
 [--tpd]                  [OPTIONAL] Adds the clause 'copyin(<pomp_tpd>)'
                          to any parallel construct. This allows to
                          pass data from the creating thread to its
