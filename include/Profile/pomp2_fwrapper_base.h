@@ -17,6 +17,8 @@
 
 #ifndef POMP2_FWRAPPER_BASE_H
 #define POMP2_FWRAPPER_BASE_H
+
+extern "C" {
 extern void
 FSUB( omp_init_lock )( omp_lock_t* s );
 extern void
@@ -37,5 +39,5 @@ extern void
 FSUB( omp_unset_nest_lock )( omp_nest_lock_t* s );
 extern int
 FSUB( omp_test_nest_lock )( omp_nest_lock_t* s );
-
+}
 #endif
