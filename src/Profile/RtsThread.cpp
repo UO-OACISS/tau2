@@ -149,6 +149,10 @@ int RtsLayer::myThread(void)
 #endif // PTHREADS
 }
 
+extern "C" int Tau_RtsLayer_myThread(void) {
+	return RtsLayer::myThread();
+}
+
 int RtsLayer::setMyThread(int i) { 
 #ifdef PTHREADS
 	PthreadLayer::SetThreadId(i);

@@ -1,0 +1,9 @@
+#ifndef KTAUNG_PROFILER_H
+#define KTAUNG_PROFILER_H
+
+#define KTAU_NG_PREFIX "Tprofile"
+#define KTAU_NG_PREFIX_LEN 8
+
+#define HOSTNAME_LEN 4096
+
+#endif /* KTAUNG_PROFILER_H */

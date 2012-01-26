@@ -894,7 +894,7 @@ EBS_CLOCK_RES=
 ##############################################
 # KTAU-NG!!
 ##############################################
-#KTAU_NG#PROFILEOPT86 = -DKTAU_NG -DTAU_TID_AS_NODE#ENDIF#
+#KTAU_NG#PROFILEOPT86 = -DKTAU_NG #ENDIF#
 
 
 
@@ -1053,7 +1053,7 @@ TAU_OPENCL_INC=
 TAU_CUPTI_INC=
 #CUDA#TAU_CUDA_INCLUDE=-I$(TAU_CUDA_INC)#ENDIF#
 #CUPTI#TAU_CUPTI_INCLUDE=-I$(TAU_CUPTI_INC)#ENDIF#
-#CUPTI#LEXTRA=-L$(TAU_CUPTI_INC)/../lib -lcupti#ENDIF#
+#CUPTI#LEXTRA=-L$(TAU_CUPTI_INC)/../lib -L$(TAU_CUPTI_INC)/../lib64 -lcupti#ENDIF#
 #############################################
 
 #CUPTI#TAU_INTERNAL_FLAGS+=-DCUPTI #ENDIF#

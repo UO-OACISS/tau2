@@ -31,8 +31,20 @@ static TauContextUserEvent *MemoryCopyEventDtoH;
 static TauContextUserEvent *MemoryCopyEventDtoD;
 
 int number_of_tasks = 0;
-gpuId *Tasks[TAU_MAX_NUMBER_OF_GPU_THREADS];
 int number_of_top_level_task_events = 0;
+
+bool gpuComp(gpuId* a, gpuId* b)
+{
+	return not a->equals(b);
+}
+
+map<gpuId*, int, bool(*)(gpuId*,gpuId*)>& TheGpuIdMap(void)
+{
+	bool (*gpuCompFunc)(gpuId*, gpuId*) = gpuComp;
+	static map<gpuId*, int, bool(*)(gpuId*, gpuId*)> GpuIdMap(gpuCompFunc);
+
+	return GpuIdMap;
+}
 
 //The number of Memcpys called with unknown transfer size which should be given
 //on the GPU thread.
@@ -279,55 +291,20 @@ FunctionInfo* parent)
 }
 int get_task(gpuId *new_task)
 {
-	//cout << "in get_task." << endl;
 	int task = 0;
-#ifdef DEBUG_PROF
-	for (int i=0; i<number_of_tasks;i++)
-		cout << "current Tasks[" << i << "]: " << Tasks[i]->printId() << endl;
-#endif
-	for (int i=0; i<number_of_tasks;i++)
-	{
-		//cout << "checking task, id: " << new_task->printId() << " against: " <<
-		//Tasks[i]->printId() << endl;
-		//reference for comparision
-		gpuId *old_task = Tasks[i];
-		if (new_task->equals(old_task))
-		{
-			//found task.
-			task = i + 1;
-			//cout << "found task! task id = " << task << endl;
-			//break;
-		}
-		else
-		{
-			continue;
-		}
-	}
-	//if new task
-	if (task == 0)
+	map<gpuId*, int>::iterator it = TheGpuIdMap().find(new_task);
+	if (it == TheGpuIdMap().end())
 	{
 		gpuId *create_task = new_task->getCopy();
-		Tasks[number_of_tasks] = create_task;
+		task = TheGpuIdMap()[create_task] = RtsLayer::createThread();
 		number_of_tasks++;
 		TAU_CREATE_TASK(task);
-		//printf("new task: %s id: %d.\n", Tasks[number_of_tasks-1]->printId(), number_of_tasks);
-		task = number_of_tasks;
+		printf("new task: %s id: %d.\n", new_task->printId(), task);
+	} else
+	{
+		task = (*it).second;
 	}
 
-//OpenMP thread offset
-#ifdef TAU_OPENMP
-	task += OpenMPLayer::numThreads() - 1;
-#elif PTHREADS
-	task += RtsLayer::getNumThreads() - 2;
-	printf("numThreads: %d.\n", RtsLayer::getNumThreads());
-	printf("task id: %d.\n", task);
-#endif
-#ifdef PTHREADS
-	task += 1;
-#ifdef DEBUG_PROF
-	printf("task # choosen: %d.\n");
-#endif /* DEBUG_PROF */
-#endif
 	return task;
 }
 
