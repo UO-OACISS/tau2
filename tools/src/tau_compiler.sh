@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash  
 
 declare -i FALSE=-1
 declare -i TRUE=1
@@ -700,7 +700,7 @@ for arg in "$@" ; do
 		fi
 		;;
 
-	    *.c)
+	    *.c|*.s)
 		fileName=$arg
 		arrFileName[$numFiles]=$arg
 		arrFileNameDirectory[$numFiles]=`dirname $arg`
