@@ -106,7 +106,6 @@ int RtsLayer::createThread()
 		nextThread = newThread->next_available;
 	}
 	UnLockEnv();
-	//printf("creating thread: %d.\n", newThread->thread_rank);
 
 	return newThread->thread_rank;
 }
@@ -119,12 +118,29 @@ void RtsLayer::recycleThread(int id)
 	TheThreadList().at(id-1)->next_available = nextThread;
 	nextThread = id-1;	
   
-	printf("recycling thread: %d.\n", TheThreadList().at(id-1)->thread_rank);
 	UnLockEnv();
 }
 
-extern "C" int Tau_RtsLayer_myThread(void) {
-  return RtsLayer::myThread();
+int RtsLayer::threadId(void)
+{
+#ifdef PTHREADS
+  return PthreadLayer::GetThreadId();
+#elif  TAU_SPROC
+  return SprocLayer::GetThreadId();
+#elif  TAU_WINDOWS
+  return WindowsThreadLayer::GetThreadId();
+#elif  TULIPTHREADS
+  return TulipThreadLayer::GetThreadId();
+#elif JAVA
+  return JavaThreadLayer::GetThreadId(); 
+	// C++ app shouldn't use this unless there's a VM
+#elif TAU_OPENMP
+  return OpenMPLayer::GetTauThreadId();
+#elif TAU_PAPI_THREADS
+  return PapiThreadLayer::GetThreadId();
+#else  // if no other thread package is available 
+  return 0;
+#endif // PTHREADS
 }
 
 int RtsLayer::myThread(void)

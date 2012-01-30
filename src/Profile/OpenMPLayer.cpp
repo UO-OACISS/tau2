@@ -60,7 +60,9 @@ static int threadCount = 0;
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::RegisterThread(void)
 {
-	return RtsLayer::createThread();
+	int id = RtsLayer::createThread();
+	//printf("OpenMP: registering thread, id = %d.\n", id);
+	return id;
   // Not needed for OpenMP programs! 
   //return 0;
 }
@@ -70,13 +72,61 @@ int OpenMPLayer::numThreads()
 	return omp_get_max_threads(); 
 }
 
+map<int, int>& TheOMPMap()
+{
+	static map<int, int> omp_map;
+	return omp_map;
+}
+
 ////////////////////////////////////////////////////////////////////////
-// GetThreadId returns an id in the range 0..N-1 by looking at the 
-// thread specific data. Since a getspecific has to be preceeded by a 
+// GetThreadId maps the id in the thread specific data to the acutal TAU thread
+// ID. Since a getspecific has to be preceeded by a 
 // setspecific (that all threads besides main do), we get a null for the
 // main thread that lets us identify it as thread 0. It is the only 
 // thread that doesn't do a OpenMPLayer::RegisterThread(). 
 ////////////////////////////////////////////////////////////////////////
+int OpenMPLayer::GetTauThreadId(void) 
+{
+	int omp_thread_id, tau_thread_id;
+#ifdef TAU_OPENMP
+#ifdef TAU_OPENMP_NESTED
+  if (threadId == -1) {
+#pragma omp critical(threadLock)
+    {
+      threadId = threadCount++;
+    }
+  }
+  omp_thread_id = threadId;
+#else
+  omp_thread_id = omp_get_thread_num();
+	//printf("omp thread id = %d.\n", omp_thread_id);
+
+	if (omp_thread_id == 0)
+	{
+		tau_thread_id = omp_thread_id;
+	}
+	else
+	{
+		RtsLayer::LockEnv();
+
+		map<int, int>::iterator it = TheOMPMap().find(omp_thread_id);
+		if (it == TheOMPMap().end())
+		{
+			TheOMPMap()[omp_thread_id] = OpenMPLayer::RegisterThread();
+			tau_thread_id = TheOMPMap()[omp_thread_id];
+		}	
+		else
+		{
+			tau_thread_id = it->second;
+		}
+		
+		RtsLayer::UnLockEnv();
+	}
+	return omp_thread_id;
+#endif /* TAU_OPENMP_NESTED */
+#endif /* TAU_OPENMP */
+}
+
 int OpenMPLayer::GetThreadId(void) 
 {
 #ifdef TAU_OPENMP
@@ -89,7 +139,7 @@ int OpenMPLayer::GetThreadId(void)
   }
   return threadId;
 #else
-  return omp_get_thread_num();
+ 	return omp_get_thread_num();
 #endif /* TAU_OPENMP_NESTED */
 #endif /* TAU_OPENMP */
 }
