@@ -19,6 +19,9 @@
 
 #include <TAU.h>
 
+#include <iostream>
+using namespace std;
+
 extern "C" int Tau_is_thread_fake(int t);
 
 /* for getrusage */
