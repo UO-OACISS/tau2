@@ -447,6 +447,7 @@ POMP2_Ordered_exit( POMP2_Region_handle* pomp2_handle );
  */
 extern void
 POMP2_Task_create_begin( POMP2_Region_handle* pomp2_handle,
+                         POMP2_Task_handle*   pomp2_new_task,
                          POMP2_Task_handle*   pomp2_old_task,
                          int                  pomp2_if,
                          const char           ctc_string[] );
@@ -467,12 +468,11 @@ POMP2_Task_create_end( POMP2_Region_handle* pomp2_handle,
 /** \e OpenMP \e 3.0: Marks the beginning of the execution of a task.
 
     @param pomp2_handle The region handle.
-    @param pomp2_new_task handle of the tas
-    @param pomp2_new_task handle of the taskk
+    @param pomp2_task handle of task.
  */
 extern void
 POMP2_Task_begin( POMP2_Region_handle* pomp2_handle,
-                  POMP2_Task_handle    pomp2_new_task );
+                  POMP2_Task_handle    pomp2_task );
 
 /** \e OpenMP \e 3.0: Marks the end of the execution of a task.
 
@@ -500,6 +500,7 @@ POMP2_Task_end( POMP2_Region_handle* pomp2_handle );
  */
 extern void
 POMP2_Untied_task_create_begin( POMP2_Region_handle* pomp2_handle,
+                                POMP2_Task_handle*   pomp2_new_task,
                                 POMP2_Task_handle*   pomp2_old_task,
                                 int                  pomp2_if,
                                 const char           ctc_string[] );
@@ -522,12 +523,12 @@ POMP2_Untied_task_create_end( POMP2_Region_handle* pomp2_handle,
 /** \e OpenMp \e 3.0: Marks the beginning of the execution of an
     untied task.
 
-    @param pomp2_handle   The region handle.
-    @param pomp2_new_task handle of the beginning task
+    @param pomp2_handle      The region handle.
+    @param pomp2_task Handle of this task.
  */
 void
 POMP2_Untied_task_begin( POMP2_Region_handle* pomp2_handle,
-                         POMP2_Task_handle    pomp2_new_task );
+                         POMP2_Task_handle    pomp2_task );
 
 /** \e OpenMP \e 3.0: Marks the end of the execution of a task.
 

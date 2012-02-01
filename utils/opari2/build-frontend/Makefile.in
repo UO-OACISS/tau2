@@ -109,6 +109,7 @@ am__aclocal_m4_deps = $(top_srcdir)/../vendor/common/build-config/m4/ac_opari_co
 	$(top_srcdir)/../vendor/common/build-config/m4/ac_scorep_fortran_checks.m4 \
 	$(top_srcdir)/../vendor/common/build-config/m4/ac_scorep_svn_controlled.m4 \
 	$(top_srcdir)/../vendor/common/build-config/m4/ac_scorep_sys_detection.m4 \
+	$(top_srcdir)/../vendor/common/build-config/m4/ac_scorep_version_and_revision.m4 \
 	$(top_srcdir)/../vendor/common/build-config/m4/ah_scorep_config_header_custom.m4 \
 	$(top_srcdir)/../vendor/common/build-config/m4/libtool.m4 \
 	$(top_srcdir)/../vendor/common/build-config/m4/ltoptions.m4 \
@@ -1503,44 +1504,46 @@ clean-local:
 create-config-tool-headers: $(CONFIG_HEADER_FRONTEND)
 
 $(CONFIG_HEADER_FRONTEND): $(builddir)/opari2_config.dat
-	@echo "Creating $(CONFIG_HEADER_FRONTEND)"
-	@echo "#define NM      \"$(NM)\""               >  $(CONFIG_HEADER_FRONTEND)
-	@echo "#define AWK     \"$(AWK)\""              >> $(CONFIG_HEADER_FRONTEND)
-	@echo "#define SCRIPT  \"$(prefix)/bin/pomp2_parse_init_regions.awk\"" >> $(CONFIG_HEADER_FRONTEND)
-	@echo "#define EGREP   \"$(EGREP)\""            >> $(CONFIG_HEADER_FRONTEND)
-	@echo "#define VERSION \"$(PACKAGE_VERSION)\""  >> $(CONFIG_HEADER_FRONTEND)
-	@echo "#define POMP2_API_VERSION \"$(LIBRARY_INTERFACE_VERSION)\""  >> $(CONFIG_HEADER_FRONTEND)
-	@echo "#define CFLAGS  \"-I$(prefix)/include\""   >> $(CONFIG_HEADER_FRONTEND)
+	$(AM_V_GEN)( \
+	    echo "#define NM      \"$(NM)\""; \
+	    echo "#define AWK     \"$(AWK)\""; \
+	    echo "#define SCRIPT  \"$(prefix)/bin/pomp2_parse_init_regions.awk\""; \
+	    echo "#define EGREP   \"$(EGREP)\""; \
+	    echo "#define VERSION \"$(PACKAGE_VERSION)\""; \
+	    echo "#define POMP2_API_VERSION \"$(LIBRARY_INTERFACE_VERSION)\""; \
+	    echo "#define CFLAGS  \"-I$(prefix)/include\""; \
+	) >$@
 
 $(builddir)/opari2_config.dat:
-	@echo "Creating $(builddir)/opari2_config.dat"
-	@echo NM=\"$(NM)\"                   >  $(builddir)/opari2_config.dat
-	@echo AWK=\"$(AWK)\"                 >> $(builddir)/opari2_config.dat
-	@echo OPARI_SCRIPT=\"$(PWD)/../build-frontend/pomp2_parse_init_regions.awk\"  >> $(builddir)/opari2_config.dat
-	@echo VERSION=\"$(PACKAGE_VERSION)\" >> $(builddir)/opari2_config.dat
-	@echo EGREP=\"$(EGREP)\"             >> $(builddir)/opari2_config.dat
-	@echo CFLAGS=\"-I$(abs_srcdir)/../include\" >> $(builddir)/opari2_config.dat
+	$(AM_V_GEN)( \
+	    echo NM=\"$(NM)\"; \
+	    echo AWK=\"$(AWK)\"; \
+	    echo OPARI_SCRIPT=\"$(PWD)/../build-frontend/pomp2_parse_init_regions.awk\"; \
+	    echo VERSION=\"$(PACKAGE_VERSION)\"; \
+	    echo EGREP=\"$(EGREP)\"; \
+	    echo CFLAGS=\"-I$(abs_srcdir)/../include\"; \
+	) >$@
 
 @OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@installcheck-local:
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@	(cd $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example/ && $(MAKE) $(AM_MAKEFLAGS)) || exit 1;
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@	(cd $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/ && $(MAKE) $(AM_MAKEFLAGS)) || exit 1;
+@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@	@$(am__cd) $(DESTDIR)$(docdir)/example/ && $(MAKE) $(AM_MAKEFLAGS)
+@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@	@$(am__cd) $(DESTDIR)$(docdir)/example_user_instrumentation/ && $(MAKE) $(AM_MAKEFLAGS)
 @OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_FALSE@installcheck-local:
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_FALSE@	(cd $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example/ && $(MAKE) $(AM_MAKEFLAGS) c ) || exit 1;
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_FALSE@	(cd $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/ && $(MAKE) $(AM_MAKEFLAGS) c ) || exit 1;
+@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_FALSE@	@$(am__cd) $(DESTDIR)$(docdir)/doc/example/ && $(MAKE) $(AM_MAKEFLAGS) c
+@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_FALSE@	@$(am__cd) $(DESTDIR)$(docdir)/doc/example_user_instrumentation/ && $(MAKE) $(AM_MAKEFLAGS) c
 
 @OPENMP_SUPPORTED_TRUE@install-example:
-@OPENMP_SUPPORTED_TRUE@	$(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example
-@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_srcdir)/../doc/example/example.*            $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example/
-@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_srcdir)/../include/opari2/pomp2_lib.h       $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example/
-@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_builddir)/../doc/example/Makefile           $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example/
-@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_builddir)/../build-frontend/.libs/libpomp.* $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example/
-@OPENMP_SUPPORTED_TRUE@	rm -f $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example/libpomp.la
-@OPENMP_SUPPORTED_TRUE@	$(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation
-@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_srcdir)/../doc/example_user_instrumentation/example_user_instrumentation.*  $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/
-@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_srcdir)/../include/opari2/pomp2_lib.h                                       $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/
-@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_builddir)/../doc/example_user_instrumentation/Makefile                      $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/
-@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_builddir)/../build-frontend/.libs/libpomp.*                                 $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/
-@OPENMP_SUPPORTED_TRUE@	rm -f $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/example_user_instrumentation/libpomp.la
+@OPENMP_SUPPORTED_TRUE@	$(MKDIR_P) $(DESTDIR)$(docdir)/example
+@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_srcdir)/../doc/example/example.*            $(DESTDIR)$(docdir)/example/
+@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_srcdir)/../include/opari2/pomp2_lib.h       $(DESTDIR)$(docdir)/example/
+@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_builddir)/../doc/example/Makefile           $(DESTDIR)$(docdir)/example/
+@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_builddir)/../build-frontend/.libs/libpomp.* $(DESTDIR)$(docdir)/example/
+@OPENMP_SUPPORTED_TRUE@	rm -f $(DESTDIR)$(docdir)/example/libpomp.la
+@OPENMP_SUPPORTED_TRUE@	$(MKDIR_P) $(DESTDIR)$(docdir)/example_user_instrumentation
+@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_srcdir)/../doc/example_user_instrumentation/example_user_instrumentation.*  $(DESTDIR)$(docdir)/example_user_instrumentation/
+@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_srcdir)/../include/opari2/pomp2_lib.h                                       $(DESTDIR)$(docdir)/example_user_instrumentation/
+@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_builddir)/../doc/example_user_instrumentation/Makefile                      $(DESTDIR)$(docdir)/example_user_instrumentation/
+@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_builddir)/../build-frontend/.libs/libpomp.*                                 $(DESTDIR)$(docdir)/example_user_instrumentation/
+@OPENMP_SUPPORTED_TRUE@	rm -f $(DESTDIR)$(docdir)/example_user_instrumentation/libpomp.la
 @OPENMP_SUPPORTED_FALSE@install-example:
 
 install-pomp2_region_info:

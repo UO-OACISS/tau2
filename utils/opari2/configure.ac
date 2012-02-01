@@ -19,8 +19,8 @@ AC_CONFIG_AUX_DIR([build-config])
 ## using AC_CONFIG_MACRO_DIR.
 AC_CONFIG_MACRO_DIR([vendor/common/build-config/m4])
 
-## Set the default installation prefix to /opt/scorep instead of /usr/local
-AC_PREFIX_DEFAULT([/opt/scorep])
+## Set the default installation prefix to /opt/opari2 instead of /usr/local
+AC_PREFIX_DEFAULT([/opt/opari2])
 
 ## Call not before AC_CONFIG_MACRO_DIR
 AM_INIT_AUTOMAKE([foreign color-tests 1.11.1 -Wall tar-pax])

@@ -450,7 +450,7 @@ main( int   argc,
             }
         }
     }
-    if ( infile && lang == L_NA )
+    if ( !errFlag && infile && lang == L_NA )
     {
         cerr << "ERROR: cannot determine input file language\n";
         errFlag = true;

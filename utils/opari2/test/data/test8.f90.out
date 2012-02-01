@@ -36,8 +36,7 @@ program test8
 #line 27 "test8.f90"
   !$omp parallel                           reduction(+:k) &
   !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
-  !$omp if(pomp_if) num_threads(pomp_num_threads) &
-  !$omp shared(/cb000/)
+  !$omp if(pomp_if) num_threads(pomp_num_threads)
       call POMP2_Parallel_begin(pomp2_region_1)
 #line 28 "test8.f90"
   write(*,*) "parallel"
@@ -101,18 +100,17 @@ program test8
 #line 46 "test8.f90"
   !$omp parallel &
   !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
-  !$omp if(pomp_if) num_threads(pomp_num_threads) &
-  !$omp shared(/cb000/)
+  !$omp if(pomp_if) num_threads(pomp_num_threads)
       call POMP2_Parallel_begin(pomp2_region_4)
 #line 47 "test8.f90"
       pomp_if = .true.
-      call POMP2_Untied_task_create_begin(pomp2_region_5, pomp2_old_task, 
-     &pomp_if, &
+      call POMP2_Untied_task_create_begin(pomp2_region_5, pomp2_new_task, &
+      pomp2_old_task, &
+      pomp_if, &
         "70*regionType=task*sscl=test8.f90:47:47*escl=test8.f90:0:0*hasUntied=1**" )
 #line 47 "test8.f90"
-  !$omp task untied if(pomp_if) firstprivate(pomp2_old_task)&
-  !$omp shared(/cb000/)
-      call POMP2_Untied_task_begin(pomp2_region_5, pomp2_old_task)
+  !$omp task untied if(pomp_if) firstprivate(pomp2_new_task)
+      call POMP2_Untied_task_begin(pomp2_region_5, pomp2_new_task)
 #line 48 "test8.f90"
   write(*,*) "task"
       call POMP2_Untied_task_end(pomp2_region_5)
@@ -137,8 +135,7 @@ program test8
 #line 52 "test8.f90"
   !$omp parallel                   reduction(+:k)                                                         &
   !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
-  !$omp if(pomp_if) num_threads(pomp_num_threads) &
-  !$omp shared(/cb000/)
+  !$omp if(pomp_if) num_threads(pomp_num_threads)
       call POMP2_Parallel_begin(pomp2_region_6)
       call POMP2_Do_enter(pomp2_region_6, &
         "158*regionType=paralleldo*sscl=test8.f90:52:52*escl=test8.f90:0:0*hasIf=1*hasNumThreads=1*hasReduction=1*scheduleType=static,chunkif*hasCollapse=1*hasOrdered=1**" )
@@ -177,8 +174,7 @@ program test8
 #line 61 "test8.f90"
   !$omp parallel                                     reduction(+:k) &
   !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
-  !$omp if(pomp_if) num_threads(pomp_num_threads) &
-  !$omp shared(/cb000/)
+  !$omp if(pomp_if) num_threads(pomp_num_threads)
       call POMP2_Parallel_begin(pomp2_region_8)
       call POMP2_Sections_enter(pomp2_region_8)
 #line 61 "test8.f90"
@@ -215,8 +211,7 @@ program test8
 #line 68 "test8.f90"
   !$omp parallel                                     reduction(+:k) &
   !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
-  !$omp if(pomp_if) num_threads(pomp_num_threads) &
-  !$omp shared(/cb000/)
+  !$omp if(pomp_if) num_threads(pomp_num_threads)
       call POMP2_Parallel_begin(pomp2_region_9)
       call POMP2_Workshare_enter(pomp2_region_9, &
         "110*regionType=parallelworkshare*sscl=test8.f90:68:68*escl=test8.f90:0:0*hasIf=1*hasNumThreads=1*hasReduction=1**" )

@@ -31,8 +31,7 @@ program test3
 #line 23 "test3.f90"
    !$omp parallel  &
   !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
-  !$omp if(pomp_if) num_threads(pomp_num_threads) &
-  !$omp shared(/cb000/)
+  !$omp if(pomp_if) num_threads(pomp_num_threads)
       call POMP2_Parallel_begin(pomp2_region_1)
 #line 24 "test3.f90"
       call POMP2_Do_enter(pomp2_region_2, &
@@ -66,8 +65,7 @@ program test3
 #line 30 "test3.f90"
    !$omp parallel    &
   !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
-  !$omp if(pomp_if) num_threads(pomp_num_threads) &
-  !$omp shared(/cb000/)
+  !$omp if(pomp_if) num_threads(pomp_num_threads)
       call POMP2_Parallel_begin(pomp2_region_3)
       call POMP2_Do_enter(pomp2_region_3, &
         "64*regionType=paralleldo*sscl=test3.f90:30:30*escl=test3.f90:0:0**" )
@@ -94,8 +92,7 @@ program test3
 #line 35 "test3.f90"
    !$omp parallel  &
   !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
-  !$omp if(pomp_if) num_threads(pomp_num_threads) &
-  !$omp shared(/cb000/)
+  !$omp if(pomp_if) num_threads(pomp_num_threads)
       call POMP2_Parallel_begin(pomp2_region_4)
 #line 36 "test3.f90"
       call POMP2_Do_enter(pomp2_region_5, &
@@ -136,8 +133,7 @@ program test3
 #line 44 "test3.f90"
    !$omp parallel    &
   !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
-  !$omp if(pomp_if) num_threads(pomp_num_threads) &
-  !$omp shared(/cb000/)
+  !$omp if(pomp_if) num_threads(pomp_num_threads)
       call POMP2_Parallel_begin(pomp2_region_7)
       call POMP2_Do_enter(pomp2_region_7, &
         "64*regionType=paralleldo*sscl=test3.f90:44:44*escl=test3.f90:0:0**" )
@@ -162,8 +158,7 @@ program test3
 #line 47 "test3.f90"
       !$omp parallel private(me,glob) &
   !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
-  !$omp if(pomp_if) num_threads(pomp_num_threads) &
-  !$omp shared(/cb000/)
+  !$omp if(pomp_if) num_threads(pomp_num_threads)
       call POMP2_Parallel_begin(pomp2_region_8)
 #line 48 "test3.f90"
    me = omp_get_thread_num()
@@ -188,8 +183,7 @@ program test3
 #line 55 "test3.f90"
   !$omp parallel &
   !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
-  !$omp if(pomp_if) num_threads(pomp_num_threads) &
-  !$omp shared(/cb000/)
+  !$omp if(pomp_if) num_threads(pomp_num_threads)
       call POMP2_Parallel_begin(pomp2_region_9)
 #line 56 "test3.f90"
       pomp_num_threads = pomp2_lib_get_max_threads()
@@ -200,8 +194,7 @@ program test3
 #line 56 "test3.f90"
   !$omp parallel &
   !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
-  !$omp if(pomp_if) num_threads(pomp_num_threads) &
-  !$omp shared(/cb000/)
+  !$omp if(pomp_if) num_threads(pomp_num_threads)
       call POMP2_Parallel_begin(pomp2_region_10)
 #line 57 "test3.f90"
       pomp_num_threads = pomp2_lib_get_max_threads()
@@ -212,8 +205,7 @@ program test3
 #line 57 "test3.f90"
   !$omp parallel &
   !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
-  !$omp if(pomp_if) num_threads(pomp_num_threads) &
-  !$omp shared(/cb000/)
+  !$omp if(pomp_if) num_threads(pomp_num_threads)
       call POMP2_Parallel_begin(pomp2_region_11)
 #line 58 "test3.f90"
       pomp_num_threads = pomp2_lib_get_max_threads()
@@ -224,8 +216,7 @@ program test3
 #line 58 "test3.f90"
   !$omp parallel    &
   !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
-  !$omp if(pomp_if) num_threads(pomp_num_threads) &
-  !$omp shared(/cb000/)
+  !$omp if(pomp_if) num_threads(pomp_num_threads)
       call POMP2_Parallel_begin(pomp2_region_12)
       call POMP2_Do_enter(pomp2_region_12, &
         "64*regionType=paralleldo*sscl=test3.f90:58:58*escl=test3.f90:0:0**" )
@@ -280,8 +271,7 @@ program test3
 #line 71 "test3.f90"
    !$omp parallel    &
   !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
-  !$omp if(pomp_if) num_threads(pomp_num_threads) &
-  !$omp shared(/cb000/)
+  !$omp if(pomp_if) num_threads(pomp_num_threads)
       call POMP2_Parallel_begin(pomp2_region_13)
       call POMP2_Do_enter(pomp2_region_13, &
         "64*regionType=paralleldo*sscl=test3.f90:71:71*escl=test3.f90:0:0**" )
@@ -310,8 +300,7 @@ program test3
 #line 78 "test3.f90"
       !$omp parallel    &
   !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
-  !$omp if(pomp_if) num_threads(pomp_num_threads) &
-  !$omp shared(/cb000/)
+  !$omp if(pomp_if) num_threads(pomp_num_threads)
       call POMP2_Parallel_begin(pomp2_region_14)
       call POMP2_Do_enter(pomp2_region_14, &
         "64*regionType=paralleldo*sscl=test3.f90:78:78*escl=test3.f90:0:0**" )
@@ -339,8 +328,7 @@ program test3
 #line 84 "test3.f90"
    !$omp parallel    &
   !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
-  !$omp if(pomp_if) num_threads(pomp_num_threads) &
-  !$omp shared(/cb000/)
+  !$omp if(pomp_if) num_threads(pomp_num_threads)
       call POMP2_Parallel_begin(pomp2_region_15)
       call POMP2_Do_enter(pomp2_region_15, &
         "64*regionType=paralleldo*sscl=test3.f90:84:84*escl=test3.f90:0:0**" )
@@ -369,8 +357,7 @@ program test3
 #line 91 "test3.f90"
    !$omp parallel    &
   !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
-  !$omp if(pomp_if) num_threads(pomp_num_threads) &
-  !$omp shared(/cb000/)
+  !$omp if(pomp_if) num_threads(pomp_num_threads)
       call POMP2_Parallel_begin(pomp2_region_16)
       call POMP2_Do_enter(pomp2_region_16, &
         "64*regionType=paralleldo*sscl=test3.f90:91:91*escl=test3.f90:0:0**" )

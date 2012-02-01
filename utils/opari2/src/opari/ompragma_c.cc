@@ -89,8 +89,17 @@ OMPragmaC::find_word( const string       word,
         string::size_type w = lines[ i ].find( word );
         while ( w != string::npos )
         {
-            char b = lines[ i ][ w - 1 ];
+            char b;
             char a;
+            //word may start at position 0 of a continuation line
+            if ( w == 0 )
+            {
+                b = ' ';
+            }
+            else
+            {
+                b = lines[ i ][ w - 1 ];
+            }
             if ( lines[ i ].length() > w + word.length() )
             {
                 a = lines[ i ][ w + word.length() ];

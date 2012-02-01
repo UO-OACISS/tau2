@@ -181,7 +181,7 @@ void
 OMPRegion::finalize_descrs( ostream& os, Language lang )
 {
     os << "\n      integer pomp2_lib_get_max_threads";
-    os << "\n      integer pomp2_test_lock";
+    os << "\n      logical pomp2_test_lock";
     os << "\n      integer pomp2_test_nest_lock\n";
 
     if ( !common_block.empty() )
@@ -298,14 +298,14 @@ OMPRegion::generate_ctc_string( Language lang )
     {
         if ( lang & L_F77 )
         {
-            for ( unsigned int i = 58; i < ctc_string.size(); i += 68 )
+            for ( unsigned int i = 58; i < ctc_string.size() - 1; i += 68 )
             {
                 ctc_string.insert( i, "\"//\n     &\"" );
             }
         }
         else
         {
-            for ( unsigned int i = 58; i < ctc_string.size(); i += 68 )
+            for ( unsigned int i = 58; i < ctc_string.size() - 1; i += 68 )
             {
                 ctc_string.insert( i, "\"//&\n      \"" );
             }

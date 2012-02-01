@@ -38,8 +38,7 @@
 !$omp parallel                           reduction(+:k)
 !$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
 !$omp& if(pomp_if) num_threads(pomp_num_threads) 
-!$omp& shared(/cb000/)
-       call POMP2_Parallel_begin(pomp2_region_1)
+      call POMP2_Parallel_begin(pomp2_region_1)
 #line 28 "test8.f"
       write(*,*) "parallel"
       
@@ -108,19 +107,18 @@
 !$omp parallel
 !$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
 !$omp& if(pomp_if) num_threads(pomp_num_threads) 
-!$omp& shared(/cb000/)
-       call POMP2_Parallel_begin(pomp2_region_4)
+      call POMP2_Parallel_begin(pomp2_region_4)
 #line 47 "test8.f"
       pomp_if = .true.
-      call POMP2_Task_create_begin(pomp2_region_5, pomp2_old_task, 
+      call POMP2_Task_create_begin(pomp2_region_5, pomp2_new_task,
+     &pomp2_old_task, 
      &pomp_if,
      &"67*regionType=task*sscl=test8.f:47:47*escl=test8.f:0:0*hasU"//
      &"ntied=1**" )
 #line 47 "test8.f"
 !$omp task       
-!$omp& if(pomp_if) firstprivate(pomp2_old_task)
-!$omp& shared(/cb000/)
-       call POMP2_Task_begin(pomp2_region_5, pomp2_old_task)
+!$omp& if(pomp_if) firstprivate(pomp2_new_task)
+      call POMP2_Task_begin(pomp2_region_5, pomp2_new_task)
 #line 48 "test8.f"
       write(*,*) "task"
       call POMP2_Task_end(pomp2_region_5)
@@ -148,8 +146,7 @@
 !$omp  parallel                   reduction(+:k)
 !$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
 !$omp& if(pomp_if) num_threads(pomp_num_threads) 
-!$omp& shared(/cb000/)
-       call POMP2_Parallel_begin(pomp2_region_6)
+      call POMP2_Parallel_begin(pomp2_region_6)
       call POMP2_Do_enter(pomp2_region_6,
      &"155*regionType=paralleldo*sscl=test8.f:52:53*escl=test8.f:0"//
      &":0*hasIf=1*hasNumThreads=1*hasReduction=1*scheduleType=stat"//
@@ -193,8 +190,7 @@
 !$omp parallel                                     reduction(+:k)
 !$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
 !$omp& if(pomp_if) num_threads(pomp_num_threads) 
-!$omp& shared(/cb000/)
-       call POMP2_Parallel_begin(pomp2_region_8)
+      call POMP2_Parallel_begin(pomp2_region_8)
       call POMP2_Sections_enter(pomp2_region_8)
 #line 62 "test8.f"
 !$omp          sections                                          
@@ -234,8 +230,7 @@
 !$omp parallel                                     reduction(+:k)
 !$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
 !$omp& if(pomp_if) num_threads(pomp_num_threads) 
-!$omp& shared(/cb000/)
-       call POMP2_Parallel_begin(pomp2_region_9)
+      call POMP2_Parallel_begin(pomp2_region_9)
       call POMP2_Workshare_enter(pomp2_region_9,
      &"107*regionType=parallelworkshare*sscl=test8.f:69:69*escl=te"//
      &"st8.f:0:0*hasIf=1*hasNumThreads=1*hasReduction=1**" )
