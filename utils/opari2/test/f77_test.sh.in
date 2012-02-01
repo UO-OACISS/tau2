@@ -18,13 +18,13 @@ test_data_dir=@abs_srcdir@/data
 sed=@SED@
 awk=@AWK@
 
-cp $test_data_dir/test?.f $test_dir/
+cp $test_data_dir/test*.f $test_dir/
 if [ ! -f $test_dir/replacePaths_f77.awk ]; then
     cp $test_data_dir/../replacePaths_f77.awk $test_dir/
 fi
 cd $test_dir
 
-for file in test?.f
+for file in test*.f
 do 
   echo "        $file ..."
   base=`basename $file .f`

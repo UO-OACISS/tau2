@@ -35,8 +35,7 @@
 !$omp parallel
 !$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
 !$omp& if(pomp_if) num_threads(pomp_num_threads) 
-!$omp& shared(/cb000/)
-       call POMP2_Parallel_begin(pomp2_region_1)
+      call POMP2_Parallel_begin(pomp2_region_1)
 #line 26 "test4.f"
       write(*,*) "parallel"
       call POMP2_Do_enter(pomp2_region_2,
@@ -103,15 +102,15 @@
 #line 47 "test4.f"
 
       pomp_if = .true.
-      call POMP2_Task_create_begin(pomp2_region_6, pomp2_old_task, 
+      call POMP2_Task_create_begin(pomp2_region_6, pomp2_new_task,
+     &pomp2_old_task, 
      &pomp_if,
      &"67*regionType=task*sscl=test4.f:48:48*escl=test4.f:0:0*hasU"//
      &"ntied=1**" )
 #line 48 "test4.f"
 !$omp task       
-!$omp& if(pomp_if) firstprivate(pomp2_old_task)
-!$omp& shared(/cb000/)
-       call POMP2_Task_begin(pomp2_region_6, pomp2_old_task)
+!$omp& if(pomp_if) firstprivate(pomp2_new_task)
+      call POMP2_Task_begin(pomp2_region_6, pomp2_new_task)
 #line 49 "test4.f"
       write(*,*) "task"
       call POMP2_Task_end(pomp2_region_6)

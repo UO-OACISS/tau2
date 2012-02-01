@@ -58,6 +58,8 @@ opari2_print_help( char** argv )
               << "   --version              Prints the opari2 version number.\n"
               << "   --pomp2-api-version    Prints the pomp2 API version that instrumented files\n"
               << "                          conform too.\n\n"
+              << "   --opari2-revision      prints the revision number of the OPARI2 package\n"
+              << "   --common-revision      prints the revision number of the common package\n\n"
               << "and following options:\n"
               << "   --help                  Prints this help text.\n"
               << "   --config=<config file>  Reads in a configuration from the given file.\n\n"
@@ -133,6 +135,16 @@ main( int    argc,
         else if ( strcmp( argv[ i ], "--pomp2-api-version" ) == 0 )
         {
             action = ACTION_POMP2_API_VERSION;
+        }
+        else if ( strcmp( argv[ i ], "--opari2-revision" ) == 0 )
+        {
+            std::cout << SCOREP_COMPONENT_REVISION << std::endl;
+            exit( EXIT_SUCCESS );
+        }
+        else if ( strcmp( argv[ i ], "--common-revision" ) == 0 )
+        {
+            std::cout << SCOREP_COMMON_REVISION << std::endl;
+            exit( EXIT_SUCCESS );
         }
         else if ( strncmp( argv[ i ], "--config", 8 ) == 0 )
         {

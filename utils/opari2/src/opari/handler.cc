@@ -265,7 +265,7 @@ generate_call( const char* event,
              strcmp( type, "taskwait" ) != 0 &&
              strcmp( event, "begin" ) == 0 )
         {
-            os << ", pomp2_old_task";
+            os << ", pomp2_new_task";
         }
         if ( r != NULL )
         {
@@ -293,7 +293,7 @@ generate_call( const char* event,
              strcmp( type, "taskwait" ) != 0 &&
              strcmp( event, "begin" ) == 0 )
         {
-            os << ", pomp2_old_task";
+            os << ", pomp2_new_task";
         }
 
         if ( r != NULL )
@@ -326,20 +326,39 @@ generate_call_save_task_id( const char* event,
     if ( lang & L_FORTRAN )
     {
         os << "      call POMP2_" << c1 << ( type + 1 )
-           << "_" << event << "(" << region_id_prefix << id
-           << ", pomp2_old_task";
-        if ( r != NULL )
+           << "_" << event << "(" << region_id_prefix << id;
+        if ( ( strcmp( type, "task_create" ) == 0 ) || ( strcmp( type, "untied_task_create" ) == 0 )  )
         {
-            if ( r->name == "task" )
-            {
-                os << ", \n     &pomp_if";
-            }
+            os << ", pomp2_new_task";
             if ( lang & L_F77 )
             {
+                os << ",\n     &pomp2_old_task";
+            }
+            else
+            {
+                os << ", &\n      pomp2_old_task";
+            }
+        }
+        else
+        {
+            os << ", pomp2_old_task";
+        }
+        if ( r != NULL )
+        {
+            if ( lang & L_F77 )
+            {
+                if ( r->name == "task" )
+                {
+                    os << ", \n     &pomp_if";
+                }
                 os << ",\n     &" << r->generate_ctc_string( lang ) << " ";
             }
             else
             {
+                if ( r->name == "task" )
+                {
+                    os << ", &\n      pomp_if";
+                }
                 os << ", &\n     " << r->generate_ctc_string( lang ) << " ";
             }
         }
@@ -348,9 +367,17 @@ generate_call_save_task_id( const char* event,
     else
     {
         os << "{ POMP2_Task_handle pomp2_old_task;\n";
+        if ( ( strcmp( type, "task_create" ) == 0 ) || ( strcmp( type, "untied_task_create" ) == 0 )  )
+        {
+            os << "  POMP2_Task_handle pomp2_new_task;\n";
+        }
         os << "  POMP2_" << c1 << ( type + 1 )
-           << "_" << event << "( &" << region_id_prefix << id
-           << ", &pomp2_old_task";
+           << "_" << event << "( &" << region_id_prefix << id;
+        if ( ( strcmp( type, "task_create" ) == 0 ) || ( strcmp( type, "untied_task_create" ) == 0 )  )
+        {
+            os << ", &pomp2_new_task";
+        }
+        os << ", &pomp2_old_task";
         if ( r != NULL )
         {
             if ( r->name == "task" )
@@ -375,14 +402,14 @@ generate_call_restore_task_id( const char* event,
     if ( lang & L_FORTRAN )
     {
         os << "      call POMP2_" << c1 << ( type + 1 )
-           << "_" << event << "(" << region_id_prefix << id
-           << ", pomp2_old_task" << ")\n";
+           << "_" << event << "(" << region_id_prefix << id;
+        os << ", pomp2_old_task" << ")\n";
     }
     else
     {
         os << "  POMP2_" << c1 << ( type + 1 )
-           << "_" << event << "( &" << region_id_prefix << id
-           << ", pomp2_old_task ); }\n";
+           << "_" << event << "( &" << region_id_prefix << id;
+        os << ", pomp2_old_task ); }\n";
     }
 }
 
@@ -516,14 +543,20 @@ print_pragma_task( OMPragma* p,
                     os << p->lines.back() << "\n";
                     os << "!$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)\n";
                     os << "!$omp& if(pomp_if) num_threads(pomp_num_threads) copyin(" << pomp_tpd << ")\n";
-                    os << "!$omp& shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)\n ";
+                    if ( p->changed_default() )
+                    {
+                        os << "!$omp& shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)\n";
+                    }
                 }
                 else
                 {
                     os << p->lines.back() << "\n";
                     os << "!$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)\n";
                     os << "!$omp& if(pomp_if) num_threads(pomp_num_threads) \n";
-                    os << "!$omp& shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)\n ";
+                    if ( p->changed_default() )
+                    {
+                        os << "!$omp& shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)\n";
+                    }
                 }
             }
             else
@@ -532,15 +565,23 @@ print_pragma_task( OMPragma* p,
                 {
                     os << p->lines.back() << " &\n";
                     os << "  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &\n";
-                    os << "  !$omp if(pomp_if) num_threads(pomp_num_threads) copyin(" << pomp_tpd << ") &\n";
-                    os << "  !$omp shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)\n";
+                    os << "  !$omp if(pomp_if) num_threads(pomp_num_threads) copyin(" << pomp_tpd << ")";
+                    if ( p->changed_default() )
+                    {
+                        os << " &\n  !$omp shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)";
+                    }
+                    os << "\n";
                 }
                 else
                 {
                     os << p->lines.back() << " &\n";
                     os << "  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &\n";
-                    os << "  !$omp if(pomp_if) num_threads(pomp_num_threads) &\n";
-                    os << "  !$omp shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)\n";
+                    os << "  !$omp if(pomp_if) num_threads(pomp_num_threads)";
+                    if ( p->changed_default() )
+                    {
+                        os << " &\n  !$omp shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)";
+                    }
+                    os << "\n";
                 }
             }
         }
@@ -578,19 +619,26 @@ print_pragma_task( OMPragma* p,
         if ( lang & L_F77 )
         {
             os << p->lines.back() << "\n";
-            os << "!$omp& if(pomp_if) firstprivate(pomp2_old_task)\n";
-            os << "!$omp& shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)\n ";
+            os << "!$omp& if(pomp_if) firstprivate(pomp2_new_task)\n";
+            if ( p->changed_default() )
+            {
+                os << "!$omp& shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)\n ";
+            }
         }
         else if ( lang & L_FORTRAN )
         {
             os << p->lines.back();
-            os << " if(pomp_if) firstprivate(pomp2_old_task)&\n";
-            os << "  !$omp shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)\n";
+            os << " if(pomp_if) firstprivate(pomp2_new_task)";
+            if ( p->changed_default() )
+            {
+                os << "&\n  !$omp shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)";
+            }
+            os << "\n";
         }
         else
         {
             os << p->lines.back();
-            os << " if(pomp_if) firstprivate(pomp2_old_task)\n";
+            os << " if(pomp_if) firstprivate(pomp2_new_task)\n";
         }
     }
     else
@@ -639,7 +687,7 @@ RTop( OMPragma* p )
     if ( regStack.empty() )
     {
         cerr << infile << ":" << p->lineno
-             << ": ERROR: unbalanced pragma/directive nesting\n";
+             << "663: ERROR: unbalanced pragma/directive nesting\n";
         cleanup_and_exit();
     }
     else
@@ -942,12 +990,18 @@ h_single_c( OMPragma* p,
         }
         r->noWaitAdded = true;
     }
-    generate_call( "enter", "single", n, os, r );
-    print_pragma( p, os );
-    generate_call( "begin", "single", n, os, NULL );
-    if ( keepSrcInfo )
+    if ( enabled & C_SINGLE )
     {
-        reset_src_info( p, os );
+        generate_call( "enter", "single", n, os, r );
+    }
+    print_pragma( p, os );
+    if ( enabled & C_SINGLE )
+    {
+        generate_call( "begin", "single", n, os, NULL );
+        if ( keepSrcInfo )
+        {
+            reset_src_info( p, os );
+        }
     }
 }
 
@@ -957,15 +1011,21 @@ h_endsingle_c( OMPragma* p,
 {
     OMPRegion* r = RTop( p );
     int        n = RExit( p );
-    generate_call( "end", "single", n, os, NULL );
+    if ( enabled & C_SINGLE )
+    {
+        generate_call( "end", "single", n, os, NULL );
+    }
     if ( r->noWaitAdded )
     {
         generate_barrier( n, os );
     }
-    generate_call( "exit", "single", n, os, NULL );
-    if ( keepSrcInfo )
+    if ( enabled & C_SINGLE )
     {
-        reset_src_info( p, os );
+        generate_call( "exit", "single", n, os, NULL );
+        if ( keepSrcInfo )
+        {
+            reset_src_info( p, os );
+        }
     }
 }
 
@@ -975,12 +1035,18 @@ h_single( OMPragma* p,
 {
     OMPRegion* r = REnter( p );
     int        n = r->id;
-    generate_call( "enter", "single", n, os, r );
-    print_pragma( p, os );
-    generate_call( "begin", "single", n, os, NULL );
-    if ( keepSrcInfo )
+    if ( enabled & C_SINGLE )
     {
-        reset_src_info( p, os );
+        generate_call( "enter", "single", n, os, r );
+    }
+    print_pragma( p, os );
+    if ( enabled & C_SINGLE )
+    {
+        generate_call( "begin", "single", n, os, NULL );
+        if ( keepSrcInfo )
+        {
+            reset_src_info( p, os );
+        }
     }
 }
 
@@ -989,7 +1055,10 @@ h_endsingle( OMPragma* p,
              ostream&  os )
 {
     int n = RExit( p );
-    generate_call( "end", "single", n, os, NULL );
+    if ( enabled & C_SINGLE )
+    {
+        generate_call( "end", "single", n, os, NULL );
+    }
     if ( p->is_nowait() )
     {
         print_pragma( p, os );
@@ -1003,10 +1072,13 @@ h_endsingle( OMPragma* p,
         print_pragma( p, os );
         generate_barrier( n, os );
     }
-    generate_call( "exit", "single", n, os, NULL );
-    if ( keepSrcInfo )
+    if ( enabled & C_SINGLE )
     {
-        reset_src_info( p, os );
+        generate_call( "exit", "single", n, os, NULL );
+        if ( keepSrcInfo )
+        {
+            reset_src_info( p, os );
+        }
     }
 }
 
@@ -1017,10 +1089,13 @@ h_master( OMPragma* p,
     OMPRegion* r = REnter( p );
     int        n = r->id;
     print_pragma( p, os );
-    generate_call( "begin", "master", n, os, r );
-    if ( keepSrcInfo )
+    if ( enabled & C_MASTER )
     {
-        reset_src_info( p, os );
+        generate_call( "begin", "master", n, os, r );
+        if ( keepSrcInfo )
+        {
+            reset_src_info( p, os );
+        }
     }
 }
 
@@ -1029,10 +1104,13 @@ h_endmaster_c( OMPragma* p,
                ostream&  os )
 {
     int n = RExit( p );
-    generate_call( "end", "master", n, os, NULL );
-    if ( keepSrcInfo )
+    if ( enabled & C_MASTER )
     {
-        reset_src_info( p, os );
+        generate_call( "end", "master", n, os, NULL );
+        if ( keepSrcInfo )
+        {
+            reset_src_info( p, os );
+        }
     }
 }
 
@@ -1041,7 +1119,10 @@ h_endmaster( OMPragma* p,
              ostream&  os )
 {
     int n = RExit( p );
-    generate_call( "end", "master", n, os, NULL );
+    if ( enabled & C_MASTER )
+    {
+        generate_call( "end", "master", n, os, NULL );
+    }
     print_pragma( p, os );
 }
 
@@ -1052,9 +1133,15 @@ h_critical( OMPragma* p,
     OMPRegion* r = REnter( p );
     int        n = r->id;
     r->sub_name = p->find_sub_name();
-    generate_call( "enter", "critical", n, os, r );
+    if ( enabled & C_CRITICAL )
+    {
+        generate_call( "enter", "critical", n, os, r );
+    }
     print_pragma( p, os );
-    generate_call( "begin", "critical", n, os, NULL );
+    if ( enabled & C_CRITICAL )
+    {
+        generate_call( "begin", "critical", n, os, NULL );
+    }
     if ( keepSrcInfo )
     {
         reset_src_info( p, os );
@@ -1081,9 +1168,15 @@ h_endcritical( OMPragma* p,
             cleanup_and_exit();
         }
     }
-    generate_call( "end", "critical", n, os, NULL );
+    if ( enabled & C_CRITICAL )
+    {
+        generate_call( "end", "critical", n, os, NULL );
+    }
     print_pragma( p, os );
-    generate_call( "exit", "critical", n, os, NULL );
+    if ( enabled & C_CRITICAL )
+    {
+        generate_call( "exit", "critical", n, os, NULL );
+    }
     if ( keepSrcInfo )
     {
         reset_src_info( p, os );
@@ -1294,7 +1387,10 @@ h_atomic( OMPragma* p,
                                   p->lineno, p->lineno + p->lines.size() - 1 );
     int        n = r->id;
     regions.push_back( r );
-    generate_call( "enter", "atomic", n, os, r );
+    if ( enabled & C_ATOMIC )
+    {
+        generate_call( "enter", "atomic", n, os, r );
+    }
     print_pragma( p, os );
     atomicRegion = r;
 }
@@ -1382,13 +1478,18 @@ h_ordered( OMPragma* p,
 {
     OMPRegion* r = REnter( p );
     int        n = r->id;
-
-    generate_call( "enter", "ordered", n, os, r );
-    print_pragma( p, os );
-    generate_call( "begin", "ordered", n, os, NULL );
-    if ( keepSrcInfo )
+    if ( enabled & C_ORDERED )
     {
-        reset_src_info( p, os );
+        generate_call( "enter", "ordered", n, os, r );
+    }
+    print_pragma( p, os );
+    if ( enabled & C_ORDERED )
+    {
+        generate_call( "begin", "ordered", n, os, NULL );
+        if ( keepSrcInfo )
+        {
+            reset_src_info( p, os );
+        }
     }
 }
 
@@ -1398,13 +1499,18 @@ h_endordered( OMPragma* p,
               ostream&  os )
 {
     int n = RExit( p );
-
-    generate_call( "end", "ordered", n, os, NULL );
-    print_pragma( p, os );
-    generate_call( "exit", "ordered", n, os, NULL );
-    if ( keepSrcInfo )
+    if ( enabled & C_ORDERED )
     {
-        reset_src_info( p, os );
+        generate_call( "end", "ordered", n, os, NULL );
+    }
+    print_pragma( p, os );
+    if ( enabled & C_ORDERED )
+    {
+        generate_call( "exit", "ordered", n, os, NULL );
+        if ( keepSrcInfo )
+        {
+            reset_src_info( p, os );
+        }
     }
 }
 
@@ -1674,7 +1780,10 @@ h_cxx_end( OMPragma* p,
 {
     if ( atomicRegion )
     {
-        extra_handler( p->lineno - p->pline, os );
+        if ( enabled & C_ATOMIC )
+        {
+            extra_handler( p->lineno - p->pline, os );
+        }
     }
     else
     {
@@ -1708,11 +1817,8 @@ init_handler( const char* inf,
             table[ "sections" ]     = h_sections;
             table[ "section" ]      = h_section;
             table[ "endsections" ]  = h_endsections;
-            if ( enabled & C_SINGLE )
-            {
-                table[ "single" ]    = h_single;
-                table[ "endsingle" ] = h_endsingle;
-            }
+            table[ "single" ]       = h_single;
+            table[ "endsingle" ]    = h_endsingle;
             if ( enabled & C_MASTER )
             {
                 table[ "master" ]    = h_master;
@@ -1728,23 +1834,16 @@ init_handler( const char* inf,
         }
         else
         {
-            table[ "for" ]         = h_for;
-            table[ "endfor" ]      = h_endfor;
-            table[ "sections" ]    = h_sections_c;
-            table[ "section" ]     = h_section_c;
-            table[ "endsection" ]  = h_endsection_c;
-            table[ "endsections" ] = h_endsections_c;
-            if ( enabled & C_SINGLE )
-            {
-                table[ "single" ]    = h_single_c;
-                table[ "endsingle" ] = h_endsingle_c;
-            }
-            if ( enabled & C_MASTER )
-            {
-                table[ "master" ]    = h_master;      // F version OK here
-                table[ "endmaster" ] = h_endmaster_c; // but not here
-            }
-
+            table[ "for" ]                 = h_for;
+            table[ "endfor" ]              = h_endfor;
+            table[ "sections" ]            = h_sections_c;
+            table[ "section" ]             = h_section_c;
+            table[ "endsection" ]          = h_endsection_c;
+            table[ "endsections" ]         = h_endsections_c;
+            table[ "single" ]              = h_single_c;
+            table[ "endsingle" ]           = h_endsingle_c;
+            table[ "master" ]              = h_master;      // F version OK here
+            table[ "endmaster" ]           = h_endmaster_c; // but not here
             table[ "parallelfor" ]         = h_parallelfor;
             table[ "endparallelfor" ]      = h_endparallelfor;
             table[ "parallelsections" ]    = h_parallelsections_c;
@@ -1754,21 +1853,15 @@ init_handler( const char* inf,
         }
         table[ "parallel" ]    = h_parallel;
         table[ "endparallel" ] = h_endparallel;
-        if ( enabled & C_CRITICAL )
-        {
-            table[ "critical" ]    = h_critical;
-            table[ "endcritical" ] = h_endcritical;
-        }
+        table[ "critical" ]    = h_critical;
+        table[ "endcritical" ] = h_endcritical;
 
         table[ "barrier" ] = h_barrier;
         if ( enabled & C_FLUSH )
         {
             table[ "flush" ] = h_flush;
         }
-        if ( enabled & C_ATOMIC )
-        {
-            table[ "atomic" ] = h_atomic;
-        }
+        table[ "atomic" ]     = h_atomic;
         table[ "ordered" ]    = h_ordered;
         table[ "endordered" ] = h_endordered;
         table[ "task" ]       = h_task;
