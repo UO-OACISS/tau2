@@ -106,6 +106,18 @@ extern void Tau_sampling_outputTraceCallstack(int tid, void *pc,
 extern void Tau_sampling_unwindTauContext(int tid, void **address);
 extern vector<unsigned long> *Tau_sampling_unwind(int tid, Profiler *profiler,
 						  void *pc, void *context);
+
+extern "C" bool unwind_cutoff(void **addresses, void *address) {
+  bool found = false;
+  for (int i=0; i<TAU_SAMP_NUM_ADDRESSES; i++) {
+    if ((unsigned long)(addresses[i]) == (unsigned long)address) {
+      //      printf("match found %p\n", address);
+      found = true;
+      break;
+    }
+  }
+  return found; 
+}
 #endif /* TAU_UNWIND */
 
 /*********************************************************************
