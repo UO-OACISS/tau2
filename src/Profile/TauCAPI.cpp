@@ -1656,6 +1656,10 @@ extern "C" int Tau_get_tid(void) {
   return RtsLayer::myThread();
 }
 
+extern "C" int Tau_create_tid(void) {
+  return RtsLayer::threadId();
+}
+
 // this routine is called by the destructors of our static objects
 // ensuring that the profiles are written out while the objects are still valid
 void Tau_destructor_trigger() {
