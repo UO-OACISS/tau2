@@ -1385,11 +1385,12 @@ POMP2_Ordered_exit( POMP2_Region_handle* pomp2_handle )
 void
 POMP2_Task_create_begin( POMP2_Region_handle* pomp2_handle,
                          POMP2_Task_handle*   pomp2_old_task,
+                         POMP2_Task_handle*   pomp2_new_task,
                          int                  pomp2_if,
                          const char           ctc_string[])
 {
     *pomp2_old_task = pomp2_current_task;
-    pomp2_current_task = POMP2_Get_new_task_handle();
+    *pomp2_new_task = POMP2_Get_new_task_handle();
 
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
 
@@ -1438,9 +1439,9 @@ POMP2_Task_create_end( POMP2_Region_handle* pomp2_handle,
 
 void
 POMP2_Task_begin( POMP2_Region_handle* pomp2_handle,
-                  POMP2_Task_handle    pomp2_new_task )
+                  POMP2_Task_handle    pomp2_task )
 {
-    pomp2_current_task = pomp2_new_task;
+    pomp2_current_task = pomp2_task;
 
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
 
@@ -1487,12 +1488,13 @@ POMP2_Task_end( POMP2_Region_handle* pomp2_handle )
 
 void
 POMP2_Untied_task_create_begin( POMP2_Region_handle* pomp2_handle,
+                                POMP2_Task_handle*   pomp2_new_task,
                                 POMP2_Task_handle*   pomp2_old_task,
                                 int                  pomp2_if,
                                 const char           ctc_string[] )
 {
+    *pomp2_new_task = POMP2_Get_new_task_handle();
     *pomp2_old_task = pomp2_current_task;
-    pomp2_current_task = POMP2_Get_new_task_handle();
 
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
 
@@ -1544,9 +1546,9 @@ POMP2_Untied_task_create_end( POMP2_Region_handle* pomp2_handle,
 
 void
 POMP2_Untied_task_begin( POMP2_Region_handle* pomp2_handle,
-                         POMP2_Task_handle    pomp2_new_task )
+                         POMP2_Task_handle    pomp2_parent_task )
 {
-    pomp2_current_task = pomp2_new_task;
+    pomp2_current_task = POMP2_Get_new_task_handle();
 
 
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
