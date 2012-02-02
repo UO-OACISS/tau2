@@ -29,6 +29,10 @@ using namespace std;
 static int compensateInitialized = 0;
 
 extern "C" int Tau_compensate_initialization() {
+  // *CWL* - This seems to be unnecessary, but it is there to remind us
+  //         of the possibility in case the current model turns out to be
+  //         wrong.
+  //  Tau_create_top_level_timer_if_necessary();
   double *tover = TauGetTimerOverhead(TauFullTimerOverhead);
   double *tnull = TauGetTimerOverhead(TauNullTimerOverhead);
   compensateInitialized = 1;
