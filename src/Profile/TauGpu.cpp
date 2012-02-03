@@ -52,7 +52,7 @@ int counted_memcpys = 0;
 
 #include <linux/unistd.h>
 
-extern void metric_set_gpu_timestamp(int tid, double value);
+extern "C" void metric_set_gpu_timestamp(int tid, double value);
 
 #include<map>
 using namespace std;
@@ -70,8 +70,6 @@ struct EventName {
 //doubleMap MemcpyEventMap;
 
 //map<EventName, void*> events;
-
-extern void metric_set_gpu_timestamp(int tid, double value);
 
 
 void check_gpu_event(int gpuTask)
@@ -118,7 +116,7 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, gpuId
 		{
 			functionName = "Memory copy (Other)";
 		}
-		printf("using default name: %s.\n", functionName);
+		//printf("using default name: %s.\n", functionName);
 	}
 
 	TAU_START(functionName);
@@ -189,7 +187,7 @@ memcpyType)
 		{
 			functionName = "Memory copy (Other)";
 		}
-		printf("using default name: %s.\n", functionName);
+		//printf("using default name: %s.\n", functionName);
 	}
 
 	// Place the Message into the trace in when the memcpy in exited if this
@@ -296,10 +294,10 @@ int get_task(gpuId *new_task)
 	if (it == TheGpuIdMap().end())
 	{
 		gpuId *create_task = new_task->getCopy();
-		task = TheGpuIdMap()[create_task] = RtsLayer::createThread();
+		task = TheGpuIdMap()[create_task] = Tau_RtsLayer_createThread();
 		number_of_tasks++;
 		TAU_CREATE_TASK(task);
-		printf("new task: %s id: %d.\n", new_task->printId(), task);
+		//printf("new task: %s id: %d.\n", new_task->printId(), task);
 	} else
 	{
 		task = (*it).second;
@@ -316,6 +314,7 @@ FunctionInfo* callingSite)
 
 void Tau_gpu_register_gpu_event(eventId id, double startTime, double endTime)
 {
+	//printf("Tau gpu name: %s.\n", id.name);
 	int task = get_task(id.device);
   
 	//printf("in TauGpu.cpp, registering gpu event.\n");

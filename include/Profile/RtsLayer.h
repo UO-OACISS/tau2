@@ -140,6 +140,7 @@ private:
 };
 
 extern "C" int Tau_RtsLayer_getTid();
+extern "C" int Tau_RtsLayer_createThread();
 
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************
