@@ -111,6 +111,10 @@ int RtsLayer::createThread()
 	return newThread->thread_rank;
 }
 
+extern "C" int Tau_RtsLayer_createThread() {
+	return RtsLayer::createThread();
+}
+
 void RtsLayer::recycleThread(int id)
 {
   LockEnv();
