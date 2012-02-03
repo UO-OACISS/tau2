@@ -86,7 +86,12 @@ struct HashNode
 };
 
 typedef std::map<unsigned long, HashNode> HashTable;
-HashTable htab;
+
+HashTable& TheHashTable()
+{
+	static HashTable htab;
+	return htab;
+}
 
 /*
  * Get symbol table by using BFD
@@ -110,7 +115,7 @@ static void issueBfdWarningIfNecessary() {
 
 void updateHashTable(unsigned long addr, const char *funcname)
 {
-	HashNode & hn = htab[addr];
+	HashNode & hn = TheHashTable()[addr];
 	hn.info.funcname = funcname;
 	hn.excluded = funcname && (
 			// Intel compiler static initializer
@@ -397,7 +402,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 
 	// Get previously hashed info, or efficiently create
 	// a new hash node if it didn't already exist
-	HashNode & hn = htab[addr];
+	HashNode & hn = TheHashTable()[addr];
 
 	// Start the timer if it's not an excluded function
 	if (!hn.excluded) {
@@ -488,7 +493,7 @@ void __cyg_profile_func_exit(void* func, void* callsite)
 	funcptr = *( void ** )func;
 #endif
 
-	HashNode & hn = htab[Tau_convert_ptr_to_unsigned_long(funcptr)];
+	HashNode & hn = TheHashTable()[Tau_convert_ptr_to_unsigned_long(funcptr)];
 	if (!hn.excluded && hn.fi) {
 		Tau_stop_timer(hn.fi, tid);
 	}

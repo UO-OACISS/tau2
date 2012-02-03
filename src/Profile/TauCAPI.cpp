@@ -244,11 +244,11 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 #endif
 
 #ifdef TAU_VAMPIRTRACE 
-  x_uint64 TimeStamp = vt_pform_wtime();
+  uint64_t TimeStamp = vt_pform_wtime();
 #ifdef TAU_VAMPIRTRACE_5_12_API
   vt_enter(VT_CURRENT_THREAD, (x_uint64 *) &TimeStamp, fi->GetFunctionId());
 #else
-  vt_enter((x_uint64 *) &TimeStamp, fi->GetFunctionId());
+  vt_enter((uint64_t *) &TimeStamp, fi->GetFunctionId());
 #endif /* TAU_VAMPIRTRACE_5_12_API */
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
@@ -415,12 +415,12 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 #endif
 
 #ifdef TAU_VAMPIRTRACE 
-  x_uint64 TimeStamp = vt_pform_wtime();
+  uint64_t TimeStamp = vt_pform_wtime();
 
 #ifdef TAU_VAMPIRTRACE_5_12_API
-  vt_exit(VT_CURRENT_THREAD, (x_uint64 *)&TimeStamp);
+  vt_exit(VT_CURRENT_THREAD, (uint64_t *)&TimeStamp);
 #else 
-  vt_exit((x_uint64 *)&TimeStamp);
+  vt_exit((uint64_t *)&TimeStamp);
 #endif /* TAU_VAMPIRTRACE_5_12_API */
 
 #ifndef TAU_WINDOWS
@@ -1654,6 +1654,10 @@ extern "C" void Tau_get_counter_info(const char ***counterNames, int *numCounter
 //////////////////////////////////////////////////////////////////////
 extern "C" int Tau_get_tid(void) {
   return RtsLayer::myThread();
+}
+
+extern "C" int Tau_create_tid(void) {
+  return RtsLayer::threadId();
 }
 
 // this routine is called by the destructors of our static objects

@@ -100,7 +100,9 @@ public:
   // Return the number of the 'current' thread. 0..TAU_MAX_THREADS-1
   static int myThread(void);
 
-  static int getNumThreads();
+  static int threadId(void);
+  
+	static int getNumThreads();
 
   static int getPid();
   static int getTid();
