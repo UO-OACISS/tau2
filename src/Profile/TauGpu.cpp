@@ -296,7 +296,7 @@ int get_task(gpuId *new_task)
 		gpuId *create_task = new_task->getCopy();
 		task = TheGpuIdMap()[create_task] = Tau_RtsLayer_createThread();
 		number_of_tasks++;
-		TAU_CREATE_TASK(task);
+		//TAU_CREATE_TASK(task);
 		//printf("new task: %s id: %d.\n", new_task->printId(), task);
 	} else
 	{
@@ -465,9 +465,10 @@ void Tau_gpu_exit(void)
 		cerr << "stopping first gpu event.\n" << endl;
 		printf("stopping level %d tasks.\n", number_of_tasks);
 #endif
-		for (int i=0; i<number_of_tasks; i++)
+		map<gpuId*, int>::iterator it;
+		for (it = TheGpuIdMap().begin(); it != TheGpuIdMap().end(); it++)
 		{
-			TAU_PROFILER_STOP_TASK(gpu_ptr, i+1);
+			TAU_PROFILER_STOP_TASK(gpu_ptr, it->second);
 		}
 #ifdef DEBUG_PROF
 		printf("stopping level 1.\n");
