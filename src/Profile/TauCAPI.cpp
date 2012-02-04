@@ -1092,6 +1092,12 @@ extern "C" void Tau_context_userevent(void *ue, double data) {
 } 
 
 ///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_context_userevent_thread(void *ue, double data, int tid) {
+  TauContextUserEvent *t = (TauContextUserEvent *) ue;
+  t->TriggerEvent(data, tid);
+}
+
+///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_set_event_name(void *ue, char *name) {
   TauUserEvent *t = (TauUserEvent *) ue;
   t->SetEventName(name);
