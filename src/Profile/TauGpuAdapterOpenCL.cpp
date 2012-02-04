@@ -383,8 +383,8 @@ void Tau_opencl_register_sync_event()
 		
 		//Add context events to gpu event.
 		TauGpuContextMap map;
-		map["Time spend in Queue (us)"] = (startTime - queuedTime)/1e3;
-		map["Time spend Submitted (us)"] = (startTime - submitTime)/1e3;
+		map["Time in Queue (us)"] = (startTime - queuedTime)/1e3;
+		map["Time Submitted (us)"] = (startTime - submitTime)/1e3;
 		kernel_data->contextEventMap = &map;
 
 
