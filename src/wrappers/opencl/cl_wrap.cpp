@@ -1915,14 +1915,30 @@ void * clEnqueueMapBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, cl_map_fla
 #ifdef TAU_ENABLE_CL_CALLBACK
 	callback_data *mem_data = (callback_data*) malloc(memcpy_data_size);
 	strcpy(mem_data->name, "MapBuffer");
-	mem_data->memcpy_type = MemcpyDtoH;
+	mem_data->memcpy_type = MemcpyHtoD;
 	//printf("name %s.\n", mem_data->name);
 #endif
-  TAU_PROFILE_START(t);
+	FunctionInfo *callingSite;
+	int err;
+	char* name = "MapBuffer";
+	//printf("name: %s.\n", name);
+
+	callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
+	//callingSite = NULL;
+	
+	//printf("CL WRAP: command queue is: %d.\n", a1);
+	openCLGpuId *gId = Tau_opencl_retrive_gpu(a1);
+	callback_data *kernel_data = new callback_data(name, gId,
+	callingSite, a9, MemcpyHtoD);
+	
+	Tau_opencl_enqueue_event(kernel_data);
+  
 	check_memory_init();
-	TAU_CONTEXT_EVENT(MemoryCopyEventDtoH, a5);
+	TAU_CONTEXT_EVENT(MemoryCopyEventHtoD, a6);
+  Tau_opencl_enter_memcpy_event("void *clEnqueueMapBuffer(cl_command_queue, cl_mem, cl_bool, cl_map_flags, size_t, size_t, cl_uint, const cl_event *, cl_event *, cl_int *) C", gId, a6, MemcpyHtoD);
   retval  =  (*clEnqueueMapBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9,  a10);
-  TAU_PROFILE_STOP(t);
+  
+	Tau_opencl_exit_memcpy_event("void *clEnqueueMapBuffer(cl_command_queue, cl_mem, cl_bool, cl_map_flags, size_t, size_t, cl_uint, const cl_event *, cl_event *, cl_int *) C", gId, MemcpyHtoD);
 #ifdef TAU_ENABLE_CL_CALLBACK
 	clSetEventCallback((*a9), CL_COMPLETE, Tau_opencl_memcpy_callback, mem_data);
 #endif
@@ -1982,9 +1998,26 @@ cl_int clEnqueueUnmapMemObject(cl_command_queue a1, cl_mem a2, void * a3, cl_uin
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-  TAU_PROFILE_START(t);
+	FunctionInfo *callingSite;
+	int err;
+	char* name = "UnmapBuffer";
+	//printf("name: %s.\n", name);
+
+	callingSite = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->CallPathFunction;
+	//callingSite = NULL;
+	
+	//printf("CL WRAP (in Unmap: command queue is: %d.\n", a1);
+	openCLGpuId *gId = Tau_opencl_retrive_gpu(a1);
+	callback_data *kernel_data = new callback_data(name, gId,
+	callingSite, a6, MemcpyDtoH);
+	
+	Tau_opencl_enqueue_event(kernel_data);
+  
+	check_memory_init();
+	TAU_CONTEXT_EVENT(MemoryCopyEventDtoH, 0);
+  Tau_opencl_enter_memcpy_event("cl_int clEnqueueUnmapMemObject(cl_command_queue, cl_mem, void *, cl_uint, const cl_event *, cl_event *) C", gId, 0, MemcpyDtoH);
   retval  =  (*clEnqueueUnmapMemObject_h)( a1,  a2,  a3,  a4,  a5,  a6);
-  TAU_PROFILE_STOP(t);
+  Tau_opencl_exit_memcpy_event("cl_int clEnqueueUnmapMemObject(cl_command_queue, cl_mem, void *, cl_uint, const cl_event *, cl_event *) C", gId, MemcpyDtoH);
   }
   return retval;
 
