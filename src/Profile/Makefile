@@ -841,7 +841,7 @@ TauGpuAdapterOpenCL.o : TauGpuAdapterOpenCL.cpp $(HDRS)  $(INCDIR)/TauGpuAdapter
 	$(CXX) $(CXXFLAGS) -I$(TAU_OPENCL_INC) -g -c $(@:.o=.cpp)
 
 TauGpuAdapterCupti.o : TauGpuAdapterCupti.cpp $(HDRS) ../../include/Profile/TauGpuAdapterCupti.h
-	$(TAU_CUDA_CXX) $(CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
+	$(TAU_CUDA_CXX) $(CXXFLAGS) -fpermissive -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 TauGpuAdapterCupti40.o : TauGpuAdapterCupti40.cpp $(HDRS) ../../include/Profile/TauGpuAdapterCupti40.h
 	$(TAU_CUDA_CXX) $(CXXFLAGS) -fpermissive -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
