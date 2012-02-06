@@ -353,7 +353,7 @@ static x_uint64 getTimeStamp() {
 }
 #endif /* TAU_PERFSUITE */
 
-
+extern "C" int TauCompensateInitialized(void);
 void Profiler::Stop(int tid, bool useLastTimeStamp) {
 #ifdef DEBUG_PROF
   fprintf (stderr, "[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
@@ -586,6 +586,17 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   /********************************************************************************/
     
   if (ParentProfiler == (Profiler *) NULL) {
+    //    printf("No parent profiler on stop\n");
+    if (TauEnv_get_extras()) {
+      /*** Profile Compensation ***/
+      if (TauEnv_get_compensate()) {
+	// If I am still compensating, I do not expect a top level timer. Just pretend
+	// this never happened.
+	if (!TauCompensateInitialized()) {
+	  return;
+	}
+      }
+    }
     /* Should we detect memory leaks here? */
     if (TheSafeToDumpData() && !RtsLayer::isCtorDtor(ThisFunction->GetName())) {
       Tau_global_callWriteHooks();

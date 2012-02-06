@@ -52,7 +52,7 @@ int counted_memcpys = 0;
 
 #include <linux/unistd.h>
 
-extern void metric_set_gpu_timestamp(int tid, double value);
+extern "C" void metric_set_gpu_timestamp(int tid, double value);
 
 #include<map>
 using namespace std;
@@ -70,8 +70,6 @@ struct EventName {
 //doubleMap MemcpyEventMap;
 
 //map<EventName, void*> events;
-
-extern void metric_set_gpu_timestamp(int tid, double value);
 
 
 void check_gpu_event(int gpuTask)
@@ -118,7 +116,7 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, gpuId
 		{
 			functionName = "Memory copy (Other)";
 		}
-		printf("using default name: %s.\n", functionName);
+		//printf("using default name: %s.\n", functionName);
 	}
 
 	TAU_START(functionName);
@@ -189,7 +187,7 @@ memcpyType)
 		{
 			functionName = "Memory copy (Other)";
 		}
-		printf("using default name: %s.\n", functionName);
+		//printf("using default name: %s.\n", functionName);
 	}
 
 	// Place the Message into the trace in when the memcpy in exited if this
@@ -296,7 +294,7 @@ int get_task(gpuId *new_task)
 	if (it == TheGpuIdMap().end())
 	{
 		gpuId *create_task = new_task->getCopy();
-		task = TheGpuIdMap()[create_task] = RtsLayer::createThread();
+		task = TheGpuIdMap()[create_task] = Tau_RtsLayer_createThread();
 		number_of_tasks++;
 		//TAU_CREATE_TASK(task);
 		//printf("new task: %s id: %d.\n", new_task->printId(), task);
@@ -309,21 +307,39 @@ int get_task(gpuId *new_task)
 }
 
 eventId Tau_gpu_create_gpu_event(const char *name, gpuId *device,
+FunctionInfo* callingSite, TauGpuContextMap* map)
+{
+	return eventId(name, device, callingSite, map);
+}
+
+eventId Tau_gpu_create_gpu_event(const char *name, gpuId *device,
 FunctionInfo* callingSite)
 {
-	return eventId(name, device, callingSite);
+	return eventId(name, device, callingSite, NULL);
 }
 
 void Tau_gpu_register_gpu_event(eventId id, double startTime, double endTime)
 {
+	//printf("Tau gpu name: %s.\n", id.name);
 	int task = get_task(id.device);
   
 	//printf("in TauGpu.cpp, registering gpu event.\n");
 	//printf("Tau gpu name: %s.\n", name);
 	stage_gpu_event(id.name, task,
 		startTime + id.device->syncOffset(), id.callingSite);
-	//TAU_REGISTER_CONTEXT_EVENT(k1, "sample kernel data");
-	//TAU_CONTEXT_EVENT(k1,1000);
+	//printf("registering context event with kernel = %d.\n", id.name);
+	if (id.contextEventMap != NULL)
+	{
+		for (TauGpuContextMap::iterator it = id.contextEventMap->begin();
+				 it != id.contextEventMap->end();
+				 it++)
+		{
+			char* event_name = (char*) it->first.c_str();
+			TAU_EVENT_DATATYPE event_data = it->second;
+			TauContextUserEvent* e = new TauContextUserEvent(event_name, false);
+			e->TriggerEvent(event_data, task);
+		}
+	}
 	break_gpu_event(id.name, task,
 			endTime + id.device->syncOffset(), id.callingSite);
 	
