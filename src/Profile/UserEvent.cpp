@@ -247,11 +247,24 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid) {
 
 void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timestamp, int use_ts) { 
 #ifdef TAU_VAMPIRTRACE
-  x_uint64 time;
-  x_uint64 cval;
+  // *CWL* - x_uint64 (unsigned long long) violates the vampirtrace interface which expects
+  //         unsigned long (previously uint64_t). The change from uint64_t to x_uint64 was
+  //         previously made in response to problems with SCORE-P but was done as a global
+  //         cut-and-paste which turned out to be unsafe. Since the use of time and cval
+  //         are guarded for just vampirtrace, it should be safe to revert the changes
+  //         for just vampirtrace.
+  //
+  //         Keep an eye on this. We should expect trouble as long as we cannot provide 
+  //         a proper abstraction for what constitutes a 64-bit unsigned integer in TAU.
+  //         This should be a TODO item.
+  // x_uint64 time;
+  // x_uint64 cval;
+  uint64_t time;
+  uint64_t cval;
   int id = GetEventId();
   time = vt_pform_wtime();
-  cval = (x_uint64) data;
+  // cval = (x_uint64) data;
+  cval = (uint64_t) data;
 #ifdef TAU_VAMPIRTRACE_5_12_API
   vt_count(VT_CURRENT_THREAD, &time, id, 0);
 #else

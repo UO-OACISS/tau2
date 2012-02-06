@@ -1489,7 +1489,7 @@ for arg in "$@"; do
     ;;
 
   -shmemlibrary=*)
-    shmemlibrary=`echo $arg | sed -e 's/-shmemlibrary=//' -e 's/ /#/g'`
+    shmemlibrary=`echo $arg | sed -e 's/-shmemlibrary=//' -e 's/#/ /g'`
     shmem=yes
     shift
     ;;
@@ -4017,7 +4017,10 @@ then
     if [ -r $openshmem_lib_dir/libopenshmem.so -o -r $openshmem_lib_dir/libopenshmem.a ] 
     then
       shmemlibargs="$shmemlibargs -L$openshmem_lib_dir"
-      shmemlibrary=-lopenshmem
+      if [ "$shmemlibrary" = "no"  -o "$shmemlibrary" = "-lsma" ]
+      then
+        shmemlibrary=-lopenshmem
+      fi
     fi
   fi
    
@@ -6008,6 +6011,11 @@ if [ $cuda = yes ] ; then
 		if [ "$machine" != "craycnl" -a "$opencl" != "disable" ] ; then
 			if [ -f "$cudainclude/CL/cl.h" ] ; then
 				fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$cudainclude"
+			fi
+		else
+			if [ "$machine" == "craycnl" -a "$PE_ENV" != "GNU" ]; then
+				echo "ERROR: TAU's GPU measurement system is only available in the GNU compiler environment on CRAY. Please swap modules and reconfigure."
+				exit 1
 			fi
 		fi
 	else
