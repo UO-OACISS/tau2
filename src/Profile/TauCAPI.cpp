@@ -250,7 +250,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 #ifdef TAU_VAMPIRTRACE 
   uint64_t TimeStamp = vt_pform_wtime();
 #ifdef TAU_VAMPIRTRACE_5_12_API
-  vt_enter(VT_CURRENT_THREAD, (x_uint64 *) &TimeStamp, fi->GetFunctionId());
+  vt_enter(VT_CURRENT_THREAD, (uint64 *) &TimeStamp, fi->GetFunctionId());
 #else
   vt_enter((uint64_t *) &TimeStamp, fi->GetFunctionId());
 #endif /* TAU_VAMPIRTRACE_5_12_API */
