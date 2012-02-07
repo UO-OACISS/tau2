@@ -141,6 +141,10 @@ extern "C" int Tau_is_thread_fake(int tid) {
   return Tau_is_thread_fake_for_task_api[tid]; 
 }
 
+extern "C" void Tau_set_thread_fake(int tid) {
+  Tau_is_thread_fake_for_task_api[tid] = 1; 
+}
+
 extern "C" void Tau_stack_initialization() {
   Tau_stack_checkInit();
 }

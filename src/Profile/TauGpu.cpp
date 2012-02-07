@@ -19,6 +19,7 @@
 #include <TauInit.h>
 #include <stdio.h>
 #include <iostream>
+#include <iomanip>
 #include <Profile/OpenMPLayer.h>
 
 void *main_ptr, *gpu_ptr;
@@ -53,6 +54,7 @@ int counted_memcpys = 0;
 #include <linux/unistd.h>
 
 extern "C" void metric_set_gpu_timestamp(int tid, double value);
+extern "C" void Tau_set_thread_fake(int tid);
 
 #include<map>
 using namespace std;
@@ -240,7 +242,7 @@ void stage_gpu_event(const char *name, int gpuTask, double start_time,
 FunctionInfo* parent)
 {
 #ifdef DEBUG_PROF
-	cout << "setting gpu timestamp for start " << start_time << endl;
+	cout << "setting gpu timestamp for start " <<  setprecision(16) << start_time << endl;
 #endif
 	metric_set_gpu_timestamp(gpuTask, start_time);
 
@@ -275,7 +277,7 @@ void break_gpu_event(const char *name, int gpuTask, double stop_time,
 FunctionInfo* parent)
 {
 #ifdef DEBUG_PROF
-	cout << "setting gpu timestamp for stop: " << stop_time << endl;
+	cout << "setting gpu timestamp for stop: " <<  setprecision(16) << stop_time << endl;
 #endif
 	metric_set_gpu_timestamp(gpuTask, stop_time);
 	stop_gpu_event(name, gpuTask);
@@ -296,6 +298,7 @@ int get_task(gpuId *new_task)
 		gpuId *create_task = new_task->getCopy();
 		task = TheGpuIdMap()[create_task] = Tau_RtsLayer_createThread();
 		number_of_tasks++;
+		Tau_set_thread_fake(task);
 		//TAU_CREATE_TASK(task);
 		//printf("new task: %s id: %d.\n", new_task->printId(), task);
 	} else
