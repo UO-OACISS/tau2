@@ -283,7 +283,7 @@ static const char *getconf(const char *key) {
 /*********************************************************************
  * Local Tau_check_dirname routine
  ********************************************************************/
-static  char * Tau_check_dirname(const char * dir) {
+char * Tau_check_dirname(const char * dir) {
   if (strcmp(dir, "$TAU_LOG_DIR") == 0){
     TAU_VERBOSE("Using PROFILEDIR=%s\n", dir);
     const char *logdir= getconf("TAU_LOG_PATH");
@@ -741,13 +741,13 @@ void TauEnv_initialize() {
     if ((env_profiledir = getconf("PROFILEDIR")) == NULL) {
       env_profiledir = ".";   /* current directory */
     }
-    env_profiledir=Tau_check_dirname(env_profiledir);
+    /* env_profiledir=Tau_check_dirname(env_profiledir); */
     TAU_VERBOSE("TAU: PROFILEDIR is \"%s\"\n", env_profiledir);
 
     if ((env_tracedir = getconf("TRACEDIR")) == NULL) {
       env_tracedir = ".";   /* current directory */
     }
-    env_tracedir=Tau_check_dirname(env_tracedir);
+    /* env_tracedir=Tau_check_dirname(env_tracedir); */
     TAU_VERBOSE("TAU: TRACEDIR is \"%s\"\n", env_tracedir);
 
     int profiling_default = TAU_PROFILING_DEFAULT;
