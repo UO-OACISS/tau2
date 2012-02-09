@@ -19,6 +19,7 @@
 #include <TauInit.h>
 #include <stdio.h>
 #include <iostream>
+#include <iomanip>
 #include <Profile/OpenMPLayer.h>
 
 void *main_ptr, *gpu_ptr;
@@ -52,7 +53,8 @@ int counted_memcpys = 0;
 
 #include <linux/unistd.h>
 
-extern void metric_set_gpu_timestamp(int tid, double value);
+extern "C" void metric_set_gpu_timestamp(int tid, double value);
+extern "C" void Tau_set_thread_fake(int tid);
 
 #include<map>
 using namespace std;
@@ -70,8 +72,6 @@ struct EventName {
 //doubleMap MemcpyEventMap;
 
 //map<EventName, void*> events;
-
-extern void metric_set_gpu_timestamp(int tid, double value);
 
 
 void check_gpu_event(int gpuTask)
@@ -118,7 +118,7 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, gpuId
 		{
 			functionName = "Memory copy (Other)";
 		}
-		printf("using default name: %s.\n", functionName);
+		//printf("using default name: %s.\n", functionName);
 	}
 
 	TAU_START(functionName);
@@ -189,7 +189,7 @@ memcpyType)
 		{
 			functionName = "Memory copy (Other)";
 		}
-		printf("using default name: %s.\n", functionName);
+		//printf("using default name: %s.\n", functionName);
 	}
 
 	// Place the Message into the trace in when the memcpy in exited if this
@@ -242,7 +242,7 @@ void stage_gpu_event(const char *name, int gpuTask, double start_time,
 FunctionInfo* parent)
 {
 #ifdef DEBUG_PROF
-	cout << "setting gpu timestamp for start " << start_time << endl;
+	cout << "setting gpu timestamp for start " <<  setprecision(16) << start_time << endl;
 #endif
 	metric_set_gpu_timestamp(gpuTask, start_time);
 
@@ -277,7 +277,7 @@ void break_gpu_event(const char *name, int gpuTask, double stop_time,
 FunctionInfo* parent)
 {
 #ifdef DEBUG_PROF
-	cout << "setting gpu timestamp for stop: " << stop_time << endl;
+	cout << "setting gpu timestamp for stop: " <<  setprecision(16) << stop_time << endl;
 #endif
 	metric_set_gpu_timestamp(gpuTask, stop_time);
 	stop_gpu_event(name, gpuTask);
@@ -296,8 +296,9 @@ int get_task(gpuId *new_task)
 	if (it == TheGpuIdMap().end())
 	{
 		gpuId *create_task = new_task->getCopy();
-		task = TheGpuIdMap()[create_task] = RtsLayer::createThread();
+		task = TheGpuIdMap()[create_task] = Tau_RtsLayer_createThread();
 		number_of_tasks++;
+		Tau_set_thread_fake(task);
 		//TAU_CREATE_TASK(task);
 		//printf("new task: %s id: %d.\n", new_task->printId(), task);
 	} else
@@ -309,21 +310,39 @@ int get_task(gpuId *new_task)
 }
 
 eventId Tau_gpu_create_gpu_event(const char *name, gpuId *device,
+FunctionInfo* callingSite, TauGpuContextMap* map)
+{
+	return eventId(name, device, callingSite, map);
+}
+
+eventId Tau_gpu_create_gpu_event(const char *name, gpuId *device,
 FunctionInfo* callingSite)
 {
-	return eventId(name, device, callingSite);
+	return eventId(name, device, callingSite, NULL);
 }
 
 void Tau_gpu_register_gpu_event(eventId id, double startTime, double endTime)
 {
+	//printf("Tau gpu name: %s.\n", id.name);
 	int task = get_task(id.device);
   
 	//printf("in TauGpu.cpp, registering gpu event.\n");
 	//printf("Tau gpu name: %s.\n", name);
 	stage_gpu_event(id.name, task,
 		startTime + id.device->syncOffset(), id.callingSite);
-	//TAU_REGISTER_CONTEXT_EVENT(k1, "sample kernel data");
-	//TAU_CONTEXT_EVENT(k1,1000);
+	//printf("registering context event with kernel = %d.\n", id.name);
+	if (id.contextEventMap != NULL)
+	{
+		for (TauGpuContextMap::iterator it = id.contextEventMap->begin();
+				 it != id.contextEventMap->end();
+				 it++)
+		{
+			char* event_name = (char*) it->first.c_str();
+			TAU_EVENT_DATATYPE event_data = it->second;
+			TauContextUserEvent* e = new TauContextUserEvent(event_name, false);
+			e->TriggerEvent(event_data, task);
+		}
+	}
 	break_gpu_event(id.name, task,
 			endTime + id.device->syncOffset(), id.callingSite);
 	
