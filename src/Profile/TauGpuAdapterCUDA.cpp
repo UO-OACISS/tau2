@@ -159,7 +159,7 @@ class KernelEvent : public eventId
 	cudaEvent_t stopEvent;
 
 	KernelEvent(const char* name, cudaGpuId* tmp, FunctionInfo* fi) : 
-		eventId(name, tmp, fi) {
+		eventId(name, tmp, fi, NULL) {
 		//overide device member 
 		//device = tmp;
 		//device = new cudaGpuId(tmp);
@@ -311,7 +311,7 @@ void Tau_cuda_register_memcpy_event(const char *name, cudaGpuId* id, double star
 transferSize, int MemcpyType)
 {
 	FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->ThisFunction;
-	eventId c = Tau_gpu_create_gpu_event(name, id, p);
+	eventId c = Tau_gpu_create_gpu_event(name, id, p, NULL);
 	Tau_gpu_register_memcpy_event(c, start/1e3, stop/1e3, transferSize, MemcpyType);
 }
 

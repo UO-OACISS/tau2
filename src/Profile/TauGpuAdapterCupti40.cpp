@@ -652,7 +652,7 @@ void Tau_cuda_onunload(void)
   err = cuptiUnsubscribe(rtSubscriber);
   err = cuptiUnsubscribe(drSubscriber);
 	//TODO: why can we unsubscribe?
-  CUDA_CHECK_ERROR(err, "Cannot unsubscribe.\n");
+  //CUDA_CHECK_ERROR(err, "Cannot unsubscribe.\n");
 	
 	if (eventGroup != NULL)
 	{
