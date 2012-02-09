@@ -337,10 +337,9 @@ void Tau_gpu_register_gpu_event(eventId id, double startTime, double endTime)
 				 it != id.contextEventMap->end();
 				 it++)
 		{
-			char* event_name = (char*) it->first.c_str();
+			TauContextUserEvent* e = it->first;
 			TAU_EVENT_DATATYPE event_data = it->second;
-			TauContextUserEvent* e = new TauContextUserEvent(event_name, false);
-			e->TriggerEvent(event_data, task);
+			TAU_CONTEXT_EVENT_THREAD(e, event_data, task);
 		}
 	}
 	break_gpu_event(id.name, task,

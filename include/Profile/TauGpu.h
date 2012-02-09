@@ -40,7 +40,7 @@ public:
 	//virtual bool operator<(const gpuId& A) const;
 };
 	
-typedef map<string, TAU_EVENT_DATATYPE> TauGpuContextMap;
+typedef map<TauContextUserEvent*, TAU_EVENT_DATATYPE> TauGpuContextMap;
 
 class eventId {
 public:

@@ -212,11 +212,21 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			//cerr << "recording kernel: " << kernel->name << ", " << kernel->end - kernel->start << "ns.\n" << endl;
 
 			TauGpuContextMap map;
-			map["Block Size"] = kernel->blockX * kernel->blockY * kernel->blockZ;
-			map["Shared Dynamic Memory (bytes)"] = kernel->dynamicSharedMemory;
-			map["Shared Static Memory (bytes)"] = kernel->staticSharedMemory;
-			map["Local Memory (bytes per thread)"] = kernel->localMemoryPerThread;
-			map["Local Registers (per thread)"] = kernel->registersPerThread;
+			static TauContextUserEvent* bs;
+			static TauContextUserEvent* dm;
+			static TauContextUserEvent* sm;
+			static TauContextUserEvent* lm;
+			static TauContextUserEvent* lr;
+			Tau_get_context_userevent((void **) &bs, "Block Size");
+			Tau_get_context_userevent((void **) &dm, "Shared Dynamic Memory (bytes)");
+			Tau_get_context_userevent((void **) &sm, "Shared Static Memory (bytes)");
+			Tau_get_context_userevent((void **) &lm, "Local Memory (bytes per thread)");
+			Tau_get_context_userevent((void **) &lr, "Local Registers (per thread)");
+			map[bs] = kernel->blockX * kernel->blockY * kernel->blockZ;
+			map[dm] = kernel->dynamicSharedMemory;
+			map[sm] = kernel->staticSharedMemory;
+			map[lm] = kernel->localMemoryPerThread;
+			map[lr] = kernel->registersPerThread;
 
 			const char* name;
 			int id;
