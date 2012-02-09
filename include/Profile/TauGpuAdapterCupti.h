@@ -99,10 +99,10 @@ class cuptiRecord : public eventId {
 	FunctionInfo *callingSite;
 
 public:
-	cuptiRecord(const char* n, cuptiGpuId *id, FunctionInfo *site) : eventId(n, id, site)
+	cuptiRecord(const char* n, cuptiGpuId *id, FunctionInfo *site, TauGpuContextMap *m) : eventId(n, id, site, m)
 	{
 	};
-	cuptiRecord(const char* n, uint32_t stream, uint32_t correlation) : eventId(n, &cuptiGpuId(stream, correlation), getParentFunction(correlation)) {};
+	cuptiRecord(const char* n, uint32_t stream, uint32_t correlation, TauGpuContextMap *m) : eventId(n, &cuptiGpuId(stream, correlation), getParentFunction(correlation), m) {};
 
 	FunctionInfo* getParentFunction(uint32_t id)
 	{

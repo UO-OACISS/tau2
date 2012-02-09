@@ -224,6 +224,9 @@ int Tau_mergeProfiles() {
   if (rank == 0) {
     char *recv_buf = (char *) malloc (maxBuflen);
 
+    TAU_VERBOSE("Before Merging Profiles: Tau_check_dirname()");
+    profiledir=Tau_check_dirname(profiledir);
+
     TAU_VERBOSE("TAU: Merging Profiles\n");
     start = TauMetrics_getTimeOfDay();
 
