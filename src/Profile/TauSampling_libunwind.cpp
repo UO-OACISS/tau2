@@ -75,49 +75,15 @@ void Tau_sampling_unwindTauContext(int tid, void **addresses) {
   }
 
   unw_cursor_t cursor;
-  unw_word_t ip, sp;
-  unw_word_t top_ip;
-  unw_proc_info_t pip;
+  unw_word_t ip;
   unw_init_local(&cursor, &context);
 
   int idx = 0;
-  int skip = 0; // skip the current context itself
-
-  //  printf("Context: ");
   while (unw_step(&cursor) > 0 && idx < TAU_SAMP_NUM_ADDRESSES) {
     unw_get_reg(&cursor, UNW_REG_IP, &ip);
-    if (skip > 0) {
-      // fprintf (stderr,"skipping address %p\n", ip);
-      skip--;
-    } else {
-      // always store the top ip (unless it is 0).
-      unw_get_proc_info(&cursor, &pip);
-      top_ip = pip.start_ip;
-      //      printf("%p|%p ", ip, top_ip);
-      if (top_ip == 0) {
-	addresses[idx++] = (void *)ip;
-      } else {
-	addresses[idx++] = (void *)top_ip;
-      }
-      // fprintf (stderr,"assigning address %p to index %d\n", ip, idx-1);
-    }
+    addresses[idx++] = (void *)ip;
   }
-  //  printf("\n");
 }
-
-/*
-bool unwind_cutoff(void **addresses, void *address) {
-  bool found = false;
-  for (int i=0; i<TAU_SAMP_NUM_ADDRESSES; i++) {
-    if ((unsigned long)(addresses[i]) == (unsigned long)address) {
-      //      printf("match found %p\n", address);
-      found = true;
-      break;
-    }
-  }
-  return found;
-}
-*/
 
 vector<unsigned long> *Tau_sampling_unwind(int tid, Profiler *profiler,
 					   void *pc, void *context) {
@@ -125,16 +91,11 @@ vector<unsigned long> *Tau_sampling_unwind(int tid, Profiler *profiler,
   unw_context_t uc;
   unw_word_t unwind_ip, sp;
   unw_word_t curr_ip;
-  unw_proc_info_t pip;
 
   vector<unsigned long> *pcStack = new vector<unsigned long>();
   int unwindDepth = 0;
   int depthCutoff = TauEnv_get_ebs_unwind_depth();
 
-  // printf("cutoff depth = %d\n", depthCutoff);
-
-  // Add the actual PC sample into the stack
-  //  printf("%p ", pc);
   pcStack->push_back((unsigned long)pc);
 
   // Commence the unwind
@@ -144,67 +105,29 @@ vector<unsigned long> *Tau_sampling_unwind(int tid, Profiler *profiler,
   //  unw_getcontext(&uc);
   uc = *(unw_context_t *)context;
   unw_init_local(&cursor, &uc);
-  // Is my sample in the immediate context?
-  unw_get_proc_info(&cursor, &pip);
-  curr_ip = pip.start_ip;
-  if (unwind_cutoff(profiler->address, (void *)curr_ip)) {
-    //    printf("[dropped %p|%p]", pc, curr_ip);
-    // Do nothing, there is no unwinding since the PC occurs
-    //   in the context of the TAU context itself.
-  } else {
-    while (unw_step(&cursor) > 0) {
-      unw_get_reg(&cursor, UNW_REG_IP, &unwind_ip);
-      unw_get_proc_info(&cursor, &pip);
-      curr_ip = pip.start_ip;
-      // unless it is 0, always compare against the curr_ip 
-      unw_word_t compare_ip;
-      if (curr_ip == 0) {
-	compare_ip = unwind_ip;
-      } else {
-	compare_ip = curr_ip;
-      }
-      if ((unwindDepth >= depthCutoff) ||
-	  (unwind_cutoff(profiler->address, (void *)compare_ip))) {
-	if (unwind_ip != curr_ip) {
-	  // We want to preserve the final callsite before a 
-	  //   match with the top of the Tau context address.
-	  pcStack->push_back((unsigned long)unwind_ip);
-	  unwindDepth++;  // for accounting only
-	}
-	//	printf("[dropped %p|%p]", ip, curr_ip);
-	// This is preliminary code to add extra unwinds past a context
-	//   unwind.
-	if (unwind_cutoff(profiler->address, (void *)compare_ip)) {
-	  // add 3 more unwinds (arbitrary)
-	  for (int i=0; i<3; i++) {
-	    if (unw_step(&cursor) > 0) {
-	      unw_get_reg(&cursor, UNW_REG_IP, &unwind_ip);
-	      unw_get_proc_info(&cursor, &pip);
-	      curr_ip = pip.start_ip;
-	      if (curr_ip == 0) {
-		compare_ip = unwind_ip;
-	      } else {
-		compare_ip = curr_ip;
-	      }
-	      if (unwind_ip != curr_ip) {
-		pcStack->push_back((unsigned long)unwind_ip);
-	      }
-	    } else {
-	      break; // no more stack
+  while (unw_step(&cursor) > 0) {
+    unw_get_reg(&cursor, UNW_REG_IP, &unwind_ip);
+    if (unwindDepth >= depthCutoff) {
+      if (unwind_cutoff(profiler->address, (void *)unwind_ip)) {
+	pcStack->push_back((unsigned long)unwind_ip);
+	unwindDepth++;  // for accounting only
+	// add 3 more unwinds (arbitrary)
+	for (int i=0; i<3; i++) {
+	  if (unw_step(&cursor) > 0) {
+	    unw_get_reg(&cursor, UNW_REG_IP, &unwind_ip);
+	    if (unwind_ip != curr_ip) {
+	      pcStack->push_back((unsigned long)unwind_ip);
 	    }
+	  } else {
+	    break; // no more stack
 	  }
 	}
-	break;
       }
-      //      printf("%p|%p ", ip, curr_ip);
-      pcStack->push_back((unsigned long)unwind_ip);
-      unwindDepth++;
+      break;
     }
+    pcStack->push_back((unsigned long)unwind_ip);
+    unwindDepth++;
   }
-  //  printf("\n");
-
-  //  printf("Unwound %d times\n", unwindDepth);
-  //  printStack(pcStack);
   return pcStack;
 }
 
