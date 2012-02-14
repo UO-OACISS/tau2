@@ -540,11 +540,9 @@ void Tau_sampling_internal_initPc2CallSiteMapIfNecessary() {
 
 CallSiteInfo *Tau_sampling_resolveCallSite(unsigned long addr, 
 					   const char *tag,
-					   const char *callee,
-					   char **funcName,
 					   bool addAddress) {
   CallSiteInfo *callsite;
-  int bfdRet;
+  int bfdRet; // used only for an old interface
 
   char resolvedBuffer[4096];
   callsite = (CallSiteInfo *)malloc(sizeof(CallSiteInfo));
@@ -559,6 +557,7 @@ CallSiteInfo *Tau_sampling_resolveCallSite(unsigned long addr,
   TauBfdAddrMap addressMap;
   sprintf(addressMap.name, "%s", "UNKNOWN");
 #ifdef TAU_BFD
+  // Attempt to use BFD to resolve names
   resolvedInfo = 
     Tau_bfd_resolveBfdInfo(bfdUnitHandle, (unsigned long)addr);
   // backup info
@@ -568,26 +567,15 @@ CallSiteInfo *Tau_sampling_resolveCallSite(unsigned long addr,
       resolvedInfo = 
 	  Tau_bfd_resolveBfdExecInfo(bfdUnitHandle, (unsigned long)addr);
       sprintf(addressMap.name, "%s", "EXEC");
-      *funcName = NULL;
   }
 #endif /* TAU_BFD */
   if (resolvedInfo != NULL) {
-    if (!strcmp(tag, "SAMPLE")) {
-      sprintf(resolvedBuffer, "[%s] %s [{%s} {%d,%d}-{%d,%d}]",
-	      tag,
-	      resolvedInfo->funcname,
-	      resolvedInfo->filename,
-	      resolvedInfo->lineno, 0,
-	      resolvedInfo->lineno, 0);
-    } else { /* if an "UNWIND" node which behaves like a callpath node */
-      sprintf(resolvedBuffer, "[%s] %s [{%s} {%d,%d}-{%d,%d}]",
-	      tag,
-	      callee,
-	      resolvedInfo->filename,
-	      resolvedInfo->lineno, 0,
-	      resolvedInfo->lineno, 0);
-    }
-    *funcName = strdup(resolvedInfo->funcname);
+    sprintf(resolvedBuffer, "[%s] %s [{%s} {%d,%d}-{%d,%d}]",
+	    tag,
+	    resolvedInfo->funcname,
+	    resolvedInfo->filename,
+	    resolvedInfo->lineno, 0,
+	    resolvedInfo->lineno, 0);
   } else {
     if (addAddress) {
       sprintf(resolvedBuffer, "[%s] UNRESOLVED %s ADDR %p", 
@@ -643,8 +631,14 @@ CallStackInfo *Tau_sampling_resolveCallSites(vector<unsigned long> *addresses) {
   }
 
   vector<unsigned long>::iterator it;
-  char *currentFuncName = NULL;
-  char *previousFuncName = NULL;
+  // Deal with just the beginning.
+  it = addresses->begin();
+  // Make sure it is not empty.
+  if (it != addresses->end()) {
+    callStack->callSites->push_back(Tau_sampling_resolveCallSite(*it, 
+								 "SAMPLE",
+								 addAddress));
+  }
   for (it = addresses->begin(); it != addresses->end(); it++) {
     // *CWL*
     // The mechanism of addAddress allows us the flexibility of 
@@ -653,29 +647,14 @@ CallStackInfo *Tau_sampling_resolveCallSites(vector<unsigned long> *addresses) {
     //   line in the callsite.
     // Right now, I do not believe this is the way to go.
     if (it == addresses->begin()) {
-      callStack->callSites->push_back(Tau_sampling_resolveCallSite(*it, 
-								   "SAMPLE",
-								   NULL,
-								   &currentFuncName,
-								   addAddress));
+      // Ignore the starting element. It has already been processed if it exists.
+      continue;
     } else {
-      callStack->callSites->push_back(Tau_sampling_resolveCallSite(*it,
-								   "UNWIND",
-								   previousFuncName,
-								   &currentFuncName,
+      callStack->callSites->push_back(Tau_sampling_resolveCallSite(*it, 
+								   "EBS_CALLSITE",
 								   addAddress));
-    }
-    if (previousFuncName != NULL) {
-      free(previousFuncName);
-      previousFuncName = NULL;
-    }
-    if (currentFuncName != NULL) {
-      previousFuncName = strdup(currentFuncName);
-      free(currentFuncName);
-      currentFuncName = NULL;
     }
   }
-
   return callStack;
 }
 
