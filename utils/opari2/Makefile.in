@@ -916,7 +916,6 @@ common-uninstall:
 @HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@beautify: beautify-recursive
 
 @HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@beautify-clean:
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@	@find $(srcdir) -name "*.unc-backup*" -exec rm '{}' \;
 
 ###############################################################################
 

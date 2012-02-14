@@ -114,7 +114,7 @@ is_sub_unit_header( string& lowline, bool inHeader )
     static bool inInterface  = false;
     static bool inContains   = false;
 
-    size_t      pos;
+    size_t pos;
     pos = lowline.find_first_not_of( " \t" );
 
     /*string is empty*/
@@ -128,6 +128,21 @@ is_sub_unit_header( string& lowline, bool inHeader )
         line = lowline.substr( pos );
     }
     line.erase( remove_if( line.begin(), line.end(), isspace ), line.end() );
+
+    //Set number of open brackets to 0 if new unit begins, since we might have missed
+    //closing brackets on continuation lines.
+    if ( ( line.find( "program" ) == 0 )                               ||
+         ( ( line.find( "module" ) == 0 ) && !inProgram )               ||
+         ( ( line.find( "interface" ) == 0 ) && inModule )             ||
+         ( ( line.find( "contains" ) != string::npos ) && inModule )     ||
+         ( line.find( "subroutine" ) == 0 )                            ||
+         ( ( line.find( "function" ) == string::npos )   &&
+           !inHeader                                &&
+           ( ( line.find( "=" ) >= line.find( "!" ) )             ||
+             ( line.find( "=" ) > line.find( "kind" ) ) ) ) )
+    {
+        openbrackets = 0;
+    }
 
     //Check if we enter a program block
     inProgram = inProgram || ( line.find( "program" ) == 0 );
@@ -155,8 +170,9 @@ is_sub_unit_header( string& lowline, bool inHeader )
            line.find( "endsubroutine" ) == string::npos         &&
            line.find( "endmodule" )     == string::npos         &&
            line.find( "endprogram" )    == string::npos         &&
-           ( ( line.find( "=" ) >= line.find( "!" )         ||
-               line.find( "=" ) > line.find( "kind" ) ) ) )         ||
+           ( ( line.find( "=" ) >= line.find( "!" )             ||
+               line.find( "=" ) > line.find( "kind" )           ||
+               line.find( "=" ) == ( line.find( ">" ) - 1 ) ) ) )     ||
          ( line.find( "#" ) == 0 && inHeader )                  ||
          ( line.find( "&" ) == 0 && inHeader )                  ||
          ( line.empty()  && inHeader )                          ||
@@ -393,13 +409,13 @@ is_loop_end( string & lowline,
     {
         // search for block Do loop
         pos = lowline.find( "end", pos );
-        if ( pos == string::npos )
+        if ( pos == string::npos || ( pos != lowline.find_first_not_of( " \t0123456789" ) ) )
         {
             return false;
         }
 
         pos = lowline.find( "do", pos + 3 );
-        if ( pos == string::npos )
+        if ( pos == string::npos  || ( lowline.find( "=", pos ) < lowline.find( "!", pos ) ) )
         {
             return false;
         }
