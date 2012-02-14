@@ -259,7 +259,6 @@ beautify: beautify-recursive
 SCOREP_RECURSIVE_TARGETS += beautify-recursive
 
 beautify-clean:
-	@find $(srcdir) -name "*.unc-backup*" -exec rm '{}' \;
 
 endif # HAVE_UNCRUSTIFY
 endif # SVN_CONTROLLED 

@@ -99,14 +99,20 @@ process_preStmt( vector<string>&   preStmt,
                  bool*             f,
                  bool              asd )
 {
-    unsigned s         = preStmt.size();
-    bool     inComment = false;
+    unsigned       s         = preStmt.size();
+    bool           inComment = false;
+
+    vector<string> origStmt;
 
     // "remove" comments
     for ( unsigned i = 0; i < s; ++i )
     {
         string::size_type pos  = 0;
         string&           line = preStmt[ i ];
+        string            origLine( line );
+
+        origStmt.push_back( origLine );
+
         while ( pos < line.size() )
         {
             if ( inComment )
@@ -187,9 +193,10 @@ process_preStmt( vector<string>&   preStmt,
 
     for ( unsigned i = 0; i < s; ++i )
     {
-        os << preStmt[ i ] << "\n";
+        os << origStmt[ i ] << "\n";
     }
     preStmt.clear();
+    origStmt.clear();
     return false;
 }
 }

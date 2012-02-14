@@ -102,6 +102,7 @@
 
         program otest
           use mmm
+          use rename_test, bar => foo
           integer :: i, f0, f1, function
 
       include 'test1_a.f90.opari.inc'

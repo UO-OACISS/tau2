@@ -92,6 +92,7 @@
 
         program otest
           use mmm
+          use rename_test, bar => foo
           integer :: i, f0, f1, function
 
           function = 0
