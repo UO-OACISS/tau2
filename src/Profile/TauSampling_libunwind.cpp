@@ -6,6 +6,8 @@
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
 
+#define TAU_SAMP_NUM_PARENTS 1
+
 void show_backtrace_unwind(void *pc) {
   unw_cursor_t cursor;
   unw_context_t uc;
@@ -107,12 +109,13 @@ vector<unsigned long> *Tau_sampling_unwind(int tid, Profiler *profiler,
   unw_init_local(&cursor, &uc);
   while (unw_step(&cursor) > 0) {
     unw_get_reg(&cursor, UNW_REG_IP, &unwind_ip);
-    if (unwindDepth >= depthCutoff) {
+    if ((unwindDepth >= depthCutoff) ||
+	(unwind_cutoff(profiler->address, (void *)unwind_ip))) {
       if (unwind_cutoff(profiler->address, (void *)unwind_ip)) {
 	pcStack->push_back((unsigned long)unwind_ip);
 	unwindDepth++;  // for accounting only
 	// add 3 more unwinds (arbitrary)
-	for (int i=0; i<3; i++) {
+	for (int i=0; i<TAU_SAMP_NUM_PARENTS; i++) {
 	  if (unw_step(&cursor) > 0) {
 	    unw_get_reg(&cursor, UNW_REG_IP, &unwind_ip);
 	    if (unwind_ip != curr_ip) {
@@ -122,6 +125,8 @@ vector<unsigned long> *Tau_sampling_unwind(int tid, Profiler *profiler,
 	    break; // no more stack
 	  }
 	}
+      } else {
+	pcStack->push_back((unsigned long)unwind_ip);
       }
       break;
     }
