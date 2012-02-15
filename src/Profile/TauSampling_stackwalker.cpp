@@ -15,68 +15,7 @@ using namespace Dyninst::Stackwalker;
 #include <set>
 using namespace std;
 
-/*
-extern "C" void *dlmalloc(size_t size);
-
-extern "C" void *dlcalloc(size_t nmemb, size_t size);
-
-extern "C" void dlfree(void *ptr);
-
-extern "C" void *dlrealloc(void *ptr, size_t size);
-
-extern "C" void *__libc_malloc(size_t size);
-
-extern "C" void *__libc_calloc(size_t nmemb, size_t size);
-
-extern "C" void __libc_free(void *ptr);
-
-extern "C" void *__libc_realloc(void *ptr, size_t size);
-*/
-
-/* *CWL* Seems like massive hackery going on here. Gonna disable until I can figure if this
-   is some solution to the malloc-re-entrancy issues I've faced.
-
-void *malloc(size_t size) {
-  int tid = RtsLayer::myThread();
-  // return __libc_malloc(size);
-  if (insideSignalHandler[tid]) {
-    return dlmalloc(size);
-  } else {
-    return __libc_malloc(size);
-  }
-}
-
-void *calloc(size_t nmemb, size_t size) {
-  int tid = RtsLayer::myThread();
-//   printf ("Our calloc called!\n");
-// return __libc_malloc(size);
-  if (insideSignalHandler[tid]) {
-    return dlcalloc(nmemb, size);
-  } else {
-    return __libc_calloc(nmemb, size);
-  }
-}
-
-void free(void *ptr) {
-  int tid = RtsLayer::myThread();
-  // return __libc_malloc(size);
-  if (insideSignalHandler[tid]) {
-    dlfree(ptr);
-  } else {
-    __libc_free(ptr);
-  }
-}
-
-void *realloc(void *ptr, size_t size) {
-  int tid = RtsLayer::myThread();
-  // return __libc_malloc(size);
-  if (insideSignalHandler[tid]) {
-    return dlrealloc(ptr, size);
-  } else {
-    return __libc_realloc(ptr, size);
-  }
-}
-*/
+#define TAU_SAMP_NUM_PARENTS 0
 
 Walker *walker = Walker::newWalker();
 // Frame crapFrame(walker);
@@ -126,48 +65,44 @@ void Tau_sampling_outputTraceCallstack(int tid, void *pc,
   RtsLayer::UnLockDB();
 }
 
-void Tau_sampling_unwindTauContext(int tid, void **addresses) {
-  ucontext_t context;
-  int ret = getcontext(&context);
+// Copied from TauSampling.cpp for now. Find a way to share the code later.
+static inline unsigned long get_pc(void *p) {
+  struct ucontext *uc = (struct ucontext *)p;
+  unsigned long pc;
 
-  if (ret != 0) {
-    fprintf(stderr, "TAU: Error getting context\n");
-    return;
-  }
-
-  std::vector<Frame> stackwalk;
-  string s;
-  Dyninst::MachRegisterVal compare_ip;
-
-  vector<unsigned long> *pcStack = new vector<unsigned long>();
-  int unwindDepth = 0;
-  int depthCutoff = TauEnv_get_ebs_unwind_depth();
-
-  int idx = 0;
-  int skip = 0;
-
-  // StackWalkerAPI is not thread-safe
-  RtsLayer::LockDB();
-
-
-  // StackWalkerAPI is not thread-safe
-  RtsLayer::UnLockDB();
+#ifdef sun
+  issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on solaris\n");
+  return 0;
+#elif __APPLE__
+  issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on apple\n");
+  return 0;
+#elif _AIX
+  issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on AIX\n");
+  return 0;
+#else
+  struct sigcontext *sc;
+  sc = (struct sigcontext *)&uc->uc_mcontext;
+#ifdef TAU_BGP
+  //  pc = (unsigned long)sc->uc_regs->gregs[PPC_REG_PC];
+  pc = (unsigned long)UCONTEXT_REG(uc, PPC_REG_PC);
+# elif __x86_64__
+  pc = (unsigned long)sc->rip;
+# elif i386
+  pc = (unsigned long)sc->eip;
+# elif __ia64__
+  pc = (unsigned long)sc->sc_ip;
+# elif __powerpc64__
+  // it could possibly be "link" - but that is supposed to be the return address.
+  pc = (unsigned long)sc->regs->nip;
+# elif __powerpc__
+  // it could possibly be "link" - but that is supposed to be the return address.
+  pc = (unsigned long)sc->regs->nip;
+# else
+#  error "profile handler not defined for this architecture"
+# endif /* TAU_BGP */
+  return pc;
+#endif /* sun */
 }
-
-/* TODO - This ought to be common code to all unwinding */
-/*
-bool unwind_cutoff(void **addresses, void *address) {
-  bool found = false;
-  for (int i=0; i<TAU_SAMP_NUM_ADDRESSES; i++) {
-    if ((unsigned long)(addresses[i]) == (unsigned long)address) {
-      // printf("match found %p\n", address); 
-      found = true;
-      break;
-    }
-  }
-  return found;
-}
-*/
 
 // Prototype support for acquiring stack pointer from the context.
 //   Only support for x86_64 for now.
@@ -195,19 +130,74 @@ static inline unsigned long get_fp(void *p) {
   return fp;
 }
 
+void Tau_sampling_unwindTauContext(int tid, void **addresses) {
+  ucontext_t context;
+  int ret = getcontext(&context);
+
+  if (ret != 0) {
+    fprintf(stderr, "TAU: Error getting context\n");
+    return;
+  }
+
+  std::vector<Frame> stackwalk;
+  string s;
+  Dyninst::MachRegisterVal unwind_ip;
+
+  unsigned long pc = get_pc(&context);
+  unsigned long sp = get_sp(&context);
+  unsigned long fp = get_fp(&context);
+  Frame *startFrame = Frame::newFrame((Dyninst::MachRegisterVal)pc,
+				      (Dyninst::MachRegisterVal)sp,
+				      (Dyninst::MachRegisterVal)fp,
+				      walker);
+
+  vector<unsigned long> *pcStack = new vector<unsigned long>();
+
+  bool success = false;
+  int idx = 0;
+  // StackWalkerAPI is not thread-safe
+  RtsLayer::LockDB();
+  //  success = walker->walkStack(stackwalk);
+  success = walker->walkStackFromFrame(stackwalk, *startFrame);
+  if (success) {
+    //    printf("Stackwalk size = %d\n", stackwalk.size());
+    for (unsigned i = 0; i < stackwalk.size(); i++) {
+      if (idx < TAU_SAMP_NUM_ADDRESSES) {
+	//	stackwalk[i].getName(s);
+	//	printf("[%d] %s\n", i, s.c_str());
+	unwind_ip = stackwalk[i].getRA();
+	addresses[idx++] = (void *)unwind_ip;
+	//	printf("[%d] context unwind [%p]\n", i, (void *)unwind_ip);
+      } else {
+	break;
+      }
+    }
+  } else {
+    //    printf("no success\n");
+  }
+  // StackWalkerAPI is not thread-safe
+  RtsLayer::UnLockDB();
+}
+
+extern "C" FunctionInfo *findTopContext(Profiler *currentProfiler, void *address);
 vector<unsigned long> *Tau_sampling_unwind(int tid, Profiler *profiler,
 					   void *pc, void *context) {
   std::vector<Frame> stackwalk;
   string s;
-  Dyninst::MachRegisterVal compare_ip;
+  Dyninst::MachRegisterVal unwind_ip;
 
   vector<unsigned long> *pcStack = new vector<unsigned long>();
   int unwindDepth = 0;
   int depthCutoff = TauEnv_get_ebs_unwind_depth();
 
+  // *CWL* - The big difference between stackwalkerAPI and libunwind
+  //         is that the RA from the first stack frame is the actual
+  //         PC itself.
+
   // Add the actual PC sample into the stack
   //  printf("%p ", pc);
-  pcStack->push_back((unsigned long)pc);
+  //  pcStack->push_back((unsigned long)pc);
+
   //printf("StackwalkerAPI Sample PC: [%p]\n", (unsigned long)pc);
 
   // Commence the unwind
@@ -227,20 +217,54 @@ vector<unsigned long> *Tau_sampling_unwind(int tid, Profiler *profiler,
   //  success = walker->walkStack(stackwalk);
   success = walker->walkStackFromFrame(stackwalk, *startFrame);
   if (success) {
-    for (unsigned i = 0; i < stackwalk.size(); i++) {
+    // push the PC
+    unwind_ip = stackwalk[0].getRA();
+    pcStack->push_back((unsigned long)unwind_ip);
+    for (unsigned i = 1; i < stackwalk.size(); i++) {
       // not necessary with BFD
-      stackwalk[i].getName(s);
       //    addr = stackwalk[i].getRA();
-      compare_ip = stackwalk[i].getRA();
-      //addr = stackwalk[i].getFP();
-      //          printf("StackwalkerAPI Unwind Address: [%p] Name: [%s]\n", compare_ip, s.c_str());
+      unwind_ip = stackwalk[i].getRA();
 
       if ((unwindDepth >= depthCutoff) ||
-	  (unwind_cutoff(profiler->address, (void *)compare_ip))) {
-	break;
-      }
+	  (unwind_cutoff(profiler->address, (void *)unwind_ip))) {
+	if (unwind_cutoff(profiler->address, (void *)unwind_ip)) {
+	  FunctionInfo *topFI;
+	  pcStack->push_back((unsigned long)unwind_ip);	  
+	  // Now that we have a match, we can look through the Profiler Stack
+	  //    to locate the top profile.
+	  topFI = findTopContext(profiler->ParentProfiler, (void *)unwind_ip);
+	  // No parent shares the current match. The current profiler must
+	  //    be the top entry.
+	  if (topFI == NULL) {
+	    if (profiler->CallPathFunction == NULL) {
+	      topFI = profiler->ThisFunction;
+	    } else {
+	      topFI = profiler->CallPathFunction;
+	    }
+	  }
+	  unwindDepth++;  // for accounting only
+	  // add 3 more unwinds (arbitrary) // not so easy here. 
+	  // And probably unnecessary.
+	  // Disabling for now.
+	  /*
+	  for (int i=0; i<TAU_SAMP_NUM_PARENTS; i++) {
+	    if (unw_step(&cursor) > 0) {
+	      unw_get_reg(&cursor, UNW_REG_IP, &unwind_ip);
+	      if (unwind_ip != curr_ip) {
+		pcStack->push_back((unsigned long)unwind_ip);
+	      }
+	    } else {
+	      break; // no more stack                                                                 
+	    }
+	  }
+	  */
+	} else {
+	  pcStack->push_back((unsigned long)unwind_ip);	  
+	}
+	break; // always break when limit is hit or cutoff reached
+      } // cut-off or limit check conditional
 
-      pcStack->push_back((unsigned long)compare_ip);
+      pcStack->push_back((unsigned long)unwind_ip);
       unwindDepth++;
     }
   }

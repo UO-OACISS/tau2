@@ -6,7 +6,7 @@
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
 
-#define TAU_SAMP_NUM_PARENTS 1
+#define TAU_SAMP_NUM_PARENTS 0
 
 void show_backtrace_unwind(void *pc) {
   unw_cursor_t cursor;
@@ -87,6 +87,7 @@ void Tau_sampling_unwindTauContext(int tid, void **addresses) {
   }
 }
 
+extern "C" FunctionInfo *findTopContext(Profiler *currentProfiler, void *address);
 vector<unsigned long> *Tau_sampling_unwind(int tid, Profiler *profiler,
 					   void *pc, void *context) {
   unw_cursor_t cursor;
@@ -112,7 +113,20 @@ vector<unsigned long> *Tau_sampling_unwind(int tid, Profiler *profiler,
     if ((unwindDepth >= depthCutoff) ||
 	(unwind_cutoff(profiler->address, (void *)unwind_ip))) {
       if (unwind_cutoff(profiler->address, (void *)unwind_ip)) {
+	FunctionInfo *topFI;
 	pcStack->push_back((unsigned long)unwind_ip);
+	// Now that we have a match, we can look through the Profiler Stack
+	//    to locate the top profile.
+	topFI = findTopContext(profiler->ParentProfiler, (void *)unwind_ip);
+	// No parent shares the current match. The current profiler must
+	//    be the top entry.
+	if (topFI == NULL) {
+	  if (profiler->CallPathFunction == NULL) {
+	    topFI = profiler->ThisFunction;
+	  } else {
+	    topFI = profiler->CallPathFunction;
+	  }
+	}
 	unwindDepth++;  // for accounting only
 	// add 3 more unwinds (arbitrary)
 	for (int i=0; i<TAU_SAMP_NUM_PARENTS; i++) {
@@ -127,9 +141,9 @@ vector<unsigned long> *Tau_sampling_unwind(int tid, Profiler *profiler,
 	}
       } else {
 	pcStack->push_back((unsigned long)unwind_ip);
-      }
-      break;
-    }
+      } // cut-off check
+      break; // always break when limit is hit or cutoff reached.
+    } // Cut-off or limit check conditional
     pcStack->push_back((unsigned long)unwind_ip);
     unwindDepth++;
   }
