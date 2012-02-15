@@ -118,6 +118,32 @@ extern "C" bool unwind_cutoff(void **addresses, void *address) {
   }
   return found; 
 }
+
+extern "C" FunctionInfo *findTopContext(Profiler *profilerStack, void *address) {
+  FunctionInfo *topFI = NULL;
+  Profiler *lastMatch = NULL;
+  Profiler *currentProfiler = profilerStack;
+  RtsLayer::LockDB();
+  // After a match, go through the Profiler Stack until we cannot find the address
+  while (currentProfiler != NULL) {
+    if (!unwind_cutoff(currentProfiler->address, address)) {
+      if (lastMatch != NULL) {
+	if (lastMatch->CallPathFunction == NULL) {
+	  topFI = lastMatch->CallPathFunction;
+	} else {
+	  topFI = lastMatch->ThisFunction;
+	}
+      }
+      break;
+    } else {
+      lastMatch = currentProfiler;
+      currentProfiler = currentProfiler->ParentProfiler;
+    }
+  }
+  RtsLayer::UnLockDB();
+  return topFI;
+}
+
 #endif /* TAU_UNWIND */
 
 /*********************************************************************
@@ -803,12 +829,12 @@ void Tau_sampling_finalizeProfile(int tid) {
     string *intermediatePathLeafString;
 
     // STEP 2a: Locate or create Leaf Entry
-    sprintf(intermediateGlobalLeafName, "[INTERMEDIATE] %s",
+    sprintf(intermediateGlobalLeafName, "[EBS_TAU_CONTEXT] %s",
 	    Tau_sampling_internal_stripCallPath(candidate->tauContext->GetName()));
     intermediateGlobalLeafString = new string(intermediateGlobalLeafName);
     fi_it = name2FuncInfoMap[tid]->find(*intermediateGlobalLeafString);
     if (fi_it == name2FuncInfoMap[tid]->end()) {
-      string grname = string("SAMPLE_INTERMEDIATE");
+      string grname = string("EBS_TAU_CONTEXT");
       // Create the FunctionInfo object for the leaf Intermediate object.
       RtsLayer::LockDB();
       intermediateGlobalLeaf = 
@@ -830,7 +856,7 @@ void Tau_sampling_finalizeProfile(int tid) {
     intermediatePathLeafString = new string(intermediatePathLeafName);
     fi_it = name2FuncInfoMap[tid]->find(*intermediatePathLeafString);
     if (fi_it == name2FuncInfoMap[tid]->end()) {
-      string grname = string("SAMPLE_INTERMEDIATE");
+      string grname = string("SAMPLE");
       // Create the FunctionInfo object for the leaf Intermediate object.
       RtsLayer::LockDB();
       intermediatePathLeaf = 
