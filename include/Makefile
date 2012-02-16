@@ -123,6 +123,7 @@ EBS_UNWIND_FLAG=
 EBS_UNWIND_INC=
 EBS_UNWIND_LIB=
 EBS_UNWIND_LIB_FLAG=
+EBS_UNWIND_EXTRAS=
 
 #######################################################################
 
@@ -889,7 +890,7 @@ EBS_CLOCK_RES=
 # TAU EBS Unwinder flags                      
 ##############################################
 #TAU_EBS_UNWIND#PROFILEOPT85 = -DTAU_UNWIND $(EBS_UNWIND_FLAG) -I$(EBS_UNWIND_INC) #ENDIF#
-#TAU_EBS_UNWIND#  TAU_LINKER_OPT17 = -L$(EBS_UNWIND_LIB) $(EBS_UNWIND_LIB_FLAG)#ENDIF#
+#TAU_EBS_UNWIND#  TAU_LINKER_OPT17 = -L$(EBS_UNWIND_LIB) $(EBS_UNWIND_LIB_FLAG) $(EBS_UNWIND_EXTRAS)#ENDIF#
 
 ##############################################
 # KTAU-NG!!
