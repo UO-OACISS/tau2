@@ -703,6 +703,7 @@ ebs_unwind_inc=
 ebs_unwind_lib=
 ebs_unwind_flag=
 ebs_unwind_lib_flag=
+ebs_unwind_extras=
 tau_links_rt=no
 opari=no
 opari1=no
@@ -1105,6 +1106,11 @@ for arg in "$@"; do
 
   -ebs_unwind_lib=*)
       ebs_unwind_lib=`echo $arg | sed -e 's/-ebs_unwind_lib=//'`
+      shift
+      ;;
+
+  -ebs_unwind_extras=*)
+      ebs_unwind_extras=`echo $arg | sed -e 's/-ebs_unwind_extras=//'`
       shift
       ;;
 
@@ -6098,7 +6104,11 @@ if [ $otf = yes ] ; then
 fi
 
 if [ "x$ebs_unwinder" != "xnone" ] ; then
-    fixmakeargs="$fixmakeargs TAU_EBS_UNWIND ebs_unwind_flag=$ebs_unwind_flag ebs_unwind_inc=$ebs_unwind_inc ebs_unwind_lib=$ebs_unwind_lib ebs_unwind_lib_flag=$ebs_unwind_lib_flag"
+  if [ "x$ebs_unwinder" = "xlibunwind" ] ; then
+    fixmakeargs="$fixmakeargs TAU_EBS_UNWIND TAU_UNWIND_LIBUNWIND ebs_unwind_flag=$ebs_unwind_flag ebs_unwind_inc=$ebs_unwind_inc ebs_unwind_lib=$ebs_unwind_lib ebs_unwind_lib_flag=$ebs_unwind_lib_flag ebs_unwind_extras=$ebs_unwind_extras"
+  else
+    fixmakeargs="$fixmakeargs TAU_EBS_UNWIND TAU_UNWIND_STACKWALKER ebs_unwind_flag=$ebs_unwind_flag ebs_unwind_inc=$ebs_unwind_inc ebs_unwind_lib=$ebs_unwind_lib ebs_unwind_lib_flag=$ebs_unwind_lib_flag ebs_unwind_extras=$ebs_unwind_extras"
+  fi
 fi
 
 if [ $ebs2otf = yes ] ; then
