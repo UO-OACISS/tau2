@@ -144,7 +144,16 @@ public class Tau2Slog2
                     offended_dobj     = prime_obj;
                     prev_dobj_endtime = curr_dobj_endtime;
                 }
+                
+//                treetrunk.addDrawable( prime_obj );
+                
+                try{
                 treetrunk.addDrawable( prime_obj );
+                }catch(Exception e){
+                	e.printStackTrace();
+                	
+                	System.out.println(prime_obj.toString());
+                }
             }
             else if ( next_kind == Kind.COMPOSITE ) {
                 cmplx_obj = dobj_ins.getNextComposite();
@@ -186,7 +195,14 @@ public class Tau2Slog2
                                   + "from peekNextKind() = " + next_kind );
             }
         }   // Endof while ( dobj_ins.peekNextKind() )
-        treetrunk.flushToFile();
+        //treetrunk.flushToFile();
+        try{
+        	treetrunk.flushToFile();
+            }catch(Exception e){
+            	e.printStackTrace();
+            	
+            
+            }
 
         objdefs.removeUnusedCategories();
         slog_outs.writeCategoryMap( objdefs );

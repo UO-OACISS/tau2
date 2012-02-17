@@ -1489,7 +1489,7 @@ for arg in "$@"; do
     ;;
 
   -shmemlibrary=*)
-    shmemlibrary=`echo $arg | sed -e 's/-shmemlibrary=//' -e 's/ /#/g'`
+    shmemlibrary=`echo $arg | sed -e 's/-shmemlibrary=//' -e 's/#/ /g'`
     shmem=yes
     shift
     ;;
@@ -4017,7 +4017,10 @@ then
     if [ -r $openshmem_lib_dir/libopenshmem.so -o -r $openshmem_lib_dir/libopenshmem.a ] 
     then
       shmemlibargs="$shmemlibargs -L$openshmem_lib_dir"
-      shmemlibrary=-lopenshmem
+      if [ "$shmemlibrary" = "no"  -o "$shmemlibrary" = "-lsma" ]
+      then
+        shmemlibrary=-lopenshmem
+      fi
     fi
   fi
    
@@ -5568,11 +5571,12 @@ if [ "x$bfd" = "xyes" ] ; then
 			fi
 			cd binutils-2.20
 			if [ $machine = "bgp" ] ; then
-				./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir CC=powerpc-bgp-linux-gcc CXX=powerpc-bgp-linux-g++ --disable-nls --disable-werror
+				./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gcc CXX=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-g++ --disable-nls --disable-werror
 				# have to run make twice, first one dies with illegal instruction
 				make
 				make
 				make install
+
 			else
 				./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir --disable-nls --disable-werror
 				make && make install
@@ -5759,7 +5763,11 @@ void foo() {
 }
 EOF
 $echo "Checking for shared library compatible libbfd... ${nnl}"
-shared_opt="-shared -fPIC"
+if [ $c_compiler = xlc -o $c_compiler = xlc_r -o $c_compiler = mpixlc -o $c_compiler = mpixlc_r ] ; then
+  shared_opt="-qmkshrobj"
+else
+  shared_opt="-shared -fPIC"
+fi
 
 bfdlibs=`echo $BFDLIBS | sed -e 's/#/ /g'`
 if $c_compiler $demangle $orig_useropt $shared_opt -o conftest_bfd.so conftest_bfd.c -fPIC $bfdinclude $bfdlink $bfdlibs 1> /dev/null 2>&1 ; then
@@ -6008,6 +6016,11 @@ if [ $cuda = yes ] ; then
 		if [ "$machine" != "craycnl" -a "$opencl" != "disable" ] ; then
 			if [ -f "$cudainclude/CL/cl.h" ] ; then
 				fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$cudainclude"
+			fi
+		else
+			if [ "$machine" == "craycnl" -a "$PE_ENV" != "GNU" ]; then
+				echo "ERROR: TAU's GPU measurement system is only available in the GNU compiler environment on CRAY. Please swap modules and reconfigure."
+				exit 1
 			fi
 		fi
 	else
