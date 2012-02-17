@@ -160,6 +160,7 @@ extern "C" {
 #define TAU_EVENT(event, data)			Tau_userevent(event, data);
 #define TAU_EVENT_THREAD(event, data, tid)				Tau_userevent_thread(event, data, tid)
 #define TAU_CONTEXT_EVENT(event, data)		Tau_context_userevent(event, data);
+#define TAU_CONTEXT_EVENT_THREAD(event, data, tid) Tau_context_userevent_thread(event, data, tid);
 #define TAU_EVENT_SET_NAME(event, name)	Tau_set_event_name(event, name); 	
 #define TAU_REPORT_STATISTICS()		Tau_report_statistics();
 #define TAU_REPORT_THREAD_STATISTICS()  Tau_report_thread_statistics();
@@ -330,6 +331,7 @@ void Tau_get_exclusive_values(void *handle, double* values, int tid);
 void Tau_set_exclusive_values(void *handle, double* values, int tid);
 void Tau_get_counter_info(const char ***counterlist, int *numcounters);
 int TAUDECL Tau_get_tid(void);
+int TAUDECL Tau_create_tid(void);
 int TAUDECL Tau_get_node(void);
 int  Tau_create_task(void);
 void Tau_destructor_trigger();
@@ -446,6 +448,7 @@ void Tau_get_context_userevent(void **ptr, char *name);
 void Tau_userevent(void *event, double data);
 void Tau_userevent_thread(void *event, double data, int tid);
 void Tau_context_userevent(void *event, double data);
+void Tau_context_userevent_thread(void *event, double data, int tid);
 void Tau_set_event_name(void *event, char * name);
 void Tau_report_statistics(void);
 void Tau_report_thread_statistics(void);

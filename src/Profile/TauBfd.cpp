@@ -1,5 +1,13 @@
 #ifdef TAU_BFD
 
+#if defined(TAU_BGP) && defined(TAU_XLC)
+// *CWL* - This is required to handle the different prototype for
+//         asprintf and vasprintf between gnu and xlc compilers
+//         on the BGP.
+#define HAVE_DECL_VASPRINTF 1
+#define HAVE_DECL_ASPRINTF 1
+#endif
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -150,9 +158,12 @@ static TauBfdModule * Tau_bfd_internal_getModuleFromIdx(
 static void Tau_bfd_internal_addExeAddressMap();
 static void Tau_bfd_internal_locateAddress(
 		bfd *bfdptr, asection *section, void *data ATTRIBUTE_UNUSED);
-static int Tau_bfd_internal_getBGPJobID(const char *path, char *name);
 static void Tau_bfd_internal_updateProcSelfMaps(TauBfdUnit *unit);
+
+#ifdef TAU_BGP
+static int Tau_bfd_internal_getBGPJobID(const char *path, char *name);
 static void Tau_bfd_internal_updateBGPMaps(TauBfdUnit *unit);
+#endif /* TAU_BGP */
 
 // BFD units (e.g. executables and their dynamic libraries)
 //vector<TauBfdUnit*> bfdUnits;
@@ -300,11 +311,11 @@ static int Tau_bfd_internal_BGP_dl_iter_callback(
 }
 #endif /* TAU_BGP */
 
-static void Tau_bfd_internal_updateBGPMaps(TauBfdUnit *unit) {
 #ifdef TAU_BGP
+static void Tau_bfd_internal_updateBGPMaps(TauBfdUnit *unit) {
     dl_iterate_phdr(Tau_bfd_internal_BGP_dl_iter_callback, (void *)unit);
-#endif /* TAU_BGP */
 }
+#endif /* TAU_BGP */
 
 
 // *JCL* - Executables compiled by MinGW are strange beasts in that
@@ -708,6 +719,7 @@ Tau_bfd_internal_getModuleFromIdx(TauBfdUnit * unit, int moduleIndex)
 	return unit->modules[moduleIndex];
 }
 
+#ifdef TAU_BGP
 static int Tau_bfd_internal_getBGPJobID(const char *path, char *name) {
   DIR *pdir = NULL;
   pdir = opendir(path);
@@ -739,6 +751,7 @@ static int Tau_bfd_internal_getBGPExePath(char *path) {
   sprintf (path, "/jobs/%s/exe", jobid);
   return 0;
 }
+#endif /* TAU_BGP */
 
 static char const * Tau_bfd_internal_getExecutablePath()
 {

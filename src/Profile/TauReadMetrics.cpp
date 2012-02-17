@@ -19,6 +19,9 @@
 
 #include <TAU.h>
 
+#include <iostream>
+using namespace std;
+
 extern "C" int Tau_is_thread_fake(int t);
 
 /* for getrusage */
@@ -280,7 +283,7 @@ void metric_read_ktau(int tid, int idx, double values[]) {
 
 double gpu_timestamp[TAU_MAX_THREADS];
 
-void metric_set_gpu_timestamp(int tid, double value)
+extern "C" void metric_set_gpu_timestamp(int tid, double value)
 {
 	gpu_timestamp[tid] = value;
 }

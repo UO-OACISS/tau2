@@ -308,7 +308,7 @@ void TauStartOpenMPRegionTimer(my_pomp2_region *r, int index)
 #else 
   FunctionInfo *f = (FunctionInfo *)r->data;
 #endif
-  Tau_start_timer(f, 0, Tau_get_tid());
+  Tau_start_timer(f, 0, Tau_create_tid());
   
   omp_unset_lock(&tau_ompregdescr_lock);
 }
@@ -327,7 +327,7 @@ void TauStopOpenMPRegionTimer(my_pomp2_region  *r, int index)
     int tid = RtsLayer::myThread(); 
     Profiler *p =TauInternal_CurrentProfiler(tid); 
     if (p->ThisFunction == f) {
-      Tau_stop_timer(f, Tau_get_tid());
+      Tau_stop_timer(f, Tau_create_tid());
     } else {
       // nothing, it must have been disabled/throttled
     }
