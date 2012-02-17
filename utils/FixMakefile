@@ -482,6 +482,14 @@ case $1 in
         echo NOTE: Enabling EBS Stack Unwinding support
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     TAU_UNWIND_LIBUNWIND)
+        echo NOTE: Using libunwind Unwinder.
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     TAU_UNWIND_STACKWALKER)
+        echo NOTE: Using stackwalker API Unwinder
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      TAU_DEMANGLE)
         echo NOTE: Using DEMANGLE support
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
