@@ -66,6 +66,20 @@ void Tau_sampling_outputTraceCallstack(int tid, void *pc,
 }
 
 // Copied from TauSampling.cpp for now. Find a way to share the code later.
+// *CWL* - Originally from HPCToolkit for the Power architecture. Kinda bizzarre -
+//         for the stack pointer and frame pointers, void ** is returned instead
+//         of void *. The double pointer is used directly, however.
+#if __WORDSIZE == 32
+#  define UCONTEXT_REG(uc, reg) ((uc)->uc_mcontext.uc_regs->gregs[reg])
+#else
+#  define UCONTEXT_REG(uc, reg) ((uc)->uc_mcontext.gp_regs[reg])
+#endif
+
+#define PPC_REG_FP   PPC_REG_R1
+#define PPC_REG_PC 32
+#define PPC_REG_R1   1
+#define PPC_REG_SP   PPC_REG_R1
+
 static inline unsigned long get_pc(void *p) {
   struct ucontext *uc = (struct ucontext *)p;
   unsigned long pc;
@@ -107,12 +121,17 @@ static inline unsigned long get_pc(void *p) {
 // Prototype support for acquiring stack pointer from the context.
 //   Only support for x86_64 for now.
 static inline unsigned long get_sp(void *p) {
-  struct ucontext *uc = (struct ucontext *)p;
   unsigned long sp;
-  
+  struct ucontext *uc = (struct ucontext *)p;
+
+#ifdef TAU_BGP
+  // *CWL* returns void ** but used directly as the SP.
+  sp = (unsigned long)UCONTEXT_REG(uc, PPC_REG_SP);
+#elif __x86_64__
   struct sigcontext *sc;
   sc = (struct sigcontext *)&uc->uc_mcontext;
   sp = (unsigned long)sc->rsp;
+#endif /* TAU_BGP */
 
   return sp;
 }
@@ -120,12 +139,17 @@ static inline unsigned long get_sp(void *p) {
 // Prototype support for acquiring frame pointer from the context.
 //   Only support for x86_64 for now.
 static inline unsigned long get_fp(void *p) {
-  struct ucontext *uc = (struct ucontext *)p;
   unsigned long fp;
-  
+  struct ucontext *uc = (struct ucontext *)p;
+
+#ifdef TAU_BGP
+  // *CWL* returns void ** but used directly as the FP.
+  fp = (unsigned long)UCONTEXT_REG(uc, PPC_REG_FP);
+#elif __x86_64__
   struct sigcontext *sc;
   sc = (struct sigcontext *)&uc->uc_mcontext;
   fp = (unsigned long)sc->rbp;
+#endif /* TAU_BGP */
 
   return fp;
 }
