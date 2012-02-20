@@ -56,7 +56,7 @@ double cudaRuntimeGpuId::syncOffset()
 	return sync_offset;
 }
 
-char* cudaRuntimeGpuId::printId() 
+char* cudaRuntimeGpuId::printId() const
 {
 		char *rtn = (char*) malloc(50*sizeof(char));
 		sprintf(rtn, "[%d:%d]", device, stream);
@@ -100,7 +100,7 @@ double cudaDriverGpuId::syncOffset()
   return sync_offset;
 }
 
-char* cudaDriverGpuId::printId() 
+char* cudaDriverGpuId::printId() const
 {
 		char *rtn = (char*) malloc(50*sizeof(char));
 		sprintf(rtn, "%d:%d:%d (Device,Context,Stream)", device, context, stream);
