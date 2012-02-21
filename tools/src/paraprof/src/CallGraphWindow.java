@@ -197,26 +197,37 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
         public String getToolTipString() {
             String result = "<html>" + function;
-
-            String unitsString = UtilFncs.getUnitsString(window.units(), dataSorter.isTimeMetric(), false);
-
+            
+            String unitsString = "", widthValue = "", colorValue = "";
 
             if (widthOption != CallGraphOption.STATIC && widthOption != CallGraphOption.NAME_LENGTH) {
-                String widthValue = UtilFncs.getOutputString(window.units(), functionProfile.getExclusive(widthMetric.getID()),
-                        ParaProf.defaultNumberPrecision, widthMetric.isTimeDenominator());
+
                 result = result + "<br>Width Value (" + widthOption;
                 if (widthOption != CallGraphOption.NUMCALLS && widthOption != CallGraphOption.NUMSUBR) {
+                    unitsString = UtilFncs.getUnitsString(window.units(), true, false);
+                    widthValue = UtilFncs.getOutputString(window.units(), getValue(functionProfile, widthOption, 1, widthMetric),
+                            ParaProf.defaultNumberPrecision, widthMetric.isTimeDenominator());
                     result = result + ", " + widthMetric.getName();
+                }
+                else
+                {
+                	widthValue = UtilFncs.formatDouble(getValue(functionProfile, widthOption, 1, widthMetric), ParaProf.defaultNumberPrecision, true);
                 }
                 result = result + ") : " + widthValue + " " + unitsString;
             }
 
             if (colorOption != CallGraphOption.STATIC) {
-                String colorValue = UtilFncs.getOutputString(window.units(), functionProfile.getInclusive(colorMetric.getID()),
-                        ParaProf.defaultNumberPrecision, colorMetric.isTimeDenominator());
+
                 result = result + "<br>Color Value (" + colorOption;
                 if (colorOption != CallGraphOption.NUMCALLS && colorOption != CallGraphOption.NUMSUBR) {
+                    unitsString = UtilFncs.getUnitsString(window.units(), true, false);
+                    colorValue = UtilFncs.getOutputString(window.units(), getValue(functionProfile, colorOption, 1, colorMetric),
+                            ParaProf.defaultNumberPrecision, colorMetric.isTimeDenominator());
                     result = result + ", " + colorMetric.getName();
+                }
+                else
+                {
+                    colorValue = UtilFncs.formatDouble(getValue(functionProfile, colorOption, 1, colorMetric), ParaProf.defaultNumberPrecision, true);
                 }
                 result = result + ") : " + colorValue + " " + unitsString;
             }
