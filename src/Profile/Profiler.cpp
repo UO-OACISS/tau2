@@ -19,6 +19,7 @@
 #include <Profile/TauMetrics.h>
 #ifndef TAU_WINDOWS
 #include <Profile/TauSampling.h>
+#include <Profile/TauUnwind.h>
 #endif
 #include <Profile/TauSnapshot.h>
 //#ifdef TAU_GPU
@@ -202,7 +203,7 @@ void TauProfiler_EnableAllEventsOnCallStack(int tid, Profiler *current) {
 #endif /* TAU_MPITRACE */
 //////////////////////////////////////////////////////////////////////
 
-
+void Tau_unwind_unwindTauContext(Profiler *myProfiler);
 void Profiler::Start(int tid) { 
 #ifdef DEBUG_PROF
   fprintf (stderr, "[%d:%d-%d] Profiler::Start for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
@@ -265,10 +266,11 @@ void Profiler::Start(int tid) {
   /*** Extras ***/
   /********************************************************************************/
 
-  
   if (TauEnv_get_callpath()) {
     CallPathStart(tid);
   }
+  //  } else if (TauEnv_get_callsite()) {
+  DiscoverCallSite(tid);
 
 #ifdef TAU_PROFILEPARAM
   ProfileParamFunction = NULL;

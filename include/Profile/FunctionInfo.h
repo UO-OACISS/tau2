@@ -49,6 +49,8 @@ extern "C" int Tau_Global_numCounters;
 #include <unistd.h>
 #include <map>
 
+#include "Profile/TauSampling.h"
+
 #ifdef TAU_SS_ALLOC_SUPPORT
 #include <Profile/TauSsAllocator.h>
 #define SS_ALLOCATOR tau_ss_allocator
@@ -160,6 +162,8 @@ public:
     SS_ALLOCATOR< std::pair<const vector<unsigned long>, unsigned int> > > *pcHistogram[TAU_MAX_THREADS];
   // For FunctionInfo objects created specially for sample-based profiling 
   FunctionInfo *parentTauContext;
+  unsigned long callsiteKey[TAU_SAMP_NUM_ADDRESSES+1]; // first entry is length
+  unsigned long eventCallSite;
 
   /* EBS Sampling Profiles */
   void addPcSample(vector<unsigned long> *pc, int tid);

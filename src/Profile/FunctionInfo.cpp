@@ -213,6 +213,8 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
     }
   }
   parentTauContext = NULL;
+  callsiteKey[0] = 0;
+  eventCallSite = 0; // Initialized to no callsite
 #endif // TAU_WINDOWS
 
 #ifdef TAU_VAMPIRTRACE
