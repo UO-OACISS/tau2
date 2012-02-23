@@ -181,6 +181,7 @@ public:
   bool AddInclCallPathFlag; 
   FunctionInfo *ThisFunction;
   FunctionInfo *CallPathFunction;
+  FunctionInfo *CallSiteFunction;
 
   Profiler() {};
   ~Profiler() {};
@@ -229,7 +230,10 @@ public:
   /* For EBS sampling */
   int needToRecordStop;
   void *address[TAU_SAMP_NUM_ADDRESSES];
-  
+  // For now - first entry is always the length
+  unsigned long callsiteKey[TAU_SAMP_NUM_ADDRESSES+1];
+  unsigned long *callsite;
+  void DiscoverCallSite(int tid);
 };
 }
 #ifdef TAU_LIBRARY_SOURCE

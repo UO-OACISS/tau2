@@ -67,6 +67,36 @@ void Tau_sampling_outputTraceCallstack(int tid, void *pc,
   }
 }
 
+void Tau_unwind_unwindTauContext(int tid, unsigned long *addresses) {
+  ucontext_t context;
+  int ret = getcontext(&context);
+  
+  if (ret != 0) {
+    fprintf(stderr, "TAU: Error getting context\n");
+    return;
+  }
+
+  unw_cursor_t cursor;
+  unw_word_t ip;
+  unw_init_local(&cursor, &context);
+
+  int count = 0;
+  int idx = 1;  // we want to fill the first entry with the length later.
+  unw_word_t last_address = 0;
+  while (unw_step(&cursor) > 0 && idx < TAU_SAMP_NUM_ADDRESSES) {
+    unw_get_reg(&cursor, UNW_REG_IP, &ip);
+    // In the case of Unwinding from TAU context, we ignore recursion as
+    //   un-helpful for the purposes of determining callsite information.
+    if (ip == last_address) {
+      continue;
+    }
+    addresses[idx++] = (unsigned long)ip;
+    last_address = ip;
+    count++;
+  }
+  addresses[0] = count;
+}
+
 void Tau_sampling_unwindTauContext(int tid, void **addresses) {
   ucontext_t context;
   int ret = getcontext(&context);
