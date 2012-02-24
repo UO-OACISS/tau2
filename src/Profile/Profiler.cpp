@@ -270,7 +270,7 @@ void Profiler::Start(int tid) {
     CallPathStart(tid);
   }
   //  } else if (TauEnv_get_callsite()) {
-  DiscoverCallSite(tid);
+  FindCallSite(tid);
 
 #ifdef TAU_PROFILEPARAM
   ProfileParamFunction = NULL;
@@ -500,7 +500,8 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   if (TauEnv_get_callpath()) {
     CallPathStop(TotalTime, tid);
   }
-    
+  StopCallSite(TotalTime, tid);
+
 #ifdef RENCI_STFF
   if (TauEnv_get_callpath()) {
     RenciSTFF::recordValues(CallPathFunction, TimeStamp, TotalTime, tid);
@@ -1177,6 +1178,7 @@ extern "C" int Tau_profiler_initialization() {
 
 
 // Store profile data at the end of execution (when top level timer stops)
+void finalizeCallSites(int tid);
 int TauProfiler_StoreData(int tid) {
 
   profileWriteCount[tid]++;
@@ -1191,7 +1193,9 @@ int TauProfiler_StoreData(int tid) {
     RtsLayer::UnLockDB();
   }
   finalizeTrace(tid);
+  
 #ifndef TAU_WINDOWS  
+  finalizeCallSites(tid);
   if (TauEnv_get_ebs_enabled()) {
     // Tau_sampling_finalize(tid);
     Tau_sampling_finalize_if_necessary();
