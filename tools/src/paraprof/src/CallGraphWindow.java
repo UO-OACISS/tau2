@@ -75,6 +75,7 @@ import edu.uoregon.tau.perfdmf.Function;
 import edu.uoregon.tau.perfdmf.FunctionProfile;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Thread;
+import edu.uoregon.tau.perfdmf.UtilFncs;
 
 /**
  * CallGraphWindow.java
@@ -130,6 +131,9 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
     private Font font;
     private int boxHeight;
     private double scale = 1.0;
+    
+    private DataSorter dataSorter;
+    private GlobalDataWindow window;
 
     private static class GraphSelectionModel extends DefaultGraphSelectionModel {
 
@@ -193,23 +197,39 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
         public String getToolTipString() {
             String result = "<html>" + function;
+            
+            String unitsString = "", widthValue = "", colorValue = "";
 
             if (widthOption != CallGraphOption.STATIC && widthOption != CallGraphOption.NAME_LENGTH) {
-                float widthValue = (float) getValue(functionProfile, widthOption, 1.0, widthMetric);
+
                 result = result + "<br>Width Value (" + widthOption;
                 if (widthOption != CallGraphOption.NUMCALLS && widthOption != CallGraphOption.NUMSUBR) {
+                    unitsString = UtilFncs.getUnitsString(window.units(), true, false);
+                    widthValue = UtilFncs.getOutputString(window.units(), getValue(functionProfile, widthOption, 1, widthMetric),
+                            ParaProf.defaultNumberPrecision, widthMetric.isTimeDenominator());
                     result = result + ", " + widthMetric.getName();
                 }
-                result = result + ") : " + widthValue;
+                else
+                {
+                	widthValue = UtilFncs.formatDouble(getValue(functionProfile, widthOption, 1, widthMetric), ParaProf.defaultNumberPrecision, true);
+                }
+                result = result + ") : " + widthValue + " " + unitsString;
             }
 
             if (colorOption != CallGraphOption.STATIC) {
-                float colorValue = (float) getValue(functionProfile, colorOption, 1.0, colorMetric);
+
                 result = result + "<br>Color Value (" + colorOption;
                 if (colorOption != CallGraphOption.NUMCALLS && colorOption != CallGraphOption.NUMSUBR) {
+                    unitsString = UtilFncs.getUnitsString(window.units(), true, false);
+                    colorValue = UtilFncs.getOutputString(window.units(), getValue(functionProfile, colorOption, 1, colorMetric),
+                            ParaProf.defaultNumberPrecision, colorMetric.isTimeDenominator());
                     result = result + ", " + colorMetric.getName();
                 }
-                result = result + ") : " + colorValue;
+                else
+                {
+                    colorValue = UtilFncs.formatDouble(getValue(functionProfile, colorOption, 1, colorMetric), ParaProf.defaultNumberPrecision, true);
+                }
+                result = result + ") : " + colorValue + " " + unitsString;
             }
 
             return result;
@@ -293,12 +313,15 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
         private CallGraphWindow callGraphWindow;
     }
-
+   
     public CallGraphWindow(ParaProfTrial ppTrial, Thread thread, Component invoker) {
         this.ppTrial = ppTrial;
         ppTrial.addObserver(this);
         this.colorMetric = ppTrial.getDefaultMetric();
         this.widthMetric = ppTrial.getDefaultMetric();
+        
+        this.window = ppTrial.getFullDataWindow();
+        this.dataSorter = new DataSorter(ppTrial);
 
         this.thread = thread;
 
