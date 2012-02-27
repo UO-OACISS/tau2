@@ -86,6 +86,7 @@ typedef struct TauFuncCsKey {
 /////////////////////////////////////////////////////////////////////////
 #define TAU_CALLSITE_MAP_TYPE unsigned long *, FunctionInfo *, TauCsLong
 #define TAU_CALLSITE_KEY_MAP_TYPE FunctionInfo *, tau_cs_key_t *
+#define TAU_CALLSITE_KEY_ID_MAP_TYPE unsigned long *, long, TauCsLong
 
 /////////////////////////////////////////////////////////////////////////
 // We use one global map to store the callpath information
@@ -101,6 +102,11 @@ map<TAU_CALLSITE_KEY_MAP_TYPE >& TheCallSiteKeyMap(void) {
   static map<TAU_CALLSITE_KEY_MAP_TYPE > callsiteKeyMap;
 
   return callsiteKeyMap;
+}
+
+map<TAU_CALLSITE_KEY_ID_MAP_TYPE >& TheCallSiteKeyIdMap(void) {
+  static map<TAU_CALLSITE_KEY_ID_MAP_TYPE > callsiteKeyIdMap;
+  return callsiteKeyIdMap;
 }
 
 char *resolveTauCallSite(unsigned long addr) {
@@ -193,19 +199,19 @@ void Profiler::FindCallSite(int tid) {
   printf("Base Function is %s\n", ThisFunction->GetName());
   printCallSites(callsiteKey);
 
-  // Does my parent have a callsite? If so, I need to increment its subroutine count.
+  // Does my parent have a callsite? If so, I need to explicitly increment 
+  //   its subroutine count. If not, the regular book-keeping routines will
+  //   take care of it.
   if (ParentProfiler != NULL) {
-    map<TAU_CALLSITE_MAP_TYPE >::iterator it = TheCallSiteMap().find(ParentProfiler->callsiteKey);
-    if (it == TheCallSiteMap().end()) {
-      // unmapped or missing callsiteKey. No matter. We don't need it.
+    map<TAU_CALLSITE_KEY_MAP_TYPE >::iterator itKey = 
+      TheCallSiteKeyMap().find(ParentProfiler->ThisFunction);
+    if (itKey == TheCallSiteKeyMap().end()) {
+      // Base Function not registered. It does not have a callsite.
     } else {
-      // Is this function specialized? If it is, we need to update its subroutine count.
-      //   If not, we will not bother.
-      FunctionInfo *theFunction = (*it).second;
-      map<TAU_CALLSITE_KEY_MAP_TYPE >::iterator itKey = TheCallSiteKeyMap().find(theFunction);
-      if (itKey == TheCallSiteKeyMap().end()) {
-	// Cannot find function. It *must* be specialized.
-	theFunction->IncrNumSubrs(tid);
+      tau_cs_key_t *masterKey = (*itKey).second;
+      if (!masterKey->isUnique) {
+	// It is a differentiated function. Explicitly increment the subroutine count
+	
       }
     }
   }
@@ -311,6 +317,95 @@ void Profiler::StopCallSite(double *totalTime, int tid) {
     theFunction->AddExclTime(totalTime, tid);
     printf("Stopping function %s\n", theFunction->GetName());
   }
+}
+
+// 0 represents a non callsite.
+// The negation of the id key is used. 
+static long callsiteId = 1;
+
+// This is replicated from TauCallPath.
+int& Tau_unwind_GetCallPathDepth(void) {
+  static int value = 0;
+
+  if (value == 0) {
+    value = TauEnv_get_callpath_depth();
+    if (value <= 1) {
+      /* minimum of 2 */
+      value = 2;
+    }
+  }
+  return value;
+}
+
+// Make combined callsite and callpath key
+long *Tau_unwind_MakePathKey(Profiler *p) {
+  int depth = Tau_unwind_GetCallPathDepth();
+
+  long *key = new long [depth*2 +1];
+  Profiler *current = p; /* argument */
+
+  int index = 0;
+  while (current != NULL && depth != 0) {
+    // There are two parts to a key - the callsite and the callpath.
+    // For now, we use the simpler, but less efficient method for
+    //   including callsites. If no callsites are desired/computed,
+    //   the value is 0.
+    key[index*2+1] = -(current->callsiteKeyId);
+    //    key[index+1] = Tau_convert_ptr_to_long(current->ThisFunction); 
+    key[index*2+2] = (long)current->ThisFunction; 
+    index++;
+    depth--;
+    current = current->ParentProfiler;
+  }
+  key[0] = index*2;
+
+  return key;
+}
+
+void Profiler::CallSitePathStart(int tid) {
+  // Capture and record the callsite key. This is represented by a sequence of 
+  //    TAU_SAMP_NUM_ADDRESSES
+  //    callsite addresses starting from some location within TAU. Cloistered within
+  //    these addresses potentially lie the application's callsite into a TAU event.
+
+  // *CWL* - TODO. Determine if we even want to unwind for this function in the
+  //    first place.
+  callsiteKeyId = 0; // default - we don't care about this callsite.
+  Tau_unwind_unwindTauContext(tid, callsiteKey);
+  map<TAU_CALLSITE_KEY_ID_MAP_TYPE >::iterator it = TheCallSiteKeyIdMap().find(callsiteKey);
+  if (it == TheCallSiteKeyIdMap().end()) {
+    callsiteKeyId = callsiteId;
+    unsigned long *key;
+    // *CWL* - It is important to make a copy of the callsiteKey for insertion into the map.
+    key = (unsigned long *)malloc(sizeof(unsigned long)*(TAU_SAMP_NUM_ADDRESSES+1));
+    // copy length element
+    key[0] = callsiteKey[0];
+    for (int i=0; i<callsiteKey[0]; i++) {
+      key[i+1] = callsiteKey[i+1];
+    }
+    TheCallSiteKeyIdMap().insert(map<TAU_CALLSITE_KEY_ID_MAP_TYPE >::value_type(key, 
+										callsiteId++));
+  } else {
+    // We've seen this callsite key before.
+    callsiteKeyId = (*it).second;
+  }
+
+  long *comparison = 0;
+  // Construct the combined callsite + callpath key
+  comparison = Tau_unwind_MakePathKey(this);
+  /*
+  printf("key is length %d\n", comparison[0]);
+  for (int i=0; i<comparison[0]; i++) {
+    printf("%ld ",comparison[i+1]);
+  }
+  printf("\n");
+  */
+  // Have we seen this key before?
+  
+}
+
+void Profiler::CallSitePathStop(double *totalTime, int tid) {
+
 }
 
 void finalizeCallSites(int tid) {

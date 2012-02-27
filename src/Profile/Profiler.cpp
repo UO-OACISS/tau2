@@ -266,11 +266,24 @@ void Profiler::Start(int tid) {
   /*** Extras ***/
   /********************************************************************************/
 
+#ifdef TAU_UNWIND
+  // *CWL* - Without unwind, there cannot be callsite discovery
+  if (TauEnv_get_callsite()) {
+    if (TauEnv_get_callpath()) {
+      CallSitePathStart(tid);
+    } else {
+      FindCallSite(tid);
+    }
+  } else {
+    if (TauEnv_get_callpath()) {
+      CallPathStart(tid);
+    }
+  }
+#else
   if (TauEnv_get_callpath()) {
     CallPathStart(tid);
   }
-  //  } else if (TauEnv_get_callsite()) {
-  FindCallSite(tid);
+#endif /* TAU_UNWIND */
 
 #ifdef TAU_PROFILEPARAM
   ProfileParamFunction = NULL;
@@ -496,11 +509,24 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   /*** Tracing ***/
   /********************************************************************************/
     
-    
+#ifdef TAU_UNWIND
+  // *CWL* - Without unwind, there cannot be callsite discovery
+  if (TauEnv_get_callsite()) {
+    if (TauEnv_get_callpath()) {
+      CallSitePathStop(TotalTime, tid);
+    } else {
+      StopCallSite(TotalTime, tid);
+    }
+  } else {
+    if (TauEnv_get_callpath()) {
+      CallPathStop(TotalTime, tid);
+    }
+  }
+#else
   if (TauEnv_get_callpath()) {
     CallPathStop(TotalTime, tid);
   }
-  StopCallSite(TotalTime, tid);
+#endif /* TAU_UNWIND */    
 
 #ifdef RENCI_STFF
   if (TauEnv_get_callpath()) {

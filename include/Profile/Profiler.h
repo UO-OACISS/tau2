@@ -232,8 +232,11 @@ public:
   // For now - first entry is always the length
   unsigned long callsiteKey[TAU_SAMP_NUM_ADDRESSES+1];
   unsigned long *callsite;
+  long callsiteKeyId;
   void FindCallSite(int tid);
+  void CallSitePathStart(int tid);
   void StopCallSite(double *totalTime, int tid);
+  void CallSitePathStop(double *totalTime, int tid);
 };
 }
 #ifdef TAU_LIBRARY_SOURCE
