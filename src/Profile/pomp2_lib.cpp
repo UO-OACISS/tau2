@@ -79,18 +79,19 @@ TAU_GLOBAL_TIMER( ttask , "task begin/end", "[OpenMP]", OpenMP);
 TAU_GLOBAL_TIMER( tuntiedcreate , "untied task create begin/end", "[OpenMP]", OpenMP);
 TAU_GLOBAL_TIMER( tuntied , "untied task begin/end", "[OpenMP]", OpenMP);
 TAU_GLOBAL_TIMER( ttaskwait , "taskwait begin/end", "[OpenMP]", OpenMP);
+TAU_GLOBAL_TIMER( tflush , "flush enter/exit", "[OpenMP]", OpenMP);
 
 
-#define NUM_OMP_TYPES 22
+#define NUM_OMP_TYPES 23
 
-static string  omp_names[22] = {"atomic enter/exit", "barrier enter/exit", "critical begin/end", 
+static string  omp_names[23] = {"atomic enter/exit", "barrier enter/exit", "critical begin/end", 
 			     "critical enter/exit", "for enter/exit", "master begin/end",
 			     "parallel begin/end", "parallel fork/join", "section begin/end",
 			     "sections enter/exit", "single begin/end", "single enter/exit",
 			      "workshare enter/exit", "inst region begin/end", "flush enter/exit",
 			     "ordered begin/end","ordered enter/exit","task create begin/end",
 			"task begin/end","untied task create begin/end","untied task begin/end",
-			"taskwait begin/end" };
+			"taskwait begin/end", "flush enter/exit" };
 
 
 #define TAU_OMP_ATOMIC      0
@@ -115,6 +116,7 @@ static string  omp_names[22] = {"atomic enter/exit", "barrier enter/exit", "crit
 #define TAU_OMP_UNTIED_TASK_CREATE_BE 19
 #define TAU_OMP_UNTIED_TASK_BE 20
 #define TAU_OMP_TASKWAIT_BE  21
+#define TAU_OMP_FLUSH        22
 
 
 
@@ -635,7 +637,7 @@ POMP2_Flush_enter( POMP2_Region_handle* pomp2_handle,
 
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
-  TAU_GLOBAL_TIMER_START(tregion);
+  TAU_GLOBAL_TIMER_START(tflush);
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef TAU_OPENMP_REGION_VIEW
