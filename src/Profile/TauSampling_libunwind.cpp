@@ -67,13 +67,13 @@ void Tau_sampling_outputTraceCallstack(int tid, void *pc,
   }
 }
 
-void Tau_unwind_unwindTauContext(int tid, unsigned long *addresses) {
+bool Tau_unwind_unwindTauContext(int tid, unsigned long *addresses) {
   ucontext_t context;
   int ret = getcontext(&context);
   
   if (ret != 0) {
     fprintf(stderr, "TAU: Error getting context\n");
-    return;
+    return false;
   }
 
   unw_cursor_t cursor;
@@ -90,11 +90,20 @@ void Tau_unwind_unwindTauContext(int tid, unsigned long *addresses) {
     if (ip == last_address) {
       continue;
     }
-    addresses[idx++] = (unsigned long)ip;
+    // The subtraction is here because the return address in the callstack
+    //   takes you to the next instruction for the purposes of line number
+    //   discovery. This is a hack - used by perfsuite and ppw, but
+    //   nonetheless still a hack.
+    addresses[idx++] = (unsigned long)(ip-1);
     last_address = ip;
     count++;
   }
-  addresses[0] = count;
+  if (count > 0) {
+    addresses[0] = count;
+    return true;
+  } else {
+    return false;
+  }
 }
 
 void Tau_sampling_unwindTauContext(int tid, void **addresses) {

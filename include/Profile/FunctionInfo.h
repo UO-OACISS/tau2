@@ -61,6 +61,11 @@ extern "C" int Tau_Global_numCounters;
 using namespace std;
 class TauUserEvent; 
 
+typedef struct CombinedKey {
+  bool isCallSite;
+  unsigned long keyValue;
+} tau_cs_path_element_t;
+
 class FunctionInfo
 {
 public:
@@ -162,8 +167,14 @@ public:
     SS_ALLOCATOR< std::pair<const vector<unsigned long>, unsigned int> > > *pcHistogram[TAU_MAX_THREADS];
   // For FunctionInfo objects created specially for sample-based profiling 
   FunctionInfo *parentTauContext;
-  unsigned long callsiteKey[TAU_SAMP_NUM_ADDRESSES+1]; // first entry is length
-  unsigned long eventCallSite;
+
+  // For Callsite discovery. True if this is a specialized path based on combined
+  //   callsite and callpath.
+  vector<tau_cs_path_element_t *> *combinedPath;
+  bool hasCallSite;
+  bool callSiteResolved;
+  unsigned long callSiteKeyId;
+  FunctionInfo *firstSpecializedFunction;
 
   /* EBS Sampling Profiles */
   void addPcSample(vector<unsigned long> *pc, int tid);
