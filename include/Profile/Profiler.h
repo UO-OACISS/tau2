@@ -225,24 +225,21 @@ public:
   bool RecordEvent; /* true when an MPI call is in the callpath */
 #endif /* TAU_MPITRACE */
 
-
   /* For EBS sampling */
   int needToRecordStop;
   void *address[TAU_SAMP_NUM_ADDRESSES];
-  // For now - first entry is always the length
-  unsigned long callsiteKey[TAU_SAMP_NUM_ADDRESSES+1];
-  unsigned long *callsite;
-  long callsiteKeyId;
-  void FindCallSite(int tid);
-  void CallSitePathStart(int tid);
-  void StopCallSite(double *totalTime, int tid);
-  void CallSitePathStop(double *totalTime, int tid);
+
+  // Callsite discovery
+  unsigned long callsites[TAU_SAMP_NUM_ADDRESSES+1];
+  unsigned long callsiteKeyId;
+  bool hasCallSite;
+  void CallSiteStart(int tid);
+  void CallSiteStop(double *totalTime, int tid);
 };
 }
 #ifdef TAU_LIBRARY_SOURCE
 using tau::Profiler;
 #endif /* TAU_LIBRARY_SOURCE */
-
 
 extern "C" tau::Profiler *TauInternal_CurrentProfiler(int tid);
 extern "C" tau::Profiler *TauInternal_ParentProfiler(int tid);

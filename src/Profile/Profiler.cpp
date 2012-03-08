@@ -19,7 +19,6 @@
 #include <Profile/TauMetrics.h>
 #ifndef TAU_WINDOWS
 #include <Profile/TauSampling.h>
-#include <Profile/TauUnwind.h>
 #endif
 #include <Profile/TauSnapshot.h>
 //#ifdef TAU_GPU
@@ -267,13 +266,10 @@ void Profiler::Start(int tid) {
   /********************************************************************************/
 
 #ifdef TAU_UNWIND
-  // *CWL* - Without unwind, there cannot be callsite discovery
+  // *CWL* - Without unwind, there cannot be callsite discovery.
+  //    Callsite discovery affects callpaths.
   if (TauEnv_get_callsite()) {
-    if (TauEnv_get_callpath()) {
-      CallSitePathStart(tid);
-    } else {
-      FindCallSite(tid);
-    }
+    CallSiteStart(tid);
   } else {
     if (TauEnv_get_callpath()) {
       CallPathStart(tid);
@@ -512,11 +508,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 #ifdef TAU_UNWIND
   // *CWL* - Without unwind, there cannot be callsite discovery
   if (TauEnv_get_callsite()) {
-    if (TauEnv_get_callpath()) {
-      CallSitePathStop(TotalTime, tid);
-    } else {
-      StopCallSite(TotalTime, tid);
-    }
+    CallSiteStop(TotalTime, tid);
   } else {
     if (TauEnv_get_callpath()) {
       CallPathStop(TotalTime, tid);
@@ -1221,7 +1213,9 @@ int TauProfiler_StoreData(int tid) {
   finalizeTrace(tid);
   
 #ifndef TAU_WINDOWS  
+#ifdef TAU_UNWIND
   finalizeCallSites(tid);
+#endif /* TAU_UNWIND */
   if (TauEnv_get_ebs_enabled()) {
     // Tau_sampling_finalize(tid);
     Tau_sampling_finalize_if_necessary();
