@@ -3900,7 +3900,17 @@ EOF
 	      papipfm=yes
 	      papiperfctr=yes
 	  fi
-	  /bin/rm -f tau_papi_test.c tau_papi_test
+          
+          if [ $machine = craycnl ] ; then
+	    $c_compiler $orig_useropt -c -fPIC tau_papi_test.c -I$papidir/include 
+	    if $c_compiler $orig_useropt tau_papi_test.o -I$papidir/include -shared -o libtau_papi_test.so $papidir/$papisubdir/libpapi.a 1> /dev/null 2>&1 ; then
+              echo "PAPI library links properly"
+            else 
+              echo "NOTE: libpapi.a can't be called in a TAU shared object. Using -DISABLESHARED"
+              fixmakeargs="$fixmakeargs NOSHARED"
+            fi
+          fi 
+	  /bin/rm -f tau_papi_test.c tau_papi_test tau_papi_test.o
       fi		
 fi
 

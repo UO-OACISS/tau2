@@ -38,7 +38,7 @@ static map<cl_command_queue, openCLGpuId*> IdentityMap;
 double Tau_opencl_sync_clocks(cl_command_queue commandQueue, cl_context
 context);
 
-char* openCLGpuId::printId() 
+char* openCLGpuId::printId() const 
 {	
 		//printf("in printId, id: %d.\n", id);
 		char r[20];

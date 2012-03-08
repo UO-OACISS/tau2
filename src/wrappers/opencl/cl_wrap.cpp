@@ -1944,6 +1944,7 @@ void * clEnqueueMapBuffer(cl_command_queue a1, cl_mem a2, cl_bool a3, cl_map_fla
 #endif
 
 	//free(mem_data);
+	Tau_opencl_register_sync_event();
   }
   return retval;
 
@@ -1998,6 +1999,12 @@ cl_int clEnqueueUnmapMemObject(cl_command_queue a1, cl_mem a2, void * a3, cl_uin
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
+	if (a6 == NULL)
+	{
+		//printf("cl_event is null.\n");
+		cl_event* new_event = (cl_event*) malloc(sizeof(cl_event));
+		a6 = &(*new_event);
+	}
 	FunctionInfo *callingSite;
 	int err;
 	char* name = "UnmapBuffer";
@@ -2019,7 +2026,10 @@ cl_int clEnqueueUnmapMemObject(cl_command_queue a1, cl_mem a2, void * a3, cl_uin
   retval  =  (*clEnqueueUnmapMemObject_h)( a1,  a2,  a3,  a4,  a5,  a6);
   Tau_opencl_exit_memcpy_event("cl_int clEnqueueUnmapMemObject(cl_command_queue, cl_mem, void *, cl_uint, const cl_event *, cl_event *) C", gId, MemcpyDtoH);
   }
-  return retval;
+	
+	Tau_opencl_register_sync_event();
+  
+	return retval;
 
 }
 
