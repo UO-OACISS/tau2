@@ -329,7 +329,7 @@ void TauStopOpenMPRegionTimer(my_pomp2_region  *r, int index)
     Profiler *p =TauInternal_CurrentProfiler(tid); 
     if(p == NULL){
       // nothing, it must have been disabled/throttled
-   } else if (p->ThisFunction == f) {
+    } else if (p->ThisFunction == f) {
       Tau_stop_timer(f, Tau_create_tid());
     } else {
       // nothing, it must have been disabled/throttled
