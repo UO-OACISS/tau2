@@ -72,6 +72,7 @@ TAU_GLOBAL_TIMER(tsingleb, "single begin/end", "[OpenMP]", OpenMP);
 TAU_GLOBAL_TIMER(tsinglee, "single enter/exit", "[OpenMP]", OpenMP); 
 TAU_GLOBAL_TIMER(tworkshare, "workshare enter/exit", "[OpenMP]", OpenMP); 
 TAU_GLOBAL_TIMER(tregion, "inst region begin/end", "[OpenMP]", OpenMP); 
+TAU_GLOBAL_TIMER( tflush , "flush enter/exit", "[OpenMP]", OpenMP);
 TAU_GLOBAL_TIMER( torderedb , "ordered begin/end", "[OpenMP]", OpenMP);
 TAU_GLOBAL_TIMER( torderede , "ordered enter/exit", "[OpenMP]", OpenMP);
 TAU_GLOBAL_TIMER( ttaskcreate , "task create begin/create end", "[OpenMP]", OpenMP);
@@ -81,9 +82,9 @@ TAU_GLOBAL_TIMER( tuntied , "untied task begin/end", "[OpenMP]", OpenMP);
 TAU_GLOBAL_TIMER( ttaskwait , "taskwait begin/end", "[OpenMP]", OpenMP);
 
 
-#define NUM_OMP_TYPES 22
+#define NUM_OMP_TYPES 23
 
-static string  omp_names[22] = {"atomic enter/exit", "barrier enter/exit", "critical begin/end", 
+static string  omp_names[23] = {"atomic enter/exit", "barrier enter/exit", "critical begin/end", 
 			     "critical enter/exit", "for enter/exit", "master begin/end",
 			     "parallel begin/end", "parallel fork/join", "section begin/end",
 			     "sections enter/exit", "single begin/end", "single enter/exit",
@@ -326,7 +327,9 @@ void TauStopOpenMPRegionTimer(my_pomp2_region  *r, int index)
 
     int tid = RtsLayer::myThread(); 
     Profiler *p =TauInternal_CurrentProfiler(tid); 
-    if (p->ThisFunction == f) {
+    if(p == NULL){
+      // nothing, it must have been disabled/throttled
+   } else if (p->ThisFunction == f) {
       Tau_stop_timer(f, Tau_create_tid());
     } else {
       // nothing, it must have been disabled/throttled
@@ -635,7 +638,7 @@ POMP2_Flush_enter( POMP2_Region_handle* pomp2_handle,
 
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
-  TAU_GLOBAL_TIMER_START(tregion);
+  TAU_GLOBAL_TIMER_START(tflush);
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef TAU_OPENMP_REGION_VIEW
