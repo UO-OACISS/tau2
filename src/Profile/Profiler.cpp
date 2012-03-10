@@ -266,18 +266,19 @@ void Profiler::Start(int tid) {
   /********************************************************************************/
 
 #ifdef TAU_UNWIND
-  // *CWL* - Without unwind, there cannot be callsite discovery.
-  //    Callsite discovery affects callpaths.
-  if (TauEnv_get_callsite()) {
-    CallSiteStart(tid);
-  } else {
-    if (TauEnv_get_callpath()) {
-      CallPathStart(tid);
-    }
+  // An initialization of sorts. Call Paths (if any) will update this.
+  if (TauEnv_get_callsite() == 1) {
+    CallSiteAddPath(NULL, tid);
   }
-#else
+#endif /* TAU_UNWIND */
+
   if (TauEnv_get_callpath()) {
     CallPathStart(tid);
+  }
+
+#ifdef TAU_UNWIND
+  if (TauEnv_get_callsite() == 1) {
+    CallSiteStart(tid);
   }
 #endif /* TAU_UNWIND */
 
@@ -323,6 +324,11 @@ void Profiler::Start(int tid) {
   // Increment the parent's NumSubrs()
   if (ParentProfiler != 0) {
     ParentProfiler->ThisFunction->IncrNumSubrs(tid);	
+#ifdef TAU_UNWIND
+    if (ParentProfiler->CallSiteFunction != NULL) {
+      ParentProfiler->CallSiteFunction->IncrNumSubrs(tid);
+    }
+#endif /* TAU_UNWIND */    
   }
   
   // If this function is not already on the call stack, put it
@@ -505,18 +511,14 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   /*** Tracing ***/
   /********************************************************************************/
     
-#ifdef TAU_UNWIND
-  // *CWL* - Without unwind, there cannot be callsite discovery
-  if (TauEnv_get_callsite()) {
-    CallSiteStop(TotalTime, tid);
-  } else {
-    if (TauEnv_get_callpath()) {
-      CallPathStop(TotalTime, tid);
-    }
-  }
-#else
   if (TauEnv_get_callpath()) {
     CallPathStop(TotalTime, tid);
+  }
+#ifdef TAU_UNWIND
+  // *CWL* - This is not symmetric with CallSiteStart because the former needs 
+  //         CallPath's path key.
+  if (TauEnv_get_callsite()) {
+    CallSiteStop(TotalTime, tid);
   }
 #endif /* TAU_UNWIND */    
 
@@ -561,6 +563,16 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 	CallPathFunction->ResetExclTimeIfNegative(tid); 
       }
     }
+#ifdef TAU_UNWIND
+    if (TauEnv_get_callsite()) {
+      if (ParentProfiler != NULL) {
+	if (CallSiteFunction != NULL) {
+	  CallSiteFunction->ResetExclTimeIfNegative(tid);
+	}
+      }
+    }
+#endif /* TAU_UNWIND */
+
 #ifdef TAU_PROFILEPARAM
     if (ProfileParamFunction != NULL) {
       ProfileParamFunction->ResetExclTimeIfNegative(tid);
