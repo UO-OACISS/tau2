@@ -181,6 +181,7 @@ public:
   bool AddInclCallPathFlag; 
   FunctionInfo *ThisFunction;
   FunctionInfo *CallPathFunction;
+  FunctionInfo *CallSiteFunction;
 
   Profiler() {};
   ~Profiler() {};
@@ -197,7 +198,6 @@ public:
   bool 	       AddInclProfileParamFlag; 
   void ProfileParamStop(double* totaltime, int tid);
 #endif /* TAU_PROFILEPARAM */
-  
   
   double StartTime[TAU_MAX_COUNTERS];
 
@@ -232,8 +232,9 @@ public:
   // Callsite discovery
   unsigned long callsites[TAU_SAMP_NUM_ADDRESSES+1];
   unsigned long callsiteKeyId;
-  bool hasCallSite;
+  long *path;
   void CallSiteStart(int tid);
+  void CallSiteAddPath(long *comparison, int tid);
   void CallSiteStop(double *totalTime, int tid);
 };
 }

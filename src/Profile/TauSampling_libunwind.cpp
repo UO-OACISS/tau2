@@ -90,11 +90,7 @@ bool Tau_unwind_unwindTauContext(int tid, unsigned long *addresses) {
     if (ip == last_address) {
       continue;
     }
-    // The subtraction is here because the return address in the callstack
-    //   takes you to the next instruction for the purposes of line number
-    //   discovery. This is a hack - used by perfsuite and ppw, but
-    //   nonetheless still a hack.
-    addresses[idx++] = (unsigned long)(ip-1);
+    addresses[idx++] = (unsigned long)ip;
     last_address = ip;
     count++;
   }

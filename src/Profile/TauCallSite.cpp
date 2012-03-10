@@ -49,14 +49,12 @@ static inline unsigned long get_pc(void *p) {
 #endif /* sun */
 }
 
-/* Only needs to be defined in FunctionInfo.h
-typedef struct CombinedKey {
+typedef struct TauCallSitePathElement {
   bool isCallSite;
   unsigned long keyValue;
 } tau_cs_path_element_t;
-*/
 
-typedef struct TauCallSiteDB {
+typedef struct TauCallSiteInfo {
   bool resolved;
   unsigned long resolvedCallSite;
   string *resolvedName;
@@ -149,15 +147,16 @@ map<TAU_CALLSITE_PATH_MAP_TYPE >& TheCallSitePathMap(void) {
   return callsitePathMap;
 }
 
-static long callsiteId = 0;
+static unsigned long callSiteId[TAU_MAX_THREADS];
 
-void printCallSites(unsigned long *addresses) {
-  unsigned long length = addresses[0];
-  printf("[length = %d] ", length);
-  for (int i=0; i<length; i++) {
-    printf("%p ", addresses[i+1]);
+void initializeCallSiteDiscoveryIfNecessary() {
+  static bool initialized = false;
+  if (!initialized) {
+    for (int i=0; i<TAU_MAX_THREADS; i++) {
+      callSiteId[i] = 0;
+    }
+    initialized = true;
   }
-  printf("\n");
 }
 
 // *CWL* - This is really a character index search on a string with unsigned long 
@@ -192,122 +191,48 @@ unsigned long determineCallSiteViaId(unsigned long a1, unsigned long a2) {
   return determineCallSite(key1, key2);
 }
 
-int &TauGetCallPathDepth(void);
-// Make combined callsite and callpath key. We consider the callsite limit
-//   only in the context of actual callpaths. In the absence of callpaths,
-//   we investigate the callsites for the function itself.
-vector<tau_cs_path_element_t *> *Tau_callsite_MakePathKey(Profiler *p) {
-  // Default, we care only for the top event in the stack.
-  int callpath_depth = 1;
-  int callsite_limit = TauEnv_get_callsite_limit();
-  if (TauEnv_get_callpath() == 1) {
-    callpath_depth = TauGetCallPathDepth();
-  }
-  vector<tau_cs_path_element_t *> *key = 
-    new vector<tau_cs_path_element_t *>();
-  Profiler *current = p; /* argument */
-
-  // The top-level event is special. We have not decided to specialize
-  //   it yet. This is the function that is meant to do this!
-  printf("FUNC: %s\n", current->ThisFunction->GetName());
-
-  tau_cs_path_element_t *newKeyElement = NULL;
-
-  // Process the top-level item first and a possible callsite later
-  newKeyElement = new tau_cs_path_element_t;
-  newKeyElement->isCallSite = false;
-  newKeyElement->keyValue = (unsigned long)current->ThisFunction;
-  key->push_back(newKeyElement);
-  callpath_depth--;
-
-  if (callsite_limit != 0) {
-    // Do we have callsites with the CallPath Function?
-    if (current->hasCallSite) {
-      newKeyElement = new tau_cs_path_element_t;
-      newKeyElement->isCallSite = true;
-      newKeyElement->keyValue = current->callsiteKeyId;
-      key->push_back(newKeyElement);
-      callsite_limit--;
+void Profiler::CallSiteAddPath(long *callpath_path, int tid) {
+  path = NULL;
+  // *CWL* Stub for a test for whether we wish to acquire callsites for this function.
+  if (1) {
+    if (callpath_path == NULL) {
+      return;
+    }
+    long length = callpath_path[0];
+    path = (long *)malloc((length+1)*sizeof(long));
+    for (int i=0; i<=length; i++) {
+      path[i] = callpath_path[i];
     }
   }
-  current = current->ParentProfiler;
-  
-  while (current != NULL && callpath_depth != 0) {
-    // No callpath functions mean no callpaths nor callsites associated
-    //   with this profiler stack entry. Just go on to the next entry
-    printf("FUNC: %s\n", current->ThisFunction->GetName());
-    FunctionInfo *candidate = NULL;
-    if (TauEnv_get_callpath() == 1) {
-      if (current->CallPathFunction == NULL) {
-	candidate = current->ThisFunction;
-      } else {
-	candidate = current->CallPathFunction;
-      }
-    } else {
-      candidate = current->ThisFunction;
-    }
-
-    // Process callpath first and possible callsites later
-    tau_cs_path_element_t *newKeyElement = NULL;
-    newKeyElement = new tau_cs_path_element_t;
-    newKeyElement->isCallSite = false;
-    // Callpaths always draw values from ThisFunction
-    newKeyElement->keyValue = (unsigned long)current->ThisFunction;
-    key->push_back(newKeyElement);
-    callpath_depth--;
-    //   If no callsites are desired or have been computed,
-    //   the value is 0.
-    if (callsite_limit != 0) {
-      // Do we have callsites with the CallPath Function?
-      if (candidate->hasCallSite) {
-	newKeyElement = new tau_cs_path_element_t;
-	newKeyElement->isCallSite = true;
-	newKeyElement->keyValue = candidate->callSiteKeyId;
-	key->push_back(newKeyElement);
-	callsite_limit--;
-      }
-    }
-    current = current->ParentProfiler;
-  }
-  return key;
 }
 
-// *CWL* - This is a mirror of CallPathStart in that all FunctionInfo objects
-//         on the Profiler stack. It is to be used when no Callpaths are
-//         required.
 bool Tau_unwind_unwindTauContext(int tid, unsigned long *addresses);
 void Profiler::CallSiteStart(int tid) {
 
-  hasCallSite = false;
-
-  // Ensure that the base function has no defined path nor callsite.
-  ThisFunction->combinedPath = NULL; 
-  ThisFunction->hasCallSite = false;
-  ThisFunction->callSiteResolved = false; 
-
-  // TAU's top level event is special.
+  // We do not record callsites with the top level timer.
   if (ParentProfiler == NULL) {
-    CallPathFunction = NULL;
+    CallSiteFunction = NULL;
     return;
   }
 
   // *CWL* Stub for a test for whether we wish to acquire callsites for this function.
-  // *CWL* - TODO. Determine if we even want to unwind for this function in the
-  //    first place.
   if (1) {
-    if (Tau_unwind_unwindTauContext(tid, callsites)) {
+    bool retVal = Tau_unwind_unwindTauContext(tid, callsites);
+    if (retVal) {
       map<TAU_CALLSITE_KEY_ID_MAP_TYPE >::iterator itCs = TheCallSiteKey2IdMap().find(callsites);
       
       if (itCs == TheCallSiteKey2IdMap().end()) {
 	unsigned long *callsiteKey = NULL;
 
-	printf("New CallSite Key %d\n", callsiteId);
+	printf("New CallSite Key %d\n", callSiteId[tid]);
 	// *CWL* - It is important to make a copy of the callsiteKey for registration.
 	callsiteKey = (unsigned long *)malloc(sizeof(unsigned long)*(TAU_SAMP_NUM_ADDRESSES+1));
 	for (int i=0; i<TAU_SAMP_NUM_ADDRESSES+1; i++) {
+	  printf("%p ", callsites[i]);
 	  callsiteKey[i] = callsites[i];
 	}
-	callsiteKeyId = callsiteId;
+	printf("\n");
+	callsiteKeyId = callSiteId[tid];
 	TheCallSiteKey2IdMap().insert(map<TAU_CALLSITE_KEY_ID_MAP_TYPE >::value_type(callsiteKey, 
 										     callsiteKeyId));
 	tau_cs_info_t *callSite = (tau_cs_info_t *)malloc(sizeof(tau_cs_info_t));
@@ -316,130 +241,190 @@ void Profiler::CallSiteStart(int tid) {
 	callSite->resolvedCallSite = 0;
 	callSite->resolvedName = NULL;
 	TheCallSiteIdVector().push_back(callSite);
-	callsiteId++;
+	callSiteId[tid]++;
       } else {
 	// We've seen this callsite key before.
 	callsiteKeyId = (*itCs).second;
 	printf("Recalled CallSite Key %d\n", callsiteKeyId);
       }
-      // We have now determined some callsite key and have registered it.
-      hasCallSite = true;
-    }
-  }
-
-  // Now construct the path's key to determine if we need new measurement instances of
-  //   the event.
-  vector<tau_cs_path_element_t *> *comparison = Tau_callsite_MakePathKey(this);
-  map<TAU_CALLSITE_PATH_MAP_TYPE >::iterator itPath = TheCallSitePathMap().find(comparison);
-  if (itPath == TheCallSitePathMap().end()) {
-    printf("New Path\n");
-    // This is a new branch, create a new FI object for it.
-    string grname;
-    if (TauEnv_get_callpath()) {
-      grname = string("TAU_CALLPATH | ") + 
-	RtsLayer::PrimaryGroup(ThisFunction->GetAllGroups());
     } else {
-      grname = RtsLayer::PrimaryGroup(ThisFunction->GetAllGroups());
+      // Unwind failed. No Callsite information.
+      CallSiteFunction = NULL;
+      return;
     }
-    CallPathFunction = new FunctionInfo(ThisFunction->GetName(), "", 
-					ThisFunction->GetProfileGroup(), 
-					(const char*) grname.c_str(), true);
 
-    // Book-keeping to determine the name later
-    CallPathFunction->combinedPath = comparison;
-    CallPathFunction->hasCallSite = hasCallSite;
-    if (hasCallSite) {
-      CallPathFunction->callSiteKeyId = callsiteKeyId; 
-    }
-    CallPathFunction->callSiteResolved = false;
-    CallPathFunction->firstSpecializedFunction = NULL; // non-base functions are always NULL
-    TheCallSitePathMap().insert(map<TAU_CALLSITE_PATH_MAP_TYPE>::value_type(comparison, 
-									    CallPathFunction));
-  } else {
-    CallPathFunction = (*itPath).second;
-    // sanity check
-    if (hasCallSite) {
-      if (CallPathFunction->callSiteKeyId != callsiteKeyId) {
-	printf("Something is wrong. FI has Id %d from Unwind %d\n", 
-	       CallPathFunction->callSiteKeyId, callsiteKeyId);
+    // Proceed to construct the key
+    string *prefixPathName = new string("");
+    string delimiter = string(" => ");
+    vector<tau_cs_path_element_t *> *key =
+      new vector<tau_cs_path_element_t *>();
+    if (path == NULL) {
+      // Flat profile. Record the current base FI.
+      tau_cs_path_element_t *element = new tau_cs_path_element_t;
+      element->isCallSite = false;
+      element->keyValue = (unsigned long)ThisFunction;
+      key->push_back(element);
+    } else {
+      // There's some call path up to and including the top FI.
+      printf("Path Length = %d\n", path[0]);
+      for (int i=0; i<path[0]; i++) {
+	// *CWL* TODO - This is a little silly. We should hash the call paths
+	//       to an ID and use that in the context of a pathId x callsiteId
+	//       tuple instead.
+	//
+	//       Also keep an eye out for that conversion from (long) to (FunctionInfo *)
+	tau_cs_path_element_t *element = new tau_cs_path_element_t;
+	element->isCallSite = false;
+	element->keyValue = (unsigned long)path[i+1]; // path[0] is the length
+	// Note: The path is in reverse order
+	// First element
+	printf("%s\n", ((FunctionInfo *)path[i+1])->GetName());
+	if (i == path[0]-1) {
+	  *prefixPathName = *prefixPathName + string(((FunctionInfo *)path[i+1])->GetName());
+	  printf("%s\n", prefixPathName->c_str());
+	} else if (i != 0) {
+	  // everything other than the last element (which is myself)
+	  *prefixPathName = 
+	    string(((FunctionInfo *)path[i+1])->GetName()) +
+	    delimiter + *prefixPathName;
+	  printf("%s\n", prefixPathName->c_str());
+	}
+	key->push_back(element);
       }
+      // We do not need the original path data anymore. Free it.
+      free(path);
     }
-  }
+    // Now distinguish this event with the callsite key.
+    tau_cs_path_element_t *element = new tau_cs_path_element_t;
+    element->isCallSite = true;
+    element->keyValue = callsiteKeyId;
+    key->push_back(element);
 
-  // Identify if the callsite key associated with the base function has been repeated
-  //   for this particular specialization.
-  map<TAU_CALLSITE_FIRSTKEY_MAP_TYPE >::iterator itKey = 
-    TheCallSiteFirstKeyMap().find(ThisFunction);
-  if (itKey == TheCallSiteFirstKeyMap().end()) {
-    // BASE Function not previously encountered. The callsite is necessarily unique.
-    //   So, no callsite resolution is required.
-    ThisFunction->firstSpecializedFunction = CallPathFunction;
-    CallPathFunction->callSiteKeyId = callsiteKeyId;
-    TheCallSiteFirstKeyMap().insert(map<TAU_CALLSITE_FIRSTKEY_MAP_TYPE >::
-				    value_type(ThisFunction, CallPathFunction)); 
-  } else {
-    FunctionInfo *firstCallSiteFunction = (*itKey).second;
-    if (CallPathFunction->callSiteKeyId != firstCallSiteFunction->callSiteKeyId) {
-      // Different callsite. Try to resolve it if it has not already been resolved.
-      //   If it has already been resolved, the first FI must also necessarily
-      //   be resolved.
-      if (!CallPathFunction->callSiteResolved) {
-	// resolve the local callsite first.
-	unsigned long resolvedCallSite = 0;
-	resolvedCallSite = 
-	  determineCallSiteViaId(CallPathFunction->callSiteKeyId,
-				 firstCallSiteFunction->callSiteKeyId);
-	printf("%d Got the final callsite %p\n", CallPathFunction->callSiteKeyId,
-	       resolvedCallSite);
-	// Register the resolution of this callsite key
-	CallPathFunction->callSiteResolved = true;
-	TheCallSiteIdVector()[CallPathFunction->callSiteKeyId]->resolved = true;
-	TheCallSiteIdVector()[CallPathFunction->callSiteKeyId]->resolvedCallSite =
-	  resolvedCallSite;
-
-	if (!firstCallSiteFunction->callSiteResolved) {
-	  resolvedCallSite =
-	    determineCallSiteViaId(firstCallSiteFunction->callSiteKeyId,
-				   CallPathFunction->callSiteKeyId);
-	  printf("%d Got the final master callsite %p\n", firstCallSiteFunction->callSiteKeyId,
-		 resolvedCallSite);
-	  firstCallSiteFunction->callSiteResolved = true;
-	  TheCallSiteIdVector()[firstCallSiteFunction->callSiteKeyId]->resolved = true;
-	  TheCallSiteIdVector()[firstCallSiteFunction->callSiteKeyId]->resolvedCallSite =
-	    resolvedCallSite;
+    // Create or pull up a CallSite object to record information into.
+    map<TAU_CALLSITE_PATH_MAP_TYPE >::iterator itPath = TheCallSitePathMap().find(key);
+    if (itPath == TheCallSitePathMap().end()) {
+      printf("New Path\n");
+      // This is a new callsite, create a new FI object for it.
+      //   The name is the same as either the callpath or base function and will
+      //     be enhanced later with a resolved entry.
+      
+      // First step - trim the name of the base function for use.
+      int nameLength = strlen(ThisFunction->GetName());
+      int prefixLength = strcspn(ThisFunction->GetName(), "[");
+      char *shortenedName = NULL;
+      if (prefixLength < nameLength) {
+	shortenedName = (char *)malloc((prefixLength+1)*sizeof(char));
+	strncpy(shortenedName, ThisFunction->GetName(), prefixLength);
+      } else {
+	shortenedName = strdup(ThisFunction->GetName());
+      }
+      if (CallPathFunction != NULL) {
+	string grname = string("TAU_CALLSITE | ") + 
+	  RtsLayer::PrimaryGroup(CallPathFunction->GetAllGroups());
+	string tempName = *prefixPathName + delimiter + 
+	  string("[CALLSITE] ") + string(shortenedName);
+	CallSiteFunction = new FunctionInfo(tempName.c_str(), "", 
+					    CallPathFunction->GetProfileGroup(), 
+					    grname.c_str(), true);
+      } else {
+	string grname = string("TAU_CALLSITE | ") + 
+	  RtsLayer::PrimaryGroup(ThisFunction->GetAllGroups());
+	string tempName = string("[CALLSITE] ") + string(shortenedName);
+	CallSiteFunction = new FunctionInfo(tempName.c_str(), "", 
+					    ThisFunction->GetProfileGroup(), 
+					    grname.c_str(), true);
+      }
+      CallSiteFunction->isCallSite = true;
+      CallSiteFunction->callSiteKeyId = callsiteKeyId; 
+      CallSiteFunction->callSiteResolved = false;
+      CallSiteFunction->firstSpecializedFunction = NULL; // non-base functions are always NULL
+      string tempName = string(shortenedName);
+      CallSiteFunction->SetShortName(tempName);
+      TheCallSitePathMap().insert(map<TAU_CALLSITE_PATH_MAP_TYPE>::value_type(key, 
+									      CallSiteFunction));
+    } else {
+      CallSiteFunction = (*itPath).second;
+      // sanity check
+      if (CallSiteFunction != NULL) {
+	if (CallSiteFunction->callSiteKeyId != callsiteKeyId) {
+	  printf("Something is wrong. FI has Id %d from Unwind %d\n", 
+		 CallSiteFunction->callSiteKeyId, callsiteKeyId);
 	}
       }
     }
-  }
-  
-  // Set up metrics. Increment number of calls and subrs
-  CallPathFunction->IncrNumCalls(tid);
-  
-  // Next, if this function is not already on the call stack, put it
-  if (CallPathFunction->GetAlreadyOnStack(tid) == false) {
-    AddInclCallPathFlag = true;
-    // We need to add Inclusive time when it gets over as
-    // it is not already on callstack.
     
-    CallPathFunction->SetAlreadyOnStack(true, tid); // it is on callstack now
-  } else { 
-    // the function is already on callstack, no need to add inclusive time
-    AddInclCallPathFlag = false;
-  }
+    // Has the callsite key for the base function been seen before?
+    map<TAU_CALLSITE_FIRSTKEY_MAP_TYPE >::iterator itKey = 
+      TheCallSiteFirstKeyMap().find(ThisFunction);
+    if (itKey == TheCallSiteFirstKeyMap().end()) {
+      // BASE Function not previously encountered. The callsite is necessarily unique.
+      //   So, no callsite resolution is required.
+      ThisFunction->firstSpecializedFunction = CallSiteFunction;
+      TheCallSiteFirstKeyMap().insert(map<TAU_CALLSITE_FIRSTKEY_MAP_TYPE >::
+				      value_type(ThisFunction, CallSiteFunction)); 
+    } else {
+      FunctionInfo *firstCallSiteFunction = (*itKey).second;
+      if (CallSiteFunction->callSiteKeyId != firstCallSiteFunction->callSiteKeyId) {
+	// Different callsite. Try to resolve it if it has not already been resolved.
+	//   If it has already been resolved, the first FI must also necessarily
+	//   be resolved.
+	if (!CallSiteFunction->callSiteResolved) {
+	  // resolve the local callsite first.
+	  unsigned long resolvedCallSite = 0;
+	  resolvedCallSite = 
+	    determineCallSiteViaId(CallSiteFunction->callSiteKeyId,
+				   firstCallSiteFunction->callSiteKeyId);
+	  printf("%d Got the final callsite %p\n", CallSiteFunction->callSiteKeyId,
+		 resolvedCallSite);
+	  // Register the resolution of this callsite key
+	  CallSiteFunction->callSiteResolved = true;
+	  TheCallSiteIdVector()[CallSiteFunction->callSiteKeyId]->resolved = true;
+	  TheCallSiteIdVector()[CallSiteFunction->callSiteKeyId]->resolvedCallSite =
+	    resolvedCallSite;
+	  
+	  if (!firstCallSiteFunction->callSiteResolved) {
+	    resolvedCallSite =
+	      determineCallSiteViaId(firstCallSiteFunction->callSiteKeyId,
+				     CallSiteFunction->callSiteKeyId);
+	    printf("%d Got the final master callsite %p\n", firstCallSiteFunction->callSiteKeyId,
+		   resolvedCallSite);
+	    firstCallSiteFunction->callSiteResolved = true;
+	    TheCallSiteIdVector()[firstCallSiteFunction->callSiteKeyId]->resolved = true;
+	    TheCallSiteIdVector()[firstCallSiteFunction->callSiteKeyId]->resolvedCallSite =
+	      resolvedCallSite;
+	  }
+	}
+      }
+    }
+    // Set up metrics. Increment number of calls and subrs
+    CallSiteFunction->IncrNumCalls(tid);
+  } else {
+    // We're not interested in this function's callsite.
+    CallSiteFunction = NULL;
+  } 
 }
 
+// *CWL* - Perform the necessary time accounting for CallSites. Note that CallSites
+//         are essentially specialized mirrors of their CallPath or Base counterparts.
+//         This means that we need to make adjustments to any active callsites on the
+//         profiler stack the same way we would call paths or baseline functions.
 void Profiler::CallSiteStop(double *TotalTime, int tid) {
-  if (ParentProfiler != NULL) {
-    if (AddInclCallPathFlag == true) { // The first time it came on call stack
-      CallPathFunction->SetAlreadyOnStack(false, tid); // while exiting
-      // And its ok to add both excl and incl times
-      CallPathFunction->AddInclTime(TotalTime, tid);
+  if (CallSiteFunction != NULL) {
+    // Is there an important distinction between callpaths and base functions?
+    if (TauEnv_get_callpath()) {
+      if (AddInclCallPathFlag) { // The first time it came on call stack
+	CallSiteFunction->AddInclTime(TotalTime, tid);
+      }
+    } else {
+      if (AddInclFlag) {
+	CallSiteFunction->AddInclTime(TotalTime, tid);
+      }
     }
-    
-    CallPathFunction->AddExclTime(TotalTime, tid);  
-    if (ParentProfiler->CallPathFunction != 0) {
-      /* Increment the parent's NumSubrs and decrease its exclude time */
-      ParentProfiler->CallPathFunction->ExcludeTime(TotalTime, tid);
+    CallSiteFunction->AddExclTime(TotalTime, tid);  
+  }
+  if (ParentProfiler != NULL) {
+    if (ParentProfiler->CallSiteFunction != NULL) {
+      ParentProfiler->CallSiteFunction->ExcludeTime(TotalTime, tid);
     }
   }
 }
@@ -452,7 +437,7 @@ static string getNameAndType(FunctionInfo *fi) {
   }
 }
 
-char *resolveTauCallSite(unsigned long addr) {
+char *resolveTauCallSite(unsigned long address) {
   int bfdRet; // used only for an old interface
 
   char *callsiteName;
@@ -464,6 +449,12 @@ char *resolveTauCallSite(unsigned long addr) {
   //   line numbers.
   TauBfdAddrMap addressMap;
   sprintf(addressMap.name, "%s", "UNKNOWN");
+
+  // The subtraction is here because the return address in the callstack
+  //   takes you to the next instruction for the purposes of line number
+  //   discovery. This is a hack - used by perfsuite and ppw, but
+  //   nonetheless still a hack.
+  unsigned long addr = address-1;
 
 #ifdef TAU_BFD
   if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
@@ -483,10 +474,9 @@ char *resolveTauCallSite(unsigned long addr) {
   }
 #endif /* TAU_BFD */
   if (resolvedInfo != NULL) {
-    sprintf(resolvedBuffer, "[%s] [{%s} {%d,%d}-{%d,%d}]",
+    sprintf(resolvedBuffer, "[%s] [{%s} {%d}]",
 	    resolvedInfo->funcname,
 	    resolvedInfo->filename,
-	    resolvedInfo->lineno, 0,
 	    resolvedInfo->lineno, 0);
   } else {
     sprintf(resolvedBuffer, "[%s] UNRESOLVED ADDR %p", 
@@ -504,29 +494,35 @@ void finalizeCallSites(int tid) {
   // First pass: Identify and resolve callsites into name strings.
 
   printf("finalizing\n");
-
-  for (int i=0; i<callsiteId; i++) {
+  string delimiter = string(" --> ");
+  for (int i=0; i<callSiteId[tid]; i++) {
     tau_cs_info_t *callsiteInfo = TheCallSiteIdVector()[i];
     string *tempName = new string("");
     if (callsiteInfo->resolved) {
       printf("ID %d resolved\n", i);
       // resolve a single address
       unsigned long callsite = callsiteInfo->resolvedCallSite;
-      *tempName = string("[TAU_CALLSITE] ") + string(resolveTauCallSite(callsite));
+      *tempName = string(" [@] ") + string(resolveTauCallSite(callsite));
       callsiteInfo->resolvedName = tempName;
     } else {
       printf("ID %d not resolved\n", i);
       // resolve the unwound callsites as a sequence
       unsigned long *key = callsiteInfo->key;
       int keyLength = key[0];
-      // Bad if not true
+      // Bad if not true. Also the head entry cannot be Tau_start_timer.
       if (keyLength > 0) {
-	*tempName = *tempName + string(resolveTauCallSite(key[1]));
+	*tempName = *tempName + string(resolveTauCallSite(key[keyLength]));
       }
-      for (int j=1; j<keyLength; j++) {
-	*tempName = string(resolveTauCallSite(key[j+1])) + string(" + ") + *tempName;
+      // process until "Tau_start_timer" is encountered and stop.
+      for (int j=keyLength-1; j>0; j--) {
+	char *temp = resolveTauCallSite(key[j]);
+	if (strstr(temp, "Tau_start_timer") == NULL) {
+	  *tempName = *tempName + delimiter + string(temp);
+	} else {
+	  break;
+	}
       }
-      *tempName = string("[TAU_CALLSITE] ") + *tempName;
+      *tempName = string(" [@] ") + *tempName;
       callsiteInfo->resolvedName = tempName;
       callsiteInfo->resolved = true;
     }
@@ -536,11 +532,12 @@ void finalizeCallSites(int tid) {
   //   objects representing the callsites themselves.
   vector<FunctionInfo *> *candidates =
     new vector<FunctionInfo *>();
+  // For multi-threaded applications. 
   RtsLayer::LockDB();
   for (vector<FunctionInfo *>::iterator fI_iter = TheFunctionDB().begin();
        fI_iter != TheFunctionDB().end(); fI_iter++) {
     FunctionInfo *theFunction = *fI_iter;
-    if (theFunction->combinedPath != NULL) {
+    if (theFunction->isCallSite) {
       candidates->push_back(theFunction);
     }
   }
@@ -550,89 +547,28 @@ void finalizeCallSites(int tid) {
   for (cs_it = candidates->begin(); cs_it != candidates->end(); cs_it++) {
     FunctionInfo *candidate = *cs_it;
 
-    // Go through the path and resolve names. Each callpath entry points to 
-    //   a function info object where we can get the name through 
-    //   ThisFunction->GetName(). The path is stored in reversed order.
     string *callSiteName = new string("");
-    string *prefixPathName = new string("");
-    string *fullPathName = new string("");
-    vector<tau_cs_path_element_t *> *comparison = candidate->combinedPath;
+    tau_cs_info_t *callsiteInfo = TheCallSiteIdVector()[candidate->callSiteKeyId];
+    *callSiteName = *callSiteName + *(callsiteInfo->resolvedName);
 
-    string delimiter(" => ");
-    bool hasPrefix = false;
-    int compLength = comparison->size();
-    // very bad if the following is not true.
-    if (compLength > 0) {
-      // The last entry *must* be the current function.
-      int startIndex = 0;
-      if (!(*comparison)[startIndex]->isCallSite) {
-	*fullPathName = *fullPathName + candidate->GetName();
-	startIndex++;
-      } else {
-	printf("The last entry is a callsite, this cannot happen!\n");
-      }
-      if (startIndex < compLength) {
-	// Now check if the 2nd last entry is a callsite.
-	*callSiteName = *callSiteName +
-	  *(TheCallSiteIdVector()[(*comparison)[startIndex]->keyValue]->resolvedName);
-	*fullPathName = *callSiteName + delimiter + *fullPathName;
-	startIndex++;
-      }
-      // Everything else is a prefix path. Get the first prefix item.
-      if (startIndex < compLength) {
-	unsigned long value = (*comparison)[startIndex]->keyValue;
-	if ((*comparison)[startIndex]->isCallSite) {
-	  // a Callsite object
-	  *prefixPathName = *prefixPathName +
-	    *(TheCallSiteIdVector()[value]->resolvedName);
-	} else {
-	  // a FunctionInfo object
-	  FunctionInfo *fi = (FunctionInfo *)value;
-	  *prefixPathName = *prefixPathName + getNameAndType(fi); 
-	}
-	hasPrefix = true;
-	startIndex++;
-      }
-      for (int i=startIndex; i<compLength; i++) {
-	unsigned long value = (*comparison)[i]->keyValue;
-	if ((*comparison)[i]->isCallSite) {
-	  // a Callsite object
-	  *prefixPathName =
-	    *(TheCallSiteIdVector()[value]->resolvedName) + delimiter + *prefixPathName;
-	} else {
-	  // a FunctionInfo object
-	  FunctionInfo *fi = (FunctionInfo *)value;
-	  *prefixPathName = getNameAndType(fi) + delimiter + *prefixPathName; 
-	}
-      }
-    }
-    if (hasPrefix) {
-      *fullPathName = *prefixPathName + delimiter + *fullPathName;
-    }
-    candidate->SetName(*fullPathName);
-
-    string grname = string("TAU_CALLSITE | ") + 
-      RtsLayer::PrimaryGroup(candidate->GetAllGroups());
-    FunctionInfo *newFunction = 
-      new FunctionInfo(*callSiteName, "",
-		       candidate->GetProfileGroup(),
-		       (const char*) grname.c_str(), true);
-    // CallSiteFunction data is exactly the same as the recorded data. So, just add
-    //   inclusive time.
-    newFunction->AddInclTime(candidate->GetInclTime(tid), tid);
-    // Has as many calls as the measured callsite.
-    newFunction->SetCalls(tid, candidate->GetCalls(tid));
-    newFunction->SetSubrs(tid, candidate->GetCalls(tid));
-
-    // Now construct the path leading to the callsite. It has exactly the same
-    //   properties as the base callsite FI.
-    if (hasPrefix) {
-      newFunction = new FunctionInfo(*prefixPathName + delimiter + *callSiteName, "",
-				     candidate->GetProfileGroup(),
-				     candidate->GetAllGroups(), true);
+    if (TauEnv_get_callpath()) {
+      // Create the standalone entry for the callsite FI (no path).
+      //   This is necessary only if there are callpaths involved.
+      string tempName = string("[CALLSITE] ") + string(candidate->GetShortName()) + *callSiteName;
+      FunctionInfo *newFunction = 
+	new FunctionInfo(tempName, "",
+			 candidate->GetProfileGroup(),
+			 candidate->GetAllGroups(), true);
+      // CallSiteFunction data is exactly the same as the recorded data.
+      newFunction->AddExclTime(candidate->GetExclTime(tid), tid);    
       newFunction->AddInclTime(candidate->GetInclTime(tid), tid);
+      // Has as many calls as the measured callsite.
       newFunction->SetCalls(tid, candidate->GetCalls(tid));
-      newFunction->SetSubrs(tid, candidate->GetCalls(tid));
-    } 
+      newFunction->SetSubrs(tid, candidate->GetSubrs(tid));
+    }
+
+    // Now rename the candidate with the completely resolved name
+    string tempName = string(candidate->GetName() + *callSiteName);
+    candidate->SetName(tempName);
   }
 }
