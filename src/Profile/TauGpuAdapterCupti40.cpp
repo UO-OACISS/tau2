@@ -20,7 +20,7 @@ public:
 	double syncOffset();
 	cuptiGpuId(uint64_t c, cudaStream_t s);
 	cuptiGpuId* getCopy();
-	char* printId();
+	char* printId() const;
 	x_uint64 id_p1();
 	x_uint64 id_p2();
 	bool equals(const gpuId *other) const;
@@ -46,7 +46,7 @@ cuptiGpuId* cuptiGpuId::getCopy()
 		return c;
 }
 
-char* cuptiGpuId::printId()
+char* cuptiGpuId::printId() const
 {
 	char *rtn = (char*) malloc(50*sizeof(char));
 	sprintf(rtn, "[%ld]", contextUid);
@@ -64,7 +64,7 @@ class cuptiEventId : public eventId
 {
 	public:
 	cuptiEventId(const char* name, cuptiGpuId* tmp, FunctionInfo* fi) :
-		eventId(name, tmp, fi) {}
+		eventId(name, tmp, fi, NULL) {}
 	
 	// for use in STL Maps	
 	/*bool operator<(const cuptiEventId& A) const
