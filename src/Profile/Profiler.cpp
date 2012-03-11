@@ -1208,7 +1208,7 @@ extern "C" int Tau_profiler_initialization() {
 
 
 // Store profile data at the end of execution (when top level timer stops)
-void finalizeCallSites(int tid);
+extern "C" void finalizeCallSites_if_necessary();
 int TauProfiler_StoreData(int tid) {
 
   profileWriteCount[tid]++;
@@ -1225,9 +1225,13 @@ int TauProfiler_StoreData(int tid) {
   finalizeTrace(tid);
   
 #ifndef TAU_WINDOWS  
+
 #ifdef TAU_UNWIND
-  finalizeCallSites(tid);
+  if (TauEnv_get_callsite()) {
+    finalizeCallSites_if_necessary();
+  }
 #endif /* TAU_UNWIND */
+
   if (TauEnv_get_ebs_enabled()) {
     // Tau_sampling_finalize(tid);
     Tau_sampling_finalize_if_necessary();

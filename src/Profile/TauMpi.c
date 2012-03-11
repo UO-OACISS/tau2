@@ -1606,6 +1606,7 @@ int TAU_MPI_Finalized() {
   return tau_mpi_finalized;
 }
 
+void finalizeCallSites_if_necessary();
 int  MPI_Finalize(  )
 {
   int  returnVal;
@@ -1653,6 +1654,10 @@ int  MPI_Finalize(  )
      correctly. Also allows profile merging (or unification) to be
      done correctly. */
 #ifndef TAU_WINDOWS
+  if (TauEnv_get_callsite()) {
+    finalizeCallSites_if_necessary();
+  }
+
   if (TauEnv_get_ebs_enabled()) {
     //    Tau_sampling_finalizeNode();
     Tau_sampling_finalize_if_necessary();

@@ -144,6 +144,7 @@ extern int tauPrintAddr(int i, char *token1, unsigned long addr);
 #ifndef TAU_DISABLE_SIGUSR
 
 //static void tauBacktraceHandler(int sig) {
+extern "C" void finalizeCallSites_if_necessary();
 void tauBacktraceHandler(int sig, siginfo_t *si, void *context) {
           char str[100+4096];
           char path[4096];
@@ -151,6 +152,10 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context) {
           char gdb_out_file[256];
 
 #ifndef TAU_WINDOWS
+	  if (TauEnv_get_callsite()) {
+	    finalizeCallSites_if_necessary();
+	  }
+
 	  if (TauEnv_get_ebs_enabled()) {
 	    // *CWL* - If sampling is active, get it to stop and finalize immediately,
 	    //         we are about to halt execution!

@@ -119,31 +119,6 @@ extern "C" bool unwind_cutoff(void **addresses, void *address) {
   return found; 
 }
 
-extern "C" FunctionInfo *findTopContext(Profiler *profilerStack, void *address) {
-  FunctionInfo *topFI = NULL;
-  Profiler *lastMatch = NULL;
-  Profiler *currentProfiler = profilerStack;
-  RtsLayer::LockDB();
-  // After a match, go through the Profiler Stack until we cannot find the address
-  while (currentProfiler != NULL) {
-    if (!unwind_cutoff(currentProfiler->address, address)) {
-      if (lastMatch != NULL) {
-	if (lastMatch->CallPathFunction == NULL) {
-	  topFI = lastMatch->CallPathFunction;
-	} else {
-	  topFI = lastMatch->ThisFunction;
-	}
-      }
-      break;
-    } else {
-      lastMatch = currentProfiler;
-      currentProfiler = currentProfiler->ParentProfiler;
-    }
-  }
-  RtsLayer::UnLockDB();
-  return topFI;
-}
-
 #endif /* TAU_UNWIND */
 
 /*********************************************************************
@@ -337,10 +312,12 @@ void Tau_sampling_outputTraceHeader(int tid) {
 
 void Tau_sampling_outputTraceCallpath(int tid) {
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
-  if (profiler->CallPathFunction == NULL) {
-    fprintf(ebsTrace[tid], "%ld", profiler->ThisFunction->GetFunctionId());
-  } else {
+  if (profiler->CallSiteFunction != NULL) {
+    fprintf(ebsTrace[tid], "%ld", profiler->CallSiteFunction->GetFunctionId());
+  } else if (profiler->CallPathFunction != NULL) {
     fprintf(ebsTrace[tid], "%ld", profiler->CallPathFunction->GetFunctionId());
+  } else {
+    fprintf(ebsTrace[tid], "%ld", profiler->ThisFunction->GetFunctionId());
   }
 }
 
@@ -564,11 +541,20 @@ void Tau_sampling_internal_initPc2CallSiteMapIfNecessary() {
   }
 }
 
-CallSiteInfo *Tau_sampling_resolveCallSite(unsigned long addr, 
+CallSiteInfo *Tau_sampling_resolveCallSite(unsigned long address,
 					   const char *tag,
 					   bool addAddress) {
   CallSiteInfo *callsite;
   int bfdRet; // used only for an old interface
+
+  unsigned long addr;
+  if (!strcmp(tag,"UNWIND")) {
+    // if we are dealing with callsites, adjust for the fact that the
+    //   return address is the next instruction.
+    addr = address-1;
+  } else {
+    addr = address;
+  }
 
   char resolvedBuffer[4096];
   callsite = (CallSiteInfo *)malloc(sizeof(CallSiteInfo));
@@ -596,12 +582,11 @@ CallSiteInfo *Tau_sampling_resolveCallSite(unsigned long addr,
   }
 #endif /* TAU_BFD */
   if (resolvedInfo != NULL) {
-    sprintf(resolvedBuffer, "[%s] %s [{%s} {%d,%d}-{%d,%d}]",
+    sprintf(resolvedBuffer, "[%s] %s [{%s} {%d}]",
 	    tag,
 	    resolvedInfo->funcname,
 	    resolvedInfo->filename,
-	    resolvedInfo->lineno, 0,
-	    resolvedInfo->lineno, 0);
+	    resolvedInfo->lineno);
   } else {
     if (addAddress) {
       sprintf(resolvedBuffer, "[%s] UNRESOLVED %s ADDR %p", 
@@ -677,7 +662,7 @@ CallStackInfo *Tau_sampling_resolveCallSites(vector<unsigned long> *addresses) {
       continue;
     } else {
       callStack->callSites->push_back(Tau_sampling_resolveCallSite(*it, 
-								   "EBS_CALLSITE",
+								   "UNWIND",
 								   addAddress));
     }
   }
@@ -754,6 +739,7 @@ void Tau_sampling_finalizeProfile(int tid) {
       candidate->pcStack = it->first;
       candidate->sampleCount = (unsigned int)it->second;
       candidate->tauContext = parentTauContext;
+      //      printf("TESTING: context name [%s] has SAMPLES\n", candidate->tauContext->GetName());
       candidates->push_back(candidate);
     }
   }
@@ -829,12 +815,12 @@ void Tau_sampling_finalizeProfile(int tid) {
     string *intermediatePathLeafString;
 
     // STEP 2a: Locate or create Leaf Entry
-    sprintf(intermediateGlobalLeafName, "[EBS_TAU_CONTEXT] %s",
+    sprintf(intermediateGlobalLeafName, "[INTERMEDIATE] %s",
 	    Tau_sampling_internal_stripCallPath(candidate->tauContext->GetName()));
     intermediateGlobalLeafString = new string(intermediateGlobalLeafName);
     fi_it = name2FuncInfoMap[tid]->find(*intermediateGlobalLeafString);
     if (fi_it == name2FuncInfoMap[tid]->end()) {
-      string grname = string("EBS_TAU_CONTEXT");
+      string grname = string("TAU_SAMPLE | ") + string(candidate->tauContext->GetAllGroups());
       // Create the FunctionInfo object for the leaf Intermediate object.
       RtsLayer::LockDB();
       intermediateGlobalLeaf = 
@@ -856,7 +842,7 @@ void Tau_sampling_finalizeProfile(int tid) {
     intermediatePathLeafString = new string(intermediatePathLeafName);
     fi_it = name2FuncInfoMap[tid]->find(*intermediatePathLeafString);
     if (fi_it == name2FuncInfoMap[tid]->end()) {
-      string grname = string("SAMPLE");
+      string grname = string("TAU_SAMPLE  | ") + string(candidate->tauContext->GetAllGroups());
       // Create the FunctionInfo object for the leaf Intermediate object.
       RtsLayer::LockDB();
       intermediatePathLeaf = 
@@ -899,7 +885,7 @@ void Tau_sampling_finalizeProfile(int tid) {
       
       fi_it = name2FuncInfoMap[tid]->find(sampleGlobalLeafString);
       if (fi_it == name2FuncInfoMap[tid]->end()) {
-	string grname = string("SAMPLE");
+	string grname = string("TAU_SAMPLE | ") + string(candidate->tauContext->GetAllGroups());
 	RtsLayer::LockDB();
 	sampleGlobalLeaf = 
 	  new FunctionInfo((const char*)sampleGlobalLeafString.c_str(),
@@ -924,7 +910,7 @@ void Tau_sampling_finalizeProfile(int tid) {
       string *callSiteKeyName = new string(call_site_key);
       fi_it = name2FuncInfoMap[tid]->find(*callSiteKeyName);
       if (fi_it == name2FuncInfoMap[tid]->end()) {
-	string grname = string("SAMPLE"); 
+	string grname = string("TAU_SAMPLE | ") + string(candidate->tauContext->GetAllGroups()); 
 	RtsLayer::LockDB();
 	samplePathLeaf =
 	  new FunctionInfo((const char*)callSiteKeyName->c_str(), "",
@@ -999,7 +985,9 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
   pcStack->push_back((unsigned long)pc);
 #endif /* TAU_UNWIND */
 
-  if (TauEnv_get_callpath() && (profiler->CallPathFunction != NULL)) {
+  if (TauEnv_get_callsite() && (profiler->CallSiteFunction != NULL)) {
+    callSiteContext = profiler->CallSiteFunction;
+  } else if (TauEnv_get_callpath() && (profiler->CallPathFunction != NULL)) {
     callSiteContext = profiler->CallPathFunction;
   } else {
     callSiteContext = profiler->ThisFunction;
