@@ -51,6 +51,9 @@ public class BarPlot implements Plot {
     // if a value is less than this threshold, no box will be drawn 
     // (this is essential to drawing huge datasets (64k+)
     private static float threshold = 0.05f; // 5 percent
+    private static final float defThreshold=0.05f;
+    private static final float noThreshold=0f;
+    private boolean useThreshold=true;
 
     // implementation details
     private int nrows;
@@ -888,6 +891,22 @@ public class BarPlot implements Plot {
             }
         });
 
+        
+        final JCheckBox thresholdBox = new JCheckBox("Use Height Threshold",useThreshold);
+        thresholdBox.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent evt) {
+                try {
+                   setUseThreshold(thresholdBox.isSelected());
+                    
+                    
+                    visRenderer.redraw();
+
+                } catch (Exception e) {
+                    VisTools.handleException(e);
+                }
+            }
+        });
+        
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.NONE;
         gbc.weightx = 0.0;
@@ -906,6 +925,9 @@ public class BarPlot implements Plot {
         addCompItem(sizePanel, plotHeightSlider, gbc, 1, 2, 1, 1);
         addCompItem(sizePanel, barSizeSlider, gbc, 1, 3, 1, 1);
         addCompItem(sizePanel, translucencySlider, gbc, 1, 4, 1, 1);
+        addCompItem(sizePanel, thresholdBox, gbc, 0, 5, 1, 1);
+        
+        
         return sizePanel;
 
     }
@@ -995,6 +1017,18 @@ public class BarPlot implements Plot {
         this.dirty = true;
     }
 
+    public void setUseThreshold(boolean thresh){
+        if(thresh){
+        	threshold = defThreshold;
+        
+        }
+        else
+        {
+        	threshold = noThreshold;
+        }
+        this.dirty = true;
+    }
+    
     /**
      * Returns current translucency ratio.
      * @return the current translucency value (0..1).

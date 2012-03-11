@@ -10,7 +10,7 @@ public:
 	cudaGpuId() {}
 	
 	virtual cudaGpuId *getCopy() = 0;
-	virtual char* printId() = 0;
+	virtual char* printId() const = 0;
 	virtual x_uint64 id_p1() = 0;
 	virtual x_uint64 id_p2() = 0;
 	//virtual bool operator<(const cudaGpuId& other) const = 0;
@@ -42,7 +42,7 @@ public:
 	}
 	
 	cudaRuntimeGpuId *getCopy();
-	char* printId();
+	char* printId() const;
 	x_uint64 id_p1(); 
 	x_uint64 id_p2();
 	//bool operator<(const cudaGpuId& other) const;
@@ -77,7 +77,7 @@ public:
 	}
 	
 	cudaDriverGpuId *getCopy();
-	char* printId();
+	char* printId() const;
 	x_uint64 id_p1(); 
 	x_uint64 id_p2();
 	//bool operator<(const cudaGpuId& other) const;

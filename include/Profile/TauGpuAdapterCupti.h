@@ -70,7 +70,7 @@ public:
 		cuptiGpuId *c = new cuptiGpuId(*this);
 		return c; 
 	};
-	char* printId() {
+	char* printId() const {
 		char *rtn = (char*) malloc(50*sizeof(char));
 		sprintf(rtn, "%d/%d", streamId, correlationId);
 		return rtn;
