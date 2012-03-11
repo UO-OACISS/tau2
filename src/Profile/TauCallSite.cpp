@@ -224,14 +224,14 @@ void Profiler::CallSiteStart(int tid) {
       if (itCs == TheCallSiteKey2IdMap().end()) {
 	unsigned long *callsiteKey = NULL;
 
-	printf("New CallSite Key %d\n", callSiteId[tid]);
+	//	printf("New CallSite Key %d\n", callSiteId[tid]);
 	// *CWL* - It is important to make a copy of the callsiteKey for registration.
 	callsiteKey = (unsigned long *)malloc(sizeof(unsigned long)*(TAU_SAMP_NUM_ADDRESSES+1));
 	for (int i=0; i<TAU_SAMP_NUM_ADDRESSES+1; i++) {
-	  printf("%p ", callsites[i]);
+	  //	  printf("%p ", callsites[i]);
 	  callsiteKey[i] = callsites[i];
 	}
-	printf("\n");
+	//	printf("\n");
 	callsiteKeyId = callSiteId[tid];
 	TheCallSiteKey2IdMap().insert(map<TAU_CALLSITE_KEY_ID_MAP_TYPE >::value_type(callsiteKey, 
 										     callsiteKeyId));
@@ -245,7 +245,7 @@ void Profiler::CallSiteStart(int tid) {
       } else {
 	// We've seen this callsite key before.
 	callsiteKeyId = (*itCs).second;
-	printf("Recalled CallSite Key %d\n", callsiteKeyId);
+	//	printf("Recalled CallSite Key %d\n", callsiteKeyId);
       }
     } else {
       // Unwind failed. No Callsite information.
@@ -266,7 +266,7 @@ void Profiler::CallSiteStart(int tid) {
       key->push_back(element);
     } else {
       // There's some call path up to and including the top FI.
-      printf("Path Length = %d\n", path[0]);
+      //      printf("Path Length = %d\n", path[0]);
       for (int i=0; i<path[0]; i++) {
 	// *CWL* TODO - This is a little silly. We should hash the call paths
 	//       to an ID and use that in the context of a pathId x callsiteId
@@ -278,16 +278,16 @@ void Profiler::CallSiteStart(int tid) {
 	element->keyValue = (unsigned long)path[i+1]; // path[0] is the length
 	// Note: The path is in reverse order
 	// First element
-	printf("%s\n", ((FunctionInfo *)path[i+1])->GetName());
+	//	printf("%s\n", ((FunctionInfo *)path[i+1])->GetName());
 	if (i == path[0]-1) {
 	  *prefixPathName = *prefixPathName + string(((FunctionInfo *)path[i+1])->GetName());
-	  printf("%s\n", prefixPathName->c_str());
+	  //	  printf("%s\n", prefixPathName->c_str());
 	} else if (i != 0) {
 	  // everything other than the last element (which is myself)
 	  *prefixPathName = 
 	    string(((FunctionInfo *)path[i+1])->GetName()) +
 	    delimiter + *prefixPathName;
-	  printf("%s\n", prefixPathName->c_str());
+	  //	  printf("%s\n", prefixPathName->c_str());
 	}
 	key->push_back(element);
       }
@@ -303,7 +303,7 @@ void Profiler::CallSiteStart(int tid) {
     // Create or pull up a CallSite object to record information into.
     map<TAU_CALLSITE_PATH_MAP_TYPE >::iterator itPath = TheCallSitePathMap().find(key);
     if (itPath == TheCallSitePathMap().end()) {
-      printf("New Path\n");
+      //      printf("New Path\n");
       // This is a new callsite, create a new FI object for it.
       //   The name is the same as either the callpath or base function and will
       //     be enhanced later with a resolved entry.
@@ -347,8 +347,8 @@ void Profiler::CallSiteStart(int tid) {
       // sanity check
       if (CallSiteFunction != NULL) {
 	if (CallSiteFunction->callSiteKeyId != callsiteKeyId) {
-	  printf("Something is wrong. FI has Id %d from Unwind %d\n", 
-		 CallSiteFunction->callSiteKeyId, callsiteKeyId);
+	  fprintf(stderr, "WARNING: Something is wrong. FI has Id %d from Unwind %d\n", 
+		  CallSiteFunction->callSiteKeyId, callsiteKeyId);
 	}
       }
     }
@@ -374,8 +374,8 @@ void Profiler::CallSiteStart(int tid) {
 	  resolvedCallSite = 
 	    determineCallSiteViaId(CallSiteFunction->callSiteKeyId,
 				   firstCallSiteFunction->callSiteKeyId);
-	  printf("%d Got the final callsite %p\n", CallSiteFunction->callSiteKeyId,
-		 resolvedCallSite);
+	  //	  printf("%d Got the final callsite %p\n", CallSiteFunction->callSiteKeyId,
+	  //		 resolvedCallSite);
 	  // Register the resolution of this callsite key
 	  CallSiteFunction->callSiteResolved = true;
 	  TheCallSiteIdVector()[CallSiteFunction->callSiteKeyId]->resolved = true;
@@ -386,8 +386,8 @@ void Profiler::CallSiteStart(int tid) {
 	    resolvedCallSite =
 	      determineCallSiteViaId(firstCallSiteFunction->callSiteKeyId,
 				     CallSiteFunction->callSiteKeyId);
-	    printf("%d Got the final master callsite %p\n", firstCallSiteFunction->callSiteKeyId,
-		   resolvedCallSite);
+	    //	    printf("%d Got the final master callsite %p\n", firstCallSiteFunction->callSiteKeyId,
+	    //		   resolvedCallSite);
 	    firstCallSiteFunction->callSiteResolved = true;
 	    TheCallSiteIdVector()[firstCallSiteFunction->callSiteKeyId]->resolved = true;
 	    TheCallSiteIdVector()[firstCallSiteFunction->callSiteKeyId]->resolvedCallSite =
@@ -486,26 +486,41 @@ char *resolveTauCallSite(unsigned long address) {
 
   callsiteName = strdup((char *)resolvedBuffer);
 
-  printf("[%p] resolves to %s\n", addr, resolvedBuffer);
+  //  printf("[%p] resolves to %s\n", addr, resolvedBuffer);
   return callsiteName;
 }
 
-void finalizeCallSites(int tid) {
+extern "C" void finalizeCallSites_if_necessary() {
+  static bool callsiteFinalizationSetup = false;
+  static bool callsiteThreadFinalized[TAU_MAX_THREADS];
+  if (!callsiteFinalizationSetup) {
+    for (int i=0; i<TAU_MAX_THREADS; i++) {
+      callsiteThreadFinalized[i] = false;
+    }
+    callsiteFinalizationSetup = true;
+  }
+  int tid = RtsLayer::myThread();
+  if (!callsiteThreadFinalized[tid]) {
+    callsiteThreadFinalized[tid] = true;
+  } else {
+    return;
+  }
+
   // First pass: Identify and resolve callsites into name strings.
 
-  printf("finalizing\n");
+  //  printf("Callsites finalizing\n");
   string delimiter = string(" --> ");
   for (int i=0; i<callSiteId[tid]; i++) {
     tau_cs_info_t *callsiteInfo = TheCallSiteIdVector()[i];
     string *tempName = new string("");
     if (callsiteInfo->resolved) {
-      printf("ID %d resolved\n", i);
+      //      printf("ID %d resolved\n", i);
       // resolve a single address
       unsigned long callsite = callsiteInfo->resolvedCallSite;
       *tempName = string(" [@] ") + string(resolveTauCallSite(callsite));
       callsiteInfo->resolvedName = tempName;
     } else {
-      printf("ID %d not resolved\n", i);
+      //      printf("ID %d not resolved\n", i);
       // resolve the unwound callsites as a sequence
       unsigned long *key = callsiteInfo->key;
       int keyLength = key[0];
