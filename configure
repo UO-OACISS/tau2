@@ -6027,6 +6027,12 @@ if [ $cuda = yes ] ; then
 			if [ -f "$cudainclude/CL/cl.h" ] ; then
 				fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$cudainclude"
 			fi
+			if [ -f "$cudainclude/../extras/CUPTI/include/cupti_events.h" ] ; then
+				tauoptions="${tauoptions}-cupti"
+				cupti="$cudainclude/../extras/CUPTI"
+				fixmakeargs="$fixmakeargs CUPTI cuptiinclude=$cupti/include"
+				echo "Using CUPTI library found in $cupti."
+			fi
 		else
 			if [ "$machine" == "craycnl" -a "$PE_ENV" != "GNU" ]; then
 				echo "ERROR: TAU's GPU measurement system is only available in the GNU compiler environment on CRAY. Please swap modules and reconfigure."
