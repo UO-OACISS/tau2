@@ -318,6 +318,7 @@ public class InputLog implements base.drawable.InputAPI
 
 	public boolean close()
 	{
+		ev_cb.endTrace(null, -1, -1);
 		tFileEvRead.closeTrace();
 		return true;
 	}
@@ -555,9 +556,19 @@ public class InputLog implements base.drawable.InputAPI
 	
 	private static class TAUReader implements TraceReaderCallbacks{
 		
+		private int badEnter=0;
+		private int badExit=0;
+		
+		ArrayList<String> badEvents = new ArrayList<String>();
+		
 		public int enterState(Object userData, long time, int nodeToken, int threadToken, int stateToken){
 			//System.out.println("Entered state "+stateToken+" time "+time+" nid "+nodeToken+" tid "+threadToken);
 			//eventstack[nodeToken][threadToken];
+			System.out.println("enter "+stateToken);
+			if(stateToken==1521){
+				badEnter+=1;
+			}
+			
 			Integer glob = new Integer(GlobalID(nodeToken,threadToken));
 			if(!eventstack.containsKey(glob))//  eventstack[nodeToken][threadToken]==null
 				eventstack.put(glob, new EZStack());  //[nodeToken][threadToken]=new Stack();
@@ -567,17 +578,29 @@ public class InputLog implements base.drawable.InputAPI
 		
 		public int leaveState(Object userData, long time, int nodeToken, int threadToken, int stateToken){
 			//System.out.println("Leaving state "+stateToken+" time "+time+" nid "+nodeToken+" tid "+threadToken);
+			System.out.println("exit "+stateToken);
+			if(stateToken==1521){
+				badExit+=1;
+			}
+			
 			Integer glob = new Integer(GlobalID(nodeToken,threadToken));
 			if(!eventstack.containsKey(glob)||eventstack.get(glob).size()==0)//if(eventstack[nodeToken][threadToken]==null||eventstack[nodeToken][threadToken].size()==0)
 			{
+				System.out.println("node "+ nodeToken+" thd "+" glob "+ glob +" size: ");
+				if(eventstack.get(glob)!=null)
+					System.out.println(eventstack.get(glob).size());
+				
 				System.err.println("Fault: Exit from empty or uninitialized thread");
-				System.exit(1);
+				return -1;
+				//System.exit(1);
 			}
 			PrimEvent leave = (PrimEvent) (eventstack.get(glob).pop());
 			if(leave.stateToken!=stateToken)
 			{
 				System.err.println("Fault: Event order failure.");
-				System.exit(1);
+				badEvents.add("evt: "+stateToken+" at: "+time+" found on stack(enter): "+leave.stateToken);
+				return -1;
+				//System.exit(1);
 			}
 			prime = new base.drawable.Primitive(stateToken,leave.time*clockP,time*clockP,
 					new double[]{leave.time*clockP,time*clockP} ,new int[]{GlobalID(nodeToken,threadToken),GlobalID(nodeToken,threadToken)},null);//((Integer)global.get(new Point(nodeToken,threadToken))).intValue(),((Integer)global.get(new Point(nodeToken,threadToken))).intValue()
@@ -811,6 +834,16 @@ public class InputLog implements base.drawable.InputAPI
 
 		public int defUserEvent(Object userData, int userEventToken, String userEventName, int monotonicallyIncreasing) {return 0;}
 
-		public int endTrace(Object userData, int nodeToken, int threadToken) {return 0;}
+		public int endTrace(Object userData, int nodeToken, int threadToken) {
+			
+			
+			for(int i=0;i<badEvents.size();i++){
+				System.out.println(badEvents.get(i));
+			}
+			
+			System.out.println("1521 enters: "+ badEnter + " exits: " +badExit);
+			
+			
+			return 0;}
 	}
 }
