@@ -82,9 +82,9 @@ TAU_GLOBAL_TIMER( tuntied , "untied task begin/end", "[OpenMP]", OpenMP);
 TAU_GLOBAL_TIMER( ttaskwait , "taskwait begin/end", "[OpenMP]", OpenMP);
 
 
-#define NUM_OMP_TYPES 23
+#define NUM_OMP_TYPES 22
 
-static string  omp_names[23] = {"atomic enter/exit", "barrier enter/exit", "critical begin/end", 
+static string  omp_names[22] = {"atomic enter/exit", "barrier enter/exit", "critical begin/end", 
 			     "critical enter/exit", "for enter/exit", "master begin/end",
 			     "parallel begin/end", "parallel fork/join", "section begin/end",
 			     "sections enter/exit", "single begin/end", "single enter/exit",
