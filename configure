@@ -701,12 +701,12 @@ cubedir=own
 ebs2otf=no
 ebs_has_rt=no
 ebs_clock_res="-1"
-ebs_unwinder="none"
-ebs_unwind_inc=
-ebs_unwind_lib=
-ebs_unwind_flag=
-ebs_unwind_lib_flag=
-ebs_unwind_extras=
+unwinder="none"
+unwind_inc=
+unwind_lib=
+unwind_flag=
+unwind_lib_flag=
+unwind_extras=
 tau_links_rt=no
 opari=no
 opari1=no
@@ -1084,36 +1084,73 @@ for arg in "$@"; do
       shift
       ;;
 
+# deprecated. Please see (and use) -unwinder
   -ebs_unwinder=*)
-      ebs_unwinder=`echo $arg | sed -e 's/-ebs_unwinder=//'`
-      if [ "x$ebs_unwinder" = "xlibunwind" ] ; then
-          ebs_unwind_flag="-DTAU_USE_LIBUNWIND"
-          ebs_unwind_lib_flag="-lunwind"
-      elif [ "x$ebs_unwinder" = "xstackwalker" ] ; then
-          ebs_unwind_flag="-DTAU_USE_STACKWALKER"
-          ebs_unwind_lib_flag="-lstackwalk"
-      elif [ "x$ebs_unwinder" = "xnone" ] ; then
-          echo "No EBS Unwinding."
+      unwinder=`echo $arg | sed -e 's/-ebs_unwinder=//'`
+      if [ "x$unwinder" = "xlibunwind" ] ; then
+          unwind_flag="-DTAU_USE_LIBUNWIND"
+          unwind_lib_flag="-lunwind"
+      elif [ "x$unwinder" = "xstackwalker" ] ; then
+          unwind_flag="-DTAU_USE_STACKWALKER"
+          unwind_lib_flag="-lstackwalk"
+      elif [ "x$unwinder" = "xnone" ] ; then
+          echo "No Unwinding Support."
       else
-          echo "Error: Invalid EBS stack unwinder $ebs_unwinder. Valid options are:"
+          echo "Error: Invalid Stack Unwinder $unwinder. Valid options are:"
           echo "libunwind, stackwalker, none (default)."
           exit 1
       fi
       shift
       ;;
 
+# deprecated. Please see (and use) -unwinder_inc
   -ebs_unwind_inc=*)
-      ebs_unwind_inc=`echo $arg | sed -e 's/-ebs_unwind_inc=//'`
+      unwind_inc=`echo $arg | sed -e 's/-ebs_unwind_inc=//'`
       shift
       ;;
 
+# deprecated. Please see (and use) -unwinder_inc
   -ebs_unwind_lib=*)
-      ebs_unwind_lib=`echo $arg | sed -e 's/-ebs_unwind_lib=//'`
+      unwind_lib=`echo $arg | sed -e 's/-ebs_unwind_lib=//'`
       shift
       ;;
 
+# deprecated. Please see (and use) -unwinder_inc
   -ebs_unwind_extras=*)
-      ebs_unwind_extras=`echo $arg | sed -e 's/-ebs_unwind_extras=//'`
+      unwind_extras=`echo $arg | sed -e 's/-ebs_unwind_extras=//'`
+      shift
+      ;;
+
+  -unwinder=*)
+      unwinder=`echo $arg | sed -e 's/-unwinder=//'`
+      if [ "x$unwinder" = "xlibunwind" ] ; then
+          unwind_flag="-DTAU_USE_LIBUNWIND"
+          unwind_lib_flag="-lunwind"
+      elif [ "x$unwinder" = "xstackwalker" ] ; then
+          unwind_flag="-DTAU_USE_STACKWALKER"
+          unwind_lib_flag="-lstackwalk"
+      elif [ "x$unwinder" = "xnone" ] ; then
+          echo "No Unwinding Support."
+      else
+          echo "Error: Invalid Stack Unwinder $unwinder. Valid options are:"
+          echo "libunwind, stackwalker, none (default)."
+          exit 1
+      fi
+      shift
+      ;;
+
+  -unwind_inc=*)
+      unwind_inc=`echo $arg | sed -e 's/-unwind_inc=//'`
+      shift
+      ;;
+
+  -unwind_lib=*)
+      unwind_lib=`echo $arg | sed -e 's/-unwind_lib=//'`
+      shift
+      ;;
+
+  -unwind_extras=*)
+      unwind_extras=`echo $arg | sed -e 's/-unwind_extras=//'`
       shift
       ;;
 
@@ -6158,11 +6195,11 @@ if [ $otf = yes ] ; then
   fi  
 fi
 
-if [ "x$ebs_unwinder" != "xnone" ] ; then
-  if [ "x$ebs_unwinder" = "xlibunwind" ] ; then
-    fixmakeargs="$fixmakeargs TAU_EBS_UNWIND TAU_UNWIND_LIBUNWIND ebs_unwind_flag=$ebs_unwind_flag ebs_unwind_inc=$ebs_unwind_inc ebs_unwind_lib=$ebs_unwind_lib ebs_unwind_lib_flag=$ebs_unwind_lib_flag ebs_unwind_extras=$ebs_unwind_extras"
+if [ "x$unwinder" != "xnone" ] ; then
+  if [ "x$unwinder" = "xlibunwind" ] ; then
+    fixmakeargs="$fixmakeargs TAU_UNWIND TAU_UNWIND_LIBUNWIND unwind_flag=$unwind_flag unwind_inc=$unwind_inc unwind_lib=$unwind_lib unwind_lib_flag=$unwind_lib_flag unwind_extras=$unwind_extras"
   else
-    fixmakeargs="$fixmakeargs TAU_EBS_UNWIND TAU_UNWIND_STACKWALKER ebs_unwind_flag=$ebs_unwind_flag ebs_unwind_inc=$ebs_unwind_inc ebs_unwind_lib=$ebs_unwind_lib ebs_unwind_lib_flag=$ebs_unwind_lib_flag ebs_unwind_extras=$ebs_unwind_extras"
+    fixmakeargs="$fixmakeargs TAU_UNWIND TAU_UNWIND_STACKWALKER unwind_flag=$unwind_flag unwind_inc=$unwind_inc unwind_lib=$unwind_lib unwind_lib_flag=$unwind_lib_flag unwind_extras=$unwind_extras"
   fi
 fi
 
