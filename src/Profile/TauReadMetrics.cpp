@@ -63,7 +63,7 @@ extern "C" int Tau_is_thread_fake(int t);
 
 
 
-#endif /* TAU_BGQ *./
+#endif /* TAU_BGQ */
 
 #ifdef TAU_PAPI
 extern "C" {
