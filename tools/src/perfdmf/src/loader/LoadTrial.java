@@ -300,10 +300,26 @@ public class LoadTrial {
                 configFile = System.getProperty("user.home") + "/.ParaProf/perfdmf.cfg." + configName;
         }
 
+        
+        String sourceFiles[] = parser.getRemainingArgs();
+        
+        boolean multippk=false;
         if (trialName == null) {
+        	
+        	if(sourceFiles!=null&&sourceFiles.length>0){
+        		
+        		String s = sourceFiles[0];
+        		File f=new File(s);
+        		int tid = UtilFncs.identifyData(f);
+        		if((fileTypeString!=null&&fileTypeString.equals("packed"))||tid==DataSource.PPK){
+        			multippk=true;
+        		}
+        	}
+        	if(!multippk){
             System.err.println("Error: Missing trial name\n");
             LoadTrial.usage();
             System.exit(-1);
+        	}
         } else if (experimentID == null && expName == null) {
             System.err.println("Error: Missing experiment id or name\n");
             LoadTrial.usage();
@@ -314,7 +330,7 @@ public class LoadTrial {
             System.exit(-1);
         }
 
-        String sourceFiles[] = parser.getRemainingArgs();
+        //String sourceFiles[] = parser.getRemainingArgs();
 
         int fileType = DataSource.TAUPROFILE;
         if (fileTypeString != null) {
@@ -377,6 +393,32 @@ public class LoadTrial {
         if (summaryOnly == null) {
             summaryOnly = new Boolean(false);
         }
+        
+        
+        if(multippk){
+        	
+        	for(int i=0;i<sourceFiles.length;i++)
+        	{
+        		
+        		trialName=sourceFiles[i].substring(0,sourceFiles[i].lastIndexOf('.'));
+        		
+        	LoadTrial trans = new LoadTrial(configFile, new String []{sourceFiles[i]});
+            trans.checkForExp(experimentID, appName, expName);
+            if (trialID != null) {
+                trans.checkForTrial(trialID);
+                trans.trialID = Integer.parseInt(trialID);
+            }
+
+            trans.trialName = trialName;
+            //trans.problemFile = problemFile;
+            trans.fixNames = fixNames.booleanValue();
+            trans.metadataFile = metadataFile;
+            trans.summaryOnly = summaryOnly.booleanValue();
+            trans.loadTrial(fileType);
+        	}
+        }
+        else
+        {
         LoadTrial trans = new LoadTrial(configFile, sourceFiles);
         trans.checkForExp(experimentID, appName, expName);
         if (trialID != null) {
@@ -391,6 +433,7 @@ public class LoadTrial {
         trans.summaryOnly = summaryOnly.booleanValue();
         trans.loadTrial(fileType);
         // the trial will be saved when the load is finished (update is called)
+        }
     }
 
     public void setMetadataFile(String metadataFile) {

@@ -299,7 +299,7 @@ char * Tau_check_dirname(const char * dir) {
 
     char logfiledir[2048]; 
     char scratchdir[2048]; 
-#ifdef TAU_BGP
+#if (defined (TAU_BGL) || defined(TAU_BGP) || defined(TAU_BGQ))
     if (cuserid(user) == NULL) {
       sprintf(user,"unknown");
     }
