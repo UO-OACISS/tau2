@@ -87,7 +87,7 @@ void check_gpu_event(int gpuTask)
 			cerr << "TAU ERROR: The number of GPU entities exceeds the maximum: " << TAU_MAX_THREADS << ". Please reconfigure TAU with '-useropt=-DTAU_MAX_THREADS=<larger number>.'" << endl;
 			exit(1);
 		}
-		printf("starting top level timer total=%d id=%d.\n", number_of_tasks, gpuTask);
+		//printf("starting top level timer total=%d id=%d.\n", number_of_tasks, gpuTask);
 		TAU_PROFILER_START_TASK(gpu_ptr, gpuTask);
 		number_of_top_level_task_events++;
 	}
