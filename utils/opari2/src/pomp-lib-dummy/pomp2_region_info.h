@@ -126,23 +126,28 @@ typedef struct
      */
     /*@{*/
     /**true if a copyin clause is present*/
-    bool                mHasCopyIn;
+    bool mHasCopyIn;
     /**true if a copyprivate clause is present*/
-    bool                mHasCopyPrivate;
+    bool mHasCopyPrivate;
     /**true if an if clause is present*/
-    bool                mHasIf;
+    bool mHasIf;
     /**true if a firstprivate clause is present*/
-    bool                mHasFirstPrivate;
+    bool mHasFirstPrivate;
     /**true if a lastprivate clause is present*/
-    bool                mHasLastPrivate;
+    bool mHasLastPrivate;
     /**true if a nowait clause is present*/
-    bool                mHasNoWait;
+    bool mHasNoWait;
     /**true if a numThreads clause is present*/
-    bool                mHasNumThreads;
+    bool mHasNumThreads;
     /**true if an ordered clause is present*/
-    bool                mHasOrdered;
+    bool mHasOrdered;
     /**true if a reduction clause is present*/
-    bool                mHasReduction;
+    bool mHasReduction;
+    /**true if a collapse clause is present*/
+    bool mHasCollapse;
+    /**true if a untied clause was present, even if the task was changed to tied
+       during instrumentation.*/
+    bool                mHasUntied;
     /** schedule type in the schedule clause*/
     POMP2_Schedule_type mScheduleType;
     /** user group name*/

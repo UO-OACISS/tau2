@@ -54,6 +54,7 @@ extern "C" {
   void  TAUDECL TauEnv_force_set_ebs_period(int period);
   int  TAUDECL TauEnv_get_ebs_period();
   int  TAUDECL TauEnv_get_ebs_inclusive();
+  char *  TAUDECL Tau_check_dirname(const char *dirname);
 #ifdef TAU_UNWIND
   int  TAUDECL TauEnv_get_ebs_unwind();
   int  TAUDECL TauEnv_get_ebs_unwind_depth();

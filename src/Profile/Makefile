@@ -150,7 +150,7 @@ SHARED_OBJS   = $(TAU_BFD_SHARED_O) $(PGIACC_O)
 #SICORTEX#SHARED_OBJS = TauBfd.o #ENDIF#
 #TAU_BFDSHAREDLINK#SHARED_LIBS = $(BFDLINK) $(BFDLIBS) -liberty #ENDIF#
 
-#CUPTI#SHARED_LIBS = -L$(TAU_CUDA_INC)/../lib -L$(TAU_CUDA_INC)/../lib -L$(TAU_CUDA_INC)/../lib64 -lcudart -L$(TAU_CUPTI_INC)/../lib -lcupti #ENDIF#
+#CUPTI#SHARED_LIBS = -L$(TAU_CUDA_INC)/../lib -L$(TAU_CUDA_INC)/../lib -L$(TAU_CUDA_INC)/../lib64 -lcudart -L$(TAU_CUPTI_INC)/../lib -L$(TAU_CUPTI_INC)/../lib64 -lcupti #ENDIF#
 
 PRINT	      = pr
 
@@ -411,7 +411,8 @@ $(TAU_NULL)$(TAU_PYCUDA_LIB): $(TAU_PYCUDA_OBJS) $(TAU_CUDA_LIB) $(TAU_DSO)
 $(TAU_NULL)$(TAU_CUPTI_LIB): $(TAU_CUPTI_OBJS) $(TAU_DSO)
 		$(PRELINK_PHASE)
 		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_CUPTI_LIB) $(TAU_CUPTI_OBJS) \
-		-L$(TAU_LIB_DIR) $(TAU_DSO) -L$(TAU_CUPTI_INC)/../lib -lcupti
+		-L$(TAU_LIB_DIR) $(TAU_DSO) -L$(TAU_CUPTI_INC)/../lib \
+		-L$(TAU_CUPTI_INC)/../lib64 -lcupti
 		$(TAU_RANLIB) $(TAU_CUPTI_LIB)
 
 $(TAU_DISABLE): TauDisable.o $(TAU_DISABLE_SHARED) TauKojakOpariDisable.o
@@ -840,7 +841,7 @@ TauGpuAdapterOpenCL.o : TauGpuAdapterOpenCL.cpp $(HDRS)  $(INCDIR)/TauGpuAdapter
 	$(CXX) $(CXXFLAGS) -I$(TAU_OPENCL_INC) -g -c $(@:.o=.cpp)
 
 TauGpuAdapterCupti.o : TauGpuAdapterCupti.cpp $(HDRS) ../../include/Profile/TauGpuAdapterCupti.h
-	$(TAU_CUDA_CXX) $(CXXFLAGS) -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
+	$(TAU_CUDA_CXX) $(CXXFLAGS) -fpermissive -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)
 
 TauGpuAdapterCupti40.o : TauGpuAdapterCupti40.cpp $(HDRS) ../../include/Profile/TauGpuAdapterCupti40.h
 	$(TAU_CUDA_CXX) $(CXXFLAGS) -fpermissive -g $(TAU_CUPTI_INCLUDE) $(TAU_CUDA_INCLUDE) $(BFDINCLUDE) -c $(@:.o=.cpp)

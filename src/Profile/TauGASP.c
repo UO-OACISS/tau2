@@ -347,6 +347,7 @@ void gasp_event_notifyVA(gasp_context_t context, unsigned int evttag, gasp_evtty
     {
          /* printf("GASP_ATOMIC: tagstr= %s argstr=%s\n", tagstr, argstr);
          */
+#ifdef GASP_BUPC_STATIC_SHARED
          if (evttag == GASP_BUPC_STATIC_SHARED) {
            int nblocks, nbytes;
                nblocks = (int)va_arg(argptr, int);
@@ -354,6 +355,7 @@ void gasp_event_notifyVA(gasp_context_t context, unsigned int evttag, gasp_evtty
                TAU_REGISTER_EVENT(variable, tagstr);	 
 	       TAU_EVENT(variable, nbytes);
          }
+#endif /* GASP_BUPC_STATIC_SHARED */
     }
 /*
     if (evttag == GASP_C_FUNC) {
@@ -370,7 +372,7 @@ void gasp_event_notifyVA(gasp_context_t context, unsigned int evttag, gasp_evtty
   NOTE: causes runtime overlaps with other START/STOP events. Disabled.
 */
     if (evttag == GASP_UPC_GET ) {
-      int relaxed = (int)va_arg(argptr, int);
+      int relaxed1 = (int)va_arg(argptr, int);
       void *dst = (void *)va_arg(argptr, void *);
       gasp_upc_PTS_t *src = (gasp_upc_PTS_t *)va_arg(argptr, gasp_upc_PTS_t *);
       size_t n = (int)va_arg(argptr, int);
@@ -382,7 +384,7 @@ void gasp_event_notifyVA(gasp_context_t context, unsigned int evttag, gasp_evtty
     }
 
     if (evttag == GASP_UPC_PUT ) {
-      int relaxed = (int)va_arg(argptr, int);
+      int relaxed2 = (int)va_arg(argptr, int);
       gasp_upc_PTS_t *dst = (gasp_upc_PTS_t *)va_arg(argptr, gasp_upc_PTS_t *);
       void *src = (void *)va_arg(argptr, void *);
       size_t n = (int)va_arg(argptr, int);
@@ -433,6 +435,7 @@ void gasp_event_notifyVA(gasp_context_t context, unsigned int evttag, gasp_evtty
       TAU_EVENT(upcevent, n);
     }
 
+#ifdef GASP_UPC_NB_GET_INIT
     if (evttag == GASP_UPC_NB_GET_INIT ) {
       int remote_rank;
       gasp_upc_nb_handle_t handle = (gasp_upc_nb_handle_t)NULL;
@@ -445,7 +448,9 @@ void gasp_event_notifyVA(gasp_context_t context, unsigned int evttag, gasp_evtty
       TAU_REGISTER_EVENT(upcevent, tagstr);
       TAU_EVENT(upcevent, n);
     }
+#endif /* GASP_UPC_NB_GET_INIT */
 
+#ifdef GASP_UPC_NB_PUT_INIT
     if (evttag == GASP_UPC_NB_PUT_INIT ) {
       int remote_rank;
       gasp_upc_nb_handle_t handle = GASP_UPC_NB_TRIVIAL;
@@ -458,6 +463,7 @@ void gasp_event_notifyVA(gasp_context_t context, unsigned int evttag, gasp_evtty
       TAU_REGISTER_EVENT(upcevent, tagstr);
       TAU_EVENT(upcevent, n);
     }
+#endif /* GASP_UPC_NB_PUT_INIT */
 
     if (evttag == GASP_UPC_COLLECTIVE_EXIT && evttype == GASP_END) {
       /* perform graceful tool shutdown */

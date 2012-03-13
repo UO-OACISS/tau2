@@ -141,6 +141,10 @@ extern "C" int Tau_is_thread_fake(int tid) {
   return Tau_is_thread_fake_for_task_api[tid]; 
 }
 
+extern "C" void Tau_set_thread_fake(int tid) {
+  Tau_is_thread_fake_for_task_api[tid] = 1; 
+}
+
 extern "C" void Tau_stack_initialization() {
   Tau_stack_checkInit();
 }
@@ -244,8 +248,12 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 #endif
 
 #ifdef TAU_VAMPIRTRACE 
-  x_uint64 TimeStamp = vt_pform_wtime();
+  uint64_t TimeStamp = vt_pform_wtime();
+#ifdef TAU_VAMPIRTRACE_5_12_API
+  vt_enter(VT_CURRENT_THREAD, (uint64_t *) &TimeStamp, fi->GetFunctionId());
+#else
   vt_enter((uint64_t *) &TimeStamp, fi->GetFunctionId());
+#endif /* TAU_VAMPIRTRACE_5_12_API */
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_resume();
@@ -411,8 +419,14 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 #endif
 
 #ifdef TAU_VAMPIRTRACE 
-  x_uint64 TimeStamp = vt_pform_wtime();
+  uint64_t TimeStamp = vt_pform_wtime();
+
+#ifdef TAU_VAMPIRTRACE_5_12_API
+  vt_exit(VT_CURRENT_THREAD, (uint64_t *)&TimeStamp);
+#else 
   vt_exit((uint64_t *)&TimeStamp);
+#endif /* TAU_VAMPIRTRACE_5_12_API */
+
 #ifndef TAU_WINDOWS
     if (TauEnv_get_ebs_enabled()) {
       Tau_sampling_resume();
@@ -814,7 +828,7 @@ extern "C" int& tau_totalnodes(int set_or_get, int value)
 }
 
 
-#if (defined(TAU_MPI) || defined(TAU_SHMEM))
+#if (defined(TAU_MPI) || defined(TAU_SHMEM) || defined(TAU_DMAPP) )
 
 
 
@@ -878,9 +892,9 @@ extern "C" int shmem_n_pes(void);
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
+  if (!RtsLayer::TheEnableInstrumentation()) return; 
   static int initialize = register_events();
 #ifdef DEBUG_PROF
-  printf("Inside Tau_trace_sendmsg length = %d, totalnodes=%d\n", length, tau_totalnodes(0,0));
 #endif /* DEBUG_PROF */
 
 #ifdef TAU_PROFILEPARAM
@@ -893,7 +907,7 @@ extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
 
   if (TauEnv_get_comm_matrix()) {
     if (destination >= tau_totalnodes(0,0)) {
-#ifdef TAU_SHMEM
+#if (defined (TAU_SHMEM))
       tau_totalnodes(1,shmem_n_pes());
       register_events();
 #else /* TAU_SHMEM */
@@ -932,6 +946,7 @@ extern "C" void Tau_trace_recvmsg(int type, int source, int length) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_recvmsg_remote(int type, int source, int length, int remoteid) {
 
+  if (!RtsLayer::TheEnableInstrumentation()) return; 
   if (TauEnv_get_tracing()) {
     if (source >= 0) {
       TauTraceRecvMsgRemote(type, source, length, remoteid);
@@ -941,6 +956,7 @@ extern "C" void Tau_trace_recvmsg_remote(int type, int source, int length, int r
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_sendmsg_remote(int type, int destination, int length, int remoteid) {
+  if (!RtsLayer::TheEnableInstrumentation()) return; 
 
   if (TauEnv_get_tracing()) {
     if (destination >= 0) {
@@ -950,7 +966,6 @@ extern "C" void Tau_trace_sendmsg_remote(int type, int destination, int length, 
   if (TauEnv_get_comm_matrix())  {
   static int initialize = register_events();
 #ifdef DEBUG_PROF
-  printf("Inside Tau_trace_sendmsg_remote length = %d, totalnodes=%d\n", length, tau_totalnodes(0,0));
 #endif /* DEBUG_PROF */
 
 #ifdef TAU_PROFILEPARAM
@@ -963,7 +978,8 @@ extern "C" void Tau_trace_sendmsg_remote(int type, int destination, int length, 
 
   if (TauEnv_get_comm_matrix()) {
     if (destination >= tau_totalnodes(0,0)) {
-#ifdef TAU_SHMEM
+     
+#if (defined (TAU_SHMEM))
       tau_totalnodes(1,shmem_n_pes());
       register_events();
 #else /* TAU_SHMEM */
@@ -1017,10 +1033,9 @@ extern "C" void Tau_scan_data(int data) {
 extern "C" void Tau_reducescatter_data(int data) {
   TAU_EVENT(TheReduceScatterEvent(), data);
 }
-#else /* !(TAU_MPI || TAU_SHMEM)*/
+#else /* !(TAU_MPI || TAU_SHMEM || TAU_DMAPP)*/
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
-  printf("Isnide the other trace_sendmsg: dest= %d\n", destination);
   TauTraceSendMsg(type, destination, length);
 }
 ///////////////////////////////////////////////////////////////////////////
@@ -1079,6 +1094,12 @@ extern "C" void Tau_context_userevent(void *ue, double data) {
   TauContextUserEvent *t = (TauContextUserEvent *) ue;
   t->TriggerEvent(data);
 } 
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_context_userevent_thread(void *ue, double data, int tid) {
+  TauContextUserEvent *t = (TauContextUserEvent *) ue;
+  t->TriggerEvent(data, tid);
+}
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_set_event_name(void *ue, char *name) {
@@ -1151,6 +1172,48 @@ extern "C" void Tau_profile_c_timer(void **ptr, const char *name, const char *ty
 /* We need a routine that will create a top level parent profiler and give
  * it a dummy name for the application, if just the MPI wrapper interposition
  * library is used without any instrumentation in main */
+extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
+
+
+  int disabled = 0;
+#ifdef TAU_VAMPIRTRACE
+  disabled = 1;
+#endif
+#ifdef TAU_EPILOG
+  disabled = 1;
+#endif
+  if (disabled) {
+    return;
+  }
+
+  static bool initialized = false;
+  static bool initthread[TAU_MAX_THREADS];
+  if (!initialized) {
+    RtsLayer::LockDB();
+    if (!initialized) {
+      for (int i=0; i<TAU_MAX_THREADS; i++) {
+	initthread[i] = false;
+      }
+    }
+    RtsLayer::UnLockDB();
+    initialized = true;
+  }
+  if (initthread[tid] == true) {
+    return;
+  }
+  
+	FunctionInfo *ptr;
+  if (TauInternal_CurrentProfiler(tid) == NULL) {
+			printf("in create_top_level_timer.\n");
+    initthread[tid] = true;
+    ptr = (FunctionInfo *) Tau_get_profiler(".TAU application", " ", TAU_DEFAULT, "TAU_DEFAULT");
+    if (ptr) {
+      Tau_start_timer(ptr, 0, tid);
+    }
+  }
+  atexit(Tau_destructor_trigger);
+}
+
 extern "C" void Tau_create_top_level_timer_if_necessary(void) {
   int disabled = 0;
 #ifdef TAU_VAMPIRTRACE
@@ -1603,6 +1666,10 @@ extern "C" int Tau_get_tid(void) {
   return RtsLayer::myThread();
 }
 
+extern "C" int Tau_create_tid(void) {
+  return RtsLayer::threadId();
+}
+
 // this routine is called by the destructors of our static objects
 // ensuring that the profiles are written out while the objects are still valid
 void Tau_destructor_trigger() {
@@ -1725,10 +1792,10 @@ int *tau_pomp_rd_table = 0;
 extern "C" void Tau_Bg_hwp_counters_start(int *error) {
 }
 
-extern "C" void Tau_Bg_hwp_counters_stop(int* numCounters, uint64_t counters[], int* mode, int *error) {
+extern "C" void Tau_Bg_hwp_counters_stop(int* numCounters, x_uint64 counters[], int* mode, int *error) {
 }
 
-extern "C" void Tau_Bg_hwp_counters_output(int* numCounters, uint64_t counters[], int* mode, int* error) {
+extern "C" void Tau_Bg_hwp_counters_output(int* numCounters, x_uint64 counters[], int* mode, int* error) {
 }
 #endif /* TAU_BGP */
                     

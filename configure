@@ -291,6 +291,8 @@ for arg in "$@"; do
     echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
     echo "       g95|open64|kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale}"
     echo "       gfortran|gfortran4]"
+    echo "-upc=<compiler> ............................. specify the UPC compiler."
+    echo "     options [upc|gcc(GNU UPC) |upcc (Berkeley UPC) | cc (Cray CCE UPC)"
     echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
     echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
     echo "    options [CC|KCC|g++|*xlC*|cxx|pgCC|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
@@ -301,7 +303,7 @@ for arg in "$@"; do
     echo "-prefix=<dir> ................ Specify a target installation directory."
     echo "-exec-prefix=<arch> .......... Specify a target architecture directory."
     echo "-arch=<architecture> ................... Specify a target architecture."
-    echo "       options          [xt3|craycnl|bgp|bgl|ibm64|ibm64linux|sunx86_64"
+    echo "       options      [xt3|craycnl|bgp|bgq|bgl|ibm64|ibm64linux|sunx86_64"
     echo "                        crayxmt|solaris2-64|mips32|sgin32|sgi64|sgio32]"
     echo "-bfd=<dir | download> ............ Specify a BFD directory or download."
     echo ""
@@ -336,6 +338,7 @@ for arg in "$@"; do
     echo ""
     echo "Other Options:"
     echo "-iowrapper .................................... Build POSIX IO Wrapper."
+    echo "-dmapp ...................................... Build Cray DMAPP Wrapper."
     echo "-pthread .................................. Use pthread thread package."
     echo "-papithread .................................. Use PAPI thread package."
     echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
@@ -381,6 +384,7 @@ for arg in "$@"; do
     echo "-COMPENSATE ........ Compensate for profiling measurement perturbation."
     echo "-BGLTIMERS .... Use fast low-overhead timers on IBM BlueGene/L systems."
     echo "-BGPTIMERS .... Use fast low-overhead timers on IBM BlueGene/P systems."
+    echo "-BGQTIMERS .... Use fast low-overhead timers on IBM BlueGene/Q systems."
     echo "-SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems."
     echo "-CRAYTIMERS ............ Use fast nanosecond timers on Cray X1 systems."
     echo "-LINUXTIMERS ......... Use low overhead TSC Counter for wallclock time."
@@ -411,6 +415,8 @@ for arg in "$@"; do
     echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
     echo "   g95|open64|kai|nec|hitachi|intel|absoft|lahey|nag|nagware|pathscale}"
     echo "       gfortran|gfortran4]"
+    echo "-upc=<compiler> ............................. specify the UPC compiler."
+    echo "     options [upc|gcc(GNU UPC) |upcc (Berkeley UPC) | cc (Cray CCE UPC)"
     echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
     echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
     echo "    options [CC|KCC|g++|*xlC*|cxx|pgCC|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
@@ -422,7 +428,7 @@ for arg in "$@"; do
     echo "-prefix=<dir> ................ Specify a target installation directory."
     echo "-exec-prefix=<arch> .......... Specify a target architecture directory."
     echo "-arch=<architecture> ................... Specify a target architecture."
-    echo "       options          [xt3|craycnl|bgp|bgl|ibm64|ibm64linux|sunx86_64"
+    echo "       options      [xt3|craycnl|bgp|bgq|bgl|ibm64|ibm64linux|sunx86_64"
     echo "                        crayxmt|solaris2-64|mips32|sgin32|sgi64|sgio32]"
     echo "-iowrapper .................................... Build POSIX IO Wrapper."
     echo "-pthread .................................. Use pthread thread package."
@@ -511,6 +517,7 @@ for arg in "$@"; do
     echo "-COMPENSATE ........ Compensate for profiling measurement perturbation."
     echo "-BGLTIMERS .... Use fast low-overhead timers on IBM BlueGene/L systems."
     echo "-BGPTIMERS .... Use fast low-overhead timers on IBM BlueGene/P systems."
+    echo "-BGQTIMERS .... Use fast low-overhead timers on IBM BlueGene/Q systems."
     echo "-SGITIMERS .......... Use fast nanosecond timers on SGI R10000 systems."
     echo "-CRAYTIMERS ............ Use fast nanosecond timers on Cray X1 systems."
     echo "-LINUXTIMERS ......... Use low overhead TSC Counter for wallclock time."
@@ -618,6 +625,7 @@ extrashlibopts=
 pthread=no
 papithread=no
 papipfm=no
+gnu_upc=no
 papiperfctr=no
 papisubdir=
 charm=no
@@ -664,6 +672,7 @@ mpitrace=no
 debugprof=no
 bgltimers=no
 bgptimers=no
+bgqtimers=no
 sgitimers=no
 craytimers=no
 linuxtimers=no
@@ -719,6 +728,7 @@ vampirtrace=no
 vampirtraceshow=no
 upnetwork=unknown
 upc=no
+upc_compiler=default
 forceshared=no
 opari_region=no
 opari_construct=no
@@ -744,6 +754,7 @@ stffdir=
 sddf=no
 sddfdir=
 iowrapper=no
+dmapp=no
 zepto=no
 zeptodir=
 cuda=no
@@ -768,7 +779,7 @@ for arg in "$@"; do
 
   -cc=*)
     myarg=`echo $arg | sed 's/-cc=//'`
-    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc ]
+    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc ]
       then
         c_compiler=$myarg
       else
@@ -776,7 +787,7 @@ for arg in "$@"; do
         testmp=`echo $myarg | sed -e 's/^mp//'`
         if [ "y$testxlc" = "y$myarg"  -a "y$testmp" = "y$myarg" ]
         then
-          echo "WARNING: valid options for cc are 'cc', 'gcc', 'gcc4', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', 'orcc', 'qk-pgcc', 'powerpc-bgp-linux-gcc', 'x86_64-w64-mingw32-gcc', and 'pgcc' "
+          echo "WARNING: valid options for cc are 'cc', 'gcc', 'gcc4', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', 'orcc', 'qk-pgcc', 'powerpc64-bgq-linux-gcc', 'powerpc-bgp-linux-gcc', 'x86_64-w64-mingw32-gcc', and 'pgcc' "
 #       exit 1
         else
 	  if [ "y$testxlc" != "y$myarg" ]
@@ -792,7 +803,7 @@ for arg in "$@"; do
 
   -c++=*)
     myarg=`echo $arg | sed 's/-c++=//'`
-    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++ ] 
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++ ] 
       then
         cxx_compiler=$myarg
       else
@@ -832,6 +843,18 @@ for arg in "$@"; do
 	fi
     else
 	echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'g95', and 'open64'"
+	exit 1
+    fi
+    shift
+    ;;
+  -upc=*)
+    myarg=`echo $arg | sed 's/-upc=//'`
+    if [ $myarg = cc -o $myarg = upc -o $myarg = gcc -o $myarg = upcc ]
+      then
+        upc_compiler=$myarg
+        upc=yes
+      else
+	echo "WARNING: valid options for upc are 'cc (Cray CCE UPC compiler)', 'upc (GNU UPC compiler)', 'upcc (Berkeley UPC compiler)', and 'gcc'"
 	exit 1
     fi
     shift
@@ -891,6 +914,11 @@ for arg in "$@"; do
 
   -iowrapper)
       iowrapper=yes
+      shift
+      ;;
+
+  -dmapp)
+      dmapp=yes
       shift
       ;;
 
@@ -1464,7 +1492,7 @@ for arg in "$@"; do
     ;;
 
   -shmemlibrary=*)
-    shmemlibrary=`echo $arg | sed -e 's/-shmemlibrary=//' -e 's/ /#/g'`
+    shmemlibrary=`echo $arg | sed -e 's/-shmemlibrary=//' -e 's/#/ /g'`
     shmem=yes
     shift
     ;;
@@ -1627,6 +1655,11 @@ for arg in "$@"; do
     shift
     ;;
 
+  -BGQTIMERS)
+    bgqtimers=yes
+    shift
+    ;;
+
   -SGITIMERS)
     sgitimers=yes
     shift
@@ -1723,18 +1756,15 @@ for arg in "$@"; do
       echo "Error: Cannot access GPU include directory $cudainclude"
       exit 1
     fi
-    if [ -f "$cudainclude/cuda.h" ] ; then
-			useropt="$useropt#-DTAU_MAX_THREADS=32"
-    	fixmakeargs="$fixmakeargs CUDA TAU_USE_GPU cudainclude=$cudainclude"
-			if [ -f "$cudainclude/CL/cl.h" ] ; then
-    		fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$cudainclude"
-			fi
+		useropt="$useropt#-DTAU_MAX_THREADS=32"
 		cuda=yes
-		else
-			echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
-    fi
     shift
     ;;
+
+	-DISABLE_OPENCL)
+		opencl=disable
+		shift
+		;;
 
   -opencl=*)
     openclinclude=`echo $arg | sed -e 's/-opencl=//' -e 's/ /#/g'`/include
@@ -2063,7 +2093,7 @@ case $machine in
 	gunzip -c tools/src/contrib/jogl/ppc64/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
 	;;
 
-    bgp)
+    bgp|bgq)
 	gunzip -c tools/src/contrib/jogl/ppc64/jogl.jar.gz > $JARTARGET/jogl.jar
 	gunzip -c tools/src/contrib/jogl/ppc64/libjogl.so.gz > $JARTARGET/libjogl.so
 	gunzip -c tools/src/contrib/jogl/ppc64/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
@@ -2363,7 +2393,7 @@ case $machine in
     fi
     ;;
 
-   bgp)
+   bgp|bgq)
     if [ $cxx_compiler = default ] ; then
       cxx_compiler=mpixlcxx_r
       c_compiler=mpixlc_r
@@ -2476,6 +2506,9 @@ case $machine in
 	elif [ "x$PE_ENV" = xCRAY ] ; then
 	    tauoptions="${tauoptions}-cray"
 	    default_fortran=cray
+	    if [ $dmapp = no ]; then
+	      fixmakeargs="$fixmakeargs DMAPP"
+            fi
 
 	    # *CWL* - if bfd path is not explicitly specified, point
 	    #         to the correct preset bfd path.
@@ -2721,6 +2754,15 @@ if [ $iowrapper = yes ] ; then
     fi
 fi    
 
+if [ "x$PE_ENV" = "xCRAY" -o $dmapp = yes ]; then
+    if [ "x$CRAY_DMAPP_INCLUDE_OPTS" = "x" ] ; then
+        echo "TAU: Please load the dmapp module on Cray to set CRAY_DMAPP_INCLUDE_OPTS environment variable and reconfigure TAU with the -dmapp configure option"
+    else
+        fixmakeargs="$fixmakeargs DMAPP"
+    fi
+fi
+
+
 if [ $stff = yes ] ; then
       fixmakeargs="$fixmakeargs RENCI_STFF stffdir=${stffdir} sddfdir=${sddfdir}"
       tauoptions="${tauoptions}-stff"
@@ -2746,7 +2788,7 @@ if [ $trace = yes ] ; then
   }
 EOF
     
-    if [ $catamount = no -a ! $machine = bgl -a ! $machine = bgp -a ! $machine = mips -a ! $machine = mips32 ] ; then
+    if [ $catamount = no -a ! $machine = bgl -a ! $machine = bgp -a ! $machine = bgq -a ! $machine = mips -a ! $machine = mips32 ] ; then
 	$echo "Checking type sizes... ${nnl}"
 	if $c_compiler -I. $orig_useropt tau_type_test.c -o tau_type_test 1> /dev/null 2>&1 ; then
 	    if ./tau_type_test 1> /dev/null 2>&1 ; then
@@ -2792,6 +2834,11 @@ if [ $bgptimers = yes ] ; then
   tauoptions="${tauoptions}-bgptimers"
 fi
 
+if [ $bgqtimers = yes ] ; then
+  fixmakeargs="$fixmakeargs BGQTIMERS"
+  tauoptions="${tauoptions}-bgqtimers"
+fi
+
 if [ $craytimers = yes ] ; then
   fixmakeargs="$fixmakeargs CRAYTIMERS"
   tauoptions="${tauoptions}-craytimers"
@@ -2834,7 +2881,7 @@ if [ $machine = apple ] ; then
   fi
 fi
 
-if [ $machine = ppc64 -o $machine = bgl -o $machine = bgp ] ; then
+if [ $machine = ppc64 -o $machine = bgl -o $machine = bgp -o $machine = bgq ] ; then
   if [ $cxx_compiler = g++ ] ; then
     if [ $fortran_compiler = no ] ; then
       extradir=`which xlf90 | sed s/xlf90/../`
@@ -2935,7 +2982,7 @@ case $cxx_compiler in
       fi
       ibmxlc=yes
 
-      if [ "$machine" = "bgp" ] ; then
+      if [ "$machine" = "bgp" -o "$machine" = "bgq" ] ; then
 	  ibm_compiler=gxlc++
       else 
 	  ibm_compiler=$cxx_compiler
@@ -3179,7 +3226,7 @@ case $cxx_compiler in
       ;;
 
     mpicxx)
-	if [ $machine = bgp ] ; then
+	if [ $machine = bgp -o $machine = bgq ] ; then
 	    echo "Using GNU Compilers for BGP"
 	    tauoptions="${tauoptions}-gnu"
 	else
@@ -3381,7 +3428,7 @@ full_cxx_compiler=`which $cxx_compiler`
 full_cc_compiler=`which $c_compiler`
 if [ $shmem = yes ]
 then
-  oshcc_var=`which oshcc`
+  oshcc_var=`which oshcc 2>/dev/null`
   if [ "x$oshcc_var" != "x" -a $? = 0 ]
   then 
     full_cxx_compiler=`which oshCC`
@@ -3452,6 +3499,9 @@ then
         ;;
   bgp)
 	mpiinc=/bgsys/drivers/ppcfloor/comm/include
+        ;;
+  bgq)
+	mpiinc=/bgsys/drivers/ppcfloor/comm/xl/include
         ;;
   t3e|crayx1|craysv1)
 	mpiinc=/opt/ctl/mpt/mpt/include
@@ -3582,6 +3632,11 @@ then
         mpilib=/bgsys/drivers/ppcfloor/comm/lib
 	additional_mpilibs='-ldcmfcoll.cnk -ldcmf.cnk -lpthread -L/bgsys/drivers/ppcfloor/runtime/SPI -lSPI.cna' 
 	;;
+  bgq)
+        mpilib=/bgsys/drivers/ppcfloor/comm/xl/lib
+	#additional_mpilibs='-ldcmfcoll.cnk -ldcmf.cnk -lpthread -L/bgsys/drivers/ppcfloor/runtime/SPI -lSPI.cna' 
+	additional_mpilibs='-L/bgsys/drivers/ppcfloor/gnu-linux/powerpc64-bgq-linux/lib -lc -lnss_files -lnss_dns -lresolv'
+	;;
   t3e|crayx1|craysv1)  
 	mpilib=/opt/ctl/mpt/mpt/lib/
 	;;
@@ -3678,7 +3733,7 @@ if [ $epilog = yes -a $epiloginc = no -a $epilogdir != no ] ; then
 fi
 
 if [ $epilog = yes -a $epilogbin = no -a $epilogdir != no ] ; then
-    if [ -f $epilogdir/bin/opari ] ; then
+    if [ -f $epilogdir/bin/opari -o -f $epilogdir/bin/opari2 ] ; then
 	epilogbindir=$epilogdir/bin
     else
 	epilogbindir=$epilogdir/src
@@ -3731,12 +3786,15 @@ if [ $vampirtrace = yes ] ; then
 	$echo "Checking version of VampirTrace... ${nnl}"
 	version=`$vampirtracedir/bin/vtcc -vt:version 2>&1`
 	echo "$version"
-	#eval major=${version/./;minor=}
+	eval major=${version/./;minor=}
 	minor=`echo $minor | sed 's/\([0-9]*\).*/\1/g'`
 
 	# check if 5.7 or later
 	if [ "x$major" = "x5" -a "x$minor" = "x7" ] ; then
 	    fixmakeargs="$fixmakeargs VAMPIRTRACE_5_7_API" 
+	fi
+	if [ "x$major" = "x5" -a "x$minor" = "x12" ] ; then
+	    fixmakeargs="$fixmakeargs VAMPIRTRACE_5_12_API" 
 	fi
 
 	vtserchk="seq"
@@ -3863,7 +3921,17 @@ EOF
 	      papipfm=yes
 	      papiperfctr=yes
 	  fi
-	  /bin/rm -f tau_papi_test.c tau_papi_test
+          
+          if [ $machine = craycnl ] ; then
+	    $c_compiler $orig_useropt -c -fPIC tau_papi_test.c -I$papidir/include 
+	    if $c_compiler $orig_useropt tau_papi_test.o -I$papidir/include -shared -o libtau_papi_test.so $papidir/$papisubdir/libpapi.a 1> /dev/null 2>&1 ; then
+              echo "PAPI library links properly"
+            else 
+              echo "NOTE: libpapi.a can't be called in a TAU shared object. Using -DISABLESHARED"
+              fixmakeargs="$fixmakeargs NOSHARED"
+            fi
+          fi 
+	  /bin/rm -f tau_papi_test.c tau_papi_test tau_papi_test.o
       fi		
 fi
 
@@ -3980,7 +4048,10 @@ then
     if [ -r $openshmem_lib_dir/libopenshmem.so -o -r $openshmem_lib_dir/libopenshmem.a ] 
     then
       shmemlibargs="$shmemlibargs -L$openshmem_lib_dir"
-      shmemlibrary=-lopenshmem
+      if [ "$shmemlibrary" = "no"  -o "$shmemlibrary" = "-lsma" ]
+      then
+        shmemlibrary=-lopenshmem
+      fi
     fi
   fi
    
@@ -4028,6 +4099,10 @@ if [ $c_compiler != gcc ]
 #    echo $gcclibdir
 fi
 
+if [ $upc_compiler = gcc -o $upc_compiler = upc ] 
+then
+  gnu_upc=yes
+fi
 if [ $c_compiler != gcc4 ]
   then
     echo Default C compiler will be $c_compiler
@@ -4078,6 +4153,22 @@ fi
 rm -f get_stdinc.C find_stdinc.awk
 
 
+######################################################################
+# Checking gcc 4.6+ version. It needs -lmpi to be added after -ltau
+cat << EOF > gcc46test.C
+#if ((__GNUC__ >= 4 ) && (__GNUC_MINOR__ >= 6)) 
+#error "Using GCC 4.6+"
+#endif 
+EOF
+
+if $cxx_compiler $orig_useropt -c gcc46test.C 1> /dev/null 2>&1 
+then
+  echo "Not using GNU 4.6+ fixes" > /dev/null
+else
+  echo "NOTE: Using GNU 4.6+ fixes" > /dev/null
+  fixmakeargs="$fixmakeargs GNU46PLUS"
+fi
+/bin/rm -f gcc46test.*
 
 
 ######################################################################
@@ -4153,13 +4244,13 @@ then
 fi
 
 ######################################################################
-if [ $cxx_compiler = g++ -o $cxx_compiler = g++4 -o $cxx_compiler = egcs -o $cxx_compiler = powerpc64-linux-g++ -o $cxx_compiler = c++ -o $cxx_compiler = scg++ -o $cxx_compiler = mips64el-gentoo-linux-gnu-g++  -o $cxx_compiler = powerpc-bgp-linux-g++ -o $cxx_compiler = x86_64-w64-mingw32-g++ ]
+if [ $cxx_compiler = g++ -o $cxx_compiler = g++4 -o $cxx_compiler = egcs -o $cxx_compiler = powerpc64-linux-g++ -o $cxx_compiler = c++ -o $cxx_compiler = scg++ -o $cxx_compiler = mips64el-gentoo-linux-gnu-g++  -o $cxx_compiler = powerpc-bgp-linux-g++ -o $cxx_compiler = x86_64-w64-mingw32-g++ -o $cxx_compiler = powerpc64-bgq-linux-g++ ]
   then
     if [ $machine != crayxmt ] 
     then
       fixmakeargs="$fixmakeargs GNU COMPINST_GNU"
     fi
-    if [ $machine = ibm64 -o $machine = rs6000 -o $machine = ppc64 -o $machine = bgl -o $machine = bgp -o $machine = ibm64linux ]
+    if [ $machine = ibm64 -o $machine = rs6000 -o $machine = ppc64 -o $machine = bgl -o $machine = bgp -o $machine = ibm64linux -o $machine = bgq ]
     then
       tauoptions="${tauoptions}-gnu"
     fi
@@ -4225,6 +4316,16 @@ case $machine in
 	    p=$papidir/lib
 	    if [ -f $p/libpapi.a ] ; then
 		fixmakeargs="$fixmakeargs BGPPAPI"
+	    fi
+	fi
+        ;; 
+     bgq)
+	echo "Found an IBM PPC-64 BG/Q Linux configuration definition"
+	fixmakeargs="arch=$machine BGQ $fixmakeargs"
+	if [ $papi = yes ] ; then
+	    p=$papidir/lib
+	    if [ -f $p/libpapi.a ] ; then
+		fixmakeargs="$fixmakeargs BGQPAPI"
 	    fi
 	fi
         ;; 
@@ -4841,7 +4942,7 @@ EOF
           # SiCortex's MPI2 interface is broken. 
 	  echo "SiCortex detected. Disabling MPI2 wrappers"
 	  fixmakeargs="$fixmakeargs MPICH_IGNORE_CXX_SEEK"
-      elif [ "$tauarch" = "bgp" ] ; then
+      elif [ "$tauarch" = "bgp" -o "$tauarch" = "bgq" ] ; then
 	  echo "BGP MPI detected. Disabling MPI2 wrappers"
 	  fixmakeargs="$fixmakeargs MPICH_IGNORE_CXX_SEEK"
       else 
@@ -5110,9 +5211,11 @@ if [ $mpi = yes ] ; then
 	   echo "NOTE: OpenMPI configured with --disable_shared"
 	   mpilibrary='-lmpi_cxx -lmpi -lopen-rte -lopen-pal -lrt -ldl -lpthread -lutil'
 	   # check for -libverbs, sometimes necessary with OpenMPI
-	   if [ -r /usr/lib64/libibverbs.a -o -r /usr/lib64/libibverbs.so ] ; then 
+           if [ $machine != bgq ] ; then 
+	     if [ -r /usr/lib64/libibverbs.a -o -r /usr/lib64/libibverbs.so ] ; then 
 	       mpilibrary="$mpilibrary -libverbs"
-	   fi
+	     fi
+           fi # BGQ has /usr/lib64/libibverbs.so but we do not want to link it.
 
 	   # check for -libverbs, sometimes necessary with OpenMPI
 	   if [ -r /usr/lib64/libnuma.a -o -r /usr/lib64/libnuma.so ] ; then 
@@ -5159,7 +5262,7 @@ if [ $mpi = yes ] ; then
 		  # For BG/P
 		  mpilibrary="-lmpich.cnk $additional_mpilibs"
 	        else
-		  mpilibrary=-lmpich
+		  mpilibrary="-lmpich $additional_mpilibs"
 	        fi
               fi
 	  fi
@@ -5190,11 +5293,13 @@ if [ $mpi = yes ] ; then
 	      mpiflibargs="$mpiflibargs -lrt"
 	  fi
 	  
-	  if [ -r /usr/lib64/libibverbs.a -o -r /usr/lib64/libibverbs.so ] ; then 
+          if [ $machine != bgq ] ; then
+	    if [ -r /usr/lib64/libibverbs.a -o -r /usr/lib64/libibverbs.so ] ; then 
               #echo "libibverbs found"
 	      mpilibargs="$mpilibargs -libverbs"
 	      mpiflibargs="$mpiflibargs -libverbs"
-	  fi
+	    fi
+          fi
 
 	  if [ -r $mpilib/libscdma.a -a -r $mpilib/libpmi.a ] ; then
 	      # echo "add -lscdma -lpmi to the SiCortex link line"
@@ -5489,28 +5594,47 @@ if [ "x$bfd" = "xyes" ] ; then
 			mkdir $tempdir
 			cd $tempdir
 			if [ "$machine" = "apple" ] ; then
-				curl http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz > binutils-2.20.tar.gz
+                                # this is a little tricky - we WANT it to be called 2.20 for now.
+                                #   after untar, we will want to rename the package to 2.20 too.
+				curl http://www.cs.uoregon.edu/Research/paracomp/tau/tauprofile/dist/binutils-2.22.tar.gz > binutils-2.20.tar.gz
+			elif    [ "x$pgi" = "xyes" ] ; then
+				wget http://www.cs.uoregon.edu/Research/paracomp/tau/tauprofile/dist/binutils-2.22.tar.gz
+				mv binutils-2.22.tar.gz  binutils-2.20.tar.gz 
 			else 
-				wget http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz
+				wget http://www.cs.uoregon.edu/Research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz
 			fi
 			if [ ! -f binutils-2.20.tar.gz ] ; then
 				echo "The BFD tarball did not download.  Please download it manually from: "
-				echo "http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz"
+				echo "http://www.cs.uoregon.edu/Research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz"
 				echo "Please enter the directory containing the tarball: ${nnl}" 
 				read RESPONSE
 				cp $RESPONSE/binutils-2.20.tar.gz .
 			fi
 			tar -xzf binutils-2.20.tar.gz
+			if [ "$machine" = "apple" -o "x$pgi" = "xyes" ] ; then
+			    mv binutils-2.22 binutils-2.20
+			fi
 			cd binutils-2.20
 			if [ $machine = "bgp" ] ; then
-				./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir CC=powerpc-bgp-linux-gcc CXX=powerpc-bgp-linux-g++ --disable-nls --disable-werror
+				./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gcc CXX=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-g++ --disable-nls --disable-werror
 				# have to run make twice, first one dies with illegal instruction
 				make
 				make
 				make install
+
+
 			else
+			  if [ $machine = "bgq" ]; then
+				./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-gcc CXX=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-g++ --disable-nls --disable-werror
+				# have to run make twice, first one dies with illegal instruction
+				make
+				make
+				make install
+
+                          else 
 				./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir --disable-nls --disable-werror
 				make && make install
+                          fi
 			fi
 			cp include/demangle.h $bfddir/include
 			cp include/libiberty.h $bfddir/include
@@ -5694,7 +5818,11 @@ void foo() {
 }
 EOF
 $echo "Checking for shared library compatible libbfd... ${nnl}"
-shared_opt="-shared -fPIC"
+if [ $c_compiler = xlc -o $c_compiler = xlc_r -o $c_compiler = mpixlc -o $c_compiler = mpixlc_r ] ; then
+  shared_opt="-qmkshrobj"
+else
+  shared_opt="-shared -fPIC"
+fi
 
 bfdlibs=`echo $BFDLIBS | sed -e 's/#/ /g'`
 if $c_compiler $demangle $orig_useropt $shared_opt -o conftest_bfd.so conftest_bfd.c -fPIC $bfdinclude $bfdlink $bfdlibs 1> /dev/null 2>&1 ; then
@@ -5935,6 +6063,30 @@ if [ $python = yes ] ; then
       echo "ERROR: For IBM systems, please specify the -pythonlib=<dir> flag where *.py files and the config directory are located!"
       exit 1
     fi
+fi
+
+if [ $cuda = yes ] ; then
+	if [ -f "$cudainclude/cuda.h" ] ; then
+		fixmakeargs="$fixmakeargs CUDA TAU_USE_GPU cudainclude=$cudainclude"
+		if [ "$machine" != "craycnl" -a "$opencl" != "disable" ] ; then
+			if [ -f "$cudainclude/CL/cl.h" ] ; then
+				fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$cudainclude"
+			fi
+			if [ -f "$cudainclude/../extras/CUPTI/include/cupti_events.h" ] ; then
+				tauoptions="${tauoptions}-cupti"
+				cupti="$cudainclude/../extras/CUPTI"
+				fixmakeargs="$fixmakeargs CUPTI cuptiinclude=$cupti/include"
+				echo "Using CUPTI library found in $cupti."
+			fi
+		else
+			if [ "$machine" == "craycnl" -a "$PE_ENV" != "GNU" ]; then
+				echo "ERROR: TAU's GPU measurement system is only available in the GNU compiler environment on CRAY. Please swap modules and reconfigure."
+				exit 1
+			fi
+		fi
+	else
+		echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
+	fi
 fi
 
 if [ $python = yes -a $cuda = yes ] ; then
@@ -6334,14 +6486,28 @@ if [ $opari1 = yes ] ; then
     fi
 fi
 
-   if [ $upc = yes ]; then
-     tauoptions="${tauoptions}-upc"
-    # If MPI is used -mpi already appears in the name. If it is not, add it
-     if [ "x$upcnetwork" != "xmpi" ]; then
-       tauoptions="${tauoptions}-$upcnetwork"
-     fi
-     fixmakeargs="$fixmakeargs UPCC upcnetwork=$upcnetwork"
-   fi
+if [ $upc_compiler = cc -o $upc_compiler = default ]; then 
+  if [ $machine = craycnl -a "x$PE_ENV" = xCRAY ]; then
+    fixmakeargs="$fixmakeargs CRAY_UPC"
+  fi
+fi
+
+if [ $upc = yes ]; then
+  tauoptions="${tauoptions}-upc"
+  # If MPI is used -mpi already appears in the name. If it is not, add it
+  if [ "x$upcnetwork" != "xmpi" -a $upc_compiler = upcc ]; then
+    tauoptions="${tauoptions}-$upcnetwork"
+  fi
+  if [ $upc_compiler = upcc ] 
+  then
+    fixmakeargs="$fixmakeargs UPCC upcnetwork=$upcnetwork"
+  fi
+
+  if [ $upc_compiler = gcc -o $upc_compiler = upc ]; then
+    tauoptions="${tauoptions}-gnuupc"
+    fixmakeargs="$fixmakeargs GNU_UPC"
+  fi
+fi
 
 if [ $trace = yes ] ; then
     if [ $profile = yes ] ; then
@@ -6603,7 +6769,7 @@ if [ $mrnet = yes ] ; then
   fi
 fi
 
-if [ $machine = ia64 -o $machine = x86_64 -o $machine = i386_linux -o $machine = craycnl -o $machine = bgp -o $machine = mips -o $machine = mips32 -o $machine = ibm64linux -o $machine = ppc64 ] ; then
+if [ $machine = ia64 -o $machine = x86_64 -o $machine = i386_linux -o $machine = craycnl -o $machine = bgp -o $machine = bgq -o $machine = mips -o $machine = mips32 -o $machine = ibm64linux -o $machine = ppc64 ] ; then
     extra_linker_args="${extralinker_args}#-Wl,--export-dynamic"
 else 
   if [ $machine = apple ]; then 
@@ -6700,6 +6866,7 @@ cp ${tauroot}/tools/src/tau_exec $BINTARGET
 cp ${tauroot}/tools/src/tauex $BINTARGET
 cp ${tauroot}/tools/src/taucc $BINTARGET
 cp ${tauroot}/tools/src/taucxx $BINTARGET
+cp ${tauroot}/tools/src/tauupc $BINTARGET
 cp ${tauroot}/tools/src/tauf90 $BINTARGET
 cp ${tauroot}/tools/src/tauex.multiple $BINTARGET
 cp ${tauroot}/tools/src/tau_cxx.sh $BINTARGET
@@ -6707,6 +6874,7 @@ cp ${tauroot}/tools/src/tau_cc.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_rewrite $BINTARGET
 cp ${tauroot}/tools/src/tau_f90.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_f77.sh $BINTARGET
+cp ${tauroot}/tools/src/tau_upc.sh $BINTARGET
 cp ${tauroot}/tools/src/contrib/tcollect10.ini $BINTARGET
 
 if [ $pdtarchdir != unknown ]

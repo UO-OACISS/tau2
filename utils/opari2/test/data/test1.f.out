@@ -25,7 +25,7 @@
 !************************************************
 !* The following pragmas should be instrumented *
 !************************************************
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_1,
      &pomp_if, pomp_num_threads, pomp2_old_task,
@@ -35,8 +35,7 @@
 c$omp parallel
 !$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
 !$omp& if(pomp_if) num_threads(pomp_num_threads) 
-!$omp& shared(/cb000/)
-       call POMP2_Parallel_begin(pomp2_region_1)
+      call POMP2_Parallel_begin(pomp2_region_1)
 #line 26 "test1.f"
       call POMP2_Barrier_enter(pomp2_region_2, pomp2_old_task,
      &"58*regionType=barrier*sscl=test1.f:26:26*escl=test1.f:0:0**"//
@@ -61,7 +60,7 @@ c$omp parallel
       call POMP2_Parallel_join(pomp2_region_1, pomp2_old_task)
 #line 29 "test1.f"
 
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_4,
      &pomp_if, pomp_num_threads, pomp2_old_task,
@@ -72,8 +71,7 @@ c$omp parallel
 !$omp&   default(shared)
 !$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
 !$omp& if(pomp_if) num_threads(pomp_num_threads) 
-!$omp& shared(/cb000/)
-       call POMP2_Parallel_begin(pomp2_region_4)
+      call POMP2_Parallel_begin(pomp2_region_4)
 #line 32 "test1.f"
       call POMP2_Implicit_barrier_enter(pomp2_region_4, pomp2_old_task)
 !$omp barrier
@@ -85,7 +83,7 @@ c$omp parallel
       call POMP2_Parallel_join(pomp2_region_4, pomp2_old_task)
 #line 34 "test1.f"
 
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_5,
      &pomp_if, pomp_num_threads, pomp2_old_task,
@@ -96,8 +94,7 @@ c$omp parallel
 !$omp&   default(shared)
 !$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
 !$omp& if(pomp_if) num_threads(pomp_num_threads) 
-!$omp& shared(/cb000/)
-       call POMP2_Parallel_begin(pomp2_region_5)
+      call POMP2_Parallel_begin(pomp2_region_5)
 #line 37 "test1.f"
       call POMP2_Implicit_barrier_enter(pomp2_region_5, pomp2_old_task)
 !$omp barrier
@@ -110,7 +107,7 @@ c$omp parallel
       call POMP2_Parallel_join(pomp2_region_5, pomp2_old_task)
 #line 40 "test1.f"
 
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_6,
      &pomp_if, pomp_num_threads, pomp2_old_task,
@@ -121,8 +118,7 @@ c$omp parallel
 !$omp&private(a)
 !$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
 !$omp& if(pomp_if) num_threads(pomp_num_threads) 
-!$omp& shared(/cb000/)
-       call POMP2_Parallel_begin(pomp2_region_6)
+      call POMP2_Parallel_begin(pomp2_region_6)
 #line 43 "test1.f"
 
       call POMP2_Implicit_barrier_enter(pomp2_region_6, pomp2_old_task)
@@ -147,12 +143,6 @@ c     comment
       write(*,*) """!$omp parallel"""
       end program test1
 
-
-      integer function pomp_get_max_threads000()
-         integer omp_get_max_threads
-         pomp_get_max_threads000=omp_get_max_threads()
-         return
-      end
 
       subroutine POMP2_Init_regions_000()
          include 'test1.f.opari.inc'

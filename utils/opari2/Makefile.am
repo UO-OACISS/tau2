@@ -75,6 +75,5 @@ install-exec-local:
 
 install-data-local: doxygen-user-install
 
-uninstall-local: doxygen-user-uninstall
-	rm -rf $(DESTDIR)$(datadir)/@PACKAGE_NAME@
+uninstall-hook: common-uninstall
 	rm -f  $(DESTDIR)$(bindir)/pomp2_parse_init_regions.awk
