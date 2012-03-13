@@ -198,7 +198,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 		{	
       CUpti_ActivityMemcpy *memcpy = (CUpti_ActivityMemcpy *)record;
 			//cerr << "recording memcpy: " << memcpy->end - memcpy->start << "ns.\n" << endl;
-			
+		  //cerr << "recording memcpy on device: " << memcpy->streamId << "/" << memcpy->runtimeCorrelationId << endl;
 			cuRec = new cuptiRecord(TAU_GPU_USE_DEFAULT_NAME, memcpy->streamId, memcpy->runtimeCorrelationId, NULL); 
 			Tau_gpu_register_memcpy_event(
 				*cuRec,
@@ -244,6 +244,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 				//printf("correlationid: %d.\n", id);
 			}
 			name = demangleName(kernel->name);
+		  //cerr << "recording kernel on device: " << kernel->streamId << "/" << id << endl;
 			cuRec = new cuptiRecord(name, kernel->streamId, id, &map);
 			Tau_gpu_register_gpu_event(
 				*cuRec, 
