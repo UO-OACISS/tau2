@@ -408,7 +408,8 @@ void traceEntry(int id)
   } 
   else {
     if (fi != NULL) {
-      TAU_PROFILER_START(fi);
+      //TAU_PROFILER_START(fi);
+      Tau_start_timer(fi, 0, tid);
     } else {
       dprintf("ERROR?: traceEntry: fi = null!\n");
     }
@@ -425,6 +426,7 @@ void traceExit(int id)
   
   if ( !RtsLayer::TheEnableInstrumentation()) return; 
   int tid = RtsLayer::myThread();
+
   if (!tauDyninstEnabled[tid]) return;
   void *fi = TheTauBinDynFI()[id];
   if (fi) 
@@ -445,7 +447,8 @@ void traceExit(int id)
     }
   }
   if (fi != NULL) {
-    TAU_PROFILER_STOP(fi);
+    //TAU_PROFILER_STOP(fi);
+     Tau_stop_timer(fi, tid);
   } else {
     printf("ERROR: traceExit: fi = null!\n");
   }
@@ -486,7 +489,10 @@ void tau_dyninst_init(int isMPI)
   }
   int tid = RtsLayer::myThread();
   if (!tauDyninstEnabled[tid]) {
-    tauDyninstEnabled[tid] = 1;
+    RtsLayer::LockDB();
+    for (int i = 0; i < TAU_MAX_THREADS; i++) 
+      tauDyninstEnabled[i] = 1;
+    RtsLayer::UnLockDB();
   }
 }
 

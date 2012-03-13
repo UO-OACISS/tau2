@@ -1,0 +1,11 @@
+BEGIN_INCLUDE_LIST
+"#dmapp#get#"
+"#dmapp#put#"
+"#dmapp_init#"
+"#dmapp_finalize#"
+END_INCLUDE_LIST
+
+BEGIN_EXCLUDE_LIST
+"#gni#"
+"#dmapp_get_rma_attrs_ext#"
+END_EXCLUDE_LIST

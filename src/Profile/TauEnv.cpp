@@ -283,7 +283,7 @@ static const char *getconf(const char *key) {
 /*********************************************************************
  * Local Tau_check_dirname routine
  ********************************************************************/
-static  char * Tau_check_dirname(const char * dir) {
+char * Tau_check_dirname(const char * dir) {
   if (strcmp(dir, "$TAU_LOG_DIR") == 0){
     TAU_VERBOSE("Using PROFILEDIR=%s\n", dir);
     const char *logdir= getconf("TAU_LOG_PATH");
@@ -299,7 +299,7 @@ static  char * Tau_check_dirname(const char * dir) {
 
     char logfiledir[2048]; 
     char scratchdir[2048]; 
-#ifdef TAU_BGP
+#if (defined (TAU_BGL) || defined(TAU_BGP) || defined(TAU_BGQ))
     if (cuserid(user) == NULL) {
       sprintf(user,"unknown");
     }
@@ -332,6 +332,8 @@ static  char * Tau_check_dirname(const char * dir) {
       mkdir(logfiledir);
 #else
 
+      mode_t oldmode;
+      oldmode=umask(0);
       mkdir(logdir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
       sprintf(scratchdir, "%s/%d", logdir, (thisTime->tm_year+1900));
       mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
@@ -345,6 +347,7 @@ static  char * Tau_check_dirname(const char * dir) {
 
       mkdir(logfiledir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
       TAU_VERBOSE("mkdir %s\n", logfiledir);
+      umask(oldmode);
 #endif 
     }
     return strdup(logfiledir);
@@ -738,13 +741,13 @@ void TauEnv_initialize() {
     if ((env_profiledir = getconf("PROFILEDIR")) == NULL) {
       env_profiledir = ".";   /* current directory */
     }
-    env_profiledir=Tau_check_dirname(env_profiledir);
+    /* env_profiledir=Tau_check_dirname(env_profiledir); */
     TAU_VERBOSE("TAU: PROFILEDIR is \"%s\"\n", env_profiledir);
 
     if ((env_tracedir = getconf("TRACEDIR")) == NULL) {
       env_tracedir = ".";   /* current directory */
     }
-    env_tracedir=Tau_check_dirname(env_tracedir);
+    /* env_tracedir=Tau_check_dirname(env_tracedir); */
     TAU_VERBOSE("TAU: TRACEDIR is \"%s\"\n", env_tracedir);
 
     int profiling_default = TAU_PROFILING_DEFAULT;
@@ -802,7 +805,7 @@ void TauEnv_initialize() {
       }
     }
 
-#if (defined(TAU_MPI) || defined(TAU_SHMEM))
+#if (defined(TAU_MPI) || defined(TAU_SHMEM) || defined(TAU_DMAPP))
     /* track comm (opposite of old -nocomm option) */
     tmp = getconf("TAU_TRACK_MESSAGE");
     if (parse_bool(tmp, env_track_message)) {
@@ -831,7 +834,7 @@ void TauEnv_initialize() {
       TAU_VERBOSE("TAU: Message Tracking Disabled\n");
       TAU_METADATA("TAU_TRACK_MESSAGE", "off");
     }
-#endif /* TAU_MPI || TAU_SHMEM */
+#endif /* TAU_MPI || TAU_SHMEM || TAU_DMAPP */
 
     /* clock synchronization */
     if (env_tracing == 0) {

@@ -30,7 +30,7 @@
 !$omp threadprivate(t)
 
 
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_1,
      &pomp_if, pomp_num_threads, pomp2_old_task,
@@ -41,8 +41,7 @@
 !$omp+ private(i,j) 
 !$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
 !$omp& if(pomp_if) num_threads(pomp_num_threads) 
-!$omp& shared(/cb000/)
-       call POMP2_Parallel_begin(pomp2_region_1)
+      call POMP2_Parallel_begin(pomp2_region_1)
       call POMP2_Do_enter(pomp2_region_1,
      &"82*regionType=paralleldo*sscl=test5.f:29:37*escl=test5.f:0:"//
      &"0*scheduleType=dynamic**" )
@@ -80,8 +79,7 @@
 !$omp+ firstprivate(j)                copyin(t) reduction(+:l)
 !$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
 !$omp& if(pomp_if) num_threads(pomp_num_threads) 
-!$omp& shared(/cb000/)
-       call POMP2_Parallel_begin(pomp2_region_2)
+      call POMP2_Parallel_begin(pomp2_region_2)
       call POMP2_Sections_enter(pomp2_region_2)
 #line 45 "test5.f"
 !$omp           sections                                     
@@ -120,7 +118,7 @@
       call POMP2_Parallel_join(pomp2_region_2, pomp2_old_task)
 #line 54 "test5.f"
 
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_3,
      &pomp_if, pomp_num_threads, pomp2_old_task,
@@ -130,8 +128,7 @@
 !$omp parallel          
 !$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
 !$omp& if(pomp_if) num_threads(pomp_num_threads) 
-!$omp& shared(/cb000/)
-       call POMP2_Parallel_begin(pomp2_region_3)
+      call POMP2_Parallel_begin(pomp2_region_3)
       call POMP2_Workshare_enter(pomp2_region_3,
      &"68*regionType=parallelworkshare*sscl=test5.f:55:55*escl=tes"//
      &"t5.f:0:0**" )
@@ -149,12 +146,6 @@
       call POMP2_Parallel_join(pomp2_region_3, pomp2_old_task)
 #line 59 "test5.f"
       end program test5
-
-      integer function pomp_get_max_threads000()
-         integer omp_get_max_threads
-         pomp_get_max_threads000=omp_get_max_threads()
-         return
-      end
 
       subroutine POMP2_Init_regions_000()
          include 'test5.f.opari.inc'

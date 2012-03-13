@@ -58,7 +58,7 @@ function evaluate_placeholder(compiler)
   # e.g. transform MPICC="mpiicc -cc=${CC}" to MPICC="mpiicc -cc=gcc",
   # assuming that CC=gcc
   mpi_compiler = "MPI" compiler
-  pattern = "\${" compiler "}"
+  pattern = "{" compiler "}"
   if (mpi_compiler in args_binary) { 
     if (match(args_binary[mpi_compiler], pattern) != 0) {
       sub(pattern, args_binary[compiler], args_binary[mpi_compiler])

@@ -1,9 +1,21 @@
-To use TAU with UPC (Berkeley UPC with GASP), please:
+To use TAU with Cray CCE compilers, please use the following commands:
+% module switch PrgEnv-pgi PrgEnv-cray    or otherwise load PrgEnv-cray
+% ./configure -pdt=<pdtoolkit-3.17+ directory> -arch=craycnl
+% make install
+% cd examples/upc; make
+You may use tau_upc.sh as the UPC compiler for compiling UPC codes. 
+% aprun -n 12 ./CAMEL 0x4925e232
+% pprof
+% paraprof
+With the Cray CCE compilers, TAU builds the DMAPP wrapper and enables the -optDMAPP configuration in TAU_OPTIONS automatically when you use tau_upc.sh. 
+
+
+To use TAU with Berkeley UPC with GASP, please use the following commands:
 
 % ./configure -upcnetwork=mpi -mpi
 % make install
 % setenv TAU_MAKEFILE <taudir>/<arch>/lib/Makefile.tau-upc-mpi
-% tau_cc.sh gasp_test.upc -o gasp_test
+% tau_upc.sh gasp_test.upc -o gasp_test
 % mpirun -np 4 ./gasp_test
 % paraprof
 
@@ -13,7 +25,7 @@ To use compiler based instrumentation for seeing the performance of individual
 user functions, please set:
 % setenv TAU_OPTIONS '-optCompInst -optVerbose'
 
-% tau_cc.sh gasp_test.upc -o gasp_test
+% tau_upc.sh gasp_test.upc -o gasp_test
 % mpirun -np 4 ./gasp_test
 % paraprof
 
@@ -24,8 +36,9 @@ To use a different network, say udp, the same procedure applies but the launch c
 % make install
 % setenv TAU_MAKEFILE <taudir>/<arch>/lib/Makefile.tau-upc-udp
 % setenv TAU_OPTIONS '-optCompInst -optVerbose'     [OPTIONAL]
-% tau_cc.sh gasp_test.upc -o gasp_test
+% tau_upc.sh gasp_test.upc -o gasp_test
 % upcrun -localhost -n 4 ./gasp_test
 % paraprof
 
+You may also use tauupc instead as a shorthand for -optCompInst with tau_upc.sh. 
 For any questions, please contact tau-bugs@cs.uoregon.edu.

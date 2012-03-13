@@ -305,6 +305,9 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 		for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads()
 				.iterator(); it.hasNext();) {
 			Thread thread = it.next();
+			
+			//System.out.print(thread.getNodeID()+": ");
+			
 			for (int f = 0; f < scatterFunctions.length; f++) {
 				if (scatterFunctions[f] != null) {
 					FunctionProfile functionProfile = thread
@@ -314,13 +317,22 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 						values[threadIndex][f] = (float) scatterValueTypes[f]
 								.getValue(functionProfile, scatterMetricIDs[f],
 										ppTrial.getSelectedSnapshot());
+						
+					}
+					else{
+						values[threadIndex][f]=0;
+					}
+						
+						//System.out.print(values[threadIndex][f]+" -- ");
 						maxScatterValues[f] = Math.max(maxScatterValues[f],
 								values[threadIndex][f]);
 						minScatterValues[f] = Math.min(minScatterValues[f],
 								values[threadIndex][f]);
 					}
-				}
+					
+				
 			}
+			System.out.println();
 			threadIndex++;
 		}
 

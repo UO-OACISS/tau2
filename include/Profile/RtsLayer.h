@@ -41,6 +41,11 @@ public:
   RtsLayer () { }  // defaults
   ~RtsLayer () { } 
 
+	static int createThread(void);
+	static void destroyThread(int id);
+	static void recycleThread(int id);
+
+
   static TauGroup_t & TheProfileMask(void);
   static bool& TheEnableInstrumentation(void);
   static bool& TheShutdown(void);
@@ -95,10 +100,16 @@ public:
   // Return the number of the 'current' thread. 0..TAU_MAX_THREADS-1
   static int myThread(void);
 
-  static int getNumThreads();
+  static int threadId(void);
+  
+	static int getNumThreads();
 
   static int getPid();
   static int getTid();
+
+#ifdef KTAU_NG
+  static int getLinuxKernelTid();
+#endif /* KTAU_NG */
 
   static int RegisterThread();
 	
@@ -131,6 +142,7 @@ private:
 };
 
 extern "C" int Tau_RtsLayer_getTid();
+extern "C" int Tau_RtsLayer_createThread();
 
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************

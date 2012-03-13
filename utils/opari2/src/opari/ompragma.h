@@ -120,6 +120,10 @@ public:
     bool
     find_untied( bool disableUntied );
 
+    /** is the default data sharing changed, i.e. is default(none) or default(private) present*/
+    bool
+    changed_default();
+
     /** add descriptors at the right place*/
     virtual void
     add_descr( int n ) = 0;

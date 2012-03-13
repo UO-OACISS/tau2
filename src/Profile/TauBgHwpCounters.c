@@ -116,7 +116,7 @@ void Tau_Bg_hwp_counters_stop(int* numCounters, uint64_t counters[], int* mode, 
 void Tau_Bg_hwp_counters_output(int* numCounters, uint64_t counters[], int* mode, int* error) {
 
     int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
     char metadata_string[1024];
 
     #ifdef COUNTER_REDUCE

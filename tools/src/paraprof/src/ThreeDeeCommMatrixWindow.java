@@ -697,6 +697,9 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         boolean animate = false;
         if (!animate) {
             barPlot.setValues(newHeightValues, newColorValues);
+            if(visRenderer==null){
+            	buildGraphicsPanel();
+            }
             visRenderer.redraw();
 
         } else {
