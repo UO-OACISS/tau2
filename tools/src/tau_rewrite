@@ -305,8 +305,8 @@ fi
 luafile="return {
   run_dir = \"$outputdir\",
   functions_global_blacklist = {
-          {subtype = "stringlist",value = {"call_gmon_start","_init","_fini","_start","frame_dummy"}},
-          {subtype = "regexplist",value = {"^irc__.*","^__do_global_.*","^__libc_csu_.*","^__intel_.*","^__pthread_.*"}}
+          {subtype = \"stringlist\",value = {\"call_gmon_start\",\"_init\",\"_fini\",\"_start\",\"frame_dummy\"}},
+          {subtype = \"regexplist\",value = {\"^irc__.*\",\"^__do_global_.*\",\"^__libc_csu_.*\",\"^__intel_.*\",\"^__pthread_.*\"}}
   },
   at_exit={
           {
@@ -316,7 +316,9 @@ luafile="return {
   },
   main_bin = {
         properties={
-          enable_function_instrumentation = true
+          enable_function_instrumentation = true, 
+          enable_demangling = true, 
+          generate_runfile   = true
         },
         path= \"$outputdir/$baseinfile\",
         output_suffix = \"_inst\",
@@ -338,7 +340,7 @@ luafile="return {
                  name = \"traceEntry\",
                  lib = \"$TAU_INST_LIBRARY\",   
                  params = {
-                            {type = "macro",value = "profiler_id"}
+                            {type = \"macro\",value = \"profiler_id\"}
                  }
               }
             },
@@ -347,14 +349,13 @@ luafile="return {
                  name = \"traceExit\",
                  lib = \"$TAU_INST_LIBRARY\",   
                  params = {
-                   {type = "macro",value = "profiler_id"}
+                   {type = \"macro\",value = \"profiler_id\"}
                  }
               }
             }
           }
         }
-      }
-  }"
+      }"
 echoIfVerbose "$luafile"
 echo "$luafile"> $tauluafile
 
@@ -385,7 +386,7 @@ do
                          name = \"traceEntry\",
                          lib = \"$TAU_INST_LIBRARY\",   
                          params = {
-                            {type = "macro",value = "profiler_id"}
+                            {type = \"macro\",value = \"profiler_id\"}
                          }
                       }
                     },
@@ -394,7 +395,7 @@ do
                          name = \"traceExit\",
                          lib = \"$TAU_INST_LIBRARY\",   
                          params = {
-                           {type = "macro",value = "profiler_id"}
+                           {type = \"macro\",value = \"profiler_id\"}
                          }
                       }
                     }
@@ -445,8 +446,8 @@ else
     /bin/rm -f $outfile_1~ $outfile~
     if [ $shortverbose = "false" -a $verbose = "false" ]
     then
-      /bin/rm -f instru_sessions.lua madras_trace.log tau_instr.log tau_rewrite.lua
+      echo Not executing /bin/rm -f instru_sessions.lua madras_trace.log tau_instr.log tau_rewrite.lua
     fi
-    /bin/rm -f tau_instr.log tau_empty.in
+    #/bin/rm -f tau_instr.log tau_empty.in
   fi
 fi
