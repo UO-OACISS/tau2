@@ -31,11 +31,11 @@ using namespace tau;
 class gpuId {
 
 public:
-	virtual gpuId *getCopy() = 0;
+	virtual gpuId *getCopy() const = 0;
 	virtual char * printId() const = 0;
 	virtual x_uint64 id_p1() = 0;
 	virtual x_uint64 id_p2() = 0;
-	virtual bool equals(const gpuId *other) const = 0;
+	virtual bool less_than(const gpuId *other) const = 0;
 	virtual double syncOffset() = 0;
 	//virtual bool operator<(const gpuId& A) const;
 };
