@@ -1,8 +1,0 @@
-If you are jzam1130 and want to start the bitten-slave for a single build just
-issue the following command from a computer that can access jugene via ssh:
-
-$ ssh -X jzam1130@jugene 'eval `tclsh /usr/local/module/modulecmd.tcl sh autoinit`; module use /homec/kojak/kojak/Software/jugene/modulefiles; module load UNITE subversion silc-dev papi sionlib pdtoolkit; export PATH=/bgsys/drivers/ppcfloor/comm/bin:$PATH; export PYTHONPATH=$HOME/lib/python2.4/site-packages; env > /homec/jzam11/jzam1130/bitten/log/bitten.env; nice -19 /homec/jzam11/jzam1130/bin/bitten-slave --verbose --single --no-loop --log=/homec/jzam11/jzam1130/bitten/log/bitten-scorep-trunk-xl-static-bgp.log --config=/homec/jzam11/jzam1130/bitten/config/scorep-trunk-xl-static-bgp.ini https://silc.zih.tu-dresden.de/trac-silc/builds'
-
-
-E.g. from a cron job, e.g. at minute 23 every three hours:
-23 */3 * * * ssh -X jzam1130@jugene 'eval ...

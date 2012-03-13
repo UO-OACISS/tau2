@@ -98,10 +98,6 @@ public:
     generate_init_handle_calls_f( ostream&    os,
                                   const char* incfile );
 
-    /** Generate the wrapper function pomp_get_max_threads_XXXXXX in every file. */
-    static void
-    generate_pomp_max_threads_wrapper_f( ostream& os );
-
     /** generate a CTC String*/
     string
     generate_ctc_string( Language lang );
@@ -144,10 +140,12 @@ public:
     int        num_sections;
     /** is a nowait added?*/
     bool       noWaitAdded;
-    /** has num_threads clause */
-    bool       has_num_threads;
+    /** has untied clause */
+    bool       has_untied;
     /** has if clause */
     bool       has_if;
+    /** has num_threads clause */
+    bool       has_num_threads;
     /** has reduction clause */
     bool       has_reduction;
     /** has schedule clause */
@@ -158,8 +156,6 @@ public:
     bool       has_collapse;
     /** has ordered clause */
     bool       has_ordered;
-    /** has untied clause */
-    bool       has_untied;
     /**is this an outer region?*/
     bool       outer_reg;
     /** set of relevant region descriptors*/
