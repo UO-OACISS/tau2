@@ -42,8 +42,6 @@
 #define POMP2_Ordered_end_U	POMP2_ORDERED_END
 #define POMP2_Ordered_enter_U	POMP2_ORDERED_ENTER
 #define POMP2_Ordered_exit_U	POMP2_ORDERED_EXIT
-#define POMP2_Get_current_task_U   POMP2_GET_CURRENT_TASK
-#define POMP2_Set_current_task_U   POMP2_SET_CURRENT_TASK
 #define POMP2_Task_begin_U         POMP2_TASK_BEGIN
 #define POMP2_Task_end_U           POMP2_TASK_END
 #define POMP2_Task_create_begin_U  POMP2_TASK_CREATE_BEGIN
@@ -58,6 +56,7 @@
 #define POMP2_Workshare_exit_U	POMP2_WORKSHARE_EXIT
 #define POMP2_Begin_U		POMP2_BEGIN
 #define POMP2_End_U		POMP2_END
+#define POMP2_Lib_get_max_threads_U        POMP2_LIB_GET_MAX_THREADS
 #define POMP2_Init_lock_U	        POMP2_INIT_LOCK
 #define POMP2_Destroy_lock_U	POMP2_DESTROY_LOCK
 #define POMP2_Set_lock_U		POMP2_SET_LOCK
@@ -120,8 +119,6 @@
 #define POMP2_Ordered_end_L	pomp2_ordered_end
 #define POMP2_Ordered_enter_L	pomp2_ordered_enter
 #define POMP2_Ordered_exit_L	pomp2_ordered_exit
-#define POMP2_Get_current_task_L   pomp2_get_current_task
-#define POMP2_Set_current_task_L   pomp2_set_current_task
 #define POMP2_Task_begin_L         pomp2_task_begin
 #define POMP2_Task_end_L           pomp2_task_end
 #define POMP2_Task_create_begin_L  pomp2_task_create_begin
@@ -136,6 +133,7 @@
 #define POMP2_Workshare_exit_L	pomp2_workshare_exit
 #define POMP2_Begin_L		pomp2_begin
 #define POMP2_End_L		pomp2_end
+#define POMP2_Lib_get_max_threads_L        pomp2_lib_get_max_threads
 #define POMP2_Init_lock_L	        pomp2_init_lock
 #define POMP2_Destroy_lock_L	pomp2_destroy_lock
 #define POMP2_Set_lock_L		pomp2_set_lock

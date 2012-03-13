@@ -52,6 +52,7 @@ init_handler( const char* infile,
 
 void
 finalize_handler( const char* incfile,
+                  char*       incfileNoPath,
                   ostream&    os );
 
 phandler_t

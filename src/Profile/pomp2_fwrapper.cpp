@@ -34,17 +34,15 @@
  *              Peter Philippen <p.philippen@fz-juelich.de>
  *
  *  @brief      This file contains fortran wrapper functions.*/
+ extern "C"{
 
 #include <config.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "opari2/pomp2_lib.h"
+#include <opari2/pomp2_lib.h>
 #include "pomp2_fwrapper_def.h"
-
-extern "C"{
-
 
 /*
  * Fortran wrappers calling the C versions
@@ -191,10 +189,11 @@ void FSUB(POMP2_Single_exit)(POMP2_Region_handle* regionHandle ) {
 }
 
 void FSUB(POMP2_Task_create_begin)(POMP2_Region_handle* regionHandle,
+                                   POMP2_Task_handle*   pomp2_new_task,
                                    POMP2_Task_handle*   pomp2_old_task,
                                    int*                 pomp2_if,
                                    char*                ctc_string){
-  POMP2_Task_create_begin(regionHandle, pomp2_old_task, *pomp2_if, ctc_string);
+  POMP2_Task_create_begin(regionHandle, pomp2_new_task, pomp2_old_task, *pomp2_if, ctc_string);
 }
 
 void FSUB(POMP2_Task_create_end)(POMP2_Region_handle* regionHandle,
@@ -212,10 +211,11 @@ void FSUB(POMP2_Task_end)(POMP2_Region_handle* regionHandle){
 }
 
 void FSUB(POMP2_Untied_task_create_begin)(POMP2_Region_handle* regionHandle,
+                                          POMP2_Task_handle*   pomp2_new_task,
                                           POMP2_Task_handle*   pomp2_old_task,
                                           int*                 pomp2_if,
                                           char*                ctc_string){
-  POMP2_Task_create_begin(regionHandle, pomp2_old_task, *pomp2_if, ctc_string);
+  POMP2_Task_create_begin(regionHandle, pomp2_new_task, pomp2_old_task, *pomp2_if, ctc_string);
 }
 
 void FSUB(POMP2_Untied_task_create_end)(POMP2_Region_handle* regionHandle,
@@ -258,5 +258,24 @@ void FSUB(POMP2_Assign_handle)(POMP2_Region_handle* regionHandle, char* ctc_stri
   str[ctc_string_len]='\0';
   POMP2_Assign_handle(regionHandle,str);
   free(str);
+}
+
+/*
+   *----------------------------------------------------------------
+ * Wrapper for omp_get_max_threads used in instrumentation
+ *
+ * In Fortran a wrapper function
+ * pomp2_get_max_threads() is used, since it is not possible to
+ * ensure, that omp_get_max_threads is not used in the user
+ * program. We would need to parse much more of the Fortran
+ * Syntax to detect these cases.  The Wrapper function avoids
+ * double definition of this function and avoids errors.
+ *
+ ******----------------------------------------------------------------
+ */
+int
+FSUB(POMP2_Lib_get_max_threads)()
+{
+  return omp_get_max_threads();
 }
 }
