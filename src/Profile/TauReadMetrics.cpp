@@ -58,11 +58,6 @@ extern "C" int Tau_is_thread_fake(int t);
 #endif
 #include <hwi/include/common/uci.h>
 
-
-#define BGQ_GROUP_ON_NODEBOARD
-
-
-
 #endif /* TAU_BGQ */
 
 #ifdef TAU_PAPI
@@ -160,9 +155,6 @@ void metric_read_clock_gettime(int tid, int idx, double values[]) {
 #endif
 }
 
-#ifdef TAU_BGQ
-static Personality_t tau_bgq_personality;
-#endif /* TAU_BGQ */
 
 /* bgl/bgp timers */
 void metric_read_bgtimers(int tid, int idx, double values[]) {
@@ -197,8 +189,9 @@ void metric_read_bgtimers(int tid, int idx, double values[]) {
 #ifdef BGQ_TIMERS
   static double bgq_clockspeed = 0.0;
   if (bgq_clockspeed < 1e-8) {
-    Kernel_GetPersonality(&tau_bgq_personality, sizeof(Personality_t));
-    bgq_clockspeed = 1.0/ (double)(tau_bgq_personality.Kernel_Config.FreqMHz);
+    static Personality_t mybgq;
+    Kernel_GetPersonality(&mybgq, sizeof(Personality_t));
+    bgq_clockspeed = 1.0/ (double)(mybgq.Kernel_Config.FreqMHz);
   }
   values[idx] =  (GetTimeBase() * bgq_clockspeed);
 
