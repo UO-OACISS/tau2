@@ -1,6 +1,7 @@
 #include <Profile/TauGpu.h>
 #include <cuda.h>
 #include <cupti.h>
+#include <sstream>
 
 #if CUPTI_API_VERSION >= 2
 
@@ -99,9 +100,9 @@ class cuptiRecord : public eventId {
 	FunctionInfo *callingSite;
 
 public:
-	cuptiRecord(const char* n, cuptiGpuId *id, FunctionInfo *site, TauGpuContextMap *m) : eventId(n, id, site, m)
-	{
-	};
+	//cuptiRecord(const char* n, cuptiGpuId *id, FunctionInfo *site, TauGpuContextMap *m) : eventId(n, id, site, m)
+	//{
+	//};
 	cuptiRecord(const char* n, uint32_t stream, uint32_t correlation, TauGpuContextMap *m) : eventId(n, &cuptiGpuId(stream, correlation), getParentFunction(correlation), m) {};
 
 	FunctionInfo* getParentFunction(uint32_t id)
@@ -125,4 +126,12 @@ public:
 		count = ((name##_v3020_params *) info->functionParams)->count; \
 	}
 
+#define S(x) #x
+#define SX(x) S(x)
+#define RECORD_DEVICE_METADATA(name, device) \
+  std::ostringstream str_##name; \
+	str_##name << device->name; \
+	Tau_metadata("GPU " SX(name), str_##name.str().c_str()); 
+
 #endif
+

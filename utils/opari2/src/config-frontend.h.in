@@ -1,17 +1,5 @@
 /* ../src/config-frontend.h.in.  Generated from configure.ac by autoheader.  */
 
-/* [] */
-#undef BAR_MANGLED
-
-/* [] */
-#undef BAZ_MANGLED
-
-/* [] */
-#undef FOOBAR_MANGLED
-
-/* [] */
-#undef FOO_MANGLED
-
 /* Alignment attribute not supported */
 #undef FORTRAN_ALIGNED
 
@@ -75,6 +63,12 @@
 
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
+
+/* Revision of common repository */
+#undef SCOREP_COMMON_REVISION
+
+/* Revision of ${PACKAGE_NAME} */
+#undef SCOREP_COMPONENT_REVISION
 
 /* Defined if we are working from svn. */
 #undef SCOREP_IN_DEVELOPEMENT

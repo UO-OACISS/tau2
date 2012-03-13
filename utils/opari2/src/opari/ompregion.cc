@@ -59,8 +59,8 @@ OMPRegion::OMPRegion( const string& n,
       end_first_line( 0 ), end_last_line( 0 ),
       num_sections( 0 ), noWaitAdded( false ), has_untied( false ),
       has_if( false ), has_num_threads( false ), has_reduction( false ),
-      has_schedule( false ), has_collapse( false ), has_ordered( false ),
-      outer_reg( outr ), enclosing_reg( 0 )
+      has_schedule( false ), arg_schedule( "" ), has_collapse( false ),
+      has_ordered( false ), outer_reg( outr ), enclosing_reg( 0 )
 {
     enclosing_reg = outer_ptr;
     if ( outer_reg )
@@ -84,8 +84,8 @@ OMPRegion::OMPRegion( const OMPRegion& parent,
       end_first_line( 0 ), end_last_line( 0 ),
       num_sections( 0 ), noWaitAdded( false ), has_untied( false ),
       has_if( false ), has_num_threads( false ), has_reduction( false ),
-      has_schedule( false ), has_collapse( false ), has_ordered( false ),
-      outer_reg( outr ), enclosing_reg( 0 )
+      has_schedule( false ), arg_schedule( "" ), has_collapse( false ),
+      has_ordered( false ), outer_reg( outr ), enclosing_reg( 0 )
 {
     enclosing_reg = outer_ptr;
     if ( outer_reg )
@@ -142,19 +142,7 @@ OMPRegion::generate_init_handle_calls_f( ostream& os, const char* incfile )
            << "      end\n";
     }
 }
-/** @brief Generate the wrapper function pomp_get_max_threads_XXXXXX in every file. */
-void
-OMPRegion::generate_pomp_max_threads_wrapper_f( ostream& os )
-{
-    if ( OMPRegion::init_handle_calls.rdbuf()->in_avail() != 0 )
-    {
-        os << "\n      integer function pomp_get_max_threads" << compiletime.tv_sec << compiletime.tv_usec << "()\n"
-           <<  "         integer omp_get_max_threads\n"
-           <<  "         pomp_get_max_threads" << compiletime.tv_sec << compiletime.tv_usec << "=omp_get_max_threads()\n"
-           <<  "         return\n"
-           <<  "      end\n";
-    }
-}
+
 /** @brief Generate a function to allow initialization of all ompregion handles for C++.
  *         The function uses extern "C" to avoid complicate name mangling issues.*/
 void
@@ -192,7 +180,10 @@ OMPRegion::generate_init_handle_calls_c( ostream& os )
 void
 OMPRegion::finalize_descrs( ostream& os, Language lang )
 {
-    os << "      integer pomp_get_max_threads" << compiletime.tv_sec << compiletime.tv_usec << "\n";
+    os << "\n      integer pomp2_lib_get_max_threads";
+    os << "\n      logical pomp2_test_lock";
+    os << "\n      integer pomp2_test_nest_lock\n";
+
     if ( !common_block.empty() )
     {
         vector<int>::iterator it = common_block.begin();
@@ -243,7 +234,6 @@ OMPRegion::generate_ctc_string( Language lang )
 {
     stringstream stream1, stream2;
     string       ctc_string;
-    int          i;
 
     stream1 << "*regionType=" << name             << "*"
             << "sscl="  << file_name        << ":"
@@ -308,14 +298,14 @@ OMPRegion::generate_ctc_string( Language lang )
     {
         if ( lang & L_F77 )
         {
-            for ( i = 58; i < ctc_string.size(); i += 68 )
+            for ( unsigned int i = 58; i < ctc_string.size() - 1; i += 68 )
             {
                 ctc_string.insert( i, "\"//\n     &\"" );
             }
         }
         else
         {
-            for ( i = 58; i < ctc_string.size(); i += 68 )
+            for ( unsigned int i = 58; i < ctc_string.size() - 1; i += 68 )
             {
                 ctc_string.insert( i, "\"//&\n      \"" );
             }

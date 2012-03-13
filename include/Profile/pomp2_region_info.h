@@ -22,11 +22,9 @@
 **                                                                         **
 **  See the file COPYRIGHT in the package base directory for details       **
 ****************************************************************************/
-  #ifdef __cplusplus
-  extern "C" {
-  #endif
-
-
+#ifdef __cplusplus
+ extern "C" {
+#endif
 #ifndef POMP2_REGION_INFO_H
 #define POMP2_REGION_INFO_H
 
@@ -43,7 +41,7 @@
  *
  */
 
-//#include <stdint.h>
+#include <stdbool.h>
 
 /**
  * POMP2_Region_type
@@ -75,7 +73,8 @@ typedef enum /* POMP2_Region_type */
 } POMP2_Region_type;
 
 /** converts regionType into a string
- * @param regionType The regionType to be converted.*/
+ * @param regionType The regionType to be converted.
+ * @return string representation of the region type*/
 const char*
 pomp2RegionType2String( POMP2_Region_type regionType );
 
@@ -94,7 +93,8 @@ typedef enum
 } POMP2_Schedule_type;
 
 /** converts scheduleType into a string
- *  @param scheduleType The scheduleType to be converted.*/
+ *  @param scheduleType The scheduleType to be converted.
+ *  @return string representation of the scheduleType*/
 const char*
 pomp2ScheduleType2String( POMP2_Schedule_type scheduleType );
 
@@ -129,23 +129,28 @@ typedef struct
      */
     /*@{*/
     /**true if a copyin clause is present*/
-    int                mHasCopyIn;
+    bool mHasCopyIn;
     /**true if a copyprivate clause is present*/
-    int                mHasCopyPrivate;
+    bool mHasCopyPrivate;
     /**true if an if clause is present*/
-    int                mHasIf;
+    bool mHasIf;
     /**true if a firstprivate clause is present*/
-    int                mHasFirstPrivate;
+    bool mHasFirstPrivate;
     /**true if a lastprivate clause is present*/
-    int                mHasLastPrivate;
+    bool mHasLastPrivate;
     /**true if a nowait clause is present*/
-    int                mHasNoWait;
+    bool mHasNoWait;
     /**true if a numThreads clause is present*/
-    int                mHasNumThreads;
+    bool mHasNumThreads;
     /**true if an ordered clause is present*/
-    int                mHasOrdered;
+    bool mHasOrdered;
     /**true if a reduction clause is present*/
-    int                mHasReduction;
+    bool mHasReduction;
+    /**true if a collapse clause is present*/
+    bool mHasCollapse;
+    /**true if a untied clause was present, even if the task was changed to tied
+       during instrumentation.*/
+    bool                mHasUntied;
     /** schedule type in the schedule clause*/
     POMP2_Schedule_type mScheduleType;
     /** user group name*/
@@ -211,7 +216,7 @@ freePOMP2RegionInfoMembers( POMP2_Region_info* regionInfo );
 
 
 #endif /* POMP2_REGION_INFO_H */
- #ifdef __cplusplus
-  }
-  #endif
 
+#ifdef __cplusplus
+}
+#endif

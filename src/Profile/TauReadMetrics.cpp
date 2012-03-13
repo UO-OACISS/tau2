@@ -47,6 +47,24 @@ extern "C" int Tau_is_thread_fake(int t);
 #  endif /* TAU_BGPTIMERS */
 #endif /* TAU_BGP */
 
+#ifdef TAU_BGQ
+# ifdef BGQ_TIMERS
+/* header files for IBM BlueGene/Q */
+#include <firmware/include/personality.h>
+#include <spi/include/kernel/process.h>
+#include <spi/include/kernel/location.h>
+#ifdef __GNUC__
+#include <hwi/include/bqc/A2_inlines.h>   
+#endif
+#include <hwi/include/common/uci.h>
+
+#endif /* BGQ_TIMERS */
+#define BGQ_GROUP_ON_NODEBOARD
+
+
+
+#endif /* TAU_BGQ *./
+
 #ifdef TAU_PAPI
 extern "C" {
 #include "papi.h"
@@ -142,6 +160,10 @@ void metric_read_clock_gettime(int tid, int idx, double values[]) {
 #endif
 }
 
+#ifdef TAU_BGQ
+static Personality_t tau_bgq_personality;
+#endif /* TAU_BGQ */
+
 /* bgl/bgp timers */
 void metric_read_bgtimers(int tid, int idx, double values[]) {
 #ifdef TAU_BGL
@@ -170,6 +192,22 @@ void metric_read_bgtimers(int tid, int idx, double values[]) {
   values[idx] = 0;
 #endif /* TAU_BGPTIMERS */
 #endif /* TAU_BGP */
+  
+#ifdef TAU_BGQ 
+#ifdef BGQ_TIMERS
+  static double bgq_clockspeed = 0.0;
+  if (bgq_clockspeed < 1e-8) {
+    Kernel_GetPersonality(&tau_bgq_personality, sizeof(Personality_t));
+    bgq_clockspeed = 1.0/ (double)(tau_bgq_personality.Kernel_Config.FreqMHz);
+  }
+  values[idx] =  (GetTimeBase() * bgq_clockspeed);
+
+#else /* TAU_BGQ */
+  printf("TAU: Error: You must specify -BGQTIMERS at configure time\n");
+  values[idx] = 0;
+#endif /* TAU_BGQTIMERS */
+#endif /* TAU_BGQ */
+  
 }
 
 /* cray timers */
