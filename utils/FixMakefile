@@ -1054,12 +1054,24 @@ case $1 in
 	echo "NOTE: *** Using gfortran. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     BGQ)
+	echo "NOTE: *** IBM BlueGene/Q development environment found. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     BGQ_GFORTRAN)
+	echo "NOTE: *** Using gfortran. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      ZEPTO_GFORTRAN)
 	echo "NOTE: *** Using ZeptoOS BGP gfortran. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      BGPPAPI)
 	echo "NOTE: *** IBM BlueGene/P PAPI found. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     BGQPAPI)
+	echo "NOTE: *** IBM BlueGene/Q PAPI found. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      T3D)
@@ -1369,6 +1381,10 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      BGPTIMERS)
+	echo "NOTE: Using IBM BlueGene/Q Fast Low-Overhead Timers for Profiling"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     BGQTIMERS)
 	echo "NOTE: Using IBM BlueGene/P Fast Low-Overhead Timers for Profiling"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;

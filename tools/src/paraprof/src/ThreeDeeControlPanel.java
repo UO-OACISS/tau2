@@ -576,7 +576,10 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         functionButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 try {
-                	String fname = "   <none>";
+                	
+                	String fname = functionField.getText();
+                	if(fname==null||fname.length()==0) 
+                		fname = "   <none>";
                 	
                 	if(!atomic.isSelected()){
                 	
@@ -754,7 +757,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                     boolean useCustom=topoComboBox.getSelectedIndex()>customTopoDex+1;
                     settings.setCustomTopo(useCustom);
                     
-                    switchTopoSelectPanels(topoComboBox.getSelectedItem().equals(CUSTOM));
+                    switchTopoSelectPanels(!topoComboBox.getSelectedItem().equals(CUSTOM));
                     
                     boolean useMap=topoComboBox.getSelectedIndex()==customTopoDex+1;
                     if(useMap){
@@ -1336,8 +1339,10 @@ JButton mapFileButton = new JButton("map");
          gbc.weightx = 0.1;
          //addCompItem(panel, new JLabel("Topology"), gbc, 0, 8, 1, 1);
          addCompItem(panel, createTopoSelectionPanel("Topology"), gbc, 0, 7, 2, 1);
-         
-         this.topoComboBox.setSelectedIndex(0);
+         if(topoComboBox.getItemCount()>this.selectedTopoDex)
+        	 this.topoComboBox.setSelectedIndex(this.selectedTopoDex);
+         else
+        	 this.topoComboBox.setSelectedIndex(0);
     	
          return panel;
     	
@@ -1460,7 +1465,7 @@ JButton mapFileButton = new JButton("map");
         
         resetTopoAxisSliders(false);
 
-        switchTopoSelectPanels(topoComboBox.getSelectedItem().equals(CUSTOM));
+        switchTopoSelectPanels(!topoComboBox.getSelectedItem().equals(CUSTOM));
         topoCreated=true;
         return panel;
 
@@ -1471,7 +1476,7 @@ JButton mapFileButton = new JButton("map");
         	for(int i=0;i<3;i++)
         	{
         		firstSet=true;
-        		this.selectAxisSliders[i].setMaximum(window.tsizes[i]-1);
+        		this.selectAxisSliders[i].setMaximum(window.tsizes[i]);
         		if(window.tsizes[i]<=1){
         			selectAxisSliders[i].setEnabled(false);
         		}else
