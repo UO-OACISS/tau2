@@ -1,4 +1,4 @@
-MPICC=mpiicc -cc=${CC}
-MPICXX=mpiicpc -cxx=${CXX}
-MPIF77=mpiifort -fc=${F77}
-MPIFC=mpiifort -fc=${FC}
+MPICC=mpiicc -cc={CC}
+MPICXX=mpiicpc -cxx={CXX}
+MPIF77=mpiifort -fc={F77}
+MPIFC=mpiifort -fc={FC}

@@ -85,6 +85,8 @@ public:
     std::string egrep;
     /** version information*/
     std::string version;
+    /** pomp2 api version information*/
+    std::string pomp2_api_version;
     /** awk script to use */
     std::string script;
     /** include path for installed headers */

@@ -339,7 +339,7 @@ CuAssertPtrEquals_LineMsg( CuTest*     tc,
     {
         return;
     }
-    sprintf( buf, "expected pointer <0x%p> but was <0x%p>", expected, actual );
+    sprintf( buf, "expected pointer <%p> but was <%p>", expected, actual );
     CuFail_Line( tc, file, line, message, buf );
 }
 
