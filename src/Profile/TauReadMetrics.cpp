@@ -48,7 +48,7 @@ extern "C" int Tau_is_thread_fake(int t);
 #endif /* TAU_BGP */
 
 #ifdef TAU_BGQ
-# ifdef BGQ_TIMERS
+
 /* header files for IBM BlueGene/Q */
 #include <firmware/include/personality.h>
 #include <spi/include/kernel/process.h>
@@ -58,7 +58,7 @@ extern "C" int Tau_is_thread_fake(int t);
 #endif
 #include <hwi/include/common/uci.h>
 
-#endif /* BGQ_TIMERS */
+
 #define BGQ_GROUP_ON_NODEBOARD
 
 
