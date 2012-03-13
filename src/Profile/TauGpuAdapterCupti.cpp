@@ -36,6 +36,10 @@ void Tau_cupti_onload()
 	//setup activity queue.
 	activityBuffer = (uint8_t *)malloc(ACTIVITY_BUFFER_SIZE);
 	err = cuptiActivityEnqueueBuffer(NULL, 0, activityBuffer, ACTIVITY_BUFFER_SIZE);
+ 	
+	//to collect device info 
+	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_DEVICE);
+	
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY);
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_KERNEL);
 	CUDA_CHECK_ERROR(err, "Cannot enqueue buffer.\n");
@@ -194,7 +198,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 		{	
       CUpti_ActivityMemcpy *memcpy = (CUpti_ActivityMemcpy *)record;
 			//cerr << "recording memcpy: " << memcpy->end - memcpy->start << "ns.\n" << endl;
-			
+		  //cerr << "recording memcpy on device: " << memcpy->streamId << "/" << memcpy->runtimeCorrelationId << endl;
 			cuRec = new cuptiRecord(TAU_GPU_USE_DEFAULT_NAME, memcpy->streamId, memcpy->runtimeCorrelationId, NULL); 
 			Tau_gpu_register_memcpy_event(
 				*cuRec,
@@ -240,6 +244,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 				//printf("correlationid: %d.\n", id);
 			}
 			name = demangleName(kernel->name);
+		  //cerr << "recording kernel on device: " << kernel->streamId << "/" << id << endl;
 			cuRec = new cuptiRecord(name, kernel->streamId, id, &map);
 			Tau_gpu_register_gpu_event(
 				*cuRec, 
@@ -247,6 +252,39 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 				kernel->end / 1e3);
 				
 				break;
+		}
+  	case CUPTI_ACTIVITY_KIND_DEVICE:
+		{
+
+			static bool recorded_metadata = false;
+			if (!recorded_metadata)
+			{
+
+				CUpti_ActivityDevice *device = (CUpti_ActivityDevice *)record;
+				
+				//first the name.
+				Tau_metadata("GPU Name", device->name);
+
+				//the rest.
+				RECORD_DEVICE_METADATA(computeCapabilityMajor, device);
+				RECORD_DEVICE_METADATA(computeCapabilityMinor, device);
+				RECORD_DEVICE_METADATA(constantMemorySize, device);
+				RECORD_DEVICE_METADATA(coreClockRate, device);
+				RECORD_DEVICE_METADATA(globalMemoryBandwidth, device);
+				RECORD_DEVICE_METADATA(globalMemorySize, device);
+				RECORD_DEVICE_METADATA(l2CacheSize, device);
+				RECORD_DEVICE_METADATA(maxIPC, device);
+				RECORD_DEVICE_METADATA(maxRegistersPerBlock, device);
+				RECORD_DEVICE_METADATA(maxSharedMemoryPerBlock, device);
+				RECORD_DEVICE_METADATA(maxThreadsPerBlock, device);
+				RECORD_DEVICE_METADATA(maxWarpsPerMultiprocessor, device);
+				RECORD_DEVICE_METADATA(numMemcpyEngines, device);
+				RECORD_DEVICE_METADATA(numMultiprocessors, device);
+				RECORD_DEVICE_METADATA(numThreadsPerWarp, device);
+			
+				recorded_metadata = true;
+			}
+			break;
 		}
 	}
 }

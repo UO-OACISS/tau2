@@ -29,7 +29,7 @@ $F77 -I$INCDIR $OPENMP $FFLAGS -c jacobi.mod.F
 $F77 -I$INCDIR $OPENMP $FFLAGS -c main.mod.F
 
 #make build
-@NM@ jacobi.mod.o main.mod.o | @EGREP@ -i "T \.{0,1}_{0,2}pomp2_init_regions" | `$OPARI2_CONFIG --awk_cmd` -f `$OPARI2_CONFIG --awk_script`> pomp_init_file.c
+@NM@ jacobi.mod.o main.mod.o | @EGREP@ -i "T \.{0,1}_{0,2}pomp2_init_regions" | `$OPARI2_CONFIG --awk-cmd` -f `$OPARI2_CONFIG --awk-script`> pomp_init_file.c
 $CC -I$INCDIR  -c pomp_init_file.c
 $F77 $OPENMP $FFLAGS pomp_init_file.o jacobi.mod.o main.mod.o $LDFLAGS -o jacobi$EXEEXT
 
