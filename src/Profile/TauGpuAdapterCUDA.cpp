@@ -28,7 +28,7 @@ static double lastEventTime = 0;
 //call to cudaEventQuery that does not register a sync event.
 extern cudaError_t cudaEventQuery_nosync(cudaEvent_t a);
 
-cudaRuntimeGpuId *cudaRuntimeGpuId::getCopy() { 
+cudaRuntimeGpuId *cudaRuntimeGpuId::getCopy() const { 
 		//printf("in runtime, getCopy.\n");
 		//return this;
 		cudaRuntimeGpuId *c = new cudaRuntimeGpuId(*this);
@@ -44,11 +44,18 @@ bool cudaRuntimeGpuId::operator<(const cudaGpuId& other) const
 	else
 		return device < other.device;
 }*/
-bool cudaRuntimeGpuId::equals(const gpuId *o) const 
+bool cudaRuntimeGpuId::less_than(const gpuId *o) const 
 {
-	//cout << "in equals." << endl;
 	cudaRuntimeGpuId *other = (cudaRuntimeGpuId *) o;
-	return (this->device == other->device && this->stream == other->stream);
+	//cout << "checking" << printId() << " < " << other->printId() << endl;
+	if (this->device == other->device)
+	{
+		return this->stream < other->stream;
+	}
+	else
+	{
+		return this->device < other->device;
+	}	
 }
 
 double cudaRuntimeGpuId::syncOffset()
@@ -68,7 +75,7 @@ cudaStream_t cudaRuntimeGpuId::getStream() { return stream; }
 int cudaRuntimeGpuId::getDevice() { return device; }
 CUcontext cudaRuntimeGpuId::getContext() { return 0; }
 
-cudaDriverGpuId *cudaDriverGpuId::getCopy() { 
+cudaDriverGpuId *cudaDriverGpuId::getCopy() const { 
 		//printf("in driver, getCopy.\n");
 		//return this;
 		cudaDriverGpuId *c = new cudaDriverGpuId(*this);
@@ -87,12 +94,25 @@ bool cudaDriverGpuId::operator<(const cudaGpuId& other) const
 	else
 		return device < other.device;
 }*/
-bool cudaDriverGpuId::equals(const gpuId *o) const 
+bool cudaDriverGpuId::less_than(const gpuId *o) const 
 {
 	//cout << "in equals." << endl;
 	cudaDriverGpuId *other = (cudaDriverGpuId *) o;
-	return (this->device == other->device && this->stream == other->stream &&
-					this->context == other->context); 
+	if (this->device == other->device)
+	{
+		if (this->stream == other->stream)
+		{
+			return this->context < other->context;
+		}
+		else
+		{	
+			return this->stream < other->stream;
+		}
+	}
+	else
+	{
+		return this->device < other->device;
+	}
 }
 
 double cudaDriverGpuId::syncOffset()
@@ -424,7 +444,7 @@ void Tau_cuda_register_sync_event()
 
 		//Create cudaGpuId for stream.
 		//cudaGpuId *id = new cudaGpuId(kernel.id.getDevice(), kernel.id.getContext(), kernel.id.getStream());
-		//cout << "in sync event, stream id is: " << id->printId() << endl;
+		//cout << "in sync event, stream id is: " << kernel.device->printId() << endl;
 		//printf("last event time: %f.\n", lastEventTime);
 		//printf("stop time: %f.\n", stop_sec);
 
