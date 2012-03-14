@@ -154,6 +154,66 @@ static inline unsigned long get_fp(void *p) {
   return fp;
 }
 
+bool Tau_unwind_unwindTauContext(int tid, unsigned long *addresses) {
+  ucontext_t context;
+  int ret = getcontext(&context);
+
+  if (ret != 0) {
+    fprintf(stderr, "TAU: Error getting context\n");
+    return false;
+  }
+
+  std::vector<Frame> stackwalk;
+  string s;
+  Dyninst::MachRegisterVal unwind_ip;
+
+  unsigned long pc = get_pc(&context);
+  unsigned long sp = get_sp(&context);
+  unsigned long fp = get_fp(&context);
+  Frame *startFrame = Frame::newFrame((Dyninst::MachRegisterVal)pc,
+				      (Dyninst::MachRegisterVal)sp,
+				      (Dyninst::MachRegisterVal)fp,
+				      walker);
+
+  bool success = false;
+  int count = 0;
+  int idx = 1;
+  Dyninst::MachRegisterVal last_address = 0;
+  // StackWalkerAPI is not thread-safe
+  RtsLayer::LockDB();
+  //  success = walker->walkStack(stackwalk);
+  success = walker->walkStackFromFrame(stackwalk, *startFrame);
+  if (success) {
+    //    printf("Stackwalk size = %d\n", stackwalk.size());
+    for (unsigned i = 0; i < stackwalk.size(); i++) {
+      if (idx < TAU_SAMP_NUM_ADDRESSES) {
+	//	stackwalk[i].getName(s);
+	//	printf("[%d] %s\n", i, s.c_str());
+	unwind_ip = stackwalk[i].getRA();
+	if (unwind_ip == last_address) {
+	  continue;
+	}
+	addresses[idx++] = (unsigned long)unwind_ip;
+	last_address = unwind_ip;
+	count++;
+	//	printf("[%d] context unwind [%p]\n", i, (void *)unwind_ip);
+      } else {
+	break;
+      }
+    }
+    if (count > 0) {
+      addresses[0] = count;
+      return true;
+    } else {
+      return false;
+    }
+  } else {
+    return false;
+  }
+  // StackWalkerAPI is not thread-safe
+  RtsLayer::UnLockDB();
+}
+
 void Tau_sampling_unwindTauContext(int tid, void **addresses) {
   ucontext_t context;
   int ret = getcontext(&context);
@@ -174,8 +234,6 @@ void Tau_sampling_unwindTauContext(int tid, void **addresses) {
 				      (Dyninst::MachRegisterVal)sp,
 				      (Dyninst::MachRegisterVal)fp,
 				      walker);
-
-  vector<unsigned long> *pcStack = new vector<unsigned long>();
 
   bool success = false;
   int idx = 0;

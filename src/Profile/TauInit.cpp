@@ -151,11 +151,11 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context) {
           char gdb_in_file[256];
           char gdb_out_file[256];
 
-#ifndef TAU_WINDOWS
 	  if (TauEnv_get_callsite()) {
 	    finalizeCallSites_if_necessary();
 	  }
 
+#ifndef TAU_WINDOWS
 	  if (TauEnv_get_ebs_enabled()) {
 	    // *CWL* - If sampling is active, get it to stop and finalize immediately,
 	    //         we are about to halt execution!

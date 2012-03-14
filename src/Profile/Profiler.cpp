@@ -265,22 +265,18 @@ void Profiler::Start(int tid) {
   /*** Extras ***/
   /********************************************************************************/
 
-#ifdef TAU_UNWIND
   // An initialization of sorts. Call Paths (if any) will update this.
   if (TauEnv_get_callsite() == 1) {
     CallSiteAddPath(NULL, tid);
   }
-#endif /* TAU_UNWIND */
 
   if (TauEnv_get_callpath()) {
     CallPathStart(tid);
   }
 
-#ifdef TAU_UNWIND
   if (TauEnv_get_callsite() == 1) {
     CallSiteStart(tid);
   }
-#endif /* TAU_UNWIND */
 
 #ifdef TAU_PROFILEPARAM
   ProfileParamFunction = NULL;
@@ -324,11 +320,9 @@ void Profiler::Start(int tid) {
   // Increment the parent's NumSubrs()
   if (ParentProfiler != 0) {
     ParentProfiler->ThisFunction->IncrNumSubrs(tid);	
-#ifdef TAU_UNWIND
     if (ParentProfiler->CallSiteFunction != NULL) {
       ParentProfiler->CallSiteFunction->IncrNumSubrs(tid);
     }
-#endif /* TAU_UNWIND */    
   }
   
   // If this function is not already on the call stack, put it
@@ -514,13 +508,10 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   if (TauEnv_get_callpath()) {
     CallPathStop(TotalTime, tid);
   }
-#ifdef TAU_UNWIND
-  // *CWL* - This is not symmetric with CallSiteStart because the former needs 
-  //         CallPath's path key.
+
   if (TauEnv_get_callsite()) {
     CallSiteStop(TotalTime, tid);
   }
-#endif /* TAU_UNWIND */    
 
 #ifdef RENCI_STFF
   if (TauEnv_get_callpath()) {
@@ -563,7 +554,6 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 	CallPathFunction->ResetExclTimeIfNegative(tid); 
       }
     }
-#ifdef TAU_UNWIND
     if (TauEnv_get_callsite()) {
       if (ParentProfiler != NULL) {
 	if (CallSiteFunction != NULL) {
@@ -571,7 +561,6 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 	}
       }
     }
-#endif /* TAU_UNWIND */
 
 #ifdef TAU_PROFILEPARAM
     if (ProfileParamFunction != NULL) {
@@ -1226,11 +1215,9 @@ int TauProfiler_StoreData(int tid) {
   
 #ifndef TAU_WINDOWS  
 
-#ifdef TAU_UNWIND
   if (TauEnv_get_callsite()) {
     finalizeCallSites_if_necessary();
   }
-#endif /* TAU_UNWIND */
 
   if (TauEnv_get_ebs_enabled()) {
     // Tau_sampling_finalize(tid);

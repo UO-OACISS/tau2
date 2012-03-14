@@ -818,8 +818,6 @@ void TauEnv_initialize() {
       }
     }
 
-#ifdef TAU_UNWIND
-    // *CWL* - No callsite discovery without unwinders.
     tmp = getconf("TAU_CALLSITE");
     if (parse_bool(tmp, TAU_CALLSITE_DEFAULT)) {
       env_callsite = 1;
@@ -838,7 +836,6 @@ void TauEnv_initialize() {
     TAU_VERBOSE("TAU: Callsite Depth Limit = %d\n", env_callsite_limit);
     sprintf(tmpstr, "%d", env_callsite_limit);
     TAU_METADATA("TAU_CALLSITE_LIMIT", tmpstr);
-#endif /* TAU_UNWIND */
 
 #if (defined(TAU_MPI) || defined(TAU_SHMEM) || defined(TAU_DMAPP))
     /* track comm (opposite of old -nocomm option) */
