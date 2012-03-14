@@ -218,6 +218,10 @@ void InitSnapshot(){
 
 void writeStringXML(string *stringIn) {
 
+	cout << "Pointer: " << stringIn << endl;
+
+	cout << "Printing: " << *stringIn << endl;
+
   const char* s = stringIn->c_str();
   if (!s) return;
 
@@ -301,9 +305,18 @@ void SnapshotDefs(){
 	stateCount!=Converter::allstate.end(); stateCount++)
 	{
 		//cout << "With shots: " << Converter::statenames[(*stateCount).second.stateToken] << " Index: " << (*stateCount).second.stateToken << endl;
+
+		string* checkstate = Converter::statenames[(*stateCount).second->stateToken];
+		if(checkstate==0)
+			break;
+
+		string* checkgroup = Converter::groupnames[(*stateCount).second->stateGroupToken];
+		if(checkgroup==0)
+				break;
+
 		snapshot << "<event id=\""<< (*stateCount).second->stateToken << "\" name=\"";
-		 writeStringXML(Converter::statenames[(*stateCount).second->stateToken]); snapshot << "\" group=\"";
-		 writeStringXML(Converter::groupnames[(*stateCount).second->stateGroupToken]);
+		 writeStringXML(checkstate); snapshot << "\" group=\"";
+		 writeStringXML(checkgroup);
 		 snapshot << "\"/>" << endl;
 
 		//cout << "With shots2: " << Converter::statenames[(*stateCount).second.stateToken] << " Index: " << (*stateCount).second.stateToken << endl;
