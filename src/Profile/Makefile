@@ -130,7 +130,7 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauMemoryWrap.o \
 		TauInit.o Comp_intel9.o Comp_pgi.o Comp_xl.o Comp_gnu.o \
 		TauCallPath.o \
                 TauXML.o TauUtil.o TauSnapshot.o TauUnify.o TauCollate.o \
-		TauMonCommon.o TauMonMrnet.o \
+		TauMonCommon.o TauMonMrnet.o TauCallSite.o \
 		$(PARAM_O) Tracer.o TauMetrics.o TauReadMetrics.o $(THR_O) \
 		$(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
 		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) $(TAU_SAMPLING_O) \
@@ -638,6 +638,9 @@ TauMonCommon.o	: TauMonCommon.cpp $(HDRS)
 
 TauMonMrnet.o	: TauMonMrnet.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) $(MRNET_INCLUDE) -c $(@:.o=.cpp)
+
+TauCallSite.o	: TauCallSite.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauCollate.o 	: TauCollate.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) $(TAU_MPI_INCLUDE) -c $(@:.o=.cpp)

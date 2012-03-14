@@ -211,15 +211,36 @@ void Profiler::CallPathStart(int tid) {
 					    ThisFunction->GetProfileGroup(), 
 					    (const char*) grname.c_str(), true);
 	TheCallPathMap().insert(map<TAU_CALLPATH_MAP_TYPE>::value_type(comparison, CallPathFunction));
+
+#ifdef TAU_UNWIND
+	if (TauEnv_get_callsite() == 1) {
+	  CallSiteAddPath(comparison, tid);
+	}
+#endif /* TAU_UNWIND */
+
       } else {
 	CallPathFunction = (*it).second; 
 	DEBUGPROFMSG("ROUTINE "<<(*it).second->GetName()<<" first = "<<(*it).first<<endl;);
+
+#ifdef TAU_UNWIND
+	if (TauEnv_get_callsite() == 1) {
+	  CallSiteAddPath(comparison, tid);
+	}
+#endif /* TAU_UNWIND */
+
 	delete[] comparison; // free up memory when name is found
       }
       RtsLayer::UnLockEnv();
     } else {
       CallPathFunction = (*it).second; 
       DEBUGPROFMSG("ROUTINE "<<(*it).second->GetName()<<" first = "<<(*it).first<<endl;);
+
+#ifdef TAU_UNWIND
+	if (TauEnv_get_callsite() == 1) {
+	  CallSiteAddPath(comparison, tid);
+	}
+#endif /* TAU_UNWIND */
+
       delete[] comparison; // free up memory when name is found
     }
     
