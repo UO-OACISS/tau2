@@ -446,7 +446,8 @@ else
     /bin/rm -f $outfile_1~ $outfile~
     if [ $shortverbose = "false" -a $verbose = "false" ]
     then
-      echo Not executing /bin/rm -f instru_sessions.lua madras_trace.log tau_instr.log tau_rewrite.lua
+      echo ""
+# Not executing /bin/rm -f instru_sessions.lua madras_trace.log tau_instr.log tau_rewrite.lua
     fi
     #/bin/rm -f tau_instr.log tau_empty.in
   fi
