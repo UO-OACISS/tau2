@@ -3,6 +3,11 @@
 #include <Profile/TauBfd.h>
 #include <ucontext.h>
 
+#if !defined(_AIX) && !defined(__sun) && !defined(TAU_WINDOWS)
+#include <execinfo.h>
+#define TAU_EXECINFO 1
+#endif /* _AIX */
+
 #include <stdlib.h>
 #include <map>
 #include <vector>
@@ -159,6 +164,14 @@ void initializeCallSiteDiscoveryIfNecessary() {
   }
 }
 
+void Tau_callsite_issueFailureNotice_ifNecessary() {
+  static bool warningIssued = false;
+  if (!warningIssued) {
+    fprintf(stderr, "WARNING: At least one failure to acquire TAU callsite encountered.\n");
+    warningIssued = true;
+  } 
+}
+
 // *CWL* - This is really a character index search on a string with unsigned long 
 //         alphabets. The goal is to find the first different character.
 //         This returns the callsite with respect to a1.
@@ -217,7 +230,36 @@ void Profiler::CallSiteStart(int tid) {
 
   // *CWL* Stub for a test for whether we wish to acquire callsites for this function.
   if (1) {
-    bool retVal = Tau_unwind_unwindTauContext(tid, callsites);
+    // *CWL* - It is EXTREMELY important that this be called at one and only one spot (here!)
+    //         for the purposes of callsite discovery.
+    bool retVal = false;
+#ifdef TAU_UNWIND
+    retVal = Tau_unwind_unwindTauContext(tid, callsites);
+#else
+    // No unwinder. We'll have to make do with backtrace. Unfortunately, backtrace will
+    //   not allow us to mitigate the effects of deep direct recursion, so expect some
+    //   strange results in that department.
+#ifdef TAU_EXECINFO 
+    void *array[TAU_SAMP_NUM_ADDRESSES];
+    size_t size;
+    // get void*'s for all entries on the stack
+    size = backtrace(array, TAU_SAMP_NUM_ADDRESSES);
+    if ((array != NULL) && (size > 0)) {
+      // construct the callsite structure from the buffer.
+      callsites[0] = (unsigned long)size;
+      for (int i=0; i<size; i++) {
+	callsites[i+1] = (unsigned long)array[i];
+      }
+      retVal = true;
+    } else {
+      // backtrace failed, we surrender.
+      retVal = false;
+    }
+#else
+    // If no backtrace available, we raise our hands in surrender.
+    retVal = false;
+#endif /* TAU_EXECINFO = !(_AIX || sun || windows) */
+#endif /* TAU_UNWIND */
     if (retVal) {
       map<TAU_CALLSITE_KEY_ID_MAP_TYPE >::iterator itCs = TheCallSiteKey2IdMap().find(callsites);
       
@@ -248,7 +290,8 @@ void Profiler::CallSiteStart(int tid) {
 	//	printf("Recalled CallSite Key %d\n", callsiteKeyId);
       }
     } else {
-      // Unwind failed. No Callsite information.
+      // Unwind failed. Issue warning if necessary. No Callsite information.
+      Tau_callsite_issueFailureNotice_ifNecessary();
       CallSiteFunction = NULL;
       return;
     }
@@ -479,8 +522,11 @@ char *resolveTauCallSite(unsigned long address) {
 	    resolvedInfo->filename,
 	    resolvedInfo->lineno, 0);
   } else {
+    /* *CWL* - gonna declare that printing the exact address is unhelpful
     sprintf(resolvedBuffer, "[%s] UNRESOLVED ADDR %p", 
 	    addressMap.name, (void *)addr);
+    */
+    sprintf(resolvedBuffer, "[%s] UNRESOLVED ADDR", addressMap.name);
   }
   //  sprintf(resolvedBuffer, "<%p>", address);
 
