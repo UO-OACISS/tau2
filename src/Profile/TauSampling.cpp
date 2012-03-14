@@ -252,7 +252,7 @@ static inline unsigned long get_pc(void *p) {
 #else
   struct sigcontext *sc;
   sc = (struct sigcontext *)&uc->uc_mcontext;
-#ifdef TAU_BGP
+#if (defined(TAU_BGP) || defined(TAU_BGQ))
   //  pc = (unsigned long)sc->uc_regs->gregs[PPC_REG_PC];
   pc = (unsigned long)UCONTEXT_REG(uc, PPC_REG_PC);
 # elif __x86_64__
@@ -269,7 +269,7 @@ static inline unsigned long get_pc(void *p) {
   pc = (unsigned long)sc->regs->nip;
 # else
 #  error "profile handler not defined for this architecture"
-# endif /* TAU_BGP */
+# endif /* TAU_BGP || BGQ */
   return pc;
 #endif /* sun */
 }
@@ -448,9 +448,11 @@ void Tau_sampling_outputTraceDefinitions(int tid) {
 
   fclose(ebsTrace[tid]);
 
-#ifndef TAU_BGP
+#if (defined (TAU_BGP) || (TAU_BGQ))
+  /* do nothing */
+#else
   Tau_sampling_write_maps(tid, 0);
-#endif
+#endif /* TAU_BGP || TAU_BGQ */
 
 }
 
