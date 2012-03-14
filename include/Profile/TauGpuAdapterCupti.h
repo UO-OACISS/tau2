@@ -49,7 +49,7 @@ const char* demangleName(const char *n);
 int getParentFunction(uint32_t id);
 
 bool function_is_sync(CUpti_CallbackId id);
-bool function_is_memcpy(CUpti_CallbackId id);
+bool function_is_memcpy(CUpti_CallbackId id, CUpti_CallbackDomain domain);
 bool function_is_launch(CUpti_CallbackId id);
 bool function_is_exit(CUpti_CallbackId id);
 
