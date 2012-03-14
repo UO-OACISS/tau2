@@ -302,30 +302,11 @@ then
 fi
 
 # Now we write to the $outfile
-luafile="return {
+luafile="events = {
   run_dir = \"$outputdir\",
   functions_global_blacklist = {
-                {subtype = \"string\",value = \"call_gmon_start\"},
-                {subtype = \"string\",value = \"_init\"},
-                {subtype = \"string\",value = \"_fini\"},
-                {subtype = \"string\",value = \"_start\"},
-                {subtype = \"string\",value = \"frame_dummy\"},
-                {subtype = \"regexp\",value = \"^irc__.*\"},
-                {subtype = \"regexp\",value = \"^__do_global_.*\"},
-                {subtype = \"regexp\",value = \"^__libc_csu_.*\"},
-                {subtype = \"regexp\",value = \"^__intel_.*\"},
-                {subtype = \"regexp\",value = \"^__pthread_.*\"}
-  },
-  at_entry={
-      {
-            name = \"trace_register_func\",
-            lib = \"$TAU_INST_LIBRARY\",
-                foreach_function = true,
-            params = {
-              {type = \"macro\",value = \"fct_info_summary\"},
-              {type = \"macro\",value = \"profiler_id\"}
-            }
-          }
+          {subtype = \"stringlist\",value = {\"call_gmon_start\",\"_init\",\"_fini\",\"_start\",\"frame_dummy\"}},
+          {subtype = \"regexplist\",value = {\"^irc__.*\",\"^__do_global_.*\",\"^__libc_csu_.*\",\"^__intel_.*\",\"^__pthread_.*\",\"pgf90_.*\", \"pghpf_\", \"__hpf_\"}}
   },
   at_exit={
           {
@@ -335,31 +316,46 @@ luafile="return {
   },
   main_bin = {
         properties={
-          enable_function_instrumentation = true
+          enable_function_instrumentation = true, 
+          enable_demangling = true, 
+          generate_runfile   = true
         },
         path= \"$outputdir/$baseinfile\",
         output_suffix = \"_inst\",
         output_name = \"$baseinfile.tau_rewritten\",
-        fct_entries={
+        functions={
           {
-            name = \"traceEntry\",
-            lib = \"$TAU_INST_LIBRARY\",
-            params = {
-                {type = \"macro\",value = \"profiler_id\"}
+            entries = {
+              {
+                 at_program_entry = {
+                   {
+                      name = \"trace_register_func\",
+                      lib = \"$TAU_INST_LIBRARY\",
+                      params = {
+                        {type = \"macro\",value = \"fct_info_summary\"},
+                        {type = \"macro\",value = \"profiler_id\"},
+                      }
+                   }
+                 },
+                 name = \"traceEntry\",
+                 lib = \"$TAU_INST_LIBRARY\",   
+                 params = {
+                            {type = \"macro\",value = \"profiler_id\"}
+                 }
+              }
+            },
+            exits = {
+              {
+                 name = \"traceExit\",
+                 lib = \"$TAU_INST_LIBRARY\",   
+                 params = {
+                   {type = \"macro\",value = \"profiler_id\"}
+                 }
+              }
             }
           }
-        },
-        fct_exits={
-          { 
-            name = \"traceExit\",
-            lib = \"$TAU_INST_LIBRARY\",
-            params = {
-                {type = \"macro\",value = \"profiler_id\"}
-            }
-          }
-        },
-        exceptions={}
-  }"
+        }
+      }"
 echoIfVerbose "$luafile"
 echo "$luafile"> $tauluafile
 
@@ -373,25 +369,39 @@ do
                 path = \"$extralibs\",
                 output_suffix = \"_inst\",
                 output_name = \"lib_inst.so\",
-                fct_entries={
+                functions={
                   {
-                    name = \"traceEntry\",
-                    lib = \"$TAU_INST_LIBRARY\",
-                    params = {
-                        {type = \"macro\",value = \"profiler_id\"}
+                    entries = {
+                      {
+                         at_program_entry = {
+                           {
+                              name = \"trace_register_func\",
+                              lib = \"$TAU_INST_LIBRARY\",
+                              params = {
+                                {type = \"macro\",value = \"fct_info_summary\"},
+                                {type = \"macro\",value = \"profiler_id\"},
+                              }
+                           }
+                         },
+                         name = \"traceEntry\",
+                         lib = \"$TAU_INST_LIBRARY\",   
+                         params = {
+                            {type = \"macro\",value = \"profiler_id\"}
+                         }
+                      }
+                    },
+                    exits = {
+                      {
+                         name = \"traceExit\",
+                         lib = \"$TAU_INST_LIBRARY\",   
+                         params = {
+                           {type = \"macro\",value = \"profiler_id\"}
+                         }
+                      }
                     }
                   }
-                },
-                fct_exits={
-                  {
-                    name = \"traceExit\",
-                    lib = \"$TAU_INST_LIBRARY\",
-                    params = {
-                        {type = \"macro\",value = \"profiler_id\"}
-                    }
-                  }
-                },
-                exceptions={}
+                }
+
         }
   }"
   echoIfVerbose "$luafile"
@@ -410,9 +420,9 @@ EOF
 
 if [ "$dryrun" = true ]
 then
-  echo "smaqao batch=on module=instrumenter mode=instrument input=tau_rewrite.lua"
+  echo "smaqao module=mil input=tau_rewrite.lua"
 else
-  eval `$maqao_bin batch=on module=instrumenter mode=instrument input=tau_rewrite.lua <tau_empty.in &> tau_instr.log `
+  eval `$maqao_bin module=mil input=tau_rewrite.lua <tau_empty.in &> tau_instr.log `
   echo "tau_rewrite: Binary instrumentation done through MAQAO Multi-Architecture Disassembler, Rewriter and ASsembler technology"
   if [ $verbose = true ] 
   then
@@ -436,8 +446,9 @@ else
     /bin/rm -f $outfile_1~ $outfile~
     if [ $shortverbose = "false" -a $verbose = "false" ]
     then
-      /bin/rm -f instru_sessions.lua madras_trace.log tau_instr.log tau_rewrite.lua
+      echo ""
+# Not executing /bin/rm -f instru_sessions.lua madras_trace.log tau_instr.log tau_rewrite.lua
     fi
-    /bin/rm -f tau_instr.log tau_empty.in
+    #/bin/rm -f tau_instr.log tau_empty.in
   fi
 fi

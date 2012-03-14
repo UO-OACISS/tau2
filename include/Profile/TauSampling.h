@@ -108,7 +108,7 @@ void Tau_sampling_outputTraceCallstack(int tid, void *pc, void *context);
 
 #endif /* TAU_CRAYXMT */
 
-#define TAU_SAMP_NUM_ADDRESSES 7
+#define TAU_SAMP_NUM_ADDRESSES 10
 
 /* The trace for this node, mulithreaded execution currently not supported */
 extern FILE *ebsTrace[];
