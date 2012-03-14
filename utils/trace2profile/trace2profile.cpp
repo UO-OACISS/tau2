@@ -1,5 +1,5 @@
 /*
- * tau2profile.cpp
+ * trace2profile.cpp
  * Author: Wyatt Spear
  * This program reads a specified TAU trace and converts it into an equivalent set of TAU
  * profile files.  An interval may be specified in the command line to have the program
@@ -760,7 +760,7 @@ void Usage()
 		 << "specified rather than the current directory.\n"<< endl;
 	//cout << "-s <interger n>: Output a profile snapshot of the trace every n "
 		// << "time units.\n" << endl;
-	cout << "e.g. $tau2profile tau.trc tau.edf" << endl; // -s 25000"  << endl;
+	cout << "e.g. $trace2profile tau.trc tau.edf" << endl; // -s 25000"  << endl;
 }
 
 /***************************************************************************
