@@ -447,6 +447,7 @@ POMP2_Ordered_exit( POMP2_Region_handle* pomp2_handle );
  */
 extern void
 POMP2_Task_create_begin( POMP2_Region_handle* pomp2_handle,
+                         POMP2_Task_handle*   pomp2_new_task,
                          POMP2_Task_handle*   pomp2_old_task,
                          int                  pomp2_if,
                          const char           ctc_string[] );
@@ -467,12 +468,11 @@ POMP2_Task_create_end( POMP2_Region_handle* pomp2_handle,
 /** \e OpenMP \e 3.0: Marks the beginning of the execution of a task.
 
     @param pomp2_handle The region handle.
-    @param pomp2_new_task handle of the tas
-    @param pomp2_new_task handle of the taskk
+    @param pomp2_task handle of task.
  */
 extern void
 POMP2_Task_begin( POMP2_Region_handle* pomp2_handle,
-                  POMP2_Task_handle    pomp2_new_task );
+                  POMP2_Task_handle    pomp2_task );
 
 /** \e OpenMP \e 3.0: Marks the end of the execution of a task.
 
@@ -500,6 +500,7 @@ POMP2_Task_end( POMP2_Region_handle* pomp2_handle );
  */
 extern void
 POMP2_Untied_task_create_begin( POMP2_Region_handle* pomp2_handle,
+                                POMP2_Task_handle*   pomp2_new_task,
                                 POMP2_Task_handle*   pomp2_old_task,
                                 int                  pomp2_if,
                                 const char           ctc_string[] );
@@ -522,12 +523,12 @@ POMP2_Untied_task_create_end( POMP2_Region_handle* pomp2_handle,
 /** \e OpenMp \e 3.0: Marks the beginning of the execution of an
     untied task.
 
-    @param pomp2_handle   The region handle.
-    @param pomp2_new_task handle of the beginning task
+    @param pomp2_handle      The region handle.
+    @param pomp2_task Handle of this task.
  */
 void
 POMP2_Untied_task_begin( POMP2_Region_handle* pomp2_handle,
-                         POMP2_Task_handle    pomp2_new_task );
+                         POMP2_Task_handle    pomp2_task );
 
 /** \e OpenMP \e 3.0: Marks the end of the execution of a task.
 
@@ -570,6 +571,16 @@ POMP2_Taskwait_begin( POMP2_Region_handle* pomp2_handle,
 extern void
 POMP2_Taskwait_end( POMP2_Region_handle* pomp2_handle,
                     POMP2_Task_handle    pomp2_old_task );
+
+/** Wraps the omp_get_max_threads function.
+ *
+ *  Needed for the instrumentation of parallel regions
+ *  where the num_threads clause is used with the return
+ *  value of the omp_get_max_threads function. This can't
+ *  be used directly because the user may have declared
+ *  it himself. Double declarations are not allowed. */
+extern int
+POMP2_Lib_get_max_threads();
 
 /** Wraps the omp_init_lock function.
  * @param s The OpenMP lock to initialize.*/

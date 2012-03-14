@@ -30,11 +30,7 @@ AC_MSG_RESULT([$scorep_compiler_intel])
 AS_IF([test "x${scorep_compiler_intel}" = "xyes"], 
       [scorep_compiler_instrumentation_cppflags="-tcollect"]
        AC_DEFINE([FORTRAN_MANGLED(var)], [var ## _], 
-                 [Name of var after mangled by the Fortran compiler.])
-       AC_DEFINE([FOO_MANGLED],    [foo_],    [[]])
-       AC_DEFINE([BAR_MANGLED],    [bar_],    [[]])
-       AC_DEFINE([FOOBAR_MANGLED], [foobar_], [[]])
-       AC_DEFINE([BAZ_MANGLED],    [baz_],    [[]]))
+                 [Name of var after mangled by the Fortran compiler.]))
 ])
 
 ##
@@ -53,11 +49,7 @@ AC_MSG_RESULT([$scorep_compiler_sun])
 AS_IF([test "x${scorep_compiler_sun}" = "xyes"], 
       [scorep_compiler_instrumentation_cppflags="-O -Qoption f90comp -phat"]
        AC_DEFINE([FORTRAN_MANGLED(var)], [var ## _], 
-                 [Name of var after mangled by the Fortran compiler.])
-       AC_DEFINE([FOO_MANGLED],    [foo_],    [[]])
-       AC_DEFINE([BAR_MANGLED],    [bar_],    [[]])
-       AC_DEFINE([FOOBAR_MANGLED], [foobar_], [[]])
-       AC_DEFINE([BAZ_MANGLED],    [baz_],    [[]]))
+                 [Name of var after mangled by the Fortran compiler.]))
 ])
 
 ##

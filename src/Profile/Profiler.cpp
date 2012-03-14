@@ -202,7 +202,7 @@ void TauProfiler_EnableAllEventsOnCallStack(int tid, Profiler *current) {
 #endif /* TAU_MPITRACE */
 //////////////////////////////////////////////////////////////////////
 
-
+void Tau_unwind_unwindTauContext(Profiler *myProfiler);
 void Profiler::Start(int tid) { 
 #ifdef DEBUG_PROF
   fprintf (stderr, "[%d:%d-%d] Profiler::Start for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
@@ -265,9 +265,17 @@ void Profiler::Start(int tid) {
   /*** Extras ***/
   /********************************************************************************/
 
-  
+  // An initialization of sorts. Call Paths (if any) will update this.
+  if (TauEnv_get_callsite() == 1) {
+    CallSiteAddPath(NULL, tid);
+  }
+
   if (TauEnv_get_callpath()) {
     CallPathStart(tid);
+  }
+
+  if (TauEnv_get_callsite() == 1) {
+    CallSiteStart(tid);
   }
 
 #ifdef TAU_PROFILEPARAM
@@ -312,6 +320,9 @@ void Profiler::Start(int tid) {
   // Increment the parent's NumSubrs()
   if (ParentProfiler != 0) {
     ParentProfiler->ThisFunction->IncrNumSubrs(tid);	
+    if (ParentProfiler->CallSiteFunction != NULL) {
+      ParentProfiler->CallSiteFunction->IncrNumSubrs(tid);
+    }
   }
   
   // If this function is not already on the call stack, put it
@@ -494,11 +505,14 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   /*** Tracing ***/
   /********************************************************************************/
     
-    
   if (TauEnv_get_callpath()) {
     CallPathStop(TotalTime, tid);
   }
-    
+
+  if (TauEnv_get_callsite()) {
+    CallSiteStop(TotalTime, tid);
+  }
+
 #ifdef RENCI_STFF
   if (TauEnv_get_callpath()) {
     RenciSTFF::recordValues(CallPathFunction, TimeStamp, TotalTime, tid);
@@ -540,6 +554,14 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 	CallPathFunction->ResetExclTimeIfNegative(tid); 
       }
     }
+    if (TauEnv_get_callsite()) {
+      if (ParentProfiler != NULL) {
+	if (CallSiteFunction != NULL) {
+	  CallSiteFunction->ResetExclTimeIfNegative(tid);
+	}
+      }
+    }
+
 #ifdef TAU_PROFILEPARAM
     if (ProfileParamFunction != NULL) {
       ProfileParamFunction->ResetExclTimeIfNegative(tid);
@@ -1175,6 +1197,7 @@ extern "C" int Tau_profiler_initialization() {
 
 
 // Store profile data at the end of execution (when top level timer stops)
+extern "C" void finalizeCallSites_if_necessary();
 int TauProfiler_StoreData(int tid) {
 
   profileWriteCount[tid]++;
@@ -1189,7 +1212,13 @@ int TauProfiler_StoreData(int tid) {
     RtsLayer::UnLockDB();
   }
   finalizeTrace(tid);
+  
 #ifndef TAU_WINDOWS  
+
+  if (TauEnv_get_callsite()) {
+    finalizeCallSites_if_necessary();
+  }
+
   if (TauEnv_get_ebs_enabled()) {
     // Tau_sampling_finalize(tid);
     Tau_sampling_finalize_if_necessary();
