@@ -13,6 +13,14 @@
 #include <vector>
 using namespace std;
 
+#if __WORDSIZE == 32
+#  define UCONTEXT_REG(uc, reg) ((uc)->uc_mcontext.uc_regs->gregs[reg])
+#else
+#  define UCONTEXT_REG(uc, reg) ((uc)->uc_mcontext.gp_regs[reg])
+#endif
+
+#define PPC_REG_PC 32
+
 // For BFD-based name resolution
 static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
 
@@ -32,7 +40,7 @@ static inline unsigned long get_pc(void *p) {
 #else
   struct sigcontext *sc;
   sc = (struct sigcontext *)&uc->uc_mcontext;
-#ifdef TAU_BGP
+#if (defined(TAU_BGP) || defined(TAU_BGQ))
   //  pc = (unsigned long)sc->uc_regs->gregs[PPC_REG_PC];
   pc = (unsigned long)UCONTEXT_REG(uc, PPC_REG_PC);
 # elif __x86_64__
@@ -49,7 +57,7 @@ static inline unsigned long get_pc(void *p) {
   pc = (unsigned long)sc->regs->nip;
 # else
 #  error "profile handler not defined for this architecture"
-# endif /* TAU_BGP */
+# endif /* TAU_BGP || TAU_BGQ */
   return pc;
 #endif /* sun */
 }
