@@ -49,7 +49,7 @@ const char* demangleName(const char *n);
 int getParentFunction(uint32_t id);
 
 bool function_is_sync(CUpti_CallbackId id);
-bool function_is_memcpy(CUpti_CallbackId id);
+bool function_is_memcpy(CUpti_CallbackId id, CUpti_CallbackDomain domain);
 bool function_is_launch(CUpti_CallbackId id);
 bool function_is_exit(CUpti_CallbackId id);
 
@@ -67,7 +67,7 @@ class cuptiGpuId : public gpuId
 public:
 
 	cuptiGpuId(uint32_t s, uint32_t c) { streamId = s; correlationId = c; };
-	cuptiGpuId *getCopy() { 
+	cuptiGpuId *getCopy() const { 
 		cuptiGpuId *c = new cuptiGpuId(*this);
 		return c; 
 	};
@@ -83,9 +83,14 @@ public:
 		return RtsLayer::myNode(); 
 	};
 
-	bool equals(const gpuId *other) const
+	bool less_than(const gpuId *other) const
 	{
-		return streamId == ((cuptiGpuId *)other)->stream();
+		return streamId < ((cuptiGpuId *)other)->stream();
+		/*
+		if (ret) { printf("%s equals %s.\n", printId(), ((cuptiGpuId *)other)->printId()); }
+		else { printf("%s does not equal %s.\n", printId(), ((cuptiGpuId *)other)->printId());}
+		return ret;
+		*/
 	};
 
 	double syncOffset() { return 0; };
