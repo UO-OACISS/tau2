@@ -302,7 +302,7 @@ then
 fi
 
 # Now we write to the $outfile
-luafile="return {
+luafile="events = {
   run_dir = \"$outputdir\",
   functions_global_blacklist = {
           {subtype = \"stringlist\",value = {\"call_gmon_start\",\"_init\",\"_fini\",\"_start\",\"frame_dummy\"}},
