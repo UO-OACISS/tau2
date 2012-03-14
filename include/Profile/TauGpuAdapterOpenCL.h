@@ -21,14 +21,14 @@ public:
 		contextId(cId), deviceId(dId) {} */
 	
 	openCLGpuId(cl_device_id id, double sync);
-	openCLGpuId *getCopy() { 
+	openCLGpuId *getCopy() const { 
 			openCLGpuId *c = new openCLGpuId(*this);
 			return c;
 	}
 
-	bool equals(const gpuId *other) const
+	bool less_than(const gpuId *other) const
 	{
-		return strcmp(printId(), ((openCLGpuId *)other)->printId()) == 0;
+		return strcmp(printId(), ((openCLGpuId *)other)->printId()) < 0;
 	}
 	double syncOffset();
 	

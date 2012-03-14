@@ -37,7 +37,7 @@ int number_of_top_level_task_events = 0;
 
 bool gpuComp(gpuId* a, gpuId* b)
 {
-	return not a->equals(b);
+	return a->less_than(b);
 }
 
 map<gpuId*, int, bool(*)(gpuId*,gpuId*)>& TheGpuIdMap(void)
@@ -87,7 +87,7 @@ void check_gpu_event(int gpuTask)
 			cerr << "TAU ERROR: The number of GPU entities exceeds the maximum: " << TAU_MAX_THREADS << ". Please reconfigure TAU with '-useropt=-DTAU_MAX_THREADS=<larger number>.'" << endl;
 			exit(1);
 		}
-		//printf("starting top level timer total=%d id=%d.\n", number_of_tasks, gpuTask);
+		//printf("starting top level timer total=%d map total=%d id=%d.\n", number_of_tasks, TheGpuIdMap().size(), gpuTask);
 		TAU_PROFILER_START_TASK(gpu_ptr, gpuTask);
 		number_of_top_level_task_events++;
 	}
@@ -299,19 +299,20 @@ FunctionInfo* parent)
 int get_task(gpuId *new_task)
 {
 	map<gpuId*, int>::iterator it = TheGpuIdMap().begin();
-	/*
-	for (it; it != TheGpuIdMap().end(); it++)
+	
+	/*for (it; it != TheGpuIdMap().end(); it++)
 	{
 		printf("tasks [%s] = %d.\n", it->first->printId(), it->second);
-	}
-	*/
+	}*/
+	
 	int task = 0;
 	//map<gpuId*, int>::iterator it = TheGpuIdMap().find(new_task);
 	it = TheGpuIdMap().find(new_task);
 	if (it == TheGpuIdMap().end())
 	{
 		gpuId *create_task = new_task->getCopy();
-		task = TheGpuIdMap()[create_task] = Tau_RtsLayer_createThread();
+		task = Tau_RtsLayer_createThread();
+		TheGpuIdMap().insert( pair<gpuId *, int>(create_task, task));
 		number_of_tasks++;
 		Tau_set_thread_fake(task);
 		//TAU_CREATE_TASK(task);

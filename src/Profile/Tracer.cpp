@@ -472,9 +472,11 @@ int TauTraceDumpEDF(int tid) {
 #endif	
   numEvents += numExtra;
   
-  fprintf(fp,"%d dynamic_trace_events\n", numEvents);
+  fprintf(fp,"%d dynamic_trace_events\n", numEvents+1);
   
   fprintf(fp,"# FunctionId Group Tag \"Name Type\" Parameters\n");
+
+  fprintf(fp,"0 TAUEVENT \".TAU <unknown event>\" TriggerValue\n");
   
   for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
     fprintf(fp, "%ld %s 0 \"%s %s\" EntryExit\n", (long)((*it)->GetFunctionId()),

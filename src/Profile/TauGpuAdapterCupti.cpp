@@ -86,7 +86,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 	else
 	{
 		const CUpti_CallbackData *cbInfo = (CUpti_CallbackData *) params;
-		if (function_is_memcpy(id))
+		if (function_is_memcpy(id, domain))
 		{
 			int kind;
 			int count;
@@ -198,7 +198,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 		{	
       CUpti_ActivityMemcpy *memcpy = (CUpti_ActivityMemcpy *)record;
 			//cerr << "recording memcpy: " << memcpy->end - memcpy->start << "ns.\n" << endl;
-			
+		  //cerr << "recording memcpy on device: " << memcpy->streamId << "/" << memcpy->runtimeCorrelationId << endl;
 			cuRec = new cuptiRecord(TAU_GPU_USE_DEFAULT_NAME, memcpy->streamId, memcpy->runtimeCorrelationId, NULL); 
 			Tau_gpu_register_memcpy_event(
 				*cuRec,
@@ -244,6 +244,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 				//printf("correlationid: %d.\n", id);
 			}
 			name = demangleName(kernel->name);
+		  //cerr << "recording kernel on device: " << kernel->streamId << "/" << id << endl;
 			cuRec = new cuptiRecord(name, kernel->streamId, id, &map);
 			Tau_gpu_register_gpu_event(
 				*cuRec, 
@@ -332,7 +333,9 @@ bool function_is_launch(CUpti_CallbackId id) {
 		     id == CUPTI_DRIVER_TRACE_CBID_cuLaunchKernel;
 }
 
-bool function_is_memcpy(CUpti_CallbackId id) { 
+bool function_is_memcpy(CUpti_CallbackId id, CUpti_CallbackDomain domain) {
+	if (domain == CUPTI_CB_DOMAIN_RUNTIME_API)
+	{
 	return (
 		id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpy_v3020 ||
 		id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyToArray_v3020 ||
@@ -345,7 +348,15 @@ bool function_is_memcpy(CUpti_CallbackId id) {
 		id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyFromArrayAsync_v3020 ||
 		id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyToSymbolAsync_v3020 ||
 		id ==     CUPTI_RUNTIME_TRACE_CBID_cudaMemcpyFromSymbolAsync_v3020
-	);	
+	);
+	}
+	else if (domain == CUPTI_CB_DOMAIN_DRIVER_API)
+	{
+		return (
+		id ==     CUPTI_DRIVER_TRACE_CBID_cuMemcpyHtoD_v2 ||
+		id ==     CUPTI_DRIVER_TRACE_CBID_cuMemcpyDtoH_v2
+		);
+	}
 }
 
 void get_values_from_memcpy(const CUpti_CallbackData *info, CUpti_CallbackId id, CUpti_CallbackDomain domain, int &kind, int &count)
@@ -363,6 +374,28 @@ void get_values_from_memcpy(const CUpti_CallbackData *info, CUpti_CallbackId id,
     CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(cudaMemcpyFromArrayAsync, id, info, kind, count)
     CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(cudaMemcpyToSymbolAsync, id, info, kind, count)
     CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(cudaMemcpyFromSymbolAsync, id, info, kind, count)
+	}
+	//driver API
+	else
+	{
+		if (id == CUPTI_DRIVER_TRACE_CBID_cuMemcpyHtoD_v2)
+		{
+			kind = CUPTI_ACTIVITY_MEMCPY_KIND_HTOD;
+			count = ((cuMemcpyHtoD_v2_params *) info->functionParams)->ByteCount;
+		}
+		else if (id == CUPTI_DRIVER_TRACE_CBID_cuMemcpyDtoH_v2)
+		{
+			kind = CUPTI_ACTIVITY_MEMCPY_KIND_DTOH;
+			count = ((cuMemcpyDtoH_v2_params *) info->functionParams)->ByteCount;
+		}
+ 
+		else
+		{
+			//cannot find byte count
+			kind = -1;
+			count = 0;
+		}
+
 	}
 }
 int getMemcpyType(int kind)
