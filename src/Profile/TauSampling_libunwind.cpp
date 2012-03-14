@@ -6,6 +6,8 @@
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
 
+#define TAU_SAMP_NUM_PARENTS 0
+
 void show_backtrace_unwind(void *pc) {
   unw_cursor_t cursor;
   unw_context_t uc;
@@ -65,6 +67,41 @@ void Tau_sampling_outputTraceCallstack(int tid, void *pc,
   }
 }
 
+bool Tau_unwind_unwindTauContext(int tid, unsigned long *addresses) {
+  ucontext_t context;
+  int ret = getcontext(&context);
+  
+  if (ret != 0) {
+    fprintf(stderr, "TAU: Error getting context\n");
+    return false;
+  }
+
+  unw_cursor_t cursor;
+  unw_word_t ip;
+  unw_init_local(&cursor, &context);
+
+  int count = 0;
+  int idx = 1;  // we want to fill the first entry with the length later.
+  unw_word_t last_address = 0;
+  while (unw_step(&cursor) > 0 && idx < TAU_SAMP_NUM_ADDRESSES) {
+    unw_get_reg(&cursor, UNW_REG_IP, &ip);
+    // In the case of Unwinding from TAU context, we ignore recursion as
+    //   un-helpful for the purposes of determining callsite information.
+    if (ip == last_address) {
+      continue;
+    }
+    addresses[idx++] = (unsigned long)ip;
+    last_address = ip;
+    count++;
+  }
+  if (count > 0) {
+    addresses[0] = count;
+    return true;
+  } else {
+    return false;
+  }
+}
+
 void Tau_sampling_unwindTauContext(int tid, void **addresses) {
   ucontext_t context;
   int ret = getcontext(&context);
@@ -75,64 +112,28 @@ void Tau_sampling_unwindTauContext(int tid, void **addresses) {
   }
 
   unw_cursor_t cursor;
-  unw_word_t ip, sp;
-  unw_word_t top_ip;
-  unw_proc_info_t pip;
+  unw_word_t ip;
   unw_init_local(&cursor, &context);
 
   int idx = 0;
-  int skip = 0; // skip the current context itself
-
-  //  printf("Context: ");
   while (unw_step(&cursor) > 0 && idx < TAU_SAMP_NUM_ADDRESSES) {
     unw_get_reg(&cursor, UNW_REG_IP, &ip);
-    if (skip > 0) {
-      // fprintf (stderr,"skipping address %p\n", ip);
-      skip--;
-    } else {
-      // always store the top ip (unless it is 0).
-      unw_get_proc_info(&cursor, &pip);
-      top_ip = pip.start_ip;
-      //      printf("%p|%p ", ip, top_ip);
-      if (top_ip == 0) {
-	addresses[idx++] = (void *)ip;
-      } else {
-	addresses[idx++] = (void *)top_ip;
-      }
-      // fprintf (stderr,"assigning address %p to index %d\n", ip, idx-1);
-    }
+    addresses[idx++] = (void *)ip;
   }
-  //  printf("\n");
 }
 
-bool unwind_cutoff(void **addresses, void *address) {
-  bool found = false;
-  for (int i=0; i<TAU_SAMP_NUM_ADDRESSES; i++) {
-    if ((unsigned long)(addresses[i]) == (unsigned long)address) {
-      //      printf("match found %p\n", address);
-      found = true;
-      break;
-    }
-  }
-  return found;
-}
-
+extern "C" FunctionInfo *findTopContext(Profiler *currentProfiler, void *address);
 vector<unsigned long> *Tau_sampling_unwind(int tid, Profiler *profiler,
 					   void *pc, void *context) {
   unw_cursor_t cursor;
   unw_context_t uc;
-  unw_word_t ip, sp;
-  unw_word_t top_ip;
-  unw_proc_info_t pip;
+  unw_word_t unwind_ip, sp;
+  unw_word_t curr_ip;
 
   vector<unsigned long> *pcStack = new vector<unsigned long>();
   int unwindDepth = 0;
   int depthCutoff = TauEnv_get_ebs_unwind_depth();
 
-  // printf("cutoff depth = %d\n", depthCutoff);
-
-  // Add the actual PC sample into the stack
-  //  printf("%p ", pc);
   pcStack->push_back((unsigned long)pc);
 
   // Commence the unwind
@@ -142,45 +143,17 @@ vector<unsigned long> *Tau_sampling_unwind(int tid, Profiler *profiler,
   //  unw_getcontext(&uc);
   uc = *(unw_context_t *)context;
   unw_init_local(&cursor, &uc);
-  // Is my sample in the immediate context?
-  unw_get_proc_info(&cursor, &pip);
-  top_ip = pip.start_ip;
-  if (unwind_cutoff(profiler->address, (void *)top_ip)) {
-    //    printf("[dropped %p|%p]", pc, top_ip);
-    // Do nothing, there is no unwinding since the PC occurs
-    //   in the context of the TAU context itself.
-  } else {
-    while (unw_step(&cursor) > 0) {
-      unw_get_reg(&cursor, UNW_REG_IP, &ip);
-      unw_get_proc_info(&cursor, &pip);
-      top_ip = pip.start_ip;
-      // unless it is 0, always compare against the top_ip 
-      unw_word_t compare_ip;
-      if (top_ip == 0) {
-	compare_ip = ip;
-      } else {
-	compare_ip = top_ip;
-      }
-      if ((unwindDepth >= depthCutoff) ||
-	  (unwind_cutoff(profiler->address, (void *)compare_ip))) {
-	if (ip != top_ip) {
-	  // We want to preserve the final callsite before a 
-	  //   match with the top of the Tau context address.
-	  pcStack->push_back((unsigned long)ip);
-	  unwindDepth++;  // for accounting only
-	}
-	//	printf("[dropped %p|%p]", ip, top_ip);
-	break;
-      }
-      //      printf("%p|%p ", ip, top_ip);
-      pcStack->push_back((unsigned long)ip);
-      unwindDepth++;
-    }
+  while (unw_step(&cursor) > 0) {
+    unw_get_reg(&cursor, UNW_REG_IP, &unwind_ip);
+    if ((unwindDepth >= depthCutoff) ||
+	(unwind_cutoff(profiler->address, (void *)unwind_ip))) {
+      pcStack->push_back((unsigned long)unwind_ip);
+      unwindDepth++;  // for accounting only
+      break; // always break when limit or cutoff is reached.
+    } // Cut-off or limit check conditional
+    pcStack->push_back((unsigned long)unwind_ip);
+    unwindDepth++;
   }
-  //  printf("\n");
-
-  //  printf("Unwound %d times\n", unwindDepth);
-  //  printStack(pcStack);
   return pcStack;
 }
 
