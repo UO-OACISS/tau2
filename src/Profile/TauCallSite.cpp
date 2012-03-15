@@ -336,13 +336,13 @@ bool nameInTau(const char *name) {
   int offset = 0;
   int length = 0;
   // Pretty ugly hack, I foresee much trouble ahead.
-  char *strPtr = strstr(name, "tau");
+  const char *strPtr = strstr(name, "tau");
   if (strPtr != NULL) {
     length = strlen(strPtr);
     offset = strcspn(strPtr, "/");
     if (offset != length) {
       strPtr += offset;
-      char *temp = strstr(strPtr, "src/");
+      const char *temp = strstr(strPtr, "src/");
       if (temp != NULL) {
 	return true;
       } else {
@@ -359,7 +359,7 @@ bool nameInTau(const char *name) {
 }
 
 bool nameIsUnknown(const char *name) {
-  char *strPtr = NULL;
+  const char *strPtr = NULL;
   strPtr = strstr(name, "{(unknown)}");
   if (strPtr != NULL) {
     return true;
