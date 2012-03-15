@@ -302,11 +302,11 @@ then
 fi
 
 # Now we write to the $outfile
-luafile="return {
+luafile="events = {
   run_dir = \"$outputdir\",
   functions_global_blacklist = {
           {subtype = \"stringlist\",value = {\"call_gmon_start\",\"_init\",\"_fini\",\"_start\",\"frame_dummy\"}},
-          {subtype = \"regexplist\",value = {\"^irc__.*\",\"^__do_global_.*\",\"^__libc_csu_.*\",\"^__intel_.*\",\"^__pthread_.*\"}}
+          {subtype = \"regexplist\",value = {\"^irc__.*\",\"^__do_global_.*\",\"^__libc_csu_.*\",\"^__intel_.*\",\"^__pthread_.*\",\"pgf90_.*\", \"pghpf_\", \"__hpf_\"}}
   },
   at_exit={
           {
@@ -446,7 +446,8 @@ else
     /bin/rm -f $outfile_1~ $outfile~
     if [ $shortverbose = "false" -a $verbose = "false" ]
     then
-      echo Not executing /bin/rm -f instru_sessions.lua madras_trace.log tau_instr.log tau_rewrite.lua
+      echo ""
+# Not executing /bin/rm -f instru_sessions.lua madras_trace.log tau_instr.log tau_rewrite.lua
     fi
     #/bin/rm -f tau_instr.log tau_empty.in
   fi

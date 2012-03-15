@@ -33,6 +33,13 @@ Version 2.21 changes (from 2.20):
 20. Added Cray DMAPP library wrapper (configure -dmapp, -optTrackDMAPP TAU_OPTIONS).
 21. Added -useropt=-DTAU_SYSTEMWIDE_TRACK_MSG_SIZE_AS_CTX_EVENT for tracking message size with context events.
 22. Added -optLinkOnly for compiling .o file without instrumentation, then linking in TAU libraries.
+23. Added support for IBM BlueGene/Q (-arch=bgq in configure).
+24. Added support for callsite profiling (TAU_CALLSITE=1 at runtime). 
+25. Added an updated Opari2. 
+25. Added support for OpenACC profiling using the updated PGI 12.3 runtime library instrumentation API.
+26. Cupti and OpenCL updates (tracking time spent in queued on the GPU).
+27. Updates to ParaProf for IBM BG/Q topology displays. 
+28. Updates to tau_rewrite for Maqao instrumentation. 
 
 
 
