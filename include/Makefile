@@ -259,6 +259,8 @@ TAU_OPENMP_OPTION =
 #ZEPTO_GFORTRAN#TAU_F90_OPT = -fno-underscoring     #ENDIF#
 
 #THREADSAFE_COMPILERS#TAU_R         =_r     #ENDIF#
+#BGP#TAU_R         =_r     #ENDIF#
+#BGQ#TAU_R         =_r     #ENDIF#
 
 ############# Fortran Compiler #############
 #GNU_FORTRAN#TAU_F90         = g77              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
