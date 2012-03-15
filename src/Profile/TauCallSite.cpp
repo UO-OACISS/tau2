@@ -9,6 +9,7 @@
 #endif /* _AIX */
 
 #include <stdlib.h>
+#include <ctype.h>
 #include <map>
 #include <vector>
 using namespace std;
@@ -62,6 +63,7 @@ typedef struct TauCallSitePathElement {
 typedef struct TauCallSiteInfo {
   bool resolved;
   unsigned long resolvedCallSite;
+  bool hasName;
   string *resolvedName;
   unsigned long *key;
 } tau_cs_info_t;
@@ -172,11 +174,80 @@ void Tau_callsite_issueFailureNotice_ifNecessary() {
   } 
 }
 
+char *resolveTauCallSite(unsigned long address) {
+  int bfdRet; // used only for an old interface
+
+  char *callsiteName;
+  char resolvedBuffer[4096];
+  // stub. BFD is needed for final solution.
+  // resolved = Tau_sampling_resolveName(addr, &name, &resolvedModuleIdx);
+  TauBfdInfo *resolvedInfo = NULL;
+  // backup information in case we fail to resolve the address to specific
+  //   line numbers.
+  TauBfdAddrMap addressMap;
+  sprintf(addressMap.name, "%s", "UNKNOWN");
+
+  // The subtraction is here because the return address in the callstack
+  //   takes you to the next instruction for the purposes of line number
+  //   discovery. This is a hack - used by perfsuite and ppw, but
+  //   nonetheless still a hack.
+  unsigned long addr = address-1;
+
+#ifdef TAU_BFD
+  if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
+    bfdUnitHandle = Tau_bfd_registerUnit(TAU_BFD_KEEP_GLOBALS);
+  }
+
+  // Attempt to use BFD to resolve names
+  resolvedInfo = 
+    Tau_bfd_resolveBfdInfo(bfdUnitHandle, (unsigned long)addr);
+  // backup info
+  bfdRet = Tau_bfd_getAddressMap(bfdUnitHandle, (unsigned long)addr,
+				 &addressMap);
+  if (resolvedInfo == NULL) {
+      resolvedInfo = 
+	  Tau_bfd_resolveBfdExecInfo(bfdUnitHandle, (unsigned long)addr);
+      sprintf(addressMap.name, "%s", "EXEC");
+  }
+#endif /* TAU_BFD */
+  if (resolvedInfo != NULL) {
+    sprintf(resolvedBuffer, "[%s] [{%s} {%d}]",
+	    resolvedInfo->funcname,
+	    resolvedInfo->filename,
+	    resolvedInfo->lineno, 0);
+  } else {
+    /* *CWL* - gonna declare that printing the exact address is unhelpful
+    sprintf(resolvedBuffer, "[%s] UNRESOLVED ADDR %p", 
+	    addressMap.name, (void *)addr);
+    */
+    sprintf(resolvedBuffer, "[%s] UNRESOLVED ADDR", addressMap.name);
+  }
+  //  sprintf(resolvedBuffer, "<%p>", address);
+
+  callsiteName = strdup((char *)resolvedBuffer);
+
+  //  printf("[%p] resolves to %s\n", addr, resolvedBuffer);
+  return callsiteName;
+}
+
 // *CWL* - This is really a character index search on a string with unsigned long 
 //         alphabets. The goal is to find the first different character.
 //         This returns the callsite with respect to a1.
 unsigned long determineCallSite(unsigned long *a1, unsigned long *a2) {
   // a1 and a2 will not always have the same length
+  /*
+  printf("1) ");
+  for (int i=0; i<a1[0]; i++) {
+    printf("%p ", a1[i+1]);
+  }
+  printf("\n");
+
+  printf("2) ");
+  for (int i=0; i<a2[0]; i++) {
+    printf("%p ", a2[i+1]);
+  }
+  printf("\n");
+  */
   int minLength = 0;
   if (a1[0] < a2[0]) {
     minLength = a1[0];
@@ -217,6 +288,165 @@ void Profiler::CallSiteAddPath(long *callpath_path, int tid) {
       path[i] = callpath_path[i];
     }
   }
+}
+
+size_t trimwhitespace(char *out, size_t len, const char *str)
+{
+  if(len == 0)
+    return 0;
+
+  const char *end;
+  size_t out_size;
+
+  // Trim leading space
+  while(isspace(*str)) str++;
+
+  if(*str == 0)  // All spaces?
+    {
+      *out = 0;
+      return 1;
+    }
+
+  // Trim trailing space
+  end = str + strlen(str) - 1;
+  while(end > str && isspace(*end)) end--;
+  end++;
+
+  // Set output size to minimum of trimmed string length and buffer size minus 1
+  out_size = (end - str) < len-1 ? (end - str) : len-1;
+
+  // Copy trimmed string and add null terminator
+  memcpy(out, str, out_size);
+  out[out_size] = 0;
+
+  return out_size;
+}
+
+
+// *CWL* - Looking for the following pattern: "tau*/src/" where * has no "/".
+bool nameInTau(const char *name) {
+  int offset = 0;
+  int length = 0;
+  // Pretty ugly hack, I foresee much trouble ahead.
+  char *strPtr = strstr(name, "tau");
+  if (strPtr != NULL) {
+    length = strlen(strPtr);
+    offset = strcspn(strPtr, "/");
+    if (offset != length) {
+      strPtr += offset;
+      char *temp = strstr(strPtr, "src/");
+      if (temp != NULL) {
+	return true;
+      } else {
+	return false;
+      }
+    } else {
+      // no directory follows "tau". Not it.
+      return false;
+    }
+  } else {
+    return false;
+  }
+  return false;
+}
+
+bool nameIsUnknown(const char *name) {
+  char *strPtr = NULL;
+  strPtr = strstr(name, "{(unknown)}");
+  if (strPtr != NULL) {
+    return true;
+  }
+  return false;
+}
+
+bool nameInMPI(const char *name) {
+  int len = strlen(name);
+  char *outString = (char *)malloc(sizeof(char)*(len+1));
+  trimwhitespace(outString, len, name);
+  int prefixLen = 6;
+  char mpiCheckBuffer[prefixLen+1];
+  for (int i=0; i<prefixLen; i++) {
+    mpiCheckBuffer[i] = (char)tolower((int)outString[i]);
+  }
+  mpiCheckBuffer[prefixLen] = '\0';
+
+  char *strPtr = NULL;
+  strPtr = strstr((char *)mpiCheckBuffer, "mpi_");
+  if (strPtr != NULL) {
+    return true;
+  }
+  return false;
+}
+
+void registerNewCallsiteInfo(char *name, unsigned long callsite, int id) {
+  TAU_VERBOSE("Found non-tau non-unknown callsite via string [%s]\n", name);
+  // Register the newly discovered callsite 
+  TheCallSiteIdVector()[id]->resolved = true;
+  TheCallSiteIdVector()[id]->resolvedCallSite = callsite;
+  TheCallSiteIdVector()[id]->hasName = true;
+  string *temp = new string("");
+  *temp = *temp + string(" [@] ") + string(name);
+  TheCallSiteIdVector()[id]->resolvedName = temp;
+}
+
+// callsite is an output parameter
+bool determineCallSiteViaString(unsigned long *addresses) {
+  unsigned long length = addresses[0];
+  char *strPtr = NULL;
+  char *name;
+
+  map<TAU_CALLSITE_KEY_ID_MAP_TYPE >::iterator itCs = TheCallSiteKey2IdMap().find(addresses);
+  if (itCs == TheCallSiteKey2IdMap().end()) {
+    // Very bad. The address should have been encountered and registered before.
+    return false;
+  } else {
+    unsigned long id = (*itCs).second;
+    if (TheCallSiteIdVector()[id]->hasName) {
+      return true;
+    }
+
+    // Was MPI in my unwind path at some point?
+    bool hasMPI = false;
+     
+    for (int i=0; i<length; i++) {
+      name = resolveTauCallSite(addresses[i+1]);
+      if (nameInTau(name)) {
+	hasMPI = hasMPI | nameInMPI(name);
+	continue;
+      } else {
+	// Found the boundary. 
+	unsigned long callsite = addresses[i+1];
+	// *CWL* - We need a general solution for this. Right now it is a horrid hack.
+	//         The ideal solution is a way to determine which of the following
+	//         instrumentation classes we are dealing with:
+	//         1. Implicit Instrumentation (wrappers, compInst, dyninst)
+	//              => Take the immediate boundary as the callsite.
+	//         2. Explicit Instrumentation representing functions (PDT, API)
+	//              => Take the parent to the immediate boundary if possible.
+	//         3. Explicit Instrumentation NOT representing functions (PDT loops)
+	//              => Take the immediate boundary as the callsite.
+	// 
+	// For now, We make a blanket correction for all non-MPI invocations.
+	//
+	if (!hasMPI) {
+	  if (i < length-2) {
+	    callsite = addresses[i+2];
+	    name = resolveTauCallSite(addresses[i+2]);
+	  }
+	} else {
+	  if (nameIsUnknown(name)) {
+	    if (i < length-2) {
+	      callsite = addresses[i+2];
+	      name = resolveTauCallSite(addresses[i+2]);
+	    }
+	  }
+	}
+	registerNewCallsiteInfo(name, callsite, id);
+	return true;
+      }
+    }
+  }
+  return false;
 }
 
 bool Tau_unwind_unwindTauContext(int tid, unsigned long *addresses);
@@ -277,12 +507,13 @@ void Profiler::CallSiteStart(int tid) {
 	callsiteKeyId = callSiteId[tid];
 	TheCallSiteKey2IdMap().insert(map<TAU_CALLSITE_KEY_ID_MAP_TYPE >::value_type(callsiteKey, 
 										     callsiteKeyId));
-	tau_cs_info_t *callSite = (tau_cs_info_t *)malloc(sizeof(tau_cs_info_t));
-	callSite->key = callsiteKey;
-	callSite->resolved = false;
-	callSite->resolvedCallSite = 0;
-	callSite->resolvedName = NULL;
-	TheCallSiteIdVector().push_back(callSite);
+	tau_cs_info_t *callSiteInfo = (tau_cs_info_t *)malloc(sizeof(tau_cs_info_t));
+	callSiteInfo->key = callsiteKey;
+	callSiteInfo->resolved = false;
+	callSiteInfo->resolvedCallSite = 0;
+	callSiteInfo->hasName = false;
+	callSiteInfo->resolvedName = NULL;
+	TheCallSiteIdVector().push_back(callSiteInfo);
 	callSiteId[tid]++;
       } else {
 	// We've seen this callsite key before.
@@ -337,6 +568,7 @@ void Profiler::CallSiteStart(int tid) {
       // We do not need the original path data anymore. Free it.
       free(path);
     }
+
     // Now distinguish this event with the callsite key.
     tau_cs_path_element_t *element = new tau_cs_path_element_t;
     element->isCallSite = true;
@@ -346,10 +578,14 @@ void Profiler::CallSiteStart(int tid) {
     // Create or pull up a CallSite object to record information into.
     map<TAU_CALLSITE_PATH_MAP_TYPE >::iterator itPath = TheCallSitePathMap().find(key);
     if (itPath == TheCallSitePathMap().end()) {
-      //      printf("New Path\n");
+      RtsLayer::LockEnv();
       // This is a new callsite, create a new FI object for it.
       //   The name is the same as either the callpath or base function and will
       //     be enhanced later with a resolved entry.
+      
+      // Resolve via string. If successful, the resolved name is registered.
+      
+      //	callsiteSuccess = determineCallSiteViaString(callsites);
       
       // First step - trim the name of the base function for use.
       int nameLength = strlen(ThisFunction->GetName());
@@ -358,6 +594,7 @@ void Profiler::CallSiteStart(int tid) {
       if (prefixLength < nameLength) {
 	shortenedName = (char *)malloc((prefixLength+1)*sizeof(char));
 	strncpy(shortenedName, ThisFunction->GetName(), prefixLength);
+	shortenedName[prefixLength] = '\0';
       } else {
 	shortenedName = strdup(ThisFunction->GetName());
       }
@@ -380,11 +617,13 @@ void Profiler::CallSiteStart(int tid) {
       CallSiteFunction->isCallSite = true;
       CallSiteFunction->callSiteKeyId = callsiteKeyId; 
       CallSiteFunction->callSiteResolved = false;
+
       CallSiteFunction->firstSpecializedFunction = NULL; // non-base functions are always NULL
       string tempName = string(shortenedName);
       CallSiteFunction->SetShortName(tempName);
       TheCallSitePathMap().insert(map<TAU_CALLSITE_PATH_MAP_TYPE>::value_type(key, 
 									      CallSiteFunction));
+      RtsLayer::UnLockEnv();
     } else {
       CallSiteFunction = (*itPath).second;
       // sanity check
@@ -417,8 +656,8 @@ void Profiler::CallSiteStart(int tid) {
 	  resolvedCallSite = 
 	    determineCallSiteViaId(CallSiteFunction->callSiteKeyId,
 				   firstCallSiteFunction->callSiteKeyId);
-	  //	  printf("%d Got the final callsite %p\n", CallSiteFunction->callSiteKeyId,
-	  //		 resolvedCallSite);
+	  TAU_VERBOSE("%d Got the final callsite %p\n", CallSiteFunction->callSiteKeyId,
+		      resolvedCallSite);
 	  // Register the resolution of this callsite key
 	  CallSiteFunction->callSiteResolved = true;
 	  TheCallSiteIdVector()[CallSiteFunction->callSiteKeyId]->resolved = true;
@@ -429,8 +668,8 @@ void Profiler::CallSiteStart(int tid) {
 	    resolvedCallSite =
 	      determineCallSiteViaId(firstCallSiteFunction->callSiteKeyId,
 				     CallSiteFunction->callSiteKeyId);
-	    //	    printf("%d Got the final master callsite %p\n", firstCallSiteFunction->callSiteKeyId,
-	    //		   resolvedCallSite);
+	    TAU_VERBOSE("%d Got the final master callsite %p\n", firstCallSiteFunction->callSiteKeyId,
+			resolvedCallSite);
 	    firstCallSiteFunction->callSiteResolved = true;
 	    TheCallSiteIdVector()[firstCallSiteFunction->callSiteKeyId]->resolved = true;
 	    TheCallSiteIdVector()[firstCallSiteFunction->callSiteKeyId]->resolvedCallSite =
@@ -480,62 +719,6 @@ static string getNameAndType(FunctionInfo *fi) {
   }
 }
 
-char *resolveTauCallSite(unsigned long address) {
-  int bfdRet; // used only for an old interface
-
-  char *callsiteName;
-  char resolvedBuffer[4096];
-  // stub. BFD is needed for final solution.
-  // resolved = Tau_sampling_resolveName(addr, &name, &resolvedModuleIdx);
-  TauBfdInfo *resolvedInfo = NULL;
-  // backup information in case we fail to resolve the address to specific
-  //   line numbers.
-  TauBfdAddrMap addressMap;
-  sprintf(addressMap.name, "%s", "UNKNOWN");
-
-  // The subtraction is here because the return address in the callstack
-  //   takes you to the next instruction for the purposes of line number
-  //   discovery. This is a hack - used by perfsuite and ppw, but
-  //   nonetheless still a hack.
-  unsigned long addr = address-1;
-
-#ifdef TAU_BFD
-  if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
-    bfdUnitHandle = Tau_bfd_registerUnit(TAU_BFD_KEEP_GLOBALS);
-  }
-
-  // Attempt to use BFD to resolve names
-  resolvedInfo = 
-    Tau_bfd_resolveBfdInfo(bfdUnitHandle, (unsigned long)addr);
-  // backup info
-  bfdRet = Tau_bfd_getAddressMap(bfdUnitHandle, (unsigned long)addr,
-				 &addressMap);
-  if (resolvedInfo == NULL) {
-      resolvedInfo = 
-	  Tau_bfd_resolveBfdExecInfo(bfdUnitHandle, (unsigned long)addr);
-      sprintf(addressMap.name, "%s", "EXEC");
-  }
-#endif /* TAU_BFD */
-  if (resolvedInfo != NULL) {
-    sprintf(resolvedBuffer, "[%s] [{%s} {%d}]",
-	    resolvedInfo->funcname,
-	    resolvedInfo->filename,
-	    resolvedInfo->lineno, 0);
-  } else {
-    /* *CWL* - gonna declare that printing the exact address is unhelpful
-    sprintf(resolvedBuffer, "[%s] UNRESOLVED ADDR %p", 
-	    addressMap.name, (void *)addr);
-    */
-    sprintf(resolvedBuffer, "[%s] UNRESOLVED ADDR", addressMap.name);
-  }
-  //  sprintf(resolvedBuffer, "<%p>", address);
-
-  callsiteName = strdup((char *)resolvedBuffer);
-
-  //  printf("[%p] resolves to %s\n", addr, resolvedBuffer);
-  return callsiteName;
-}
-
 extern "C" void finalizeCallSites_if_necessary() {
   static bool callsiteFinalizationSetup = false;
   static bool callsiteThreadFinalized[TAU_MAX_THREADS];
@@ -558,6 +741,10 @@ extern "C" void finalizeCallSites_if_necessary() {
   string delimiter = string(" --> ");
   for (int i=0; i<callSiteId[tid]; i++) {
     tau_cs_info_t *callsiteInfo = TheCallSiteIdVector()[i];
+    if (callsiteInfo->hasName) {
+      // We've already done this in the discovery phase.
+      continue;
+    }
     string *tempName = new string("");
     if (callsiteInfo->resolved) {
       //      printf("ID %d resolved\n", i);
@@ -566,26 +753,32 @@ extern "C" void finalizeCallSites_if_necessary() {
       *tempName = string(" [@] ") + string(resolveTauCallSite(callsite));
       callsiteInfo->resolvedName = tempName;
     } else {
-      //      printf("ID %d not resolved\n", i);
-      // resolve the unwound callsites as a sequence
       unsigned long *key = callsiteInfo->key;
-      int keyLength = key[0];
-      // Bad if not true. Also the head entry cannot be Tau_start_timer.
-      if (keyLength > 0) {
-	*tempName = *tempName + string(resolveTauCallSite(key[keyLength]));
-      }
-      // process until "Tau_start_timer" is encountered and stop.
-      for (int j=keyLength-1; j>0; j--) {
-	char *temp = resolveTauCallSite(key[j]);
-	if (strstr(temp, "Tau_start_timer") == NULL) {
-	  *tempName = *tempName + delimiter + string(temp);
-	} else {
-	  break;
+      // One last try with the string method.
+      bool success =
+	determineCallSiteViaString(key);
+      //      success = false;
+      if (!success) {
+	//      printf("ID %d not resolved\n", i);
+	// resolve the unwound callsites as a sequence
+	int keyLength = key[0];
+	// Bad if not true. Also the head entry cannot be Tau_start_timer.
+	if (keyLength > 0) {
+	  *tempName = *tempName + string(resolveTauCallSite(key[keyLength]));
 	}
+	// process until "Tau_start_timer" is encountered and stop.
+	for (int j=keyLength-1; j>0; j--) {
+	  char *temp = resolveTauCallSite(key[j]);
+	  if (strstr(temp, "Tau_start_timer") == NULL) {
+	    *tempName = *tempName + delimiter + string(temp);
+	  } else {
+	    break;
+	  }
+	}
+	*tempName = string(" [@] ") + *tempName;
+	callsiteInfo->resolvedName = tempName;
+	callsiteInfo->resolved = true;
       }
-      *tempName = string(" [@] ") + *tempName;
-      callsiteInfo->resolvedName = tempName;
-      callsiteInfo->resolved = true;
     }
   }
   
@@ -613,6 +806,7 @@ extern "C" void finalizeCallSites_if_necessary() {
     *callSiteName = *callSiteName + *(callsiteInfo->resolvedName);
 
     if (TauEnv_get_callpath()) {
+      RtsLayer::LockDB();
       // Create the standalone entry for the callsite FI (no path).
       //   This is necessary only if there are callpaths involved.
       string tempName = string("[CALLSITE] ") + string(candidate->GetShortName()) + *callSiteName;
@@ -626,9 +820,11 @@ extern "C" void finalizeCallSites_if_necessary() {
       // Has as many calls as the measured callsite.
       newFunction->SetCalls(tid, candidate->GetCalls(tid));
       newFunction->SetSubrs(tid, candidate->GetSubrs(tid));
+      RtsLayer::UnLockDB();
     }
 
     // Now rename the candidate with the completely resolved name
+    //    printf("candidate name %s\n", candidate->GetName());
     string tempName = string(candidate->GetName() + *callSiteName);
     candidate->SetName(tempName);
   }
