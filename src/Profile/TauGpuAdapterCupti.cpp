@@ -93,7 +93,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 			get_values_from_memcpy(cbInfo, id, domain, kind, count);
 			if (cbInfo->callbackSite == CUPTI_API_ENTER)
 			{
-				FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::getTid())->ThisFunction;
+				FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->ThisFunction;
 				functionInfoMap[cbInfo->correlationId] = p;	
 				cuptiGpuId *new_id = new cuptiGpuId(cbInfo->contextUid, cbInfo->correlationId);
 				Tau_gpu_enter_memcpy_event(
@@ -132,7 +132,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 				}
 				else if (function_is_launch(id))
 				{
-					FunctionInfo *p = TauInternal_CurrentProfiler(RtsLayer::getTid())->ThisFunction;
+					FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->ThisFunction;
 					functionInfoMap[cbInfo->correlationId] = p;	
 					//printf("at launch id: %d.\n", cbInfo->correlationId);
 					Tau_CuptiLayer_init();
