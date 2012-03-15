@@ -392,7 +392,8 @@ int Tau_metadata_fillMetaData() {
    int size_y = tau_torus_size[TAU_BGQ_IDX(2)] * tau_torus_size[TAU_BGQ_IDX(3)];
    int size_z = tau_torus_size[TAU_BGQ_IDX(4)] * tau_torus_size[TAU_BGQ_IDX(5)];
 
-   sprintf(bgqbuffer, "(%d,%d,%d)", size_x,size_y,size_z);
+   sprintf(bgqbuffer, "(%d,%d,%d,%d,%d,%d)", tau_torus_size[0], tau_torus_size[1], tau_torus_size[2],
+	tau_torus_size[3], tau_torus_size[4], tau_torus_size[5]);
    Tau_metadata_register("BGQ Size", bgqbuffer);
   
    int wrap_x = tau_torus_wraparound[TAU_BGQ_IDX(0)] && tau_torus_wraparound[TAU_BGQ_IDX(1)]; 
