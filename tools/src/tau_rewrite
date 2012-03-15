@@ -306,7 +306,7 @@ luafile="events = {
   run_dir = \"$outputdir\",
   functions_global_blacklist = {
           {subtype = \"stringlist\",value = {\"call_gmon_start\",\"_init\",\"_fini\",\"_start\",\"frame_dummy\"}},
-          {subtype = \"regexplist\",value = {\"^irc__.*\",\"^__do_global_.*\",\"^__libc_csu_.*\",\"^__intel_.*\",\"^__pthread_.*\"}}
+          {subtype = \"regexplist\",value = {\"^irc__.*\",\"^__do_global_.*\",\"^__libc_csu_.*\",\"^__intel_.*\",\"^__pthread_.*\",\"pgf90_.*\", \"pghpf_\", \"__hpf_\"}}
   },
   at_exit={
           {
