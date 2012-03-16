@@ -543,8 +543,15 @@ void Tau_sampling_internal_initPc2CallSiteMapIfNecessary() {
   }
 }
 
+
+char *Tau_sampling_getShortSampleName(const char *sampleName) {
+  
+}
+
 CallSiteInfo *Tau_sampling_resolveCallSite(unsigned long address,
 					   const char *tag,
+					   const char *childName,
+					   char **newShortName,
 					   bool addAddress) {
   CallSiteInfo *callsite;
   int bfdRet; // used only for an old interface
@@ -584,19 +591,47 @@ CallSiteInfo *Tau_sampling_resolveCallSite(unsigned long address,
   }
 #endif /* TAU_BFD */
   if (resolvedInfo != NULL) {
-    sprintf(resolvedBuffer, "[%s] %s [{%s} {%d}]",
-	    tag,
-	    resolvedInfo->funcname,
-	    resolvedInfo->filename,
-	    resolvedInfo->lineno);
+    if (childName == NULL) {
+      sprintf(resolvedBuffer, "[%s] %s [{%s} {%d}]",
+	      tag,
+	      resolvedInfo->funcname,
+	      resolvedInfo->filename,
+	      resolvedInfo->lineno);
+    } else {
+      sprintf(resolvedBuffer, "[%s] %s [@] %s [{%s} {%d}]",
+	      tag,
+	      childName,
+	      resolvedInfo->funcname,
+	      resolvedInfo->filename,
+	      resolvedInfo->lineno);
+    }
+    // This will be reused later. Make sure to free after it is used.
+    // strdup should not be used because we cannot guaranteed the allocation scheme.
+    *newShortName = (char *)malloc(sizeof(char)*(strlen(resolvedInfo->funcname)+1));
+    *newShortName = strcpy(*newShortName, resolvedInfo->funcname);
   } else {
     if (addAddress) {
-      sprintf(resolvedBuffer, "[%s] UNRESOLVED %s ADDR %p", 
-	      tag, addressMap.name, (void *)addr);
-	      
+      char tempAddrBuffer[32]; // not expecting more than 26 digits in addr
+      if (childName == NULL) {
+	sprintf(resolvedBuffer, "[%s] UNRESOLVED %s ADDR %p", 
+		tag, addressMap.name, (void *)addr);
+      } else {
+	sprintf(resolvedBuffer, "[%s] [%s] [@] UNRESOLVED %s ADDR %p", 
+		tag, childName, addressMap.name, (void *)addr);
+      }
+      sprintf(tempAddrBuffer, "ADDR %p", (void *)addr);
+      *newShortName = (char *)malloc(sizeof(char)*(strlen(tempAddrBuffer)+1));
+      *newShortName = strcpy(*newShortName, tempAddrBuffer);
     } else {
-      sprintf(resolvedBuffer, "[%s] UNRESOLVED %s", 
-	      tag, addressMap.name);
+      if (childName == NULL) {
+	sprintf(resolvedBuffer, "[%s] UNRESOLVED %s", 
+		tag, addressMap.name);
+      } else {
+	sprintf(resolvedBuffer, "[%s] [%s] [@] UNRESOLVED %s", 
+		tag, childName, addressMap.name);
+      }
+      *newShortName = (char *)malloc(sizeof(char)*(strlen("UNRESOLVED")+1));
+      *newShortName = strcpy(*newShortName, "UNRESOLVED");
     }
   }
   callsite->name = strdup(resolvedBuffer);
@@ -647,10 +682,20 @@ CallStackInfo *Tau_sampling_resolveCallSites(vector<unsigned long> *addresses) {
   // Deal with just the beginning.
   it = addresses->begin();
   // Make sure it is not empty.
+  
+  char *prevShortName = NULL;
+  char *newShortName = NULL;
   if (it != addresses->end()) {
     callStack->callSites->push_back(Tau_sampling_resolveCallSite(*it, 
 								 "SAMPLE",
+								 NULL,
+								 &newShortName,
 								 addAddress));
+    // move the pointers
+    if (newShortName != NULL) {
+      prevShortName = newShortName;
+      newShortName = NULL;
+    }
   }
   for (it = addresses->begin(); it != addresses->end(); it++) {
     // *CWL*
@@ -665,8 +710,21 @@ CallStackInfo *Tau_sampling_resolveCallSites(vector<unsigned long> *addresses) {
     } else {
       callStack->callSites->push_back(Tau_sampling_resolveCallSite(*it, 
 								   "UNWIND",
+								   prevShortName,
+								   &newShortName,
 								   addAddress));
+      // free the previous short name now.
+      if (prevShortName != NULL) {
+	free(prevShortName);
+	if (newShortName != NULL) {
+	  prevShortName = newShortName;
+	}
+      }
     }
+  }
+  // free both short names if need be
+  if (prevShortName != NULL) {
+    free(prevShortName);
   }
   return callStack;
 }
