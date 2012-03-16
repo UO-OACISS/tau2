@@ -465,6 +465,8 @@ void Profiler::CallSiteStart(int tid) {
     CallSiteFunction = NULL;
     return;
   }
+  //Initialization
+  CallSiteFunction=NULL;
 
   // *CWL* Stub for a test for whether we wish to acquire callsites for this function.
   if (1) {
