@@ -447,7 +447,7 @@ public class FunctionBarChartWindow extends JFrame implements KeyListener, Searc
     public void update(Observable o, Object arg) {
         String tmpString = (String) arg;
         if (tmpString.equals("prefEvent")) {
-        	if(this.comparisonChart==false){
+        	if(this.comparisonChart==false&&this.ppThread!=null){
         	this.setTitle("TAU: ParaProf: " + ParaProfUtils.getThreadLabel(ppThread.getThread()) + " - "
                     + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()) + phaseString);
         	}

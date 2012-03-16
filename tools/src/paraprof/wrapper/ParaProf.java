@@ -54,7 +54,7 @@ public class ParaProf implements ActionListener {
 	}
     }
 
-    private final static String VERSION = "Thu Dec  8 14:55:13 PST 2011";
+    private final static String VERSION = "Thu Mar 15 15:30:04 PDT 2012";
 
     public static int defaultNumberPrecision = 6;
 
@@ -608,7 +608,7 @@ public class ParaProf implements ActionListener {
 		FileList fl = new FileList();
 		List<File[]> v = fl.helperFindProfiles(".");
 
-		if (overwrite == null&&(unpackMPISumm==null||!unpackMPISumm)) {
+		if (overwrite == null&&(unpackMPISumm==null||!unpackMPISumm)&&(metadump==null||!metadump)) {
 		    if (v.size() != 0) {
 			System.err.println("Error: profiles found in current directory, please remove first");
 			return;

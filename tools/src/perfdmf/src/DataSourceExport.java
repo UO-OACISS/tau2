@@ -806,9 +806,8 @@ public class DataSourceExport {
 		if (suppress) {
 			System.out.format(
 					"%8.3f%8.3f%8.3f%16.5f%16.5f%16.5f%16.5f%16.5f%16.5f",
-					values[0], values[1], values[2], values[7], values[8],
-					values[9], values[10], values[11], values[12], values[13],
-					values[14]);
+					values[0], values[1], values[2], values[9], values[10],
+					values[11], values[12], values[13], values[14]);
 		} else {
 			System.out
 					.format("%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%16.5f%16.5f%16.5f%16.5f%16.5f%16.5f%16.5f%16.5f%16.5f",

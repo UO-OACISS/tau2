@@ -49,6 +49,8 @@ extern "C" int Tau_Global_numCounters;
 #include <unistd.h>
 #include <map>
 
+#include "Profile/TauSampling.h"
+
 #ifdef TAU_SS_ALLOC_SUPPORT
 #include <Profile/TauSsAllocator.h>
 #define SS_ALLOCATOR tau_ss_allocator
@@ -145,7 +147,7 @@ public:
   char *Type;
   char *GroupName;
   char *AllGroups;
-  uint64_t FunctionId;
+  x_uint64 FunctionId;
   string *FullName;
 
   /* For EBS Sampling Profiles */
@@ -160,6 +162,15 @@ public:
     SS_ALLOCATOR< std::pair<const vector<unsigned long>, unsigned int> > > *pcHistogram[TAU_MAX_THREADS];
   // For FunctionInfo objects created specially for sample-based profiling 
   FunctionInfo *parentTauContext;
+
+  // For CallSite discovery
+  bool isCallSite;
+  bool callSiteResolved;
+  unsigned long callSiteKeyId;
+  FunctionInfo *firstSpecializedFunction;
+  char *ShortenedName;
+  void SetShortName(string& str) { ShortenedName = strdup(str.c_str()); }
+  const char* GetShortName() const { return ShortenedName; }
 
   /* EBS Sampling Profiles */
   void addPcSample(vector<unsigned long> *pc, int tid);
@@ -193,7 +204,7 @@ public:
   string *GetFullName(); /* created on demand, cached */
 
 
-  uint64_t GetFunctionId() ;
+  x_uint64 GetFunctionId() ;
   long GetCalls(int tid) { return NumCalls[tid]; }
   void SetCalls(int tid, long calls) { NumCalls[tid] = calls; }
   long GetSubrs(int tid) { return NumSubrs[tid]; }

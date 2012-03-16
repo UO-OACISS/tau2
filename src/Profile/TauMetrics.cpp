@@ -326,6 +326,8 @@ static void initialize_functionArray() {
       functionArray[pos++] = metric_read_bgtimers;
     } else if (compareMetricString(metricv[i], "BGP_TIMERS")) {
       functionArray[pos++] = metric_read_bgtimers;
+    } else if (compareMetricString(metricv[i], "BGQ_TIMERS")) {
+      functionArray[pos++] = metric_read_bgtimers;
     } else if (compareMetricString(metricv[i], "CRAY_TIMERS")) {
       functionArray[pos++] = metric_read_craytimers;
     } else if (compareMetricString(metricv[i], "TAU_MPI_MESSAGE_SIZE")) {
@@ -459,8 +461,16 @@ int TauMetrics_getMetricUsed(int metric) {
 /*********************************************************************
  * Read the metrics
  ********************************************************************/
+extern "C"  bool TauCompensateInitialized(void);
 void TauMetrics_getMetrics(int tid, double values[]) {
-  if (!Tau_init_check_initialized()) TauMetrics_init();
+  if (!Tau_init_check_initialized()) {
+    // *CWL* - Safe only if Compensation is safely initialized. Otherwise
+    //         we would be in the middle of re-entrant behavior and
+    //         would be re-initializing metrics each time.
+    if (TauCompensateInitialized()) {
+      TauMetrics_init();
+    }
+  }
   for (int i = 0; i < nfunctions; i++) {
     functionArray[i](tid, i, values);
   }

@@ -19,6 +19,9 @@
 
 #include <TAU.h>
 
+#include <iostream>
+using namespace std;
+
 extern "C" int Tau_is_thread_fake(int t);
 
 /* for getrusage */
@@ -43,6 +46,19 @@ extern "C" int Tau_is_thread_fake(int t);
 #    include <kernel_interface.h>
 #  endif /* TAU_BGPTIMERS */
 #endif /* TAU_BGP */
+
+#ifdef TAU_BGQ
+
+/* header files for IBM BlueGene/Q */
+#include <firmware/include/personality.h>
+#include <spi/include/kernel/process.h>
+#include <spi/include/kernel/location.h>
+#ifdef __GNUC__
+#include <hwi/include/bqc/A2_inlines.h>   
+#endif
+#include <hwi/include/common/uci.h>
+
+#endif /* TAU_BGQ */
 
 #ifdef TAU_PAPI
 extern "C" {
@@ -139,6 +155,7 @@ void metric_read_clock_gettime(int tid, int idx, double values[]) {
 #endif
 }
 
+
 /* bgl/bgp timers */
 void metric_read_bgtimers(int tid, int idx, double values[]) {
 #ifdef TAU_BGL
@@ -167,6 +184,23 @@ void metric_read_bgtimers(int tid, int idx, double values[]) {
   values[idx] = 0;
 #endif /* TAU_BGPTIMERS */
 #endif /* TAU_BGP */
+  
+#ifdef TAU_BGQ 
+#ifdef BGQ_TIMERS
+  static double bgq_clockspeed = 0.0;
+  if (bgq_clockspeed < 1e-8) {
+    static Personality_t mybgq;
+    Kernel_GetPersonality(&mybgq, sizeof(Personality_t));
+    bgq_clockspeed = 1.0/ (double)(mybgq.Kernel_Config.FreqMHz);
+  }
+  values[idx] =  (GetTimeBase() * bgq_clockspeed);
+
+#else /* TAU_BGQ */
+  printf("TAU: Error: You must specify -BGQTIMERS at configure time\n");
+  values[idx] = 0;
+#endif /* TAU_BGQTIMERS */
+#endif /* TAU_BGQ */
+  
 }
 
 /* cray timers */
@@ -280,7 +314,7 @@ void metric_read_ktau(int tid, int idx, double values[]) {
 
 double gpu_timestamp[TAU_MAX_THREADS];
 
-void metric_set_gpu_timestamp(int tid, double value)
+extern "C" void metric_set_gpu_timestamp(int tid, double value)
 {
 	gpu_timestamp[tid] = value;
 }

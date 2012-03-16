@@ -93,6 +93,7 @@ public class TreeDropTarget implements DropTargetListener {
 		.getLastPathComponent();
 
 		boolean copy = dtde.getDropAction() == DnDConstants.ACTION_COPY;
+copy = !copy;
 
 		try {
 			Transferable tr = dtde.getTransferable();

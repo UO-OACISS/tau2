@@ -10,7 +10,7 @@
 /*******************************************************************
  *                                                                 *
  *        Tuning and Analysis Utilities Installation Procedure     *
- *                           Version 2.20                          *
+ *                           Version 2.21.2                        *
  *                                                                 *
  *******************************************************************
  *    For installation help, see INSTALL.                          *
@@ -36,7 +36,7 @@ Microsoft Windows users should refer to instructions in README.WINDOWS.txt.
 The following instructions are meant for Unix Users.
 
 1.  Configure the package for your system. We strongly urge you to see the section
-"1) INSTALLING TAU" below for examples (Linux clusters, AIX, BGP, XT5)
+"1) INSTALLING TAU" below for examples (Linux clusters, AIX, BGQ, XK6)
 
 After uncompressing and untarring tau, the user needs to configure, compile and
 install the package. This is done by invoking:
@@ -85,7 +85,7 @@ Installation Options:
 -prefix=<dir> ................ Specify a target installation directory.
 -exec-prefix=<arch> .......... Specify a target architecture directory.
 -arch=<architecture> ................... Specify a target architecture.
-       options          [xt3|craycnl|bgp|bgl|ibm64|ibm64linux|sunx86_64
+       options          [xt3|craycnl|bgp|bgq|ibm64|ibm64linux|sunx86_64
                                |solaris2-64|mips32|sgin32|sgi64|sgio32]
 
 MPI Options:
@@ -189,7 +189,7 @@ IMPORTANT NOTE: For IBM architectures, we use rs6000 and ppc64 to denote the
    /usr/bin/g++ for 32 bits and /opt/cross/bin/powerpc64-linux-g++ for 64 bit g++ 
    respectively. Under IBM Linux Power, we use xlf90 as the default Fortran compiler with 
    g++/gcc and xlC/xlc. For IBM BlueGene/L, we recommend using the -arch=bgl option. 
-   For IBM BG/L and BG/P, we recommend using the -arch=bgp. 
+   For IBM BG/P and BG/Q, we recommend using the -arch=bgp and -arch=bgq options respectively. 
 
    
 -c++=<C++ compiler>
@@ -683,23 +683,23 @@ iv) To configure TAU for Cray XE6 or IBM BGL/BGP,
    % configure -GNU; make clean install
 
    Then, configure TAU using:
-   % configure -arch=bgl -mpi -pdt=<dir> -pdt_c++=xlC 
-	configures TAU with MPI and PDT on BGL. You may configure TAU using:
+   % configure -arch=bgq -mpi -pdt=<dir> -pdt_c++=xlC 
+	configures TAU with MPI and PDT on BG/Q. You may configure TAU using:
    % configure -arch=bgp -mpi -pdt=<dir> -pdt_c++=xlC 
         to configure TAU with MPI and PDT on IBM BG/P. 
      Use -arch=craycnl -pdt_c++ on Cray CNL systems and 
-     Use -arch=xt3 -pdt_c++=g++ on Cray XT3 (Catamount). 
+     Use -arch=xt3 -pdt_c++=g++ on the older Cray XT3 (Catamount) systems. 
 	Then configure for the frontend using 
-	% ./configure This creates a backend library directory 
-	<taudir>/[bgl,xt3]/lib and a front-end 
-        directory <taudir>/[rs6000,x86_64]/bin which should be put in your PATH. 
+	% ./configure This creates directories
+	<taudir>/[bgq,craycnl]/[bin,lib] 
+        The directory <taudir>/[bgq,craycnl]/bin should be added to your PATH. 
 
-   For Cray XT4/XT5/XE6 or systems running Cray Compute Node Linux (CNL) instead of 
+   For Cray XT4/XT5/XE6/XK6 or systems running Cray Compute Node Linux (CNL) instead of 
    Catamount on the backend nodes, you will need to configure TAU with the 
    -arch=craycnl configuration option. e.g., 
 
    % configure -arch=craycnl -mpi -pdt=<dir> -pdt_c++=pgCC 
-        Configures TAU with MPI and PDT on Cray XT3/4 with Cray CNL. 
+        Configures TAU with MPI and PDT on Cray XE6/XK6... with Cray CNL. 
 
    TAU's -arch=xt3 configuration assumes Catamount and -arch=craycnl assumes 
    Cray Compute Node Linux on the backend nodes respectively. See TAU wiki for
@@ -713,11 +713,11 @@ vi) To configure TAU with VampirTrace using Intel Fortran compilers under Linux,
     please configure VampirTrace with support for PAPI and fmpi-lib as follows:
     % setenv CC icc; setenv CXX icpc; setenv F90 ifort; setenv FC ifort
     % cd VampirTrace-<version>; 
-    % ./configure --with-papi-dir=/usr/local/packages/papi-3.5.0 --enable-omp --enable-mpi --enable-fmpi-lib --prefix=/usr/local/packages/vampirtrace-5.2.5-mpich2
+    % ./configure --with-papi-dir=/usr/local/packages/papi-4.2.0 --enable-omp --enable-mpi --enable-fmpi-lib --prefix=/usr/local/packages/vampirtrace-5.2.5-mpich2
     % make clean; make ; make install
     Then, you may configure TAU using:
 
-    % cd tau-2.<x>; ./configure -papi=/usr/local/packages/papi-3.5.0 -vampirtrace=/usr/local/packages/vampirtrace-5.2.5-mpich2 -cc=icc -c++=icpc -fortran=intel -pdt=/usr/local/packages/pdtoolkit-3.14 -mpiinc=/usr/local/packages/mpich2-1.0.4p1/intel-9.1/include -mpilib=/usr/local/packages/mpich2-1.0.4p1/intel-9.1/lib
+    % cd tau-2.<x>; ./configure -papi=/usr/local/packages/papi-4.2.0 -vampirtrace=/usr/local/packages/vampirtrace-5.2.5-mpich2 -cc=icc -c++=icpc -fortran=intel -pdt=/usr/local/packages/pdtoolkit-3.17 -mpiinc=/usr/local/packages/mpich2-1.0.4p1/intel-9.1/include -mpilib=/usr/local/packages/mpich2-1.0.4p1/intel-9.1/lib
     % make clean install
 
 ***********************************************************************
@@ -857,15 +857,15 @@ Usage: installtau [OPTIONS]
    To use tau_instrumentor, the C++ source code instrumentor: 
    a. Install pdtoolkit. [ Ref: http://www.cs.uoregon.edu/research/pdt ]
       % ./configure -arch=ibm64 -XLC
-      % ./configure -XLC -exec-prefix=bgl
-      % ./configure -GNU -exec-prefix=xt3
+      % ./configure -XLC -exec-prefix=bgq
+      % ./configure -GNU -exec-prefix=craycnl
       % ./configure -ICPC
 
-      are commonly used values for AIX 64 bits, IBM BGL, Cray XT3 and Intel/AMD
+      are commonly used values for AIX 64 bits, IBM BGQ, Cray XK6 and Intel/AMD
       Linux clusters. 
 
    b. Install TAU using the -pdt configuration option.
-      % ./configure -pdt=/usr/local/packages/pdtoolkit-3.14 -c++=icpc -cc=icc ...
+      % ./configure -pdt=/usr/local/packages/pdtoolkit-3.17 -c++=icpc -cc=icc ...
 
    c. Modify the makefile to invoke tau_cxx.sh as the compiler. It generates a 
       program database file (.pdb) that contains program  entities (such as 

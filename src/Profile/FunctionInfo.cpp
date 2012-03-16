@@ -213,6 +213,13 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
     }
   }
   parentTauContext = NULL;
+
+  // Initialization of CallSite discovery structures.
+  isCallSite = false;
+  callSiteResolved = false;
+  //  callSiteKeyId = 0; // Any value works.
+  firstSpecializedFunction = NULL;
+
 #endif // TAU_WINDOWS
 
 #ifdef TAU_VAMPIRTRACE
@@ -372,7 +379,7 @@ void FunctionInfo::getExclusiveValues(int tid, double *values) {
 
 
 //////////////////////////////////////////////////////////////////////
-uint64_t FunctionInfo::GetFunctionId(void) {
+x_uint64 FunctionInfo::GetFunctionId(void) {
   // To avoid data races, we use a lock if the id has not been created
   if (FunctionId == 0) {
 #ifdef DEBUG_PROF

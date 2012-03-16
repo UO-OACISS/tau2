@@ -40,6 +40,7 @@
 #define ACTION_VERSION 5
 #define ACTION_NM2AWK  6
 #define ACTION_CFLAGS  7
+#define ACTION_POMP2_API_VERSION 8
 
 void
 opari2_print_help( char** argv )
@@ -47,14 +48,18 @@ opari2_print_help( char** argv )
     std::cout << argv[ 0 ] << "\n\n"
               << "Usage: opari2-config [OPTION] ... <command>\n\n"
               << "with following commands:\n"
-              << "   --nm                 Prints the nm command.\n"
-              << "   --awk_cmd            Prints the awk command.\n"
-              << "   --awk_script         Prints the awk script.\n"
-              << "   --egrep              Prints the egrep command.\n"
-              << "   --create_pompregions Prints the whole command necessary\n"
-              << "                        for creating the initialization file.\n"
-              << "   --cflags             Prints compiler options to include installed headers.\n"
-              << "   --version            Prints the Version number.\n\n"
+              << "   --nm                   Prints the nm command.\n"
+              << "   --awk-cmd              Prints the awk command.\n"
+              << "   --awk-script           Prints the awk script.\n"
+              << "   --egrep                Prints the egrep command.\n"
+              << "   --create-pomp2-regions Prints the whole command necessary\n"
+              << "                          for creating the initialization file.\n"
+              << "   --cflags               Prints compiler options to include installed headers.\n"
+              << "   --version              Prints the opari2 version number.\n"
+              << "   --pomp2-api-version    Prints the pomp2 API version that instrumented files\n"
+              << "                          conform too.\n\n"
+              << "   --opari2-revision      prints the revision number of the OPARI2 package\n"
+              << "   --common-revision      prints the revision number of the common package\n\n"
               << "and following options:\n"
               << "   --help                  Prints this help text.\n"
               << "   --config=<config file>  Reads in a configuration from the given file.\n\n"
@@ -87,11 +92,11 @@ main( int    argc,
         {
             action = ACTION_NM;
         }
-        else if ( strcmp( argv[ i ], "--awk_cmd" ) == 0 )
+        else if ( strcmp( argv[ i ], "--awk-cmd" ) == 0 )
         {
             action = ACTION_AWK;
         }
-        else if ( strcmp( argv[ i ], "--awk_script" ) == 0 )
+        else if ( strcmp( argv[ i ], "--awk-script" ) == 0 )
         {
             action = ACTION_SCRIPT;
         }
@@ -104,7 +109,7 @@ main( int    argc,
             action = ACTION_CFLAGS;
         }
 
-        else if ( strcmp( argv[ i ], "--create_pompregions" ) == 0 )
+        else if ( strcmp( argv[ i ], "--create-pomp2-regions" ) == 0 )
         {
             int j = 0;
             n_obj_files = argc - i - 1;
@@ -126,6 +131,20 @@ main( int    argc,
         else if ( strcmp( argv[ i ], "--version" ) == 0 )
         {
             action = ACTION_VERSION;
+        }
+        else if ( strcmp( argv[ i ], "--pomp2-api-version" ) == 0 )
+        {
+            action = ACTION_POMP2_API_VERSION;
+        }
+        else if ( strcmp( argv[ i ], "--opari2-revision" ) == 0 )
+        {
+            std::cout << SCOREP_COMPONENT_REVISION << std::endl;
+            exit( EXIT_SUCCESS );
+        }
+        else if ( strcmp( argv[ i ], "--common-revision" ) == 0 )
+        {
+            std::cout << SCOREP_COMMON_REVISION << std::endl;
+            exit( EXIT_SUCCESS );
         }
         else if ( strncmp( argv[ i ], "--config", 8 ) == 0 )
         {
@@ -189,11 +208,17 @@ main( int    argc,
                 std::cout << obj_files[ i ] << " ";
             }
             std::cout << " | " << app.egrep << " -i POMP2_Init_regions | "
-                      << app.egrep << " \" T \" | "
-                      << app.awk << " -f " << app.script << " > pompregions_c.c";
+                      << app.egrep << " \" [TD] \" | "
+                      << app.awk << " -f " << app.script;
             break;
+
         case ACTION_VERSION:
             std::cout << app.version << "\n";
+            std::cout.flush();
+            break;
+
+        case ACTION_POMP2_API_VERSION:
+            std::cout << app.pomp2_api_version << "\n";
             std::cout.flush();
             break;
 
@@ -206,12 +231,13 @@ main( int    argc,
 
 OPARI_Config::OPARI_Config()
 {
-    nm      = NM;
-    awk     = AWK;
-    egrep   = EGREP;
-    version = VERSION;
-    script  = SCRIPT;
-    cflags  = CFLAGS;
+    nm                = NM;
+    awk               = AWK;
+    egrep             = EGREP;
+    version           = VERSION;
+    pomp2_api_version = POMP2_API_VERSION;
+    script            = SCRIPT;
+    cflags            = CFLAGS;
 }
 
 OPARI_Config::~OPARI_Config()
@@ -250,6 +276,10 @@ OPARI_Config::set_value( std::string key, std::string value )
     {
         version = value;
     }
+    else if ( key == "POMP2_API_VERSION" )
+    {
+        pomp2_api_version = value;
+    }
     else if ( key == "NM" )
     {
         nm = value;
@@ -273,10 +303,10 @@ void
 OPARI_Config::read_parameter( std::string line )
 {
     /* check for comments */
-    int pos = line.find( "#" );
+    size_t pos = line.find( "#" );
     if ( pos == 0 )
     {
-        return; // Whole line cemmented out
+        return; // Whole line commented out
     }
     if ( pos != std::string::npos )
     {
