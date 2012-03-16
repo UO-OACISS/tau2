@@ -213,13 +213,14 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
     }
   }
   parentTauContext = NULL;
-#endif // TAU_WINDOWS
 
   // Initialization of CallSite discovery structures.
   isCallSite = false;
   callSiteResolved = false;
   //  callSiteKeyId = 0; // Any value works.
   firstSpecializedFunction = NULL;
+
+#endif // TAU_WINDOWS
 
 #ifdef TAU_VAMPIRTRACE
   string tau_vt_name(string(Name)+" "+string(Type));
