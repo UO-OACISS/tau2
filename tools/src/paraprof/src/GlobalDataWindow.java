@@ -58,7 +58,7 @@ public class GlobalDataWindow extends JFrame implements ActionListener, Observer
     private JMenu optionsMenu;
     private JCheckBoxMenuItem nameCheckBox = new JCheckBoxMenuItem("Sort By Name", false);
     private JCheckBoxMenuItem normalizeCheckBox = new JCheckBoxMenuItem("Normalize Bars", true);
-    private JCheckBoxMenuItem hideTotalCheckBox = new JCheckBoxMenuItem("Hide Total", false);
+    private JCheckBoxMenuItem hideTotalCheckBox = new JCheckBoxMenuItem("Hide Total", true);
     private JCheckBoxMenuItem orderByMeanCheckBox = new JCheckBoxMenuItem("Order By Mean", true);
     private JCheckBoxMenuItem orderCheckBox = new JCheckBoxMenuItem("Descending Order", true);
     private JCheckBoxMenuItem stackBarsCheckBox = new JCheckBoxMenuItem("Stack Bars Together", true);

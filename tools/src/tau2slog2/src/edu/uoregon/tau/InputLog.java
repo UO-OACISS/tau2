@@ -93,6 +93,54 @@ class EZStack extends ArrayList<PrimEvent>{
 	    }
 }
 
+
+class ComSource {
+	int source;
+	int dest;
+	int tag;
+	
+	
+
+	public ComSource(int source, int dest, int tag) {
+		super();
+		this.source = source;
+		this.dest = dest;
+		this.tag = tag;
+	}
+
+
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + dest;
+		result = prime * result + source;
+		result = prime * result + tag;
+		return result;
+	}
+
+
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ComSource other = (ComSource) obj;
+		if (dest != other.dest)
+			return false;
+		if (source != other.source)
+			return false;
+		if (tag != other.tag)
+			return false;
+		return true;
+	}
+}
+
 /*
    This class provides the Java version of TRACE-API.
 */
@@ -118,6 +166,7 @@ public class InputLog implements base.drawable.InputAPI
 	//private static int maxcats;
 	//private static base.drawable.YCoordMap ymap;
 	private static base.drawable.Primitive prime;
+	private static base.drawable.Primitive lastPrime;
 	private base.drawable.Category statedef;
 	
 	//private static Map global;
@@ -126,8 +175,8 @@ public class InputLog implements base.drawable.InputAPI
 	private static int maxnode;
 	private static int maxthread;
 	private static HashMap<Integer, EZStack> eventstack;
-	private static HashMap<Long, List<MessageEvent>> msgRecStack;
-	private static HashMap<Long, List<MessageEvent>> msgSenStack;
+	private static HashMap<ComSource, List<MessageEvent>> msgRecStack;
+	private static HashMap<ComSource, List<MessageEvent>> msgSenStack;
 	//private static int[] offset;
 	
 	private static Random getcolors;
@@ -150,10 +199,10 @@ public class InputLog implements base.drawable.InputAPI
 		return (nid << 16)+tid;
 	}
 	
-	private static long SourceDest(int source,int dest)
-	{
-		return ((long)source << 32)+dest;
-	}
+//	private static long SourceDest(int source,int dest, int tag)
+//	{
+//		return ((long)source << 32)+dest;
+//	}
 	
 	/*private static int GlobalID(int localnodeid, int localthreadid)
 	{
@@ -212,6 +261,7 @@ public class InputLog implements base.drawable.InputAPI
 		//numcats=0;
 		//maxcats=0;
 		prime=null;
+		lastPrime=null;
 		clockP=1;
 		eventReady=false;
 		doneReading=false;
@@ -255,8 +305,8 @@ public class InputLog implements base.drawable.InputAPI
 			}
 		}*/
 		eventstack = new HashMap<Integer, EZStack>();// Stack[maxnode+1][maxthread+1];
-		msgRecStack = new HashMap<Long, List<MessageEvent>>();// Stack[maxnode+1][maxthread+1];
-		msgSenStack = new HashMap<Long, List<MessageEvent>>();
+		msgRecStack = new HashMap<ComSource, List<MessageEvent>>();// Stack[maxnode+1][maxthread+1];
+		msgSenStack = new HashMap<ComSource, List<MessageEvent>>();
 		noMonEventCycle = new HashMap<Integer, Integer>();//[maxnode+1][maxthread+1];
 		
 		ev_cb = new TAUReader();
@@ -268,6 +318,7 @@ public class InputLog implements base.drawable.InputAPI
 
 	public boolean close()
 	{
+		ev_cb.endTrace(null, -1, -1);
 		tFileEvRead.closeTrace();
 		return true;
 	}
@@ -505,9 +556,19 @@ public class InputLog implements base.drawable.InputAPI
 	
 	private static class TAUReader implements TraceReaderCallbacks{
 		
+		private int badEnter=0;
+		private int badExit=0;
+		
+		ArrayList<String> badEvents = new ArrayList<String>();
+		
 		public int enterState(Object userData, long time, int nodeToken, int threadToken, int stateToken){
 			//System.out.println("Entered state "+stateToken+" time "+time+" nid "+nodeToken+" tid "+threadToken);
 			//eventstack[nodeToken][threadToken];
+			System.out.println("enter "+stateToken);
+			if(stateToken==1521){
+				badEnter+=1;
+			}
+			
 			Integer glob = new Integer(GlobalID(nodeToken,threadToken));
 			if(!eventstack.containsKey(glob))//  eventstack[nodeToken][threadToken]==null
 				eventstack.put(glob, new EZStack());  //[nodeToken][threadToken]=new Stack();
@@ -517,21 +578,43 @@ public class InputLog implements base.drawable.InputAPI
 		
 		public int leaveState(Object userData, long time, int nodeToken, int threadToken, int stateToken){
 			//System.out.println("Leaving state "+stateToken+" time "+time+" nid "+nodeToken+" tid "+threadToken);
+			System.out.println("exit "+stateToken);
+			if(stateToken==1521){
+				badExit+=1;
+			}
+			
 			Integer glob = new Integer(GlobalID(nodeToken,threadToken));
 			if(!eventstack.containsKey(glob)||eventstack.get(glob).size()==0)//if(eventstack[nodeToken][threadToken]==null||eventstack[nodeToken][threadToken].size()==0)
 			{
+				System.out.println("node "+ nodeToken+" thd "+" glob "+ glob +" size: ");
+				if(eventstack.get(glob)!=null)
+					System.out.println(eventstack.get(glob).size());
+				
 				System.err.println("Fault: Exit from empty or uninitialized thread");
-				System.exit(1);
+				return -1;
+				//System.exit(1);
 			}
 			PrimEvent leave = (PrimEvent) (eventstack.get(glob).pop());
 			if(leave.stateToken!=stateToken)
 			{
 				System.err.println("Fault: Event order failure.");
-				System.exit(1);
+				badEvents.add("evt: "+stateToken+" at: "+time+" found on stack(enter): "+leave.stateToken);
+				return -1;
+				//System.exit(1);
 			}
 			prime = new base.drawable.Primitive(stateToken,leave.time*clockP,time*clockP,
 					new double[]{leave.time*clockP,time*clockP} ,new int[]{GlobalID(nodeToken,threadToken),GlobalID(nodeToken,threadToken)},null);//((Integer)global.get(new Point(nodeToken,threadToken))).intValue(),((Integer)global.get(new Point(nodeToken,threadToken))).intValue()
-			eventReady=true;
+			
+			
+			if(lastPrime==null||(
+					comparePrimatives(prime,lastPrime)
+					))
+			{	
+				eventReady=true;
+				lastPrime=prime;
+			}
+			
+			
 			//System.out.println(nodeToken+" "+threadToken+" vs. "+((Integer)global.get(new Point(nodeToken,threadToken))).intValue()+" "+((Integer)global.get(new Point(nodeToken,threadToken))).intValue());
 			return 0;
 		}
@@ -544,6 +627,18 @@ public class InputLog implements base.drawable.InputAPI
 //			
 //			return false;
 //		}
+		
+		/**
+		 * Returns true if the argument primitives are not too similar to both be printed.  False if they should not both be printed (they are the same category in the same location)
+		 * @param prim1
+		 * @param prim2
+		 * @return
+		 */
+		private static boolean comparePrimatives(Primitive prim1,Primitive prim2){
+			if(prim1.getCategoryIndex()!=prim2.getCategoryIndex()||!prim1.equals(prim2)||(prim1.getStartVertex().lineID!=prim2.getStartVertex().lineID&&prim1.getFinalVertex().lineID!=prim2.getFinalVertex().lineID))
+				return true;
+			return false;
+		}
 		
 		public int sendMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, 
 				int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageComm){
@@ -578,7 +673,8 @@ public class InputLog implements base.drawable.InputAPI
 			 */
 			int destGlob = GlobalID(destinationNodeToken,destinationThreadToken);
 			int sourceGlob = GlobalID(sourceNodeToken,sourceThreadToken);
-			Long srcDst=new Long(SourceDest(sourceGlob,destGlob));
+			//Long srcDst=new Long(SourceDest(sourceGlob,destGlob,messageTag));
+			ComSource cs = new ComSource(sourceGlob,destGlob,messageTag);
 			
 			MessageEvent sndE=new MessageEvent(time,messageTag,sourceGlob,destGlob,messageSize,messageComm);
 			
@@ -587,7 +683,7 @@ public class InputLog implements base.drawable.InputAPI
 			 * If we have a message event in the recieved list then there has been a recieve sent before its send.
 			 * Match this send with the advanced recieve and submit the event.  (Is this always correct?)
 			 */
-			if(msgRecStack.containsKey(srcDst) && msgRecStack.get(srcDst).size()>0 &&(leave=(MessageEvent)msgRecStack.get(srcDst).remove(0))!=null)
+			if(msgRecStack.containsKey(cs) && msgRecStack.get(cs).size()>0 &&(leave=(MessageEvent)msgRecStack.get(cs).remove(0))!=null)
 			{
 					System.out.println("Reversed Message: time "+time+", source nid "+ sourceNodeToken +
 							" tid "+sourceThreadToken+", destination nid "+destinationNodeToken+" tid "+
@@ -596,7 +692,17 @@ public class InputLog implements base.drawable.InputAPI
 							new double[]{time*clockP,leave.time*clockP,} ,
 							new int[]{sourceGlob,destGlob},
 							getInfoVals(new int[]{messageTag,messageSize,messageComm}));
-					eventReady=true;
+					
+					
+					if(lastPrime==null||(
+							comparePrimatives(prime,lastPrime)
+							))
+					{	
+						eventReady=true;
+						lastPrime=prime;
+					}
+					
+					//eventReady=true;
 					return 0;
 			}
 			
@@ -604,11 +710,11 @@ public class InputLog implements base.drawable.InputAPI
 			 * If we do not yet have an event source-list list for this transaction ID, create one
 			 * Put this event in the source list
 			 */
-			if(!msgSenStack.containsKey(srcDst))
-				msgSenStack.put(srcDst, new LinkedList<MessageEvent>());
-			msgSenStack.get(srcDst).add(sndE);
+			if(!msgSenStack.containsKey(cs))
+				msgSenStack.put(cs, new LinkedList<MessageEvent>());
+			msgSenStack.get(cs).add(sndE);
 			return 0;
-		}
+		}//sendMessage
 		
 		public int recvMessage(Object userData, long time, int sourceNodeToken, int sourceThreadToken, 
 				int destinationNodeToken, int destinationThreadToken, int messageSize, int messageTag, int messageComm){
@@ -624,12 +730,12 @@ public class InputLog implements base.drawable.InputAPI
 				sourceThreadToken=0;
 			int sourceGlob = GlobalID(sourceNodeToken,sourceThreadToken);
 			int destGlob = GlobalID(destinationNodeToken,destinationThreadToken);
-			Long srcDst=new Long(SourceDest(sourceGlob,destGlob));
-			
+			//Long srcDst=new Long(SourceDest(sourceGlob,destGlob,messageTag));
+			ComSource cs = new ComSource(sourceGlob,destGlob,messageTag);
 			MessageEvent recE=new MessageEvent(time,messageTag, sourceGlob,destGlob,messageSize,messageComm);
 			
 			MessageEvent leave;
-			if(msgSenStack.containsKey(srcDst) && msgSenStack.get(srcDst).size()>0 && (leave=(MessageEvent)msgSenStack.get(srcDst).remove(0))!=null)
+			if(msgSenStack.containsKey(cs) && msgSenStack.get(cs).size()>0 && (leave=(MessageEvent)msgSenStack.get(cs).remove(0))!=null)
 			{
 					prime = new base.drawable.Primitive(messageTagShift,leave.time*clockP,time*clockP,
 							new double[]{leave.time*clockP,time*clockP},
@@ -637,16 +743,28 @@ public class InputLog implements base.drawable.InputAPI
 							sourceGlob,destGlob
 							},
 							getInfoVals(new int[]{messageTag,messageSize,messageComm}));
-					eventReady=true;
+					
+					if(lastPrime==null||(
+							comparePrimatives(prime,lastPrime)
+							))
+					{	
+						eventReady=true;
+						lastPrime=prime;
+					}
+					
+					//eventReady=true;
 					return 0;
 			}
 			
-			if(!msgRecStack.containsKey(srcDst))
-				msgRecStack.put(srcDst, new LinkedList<MessageEvent>());
-			msgRecStack.get(srcDst).add(recE);
+			if(!msgRecStack.containsKey(cs))
+				msgRecStack.put(cs, new LinkedList<MessageEvent>());
+			msgRecStack.get(cs).add(recE);
 			return 0;
-		}
+		}//recvMessage
 		
+		/*
+		 * If a message is sent from a thread (7004) we need to get its value from the send since we don't get thread values in messages naturally.
+		 */
 		int remoteThread=-1;
 		
 		public int eventTrigger(Object userData, long time, int nodeToken, int threadToken, int userEventToken,
@@ -654,6 +772,7 @@ public class InputLog implements base.drawable.InputAPI
 			
 			if(userEventToken==7004){
 				remoteThread=(int) userEventValue;
+				return 0;
 			}
 			
 			//System.out.println("EventTrigger: time "+time+", nid "+nodeToken+" tid "+threadToken+" event id "+userEventToken+" triggered value "+userEventValue);
@@ -689,7 +808,14 @@ public class InputLog implements base.drawable.InputAPI
 					//((Integer)global.get(new Point(nodeToken,threadToken))).intValue()
 					},
 					getInfoVals(new double[]{userEventValue}));
-			eventReady=true;
+			if(lastPrime==null||(
+					comparePrimatives(prime,lastPrime)
+					))
+			{	
+				eventReady=true;
+				lastPrime=prime;
+			}
+			//eventReady=true;
 			return 0;
 		}
 
@@ -708,6 +834,16 @@ public class InputLog implements base.drawable.InputAPI
 
 		public int defUserEvent(Object userData, int userEventToken, String userEventName, int monotonicallyIncreasing) {return 0;}
 
-		public int endTrace(Object userData, int nodeToken, int threadToken) {return 0;}
+		public int endTrace(Object userData, int nodeToken, int threadToken) {
+			
+			
+			for(int i=0;i<badEvents.size();i++){
+				System.out.println(badEvents.get(i));
+			}
+			
+			System.out.println("1521 enters: "+ badEnter + " exits: " +badExit);
+			
+			
+			return 0;}
 	}
 }

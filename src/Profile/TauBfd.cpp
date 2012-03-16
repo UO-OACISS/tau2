@@ -1,5 +1,13 @@
 #ifdef TAU_BFD
 
+#if (defined(TAU_BGP) || defined(TAU_BGQ)) && defined(TAU_XLC)
+// *CWL* - This is required to handle the different prototype for
+//         asprintf and vasprintf between gnu and xlc compilers
+//         on the BGP.
+#define HAVE_DECL_VASPRINTF 1
+#define HAVE_DECL_ASPRINTF 1
+#endif
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -18,12 +26,12 @@
 #define DEMANGLE_FLAGS (DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE | DMGL_TYPES)
 #endif /* HAVE_GNU_DEMANGLE */
 
-#ifdef TAU_BGP
+#if (defined(TAU_BGP) || defined(TAU_BGQ))
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif /* _GNU_SOURCE */
 #include <link.h>
-#endif /* TAU_BGP */
+#endif /* TAU_BGP || TAU_BGQ */
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
@@ -150,9 +158,12 @@ static TauBfdModule * Tau_bfd_internal_getModuleFromIdx(
 static void Tau_bfd_internal_addExeAddressMap();
 static void Tau_bfd_internal_locateAddress(
 		bfd *bfdptr, asection *section, void *data ATTRIBUTE_UNUSED);
-static int Tau_bfd_internal_getBGPJobID(const char *path, char *name);
 static void Tau_bfd_internal_updateProcSelfMaps(TauBfdUnit *unit);
+
+#if (defined(TAU_BGP) || defined(TAU_BGQ))
+static int Tau_bfd_internal_getBGPJobID(const char *path, char *name);
 static void Tau_bfd_internal_updateBGPMaps(TauBfdUnit *unit);
+#endif /* TAU_BGP || TAU_BGQ */
 
 // BFD units (e.g. executables and their dynamic libraries)
 //vector<TauBfdUnit*> bfdUnits;
@@ -224,9 +235,10 @@ static void Tau_bfd_internal_updateProcSelfMaps(TauBfdUnit *unit)
 	//         the BGP because the information acquired comes from the I/O nodes
 	//         and not the compute nodes. You could end up with an overlapping
 	//         range for address resolution if used!
-#ifndef TAU_BGP
+#if (defined (TAU_BGP) || defined(TAU_BGQ) || (TAU_WINDOWS))
+/* do nothing */
 	// *JCL* - Windows has no /proc filesystem, so don't try to use it
-#ifndef TAU_WINDOWS
+#else 
 
 	// Note: Linux systems only.
 	FILE *mapsfile = fopen("/proc/self/maps", "r");
@@ -260,11 +272,10 @@ static void Tau_bfd_internal_updateProcSelfMaps(TauBfdUnit *unit)
 		}
 	}
 	fclose(mapsfile);
-#endif /* TAU_WINDOWS */
-#endif /* TAU_BGP */
+#endif /* TAU_BGP || TAU_BGQ || TAU_WINDOWS */
 }
 
-#ifdef TAU_BGP
+#if (defined(TAU_BGP) || defined(TAU_BGQ))
 static int Tau_bfd_internal_BGP_dl_iter_callback(
 		struct dl_phdr_info *info, size_t size, void *data)
 {
@@ -292,19 +303,19 @@ static int Tau_bfd_internal_BGP_dl_iter_callback(
 	map->end = map->start + max_addr;
 	map->offset = 0; // assume.
 	sprintf(map->name, "%s", info->dlpi_name);
-	TAU_VERBOSE("BGP Module: %s, %p-%p (%d)\n",
+	TAU_VERBOSE("BG Module: %s, %p-%p (%d)\n",
 			map->name, map->start, map->end, map->offset);
 	unit->addressMaps.push_back(map);
 	unit->modules.push_back(new TauBfdModule);
 	return 0;
 }
-#endif /* TAU_BGP */
+#endif /* TAU_BGP || TAU_BGQ */
 
+#if (defined(TAU_BGP) || defined(TAU_BGQ))
 static void Tau_bfd_internal_updateBGPMaps(TauBfdUnit *unit) {
-#ifdef TAU_BGP
     dl_iterate_phdr(Tau_bfd_internal_BGP_dl_iter_callback, (void *)unit);
-#endif /* TAU_BGP */
 }
+#endif /* TAU_BGP || TAU_BGQ */
 
 
 // *JCL* - Executables compiled by MinGW are strange beasts in that
@@ -549,7 +560,11 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle,
 			sprintf((char*)info.funcname, "addr=<%p>", probeAddr);
 		}
 		if(info.filename == NULL) {
+		  if (matchingIdx != -1) {
 			info.filename = unit->addressMaps[matchingIdx]->name;
+		  } else {
+		    info.filename = unit->executablePath;
+		  }
 		}
 		info.probeAddr = probeAddr;
 		info.lineno = 0;
@@ -704,6 +719,7 @@ Tau_bfd_internal_getModuleFromIdx(TauBfdUnit * unit, int moduleIndex)
 	return unit->modules[moduleIndex];
 }
 
+#if (defined(TAU_BGP) || defined(TAU_BGQ))
 static int Tau_bfd_internal_getBGPJobID(const char *path, char *name) {
   DIR *pdir = NULL;
   pdir = opendir(path);
@@ -735,6 +751,7 @@ static int Tau_bfd_internal_getBGPExePath(char *path) {
   sprintf (path, "/jobs/%s/exe", jobid);
   return 0;
 }
+#endif /* TAU_BGP || TAU_BGQ */
 
 static char const * Tau_bfd_internal_getExecutablePath()
 {

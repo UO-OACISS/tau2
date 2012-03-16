@@ -1,0 +1,14 @@
+#!/bin/bash
+
+export COMPILER=$1
+shift
+
+export CONVERT_MP=`echo "$*" | sed 's/ -mp / -fopenmp /g' | sed 's/^-mp /-fopenmp /g' | sed 's/ -mp$/ -fopenmp/g' | sed 's/^-mp$/-fopenmp/g'`
+export CONVERT_RPATH=`echo "$CONVERT_MP" | sed 's/\( -R\)\([^ ]* \)/ -Wl,-rpath \2/g' | sed 's/\(^-R\)\([^ ]* \)/-Wl,-rpath \2/g' | sed 's/\( -R\)\([^ ]*$\)/ -Wl,-rpath \2/g' | sed 's/\(^-R\)\([^ ]*$\)/-Wl,-rpath \2/g'`
+
+export FINAL=$CONVERT_RPATH
+echo PRELOAD ALTCOMP: $COMPILER $FINAL
+$COMPILER $FINAL
+
+#`echo "$*" | sed 's/ -mp / -fopenmp /g' | sed 's/^-mp /-fopenmp /g' | sed 's/ -mp$/ -fopenmp/g' | sed 's/^-mp$/-fopenmp/g' | sed 's/\( -R\)\([^ ]* \)/ -Wl,-rpath \2/g' | sed 's/\(^-R\)\([^ ]* \)/-Wl,-rpath \2/g' | sed 's/\( -R\)\([^ ]*$\)/ -Wl,-rpath \2/g' | sed 's/\(^-R\)\([^ ]*$\)/-Wl,-rpath \2/g'`
+#gcc `echo "$*" | sed 's/ -mp / -fopenmp /g' | sed 's/^-mp /-fopenmp /g' | sed 's/ -mp$/ -fopenmp/g' | sed 's/^-mp$/-fopenmp/g' | sed 's/ -R[^ ]* / -Wl,-rpath \2/g`

@@ -40,7 +40,7 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
     private List<Thread> theThreads;
 
     
-    private boolean hideTotal = false;
+    private boolean hideTotal = true;
     
     
     public void setHideTotal(boolean hideTotal) {

@@ -1,5 +1,5 @@
 #!/bin/sh
 . $MODULESHOME/init/bash
 module switch PrgEnv-pgi PrgEnv-gnu
-cc $*
+./tau_alt_gnu_compiler cc $*
 module switch PrgEnv-gnu PrgEnv-pgi

@@ -17,12 +17,12 @@
 # pomp2_parse_init_regions.awk
 #
 # Expects the output of
-# $NM) $ALL_OBJS_AND_LIBS | $(GREP) -i POMP2_Init_regions | $(GREP) " T "
+# $(NM) $ALL_OBJS_AND_LIBS | $(GREP) -i POMP2_Init_regions | $(GREP) " [TD] "
 # as input. See <prefix/share/opari/doc/example/Makefile> for a working
 # example.
 #
 # The output is C-code that needs to be linked to your application. It
-# provides three function:
+# provides several functions:
 #
 # void POMP2_Init_regions(): need to be called from your POMP2 library to
 # initialize all instrumented POMP2 region by calling the instrumented
@@ -31,7 +31,10 @@
 # size_t POMP2_Get_num_regions() returns the number of POMP2 regions found
 # in $ALL_OBJS_AND_LIBS.
 #
-#  const char* POMP2_Get_opari2_version() returns a version string.
+# const char* POMP2_Get_opari2_version() returns a version string.
+#
+# Three functions returning int and specifying the library interface version:
+# int POMP2_Get_required_pomp2_library_version_(current|revision|age)()
 # 
 # Author: Christian Roessel <c.roessel@fz-juelich.de>
 #
@@ -41,31 +44,32 @@
   {
     if (index($i,"POMP2_Init_regions") != 0)
     {
-      split ($i,unmangled,"POMP2_Init_regions");
-      # $i looks like "POMP2_Init_regions_uniqueId_nRegions_?_?"
-      regions[n++] = $i;
-      split(unmangled[2], tokens, "_"); 
-      nRegions += tokens[3];
+      separator = "POMP2_Init_regions";
+    }
+    else if (index($i,"pomp2_init_regions") != 0)
+    {
+      separator = "pomp2_init_regions";
+    }
+    else if (index($i,"POMP2_INIT_REGIONS") != 0)
+    {
+      separator = "POMP2_INIT_REGIONS";
+    }
+    else
+    {
       continue;
     }
-    if (index($i,"pomp2_init_regions") != 0)
+
+    # $i looks like "POMP2_Init_regions_uniqueId_nRegions" or
+    # like "pomp2_init_regions_uniqueId_nRegions" or
+    # like "POMP2_INIT_REGIONS_uniqueId_nRegions"
+    split ($i,splitResult,separator);
+    _uniqueId_nRegions = splitResult[2];
+    if (!(_uniqueId_nRegions in regions))
     {
-      split ($i,unmangled,"pomp2_init_regions");
-      # $i looks like "pomp2_init_regions_uniqueId_nRegions_?_?"
-      regions[n++] = $i;
-      split(unmangled[2], tokens, "_"); 
+      regions[_uniqueId_nRegions] = $i;
+      split(_uniqueId_nRegions, tokens, "_");
       nRegions += tokens[3];
-      continue;
     }
-    if (index($i,"POMP2_INIT_REGIONS") != 0)
-    {
-      split ($i,unmangled,"POMP2_INIT_REGIONS");
-      # $i looks like "POMP2_INIT_REGIONS_uniqueId_nRegions_?_?"
-      regions[n++] = $i;
-      split(unmangled[2], tokens, "_"); 
-      nRegions += tokens[3];
-      continue;
-    }   
   }
 }
   

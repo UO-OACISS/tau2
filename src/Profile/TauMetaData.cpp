@@ -66,6 +66,54 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #include <kernel_interface.h>
 #endif // TAU_BGP
 
+#ifdef TAU_BGQ
+#include <firmware/include/personality.h>
+#include <spi/include/kernel/process.h>
+#include <spi/include/kernel/location.h>
+#ifdef __GNUC__
+#include <hwi/include/bqc/A2_inlines.h>
+#endif
+#include <hwi/include/common/uci.h>
+
+static Personality_t tau_bgq_personality;
+#define TAU_BGQ_TORUS_DIM 6
+static int tau_torus_size[TAU_BGQ_TORUS_DIM];
+static int tau_torus_coord[TAU_BGQ_TORUS_DIM];
+static int tau_torus_wraparound[TAU_BGQ_TORUS_DIM];
+
+int tau_bgq_init(void) {
+  uint64_t network_options;
+
+  Kernel_GetPersonality(&tau_bgq_personality, sizeof(Personality_t));
+
+  tau_torus_size[0] = tau_bgq_personality.Network_Config.Anodes;
+  tau_torus_size[1] = tau_bgq_personality.Network_Config.Bnodes;
+  tau_torus_size[2] = tau_bgq_personality.Network_Config.Cnodes;
+  tau_torus_size[3] = tau_bgq_personality.Network_Config.Dnodes;
+  tau_torus_size[4] = tau_bgq_personality.Network_Config.Enodes;
+  tau_torus_size[5] = 64;
+
+  tau_torus_coord[0] = tau_bgq_personality.Network_Config.Anodes;
+  tau_torus_coord[1] = tau_bgq_personality.Network_Config.Bnodes;
+  tau_torus_coord[2] = tau_bgq_personality.Network_Config.Cnodes;
+  tau_torus_coord[3] = tau_bgq_personality.Network_Config.Dnodes;
+  tau_torus_coord[4] = tau_bgq_personality.Network_Config.Enodes;
+  tau_torus_coord[5] = Kernel_ProcessorID();
+
+  network_options = tau_bgq_personality.Network_Config.NetFlags;
+
+  tau_torus_wraparound[0] = network_options & ND_ENABLE_TORUS_DIM_A;
+  tau_torus_wraparound[1] = network_options & ND_ENABLE_TORUS_DIM_B;
+  tau_torus_wraparound[2] = network_options & ND_ENABLE_TORUS_DIM_C;
+  tau_torus_wraparound[3] = network_options & ND_ENABLE_TORUS_DIM_D;
+  tau_torus_wraparound[4] = network_options & ND_ENABLE_TORUS_DIM_E;
+  tau_torus_wraparound[5] = 0;
+
+  return 1;
+}
+
+#endif /* TAU_BGQ */
+
 #if (defined (TAU_CATAMOUNT) && defined (PTHREADS))
 #define _BITS_PTHREADTYPES_H 1
 #endif
@@ -317,7 +365,97 @@ int Tau_metadata_fillMetaData() {
 	   BGP_Personality_zPsetCoord(&personality));
   Tau_metadata_register("BGP PsetCoord", bgpbuffer);
 */
+
 #endif /* TAU_BGP */
+
+#ifdef TAU_BGQ
+/* NOTE: Please refer to Scalasca's elg_pform_bgq.c [www.scalasca.org] for 
+   details on IBM BGQ Axis mapping. */
+   static int bgq_init = tau_bgq_init(); 
+   char bgqbuffer[4096];
+   static char tau_axis_map[] = "EFABCD";  
+   /* EF -> x, AB -> y, CD -> z */
+
+   #define TAU_BGQ_IDX(i) tau_axis_map[i] - 'A'
+
+   int x = tau_torus_coord[TAU_BGQ_IDX(0)] * tau_torus_size[TAU_BGQ_IDX(1)] 	
+           + tau_torus_coord[TAU_BGQ_IDX(1)]; 
+   int y = tau_torus_coord[TAU_BGQ_IDX(2)] * tau_torus_size[TAU_BGQ_IDX(3)] 
+           + tau_torus_coord[TAU_BGQ_IDX(3)]; 
+   int z = tau_torus_coord[TAU_BGQ_IDX(4)] * tau_torus_size[TAU_BGQ_IDX(5)]
+           + tau_torus_coord[TAU_BGQ_IDX(5)]; 
+
+   sprintf(bgqbuffer, "(%d,%d,%d)", x,y,z);
+   Tau_metadata_register("BGQ Coords", bgqbuffer);
+
+   int size_x = tau_torus_size[TAU_BGQ_IDX(0)] * tau_torus_size[TAU_BGQ_IDX(1)];
+   int size_y = tau_torus_size[TAU_BGQ_IDX(2)] * tau_torus_size[TAU_BGQ_IDX(3)];
+   int size_z = tau_torus_size[TAU_BGQ_IDX(4)] * tau_torus_size[TAU_BGQ_IDX(5)];
+
+   sprintf(bgqbuffer, "(%d,%d,%d,%d,%d,%d)", tau_torus_size[0], tau_torus_size[1], tau_torus_size[2],
+	tau_torus_size[3], tau_torus_size[4], tau_torus_size[5]);
+   Tau_metadata_register("BGQ Size", bgqbuffer);
+  
+   int wrap_x = tau_torus_wraparound[TAU_BGQ_IDX(0)] && tau_torus_wraparound[TAU_BGQ_IDX(1)]; 
+   int wrap_y = tau_torus_wraparound[TAU_BGQ_IDX(2)] && tau_torus_wraparound[TAU_BGQ_IDX(3)]; 
+   int wrap_z = tau_torus_wraparound[TAU_BGQ_IDX(4)] && tau_torus_wraparound[TAU_BGQ_IDX(5)]; 
+
+   sprintf(bgqbuffer, "(%d,%d,%d)", wrap_x,wrap_y,wrap_z);
+   Tau_metadata_register("BGQ Period", bgqbuffer);
+
+   BG_UniversalComponentIdentifier uci = tau_bgq_personality.Kernel_Config.UCI;
+   unsigned int row, col, mp, nb, cc;
+   bg_decodeComputeCardOnNodeBoardUCI(uci, &row, &col, &mp, &nb, &cc);
+   sprintf(bgqbuffer, "R%x%x-M%d-N%02x-J%02x <%d,%d,%d,%d,%d>", row, col, mp, nb, cc,
+          tau_torus_coord[0], tau_torus_coord[1], tau_torus_coord[2],
+          tau_torus_coord[3], tau_torus_coord[4]);
+   Tau_metadata_register("BGQ Node Name", bgqbuffer);
+
+   sprintf(bgqbuffer, "%ld", ((uci>>38)&0xFFFFF)); /* encode row,col,mp,nb,cc*/
+   Tau_metadata_register("BGQ Node ID", bgqbuffer);
+
+   sprintf(bgqbuffer, "%ld", Kernel_PhysicalProcessorID());
+   Tau_metadata_register("BGQ Physical Processor ID", bgqbuffer);
+
+   sprintf(bgqbuffer, "%d", tau_bgq_personality.Kernel_Config.FreqMHz);
+   Tau_metadata_register("CPU MHz", bgqbuffer);
+
+   sprintf(bgqbuffer, "%d", Kernel_GetJobID());
+   Tau_metadata_register("BGQ Job ID", bgqbuffer);
+
+   sprintf(bgqbuffer, "%d", Kernel_ProcessorID());
+   Tau_metadata_register("BGQ Processor ID", bgqbuffer);
+
+   sprintf(bgqbuffer, "%d", Kernel_PhysicalHWThreadID());
+   Tau_metadata_register("BGQ Physical HW Thread ID", bgqbuffer);
+
+   sprintf(bgqbuffer, "%d", Kernel_ProcessCount());
+   Tau_metadata_register("BGQ Process Count", bgqbuffer);
+
+   sprintf(bgqbuffer, "%d", Kernel_ProcessorCount());
+   Tau_metadata_register("BGQ Processor Count", bgqbuffer);
+
+   sprintf(bgqbuffer, "%d", Kernel_MyTcoord());
+   Tau_metadata_register("BGQ tCoord", bgqbuffer);
+
+   sprintf(bgqbuffer, "%d", Kernel_ProcessorCoreID());
+   Tau_metadata_register("BGQ Processor Core ID", bgqbuffer);
+
+   sprintf(bgqbuffer, "%d", Kernel_ProcessorThreadID());
+   Tau_metadata_register("BGQ Processor Thread ID", bgqbuffer);
+
+   sprintf(bgqbuffer, "%d", Kernel_BlockThreadId());
+   Tau_metadata_register("BGQ Block Thread ID", bgqbuffer);
+
+   // Returns the Rank associated with the current process
+   sprintf(bgqbuffer, "%d", Kernel_GetRank());
+   Tau_metadata_register("BGQ Rank", bgqbuffer);
+
+   sprintf(bgqbuffer, "%d", tau_bgq_personality.DDR_Config.DDRSizeMB);
+   Tau_metadata_register("BGQ DDR Size (MB)", bgqbuffer);
+
+
+#endif /* TAU_BGQ */
 
 #ifdef __linux__
   // doesn't work on ia64 for some reason

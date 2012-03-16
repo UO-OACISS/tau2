@@ -87,10 +87,11 @@ int PthreadLayer::RegisterThread(void)
   int *threadId = new int;
 
   pthread_mutex_lock(&tauThreadcountMutex);
-  tauThreadCount ++;
+  //tauThreadCount ++;
   // A thread should call this routine exactly once. 
-  *threadId = tauThreadCount;
-  DEBUGPROFMSG("Thread id "<< tauThreadCount<< " Created! "<<endl;);
+  //*threadId = tauThreadCount;
+  *threadId = RtsLayer::createThread();
+  DEBUGPROFMSG("Thread id "<< *threadId << " Created! "<<endl;);
 
   pthread_mutex_unlock(&tauThreadcountMutex);
   pthread_setspecific(tauPthreadId, threadId);

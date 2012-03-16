@@ -82,7 +82,7 @@ dist_bin_SCRIPTS =
 ## resp.  But we need to define TESTS or else am__tty_colors will not
 ## get defined which leads to an syntax error in our tests.
 TESTS = 
-# XFAIL_TESTS =
+XFAIL_TESTS =
 # TESTS_ENVIRONMENT = 
 
 .PHONY: $(PHONY_TARGETS)
@@ -97,6 +97,6 @@ beautify:
 
 ## just build all targets specified by check_PROGRAMS and
 ## check_LTLIBRARIES here, don't traverse into subdirectories
-check-build: $(BUILT_SOURCES) all $(check_PROGRAMS) $(check_LTLIBRARIES)
+check-build: $(BUILT_SOURCES) all-am $(check_PROGRAMS) $(check_LTLIBRARIES)
 
 DISTCLEANFILES += $(builddir)/config.summary

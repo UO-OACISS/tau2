@@ -187,18 +187,30 @@ public class ThreeDeeGeneralPlotUtils {
 		return coords;
 	}
 
+	
+	public static int[] parseMPIProcName(String pname){
+		
+		String s = pname.substring(pname.indexOf('('),pname.indexOf(')')+1);
+		
+		return(parseTuple(s));
+		
+	}
+	
 	public static int[] parseTuple(String tuple) {
 
 		tuple = tuple.substring(1, tuple.length() - 1);
 		String[] tmp = tuple.split(",");
-		int[] tres = new int[3];
-		for (int i = 0; i < tmp.length; i++) {
-			if (i <= tmp.length)
+		int tmplen=tmp.length;
+		if(tmplen<3){
+			tmplen=3;
+		}
+		int[] tres = new int[tmplen];
+		for (int i = 0; i < tmplen; i++) {
+			if (i < tmp.length)
 				tres[i] = Integer.parseInt(tmp[i]);
 			else
 				tres[i] = 0;
 		}
-
 		return tres;
 	}
 
