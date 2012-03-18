@@ -212,7 +212,6 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 #endif /* TAU_PATHSCALE */
     }
   }
-  parentTauContext = NULL;
 
   // Initialization of CallSite discovery structures.
   isCallSite = false;
