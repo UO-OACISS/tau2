@@ -160,8 +160,6 @@ public:
   std::map< vector<unsigned long>, unsigned int, 
     std::less< vector<unsigned long> >, 
     SS_ALLOCATOR< std::pair<const vector<unsigned long>, unsigned int> > > *pcHistogram[TAU_MAX_THREADS];
-  // For FunctionInfo objects created specially for sample-based profiling 
-  FunctionInfo *parentTauContext;
 
   // For CallSite discovery
   bool isCallSite;
