@@ -243,6 +243,10 @@ static inline unsigned long get_pc(void *p) {
 #ifdef sun
   issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on solaris\n");
   return 0;
+#elif defined(TAU_BGQ)
+  // uc_mcontext->ss.srr0 *may* be the way forward.
+  issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not currently work on BGQ\n");
+  return 0;
 #elif __APPLE__
   issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on apple\n");
   return 0;
@@ -252,7 +256,7 @@ static inline unsigned long get_pc(void *p) {
 #else
   struct sigcontext *sc;
   sc = (struct sigcontext *)&uc->uc_mcontext;
-#if (defined(TAU_BGP) || defined(TAU_BGQ))
+#ifdef TAU_BGP
   //  pc = (unsigned long)sc->uc_regs->gregs[PPC_REG_PC];
   pc = (unsigned long)UCONTEXT_REG(uc, PPC_REG_PC);
 # elif __x86_64__
@@ -269,7 +273,7 @@ static inline unsigned long get_pc(void *p) {
   pc = (unsigned long)sc->regs->nip;
 # else
 #  error "profile handler not defined for this architecture"
-# endif /* TAU_BGP || BGQ */
+# endif /* TAU_BGP */
   return pc;
 #endif /* sun */
 }
