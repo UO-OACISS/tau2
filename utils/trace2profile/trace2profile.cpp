@@ -1,5 +1,5 @@
 /*
- * tau2profile.cpp
+ * trace2profile.cpp
  * Author: Wyatt Spear
  * This program reads a specified TAU trace and converts it into an equivalent set of TAU
  * profile files.  An interval may be specified in the command line to have the program
@@ -218,6 +218,10 @@ void InitSnapshot(){
 
 void writeStringXML(string *stringIn) {
 
+	cout << "Pointer: " << stringIn << endl;
+
+	cout << "Printing: " << *stringIn << endl;
+
   const char* s = stringIn->c_str();
   if (!s) return;
 
@@ -301,9 +305,18 @@ void SnapshotDefs(){
 	stateCount!=Converter::allstate.end(); stateCount++)
 	{
 		//cout << "With shots: " << Converter::statenames[(*stateCount).second.stateToken] << " Index: " << (*stateCount).second.stateToken << endl;
+
+		string* checkstate = Converter::statenames[(*stateCount).second->stateToken];
+		if(checkstate==0)
+			break;
+
+		string* checkgroup = Converter::groupnames[(*stateCount).second->stateGroupToken];
+		if(checkgroup==0)
+				break;
+
 		snapshot << "<event id=\""<< (*stateCount).second->stateToken << "\" name=\"";
-		 writeStringXML(Converter::statenames[(*stateCount).second->stateToken]); snapshot << "\" group=\"";
-		 writeStringXML(Converter::groupnames[(*stateCount).second->stateGroupToken]);
+		 writeStringXML(checkstate); snapshot << "\" group=\"";
+		 writeStringXML(checkgroup);
 		 snapshot << "\"/>" << endl;
 
 		//cout << "With shots2: " << Converter::statenames[(*stateCount).second.stateToken] << " Index: " << (*stateCount).second.stateToken << endl;
@@ -747,7 +760,7 @@ void Usage()
 		 << "specified rather than the current directory.\n"<< endl;
 	//cout << "-s <interger n>: Output a profile snapshot of the trace every n "
 		// << "time units.\n" << endl;
-	cout << "e.g. $tau2profile tau.trc tau.edf" << endl; // -s 25000"  << endl;
+	cout << "e.g. $trace2profile tau.trc tau.edf" << endl; // -s 25000"  << endl;
 }
 
 /***************************************************************************

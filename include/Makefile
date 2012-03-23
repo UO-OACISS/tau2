@@ -122,10 +122,11 @@ TAU_BIN_DIR=$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin
 TAU_INC_DIR=$(TAU_PREFIX_INSTALL_DIR)/include
 TAU_LIB_DIR=$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
-EBS_UNWIND_FLAG=
-EBS_UNWIND_INC=
-EBS_UNWIND_LIB=
-EBS_UNWIND_LIB_FLAG=
+UNWIND_FLAG=
+UNWIND_INC=
+UNWIND_LIB=
+UNWIND_LIB_FLAG=
+UNWIND_EXTRAS=
 
 #######################################################################
 
@@ -258,6 +259,8 @@ TAU_OPENMP_OPTION =
 #ZEPTO_GFORTRAN#TAU_F90_OPT = -fno-underscoring     #ENDIF#
 
 #THREADSAFE_COMPILERS#TAU_R         =_r     #ENDIF#
+#BGP#TAU_R         =_r     #ENDIF#
+#BGQ#TAU_R         =_r     #ENDIF#
 
 ############# Fortran Compiler #############
 #GNU_FORTRAN#TAU_F90         = g77              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
@@ -903,10 +906,10 @@ EBS_CLOCK_RES=
 #TAU_STRSIGNAL_OK#PROFILEOPT84 = -DTAU_STRSIGNAL_OK#ENDIF#
 
 ##############################################
-# TAU EBS Unwinder flags                      
+# TAU Unwinder flags                      
 ##############################################
-#TAU_EBS_UNWIND#PROFILEOPT85 = -DTAU_UNWIND $(EBS_UNWIND_FLAG) -I$(EBS_UNWIND_INC) #ENDIF#
-#TAU_EBS_UNWIND#  TAU_LINKER_OPT17 = -L$(EBS_UNWIND_LIB) $(EBS_UNWIND_LIB_FLAG)#ENDIF#
+#TAU_UNWIND#PROFILEOPT85 = -DTAU_UNWIND $(UNWIND_FLAG) -I$(UNWIND_INC) #ENDIF#
+#TAU_UNWIND#TAU_LINKER_OPT17 = -L$(UNWIND_LIB) $(UNWIND_LIB_FLAG) $(UNWIND_EXTRAS)#ENDIF#
 
 ##############################################
 # KTAU-NG!!
