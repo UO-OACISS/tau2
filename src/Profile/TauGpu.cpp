@@ -21,6 +21,7 @@
 #include <iostream>
 #include <iomanip>
 #include <Profile/OpenMPLayer.h>
+#include <stdlib.h>
 
 void *main_ptr, *gpu_ptr;
 
@@ -81,6 +82,12 @@ void check_gpu_event(int gpuTask)
 #ifdef DEBUG_PROF
 		cerr << "first gpu event" << endl;
 #endif
+		if (gpuTask >= TAU_MAX_THREADS)
+		{
+			cerr << "TAU ERROR: The number of GPU entities exceeds the maximum: " << TAU_MAX_THREADS << ". Please reconfigure TAU with '-useropt=-DTAU_MAX_THREADS=<larger number>.'" << endl;
+			exit(1);
+		}
+		printf("starting top level timer total=%d id=%d.\n", number_of_tasks, gpuTask);
 		TAU_PROFILER_START_TASK(gpu_ptr, gpuTask);
 		number_of_top_level_task_events++;
 	}
@@ -291,8 +298,16 @@ FunctionInfo* parent)
 }
 int get_task(gpuId *new_task)
 {
+	map<gpuId*, int>::iterator it = TheGpuIdMap().begin();
+	/*
+	for (it; it != TheGpuIdMap().end(); it++)
+	{
+		printf("tasks [%s] = %d.\n", it->first->printId(), it->second);
+	}
+	*/
 	int task = 0;
-	map<gpuId*, int>::iterator it = TheGpuIdMap().find(new_task);
+	//map<gpuId*, int>::iterator it = TheGpuIdMap().find(new_task);
+	it = TheGpuIdMap().find(new_task);
 	if (it == TheGpuIdMap().end())
 	{
 		gpuId *create_task = new_task->getCopy();
@@ -300,7 +315,7 @@ int get_task(gpuId *new_task)
 		number_of_tasks++;
 		Tau_set_thread_fake(task);
 		//TAU_CREATE_TASK(task);
-		//printf("new task: %s id: %d.\n", new_task->printId(), task);
+		//printf("new task: %s id: %d.\n", create_task->printId(), task);
 	} else
 	{
 		task = (*it).second;

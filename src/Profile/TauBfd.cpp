@@ -1,6 +1,6 @@
 #ifdef TAU_BFD
 
-#if defined(TAU_BGP) && defined(TAU_XLC)
+#if (defined(TAU_BGP) || defined(TAU_BGQ)) && defined(TAU_XLC)
 // *CWL* - This is required to handle the different prototype for
 //         asprintf and vasprintf between gnu and xlc compilers
 //         on the BGP.
