@@ -65,58 +65,17 @@ void Tau_sampling_outputTraceCallstack(int tid, void *pc,
   RtsLayer::UnLockDB();
 }
 
-// Copied from TauSampling.cpp for now. Find a way to share the code later.
-// *CWL* - Originally from HPCToolkit for the Power architecture. Kinda bizzarre -
-//         for the stack pointer and frame pointers, void ** is returned instead
-//         of void *. The double pointer is used directly, however.
+
+// *CWL* Partially copied from TauSampling.cpp. Clean up later.
 #if __WORDSIZE == 32
 #  define UCONTEXT_REG(uc, reg) ((uc)->uc_mcontext.uc_regs->gregs[reg])
 #else
 #  define UCONTEXT_REG(uc, reg) ((uc)->uc_mcontext.gp_regs[reg])
 #endif
 
-#define PPC_REG_FP   PPC_REG_R1
 #define PPC_REG_PC 32
-#define PPC_REG_R1   1
-#define PPC_REG_SP   PPC_REG_R1
 
-static inline unsigned long get_pc(void *p) {
-  struct ucontext *uc = (struct ucontext *)p;
-  unsigned long pc;
-
-#ifdef sun
-  issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on solaris\n");
-  return 0;
-#elif __APPLE__
-  issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on apple\n");
-  return 0;
-#elif _AIX
-  issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on AIX\n");
-  return 0;
-#else
-  struct sigcontext *sc;
-  sc = (struct sigcontext *)&uc->uc_mcontext;
-#ifdef TAU_BGP
-  //  pc = (unsigned long)sc->uc_regs->gregs[PPC_REG_PC];
-  pc = (unsigned long)UCONTEXT_REG(uc, PPC_REG_PC);
-# elif __x86_64__
-  pc = (unsigned long)sc->rip;
-# elif i386
-  pc = (unsigned long)sc->eip;
-# elif __ia64__
-  pc = (unsigned long)sc->sc_ip;
-# elif __powerpc64__
-  // it could possibly be "link" - but that is supposed to be the return address.
-  pc = (unsigned long)sc->regs->nip;
-# elif __powerpc__
-  // it could possibly be "link" - but that is supposed to be the return address.
-  pc = (unsigned long)sc->regs->nip;
-# else
-#  error "profile handler not defined for this architecture"
-# endif /* TAU_BGP */
-  return pc;
-#endif /* sun */
-}
+unsigned long get_pc(void *p);
 
 // Prototype support for acquiring stack pointer from the context.
 //   Only support for x86_64 for now.
@@ -261,14 +220,12 @@ void Tau_sampling_unwindTauContext(int tid, void **addresses) {
   RtsLayer::UnLockDB();
 }
 
-extern "C" FunctionInfo *findTopContext(Profiler *currentProfiler, void *address);
-vector<unsigned long> *Tau_sampling_unwind(int tid, Profiler *profiler,
-					   void *pc, void *context) {
+void Tau_sampling_unwind(int tid, Profiler *profiler,
+			 void *pc, void *context, unsigned long pcStack[]) {
   std::vector<Frame> stackwalk;
   string s;
   Dyninst::MachRegisterVal unwind_ip;
 
-  vector<unsigned long> *pcStack = new vector<unsigned long>();
   int unwindDepth = 0;
   int depthCutoff = TauEnv_get_ebs_unwind_depth();
 
@@ -293,67 +250,32 @@ vector<unsigned long> *Tau_sampling_unwind(int tid, Profiler *profiler,
 
   // StackWalkerAPI is not thread-safe
   RtsLayer::LockDB();
-
+  int index = 1;
   // Sadly, not single-stepping here. Just read the whole stack.
   bool success = false;
   //  success = walker->walkStack(stackwalk);
   success = walker->walkStackFromFrame(stackwalk, *startFrame);
   if (success) {
-    // push the PC
+    // push the PC (the top of the stackwalker stack is always it)
     unwind_ip = stackwalk[0].getRA();
-    pcStack->push_back((unsigned long)unwind_ip);
+    pcStack[index++] = (unsigned long)unwind_ip;
     for (unsigned i = 1; i < stackwalk.size(); i++) {
-      // not necessary with BFD
-      //    addr = stackwalk[i].getRA();
       unwind_ip = stackwalk[i].getRA();
-
       if ((unwindDepth >= depthCutoff) ||
 	  (unwind_cutoff(profiler->address, (void *)unwind_ip))) {
-	if (unwind_cutoff(profiler->address, (void *)unwind_ip)) {
-	  FunctionInfo *topFI;
-	  pcStack->push_back((unsigned long)unwind_ip);	  
-	  // Now that we have a match, we can look through the Profiler Stack
-	  //    to locate the top profile.
-	  topFI = findTopContext(profiler->ParentProfiler, (void *)unwind_ip);
-	  // No parent shares the current match. The current profiler must
-	  //    be the top entry.
-	  if (topFI == NULL) {
-	    if (profiler->CallPathFunction == NULL) {
-	      topFI = profiler->ThisFunction;
-	    } else {
-	      topFI = profiler->CallPathFunction;
-	    }
-	  }
-	  unwindDepth++;  // for accounting only
-	  // add 3 more unwinds (arbitrary) // not so easy here. 
-	  // And probably unnecessary.
-	  // Disabling for now.
-	  /*
-	  for (int i=0; i<TAU_SAMP_NUM_PARENTS; i++) {
-	    if (unw_step(&cursor) > 0) {
-	      unw_get_reg(&cursor, UNW_REG_IP, &unwind_ip);
-	      if (unwind_ip != curr_ip) {
-		pcStack->push_back((unsigned long)unwind_ip);
-	      }
-	    } else {
-	      break; // no more stack                                                                 
-	    }
-	  }
-	  */
-	} else {
-	  pcStack->push_back((unsigned long)unwind_ip);	  
-	}
+	pcStack[index++] = (unsigned long)unwind_ip;
+	unwindDepth++;
 	break; // always break when limit is hit or cutoff reached
       } // cut-off or limit check conditional
-
-      pcStack->push_back((unsigned long)unwind_ip);
+      pcStack[index++] = (unsigned long)unwind_ip;
       unwindDepth++;
     }
   }
+  // works in all cases because index is initialized to 1
+  pcStack[0] = index-1;
 
   // StackWalkerAPI is not thread-safe
   RtsLayer::UnLockDB();
-  return pcStack;
 }
 
 #endif /* TAU_USE_STACKWALKER */

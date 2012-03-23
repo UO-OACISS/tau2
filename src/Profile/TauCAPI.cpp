@@ -210,7 +210,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_init_if_necessary();
-    Tau_sampling_suspend();
+    Tau_sampling_suspend(tid);
   }
 #endif
 
@@ -220,7 +220,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   if ( !RtsLayer::TheEnableInstrumentation() || !(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
 #ifndef TAU_WINDOWS
     if (TauEnv_get_ebs_enabled()) {
-      Tau_sampling_resume();
+      Tau_sampling_resume(tid);
     }
 #endif
     Tau_global_insideTAU[tid]--;
@@ -240,7 +240,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   esd_enter(fi->GetFunctionId());
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
-    Tau_sampling_resume();
+    Tau_sampling_resume(tid);
   }
 #endif
   Tau_global_insideTAU[tid]--;
@@ -256,7 +256,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 #endif /* TAU_VAMPIRTRACE_5_12_API */
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
-    Tau_sampling_resume();
+    Tau_sampling_resume(tid);
   }
 #endif
   Tau_global_insideTAU[tid]--;
@@ -307,7 +307,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   if (mydepth >= userspecifieddepth) { 
 #ifndef TAU_WINDOWS
     if (TauEnv_get_ebs_enabled()) {
-      Tau_sampling_resume();
+      Tau_sampling_resume(tid);
     }
 #endif
     Tau_global_insideTAU[tid]--;
@@ -346,7 +346,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
-    Tau_sampling_resume();
+    Tau_sampling_resume(tid);
     Tau_sampling_event_start(tid, p->address);
   }
 #endif
@@ -368,7 +368,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   Tau_global_insideTAU[tid]++;
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
-    Tau_sampling_suspend();
+    Tau_sampling_suspend(tid);
   }
 #endif
   FunctionInfo *fi = (FunctionInfo *) function_info; 
@@ -379,7 +379,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   if ( !RtsLayer::TheEnableInstrumentation() || !(fi->GetProfileGroup()) & RtsLayer::TheProfileMask()) {
 #ifndef TAU_WINDOWS
     if (TauEnv_get_ebs_enabled()) {
-      Tau_sampling_resume();
+      Tau_sampling_resume(tid);
     }
 #endif
     Tau_global_insideTAU[tid]--;
@@ -411,7 +411,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   esd_exit(fi->GetFunctionId());
 #ifndef TAU_WINDOWS
     if (TauEnv_get_ebs_enabled()) {
-      Tau_sampling_resume();
+      Tau_sampling_resume(tid);
     }
 #endif
   Tau_global_insideTAU[tid]--;
@@ -429,7 +429,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 
 #ifndef TAU_WINDOWS
     if (TauEnv_get_ebs_enabled()) {
-      Tau_sampling_resume();
+      Tau_sampling_resume(tid);
     }
 #endif
   Tau_global_insideTAU[tid]--;
@@ -444,7 +444,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   if (Tau_global_stackpos[tid] < 0) { 
 #ifndef TAU_WINDOWS
     if (TauEnv_get_ebs_enabled()) {
-      Tau_sampling_resume();
+      Tau_sampling_resume(tid);
     }
 #endif
     Tau_global_insideTAU[tid]--;
@@ -465,7 +465,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
     Tau_global_stackpos[tid]--; /* pop */
 #ifndef TAU_WINDOWS
     if (TauEnv_get_ebs_enabled()) {
-      Tau_sampling_resume();
+      Tau_sampling_resume(tid);
     }
 #endif
     Tau_global_insideTAU[tid]--;
@@ -480,7 +480,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
-    Tau_sampling_resume();
+    Tau_sampling_resume(tid);
   }
 #endif
 
@@ -1410,6 +1410,7 @@ extern "C" void Tau_pure_start_task(const char *name, int tid)
 {
   FunctionInfo *fi = 0;
   string n = string(name);
+  RtsLayer::LockDB();
   TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
   if (it == ThePureMap().end()) {
     tauCreateFI((void**)&fi,n,"",TAU_USER,"TAU_USER");
@@ -1417,6 +1418,7 @@ extern "C" void Tau_pure_start_task(const char *name, int tid)
   } else {
     fi = (*it).second;
   }
+  RtsLayer::UnLockDB();
   Tau_start_timer(fi,0, tid);
 }
 extern "C" void Tau_pure_start(const char *name) {
@@ -1426,13 +1428,15 @@ extern "C" void Tau_pure_start(const char *name) {
 extern "C" void Tau_pure_stop_task(const char *name, int tid) {
   FunctionInfo *fi;
   string n = string(name);
+  RtsLayer::LockDB();
   TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
   if (it == ThePureMap().end()) {
     fprintf (stderr, "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\nTAU Error: You will likely get an overlapping timer message next\n\n", name);
   } else {
     fi = (*it).second;
-    Tau_stop_timer(fi, tid);
   }
+  RtsLayer::UnLockDB();
+  Tau_stop_timer(fi, tid);
 }
 extern "C" void Tau_pure_stop(const char *name) {
   Tau_pure_stop_task(name, Tau_get_tid());
