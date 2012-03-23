@@ -212,7 +212,13 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 #endif /* TAU_PATHSCALE */
     }
   }
-  parentTauContext = NULL;
+
+  // Initialization of CallSite discovery structures.
+  isCallSite = false;
+  callSiteResolved = false;
+  //  callSiteKeyId = 0; // Any value works.
+  firstSpecializedFunction = NULL;
+
 #endif // TAU_WINDOWS
 
 #ifdef TAU_VAMPIRTRACE

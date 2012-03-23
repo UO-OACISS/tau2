@@ -805,7 +805,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 		Vector<String> topos = new Vector<String>();
 		for(Iterator<String> it = keys.iterator(); it.hasNext();){
 			String key = it.next();
-			if(key.contains(" isTorus")){
+			if(key.contains(" isTorus")||key.contains(" Period")){
 				topos.add(key.split(" ")[0]);
 			}
 		}

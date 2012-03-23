@@ -19,11 +19,11 @@ class cuptiGpuId : public cudaGpuId
 public:
 	double syncOffset();
 	cuptiGpuId(uint64_t c, cudaStream_t s);
-	cuptiGpuId* getCopy();
+	cuptiGpuId* getCopy() const;
 	char* printId() const;
 	x_uint64 id_p1();
 	x_uint64 id_p2();
-	bool equals(const gpuId *other) const;
+	bool less_than(const gpuId *other) const;
 	cudaStream_t getStream();
 	int getDevice();
 	CUcontext getContext();
@@ -40,7 +40,7 @@ cudaStream_t cuptiGpuId::getStream() { return stream; };
 int cuptiGpuId::getDevice() { return 0; };
 CUcontext cuptiGpuId::getContext() { return (CUcontext) contextUid; };
 
-cuptiGpuId* cuptiGpuId::getCopy()
+cuptiGpuId* cuptiGpuId::getCopy() const
 {
 		cuptiGpuId *c = new cuptiGpuId(*this);
 		return c;
@@ -54,10 +54,10 @@ char* cuptiGpuId::printId() const
 };
 x_uint64 cuptiGpuId::id_p1() { return contextUid; };
 x_uint64 cuptiGpuId::id_p2() { return 0; };
-bool cuptiGpuId::equals(const gpuId *o) const
+bool cuptiGpuId::less_than(const gpuId *o) const
 {
 	cuptiGpuId *other = (cuptiGpuId*) o;
-	return this->contextUid == other->contextUid;
+	return this->contextUid < other->contextUid;
 }
 	
 class cuptiEventId : public eventId
