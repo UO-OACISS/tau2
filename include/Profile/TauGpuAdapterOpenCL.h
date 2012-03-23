@@ -28,11 +28,11 @@ public:
 
 	bool equals(const gpuId *other) const
 	{
-		return id  == ((openCLGpuId *)other)->id;
+		return strcmp(printId(), ((openCLGpuId *)other)->printId()) == 0;
 	}
 	double syncOffset();
 	
-  char* printId();
+  char* printId() const;
 	x_uint64 id_p1() { return (x_uint64) id; }
 	x_uint64 id_p2() { return 0; }
 };
