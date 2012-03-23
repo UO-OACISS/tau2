@@ -2,25 +2,33 @@
 #include <Profile/TauMmapMemMgr.h>
 
 #include <stdio.h>
-#include <errno.h>
 
 #include <sys/mman.h>
 #include <sys/stat.h>
 
-typedef struct TauMemSummary {
+typedef struct TauMemMgrSummary {
   int numBlocks;
   unsigned long totalAllocatedMemory;
-} tau_mem_summary_t;
+} tau_memmgr_summary_t;
 
-typedef struct TauMemInfo {
+typedef struct TauMemMgrInfo {
   unsigned long start;
   size_t size;
   unsigned long low;
   unsigned long high;
-} tau_mem_info_t;
+} tau_memmgr_info_t;
 
-static tau_mem_summary_t memSummary[TAU_MAX_THREADS];
-static tau_mem_info_t memInfo[TAU_MAX_THREADS][TAU_MEMMGR_MAX_MEMBLOCKS];
+tau_memmgr_summary_t& TheMmapMemMgrSummary(void) {
+  static tau_memmgr_summary_t memSummary[TAU_MAX_THREADS];
+  int myTid = RtsLayer::myThread();
+  return memSummary[myTid];
+}
+
+tau_memmgr_info_t& TheMmapMemMgrInfo(int block) {
+  static tau_memmgr_info_t memInfo[TAU_MAX_THREADS][TAU_MEMMGR_MAX_MEMBLOCKS];
+  int myTid = RtsLayer::myThread();
+  return memInfo[myTid][block];
+}
 
 // *CWL* - No intention to support memory freeing just yet
 
@@ -29,27 +37,39 @@ size_t Tau_MemMgr_alignRequest(size_t size) {
   return size + offset;
 }
 
-unsigned long Tau_MemMgr_getMemUsed(int tid) {
-  return memSummary[tid].totalAllocatedMemory;
+unsigned long Tau_MemMgr_getMemUsed() {
+  return TheMmapMemMgrSummary().totalAllocatedMemory;
 }
 
-// Global book-keeping.
 void Tau_MemMgr_initIfNecessary() {
   static bool initialized = false;
   static bool thrInitialized[TAU_MAX_THREADS];
+  // The double-check is to allow the race-condition on initialized
+  //   without compromising performance and correctness.
+  // This works for thread-safety. However, if signal-safety is
+  //   desired, the memory manager *must* be initialized before
+  //   any interrupt-based code attempts to use mmap or malloc
+  //   for the first time! Right now, the correct place for this
+  //   is sampling init.
   if (!initialized) {
-    for (int i=0; i<TAU_MAX_THREADS; i++) {
-      thrInitialized[i] = false;
+    RtsLayer::LockEnv();
+    // check again, someone else might already have initialized by now.
+    if (!initialized) {
+      //      printf("Not initialized!\n");
+      for (int i=0; i<TAU_MAX_THREADS; i++) {
+	thrInitialized[i] = false;
+      }
+      initialized = true;
     }
-    initialized = true;
+    RtsLayer::UnLockEnv();
   }
 
-  // *CWL* - TODO: Replace with RtsThread::MyThread() in real code.
   int myTid = RtsLayer::myThread();
 
   if (!thrInitialized[myTid]) {
-    memSummary[myTid].numBlocks = 0;
-    memSummary[myTid].totalAllocatedMemory = 0;
+    //    printf("Thread %d Not initialized!\n", myTid);
+    TheMmapMemMgrSummary().numBlocks = 0;
+    TheMmapMemMgrSummary().totalAllocatedMemory = 0;
     thrInitialized[myTid] = true;
   }
 }
@@ -60,6 +80,7 @@ void *Tau_MemMgr_mmap(int tid, size_t size)
   char *str;
   void *addr;
 
+  // Always ensure the system is ready for the mmap call
   Tau_MemMgr_initIfNecessary();
 
   prot = PROT_READ | PROT_WRITE;
@@ -73,37 +94,41 @@ void *Tau_MemMgr_mmap(int tid, size_t size)
   flags = MAP_PRIVATE;
   fd = open("/dev/zero", O_RDWR);
   if (fd < 0) {
-    printf("%s: open /dev/null failed: %d\n", __func__, errno);
+    fprintf(stderr, "Tau_MemMgr_mmap: open /dev/null failed\n");
     return NULL;
   }
 #endif
 
   addr = mmap(NULL, size, prot, flags, fd, 0);
   if (addr == MAP_FAILED) {
-    printf("%s: mmap failed: %d", __func__, errno);
+    fprintf(stderr, "Tau_MemMgr_mmap: mmap failed\n");
     addr = NULL;
   } else {
-    int numBlocks = memSummary[tid].numBlocks;
-    memInfo[tid][numBlocks].start = (unsigned long)addr;
-    memInfo[tid][numBlocks].size = size;
-    memInfo[tid][numBlocks].low = memInfo[tid][numBlocks].start;
-    memInfo[tid][numBlocks].high = memInfo[tid][numBlocks].start + size;
-    memSummary[tid].numBlocks++;
-    memSummary[tid].totalAllocatedMemory += size;
+    int numBlocks = TheMmapMemMgrSummary().numBlocks;
+    TheMmapMemMgrInfo(numBlocks).start = (unsigned long)addr;
+    TheMmapMemMgrInfo(numBlocks).size = size;
+    TheMmapMemMgrInfo(numBlocks).low = (unsigned long)addr;
+    TheMmapMemMgrInfo(numBlocks).high = (unsigned long)addr + size;
+    TheMmapMemMgrSummary().numBlocks++;
+    //    printf("At MMAP: numblocks now = %d\n", TheMmapMemMgrSummary().numBlocks);
+    TheMmapMemMgrSummary().totalAllocatedMemory += size;
   }
 
-  printf("%s: size = %ld, fd = %d, addr = %p\n",
-	 __func__, size, fd, addr);
+  //  printf("MMAP BLOCK acquired %ld at %p\n", size, addr);
+  TAU_VERBOSE("Tau_MemMgr_mmap: tid=%d, size = %ld, fd = %d, addr = %p\n",
+	      tid, size, fd, addr);
   return addr;
 }
 
 int Tau_MemMgr_findFit(int tid, size_t size) {
-  int numBlocks = memSummary[tid].numBlocks;
+  int numBlocks = TheMmapMemMgrSummary().numBlocks;
+  //  printf("Summary Says Num BLocks = %d\n", numBlocks);
   size_t blockSize = TAU_MEMMGR_DEFAULT_BLOCKSIZE;
   // If the request bigger than the default size.
   if (size > TAU_MEMMGR_DEFAULT_BLOCKSIZE) {
     blockSize = size;
   }
+
   // No block allocated so far. Attempt to acquire a new one that fits.
   if (numBlocks == 0) {
     void *addr = Tau_MemMgr_mmap(tid, blockSize);
@@ -112,13 +137,24 @@ int Tau_MemMgr_findFit(int tid, size_t size) {
       return -1;
     }
     // return index to new block
-    return memSummary[tid].numBlocks - 1;
+    int newBlkIdx = TheMmapMemMgrSummary().numBlocks-1;
+    /*
+    printf("block=%d, low=%p, high=%p, size=%d\n", newBlkIdx,
+	   TheMmapMemMgrInfo(newBlkIdx).low,
+	   TheMmapMemMgrInfo(newBlkIdx).high,
+	   TheMmapMemMgrInfo(newBlkIdx).size);
+    */
+    return newBlkIdx;
   }
+
+  // Hunt for an existing block with sufficient memory.
   for (int i=0; i<numBlocks; i++) {
-    if (memInfo[tid][i].high - memInfo[tid][i].low >= size) {
+    if (TheMmapMemMgrInfo(i).high - TheMmapMemMgrInfo(i).low >= size) {
+      //      printf("Found enough memory at block %d\n", i);
       return i;
     }
   }
+
   // Didn't find any suitable block. Attempt to acquire a new one.
   if (numBlocks < TAU_MEMMGR_MAX_MEMBLOCKS) {
     void *addr = Tau_MemMgr_mmap(tid, blockSize);
@@ -127,7 +163,7 @@ int Tau_MemMgr_findFit(int tid, size_t size) {
       return -1;
     }
     // return index to new block
-    return memSummary[tid].numBlocks - 1;
+    return TheMmapMemMgrSummary().numBlocks-1;
   } else {
     return -1;
   }
@@ -136,17 +172,23 @@ int Tau_MemMgr_findFit(int tid, size_t size) {
 void *Tau_MemMgr_malloc(int tid, size_t size) {
   void *addr;
 
+  // Always ensure the system is ready for a malloc
+  Tau_MemMgr_initIfNecessary();
+
   // Find (and attempt to create) a suitably sized memory block
   size_t myRequest = Tau_MemMgr_alignRequest(size);
+  //  printf("I am requesting %ld bytes\n", myRequest);
   int myBlock = Tau_MemMgr_findFit(tid, myRequest);
+  //  printf("Block returned by fit finder = %d\n", myBlock);
   if (myBlock < 0) {
     // failure.
     return NULL;
   }
   
-  tau_mem_info_t *info = &(memInfo[tid][myBlock]);
-  addr = (void *)info->low;
-  info->low += myRequest;
+  addr = (void *)TheMmapMemMgrInfo(myBlock).low;
+  TheMmapMemMgrInfo(myBlock).low += myRequest;
+
+  //  printf("Allocated memory %p\n", addr);
  
   return addr;
 }

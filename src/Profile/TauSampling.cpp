@@ -104,8 +104,8 @@ extern void Tau_sampling_outputTraceCallstack(int tid, void *pc,
 //             The same is not true for sampling, where the signal handler itself
 //             provides the originating context.
 extern void Tau_sampling_unwindTauContext(int tid, void **address);
-extern vector<unsigned long> *Tau_sampling_unwind(int tid, Profiler *profiler,
-						  void *pc, void *context);
+extern void Tau_sampling_unwind(int tid, Profiler *profiler,
+				void *pc, void *context, unsigned long stack[]);
 
 extern "C" bool unwind_cutoff(void **addresses, void *address) {
   bool found = false;
@@ -135,7 +135,7 @@ typedef struct {
 } TauSamplingRecord;
 
 typedef struct {
-  vector<unsigned long> pcStack;
+  unsigned long *pcStack;
   unsigned int sampleCount;
   FunctionInfo *tauContext;
 } CallSiteCandidate;
@@ -200,22 +200,6 @@ public:
 };
 // initSamplingThreadStructs initializer = initSamplingThreadStructs();
 
-void init_thread_variables_if_necessary(void) {
-  static bool thread_variables_initialized = false;
-  if (!thread_variables_initialized) {
-    TAU_VERBOSE("Initializing thread-specific variables\n");
-    for (int i = 0; i < TAU_MAX_THREADS; i++) {
-      samplingEnabled[i] = 0;
-      suspendSampling[i] = 0;
-      numSamples[i] = 0;
-      samplesDroppedTau[i] = 0;
-      samplesDroppedSuspended[i] = 0;
-    }
-    thread_variables_initialized = true;
-  }
-}
-
-
 /*********************************************************************
  * Get the architecture specific PC
  ********************************************************************/
@@ -236,7 +220,7 @@ void issueUnavailableWarningIfNecessary(char *text) {
   }
 }
 
-static inline unsigned long get_pc(void *p) {
+unsigned long get_pc(void *p) {
   struct ucontext *uc = (struct ucontext *)p;
   unsigned long pc;
 
@@ -274,14 +258,14 @@ static inline unsigned long get_pc(void *p) {
 #endif /* sun */
 }
 
-extern "C" void Tau_sampling_suspend() {
-  int tid = RtsLayer::myThread();
+extern "C" void Tau_sampling_suspend(int tid) {
+  //  int tid = RtsLayer::myThread();
   suspendSampling[tid] = 1;
   TAU_VERBOSE("Tau_sampling_suspend: on thread %d\n", tid);
 }
 
-extern "C" void Tau_sampling_resume() {
-  int tid = RtsLayer::myThread();
+extern "C" void Tau_sampling_resume(int tid) {
+  //  int tid = RtsLayer::myThread();
   suspendSampling[tid] = 0;
   TAU_VERBOSE("Tau_sampling_resume: on thread %d\n", tid);
 }
@@ -347,7 +331,7 @@ void Tau_sampling_flushTraceRecord(int tid, TauSamplingRecord *record,
   }
 #endif /* TAU_UNWIND */
 
-  fprintf(ebsTrace[tid], "\n");
+  fprintf(ebsTrace[tid], "");
 }
 
 void Tau_sampling_outputTraceStop(int tid, Profiler *profiler, 
@@ -544,7 +528,7 @@ void Tau_sampling_internal_initPc2CallSiteMapIfNecessary() {
 
 
 char *Tau_sampling_getShortSampleName(const char *sampleName) {
-  
+  return NULL;
 }
 
 CallSiteInfo *Tau_sampling_resolveCallSite(unsigned long address,
@@ -633,6 +617,7 @@ CallSiteInfo *Tau_sampling_resolveCallSite(unsigned long address,
       *newShortName = strcpy(*newShortName, "UNRESOLVED");
     }
   }
+  //  printf("Address %p resolves to %s\n", address, resolvedBuffer);
   callsite->name = strdup(resolvedBuffer);
   return callsite;
 }
@@ -665,65 +650,55 @@ char *Tau_sampling_getPathName(int index, CallStackInfo *callStack) {
   return ret;
 }
 
-CallStackInfo *Tau_sampling_resolveCallSites(vector<unsigned long> *addresses) {
+CallStackInfo *Tau_sampling_resolveCallSites(const unsigned long *addresses) {
   CallStackInfo *callStack;
   bool addAddress = false;
 
   callStack = (CallStackInfo *)malloc(sizeof(CallStackInfo));
-
   callStack->callSites = new vector<CallSiteInfo *>();
     
   if (TauEnv_get_ebs_keep_unresolved_addr() == 1) {
     addAddress = true;
   }
 
-  vector<unsigned long>::iterator it;
-  // Deal with just the beginning.
-  it = addresses->begin();
-  // Make sure it is not empty.
-  
+  if (addresses == NULL) {
+    return NULL;
+  }
+  int length = addresses[0];
+  if (length < 1) {
+    return NULL;
+  }
   char *prevShortName = NULL;
   char *newShortName = NULL;
-  if (it != addresses->end()) {
-    callStack->callSites->push_back(Tau_sampling_resolveCallSite(*it, 
-								 "SAMPLE",
-								 NULL,
+  callStack->callSites->push_back(Tau_sampling_resolveCallSite(addresses[1], 
+							       "SAMPLE",
+							       NULL,
+							       &newShortName,
+							       addAddress));
+  // move the pointers
+  if (newShortName != NULL) {
+    prevShortName = newShortName;
+    newShortName = NULL;
+  }
+  for (int i=1; i<length; i++) {
+    unsigned long address = addresses[i+1];
+    callStack->callSites->push_back(Tau_sampling_resolveCallSite(address, 
+								 "UNWIND",
+								 prevShortName,
 								 &newShortName,
 								 addAddress));
+    // free the previous short name now.
+    if (prevShortName != NULL) {
+      free(prevShortName);
+      if (newShortName != NULL) {
+	prevShortName = newShortName;
+      }
+    }
     // move the pointers
     if (newShortName != NULL) {
       prevShortName = newShortName;
       newShortName = NULL;
     }
-  }
-  for (it = addresses->begin(); it != addresses->end(); it++) {
-    // *CWL*
-    // The mechanism of addAddress allows us the flexibility of 
-    //   insisting on the insertion of address values to
-    //   distinguish multiple function invocations on the same
-    //   line in the callsite.
-    // Right now, I do not believe this is the way to go.
-    if (it == addresses->begin()) {
-      // Ignore the starting element. It has already been processed if it exists.
-      continue;
-    } else {
-      callStack->callSites->push_back(Tau_sampling_resolveCallSite(*it, 
-								   "UNWIND",
-								   prevShortName,
-								   &newShortName,
-								   addAddress));
-      // free the previous short name now.
-      if (prevShortName != NULL) {
-	free(prevShortName);
-	if (newShortName != NULL) {
-	  prevShortName = newShortName;
-	}
-      }
-    }
-  }
-  // free both short names if need be
-  if (prevShortName != NULL) {
-    free(prevShortName);
   }
   return callStack;
 }
@@ -780,27 +755,43 @@ void Tau_sampling_finalizeProfile(int tid) {
   for (vector<FunctionInfo *>::iterator fI_iter = TheFunctionDB().begin();
        fI_iter != TheFunctionDB().end(); fI_iter++) {
     FunctionInfo *parentTauContext = *fI_iter;
-    if ((parentTauContext->pcHistogram[tid] == NULL) ||
-	(parentTauContext->pcHistogram[tid]->size() == 0)) {
+    if ((parentTauContext->pathHistogram[tid] == NULL) ||
+	(parentTauContext->pathHistogram[tid]->size() == 0)) {
       // No samples encountered in this TAU context.
       //   Continue to next TAU context.
       TAU_VERBOSE("Tau Context %s has no samples.\n",
 		  parentTauContext->GetName());
       continue;
     }
-    map< vector<unsigned long>, unsigned int,
-      std::less<vector<unsigned long> >, 
-      SS_ALLOCATOR< std::pair<const vector<unsigned long>, unsigned int> > >::iterator it;
-    for (it = parentTauContext->pcHistogram[tid]->begin();
-	 it != parentTauContext->pcHistogram[tid]->end(); it++) {
+
+    /*
+    printf("Sampled Parent %s has %d elements\n", parentTauContext->GetName(),
+	   parentTauContext->pathHistogram[tid]->size());
+    parentTauContext->pathHistogram[tid]->printTable();
+    */
+    pair<unsigned long *, unsigned long> *item = NULL;
+    parentTauContext->pathHistogram[tid]->resetIter();
+    item = parentTauContext->pathHistogram[tid]->nextIter();
+    int count = 0;
+    while (item != NULL) {
       // This is a placeholder for more generic pcStack extraction routines.
       CallSiteCandidate *candidate = new CallSiteCandidate();
-      candidate->pcStack = it->first;
-      candidate->sampleCount = (unsigned int)it->second;
+      candidate->pcStack = item->first;
+      /*
+      for (int i=0; i<candidate->pcStack[0]; i++) {
+	printf("%p ", candidate->pcStack[i+1]);
+      }
+      printf("\n");
+      */
+      candidate->sampleCount = item->second;
       candidate->tauContext = parentTauContext;
       //      printf("TESTING: context name [%s] has SAMPLES\n", candidate->tauContext->GetName());
       candidates->push_back(candidate);
+      delete item;
+      item = parentTauContext->pathHistogram[tid]->nextIter();
+      count++;
     }
+    //    printf("Found count = %d items\n", count);
   }
   RtsLayer::UnLockDB();
 
@@ -857,7 +848,7 @@ void Tau_sampling_finalizeProfile(int tid) {
 
     // STEP 1: Resolve all addresses in a PC Stack.
     CallStackInfo *callStack =
-      Tau_sampling_resolveCallSites(&(candidate->pcStack));
+      Tau_sampling_resolveCallSites(candidate->pcStack);
 
     // Name-to-function map iterator. To be shared for intermediate and callsite
     //   scenarios.
@@ -1033,15 +1024,21 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
   FunctionInfo *samplingContext;
 
-  vector<unsigned long> *pcStack = new vector<unsigned long>();
+  // ok to be temporary. Hash table on the other end will copy the details.
+  unsigned long pcStack[TAU_SAMP_NUM_ADDRESSES+1];
+  for (int i=0; i<TAU_SAMP_NUM_ADDRESSES+1; i++) {
+    pcStack[i] = 0;
+  }
 #ifdef TAU_UNWIND
   if (TauEnv_get_ebs_unwind() == 1) {
-    pcStack = Tau_sampling_unwind(tid, profiler, pc, context);
+    Tau_sampling_unwind(tid, profiler, pc, context, pcStack);
   } else {
-    pcStack->push_back((unsigned long)pc);
+    pcStack[0] = 1;
+    pcStack[1] = (unsigned long)pc;
   }
 #else
-  pcStack->push_back((unsigned long)pc);
+  pcStack[0] = 1;
+  pcStack[1] = (unsigned long)pc;
 #endif /* TAU_UNWIND */
 
   if (TauEnv_get_callsite() && (profiler->CallSiteFunction != NULL)) {
@@ -1051,7 +1048,6 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
   } else {
     samplingContext = profiler->ThisFunction;
   }
-  //  pcStack->push_back((unsigned long)pc);
   samplingContext->addPcSample(pcStack, tid);
 
   Tau_global_decr_insideTAU_tid(tid);
@@ -1063,6 +1059,10 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
 
 /* Various unwinders might have their own implementation */
 void Tau_sampling_event_start(int tid, void **addresses) {
+
+  if (tid > 0) {
+    return;
+  }
 
   Tau_global_incr_insideTAU_tid(tid);
 
@@ -1089,6 +1089,10 @@ int Tau_sampling_event_stop(int tid, double *stopTime) {
 #ifdef TAU_EXP_DISABLE_DELTAS
   return 0;
 #endif
+
+  if (tid > 0) {
+    return 0;
+  }
 
   Tau_global_incr_insideTAU_tid(tid);
 
@@ -1122,6 +1126,10 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
   TAU_VERBOSE("Tau_sampling_handle_sample: tid=%d got sample [%p]\n",
   	      tid, (unsigned long)pc);
   */
+  if (tid > 0) {
+    return;
+  }
+
   if (samplingEnabled[tid] == 0) {
     // Do not track counts when sampling is not enabled.
     TAU_VERBOSE("Tau_sampling_handle_sample: sampling not enabled\n");
@@ -1186,15 +1194,23 @@ int Tau_sampling_init(int tid) {
 
   static struct itimerval itval;
 
+  if (tid > 0) {
+    return 0;
+  }
+
   Tau_global_incr_insideTAU_tid(tid);
 
   //int threshold = 1000;
   int threshold = TauEnv_get_ebs_period();
   TAU_VERBOSE("Tau_sampling_init: tid = %d with threshold %d\n", 
 	      tid, threshold);
-  init_thread_variables_if_necessary();
-  samplingEnabled[tid] = 0;
 
+  samplingEnabled[tid] = 0;
+  suspendSampling[tid] = 0;
+  numSamples[tid] = 0;
+  samplesDroppedTau[tid] = 0;
+  samplesDroppedSuspended[tid] = 0;
+  
   itval.it_interval.tv_usec = itval.it_value.tv_usec = threshold % 1000000;
   itval.it_interval.tv_sec =  itval.it_value.tv_sec = threshold / 1000000;
 
@@ -1235,25 +1251,25 @@ int Tau_sampling_init(int tid) {
   // int which = ITIMER_PROF;
   // int alarmType = SIGPROF;
 
+  int which = ITIMER_REAL;
+  int alarmType = SIGALRM;
+  
   /*  *CWL* - NOTE: It is fine to establish the timer interrupts here
       (and the PAPI overflow interrupts elsewhere) only because we
       enable sample handling for each thread after init(tid) completes.
       See Tau_sampling_handle_sample().
    */
   if (strcmp(TauEnv_get_ebs_source(), "itimer") == 0) {
-    int which = ITIMER_REAL;
-    int alarmType = SIGALRM;
-    
     struct sigaction act;
     memset(&act, 0, sizeof(struct sigaction));
     ret = sigemptyset(&act.sa_mask);
     if (ret != 0) {
-      printf("TAU: Sampling error: %s\n", strerror(ret));
+      fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
       return -1;
     }
     ret = sigaddset(&act.sa_mask, alarmType);
     if (ret != 0) {
-      printf("TAU: Sampling error: %s\n", strerror(ret));
+      fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
       return -1;
     }
     act.sa_sigaction = Tau_sampling_handler;
@@ -1261,7 +1277,7 @@ int Tau_sampling_init(int tid) {
     
     ret = sigaction(alarmType, &act, NULL);
     if (ret != 0) {
-      printf("TAU: Sampling error: %s\n", strerror(ret));
+      fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
       return -1;
     }
     
@@ -1270,7 +1286,7 @@ int Tau_sampling_init(int tid) {
     
     ret = setitimer(which, &itval, &ovalue);
     if (ret != 0) {
-      printf("TAU: Sampling error: %s\n", strerror(ret));
+      fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
       return -1;
     }
     
@@ -1278,7 +1294,7 @@ int Tau_sampling_init(int tid) {
 	ovalue.it_interval.tv_usec != pvalue.it_interval.tv_usec ||
 	ovalue.it_value.tv_sec != pvalue.it_value.tv_sec ||
 	ovalue.it_value.tv_usec != pvalue.it_value.tv_usec) {
-      printf("TAU [tid = %d]: Sampling error - Real time interval timer mismatch.\n", tid);
+      fprintf(stderr,"TAU [tid = %d]: Sampling error - Real time interval timer mismatch.\n", tid);
       return -1;
     }
     TAU_VERBOSE("Tau_sampling_init: pid = %d, tid = %d Signals set up.\n", getpid(), tid);
@@ -1298,17 +1314,11 @@ int Tau_sampling_finalize(int tid) {
      first instance. Right now, we should not have issues with the
      fact that this is not a per-thread construct.
   */
-  static bool ebsFinalized = false;
-  if (ebsFinalized) {
+  TAU_VERBOSE("Tau_sampling_finalize tid=%d\n", tid);
+
+  if (tid > 0) {
     return 0;
   }
-  ebsFinalized = true;
-  
-  TAU_VERBOSE("Tau_sampling_finalize tid=%d\n", tid);
-  //  printf("Tau_sampling_finalize tid=%d\n", tid);
-
-  //  printf("Total samples encountered = %lld\n", numSamples);
-  
 
   if (TauEnv_get_tracing()) {
     if (ebsTrace[tid] == 0) {
@@ -1352,13 +1362,28 @@ int Tau_sampling_finalize(int tid) {
    Assume no threading in this debug version.
  */
 extern "C" void Tau_sampling_init_if_necessary(void) {
-  static bool nodeInitialized = false;
-  if (!nodeInitialized) {
-    nodeInitialized = true;
-    if (TauEnv_get_ebs_enabled()) {
-      Tau_sampling_init(RtsLayer::myThread());
+  static bool initialized = false;
+  static bool thrInitialized[TAU_MAX_THREADS];
+
+  if (!initialized) {
+    RtsLayer::LockEnv();
+    // check again, someone else might already have initialized by now.
+    if (!initialized) {
+      //      printf("Sampling global initializing!\n");
+      for (int i=0; i<TAU_MAX_THREADS; i++) {
+	thrInitialized[i] = false;
+      }
+      initialized = true;
     }
-    return;
+    RtsLayer::UnLockEnv();
+  }
+
+  int myTid = RtsLayer::myThread();
+
+  if (!thrInitialized[myTid]) {
+    //    printf("Sampling thread %d initializing!\n", myTid);
+    Tau_sampling_init(myTid);
+    thrInitialized[myTid] = true;
   }
 }
 
@@ -1367,17 +1392,28 @@ extern "C" void Tau_sampling_init_if_necessary(void) {
    MPI_Finalize before the process of TAU event unification.
  */
 extern "C" void Tau_sampling_finalize_if_necessary(void) {
-  static bool nodeFinalized = false;
-  if (!nodeFinalized) {
-    nodeFinalized = true;
-    /* *CWL* This is not really a problem for now, but in the future,
-       there might be cases where we need a model for activating the
-       finalization of TAU Sampling on each thread of a process instead.
-     */
-    if (TauEnv_get_ebs_enabled()) {
-      Tau_sampling_finalize(RtsLayer::myThread());
+  static bool finalized = false;
+  static bool thrFinalized[TAU_MAX_THREADS];
+
+  if (!finalized) {
+    RtsLayer::LockEnv();
+    // check again, someone else might already have finalized by now.
+    if (!finalized) {
+      //      printf("Sampling global finalizing!\n");
+      for (int i=0; i<TAU_MAX_THREADS; i++) {
+	thrFinalized[i] = false;
+      }
+      finalized = true;
     }
-    return;
+    RtsLayer::UnLockEnv();
+  }
+
+  int myTid = RtsLayer::myThread();
+
+  if (!thrFinalized[myTid]) {
+    //    printf("Sampling thread %d finalizing!\n", myTid);
+    Tau_sampling_finalize(myTid);
+    thrFinalized[myTid] = true;
   }
 }
 
