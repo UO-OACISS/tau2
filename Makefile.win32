@@ -16,7 +16,7 @@ MPICFLAGS= /O2 /Gz /nologo /EHsc -I . -DPROFILING_ON -DTAU_WINDOWS
 CFLAGS= $(CFLAGS) /O2 /Gd /nologo /TP /EHsc -I .
 CC=cl
 INCLUDES=-Iinclude -I../include -Iinclude/Profile -I"C:\Program Files\Microsoft Compute Cluster Pack\Include"
-DEFINES=-DTAU_WINDOWS -DTAU_DOT_H_LESS_HEADERS -DTAU_LIBRARY_SOURCE -DTAU_DISABLE_SIGUSR -DTAU_SYNCHRONIZE_CLOCKS
+DEFINES=-DTAU_WINDOWS -DTAU_DOT_H_LESS_HEADERS -DTAU_LIBRARY_SOURCE -DTAU_DISABLE_SIGUSR -DTAU_SYNCHRONIZE_CLOCKS -DPDT_NO_UPC
 #DEFINES=-DTAU_WINDOWS -DTAU_DOT_H_LESS_HEADERS -DTAU_LIBRARY_SOURCE -DTAU_DISABLE_SIGUSR -DTAU_MPI -DTAU_SYNCHRONIZE_CLOCKS
 CFLAGS=$(CFLAGS) $(DEFINES) $(INCLUDES)
 MPICFLAGS=$(MPICFLAGS) $(DEFINES) $(INCLUDES)
@@ -87,18 +87,23 @@ libs : win32
 	nmake /f Makefile.win32 "FLAGS = -DPROFILING_ON /MT" tau-profile-mt.lib
 
 
-tau2vtf :
+tau2vtf : win32\bin
 	$(CC) $(CFLAGS) -DTRACING_ON /o win32\bin\tau2vtf utils\tau2vtf.cpp src\TraceInput\TAU_tf.cpp src\TraceInput\TAU_tf_writer.cpp src\TraceInput\TAU_Cwrapper.cpp -Isrc\TraceInput -I$(VTF)/include /link $(VTF)\win32\lib\libvtf3.lib
 
 
 
-tau_instrumentor :
+tau_instrumentor : win32\bin
 	$(CC) $(CFLAGS) /o win32\bin\tau_instrumentor utils\tau_instrumentor.cpp utils\tau_instrument.cpp utils\tau_selective.cpp -I$(PDT)\ductape\inc /link $(PDT)\windows\lib\ductape.lib	
+
+
+win32\bin : win32
+	md win32\bin
+
+win32\lib : win32
+	md win32\lib
 
 win32 :
 	md win32
-	md win32\bin
-	md win32\lib
 	copy tools\src\windows\etc\tau_config.h include
 	copy tools\src\windows\etc\tauarch.h include
 	copy tools\src\windows\trace_impl.h include

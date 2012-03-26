@@ -1,3 +1,7 @@
+#ifdef __APPLE__
+#define _XOPEN_SOURCE 600 /* Single UNIX Specification, Version 3 */
+#endif /* __APPLE__ */
+
 #include <Profile/TauSampling.h>
 #include <Profile/Profiler.h>
 #include <Profile/TauBfd.h>
@@ -14,54 +18,8 @@
 #include <vector>
 using namespace std;
 
-#if __WORDSIZE == 32
-#  define UCONTEXT_REG(uc, reg) ((uc)->uc_mcontext.uc_regs->gregs[reg])
-#else
-#  define UCONTEXT_REG(uc, reg) ((uc)->uc_mcontext.gp_regs[reg])
-#endif
-
-#define PPC_REG_PC 32
-
 // For BFD-based name resolution
 static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
-
-static inline unsigned long get_pc(void *p) {
-  struct ucontext *uc = (struct ucontext *)p;
-  unsigned long pc;
-
-#ifdef sun
-  issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on solaris\n");
-  return 0;
-#elif __APPLE__
-  issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on apple\n");
-  return 0;
-#elif _AIX
-  issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on AIX\n");
-  return 0;
-#else
-  struct sigcontext *sc;
-  sc = (struct sigcontext *)&uc->uc_mcontext;
-#if (defined(TAU_BGP) || defined(TAU_BGQ))
-  //  pc = (unsigned long)sc->uc_regs->gregs[PPC_REG_PC];
-  pc = (unsigned long)UCONTEXT_REG(uc, PPC_REG_PC);
-# elif __x86_64__
-  pc = (unsigned long)sc->rip;
-# elif i386
-  pc = (unsigned long)sc->eip;
-# elif __ia64__
-  pc = (unsigned long)sc->sc_ip;
-# elif __powerpc64__
-  // it could possibly be "link" - but that is supposed to be the return address.
-  pc = (unsigned long)sc->regs->nip;
-# elif __powerpc__
-  // it could possibly be "link" - but that is supposed to be the return address.
-  pc = (unsigned long)sc->regs->nip;
-# else
-#  error "profile handler not defined for this architecture"
-# endif /* TAU_BGP || TAU_BGQ */
-  return pc;
-#endif /* sun */
-}
 
 typedef struct TauCallSitePathElement {
   bool isCallSite;
@@ -182,7 +140,7 @@ void Tau_callsite_issueFailureNotice_ifNecessary() {
   } 
 }
 
-char *resolveTauCallSite(unsigned long address) {
+char *Tau_callsite_resolveCallSite(unsigned long address) {
   int bfdRet; // used only for an old interface
 
   char *callsiteName;
@@ -202,10 +160,6 @@ char *resolveTauCallSite(unsigned long address) {
   unsigned long addr = address-1;
 
 #ifdef TAU_BFD
-  if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
-    bfdUnitHandle = Tau_bfd_registerUnit(TAU_BFD_KEEP_GLOBALS);
-  }
-
   // Attempt to use BFD to resolve names
   resolvedInfo = 
     Tau_bfd_resolveBfdInfo(bfdUnitHandle, (unsigned long)addr);
@@ -332,6 +286,7 @@ size_t trimwhitespace(char *out, size_t len, const char *str)
 
 
 // *CWL* - Looking for the following pattern: "tau*/src/" where * has no "/".
+//         Also look for "tau*/include/" where * has no "/".
 bool nameInTau(const char *name) {
   int offset = 0;
   int length = 0;
@@ -346,6 +301,11 @@ bool nameInTau(const char *name) {
       if (temp != NULL) {
 	return true;
       } else {
+	// Try again with "include".
+	temp = strstr(strPtr, "include/");
+	if (temp != NULL) {
+	  return true;
+	}
 	return false;
       }
     } else {
@@ -417,13 +377,13 @@ bool determineCallSiteViaString(unsigned long *addresses) {
     bool hasMPI = false;
      
     for (int i=0; i<length; i++) {
-      name = resolveTauCallSite(addresses[i+1]);
+      name = Tau_callsite_resolveCallSite(addresses[i+1]);
       if (nameInTau(name)) {
 	hasMPI = hasMPI | nameInMPI(name);
 	continue;
       } else {
-	// Found the boundary. 
-	unsigned long callsite = addresses[i+1];
+	// Not in TAU. Found a boundary candidate.
+	//
 	// *CWL* - We need a general solution for this. Right now it is a horrid hack.
 	//         The ideal solution is a way to determine which of the following
 	//         instrumentation classes we are dealing with:
@@ -436,21 +396,30 @@ bool determineCallSiteViaString(unsigned long *addresses) {
 	// 
 	// For now, We make a blanket correction for all non-MPI invocations.
 	//
+	unsigned long callsite;
 	if (!hasMPI) {
-	  if (i < length-2) {
+	  // This is not an MPI chain. We assume it is a function event. Skip one level.
+	  //   The callsite into a function probe is not the same as the callsite into
+	  //   the function itself.
+	  if (i+2 < length) {
 	    callsite = addresses[i+2];
-	    name = resolveTauCallSite(addresses[i+2]);
+	    name = Tau_callsite_resolveCallSite(addresses[i+2]);
+	    registerNewCallsiteInfo(name, callsite, id);
+	    return true;
 	  }
 	} else {
-	  if (nameIsUnknown(name)) {
-	    if (i < length-2) {
-	      callsite = addresses[i+2];
-	      name = resolveTauCallSite(addresses[i+2]);
-	    }
+	  if (nameInMPI(name)) {
+	    // MPI could not possibly have invoked an MPI chain.
+	    //   Ignore and continue searching.
+	    continue;
+	  } else {
+	    // MPI invocations have immediate callsites.
+	    callsite = addresses[i+1];
+	    name = Tau_callsite_resolveCallSite(addresses[i+1]);
+	    registerNewCallsiteInfo(name, callsite, id);
+	    return true;
 	  }
 	}
-	registerNewCallsiteInfo(name, callsite, id);
-	return true;
       }
     }
   }
@@ -465,6 +434,7 @@ void Profiler::CallSiteStart(int tid) {
     CallSiteFunction = NULL;
     return;
   }
+
   //Initialization
   CallSiteFunction=NULL;
 
@@ -484,6 +454,9 @@ void Profiler::CallSiteStart(int tid) {
     size_t size;
     // get void*'s for all entries on the stack
     size = backtrace(array, TAU_SAMP_NUM_ADDRESSES);
+    // *CWL* NOTE: backtrace_symbols() will work for __APPLE__. Since addr2line fails
+    //       there, backup information using the "-->" format could be employed for
+    //       Mac OS X instead of "unresolved".
     if ((array != NULL) && (size > 0)) {
       // construct the callsite structure from the buffer.
       callsites[0] = (unsigned long)size;
@@ -595,8 +568,6 @@ void Profiler::CallSiteStart(int tid) {
       
       // Resolve via string. If successful, the resolved name is registered.
       
-      //	callsiteSuccess = determineCallSiteViaString(callsites);
-      
       // First step - trim the name of the base function for use.
       int nameLength = strlen(ThisFunction->GetName());
       int prefixLength = strcspn(ThisFunction->GetName(), "[");
@@ -690,7 +661,7 @@ void Profiler::CallSiteStart(int tid) {
     }
     // Set up metrics. Increment number of calls and subrs
     CallSiteFunction->IncrNumCalls(tid);
-  } else {
+  } else { // Stub for the desire of callsites.
     // We're not interested in this function's callsite.
     CallSiteFunction = NULL;
   } 
@@ -746,6 +717,11 @@ extern "C" void finalizeCallSites_if_necessary() {
   }
 
   // First pass: Identify and resolve callsites into name strings.
+#ifdef TAU_BFD
+  if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
+    bfdUnitHandle = Tau_bfd_registerUnit(TAU_BFD_KEEP_GLOBALS);
+  }
+#endif /* TAU_BFD */
 
   //  printf("Callsites finalizing\n");
   string delimiter = string(" --> ");
@@ -760,25 +736,25 @@ extern "C" void finalizeCallSites_if_necessary() {
       //      printf("ID %d resolved\n", i);
       // resolve a single address
       unsigned long callsite = callsiteInfo->resolvedCallSite;
-      *tempName = string(" [@] ") + string(resolveTauCallSite(callsite));
+      *tempName = string(" [@] ") + string(Tau_callsite_resolveCallSite(callsite));
       callsiteInfo->resolvedName = tempName;
     } else {
       unsigned long *key = callsiteInfo->key;
       // One last try with the string method.
       bool success =
 	determineCallSiteViaString(key);
-      //      success = false;
+	// false; // *CWL* For debugging.
       if (!success) {
 	//      printf("ID %d not resolved\n", i);
 	// resolve the unwound callsites as a sequence
 	int keyLength = key[0];
 	// Bad if not true. Also the head entry cannot be Tau_start_timer.
 	if (keyLength > 0) {
-	  *tempName = *tempName + string(resolveTauCallSite(key[keyLength]));
+	  *tempName = *tempName + string(Tau_callsite_resolveCallSite(key[keyLength]));
 	}
 	// process until "Tau_start_timer" is encountered and stop.
 	for (int j=keyLength-1; j>0; j--) {
-	  char *temp = resolveTauCallSite(key[j]);
+	  char *temp = Tau_callsite_resolveCallSite(key[j]);
 	  if (strstr(temp, "Tau_start_timer") == NULL) {
 	    *tempName = *tempName + delimiter + string(temp);
 	  } else {
