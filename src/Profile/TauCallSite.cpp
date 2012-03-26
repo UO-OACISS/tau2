@@ -100,24 +100,28 @@ struct TauCsULong {
 // We use global maps to maintain callsite book-keeping information
 /////////////////////////////////////////////////////////////////////////
 map<TAU_CALLSITE_KEY_ID_MAP_TYPE >& TheCallSiteKey2IdMap(void) {
-  static map<TAU_CALLSITE_KEY_ID_MAP_TYPE > callsiteKey2IdMap;
-  return callsiteKey2IdMap;
+  static map<TAU_CALLSITE_KEY_ID_MAP_TYPE > callsiteKey2IdMap[TAU_MAX_THREADS];
+  int tid = RtsLayer::myThread();
+  return callsiteKey2IdMap[tid];
 }
 
 vector<tau_cs_info_t * >& TheCallSiteIdVector(void) {
-  static vector<tau_cs_info_t *> callsiteId2KeyVec;
-  return callsiteId2KeyVec;
+  static vector<tau_cs_info_t *> callsiteId2KeyVec[TAU_MAX_THREADS];
+  int tid = RtsLayer::myThread();
+  return callsiteId2KeyVec[tid];
 }
 
 map<TAU_CALLSITE_FIRSTKEY_MAP_TYPE >& TheCallSiteFirstKeyMap(void) {
-  static map<TAU_CALLSITE_FIRSTKEY_MAP_TYPE > callsiteFirstKeyMap;
-  return callsiteFirstKeyMap;
+  static map<TAU_CALLSITE_FIRSTKEY_MAP_TYPE > callsiteFirstKeyMap[TAU_MAX_THREADS];
+  int tid = RtsLayer::myThread();
+  return callsiteFirstKeyMap[tid];
 }
 
 map<TAU_CALLSITE_PATH_MAP_TYPE >& TheCallSitePathMap(void) {
   // to avoid initialization problems of non-local static variables
-  static map<TAU_CALLSITE_PATH_MAP_TYPE > callsitePathMap;
-  return callsitePathMap;
+  static map<TAU_CALLSITE_PATH_MAP_TYPE > callsitePathMap[TAU_MAX_THREADS];
+  int tid = RtsLayer::myThread();
+  return callsitePathMap[tid];
 }
 
 static unsigned long callSiteId[TAU_MAX_THREADS];
