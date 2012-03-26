@@ -728,6 +728,7 @@ char *Tau_sampling_internal_stripCallPath(const char *callpath) {
 
 void Tau_sampling_finalizeProfile(int tid) {
   TAU_VERBOSE("Tau_sampling_finalizeProfile with tid=%d\n", tid);
+
   // Resolve all unresolved PC values.
   //
   // For resolution, each PC resolves to a unique CallSite tuple:
@@ -737,6 +738,7 @@ void Tau_sampling_finalizeProfile(int tid) {
 
   // NOTE: This code ought to be at the start of a dlopen trap as well
   //       to take care of epoch changes.
+  
 
 #ifdef TAU_BFD
   if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
@@ -772,7 +774,6 @@ void Tau_sampling_finalizeProfile(int tid) {
     pair<unsigned long *, unsigned long> *item = NULL;
     parentTauContext->pathHistogram[tid]->resetIter();
     item = parentTauContext->pathHistogram[tid]->nextIter();
-    int count = 0;
     while (item != NULL) {
       // This is a placeholder for more generic pcStack extraction routines.
       CallSiteCandidate *candidate = new CallSiteCandidate();
@@ -789,9 +790,7 @@ void Tau_sampling_finalizeProfile(int tid) {
       candidates->push_back(candidate);
       delete item;
       item = parentTauContext->pathHistogram[tid]->nextIter();
-      count++;
     }
-    //    printf("Found count = %d items\n", count);
   }
   RtsLayer::UnLockDB();
 
@@ -824,17 +823,8 @@ void Tau_sampling_finalizeProfile(int tid) {
     // STEP 0: Set up the metric values based on the candidate 
     //         to eventually be assigned to various FunctionInfo
     //         entities.
-     double *metricValues = 
-      (double *)malloc(Tau_Global_numCounters*sizeof(double));
-     // *CWL* emptyMetricValues is simply a way to get around
-     //         the current FunctionInfo interface. This should
-     //         probably be changed eventually.
-     double *emptyMetricValues = 
-      (double *)malloc(Tau_Global_numCounters*sizeof(double));
-    for (int i=0; i<Tau_Global_numCounters; i++) {
-      metricValues[i] = 0.0;
-      emptyMetricValues[i] = 0.0;
-    }
+    double metricValue; 
+
     // Determine the EBS_SOURCE metric index and update the appropriate
     //   sample approximations.
     int ebsSourceMetricIndex = 
@@ -844,11 +834,14 @@ void Tau_sampling_finalizeProfile(int tid) {
       ebsSourceMetricIndex = 0;
     }
     unsigned int binFreq = candidate->sampleCount;
-    metricValues[ebsSourceMetricIndex] = binFreq*TauEnv_get_ebs_period();
+    metricValue = binFreq*TauEnv_get_ebs_period();
 
+    // *CWL* - BFD is thread unsafe.
+    RtsLayer::LockDB();
     // STEP 1: Resolve all addresses in a PC Stack.
     CallStackInfo *callStack =
       Tau_sampling_resolveCallSites(candidate->pcStack);
+    RtsLayer::UnLockDB();
 
     // Name-to-function map iterator. To be shared for intermediate and callsite
     //   scenarios.
@@ -908,13 +901,8 @@ void Tau_sampling_finalizeProfile(int tid) {
     // Accumulate the histogram into the Intermediate FunctionInfo objects.
     intermediatePathLeaf->SetCalls(tid, intermediatePathLeaf->GetCalls(tid)+binFreq);
     intermediateGlobalLeaf->SetCalls(tid, intermediateGlobalLeaf->GetCalls(tid)+binFreq);
-    intermediatePathLeaf->AddInclTime(metricValues, tid);
-    intermediateGlobalLeaf->AddInclTime(metricValues, tid);
-    // *CWL* Intermediate objects represent the sum of all
-    //       its samples. By definition, it cannot have any
-    //       exclusive time.
-    intermediatePathLeaf->AddExclTime(emptyMetricValues, tid);
-    intermediateGlobalLeaf->AddExclTime(emptyMetricValues, tid);
+    intermediatePathLeaf->AddInclTimeForCounter(metricValue, tid, ebsSourceMetricIndex);
+    intermediateGlobalLeaf->AddInclTimeForCounter(metricValue, tid, ebsSourceMetricIndex);
 
     // STEP 3: For each sample, construct all FunctionInfo objects
     //    associated with the unwound addresses and the PC.
@@ -975,21 +963,17 @@ void Tau_sampling_finalizeProfile(int tid) {
       
       // Update the count and time for the end of the path for sampled event.
       samplePathLeaf->SetCalls(tid, samplePathLeaf->GetCalls(tid)+binFreq);
-      samplePathLeaf->AddInclTime(metricValues, tid);
+      samplePathLeaf->AddInclTimeForCounter(metricValue, tid, ebsSourceMetricIndex);
       // Exclusive times are only incremented for actual sample data 
       //   and not unwound data
       if (i == 0) {
-	samplePathLeaf->AddExclTime(metricValues, tid);
-      } else {
-	samplePathLeaf->AddExclTime(emptyMetricValues, tid);
+	samplePathLeaf->AddExclTimeForCounter(metricValue, tid, ebsSourceMetricIndex);
       }
       // Accumulate the count and time into the global leaf representative sampled event.
       sampleGlobalLeaf->SetCalls(tid, sampleGlobalLeaf->GetCalls(tid)+binFreq);
-      sampleGlobalLeaf->AddInclTime(metricValues, tid);
+      sampleGlobalLeaf->AddInclTimeForCounter(metricValue, tid, ebsSourceMetricIndex);
       if (i == 0) {
-	sampleGlobalLeaf->AddExclTime(metricValues, tid);
-      } else {
-	sampleGlobalLeaf->AddExclTime(emptyMetricValues, tid);
+	sampleGlobalLeaf->AddExclTimeForCounter(metricValue, tid, ebsSourceMetricIndex);
       }
     }
   }
@@ -1060,10 +1044,6 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
 /* Various unwinders might have their own implementation */
 void Tau_sampling_event_start(int tid, void **addresses) {
 
-  if (tid > 0) {
-    return;
-  }
-
   Tau_global_incr_insideTAU_tid(tid);
 
   TAU_VERBOSE("Tau_sampling_event_start: tid = %d address = %p\n", tid, addresses);
@@ -1089,10 +1069,6 @@ int Tau_sampling_event_stop(int tid, double *stopTime) {
 #ifdef TAU_EXP_DISABLE_DELTAS
   return 0;
 #endif
-
-  if (tid > 0) {
-    return 0;
-  }
 
   Tau_global_incr_insideTAU_tid(tid);
 
@@ -1126,10 +1102,6 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
   TAU_VERBOSE("Tau_sampling_handle_sample: tid=%d got sample [%p]\n",
   	      tid, (unsigned long)pc);
   */
-  if (tid > 0) {
-    return;
-  }
-
   if (samplingEnabled[tid] == 0) {
     // Do not track counts when sampling is not enabled.
     TAU_VERBOSE("Tau_sampling_handle_sample: sampling not enabled\n");
@@ -1194,9 +1166,6 @@ int Tau_sampling_init(int tid) {
 
   static struct itimerval itval;
 
-  if (tid > 0) {
-    return 0;
-  }
 
   Tau_global_incr_insideTAU_tid(tid);
 
@@ -1259,7 +1228,8 @@ int Tau_sampling_init(int tid) {
       enable sample handling for each thread after init(tid) completes.
       See Tau_sampling_handle_sample().
    */
-  if (strcmp(TauEnv_get_ebs_source(), "itimer") == 0) {
+  // only thread 0 sets up the timer interrupts.
+  if ((strcmp(TauEnv_get_ebs_source(), "itimer") == 0) && (tid == 0)) {
     struct sigaction act;
     memset(&act, 0, sizeof(struct sigaction));
     ret = sigemptyset(&act.sa_mask);
@@ -1316,10 +1286,6 @@ int Tau_sampling_finalize(int tid) {
   */
   TAU_VERBOSE("Tau_sampling_finalize tid=%d\n", tid);
 
-  if (tid > 0) {
-    return 0;
-  }
-
   if (TauEnv_get_tracing()) {
     if (ebsTrace[tid] == 0) {
       return 0;
@@ -1334,12 +1300,15 @@ int Tau_sampling_finalize(int tid) {
   struct itimerval itval;
   int ret;
 
-  itval.it_interval.tv_usec = itval.it_value.tv_usec =
-                                itval.it_interval.tv_sec = itval.it_value.tv_sec = 0;
-
-  ret = setitimer(ITIMER_REAL, &itval, 0);
-  if (ret != 0) {
-    /* ERROR */
+  if (tid == 0) {
+    // no timers to unset if on thread 0
+    itval.it_interval.tv_usec = itval.it_value.tv_usec =
+      itval.it_interval.tv_sec = itval.it_value.tv_sec = 0;
+    
+    ret = setitimer(ITIMER_REAL, &itval, 0);
+    if (ret != 0) {
+      /* ERROR */
+    }
   }
 
   if (TauEnv_get_tracing()) {
