@@ -594,6 +594,8 @@ TAU_GCCLIB	= -lgcc_s
 #PPC64XLF#TAU_FORTRANLIBS = -L$(EXTRADIR)/$(TAU_FORLIBDIR) -lxlf90 -lxlfmath -lxl -lxlomp_ser #ENDIF#
 #IBM64LINUX_XLF#TAU_FORTRANLIBS = -L$(EXTRADIR)/$(TAU_FORLIBDIR) -lxlf90 -lxlfmath -lxl -lxlomp_ser #ENDIF#
 #BGL#TAU_FORTRANLIBS = -L$(EXTRADIR)/$(TAU_FORLIBDIR) -L$(EXTRADIR)/blrts_lib -lxlf90 -lxlfmath -lxl #ENDIF#
+#BGQ#TAU_IBM_FORTRANLIBS             =  -L/bgsys/drivers/ppcfloor/comm/xl/lib -lxlf90_r -lm -lc #ENDIF#
+
 
 #BGP#TAU_BGL_OMP_SERIAL= -lxlomp_ser #ENDIF#
 #OPENMP#TAU_BGL_OMP_SERIAL= #ENDIF#
@@ -695,7 +697,7 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 #IBMXLCAPPLE#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/$(TAU_FORLIBDIR) -libmc++ -lstdc++       #ENDIF#
 #BGL#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/blrts_dev_lib -L$(EXTRADIRCXX)/blrts_lib -libmc++ -L/bgl/BlueLight/ppcfloor/blrts-gnu/powerpc-bgl-blrts-gnu/lib -lstdc++      #ENDIF#
 #BGP#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/bglib -libmc++ -lstdc++      #ENDIF#
-#BGQ#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/bglib64 -libmc++ -lstdc++  -L$(EXTRADIR)/bglib64 -lxlf90  -lxlfmath     #ENDIF#
+#BGQ#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/bglib64 -libmc++ -lstdc++  -L$(EXTRADIR)/bglib64 -lxlf90_r  -lxlfmath     #ENDIF#
 #SP1#TAU_XLCLIBS         = -lC  -lm            #ENDIF#
 #USE_IBMXLC#TAU_CXXLIBS         = $(TAU_XLCLIBS) #ENDIF#
 #USE_DECCXX#TAU_CXXLIBS         = -lcxxstd -lcxx #ENDIF#
