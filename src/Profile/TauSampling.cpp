@@ -245,7 +245,7 @@ unsigned long get_pc(void *p) {
   pc = (unsigned long)UCONTEXT_REG(uc, PPC_REG_PC);
 # elif TAU_BGQ
   //  201203 - Thanks to the Open|Speedshop team!
-  pc = (unsigned long)((struct pt_regs *)((&(uc->uc_mcontext))->regs))->nip);
+  pc = (unsigned long)((struct pt_regs *)(((&(uc->uc_mcontext))->regs))->nip);
 # elif __x86_64__
   pc = (unsigned long)sc->rip;
 # elif i386
