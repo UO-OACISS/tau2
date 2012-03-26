@@ -48,8 +48,7 @@ CEXTRA =
 #PGINOPRELINK#PRELINK_PHASE = #ENDIF#
 #############################################
 
-OPARI2_INCLUDE = -I$(TAUROOT)/utils/opari2/include -I$(TAUROOT)/utils/opari2/src/  -I$(TAUROOT)/utils/opari2/_build/src/ -I$(TAUROOT)/utils/opari2/build-frontend -DHAVE_CONFIG_H  -DFRONTEND_BUILD -DCROSS_BUILD
-
+OPARI2_INCLUDE = -I$(TAUROOT)/utils/opari2/_build/include -I$(TAUROOT)/utils/opari2/_build/src/ -I$(TAUROOT)/utils/opari2/_build/build-frontend -I$(TAUROOT)/utils/opari2/src -DHAVE_CONFIG_H  -DFRONTEND_BUILD -DCROSS_BUILD
 
 DEFINES = -DTAU_LIBRARY_SOURCE
 
