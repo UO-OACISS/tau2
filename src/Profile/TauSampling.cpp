@@ -243,6 +243,10 @@ static inline unsigned long get_pc(void *p) {
 #ifdef sun
   issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on solaris\n");
   return 0;
+#elif defined(TAU_BGQ)
+  // uc_mcontext->ss.srr0 *may* be the way forward.
+  issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not currently work on BGQ\n");
+  return 0;
 #elif __APPLE__
   issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on apple\n");
   return 0;
@@ -252,7 +256,7 @@ static inline unsigned long get_pc(void *p) {
 #else
   struct sigcontext *sc;
   sc = (struct sigcontext *)&uc->uc_mcontext;
-#if (defined(TAU_BGP) || defined(TAU_BGQ))
+#ifdef TAU_BGP
   //  pc = (unsigned long)sc->uc_regs->gregs[PPC_REG_PC];
   pc = (unsigned long)UCONTEXT_REG(uc, PPC_REG_PC);
 # elif __x86_64__
@@ -269,7 +273,7 @@ static inline unsigned long get_pc(void *p) {
   pc = (unsigned long)sc->regs->nip;
 # else
 #  error "profile handler not defined for this architecture"
-# endif /* TAU_BGP || BGQ */
+# endif /* TAU_BGP */
   return pc;
 #endif /* sun */
 }
@@ -312,11 +316,10 @@ void Tau_sampling_outputTraceHeader(int tid) {
 
 void Tau_sampling_outputTraceCallpath(int tid) {
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
-  if (profiler->CallSiteFunction != NULL) {
-    fprintf(ebsTrace[tid], "%ld", profiler->CallSiteFunction->GetFunctionId());
-  } else if (profiler->CallPathFunction != NULL) {
+  // *CWL* 2012/3/18 - EBS traces cannot handle callsites for now. Do not track.
+  if ((profiler->CallPathFunction != NULL) && (TauEnv_get_callpath())) {
     fprintf(ebsTrace[tid], "%ld", profiler->CallPathFunction->GetFunctionId());
-  } else {
+  } else if (profiler->ThisFunction != NULL) {
     fprintf(ebsTrace[tid], "%ld", profiler->ThisFunction->GetFunctionId());
   }
 }
@@ -974,7 +977,7 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
   // *CWL* - Too "noisy" and useless a verbose output.
   //TAU_VERBOSE("[tid=%d] EBS profile sample with pc %p\n", tid, (unsigned long)pc);
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
-  FunctionInfo *callSiteContext;
+  FunctionInfo *samplingContext;
 
   vector<unsigned long> *pcStack = new vector<unsigned long>();
 #ifdef TAU_UNWIND
@@ -988,14 +991,14 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
 #endif /* TAU_UNWIND */
 
   if (TauEnv_get_callsite() && (profiler->CallSiteFunction != NULL)) {
-    callSiteContext = profiler->CallSiteFunction;
+    samplingContext = profiler->CallSiteFunction;
   } else if (TauEnv_get_callpath() && (profiler->CallPathFunction != NULL)) {
-    callSiteContext = profiler->CallPathFunction;
+    samplingContext = profiler->CallPathFunction;
   } else {
-    callSiteContext = profiler->ThisFunction;
+    samplingContext = profiler->ThisFunction;
   }
   //  pcStack->push_back((unsigned long)pc);
-  callSiteContext->addPcSample(pcStack, tid);
+  samplingContext->addPcSample(pcStack, tid);
 
   Tau_global_decr_insideTAU_tid(tid);
 }

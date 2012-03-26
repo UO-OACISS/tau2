@@ -23,7 +23,9 @@
 #include <stack>
 
 #include <stdlib.h>
+#ifndef TAU_WINDOWS
 #include <unistd.h>
+#endif //TAU_WINDOWS
 #include <string.h>
 
 using namespace std;
