@@ -1,0 +1,5 @@
+This example has two experiments, and each experiment has 5 trials.
+
+The goal is to compare the scaling of 3 functions from both experiments
+across all 5 trial sizes.  The x axis is the number of processes, 
+the y axis is inclusive time, and the series names are "experiment : function".

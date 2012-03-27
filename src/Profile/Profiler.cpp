@@ -317,12 +317,15 @@ void Profiler::Start(int tid) {
   // Inncrement the number of calls
   ThisFunction->IncrNumCalls(tid);
   
+
   // Increment the parent's NumSubrs()
   if (ParentProfiler != 0) {
-    ParentProfiler->ThisFunction->IncrNumSubrs(tid);	
-    if (ParentProfiler->CallSiteFunction != NULL) {
-      ParentProfiler->CallSiteFunction->IncrNumSubrs(tid);
-    }
+    ParentProfiler->ThisFunction->IncrNumSubrs(tid);
+    if (TauEnv_get_callsite()) {	
+      if (ParentProfiler->CallSiteFunction != NULL) {
+        ParentProfiler->CallSiteFunction->IncrNumSubrs(tid);
+      }
+    }    
   }
   
   // If this function is not already on the call stack, put it

@@ -32,6 +32,7 @@ using namespace std;
 void TraceCallStack(int tid, Profiler *current);
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #ifdef TAUKTAU
 #include <Profile/KtauProfiler.h>
@@ -179,8 +180,16 @@ int RtsLayer::setMyThread(int i) {
 #endif
 	return 0;
 }
-int RtsLayer::getNumThreads() { return 1; } 
-int* RtsLayer::numThreads() { static int i = 1; return &i; } 
+
+// int* RtsLayer::numThreads() { static int i = 1; return &i; } 
+int RtsLayer::getTotalThreads() {
+  int numThreads = 1;
+  LockEnv();
+  // *CWL* - The Thread vector does NOT include the main thread!!
+  numThreads = TheThreadList().size() + 1;
+  UnLockEnv();
+  return numThreads;
+}
 
 //////////////////////////////////////////////////////////////////////
 // myNode() returns the current node id (0..N-1)
@@ -214,6 +223,7 @@ int RtsLayer::myContext(void)
 //////////////////////////////////////////////////////////////////////
 int RtsLayer::RegisterThread() {
   /* Check the size of threads */
+  /*
   LockEnv();
   int numthreads = *(RtsLayer::numThreads());
   numthreads ++;
@@ -221,10 +231,10 @@ int RtsLayer::RegisterThread() {
     fprintf(stderr, "TAU: RtsLayer: Max thread limit (%d) exceeded. Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=<higher limit>\n", numthreads);
   }
   UnLockEnv();
- 
+  */
+
 #ifndef TAU_WINDOWS 
   if (TauEnv_get_ebs_enabled()) {
-    //    Tau_sampling_init(numthreads-1);
     Tau_sampling_init_if_necessary();
   }
 #endif
@@ -244,8 +254,17 @@ int RtsLayer::RegisterThread() {
 #endif // PTHREADS
 // Note: Java thread registration is done at the VM layer in TauJava.cpp
 
-  *(RtsLayer::numThreads()) = *(RtsLayer::numThreads()) + 1;
-  return numthreads;
+  // *CWL* - This is a fuzzy report. What is guaranteed is that AT LEAST ONE thread has
+  //         pushed us over the limit with the last registration.
+  //
+  //         Because this is a guaranteed failure, we "gracefully" exit at this point
+  //         rather than suffer a random segfault later.
+  int numThreads = getTotalThreads();
+  if (numThreads > TAU_MAX_THREADS) {
+    fprintf(stderr, "TAU Error: RtsLayer: [Max thread limit = %d] [Encountered = %d]. Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=<higher limit>\n", TAU_MAX_THREADS, numThreads);
+    exit(-1);
+  }
+  return numThreads;
 }
 
 

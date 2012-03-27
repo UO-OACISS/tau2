@@ -102,8 +102,6 @@ public:
 
   static int threadId(void);
   
-	static int getNumThreads();
-
   static int getPid();
   static int getTid();
 
@@ -137,7 +135,8 @@ private:
 
   static bool initLocks();
   static bool initEnvLocks();
-  static int *numThreads();
+  //  static int *numThreads();
+  static int getTotalThreads();
 
 };
 
