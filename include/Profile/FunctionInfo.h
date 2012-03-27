@@ -49,6 +49,7 @@ extern "C" int Tau_Global_numCounters;
 #include <unistd.h>
 #include <map>
 
+#include <Profile/TauPathHash.h>
 #include "Profile/TauSampling.h"
 
 #ifdef TAU_SS_ALLOC_SUPPORT
@@ -157,11 +158,7 @@ public:
   //         eventually.
   //  map<unsigned long, unsigned int> *pcHistogram;
 #ifndef TAU_WINDOWS
-  std::map< vector<unsigned long>, unsigned int, 
-    std::less< vector<unsigned long> >, 
-    SS_ALLOCATOR< std::pair<const vector<unsigned long>, unsigned int> > > *pcHistogram[TAU_MAX_THREADS];
-  // For FunctionInfo objects created specially for sample-based profiling 
-  FunctionInfo *parentTauContext;
+  TauPathHashTable<unsigned long> *pathHistogram[TAU_MAX_THREADS];
 
   // For CallSite discovery
   bool isCallSite;
@@ -173,7 +170,7 @@ public:
   const char* GetShortName() const { return ShortenedName; }
 
   /* EBS Sampling Profiles */
-  void addPcSample(vector<unsigned long> *pc, int tid);
+  void addPcSample(unsigned long *pc, int tid);
 #endif // TAU_WINDOWS
 
   inline double *getDumpExclusiveValues(int tid) {

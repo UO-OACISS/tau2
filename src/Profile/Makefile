@@ -48,8 +48,7 @@ CEXTRA =
 #PGINOPRELINK#PRELINK_PHASE = #ENDIF#
 #############################################
 
-OPARI2_INCLUDE = -I$(TAUROOT)/utils/opari2/include -I$(TAUROOT)/utils/opari2/src/  -I$(TAUROOT)/utils/opari2/_build/src/ -I$(TAUROOT)/utils/opari2/build-frontend -DHAVE_CONFIG_H  -DFRONTEND_BUILD -DCROSS_BUILD
-
+OPARI2_INCLUDE = -I$(TAUROOT)/utils/opari2/_build/include -I$(TAUROOT)/utils/opari2/_build/src/ -I$(TAUROOT)/utils/opari2/_build/build-frontend -I$(TAUROOT)/utils/opari2/src -DHAVE_CONFIG_H  -DFRONTEND_BUILD -DCROSS_BUILD
 
 DEFINES = -DTAU_LIBRARY_SOURCE
 
@@ -89,6 +88,7 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/TauMonMrnet.h $(INCDIR)/TauMon.h \
 		$(INCDIR)/TauMemoryWrap.h $(INCDIR)/TauIoWrap.h		\
 		$(INCDIR)/TauBfd.h \
+		$(INCDIR)/TauMmapMemMgr.h $(INCDIR)/TauPathHash.h \
 		$(INCDIR)/agent_util.h	$(INCDIR)/java_crw_demo.h \
 
 LDFLAGS	      =
@@ -100,7 +100,7 @@ PGIACC_O=
 #PGI#PGIACC_STATIC_O = PgiAcc.o #ENDIF#
 
 TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.o \
-		TauSampling_libunwind.o
+		TauSampling_libunwind.o TauMmapMemMgr.o 
 #BGL#TAU_SAMPLING_O= #ENDIF#
 #CATAMOUNT#TAU_SAMPLING_O= #ENDIF#
 #CRAYX1CC#TAU_SAMPLING_O= #ENDIF#
@@ -655,6 +655,9 @@ TauSampling_stackwalker.o 	: TauSampling_stackwalker.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauSampling_libunwind.o 	: TauSampling_libunwind.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauMmapMemMgr.o 	: TauMmapMemMgr.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauBfdUnimplemented.o:	TauBfdUnimplemented.cpp $(HDRS)

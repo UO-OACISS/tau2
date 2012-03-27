@@ -2466,7 +2466,11 @@ case $machine in
       cxx_compiler=mpicxx
       c_compiler=mpicc
       gnu=yes
-      fixmakeargs="$fixmakeargs GNU BGP_GFORTRAN COMPINST_GNU"
+      if [ $machine = bgp ]; then 
+        fixmakeargs="$fixmakeargs GNU BGP_GFORTRAN COMPINST_GNU"
+      else 
+        fixmakeargs="$fixmakeargs GNU BGQ_GFORTRAN COMPINST_GNU"
+      fi
     fi
 
 
