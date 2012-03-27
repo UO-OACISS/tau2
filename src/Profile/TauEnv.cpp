@@ -302,7 +302,7 @@ char * Tau_check_dirname(const char * dir) {
 
     char logfiledir[2048]; 
     char scratchdir[2048]; 
-#if (defined (TAU_BGL) || defined(TAU_BGP) || defined(TAU_BGQ))
+#if (defined (TAU_BGL) || defined(TAU_BGP) || defined(TAU_BGQ) || defined(__linux__))
     if (cuserid(user) == NULL) {
       sprintf(user,"unknown");
     }
@@ -317,6 +317,7 @@ char * Tau_check_dirname(const char * dir) {
       strcpy(user, pwInfo->pw_name);
     */
     char *temp = getlogin();
+    TAU_VERBOSE("TAU: cuserid returns %s\n", temp);
 #endif // TAU_WINDOWS
     if (temp != NULL) {
       sprintf(user, temp);
@@ -337,18 +338,18 @@ char * Tau_check_dirname(const char * dir) {
 
       mode_t oldmode;
       oldmode=umask(0);
-      mkdir(logdir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
+      mkdir(logdir, S_IRWXU | S_IRGRP | S_IWGRP | S_IXGRP | S_IRWXO);
       sprintf(scratchdir, "%s/%d", logdir, (thisTime->tm_year+1900));
-      mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
+      mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IWGRP | S_IXGRP | S_IRWXO);
       sprintf(scratchdir, "%s/%d/%d", logdir, (thisTime->tm_year+1900), 
 	(thisTime->tm_mon+1));
-      mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
+      mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IWGRP | S_IXGRP | S_IRWXO);
       sprintf(scratchdir, "%s/%d/%d/%d", logdir, (thisTime->tm_year+1900), 
 	(thisTime->tm_mon+1), thisTime->tm_mday);
-      mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
+      mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IWGRP | S_IXGRP | S_IRWXO);
       TAU_VERBOSE("mkdir %s\n", scratchdir);
 
-      mkdir(logfiledir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
+      mkdir(logfiledir, S_IRWXU | S_IRGRP | S_IXGRP | S_IXGRP | S_IRWXO);
       TAU_VERBOSE("mkdir %s\n", logfiledir);
       umask(oldmode);
 #endif 
