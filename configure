@@ -6940,6 +6940,11 @@ if [ $pdt = yes ] ; then
       echo "TAU: PDT: Using binary rewriting capabilities from MAQAO in tau_rewrite"
       rm -f ${targetdir}/${architecture}/bin/tau_maqao
       ln -s ${pdtdir}/${pdtarchcompdir}/bin/smaqao ${targetdir}/${architecture}/bin/tau_maqao
+      if [ -r ${pdtdir}/${pdtarchcompdir}/bin/tau_rewrite -a ${pdtdir}/${pdtarchcompdir}/bin/tau_rewrite -nt ${tauroot}/tools/src/tau_rewrite ]; then 
+# if Maqao has a newer tau_rewrite, use that instead!
+	echo "NOTE: Found a newer tau_rewrite in PDT. Using it instead."
+	cp ${pdtdir}/${pdtarchcompdir}/bin/tau_rewrite  $BINTARGET
+      fi 
     fi
 fi
 
