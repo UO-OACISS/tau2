@@ -226,6 +226,10 @@ extern "C" {
 #define TAU_PROFILE_SNAPSHOT(name)              Tau_profile_snapshot(name);
 #define TAU_PROFILE_SNAPSHOT_1L(name, expr)     Tau_profile_snapshot_1l(name, expr);
 #define TAU_METADATA(name, value)               Tau_metadata(name, value);
+#define TAU_METADATA_ITERATION(name,iteration,value) {char meta_buf[1024]; \
+        sprintf(meta_buf,"%s_|_%d",name,iteration); \
+        TAU_METADATA(meta_buf,value);}
+
 #define TAU_CONTEXT_METADATA(name, value)       Tau_context_metadata(name, value);
 #define TAU_PHASE_METADATA(name, value)         Tau_phase_metadata(name, value);
 
