@@ -79,6 +79,7 @@ MPI_Op collate_op[NUM_COLLATE_STEPS] = { MPI_MIN, MPI_MAX, MPI_SUM, MPI_SUM };
 
 static double calculateMean(int count, double sum) {
   double ret = 0.0;
+  if (count <= 0) return 0.0;
   assert(count >= 0);
   assert(sum >= 0.0);
   return sum/count;
