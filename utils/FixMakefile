@@ -87,25 +87,30 @@ case $1 in
 	echo "s,^BFDINCLUDE=.*$,BFDINCLUDE=$bfdinclude,g" >> $sedout
 	;;
 
-     ebs_unwind_flag=*)
-       ebs_unwind_flag=`echo $1 | sed -e 's/^ebs_unwind_flag=//'`
-        echo "s,^EBS_UNWIND_FLAG=.*$,EBS_UNWIND_FLAG=$ebs_unwind_flag,g" >> $sedout
+     unwind_flag=*)
+       unwind_flag=`echo $1 | sed -e 's/^unwind_flag=//'`
+        echo "s,^UNWIND_FLAG=.*$,UNWIND_FLAG=$unwind_flag,g" >> $sedout
         ;;
 
-     ebs_unwind_inc=*)
-       ebs_unwind_inc=`echo $1 | sed -e 's/^ebs_unwind_inc=//'`
-        echo "s,^EBS_UNWIND_INC=.*$,EBS_UNWIND_INC=$ebs_unwind_inc,g" >> $sedout
+     unwind_inc=*)
+       unwind_inc=`echo $1 | sed -e 's/^unwind_inc=//'`
+        echo "s,^UNWIND_INC=.*$,UNWIND_INC=$unwind_inc,g" >> $sedout
         ;;
 
-     ebs_unwind_lib=*)
-        ebs_unwind_lib=`echo $1 | sed -e 's/^ebs_unwind_lib=//'`
-        echo "s,^EBS_UNWIND_LIB=.*$,EBS_UNWIND_LIB=$ebs_unwind_lib,g" >> $sedout
+     unwind_lib=*)
+        unwind_lib=`echo $1 | sed -e 's/^unwind_lib=//'`
+        echo "s,^UNWIND_LIB=.*$,UNWIND_LIB=$unwind_lib,g" >> $sedout
         ;;
 
-     ebs_unwind_lib_flag=*)
-        ebs_unwind_lib_flag=`echo $1 | sed -e 's/^ebs_unwind_lib_flag=//'`
-       echo "s,^EBS_UNWIND_LIB_FLAG=.*$,EBS_UNWIND_LIB_FLAG=$ebs_unwind_lib_flag,g" >> $sedout
+     unwind_lib_flag=*)
+        unwind_lib_flag=`echo $1 | sed -e 's/^unwind_lib_flag=//'`
+       echo "s,^UNWIND_LIB_FLAG=.*$,UNWIND_LIB_FLAG=$unwind_lib_flag,g" >> $sedout
         ;;
+
+     unwind_extras=*)
+        unwind_extras=`echo $1 | sed -e 's/^unwind_extras=//' -e 's/#/ /g'`
+	echo "s,^UNWIND_EXTRAS=.*$,UNWIND_EXTRAS=$unwind_extras,g" >> $sedout
+	;;
 
      perfsuitelink=*)
         perfsuitelink=`echo $1 | sed -e 's/^perfsuitelink=//' -e 's/#/ /g'`
@@ -473,8 +478,16 @@ case $1 in
         echo NOTE: Using BFD support
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
-     TAU_EBS_UNWIND)
-        echo NOTE: Enabling EBS Stack Unwinding support
+     TAU_UNWIND)
+        echo NOTE: Enabling Stack Unwinding support
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     TAU_UNWIND_LIBUNWIND)
+        echo NOTE: Using libunwind Unwinder.
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     TAU_UNWIND_STACKWALKER)
+        echo NOTE: Using stackwalker API Unwinder
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      TAU_DEMANGLE)

@@ -60,6 +60,9 @@
 # define TAU_CALLPATH_DEFAULT 0
 #endif
 
+#define TAU_CALLSITE_DEFAULT 0
+#define TAU_CALLSITE_LIMIT_DEFAULT 1 /* default to be local */
+
 /* if we are doing EBS sampling, set the default sampling period */
 #define TAU_EBS_DEFAULT 0
 #define TAU_EBS_KEEP_UNRESOLVED_ADDR_DEFAULT 0
@@ -299,7 +302,7 @@ char * Tau_check_dirname(const char * dir) {
 
     char logfiledir[2048]; 
     char scratchdir[2048]; 
-#if (defined (TAU_BGL) || defined(TAU_BGP) || defined(TAU_BGQ))
+#if (defined (TAU_BGL) || defined(TAU_BGP) || defined(TAU_BGQ) || defined(__linux__))
     if (cuserid(user) == NULL) {
       sprintf(user,"unknown");
     }
@@ -314,6 +317,7 @@ char * Tau_check_dirname(const char * dir) {
       strcpy(user, pwInfo->pw_name);
     */
     char *temp = getlogin();
+    TAU_VERBOSE("TAU: cuserid returns %s\n", temp);
 #endif // TAU_WINDOWS
     if (temp != NULL) {
       sprintf(user, temp);
@@ -334,18 +338,18 @@ char * Tau_check_dirname(const char * dir) {
 
       mode_t oldmode;
       oldmode=umask(0);
-      mkdir(logdir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
+      mkdir(logdir, S_IRWXU | S_IRGRP | S_IWGRP | S_IXGRP | S_IRWXO);
       sprintf(scratchdir, "%s/%d", logdir, (thisTime->tm_year+1900));
-      mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
+      mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IWGRP | S_IXGRP | S_IRWXO);
       sprintf(scratchdir, "%s/%d/%d", logdir, (thisTime->tm_year+1900), 
 	(thisTime->tm_mon+1));
-      mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
+      mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IWGRP | S_IXGRP | S_IRWXO);
       sprintf(scratchdir, "%s/%d/%d/%d", logdir, (thisTime->tm_year+1900), 
 	(thisTime->tm_mon+1), thisTime->tm_mday);
-      mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
+      mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IWGRP | S_IXGRP | S_IRWXO);
       TAU_VERBOSE("mkdir %s\n", scratchdir);
 
-      mkdir(logfiledir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
+      mkdir(logfiledir, S_IRWXU | S_IRGRP | S_IXGRP | S_IXGRP | S_IRWXO);
       TAU_VERBOSE("mkdir %s\n", logfiledir);
       umask(oldmode);
 #endif 
@@ -367,6 +371,8 @@ static int env_throttle = 0;
 static int env_disable_instrumentation = 0;
 static double env_max_records = 0;
 static int env_callpath = 0;
+static int env_callsite = 0;
+static int env_callsite_limit = 0;
 static int env_compensate = 0;
 static int env_profiling = 0;
 static int env_tracing = 0;
@@ -475,6 +481,14 @@ double TauEnv_get_max_records() {
 }
 int TauEnv_get_callpath() {
   return env_callpath;
+}
+
+int TauEnv_get_callsite() {
+  return env_callsite;
+}
+
+int TauEnv_get_callsite_limit() {
+  return env_callsite_limit;
 }
 
 int TauEnv_get_compensate() {
@@ -804,6 +818,25 @@ void TauEnv_initialize() {
         TAU_METADATA("TAU_COMPENSATE", "off");
       }
     }
+
+    tmp = getconf("TAU_CALLSITE");
+    if (parse_bool(tmp, TAU_CALLSITE_DEFAULT)) {
+      env_callsite = 1;
+      TAU_VERBOSE("TAU: Callsite Discovery via Unwinding Enabled\n");
+      TAU_METADATA("TAU_CALLSITE", "on");
+    } 
+
+    const char *callsiteLimit = getconf("TAU_CALLSITE_LIMIT");
+    env_callsite_limit = TAU_CALLSITE_LIMIT_DEFAULT;
+    if (callsiteLimit) {
+      env_callsite_limit = atoi(callsiteLimit);
+      if (env_callsite_limit < 0) {
+        env_callsite_limit = TAU_CALLSITE_LIMIT_DEFAULT;
+      }
+    }
+    TAU_VERBOSE("TAU: Callsite Depth Limit = %d\n", env_callsite_limit);
+    sprintf(tmpstr, "%d", env_callsite_limit);
+    TAU_METADATA("TAU_CALLSITE_LIMIT", tmpstr);
 
 #if (defined(TAU_MPI) || defined(TAU_SHMEM) || defined(TAU_DMAPP))
     /* track comm (opposite of old -nocomm option) */

@@ -16,4 +16,8 @@ void Tau_sampling_unwindTauContext(int tid, void **address);
 vector<unsigned long> *Tau_sampling_unwind(int tid, Profiler *profiler,
 					   void *pc, void *context);
 
+/* *CWL* - Looks like we do need to add common unwinding prototypes here as well. 
+   These will be declared and implemented in TauSampling.cpp.
+ */
+extern "C" bool unwind_cutoff(void **addresses, void *address);
 #endif /* _TAU_SAMPLING_UNWIND_H */

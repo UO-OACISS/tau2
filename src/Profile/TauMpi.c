@@ -1606,6 +1606,7 @@ int TAU_MPI_Finalized() {
   return tau_mpi_finalized;
 }
 
+void finalizeCallSites_if_necessary();
 int  MPI_Finalize(  )
 {
   int  returnVal;
@@ -1652,6 +1653,10 @@ int  MPI_Finalize(  )
   /* Shutdown EBS after Finalize to allow Profiles to be written out
      correctly. Also allows profile merging (or unification) to be
      done correctly. */
+  if (TauEnv_get_callsite()) {
+    finalizeCallSites_if_necessary();
+  }
+
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     //    Tau_sampling_finalizeNode();
