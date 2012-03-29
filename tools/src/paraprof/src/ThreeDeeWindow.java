@@ -332,7 +332,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 					
 				
 			}
-			System.out.println();
+			//System.out.println();
 			threadIndex++;
 		}
 
@@ -449,34 +449,26 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 
 	int[] tsizes = { 0, 0, 0 };
 	boolean restrict = false;
+	Thread[][][] threadTopo=null;
 
 	private float[][] defaultTopology(int numThreads) {
 		float[][] values = new float[numThreads][4];
+		
+		//Thread[][][] threadTopo=null;
 
 		String prefix = settings.getTopoCart();
 
 		if (prefix == null || prefix.equals("Custom")) {
-
-			// int[] custTopoDims = null;
-			// int x,y,z;min
-
 			int xdim = settings.getCustomTopoAxis(0);
 			int ydim = settings.getCustomTopoAxis(1);
 			int zdim = settings.getCustomTopoAxis(2);
-			//
-			// xdim=z;
-			// ydim=x;
-			// zdim=y;
 
-			// int xdim = topoValues[0];
 			if (xdim <= 0) {
 				xdim = 1;
 			}
-			// /int ydim = topoValues[1];
 			if (ydim <= 0) {
 				ydim = 1;
 			}
-			// int zdim = topoValues[2];
 			if (ydim <= 0) {
 				ydim = 1;
 			}
@@ -511,22 +503,6 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 									values[threadIndex][3]);
 						}
 
-						// if (topoFunction != null) {
-						// FunctionProfile functionProfile =
-						// thread.getFunctionProfile(topoFunction);
-						//
-						// if (functionProfile != null) {
-						//
-						//
-						// values[threadIndex][3] = (float)
-						// topoValueType.getValue(functionProfile,
-						// topoMetricID,ppTrial.getSelectedSnapshot());
-						// maxScatterValues[3] = Math.max(maxScatterValues[3],
-						// values[threadIndex][3]);
-						// minScatterValues[3] = Math.min(minScatterValues[3],
-						// values[threadIndex][3]);
-						// }
-						// }
 					}
 					maxScatterValues[f] = Math.max(maxScatterValues[f],
 							values[threadIndex][f]);
@@ -535,10 +511,13 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 				}
 				threadIndex++;
 			}
-			for (int i = 0; i < 3; i++)
+			for (int i = 0; i < 3; i++){
 				tsizes[i] = (int) maxScatterValues[i];
+			}
 
-		} else if (prefix.equals("Map")) {
+		} 
+		
+		else if (prefix.equals("Map")) {
 			String fileLoc = settings.getTopoMapFile();
 			if (fileLoc == null)
 				return null;
@@ -827,21 +806,43 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 				// System.out.println(tsizes[i]);
 			}
 
-		} else {
+		} 
 
+			else {
+				
 			String coord_key = prefix + " Coords";
 			String size_key = prefix + " Size";
-
+			
+			
+			boolean isBGQ=false;
+			if(prefix.equals("BGQ")){
+				coord_key="MPI Processor Name";
+				isBGQ=true;
+			}
+			
 			String tsize = ppTrial.getDataSource().getMetaData().get(size_key);
-			tsizes = ThreeDeeGeneralPlotUtils.parseTuple(tsize);
+			
+			
+			int[] tempsizes = ThreeDeeGeneralPlotUtils.parseTuple(tsize);
+			
+			int offset=5;
+			if(tempsizes.length>3){
+				
+				calculateTSize(tempsizes,offset);
+			}
+			else{
+				tsizes = tempsizes;
+			}
+			
+			threadTopo = new Thread[tsizes[0]][tsizes[1]][tsizes[2]];
+			
+			
 			for (int i = 0; i < 3; i++) {
+				if(!isBGQ)
 				maxScatterValues[i] = tsizes[i];
 				minScatterValues[i] = 0;
 			}
-			// scatterPlot.setSize(tsizes[0],tsizes[1], tsizes[2]);
 
-			// int minVis=settings.getMinTopoRange();
-			// int maxVix=settings.getMaxTopoRange();
 
 			int threadIndex = 0;
 			for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads()
@@ -852,40 +853,62 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 				if (coord == null) {
 					continue;
 				}
-				int[] coords = ThreeDeeGeneralPlotUtils.parseTuple(coord);
+				
+				
+				int[] coords; 
+				if(isBGQ){
+					coords = ThreeDeeGeneralPlotUtils.parseMPIProcName(coord);
+					values[threadIndex][0] = coords[4]*tempsizes[5]+coords[5]+offset*coords[4];
+					values[threadIndex][1] = coords[0]*tempsizes[1]+coords[1]+offset*coords[0];
+					values[threadIndex][2] = coords[2]*tempsizes[3]+coords[3]+offset*coords[2];
+					
+					for (int i = 0; i < 3; i++) {
+					maxScatterValues[i] = Math.max(maxScatterValues[i], values[threadIndex][i]);
+				}
+					
+					
+				}
+				
+				else{
+					coords = ThreeDeeGeneralPlotUtils.parseTuple(coord);
 
-				values[threadIndex][0] = coords[0];
-				values[threadIndex][1] = coords[1];
-				values[threadIndex][2] = coords[2];
-
-				Function topoFunction = settings.getTopoFunction(3);
-				ValueType topoValueType = settings.getTopoValueType(3);
-				Metric topoMetricID = settings.getTopoMetric(3);
-
-				if (topoFunction != null) {
-					FunctionProfile functionProfile = thread
-							.getFunctionProfile(topoFunction);
-
-					if (functionProfile != null) {
-
-						values[threadIndex][3] = (float) topoValueType
-								.getValue(functionProfile, topoMetricID,
-										ppTrial.getSelectedSnapshot());
-						maxScatterValues[3] = Math.max(maxScatterValues[3],
-								values[threadIndex][3]);
-						minScatterValues[3] = Math.min(minScatterValues[3],
-								values[threadIndex][3]);
+					for (int i = 0; i < coords.length; i++) {
+						values[threadIndex][i] = coords[i];
 					}
+					
+				}
+				
+				threadTopo[(int)values[threadIndex][0]][(int)values[threadIndex][2]][(int)values[threadIndex][1]]=thread;
+
+				
+				float color = getColorValue(thread);
+				if (color != Float.NaN) {
+					values[threadIndex][3] = color;
+					maxScatterValues[3] = Math.max(maxScatterValues[3],
+							values[threadIndex][3]);
+					minScatterValues[3] = Math.min(minScatterValues[3],
+							values[threadIndex][3]);
 				}
 
 				threadIndex++;
 			}
-			// maxScatterValues[3] = 365584000;
-			// minScatterValues[3] = 43460000;
-
-		}
+			}
 
 		return values;
+	}
+	
+	private void calculateTSize(int[] tempSize, int offset){
+		if(tempSize.length==6){
+			
+			tsizes[0]=tempSize[4]*tempSize[5]+tempSize[4]*offset;
+			tsizes[1]=tempSize[0]*tempSize[1]+tempSize[0]*offset;
+			tsizes[2]=tempSize[2]*tempSize[3]+tempSize[2]*offset;
+			
+		}
+		else
+			for(int i=0;i<3;i++){
+				tsizes[i]=tempSize[i+3];
+			}
 	}
 
 	// String[] expressions =
@@ -1975,6 +1998,19 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 		else
 			return getSelectedTopoValue(Float.NaN);
 	}
+	
+	public String getSelectedThread(){
+		int[] show = settings.getTopoVisAxes();
+		if(this.threadTopo==null||show[0]<0||show[1]<0||show[2]<0)
+			return "\n ";
+		
+		Thread sel = threadTopo[show[0]][show[1]][show[2]];
+		if(sel==null)
+			return "\n ";
+		
+		return "\nN,C,T:"+sel.getNodeID()+","+sel.getThreadID()+","+sel.getContextID();
+		
+	}
 
 	private String getSelectedTopoValue(float val) {
 		// if (threads == null || functionNames == null)
@@ -1992,8 +2028,16 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 		// if (fp == null) {
 		// return "no value";
 		// }
+		
+		if(new Float(val).equals(new Float(Float.NaN)))
+			return "Invalid Selection";
 
 		int units = this.units;
+		
+		boolean atomic = settings.getAtomic(3);
+		
+		if(!atomic){
+		
 		ParaProfMetric ppMetric = (ParaProfMetric) settings.getTopoMetric(3);
 		if (!ppMetric.isTimeMetric()
 				|| !ValueType.isTimeUnits(settings.getTopoValueType(3))) {
@@ -2003,7 +2047,10 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 		return UtilFncs.getOutputString(units, val, 6,
 				ppMetric.isTimeDenominator()).trim()
 				+ getUnitsString(units, settings.getTopoValueType(3), ppMetric);
-
+		}
+		else{
+			return val+" counts";
+		}
 	}
 
 	private String getUnitsString(int units, ValueType valueType,

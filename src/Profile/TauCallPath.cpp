@@ -197,10 +197,17 @@ void Profiler::CallPathStart(int tid) {
     DEBUGPROFMSG("Inside CallPath Start "<<ThisFunction->GetName()<<endl;);
     comparison = TauFormulateComparisonArray(this);
     
+    // *CWL* - Send the path key off to be registered with CallSite discovery
+    //         for later processing.
+    if (TauEnv_get_callsite() == 1) {
+      CallSiteAddPath(comparison, tid);
+    }
+
     map<TAU_CALLPATH_MAP_TYPE>::iterator it = TheCallPathMap().find(comparison);
     if (it == TheCallPathMap().end()) {
       RtsLayer::LockEnv();
       it = TheCallPathMap().find(comparison);
+
       if (it == TheCallPathMap().end()) {
 	
 	string *callpathname = TauFormulateNameString(this);
@@ -211,15 +218,18 @@ void Profiler::CallPathStart(int tid) {
 					    ThisFunction->GetProfileGroup(), 
 					    (const char*) grname.c_str(), true);
 	TheCallPathMap().insert(map<TAU_CALLPATH_MAP_TYPE>::value_type(comparison, CallPathFunction));
+
       } else {
 	CallPathFunction = (*it).second; 
 	DEBUGPROFMSG("ROUTINE "<<(*it).second->GetName()<<" first = "<<(*it).first<<endl;);
+
 	delete[] comparison; // free up memory when name is found
       }
       RtsLayer::UnLockEnv();
     } else {
       CallPathFunction = (*it).second; 
       DEBUGPROFMSG("ROUTINE "<<(*it).second->GetName()<<" first = "<<(*it).first<<endl;);
+
       delete[] comparison; // free up memory when name is found
     }
     

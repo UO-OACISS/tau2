@@ -40,6 +40,8 @@
 #include <assert.h>
 // #include <sstream>
 
+#define FAKE_NUM_THREADS 1
+
 const int collate_num_op_items[NUM_COLLATE_OP_TYPES] =
   { NUM_COLLATE_STEPS, NUM_STAT_TYPES };
 const char * collate_step_names[NUM_COLLATE_STEPS] =
@@ -77,7 +79,8 @@ MPI_Op collate_op[NUM_COLLATE_STEPS] = { MPI_MIN, MPI_MAX, MPI_SUM, MPI_SUM };
 
 static double calculateMean(int count, double sum) {
   double ret = 0.0;
-  assert(count > 0);
+  if (count <= 0) return 0.0;
+  assert(count >= 0);
   assert(sum >= 0.0);
   return sum/count;
 }
@@ -389,7 +392,9 @@ void Tau_collate_get_total_threads(int *globalNumThreads,
   int *numThreadsGlobal = (int *)TAU_UTIL_MALLOC(sizeof(int)*(numEvents+1));
   int *numThreadsLocal = (int *)TAU_UTIL_MALLOC(sizeof(int)*(numEvents+1));
   
-  int numThreads = RtsLayer::getNumThreads();
+  //  int numThreads = RtsLayer::getNumThreads();
+  // *CWL* 2012/3/19 - We are faking this. Let's not pretend things work in the thread layer!
+  int numThreads = FAKE_NUM_THREADS;
 
   /* For each event, determine contributing threads */
   for (int i=0; i<numEvents; i++) {
@@ -465,7 +470,9 @@ void Tau_collate_compute_atomicStatistics(Tau_unify_object_t *atomicUnifier,
       if (globalEventMap[i] != -1) { // if it occurred in our rank
 	int local_index = atomicUnifier->sortMap[globalEventMap[i]];
 	TauUserEvent *event = TheEventDB()[local_index];
-	int numThreads = RtsLayer::getNumThreads();
+	//	int numThreads = RtsLayer::getNumThreads();
+	int numThreads = FAKE_NUM_THREADS;
+
 	for (int tid = 0; tid<numThreads; tid++) { // for each thread
 	  atomicMin[i] = getStepValue((collate_step)s, atomicMin[i],
 				      (double)event->GetMin(tid));
@@ -564,7 +571,8 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
       if (globalEventMap[i] != -1) { // if it occurred in our rank
 	int local_index = functionUnifier->sortMap[globalEventMap[i]];
 	FunctionInfo *fi = TheFunctionDB()[local_index];
-	int numThreads = RtsLayer::getNumThreads();
+	//	int numThreads = RtsLayer::getNumThreads();
+	int numThreads = FAKE_NUM_THREADS;
 	for (int tid = 0; tid<numThreads; tid++) { // for each thread
 	  for (int m=0; m<Tau_Global_numCounters; m++) {
 	    incl[m][i] = getStepValue((collate_step)s, incl[m][i],
@@ -657,7 +665,8 @@ void Tau_collate_compute_histograms(Tau_unify_object_t *functionUnifier,
     FunctionInfo *fi = TheFunctionDB()[local_index];
     
     double min, max;
-    int numThreads = RtsLayer::getNumThreads();
+    //    int numThreads = RtsLayer::getNumThreads();
+    int numThreads = FAKE_NUM_THREADS;
     for (int tid = 0; tid<numThreads; tid++) { // for each thread
       for (int m=0; m<Tau_Global_numCounters; m++) {
 	Tau_collate_incrementHistogram(&(histogram[(m*2)*numBins]), 
@@ -728,7 +737,8 @@ extern "C" int Tau_collate_writeProfile() {
   */
 
   // Dump out all thread data with present values
-  int numThreads = RtsLayer::getNumThreads();
+  //  int numThreads = RtsLayer::getNumThreads();
+  int numThreads = FAKE_NUM_THREADS;
   for (int tid = 0; tid<numThreads; tid++) {
     TauProfiler_updateIntermediateStatistics(tid);
   }
