@@ -710,6 +710,7 @@ unwind_extras=
 tau_links_rt=no
 opari=no
 opari1=no
+oparicomp=no
 epilog=no
 hpctoolkit=no
 hpctoolkit_src_dir=
@@ -1178,6 +1179,13 @@ for arg in "$@"; do
   -perflibrary=*)
       perf=yes
       perflibrary=`echo $arg | sed -e 's/-perflibrary=//' -e 's/ /#/g'`
+      shift
+      ;;
+
+  -oparicomp=*)
+      opari=yes
+      openmp=yes
+      oparicomp=`echo $arg | sed -e 's/-oparicomp=//' -e 's/ /#/g'`
       shift
       ;;
       
@@ -6389,9 +6397,25 @@ if [ $opari1 = yes ] ; then
     fixmakeargs="$fixmakeargs OPARI oparidir=$oparidir"
     tauoptions="${tauoptions}-opari"
 fi
+
 if [ $opari = yes ] ; then
     fixmakeargs="$fixmakeargs OPARI2"
     fixmakeargs="$fixmakeargs oparidir=$oparidir"
+    if [ $oparicomp = no ] ; then
+          if [ $fortran_compiler = intel ] ; then
+             oparicomp="$fortran_compiler"
+          fi
+          if [ $fortran_compiler = pathscale ] ; then
+             oparicomp="$fortran_compiler"
+          fi
+          if [ $fortran_compiler = pgi ] ; then
+             oparicomp="$fortran_compiler"
+          fi
+    else
+      oparicomp=gnu
+    fi
+
+    fixmakeargs="$fixmakeargs oparicomp=$oparicomp"
     tauoptions="${tauoptions}-opari"
 fi
 
