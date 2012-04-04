@@ -6403,8 +6403,7 @@ if [ $opari1 = yes ] ; then
 fi
 
 if [ $opari = yes ] ; then
-    fixmakeargs="$fixmakeargs OPARI2"
-    fixmakeargs="$fixmakeargs oparidir=$oparidir"
+    fixmakeargs="$fixmakeargs OPARI2 oparidir=$oparidir"
     if [ $oparicomp = no ] ; then
           if [ $fortran_compiler = intel ] ; then
              oparicomp="$fortran_compiler"
@@ -6415,10 +6414,10 @@ if [ $opari = yes ] ; then
           if [ $fortran_compiler = pgi ] ; then
              oparicomp="$fortran_compiler"
           fi
-    else
-      oparicomp=gnu
+    fi 
+    if [ $oparicomp = no ] ; then
+      oparicomp=
     fi
-
     fixmakeargs="$fixmakeargs oparicomp=$oparicomp"
     tauoptions="${tauoptions}-opari"
 fi
