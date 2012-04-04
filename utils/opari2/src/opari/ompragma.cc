@@ -261,7 +261,8 @@ OMPragma::changed_default()
     unsigned          line = 0;
     string::size_type pos  = 0;
 
-    if (  find_word( "default(none)", line, pos ) || find_word( "default(private)", line, pos ) )
+    if (  find_word( "default(none)", line, pos ) || find_word( "default(private)", line, pos ) ||
+          find_word( "default (none)", line, pos ) || find_word( "default (private)", line, pos ) )
     {
         return true;
     }

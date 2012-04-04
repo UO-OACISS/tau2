@@ -180,9 +180,19 @@ OMPRegion::generate_init_handle_calls_c( ostream& os )
 void
 OMPRegion::finalize_descrs( ostream& os, Language lang )
 {
-    os << "\n      integer pomp2_lib_get_max_threads";
-    os << "\n      logical pomp2_test_lock";
-    os << "\n      integer pomp2_test_nest_lock\n";
+    if ( lang & L_F77 )
+    {
+        os << "\n      integer*4 pomp2_lib_get_max_threads";
+        os << "\n      logical pomp2_test_lock";
+        os << "\n      integer*4 pomp2_test_nest_lock\n";
+    }
+    else
+    {
+        os << "\n      integer ( kind=4 ) :: pomp2_lib_get_max_threads";
+        os << "\n      logical :: pomp2_test_lock";
+        os << "\n      integer ( kind=4 ) :: pomp2_test_nest_lock\n";
+    }
+
 
     if ( !common_block.empty() )
     {
@@ -205,13 +215,14 @@ OMPRegion::finalize_descrs( ostream& os, Language lang )
         {
             os << "      integer*8 pomp2_old_task, pomp2_new_task \n";
             os << "      logical pomp_if \n";
+            os << "      integer*4 pomp_num_threads \n";
         }
         else
         {
             os << "      integer ( kind=8 ) :: pomp2_old_task, pomp2_new_task \n";
             os << "      logical :: pomp_if \n";
+            os << "      integer ( kind=4 ) :: pomp_num_threads \n";
         }
-        os << "      integer pomp_num_threads \n";
         os << "      common /" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/ " << region_id_prefix << *it++;
         for (; it < common_block.end(); it++ )
         {
