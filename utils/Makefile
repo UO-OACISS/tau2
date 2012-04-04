@@ -20,7 +20,7 @@ VTFDIR=
 OTFDIR=
 PDTDIR=
 DYNINSTDIR=
-OPARICOMP=intel
+OPARICOMP=
 #######################################################################
  
 #MIPSR8K#ISA          = -mips4		   #ENDIF#
