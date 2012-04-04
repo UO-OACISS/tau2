@@ -72,5 +72,5 @@ AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([test/c_test.sh], [chmod +x test/c_test.sh]) 
 AC_CONFIG_FILES([test/f90_test.sh], [chmod +x test/f90_test.sh]) 
 AC_CONFIG_FILES([test/f77_test.sh], [chmod +x test/f77_test.sh])
-AC_CONFIG_FILES([build-frontend/pomp2_parse_init_regions.awk:src/pomp-lib-dummy/pomp2_parse_init_regions.awk.in])
+AC_CONFIG_FILES([build-frontend/pomp2-parse-init-regions.awk:src/pomp-lib-dummy/pomp2_parse_init_regions.awk.in])
 AC_OUTPUT

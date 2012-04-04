@@ -8,5 +8,5 @@ FC=gfortran
 #CXXFLAGS=
 #FFLAGS=
 #FCFLAGS=
-#LD_FLAGS=
+#LDFLAGS=
 #LIBS=

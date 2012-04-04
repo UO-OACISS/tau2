@@ -110,21 +110,29 @@
       call POMP2_Parallel_begin(pomp2_region_4)
 #line 47 "test8.f"
       pomp_if = .true.
+      if (pomp_if) then
       call POMP2_Task_create_begin(pomp2_region_5, pomp2_new_task,
      &pomp2_old_task, 
      &pomp_if,
      &"67*regionType=task*sscl=test8.f:47:47*escl=test8.f:0:0*hasU"//
      &"ntied=1**" )
+      end if
 #line 47 "test8.f"
 !$omp task       
-!$omp& if(pomp_if) firstprivate(pomp2_new_task)
+!$omp& if(pomp_if) firstprivate(pomp2_new_task, pomp_if)
+      if (pomp_if) then
       call POMP2_Task_begin(pomp2_region_5, pomp2_new_task)
+      end if
 #line 48 "test8.f"
       write(*,*) "task"
+      if (pomp_if) then
       call POMP2_Task_end(pomp2_region_5)
+      end if
 #line 49 "test8.f"
 !$omp end task
+      if (pomp_if) then
       call POMP2_Task_create_end(pomp2_region_5, pomp2_old_task)
+      end if
 #line 50 "test8.f"
       call POMP2_Implicit_barrier_enter(pomp2_region_4, pomp2_old_task)
 !$omp barrier

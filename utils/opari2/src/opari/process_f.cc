@@ -105,6 +105,7 @@ bool
 is_sub_unit_header( string& lowline, bool inHeader )
 {
     string      line;
+    string      lline;
     string      keyword;
     bool        result;
     static bool continuation = false;
@@ -127,6 +128,7 @@ is_sub_unit_header( string& lowline, bool inHeader )
     {
         line = lowline.substr( pos );
     }
+    lline = line;
     line.erase( remove_if( line.begin(), line.end(), isspace ), line.end() );
 
     //Set number of open brackets to 0 if new unit begins, since we might have missed
@@ -158,13 +160,25 @@ is_sub_unit_header( string& lowline, bool inHeader )
     //we can insert variable definitions, these keywords are:
     //program, function, result, subroutine, save, implicit, parameter,
     //and use
-    if ( ( ( ( line.find( "program" ) == 0 )                ||
-             ( line.find( "function" )   != string::npos )  ||
-             ( line.find( "subroutine" ) != string::npos )  ||
-             ( line.find( "save" )     == 0 && inHeader )   ||
-             ( line.find( "result" )   == 0 && inHeader )   ||
-             ( line.find( "implicit" ) == 0 && inHeader )   ||
-             ( line.find( "use" )      == 0 && inHeader )   ||
+    if ( ( ( ( line.find( "program" ) == 0 )                                    ||
+             ( ( lline.find( "function" )   != string::npos )           &&
+               !( lline.length() >= ( lline.find( "function" ) + 8 )        &&
+                  ( isalnum( lline[ lline.find( "function" ) + 8 ] ) ||
+                    ( lline[ lline.find( "function" ) + 8 ] == '_' ) ) )     &&
+               !( ( lline.find( "function" ) != 0 )                       &&
+                  ( isalnum( lline[ lline.find( "function" ) - 1 ] ) ) ||
+                  ( lline[ lline.find( "function" ) - 1 ] == '_' ) ) )             ||
+             ( ( lline.find( "subroutine" )   != string::npos )                 &&
+               !( lline.length() >= ( lline.find( "subroutine" ) + 10 )     &&
+                  ( isalnum( lline[ lline.find( "subroutine" ) + 10 ] ) ||
+                    ( lline[ lline.find( "subroutine" ) + 10 ] == '_' ) ) )  &&
+               !( ( lline.find( "subroutine" ) != 0 )                     &&
+                  ( isalnum( lline[ lline.find( "subroutine" ) - 1 ] ) ) ||
+                  ( lline[ lline.find( "subroutine" ) - 1 ] == '_' ) ) )           ||
+             ( line.find( "save" )     == 0 && inHeader )                       ||
+             ( line.find( "result" )   == 0 && inHeader )                       ||
+             ( line.find( "implicit" ) == 0 && inHeader )                       ||
+             ( line.find( "use" )      == 0 && inHeader )                       ||
              ( line.find( "include" )  == 0 && inHeader ) )     &&
            line.find( "endfunction" )   == string::npos         &&
            line.find( "endsubroutine" ) == string::npos         &&
@@ -197,7 +211,7 @@ is_sub_unit_header( string& lowline, bool inHeader )
     //Check if we leave an contains block
     inContains = inContains && line.find( "endmodule" ) == string::npos;
 
-    if ( line[ line.length() - 1 ] == '&' )
+    if ( line[ line.length() - 1 ] == '&' || line.find( "&!" ) != string::npos )
     {
         continuation = true;
     }
