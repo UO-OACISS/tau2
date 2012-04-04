@@ -156,6 +156,11 @@ case $1 in
 	echo "s,^OPARIDIR=.*$,OPARIDIR=$oparidir,g" >> $sedout
 	;;
 
+     oparicomp=*)
+        oparicomp=`echo $1 | sed -e 's/^oparicomp=//'`
+	echo "s,^OPARICOMP=.*$,OPARICOMP=$oparicomp,g" >> $sedout
+	;;
+
      scorepdir=*)
         scorepdir=`echo $1 | sed -e 's/^scorepdir=//'`
 	echo "s,^SCOREPDIR=.*$,SCOREPDIR=$scorepdir,g" >> $sedout

@@ -20,6 +20,7 @@ VTFDIR=
 OTFDIR=
 PDTDIR=
 DYNINSTDIR=
+OPARICOMP=intel
 #######################################################################
  
 #MIPSR8K#ISA          = -mips4		   #ENDIF#
@@ -203,7 +204,7 @@ opari/opari:
 		cd opari ; $(MAKE) opari
 
 opari2/_build/bin/opari2:
-		cd opari2 ;mkdir _build; cd _build; CXX=$(CONFIG_CXX) CC=$(CONFIG_CC) ../configure -prefix=`pwd` ; $(MAKE) ; $(MAKE) install
+		cd opari2 ;mkdir _build; cd _build; CXX=$(CONFIG_CXX) CC=$(CONFIG_CC) ../configure --prefix=`pwd` --with-compiler-suite=$(OPARICOMP); $(MAKE) ; $(MAKE) install
 
 tau_timecorrect.o:	tau_timecorrect.cpp
 		$(CXX) $(CFLAGS) tau_timecorrect.cpp -c
