@@ -32,7 +32,7 @@ TAUDB_THREAD* taudb_query_threads_2005(PGconn* connection, TAUDB_TRIAL* trial) {
 
 TAUDB_THREAD* taudb_query_threads_2012(PGconn* connection, TAUDB_TRIAL* trial) {
 #ifdef TAUDB_DEBUG
-  printf("Calling taudb_query_threads(%d)\n", trial);
+  printf("Calling taudb_query_threads(%p)\n", trial);
 #endif
   PGresult *res;
   int nFields;
@@ -135,7 +135,7 @@ TAUDB_THREAD* taudb_query_threads_2012(PGconn* connection, TAUDB_TRIAL* trial) {
 
 TAUDB_THREAD* taudb_query_threads(PGconn* connection, TAUDB_TRIAL* trial) {
 #ifdef TAUDB_DEBUG
-  printf("Calling taudb_query_threads(%d)\n", trial);
+  printf("Calling taudb_query_threads(%p)\n", trial);
 #endif
   if (taudb_version == TAUDB_2005_SCHEMA) {
     return taudb_query_threads_2005(connection, trial);
