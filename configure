@@ -322,6 +322,8 @@ for arg in "$@"; do
     echo "-opari1 .................................................... Use Opari."
     echo "-opari_region ......... Report performance data for all OpenMP regions."
     echo "-opari_construct ... Report performance data for all OpenMP constructs."
+    echo "-oparicomp=<compiler>...Specify which compiler sutie to compile Opari2."
+    echo "     options [gcc|ibm|intel|pathscale|pgi|studio]."
     echo ""
     echo "SHMEM Options:"
     echo "-shmem ...................... Specify use of TAU SHMEM wrapper library."
@@ -440,6 +442,8 @@ for arg in "$@"; do
     echo "-opari1 .................................................... Use Opari."
     echo "-opari_region ......... Report performance data for all OpenMP regions."
     echo "-opari_construct ... Report performance data for all OpenMP constructs."
+    echo "-oparicomp=<compiler>...Specify which compiler sutie to compile Opari2."
+    echo "     options [gcc|ibm|intel|pathscale|pgi|studio]."
     echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
     echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
     echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
@@ -710,6 +714,7 @@ unwind_extras=
 tau_links_rt=no
 opari=no
 opari1=no
+oparicomp=no
 epilog=no
 hpctoolkit=no
 hpctoolkit_src_dir=
@@ -1178,6 +1183,13 @@ for arg in "$@"; do
   -perflibrary=*)
       perf=yes
       perflibrary=`echo $arg | sed -e 's/-perflibrary=//' -e 's/ /#/g'`
+      shift
+      ;;
+
+  -oparicomp=*)
+      opari=yes
+      openmp=yes
+      oparicomp=`echo $arg | sed -e 's/-oparicomp=//' -e 's/ /#/g'`
       shift
       ;;
       
@@ -6389,9 +6401,24 @@ if [ $opari1 = yes ] ; then
     fixmakeargs="$fixmakeargs OPARI oparidir=$oparidir"
     tauoptions="${tauoptions}-opari"
 fi
+
 if [ $opari = yes ] ; then
-    fixmakeargs="$fixmakeargs OPARI2"
-    fixmakeargs="$fixmakeargs oparidir=$oparidir"
+    fixmakeargs="$fixmakeargs OPARI2 oparidir=$oparidir"
+    if [ $oparicomp = no ] ; then
+          if [ $fortran_compiler = intel ] ; then
+             oparicomp="$fortran_compiler"
+          fi
+          if [ $fortran_compiler = pathscale ] ; then
+             oparicomp="$fortran_compiler"
+          fi
+          if [ $fortran_compiler = pgi ] ; then
+             oparicomp="$fortran_compiler"
+          fi
+    fi 
+    if [ $oparicomp = no ] ; then
+      oparicomp=
+    fi
+    fixmakeargs="$fixmakeargs oparicomp=$oparicomp"
     tauoptions="${tauoptions}-opari"
 fi
 

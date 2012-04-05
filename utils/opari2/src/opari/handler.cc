@@ -259,6 +259,10 @@ generate_call( const char* event,
 
     if ( lang & L_FORTRAN )
     {
+        if ( strcmp( type, "task" ) == 0 || strcmp( type, "untied_task" ) == 0 )
+        {
+            os << "      if (pomp_if) then\n";
+        }
         os << "      call POMP2_" << c1 << ( type + 1 )
            << "_" << event << "(" << region_id_prefix << id;
         if ( strstr( type, "task" ) != NULL &&
@@ -279,6 +283,10 @@ generate_call( const char* event,
             }
         }
         os << ")\n";
+        if ( strcmp( type, "task" ) == 0 || strcmp( type, "untied_task" ) == 0 )
+        {
+            os << "      end if\n";
+        }
     }
     else
     {
@@ -286,6 +294,12 @@ generate_call( const char* event,
         {
             os << "{ ";
         }
+
+        if ( strcmp( type, "task" ) == 0 || strcmp( type, "untied_task" ) == 0 )
+        {
+            os << "if (pomp_if)";
+        }
+
         os << "  POMP2_" << c1 << ( type + 1 )
            << "_" << event << "( &" << region_id_prefix << id;
 
@@ -325,6 +339,10 @@ generate_call_save_task_id( const char* event,
 
     if ( lang & L_FORTRAN )
     {
+        if ( strcmp( type, "task_create" ) == 0 || strcmp( type, "untied_task_create" ) == 0 )
+        {
+            os << "      if (pomp_if) then\n";
+        }
         os << "      call POMP2_" << c1 << ( type + 1 )
            << "_" << event << "(" << region_id_prefix << id;
         if ( ( strcmp( type, "task_create" ) == 0 ) || ( strcmp( type, "untied_task_create" ) == 0 )  )
@@ -363,6 +381,10 @@ generate_call_save_task_id( const char* event,
             }
         }
         os << ")\n";
+        if ( strcmp( type, "task_create" ) == 0 || strcmp( type, "untied_task_create" ) == 0 )
+        {
+            os << "      end if\n";
+        }
     }
     else
     {
@@ -370,6 +392,10 @@ generate_call_save_task_id( const char* event,
         if ( ( strcmp( type, "task_create" ) == 0 ) || ( strcmp( type, "untied_task_create" ) == 0 )  )
         {
             os << "  POMP2_Task_handle pomp2_new_task;\n";
+        }
+        if ( strcmp( type, "task_create" ) == 0 || strcmp( type, "untied_task_create" ) == 0 )
+        {
+            os << "if (pomp_if)";
         }
         os << "  POMP2_" << c1 << ( type + 1 )
            << "_" << event << "( &" << region_id_prefix << id;
@@ -401,12 +427,24 @@ generate_call_restore_task_id( const char* event,
 
     if ( lang & L_FORTRAN )
     {
+        if ( strcmp( type, "task_create" ) == 0 || strcmp( type, "untied_task_create" ) == 0 )
+        {
+            os << "      if (pomp_if) then\n";
+        }
         os << "      call POMP2_" << c1 << ( type + 1 )
            << "_" << event << "(" << region_id_prefix << id;
         os << ", pomp2_old_task" << ")\n";
+        if ( strcmp( type, "task_create" ) == 0 || strcmp( type, "untied_task_create" ) == 0 )
+        {
+            os << "      end if\n";
+        }
     }
     else
     {
+        if ( strcmp( type, "task_create" ) == 0 || strcmp( type, "untied_task_create" ) == 0 )
+        {
+            os << "if (pomp_if)";
+        }
         os << "  POMP2_" << c1 << ( type + 1 )
            << "_" << event << "( &" << region_id_prefix << id;
         os << ", pomp2_old_task ); }\n";
@@ -619,7 +657,7 @@ print_pragma_task( OMPragma* p,
         if ( lang & L_F77 )
         {
             os << p->lines.back() << "\n";
-            os << "!$omp& if(pomp_if) firstprivate(pomp2_new_task)\n";
+            os << "!$omp& if(pomp_if) firstprivate(pomp2_new_task, pomp_if)\n";
             if ( p->changed_default() )
             {
                 os << "!$omp& shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)\n ";
@@ -628,7 +666,7 @@ print_pragma_task( OMPragma* p,
         else if ( lang & L_FORTRAN )
         {
             os << p->lines.back();
-            os << " if(pomp_if) firstprivate(pomp2_new_task)";
+            os << " if(pomp_if) firstprivate(pomp2_new_task, pomp_if)";
             if ( p->changed_default() )
             {
                 os << "&\n  !$omp shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)";
@@ -638,7 +676,7 @@ print_pragma_task( OMPragma* p,
         else
         {
             os << p->lines.back();
-            os << " if(pomp_if) firstprivate(pomp2_new_task)\n";
+            os << " if(pomp_if) firstprivate(pomp2_new_task, pomp_if)\n";
         }
     }
     else
@@ -1351,7 +1389,7 @@ h_barrier( OMPragma* p,
 {
     OMPRegion* r = new OMPRegion( p->name, p->filename,
                                   p->lineno, p->lineno + p->lines.size() - 1 );
-    int        n = r->id;
+    int n = r->id;
     regions.push_back( r );
     generate_call_save_task_id( "enter", "barrier", n, os, r );
     print_pragma( p, os );
@@ -1368,7 +1406,7 @@ h_flush( OMPragma* p,
 {
     OMPRegion* r = new OMPRegion( p->name, p->filename,
                                   p->lineno, p->lineno + p->lines.size() - 1 );
-    int        n = r->id;
+    int n = r->id;
     regions.push_back( r );
     generate_call( "enter", "flush", n, os, r );
     print_pragma( p, os );
@@ -1385,7 +1423,7 @@ h_atomic( OMPragma* p,
 {
     OMPRegion* r = new OMPRegion( p->name, p->filename,
                                   p->lineno, p->lineno + p->lines.size() - 1 );
-    int        n = r->id;
+    int n = r->id;
     regions.push_back( r );
     if ( enabled & C_ATOMIC )
     {
@@ -1632,7 +1670,7 @@ h_taskwait( OMPragma* p,
 {
     OMPRegion* r = new OMPRegion( p->name, p->filename,
                                   p->lineno, p->lineno + p->lines.size() - 1 );
-    int        n = r->id;
+    int n = r->id;
     regions.push_back( r );
     generate_call_save_task_id( "begin", "taskwait", n, os, r );
     print_pragma( p, os );

@@ -133,7 +133,7 @@ void Tau_sampling_unwind(int tid, Profiler *profiler,
   unw_word_t unwind_ip, sp;
   unw_word_t curr_ip;
 
-  int unwindDepth = 0;
+  int unwindDepth = 1; // We need to include the PC in unwind depth calculations
   int depthCutoff = TauEnv_get_ebs_unwind_depth();
 
   int index = 1;
