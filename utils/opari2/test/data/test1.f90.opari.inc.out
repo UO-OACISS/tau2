@@ -3,12 +3,12 @@
       INTEGER( KIND=8 ) :: pomp2_region_3
       INTEGER( KIND=8 ) :: pomp2_region_4
 
-      integer pomp2_lib_get_max_threads
-      logical pomp2_test_lock
-      integer pomp2_test_nest_lock
+      integer ( kind=4 ) :: pomp2_lib_get_max_threads
+      logical :: pomp2_test_lock
+      integer ( kind=4 ) :: pomp2_test_nest_lock
       integer ( kind=8 ) :: pomp2_old_task, pomp2_new_task 
       logical :: pomp_if 
-      integer pomp_num_threads 
+      integer ( kind=4 ) :: pomp_num_threads 
       common /cb000/ pomp2_region_1,&
               pomp2_region_2,&
               pomp2_region_3,&
