@@ -45,6 +45,6 @@ test: $(TARGET)
 
 clean:
 	echo "Removing : $(OBJS) $(TARGET)"
-	/bin/rm -f $(OBJS) $(TARGET) $(TARGET).log
+	/bin/rm -f $(OBJS) $(TARGET) $(TARGET).log *.pdb *.inst.c
 
 remake: clean all

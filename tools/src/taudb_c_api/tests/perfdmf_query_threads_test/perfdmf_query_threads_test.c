@@ -25,7 +25,7 @@ int main (int argc, char** argv) {
      for (t = 0 ; t < numTrials ; t = t+1) {
         printf("  Trial name: '%s', id: %d\n", trials[t].name, trials[t].id);
 	    dump_metadata(trials[t].primary_metadata, trials[t].primary_metadata_count);
-        dump_trial_threads(connection, &(trials[t]));
+        dump_threads(connection, &(trials[t]));
      }
    }
 

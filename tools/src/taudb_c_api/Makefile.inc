@@ -14,10 +14,10 @@
 
 CC=gcc
 AR=ar
-#CC=tau_cc.sh -tau_makefile=${HOME}/src/tau2/apple/lib/Makefile.tau-pdt
+#CC=tau_cc.sh -tau_makefile=${HOME}/src/tau2/x86_64/lib/Makefile.tau-pdt -optQuiet -optPreProcess
 
-POSTGRESQL_INCLUDES=-I/usr/include
-POSTGRESQL_LIBRARIES=-L/usr/include -lpq
+POSTGRESQL_INCLUDES=-I/usr/local/pgsql/include
+POSTGRESQL_LIBRARIES=-L/usr/local/pgsql/lib -lpq
 
 FLAGS=-g
 PERFDMF_SUPPORT=-DTAUDB_PERFDMF

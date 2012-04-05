@@ -12,6 +12,17 @@ TAUDB_COUNTER* taudb_query_counters(PGconn* connection, TAUDB_TRIAL* trial) {
   int nFields;
   int i, j;
 
+  if (trial == NULL) {
+    fprintf(stderr, "Error: trial parameter null. Please provide a valid trial.\n");
+    return NULL;
+  }
+
+  // if the Trial already has the data, return it.
+  if (trial->counters != NULL && trial->counter_count > 0) {
+    taudb_numItems = trial->counter_count;
+    return trial->counters;
+  }
+
   /* Start a transaction block */
   res = PQexec(connection, "BEGIN");
   if (PQresultStatus(res) != PGRES_COMMAND_OK)
@@ -36,6 +47,9 @@ TAUDB_COUNTER* taudb_query_counters(PGconn* connection, TAUDB_TRIAL* trial) {
   } else {
     sprintf(my_query,"DECLARE myportal CURSOR FOR select * from counter where trial = %d", trial->id);
   }
+#ifdef TAUDB_DEBUG
+  printf("'%s'\n",my_query);
+#endif
   res = PQexec(connection, my_query);
   if (PQresultStatus(res) != PGRES_COMMAND_OK)
   {

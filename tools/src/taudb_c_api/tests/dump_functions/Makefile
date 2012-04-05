@@ -37,7 +37,7 @@ $(OBJS): $(HEADERS) Makefile
 
 clean:
 	echo "Removing : $(OBJS)"
-	/bin/rm -f $(OBJS) $(TARGET)
+	/bin/rm -f $(OBJS) $(TARGET) *.pdb *.inst.c
 
 test:
 

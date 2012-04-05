@@ -21,6 +21,12 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(PGconn* connection, TAUDB_TRIA
     fprintf(stderr, "Error: trial parameter null. Please provide a valid trial.\n");
     return NULL;
   }
+  
+  // if the Trial already has the callpath data, return it.
+  if (trial->timer_callpaths != NULL && trial->callpath_count > 0) {
+    taudb_numItems = trial->callpath_count;
+    return trial->timer_callpaths;
+  }
 
   /* Start a transaction block */
   res = PQexec(connection, "BEGIN");
@@ -57,7 +63,7 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(PGconn* connection, TAUDB_TRIA
     fprintf(stderr, "Error: 2012 schema not supported yet.\n");
     return NULL;
   }
-#ifdef TAUDB_DEBUG_DEBUG
+#ifdef TAUDB_DEBUG
   printf("%s\n", my_query);
 #endif
   res = PQexec(connection, my_query);
@@ -123,6 +129,9 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(PGconn* connection, TAUDB_TRIA
 	sprintf(tmp_thread, "%d", timer_callpath->thread);
 	timer_callpath->key = calloc((strlen(tmp_thread) + strlen(timer_str) + 2), sizeof(char));
     sprintf(timer_callpath->key, "%d:%s", timer_callpath->thread, timer_str);
+#ifdef TAUDB_DEBUG_DEBUG
+    printf("NEW KEY: '%s'\n",timer_callpath->key);
+#endif
 	HASH_ADD_KEYPTR(hh, timer_callpaths, timer_callpath->key, strlen(timer_callpath->key), timer_callpath);
   }
 
@@ -160,7 +169,9 @@ TAUDB_TIMER_CALLPATH* taudb_get_timer_callpath(TAUDB_TIMER_CALLPATH* timer_callp
   sprintf(tmp_thread, "%d", thread->index);
   char *key = calloc((strlen(tmp_thread) + strlen(timer->name) + 2), sizeof(char));
   sprintf(key, "%d:%s", thread->index, timer->name);
-  //printf("%s\n", key);
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("'%d', '%s', Looking for key: %s\n", thread->index, timer->name, key);
+#endif
 
   TAUDB_TIMER_CALLPATH* timer_callpath = NULL;
   HASH_FIND_STR(timer_callpaths, key, timer_callpath);

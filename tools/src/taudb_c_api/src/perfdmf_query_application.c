@@ -40,6 +40,9 @@ PERFDMF_APPLICATION* perfdmf_query_application(PGconn* connection, char* name) {
   char my_query[256] = "DECLARE myportal CURSOR FOR select * from application where name = '";
   strcat(my_query, name);
   strcat(my_query, "'");
+#ifdef TAUDB_DEBUG
+  printf("'%s'\n",my_query);
+#endif
   res = PQexec(connection, my_query);
   if (PQresultStatus(res) != PGRES_COMMAND_OK)
   {

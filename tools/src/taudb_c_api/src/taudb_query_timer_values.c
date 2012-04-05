@@ -25,6 +25,12 @@ TAUDB_TIMER_VALUE* taudb_query_timer_values(PGconn* connection, TAUDB_TRIAL* tri
 	return NULL;
   }
 
+  //if the Trial already has the data, return it.
+  if (trial->timer_values != NULL && trial->value_count > 0) {
+    taudb_numItems = trial->value_count;
+    return trial->timer_values;
+  }
+
   /* Start a transaction block */
   res = PQexec(connection, "BEGIN");
   if (PQresultStatus(res) != PGRES_COMMAND_OK)
@@ -75,7 +81,7 @@ TAUDB_TIMER_VALUE* taudb_query_timer_values(PGconn* connection, TAUDB_TRIAL* tri
     fprintf(stderr, "Error: 2012 schema not supported yet.\n");
     return NULL;
   }
-#ifdef TAUDB_DEBUG_DEBUG
+#ifdef TAUDB_DEBUG
   printf("%s\n", my_query);
 #endif
   res = PQexec(connection, my_query);
