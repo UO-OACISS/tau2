@@ -12,6 +12,17 @@ TAUDB_METRIC* taudb_query_metrics(PGconn* connection, TAUDB_TRIAL* trial) {
   int nFields;
   int i, j;
 
+  if (trial == NULL) {
+    fprintf(stderr, "Error: trial parameter null. Please provide a valid trial.\n");
+    return NULL;
+  }
+
+  //if the Trial already has the data, return it.
+  if (trial->metrics != NULL && trial->metric_count > 0) {
+    taudb_numItems = trial->metric_count;
+    return trial->metrics;
+  }
+
   /* Start a transaction block */
   res = PQexec(connection, "BEGIN");
   if (PQresultStatus(res) != PGRES_COMMAND_OK)
@@ -32,6 +43,9 @@ TAUDB_METRIC* taudb_query_metrics(PGconn* connection, TAUDB_TRIAL* trial) {
    */
   char my_query[256];
   sprintf(my_query,"DECLARE myportal CURSOR FOR select * from metric where trial = %d", trial->id);
+#ifdef TAUDB_DEBUG
+  printf("Query: %s\n", my_query);
+#endif
   res = PQexec(connection, my_query);
   if (PQresultStatus(res) != PGRES_COMMAND_OK)
   {

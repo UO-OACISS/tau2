@@ -39,6 +39,9 @@ PERFDMF_EXPERIMENT* perfdmf_query_experiments(PGconn* connection, PERFDMF_APPLIC
    */
   char my_query[256];
   sprintf(my_query,"DECLARE myportal CURSOR FOR select * from experiment where application = %d", application->id);
+#ifdef TAUDB_DEBUG
+  printf("'%s'\n",my_query);
+#endif
   res = PQexec(connection, my_query);
   if (PQresultStatus(res) != PGRES_COMMAND_OK)
   {

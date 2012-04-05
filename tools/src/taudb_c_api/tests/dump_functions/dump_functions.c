@@ -18,7 +18,7 @@ void dump_trial(PGconn* connection, TAUDB_TRIAL* filter) {
    printf("Trial name: '%s', id: %d, main: '%s'\n\n", trial->name, trial->id, timer->name);
 }
 
-void dump_trial_timers(PGconn* connection, TAUDB_TRIAL* filter) {
+void dump_timers(PGconn* connection, TAUDB_TRIAL* filter) {
    TAUDB_TRIAL* trial = taudb_query_trials(connection, FALSE, filter);
    printf("Trial name: '%s', id: %d\n\n", trial->name, trial->id);
 
@@ -32,10 +32,10 @@ void dump_trial_timers(PGconn* connection, TAUDB_TRIAL* filter) {
      printf("%s\n", timers[e].name);
    }
 
-   taudb_delete_timers(timers, 1);
+   //taudb_delete_timers(timers, 1);
 }
 
-void dump_trial_metrics(PGconn* connection, TAUDB_TRIAL* filter) {
+void dump_metrics(PGconn* connection, TAUDB_TRIAL* filter) {
    TAUDB_TRIAL* trial = taudb_query_trials(connection, FALSE, filter);
    printf("Trial name: '%s', id: %d\n\n", trial->name, trial->id);
 
@@ -49,10 +49,10 @@ void dump_trial_metrics(PGconn* connection, TAUDB_TRIAL* filter) {
      printf("%s\n", metrics[m].name);
    }
 
-   taudb_delete_metrics(metrics, 1);
+   //taudb_delete_metrics(metrics, 1);
 }
 
-void dump_trial_threads(PGconn* connection, TAUDB_TRIAL* filter) {
+void dump_threads(PGconn* connection, TAUDB_TRIAL* filter) {
    TAUDB_TRIAL* trial = taudb_query_trials(connection, FALSE, filter);
    printf("Trial name: '%s', id: %d\n\n", trial->name, trial->id);
 
@@ -66,10 +66,50 @@ void dump_trial_threads(PGconn* connection, TAUDB_TRIAL* filter) {
      printf("%d %d %d %d\n", threads[t].index, threads[t].node_rank, threads[t].context_rank, threads[t].thread_rank);
    }
 
-   taudb_delete_threads(threads, 1);
+   //taudb_delete_threads(threads, 1);
 }
 
-void dump_trial_backup(PGconn* connection, TAUDB_TRIAL* filter) {
+void dump_timer_callpaths(PGconn* connection, TAUDB_TRIAL* filter) {
+   TAUDB_TRIAL* trial = taudb_query_trials(connection, FALSE, filter);
+   printf("Trial name: '%s', id: %d\n\n", trial->name, trial->id);
+
+   TAUDB_THREAD* threads = taudb_query_threads(connection, trial);
+   int numThreads = taudb_numItems;
+   printf("Found %d threads\n", numThreads);
+   TAUDB_TIMER* timers = taudb_query_timers(connection, trial);
+   int numTimers = taudb_numItems;
+   printf("Found %d timers\n", numTimers);
+   TAUDB_TIMER_CALLPATH* callpaths = taudb_query_timer_callpaths(connection, trial, NULL, NULL);
+   int numCallpaths = taudb_numItems;
+   printf("Found %d callpaths\n", numCallpaths);
+
+   int e, t, m;
+   int total = 0;
+   for (e = 0 ; e < numTimers ; e++) {
+#ifdef TAUDB_DEBUG_DEBUG
+      printf("'%s'\n", timers[e].name);
+#endif
+      for (t = 0 ; t < numThreads ; t++) {
+         TAUDB_TIMER_CALLPATH* timer_callpath = taudb_get_timer_callpath(callpaths, &(timers[e]), &(threads[t]));
+         //TAUDB_TIMER_CALLPATH* timer_callpath = taudb_query_timer_callpaths(connection, trial, &(timers[e]), &(threads[t]));
+         if (timer_callpath) {
+           printf("timer %s, thread %d - calls: %d\n", timers[e].name, threads[t].index, timer_callpath->calls);
+           total++;
+         } else {
+           printf("ERROR!!! key '%d:%s' not found.\n", threads[t].index, timers[e].name);
+         }
+      }
+   }
+   printf("Found %d objects in the hash.\n\n", total);
+
+   if (numCallpaths != total) {
+     printf("ERROR!!! %d != %d - MISSING ITEMS!\n\n", numCallpaths, total);
+   }
+
+   //taudb_delete_trials(trial, 1);
+}
+
+void dump_timer_values(PGconn* connection, TAUDB_TRIAL* filter) {
    TAUDB_TRIAL* trial = taudb_query_trials(connection, TRUE, filter);
 
    TAUDB_TIMER* timer = taudb_query_main_timer(connection, trial);
@@ -86,22 +126,6 @@ void dump_trial_backup(PGconn* connection, TAUDB_TRIAL* filter) {
 
    int e, t, m;
    int total = 0;
-   for (e = 0 ; e < numTimers ; e++) {
-      for (t = 0 ; t < numThreads ; t++) {
-         TAUDB_TIMER_CALLPATH* timer_callpath = taudb_get_timer_callpath(trial->timer_callpaths, &(trial->timers[e]), &(trial->threads[t]));
-         if (timer_callpath) {
-		   //printf("timer %s, thread %d - calls: %d\n", timers[e].name, t, timer_callpath->calls);
-		   total++;
-		 }
-		 /*
-         TAUDB_COUNTER* counter = taudb_get_counters(trial->counters, &(trial->timers[e]), &(trial->threads[t]));
-         if (counter) {
-		   //printf("timer %s, thread %d - calls: %d\n", timers[e].name, t, timer_callpath->calls);
-		 }
-		 */
-      }
-   }
-   printf("Found %d objects in the hash.\n\n", total);
 
    TAUDB_TIMER_VALUE* timer_values = taudb_query_all_timer_values(connection, trial);
    printf("Found %d values\n\n", taudb_numItems);
@@ -112,14 +136,14 @@ void dump_trial_backup(PGconn* connection, TAUDB_TRIAL* filter) {
          for (m = 0 ; m < numMetrics ; m++) {
            TAUDB_TIMER_VALUE* timer_value = taudb_get_timer_value(timer_values, &(trial->timers[e]), &(trial->threads[t]), &(trial->metrics[m]));
            if (timer_value) {
-		     //printf("timer %s, metric %s, thread %d - inclusive: %f, exclusive %f\n", timers[e].name, metrics[m].name, t, timer_value->inclusive, timer_value->exclusive);
-			 total++;
-		   }
+             //printf("timer %s, metric %s, thread %d - inclusive: %f, exclusive %f\n", timers[e].name, metrics[m].name, t, timer_value->inclusive, timer_value->exclusive);
+             total++;
+           }
          }
       }
    }
    printf("Found %d objects in the hash.\n\n", total);
 
-   taudb_delete_trials(trial, 1);
+   //taudb_delete_trials(trial, 1);
 }
 

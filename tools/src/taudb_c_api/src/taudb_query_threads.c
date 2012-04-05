@@ -4,13 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef TAUDB_PERFDMF
-TAUDB_THREAD* taudb_query_threads(PGconn* connection, TAUDB_TRIAL* trial) {
-#ifdef TAUDB_DEBUG_DEBUG
-  printf("Calling taudb_query_threads(%p)\n", trial);
-#endif
+TAUDB_THREAD* taudb_query_threads_2005(PGconn* connection, TAUDB_TRIAL* trial) {
   int i, j, k;
-  
   taudb_numItems = trial->node_count * trial->contexts_per_node * trial->threads_per_context;
   TAUDB_THREAD* threads = taudb_create_threads(taudb_numItems);
   int threadIndex = 0;
@@ -28,21 +23,31 @@ TAUDB_THREAD* taudb_query_threads(PGconn* connection, TAUDB_TRIAL* trial) {
         threads[threadIndex].process_id = 0; // should get this from the metadata
         threads[threadIndex].thread_id = 0; // should get this from the metadata
         threads[threadIndex].index = threadIndex;
-		threadIndex++;
-	  }
-	} 
+        threadIndex++;
+      }
+    } 
   }
   return threads;
 }
-#else
 
-TAUDB_THREAD* taudb_query_threads(PGconn* connection, TAUDB_TRIAL* trial) {
+TAUDB_THREAD* taudb_query_threads_2012(PGconn* connection, TAUDB_TRIAL* trial) {
 #ifdef TAUDB_DEBUG
   printf("Calling taudb_query_threads(%d)\n", trial);
 #endif
   PGresult *res;
   int nFields;
   int i, j;
+
+  if (trial == NULL) {
+    fprintf(stderr, "Error: trial parameter null. Please provide a valid trial.\n");
+    return NULL;
+  }
+
+  //if the Trial already has the data, return it.
+  if (trial->threads != NULL && trial->thread_count > 0) {
+    taudb_numItems = trial->thread_count;
+    return trial->threads;
+  }
 
   /* Start a transaction block */
   res = PQexec(connection, "BEGIN");
@@ -64,6 +69,9 @@ TAUDB_THREAD* taudb_query_threads(PGconn* connection, TAUDB_TRIAL* trial) {
    */
   char my_query[256];
   sprintf(my_query,"DECLARE myportal CURSOR FOR select * from thread where trial = %d", trial->id);
+#ifdef TAUDB_DEBUG
+  printf("Query: %s\n", my_query);
+#endif
   res = PQexec(connection, my_query);
   if (PQresultStatus(res) != PGRES_COMMAND_OK)
   {
@@ -92,24 +100,24 @@ TAUDB_THREAD* taudb_query_threads(PGconn* connection, TAUDB_TRIAL* trial) {
   {
     /* the columns */
     for (j = 0; j < nFields; j++) {
-	  if (strcmp(PQfname(res, j), "id") == 0) {
-	    threads[i].id = atoi(PQgetvalue(res, i, j));
-	  } else if (strcmp(PQfname(res, j), "trial") == 0) {
-	    threads[i].trial = atoi(PQgetvalue(res, i, j));
-	  } else if (strcmp(PQfname(res, j), "node_rank") == 0) {
-	    threads[i].node_rank = atoi(PQgetvalue(res, i, j));
-	  } else if (strcmp(PQfname(res, j), "context_rank") == 0) {
-	    threads[i].context_rank = atoi(PQgetvalue(res, i, j));
-	  } else if (strcmp(PQfname(res, j), "thread_rank") == 0) {
-	    threads[i].thread_rank = atoi(PQgetvalue(res, i, j));
-	  } else if (strcmp(PQfname(res, j), "process_id") == 0) {
-	    threads[i].process_id = atoi(PQgetvalue(res, i, j));
-	  } else if (strcmp(PQfname(res, j), "thread_id") == 0) {
-	    threads[i].thread_id = atoi(PQgetvalue(res, i, j));
-	  }
-	} 
-	threads[i].index = i;
-	threads[i].secondary_metadata_count = 0;
+      if (strcmp(PQfname(res, j), "id") == 0) {
+        threads[i].id = atoi(PQgetvalue(res, i, j));
+      } else if (strcmp(PQfname(res, j), "trial") == 0) {
+        threads[i].trial = atoi(PQgetvalue(res, i, j));
+      } else if (strcmp(PQfname(res, j), "node_rank") == 0) {
+        threads[i].node_rank = atoi(PQgetvalue(res, i, j));
+      } else if (strcmp(PQfname(res, j), "context_rank") == 0) {
+        threads[i].context_rank = atoi(PQgetvalue(res, i, j));
+      } else if (strcmp(PQfname(res, j), "thread_rank") == 0) {
+        threads[i].thread_rank = atoi(PQgetvalue(res, i, j));
+      } else if (strcmp(PQfname(res, j), "process_id") == 0) {
+        threads[i].process_id = atoi(PQgetvalue(res, i, j));
+      } else if (strcmp(PQfname(res, j), "thread_id") == 0) {
+        threads[i].thread_id = atoi(PQgetvalue(res, i, j));
+      }
+    } 
+    threads[i].index = i;
+    threads[i].secondary_metadata_count = 0;
   }
 
   PQclear(res);
@@ -125,4 +133,13 @@ TAUDB_THREAD* taudb_query_threads(PGconn* connection, TAUDB_TRIAL* trial) {
   return threads;
 }
 
+TAUDB_THREAD* taudb_query_threads(PGconn* connection, TAUDB_TRIAL* trial) {
+#ifdef TAUDB_DEBUG
+  printf("Calling taudb_query_threads(%d)\n", trial);
 #endif
+  if (taudb_version == TAUDB_2005_SCHEMA) {
+    return taudb_query_threads_2005(connection, trial);
+  } else {
+    return taudb_query_threads_2012(connection, trial);
+  }
+}

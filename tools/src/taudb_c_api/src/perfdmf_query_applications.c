@@ -38,6 +38,9 @@ PERFDMF_APPLICATION* perfdmf_query_applications(PGconn* connection) {
    * Fetch rows from table_name, the system catalog of databases
    */
   char my_query[256] = "DECLARE myportal CURSOR FOR select * from application";
+#ifdef TAUDB_DEBUG
+  printf("'%s'\n",my_query);
+#endif
   res = PQexec(connection, my_query);
   if (PQresultStatus(res) != PGRES_COMMAND_OK)
   {

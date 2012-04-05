@@ -17,7 +17,7 @@ HEADERS=${wildcard *.h}
 SOURCES=${wildcard *.c}
 OBJS=${patsubst %.c, %.o, ${SOURCES}}
 
-TARGET=perfdmf_query_timers_test
+TARGET=perfdmf_query_timer_callpaths_test
 TAUDBLIB=../../libtaudb.a
 DUMP_FUNCS=../libtaudb_dump.a
 LIBS=$(POSTGRESQL_LIBRARIES)

@@ -212,6 +212,7 @@ typedef struct taudb_trial {
  int thread_count;
  int timer_count;
  int callpath_count;
+ int value_count;
  int counter_count;
  int primary_metadata_count;
  int secondary_metadata_count;
