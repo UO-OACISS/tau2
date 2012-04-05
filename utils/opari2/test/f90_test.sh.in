@@ -13,7 +13,8 @@
 # See the COPYING file in the package base directory for details.
 
 opari_dir=`pwd`
-test_dir="../test"
+test_dir="../test/tmp"
+mkdir -p ${test_dir}
 test_data_dir=@abs_srcdir@/data
 sed=@SED@
 awk=@AWK@
