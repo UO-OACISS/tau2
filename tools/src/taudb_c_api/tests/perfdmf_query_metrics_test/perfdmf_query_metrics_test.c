@@ -20,7 +20,7 @@ int main (int argc, char** argv) {
      TAUDB_TRIAL* filter = taudb_create_trials(1);
      //filter->id = 216;
      filter->id = 209;
-     TAUDB_TRIAL* trials = taudb_query_trials(connection, TRUE, filter);
+     TAUDB_TRIAL* trials = taudb_query_trials(connection, FALSE, filter);
      int numTrials = taudb_numItems;
      for (t = 0 ; t < numTrials ; t = t+1) {
         printf("  Trial name: '%s', id: %d\n", trials[t].name, trials[t].id);
