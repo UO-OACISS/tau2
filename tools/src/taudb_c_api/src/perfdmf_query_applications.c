@@ -75,7 +75,7 @@ PERFDMF_APPLICATION* perfdmf_query_applications(PGconn* connection) {
 	    applications[i].id = atoi(PQgetvalue(res, i, j));
 	  } else if (strcmp(PQfname(res, j), "name") == 0) {
 	    //applications[i].name = PQgetvalue(res, i, j);
-		applications[i].name = (char*)(malloc(sizeof(char)*strlen(PQgetvalue(res,i,j))));
+		applications[i].name = taudb_create_string(strlen(PQgetvalue(res,i,j)));
 		strcpy(applications[i].name, PQgetvalue(res,i,j));
 	  } else {
 	    applications[i].primary_metadata[metaIndex].name = PQfname(res, j);

@@ -26,8 +26,8 @@ TAUDB_TIMER_VALUE* taudb_query_timer_values(PGconn* connection, TAUDB_TRIAL* tri
   }
 
   //if the Trial already has the data, return it.
-  if (trial->timer_values != NULL && trial->value_count > 0) {
-    taudb_numItems = trial->value_count;
+  if (trial->timer_values != NULL && trial->timer_value_count > 0) {
+    taudb_numItems = trial->timer_value_count;
     return trial->timer_values;
   }
 
@@ -165,7 +165,7 @@ TAUDB_TIMER_VALUE* taudb_query_timer_values(PGconn* connection, TAUDB_TRIAL* tri
 
     char tmp_thread[100];
 	sprintf(tmp_thread, "%d", timer_value->thread);
-	timer_value->key = malloc(sizeof(char) * (strlen(tmp_thread) + strlen(metric_str) + strlen(timer_str) + 3));
+	timer_value->key = taudb_create_string(strlen(tmp_thread) + strlen(metric_str) + strlen(timer_str) + 3);
     sprintf(timer_value->key, "%d:%s:%s", timer_value->thread, timer_str, metric_str);
 	HASH_ADD_KEYPTR(hh, timer_values, timer_value->key, strlen(timer_value->key), timer_value);
   }
@@ -205,8 +205,8 @@ TAUDB_TIMER_VALUE* taudb_get_timer_value(TAUDB_TIMER_VALUE* timer_values, TAUDB_
   }
   char tmp_thread[10];
   sprintf(tmp_thread, "%d", thread->index);
-  char *key = calloc((strlen(tmp_thread) + strlen(timer->name) + strlen(metric->name) + 3), sizeof(char));
-  sprintf(key, "%d:%s:%s", thread->index, timer->name, metric->name);
+  char *key = taudb_create_string(strlen(tmp_thread) + strlen(timer->full_name) + strlen(metric->name) + 3);
+  sprintf(key, "%d:%s:%s", thread->index, timer->full_name, metric->name);
   //printf("%s\n", key);
 
   TAUDB_TIMER_VALUE* timer_value = NULL;

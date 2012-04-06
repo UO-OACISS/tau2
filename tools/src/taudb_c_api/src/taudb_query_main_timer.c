@@ -78,14 +78,16 @@ TAUDB_TIMER* taudb_query_main_timer(PGconn* connection, TAUDB_TRIAL* trial) {
 	    timers[i].trial = atoi(PQgetvalue(res, i, j));
 	  } else if (strcmp(PQfname(res, j), "name") == 0) {
 	    //timers[i].name = PQgetvalue(res, i, j);
-		timers[i].name = (char*)(malloc(sizeof(char)*strlen(PQgetvalue(res,i,j))));
-		strcpy(timers[i].name, PQgetvalue(res,i,j));
+		timers[i].full_name = taudb_create_string(strlen(PQgetvalue(res,i,j)));
+		strcpy(timers[i].full_name, PQgetvalue(res,i,j));
+		timers[i].short_name = taudb_create_string(strlen(PQgetvalue(res,i,j)));
+		strcpy(timers[i].short_name, PQgetvalue(res,i,j));
 #ifdef TAUDB_DEBUG
         //printf("Got timer '%s'\n", timers[i].name);
 #endif
 	  } else if (strcmp(PQfname(res, j), "source_file") == 0) {
 	    //timers[i].source_file = PQgetvalue(res, i, j);
-		timers[i].source_file = (char*)(malloc(sizeof(char)*strlen(PQgetvalue(res,i,j))));
+		timers[i].source_file = taudb_create_string(strlen(PQgetvalue(res,i,j)));
 		strcpy(timers[i].source_file, PQgetvalue(res,i,j));
 	  } else if (strcmp(PQfname(res, j), "line_number") == 0) {
 	    timers[i].line_number = atoi(PQgetvalue(res, i, j));

@@ -127,7 +127,7 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(PGconn* connection, TAUDB_TRIA
 
     char tmp_thread[100];
 	sprintf(tmp_thread, "%d", timer_callpath->thread);
-	timer_callpath->key = calloc((strlen(tmp_thread) + strlen(timer_str) + 2), sizeof(char));
+	timer_callpath->key = taudb_create_string(strlen(tmp_thread) + strlen(timer_str) + 2);
     sprintf(timer_callpath->key, "%d:%s", timer_callpath->thread, timer_str);
 #ifdef TAUDB_DEBUG_DEBUG
     printf("NEW KEY: '%s'\n",timer_callpath->key);
@@ -167,10 +167,10 @@ TAUDB_TIMER_CALLPATH* taudb_get_timer_callpath(TAUDB_TIMER_CALLPATH* timer_callp
   }
   char tmp_thread[10];
   sprintf(tmp_thread, "%d", thread->index);
-  char *key = calloc((strlen(tmp_thread) + strlen(timer->name) + 2), sizeof(char));
-  sprintf(key, "%d:%s", thread->index, timer->name);
+  char *key = taudb_create_string(strlen(tmp_thread) + strlen(timer->full_name) + 2);
+  sprintf(key, "%d:%s", thread->index, timer->full_name);
 #ifdef TAUDB_DEBUG_DEBUG
-  printf("'%d', '%s', Looking for key: %s\n", thread->index, timer->name, key);
+  printf("'%d', '%s', Looking for key: %s\n", thread->index, timer->full_name, key);
 #endif
 
   TAUDB_TIMER_CALLPATH* timer_callpath = NULL;

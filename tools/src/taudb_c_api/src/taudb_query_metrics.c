@@ -80,7 +80,7 @@ TAUDB_METRIC* taudb_query_metrics(PGconn* connection, TAUDB_TRIAL* trial) {
 	  } else if (strcmp(PQfname(res, j), "trial") == 0) {
 	    metrics[i].trial = atoi(PQgetvalue(res, i, j));
 	  } else if (strcmp(PQfname(res, j), "name") == 0) {
-	    metrics[i].name = (char*)(malloc(sizeof(char)*strlen(PQgetvalue(res,i,j))));
+	    metrics[i].name = taudb_create_string(strlen(PQgetvalue(res,i,j)));
 		strcpy(metrics[i].name, PQgetvalue(res,i,j));
 	  } else if (strcmp(PQfname(res, j), "derived") == 0) {
 	    metrics[i].derived = atoi(PQgetvalue(res, i, j));
