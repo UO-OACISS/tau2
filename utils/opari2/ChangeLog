@@ -1,3 +1,24 @@
+------------------- Released version 1.0.2 ---------------------------
+
+- Renaming of the configure related variable LD_FLAGS_FOR_BUILD to 
+  LDFLAGS_FOR_BUILD for consistency.
+
+- Renaming of the installed script pomp2_parse_init_regions.awk to 
+  pomp2-parse-init-regions.awk for consistency.
+
+- In Fortran, improved parsing of function and subroutine keywords.
+
+- In in-place builds, the [dist]clean targets accidentially removed
+  files. 
+
+- Create task events only for tasks that actually get created.
+
+- In Fortran, added `integer ( kind=4 )' to all integer variables 
+  instrumented by opari2.
+
+- In Fortran, continuation lines ending with comments were not 
+  detected as continuation lines (Ticket 77).
+
 ------------------- Released version 1.0.1 ---------------------------
 
 - In Fortran, continued format descriptors resulted in invalid include

@@ -35,9 +35,6 @@ do
   TOPLEVEL_CONFIGURE_ARGUMENTS="$TOPLEVEL_CONFIGURE_ARGUMENTS  
 $ac_arg"
 done
-if test "$silent" = yes; then
-  TOPLEVEL_CONFIGURE_ARGUMENTS="$TOPLEVEL_CONFIGURE_ARGUMENTS --silent"
-fi
 # Remove the initial space we just introduced and, as these will be
 # expanded by make, quote '$'.
 TOPLEVEL_CONFIGURE_ARGUMENTS=`echo "x$TOPLEVEL_CONFIGURE_ARGUMENTS" | sed -e 's/^x *//' -e 's,\\$,$$,g'`
