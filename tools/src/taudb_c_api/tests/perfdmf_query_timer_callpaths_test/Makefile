@@ -1,0 +1,50 @@
+#****************************************************************************
+#*                      TAU Performance System (R)                          *
+#*                      http://tau.uoregon.edu                              *
+#****************************************************************************
+#*    Copyright 2012                                                       **
+#*    Department of Computer and Information Science, University of Oregon **
+#*    Juelich Supercomputing Center, NIC, Germany                          ** 
+#*    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+#****************************************************************************
+
+.SUFFIXES : .c
+.SILENT :
+
+include ../../Makefile.inc
+
+HEADERS=${wildcard *.h}
+SOURCES=${wildcard *.c}
+OBJS=${patsubst %.c, %.o, ${SOURCES}}
+
+TARGET=perfdmf_query_timer_callpaths_test
+TAUDBLIB=../../libtaudb.a
+DUMP_FUNCS=../libtaudb_dump.a
+LIBS=$(POSTGRESQL_LIBRARIES)
+INCLUDE=-I. -I../../include $(POSTGRESQL_INCLUDES) -I../dump_functions
+
+all: $(TARGET)
+
+$(TARGET): $(TAUDBLIB) $(HEADERS) $(OBJS) $(DUMP_FUNCS)
+	echo " Linking : $@"
+	$(CC) $(FLAGS) $@.o $(DUMP_FUNCS) -o $@ $(TAUDBLIB) $(LIBS)
+
+# rebuild everything if the headers or the makefile changes
+$(OBJS): $(HEADERS) Makefile ../../Makefile.inc
+
+.c.o:
+	echo "Building : $@ from $<"
+	$(CC) $(FLAGS) -c $(INCLUDE) $< -o $@ $(PERFDMF_SUPPORT) $(DEBUG)
+
+test: $(TARGET)
+	echo " Testing : $(TARGET)..."
+	time `./$(TARGET) >& $(TARGET).log`
+	echo " \n...Done. Contents of $(TARGET).log: \n"
+	cat $(TARGET).log
+	echo ""
+
+clean:
+	echo "Removing : $(OBJS) $(TARGET)"
+	/bin/rm -f $(OBJS) $(TARGET) $(TARGET).log *.pdb *.inst.c
+
+remake: clean all

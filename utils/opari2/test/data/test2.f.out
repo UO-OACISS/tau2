@@ -233,20 +233,28 @@
       call POMP2_Parallel_begin(pomp2_region_14)
 #line 83 "test2.f"
       pomp_if = .true.
+      if (pomp_if) then
       call POMP2_Task_create_begin(pomp2_region_15, pomp2_new_task,
      &pomp2_old_task, 
      &pomp_if,
      &"55*regionType=task*sscl=test2.f:83:83*escl=test2.f:0:0**" )
+      end if
 #line 83 "test2.f"
 !$omp task
-!$omp& if(pomp_if) firstprivate(pomp2_new_task)
+!$omp& if(pomp_if) firstprivate(pomp2_new_task, pomp_if)
+      if (pomp_if) then
       call POMP2_Task_begin(pomp2_region_15, pomp2_new_task)
+      end if
 #line 84 "test2.f"
       write(*,*) "task"
+      if (pomp_if) then
       call POMP2_Task_end(pomp2_region_15)
+      end if
 #line 85 "test2.f"
 !$omp end task
+      if (pomp_if) then
       call POMP2_Task_create_end(pomp2_region_15, pomp2_old_task)
+      end if
 #line 86 "test2.f"
 
 #line 87 "test2.f"

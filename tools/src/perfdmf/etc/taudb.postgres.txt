@@ -26,6 +26,14 @@ DROP TABLE thread;
 DROP TABLE trial;
 DROP TABLE data_source;
 
+CREATE TABLE schema_version (
+ version     INT NOT NULL;
+);
+/* IF THE SCHEMA IS MODIFIED, INCREMENT THIS VALUE */
+/* 0 = PERFDMF (ORIGINAL) */
+/* 1 = TAUDB (APRIL, 2012) */
+INSERT INTO schema_version (version) VALUES (1);
+
 /* These are our supported parsers. */
 
 CREATE TABLE data_source (
@@ -87,11 +95,12 @@ CREATE TABLE trial (
  node_count          INT,
  contexts_per_node   INT,
  threads_per_context INT,
+ total_threads       INT,
  FOREIGN KEY(data_source) REFERENCES data_source(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 /* threads make it convenient to identify timer values.
-   Special values for node_id:
+   Special values for thread_index:
    -1 mean (nulls ignored)
    -2 total
    -3 stddev (nulls ignored)
@@ -111,6 +120,7 @@ CREATE TABLE thread (
  thread_rank  INT NOT NULL,
  process_id   INT NOT NULL,
  thread_id    INT NOT NULL,
+ thread_index INT NOT NULL,
  FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 

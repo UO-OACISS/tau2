@@ -125,6 +125,9 @@
 
 #define TAU_CUPTI_API_DEFAULT "runtime"
 
+// forward declartion of cuserid. need for c++ compilers on Cray.
+extern "C" char *cuserid(char *);
+
 /************************** tau.conf stuff, adapted from Scalasca ***********/
 
 /*********************************************************************

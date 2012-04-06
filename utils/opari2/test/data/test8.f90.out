@@ -104,19 +104,27 @@ program test8
       call POMP2_Parallel_begin(pomp2_region_4)
 #line 47 "test8.f90"
       pomp_if = .true.
+      if (pomp_if) then
       call POMP2_Untied_task_create_begin(pomp2_region_5, pomp2_new_task, &
       pomp2_old_task, &
       pomp_if, &
         "70*regionType=task*sscl=test8.f90:47:47*escl=test8.f90:0:0*hasUntied=1**" )
+      end if
 #line 47 "test8.f90"
-  !$omp task untied if(pomp_if) firstprivate(pomp2_new_task)
+  !$omp task untied if(pomp_if) firstprivate(pomp2_new_task, pomp_if)
+      if (pomp_if) then
       call POMP2_Untied_task_begin(pomp2_region_5, pomp2_new_task)
+      end if
 #line 48 "test8.f90"
   write(*,*) "task"
+      if (pomp_if) then
       call POMP2_Untied_task_end(pomp2_region_5)
+      end if
 #line 49 "test8.f90"
   !$omp end task
+      if (pomp_if) then
       call POMP2_Untied_task_create_end(pomp2_region_5, pomp2_old_task)
+      end if
 #line 50 "test8.f90"
       call POMP2_Implicit_barrier_enter(pomp2_region_4, pomp2_old_task)
 !$omp barrier

@@ -216,19 +216,27 @@ program test2
       call POMP2_Parallel_begin(pomp2_region_14)
 #line 81 "test2.f90"
       pomp_if = .true.
+      if (pomp_if) then
       call POMP2_Task_create_begin(pomp2_region_15, pomp2_new_task, &
       pomp2_old_task, &
       pomp_if, &
         "58*regionType=task*sscl=test2.f90:81:81*escl=test2.f90:0:0**" )
+      end if
 #line 81 "test2.f90"
-  !$omp task if(pomp_if) firstprivate(pomp2_new_task)
+  !$omp task if(pomp_if) firstprivate(pomp2_new_task, pomp_if)
+      if (pomp_if) then
       call POMP2_Task_begin(pomp2_region_15, pomp2_new_task)
+      end if
 #line 82 "test2.f90"
   write(*,*) "task"
+      if (pomp_if) then
       call POMP2_Task_end(pomp2_region_15)
+      end if
 #line 83 "test2.f90"
   !$omp end task
+      if (pomp_if) then
       call POMP2_Task_create_end(pomp2_region_15, pomp2_old_task)
+      end if
 #line 84 "test2.f90"
 
       call POMP2_Taskwait_begin(pomp2_region_16, pomp2_old_task, &
