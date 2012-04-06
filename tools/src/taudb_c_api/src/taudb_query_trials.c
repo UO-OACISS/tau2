@@ -88,10 +88,10 @@ TAUDB_TRIAL* taudb_private_query_trials(PGconn* connection, boolean full, char* 
       if (strcmp(PQfname(res, j), "id") == 0) {
         trials[i].id = atoi(PQgetvalue(res, i, j));
       } else if (strcmp(PQfname(res, j), "name") == 0) {
-        trials[i].name = (char*)(malloc(sizeof(char)*strlen(PQgetvalue(res,i,j))));
+        trials[i].name = taudb_create_string(strlen(PQgetvalue(res,i,j)));
         strcpy(trials[i].name, PQgetvalue(res,i,j));
       } else if (strcmp(PQfname(res, j), "date") == 0) {
-        trials[i].collection_date = (char*)(malloc(sizeof(char)*strlen(PQgetvalue(res,i,j))));
+        trials[i].collection_date = taudb_create_string(strlen(PQgetvalue(res,i,j)));
         strcpy(trials[i].collection_date, PQgetvalue(res,i,j));
       } else if (strcmp(PQfname(res, j), "node_count") == 0) {
         trials[i].node_count = atoi(PQgetvalue(res, i, j));
@@ -106,9 +106,9 @@ TAUDB_TRIAL* taudb_private_query_trials(PGconn* connection, boolean full, char* 
         // TODO we need to handle this!
         continue;
       } else {
-        trials[i].primary_metadata[metaIndex].name = (char*)(malloc(sizeof(char)*strlen(PQfname(res, j))));
+        trials[i].primary_metadata[metaIndex].name = taudb_create_string(strlen(PQfname(res, j)));
         strcpy(trials[i].primary_metadata[metaIndex].name, PQfname(res, j));
-        trials[i].primary_metadata[metaIndex].value = (char*)(malloc(sizeof(char)*strlen(PQgetvalue(res,i,j))));
+        trials[i].primary_metadata[metaIndex].value = taudb_create_string(strlen(PQgetvalue(res,i,j)));
         strcpy(trials[i].primary_metadata[metaIndex].value, PQgetvalue(res, i, j));
         metaIndex++;
       }
@@ -137,10 +137,10 @@ TAUDB_TRIAL* taudb_private_query_trials(PGconn* connection, boolean full, char* 
       trials[i].metrics = taudb_query_metrics(connection, &(trials[i]));
       trials[i].metric_count = taudb_numItems;
       trials[i].timer_values = taudb_query_all_timer_values(connection, &(trials[i]));
-      trials[i].value_count = taudb_numItems;
-      //trials[i].counters = taudb_query_counters(&(trials[i]));
-      //trials[i].counter_count = taudb_numItems;
-      //taudb_query_counter_values(&(trials[i]));
+      trials[i].timer_value_count = taudb_numItems;
+      trials[i].counters = taudb_query_counters(connection, &(trials[i]));
+      trials[i].counter_count = taudb_numItems;
+      trials[i].counter_values = taudb_query_all_counter_values(connection, &(trials[i]));
     }
   }
   taudb_numItems = nRows;

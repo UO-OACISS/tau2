@@ -88,5 +88,6 @@ PGconn* taudb_connect_config(char* config_name) {
 PGconn* taudb_connect_config_file(char* config_file_name) {
   TAUDB_CONFIGURATION* config = taudb_parse_config_file(config_file_name);
   return taudb_connect(config->db_hostname, config->db_portnum, config->db_dbname, config->db_username, config->db_password);
+  taudb_delete_config(config);
 }
 

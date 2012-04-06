@@ -25,6 +25,7 @@ int main (int argc, char** argv) {
           printf("Parsing config file %s...\n", config_file);
           TAUDB_CONFIGURATION* config = taudb_parse_config_file(config_file);
 		  printf ("Database: %s, %s, %s\n", config->db_hostname, config->db_portnum, config->db_dbname);
+		  taudb_delete_configuration(config);
 	   }
 	 }
 	 closedir(dp);

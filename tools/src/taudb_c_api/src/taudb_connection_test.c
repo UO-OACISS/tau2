@@ -4,8 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef TAUDB_PERFDMF
-int num_tables = 11;
+int num_taudb_tables = 11;
 char* taudb_tables[] = {
   "application",
   "experiment",
@@ -19,9 +18,9 @@ char* taudb_tables[] = {
   "interval_mean_summary",
   "machine_thread_map"
 };
-#else
-int num_tables = 13;
-char* taudb_tables[] = {
+
+int num_perfdmf_tables = 13;
+char* perfdmf_tables[] = {
    "data_source",
    "trial",
    "thread",
@@ -36,12 +35,17 @@ char* taudb_tables[] = {
    "measurement_value",
    "counter_value"
 };
-#endif
 
 void taudb_iterate_tables(PGconn* connection) {
    int i;
-   for (i = 0 ; i < num_tables ; i = i+1) {
-     taudb_api_test(connection, taudb_tables[i]);
+   if (taudb_version == TAUDB_2005_SCHEMA) {
+     for (i = 0 ; i < num_perfdmf_tables ; i = i+1) {
+       taudb_api_test(connection, perfdmf_tables[i]);
+     }
+   } else {
+     for (i = 0 ; i < num_taudb_tables ; i = i+1) {
+       taudb_api_test(connection, taudb_tables[i]);
+     }
    }
 }
 
