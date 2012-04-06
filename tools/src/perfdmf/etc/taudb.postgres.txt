@@ -27,7 +27,7 @@ DROP TABLE trial;
 DROP TABLE data_source;
 
 CREATE TABLE schema_version (
- version     INT NOT NULL;
+ version     INT NOT NULL
 );
 /* IF THE SCHEMA IS MODIFIED, INCREMENT THIS VALUE */
 /* 0 = PERFDMF (ORIGINAL) */
