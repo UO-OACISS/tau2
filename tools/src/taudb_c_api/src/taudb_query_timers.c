@@ -85,14 +85,16 @@ TAUDB_TIMER* taudb_query_timers(PGconn* connection, TAUDB_TRIAL* trial) {
         timers[i].trial = atoi(PQgetvalue(res, i, j));
       } else if (strcmp(PQfname(res, j), "name") == 0) {
         //timers[i].name = PQgetvalue(res, i, j);
-        timers[i].name = (char*)(calloc(strlen(PQgetvalue(res,i,j)), sizeof(char)));
-        strcpy(timers[i].name, PQgetvalue(res,i,j));
+        timers[i].full_name = taudb_create_string(strlen(PQgetvalue(res,i,j)));
+        strcpy(timers[i].full_name, PQgetvalue(res,i,j));
+        timers[i].short_name = taudb_create_string(strlen(PQgetvalue(res,i,j)));
+        strcpy(timers[i].short_name, PQgetvalue(res,i,j));
 #ifdef TAUDB_DEBUG_DEBUG
         printf("Got timer '%s'\n", timers[i].name);
 #endif
       } else if (strcmp(PQfname(res, j), "source_file") == 0) {
         //timers[i].source_file = PQgetvalue(res, i, j);
-        timers[i].source_file = (char*)(calloc(strlen(PQgetvalue(res,i,j)), sizeof(char)));
+        timers[i].source_file = taudb_create_string(strlen(PQgetvalue(res,i,j)));
         strcpy(timers[i].source_file, PQgetvalue(res,i,j));
       } else if (strcmp(PQfname(res, j), "line_number") == 0) {
         timers[i].line_number = atoi(PQgetvalue(res, i, j));
@@ -114,14 +116,14 @@ TAUDB_TIMER* taudb_query_timers(PGconn* connection, TAUDB_TRIAL* trial) {
           TAUDB_TIMER_GROUP* groups = taudb_create_timer_groups(1);
           groups[0].id = 0;
           groups[0].timer = 0;
-          groups[0].name = (char*)(calloc(strlen(group), sizeof(char)));
+          groups[0].name = taudb_create_string(strlen(group));
           strcpy(groups[0].name,group);
           group = strtok(NULL, "|");
           while (group != NULL) {
             TAUDB_TIMER_GROUP* groups = taudb_resize_timer_groups(timers[i].group_count+1, groups);
             groups[timers[i].group_count].id = 0;
             groups[timers[i].group_count].timer = 0;
-            groups[timers[i].group_count].name = (char*)(calloc(strlen(group), sizeof(char)));
+            groups[timers[i].group_count].name = taudb_create_string(strlen(group));
             strcpy(groups[timers[i].group_count].name, group);
             timers[i].group_count++;
             group = strtok(NULL, "|");

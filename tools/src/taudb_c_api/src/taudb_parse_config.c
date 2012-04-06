@@ -56,28 +56,28 @@ TAUDB_CONFIGURATION* taudb_parse_config_file(char* config_name) {
 	    strcpy(value, tmp);
 	  }
 	  if (strcmp(name, "jdbc_db_type") == 0) {
-	    config->jdbc_db_type = (char *)calloc(strlen(value), sizeof(char));
+	    config->jdbc_db_type = taudb_create_string(strlen(value));
 	    strcpy(config->jdbc_db_type, value);
 	  } else if (strcmp(name, "db_hostname") == 0) {
-	    config->db_hostname = (char *)calloc(strlen(value), sizeof(char));
+	    config->db_hostname = taudb_create_string(strlen(value));
 	    strcpy(config->db_hostname, value);
 	  } else if (strcmp(name, "db_portnum") == 0) {
-	    config->db_portnum = (char *)calloc(strlen(value), sizeof(char));
+	    config->db_portnum = taudb_create_string(strlen(value));
 	    strcpy(config->db_portnum, value);
 	  } else if (strcmp(name, "db_dbname") == 0) {
-	    config->db_dbname = (char *)calloc(strlen(value), sizeof(char));
+	    config->db_dbname = taudb_create_string(strlen(value));
 	    strcpy(config->db_dbname, value);
 	  } else if (strcmp(name, "db_schemaprefix") == 0) {
-	    config->db_schemaprefix = (char *)calloc(strlen(value), sizeof(char));
+	    config->db_schemaprefix = taudb_create_string(strlen(value));
 	    strcpy(config->db_schemaprefix, value);
 	  } else if (strcmp(name, "db_username") == 0) {
-	    config->db_username = (char *)calloc(strlen(value), sizeof(char));
+	    config->db_username = taudb_create_string(strlen(value));
 	    strcpy(config->db_username, value);
 	  } else if (strcmp(name, "db_password") == 0) {
-	    config->db_password = (char *)calloc(strlen(value), sizeof(char));
+	    config->db_password = taudb_create_string(strlen(value));
 	    strcpy(config->db_password, value);
 	  } else if (strcmp(name, "db_schemafile") == 0) {
-	    config->db_schemafile = (char *)calloc(strlen(value), sizeof(char));
+	    config->db_schemafile = taudb_create_string(strlen(value));
 	    strcpy(config->db_schemafile, value);
 	  }
 	}
