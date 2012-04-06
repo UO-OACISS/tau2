@@ -8,6 +8,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Vector;
 
 import edu.uoregon.tau.perfdmf.database.DB;
@@ -252,6 +253,10 @@ public class Application implements Serializable {
 
     public static Vector<Application> getApplicationList(DB db, String whereClause) {
         StringBuffer buf = null;
+       	if(db.getSchemaVersion()>0){
+    		System.err.println("WARNING: A list of applications was requested, but no experiments exist in TAUdb.");
+    		return new Vector<Application>();
+    	}
         try {
             Database database = db.getDatabase();
             Application.getMetaData(db);
@@ -310,6 +315,10 @@ public class Application implements Serializable {
     }
 
     public int saveApplication(DB db) throws SQLException {
+      	if(db.getSchemaVersion()>0){
+    		System.err.println("WARNING: Attemped to save an application, but they don't exist in TAUdb.");
+    		return 0;
+    	}
 
         boolean itExists = false;
 

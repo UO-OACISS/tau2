@@ -150,7 +150,7 @@ public class DatabaseAPI {
 
     // returns Vector of Experiment objects
     public List<Experiment> getExperimentList() throws DatabaseException {
-
+ 
         String whereClause = "";
         if (application != null)
             whereClause = "WHERE application = " + application.getID();
