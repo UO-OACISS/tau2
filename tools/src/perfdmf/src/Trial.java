@@ -671,9 +671,11 @@ public class Trial implements Serializable, Comparable<Trial> {
     public int saveTrial(DB db) {
         boolean itExists = exists(db);
         int newTrialID = 0;
+  
 
         try {
             database = db.getDatabase();
+            System.out.println(db.getSchemaVersion());
             // determine if we have a data meta-data item
             boolean haveDate = false;
             java.sql.Timestamp timestamp = null;
