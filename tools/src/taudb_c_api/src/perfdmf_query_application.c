@@ -75,13 +75,13 @@ PERFDMF_APPLICATION* perfdmf_query_application(PGconn* connection, char* name) {
 	    application->id = atoi(PQgetvalue(res, i, j));
 	  } else if (strcmp(PQfname(res, j), "name") == 0) {
 	    //application->name = PQgetvalue(res, i, j);
-		application->name = (char*)(malloc(sizeof(char)*strlen(PQgetvalue(res,i,j))));
+		application->name = taudb_create_string(strlen(PQgetvalue(res,i,j)));
 		strcpy(application->name, PQgetvalue(res,i,j));
 
 	  } else {
-	    application->primary_metadata[metaIndex].name = (char*)(malloc(sizeof(char)*strlen(PQfname(res,j))));
+	    application->primary_metadata[metaIndex].name = taudb_create_string(strlen(PQfname(res,j)));
 		strcpy(application->primary_metadata[metaIndex].name, PQfname(res, j));
-	    application->primary_metadata[metaIndex].value = (char*)(malloc(sizeof(char)*strlen(PQgetvalue(res,i,j))));
+	    application->primary_metadata[metaIndex].value = taudb_create_string(strlen(PQgetvalue(res,i,j)));
 		strcpy(application->primary_metadata[metaIndex].value, PQgetvalue(res, i, j));
 		metaIndex++;
 	  }

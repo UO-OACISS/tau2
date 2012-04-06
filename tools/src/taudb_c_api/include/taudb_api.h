@@ -55,6 +55,7 @@ extern TAUDB_TIMER_GROUP*        taudb_create_timer_groups(int count);
 extern TAUDB_TIMER_GROUP*        taudb_resize_timer_groups(int count, TAUDB_TIMER_GROUP* old_groups);
 extern TAUDB_TIMER_CALLPATH*     taudb_create_timer_callpaths(int count);
 extern TAUDB_TIMER_VALUE*        taudb_create_timer_values(int count);
+extern char*                     taudb_create_string(int length);
 
 // freers
 extern void perfdmf_delete_applications(PERFDMF_APPLICATION* applications, int count);
@@ -72,6 +73,8 @@ extern void taudb_delete_timer_parameters(TAUDB_TIMER_PARAMETER* timer_parameter
 extern void taudb_delete_timer_groups(TAUDB_TIMER_GROUP* timer_groups, int count);
 extern void taudb_delete_timer_callpath(TAUDB_TIMER_CALLPATH* timer_callpath, int count);
 extern void taudb_delete_timer_values(TAUDB_TIMER_VALUE* timer_values, int count);
+extern void taudb_delete_configuration(TAUDB_CONFIGURATION* config);
+extern void taudb_delete_string(char* string, int length);
 
 // using the properties set in the filter, find a set of trials
 extern TAUDB_TRIAL* taudb_query_trials(PGconn* connection, boolean complete, TAUDB_TRIAL* filter);
@@ -87,6 +90,9 @@ extern TAUDB_TIMER* taudb_query_timers(PGconn* connection, TAUDB_TRIAL* trial);
 
 // get the counters for a trial
 extern TAUDB_COUNTER* taudb_query_counters(PGconn* connection, TAUDB_TRIAL* trial);
+extern TAUDB_COUNTER_VALUE* taudb_query_counter_values(PGconn* connection, TAUDB_TRIAL* trial, TAUDB_COUNTER* counter, TAUDB_THREAD* thread);
+extern TAUDB_COUNTER_VALUE* taudb_query_all_counter_values(PGconn* connection, TAUDB_TRIAL* trial);
+extern TAUDB_COUNTER_VALUE* taudb_get_counter_value(TAUDB_COUNTER_VALUE* counter_values, TAUDB_COUNTER* counter, TAUDB_THREAD* thread);
 
 // get the timer callpath data for a trial
 extern TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(PGconn* connection, TAUDB_TRIAL* trial, TAUDB_TIMER* timer, TAUDB_THREAD* thread);

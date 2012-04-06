@@ -29,7 +29,7 @@ typedef struct taudb_configuration {
 typedef struct taudb_data_source {
  int id;
  char* name;
- char*description;
+ char* description;
 } TAUDB_DATA_SOURCE;
 
 typedef struct taudb_timer_value {
@@ -43,7 +43,6 @@ typedef struct taudb_timer_value {
  double inclusive_percentage;
  double exclusive_percentage;
  double sum_exclusive_squared;
- char* timestamp;
  UT_hash_handle hh;
 } TAUDB_TIMER_VALUE;
 
@@ -89,7 +88,8 @@ typedef struct taudb_timer_parameter {
 typedef struct taudb_timer {
  int id;
  int trial;
- char* name;
+ char* short_name;
+ char* full_name;
  char* source_file;
  int line_number;
  int line_number_end;
@@ -109,11 +109,15 @@ typedef struct taudb_timer {
 
 typedef struct taudb_counter_value {
  int id;
+ int counter;
+ int thread;
  int sample_count;
  double maximum_value;
  double minimum_value;
  double mean_value;
  double standard_deviation;
+ char *key; // hash table key
+ UT_hash_handle hh;
 } TAUDB_COUNTER_VALUE;
 
 /* counter groups are the groups of counters. This table
@@ -130,7 +134,8 @@ typedef struct taudb_counter_group {
 typedef struct taudb_counter {
  int id;
  int trial;
- char* name;
+ char* short_name;
+ char* full_name;
  char* source_file;
  int line_number;
  int group_count;
@@ -169,7 +174,7 @@ typedef struct taudb_secondary_metadata {
  int trial;
  int thread;
  char* name;
- char** value;
+ char** values;
  int num_values;
  int child_count;
  struct taudb_secondary_metadata* children; // self-referencing 
@@ -212,8 +217,9 @@ typedef struct taudb_trial {
  int thread_count;
  int timer_count;
  int callpath_count;
- int value_count;
+ int timer_value_count;
  int counter_count;
+ int counter_value_count;
  int primary_metadata_count;
  int secondary_metadata_count;
  TAUDB_METRIC* metrics;

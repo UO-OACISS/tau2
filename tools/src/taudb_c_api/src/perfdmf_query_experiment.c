@@ -74,12 +74,12 @@ PERFDMF_EXPERIMENT* perfdmf_query_experiment(PGconn* connection, PERFDMF_APPLICA
 	    experiment->id = atoi(PQgetvalue(res, i, j));
 	  } else if (strcmp(PQfname(res, j), "name") == 0) {
 	    //experiment->name = PQgetvalue(res, i, j);
-		experiment->name = (char*)(malloc(sizeof(char)*strlen(PQgetvalue(res,i,j))));
+		experiment->name = taudb_create_string(strlen(PQgetvalue(res,i,j)));
 		strcpy(experiment->name, PQgetvalue(res,i,j));
 	  } else {
-	    experiment->primary_metadata[metaIndex].name = (char*)(malloc(sizeof(char)*strlen(PQfname(res,j))));
+	    experiment->primary_metadata[metaIndex].name = taudb_create_string(strlen(PQfname(res,j)));
 		strcpy(experiment->primary_metadata[metaIndex].name, PQfname(res, j));
-	    experiment->primary_metadata[metaIndex].value = (char*)(malloc(sizeof(char)*strlen(PQgetvalue(res,i,j))));
+	    experiment->primary_metadata[metaIndex].value = taudb_create_string(strlen(PQgetvalue(res,i,j)));
 		strcpy(experiment->primary_metadata[metaIndex].value, PQgetvalue(res, i, j));
 	  }
 	} 

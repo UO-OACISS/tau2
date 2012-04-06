@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef TAUDB_PERFDMF
 PERFDMF_APPLICATION* perfdmf_create_applications(int count){ 
  PERFDMF_APPLICATION* applications = (PERFDMF_APPLICATION*) (calloc (count, sizeof (PERFDMF_APPLICATION)));
  return applications;
@@ -14,7 +13,6 @@ PERFDMF_EXPERIMENT* perfdmf_create_experiments(int count){
  PERFDMF_EXPERIMENT* experiments = (PERFDMF_EXPERIMENT*) (calloc (count, sizeof (PERFDMF_EXPERIMENT)));
  return experiments;
 }
-#endif
 
 TAUDB_CONFIGURATION* taudb_create_configuration(){ 
  TAUDB_CONFIGURATION* config = (TAUDB_CONFIGURATION*) (calloc (1, sizeof (TAUDB_CONFIGURATION)));
@@ -107,4 +105,8 @@ TAUDB_TIMER_CALLPATH* taudb_create_timer_callpaths(int count){
  return timer_callpaths;
 }
 
+char* taudb_create_string(int length) {
+ char* string = (char*) (calloc (length, sizeof (char)));
+ return string;
+}
 
