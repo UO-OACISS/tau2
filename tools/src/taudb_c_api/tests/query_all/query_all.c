@@ -1,0 +1,60 @@
+#include "taudb_api.h"
+#include <stdio.h>
+#include <string.h>
+#include "dump_functions.h"
+
+int main (int argc, char** argv) {
+   printf("Connecting...\n");
+   PGconn* connection = taudb_connect_config("facets");
+   printf("Checking connection...\n");
+   taudb_check_connection(connection);
+   printf("Testing queries...\n");
+
+   int i = 0;
+   int j = 0;
+   int a, e, t;
+
+   if (taudb_version == TAUDB_2005_SCHEMA) {
+     PERFDMF_APPLICATION* applications = perfdmf_query_applications(connection);
+     printf("%d applications:\n", taudb_numItems);
+     int numApplications = taudb_numItems;
+     for (a = 0 ; a < numApplications ; a = a+1) {
+       printf("  Application name: %s, id: %d\n", applications[a].name, applications[a].id);
+	   dump_metadata(applications[a].primary_metadata, applications[a].primary_metadata_count);
+       PERFDMF_EXPERIMENT* experiments = perfdmf_query_experiments(connection, &(applications[a]));
+       printf("%d experiments:\n", taudb_numItems);
+       int numExperiments = taudb_numItems;
+       for (e = 0 ; e < numExperiments ; e = e+1) {
+         printf("  Experiment name: %s, id: %d\n", experiments[e].name, experiments[e].id);
+	     dump_metadata(experiments[e].primary_metadata, experiments[e].primary_metadata_count);
+         TAUDB_TRIAL* trials = perfdmf_query_trials(connection, &(experiments[e]));
+         printf("%d trials:\n", taudb_numItems);
+         int numTrials = taudb_numItems;
+         for (t = 0 ; t < numTrials ; t = t+1) {
+           printf("  Trial name: '%s', id: %d\n", trials[t].name, trials[t].id);
+	       dump_metadata(trials[t].primary_metadata, trials[t].primary_metadata_count);
+           dump_trial(connection, &(trials[t]));
+         }
+       }
+	   //perfdmf_delete_experiments(experiments, numExperiments);
+     }
+	 //perfdmf_delete_applications(applications, numApplications);
+   } else {
+     // test the "find trials" method to populate the trial
+     TAUDB_TRIAL* filter = taudb_create_trials(1);
+     //filter->id = 216;
+     filter->id = 209;
+     TAUDB_TRIAL* trials = taudb_query_trials(connection, TRUE, filter);
+     int numTrials = taudb_numItems;
+     for (t = 0 ; t < numTrials ; t = t+1) {
+        printf("  Trial name: '%s', id: %d\n", trials[t].name, trials[t].id);
+	    dump_metadata(trials[t].primary_metadata, trials[t].primary_metadata_count);
+        dump_trial(connection, &(trials[t]));
+     }
+   }
+
+   printf("Disconnecting...\n");
+   taudb_disconnect(connection);
+   printf("Done.\n");
+   return 0;
+}

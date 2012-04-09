@@ -4,6 +4,10 @@
 #include <setjmp.h>
 #include <stdarg.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 /* CuString */
 
 char*
@@ -186,5 +190,9 @@ CuSuiteRun( CuSuite* testSuite );
 void
 CuSuiteSummary( CuSuite*  testSuite,
                 CuString* summary );
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* CU_TEST_H */

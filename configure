@@ -322,6 +322,8 @@ for arg in "$@"; do
     echo "-opari1 .................................................... Use Opari."
     echo "-opari_region ......... Report performance data for all OpenMP regions."
     echo "-opari_construct ... Report performance data for all OpenMP constructs."
+    echo "-oparicomp=<compiler>...Specify which compiler sutie to compile Opari2."
+    echo "     options [gcc|ibm|intel|pathscale|pgi|studio]."
     echo ""
     echo "SHMEM Options:"
     echo "-shmem ...................... Specify use of TAU SHMEM wrapper library."
@@ -440,6 +442,8 @@ for arg in "$@"; do
     echo "-opari1 .................................................... Use Opari."
     echo "-opari_region ......... Report performance data for all OpenMP regions."
     echo "-opari_construct ... Report performance data for all OpenMP constructs."
+    echo "-oparicomp=<compiler>...Specify which compiler sutie to compile Opari2."
+    echo "     options [gcc|ibm|intel|pathscale|pgi|studio]."
     echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
     echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
     echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
@@ -539,8 +543,18 @@ done
 # this causes `make install` to clean, since configure has been run
 rm -f .clean
 
+testlastcon=""
+testlaststu=""
+if [ -f .last_config ] ; then
+    testlastcon=`cat .last_config`
+    testlaststu=`cat .last_stub`
+fi
+
+
 if [ $default = false ] ; then
+    
     rm -f .last_config
+    rm -f .last_stub
 fi
 
 # This method will escape spaces so that you can use ./configure `cat .last_config` when you've used them
@@ -560,7 +574,11 @@ if [ $default = false ] ; then
 #    echo ""
 #    echo "$modargs"
 #    echo ""
-    echo "$modargs" >> .all_configs
+    if [ "$modargs" != "$testlastcon" ] ; then
+
+        echo "$modargs" >> .all_configs
+        
+    fi
     echo "$modargs" > .last_config
 fi
 
@@ -710,6 +728,7 @@ unwind_extras=
 tau_links_rt=no
 opari=no
 opari1=no
+oparicomp=no
 epilog=no
 hpctoolkit=no
 hpctoolkit_src_dir=
@@ -1178,6 +1197,13 @@ for arg in "$@"; do
   -perflibrary=*)
       perf=yes
       perflibrary=`echo $arg | sed -e 's/-perflibrary=//' -e 's/ /#/g'`
+      shift
+      ;;
+
+  -oparicomp=*)
+      opari=yes
+      openmp=yes
+      oparicomp=`echo $arg | sed -e 's/-oparicomp=//' -e 's/ /#/g'`
       shift
       ;;
       
@@ -6389,9 +6415,24 @@ if [ $opari1 = yes ] ; then
     fixmakeargs="$fixmakeargs OPARI oparidir=$oparidir"
     tauoptions="${tauoptions}-opari"
 fi
+
 if [ $opari = yes ] ; then
-    fixmakeargs="$fixmakeargs OPARI2"
-    fixmakeargs="$fixmakeargs oparidir=$oparidir"
+    fixmakeargs="$fixmakeargs OPARI2 oparidir=$oparidir"
+    if [ $oparicomp = no ] ; then
+          if [ $fortran_compiler = intel ] ; then
+             oparicomp="$fortran_compiler"
+          fi
+          if [ $fortran_compiler = pathscale ] ; then
+             oparicomp="$fortran_compiler"
+          fi
+          if [ $fortran_compiler = pgi ] ; then
+             oparicomp="$fortran_compiler"
+          fi
+    fi 
+    if [ $oparicomp = no ] ; then
+      oparicomp=
+    fi
+    fixmakeargs="$fixmakeargs oparicomp=$oparicomp"
     tauoptions="${tauoptions}-opari"
 fi
 
@@ -7181,6 +7222,25 @@ else
   STUB="$tautoplevel/$architecture/lib/Makefile.tau$tauoptions"
 fi
 
+
+if [ $default = false ] ; then
+    rm -f .last_stub
+fi
+
+if [ $default = false ] ; then
+#    echo "configured with:"
+#    echo ""
+#    echo "$modargs"
+#    echo ""
+
+    if [ "$STUB" != "$testlaststu" ] ; then
+
+        echo "$STUB" >> .all_stubs
+        
+    fi
+    echo "$STUB" > .last_stub
+fi
+
 # replace TAU_MAKEFILE in TAU.h
 cat ./include/TAU.h | sed -e "s@^#define TAU_MAKEFILE.*\$@#define TAU_MAKEFILE \"$STUB\"@" > TAU.h
 rm ./include/TAU.h
@@ -7194,7 +7254,7 @@ fi
 
 if [ $tauprefix != unknown ] ; then
   cp -r examples ${tauprefix}
-  cp .all_configs .last_config ${tauprefix}
+  cp .all_configs .last_config .all_stubs .last_stub ${tauprefix}
 fi
 
 
