@@ -1728,7 +1728,9 @@ char *** argv;
   
   returnVal = PMPI_Init( argc, argv );
 #ifndef TAU_WINDOWS
-  Tau_sampling_init_if_necessary();
+  if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_init_if_necessary();
+  }
 #endif /* TAU_WINDOWS */
 #ifndef TAU_DISABLE_SIGUSR
   Tau_signal_initialization(); 

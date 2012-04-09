@@ -56,6 +56,7 @@ using namespace std;
 #endif /* TAU_OPENMP */
 
 #include <Profile/TauBfd.h>
+#include <Profile/TauInit.h>
 
 #ifdef __APPLE__
 #include <mach-o/dyld.h>
@@ -339,6 +340,11 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 		return;
 	}
 
+	//prevent entry into cyg_profile functions while still initializing TAU
+	if (Tau_init_initializingTAU()) {
+		return;
+	}
+
 	void * funcptr = func;
 #ifdef __ia64__
 	funcptr = *( void ** )func;
@@ -485,6 +491,11 @@ void __cyg_profile_func_exit(void* func, void* callsite)
 	}
 
 	if (executionFinished) {
+		return;
+	}
+
+	//prevent entry into cyg_profile functions while still initializing TAU
+	if (Tau_init_initializingTAU()) {
 		return;
 	}
 
