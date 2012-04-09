@@ -543,8 +543,18 @@ done
 # this causes `make install` to clean, since configure has been run
 rm -f .clean
 
+testlastcon=""
+testlaststu=""
+if [ -f .last_config ] ; then
+    testlastcon=`cat .last_config`
+    testlaststu=`cat .last_stub`
+fi
+
+
 if [ $default = false ] ; then
+    
     rm -f .last_config
+    rm -f .last_stub
 fi
 
 # This method will escape spaces so that you can use ./configure `cat .last_config` when you've used them
@@ -564,7 +574,11 @@ if [ $default = false ] ; then
 #    echo ""
 #    echo "$modargs"
 #    echo ""
-    echo "$modargs" >> .all_configs
+    if [ "$modargs" != "$testlastcon" ] ; then
+
+        echo "$modargs" >> .all_configs
+        
+    fi
     echo "$modargs" > .last_config
 fi
 
@@ -7208,6 +7222,25 @@ else
   STUB="$tautoplevel/$architecture/lib/Makefile.tau$tauoptions"
 fi
 
+
+if [ $default = false ] ; then
+    rm -f .last_stub
+fi
+
+if [ $default = false ] ; then
+#    echo "configured with:"
+#    echo ""
+#    echo "$modargs"
+#    echo ""
+
+    if [ "$STUB" != "$testlaststu" ] ; then
+
+        echo "$STUB" >> .all_stubs
+        
+    fi
+    echo "$STUB" > .last_stub
+fi
+
 # replace TAU_MAKEFILE in TAU.h
 cat ./include/TAU.h | sed -e "s@^#define TAU_MAKEFILE.*\$@#define TAU_MAKEFILE \"$STUB\"@" > TAU.h
 rm ./include/TAU.h
@@ -7221,7 +7254,7 @@ fi
 
 if [ $tauprefix != unknown ] ; then
   cp -r examples ${tauprefix}
-  cp .all_configs .last_config ${tauprefix}
+  cp .all_configs .last_config .all_stubs .last_stub ${tauprefix}
 fi
 
 
