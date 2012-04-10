@@ -547,7 +547,10 @@ testlastcon=""
 testlaststu=""
 if [ -f .last_config ] ; then
     testlastcon=`cat .last_config`
-    testlaststu=`cat .last_stub`
+fi
+
+if [ -f .last_stub ] ; then
+ testlaststu=`cat .last_stub`
 fi
 
 
