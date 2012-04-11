@@ -28,22 +28,26 @@ public class TAUdbTrial {
 
 			java.sql.Timestamp collection_date = new Timestamp(
 					System.currentTimeMillis());
-			int node_count = 1 + dataSource.getMaxNCTNumbers()[0];
-			int contexts_per_node = 1 + dataSource.getMaxNCTNumbers()[1];
-			int threads_per_context = 1 + dataSource.getMaxNCTNumbers()[2];
+			int node_count = dataSource.getMaxNode();
+			int contexts_per_node = dataSource.getMaxContextPerNode();
+			int threads_per_context =dataSource.getMaxThreadsPerContext();
 			int datasource_id = dataSource.getFileType();
+			int total_threads = dataSource.getNumThreads();
 
 			String sql = "INSERT INTO "
 					+ db.getSchemaPrefix()
-					+ "trial (name, collection_date, node_count, contexts_per_node, threads_per_context,data_source)"
-					+ "VALUES (?,?,?,?,?,?) ";
+					+ "trial (name, collection_date, data_source,  node_count, contexts_per_node, threads_per_context, total_threads)"
+					+ "VALUES (?,?,?,?,?,?,?) ";
 			PreparedStatement statement = db.prepareStatement(sql);
 			statement.setString(1, name);
+
 			statement.setTimestamp(2, collection_date);
-			statement.setInt(3, node_count);
-			statement.setInt(4, contexts_per_node);
-			statement.setInt(5, threads_per_context);
-			statement.setInt(6, datasource_id);
+			statement.setInt(3, datasource_id);
+
+			statement.setInt(4, node_count);
+			statement.setInt(5, contexts_per_node);
+			statement.setInt(6, threads_per_context);
+			statement.setInt(7, total_threads);
 
 			statement.executeUpdate();
 			statement.close();

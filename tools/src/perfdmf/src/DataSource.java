@@ -115,6 +115,10 @@ public abstract class DataSource {
 
 	protected boolean derivedAtomicProvided=false;
 
+	private int threadsPerConext =-1;
+
+	private int conextsPerNode = -1;
+
     public boolean isDerivedProvided() {
 		return derivedProvided;
 	}
@@ -348,6 +352,35 @@ public abstract class DataSource {
             }
         }
         return maxNCT;
+    }
+
+    public int getMaxThreadsPerContext(){
+    	if( threadsPerConext  <0){
+    		threadsPerConext = 0;
+        for (Iterator<Node> it = this.getNodes(); it.hasNext();) {
+            Node node = it.next();
+            for (Iterator<Context> it2 = node.getContexts(); it2.hasNext();) {
+                Context context = it2.next();
+                int numThreads = context.getNodeID();
+                threadsPerConext = threadsPerConext < numThreads ? numThreads: threadsPerConext;
+            }
+        }
+    	}
+        return threadsPerConext;
+    }
+    public int getMaxContextPerNode(){
+    	if( conextsPerNode   <0){
+    		conextsPerNode = 0;
+        for (Iterator<Node> it = this.getNodes(); it.hasNext();) {
+            Node node = it.next();
+            int numContext = node.getNumberOfContexts();
+            conextsPerNode = conextsPerNode < numContext ? numContext: conextsPerNode;
+            }
+    	}
+        return conextsPerNode;
+    }
+    public int getMaxNode(){
+        return nodes.size();
     }
 
     public int getNumThreads() {
