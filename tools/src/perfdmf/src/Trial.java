@@ -670,7 +670,7 @@ public class Trial implements Serializable, Comparable<Trial> {
 
    
     public int saveTrial(DB db) {
-    	if(db.getSchemaVersion()>0) return TAUdbTrial.saveTrialTAUdb(db,trialID, this.getDataSource());
+    	if(db.getSchemaVersion()>0) return TAUdbTrial.saveTrialTAUdb(db,trialID, this.getDataSource(), this.name);
     	
     	boolean itExists = exists(db);
         int newTrialID = 0;
