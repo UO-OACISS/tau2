@@ -27,7 +27,7 @@ DROP TABLE trial;
 DROP TABLE data_source;
 
 CREATE TABLE schema_version (
- version     INT NOT NULL
+ version     INT NOT NULL;
 );
 /* IF THE SCHEMA IS MODIFIED, INCREMENT THIS VALUE */
 /* 0 = PERFDMF (ORIGINAL) */
@@ -90,12 +90,19 @@ INSERT INTO data_source (name,id,description)
 CREATE TABLE trial (
  id                  SERIAL NOT NULL PRIMARY KEY,
  name                TEXT,
+ /* extract this from the metadata */
  collection_date     TIMESTAMP WITH TIME ZONE,
+ /* where did this data come from? */
  data_source         INT,
+ /* number of processes */
  node_count          INT,
+ /* legacy value */
  contexts_per_node   INT,
+ /* how many threads per node? */
  threads_per_context INT,
+ /* total number of threads */
  total_threads       INT,
+ /* reference to the data source table. */
  FOREIGN KEY(data_source) REFERENCES data_source(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
@@ -114,12 +121,19 @@ CREATE TABLE trial (
 
 CREATE TABLE thread (
  id           SERIAL NOT NULL PRIMARY KEY,
+ /* trial this thread belongs to */
  trial        INT NOT NULL,
+ /* process rank, really */
  node_rank    INT NOT NULL,
+ /* legacy value */
  context_rank INT NOT NULL,
+ /* thread rank relative to the process */
  thread_rank  INT NOT NULL,
+ /* the OS process ID */
  process_id   INT NOT NULL,
+ /* the OS thread ID */
  thread_id    INT NOT NULL,
+ /* thread index from 0 to N-1 */
  thread_index INT NOT NULL,
  FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
@@ -142,12 +156,17 @@ CREATE INDEX primary_metadata_index on primary_metadata (trial, name);
 
 CREATE TABLE secondary_metadata (
  id       SERIAL NOT NULL PRIMARY KEY,
+ /* trial this value belongs to */
  trial    INT NOT NULL,
+ /* this metadata value could be associated with a thread */
  thread   INT,
+ /* this metadata value could be associated with a timer */
  timer    INT,
+ /* this metadata value could be a nested structure */
  parent   INT,
  name     VARCHAR NOT NULL,
  value    TEXT,
+ /* this metadata value could be an array - so tokenize it */
  is_array BOOLEAN DEFAULT FALSE,
  FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
  FOREIGN KEY(thread) REFERENCES thread(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
@@ -163,8 +182,11 @@ CREATE INDEX secondary_metadata_index on secondary_metadata (trial, name, thread
 
 CREATE TABLE metric (
  id      SERIAL NOT NULL PRIMARY KEY,
- name    TEXT NOT NULL,
+ /* trial this value belongs to */
  trial   INT NOT NULL,
+ /* name of the metric */
+ name    TEXT NOT NULL,
+ /* if this metric is derived by one of the tools */
  derived BOOLEAN NOT NULL DEFAULT FALSE,
  FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
@@ -174,12 +196,19 @@ CREATE TABLE metric (
 
 CREATE TABLE timer (
  id                SERIAL NOT NULL PRIMARY KEY,
+ /* trial this value belongs to */
  trial             INT NOT NULL,
+ /* name of the metric */
  name              TEXT NOT NULL,
+ /* filename */
  source_file       TEXT,
+ /* line number of the start of the block of code */
  line_number       INT,
+ /* line number of the end of the block of code */
  line_number_end   INT,
+ /* column number of the start of the block of code */
  column_number     INT,
+ /* column number of the end of the block of code */
  column_number_end INT,
  FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
@@ -221,8 +250,7 @@ CREATE TABLE counter (
  id          SERIAL      NOT NULL PRIMARY KEY,
  trial       INT         NOT NULL,
  name        TEXT        NOT NULL,
- source_file TEXT,
- line_number INT,
+ /* where was this counter collected? Refer to the parent timer */
  parent      INT,
  FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
  FOREIGN KEY(parent) REFERENCES timer(id) ON DELETE NO ACTION ON UPDATE NO ACTION
@@ -247,11 +275,17 @@ CREATE INDEX counter_group_index on counter_group (counter, group_name);
    on one thread. */
 
 CREATE TABLE timer_callpath (
+ /* what timer is this? */
  timer       INT NOT NULL,
+ /* what thread is this? */
  thread      INT NOT NULL,
+ /* how many times this timer was called */
  calls       INT,
+ /* how many subroutines this timer called */
  subroutines INT,
+ /* what is the parent timer? */
  parent      INT,
+ /* what is the timestamp? this is for supporting snapshots */
  timestamp   DOUBLE PRECISION,
  FOREIGN KEY(timer) REFERENCES timer(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
  FOREIGN KEY(thread) REFERENCES thread(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
@@ -262,11 +296,17 @@ CREATE TABLE timer_callpath (
    on one thread for one metric. */
 
 CREATE TABLE timer_value (
+ /* what timer is this? */
  timer                 INT NOT NULL,
+ /* what thread is this? */
  thread                INT NOT NULL,
+ /* what metric is this? */
  metric                INT NOT NULL,
+ /* The inclusive value for this timer */
  inclusive_value       DOUBLE PRECISION,
+ /* The exclusive value for this timer */
  exclusive_value       DOUBLE PRECISION,
+ /* The variance for this timer */
  sum_exclusive_squared DOUBLE PRECISION,
  FOREIGN KEY(timer) REFERENCES timer(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
  FOREIGN KEY(thread) REFERENCES thread(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
@@ -277,15 +317,22 @@ CREATE TABLE timer_value (
 CREATE INDEX timer_value_index on timer_value (timer, metric, thread);
 
 CREATE TABLE counter_value (
-    counter            INT NOT NULL,
-    thread             INT NOT NULL,
-    sample_count       INT,         
-    maximum_value      DOUBLE PRECISION,
-    minimum_value      DOUBLE PRECISION,
-    mean_value         DOUBLE PRECISION,
-    standard_deviation DOUBLE PRECISION,
-    FOREIGN KEY(counter) REFERENCES counter(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
-    FOREIGN KEY(thread) REFERENCES thread(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+ /* what counter is this? */
+ counter            INT NOT NULL,
+ /* what thread is this? */
+ thread             INT NOT NULL,
+ /* The total number of samples */
+ sample_count       INT,         
+ /* The maximum value seen */
+ maximum_value      DOUBLE PRECISION,
+ /* The minimum value seen */
+ minimum_value      DOUBLE PRECISION,
+ /* The mean value seen */
+ mean_value         DOUBLE PRECISION,
+ /* The variance for this counter */
+ standard_deviation DOUBLE PRECISION,
+ FOREIGN KEY(counter) REFERENCES counter(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
+ FOREIGN KEY(thread) REFERENCES thread(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 /* one thread, one counter */
