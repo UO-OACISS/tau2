@@ -16,7 +16,7 @@ then
 fi
 
 if [ $# -lt 2 ] ; then 
-  PREFIX="Iteration"
+  PREFIX="iteration"
 else
   PREFIX=$2
 fi
