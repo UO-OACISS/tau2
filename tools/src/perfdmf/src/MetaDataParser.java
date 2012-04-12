@@ -36,9 +36,9 @@ public class MetaDataParser {
         }
 
         public void endElement(String uri, String localName, String qName) throws SAXException {
-            if (localName.equals("name")) {
+            if (localName.equals("name") || localName.equals("tau:name")) {
                 currentName = accumulator.toString().trim();
-            } else if (localName.equals("value")) {
+            } else if (localName.equals("value") || localName.equals("tau:value")) {
                 String currentValue = accumulator.toString().trim();
                 metadataMap.put(currentName, currentValue);
             }

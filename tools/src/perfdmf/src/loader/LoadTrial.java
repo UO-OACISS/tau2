@@ -25,6 +25,8 @@ public class LoadTrial {
     public int trialID;
     private DataSource dataSource;
     public String trialName;
+    public String appName;
+    public String expName;
     public String problemFile;
     public String configuration;
     public boolean terminate = true;
@@ -178,6 +180,10 @@ public class LoadTrial {
 
     public void saveTrial() {
         trial.setName(trialName);
+        if (this.appName != null)
+        	trial.getMetaData().put("Application", this.appName);
+        if (this.expName != null)
+        	trial.getMetaData().put("Experiment", this.expName);
 
         System.err.println("TrialName: " + trialName);
         trial.setExperimentID(expID);
@@ -435,6 +441,8 @@ public class LoadTrial {
         trans.fixNames = fixNames.booleanValue();
         trans.metadataFile = metadataFile;
         trans.summaryOnly = summaryOnly.booleanValue();
+        trans.appName = appName;
+        trans.expName = expName;
         trans.loadTrial(fileType);
         // the trial will be saved when the load is finished (update is called)
         }
