@@ -131,7 +131,7 @@ CREATE TABLE thread (
 CREATE TABLE primary_metadata (
  trial    INT NOT NULL,
  name     VARCHAR NOT NULL,
- value    VARCHAR NOT NULL,
+ value    VARCHAR,
  FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
