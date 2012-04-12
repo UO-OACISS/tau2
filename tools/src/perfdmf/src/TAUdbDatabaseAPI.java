@@ -45,7 +45,7 @@ public class TAUdbDatabaseAPI {
             
 
 //TODO: Upload values later.....
-          //  uploadFunctionProfiles(newTrialID, dataSource, functionMap, metricMap, summaryOnly);
+            uploadFunctionProfiles(newTrialID, dataSource, functionMap, metricMap, summaryOnly);
 
             Map<UserEvent, Integer> userEventMap = uploadUserEvents(newTrialID, dataSource, db);
 
@@ -287,105 +287,65 @@ public class TAUdbDatabaseAPI {
 	        }
 	        return map;
 	    }
-	    private void uploadFunctionProfiles(int trialID, DataSource dataSource, Map<Function, Integer> functionMap, Map<Metric, Integer> metricMap, boolean summaryOnly)
-	            throws SQLException {
 
-//	        PreparedStatement totalInsertStatement = null;
-//	        PreparedStatement meanInsertStatement = null;
-//	        PreparedStatement threadInsertStatement = null;
-//
-//	        if (db.getDBType().compareTo("oracle") == 0) {
-//	            totalInsertStatement = db.prepareStatement("INSERT INTO "
-//	                    + db.getSchemaPrefix()
-//	                    + "interval_total_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-//	            meanInsertStatement = db.prepareStatement("INSERT INTO "
-//	                    + db.getSchemaPrefix()
-//	                    + "interval_mean_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-//	            threadInsertStatement = db.prepareStatement("INSERT INTO "
-//	                    + db.getSchemaPrefix()
-//	                    + "interval_location_profile (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, excl, call, subroutines, inclusive_per_call, node, context, thread) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-//	        } else if (db.getDBType().compareTo("derby") == 0) {
-//	            totalInsertStatement = db.prepareStatement("INSERT INTO "
-//	                    + db.getSchemaPrefix()
-//	                    + "interval_total_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, num_calls, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-//	            meanInsertStatement = db.prepareStatement("INSERT INTO "
-//	                    + db.getSchemaPrefix()
-//	                    + "interval_mean_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, num_calls, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-//	            threadInsertStatement = db.prepareStatement("INSERT INTO "
-//	                    + db.getSchemaPrefix()
-//	                    + "interval_location_profile (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, num_calls, subroutines, inclusive_per_call, node, context, thread) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-//	        } else if (db.getDBType().compareTo("mysql") == 0) {
-//	            totalInsertStatement = db.prepareStatement("INSERT INTO "
-//	                    + db.getSchemaPrefix()
-//	                    + "interval_total_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, `call`, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-//	            meanInsertStatement = db.prepareStatement("INSERT INTO "
-//	                    + db.getSchemaPrefix()
-//	                    + "interval_mean_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, `call`, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-//	            threadInsertStatement = db.prepareStatement("INSERT INTO "
-//	                    + db.getSchemaPrefix()
-//	                    + "interval_location_profile (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, `call`, subroutines, inclusive_per_call, node, context, thread) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-//	        } else {
-//	            totalInsertStatement = db.prepareStatement("INSERT INTO "
-//	                    + db.getSchemaPrefix()
-//	                    + "interval_total_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-//	            meanInsertStatement = db.prepareStatement("INSERT INTO "
-//	                    + db.getSchemaPrefix()
-//	                    + "interval_mean_summary (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-//	            threadInsertStatement = db.prepareStatement("INSERT INTO "
-//	                    + db.getSchemaPrefix()
-//	                    + "interval_location_profile (interval_event, metric, inclusive_percentage, inclusive, exclusive_percentage, exclusive, call, subroutines, inclusive_per_call, node, context, thread) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-//	        }
-//
-//	        Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
-//
-//	        for (Iterator<Metric> it5 = dataSource.getMetrics().iterator(); it5.hasNext();) {
-//	            Metric metric = it5.next();
-//	            Integer dbMetricID = metricMap.get(metric);
-//
-//	            for (Iterator<Function> it4 = dataSource.getFunctions(); it4.hasNext();) {
-//	                Function function = it4.next();
-//	                if (function.isGroupMember(derived)) {
-//	                    continue;
-//	                }
-//	                Integer intervalEventID = functionMap.get(function);
-//
-//	                edu.uoregon.tau.perfdmf.Thread totalData = dataSource.getTotalData();
-//	                addBatchFunctionProfile(totalInsertStatement, totalData, metric.getID(), dbMetricID.intValue(),
-//	                        function.getTotalProfile(), intervalEventID.intValue(), false, dataSource.getAllThreads().size());
-//
-//	                //edu.uoregon.tau.dms.dss.Thread meanData = dataSource.getMeanData();
-//	                //addBatchFunctionProfile(meanInsertStatement, meanData, metric.getID(), dbMetricID.intValue(),
-//	                //       function.getMeanProfile(), intervalEventID.intValue(), false, dataSource.getAllThreads().size());
-//
-//	                addBatchFunctionProfile(meanInsertStatement, totalData, metric.getID(), dbMetricID.intValue(),
-//	                        function.getTotalProfile(), intervalEventID.intValue(), true, dataSource.getAllThreads().size());
-//
-//	                for (Iterator<Thread> it = dataSource.getAllThreads().iterator(); it.hasNext() && summaryOnly == false;) {
-//	                    edu.uoregon.tau.perfdmf.Thread thread = it.next();
-//
-//	                    FunctionProfile fp = thread.getFunctionProfile(function);
-//	                    if (fp != null) { // only if this thread calls this function
-//
-//	                        if (this.cancelUpload)
-//	                            return;
-//
-//	                        addBatchFunctionProfile(threadInsertStatement, thread, metric.getID(), dbMetricID.intValue(), fp,
-//	                                intervalEventID.intValue(), false, dataSource.getAllThreads().size());
-//	                    }
-//	                }
-//	            }
-//	        }
-//
-//	        //        totalInsertStatement.executeBatch();
-//	        //        meanInsertStatement.executeBatch();
-//	        //        threadInsertStatement.executeBatch();
-//
-//	        totalInsertStatement.close();
-//	        meanInsertStatement.close();
-//	        threadInsertStatement.close();
+	private void uploadFunctionProfiles(DataSource dataSource,
+			Map<Function, Integer> functionMap, Map<Metric, Integer> metricMap,
+			DB db) throws SQLException {
 
-	    }
-	    
+		PreparedStatement threadInsertStatement = null;
+
+		threadInsertStatement = db
+				.prepareStatement("INSERT INTO "
+						+ db.getSchemaPrefix()
+						+ "timer_value (timer, thread, metric, inclusive_percentage, inclusive_value, exclusive_percentage, " +
+						" exclusive_value, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+		Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
+
+		for (Iterator<Metric> it5 = dataSource.getMetrics().iterator(); it5
+				.hasNext();) {
+			Metric metric = it5.next();
+			Integer dbMetricID = metricMap.get(metric);
+
+			for (Iterator<Function> it4 = dataSource.getFunctions(); it4
+					.hasNext();) {
+				Function function = it4.next();
+				if (function.isGroupMember(derived)) {
+					continue;
+				}
+				Integer intervalEventID = functionMap.get(function);
+
+				edu.uoregon.tau.perfdmf.Thread totalData = dataSource
+						.getTotalData();
+				// TODO: Save total thread as -2 thread
+
+				for (Thread thread : dataSource.getAllThreads()) {
+
+					FunctionProfile fp = thread.getFunctionProfile(function);
+
+					if (fp != null) { // only if this thread calls this function
+					// TODO: Deal with cancelUpload
+					// if (this.cancelUpload)
+					// return;
+
+						addBatchFunctionProfile(threadInsertStatement, thread,
+								metric.getID(), dbMetricID.intValue(), fp,
+								intervalEventID.intValue(), false, dataSource
+										.getAllThreads().size());
+					}
+				}
+			}
+		}
+
+		// totalInsertStatement.executeBatch();
+		// meanInsertStatement.executeBatch();
+		// threadInsertStatement.executeBatch();
+
+
+		threadInsertStatement.close();
+
+	}
+
 	    private static Map<UserEvent, Integer> uploadUserEvents(int trialID, DataSource dataSource, DB db) throws SQLException {
 	        Map<UserEvent, Integer> map = new HashMap<UserEvent, Integer>();
 
@@ -428,11 +388,11 @@ public class TAUdbDatabaseAPI {
 			Map<UserEvent, Integer> userEventMap, DB db, Map<Thread, Integer> threadMap) throws SQLException {
 
 		List<Thread> threads = dataSource.getThreads();
-//		PreparedStatement statement = db
-//				.prepareStatement("INSERT INTO "
-//						+ db.getSchemaPrefix()
-//						+ "atomic_location_profile (counter, thread, sample_count, maximum_value, minimum_value, mean_value, standard_deviation)"
-//						+ "VALUES (?, ?, ?, ?, ?, ?, ?)");
+		PreparedStatement statement = db
+				.prepareStatement("INSERT INTO "
+						+ db.getSchemaPrefix()
+						+ "counter_value (counter, thread, sample_count, maximum_value, minimum_value, mean_value, standard_deviation)"
+						+ "VALUES (?, ?, ?, ?, ?, ?, ?)");
 
 		for (Thread thread : threads) {
 
@@ -446,12 +406,7 @@ public class TAUdbDatabaseAPI {
 				if (uep != null) {
 					int atomicEventID = userEventMap.get(uep.getUserEvent())
 							.intValue();
-					PreparedStatement statement = db
-							.prepareStatement("INSERT INTO "
-									+ db.getSchemaPrefix()
-									+ "counter_value (counter, thread, sample_count, maximum_value, minimum_value, mean_value, standard_deviation)"
-									+ "VALUES (?, ?, ?, ?, ?, ?, ?)");
-
+				
 					statement.setInt(1, atomicEventID);
 					statement.setInt(2, threadMap.get(thread));
 					statement.setInt(3, (int) uep.getNumSamples());
@@ -459,16 +414,13 @@ public class TAUdbDatabaseAPI {
 					statement.setDouble(5, uep.getMinValue());
 					statement.setDouble(6, uep.getMeanValue());
 					statement.setDouble(7, uep.getSumSquared());
-					statement.execute();
-					statement.close();
-
-					//statement.addBatch();
+					statement.addBatch();
 				}
 
 			}
 		}
-//		statement.executeBatch();
-//		statement.close();
+		statement.executeBatch();
+		statement.close();
 
 	}
 
