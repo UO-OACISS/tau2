@@ -15,7 +15,7 @@ void dump_trial(PGconn* connection, TAUDB_TRIAL* filter) {
    TAUDB_TRIAL* trial = taudb_query_trials(connection, FALSE, filter);
 
    TAUDB_TIMER* timer = taudb_query_main_timer(connection, trial);
-   printf("Trial name: '%s', id: %d, main: '%s'\n\n", trial->name, trial->id, timer->short_name);
+   printf("Trial name: '%s', id: %d, main: '%s'\n\n", trial->name, trial->id, timer->full_name);
 }
 
 void dump_timers(PGconn* connection, TAUDB_TRIAL* filter) {
@@ -29,7 +29,7 @@ void dump_timers(PGconn* connection, TAUDB_TRIAL* filter) {
    int e;
    int total = 0;
    for (e = 0 ; e < numTimers ; e++) {
-     printf("%s\n", timers[e].short_name);
+     printf("%s\n", timers[e].full_name);
    }
 
    taudb_delete_timers(timers, 1);
@@ -46,7 +46,7 @@ void dump_counters(PGconn* connection, TAUDB_TRIAL* filter) {
    int e;
    int total = 0;
    for (e = 0 ; e < numTimers ; e++) {
-     printf("%s\n", counters[e].short_name);
+     printf("%s\n", counters[e].name);
    }
 
    taudb_delete_counters(counters, 1);
@@ -121,6 +121,7 @@ void dump_timer_callpaths(PGconn* connection, TAUDB_TRIAL* filter) {
 
    if (numCallpaths != total) {
      printf("ERROR!!! %d != %d - MISSING ITEMS!\n\n", numCallpaths, total);
+	 exit(1);
    }
 
    taudb_delete_trials(trial, 1);
@@ -161,6 +162,11 @@ void dump_timer_values(PGconn* connection, TAUDB_TRIAL* filter) {
    }
    printf("Found %d objects in the hash.\n\n", total);
 
+   if (taudb_numItems != total) {
+     printf("ERROR!!! %d != %d - MISSING ITEMS!\n\n", taudb_numItems, total);
+	 exit(1);
+   }
+
    taudb_delete_trials(trial, 1);
 }
 
@@ -185,13 +191,20 @@ void dump_counter_values(PGconn* connection, TAUDB_TRIAL* filter) {
    for (e = 0 ; e < numCounters ; e++) {
       for (t = 0 ; t < numThreads ; t++) {
            TAUDB_COUNTER_VALUE* counter_value = taudb_get_counter_value(counter_values, &(counters[e]), &(threads[t]));
+           //TAUDB_COUNTER_VALUE* counter_value = taudb_query_counter_values(connection, trial, &(counters[e]), &(threads[t]));
            if (counter_value) {
-             printf("counter %s, thread %d - num_samples: %d, mean %f\n", counters[e].short_name, t, counter_value->sample_count, counter_value->mean_value);
+             printf("counter %s, thread %d - num_samples: %d, mean %f\n", counters[e].name, t, counter_value->sample_count, counter_value->mean_value);
              total++;
          }
       }
    }
    printf("Found %d objects in the hash.\n\n", total);
+
+   if (taudb_numItems != total) {
+     printf("ERROR!!! %d != %d - MISSING ITEMS!\n\n", taudb_numItems, total);
+	 exit(1);
+   }
+
 
    taudb_delete_trials(trial, 1);
 }

@@ -19,15 +19,14 @@ OBJS=${patsubst %.c, %.o, ${SOURCES}}
 
 TARGET=perfdmf_query_counter_values_test
 TAUDBLIB=../../libtaudb.a
-DUMP_FUNCS=../libtaudb_dump.a
 LIBS=$(POSTGRESQL_LIBRARIES)
 INCLUDE=-I. -I../../include $(POSTGRESQL_INCLUDES) -I../dump_functions
 
 all: $(TARGET)
 
-$(TARGET): $(TAUDBLIB) $(HEADERS) $(OBJS) $(DUMP_FUNCS)
+$(TARGET): $(TAUDBLIB) $(HEADERS) $(OBJS)
 	echo " Linking : $@"
-	$(CC) $(FLAGS) $@.o $(DUMP_FUNCS) -o $@ $(TAUDBLIB) $(LIBS)
+	$(CC) $(FLAGS) $@.o -o $@ $(TAUDBLIB) $(LIBS)
 
 # rebuild everything if the headers or the makefile changes
 $(OBJS): $(HEADERS) Makefile ../../Makefile.inc

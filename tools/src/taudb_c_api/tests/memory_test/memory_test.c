@@ -146,8 +146,7 @@ TAUDB_COUNTER* test_counters(int count) {
    TAUDB_COUNTER* counters = taudb_create_counters(count);
    int i;
    for (i = 0 ; i < count ; i++ ) {
-     counters[i].full_name = taudb_create_string(count);
-     counters[i].short_name = taudb_create_string(count);
+     counters[i].name = taudb_create_string(count);
      counters[i].source_file = taudb_create_string(count);
      counters[i].groups = test_counter_groups(count);
 	 counters[i].group_count = count;
