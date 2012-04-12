@@ -602,26 +602,32 @@ public class DBConnector implements DB {
 			DatabaseMetaData meta;
 			try {
 				meta = getMetaData();
-			
-			ResultSet r = meta.getTables(null, null, "schema_version", null);
-			
-			while (r.next()) {
-				String tablename = r.getString("TABLE_NAME");
-				if (tablename.equalsIgnoreCase("schema_version")) {
-					hasSchemaVersionTable = true;
-				}
-			}
-			
-			if (hasSchemaVersionTable) {
-				String query = "SELECT version FROM " + getSchemaPrefix()
-						+ "schema_version";
-				ResultSet resultSet = executeQuery(query);
 
-				if (resultSet.next()){
-					schemaVersion = resultSet.getInt(1);
-					return;
-				}
-			}
+                String tmpStr = null;
+                if (this.getDBType().compareTo("h2") == 0) {
+                    tmpStr = "SCHEMA_VERSION";
+                } else {
+                    tmpStr = "schema_version";
+                }
+                ResultSet r = meta.getTables(null, null, tmpStr, null);
+            
+                while (r.next()) {
+                    String tablename = r.getString("TABLE_NAME");
+                    if (tablename.equalsIgnoreCase("schema_version")) {
+                        hasSchemaVersionTable = true;
+                    }
+			    }
+			
+			    if (hasSchemaVersionTable) {
+				    String query = "SELECT version FROM " + getSchemaPrefix()
+						    + "schema_version";
+				    ResultSet resultSet = executeQuery(query);
+    
+				    if (resultSet.next()){
+					    schemaVersion = resultSet.getInt(1);
+					    return;
+				    }
+			    }
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
