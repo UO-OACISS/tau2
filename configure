@@ -547,7 +547,10 @@ testlastcon=""
 testlaststu=""
 if [ -f .last_config ] ; then
     testlastcon=`cat .last_config`
-    testlaststu=`cat .last_stub`
+fi
+
+if [ -f .last_stub ] ; then
+ testlaststu=`cat .last_stub`
 fi
 
 
@@ -5284,7 +5287,7 @@ if [ $mpi = yes ] ; then
 	   echo "NOTE: OpenMPI configured with --disable_shared"
 	   mpilibrary='-lmpi_cxx -lmpi -lopen-rte -lopen-pal -lrt -ldl -lpthread -lutil'
 	   # check for -libverbs, sometimes necessary with OpenMPI
-           if [ $machine != bgq ] ; then 
+           if [ $machine != bgq -a $machine != craycnl ] ; then 
 	     if [ -r /usr/lib64/libibverbs.a -o -r /usr/lib64/libibverbs.so ] ; then 
 	       mpilibrary="$mpilibrary -libverbs"
 	     fi
@@ -5366,7 +5369,7 @@ if [ $mpi = yes ] ; then
 	      mpiflibargs="$mpiflibargs -lrt"
 	  fi
 	  
-          if [ $machine != bgq ] ; then
+          if [ $machine != bgq -a $machine != craycnl ] ; then
 	    if [ -r /usr/lib64/libibverbs.a -o -r /usr/lib64/libibverbs.so ] ; then 
               #echo "libibverbs found"
 	      mpilibargs="$mpilibargs -libverbs"
