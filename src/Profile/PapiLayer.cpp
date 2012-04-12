@@ -312,8 +312,9 @@ int PapiLayer::initializeThread(int tid) {
       TAU_VERBOSE("TAU: Setting PAPI overflow handler\n");
       rc = PAPI_overflow(ThreadList[tid]->EventSet[comp], tauSampEvent, threshold, 0, Tau_sampling_papi_overflow_handler);
       if (rc != PAPI_OK) {
-	fprintf (stderr, "TAU: Error adding PAPI overflow handler: %s\n", PAPI_strerror(rc));
-	return -1;
+        fprintf (stderr, "TAU Sampling Warning: Error adding PAPI overflow handler: %s. Threshold=%d\n", PAPI_strerror(rc), threshold);
+	tauSampEvent = 0; // Make sampling use itimer instead. We can disable it later.
+//	return -1;
       }
     }
   }
