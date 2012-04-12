@@ -1,12 +1,17 @@
 package edu.uoregon.tau.perfdmf;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.python.tests.inbred.Metis;
+
+import viewer.histogram.StatBoxStatusPanel;
 
 //import org.h2.store.Data;
 
@@ -35,27 +40,34 @@ public class TAUdbDatabaseAPI {
           //  computeUploadSize(dataSource);
             
             // upload the metrics and get a map that maps the metrics 0 -> n-1 to their unique DB IDs (e.g. 83, 84)
-            Map<Metric, Integer> metricMap = uploadMetrics(newTrialID, dataSource.getMetrics(), db);
-            Map<Function, Integer> functionMap = uploadFunctions(newTrialID, dataSource, db);
-            Map<Thread, Integer> threadMap = uploadThreads(newTrialID, dataSource, db);
+            uploadMetrics(newTrialID, dataSource.getMetrics(), db);
+            Map<Metric, Integer> metricMap = getMetricIDMap(newTrialID, dataSource, db);
+            
+            uploadFunctions(newTrialID, dataSource, db);
+            Map<Function, Integer> functionMap = getFunctionsIDMap(newTrialID, dataSource, db);
+            
+            uploadThreads(newTrialID, dataSource, db);
+            Map<Thread, Integer> threadMap = getThreadsMap(newTrialID, dataSource, db);
             
             uploadTimerGroups(functionMap, db);
             uploadTimerParameter(functionMap, db);
             uploadTimerCallpath(functionMap,  db);
             
 
-//TODO: Upload values later.....
-            uploadFunctionProfiles(newTrialID, dataSource, functionMap, metricMap, summaryOnly);
+            uploadFunctionProfiles(dataSource, functionMap, metricMap, threadMap, db);
 
-            Map<UserEvent, Integer> userEventMap = uploadUserEvents(newTrialID, dataSource, db);
+           uploadUserEvents(newTrialID, dataSource, db);
+           Map<UserEvent, Integer> userEventMap = getUserEventsMap(newTrialID, dataSource, db);
 
             uploadUserEventProfiles( dataSource, userEventMap, db, threadMap);
+            
 //TODO: Deal with cancel upload
 //            if (this.cancelUpload) {
 //                db.rollback();
 //                deleteTrial(newTrialID);
 //                return -1;
 //            }
+            
             uploadMetadata(trial, functionMap, threadMap, db);
 
         } catch (SQLException e) {
@@ -83,12 +95,16 @@ public class TAUdbDatabaseAPI {
         return newTrialID;
 	}
 
-	private static Map<Thread, Integer> uploadThreads(int trialID,
+	private static void uploadThreads(int trialID,
 			DataSource dataSource, DB db) throws SQLException {
-		Map<Thread, Integer> map = new HashMap<Thread, Integer>();
 		int maxContextPerNode = dataSource.getMaxNCTNumbers()[1] +1;
 		int maxThreadsPerContext = dataSource.getMaxNCTNumbers()[2] +1;
 
+
+		PreparedStatement stmt = db.prepareStatement("INSERT INTO "
+						+ db.getSchemaPrefix()
+						+ "thread (trial, node_rank, context_rank, thread_rank, process_id, " +
+						"thread_id, thread_index) VALUES (?, ?, ?, ?, ?, ?,?)");
 		List<Thread> threads = dataSource.getAllThreads();
 		for (Thread t : threads) {
 
@@ -101,10 +117,6 @@ public class TAUdbDatabaseAPI {
 			
 	
 
-			PreparedStatement stmt = db
-					.prepareStatement("INSERT INTO "
-							+ db.getSchemaPrefix()
-							+ "thread (trial, node_rank, context_rank, thread_rank, process_id, thread_id, thread_index) VALUES (?, ?, ?, ?, ?, ?,?)");
 			stmt.setInt(1, trialID);
 			stmt.setInt(2, node_rank);
 			stmt.setInt(3, context_rank);
@@ -113,29 +125,34 @@ public class TAUdbDatabaseAPI {
 			stmt.setInt(6, thread_id);
 			stmt.setInt(7, thread_index);
 
-			stmt.executeUpdate();
-			stmt.close();
-
-			String tmpStr = new String();
-			if (db.getDBType().compareTo("mysql") == 0)
-				tmpStr = "select LAST_INSERT_ID();";
-			else if (db.getDBType().compareTo("db2") == 0)
-				tmpStr = "select IDENTITY_VAL_LOCAL() FROM thread";
-			else if (db.getDBType().compareTo("derby") == 0)
-				tmpStr = "select IDENTITY_VAL_LOCAL() FROM thread";
-			else if (db.getDBType().compareTo("h2") == 0)
-				tmpStr = "select IDENTITY_VAL_LOCAL() FROM thread";
-			else if (db.getDBType().compareTo("oracle") == 0)
-				tmpStr = "select " + db.getSchemaPrefix()
-						+ "thread_id_seq.currval FROM dual"; //Not sure if this is right...
-			else
-				tmpStr = "select currval('thread_id_seq');";
-			int dbThreadID = Integer.parseInt(db.getDataItem(tmpStr));
+			stmt.addBatch();
 			
-			map.put(t, new Integer(dbThreadID));
 		}
-		
-		return map;
+		stmt.executeBatch();
+		stmt.close();
+	}
+	private static Map<Thread, Integer> getThreadsMap(int trialID,DataSource dataSource, DB db) throws SQLException {
+		Map<Thread, Integer> map = new HashMap<Thread, Integer>();
+
+		PreparedStatement statement = db.prepareStatement("SELECT node_rank, context_rank, thread_rank, id FROM "
+						+ db.getSchemaPrefix()
+						+ "thread WHERE trial=?");
+		statement.setInt(1, trialID);
+		   statement.execute();
+           ResultSet results = statement.getResultSet();
+      
+
+		while (results.next()) {
+			int node = results.getInt(1);
+			int context =results.getInt(2);
+			int thread = results.getInt(3);
+			int id = results.getInt(4);
+			Thread t = dataSource.getThread(node, context, thread);
+			map.put(t, id);
+		}
+		statement.close();
+        return map;
+
 	}
 
 	private static void uploadTimerCallpath(Map<Function, Integer> map, DB db) throws SQLException {
@@ -211,51 +228,61 @@ public class TAUdbDatabaseAPI {
 		statement.close();
 
 	}
-	private static Map<Metric, Integer> uploadMetrics(int trialID,
-			List<Metric> metrics, DB db) throws SQLException {
-		  Map<Metric, Integer> map = new HashMap<Metric, Integer>();
-		for (Metric metric: metrics){
-	            PreparedStatement stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
-	                    + "metric (name, trial) VALUES (?, ?)");
-	            stmt.setString(1, metric.getName());
-	            stmt.setInt(2, trialID);
-	            stmt.executeUpdate();
-	            stmt.close();
 
-	            String tmpStr = new String();
-	            if (db.getDBType().compareTo("mysql") == 0)
-	                tmpStr = "select LAST_INSERT_ID();";
-	            else if (db.getDBType().compareTo("db2") == 0)
-	                tmpStr = "select IDENTITY_VAL_LOCAL() FROM metric";
-	            else if (db.getDBType().compareTo("derby") == 0)
-	                tmpStr = "select IDENTITY_VAL_LOCAL() FROM metric";
-	            else if (db.getDBType().compareTo("h2") == 0)
-	                tmpStr = "select IDENTITY_VAL_LOCAL() FROM metric";
-	            else if (db.getDBType().compareTo("oracle") == 0)
-	                tmpStr = "select " + db.getSchemaPrefix() + "metric_id_seq.currval FROM dual";
-	            else
-	                tmpStr = "select currval('metric_id_seq');";
-	            int dbMetricID = Integer.parseInt(db.getDataItem(tmpStr));
-	            map .put(metric, new Integer(dbMetricID));
-	            metric.setDbMetricID(dbMetricID);
-	        }
-	        return map;
-	    }
+	private static void uploadMetrics(int trialID, List<Metric> metrics, DB db)
+			throws SQLException {
+
+		PreparedStatement insert = db.prepareStatement("INSERT INTO "
+				+ db.getSchemaPrefix() + "metric (name, trial, derived) VALUES (?, ?, ?)");
+	
+		for (Metric metric : metrics) {
+			insert.setString(1, metric.getName());
+			insert.setInt(2, trialID);
+			insert.setBoolean(3,metric.getDerivedMetric());
+			insert.addBatch();
+
+		}
+		
+		insert.executeBatch();
+		insert.close();		
+	}
+
+	private static Map<Metric, Integer> getMetricIDMap(int trialID,
+			DataSource dataSource, DB db) throws SQLException {
+		Map<Metric, Integer> map = new HashMap<Metric, Integer>();
+
+		PreparedStatement select = db.prepareStatement("SELECT id, name FROM "
+				+ db.getSchemaPrefix() + "metric WHERE trial=?");
+		select.setInt(1, trialID);
+		select.execute();
+		ResultSet results = select.getResultSet();
+		while (results.next()) {
+			int metricID = results.getInt(1);
+			String name = results.getString(2);
+			Metric metric = dataSource.getMetric(name);
+
+			metric.setDbMetricID(metricID);
+			map.put(metric, metricID);
+
+		}
+
+		select.close();
+		return map;
+	}
 	  // fills the timer table
-	    private static Map<Function, Integer>  uploadFunctions(int trialID, DataSource dataSource, DB db) throws SQLException {
-	        Map<Function, Integer> map = new HashMap<Function, Integer>();
+	    private static void  uploadFunctions(int trialID, DataSource dataSource, DB db) throws SQLException {
 	       
 	        Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
+	           PreparedStatement statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
+	                    + "timer (trial, name, source_file, line_number, line_number_end, column_number, column_number_end) VALUES (?, ?, ?, ?, ?, ?, ?)");
+
 	        for (Iterator<Function> it = dataSource.getFunctions(); it.hasNext();) {
 	            Function f = it.next();
 	            if (f.isGroupMember(derived)) {
 	                continue; //Should we save the derived callpath functions??
 	            }
 	            SourceRegion source = f.getSourceLink();
-
-	            PreparedStatement statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
-	                    + "timer (trial, name, source_file, line_number, line_number_end, column_number, column_number_end) VALUES (?, ?, ?, ?, ?, ?, ?)");
-
+	 
 	            statement.setInt(1, trialID);
 	            statement.setString(2, f.getName());
 	            statement.setString(3, source.getFilename());
@@ -263,126 +290,135 @@ public class TAUdbDatabaseAPI {
 	            statement.setInt(5, source.getEndLine());
 	            statement.setInt(6, source.getStartColumn());
 	            statement.setInt(7, source.getEndColumn());
-	            statement.executeUpdate();
-	            statement.close();
-
-	            String tmpStr = new String();
-	            if (db.getDBType().compareTo("mysql") == 0)
-	                tmpStr = "select LAST_INSERT_ID();";
-	            else if (db.getDBType().compareTo("db2") == 0)
-	                tmpStr = "select IDENTITY_VAL_LOCAL() FROM timer";
-	            else if (db.getDBType().compareTo("derby") == 0)
-	                tmpStr = "select IDENTITY_VAL_LOCAL() FROM timer";
-	            else if (db.getDBType().compareTo("h2") == 0)
-	                tmpStr = "select IDENTITY_VAL_LOCAL() FROM timer";
-	            else if (db.getDBType().compareTo("oracle") == 0)
-	                tmpStr = "select " + db.getSchemaPrefix() + "timer_seq.currval FROM dual";
-	            else
-	                tmpStr = "select currval('timer_id_seq');";
-	            int newIntervalEventID = Integer.parseInt(db.getDataItem(tmpStr));
-
-	            map.put(f, new Integer(newIntervalEventID));
+	            statement.addBatch();
 //TODO: increment itemsDone for progress bar
 //	            this.itemsDone++;
 	        }
-	        return map;
-	    }
+            statement.executeBatch();
+            statement.close();
 
-	private void uploadFunctionProfiles(DataSource dataSource,
-			Map<Function, Integer> functionMap, Map<Metric, Integer> metricMap,
+	    }
+	    private static Map<Function, Integer>  getFunctionsIDMap(int trialID, DataSource dataSource, DB db) throws SQLException {
+	    		           
+		Map<Function, Integer> map = new HashMap<Function, Integer>();
+
+		PreparedStatement statement = db
+				.prepareStatement("SELECT id, name FROM " + db.getSchemaPrefix()
+						+ "timer WHERE trial=?");
+		statement.setInt(1, trialID);
+		statement.execute();
+		ResultSet results = statement.getResultSet();
+
+		while (results.next()) {
+			int funcID = results.getInt(1);
+			String name = results.getString(2);
+
+			Function func = dataSource.getFunction(name);
+			map.put(func, funcID);
+		}
+		statement.close();
+		return map;
+	}
+
+	private static void uploadFunctionProfiles(DataSource dataSource,
+			Map<Function, Integer> functionMap, Map<Metric, Integer> metricMap, Map<Thread, Integer> threadMap,
 			DB db) throws SQLException {
 
-		PreparedStatement threadInsertStatement = null;
-
-		threadInsertStatement = db
+		PreparedStatement timerValueInsert = db
 				.prepareStatement("INSERT INTO "
 						+ db.getSchemaPrefix()
-						+ "timer_value (timer, thread, metric, inclusive_percentage, inclusive_value, exclusive_percentage, " +
-						" exclusive_value, call, subroutines, inclusive_per_call) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+						+ "timer_value (timer, thread, metric, inclusive_percent, inclusive_value, exclusive_percent, "
+						+ " exclusive_value) VALUES (?, ?, ?, ?, ?, ?, ?)");
 
 		Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
 
-		for (Iterator<Metric> it5 = dataSource.getMetrics().iterator(); it5
-				.hasNext();) {
-			Metric metric = it5.next();
-			Integer dbMetricID = metricMap.get(metric);
+		for (Metric metric:  dataSource.getMetrics()) {
+			Integer metricID = metricMap.get(metric);
 
-			for (Iterator<Function> it4 = dataSource.getFunctions(); it4
-					.hasNext();) {
-				Function function = it4.next();
+			for (Iterator<Function> func = dataSource.getFunctions(); func.hasNext();) {
+				Function function = func.next();
 				if (function.isGroupMember(derived)) {
 					continue;
 				}
-				Integer intervalEventID = functionMap.get(function);
-
-				edu.uoregon.tau.perfdmf.Thread totalData = dataSource
-						.getTotalData();
+				Integer timerID = functionMap.get(function);
+				
 				// TODO: Save total thread as -2 thread
+				edu.uoregon.tau.perfdmf.Thread totalData = dataSource.getTotalData();
 
 				for (Thread thread : dataSource.getAllThreads()) {
+					Integer threadID = threadMap.get(thread);
 
 					FunctionProfile fp = thread.getFunctionProfile(function);
 
 					if (fp != null) { // only if this thread calls this function
-					// TODO: Deal with cancelUpload
-					// if (this.cancelUpload)
-					// return;
+						// TODO: Deal with cancelUpload
+						// if (this.cancelUpload)
+						// return;
+						timerValueInsert.setInt(1,timerID);
+						timerValueInsert.setInt(2, threadID);
+						timerValueInsert.setInt(3, metricID);
+						
+						timerValueInsert.setDouble(4, fp.getInclusivePercent(metric.getID()));
+						timerValueInsert.setDouble(5, fp.getInclusive(metric.getID()));
+						timerValueInsert.setDouble(6, fp.getExclusivePercent(metric.getID()));
+						timerValueInsert.setDouble(7, fp.getExclusive(metric.getID()));
+						//TODO: Find the sum_exclusive_square values
+//						timerValueInsert.setDouble(8, fp.get)
+						
+						timerValueInsert.addBatch();		
 
-						addBatchFunctionProfile(threadInsertStatement, thread,
-								metric.getID(), dbMetricID.intValue(), fp,
-								intervalEventID.intValue(), false, dataSource
-										.getAllThreads().size());
 					}
 				}
 			}
 		}
-
-		// totalInsertStatement.executeBatch();
-		// meanInsertStatement.executeBatch();
-		// threadInsertStatement.executeBatch();
-
-
-		threadInsertStatement.close();
-
+		timerValueInsert.executeBatch();
+		timerValueInsert.close();
 	}
 
-	    private static Map<UserEvent, Integer> uploadUserEvents(int trialID, DataSource dataSource, DB db) throws SQLException {
-	        Map<UserEvent, Integer> map = new HashMap<UserEvent, Integer>();
+	private static void uploadUserEvents(int trialID, DataSource dataSource,
+			DB db) throws SQLException {
+		Map<UserEvent, Integer> map = new HashMap<UserEvent, Integer>();
 
-	        String group = null; // no groups right now?
+		String group = null; // no groups right now?
+		// TODO: Need to load information for parent timer
+		PreparedStatement statement = db.prepareStatement("INSERT INTO "
+				+ db.getSchemaPrefix() + "counter (trial, name) VALUES (?, ?)");
 
-	        for (Iterator<UserEvent> it = dataSource.getUserEvents(); it.hasNext();) {
-	            UserEvent ue = it.next();
-	        
-//TODO: Need to load information for parent timer
-	            PreparedStatement statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
-	                    + "counter (trial, name) VALUES (?, ?)");
-	            statement.setInt(1, trialID);
-	            statement.setString(2, ue.getName());
-	            statement.executeUpdate();
-	            statement.close();
+		for (Iterator<UserEvent> it = dataSource.getUserEvents(); it.hasNext();) {
+			UserEvent ue = it.next();
 
-	            String tmpStr = new String();
-	            if (db.getDBType().compareTo("mysql") == 0)
-	                tmpStr = "select LAST_INSERT_ID();";
-	            else if (db.getDBType().compareTo("db2") == 0)
-	                tmpStr = "select IDENTITY_VAL_LOCAL() FROM counter";
-	            else if (db.getDBType().compareTo("derby") == 0)
-	                tmpStr = "select IDENTITY_VAL_LOCAL() FROM counter";
-	            else if (db.getDBType().compareTo("h2") == 0)
-	                tmpStr = "select IDENTITY_VAL_LOCAL() FROM counter";
-	            else if (db.getDBType().compareTo("oracle") == 0)
-	                tmpStr = "select " + db.getSchemaPrefix() + "counter_id_seq.currval FROM dual";
-	            else
-	                tmpStr = "select currval('counter_id_seq');";
-	            int newAtomicEventID = Integer.parseInt(db.getDataItem(tmpStr));
-	            map.put(ue, new Integer(newAtomicEventID));
-//TODO: Add this to progress bar
-//	            this.itemsDone++;
-	        }
-	        return map;
-	    }
+			statement.setInt(1, trialID);
+			statement.setString(2, ue.getName());
+			statement.addBatch();
 
+			// TODO: Add this to progress bar
+			// this.itemsDone++;
+		}
+		statement.executeBatch();
+		statement.close();
+	}
+
+	private static Map<UserEvent, Integer> getUserEventsMap(int trialID,
+			DataSource dataSource, DB db) throws SQLException {
+		Map<UserEvent, Integer> map = new HashMap<UserEvent, Integer>();
+
+		PreparedStatement statement = db
+				.prepareStatement("SELECT id, name FROM "
+						+ db.getSchemaPrefix() + "counter WHERE trial=?");
+		statement.setInt(1, trialID);
+		statement.execute();
+		ResultSet results = statement.getResultSet();
+
+		while (results.next()) {
+			int funcID = results.getInt(1);
+			String name = results.getString(2);
+
+			UserEvent func = dataSource.getUserEvent(name);
+			map.put(func, funcID);
+		}
+		statement.close();
+		return map;
+	}
 
 	private static void uploadUserEventProfiles(DataSource dataSource,
 			Map<UserEvent, Integer> userEventMap, DB db, Map<Thread, Integer> threadMap) throws SQLException {
