@@ -259,7 +259,7 @@ public abstract class DataSource {
     public Iterator<Function> getFunctions() {
         return functions.values().iterator();
     }
-
+    
     public UserEvent addUserEvent(String name) {
         Object obj = userEvents.get(name);
 
@@ -1255,6 +1255,7 @@ public abstract class DataSource {
             thread = context.getThread(threadID);
         return thread;
     }
+
 
     private void initAllThreadsList() {
         allThreads = new ArrayList<Thread>();
