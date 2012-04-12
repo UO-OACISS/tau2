@@ -1498,13 +1498,15 @@ public abstract class DataSource {
             // if the user also specified an XML file on the command line
             // with XML data, then merge that tree into our tree
             if (this.metadataFile != null) {
+            	// put the metadata fields in the map
+            	MetaDataParser.parse(this.getMetaData(), readFileAsString(metadataFile));
                 Document oldDocument = builder.parse(metadataFile);
                 // get the root elements, so we can move it
                 Element oldRoot = oldDocument.getDocumentElement();
                 // here's the magic step!
                 org.w3c.dom.Node imported = document.importNode(oldRoot, true);
-                System.out.println(imported.getPrefix());
-                System.out.println(imported.getNodeName());
+                //System.out.println(imported.getPrefix());
+                //System.out.println(imported.getNodeName());
                 if (master != null && imported.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
                         && imported.getNodeName().equals("tau:metadata")) {
                     // extract it out, and add it to our tree!
@@ -1582,7 +1584,23 @@ public abstract class DataSource {
 
     }
 
-    public void aggregateMetaData() {
+    private static String readFileAsString(File filePath)
+    throws java.io.IOException{
+        StringBuffer fileData = new StringBuffer(1000);
+        BufferedReader reader = new BufferedReader(
+                new FileReader(filePath));
+        char[] buf = new char[1024];
+        int numRead=0;
+        while((numRead=reader.read(buf)) != -1){
+            String readData = String.valueOf(buf, 0, numRead);
+            fileData.append(readData);
+            buf = new char[1024];
+        }
+        reader.close();
+        return fileData.toString();
+    }
+    
+	public void aggregateMetaData() {
         Thread node0 = getAllThreads().get(0);
 
         // must have at least one thread
