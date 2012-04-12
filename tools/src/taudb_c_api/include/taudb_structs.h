@@ -134,8 +134,7 @@ typedef struct taudb_counter_group {
 typedef struct taudb_counter {
  int id;
  int trial;
- char* short_name;
- char* full_name;
+ char* name;
  char* source_file;
  int line_number;
  int group_count;

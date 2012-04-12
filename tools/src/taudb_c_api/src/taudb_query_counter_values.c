@@ -116,7 +116,8 @@ TAUDB_COUNTER_VALUE* taudb_query_counter_values(PGconn* connection, TAUDB_TRIAL*
       } else if (strcmp(PQfname(res, j), "thread") == 0) {
         thread = atoi(PQgetvalue(res, i, j));
       } else if (strcmp(PQfname(res, j), "counter_name") == 0) {
-        counter_str = PQgetvalue(res, i, j);
+	    counter_str = taudb_create_string(strlen(PQgetvalue(res, i, j)));
+        strcpy(counter_str,PQgetvalue(res, i, j));
       } else if (strcmp(PQfname(res, j), "sample_count") == 0) {
         counter_value->sample_count = atoi(PQgetvalue(res, i, j));
       } else if (strcmp(PQfname(res, j), "maximum_value") == 0) {
@@ -140,6 +141,7 @@ TAUDB_COUNTER_VALUE* taudb_query_counter_values(PGconn* connection, TAUDB_TRIAL*
 	sprintf(tmp_thread, "%d", counter_value->thread);
 	counter_value->key = taudb_create_string(strlen(tmp_thread) + strlen(counter_str) + 2);
     sprintf(counter_value->key, "%d:%s", counter_value->thread, counter_str);
+	printf("KEY: '%s'\n", counter_value->key);
 	HASH_ADD_KEYPTR(hh, counter_values, counter_value->key, strlen(counter_value->key), counter_value);
   }
 
@@ -174,8 +176,8 @@ TAUDB_COUNTER_VALUE* taudb_get_counter_value(TAUDB_COUNTER_VALUE* counter_values
   }
   char tmp_thread[10];
   sprintf(tmp_thread, "%d", thread->index);
-  char *key = taudb_create_string(strlen(tmp_thread) + strlen(counter->full_name) + 2);
-  sprintf(key, "%d:%s", thread->index, counter->full_name);
+  char *key = taudb_create_string(strlen(tmp_thread) + strlen(counter->name) + 2);
+  sprintf(key, "%d:%s", thread->index, counter->name);
   //printf("%s\n", key);
 
   TAUDB_COUNTER_VALUE* counter_value = NULL;
