@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.h2.store.Data;
+//import org.h2.store.Data;
 
 import edu.uoregon.tau.perfdmf.database.DB;
 
@@ -56,6 +56,7 @@ public class TAUdbDatabaseAPI {
 //                deleteTrial(newTrialID);
 //                return -1;
 //            }
+            uploadMetadata(trial, functionMap, threadMap, db);
 
         } catch (SQLException e) {
             try {
@@ -422,5 +423,57 @@ public class TAUdbDatabaseAPI {
 		statement.close();
 
 	}
+
+	private static void uploadMetadata(Trial trial,
+			Map<Function, Integer> functionMap, Map<Thread, Integer> threadMap,
+			DB db) throws SQLException {
+		int trialID = trial.getID();
+		
+		// save the primary metadata
+		
+        PreparedStatement stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
+                + "primary_metadata (trial, name, value) VALUES (?, ?, ?)");
+		for (Map.Entry<String, String> entry : trial.getMetaData().entrySet()) {
+		    String key = entry.getKey();
+		    String value = entry.getValue();
+            stmt.setInt(1, trialID);
+            stmt.setString(2, key);
+            stmt.setString(3, value);
+            stmt.addBatch();
+		}
+        stmt.executeBatch();
+        stmt.close();
+        
+        stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
+                + "secondary_metadata (trial, thread, name, value) VALUES (?, ?, ?, ?)");
+        for (Thread thread : trial.getDataSource().getThreads()) {
+			for (String key : trial.getUncommonMetaData().keySet()) {
+			    String value = thread.getMetaData().get(key);
+	            stmt.setInt(1, trialID);
+	            stmt.setInt(2, threadMap.get(thread));
+	            stmt.setString(3, key);
+	            stmt.setString(4, value);
+	            stmt.addBatch();
+			}
+    	}
+        stmt.executeBatch();
+        stmt.close();
+
+        // do we want to do this? If so, don't we want thread handle, too?
+        stmt = db.prepareStatement("UPDATE " + db.getSchemaPrefix()
+                + "thread set process_id = ? where id = ?");
+        for (Thread thread : trial.getDataSource().getThreads()) {
+			String key = "pid";
+			String value = thread.getMetaData().get(key);
+			if (value != null) {
+	            stmt.setInt(1, Integer.parseInt(value));
+	            stmt.setInt(2, threadMap.get(thread));
+	            stmt.addBatch();
+			}
+    	}
+        stmt.executeBatch();
+        stmt.close();
+	}
+
 
 }

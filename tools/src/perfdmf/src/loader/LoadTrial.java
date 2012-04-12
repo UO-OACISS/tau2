@@ -420,7 +420,11 @@ public class LoadTrial {
         else
         {
         LoadTrial trans = new LoadTrial(configFile, sourceFiles);
-        trans.checkForExp(experimentID, appName, expName);
+        if (trans.databaseAPI.db().getSchemaVersion()==0) {
+            trans.checkForExp(experimentID, appName, expName);
+        } else {
+        	System.err.println("Warning - this is the TAUdb schema, there is no Experiment table");
+        }
         if (trialID != null) {
             trans.checkForTrial(trialID);
             trans.trialID = Integer.parseInt(trialID);
