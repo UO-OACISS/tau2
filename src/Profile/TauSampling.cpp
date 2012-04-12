@@ -1238,6 +1238,17 @@ int Tau_sampling_init(int tid) {
   // only thread 0 sets up the timer interrupts.
   if ((strcmp(TauEnv_get_ebs_source(), "itimer") == 0) && (tid == 0)) {
     struct sigaction act;
+
+    // If TIME isn't on the list of TAU_METRICS, then do not sample.
+    // Eventually, we could employ a best-effort attempt to add 
+    //   TAU_EBS_SOURCE to TAU_METRICS if TAU_EBS_SOURCE is not a 
+    //   a member of TAU_METRICS.
+    int checkVal = TauMetrics_getMetricIndexFromName("TIME");
+    if (checkVal == -1) {
+      fprintf(stderr, "TAU Sampling Warning: TIME is not a member of TAU_METRICS. No sampling is enabled.\n");
+      return -1;
+    }
+
     memset(&act, 0, sizeof(struct sigaction));
     ret = sigemptyset(&act.sa_mask);
     if (ret != 0) {

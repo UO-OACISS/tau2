@@ -135,6 +135,7 @@ int TauTraceGetFlushEvents() {
 
 /* Check that the trace file is initialized */
 static int checkTraceFileInitialized(int tid) {
+
   if ( !(TraceFileInitialized[tid]) && (RtsLayer::myNode() > -1)) { 
     TraceFileInitialized[tid] = 1;
     const char *dirname;
@@ -147,6 +148,9 @@ static int checkTraceFileInitialized(int tid) {
       perror (tracefilename);
       exit (1);
     }
+
+    //    printf("checkTraceFileInitialized [%d]: TauTraceFd[%d] for [%s] is %d\n", RtsLayer::myNode(), 
+    //	   tid, tracefilename, TauTraceFd[tid]);
 
     if (TraceBuffer[tid][0].ev == TAU_EV_INIT) { 
       /* first record is init */
@@ -166,10 +170,11 @@ static int checkTraceFileInitialized(int tid) {
 
 /* Flush the trace buffer */
 void TauTraceFlushBuffer(int tid) {
+  Tau_global_incr_insideTAU_tid(tid);
   checkTraceFileInitialized(tid);
 
   int ret;
-  if (TauTraceFd[tid] == 0) {
+  if (TauTraceFd[tid] == -1) {
     printf("Error: TauTraceFlush(%d): Fd is -1. Trace file not initialized \n", tid);
     if (RtsLayer::myNode() == -1) {
       fprintf (stderr, "ERROR in configuration. Trace file not initialized. If this is an MPI application, please ensure that TAU MPI wrapper library is linked. If not, please ensure that TAU_PROFILE_SET_NODE(id); is called in the program (0 for sequential).\n");
@@ -195,6 +200,7 @@ void TauTraceFlushBuffer(int tid) {
     }
   }
   TauCurrentEvent[tid] = 0;
+  Tau_global_decr_insideTAU_tid(tid);
 }
 
 
