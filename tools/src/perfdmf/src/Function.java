@@ -169,18 +169,23 @@ public class Function implements Serializable, Comparable<Function> {
         }
 
         // check for parameter based profile name
+    	List<Parameter> parameters = new ArrayList<Parameter>();
         int parameterStart = name.indexOf("[ <");
-        if (parameterStart != -1) {
+        while (parameterStart != -1) {
+        	// find the end of the name
         	int parameterEnd = name.indexOf("> = <", parameterStart);
         	String pname = name.substring(parameterStart+3, parameterEnd).trim();
+        	// find the start of the value
         	parameterStart = name.indexOf("<", parameterEnd);
+        	// and the end of the value
         	parameterEnd = name.indexOf(">", parameterStart);
         	String pval = name.substring(parameterStart+1, parameterEnd).trim();
+        	// create a parameter and put it in the list.
         	Parameter param = new Parameter(pname, pval, -1);
-        	List<Parameter> parameters = new ArrayList<Parameter>();
         	parameters.add(param);
-        	sourceLink.setParameters(parameters);
+            parameterStart = name.indexOf(", <", parameterEnd);
         }        
+    	sourceLink.setParameters(parameters);
 
         int filenameStart = name.indexOf("[{");
         if (filenameStart == -1) {
