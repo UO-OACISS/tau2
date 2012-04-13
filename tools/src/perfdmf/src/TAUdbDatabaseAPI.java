@@ -63,7 +63,7 @@ public class TAUdbDatabaseAPI {
 
             uploadFunctionProfiles(dataSource, functionMap, metricMap, threadMap, db);
 
-           uploadUserEvents(newTrialID, dataSource, db);
+           uploadUserEvents(newTrialID, functionMap, dataSource, db);
            Map<UserEvent, Integer> userEventMap = getUserEventsMap(newTrialID, dataSource, db);
 
             uploadUserEventProfiles( dataSource, userEventMap, db, threadMap);
@@ -380,20 +380,45 @@ public class TAUdbDatabaseAPI {
 		timerValueInsert.close();
 	}
 
-	private static void uploadUserEvents(int trialID, DataSource dataSource,
+	private static void uploadUserEvents(int trialID, Map<Function, Integer> functionMap, DataSource dataSource,
 			DB db) throws SQLException {
 		Map<UserEvent, Integer> map = new HashMap<UserEvent, Integer>();
+		
+		// first, build a map of timer names to integers
+		Map<String, Integer> contextMap = new HashMap<String, Integer>();
+		for (Function key : functionMap.keySet()) {
+			contextMap.put(key.getName(), functionMap.get(key)); 
+		}
 
 		String group = null; // no groups right now?
 		// TODO: Need to load information for parent timer
 		PreparedStatement statement = db.prepareStatement("INSERT INTO "
-				+ db.getSchemaPrefix() + "counter (trial, name) VALUES (?, ?)");
+				+ db.getSchemaPrefix() + "counter (trial, name, parent) VALUES (?, ?, ?)");
 
 		for (Iterator<UserEvent> it = dataSource.getUserEvents(); it.hasNext();) {
 			UserEvent ue = it.next();
 
 			statement.setInt(1, trialID);
 			statement.setString(2, ue.getName());
+			if (ue.isContextEvent()) {
+				// this is a context event, so get the context
+				int contextStart = ue.getName().indexOf(" : ");
+				String context = ue.getName().substring(contextStart + 3).trim();
+				Integer func = contextMap.get(context);
+				// if this is not a callpath profile, we may not have this timer
+				if (func == null) {
+					context = context.substring(context.lastIndexOf(" => ") + 4).trim();
+					func = contextMap.get(context);
+				}
+				if (func != null) {
+					statement.setInt(3, func);
+				} else {
+					// we are out of ideas, there is no parent.
+					statement.setNull(3, java.sql.Types.INTEGER);
+				}
+			} else {
+				statement.setNull(3, java.sql.Types.INTEGER);
+			}
 			statement.addBatch();
 
 			// TODO: Add this to progress bar
