@@ -171,8 +171,10 @@ CREATE TABLE timer (
  id                SERIAL NOT NULL PRIMARY KEY,
  /* trial this value belongs to */
  trial             INT NOT NULL,
- /* name of the metric */
+ /* name of the timer */
  name              VARCHAR NOT NULL,
+ /* short name of the timer - without source or parameter info */
+ short_name        VARCHAR NOT NULL,
  /* filename */
  source_file       VARCHAR,
  /* line number of the start of the block of code */
