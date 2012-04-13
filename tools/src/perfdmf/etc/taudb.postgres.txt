@@ -1,10 +1,8 @@
 /* remove whatever indexes and tables are there already, in reverse order */
 
 DROP INDEX counter_value_index;
-DROP INDEX counter_group_index;
 DROP INDEX counter_trial_index;
 DROP TABLE counter_value;
-DROP TABLE counter_group;
 DROP TABLE counter;
 
 DROP INDEX secondary_metadata_index;
@@ -259,18 +257,6 @@ CREATE TABLE counter (
 
 /* counter index on the trial and name columns */
 CREATE INDEX counter_trial_index on counter (trial, name);
-
-/* counter groups are the groups of counters. This table
-   allows for NxN mappings of counters to groups. */
-
-CREATE TABLE counter_group (
- counter    INT,
- group_name VARCHAR NOT NULL,
- FOREIGN KEY(counter) REFERENCES counter(id) ON DELETE NO ACTION ON UPDATE NO ACTION
-);
-
-/* index for faster queries into groups */
-CREATE INDEX counter_group_index on counter_group (counter, group_name);
 
 /* timer callpath have the information about when one timer was collected
    on one thread. */
