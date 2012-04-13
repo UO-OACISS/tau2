@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Map.Entry;
 import java.io.IOException;
 
+import org.python.antlr.PythonParser.parameters_return;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
@@ -58,11 +60,12 @@ public class TAUdbDatabaseAPI {
             
             uploadTimerGroups(functionMap, db);
             uploadTimerParameter(functionMap, db);
-            uploadTimerCallpath(functionMap,  db);
+            uploadCallpathInfo(dataSource, functionMap, metricMap, threadMap, db);
             
 
             uploadFunctionProfiles(dataSource, functionMap, metricMap, threadMap, db);
 
+            
            uploadUserEvents(newTrialID, dataSource, db);
            Map<UserEvent, Integer> userEventMap = getUserEventsMap(newTrialID, dataSource, db);
 
@@ -100,6 +103,57 @@ public class TAUdbDatabaseAPI {
         //double elapsedSeconds = (double) (elapsedMillis) / 1000.0;
         //        System.out.println("Elapsed time: " + elapsedSeconds + " seconds.");
         return newTrialID;
+	}
+
+	private static void uploadCallpathInfo(DataSource dataSource,
+			Map<Function, Integer> functionMap, Map<Metric, Integer> metricMap,
+			Map<Thread, Integer> threadMap, DB db) throws SQLException {
+
+		PreparedStatement timerCallpathInsert = db
+				.prepareStatement("INSERT INTO "
+						+ db.getSchemaPrefix()
+						+ "timer_callpath (timer, thread, calls, subroutines, parent) "
+						+ "VALUES (?, ?, ?, ?, ?)");
+
+		Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
+		Iterator<Function> funcs = functionMap.keySet().iterator();
+		while (funcs.hasNext()) {
+			Function function = funcs.next();
+			if (function.isGroupMember(derived)) {
+				continue;
+			}
+			Integer timerID = functionMap.get(function);
+
+			for (Thread thread : dataSource.getAllThreads()) {
+				Integer threadID = threadMap.get(thread);
+
+				FunctionProfile fp = thread.getFunctionProfile(function);
+
+				if (fp != null) { // only if this thread calls this function
+					// TODO: Deal with cancelUpload
+					// if (this.cancelUpload)
+					// return;
+					timerCallpathInsert.setInt(1, timerID);
+					timerCallpathInsert.setInt(2, threadID);
+					timerCallpathInsert.setInt(3, (int) fp.getNumCalls());
+					timerCallpathInsert.setInt(4, (int) fp.getNumSubr());
+					String parentName = CallPathUtilFuncs.getParentName(fp
+							.getName());
+					if (!parentName.equals("")) {
+						Function parent = dataSource.getFunction(parentName);
+						int parentID = functionMap.get(parent);
+						System.out.println(parentID +": "+parent.getName());
+
+						timerCallpathInsert.setInt(5, parentID);
+					} else {
+						timerCallpathInsert.setNull(5, java.sql.Types.INTEGER);
+					}
+					timerCallpathInsert.addBatch();
+				}
+			}
+		}
+		timerCallpathInsert.executeBatch();
+		timerCallpathInsert.close();
 	}
 
 	private static void uploadThreads(int trialID,
@@ -162,34 +216,7 @@ public class TAUdbDatabaseAPI {
 
 	}
 
-	private static void uploadTimerCallpath(Map<Function, Integer> map, DB db) throws SQLException {
-		System.err.println("Warning: Not saving Callpath information yet");
-		
-		//TODO: Upload the callpath information like this maybe?
-		Set<Function> funcs = map.keySet();
-		PreparedStatement statement = db.prepareStatement("INSERT INTO "
-				+ db.getSchemaPrefix()
-				+ "timer_callpath (timer, parameter_name, parameter_value) VALUES (?, ?, ?)");
-		for (Function f : funcs) {
-			if(f.isCallPathFunction()){
-				
-				
-			}
-//			int timer = map.get(f);
-//			List<Callpath> callpaths = f.getCallpaths();
-//			if (callpaths != null) {
-//				for (Callpath p : callpaths) {
-//					statement.setInt(1, timer);
-//					statement.setString(2, p.getName());
-//					statement.setString(3, p.getValue());
-//					statement.addBatch();
-//				}
-//			}
-		}
-//		statement.executeBatch();
-//		statement.close();		
-		
-	}
+
 
 	private static void uploadTimerParameter(Map<Function, Integer> map, DB db) throws SQLException {
 		Set<Function> funcs = map.keySet();
@@ -333,6 +360,8 @@ public class TAUdbDatabaseAPI {
 						+ db.getSchemaPrefix()
 						+ "timer_value (timer, thread, metric, inclusive_percent, inclusive_value, exclusive_percent, "
 						+ " exclusive_value) VALUES (?, ?, ?, ?, ?, ?, ?)");
+		
+
 
 		Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
 
@@ -353,6 +382,7 @@ public class TAUdbDatabaseAPI {
 					Integer threadID = threadMap.get(thread);
 
 					FunctionProfile fp = thread.getFunctionProfile(function);
+					
 
 					if (fp != null) { // only if this thread calls this function
 						// TODO: Deal with cancelUpload
@@ -369,7 +399,9 @@ public class TAUdbDatabaseAPI {
 						//TODO: Find the sum_exclusive_square values
 //						timerValueInsert.setDouble(8, fp.get)
 						
-						timerValueInsert.addBatch();		
+						timerValueInsert.addBatch();	
+					
+						
 
 					}
 				}
