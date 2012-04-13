@@ -40,7 +40,7 @@
 #include <assert.h>
 // #include <sstream>
 
-#define FAKE_NUM_THREADS 1
+//#define RtsLayer::getTotalThreads() 1
 
 const int collate_num_op_items[NUM_COLLATE_OP_TYPES] =
   { NUM_COLLATE_STEPS, NUM_STAT_TYPES };
@@ -79,6 +79,8 @@ MPI_Op collate_op[NUM_COLLATE_STEPS] = { MPI_MIN, MPI_MAX, MPI_SUM, MPI_SUM };
 
 static double calculateMean(int count, double sum) {
   double ret = 0.0;
+  TAU_VERBOSE("Collate calculateMean count [%d] sum [%.16G]\n", 
+	      count, sum);
   if (count <= 0) return 0.0;
   assert(count >= 0);
   assert(sum >= 0.0);
@@ -103,23 +105,32 @@ static double calculateStdDev(int count, double sumsqr, double mean) {
 static void assignDerivedStats(double ****eventType, double ****gEventType,
 			       int m, int i,
 			       int globalNumThreads, int *numEventThreads) {
+	FunctionInfo* fi = TheFunctionDB()[i];
+	TAU_VERBOSE("Assigning Derived Stat (mean_all) for %s.\n", fi->GetName());
   (*eventType)[stat_mean_all][m][i] =
     calculateMean(globalNumThreads,(*gEventType)[step_sum][m][i]);
+	TAU_VERBOSE("Assigning Derived Stat (mean_exist) for %s.\n", fi->GetName());
   (*eventType)[stat_mean_exist][m][i] =
     calculateMean(numEventThreads[i],(*gEventType)[step_sum][m][i]);
+	TAU_VERBOSE("Assigning Derived Stat (stddev_all) for %s.\n", fi->GetName());
   (*eventType)[stat_stddev_all][m][i] =
     calculateStdDev(globalNumThreads,(*gEventType)[step_sumsqr][m][i],
 		    (*eventType)[stat_mean_all][m][i]);
+	TAU_VERBOSE("Assigning Derived Stat (stddev_exist) for %s.\n", fi->GetName());
   (*eventType)[stat_stddev_exist][m][i] =
     calculateStdDev(numEventThreads[i],(*gEventType)[step_sumsqr][m][i],
 		    (*eventType)[stat_mean_exist][m][i]);
+	TAU_VERBOSE("Assigning Derived Stat (min_exist) for %s.\n", fi->GetName());
   (*eventType)[stat_min_exist][m][i] =(*gEventType)[step_min][m][i];
+	TAU_VERBOSE("Assigning Derived Stat (max_exist) for %s.\n", fi->GetName());
   (*eventType)[stat_max_exist][m][i] =(*gEventType)[step_max][m][i];
 }
 
 static void assignDerivedStats(double ***eventType, double ***gEventType,
 			       int i,
 			       int globalNumThreads, int *numEventThreads) {
+	FunctionInfo* fi = TheFunctionDB()[i];
+	TAU_VERBOSE("Assigning Derived Stats for %s.\n", fi->GetName());
   (*eventType)[stat_mean_all][i] = 
     calculateMean(globalNumThreads,(*gEventType)[step_sum][i]);
   (*eventType)[stat_mean_exist][i] = 
@@ -146,10 +157,12 @@ static void assignDerivedStats(double ***eventType, double ***gEventType,
  ********************************************************************/
 static double getStepValue(collate_step step, double prevValue, 
 			   double nextValue) {
+
+
   double ret = prevValue;
   switch (step) {
   case step_sum: {
-    //    printf("next sum dbl: %.16G\n", nextValue);
+       // printf("next sum dbl: %.16G\n", nextValue);
     ret = prevValue + nextValue;
     assert(ret >= 0.0);
     break;
@@ -175,7 +188,9 @@ static double getStepValue(collate_step step, double prevValue,
     break;
   }
   }
-  return ret;
+	
+  
+	return ret;
 }
 
 /*********************************************************************
@@ -393,15 +408,25 @@ void Tau_collate_get_total_threads(int *globalNumThreads,
   int *numThreadsLocal = (int *)TAU_UTIL_MALLOC(sizeof(int)*(numEvents+1));
   
   //  int numThreads = RtsLayer::getNumThreads();
-  // *CWL* 2012/3/19 - We are faking this. Let's not pretend things work in the thread layer!
-  int numThreads = FAKE_NUM_THREADS;
+  int numThreads = RtsLayer::getTotalThreads();
 
   /* For each event, determine contributing threads */
   for (int i=0; i<numEvents; i++) {
-    numThreadsLocal[i] = numThreads;
-    if (globalEventMap[i] == -1) {
-      numThreadsLocal[i] = 0;
-    }
+		numThreadsLocal[i] = 0;
+		FunctionInfo *fi = TheFunctionDB()[i];
+		for (int t=0; t<numThreads; t++)
+		{
+			if (fi->GetCalls(t) > 0)
+			{
+				numThreadsLocal[i] += 1;
+			}
+			/*
+			numThreadsLocal[i] = numThreads;
+			if (globalEventMap[i] == -1) {
+				numThreadsLocal[i] = 0;
+			}
+			*/
+		}
   }
   /* Extra slot in array indicates number of threads on rank */
   numThreadsLocal[numEvents] = numThreads;
@@ -412,6 +437,9 @@ void Tau_collate_get_total_threads(int *globalNumThreads,
   if (rank == 0) {
     for (int i=0; i<numEvents; i++) {
       (*numEventThreads)[i] = numThreadsGlobal[i];
+			FunctionInfo *fi = TheFunctionDB()[i];
+			printf("TAU: Looking up number of calls for %s thread total = %d.\n",
+				fi->GetName(), (*numEventThreads)[i]);
     }
     *globalNumThreads = numThreadsGlobal[numEvents];
   }
@@ -471,7 +499,10 @@ void Tau_collate_compute_atomicStatistics(Tau_unify_object_t *atomicUnifier,
 	int local_index = atomicUnifier->sortMap[globalEventMap[i]];
 	TauUserEvent *event = TheEventDB()[local_index];
 	//	int numThreads = RtsLayer::getNumThreads();
-	int numThreads = FAKE_NUM_THREADS;
+	int numThreads = RtsLayer::getTotalThreads();
+
+	//synchronize
+	RtsLayer::LockDB();
 
 	for (int tid = 0; tid<numThreads; tid++) { // for each thread
 	  atomicMin[i] = getStepValue((collate_step)s, atomicMin[i],
@@ -485,6 +516,9 @@ void Tau_collate_compute_atomicStatistics(Tau_unify_object_t *atomicUnifier,
 	  atomicSumSqr[i] = getStepValue((collate_step)s, atomicSumSqr[i],
 					 (double)event->GetSumSqr(tid));
 	}
+	
+	//release lock
+	RtsLayer::UnLockDB();
       }
     }
 
@@ -508,6 +542,7 @@ void Tau_collate_compute_atomicStatistics(Tau_unify_object_t *atomicUnifier,
   // Compute derived statistics on rank 0
   if (rank == 0) {
     for (int i=0; i<numItems; i++) { // for each event
+			FunctionInfo *fi = TheFunctionDB()[i];
       assignDerivedStats(sAtomicMin, gAtomicMin, i,
 			 globalNumThreads, numEventThreads);
       assignDerivedStats(sAtomicMax, gAtomicMax, i,
@@ -572,19 +607,48 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
 	int local_index = functionUnifier->sortMap[globalEventMap[i]];
 	FunctionInfo *fi = TheFunctionDB()[local_index];
 	//	int numThreads = RtsLayer::getNumThreads();
-	int numThreads = FAKE_NUM_THREADS;
+	int numThreads = RtsLayer::getTotalThreads();
+	//synchronize
+	RtsLayer::LockDB();
+	
 	for (int tid = 0; tid<numThreads; tid++) { // for each thread
 	  for (int m=0; m<Tau_Global_numCounters; m++) {
-	    incl[m][i] = getStepValue((collate_step)s, incl[m][i],
-				      fi->getDumpInclusiveValues(tid)[m]);
-	    excl[m][i] = getStepValue((collate_step)s, excl[m][i],
-				      fi->getDumpExclusiveValues(tid)[m]);
+			//this make no sense but you need to use a different data-structure in
+			//FunctionInfo if you are quering thread 0.
+			if (tid == 0)
+			{	
+				incl[m][i] = getStepValue((collate_step)s, incl[m][i],
+								fi->getDumpInclusiveValues(tid)[m]);
+				excl[m][i] = getStepValue((collate_step)s, excl[m][i],
+								fi->getDumpExclusiveValues(tid)[m]);
+			}	
+			else // thread != 0
+			{
+				incl[m][i] = getStepValue((collate_step)s, incl[m][i],
+								fi->GetInclTimeForCounter(tid,m));
+				excl[m][i] = getStepValue((collate_step)s, excl[m][i],
+								fi->GetExclTimeForCounter(tid,m));
+			}	
+			//printf("[%d,%d,%d] [metric, item, thread] TAU Collate inclusive: %.16G exclusive: %.16G.\n", m,i,tid, incl[m][i], excl[m][i]);
+		
 	  }
-	  numCalls[i] = getStepValue((collate_step)s, numCalls[i],
-				     (double)fi->GetCalls(tid));
-	  numSubr[i] = getStepValue((collate_step)s, numSubr[i],
-				    (double)fi->GetSubrs(tid));
+		if (tid == 0)
+		{	
+			numCalls[i] = getStepValue((collate_step)s, numCalls[i],
+							 (double)fi->GetCalls(tid));
+			numSubr[i] = getStepValue((collate_step)s, numSubr[i],
+							(double)fi->GetSubrs(tid));
+		}	
+		else // thread != 0
+		{
+			numCalls[i] = getStepValue((collate_step)s, numCalls[i],
+							 (double)fi->GetCalls(tid));
+			numSubr[i] = getStepValue((collate_step)s, numSubr[i],
+							(double)fi->GetSubrs(tid));
+		}
 	}
+	//release lock
+	RtsLayer::UnLockDB();
       }
     }
     
@@ -666,7 +730,7 @@ void Tau_collate_compute_histograms(Tau_unify_object_t *functionUnifier,
     
     double min, max;
     //    int numThreads = RtsLayer::getNumThreads();
-    int numThreads = FAKE_NUM_THREADS;
+    int numThreads = RtsLayer::getTotalThreads();
     for (int tid = 0; tid<numThreads; tid++) { // for each thread
       for (int m=0; m<Tau_Global_numCounters; m++) {
 	Tau_collate_incrementHistogram(&(histogram[(m*2)*numBins]), 
@@ -738,7 +802,7 @@ extern "C" int Tau_collate_writeProfile() {
 
   // Dump out all thread data with present values
   //  int numThreads = RtsLayer::getNumThreads();
-  int numThreads = FAKE_NUM_THREADS;
+  int numThreads = RtsLayer::getTotalThreads();
   for (int tid = 0; tid<numThreads; tid++) {
     TauProfiler_updateIntermediateStatistics(tid);
   }
