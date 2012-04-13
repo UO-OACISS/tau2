@@ -1,9 +1,13 @@
 package edu.uoregon.tau.perfdmf;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SourceRegion {
 
     private String filename;
     private int startLine, endLine, startColumn, endColumn;
+    private List<Parameter> parameters = new ArrayList<Parameter>();
 
     public SourceRegion() {}
 
@@ -50,5 +54,13 @@ public class SourceRegion {
     public void setStartLine(int startLine) {
         this.startLine = startLine;
     }
+
+	public List<Parameter> getParameters() {
+		return parameters;
+	}
+
+	public void setParameters(List<Parameter> parameters) {
+		this.parameters = parameters;
+	}
 
 }
