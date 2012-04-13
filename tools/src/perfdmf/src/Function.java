@@ -126,6 +126,9 @@ public class Function implements Serializable, Comparable<Function> {
 
     public static SourceRegion getSourceLink(String name) {
         SourceRegion sourceLink = new SourceRegion();
+        
+        // initialize to the full name for now
+        sourceLink.setShortName(name);
 
         if (name.indexOf("OpenMP location:") != -1) { // opari instrumentation points
             // parse source location with format:
@@ -136,6 +139,7 @@ public class Function implements Serializable, Comparable<Function> {
             int comma = name.indexOf(",");
             int right = name.indexOf(">");
 
+            sourceLink.setShortName(name.substring(0,fileIndex));
             sourceLink.setFilename(name.substring(fileIndex + 5, left).trim());
             sourceLink.setStartLine(Integer.parseInt(name.substring(left + 1, comma).trim()));
             sourceLink.setEndLine(Integer.parseInt(name.substring(comma + 1, right).trim()));
@@ -174,6 +178,7 @@ public class Function implements Serializable, Comparable<Function> {
     	List<Parameter> parameters = new ArrayList<Parameter>();
         int parameterStart = name.indexOf("[ <");
         while (parameterStart != -1) {
+        	
         	// find the end of the name
         	int parameterEnd = name.indexOf("> = <", parameterStart);
         	String pname = name.substring(parameterStart+3, parameterEnd).trim();
@@ -200,6 +205,8 @@ public class Function implements Serializable, Comparable<Function> {
         }
         
         int openbracket1 = name.indexOf("{", filenameEnd + 1);
+        sourceLink.setShortName(name.substring(0,filenameStart).trim());
+        
         int comma1 = name.indexOf(",", filenameEnd + 1);
         int closebracket1 = name.indexOf("}", filenameEnd + 1);
         int dash = name.indexOf("-", closebracket1 + 1);
