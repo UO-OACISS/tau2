@@ -307,6 +307,10 @@ CREATE TABLE timer_value (
  inclusive_value       DOUBLE PRECISION,
  /* The exclusive value for this timer */
  exclusive_value       DOUBLE PRECISION,
+ /* The inclusive percent for this timer */
+ inclusive_percent     DOUBLE PRECISION,
+ /* The exclusive percent for this timer */
+ exclusive_percent     DOUBLE PRECISION,
  /* The variance for this timer */
  sum_exclusive_squared DOUBLE PRECISION,
  FOREIGN KEY(timer) REFERENCES timer(id) ON DELETE NO ACTION ON UPDATE NO ACTION,

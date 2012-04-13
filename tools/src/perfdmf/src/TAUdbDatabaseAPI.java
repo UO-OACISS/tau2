@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.LinkedHashMap;
-import java.util.ArrayList;;
+import java.util.ArrayList;
 import java.util.Map.Entry;
 import java.io.IOException;
 
@@ -192,27 +192,24 @@ public class TAUdbDatabaseAPI {
 	}
 
 	private static void uploadTimerParameter(Map<Function, Integer> map, DB db) throws SQLException {
-		System.err.println("Warning: Not saving parameter information yet");
-		
-		//TODO: Upload the parameter information like this maybe?
-//		Set<Function> funcs = map.keySet();
-//		PreparedStatement statement = db.prepareStatement("INSERT INTO "
-//				+ db.getSchemaPrefix()
-//				+ "timer_parameter (timer, parameter_name, parameter_value) VALUES (?, ?, ?)");
-//		for (Function f : funcs) {
-//			int timer = map.get(f);
-//			List<Parameter> params = f.getParameters();
-//			if (params != null) {
-//				for (Parameter p : params) {
-//					statement.setInt(1, timer);
-//					statement.setString(2, p.getName());
-//					statement.setString(3, p.getValue());
-//					statement.addBatch();
-//				}
-//			}
-//		}
-//		statement.executeBatch();
-//		statement.close();		
+		Set<Function> funcs = map.keySet();
+		PreparedStatement statement = db.prepareStatement("INSERT INTO "
+				+ db.getSchemaPrefix()
+				+ "timer_parameter (timer, parameter_name, parameter_value) VALUES (?, ?, ?)");
+		for (Function f : funcs) {
+			int timer = map.get(f);
+			List<Parameter> params = f.getSourceLink().getParameters();
+			if (params != null) {
+				for (Parameter p : params) {
+					statement.setInt(1, timer);
+					statement.setString(2, p.getName());
+					statement.setString(3, p.getValue());
+					statement.addBatch();
+				}
+			}
+		}
+		statement.executeBatch();
+		statement.close();		
 	}
 
 	private static void uploadTimerGroups(Map<Function, Integer> map, DB db) throws SQLException {
@@ -226,7 +223,7 @@ public class TAUdbDatabaseAPI {
 			if (groups != null) {
 				for (Group g : groups) {
 					statement.setInt(1, timer);
-					statement.setString(2, f.getName());
+					statement.setString(2, g.getName());
 					statement.addBatch();
 				}
 			}

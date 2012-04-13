@@ -27,6 +27,7 @@ public class Function implements Serializable, Comparable<Function> {
 	 */
 	private static final long serialVersionUID = 362090098221172924L;
 	private String name;
+	private String short_name;
     private String reversedName;
     private int id = -1;
     private List<Group> groups = new ArrayList<Group>();
@@ -167,6 +168,20 @@ public class Function implements Serializable, Comparable<Function> {
             name = name.substring(name.lastIndexOf("=>") + 2);
         }
 
+        // check for parameter based profile name
+        int parameterStart = name.indexOf("[ <");
+        if (parameterStart != -1) {
+        	int parameterEnd = name.indexOf("> = <", parameterStart);
+        	String pname = name.substring(parameterStart+3, parameterEnd).trim();
+        	parameterStart = name.indexOf("<", parameterEnd);
+        	parameterEnd = name.indexOf(">", parameterStart);
+        	String pval = name.substring(parameterStart+1, parameterEnd).trim();
+        	Parameter param = new Parameter(pname, pval, -1);
+        	List<Parameter> parameters = new ArrayList<Parameter>();
+        	parameters.add(param);
+        	sourceLink.setParameters(parameters);
+        }        
+
         int filenameStart = name.indexOf("[{");
         if (filenameStart == -1) {
             return sourceLink;
@@ -176,7 +191,7 @@ public class Function implements Serializable, Comparable<Function> {
             // quit, it's not valid
             return sourceLink;
         }
-
+        
         int openbracket1 = name.indexOf("{", filenameEnd + 1);
         int comma1 = name.indexOf(",", filenameEnd + 1);
         int closebracket1 = name.indexOf("}", filenameEnd + 1);
