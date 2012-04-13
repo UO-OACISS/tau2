@@ -1,12 +1,20 @@
 package edu.uoregon.tau.perfdmf;
 
+import java.io.File;
+import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 
 //import org.h2.store.Data;
 
@@ -14,7 +22,7 @@ import edu.uoregon.tau.perfdmf.database.DB;
 
 public class TAUdbDatabaseAPI {
 
-	public static int uploadTrial(DB db, Trial trial) {
+	public static int uploadTrial(DB db, Trial trial, boolean summaryOnly) {
 
         DataSource dataSource = trial.getDataSource();
 
@@ -45,7 +53,7 @@ public class TAUdbDatabaseAPI {
             
 
 //TODO: Upload values later.....
-            uploadFunctionProfiles(newTrialID, dataSource, functionMap, metricMap, summaryOnly);
+//            uploadFunctionProfiles(newTrialID, dataSource, functionMap, metricMap, summaryOnly);
 
             Map<UserEvent, Integer> userEventMap = uploadUserEvents(newTrialID, dataSource, db);
 
@@ -327,11 +335,12 @@ public class TAUdbDatabaseAPI {
 					// TODO: Deal with cancelUpload
 					// if (this.cancelUpload)
 					// return;
-
+/*
 						addBatchFunctionProfile(threadInsertStatement, thread,
 								metric.getID(), dbMetricID.intValue(), fp,
 								intervalEventID.intValue(), false, dataSource
 										.getAllThreads().size());
+										*/
 					}
 				}
 			}
@@ -473,6 +482,117 @@ public class TAUdbDatabaseAPI {
     	}
         stmt.executeBatch();
         stmt.close();
+
+        if (trial.getDataSource().getMetadataFile() != null) {
+        	try {
+	        	String meta = DataSource.readFileAsString(trial.getDataSource().getMetadataFile());
+	        	if (MetaDataParserJSON.isJSON(meta)) {
+	        		Gson gson = new Gson();
+	        		Object obj = gson.fromJson(meta, Object.class);
+	        		if (obj.getClass() == LinkedHashMap.class) {
+	        			Map<String, Object> map = (LinkedHashMap<String,Object>)obj;
+	        			for (Map.Entry<String, Object> entry : map.entrySet()) {
+	        				processElement(entry, null, trialID, db);
+	        			}
+	        		}
+	        	}
+        	} catch (IOException ioe) {
+        		System.err.println("Error parsing metadata file.");
+        		System.err.println(ioe.getMessage());
+        	} catch (JsonSyntaxException jse) {
+        		System.err.println("Error parsing JSON metadata file.");
+        		System.err.println(jse.getMessage());
+        	}
+        }
+	}
+	
+	private static void processElement(Entry<String, Object> entry,
+			Integer parent, int trialID, DB db) throws SQLException {
+		String key = entry.getKey();
+		Object value = entry.getValue();
+        PreparedStatement stmt = null;
+        // handle special case of top-level metadata with no value
+		if (value == null && parent == null) {
+	        stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
+	                + "primary_metadata (trial, name, value) VALUES (?, ?, ?)");
+	        stmt.setInt(1, trialID);
+	        stmt.setString(2, key);
+	        stmt.setNull(3, java.sql.Types.VARCHAR);
+	        stmt.execute();
+	        stmt.close();
+	    // second case, nested metadata with null value
+		} else if (value == null) {
+	        stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
+	                + "secondary_metadata (trial, name, value, parent) VALUES (?, ?, ?, ?)");
+	        stmt.setInt(1, trialID);
+	        stmt.setString(2, key);
+	        stmt.setNull(3, java.sql.Types.VARCHAR);
+	        stmt.setInt(4, parent);
+	        stmt.execute();
+	        stmt.close();
+	    // ok, we have a value.
+		} else {
+			// is there an inner object?
+			if (value.getClass() == LinkedHashMap.class) {
+				// insert this object as the parent
+		        stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
+		                + "secondary_metadata (trial, name, value, parent) VALUES (?, ?, ?, ?)");
+		        stmt.setInt(1, trialID);
+		        stmt.setString(2, key);
+		        stmt.setNull(3, java.sql.Types.VARCHAR);
+		        if (parent == null) {
+		        	stmt.setNull(4, java.sql.Types.INTEGER);
+		        } else {
+		        	stmt.setInt(4, parent);
+		        }
+		        stmt.execute();
+		        stmt.close();
+	            String tmpStr = new String();
+	            if (db.getDBType().compareTo("mysql") == 0)
+	                tmpStr = "select LAST_INSERT_ID();";
+	            else if (db.getDBType().compareTo("db2") == 0)
+	                tmpStr = "select IDENTITY_VAL_LOCAL() FROM secondary_metadata";
+	            else if (db.getDBType().compareTo("derby") == 0)
+	                tmpStr = "select IDENTITY_VAL_LOCAL() FROM secondary_metadata";
+	            else if (db.getDBType().compareTo("h2") == 0)
+	                tmpStr = "select IDENTITY_VAL_LOCAL() FROM secondary_metadata";
+	            else if (db.getDBType().compareTo("oracle") == 0)
+	                tmpStr = "select " + db.getSchemaPrefix() + "secondary_metadata_id_seq.currval FROM dual";
+	            else
+	                tmpStr = "select currval('secondary_metadata_id_seq');";
+	            int newParent = Integer.parseInt(db.getDataItem(tmpStr));
+
+	            // process the children
+	            Map<String, Object> map = (LinkedHashMap<String,Object>)value;
+				for (Map.Entry<String, Object> innerEntry : map.entrySet()) {
+					processElement(innerEntry, newParent, trialID, db);
+				}
+			// this is a regular value, could be nested.
+			} else {
+		        if (parent == null && !(value.getClass() == ArrayList.class)) {
+			        stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
+			                + "primary_metadata (trial, name, value) VALUES (?, ?, ?)");
+			        stmt.setInt(1, trialID);
+			        stmt.setString(2, key);
+			        stmt.setString(3, value.toString());
+		        } else {
+			        stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
+			                + "secondary_metadata (trial, name, value, parent, is_array) VALUES (?, ?, ?, ?, ?)");
+			        stmt.setInt(1, trialID);
+			        stmt.setString(2, key);
+			        stmt.setString(3, value.toString());
+			        if (parent == null) {
+			        	stmt.setNull(4, java.sql.Types.INTEGER);
+			        } else {
+			        	stmt.setInt(4, parent);
+			        }
+			        // if this value is an array, say so.
+		        	stmt.setBoolean(5, (value.getClass() == ArrayList.class));
+		        }
+		        stmt.execute();
+		        stmt.close();
+			}
+		}
 	}
 
 

@@ -1497,67 +1497,72 @@ public abstract class DataSource {
             // if the user also specified an XML file on the command line
             // with XML data, then merge that tree into our tree
             if (this.metadataFile != null) {
-            	// put the metadata fields in the map
-            	MetaDataParser.parse(this.getMetaData(), readFileAsString(metadataFile));
-                Document oldDocument = builder.parse(metadataFile);
-                // get the root elements, so we can move it
-                Element oldRoot = oldDocument.getDocumentElement();
-                // here's the magic step!
-                org.w3c.dom.Node imported = document.importNode(oldRoot, true);
-                //System.out.println(imported.getPrefix());
-                //System.out.println(imported.getNodeName());
-                if (master != null && imported.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
-                        && imported.getNodeName().equals("tau:metadata")) {
-                    // extract it out, and add it to our tree!
-                    NodeList nodes = imported.getChildNodes();
-                    int nodeIndex = 0;
-                    for (int i = 0; i < nodes.getLength(); i++) {
-                        org.w3c.dom.Node cpa = nodes.item(i);
-                        // System.out.println("\t" + cpa.getNodeName());
-                        if (cpa.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
-                                && cpa.getNodeName().equals("tau:CommonProfileAttributes")) {
+            	String data = readFileAsString(metadataFile);
+            	if (MetaDataParserJSON.isJSON(data)) {
+            		// don't do this here! do it in the TAUdbDatabaseAPI.uploadMetadata() function
+            	} else {
+            		// put the metadata fields in the map
+            		MetaDataParser.parse(this.getMetaData(), data);
+            		Document oldDocument = builder.parse(metadataFile);
+            		// get the root elements, so we can move it
+            		Element oldRoot = oldDocument.getDocumentElement();
+            		// here's the magic step!
+            		org.w3c.dom.Node imported = document.importNode(oldRoot, true);
+            		//System.out.println(imported.getPrefix());
+            		//System.out.println(imported.getNodeName());
+            		if (master != null && imported.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
+            				&& imported.getNodeName().equals("tau:metadata")) {
+            			// extract it out, and add it to our tree!
+            			NodeList nodes = imported.getChildNodes();
+            			int nodeIndex = 0;
+            			for (int i = 0; i < nodes.getLength(); i++) {
+            				org.w3c.dom.Node cpa = nodes.item(i);
+            				// System.out.println("\t" + cpa.getNodeName());
+            				if (cpa.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
+            						&& cpa.getNodeName().equals("tau:CommonProfileAttributes")) {
 
-                            NodeList attrs = cpa.getChildNodes();
-                            // System.out.println("length: " + attrs.getLength());
-                            for (int j = 0; j < attrs.getLength(); j++) {
-                                // System.out.println("\t\tj:" + j);
-                                org.w3c.dom.Node tmp = attrs.item(j);
-                                if (tmp.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
-                                        && tmp.getNodeName().equals("tau:attribute")) {
-                                    // System.out.println("\t\tname:" + tmp.getNodeName());
-                                    master.appendChild(tmp);
-                                }
-                                // System.out.println("\t\tend j:" + j);
-                            }
+            					NodeList attrs = cpa.getChildNodes();
+            					// System.out.println("length: " + attrs.getLength());
+            					for (int j = 0; j < attrs.getLength(); j++) {
+            						// System.out.println("\t\tj:" + j);
+            						org.w3c.dom.Node tmp = attrs.item(j);
+            						if (tmp.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
+            								&& tmp.getNodeName().equals("tau:attribute")) {
+            							// System.out.println("\t\tname:" + tmp.getNodeName());
+            							master.appendChild(tmp);
+            						}
+            						// System.out.println("\t\tend j:" + j);
+            					}
 
-                            //root.appendChild(cpa);
-                        } else if (cpa.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
-                                && cpa.getNodeName().equals("tau:ProfileAttributes")) {
-                            Element currentDelta = nodeProfiles.get(nodeIndex);
-                            if (profilesAdded.get(nodeIndex).booleanValue()) {
+            					//root.appendChild(cpa);
+            				} else if (cpa.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
+            						&& cpa.getNodeName().equals("tau:ProfileAttributes")) {
+            					Element currentDelta = nodeProfiles.get(nodeIndex);
+            					if (profilesAdded.get(nodeIndex).booleanValue()) {
 
-                                NodeList attrs = cpa.getChildNodes();
-                                // System.out.println("length: " + attrs.getLength());
-                                for (int j = 0; j < attrs.getLength(); j++) {
-                                    // System.out.println("\t\tj:" + j);
-                                    org.w3c.dom.Node tmp = attrs.item(j);
-                                    if (tmp.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
-                                            && tmp.getNodeName().equals("tau:attribute")) {
-                                        // System.out.println("\t\tname:" + tmp.getNodeName());
-                                        currentDelta.appendChild(tmp);
-                                    }
-                                    // System.out.println("\t\tend j:" + j);
-                                }
-                            } else {
-                                root.appendChild(cpa);
-                            }
-                            nodeIndex++;
-                        }
-                    }
-                } else {
-                    // add the root of the second document to our root
-                    root.appendChild(imported);
-                }
+            						NodeList attrs = cpa.getChildNodes();
+            						// System.out.println("length: " + attrs.getLength());
+            						for (int j = 0; j < attrs.getLength(); j++) {
+            							// System.out.println("\t\tj:" + j);
+            							org.w3c.dom.Node tmp = attrs.item(j);
+            							if (tmp.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
+            									&& tmp.getNodeName().equals("tau:attribute")) {
+            								// System.out.println("\t\tname:" + tmp.getNodeName());
+            								currentDelta.appendChild(tmp);
+            							}
+            							// System.out.println("\t\tend j:" + j);
+            						}
+            					} else {
+            						root.appendChild(cpa);
+            					}
+            					nodeIndex++;
+            				}
+            			}
+            		} else {
+            			// add the root of the second document to our root
+            			root.appendChild(imported);
+            		}
+            	}
             }
 
             // normalize all whitespace in the file
@@ -1583,7 +1588,7 @@ public abstract class DataSource {
 
     }
 
-    private static String readFileAsString(File filePath)
+    public static String readFileAsString(File filePath)
     throws java.io.IOException{
         StringBuffer fileData = new StringBuffer(1000);
         BufferedReader reader = new BufferedReader(
@@ -1734,5 +1739,9 @@ public abstract class DataSource {
         }
 
         functionToRename.setName(newName);
+    }
+    
+    public File getMetadataFile() {
+    	return metadataFile;
     }
 }
