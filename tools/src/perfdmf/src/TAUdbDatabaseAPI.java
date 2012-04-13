@@ -1,24 +1,24 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.io.File;
-import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
+import java.util.LinkedHashMap;
+import java.util.ArrayList;;
+import java.util.Map.Entry;
+import java.io.IOException;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import org.python.tests.inbred.Metis;
 
-import viewer.histogram.StatBoxStatusPanel;
+//import org.python.tests.inbred.Metis;
+
+//import viewer.histogram.StatBoxStatusPanel;
 
 //import org.h2.store.Data;
 
@@ -26,7 +26,7 @@ import edu.uoregon.tau.perfdmf.database.DB;
 
 public class TAUdbDatabaseAPI {
 
-	public static int uploadTrial(DB db, Trial trial, boolean summaryOnly) {
+	public static int uploadTrial(DB db, Trial trial) {
 
         DataSource dataSource = trial.getDataSource();
 
@@ -61,8 +61,7 @@ public class TAUdbDatabaseAPI {
             uploadTimerCallpath(functionMap,  db);
             
 
-//TODO: Upload values later.....
-//            uploadFunctionProfiles(newTrialID, dataSource, functionMap, metricMap, summaryOnly);
+            uploadFunctionProfiles(dataSource, functionMap, metricMap, threadMap, db);
 
            uploadUserEvents(newTrialID, dataSource, db);
            Map<UserEvent, Integer> userEventMap = getUserEventsMap(newTrialID, dataSource, db);
@@ -359,15 +358,22 @@ public class TAUdbDatabaseAPI {
 					FunctionProfile fp = thread.getFunctionProfile(function);
 
 					if (fp != null) { // only if this thread calls this function
-					// TODO: Deal with cancelUpload
-					// if (this.cancelUpload)
-					// return;
-/*
-						addBatchFunctionProfile(threadInsertStatement, thread,
-								metric.getID(), dbMetricID.intValue(), fp,
-								intervalEventID.intValue(), false, dataSource
-										.getAllThreads().size());
-										*/
+						// TODO: Deal with cancelUpload
+						// if (this.cancelUpload)
+						// return;
+						timerValueInsert.setInt(1,timerID);
+						timerValueInsert.setInt(2, threadID);
+						timerValueInsert.setInt(3, metricID);
+						
+						timerValueInsert.setDouble(4, fp.getInclusivePercent(metric.getID()));
+						timerValueInsert.setDouble(5, fp.getInclusive(metric.getID()));
+						timerValueInsert.setDouble(6, fp.getExclusivePercent(metric.getID()));
+						timerValueInsert.setDouble(7, fp.getExclusive(metric.getID()));
+						//TODO: Find the sum_exclusive_square values
+//						timerValueInsert.setDouble(8, fp.get)
+						
+						timerValueInsert.addBatch();		
+
 					}
 				}
 			}
@@ -622,6 +628,4 @@ public class TAUdbDatabaseAPI {
 			}
 		}
 	}
-
-
 }

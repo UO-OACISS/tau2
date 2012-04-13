@@ -6,7 +6,8 @@ TAUROOT=
 # loader directory.  The first is for everything else.
 CLASSPATH=./classes
 CUBE_JAVA_READER=../contrib/CubeReader.jar
-LOADER_CLASSPATH=$(CLASSPATH):../contrib/jargs.jar:../contrib/xerces.jar:../common/bin/tau-common.jar:$(CUBE_JAVA_READER)
+JSON_CLASSPATH=../contrib/google-gson-2.1/gson-2.1.jar
+LOADER_CLASSPATH=$(CLASSPATH):../contrib/jargs.jar:../contrib/xerces.jar:../common/bin/tau-common.jar:$(CUBE_JAVA_READER):$(JSON_CLASSPATH)
 
 # These are class and source targets.
 DOC_PATH=./doc

@@ -1363,7 +1363,7 @@ public class DatabaseAPI {
 
     public synchronized int uploadTrial(Trial trial, boolean summaryOnly) throws DatabaseException {
         //long start = System.currentTimeMillis();
-    	if(db.getSchemaVersion()>0) return TAUdbDatabaseAPI.uploadTrial(db,trial,summaryOnly);
+    	if(db.getSchemaVersion()>0) return TAUdbDatabaseAPI.uploadTrial(db,trial);
 
 
         DataSource dataSource = trial.getDataSource();
