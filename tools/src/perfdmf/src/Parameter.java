@@ -40,7 +40,7 @@ public class Parameter implements Serializable, Comparable<Parameter> {
         return id;
     }
 
-    public int setID(int id) {
+    public void setID(int id) {
         this.id = id;
     }
 
