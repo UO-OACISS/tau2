@@ -67,7 +67,7 @@ public class MetaDataParser {
             xmlreader.parse(new InputSource(new XMLCleanWrapInputStream(input)));
 
         } catch (SAXException saxe) {
-            throw new RuntimeException(saxe);
+       		throw new RuntimeException(saxe);
         } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }
