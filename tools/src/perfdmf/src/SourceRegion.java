@@ -8,8 +8,17 @@ public class SourceRegion {
     private String filename;
     private int startLine, endLine, startColumn, endColumn;
     private List<Parameter> parameters = new ArrayList<Parameter>();
+    private String shortName;
 
-    public SourceRegion() {}
+    public String getShortName() {
+		return shortName;
+	}
+
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
+	}
+
+	public SourceRegion() {}
 
     public String toString() {
         return filename + " " + startLine + " " + startColumn + " " + endLine + " " + endColumn;

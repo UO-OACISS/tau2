@@ -278,7 +278,7 @@ public class TAUdbDatabaseAPI {
 	       
 	        Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
 	           PreparedStatement statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
-	                    + "timer (trial, name, source_file, line_number, line_number_end, column_number, column_number_end) VALUES (?, ?, ?, ?, ?, ?, ?)");
+	                    + "timer (trial, name, source_file, line_number, line_number_end, column_number, column_number_end, short_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 
 	        for (Iterator<Function> it = dataSource.getFunctions(); it.hasNext();) {
 	            Function f = it.next();
@@ -294,6 +294,7 @@ public class TAUdbDatabaseAPI {
 	            statement.setInt(5, source.getEndLine());
 	            statement.setInt(6, source.getStartColumn());
 	            statement.setInt(7, source.getEndColumn());
+	            statement.setString(8, source.getShortName());
 	            statement.addBatch();
 //TODO: increment itemsDone for progress bar
 //	            this.itemsDone++;
