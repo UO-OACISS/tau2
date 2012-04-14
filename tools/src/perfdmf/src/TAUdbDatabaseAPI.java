@@ -13,16 +13,8 @@ import java.util.ArrayList;
 import java.util.Map.Entry;
 import java.io.IOException;
 
-import org.python.antlr.PythonParser.parameters_return;
-
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-
-//import org.python.tests.inbred.Metis;
-
-//import viewer.histogram.StatBoxStatusPanel;
-
-//import org.h2.store.Data;
 
 import edu.uoregon.tau.perfdmf.database.DB;
 
@@ -137,8 +129,7 @@ public class TAUdbDatabaseAPI {
 					timerCallpathInsert.setInt(2, threadID);
 					timerCallpathInsert.setInt(3, (int) fp.getNumCalls());
 					timerCallpathInsert.setInt(4, (int) fp.getNumSubr());
-					String parentName = CallPathUtilFuncs.getParentName(fp
-							.getName());
+					String parentName = CallPathUtilFuncs.getParentName(fp.getName());
 					if (!parentName.equals("")) {
 						Function parent = dataSource.getFunction(parentName);
 						int parentID = functionMap.get(parent);
@@ -546,21 +537,6 @@ public class TAUdbDatabaseAPI {
 	            stmt.setInt(2, threadMap.get(thread));
 	            stmt.setString(3, key);
 	            stmt.setString(4, value);
-	            stmt.addBatch();
-			}
-    	}
-        stmt.executeBatch();
-        stmt.close();
-
-        // do we want to do this? If so, don't we want thread handle, too?
-        stmt = db.prepareStatement("UPDATE " + db.getSchemaPrefix()
-                + "thread set process_id = ? where id = ?");
-        for (Thread thread : trial.getDataSource().getThreads()) {
-			String key = "pid";
-			String value = thread.getMetaData().get(key);
-			if (value != null) {
-	            stmt.setInt(1, Integer.parseInt(value));
-	            stmt.setInt(2, threadMap.get(thread));
 	            stmt.addBatch();
 			}
     	}

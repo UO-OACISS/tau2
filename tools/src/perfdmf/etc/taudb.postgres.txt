@@ -128,10 +128,6 @@ CREATE TABLE thread (
  context_rank INT NOT NULL,
  /* thread rank relative to the process */
  thread_rank  INT NOT NULL,
- /* the OS process ID */
- process_id   INT NOT NULL,
- /* the OS thread ID */
- thread_id    INT NOT NULL,
  /* thread index from 0 to N-1 */
  thread_index INT NOT NULL,
  FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
