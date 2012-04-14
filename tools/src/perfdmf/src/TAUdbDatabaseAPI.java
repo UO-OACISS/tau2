@@ -163,16 +163,14 @@ public class TAUdbDatabaseAPI {
 
 		PreparedStatement stmt = db.prepareStatement("INSERT INTO "
 						+ db.getSchemaPrefix()
-						+ "thread (trial, node_rank, context_rank, thread_rank, process_id, " +
-						"thread_id, thread_index) VALUES (?, ?, ?, ?, ?, ?,?)");
+						+ "thread (trial, node_rank, context_rank, thread_rank,  " +
+						" thread_index) VALUES (?, ?, ?, ?, ?)");
 		List<Thread> threads = dataSource.getAllThreads();
 		for (Thread t : threads) {
 
 			int node_rank = t.getNodeID();
 			int context_rank = t.getContextID();
 			int thread_rank = t.getThreadID();
-			int process_id = 0;//TODO:  Is this saved somewhere I can access if it was collected?
-			int thread_id = 0;//TODO:  Is this saved somewhere I can access if it was collected?
 			int thread_index = node_rank * maxContextPerNode * maxThreadsPerContext + context_rank * maxThreadsPerContext + thread_rank; 
 			
 	
@@ -181,9 +179,7 @@ public class TAUdbDatabaseAPI {
 			stmt.setInt(2, node_rank);
 			stmt.setInt(3, context_rank);
 			stmt.setInt(4, thread_rank);
-			stmt.setInt(5, process_id);
-			stmt.setInt(6, thread_id);
-			stmt.setInt(7, thread_index);
+			stmt.setInt(5, thread_index);
 
 			stmt.addBatch();
 			
