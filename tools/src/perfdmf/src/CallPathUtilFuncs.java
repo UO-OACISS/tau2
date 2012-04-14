@@ -37,7 +37,6 @@ public class CallPathUtilFuncs {
 	
 		parent = callpath.substring(0,lastLink);
 	}
-	System.out.println(parent);
 	return parent;
 }
     public static boolean checkCallPathsPresent(Iterator<Function> l) {

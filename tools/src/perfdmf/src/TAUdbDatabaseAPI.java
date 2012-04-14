@@ -142,7 +142,6 @@ public class TAUdbDatabaseAPI {
 					if (!parentName.equals("")) {
 						Function parent = dataSource.getFunction(parentName);
 						int parentID = functionMap.get(parent);
-						System.out.println(parentID +": "+parent.getName());
 
 						timerCallpathInsert.setInt(5, parentID);
 					} else {
