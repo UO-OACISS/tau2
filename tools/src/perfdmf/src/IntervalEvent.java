@@ -202,6 +202,7 @@ public class IntervalEvent {
 
     // returns a Vector of IntervalEvents
     public static Vector<IntervalEvent> getIntervalEvents(DatabaseAPI dataSession, DB db, String whereClause) {
+    	if(db.getSchemaVersion() >0) return getTAUdbIntervalEvents(dataSession,db,  whereClause);
         Vector<IntervalEvent> events = new Vector<IntervalEvent>();
         // create a string to hit the database
         StringBuffer buf = new StringBuffer();
@@ -243,7 +244,57 @@ public class IntervalEvent {
         return events;
     }
 
-    public int saveIntervalEvent(DB db, int newTrialID, Hashtable<Integer, Integer> newMetHash, int saveMetricIndex)
+    private static Vector<IntervalEvent> getTAUdbIntervalEvents(
+			DatabaseAPI dataSession, DB db, String whereClause) {
+//    	SELECT timer.id, timer.trial, timer.name, timer_group.group_name 
+//    	FROM timer
+//    	LEFT JOIN timer_group
+//    	ON timer.id=timer_group.timer
+    	
+    	 Vector<IntervalEvent> events = new Vector<IntervalEvent>();
+         // create a string to hit the database
+         StringBuffer buf = new StringBuffer();
+         buf.append("SELECT t.id, t.name,  g.group_name, t.trial as trial ");
+         buf.append("from " + db.getSchemaPrefix() + "timer t ");
+         buf.append("LEFT JOIN " + db.getSchemaPrefix() + "timer_group g");
+         buf.append(" ON t.id=g.timer ");
+         buf.append(whereClause);
+
+         if (db.getDBType().compareTo("oracle") == 0) {
+             buf.append(" order by dbms_lob.substr(name) asc");
+         } else if (db.getDBType().compareTo("derby") == 0) {
+             buf.append(" order by cast (name as varchar(4000)) asc");
+         } else if (db.getDBType().compareTo("db2") == 0) {
+             buf.append(" order by cast (name as varchar(256)) asc");
+         } else {
+             buf.append(" order by name asc ");
+         }
+
+
+         // get the results
+         try {
+             ResultSet resultSet = db.executeQuery(buf.toString());
+System.err.println("Warning:  need to combime groups");
+             //IntervalEvent tmpIntervalEvent = null;
+             while (resultSet.next() != false) {
+                 IntervalEvent event = new IntervalEvent(dataSession);
+                 event.setID(resultSet.getInt(1));
+                 event.setName(resultSet.getString(2));
+                 event.setGroup(resultSet.getString(3));
+                 event.setTrialID(resultSet.getInt(4));
+                 events.addElement(event);
+             }
+             resultSet.close();
+         } catch (Exception ex) {
+             ex.printStackTrace();
+             return null;
+         }
+
+         return events;
+		
+	}
+
+	public int saveIntervalEvent(DB db, int newTrialID, Hashtable<Integer, Integer> newMetHash, int saveMetricIndex)
             throws SQLException {
         int newIntervalEventID = -1;
 

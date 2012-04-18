@@ -30,7 +30,6 @@ import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.dnd.Autoscroll;
 import java.awt.dnd.DnDConstants;
-import java.awt.dnd.DragSource;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -97,6 +96,7 @@ import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.DatabaseException;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.TAUdbDataSource;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.UtilFncs;
 import edu.uoregon.tau.perfdmf.database.DBConnector;
@@ -2077,12 +2077,17 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 					// metadata
 					// required
 					// here?
-
-					DBDataSource dbDataSource = new DBDataSource(databaseAPI);
+					DataSource dbDataSource;
+					if(databaseAPI.getDb().getSchemaVersion() >0 ){
+						dbDataSource = new TAUdbDataSource(databaseAPI);
+					}else{
+					dbDataSource = new DBDataSource(databaseAPI);
+					}
 					dbDataSource
 					.setGenerateIntermediateCallPathData(ParaProf.preferences
 							.getGenerateIntermediateCallPathData());
 					ppTrial.getTrial().setDataSource(dbDataSource);
+				
 					final DataSource dataSource = dbDataSource;
 					final ParaProfTrial theTrial = ppTrial;
 					java.lang.Thread thread = new java.lang.Thread(

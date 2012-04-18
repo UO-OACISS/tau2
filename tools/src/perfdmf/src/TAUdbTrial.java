@@ -4,6 +4,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.util.Collections;
+import java.util.Vector;
 
 import edu.uoregon.tau.perfdmf.database.DB;
 
@@ -37,7 +39,8 @@ public class TAUdbTrial {
 			String sql = "INSERT INTO "
 					+ db.getSchemaPrefix()
 					+ "trial (name, collection_date, data_source,  node_count, contexts_per_node, threads_per_context, total_threads)"
-					+ "VALUES (?,?,?,?,?,?,?) ";
+					+ "VALUES (?,?,?,?,?,?,?" +
+					") ";
 			PreparedStatement statement = db.prepareStatement(sql);
 			statement.setString(1, name);
 
@@ -91,4 +94,90 @@ public class TAUdbTrial {
 	        }
 	        return retval;
 	    }
+		public static Vector<Trial> getTrialList(DB db, boolean getXMLMetadata, String whereClause ) {
+			 try {
+
+		            Trial.getMetaData(db);
+
+		            // create a string to hit the database
+		            String buf = 
+		            "SELECT t.id, t.name, metadata.app, metadata.exp FROM " +
+		            "( SELECT DISTINCT A.value as app, E.value as exp, A.trial as trial " +
+		            "FROM " +
+		            db.getSchemaPrefix()+"primary_metadata A, " +
+		            		db.getSchemaPrefix()+"primary_metadata E " +
+		            "WHERE A.trial=E.trial AND A.name='Application' AND E.name='Experiment'" +
+		            ") as metadata LEFT JOIN " +
+		            db.getSchemaPrefix()+"trial as t ON metadata.trial=t.id  " + whereClause ;
+
+		            Vector<Trial> trials = new Vector<Trial>();
+
+		            ResultSet resultSet = db.executeQuery(buf.toString());
+		            while (resultSet.next() != false) {
+		                Trial trial = new Trial();
+		                trial.setDatabase(db.getDatabase());
+		                int pos = 1;
+		                trial.setID(resultSet.getInt(pos++));
+		                trial.setName(resultSet.getString(pos++));
+		                
+		                String appname = resultSet.getString(pos++);
+	//TODO: Figure out what to do about the app ids	                
+//		                trial.setApplicationID(resultSet.getInt(pos++));
+
+		                String expanme = resultSet.getString(pos++);
+	//TODO: Figure out what to do about the experiment ids	                
+//		                trial.setExperimentID();
+		                
+//TODO: Deall with loading metadata
+
+//		                boolean xmlSet = false;
+//
+//		                for (int i = 0; i < database.getTrialFieldNames().length; i++) {
+//		                    if (database.getTrialFieldNames()[i].equalsIgnoreCase(XML_METADATA_GZ)) {
+//		                        if (getXMLMetadata) {
+//		                            InputStream compressedStream = resultSet.getBinaryStream(pos++);
+//		                            String tmp = Gzip.decompress(compressedStream);
+//		                            //trial.setField(i, tmp);
+//		                            if (tmp != null && tmp.length() > 0) {
+//		                                trial.setField(XML_METADATA, tmp);
+//		                                trial.parseMetaData(tmp);
+//		                            }
+//		                            xmlSet = true;
+//		                            trial.setXmlMetaDataLoaded(true);
+//		                        }
+//		                    } else {
+//		                        if (database.getTrialFieldNames()[i].equalsIgnoreCase(XML_METADATA)) {
+//		                            if (getXMLMetadata) {
+//		                                if (xmlSet == false) {
+//		                                    trial.setField(i, resultSet.getString(pos++));
+//		                                    trial.setXmlMetaDataLoaded(true);
+//		                                }
+//		                            }
+//		                        } else {
+//		                            trial.setField(i, resultSet.getString(pos++));
+//		                        }
+//		                    }
+//		                }
+
+		                trials.addElement(trial);
+		            }
+		            resultSet.close();
+//TODO: Deal with adding the metrics to the trial
+//		            // get the function details
+//		            Enumeration<Trial> en = trials.elements();
+//		            Trial trial;
+//		            while (en.hasMoreElements()) {
+//		                trial = en.nextElement();
+//		                trial.getTrialMetrics(db);
+//		            }
+
+		            Collections.sort(trials);
+
+		            return trials;
+
+		        } catch (Exception ex) {
+		            ex.printStackTrace();
+	            return null;
+		        }
+		}
 }

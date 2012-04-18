@@ -579,6 +579,10 @@ public class Trial implements Serializable, Comparable<Trial> {
     }
 
     public static Vector<Trial> getTrialList(DB db, String whereClause, boolean getXMLMetadata) {
+    	if(db.getSchemaVersion() >0){
+
+    		return TAUdbTrial.getTrialList(db, getXMLMetadata, whereClause);
+    	}
 
         try {
 
