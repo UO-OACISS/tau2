@@ -40,6 +40,10 @@
 #include <assert.h>
 // #include <sstream>
 
+#define DEBUG_NUM_CALLS printf
+//#define DEBUG_FUNCTION_MAP printf
+#define DEBUG_FUNCTION_MAP TAU_VERBOSE
+
 //#define RtsLayer::getTotalThreads() 1
 
 const int collate_num_op_items[NUM_COLLATE_OP_TYPES] =
@@ -398,7 +402,7 @@ void Tau_collate_freeUnitAtomicBuffer(double **atomicMin, double **atomicMax,
 }
 
 /* Parallel operation to acquire total number of threads for each event */
-void Tau_collate_get_total_threads(int *globalNumThreads, 
+void Tau_collate_get_total_threads(Tau_unify_object_t *functionUnifier, int *globalNumThreads, 
 				   int **numEventThreads,
 				   int numEvents, int *globalEventMap) {
   int rank;
@@ -412,20 +416,30 @@ void Tau_collate_get_total_threads(int *globalNumThreads,
 
   /* For each event, determine contributing threads */
   for (int i=0; i<numEvents; i++) {
-		numThreadsLocal[i] = 0;
-		FunctionInfo *fi = TheFunctionDB()[i];
-		for (int t=0; t<numThreads; t++)
-		{
-			if (fi->GetCalls(t) > 0)
+    if (globalEventMap[i] != -1) { // if it occurred in our rank
+			int local_index = functionUnifier->sortMap[globalEventMap[i]];
+			numThreadsLocal[local_index] = 0;
+			FunctionInfo *fi = TheFunctionDB()[local_index];
+			DEBUG_FUNCTION_MAP("function list: %s, [%d, %d] (i,local_index) (total_threads).\n",
+			fi->GetName(), i, local_index);
+			for (int t=0; t<numThreads; t++)
 			{
-				numThreadsLocal[i] += 1;
+				if (fi->GetCalls(t) > 0)
+				{
+					numThreadsLocal[local_index] += 1;
+				}
+				/*
+				numThreadsLocal[i] = numThreads;
+				if (globalEventMap[i] == -1) {
+					numThreadsLocal[i] = 0;
+				}
+				*/
 			}
-			/*
-			numThreadsLocal[i] = numThreads;
-			if (globalEventMap[i] == -1) {
-				numThreadsLocal[i] = 0;
-			}
-			*/
+			DEBUG_NUM_CALLS("TAU: %d threads call function: %s.\n",
+			numThreadsLocal[local_index], fi->GetName());
+		}
+		else {
+			DEBUG_FUNCTION_MAP("skipped event %d. does not occur in global map.\n", i);
 		}
   }
   /* Extra slot in array indicates number of threads on rank */
@@ -436,10 +450,15 @@ void Tau_collate_get_total_threads(int *globalNumThreads,
   /* Now rank 0 knows all about global thread counts */
   if (rank == 0) {
     for (int i=0; i<numEvents; i++) {
-      (*numEventThreads)[i] = numThreadsGlobal[i];
-			FunctionInfo *fi = TheFunctionDB()[i];
-			printf("TAU: Looking up number of calls for %s thread total = %d.\n",
-				fi->GetName(), (*numEventThreads)[i]);
+			if (globalEventMap[i] != -1) { // if it occurred in our rank
+				int local_index = functionUnifier->sortMap[globalEventMap[i]];
+				(*numEventThreads)[local_index] = numThreadsGlobal[local_index];
+				FunctionInfo *fi = TheFunctionDB()[local_index];
+			DEBUG_FUNCTION_MAP("function list: %s, [%d, %d] (i,local_index) (global_thread).\n",
+			fi->GetName(), i, local_index);
+				DEBUG_NUM_CALLS("TAU: Looking up number of calls for %s thread total = %d.\n",
+					fi->GetName(), numThreadsGlobal[local_index]);
+			}
     }
     *globalNumThreads = numThreadsGlobal[numEvents];
   }
@@ -542,17 +561,23 @@ void Tau_collate_compute_atomicStatistics(Tau_unify_object_t *atomicUnifier,
   // Compute derived statistics on rank 0
   if (rank == 0) {
     for (int i=0; i<numItems; i++) { // for each event
-			FunctionInfo *fi = TheFunctionDB()[i];
-      assignDerivedStats(sAtomicMin, gAtomicMin, i,
-			 globalNumThreads, numEventThreads);
-      assignDerivedStats(sAtomicMax, gAtomicMax, i,
-			 globalNumThreads, numEventThreads);
-      assignDerivedStats(sAtomicCalls, gAtomicCalls, i,
-			 globalNumThreads, numEventThreads);
-      assignDerivedStats(sAtomicMean, gAtomicMean, i,
-			 globalNumThreads, numEventThreads);
-      assignDerivedStats(sAtomicSumSqr, gAtomicSumSqr, i,
-			 globalNumThreads, numEventThreads);
+			if (globalEventMap[i] != -1) { // if it occurred in our rank
+				int local_index = atomicUnifier->sortMap[globalEventMap[i]];
+				TauUserEvent *event = TheEventDB()[local_index];
+				assignDerivedStats(sAtomicMin, gAtomicMin, local_index,
+				 globalNumThreads, numEventThreads);
+				assignDerivedStats(sAtomicMax, gAtomicMax, local_index,
+				 globalNumThreads, numEventThreads);
+				assignDerivedStats(sAtomicCalls, gAtomicCalls, local_index,
+				 globalNumThreads, numEventThreads);
+				assignDerivedStats(sAtomicMean, gAtomicMean, local_index,
+				 globalNumThreads, numEventThreads);
+				assignDerivedStats(sAtomicSumSqr, gAtomicSumSqr, local_index,
+				 globalNumThreads, numEventThreads);
+			
+				DEBUG_NUM_CALLS("TAU: %d threads call function: %s.\n",
+				numEventThreads[local_index], event->EventName.c_str());
+			}
     }    
   }
   PMPI_Op_free(&min_op);
@@ -596,16 +621,20 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
     }
     for (int i=0; i<numItems; i++) {
       for (int m=0; m<Tau_Global_numCounters; m++) {
-	incl[m][i] = fillDbl;
-	excl[m][i] = fillDbl;
+				incl[m][i] = fillDbl;
+				excl[m][i] = fillDbl;
       }
       numCalls[i] = fillDbl;
       numSubr[i] = fillDbl;
     }
+		numCalls[0] = fillDbl;
+		numSubr[0] = fillDbl;
     for (int i=0; i<numItems; i++) { // for each event
       if (globalEventMap[i] != -1) { // if it occurred in our rank
 	int local_index = functionUnifier->sortMap[globalEventMap[i]];
 	FunctionInfo *fi = TheFunctionDB()[local_index];
+		DEBUG_FUNCTION_MAP("function list: %s, [%d, %d] (i,local_index) (getStepValue).\n",
+		fi->GetName(), i, local_index);
 	//	int numThreads = RtsLayer::getNumThreads();
 	int numThreads = RtsLayer::getTotalThreads();
 	//synchronize
@@ -617,33 +646,37 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
 			//FunctionInfo if you are quering thread 0.
 			if (tid == 0)
 			{	
-				incl[m][i] = getStepValue((collate_step)s, incl[m][i],
+				incl[m][local_index] = getStepValue((collate_step)s, incl[m][local_index],
 								fi->getDumpInclusiveValues(tid)[m]);
-				excl[m][i] = getStepValue((collate_step)s, excl[m][i],
+				excl[m][local_index] = getStepValue((collate_step)s, excl[m][local_index],
 								fi->getDumpExclusiveValues(tid)[m]);
 			}	
 			else // thread != 0
 			{
-				incl[m][i] = getStepValue((collate_step)s, incl[m][i],
+				incl[m][local_index] = getStepValue((collate_step)s, incl[m][local_index],
 								fi->GetInclTimeForCounter(tid,m));
-				excl[m][i] = getStepValue((collate_step)s, excl[m][i],
+				excl[m][local_index] = getStepValue((collate_step)s, excl[m][local_index],
 								fi->GetExclTimeForCounter(tid,m));
 			}	
-			//printf("[%d,%d,%d] [metric, item, thread] TAU Collate inclusive: %.16G exclusive: %.16G.\n", m,i,tid, incl[m][i], excl[m][i]);
+			//printf("[%d,%d,%d] [metric, item, thread] TAU Collate inclusive: %.16G exclusive: %.16G.\n", m,i,tid, incl[m][local_index], excl[m][local_index]);
 		
 	  }
+		
+		
+		
+		
 		if (tid == 0)
 		{	
-			numCalls[i] = getStepValue((collate_step)s, numCalls[i],
+			numCalls[local_index] = getStepValue((collate_step)s, numCalls[local_index],
 							 (double)fi->GetCalls(tid));
-			numSubr[i] = getStepValue((collate_step)s, numSubr[i],
+			numSubr[local_index] = getStepValue((collate_step)s, numSubr[local_index],
 							(double)fi->GetSubrs(tid));
 		}	
 		else // thread != 0
 		{
-			numCalls[i] = getStepValue((collate_step)s, numCalls[i],
+			numCalls[local_index] = getStepValue((collate_step)s, numCalls[local_index],
 							 (double)fi->GetCalls(tid));
-			numSubr[i] = getStepValue((collate_step)s, numSubr[i],
+			numSubr[local_index] = getStepValue((collate_step)s, numSubr[local_index],
 							(double)fi->GetSubrs(tid));
 		}
 	}
@@ -664,8 +697,6 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
     PMPI_Reduce(numSubr, (*gNumSubr)[s], numItems, MPI_DOUBLE, 
 		collate_op[s], 0, MPI_COMM_WORLD);
   }
-  // Free allocated memory for basic info.
-  Tau_collate_freeUnitFunctionBuffer(&excl, &incl, &numCalls, &numSubr, Tau_Global_numCounters);
 
   // Now compute the actual statistics on rank 0 only. The assumption
   //   is that at least one thread would be active across the node-space
@@ -674,18 +705,28 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
     // *CWL* TODO - abstract the operations to avoid this nasty coding
     //     of individual operations.
     for (int i=0; i<numItems; i++) { // for each event
-      for (int m=0; m<Tau_Global_numCounters; m++) {
-	assignDerivedStats(sIncl, gIncl, m, i,
-			   globalNumThreads, numEventThreads);
-	assignDerivedStats(sExcl, gExcl, m, i,
-			   globalNumThreads, numEventThreads);
-      }
-      assignDerivedStats(sNumCalls, gNumCalls, i,
-			 globalNumThreads, numEventThreads);
-      assignDerivedStats(sNumSubr, gNumSubr, i,
-			 globalNumThreads, numEventThreads);
-    }    
+			if (globalEventMap[i] != -1) { // if it occurred in our rank
+				int local_index = functionUnifier->sortMap[globalEventMap[i]];
+				FunctionInfo *fi = TheFunctionDB()[local_index];
+				DEBUG_FUNCTION_MAP("function list: %s, [%d, %d] (i,local_index) (assignDerived).\n",
+				fi->GetName(), i, local_index);
+				//printf("TAU: %d threads for function: %s, last check.\n",
+				//numEventThreads[local_index], fi->GetName());
+				for (int m=0; m<Tau_Global_numCounters; m++) {
+		assignDerivedStats(sIncl, gIncl, m, local_index,
+					 globalNumThreads, numEventThreads);
+		assignDerivedStats(sExcl, gExcl, m, local_index,
+					 globalNumThreads, numEventThreads);
+				}
+				assignDerivedStats(sNumCalls, gNumCalls, local_index,
+				 globalNumThreads, numEventThreads);
+				assignDerivedStats(sNumSubr, gNumSubr, local_index,
+				 globalNumThreads, numEventThreads);
+			}
+		}    
   }
+  // Free allocated memory for basic info.
+  Tau_collate_freeUnitFunctionBuffer(&excl, &incl, &numCalls, &numSubr, Tau_Global_numCounters);
   PMPI_Op_free(&min_op);
 }
 
@@ -844,7 +885,7 @@ extern "C" int Tau_collate_writeProfile() {
   for (int i=0; i<functionUnifier->localNumItems; i++) {
     globalEventMap[functionUnifier->mapping[i]] = i; // set reverse mapping
   }
-  Tau_collate_get_total_threads(&globalNumThreads, &numEventThreads,
+  Tau_collate_get_total_threads(functionUnifier, &globalNumThreads, &numEventThreads,
 				numItems, globalEventMap);
 
   double ***gExcl, ***gIncl;

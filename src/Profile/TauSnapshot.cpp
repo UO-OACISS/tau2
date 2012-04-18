@@ -231,8 +231,8 @@ static int Tau_snapshot_writeSnapshot(const char *name, int to_buffer) {
 }
 
 #ifdef TAU_UNIFY
-int Tau_snapshot_writeUnifiedBuffer() {
-  int tid = RtsLayer::myThread();
+int Tau_snapshot_writeUnifiedBuffer(int tid) {
+  //int tid = RtsLayer::myThread();
   int i, c;
   Tau_util_outputDevice *out = Tau_snapshot_getFiles()[tid];
   
@@ -295,13 +295,21 @@ int Tau_snapshot_writeUnifiedBuffer() {
       FunctionInfo *fi = TheFunctionDB()[local_index];
       
       // get currently stored values
-      double *incltime = fi->getDumpInclusiveValues(tid);
-      double *excltime = fi->getDumpExclusiveValues(tid);
-      
+			double *incltime, *excltime;
+			if (tid == 0)
+			{
+				incltime = fi->getDumpInclusiveValues(tid);
+				excltime = fi->getDumpExclusiveValues(tid);
+     	}
+			else
+			{
+				incltime = fi->GetInclTime(tid);
+				excltime = fi->GetExclTime(tid);
+			}
       //fprintf (stderr, "local=%d, global=%d, name=%s\n", i, functionUnifier->mapping[functionUnifier->sortMap[i]], fi->GetName());
       Tau_util_output (out, "%d %ld %ld ", e, fi->GetCalls(tid), fi->GetSubrs(tid));
       for (c=0; c<Tau_Global_numCounters; c++) {
-	Tau_util_output (out, "%.16G %.16G ", excltime[c], incltime[c]);
+				Tau_util_output (out, "%.16G %.16G ", excltime[c], incltime[c]);
       }
       Tau_util_output (out, "\n");
     }
