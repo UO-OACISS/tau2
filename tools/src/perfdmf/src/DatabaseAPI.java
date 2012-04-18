@@ -36,6 +36,11 @@ public class DatabaseAPI {
     private List<Integer> threads = null;
     private Vector<IntervalEvent> intervalEvents = null;
     private List<Metric> metrics = null;
+    
+    private Map<Integer, Application> applications = null;
+    private Map<Integer, Experiment> experiments = null;
+    private Map<Integer, Trial> trials = null;
+    
     private Vector<IntervalLocationProfile> intervalEventData = null;
     private Vector<AtomicEvent> atomicEvents = null;
     private Vector<AtomicLocationProfile> atomicEventData = null;
@@ -70,6 +75,8 @@ public class DatabaseAPI {
     }
 
     public void setApplication(Application application) {
+    	this.experiments = null;
+    	this.trials = null;
         this.application = application;
     }
 
@@ -145,43 +152,78 @@ public class DatabaseAPI {
     // returns Vector of ALL Application objects
     public List<Application> getApplicationList() throws DatabaseException {
         String whereClause = "";
-        return Application.getApplicationList(db, whereClause);
+        if(applications == null){
+        	applications =  new HashMap<Integer, Application>();
+        	List<Application> apps = Application.getApplicationList(db, whereClause);
+        	for (Application app: apps)
+        		applications.put(app.getID(), app);
+        	
+        }
+        return new ArrayList<Application>(applications.values());
     }
 
-    // returns Vector of Experiment objects
-    public List<Experiment> getExperimentList() throws DatabaseException {
- 
-        String whereClause = "";
-        if (application != null)
-            whereClause = "WHERE application = " + application.getID();
-        return Experiment.getExperimentList(db, whereClause);
+	// returns Vector of Experiment objects
+	public List<Experiment> getExperimentList() throws DatabaseException {
 
-    }
+		if (experiments == null) {
+
+
+			Vector<Experiment> expers;
+			if (db.getSchemaVersion() > 0) {
+				String appname = "";
+				if ( application != null)
+					appname = application.getName();
+				expers = TAUdbExperiment.getExperimentList(appname, db);
+			} else {
+				String whereClause = "";
+				if (application != null)
+					whereClause = "WHERE application = " + application.getID();
+				expers = Experiment.getExperimentList(db, whereClause);
+			}
+			experiments = new HashMap<Integer, Experiment>();
+			for (Experiment ex : expers) {
+				experiments.put(ex.getID(), ex);
+			}
+
+		}
+		return new ArrayList<Experiment>(experiments.values());
+	}
 
     // returns Vector of Trial objects
-    public List<Trial> getTrialList(boolean getMetadata) {
-        StringBuffer whereClause = new StringBuffer();
-        if (experiment != null) {
-            whereClause.append("WHERE t.experiment = " + experiment.getID());
-        } else if (application != null) {
-            whereClause.append("WHERE e.application = " + application.getID());
-        }
-        return Trial.getTrialList(db, whereClause.toString(), getMetadata);
-    }
+	public List<Trial> getTrialList(boolean getMetadata) {
+		if (trials == null) {
+			StringBuffer whereClause = new StringBuffer();
+			if (experiment != null) {
+				whereClause
+						.append("WHERE t.experiment = " + experiment.getID());
+			} else if (application != null) {
+				whereClause.append("WHERE e.application = "
+						+ application.getID());
+			}
+			trials = new HashMap<Integer, Trial>();
+			Vector<Trial> ts = Trial.getTrialList(db, whereClause.toString(),
+					getMetadata);
+			for (Trial t : ts) {
+				trials.put(t.getID(), t);
+			}
+		}
+		return new ArrayList<Trial>(trials.values());
+	}
 
     // set the Application for this session
     public Application setApplication(int id) {
         this.application = null;
         this.experiment = null;
+        this.experiments = null;
+        
         this.trial = null;
+        this.experiments = null;
         this.intervalEventHash = null;
         this.atomicEventHash = null;
         // create a string to hit the database
-        String whereClause = " WHERE id = " + id;
-        Vector<Application> applications = Application.getApplicationList(db, whereClause);
-        if (applications.size() == 1) {
-            this.application = applications.elementAt(0);
-        } // else exception?
+        if(applications == null)
+        	getApplicationList();
+            this.application = applications.get(id);
         return this.application;
     }
 
@@ -189,6 +231,8 @@ public class DatabaseAPI {
     public Application setApplication(String name, String version) {
         this.application = null;
         this.experiment = null;
+        this.experiments = null;
+
         this.trial = null;
         this.intervalEventHash = null;
         this.atomicEventHash = null;
@@ -213,6 +257,13 @@ public class DatabaseAPI {
         this.trial = null;
         this.intervalEventHash = null;
         this.atomicEventHash = null;
+        if(db.getSchemaVersion() >0){
+        	if (this.experiments == null)
+        		getExperimentList();
+        	this.experiment = experiments.get(id);
+        	return this.experiment;
+        	
+        }
         // create a string to hit the database
         String whereClause;
         whereClause = " WHERE id = " + id;
@@ -230,23 +281,27 @@ public class DatabaseAPI {
         return setTrial(id, true, getXMLMetadata);
     }
 
-    private Trial setTrial(int id, boolean clearHashes, boolean getXMLMetadata) {
-        this.trial = null;
-        this.metrics = null;
-        if (clearHashes) {
-            this.intervalEventHash = null;
-            this.atomicEventHash = null;
-        }
-        // create a string to hit the database
-        String whereClause;
-        whereClause = " WHERE t.id = " + id;
-        Vector<Trial> trials = Trial.getTrialList(db, whereClause, getXMLMetadata);
-        if (trials.size() == 1) {
-            this.trial = trials.elementAt(0);
-        } //else exception?
-
-        return this.trial;
-    }
+	private Trial setTrial(int id, boolean clearHashes, boolean getXMLMetadata) {
+		this.trial = null;
+		this.metrics = null;
+		if (clearHashes) {
+			this.intervalEventHash = null;
+			this.atomicEventHash = null;
+		}
+		if (trials == null) {
+			// create a string to hit the database
+			String whereClause;
+			whereClause = " WHERE t.id = " + id;
+			Vector<Trial> trials = Trial.getTrialList(db, whereClause,
+					getXMLMetadata);
+			//if (trials.size() == 1) {
+				this.trial = trials.elementAt(0);
+			//} // else exception?
+		} else {
+			this.trial = trials.get(id);
+		}
+		return this.trial;
+	}
 
     // set the Trial for this session
     public Trial setTrial(String trialName, boolean getXMLMetadata) {
@@ -273,6 +328,7 @@ public class DatabaseAPI {
 
     // returns a List of IntervalEvents
     public List<IntervalEvent> getIntervalEvents() {
+    	if(db.getSchemaVersion()>0) return getTAUdbINtervalEvents();
         String whereClause = new String();
         if (trial != null) {
             whereClause = " WHERE trial = " + trial.getID();
@@ -295,7 +351,33 @@ public class DatabaseAPI {
         return intervalEvents;
     }
 
-    // gets the mean & total data for a intervalEvent
+    private List<IntervalEvent> getTAUdbINtervalEvents() {
+    	  String whereClause = new String();
+          if (trial != null) {
+              whereClause = " WHERE trial = " + trial.getID();
+          } else if (experiment != null) {
+        	  System.err.println("Need to query meta-data for experiment");
+//              whereClause = " WHERE experiment = " + experiment.getID();
+          } else if (application != null) {
+        	  System.err.println("Need to query meta-data for application");
+//              whereClause = " WHERE application = " + application.getID();
+          }
+
+          intervalEvents = IntervalEvent.getIntervalEvents(this, db, whereClause);
+
+          if (intervalEventHash == null) {
+              intervalEventHash = new Hashtable<Integer, IntervalEvent>();
+          }
+          IntervalEvent fun;
+          Enumeration<IntervalEvent> en = intervalEvents.elements();
+          while( en.hasMoreElements()) {
+              fun = en.nextElement();
+              intervalEventHash.put(new Integer(fun.getID()), fun);
+          }
+          return intervalEvents;
+	}
+
+	// gets the mean & total data for a intervalEvent
     public void getIntervalEventDetail(IntervalEvent intervalEvent) throws SQLException {
         StringBuffer buf = new StringBuffer();
         buf.append(" WHERE ms.interval_event = " + intervalEvent.getID());

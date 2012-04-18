@@ -8,7 +8,6 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Vector;
 
 import edu.uoregon.tau.perfdmf.database.DB;
@@ -254,8 +253,11 @@ public class Application implements Serializable {
     public static Vector<Application> getApplicationList(DB db, String whereClause) {
         StringBuffer buf = null;
        	if(db.getSchemaVersion()>0){
-    		System.err.println("WARNING: A list of applications was requested, but no experiments exist in TAUdb.");
-    		return new Vector<Application>();
+       		if(!whereClause.trim().equals("")){
+       			System.out.println("App List requested has a where clause.  This is not implmented yet.: "+whereClause);
+       			return new Vector<Application>();
+       		}
+    		return getTAUdbApplicationList(db);
     	}
         try {
             Database database = db.getDatabase();
@@ -314,7 +316,42 @@ public class Application implements Serializable {
 
     }
 
-    public int saveApplication(DB db) throws SQLException {
+    private static Vector<Application> getTAUdbApplicationList(DB db) {
+    	String buf = null;
+    	   try {
+               Database database = db.getDatabase();
+               Application.getMetaData(db);
+
+               ResultSet resultSet = null;
+               Vector<Application> applications = new Vector<Application>();
+//SELECT DISTINCT name, value FROM primary_metadata WHERE name='Application';
+               buf = "SELECT DISTINCT value FROM " +
+               		db.getSchemaPrefix() + "primary_metadata WHERE name=\'Application\'";
+
+               resultSet = db.executeQuery(buf);
+               int id = 0;
+               while (resultSet.next()) {
+                   Application application = new Application();
+                   application.setDatabase(database);
+                   application.setName(resultSet.getString(1));
+                   application.setID(id);
+                   id++;
+                   applications.addElement(application);
+               }
+               //Cleanup resources.
+               resultSet.close();
+
+               return applications;
+           } catch (SQLException e) {
+               if (buf != null)
+                   System.out.println(buf.toString());
+   			System.err.println(e.getMessage());
+               throw new DatabaseException("", e);
+           }
+
+	}
+
+	public int saveApplication(DB db) throws SQLException {
       	if(db.getSchemaVersion()>0){
     		System.err.println("WARNING: Attemped to save an application, but they don't exist in TAUdb.");
     		return 0;

@@ -8,7 +8,6 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Vector;
 
@@ -69,6 +68,10 @@ public class Experiment implements Serializable, Comparable<Experiment> {
     }
 
     public static void getMetaData(DB db) {
+    	if (db.getSchemaVersion() >0){
+    		System.err.println("MetaData requested, but no yet implemented in TAUdb");
+    		return;
+    	}
         Database database = db.getDatabase();
 
         //see if we've already have them
@@ -258,8 +261,11 @@ public class Experiment implements Serializable, Comparable<Experiment> {
 
     public static Vector<Experiment> getExperimentList(DB db, String whereClause) throws DatabaseException {
        	if(db.getSchemaVersion()>0){
-    		System.err.println("WARNING: A list of experiments was requested, but no experiments exist in TAUdb.");
+       		if(!whereClause.equals("")){
+    		System.err.println("WARNING: A list of experiments was requested with where clause: " + whereClause);
     		return new Vector<Experiment>();
+       		}
+       		return TAUdbExperiment.getExperimentList(db);
     	}
         try {
             Experiment.getMetaData(db);
@@ -316,7 +322,9 @@ public class Experiment implements Serializable, Comparable<Experiment> {
         }
     }
 
-    public int saveExperiment(DB db) throws SQLException {
+ 
+
+	public int saveExperiment(DB db) throws SQLException {
     	
       	if(db.getSchemaVersion()>0){
     		System.err.println("WARNING: Attemped to save an experiment, but no experiments exist in TAUdb.");
@@ -443,7 +451,10 @@ public class Experiment implements Serializable, Comparable<Experiment> {
 
     public void setDatabase(Database database) {
         this.database = database;
+        //If TAUdb is used, the field names will never be set
+        if( database.getExpFieldNames() != null){
         fields = new String[database.getExpFieldNames().length];
+        }
     }
 
     public int compareTo(Experiment arg0) {

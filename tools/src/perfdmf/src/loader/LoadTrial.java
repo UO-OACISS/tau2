@@ -90,6 +90,12 @@ public class LoadTrial {
     }
 
     public boolean checkForExp(String expid, String appName, String expName) {
+    	if(databaseAPI.db().getSchemaVersion() >0){
+    		System.err.println("Ignore Exp in load trial");
+//            Experiment exp = databaseAPI.getExperiment(appName, expName, true);
+//            return exp != null;
+    		return true;
+    	}
         if (expid != null) {
             this.expID = Integer.parseInt(expid);
 
