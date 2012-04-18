@@ -2575,6 +2575,7 @@ case $machine in
             pathscale=yes
 	    fixmakeargs="$fixmakeargs COMPINST_GNU USE_PATHCC"
 	elif [ "x$PE_ENV" = xINTEL ] ; then
+	    intel=yes
 	    tauoptions="${tauoptions}-intel"
 	    default_fortran=intel
 	    turnbfdoff=yes
