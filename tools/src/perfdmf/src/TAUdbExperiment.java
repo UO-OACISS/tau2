@@ -1,11 +1,13 @@
 package edu.uoregon.tau.perfdmf;
 
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Vector;
 
 import edu.uoregon.tau.perfdmf.database.DB;
+import edu.uoregon.tau.perfdmf.database.DBConnector;
 
 public class TAUdbExperiment {
 
@@ -29,7 +31,7 @@ public class TAUdbExperiment {
                  exp.setDatabase(db.getDatabase());
                 exp.setID(id);
                  id++;
-                 //TODO: Figure out what to do about application ids
+                 //TODO Figure out what to do about application ids
 //                 exp.setApplicationID(resultSet.getInt(2));
                  String app = resultSet.getString(1);
                  exp.setName(resultSet.getString(2));
@@ -82,6 +84,9 @@ public static Vector<Experiment> getExperimentList( DB db) {
         throw new DatabaseException("Error getting experiment list", e);
     }
 }
+
+
+
 
 
 }

@@ -69,7 +69,7 @@ public class Experiment implements Serializable, Comparable<Experiment> {
 
     public static void getMetaData(DB db) {
     	if (db.getSchemaVersion() >0){
-    		System.err.println("MetaData requested, but no yet implemented in TAUdb");
+    		//No need to worry about Experiment Metadata, there isn't any
     		return;
     	}
         Database database = db.getDatabase();

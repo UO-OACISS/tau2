@@ -490,6 +490,7 @@ public class Trial implements Serializable, Comparable<Trial> {
         // need to load each time in case we are working with a new database. 
         //        if (Trial.fieldNames != null)
         //            return;
+    	if(db.getSchemaVersion() >0) TAUdbTrial.getMetaData(db,allColumns);
 
         try {
             ResultSet resultSet = null;
