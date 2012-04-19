@@ -438,8 +438,10 @@ void Tau_collate_get_total_threads(int *globalNumThreads,
     for (int i=0; i<numEvents; i++) {
       (*numEventThreads)[i] = numThreadsGlobal[i];
 			FunctionInfo *fi = TheFunctionDB()[i];
+			/*
 			printf("TAU: Looking up number of calls for %s thread total = %d.\n",
 				fi->GetName(), (*numEventThreads)[i]);
+			*/
     }
     *globalNumThreads = numThreadsGlobal[numEvents];
   }
