@@ -28,6 +28,14 @@ CC		= $(TAU_CC)
 #CRAYCNL#CC = $(TAU_CC_FE) $(ABI) $(ISA) #ENDIF#
 #CRAYCNL#CXX = $(TAU_CXX_FE) $(ABI) $(ISA) #ENDIF#
 
+#BGL#CC = $(TAU_CC_FE) $(ABI) $(ISA) #ENDIF#
+#BGL#CXX = $(TAU_CXX_FE) $(ABI) $(ISA) #ENDIF#
+#BGP#CC = $(TAU_CC_FE) $(ABI) $(ISA) #ENDIF#
+#BGP#CXX = $(TAU_CXX_FE) $(ABI) $(ISA) #ENDIF#
+#BGQ#CC = $(TAU_CC_FE) $(ABI) $(ISA) #ENDIF#
+#BGQ#CXX = $(TAU_CXX_FE) $(ABI) $(ISA) #ENDIF#
+
+
 AR		= $(TAU_AR)
 #CRAYXMT#AR		= /usr/bin/ar  #ENDIF#
 #CRAYCNL#AR		= /usr/bin/ar  #ENDIF#
