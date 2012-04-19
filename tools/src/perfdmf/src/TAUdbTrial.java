@@ -1,18 +1,13 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Vector;
 
 import edu.uoregon.tau.perfdmf.database.DB;
-import edu.uoregon.tau.perfdmf.database.DBConnector;
 
 public class TAUdbTrial {
 	public static int saveTrialTAUdb(DB db, int trialID, DataSource dataSource,
@@ -142,13 +137,10 @@ public class TAUdbTrial {
 							.equalsIgnoreCase("collection_date")) {
 						java.sql.Timestamp time = resultSet.getTimestamp(pos++);
 						trial.setField(i, time.toString());
-						System.out.println(time.toString());
-
 					} else {
 						trial.setField(i, resultSet.getString(pos++));
 					}
 				}
-
 				trials.addElement(trial);
 			}
 			resultSet.close();
@@ -170,83 +162,22 @@ public class TAUdbTrial {
 			return null;
 		}
 	}
+		//This is for the Columns in the Trial table
 		public static void getMetaData(DB db, boolean allColumns) {
-			  try {
-		            ResultSet resultSet = null;
-
-		            //String trialFieldNames[] = null;
-		            //int trialFieldTypes[] = null;
-
-		            DatabaseMetaData dbMeta = db.getMetaData();
-
-		            if ((db.getDBType().compareTo("oracle") == 0) || (db.getDBType().compareTo("derby") == 0) || (db.getDBType().compareTo("h2") == 0)
-		                    || (db.getDBType().compareTo("db2") == 0)) {
-		                resultSet = dbMeta.getColumns(null, null, "TRIAL", "%");
-		            } else {
-		                resultSet = dbMeta.getColumns(null, null, "trial", "%");
-		            }
-
-		            Vector<String> nameList = new Vector<String>();
-		            Vector<Integer> typeList = new Vector<Integer>();
-		            List<String> typeNames = new ArrayList<String>();
-		            List<Integer> columnSizes = new ArrayList<Integer>();
-		            boolean seenID = false;
-
-		            ResultSetMetaData md = resultSet.getMetaData();
-		            for (int i = 0; i < md.getColumnCount(); i++) {
-		                //System.out.println(md.getColumnName(i));
-		            }
-
-		            while (resultSet.next() != false) {
-
-		                int ctype = resultSet.getInt("DATA_TYPE");
-		                String cname = resultSet.getString("COLUMN_NAME");
-		                String typename = resultSet.getString("TYPE_NAME");
-		                Integer size = new Integer(resultSet.getInt("COLUMN_SIZE"));
-
-		                // this code is because of a bug in derby...
-		                if (cname.equals("ID")) {
-		                    if (!seenID)
-		                        seenID = true;
-		                    else
-		                        break;
-		                }
-
-		                // only integer and string types (for now)
-		                // don't do name and id, we already know about them
-
-		                if (allColumns
-		                        || (DBConnector.isReadAbleType(ctype) && cname.toUpperCase().compareTo("ID") != 0
-		                                && cname.toUpperCase().compareTo("NAME") != 0
-		                                && cname.toUpperCase().compareTo("APPLICATION") != 0 && cname.toUpperCase().compareTo(
-		                                "EXPERIMENT") != 0)) {
-
-		                    nameList.add(resultSet.getString("COLUMN_NAME"));
-		                    typeList.add(new Integer(ctype));
-		                    typeNames.add(typename);
-		                    columnSizes.add(size);
-		                }
-		            }
-		            resultSet.close();
-
-		            String[] fieldNames = new String[nameList.size()];
-		            int[] fieldTypes = new int[typeList.size()];
-		            String[] fieldTypeNames = new String[typeList.size()];
-		            for (int i = 0; i < typeList.size(); i++) {
-		                fieldNames[i] = nameList.get(i);
-		                fieldTypes[i] = typeList.get(i).intValue();
-		                if (columnSizes.get(i).intValue() > 255) {
-		                    fieldTypeNames[i] = typeNames.get(i) + "(" + columnSizes.get(i).toString() + ")";
-		                } else {
-		                    fieldTypeNames[i] = typeNames.get(i);
-		                }
-		            }
-
+	
+				  
+		            String[] fieldNames = new String[6];
+		           //int[] fieldTypes = new int[typeList.size()];
+		           // String[] fieldTypeNames = new String[typeList.size()];
+		            fieldNames[0] = "collection_date";
+		            fieldNames[1] = "data_source";
+		            fieldNames[2] = "node_count";
+		            fieldNames[3] = "contexts_per_node";
+		            fieldNames[4] = "threads_per_context";
+		            fieldNames[5] = "total_threads";
 		            db.getDatabase().setTrialFieldNames(fieldNames);
-		            db.getDatabase().setTrialFieldTypes(fieldTypes);
-		            db.getDatabase().setTrialFieldTypeNames(fieldTypeNames);
-		        } catch (SQLException e) {
-		            e.printStackTrace();
-		        }			
+		            //db.getDatabase().setTrialFieldTypes(fieldTypes);
+		            //db.getDatabase().setTrialFieldTypeNames(fieldTypeNames);
+		
 		}
 }
