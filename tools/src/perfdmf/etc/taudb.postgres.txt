@@ -327,4 +327,29 @@ CREATE TABLE counter_value (
 /* one thread, one counter */
 CREATE INDEX counter_value_index on counter_value (counter, thread);
 
+/* this is the view table, which organizes and filters trials */
+create table taudb_view (
+	id					SERIAL			NOT NULL	PRIMARY KEY,
+	/* views can be nested */
+	parent				INTEGER			NULL,
+	/* name of the view */
+	name				TEXT	NOT NULL,
+	/* view conjoin type for parameters */
+	conjoin				TEXT	NOT NULL,
+	FOREIGN KEY (parent) REFERENCES taudb_view(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+create table taudb_view_parameter (
+	/* the view ID */
+	taudb_view			INTEGER	NOT NULL,
+	/* the table name for the where clause */
+	table_name			TEXT	NOT NULL,
+	/* the column name for the where clause */
+	column_name			TEXT	NOT NULL,
+	/* the operator for the where clause */
+	operator			TEXT	NOT NULL,
+	/* the value for the where clause */
+	value				TEXT	NOT NULL,
+	FOREIGN KEY (parent) REFERENCES trial_view(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
 
