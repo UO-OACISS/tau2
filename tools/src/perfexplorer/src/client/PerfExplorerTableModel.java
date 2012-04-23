@@ -13,6 +13,7 @@ import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.IntervalLocationProfile;
 import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.TAUdbTrial;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
 import edu.uoregon.tau.perfexplorer.common.RMIView;
@@ -56,6 +57,13 @@ public class PerfExplorerTableModel extends AbstractTableModel {
         } else if (object instanceof Experiment) {
             this.experiment = (Experiment) object;
             type = 1;
+        } else if (object instanceof TAUdbTrial) {
+            this.trial = (Trial) object;
+            TAUdbTrial localTrial = (TAUdbTrial)this.trial;
+            if(!localTrial.hasMetadata()){
+				localTrial.loadMetadata(PerfExplorerServer.getServer().getDB());
+            }
+            type = 2;
         } else if (object instanceof Trial) {
             this.trial = (Trial) object;
             if(!trial.isXmlMetaDataLoaded()){

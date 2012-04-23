@@ -203,6 +203,27 @@ public class PerfExplorerJTree extends JTree {
 	}
     }
 
+    public static void addTAUdbViewNodes (DefaultMutableTreeNode parentNode, String parent) {
+	setConnectionIndex(parentNode);
+	if (parentNode.getUserObject() instanceof ConnectionNodeObject) {
+		leafViews = new ArrayList<DefaultMutableTreeNode>();
+	}
+	// get the top level views
+	PerfExplorerConnection server = PerfExplorerConnection.getConnection();
+	List<RMIView> viewVector = server.getViews(Integer.parseInt(parent));
+	Iterator<RMIView> views = viewVector.iterator();
+	while (views.hasNext()) {
+	    RMIView view = views.next();
+	    DefaultMutableTreeNode node = new PerfExplorerTreeNode (view);
+	    addTAUdbViewNodes(node, view.getField("ID"));
+	    parentNode.add(node);
+	}
+	if (viewVector.size() == 0) {
+	    leafViews.add(parentNode);
+	    addTrialsForView(parentNode);
+	}
+    }
+
     public static void addTrialsForViews () {
 	Iterator<DefaultMutableTreeNode> e = leafViews.iterator();
 	while (e.hasNext()) {

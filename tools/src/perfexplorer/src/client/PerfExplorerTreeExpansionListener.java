@@ -45,8 +45,15 @@ public class PerfExplorerTreeExpansionListener implements TreeExpansionListener,
 		if (node.isRoot()) {
 			PerfExplorerJTree.refreshDatabases();
 		} else if (node.toString() != null && node.toString().startsWith("jdbc:")) {
-			PerfExplorerJTree.addApplicationNodes(node, false);
-			PerfExplorerJTree.getTree().addViewNode(node);
+			// get the schema version for the connection
+			int index = PerfExplorerJTree.getConnectionIndex(node);
+			int schemaVersion = PerfExplorerConnection.getConnection().getSchemaVersion(index);
+            if (schemaVersion < 1) {
+            	PerfExplorerJTree.addApplicationNodes(node, false);
+            	PerfExplorerJTree.getTree().addViewNode(node);
+            } else {
+				PerfExplorerJTree.addTAUdbViewNodes (node, "0");            	
+            }
 		} else if (node.toString() != null && node.toString().equals("Views")) {
 			PerfExplorerJTree.addViewNodes(node, "0");
 		} else {
