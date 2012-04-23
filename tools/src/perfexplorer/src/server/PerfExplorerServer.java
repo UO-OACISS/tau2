@@ -73,6 +73,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	private List<DatabaseAPI> sessions = new ArrayList<DatabaseAPI>();
 	private List<String> configNames = new ArrayList<String>();
 	private List<String> sessionStrings = new ArrayList<String>();
+	private List<Integer> schemaVersions = new ArrayList<Integer>();
 	private List<Queue<RMIPerfExplorerModel>> requestQueues = new ArrayList<Queue<RMIPerfExplorerModel>>();
 	private List<Thread> timerThreads = new ArrayList<Thread>();
 	private List<TimerThread> timers = new ArrayList<TimerThread>();
@@ -185,6 +186,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				this.sessions.add(api);
 				this.configNames.add(configName);
 				this.sessionStrings.add(api.db().getConnectString());
+				this.schemaVersions.add(api.db().getSchemaVersion());
 				Queue<RMIPerfExplorerModel> requestQueue = new LinkedList<RMIPerfExplorerModel>();
 				this.requestQueues.add(requestQueue);
 				TimerThread timer = new TimerThread(this, workerSession, i++);
@@ -1386,6 +1388,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		List<RMIView> views = new ArrayList<RMIView>();
 		try {
 			DB db = this.getDB();
+			String table_name = "trial_view";
+			if (db.getSchemaVersion() > 0) {
+				table_name = "taudb_view";
+			}
 			Iterator<String> names = RMIView.getFieldNames(db);
 			if (!names.hasNext()) {
 				// the database is not modified to support views
@@ -1398,7 +1404,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				buf.append(", ");
 				buf.append(names.next());
 			}
-			buf.append(" from trial_view");
+			buf.append(" from " + table_name);
 			if (parent == -1) { // get all views!
 				// no while clause
 			} else if (parent == 0) {
@@ -1433,6 +1439,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @return List
 	 */
 	public List<Trial> getTrialsForView (List<RMIView> views, boolean getXMLMetadata) {
+		if (this.getDB().getSchemaVersion() > 0) {
+			return getTrialsForTAUdbView(views);
+		}
 		//PerfExplorerOutput.println("getTrialsForView()...");
 		List<Trial> trials = new ArrayList<Trial>();
 		try {
@@ -1466,6 +1475,79 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			}
 			//PerfExplorerOutput.println(whereClause.toString());
 			trials = Trial.getTrialList(db, whereClause.toString(), getXMLMetadata);
+		} catch (Exception e) {
+			String error = "ERROR: Couldn't select views from the database!";
+			System.err.println(error);
+			e.printStackTrace();
+		}
+		return trials;
+	}
+
+	/**
+	 * Get the trials which are filtered by the defined view(s).
+	 * 
+	 * @param views
+	 * @return List
+	 */
+	public List<Trial> getTrialsForTAUdbView (List<RMIView> views) {
+		//PerfExplorerOutput.println("getTrialsForView()...");
+		List<Trial> trials = new ArrayList<Trial>();
+		try {
+			DB db = this.getDB();
+			
+			StringBuilder sql = new StringBuilder();
+			sql.append("select conjoin, taudb_view, table_name, column_name, operator, value from taudb_view left outer join taudb_view_parameter on taudb_view.id = taudb_view_parameter.taudb_view where taudb_view.id in (");
+			for (int i = 0 ; i < views.size(); i++) {
+				if (i > 0)
+					sql.append(",?");
+				else
+					sql.append("?");
+			}
+			sql.append(") order by taudb_view.id");
+			PreparedStatement statement = db.prepareStatement(sql.toString());
+			int i = 1;
+			for (RMIView view : views) {
+				statement.setInt(1, Integer.valueOf(view.getField("ID")));
+				i++;
+			}
+			ResultSet results = statement.executeQuery();
+			
+			StringBuilder whereClause = new StringBuilder();
+			StringBuilder joinClause = new StringBuilder();
+			int currentView = 0;
+			int alias = 0;
+			String conjoin = " where ";
+			while (results.next() != false) {
+				int viewid = results.getInt(2);
+				String tableName = results.getString(3);
+				if (tableName == null) 
+					break;
+				String columnName = results.getString(4);
+				String operator = results.getString(5);
+				String value = results.getString(6);
+				if ((currentView > 0) && (currentView != viewid)) {
+					conjoin = " and ";
+				} else if (currentView == viewid) {
+					conjoin = " " + results.getString(1) + " ";
+				}
+				if (tableName.equalsIgnoreCase("trial")) {
+					whereClause.append(conjoin + tableName + "." + columnName + " " + operator + " " + "'" + value + "'");
+				} else {
+					// otherwise, we have primary_metadata or secondary_metadata
+					joinClause.append(" left outer join " + tableName + " t" + alias + " on t.id = t" + alias + ".trial");
+					whereClause.append(conjoin + "t" + alias + "." + columnName);
+					if (db.getDBType().compareTo("db2") == 0) {
+						whereClause.append(" as varchar(256)) ");
+					}
+					whereClause.append(" " + operator + " " + "'" + value + "'");
+				}
+				alias++;
+				currentView = viewid;
+			}
+			statement.close();
+			
+			//PerfExplorerOutput.println(whereClause.toString());
+			trials = Trial.getTrialList(db, joinClause.toString() + " " + whereClause.toString(), false);
 		} catch (Exception e) {
 			String error = "ERROR: Couldn't select views from the database!";
 			System.err.println(error);
@@ -1777,6 +1859,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 
 	public String getConnectionString() {
 		return session.db().getConnectString();
+	}
+	
+	public List<Integer> getSchemaVersions() {
+		return this.schemaVersions;
 	}
 	
 	public List<String> getConnectionStrings() {

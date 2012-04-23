@@ -64,18 +64,18 @@ public class Trial implements Serializable, Comparable<Trial> {
     public static final String XML_METADATA = "XML_METADATA";
     public static final String XML_METADATA_GZ = "XML_METADATA_GZ";
 
-    private int trialID;
+    protected int trialID;
     private int experimentID;
     private int applicationID;
-    private String name;
-    private List<Metric> metrics;
-    private String fields[];
+    protected String name;
+    protected List<Metric> metrics;
+    protected String fields[];
 
     protected DataSource dataSource;
 
-    private Database database;
-    private Map<String, String> metaData = new TreeMap<String, String>();
-    private Map<String, String> uncommonMetaData = new TreeMap<String, String>();
+    protected Database database;
+    protected Map<String, String> metaData = new TreeMap<String, String>();
+    protected Map<String, String> uncommonMetaData = new TreeMap<String, String>();
 
     private boolean xmlMetaDataLoaded = false;
 
@@ -1172,5 +1172,12 @@ public class Trial implements Serializable, Comparable<Trial> {
     public int compareTo(Trial arg0) {
         return alphanum.compare(this.getName(),  arg0.getName());
     }
+
+	public boolean hasMetadata() {
+		if (this.metaData.size() == 0) {
+			return false;
+		}
+		return true;
+	}
 
 }
