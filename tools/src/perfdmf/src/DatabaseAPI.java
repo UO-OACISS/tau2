@@ -406,9 +406,10 @@ public class DatabaseAPI {
 
     // returns a List of AtomicEvents
     public List<AtomicEvent> getAtomicEvents() {
+
         String whereClause = new String();
         if (trial != null) {
-            whereClause = " WHERE t.id = " + trial.getID();
+            whereClause = " WHERE u.trial = " + trial.getID();
         } else if (experiment != null) {
             whereClause = " WHERE t.experiment = " + experiment.getID();
         } else if (application != null) {
@@ -573,6 +574,7 @@ public class DatabaseAPI {
     }
 
     public List<AtomicLocationProfile> getAtomicEventData() {
+    	
         // check to make sure this is a meaningful request
         if (trial == null && atomicEvents == null) {
             System.out.println("Please select a trial or a set of user events before getting user event data.");
