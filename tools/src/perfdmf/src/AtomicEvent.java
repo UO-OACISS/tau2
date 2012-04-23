@@ -224,6 +224,7 @@ public class AtomicEvent {
 
     // returns a Vector of AtomicEvents
     public static Vector<AtomicEvent> getAtomicEvents(DatabaseAPI dataSession, DB db, String whereClause) {
+    	if(db.getSchemaVersion()>0) return getTAUdbAtomicEvents(dataSession,db, whereClause);
         Vector<AtomicEvent> atomicEvents = new Vector<AtomicEvent>();
         // create a string to hit the database
         StringBuffer buf = new StringBuffer();
@@ -257,7 +258,38 @@ public class AtomicEvent {
         return atomicEvents;
     }
 
-    public int saveAtomicEvent(DB db, int newTrialID) {
+    private static Vector<AtomicEvent> getTAUdbAtomicEvents(
+			DatabaseAPI datasource, DB db, String whereClause) {
+        Vector<AtomicEvent> atomicEvents = new Vector<AtomicEvent>();
+        // create a string to hit the database
+        StringBuffer buf = new StringBuffer();
+        buf.append("select u.id, u.trial, u.name ");
+        buf.append("from " + db.getSchemaPrefix() + "counter u ");
+        buf.append(whereClause);
+        buf.append(" order by id ");
+        System.out.println(buf.toString());
+
+        // get the results
+        try {
+            ResultSet resultSet = db.executeQuery(buf.toString());
+            //AtomicEvent tmpAtomicEvent = null;
+            while (resultSet.next() != false) {
+                AtomicEvent ue = new AtomicEvent(datasource);
+                ue.setID(resultSet.getInt(1));
+                ue.setTrialID(resultSet.getInt(2));
+                ue.setName(resultSet.getString(3));
+                atomicEvents.addElement(ue);
+            }
+            resultSet.close();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
+        }
+
+        return atomicEvents;
+	}
+
+	public int saveAtomicEvent(DB db, int newTrialID) {
         int newAtomicEventID = 0;
         try {
             PreparedStatement statement = null;

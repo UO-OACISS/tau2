@@ -228,6 +228,7 @@ public class AtomicLocationProfile {
      */
 
     public static Vector<AtomicLocationProfile> getAtomicEventData(DB db, String whereClause) {
+    	if(db.getSchemaVersion()>0) return TAUdbGetAtomicEventData(db,whereClause);
 	Vector<AtomicLocationProfile> atomicEventData = new Vector<AtomicLocationProfile>();
 	// create a string to hit the database
 	StringBuffer buf = new StringBuffer();
@@ -265,7 +266,46 @@ public class AtomicLocationProfile {
 	return atomicEventData;
     }
 
-    /**
+    private static Vector<AtomicLocationProfile> TAUdbGetAtomicEventData(DB db,
+			String whereClause) {
+    	Vector<AtomicLocationProfile> atomicEventData = new Vector<AtomicLocationProfile>();
+    	// create a string to hit the database
+    	StringBuffer buf = new StringBuffer();
+    	buf.append("select p.atomic_event, p.node, ");
+    	buf.append("p.context, p.thread, p.sample_count, ");
+    	buf.append("p.maximum_value, p.minimum_value, p.mean_value, ");
+    	buf.append("p.standard_deviation, e.trial ");
+    	buf.append("from " + db.getSchemaPrefix() + "atomic_location_profile p ");
+    	buf.append("inner join " + db.getSchemaPrefix() + "atomic_event e on e.id = p.atomic_event ");
+    	buf.append(whereClause);
+    	buf.append(" order by p.node, p.context, p.thread, p.atomic_event");
+    	// System.out.println(buf.toString());
+
+    	// get the results
+    	try {
+    	    ResultSet resultSet = db.executeQuery(buf.toString());	
+    	    while (resultSet.next() != false) {
+    		AtomicLocationProfile ueDO = new AtomicLocationProfile();
+    		ueDO.setAtomicEventID(resultSet.getInt(1));
+    		ueDO.setNode(resultSet.getInt(2));
+    		ueDO.setContext(resultSet.getInt(3));
+    		ueDO.setThread(resultSet.getInt(4));
+    		ueDO.setSampleCount(resultSet.getInt(5));
+    		ueDO.setMaximumValue(resultSet.getDouble(6));
+    		ueDO.setMinimumValue(resultSet.getDouble(7));
+    		ueDO.setMeanValue(resultSet.getDouble(8));
+    		ueDO.setSumSquared(resultSet.getDouble(9));
+    		atomicEventData.addElement(ueDO);
+    	    }
+    	    resultSet.close(); 
+    	} catch (Exception ex) {
+    	    ex.printStackTrace();
+    	    return null;
+    	}
+    	return atomicEventData;
+	}
+
+	/**
      * Documentation?
      */
 

@@ -274,15 +274,29 @@ public class IntervalEvent {
          // get the results
          try {
              ResultSet resultSet = db.executeQuery(buf.toString());
-System.err.println("Warning:  need to combime groups");
              //IntervalEvent tmpIntervalEvent = null;
              while (resultSet.next() != false) {
+            	 if(events.size()>0){
+                	 IntervalEvent last = events.get(events.size()-1);
+                     IntervalEvent event = new IntervalEvent(dataSession);
+                     event.setID(resultSet.getInt(1));
+                     event.setName(resultSet.getString(2));
+                     event.setGroup(resultSet.getString(3));
+                     event.setTrialID(resultSet.getInt(4));
+                     if(last.getID() == event.getID()){
+                    	String group = last.getGroup() +"|"+ event.getGroup(); 
+                    	last.setGroup(group);
+                     }else{
+                     events.addElement(event);
+                     }
+            	 }else{
                  IntervalEvent event = new IntervalEvent(dataSession);
                  event.setID(resultSet.getInt(1));
                  event.setName(resultSet.getString(2));
                  event.setGroup(resultSet.getString(3));
                  event.setTrialID(resultSet.getInt(4));
                  events.addElement(event);
+            	 }
              }
              resultSet.close();
          } catch (Exception ex) {

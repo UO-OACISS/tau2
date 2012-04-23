@@ -76,33 +76,22 @@ public class TAUdbDataSource extends DataSource {
         return;
     }
 
+
     private void fastGetIntervalEventData(int trialID, Map<Integer, Function> ieMap, Map<Integer, Metric> metricMap) throws SQLException {
         int numMetrics = getNumberOfMetrics();
         DB db = databaseAPI.getDb();
 
  
 		StringBuffer buff = new StringBuffer();
-		// Joins timer_callpath to the rest to get calls and subroutines
-		buff.append(" SELECT  sub.timer, metric, node, context, sub.thread,  inclusive, exclusive, calls, subroutines FROM (");
+		String buf = "select v.timer, v.metric, h.node_rank as node, h.context_rank as context, h.thread_rank as thread, " +
+				"v.inclusive_value as inclusive, v.exclusive_value as inclusive, cp.calls, cp.subroutines " +
+				"from timer_value v left outer join " +
+				db.getSchemaPrefix() +"timer t on v.timer = t.id " +
+				"left outer join " +
+				db.getSchemaPrefix() +"thread h on v.thread = h.id left outer join" +
+				db.getSchemaPrefix() +" timer_callpath cp on v.timer = cp.timer and v.thread = cp.thread where t.trial = "+trialID;
 
-		// Joins NCT to the timer values
-		buff.append("SELECT thread.node_rank as node , thread.context_rank as context, thread.thread_rank as thread, ");
-		buff.append("values.metric as metric, values.inclusive as inclusive, values.exclusive as exclusive, values.timer as timer FROM ");
-		buff.append(db.getSchemaPrefix() + "thread as thread JOIN (");
 
-		// Gets the values for the given trial id
-		buff.append("SELECT v.timer as timer, v.thread as thread, v.metric as metric , v.inclusive_value as inclusive, v.exclusive_value as exclusive FROM ");
-		buff.append(db.getSchemaPrefix() + "timer t JOIN ");
-		buff.append(db.getSchemaPrefix()
-				+ "timer_value v  ON t.id=v.timer WHERE t.trial=" + trialID);
-
-		// Close the NCT join
-		buff.append(") as values ON thread.id=values.thread");
-
-		// Close the calls/subroutine join
-		buff.append(") as sub JOIN "
-				+ db.getSchemaPrefix()
-				+ "timer_callpath as timer_callpath ON timer_callpath.timer=sub.timer");
 
         /*
          1 - timer
@@ -163,6 +152,7 @@ public class TAUdbDataSource extends DataSource {
     }
 
     private void downloadMetaData() {
+    	System.err.println("Warning: not getting metadata.");
         try {
             DB db = databaseAPI.getDb();
             StringBuffer joe = new StringBuffer();
@@ -236,32 +226,32 @@ public class TAUdbDataSource extends DataSource {
         // map Interval Event ID's to Function objects
         Map<Integer, UserEvent> aeMap = new HashMap<Integer, UserEvent>();
 System.err.println("Warning not loading Atomic Events from TAUdb yet");
-//        ListIterator<AtomicEvent> lAE = databaseAPI.getAtomicEvents().listIterator();
-//        while (lAE.hasNext()) {
-//            AtomicEvent atomicEvent = lAE.next();
-//            UserEvent userEvent = addUserEvent(atomicEvent.getName());
-//            aeMap.put(new Integer(atomicEvent.getID()), userEvent);
-//        }
+        ListIterator<AtomicEvent> lAE = databaseAPI.getAtomicEvents().listIterator();
+        while (lAE.hasNext()) {
+            AtomicEvent atomicEvent = lAE.next();
+            UserEvent userEvent = addUserEvent(atomicEvent.getName());
+            aeMap.put(new Integer(atomicEvent.getID()), userEvent);
+        }
 
-//        ListIterator<AtomicLocationProfile> lAD = databaseAPI.getAtomicEventData().listIterator();
-//        while (lAD.hasNext()) {
-//            AtomicLocationProfile alp = lAD.next();
-//            Thread thread = addThread(alp.getNode(), alp.getContext(), alp.getThread());
-//            UserEvent userEvent = aeMap.get(new Integer(alp.getAtomicEventID()));
-//            UserEventProfile userEventProfile = thread.getUserEventProfile(userEvent);
-//
-//            if (userEventProfile == null) {
-//                userEventProfile = new UserEventProfile(userEvent);
-//                thread.addUserEventProfile(userEventProfile);
-//            }
-//
-//            userEventProfile.setNumSamples(alp.getSampleCount());
-//            userEventProfile.setMaxValue(alp.getMaximumValue());
-//            userEventProfile.setMinValue(alp.getMinimumValue());
-//            userEventProfile.setMeanValue(alp.getMeanValue());
-//            userEventProfile.setSumSquared(alp.getSumSquared());
-//            userEventProfile.updateMax();
-//        }
+        ListIterator<AtomicLocationProfile> lAD = databaseAPI.getAtomicEventData().listIterator();
+        while (lAD.hasNext()) {
+            AtomicLocationProfile alp = lAD.next();
+            Thread thread = addThread(alp.getNode(), alp.getContext(), alp.getThread());
+            UserEvent userEvent = aeMap.get(new Integer(alp.getAtomicEventID()));
+            UserEventProfile userEventProfile = thread.getUserEventProfile(userEvent);
+
+            if (userEventProfile == null) {
+                userEventProfile = new UserEventProfile(userEvent);
+                thread.addUserEventProfile(userEventProfile);
+            }
+
+            userEventProfile.setNumSamples(alp.getSampleCount());
+            userEventProfile.setMaxValue(alp.getMaximumValue());
+            userEventProfile.setMinValue(alp.getMinimumValue());
+            userEventProfile.setMeanValue(alp.getMeanValue());
+            userEventProfile.setSumSquared(alp.getSumSquared());
+            userEventProfile.updateMax();
+        }
 
         downloadMetaData();
 
@@ -272,6 +262,7 @@ System.err.println("Warning not loading Atomic Events from TAUdb yet");
 
         // We actually discard the mean and total values by calling this
         // But, we need to compute other statistics anyway
-        generateDerivedData();
+        //TODO Deal with derived data.  Most of it will be saved in the DB?
+        //generateDerivedData();
     }
 }
