@@ -34,6 +34,7 @@ public class PerfExplorerConnection {
 	private static String tauHome = null;
 	private static String tauArch = null;
 	private int connectionIndex = 0;
+	private static List<Integer> schemaVersion = null;
 
 	private PerfExplorerConnection () {
 		makeConnection();
@@ -454,6 +455,17 @@ public class PerfExplorerConnection {
 			handleError(e, "getUserEventData(" + model.toString() + ")");
 		}
 		return userEvents;
+	}
+
+	public int getSchemaVersion(int index) {
+		if (schemaVersion == null) {
+			try {
+				schemaVersion = server.getSchemaVersions();
+			} catch (RemoteException e) {
+				handleError(e, "getSchemaVersions(" + index + ")");
+			}
+		}
+		return schemaVersion.get(index);
 	}
 
 }

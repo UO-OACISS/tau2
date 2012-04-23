@@ -9,7 +9,7 @@ import java.util.Vector;
 
 import edu.uoregon.tau.perfdmf.database.DB;
 
-public class TAUdbTrial {
+public class TAUdbTrial extends Trial {
 	public static int saveTrialTAUdb(DB db, int trialID, DataSource dataSource,
 			String name) {
 		boolean itExists = exists(db, trialID);
@@ -95,72 +95,68 @@ public class TAUdbTrial {
 	        return retval;
 	    }
 		public static Vector<Trial> getTrialList(DB db, boolean getXMLMetadata, String whereClause ) {
-		try {
+			 try {
 
-			Trial.getMetaData(db);
+		            Trial.getMetaData(db);
 
-			// create a string to hit the database
-			String buf = "SELECT t.id, t.name, metadata.app, metadata.exp, t.collection_date, t.data_source, "
-					+ "t.node_count, t.contexts_per_node, t.threads_per_context, t.total_threads FROM "
-					+ "( SELECT DISTINCT A.value as app, E.value as exp, A.trial as trial "
-					+ "FROM "
-					+ db.getSchemaPrefix()
-					+ "primary_metadata A, "
-					+ db.getSchemaPrefix()
-					+ "primary_metadata E "
-					+ "WHERE A.trial=E.trial AND A.name='Application' AND E.name='Experiment'"
-					+ ") as metadata LEFT JOIN "
-					+ db.getSchemaPrefix()
-					+ "trial as t ON metadata.trial=t.id  " + whereClause;
+		            // create a string to hit the database
+		            String buf = 
+		            "SELECT t.id, t.name, t.collection_date, t.data_source, t.node_count, t.contexts_per_node, t.threads_per_context, t.total_threads, metadata.app, metadata.exp FROM " +
+		            "( SELECT DISTINCT A.value as app, E.value as exp, A.trial as trial " +
+		            "FROM " +
+		            db.getSchemaPrefix()+"primary_metadata A, " +
+		            		db.getSchemaPrefix()+"primary_metadata E " +
+		            "WHERE A.trial=E.trial AND A.name='Application' AND E.name='Experiment'" +
+		            ") as metadata LEFT JOIN " +
+		            db.getSchemaPrefix()+"trial as t ON metadata.trial=t.id  " + whereClause ;
 
-			Vector<Trial> trials = new Vector<Trial>();
+		            Vector<Trial> trials = new Vector<Trial>();
 
-			ResultSet resultSet = db.executeQuery(buf.toString());
-			while (resultSet.next() != false) {
-				Trial trial = new Trial();
-				trial.setDatabase(db.getDatabase());
-				int pos = 1;
-				trial.setID(resultSet.getInt(pos++));
-				trial.setName(resultSet.getString(pos++));
+		            System.out.println(buf.toString());
+		            ResultSet resultSet = db.executeQuery(buf.toString());
+		            while (resultSet.next() != false) {
+		                Trial trial = new TAUdbTrial();
+		                trial.setDatabase(db.getDatabase());
+		                int pos = 1;
+		                trial.setID(resultSet.getInt(pos++));
+		                trial.setName(resultSet.getString(pos++));
+		                trial.setField("collection_date", resultSet.getString(pos++));
+		                trial.setField("data_source", resultSet.getString(pos++));
+		                trial.setField("node_count", resultSet.getString(pos++));
+		                trial.setField("contexts_per_node", resultSet.getString(pos++));
+		                trial.setField("threads_per_context", resultSet.getString(pos++));
+		                trial.setField("total_threads", resultSet.getString(pos++));
+		                
+		                String appname = resultSet.getString(pos++);
+	//TODO: Figure out what to do about the app ids	                
+//		                trial.setApplicationID(resultSet.getInt(pos++));
 
-				String appname = resultSet.getString(pos++);
-				// TODO: Figure out what to do about the app ids
-				// trial.setApplicationID(resultSet.getInt(pos++));
+		                String expanme = resultSet.getString(pos++);
+	//TODO: Figure out what to do about the experiment ids	                
+//		                trial.setExperimentID();
+		                
 
-				String expanme = resultSet.getString(pos++);
-				// TODO: Figure out what to do about the experiment ids
-				// trial.setExperimentID();
 
-				Database database = db.getDatabase();
-				for (int i = 0; i < database.getTrialFieldNames().length; i++) {
-					if (database.getTrialFieldNames()[i]
-							.equalsIgnoreCase("collection_date")) {
-						java.sql.Timestamp time = resultSet.getTimestamp(pos++);
-						trial.setField(i, time.toString());
-					} else {
-						trial.setField(i, resultSet.getString(pos++));
-					}
-				}
-				trials.addElement(trial);
-			}
-			resultSet.close();
-			// TODO: Deal with adding the metrics to the trial
-			// // get the function details
-			// Enumeration<Trial> en = trials.elements();
-			// Trial trial;
-			// while (en.hasMoreElements()) {
-			// trial = en.nextElement();
-			// trial.getTrialMetrics(db);
-			// }
+		                trials.addElement(trial);
+		            }
+		            resultSet.close();
+//TODO: Deal with adding the metrics to the trial
+//		            // get the function details
+//		            Enumeration<Trial> en = trials.elements();
+//		            Trial trial;
+//		            while (en.hasMoreElements()) {
+//		                trial = en.nextElement();
+//		                trial.getTrialMetrics(db);
+//		            }
 
-			Collections.sort(trials);
+		            Collections.sort(trials);
 
-			return trials;
+		            return trials;
 
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			return null;
-		}
+		        } catch (Exception ex) {
+		            ex.printStackTrace();
+	            return null;
+		        }
 	}
 		//This is for the Columns in the Trial table
 		public static void getMetaData(DB db, boolean allColumns) {
@@ -178,6 +174,29 @@ public class TAUdbTrial {
 		            db.getDatabase().setTrialFieldNames(fieldNames);
 		            //db.getDatabase().setTrialFieldTypes(fieldTypes);
 		            //db.getDatabase().setTrialFieldTypeNames(fieldTypeNames);
-		
+
 		}
+
+		public void loadMetadata(DB db) {
+	        boolean retval = false;
+	        try {
+	            PreparedStatement statement = db.prepareStatement("SELECT name, value FROM " + db.getSchemaPrefix() + "primary_metadata WHERE trial = ?");
+	            statement.setInt(1, this.trialID);
+	            ResultSet results = statement.executeQuery();
+	            while (results.next() != false) {
+	                int pos = 1;
+	                String name = results.getString(1);
+	                String value = results.getString(2);
+	                this.metaData.put(name, value);
+	            }
+	            results.close();
+	            // TODO: need to get the secondary metadata and either populate uncommonMetaData, or 
+	            // something similar.
+	        } catch (SQLException e) {
+	            System.out.println("An error occurred loading metadata for trial object from TAUdb database.");
+	            e.printStackTrace();
+	        }
+	        return;
+	    }
+
 }

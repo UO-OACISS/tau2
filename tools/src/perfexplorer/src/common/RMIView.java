@@ -40,21 +40,27 @@ public class RMIView implements Serializable {
 	}
 
 	public static Iterator<String> getFieldNames(DB db) {
+		String allUpperCase = "TRIAL_VIEW";
+		String allLowerCase = "trial_view";
+		if (db.getSchemaVersion() > 0) {
+			allUpperCase = "TAUDB_VIEW";
+			allLowerCase = "taudb_view";
+		}
 		if (fieldNames == null) {
 			fieldNames = new ArrayList<String>();
 			try {
 				ResultSet resultSet = null;
 				DatabaseMetaData dbMeta = db.getMetaData();
 				if (db.getDBType().compareTo("oracle") == 0) {
-					resultSet = dbMeta.getColumns(null, null, "TRIAL_VIEW", "%");
+					resultSet = dbMeta.getColumns(null, null, allUpperCase, "%");
 				} else if (db.getDBType().compareTo("derby") == 0) {
-					resultSet = dbMeta.getColumns(null, null, "TRIAL_VIEW", "%");
+					resultSet = dbMeta.getColumns(null, null, allUpperCase, "%");
 				} else if (db.getDBType().compareTo("h2") == 0) {
-					resultSet = dbMeta.getColumns(null, null, "TRIAL_VIEW", "%");
+					resultSet = dbMeta.getColumns(null, null, allUpperCase, "%");
 				} else if (db.getDBType().compareTo("db2") == 0) {
-					resultSet = dbMeta.getColumns(null, null, "TRIAL_VIEW", "%");
+					resultSet = dbMeta.getColumns(null, null, allUpperCase, "%");
 				} else {
-					resultSet = dbMeta.getColumns(null, null, "trial_view", "%");
+					resultSet = dbMeta.getColumns(null, null, allLowerCase, "%");
 				}
 
 				int i = 0;
@@ -65,7 +71,6 @@ public class RMIView implements Serializable {
 					i++;
 				}
 				resultSet.close();
-
 			} catch (SQLException e) {
 				System.err.println("DATABASE EXCEPTION: " + e.toString());
 				e.printStackTrace();

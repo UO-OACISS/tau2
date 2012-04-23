@@ -338,5 +338,9 @@ public interface RMIPerfExplorer extends Remote {
 
    public Map<String, double[][]> getUserEventData(RMIPerfExplorerModel model)
    	throws RemoteException;
+
+   public List<Integer> getSchemaVersions()
+    throws RemoteException;
+   
 }
 
