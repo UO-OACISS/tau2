@@ -1,5 +1,8 @@
 /* remove whatever indexes and tables are there already, in reverse order */
 
+DROP TABLE taudb_view_parameter;
+DROP TABLE taudb_view;
+
 DROP INDEX counter_value_index;
 DROP INDEX counter_trial_index;
 DROP TABLE counter_value;
@@ -327,4 +330,34 @@ CREATE TABLE counter_value (
 /* one thread, one counter */
 CREATE INDEX counter_value_index on counter_value (counter, thread);
 
+/* this is the view table, which organizes and filters trials */
+create table taudb_view (
+	id					SERIAL			NOT NULL	PRIMARY KEY,
+	/* views can be nested */
+	parent				INTEGER			NULL,
+	/* name of the view */
+	name				VARCHAR	NOT NULL,
+	/* view conjoin type for parameters */
+	conjoin				VARCHAR	NOT NULL,
+	FOREIGN KEY (parent) REFERENCES taudb_view(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+create table taudb_view_parameter (
+	/* the view ID */
+	taudb_view			INTEGER	NOT NULL,
+	/* the table name for the where clause */
+	table_name			VARCHAR	NOT NULL,
+	/* the column name for the where clause */
+	column_name			VARCHAR	NOT NULL,
+	/* the operator for the where clause */
+	operator			VARCHAR	NOT NULL,
+	/* the value for the where clause */
+	value				VARCHAR	NOT NULL,
+	FOREIGN KEY (taudb_view) REFERENCES taudb_view(id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+INSERT INTO taudb_view (parent, name, conjoin) VALUES (NULL, 'All Trials', 'and');
+INSERT INTO taudb_view (parent, name, conjoin) VALUES (NULL, 'Test View', 'and');
+INSERT INTO taudb_view_parameter (taudb_view, table_name, column_name, operator, value) VALUES (2, 'primary_metadata', 'name', '=', 'Application');
+INSERT INTO taudb_view_parameter (taudb_view, table_name, column_name, operator, value) VALUES (2, 'primary_metadata', 'value', '=', 'application');
 
