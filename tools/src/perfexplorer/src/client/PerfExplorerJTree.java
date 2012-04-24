@@ -215,8 +215,9 @@ public class PerfExplorerJTree extends JTree {
 	while (views.hasNext()) {
 	    RMIView view = views.next();
 	    DefaultMutableTreeNode node = new PerfExplorerTreeNode (view);
-	    addTAUdbViewNodes(node, view.getField("ID"));
 	    parentNode.add(node);
+
+	    addTAUdbViewNodes(node, view.getField("ID"));
 	}
 	if (viewVector.size() == 0) {
 	    leafViews.add(parentNode);
@@ -300,7 +301,8 @@ public class PerfExplorerJTree extends JTree {
     }
 
     public static int getConnectionIndex(DefaultMutableTreeNode node) {
-	int index = 0;
+    	//Don't silent ignore if the connection index is not found
+	int index = -1;
 	// find the connection node for this subtree
 	DefaultMutableTreeNode parent = node;
 	Object obj = parent.getUserObject();
