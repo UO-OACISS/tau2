@@ -18,7 +18,7 @@ import com.google.gson.JsonSyntaxException;
 
 import edu.uoregon.tau.perfdmf.database.DB;
 
-public class TAUdbDatabaseAPI {
+public class TAUdbDatabaseAPI extends DatabaseAPI {
 
 	public static int uploadTrial(DB db, Trial trial) {
 
