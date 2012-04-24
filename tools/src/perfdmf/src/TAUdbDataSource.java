@@ -1,18 +1,10 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.sql.PreparedStatement;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-import org.xml.sax.*;
-import org.xml.sax.helpers.DefaultHandler;
-import org.xml.sax.helpers.XMLReaderFactory;
-
-import edu.uoregon.tau.common.Gzip;
 import edu.uoregon.tau.perfdmf.database.DB;
 
 /**
@@ -20,46 +12,7 @@ import edu.uoregon.tau.perfdmf.database.DB;
  */
 public class TAUdbDataSource extends DataSource {
 
-    private DatabaseAPI databaseAPI;
-    //private volatile boolean abort = false;
-    //private volatile int totalItems = 0;
-    //private volatile int itemsDone = 0;
-
-    private class XMLParser extends DefaultHandler {
-        private StringBuffer accumulator = new StringBuffer();
-        private String currentName = "";
-        private Thread currentThread;
-
-        public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-            accumulator = new StringBuffer();
-            if (localName.equals("CommonProfileAttributes")) {
-                currentThread = null;
-            } else if (localName.equals("ProfileAttributes")) {
-                int node = Integer.parseInt(attributes.getValue("node"));
-                int context = Integer.parseInt(attributes.getValue("context"));
-                int threadID = Integer.parseInt(attributes.getValue("thread"));
-                currentThread = getThread(node, context, threadID);
-            }
-        }
-
-        public void endElement(String uri, String localName, String qName) throws SAXException {
-            if (localName.equals("name")) {
-                currentName = accumulator.toString().trim();
-            } else if (localName.equals("value")) {
-                String currentValue = accumulator.toString().trim();
-                if (currentThread == null) {
-                    getMetaData().put(currentName, currentValue);
-                } else {
-                    currentThread.getMetaData().put(currentName, currentValue);
-                    getUncommonMetaData().put(currentName, currentValue);
-                }
-            }
-        }
-
-        public void characters(char[] ch, int start, int length) throws SAXException {
-            accumulator.append(ch, start, length);
-        }
-    }
+    private DatabaseAPI databaseAPI;  
 
     public TAUdbDataSource(DatabaseAPI dbAPI) {
         super();
@@ -151,35 +104,7 @@ public class TAUdbDataSource extends DataSource {
         resultSet.close();
     }
 
-    private void downloadMetaData() {
-    	System.err.println("Warning: not getting metadata.");
-        try {
-            DB db = databaseAPI.getDb();
-            StringBuffer joe = new StringBuffer();
-            joe.append(" SELECT " + Trial.XML_METADATA_GZ);
-            joe.append(" FROM TRIAL WHERE id = ");
-            joe.append(databaseAPI.getTrial().getID());
-            ResultSet resultSet = db.executeQuery(joe.toString());
-            resultSet.next();
-            InputStream compressedStream = resultSet.getBinaryStream(1);
-            String metaDataString = Gzip.decompress(compressedStream);
-            if (metaDataString != null) {
-                XMLReader xmlreader = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
-                XMLParser parser = new XMLParser();
-                xmlreader.setContentHandler(parser);
-                xmlreader.setErrorHandler(parser);
-                ByteArrayInputStream input = new ByteArrayInputStream(metaDataString.getBytes());
-                xmlreader.parse(new InputSource(input));
-            }
-        } catch (IOException e) {
-            // oh well, no metadata
-        } catch (SAXException e) {
-            // oh well, no metadata
-        } catch (SQLException e) {
-            // oh well, no metadata
-        }
-    }
-
+  
     public void load() throws SQLException {
 
         //System.out.println("Processing data, please wait ......");

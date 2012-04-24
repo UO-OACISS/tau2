@@ -400,7 +400,6 @@ public class TAUdbDatabaseAPI {
 
 	private static void uploadUserEvents(int trialID, Map<Function, Integer> functionMap, DataSource dataSource,
 			DB db) throws SQLException {
-		Map<UserEvent, Integer> map = new HashMap<UserEvent, Integer>();
 		
 		// first, build a map of timer names to integers
 		Map<String, Integer> contextMap = new HashMap<String, Integer>();
@@ -408,7 +407,6 @@ public class TAUdbDatabaseAPI {
 			contextMap.put(key.getName(), functionMap.get(key)); 
 		}
 
-		String group = null; // no groups right now?
 		// TODO: Need to load information for parent timer
 		PreparedStatement statement = db.prepareStatement("INSERT INTO "
 				+ db.getSchemaPrefix() + "counter (trial, name, parent) VALUES (?, ?, ?)");
