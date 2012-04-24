@@ -442,7 +442,7 @@ public class Trial implements Serializable, Comparable<Trial> {
 
 
     // gets the metric data for the trial
-    private void getTrialMetrics(DB db) {
+    protected void getTrialMetrics(DB db) {
         // create a string to hit the database
         StringBuffer buf = new StringBuffer();
         buf.append("select id, name ");
@@ -490,8 +490,7 @@ public class Trial implements Serializable, Comparable<Trial> {
         // need to load each time in case we are working with a new database. 
         //        if (Trial.fieldNames != null)
         //            return;
-    	if(db.getSchemaVersion() >0) TAUdbTrial.getMetaData(db,allColumns);
-
+		
         try {
             ResultSet resultSet = null;
 

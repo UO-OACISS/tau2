@@ -5,6 +5,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.Vector;
 
 import edu.uoregon.tau.perfdmf.database.DB;
@@ -141,13 +142,13 @@ public class TAUdbTrial extends Trial {
 		            }
 		            resultSet.close();
 //TODO: Deal with adding the metrics to the trial
-//		            // get the function details
-//		            Enumeration<Trial> en = trials.elements();
-//		            Trial trial;
-//		            while (en.hasMoreElements()) {
-//		                trial = en.nextElement();
-//		                trial.getTrialMetrics(db);
-//		            }
+		            // get the function details
+		            Enumeration<Trial> en = trials.elements();
+		            Trial trial;
+		            while (en.hasMoreElements()) {
+		                trial = en.nextElement();
+		                trial.getTrialMetrics(db);
+		            }
 
 		            Collections.sort(trials);
 
@@ -158,17 +159,7 @@ public class TAUdbTrial extends Trial {
 	            return null;
 		        }
 	}
-		//This is for the Columns in the Trial table
-		public static void getMetaData(DB db, boolean allColumns) {
-		            String[] fieldNames = new String[6];
-		            fieldNames[0] = "collection_date";
-		            fieldNames[1] = "data_source";
-		            fieldNames[2] = "node_count";
-		            fieldNames[3] = "contexts_per_node";
-		            fieldNames[4] = "threads_per_context";
-		            fieldNames[5] = "total_threads";
-		            db.getDatabase().setTrialFieldNames(fieldNames);
-		}
+
 		public void loadXMLMetadata(DB db) {
 			loadMetadata(db);
 		}
