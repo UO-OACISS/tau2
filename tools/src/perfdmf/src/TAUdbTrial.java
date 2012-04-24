@@ -160,11 +160,7 @@ public class TAUdbTrial extends Trial {
 	}
 		//This is for the Columns in the Trial table
 		public static void getMetaData(DB db, boolean allColumns) {
-	
-				  
 		            String[] fieldNames = new String[6];
-		           //int[] fieldTypes = new int[typeList.size()];
-		           // String[] fieldTypeNames = new String[typeList.size()];
 		            fieldNames[0] = "collection_date";
 		            fieldNames[1] = "data_source";
 		            fieldNames[2] = "node_count";
@@ -172,22 +168,17 @@ public class TAUdbTrial extends Trial {
 		            fieldNames[4] = "threads_per_context";
 		            fieldNames[5] = "total_threads";
 		            db.getDatabase().setTrialFieldNames(fieldNames);
-		            //db.getDatabase().setTrialFieldTypes(fieldTypes);
-		            //db.getDatabase().setTrialFieldTypeNames(fieldTypeNames);
-
 		}
 		public void loadXMLMetadata(DB db) {
 			loadMetadata(db);
 		}
 //Shouldn't this method override loadXMLMetadata?
 		public void loadMetadata(DB db) {
-	        boolean retval = false;
 	        try {
 	            PreparedStatement statement = db.prepareStatement("SELECT name, value FROM " + db.getSchemaPrefix() + "primary_metadata WHERE trial = ?");
 	            statement.setInt(1, this.trialID);
 	            ResultSet results = statement.executeQuery();
 	            while (results.next() != false) {
-	                int pos = 1;
 	                String name = results.getString(1);
 	                String value = results.getString(2);
 	                this.metaData.put(name, value);

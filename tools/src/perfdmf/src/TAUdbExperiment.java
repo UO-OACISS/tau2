@@ -1,13 +1,11 @@
 package edu.uoregon.tau.perfdmf;
 
-import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Vector;
 
 import edu.uoregon.tau.perfdmf.database.DB;
-import edu.uoregon.tau.perfdmf.database.DBConnector;
 
 public class TAUdbExperiment {
 
