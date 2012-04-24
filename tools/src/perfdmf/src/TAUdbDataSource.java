@@ -252,8 +252,12 @@ public class TAUdbDataSource extends DataSource {
             userEventProfile.updateMax();
         }
 
-       // downloadMetaData();
-
+       //downloadMetaData();
+        Trial t = databaseAPI.getTrial();
+        databaseAPI.getTrial().loadXMLMetadata(db);
+        //ParaProf uses the metadata in the datas ource to load the side bar rather than 
+        //what's in the trial so you have to do both.
+        this.setMetaData(t.getMetaData());
         databaseAPI.terminate();
         time = (System.currentTimeMillis()) - time;
         //System.out.println("Time to download file (in milliseconds): " + time);

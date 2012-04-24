@@ -176,7 +176,10 @@ public class TAUdbTrial extends Trial {
 		            //db.getDatabase().setTrialFieldTypeNames(fieldTypeNames);
 
 		}
-
+		public void loadXMLMetadata(DB db) {
+			loadMetadata(db);
+		}
+//Shouldn't this method override loadXMLMetadata?
 		public void loadMetadata(DB db) {
 	        boolean retval = false;
 	        try {
