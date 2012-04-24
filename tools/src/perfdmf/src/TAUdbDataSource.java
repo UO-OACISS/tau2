@@ -3,6 +3,7 @@ package edu.uoregon.tau.perfdmf;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -82,7 +83,6 @@ public class TAUdbDataSource extends DataSource {
         DB db = databaseAPI.getDb();
 
  
-		StringBuffer buff = new StringBuffer();
 		String buf = "select v.timer, v.metric, h.node_rank as node, h.context_rank as context, h.thread_rank as thread, " +
 				"v.inclusive_value as inclusive, v.exclusive_value as inclusive, cp.calls, cp.subroutines " +
 				"from timer_value v left outer join " +
@@ -107,8 +107,8 @@ public class TAUdbDataSource extends DataSource {
 
         // get the results
         long time = System.currentTimeMillis();
-        System.out.println(buff.toString());
-        ResultSet resultSet = db.executeQuery(buff.toString());
+        //System.out.println(buf.toString());
+        ResultSet resultSet = db.executeQuery(buf.toString());
         time = (System.currentTimeMillis()) - time;
         //System.out.println("Query : " + time);
         //System.out.print(time + ", ");
@@ -225,7 +225,6 @@ public class TAUdbDataSource extends DataSource {
 
         // map Interval Event ID's to Function objects
         Map<Integer, UserEvent> aeMap = new HashMap<Integer, UserEvent>();
-System.err.println("Warning not loading Atomic Events from TAUdb yet");
         ListIterator<AtomicEvent> lAE = databaseAPI.getAtomicEvents().listIterator();
         while (lAE.hasNext()) {
             AtomicEvent atomicEvent = lAE.next();
@@ -253,7 +252,7 @@ System.err.println("Warning not loading Atomic Events from TAUdb yet");
             userEventProfile.updateMax();
         }
 
-        downloadMetaData();
+       // downloadMetaData();
 
         databaseAPI.terminate();
         time = (System.currentTimeMillis()) - time;
@@ -263,6 +262,73 @@ System.err.println("Warning not loading Atomic Events from TAUdb yet");
         // We actually discard the mean and total values by calling this
         // But, we need to compute other statistics anyway
         //TODO Deal with derived data.  Most of it will be saved in the DB?
-        //generateDerivedData();
+        generateDerivedData();
     }
+//    public static List<Trial> getTrialsForTAUdbView (List<RMIView> views, DB db) {
+//		//PerfExplorerOutput.println("getTrialsForView()...");
+//		List<Trial> trials = new ArrayList<Trial>();
+//		try {
+//			
+//			StringBuilder sql = new StringBuilder();
+//			sql.append("select conjoin, taudb_view, table_name, column_name, operator, value from taudb_view left outer join taudb_view_parameter on taudb_view.id = taudb_view_parameter.taudb_view where taudb_view.id in (");
+//			for (int i = 0 ; i < views.size(); i++) {
+//				if (i > 0)
+//					sql.append(",?");
+//				else
+//					sql.append("?");
+//			}
+//			sql.append(") order by taudb_view.id");
+//			PreparedStatement statement = db.prepareStatement(sql.toString());
+//			int i = 1;
+//			for (RMIView view : views) {
+//				statement.setInt(1, Integer.valueOf(view.getField("ID")));
+//				i++;
+//			}
+//			ResultSet results = statement.executeQuery();
+//			
+//			StringBuilder whereClause = new StringBuilder();
+//			StringBuilder joinClause = new StringBuilder();
+//			int currentView = 0;
+//			int alias = 0;
+//			String conjoin = " where ";
+//			while (results.next() != false) {
+//				int viewid = results.getInt(2);
+//				String tableName = results.getString(3);
+//				if (tableName == null) 
+//					break;
+//				String columnName = results.getString(4);
+//				String operator = results.getString(5);
+//				String value = results.getString(6);
+//				if ((currentView > 0) && (currentView != viewid)) {
+//					conjoin = " and ";
+//				} else if (currentView == viewid) {
+//					conjoin = " " + results.getString(1) + " ";
+//				}
+//				if (tableName.equalsIgnoreCase("trial")) {
+//					whereClause.append(conjoin + tableName + "." + columnName + " " + operator + " " + "'" + value + "'");
+//				} else {
+//					// otherwise, we have primary_metadata or secondary_metadata
+//					joinClause.append(" left outer join " + tableName + " t" + alias + " on t.id = t" + alias + ".trial");
+//					whereClause.append(conjoin + "t" + alias + "." + columnName);
+//					if (db.getDBType().compareTo("db2") == 0) {
+//						whereClause.append(" as varchar(256)) ");
+//					}
+//					whereClause.append(" " + operator + " " + "'" + value + "'");
+//				}
+//				alias++;
+//				currentView = viewid;
+//			}
+//			statement.close();
+//			
+//			//PerfExplorerOutput.println(whereClause.toString());
+//			trials = Trial.getTrialList(db, joinClause.toString() + " " + whereClause.toString(), false);
+//		} catch (Exception e) {
+//			String error = "ERROR: Couldn't select views from the database!";
+//			System.err.println(error);
+//			e.printStackTrace();
+//		}
+//		return trials;
+//	}
+
+
 }

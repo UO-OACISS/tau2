@@ -267,7 +267,7 @@ public class AtomicEvent {
         buf.append("from " + db.getSchemaPrefix() + "counter u ");
         buf.append(whereClause);
         buf.append(" order by id ");
-        System.out.println(buf.toString());
+        //System.out.println(buf.toString());
 
         // get the results
         try {
