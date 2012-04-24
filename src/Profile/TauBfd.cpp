@@ -283,6 +283,8 @@ static int Tau_bfd_internal_BGP_dl_iter_callback(
 		TAU_VERBOSE("Tau_bfd_internal_BGP_dl_iter_callback: Nameless module. Ignored.\n");
 		return 0;
 	}
+	TAU_VERBOSE("Tau_bfd_internal_BGP_dl_iter_callback: Processing module [%s]\n",
+		    info->dlpi_name);
 
 	TauBfdUnit *unit = (TauBfdUnit *)data;
 	TauBfdAddrMap * map = new TauBfdAddrMap;
@@ -749,6 +751,7 @@ static int Tau_bfd_internal_getBGPExePath(char *path) {
     return -1;
   }
   sprintf (path, "/jobs/%s/exe", jobid);
+  TAU_VERBOSE("Tau_bfd_internal_getBGPExePath: [%s]\n", path);
   return 0;
 }
 #endif /* TAU_BGP || TAU_BGQ */
@@ -762,7 +765,8 @@ static char const * Tau_bfd_internal_getExecutablePath()
 #if defined(TAU_AIX)
 	// AIX
 	sprintf(path, "/proc/%d/object/a.out", getpid());
-#elif defined(TAU_BGP)
+// #elif defined(TAU_BGP)
+#elif (defined(TAU_BGP) || defined(TAU_BGQ))
 	// BlueGene
 	if (Tau_bfd_internal_getBGPExePath(path) != 0) {
 		fprintf(stderr, "Tau_bfd_internal_getExecutablePath: "

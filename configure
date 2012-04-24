@@ -3305,6 +3305,8 @@ case $cxx_compiler in
     mpicxx)
 	if [ $machine = bgp -o $machine = bgq ] ; then
 	    echo "Using GNU Compilers for BGP"
+	    cxx_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx
+	    c_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc
 	    tauoptions="${tauoptions}-gnu"
 	else
 	    echo "ERROR Unknown C++ compiler: $cxx_compiler"
