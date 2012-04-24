@@ -112,7 +112,7 @@ public class TAUdbTrial extends Trial {
 
 		            Vector<Trial> trials = new Vector<Trial>();
 
-		            System.out.println(buf.toString());
+		            //System.out.println(buf.toString());
 		            ResultSet resultSet = db.executeQuery(buf.toString());
 		            while (resultSet.next() != false) {
 		                Trial trial = new TAUdbTrial();

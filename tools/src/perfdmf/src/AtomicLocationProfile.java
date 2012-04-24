@@ -270,16 +270,17 @@ public class AtomicLocationProfile {
 			String whereClause) {
     	Vector<AtomicLocationProfile> atomicEventData = new Vector<AtomicLocationProfile>();
     	// create a string to hit the database
-    	StringBuffer buf = new StringBuffer();
-    	buf.append("select p.atomic_event, p.node, ");
-    	buf.append("p.context, p.thread, p.sample_count, ");
-    	buf.append("p.maximum_value, p.minimum_value, p.mean_value, ");
-    	buf.append("p.standard_deviation, e.trial ");
-    	buf.append("from " + db.getSchemaPrefix() + "atomic_location_profile p ");
-    	buf.append("inner join " + db.getSchemaPrefix() + "atomic_event e on e.id = p.atomic_event ");
+		StringBuffer buf = new StringBuffer();
+		buf.append("select v.counter, h.node_rank as node, h.context_rank as context, h.thread_rank as thread,v.sample_count,");
+		buf.append("v.maximum_value, v.minimum_value, v.mean_value,v.standard_deviation");
+		buf.append(" from " +
+				db.getSchemaPrefix() +"counter_value v  left outer join counter e on v.counter = e.id ");
+		buf.append("left outer join " +
+				db.getSchemaPrefix() +"thread h on v.thread = h.id ");
+    	
     	buf.append(whereClause);
-    	buf.append(" order by p.node, p.context, p.thread, p.atomic_event");
-    	// System.out.println(buf.toString());
+    	buf.append(" order by node, context, thread, v.counter");
+    	 //System.out.println(buf.toString());
 
     	// get the results
     	try {
