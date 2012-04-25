@@ -1535,11 +1535,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				} else {
 					// otherwise, we have primary_metadata or secondary_metadata
 					joinClause.append(" left outer join " + tableName + " t" + alias + " on t.id = t" + alias + ".trial");
-					whereClause.append(conjoin + "t" + alias + "." + columnName);
-					if (db.getDBType().compareTo("db2") == 0) {
-						whereClause.append(" as varchar(256)) ");
-					}
-					whereClause.append(" " + operator + " " + "'" + value + "'");
+					whereClause.append(conjoin + "t" + alias + ".name = '" + columnName + "' ");
+					whereClause.append("and  t" + alias + ".value = '" + value + "' ");
 				}
 				alias++;
 				currentView = viewid;

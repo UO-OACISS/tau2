@@ -164,6 +164,10 @@ public class LoadTrial {
         }
 
         try {
+            if (databaseAPI.db().getSchemaVersion()>=0) {
+            	dataSource.setMeanIncludeNulls(false);
+            	dataSource.setGenerateTAUdbStatistics(true);
+            }
             dataSource.load();
         } catch (Exception e) {
             System.err.println("Error Loading Trial:");
