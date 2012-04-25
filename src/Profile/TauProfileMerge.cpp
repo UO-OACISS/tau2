@@ -53,15 +53,9 @@ void Tau_profileMerge_writeDefinitions(int *globalEventMap, int
   Tau_util_output (&out, "\n<definitions thread=\"*\">\n");
 
   for (int i=0; i<functionUnifier->globalNumItems; i++) {
-	
-		//int local_index = functionUnifier->sortMap[globalEventMap[i]];
-		int local_index = i;
+    Tau_util_output (&out, "<event id=\"%d\"><name>", i);
 
-    Tau_util_output (&out, "<event id=\"%d\"><name>", local_index);
-
-    char *name = functionUnifier->globalStrings[local_index];
-		printf("function list: %s, [%d, %d] (i,local_index) (definitions).\n",
-		functionUnifier->globalStrings[local_index], i, local_index);
+    char *name = functionUnifier->globalStrings[i];
     char *group = strstr(name,":GROUP:");
     if (group == NULL) {
       fprintf (stderr, "TAU: Error extracting groups for %s!\n",name);
@@ -78,11 +72,8 @@ void Tau_profileMerge_writeDefinitions(int *globalEventMap, int
   }
 
   for (int i=0; i<atomicUnifier->globalNumItems; i++) {
-		
-		int local_index = atomicUnifier->sortMap[globalAtomicEventMap[i]];
-		
-    Tau_util_output (&out, "<userevent id=\"%d\"><name>", local_index);
-    Tau_XML_writeString(&out, atomicUnifier->globalStrings[local_index]);
+    Tau_util_output (&out, "<userevent id=\"%d\"><name>", i);
+    Tau_XML_writeString(&out, atomicUnifier->globalStrings[i]);
     Tau_util_output (&out, "</name></userevent>\n");
   }
 
@@ -104,10 +95,6 @@ int Tau_mergeProfiles() {
 
   Tau_global_incr_insideTAU();
 #ifdef TAU_UNIFY
-	//nasty workaround: we need at least one atomic event for the atomic
-	//unification to work correctly.
-	//TAU_REGISTER_EVENT(e, "TAU profiles merged");
-	//TAU_EVENT(e, 0);
   Tau_unify_unifyDefinitions();
 
 	for (int tid = 0; tid<RtsLayer::getTotalThreads(); tid++) {
@@ -130,8 +117,9 @@ int Tau_mergeProfiles() {
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &size);
 
-  buf = Tau_snapshot_getBuffer();
-  buflen = Tau_snapshot_getBufferLength();
+	buflen = Tau_snapshot_getBufferLength();
+	buf = (char *) malloc(buflen);
+	Tau_snapshot_getBuffer(buf);
 
   int maxBuflen;
   PMPI_Reduce(&buflen, &maxBuflen, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
@@ -299,8 +287,9 @@ int Tau_mergeProfiles() {
     }
     Tau_snapshot_writeMetaDataBlock();
 
-    buf = Tau_snapshot_getBuffer();
     buflen = Tau_snapshot_getBufferLength();
+		buf = (char *) malloc(buflen);
+    Tau_snapshot_getBuffer(buf);
     fwrite (buf, buflen, 1, f);
 
 #ifdef TAU_UNIFY
@@ -323,14 +312,11 @@ int Tau_mergeProfiles() {
 	
 	fprintf(f,"<derivedinterval_data metrics=\"%s\">\n", metricList);
 	for (int i=0; i<numEvents; i++) {
-		int local_index = functionUnifier->sortMap[globalEventMap[i]];
-		printf("function list: %s, [%d, %d] (i,local_index) (derivedinterval).\n",
-		functionUnifier->globalStrings[local_index], i, local_index);
-	  fprintf(f, "%d %lld %lld ", i, (long long)gNumCalls[step_sum][local_index], 
-		  (long long)gNumSubr[step_sum][local_index]);
+	  fprintf(f, "%d %lld %lld ", i, (long long)gNumCalls[step_sum][i], 
+		  (long long)gNumSubr[step_sum][i]);
 	  for (int m=0; m<Tau_Global_numCounters; m++) {
-	    fprintf(f, "%.16G %.16G ", gExcl[step_sum][m][local_index], 
-		    gIncl[step_sum][m][local_index]);
+	    fprintf(f, "%.16G %.16G ", gExcl[step_sum][m][i], 
+		    gIncl[step_sum][m][i]);
 	  }	  
 	  fprintf(f,"\n");
 	}
@@ -354,12 +340,9 @@ int Tau_mergeProfiles() {
           }
 	  fprintf(f,"<derivedinterval_data metrics=\"%s\">\n", metricList);
 	  for (int i=0; i<numEvents; i++) {
-			int local_index = functionUnifier->sortMap[globalEventMap[i]];
-			printf("function list: %s, [%d, %d] (i,local_index) (derivedentity).\n",
-			functionUnifier->globalStrings[local_index], i, local_index);
-	    fprintf(f, "%d %.16G %.16G ", i, sNumCalls[s][local_index], sNumSubr[s][local_index]);
+	    fprintf(f, "%d %.16G %.16G ", i, sNumCalls[s][i], sNumSubr[s][i]);
 	    for (int m=0; m<Tau_Global_numCounters; m++) {
-	      fprintf(f, "%.16G %.16G ", sExcl[s][m][local_index], sIncl[s][m][local_index]);
+	      fprintf(f, "%.16G %.16G ", sExcl[s][m][i], sIncl[s][m][i]);
 	    }	  
 	    fprintf(f,"\n");
 	  }
@@ -367,16 +350,13 @@ int Tau_mergeProfiles() {
 	  fprintf(f, "</derivedinterval_data>\n");
 	  fprintf(f,"<derivedatomic_data>\n");
 	  for (int i=0; i<numAtomicEvents; i++) {
-			int local_index = functionUnifier->sortMap[globalEventMap[i]];
-			printf("function list: %s, [%d, %d] (i,local_index) (derivedatomic).\n",
-			functionUnifier->globalStrings[local_index], i, local_index);
 	    // output order = num calls, max, min, mean, sumsqr
 	    fprintf(f,"%d %.16G %.16G %.16G %.16G %.16G\n", i,
-		   sAtomicCalls[s][local_index], 
-		   sAtomicMax[s][local_index],
-		   sAtomicMin[s][local_index], 
-		   sAtomicMean[s][local_index],
-		   sAtomicSumSqr[s][local_index]);
+		   sAtomicCalls[s][i], 
+		   sAtomicMax[s][i],
+		   sAtomicMin[s][i], 
+		   sAtomicMean[s][i],
+		   sAtomicSumSqr[s][i]);
 	  }
 	  fprintf(f,"</derivedatomic_data>\n");
 	  
@@ -416,6 +396,7 @@ int Tau_mergeProfiles() {
     /* send data */
     PMPI_Send(buf, buflen, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
   }
+	free(buf);
   Tau_global_decr_insideTAU();  
   return 0;
 }
