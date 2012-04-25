@@ -184,18 +184,18 @@ unify_merge_object_t *Tau_unify_mergeObjects(vector<unify_object_t*> &objects) {
     int objectIndex = 0;
     for (int i=0; i<objects.size(); i++) {
       if (objects[i]->idx < objects[i]->numEvents) {
-				if (nextString == NULL) {
-	  			nextString = objects[i]->strings[objects[i]->idx];
-	  			objectIndex = i;
-				} else {
-	  			char *compareString = objects[i]->strings[objects[i]->idx];
-	  			if (strcmp(nextString, compareString) > 0) {
-	    			nextString = compareString;
-	    			objectIndex = i;
-	  			}
-				}
-    	}
- 	  }
+	if (nextString == NULL) {
+	  nextString = objects[i]->strings[objects[i]->idx];
+	  objectIndex = i;
+	} else {
+	  char *compareString = objects[i]->strings[objects[i]->idx];
+	  if (strcmp(nextString, compareString) > 0) {
+	    nextString = compareString;
+	    objectIndex = i;
+	  }
+	}
+      }
+    }
  
     // the next string is given in nextString at this point
     if (nextString != NULL) {
@@ -207,14 +207,14 @@ unify_merge_object_t *Tau_unify_mergeObjects(vector<unify_object_t*> &objects) {
     // write the mappings and check if we are finished
     for (int i=0; i<objects.size(); i++) {
       if (objects[i]->idx < objects[i]->numEvents) {
-				char * compareString = objects[i]->strings[objects[i]->idx];
-				if (strcmp(nextString, compareString) == 0) {
-	 			  objects[i]->mapping[objects[i]->idx] = count;
-	  			objects[i]->idx++;
-				}
-				if (objects[i]->idx < objects[i]->numEvents) {
-	  			finished = false;
-				}
+	char * compareString = objects[i]->strings[objects[i]->idx];
+	if (strcmp(nextString, compareString) == 0) {
+	  objects[i]->mapping[objects[i]->idx] = count;
+	  objects[i]->idx++;
+	}
+	if (objects[i]->idx < objects[i]->numEvents) {
+	  finished = false;
+	}
       }
     }
     
