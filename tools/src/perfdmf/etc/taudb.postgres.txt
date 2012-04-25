@@ -24,6 +24,7 @@ DROP TABLE timer;
 
 DROP TABLE metric;
 DROP TABLE thread;
+DROP TABLE derived_thread_type;
 DROP TABLE trial;
 DROP TABLE data_source;
 DROP TABLE schema_version;
@@ -113,13 +114,25 @@ CREATE TABLE trial (
    -1 mean (nulls ignored)
    -2 total
    -3 stddev (nulls ignored)
-   -4 mean (nulls are 0 value)
-   -5 stddev (nulls are 0 value)
-   -6 min (nulls are ignored)
-   -7 min (nulls are 0 value)
-   -8 max
-   -9 mode
+   -4 min
+   -5 max
+   -6 mean (nulls are 0 value)
+   -7 stddev (nulls are 0 value)
 */
+
+CREATE TABLE derived_thread_type (
+ id INT NOT NULL,
+ name VARCHAR NOT NULL,
+ description VARCHAR NOT NULL
+);
+
+INSERT INTO derived_thread_type (id, name, description) VALUES (-1, 'MEAN', 'MEAN (nulls ignored)');
+INSERT INTO derived_thread_type (id, name, description) VALUES (-2, 'TOTAL', 'TOTAL');
+INSERT INTO derived_thread_type (id, name, description) VALUES (-3, 'STDDEV', 'STDDEV (nulls ignored)');
+INSERT INTO derived_thread_type (id, name, description) VALUES (-4, 'MIN', 'MIN');
+INSERT INTO derived_thread_type (id, name, description) VALUES (-5, 'MAX', 'MAX');
+INSERT INTO derived_thread_type (id, name, description) VALUES (-6, 'MEAN', 'MEAN (nulls are 0 value)');
+INSERT INTO derived_thread_type (id, name, description) VALUES (-7, 'STDDEV', 'STDDEV (nulls are 0 value)');
 
 CREATE TABLE thread (
  id           SERIAL NOT NULL PRIMARY KEY,
@@ -347,7 +360,9 @@ create table taudb_view_parameter (
 	taudb_view			INTEGER	NOT NULL,
 	/* the table name for the where clause */
 	table_name			VARCHAR	NOT NULL,
-	/* the column name for the where clause */
+	/* the column name for the where clause.
+	   If the table_name is one of the metadata tables, this is the 
+	   value of the "name" column */
 	column_name			VARCHAR	NOT NULL,
 	/* the operator for the where clause */
 	operator			VARCHAR	NOT NULL,
@@ -356,8 +371,10 @@ create table taudb_view_parameter (
 	FOREIGN KEY (taudb_view) REFERENCES taudb_view(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+/* simple view of all trials */
 INSERT INTO taudb_view (parent, name, conjoin) VALUES (NULL, 'All Trials', 'and');
+
+/* simple view where the metadata field "Application" is equal to "application" */
 INSERT INTO taudb_view (parent, name, conjoin) VALUES (NULL, 'Test View', 'and');
-INSERT INTO taudb_view_parameter (taudb_view, table_name, column_name, operator, value) VALUES (2, 'primary_metadata', 'name', '=', 'Application');
-INSERT INTO taudb_view_parameter (taudb_view, table_name, column_name, operator, value) VALUES (2, 'primary_metadata', 'value', '=', 'application');
+INSERT INTO taudb_view_parameter (taudb_view, table_name, column_name, operator, value) VALUES (2, 'primary_metadata', 'Application', '=', 'application');
 

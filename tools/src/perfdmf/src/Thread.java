@@ -33,6 +33,8 @@ public class Thread implements Comparable<Thread> {
     public static final int STDDEV = -3;
     public static final int MIN = -4;
     public static final int MAX = -5;
+    public static final int MEAN_ALL = -6;
+    public static final int STDDEV_ALL = -7;
 
     private List<Snapshot> snapshots = new ArrayList<Snapshot>();
     private Map<String,String> metaData = new TreeMap<String,String>();
@@ -80,20 +82,26 @@ public class Thread implements Comparable<Thread> {
     }
 
     public String toString() {
-        if (nodeID == -1) {
+        if (nodeID == MEAN) {
             return "Mean";
         }
-        if (nodeID == -2) {
+        if (nodeID == TOTAL) {
             return "Total";
         }
-        if (nodeID == -3) {
+        if (nodeID == STDDEV) {
             return "Standard Deviation";
         }
-        if (nodeID == -4) {
+        if (nodeID == MIN) {
             return "Min";
         }
-        if (nodeID == -5) {
+        if (nodeID == MAX) {
             return "Max";
+        }
+        if (nodeID == MEAN_ALL) {
+            return "Mean, All Threads";
+        }
+        if (nodeID == STDDEV_ALL) {
+            return "Standard Deviation, All Threads";
         }
         return "n,c,t " + nodeID + "," + contextID + "," + threadID;
     }

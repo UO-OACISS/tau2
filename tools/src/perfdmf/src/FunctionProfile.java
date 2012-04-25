@@ -104,13 +104,13 @@ public class FunctionProfile {
                 return 0;
             }
             return getInclusive(snapshot, metric) / dividend;
-        } else if (thread.getNodeID() == Thread.TOTAL || thread.getNodeID() == Thread.MEAN|| thread.getNodeID() == Thread.MIN|| thread.getNodeID() == Thread.MAX) {
+        } else if (thread.getNodeID() == Thread.TOTAL || thread.getNodeID() == Thread.MEAN|| thread.getNodeID() == Thread.MIN|| thread.getNodeID() == Thread.MAX|| thread.getNodeID() == Thread.MEAN_ALL) {
             double dividend = thread.getPercentDivider(metric, snapshot);
             if (dividend == 0) {
                 return 0;
             }
             return function.getTotalProfile().getInclusive(snapshot, metric) / dividend;
-        } else if (thread.getNodeID() == Thread.STDDEV) {
+        } else if (thread.getNodeID() == Thread.STDDEV || thread.getNodeID() == Thread.STDDEV_ALL) {
             return getInclusive(snapshot, metric) / function.getMeanInclusive(metric) * 100.0;
         }
         throw new RuntimeException("Bad Thread ID = " + thread);
@@ -132,7 +132,7 @@ public class FunctionProfile {
                 return 0;
             }
             return getExclusive(snapshot, metric) / dividend;
-        } else if (thread.getNodeID() == Thread.TOTAL || thread.getNodeID() == Thread.MEAN || thread.getNodeID() == Thread.MIN || thread.getNodeID() == Thread.MAX) {
+        } else if (thread.getNodeID() == Thread.TOTAL || thread.getNodeID() == Thread.MEAN || thread.getNodeID() == Thread.MIN || thread.getNodeID() == Thread.MAX|| thread.getNodeID() == Thread.MEAN_ALL) {
             double dividend = thread.getPercentDivider(metric, snapshot);
             if (dividend == 0) {
                 return 0;
@@ -150,7 +150,7 @@ public class FunctionProfile {
                 dividend /= thread.getDataSource().getAllThreads().size();
                 return function.getMeanProfile().getExclusive(snapshot, metric) / dividend;
             }
-        } else if (thread.getNodeID() == Thread.STDDEV) {
+        } else if (thread.getNodeID() == Thread.STDDEV || thread.getNodeID() == Thread.STDDEV_ALL) {
             return getExclusive(metric) / function.getMeanExclusive(metric) * 100.0;
         }
         throw new RuntimeException("Bad Thread ID = " + thread);

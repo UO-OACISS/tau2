@@ -19,7 +19,14 @@ import com.google.gson.JsonSyntaxException;
 import edu.uoregon.tau.perfdmf.database.DB;
 
 public class TAUdbDatabaseAPI extends DatabaseAPI {
-
+	final static int MEAN_WITHOUT_NULL = -1;
+	final static int TOTAL = -2;
+	final static int STDDEV_WITHOUT_NULL = -3;
+	final static int MIN = -4;
+	final static int MAX = -5;
+	final static int MEAN_WITH_NULL = -6;
+	final static int STDDEV_WITH_NULL = -7;
+	
 	public static int uploadTrial(DB db, Trial trial) {
 
         DataSource dataSource = trial.getDataSource();
@@ -57,21 +64,22 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 
             uploadFunctionProfiles(dataSource, functionMap, metricMap, threadMap, db);
 
+            Map<Thread, Integer> derivedThreadMap = uploadDerivedThreads(newTrialID, dataSource, db);
+            uploadStatistics(dataSource, functionMap, metricMap, derivedThreadMap, db);
 
            uploadUserEvents(newTrialID, functionMap, dataSource, db);
            Map<UserEvent, Integer> userEventMap = getUserEventsMap(newTrialID, dataSource, db);
 
             uploadUserEventProfiles( dataSource, userEventMap, db, threadMap);
-            
-//TODO: Deal with cancel upload
-//            if (this.cancelUpload) {
-//                db.rollback();
-//                deleteTrial(newTrialID);
-//                return -1;
-//            }
-            
+                        
             uploadMetadata(trial, functionMap, threadMap, db);
 
+          //TODO: Deal with cancel upload
+//          if (this.cancelUpload) {
+//              db.rollback();
+//              deleteTrial(newTrialID);
+//              return -1;
+//          }
         } catch (SQLException e) {
             try {
                 db.rollback();
@@ -95,6 +103,86 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
         //double elapsedSeconds = (double) (elapsedMillis) / 1000.0;
         //        System.out.println("Elapsed time: " + elapsedSeconds + " seconds.");
         return newTrialID;
+	}
+
+	private static Map<Thread, Integer> uploadDerivedThreads(int trialID,
+			DataSource dataSource, DB db) throws SQLException {
+		PreparedStatement stmt = db.prepareStatement("INSERT INTO "
+				+ db.getSchemaPrefix()
+				+ "thread (trial, node_rank, context_rank, thread_rank,  " +
+				" thread_index) VALUES (?, ?, ?, ?, ?)");
+		List<Thread> threads = dataSource.getAggThreads();
+
+		for (Thread t : threads) {
+			int node_rank = t.getNodeID();
+			int context_rank = t.getContextID();
+			int thread_rank = t.getThreadID();
+			int thread_index = node_rank; // same negative value 
+			stmt.setInt(1, trialID);
+			stmt.setInt(2, node_rank);
+			stmt.setInt(3, context_rank);
+			stmt.setInt(4, thread_rank);
+			stmt.setInt(5, thread_index);
+			stmt.addBatch();
+		}
+		stmt.executeBatch();
+		stmt.close();
+		return getDerivedThreadsMap(trialID, dataSource, db);
+	}
+
+	private static void uploadStatistics(DataSource dataSource,
+			Map<Function, Integer> functionMap, Map<Metric, Integer> metricMap,
+			Map<Thread, Integer> derivedThreadMap, DB db) throws SQLException {
+		PreparedStatement timerValueInsert = db.prepareStatement("INSERT INTO "
+						+ db.getSchemaPrefix()
+						+ "timer_value (timer, thread, metric, inclusive_percent, inclusive_value, exclusive_percent, "
+						+ " exclusive_value) VALUES (?, ?, ?, ?, ?, ?, ?)");
+
+		Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
+
+		for (Metric metric:  dataSource.getMetrics()) {
+			Integer metricID = metricMap.get(metric);
+
+			for (Iterator<Function> func = dataSource.getFunctions(); func.hasNext();) {
+				Function function = func.next();
+				if (function.isGroupMember(derived)) {
+					continue;
+				}
+				Integer timerID = functionMap.get(function);
+				for (Thread thread : dataSource.getAggThreads()) {
+				insertDerivedThreadValue(timerValueInsert, metric, metricID,
+						timerID, thread, derivedThreadMap, function);
+				}
+			}
+		}
+		timerValueInsert.executeBatch();
+		timerValueInsert.close();
+	}
+
+	private static void insertDerivedThreadValue(
+			PreparedStatement timerValueInsert, Metric metric,
+			Integer metricID, Integer timerID, Thread thread, 
+			Map<Thread, Integer> derivedThreadMap, Function function
+			) throws SQLException {
+		Integer threadID = derivedThreadMap.get(thread);
+		FunctionProfile fp = thread.getFunctionProfile(function);
+		if (fp != null) { // only if this thread calls this function
+			// TODO: Deal with cancelUpload
+			// if (this.cancelUpload)
+			// return;
+			timerValueInsert.setInt(1,timerID);
+			timerValueInsert.setInt(2, threadID);
+			timerValueInsert.setInt(3, metricID);
+			
+			timerValueInsert.setDouble(4, fp.getInclusivePercent(metric.getID()));
+			timerValueInsert.setDouble(5, fp.getInclusive(metric.getID()));
+			timerValueInsert.setDouble(6, fp.getExclusivePercent(metric.getID()));
+			timerValueInsert.setDouble(7, fp.getExclusive(metric.getID()));
+			//TODO: Find the sum_exclusive_square values
+//						timerValueInsert.setDouble(8, fp.get)
+			
+			timerValueInsert.addBatch();	
+		}
 	}
 
 	private static void uploadCallpathInfo(DataSource dataSource,
@@ -202,6 +290,49 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 
 	}
 
+	private static Map<Thread, Integer> getDerivedThreadsMap(int trialID,DataSource dataSource, DB db) throws SQLException {
+		Map<Thread, Integer> map = new HashMap<Thread, Integer>();
+
+		PreparedStatement statement = db.prepareStatement("SELECT thread_index, id FROM "
+						+ db.getSchemaPrefix()
+						+ "thread WHERE trial=? and thread_index < 0 order by thread_index desc");
+		statement.setInt(1, trialID);
+		statement.execute();
+        ResultSet results = statement.getResultSet();
+
+		while (results.next()) {
+			int thread_index = results.getInt(1);
+			int id = results.getInt(2);
+			switch (thread_index) {
+			case MEAN_WITHOUT_NULL:
+				map.put(dataSource.getMeanData(), id);
+				break;
+			case TOTAL:
+				map.put(dataSource.getTotalData(), id);
+				break;
+			case STDDEV_WITHOUT_NULL:
+				map.put(dataSource.getStdDevData(), id);
+				break;
+			case MIN:
+				map.put(dataSource.getMinData(), id);
+				break;
+			case MAX:
+				map.put(dataSource.getMaxData(), id);
+				break;
+			case MEAN_WITH_NULL:
+				map.put(dataSource.getMeanDataAll(), id);
+				break;
+			case STDDEV_WITH_NULL:
+				map.put(dataSource.getStdDevDataAll(), id);
+				break;
+			default:
+				break;
+			}
+		}
+		statement.close();
+        return map;
+
+	}
 
 
 	private static void uploadTimerParameter(Map<Function, Integer> map, DB db) throws SQLException {
@@ -361,36 +492,9 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 					continue;
 				}
 				Integer timerID = functionMap.get(function);
-				
-				// TODO: Save total thread as -2 thread
-				edu.uoregon.tau.perfdmf.Thread totalData = dataSource.getTotalData();
-
 				for (Thread thread : dataSource.getAllThreads()) {
-					Integer threadID = threadMap.get(thread);
-
-					FunctionProfile fp = thread.getFunctionProfile(function);
-					
-
-					if (fp != null) { // only if this thread calls this function
-						// TODO: Deal with cancelUpload
-						// if (this.cancelUpload)
-						// return;
-						timerValueInsert.setInt(1,timerID);
-						timerValueInsert.setInt(2, threadID);
-						timerValueInsert.setInt(3, metricID);
-						
-						timerValueInsert.setDouble(4, fp.getInclusivePercent(metric.getID()));
-						timerValueInsert.setDouble(5, fp.getInclusive(metric.getID()));
-						timerValueInsert.setDouble(6, fp.getExclusivePercent(metric.getID()));
-						timerValueInsert.setDouble(7, fp.getExclusive(metric.getID()));
-						//TODO: Find the sum_exclusive_square values
-//						timerValueInsert.setDouble(8, fp.get)
-						
-						timerValueInsert.addBatch();	
-					
-						
-
-					}
+					insertDerivedThreadValue(timerValueInsert, metric,
+							metricID, timerID, thread, threadMap, function);
 				}
 			}
 		}
