@@ -682,7 +682,6 @@ public class Trial implements Serializable, Comparable<Trial> {
 
         try {
             database = db.getDatabase();
-            System.out.println(db.getSchemaVersion());
             // determine if we have a data meta-data item
             boolean haveDate = false;
             java.sql.Timestamp timestamp = null;
