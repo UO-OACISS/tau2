@@ -16,6 +16,7 @@ import java.io.IOException;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
+import edu.uoregon.tau.perfdmf.database.ConnectionManager;
 import edu.uoregon.tau.perfdmf.database.DB;
 
 public class TAUdbDatabaseAPI extends DatabaseAPI {
@@ -27,6 +28,17 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 	final static int MEAN_WITH_NULL = -6;
 	final static int STDDEV_WITH_NULL = -7;
 	
+	public TAUdbDatabaseAPI(DatabaseAPI api) {
+		super();
+        this.database = api.database;
+        this.connector = api.connector;
+        this.db = this.connector.getDB();
+	}
+
+	public TAUdbDatabaseAPI() {
+		super();
+	}
+
 	public static int uploadTrial(DB db, Trial trial) {
 
         DataSource dataSource = trial.getDataSource();

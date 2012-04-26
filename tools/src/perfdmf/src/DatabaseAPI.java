@@ -46,15 +46,15 @@ public class DatabaseAPI {
     private Vector<AtomicLocationProfile> atomicEventData = null;
 
     // from datasession
-    private DB db = null;
-    private ConnectionManager connector;
+    protected DB db = null;
+    protected ConnectionManager connector;
     private Hashtable<Integer, IntervalEvent> intervalEventHash = null;
     private Hashtable<Integer, AtomicEvent> atomicEventHash = null;
     //private String configFileName = null;
 
     private boolean cancelUpload = false;
 
-    private Database database;
+    protected Database database;
 
     public void cancelUpload() {
         this.cancelUpload = true;

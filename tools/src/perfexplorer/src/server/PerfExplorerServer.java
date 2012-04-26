@@ -32,6 +32,7 @@ import edu.uoregon.tau.perfdmf.DatabaseException;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.TAUdbDatabaseAPI;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfexplorer.common.AnalysisType;
@@ -153,7 +154,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		this.tauArch = tauArch;
 		PerfExplorerOutput.setQuiet(quiet);
 		theServer = this;
-		DatabaseAPI workerSession = null;
 		int i = 0;
 		List<String> configFiles = ConfigureFiles.getConfigurationNames();
 		if (configFile != null && configFile.length() > 0) {
@@ -180,8 +180,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				api = new DatabaseAPI();
 				String configName = tmpFile.replaceAll(prefix, "");
 				api.initialize(tmpFile, false);
-				workerSession = new DatabaseAPI();
-				workerSession.initialize(tmpFile, false);
+				if (api.db().getSchemaVersion() > 0) {
+					// copy the DatabaseAPI object data into a new TAUdbDatabaseAPI object
+					api = new TAUdbDatabaseAPI(api);
+				}
 				PerfExplorerOutput.println(" Connected to " + api.db().getConnectString() + ".");
 				this.sessions.add(api);
 				this.configNames.add(configName);
@@ -189,7 +191,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				this.schemaVersions.add(api.db().getSchemaVersion());
 				Queue<RMIPerfExplorerModel> requestQueue = new LinkedList<RMIPerfExplorerModel>();
 				this.requestQueues.add(requestQueue);
-				TimerThread timer = new TimerThread(this, workerSession, i++);
+				TimerThread timer = new TimerThread(this, api, i++);
 				this.timers.add(timer);
 				java.lang.Thread timerThread = new java.lang.Thread(timer);
 				this.timerThreads.add(timerThread);
