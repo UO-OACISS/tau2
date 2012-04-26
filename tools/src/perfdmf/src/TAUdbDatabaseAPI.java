@@ -11,7 +11,14 @@ import java.util.Set;
 import java.util.LinkedHashMap;
 import java.util.ArrayList;
 import java.util.Map.Entry;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
+import org.postgresql.PGConnection;
+import org.postgresql.copy.CopyManager;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
@@ -72,12 +79,19 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
             uploadTimerGroups(functionMap, db);
             uploadTimerParameter(functionMap, db);
             uploadCallpathInfo(dataSource, functionMap, metricMap, threadMap, db);
+            Map<Thread, Integer> derivedThreadMap = uploadDerivedThreads(newTrialID, dataSource, db);            
+
+            if(db.getDBType().equals("postgresql")){
+            	List<Thread> threads = dataSource.getAllThreads();
+            	threads.addAll(dataSource.getAggThreads());
+            	threadMap.putAll(derivedThreadMap);
+                uploadFunctionProfilesPSQL(threads, dataSource, functionMap, metricMap, threadMap, db);
+            }else{
+                uploadFunctionProfiles(dataSource, functionMap, metricMap, threadMap, db);
+                uploadStatistics(dataSource, functionMap, metricMap, derivedThreadMap, db);
+            }
+
             
-
-            uploadFunctionProfiles(dataSource, functionMap, metricMap, threadMap, db);
-
-            Map<Thread, Integer> derivedThreadMap = uploadDerivedThreads(newTrialID, dataSource, db);
-            uploadStatistics(dataSource, functionMap, metricMap, derivedThreadMap, db);
 
            uploadUserEvents(newTrialID, functionMap, dataSource, db);
            Map<UserEvent, Integer> userEventMap = getUserEventsMap(newTrialID, dataSource, db);
@@ -92,6 +106,24 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 //              deleteTrial(newTrialID);
 //              return -1;
 //          }
+            /*
+             *We might in the future need to do something like this to detect if the batch statement uses too much memory 				
+				double freePercent =  ((double)Runtime.getRuntime().freeMemory())/Runtime.getRuntime().totalMemory();
+				if(freePercent< 0.05){
+//					System.out.print("Clearing batch: "+freePercent*100+"%");
+					timerValueInsert.executeBatch();
+					timerValueInsert.close();
+					timerValueInsert = db
+							.prepareStatement("INSERT INTO "
+									+ db.getSchemaPrefix()
+									+ "timer_value (timer, thread, metric, inclusive_percent, inclusive_value, exclusive_percent, "
+									+ " exclusive_value) VALUES (?, ?, ?, ?, ?, ?, ?)");
+
+//					 freePercent =  ((double)Runtime.getRuntime().freeMemory())/Runtime.getRuntime().totalMemory();
+//					System.out.print("After batch: +freePercent*100+"%");
+
+				}
+             */
         } catch (SQLException e) {
             try {
                 db.rollback();
@@ -141,34 +173,42 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 		stmt.close();
 		return getDerivedThreadsMap(trialID, dataSource, db);
 	}
+	
 
 	private static void uploadStatistics(DataSource dataSource,
 			Map<Function, Integer> functionMap, Map<Metric, Integer> metricMap,
 			Map<Thread, Integer> derivedThreadMap, DB db) throws SQLException {
-		PreparedStatement timerValueInsert = db.prepareStatement("INSERT INTO "
+
+		Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
+		PreparedStatement timerValueInsert = db
+				.prepareStatement("INSERT INTO "
 						+ db.getSchemaPrefix()
 						+ "timer_value (timer, thread, metric, inclusive_percent, inclusive_value, exclusive_percent, "
 						+ " exclusive_value) VALUES (?, ?, ?, ?, ?, ?, ?)");
-
-		Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
-
-		for (Metric metric:  dataSource.getMetrics()) {
+		for (Metric metric : dataSource.getMetrics()) {
 			Integer metricID = metricMap.get(metric);
 
-			for (Iterator<Function> func = dataSource.getFunctions(); func.hasNext();) {
+			for (Iterator<Function> func = dataSource.getFunctions(); func
+					.hasNext();) {
 				Function function = func.next();
 				if (function.isGroupMember(derived)) {
 					continue;
 				}
 				Integer timerID = functionMap.get(function);
+
+				
 				for (Thread thread : dataSource.getAggThreads()) {
-				insertDerivedThreadValue(timerValueInsert, metric, metricID,
-						timerID, thread, derivedThreadMap, function);
+					insertDerivedThreadValue(timerValueInsert, metric,
+							metricID, timerID, thread, derivedThreadMap,
+							function);
 				}
 			}
+
+
 		}
 		timerValueInsert.executeBatch();
 		timerValueInsert.close();
+
 	}
 
 	private static void insertDerivedThreadValue(
@@ -318,7 +358,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			switch (thread_index) {
 			case MEAN_WITHOUT_NULL:
 				map.put(dataSource.getMeanData(), id);
-				break;
+				break; 
 			case TOTAL:
 				map.put(dataSource.getTotalData(), id);
 				break;
@@ -479,6 +519,62 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 		}
 		statement.close();
 		return map;
+	}
+
+	private static void uploadFunctionProfilesPSQL(List<Thread> threads, DataSource dataSource,
+			Map<Function, Integer> functionMap, Map<Metric, Integer> metricMap,
+			Map<Thread, Integer> threadMap, DB db) throws SQLException {
+		org.postgresql.PGConnection conn;
+		if (db.getConnection() instanceof org.postgresql.PGConnection) {
+			conn = (PGConnection) db.getConnection();
+		} else {
+			System.err
+					.println("Upload using copy was called on a non postgresql database.");
+			return;
+		}
+		CopyManager copy = conn.getCopyAPI();
+		StringBuffer buf = new StringBuffer();
+
+		Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
+
+		for (Metric metric : dataSource.getMetrics()) {
+			Integer metricID = metricMap.get(metric);
+
+			for (Iterator<Function> func = dataSource.getFunctions(); func
+					.hasNext();) {
+				Function function = func.next();
+				if (function.isGroupMember(derived)) {
+					continue;
+				}
+				Integer timerID = functionMap.get(function);
+				for (Thread thread : threads) {
+					Integer threadID = threadMap.get(thread);
+					FunctionProfile fp = thread.getFunctionProfile(function);
+					if (fp != null) { // only if this thread calls this function
+						buf.append(timerID + "\t");
+						buf.append(threadID + "\t");
+						buf.append(metricID + "\t");
+
+						buf.append(fp.getInclusivePercent(metric.getID())
+								+ "\t");
+						buf.append(fp.getInclusive(metric.getID()) + "\t");
+						buf.append(fp.getExclusivePercent(metric.getID())
+								+ "\t");
+						buf.append(fp.getExclusive(metric.getID()) + "\n");
+					}
+				}
+			}
+		}
+		// copy data from the given input stream to the table
+		InputStream input = new ByteArrayInputStream(buf.toString().getBytes());
+		try {
+			copy.copyIn(
+					"COPY timer_value (timer, thread, metric, inclusive_percent, inclusive_value, exclusive_percent, "
+							+ " exclusive_value) FROM STDIN", input);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	private static void uploadFunctionProfiles(DataSource dataSource,
