@@ -598,7 +598,7 @@ TauForceMPI.o : TauForceMPI.c
 
 # Rules
 Profile.class	: Profile.java
-	$(JDKDIR)/bin/javac Profile.java 
+	$(JDKBINDIR)/javac Profile.java 
 
 Profiler.o 	: Profiler.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
@@ -867,7 +867,7 @@ TauJVMTI.o :	TauJVMTI.cpp TauJVMTI.jar
 TauJVMTI.jar:  TauJVMTI.java
 	rm -f -r classes
 	mkdir -p classes
-	$(JDKDIR)/bin/javac -d classes TauJVMTI.java
+	$(JDKBINDIR)/javac -d classes TauJVMTI.java
 	(cd classes; $(JDKDIR)/bin/jar cf ../$@ *)
 
 test_java: all
