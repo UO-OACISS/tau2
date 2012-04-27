@@ -1048,7 +1048,7 @@ public abstract class DataSource {
     					stddevAllProfile = new FunctionProfile(function, numMetrics, meanData.getNumSnapshots());
     					stddevDataAll.addFunctionProfile(stddevAllProfile);
     				}
-    				//function.setstddevAllProfile(stddevAllProfile);
+    				function.setStddevAllProfile(stddevAllProfile);
     			}
 
     			if(meanDataAll!=null){
@@ -1057,10 +1057,10 @@ public abstract class DataSource {
     					meanAllProfile = new FunctionProfile(function, numMetrics, meanData.getNumSnapshots());
     					meanDataAll.addFunctionProfile(meanAllProfile);
     				}
-    				//function.setmeanAllProfile(meanAllProfile);
+    				function.setMeanAllProfile(meanAllProfile);
     			}
 
-    			if(!derivedProvided && !generateTAUdbStatistics){
+    			if(!derivedProvided || generateTAUdbStatistics){
     				int numEvents = 0;
     				double callSum = 0;
     				double subrSum = 0;

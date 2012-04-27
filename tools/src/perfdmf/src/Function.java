@@ -45,6 +45,8 @@ public class Function implements Serializable, Comparable<Function> {
     private FunctionProfile totalProfile;
     private FunctionProfile minProfile;
     private FunctionProfile maxProfile;
+    private FunctionProfile meanAllProfile;
+    private FunctionProfile stddevAllProfile;
 
     // color settings
     private boolean colorFlag = false;
@@ -414,8 +416,16 @@ public class Function implements Serializable, Comparable<Function> {
         this.stddevProfile = fp;
     }
 
+    public void setStddevAllProfile(FunctionProfile fp) {
+        this.stddevAllProfile = fp;
+    }
+
     public FunctionProfile getStddevProfile() {
         return stddevProfile;
+    }
+
+    public FunctionProfile getStddevAllProfile() {
+        return stddevAllProfile;
     }
 
     // mean section
@@ -425,6 +435,14 @@ public class Function implements Serializable, Comparable<Function> {
 
     public FunctionProfile getMeanProfile() {
         return meanProfile;
+    }
+
+    public void setMeanAllProfile(FunctionProfile fp) {
+        this.meanAllProfile = fp;
+    }
+
+    public FunctionProfile getMeanAllProfile() {
+        return meanAllProfile;
     }
 
     public double getMeanInclusive(int metric) {
