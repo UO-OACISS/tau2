@@ -380,7 +380,16 @@ public class DatabaseAPI {
 	// gets the mean & total data for a intervalEvent
     public void getIntervalEventDetail(IntervalEvent intervalEvent) throws SQLException {
         StringBuffer buf = new StringBuffer();
-        buf.append(" WHERE ms.interval_event = " + intervalEvent.getID());
+        String tableAlias = "ms.";
+        String timerName = "interval_event";
+        if (this.db().getSchemaVersion() > 0) {
+        	tableAlias = "tv.";
+        	timerName = "timer";
+        }
+        buf.append(" WHERE ");
+        buf.append(tableAlias);
+        buf.append(timerName);
+        buf.append(" = " + intervalEvent.getID());
         if (metrics != null && metrics.size() > 0) {
             buf.append(" AND ms.metric in (");
             Metric metric;
@@ -394,7 +403,11 @@ public class DatabaseAPI {
                 }
             }
         }
-        IntervalLocationProfile.getIntervalEventDetail(db, intervalEvent, buf.toString());
+        if (this.db().getSchemaVersion() > 0) {
+        	IntervalLocationProfile.getTimerValues(db, intervalEvent, buf.toString());
+        } else {
+        	IntervalLocationProfile.getIntervalEventDetail(db, intervalEvent, buf.toString());
+        }
     }
 
     // gets the mean & total data for a atomicEvent

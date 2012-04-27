@@ -1433,7 +1433,7 @@ for arg in "$@"; do
       major=`echo $jv | sed 's/\([0-9]*\).*/\1/g'`
       minor=`echo $jv | sed 's/'${major}'.\([0-9]*\).*/\1/g'`
       #echo "major = $major, minor = $minor"
-      if [ $major = 1 ]
+      if [ "$major" = "1" ]
       then
         if [ $minor -lt 5 ]
         then
@@ -2375,6 +2375,11 @@ case $machine in
      if [ -f INSTALL ]
        then
 	mv INSTALL INSTALL.txt
+     fi
+
+     # change it back for Git. Stupid Git.
+     if [ $default = true ]; then
+       mv INSTALL.txt INSTALL
      fi
 
      if [ $c_compiler = default ]

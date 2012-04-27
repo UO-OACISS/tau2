@@ -78,14 +78,12 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
             
             uploadTimerGroups(functionMap, db);
             uploadTimerParameter(functionMap, db);
-            uploadCallpathInfo(dataSource, functionMap, metricMap, threadMap, db);
+            uploadCallpathInfo(dataSource, functionMap, metricMap, threadMap, db, false);
             Map<Thread, Integer> derivedThreadMap = uploadDerivedThreads(newTrialID, dataSource, db);            
+            uploadCallpathInfo(dataSource, functionMap, metricMap, derivedThreadMap, db, true);
 
             if(db.getDBType().equals("postgresql")){
-            	List<Thread> threads = dataSource.getAllThreads();
-            	threads.addAll(dataSource.getAggThreads());
-            	threadMap.putAll(derivedThreadMap);
-                uploadFunctionProfilesPSQL(threads, dataSource, functionMap, metricMap, threadMap, db);
+                uploadFunctionProfilesPSQL(dataSource, functionMap, metricMap, threadMap, derivedThreadMap, db);
             }else{
                 uploadFunctionProfiles(dataSource, functionMap, metricMap, threadMap, db);
                 uploadStatistics(dataSource, functionMap, metricMap, derivedThreadMap, db);
@@ -239,7 +237,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 
 	private static void uploadCallpathInfo(DataSource dataSource,
 			Map<Function, Integer> functionMap, Map<Metric, Integer> metricMap,
-			Map<Thread, Integer> threadMap, DB db) throws SQLException {
+			Map<Thread, Integer> threadMap, DB db, boolean aggregates) throws SQLException {
 
 		PreparedStatement timerCallpathInsert = db
 				.prepareStatement("INSERT INTO "
@@ -256,7 +254,12 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			}
 			Integer timerID = functionMap.get(function);
 
-			for (Thread thread : dataSource.getAllThreads()) {
+			List<Thread> threads = null;
+			if (aggregates) 
+				threads = dataSource.getAggThreads();
+			else 
+				threads = dataSource.getAllThreads();
+			for (Thread thread : threads) {
 				Integer threadID = threadMap.get(thread);
 
 				FunctionProfile fp = thread.getFunctionProfile(function);
@@ -521,9 +524,9 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 		return map;
 	}
 
-	private static void uploadFunctionProfilesPSQL(List<Thread> threads, DataSource dataSource,
+	private static void uploadFunctionProfilesPSQL(DataSource dataSource,
 			Map<Function, Integer> functionMap, Map<Metric, Integer> metricMap,
-			Map<Thread, Integer> threadMap, DB db) throws SQLException {
+			Map<Thread, Integer> threadMap, Map<Thread, Integer> derivedThreadMap, DB db) throws SQLException {
 		org.postgresql.PGConnection conn;
 		if (db.getConnection() instanceof org.postgresql.PGConnection) {
 			conn = (PGConnection) db.getConnection();
@@ -547,8 +550,25 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 					continue;
 				}
 				Integer timerID = functionMap.get(function);
-				for (Thread thread : threads) {
+				for (Thread thread : dataSource.getAllThreads()) {
 					Integer threadID = threadMap.get(thread);
+					FunctionProfile fp = thread.getFunctionProfile(function);
+					if (fp != null) { // only if this thread calls this function
+						buf.append(timerID + "\t");
+						buf.append(threadID + "\t");
+						buf.append(metricID + "\t");
+
+						buf.append(fp.getInclusivePercent(metric.getID())
+								+ "\t");
+						buf.append(fp.getInclusive(metric.getID()) + "\t");
+						buf.append(fp.getExclusivePercent(metric.getID())
+								+ "\t");
+						buf.append(fp.getExclusive(metric.getID()) + "\n");
+					}
+				}
+				// now the aggregate threads
+				for (Thread thread : dataSource.getAggThreads()) {
+					Integer threadID = derivedThreadMap.get(thread);
 					FunctionProfile fp = thread.getFunctionProfile(function);
 					if (fp != null) { // only if this thread calls this function
 						buf.append(timerID + "\t");

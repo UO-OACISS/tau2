@@ -449,6 +449,64 @@ public class IntervalLocationProfile extends Object {
         resultSet.close();
     }
 
+    // returns a Vector of IntervalEvents
+    public static void getTimerValues(DB db, IntervalEvent intervalEvent, String whereClause)
+            throws SQLException {
+        // create a string to hit the database
+        StringBuffer buf = new StringBuffer();
+        buf.append("select ");
+        buf.append("th.thread_index, ");
+        buf.append("tv.timer, ");
+        buf.append("tv.inclusive_percent, tv.inclusive_value, ");
+        buf.append("tv.exclusive_percent, tv.exclusive_value, ");
+      	buf.append("tc.calls, ");
+        buf.append("tc.subroutines, ");
+        buf.append("tv.metric ");
+        buf.append("from " + db.getSchemaPrefix() + "timer_value tv ");
+        buf.append("left outer join " + db.getSchemaPrefix() + "thread th on tv.thread = th.id ");
+        buf.append("left outer join " + db.getSchemaPrefix() + "timer_callpath tc ");
+        buf.append("on tv.timer = tc.timer and tv.thread = tc.thread ");
+        buf.append(whereClause);
+        buf.append(" and th.thread_index < 0 and th.thread_index > " + Thread.STDDEV); // only get mean and total for now
+        buf.append(" order by tv.timer, tv.metric, th.thread_index desc");
+        System.out.println(buf.toString());
+
+        // get the results
+        ResultSet resultSet = db.executeQuery(buf.toString());
+        int metricIndex = 0;
+        int tmpMetric = 0;
+        IntervalLocationProfile eMS = new IntervalLocationProfile();
+        IntervalLocationProfile eTS = new IntervalLocationProfile();
+        while (resultSet.next() != false) {
+            if (tmpMetric != 0 && resultSet.getInt(9) != tmpMetric)
+                metricIndex++;
+        	IntervalLocationProfile tmp = null;
+        	int threadIndex = resultSet.getInt(1);
+        	if (threadIndex == Thread.MEAN) {
+        		tmp = eMS;
+        	} else if (threadIndex == Thread.TOTAL) {
+        		tmp = eTS;
+        	}
+            // get the mean summary data
+            tmp.setIntervalEventID(resultSet.getInt(2));
+            tmp.setInclusivePercentage(metricIndex, resultSet.getDouble(3));
+            tmp.setInclusive(metricIndex, resultSet.getDouble(4));
+            tmp.setExclusivePercentage(metricIndex, resultSet.getDouble(5));
+            tmp.setExclusive(metricIndex, resultSet.getDouble(6));
+            tmp.setNumCalls(resultSet.getDouble(7));
+            tmp.setNumSubroutines(resultSet.getDouble(8));
+            if (tmp.getNumCalls() > 0) {
+            	tmp.setInclusivePerCall(metricIndex, resultSet.getDouble(4)/resultSet.getDouble(7));
+            } else {
+            	tmp.setInclusivePerCall(metricIndex, 0.0);
+            }
+            tmpMetric = resultSet.getInt(9);
+        }
+        intervalEvent.setMeanSummary(eMS);
+        intervalEvent.setTotalSummary(eTS);
+        resultSet.close();
+    }
+
     public static Vector<IntervalLocationProfile> getIntervalEventData(DB db, int metricCount, String whereClause) throws SQLException {
         StringBuffer buf = new StringBuffer();
         buf.append("select p.interval_event, p.metric, p.node, p.context, p.thread, ");
