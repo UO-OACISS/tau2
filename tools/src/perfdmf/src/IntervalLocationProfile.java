@@ -469,7 +469,6 @@ public class IntervalLocationProfile extends Object {
         buf.append(whereClause);
         buf.append(" and th.thread_index < 0 and th.thread_index > " + Thread.STDDEV); // only get mean and total for now
         buf.append(" order by tv.timer, tv.metric, th.thread_index desc");
-        System.out.println(buf.toString());
 
         // get the results
         ResultSet resultSet = db.executeQuery(buf.toString());
