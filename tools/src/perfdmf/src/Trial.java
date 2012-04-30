@@ -674,7 +674,10 @@ public class Trial implements Serializable, Comparable<Trial> {
 
    
     public int saveTrial(DB db) {
-    	if(db.getSchemaVersion()>0) System.err.println("Tyring to save a PerfDMF Trial to a TAUdb");
+    	//Needs to be here in case the db is a TAUdb.
+    	//This happens when loading a trial the first time
+    	//And could happen during a copy.
+    	if(db.getSchemaVersion()>0) return TAUdbTrial.saveTrialTAUdb(db, trialID, dataSource, name);
     	
     	boolean itExists = exists(db);
         int newTrialID = 0;

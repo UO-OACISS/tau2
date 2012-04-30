@@ -11,7 +11,14 @@ import java.util.Vector;
 import edu.uoregon.tau.perfdmf.database.DB;
 
 public class TAUdbTrial extends Trial {
-	public  int saveTrialTAUdb(DB db) {
+	public  int saveTrial(DB db) {
+		return TAUdbTrial.saveTrialTAUdb(db, trialID, dataSource, name);
+	}
+	public static  int saveTrialTAUdb(DB db, int trialID, DataSource dataSource, String name) {
+		if(db.getSchemaVersion()<1){
+			System.err.println("You can't save a TAUdbTrial to a PerfDMF database.");
+			return -1;
+		}
 		boolean itExists = exists(db, trialID);
 		int newTrialID = 0;
 		if (dataSource == null) {
