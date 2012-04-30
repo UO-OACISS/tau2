@@ -28,6 +28,7 @@ import edu.uoregon.tau.perfdmf.database.DBConnector;
  * @since	0.2
  * @see		Trial
  * @see     IntervalLocationProfile
+ * @deprecated  This class is not used/has never been used.
  */
 public class Machine implements Serializable {
 
