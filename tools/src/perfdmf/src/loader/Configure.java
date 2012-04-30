@@ -814,7 +814,7 @@ public class Configure {
             throw new DatabaseException("Error Connection to Database" + db_dbname, e);
         }
         try {
-            String query = new String("select * from application;");
+            String query = new String("select * from trial;");
             ResultSet resultSet = db.executeQuery(query);
             resultSet.close();
             connector.dbclose();
