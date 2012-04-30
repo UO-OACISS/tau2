@@ -11,8 +11,7 @@ import java.util.Vector;
 import edu.uoregon.tau.perfdmf.database.DB;
 
 public class TAUdbTrial extends Trial {
-	public static int saveTrialTAUdb(DB db, int trialID, DataSource dataSource,
-			String name) {
+	public  int saveTrialTAUdb(DB db) {
 		boolean itExists = exists(db, trialID);
 		int newTrialID = 0;
 		if (dataSource == null) {
@@ -159,7 +158,126 @@ public class TAUdbTrial extends Trial {
 	            return null;
 		        }
 	}
+	    // gets the metric data for the trial
+	    public void getTrialMetrics(DB db) {
+	        // create a string to hit the database
+	        StringBuffer buf = new StringBuffer();
+	        buf.append("select id, name, derived ");
+	        buf.append("from " + db.getSchemaPrefix() + "metric ");
+	        buf.append("where trial = ");
+	        buf.append(getID());
+	        buf.append(" order by id ");
+	        // System.out.println(buf.toString());
 
+	        // get the results
+	        try {
+	            ResultSet resultSet = db.executeQuery(buf.toString());
+	            while (resultSet.next() != false) {
+	                Metric tmp = new Metric();
+	                tmp.setID(resultSet.getInt(1));
+	                tmp.setName(resultSet.getString(2));
+	                tmp.setDerivedMetric(resultSet.getBoolean(3));
+	                tmp.setTrialID(getID());
+	                addMetric(tmp);
+	            }
+	            resultSet.close();
+	        } catch (Exception ex) {
+	            ex.printStackTrace();
+	            return;
+	        }
+	        return;
+	    }
+
+
+//		    private static int getDBMetric(int trialID, int metric) {
+//		        return 0;
+//		    }
+
+		    public static void deleteMetric(DB db, int trialID, int metricID) throws SQLException {
+		        PreparedStatement statement = null;
+
+		        // delete from the interval_location_profile table
+		        statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix() + "timer_value WHERE metric = ?");
+		        statement.setInt(1, metricID);
+		        statement.execute();
+
+		        statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix() + "metric WHERE id = ?");
+		        statement.setInt(1, metricID);
+		        statement.execute();
+		    }
+		 public static void deleteTrial(DB db, int trialID) throws SQLException {
+
+		        PreparedStatement statement = null;
+		        
+//There's a chances that these might not work with MySQL, but after reading the manual 
+
+		            // Postgresql, oracle, and DB2?
+		            statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
+		                    + "counter_value WHERE counter in (SELECT id FROM " + db.getSchemaPrefix()
+		                    + "counter WHERE trial = ?)");
+		            statement.setInt(1, trialID);
+		            statement.execute();
+		            
+		            statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
+		                    + "timer_value WHERE timer IN (SELECT id FROM " + db.getSchemaPrefix()
+		                    + "timer WHERE trial = ?)");
+		            statement.setInt(1, trialID);
+		            statement.execute();
+		            
+		            statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
+		                    + "timer_callpath WHERE timer IN (SELECT id FROM " + db.getSchemaPrefix()
+		                    + "timer WHERE trial = ?)");
+		            statement.setInt(1, trialID);
+		            statement.execute();
+		            statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
+		                    + "timer_parameter WHERE timer IN (SELECT id FROM " + db.getSchemaPrefix()
+		                    + "timer WHERE trial = ?)");
+		            statement.setInt(1, trialID);
+		            statement.execute();
+		            
+		            statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
+		                    + "timer_group WHERE timer IN (SELECT id FROM " + db.getSchemaPrefix()
+		                    + "timer WHERE trial = ?)");
+		            statement.setInt(1, trialID);
+		            statement.execute();
+		            
+		            statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
+		                    + "timer_group WHERE timer IN (SELECT id FROM " + db.getSchemaPrefix()
+		                    + "timer WHERE trial = ?)");
+		            statement.setInt(1, trialID);
+		            statement.execute();
+		            
+		        		     
+
+		        statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix() + "counter WHERE trial = ?");
+		        statement.setInt(1, trialID);
+		        statement.execute();
+
+		        statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix() + "primary_metadata WHERE trial = ?");
+		        statement.setInt(1, trialID);
+		        statement.execute();
+		        
+		        statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix() + "secondary_metadata WHERE trial = ?");
+		        statement.setInt(1, trialID);
+		        statement.execute();
+		        
+		        statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix() + "thread WHERE trial = ?");
+		        statement.setInt(1, trialID);
+		        statement.execute();
+		        
+		        statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix() + "timer WHERE trial = ?");
+		        statement.setInt(1, trialID);
+		        statement.execute();
+		        
+		        statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix() + "metric WHERE trial = ?");
+		        statement.setInt(1, trialID);
+		        statement.execute();
+
+		        statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix() + "trial WHERE id = ?");
+		        statement.setInt(1, trialID);
+		        statement.execute();
+		    }
+		 
 		public void loadXMLMetadata(DB db) {
 			loadMetadata(db);
 		}

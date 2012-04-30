@@ -442,7 +442,7 @@ public class Trial implements Serializable, Comparable<Trial> {
 
 
     // gets the metric data for the trial
-    protected void getTrialMetrics(DB db) {
+    public void getTrialMetrics(DB db) {
         // create a string to hit the database
         StringBuffer buf = new StringBuffer();
         buf.append("select id, name ");
@@ -674,7 +674,7 @@ public class Trial implements Serializable, Comparable<Trial> {
 
    
     public int saveTrial(DB db) {
-    	if(db.getSchemaVersion()>0) return TAUdbTrial.saveTrialTAUdb(db,trialID, this.getDataSource(), this.name);
+    	if(db.getSchemaVersion()>0) System.err.println("Tyring to save a PerfDMF Trial to a TAUdb");
     	
     	boolean itExists = exists(db);
         int newTrialID = 0;
@@ -924,6 +924,10 @@ public class Trial implements Serializable, Comparable<Trial> {
 //    }
 
     public static void deleteMetric(DB db, int trialID, int metricID) throws SQLException {
+    	if(db.getSchemaVersion()>0){
+    		TAUdbTrial.deleteMetric(db, trialID, metricID);
+    		return;
+    	}
         PreparedStatement statement = null;
 
         // delete from the interval_location_profile table
@@ -950,6 +954,10 @@ public class Trial implements Serializable, Comparable<Trial> {
     }
 
     public static void deleteTrial(DB db, int trialID) throws SQLException {
+    	if(db.getSchemaVersion()>0) {
+    		TAUdbTrial.deleteTrial(db, trialID);
+    		return;
+    	}
         PreparedStatement statement = null;
 
         // delete from the atomic_location_profile table
@@ -1066,7 +1074,7 @@ public class Trial implements Serializable, Comparable<Trial> {
     //        fieldNames = null;
     //        fieldTypes = null;
     //    }
-    public void checkForMetadataColumn(DB db) {
+    private void checkForMetadataColumn(DB db) {
         String[] columns = Trial.getFieldNames(db);
         boolean found = false;
         // loop through the column names, and see if we have this column already
@@ -1104,7 +1112,7 @@ public class Trial implements Serializable, Comparable<Trial> {
         }
     }
 
-    public void checkForMetadataColumn2(DB db) {
+    private void checkForMetadataColumn2(DB db) {
         String[] columns = Trial.getFieldNames(db);
         boolean found = false;
         // loop through the column names, and see if we have this column already
