@@ -1,33 +1,33 @@
 /* remove whatever indexes and tables are there already, in reverse order */
 
-DROP TABLE taudb_view_parameter;
-DROP TABLE taudb_view;
+DROP TABLE IF EXISTS taudb_view_parameter;
+DROP TABLE IF EXISTS taudb_view;
 
-DROP INDEX counter_value_index;
-DROP INDEX counter_trial_index;
-DROP TABLE counter_value;
-DROP TABLE counter;
+DROP INDEX IF EXISTS counter_value_index;
+DROP INDEX IF EXISTS counter_trial_index;
+DROP TABLE IF EXISTS counter_value;
+DROP TABLE IF EXISTS counter;
 
-DROP INDEX secondary_metadata_index;
-DROP INDEX primary_metadata_index;
-DROP TABLE secondary_metadata;
-DROP TABLE primary_metadata;
+DROP INDEX IF EXISTS secondary_metadata_index;
+DROP INDEX IF EXISTS primary_metadata_index;
+DROP TABLE IF EXISTS secondary_metadata;
+DROP TABLE IF EXISTS primary_metadata;
 
-DROP INDEX timer_value_index;
-DROP INDEX timer_group_index;
-DROP INDEX timer_trial_index;
-DROP TABLE timer_value;
-DROP TABLE timer_callpath;
-DROP TABLE timer_group;
-DROP TABLE timer_parameter;
-DROP TABLE timer;
+DROP INDEX IF EXISTS timer_value_index;
+DROP INDEX IF EXISTS timer_group_index;
+DROP INDEX IF EXISTS timer_trial_index;
+DROP TABLE IF EXISTS timer_value;
+DROP TABLE IF EXISTS timer_callpath;
+DROP TABLE IF EXISTS timer_group;
+DROP TABLE IF EXISTS timer_parameter;
+DROP TABLE IF EXISTS timer;
 
-DROP TABLE metric;
-DROP TABLE thread;
-DROP TABLE derived_thread_type;
-DROP TABLE trial;
-DROP TABLE data_source;
-DROP TABLE schema_version;
+DROP TABLE IF EXISTS metric;
+DROP TABLE IF EXISTS thread;
+DROP TABLE IF EXISTS derived_thread_type;
+DROP TABLE IF EXISTS trial;
+DROP TABLE IF EXISTS data_source;
+DROP TABLE IF EXISTS schema_version;
 
 CREATE TABLE schema_version (
  version     INT NOT NULL
@@ -94,7 +94,7 @@ CREATE TABLE trial (
  id                  SERIAL NOT NULL PRIMARY KEY,
  name                VARCHAR,
  /* extract this from the metadata */
- collection_date     TIMESTAMP WITH TIME ZONE,
+ collection_date     TIMESTAMP,
  /* where did this data come from? */
  data_source         INT,
  /* number of processes */
