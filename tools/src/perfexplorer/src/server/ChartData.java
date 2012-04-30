@@ -9,12 +9,12 @@ import java.util.List;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.View;
 import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfexplorer.common.ChartDataType;
 import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 import edu.uoregon.tau.perfexplorer.common.RMIChartData;
 import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
-import edu.uoregon.tau.perfexplorer.common.RMIView;
 
 /**
  * The ChartData class is used to select data from the database which 
@@ -256,7 +256,7 @@ public class ChartData extends RMIChartData {
 			buf.append("on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
-			if (object instanceof RMIView) {
+			if (object instanceof View) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
 				buf.append("where t.experiment in (");
@@ -301,7 +301,7 @@ public class ChartData extends RMIChartData {
 			List<Object> selections = model.getMultiSelection();
 			buf.append("select ");
 			StringBuilder tmpBuf = new StringBuilder();
-			if (object instanceof RMIView) {
+			if (object instanceof View) {
 				if (isLeafView()) {
 					tmpBuf.append(model.getViewSelectionString(db.getDBType()));
 				} else {
@@ -320,7 +320,7 @@ public class ChartData extends RMIChartData {
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
-			if (object instanceof RMIView) {
+			if (object instanceof View) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
 				buf.append("inner join experiment e on t.experiment = e.id ");
@@ -362,7 +362,7 @@ public class ChartData extends RMIChartData {
 			// execution increases.
 			buf.append("select ");
 			StringBuilder tmpBuf = new StringBuilder();
-			if (object instanceof RMIView) {
+			if (object instanceof View) {
 				if (isLeafView()) {
 					tmpBuf.append(" " + model.getViewSelectionString(db.getDBType()) + ", ");
 				} else {
@@ -388,7 +388,7 @@ public class ChartData extends RMIChartData {
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
 			buf.append("inner join experiment e on t.experiment = e.id ");
-			if (object instanceof RMIView) {
+			if (object instanceof View) {
 				buf.append(model.getViewSelectionPath(true, false, db.getDBType()));
 			} else {
 				buf.append("where t.experiment in (");
@@ -474,7 +474,7 @@ public class ChartData extends RMIChartData {
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
-			if (object instanceof RMIView) {
+			if (object instanceof View) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
 			
@@ -558,7 +558,7 @@ public class ChartData extends RMIChartData {
 			} else {
 				buf.append("working_table w on w.name = ie.name ");
 			}
-			if (object instanceof RMIView) {
+			if (object instanceof View) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
 buf.append("where t.experiment in (");
@@ -597,7 +597,7 @@ buf.append("where t.experiment in (");
 			// threads of execution increases.
 			buf.append("select ");
 			StringBuilder tmpBuf = new StringBuilder();
-			if (object instanceof RMIView) {
+			if (object instanceof View) {
 				if (isLeafView()) {
 					tmpBuf.append(" " + model.getViewSelectionString(db.getDBType()) + ", ");
 				} else {
@@ -620,7 +620,7 @@ buf.append("where t.experiment in (");
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
-			if (object instanceof RMIView) {
+			if (object instanceof View) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
 				buf.append("inner join experiment e on t.experiment = e.id ");
@@ -662,7 +662,7 @@ buf.append("where t.experiment in (");
 			// execution increases.
 			buf.append("select ");
 			StringBuilder tmpBuf = new StringBuilder();
-			if (object instanceof RMIView) {
+			if (object instanceof View) {
 				if (isLeafView()) {
 					//tmpBuf.append(" " + model.getViewSelectionString(db.getDBType()) + ", ");
 					if (db.getDBType().compareTo("db2") == 0) {
@@ -686,7 +686,7 @@ buf.append("where t.experiment in (");
 			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
-			if (object instanceof RMIView) {
+			if (object instanceof View) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
 				buf.append("where t.experiment = ? ");
@@ -709,7 +709,7 @@ buf.append("where t.experiment in (");
 			buf.append(" order by 1, 2, 3, 4");
 			
 			statement = db.prepareStatement(buf.toString());
-			if (object instanceof RMIView) {
+			if (object instanceof View) {
 				statement.setString(1, metricName);
 			} else {
 				statement.setInt (1, model.getExperiment().getID());
@@ -722,7 +722,7 @@ buf.append("where t.experiment in (");
 			// increases.
 			buf.append("select ");
 			StringBuilder tmpBuf = new StringBuilder();
-			if (object instanceof RMIView) {
+			if (object instanceof View) {
 				if (isLeafView()) {
 					//tmpBuf.append(" " + model.getViewSelectionString(db.getDBType()) + ", ");
 					if (db.getDBType().compareTo("db2") == 0) {
@@ -747,7 +747,7 @@ buf.append("where t.experiment in (");
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
 			statement = null;
-			if (object instanceof RMIView) {
+			if (object instanceof View) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
 				buf.append("where t.experiment in (");
@@ -884,7 +884,7 @@ buf.append("where t.experiment in (");
 			buf.append("on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
-			if (object instanceof RMIView) {
+			if (object instanceof View) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
 		buf.append("where t.experiment in (");
@@ -965,7 +965,7 @@ buf.append("where t.experiment in (");
 				buf.append("SESSION.working_table w on w.name = cast(ie.name as varchar(256)) ");
 			else
 				buf.append("working_table w on w.name = ie.name ");
-			if (object instanceof RMIView) {
+			if (object instanceof View) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
     List<Object> selections = model.getMultiSelection();
@@ -1017,7 +1017,7 @@ buf.append("where t.experiment in (");
 			buf.append("on ims.interval_event = ie.id ");
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
-			if (object instanceof RMIView) {
+			if (object instanceof View) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
 	buf.append("where t.experiment in (");

@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.ArrayList;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
-import edu.uoregon.tau.perfexplorer.common.RMIView;
 
 public class PerfExplorerJTree extends JTree {
 
@@ -129,10 +128,10 @@ public class PerfExplorerJTree extends JTree {
 	setConnectionIndex(parentNode);
 	// get the top level views
 	PerfExplorerConnection server = PerfExplorerConnection.getConnection();
-	List<RMIView> viewVector = server.getViews(Integer.parseInt(parent));
-	Iterator<RMIView> views = viewVector.iterator();
+	List<View> viewVector = server.getViews(Integer.parseInt(parent));
+	Iterator<View> views = viewVector.iterator();
 	while (views.hasNext()) {
-	    RMIView view = views.next();
+	    View view = views.next();
 	    DefaultMutableTreeNode node = new PerfExplorerTreeNode (view);
 	    addViewNodes(node, view.getField("ID"));
 	    parentNode.add(node);
@@ -210,10 +209,10 @@ public class PerfExplorerJTree extends JTree {
 	}
 	// get the top level views
 	PerfExplorerConnection server = PerfExplorerConnection.getConnection();
-	List<RMIView> viewVector = server.getViews(Integer.parseInt(parent));
-	Iterator<RMIView> views = viewVector.iterator();
+	List<View> viewVector = server.getViews(Integer.parseInt(parent));
+	Iterator<View> views = viewVector.iterator();
 	while (views.hasNext()) {
-	    RMIView view = views.next();
+	    View view = views.next();
 	    DefaultMutableTreeNode node = new PerfExplorerTreeNode (view);
 	    parentNode.add(node);
 
@@ -237,10 +236,10 @@ public class PerfExplorerJTree extends JTree {
 	setConnectionIndex(node);
 	//System.out.println("trial nodes...");
 	Object[] objects = node.getUserObjectPath();
-	List<RMIView> views = new ArrayList<RMIView>();
+	List<View> views = new ArrayList<View>();
 	for (int i = 0 ; i < objects.length ; i++) {
-	    if (objects[i] instanceof RMIView) {
-		views.add((RMIView)objects[i]);
+	    if (objects[i] instanceof View) {
+		views.add((View)objects[i]);
 	    }
 	}
 	PerfExplorerConnection server = PerfExplorerConnection.getConnection();
@@ -422,7 +421,7 @@ public class PerfExplorerJTree extends JTree {
 	    if (trial == null || trial.getID() != current.getID()) {
 		return;  // this isn't our current path, so don't expand
 	    }
-	} else if (obj instanceof RMIView) {
+	} else if (obj instanceof View) {
 	    return;  // this isn't our current path, so don't expand
 	} else if (obj instanceof Metric) {
 	    return;  // don't expand that deep

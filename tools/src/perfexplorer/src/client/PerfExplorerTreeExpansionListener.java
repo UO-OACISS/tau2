@@ -15,8 +15,8 @@ import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.View;
 import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfexplorer.common.RMIView;
 
 
 public class PerfExplorerTreeExpansionListener implements TreeExpansionListener, TreeWillExpandListener {
@@ -83,8 +83,8 @@ public class PerfExplorerTreeExpansionListener implements TreeExpansionListener,
 				}
 			} else if (object instanceof IntervalEvent) {
 				// do nothing
-			} else if (object instanceof RMIView) {
-				RMIView view = (RMIView) object;
+			} else if (object instanceof View) {
+				View view = (View) object;
 				PerfExplorerJTree.addViewNodes(node, view.getField("id"));
 			} else {
 				System.out.println("unknown!");

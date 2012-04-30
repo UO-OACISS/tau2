@@ -10,6 +10,7 @@ import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.View;
 import edu.uoregon.tau.perfdmf.Trial;
 
 /**
@@ -71,7 +72,7 @@ public class RMIPerfExplorerModel implements Serializable {
 	protected Application application = null;
 	protected Experiment experiment = null;
 	protected Trial trial = null;
-	protected RMIView view = null;
+	protected View view = null;
 	protected Metric metric = null;
 	protected IntervalEvent event = null;
 	protected int analysisID = 0;
@@ -265,8 +266,8 @@ public class RMIPerfExplorerModel implements Serializable {
 			experiment = (Experiment)currentSelection;
 		} else if (currentSelection instanceof Trial) {
 			trial = (Trial)currentSelection;
-		} else if (currentSelection instanceof RMIView) {
-			view = (RMIView)currentSelection;
+		} else if (currentSelection instanceof View) {
+			view = (View)currentSelection;
 		} else if (currentSelection instanceof Metric) {
 			metric = (Metric)currentSelection;
 		} else if (currentSelection instanceof IntervalEvent) {
@@ -300,8 +301,8 @@ public class RMIPerfExplorerModel implements Serializable {
 				experiment = (Experiment)objectPath[i];
 			} else if (objectPath[i] instanceof Trial) {
 				trial = (Trial)objectPath[i];
-			} else if (objectPath[i] instanceof RMIView) {
-				view = (RMIView)objectPath[i];
+			} else if (objectPath[i] instanceof View) {
+				view = (View)objectPath[i];
 			} else if (objectPath[i] instanceof Metric) {
 				metric = (Metric)objectPath[i];
 			} else if (objectPath[i] instanceof IntervalEvent) {
@@ -430,8 +431,8 @@ public class RMIPerfExplorerModel implements Serializable {
 			Application application = (Application)currentSelection;
 			String tmpStr = application.getName();
 			return tmpStr;
-		} else if (currentSelection instanceof RMIView) {
-			RMIView view = (RMIView)currentSelection;
+		} else if (currentSelection instanceof View) {
+			View view = (View)currentSelection;
 			String tmpStr = view.getField("NAME");
 			return tmpStr;
 		}
@@ -484,8 +485,8 @@ public class RMIPerfExplorerModel implements Serializable {
 			String tmpStr = "" + application.getID();
 			return tmpStr;
 		}
-		if (currentSelection instanceof RMIView) {
-			RMIView view = (RMIView)currentSelection;
+		if (currentSelection instanceof View) {
+			View view = (View)currentSelection;
 			String tmpStr = view.getField("NAME");
 			return tmpStr;
 		}
@@ -544,7 +545,7 @@ public class RMIPerfExplorerModel implements Serializable {
 					multiSelectionType != SelectionType.NO_MULTI)
 					return false;
 				multiSelectionType = SelectionType.METRIC;
-			} else if (objects.get(i) instanceof RMIView) {
+			} else if (objects.get(i) instanceof View) {
 				if (multiSelectionType != SelectionType.VIEW &&
 					multiSelectionType != SelectionType.NO_MULTI)
 					return false;
@@ -794,8 +795,8 @@ public class RMIPerfExplorerModel implements Serializable {
 			if (i > 0 && doAnd) {
 				buf.append (" AND ");
 			}
-			if (fullPath[i] instanceof RMIView) {
-				RMIView view = (RMIView) fullPath[i];
+			if (fullPath[i] instanceof View) {
+				View view = (View) fullPath[i];
 				if (dbType.equalsIgnoreCase("db2"))
 					buf.append(" cast (");
 				if (view.getField("table_name").equalsIgnoreCase("Application")) {
@@ -828,7 +829,7 @@ public class RMIPerfExplorerModel implements Serializable {
 	public String getViewSelectionString (String dbType) {
 		StringBuilder buf = new StringBuilder();
 		int i = fullPath.length - 1;
-		RMIView view = (RMIView) fullPath[i];
+		View view = (View) fullPath[i];
 		if (//(view.getField("operator").equalsIgnoreCase("like")) || //{
 			//buf.append(" '" + view.getField("value").replaceAll("%","") + "'");
 		/*} else if*/ (view.getField("operator").equals("="))) {
@@ -858,7 +859,7 @@ public class RMIPerfExplorerModel implements Serializable {
      */
 	public String getViewID () {
 		int i = fullPath.length - 1;
-		RMIView view = (RMIView) fullPath[i];
+		View view = (View) fullPath[i];
 		return view.getField("id");
 	}
 	

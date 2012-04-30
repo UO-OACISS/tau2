@@ -10,7 +10,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultTreeModel;
 
-import edu.uoregon.tau.perfexplorer.common.RMIView;
+import edu.uoregon.tau.perfdmf.View;
 
 public class PerfExplorerViews {
 
@@ -128,13 +128,13 @@ public class PerfExplorerViews {
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the data
 		int parent = -1;  // get all the views!
-		List<RMIView> views = server.getViews(parent);
+		List<View> views = server.getViews(parent);
 		
-		Iterator<RMIView> e = views.iterator();
+		Iterator<View> e = views.iterator();
 		List<String> options = new ArrayList<String>();
 		Hashtable<String, String> myViews = new Hashtable<String, String>();
 		while (e.hasNext()) {
-			RMIView view = e.next();
+			View view = e.next();
 			options.add(view.getField("NAME"));
 			myViews.put(view.getField("NAME"), view.getField("ID"));
 		}
@@ -154,10 +154,10 @@ public class PerfExplorerViews {
 	public static void deleteCurrentView(JFrame mainFrame) {
 		PerfExplorerModel model = PerfExplorerModel.getModel();
 		Object selection = model.getCurrentSelection();
-		if (selection instanceof RMIView) {
+		if (selection instanceof View) {
 			// get the server
 			PerfExplorerConnection server = PerfExplorerConnection.getConnection();
-			RMIView view = (RMIView)selection;
+			View view = (View)selection;
 			// delete the view
 			server.deleteView(view.getField("id"));
 

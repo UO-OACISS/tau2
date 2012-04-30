@@ -32,6 +32,7 @@ import edu.uoregon.tau.perfdmf.DatabaseException;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.View;
 import edu.uoregon.tau.perfdmf.TAUdbDatabaseAPI;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.database.DB;
@@ -49,7 +50,6 @@ import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
 import edu.uoregon.tau.perfexplorer.common.RMIPerformanceResults;
 import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
 import edu.uoregon.tau.perfexplorer.common.RMIVarianceData;
-import edu.uoregon.tau.perfexplorer.common.RMIView;
 import edu.uoregon.tau.perfexplorer.constants.Constants;
 
 /**
@@ -794,7 +794,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			buf = new StringBuilder("select distinct ie.group_name ");
 			buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
 			Object object = modelData.getCurrentSelection();
-			if (object instanceof RMIView) {
+			if (object instanceof View) {
 				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
 				buf.append(" inner join experiment e on t.experiment = e.id ");
@@ -880,7 +880,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			}
 			buf.append(" from metric m inner join trial t on m.trial = t.id ");
 			Object object = modelData.getCurrentSelection();
-			if (object instanceof RMIView) {
+			if (object instanceof View) {
 				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
 				buf.append(" inner join experiment e on t.experiment = e.id ");
@@ -982,7 +982,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			}
 			buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
 			Object object = modelData.getCurrentSelection();
-			if (object instanceof RMIView) {
+			if (object instanceof View) {
 				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
 				buf.append(" inner join experiment e on t.experiment = e.id ");
@@ -1068,7 +1068,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			}
 			buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
 			Object object = modelData.getCurrentSelection();
-			if (object instanceof RMIView) {
+			if (object instanceof View) {
 				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
 				buf.append(" inner join experiment e on t.experiment = e.id ");
@@ -1155,7 +1155,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			}
 			buf.append(" from atomic_event ae inner join trial t on ae.trial = t.id ");
 			Object object = modelData.getCurrentSelection();
-			if (object instanceof RMIView) {
+			if (object instanceof View) {
 				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
 				buf.append(" inner join experiment e on t.experiment = e.id ");
@@ -1385,53 +1385,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param parent
 	 * @return List of views
 	 */
-	public List<RMIView> getViews (int parent) {
-		//PerfExplorerOutput.println("getViews()...");
-		List<RMIView> views = new ArrayList<RMIView>();
-		try {
-			DB db = this.getDB();
-			String table_name = "trial_view";
-			if (db.getSchemaVersion() > 0) {
-				table_name = "taudb_view";
-			}
-			Iterator<String> names = RMIView.getFieldNames(db);
-			if (!names.hasNext()) {
-				// the database is not modified to support views
-				throw new Exception ("The Database is not modified to support views.");
-			}
-			StringBuilder buf = new StringBuilder("select ");
-			// assumes at least one column...
-			buf.append(names.next());
-			while (names.hasNext()) {
-				buf.append(", ");
-				buf.append(names.next());
-			}
-			buf.append(" from " + table_name);
-			if (parent == -1) { // get all views!
-				// no while clause
-			} else if (parent == 0) {
-				buf.append(" where parent is null");
-			} else {
-				buf.append(" where parent = ");
-				buf.append(parent);
-			}
-			PreparedStatement statement = db.prepareStatement(buf.toString());
-			//PerfExplorerOutput.println(statement.toString());
-			ResultSet results = statement.executeQuery();
-			while (results.next() != false) {
-				RMIView view = new RMIView();
-				for (int i = 1 ; i <= RMIView.getFieldCount() ; i++) {
-					view.addField(results.getString(i));
-				}
-				views.add(view);
-			}
-			statement.close();
-		} catch (Exception e) {
-			String error = "ERROR: Couldn't select views from the database!";
-			System.err.println(error);
-			e.printStackTrace();
-		}
-		return views;
+	public List<View> getViews (int parent) {
+		DB db = this.getDB();
+		return View.getViews(parent, db);
 	}
 
 	/**
@@ -1440,49 +1396,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param views
 	 * @return List
 	 */
-	public List<Trial> getTrialsForView (List<RMIView> views, boolean getXMLMetadata) {
-		if (this.getDB().getSchemaVersion() > 0) {
-			return getTrialsForTAUdbView(views);
-		}
-		//PerfExplorerOutput.println("getTrialsForView()...");
-		List<Trial> trials = new ArrayList<Trial>();
-		try {
-			DB db = this.getDB();
-			StringBuilder whereClause = new StringBuilder();
-			whereClause.append(" inner join application a on e.application = a.id WHERE ");
-			for (int i = 0 ; i < views.size() ; i++) {
-				if (i > 0) {
-					whereClause.append (" AND ");
-				}
-				RMIView view = views.get(i);
-
-				if (db.getDBType().compareTo("db2") == 0) {
-					whereClause.append(" cast (");
-				}
-				if (view.getField("TABLE_NAME").equalsIgnoreCase("Application")) {
-					whereClause.append (" a.");
-				} else if (view.getField("TABLE_NAME").equalsIgnoreCase("Experiment")) {
-					whereClause.append (" e.");
-				} else /*if (view.getField("table_name").equalsIgnoreCase("Trial")) */ {
-					whereClause.append (" t.");
-				}
-				whereClause.append (view.getField("COLUMN_NAME"));
-				if (db.getDBType().compareTo("db2") == 0) {
-					whereClause.append(" as varchar(256)) ");
-				}
-				whereClause.append (" " + view.getField("OPERATOR") + " '");
-				whereClause.append (view.getField("VALUE"));
-				whereClause.append ("' ");
-
-			}
-			//PerfExplorerOutput.println(whereClause.toString());
-			trials = Trial.getTrialList(db, whereClause.toString(), getXMLMetadata);
-		} catch (Exception e) {
-			String error = "ERROR: Couldn't select views from the database!";
-			System.err.println(error);
-			e.printStackTrace();
-		}
-		return trials;
+	public List<Trial> getTrialsForView (List<View> views, boolean getXMLMetadata) {
+		DB db = this.getDB();
+		
+		return View.getTrialsForView(views, getXMLMetadata, db);
 	}
 
 	/**
@@ -1491,68 +1408,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param views
 	 * @return List
 	 */
-	public List<Trial> getTrialsForTAUdbView (List<RMIView> views) {
-		//PerfExplorerOutput.println("getTrialsForView()...");
-		List<Trial> trials = new ArrayList<Trial>();
-		try {
-			DB db = this.getDB();
-			
-			StringBuilder sql = new StringBuilder();
-			sql.append("select conjoin, taudb_view, table_name, column_name, operator, value from taudb_view left outer join taudb_view_parameter on taudb_view.id = taudb_view_parameter.taudb_view where taudb_view.id in (");
-			for (int i = 0 ; i < views.size(); i++) {
-				if (i > 0)
-					sql.append(",?");
-				else
-					sql.append("?");
-			}
-			sql.append(") order by taudb_view.id");
-			PreparedStatement statement = db.prepareStatement(sql.toString());
-			int i = 1;
-			for (RMIView view : views) {
-				statement.setInt(1, Integer.valueOf(view.getField("ID")));
-				i++;
-			}
-			ResultSet results = statement.executeQuery();
-			
-			StringBuilder whereClause = new StringBuilder();
-			StringBuilder joinClause = new StringBuilder();
-			int currentView = 0;
-			int alias = 0;
-			String conjoin = " where ";
-			while (results.next() != false) {
-				int viewid = results.getInt(2);
-				String tableName = results.getString(3);
-				if (tableName == null) 
-					break;
-				String columnName = results.getString(4);
-				String operator = results.getString(5);
-				String value = results.getString(6);
-				if ((currentView > 0) && (currentView != viewid)) {
-					conjoin = " and ";
-				} else if (currentView == viewid) {
-					conjoin = " " + results.getString(1) + " ";
-				}
-				if (tableName.equalsIgnoreCase("trial")) {
-					whereClause.append(conjoin + tableName + "." + columnName + " " + operator + " " + "'" + value + "'");
-				} else {
-					// otherwise, we have primary_metadata or secondary_metadata
-					joinClause.append(" left outer join " + tableName + " t" + alias + " on t.id = t" + alias + ".trial");
-					whereClause.append(conjoin + "t" + alias + ".name = '" + columnName + "' ");
-					whereClause.append("and  t" + alias + ".value = '" + value + "' ");
-				}
-				alias++;
-				currentView = viewid;
-			}
-			statement.close();
-			
-			//PerfExplorerOutput.println(whereClause.toString());
-			trials = Trial.getTrialList(db, joinClause.toString() + " " + whereClause.toString(), false);
-		} catch (Exception e) {
-			String error = "ERROR: Couldn't select views from the database!";
-			System.err.println(error);
-			e.printStackTrace();
-		}
-		return trials;
+	public List<Trial> getTrialsForTAUdbView (List<View> views) {
+		DB db = this.getDB();
+		return View.getTrialsForTAUdbView(views, db);
 	}
 
 	/* (non-Javadoc)
@@ -2076,7 +1934,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			buf.append("select t.id, node_count * contexts_per_node * threads_per_context, t.experiment ");
 			buf.append(" from trial t ");
 			Object object = modelData.getCurrentSelection();
-			if (object instanceof RMIView) {
+			if (object instanceof View) {
 				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
 			} else {
 				buf.append(" inner join experiment e on t.experiment = e.id ");

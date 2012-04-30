@@ -13,10 +13,10 @@ import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.IntervalLocationProfile;
 import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.View;
 import edu.uoregon.tau.perfdmf.TAUdbTrial;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
-import edu.uoregon.tau.perfexplorer.common.RMIView;
 import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
 public class PerfExplorerTableModel extends AbstractTableModel {
@@ -31,7 +31,7 @@ public class PerfExplorerTableModel extends AbstractTableModel {
     private Metric metric = null;
     private RMISortableIntervalEvent event = null;
     private IntervalLocationProfile ilp = null;
-    private RMIView view = null;
+    private View view = null;
     private int type = -1;
     private String[] columnNames = { "Field", "Value" };
     private int currentTrial = 0;
@@ -83,8 +83,8 @@ public class PerfExplorerTableModel extends AbstractTableModel {
                 ilp = event.getMeanSummary();
             } catch (SQLException exception) {}
             type = 4;
-        } else if (object instanceof RMIView) {
-            this.view = (RMIView) object;
+        } else if (object instanceof View) {
+            this.view = (View) object;
             type = 5;
         }
         fireTableDataChanged();
@@ -107,7 +107,7 @@ public class PerfExplorerTableModel extends AbstractTableModel {
         case 4:
             return 11;
         case 5:
-            return RMIView.getFieldCount();
+            return View.getFieldCount();
         default:
             return 0;
         }
@@ -315,8 +315,8 @@ public class PerfExplorerTableModel extends AbstractTableModel {
             }
         case 5:
             if (c == 0) {
-                if (RMIView.getFieldName(r) != null)
-                    return RMIView.getFieldName(r);
+                if (View.getFieldName(r) != null)
+                    return View.getFieldName(r);
                 else
                     return "";
             } else {
