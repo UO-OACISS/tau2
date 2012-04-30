@@ -94,7 +94,7 @@ CREATE TABLE trial (
  id                  SERIAL NOT NULL PRIMARY KEY,
  name                VARCHAR,
  /* extract this from the metadata */
- collection_date     TIMESTAMP WITH TIME ZONE,
+ collection_date     TIMESTAMP,
  /* where did this data come from? */
  data_source         INT,
  /* number of processes */
