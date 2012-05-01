@@ -516,6 +516,8 @@ $(TAU_JAVA_INSTALLDIR)/TauJVMTI.jar: TauJVMTI.jar
 		@if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir -p $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
+		@if [ -f $(INSTALLDEST)/libTAU.jnilib ] ; then true; \
+									 else cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) libTAU.jnilib; fi
 
 $(TAU_SHAREDDIR)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
 		@echo Installing $(TAUPYTHON), ltau.py, and tau.py in $(INSTALLDEST)
@@ -868,7 +870,7 @@ TauJVMTI.jar:  TauJVMTI.java
 	rm -f -r classes
 	mkdir -p classes
 	$(JDKBINDIR)/javac -d classes TauJVMTI.java
-	(cd classes; $(JDKDIR)/bin/jar cf ../$@ *)
+	(cd classes; $(JDKBINDIR)/jar cf ../$@ *)
 
 test_java: all
 	LD_LIBRARY_PATH=`pwd` $(JDKDIR)/bin/java -agentlib:TAUsh-jdk=exclude=java/util/zip/ZipFile/init,java/util/jar/JarFile/init,sun/misc/URLClassPath*,java/net/URLClassLoader*,java/lang/ClassLoader* -Xbootclasspath/a:./TauJVMTI.jar Pi
