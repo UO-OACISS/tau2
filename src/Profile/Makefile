@@ -383,7 +383,7 @@ $(TAU_TARGET):	$(OBJS) $(STATIC_OBJS)
 #	cp $(TAU_CUPTI_LIB) $(TAU_SHAREDDIR)/$(TAU_CUPTI_LIB)
 
 
-$(TAU_NULL)$(TAU_SHLIB): 	$(TAU_TARGET) $(OBJS) $(MPI_WRAPPER) $(TAU_FORCE_MPI) $(SHARED_OBJS)
+$(TAU_NULL)$(TAU_SHLIB): 	$(TAU_TARGET) $(OBJS) $(MPI_WRAPPER) $(TAU_FORCE_MPI) $(SHARED_OBJS) $(MPI_WRAPPER)
 		$(PRELINK_PHASE)
 		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_SHLIB) $(OBJS) $(SHARED_OBJS) $(SHARED_LIBS) $(EXTRAOBJS) $(TAU_MPI_FOR_SHARED) $(TAU_MPI_LIB) $(TAU_MPI_FLIB) $(EXTRA_LIBS) $(LEXTRA1) $(TAU_PAPI_EXTRA_FLAGS) $(TAU_EXTRA_LIBRARY_FLAGS) $(TAUEXTRASHLIBOPTS) $(TAU_SHLIB_EXTRA_CXXLIBS) $(TAU_LINKER_OPTS)
 		$(TAU_CREATE_SYMLINKS)
@@ -516,6 +516,8 @@ $(TAU_JAVA_INSTALLDIR)/TauJVMTI.jar: TauJVMTI.jar
 		@if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir -p $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
+		@if [ -f $(INSTALLDEST)/libTAU.jnilib ] ; then true; \
+									 else cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) libTAU.jnilib; fi
 
 $(TAU_SHAREDDIR)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
 		@echo Installing $(TAUPYTHON), ltau.py, and tau.py in $(INSTALLDEST)
@@ -598,7 +600,7 @@ TauForceMPI.o : TauForceMPI.c
 
 # Rules
 Profile.class	: Profile.java
-	$(JDKDIR)/bin/javac Profile.java 
+	$(JDKBINDIR)/javac Profile.java 
 
 Profiler.o 	: Profiler.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
@@ -867,8 +869,8 @@ TauJVMTI.o :	TauJVMTI.cpp TauJVMTI.jar
 TauJVMTI.jar:  TauJVMTI.java
 	rm -f -r classes
 	mkdir -p classes
-	$(JDKDIR)/bin/javac -d classes TauJVMTI.java
-	(cd classes; $(JDKDIR)/bin/jar cf ../$@ *)
+	$(JDKBINDIR)/javac -d classes TauJVMTI.java
+	(cd classes; $(JDKBINDIR)/jar cf ../$@ *)
 
 test_java: all
 	LD_LIBRARY_PATH=`pwd` $(JDKDIR)/bin/java -agentlib:TAUsh-jdk=exclude=java/util/zip/ZipFile/init,java/util/jar/JarFile/init,sun/misc/URLClassPath*,java/net/URLClassLoader*,java/lang/ClassLoader* -Xbootclasspath/a:./TauJVMTI.jar Pi

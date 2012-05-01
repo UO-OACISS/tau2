@@ -1446,19 +1446,6 @@ for arg in "$@"; do
         echo "Error: Cannot access JDK directory $jdkdir"
         exit 1
       fi 
-      jv=`${jdkdir}/bin/java -version 2>&1 | grep version | awk '{ print $3; }'| sed -e s/\"//g`
-      major=`echo $jv | sed 's/\([0-9]*\).*/\1/g'`
-      minor=`echo $jv | sed 's/'${major}'.\([0-9]*\).*/\1/g'`
-      #echo "major = $major, minor = $minor"
-      if [ $major = 1 ]
-      then
-        if [ $minor -lt 5 ]
-        then
-          echo "Error: Please specify a JDK version 1.5 or later to use JVMTI based instrumentation"
-	else
-	  fixmakeargs="$fixmakeargs JVMTI jdkdir=$jdkdir"
-        fi
-      fi
 
     shift
     ;;
@@ -2292,7 +2279,30 @@ if [ $tauarch = unknown -o $tauarch = none ]
     fi
 fi
 
-
+#detech the java version.
+if [ "x$java" = "xyes" ]
+then
+	if [ "x$machine" = "xapple" ]
+	then
+		#echo "${jdkdir}/Commands/java -version"
+		jv=`${jdkdir}/Commands/java -version 2>&1 | grep version | awk '{ print $3; }'| sed -e s/\"//g`
+	else
+		jv=`${jdkdir}/bin/java -version 2>&1 | grep version | awk '{ print $3; }'| sed -e s/\"//g`
+	fi
+	#echo "jv = $jv"
+	major=`echo $jv | sed 's/\([0-9]*\).*/\1/g'`
+	minor=`echo $jv | sed 's/'${major}'.\([0-9]*\).*/\1/g'`
+	#echo "major = $major, minor = $minor"
+	if [ "x$major" = "x1" ]
+	then
+		if [ $minor -lt 5 ]
+		then
+			echo "Error: Please specify a JDK version 1.5 or later to use JVMTI based instrumentation"
+		else
+			fixmakeargs="$fixmakeargs JVMTI jdkdir=$jdkdir"
+		fi
+	fi
+fi
 
 
 # use -m32 when specifying 32 bit on an Opteron/EM64T
@@ -3305,6 +3315,8 @@ case $cxx_compiler in
     mpicxx)
 	if [ $machine = bgp -o $machine = bgq ] ; then
 	    echo "Using GNU Compilers for BGP"
+	    cxx_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx
+	    c_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc
 	    tauoptions="${tauoptions}-gnu"
 	else
 	    echo "ERROR Unknown C++ compiler: $cxx_compiler"
