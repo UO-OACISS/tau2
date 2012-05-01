@@ -76,6 +76,8 @@ public class Trial implements Serializable, Comparable<Trial> {
     protected Database database;
     protected Map<String, String> metaData = new TreeMap<String, String>();
     protected Map<String, String> uncommonMetaData = new TreeMap<String, String>();
+	protected Map<Integer, Function> intervalEventMap = null;
+    protected Map<Integer, AtomicEvent> atomicEventMap = null;
 
     private boolean xmlMetaDataLoaded = false;
 
@@ -1189,5 +1191,22 @@ public class Trial implements Serializable, Comparable<Trial> {
 		}
 		return true;
 	}
+
+    public Map<Integer, Function> getFunctionMap() {
+		return intervalEventMap;
+	}
+
+	public void setFunctionMap(Map<Integer, Function> intervalEventMap) {
+		this.intervalEventMap = intervalEventMap;
+	}
+
+	public Map<Integer, AtomicEvent> getAtomicEventMap() {
+		return atomicEventMap;
+	}
+
+	public void setAtomicEventMap(Map<Integer, AtomicEvent> atomicEventMap) {
+		this.atomicEventMap = atomicEventMap;
+	}
+
 
 }

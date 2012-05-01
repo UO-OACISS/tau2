@@ -43,6 +43,7 @@ public class AtomicEvent {
     private AtomicLocationProfile meanSummary = null;
     private AtomicLocationProfile totalSummary = null;
     private DatabaseAPI dataSession = null;
+    private IntervalEvent parentTimer = null;
 
     public AtomicEvent(DatabaseAPI dataSession) {
         this.dataSession = dataSession;
@@ -263,7 +264,7 @@ public class AtomicEvent {
         Vector<AtomicEvent> atomicEvents = new Vector<AtomicEvent>();
         // create a string to hit the database
         StringBuffer buf = new StringBuffer();
-        buf.append("select u.id, u.trial, u.name ");
+        buf.append("select u.id, u.trial, u.name, u.parent ");
         buf.append("from " + db.getSchemaPrefix() + "counter u ");
         buf.append(whereClause);
         buf.append(" order by id ");
@@ -278,6 +279,17 @@ public class AtomicEvent {
                 ue.setID(resultSet.getInt(1));
                 ue.setTrialID(resultSet.getInt(2));
                 ue.setName(resultSet.getString(3));
+                int parent = resultSet.getInt(4);
+            	/*
+                if (parent > 0) {
+            		// TODO - SET THE PARENT! But we can't because we don't
+            		// yet have a map of parents to Function/IntervalEvent objects.
+                	Function f = datasource.getTrial().getFunctionMap().get(parent);
+                	if (f != null) {
+                		ue.setParent(f);
+                	}
+                }
+               	*/
                 atomicEvents.addElement(ue);
             }
             resultSet.close();
@@ -288,8 +300,11 @@ public class AtomicEvent {
 
         return atomicEvents;
 	}
-
+	
 	public int saveAtomicEvent(DB db, int newTrialID) {
+		// for the new schema
+		if(db.getSchemaVersion()>0) return saveCounter(db, newTrialID);
+    	
         int newAtomicEventID = 0;
         try {
             PreparedStatement statement = null;
@@ -320,6 +335,42 @@ public class AtomicEvent {
         return newAtomicEventID;
     }
 
+	public int saveCounter(DB db, int newTrialID) {
+    	
+        int newCounterID = 0;
+        try {
+            PreparedStatement statement = null;
+            statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
+                    + "counter (trial, name, parent) VALUES (?, ?, ?)");
+            statement.setInt(1, newTrialID);
+            statement.setString(2, name);
+            if (parentTimer == null) {
+                statement.setNull(3, java.sql.Types.INTEGER);
+            } else {
+                statement.setInt(3, parentTimer.getID());	
+            }
+            statement.executeUpdate();
+            String tmpStr = new String();
+            if (db.getDBType().compareTo("mysql") == 0)
+                tmpStr = "select LAST_INSERT_ID();";
+            else if (db.getDBType().compareTo("derby") == 0)
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM counter";
+            else if (db.getDBType().compareTo("h2") == 0)
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM counter";
+            else if (db.getDBType().compareTo("db2") == 0)
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM counter";
+            else if (db.getDBType().compareTo("oracle") == 0)
+                tmpStr = "select " + db.getSchemaPrefix() + "counter_id_seq.currval FROM dual";
+            else
+                tmpStr = "select currval('counter_id_seq');";
+            newCounterID = Integer.parseInt(db.getDataItem(tmpStr));
+        } catch (SQLException e) {
+            System.out.println("An error occurred while saving the trial.");
+            e.printStackTrace();
+        }
+        return newCounterID;
+    }
+
     public static void getMetaData(DB db) {
         // see if we've already have them
         // need to load each time in case we are working with a new database. 
@@ -329,13 +380,18 @@ public class AtomicEvent {
         try {
             ResultSet resultSet = null;
 
+            String tableName = "atomic_event";
+    		if(db.getSchemaVersion()>0) {
+    			tableName = "counter";
+    		}
+    		
             DatabaseMetaData dbMeta = db.getMetaData();
 
             if ((db.getDBType().compareTo("oracle") == 0) || (db.getDBType().compareTo("derby") == 0)
                     || (db.getDBType().compareTo("db2") == 0)) {
-                resultSet = dbMeta.getColumns(null, null, "ATOMIC_EVENT", "%");
+                resultSet = dbMeta.getColumns(null, null, tableName.toUpperCase(), "%");
             } else {
-                resultSet = dbMeta.getColumns(null, null, "atomic_event", "%");
+                resultSet = dbMeta.getColumns(null, null, tableName.toLowerCase(), "%");
             }
 
             Vector<String> nameList = new Vector<String>();

@@ -144,6 +144,7 @@ public class TAUdbDataSource extends DataSource {
             addGroups(ie.getGroup(), function);
             ieMap.put(new Integer(ie.getID()), function);
         }
+        databaseAPI.getTrial().setFunctionMap(ieMap);
 
         //getIntervalEventData(ieMap);
         fastGetIntervalEventData(trialID,ieMap, metricMap);
