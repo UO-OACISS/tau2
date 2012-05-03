@@ -465,6 +465,11 @@ Tau_bfd_getAddressMap(tau_bfd_handle_t handle, unsigned long probe_addr)
 static char const *
 Tau_bfd_internal_tryDemangle(bfd * bfdImage, char const * funcname)
 {
+	/* Intel version 12 compilers output symbol with the extraneous '.text.'
+	 * prepended to the mangled name - S.B. */
+	if (strncmp(funcname, ".text.", 6) == 0) {
+		funcname = &funcname[6];
+	}
 	char const * demangled = NULL;
 #if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
 	if(funcname && bfdImage) {
