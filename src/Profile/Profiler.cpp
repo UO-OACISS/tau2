@@ -1029,10 +1029,12 @@ static int writeUserEvents(FILE *fp, int tid) {
   // Print UserEvent Data if any
   int numEvents = 0;
   for (it = TheEventDB().begin(); it != TheEventDB().end(); ++it) {
-    if ((*it)->GetNumEvents(tid) == 0) { // skip user events with no calls
+    if ((*it) && (*it)->GetNumEvents(tid) == 0) { // skip user events with no calls
       continue;
     }
-    numEvents++;
+    if ((*it)) {
+      numEvents++;
+    }
   }
   
   if (numEvents > 0) {
@@ -1043,7 +1045,7 @@ static int writeUserEvents(FILE *fp, int tid) {
     fprintf(fp, "# eventname numevents max min mean sumsqr\n");
     
     for(it = TheEventDB().begin(); it != TheEventDB().end(); ++it) {
-      if ((*it)->GetNumEvents(tid) == 0) { // skip user events with no calls
+      if ((*it) && (*it)->GetNumEvents(tid) == 0) { // skip user events with no calls
 	continue;
       }
       fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n", 
