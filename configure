@@ -2034,6 +2034,9 @@ chmod a+rx $BINTARGET/perfexplorer
 # install tau_gen_wrapper
 cp ${tauroot}/tools/src/tau_gen_wrapper $BINTARGET
 
+# install tau_macro.sh
+cp ${tauroot}/tools/src/tau_macro.sh $BINTARGET
+
 
 if [ ! -f $BINTARGET/jracy ] ; then 
     cd $BINTARGET/; ln -s paraprof jracy; cd ${tauroot}; 
