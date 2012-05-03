@@ -386,6 +386,7 @@ public class IntervalEvent {
                     + "timer (trial, name) VALUES (?, ?)");
             statement.setInt(1, newTrialID);
             statement.setString(2, name);
+            // TODO: What about short_name, file, column, line, etc?
             statement.executeUpdate();
             statement.close();
 
@@ -441,6 +442,7 @@ public class IntervalEvent {
             throw new RuntimeException("Unable to find event in database, event: " + name, null);
         }
 
+        // TODO: mean, total. etc should all be saved when aggregate threads are saved.
 /*        // save the intervalEvent mean summary
         if (meanSummary != null) {
             meanSummary.saveMeanSummary(db, newIntervalEventID, newMetHash, saveMetricIndex);

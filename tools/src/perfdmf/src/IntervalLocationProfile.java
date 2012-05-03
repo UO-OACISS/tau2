@@ -506,8 +506,11 @@ public class IntervalLocationProfile extends Object {
         resultSet.close();
     }
 
+    // @deprecated - this is only called from DatabaseAPI.getIntervalEventData(),
+    //               which is never called anywhere.
     public static Vector<IntervalLocationProfile> getIntervalEventData(DB db, int metricCount, String whereClause) throws SQLException {
-        StringBuffer buf = new StringBuffer();
+    	if (db.getSchemaVersion() > 0) return getTAUdbIntervalEventData(db, metricCount, whereClause);
+    	StringBuffer buf = new StringBuffer();
         buf.append("select p.interval_event, p.metric, p.node, p.context, p.thread, ");
         buf.append("p.inclusive_percentage, ");
 
@@ -555,6 +558,68 @@ public class IntervalLocationProfile extends Object {
             intervalLocationProfile.setNumCalls(resultSet.getDouble(10));
             intervalLocationProfile.setNumSubroutines(resultSet.getDouble(11));
             intervalLocationProfile.setInclusivePerCall(metricIndex, resultSet.getDouble(12));
+            for (int i = 1; i < metricCount; i++) {
+                if (resultSet.next() == false) {
+                    break;
+                }
+                metricIndex++;
+                intervalLocationProfile.setInclusivePercentage(metricIndex, resultSet.getDouble(6));
+                intervalLocationProfile.setInclusive(metricIndex, resultSet.getDouble(7));
+                intervalLocationProfile.setExclusivePercentage(metricIndex, resultSet.getDouble(8));
+                intervalLocationProfile.setExclusive(metricIndex, resultSet.getDouble(9));
+                intervalLocationProfile.setInclusivePerCall(metricIndex, resultSet.getDouble(12));
+            }
+            intervalLocationProfiles.addElement(intervalLocationProfile);
+        }
+        resultSet.close();
+        return (intervalLocationProfiles);
+    }
+
+    // @deprecated - this is only called from DatabaseAPI.getIntervalEventData(),
+    //               which is never called anywhere.
+    public static Vector<IntervalLocationProfile> getTAUdbIntervalEventData(DB db, int metricCount, String whereClause) throws SQLException {
+        StringBuffer buf = new StringBuffer();
+        buf.append("select p.timer, p.metric, t.node_rank, t.context_rank, t.thread_rank, ");
+        buf.append("p.inclusive_percentage, p.inclusive_value, ");
+        buf.append("p.exclusive_percentage, p.exclusive_value, ");
+        buf.append("tc.calls, tc.subroutines ");
+        buf.append("from " + db.getSchemaPrefix() + "timer e ");
+        buf.append("inner join " + db.getSchemaPrefix() + "timer_value p ");
+        buf.append("on e.id = p.timer ");
+        buf.append("inner join " + db.getSchemaPrefix() + "timer_callpath tc ");
+        buf.append("on p.timer = tc.timer and p.thread = tc.thread ");
+        buf.append("inner join " + db.getSchemaPrefix() + "thread t on p.thread = t.id");
+        buf.append(whereClause);
+        
+        // must be ordered this way because of the assumption that all metrics for each function come together
+        buf.append(" order by p.timer, t.node_rank, t.context_rank, t.thread_rank, p.metric ");
+        // System.out.println(buf.toString());
+
+        Vector<IntervalLocationProfile> intervalLocationProfiles = new Vector<IntervalLocationProfile>();
+        // get the results
+        //long time = System.currentTimeMillis();
+        ResultSet resultSet = db.executeQuery(buf.toString());
+        //time = (System.currentTimeMillis()) - time;
+        //System.out.println("Query : " + time);
+        
+        while (resultSet.next() != false) {
+
+            int metricIndex = 0;
+            IntervalLocationProfile intervalLocationProfile = new IntervalLocationProfile();
+            intervalLocationProfile.setIntervalEventID(resultSet.getInt(1));
+            intervalLocationProfile.setNode(resultSet.getInt(3));
+            intervalLocationProfile.setContext(resultSet.getInt(4));
+            intervalLocationProfile.setThread(resultSet.getInt(5));
+            intervalLocationProfile.setInclusivePercentage(metricIndex, resultSet.getDouble(6));
+            intervalLocationProfile.setInclusive(metricIndex, resultSet.getDouble(7));
+            intervalLocationProfile.setExclusivePercentage(metricIndex, resultSet.getDouble(8));
+            intervalLocationProfile.setExclusive(metricIndex, resultSet.getDouble(9));
+            intervalLocationProfile.setNumCalls(resultSet.getDouble(10));
+            intervalLocationProfile.setNumSubroutines(resultSet.getDouble(11));
+            if (intervalLocationProfile.getNumCalls() > 0)
+            	intervalLocationProfile.setInclusivePerCall(metricIndex, resultSet.getDouble(7)/resultSet.getDouble(11));
+            else
+            	intervalLocationProfile.setInclusivePerCall(metricIndex, 0.0);
             for (int i = 1; i < metricCount; i++) {
                 if (resultSet.next() == false) {
                     break;
