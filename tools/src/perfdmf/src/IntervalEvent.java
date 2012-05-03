@@ -310,6 +310,7 @@ public class IntervalEvent {
 
 	public int saveIntervalEvent(DB db, int newTrialID, Hashtable<Integer, Integer> newMetHash, int saveMetricIndex)
             throws SQLException {
+    	if(db.getSchemaVersion() >0) return saveTAUdbIntervalEvent(db, newTrialID, newMetHash, saveMetricIndex);
         int newIntervalEventID = -1;
 
         PreparedStatement statement = null;
@@ -372,6 +373,84 @@ public class IntervalEvent {
         if (totalSummary != null) {
             totalSummary.saveTotalSummary(db, newIntervalEventID, newMetHash, saveMetricIndex);
         }
+        return newIntervalEventID;
+    }
+    
+	public int saveTAUdbIntervalEvent(DB db, int newTrialID, Hashtable<Integer, Integer> newMetHash, int saveMetricIndex)
+            throws SQLException {
+        int newIntervalEventID = -1;
+
+        PreparedStatement statement = null;
+        if (saveMetricIndex < 0) {
+            statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
+                    + "timer (trial, name) VALUES (?, ?)");
+            statement.setInt(1, newTrialID);
+            statement.setString(2, name);
+            statement.executeUpdate();
+            statement.close();
+
+            String tmpStr = new String();
+            if (db.getDBType().compareTo("mysql") == 0)
+                tmpStr = "select LAST_INSERT_ID();";
+            else if (db.getDBType().compareTo("db2") == 0)
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM interval_event";
+            else if (db.getDBType().compareTo("derby") == 0)
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM interval_event";
+            else if (db.getDBType().compareTo("h2") == 0)
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM interval_event";
+            else if (db.getDBType().compareTo("oracle") == 0)
+                tmpStr = "select " + db.getSchemaPrefix() + "interval_event_id_seq.currval FROM dual";
+            else // postgres
+                tmpStr = "select currval('interval_event_id_seq');";
+            newIntervalEventID = Integer.parseInt(db.getDataItem(tmpStr));
+
+			// save the groups
+			String[] groups = group.split("|");
+            statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
+               	+ "timer_group (timer, group_name) VALUES (?, ?)");
+			for (int i = 0 ; i < groups.length ; i++) {
+				statement.setInt(1,newIntervalEventID);
+				statement.setString(2,groups[i].trim());
+				statement.addBatch();
+			}
+			statement.executeBatch();
+			statement.close();
+        } else {
+
+            if (db.getDBType().compareTo("oracle") == 0)
+                statement = db.prepareStatement("SELECT id FROM " + db.getSchemaPrefix()
+                        + "interval_event where dbms_lob.instr(name, ?) > 0 and trial = ?");
+            else if (db.getDBType().compareTo("derby") == 0)
+                statement = db.prepareStatement("SELECT id FROM " + db.getSchemaPrefix()
+                        + "interval_event where cast(name as varchar(4000)) = ? and trial = ?");
+            else
+                statement = db.prepareStatement("SELECT id FROM " + db.getSchemaPrefix()
+                        + "interval_event where name = ? and trial = ?");
+
+            statement.setString(1, name);
+            statement.setInt(2, newTrialID);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next() != false) {
+                newIntervalEventID = resultSet.getInt(1);
+            }
+            resultSet.close();
+            statement.close();
+        }
+        
+        if (newIntervalEventID == -1) {
+            throw new RuntimeException("Unable to find event in database, event: " + name, null);
+        }
+
+/*        // save the intervalEvent mean summary
+        if (meanSummary != null) {
+            meanSummary.saveMeanSummary(db, newIntervalEventID, newMetHash, saveMetricIndex);
+        }
+
+        // save the intervalEvent total summary
+        if (totalSummary != null) {
+            totalSummary.saveTotalSummary(db, newIntervalEventID, newMetHash, saveMetricIndex);
+        }
+*/
         return newIntervalEventID;
     }
     
