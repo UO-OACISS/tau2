@@ -12,15 +12,23 @@ base=`echo $filename | sed -e 's/\.[^\.]*$//' -e's/.*\///'`
 suf=`echo $filename | sed -e 's/.*\./\./' `
 
 shift
-cpp $filename $* -dM > $filename.tau.inc
+cpp $filename $* -dM  > $filename.tau.inc
 sed -e 's@#include@//TAU_INCLUDE#include@g' $filename > $filename.tau.tmp
 #echo "cpp $filename.tau.tmp  $* -P -traditional-cpp -w -include $filename.tau.inc"
-cpp $filename.tau.tmp  $* -CC -P -traditional-cpp -w -include $filename.tau.inc  | sed -e 's@//TAU_INCLUDE#include@#include@g' > $base.pp$suf
+if [ "x$suf" = "x.c" -o "x$suf" = "x.cc" -o "x$suf" = "x.cpp" -o "x$suf" = "x.C" ]; then
+# omit -traditional-cpp for C/C++
+  cpp $filename.tau.tmp  $* -CC -P -w -include $filename.tau.inc  | sed -e 's@//TAU_INCLUDE#include@#include@g' > $base.pp$suf
+else
+# use white-space preserving -traditional-cpp for Fortran
+  cpp $filename.tau.tmp  $* -CC -P -traditional-cpp -w -include $filename.tau.inc  | sed -e 's@//TAU_INCLUDE#include@#include@g' > $base.pp$suf
+fi
+
 
 # -CC preserves the comments
 # -P removes any line number cluter 
+# -traditional-cpp preserves whitespaces
 
-/bin/rm -f $filename.tau.tmp $filename.tau.inc
+#/bin/rm -f $filename.tau.tmp $filename.tau.inc
 
 
 
