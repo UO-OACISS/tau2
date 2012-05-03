@@ -11,7 +11,10 @@ shift
 cpp $filename $* -dM > $filename.tau.inc
 sed -e 's@#include@//TAU_INCLUDE#include@g' $filename > $filename.tau.tmp
 #echo "cpp $filename.tau.tmp  $* -P -traditional-cpp -w -include $filename.tau.inc"
-cpp $filename.tau.tmp  $* -P -traditional-cpp -w -include $filename.tau.inc  | sed -e 's@//TAU_INCLUDE#include@#include@g' > taucpp.$filename
+cpp $filename.tau.tmp  $* -CC -P -traditional-cpp -w -include $filename.tau.inc  | sed -e 's@//TAU_INCLUDE#include@#include@g' > taucpp.$filename
+
+# -CC preserves the comments
+# -P removes any line number cluter 
 
 /bin/rm -f $filename.tau.tmp $filename.tau.inc
 
