@@ -61,6 +61,7 @@ declare -i disableCompInst=$FALSE
 declare -i madeToLinkStep=$FALSE
 
 declare -i optFixHashIf=$FALSE
+declare -i tauPreProcessor=$TRUE
 
 headerInstDir=".tau_tmp_$$"
 headerInstFlag=""
@@ -280,6 +281,12 @@ for arg in "$@" ; do
 			if [ ! -x $preprocessor ]; then
 			    preprocessor=`which cpp`
 			fi
+
+			if [ $tauPreProcessor == $TRUE ]; then 
+			  # USE TAU's pre-processor for macro expansion by default, unless a different one is specified
+		          preprocessor=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_macro.sh@'` 
+                        fi
+
 			if [ ! -x $preprocessor ]; then
  			    echo "ERROR: No working cpp found in path. Please specify -optCPP=<full_path_to_cpp> and recompile"
 			fi
@@ -310,6 +317,7 @@ for arg in "$@" ; do
 		    -optCPP=*)
                         preprocessor=${arg#"-optCPP="}
 			preprocess=$TRUE
+			tauPreProcessor=$FALSE
 			echoIfDebug "\tPreprocessing $preprocess. preprocessor used is $preprocessor with options $preprocessorOpts"
 			;;
 		    
@@ -938,7 +946,7 @@ passCount=passCount+1;
 
 
 # Some sanity checks
-if [ $optCompInst = $TRUE ] ; then
+if [ $optCompInst == $TRUE ] ; then
     optHeaderInst=$FALSE
 fi
 
@@ -976,9 +984,15 @@ while [ $tempCounter -lt $numFiles ]; do
     # suf gets .F90 in the example above.
     #echoIfDebug "suffix here is -- $suf"
     # If we need to pre-process the source code, we should do so here!
-    if [ $preprocess = $TRUE -a $groupType == $group_f_F ]; then
+    #if [ $preprocess = $TRUE -a $groupType == $group_f_F ]; then
+    if [ $preprocess == $TRUE ]; then
 	base=${base}.pp
-	cmdToExecute="${preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} $base$suf"
+        if [ $tauPreProcessor == $TRUE ]; then
+	  cmdToExecute="${preprocessor} ${arrFileName[$tempCounter]} $optTauIncludes $optIncludeDefs"
+# tau_macro.sh will generate the .pp$suf file.
+        else 
+	  cmdToExecute="${preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} $base$suf"
+        fi
 	evalWithDebugMessage "$cmdToExecute" "Preprocessing"
         if [ ! -f $base$suf ]; then
             echoIfVerbose "ERROR: Did not generate .pp file"
