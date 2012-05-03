@@ -120,6 +120,9 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
         schemafileChooser.setText("Browse...");
         schemafileChooser.addActionListener(this);
         schemafileChooser.setActionCommand("schema");
+        schemafileChooser2.setText("Browse...");
+        schemafileChooser2.addActionListener(this);
+        schemafileChooser2.setActionCommand("schema2");
         saveConfig.setText("Save Configuration");
         saveConfig.addActionListener(this);
         removeConfig.setText("Remove Configuration");
@@ -374,6 +377,17 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
                 }
                 lastDirectory = jFileChooser.getSelectedFile().getParent();
                 schema.setText(jFileChooser.getSelectedFile().getAbsolutePath());
+            } else if (arg.equals("schema2")) {
+                JFileChooser jFileChooser = new JFileChooser(lastDirectory);
+                jFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                jFileChooser.setMultiSelectionEnabled(false);
+                jFileChooser.setDialogTitle("Select File");
+                jFileChooser.setApproveButtonText("Select");
+                if ((jFileChooser.showOpenDialog(this)) != JFileChooser.APPROVE_OPTION) {
+                    return;
+                }
+                lastDirectory = jFileChooser.getSelectedFile().getParent();
+                schema2.setText(jFileChooser.getSelectedFile().getAbsolutePath());
             } else if (arg.equals("Save Configuration")) {
                 String filename = writeConfig(name.getText());
                 configList.clearSelection();
