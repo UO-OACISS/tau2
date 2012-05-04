@@ -42,7 +42,7 @@ public class TAUdbDataSource extends DataSource {
 				db.getSchemaPrefix() +"timer t on v.timer = t.id " +
 				"left outer join " +
 				db.getSchemaPrefix() +"thread h on v.thread = h.id left outer join" +
-				db.getSchemaPrefix() +" timer_callpath cp on v.timer = cp.timer and v.thread = cp.thread where t.trial = "+trialID;
+				db.getSchemaPrefix() +" timer_callpath cp on v.timer = cp.timer and v.thread = cp.thread where h.node_rank > -1 and t.trial = "+trialID;
 
 
 
