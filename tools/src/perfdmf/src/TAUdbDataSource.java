@@ -110,6 +110,7 @@ public class TAUdbDataSource extends DataSource {
         //System.out.println("Processing data, please wait ......");
         long time = System.currentTimeMillis();
         int trialID = databaseAPI.getTrial().getID();
+        databaseAPI.getTrial().setDataSource(this);
         DB db = databaseAPI.getDb();
         StringBuffer joe = new StringBuffer();
         joe.append("SELECT id, name ");

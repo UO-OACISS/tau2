@@ -11,6 +11,7 @@ import edu.uoregon.tau.perfdmf.DataSourceException;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.DatabaseException;
 import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.TAUdbDatabaseAPI;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.UtilFncs;
 
@@ -82,6 +83,11 @@ public class LoadTrial {
         databaseAPI = new DatabaseAPI();
         try {
             databaseAPI.initialize(configFileName, true);
+			if (databaseAPI.db().getSchemaVersion() > 0) {
+				// copy the DatabaseAPI object data into a new TAUdbDatabaseAPI object
+				databaseAPI = new TAUdbDatabaseAPI(databaseAPI);
+			}
+
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(-1);

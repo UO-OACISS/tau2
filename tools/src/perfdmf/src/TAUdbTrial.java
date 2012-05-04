@@ -290,6 +290,10 @@ public class TAUdbTrial extends Trial {
 		}
 //Shouldn't this method override loadXMLMetadata?
 		public void loadMetadata(DB db) {
+			StringBuffer iHateThis = new StringBuffer();
+			iHateThis.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>");
+			iHateThis.append("<tau:metadata xmlns:tau=\"http://www.cs.uoregon.edu/research/tau\">");
+			iHateThis.append("<tau:CommonProfileAttributes>");
 	        try {
 	            PreparedStatement statement = db.prepareStatement("SELECT name, value FROM " + db.getSchemaPrefix() + "primary_metadata WHERE trial = ?");
 	            statement.setInt(1, this.trialID);
@@ -298,10 +302,63 @@ public class TAUdbTrial extends Trial {
 	                String name = results.getString(1);
 	                String value = results.getString(2);
 	                this.metaData.put(name, value);
+	                iHateThis.append("<tau:attribute><tau:name>");
+	                iHateThis.append(name);
+	                iHateThis.append("</tau:name><tau:value>");
+	                iHateThis.append(value);
+	                iHateThis.append("</tau:value></tau:attribute>");
 	            }
 	            results.close();
+				iHateThis.append("</tau:CommonProfileAttributes>");
 	            // TODO: need to get the secondary metadata and either populate uncommonMetaData, or 
 	            // something similar.
+				
+				int node = -1;
+				int context = -1;
+				int thread = -1;
+				boolean inThread = false;
+				
+	            statement = db.prepareStatement("SELECT sm.name, sm.value, t.node_rank, t.context_rank, t.thread_rank FROM " + 
+	            		db.getSchemaPrefix() + "secondary_metadata sm left outer join " + db.getSchemaPrefix() + 
+	            		"thread t on sm.thread = t.id WHERE sm.trial = ? order by t.node_rank, t.context_rank, t.thread_rank");
+	            statement.setInt(1, this.trialID);
+	            results = statement.executeQuery();
+	            Thread currentThread = null;
+	            while (results.next() != false) {
+	            	if (node != results.getInt(3) || context != results.getInt(4) || thread != results.getInt(5)) {
+	            		node = results.getInt(3);
+	            		context = results.getInt(4);
+	            		thread = results.getInt(5);
+	            		if (this.getDataSource() != null) {
+	            			currentThread = this.getDataSource().getThread(node, context, thread);
+	            		}
+	            		if (inThread) {
+	            			iHateThis.append("</tau:ProfileAttributes>");
+	            		}
+            			iHateThis.append("<tau:ProfileAttributes context=\"" + context + "\" node=\"" + node + "\" thread=\"" + thread + "\">");
+            			inThread = true;
+	            	}
+	                String name = results.getString(1);
+	                String value = results.getString(2);
+	                // put this value in the trial's uncommon metadata map
+	                this.uncommonMetaData.put(name, value);
+	                // put this value in the thread's metadata map
+	                if (currentThread != null) {
+		                currentThread.getMetaData().put(name, value);
+	                }
+	                iHateThis.append("<tau:attribute><tau:name>");
+	                iHateThis.append(name);
+	                iHateThis.append("</tau:name><tau:value>");
+	                iHateThis.append(value);
+	                iHateThis.append("</tau:value></tau:attribute>");
+	            }
+	            results.close();
+	            if (inThread) {
+	            	iHateThis.append("</tau:ProfileAttributes>");
+	            }
+				iHateThis.append("</tau:metadata>");
+				this.setField(XML_METADATA, iHateThis.toString());
+                this.setXmlMetaDataLoaded(true);
 	        } catch (SQLException e) {
 	            System.out.println("An error occurred loading metadata for trial object from TAUdb database.");
 	            e.printStackTrace();

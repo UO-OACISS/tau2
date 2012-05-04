@@ -35,6 +35,7 @@ import edu.uoregon.tau.perfdmf.DBDataSource;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Function;
+import edu.uoregon.tau.perfdmf.TAUdbDatabaseAPI;
 import edu.uoregon.tau.perfdmf.Trial;
 
 public class JUnitParaProf extends JFCTestCase {
@@ -336,6 +337,10 @@ public class JUnitParaProf extends JFCTestCase {
             DatabaseAPI dbApi = new DatabaseAPI();
 
             dbApi.initialize(ParaProf.preferences.getDatabaseConfigurationFile(), false);
+			if (dbApi.db().getSchemaVersion() > 0) {
+				// copy the DatabaseAPI object data into a new TAUdbDatabaseAPI object
+				dbApi = new TAUdbDatabaseAPI(dbApi);
+			}
 
             dbApi.getApplicationList();
             ListIterator<Application> apps = dbApi.getApplicationList().listIterator();
