@@ -549,15 +549,15 @@ if [ -f .last_config ] ; then
     testlastcon=`cat .last_config`
 fi
 
-if [ -f .last_stub ] ; then
- testlaststu=`cat .last_stub`
+if [ -f .active_stub ] ; then
+ testlaststu=`cat .active_stub`
 fi
 
 
 if [ $default = false ] ; then
     
     rm -f .last_config
-    rm -f .last_stub
+    rm -f .active_stub
 fi
 
 # This method will escape spaces so that you can use ./configure `cat .last_config` when you've used them
@@ -7243,7 +7243,7 @@ fi
 
 
 if [ $default = false ] ; then
-    rm -f .last_stub
+    rm -f .active_stub
 fi
 
 if [ $default = false ] ; then
@@ -7254,10 +7254,10 @@ if [ $default = false ] ; then
 
     if [ "$STUB" != "$testlaststu" ] ; then
 
-        echo "$STUB" >> .all_stubs
+        echo "$STUB" >> .active_stubs
         
     fi
-    echo "$STUB" > .last_stub
+    echo "$STUB" > .active_stub
 fi
 
 # replace TAU_MAKEFILE in TAU.h
@@ -7273,7 +7273,7 @@ fi
 
 if [ $tauprefix != unknown ] ; then
   cp -r examples ${tauprefix}
-  cp .all_configs .last_config .all_stubs .last_stub ${tauprefix}
+  cp .all_configs .last_config .active_stubs .active_stub ${tauprefix}
 fi
 
 
