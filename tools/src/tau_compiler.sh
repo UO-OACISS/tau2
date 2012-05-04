@@ -276,15 +276,17 @@ for arg in "$@" ; do
 			# if a preprocessor has not been specified yet, use
 			# the default C preprocessor
 			if [ "x$preprocessor" == "x" ]; then
-			    preprocessor=/usr/bin/cpp
+			    f90preprocessor=/usr/bin/cpp
 			fi
 			if [ ! -x $preprocessor ]; then
-			    preprocessor=`which cpp`
+			    f90preprocessor=`which cpp`
 			fi
 
 			if [ $tauPreProcessor == $TRUE ]; then 
 			  # USE TAU's pre-processor for macro expansion by default, unless a different one is specified
 		          preprocessor=`echo $optTauInstr | sed -e 's@tau_instrumentor@tau_macro.sh@'` 
+			else
+			  preprocessor=$f90preprocessor
                         fi
 
 			if [ ! -x $preprocessor ]; then
@@ -316,6 +318,7 @@ for arg in "$@" ; do
 
 		    -optCPP=*)
                         preprocessor=${arg#"-optCPP="}
+			f90preprocessor=$preprocessor
 			preprocess=$TRUE
 			tauPreProcessor=$FALSE
 			echoIfDebug "\tPreprocessing $preprocess. preprocessor used is $preprocessor with options $preprocessorOpts"
@@ -988,7 +991,11 @@ while [ $tempCounter -lt $numFiles ]; do
     if [ $preprocess == $TRUE ]; then
 	base=${base}.pp
         if [ $tauPreProcessor == $TRUE ]; then
-	  cmdToExecute="${preprocessor} ${arrFileName[$tempCounter]} $optTauIncludes $optIncludeDefs"
+          if [ $groupType == $group_f_F ]; then
+	    cmdToExecute="${f90preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} $base$suf"
+          else 
+	    cmdToExecute="${preprocessor} ${arrFileName[$tempCounter]} $optTauIncludes $optIncludeDefs"
+          fi
 # tau_macro.sh will generate the .pp$suf file.
         else 
 	  cmdToExecute="${preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} $base$suf"
