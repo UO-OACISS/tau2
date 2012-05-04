@@ -97,6 +97,7 @@ import edu.uoregon.tau.perfdmf.DatabaseException;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.TAUdbDataSource;
+import edu.uoregon.tau.perfdmf.TAUdbDatabaseAPI;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.UtilFncs;
 import edu.uoregon.tau.perfdmf.database.DBConnector;
@@ -2824,6 +2825,10 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 			// Basic checks done, try to access the db.
 			DatabaseAPI databaseAPI = new DatabaseAPI();
 			databaseAPI.initialize(database);
+			if (databaseAPI.db().getSchemaVersion() > 0) {
+				// copy the DatabaseAPI object data into a new TAUdbDatabaseAPI object
+				databaseAPI = new TAUdbDatabaseAPI(databaseAPI);
+			}
 
 			// // Some strangeness here, we retrieve the metadata columns for
 			// the non-db trials

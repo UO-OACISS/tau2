@@ -60,6 +60,8 @@ public class PerfExplorerTableModel extends AbstractTableModel {
         } else if (object instanceof TAUdbTrial) {
             this.trial = (Trial) object;
             TAUdbTrial localTrial = (TAUdbTrial)this.trial;
+            System.err.println("PerfExplorerTableModel.updateObject() says: SET THE DATA SOURCE IN THE TRIAL!");
+            //localTrial.setDataSource(PerfExplorerServer.getServer().getSession());
             if(!localTrial.hasMetadata()){
 				localTrial.loadMetadata(PerfExplorerServer.getServer().getDB());
             }

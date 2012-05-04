@@ -85,7 +85,7 @@ public class DatabaseAPI {
     }
 
     public DatabaseAPI() {}
-
+    
     public DB db() {
         return db;
     }
@@ -1560,7 +1560,12 @@ public class DatabaseAPI {
         // Why? Because we have to set the experiment to get the trials
         // and that will screw up the state of the current object.
         // the easiest way is to create a new reference to the DB.
-        DatabaseAPI tmpSession = new DatabaseAPI();
+        DatabaseAPI tmpSession = null;
+    	if (this.db().getSchemaVersion() > 0) {
+    		tmpSession = new TAUdbDatabaseAPI();
+    	} else {
+    		tmpSession = new DatabaseAPI();
+    	}
         // don't initialize (not a new connection) - just reference
         // the other DB connection
         tmpSession.setDB(this.db());
@@ -1579,7 +1584,12 @@ public class DatabaseAPI {
         // Why? Because we have to set the experiment to get the trials
         // and that will screw up the state of the current object.
         // the easiest way is to create a new reference to the DB.
-        DatabaseAPI tmpSession = new DatabaseAPI();
+        DatabaseAPI tmpSession = null;
+    	if (this.db().getSchemaVersion() > 0) {
+    		tmpSession = new TAUdbDatabaseAPI();
+    	} else {
+    		tmpSession = new DatabaseAPI();
+    	}
         // don't initialize (not a new connection) - just reference
         // the other DB connection
         tmpSession.setDB(this.db());
