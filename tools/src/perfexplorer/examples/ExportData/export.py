@@ -44,12 +44,23 @@ def extract(inputs):
 	extracted = extractor.processData()
 	return extracted
 
+def doStats(inputs):
+	statMaker = BasicStatisticsOperation(inputs, False)
+	stats = statMaker.processData()
+	# stddevs = stats.get(BasicStatisticsOperation.STDDEV)
+	means = stats.get(BasicStatisticsOperation.MEAN)
+	# totals = stats.get(BasicStatisticsOperation.TOTAL)
+	# maxs = stats.get(BasicStatisticsOperation.MAX)
+	# mins = stats.get(BasicStatisticsOperation.MIN)
+	return means
+
 def export(results):
 	# change this to P_WALL_CLOCK_TIME as necessary
 	metric = "Time"
 	f = open('export.csv', 'w')
 	f.write('Trial,Metric,Event,Threads,Exclusive\n')
 	for r in results:
+		means = doStats(r)
 		for event in r.getEvents():
 			f.write('\"')
 			f.write(r.getName())
@@ -60,7 +71,7 @@ def export(results):
 			f.write('\",\"')
 			f.write(str(r.getOriginalThreads()))
 			f.write('\",\"')
-			f.write(str(r.getExclusive(0,event,metric)))
+			f.write(str(means.getExclusive(0,event,metric)))
 			f.write('\"\n')
 	f.close()
 	print "Data written to export.csv"
