@@ -1494,10 +1494,12 @@ int errorcode;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Abort()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+ 
+#ifndef TAU_WINDOWS 
   if (TauEnv_get_track_signals()) {
     kill(getpid(), SIGABRT);
   }
+#endif
   TAU_TRACK_COMM(comm);
   TAU_PROFILE_EXIT("MPI_Abort");
   returnVal = PMPI_Abort( comm, errorcode );
@@ -1655,12 +1657,14 @@ int  MPI_Finalize(  )
   }
 #endif /* TAU_BGP */
 
+#ifndef TAU_WINDOWS
   /* Shutdown EBS after Finalize to allow Profiles to be written out
      correctly. Also allows profile merging (or unification) to be
      done correctly. */
   if (TauEnv_get_callsite()) {
     finalizeCallSites_if_necessary();
   }
+#endif /* TAU_WINDOWS */
 
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {

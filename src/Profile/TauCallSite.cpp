@@ -5,6 +5,8 @@
 #include <Profile/TauSampling.h>
 #include <Profile/Profiler.h>
 #include <Profile/TauBfd.h>
+
+#ifndef TAU_WINDOWS
 #include <ucontext.h>
 
 #if !defined(_AIX) && !defined(__sun) && !defined(TAU_WINDOWS)
@@ -819,3 +821,4 @@ extern "C" void finalizeCallSites_if_necessary() {
     candidate->SetName(tempName);
   }
 }
+#endif
