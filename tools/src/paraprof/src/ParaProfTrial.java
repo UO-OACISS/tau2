@@ -50,6 +50,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
     private DatabaseAPI dbAPI;
     private ParaProfExperiment experiment = null;
+    private ParaProfView view = null;
     private DefaultMutableTreeNode defaultMutableTreeNode = null;
     private TreePath treePath = null;
     private boolean dBTrial = false;
@@ -145,6 +146,14 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
         this.experiment = experiment;
     }
 
+    public void setView(ParaProfView view) {
+        this.view = view;
+    }
+
+    public ParaProfView getView() {
+        return view;
+    }
+
     public ParaProfExperiment getExperiment() {
         return experiment;
     }
@@ -192,6 +201,8 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     public String getIDString() {
         if (experiment != null) {
             return (experiment.getIDString()) + ":" + (trial.getID());
+        } else if (view != null) {
+            return (view.getIDString()) + ":" + (trial.getID());
         } else {
             return ":" + (trial.getID());
         }
@@ -738,10 +749,12 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
     public Database getDatabase() {
-        if (experiment == null) {
-            return null;
+        if (experiment != null) {
+        	return experiment.getDatabase();
+        } else if (view != null) {
+            return view.getDatabase();
         }
-        return experiment.getDatabase();
+        return null;
     }
 
     public List<Thread> getThreads() {

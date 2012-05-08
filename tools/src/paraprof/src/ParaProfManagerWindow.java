@@ -84,6 +84,7 @@ import edu.uoregon.tau.paraprof.tablemodel.ExperimentTableModel;
 import edu.uoregon.tau.paraprof.tablemodel.MetricTableModel;
 import edu.uoregon.tau.paraprof.tablemodel.TrialCellRenderer;
 import edu.uoregon.tau.paraprof.tablemodel.TrialTableModel;
+import edu.uoregon.tau.paraprof.tablemodel.ViewTableModel;
 import edu.uoregon.tau.paraprof.treetable.TreeDragSource;
 import edu.uoregon.tau.paraprof.treetable.TreeDropTarget;
 import edu.uoregon.tau.perfdmf.Application;
@@ -93,13 +94,16 @@ import edu.uoregon.tau.perfdmf.DataSourceException;
 import edu.uoregon.tau.perfdmf.DataSourceExport;
 import edu.uoregon.tau.perfdmf.Database;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
+import edu.uoregon.tau.perfdmf.TAUdbDatabaseAPI;
 import edu.uoregon.tau.perfdmf.DatabaseException;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.TAUdbDataSource;
 import edu.uoregon.tau.perfdmf.TAUdbDatabaseAPI;
+import edu.uoregon.tau.perfdmf.TAUdbTrial;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.UtilFncs;
+import edu.uoregon.tau.perfdmf.View;
 import edu.uoregon.tau.perfdmf.database.DBConnector;
 import edu.uoregon.tau.perfdmf.database.DBManagerListener;
 import edu.uoregon.tau.perfdmf.database.DatabaseManagerWindow;
@@ -1887,8 +1891,8 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 					jSplitInnerPane.setRightComponent(getPanelHelpMessage(2));
 				} else {
 					jSplitInnerPane.setRightComponent(getPanelHelpMessage(3));
-
-					// refresh the application list
+					
+					// refresh the application/trial list
 					for (int i = selectedNode.getChildCount(); i > 0; i--) {
 						getTreeModel().removeNodeFromParent(
 								((DefaultMutableTreeNode) selectedNode
@@ -1898,6 +1902,20 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 					Database database = (Database) userObject;
 					DatabaseAPI databaseAPI = getDatabaseAPI(database);
 					if (databaseAPI != null) {
+						if (databaseAPI.db().getSchemaVersion() > 0) {
+							// oh, this is so ugly. Create a TAUdbDatabase object
+							TAUdbDatabaseAPI api = new TAUdbDatabaseAPI(databaseAPI);
+							// get the views
+							ListIterator<View> l = api.getViewList().listIterator();
+							while (l.hasNext()) {
+								ParaProfView view = new ParaProfView((View) l.next());
+								DefaultMutableTreeNode viewNode = new DefaultMutableTreeNode(
+										view);
+								view.setDMTN(viewNode);
+								getTreeModel().insertNodeInto(viewNode,
+										selectedNode, selectedNode.getChildCount());
+							}
+						} else {
 						ListIterator<Application> l = databaseAPI
 						.getApplicationList().listIterator();
 						while (l.hasNext()) {
@@ -1909,6 +1927,8 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 							application.setDMTN(applicationNode);
 							getTreeModel().insertNodeInto(applicationNode,
 									selectedNode, selectedNode.getChildCount());
+						}
+						
 						}
 						databaseAPI.terminate();
 					}
@@ -2022,6 +2042,50 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 								selectedNode.getChildCount());
 						ppTrial.setTreePath(new TreePath(trialNode.getPath()));
 					}
+				}
+				int location = jSplitInnerPane.getDividerLocation();
+				jSplitInnerPane.setRightComponent(getTable(userObject));
+				jSplitInnerPane.setDividerLocation(location);
+			}
+			if (userObject instanceof ParaProfView) {
+				ParaProfView parentView = (ParaProfView) userObject;
+				// refresh the views/trials list
+				for (int i = selectedNode.getChildCount(); i > 0; i--) {
+					getTreeModel().removeNodeFromParent(
+							((DefaultMutableTreeNode) selectedNode
+									.getChildAt(i - 1)));
+				}
+//				parentView.setParent((ParaProfView) parentNode
+//						.getUserObject());
+				TAUdbDatabaseAPI databaseAPI = (TAUdbDatabaseAPI) this.getDatabaseAPI(parentView
+						.getDatabase());
+				if (databaseAPI != null) {
+					databaseAPI.setView(parentView);
+					ListIterator<View> l = databaseAPI.getViewList().listIterator();
+					while (l.hasNext()) {
+						ParaProfView view = new ParaProfView((View) l.next());
+						DefaultMutableTreeNode viewNode = new DefaultMutableTreeNode(
+								view);
+						view.setDMTN(viewNode);
+						getTreeModel().insertNodeInto(viewNode,
+								selectedNode, selectedNode.getChildCount());
+					}
+					ListIterator<Trial> l2 = databaseAPI.getTrialList(
+							true).listIterator();// TODO: Is xml
+					          // metadata required here?
+					while (l2.hasNext()) {
+						ParaProfTrial ppTrial = new ParaProfTrial(
+								(Trial) l2.next());
+						ppTrial.setDBTrial(true);
+						ppTrial.setView(parentView);
+						DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(
+								ppTrial);
+						ppTrial.setDMTN(trialNode);
+						getTreeModel().insertNodeInto(trialNode,
+								selectedNode,
+								selectedNode.getChildCount());
+					}
+					databaseAPI.terminate();
 				}
 				int location = jSplitInnerPane.getDividerLocation();
 				jSplitInnerPane.setRightComponent(getTable(userObject));
@@ -2307,6 +2371,9 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		} else if (obj instanceof ParaProfExperiment) {
 			return (new JScrollPane(new JTable(new ExperimentTableModel(this,
 					(ParaProfExperiment) obj, getTreeModel()))));
+		} else if (obj instanceof ParaProfView) {
+			return (new JScrollPane(new JTable(new ViewTableModel(this,
+					(ParaProfView) obj, getTreeModel()))));
 		} else if (obj instanceof ParaProfTrial) {
 			ParaProfTrial ppTrial = (ParaProfTrial) obj;
 			TrialTableModel model = new TrialTableModel(this, ppTrial,
@@ -2729,6 +2796,7 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		return null;
 	}
 
+
 	public DefaultMutableTreeNode expandExperiment(int type, int applicationID,
 			int experimentID, int trialID, ParaProfApplication application,
 			ParaProfExperiment experiment, ParaProfTrial ppTrial) {
@@ -2761,8 +2829,12 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 	}
 
 	public void expandTrial(ParaProfTrial ppTrial) {
-		DefaultMutableTreeNode trialNode = this.expandExperiment(
-				ppTrial.getExperiment(), ppTrial);
+		DefaultMutableTreeNode trialNode = null;
+		if (ppTrial.getView() != null) {
+			//trialNode = this.expandView(ppTrial.getView(), ppTrial);
+		} else {
+			trialNode = this.expandExperiment(ppTrial.getExperiment(), ppTrial);
+		}
 		// Expand the trial.
 		if (trialNode != null) {
 			if (tree.isExpanded(new TreePath(trialNode.getPath())))

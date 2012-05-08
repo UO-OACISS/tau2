@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.LinkedHashMap;
 import java.util.ArrayList;
+import java.util.Vector;
 import java.util.Map.Entry;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -34,6 +35,10 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 	final static int MAX = -5;
 	final static int MEAN_WITH_NULL = -6;
 	final static int STDDEV_WITH_NULL = -7;
+    private Map<Integer, Experiment> experiments = null;
+    private Map<Integer, View> views = null;
+	private View view = null;
+
 	
 	public TAUdbDatabaseAPI(DatabaseAPI api) {
 		super();
@@ -883,6 +888,49 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 		        stmt.close();
 			}
 		}
+	}
+
+	public void setView(View view) {
+		this.view = view;
+	}
+	
+	public View getView() {
+		return this.view;
+	}
+	
+	// returns Vector of View objects
+	public List<View> getViewList() throws DatabaseException {
+		List<View> vs = null;
+		if (views == null) {
+			int parent = 0;
+			if (view != null)
+				parent = view.getID();
+			vs = View.getViews(parent, db);
+			views = new HashMap<Integer, View>();
+			for (View v : vs) {
+				v.setParent(view);
+				views.put(v.getID(), v);
+			}
+		}
+		return new ArrayList<View>(views.values());
+	}
+
+    // returns Vector of Trial objects
+	public List<Trial> getTrialList(boolean getMetadata) {
+		if (trials == null) {
+			List<View> parents = new ArrayList<View>();
+			View tmpView = view;
+			while (tmpView != null) {
+				parents.add(tmpView);
+				tmpView = tmpView.getParent();
+			}
+			trials = new HashMap<Integer, Trial>();
+			List<Trial> ts = View.getTrialsForTAUdbView(parents, db);
+			for (Trial t : ts) {
+				trials.put(t.getID(), t);
+			}
+		}
+		return new ArrayList<Trial>(trials.values());
 	}
 
 

@@ -39,7 +39,7 @@ public class DatabaseAPI {
     
     private Map<Integer, Application> applications = null;
     private Map<Integer, Experiment> experiments = null;
-    private Map<Integer, Trial> trials = null;
+    protected Map<Integer, Trial> trials = null;
     
     private Vector<IntervalLocationProfile> intervalEventData = null;
     private Vector<AtomicEvent> atomicEvents = null;
@@ -1768,4 +1768,5 @@ public class DatabaseAPI {
     public Trial getTrial() {
         return trial;
     }
+
 };
