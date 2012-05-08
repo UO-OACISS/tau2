@@ -303,7 +303,7 @@ fi
 
 # Now we write to the $outfile
 luafile="events = {
-  run_dir = \"$outputdir\",
+  run_dir = \"$outputdir/\",
   functions_global_blacklist = {
           {subtype = \"stringlist\",value = {\"call_gmon_start\",\"_init\",\"_fini\",\"_start\",\"frame_dummy\"}},
           {subtype = \"regexplist\",value = {\"^irc__.*\",\"^__do_global_.*\",\"^__libc_csu_.*\",\"^__intel_.*\",\"^__pthread_.*\",\"pgf90_.*\", \"pghpf_\", \"__hpf_\"}}
@@ -318,6 +318,8 @@ luafile="events = {
         properties={
           enable_function_instrumentation = true, 
           enable_demangling = true, 
+          distinguish_inlined_functions = true,
+          distinguish_suffix = \"_omp\", 
           generate_runfile   = true
         },
         path= \"$outputdir/$baseinfile\",
@@ -365,6 +367,8 @@ do
         {
                 properties={
                   enable_function_instrumentation = true
+                  distinguish_inlined_functions = true,
+                  distinguish_suffix = \"_omp\", 
                 },
                 path = \"$extralibs\",
                 output_suffix = \"_inst\",

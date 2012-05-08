@@ -549,15 +549,15 @@ if [ -f .last_config ] ; then
     testlastcon=`cat .last_config`
 fi
 
-if [ -f .last_stub ] ; then
- testlaststu=`cat .last_stub`
+if [ -f .active_stub ] ; then
+ testlaststu=`cat .active_stub`
 fi
 
 
 if [ $default = false ] ; then
     
     rm -f .last_config
-    rm -f .last_stub
+    rm -f .active_stub
 fi
 
 # This method will escape spaces so that you can use ./configure `cat .last_config` when you've used them
@@ -1446,19 +1446,6 @@ for arg in "$@"; do
         echo "Error: Cannot access JDK directory $jdkdir"
         exit 1
       fi 
-      jv=`${jdkdir}/bin/java -version 2>&1 | grep version | awk '{ print $3; }'| sed -e s/\"//g`
-      major=`echo $jv | sed 's/\([0-9]*\).*/\1/g'`
-      minor=`echo $jv | sed 's/'${major}'.\([0-9]*\).*/\1/g'`
-      #echo "major = $major, minor = $minor"
-      if [ $major = 1 ]
-      then
-        if [ $minor -lt 5 ]
-        then
-          echo "Error: Please specify a JDK version 1.5 or later to use JVMTI based instrumentation"
-	else
-	  fixmakeargs="$fixmakeargs JVMTI jdkdir=$jdkdir"
-        fi
-      fi
 
     shift
     ;;
@@ -2047,6 +2034,9 @@ chmod a+rx $BINTARGET/perfexplorer
 # install tau_gen_wrapper
 cp ${tauroot}/tools/src/tau_gen_wrapper $BINTARGET
 
+# install tau_macro.sh
+cp ${tauroot}/tools/src/tau_macro.sh $BINTARGET
+
 
 if [ ! -f $BINTARGET/jracy ] ; then 
     cd $BINTARGET/; ln -s paraprof jracy; cd ${tauroot}; 
@@ -2165,11 +2155,22 @@ case $machine in
 	gunzip -c tools/src/contrib/jogl/ppc64/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
 	;;
 
-    bgp|bgq)
+    bgp)
 	gunzip -c tools/src/contrib/jogl/ppc64/jogl.jar.gz > $JARTARGET/jogl.jar
 	gunzip -c tools/src/contrib/jogl/ppc64/libjogl.so.gz > $JARTARGET/libjogl.so
 	gunzip -c tools/src/contrib/jogl/ppc64/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
 	gunzip -c tools/src/contrib/jogl/ppc64/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+	;;
+    
+    bgq)
+	gunzip -c tools/src/contrib/jogl/bgq/jogl.jar.gz > $JARTARGET/jogl.jar
+	gunzip -c tools/src/contrib/jogl/bgq/libjogl.so.gz > $JARTARGET/libjogl.so
+	gunzip -c tools/src/contrib/jogl/bgq/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
+	gunzip -c tools/src/contrib/jogl/bgq/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+	if [ -r ${JAVA_HOME}/lib/ppc64/libjawt.so ]; then
+	  /bin/rm -f $JARTARGET/libjawt.so
+	  ln -s ${JAVA_HOME}/lib/ppc64/libjawt.so $JARTARGET/libjawt.so
+        fi
 	;;
     
     *)
@@ -2292,7 +2293,30 @@ if [ $tauarch = unknown -o $tauarch = none ]
     fi
 fi
 
-
+#detech the java version.
+if [ "x$java" = "xyes" ]
+then
+	if [ "x$machine" = "xapple" ]
+	then
+		#echo "${jdkdir}/Commands/java -version"
+		jv=`${jdkdir}/Commands/java -version 2>&1 | grep version | awk '{ print $3; }'| sed -e s/\"//g`
+	else
+		jv=`${jdkdir}/bin/java -version 2>&1 | grep version | awk '{ print $3; }'| sed -e s/\"//g`
+	fi
+	#echo "jv = $jv"
+	major=`echo $jv | sed 's/\([0-9]*\).*/\1/g'`
+	minor=`echo $jv | sed 's/'${major}'.\([0-9]*\).*/\1/g'`
+	#echo "major = $major, minor = $minor"
+	if [ "x$major" = "x1" ]
+	then
+		if [ $minor -lt 5 ]
+		then
+			echo "Error: Please specify a JDK version 1.5 or later to use JVMTI based instrumentation"
+		else
+			fixmakeargs="$fixmakeargs JVMTI jdkdir=$jdkdir"
+		fi
+	fi
+fi
 
 
 # use -m32 when specifying 32 bit on an Opteron/EM64T
@@ -2575,6 +2599,7 @@ case $machine in
             pathscale=yes
 	    fixmakeargs="$fixmakeargs COMPINST_GNU USE_PATHCC"
 	elif [ "x$PE_ENV" = xINTEL ] ; then
+	    intel=yes
 	    tauoptions="${tauoptions}-intel"
 	    default_fortran=intel
 	    turnbfdoff=yes
@@ -3304,6 +3329,8 @@ case $cxx_compiler in
     mpicxx)
 	if [ $machine = bgp -o $machine = bgq ] ; then
 	    echo "Using GNU Compilers for BGP"
+	    cxx_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx
+	    c_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc
 	    tauoptions="${tauoptions}-gnu"
 	else
 	    echo "ERROR Unknown C++ compiler: $cxx_compiler"
@@ -7227,7 +7254,7 @@ fi
 
 
 if [ $default = false ] ; then
-    rm -f .last_stub
+    rm -f .active_stub
 fi
 
 if [ $default = false ] ; then
@@ -7238,10 +7265,10 @@ if [ $default = false ] ; then
 
     if [ "$STUB" != "$testlaststu" ] ; then
 
-        echo "$STUB" >> .all_stubs
+        echo "$STUB" >> .active_stubs
         
     fi
-    echo "$STUB" > .last_stub
+    echo "$STUB" > .active_stub
 fi
 
 # replace TAU_MAKEFILE in TAU.h
@@ -7257,7 +7284,7 @@ fi
 
 if [ $tauprefix != unknown ] ; then
   cp -r examples ${tauprefix}
-  cp .all_configs .last_config .all_stubs .last_stub ${tauprefix}
+  cp .all_configs .last_config .active_stubs .active_stub ${tauprefix}
 fi
 
 

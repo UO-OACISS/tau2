@@ -120,6 +120,7 @@ public:
   static void LockEnv(void);
   static void UnLockEnv(void);
 
+  static int getTotalThreads();
 
 
 private:
@@ -136,7 +137,6 @@ private:
   static bool initLocks();
   static bool initEnvLocks();
   //  static int *numThreads();
-  static int getTotalThreads();
 
 };
 
