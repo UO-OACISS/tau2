@@ -30,7 +30,7 @@ fi
 verbose=false
 include=
 exclude=
-agentlib=-agentlib:TAUsh-jdk 
+agentlib=-agentpath:${TAU_LIB_DIR}/libTAU.jnilib 
 classpatharg=-Xbootclasspath/a:$JARTARGET/TauJVMTI.jar
 java=java
 

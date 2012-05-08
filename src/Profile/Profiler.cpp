@@ -266,17 +266,21 @@ void Profiler::Start(int tid) {
   /********************************************************************************/
 
   // An initialization of sorts. Call Paths (if any) will update this.
+#ifndef TAU_WINDOWS
   if (TauEnv_get_callsite() == 1) {
     CallSiteAddPath(NULL, tid);
   }
+#endif /* TAU_WINDOWS */
 
   if (TauEnv_get_callpath()) {
     CallPathStart(tid);
   }
 
+#ifndef TAU_WINDOWS
   if (TauEnv_get_callsite() == 1) {
     CallSiteStart(tid);
   }
+#endif
 
 #ifdef TAU_PROFILEPARAM
   ProfileParamFunction = NULL;
@@ -512,9 +516,11 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
     CallPathStop(TotalTime, tid);
   }
 
+#ifndef TAU_WINDOWS
   if (TauEnv_get_callsite()) {
     CallSiteStop(TotalTime, tid);
   }
+#endif /* TAU_WINDOWS */
 
 #ifdef RENCI_STFF
   if (TauEnv_get_callpath()) {
@@ -1029,10 +1035,12 @@ static int writeUserEvents(FILE *fp, int tid) {
   // Print UserEvent Data if any
   int numEvents = 0;
   for (it = TheEventDB().begin(); it != TheEventDB().end(); ++it) {
-    if ((*it)->GetNumEvents(tid) == 0) { // skip user events with no calls
+    if ((*it) && (*it)->GetNumEvents(tid) == 0) { // skip user events with no calls
       continue;
     }
-    numEvents++;
+    if ((*it)) {
+      numEvents++;
+    }
   }
   
   if (numEvents > 0) {
@@ -1043,7 +1051,7 @@ static int writeUserEvents(FILE *fp, int tid) {
     fprintf(fp, "# eventname numevents max min mean sumsqr\n");
     
     for(it = TheEventDB().begin(); it != TheEventDB().end(); ++it) {
-      if ((*it)->GetNumEvents(tid) == 0) { // skip user events with no calls
+      if ((*it) && (*it)->GetNumEvents(tid) == 0) { // skip user events with no calls
 	continue;
       }
       fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n", 
