@@ -1,13 +1,14 @@
 # settings set automatically by the configure script.
-CONFIG_ARCH=default
-TAUROOT=
+CONFIG_ARCH=x86_64
+TAUROOT=/home/khuck/src/tau2-taudb-branch
 
 # these are classpaths for the build.  The second classpath is for the 
 # loader directory.  The first is for everything else.
 CLASSPATH=./classes
 CUBE_JAVA_READER=../contrib/CubeReader.jar
 JSON_CLASSPATH=../contrib/google-gson-2.1/gson-2.1.jar
-LOADER_CLASSPATH=$(CLASSPATH):../contrib/jargs.jar:../contrib/xerces.jar:../common/bin/tau-common.jar:$(CUBE_JAVA_READER):$(JSON_CLASSPATH)
+POSTGRESQL_CLASSPATH=../contrib/postgresql.jar
+LOADER_CLASSPATH=$(CLASSPATH):../contrib/jargs.jar:../contrib/xerces.jar:../common/bin/tau-common.jar:$(CUBE_JAVA_READER):$(JSON_CLASSPATH):$(POSTGRESQL_CLASSPATH)
 
 # These are class and source targets.
 DOC_PATH=./doc
