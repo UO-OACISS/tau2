@@ -15,6 +15,7 @@ import java.util.List;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import edu.uoregon.tau.perfdmf.database.DB;
+import edu.uoregon.tau.perfdmf.database.DBConnector;
 
 /**
  * This class is the RMI class which contains the tree of views to be 
@@ -35,9 +36,39 @@ public class View implements Serializable {
 	private static List<String> fieldNames = null;
 	private List<String> fields = null;
 	private DefaultMutableTreeNode node = null;
+	private View parent = null;
+    private Database database;
+    private int viewID = 0;
+
+    public Database getDatabase() {
+        return database;
+    }
+
+    public void setDatabase(Database database) {
+        this.database = database;
+    }
+
+	public View getParent() {
+		return parent;
+	}
+
+	public void setParent(View parent) {
+		this.parent = parent;
+	}
 
 	public View () {
 		fields = new ArrayList<String>();
+	}
+
+	public View(View view) {
+		this.fields = new ArrayList<String>();
+		for (String f : view.fields) {
+			this.fields.add(f);
+		}
+		this.node = view.node;
+		this.parent = view.parent;
+		this.database = view.database;
+		this.viewID = view.viewID;
 	}
 
 	public static Iterator<String> getFieldNames(DB db) {
@@ -98,6 +129,8 @@ public class View implements Serializable {
 		if (i == -1)
 			return new String("");
 		else
+			if (fields == null)
+				return "";
 			return fields.get(i);
 	}
 
@@ -177,6 +210,7 @@ public class View implements Serializable {
 			ResultSet results = statement.executeQuery();
 			while (results.next() != false) {
 				View view = new View();
+				view.setDatabase(db.getDatabase());
 				for (int i = 1 ; i <= View.getFieldCount() ; i++) {
 					view.addField(results.getString(i));
 				}
@@ -310,5 +344,117 @@ public class View implements Serializable {
 		return trials;
 	}
 
+	public int getID() {
+		if (this.viewID == 0) {
+			this.viewID = Integer.valueOf(this.getField("ID"));
+		}
+		return this.viewID;
+	}
 	
+	public void setID(int id) {
+		this.viewID = id;
+	}
+
+    public void setField(int idx, String field) {
+        if (DBConnector.isIntegerType(database.getAppFieldTypes()[idx]) && field != null) {
+            try {
+                //int test = 
+                	Integer.parseInt(field);
+            } catch (java.lang.NumberFormatException e) {
+                return;
+            }
+        }
+
+        if (DBConnector.isFloatingPointType(database.getAppFieldTypes()[idx]) && field != null) {
+            try {
+                //double test = 
+                	Double.parseDouble(field);
+            } catch (java.lang.NumberFormatException e) {
+                return;
+            }
+        }
+        fields.set(idx, field);
+    }
+
+	public int saveView(DB db) throws SQLException {
+        boolean itExists = false;
+
+        // First, determine whether it exists already (whether we are doing an insert or update)
+        PreparedStatement statement = db.prepareStatement("SELECT name FROM " + db.getSchemaPrefix() + "taudb_view WHERE id = ?");
+        statement.setInt(1, this.getID());
+        ResultSet resultSet = statement.executeQuery();
+        while (resultSet.next() != false) {
+            itExists = true;
+            break;
+        }
+        resultSet.close();
+        statement.close();
+
+        StringBuffer buf = new StringBuffer();
+        if (itExists) {
+            buf.append("UPDATE " + db.getSchemaPrefix() + "taudb_view SET ");
+            for (int i = 0; i < this.getNumFields(); i++) {
+            	if (!View.getFieldName(i).equals("ID"))
+                    buf.append(", " + View.getFieldName(i) + " = ?");
+            }
+            buf.append(" WHERE id = ?");
+        } else {
+            buf.append("INSERT INTO " + db.getSchemaPrefix() + "taudb_view (name");
+            for (int i = 0; i < this.getNumFields(); i++) {
+            	if (!View.getFieldName(i).equals("ID"))
+                    buf.append(", " + View.getFieldName(i));
+            }
+            buf.append(") VALUES (?");
+            for (int i = 0; i < this.getNumFields(); i++) {
+            	if (!View.getFieldName(i).equals("ID"))
+                    buf.append(", ?");
+            }
+            buf.append(")");
+        }
+
+        statement = db.prepareStatement(buf.toString());
+
+        int pos = 1;
+
+        for (int i = 0; i < this.getNumFields(); i++) {
+        	if (!View.getFieldName(i).equals("ID"))
+                statement.setString(pos++, this.getField(i));
+        }
+
+        if (itExists) {
+            statement.setInt(pos++, this.getID());
+        }
+        statement.executeUpdate();
+        statement.close();
+
+        int newViewID = 0;
+
+        if (itExists) {
+            newViewID = this.getID();
+        } else {
+            String tmpStr = new String();
+            if (db.getDBType().compareTo("mysql") == 0) {
+                tmpStr = "select LAST_INSERT_ID();";
+            } else if (db.getDBType().compareTo("db2") == 0) {
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM taudb_view";
+            } else if (db.getDBType().compareTo("derby") == 0) {
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM taudb_view";
+            } else if (db.getDBType().compareTo("h2") == 0) {
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM taudb_view";
+            } else if (db.getDBType().compareTo("oracle") == 0) {
+                tmpStr = "SELECT " + db.getSchemaPrefix() + "taudb_view_id_seq.currval FROM DUAL";
+            } else { // postgresql 
+                tmpStr = "select currval('taudb_view_id_seq');";
+            }
+            newViewID = Integer.parseInt(db.getDataItem(tmpStr));
+        }
+        return newViewID;
+
+    }
+
+	public int getNumFields() {
+		return this.getFieldCount();
+	}
+
+
 }
