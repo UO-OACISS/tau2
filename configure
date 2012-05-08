@@ -2155,11 +2155,22 @@ case $machine in
 	gunzip -c tools/src/contrib/jogl/ppc64/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
 	;;
 
-    bgp|bgq)
+    bgp)
 	gunzip -c tools/src/contrib/jogl/ppc64/jogl.jar.gz > $JARTARGET/jogl.jar
 	gunzip -c tools/src/contrib/jogl/ppc64/libjogl.so.gz > $JARTARGET/libjogl.so
 	gunzip -c tools/src/contrib/jogl/ppc64/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
 	gunzip -c tools/src/contrib/jogl/ppc64/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+	;;
+    
+    bgq)
+	gunzip -c tools/src/contrib/jogl/bgq/jogl.jar.gz > $JARTARGET/jogl.jar
+	gunzip -c tools/src/contrib/jogl/bgq/libjogl.so.gz > $JARTARGET/libjogl.so
+	gunzip -c tools/src/contrib/jogl/bgq/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
+	gunzip -c tools/src/contrib/jogl/bgq/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+	if [ -r ${JAVA_HOME}/lib/ppc64/libjawt.so ]; then
+	  /bin/rm -f $JARTARGET/libjawt.so
+	  ln -s ${JAVA_HOME}/lib/ppc64/libjawt.so $JARTARGET/libjawt.so
+        fi
 	;;
     
     *)
