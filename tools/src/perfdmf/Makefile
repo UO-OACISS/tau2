@@ -1,6 +1,6 @@
 # settings set automatically by the configure script.
-CONFIG_ARCH=x86_64
-TAUROOT=/home/khuck/src/tau2-taudb-branch
+CONFIG_ARCH=default
+TAUROOT=
 
 # these are classpaths for the build.  The second classpath is for the 
 # loader directory.  The first is for everything else.
@@ -25,25 +25,20 @@ JAVAC=javac
 SOURCES = $(DATABASE_SOURCES) $(DSS_SOURCES) $(LOADER_SOURCES) $(ANALYSIS_SOURCES)
 CLASSES = $(subst ./src/, ./classes/, $(patsubst %.java, %.class, $(SOURCES)))
 
-
-
 # We only want to use Java 1.5
 JAVA_FIVE=$(shell java -version 2>&1 | grep version | /usr/bin/awk '{ print $$3; }'| sed -e s/\"//g | sed -e s/1\.5\..*// | wc -c)
 ifeq ($(JAVA_FIVE),1)
   TARGET=build
 else
-  ifeq ($(override),1)
-    JAVAC=javac -source 1.5 -target 1.5
-    TARGET=build
-  else 
-    TARGET=badversion
-  endif
+  TARGET=badversion
 endif
 
 all: $(TARGET)
 
 build: bin/perfdmf.jar 
 
+override: build
+    JAVAC=javac -source 1.5 -target 1.5
 
 #all: perfdmf.jar javadoc rebuilddb buildtest simple
 
