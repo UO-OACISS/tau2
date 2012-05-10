@@ -46,6 +46,11 @@ TAUDB_PRIMARY_METADATA* taudb_create_primary_metadata(int count){
  return metadata;
 }
 
+TAUDB_PRIMARY_METADATA* taudb_resize_primary_metadata(int count, TAUDB_PRIMARY_METADATA* old_primary_metadata){ 
+ TAUDB_PRIMARY_METADATA* primary_metadata = (TAUDB_PRIMARY_METADATA*) (realloc (old_primary_metadata, count * sizeof (TAUDB_PRIMARY_METADATA)));
+ return primary_metadata;
+}
+
 TAUDB_COUNTER* taudb_create_counters(int count){ 
  TAUDB_COUNTER* counters = (TAUDB_COUNTER*) (calloc (count, sizeof (TAUDB_COUNTER)));
  int i = 0;

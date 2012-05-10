@@ -90,6 +90,7 @@ typedef struct taudb_timer {
  int id;
  int trial;
  char* name;
+ char* short_name;
  char* source_file;
  int line_number;
  int line_number_end;
@@ -143,20 +144,15 @@ typedef struct taudb_counter {
 static int TAUDB_MEAN_WITHOUT_NULLS = -1;
 static int TAUDB_TOTAL = -2;
 static int TAUDB_STDDEV_WITHOUT_NULLS = -3;
-static int TAUDB_MEAN_WITH_NULLS = -4;
-static int TAUDB_STDDEV_WITH_NULLS = -5;
-static int TAUDB_MIN_WITHOUT_NULLS = -6;
-static int TAUDB_MIN_WITH_NULLS = -7;
-static int TAUDB_MAX = -8;
-static int TAUDB_MODE_WITHOUT_NULLS = -9;
-static int TAUDB_MODE_WITH_NULLS = -10;
+static int TAUDB_MIN = -4;
+static int TAUDB_MAX = -5;
+static int TAUDB_MEAN_WITH_NULLS = -6;
+static int TAUDB_STDDEV_WITH_NULLS = -7;
 
 /* primary metadata is metadata that is not nested, does not
    contain unique data for each thread. */
 
 typedef struct taudb_primary_metadata {
- int id;
- int trial;
  char* name;
  char* value;
 } TAUDB_PRIMARY_METADATA;
@@ -181,8 +177,6 @@ typedef struct taudb_thread {
  int node_rank;
  int context_rank;
  int thread_rank;
- int process_id;
- int thread_id;
  int index;
  int secondary_metadata_count;
  TAUDB_SECONDARY_METADATA* secondary_metadata;
@@ -213,6 +207,8 @@ typedef struct taudb_trial {
  int timer_count;
  int callpath_count;
  int value_count;
+ int callpath_stat_count;
+ int value_stat_count;
  int counter_count;
  int primary_metadata_count;
  int secondary_metadata_count;
@@ -222,6 +218,8 @@ typedef struct taudb_trial {
  TAUDB_COUNTER* counters;
  TAUDB_TIMER_CALLPATH* timer_callpaths;
  TAUDB_TIMER_VALUE* timer_values;
+ TAUDB_TIMER_CALLPATH* timer_callpath_stats;
+ TAUDB_TIMER_VALUE* timer_value_stats;
  TAUDB_COUNTER_VALUE* counter_values;
  TAUDB_PRIMARY_METADATA* primary_metadata;
  TAUDB_SECONDARY_METADATA* secondary_metadata;
