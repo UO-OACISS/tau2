@@ -68,10 +68,10 @@ TAUDB_PRIMARY_METADATA* taudb_query_primary_metadata(PGconn* connection, TAUDB_T
   int metaIndex = trial->primary_metadata_count;
   TAUDB_PRIMARY_METADATA* pm = taudb_resize_primary_metadata(nRows+trial->primary_metadata_count, trial->primary_metadata);
   // the resize should do this, but just in case...
-  for (i = 0; i < trial->primary_metadata_count; i++) {
-    pm[i].name = trial->primary_metadata[i].name;
-    pm[i].value = trial->primary_metadata[i].value;
-  }
+  //for (i = 0; i < trial->primary_metadata_count; i++) {
+    //pm[i].name = trial->primary_metadata[i].name;
+    //pm[i].value = trial->primary_metadata[i].value;
+  //}
 
   nFields = PQnfields(res);
 
@@ -81,11 +81,9 @@ TAUDB_PRIMARY_METADATA* taudb_query_primary_metadata(PGconn* connection, TAUDB_T
     /* the columns */
     for (j = 0; j < nFields; j++) {
       if (strcmp(PQfname(res, j), "name") == 0) {
-        pm[metaIndex].name = (char*)(malloc(sizeof(char)*strlen(PQfname(res, j))));
-        strcpy(pm[metaIndex].name, PQgetvalue(res, i, j));
+        pm[metaIndex].name = taudb_create_and_copy_string(PQfname(res, j));
       } else if (strcmp(PQfname(res, j), "value") == 0) {
-        pm[metaIndex].value = (char*)(malloc(sizeof(char)*strlen(PQgetvalue(res,i,j))));
-        strcpy(pm[metaIndex].value, PQgetvalue(res, i, j));
+        pm[metaIndex].value = taudb_create_and_copy_string(PQgetvalue(res,i,j));
         metaIndex++;
       } else {
 	    fprintf(stderr,"Unknown primary_metadata column: %s\n", PQfname(res, j));

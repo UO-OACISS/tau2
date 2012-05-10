@@ -19,6 +19,7 @@ extern PGconn* taudb_connect_config(char* config_name);
 extern PGconn* taudb_connect_config_file(char* config_file_name);
 extern PGconn* taudb_private_connect(char* host, char* port, char* database,
                          char* login, char* password);
+extern int taudb_check_schema_version(PGconn* connection);
 
 // test the connection status
 extern int taudb_check_connection(PGconn* connection);
@@ -90,6 +91,9 @@ extern TAUDB_TIMER_GROUP*        taudb_create_timer_groups(int count);
 extern TAUDB_TIMER_GROUP*        taudb_resize_timer_groups(int count, TAUDB_TIMER_GROUP* old_groups);
 extern TAUDB_TIMER_CALLPATH*     taudb_create_timer_callpaths(int count);
 extern TAUDB_TIMER_VALUE*        taudb_create_timer_values(int count);
+extern char*                     taudb_create_and_copy_string(const char* in_string);
+extern char*                     taudb_create_hash_key_2(int thread, const char* timer);
+extern char*                     taudb_create_hash_key_3(int thread, const char* timer, const char* metric);
 
 // freers
 extern void perfdmf_delete_applications(PERFDMF_APPLICATION* applications, int count);
