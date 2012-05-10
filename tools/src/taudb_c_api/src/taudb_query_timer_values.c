@@ -201,11 +201,8 @@ TAUDB_TIMER_VALUE* taudb_private_query_timer_values(PGconn* connection, TAUDB_TR
                            thread;
 	}
 
-    char tmp_thread[100];
-	sprintf(tmp_thread, "%d", timer_value->thread);
-	timer_value->key = malloc(sizeof(char) * (strlen(tmp_thread) + strlen(metric_str) + strlen(timer_str) + 3));
-    sprintf(timer_value->key, "%d:%s:%s", timer_value->thread, timer_str, metric_str);
-	HASH_ADD_KEYPTR(hh, timer_values, timer_value->key, strlen(timer_value->key), timer_value);
+    timer_value->key = taudb_create_hash_key_3(timer_value->thread, timer_str, metric_str);
+    HASH_ADD_KEYPTR(hh, timer_values, timer_value->key, strlen(timer_value->key), timer_value);
   }
 
   PQclear(res);
@@ -269,10 +266,8 @@ TAUDB_TIMER_VALUE* taudb_get_timer_value(TAUDB_TIMER_VALUE* timer_values, TAUDB_
     fprintf(stderr, "Error: metric parameter null. Please provide a valid metric.\n");
     return NULL;
   }
-  char tmp_thread[10];
-  sprintf(tmp_thread, "%d", thread->index);
-  char *key = calloc((strlen(tmp_thread) + strlen(timer->name) + strlen(metric->name) + 3), sizeof(char));
-  sprintf(key, "%d:%s:%s", thread->index, timer->name, metric->name);
+  
+  char *key = taudb_create_hash_key_3(thread->index, timer->name, metric->name);
   //printf("%s\n", key);
 
   TAUDB_TIMER_VALUE* timer_value = NULL;

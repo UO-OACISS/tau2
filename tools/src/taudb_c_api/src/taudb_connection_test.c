@@ -39,13 +39,6 @@ char* taudb_tables[] = {
 };
 #endif
 
-void taudb_iterate_tables(PGconn* connection) {
-   int i;
-   for (i = 0 ; i < num_tables ; i = i+1) {
-     taudb_api_test(connection, taudb_tables[i]);
-   }
-}
-
 int taudb_api_test(PGconn* connection, char* table_name) {
   PGresult   *res;
   int                     nFields;
@@ -121,3 +114,12 @@ int taudb_api_test(PGconn* connection, char* table_name) {
   PQclear(res);
   return 0;
 }
+
+void taudb_iterate_tables(PGconn* connection) {
+   int i;
+   for (i = 0 ; i < num_tables ; i = i+1) {
+     taudb_api_test(connection, taudb_tables[i]);
+   }
+}
+
+

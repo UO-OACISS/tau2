@@ -72,14 +72,11 @@ TAUDB_TRIAL* taudb_private_query_trials(PGconn* connection, boolean full, char* 
       if (strcmp(PQfname(res, j), "id") == 0) {
         trials[i].id = atoi(PQgetvalue(res, i, j));
       } else if (strcmp(PQfname(res, j), "name") == 0) {
-        trials[i].name = (char*)(malloc(sizeof(char)*strlen(PQgetvalue(res,i,j))));
-        strcpy(trials[i].name, PQgetvalue(res,i,j));
+        trials[i].name = taudb_create_and_copy_string(PQgetvalue(res,i,j));
       } else if (strcmp(PQfname(res, j), "collection_date") == 0) {
-        trials[i].collection_date = (char*)(malloc(sizeof(char)*strlen(PQgetvalue(res,i,j))));
-        strcpy(trials[i].collection_date, PQgetvalue(res,i,j));
+        trials[i].collection_date = taudb_create_and_copy_string(PQgetvalue(res,i,j));
       } else if (strcmp(PQfname(res, j), "date") == 0) {
-        trials[i].collection_date = (char*)(malloc(sizeof(char)*strlen(PQgetvalue(res,i,j))));
-        strcpy(trials[i].collection_date, PQgetvalue(res,i,j));
+        trials[i].collection_date = taudb_create_and_copy_string(PQgetvalue(res,i,j));
       } else if (strcmp(PQfname(res, j), "node_count") == 0) {
         trials[i].node_count = atoi(PQgetvalue(res, i, j));
       } else if (strcmp(PQfname(res, j), "contexts_per_node") == 0) {
@@ -93,10 +90,8 @@ TAUDB_TRIAL* taudb_private_query_trials(PGconn* connection, boolean full, char* 
         // TODO we need to handle this!
         continue;
       } else {
-        trials[i].primary_metadata[metaIndex].name = (char*)(malloc(sizeof(char)*strlen(PQfname(res, j))));
-        strcpy(trials[i].primary_metadata[metaIndex].name, PQfname(res, j));
-        trials[i].primary_metadata[metaIndex].value = (char*)(malloc(sizeof(char)*strlen(PQgetvalue(res,i,j))));
-        strcpy(trials[i].primary_metadata[metaIndex].value, PQgetvalue(res, i, j));
+        trials[i].primary_metadata[metaIndex].name = taudb_create_and_copy_string(PQfname(res, j));
+        trials[i].primary_metadata[metaIndex].value = taudb_create_and_copy_string(PQgetvalue(res,i,j));
         metaIndex++;
       }
     } 
@@ -115,7 +110,7 @@ TAUDB_TRIAL* taudb_private_query_trials(PGconn* connection, boolean full, char* 
   
   for (i = 0 ; i < nRows ; i++) {
     if (taudb_version == TAUDB_2005_SCHEMA) {
-	  printf(stderr,"Did not load the PerfDMF metadata...\n");
+	  fprintf(stderr,"Did not load the PerfDMF metadata...\n");
 	} else {
       trials[i].primary_metadata = taudb_query_primary_metadata(connection, &(trials[i]));
       trials[i].primary_metadata_count = taudb_numItems;

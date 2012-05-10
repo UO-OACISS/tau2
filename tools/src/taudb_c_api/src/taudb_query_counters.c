@@ -84,15 +84,13 @@ TAUDB_COUNTER* taudb_query_counters(PGconn* connection, TAUDB_TRIAL* trial) {
 	    counters[i].trial = atoi(PQgetvalue(res, i, j));
 	  } else if (strcmp(PQfname(res, j), "name") == 0) {
 	    //counters[i].name = PQgetvalue(res, i, j);
-		counters[i].name = (char*)(malloc(sizeof(char)*strlen(PQgetvalue(res,i,j))));
-		strcpy(counters[i].name, PQgetvalue(res,i,j));
+		counters[i].name = taudb_create_and_copy_string(PQgetvalue(res,i,j));
 #ifdef TAUDB_DEBUG
         //printf("Got counter '%s'\n", counters[i].name);
 #endif
 	  } else if (strcmp(PQfname(res, j), "source_file") == 0) {
 	    //counters[i].source_file = PQgetvalue(res, i, j);
-		counters[i].source_file = (char*)(malloc(sizeof(char)*strlen(PQgetvalue(res,i,j))));
-		strcpy(counters[i].source_file, PQgetvalue(res,i,j));
+		counters[i].source_file = taudb_create_and_copy_string(PQgetvalue(res,i,j));
 	  } else if (strcmp(PQfname(res, j), "line_number") == 0) {
 	    counters[i].line_number = atoi(PQgetvalue(res, i, j));
 	  } else if (strcmp(PQfname(res, j), "group_name") == 0) {

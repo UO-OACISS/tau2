@@ -76,8 +76,7 @@ PERFDMF_EXPERIMENT* perfdmf_query_experiments(PGconn* connection, PERFDMF_APPLIC
 	    experiments[i].id = atoi(PQgetvalue(res, i, j));
 	  } else if (strcmp(PQfname(res, j), "name") == 0) {
 	    //experiments[i].name = PQgetvalue(res, i, j);
-		experiments[i].name = (char*)(malloc(sizeof(char)*strlen(PQgetvalue(res,i,j))));
-		strcpy(experiments[i].name, PQgetvalue(res,i,j));
+		experiments[i].name = taudb_create_and_copy_string(PQgetvalue(res,i,j));
 	  } else {
 	    experiments[i].primary_metadata[metaIndex].name = PQfname(res, j);
 	    experiments[i].primary_metadata[metaIndex].value = PQgetvalue(res, i, j);

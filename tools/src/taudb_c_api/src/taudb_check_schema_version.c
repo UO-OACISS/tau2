@@ -9,7 +9,6 @@ int taudb_check_schema_version(PGconn* connection) {
   printf("Calling taudb_check_schema_version()\n");
 #endif
   PGresult *res;
-  int nFields;
 
   /*
    * Our test case here involves using a cursor, for which we must be
