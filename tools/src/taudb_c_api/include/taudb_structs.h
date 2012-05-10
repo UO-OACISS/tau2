@@ -161,9 +161,10 @@ typedef struct taudb_primary_metadata {
    contain unique data for each thread, and could be an array. */
 
 typedef struct taudb_secondary_metadata {
- int id;
- int trial;
- int thread;
+ int id; // link back to database
+ int trial; // link back to database
+ int timer; // link back to database
+ int thread; // link back to database
  char* name;
  char** value;
  int num_values;

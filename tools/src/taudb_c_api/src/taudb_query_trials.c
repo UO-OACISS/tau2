@@ -131,6 +131,10 @@ TAUDB_TRIAL* taudb_private_query_trials(PGconn* connection, boolean full, char* 
       //trials[i].counters = taudb_query_counters(&(trials[i]));
       //trials[i].counter_count = taudb_numItems;
       //taudb_query_counter_values(&(trials[i]));
+      if (taudb_version == TAUDB_2012_SCHEMA) {
+        trials[i].secondary_metadata = taudb_query_secondary_metadata(connection, &(trials[i]));
+        trials[i].secondary_metadata_count = taudb_numItems;
+      }
     }
   }
   taudb_numItems = nRows;
