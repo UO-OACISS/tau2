@@ -40,6 +40,7 @@ extern TAUDB_TRIAL*         perfdmf_query_trials(PGconn* connection, PERFDMF_EXP
 // using the properties set in the filter, find a set of trials
 extern TAUDB_TRIAL* taudb_query_trials(PGconn* connection, boolean complete, TAUDB_TRIAL* filter);
 extern TAUDB_PRIMARY_METADATA* taudb_query_primary_metadata(PGconn* connection, TAUDB_TRIAL* filter);
+extern TAUDB_SECONDARY_METADATA* taudb_query_secondary_metadata(PGconn* connection, TAUDB_TRIAL* filter);
 
 // get the threads for a trial
 extern TAUDB_THREAD* taudb_query_threads(PGconn* connection, TAUDB_TRIAL* trial);

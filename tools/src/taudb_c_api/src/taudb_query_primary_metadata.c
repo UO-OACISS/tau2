@@ -81,7 +81,7 @@ TAUDB_PRIMARY_METADATA* taudb_query_primary_metadata(PGconn* connection, TAUDB_T
     /* the columns */
     for (j = 0; j < nFields; j++) {
       if (strcmp(PQfname(res, j), "name") == 0) {
-        pm[metaIndex].name = taudb_create_and_copy_string(PQfname(res, j));
+        pm[metaIndex].name = taudb_create_and_copy_string(PQgetvalue(res,i,j));
       } else if (strcmp(PQfname(res, j), "value") == 0) {
         pm[metaIndex].value = taudb_create_and_copy_string(PQgetvalue(res,i,j));
         metaIndex++;
