@@ -4,14 +4,9 @@
 #include <stdio.h>
 #include <string.h>
 
-// convenience method
-TAUDB_TIMER_CALLPATH* taudb_query_all_timer_callpaths(PGconn* connection, TAUDB_TRIAL* trial) {
-  return taudb_query_timer_callpaths(connection, trial, NULL, NULL);
-}
-
-TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(PGconn* connection, TAUDB_TRIAL* trial, TAUDB_TIMER* timer, TAUDB_THREAD* thread) {
+TAUDB_TIMER_CALLPATH* taudb_private_query_timer_callpaths(PGconn* connection, TAUDB_TRIAL* trial, TAUDB_TIMER* timer, TAUDB_THREAD* thread, boolean derived) {
 #ifdef TAUDB_DEBUG_DEBUG
-  printf("Calling taudb_query_timer_callpaths(%p,%p,%p)\n", trial, timer, thread);
+  printf("Calling taudb_private_query_timer_callpaths(%p,%p,%p)\n", trial, timer, thread);
 #endif
   PGresult *res;
   int nFields;
@@ -59,9 +54,20 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(PGconn* connection, TAUDB_TRIA
 	// we need just one metric, but from this trial
     sprintf(my_query,"%s and m.id = (select max(id) from metric where trial = %d)", my_query, trial->id);
   } else {
-    //sprintf(my_query,"DECLARE myportal CURSOR FOR select * from measurement where trial = %d", trial->id);
-    fprintf(stderr, "Error: 2012 schema not supported yet.\n");
-    return NULL;
+    //sprintf(my_query,"DECLARE myportal CURSOR FOR select * from timer where trial = %d", trial->id);
+    sprintf(my_query,"DECLARE myportal CURSOR FOR select h.node_rank as node, h.context_rank as context, h.thread_rank as thread, h.thread_index as index, tc.calls as call, tc.subroutines as subroutines, t.name as timer_name from timer_callpath tc inner join timer t on tc.timer = t.id inner join thread h on tc.thread = h.id");
+    sprintf(my_query,"%s where t.trial = %d", my_query, trial->id);
+    if (timer != NULL) {
+      sprintf(my_query,"%s and t.id = %d", my_query, timer->id);
+    }
+    if (thread != NULL) {
+      sprintf(my_query,"%s and h.node_rank = %d and h.context_rank = %d and h.thread_rank = %d", my_query, thread->node_rank, thread->context_rank, thread->thread_rank);
+    }
+    if (derived) {
+      sprintf(my_query,"%s and h.thread_index < 0 order by h.thread_index desc", my_query);
+    } else {
+      sprintf(my_query,"%s and h.thread_index > -1 order by h.thread_index asc", my_query);
+	}
   }
 #ifdef TAUDB_DEBUG
   printf("%s\n", my_query);
@@ -96,6 +102,7 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(PGconn* connection, TAUDB_TRIA
     int node = 0;
     int context = 0;
     int thread = 0;
+	int index = 0;
 	char* timer_str;
     TAUDB_TIMER_CALLPATH* timer_callpath = taudb_create_timer_callpaths(1);
     /* the columns */
@@ -110,6 +117,8 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(PGconn* connection, TAUDB_TRIA
         context = atoi(PQgetvalue(res, i, j));
       } else if (strcmp(PQfname(res, j), "thread") == 0) {
         thread = atoi(PQgetvalue(res, i, j));
+      } else if (strcmp(PQfname(res, j), "index") == 0) {
+        index = atoi(PQgetvalue(res, i, j));
       } else if (strcmp(PQfname(res, j), "timer_name") == 0) {
         timer_str = PQgetvalue(res, i, j);
       } else if (strcmp(PQfname(res, j), "call") == 0) {
@@ -121,9 +130,13 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(PGconn* connection, TAUDB_TRIA
         taudb_exit_nicely(connection);
       }
     } 
-    timer_callpath->thread = (node * (trial->contexts_per_node * trial->threads_per_context)) +
-                          (context * (trial->threads_per_context)) + 
-                          thread;
+	if (node < 0) {
+	  timer_callpath->thread = index;
+	} else {
+      timer_callpath->thread = (node * (trial->contexts_per_node * trial->threads_per_context)) +
+                            (context * (trial->threads_per_context)) + 
+                            thread;
+	}
 
     char tmp_thread[100];
 	sprintf(tmp_thread, "%d", timer_callpath->thread);
@@ -146,6 +159,30 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(PGconn* connection, TAUDB_TRIA
   PQclear(res);
   
   return (timer_callpaths);
+}
+
+// convenience method
+TAUDB_TIMER_CALLPATH* taudb_query_all_timer_callpaths(PGconn* connection, TAUDB_TRIAL* trial) {
+  return taudb_query_timer_callpaths(connection, trial, NULL, NULL);
+}
+
+// convenience method
+TAUDB_TIMER_CALLPATH* taudb_query_all_timer_callpath_stats(PGconn* connection, TAUDB_TRIAL* trial) {
+  return taudb_query_timer_callpath_stats(connection, trial, NULL, NULL);
+}
+
+// for getting callpaths for real threads
+TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(PGconn* connection, TAUDB_TRIAL* trial, TAUDB_TIMER* timer, TAUDB_THREAD* thread) {
+  return taudb_private_query_timer_callpaths(connection, trial, timer, thread, FALSE);
+} 
+
+// for getting callpaths for derived threads
+TAUDB_TIMER_CALLPATH* taudb_query_timer_callpath_stats(PGconn* connection, TAUDB_TRIAL* trial, TAUDB_TIMER* timer, TAUDB_THREAD* thread) {
+  if (taudb_version == TAUDB_2005_SCHEMA) {
+    return taudb_private_query_timer_callpaths(connection, trial, timer, thread, TRUE);
+  } else {
+    return taudb_private_query_timer_callpaths(connection, trial, timer, thread, TRUE);
+  }
 }
 
 // convenience method for indexing into the hash

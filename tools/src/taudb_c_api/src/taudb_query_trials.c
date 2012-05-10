@@ -4,22 +4,6 @@
 #include <stdio.h>
 #include <string.h>
 
-TAUDB_TRIAL* taudb_query_trials(PGconn* connection, boolean full, TAUDB_TRIAL* trial) {
-#ifdef TAUDB_DEBUG_DEBUG
-  printf("Calling taudb_query_trials(%d, %p)\n", full, trial);
-#endif
-  char my_query[1024];
-  if (trial->id > 0) { // the user wants a specific trial, so get it
-    sprintf(my_query,"DECLARE myportal CURSOR FOR select * from trial where id = %d", trial->id);
-  } else {
-    sprintf(my_query,"DECLARE myportal CURSOR FOR select * from trial where");
-    if (trial->name != NULL) {
-      sprintf(my_query,"%s name = '%s'", my_query, trial->name);
-    } 
-  }
-  return taudb_private_query_trials(connection, full, my_query);
-}
-
 TAUDB_TRIAL* taudb_private_query_trials(PGconn* connection, boolean full, char* my_query) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_private_query_trials(%d, %s)\n", full, my_query);
@@ -90,6 +74,9 @@ TAUDB_TRIAL* taudb_private_query_trials(PGconn* connection, boolean full, char* 
       } else if (strcmp(PQfname(res, j), "name") == 0) {
         trials[i].name = (char*)(malloc(sizeof(char)*strlen(PQgetvalue(res,i,j))));
         strcpy(trials[i].name, PQgetvalue(res,i,j));
+      } else if (strcmp(PQfname(res, j), "collection_date") == 0) {
+        trials[i].collection_date = (char*)(malloc(sizeof(char)*strlen(PQgetvalue(res,i,j))));
+        strcpy(trials[i].collection_date, PQgetvalue(res,i,j));
       } else if (strcmp(PQfname(res, j), "date") == 0) {
         trials[i].collection_date = (char*)(malloc(sizeof(char)*strlen(PQgetvalue(res,i,j))));
         strcpy(trials[i].collection_date, PQgetvalue(res,i,j));
@@ -126,14 +113,22 @@ TAUDB_TRIAL* taudb_private_query_trials(PGconn* connection, boolean full, char* 
   res = PQexec(connection, "END");
   PQclear(res);
   
-  if (full) {
-    for (i = 0 ; i < nRows ; i++) {
+  for (i = 0 ; i < nRows ; i++) {
+    if (taudb_version == TAUDB_2005_SCHEMA) {
+	  printf(stderr,"Did not load the PerfDMF metadata...\n");
+	} else {
+      trials[i].primary_metadata = taudb_query_primary_metadata(connection, &(trials[i]));
+      trials[i].primary_metadata_count = taudb_numItems;
+	}
+    if (full) {
       trials[i].threads = taudb_query_threads(connection, &(trials[i]));
       trials[i].thread_count = taudb_numItems;
       trials[i].timers = taudb_query_timers(connection, &(trials[i]));
       trials[i].timer_count = taudb_numItems;
       trials[i].timer_callpaths = taudb_query_all_timer_callpaths(connection, &(trials[i]));
       trials[i].callpath_count = taudb_numItems;
+      trials[i].timer_callpath_stats = taudb_query_all_timer_callpath_stats(connection, &(trials[i]));
+      trials[i].callpath_stat_count = taudb_numItems;
       trials[i].metrics = taudb_query_metrics(connection, &(trials[i]));
       trials[i].metric_count = taudb_numItems;
       trials[i].timer_values = taudb_query_all_timer_values(connection, &(trials[i]));
@@ -147,3 +142,30 @@ TAUDB_TRIAL* taudb_private_query_trials(PGconn* connection, boolean full, char* 
 
   return trials;
 }
+
+TAUDB_TRIAL* taudb_query_trials(PGconn* connection, boolean full, TAUDB_TRIAL* trial) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("Calling taudb_query_trials(%d, %p)\n", full, trial);
+#endif
+  char my_query[1024];
+  if (trial->id > 0) { // the user wants a specific trial, so get it
+    sprintf(my_query,"DECLARE myportal CURSOR FOR select * from trial where id = %d", trial->id);
+  } else {
+    sprintf(my_query,"DECLARE myportal CURSOR FOR select * from trial where");
+    if (trial->name != NULL) {
+      sprintf(my_query,"%s name = '%s'", my_query, trial->name);
+    } 
+  }
+  return taudb_private_query_trials(connection, full, my_query);
+}
+
+TAUDB_TRIAL* perfdmf_query_trials(PGconn* connection, PERFDMF_EXPERIMENT* experiment) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("Calling perfdmf_query_trials(%p)\n", experiment);
+#endif
+  char my_query[256];
+  sprintf(my_query,"DECLARE myportal CURSOR FOR select * from trial where experiment = %d", experiment->id);
+
+  return taudb_private_query_trials(connection, FALSE, my_query);
+}
+

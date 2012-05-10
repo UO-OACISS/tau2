@@ -17,7 +17,7 @@ HEADERS=${wildcard *.h}
 SOURCES=${wildcard *.c}
 OBJS=${patsubst %.c, %.o, ${SOURCES}}
 
-TARGET=taudb_main
+TARGET=taudb_query_metrics_test
 TAUDBLIB=../../libtaudb.a
 DUMP_FUNCS=../libtaudb_dump.a
 LIBS=$(POSTGRESQL_LIBRARIES)
@@ -25,7 +25,7 @@ INCLUDE=-I. -I../../include $(POSTGRESQL_INCLUDES) -I../dump_functions
 
 all: $(TARGET)
 
-$(TARGET): $(TAUDBLIB) $(HEADERS) $(OBJS)
+$(TARGET): $(TAUDBLIB) $(HEADERS) $(OBJS) $(DUMP_FUNCS)
 	echo " Linking : $@"
 	$(CC) $(FLAGS) $@.o $(DUMP_FUNCS) -o $@ $(TAUDBLIB) $(LIBS)
 
@@ -38,8 +38,7 @@ $(OBJS): $(HEADERS) Makefile ../../Makefile.inc
 
 test: $(TARGET)
 	echo " Testing : $(TARGET)..."
-	#time `./$(TARGET) >& $(TARGET).log`
-	time `./$(TARGET)`
+	time `./$(TARGET) >& $(TARGET).log`
 	echo " \n...Done. Contents of $(TARGET).log: \n"
 	cat $(TARGET).log
 	echo ""

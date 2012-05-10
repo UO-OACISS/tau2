@@ -36,6 +36,40 @@ extern PERFDMF_APPLICATION* perfdmf_query_application(PGconn* connection, char* 
 extern PERFDMF_EXPERIMENT*  perfdmf_query_experiment(PGconn* connection, PERFDMF_APPLICATION* application, char* name);
 extern TAUDB_TRIAL*         perfdmf_query_trials(PGconn* connection, PERFDMF_EXPERIMENT* experiment);
 
+// using the properties set in the filter, find a set of trials
+extern TAUDB_TRIAL* taudb_query_trials(PGconn* connection, boolean complete, TAUDB_TRIAL* filter);
+extern TAUDB_PRIMARY_METADATA* taudb_query_primary_metadata(PGconn* connection, TAUDB_TRIAL* filter);
+
+// get the threads for a trial
+extern TAUDB_THREAD* taudb_query_threads(PGconn* connection, TAUDB_TRIAL* trial);
+extern TAUDB_THREAD* taudb_query_derived_threads(PGconn* connection, TAUDB_TRIAL* trial);
+
+// get the metrics for a trial
+extern TAUDB_METRIC* taudb_query_metrics(PGconn* connection, TAUDB_TRIAL* trial);
+
+// get the timers for a trial
+extern TAUDB_TIMER* taudb_query_timers(PGconn* connection, TAUDB_TRIAL* trial);
+
+// get the counters for a trial
+extern TAUDB_COUNTER* taudb_query_counters(PGconn* connection, TAUDB_TRIAL* trial);
+
+// get the timer callpath data for a trial
+extern TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(PGconn* connection, TAUDB_TRIAL* trial, TAUDB_TIMER* timer, TAUDB_THREAD* thread);
+extern TAUDB_TIMER_CALLPATH* taudb_query_timer_callpath_stats(PGconn* connection, TAUDB_TRIAL* trial, TAUDB_TIMER* timer, TAUDB_THREAD* thread);
+extern TAUDB_TIMER_CALLPATH* taudb_query_all_timer_callpaths(PGconn* connection, TAUDB_TRIAL* trial);
+extern TAUDB_TIMER_CALLPATH* taudb_query_all_timer_callpath_stats(PGconn* connection, TAUDB_TRIAL* trial);
+extern TAUDB_TIMER_CALLPATH* taudb_get_timer_callpath(TAUDB_TIMER_CALLPATH* timer_callpaths, TAUDB_TIMER* timer, TAUDB_THREAD* thread);
+
+// get the timer values for a trial
+extern TAUDB_TIMER_VALUE* taudb_query_timer_values(PGconn* connection, TAUDB_TRIAL* trial, TAUDB_TIMER* timer, TAUDB_THREAD* thread, TAUDB_METRIC* metric);
+extern TAUDB_TIMER_VALUE* taudb_query_timer_stats(PGconn* connection, TAUDB_TRIAL* trial, TAUDB_TIMER* timer, TAUDB_THREAD* thread, TAUDB_METRIC* metric);
+extern TAUDB_TIMER_VALUE* taudb_query_all_timer_values(PGconn* connection, TAUDB_TRIAL* trial);
+extern TAUDB_TIMER_VALUE* taudb_query_all_timer_stats(PGconn* connection, TAUDB_TRIAL* trial);
+extern TAUDB_TIMER_VALUE* taudb_get_timer_value(TAUDB_TIMER_VALUE* timer_values, TAUDB_TIMER* timer, TAUDB_THREAD* thread, TAUDB_METRIC* metric);
+
+// find main
+extern TAUDB_TIMER* taudb_query_main_timer(PGconn* connection, TAUDB_TRIAL* trial);
+
 // allocators
 extern PERFDMF_APPLICATION*      perfdmf_create_applications(int count);
 extern PERFDMF_EXPERIMENT*       perfdmf_create_experiments(int count);
@@ -45,6 +79,7 @@ extern TAUDB_METRIC*             taudb_create_metrics(int count);
 extern TAUDB_THREAD*             taudb_create_threads(int count);
 extern TAUDB_SECONDARY_METADATA* taudb_create_secondary_metadata(int count);
 extern TAUDB_PRIMARY_METADATA*   taudb_create_primary_metadata(int count);
+extern TAUDB_PRIMARY_METADATA*   taudb_resize_primary_metadata(int count, TAUDB_PRIMARY_METADATA* old_primary_metadata);
 extern TAUDB_COUNTER*            taudb_create_counters(int count);
 extern TAUDB_COUNTER_GROUP*      taudb_create_counter_groups(int count);
 extern TAUDB_COUNTER_GROUP*      taudb_resize_counter_groups(int count, TAUDB_COUNTER_GROUP* old_groups);
@@ -73,34 +108,4 @@ extern void taudb_delete_timer_groups(TAUDB_TIMER_GROUP* timer_groups, int count
 extern void taudb_delete_timer_callpath(TAUDB_TIMER_CALLPATH* timer_callpath, int count);
 extern void taudb_delete_timer_values(TAUDB_TIMER_VALUE* timer_values, int count);
 
-// using the properties set in the filter, find a set of trials
-extern TAUDB_TRIAL* taudb_query_trials(PGconn* connection, boolean complete, TAUDB_TRIAL* filter);
-
-// get the threads for a trial
-extern TAUDB_THREAD* taudb_query_threads(PGconn* connection, TAUDB_TRIAL* trial);
-
-// get the metrics for a trial
-extern TAUDB_METRIC* taudb_query_metrics(PGconn* connection, TAUDB_TRIAL* trial);
-
-// get the timers for a trial
-extern TAUDB_TIMER* taudb_query_timers(PGconn* connection, TAUDB_TRIAL* trial);
-
-// get the counters for a trial
-extern TAUDB_COUNTER* taudb_query_counters(PGconn* connection, TAUDB_TRIAL* trial);
-
-// get the timer callpath data for a trial
-extern TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(PGconn* connection, TAUDB_TRIAL* trial, TAUDB_TIMER* timer, TAUDB_THREAD* thread);
-extern TAUDB_TIMER_CALLPATH* taudb_query_all_timer_callpaths(PGconn* connection, TAUDB_TRIAL* trial);
-extern TAUDB_TIMER_CALLPATH* taudb_get_timer_callpath(TAUDB_TIMER_CALLPATH* timer_callpaths, TAUDB_TIMER* timer, TAUDB_THREAD* thread);
-
-// get the timer values for a trial
-extern TAUDB_TIMER_VALUE* taudb_query_timer_values(PGconn* connection, TAUDB_TRIAL* trial, TAUDB_TIMER* timer, TAUDB_THREAD* thread, TAUDB_METRIC* metric);
-extern TAUDB_TIMER_VALUE* taudb_query_all_timer_values(PGconn* connection, TAUDB_TRIAL* trial);
-extern TAUDB_TIMER_VALUE* taudb_get_timer_value(TAUDB_TIMER_VALUE* timer_values, TAUDB_TIMER* timer, TAUDB_THREAD* thread, TAUDB_METRIC* metric);
-
-// find main
-extern TAUDB_TIMER* taudb_query_main_timer(PGconn* connection, TAUDB_TRIAL* trial);
-
-// PRIVATE FUNCTIONS
-extern TAUDB_TRIAL* taudb_private_query_trials(PGconn* connection, boolean full, char* my_query);
 #endif // TAUDB_API_H

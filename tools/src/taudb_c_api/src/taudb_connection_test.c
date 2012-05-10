@@ -28,12 +28,13 @@ char* taudb_tables[] = {
    "primary_metadata",
    "secondary_metadata",
    "metric",
-   "measurement",
-   "measurement_group",
-   "measurement_parameter",
+   "timer",
+   "timer_group",
+   "timer_parameter",
+   "timer_callpath",
    "counter",
    "counter_group",
-   "measurement_value",
+   "timer_value",
    "counter_value"
 };
 #endif

@@ -39,7 +39,7 @@ TAUDB_TIMER* taudb_query_main_timer(PGconn* connection, TAUDB_TRIAL* trial) {
   if (taudb_version == TAUDB_2005_SCHEMA) {
     sprintf(my_query,"DECLARE myportal CURSOR FOR select interval_location_profile.inclusive, interval_event.* from interval_location_profile left outer join interval_event on interval_location_profile.interval_event = interval_event.id where interval_event.trial = %d order by 1 desc limit 1", trial->id);
   } else {
-    sprintf(my_query,"DECLARE myportal CURSOR FOR select * from measurement where trial = %d", trial->id);
+    sprintf(my_query,"DECLARE myportal CURSOR FOR select * from timer where trial = %d", trial->id);
   }
 #ifdef TAUDB_DEBUG
   printf("Query: %s\n", my_query);
@@ -83,6 +83,9 @@ TAUDB_TIMER* taudb_query_main_timer(PGconn* connection, TAUDB_TRIAL* trial) {
 #ifdef TAUDB_DEBUG
         //printf("Got timer '%s'\n", timers[i].name);
 #endif
+	  } else if (strcmp(PQfname(res, j), "short_name") == 0) {
+		timers[i].short_name = (char*)(malloc(sizeof(char)*strlen(PQgetvalue(res,i,j))));
+		strcpy(timers[i].short_name, PQgetvalue(res,i,j));
 	  } else if (strcmp(PQfname(res, j), "source_file") == 0) {
 	    //timers[i].source_file = PQgetvalue(res, i, j);
 		timers[i].source_file = (char*)(malloc(sizeof(char)*strlen(PQgetvalue(res,i,j))));

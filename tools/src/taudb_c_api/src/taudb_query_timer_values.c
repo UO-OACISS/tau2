@@ -4,16 +4,9 @@
 #include <stdio.h>
 #include <string.h>
 
-TAUDB_TIMER_VALUE* taudb_query_all_timer_values(PGconn* connection, TAUDB_TRIAL* trial) {
+TAUDB_TIMER_VALUE* taudb_private_query_timer_values(PGconn* connection, TAUDB_TRIAL* trial, TAUDB_TIMER* timer, TAUDB_THREAD* thread, TAUDB_METRIC* metric, boolean derived) {
 #ifdef TAUDB_DEBUG_DEBUG
-  printf("Calling taudb_query_all_timer_values(%p)\n", trial);
-#endif
-  return taudb_query_timer_values(connection, trial, NULL, NULL, NULL);
-}
-
-TAUDB_TIMER_VALUE* taudb_query_timer_values(PGconn* connection, TAUDB_TRIAL* trial, TAUDB_TIMER* timer, TAUDB_THREAD* thread, TAUDB_METRIC* metric) {
-#ifdef TAUDB_DEBUG_DEBUG
-  printf("Calling taudb_query_timer_values(%p,%p,%p,%p)\n", trial, timer, thread, metric);
+  printf("Calling taudb_private_query_timer_values(%p,%p,%p,%p)\n", trial, timer, thread, metric);
 #endif
   PGresult *res;
   int nFields;
@@ -77,9 +70,30 @@ TAUDB_TIMER_VALUE* taudb_query_timer_values(PGconn* connection, TAUDB_TRIAL* tri
       sprintf(my_query,"%s %s node = %d and context = %d and thread = %d", my_query, conjoiner, thread->node_rank, thread->context_rank, thread->thread_rank);
     }
   } else {
-    //sprintf(my_query,"DECLARE myportal CURSOR FOR select * from measurement where trial = %d", trial->id);
-    fprintf(stderr, "Error: 2012 schema not supported yet.\n");
-    return NULL;
+    //sprintf(my_query,"DECLARE myportal CURSOR FOR select * from timer where trial = %d", trial->id);
+    sprintf(my_query,"DECLARE myportal CURSOR FOR select tv.*, h.node_rank as node, h.context_rank as context, h.thread_rank as thread, h.thread_index as index, t.name as timer_name, m.name as metric_name from timer_value tv inner join timer t on tv.timer = t.id left outer join metric m on tv.metric = m.id left outer join thread h on tv.thread = h.id");
+    char* conjoiner = "where";
+    if (trial != NULL) {
+      sprintf(my_query,"%s where t.trial = %d", my_query, trial->id);
+      conjoiner = "and";
+    } 
+    if (timer != NULL) {
+      sprintf(my_query,"%s %s t.id = %d", my_query, conjoiner, timer->id);
+      conjoiner = "and";
+    }
+    if (metric != NULL) {
+      sprintf(my_query,"%s %s m.id = %d", my_query, conjoiner, metric->id);
+      conjoiner = "and";
+    }
+    if (thread != NULL) {
+      sprintf(my_query,"%s %s h.node_rank = %d and h.context_rank = %d and h.thread_rank = %d", my_query, conjoiner, thread->node_rank, thread->context_rank, thread->thread_rank);
+      conjoiner = "and";
+    }
+	if (derived) {
+      sprintf(my_query,"%s %s h.thread_index < 0 order by h.thread_index desc", my_query, conjoiner);
+	} else {
+      sprintf(my_query,"%s %s h.thread_index > -1 order by h.thread_index asc", my_query, conjoiner);
+	}
   }
 #ifdef TAUDB_DEBUG
   printf("%s\n", my_query);
@@ -114,6 +128,7 @@ TAUDB_TIMER_VALUE* taudb_query_timer_values(PGconn* connection, TAUDB_TRIAL* tri
     int node = 0;
     int context = 0;
     int thread = 0;
+    int index = 0;
 	char* metric_str;
 	char* timer_str;
     TAUDB_TIMER_VALUE* timer_value = taudb_create_timer_values(1);
@@ -121,28 +136,47 @@ TAUDB_TIMER_VALUE* taudb_query_timer_values(PGconn* connection, TAUDB_TRIAL* tri
     for (j = 0; j < nFields; j++) {
       if (strcmp(PQfname(res, j), "id") == 0) {
         timer_value->id = atoi(PQgetvalue(res, i, j));
+// these two are the same
       } else if (strcmp(PQfname(res, j), "interval_event") == 0) {
         timer_value->timer = atoi(PQgetvalue(res, i, j));
+      } else if (strcmp(PQfname(res, j), "timer") == 0) {
+        timer_value->timer = atoi(PQgetvalue(res, i, j));
+
       } else if (strcmp(PQfname(res, j), "node") == 0) {
         node = atoi(PQgetvalue(res, i, j));
       } else if (strcmp(PQfname(res, j), "context") == 0) {
         context = atoi(PQgetvalue(res, i, j));
       } else if (strcmp(PQfname(res, j), "thread") == 0) {
         thread = atoi(PQgetvalue(res, i, j));
+      } else if (strcmp(PQfname(res, j), "index") == 0) {
+        index = atoi(PQgetvalue(res, i, j));
       } else if (strcmp(PQfname(res, j), "metric_name") == 0) {
         metric_str = PQgetvalue(res, i, j);
       } else if (strcmp(PQfname(res, j), "timer_name") == 0) {
         timer_str = PQgetvalue(res, i, j);
       } else if (strcmp(PQfname(res, j), "metric") == 0) {
         timer_value->metric = atoi(PQgetvalue(res, i, j));
+// these two are the same
       } else if (strcmp(PQfname(res, j), "inclusive_percentage") == 0) {
         timer_value->inclusive_percentage = atof(PQgetvalue(res, i, j));
+      } else if (strcmp(PQfname(res, j), "inclusive_percent") == 0) {
+        timer_value->inclusive_percentage = atof(PQgetvalue(res, i, j));
+// these two are the same
       } else if (strcmp(PQfname(res, j), "exclusive_percentage") == 0) {
         timer_value->exclusive_percentage = atof(PQgetvalue(res, i, j));
+      } else if (strcmp(PQfname(res, j), "exclusive_percent") == 0) {
+        timer_value->exclusive_percentage = atof(PQgetvalue(res, i, j));
+// these two are the same
       } else if (strcmp(PQfname(res, j), "inclusive") == 0) {
         timer_value->inclusive = atof(PQgetvalue(res, i, j));
+      } else if (strcmp(PQfname(res, j), "inclusive_value") == 0) {
+        timer_value->inclusive = atof(PQgetvalue(res, i, j));
+// these two are the same
       } else if (strcmp(PQfname(res, j), "exclusive") == 0) {
         timer_value->exclusive = atof(PQgetvalue(res, i, j));
+      } else if (strcmp(PQfname(res, j), "exclusive_value") == 0) {
+        timer_value->exclusive = atof(PQgetvalue(res, i, j));
+
       } else if (strcmp(PQfname(res, j), "sum_exclusive_squared") == 0) {
         timer_value->sum_exclusive_squared = atof(PQgetvalue(res, i, j));
       } else if (strcmp(PQfname(res, j), "inclusive_per_call") == 0) {
@@ -159,9 +193,13 @@ TAUDB_TIMER_VALUE* taudb_query_timer_values(PGconn* connection, TAUDB_TRIAL* tri
         taudb_exit_nicely(connection);
       }
     } 
-    timer_value->thread = (node * (trial->contexts_per_node * trial->threads_per_context)) +
-                          (context * (trial->threads_per_context)) + 
-                          thread;
+	if (node < 0) {
+	  timer_value->thread = index;
+	} else {
+      timer_value->thread = (node * (trial->contexts_per_node * trial->threads_per_context)) +
+                           (context * (trial->threads_per_context)) + 
+                           thread;
+	}
 
     char tmp_thread[100];
 	sprintf(tmp_thread, "%d", timer_value->thread);
@@ -181,6 +219,34 @@ TAUDB_TIMER_VALUE* taudb_query_timer_values(PGconn* connection, TAUDB_TRIAL* tri
   PQclear(res);
   
   return (timer_values);
+}
+
+TAUDB_TIMER_VALUE* taudb_query_all_timer_values(PGconn* connection, TAUDB_TRIAL* trial) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("Calling taudb_query_all_timer_values(%p)\n", trial);
+#endif
+  return taudb_private_query_timer_values(connection, trial, NULL, NULL, NULL, FALSE);
+}
+
+TAUDB_TIMER_VALUE* taudb_query_all_timer_stats(PGconn* connection, TAUDB_TRIAL* trial) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("Calling taudb_query_all_timer_values(%p)\n", trial);
+#endif
+  return taudb_private_query_timer_values(connection, trial, NULL, NULL, NULL, TRUE);
+}
+
+TAUDB_TIMER_VALUE* taudb_query_timer_values(PGconn* connection, TAUDB_TRIAL* trial, TAUDB_TIMER* timer, TAUDB_THREAD* thread, TAUDB_METRIC* metric) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("Calling taudb_query_timer_values(%p,%p,%p,%p)\n", trial, timer, thread, metric);
+#endif
+  return taudb_private_query_timer_values(connection, trial, timer, thread, metric, FALSE);
+}
+
+TAUDB_TIMER_VALUE* taudb_query_timer_stats(PGconn* connection, TAUDB_TRIAL* trial, TAUDB_TIMER* timer, TAUDB_THREAD* thread, TAUDB_METRIC* metric) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("Calling taudb_query_timer_values(%p,%p,%p,%p)\n", trial, timer, thread, metric);
+#endif
+  return taudb_private_query_timer_values(connection, trial, timer, thread, metric, TRUE);
 }
 
 TAUDB_TIMER_VALUE* taudb_get_timer_value(TAUDB_TIMER_VALUE* timer_values, TAUDB_TIMER* timer, TAUDB_THREAD* thread, TAUDB_METRIC* metric) {

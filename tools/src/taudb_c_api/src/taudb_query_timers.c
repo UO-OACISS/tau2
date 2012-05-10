@@ -46,7 +46,7 @@ TAUDB_TIMER* taudb_query_timers(PGconn* connection, TAUDB_TRIAL* trial) {
   if (taudb_version == TAUDB_2005_SCHEMA) {
     sprintf(my_query,"DECLARE myportal CURSOR FOR select * from interval_event where trial = %d", trial->id);
   } else {
-    sprintf(my_query,"DECLARE myportal CURSOR FOR select * from measurement where trial = %d", trial->id);
+    sprintf(my_query,"DECLARE myportal CURSOR FOR select * from timer where trial = %d", trial->id);
   }
 #ifdef TAUDB_DEBUG
   printf("%s\n", my_query);
@@ -90,6 +90,10 @@ TAUDB_TIMER* taudb_query_timers(PGconn* connection, TAUDB_TRIAL* trial) {
 #ifdef TAUDB_DEBUG_DEBUG
         printf("Got timer '%s'\n", timers[i].name);
 #endif
+      } else if (strcmp(PQfname(res, j), "short_name") == 0) {
+        //timers[i].name = PQgetvalue(res, i, j);
+        timers[i].short_name = (char*)(calloc(strlen(PQgetvalue(res,i,j)), sizeof(char)));
+        strcpy(timers[i].short_name, PQgetvalue(res,i,j));
       } else if (strcmp(PQfname(res, j), "source_file") == 0) {
         //timers[i].source_file = PQgetvalue(res, i, j);
         timers[i].source_file = (char*)(calloc(strlen(PQgetvalue(res,i,j)), sizeof(char)));
