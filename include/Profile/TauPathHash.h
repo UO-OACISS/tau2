@@ -1,8 +1,6 @@
 #ifndef TAU_PATH_HASH_H_
 #define TAU_PATH_HASH_H_
 
-#ifndef TAU_WINDOWS
-
 #include <stdio.h>
 #include <string.h>
 
@@ -31,7 +29,14 @@ using namespace std;
 
    TODO - define new filters for 32-bit platforms?
  */
+#include <limits.h>
+#if WORD_BIT > 32
+#define HALF_SIZEOF_PTR 4
 #define HASH_FILTER 0xf000000000000000 /* 8-byte unsigned */
+#else
+#define HALF_SIZEOF_PTR 2
+#define HASH_FILTER 0xf0000000 /* 4-byte unsigned */
+#endif
 
 template <class T> class TauPathHashTable {
  private:
@@ -139,11 +144,11 @@ unsigned long TauPathHashTable<T>::hashSequence(const unsigned long *keySequence
   unsigned long g = 0; // temp
   int length = (int)keySequence[0];
   // Convert bytes to bits. For the 4-bit shifts.
-  int shiftOffset = sizeof(unsigned long)*8 - 8; 
+  int shiftOffset = sizeof(unsigned long)*2*HALF_SIZEOF_PTR - 2*HALF_SIZEOF_PTR; 
 
   for (int i=0; i<length; i++) {
     // The top 4 bits of h are all zero
-    h = (h << 4) + keySequence[i+1];  // shift h 4 bits left, add in ki
+    h = (h << HALF_SIZEOF_PTR) + keySequence[i+1];  // shift h 4 bits left, add in ki
     g = h & HASH_FILTER;              // get the top 4 bits of h
     if (g != 0) {                     // if the top 4 bits aren't zero,
       h = h ^ (g >> shiftOffset);     //   move them to the low end of h
@@ -388,7 +393,5 @@ pair<unsigned long *, T> *TauPathHashTable<T>::nextIter() {
     return item;
   }
 }
-
-#endif
 
 #endif /* TAU_PATH_HASH_H_ */

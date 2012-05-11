@@ -3327,10 +3327,19 @@ case $cxx_compiler in
       ;;
 
     mpicxx)
-	if [ $machine = bgp -o $machine = bgq ] ; then
-	    echo "Using GNU Compilers for BGP"
+	if [ $machine = bgq ] ; then
+	    echo "Using GNU Compilers for BGQ"
 	    cxx_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx
 	    c_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc
+	    tauoptions="${tauoptions}-gnu"
+	elif [ $machine = bgp ] ; then
+	    echo "Using GNU Compilers for BGP"
+# CWL - 4.3.2 won't quite work out of the box. Requires LD_LIBRARY_PATH to
+#       be set appropriately to account for libgmp.so.10
+#	    cxx_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicxx
+#	    c_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicc
+	    cxx_compiler=/bgsys/drivers/ppcfloor/comm/bin/mpicxx
+	    c_compiler=/bgsys/drivers/ppcfloor/comm/bin/mpicc
 	    tauoptions="${tauoptions}-gnu"
 	else
 	    echo "ERROR Unknown C++ compiler: $cxx_compiler"
