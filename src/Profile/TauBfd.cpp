@@ -45,6 +45,7 @@
 using namespace std;
 
 static char const * Tau_bfd_internal_getExecutablePath();
+static void Tau_bfd_internal_reinitializeBfd();
 
 struct TauBfdModule
 {
@@ -59,6 +60,14 @@ struct TauBfdModule
 	}
 
 	bool loadSymbolTable(char const * path) {
+
+#ifdef TAU_INTEL12
+		// Nasty hack because Intel 12 is broken with Bfd 2.2x and
+		//   requires a complete reset of BFD. The latter's internals
+		//   becomes corrupted on a bad address from Intel 12 binaries.
+		Tau_bfd_internal_reinitializeBfd();
+		bfdOpen = false;
+#endif /* TAU_INTEL12 */
 
 		// Executable symbol table is already loaded.
 		if (bfdOpen) return true;
@@ -191,6 +200,9 @@ std::vector<TauBfdUnit*>& ThebfdUnits(void)
 //
 // Main interface functions
 //
+void Tau_bfd_internal_reinitializeBfd() {
+  bfd_init();
+}
 
 void Tau_bfd_initializeBfdIfNecessary() {
   static bool bfdInitialized = false;
