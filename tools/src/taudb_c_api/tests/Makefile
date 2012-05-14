@@ -23,6 +23,7 @@ perfdmf_query_timer_callpaths_test \
 taudb_main \
 taudb_query_trial_test \
 taudb_query_timers_test \
+taudb_query_counters_test \
 taudb_query_metrics_test \
 taudb_query_threads_test \
 taudb_query_timer_values_test \
@@ -31,7 +32,8 @@ taudb_query_timer_callpaths_test \
 perfdmf_test \
 query_all
 
-TEST_TARGETS=parse_config_test \
+TEST_TARGETS=taudb_query_counters_test
+# TEST_TARGETS=parse_config_test \
 perfdmf_query_trial_test \
 perfdmf_query_timers_test \
 perfdmf_query_metrics_test \

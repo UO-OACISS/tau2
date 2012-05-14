@@ -35,6 +35,23 @@ void dump_timers(PGconn* connection, TAUDB_TRIAL* filter) {
    //taudb_delete_timers(timers, 1);
 }
 
+void dump_counters(PGconn* connection, TAUDB_TRIAL* filter) {
+   TAUDB_TRIAL* trial = taudb_query_trials(connection, FALSE, filter);
+   printf("Trial name: '%s', id: %d\n\n", trial->name, trial->id);
+
+   TAUDB_COUNTER* counters = taudb_query_counters(connection, trial);
+   int numTimers = taudb_numItems;
+   printf("Found %d counters\n", numTimers);
+
+   int e;
+   int total = 0;
+   for (e = 0 ; e < numTimers ; e++) {
+     printf("%s\n", counters[e].name);
+   }
+
+   //taudb_delete_counters(timers, 1);
+}
+
 void dump_metrics(PGconn* connection, TAUDB_TRIAL* filter) {
    TAUDB_TRIAL* trial = taudb_query_trials(connection, FALSE, filter);
    printf("Trial name: '%s', id: %d\n\n", trial->name, trial->id);
