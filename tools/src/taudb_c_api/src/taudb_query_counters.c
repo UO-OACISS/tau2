@@ -93,6 +93,8 @@ TAUDB_COUNTER* taudb_query_counters(PGconn* connection, TAUDB_TRIAL* trial) {
 		counters[i].source_file = taudb_create_and_copy_string(PQgetvalue(res,i,j));
 	  } else if (strcmp(PQfname(res, j), "line_number") == 0) {
 	    counters[i].line_number = atoi(PQgetvalue(res, i, j));
+	  } else if (strcmp(PQfname(res, j), "parent") == 0) {
+	    counters[i].line_number = atoi(PQgetvalue(res, i, j));
 	  } else if (strcmp(PQfname(res, j), "group_name") == 0) {
 	    // tokenize the string, something like 'TAU_USER|MPI|...'
 	    char* group_names = PQgetvalue(res, i, j);
