@@ -87,7 +87,7 @@ void Tau_collate_freeUnitAtomicBuffer(double **atomicMin, double **atomicMax,
 
 void Tau_collate_get_total_threads(Tau_unify_object_t *functionUnifier, int *globalNumThreads, 
 				   int **numEventThreads,
-				   int numItems, int *globalmap);
+				   int numItems, int *globalmap, bool isAtomic);
 
 void Tau_collate_compute_atomicStatistics(Tau_unify_object_t *atomicUnifier,
 					  int *globalEventMap, int numItems,

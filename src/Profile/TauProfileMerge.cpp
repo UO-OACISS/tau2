@@ -163,7 +163,7 @@ int Tau_mergeProfiles() {
       globalEventMap[functionUnifier->mapping[i]] = i; // set reverse mapping
     }
     Tau_collate_get_total_threads(functionUnifier, &globalNumThreads, &numEventThreads,
-				  numEvents, globalEventMap);
+				  numEvents, globalEventMap,false);
     
     Tau_collate_allocateFunctionBuffers(&gExcl, &gIncl,
 					&gNumCalls, &gNumSubr,
@@ -198,7 +198,7 @@ int Tau_mergeProfiles() {
       globalAtomicEventMap[atomicUnifier->mapping[i]] = i;
     }
     Tau_collate_get_total_threads(atomicUnifier, &globalNumThreads, &numAtomicEventThreads,
-				  numAtomicEvents, globalAtomicEventMap);
+				  numAtomicEvents, globalAtomicEventMap,true);
     
     Tau_collate_allocateAtomicBuffers(&gAtomicMin, &gAtomicMax,
 				      &gAtomicCalls, &gAtomicMean,
