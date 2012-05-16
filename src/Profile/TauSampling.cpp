@@ -259,7 +259,8 @@ unsigned long get_pc(void *p) {
   // it could possibly be "link" - but that is supposed to be the return address.
   pc = (unsigned long)sc->regs->nip;
 # else
-#  error "profile handler not defined for this architecture"
+  issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on unknown platform.\n");
+  return 0;
 # endif /* TAU_BGP */
   return pc;
 #endif /* sun */
