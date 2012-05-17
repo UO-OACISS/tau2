@@ -258,6 +258,8 @@ unsigned long get_pc(void *p) {
 # elif __powerpc__
   // it could possibly be "link" - but that is supposed to be the return address.
   pc = (unsigned long)sc->regs->nip;
+# elif __arm__
+  pc = (unsigned long)sc->arm_pc;
 # else
   issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on unknown platform.\n");
   return 0;
