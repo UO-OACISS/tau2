@@ -113,7 +113,8 @@ int PthreadLayer::GetThreadId(void) {
     return 0;
 #endif
 
-  static int initflag = PthreadLayer::InitializeThreadData();
+  //static 
+  int initflag = PthreadLayer::InitializeThreadData();
   // if its in here the first time, setup mutexes etc.
 
   int *id = (int *) pthread_getspecific(tauPthreadId);
@@ -127,7 +128,8 @@ int PthreadLayer::GetThreadId(void) {
 
 
 void PthreadLayer::SetThreadId(int tid) {
-  static int initflag = PthreadLayer::InitializeThreadData();
+  //static 
+  int initflag = PthreadLayer::InitializeThreadData();
   int *id = new int;
   *id = tid;
   pthread_setspecific(tauPthreadId, id);

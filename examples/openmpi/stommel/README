@@ -1,0 +1,25 @@
+This example was written by Timothy H. Kaiser (SDSC) and it demonstrates the 
+use of TAU instrumentation for OpenMPI (OpenMP+MPI) programs. It uses C source
+level instrumentation in addition of MPI wrapper library level instrumentation.
+It solves the 2d Stommel Model of Ocean Circulation using a Five-point 
+stencil and Jacobi iteration
+
+ gamma*((d(d(psi)/dx)/dx) + (d(d(psi)/dy)/dy))
+ +beta(d(psi)/dx)=-alpha*sin(pi*y/(2*ly))
+
+More information on this and OpenMPI is available at:
+
+http://www.sdsc.edu/~tkaiser/
+http://www.npaci.edu/Training/AHM00/examples/openmp_ibm/
+
+
+We gratefully acknowledge the help of Tim Kaiser for making this example 
+available to us. 
+
+To execute the program:
+
+% setenv OMP_NUM_THREADS 2
+% mpirun -np 3 stommel
+
+It reads st.in file (which should be present in this directory) and generates
+performance data.

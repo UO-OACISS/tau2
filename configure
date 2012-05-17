@@ -2089,6 +2089,14 @@ case $machine in
 	gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
 
 	;;
+
+    arm_linux)
+	gunzip -c tools/src/contrib/jogl/arm_linux/jogl.jar.gz > $JARTARGET/jogl.jar
+	gunzip -c tools/src/contrib/jogl/arm_linux/libjogl.so.gz > $JARTARGET/libjogl.so
+	gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
+	gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+
+	;;
     
     crayxmt)
 	gunzip -c tools/src/contrib/jogl/x86_64/libjogl.so.gz > $JARTARGET/libjogl.so
@@ -3327,10 +3335,19 @@ case $cxx_compiler in
       ;;
 
     mpicxx)
-	if [ $machine = bgp -o $machine = bgq ] ; then
-	    echo "Using GNU Compilers for BGP"
+	if [ $machine = bgq ] ; then
+	    echo "Using GNU Compilers for BGQ"
 	    cxx_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx
 	    c_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc
+	    tauoptions="${tauoptions}-gnu"
+	elif [ $machine = bgp ] ; then
+	    echo "Using GNU Compilers for BGP"
+# CWL - 4.3.2 won't quite work out of the box. Requires LD_LIBRARY_PATH to
+#       be set appropriately to account for libgmp.so.10
+#	    cxx_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicxx
+#	    c_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicc
+	    cxx_compiler=/bgsys/drivers/ppcfloor/comm/bin/mpicxx
+	    c_compiler=/bgsys/drivers/ppcfloor/comm/bin/mpicc
 	    tauoptions="${tauoptions}-gnu"
 	else
 	    echo "ERROR Unknown C++ compiler: $cxx_compiler"
@@ -6786,6 +6803,21 @@ if [ $cxx_compiler = icpc ] ; then
     fixmakeargs="$fixmakeargs ifortlibdir=$libdir" 
 fi
 
+if [ $cxx_compiler = icpc ] ; then
+    echo "Checking version (12.x) of Intel compilers"
+    version=`icpc -v 2>&1`
+    t="Version 12"
+    t1="icpc version 12"
+    testarg=${version#$t}
+    testarg1=${version#$t1}
+
+    if [ "y$testarg" != "y$version" -o "y$testarg1" != "y$version" ] ; then
+        echo "Intel v12.x compilers found"
+        fixmakeargs="$fixmakeargs INTEL12FIX"
+    else
+	echo "Intel v12.x compilers NOT found"
+    fi
+fi
 
 if [ $ibmxlc = yes ] ; then
   if [ $openmp = yes ] ; then

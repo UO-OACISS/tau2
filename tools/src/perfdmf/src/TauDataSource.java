@@ -548,7 +548,7 @@ public class TauDataSource extends DataSource {
             exclusive = 0;
         }
 
-        if (numcalls != 0) {
+        //if (numcalls != 0) {
             Function func = this.addFunction(name, 1);
 
             FunctionProfile functionProfile = thread.getFunctionProfile(func);
@@ -570,7 +570,7 @@ public class TauDataSource extends DataSource {
             if (metric == 0) {
                 addGroups(groupNames, func);
             }
-        }
+        //}
     }
 
     private String getGroupNames(String string) {
@@ -664,7 +664,7 @@ public class TauDataSource extends DataSource {
         sampleMean = Double.parseDouble(st2.nextToken()); //Mean
         sampleSumSquared = Double.parseDouble(st2.nextToken()); //Standard Deviation
 
-        if (numSamples != 0) {
+        //if (numSamples != 0) {
             UserEvent userEvent = this.addUserEvent(name);
             UserEventProfile userEventProfile = thread.getUserEventProfile(userEvent);
 
@@ -694,7 +694,7 @@ public class TauDataSource extends DataSource {
                 userEventProfile.setSumSquared(sampleSumSquared + userEventProfile.getSumSquared());
                 userEventProfile.updateMax();
             }
-        }
+        //}
     }
 
     protected void setProfileStatsPresent(boolean profileStatsPresent) {
