@@ -13,11 +13,13 @@ int f1(void) {
 int input(void) {
   TAU_PROFILE("input", "", TAU_USER);
   sleep(1);
+  return 0;
 }
 
 int output(void) {
   TAU_PROFILE("output", "", TAU_USER);
   sleep(1);
+  return 0;
 }
 
 int f2(void) {
@@ -66,4 +68,5 @@ int main(int argc, char **argv) {
 
   f1();
   f4();
+  return 0;
 }
