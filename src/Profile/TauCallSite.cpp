@@ -5,6 +5,8 @@
 #include <Profile/TauSampling.h>
 #include <Profile/Profiler.h>
 #include <Profile/TauBfd.h>
+
+#ifndef TAU_WINDOWS
 #include <ucontext.h>
 
 #if !defined(_AIX) && !defined(__sun) && !defined(TAU_WINDOWS)
@@ -336,7 +338,7 @@ bool nameInMPI(const char *name) {
   char *outString = (char *)malloc(sizeof(char)*(len+1));
   trimwhitespace(outString, len, name);
   int prefixLen = 6;
-  char mpiCheckBuffer[prefixLen+1];
+  char* mpiCheckBuffer = (char*)malloc((prefixLen+1)*sizeof(char));
   for (int i=0; i<prefixLen; i++) {
     mpiCheckBuffer[i] = (char)tolower((int)outString[i]);
   }
@@ -344,6 +346,9 @@ bool nameInMPI(const char *name) {
 
   char *strPtr = NULL;
   strPtr = strstr((char *)mpiCheckBuffer, "mpi_");
+
+  free(mpiCheckBuffer);
+
   if (strPtr != NULL) {
     return true;
   }
@@ -819,3 +824,4 @@ extern "C" void finalizeCallSites_if_necessary() {
     candidate->SetName(tempName);
   }
 }
+#endif
