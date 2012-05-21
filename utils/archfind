@@ -34,6 +34,12 @@ if [ `uname -s ` = "Darwin" ];  then
     ARCH=apple
 fi
 
+if [ `uname -m ` = "armv7l" ];  then
+    TAU_CCOM=gcc
+    ARCH=arm_linux
+fi
+
+
 
 if [ `uname -s ` = "HI-UX/MPP" ]; then 
       ARCH=`$TAU_CCOM -msg=e -E $ARCHTESTFILE | sed -e '/^#/d' -e '/^[ ]*$/d' -e 's/^ARCH//'` 
@@ -95,7 +101,7 @@ if [ $ARCH = rs6000 ]; then
 fi
 
 if [ $ARCH = unknown ]; then
-#See if users path finds an 'arch' command, it so, use it! (a little sloppy)
+#See if users path finds an 'arch' command, if so, use it! (a little sloppy)
     arch &> /dev/null
     if [ $? != 0 ]; then
 #This machine does not have an 'arch' command

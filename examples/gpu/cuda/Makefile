@@ -4,7 +4,7 @@ matmult: matmult.o
 	nvcc -o $@ $<
 
 matmult.o: matmult.cu
-	nvcc --compiler-options='-finstrument-functions' -g -c $< -o $@
+	nvcc -g -c $< -o $@
 
 clean: 
 	rm -rf matmult matmult.o

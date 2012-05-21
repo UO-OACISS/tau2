@@ -40,7 +40,8 @@
 #include <assert.h>
 // #include <sstream>
 
-#define FAKE_NUM_THREADS 1
+#define DEBUG_NUM_CALLS
+#define DEBUG_FUNCTION_MAP
 
 const int collate_num_op_items[NUM_COLLATE_OP_TYPES] =
   { NUM_COLLATE_STEPS, NUM_STAT_TYPES };
@@ -382,29 +383,82 @@ void Tau_collate_freeUnitAtomicBuffer(double **atomicMin, double **atomicMax,
   free(*atomicSumSqr);
 }
 
+
+int Tau_collate_get_local_threads(int id, bool isAtomic){
+    int numThreadsLocal=0;
+    int numThreads = RtsLayer::getTotalThreads();
+    if(isAtomic){
+        TauUserEvent *userEvent = TheEventDB()[id];
+		for (int t=0; t<numThreads; t++)
+			{
+				if (userEvent->GetNumEvents(t) > 0)
+				{
+					numThreadsLocal += 1;
+				}
+			}
+			DEBUG_NUM_CALLS("TAU: %d threads register event: %s.\n",
+			numThreadsLocal, userEvent->GetEventName());
+    }
+    else{/*It is a function*/
+        FunctionInfo *fi = TheFunctionDB()[id];
+		for (int t=0; t<numThreads; t++)
+			{
+				if (fi->GetCalls(t) > 0)
+				{
+					numThreadsLocal += 1;
+				}
+			}
+			DEBUG_NUM_CALLS("TAU: %d threads call function: %s.\n",
+			numThreadsLocal, fi->GetName());
+        
+    }
+    return numThreadsLocal;
+}
+
+
 /* Parallel operation to acquire total number of threads for each event */
-void Tau_collate_get_total_threads(int *globalNumThreads, 
+void Tau_collate_get_total_threads(Tau_unify_object_t *functionUnifier, int *globalNumThreads, 
 				   int **numEventThreads,
-				   int numEvents, int *globalEventMap) {
+				   int numEvents, int *globalEventMap,bool isAtomic) {
   int rank;
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   
   int *numThreadsGlobal = (int *)TAU_UTIL_MALLOC(sizeof(int)*(numEvents+1));
   int *numThreadsLocal = (int *)TAU_UTIL_MALLOC(sizeof(int)*(numEvents+1));
   
-  //  int numThreads = RtsLayer::getNumThreads();
-  // *CWL* 2012/3/19 - We are faking this. Let's not pretend things work in the thread layer!
-  int numThreads = FAKE_NUM_THREADS;
+  
 
   /* For each event, determine contributing threads */
   for (int i=0; i<numEvents; i++) {
-    numThreadsLocal[i] = numThreads;
-    if (globalEventMap[i] == -1) {
-      numThreadsLocal[i] = 0;
-    }
-  }
+		numThreadsLocal[i] = 0;
+	}
+	for (int i=0; i<numEvents; i++)
+	{
+	 int local_index = functionUnifier->sortMap[globalEventMap[i]];
+/*   if (globalEventMap[i] != -1) { // if it occurred in our rank
+	  FunctionInfo *fi = TheFunctionDB()[local_index];
+			for (int t=0; t<numThreads; t++)
+			{
+				if (fi->GetCalls(t) > 0)
+				{
+					numThreadsLocal[i] += 1;
+				}
+			}
+			DEBUG_NUM_CALLS("TAU: %d threads call function: %s.\n",
+			numThreadsLocal[i], fi->GetName());
+		}*/
+		if(globalEventMap[i]!=-1){
+		numThreadsLocal[i]=Tau_collate_get_local_threads(local_index,isAtomic);
+		}
+		else
+		{	
+			DEBUG_NUM_CALLS("TAU [%d]: Skipping %d, does not occur in this rank.\n",
+			RtsLayer::myNode(), i);
+			numThreadsLocal[i] = 0;
+		}
+	}
   /* Extra slot in array indicates number of threads on rank */
-  numThreadsLocal[numEvents] = numThreads;
+  numThreadsLocal[numEvents] = RtsLayer::getTotalThreads();
   PMPI_Reduce(numThreadsLocal, numThreadsGlobal, numEvents+1, 
 	      MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
@@ -412,6 +466,8 @@ void Tau_collate_get_total_threads(int *globalNumThreads,
   if (rank == 0) {
     for (int i=0; i<numEvents; i++) {
       (*numEventThreads)[i] = numThreadsGlobal[i];
+	DEBUG_NUM_CALLS("TAU: Looking up global number of calls for    %d thread total = %d.\n",
+					i, numThreadsGlobal[i]);
     }
     *globalNumThreads = numThreadsGlobal[numEvents];
   }
@@ -471,7 +527,10 @@ void Tau_collate_compute_atomicStatistics(Tau_unify_object_t *atomicUnifier,
 	int local_index = atomicUnifier->sortMap[globalEventMap[i]];
 	TauUserEvent *event = TheEventDB()[local_index];
 	//	int numThreads = RtsLayer::getNumThreads();
-	int numThreads = FAKE_NUM_THREADS;
+	int numThreads = RtsLayer::getTotalThreads();
+
+	//synchronize
+	RtsLayer::LockDB();
 
 	for (int tid = 0; tid<numThreads; tid++) { // for each thread
 	  atomicMin[i] = getStepValue((collate_step)s, atomicMin[i],
@@ -485,6 +544,9 @@ void Tau_collate_compute_atomicStatistics(Tau_unify_object_t *atomicUnifier,
 	  atomicSumSqr[i] = getStepValue((collate_step)s, atomicSumSqr[i],
 					 (double)event->GetSumSqr(tid));
 	}
+	
+	//release lock
+	RtsLayer::UnLockDB();
       }
     }
 
@@ -508,16 +570,21 @@ void Tau_collate_compute_atomicStatistics(Tau_unify_object_t *atomicUnifier,
   // Compute derived statistics on rank 0
   if (rank == 0) {
     for (int i=0; i<numItems; i++) { // for each event
-      assignDerivedStats(sAtomicMin, gAtomicMin, i,
+			int local_index = atomicUnifier->sortMap[globalEventMap[i]];
+			TauUserEvent *event = TheEventDB()[local_index];
+			assignDerivedStats(sAtomicMin, gAtomicMin, i,
 			 globalNumThreads, numEventThreads);
-      assignDerivedStats(sAtomicMax, gAtomicMax, i,
+			assignDerivedStats(sAtomicMax, gAtomicMax, i,
 			 globalNumThreads, numEventThreads);
-      assignDerivedStats(sAtomicCalls, gAtomicCalls, i,
+			assignDerivedStats(sAtomicCalls, gAtomicCalls, i,
 			 globalNumThreads, numEventThreads);
-      assignDerivedStats(sAtomicMean, gAtomicMean, i,
+			assignDerivedStats(sAtomicMean, gAtomicMean, i,
 			 globalNumThreads, numEventThreads);
-      assignDerivedStats(sAtomicSumSqr, gAtomicSumSqr, i,
+			assignDerivedStats(sAtomicSumSqr, gAtomicSumSqr, i,
 			 globalNumThreads, numEventThreads);
+		
+			DEBUG_NUM_CALLS("TAU: %d threads call function: %s.\n",
+			numEventThreads[i], event->EventName.c_str());
     }    
   }
   PMPI_Op_free(&min_op);
@@ -572,19 +639,39 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
 	int local_index = functionUnifier->sortMap[globalEventMap[i]];
 	FunctionInfo *fi = TheFunctionDB()[local_index];
 	//	int numThreads = RtsLayer::getNumThreads();
-	int numThreads = FAKE_NUM_THREADS;
+	int numThreads = RtsLayer::getTotalThreads();
+	//synchronize
+	RtsLayer::LockDB();
+
 	for (int tid = 0; tid<numThreads; tid++) { // for each thread
 	  for (int m=0; m<Tau_Global_numCounters; m++) {
-	    incl[m][i] = getStepValue((collate_step)s, incl[m][i],
-				      fi->getDumpInclusiveValues(tid)[m]);
-	    excl[m][i] = getStepValue((collate_step)s, excl[m][i],
-				      fi->getDumpExclusiveValues(tid)[m]);
+			//this make no sense but you need to use a different data-structure in
+			//FunctionInfo if you are quering thread 0.
+			if (tid == 0)
+			{	
+				incl[m][i] = getStepValue((collate_step)s, incl[m][i],
+								fi->getDumpInclusiveValues(tid)[m]);
+				excl[m][i] = getStepValue((collate_step)s, excl[m][i],
+								fi->getDumpExclusiveValues(tid)[m]);
+			}	
+			else // thread != 0
+			{
+				incl[m][i] = getStepValue((collate_step)s, incl[m][i],
+								fi->GetInclTimeForCounter(tid,m));
+				excl[m][i] = getStepValue((collate_step)s, excl[m][i],
+								fi->GetExclTimeForCounter(tid,m));
+			}	
+		
 	  }
-	  numCalls[i] = getStepValue((collate_step)s, numCalls[i],
-				     (double)fi->GetCalls(tid));
-	  numSubr[i] = getStepValue((collate_step)s, numSubr[i],
-				    (double)fi->GetSubrs(tid));
+			numCalls[i] = getStepValue((collate_step)s, numCalls[i],
+							 (double)fi->GetCalls(tid));
+			numSubr[i] = getStepValue((collate_step)s, numSubr[i],
+							(double)fi->GetSubrs(tid));
+		DEBUG_NUM_CALLS("function: %s, [%d, %d, %d] (i,local_index,tid) called %ld times on rank %d.\n", 
+		fi->GetName(), i, local_index, tid, fi->GetCalls(tid), RtsLayer::myNode());
 	}
+	//release lock
+	RtsLayer::UnLockDB();
       }
     }
     
@@ -609,18 +696,20 @@ void Tau_collate_compute_statistics(Tau_unify_object_t *functionUnifier,
   if (rank == 0) {
     // *CWL* TODO - abstract the operations to avoid this nasty coding
     //     of individual operations.
+		DEBUG_FUNCTION_MAP("On rank 0, %d items to loop through.\n", numItems);
     for (int i=0; i<numItems; i++) { // for each event
-      for (int m=0; m<Tau_Global_numCounters; m++) {
+			int local_index = functionUnifier->sortMap[globalEventMap[i]];
+			for (int m=0; m<Tau_Global_numCounters; m++) {
 	assignDerivedStats(sIncl, gIncl, m, i,
-			   globalNumThreads, numEventThreads);
+				 globalNumThreads, numEventThreads);
 	assignDerivedStats(sExcl, gExcl, m, i,
-			   globalNumThreads, numEventThreads);
-      }
-      assignDerivedStats(sNumCalls, gNumCalls, i,
+				 globalNumThreads, numEventThreads);
+			}
+			assignDerivedStats(sNumCalls, gNumCalls, i,
 			 globalNumThreads, numEventThreads);
-      assignDerivedStats(sNumSubr, gNumSubr, i,
+			assignDerivedStats(sNumSubr, gNumSubr, i,
 			 globalNumThreads, numEventThreads);
-    }    
+		}    
   }
   PMPI_Op_free(&min_op);
 }
@@ -666,7 +755,7 @@ void Tau_collate_compute_histograms(Tau_unify_object_t *functionUnifier,
     
     double min, max;
     //    int numThreads = RtsLayer::getNumThreads();
-    int numThreads = FAKE_NUM_THREADS;
+    int numThreads = RtsLayer::getTotalThreads();
     for (int tid = 0; tid<numThreads; tid++) { // for each thread
       for (int m=0; m<Tau_Global_numCounters; m++) {
 	Tau_collate_incrementHistogram(&(histogram[(m*2)*numBins]), 
@@ -738,7 +827,7 @@ extern "C" int Tau_collate_writeProfile() {
 
   // Dump out all thread data with present values
   //  int numThreads = RtsLayer::getNumThreads();
-  int numThreads = FAKE_NUM_THREADS;
+  int numThreads = RtsLayer::getTotalThreads();
   for (int tid = 0; tid<numThreads; tid++) {
     TauProfiler_updateIntermediateStatistics(tid);
   }
@@ -780,8 +869,8 @@ extern "C" int Tau_collate_writeProfile() {
   for (int i=0; i<functionUnifier->localNumItems; i++) {
     globalEventMap[functionUnifier->mapping[i]] = i; // set reverse mapping
   }
-  Tau_collate_get_total_threads(&globalNumThreads, &numEventThreads,
-				numItems, globalEventMap);
+  Tau_collate_get_total_threads(functionUnifier, &globalNumThreads, &numEventThreads,
+				numItems, globalEventMap,false);
 
   double ***gExcl, ***gIncl;
   double **gNumCalls, **gNumSubr;

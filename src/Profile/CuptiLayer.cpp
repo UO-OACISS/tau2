@@ -356,7 +356,7 @@ void retrieve_available_counters()
 		CHECK_CUPTI_ERROR( err, "cuptiDeviceGetNumEventDomains" );
 		if ( domainCount == 0 ) {
 			printf( "No domain is exposed by dev = %d\n", i );
-			// TODO: error types return false;
+			exit(1);
 		}
 	
 		for (int j=0; j<domainCount; j++)
@@ -370,7 +370,7 @@ void retrieve_available_counters()
 			CHECK_CUPTI_ERROR( err, "cuptiDeviceGetNumEventDomains" );
 			if ( num_domains == 0 ) {
 				printf( "No domain is exposed by dev = %d\n", currDevice );
-				// TODO: error types return false;
+				exit(1);
 			}
 			
 			size_t size = sizeof ( CUpti_EventDomainID ) * num_domains;
