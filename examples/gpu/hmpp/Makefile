@@ -1,11 +1,12 @@
 include ../../../include/Makefile
 
-F90 = hmpp $(TAU_F90)
+F90 = hmpp $(TAU_F90) -finstrument-functions
+FLINK = hmpp tau_f90.sh
 
 all: matmult
 
 matmult: matmult.o
-	$(F90) $(FLAGS) $< -o $@
+	$(FLINK) $(FLAGS) $< -o $@
 
 matmult.o: matmult.f90
 	$(F90) $(FLAGS) -c $< -o $@

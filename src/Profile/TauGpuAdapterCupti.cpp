@@ -95,10 +95,10 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 			{
 				FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->ThisFunction;
 				functionInfoMap[cbInfo->correlationId] = p;	
-				cuptiGpuId *new_id = new cuptiGpuId(cbInfo->contextUid, cbInfo->correlationId);
+				cuptiGpuId new_id = cuptiGpuId(cbInfo->contextUid, cbInfo->correlationId);
 				Tau_gpu_enter_memcpy_event(
 					cbInfo->functionName,
-					&cuptiGpuId(cbInfo->contextUid, cbInfo->correlationId),
+					&new_id,
 					count,
 					getMemcpyType(kind)
 				);
@@ -191,7 +191,6 @@ void Tau_cupti_register_sync_event()
 
 void Tau_cupti_record_activity(CUpti_Activity *record)
 {
-	cuptiRecord *cuRec;
 	//printf("in record activity");
   switch (record->kind) {
   	case CUPTI_ACTIVITY_KIND_MEMCPY:
@@ -199,9 +198,19 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       CUpti_ActivityMemcpy *memcpy = (CUpti_ActivityMemcpy *)record;
 			//cerr << "recording memcpy: " << memcpy->end - memcpy->start << "ns.\n" << endl;
 		  //cerr << "recording memcpy on device: " << memcpy->streamId << "/" << memcpy->runtimeCorrelationId << endl;
-			cuRec = new cuptiRecord(TAU_GPU_USE_DEFAULT_NAME, memcpy->streamId, memcpy->runtimeCorrelationId, NULL); 
+			int id;
+			if (cupti_api_runtime())
+			{
+				id = memcpy->runtimeCorrelationId;
+			}
+			else
+			{
+				id = memcpy->correlationId;
+			}
+			cuptiGpuId gId = cuptiGpuId(memcpy->streamId, id);
+			cuptiRecord cuRec = cuptiRecord(TAU_GPU_USE_DEFAULT_NAME, &gId, NULL); 
 			Tau_gpu_register_memcpy_event(
-				*cuRec,
+				cuRec,
 				memcpy->start / 1e3, 
 				memcpy->end / 1e3, 
 				TAU_GPU_UNKNOW_TRANSFER_SIZE, 
@@ -245,9 +254,10 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			}
 			name = demangleName(kernel->name);
 		  //cerr << "recording kernel on device: " << kernel->streamId << "/" << id << endl;
-			cuRec = new cuptiRecord(name, kernel->streamId, id, &map);
+			cuptiGpuId gId = cuptiGpuId(kernel->streamId, id);
+			cuptiRecord cuRec = cuptiRecord(name, &gId, &map);
 			Tau_gpu_register_gpu_event(
-				*cuRec, 
+				cuRec, 
 				kernel->start / 1e3,
 				kernel->end / 1e3);
 				
