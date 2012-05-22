@@ -5743,19 +5743,19 @@ if [ "x$bfd" = "xyes" ] ; then
 				make install
 
 
-			else
-			  if [ $machine = "bgq" ]; then
+			elif [ $machine = "bgq" ]; then
 				./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-gcc CXX=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-g++ --disable-nls --disable-werror
 				# have to run make twice, first one dies with illegal instruction
 				make
 				make
 				make install
-
-                          else 
+			elif [ $machine = "rs6000" -o  $machine = "ibm64" ]; then
+				./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir --disable-nls --disable-werror  --disable-largefile
+				make && make install
+                        else 
 				./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir --disable-nls --disable-werror
 				make && make install
-                          fi
-			fi
+                        fi
 			cp include/demangle.h $bfddir/include
 			cp include/libiberty.h $bfddir/include
 			
