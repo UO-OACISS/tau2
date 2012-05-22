@@ -12,6 +12,10 @@ CUBE_JAVA_READER=${TAUROOT}/${MACHINE}/lib/CubeReader.jar
 
 JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis.jar:${JARDIR}/jogl.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-1.0.12.jar:${JARDIR}/jcommon-1.0.15.jar:${JARDIR}/jython.jar:${JARDIR}/mesp.jar:${CUBE_JAVA_READER}
 
+if [ "$MACHINE" = "bgq" ]; then
+  export LIBGL_ALWAYS_INDIRECT=1
+fi
+
 APPLE_OPTIONS=""
 if [ "$MACHINE" = "apple" ]; then
     APPLE_OPTIONS="-d32 -Xdock:name=ParaProf -Xdock:icon=${TAUROOT}/${MACHINE}/lib/tau-medium.png -Dapple.laf.useScreenMenuBar=true -Dcom.apple.mrj.application.growbox.intrudes=true"
