@@ -76,6 +76,15 @@ public class Function implements Serializable, Comparable<Function> {
         this.reversedName = null;
     }
 
+    public String getCallpathNodeName() {
+    	if (!this.isCallPathFunction()) {
+    		return this.name;
+    	}
+        String s = name;
+        int location = s.lastIndexOf("=>");
+        return s.substring(location + 3);
+    }
+    
     /**
      * Retrieve the reversed (callpath) name
      * If the function's name is "A => B => C", this will return "C <= B <= A"

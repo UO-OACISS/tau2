@@ -166,8 +166,6 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
                 uploadStatistics(dataSource, timerCallDataMap, metricMap, db);
             }
 
-            
-
            uploadUserEvents(newTrialID, functionMap, dataSource, db);
            Map<UserEvent, Integer> userEventMap = getUserEventsMap(newTrialID, dataSource, db);
 
@@ -319,8 +317,11 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 				Function parentFunction = dataSource.getFunction(parentName);
                 parent = getIDForCallpath(dataSource, db, parentFunction, callpathMap, functionMap);
 			}
+			// get the timer name
+			String timerName = current.getCallpathNodeName();
+			Function trueCurrent = dataSource.getFunction(timerName);
 			// get the timer ID
-			Integer timer = functionMap.get(current);
+			Integer timer = functionMap.get(trueCurrent);
 			PreparedStatement statement = db.prepareStatement("INSERT INTO "
 					+ db.getSchemaPrefix()
 					+ "timer_callpath (timer, parent) "
@@ -351,12 +352,13 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
         }
 		return id.intValue();
 	}
+	
 	private static Map<Function, Integer> uploadCallpathInfo(DataSource dataSource,
 			Map<Function, Integer> functionMap, DB db) throws SQLException {
 
 		Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
-		Iterator<Function> funcs = functionMap.keySet().iterator();
 		Map<Function, Integer> callpathMap = new HashMap<Function, Integer>();
+		Iterator<Function> funcs = dataSource.getFunctions();
 		while (funcs.hasNext()) {
 			Function function = funcs.next();
 			if (function.isGroupMember(derived)) {
@@ -497,15 +499,26 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 	private static Map<TimerCallData, Integer> getCallDataMap(int trialID, DataSource dataSource, DB db) throws SQLException {
 		Map<TimerCallData, Integer> map = new HashMap<TimerCallData, Integer>();
 		StringBuilder sb = new StringBuilder();
-		sb.append("SELECT tcd.id, tcd.timestamp, t.name, h.node_rank, h.context_rank, h.thread_rank FROM ");
+		sb.append("with recursive cp (id, parent, timer, name) as ( " +
+				"SELECT tc.id, tc.parent, tc.timer, t.name FROM " +
+				db.getSchemaPrefix() +
+				"timer_callpath tc inner join " +
+				db.getSchemaPrefix() +
+				"timer t on tc.timer = t.id where " +
+				//"t.trial = ? and tc.parent is null " +
+				"tc.parent is null " +
+				"UNION ALL " +
+				"SELECT d.id, d.parent, d.timer, " +
+				"concat (cp.name, ' => ', dt.name) FROM " +
+				db.getSchemaPrefix() +
+				"timer_callpath AS d JOIN cp ON (d.parent = cp.id) join " +
+				db.getSchemaPrefix() +
+				"timer dt on d.timer = dt.id) " +
+				"SELECT distinct tcd.id, tcd.timestamp, cp.name, h.node_rank, h.context_rank, h.thread_rank FROM cp join ");
 		sb.append(db.getSchemaPrefix());
-		sb.append("timer_call_data tcd join ");
+		sb.append("timer_call_data tcd on tcd.timer_callpath = cp.id join ");
 		sb.append(db.getSchemaPrefix());
-		sb.append("timer_callpath cp on tcd.timer_callpath = cp.id join ");
-		sb.append(db.getSchemaPrefix());
-		sb.append("timer t on cp.timer = t.id join ");
-		sb.append(db.getSchemaPrefix());
-		sb.append("thread h on tcd.thread = h.id WHERE h.trial=?");
+		sb.append("thread h on tcd.thread = h.id where h.trial = ?");
 		PreparedStatement statement = db.prepareStatement(sb.toString());
 		statement.setInt(1, trialID);
 		statement.execute();
@@ -706,36 +719,40 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 		select.close();
 		return map;
 	}
-	  // fills the timer table
-	    private static void  uploadFunctions(int trialID, DataSource dataSource, DB db) throws SQLException {
-	       
-	        Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
-	           PreparedStatement statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
-	                    + "timer (trial, name, source_file, line_number, line_number_end, column_number, column_number_end, short_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+	// fills the timer table
+	private static void  uploadFunctions(int trialID, DataSource dataSource, DB db) throws SQLException {
 
-	        for (Iterator<Function> it = dataSource.getFunctions(); it.hasNext();) {
-	            Function f = it.next();
-	            if (f.isGroupMember(derived)) {
-	                continue; //Should we save the derived callpath functions??
-	            }
-	            SourceRegion source = f.getSourceLink();
-	 
-	            statement.setInt(1, trialID);
-	            statement.setString(2, f.getName());
-	            statement.setString(3, source.getFilename());
-	            statement.setInt(4, source.getStartLine());
-	            statement.setInt(5, source.getEndLine());
-	            statement.setInt(6, source.getStartColumn());
-	            statement.setInt(7, source.getEndColumn());
-	            statement.setString(8, source.getShortName());
-	            statement.addBatch();
-//TODO: increment itemsDone for progress bar
-//	            this.itemsDone++;
-	        }
-            statement.executeBatch();
-            statement.close();
+		Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
+		Group callpath = dataSource.getGroup("TAU_CALLPATH");
+		PreparedStatement statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
+				+ "timer (trial, name, source_file, line_number, line_number_end, column_number, column_number_end, short_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 
-	    }
+		for (Iterator<Function> it = dataSource.getFunctions(); it.hasNext();) {
+			Function f = it.next();
+			if (f.isGroupMember(derived)) {
+				continue; //Should we save the derived callpath functions??
+			}
+			if (f.isCallPathFunction()) {
+				continue; //don't save the a => b => c stuff here - in the timer_callpath table instead.
+			}
+			SourceRegion source = f.getSourceLink();
+
+			statement.setInt(1, trialID);
+			statement.setString(2, f.getName());
+			statement.setString(3, source.getFilename());
+			statement.setInt(4, source.getStartLine());
+			statement.setInt(5, source.getEndLine());
+			statement.setInt(6, source.getStartColumn());
+			statement.setInt(7, source.getEndColumn());
+			statement.setString(8, source.getShortName());
+			statement.addBatch();
+			//TODO: increment itemsDone for progress bar
+			//	            this.itemsDone++;
+		}
+		statement.executeBatch();
+		statement.close();
+
+	}
 	    private static Map<Function, Integer>  getFunctionsIDMap(int trialID, DataSource dataSource, DB db) throws SQLException {
 	    		           
 		Map<Function, Integer> map = new HashMap<Function, Integer>();
@@ -838,8 +855,6 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 						+ db.getSchemaPrefix()
 						+ "timer_value (timer_call_data, metric, inclusive_percent, inclusive_value, exclusive_percent, "
 						+ " exclusive_value) VALUES (?, ?, ?, ?, ?, ?)");
-		
-
 
 		Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
 
