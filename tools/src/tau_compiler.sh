@@ -24,6 +24,8 @@ declare -i pdbFileSpecified=$FALSE
 declare -i optResetUsed=$FALSE
 declare -i optDetectMemoryLeaks=$FALSE
 
+declare -i optPdtF95ResetSpecified=$FALSE
+
 declare -i isVerbose=$FALSE
 declare -i isCXXUsedForC=$FALSE
 
@@ -538,6 +540,7 @@ for arg in "$@" ; do
 			;;
 		    -optPdtF95Reset*)
 			optPdtF95=${arg#"-optPdtF95Reset="} 
+			optPdtF95ResetSpecified=$TRUE
 			echoIfDebug "\tParsing F95 Options are: $optPdtF95" 
 			;;
 		    -optVerbose*)
@@ -791,12 +794,16 @@ for arg in "$@" ; do
 
 	    # IBM fixed and free
 	    -qfixed*)
-		optPdtF95="$optPdtF95 -R fixed"
+                if [ $optPdtF95ResetSpecified == $FALSE ]; then
+                  optPdtF95="$optPdtF95 -R fixed"
+                fi
 		argsRemaining="$argsRemaining $arg"
 		;;
 
 	    -qfree*)
-		optPdtF95="$optPdtF95 -R free"
+                if [ $optPdtF95ResetSpecified == $FALSE ]; then
+                  optPdtF95="$optPdtF95 -R free"
+                fi
 		argsRemaining="$argsRemaining $arg"
 		;;
 
