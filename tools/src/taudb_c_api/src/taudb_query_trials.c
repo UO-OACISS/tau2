@@ -121,13 +121,13 @@ TAUDB_TRIAL* taudb_private_query_trials(PGconn* connection, boolean full, char* 
       trials[i].timers = taudb_query_timers(connection, &(trials[i]));
       trials[i].timer_count = taudb_numItems;
       trials[i].timer_callpaths = taudb_query_all_timer_callpaths(connection, &(trials[i]));
-      trials[i].callpath_count = taudb_numItems;
-      trials[i].timer_callpath_stats = taudb_query_all_timer_callpath_stats(connection, &(trials[i]));
-      trials[i].callpath_stat_count = taudb_numItems;
+      trials[i].timer_callpath_count = taudb_numItems;
+      //trials[i].timer_callpath_stats = taudb_query_all_timer_callpath_stats(connection, &(trials[i]));
+      //trials[i].callpath_stat_count = taudb_numItems;
       trials[i].metrics = taudb_query_metrics(connection, &(trials[i]));
       trials[i].metric_count = taudb_numItems;
-      trials[i].timer_values = taudb_query_all_timer_values(connection, &(trials[i]));
-      trials[i].value_count = taudb_numItems;
+      //trials[i].timer_values = taudb_query_all_timer_values(connection, &(trials[i]));
+      //trials[i].value_count = taudb_numItems;
       //trials[i].counters = taudb_query_counters(&(trials[i]));
       //trials[i].counter_count = taudb_numItems;
       //taudb_query_counter_values(&(trials[i]));

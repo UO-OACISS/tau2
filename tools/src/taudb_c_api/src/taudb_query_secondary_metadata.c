@@ -80,11 +80,14 @@ TAUDB_SECONDARY_METADATA* taudb_query_secondary_metadata(PGconn* connection, TAU
       if (strcmp(PQfname(res, j), "id") == 0) {
         pm[i].id = atoi(PQgetvalue(res, i, j));
       } else if (strcmp(PQfname(res, j), "trial") == 0) {
-        pm[i].trial = atoi(PQgetvalue(res, i, j));
+        //pm[i].trial = atoi(PQgetvalue(res, i, j));
       } else if (strcmp(PQfname(res, j), "thread") == 0) {
-        pm[i].thread = atoi(PQgetvalue(res, i, j));
-      } else if (strcmp(PQfname(res, j), "timer") == 0) {
-        pm[i].timer = atoi(PQgetvalue(res, i, j));
+        //pm[i].thread = atoi(PQgetvalue(res, i, j));
+		fprintf(stderr, "TODO: ASSIGN THE THREAD FOR THE SECONDARY METADATA\n");
+      } else if (strcmp(PQfname(res, j), "timer_call_data") == 0) {
+        //pm[i].timer_call_data = atoi(PQgetvalue(res, i, j));
+		fprintf(stderr, "TODO: ASSIGN THE TIMER_CALL_DATA FOR THE SECONDARY METADATA\n");
+      } else if (strcmp(PQfname(res, j), "timer_call_data") == 0) {
       } else if (strcmp(PQfname(res, j), "parent") == 0) {
         //pm[i].parent = atoi(PQgetvalue(res, i, j));
       } else if (strcmp(PQfname(res, j), "is_array") == 0) {

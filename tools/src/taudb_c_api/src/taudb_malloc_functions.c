@@ -53,22 +53,7 @@ TAUDB_PRIMARY_METADATA* taudb_resize_primary_metadata(int count, TAUDB_PRIMARY_M
 
 TAUDB_COUNTER* taudb_create_counters(int count){ 
  TAUDB_COUNTER* counters = (TAUDB_COUNTER*) (calloc (count, sizeof (TAUDB_COUNTER)));
- int i = 0;
- for (i = 0 ; i < count ; i++) {
-   counters[i].group_count = 0;
-   counters[i].value_count = 0;
- }
  return counters;
-}
-
-TAUDB_COUNTER_GROUP* taudb_create_counter_groups(int count){ 
- TAUDB_COUNTER_GROUP* groups = (TAUDB_COUNTER_GROUP*) (calloc (count, sizeof (TAUDB_COUNTER_GROUP)));
- return groups;
-}
-
-TAUDB_COUNTER_GROUP* taudb_resize_counter_groups(int count, TAUDB_COUNTER_GROUP* old_groups){ 
- TAUDB_COUNTER_GROUP* counter_groups = (TAUDB_COUNTER_GROUP*) (realloc (old_groups, count * sizeof (TAUDB_COUNTER_GROUP)));
- return counter_groups;
 }
 
 TAUDB_COUNTER_VALUE* taudb_create_counter_values(int count){ 
@@ -78,12 +63,6 @@ TAUDB_COUNTER_VALUE* taudb_create_counter_values(int count){
 
 TAUDB_TIMER* taudb_create_timers(int count){ 
  TAUDB_TIMER* timers = (TAUDB_TIMER*) (calloc (count, sizeof (TAUDB_TIMER)));
- int i = 0;
- for (i = 0 ; i < count ; i++) {
-   timers[i].child_count = 0;
-   timers[i].group_count = 0;
-   timers[i].parameter_count = 0;
- }
  return timers;
 }
 

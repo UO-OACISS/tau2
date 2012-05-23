@@ -9,17 +9,19 @@ TAUDB_THREAD* taudb_query_threads_2005(PGconn* connection, TAUDB_TRIAL* trial, b
     taudb_numItems = 2;
     TAUDB_THREAD* threads = taudb_create_threads(taudb_numItems);
     threads[0].id = 0;
-    threads[0].trial = trial->id;
+    threads[0].trial = trial;
     threads[0].node_rank = TAUDB_MEAN_WITHOUT_NULLS;
     threads[0].context_rank = TAUDB_MEAN_WITHOUT_NULLS;
     threads[0].thread_rank = TAUDB_MEAN_WITHOUT_NULLS;
     threads[0].index = TAUDB_MEAN_WITHOUT_NULLS;;
+	HASH_ADD_INT(threads, index, &(threads[0]));
     threads[1].id = 0;
-    threads[1].trial = trial->id;
+    threads[1].trial = trial;
     threads[1].node_rank = TAUDB_TOTAL;
     threads[1].context_rank = TAUDB_TOTAL;
     threads[1].thread_rank = TAUDB_TOTAL;
     threads[1].index = TAUDB_TOTAL;
+	HASH_ADD_INT(threads, index, &(threads[1]));
     return threads;
   } else {
     int i, j, k;
@@ -33,11 +35,12 @@ TAUDB_THREAD* taudb_query_threads_2005(PGconn* connection, TAUDB_TRIAL* trial, b
         for (k = 0; k < trial->threads_per_context; k++)
         {
           threads[threadIndex].id = 0;
-          threads[threadIndex].trial = trial->id;
+          threads[threadIndex].trial = trial;
           threads[threadIndex].node_rank = i;
           threads[threadIndex].context_rank = j;
           threads[threadIndex].thread_rank = k;
           threads[threadIndex].index = threadIndex;
+	      HASH_ADD_INT(threads, index, &(threads[threadIndex]));
           threadIndex++;
         }
       } 
@@ -119,23 +122,25 @@ TAUDB_THREAD* taudb_query_threads_2012(PGconn* connection, TAUDB_TRIAL* trial, b
   /* the rows */
   for (i = 0; i < PQntuples(res); i++)
   {
+    TAUDB_THREAD* thread = &(threads[i]);
     /* the columns */
     for (j = 0; j < nFields; j++) {
       if (strcmp(PQfname(res, j), "id") == 0) {
-        threads[i].id = atoi(PQgetvalue(res, i, j));
+        thread->id = atoi(PQgetvalue(res, i, j));
       } else if (strcmp(PQfname(res, j), "trial") == 0) {
-        threads[i].trial = atoi(PQgetvalue(res, i, j));
+        thread->trial = trial;
       } else if (strcmp(PQfname(res, j), "node_rank") == 0) {
-        threads[i].node_rank = atoi(PQgetvalue(res, i, j));
+        thread->node_rank = atoi(PQgetvalue(res, i, j));
       } else if (strcmp(PQfname(res, j), "context_rank") == 0) {
-        threads[i].context_rank = atoi(PQgetvalue(res, i, j));
+        thread->context_rank = atoi(PQgetvalue(res, i, j));
       } else if (strcmp(PQfname(res, j), "thread_rank") == 0) {
-        threads[i].thread_rank = atoi(PQgetvalue(res, i, j));
+        thread->thread_rank = atoi(PQgetvalue(res, i, j));
       } else if (strcmp(PQfname(res, j), "thread_index") == 0) {
-        threads[i].index = atoi(PQgetvalue(res, i, j));
+        thread->index = atoi(PQgetvalue(res, i, j));
       }
     } 
-    threads[i].secondary_metadata_count = 0;
+    thread->secondary_metadata_count = 0;
+	HASH_ADD_INT(threads, index, thread);
   }
 
   PQclear(res);
@@ -171,4 +176,10 @@ TAUDB_THREAD* taudb_query_derived_threads(PGconn* connection, TAUDB_TRIAL* trial
   } else {
     return taudb_query_threads_2012(connection, trial, TRUE);
   }
+}
+
+TAUDB_THREAD* taudb_get_thread(TAUDB_THREAD* threads, int index) {
+  TAUDB_THREAD* thread;
+  HASH_FIND_INT(threads, &(index), thread);
+  return thread;
 }

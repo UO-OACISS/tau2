@@ -39,6 +39,67 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
     private Map<Integer, View> views = null;
 	private View view = null;
 
+	public static class TimerCallData {
+		public TimerCallData(Function f, Thread t, double d) {
+			this.function = f;
+			this.thread = t;
+			this.timestamp = d;
+		}
+		public Function function = null;
+		public Thread thread = null;
+		public double timestamp = 0.0; // for future support of snapshots
+		/* (non-Javadoc)
+		 * @see java.lang.Object#hashCode()
+		 */
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result
+					+ ((function == null) ? 0 : function.hashCode());
+			result = prime * result
+					+ ((thread == null) ? 0 : thread.hashCode());
+			long temp;
+			temp = Double.doubleToLongBits(timestamp);
+			result = prime * result + (int) (temp ^ (temp >>> 32));
+			return result;
+		}
+		/* (non-Javadoc)
+		 * @see java.lang.Object#equals(java.lang.Object)
+		 */
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj) {
+				return true;
+			}
+			if (obj == null) {
+				return false;
+			}
+			if (!(obj instanceof TimerCallData)) {
+				return false;
+			}
+			TimerCallData other = (TimerCallData) obj;
+			if (function == null) {
+				if (other.function != null) {
+					return false;
+				}
+			} else if (!function.equals(other.function)) {
+				return false;
+			}
+			if (thread == null) {
+				if (other.thread != null) {
+					return false;
+				}
+			} else if (!thread.equals(other.thread)) {
+				return false;
+			}
+			if (Double.doubleToLongBits(timestamp) != Double
+					.doubleToLongBits(other.timestamp)) {
+				return false;
+			}
+			return true;
+		}
+	}
 	
 	public TAUdbDatabaseAPI(DatabaseAPI api) {
 		super();
@@ -83,15 +144,26 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
             
             uploadTimerGroups(functionMap, db);
             uploadTimerParameter(functionMap, db);
-            uploadCallpathInfo(dataSource, functionMap, metricMap, threadMap, db, false);
+            // this seems confusing... but let me explain. We have uploaded the timers,
+            // which are just the flat profile. This call will upload the full call graph,
+            // including all the nodes and edges. However, they are mapped from Function
+            // objects to timer_callpath rows in the database.
+            Map<Function, Integer> callpathMap = uploadCallpathInfo(dataSource, functionMap, db);
+            
+            // now that the graph is created, insert the call and subroutine data.
+            uploadCallDataInfo(dataSource, callpathMap, metricMap, threadMap, db, false);
+            // also do it for the derived threads
             Map<Thread, Integer> derivedThreadMap = uploadDerivedThreads(newTrialID, dataSource, db);            
-            uploadCallpathInfo(dataSource, functionMap, metricMap, derivedThreadMap, db, true);
+            uploadCallDataInfo(dataSource, callpathMap, metricMap, derivedThreadMap, db, true);
+            
+            Map<TimerCallData, Integer> timerCallDataMap = getCallDataMap(newTrialID, dataSource, db);
 
+            // now upload the measurements
             if(db.getDBType().equals("postgresql")){
-                uploadFunctionProfilesPSQL(dataSource, functionMap, metricMap, threadMap, derivedThreadMap, db);
+                uploadFunctionProfilesPSQL(dataSource, timerCallDataMap, metricMap, db);
             }else{
-                uploadFunctionProfiles(dataSource, functionMap, metricMap, threadMap, db);
-                uploadStatistics(dataSource, functionMap, metricMap, derivedThreadMap, db);
+                uploadFunctionProfiles(dataSource, timerCallDataMap, metricMap, db);
+                uploadStatistics(dataSource, timerCallDataMap, metricMap, db);
             }
 
             
@@ -179,15 +251,15 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 	
 
 	private static void uploadStatistics(DataSource dataSource,
-			Map<Function, Integer> functionMap, Map<Metric, Integer> metricMap,
-			Map<Thread, Integer> derivedThreadMap, DB db) throws SQLException {
+			Map<TimerCallData, Integer> timerCallDataMap, Map<Metric, Integer> metricMap,
+			DB db) throws SQLException {
 
 		Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
 		PreparedStatement timerValueInsert = db
 				.prepareStatement("INSERT INTO "
 						+ db.getSchemaPrefix()
-						+ "timer_value (timer, thread, metric, inclusive_percent, inclusive_value, exclusive_percent, "
-						+ " exclusive_value) VALUES (?, ?, ?, ?, ?, ?, ?)");
+						+ "timer_value (timer_call_data, metric, inclusive_percent, inclusive_value, exclusive_percent, "
+						+ " exclusive_value) VALUES (?, ?, ?, ?, ?, ?)");
 		for (Metric metric : dataSource.getMetrics()) {
 			Integer metricID = metricMap.get(metric);
 
@@ -197,13 +269,12 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 				if (function.isGroupMember(derived)) {
 					continue;
 				}
-				Integer timerID = functionMap.get(function);
-
 				
 				for (Thread thread : dataSource.getAggThreads()) {
+					TimerCallData tcd = new TimerCallData(function, thread, 0.0);
+					int timerCallDataID = timerCallDataMap.get(tcd).intValue();
 					insertDerivedThreadValue(timerValueInsert, metric,
-							metricID, timerID, thread, derivedThreadMap,
-							function);
+							metricID, timerCallDataID, thread, function);
 				}
 			}
 
@@ -216,39 +287,144 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 
 	private static void insertDerivedThreadValue(
 			PreparedStatement timerValueInsert, Metric metric,
-			Integer metricID, Integer timerID, Thread thread, 
-			Map<Thread, Integer> derivedThreadMap, Function function
+			Integer metricID, Integer timerCallPathID, Thread thread, Function function
 			) throws SQLException {
-		Integer threadID = derivedThreadMap.get(thread);
 		FunctionProfile fp = thread.getFunctionProfile(function);
 		if (fp != null) { // only if this thread calls this function
 			// TODO: Deal with cancelUpload
 			// if (this.cancelUpload)
 			// return;
-			timerValueInsert.setInt(1,timerID);
-			timerValueInsert.setInt(2, threadID);
-			timerValueInsert.setInt(3, metricID);
+			timerValueInsert.setInt(1, timerCallPathID);
+			timerValueInsert.setInt(2, metricID);
 			
-			timerValueInsert.setDouble(4, fp.getInclusivePercent(metric.getID()));
-			timerValueInsert.setDouble(5, fp.getInclusive(metric.getID()));
-			timerValueInsert.setDouble(6, fp.getExclusivePercent(metric.getID()));
-			timerValueInsert.setDouble(7, fp.getExclusive(metric.getID()));
+			timerValueInsert.setDouble(3, fp.getInclusivePercent(metric.getID()));
+			timerValueInsert.setDouble(4, fp.getInclusive(metric.getID()));
+			timerValueInsert.setDouble(5, fp.getExclusivePercent(metric.getID()));
+			timerValueInsert.setDouble(6, fp.getExclusive(metric.getID()));
 			//TODO: Find the sum_exclusive_square values
-//						timerValueInsert.setDouble(8, fp.get)
+//						timerValueInsert.setDouble(7, fp.get)
 			
 			timerValueInsert.addBatch();	
 		}
 	}
 
-	private static void uploadCallpathInfo(DataSource dataSource,
+	private static Integer getIDForCallpath(DataSource dataSource, DB db, Function current, 
+			Map<Function, Integer> callpathMap, Map<Function, Integer> functionMap) throws SQLException {
+		Integer id = callpathMap.get(current);
+		if (id == null) {
+			Integer parent = null;
+			// get the parent's id
+			String parentName = CallPathUtilFuncs.getParentName(current.getName());
+			if (!parentName.equals("")) {
+				Function parentFunction = dataSource.getFunction(parentName);
+                parent = getIDForCallpath(dataSource, db, parentFunction, callpathMap, functionMap);
+			}
+			// get the timer ID
+			Integer timer = functionMap.get(current);
+			PreparedStatement statement = db.prepareStatement("INSERT INTO "
+					+ db.getSchemaPrefix()
+					+ "timer_callpath (timer, parent) "
+					+ "VALUES (?, ?)");
+			statement.setInt(1, timer.intValue());
+			if (parent == null) {
+				statement.setNull(2, java.sql.Types.INTEGER);
+			} else {
+				statement.setInt(2, parent.intValue());
+			}
+	        statement.execute();
+	        statement.close();
+            String tmpStr = new String();
+            if (db.getDBType().compareTo("mysql") == 0)
+                tmpStr = "select LAST_INSERT_ID();";
+            else if (db.getDBType().compareTo("db2") == 0)
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM timer_callpath";
+            else if (db.getDBType().compareTo("derby") == 0)
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM timer_callpath";
+            else if (db.getDBType().compareTo("h2") == 0)
+                tmpStr = "select IDENTITY_VAL_LOCAL() FROM timer_callpath";
+            else if (db.getDBType().compareTo("oracle") == 0)
+                tmpStr = "select " + db.getSchemaPrefix() + "timer_callpath_id_seq.currval FROM dual";
+            else
+                tmpStr = "select currval('timer_callpath_id_seq');";
+            id = Integer.parseInt(db.getDataItem(tmpStr));
+            callpathMap.put(current, id);
+        }
+		return id.intValue();
+	}
+	private static Map<Function, Integer> uploadCallpathInfo(DataSource dataSource,
+			Map<Function, Integer> functionMap, DB db) throws SQLException {
+
+		Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
+		Iterator<Function> funcs = functionMap.keySet().iterator();
+		Map<Function, Integer> callpathMap = new HashMap<Function, Integer>();
+		while (funcs.hasNext()) {
+			Function function = funcs.next();
+			if (function.isGroupMember(derived)) {
+				continue;
+			}
+			getIDForCallpath(dataSource, db, function, callpathMap, functionMap);
+		}
+		return callpathMap;
+	}
+	
+    private static Map<Function, Integer>  getTimerCallPathMap(int trialID, DataSource dataSource, DB db) throws SQLException {
+        
+	Map<Function, Integer> map = new HashMap<Function, Integer>();
+
+/* This ugly statement is called a CTE, or Common Table Expression.
+ * Essentially, this is a recursive statement which builds the callgraph
+ * structure for us, including reconstructing the timer names with 
+ * the arrows. The "with" statement creates a virtual table "cp".
+ * The virtual table is populated with the roots of the trees (our
+ * flat profile). Those results are unioned with a recursive 
+ * examination of the tree, where leaves are joined on to the 
+ * existing tree. As long as the table grows in size, the recursion
+ * continues. The final virtual table is queried and ordered
+ * by the last select statement.
+ * For more details, see: http://wiki.postgresql.org/wiki/CTEReadme
+ */
+
+	PreparedStatement statement = 
+	  db.prepareStatement("with recursive cp (id, parent, timer, name) as ( " +
+			"SELECT tc.id, tc.parent, tc.timer, t.name FROM " +
+			db.getSchemaPrefix() +
+			"timer_callpath tc inner join " +
+			db.getSchemaPrefix() +
+			"timer t on tc.timer = t.id where " +
+			"t.trial = ? and tc.parent is null" +
+			"UNION ALL" +
+			"SELECT d.id, d.parent, d.timer, " +
+			"concat (cp.name, ' => ', dt.name) FROM " +
+			db.getSchemaPrefix() +
+			"timer_callpath AS d JOIN cp ON (d.parent = cp.id) join " +
+			db.getSchemaPrefix() +
+			"timer dt on d.timer = dt.id) " +
+			"SELECT distinct * FROM cp order by parent;");
+	statement.setInt(1, trialID);
+	statement.execute();
+	ResultSet results = statement.getResultSet();
+
+	while (results.next()) {
+		int funcID = results.getInt(1);
+		String name = results.getString(2);
+
+		Function func = dataSource.getFunction(name);
+		map.put(func, funcID);
+	}
+	statement.close();
+	return map;
+}
+
+	
+	private static void uploadCallDataInfo(DataSource dataSource,
 			Map<Function, Integer> functionMap, Map<Metric, Integer> metricMap,
 			Map<Thread, Integer> threadMap, DB db, boolean aggregates) throws SQLException {
 
 		PreparedStatement timerCallpathInsert = db
 				.prepareStatement("INSERT INTO "
 						+ db.getSchemaPrefix()
-						+ "timer_callpath (timer, thread, calls, subroutines, parent) "
-						+ "VALUES (?, ?, ?, ?, ?)");
+						+ "timer_call_data (timer_callpath, thread, calls, subroutines) "
+						+ "VALUES (?, ?, ?, ?)");
 
 		Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
 		Iterator<Function> funcs = functionMap.keySet().iterator();
@@ -277,15 +453,6 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 					timerCallpathInsert.setInt(2, threadID);
 					timerCallpathInsert.setInt(3, (int) fp.getNumCalls());
 					timerCallpathInsert.setInt(4, (int) fp.getNumSubr());
-					String parentName = CallPathUtilFuncs.getParentName(fp.getName());
-					if (!parentName.equals("")) {
-						Function parent = dataSource.getFunction(parentName);
-						int parentID = functionMap.get(parent);
-
-						timerCallpathInsert.setInt(5, parentID);
-					} else {
-						timerCallpathInsert.setNull(5, java.sql.Types.INTEGER);
-					}
 					timerCallpathInsert.addBatch();
 				}
 			}
@@ -326,9 +493,71 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 		stmt.executeBatch();
 		stmt.close();
 	}
+	
+	private static Map<TimerCallData, Integer> getCallDataMap(int trialID, DataSource dataSource, DB db) throws SQLException {
+		Map<TimerCallData, Integer> map = new HashMap<TimerCallData, Integer>();
+		StringBuilder sb = new StringBuilder();
+		sb.append("SELECT tcd.id, tcd.timestamp, t.name, h.node_rank, h.context_rank, h.thread_rank FROM ");
+		sb.append(db.getSchemaPrefix());
+		sb.append("timer_call_data tcd join ");
+		sb.append(db.getSchemaPrefix());
+		sb.append("timer_callpath cp on tcd.timer_callpath = cp.id join ");
+		sb.append(db.getSchemaPrefix());
+		sb.append("timer t on cp.timer = t.id join ");
+		sb.append(db.getSchemaPrefix());
+		sb.append("thread h on tcd.thread = h.id WHERE h.trial=?");
+		PreparedStatement statement = db.prepareStatement(sb.toString());
+		statement.setInt(1, trialID);
+		statement.execute();
+		ResultSet results = statement.getResultSet();
+
+		while (results.next()) {
+			int id = results.getInt(1);
+			Double timestamp = results.getDouble(2);
+			String functionName = results.getString(3);
+			int node = results.getInt(4);
+			int context =results.getInt(5);
+			int thread = results.getInt(6);
+			Function f = dataSource.getFunction(functionName);
+			Thread t = null;
+			if (node < 0) {
+				switch (node) {
+				case MEAN_WITHOUT_NULL:
+					t = dataSource.getMeanData();
+					break; 
+				case TOTAL:
+					t = dataSource.getTotalData();
+					break;
+				case STDDEV_WITHOUT_NULL:
+					t = dataSource.getStdDevData();
+					break;
+				case MIN:
+					t = dataSource.getMinData();
+					break;
+				case MAX:
+					t = dataSource.getMaxData();
+					break;
+				case MEAN_WITH_NULL:
+					t = dataSource.getMeanDataAll();
+					break;
+				case STDDEV_WITH_NULL:
+					t = dataSource.getStdDevDataAll();
+					break;
+				default:
+					break;
+				}
+			} else {
+				t = dataSource.getThread(node, context, thread);
+			}
+			TimerCallData cpd = new TimerCallData(f, t, timestamp);
+			map.put(cpd, id);
+		}
+		statement.close();
+        return map;
+	}
+
 	private static Map<Thread, Integer> getThreadsMap(int trialID,DataSource dataSource, DB db) throws SQLException {
 		Map<Thread, Integer> map = new HashMap<Thread, Integer>();
-
 		PreparedStatement statement = db.prepareStatement("SELECT node_rank, context_rank, thread_rank, id FROM "
 						+ db.getSchemaPrefix()
 						+ "thread WHERE trial=?");
@@ -530,8 +759,8 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 	}
 
 	private static void uploadFunctionProfilesPSQL(DataSource dataSource,
-			Map<Function, Integer> functionMap, Map<Metric, Integer> metricMap,
-			Map<Thread, Integer> threadMap, Map<Thread, Integer> derivedThreadMap, DB db) throws SQLException {
+			Map<TimerCallData, Integer> timerCallDataMap, Map<Metric, Integer> metricMap,
+			DB db) throws SQLException {
 		org.postgresql.PGConnection conn;
 		if (db.getConnection() instanceof org.postgresql.PGConnection) {
 			conn = (PGConnection) db.getConnection();
@@ -554,13 +783,12 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 				if (function.isGroupMember(derived)) {
 					continue;
 				}
-				Integer timerID = functionMap.get(function);
 				for (Thread thread : dataSource.getAllThreads()) {
-					Integer threadID = threadMap.get(thread);
+					TimerCallData tcd = new TimerCallData(function, thread, 0.0);
+					Integer timerCallDataID = timerCallDataMap.get(tcd);
 					FunctionProfile fp = thread.getFunctionProfile(function);
 					if (fp != null) { // only if this thread calls this function
-						buf.append(timerID + "\t");
-						buf.append(threadID + "\t");
+						buf.append(timerCallDataID + "\t");
 						buf.append(metricID + "\t");
 
 						buf.append(fp.getInclusivePercent(metric.getID())
@@ -573,11 +801,11 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 				}
 				// now the aggregate threads
 				for (Thread thread : dataSource.getAggThreads()) {
-					Integer threadID = derivedThreadMap.get(thread);
+					TimerCallData tcd = new TimerCallData(function, thread, 0.0);
+					Integer timerCallDataID = timerCallDataMap.get(tcd);
 					FunctionProfile fp = thread.getFunctionProfile(function);
 					if (fp != null) { // only if this thread calls this function
-						buf.append(timerID + "\t");
-						buf.append(threadID + "\t");
+						buf.append(timerCallDataID + "\t");
 						buf.append(metricID + "\t");
 
 						buf.append(fp.getInclusivePercent(metric.getID())
@@ -594,7 +822,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 		InputStream input = new ByteArrayInputStream(buf.toString().getBytes());
 		try {
 			copy.copyIn(
-					"COPY timer_value (timer, thread, metric, inclusive_percent, inclusive_value, exclusive_percent, "
+					"COPY timer_value (timer_call_data, metric, inclusive_percent, inclusive_value, exclusive_percent, "
 							+ " exclusive_value) FROM STDIN", input);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -603,14 +831,13 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 	}
 
 	private static void uploadFunctionProfiles(DataSource dataSource,
-			Map<Function, Integer> functionMap, Map<Metric, Integer> metricMap, Map<Thread, Integer> threadMap,
-			DB db) throws SQLException {
+			Map<TimerCallData, Integer> timerCallDataMap, Map<Metric, Integer> metricMap, DB db) throws SQLException {
 
 		PreparedStatement timerValueInsert = db
 				.prepareStatement("INSERT INTO "
 						+ db.getSchemaPrefix()
-						+ "timer_value (timer, thread, metric, inclusive_percent, inclusive_value, exclusive_percent, "
-						+ " exclusive_value) VALUES (?, ?, ?, ?, ?, ?, ?)");
+						+ "timer_value (timer_call_data, metric, inclusive_percent, inclusive_value, exclusive_percent, "
+						+ " exclusive_value) VALUES (?, ?, ?, ?, ?, ?)");
 		
 
 
@@ -624,10 +851,11 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 				if (function.isGroupMember(derived)) {
 					continue;
 				}
-				Integer timerID = functionMap.get(function);
 				for (Thread thread : dataSource.getAllThreads()) {
+					TimerCallData tcd = new TimerCallData(function, thread, 0.0); //TODO - this should be a timestamp, not null
+					int timerCallDataID = timerCallDataMap.get(tcd).intValue();
 					insertDerivedThreadValue(timerValueInsert, metric,
-							metricID, timerID, thread, threadMap, function);
+							metricID, timerCallDataID, thread, function);
 				}
 			}
 		}
@@ -646,14 +874,14 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 
 		// TODO: Need to load information for parent timer
 		PreparedStatement statement = db.prepareStatement("INSERT INTO "
-				+ db.getSchemaPrefix() + "counter (trial, name, parent) VALUES (?, ?, ?)");
+				+ db.getSchemaPrefix() + "counter (trial, name) VALUES (?, ?)");
 
 		for (Iterator<UserEvent> it = dataSource.getUserEvents(); it.hasNext();) {
 			UserEvent ue = it.next();
 
 			statement.setInt(1, trialID);
 			statement.setString(2, ue.getName());
-			if (ue.isContextEvent()) {
+/*			if (ue.isContextEvent()) {
 				// this is a context event, so get the context
 				int contextStart = ue.getName().indexOf(" : ");
 				String context = ue.getName().substring(contextStart + 3).trim();
@@ -672,7 +900,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			} else {
 				statement.setNull(3, java.sql.Types.INTEGER);
 			}
-			statement.addBatch();
+*/			statement.addBatch();
 
 			// TODO: Add this to progress bar
 			// this.itemsDone++;

@@ -10,10 +10,24 @@
 typedef int boolean;
 #endif
 
-enum taudb_database_schema_version {
-  TAUDB_2005_SCHEMA,
-  TAUDB_2012_SCHEMA
-};
+/* forward declarations to ease objects that need to know about each other 
+ * and have doubly-linked relationships */
+
+struct taudb_timer_call_data;
+struct taudb_timer_value;
+struct taudb_timer_callpath;
+struct taudb_timer_group;
+struct taudb_timer_parameter;
+struct taudb_timer;
+struct taudb_counter_value;
+struct taudb_counter;
+struct taudb_primary_metadata;
+struct taudb_secondary_metadata;
+struct taudb_thread;
+struct taudb_metric;
+struct taudb_trial;
+struct perfdmf_experiment;
+struct perfdmf_application;
 
 typedef struct taudb_configuration {
   char* jdbc_db_type;
@@ -26,48 +40,123 @@ typedef struct taudb_configuration {
   char* db_schemafile;
 } TAUDB_CONFIGURATION;
 
+enum taudb_database_schema_version {
+  TAUDB_2005_SCHEMA,
+  TAUDB_2012_SCHEMA
+};
+
 typedef struct taudb_data_source {
  int id;
  char* name;
  char*description;
 } TAUDB_DATA_SOURCE;
 
-typedef struct taudb_timer_value {
- int id; // link back to database
- int timer; // link back to database
- int metric; // link back to database
- int thread; // link back to database, roundabout way
- char *key; // hash table key
- double inclusive;
- double exclusive;
- double inclusive_percentage;
- double exclusive_percentage;
- double sum_exclusive_squared;
- char* timestamp;
- UT_hash_handle hh;
-} TAUDB_TIMER_VALUE;
+/* these are the derived thread indexes. */
 
-typedef struct taudb_timer_callpath {
- int id; // link back to database
- int timer; // link back to database
- int thread; // link back to database, roundabout way
- char *key; // hash table key
- int calls;
- int subroutines;
- char *parent_key; // hash table key
- char* timestamp;
- UT_hash_handle hh;
-} TAUDB_TIMER_CALLPATH;
+static int TAUDB_MEAN_WITHOUT_NULLS = -1;
+static int TAUDB_TOTAL = -2;
+static int TAUDB_STDDEV_WITHOUT_NULLS = -3;
+static int TAUDB_MIN = -4;
+static int TAUDB_MAX = -5;
+static int TAUDB_MEAN_WITH_NULLS = -6;
+static int TAUDB_STDDEV_WITH_NULLS = -7;
 
-/* timers groups are the groups such as tau_default,
+/* trials are the top level structure */
+
+typedef struct taudb_trial {
+ // actual data from the database
+ int id;
+ char* name;
+ char* collection_date;
+ struct taudb_data_source* data_source;
+ int node_count;
+ int contexts_per_node;
+ int threads_per_context;
+ // array sizes
+ int metric_count;
+ int thread_count;
+ int derived_thread_count;
+ int timer_count;
+ int timer_group_count;
+ int timer_callpath_count;
+ int timer_call_data_count;
+ int counter_count;
+ int counter_value_count;
+ int primary_metadata_count;
+ int secondary_metadata_count;
+ // arrays of data for this trial
+ struct taudb_metric* metrics;
+ struct taudb_thread* threads;
+ struct taudb_timer* timers;
+ struct taudb_timer_group* timer_groups;
+ struct taudb_timer_callpath* timer_callpaths;
+ struct taudb_timer_call_data* timer_call_data;
+ struct taudb_counter* counters;
+ struct taudb_counter_value* counter_values;
+ struct taudb_primary_metadata* primary_metadata;
+ struct taudb_secondary_metadata* secondary_metadata;
+} TAUDB_TRIAL;
+
+/*********************************************/
+/* data dimensions */
+/*********************************************/
+
+typedef struct taudb_thread {
+ int id; // database id, also key to hash
+ struct taudb_trial* trial;
+ int node_rank;
+ int context_rank;
+ int thread_rank;
+ int index;
+ int secondary_metadata_count;
+ struct taudb_secondary_metadata* secondary_metadata;
+ UT_hash_handle hh;
+} TAUDB_THREAD;
+
+/* metrics are things like TIME, PAPI counters, and derived metrics. */
+
+typedef struct taudb_metric {
+ int id; // database value, also key to hash
+ char* name;
+ boolean derived;
+ UT_hash_handle hh;
+} TAUDB_METRIC;
+
+/* timers are interval timers, capturing some interval value.  for callpath or
+   phase profiles, the parent refers to the calling function or phase. */
+
+typedef struct taudb_timer {
+ int id; // database value, also key to hash
+ struct taudb_trial* trial;
+ char* name;
+ char* short_name;
+ char* source_file;
+ int line_number;
+ int line_number_end;
+ int column_number;
+ int column_number_end;
+ int group_count;
+ int parameter_count;
+ struct taudb_timer_group* groups;
+ struct taudb_timer_parameter* parameters;
+ UT_hash_handle hh;
+} TAUDB_TIMER;
+
+/*********************************************/
+/* timer related structures  */
+/*********************************************/
+
+/* timer groups are the groups such as tau_default,
    mpi, openmp, tau_phase, tau_callpath, tau_param, etc. 
    this mapping table allows for nxn mappings between timers
    and groups */
 
 typedef struct taudb_timer_group {
- int id;
- int timer;
+ int id; // database reference, and hash key
  char* name;
+ int timer_count;
+ struct taudb_timer* timers;
+ UT_hash_handle hh;
 } TAUDB_TIMER_GROUP;
 
 /* timer parameters are parameter based profile values. 
@@ -78,38 +167,71 @@ typedef struct taudb_timer_group {
 */
 
 typedef struct taudb_timer_parameter {
- int id;
+ int id; // database reference, and hash key
  char* name;
  char* value;
+ UT_hash_handle hh;
 } TAUDB_TIMER_PARAMETER;
 
-/* timers are interval timers, capturing some interval value.  for callpath or
-   phase profiles, the parent refers to the calling function or phase. */
+/* callpath objects contain the merged dynamic callgraph tree seen
+ * during execution */
 
-typedef struct taudb_timer {
- int id;
- int trial;
+typedef struct taudb_timer_callpath {
+ int id; // link back to database, and hash key
+ struct taudb_timer* timer; // which timer is this?
+ struct taudb_timer_callpath *parent; // callgraph parent
+ UT_hash_handle hh;
+} TAUDB_TIMER_CALLPATH;
+
+/* timer_call_data objects are observations of a node of the callgraph
+   for one of the threads. */
+
+typedef struct taudb_timer_call_data {
+ int id; // link back to database
+ struct taudb_timer_callpath *timer_callpath; // link back to database
+ struct taudb_thread *thread; // link back to database, roundabout way
+ char *key; // hash table key - thread:timer_string (all names)
+ int calls;
+ int subroutines;
+ char* timestamp;
+ int timer_value_count;
+ struct taudb_timer_value* timer_values;
+ UT_hash_handle hh;
+} TAUDB_TIMER_CALL_DATA;
+
+/* finally, timer_values are specific measurements during one of the
+   observations of the node of the callgraph on a thread. */
+
+typedef struct taudb_timer_value {
+ struct taudb_metric* metric; 
+ double inclusive;
+ double exclusive;
+ double inclusive_percentage;
+ double exclusive_percentage;
+ double sum_exclusive_squared;
+ char *key; // hash table key - thread:timer_string:metric (all names)
+ UT_hash_handle hh;
+} TAUDB_TIMER_VALUE;
+
+/*********************************************/
+/* counter related structures  */
+/*********************************************/
+
+/* counters measure some counted value. */
+
+typedef struct taudb_counter {
+ int id; // database reference
+ struct taudb_trial* trial;
  char* name;
- char* short_name;
- char* source_file;
- int line_number;
- int line_number_end;
- int column_number;
- int column_number_end;
- int child_count;
- int group_count;
- int parameter_count;
- struct taudb_timer* children; // self-referencing pointer
- struct taudb_timer* parent; // self-referencing pointer, only one parent
- TAUDB_TIMER_GROUP* groups;
- TAUDB_TIMER_PARAMETER* parameters;
- TAUDB_TIMER_VALUE* values;
-} TAUDB_TIMER;
+} TAUDB_COUNTER;
 
 /* counters are atomic counters, not just interval timers */
 
 typedef struct taudb_counter_value {
- int id;
+ struct taudb_counter* counter; // the counter we are measuring
+ struct taudb_thread* thread;   // where this measurement is
+ struct taudb_timer_callpath* context; // the calling context (can be null)
+ char* timestamp; // timestamp in case we are in a snapshot or something
  int sample_count;
  double maximum_value;
  double minimum_value;
@@ -117,37 +239,9 @@ typedef struct taudb_counter_value {
  double standard_deviation;
 } TAUDB_COUNTER_VALUE;
 
-/* counter groups are the groups of counters. This table
-   allows for NxN mappings of counters to groups. */
-
-typedef struct taudb_counter_group {
- int id;
- int counter;
- char*  name;
-} TAUDB_COUNTER_GROUP;
-
-/* counters measure some counted value. */
-
-typedef struct taudb_counter {
- int id;
- int trial;
- char* name;
- char* source_file;
- int line_number;
- int group_count;
- int value_count;
- TAUDB_TIMER* parent;
- TAUDB_COUNTER_GROUP* groups;
- TAUDB_COUNTER_VALUE* values;
-} TAUDB_COUNTER;
-
-static int TAUDB_MEAN_WITHOUT_NULLS = -1;
-static int TAUDB_TOTAL = -2;
-static int TAUDB_STDDEV_WITHOUT_NULLS = -3;
-static int TAUDB_MIN = -4;
-static int TAUDB_MAX = -5;
-static int TAUDB_MEAN_WITH_NULLS = -6;
-static int TAUDB_STDDEV_WITH_NULLS = -7;
+/*********************************************/
+/* metadata related structures  */
+/*********************************************/
 
 /* primary metadata is metadata that is not nested, does not
    contain unique data for each thread. */
@@ -155,6 +249,7 @@ static int TAUDB_STDDEV_WITH_NULLS = -7;
 typedef struct taudb_primary_metadata {
  char* name;
  char* value;
+ UT_hash_handle hh; // uses the name as the key
 } TAUDB_PRIMARY_METADATA;
 
 /* primary metadata is metadata that could be nested, could
@@ -162,82 +257,32 @@ typedef struct taudb_primary_metadata {
 
 typedef struct taudb_secondary_metadata {
  int id; // link back to database
- int trial; // link back to database
- int timer; // link back to database
- int thread; // link back to database
+ struct taudb_timer_call_data* timer_call_data; 
+ struct taudb_thread* thread; 
+ struct taudb_secondary_metadata* parent; // self-referencing 
+ int num_values; // can have arrays of data
  char* name;
  char** value;
- int num_values;
  int child_count;
  struct taudb_secondary_metadata* children; // self-referencing 
+ char* key;
+ UT_hash_handle hh; // uses the key as a compound key
 } TAUDB_SECONDARY_METADATA;
 
-typedef struct taudb_thread {
- int id;
- int trial;
- int node_rank;
- int context_rank;
- int thread_rank;
- int index;
- int secondary_metadata_count;
- TAUDB_SECONDARY_METADATA* secondary_metadata;
-} TAUDB_THREAD;
-
-/* metrics are things like num_calls, num_subroutines, TIME, PAPI
-   counters, and derived metrics. */
-
-typedef struct taudb_metric {
- int id;
- int trial;
- char* name;
- boolean derived;
-} TAUDB_METRIC;
-
-/* trials are the top level structure */
-
-typedef struct taudb_trial {
- int id;
- char* name;
- char* collection_date;
- int data_source;
- int node_count;
- int contexts_per_node;
- int threads_per_context;
- int metric_count;
- int thread_count;
- int timer_count;
- int callpath_count;
- int value_count;
- int callpath_stat_count;
- int value_stat_count;
- int counter_count;
- int primary_metadata_count;
- int secondary_metadata_count;
- TAUDB_METRIC* metrics;
- TAUDB_THREAD* threads;
- TAUDB_TIMER* timers;
- TAUDB_COUNTER* counters;
- TAUDB_TIMER_CALLPATH* timer_callpaths;
- TAUDB_TIMER_VALUE* timer_values;
- TAUDB_TIMER_CALLPATH* timer_callpath_stats;
- TAUDB_TIMER_VALUE* timer_value_stats;
- TAUDB_COUNTER_VALUE* counter_values;
- TAUDB_PRIMARY_METADATA* primary_metadata;
- TAUDB_SECONDARY_METADATA* secondary_metadata;
-} TAUDB_TRIAL;
+/* these are for supporting the older schema */
 
 typedef struct perfdmf_experiment {
  int id;
  char* name;
  int primary_metadata_count;
- TAUDB_PRIMARY_METADATA* primary_metadata;
+ struct taudb_primary_metadata* primary_metadata;
 } PERFDMF_EXPERIMENT;
 
 typedef struct perfdmf_application {
  int id;
  char* name;
  int primary_metadata_count;
- TAUDB_PRIMARY_METADATA* primary_metadata;
+ struct taudb_primary_metadata* primary_metadata;
 } PERFDMF_APPLICATION;
 
 #endif // TAUDB_STRUCTS_H

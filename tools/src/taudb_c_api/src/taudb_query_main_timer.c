@@ -75,7 +75,7 @@ TAUDB_TIMER* taudb_query_main_timer(PGconn* connection, TAUDB_TRIAL* trial) {
 	  if (strcmp(PQfname(res, j), "id") == 0) {
 	    timers[i].id = atoi(PQgetvalue(res, i, j));
 	  } else if (strcmp(PQfname(res, j), "trial") == 0) {
-	    timers[i].trial = atoi(PQgetvalue(res, i, j));
+	    timers[i].trial = trial;
 	  } else if (strcmp(PQfname(res, j), "name") == 0) {
 	    //timers[i].name = PQgetvalue(res, i, j);
 		timers[i].name = taudb_create_and_copy_string(PQgetvalue(res,i,j));
@@ -106,13 +106,11 @@ TAUDB_TIMER* taudb_query_main_timer(PGconn* connection, TAUDB_TRIAL* trial) {
 		  timers[i].group_count = 1;
 	      TAUDB_TIMER_GROUP* groups = taudb_create_timer_groups(1);
 		  groups[0].id = 0;
-		  groups[0].timer = 0;
 		  groups[0].name = group;
 		  group = strtok(NULL, "|");
 		  while (group != NULL) {
 	        TAUDB_TIMER_GROUP* groups = taudb_resize_timer_groups(timers[i].group_count+1, groups);
 		    groups[timers[i].group_count].id = 0;
-		    groups[timers[i].group_count].timer = 0;
 		    groups[timers[i].group_count].name = group;
 		    timers[i].group_count++;
 		    group = strtok(NULL, "|");
