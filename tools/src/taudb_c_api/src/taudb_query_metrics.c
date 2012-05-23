@@ -73,21 +73,23 @@ TAUDB_METRIC* taudb_query_metrics(PGconn* connection, TAUDB_TRIAL* trial) {
   /* the rows */
   for (i = 0; i < PQntuples(res); i++)
   {
+    TAUDB_METRIC* metric = &(metrics[i]);
     /* the columns */
     for (j = 0; j < nFields; j++) {
 	  if (strcmp(PQfname(res, j), "id") == 0) {
-	    metrics[i].id = atoi(PQgetvalue(res, i, j));
+	    metric->id = atoi(PQgetvalue(res, i, j));
 	  } else if (strcmp(PQfname(res, j), "trial") == 0) {
-	    metrics[i].trial = atoi(PQgetvalue(res, i, j));
+	    //metric->trial = trial;
 	  } else if (strcmp(PQfname(res, j), "name") == 0) {
-	    metrics[i].name = taudb_create_and_copy_string(PQgetvalue(res,i,j));
+	    metric->name = taudb_create_and_copy_string(PQgetvalue(res,i,j));
 	  } else if (strcmp(PQfname(res, j), "derived") == 0) {
-	    metrics[i].derived = atoi(PQgetvalue(res, i, j));
+	    metric->derived = atoi(PQgetvalue(res, i, j));
 	  } else {
 	    printf("Error: unknown column '%s'\n", PQfname(res, j));
 	    taudb_exit_nicely(connection);
 	  }
 	} 
+	HASH_ADD_KEYPTR(hh, metrics, metric->name, strlen(metric->name), metric);
   }
 
   PQclear(res);
@@ -102,3 +104,22 @@ TAUDB_METRIC* taudb_query_metrics(PGconn* connection, TAUDB_TRIAL* trial) {
   
   return (metrics);
 }
+
+TAUDB_METRIC* taudb_get_metric(TAUDB_METRIC* metrics, const char* name) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("Calling taudb_get_metric(%p,%s)\n", metrics, name);
+#endif
+  if (metrics == NULL) {
+    fprintf(stderr, "Error: metric parameter null. Please provide a valid set of metrics.\n");
+    return NULL;
+  }
+  if (name == NULL) {
+    fprintf(stderr, "Error: name parameter null. Please provide a valid name.\n");
+    return NULL;
+  }
+
+  TAUDB_METRIC* metric = NULL;
+  HASH_FIND_STR(metrics, name, metric);
+  return metric;
+}
+

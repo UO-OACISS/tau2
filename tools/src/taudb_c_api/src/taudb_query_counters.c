@@ -81,46 +81,13 @@ TAUDB_COUNTER* taudb_query_counters(PGconn* connection, TAUDB_TRIAL* trial) {
 	  if (strcmp(PQfname(res, j), "id") == 0) {
 	    counters[i].id = atoi(PQgetvalue(res, i, j));
 	  } else if (strcmp(PQfname(res, j), "trial") == 0) {
-	    counters[i].trial = atoi(PQgetvalue(res, i, j));
+	    counters[i].trial = trial;
 	  } else if (strcmp(PQfname(res, j), "name") == 0) {
 	    //counters[i].name = PQgetvalue(res, i, j);
 		counters[i].name = taudb_create_and_copy_string(PQgetvalue(res,i,j));
 #ifdef TAUDB_DEBUG
         //printf("Got counter '%s'\n", counters[i].name);
 #endif
-	  } else if (strcmp(PQfname(res, j), "source_file") == 0) {
-	    //counters[i].source_file = PQgetvalue(res, i, j);
-		counters[i].source_file = taudb_create_and_copy_string(PQgetvalue(res,i,j));
-	  } else if (strcmp(PQfname(res, j), "line_number") == 0) {
-	    counters[i].line_number = atoi(PQgetvalue(res, i, j));
-	  } else if (strcmp(PQfname(res, j), "parent") == 0) {
-	    counters[i].line_number = atoi(PQgetvalue(res, i, j));
-	  } else if (strcmp(PQfname(res, j), "group_name") == 0) {
-	    // tokenize the string, something like 'TAU_USER|MPI|...'
-	    char* group_names = PQgetvalue(res, i, j);
-		char* group = strtok(group_names, "|");
-		if (group != NULL && strlen(group_names) > 0) {
-#ifdef TAUDB_DEBUG
-          //printf("Got counter groups '%s'\n", group_names);
-#endif
-		  counters[i].group_count = 1;
-	      TAUDB_COUNTER_GROUP* groups = taudb_create_counter_groups(1);
-		  groups[0].id = 0;
-		  groups[0].counter = 0;
-		  groups[0].name = group;
-		  group = strtok(NULL, "|");
-		  while (group != NULL) {
-	        TAUDB_COUNTER_GROUP* groups = taudb_resize_counter_groups(counters[i].group_count+1, groups);
-		    groups[counters[i].group_count].id = 0;
-		    groups[counters[i].group_count].counter = 0;
-		    groups[counters[i].group_count].name = group;
-		    counters[i].group_count++;
-		    group = strtok(NULL, "|");
-		  }
-		} else {
-		  counters[i].group_count = 0;
-		  counters[i].groups = NULL;
-		}
 	  } else {
 	    printf("Error: unknown column '%s'\n", PQfname(res, j));
 	    taudb_exit_nicely(connection);

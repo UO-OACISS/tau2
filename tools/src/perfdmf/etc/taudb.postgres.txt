@@ -1,44 +1,55 @@
 /* remove whatever indexes and tables are there already, in reverse order */
 
-DROP TABLE IF EXISTS taudb_view_parameter;
-DROP TABLE IF EXISTS taudb_view;
-
+/* indexes */
 DROP INDEX IF EXISTS counter_value_index;
 DROP INDEX IF EXISTS counter_trial_index;
-DROP TABLE IF EXISTS counter_value;
-DROP TABLE IF EXISTS counter;
-
 DROP INDEX IF EXISTS secondary_metadata_index;
 DROP INDEX IF EXISTS primary_metadata_index;
-DROP TABLE IF EXISTS secondary_metadata;
-DROP TABLE IF EXISTS primary_metadata;
-
 DROP INDEX IF EXISTS timer_value_index;
 DROP INDEX IF EXISTS timer_group_index;
 DROP INDEX IF EXISTS timer_trial_index;
+
+/* view related */
+DROP TABLE IF EXISTS taudb_view_parameter;
+DROP TABLE IF EXISTS taudb_view;
+/* counter related */
+DROP TABLE IF EXISTS counter_value;
+DROP TABLE IF EXISTS counter;
+/* metadata related */
+DROP TABLE IF EXISTS secondary_metadata;
+DROP TABLE IF EXISTS primary_metadata;
+/* timer related */
 DROP TABLE IF EXISTS timer_value;
 DROP TABLE IF EXISTS timer_callpath;
+DROP TABLE IF EXISTS timer_call_data;
 DROP TABLE IF EXISTS timer_group;
 DROP TABLE IF EXISTS timer_parameter;
+/* data dimensions */
 DROP TABLE IF EXISTS timer;
-
 DROP TABLE IF EXISTS metric;
 DROP TABLE IF EXISTS thread;
-DROP TABLE IF EXISTS derived_thread_type;
+/* the top level object */
 DROP TABLE IF EXISTS trial;
+/* static tables */
+DROP TABLE IF EXISTS derived_thread_type;
 DROP TABLE IF EXISTS data_source;
 DROP TABLE IF EXISTS schema_version;
 
+/****************************/
+/* CREATE THE STATIC TABLES */
+/****************************/
+
 CREATE TABLE schema_version (
- version     INT NOT NULL
+ version     INT NOT NULL,
+ description VARCHAR NOT NULL
 );
 /* IF THE SCHEMA IS MODIFIED, INCREMENT THIS VALUE */
 /* 0 = PERFDMF (ORIGINAL) */
 /* 1 = TAUDB (APRIL, 2012) */
-INSERT INTO schema_version (version) VALUES (1);
+INSERT INTO schema_version (version, description) 
+  VALUES (1, 'TAUdb redesign from Spring, 2012');
 
 /* These are our supported parsers. */
-
 CREATE TABLE data_source (
  id          INT UNIQUE NOT NULL,
  name        VARCHAR NOT NULL,
@@ -88,27 +99,6 @@ INSERT INTO data_source (name,id,description)
 INSERT INTO data_source (name,id,description) 
   VALUES ('Other',999,'Other profiles');
 
-/* trials are the top level table */
-
-CREATE TABLE trial (
- id                  SERIAL NOT NULL PRIMARY KEY,
- name                VARCHAR,
- /* extract this from the metadata */
- collection_date     TIMESTAMP,
- /* where did this data come from? */
- data_source         INT,
- /* number of processes */
- node_count          INT,
- /* legacy value */
- contexts_per_node   INT,
- /* how many threads per node? */
- threads_per_context INT,
- /* total number of threads */
- total_threads       INT,
- /* reference to the data source table. */
- FOREIGN KEY(data_source) REFERENCES data_source(id) ON DELETE NO ACTION ON UPDATE NO ACTION
-);
-
 /* threads make it convenient to identify timer values.
    Special values for thread_index:
    -1 mean (nulls ignored)
@@ -126,13 +116,53 @@ CREATE TABLE derived_thread_type (
  description VARCHAR NOT NULL
 );
 
-INSERT INTO derived_thread_type (id, name, description) VALUES (-1, 'MEAN', 'MEAN (nulls ignored)');
-INSERT INTO derived_thread_type (id, name, description) VALUES (-2, 'TOTAL', 'TOTAL');
-INSERT INTO derived_thread_type (id, name, description) VALUES (-3, 'STDDEV', 'STDDEV (nulls ignored)');
-INSERT INTO derived_thread_type (id, name, description) VALUES (-4, 'MIN', 'MIN');
-INSERT INTO derived_thread_type (id, name, description) VALUES (-5, 'MAX', 'MAX');
-INSERT INTO derived_thread_type (id, name, description) VALUES (-6, 'MEAN', 'MEAN (nulls are 0 value)');
-INSERT INTO derived_thread_type (id, name, description) VALUES (-7, 'STDDEV', 'STDDEV (nulls are 0 value)');
+INSERT INTO derived_thread_type (id, name, description) 
+  VALUES (-1, 'MEAN', 'MEAN (nulls ignored)');
+INSERT INTO derived_thread_type (id, name, description) 
+  VALUES (-2, 'TOTAL', 'TOTAL');
+INSERT INTO derived_thread_type (id, name, description) 
+  VALUES (-3, 'STDDEV', 'STDDEV (nulls ignored)');
+INSERT INTO derived_thread_type (id, name, description) 
+  VALUES (-4, 'MIN', 'MIN');
+INSERT INTO derived_thread_type (id, name, description) 
+  VALUES (-5, 'MAX', 'MAX');
+INSERT INTO derived_thread_type (id, name, description) 
+  VALUES (-6, 'MEAN', 'MEAN (nulls are 0 value)');
+INSERT INTO derived_thread_type (id, name, description) 
+  VALUES (-7, 'STDDEV', 'STDDEV (nulls are 0 value)');
+
+/**************************/
+/* CREATE THE TRIAL TABLE */
+/**************************/
+
+/* trials are the top level table */
+
+CREATE TABLE trial (
+ id                  SERIAL NOT NULL PRIMARY KEY,
+ name                VARCHAR,
+ /* extract this from the metadata */
+ collection_date     TIMESTAMP,
+ /* where did this data come from? */
+ data_source         INT,
+ /* number of processes */
+ node_count          INT,
+ /* legacy values - these are actually "max" values - i.e. not all nodes have
+  * this many threads */
+ contexts_per_node   INT,
+ /* how many threads per node? */
+ threads_per_context INT,
+ /* total number of threads */
+ total_threads       INT,
+ /* reference to the data source table. */
+ FOREIGN KEY(data_source) REFERENCES data_source(id) 
+   ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+/******************************/
+/* CREATE THE DATA DIMENSIONS */
+/******************************/
+
+/* threads are the "location" dimension */
 
 CREATE TABLE thread (
  id           SERIAL NOT NULL PRIMARY KEY,
@@ -146,21 +176,9 @@ CREATE TABLE thread (
  thread_rank  INT NOT NULL,
  /* thread index from 0 to N-1 */
  thread_index INT NOT NULL,
- FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+ FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE 
+   NO ACTION ON UPDATE NO ACTION
 );
-
-/* primary metadata is metadata that is not nested, does not
-   contain unique data for each thread. */
-
-CREATE TABLE primary_metadata (
- trial    INT NOT NULL,
- name     VARCHAR NOT NULL,
- value    VARCHAR,
- FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
-);
-
-/* create an index for faster queries against the primary_metadata table */
-CREATE INDEX primary_metadata_index on primary_metadata (trial, name);
 
 /* metrics are things like num_calls, num_subroutines, TIME, PAPI
    counters, and derived metrics. */
@@ -173,7 +191,8 @@ CREATE TABLE metric (
  name    VARCHAR NOT NULL,
  /* if this metric is derived by one of the tools */
  derived BOOLEAN NOT NULL DEFAULT FALSE,
- FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+ FOREIGN KEY(trial) REFERENCES trial(id)
+   ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 /* timers are timers, capturing some interval value.  For callpath or
@@ -197,39 +216,18 @@ CREATE TABLE timer (
  column_number     INT,
  /* column number of the end of the block of code */
  column_number_end INT,
- FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+ FOREIGN KEY(trial) REFERENCES trial(id)
+   ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 /* timer index on the trial and name columns */
 CREATE INDEX timer_trial_index on timer (trial, name);
 
-/* secondary metadata is metadata that could be nested, could
-   contain unique data for each thread, and could be an array. */
+/***********************************/
+/* CREATE THE TIMER RELATED TABLES */
+/***********************************/
 
-CREATE TABLE secondary_metadata (
- id       SERIAL NOT NULL PRIMARY KEY,
- /* trial this value belongs to */
- trial    INT NOT NULL,
- /* this metadata value could be associated with a thread */
- thread   INT,
- /* this metadata value could be associated with a timer */
- timer    INT,
- /* this metadata value could be a nested structure */
- parent   INT,
- name     VARCHAR NOT NULL,
- value    VARCHAR,
- /* this metadata value could be an array - so tokenize it */
- is_array BOOLEAN DEFAULT FALSE,
- FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
- FOREIGN KEY(thread) REFERENCES thread(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
- FOREIGN KEY(timer) REFERENCES timer(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
- FOREIGN KEY(parent) REFERENCES secondary_metadata(id) ON DELETE NO ACTION ON UPDATE NO ACTION
-);
-
-/* create an index for faster queries against the secondary_metadata table */
-CREATE INDEX secondary_metadata_index on secondary_metadata (trial, name, thread, parent);
-
-/* timers groups are the groups such as TAU_DEFAULT,
+/* timer groups are the groups such as TAU_DEFAULT,
    MPI, OPENMP, TAU_PHASE, TAU_CALLPATH, TAU_PARAM, etc. 
    This mapping table allows for NxN mappings between timers
    and groups */
@@ -237,70 +235,73 @@ CREATE INDEX secondary_metadata_index on secondary_metadata (trial, name, thread
 CREATE TABLE timer_group (
  timer INT,
  group_name  VARCHAR NOT NULL,
- FOREIGN KEY(timer) REFERENCES timer(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+ FOREIGN KEY(timer) REFERENCES timer(id)
+   ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 /* index for faster queries into groups */
 CREATE INDEX timer_group_index on timer_group (timer, group_name);
 
 /* timer parameters are parameter based profile values. 
-   an example is foo (x,y) where x=4 and y=10. In that example,
-   timer would be the index of the timer with the
-   name 'foo (x,y) <x>=<4> <y>=<10>'. This table would have two
-   entries, one for the x value and one for the y value.
-*/
+ * an example is foo (x,y) where x=4 and y=10. In that example,
+ * timer would be the index of the timer with the
+ * name 'foo (x,y) <x>=<4> <y>=<10>'. This table would have two
+ * entries, one for the x value and one for the y value. */
 
 CREATE TABLE timer_parameter (
  timer     INT,
  parameter_name  VARCHAR NOT NULL,
  parameter_value VARCHAR NOT NULL,
- FOREIGN KEY(timer) REFERENCES timer(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+ FOREIGN KEY(timer) REFERENCES timer(id)
+   ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
-/* counters measure some counted value. */
-
-CREATE TABLE counter (
- id          SERIAL      NOT NULL PRIMARY KEY,
- trial       INT         NOT NULL,
- name        VARCHAR        NOT NULL,
- /* where was this counter collected? Refer to the parent timer */
- parent      INT,
- FOREIGN KEY(trial) REFERENCES trial(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
- FOREIGN KEY(parent) REFERENCES timer(id) ON DELETE NO ACTION ON UPDATE NO ACTION
-);
-
-/* counter index on the trial and name columns */
-CREATE INDEX counter_trial_index on counter (trial, name);
-
-/* timer callpath have the information about when one timer was collected
-   on one thread. */
+/* timer callpath have the information about the call graph in a trial.
+ * If the profile is "flat", these will all have no parents. Otherwise,
+ * the parent points to a node in the callgraph, the calling timer 
+ * (function). */
 
 CREATE TABLE timer_callpath (
+ id        SERIAL NOT NULL PRIMARY KEY,
  /* what timer is this? */
- timer       INT NOT NULL,
+ timer     INT NOT NULL,
+ /* what is the parent timer? */
+ parent    INT,
+ FOREIGN KEY(timer) REFERENCES timer(id)
+   ON DELETE NO ACTION ON UPDATE NO ACTION,
+ FOREIGN KEY(parent) REFERENCES timer_callpath(id)
+   ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+/* timer_call_data records have the dynamic information for when a node
+ * in the callgraph is visited by a thread. If you are tracking dynamic
+ * callstacks, you would use the timestamp field. If you are storing
+ * snapshot data, you would use the timestamp field. */
+
+CREATE TABLE timer_call_data (
+ id          SERIAL NOT NULL PRIMARY KEY,
+ /* what callgraph node is this? */
+ timer_callpath       INT NOT NULL,
  /* what thread is this? */
  thread      INT NOT NULL,
  /* how many times this timer was called */
  calls       INT,
  /* how many subroutines this timer called */
  subroutines INT,
- /* what is the parent timer? */
- parent      INT,
  /* what is the timestamp? this is for supporting snapshots */
  timestamp   DOUBLE PRECISION,
- FOREIGN KEY(timer) REFERENCES timer(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
- FOREIGN KEY(thread) REFERENCES thread(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
- FOREIGN KEY(parent) REFERENCES timer(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+ FOREIGN KEY(timer_callpath) REFERENCES timer_callpath(id)
+   ON DELETE NO ACTION ON UPDATE NO ACTION,
+ FOREIGN KEY(thread) REFERENCES thread(id)
+   ON DELETE NO ACTION ON UPDATE NO ACTION,
 );
 
 /* timer values have the timer of one timer
-   on one thread for one metric. */
+   on one thread for one metric, at one location on the callgraph. */
 
 CREATE TABLE timer_value (
- /* what timer is this? */
- timer                 INT NOT NULL,
- /* what thread is this? */
- thread                INT NOT NULL,
+ /* what node in the callgraph and thread is this? */
+ timer_call_data       INT NOT NULL,
  /* what metric is this? */
  metric                INT NOT NULL,
  /* The inclusive value for this timer */
@@ -313,17 +314,37 @@ CREATE TABLE timer_value (
  exclusive_percent     DOUBLE PRECISION,
  /* The variance for this timer */
  sum_exclusive_squared DOUBLE PRECISION,
- FOREIGN KEY(timer) REFERENCES timer(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
- FOREIGN KEY(thread) REFERENCES thread(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
- FOREIGN KEY(metric) REFERENCES metric(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+ FOREIGN KEY(timer_call_data) REFERENCES timer_call_data(id)
+   ON DELETE NO ACTION ON UPDATE NO ACTION,
+ FOREIGN KEY(metric) REFERENCES metric(id)
+   ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 /* one metric, one thread, one timer */
-CREATE INDEX timer_value_index on timer_value (timer, metric, thread);
+CREATE INDEX timer_value_index on timer_value (timer_call_data, metric);
+
+/*************************************/
+/* CREATE THE COUNTER RELATED TABLES */
+/*************************************/
+
+/* counters measure some counted value. */
+
+CREATE TABLE counter (
+ id          SERIAL      NOT NULL PRIMARY KEY,
+ trial       INT         NOT NULL,
+ name        VARCHAR        NOT NULL,
+ FOREIGN KEY(trial) REFERENCES trial(id)
+   ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+/* counter index on the trial and name columns */
+CREATE INDEX counter_trial_index on counter (trial, name);
 
 CREATE TABLE counter_value (
  /* what counter is this? */
  counter            INT NOT NULL,
+ /* where in the callgraph? */
+ timer_callpath     INT,
  /* what thread is this? */
  thread             INT NOT NULL,
  /* The total number of samples */
@@ -336,12 +357,70 @@ CREATE TABLE counter_value (
  mean_value         DOUBLE PRECISION,
  /* The variance for this counter */
  standard_deviation DOUBLE PRECISION,
- FOREIGN KEY(counter) REFERENCES counter(id) ON DELETE NO ACTION ON UPDATE NO ACTION,
- FOREIGN KEY(thread) REFERENCES thread(id) ON DELETE NO ACTION ON UPDATE NO ACTION
+ FOREIGN KEY(counter) REFERENCES counter(id)
+   ON DELETE NO ACTION ON UPDATE NO ACTION,
+ FOREIGN KEY(timer_callpath) REFERENCES timer_callpath(id)
+   ON DELETE NO ACTION ON UPDATE NO ACTION,
+ FOREIGN KEY(thread) REFERENCES thread(id)
+   ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 /* one thread, one counter */
 CREATE INDEX counter_value_index on counter_value (counter, thread);
+
+/**************************************/
+/* CREATE THE METADATA RELATED TABLES */
+/**************************************/
+
+/* primary metadata is metadata that is not nested, does not
+   contain unique data for each thread. */
+
+CREATE TABLE primary_metadata (
+ trial    INT NOT NULL,
+ name     VARCHAR NOT NULL,
+ value    VARCHAR,
+ FOREIGN KEY(trial) REFERENCES trial(id)
+   ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+/* create an index for faster queries against the primary_metadata table */
+CREATE INDEX primary_metadata_index on primary_metadata (trial, name);
+
+/* secondary metadata is metadata that could be nested, could
+   contain unique data for each thread, and could be an array. */
+
+CREATE TABLE secondary_metadata (
+ id       SERIAL NOT NULL PRIMARY KEY,
+ /* trial this value belongs to */
+ trial    INT NOT NULL,
+ /* this metadata value could be associated with a thread */
+ thread   INT,
+ /* this metadata value could be associated with a timer that happened */
+ timer_call_data    INT,
+ /* this metadata value could be a nested structure */
+ parent   INT,
+ /* the name of the metadata field */
+ name     VARCHAR NOT NULL,
+ /* the value of the metadata field */
+ value    VARCHAR,
+ /* this metadata value could be an array - so tokenize it */
+ is_array BOOLEAN DEFAULT FALSE,
+ FOREIGN KEY(trial) REFERENCES trial(id)
+   ON DELETE NO ACTION ON UPDATE NO ACTION,
+ FOREIGN KEY(thread) REFERENCES thread(id)
+   ON DELETE NO ACTION ON UPDATE NO ACTION,
+ FOREIGN KEY(timer_call_data) REFERENCES timer_call_data(id)
+   ON DELETE NO ACTION ON UPDATE NO ACTION,
+ FOREIGN KEY(parent) REFERENCES secondary_metadata(id)
+   ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
+/* create an index for faster queries against the secondary_metadata table */
+CREATE INDEX secondary_metadata_index on secondary_metadata (trial, name, thread, parent);
+
+/**************************************/
+/* CREATE THE METADATA RELATED TABLES */
+/**************************************/
 
 /* this is the view table, which organizes and filters trials */
 create table taudb_view (
@@ -352,7 +431,8 @@ create table taudb_view (
 	name				VARCHAR	NOT NULL,
 	/* view conjoin type for parameters */
 	conjoin				VARCHAR	NOT NULL,
-	FOREIGN KEY (parent) REFERENCES taudb_view(id) ON DELETE CASCADE ON UPDATE CASCADE
+	FOREIGN KEY (parent) REFERENCES taudb_view(id)
+	  ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 create table taudb_view_parameter (
@@ -368,7 +448,8 @@ create table taudb_view_parameter (
 	operator			VARCHAR	NOT NULL,
 	/* the value for the where clause */
 	value				VARCHAR	NOT NULL,
-	FOREIGN KEY (taudb_view) REFERENCES taudb_view(id) ON DELETE CASCADE ON UPDATE CASCADE
+	FOREIGN KEY (taudb_view) REFERENCES taudb_view(id)
+	  ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 /* simple view of all trials */
@@ -377,3 +458,4 @@ INSERT INTO taudb_view (parent, name, conjoin) VALUES (NULL, 'All Trials', 'and'
 /* simple view where the metadata field "Application" is equal to "application" */
 INSERT INTO taudb_view (parent, name, conjoin) VALUES (NULL, 'Test View', 'and');
 INSERT INTO taudb_view_parameter (taudb_view, table_name, column_name, operator, value) VALUES (2, 'primary_metadata', 'Application', '=', 'application');
+

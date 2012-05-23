@@ -640,8 +640,15 @@ public class DBConnector implements DB {
             return -1;
         if (checkTable(dbMeta, "timer_callpath", columns.toArray()) != 0)
             return -1;
-
+        columns.clear();
+        columns.add("timer_callpath");
         columns.add("thread");
+        if (checkTable(dbMeta, "timer_call_data", columns.toArray()) != 0)
+            return -1;
+
+
+        columns.clear();
+        columns.add("timer_call_data");
         columns.add("metric");
         columns.add("inclusive_value");
         columns.add("exclusive_value");
