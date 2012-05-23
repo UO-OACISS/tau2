@@ -991,6 +991,9 @@ while [ $tempCounter -lt $numFiles ]; do
     if [ $preprocess == $TRUE ]; then
 	base=${base}.pp
         if [ $tauPreProcessor == $TRUE ]; then
+          if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
+	       optTauIncludes="$optIncludes -I${arrFileNameDirectory[$tempCounter]}"
+          fi
           if [ $groupType == $group_f_F ]; then
 	    cmdToExecute="${f90preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} $base$suf"
           else 
@@ -1019,9 +1022,15 @@ while [ $tempCounter -lt $numFiles ]; do
 	    pdtParserCmd="$pdtParserF ${arrFileName[$tempCounter]} $optPdtUser ${optPdtF95} $optIncludes"
 	    ;;
 	    $group_c | $group_upc)
+            if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
+	       optIncludes="$optIncludes -I${arrFileNameDirectory[$tempCounter]}"
+            fi
 	    pdtParserCmd="$optPdtDir/$pdtParserType ${arrFileName[$tempCounter]} $optPdtCFlags $optPdtUser $optDefines $optIncludes"
 	    ;;
 	    $group_C)
+            if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
+	       optIncludes="$optIncludes -I${arrFileNameDirectory[$tempCounter]}"
+            fi
 	    pdtParserCmd="$optPdtDir/$pdtParserType ${arrFileName[$tempCounter]} $optPdtCxxFlags $optPdtUser $optDefines $optIncludes"
 	    ;;
 	esac
@@ -1266,6 +1275,9 @@ if [ $gotoNextStep == $TRUE ]; then
 	    pdtCmd="$optPdtDir""/$pdtParserType"
 	    pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
 	    pdtCmd="$pdtCmd $optPdtCFlags $optPdtUser "
+            if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
+	       pdtCmd="$pdtCmd -I${arrFileNameDirectory[$tempCounter]}"
+            fi
 	    optCompile="$optCompile $optDefs $optIncludes"
 
             if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]} ]; then
@@ -1277,6 +1289,9 @@ if [ $gotoNextStep == $TRUE ]; then
 	    pdtCmd="$optPdtDir""/$pdtParserType"
 	    pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
 	    pdtCmd="$pdtCmd $optPdtCxxFlags $optPdtUser "
+            if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
+	       pdtCmd="$pdtCmd -I${arrFileNameDirectory[$tempCounter]}"
+            fi
 	    optCompile="$optCompile $optDefs $optIncludes"
 
             if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]} ]; then
