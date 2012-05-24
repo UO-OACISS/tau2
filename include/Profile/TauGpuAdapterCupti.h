@@ -32,7 +32,7 @@
 uint8_t *activityBuffer;
 CUpti_SubscriberHandle subscriber;
 
-void Tau_cupti_register_sync_event();
+void Tau_cupti_register_sync_event(CUcontext c);
 
 void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_CallbackId id, const void *params);
 
@@ -76,10 +76,10 @@ public:
 		sprintf(rtn, "%d/%d", streamId, correlationId);
 		return rtn;
 	};
-	x_uint64 id_p1() {
+	x_uint64 id_p1() const {
 		return correlationId;
 	};
-	x_uint64 id_p2() { 
+	x_uint64 id_p2() const { 
 		return RtsLayer::myNode(); 
 	};
 
