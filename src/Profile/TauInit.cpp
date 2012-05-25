@@ -137,9 +137,9 @@ extern "C" int Tau_get_backtrace_off_by_one_correction(void) {
 }
 
 // **CWL** Added to be consistent for operation with Comp_gnu.cpp
-#ifndef TAU_XLC
-extern int tauPrintAddr(int i, char *token1, unsigned long addr);
-#endif /* TAU_XLC */
+//#ifndef TAU_XLC
+extern int Tau_Backtrace_writeMetadata(int i, char *token1, unsigned long addr);
+//#endif /* TAU_XLC */
 
 #ifndef TAU_DISABLE_SIGUSR
 
@@ -254,11 +254,11 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context) {
 	}
       }
 // **CWL** For correct operation with Comp_gnu.cpp
-#ifndef TAU_XLC
+//#ifndef TAU_XLC
       // Map the addresses found in backtrace to actual code symbols and line information
       //   for addition to TAU_METADATA.
-      tauPrintAddr(i, names[i], addr);
-#endif /* TAU_XLC */
+      Tau_Backtrace_writeMetadata(i, names[i], addr);
+      //#endif /* TAU_XLC */
     }
     free(names);
   }
@@ -367,17 +367,24 @@ extern "C" int Tau_signal_initialization() {
 }
 
 #endif // TAU_DISABLE_SIGUSR
+static int initializing = 0;
+
+// used if other components want to guard against operating while TAU is being
+// initialized.
+extern "C" int Tau_init_initializingTAU() {
+	return initializing - tau_initialized;
+}
 
 extern "C" int Tau_init_initializeTAU() {
-  static int initialized = 0;
 
-  if (initialized) {
+	//protect against reentrancy
+  if (initializing) {
     return 0;
   }
 
   Tau_global_incr_insideTAU();
   
-  initialized = 1;
+  initializing = 1;
 
   /* initialize the Profiler stack */
   Tau_stack_initialization();
@@ -387,7 +394,7 @@ extern "C" int Tau_init_initializeTAU() {
 
 #ifdef TAU_EPILOG
   /* no more initialization necessary if using epilog/scalasca */
-  initialized = 1;
+  initializing = 1;
   Tau_init_epilog();
   return 0;
 #endif
@@ -395,7 +402,7 @@ extern "C" int Tau_init_initializeTAU() {
 
 #ifdef TAU_SCOREP
   /* no more initialization necessary if using SCOREP */
-  initialized = 1;
+  initializing = 1;
   SCOREP_Tau_InitMeasurement();
   SCOREP_Tau_RegisterExitCallback(Tau_profile_exit_all_threads); 
   return 0;
@@ -403,7 +410,7 @@ extern "C" int Tau_init_initializeTAU() {
 
 #ifdef TAU_VAMPIRTRACE
   /* no more initialization necessary if using vampirtrace */
-  initialized = 1;
+  initializing = 1;
   Tau_init_vampirTrace();
   return 0;
 #endif
@@ -440,7 +447,7 @@ extern "C" int Tau_init_initializeTAU() {
 
   /* TAU must me marked as initialized BEFORE Tau_compensate_initialize is called
      Otherwise re-entry to this function will take place and bad things will happen */
-  initialized = 1;
+  initializing = 1;
 
   /* initialize compensation */
   if (TauEnv_get_compensate()) {

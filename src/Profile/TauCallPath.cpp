@@ -199,9 +199,11 @@ void Profiler::CallPathStart(int tid) {
     
     // *CWL* - Send the path key off to be registered with CallSite discovery
     //         for later processing.
+#ifndef TAU_WINDOWS
     if (TauEnv_get_callsite() == 1) {
       CallSiteAddPath(comparison, tid);
     }
+#endif /* TAU_WINDOWS */
 
     map<TAU_CALLPATH_MAP_TYPE>::iterator it = TheCallPathMap().find(comparison);
     if (it == TheCallPathMap().end()) {

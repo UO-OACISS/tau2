@@ -543,8 +543,21 @@ done
 # this causes `make install` to clean, since configure has been run
 rm -f .clean
 
+testlastcon=""
+testlaststu=""
+if [ -f .last_config ] ; then
+    testlastcon=`cat .last_config`
+fi
+
+if [ -f .active_stub ] ; then
+ testlaststu=`cat .active_stub`
+fi
+
+
 if [ $default = false ] ; then
+    
     rm -f .last_config
+    rm -f .active_stub
 fi
 
 # This method will escape spaces so that you can use ./configure `cat .last_config` when you've used them
@@ -564,7 +577,11 @@ if [ $default = false ] ; then
 #    echo ""
 #    echo "$modargs"
 #    echo ""
-    echo "$modargs" >> .all_configs
+    if [ "$modargs" != "$testlastcon" ] ; then
+
+        echo "$modargs" >> .all_configs
+        
+    fi
     echo "$modargs" > .last_config
 fi
 
@@ -1429,19 +1446,6 @@ for arg in "$@"; do
         echo "Error: Cannot access JDK directory $jdkdir"
         exit 1
       fi 
-      jv=`${jdkdir}/bin/java -version 2>&1 | grep version | awk '{ print $3; }'| sed -e s/\"//g`
-      major=`echo $jv | sed 's/\([0-9]*\).*/\1/g'`
-      minor=`echo $jv | sed 's/'${major}'.\([0-9]*\).*/\1/g'`
-      #echo "major = $major, minor = $minor"
-      if [ $major = 1 ]
-      then
-        if [ $minor -lt 5 ]
-        then
-          echo "Error: Please specify a JDK version 1.5 or later to use JVMTI based instrumentation"
-	else
-	  fixmakeargs="$fixmakeargs JVMTI jdkdir=$jdkdir"
-        fi
-      fi
 
     shift
     ;;
@@ -2030,6 +2034,9 @@ chmod a+rx $BINTARGET/perfexplorer
 # install tau_gen_wrapper
 cp ${tauroot}/tools/src/tau_gen_wrapper $BINTARGET
 
+# install tau_macro.sh
+cp ${tauroot}/tools/src/tau_macro.sh $BINTARGET
+
 
 if [ ! -f $BINTARGET/jracy ] ; then 
     cd $BINTARGET/; ln -s paraprof jracy; cd ${tauroot}; 
@@ -2080,6 +2087,14 @@ case $machine in
 	gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
 	gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_cg.so.gz > $JARTARGET/libjogl_cg.so
 	gunzip -c tools/src/contrib/jogl/i386_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+
+	;;
+
+    arm_linux)
+	gunzip -c tools/src/contrib/jogl/arm_linux/jogl.jar.gz > $JARTARGET/jogl.jar
+	gunzip -c tools/src/contrib/jogl/arm_linux/libjogl.so.gz > $JARTARGET/libjogl.so
+	gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
+	gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
 
 	;;
     
@@ -2148,11 +2163,22 @@ case $machine in
 	gunzip -c tools/src/contrib/jogl/ppc64/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
 	;;
 
-    bgp|bgq)
+    bgp)
 	gunzip -c tools/src/contrib/jogl/ppc64/jogl.jar.gz > $JARTARGET/jogl.jar
 	gunzip -c tools/src/contrib/jogl/ppc64/libjogl.so.gz > $JARTARGET/libjogl.so
 	gunzip -c tools/src/contrib/jogl/ppc64/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
 	gunzip -c tools/src/contrib/jogl/ppc64/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+	;;
+    
+    bgq)
+	gunzip -c tools/src/contrib/jogl/bgq/jogl.jar.gz > $JARTARGET/jogl.jar
+	gunzip -c tools/src/contrib/jogl/bgq/libjogl.so.gz > $JARTARGET/libjogl.so
+	gunzip -c tools/src/contrib/jogl/bgq/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
+	gunzip -c tools/src/contrib/jogl/bgq/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+	if [ -r ${JAVA_HOME}/lib/ppc64/libjawt.so ]; then
+	  /bin/rm -f $JARTARGET/libjawt.so
+	  ln -s ${JAVA_HOME}/lib/ppc64/libjawt.so $JARTARGET/libjawt.so
+        fi
 	;;
     
     *)
@@ -2275,7 +2301,30 @@ if [ $tauarch = unknown -o $tauarch = none ]
     fi
 fi
 
-
+#detech the java version.
+if [ "x$java" = "xyes" ]
+then
+	if [ "x$machine" = "xapple" ]
+	then
+		#echo "${jdkdir}/Commands/java -version"
+		jv=`${jdkdir}/Commands/java -version 2>&1 | grep version | awk '{ print $3; }'| sed -e s/\"//g`
+	else
+		jv=`${jdkdir}/bin/java -version 2>&1 | grep version | awk '{ print $3; }'| sed -e s/\"//g`
+	fi
+	#echo "jv = $jv"
+	major=`echo $jv | sed 's/\([0-9]*\).*/\1/g'`
+	minor=`echo $jv | sed 's/'${major}'.\([0-9]*\).*/\1/g'`
+	#echo "major = $major, minor = $minor"
+	if [ "x$major" = "x1" ]
+	then
+		if [ $minor -lt 5 ]
+		then
+			echo "Error: Please specify a JDK version 1.5 or later to use JVMTI based instrumentation"
+		else
+			fixmakeargs="$fixmakeargs JVMTI jdkdir=$jdkdir"
+		fi
+	fi
+fi
 
 
 # use -m32 when specifying 32 bit on an Opteron/EM64T
@@ -2558,6 +2607,7 @@ case $machine in
             pathscale=yes
 	    fixmakeargs="$fixmakeargs COMPINST_GNU USE_PATHCC"
 	elif [ "x$PE_ENV" = xINTEL ] ; then
+	    intel=yes
 	    tauoptions="${tauoptions}-intel"
 	    default_fortran=intel
 	    turnbfdoff=yes
@@ -3285,8 +3335,19 @@ case $cxx_compiler in
       ;;
 
     mpicxx)
-	if [ $machine = bgp -o $machine = bgq ] ; then
+	if [ $machine = bgq ] ; then
+	    echo "Using GNU Compilers for BGQ"
+	    cxx_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx
+	    c_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc
+	    tauoptions="${tauoptions}-gnu"
+	elif [ $machine = bgp ] ; then
 	    echo "Using GNU Compilers for BGP"
+# CWL - 4.3.2 won't quite work out of the box. Requires LD_LIBRARY_PATH to
+#       be set appropriately to account for libgmp.so.10
+#	    cxx_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicxx
+#	    c_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicc
+	    cxx_compiler=/bgsys/drivers/ppcfloor/comm/bin/mpicxx
+	    c_compiler=/bgsys/drivers/ppcfloor/comm/bin/mpicc
 	    tauoptions="${tauoptions}-gnu"
 	else
 	    echo "ERROR Unknown C++ compiler: $cxx_compiler"
@@ -3986,8 +4047,13 @@ EOF
 	    if $c_compiler $orig_useropt tau_papi_test.o -I$papidir/include -shared -o libtau_papi_test.so $papidir/$papisubdir/libpapi.a 1> /dev/null 2>&1 ; then
               echo "PAPI library links properly"
             else 
-              echo "NOTE: libpapi.a can't be called in a TAU shared object. Using -DISABLESHARED"
-              fixmakeargs="$fixmakeargs NOSHARED"
+              if $c_compiler $orig_useropt tau_papi_test.o -I$papidir/include -shared -o libtau_papi_test.so $papidir/$papisubdir/libpapi.so 1> /dev/null 2>&1 ; then	
+              	echo "PAPI library links properly with .so"
+		fixmakeargs="$fixmakeargs CRAYCNL_PAPI_SHARED"
+              else
+                echo "NOTE: libpapi.a can't be called in a TAU shared object. Using -DISABLESHARED"
+                fixmakeargs="$fixmakeargs NOSHARED"
+              fi  
             fi
           fi 
 	  /bin/rm -f tau_papi_test.c tau_papi_test tau_papi_test.o
@@ -5270,7 +5336,7 @@ if [ $mpi = yes ] ; then
 	   echo "NOTE: OpenMPI configured with --disable_shared"
 	   mpilibrary='-lmpi_cxx -lmpi -lopen-rte -lopen-pal -lrt -ldl -lpthread -lutil'
 	   # check for -libverbs, sometimes necessary with OpenMPI
-           if [ $machine != bgq ] ; then 
+           if [ $machine != bgq -a $machine != craycnl ] ; then 
 	     if [ -r /usr/lib64/libibverbs.a -o -r /usr/lib64/libibverbs.so ] ; then 
 	       mpilibrary="$mpilibrary -libverbs"
 	     fi
@@ -5352,7 +5418,7 @@ if [ $mpi = yes ] ; then
 	      mpiflibargs="$mpiflibargs -lrt"
 	  fi
 	  
-          if [ $machine != bgq ] ; then
+          if [ $machine != bgq -a $machine != craycnl ] ; then
 	    if [ -r /usr/lib64/libibverbs.a -o -r /usr/lib64/libibverbs.so ] ; then 
               #echo "libibverbs found"
 	      mpilibargs="$mpilibargs -libverbs"
@@ -5682,19 +5748,19 @@ if [ "x$bfd" = "xyes" ] ; then
 				make install
 
 
-			else
-			  if [ $machine = "bgq" ]; then
+			elif [ $machine = "bgq" ]; then
 				./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-gcc CXX=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-g++ --disable-nls --disable-werror
 				# have to run make twice, first one dies with illegal instruction
 				make
 				make
 				make install
-
-                          else 
+			elif [ $machine = "rs6000" -o  $machine = "ibm64" ]; then
+				./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir --disable-nls --disable-werror  --disable-largefile
+				make && make install
+                        else 
 				./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir --disable-nls --disable-werror
 				make && make install
-                          fi
-			fi
+                        fi
 			cp include/demangle.h $bfddir/include
 			cp include/libiberty.h $bfddir/include
 			
@@ -6742,6 +6808,21 @@ if [ $cxx_compiler = icpc ] ; then
     fixmakeargs="$fixmakeargs ifortlibdir=$libdir" 
 fi
 
+if [ $cxx_compiler = icpc ] ; then
+    echo "Checking version (12.x) of Intel compilers"
+    version=`icpc -v 2>&1`
+    t="Version 12"
+    t1="icpc version 12"
+    testarg=${version#$t}
+    testarg1=${version#$t1}
+
+    if [ "y$testarg" != "y$version" -o "y$testarg1" != "y$version" ] ; then
+        echo "Intel v12.x compilers found"
+        fixmakeargs="$fixmakeargs INTEL12FIX"
+    else
+	echo "Intel v12.x compilers NOT found"
+    fi
+fi
 
 if [ $ibmxlc = yes ] ; then
   if [ $openmp = yes ] ; then
@@ -7131,7 +7212,7 @@ if [ $mpi = yes ] ; then
     exampleslist="$exampleslist NPB2.3/config/make.def"
   fi
   if [ $openmp = yes ] ; then 
-    exampleslist="$exampleslist openmpi/Makefile"
+    exampleslist="$exampleslist openmpi/stommel/Makefile"
   fi
 fi
 
@@ -7208,6 +7289,25 @@ else
   STUB="$tautoplevel/$architecture/lib/Makefile.tau$tauoptions"
 fi
 
+
+if [ $default = false ] ; then
+    rm -f .active_stub
+fi
+
+if [ $default = false ] ; then
+#    echo "configured with:"
+#    echo ""
+#    echo "$modargs"
+#    echo ""
+
+    if [ "$STUB" != "$testlaststu" ] ; then
+
+        echo "$STUB" >> .active_stubs
+        
+    fi
+    echo "$STUB" > .active_stub
+fi
+
 # replace TAU_MAKEFILE in TAU.h
 cat ./include/TAU.h | sed -e "s@^#define TAU_MAKEFILE.*\$@#define TAU_MAKEFILE \"$STUB\"@" > TAU.h
 rm ./include/TAU.h
@@ -7221,7 +7321,7 @@ fi
 
 if [ $tauprefix != unknown ] ; then
   cp -r examples ${tauprefix}
-  cp .all_configs .last_config ${tauprefix}
+  cp .all_configs .last_config .active_stubs .active_stub ${tauprefix}
 fi
 
 

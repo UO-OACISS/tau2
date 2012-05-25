@@ -296,7 +296,7 @@ void TauStartOpenMPRegionTimer(my_pomp2_region *r, int index)
     FunctionInfo **flist = new FunctionInfo*[NUM_OMP_TYPES];
     for (int i=0; i < NUM_OMP_TYPES; i++) {
       char rname[1024], rtype[1024];
-      sprintf(rname, "%s %s (%s)", r->name, r->sub_name, omp_names[i]);
+      sprintf(rname, "%s (%s)",  r->sub_name, omp_names[i]);
       sprintf(rtype, "[OpenMP location: file:%s <%d, %d>]",
 	      r->start_file_name, r->start_line_1, r->end_line_1);
       
@@ -306,7 +306,7 @@ void TauStartOpenMPRegionTimer(my_pomp2_region *r, int index)
     r->data = (void*)flist;
 #else
     char rname[1024], rtype[1024];
-    sprintf(rname, "%s %s", r->rtype, r->name);
+    sprintf(rname, "%s", r->rtype);
     sprintf(rtype, "[OpenMP location: file:%s <%d, %d>]",
 	    r->start_file_name, r->start_line_1, r->end_line_1);
     
@@ -320,7 +320,10 @@ void TauStartOpenMPRegionTimer(my_pomp2_region *r, int index)
 #else 
   FunctionInfo *f = (FunctionInfo *)r->data;
 #endif
-  Tau_start_timer(f, 0, Tau_create_tid());
+//Have to register new threads with global threading framework.
+//Doesn't matter if this is called by a thread more than once 
+  Tau_create_tid();
+  Tau_start_timer(f, 0, Tau_get_tid());
   
   omp_unset_lock(&tau_ompregdescr_lock);
 }
