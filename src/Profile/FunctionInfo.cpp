@@ -236,6 +236,16 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 #else
 #ifdef TAU_SCOREP
   string tau_silc_name(string(Name)+" "+string(Type));
+if (strstr(ProfileGroupName, "TAU_PHASE") != NULL) {
+  FunctionId =  SCOREP_Tau_DefineRegion( tau_silc_name.c_str(),
+				   SCOREP_TAU_INVALID_SOURCE_FILE,
+				   SCOREP_TAU_INVALID_LINE_NO,
+				   SCOREP_TAU_INVALID_LINE_NO,
+				   SCOREP_TAU_ADAPTER_COMPILER,
+                                   SCOREP_TAU_REGION_PHASE
+				   );
+
+}else{
   FunctionId =  SCOREP_Tau_DefineRegion( tau_silc_name.c_str(),
 				   SCOREP_TAU_INVALID_SOURCE_FILE,
 				   SCOREP_TAU_INVALID_LINE_NO,
@@ -243,7 +253,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 				   SCOREP_TAU_ADAPTER_COMPILER,
 				   SCOREP_TAU_REGION_FUNCTION
 				   );
-
+}
 #endif /* TAU_SCOREP */
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
