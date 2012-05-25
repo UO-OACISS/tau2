@@ -69,8 +69,8 @@ char* cudaRuntimeGpuId::printId() const
 		sprintf(rtn, "[%d:%d]", device, stream);
 		return rtn;
 }
-x_uint64 cudaRuntimeGpuId::id_p1(void) { return device; }
-x_uint64 cudaRuntimeGpuId::id_p2(void) { return (x_uint64) stream; }
+x_uint64 cudaRuntimeGpuId::id_p1(void) const { return device; }
+x_uint64 cudaRuntimeGpuId::id_p2(void) const { return (x_uint64) stream; }
 cudaStream_t cudaRuntimeGpuId::getStream() { return stream; }
 int cudaRuntimeGpuId::getDevice() { return device; }
 CUcontext cudaRuntimeGpuId::getContext() { return 0; }
@@ -126,8 +126,8 @@ char* cudaDriverGpuId::printId() const
 		sprintf(rtn, "%d:%d:%d (Device,Context,Stream)", device, context, stream);
 		return rtn;
 }
-x_uint64 cudaDriverGpuId::id_p1(void) { return device; }
-x_uint64 cudaDriverGpuId::id_p2(void) { return (x_uint64) stream; }
+x_uint64 cudaDriverGpuId::id_p1(void) const { return device; }
+x_uint64 cudaDriverGpuId::id_p2(void) const { return (x_uint64) stream; }
 cudaStream_t cudaDriverGpuId::getStream() { return stream; }
 int cudaDriverGpuId::getDevice() { return device; }
 CUcontext cudaDriverGpuId::getContext() { return context; }

@@ -18,10 +18,12 @@
 // This needs to go at the top because the ordering of include files here
 // makes a difference on Cray systems and we get an error with RTLD_NEXT 
 // not being defined
+// *CWL* - Update 5/25/2012: This workaround appears to no longer be
+//         required and now makes Cray's PGI software stack fail.
 #ifdef TAU_PTHREAD_PRELOAD
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
+//#ifndef _GNU_SOURCE
+//#define _GNU_SOURCE
+//#endif
 #include <dlfcn.h>
 #endif
 
