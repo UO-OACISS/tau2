@@ -936,6 +936,13 @@ for arg in "$@" ; do
     fi
 done
 
+
+tempCounter=0
+while [ $tempCounter -lt $numFiles ]; do
+	arrBaseFileName[$tempCounter]=${arrFileName[$tempCounter]}
+	tempCounter=tempCounter+1
+done
+
 echoIfDebug "Using $optCompInstOption $optCompInstFortranOption for compiling Fortran Code"
 
 # on the first pass, we use PDT, on the 2nd, compiler instrumentation (if available and not disabled)
@@ -950,6 +957,8 @@ if [ $passCount == 1 ] ; then
     optCompInst=$TRUE
     gotoNextStep=$TRUE
     disablePdtStep=$TRUE
+    preprocess=$FALSE
+    arrFileName=${arrBaseFileName}
     errorStatus=0
 fi
 passCount=passCount+1;
