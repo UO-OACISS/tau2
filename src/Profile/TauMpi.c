@@ -25,6 +25,8 @@
 #include <stdio.h>
 #include <mpi.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <signal.h>
 
 #include <string.h>
 
@@ -1492,7 +1494,12 @@ int errorcode;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Abort()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
-  
+ 
+#ifndef TAU_WINDOWS 
+  if (TauEnv_get_track_signals()) {
+    kill(getpid(), SIGABRT);
+  }
+#endif
   TAU_TRACK_COMM(comm);
   TAU_PROFILE_EXIT("MPI_Abort");
   returnVal = PMPI_Abort( comm, errorcode );
@@ -1650,12 +1657,14 @@ int  MPI_Finalize(  )
   }
 #endif /* TAU_BGP */
 
+#ifndef TAU_WINDOWS
   /* Shutdown EBS after Finalize to allow Profiles to be written out
      correctly. Also allows profile merging (or unification) to be
      done correctly. */
   if (TauEnv_get_callsite()) {
     finalizeCallSites_if_necessary();
   }
+#endif /* TAU_WINDOWS */
 
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
@@ -1723,7 +1732,9 @@ char *** argv;
   
   returnVal = PMPI_Init( argc, argv );
 #ifndef TAU_WINDOWS
-  Tau_sampling_init_if_necessary();
+  if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_init_if_necessary();
+  }
 #endif /* TAU_WINDOWS */
 #ifndef TAU_DISABLE_SIGUSR
   Tau_signal_initialization(); 

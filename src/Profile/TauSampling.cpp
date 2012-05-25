@@ -258,8 +258,11 @@ unsigned long get_pc(void *p) {
 # elif __powerpc__
   // it could possibly be "link" - but that is supposed to be the return address.
   pc = (unsigned long)sc->regs->nip;
+# elif __arm__
+  pc = (unsigned long)sc->arm_pc;
 # else
-#  error "profile handler not defined for this architecture"
+  issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on unknown platform.\n");
+  return 0;
 # endif /* TAU_BGP */
   return pc;
 #endif /* sun */
@@ -1238,6 +1241,17 @@ int Tau_sampling_init(int tid) {
   // only thread 0 sets up the timer interrupts.
   if ((strcmp(TauEnv_get_ebs_source(), "itimer") == 0) && (tid == 0)) {
     struct sigaction act;
+
+    // If TIME isn't on the list of TAU_METRICS, then do not sample.
+    // Eventually, we could employ a best-effort attempt to add 
+    //   TAU_EBS_SOURCE to TAU_METRICS if TAU_EBS_SOURCE is not a 
+    //   a member of TAU_METRICS.
+    int checkVal = TauMetrics_getMetricIndexFromName("TIME");
+    if (checkVal == -1) {
+      fprintf(stderr, "TAU Sampling Warning: TIME is not a member of TAU_METRICS. No sampling is enabled.\n");
+      return -1;
+    }
+
     memset(&act, 0, sizeof(struct sigaction));
     ret = sigemptyset(&act.sa_mask);
     if (ret != 0) {
