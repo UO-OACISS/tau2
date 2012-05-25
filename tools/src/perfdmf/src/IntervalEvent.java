@@ -41,15 +41,30 @@ import edu.uoregon.tau.perfdmf.database.DB;
  * @see		IntervalLocationProfile
  */
 public class IntervalEvent {
-    private int intervalEventID;
+    private int intervalEventID; // for 2012 schema, doubles as timer ID
     private String name;
     private String group;
     private int trialID;
     private IntervalLocationProfile meanSummary = null;
     private IntervalLocationProfile totalSummary = null;
     private DatabaseAPI dataSession = null;
+    private int timerCallpathID;
 
-    public IntervalEvent(DatabaseAPI dataSession) {
+    /**
+	 * @return the timerCallpathID
+	 */
+	public int getTimerCallpathID() {
+		return timerCallpathID;
+	}
+
+	/**
+	 * @param timerCallpathID the timerCallpathID to set
+	 */
+	public void setTimerCallpathID(int timerCallpathID) {
+		this.timerCallpathID = timerCallpathID;
+	}
+
+	public IntervalEvent(DatabaseAPI dataSession) {
         this.dataSession = dataSession;
     }
 
@@ -254,10 +269,26 @@ public class IntervalEvent {
     	 Vector<IntervalEvent> events = new Vector<IntervalEvent>();
          // create a string to hit the database
          StringBuffer buf = new StringBuffer();
-         buf.append("SELECT t.id, t.name,  g.group_name, t.trial as trial ");
-         buf.append("from " + db.getSchemaPrefix() + "timer t ");
-         buf.append("LEFT JOIN " + db.getSchemaPrefix() + "timer_group g");
-         buf.append(" ON t.id=g.timer ");
+         buf.append("with recursive cp (id, parent, timer, name) as (");
+         /* flat timer part */
+         buf.append("SELECT tc.id, tc.parent, tc.timer, t.name FROM ");
+         buf.append(db.getSchemaPrefix());
+         buf.append("timer_callpath tc INNER JOIN ");
+         buf.append(db.getSchemaPrefix());
+         buf.append("timer t on tc.timer = t.id WHERE tc.parent is null ");
+         buf.append("UNION ALL ");
+         /* recursive part */
+         buf.append("SELECT d.id, d.parent, d.timer, concat (cp.name, ' -> ', dt.name) FROM ");
+         buf.append(db.getSchemaPrefix());
+         buf.append("timer_callpath AS d JOIN cp on (d.parent = cp.id) JOIN ");
+         buf.append(db.getSchemaPrefix());
+         buf.append("timer dt on d.timer = dt.id) ");
+         buf.append("SELECT distinct cp.id, cp.timer, cp.name, t.short_name, t.source_file, t.line_number, ");
+         buf.append("t.line_number_end, t.column_number, t.column_number_end, g.group_name, t.trial FROM cp join ");
+         buf.append(db.getSchemaPrefix());
+         buf.append("timer t on cp.timer = t.id join ");
+         buf.append(db.getSchemaPrefix());
+         buf.append("timer_group g on t.id = g.timer ");
          buf.append(whereClause);
 
          if (db.getDBType().compareTo("oracle") == 0) {
@@ -270,32 +301,34 @@ public class IntervalEvent {
              buf.append(" order by name asc ");
          }
 
-
          // get the results
          try {
              ResultSet resultSet = db.executeQuery(buf.toString());
              //IntervalEvent tmpIntervalEvent = null;
              while (resultSet.next() != false) {
             	 if(events.size()>0){
-                	 IntervalEvent last = events.get(events.size()-1);
-                     IntervalEvent event = new IntervalEvent(dataSession);
-                     event.setID(resultSet.getInt(1));
-                     event.setName(resultSet.getString(2));
-                     event.setGroup(resultSet.getString(3));
-                     event.setTrialID(resultSet.getInt(4));
-                     if(last.getID() == event.getID()){
-                    	String group = last.getGroup() +"|"+ event.getGroup(); 
-                    	last.setGroup(group);
-                     }else{
-                     events.addElement(event);
-                     }
+            		 IntervalEvent last = events.get(events.size()-1);
+            		 IntervalEvent event = new IntervalEvent(dataSession);
+            		 event.setID(resultSet.getInt(1));  // this is the timer_callpath ID
+            		 event.setTimerCallpathID(resultSet.getInt(2));
+            		 event.setName(resultSet.getString(3));
+            		 // ignore other columns for now... this needs refactoring!
+            		 event.setGroup(resultSet.getString(10));
+            		 event.setTrialID(resultSet.getInt(11));
+            		 if(last.getID() == event.getID()){
+            			 String group = last.getGroup() +"|"+ event.getGroup(); 
+            			 last.setGroup(group);
+            		 }else{
+            			 events.addElement(event);
+            		 }
             	 }else{
-                 IntervalEvent event = new IntervalEvent(dataSession);
-                 event.setID(resultSet.getInt(1));
-                 event.setName(resultSet.getString(2));
-                 event.setGroup(resultSet.getString(3));
-                 event.setTrialID(resultSet.getInt(4));
-                 events.addElement(event);
+            		 IntervalEvent event = new IntervalEvent(dataSession);
+            		 event.setID(resultSet.getInt(1));
+            		 event.setTimerCallpathID(resultSet.getInt(2));
+            		 event.setName(resultSet.getString(3));
+            		 event.setGroup(resultSet.getString(10));
+            		 event.setTrialID(resultSet.getInt(11));
+            		 events.addElement(event);
             	 }
              }
              resultSet.close();

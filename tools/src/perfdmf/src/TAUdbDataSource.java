@@ -12,12 +12,12 @@ import edu.uoregon.tau.perfdmf.database.DB;
  */
 public class TAUdbDataSource extends DataSource {
 
-    private DatabaseAPI databaseAPI;  
+    private TAUdbDatabaseAPI databaseAPI;  
 
     public TAUdbDataSource(DatabaseAPI dbAPI) {
         super();
         this.setMetrics(new Vector<Metric>());
-        this.databaseAPI = dbAPI;
+        this.databaseAPI = new TAUdbDatabaseAPI(dbAPI);
     }
 
     public int getProgress() {
@@ -43,8 +43,6 @@ public class TAUdbDataSource extends DataSource {
 				"left outer join " +
 				db.getSchemaPrefix() +"thread h on v.thread = h.id left outer join" +
 				db.getSchemaPrefix() +" timer_callpath cp on v.timer = cp.timer and v.thread = cp.thread where h.node_rank > -1 and t.trial = "+trialID;
-
-
 
         /*
          1 - timer
@@ -195,71 +193,5 @@ public class TAUdbDataSource extends DataSource {
         //TODO Deal with derived data.  Most of it will be saved in the DB?
         generateDerivedData();
     }
-//    public static List<Trial> getTrialsForTAUdbView (List<RMIView> views, DB db) {
-//		//PerfExplorerOutput.println("getTrialsForView()...");
-//		List<Trial> trials = new ArrayList<Trial>();
-//		try {
-//			
-//			StringBuilder sql = new StringBuilder();
-//			sql.append("select conjoin, taudb_view, table_name, column_name, operator, value from taudb_view left outer join taudb_view_parameter on taudb_view.id = taudb_view_parameter.taudb_view where taudb_view.id in (");
-//			for (int i = 0 ; i < views.size(); i++) {
-//				if (i > 0)
-//					sql.append(",?");
-//				else
-//					sql.append("?");
-//			}
-//			sql.append(") order by taudb_view.id");
-//			PreparedStatement statement = db.prepareStatement(sql.toString());
-//			int i = 1;
-//			for (RMIView view : views) {
-//				statement.setInt(1, Integer.valueOf(view.getField("ID")));
-//				i++;
-//			}
-//			ResultSet results = statement.executeQuery();
-//			
-//			StringBuilder whereClause = new StringBuilder();
-//			StringBuilder joinClause = new StringBuilder();
-//			int currentView = 0;
-//			int alias = 0;
-//			String conjoin = " where ";
-//			while (results.next() != false) {
-//				int viewid = results.getInt(2);
-//				String tableName = results.getString(3);
-//				if (tableName == null) 
-//					break;
-//				String columnName = results.getString(4);
-//				String operator = results.getString(5);
-//				String value = results.getString(6);
-//				if ((currentView > 0) && (currentView != viewid)) {
-//					conjoin = " and ";
-//				} else if (currentView == viewid) {
-//					conjoin = " " + results.getString(1) + " ";
-//				}
-//				if (tableName.equalsIgnoreCase("trial")) {
-//					whereClause.append(conjoin + tableName + "." + columnName + " " + operator + " " + "'" + value + "'");
-//				} else {
-//					// otherwise, we have primary_metadata or secondary_metadata
-//					joinClause.append(" left outer join " + tableName + " t" + alias + " on t.id = t" + alias + ".trial");
-//					whereClause.append(conjoin + "t" + alias + "." + columnName);
-//					if (db.getDBType().compareTo("db2") == 0) {
-//						whereClause.append(" as varchar(256)) ");
-//					}
-//					whereClause.append(" " + operator + " " + "'" + value + "'");
-//				}
-//				alias++;
-//				currentView = viewid;
-//			}
-//			statement.close();
-//			
-//			//PerfExplorerOutput.println(whereClause.toString());
-//			trials = Trial.getTrialList(db, joinClause.toString() + " " + whereClause.toString(), false);
-//		} catch (Exception e) {
-//			String error = "ERROR: Couldn't select views from the database!";
-//			System.err.println(error);
-//			e.printStackTrace();
-//		}
-//		return trials;
-//	}
-
 
 }
