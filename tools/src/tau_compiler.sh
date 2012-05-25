@@ -24,6 +24,8 @@ declare -i pdbFileSpecified=$FALSE
 declare -i optResetUsed=$FALSE
 declare -i optDetectMemoryLeaks=$FALSE
 
+declare -i optPdtF95ResetSpecified=$FALSE
+
 declare -i isVerbose=$FALSE
 declare -i isCXXUsedForC=$FALSE
 
@@ -538,6 +540,7 @@ for arg in "$@" ; do
 			;;
 		    -optPdtF95Reset*)
 			optPdtF95=${arg#"-optPdtF95Reset="} 
+			optPdtF95ResetSpecified=$TRUE
 			echoIfDebug "\tParsing F95 Options are: $optPdtF95" 
 			;;
 		    -optVerbose*)
@@ -791,12 +794,16 @@ for arg in "$@" ; do
 
 	    # IBM fixed and free
 	    -qfixed*)
-		optPdtF95="$optPdtF95 -R fixed"
+                if [ $optPdtF95ResetSpecified == $FALSE ]; then
+                  optPdtF95="$optPdtF95 -R fixed"
+                fi
 		argsRemaining="$argsRemaining $arg"
 		;;
 
 	    -qfree*)
-		optPdtF95="$optPdtF95 -R free"
+                if [ $optPdtF95ResetSpecified == $FALSE ]; then
+                  optPdtF95="$optPdtF95 -R free"
+                fi
 		argsRemaining="$argsRemaining $arg"
 		;;
 
@@ -991,6 +998,9 @@ while [ $tempCounter -lt $numFiles ]; do
     if [ $preprocess == $TRUE ]; then
 	base=${base}.pp
         if [ $tauPreProcessor == $TRUE ]; then
+          if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
+	       optTauIncludes="$optIncludes -I${arrFileNameDirectory[$tempCounter]}"
+          fi
           if [ $groupType == $group_f_F ]; then
 	    cmdToExecute="${f90preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} $base$suf"
           else 
@@ -1019,9 +1029,15 @@ while [ $tempCounter -lt $numFiles ]; do
 	    pdtParserCmd="$pdtParserF ${arrFileName[$tempCounter]} $optPdtUser ${optPdtF95} $optIncludes"
 	    ;;
 	    $group_c | $group_upc)
+            if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
+	       optIncludes="$optIncludes -I${arrFileNameDirectory[$tempCounter]}"
+            fi
 	    pdtParserCmd="$optPdtDir/$pdtParserType ${arrFileName[$tempCounter]} $optPdtCFlags $optPdtUser $optDefines $optIncludes"
 	    ;;
 	    $group_C)
+            if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
+	       optIncludes="$optIncludes -I${arrFileNameDirectory[$tempCounter]}"
+            fi
 	    pdtParserCmd="$optPdtDir/$pdtParserType ${arrFileName[$tempCounter]} $optPdtCxxFlags $optPdtUser $optDefines $optIncludes"
 	    ;;
 	esac
@@ -1179,7 +1195,7 @@ if [ $numFiles == 0 ]; then
       
         #cmdCreatePompRegions="${NM} ${listOfObjectFiles} | ${GREP} -i POMP2_Init_regions | ${AWK} -f ${AWK_SCRIPT} > pompregions.c"
 
-cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${listOfObjectFiles} | `${optOpari2ConfigTool} --egrep` -i \"pomp2_init_regions\" | `${optOpari2ConfigTool} --egrep` \" T \" | `${optOpari2ConfigTool} --awk-cmd` -f `${optOpari2ConfigTool} --awk-script` > pompregions.c"
+cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${listOfObjectFiles} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_regions |  `${optOpari2ConfigTool} --awk-cmd` -f `${optOpari2ConfigTool} --awk-script` > pompregions.c"
 
 
         evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
@@ -1266,6 +1282,9 @@ if [ $gotoNextStep == $TRUE ]; then
 	    pdtCmd="$optPdtDir""/$pdtParserType"
 	    pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
 	    pdtCmd="$pdtCmd $optPdtCFlags $optPdtUser "
+            if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
+	       pdtCmd="$pdtCmd -I${arrFileNameDirectory[$tempCounter]}"
+            fi
 	    optCompile="$optCompile $optDefs $optIncludes"
 
             if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]} ]; then
@@ -1277,6 +1296,9 @@ if [ $gotoNextStep == $TRUE ]; then
 	    pdtCmd="$optPdtDir""/$pdtParserType"
 	    pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
 	    pdtCmd="$pdtCmd $optPdtCxxFlags $optPdtUser "
+            if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
+	       pdtCmd="$pdtCmd -I${arrFileNameDirectory[$tempCounter]}"
+            fi
 	    optCompile="$optCompile $optDefs $optIncludes"
 
             if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]} ]; then
@@ -1651,7 +1673,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	if [ $opari2 == $TRUE ]; then
             evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
       
-cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} | `${optOpari2ConfigTool} --egrep` -i \"pomp2_init_regions\" | `${optOpari2ConfigTool} --egrep` \" T \" | `${optOpari2ConfigTool} --awk-cmd` -f `${optOpari2ConfigTool} --awk-script` > pompregions.c"
+cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_regions |  `${optOpari2ConfigTool} --awk-cmd` -f `${optOpari2ConfigTool} --awk-script` > pompregions.c"
         evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
         cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
         evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
