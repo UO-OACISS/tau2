@@ -266,17 +266,21 @@ void Profiler::Start(int tid) {
   /********************************************************************************/
 
   // An initialization of sorts. Call Paths (if any) will update this.
+#ifndef TAU_WINDOWS
   if (TauEnv_get_callsite() == 1) {
     CallSiteAddPath(NULL, tid);
   }
+#endif /* TAU_WINDOWS */
 
   if (TauEnv_get_callpath()) {
     CallPathStart(tid);
   }
 
+#ifndef TAU_WINDOWS
   if (TauEnv_get_callsite() == 1) {
     CallSiteStart(tid);
   }
+#endif
 
 #ifdef TAU_PROFILEPARAM
   ProfileParamFunction = NULL;
@@ -512,9 +516,11 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
     CallPathStop(TotalTime, tid);
   }
 
+#ifndef TAU_WINDOWS
   if (TauEnv_get_callsite()) {
     CallSiteStop(TotalTime, tid);
   }
+#endif /* TAU_WINDOWS */
 
 #ifdef RENCI_STFF
   if (TauEnv_get_callpath()) {
