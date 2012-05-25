@@ -137,9 +137,9 @@ extern "C" int Tau_get_backtrace_off_by_one_correction(void) {
 }
 
 // **CWL** Added to be consistent for operation with Comp_gnu.cpp
-#ifndef TAU_XLC
-extern int tauPrintAddr(int i, char *token1, unsigned long addr);
-#endif /* TAU_XLC */
+//#ifndef TAU_XLC
+extern int Tau_Backtrace_writeMetadata(int i, char *token1, unsigned long addr);
+//#endif /* TAU_XLC */
 
 #ifndef TAU_DISABLE_SIGUSR
 
@@ -254,11 +254,11 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context) {
 	}
       }
 // **CWL** For correct operation with Comp_gnu.cpp
-#ifndef TAU_XLC
+//#ifndef TAU_XLC
       // Map the addresses found in backtrace to actual code symbols and line information
       //   for addition to TAU_METADATA.
-      tauPrintAddr(i, names[i], addr);
-#endif /* TAU_XLC */
+      Tau_Backtrace_writeMetadata(i, names[i], addr);
+      //#endif /* TAU_XLC */
     }
     free(names);
   }

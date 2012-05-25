@@ -1,3 +1,4 @@
+#ifndef TAU_WINDOWS
 #include <Profile/Profiler.h>
 #include <Profile/TauMmapMemMgr.h>
 
@@ -192,4 +193,4 @@ void *Tau_MemMgr_malloc(int tid, size_t size) {
  
   return addr;
 }
-
+#endif

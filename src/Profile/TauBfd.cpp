@@ -45,11 +45,13 @@
 using namespace std;
 
 static char const * Tau_bfd_internal_getExecutablePath();
+static void Tau_bfd_internal_reinitializeBfd();
 
 struct TauBfdModule
 {
 	TauBfdModule() :
 		bfdImage(NULL), syms(NULL), nr_all_syms(0), bfdOpen(false),
+		lastResolveFailed(false),
 		processCode(TAU_BFD_SYMTAB_NOT_LOADED)
 	{ }
 
@@ -58,7 +60,22 @@ struct TauBfdModule
 		delete bfdImage;
 	}
 
+        // Meant for consumption by the Intel12 workaround only.
+        void markLastResult(bool success) {
+	  lastResolveFailed = !success;
+        }
+
 	bool loadSymbolTable(char const * path) {
+
+#ifdef TAU_INTEL12
+		// Nasty hack because Intel 12 is broken with Bfd 2.2x and
+		//   requires a complete reset of BFD. The latter's internals
+		//   becomes corrupted on a bad address from Intel 12 binaries.
+	  if (lastResolveFailed) {
+	    Tau_bfd_internal_reinitializeBfd();
+	    bfdOpen = false;
+	  }
+#endif /* TAU_INTEL12 */
 
 		// Executable symbol table is already loaded.
 		if (bfdOpen) return true;
@@ -102,6 +119,7 @@ struct TauBfdModule
 
 	// For EBS book-keeping
 	bool bfdOpen; // once open, symtabs are loaded and never released
+        bool lastResolveFailed;
 
 	// Remember the result of the last process to avoid reprocessing
 	int processCode;
@@ -191,6 +209,9 @@ std::vector<TauBfdUnit*>& ThebfdUnits(void)
 //
 // Main interface functions
 //
+void Tau_bfd_internal_reinitializeBfd() {
+  bfd_init();
+}
 
 void Tau_bfd_initializeBfdIfNecessary() {
   static bool bfdInitialized = false;
@@ -465,6 +486,11 @@ Tau_bfd_getAddressMap(tau_bfd_handle_t handle, unsigned long probe_addr)
 static char const *
 Tau_bfd_internal_tryDemangle(bfd * bfdImage, char const * funcname)
 {
+	/* Intel version 12 compilers output symbol with the extraneous '.text.'
+	 * prepended to the mangled name - S.B. */
+	if (strncmp(funcname, ".text.", 6) == 0) {
+		funcname = &funcname[6];
+	}
 	char const * demangled = NULL;
 #if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
 	if(funcname && bfdImage) {
@@ -549,12 +575,25 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle,
 
 	bool resolved = data.found && (info.funcname != NULL);
 	if (resolved) {
+#ifdef TAU_INTEL12
+	  // For Intel 12 workaround. Inform the module that the previous resolve
+	  //   was successful.
+	  module->markLastResult(true);
+#endif /* TAU_INTEL12 */
 		info.funcname = Tau_bfd_internal_tryDemangle(
 				module->bfdImage, info.funcname);
 		if(info.filename == NULL) {
 			info.filename = "(unknown)";
+#ifdef TAU_INTEL12
+	  module->markLastResult(false);
+#endif /* TAU_INTEL12 */
 		}
 	} else {
+#ifdef TAU_INTEL12
+	  // For Intel 12 workaround. Inform the module that the previous resolve
+	  //   failed.
+	  module->markLastResult(false);
+#endif /* TAU_INTEL12 */
 		// Couldn't resolve the address.
 		// Fill in fields as best we can.
 		if(info.funcname == NULL) {

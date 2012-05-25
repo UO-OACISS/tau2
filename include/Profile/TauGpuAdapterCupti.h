@@ -62,9 +62,9 @@ map<uint32_t, FunctionInfo*> functionInfoMap;
 
 class cuptiGpuId : public gpuId
 {
+public:
 	uint32_t streamId;
 	uint32_t correlationId;
-public:
 
 	cuptiGpuId(uint32_t s, uint32_t c) { streamId = s; correlationId = c; };
 	cuptiGpuId *getCopy() const { 
@@ -109,6 +109,8 @@ public:
 	//{
 	//};
 	cuptiRecord(const char* n, uint32_t stream, uint32_t correlation, TauGpuContextMap *m) : eventId(n, &cuptiGpuId(stream, correlation), getParentFunction(correlation), m) {};
+	
+	cuptiRecord(const char* n, cuptiGpuId *id, TauGpuContextMap *m) : eventId(n, id, getParentFunction(id->correlationId), m) {};
 
 	FunctionInfo* getParentFunction(uint32_t id)
 	{
