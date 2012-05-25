@@ -7212,7 +7212,7 @@ if [ $mpi = yes ] ; then
     exampleslist="$exampleslist NPB2.3/config/make.def"
   fi
   if [ $openmp = yes ] ; then 
-    exampleslist="$exampleslist openmpi/Makefile"
+    exampleslist="$exampleslist openmpi/stommel/Makefile"
   fi
 fi
 
