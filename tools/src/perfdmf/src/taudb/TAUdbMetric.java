@@ -13,17 +13,17 @@ import java.util.Map;
  * @author khuck
  *
  */
-public class Metric {
+public class TAUdbMetric {
 	private int id = 0;
-	private Trial trial = null;
-	private Session session = null;
+	private TAUdbTrial trial = null;
+	private TAUdbSession session = null;
 	private String name = null;
 	private boolean derived = false;
 
 	/**
 	 * 
 	 */
-	public Metric(Session session, int id, Trial trial, String name, boolean derived) {
+	public TAUdbMetric(TAUdbSession session, int id, TAUdbTrial trial, String name, boolean derived) {
 		this.id = id;
 		this.trial = trial;
 		this.session = session;
@@ -52,28 +52,28 @@ public class Metric {
 	/**
 	 * @return the trial
 	 */
-	public Trial getTrial() {
+	public TAUdbTrial getTrial() {
 		return trial;
 	}
 
 	/**
 	 * @param trial the trial to set
 	 */
-	public void setTrial(Trial trial) {
+	public void setTrial(TAUdbTrial trial) {
 		this.trial = trial;
 	}
 
 	/**
 	 * @return the session
 	 */
-	public Session getSession() {
+	public TAUdbSession getSession() {
 		return session;
 	}
 
 	/**
 	 * @param session the session to set
 	 */
-	public void setSession(Session session) {
+	public void setSession(TAUdbSession session) {
 		this.session = session;
 	}
 
@@ -105,12 +105,12 @@ public class Metric {
 		this.derived = derived;
 	}
 
-	public static Map<Integer, Metric> getMetrics(Session session, Trial trial) {
+	public static Map<Integer, TAUdbMetric> getMetrics(TAUdbSession session, TAUdbTrial trial) {
 		// if the trial has already loaded them, don't get them again.
 		if (trial.getMetrics() != null && trial.getMetrics().size() > 0) {
 			return trial.getMetrics();
 		}
-		Map<Integer, Metric> metrics = new HashMap<Integer, Metric>();
+		Map<Integer, TAUdbMetric> metrics = new HashMap<Integer, TAUdbMetric>();
 		String query = "select id, name, derived from metric where trial = ?";
 		try {
 			PreparedStatement statement = session.getDB().prepareStatement(query);
@@ -120,7 +120,7 @@ public class Metric {
 				Integer id = results.getInt(1);
 				String name = results.getString(2);
 				boolean derived = results.getBoolean(3);
-				Metric metric = new Metric (session, id, trial, name, derived);
+				TAUdbMetric metric = new TAUdbMetric (session, id, trial, name, derived);
 				metrics.put(id, metric);
 			}
 			results.close();
@@ -138,11 +138,11 @@ public class Metric {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		Session session = new Session("callpath", false);
-		Trial trial = Trial.getTrial(session, 1, false);
-		Map<Integer, Metric> metrics = Metric.getMetrics(session, trial);
+		TAUdbSession session = new TAUdbSession("callpath", false);
+		TAUdbTrial trial = TAUdbTrial.getTrial(session, 1, false);
+		Map<Integer, TAUdbMetric> metrics = TAUdbMetric.getMetrics(session, trial);
 		for (Integer id : metrics.keySet()) {
-			Metric metric = metrics.get(id);
+			TAUdbMetric metric = metrics.get(id);
 			System.out.println(metric.toString());
 		}
 		session.close();

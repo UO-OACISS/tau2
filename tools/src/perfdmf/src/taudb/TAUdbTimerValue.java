@@ -13,11 +13,11 @@ import java.util.List;
  * @author khuck
  *
  */
-public class TimerValue {
-	private Session session = null;
-	private Trial trial = null;
-	private TimerCall timerCall = null;
-	private Metric metric = null;
+public class TAUdbTimerValue {
+	private TAUdbSession session = null;
+	private TAUdbTrial trial = null;
+	private TAUdbTimerCall timerCall = null;
+	private TAUdbMetric metric = null;
 	private double inclusive = 0.0;
 	private double exclusive = 0.0;
 	private double inclusivePercent = 0.0;
@@ -27,7 +27,7 @@ public class TimerValue {
 	/**
 	 * 
 	 */
-	public TimerValue(Session session, Trial trial, TimerCall timerCall, Metric metric, double inclusive, double exclusive, double inclusivePercent, double exclusivePercent, double sumExclusiveSquared) {
+	public TAUdbTimerValue(TAUdbSession session, TAUdbTrial trial, TAUdbTimerCall timerCall, TAUdbMetric metric, double inclusive, double exclusive, double inclusivePercent, double exclusivePercent, double sumExclusiveSquared) {
 		this.session = session;
 		this.trial = trial;
 		this.timerCall = timerCall;
@@ -42,56 +42,56 @@ public class TimerValue {
 	/**
 	 * @return the session
 	 */
-	public Session getSession() {
+	public TAUdbSession getSession() {
 		return session;
 	}
 
 	/**
 	 * @param session the session to set
 	 */
-	public void setSession(Session session) {
+	public void setSession(TAUdbSession session) {
 		this.session = session;
 	}
 
 	/**
 	 * @return the trial
 	 */
-	public Trial getTrial() {
+	public TAUdbTrial getTrial() {
 		return trial;
 	}
 
 	/**
 	 * @param trial the trial to set
 	 */
-	public void setTrial(Trial trial) {
+	public void setTrial(TAUdbTrial trial) {
 		this.trial = trial;
 	}
 
 	/**
 	 * @return the timerCall
 	 */
-	public TimerCall getTimerCall() {
+	public TAUdbTimerCall getTimerCall() {
 		return timerCall;
 	}
 
 	/**
 	 * @param timerCall the timerCall to set
 	 */
-	public void setTimerCall(TimerCall timerCall) {
+	public void setTimerCall(TAUdbTimerCall timerCall) {
 		this.timerCall = timerCall;
 	}
 
 	/**
 	 * @return the metric
 	 */
-	public Metric getMetric() {
+	public TAUdbMetric getMetric() {
 		return metric;
 	}
 
 	/**
 	 * @param metric the metric to set
 	 */
-	public void setMetric(Metric metric) {
+	public void setMetric(TAUdbMetric metric) {
 		this.metric = metric;
 	}
 
@@ -172,12 +172,12 @@ public class TimerValue {
 		return b.toString();
 	}
 	
-	public static List<TimerValue> getTimerValues(Session session, Trial trial) {
+	public static List<TAUdbTimerValue> getTimerValues(TAUdbSession session, TAUdbTrial trial) {
 		// if the trial has already loaded them, don't get them again.
 		if (trial.getTimerValues() != null && trial.getTimerValues().size() > 0) {
 			return trial.getTimerValues();
 		}
-		List<TimerValue> timerValues = new ArrayList<TimerValue>();
+		List<TAUdbTimerValue> timerValues = new ArrayList<TAUdbTimerValue>();
 		String query = "select v.timer_call_data, v.metric, v.inclusive_value, v.exclusive_value, v.inclusive_percent, v.exclusive_percent, v.sum_exclusive_squared from timer_value v join timer_call_data td on v.timer_call_data = td.id join thread t on td.thread = t.id where t.trial = ?";
 		try {
 			PreparedStatement statement = session.getDB().prepareStatement(query);
@@ -191,9 +191,9 @@ public class TimerValue {
 				double inclusivePercent = results.getDouble(5);
 				double exclusivePercent = results.getDouble(6);
 				double sumExclusiveSquared = results.getDouble(7);
-				TimerCall timerCall = trial.getTimerCalls().get(timerCallID);
-				Metric metric = trial.getMetrics().get(metricID);
-				TimerValue timerValue = new TimerValue (session, trial, timerCall, metric, inclusive, exclusive, inclusivePercent, exclusivePercent, sumExclusiveSquared);
+				TAUdbTimerCall timerCall = trial.getTimerCalls().get(timerCallID);
+				TAUdbMetric metric = trial.getMetrics().get(metricID);
+				TAUdbTimerValue timerValue = new TAUdbTimerValue (session, trial, timerCall, metric, inclusive, exclusive, inclusivePercent, exclusivePercent, sumExclusiveSquared);
 				timerValues.add(timerValue);
 			}
 			results.close();
@@ -211,10 +211,10 @@ public class TimerValue {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		Session session = new Session("callpath", false);
-		Trial trial = Trial.getTrial(session, 1, true);
-		List<TimerValue> timerValues = TimerValue.getTimerValues(session, trial);
-		for (TimerValue timerValue : timerValues) {
+		TAUdbSession session = new TAUdbSession("callpath", false);
+		TAUdbTrial trial = TAUdbTrial.getTrial(session, 1, true);
+		List<TAUdbTimerValue> timerValues = TAUdbTimerValue.getTimerValues(session, trial);
+		for (TAUdbTimerValue timerValue : timerValues) {
 			System.out.println(timerValue.toString());
 		}
 		session.close();

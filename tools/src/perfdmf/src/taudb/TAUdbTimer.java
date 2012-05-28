@@ -15,10 +15,10 @@ import java.util.Set;
  * @author khuck
  *
  */
-public class Timer {
-	private Session session = null;
+public class TAUdbTimer {
+	private TAUdbSession session = null;
 	private int id = 0;
-	private Trial trial = null;
+	private TAUdbTrial trial = null;
 	private String name = null;
 	private String shortName = null;
 	private String sourceFile = null;
@@ -26,17 +26,17 @@ public class Timer {
 	private int lineNumberEnd = 0;
 	private int columnNumber = 0;
 	private int columnNumberEnd = 0;
-	private Set<TimerGroup> groups;
-	private Set<TimerParameter> parameters;
+	private Set<TAUdbTimerGroup> groups;
+	private Set<TAUdbTimerParameter> parameters;
 
 	/**
 	 * 
 	 */
-	public Timer() {
+	public TAUdbTimer() {
 		super();
 	}
 	
-	public Timer(Session session, int id, Trial trial, String name, String shortName, String sourceFile, int lineNumber, int lineNumberEnd, int columnNumber, int columnNumberEnd) {
+	public TAUdbTimer(TAUdbSession session, int id, TAUdbTrial trial, String name, String shortName, String sourceFile, int lineNumber, int lineNumberEnd, int columnNumber, int columnNumberEnd) {
 		this.session = session;
 		this.id = id;
 		this.trial = trial;
@@ -47,21 +47,21 @@ public class Timer {
 		this.lineNumberEnd = lineNumberEnd;
 		this.columnNumber = columnNumber;
 		this.columnNumberEnd = columnNumberEnd;
-		this.groups = new HashSet<TimerGroup>();
-		this.parameters = new HashSet<TimerParameter>();
+		this.groups = new HashSet<TAUdbTimerGroup>();
+		this.parameters = new HashSet<TAUdbTimerParameter>();
 	}
 	
 	/**
 	 * @return the session
 	 */
-	public Session getSession() {
+	public TAUdbSession getSession() {
 		return session;
 	}
 
 	/**
 	 * @param session the session to set
 	 */
-	public void setSession(Session session) {
+	public void setSession(TAUdbSession session) {
 		this.session = session;
 	}
 
@@ -82,14 +82,14 @@ public class Timer {
 	/**
 	 * @return the trial
 	 */
-	public Trial getTrial() {
+	public TAUdbTrial getTrial() {
 		return trial;
 	}
 
 	/**
 	 * @param trial the trial to set
 	 */
-	public void setTrial(Trial trial) {
+	public void setTrial(TAUdbTrial trial) {
 		this.trial = trial;
 	}
 
@@ -191,28 +191,28 @@ public class Timer {
 		this.columnNumberEnd = columnNumberEnd;
 	}
 	
-	public void addGroup(TimerGroup group) {
+	public void addGroup(TAUdbTimerGroup group) {
 		this.groups.add(group);
 	}
 	
-	public void addParameter(TimerParameter parameter) {
+	public void addParameter(TAUdbTimerParameter parameter) {
 		this.parameters.add(parameter);
 	}
 
 	public String toString() {
 		StringBuilder b = new StringBuilder();
 		b.append("name:" + name + ",");
-		for (TimerGroup group : groups) {
+		for (TAUdbTimerGroup group : groups) {
 			b.append(group.toString());
 		}
-		for (TimerParameter parameter : parameters) {
+		for (TAUdbTimerParameter parameter : parameters) {
 			b.append(parameter.toString());
 		}
 		return b.toString();
 	}
 
-	public static Timer getTimer(Session session, Trial trial, int id) {
-		Timer timer = null;
+	public static TAUdbTimer getTimer(TAUdbSession session, TAUdbTrial trial, int id) {
+		TAUdbTimer timer = null;
 		String query = "select name, short_name, source_file, line_number, line_number_end, column_number, column_number_end from timer where id = ?;";
 		try {
 			PreparedStatement statement = session.getDB().prepareStatement(query);
@@ -226,7 +226,7 @@ public class Timer {
 				int lineNumberEnd = results.getInt(5);
 				int columnNumber = results.getInt(6);
 				int columnNumberEnd = results.getInt(7);
-				timer = new Timer (session, id, trial, name, shortName, sourceFile, lineNumber, lineNumberEnd, columnNumber, columnNumberEnd);
+				timer = new TAUdbTimer (session, id, trial, name, shortName, sourceFile, lineNumber, lineNumberEnd, columnNumber, columnNumberEnd);
 			}
 			results.close();
 			statement.close();
@@ -237,12 +237,12 @@ public class Timer {
 		return timer;
 	}
 
-	public static Map<Integer, Timer> getTimers(Session session, Trial trial) {
+	public static Map<Integer, TAUdbTimer> getTimers(TAUdbSession session, TAUdbTrial trial) {
 		// if the trial has already loaded them, don't get them again.
 		if (trial.getTimers() != null && trial.getTimers().size() > 0) {
 			return trial.getTimers();
 		}
-		Map<Integer, Timer> timers = new HashMap<Integer, Timer>();
+		Map<Integer, TAUdbTimer> timers = new HashMap<Integer, TAUdbTimer>();
 		String query = "select id, name, short_name, source_file, line_number, line_number_end, column_number, column_number_end from timer where trial = ?;";
 		try {
 			PreparedStatement statement = session.getDB().prepareStatement(query);
@@ -257,7 +257,7 @@ public class Timer {
 				int lineNumberEnd = results.getInt(6);
 				int columnNumber = results.getInt(7);
 				int columnNumberEnd = results.getInt(8);
-				Timer timer = new Timer (session, id, trial, name, shortName, sourceFile, lineNumber, lineNumberEnd, columnNumber, columnNumberEnd);
+				TAUdbTimer timer = new TAUdbTimer (session, id, trial, name, shortName, sourceFile, lineNumber, lineNumberEnd, columnNumber, columnNumberEnd);
 				timers.put(id, timer);
 			}
 			results.close();
@@ -267,7 +267,7 @@ public class Timer {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		TimerGroup.getTimerGroups(session, trial, timers);
+		TAUdbTimerGroup.getTimerGroups(session, trial, timers);
 		return timers;
 	}
 
@@ -276,11 +276,11 @@ public class Timer {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		Session session = new Session("callpath", false);
-		Trial trial = Trial.getTrial(session, 1, false);
-		Map<Integer, Timer> timers = Timer.getTimers(session, trial);
+		TAUdbSession session = new TAUdbSession("callpath", false);
+		TAUdbTrial trial = TAUdbTrial.getTrial(session, 1, false);
+		Map<Integer, TAUdbTimer> timers = TAUdbTimer.getTimers(session, trial);
 		for (Integer id : timers.keySet()) {
-			Timer timer = timers.get(id);
+			TAUdbTimer timer = timers.get(id);
 			System.out.println(timer.toString());
 		}
 		session.close();

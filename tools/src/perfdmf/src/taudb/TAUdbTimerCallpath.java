@@ -15,16 +15,16 @@ import edu.uoregon.tau.perfdmf.database.DB;
  * @author khuck
  *
  */
-public class TimerCallpath {
+public class TAUdbTimerCallpath {
 	private int id = 0;
-	private Timer timer = null;
-	private TimerCallpath parent = null;
+	private TAUdbTimer timer = null;
+	private TAUdbTimerCallpath parent = null;
 	private String name = null;
 
 	/**
 	 * 
 	 */
-	public TimerCallpath(Session session, int id, Timer timer, TimerCallpath parent, String name) {
+	public TAUdbTimerCallpath(TAUdbSession session, int id, TAUdbTimer timer, TAUdbTimerCallpath parent, String name) {
 		this.id = id;
 		this.timer = timer;
 		this.parent = parent;
@@ -48,28 +48,28 @@ public class TimerCallpath {
 	/**
 	 * @return the timer
 	 */
-	public Timer getTimer() {
+	public TAUdbTimer getTimer() {
 		return timer;
 	}
 
 	/**
 	 * @param timer the timer to set
 	 */
-	public void setTimer(Timer timer) {
+	public void setTimer(TAUdbTimer timer) {
 		this.timer = timer;
 	}
 
 	/**
 	 * @return the parent
 	 */
-	public TimerCallpath getParent() {
+	public TAUdbTimerCallpath getParent() {
 		return parent;
 	}
 
 	/**
 	 * @param parent the parent to set
 	 */
-	public void setParent(TimerCallpath parent) {
+	public void setParent(TAUdbTimerCallpath parent) {
 		this.parent = parent;
 	}
 
@@ -91,13 +91,13 @@ public class TimerCallpath {
 		return this.name;
 	}
 	
-	public static Map<Integer, TimerCallpath> getTimerCallpaths(Session session, Trial trial) {
+	public static Map<Integer, TAUdbTimerCallpath> getTimerCallpaths(TAUdbSession session, TAUdbTrial trial) {
 		// if the trial has already loaded them, don't get them again.
 		if (trial.getTimerCallpaths() != null && trial.getTimerCallpaths().size() > 0) {
 			return trial.getTimerCallpaths();
 		}
-		Map<Integer, TimerCallpath> timerCallpaths = new HashMap<Integer, TimerCallpath>();
-		Map<Integer, Timer> timers = trial.getTimers();
+		Map<Integer, TAUdbTimerCallpath> timerCallpaths = new HashMap<Integer, TAUdbTimerCallpath>();
+		Map<Integer, TAUdbTimer> timers = trial.getTimers();
 		DB db = session.getDB();
 		StringBuilder sb = new StringBuilder();
 		// for some reason, this fails as a parameterized query. So, put the trial id in explicitly.
@@ -124,9 +124,9 @@ public class TimerCallpath {
 				Integer parentID = results.getInt(2);
 				Integer timerID = results.getInt(3);
 				String name = results.getString(4);
-				Timer timer = timers.get(timerID);
-				TimerCallpath parent = timerCallpaths.get(parentID);
-				TimerCallpath timerCallpath = new TimerCallpath (session, id, timer, parent, name);
+				TAUdbTimer timer = timers.get(timerID);
+				TAUdbTimerCallpath parent = timerCallpaths.get(parentID);
+				TAUdbTimerCallpath timerCallpath = new TAUdbTimerCallpath (session, id, timer, parent, name);
 				timerCallpaths.put(id, timerCallpath);
 			}
 			results.close();
@@ -144,9 +144,9 @@ public class TimerCallpath {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		Session session = new Session("callpath", false);
-		Trial trial = Trial.getTrial(session, 1, true);
-		Map<Integer, TimerCallpath> timerCallpaths = TimerCallpath.getTimerCallpaths(session, trial);
+		TAUdbSession session = new TAUdbSession("callpath", false);
+		TAUdbTrial trial = TAUdbTrial.getTrial(session, 1, true);
+		Map<Integer, TAUdbTimerCallpath> timerCallpaths = TAUdbTimerCallpath.getTimerCallpaths(session, trial);
 		for (Integer cp : timerCallpaths.keySet()) {
 			System.out.println(timerCallpaths.get(cp).toString());
 		}

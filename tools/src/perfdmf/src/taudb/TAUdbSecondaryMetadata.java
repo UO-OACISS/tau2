@@ -15,14 +15,14 @@ import java.util.Map;
  * @author khuck
  *
  */
-public class SecondaryMetadata {
-	private Session session = null;
-	private Trial trial = null;
+public class TAUdbSecondaryMetadata {
+	private TAUdbSession session = null;
+	private TAUdbTrial trial = null;
 	private int id = 0;
-	private TimerCallpath timerCallpath = null;
-	private Thread thread = null;
-	private SecondaryMetadata parent = null;
-	private List<SecondaryMetadata> children = null;
+	private TAUdbTimerCallpath timerCallpath = null;
+	private TAUdbThread thread = null;
+	private TAUdbSecondaryMetadata parent = null;
+	private List<TAUdbSecondaryMetadata> children = null;
 	private double timestamp = 0.0;
 	private String name = null;
 	private String value = null;
@@ -31,28 +31,28 @@ public class SecondaryMetadata {
 	/**
 	 * @return the session
 	 */
-	public Session getSession() {
+	public TAUdbSession getSession() {
 		return session;
 	}
 
 	/**
 	 * @param session the session to set
 	 */
-	public void setSession(Session session) {
+	public void setSession(TAUdbSession session) {
 		this.session = session;
 	}
 
 	/**
 	 * @return the trial
 	 */
-	public Trial getTrial() {
+	public TAUdbTrial getTrial() {
 		return trial;
 	}
 
 	/**
 	 * @param trial the trial to set
 	 */
-	public void setTrial(Trial trial) {
+	public void setTrial(TAUdbTrial trial) {
 		this.trial = trial;
 	}
 
@@ -73,56 +73,56 @@ public class SecondaryMetadata {
 	/**
 	 * @return the timerCallpath
 	 */
-	public TimerCallpath getTimerCallpath() {
+	public TAUdbTimerCallpath getTimerCallpath() {
 		return timerCallpath;
 	}
 
 	/**
 	 * @param timerCallpath the timerCallpath to set
 	 */
-	public void setTimerCallpath(TimerCallpath timerCallpath) {
+	public void setTimerCallpath(TAUdbTimerCallpath timerCallpath) {
 		this.timerCallpath = timerCallpath;
 	}
 
 	/**
 	 * @return the thread
 	 */
-	public Thread getThread() {
+	public TAUdbThread getThread() {
 		return thread;
 	}
 
 	/**
 	 * @param thread the thread to set
 	 */
-	public void setThread(Thread thread) {
+	public void setThread(TAUdbThread thread) {
 		this.thread = thread;
 	}
 
 	/**
 	 * @return the parent
 	 */
-	public SecondaryMetadata getParent() {
+	public TAUdbSecondaryMetadata getParent() {
 		return parent;
 	}
 
 	/**
 	 * @param parent the parent to set
 	 */
-	public void setParent(SecondaryMetadata parent) {
+	public void setParent(TAUdbSecondaryMetadata parent) {
 		this.parent = parent;
 	}
 
 	/**
 	 * @return the children
 	 */
-	public List<SecondaryMetadata> getChildren() {
+	public List<TAUdbSecondaryMetadata> getChildren() {
 		return children;
 	}
 
 	/**
 	 * @param children the children to set
 	 */
-	public void setChildren(List<SecondaryMetadata> children) {
+	public void setChildren(List<TAUdbSecondaryMetadata> children) {
 		this.children = children;
 	}
 
@@ -185,25 +185,25 @@ public class SecondaryMetadata {
 	/**
 	 * 
 	 */
-	public SecondaryMetadata(Session session, Trial trial, int id, TimerCallpath timerCallpath, Thread thread, SecondaryMetadata parent, String name, String value, boolean isArray) {
+	public TAUdbSecondaryMetadata(TAUdbSession session, TAUdbTrial trial, int id, TAUdbTimerCallpath timerCallpath, TAUdbThread thread, TAUdbSecondaryMetadata parent, String name, String value, boolean isArray) {
 		this.session = session;
 		this.trial = trial;
 		this.id = id;
 		this.timerCallpath = timerCallpath;
 		this.thread = thread;
 		this.parent = parent;
-		this.children = new ArrayList<SecondaryMetadata>();
+		this.children = new ArrayList<TAUdbSecondaryMetadata>();
 		this.name = name;
 		this.value = value;
 		this.isArray = isArray;
 	}
 
-	public static Map<Integer, SecondaryMetadata> getSecondaryMetadata(Session session, Trial trial) {
+	public static Map<Integer, TAUdbSecondaryMetadata> getSecondaryMetadata(TAUdbSession session, TAUdbTrial trial) {
 		// if the trial has already loaded them, don't get them again.
 		if (trial.getSecondaryMetadata() != null && trial.getSecondaryMetadata().size() > 0) {
 			return trial.getSecondaryMetadata();
 		}
-		Map<Integer, SecondaryMetadata> secondaryMetadata = new HashMap<Integer, SecondaryMetadata>();
+		Map<Integer, TAUdbSecondaryMetadata> secondaryMetadata = new HashMap<Integer, TAUdbSecondaryMetadata>();
 		String query = "select id, thread, timer_callpath, parent, name, value, is_array from secondary_metadata where trial = ?";
 		try {
 			PreparedStatement statement = session.getDB().prepareStatement(query);
@@ -217,13 +217,13 @@ public class SecondaryMetadata {
 				String name = results.getString(5);
 				String value = results.getString(6);
 				boolean isArray = results.getBoolean(7);
-				TimerCallpath timerCallpath = trial.getTimerCallpaths().get(timerCallpathID);
-				Thread thread = trial.getThreads().get(threadID);
-				SecondaryMetadata parent = null;
+				TAUdbTimerCallpath timerCallpath = trial.getTimerCallpaths().get(timerCallpathID);
+				TAUdbThread thread = trial.getThreads().get(threadID);
+				TAUdbSecondaryMetadata parent = null;
 				if (parentID != null) {
 					parent = secondaryMetadata.get(parentID);
 				}
-				SecondaryMetadata secondaryMetadatum = new SecondaryMetadata (session, trial, id, timerCallpath, thread, parent, name, value, isArray);
+				TAUdbSecondaryMetadata secondaryMetadatum = new TAUdbSecondaryMetadata (session, trial, id, timerCallpath, thread, parent, name, value, isArray);
 				secondaryMetadata.put(id, secondaryMetadatum);
 			}
 			results.close();
@@ -241,9 +241,9 @@ public class SecondaryMetadata {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		Session session = new Session("callpath", false);
-		Trial trial = Trial.getTrial(session, 1, true);
-		Map<Integer, SecondaryMetadata> secondaryMetadata = SecondaryMetadata.getSecondaryMetadata(session, trial);
+		TAUdbSession session = new TAUdbSession("callpath", false);
+		TAUdbTrial trial = TAUdbTrial.getTrial(session, 1, true);
+		Map<Integer, TAUdbSecondaryMetadata> secondaryMetadata = TAUdbSecondaryMetadata.getSecondaryMetadata(session, trial);
 		for (Integer cp : secondaryMetadata.keySet()) {
 			System.out.println(secondaryMetadata.get(cp).toString());
 		}

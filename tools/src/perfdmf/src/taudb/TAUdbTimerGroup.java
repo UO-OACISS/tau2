@@ -15,20 +15,20 @@ import java.util.Map;
  * @author khuck
  *
  */
-public class TimerGroup {
+public class TAUdbTimerGroup {
 	String name = null;
-	List<Timer> timers = null;
+	List<TAUdbTimer> timers = null;
 
 	/**
 	 * 
 	 */
-	public TimerGroup(String name, Timer timer) {
+	public TAUdbTimerGroup(String name, TAUdbTimer timer) {
 		this.name = name;
-		this.timers = new ArrayList<Timer>();
+		this.timers = new ArrayList<TAUdbTimer>();
 		timers.add(timer);
 	}
 	
-	public void addTimer(Timer timer) {
+	public void addTimer(TAUdbTimer timer) {
 		this.timers.add(timer);
 	}
 	
@@ -36,8 +36,8 @@ public class TimerGroup {
 		return this.name;
 	}
 
-	public static Map<String, TimerGroup> getTimerGroups(Session session, Trial trial, Map<Integer, Timer> timers) {
-		Map<String, TimerGroup> groups = new HashMap<String, TimerGroup>();
+	public static Map<String, TAUdbTimerGroup> getTimerGroups(TAUdbSession session, TAUdbTrial trial, Map<Integer, TAUdbTimer> timers) {
+		Map<String, TAUdbTimerGroup> groups = new HashMap<String, TAUdbTimerGroup>();
 		String query = "select tg.group_name, tg.timer, t.trial from timer_group tg join timer t on tg.timer = t.id where t.trial = ?;";
 		try {
 			PreparedStatement statement = session.getDB().prepareStatement(query);
@@ -46,10 +46,10 @@ public class TimerGroup {
 			while(results.next()) {
 				String name = results.getString(1);
 				Integer timerID = results.getInt(2);
-				Timer timer = timers.get(timerID);
-				TimerGroup group = groups.get(name);
+				TAUdbTimer timer = timers.get(timerID);
+				TAUdbTimerGroup group = groups.get(name);
 				if (group == null) {
-					group = new TimerGroup(name, timer);
+					group = new TAUdbTimerGroup(name, timer);
 				} else {
 					group.addTimer(timer);
 				}

@@ -14,24 +14,24 @@ import edu.uoregon.tau.perfdmf.database.DB;
  * @author khuck
  *
  */
-public class Session {
+public class TAUdbSession {
 
-	private Map<Integer, DataSource> sources = null;
+	private Map<Integer, TAUdbDataSource> sources = null;
 	private TAUdbDatabaseAPI api = null;
 	private boolean connected = false;
-	private Trial currentTrial = null;
+	private TAUdbTrial currentTrial = null;
 	
 	/**
 	 * 
 	 */
-	public Session(String configName, boolean prompt) {
+	public TAUdbSession(String configName, boolean prompt) {
 		api = new TAUdbDatabaseAPI();
 		String homedir = System.getenv("HOME");
 		String configFile = homedir + File.separator + ".ParaProf" + File.separator + "perfdmf.cfg." + configName;
 		try {
 			api.initialize(configFile, false);
 			connected = true;
-			sources = DataSource.getDataSources(this);
+			sources = TAUdbDataSource.getDataSources(this);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -43,7 +43,7 @@ public class Session {
 		connected = false;
 	}
 	
-	public Trial getCurrentTrial() {
+	public TAUdbTrial getCurrentTrial() {
 		return currentTrial;
 	}
 	
@@ -53,7 +53,7 @@ public class Session {
 		close();
 	}
 	
-	public Map<Integer, DataSource> getDataSources() {
+	public Map<Integer, TAUdbDataSource> getDataSources() {
 		return sources;
 	}
 	
@@ -65,7 +65,7 @@ public class Session {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		Session session = new Session("callpath", false);
+		TAUdbSession session = new TAUdbSession("callpath", false);
 		System.out.print("Connected to: ");
 		System.out.println(session.api.db().getConnectString());
 		session.close();

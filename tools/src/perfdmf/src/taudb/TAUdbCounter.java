@@ -14,20 +14,20 @@ import java.util.Map;
  * @author khuck
  *
  */
-public class Counter {
-	private Session session = null;
+public class TAUdbCounter {
+	private TAUdbSession session = null;
 	private int id = 0;
-	private Trial trial = null;
+	private TAUdbTrial trial = null;
 	private String name = null;
 
 	/**
 	 * 
 	 */
-	public Counter() {
+	public TAUdbCounter() {
 		super();
 	}
 	
-	public Counter(Session session, int id, Trial trial, String name) {
+	public TAUdbCounter(TAUdbSession session, int id, TAUdbTrial trial, String name) {
 		this.session = session;
 		this.id = id;
 		this.trial = trial;
@@ -37,14 +37,14 @@ public class Counter {
 	/**
 	 * @return the session
 	 */
-	public Session getSession() {
+	public TAUdbSession getSession() {
 		return session;
 	}
 
 	/**
 	 * @param session the session to set
 	 */
-	public void setSession(Session session) {
+	public void setSession(TAUdbSession session) {
 		this.session = session;
 	}
 
@@ -65,14 +65,14 @@ public class Counter {
 	/**
 	 * @return the trial
 	 */
-	public Trial getTrial() {
+	public TAUdbTrial getTrial() {
 		return trial;
 	}
 
 	/**
 	 * @param trial the trial to set
 	 */
-	public void setTrial(Trial trial) {
+	public void setTrial(TAUdbTrial trial) {
 		this.trial = trial;
 	}
 
@@ -96,8 +96,8 @@ public class Counter {
 		return b.toString();
 	}
 
-	public static Counter getCounter(Session session, Trial trial, int id) {
-		Counter counter = null;
+	public static TAUdbCounter getCounter(TAUdbSession session, TAUdbTrial trial, int id) {
+		TAUdbCounter counter = null;
 		String query = "select name from counter where id = ?;";
 		try {
 			PreparedStatement statement = session.getDB().prepareStatement(query);
@@ -105,7 +105,7 @@ public class Counter {
 			ResultSet results = statement.executeQuery();
 			while(results.next()) {
 				String name = results.getString(1);
-				counter = new Counter (session, id, trial, name);
+				counter = new TAUdbCounter (session, id, trial, name);
 			}
 			results.close();
 			statement.close();
@@ -116,12 +116,12 @@ public class Counter {
 		return counter;
 	}
 
-	public static Map<Integer, Counter> getCounters(Session session, Trial trial) {
+	public static Map<Integer, TAUdbCounter> getCounters(TAUdbSession session, TAUdbTrial trial) {
 		// if the trial has already loaded them, don't get them again.
 		if (trial.getCounters() != null && trial.getCounters().size() > 0) {
 			return trial.getCounters();
 		}
-		Map<Integer, Counter> counters = new HashMap<Integer, Counter>();
+		Map<Integer, TAUdbCounter> counters = new HashMap<Integer, TAUdbCounter>();
 		String query = "select id, name from counter where trial = ?;";
 		try {
 			PreparedStatement statement = session.getDB().prepareStatement(query);
@@ -130,7 +130,7 @@ public class Counter {
 			while(results.next()) {
 				Integer id = results.getInt(1);
 				String name = results.getString(2);
-				Counter counter = new Counter (session, id, trial, name);
+				TAUdbCounter counter = new TAUdbCounter (session, id, trial, name);
 				counters.put(id, counter);
 			}
 			results.close();
@@ -148,11 +148,11 @@ public class Counter {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		Session session = new Session("callpath", false);
-		Trial trial = Trial.getTrial(session, 1, true);
-		Map<Integer, Counter> counters = Counter.getCounters(session, trial);
+		TAUdbSession session = new TAUdbSession("callpath", false);
+		TAUdbTrial trial = TAUdbTrial.getTrial(session, 1, true);
+		Map<Integer, TAUdbCounter> counters = TAUdbCounter.getCounters(session, trial);
 		for (Integer id : counters.keySet()) {
-			Counter counter = counters.get(id);
+			TAUdbCounter counter = counters.get(id);
 			System.out.println(counter.toString());
 		}
 		session.close();
