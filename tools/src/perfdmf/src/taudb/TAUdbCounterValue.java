@@ -13,12 +13,12 @@ import java.util.List;
  * @author khuck
  *
  */
-public class CounterValue {
-	private Session session = null;
-	private Trial trial = null;
-	private Counter counter = null;
-	private TimerCallpath timerCallpath = null;
-	private Thread thread = null;
+public class TAUdbCounterValue {
+	private TAUdbSession session = null;
+	private TAUdbTrial trial = null;
+	private TAUdbCounter counter = null;
+	private TAUdbTimerCallpath timerCallpath = null;
+	private TAUdbThread thread = null;
 	private double sampleCount = 0.0;
 	private double maximumValue = 0.0;
 	private double minimumValue = 0.0;
@@ -28,7 +28,7 @@ public class CounterValue {
 	/**
 	 * 
 	 */
-	public CounterValue(Session session, Trial trial, Counter counter, TimerCallpath timerCallpath, Thread thread, double sampleCount, double maximumValue, double minimumValue, double meanValue, double standardDeviation) {
+	public TAUdbCounterValue(TAUdbSession session, TAUdbTrial trial, TAUdbCounter counter, TAUdbTimerCallpath timerCallpath, TAUdbThread thread, double sampleCount, double maximumValue, double minimumValue, double meanValue, double standardDeviation) {
 		this.session = session;
 		this.trial = trial;
 		this.counter = counter;
@@ -50,12 +50,12 @@ public class CounterValue {
 		return b.toString();
 	}
 
-	public static List<CounterValue> getCounterValues(Session session, Trial trial) {
+	public static List<TAUdbCounterValue> getCounterValues(TAUdbSession session, TAUdbTrial trial) {
 		// if the trial has already loaded them, don't get them again.
 		if (trial.getCounterValues() != null && trial.getCounterValues().size() > 0) {
 			return trial.getCounterValues();
 		}
-		List<CounterValue> counterValues = new ArrayList<CounterValue>();
+		List<TAUdbCounterValue> counterValues = new ArrayList<TAUdbCounterValue>();
 		String query = "select v.counter, v.timer_callpath, v.thread, v.sample_count, v.maximum_value, v.minimum_value, v.mean_value, v.standard_deviation from counter_value v join counter c on v.counter = c.id where c.trial = ?";
 		try {
 			PreparedStatement statement = session.getDB().prepareStatement(query);
@@ -70,13 +70,13 @@ public class CounterValue {
 				double minimumValue = results.getDouble(6);
 				double meanValue = results.getDouble(7);
 				double standardDeviation = results.getDouble(8);
-				Counter counter = trial.getCounters().get(counterID);
-				TimerCallpath timerCallpath = trial.getTimerCallpaths().get(timerCallpathID);
-				Thread thread = trial.getThreads().get(threadID);
+				TAUdbCounter counter = trial.getCounters().get(counterID);
+				TAUdbTimerCallpath timerCallpath = trial.getTimerCallpaths().get(timerCallpathID);
+				TAUdbThread thread = trial.getThreads().get(threadID);
 				if (thread == null) {
 					thread = trial.getDerivedThreads().get(threadID);
 				}
-				CounterValue counterValue = new CounterValue (session, trial, counter, timerCallpath, thread, sampleCount, maximumValue, minimumValue, meanValue, standardDeviation);
+				TAUdbCounterValue counterValue = new TAUdbCounterValue (session, trial, counter, timerCallpath, thread, sampleCount, maximumValue, minimumValue, meanValue, standardDeviation);
 				counterValues.add(counterValue);
 			}
 			results.close();
@@ -93,70 +93,70 @@ public class CounterValue {
 	/**
 	 * @return the session
 	 */
-	public Session getSession() {
+	public TAUdbSession getSession() {
 		return session;
 	}
 
 	/**
 	 * @param session the session to set
 	 */
-	public void setSession(Session session) {
+	public void setSession(TAUdbSession session) {
 		this.session = session;
 	}
 
 	/**
 	 * @return the trial
 	 */
-	public Trial getTrial() {
+	public TAUdbTrial getTrial() {
 		return trial;
 	}
 
 	/**
 	 * @param trial the trial to set
 	 */
-	public void setTrial(Trial trial) {
+	public void setTrial(TAUdbTrial trial) {
 		this.trial = trial;
 	}
 
 	/**
 	 * @return the counter
 	 */
-	public Counter getCounter() {
+	public TAUdbCounter getCounter() {
 		return counter;
 	}
 
 	/**
 	 * @param counter the counter to set
 	 */
-	public void setCounter(Counter counter) {
+	public void setCounter(TAUdbCounter counter) {
 		this.counter = counter;
 	}
 
 	/**
 	 * @return the timerCallpath
 	 */
-	public TimerCallpath getTimerCallpath() {
+	public TAUdbTimerCallpath getTimerCallpath() {
 		return timerCallpath;
 	}
 
 	/**
 	 * @param timerCallpath the timerCallpath to set
 	 */
-	public void setTimerCallpath(TimerCallpath timerCallpath) {
+	public void setTimerCallpath(TAUdbTimerCallpath timerCallpath) {
 		this.timerCallpath = timerCallpath;
 	}
 
 	/**
 	 * @return the thread
 	 */
-	public Thread getThread() {
+	public TAUdbThread getThread() {
 		return thread;
 	}
 
 	/**
 	 * @param thread the thread to set
 	 */
-	public void setThread(Thread thread) {
+	public void setThread(TAUdbThread thread) {
 		this.thread = thread;
 	}
 
@@ -234,10 +234,10 @@ public class CounterValue {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		Session session = new Session("callpath", false);
-		Trial trial = Trial.getTrial(session, 1, true);
-		List<CounterValue> counterValues = CounterValue.getCounterValues(session, trial);
-		for (CounterValue val : counterValues) {
+		TAUdbSession session = new TAUdbSession("callpath", false);
+		TAUdbTrial trial = TAUdbTrial.getTrial(session, 1, true);
+		List<TAUdbCounterValue> counterValues = TAUdbCounterValue.getCounterValues(session, trial);
+		for (TAUdbCounterValue val : counterValues) {
 			System.out.println(val.toString());
 		}
 		session.close();

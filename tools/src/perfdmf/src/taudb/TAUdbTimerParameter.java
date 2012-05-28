@@ -13,15 +13,15 @@ import java.util.Map;
  * @author khuck
  *
  */
-public class TimerParameter {
-	private Timer timer = null;
+public class TAUdbTimerParameter {
+	private TAUdbTimer timer = null;
 	private String name = null;
 	private String value = null;
 
 	/**
 	 * 
 	 */
-	public TimerParameter(Timer timer, String name, String value) {
+	public TAUdbTimerParameter(TAUdbTimer timer, String name, String value) {
 		this.timer = timer;
 		this.name = name;
 		this.value = value;
@@ -30,14 +30,14 @@ public class TimerParameter {
 	/**
 	 * @return the timer
 	 */
-	public Timer getTimer() {
+	public TAUdbTimer getTimer() {
 		return timer;
 	}
 
 	/**
 	 * @param timer the timer to set
 	 */
-	public void setTimer(Timer timer) {
+	public void setTimer(TAUdbTimer timer) {
 		this.timer = timer;
 	}
 
@@ -73,8 +73,8 @@ public class TimerParameter {
 		return (this.name + "=" + this.value);
 	}
 
-	public static Map<String, TimerParameter> getTimerParameters(Session session, Trial trial, Map<Integer, Timer> timers) {
-		Map<String, TimerParameter> parameters = new HashMap<String, TimerParameter>();
+	public static Map<String, TAUdbTimerParameter> getTimerParameters(TAUdbSession session, TAUdbTrial trial, Map<Integer, TAUdbTimer> timers) {
+		Map<String, TAUdbTimerParameter> parameters = new HashMap<String, TAUdbTimerParameter>();
 		String query = "select tp.timer, tp.parameter_name, tp.parameter_value, t.trial from timer_parameter tp join timer t on tg.timer = t.id where t.trial = ?;";
 		try {
 			PreparedStatement statement = session.getDB().prepareStatement(query);
@@ -84,8 +84,8 @@ public class TimerParameter {
 				Integer timerID = results.getInt(1);
 				String name = results.getString(2);
 				String value = results.getString(3);
-				Timer timer = timers.get(timerID);
-				TimerParameter parameter = new TimerParameter(timer, name, value);
+				TAUdbTimer timer = timers.get(timerID);
+				TAUdbTimerParameter parameter = new TAUdbTimerParameter(timer, name, value);
 				timer.addParameter(parameter);
 			}
 			results.close();

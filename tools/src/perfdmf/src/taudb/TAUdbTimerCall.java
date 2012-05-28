@@ -13,12 +13,12 @@ import java.util.Map;
  * @author khuck
  *
  */
-public class TimerCall {
-	private Session session = null;
-	private Trial trial = null;
+public class TAUdbTimerCall {
+	private TAUdbSession session = null;
+	private TAUdbTrial trial = null;
 	private int id = 0;
-	private TimerCallpath timerCallpath = null;
-	private Thread thread = null;
+	private TAUdbTimerCallpath timerCallpath = null;
+	private TAUdbThread thread = null;
 	private double calls = 0.0;
 	private double subroutines = 0.0;
 	private double timestamp = 0.0;
@@ -26,7 +26,7 @@ public class TimerCall {
 	/**
 	 * 
 	 */
-	public TimerCall(Session session, Trial trial, int id, TimerCallpath timerCallpath, Thread thread, double calls, double subroutines, double timestamp) {
+	public TAUdbTimerCall(TAUdbSession session, TAUdbTrial trial, int id, TAUdbTimerCallpath timerCallpath, TAUdbThread thread, double calls, double subroutines, double timestamp) {
 		this.session = session;
 		this.trial = trial;
 		this.id = id;
@@ -40,28 +40,28 @@ public class TimerCall {
 	/**
 	 * @return the session
 	 */
-	public Session getSession() {
+	public TAUdbSession getSession() {
 		return session;
 	}
 
 	/**
 	 * @param session the session to set
 	 */
-	public void setSession(Session session) {
+	public void setSession(TAUdbSession session) {
 		this.session = session;
 	}
 
 	/**
 	 * @return the trial
 	 */
-	public Trial getTrial() {
+	public TAUdbTrial getTrial() {
 		return trial;
 	}
 
 	/**
 	 * @param trial the trial to set
 	 */
-	public void setTrial(Trial trial) {
+	public void setTrial(TAUdbTrial trial) {
 		this.trial = trial;
 	}
 
@@ -82,28 +82,28 @@ public class TimerCall {
 	/**
 	 * @return the timerCallpath
 	 */
-	public TimerCallpath getTimerCallpath() {
+	public TAUdbTimerCallpath getTimerCallpath() {
 		return timerCallpath;
 	}
 
 	/**
 	 * @param timerCallpath the timerCallpath to set
 	 */
-	public void setTimerCallpath(TimerCallpath timerCallpath) {
+	public void setTimerCallpath(TAUdbTimerCallpath timerCallpath) {
 		this.timerCallpath = timerCallpath;
 	}
 
 	/**
 	 * @return the thread
 	 */
-	public Thread getThread() {
+	public TAUdbThread getThread() {
 		return thread;
 	}
 
 	/**
 	 * @param thread the thread to set
 	 */
-	public void setThread(Thread thread) {
+	public void setThread(TAUdbThread thread) {
 		this.thread = thread;
 	}
 
@@ -157,12 +157,12 @@ public class TimerCall {
 		b.append(" Subroutines: " + this.subroutines);
 		return b.toString();
 	}
-	public static Map<Integer, TimerCall> getTimerCalls(Session session, Trial trial) {
+	public static Map<Integer, TAUdbTimerCall> getTimerCalls(TAUdbSession session, TAUdbTrial trial) {
 		// if the trial has already loaded them, don't get them again.
 		if (trial.getTimerCalls() != null && trial.getTimerCalls().size() > 0) {
 			return trial.getTimerCalls();
 		}
-		Map<Integer, TimerCall> timerCalls = new HashMap<Integer, TimerCall>();
+		Map<Integer, TAUdbTimerCall> timerCalls = new HashMap<Integer, TAUdbTimerCall>();
 		String query = "select tc.id, tc.timer_callpath, tc.thread, tc.calls, tc.subroutines, tc.timestamp from timer_call_data tc join thread t on tc.thread = t.id where t.trial = ?";
 		try {
 			PreparedStatement statement = session.getDB().prepareStatement(query);
@@ -175,12 +175,12 @@ public class TimerCall {
 				double calls = results.getDouble(4);
 				double subroutines = results.getDouble(5);
 				double timestamp = results.getDouble(6);
-				TimerCallpath timerCallpath = trial.getTimerCallpaths().get(timerCallpathID);
-				Thread thread = trial.getThreads().get(threadID);
+				TAUdbTimerCallpath timerCallpath = trial.getTimerCallpaths().get(timerCallpathID);
+				TAUdbThread thread = trial.getThreads().get(threadID);
 				if (thread == null) {
 					thread = trial.getDerivedThreads().get(threadID);
 				}
-				TimerCall timerCallData = new TimerCall (session, trial, id, timerCallpath, thread, calls, subroutines, timestamp);
+				TAUdbTimerCall timerCallData = new TAUdbTimerCall (session, trial, id, timerCallpath, thread, calls, subroutines, timestamp);
 				timerCalls.put(id, timerCallData);
 			}
 			results.close();
@@ -198,9 +198,9 @@ public class TimerCall {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		Session session = new Session("callpath", false);
-		Trial trial = Trial.getTrial(session, 1, true);
-		Map<Integer, TimerCall> timerCalls = TimerCall.getTimerCalls(session, trial);
+		TAUdbSession session = new TAUdbSession("callpath", false);
+		TAUdbTrial trial = TAUdbTrial.getTrial(session, 1, true);
+		Map<Integer, TAUdbTimerCall> timerCalls = TAUdbTimerCall.getTimerCalls(session, trial);
 		for (Integer cp : timerCalls.keySet()) {
 			System.out.println(timerCalls.get(cp).toString());
 		}

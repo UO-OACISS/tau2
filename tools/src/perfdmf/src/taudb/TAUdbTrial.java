@@ -16,34 +16,34 @@ import java.util.Set;
  * @author khuck
  *
  */
-public class Trial {
+public class TAUdbTrial {
 
-	private Session session = null;
+	private TAUdbSession session = null;
 	private int id = 0; // database ID, zero indicates not set
 	private String name = null;
-	private DataSource dataSource = null;
+	private TAUdbDataSource dataSource = null;
 	private int nodeCount = 0;
 	private int contextsPerNode = 0;
 	private int threadsPerContext = 0;
 	private int totalThreads = 0;
 	private Map<String, String> primaryMetadata;
-	private Map<Integer, SecondaryMetadata> secondaryMetadata;
-	private Map<Integer, Timer> timers;
-	private Set<TimerGroup> timerGroups;
-	private Map<Integer, TimerCallpath> timerCallpaths;
-	private Map<Integer, Thread> threads;
-	private Map<Integer, TimerCall> timerCalls;
-	private List<TimerValue> timerValues;
-	private Map<Integer, Thread> derivedThreads;
-	private Map<Integer, Metric> metrics;
-	private Map<Integer, Counter> counters;
-	private List<CounterValue> counterValues;
+	private Map<Integer, TAUdbSecondaryMetadata> secondaryMetadata;
+	private Map<Integer, TAUdbTimer> timers;
+	private Set<TAUdbTimerGroup> timerGroups;
+	private Map<Integer, TAUdbTimerCallpath> timerCallpaths;
+	private Map<Integer, TAUdbThread> threads;
+	private Map<Integer, TAUdbTimerCall> timerCalls;
+	private List<TAUdbTimerValue> timerValues;
+	private Map<Integer, TAUdbThread> derivedThreads;
+	private Map<Integer, TAUdbMetric> metrics;
+	private Map<Integer, TAUdbCounter> counters;
+	private List<TAUdbCounterValue> counterValues;
 
-	public Trial () {
+	public TAUdbTrial () {
 		super();
 	}
 	
-	public Trial (Session session, int id, String name, DataSource dataSource, int nodeCount, int contextsPerNode, int threadsPerContext, int totalThreads) {
+	public TAUdbTrial (TAUdbSession session, int id, String name, TAUdbDataSource dataSource, int nodeCount, int contextsPerNode, int threadsPerContext, int totalThreads) {
 		this.session = session;
 		this.id = id;
 		this.name = name;
@@ -54,11 +54,11 @@ public class Trial {
 		this.totalThreads = totalThreads;
 		// always do this now?
 		this.loadPrimaryMetadata();
-		this.timerGroups = new HashSet<TimerGroup>();
+		this.timerGroups = new HashSet<TAUdbTimerGroup>();
 	}
 	
-	public static Trial getTrial (Session session, int id, boolean complete) {
-		Trial trial = null;
+	public static TAUdbTrial getTrial (TAUdbSession session, int id, boolean complete) {
+		TAUdbTrial trial = null;
 		String query = "select id, name, data_source, node_count, contexts_per_node, threads_per_context, total_threads from trial ";
 		try {
 			PreparedStatement statement = session.getDB().prepareStatement(query);
@@ -66,12 +66,12 @@ public class Trial {
 			while(results.next()) {
 				String name = results.getString(2);
 				Integer sourceID = results.getInt(3);
-				DataSource source = session.getDataSources().get(sourceID);
+				TAUdbDataSource source = session.getDataSources().get(sourceID);
 				int nodeCount = results.getInt(4);
 				int contextsPerNode = results.getInt(5);
 				int threadsPerContext = results.getInt(6);
 				int totalThreads = results.getInt(7);
-				trial = new Trial (session, id, name, source, nodeCount, contextsPerNode, threadsPerContext, totalThreads);
+				trial = new TAUdbTrial (session, id, name, source, nodeCount, contextsPerNode, threadsPerContext, totalThreads);
 			}
 			results.close();
 			statement.close();
@@ -86,18 +86,18 @@ public class Trial {
 	}
 	
 	private void loadEverything() {
-		this.timers = Timer.getTimers(session, this);
-		this.timerCallpaths = TimerCallpath.getTimerCallpaths(session, this);
-		this.threads = Thread.getThreads(session, this, false);
-		this.derivedThreads = Thread.getThreads(session, this, true);
-		this.timerCalls = TimerCall.getTimerCalls(session, this);
-		this.metrics = Metric.getMetrics(session, this);
-		this.timerValues = TimerValue.getTimerValues(session, this);
-		this.counters = Counter.getCounters(session, this);
-		this.counterValues = CounterValue.getCounterValues(session, this);
+		this.timers = TAUdbTimer.getTimers(session, this);
+		this.timerCallpaths = TAUdbTimerCallpath.getTimerCallpaths(session, this);
+		this.threads = TAUdbThread.getThreads(session, this, false);
+		this.derivedThreads = TAUdbThread.getThreads(session, this, true);
+		this.timerCalls = TAUdbTimerCall.getTimerCalls(session, this);
+		this.metrics = TAUdbMetric.getMetrics(session, this);
+		this.timerValues = TAUdbTimerValue.getTimerValues(session, this);
+		this.counters = TAUdbCounter.getCounters(session, this);
+		this.counterValues = TAUdbCounterValue.getCounterValues(session, this);
 	}
 	
-	public void addTimerGroup(TimerGroup group) {
+	public void addTimerGroup(TAUdbTimerGroup group) {
 		this.timerGroups.add(group);
 	}
 	
@@ -152,14 +152,14 @@ public class Trial {
 	/**
 	 * @return the dataSource
 	 */
-	public DataSource getDataSource() {
+	public TAUdbDataSource getDataSource() {
 		return dataSource;
 	}
 
 	/**
 	 * @param dataSource the dataSource to set
 	 */
-	public void setDataSource(DataSource dataSource) {
+	public void setDataSource(TAUdbDataSource dataSource) {
 		this.dataSource = dataSource;
 	}
 
@@ -222,98 +222,98 @@ public class Trial {
 	/**
 	 * @return the timers
 	 */
-	public Map<Integer, Timer> getTimers() {
+	public Map<Integer, TAUdbTimer> getTimers() {
 		return timers;
 	}
 
 	/**
 	 * @param timers the timers to set
 	 */
-	public void setTimers(Map<Integer, Timer> timers) {
+	public void setTimers(Map<Integer, TAUdbTimer> timers) {
 		this.timers = timers;
 	}
 
 	/**
 	 * @return the timerGroups
 	 */
-	public Set<TimerGroup> getTimerGroups() {
+	public Set<TAUdbTimerGroup> getTimerGroups() {
 		return timerGroups;
 	}
 
 	/**
 	 * @param timerGroups the timerGroups to set
 	 */
-	public void setTimerGroups(Set<TimerGroup> timerGroups) {
+	public void setTimerGroups(Set<TAUdbTimerGroup> timerGroups) {
 		this.timerGroups = timerGroups;
 	}
 
 	/**
 	 * @return the timerCallpaths
 	 */
-	public Map<Integer, TimerCallpath> getTimerCallpaths() {
+	public Map<Integer, TAUdbTimerCallpath> getTimerCallpaths() {
 		return timerCallpaths;
 	}
 
 	/**
 	 * @param timerCallpaths the timerCallpaths to set
 	 */
-	public void setTimerCallpaths(Map<Integer, TimerCallpath> timerCallpaths) {
+	public void setTimerCallpaths(Map<Integer, TAUdbTimerCallpath> timerCallpaths) {
 		this.timerCallpaths = timerCallpaths;
 	}
 
 	/**
 	 * @return the threads
 	 */
-	public Map<Integer, Thread> getThreads() {
+	public Map<Integer, TAUdbThread> getThreads() {
 		return threads;
 	}
 
 	/**
 	 * @param threads the threads to set
 	 */
-	public void setThreads(Map<Integer, Thread> threads) {
+	public void setThreads(Map<Integer, TAUdbThread> threads) {
 		this.threads = threads;
 	}
 
 	/**
 	 * @return the derivedThreads
 	 */
-	public Map<Integer, Thread> getDerivedThreads() {
+	public Map<Integer, TAUdbThread> getDerivedThreads() {
 		return derivedThreads;
 	}
 
 	/**
 	 * @param derivedThreads the derivedThreads to set
 	 */
-	public void setDerivedThreads(Map<Integer, Thread> derivedThreads) {
+	public void setDerivedThreads(Map<Integer, TAUdbThread> derivedThreads) {
 		this.derivedThreads = derivedThreads;
 	}
 
 	/**
 	 * @return the timerCalls
 	 */
-	public Map<Integer, TimerCall> getTimerCalls() {
+	public Map<Integer, TAUdbTimerCall> getTimerCalls() {
 		return timerCalls;
 	}
 
 	/**
 	 * @param timerCalls the timerCalls to set
 	 */
-	public void setTimerCalls(Map<Integer, TimerCall> timerCalls) {
+	public void setTimerCalls(Map<Integer, TAUdbTimerCall> timerCalls) {
 		this.timerCalls = timerCalls;
 	}
 
 	/**
 	 * @return the session
 	 */
-	public Session getSession() {
+	public TAUdbSession getSession() {
 		return session;
 	}
 
 	/**
 	 * @param session the session to set
 	 */
-	public void setSession(Session session) {
+	public void setSession(TAUdbSession session) {
 		this.session = session;
 	}
 
@@ -334,63 +334,63 @@ public class Trial {
 	/**
 	 * @return the metrics
 	 */
-	public Map<Integer, Metric> getMetrics() {
+	public Map<Integer, TAUdbMetric> getMetrics() {
 		return metrics;
 	}
 
 	/**
 	 * @param metrics the metrics to set
 	 */
-	public void setMetrics(Map<Integer, Metric> metrics) {
+	public void setMetrics(Map<Integer, TAUdbMetric> metrics) {
 		this.metrics = metrics;
 	}
 
 	/**
 	 * @return the timerValues
 	 */
-	public List<TimerValue> getTimerValues() {
+	public List<TAUdbTimerValue> getTimerValues() {
 		return timerValues;
 	}
 
 	/**
 	 * @param timerValues the timerValues to set
 	 */
-	public void setTimerValues(List<TimerValue> timerValues) {
+	public void setTimerValues(List<TAUdbTimerValue> timerValues) {
 		this.timerValues = timerValues;
 	}
 
 	/**
 	 * @return the counters
 	 */
-	public Map<Integer, Counter> getCounters() {
+	public Map<Integer, TAUdbCounter> getCounters() {
 		return counters;
 	}
 
 	/**
 	 * @param counters the counters to set
 	 */
-	public void setCounters(Map<Integer, Counter> counters) {
+	public void setCounters(Map<Integer, TAUdbCounter> counters) {
 		this.counters = counters;
 	}
 
 	/**
 	 * @return the counterValue
 	 */
-	public List<CounterValue> getCounterValues() {
+	public List<TAUdbCounterValue> getCounterValues() {
 		return counterValues;
 	}
 
 	/**
 	 * @param counterValue the counterValue to set
 	 */
-	public void setCounterValues(List<CounterValue> counterValues) {
+	public void setCounterValues(List<TAUdbCounterValue> counterValues) {
 		this.counterValues = counterValues;
 	}
 
 	/**
 	 * @return the secondaryMetadata
 	 */
-	public Map<Integer, SecondaryMetadata> getSecondaryMetadata() {
+	public Map<Integer, TAUdbSecondaryMetadata> getSecondaryMetadata() {
 		return secondaryMetadata;
 	}
 
@@ -398,7 +398,7 @@ public class Trial {
 	 * @param secondaryMetadata the secondaryMetadata to set
 	 */
 	public void setSecondaryMetadata(
-			Map<Integer, SecondaryMetadata> secondaryMetadata) {
+			Map<Integer, TAUdbSecondaryMetadata> secondaryMetadata) {
 		this.secondaryMetadata = secondaryMetadata;
 	}
 
@@ -417,8 +417,8 @@ public class Trial {
 		return b.toString();
 	}
 	
-	public static Map<Integer, Trial> getTrials(Session session) {
-		Map<Integer, Trial> trials = new HashMap<Integer, Trial>();
+	public static Map<Integer, TAUdbTrial> getTrials(TAUdbSession session) {
+		Map<Integer, TAUdbTrial> trials = new HashMap<Integer, TAUdbTrial>();
 		String query = "select id, name, data_source, node_count, contexts_per_node, threads_per_context, total_threads from trial ";
 		try {
 			PreparedStatement statement = session.getDB().prepareStatement(query);
@@ -427,12 +427,12 @@ public class Trial {
 				Integer id = results.getInt(1);
 				String name = results.getString(2);
 				Integer sourceID = results.getInt(3);
-				DataSource source = session.getDataSources().get(sourceID);
+				TAUdbDataSource source = session.getDataSources().get(sourceID);
 				int nodeCount = results.getInt(4);
 				int contextsPerNode = results.getInt(5);
 				int threadsPerContext = results.getInt(6);
 				int totalThreads = results.getInt(7);
-				Trial trial = new Trial (session, id, name, source, nodeCount, contextsPerNode, threadsPerContext, totalThreads);
+				TAUdbTrial trial = new TAUdbTrial (session, id, name, source, nodeCount, contextsPerNode, threadsPerContext, totalThreads);
 				trials.put(id, trial);
 			}
 			results.close();
@@ -451,10 +451,10 @@ public class Trial {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		Session session = new Session("callpath", false);
-		Map<Integer, Trial> trials = Trial.getTrials(session);
+		TAUdbSession session = new TAUdbSession("callpath", false);
+		Map<Integer, TAUdbTrial> trials = TAUdbTrial.getTrials(session);
 		for (Integer id : trials.keySet()) {
-			Trial trial = trials.get(id);
+			TAUdbTrial trial = trials.get(id);
 			trial.loadEverything();
 			System.out.println(trial.toString());
 			System.out.println(trial.getDataSource().toString());

@@ -13,10 +13,10 @@ import java.util.Map;
  * @author khuck
  *
  */
-public class Thread {
+public class TAUdbThread {
 	private int id = 0;
-	private Trial trial = null;
-	private Session session = null;
+	private TAUdbTrial trial = null;
+	private TAUdbSession session = null;
 	private int nodeRank = 0;
 	private int contextRank = 0;
 	private int threadRank = 0;
@@ -25,7 +25,7 @@ public class Thread {
 	/**
 	 * 
 	 */
-	public Thread(Session session, int id, Trial trial, int nodeRank, int contextRank, int threadRank, int threadIndex) {
+	public TAUdbThread(TAUdbSession session, int id, TAUdbTrial trial, int nodeRank, int contextRank, int threadRank, int threadIndex) {
 		this.id = id;
 		this.trial = trial;
 		this.session = session;
@@ -52,28 +52,28 @@ public class Thread {
 	/**
 	 * @return the trial
 	 */
-	public Trial getTrial() {
+	public TAUdbTrial getTrial() {
 		return trial;
 	}
 
 	/**
 	 * @param trial the trial to set
 	 */
-	public void setTrial(Trial trial) {
+	public void setTrial(TAUdbTrial trial) {
 		this.trial = trial;
 	}
 
 	/**
 	 * @return the session
 	 */
-	public Session getSession() {
+	public TAUdbSession getSession() {
 		return session;
 	}
 
 	/**
 	 * @param session the session to set
 	 */
-	public void setSession(Session session) {
+	public void setSession(TAUdbSession session) {
 		this.session = session;
 	}
 
@@ -145,7 +145,7 @@ public class Thread {
 		return b.toString();
 	}
 
-	public static Map<Integer, Thread> getThreads(Session session, Trial trial, boolean derived) {
+	public static Map<Integer, TAUdbThread> getThreads(TAUdbSession session, TAUdbTrial trial, boolean derived) {
 		// if the trial has already loaded them, don't get them again.
 		if (derived) {
 			if (trial.getDerivedThreads() != null && trial.getDerivedThreads().size() > 0) {
@@ -156,7 +156,7 @@ public class Thread {
 				return trial.getThreads();
 			}
 		}
-		Map<Integer, Thread> threads = new HashMap<Integer, Thread>();
+		Map<Integer, TAUdbThread> threads = new HashMap<Integer, TAUdbThread>();
 		String condition = "thread_index > -1";
 		if (derived) {
 			condition = "thread_index < 0";
@@ -172,7 +172,7 @@ public class Thread {
 				int contextRank = results.getInt(3);
 				int threadRank = results.getInt(4);
 				int threadIndex = results.getInt(5);
-				Thread thread = new Thread (session, id, trial, nodeRank, contextRank, threadRank, threadIndex);
+				TAUdbThread thread = new TAUdbThread (session, id, trial, nodeRank, contextRank, threadRank, threadIndex);
 				threads.put(id, thread);
 			}
 			results.close();
@@ -194,16 +194,16 @@ public class Thread {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		Session session = new Session("callpath", false);
-		Trial trial = Trial.getTrial(session, 1, false);
-		Map<Integer, Thread> threads = Thread.getThreads(session, trial, false);
+		TAUdbSession session = new TAUdbSession("callpath", false);
+		TAUdbTrial trial = TAUdbTrial.getTrial(session, 1, false);
+		Map<Integer, TAUdbThread> threads = TAUdbThread.getThreads(session, trial, false);
 		for (Integer id : threads.keySet()) {
-			Thread thread = threads.get(id);
+			TAUdbThread thread = threads.get(id);
 			System.out.println(thread.toString());
 		}
-		threads = Thread.getThreads(session, trial, true);
+		threads = TAUdbThread.getThreads(session, trial, true);
 		for (Integer id : threads.keySet()) {
-			Thread thread = threads.get(id);
+			TAUdbThread thread = threads.get(id);
 			System.out.println(thread.toString());
 		}
 		session.close();

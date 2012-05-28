@@ -13,17 +13,17 @@ import java.util.Map;
  * @author khuck
  *
  */
-public class DataSource {
+public class TAUdbDataSource {
 
 	private int id = 0; // database ID
 	private String name = null; // datasource name
 	private String description = null; // datasource description
 	
-	public DataSource() {
+	public TAUdbDataSource() {
 		super();
 	}
 	
-	public DataSource(int id, String name, String description) {
+	public TAUdbDataSource(int id, String name, String description) {
 		this.id = id;
 		this.name = name;
 		this.description = description;
@@ -79,8 +79,8 @@ public class DataSource {
 		return b.toString();
 	}
 
-	public static Map<Integer, DataSource> getDataSources(Session session) {
-		Map<Integer, DataSource> sources = new HashMap<Integer, DataSource>();
+	public static Map<Integer, TAUdbDataSource> getDataSources(TAUdbSession session) {
+		Map<Integer, TAUdbDataSource> sources = new HashMap<Integer, TAUdbDataSource>();
 		String query = "select id, name, description from data_source;";
 		try {
 			PreparedStatement statement = session.getDB().prepareStatement(query);
@@ -89,7 +89,7 @@ public class DataSource {
 				Integer id = results.getInt(1);
 				String name = results.getString(2);
 				String description = results.getString(3);
-				DataSource source = new DataSource(id, name, description);
+				TAUdbDataSource source = new TAUdbDataSource(id, name, description);
 				sources.put(id, source);
 			}
 			results.close();
@@ -105,8 +105,8 @@ public class DataSource {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		Session session = new Session("callpath", false);
-		Map<Integer, DataSource> sources = DataSource.getDataSources(session);
+		TAUdbSession session = new TAUdbSession("callpath", false);
+		Map<Integer, TAUdbDataSource> sources = TAUdbDataSource.getDataSources(session);
 		for (Integer id : sources.keySet()) {
 			System.out.println(sources.get(id).toString());
 		}
