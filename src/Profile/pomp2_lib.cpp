@@ -320,7 +320,10 @@ void TauStartOpenMPRegionTimer(my_pomp2_region *r, int index)
 #else 
   FunctionInfo *f = (FunctionInfo *)r->data;
 #endif
-  Tau_start_timer(f, 0, Tau_create_tid());
+//Have to register new threads with global threading framework.
+//Doesn't matter if this is called by a thread more than once 
+  Tau_create_tid();
+  Tau_start_timer(f, 0, Tau_get_tid());
   
   omp_unset_lock(&tau_ompregdescr_lock);
 }
