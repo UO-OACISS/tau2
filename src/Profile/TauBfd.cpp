@@ -23,8 +23,14 @@
 #if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
 #define HAVE_DECL_BASENAME 1
 #include <demangle.h>
-#define DEMANGLE_FLAGS (DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE | DMGL_TYPES)
+#define DEFAULT_DEMANGLE_FLAGS DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE | DMGL_TYPES
 #endif /* HAVE_GNU_DEMANGLE */
+
+#ifdef __PGI
+#define DEMANGLE_FLAGS DEFAULT_DEMANGLE_FLAGS | DMGL_ARM
+#else
+#define DEMANGLE_FLAGS DEFAULT_DEMANGLE_FLAGS
+#endif
 
 #if (defined(TAU_BGP) || defined(TAU_BGQ))
 #ifndef _GNU_SOURCE
@@ -951,8 +957,7 @@ int Tau_bfd_processBfdModuleInfo(tau_bfd_handle_t handle,
 
 			/* use demangled name if possible */
 #if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
-			dem_name = cplus_demangle(syms[i]->name, DMGL_PARAMS | DMGL_ANSI
-					| DMGL_VERBOSE | DMGL_TYPES);
+			dem_name = cplus_demangle(syms[i]->name, DEMANGLE_FLAGS);
 #endif /* HAVE_GNU_DEMANGLE */
 
 			const char *name = syms[i]->name;

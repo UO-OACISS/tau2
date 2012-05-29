@@ -1388,6 +1388,10 @@ extern "C" void Tau_profile_param1l(long data, const char *dataname) {
   string dname(dataname);
 #ifdef TAU_PROFILEPARAM
   TauProfiler_AddProfileParamData(data, dataname);
+#ifdef TAU_SCOREP
+  SCOREP_Tau_ParamHandle handle = SCOREP_TAU_INIT_PARAM_HANDLE;
+  SCOREP_Tau_Parameter_INT64(&handle, dataname, data);
+#endif
 #endif
 }
 
@@ -1443,6 +1447,8 @@ extern "C" void Tau_pure_stop(const char *name) {
 }
 
 extern "C" void Tau_static_phase_start(char *name) {
+
+printf("Static phase: %s\n", name);
   FunctionInfo *fi = 0;
   string n = string(name);
   TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(n);

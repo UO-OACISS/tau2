@@ -4048,7 +4048,8 @@ EOF
               echo "PAPI library links properly"
             else 
               if $c_compiler $orig_useropt tau_papi_test.o -I$papidir/include -shared -o libtau_papi_test.so $papidir/$papisubdir/libpapi.so 1> /dev/null 2>&1 ; then	
-              	echo "PAPI library links properly"
+              	echo "PAPI library links properly with .so"
+		fixmakeargs="$fixmakeargs CRAYCNL_PAPI_SHARED"
               else
                 echo "NOTE: libpapi.a can't be called in a TAU shared object. Using -DISABLESHARED"
                 fixmakeargs="$fixmakeargs NOSHARED"

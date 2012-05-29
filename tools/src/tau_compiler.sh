@@ -941,6 +941,13 @@ for arg in "$@" ; do
     fi
 done
 
+
+tempCounter=0
+while [ $tempCounter -lt $numFiles ]; do
+	arrBaseFileName[$tempCounter]=${arrFileName[$tempCounter]}
+	tempCounter=tempCounter+1
+done
+
 echoIfDebug "Using $optCompInstOption $optCompInstFortranOption for compiling Fortran Code"
 
 # on the first pass, we use PDT, on the 2nd, compiler instrumentation (if available and not disabled)
@@ -955,6 +962,8 @@ if [ $passCount == 1 ] ; then
     optCompInst=$TRUE
     gotoNextStep=$TRUE
     disablePdtStep=$TRUE
+    preprocess=$FALSE
+    arrFileName=${arrBaseFileName}
     errorStatus=0
 fi
 passCount=passCount+1;
@@ -1237,10 +1246,13 @@ cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${listOfObjectFiles} | `${op
     fi 
 
     evalWithDebugMessage "$linkCmd" "Linking with TAU Options"
-
+    buildSuccess=$?
+	    
     echoIfDebug "Looking for file: $passedOutputFile"
-    if [  ! -e $passedOutputFile ]; then
+    if [  "x$buildSuccess" != "x0" ]; then
+    	if [ ! -e $passedOutputFile ]; then
 	echoIfVerbose "Error: Tried looking for file: $passedOutputFile"
+	fi
 	echoIfVerbose "Error: Failed to link with TAU options"
 	if [ $revertForced == $TRUE -o $optCompInst = $FALSE ] ; then
 	    printError "$CMD" "$linkCmd"
@@ -1590,7 +1602,13 @@ if [ $gotoNextStep == $TRUE ]; then
 	    #echoIfDebug "cmd after appending the .o file is $newCmd"
 
 	    evalWithDebugMessage "$newCmd" "Compiling with Instrumented Code"
-
+	    buildSuccess=$?
+	    
+	    if [ "x$buildSuccess" != "x0" ]; then
+	    echoIfVerbose "Error: Compilation Failed"
+	    printError "$CMD" "$newCmd"
+	    break
+	    else
 	    echoIfVerbose "Looking for file: $outputFile "
 	    if [ $hasAnOutputFile == $TRUE ]; then
 		if [  ! -e $passedOutputFile ]; then
@@ -1604,6 +1622,7 @@ if [ $gotoNextStep == $TRUE ]; then
 		    printError "$CMD" "$newCmd"
 		    break
 		fi
+	    fi
 	    fi
 	    tempCounter=tempCounter+1
 	done
