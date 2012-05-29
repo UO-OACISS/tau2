@@ -105,6 +105,7 @@ printUsage () {
     echo -e "  -optReset=\"\"\t\t\tReset options to the compiler to the given list"
     echo -e "  -optLinking=\"\"\t\tOptions passed to the linker. Typically \$(TAU_MPI_FLIBS) \$(TAU_LIBS) \$(TAU_CXXLIBS)"
     echo -e "  -optLinkReset=\"\"\t\tReset options to the linker to the given list"
+    echo -e "  -optLinkPreserveLib=\"\"\t\tLibraries which TAU should preserve the order of on the link line see \"Moving these libraries to the end of the link line:\". Default: none."
     echo -e "  -optTauCC=\"<cc>\"\t\tSpecifies the C compiler used by TAU"
     echo -e "  -optTauUseCXXForC\t\tSpecifies the use of a C++ compiler for compiling C code"
     echo -e "  -optUseReturnFix\t\tSpecifies the use of a bug fix with ROSE parser using EDG v3.x"
@@ -486,6 +487,10 @@ for arg in "$@" ; do
 		    -optLinkReset*)
 			optLinking=${arg#"-optLinkReset="}
 			echoIfDebug "\tLinking Options are: $optLinking"
+			;;
+		    -optLinkPreserveLib*)
+			optLinkPreserveLib=${arg#"-optLinkPreserveLib="}
+			echoIfDebug "\tPreserve these libararies on link line: $optLinkPreserveLib"
 			;;
 		    -optTauDefs=*)
 		        optTauDefs="${arg#"-optTauDefs="}"
@@ -1160,10 +1165,19 @@ if [ $numFiles == 0 ]; then
 	echoIfDebug "After filtering libmpi*.so options command is: $regularCmd"
 
 	echoIfDebug "Before filtering -l*mpi* options command is: $regularCmd"
-	matchingmpi=`echo -n "$regularCmd" | perl -ne '@strings = split(/ /); foreach $s (@strings) { if ($s =~ /-l\S*mpi\S*/) {print " $s "} }'`
-	regularCmd=`echo "$regularCmd" | sed -e 's/-l\S*mpi\S*//g'`
+	matchingmpi=`perl -se '@libraries = split(/ /, $libraries); @exceptions = split(/ /, $exceptions);
+												 foreach $lib (@libraries) {
+												   if (not $lib ~~ @exceptions and $lib =~ /-l\S*mpi\S*/) {
+													 	 print " $lib " } } '\
+							-- -libraries="$regularCmd" -exceptions="$optLinkPreserveLib"`
+	regularCmd=`perl -se '@libraries = split(/ /, $libraries); @exceptions = split(/ /, $exceptions);
+												 foreach $lib (@libraries) {
+												   if ($lib ~~ @exceptions or not $lib =~ /-l\S*mpi\S*/) {
+													 	 print " $lib " } } '\
+							-- -libraries="$regularCmd" -exceptions="$optLinkPreserveLib"`
+	
 	echoIfDebug "After filtering -l*mpi* options command is: $regularCmd"
-
+	echoIfVerbose "Debug: Moving these libraries to the end of the link line: $matchingmpi"
 	optLinking="$optLinking $matchingmpi"
 
 	# also check for IBM -lvtd_r, and if found, move it to the end
