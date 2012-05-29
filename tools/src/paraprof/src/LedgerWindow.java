@@ -194,7 +194,7 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
                 list.addElement(new LedgerDataElement(it.next()));
             }
         } else if (this.windowType == USEREVENT_LEGEND) {
-            for (Iterator<UserEvent> it = ppTrial.getDataSource().getUserEvents(); it.hasNext();) {
+            for (Iterator<UserEvent> it = ppTrial.getDataSource().getUserEventIterator(); it.hasNext();) {
                 list.addElement(new LedgerDataElement(it.next()));
             }
         } else if (this.windowType == PHASE_LEGEND) {

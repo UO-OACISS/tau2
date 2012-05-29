@@ -221,7 +221,7 @@ public class DBDataSource extends DataSource {
 
         //System.out.println("Processing data, please wait ......");
         long time = System.currentTimeMillis();
-
+        databaseAPI.getTrial().setDataSource(this);
         DB db = databaseAPI.getDb();
         StringBuffer joe = new StringBuffer();
         joe.append("SELECT id, name ");
@@ -261,14 +261,7 @@ public class DBDataSource extends DataSource {
         fastGetIntervalEventData(ieMap, metricMap);
 
         // map Interval Event ID's to Function objects
-        Map<Integer, UserEvent> aeMap = new HashMap<Integer, UserEvent>();
-
-        ListIterator<AtomicEvent> lAE = databaseAPI.getAtomicEvents().listIterator();
-        while (lAE.hasNext()) {
-            AtomicEvent atomicEvent = lAE.next();
-            UserEvent userEvent = addUserEvent(atomicEvent.getName());
-            aeMap.put(new Integer(atomicEvent.getID()), userEvent);
-        }
+        Map<Integer, UserEvent> aeMap = databaseAPI.getAtomicEvents();
 
         ListIterator<AtomicLocationProfile> lAD = databaseAPI.getAtomicEventData().listIterator();
         while (lAD.hasNext()) {

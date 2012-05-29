@@ -120,7 +120,7 @@ public class DataSourceResult extends AbstractResult {
 			events.add(name);
 		}
 
-		Iterator<UserEvent> userEvents = source.getUserEvents();
+		Iterator<UserEvent> userEvents = source.getUserEventIterator();
 		while (userEvents.hasNext()) {
 			UserEvent userEvent = userEvents.next();
 			String name = userEvent.getName();

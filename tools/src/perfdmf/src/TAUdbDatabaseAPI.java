@@ -891,7 +891,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 		PreparedStatement statement = db.prepareStatement("INSERT INTO "
 				+ db.getSchemaPrefix() + "counter (trial, name) VALUES (?, ?)");
 
-		for (Iterator<UserEvent> it = dataSource.getUserEvents(); it.hasNext();) {
+		for (Iterator<UserEvent> it = dataSource.getUserEventIterator(); it.hasNext();) {
 			UserEvent ue = it.next();
 
 			statement.setInt(1, trialID);

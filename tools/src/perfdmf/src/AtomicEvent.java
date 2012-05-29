@@ -5,6 +5,8 @@ import java.sql.ResultSetMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 import java.util.List;
 import java.util.ArrayList;
@@ -34,203 +36,18 @@ import edu.uoregon.tau.perfdmf.database.DB;
  * @see		AtomicLocationProfile
  */
 public class AtomicEvent {
-    private int atomicEventID;
-    private String name;
-    private String group;
-    private int trialID;
-    private int experimentID;
-    private int applicationID;
-    private AtomicLocationProfile meanSummary = null;
-    private AtomicLocationProfile totalSummary = null;
-    private DatabaseAPI dataSession = null;
-    private IntervalEvent parentTimer = null;
 
-    public AtomicEvent(DatabaseAPI dataSession) {
-        this.dataSession = dataSession;
+	// this class is only static methods!
+    private AtomicEvent() {
     }
 
-    /**
-     * Gets the unique identifier of this atomic event object.
-     *
-     * @return	the unique identifier of the atomic event
-     */
-    public int getID() {
-        return this.atomicEventID;
-    }
-
-    /**
-     * Gets the name of the atomic event object.
-     *
-     * @return	the name of the atomic event
-     */
-    public String getName() {
-        return this.name;
-    }
-
-    /**
-     * Gets the group of the atomic event object.
-     *
-     * @return	the group of the atomic event
-     */
-    public String getGroup() {
-        return this.group;
-    }
-
-    /**
-     * Gets the trial ID of the atomic event object.
-     *
-     * @return	the trial ID of the atomic event
-     */
-    public int getTrialID() {
-        return this.trialID;
-    }
-
-    /**
-     * Gets the experiment ID of the atomic event object.
-     *
-     * @return	the experiment ID of the atomic event
-     */
-    public int getExperimentID() {
-        return this.experimentID;
-    }
-
-    /**
-     * Gets the application ID of the atomic event object.
-     *
-     * @return	the application ID of the atomic event
-     */
-    public int getApplicationID() {
-        return this.applicationID;
-    }
-
-    /**
-     * Gets mean summary data for the AtomicEvent object.
-     * The mean data is averaged across all locations, defined as any combination
-     * of node/context/thread.
-     *
-     * @return	the AtomicLocationProfile containing the mean data for this AtomicEvent.
-     * @see		Trial
-     * @see		AtomicLocationProfile
-     * @see		DataSession#getAtomicEvents
-     */
-    public AtomicLocationProfile getMeanSummary() {
-        if (this.meanSummary == null)
-            dataSession.getAtomicEventDetail(this);
-        return (this.meanSummary);
-    }
-
-    /**
-     * Gets total summary data for the AtomicEvent object.
-     * The total data is summed across all locations, defined as any combination
-     * of node/context/thread.
-     *
-     * @return	the AtomicLocationProfile containing the total data for this AtomicEvent.
-     * @see		Trial
-     * @see		AtomicLocationProfile
-     * @see		DataSession#getAtomicEvents
-     */
-    public AtomicLocationProfile getTotalSummary() {
-        if (this.totalSummary == null)
-            dataSession.getAtomicEventDetail(this);
-        return (this.totalSummary);
-    }
-
-    /**
-     * Sets the unique ID associated with this atomic event.
-     * <i> NOTE: This method is used by the DataSession object to initialize
-     * the object.  Not currently intended for use by any other code.</i>
-     *
-     * @param	id unique ID associated with this atomic event
-     */
-    public void setID(int id) {
-        this.atomicEventID = id;
-    }
-
-    /**
-     * Sets the atomic event name.
-     * <i> NOTE: This method is used by the DataSession object to initialize
-     * the object.  Not currently intended for use by any other code.</i>
-     *
-     * @param	name the name of the atomic event
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    /**
-     * Sets the TAU group of this atomic event object.
-     * <i> NOTE: This method is used by the DataSession object to initialize
-     * the object.  Not currently intended for use by any other code.</i>
-     *
-     * @param	group the TAU group the atomic event is in.
-     */
-    public void setGroup(String group) {
-        this.group = group;
-    }
-
-    /**
-     * Sets the trial ID of this atomic event object.
-     * <i> NOTE: This method is used by the DataSession object to initialize
-     * the object.  Not currently intended for use by any other code.</i>
-     *
-     * @param	id the trial ID for the atomic event.
-     */
-    public void setTrialID(int id) {
-        this.trialID = id;
-    }
-
-    /**
-     * Sets the experiment ID of this atomic event object.
-     * <i> NOTE: This method is used by the DataSession object to initialize
-     * the object.  Not currently intended for use by any other code.</i>
-     *
-     * @param	id the experiment ID for the atomic event.
-     */
-    public void setExperimentID(int id) {
-        this.experimentID = id;
-    }
-
-    /**
-     * Sets the application ID of this atomic event object.
-     * <i> NOTE: This method is used by the DataSession object to initialize
-     * the object.  Not currently intended for use by any other code.</i>
-     *
-     * @param	id the application ID for the atomic event.
-     */
-    public void setApplicationID(int id) {
-        this.applicationID = id;
-    }
-
-    /**
-     * Adds a AtomicLocationProfile to the AtomicEvent as a mean summary.
-     * <i> NOTE: This method is used by the DataSession object to initialize
-     * the object.  Not currently intended for use by any other code.</i>
-     *
-     * @param	meanSummary the mean summary object for the AtomicEvent.
-     */
-    public void setMeanSummary(AtomicLocationProfile meanSummary) {
-        this.meanSummary = meanSummary;
-    }
-
-    /**
-     * Adds a AtomicLocationProfile to the AtomicEvent as a total summary.
-     * <i> NOTE: This method is used by the DataSession object to initialize
-     * the object.  Not currently intended for use by any other code.</i>
-     *
-     * @param	totalSummary the total summary object for the AtomicEvent.
-     */
-    public void setTotalSummary(AtomicLocationProfile totalSummary) {
-        this.totalSummary = totalSummary;
-    }
-
-    // returns a Vector of AtomicEvents
-    public static Vector<AtomicEvent> getAtomicEvents(DatabaseAPI dataSession, DB db, String whereClause) {
+    // returns a Vector of UserEvents
+    public static Map<Integer, UserEvent> getAtomicEvents(DatabaseAPI dataSession, DB db, String whereClause) {
     	if(db.getSchemaVersion()>0) return getTAUdbAtomicEvents(dataSession,db, whereClause);
-        Vector<AtomicEvent> atomicEvents = new Vector<AtomicEvent>();
+        Map<Integer,UserEvent> atomicEvents = new HashMap<Integer,UserEvent>();
         // create a string to hit the database
         StringBuffer buf = new StringBuffer();
-        buf.append("select u.id, u.trial, u.name, ");
-        buf.append("u.group_name ");
+        buf.append("select u.id, u.trial, u.name ");
         buf.append("from " + db.getSchemaPrefix() + "atomic_event u inner join "
                 + db.getSchemaPrefix() + "trial t on u.trial = t.id ");
         buf.append("inner join " + db.getSchemaPrefix() + "experiment e on t.experiment = e.id ");
@@ -241,14 +58,13 @@ public class AtomicEvent {
         // get the results
         try {
             ResultSet resultSet = db.executeQuery(buf.toString());
-            //AtomicEvent tmpAtomicEvent = null;
+            //UserEvent tmpUserEvent = null;
             while (resultSet.next() != false) {
-                AtomicEvent ue = new AtomicEvent(dataSession);
-                ue.setID(resultSet.getInt(1));
-                ue.setTrialID(resultSet.getInt(2));
-                ue.setName(resultSet.getString(3));
-                ue.setGroup(resultSet.getString(4));
-                atomicEvents.addElement(ue);
+            	int id = resultSet.getInt(1);
+            	String name = resultSet.getString(3);
+            	// this is UGLY
+            	UserEvent ue = dataSession.getTrial().getDataSource().addUserEvent(name);
+                atomicEvents.put(id, ue);
             }
             resultSet.close();
         } catch (Exception ex) {
@@ -259,9 +75,9 @@ public class AtomicEvent {
         return atomicEvents;
     }
 
-    private static Vector<AtomicEvent> getTAUdbAtomicEvents(
+    private static Map<Integer,UserEvent> getTAUdbAtomicEvents(
 			DatabaseAPI datasource, DB db, String whereClause) {
-        Vector<AtomicEvent> atomicEvents = new Vector<AtomicEvent>();
+        Map<Integer,UserEvent> atomicEvents = new HashMap<Integer,UserEvent>();
         // create a string to hit the database
         StringBuffer buf = new StringBuffer();
         buf.append("select u.id, u.trial, u.name, u.parent ");
@@ -273,12 +89,11 @@ public class AtomicEvent {
         // get the results
         try {
             ResultSet resultSet = db.executeQuery(buf.toString());
-            //AtomicEvent tmpAtomicEvent = null;
+            //UserEvent tmpUserEvent = null;
             while (resultSet.next() != false) {
-                AtomicEvent ue = new AtomicEvent(datasource);
-                ue.setID(resultSet.getInt(1));
-                ue.setTrialID(resultSet.getInt(2));
-                ue.setName(resultSet.getString(3));
+                int id = resultSet.getInt(1);
+                String name = resultSet.getString(3);
+                UserEvent ue = new UserEvent(name, id);
                 int parent = resultSet.getInt(4);
             	/*
                 if (parent > 0) {
@@ -290,7 +105,7 @@ public class AtomicEvent {
                 	}
                 }
                	*/
-                atomicEvents.addElement(ue);
+                atomicEvents.put(ue.getID(),ue);
             }
             resultSet.close();
         } catch (Exception ex) {
@@ -301,18 +116,17 @@ public class AtomicEvent {
         return atomicEvents;
 	}
 	
-	public int saveAtomicEvent(DB db, int newTrialID) {
+	public static int saveAtomicEvent(DB db, int newTrialID, UserEvent userEvent) {
 		// for the new schema
-		if(db.getSchemaVersion()>0) return saveCounter(db, newTrialID);
+		if(db.getSchemaVersion()>0) return saveCounter(db, newTrialID, userEvent);
     	
         int newAtomicEventID = 0;
         try {
             PreparedStatement statement = null;
             statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
-                    + "atomic_event (trial, name, group_name) VALUES (?, ?, ?)");
+                    + "atomic_event (trial, name) VALUES (?, ?)");
             statement.setInt(1, newTrialID);
-            statement.setString(2, name);
-            statement.setString(3, group);
+            statement.setString(2, userEvent.getName());
             statement.executeUpdate();
             String tmpStr = new String();
             if (db.getDBType().compareTo("mysql") == 0)
@@ -328,6 +142,7 @@ public class AtomicEvent {
             else
                 tmpStr = "select currval('atomic_event_id_seq');";
             newAtomicEventID = Integer.parseInt(db.getDataItem(tmpStr));
+            //userEvent.setID(newAtomicEventID);
         } catch (SQLException e) {
             System.out.println("An error occurred while saving the trial.");
             e.printStackTrace();
@@ -335,7 +150,7 @@ public class AtomicEvent {
         return newAtomicEventID;
     }
 
-	public int saveCounter(DB db, int newTrialID) {
+	public static int saveCounter(DB db, int newTrialID, UserEvent userEvent) {
     	
         int newCounterID = 0;
         try {
@@ -343,12 +158,13 @@ public class AtomicEvent {
             statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
                     + "counter (trial, name, parent) VALUES (?, ?, ?)");
             statement.setInt(1, newTrialID);
-            statement.setString(2, name);
-            if (parentTimer == null) {
+            statement.setString(2, userEvent.getName());
+            System.out.println("TODO! NEED TO SAVE COUNTER CONTEXT");
+//            if (parentTimer == null) {
                 statement.setNull(3, java.sql.Types.INTEGER);
-            } else {
-                statement.setInt(3, parentTimer.getID());	
-            }
+//            } else {
+//                statement.setInt(3, parentTimer.getID());	
+//            }
             statement.executeUpdate();
             String tmpStr = new String();
             if (db.getDBType().compareTo("mysql") == 0)
@@ -364,6 +180,7 @@ public class AtomicEvent {
             else
                 tmpStr = "select currval('counter_id_seq');";
             newCounterID = Integer.parseInt(db.getDataItem(tmpStr));
+            //userEvent.setID(newCounterID);
         } catch (SQLException e) {
             System.out.println("An error occurred while saving the trial.");
             e.printStackTrace();

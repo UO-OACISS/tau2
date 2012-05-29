@@ -297,7 +297,11 @@ public abstract class DataSource {
         return userEvents.size();
     }
 
-    public Iterator<UserEvent> getUserEvents() {
+    public List<UserEvent> getUserEvents() {
+        return new ArrayList<UserEvent>(userEvents.values());
+    }
+
+    public Iterator<UserEvent> getUserEventIterator() {
         return userEvents.values().iterator();
     }
 
@@ -790,7 +794,7 @@ public abstract class DataSource {
         int numThreads = allThreads.size();
         int numSnapshots = meanData.getNumSnapshots();
 
-        int numProfiles[] = new int[getNumUserEvents() + 1];
+        Map<Integer, Integer> numProfiles = new HashMap<Integer, Integer>();
 
         for (int snapshot = 0; snapshot < numSnapshots; snapshot++) {
 
@@ -821,7 +825,9 @@ public abstract class DataSource {
                         stddevData.addUserEventProfile(stddevProfile);
                     }
 
-                    numProfiles[ue.getID()]++;
+                    Integer count = numProfiles.get(ue.getID());
+                    if (count == null) count = new Integer(1);
+                    numProfiles.put(ue.getID(), count++);
 
                     totalProfile.setNumSamples(totalProfile.getNumSamples() + uep.getNumSamples(snapshot), snapshot);
                     totalProfile.setMaxValue(totalProfile.getMaxValue() + uep.getMaxValue(snapshot), snapshot);
@@ -843,7 +849,7 @@ public abstract class DataSource {
                 }
             }
 
-            for (Iterator<UserEvent> it = this.getUserEvents(); it.hasNext();) {
+            for (Iterator<UserEvent> it = this.getUserEventIterator(); it.hasNext();) {
                 UserEvent ue = it.next();
 
                 UserEventProfile meanProfile = meanData.getUserEventProfile(ue);
@@ -852,7 +858,7 @@ public abstract class DataSource {
 
                 int divider = numThreads;
                 if (!meanIncludeNulls) { // do we include null values as zeroes in the computation or not?
-                    divider = numProfiles[ue.getID()];
+                    divider = numProfiles.get(ue.getID());
                 }
 
                 meanProfile.setNumSamples((totalProfile.getNumSamples() / divider), snapshot);

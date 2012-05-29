@@ -6,7 +6,9 @@ package edu.uoregon.tau.perfdmf.taudb;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import edu.uoregon.tau.perfdmf.database.DB;
@@ -19,6 +21,7 @@ public class TAUdbTimerCallpath {
 	private int id = 0;
 	private TAUdbTimer timer = null;
 	private TAUdbTimerCallpath parent = null;
+	private List<TAUdbTimerCallpath> children = null;
 	private String name = null;
 
 	/**
@@ -87,6 +90,19 @@ public class TAUdbTimerCallpath {
 		this.name = name;
 	}
 
+	/**
+	 * @return the children
+	 */
+	public List<TAUdbTimerCallpath> getChildren() {
+		return children;
+	}
+
+	public void addChild(TAUdbTimerCallpath child) {
+		if (this.children == null)
+			this.children = new ArrayList<TAUdbTimerCallpath>();
+		this.children.add(child);
+	}
+
 	public String toString() {
 		return this.name;
 	}
@@ -127,6 +143,8 @@ public class TAUdbTimerCallpath {
 				TAUdbTimer timer = timers.get(timerID);
 				TAUdbTimerCallpath parent = timerCallpaths.get(parentID);
 				TAUdbTimerCallpath timerCallpath = new TAUdbTimerCallpath (session, id, timer, parent, name);
+				if (parent != null) 
+					parent.addChild(timerCallpath);
 				timerCallpaths.put(id, timerCallpath);
 			}
 			results.close();

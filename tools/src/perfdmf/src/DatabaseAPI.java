@@ -35,6 +35,7 @@ public class DatabaseAPI {
     private List<Integer> contexts = null;
     private List<Integer> threads = null;
     private Vector<IntervalEvent> intervalEvents = null;
+    private List<UserEvent> atomicEvents = null;
     private List<Metric> metrics = null;
     
     private Map<Integer, Application> applications = null;
@@ -42,14 +43,13 @@ public class DatabaseAPI {
     protected Map<Integer, Trial> trials = null;
     
     private Vector<IntervalLocationProfile> intervalEventData = null;
-    private Vector<AtomicEvent> atomicEvents = null;
     private Vector<AtomicLocationProfile> atomicEventData = null;
 
     // from datasession
     protected DB db = null;
     protected ConnectionManager connector;
-    private Hashtable<Integer, IntervalEvent> intervalEventHash = null;
-    private Hashtable<Integer, AtomicEvent> atomicEventHash = null;
+    private Map<Integer, IntervalEvent> intervalEventHash = null;
+    private Map<Integer, UserEvent> atomicEventHash = null;
     //private String configFileName = null;
 
     private boolean cancelUpload = false;
@@ -410,33 +410,20 @@ public class DatabaseAPI {
         }
     }
 
-    // gets the mean & total data for a atomicEvent
-    public void getAtomicEventDetail(AtomicEvent atomicEvent) {
-        StringBuffer buf = new StringBuffer();
-        buf.append(" WHERE e.id = " + atomicEvent.getID());
-        AtomicLocationProfile.getAtomicEventDetail(db, atomicEvent, buf.toString());
-    }
-
     // returns a List of AtomicEvents
-    public List<AtomicEvent> getAtomicEvents() {
-
-        String whereClause = new String();
-        if (trial != null) {
-            whereClause = " WHERE u.trial = " + trial.getID();
-        } else if (experiment != null) {
-            whereClause = " WHERE t.experiment = " + experiment.getID();
-        } else if (application != null) {
-            whereClause = " WHERE e.application = " + application.getID();
+    public Map<Integer,UserEvent> getAtomicEvents() {
+        if (atomicEventHash == null) {
+            String whereClause = new String();
+            if (trial != null) {
+                whereClause = " WHERE u.trial = " + trial.getID();
+            } else if (experiment != null) {
+                whereClause = " WHERE t.experiment = " + experiment.getID();
+            } else if (application != null) {
+                whereClause = " WHERE e.application = " + application.getID();
+            }
+            atomicEventHash = AtomicEvent.getAtomicEvents(this, db, whereClause);
         }
-        atomicEvents = AtomicEvent.getAtomicEvents(this, db, whereClause);
-        if (atomicEventHash == null)
-            atomicEventHash = new Hashtable<Integer, AtomicEvent>();
-        AtomicEvent ue;
-        for (Enumeration<AtomicEvent> en = atomicEvents.elements(); en.hasMoreElements();) {
-            ue = en.nextElement();
-            atomicEventHash.put(new Integer(ue.getID()), ue);
-        }
-        return atomicEvents;
+        return this.atomicEventHash;
     }
 
     // sets the current intervalEvent
@@ -450,16 +437,6 @@ public class DatabaseAPI {
             setTrial(intervalEvent.getTrialID(), false);
         }
         return intervalEvent;
-    }
-
-    // sets the current user event
-    public AtomicEvent setAtomicEvent(int id) {
-        AtomicEvent atomicEvent = null;
-        this.atomicEvents = new Vector<AtomicEvent>();
-        atomicEvent = getAtomicEvent(id);
-        if (atomicEvent != null)
-            this.atomicEvents.addElement(atomicEvent);
-        return atomicEvent;
     }
 
     // clears the interval event selection
@@ -589,13 +566,13 @@ public class DatabaseAPI {
     public List<AtomicLocationProfile> getAtomicEventData() {
     	
         // check to make sure this is a meaningful request
-        if (trial == null && atomicEvents == null) {
-            System.out.println("Please select a trial or a set of user events before getting user event data.");
+        if (trial == null) {
+            System.out.println("Please select a trial before getting user event data.");
             return null;
         }
 
         // get the hash of atomicEvent names first
-        if (atomicEvents == null)
+        if (atomicEventHash == null)
             getAtomicEvents();
 
         boolean gotWhere = false;
@@ -610,11 +587,11 @@ public class DatabaseAPI {
                 buf.append(" AND e.id IN (");
             else
                 buf.append(" WHERE e.id IN (");
-            AtomicEvent atomicEvent;
-            for (Enumeration<AtomicEvent> en = atomicEvents.elements(); en.hasMoreElements();) {
-                atomicEvent = en.nextElement();
+            UserEvent atomicEvent;
+            for (int i = 0 ; i < atomicEvents.size(); i++) {
+                atomicEvent = atomicEvents.get(i);
                 buf.append(atomicEvent.getID());
-                if (en.hasMoreElements())
+                if (i + 1 < atomicEvents.size())
                     buf.append(", ");
                 else
                     buf.append(") ");
@@ -680,26 +657,6 @@ public class DatabaseAPI {
             intervalEventHash.put(new Integer(intervalEvent.getID()), intervalEvent);
         }
         return intervalEvent;
-    }
-
-    public AtomicEvent getAtomicEvent(int id) {
-        AtomicEvent atomicEvent = null;
-        if (atomicEventHash != null) {
-            atomicEvent = atomicEventHash.get(new Integer(id));
-        }
-        if (atomicEvent == null) {
-            // create a string to hit the database
-            String whereClause;
-            whereClause = " WHERE u.id = " + id;
-            Vector<AtomicEvent> atomicEvents = AtomicEvent.getAtomicEvents(this, db, whereClause);
-            if (atomicEvents.size() == 1) {
-                atomicEvent = atomicEvents.elementAt(0);
-            } //else exception?
-            if (atomicEventHash == null)
-                atomicEventHash = new Hashtable<Integer, AtomicEvent>();
-            atomicEventHash.put(new Integer(atomicEvent.getID()), atomicEvent);
-        }
-        return atomicEvent;
     }
 
     public int saveApplication(Application app) {
@@ -792,12 +749,12 @@ public class DatabaseAPI {
     private Hashtable<Integer, Integer> saveAtomicEvents(int newTrialID) {
         //        System.out.print("Saving the user events:");
         Hashtable<Integer, Integer> newUEHash = new Hashtable<Integer, Integer>();
-        Enumeration<AtomicEvent> en = atomicEvents.elements();
+        Iterator<UserEvent> en = atomicEvents.iterator();
         //int count = 0;
-        AtomicEvent atomicEvent;
-        while (en.hasMoreElements()) {
-            atomicEvent = en.nextElement();
-            int newAtomicEventID = atomicEvent.saveAtomicEvent(db, newTrialID);
+        UserEvent atomicEvent;
+        while (en.hasNext()) {
+            atomicEvent = en.next();
+            int newAtomicEventID = AtomicEvent.saveAtomicEvent(db, newTrialID, atomicEvent);
             newUEHash.put(new Integer(atomicEvent.getID()), new Integer(newAtomicEventID));
             //System.out.print("\rSaving the user events: " + ++count + " records saved...");
             //DatabaseAPI.itemsDone++;
@@ -841,16 +798,6 @@ public class DatabaseAPI {
      */
     public int saveIntervalEvent(IntervalEvent intervalEvent, int newTrialID, Hashtable<Integer, Integer> newMetHash) throws SQLException {
         return intervalEvent.saveIntervalEvent(db, newTrialID, newMetHash, -1);
-    }
-
-    /**
-     * Saves the AtomicEvent object.
-     * 
-     * @param atomicEvent
-     * @return database index ID of the saved user_event record
-     */
-    public int saveAtomicEvent(AtomicEvent atomicEvent, int newTrialID) {
-        return atomicEvent.saveAtomicEvent(db, newTrialID);
     }
 
     /**
@@ -906,7 +853,7 @@ public class DatabaseAPI {
         // create the Vectors to store the data
         intervalEvents = new Vector<IntervalEvent>();
         intervalEventData = new Vector<IntervalLocationProfile>();
-        atomicEvents = new Vector<AtomicEvent>();
+        atomicEvents = new ArrayList<UserEvent>();
         atomicEventData = new Vector<AtomicLocationProfile>();
 
         //int fcount = 0;
@@ -967,16 +914,7 @@ public class DatabaseAPI {
             }
         }
 
-        // create the user events
-        for (Iterator<UserEvent> it = dataSource.getUserEvents(); it.hasNext();) {
-            UserEvent ue = it.next();
-            if (ue != null) {
-                AtomicEvent atomicEvent = new AtomicEvent(this);
-                atomicEvent.setName(ue.getName());
-                atomicEvent.setID(ue.getID());
-                atomicEvents.add(atomicEvent);
-            }
-        }
+        this.atomicEvents = dataSource.getUserEvents();
 
         for (Iterator<Thread> it = trial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
             edu.uoregon.tau.perfdmf.Thread thread = it.next();
@@ -1205,7 +1143,7 @@ public class DatabaseAPI {
 
         String group = null; // no groups right now?
 
-        for (Iterator<UserEvent> it = dataSource.getUserEvents(); it.hasNext();) {
+        for (Iterator<UserEvent> it = dataSource.getUserEventIterator(); it.hasNext();) {
             UserEvent ue = it.next();
 
             PreparedStatement statement = null;

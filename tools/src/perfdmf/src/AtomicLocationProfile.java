@@ -306,53 +306,6 @@ public class AtomicLocationProfile {
     	return atomicEventData;
 	}
 
-	/**
-     * Documentation?
-     */
-
-    public static void getAtomicEventDetail(DB db, AtomicEvent atomicEvent, String whereClause) {
-	// create a string to hit the database
-	StringBuffer buf = new StringBuffer();
-	buf.append("select p.atomic_event, avg(p.sample_count), ");
-	buf.append("avg(p.maximum_value), avg(p.minimum_value), avg(p.mean_value), ");
-	buf.append("avg(p.standard_deviation), ");
-	buf.append("sum(p.sample_count), ");
-	buf.append("sum(p.maximum_value), sum(p.minimum_value), sum(p.mean_value), ");
-	buf.append("sum(p.standard_deviation) ");
-	buf.append("from " + db.getSchemaPrefix() + "atomic_location_profile p ");
-	buf.append("inner join " + db.getSchemaPrefix() + "atomic_event e on e.id = p.atomic_event ");
-	buf.append(whereClause);
-	buf.append(" group by p.atomic_event");
-	buf.append(" order by p.atomic_event");
-	// System.out.println(buf.toString());
-
-	// get the results
-	try {
-	    ResultSet resultSet = db.executeQuery(buf.toString());	
-	    AtomicLocationProfile eMS = new AtomicLocationProfile();
-	    AtomicLocationProfile eTS = new AtomicLocationProfile();
-	    while (resultSet.next() != false) {
-		eMS.setAtomicEventID(resultSet.getInt(1));
-		eTS.setAtomicEventID(resultSet.getInt(1));
-		eMS.setSampleCount((int)(resultSet.getDouble(2)));
-		eMS.setMaximumValue(resultSet.getDouble(3));
-		eMS.setMinimumValue(resultSet.getDouble(4));
-		eMS.setMeanValue(resultSet.getDouble(5));
-		eMS.setSumSquared(resultSet.getDouble(6));
-		eTS.setSampleCount((int)(resultSet.getDouble(7)));
-		eTS.setMaximumValue(resultSet.getDouble(8));
-		eTS.setMinimumValue(resultSet.getDouble(9));
-		eTS.setMeanValue(resultSet.getDouble(10));
-		eTS.setSumSquared(resultSet.getDouble(11));
-	    }
-	    resultSet.close(); 
-	    atomicEvent.setMeanSummary(eMS);
-	    atomicEvent.setTotalSummary(eTS);
-	}catch (Exception ex) {
-	    ex.printStackTrace();
-	}
-    }
-
     public void saveAtomicEventData(DB db, int atomicEventID) {
 	try {
 	    PreparedStatement statement = null;
