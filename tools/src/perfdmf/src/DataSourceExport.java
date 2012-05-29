@@ -237,7 +237,7 @@ public class DataSourceExport {
 		UserEvent userEvents[] = new UserEvent[numUserEvents];
 		idx = 0;
 		p.writeInt(numUserEvents);
-		for (Iterator<UserEvent> it = dataSource.getUserEvents(); it.hasNext();) {
+		for (Iterator<UserEvent> it = dataSource.getUserEventIterator(); it.hasNext();) {
 			UserEvent userEvent = it.next();
 			userEvents[idx++] = userEvent;
 			p.writeUTF(userEvent.getName());
@@ -545,7 +545,7 @@ public class DataSourceExport {
 		UserEvent userEvents[] = new UserEvent[numUserEvents];
 		idx = 0;
 		// collect user event names
-		for (Iterator<UserEvent> it = dataSource.getUserEvents(); it.hasNext();) {
+		for (Iterator<UserEvent> it = dataSource.getUserEventIterator(); it.hasNext();) {
 			UserEvent userEvent = it.next();
 			userEvents[idx++] = userEvent;
 		}
@@ -634,7 +634,7 @@ public class DataSourceExport {
 		UserEvent userEvents[] = new UserEvent[numUserEvents];
 		idx = 0;
 		// collect user event names
-		for (Iterator<UserEvent> it = dataSource.getUserEvents(); it.hasNext();) {
+		for (Iterator<UserEvent> it = dataSource.getUserEventIterator(); it.hasNext();) {
 			UserEvent userEvent = it.next();
 			userEvents[idx++] = userEvent;
 		}

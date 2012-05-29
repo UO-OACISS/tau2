@@ -543,7 +543,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         			valueBox.setSelectedIndex(settings.atomicETDex[dex]);
         			if(settings.getTopoAtomic(dex)==null){
         				
-        				UserEvent tmpUE = ppTrial.getDataSource().getUserEvents().next();
+        				UserEvent tmpUE = ppTrial.getDataSource().getUserEventIterator().next();
         				settings.setTopoAtomic(tmpUE, dex);
         			}
         			fname=settings.getTopoAtomic(dex).getName();
@@ -602,7 +602,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                 	}
                 	else{
                         FunctionSelectorDialog fSelector = new FunctionSelectorDialog(window, true,
-                        		ppTrial.getDataSource().getUserEvents(), settings.getTopoAtomic(dex), true, false);
+                        		ppTrial.getDataSource().getUserEventIterator(), settings.getTopoAtomic(dex), true, false);
 
                         if (fSelector.choose()) {
                             UserEvent selectedFunction = (UserEvent) fSelector.getSelectedObject();
