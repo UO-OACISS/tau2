@@ -13,7 +13,7 @@
 
 F90=tau_f90.sh
 
-LIBS= 
+LIBS=-lmpi_f90 -lfftw_mpi
 INCLUDE=
 OBJS= matmult.o
 

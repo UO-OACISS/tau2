@@ -753,24 +753,24 @@ public abstract class DataSource {
 
                     // get/create the userEventProfile for mean
                     UserEventProfile meanProfile = meanData.getUserEventProfile(ue);
-                    if (meanProfile == null) {
+                    //if (meanProfile == null) {
                         meanProfile = new UserEventProfile(ue, numSnapshots);
                         meanData.addUserEventProfile(meanProfile);
-                    }
+                    //}
 
                     // get/create the userEventProfile for total
                     UserEventProfile totalProfile = totalData.getUserEventProfile(ue);
-                    if (totalProfile == null) {
+                    //if (totalProfile == null) {
                         totalProfile = new UserEventProfile(ue, numSnapshots);
                         totalData.addUserEventProfile(totalProfile);
-                    }
+                   // }
 
                     // get/create the userEventProfile for stddev
                     UserEventProfile stddevProfile = stddevData.getUserEventProfile(ue);
-                    if (stddevProfile == null) {
+                   // if (stddevProfile == null) {
                         stddevProfile = new UserEventProfile(ue, numSnapshots);
                         stddevData.addUserEventProfile(stddevProfile);
-                    }
+                   // }
 
                     numProfiles[ue.getID()]++;
 
