@@ -383,17 +383,50 @@ void Tau_collate_freeUnitAtomicBuffer(double **atomicMin, double **atomicMax,
   free(*atomicSumSqr);
 }
 
+
+int Tau_collate_get_local_threads(int id, bool isAtomic){
+    int numThreadsLocal=0;
+    int numThreads = RtsLayer::getTotalThreads();
+    if(isAtomic){
+        TauUserEvent *userEvent = TheEventDB()[id];
+		for (int t=0; t<numThreads; t++)
+			{
+				if (userEvent->GetNumEvents(t) > 0)
+				{
+					numThreadsLocal += 1;
+				}
+			}
+			DEBUG_NUM_CALLS("TAU: %d threads register event: %s.\n",
+			numThreadsLocal, userEvent->GetEventName());
+    }
+    else{/*It is a function*/
+        FunctionInfo *fi = TheFunctionDB()[id];
+		for (int t=0; t<numThreads; t++)
+			{
+				if (fi->GetCalls(t) > 0)
+				{
+					numThreadsLocal += 1;
+				}
+			}
+			DEBUG_NUM_CALLS("TAU: %d threads call function: %s.\n",
+			numThreadsLocal, fi->GetName());
+        
+    }
+    return numThreadsLocal;
+}
+
+
 /* Parallel operation to acquire total number of threads for each event */
 void Tau_collate_get_total_threads(Tau_unify_object_t *functionUnifier, int *globalNumThreads, 
 				   int **numEventThreads,
-				   int numEvents, int *globalEventMap) {
+				   int numEvents, int *globalEventMap,bool isAtomic) {
   int rank;
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   
   int *numThreadsGlobal = (int *)TAU_UTIL_MALLOC(sizeof(int)*(numEvents+1));
   int *numThreadsLocal = (int *)TAU_UTIL_MALLOC(sizeof(int)*(numEvents+1));
   
-  int numThreads = RtsLayer::getTotalThreads();
+  
 
   /* For each event, determine contributing threads */
   for (int i=0; i<numEvents; i++) {
@@ -402,7 +435,7 @@ void Tau_collate_get_total_threads(Tau_unify_object_t *functionUnifier, int *glo
 	for (int i=0; i<numEvents; i++)
 	{
 	 int local_index = functionUnifier->sortMap[globalEventMap[i]];
-   if (globalEventMap[i] != -1) { // if it occurred in our rank
+/*   if (globalEventMap[i] != -1) { // if it occurred in our rank
 	  FunctionInfo *fi = TheFunctionDB()[local_index];
 			for (int t=0; t<numThreads; t++)
 			{
@@ -413,6 +446,9 @@ void Tau_collate_get_total_threads(Tau_unify_object_t *functionUnifier, int *glo
 			}
 			DEBUG_NUM_CALLS("TAU: %d threads call function: %s.\n",
 			numThreadsLocal[i], fi->GetName());
+		}*/
+		if(globalEventMap[i]!=-1){
+		numThreadsLocal[i]=Tau_collate_get_local_threads(local_index,isAtomic);
 		}
 		else
 		{	
@@ -422,7 +458,7 @@ void Tau_collate_get_total_threads(Tau_unify_object_t *functionUnifier, int *glo
 		}
 	}
   /* Extra slot in array indicates number of threads on rank */
-  numThreadsLocal[numEvents] = numThreads;
+  numThreadsLocal[numEvents] = RtsLayer::getTotalThreads();
   PMPI_Reduce(numThreadsLocal, numThreadsGlobal, numEvents+1, 
 	      MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
@@ -834,7 +870,7 @@ extern "C" int Tau_collate_writeProfile() {
     globalEventMap[functionUnifier->mapping[i]] = i; // set reverse mapping
   }
   Tau_collate_get_total_threads(functionUnifier, &globalNumThreads, &numEventThreads,
-				numItems, globalEventMap);
+				numItems, globalEventMap,false);
 
   double ***gExcl, ***gIncl;
   double **gNumCalls, **gNumSubr;

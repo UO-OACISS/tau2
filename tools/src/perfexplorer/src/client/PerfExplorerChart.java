@@ -61,7 +61,7 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 			}
 		}
 
-		JFreeChart chart = ChartFactory.createStackedBarChart(
+		JFreeChart chart = ChartFactory.createStackedBarChart3D(
 			"Total " + PerfExplorerModel.getModel().getMetricName() + " Bar Chart for " +   // chart title
 			PerfExplorerModel.getModel().toString(),
 			"Number of Processors",		  // domain axis label

@@ -12,6 +12,10 @@ CUBE_JAVA_READER=${TAUROOT}/${MACHINE}/lib/CubeReader.jar
 
 JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis.jar:${JARDIR}/jogl.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-1.0.12.jar:${JARDIR}/jcommon-1.0.15.jar:${JARDIR}/jython.jar:${JARDIR}/mesp.jar:${CUBE_JAVA_READER}
 
+if [ $MACHINE = bgq -o $MACHINE = arm_linux ]; then
+  export LIBGL_ALWAYS_INDIRECT=1
+fi
+
 APPLE_OPTIONS=""
 if [ "$MACHINE" = "apple" ]; then
     APPLE_OPTIONS="-d32 -Xdock:name=ParaProf -Xdock:icon=${TAUROOT}/${MACHINE}/lib/tau-medium.png -Dapple.laf.useScreenMenuBar=true -Dcom.apple.mrj.application.growbox.intrudes=true"
@@ -98,6 +102,22 @@ if [ "x$readlink" != "x" -a "x$platform" != "xDarwin" ] ; then
     fi
 fi
 javaLocation=`dirname $javaLocation`
+
+# If libjawt.so is not in the java bin directory, it might be in the lib or lib/arch dir
+# It is needed for the 3D window in ParaProf.
+if [ ! -r $javaLocation/libjawt.so -a -r $javaLocation/../lib/x86_64/libjawt.so ]
+then
+  javaLocation="$javaLocation:$javaLocation/../lib:$javaLocation/../lib/x86_64"
+fi
+
+if [ $MACHINE = arm_linux ]
+then
+  javaLocation="$javaLocation:$javaLocation/../lib:$javaLocation/../lib/arm:$javaLocation/../lib/arm/server"
+#  echo "javaLocation=$javaLocation"
+  export LD_LIBRARY_PATH=$javaLocation:${LIBDIR}:${LD_LIBRARY_PATH}
+fi
+
+
 
 
 # run the user setup script

@@ -41,8 +41,8 @@ context);
 char* openCLGpuId::printId() const 
 {	
 		//printf("in printId, id: %d.\n", id);
-		char r[20];
-		sprintf(r, "%d", id);
+		char r[40];
+		sprintf(r, "%d:%lld", id, commandId);
 		return r;
 }
 
@@ -65,17 +65,18 @@ class openCLEventId : public eventId
 	}
 };
 
-openCLGpuId::openCLGpuId(cl_device_id i, double sync)
+openCLGpuId::openCLGpuId(cl_device_id i, x_uint64 cId, double sync)
 {
 	id = i;
+	commandId = cId;
 	sync_offset = sync;
 }
 
 openCLGpuId *Tau_opencl_retrive_gpu(cl_command_queue q)
 {
-	//printf("Adapter: command queue is: %d.\n", q);
+	//printf("Adapter: command queue is: %lld.\n", q);
 	if (q == NULL)
-	{	printf("NULL command queue passed. exiting.\n");
+	{	//printf("NULL command queue passed. exiting.\n");
 		exit(1); }
 	//map<cl_command_queue, openCLGpuId*>::iterator it = IdentityMap.end();
 	map<cl_command_queue, openCLGpuId*>::iterator it = IdentityMap.find(q);
@@ -97,19 +98,20 @@ openCLGpuId *Tau_opencl_retrive_gpu(cl_command_queue q)
 			if (err == CL_INVALID_COMMAND_QUEUE)
 				printf("invalid command queue.\n");
 		}
+		err = clGetCommandQueueInfo(q, CL_QUEUE_CONTEXT, sizeof(cl_context), &context, NULL);
+		if (err != CL_SUCCESS)
+		{	printf("error in clGetCommandQueueInfo CONTEXT.\n"); }
+	
 		//err = clGetDeviceInfo(id, CL_DEVICE_VENDOR_ID, sizeof(cl_uint), &vendor, NULL);
 
 
 		//printf("device id: %d.\n", id);
+		//printf("command id: %lld.\n", q);
 		//printf("vendor id: %d.\n", vendor);
-		clGetCommandQueueInfo(q, CL_QUEUE_CONTEXT, sizeof(cl_context), &context, NULL);
-		if (err != CL_SUCCESS)
-		{	printf("error in clGetCommandQueueInfo CONTEXT.\n"); }
-	
 		double sync_offset;
 		sync_offset = Tau_opencl_sync_clocks(q, context);
 	
-		openCLGpuId *gId = new openCLGpuId(id, sync_offset);
+		openCLGpuId *gId = new openCLGpuId(id, (x_uint64) q, sync_offset);
 		IdentityMap[q] = gId;
 		
 		return gId;
@@ -173,7 +175,7 @@ pthread_mutex_t callback_lock;
 int init_callback() 
 {
 #ifdef TAU_OPENCL_LOCKING
-	printf("initalize pthread locking.\n");
+	//printf("initalize pthread locking.\n");
 	pthread_mutexattr_t lock_attr;
 	pthread_mutexattr_init(&lock_attr);
 	pthread_mutex_init(&callback_lock, &lock_attr);
