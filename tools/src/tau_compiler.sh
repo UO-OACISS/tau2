@@ -1165,16 +1165,20 @@ if [ $numFiles == 0 ]; then
 	echoIfDebug "After filtering libmpi*.so options command is: $regularCmd"
 
 	echoIfDebug "Before filtering -l*mpi* options command is: $regularCmd"
-	matchingmpi=`perl -se '@libraries = split(/ /, $libraries); @exceptions = split(/ /, $exceptions);
-												 foreach $lib (@libraries) {
-												   if (not $lib ~~ @exceptions and $lib =~ /-l\S*mpi\S*/) {
-													 	 print " $lib " } } '\
-							-- -libraries="$regularCmd" -exceptions="$optLinkPreserveLib"`
-	regularCmd=`perl -se '@libraries = split(/ /, $libraries); @exceptions = split(/ /, $exceptions);
-												 foreach $lib (@libraries) {
-												   if ($lib ~~ @exceptions or not $lib =~ /-l\S*mpi\S*/) {
-													 	 print " $lib " } } '\
-							-- -libraries="$regularCmd" -exceptions="$optLinkPreserveLib"`
+	matchingmpi=`perl -se '@libraries = split(/ /, $libraries); 
+  @exceptions = split(/ /, $exceptions);
+  @hash{@exceptions}=();
+    foreach $lib (@libraries) {
+      if (not exists $hash{$lib} and $lib =~ /-l\S*mpi\S*/) {
+        print " $lib " } } '\
+   -- -libraries="$regularCmd" -exceptions="$optLinkPreserveLib"`
+	regularCmd=`perl -se '@libraries = split(/ /, $libraries); 
+  @exceptions = split(/ /, $exceptions);
+  @hash{@exceptions}=();
+    foreach $lib (@libraries) {
+      if (exists $hash{$lib} or not $lib =~ /-l\S*mpi\S*/) {
+        print " $lib " } } '\
+   -- -libraries="$regularCmd" -exceptions="$optLinkPreserveLib"`
 	
 	echoIfDebug "After filtering -l*mpi* options command is: $regularCmd"
 	echoIfVerbose "Debug: Moving these libraries to the end of the link line: $matchingmpi"
