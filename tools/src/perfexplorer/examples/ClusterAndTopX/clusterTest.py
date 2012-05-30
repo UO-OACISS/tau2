@@ -88,7 +88,9 @@ def main():
 
 	# split the trial into the clusters
 	splitter = SplitTrialClusters(result, clusterResult)
-	clusters = splitter.processData()
+	#clusters = splitter.processData()
+	clusters = ArrayList()
+	clusters.add(reduced)
 
 	functions = "function-list.txt"
 	gprof = False

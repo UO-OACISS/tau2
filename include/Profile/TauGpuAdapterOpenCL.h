@@ -13,14 +13,15 @@ using namespace std;
 
 class openCLGpuId : public gpuId {
 
+public:
+	x_uint64 commandId;
 	cl_device_id id;
 	double sync_offset;
 
-public:
 /*	cudaGpuId(const NvU64 cId, const NvU32 dId) :
 		contextId(cId), deviceId(dId) {} */
 	
-	openCLGpuId(cl_device_id id, double sync);
+	openCLGpuId(cl_device_id id, x_uint64 commandId, double sync);
 	openCLGpuId *getCopy() const { 
 			openCLGpuId *c = new openCLGpuId(*this);
 			return c;
@@ -28,13 +29,21 @@ public:
 
 	bool less_than(const gpuId *other) const
 	{
-		return strcmp(printId(), ((openCLGpuId *)other)->printId()) < 0;
+		if (this->id_p1() == other->id_p1())
+		{
+			return this->id_p2() < other->id_p2();
+		}
+		else
+		{
+			return this->id_p1() < other->id_p1();
+		}
+		//return strcmp(printId(), ((openCLGpuId *)o)->printId()) < 0;
 	}
 	double syncOffset();
 	
   char* printId() const;
-	x_uint64 id_p1() { return (x_uint64) id; }
-	x_uint64 id_p2() { return 0; }
+	x_uint64 id_p1() const { return (x_uint64) id; }
+	x_uint64 id_p2() const { return (x_uint64) commandId; }
 };
 
 class callback_data
