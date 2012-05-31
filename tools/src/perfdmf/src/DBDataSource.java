@@ -261,27 +261,8 @@ public class DBDataSource extends DataSource {
         fastGetIntervalEventData(ieMap, metricMap);
 
         // map Interval Event ID's to Function objects
-        Map<Integer, UserEvent> aeMap = databaseAPI.getAtomicEvents();
-
-        ListIterator<AtomicLocationProfile> lAD = databaseAPI.getAtomicEventData().listIterator();
-        while (lAD.hasNext()) {
-            AtomicLocationProfile alp = lAD.next();
-            Thread thread = addThread(alp.getNode(), alp.getContext(), alp.getThread());
-            UserEvent userEvent = aeMap.get(new Integer(alp.getAtomicEventID()));
-            UserEventProfile userEventProfile = thread.getUserEventProfile(userEvent);
-
-            if (userEventProfile == null) {
-                userEventProfile = new UserEventProfile(userEvent);
-                thread.addUserEventProfile(userEventProfile);
-            }
-
-            userEventProfile.setNumSamples(alp.getSampleCount());
-            userEventProfile.setMaxValue(alp.getMaximumValue());
-            userEventProfile.setMinValue(alp.getMinimumValue());
-            userEventProfile.setMeanValue(alp.getMeanValue());
-            userEventProfile.setSumSquared(alp.getSumSquared());
-            userEventProfile.updateMax();
-        }
+        databaseAPI.getAtomicEvents();
+        databaseAPI.getAtomicEventData(this);
 
         downloadMetaData();
 

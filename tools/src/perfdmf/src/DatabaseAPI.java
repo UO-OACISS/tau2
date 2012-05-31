@@ -43,7 +43,7 @@ public class DatabaseAPI {
     protected Map<Integer, Trial> trials = null;
     
     private Vector<IntervalLocationProfile> intervalEventData = null;
-    private Vector<AtomicLocationProfile> atomicEventData = null;
+    private Vector<UserEventProfile> atomicEventData = null;
 
     // from datasession
     protected DB db = null;
@@ -563,7 +563,7 @@ public class DatabaseAPI {
         return intervalEventData;
     }
 
-    public List<AtomicLocationProfile> getAtomicEventData() {
+    public List<UserEventProfile> getAtomicEventData(DataSource dataSource) {
     	
         // check to make sure this is a meaningful request
         if (trial == null) {
@@ -635,7 +635,7 @@ public class DatabaseAPI {
             }
         }
 
-        atomicEventData = AtomicLocationProfile.getAtomicEventData(db, buf.toString());
+        atomicEventData = AtomicLocationProfile.getAtomicEventData(db, buf.toString(), dataSource, this.atomicEventHash);
         return atomicEventData;
     }
 
@@ -764,19 +764,20 @@ public class DatabaseAPI {
         return newUEHash;
     }
 
-    private void saveAtomicEventData(Hashtable<Integer, Integer> newUEHash) {
+    private void saveAtomicEventData(Hashtable<Integer, Integer> newUEHash, List<Thread> threads) {
         //    System.out.print("Saving the user event data:");
-        Enumeration<AtomicLocationProfile> en = atomicEventData.elements();
-        AtomicLocationProfile uedo;
+    	AtomicLocationProfile.saveAtomicEventData(db,  newUEHash, threads);
+/*        Enumeration<UserEventProfile> en = atomicEventData.elements();
+        UserEventProfile uedo;
         //int count = 0;
         while (en.hasMoreElements()) {
             uedo = en.nextElement();
-            Integer newAtomicEventID = newUEHash.get(new Integer(uedo.getAtomicEventID()));
-            uedo.saveAtomicEventData(db, newAtomicEventID.intValue());
+            Integer newAtomicEventID = newUEHash.get(new Integer(uedo.getUserEvent().getID()));
+            AtomicLocationProfile.saveAtomicEventData(db, uedo, newAtomicEventID);
             //       System.out.print("\rSaving the user event data: " + ++count + " records saved...");
         }
         //     System.out.print("\n");
-    }
+*/    }
 
     /**
      * Saves the Trial.
@@ -798,17 +799,6 @@ public class DatabaseAPI {
      */
     public int saveIntervalEvent(IntervalEvent intervalEvent, int newTrialID, Hashtable<Integer, Integer> newMetHash) throws SQLException {
         return intervalEvent.saveIntervalEvent(db, newTrialID, newMetHash, -1);
-    }
-
-    /**
-     * Saves the atomicEventData object.
-     * 
-     * @param atomicEventData
-     * @return database index ID of the saved atomic_location_profile record
-     */
-    public void saveAtomicEventData(AtomicLocationProfile atomicEventData, int newAtomicEventID) {
-        atomicEventData.saveAtomicEventData(db, newAtomicEventID);
-        return;
     }
 
     // this stuff is a total hack to get some functionality that the new database API will have
@@ -854,7 +844,7 @@ public class DatabaseAPI {
         intervalEvents = new Vector<IntervalEvent>();
         intervalEventData = new Vector<IntervalLocationProfile>();
         atomicEvents = new ArrayList<UserEvent>();
-        atomicEventData = new Vector<AtomicLocationProfile>();
+        atomicEventData = new Vector<UserEventProfile>();
 
         //int fcount = 0;
         //int ucount = 0;
@@ -947,18 +937,7 @@ public class DatabaseAPI {
             for (Iterator<UserEventProfile> e4 = thread.getUserEventProfiles(); e4.hasNext();) {
                 UserEventProfile uep = e4.next();
                 if (uep != null) {
-
-                    AtomicLocationProfile udo = new AtomicLocationProfile();
-                    udo.setAtomicEventID(uep.getUserEvent().getID());
-                    udo.setNode(thread.getNodeID());
-                    udo.setContext(thread.getContextID());
-                    udo.setThread(thread.getThreadID());
-                    udo.setSampleCount((int) uep.getNumSamples());
-                    udo.setMaximumValue(uep.getMaxValue());
-                    udo.setMinimumValue(uep.getMinValue());
-                    udo.setMeanValue(uep.getMeanValue());
-                    udo.setSumSquared(uep.getSumSquared());
-                    atomicEventData.add(udo);
+                    atomicEventData.add(uep);
                 }
             }
         }
@@ -997,7 +976,7 @@ public class DatabaseAPI {
                 if (atomicEvents != null && atomicEvents.size() > 0) {
                     Hashtable<Integer, Integer> atomicEventHash = saveAtomicEvents(newTrialID);
                     if (atomicEventData != null && atomicEventData.size() > 0) {
-                        saveAtomicEventData(atomicEventHash);
+                        saveAtomicEventData(atomicEventHash, trial.getDataSource().getAllThreads());
                     }
                 }
 
