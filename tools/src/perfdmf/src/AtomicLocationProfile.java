@@ -3,6 +3,10 @@ package edu.uoregon.tau.perfdmf;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import edu.uoregon.tau.perfdmf.database.DB;
@@ -32,244 +36,60 @@ import edu.uoregon.tau.perfdmf.database.DB;
  * @see		AtomicEvent
  */
 public class AtomicLocationProfile {
-    private int atomicEventID;
-    private int node;
-    private int context;
-    private int thread;
-    private int sampleCount;
-    private double maximumValue;
-    private double minimumValue;
-    private double meanValue;
-    private double sumSquared;
 
-    /**
-     * Returns the unique ID for the atomic event that owns this data
-     *
-     * @return	the atomic event ID.
-     * @see		AtomicEvent
-     */
-    public int getAtomicEventID () {
-	return this.atomicEventID;
-    }
+	public static Vector<UserEventProfile> getAtomicEventData(DB db, String whereClause, DataSource dataSource, Map<Integer, UserEvent> eventMap) {
+		if(db.getSchemaVersion()>0) return TAUdbGetAtomicEventData(db,whereClause, dataSource, eventMap);
+		Vector<UserEventProfile> userEventData = new Vector<UserEventProfile>();
+		// create a string to hit the database
+		StringBuffer buf = new StringBuffer();
+		buf.append("select p.atomic_event, p.node, ");
+		buf.append("p.context, p.thread, p.sample_count, ");
+		buf.append("p.maximum_value, p.minimum_value, p.mean_value, ");
+		buf.append("p.standard_deviation, e.trial ");
+		buf.append("from " + db.getSchemaPrefix() + "atomic_location_profile p ");
+		buf.append("inner join " + db.getSchemaPrefix() + "atomic_event e on e.id = p.atomic_event ");
+		buf.append(whereClause);
+		buf.append(" order by p.node, p.context, p.thread, p.atomic_event");
+		// System.out.println(buf.toString());
 
-    /**
-     * Returns the node for this data location.
-     *
-     * @return the node index.
-     */
-    public int getNode () {
-	return this.node;
-    }
+		// get the results
+		try {
+			ResultSet resultSet = db.executeQuery(buf.toString());	
+			while (resultSet.next() != false) {
+				int eventid = resultSet.getInt(1);
+				int nodeid = resultSet.getInt(2);
+				int contextid = resultSet.getInt(3);
+				int threadid = resultSet.getInt(4);
+				Thread thread = dataSource.addThread(nodeid, contextid, threadid);
+				UserEvent userEvent = eventMap.get(new Integer(eventid));
+				UserEventProfile userEventProfile = thread.getUserEventProfile(userEvent);
 
-    /**
-     * Returns the context for this data location.
-     *
-     * @return the context index.
-     */
-    public int getContext () {
-	return this.context;
-    }
+				if (userEventProfile == null) {
+					userEventProfile = new UserEventProfile(userEvent);
+					thread.addUserEventProfile(userEventProfile);
+				}
 
-    /**
-     * Returns the thread for this data location.
-     *
-     * @return the thread index.
-     */
-    public int getThread () {
-	return this.thread;
-    }
+				userEventProfile.setNumSamples(resultSet.getInt(5));
+				userEventProfile.setMaxValue(resultSet.getDouble(6));
+				userEventProfile.setMinValue(resultSet.getDouble(7));
+				userEventProfile.setMeanValue(resultSet.getDouble(8));
+				userEventProfile.setSumSquared(resultSet.getDouble(9));
+				userEventProfile.updateMax();
 
-    /**
-     * Returns the number of calls to this function at this location.
-     *
-     * @return	the number of calls.
-     */
-    public int getSampleCount () {
-	return this.sampleCount;
-    }
-
-    /**
-     * Returns the maximum value recorded for this atomic event.
-     *
-     * @return	the maximum value.
-     */
-    public double getMaximumValue () {
-	return this.maximumValue;
-    }
-
-    /**
-     * Returns the minimum value recorded for this atomic event.
-     *
-     * @return	the minimum value.
-     */
-    public double getMinimumValue () {
-	return this.minimumValue;
-    }
-
-    /**
-     * Returns the mean value recorded for this atomic event.
-     *
-     * @return	the mean value.
-     */
-    public double getMeanValue () {
-	return this.meanValue;
-    }
-
-    /**
-     * Returns the sum squared calculated for this atomic event.
-     *
-     * @return	the sum squared value.
-     */
-    public double getSumSquared () {
-	return this.sumSquared;
-    }
-
-    /**
-     * Sets the unique atomic event ID for the atomic event at this location.
-     * <i> NOTE: This method is used by the DataSession object to initialize
-     * the object.  Not currently intended for use by any other code.</i>
-     *
-     * @param	atomicEventID a unique atomic event ID.
-     */
-    public void setAtomicEventID (int atomicEventID) {
-	this.atomicEventID = atomicEventID;
-    }
-
-    /**
-     * Sets the node of the current location that this data object represents.
-     * <i> NOTE: This method is used by the DataSession object to initialize
-     * the object.  Not currently intended for use by any other code.</i>
-     *
-     * @param	node the node for this location.
-     */
-    public void setNode (int node) {
-	this.node = node;
-    }
-
-    /**
-     * Sets the context of the current location that this data object represents.
-     * <i> NOTE: This method is used by the DataSession object to initialize
-     * the object.  Not currently intended for use by any other code.</i>
-     *
-     * @param	context the context for this location.
-     */
-    public void setContext (int context) {
-	this.context = context;
-    }
-
-    /**
-     * Sets the thread of the current location that this data object represents.
-     * <i> NOTE: This method is used by the DataSession object to initialize
-     * the object.  Not currently intended for use by any other code.</i>
-     *
-     * @param	thread the thread for this location.
-     */
-    public void setThread (int thread) {
-	this.thread = thread;
-    }
-
-    /**
-     * Sets the number of times the atomic event occurred at this location.
-     * <i> NOTE: This method is used by the DataSession object to initialize
-     * the object.  Not currently intended for use by any other code.</i>
-     *
-     * @param	sampleCount the sample count at this location
-     */
-    public void setSampleCount (int sampleCount) {
-	this.sampleCount = sampleCount;
-    }
-
-    /**
-     * Sets the maximum value recorded for this atomic event at this location.
-     * <i> NOTE: This method is used by the DataSession object to initialize
-     * the object.  Not currently intended for use by any other code.</i>
-     *
-     * @param	maximumValue the maximum value at this location
-     */
-    public void setMaximumValue (double maximumValue) {
-	this.maximumValue = maximumValue;
-    }
-
-    /**
-     * Sets the minimum value recorded for this atomic event at this location.
-     * <i> NOTE: This method is used by the DataSession object to initialize
-     * the object.  Not currently intended for use by any other code.</i>
-     *
-     * @param	minimumValue the minimum value at this location
-     */
-    public void setMinimumValue (double minimumValue) {
-	this.minimumValue = minimumValue;
-    }
-
-    /**
-     * Sets the mean value calculated for this atomic event at this location.
-     * <i> NOTE: This method is used by the DataSession object to initialize
-     * the object.  Not currently intended for use by any other code.</i>
-     *
-     * @param	meanValue the mean value at this location
-     */
-    public void setMeanValue (double meanValue) {
-	this.meanValue = meanValue;
-    }
-
-    /**
-     * Sets the sum squared value calculated for this atomic event at this location.
-     * <i> NOTE: This method is used by the DataSession object to initialize
-     * the object.  Not currently intended for use by any other code.</i>
-     *
-     * @param	sumSquared the sum squared value at this location
-     */
-    public void setSumSquared (double sumSquared) {
-	this.sumSquared = sumSquared;
-    }
-
-    /**
-     * Documentation?
-     */
-
-    public static Vector<AtomicLocationProfile> getAtomicEventData(DB db, String whereClause) {
-    	if(db.getSchemaVersion()>0) return TAUdbGetAtomicEventData(db,whereClause);
-	Vector<AtomicLocationProfile> atomicEventData = new Vector<AtomicLocationProfile>();
-	// create a string to hit the database
-	StringBuffer buf = new StringBuffer();
-	buf.append("select p.atomic_event, p.node, ");
-	buf.append("p.context, p.thread, p.sample_count, ");
-	buf.append("p.maximum_value, p.minimum_value, p.mean_value, ");
-	buf.append("p.standard_deviation, e.trial ");
-	buf.append("from " + db.getSchemaPrefix() + "atomic_location_profile p ");
-	buf.append("inner join " + db.getSchemaPrefix() + "atomic_event e on e.id = p.atomic_event ");
-	buf.append(whereClause);
-	buf.append(" order by p.node, p.context, p.thread, p.atomic_event");
-	// System.out.println(buf.toString());
-
-	// get the results
-	try {
-	    ResultSet resultSet = db.executeQuery(buf.toString());	
-	    while (resultSet.next() != false) {
-		AtomicLocationProfile ueDO = new AtomicLocationProfile();
-		ueDO.setAtomicEventID(resultSet.getInt(1));
-		ueDO.setNode(resultSet.getInt(2));
-		ueDO.setContext(resultSet.getInt(3));
-		ueDO.setThread(resultSet.getInt(4));
-		ueDO.setSampleCount(resultSet.getInt(5));
-		ueDO.setMaximumValue(resultSet.getDouble(6));
-		ueDO.setMinimumValue(resultSet.getDouble(7));
-		ueDO.setMeanValue(resultSet.getDouble(8));
-		ueDO.setSumSquared(resultSet.getDouble(9));
-		atomicEventData.addElement(ueDO);
-	    }
-	    resultSet.close(); 
-	} catch (Exception ex) {
-	    ex.printStackTrace();
-	    return null;
+				userEventData.addElement(userEventProfile);
+			}
+			resultSet.close(); 
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return null;
+		}
+		return userEventData;
 	}
-	return atomicEventData;
-    }
 
-    private static Vector<AtomicLocationProfile> TAUdbGetAtomicEventData(DB db,
-			String whereClause) {
-    	Vector<AtomicLocationProfile> atomicEventData = new Vector<AtomicLocationProfile>();
-    	// create a string to hit the database
+	private static Vector<UserEventProfile> TAUdbGetAtomicEventData(DB db,
+			String whereClause, DataSource dataSource, Map<Integer, UserEvent> eventMap) {
+		Vector<UserEventProfile> userEventData = new Vector<UserEventProfile>();
+		// create a string to hit the database
 		StringBuffer buf = new StringBuffer();
 		buf.append("select v.counter, h.node_rank as node, h.context_rank as context, h.thread_rank as thread,v.sample_count,");
 		buf.append("v.maximum_value, v.minimum_value, v.mean_value,v.standard_deviation");
@@ -277,53 +97,81 @@ public class AtomicLocationProfile {
 				db.getSchemaPrefix() +"counter_value v  left outer join counter e on v.counter = e.id ");
 		buf.append("left outer join " +
 				db.getSchemaPrefix() +"thread h on v.thread = h.id ");
-    	
-    	buf.append(whereClause);
-    	buf.append(" order by node, context, thread, v.counter");
-    	 //System.out.println(buf.toString());
 
-    	// get the results
-    	try {
-    	    ResultSet resultSet = db.executeQuery(buf.toString());	
-    	    while (resultSet.next() != false) {
-    		AtomicLocationProfile ueDO = new AtomicLocationProfile();
-    		ueDO.setAtomicEventID(resultSet.getInt(1));
-    		ueDO.setNode(resultSet.getInt(2));
-    		ueDO.setContext(resultSet.getInt(3));
-    		ueDO.setThread(resultSet.getInt(4));
-    		ueDO.setSampleCount(resultSet.getInt(5));
-    		ueDO.setMaximumValue(resultSet.getDouble(6));
-    		ueDO.setMinimumValue(resultSet.getDouble(7));
-    		ueDO.setMeanValue(resultSet.getDouble(8));
-    		ueDO.setSumSquared(resultSet.getDouble(9));
-    		atomicEventData.addElement(ueDO);
-    	    }
-    	    resultSet.close(); 
-    	} catch (Exception ex) {
-    	    ex.printStackTrace();
-    	    return null;
-    	}
-    	return atomicEventData;
+		buf.append(whereClause);
+		buf.append(" order by node, context, thread, v.counter");
+		//System.out.println(buf.toString());
+
+		// get the results
+		try {
+			ResultSet resultSet = db.executeQuery(buf.toString());	
+			while (resultSet.next() != false) {
+				int eventid = resultSet.getInt(1);
+				int nodeid = resultSet.getInt(2);
+				int contextid = resultSet.getInt(3);
+				int threadid = resultSet.getInt(4);
+				Thread thread = dataSource.addThread(nodeid, contextid, threadid);
+				UserEvent userEvent = eventMap.get(new Integer(eventid));
+				UserEventProfile userEventProfile = thread.getUserEventProfile(userEvent);
+				if (userEventProfile == null) {
+					userEventProfile = new UserEventProfile(userEvent);
+					thread.addUserEventProfile(userEventProfile);
+				}
+				userEventProfile.setNumSamples(resultSet.getInt(5));
+				userEventProfile.setMaxValue(resultSet.getDouble(6));
+				userEventProfile.setMinValue(resultSet.getDouble(7));
+				userEventProfile.setMeanValue(resultSet.getDouble(8));
+				userEventProfile.setSumSquared(resultSet.getDouble(9));
+				userEventProfile.updateMax();
+				userEventData.addElement(userEventProfile);
+			}
+			resultSet.close(); 
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			return null;
+		}
+		return userEventData;
 	}
 
-    public void saveAtomicEventData(DB db, int atomicEventID) {
-	try {
-	    PreparedStatement statement = null;
-	    statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix() + "atomic_location_profile (atomic_event, node, context, thread, sample_count, maximum_value, minimum_value, mean_value, standard_deviation) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-	    statement.setInt(1, atomicEventID);
-	    statement.setInt(2, node);
-	    statement.setInt(3, context);
-	    statement.setInt(4, thread);
-	    statement.setInt(5, sampleCount);
-	    statement.setDouble(6, maximumValue);
-	    statement.setDouble(7, minimumValue);
-	    statement.setDouble(8, meanValue);
-	    statement.setDouble(9, sumSquared);
-	    statement.executeUpdate();
-	} catch (SQLException e) {
-	    System.out.println("An error occurred while saving the trial.");
-	    e.printStackTrace();
+	public static void saveAtomicEventData(DB db, Hashtable<Integer, Integer> newUEHash, List<Thread> threads) {
+		try {
+			PreparedStatement statement = null;
+			if (db.getSchemaVersion() > 0) {
+				// need to look up the thread index!
+				statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix() + 
+						"counter_value (atomic_event, sample_count, maximum_value, minimum_value, mean_value, standard_deviation, thread) VALUES (?, ?, ?, ?, ?, ?, ?)");
+			} else {
+				statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix() + 
+						"atomic_location_profile (atomic_event, sample_count, maximum_value, minimum_value, mean_value, standard_deviation, node, context, thread) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			}
+	        for (Iterator<Thread> it = threads.iterator(); it.hasNext();) {
+	            edu.uoregon.tau.perfdmf.Thread thread = it.next();
+	            for (Iterator<UserEventProfile> e4 = thread.getUserEventProfiles(); e4.hasNext();) {
+	                UserEventProfile uep = e4.next();
+	                if (uep != null) {
+	                    statement.setInt(1, uep.getUserEvent().getID());
+	                    statement.setInt(2, (int) uep.getNumSamples());
+	                    statement.setDouble(3, uep.getMaxValue());
+	                    statement.setDouble(4, uep.getMinValue());
+	                    statement.setDouble(5, uep.getMeanValue());
+	                    statement.setDouble(6, uep.getSumSquared());
+	                    if (db.getSchemaVersion() > 0) {
+	                    	statement.setInt(7, thread.getThreadID());
+	                    } else {
+		                    statement.setInt(7, thread.getNodeID());
+		                    statement.setInt(8, thread.getContextID());
+		                    statement.setInt(9, thread.getThreadID());
+	                    }
+	        			statement.addBatch();
+	                }
+	            }
+	        }
+			statement.executeBatch();
+			statement.close();
+		} catch (SQLException e) {
+			System.out.println("An error occurred while saving the trial.");
+			e.printStackTrace();
+		}
 	}
-    }
 }
 
