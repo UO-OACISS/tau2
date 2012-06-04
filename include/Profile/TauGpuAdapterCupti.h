@@ -32,7 +32,7 @@
 uint8_t *activityBuffer;
 CUpti_SubscriberHandle subscriber;
 
-void Tau_cupti_register_sync_event();
+void Tau_cupti_register_sync_event(CUcontext c);
 
 void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_CallbackId id, const void *params);
 
@@ -62,9 +62,9 @@ map<uint32_t, FunctionInfo*> functionInfoMap;
 
 class cuptiGpuId : public gpuId
 {
+public:
 	uint32_t streamId;
 	uint32_t correlationId;
-public:
 
 	cuptiGpuId(uint32_t s, uint32_t c) { streamId = s; correlationId = c; };
 	cuptiGpuId *getCopy() const { 
@@ -76,10 +76,10 @@ public:
 		sprintf(rtn, "%d/%d", streamId, correlationId);
 		return rtn;
 	};
-	x_uint64 id_p1() {
+	x_uint64 id_p1() const {
 		return correlationId;
 	};
-	x_uint64 id_p2() { 
+	x_uint64 id_p2() const { 
 		return RtsLayer::myNode(); 
 	};
 
@@ -109,6 +109,8 @@ public:
 	//{
 	//};
 	cuptiRecord(const char* n, uint32_t stream, uint32_t correlation, TauGpuContextMap *m) : eventId(n, &cuptiGpuId(stream, correlation), getParentFunction(correlation), m) {};
+	
+	cuptiRecord(const char* n, cuptiGpuId *id, TauGpuContextMap *m) : eventId(n, id, getParentFunction(id->correlationId), m) {};
 
 	FunctionInfo* getParentFunction(uint32_t id)
 	{

@@ -24,6 +24,8 @@ declare -i pdbFileSpecified=$FALSE
 declare -i optResetUsed=$FALSE
 declare -i optDetectMemoryLeaks=$FALSE
 
+declare -i optPdtF95ResetSpecified=$FALSE
+
 declare -i isVerbose=$FALSE
 declare -i isCXXUsedForC=$FALSE
 
@@ -103,6 +105,7 @@ printUsage () {
     echo -e "  -optReset=\"\"\t\t\tReset options to the compiler to the given list"
     echo -e "  -optLinking=\"\"\t\tOptions passed to the linker. Typically \$(TAU_MPI_FLIBS) \$(TAU_LIBS) \$(TAU_CXXLIBS)"
     echo -e "  -optLinkReset=\"\"\t\tReset options to the linker to the given list"
+    echo -e "  -optLinkPreserveLib=\"\"\t\tLibraries which TAU should preserve the order of on the link line see \"Moving these libraries to the end of the link line:\". Default: none."
     echo -e "  -optTauCC=\"<cc>\"\t\tSpecifies the C compiler used by TAU"
     echo -e "  -optTauUseCXXForC\t\tSpecifies the use of a C++ compiler for compiling C code"
     echo -e "  -optUseReturnFix\t\tSpecifies the use of a bug fix with ROSE parser using EDG v3.x"
@@ -485,6 +488,10 @@ for arg in "$@" ; do
 			optLinking=${arg#"-optLinkReset="}
 			echoIfDebug "\tLinking Options are: $optLinking"
 			;;
+		    -optLinkPreserveLib*)
+			optLinkPreserveLib=${arg#"-optLinkPreserveLib="}
+			echoIfDebug "\tPreserve these libararies on link line: $optLinkPreserveLib"
+			;;
 		    -optTauDefs=*)
 		        optTauDefs="${arg#"-optTauDefs="}"
 			echoIfDebug "\tCompiling Defines Options from TAU are: $optTauDefs"
@@ -538,6 +545,7 @@ for arg in "$@" ; do
 			;;
 		    -optPdtF95Reset*)
 			optPdtF95=${arg#"-optPdtF95Reset="} 
+			optPdtF95ResetSpecified=$TRUE
 			echoIfDebug "\tParsing F95 Options are: $optPdtF95" 
 			;;
 		    -optVerbose*)
@@ -791,12 +799,16 @@ for arg in "$@" ; do
 
 	    # IBM fixed and free
 	    -qfixed*)
-		optPdtF95="$optPdtF95 -R fixed"
+                if [ $optPdtF95ResetSpecified == $FALSE ]; then
+                  optPdtF95="$optPdtF95 -R fixed"
+                fi
 		argsRemaining="$argsRemaining $arg"
 		;;
 
 	    -qfree*)
-		optPdtF95="$optPdtF95 -R free"
+                if [ $optPdtF95ResetSpecified == $FALSE ]; then
+                  optPdtF95="$optPdtF95 -R free"
+                fi
 		argsRemaining="$argsRemaining $arg"
 		;;
 
@@ -929,6 +941,13 @@ for arg in "$@" ; do
     fi
 done
 
+
+tempCounter=0
+while [ $tempCounter -lt $numFiles ]; do
+	arrBaseFileName[$tempCounter]=${arrFileName[$tempCounter]}
+	tempCounter=tempCounter+1
+done
+
 echoIfDebug "Using $optCompInstOption $optCompInstFortranOption for compiling Fortran Code"
 
 # on the first pass, we use PDT, on the 2nd, compiler instrumentation (if available and not disabled)
@@ -943,6 +962,8 @@ if [ $passCount == 1 ] ; then
     optCompInst=$TRUE
     gotoNextStep=$TRUE
     disablePdtStep=$TRUE
+    preprocess=$FALSE
+    arrFileName=${arrBaseFileName}
     errorStatus=0
 fi
 passCount=passCount+1;
@@ -991,6 +1012,9 @@ while [ $tempCounter -lt $numFiles ]; do
     if [ $preprocess == $TRUE ]; then
 	base=${base}.pp
         if [ $tauPreProcessor == $TRUE ]; then
+          if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
+	       optTauIncludes="$optIncludes -I${arrFileNameDirectory[$tempCounter]}"
+          fi
           if [ $groupType == $group_f_F ]; then
 	    cmdToExecute="${f90preprocessor} $preprocessorOpts $optTauIncludes $optIncludeDefs ${arrFileName[$tempCounter]} $base$suf"
           else 
@@ -1019,9 +1043,15 @@ while [ $tempCounter -lt $numFiles ]; do
 	    pdtParserCmd="$pdtParserF ${arrFileName[$tempCounter]} $optPdtUser ${optPdtF95} $optIncludes"
 	    ;;
 	    $group_c | $group_upc)
+            if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
+	       optIncludes="$optIncludes -I${arrFileNameDirectory[$tempCounter]}"
+            fi
 	    pdtParserCmd="$optPdtDir/$pdtParserType ${arrFileName[$tempCounter]} $optPdtCFlags $optPdtUser $optDefines $optIncludes"
 	    ;;
 	    $group_C)
+            if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
+	       optIncludes="$optIncludes -I${arrFileNameDirectory[$tempCounter]}"
+            fi
 	    pdtParserCmd="$optPdtDir/$pdtParserType ${arrFileName[$tempCounter]} $optPdtCxxFlags $optPdtUser $optDefines $optIncludes"
 	    ;;
 	esac
@@ -1135,10 +1165,23 @@ if [ $numFiles == 0 ]; then
 	echoIfDebug "After filtering libmpi*.so options command is: $regularCmd"
 
 	echoIfDebug "Before filtering -l*mpi* options command is: $regularCmd"
-	matchingmpi=`echo -n "$regularCmd" | perl -ne '@strings = split(/ /); foreach $s (@strings) { if ($s =~ /-l\S*mpi\S*/) {print " $s "} }'`
-	regularCmd=`echo "$regularCmd" | sed -e 's/-l\S*mpi\S*//g'`
+	matchingmpi=`perl -se '@libraries = split(/ /, $libraries); 
+  @exceptions = split(/ /, $exceptions);
+  @hash{@exceptions}=();
+    foreach $lib (@libraries) {
+      if (not exists $hash{$lib} and $lib =~ /-l\S*mpi\S*/) {
+        print " $lib " } } '\
+   -- -libraries="$regularCmd" -exceptions="$optLinkPreserveLib"`
+	regularCmd=`perl -se '@libraries = split(/ /, $libraries); 
+  @exceptions = split(/ /, $exceptions);
+  @hash{@exceptions}=();
+    foreach $lib (@libraries) {
+      if (exists $hash{$lib} or not $lib =~ /-l\S*mpi\S*/) {
+        print " $lib " } } '\
+   -- -libraries="$regularCmd" -exceptions="$optLinkPreserveLib"`
+	
 	echoIfDebug "After filtering -l*mpi* options command is: $regularCmd"
-
+	echoIfVerbose "Debug: Moving these libraries to the end of the link line: $matchingmpi"
 	optLinking="$optLinking $matchingmpi"
 
 	# also check for IBM -lvtd_r, and if found, move it to the end
@@ -1179,7 +1222,7 @@ if [ $numFiles == 0 ]; then
       
         #cmdCreatePompRegions="${NM} ${listOfObjectFiles} | ${GREP} -i POMP2_Init_regions | ${AWK} -f ${AWK_SCRIPT} > pompregions.c"
 
-cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${listOfObjectFiles} | `${optOpari2ConfigTool} --egrep` -i \"pomp2_init_regions\" | `${optOpari2ConfigTool} --egrep` \" T \" | `${optOpari2ConfigTool} --awk-cmd` -f `${optOpari2ConfigTool} --awk-script` > pompregions.c"
+cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${listOfObjectFiles} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_regions |  `${optOpari2ConfigTool} --awk-cmd` -f `${optOpari2ConfigTool} --awk-script` > pompregions.c"
 
 
         evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
@@ -1207,10 +1250,13 @@ cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${listOfObjectFiles} | `${op
     fi 
 
     evalWithDebugMessage "$linkCmd" "Linking with TAU Options"
-
+    buildSuccess=$?
+	    
     echoIfDebug "Looking for file: $passedOutputFile"
-    if [  ! -e $passedOutputFile ]; then
+    if [  "x$buildSuccess" != "x0" ]; then
+    	if [ ! -e $passedOutputFile ]; then
 	echoIfVerbose "Error: Tried looking for file: $passedOutputFile"
+	fi
 	echoIfVerbose "Error: Failed to link with TAU options"
 	if [ $revertForced == $TRUE -o $optCompInst = $FALSE ] ; then
 	    printError "$CMD" "$linkCmd"
@@ -1266,6 +1312,9 @@ if [ $gotoNextStep == $TRUE ]; then
 	    pdtCmd="$optPdtDir""/$pdtParserType"
 	    pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
 	    pdtCmd="$pdtCmd $optPdtCFlags $optPdtUser "
+            if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
+	       pdtCmd="$pdtCmd -I${arrFileNameDirectory[$tempCounter]}"
+            fi
 	    optCompile="$optCompile $optDefs $optIncludes"
 
             if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]} ]; then
@@ -1277,6 +1326,9 @@ if [ $gotoNextStep == $TRUE ]; then
 	    pdtCmd="$optPdtDir""/$pdtParserType"
 	    pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
 	    pdtCmd="$pdtCmd $optPdtCxxFlags $optPdtUser "
+            if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
+	       pdtCmd="$pdtCmd -I${arrFileNameDirectory[$tempCounter]}"
+            fi
 	    optCompile="$optCompile $optDefs $optIncludes"
 
             if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]} ]; then
@@ -1554,7 +1606,13 @@ if [ $gotoNextStep == $TRUE ]; then
 	    #echoIfDebug "cmd after appending the .o file is $newCmd"
 
 	    evalWithDebugMessage "$newCmd" "Compiling with Instrumented Code"
-
+	    buildSuccess=$?
+	    
+	    if [ "x$buildSuccess" != "x0" ]; then
+	    echoIfVerbose "Error: Compilation Failed"
+	    printError "$CMD" "$newCmd"
+	    break
+	    else
 	    echoIfVerbose "Looking for file: $outputFile "
 	    if [ $hasAnOutputFile == $TRUE ]; then
 		if [  ! -e $passedOutputFile ]; then
@@ -1568,6 +1626,7 @@ if [ $gotoNextStep == $TRUE ]; then
 		    printError "$CMD" "$newCmd"
 		    break
 		fi
+	    fi
 	    fi
 	    tempCounter=tempCounter+1
 	done
@@ -1651,7 +1710,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	if [ $opari2 == $TRUE ]; then
             evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
       
-cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} | `${optOpari2ConfigTool} --egrep` -i \"pomp2_init_regions\" | `${optOpari2ConfigTool} --egrep` \" T \" | `${optOpari2ConfigTool} --awk-cmd` -f `${optOpari2ConfigTool} --awk-script` > pompregions.c"
+cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_regions |  `${optOpari2ConfigTool} --awk-cmd` -f `${optOpari2ConfigTool} --awk-script` > pompregions.c"
         evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
         cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
         evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
