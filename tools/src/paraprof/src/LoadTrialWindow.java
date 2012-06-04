@@ -170,7 +170,7 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
         }
 
     }
-
+    private static final String locationSeparator=", ";
     public void actionPerformed(ActionEvent evt) {
         try {
             String arg = evt.getActionCommand();
@@ -190,7 +190,7 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
                 JFileChooser jFileChooser = new JFileChooser(lastDirectory);
                 jFileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
 
-                if (	   trialTypes.getSelectedIndex() == DataSource.PPK 
+                if (	   trialTypes.getSelectedIndex() == DataSource.PPK ||  trialTypes.getSelectedIndex() == DataSource.SNAP
 			|| trialTypes.getSelectedIndex() == DataSource.MPIP
                         || trialTypes.getSelectedIndex() == DataSource.PPROF 
 			|| trialTypes.getSelectedIndex() == DataSource.CUBE3
@@ -218,6 +218,11 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
                 if (trialTypes.getSelectedIndex() == DataSource.PPK) {
                     jFileChooser.setFileFilter(new ParaProfFileFilter(ParaProfFileFilter.PPK));
                 }
+                else
+                if (trialTypes.getSelectedIndex() == DataSource.SNAP) {
+                    jFileChooser.setFileFilter(new ParaProfFileFilter(ParaProfFileFilter.XML));
+                }
+                
                 jFileChooser.setDialogTitle("Select File(s)");
                 jFileChooser.setApproveButtonText("Select");
                 if ((jFileChooser.showOpenDialog(this)) != JFileChooser.APPROVE_OPTION) {
@@ -231,13 +236,19 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
                     selectedFiles[0] = jFileChooser.getSelectedFile();
                 }
 
-                if (selectedFiles.length > 1) {
-                    dirLocationField.setText("<Multiple Files Selected>");
-                    dirLocationField.setEditable(false);
-                } else {
-                    dirLocationField.setText(selectedFiles[0].toString());
-                    dirLocationField.setEditable(true);
+//                if (selectedFiles.length > 1) {
+//                    dirLocationField.setText("<Multiple Files Selected>");
+//                    dirLocationField.setEditable(false);
+//                } else {
+                String selText="";
+                for(int i=0;i<selectedFiles.length;i++){
+                	if(i>0)
+                		selText+=locationSeparator;
+                	selText+=selectedFiles[i].toString();
                 }
+                    dirLocationField.setText(selText);//(selectedFiles[0].toString());
+                    dirLocationField.setEditable(true);
+//                }
             } else if (arg.equals("Cancel")) {
                 // note that these are null if they're not top level (so this won't delete an application that has other experiments)
         	   if (newApplication) {
@@ -248,18 +259,22 @@ public class LoadTrialWindow extends JFrame implements ActionListener {
              
                 closeThisWindow();
             } else if (arg.equals("Ok")) {
-                if (trialTypes.getSelectedIndex() == 0) {
-                    File files[] = new File[1];
-                    files[0] = new File(dirLocationField.getText().trim());
+            	String dirLoc=dirLocationField.getText().trim();
+            	String[] locs = dirLoc.split(locationSeparator);
+                if (trialTypes.getSelectedIndex() == 0||trialTypes.getSelectedIndex() == 2) {
+                	File files[] = new File[1];
+                    for(int i =0;i<locs.length;i++){
+                    files[0] = new File(locs[i]);
 
                     if (!files[0].exists()) {
                         if (!files[0].toString().toLowerCase().startsWith("http:")) {
                             JOptionPane.showMessageDialog(this, dirLocationField.getText().trim() + " does not exist");
-                            return;
+                            //return;
                         }
                     }
                     paraProfManagerWindow.addTrial(application, experiment, files, trialTypes.getSelectedIndex(), false,
                             monitorTrialCheckBox.isSelected());
+                    }
                 } else {
                     if (selectedFiles == null) {
                         selectedFiles = new File[1];
