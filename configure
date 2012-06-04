@@ -374,7 +374,7 @@ for arg in "$@"; do
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
     echo "-tag=<unique name> ........ Specify a tag to identify the installation."
     echo "-TRACE ..................................... Generate TAU event traces."
-    echo "-MPITRACE ... Generate event traces for MPI events and their ancestors."
+#    echo "-MPITRACE ... Generate event traces for MPI events and their ancestors."
     echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
     echo "-PROFILECALLPATH ......................... Generate call path profiles."
     echo "-PROFILEPARAM .... Generate profiles with parameter mapped event data ."
@@ -509,7 +509,7 @@ for arg in "$@"; do
     echo "-stff=<dir> .... Location of RENCI Scalable Time-series filter library."
     echo "-sddf=<dir> ...... SDDF library location; Only required for RENCI STFF."
     echo "-TRACE ..................................... Generate TAU event traces."
-    echo "-MPITRACE ... Generate event traces for MPI events and their ancestors."
+#    echo "-MPITRACE ... Generate event traces for MPI events and their ancestors."
     echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
     echo "-PROFILECALLPATH ......................... Generate call path profiles."
     echo "-PROFILEPARAM .... Generate profiles with parameter mapped event data ."
@@ -4052,8 +4052,13 @@ EOF
 	    if $c_compiler $orig_useropt tau_papi_test.o -I$papidir/include -shared -o libtau_papi_test.so $papidir/$papisubdir/libpapi.a 1> /dev/null 2>&1 ; then
               echo "PAPI library links properly"
             else 
-              echo "NOTE: libpapi.a can't be called in a TAU shared object. Using -DISABLESHARED"
-              fixmakeargs="$fixmakeargs NOSHARED"
+              if $c_compiler $orig_useropt tau_papi_test.o -I$papidir/include -shared -o libtau_papi_test.so $papidir/$papisubdir/libpapi.so 1> /dev/null 2>&1 ; then	
+              	echo "PAPI library links properly with .so"
+		fixmakeargs="$fixmakeargs CRAYCNL_PAPI_SHARED"
+              else
+                echo "NOTE: libpapi.a can't be called in a TAU shared object. Using -DISABLESHARED"
+                fixmakeargs="$fixmakeargs NOSHARED"
+              fi  
             fi
           fi 
 	  /bin/rm -f tau_papi_test.c tau_papi_test tau_papi_test.o
@@ -5748,19 +5753,19 @@ if [ "x$bfd" = "xyes" ] ; then
 				make install
 
 
-			else
-			  if [ $machine = "bgq" ]; then
+			elif [ $machine = "bgq" ]; then
 				./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-gcc CXX=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-g++ --disable-nls --disable-werror
 				# have to run make twice, first one dies with illegal instruction
 				make
 				make
 				make install
-
-                          else 
+			elif [ $machine = "rs6000" -o  $machine = "ibm64" ]; then
+				./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir --disable-nls --disable-werror  --disable-largefile
+				make && make install
+                        else 
 				./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir --disable-nls --disable-werror
 				make && make install
-                          fi
-			fi
+                        fi
 			cp include/demangle.h $bfddir/include
 			cp include/libiberty.h $bfddir/include
 			
@@ -6529,6 +6534,11 @@ if [ $scorep = yes ] ; then
     fixmakeargs="$fixmakeargs scorepmpilibs=$scorepLibs"
     fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"
     fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/scorep"
+
+if [ $phase = yes ] ; then
+     echo "********scorep and phase are on"
+fi
+
 fi
 
 if [ $epilog = yes ] ; then
@@ -7212,7 +7222,7 @@ if [ $mpi = yes ] ; then
     exampleslist="$exampleslist NPB2.3/config/make.def"
   fi
   if [ $openmp = yes ] ; then 
-    exampleslist="$exampleslist openmpi/Makefile"
+    exampleslist="$exampleslist openmpi/stommel/Makefile"
   fi
 fi
 

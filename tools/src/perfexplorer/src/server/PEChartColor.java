@@ -41,7 +41,7 @@ public class PEChartColor extends ChartColor {
 			Color.red,
 			Color.blue,
 			Color.green,
-			Color.yellow,
+			//Color.yellow,
 			Color.orange,
 			Color.magenta,
 			Color.cyan,
@@ -57,7 +57,7 @@ public class PEChartColor extends ChartColor {
 			ChartColor.LIGHT_RED,
 			ChartColor.LIGHT_BLUE,
 			ChartColor.LIGHT_GREEN,
-			ChartColor.LIGHT_YELLOW,
+			//ChartColor.LIGHT_YELLOW,
 			ChartColor.LIGHT_MAGENTA,
 			ChartColor.LIGHT_CYAN,
 			Color.lightGray,
@@ -70,7 +70,7 @@ public class PEChartColor extends ChartColor {
 			ChartColor.VERY_LIGHT_RED,
 			ChartColor.VERY_LIGHT_BLUE,
 			ChartColor.VERY_LIGHT_GREEN,
-			ChartColor.VERY_LIGHT_YELLOW,
+			//ChartColor.VERY_LIGHT_YELLOW,
 			ChartColor.VERY_LIGHT_MAGENTA,
 			ChartColor.VERY_LIGHT_CYAN
 	    	};
