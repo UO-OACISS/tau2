@@ -2095,6 +2095,11 @@ case $machine in
 	gunzip -c tools/src/contrib/jogl/arm_linux/libjogl.so.gz > $JARTARGET/libjogl.so
 	gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
 	gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+        if [ ! -r /usr/lib/libGL.so.1 ]
+        then
+	  echo "NOTE: Did not find OpenGL library, copying TAU's Mesa libGL.so.1 to arm_linux/lib directory"
+	  gunzip -c tools/src/contrib/jogl/arm_linux/libGL.so.1.gz > $JARTARGET/libGL.so.1
+        fi
 
 	;;
     
