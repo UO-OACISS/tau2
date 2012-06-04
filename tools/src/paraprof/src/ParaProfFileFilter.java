@@ -14,6 +14,7 @@ public class ParaProfFileFilter extends javax.swing.filechooser.FileFilter {
 
     public static String PPK = "ppk";
     public static String TXT = "txt";
+    public static String XML = "xml";
 
     private String extension = null;
 
@@ -38,6 +39,8 @@ public class ParaProfFileFilter extends javax.swing.filechooser.FileFilter {
             return "Tab Delimited (*.txt)";
         else if (extension.equals(PPK))
             return "ParaProf Packed Profile (*.ppk)";
+        else if (extension.equals(XML))
+            return "XML (e.g. TAU Snapshot) (*.xml)";
         else
             return "Unknown Extension (*.*)";
     }
