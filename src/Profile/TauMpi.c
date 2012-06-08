@@ -16,11 +16,11 @@
 **                                                                         **
 ****************************************************************************/
 
-
 #include <Profile/Profiler.h>
 #include <Profile/TauEnv.h>
 #include <TauMetaDataMerge.h>
 #include <Profile/TauMon.h>
+#include <Profile/TauRequest.h>
 
 #include <stdio.h>
 #include <mpi.h>
@@ -52,6 +52,9 @@ int TAUDECL tau_totalnodes(int set_or_get, int value);
 char * Tau_printRanks(void * comm_ptr);
 extern int Tau_signal_initialization();
 
+/* JCL: Optimized rank translation with cache */
+int TauTranslateRankToWorld(MPI_Comm comm, int rank);
+
 
 /* This file uses the MPI Profiling Interface with TAU instrumentation.
    It has been adopted from the MPE Profiling interface wrapper generator
@@ -65,82 +68,6 @@ extern int Tau_signal_initialization();
    % <mpich>/mpe/profiling/wrappergen/wrappergen -w TauMpi.w -o TauMpi.c
 
 */
-
-/* Requests */
-
-
-
-typedef struct request_list_ {
-    MPI_Request request; /* SSS request should be a pointer */
-    int         status, size, tag, otherParty;
-    int         is_persistent;
-    MPI_Comm    comm;
-    struct request_list_ *next;
-} request_list;
-
-#define RQ_SEND    0x1
-#define RQ_RECV    0x2
-#define RQ_CANCEL  0x4
-/* if MPI_Cancel is called on a request, 'or' RQ_CANCEL into status.
-** After a Wait* or Test* is called on that request, check for RQ_CANCEL.
-** If the bit is set, check with MPI_Test_cancelled before registering
-** the send/receive as 'happening'.
-**
-*/
-
-#define rq_alloc( head_alloc, newrq ) {\
-      if (head_alloc) {\
-        newrq=head_alloc;head_alloc=newrq->next;\
-	}else{\
-      newrq = (request_list*) malloc(sizeof( request_list ));\
-      }}
-
-#define rq_remove_at( head, tail, head_alloc, ptr, last ) { \
-  if (ptr) { \
-    if (!last) { \
-      head = ptr->next; \
-    } else { \
-      last->next = ptr->next; \
-      if (tail == ptr) tail = last; \
-    } \
-	  ptr->next = head_alloc; head_alloc = ptr;}}
-
-#define rq_remove( head, tail, head_alloc, rq ) { \
-  request_list *ptr, *last; \
-  ptr = head; \
-  last = 0; \
-  while (ptr && (ptr->request != rq)) { \
-    last = ptr; \
-    ptr = ptr->next; \
-  } \
-	rq_remove_at( head, tail, head_alloc, ptr, last );}
-
-
-#define rq_add( head, tail, rq ) { \
-  if (!head) { \
-    head = tail = rq; \
-  } else { \
-    tail->next = rq; tail = rq; \
-  }}
-
-#define rq_find( head, req, rq ) { \
-  rq = head; \
-  while (rq && (rq->request != req)) rq = rq->next; }
-
-#define rq_init( head_alloc ) {\
-  int i; request_list *newrq; head_alloc = 0;\
-  for (i=0;i<20;i++) {\
-      newrq = (request_list*) malloc(sizeof( request_list ));\
-      newrq->next = head_alloc;\
-      head_alloc = newrq;\
-  }}
-
-#define rq_end( head_alloc ) {\
-  request_list *rq; while (head_alloc) {\
-	rq = head_alloc->next;free(head_alloc);head_alloc=rq;}}
-static request_list *requests_head_0=NULL, *requests_tail_0=NULL;
-
-
 
 
 static int procid_0;
@@ -185,27 +112,36 @@ static int sum_array (int *counts, MPI_Datatype type, MPI_Comm comm) {
   } 
 
 
+#if 0
 /* This function translates a given rank in a given communicator to the proper
    rank in MPI_COMM_WORLD */
-static int translateRankToWorld(MPI_Comm comm, int rank) {
+static int TauTranslateRankToWorld(MPI_Comm comm, int rank) {
   MPI_Group commGroup, worldGroup;
   int ranks[1], worldranks[1];
+
+  //TAU_PROFILE_TIMER(tautimer, "TauTranslateRankToWorld",  " ", TAU_MESSAGE);
+  //TAU_PROFILE_START(tautimer);
+
   if (comm != MPI_COMM_WORLD) {
 
     int result;
     PMPI_Comm_compare(comm, MPI_COMM_WORLD, &result);
     if (result == MPI_IDENT || result == MPI_CONGRUENT) {
+      // TAU_PROFILE_STOP(tautimer);
       return rank;
     } else {
       ranks[0] = rank;
       PMPI_Comm_group(MPI_COMM_WORLD, &worldGroup);
       PMPI_Comm_group(comm, &commGroup);
       PMPI_Group_translate_ranks(commGroup, 1, ranks, worldGroup, worldranks);
+      // TAU_PROFILE_STOP(tautimer);
       return worldranks[0];
     }
   }
+  //TAU_PROFILE_STOP(tautimer);
   return rank;
 }
+#endif
 
 /* MPI PROFILING INTERFACE WRAPPERS BEGIN HERE */
 
@@ -275,33 +211,25 @@ MPI_Request request;
 MPI_Status *status;
 char *note;
 {
-  request_list *rq, *last;
+  request_data * rq;
   int otherid, othertag;
+
+  // TAU_PROFILE_TIMER(tautimer, "TauProcessRecv",  " ", TAU_MESSAGE);
+  // TAU_PROFILE_START(tautimer);
 
 #ifdef DEBUG
   int myrank;
   PMPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 #endif /* DEBUG */
 
-  /* look for request */
-  rq = requests_head_0;
-  last = 0;
-
-  /* first request */
-  while ((rq != NULL) && (rq->request != request)) {
-#ifdef DEBUG 
-   printf("Node %d: Comparing %lx %lx\n", myrank, rq->request, request);
-#endif /* DEBUG */
-
-    last = rq;
-    rq = rq->next;
-  }
+  rq = TauGetRequestData(&request);
 
   if (!rq) {
 #ifdef DEBUG
     fprintf( stderr, "Node %d: Request not found in '%s'.\n",myrank, note );
 #endif /* DEBUG */
-    return ;                /* request not found */
+    // TAU_PROFILE_STOP(tautimer);
+    return;                /* request not found */
   }
 #ifdef DEBUG
   else
@@ -309,6 +237,7 @@ char *note;
     printf("Node %d: Request found %lx\n", myrank, request);
   }
 #endif /* DEBUG */
+
   /* We post a receive here */
   if ((rq) && rq->status == RQ_RECV)
   { /* See if we need to see the status to get values of tag & id */
@@ -318,24 +247,16 @@ char *note;
     /* if (rq->tag == MPI_ANY_TAG) */
     othertag = status->MPI_TAG;
     /* post the receive message */
-    TAU_TRACE_RECVMSG(othertag, translateRankToWorld(rq->comm, otherid), rq->size);
+    TAU_TRACE_RECVMSG(othertag, TauTranslateRankToWorld(rq->comm, otherid), rq->size);
     TAU_WAIT_DATA(rq->size);
   }
 
-  if (rq->is_persistent == 0) {
-    /* Remove the record from the request list */
-    if (last) {
-      if (rq == requests_tail_0) {
-	requests_tail_0 = last;
-      }
-      last->next = rq->next;
-    } else {
-      requests_head_0 = rq->next;
-    }
-    free( rq );
+  if (!rq->is_persistent) {
+    TauDeleteRequestData(&request);
   }
   
-  return ; 
+  // TAU_PROFILE_STOP(tautimer);
+  return; 
 }
 
 /* This routine traverses the list of requests and checks for RQ_SEND. The 
@@ -346,7 +267,7 @@ void TauProcessSend ( request, note )
 MPI_Request request;
 char *note;
 {
-  request_list *rq, *last;
+  request_data * rq;
   int otherid, othertag;
 
 #ifdef DEBUG
@@ -354,25 +275,13 @@ char *note;
   PMPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 #endif /* DEBUG */
 
-  /* look for request */
-  rq = requests_head_0;
-  last = 0;
-
-  /* first request */
-  while ((rq != NULL) && (rq->request != request)) {
-#ifdef DEBUG 
-   printf("Node %d: Comparing %lx %lx\n", myrank, rq->request, request);
-#endif /* DEBUG */
-
-    last = rq;
-    rq = rq->next;
-  }
+  rq = TauGetRequestData(&request);
 
   if (!rq) {
 #ifdef DEBUG
     fprintf( stderr, "Node %d: Request not found in '%s'.\n",myrank, note );
 #endif /* DEBUG */
-    return ;                /* request not found */
+    return;                /* request not found */
   }
 #ifdef DEBUG
   else
@@ -380,96 +289,18 @@ char *note;
     printf("Node %d: Request found %lx\n", myrank, request);
   }
 #endif /* DEBUG */
+
   if ((rq) && rq->status == RQ_SEND)
   { 
-    otherid = translateRankToWorld(rq->comm, rq->otherParty);
+    otherid = TauTranslateRankToWorld(rq->comm, rq->otherParty);
     othertag = rq->tag;
     /* post the send message */
     TAU_TRACE_SENDMSG(othertag, otherid, rq->size);
   }
 
-  return ; 
+  return; 
 }
 
-
-
-
-request_list *TauGetRequest( MPI_Request request) {
-  request_list *rq;
-
-  rq = requests_head_0;
-
-  while ((rq != NULL) && (rq->request != request)) {
-    rq = rq->next;
-  }
-  return rq;
-}
-
-
-void TauAddRequest (int status, int count, MPI_Datatype datatype, int other, 
-		    int tag, MPI_Comm comm, MPI_Request *request, int returnVal, int persistent) {
-  int typesize;
-  request_list *newrq1;
-  if (other != MPI_PROC_NULL && returnVal == MPI_SUCCESS) {
-    if (newrq1 = (request_list*) malloc(sizeof( request_list ))) {
-      PMPI_Type_size( datatype, &typesize );
-      newrq1->request = *request;
-      newrq1->status = status;
-      newrq1->size = typesize * count;
-      newrq1->otherParty = other;
-      newrq1->comm = comm;
-      newrq1->tag = tag;
-      newrq1->is_persistent = persistent;
-      newrq1->next = 0;
-      rq_add( requests_head_0, requests_tail_0, newrq1 );
-    }
-  }
-}
-
-/* This routine traverses the list of requests and deletes the given request */
-void TauRemoveRequest ( request, note )
-MPI_Request request;
-char *note;
-{
-  request_list *rq, *last;
-
-#ifdef DEBUG
-  int myrank;
-  PMPI_Comm_rank(MPI_COMM_WORLD, &myrank);
-#endif /* DEBUG */
-
-  /* look for request */
-  rq = requests_head_0;
-  last = 0;
-
-  /* first request */
-  while ((rq != NULL) && (rq->request != request)) {
-#ifdef DEBUG
-   printf("Node %d: Comparing %lx %lx\n", myrank, rq->request, request);
-#endif /* DEBUG */ 
-    last = rq;
-    rq = rq->next;
-  }
-
-  if (!rq) {
-#ifdef DEBUG
-    fprintf( stderr, "Node %d: Request not found in '%s'.\n",myrank, note );
-#endif /* DEBUG */
-    return ;		/* request not found */
-  }
-  /* remove the request */
-  if (last) {
-    if (rq == requests_tail_0) {
-      requests_tail_0 = last;
-    }
-    last->next = rq->next;
-  } else {
-    requests_head_0 = rq->next;
-  }
-  free( rq );
-   
-  return ; 
-}
 
 
 
@@ -1148,7 +979,7 @@ void tau_exp_track_comm_split (MPI_Comm oldcomm, MPI_Comm newcomm) {
 
   limit = (newCommSize < TAU_MAX_MPI_RANKS) ? newCommSize : TAU_MAX_MPI_RANKS;
   for (i=0; i<limit; i++) {
-    worldrank = translateRankToWorld(newcomm, i);
+    worldrank = TauTranslateRankToWorld(newcomm, i);
 /*     printf ("comm %p has world member %d\n", newcommhandle, worldrank); */
     sprintf (catbuffer, "%d ", worldrank);
     strcat(buffer, catbuffer);
@@ -1769,8 +1600,6 @@ char *** argv;
     TauSyncClocks();
   }
 
-  requests_head_0 = requests_tail_0 = 0;
-
   return returnVal;
 }
 
@@ -1826,8 +1655,6 @@ int *provided;
   if (TauEnv_get_synchronize_clocks()) {
     TauSyncClocks(procid_0, size);
   }
-
-  requests_head_0 = requests_tail_0 = 0;
 
   return returnVal;
 }
@@ -1917,7 +1744,7 @@ MPI_Comm comm;
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
       PMPI_Type_size( datatype, &typesize );
-      TAU_TRACE_SENDMSG(tag, translateRankToWorld(comm, dest), typesize*count);
+      TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), typesize*count);
     }
   }
   TAU_TRACK_COMM(comm);
@@ -1949,7 +1776,7 @@ MPI_Request * request;
   returnVal = PMPI_Bsend_init( buf, count, datatype, dest, tag, comm, request );
 
   if (TauEnv_get_track_message()) {
-    TauAddRequest(RQ_SEND, count, datatype, dest, tag, comm, request, returnVal, 1);
+    TauAddRequestData(RQ_SEND, count, datatype, dest, tag, comm, request, returnVal, 1);
   }
 
   TAU_PROFILE_STOP(tautimer);
@@ -1998,7 +1825,7 @@ MPI_Request * request;
   TAU_PROFILE_START(tautimer);
   
   if (TauEnv_get_track_message()) {
-    TauRemoveRequest(*request, "MPI_Cancel");
+    TauDeleteRequestData(request);
   }
 
   returnVal = PMPI_Cancel( request );
@@ -2018,7 +1845,7 @@ MPI_Request * request;
   TAU_PROFILE_START(tautimer);
 
   if (TauEnv_get_track_message()) {
-    TauRemoveRequest(*request, "MPI_Request_free");
+    TauDeleteRequestData(request);
   }
   
   returnVal = PMPI_Request_free( request );
@@ -2046,7 +1873,7 @@ MPI_Request * request;
   TAU_PROFILE_STOP(tautimer);
 
   if (TauEnv_get_track_message()) {
-    TauAddRequest(RQ_RECV, count, datatype, source, tag, comm, request, returnVal, 1);
+    TauAddRequestData(RQ_RECV, count, datatype, source, tag, comm, request, returnVal, 1);
   }
   return returnVal;
 }
@@ -2075,7 +1902,7 @@ MPI_Request * request;
   /* we need to store the request and associate it with the size/tag so MPI_Start can 
      retrieve it and log the TAU_TRACE_SENDMSG */
 if (TauEnv_get_track_message()) {
-  TauAddRequest(RQ_SEND, count, datatype, dest, tag, comm, request, returnVal, 1);
+  TauAddRequestData(RQ_SEND, count, datatype, dest, tag, comm, request, returnVal, 1);
 }
 
   TAU_PROFILE_STOP(tautimer);
@@ -2135,7 +1962,7 @@ MPI_Request * request;
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
       PMPI_Type_size( datatype, &typesize );
-      TAU_TRACE_SENDMSG(tag, translateRankToWorld(comm, dest), count * typesize);
+      TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), count * typesize);
     }
   }
   
@@ -2175,14 +2002,10 @@ MPI_Comm comm;
 MPI_Request * request;
 {
   int  returnVal;
-  request_list *newrq1;
-  int typesize;
 
 #ifdef DEBUG
   int myrank;
 #endif /* DEBUG */
-
-  
   
   TAU_PROFILE_TIMER(tautimer, "MPI_Irecv()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
@@ -2201,20 +2024,7 @@ MPI_Request * request;
   TAU_PROFILE_STOP(tautimer);
 
   if (TauEnv_get_track_message()) {
-    if (source != MPI_PROC_NULL && returnVal == MPI_SUCCESS) {
-      if (newrq1 = (request_list*) malloc(sizeof( request_list ))) {
-	PMPI_Type_size( datatype, &typesize );
-	newrq1->request = *request;
-	newrq1->status = RQ_RECV;
-	newrq1->size = typesize * count;
-	newrq1->otherParty = source;
-	newrq1->comm = comm;
-	newrq1->tag = tag;
-	newrq1->is_persistent = 0;
-	newrq1->next = 0;
-	rq_add( requests_head_0, requests_tail_0, newrq1 );
-      }
-    }
+    TauAddRequestData(RQ_RECV, count, datatype, source, tag, comm, request, returnVal, 0);
   }
   
   return returnVal;
@@ -2238,7 +2048,7 @@ MPI_Request * request;
 if (TauEnv_get_track_message()) {
   if (dest != MPI_PROC_NULL) {
     PMPI_Type_size( datatype, &typesize3 );
-    TAU_TRACE_SENDMSG(tag, translateRankToWorld(comm, dest), count * typesize3);
+    TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), count * typesize3);
   }
 }
 
@@ -2269,7 +2079,7 @@ MPI_Request * request;
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
       PMPI_Type_size( datatype, &typesize3 );
-      TAU_TRACE_SENDMSG(tag, translateRankToWorld(comm, dest), count * typesize3);
+      TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), count * typesize3);
     }
   }
   
@@ -2297,7 +2107,7 @@ MPI_Request * request;
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
       PMPI_Type_size( datatype, &typesize3 );
-      TAU_TRACE_SENDMSG(tag, translateRankToWorld(comm, dest), count * typesize3);
+      TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), count * typesize3);
     }
   }
   
@@ -2388,26 +2198,23 @@ MPI_Status * status;
       status = &local_status;
     }
   }
-  
+
   TAU_TRACK_COMM(comm);
+
   returnVal = PMPI_Recv( buf, count, datatype, source, tag, comm, status );
 
   if (TauEnv_get_track_message()) {
     if (source != MPI_PROC_NULL && returnVal == MPI_SUCCESS) {
       PMPI_Get_count( status, MPI_BYTE, &size );
-
       /* note that status->MPI_COMM must == comm */
-      TAU_TRACE_RECVMSG(status->MPI_TAG,  translateRankToWorld(comm, status->MPI_SOURCE), size);
-      /*
-      prof_recv( procid_0, status->MPI_SOURCE,
-	       status->MPI_TAG, size, "MPI_Recv" );
-      */
+      TAU_TRACE_RECVMSG(status->MPI_TAG, TauTranslateRankToWorld(comm, status->MPI_SOURCE), size);
     }
   }
   TAU_PROFILE_STOP(tautimer);
 
   return returnVal;
 }
+
 
 int  MPI_Rsend( buf, count, datatype, dest, tag, comm )
 void * buf;
@@ -2425,7 +2232,7 @@ MPI_Comm comm;
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
       PMPI_Type_size( datatype, &typesize );
-      TAU_TRACE_SENDMSG(tag, translateRankToWorld(comm, dest), typesize*count);
+      TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), typesize*count);
     }
   }
   
@@ -2455,7 +2262,7 @@ MPI_Request * request;
   returnVal = PMPI_Rsend_init( buf, count, datatype, dest, tag, comm, request );
 
 if (TauEnv_get_track_message()) {
-  TauAddRequest(RQ_SEND, count, datatype, dest, tag, comm, request, returnVal, 1);
+  TauAddRequestData(RQ_SEND, count, datatype, dest, tag, comm, request, returnVal, 1);
 }
 
   TAU_PROFILE_STOP(tautimer);
@@ -2480,7 +2287,7 @@ MPI_Comm comm;
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
       PMPI_Type_size( datatype, &typesize );
-      TAU_TRACE_SENDMSG(tag, translateRankToWorld(comm, dest), typesize*count);
+      TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), typesize*count);
     }
   }
   
@@ -2515,7 +2322,7 @@ MPI_Status * status;
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
       PMPI_Type_size( sendtype, &typesize1 );
-      TAU_TRACE_SENDMSG(sendtag, translateRankToWorld(comm, dest), typesize1*sendcount);
+      TAU_TRACE_SENDMSG(sendtag, TauTranslateRankToWorld(comm, dest), typesize1*sendcount);
     }
     
     if (status == MPI_STATUS_IGNORE) {
@@ -2530,7 +2337,7 @@ MPI_Status * status;
   if (TauEnv_get_track_message()) {
     if (source != MPI_PROC_NULL && returnVal == MPI_SUCCESS) {
       PMPI_Get_count( status, MPI_BYTE, &count );
-      TAU_TRACE_RECVMSG(status->MPI_TAG, translateRankToWorld(comm, status->MPI_SOURCE), count);
+      TAU_TRACE_RECVMSG(status->MPI_TAG, TauTranslateRankToWorld(comm, status->MPI_SOURCE), count);
     }
   }
   TAU_PROFILE_STOP(tautimer);
@@ -2560,7 +2367,7 @@ MPI_Status * status;
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
       PMPI_Type_size( datatype, &typesize2 );
-      TAU_TRACE_SENDMSG(sendtag, translateRankToWorld(comm, dest), typesize2*count);
+      TAU_TRACE_SENDMSG(sendtag, TauTranslateRankToWorld(comm, dest), typesize2*count);
     }
     
     if (status == MPI_STATUS_IGNORE) {
@@ -2574,7 +2381,7 @@ MPI_Status * status;
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL && returnVal == MPI_SUCCESS) {
       PMPI_Get_count( status, MPI_BYTE, &size1 );
-      TAU_TRACE_RECVMSG(status->MPI_TAG, translateRankToWorld(comm, status->MPI_SOURCE), size1);
+      TAU_TRACE_RECVMSG(status->MPI_TAG, TauTranslateRankToWorld(comm, status->MPI_SOURCE), size1);
     }
   }
   TAU_PROFILE_STOP(tautimer);
@@ -2598,7 +2405,7 @@ MPI_Comm comm;
   if (TauEnv_get_track_message()) {
     if (dest != MPI_PROC_NULL) {
       PMPI_Type_size( datatype, &typesize );
-      TAU_TRACE_SENDMSG(tag, translateRankToWorld(comm, dest), typesize*count);
+      TAU_TRACE_SENDMSG(tag, TauTranslateRankToWorld(comm, dest), typesize*count);
     }
   }
   
@@ -2630,7 +2437,7 @@ MPI_Request * request;
   returnVal = PMPI_Ssend_init( buf, count, datatype, dest, tag, comm, request );
 
 if (TauEnv_get_track_message()) {
-  TauAddRequest(RQ_SEND, count, datatype, dest, tag, comm, request, returnVal, 1);
+  TauAddRequestData(RQ_SEND, count, datatype, dest, tag, comm, request, returnVal, 1);
 }
 
   TAU_PROFILE_STOP(tautimer);
@@ -2641,14 +2448,14 @@ if (TauEnv_get_track_message()) {
 int  MPI_Start( request )
 MPI_Request * request;
 {
-  request_list *rq;
+  request_data * rq;
   int  returnVal;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Start()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
 
   if (TauEnv_get_track_message()) {
-    rq = TauGetRequest(*request);
+    rq = TauGetRequestData(request);
     TauProcessSend(*request, "MPI_Start");
   }
 
@@ -2656,7 +2463,7 @@ MPI_Request * request;
 
   if (TauEnv_get_track_message()) {
     /* fix up the request since MPI_Start may (will) change it */
-    rq->request = *request;
+    rq->request = request;
   }
   
   TAU_PROFILE_STOP(tautimer);
@@ -3531,7 +3338,7 @@ int * top_type;
 //For a given process, process is the unique MPI rank
 //Node n is the nth node in the allocation
 //Core m is the mth core on node n
-int TauGetCpuSite(unsigned int *node, unsigned int *core, unsigned int *rank) {
+int TauGetCpuSite(int *node, int *core, int *rank) {
   char host_name[MPI_MAX_PROCESSOR_NAME];
   char (*host_names)[MPI_MAX_PROCESSOR_NAME];
   MPI_Comm internode;
@@ -3594,7 +3401,7 @@ char * Tau_printRanks(void *comm_ptr) {
   PMPI_Comm_size(comm, &size);
   limit = (size < TAU_MAX_MPI_RANKS) ? size : TAU_MAX_MPI_RANKS;
   for ( i = 0; i < limit; i++) {
-    worldrank = translateRankToWorld(comm, i);
+    worldrank = TauTranslateRankToWorld(comm, i);
     if (i == 0) { 
       sprintf(rankbuffer, "ranks: %d", worldrank);
     } else {
