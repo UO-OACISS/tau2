@@ -27,7 +27,7 @@ program test8
   !$omp parallel if(k.eq.0) num_threads(4) reduction(+:k)
   write(*,*) "parallel"
 
-  !$omp do reduction(+:k) schedule(dynamic) collapse(1)
+  !$omp do reduction(+:k) schedule(dynamic, 5) collapse(1)
   do i=1,4
      write(*,*) "do",i
      k = k + 1
@@ -49,7 +49,7 @@ program test8
   !$omp end task
   !$omp end parallel
 
-  !$omp parallel do if(.true.) num_threads(4) reduction(+:k) schedule(static) collapse(1) ordered
+  !$omp parallel do num_threads(4) reduction(+:k) schedule(static,chunkif) collapse(1) ordered if(.true.)
   do i=1,4
      !$omp ordered
      write(*,*) "do",i
@@ -58,7 +58,7 @@ program test8
   enddo
   !$omp end parallel do
 
-  !$omp parallel sections if(.true.) num_threads(4) reduction(+:k)
+  !$omp parallel sections if((i+k)>5) num_threads(4) reduction(+:k)
   !$omp section
   write(*,*) "section 1"
   !$omp section

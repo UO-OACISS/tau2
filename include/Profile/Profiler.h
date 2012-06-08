@@ -181,6 +181,7 @@ public:
   bool AddInclCallPathFlag; 
   FunctionInfo *ThisFunction;
   FunctionInfo *CallPathFunction;
+  FunctionInfo *CallSiteFunction;
 
   Profiler() {};
   ~Profiler() {};
@@ -191,13 +192,12 @@ public:
 
   void CallPathStart(int tid);
   void CallPathStop(double* totaltime, int tid);
-  
+
 #ifdef TAU_PROFILEPARAM
   FunctionInfo *ProfileParamFunction; 
   bool 	       AddInclProfileParamFlag; 
   void ProfileParamStop(double* totaltime, int tid);
 #endif /* TAU_PROFILEPARAM */
-  
   
   double StartTime[TAU_MAX_COUNTERS];
 
@@ -225,17 +225,22 @@ public:
   bool RecordEvent; /* true when an MPI call is in the callpath */
 #endif /* TAU_MPITRACE */
 
-
   /* For EBS sampling */
   int needToRecordStop;
   void *address[TAU_SAMP_NUM_ADDRESSES];
-  
+
+  // Callsite discovery
+  unsigned long callsites[TAU_SAMP_NUM_ADDRESSES+1];
+  unsigned long callsiteKeyId;
+  long *path;
+  void CallSiteStart(int tid);
+  void CallSiteAddPath(long *comparison, int tid);
+  void CallSiteStop(double *totalTime, int tid);
 };
 }
 #ifdef TAU_LIBRARY_SOURCE
 using tau::Profiler;
 #endif /* TAU_LIBRARY_SOURCE */
-
 
 extern "C" tau::Profiler *TauInternal_CurrentProfiler(int tid);
 extern "C" tau::Profiler *TauInternal_ParentProfiler(int tid);

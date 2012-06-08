@@ -39,6 +39,8 @@
 #include <config.h>
 #include "ompragma.h"
 #include <iostream>
+
+#include "opari2.h"
 /** @brief Find the next word in a line.*/
 string
 OMPragmaF::find_next_word()
@@ -78,7 +80,7 @@ OMPragmaF::find_next_word()
 
 /** @brief True if word is in line.*/
 bool
-OMPragmaF::find_word( const char*        word,
+OMPragmaF::find_word( const string       word,
                       unsigned&          line,
                       string::size_type& pos )
 {
@@ -88,13 +90,35 @@ OMPragmaF::find_word( const char*        word,
         string::size_type w = lines[ i ].find( word, s );
         string::size_type c = lines[ i ].find( '!', s );
         // if word found and found before comment
-        if ( w != string::npos &&
-             ( c == string::npos || ( c != string::npos && w < c ) )
-             )
+        while ( w != string::npos &&
+                ( c == string::npos || ( c != string::npos && w < c ) )
+                )
         {
-            line = i;
-            pos  = w;
-            return true;
+            char b = lines[ i ][ w - 1 ];
+            char a;
+            if ( lines[ i ].length() > w + word.length() )
+            {
+                a = lines[ i ][ w + word.length() ];
+            }
+            else
+            {
+                a = ' ';
+            }
+            if ( ( b == ' ' || b == '\t' || b == '!' || b == ')' || b == ',' ) &&
+                 ( a == ' ' || a == '\t' || a == '!' || a == '(' || a == ',' || a == '&' ) )
+            {
+                line = i;
+                pos  = w;
+                return true;
+            }
+            else
+            {
+                w++;
+                if ( w != string::npos )
+                {
+                    w = lines[ i ].find( word, w );
+                }
+            }
         }
         pos = 0;
     }
@@ -105,45 +129,105 @@ OMPragmaF::find_word( const char*        word,
 string
 OMPragmaF::find_arguments( unsigned&          line,
                            string::size_type& pos,
-                           bool               remove )
+                           bool               remove,
+                           string             clause )
 {
     string arguments;
-    bool   skip_first_amp = false;
+    bool   contComm = false;       // Continuation line or comment found
 
-    while ( lines[ line ][ pos ] != ')' )
+    int    bracket_counter = 0;
+
+    for ( unsigned int i = 0; i < clause.length(); i++ )
     {
-        if ( lines[ line ][ pos ] == '&' && !skip_first_amp )
+        if ( remove )
         {
-            pos            = lines[ line ].length();
-            skip_first_amp = false;
+            lines[ line ][ pos ] = ' ';
+        }
+        pos++;
+    }
+    pos = lines[ line ].find_first_not_of( " \t", pos );
+    if ( lines[ line ][ pos ] == '(' )
+    {
+        bracket_counter++;
+        if ( remove )
+        {
+            lines[ line ][ pos ] = ' ';
+        }
+        pos++;
+    }
+    else
+    {
+        std::cerr << filename << ":" << lineno << ": ERROR: Expecting argument for "
+                  << clause << " clause\n" << std::endl;
+        cleanup_and_exit();
+    }
+
+    while ( bracket_counter > 0 )
+    {
+        if ( lines[ line ][ pos ] == '(' )
+        {
+            bracket_counter++;
+        }
+
+        if ( lines[ line ][ pos ] == '&' )
+        {
+            pos = lines[ line ].length();
         }
         else
         {
-            arguments.append( 1, lines[ line ][ pos ] );
-            if ( remove )
+            if ( lines[ line ][ pos ] == '&' || lines[ line ][ pos ] == '!' )
             {
-                lines[ line ][ pos ] = ' ';
+                contComm = true;
             }
-            pos++;
+            else
+            {
+                arguments.append( 1, lines[ line ][ pos ] );
+                if ( remove )
+                {
+                    lines[ line ][ pos ] = ' ';
+                }
+                pos++;
+            }
         }
-        if ( pos >= lines[ line ].length() )
+        if ( pos >= lines[ line ].length() || contComm )
         {
             line++;
+            contComm = false;
+
             if ( line >= lines.size() )
             {
-                std::cerr << "ERROR: Missing )\n";
-                break;
+                std::cerr << filename << ":" << lineno << ": ERROR: Missing ) for "
+                          << clause << " clause \n" << std::endl;
+                cleanup_and_exit();
             }
             else
             {
                 pos = lines[ line ].find_first_of( "!*cC" ) + 6;
-                int firstcharpos = lines[ line ].find_first_not_of( " \t", pos );
-                if ( lines[ line ][ firstcharpos ] == '&' )
+                pos = lines[ line ].find_first_not_of( " \t", pos );
+                if ( lines[ line ][ pos ] == '&' )
                 {
-                    skip_first_amp = true;
+                    pos++;
                 }
             }
         }
+        if ( lines[ line ][ pos ] == ')' )
+        {
+            bracket_counter--;
+        }
+    }
+
+    //remove last bracket if necessary
+    if ( remove )
+    {
+        lines[ line ][ pos ] = ' ';
+    }
+
+    size_t p;
+    p = arguments.find( ' ' );
+    while ( p != string::npos )
+    {
+        arguments.erase( p, 1 );
+        p = arguments.find( ' ' );
     }
 
     return arguments;
@@ -296,6 +380,7 @@ OMPragmaF::remove_empties()
 OMPragma*
 OMPragmaF::split_combined()
 {
+    remove_commas();
     OMPragmaF* inner = new OMPragmaF( filename, lineno, 0,
                                       string( lines[ 0 ].size(), ' ' ),
                                       ( slen == 6 ), asd );

@@ -49,7 +49,8 @@ DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	build-config/install-sh build-config/missing
 @SVN_CONTROLLED_TRUE@am__append_1 = doc/doxygen-project-number.cfg
 @HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@am__append_2 = doc/doxygen-user.cfg doc/doxygen-user-at-make-time.cfg doxygen.err
-@CROSS_BUILD_FALSE@am__append_3 = $(srcdir)/build-frontend/configure.ac \
+@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@am__append_3 = beautify-recursive
+@CROSS_BUILD_FALSE@am__append_4 = $(srcdir)/build-frontend/configure.ac \
 @CROSS_BUILD_FALSE@              $(srcdir)/build-frontend/aclocal.m4   \
 @CROSS_BUILD_FALSE@              $(srcdir)/build-frontend/Makefile.am  \
 @CROSS_BUILD_FALSE@              $(srcdir)/build-frontend/Makefile.in  \
@@ -75,7 +76,7 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES = doc/doxygen-user-common.cfg \
 	doc/doxygen-user-component.cfg doc/doxygen-dev.cfg \
 	test/c_test.sh test/f90_test.sh test/f77_test.sh \
-	build-frontend/pomp2_parse_init_regions.awk
+	build-frontend/pomp2-parse-init-regions.awk
 CONFIG_CLEAN_VPATH_FILES =
 AM_V_GEN = $(am__v_GEN_$(V))
 am__v_GEN_ = $(am__v_GEN_$(AM_DEFAULT_VERBOSITY))
@@ -162,7 +163,10 @@ LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
 MKDIR_P = @MKDIR_P@
 PACKAGE = @PACKAGE@
+PACKAGE_BUGFIX = @PACKAGE_BUGFIX@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
+PACKAGE_MAJOR = @PACKAGE_MAJOR@
+PACKAGE_MINOR = @PACKAGE_MINOR@
 PACKAGE_NAME = @PACKAGE_NAME@
 PACKAGE_STRING = @PACKAGE_STRING@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
@@ -299,16 +303,19 @@ EXTRA_DIST =  \
 	$(srcdir)/doc/example_user_instrumentation/example_user_instrumentation.c \
 	$(srcdir)/doc/example_user_instrumentation/example_user_instrumentation.f \
 	$(srcdir)/doc/doxygen-user/opari2_usage.dox.in \
-	$(srcdir)/test/data $(am__append_3)
+	$(srcdir)/test/data $(am__append_4)
 CLEANFILES = $(builddir)/user_provided_configure_args \
 	$(builddir)/mpi_compiler_suite \
 	$(builddir)/mpi_compiler_suite_to_source $(am__append_1) \
 	$(am__append_2) doc/doxygen-user/main.dox
 DISTCLEANFILES = $(builddir)/config.summary
+DOC_SRC_DIR = $(srcdir)/doc
 
 ###############################################################################
 @SVN_CONTROLLED_TRUE@USER_DOC_DIR = $(top_distdir)$(ac_scorep_doxygen_distdir)/doc
-@SVN_CONTROLLED_FALSE@DOC_SRC_DIR = $(srcdir)/doc
+
+###############################################################################
+SCOREP_RECURSIVE_TARGETS = $(am__append_3) check-build-recursive
 all: all-recursive
 
 .SUFFIXES:
@@ -358,7 +365,7 @@ test/f90_test.sh: $(top_builddir)/config.status $(top_srcdir)/test/f90_test.sh.i
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 test/f77_test.sh: $(top_builddir)/config.status $(top_srcdir)/test/f77_test.sh.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
-build-frontend/pomp2_parse_init_regions.awk: $(top_builddir)/config.status $(top_srcdir)/src/pomp-lib-dummy/pomp2_parse_init_regions.awk.in
+build-frontend/pomp2-parse-init-regions.awk: $(top_builddir)/config.status $(top_srcdir)/src/pomp-lib-dummy/pomp2_parse_init_regions.awk.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 
 # This directory's subdirectories are mostly independent; you can cd
@@ -713,8 +720,7 @@ clean-am: clean-generic clean-local mostlyclean-am
 distclean: distclean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
 	-rm -f Makefile
-distclean-am: clean-am distclean-generic distclean-local \
-	distclean-tags
+distclean-am: clean-am distclean-generic distclean-tags
 
 dvi: dvi-recursive
 
@@ -774,41 +780,43 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-local
-
+uninstall-am:
+	@$(NORMAL_INSTALL)
+	$(MAKE) $(AM_MAKEFLAGS) uninstall-hook
 .MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) ctags-recursive \
-	install-am install-strip tags-recursive
+	install-am install-strip tags-recursive uninstall-am
 
 .PHONY: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) CTAGS GTAGS \
 	all all-am am--refresh check check-am clean clean-generic \
 	clean-local ctags ctags-recursive dist dist-all dist-bzip2 \
 	dist-gzip dist-hook dist-lzma dist-shar dist-tarZ dist-xz \
-	dist-zip distcheck distclean distclean-generic distclean-local \
-	distclean-tags distcleancheck distdir distuninstallcheck dvi \
-	dvi-am html html-am info info-am install install-am \
-	install-data install-data-am install-data-local install-dvi \
-	install-dvi-am install-exec install-exec-am install-exec-local \
-	install-html install-html-am install-info install-info-am \
-	install-man install-pdf install-pdf-am install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs installdirs-am maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
-	pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
-	uninstall-local
+	dist-zip distcheck distclean distclean-generic distclean-tags \
+	distcleancheck distdir distuninstallcheck dvi dvi-am html \
+	html-am info info-am install install-am install-data \
+	install-data-am install-data-local install-dvi install-dvi-am \
+	install-exec install-exec-am install-exec-local install-html \
+	install-html-am install-info install-info-am install-man \
+	install-pdf install-pdf-am install-ps install-ps-am \
+	install-strip installcheck installcheck-am installdirs \
+	installdirs-am maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-generic pdf pdf-am ps ps-am tags \
+	tags-recursive uninstall uninstall-am uninstall-hook
 
 
 prohibit-svn-files-in-dist:
 	@find $(top_distdir) -type d | grep "\.svn"; \
 	if [ $$? -eq 0 ]; then \
-            echo "ERROR: subversion files found in distrubution. This is usually caused by";  \
+            echo "ERROR: subversion files found in distribution. This is usually caused by";  \
             echo "referencing directories in EXTRA_DIST. Please specify the files that need"; \
             echo "to go into the distribution explicitly."; \
             exit 1; \
         fi
 
-@SVN_CONTROLLED_TRUE@doxygen-user-install:
+common-uninstall:
+	rm -rf $(DESTDIR)$(docdir)
+	rm -rf $(DESTDIR)$(datadir)/@PACKAGE_NAME@
 
-@SVN_CONTROLLED_TRUE@doxygen-user-uninstall:
+@SVN_CONTROLLED_TRUE@doxygen-user-install:
 
 @SVN_CONTROLLED_TRUE@doxygen-user-generate: doxygen-user-pdf doxygen-user-html-compress copy-revision-file-to-dist
 
@@ -817,11 +825,13 @@ prohibit-svn-files-in-dist:
 
 @SVN_CONTROLLED_TRUE@copy-revision-file-to-dist:
 @SVN_CONTROLLED_TRUE@	$(MKDIR_P) "$(distdir)/build-config/"
-@SVN_CONTROLLED_TRUE@	cp -p "$(srcdir)/build-config/REVISION" "$(distdir)/build-config/"
-@SVN_CONTROLLED_TRUE@	if grep -E [A-Z] "$(srcdir)/build-config/REVISION" ||                               \
-@SVN_CONTROLLED_TRUE@           grep "-" "$(srcdir)/build-config/REVISION"; then                                 \
-@SVN_CONTROLLED_TRUE@            echo "WARNING: distribution does not match a single, unmodified revision." >&2; \
-@SVN_CONTROLLED_TRUE@        fi
+@SVN_CONTROLLED_TRUE@	for i in REVISION REVISION_COMMON; do                                                   \
+@SVN_CONTROLLED_TRUE@	    cp -p "$(srcdir)/build-config/$$i" "$(distdir)/build-config/";                      \
+@SVN_CONTROLLED_TRUE@	    if grep -E [A-Z] "$(srcdir)/build-config/$$i" ||                                    \
+@SVN_CONTROLLED_TRUE@                grep "-" "$(srcdir)/build-config/$$i"; then                                     \
+@SVN_CONTROLLED_TRUE@                echo "WARNING: distribution does not match a single, unmodified revision." >&2; \
+@SVN_CONTROLLED_TRUE@            fi                                                                                  \
+@SVN_CONTROLLED_TRUE@        done
 
 @SVN_CONTROLLED_TRUE@doxygen-user-html-compress:
 @SVN_CONTROLLED_TRUE@	if test -d "$(USER_DOC_DIR)/html"; then                               \
@@ -839,6 +849,8 @@ prohibit-svn-files-in-dist:
 @HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	echo "OUTPUT_DIRECTORY = $(USER_DOC_DIR)" > doc/doxygen-user-at-make-time.cfg
 @HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	echo "GENERATE_TAGFILE = $(USER_DOC_DIR)/tags/@PACKAGE_NAME@.tag" >> doc/doxygen-user-at-make-time.cfg
 @HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	cat doc/doxygen-project-number.cfg doc/doxygen-user-at-make-time.cfg doc/doxygen-user-common.cfg doc/doxygen-user-component.cfg > doc/doxygen-user.cfg
+@HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	$(MKDIR_P) "$(USER_DOC_DIR)/html"
+@HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	cp $(abs_srcdir)/doc/images/* $(USER_DOC_DIR)/html
 @HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	doxygen doc/doxygen-user.cfg
 
 @HAVE_DOXYGEN_FALSE@@SVN_CONTROLLED_TRUE@doxygen-user:
@@ -868,54 +880,39 @@ prohibit-svn-files-in-dist:
 @SVN_CONTROLLED_FALSE@doxygen-user-pdf:
 
 @SVN_CONTROLLED_FALSE@doxygen-user-install:
-@SVN_CONTROLLED_FALSE@	if test -f "$(DOC_SRC_DIR)/html.tar.gz"; then                            \
-@SVN_CONTROLLED_FALSE@            $(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc;                  \
-@SVN_CONTROLLED_FALSE@            $(INSTALL_DATA) $(DOC_SRC_DIR)/html.tar.gz                           \
-@SVN_CONTROLLED_FALSE@                            $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/html.tar.gz; \
-@SVN_CONTROLLED_FALSE@	    cd $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc;                          \
-@SVN_CONTROLLED_FALSE@            tar xzvf html.tar.gz;                                                \
-@SVN_CONTROLLED_FALSE@	    rm -f html.tar.gz;                                                   \
+@SVN_CONTROLLED_FALSE@	if test -f "$(DOC_SRC_DIR)/html.tar.gz"; then                                   \
+@SVN_CONTROLLED_FALSE@            $(MKDIR_P) $(DESTDIR)$(docdir);                                             \
+@SVN_CONTROLLED_FALSE@            $(INSTALL_DATA) $(DOC_SRC_DIR)/html.tar.gz $(DESTDIR)$(docdir)/html.tar.gz; \
+@SVN_CONTROLLED_FALSE@	    cd $(DESTDIR)$(docdir);                                                     \
+@SVN_CONTROLLED_FALSE@            tar xzvf html.tar.gz;                                                       \
+@SVN_CONTROLLED_FALSE@	    rm -f html.tar.gz;                                                          \
 @SVN_CONTROLLED_FALSE@	fi
-@SVN_CONTROLLED_FALSE@	if test -d "$(DOC_SRC_DIR)"; then                                                       \
-@SVN_CONTROLLED_FALSE@            cd $(DOC_SRC_DIR);                                                                  \
-@SVN_CONTROLLED_FALSE@            dirs=`find . -type d`;                                                              \
-@SVN_CONTROLLED_FALSE@            cd -;                                                                               \
-@SVN_CONTROLLED_FALSE@            for i in $$dirs; do                                                                 \
-@SVN_CONTROLLED_FALSE@                $(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/$$i;                         \
-@SVN_CONTROLLED_FALSE@            done;                                                                               \
-@SVN_CONTROLLED_FALSE@	    cd $(DOC_SRC_DIR);                                                                  \
-@SVN_CONTROLLED_FALSE@            files=`find . -type f`;                                                             \
-@SVN_CONTROLLED_FALSE@            cd -;                                                                               \
-@SVN_CONTROLLED_FALSE@            for i in $$files; do                                                                \
-@SVN_CONTROLLED_FALSE@                $(INSTALL_DATA) $(DOC_SRC_DIR)/$$i $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/$$i; \
-@SVN_CONTROLLED_FALSE@            done;                                                                               \
-@SVN_CONTROLLED_FALSE@            rm -rf $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/doxygen-user;                        \
-@SVN_CONTROLLED_FALSE@            rm -rf $(DESTDIR)$(datadir)/@PACKAGE_NAME@/doc/doxygen-dev;                         \
+@SVN_CONTROLLED_FALSE@	if test -d "$(DOC_SRC_DIR)"; then                                                   \
+@SVN_CONTROLLED_FALSE@            cd $(DOC_SRC_DIR);                                                              \
+@SVN_CONTROLLED_FALSE@            dirs="pdf tags";                                                                \
+@SVN_CONTROLLED_FALSE@            cd -;                                                                           \
+@SVN_CONTROLLED_FALSE@            for i in $$dirs; do                                                             \
+@SVN_CONTROLLED_FALSE@                if test -d "$(DOC_SRC_DIR)/$$i"; then                                       \
+@SVN_CONTROLLED_FALSE@                    $(MKDIR_P) $(DESTDIR)$(docdir)/$$i;                                     \
+@SVN_CONTROLLED_FALSE@                    cd $(DOC_SRC_DIR)/$$i;                                                  \
+@SVN_CONTROLLED_FALSE@                    files=`find . -type f`;                                                 \
+@SVN_CONTROLLED_FALSE@                    cd -;                                                                   \
+@SVN_CONTROLLED_FALSE@                    for j in $$files; do                                                    \
+@SVN_CONTROLLED_FALSE@                        $(INSTALL_DATA) $(DOC_SRC_DIR)/$$i/$$j $(DESTDIR)$(docdir)/$$i/$$j; \
+@SVN_CONTROLLED_FALSE@                    done;                                                                   \
+@SVN_CONTROLLED_FALSE@                fi;                                                                         \
+@SVN_CONTROLLED_FALSE@            done;                                                                           \
 @SVN_CONTROLLED_FALSE@        fi
 
-@SVN_CONTROLLED_FALSE@doxygen-user-uninstall:
-@SVN_CONTROLLED_FALSE@	rm -rf $(DESTDIR)$(datadir)/@PACKAGE_NAME@
+@SVN_CONTROLLED_FALSE@copy-revision-file-to-dist:
 
 ###############################################################################
 
-###############################################################################
-
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@beautify:
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@	@fail= failcom='exit 1'; \
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@	for f in x $$MAKEFLAGS; do \
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@	  case $$f in \
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@	    *=* | --[!k]*);; \
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@	    *k*) failcom='fail=yes';; \
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@	  esac; \
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@	done; \
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@        for subdir in $(SUBDIRS); do \
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@            ($(am__cd) $$subdir && $(MAKE) $(AM_MAKEFLAGS) $@) || eval $$failcom; \
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@        done; \
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@        test -z "$$fail"
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@	cd $(srcdir); ./vendor/common/beautifier/beautify
+@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@beautify-sp:
+@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@	@$(am__cd) $(srcdir) && ./vendor/common/beautifier/beautify
+@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@beautify: beautify-recursive
 
 @HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@beautify-clean:
-@HAVE_UNCRUSTIFY_TRUE@@SVN_CONTROLLED_TRUE@	find $(srcdir) -name "*.unc-backup*" -exec rm '{}' \;
 
 ###############################################################################
 
@@ -923,7 +920,7 @@ prohibit-svn-files-in-dist:
 
 bitten-copy-tarball-to-prefix: $(distdir).tar.gz
 	$(MKDIR_P) $(DESTDIR)$(prefix)
-	$(INSTALL_DATA) $(distdir).tar.gz $(DESTDIR)$(prefix)/
+	$(INSTALL_DATA) $(distdir).tar.gz $(DESTDIR)$(prefix)/$(PACKAGE)-latest.tar.gz
 
 bitten-print-environment:
 	env
@@ -931,7 +928,12 @@ bitten-print-environment:
 
 ###############################################################################
 
-check-build: $(BUILT_SOURCES) all $(check_PROGRAMS) $(check_LTLIBRARIES)
+check-build-sp: $(BUILT_SOURCES) all-am $(check_PROGRAMS) $(check_LTLIBRARIES)
+check-build: check-build-recursive
+
+###############################################################################
+
+$(SCOREP_RECURSIVE_TARGETS):
 	@fail= failcom='exit 1'; \
 	for f in x $$MAKEFLAGS; do \
 	  case $$f in \
@@ -939,12 +941,22 @@ check-build: $(BUILT_SOURCES) all $(check_PROGRAMS) $(check_LTLIBRARIES)
 	    *k*) failcom='fail=yes';; \
 	  esac; \
 	done; \
-        for subdir in $(SUBDIRS); do \
-            ($(am__cd) $$subdir && $(MAKE) $(AM_MAKEFLAGS) $@) || eval $$failcom; \
-        done; \
-        test -z "$$fail"
-
-###############################################################################
+	dot_seen=no; \
+	target=`echo $@ | sed s/-recursive//`; \
+	list='$(SUBDIRS)'; for subdir in $$list; do \
+	  echo "Making $$target in $$subdir"; \
+	  if test "$$subdir" = "."; then \
+	    dot_seen=yes; \
+	    local_target="$$target-sp"; \
+	  else \
+	    local_target="$$target"; \
+	  fi; \
+	  ($(am__cd) $$subdir && $(MAKE) $(AM_MAKEFLAGS) $$local_target) \
+	  || eval $$failcom; \
+	done; \
+	if test "$$dot_seen" = "no"; then \
+	  $(MAKE) $(AM_MAKEFLAGS) "$$target-sp" || exit 1; \
+	fi; test -z "$$fail"
 
 .PHONY: doc/doxygen-user/main.dox remove-svn-files-from-dist
 
@@ -965,18 +977,15 @@ dist-hook: remove-svn-files-from-dist prohibit-svn-files-in-dist doc/doxygen-use
 	rm -f $(top_distdir)/build-frontend/opari2_usage.h
 
 clean-local: doxygen-user-clean
-
-distclean-local:
-	rm -rf test/
+	rm -rf test/tmp
 
 install-exec-local:
-	$(INSTALL_SCRIPT) $(builddir)/build-frontend/pomp2_parse_init_regions.awk $(DESTDIR)$(bindir)/
+	$(INSTALL_SCRIPT) $(builddir)/build-frontend/pomp2-parse-init-regions.awk $(DESTDIR)$(bindir)/
 
 install-data-local: doxygen-user-install
 
-uninstall-local: doxygen-user-uninstall
-	rm -rf $(DESTDIR)$(datadir)/@PACKAGE_NAME@
-	rm -f  $(DESTDIR)$(bindir)/pomp2_parse_init_regions.awk
+uninstall-hook: common-uninstall
+	rm -f  $(DESTDIR)$(bindir)/pomp2-parse-init-regions.awk
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -21,6 +21,10 @@
 #include <string.h>
 #include <Profile/Profiler.h>
 
+#ifdef __GNUC__
+#include <cxxabi.h>
+#endif /* __GNUC__ */
+
 #ifdef TAU_WINDOWS
 //#include <vector>
 //#include <string>
@@ -408,7 +412,8 @@ void traceEntry(int id)
   } 
   else {
     if (fi != NULL) {
-      TAU_PROFILER_START(fi);
+      //TAU_PROFILER_START(fi);
+      Tau_start_timer(fi, 0, tid);
     } else {
       dprintf("ERROR?: traceEntry: fi = null!\n");
     }
@@ -425,6 +430,7 @@ void traceExit(int id)
   
   if ( !RtsLayer::TheEnableInstrumentation()) return; 
   int tid = RtsLayer::myThread();
+
   if (!tauDyninstEnabled[tid]) return;
   void *fi = TheTauBinDynFI()[id];
   if (fi) 
@@ -445,7 +451,8 @@ void traceExit(int id)
     }
   }
   if (fi != NULL) {
-    TAU_PROFILER_STOP(fi);
+    //TAU_PROFILER_STOP(fi);
+     Tau_stop_timer(fi, tid);
   } else {
     printf("ERROR: traceExit: fi = null!\n");
   }
@@ -486,7 +493,10 @@ void tau_dyninst_init(int isMPI)
   }
   int tid = RtsLayer::myThread();
   if (!tauDyninstEnabled[tid]) {
-    tauDyninstEnabled[tid] = 1;
+    RtsLayer::LockDB();
+    for (int i = 0; i < TAU_MAX_THREADS; i++) 
+      tauDyninstEnabled[i] = 1;
+    RtsLayer::UnLockDB();
   }
 }
 
@@ -495,9 +505,49 @@ void tau_dyninst_cleanup()
   dprintf("Inside tau_dyninst_cleanup\n");
 }
 
-
+/* PEBIL */
+char * tau_demangle_name(char **funcname) {
+  std::size_t len=1024;
+  int stat;
+  char *out_buf= (char *) malloc (len);
+  char *dem_name = NULL; 
+#ifdef __GNUC__
+  char *name = abi::__cxa_demangle(*funcname, out_buf, &len, &stat);
+  if (stat == 0) dem_name = out_buf;
+  else dem_name = *funcname;
+  return dem_name; 
+#else  /* __GNUC__ */
+  return *funcname; 
+  /* return the original name pass it through c++filt <name> */
+#endif /* __GNUC__ */
+  
 }
-// extern "C"
+
+void  tau_register_func(char **func, char** file, int* lineno, 
+  int* id) {
+    if (*file == NULL){
+      dprintf("TAU: tau_register_func: name = %s, id = %d\n", *func, *id);
+      trace_register_func(tau_demangle_name(func), *id);
+    } else {
+      char funcname[2048];
+      sprintf(funcname, "%s [{%s}{%d}]", tau_demangle_name(func), *file, *lineno);
+      trace_register_func(funcname, *id);
+      dprintf("TAU : tau_register_func: name = %s, id = %d\n", funcname, *id);
+    }
+}
+
+void tau_trace_entry(int* id) {
+  dprintf("TAU: tau_trace_entry: id = %d\n", *id);
+  traceEntry(*id);
+}
+
+void tau_trace_exit(int* id) {
+  dprintf("TAU: tau_trace_exit : id = %d\n", *id);
+  traceExit(*id);
+}
+
+} /* extern "C" */
+  
 
 // EOF TauHooks.cpp
 /***************************************************************************

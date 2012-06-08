@@ -53,9 +53,10 @@ int WindowsThreadLayer::RegisterThread(void)
   WaitCheck = WaitForSingleObject(tauThreadcountMutex, INFINITE);
   if(WaitCheck == WAIT_OBJECT_0)
   {
-	  tauThreadCount ++;
+	  //tauThreadCount ++;
 	  // A thread should call this routine exactly once. 
-	  *threadId = tauThreadCount;
+	  //*threadId = tauThreadCount;
+		*threadId = RtsLayer::createThread();
 	  DEBUGPROFMSG("Thread id "<< tauThreadCount<< " Created! "<<endl;);
 
 	  ReleaseMutex(tauThreadcountMutex);

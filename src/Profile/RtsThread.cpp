@@ -32,6 +32,7 @@ using namespace std;
 void TraceCallStack(int tid, Profiler *current);
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #ifdef TAUKTAU
 #include <Profile/KtauProfiler.h>
@@ -50,33 +51,103 @@ int RtsLayer::lockDBcount[TAU_MAX_THREADS];
 int RtsLayer::lockEnvCount[TAU_MAX_THREADS];
 
 //////////////////////////////////////////////////////////////////////
-// myNode() returns the current node id (0..N-1)
+// Thread struct 
 //////////////////////////////////////////////////////////////////////
-int RtsLayer::myNode(void)
+class RtsThread
 {
-#ifdef TAU_PID_AS_NODE
-  return getpid();
-#endif
-  return TheNode();
-}
+public:
 
+	static int num_threads;
+	int thread_rank;
+	bool recyclable;
+	bool active;
+	int next_available;
 
-//////////////////////////////////////////////////////////////////////
-// myContext() returns the current context id (0..N-1)
-//////////////////////////////////////////////////////////////////////
-int RtsLayer::myContext(void)
+	RtsThread()
+	{
+		thread_rank = ++num_threads;
+		recyclable = false;
+		active = true;
+		next_available = thread_rank + 1;
+	  //printf("creating new thread obj, rank: %d, next: %d.\n", thread_rank,
+			//next_available);
+	}
+
+};
+
+int RtsThread::num_threads = 0;
+
+vector<RtsThread*>& TheThreadList(void)
 {
-  return TheContext(); 
+	static vector<RtsThread*> ThreadList;
+
+	return ThreadList;
 }
 
-extern "C" int Tau_RtsLayer_myThread(void) {
-  return RtsLayer::myThread();
+
+static int nextThread = 1;
+
+int RtsLayer::createThread()
+{
+
+  LockEnv();
+
+	RtsThread* newThread;
+	
+	if (nextThread > TheThreadList().size())
+	{
+		newThread = new RtsThread();
+		TheThreadList().push_back(newThread);
+		nextThread = newThread->next_available;
+	}
+	else
+	{
+		newThread = TheThreadList().at(nextThread);
+		newThread->active = true;
+		nextThread = newThread->next_available;
+	}
+	UnLockEnv();
+
+	return newThread->thread_rank;
 }
 
+extern "C" int Tau_RtsLayer_createThread() {
+	return RtsLayer::createThread();
+}
 
-//////////////////////////////////////////////////////////////////////
-// myNode() returns the current node id (0..N-1)
-//////////////////////////////////////////////////////////////////////
+void RtsLayer::recycleThread(int id)
+{
+  LockEnv();
+	
+	TheThreadList().at(id-1)->active = false;
+	TheThreadList().at(id-1)->next_available = nextThread;
+	nextThread = id-1;	
+  
+	UnLockEnv();
+}
+
+int RtsLayer::threadId(void)
+{
+#ifdef PTHREADS
+  return PthreadLayer::GetThreadId();
+#elif  TAU_SPROC
+  return SprocLayer::GetThreadId();
+#elif  TAU_WINDOWS
+  return WindowsThreadLayer::GetThreadId();
+#elif  TULIPTHREADS
+  return TulipThreadLayer::GetThreadId();
+#elif JAVA
+  return JavaThreadLayer::GetThreadId(); 
+	// C++ app shouldn't use this unless there's a VM
+#elif TAU_OPENMP
+  return OpenMPLayer::GetTauThreadId();
+#elif TAU_PAPI_THREADS
+  return PapiThreadLayer::GetThreadId();
+#else  // if no other thread package is available 
+  return 0;
+#endif // PTHREADS
+}
+
 int RtsLayer::myThread(void)
 {
 #ifdef PTHREADS
@@ -99,25 +170,53 @@ int RtsLayer::myThread(void)
 #endif // PTHREADS
 }
 
-int RtsLayer::setMyThread(int tid) {
+extern "C" int Tau_RtsLayer_myThread(void) {
+	return RtsLayer::myThread();
+}
+
+int RtsLayer::setMyThread(int i) { 
 #ifdef PTHREADS
-  PthreadLayer::SetThreadId(tid);
-#endif // PTHREADS
-  return 0;
-}
-
-int RtsLayer::getNumThreads() {
-  return *(RtsLayer::numThreads());
-}
-
-int *RtsLayer::numThreads() {
-#ifdef TAU_OPENMP
-	static int numthreads = OpenMPLayer::numThreads();
-#else
-  static int numthreads = 1;
+	PthreadLayer::SetThreadId(i);
 #endif
-	return &numthreads;
+	return 0;
+}
 
+// int* RtsLayer::numThreads() { static int i = 1; return &i; } 
+int RtsLayer::getTotalThreads() {
+  int numThreads = 1;
+  LockEnv();
+  // *CWL* - The Thread vector does NOT include the main thread!!
+  numThreads = TheThreadList().size() + 1;
+  UnLockEnv();
+  return numThreads;
+}
+
+//////////////////////////////////////////////////////////////////////
+// myNode() returns the current node id (0..N-1)
+//////////////////////////////////////////////////////////////////////
+int RtsLayer::myNode(void)
+{
+#ifdef TAU_PID_AS_NODE
+  return getpid();
+#endif
+#ifdef KTAU_NG
+#ifdef TAU_TID_AS_NODE
+  return RtsLayer::getLinuxKernelTid(); //voorhees
+#endif /* TAU_TID_AS_NODE */
+#endif /* KTAU_NG */
+  return TheNode();
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// myContext() returns the current context id (0..N-1)
+//////////////////////////////////////////////////////////////////////
+int RtsLayer::myContext(void)
+{
+#ifdef KTAU_NG
+  return RtsLayer::getLinuxKernelTid(); //voorhees
+#endif /* KTAU_NG */
+  return TheContext(); 
 }
 
 
@@ -127,6 +226,7 @@ int *RtsLayer::numThreads() {
 //////////////////////////////////////////////////////////////////////
 int RtsLayer::RegisterThread() {
   /* Check the size of threads */
+  /*
   LockEnv();
   int numthreads = *(RtsLayer::numThreads());
   numthreads ++;
@@ -134,10 +234,11 @@ int RtsLayer::RegisterThread() {
     fprintf(stderr, "TAU: RtsLayer: Max thread limit (%d) exceeded. Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=<higher limit>\n", numthreads);
   }
   UnLockEnv();
- 
+  */
+
 #ifndef TAU_WINDOWS 
   if (TauEnv_get_ebs_enabled()) {
-    Tau_sampling_init(numthreads-1);
+    Tau_sampling_init_if_necessary();
   }
 #endif
 
@@ -156,8 +257,17 @@ int RtsLayer::RegisterThread() {
 #endif // PTHREADS
 // Note: Java thread registration is done at the VM layer in TauJava.cpp
 
-  *(RtsLayer::numThreads()) = *(RtsLayer::numThreads()) + 1;
-  return numthreads;
+  // *CWL* - This is a fuzzy report. What is guaranteed is that AT LEAST ONE thread has
+  //         pushed us over the limit with the last registration.
+  //
+  //         Because this is a guaranteed failure, we "gracefully" exit at this point
+  //         rather than suffer a random segfault later.
+  int numThreads = getTotalThreads();
+  if (numThreads > TAU_MAX_THREADS) {
+    fprintf(stderr, "TAU Error: RtsLayer: [Max thread limit = %d] [Encountered = %d]. Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=<higher limit>\n", TAU_MAX_THREADS, numThreads);
+    exit(-1);
+  }
+  return numThreads;
 }
 
 

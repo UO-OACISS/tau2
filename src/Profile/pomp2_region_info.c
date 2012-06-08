@@ -77,7 +77,8 @@ typedef enum /* CTC_ERROR_Type */
     CTC_ERROR_Zero_length_key,
     CTC_ERROR_Zero_length_value,
     CTC_ERROR_Unknown_schedule_type,
-    CTC_ERROR_SCL_error
+    CTC_ERROR_SCL_error,
+    CTC_ERROR_Inconsistent_line_numbers
 } CTC_ERROR_Type;
 
 static void
@@ -89,6 +90,7 @@ ctcError( CTCData*       obj,
           CTC_ERROR_Type errorType,
           const char*    info1 )
 {
+    bool abort = true;
     printf( "Error parsing ctc string:\n\"%s\"\n",
             obj->mCTCStringForErrorMsg );
     switch ( errorType )
@@ -115,6 +117,7 @@ ctcError( CTCData*       obj,
             break;
         case CTC_ERROR_Unknown_token:
             printf( "Token \"%s\" not known.\n", info1 );
+            abort = false;
             break;
         case CTC_ERROR_Unsigned_expected:
             printf( "A value >= 0 is expected, \"%s\" is not allowed.\n", info1 );
@@ -145,6 +148,8 @@ ctcError( CTCData*       obj,
         case CTC_ERROR_Unknown_schedule_type:
             printf( "Schedule type \"%s\" not known.\n", info1 );
             break;
+        case CTC_ERROR_Inconsistent_line_numbers:
+            printf( "Line numbers not valid. Expected startLineNo1 <= startLineNo2 <= endLineNo1 <= endLineNo2 \n" );
         case CTC_ERROR_SCL_error:
             printf( "Error parsing source code location, "
                     "expecting \"filename:lineNo1:lineNo2\".\n" );
@@ -152,10 +157,12 @@ ctcError( CTCData*       obj,
         default:
             puts( "ctc internal error: unknown error type." );
     }
-
-    freeCTCData( obj );
-    puts( "Aborting" );
-    exit( 1 );
+    if ( abort )
+    {
+        freeCTCData( obj );
+        puts( "Aborting" );
+        exit( 1 );
+    }
 }
 
 /*----------------------------------------------------------------------------*/
@@ -215,13 +222,17 @@ initRegionInfo( CTCData* obj )
     obj->mRegionInfo->mEndFileName     = 0;
     obj->mRegionInfo->mEndLine1        = 0;
     obj->mRegionInfo->mEndLine2        = 0;
-    obj->mRegionInfo->mHasCopyIn       = 0;
-    obj->mRegionInfo->mHasCopyPrivate  = 0;
-    obj->mRegionInfo->mHasFirstPrivate = 0;
-    obj->mRegionInfo->mHasLastPrivate  = 0;
-    obj->mRegionInfo->mHasNoWait       = 0;
-    obj->mRegionInfo->mHasOrdered      = 0;
-    obj->mRegionInfo->mHasReduction    = 0;
+    obj->mRegionInfo->mHasCollapse     = false;
+    obj->mRegionInfo->mHasCopyIn       = false;
+    obj->mRegionInfo->mHasCopyPrivate  = false;
+    obj->mRegionInfo->mHasFirstPrivate = false;
+    obj->mRegionInfo->mHasIf           = false;
+    obj->mRegionInfo->mHasLastPrivate  = false;
+    obj->mRegionInfo->mHasNoWait       = false;
+    obj->mRegionInfo->mHasNumThreads   = false;
+    obj->mRegionInfo->mHasOrdered      = false;
+    obj->mRegionInfo->mHasReduction    = false;
+    obj->mRegionInfo->mHasUntied       = false;
     obj->mRegionInfo->mScheduleType    = POMP2_No_schedule;
     obj->mRegionInfo->mNumSections     = 0;
     obj->mRegionInfo->mCriticalName    = 0;
@@ -238,8 +249,8 @@ copyCTCStringToInternalMemory( CTCData*    obj,
     assert( obj->mCTCStringForErrorMsg == 0 );
 
     const size_t nBytes = strlen( source ) * sizeof( char ) + 1;
-    obj->mCTCStringMemory      = (char *)malloc( nBytes );
-    obj->mCTCStringForErrorMsg = (char *)malloc( nBytes );
+    obj->mCTCStringMemory      = malloc( nBytes );
+    obj->mCTCStringForErrorMsg = malloc( nBytes );
     strcpy( obj->mCTCStringMemory, source );
     strcpy( obj->mCTCStringForErrorMsg, source );
     obj->mCTCStringToParse = obj->mCTCStringMemory;
@@ -284,12 +295,16 @@ typedef enum
     CTC_Critical_name,
     CTC_User_region_name,
     CTC_User_group_name,
+    CTC_Has_if,
+    CTC_Has_collapse,
+    CTC_Has_num_threads,
+    CTC_Has_untied,
     CTC_No_token
 } CTCToken;
 
 static void
 ignoreLengthField( CTCData* obj );
-static int
+static bool
 getKeyValuePair( CTCData* obj,
                  char**   key,
                  char**   value );
@@ -306,11 +321,11 @@ assignSourceCodeLocation( CTCData*  obj,
                           char*     value );
 static void
 assignHasClause( CTCData*    obj,
-                 int*       hasClause,
+                 bool*       hasClause,
                  const char* value );
 static void
-assignScheduleType( CTCData*    obj,
-                    const char* value );
+assignScheduleType( CTCData*       obj,
+                    char* value );
 static void
 assignUnsigned( CTCData*    obj,
                 unsigned*   anUnsigned,
@@ -324,6 +339,7 @@ parseCTCStringAndAssignRegionInfoValues( CTCData* obj )
 {
     char* key;
     char* value;
+
     ignoreLengthField( obj );
 
     while ( getKeyValuePair( obj, &key, &value ) )
@@ -356,17 +372,29 @@ parseCTCStringAndAssignRegionInfoValues( CTCData* obj )
             case CTC_Has_first_private:
                 assignHasClause( obj, &obj->mRegionInfo->mHasFirstPrivate, value );
                 break;
+            case CTC_Has_if:
+                assignHasClause( obj, &obj->mRegionInfo->mHasIf, value );
+                break;
             case CTC_Has_last_private:
                 assignHasClause( obj, &obj->mRegionInfo->mHasLastPrivate, value );
                 break;
             case CTC_Has_no_wait:
                 assignHasClause( obj, &obj->mRegionInfo->mHasNoWait, value );
                 break;
+            case CTC_Has_num_threads:
+                assignHasClause( obj, &obj->mRegionInfo->mHasNumThreads, value );
+                break;
             case CTC_Has_ordered:
                 assignHasClause( obj, &obj->mRegionInfo->mHasOrdered, value );
                 break;
             case CTC_Has_reduction:
                 assignHasClause( obj, &obj->mRegionInfo->mHasReduction, value );
+                break;
+            case CTC_Has_collapse:
+                assignHasClause( obj, &obj->mRegionInfo->mHasCollapse, value );
+                break;
+            case CTC_Has_untied:
+                assignHasClause(  obj, &obj->mRegionInfo->mHasUntied, value );
                 break;
             case CTC_Schedule_type:
                 assignScheduleType( obj, value );
@@ -415,11 +443,11 @@ ignoreLengthField( CTCData* obj )
     }
 }
 
-static int
+static bool
 extractNextToken( char**     string,
                   const char tokenDelimiter );
 
-static int
+static bool
 getKeyValuePair( CTCData* obj,
                  char**   key,
                  char**   value )
@@ -427,12 +455,12 @@ getKeyValuePair( CTCData* obj,
     /* We expect ctcString to look like "key=value*...**" or "*".   */
     if ( *( obj->mCTCStringToParse ) == '*' )
     {
-        return 0; /* end of ctc string */
+        return false; /* end of ctc string */
     }
 
     if ( *( obj->mCTCStringToParse ) == '\0' )
     {
-        return 0; /* also end of ctc string. we don't force the second "*" */
+        return false; /* also end of ctc string. we don't force the second "*" */
     }
 
     *key = obj->mCTCStringToParse;
@@ -454,21 +482,22 @@ getKeyValuePair( CTCData* obj,
     {
         ctcError( obj, CTC_ERROR_Zero_length_value, 0 );
     }
-    return 1;
+
+    return true;
 }
 
-static int
+static bool
 extractNextToken( char**     string,
                   const char tokenDelimiter )
 {
     *string = strchr( *string, tokenDelimiter );
     if ( !( *string && **string == tokenDelimiter ) )
     {
-        return 0;
+        return false;
     }
     **string = '\0'; /* extraction */
     ++( *string );
-    return 1;
+    return true;
 }
 
 /** @brief matching between string description and CTC token*/
@@ -484,16 +513,20 @@ typedef struct
 static const CTCTokenMapValueType ctcTokenMap[] =
 {
     /* Entries must be sorted to be used in binary search. */
-    /* If you add/remove items, ctcTokenMapSize            */
+    /* If you add/remove items update ctcTokenMapSize      */
     { "criticalName",    CTC_Critical_name                         },
     { "escl",            CTC_End_source_code_location              },
+    { "hasCollapse",     CTC_Has_collapse                          },
     { "hasCopyIn",       CTC_Has_copy_in                           },
     { "hasCopyPrivate",  CTC_Has_copy_private                      },
     { "hasFirstPrivate", CTC_Has_first_private                     },
+    { "hasIf",           CTC_Has_if                                },
     { "hasLastPrivate",  CTC_Has_last_private                      },
     { "hasNoWait",       CTC_Has_no_wait                           },
+    { "hasNumThreads",   CTC_Has_num_threads                       },
     { "hasOrdered",      CTC_Has_ordered                           },
     { "hasReduction",    CTC_Has_reduction                         },
+    { "hasUntied",       CTC_Has_untied                            },
     { "numSections",     CTC_Num_sections                          },
     { "regionType",      CTC_Region_type                           },
     { "scheduleType",    CTC_Schedule_type                         },
@@ -503,7 +536,7 @@ static const CTCTokenMapValueType ctcTokenMap[] =
 };
 
 /** @brief number of entries in ctcTokenMap*/
-const size_t ctcTokenMapSize = 15;
+const size_t ctcTokenMapSize = sizeof( ctcTokenMap ) / sizeof( CTCTokenMapValueType );
 
 static int
 ctcTokenMapCompare( const void* searchToken,
@@ -559,6 +592,7 @@ static const RegionTypesMapValueType regionTypesMap[] =
     { "flush",             POMP2_Flush                  },
     { "for",               POMP2_For                    },
     { "master",            POMP2_Master                 },
+    { "ordered",           POMP2_Ordered                },
     { "parallel",          POMP2_Parallel               },
     { "paralleldo",        POMP2_Parallel_do            },
     { "parallelfor",       POMP2_Parallel_for           },
@@ -567,11 +601,14 @@ static const RegionTypesMapValueType regionTypesMap[] =
     { "region",            POMP2_User_region            },
     { "sections",          POMP2_Sections               },
     { "single",            POMP2_Single                 },
+    { "task",              POMP2_Task                   },
+    { "taskuntied",        POMP2_Taskuntied             },
+    { "taskwait",          POMP2_Taskwait               },
     { "workshare",         POMP2_Workshare              }
 };
 
 /** @brief number of entries in regionTypesMap*/
-const size_t regionTypesMapSize = 16;
+const size_t regionTypesMapSize = sizeof( regionTypesMap ) / sizeof( RegionTypesMapValueType );
 
 static POMP2_Region_type
 getRegionTypeFromString( const char* regionTypeString );
@@ -632,12 +669,12 @@ assignSourceCodeLocation( CTCData*  obj,
     char* token    = value;
     int   line1Tmp = -1;
     int   line2Tmp = -1;
-    int  continueExtraction;
+    bool  continueExtraction;
     assert( *filename == 0 );
 
     if ( ( continueExtraction = extractNextToken( &value, ':' ) ) )
     {
-        *filename =(char *) malloc( strlen( token ) * sizeof( char ) + 1 );
+        *filename = malloc( strlen( token ) * sizeof( char ) + 1 );
         strcpy( *filename, token );
     }
     token = value;
@@ -669,7 +706,7 @@ assignSourceCodeLocation( CTCData*  obj,
 
 static void
 assignHasClause( CTCData*    obj,
-                 int*       hasClause,
+                 bool*       hasClause,
                  const char* value )
 {
     if ( !isdigit( *value ) )
@@ -689,10 +726,21 @@ static POMP2_Schedule_type
 getScheduleTypeFromString( const char* key );
 
 static void
-assignScheduleType( CTCData*    obj,
-                    const char* value )
+assignScheduleType( CTCData*       obj,
+                    char* value )
 {
-    obj->mRegionInfo->mScheduleType = getScheduleTypeFromString( value );
+    char* token = NULL;
+
+    token = strtok( value, "," );
+
+    if ( token )
+    {
+        obj->mRegionInfo->mScheduleType = getScheduleTypeFromString( token );
+    }
+    else
+    {
+        obj->mRegionInfo->mScheduleType = getScheduleTypeFromString( value );
+    }
     if ( obj->mRegionInfo->mScheduleType ==  POMP2_No_schedule )
     {
         ctcError( obj, CTC_ERROR_Unknown_schedule_type, value );
@@ -716,14 +764,14 @@ static void
 assignString( char**      aString,
               const char* value )
 {
-    *aString = (char *)malloc( strlen( value ) * sizeof( char ) + 1 );
+    *aString = malloc( strlen( value ) * sizeof( char ) + 1 );
     strcpy( *aString, value );
 }
 
 static void
 checkConsistency( CTCData* obj )
 {
-    int requiredAttributesFound;
+    bool requiredAttributesFound;
 
     if ( obj->mRegionInfo->mRegionType == POMP2_No_type )
     {
@@ -754,7 +802,27 @@ checkConsistency( CTCData* obj )
         return;
     }
 
-    /** @todo implement missing consistency checks */
+    if ( obj->mRegionInfo->mStartLine1 > obj->mRegionInfo->mStartLine2 )
+    {
+        ctcError( obj, CTC_ERROR_Inconsistent_line_numbers, 0 );
+        return;
+    }
+
+    if ( obj->mRegionInfo->mEndLine1 > obj->mRegionInfo->mEndLine2 )
+    {
+        ctcError( obj, CTC_ERROR_Inconsistent_line_numbers, 0 );
+        return;
+    }
+/* A barrier, taskwait and flush does not have an end line number, since it
+ * is not associated to a region.*/
+    if ( obj->mRegionInfo->mStartLine2 > obj->mRegionInfo->mEndLine1 &&
+         obj->mRegionInfo->mRegionType != POMP2_Barrier &&
+         obj->mRegionInfo->mRegionType != POMP2_Taskwait &&
+         obj->mRegionInfo->mRegionType != POMP2_Flush )
+    {
+        ctcError( obj, CTC_ERROR_Inconsistent_line_numbers, 0 );
+        return;
+    }
 }
 
 /*----------------------------------------------------------------------------*/
@@ -810,22 +878,21 @@ static const ScheduleTypesMapValueType scheduleTypesMap[] =
 };
 
 /** @brief number of entries in scheduleTypesMap*/
-const size_t scheduleTypesMapSize = 5;
+const size_t scheduleTypesMapSize = sizeof( scheduleTypesMap ) / sizeof( ScheduleTypesMapValueType );
 
 static int
 scheduleTypesMapCompare( const void* searchKey,
                          const void* mapElem );
 
-/* currently not used because opari does not provide this information yet */
+/* @brief Assigns a schedule type according to an entry in the ctc string */
 static POMP2_Schedule_type
 getScheduleTypeFromString( const char* key )
 {
-    ScheduleTypesMapValueType* mapElem = ( ScheduleTypesMapValueType* )bsearch(
-        key,
-        &scheduleTypesMap,
-        scheduleTypesMapSize,
-        sizeof( ScheduleTypesMapValueType ),
-        scheduleTypesMapCompare );
+    ScheduleTypesMapValueType* mapElem = ( ScheduleTypesMapValueType* )bsearch( key,
+                                                                                &scheduleTypesMap,
+                                                                                scheduleTypesMapSize,
+                                                                                sizeof( ScheduleTypesMapValueType ),
+                                                                                scheduleTypesMapCompare );
 
     if ( mapElem )
     {

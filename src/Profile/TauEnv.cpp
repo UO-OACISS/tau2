@@ -60,6 +60,9 @@
 # define TAU_CALLPATH_DEFAULT 0
 #endif
 
+#define TAU_CALLSITE_DEFAULT 0
+#define TAU_CALLSITE_LIMIT_DEFAULT 1 /* default to be local */
+
 /* if we are doing EBS sampling, set the default sampling period */
 #define TAU_EBS_DEFAULT 0
 #define TAU_EBS_KEEP_UNRESOLVED_ADDR_DEFAULT 0
@@ -121,6 +124,9 @@
 #endif /* TAU_MPI */
 
 #define TAU_CUPTI_API_DEFAULT "runtime"
+
+// forward declartion of cuserid. need for c++ compilers on Cray.
+extern "C" char *cuserid(char *);
 
 /************************** tau.conf stuff, adapted from Scalasca ***********/
 
@@ -283,7 +289,7 @@ static const char *getconf(const char *key) {
 /*********************************************************************
  * Local Tau_check_dirname routine
  ********************************************************************/
-static  char * Tau_check_dirname(const char * dir) {
+char * Tau_check_dirname(const char * dir) {
   if (strcmp(dir, "$TAU_LOG_DIR") == 0){
     TAU_VERBOSE("Using PROFILEDIR=%s\n", dir);
     const char *logdir= getconf("TAU_LOG_PATH");
@@ -299,7 +305,7 @@ static  char * Tau_check_dirname(const char * dir) {
 
     char logfiledir[2048]; 
     char scratchdir[2048]; 
-#ifdef TAU_BGP
+#if (defined (TAU_BGL) || defined(TAU_BGP) || defined(TAU_BGQ) || defined(__linux__))
     if (cuserid(user) == NULL) {
       sprintf(user,"unknown");
     }
@@ -314,6 +320,7 @@ static  char * Tau_check_dirname(const char * dir) {
       strcpy(user, pwInfo->pw_name);
     */
     char *temp = getlogin();
+    TAU_VERBOSE("TAU: cuserid returns %s\n", temp);
 #endif // TAU_WINDOWS
     if (temp != NULL) {
       sprintf(user, temp);
@@ -332,19 +339,22 @@ static  char * Tau_check_dirname(const char * dir) {
       mkdir(logfiledir);
 #else
 
-      mkdir(logdir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
+      mode_t oldmode;
+      oldmode=umask(0);
+      mkdir(logdir, S_IRWXU | S_IRGRP | S_IWGRP | S_IXGRP | S_IRWXO);
       sprintf(scratchdir, "%s/%d", logdir, (thisTime->tm_year+1900));
-      mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
+      mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IWGRP | S_IXGRP | S_IRWXO);
       sprintf(scratchdir, "%s/%d/%d", logdir, (thisTime->tm_year+1900), 
 	(thisTime->tm_mon+1));
-      mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
+      mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IWGRP | S_IXGRP | S_IRWXO);
       sprintf(scratchdir, "%s/%d/%d/%d", logdir, (thisTime->tm_year+1900), 
 	(thisTime->tm_mon+1), thisTime->tm_mday);
-      mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
+      mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IWGRP | S_IXGRP | S_IRWXO);
       TAU_VERBOSE("mkdir %s\n", scratchdir);
 
-      mkdir(logfiledir, S_IRWXU | S_IRGRP | S_IXGRP | S_IRWXO);
+      mkdir(logfiledir, S_IRWXU | S_IRGRP | S_IXGRP | S_IXGRP | S_IRWXO);
       TAU_VERBOSE("mkdir %s\n", logfiledir);
+      umask(oldmode);
 #endif 
     }
     return strdup(logfiledir);
@@ -364,6 +374,8 @@ static int env_throttle = 0;
 static int env_disable_instrumentation = 0;
 static double env_max_records = 0;
 static int env_callpath = 0;
+static int env_callsite = 0;
+static int env_callsite_limit = 0;
 static int env_compensate = 0;
 static int env_profiling = 0;
 static int env_tracing = 0;
@@ -472,6 +484,14 @@ double TauEnv_get_max_records() {
 }
 int TauEnv_get_callpath() {
   return env_callpath;
+}
+
+int TauEnv_get_callsite() {
+  return env_callsite;
+}
+
+int TauEnv_get_callsite_limit() {
+  return env_callsite_limit;
 }
 
 int TauEnv_get_compensate() {
@@ -738,13 +758,13 @@ void TauEnv_initialize() {
     if ((env_profiledir = getconf("PROFILEDIR")) == NULL) {
       env_profiledir = ".";   /* current directory */
     }
-    env_profiledir=Tau_check_dirname(env_profiledir);
+    /* env_profiledir=Tau_check_dirname(env_profiledir); */
     TAU_VERBOSE("TAU: PROFILEDIR is \"%s\"\n", env_profiledir);
 
     if ((env_tracedir = getconf("TRACEDIR")) == NULL) {
       env_tracedir = ".";   /* current directory */
     }
-    env_tracedir=Tau_check_dirname(env_tracedir);
+    /* env_tracedir=Tau_check_dirname(env_tracedir); */
     TAU_VERBOSE("TAU: TRACEDIR is \"%s\"\n", env_tracedir);
 
     int profiling_default = TAU_PROFILING_DEFAULT;
@@ -802,7 +822,26 @@ void TauEnv_initialize() {
       }
     }
 
-#if (defined(TAU_MPI) || defined(TAU_SHMEM))
+    tmp = getconf("TAU_CALLSITE");
+    if (parse_bool(tmp, TAU_CALLSITE_DEFAULT)) {
+      env_callsite = 1;
+      TAU_VERBOSE("TAU: Callsite Discovery via Unwinding Enabled\n");
+      TAU_METADATA("TAU_CALLSITE", "on");
+    } 
+
+    const char *callsiteLimit = getconf("TAU_CALLSITE_LIMIT");
+    env_callsite_limit = TAU_CALLSITE_LIMIT_DEFAULT;
+    if (callsiteLimit) {
+      env_callsite_limit = atoi(callsiteLimit);
+      if (env_callsite_limit < 0) {
+        env_callsite_limit = TAU_CALLSITE_LIMIT_DEFAULT;
+      }
+    }
+    TAU_VERBOSE("TAU: Callsite Depth Limit = %d\n", env_callsite_limit);
+    sprintf(tmpstr, "%d", env_callsite_limit);
+    TAU_METADATA("TAU_CALLSITE_LIMIT", tmpstr);
+
+#if (defined(TAU_MPI) || defined(TAU_SHMEM) || defined(TAU_DMAPP))
     /* track comm (opposite of old -nocomm option) */
     tmp = getconf("TAU_TRACK_MESSAGE");
     if (parse_bool(tmp, env_track_message)) {
@@ -831,7 +870,7 @@ void TauEnv_initialize() {
       TAU_VERBOSE("TAU: Message Tracking Disabled\n");
       TAU_METADATA("TAU_TRACK_MESSAGE", "off");
     }
-#endif /* TAU_MPI || TAU_SHMEM */
+#endif /* TAU_MPI || TAU_SHMEM || TAU_DMAPP */
 
     /* clock synchronization */
     if (env_tracing == 0) {
@@ -945,9 +984,15 @@ void TauEnv_initialize() {
       TAU_VERBOSE("TAU: Output Format: snapshot\n");
       TAU_METADATA("TAU_PROFILE_FORMAT", "snapshot");
     } else if (profileFormat != NULL && 0 == strcasecmp(profileFormat, "merged")) {
+#ifdef TAU_MPI
       env_profile_format = TAU_FORMAT_MERGED;
       TAU_VERBOSE("TAU: Output Format: merged\n");
       TAU_METADATA("TAU_PROFILE_FORMAT", "merged");
+#else
+      env_profile_format = TAU_FORMAT_PROFILE;
+      TAU_VERBOSE("TAU: Output Format: merged format not supported without MPI, reverting to profile\n");
+      TAU_METADATA("TAU_PROFILE_FORMAT", "profile");
+#endif /* TAU_MPI */
     } else if (profileFormat != NULL && 0 == strcasecmp(profileFormat, "none")) {
       env_profile_format = TAU_FORMAT_NONE;
       TAU_VERBOSE("TAU: Output Format: none\n");

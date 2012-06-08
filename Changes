@@ -26,6 +26,25 @@ Version 2.21 changes (from 2.20):
 13. Added TAU_SUMMARY=1 and pprof -f profile.Min/Max with paraprof -dumpsummary to generate just min/max/stddev/mean statistics instead of per-node data.
 14. Added support for systemwide tracking using tau.conf. 
 15. Added support for MINGW compiler to create binaries for Windows.
+16. Added support for Cray XK6 CUDA with Cray CCE compilers v8.0.x.
+17. Added support for UPC compiler scripts (tau_upc.sh, tauupc).
+18. Updated Opari2. 
+19. Added EBS based on callstack unwinding.
+20. Added Cray DMAPP library wrapper (configure -dmapp, -optTrackDMAPP TAU_OPTIONS).
+21. Added -useropt=-DTAU_SYSTEMWIDE_TRACK_MSG_SIZE_AS_CTX_EVENT for tracking message size with context events.
+22. Added -optLinkOnly for compiling .o file without instrumentation, then linking in TAU libraries.
+23. Added support for IBM BlueGene/Q (-arch=bgq in configure).
+24. Added support for callsite profiling (TAU_CALLSITE=1 at runtime). 
+25. Added an updated Opari2. 
+25. Added support for OpenACC profiling using the updated PGI 12.3 runtime library instrumentation API.
+26. Cupti and OpenCL updates (tracking time spent in queued on the GPU).
+27. Updates to ParaProf for IBM BG/Q topology displays. 
+28. Updates to tau_rewrite for Maqao instrumentation. 
+29. Added tau_macro.sh tool used for pre-processing (-optPreProcess) for Opari2.
+30. Added support for -arch=arm_linux.
+31. Added jogl.jar and libjogl.* changes for IBM BG/Q and ARM Linux.
+32. Enhancements for TAU sampling and TAU_TRACK_SIGNALS for IBM BG/Q.
+
 
 
 Version 2.20 changes (from 2.19):

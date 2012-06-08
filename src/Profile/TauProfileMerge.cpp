@@ -36,7 +36,8 @@ extern "C" int TAUDECL Tau_RtsLayer_myThread();
 
 
 #ifdef TAU_UNIFY
-void Tau_profileMerge_writeDefinitions(FILE *f) {
+void Tau_profileMerge_writeDefinitions(int *globalEventMap, int
+*globalAtomicEventMap, FILE *f) {
 
   Tau_unify_object_t *functionUnifier, *atomicUnifier;
   functionUnifier = Tau_unify_getFunctionUnifier();
@@ -95,7 +96,10 @@ int Tau_mergeProfiles() {
   Tau_global_incr_insideTAU();
 #ifdef TAU_UNIFY
   Tau_unify_unifyDefinitions();
-  Tau_snapshot_writeUnifiedBuffer();
+
+	for (int tid = 0; tid<RtsLayer::getTotalThreads(); tid++) {
+		Tau_snapshot_writeUnifiedBuffer(tid);
+	}
 #else
   Tau_snapshot_writeToBuffer("merge");
 #endif
@@ -113,8 +117,9 @@ int Tau_mergeProfiles() {
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &size);
 
-  buf = Tau_snapshot_getBuffer();
-  buflen = Tau_snapshot_getBufferLength();
+	buflen = Tau_snapshot_getBufferLength();
+	buf = (char *) malloc(buflen);
+	Tau_snapshot_getBuffer(buf);
 
   int maxBuflen;
   PMPI_Reduce(&buflen, &maxBuflen, 1, MPI_INT, MPI_MAX, 0, MPI_COMM_WORLD);
@@ -157,8 +162,8 @@ int Tau_mergeProfiles() {
     for (int i=0; i<functionUnifier->localNumItems; i++) {
       globalEventMap[functionUnifier->mapping[i]] = i; // set reverse mapping
     }
-    Tau_collate_get_total_threads(&globalNumThreads, &numEventThreads,
-				  numEvents, globalEventMap);
+    Tau_collate_get_total_threads(functionUnifier, &globalNumThreads, &numEventThreads,
+				  numEvents, globalEventMap,false);
     
     Tau_collate_allocateFunctionBuffers(&gExcl, &gIncl,
 					&gNumCalls, &gNumSubr,
@@ -192,8 +197,8 @@ int Tau_mergeProfiles() {
       // set reverse mapping
       globalAtomicEventMap[atomicUnifier->mapping[i]] = i;
     }
-    Tau_collate_get_total_threads(&globalNumThreads, &numAtomicEventThreads,
-				  numAtomicEvents, globalAtomicEventMap);
+    Tau_collate_get_total_threads(atomicUnifier, &globalNumThreads, &numAtomicEventThreads,
+				  numAtomicEvents, globalAtomicEventMap,true);
     
     Tau_collate_allocateAtomicBuffers(&gAtomicMin, &gAtomicMax,
 				      &gAtomicCalls, &gAtomicMean,
@@ -224,6 +229,9 @@ int Tau_mergeProfiles() {
   if (rank == 0) {
     char *recv_buf = (char *) malloc (maxBuflen);
 
+    TAU_VERBOSE("Before Merging Profiles: Tau_check_dirname()");
+    profiledir=Tau_check_dirname(profiledir);
+
     TAU_VERBOSE("TAU: Merging Profiles\n");
     start = TauMetrics_getTimeOfDay();
 
@@ -238,7 +246,7 @@ int Tau_mergeProfiles() {
     }
 
 #ifdef TAU_UNIFY
-    Tau_profileMerge_writeDefinitions(f);
+    Tau_profileMerge_writeDefinitions(globalEventMap, globalAtomicEventMap, f);
 #endif
 
     for (i=1; i<size; i++) {
@@ -279,8 +287,9 @@ int Tau_mergeProfiles() {
     }
     Tau_snapshot_writeMetaDataBlock();
 
-    buf = Tau_snapshot_getBuffer();
     buflen = Tau_snapshot_getBufferLength();
+		buf = (char *) malloc(buflen);
+    Tau_snapshot_getBuffer(buf);
     fwrite (buf, buflen, 1, f);
 
 #ifdef TAU_UNIFY
@@ -387,6 +396,7 @@ int Tau_mergeProfiles() {
     /* send data */
     PMPI_Send(buf, buflen, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
   }
+	free(buf);
   Tau_global_decr_insideTAU();  
   return 0;
 }

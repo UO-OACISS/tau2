@@ -40,7 +40,7 @@
 #include "ompragma.h"
 #include <iostream>
 
-/** brief Find the pragma name.*/
+/** @brief Find the pragma name.*/
 void
 OMPragma::find_name()
 {
@@ -79,6 +79,32 @@ OMPragma::find_name()
     else if ( name == "no" || name == "inst" )   /*INST*/
     {
         name += find_next_word();                /*INST*/
+    }
+}
+
+/** @brief Removes all unnecessary commas. */
+void
+OMPragma::remove_commas()
+{
+    int bracket_counter = 0;
+
+    for ( unsigned int line = 0; line < lines.size(); line++ )
+    {
+        for ( unsigned int c = 0; c < lines[ line ].length(); c++ )
+        {
+            if ( lines[ line ][ c ] == '(' )
+            {
+                bracket_counter++;
+            }
+            if ( lines[ line ][ c ] == ')' )
+            {
+                bracket_counter--;
+            }
+            if ( bracket_counter == 0 && lines[ line ][ c ] == ',' )
+            {
+                lines[ line ][ c ] = ' ';
+            }
+        }
     }
 }
 
@@ -122,12 +148,7 @@ OMPragma::find_numthreads()
 
     if (  find_word( "num_threads", line, pos ) )
     {
-        lines[ line ].replace( pos, 11, "           " );
-        pos                    = lines[ line ].find( '(', pos );
-        lines[ line ][ pos++ ] = ' ';
-        arg_num_threads        = find_arguments( line, pos, true );
-        lines[ line ][ pos++ ] = ' ';
-
+        arg_num_threads = find_arguments( line, pos, true, "num_threads" );
         return true;
     }
     return false;
@@ -144,12 +165,7 @@ OMPragma::find_if()
 
     if (  find_word( "if", line, pos ) )
     {
-        lines[ line ].replace( pos, 2, "  " );
-        pos                    = lines[ line ].find( '(', pos );
-        lines[ line ][ pos++ ] = ' ';
-        arg_if                 = find_arguments( line, pos, true );
-        lines[ line ][ pos++ ] = ' ';
-
+        arg_if = find_arguments( line, pos, true, "if" );
         return true;
     }
     return false;
@@ -166,12 +182,7 @@ OMPragma::find_reduction()
 
     if (  find_word( "reduction", line, pos ) )
     {
-        //      lines[ line ].replace( pos, 9, "         " );
-        pos = lines[ line ].find( '(', pos );
-        //      lines[ line ][ pos++ ] = ' ';
-        arg_reduction = find_arguments( line, pos, false );
-        //      lines[ line ][ pos++ ] = ' ';
-
+        arg_reduction = find_arguments( line, pos, false, "reduction" );
         return true;
     }
     return false;
@@ -181,16 +192,15 @@ OMPragma::find_reduction()
  *         schedule clause is deleted in the pragma string and
  *         stored in the arg_schedule member variable.*/
 bool
-OMPragma::find_schedule()
+OMPragma::find_schedule( string* reg_arg_schedule )
 {
     unsigned          line = 0;
     string::size_type pos  = 0;
 
-    if (  find_word( "schedule", line, pos ) )
+    if ( find_word( "schedule", line, pos ) )
     {
-        pos          = lines[ line ].find( '(', pos );
-        arg_schedule = find_arguments( line, pos, false );
-
+        arg_schedule      = find_arguments( line, pos, false, "schedule" );
+        *reg_arg_schedule = arg_schedule;
         return true;
     }
     return false;
@@ -203,7 +213,7 @@ OMPragma::find_ordered()
     unsigned          line = 0;
     string::size_type pos  = 0;
 
-    if (  find_word( "reduction", line, pos ) )
+    if (  find_word( "ordered", line, pos ) )
     {
         return true;
     }
@@ -220,9 +230,7 @@ OMPragma::find_collapse()
 
     if (  find_word( "collapse", line, pos ) )
     {
-        pos          = lines[ line ].find( '(', pos );
-        arg_collapse = find_arguments( line, pos, false );
-
+        arg_collapse = find_arguments( line, pos, false, "collapse" );
         return true;
     }
     return false;
@@ -241,6 +249,21 @@ OMPragma::find_untied( bool keep_untied )
         {
             lines[ line ].replace( pos, 6, "      " );
         }
+        return true;
+    }
+    return false;
+}
+
+/* @brief Is the default data sharing changed by default(none) or default(private) clause?*/
+bool
+OMPragma::changed_default()
+{
+    unsigned          line = 0;
+    string::size_type pos  = 0;
+
+    if (  find_word( "default(none)", line, pos ) || find_word( "default(private)", line, pos ) ||
+          find_word( "default (none)", line, pos ) || find_word( "default (private)", line, pos ) )
+    {
         return true;
     }
     return false;

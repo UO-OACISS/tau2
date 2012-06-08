@@ -37,6 +37,8 @@ extern "C" {
   int  TAUDECL TauEnv_get_tracing();
   int  TAUDECL TauEnv_get_callpath();
   int  TAUDECL TauEnv_get_callpath_depth();
+  int  TAUDECL TauEnv_get_callsite();
+  int  TAUDECL TauEnv_get_callsite_limit();
   int  TAUDECL TauEnv_get_depth_limit();
   void TAUDECL TauEnv_set_depth_limit(int value);
   int  TAUDECL TauEnv_get_comm_matrix();
@@ -54,6 +56,7 @@ extern "C" {
   void  TAUDECL TauEnv_force_set_ebs_period(int period);
   int  TAUDECL TauEnv_get_ebs_period();
   int  TAUDECL TauEnv_get_ebs_inclusive();
+  char *  TAUDECL Tau_check_dirname(const char *dirname);
 #ifdef TAU_UNWIND
   int  TAUDECL TauEnv_get_ebs_unwind();
   int  TAUDECL TauEnv_get_ebs_unwind_depth();

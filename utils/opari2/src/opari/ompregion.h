@@ -140,20 +140,22 @@ public:
     int        num_sections;
     /** is a nowait added?*/
     bool       noWaitAdded;
-    /** has num_threads clause */
-    bool       has_num_threads;
+    /** has untied clause */
+    bool       has_untied;
     /** has if clause */
     bool       has_if;
+    /** has num_threads clause */
+    bool       has_num_threads;
     /** has reduction clause */
     bool       has_reduction;
     /** has schedule clause */
     bool       has_schedule;
+    /** argument of schedule clause */
+    string     arg_schedule;
     /** has collapse clause */
     bool       has_collapse;
     /** has ordered clause */
     bool       has_ordered;
-    /** has untied clause */
-    bool       has_untied;
     /**is this an outer region?*/
     bool       outer_reg;
     /** set of relevant region descriptors*/

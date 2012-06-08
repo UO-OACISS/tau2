@@ -19,12 +19,12 @@ AC_CONFIG_AUX_DIR([build-config])
 ## using AC_CONFIG_MACRO_DIR.
 AC_CONFIG_MACRO_DIR([vendor/common/build-config/m4])
 
-## Set the default installation prefix to /opt/scorep instead of /usr/local
-AC_PREFIX_DEFAULT([/opt/scorep])
+## Set the default installation prefix to /opt/opari2 instead of /usr/local
+AC_PREFIX_DEFAULT([/opt/opari2])
 
 ## Call not before AC_CONFIG_MACRO_DIR
-AM_INIT_AUTOMAKE([foreign silent-rules color-tests 1.11.1 -Wall tar-pax])
-
+AM_INIT_AUTOMAKE([foreign color-tests 1.11.1 -Wall tar-pax])
+AM_SILENT_RULES([yes])
 
 
 # don't detect and load defaults in nested configures (e.g. otf2)
@@ -72,5 +72,5 @@ AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([test/c_test.sh], [chmod +x test/c_test.sh]) 
 AC_CONFIG_FILES([test/f90_test.sh], [chmod +x test/f90_test.sh]) 
 AC_CONFIG_FILES([test/f77_test.sh], [chmod +x test/f77_test.sh])
-AC_CONFIG_FILES([build-frontend/pomp2_parse_init_regions.awk:src/pomp-lib-dummy/pomp2_parse_init_regions.awk.in])
+AC_CONFIG_FILES([build-frontend/pomp2-parse-init-regions.awk:src/pomp-lib-dummy/pomp2_parse_init_regions.awk.in])
 AC_OUTPUT

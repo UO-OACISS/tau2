@@ -13,19 +13,19 @@
  * See the COPYING file in the package base directory for details.
  *
  */
-/****************************************************************************  
-**  SCALASCA    http://www.scalasca.org/                                   **  
-**  KOJAK       http://www.fz-juelich.de/jsc/kojak/                        **  
-*****************************************************************************  
-**  Copyright (c) 1998-2009                                                **  
-**  Forschungszentrum Juelich, Juelich Supercomputing Centre               **  
-**                                                                         **  
-**  See the file COPYRIGHT in the package base directory for details       **  
+/****************************************************************************
+**  SCALASCA    http://www.scalasca.org/                                   **
+**  KOJAK       http://www.fz-juelich.de/jsc/kojak/                        **
+*****************************************************************************
+**  Copyright (c) 1998-2009                                                **
+**  Forschungszentrum Juelich, Juelich Supercomputing Centre               **
+**                                                                         **
+**  See the file COPYRIGHT in the package base directory for details       **
 ****************************************************************************/
 /** @internal
  *
  *  @file       process_f.cc
- *  @status     beta 
+ *  @status     beta
  *
  *  @maintainer Dirk Schmidl <schmidl@rz.rwth-aachen.de>
  *
@@ -55,7 +55,7 @@ using std::sort;
 using std::greater;
 #include <cstring>
 using std::strlen;
-
+using std::remove_if;
 #ifdef EBUG
 #  include <iomanip>
 using std::setw;
@@ -99,93 +99,164 @@ look_for( const string&              lowline,
     }
 }
 
-/**@brief Check if the line belonges to the header of a subroutine or function. 
+/**@brief Check if the line belonges to the header of a subroutine or function.
  *        After lines in the header, we ca insert our variable definitions.*/
 bool
-isSubUnitHeader( string& lowline , bool inHeader)
+is_sub_unit_header( string& lowline, bool inHeader )
 {
-	string line;
-	bool result;
-	static int openbrackets=0;
-	int pos;
-	pos=lowline.find_first_not_of(" \t");
- 
-	/*string is empty*/
-	if( pos == string::npos ) 
-	{
-	     pos = 0;
-	     line.clear();
-	}
-	else
-	{
-	     line = lowline.substr( pos );
-	}
-	//search for words indicating, that we did not reach a point where
-	//we can insert varable definitions, these keywords are:
-	//program, function, result, subroutine, save, implicit, parameter,
-	//and use
-	if(  line[0] == 'p' && line[1] == 'r' && line[2] == 'o' &&
-	     line[3] == 'g' && line[4] == 'r' && line[5] == 'a' &&
-     	     line[6] == 'm' 
-	   ||
-	     line[0] == 'f' && line[1] == 'u' && line[2] == 'n' &&
-	     line[3] == 'c' && line[4] == 't' && line[5] == 'i' &&
-     	     line[6] == 'o' && line[7] == 'n'
-	   ||
-	     line[0] == 'r' && line[1] == 'e' && line[2] == 's' &&
-	     line[3] == 'u' && line[4] == 'l' && line[5] == 't' 
-	   ||
-	     line[0] == 's' && line[1] == 'u' && line[2] == 'b' &&
-	     line[3] == 'r' && line[4] == 'o' && line[5] == 'u' &&
-     	     line[6] == 't' && line[7] == 'i' && line[8] == 'n' &&
-	     line[9] == 'e'	     
-	   ||
-             line[0] == 's' && line[1] == 'a' && line[2] == 'v' &&
-	     line[3] == 'e' && inHeader
-	   ||
-	     line[0] == 'i' && line[1] == 'm' && line[2] == 'p' &&
-	     line[3] == 'l' && line[4] == 'i' && line[5] == 'c' &&
-     	     line[6] == 'i' && line[7] == 't' && inHeader
-	   ||
-	     line[0] == 'p' && line[1] == 'a' && line[2] == 'r' &&
-	     line[3] == 'a' && line[4] == 'm' && line[5] == 'e' &&
-     	     line[6] == 't' && line[7] == 'e' && line[8] == 'r' && 
-	     inHeader
-	   ||
-	     line[0] == 'u' && line[1] == 's' && line[2] == 'e' &&
-	     inHeader
-	   ||
-	     line[0] == '#' && inHeader
-	   ||
-	     line.empty()  && inHeader 
-	   ||
-	     openbrackets!=0 && inHeader
-	   )
+    string      line;
+    string      lline;
+    string      keyword;
+    bool        result;
+    static bool continuation = false;
+    static int  openbrackets = 0;
+    static bool inProgram    = false;
+    static bool inModule     = false;
+    static bool inInterface  = false;
+    static bool inContains   = false;
 
-	{
-		result=true;
-	}
-	else
-	{
-		result=false;
-	}
-	/*count open brackets, to see if a functionheader is split across different lines*/
-	for (int i=0 ; i < lowline.length() ; i++)
-	{
-		if( lowline[i]=='(' ) openbrackets++;
-		if( lowline[i]==')' ) openbrackets--;
-	}
-	return result;
+    size_t pos;
+    pos = lowline.find_first_not_of( " \t" );
+
+    /*string is empty*/
+    if ( pos == string::npos )
+    {
+        pos = 0;
+        line.clear();
+    }
+    else
+    {
+        line = lowline.substr( pos );
+    }
+    lline = line;
+    line.erase( remove_if( line.begin(), line.end(), isspace ), line.end() );
+
+    //Set number of open brackets to 0 if new unit begins, since we might have missed
+    //closing brackets on continuation lines.
+    if ( ( line.find( "program" ) == 0 )                               ||
+         ( ( line.find( "module" ) == 0 ) && !inProgram )               ||
+         ( ( line.find( "interface" ) == 0 ) && inModule )             ||
+         ( ( line.find( "contains" ) != string::npos ) && inModule )     ||
+         ( line.find( "subroutine" ) == 0 )                            ||
+         ( ( line.find( "function" ) == string::npos )   &&
+           !inHeader                                &&
+           ( ( line.find( "=" ) >= line.find( "!" ) )             ||
+             ( line.find( "=" ) > line.find( "kind" ) ) ) ) )
+    {
+        openbrackets = 0;
+    }
+
+    //Check if we enter a program block
+    inProgram = inProgram || ( line.find( "program" ) == 0 );
+    //Check if we enter a module block
+    inModule = !inProgram && ( inModule || ( line.find( "module" ) == 0 ) );
+    //Check if we enter an interface block
+    inInterface = inModule && ( inInterface || ( line.find( "interface" ) == 0 ) );
+    //Check if we enter a contains block
+    inContains = inModule && ( inContains || ( line.find( "contains" ) != string::npos ) );
+
+
+    //search for words indicating, that we did not reach a point where
+    //we can insert variable definitions, these keywords are:
+    //program, function, result, subroutine, save, implicit, parameter,
+    //and use
+    if ( ( ( ( line.find( "program" ) == 0 )                                    ||
+             ( ( lline.find( "function" )   != string::npos )           &&
+               !( lline.length() >= ( lline.find( "function" ) + 8 )        &&
+                  ( isalnum( lline[ lline.find( "function" ) + 8 ] ) ||
+                    ( lline[ lline.find( "function" ) + 8 ] == '_' ) ) )     &&
+               !( ( lline.find( "function" ) != 0 )                       &&
+                  ( isalnum( lline[ lline.find( "function" ) - 1 ] ) ) ||
+                  ( lline[ lline.find( "function" ) - 1 ] == '_' ) ) )             ||
+             ( ( lline.find( "subroutine" )   != string::npos )                 &&
+               !( lline.length() >= ( lline.find( "subroutine" ) + 10 )     &&
+                  ( isalnum( lline[ lline.find( "subroutine" ) + 10 ] ) ||
+                    ( lline[ lline.find( "subroutine" ) + 10 ] == '_' ) ) )  &&
+               !( ( lline.find( "subroutine" ) != 0 )                     &&
+                  ( isalnum( lline[ lline.find( "subroutine" ) - 1 ] ) ) ||
+                  ( lline[ lline.find( "subroutine" ) - 1 ] == '_' ) ) )           ||
+             ( line.find( "save" )     == 0 && inHeader )                       ||
+             ( line.find( "result" )   == 0 && inHeader )                       ||
+             ( line.find( "implicit" ) == 0 && inHeader )                       ||
+             ( line.find( "use" )      == 0 && inHeader )                       ||
+             ( line.find( "include" )  == 0 && inHeader ) )     &&
+           line.find( "endfunction" )   == string::npos         &&
+           line.find( "endsubroutine" ) == string::npos         &&
+           line.find( "endmodule" )     == string::npos         &&
+           line.find( "endprogram" )    == string::npos         &&
+           ( ( line.find( "=" ) >= line.find( "!" )             ||
+               line.find( "=" ) > line.find( "kind" )           ||
+               line.find( "=" ) == ( line.find( ">" ) - 1 ) ) ) )     ||
+         ( line.find( "#" ) == 0 && inHeader )                  ||
+         ( line.find( "&" ) == 0 && inHeader )                  ||
+         ( line.empty()  && inHeader )                          ||
+         ( line.find( "parameter" ) == 0 && inHeader )          ||
+         ( line.find( "dimension" ) == 0 && inHeader )          ||
+         ( openbrackets != 0 && inHeader )                      ||
+         ( continuation && inHeader ) )
+    {
+        result = !inModule || ( !inInterface && inContains );
+    }
+    else
+    {
+        result = false;
+    }
+
+    //Check if we leave a program block
+    inProgram = inProgram && line.find( "endprogram" ) == string::npos;
+    //Check if we leave a module block
+    inModule = inModule && line.find( "endmodule" ) == string::npos;
+    //Check if we leave an interface block
+    inInterface = inInterface && line.find( "endinterface" ) == string::npos;
+    //Check if we leave an contains block
+    inContains = inContains && line.find( "endmodule" ) == string::npos;
+
+    if ( line[ line.length() - 1 ] == '&' || line.find( "&!" ) != string::npos )
+    {
+        continuation = true;
+    }
+    else
+    {
+        continuation = false;
+    }
+
+    /*count open brackets, to see if a functionheader is split across different lines*/
+    for ( unsigned int i = 0; i < lowline.length(); i++ )
+    {
+        bool inString = false;
+        if ( lowline[ i ] == '(' )
+        {
+            openbrackets++;
+        }
+        if ( lowline[ i ] == ')' )
+        {
+            openbrackets--;
+        }
+        if ( ( lowline[ i ] == '\'' || lowline[ i ] == '"' ) && inString )
+        {
+            inString = false;
+        }
+        else
+        {
+            inString = true;
+        }
+        /*rest of line is a comment*/
+        if ( lowline[ i ] == '!' && !inString )
+        {
+            break;
+        }
+    }
+    return result;
 }
 
 /**@brief check if this line is a comment line*/
 bool
-is_comment_line( string&  lowline,
-                 string&  line,
-		 Language lang)
+is_comment_line( string & lowline,
+                 string & line,
+                 Language lang )
 {
     if ( lowline[ 0 ] == '!' ||
-	 ( ( lang & L_F77 ) && ( lowline[ 0 ] == '*' || lowline[ 0 ] == 'c' ) ) )
+         ( ( lang & L_F77 ) && ( lowline[ 0 ] == '*' || lowline[ 0 ] == 'c' ) ) )
     {
         // fixed form comment
 
@@ -240,9 +311,9 @@ is_comment_line( string&  lowline,
 }
 /**@brief check if this line startes a do loop*/
 bool
-is_loop_start( string& lowline,
-               string& line,
-               string& label )
+is_loop_start( string & lowline,
+               string & line,
+               string & label )
 {
     string::size_type poslab = string::npos;
 
@@ -257,10 +328,10 @@ is_loop_start( string& lowline,
 
     // is there a 'do '
     string::size_type pstart = lowline.find( "do" );
-    if ( pstart == string::npos || 
-         ( lowline[pstart+2] != '\0' && 
-           lowline[pstart+2] != ' '  && 
-           lowline[pstart+2] != '\t'    ) )
+    if ( pstart == string::npos ||
+         ( lowline[ pstart + 2 ] != '\0' &&
+           lowline[ pstart + 2 ] != ' '  &&
+           lowline[ pstart + 2 ] != '\t'    ) )
     {
         return false;
     }
@@ -284,10 +355,10 @@ is_loop_start( string& lowline,
 
     //check again, if pos now start of do, otherwise not a correct do statement
     pstart = lowline.find( "do", pos );
-    if ( pstart != pos || 
-         ( lowline[pstart+2] != '\0' && 
-           lowline[pstart+2] != ' '  && 
-           lowline[pstart+2] != '\t'    ) )
+    if ( pstart != pos ||
+         ( lowline[ pstart + 2 ] != '\0' &&
+           lowline[ pstart + 2 ] != ' '  &&
+           lowline[ pstart + 2 ] != '\t'    ) )
     {
         return false;
     }
@@ -300,7 +371,7 @@ is_loop_start( string& lowline,
         poslab = pos;
         pos    = lowline.find_first_not_of( "0123456789", pos );
         //         cerr << "2pos: " << pos << ", poslab: " << poslab << std::endl;
-        label  = line.substr( poslab, pos - poslab );
+        label = line.substr( poslab, pos - poslab );
     }
 
     //    cerr << label << "\n\n";
@@ -310,9 +381,9 @@ is_loop_start( string& lowline,
 
 /**@brief check if this line is the end of a do loop*/
 bool
-is_loop_end( string& lowline,
-             string& line,
-             string  toplabel )
+is_loop_end( string & lowline,
+             string & line,
+             string   toplabel )
 {
     string label;
 
@@ -352,13 +423,13 @@ is_loop_end( string& lowline,
     {
         // search for block Do loop
         pos = lowline.find( "end", pos );
-        if ( pos == string::npos )
+        if ( pos == string::npos || ( pos != lowline.find_first_not_of( " \t0123456789" ) ) )
         {
             return false;
         }
 
         pos = lowline.find( "do", pos + 3 );
-        if ( pos == string::npos )
+        if ( pos == string::npos  || ( lowline.find( "=", pos ) < lowline.find( "!", pos ) ) )
         {
             return false;
         }
@@ -387,7 +458,7 @@ is_loop_end( string& lowline,
         }
         else
         {
-            return true; // end do without label
+            return true;                // end do without label
         }
     }
 }
@@ -402,7 +473,7 @@ check_pragma( OMPragma* pragma )
     save_pline = pragma->pline;
     save_ppos  = pragma->ppos;
     pragma->find_name();
-    pragma->pline = save_pline;               // reset parse position
+    pragma->pline = save_pline;                // reset parse position
     pragma->ppos  = save_ppos;
     if ( pragma->name.find( "do" ) != string::npos )
     {
@@ -435,11 +506,11 @@ check_pragma( OMPragma* pragma )
 }
 
 void
-test_and_insert_ompenddo( ostream&      os,
+test_and_insert_ompenddo( ostream &     os,
                           Line_type     typeOfLastLine,
-                          Loop_type&    waitforOMPEndDo,
-                          const string& infile,
-                          int&          lineno,
+                          Loop_type &   waitforOMPEndDo,
+                          const string &infile,
+                          int &         lineno,
                           int           ppos,
                           int           pomp,
                           bool          a )
@@ -488,8 +559,8 @@ test_and_insert_ompenddo( ostream&      os,
 /** @brief Delete comments and strings before the lines are parsed
  *         to avoid finding keywords in comments or strings.*/
 void
-del_strings_and_comments( string& lowline,
-                          char&   inString )
+del_strings_and_comments( string & lowline,
+                          char &   inString )
 {
     // zero out string constants and free form comments
     for ( unsigned i = 0; i < lowline.size(); ++i )
@@ -535,32 +606,32 @@ del_strings_and_comments( string& lowline,
     }
 }
 
-/** @brief Delete comments in directive lines to avoid finding                                                                 
+/** @brief Delete comments in directive lines to avoid finding
     keywords.*/
 void
-del_inline_comments( string& lowline )
+del_inline_comments( string & lowline )
 {
-  // find first !                                                                                                            
-  int c = lowline.find( "!" );
-  // zero out string constants and free form comments                                                                        
-  for ( unsigned i = c+1; i < lowline.size(); ++i )
+    // find first !
+    int c = lowline.find( "!" );
+    // zero out string constants and free form comments
+    for ( unsigned i = c + 1; i < lowline.size(); ++i )
     {
-      if ( lowline[ i ] == '!' )
+        if ( lowline[ i ] == '!' )
         {
-          /* -- zero out partial line F90 comments -- */
-          for (; i < lowline.size(); ++i )
+            /* -- zero out partial line F90 comments -- */
+            for (; i < lowline.size(); ++i )
             {
-              lowline[ i ] = ' ';
+                lowline[ i ] = ' ';
             }
-          break;
+            break;
         }
     }
 }
 
 /** @brief Calls to the OpenMP API are replaced by pomp2 functions */
 void
-replace_openmp_api_calls( string& lowline,
-                          string& line )
+replace_openmp_api_calls( string & lowline,
+                          string & line )
 {
     // replace call to omp_*_lock routines
     vector<string::size_type> positions;
@@ -569,11 +640,11 @@ replace_openmp_api_calls( string& lowline,
     look_for( lowline, "omp_set_lock", positions );
     look_for( lowline, "omp_unset_lock", positions );
     look_for( lowline, "omp_test_lock", positions );
-    look_for( lowline, "omp_init_nest_lock", positions );        /*2.0*/
-    look_for( lowline, "omp_destroy_nest_lock", positions );     /*2.0*/
-    look_for( lowline, "omp_set_nest_lock", positions );         /*2.0*/
-    look_for( lowline, "omp_unset_nest_lock", positions );       /*2.0*/
-    look_for( lowline, "omp_test_nest_lock", positions );        /*2.0*/
+    look_for( lowline, "omp_init_nest_lock", positions );                   /*2.0*/
+    look_for( lowline, "omp_destroy_nest_lock", positions );                /*2.0*/
+    look_for( lowline, "omp_set_nest_lock", positions );                    /*2.0*/
+    look_for( lowline, "omp_unset_nest_lock", positions );                  /*2.0*/
+    look_for( lowline, "omp_test_nest_lock", positions );                   /*2.0*/
     sort( positions.begin(), positions.end(), greater<string::size_type>() );
     for ( unsigned i = 0; i < positions.size(); ++i )
     {
@@ -596,12 +667,12 @@ struct fo_tolower : public std::unary_function<int, int>
  *         variables, OpenMP pragmas and the begin and end of do loops which are needed
  *         to ensure correct instrumentation of parallel do constructs.*/
 void
-process_fortran( istream&    is,
+process_fortran( istream &   is,
                  const char* infile,
-                 ostream&    os,
-                 bool        addSharedDecl, 
-		 char*       incfile,
-		 Language    lang)
+                 ostream &   os,
+                 bool        addSharedDecl,
+                 char*       incfile,
+                 Language    lang )
 {
     string            line;
     int               lineno     = 0;
@@ -624,7 +695,7 @@ process_fortran( istream&    is,
 
     while ( getline( is, line ) )
     {
-      //                  std::cerr << line << '\n';
+        //                  std::cerr << line << '\n';
         /* workaround for bogus getline implementations */
         if ( line.size() == 1 && line[ 0 ] == '\0' )
         {
@@ -632,27 +703,17 @@ process_fortran( istream&    is,
         }
 
         /* remove extra \r from Windows source files */
-        if ( line.size() && *(line.end()-1) == '\r' ) line.erase(line.end()-1);
+        if ( line.size() && *( line.end() - 1 ) == '\r' )
+        {
+            line.erase( line.end() - 1 );
+        }
 
         ++lineno;
         string lowline( line );
         transform( line.begin(), line.end(), lowline.begin(), fo_tolower() );
-	if ( ! is_comment_line( lowline, line, lang ) )
-	{
-	    if ( isSubUnitHeader( lowline, inHeader ) )
-	    {
-		inHeader=true;
-	    }
-	    else if (inHeader == true)
-	    {
-		inHeader = false;
-	        os << "      include \'" << incfile << "\'" << std::endl;
-	    }	
-	}
-
         if ( inString )
         {
-  	  if ( !is_comment_line( lowline, line, lang ) )
+            if ( !is_comment_line( lowline, line, lang ) )
             {
                 del_strings_and_comments( lowline, inString );
                 if (  instrument_locks() )
@@ -670,10 +731,10 @@ process_fortran( istream&    is,
                       ( lowline[ 1 ] == '$' &&
                         (
                             ( lowline[ 2 ] == 'p' && lowline[ 3 ] == 'o' &&
-                 lowline[ 4 ] == 'm' && lowline[ 5 ] == 'p' )
+                              lowline[ 4 ] == 'm' && lowline[ 5 ] == 'p' )
                             ||
                             ( lowline[ 2 ] == 'o' &&
-                 lowline[ 3 ] == 'm' && lowline[ 4 ] == 'p' ) ) )
+                              lowline[ 3 ] == 'm' && lowline[ 4 ] == 'p' ) ) )
                       ||
                       ( lowline[ 1 ] == 'p' && lowline[ 2 ] == 'o' &&
                         lowline[ 3 ] == 'm' && lowline[ 4 ] == 'p' && lowline[ 5 ] == '$' ) ) && (
@@ -682,12 +743,12 @@ process_fortran( istream&    is,
 
                       ) )
         {
-	    /*insert include before first OpenMP pragma*/
-	    if (inHeader == true)
-	    {
-		inHeader = false;
-	        os << "      include \'" << incfile << "\'" << std::endl;
-	    }
+            /*insert include before first OpenMP pragma*/
+            if ( inHeader == true )
+            {
+                inHeader = false;
+                os << "      include \'" << incfile << "\'" << std::endl;
+            }
 
             int pomp = ( ( lowline[ 1 ] == 'p' ) || ( lowline[ 2 ] == 'p' ) );
 
@@ -737,12 +798,12 @@ process_fortran( istream&    is,
         {
             int pomp = ( ( lowline[ pstart + 1 ] == 'p' ) || ( lowline[ pstart + 2 ] == 'p' ) );
             pragma_indent = pstart;
-	    /*insert include before first OpenMP pragma*/
-	    if (inHeader == true)
-	    {
-		inHeader = false;
-	        os << "      include \'" << incfile << "\'" << std::endl;
-	    }
+            /*insert include before first OpenMP pragma*/
+            if ( inHeader == true )
+            {
+                inHeader = false;
+                os << "      include \'" << incfile << "\'" << std::endl;
+            }
 
             /*
              * free form omp directive
@@ -756,6 +817,16 @@ process_fortran( istream&    is,
             else
             {
                 // new directive
+                if ( currPragma )
+                {
+                    // if necessary process last complete directive
+                    typeOfLastLine = check_pragma( currPragma );
+                    test_and_insert_ompenddo( os, typeOfLastLine, waitforOMPEndDo,
+                                              infile, currPragma->lineno, pragma_indent,
+                                              pomp, addSharedDecl );
+                    process_pragma( currPragma, os );
+                    currPragma = 0;
+                }
                 del_inline_comments( lowline );
                 currPragma
                     = new OMPragmaF( infile, lineno, pstart + 5 + pomp, lowline, pomp,
@@ -796,7 +867,7 @@ process_fortran( istream&    is,
                      << ": ERROR: missing continuation line\n";
                 cleanup_and_exit();
             }
-            else if ( currPragma && !isComment)
+            else if ( currPragma && !isComment )
             {
                 // if necessary process last complete directive
                 typeOfLastLine = check_pragma( currPragma );
@@ -810,13 +881,13 @@ process_fortran( istream&    is,
             if ( isComment )
             {
                 // normal line: comment but not directly after OMP pragma line
-                if ( !currPragma)
-                  {
+                if ( !currPragma )
+                {
                     os << line << '\n';
 #       ifdef EBUG
-                cerr << setw( 3 ) << lineno << ":C : " << line << '\n';
+                    cerr << setw( 3 ) << lineno << ":C : " << line << '\n';
 #       endif
-                  }
+                }
             }
             else if ( line.size() == 0 ||
                       lowline.find_first_not_of( " \t" ) == string::npos )
@@ -831,6 +902,15 @@ process_fortran( istream&    is,
             {
                 // really normal line
                 del_strings_and_comments( lowline, inString );
+                if ( is_sub_unit_header( lowline, inHeader ) )
+                {
+                    inHeader = true;
+                }
+                else if ( inHeader == true )
+                {
+                    inHeader = false;
+                    os << "      include \'" << incfile << "\'" << std::endl;
+                }
                 if ( instrument_locks() )
                 {
                     replace_openmp_api_calls( lowline, line );
@@ -838,10 +918,10 @@ process_fortran( istream&    is,
                 test_and_insert_ompenddo( os, typeOfLastLine, waitforOMPEndDo,
                                           infile, lineno, pragma_indent, 0,
                                           addSharedDecl );
-		//print line, if it is not an include 'omp_lib.h' or use omp_lib, since this is inserted automatically for every file, two includes cause an error
-		//if (line.find("omp_lib")==string::npos && line.find("OMP_LIB")==string::npos){
-                	os << line << '\n';
-		//}
+                //print line, if it is not an include 'omp_lib.h' or use omp_lib, since this is inserted automatically for every file, two includes cause an error
+                //if (line.find("omp_lib")==string::npos && line.find("OMP_LIB")==string::npos){
+                os << line << '\n';
+                //}
                 extra_handler( lineno, os );
 
                 // search for loop start statement

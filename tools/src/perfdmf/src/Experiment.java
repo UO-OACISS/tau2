@@ -316,7 +316,9 @@ public class Experiment implements Serializable, Comparable<Experiment> {
         int newExperimentID = 0;
 
         StringBuffer buf = new StringBuffer();
-
+        if(database!= null && !itExists){
+        	this.setFields(new String[0]);
+        }
         if (itExists) {
             buf.append("UPDATE " + db.getSchemaPrefix() + "experiment SET application = ?, name = ?");
             for (int i = 0; i < this.getNumFields(); i++) {

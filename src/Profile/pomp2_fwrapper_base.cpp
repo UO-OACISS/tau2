@@ -29,16 +29,17 @@
  *
  *  @maintainer Dirk Schmidl <schmidl@rz.rwth-aachen.de>
  *
- *  @brief      Basic fortan wrappers calling the C versions.*/  
+ *  @brief      Basic fortan wrappers calling the C versions.*/
 
 #include <config.h>
 
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "pomp2_lib.h"
+#include "pomp2_fwrapper_base.h"
+#include <opari2/pomp2_lib.h>
 #include "pomp2_fwrapper_def.h"
-extern "C"{
+extern "C" {
 extern int pomp2_tracing;
 
 /* *INDENT-OFF*  */
@@ -58,11 +59,117 @@ void FSUB(POMP2_On)() {
   pomp2_tracing = 1;
 }
 
-void FSUB(POMP2_Begin)(int* regionHandle) {
-  if ( pomp2_tracing ) POMP2_Begin((void**)&regionHandle);
+void FSUB(POMP2_Begin)(POMP2_Region_handle* regionHandle) {
+  POMP2_Begin(regionHandle);
 }
 
-void FSUB(POMP2_End)(int* regionHandle) {
-  if ( pomp2_tracing ) POMP2_End((void**)&regionHandle);
+void FSUB(POMP2_End)(POMP2_Region_handle* regionHandle) {
+  POMP2_End(regionHandle);
 }
+
+/* *INDENT-OFF*  */
+/*
+   *----------------------------------------------------------------
+ * Fortran  Wrapper for OpenMP API
+ ******----------------------------------------------------------------
+ */
+/* *INDENT-OFF*  */
+#if defined(__ICC) || defined(__ECC) || defined(_SX)
+#define CALLFSUB(a) a
+#else
+#define CALLFSUB(a) FSUB(a)
+#endif
+
+void FSUB(POMP2_Init_lock)(omp_lock_t *s) {
+
+  if ( pomp2_tracing ) {
+#ifdef DEBUG_PROF
+    fprintf(stderr, "%3d: init lock\n", omp_get_thread_num());
+#endif /* DEBUG_PROF */
+  }
+  CALLFSUB(omp_init_lock)(s);
+}
+
+void FSUB(POMP2_Destroy_lock)(omp_lock_t *s) {
+  if ( pomp2_tracing ) {
+#ifdef DEBUG_PROF
+    fprintf(stderr, "%3d: destroy lock\n", omp_get_thread_num());
+#endif /* DEBUG_PROF */
+  }
+  CALLFSUB(omp_destroy_lock)(s);
+}
+
+void FSUB(POMP2_Set_lock)(omp_lock_t *s) {
+  if ( pomp2_tracing ) {
+#ifdef DEBUG_PROF
+    fprintf(stderr, "%3d: set lock\n", omp_get_thread_num());
+#endif /* DEBUG_PROF */
+  }
+  CALLFSUB(omp_set_lock)(s);
+}
+
+void FSUB(POMP2_Unset_lock)(omp_lock_t *s) {
+  if ( pomp2_tracing ) {
+#ifdef DEBUG_PROF
+    fprintf(stderr, "%3d: unset lock\n", omp_get_thread_num());
+#endif /* DEBUG_PROF */
+  }
+  CALLFSUB(omp_unset_lock)(s);
+}
+
+int  FSUB(POMP2_Test_lock)(omp_lock_t *s) {
+  if ( pomp2_tracing ) {
+#ifdef DEBUG_PROF
+    fprintf(stderr, "%3d: test lock\n", omp_get_thread_num());
+#endif /* DEBUG_PROF */
+  }
+  return CALLFSUB(omp_test_lock)(s);
+}
+
+#ifndef __osf__
+void FSUB(POMP2_Init_nest_lock)(omp_nest_lock_t *s) {
+  if ( pomp2_tracing ) {
+#ifdef DEBUG_PROF
+    fprintf(stderr, "%3d: init nestlock\n", omp_get_thread_num());
+#endif /* DEBUG_PROF */
+  }
+  CALLFSUB(omp_init_nest_lock)(s);
+}
+
+void FSUB(POMP2_Destroy_nest_lock)(omp_nest_lock_t *s) {
+  if ( pomp2_tracing ) {
+#ifdef DEBUG_PROF
+    fprintf(stderr, "%3d: destroy nestlock\n", omp_get_thread_num());
+#endif /* DEBUG_PROF */
+  }
+  CALLFSUB(omp_destroy_nest_lock)(s);
+}
+
+void FSUB(POMP2_Set_nest_lock)(omp_nest_lock_t *s) {
+  if ( pomp2_tracing ) {
+#ifdef DEBUG_PROF
+    fprintf(stderr, "%3d: set nestlock\n", omp_get_thread_num());
+#endif /* DEBUG_PROF */
+  }
+  CALLFSUB(omp_set_nest_lock)(s);
+}
+
+void FSUB(POMP2_Unset_nest_lock)(omp_nest_lock_t *s) {
+  if ( pomp2_tracing ) {
+#ifdef DEBUG_PROF
+    fprintf(stderr, "%3d: unset nestlock\n", omp_get_thread_num());
+#endif /* DEBUG_PROF */
+  }
+  CALLFSUB(omp_unset_nest_lock)(s);
+}
+
+int  FSUB(POMP2_Test_nest_lock)(omp_nest_lock_t *s) {
+  if ( pomp2_tracing ) {
+#ifdef DEBUG_PROF
+    fprintf(stderr, "%3d: test nestlock\n", omp_get_thread_num());
+#endif /* DEBUG_PROF */
+  }
+  return CALLFSUB(omp_test_nest_lock)(s);
+}
+#endif
 }

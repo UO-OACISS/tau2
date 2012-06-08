@@ -1183,6 +1183,7 @@ cudaError_t cudaLaunch(const char * a1) {
 			//make copy.
 			//char device_name[1024];
 			//strcpy(device_name, found->dev);
+	    //cout << "in cudaLaunch... stream is " << curr_stream << endl;
 			Tau_cuda_enqueue_kernel_enter_event(found->dev,
 				&cudaRuntimeGpuId(device,curr_stream));
 		}

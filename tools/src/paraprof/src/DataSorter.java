@@ -354,29 +354,80 @@ public class DataSorter implements Comparator<FunctionProfile> {
         return fo;
     }
 
-    public List<Thread> getThreads() {
+    
+    boolean filterThread(Thread thread,int[] exList){
+    	if(thread==null)
+    		return false;
+    	if(exList==null)
+    		return true;
+
+    	for(int i=0;i<exList.length;i++){
+    		if(thread.getThreadID()==exList[i])
+    			return false;
+    	}
+    	return true;
+    }
+    
+    public List<Thread> getThreads(int[] exclude){
         ArrayList<Thread> threads = new ArrayList<Thread>();
+        Thread thread=null;
         if (ppTrial.getDataSource().getAllThreads().size() > 1) {
-            threads.add(ppTrial.getDataSource().getStdDevData());
+        	thread=ppTrial.getDataSource().getStdDevData();
+        	if(filterThread(thread,exclude)){
+        		threads.add(thread);
+        	}
+            //threads.add(ppTrial.getDataSource().getStdDevData());
             
-            threads.add(ppTrial.getDataSource().getMeanData());
-            threads.add(ppTrial.getDataSource().getTotalData());
+            thread=ppTrial.getDataSource().getMeanData();
+        	if(filterThread(thread,exclude)){
+        		threads.add(thread);
+        	}
+            thread=ppTrial.getDataSource().getTotalData();
+        	if(filterThread(thread,exclude)){
+        		threads.add(thread);
+        	}
             
-            Thread maxData=ppTrial.getDataSource().getMaxData();
-            if(maxData!=null)
-            	threads.add(maxData);
-            Thread minData=ppTrial.getDataSource().getMinData();
-            if(minData!=null)
-            	threads.add(minData);
+            thread=ppTrial.getDataSource().getMaxData();
+            if(filterThread(thread,exclude))
+            	threads.add(thread);
+            thread=ppTrial.getDataSource().getMinData();
+            if(filterThread(thread,exclude))
+            	threads.add(thread);
             
         }
 
         // add all the other threads
         for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
-            Thread thread = it.next();
-            threads.add(thread);
+            thread = it.next();
+            if(filterThread(thread,exclude))
+            	threads.add(thread);
         }
         return threads;
+    }
+    
+    public List<Thread> getThreads() {
+//        ArrayList<Thread> threads = new ArrayList<Thread>();
+//        if (ppTrial.getDataSource().getAllThreads().size() > 1) {
+//            threads.add(ppTrial.getDataSource().getStdDevData());
+//            
+//            threads.add(ppTrial.getDataSource().getMeanData());
+//            threads.add(ppTrial.getDataSource().getTotalData());
+//            
+//            Thread maxData=ppTrial.getDataSource().getMaxData();
+//            if(maxData!=null)
+//            	threads.add(maxData);
+//            Thread minData=ppTrial.getDataSource().getMinData();
+//            if(minData!=null)
+//            	threads.add(minData);
+//            
+//        }
+//
+//        // add all the other threads
+//        for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
+//            Thread thread = it.next();
+//            threads.add(thread);
+//        }
+        return getThreads(null);
     }
 
     public List<PPFunctionProfile> getFunctionData(Function function, boolean includeMean, boolean includeStdDev) {

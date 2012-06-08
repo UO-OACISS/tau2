@@ -9,12 +9,12 @@ class cudaGpuId : public gpuId {
 public:
 	cudaGpuId() {}
 	
-	virtual cudaGpuId *getCopy() = 0;
-	virtual char* printId() = 0;
-	virtual x_uint64 id_p1() = 0;
-	virtual x_uint64 id_p2() = 0;
+	virtual cudaGpuId *getCopy() const = 0;
+	virtual char* printId() const = 0;
+	virtual x_uint64 id_p1() const = 0;
+	virtual x_uint64 id_p2() const = 0;
 	//virtual bool operator<(const cudaGpuId& other) const = 0;
-	virtual bool equals(const gpuId *other) const = 0;
+	virtual bool less_than(const gpuId *other) const = 0;
 	virtual double syncOffset() = 0;
 	virtual cudaStream_t getStream() = 0;
 	virtual int getDevice() = 0;
@@ -41,12 +41,12 @@ public:
 		stream = s;
 	}
 	
-	cudaRuntimeGpuId *getCopy();
-	char* printId();
-	x_uint64 id_p1(); 
-	x_uint64 id_p2();
+	cudaRuntimeGpuId *getCopy() const;
+	char* printId() const;
+	x_uint64 id_p1() const ; 
+	x_uint64 id_p2() const ;
 	//bool operator<(const cudaGpuId& other) const;
-	bool equals(const gpuId *other) const;
+	bool less_than(const gpuId *other) const;
 	virtual double syncOffset();
 	cudaStream_t getStream();
 	int getDevice();
@@ -76,12 +76,12 @@ public:
 		stream = s;
 	}
 	
-	cudaDriverGpuId *getCopy();
-	char* printId();
-	x_uint64 id_p1(); 
-	x_uint64 id_p2();
+	cudaDriverGpuId *getCopy() const;
+	char* printId() const;
+	x_uint64 id_p1() const ; 
+	x_uint64 id_p2() const ;
 	//bool operator<(const cudaGpuId& other) const;
-	bool equals(const gpuId *other) const;
+	bool less_than(const gpuId *other) const;
 	virtual double syncOffset();
 	cudaStream_t getStream();
 	int getDevice();

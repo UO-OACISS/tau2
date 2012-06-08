@@ -34,13 +34,28 @@ if [ `uname -s ` = "Darwin" ];  then
     ARCH=apple
 fi
 
+# check for ARM linux so it covers uname -m output such as armv7l or arm*
+uname_output=`uname -m`
+match_string="arm"
+test_arg=${uname_output#$match_string}
+if [ "y$test_arg" != "y$uname_output" ]
+then
+    TAU_CCOM=gcc
+    ARCH=arm_linux
+fi
+
 
 if [ `uname -s ` = "HI-UX/MPP" ]; then 
       ARCH=`$TAU_CCOM -msg=e -E $ARCHTESTFILE | sed -e '/^#/d' -e '/^[ ]*$/d' -e 's/^ARCH//'` 
 else
   if [ "x$ARCH" = "x" ]; then
 # ARCH has not been assigned yet.
-      ARCH=`$TAU_CCOM -w -E $ARCHTESTFILE | sed -e '/^#/d' -e '/^[ ]*$/d' -e 's/^ARCH//'` 
+    if [ "x$PE_ENV" = "xCRAY" ]; then
+      TAU_W_FLAG="" 
+    else
+      TAU_W_FLAG=-w
+    fi
+    ARCH=`$TAU_CCOM $TAU_W_FLAG -E $ARCHTESTFILE | sed -e '/^#/d' -e '/^[ ]*$/d' -e 's/^ARCH//'` 
       if [ "x$ARCH" = "x" ] ; then 
 	  exit
       fi
@@ -90,7 +105,7 @@ if [ $ARCH = rs6000 ]; then
 fi
 
 if [ $ARCH = unknown ]; then
-#See if users path finds an 'arch' command, it so, use it! (a little sloppy)
+#See if users path finds an 'arch' command, if so, use it! (a little sloppy)
     arch &> /dev/null
     if [ $? != 0 ]; then
 #This machine does not have an 'arch' command

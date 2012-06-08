@@ -100,8 +100,13 @@ void TauUserEvent::AddEventToDB() {
   /* Set user event id */
   EventId = RtsLayer::GenerateUniqueId();
 #ifdef TAU_VAMPIRTRACE
+#ifdef TAU_VAMPIRTRACE_5_12_API
+  uint32_t gid = vt_def_counter_group(VT_CURRENT_THREAD, "TAU Events");
+  EventId = vt_def_counter(VT_CURRENT_THREAD, GetEventName(), OTF_COUNTER_TYPE_ABS|OTF_COUNTER_SCOPE_NEXT, gid, "#");
+#else
   uint32_t gid = vt_def_counter_group("TAU Events");
   EventId = vt_def_counter(GetEventName(), OTF_COUNTER_TYPE_ABS|OTF_COUNTER_SCOPE_NEXT, gid, "#");
+#endif /* TAU_VAMPIRTRACE_5_12_API */
 #endif /* TAU_VAMPIRTRACE */
 
 #ifdef TAU_SCOREP
@@ -114,11 +119,11 @@ EventId=handle;
   return;
 }
 
-uint64_t TauUserEvent::GetEventId(void) {
+x_uint64 TauUserEvent::GetEventId(void) {
   return EventId;
 }
 
-extern "C" uint64_t TauUserEvent_GetEventId(TauUserEvent *evt) {
+extern "C" x_uint64 TauUserEvent_GetEventId(TauUserEvent *evt) {
   return evt->GetEventId();
 }
 
@@ -242,16 +247,42 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid) {
 
 void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timestamp, int use_ts) { 
 #ifdef TAU_VAMPIRTRACE
+  // *CWL* - x_uint64 (unsigned long long) violates the vampirtrace interface which expects
+  //         unsigned long (previously uint64_t). The change from uint64_t to x_uint64 was
+  //         previously made in response to problems with SCORE-P but was done as a global
+  //         cut-and-paste which turned out to be unsafe. Since the use of time and cval
+  //         are guarded for just vampirtrace, it should be safe to revert the changes
+  //         for just vampirtrace.
+  //
+  //         Keep an eye on this. We should expect trouble as long as we cannot provide 
+  //         a proper abstraction for what constitutes a 64-bit unsigned integer in TAU.
+  //         This should be a TODO item.
+  // x_uint64 time;
+  // x_uint64 cval;
   uint64_t time;
   uint64_t cval;
   int id = GetEventId();
   time = vt_pform_wtime();
+  // cval = (x_uint64) data;
   cval = (uint64_t) data;
+#ifdef TAU_VAMPIRTRACE_5_12_API
+  vt_count(VT_CURRENT_THREAD, &time, id, 0);
+#else
   vt_count(&time, id, 0);
+#endif /* TAU_VAMPIRTRACE_5_12_API */
   time = vt_pform_wtime();
+#ifdef TAU_VAMPIRTRACE_5_12_API
+  vt_count(VT_CURRENT_THREAD, &time, id, cval);
+#else
   vt_count(&time, id, cval);
+#endif /* TAU_VAMPIRTRACE_5_12_API */
   time = vt_pform_wtime();
+#ifdef TAU_VAMPIRTRACE_5_12_API
+  vt_count(VT_CURRENT_THREAD, &time, id, 0);
+#else
   vt_count(&time, id, 0);
+#endif /* TAU_VAMPIRTRACE_5_12_API */
+
 #else /* TAU_VAMPIRTRACE */
 #ifndef TAU_EPILOG
   if (TauEnv_get_tracing()) {

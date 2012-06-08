@@ -28,6 +28,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JSpinner;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SpinnerModel;
@@ -510,7 +511,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                 	 window.redraw();
                      minTopoField.setText(window.getSelectedMinTopoValue());
                      maxTopoField.setText(window.getSelectedMaxTopoValue());
-                     topoValField.setText(window.getStatMean());
+                     topoValField.setText(window.getStatMean()+window.getSelectedThread());
                     
                 } catch (Exception e) {
                     ParaProfUtils.handleException(e);
@@ -527,6 +528,13 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         		String fname=null;
         		
         		if(atomic.isSelected()){
+        			
+        			int numUE = ppTrial.getDataSource().getNumUserEvents();
+        			if(numUE<1){
+        				atomic.setSelected(false);
+        				return;
+        			}
+        			
         			metricBox.setEnabled(false);
         			valueBox.removeAllItems();
         			for(int i=0;i<UserEventValueType.VALUES.length;i++){
@@ -534,7 +542,9 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         			}
         			valueBox.setSelectedIndex(settings.atomicETDex[dex]);
         			if(settings.getTopoAtomic(dex)==null){
-        				settings.setTopoAtomic(ppTrial.getDataSource().getUserEvents().next(), dex);
+        				
+        				UserEvent tmpUE = ppTrial.getDataSource().getUserEvents().next();
+        				settings.setTopoAtomic(tmpUE, dex);
         			}
         			fname=settings.getTopoAtomic(dex).getName();
         		}
@@ -556,7 +566,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
             	window.redraw();
                 minTopoField.setText(window.getSelectedMinTopoValue());
                 maxTopoField.setText(window.getSelectedMaxTopoValue());
-                topoValField.setText(window.getStatMean());
+                topoValField.setText(window.getStatMean()+window.getSelectedThread());
         		
         		
         	}
@@ -567,7 +577,10 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         functionButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 try {
-                	String fname = "   <none>";
+                	
+                	String fname = functionField.getText();
+                	if(fname==null||fname.length()==0) 
+                		fname = "   <none>";
                 	
                 	if(!atomic.isSelected()){
                 	
@@ -609,7 +622,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                 	window.redraw();
                     minTopoField.setText(window.getSelectedMinTopoValue());
                     maxTopoField.setText(window.getSelectedMaxTopoValue());
-                    topoValField.setText(window.getStatMean());
+                    topoValField.setText(window.getStatMean()+window.getSelectedThread());
 
                 } catch (Exception e) {
                     ParaProfUtils.handleException(e);
@@ -669,6 +682,11 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
     	}
     }
     
+    private boolean checkDisableTopoWidgets(String topo){
+    	boolean b = (topo.equals("Custom")||topo.equals("BGQ")||topo.equals("Map")||topo.startsWith("Topo"));
+    	return !b;
+    	
+    }
     
     private void switchTopoSelectPanels(boolean active){
     	for(int i =0;i<3;i++){
@@ -745,7 +763,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                     boolean useCustom=topoComboBox.getSelectedIndex()>customTopoDex+1;
                     settings.setCustomTopo(useCustom);
                     
-                    switchTopoSelectPanels(topoComboBox.getSelectedItem().equals(CUSTOM));
+                    switchTopoSelectPanels(checkDisableTopoWidgets((String)topoComboBox.getSelectedItem()));
                     
                     boolean useMap=topoComboBox.getSelectedIndex()==customTopoDex+1;
                     if(useMap){
@@ -1058,7 +1076,7 @@ JButton mapFileButton = new JButton("map");
 	                    	selectAxisLabels[idex].setText(topoLabelStrings[idex]);
 	                    }else selectAxisLabels[idex].setText(topoLabelStrings[idex]+": "+val);
 	                    
-	                    topoValField.setText(window.getStatMean());
+	                    topoValField.setText(window.getStatMean()+window.getSelectedThread());
 	                    if(allAxesOn()){
 	                    	topoValLabel.setText(CV);
 	                    }else topoValLabel.setText(ACV);
@@ -1253,7 +1271,7 @@ JButton mapFileButton = new JButton("map");
     }
     
     JCheckBox lockBox;// = new JCheckBox();
-    JTextField topoValField;
+    JTextArea topoValField;
     JLabel topoValLabel;
     
     private JPanel createTopoSettingsPanel(){
@@ -1314,11 +1332,15 @@ JButton mapFileButton = new JButton("map");
          gbc.weightx = 0.1;
          addCompItem(panel, createTopoAxisSelectionPanel(2), gbc, 1, 5, 1, 1);
          gbc.weightx = 0;
-         addCompItem(panel,topoValLabel=new JLabel("Average Color Value: "),gbc,0,6,1,1);
+         addCompItem(panel,topoValLabel=new JLabel("Average Color Value: "),gbc,0,6,1,2);
          gbc.weightx = 0.1;
-         addCompItem(panel,topoValField=new JTextField(),gbc,1,6,1,1);
+         
+         
+         
+         addCompItem(panel,topoValField=new JTextArea(),gbc,1,6,1,2);
+         topoValField.setRows(2);
          topoValField.setEditable(false);
-         topoValField.setText(window.getStatMean());
+         topoValField.setText(window.getStatMean()+window.getSelectedThread());
          if(allAxesOn()){
          	topoValLabel.setText(CV);
          }else topoValLabel.setText(ACV);
@@ -1326,9 +1348,11 @@ JButton mapFileButton = new JButton("map");
          
          gbc.weightx = 0.1;
          //addCompItem(panel, new JLabel("Topology"), gbc, 0, 8, 1, 1);
-         addCompItem(panel, createTopoSelectionPanel("Topology"), gbc, 0, 7, 2, 1);
-         
-         this.topoComboBox.setSelectedIndex(0);
+         addCompItem(panel, createTopoSelectionPanel("Topology"), gbc, 0, 8, 2, 1);
+         if(topoComboBox.getItemCount()>this.selectedTopoDex)
+        	 this.topoComboBox.setSelectedIndex(this.selectedTopoDex);
+         else
+        	 this.topoComboBox.setSelectedIndex(0);
     	
          return panel;
     	
@@ -1402,7 +1426,7 @@ JButton mapFileButton = new JButton("map");
          return panel;
          
     }
-    
+    private boolean topoCreated=false;
     private JPanel createTopoPanel() {
 
         JPanel panel = new JPanel();
@@ -1451,8 +1475,8 @@ JButton mapFileButton = new JButton("map");
         
         resetTopoAxisSliders(false);
 
-        switchTopoSelectPanels(topoComboBox.getSelectedItem().equals(CUSTOM));
-        
+        switchTopoSelectPanels(checkDisableTopoWidgets((String)topoComboBox.getSelectedItem()));
+        topoCreated=true;
         return panel;
 
     }
@@ -1462,7 +1486,7 @@ JButton mapFileButton = new JButton("map");
         	for(int i=0;i<3;i++)
         	{
         		firstSet=true;
-        		this.selectAxisSliders[i].setMaximum(window.tsizes[i]-1);
+        		this.selectAxisSliders[i].setMaximum(window.tsizes[i]);
         		if(window.tsizes[i]<=1){
         			selectAxisSliders[i].setEnabled(false);
         		}else
@@ -1748,12 +1772,14 @@ JButton mapFileButton = new JButton("map");
         heightValueField.setText(window.getSelectedHeightValue());
         colorValueField.setText(window.getSelectedColorValue());
         
+        if(topoCreated){
         minTopoField.setText(window.getSelectedMinTopoValue());
         maxTopoField.setText(window.getSelectedMaxTopoValue());
-        topoValField.setText(window.getStatMean());
+        topoValField.setText(window.getStatMean()+window.getSelectedThread());
         if(allAxesOn()){
         	topoValLabel.setText(CV);
         }else topoValLabel.setText(ACV);
+        }
     }
     private static final String CV = "Color Value: ";
     private static final String ACV ="Avg Color Value: ";

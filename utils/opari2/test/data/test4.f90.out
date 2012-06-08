@@ -25,16 +25,15 @@ program test4
   
   real a(5,5), b(5,5), c(5,5)
   
-      pomp_num_threads = pomp_get_max_threads000()
+      pomp_num_threads = pomp2_lib_get_max_threads()
       pomp_if = .true.
       call POMP2_Parallel_fork(pomp2_region_1,&
       pomp_if, pomp_num_threads, pomp2_old_task, &
         "62*regionType=parallel*sscl=test4.f90:25:25*escl=test4.f90:0:0**" )
 #line 25 "test4.f90"
-  !$omp parallel&
-  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task)&
-  !$omp if(pomp_if) num_threads(pomp_num_threads)&
-  !$omp shared(/cb000/)
+  !$omp parallel &
+  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
+  !$omp if(pomp_if) num_threads(pomp_num_threads)
       call POMP2_Parallel_begin(pomp2_region_1)
 #line 26 "test4.f90"
   write(*,*) "parallel"
@@ -97,18 +96,27 @@ program test4
 #line 47 "test4.f90"
   
       pomp_if = .true.
-      call POMP2_Untied_task_create_begin(pomp2_region_6, pomp2_old_task, pomp_if, &
+      if (pomp_if) then
+      call POMP2_Untied_task_create_begin(pomp2_region_6, pomp2_new_task, &
+      pomp2_old_task, &
+      pomp_if, &
         "70*regionType=task*sscl=test4.f90:48:48*escl=test4.f90:0:0*hasUntied=1**" )
+      end if
 #line 48 "test4.f90"
-  !$omp task untied if(pomp_if) firstprivate(pomp2_old_task)&
-  !$omp shared(/cb000/)
-      call POMP2_Untied_task_begin(pomp2_region_6, pomp2_old_task)
+  !$omp task untied if(pomp_if) firstprivate(pomp2_new_task, pomp_if)
+      if (pomp_if) then
+      call POMP2_Untied_task_begin(pomp2_region_6, pomp2_new_task)
+      end if
 #line 49 "test4.f90"
   write(*,*) "task"
+      if (pomp_if) then
       call POMP2_Untied_task_end(pomp2_region_6)
+      end if
 #line 50 "test4.f90"
   !$omp end task
+      if (pomp_if) then
       call POMP2_Untied_task_create_end(pomp2_region_6, pomp2_old_task)
+      end if
 #line 51 "test4.f90"
   
       call POMP2_Implicit_barrier_enter(pomp2_region_1, pomp2_old_task)
@@ -120,12 +128,6 @@ program test4
       call POMP2_Parallel_join(pomp2_region_1, pomp2_old_task)
 #line 53 "test4.f90"
 end program test4
-
-      integer function pomp_get_max_threads000()
-         integer omp_get_max_threads
-         pomp_get_max_threads000=omp_get_max_threads()
-         return
-      end
 
       subroutine POMP2_Init_regions_000()
          include 'test4.f90.opari.inc'

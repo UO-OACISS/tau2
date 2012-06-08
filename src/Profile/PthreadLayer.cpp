@@ -18,10 +18,12 @@
 // This needs to go at the top because the ordering of include files here
 // makes a difference on Cray systems and we get an error with RTLD_NEXT 
 // not being defined
+// *CWL* - Update 5/25/2012: This workaround appears to no longer be
+//         required and now makes Cray's PGI software stack fail.
 #ifdef TAU_PTHREAD_PRELOAD
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
+//#ifndef _GNU_SOURCE
+//#define _GNU_SOURCE
+//#endif
 #include <dlfcn.h>
 #endif
 
@@ -87,10 +89,11 @@ int PthreadLayer::RegisterThread(void)
   int *threadId = new int;
 
   pthread_mutex_lock(&tauThreadcountMutex);
-  tauThreadCount ++;
+  //tauThreadCount ++;
   // A thread should call this routine exactly once. 
-  *threadId = tauThreadCount;
-  DEBUGPROFMSG("Thread id "<< tauThreadCount<< " Created! "<<endl;);
+  //*threadId = tauThreadCount;
+  *threadId = RtsLayer::createThread();
+  DEBUGPROFMSG("Thread id "<< *threadId << " Created! "<<endl;);
 
   pthread_mutex_unlock(&tauThreadcountMutex);
   pthread_setspecific(tauPthreadId, threadId);
@@ -112,7 +115,8 @@ int PthreadLayer::GetThreadId(void) {
     return 0;
 #endif
 
-  static int initflag = PthreadLayer::InitializeThreadData();
+  //static 
+  int initflag = PthreadLayer::InitializeThreadData();
   // if its in here the first time, setup mutexes etc.
 
   int *id = (int *) pthread_getspecific(tauPthreadId);
@@ -126,7 +130,8 @@ int PthreadLayer::GetThreadId(void) {
 
 
 void PthreadLayer::SetThreadId(int tid) {
-  static int initflag = PthreadLayer::InitializeThreadData();
+  //static 
+  int initflag = PthreadLayer::InitializeThreadData();
   int *id = new int;
   *id = tid;
   pthread_setspecific(tauPthreadId, id);
@@ -233,13 +238,17 @@ typedef struct tau_pthread_pack {
 } tau_pthread_pack;
 
 extern "C" void *tau_pthread_function (void *arg) {
+  void *ret; 
   tau_pthread_pack *pack = (tau_pthread_pack*)arg;
   if (pack->id != -1) {
     TAU_PROFILE_SET_THREAD(pack->id);
   } else {
     TAU_REGISTER_THREAD();
   }
-  return pack->start_routine(pack->arg);
+  TAU_START(".TAU application  ");
+  ret = pack->start_routine(pack->arg);
+  TAU_STOP(".TAU application  ");
+  return ret; 
 }
 
 extern "C" int tau_pthread_create (pthread_t * threadp,

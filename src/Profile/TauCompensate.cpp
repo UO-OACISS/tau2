@@ -26,14 +26,22 @@ using namespace std;
 #include <stdlib.h>
 #include <limits.h>
 
+static int compensateInitialized = 0;
 
 extern "C" int Tau_compensate_initialization() {
+  // *CWL* - This seems to be unnecessary, but it is there to remind us
+  //         of the possibility in case the current model turns out to be
+  //         wrong.
+  //  Tau_create_top_level_timer_if_necessary();
   double *tover = TauGetTimerOverhead(TauFullTimerOverhead);
   double *tnull = TauGetTimerOverhead(TauNullTimerOverhead);
+  compensateInitialized = 1;
   return 0;
 }
 
-
+extern "C" int TauCompensateInitialized(void) {
+  return compensateInitialized;
+}
 
 double*& TheTauNullTimerOverhead() {
   static double *over = new double[TAU_MAX_COUNTERS];
@@ -84,8 +92,10 @@ int TauCalibrateNullTimer(void) {
   TauEnv_set_depth_limit(INT_MAX);
 #endif /* TAU_DEPTH_LIMIT */
 
-  bool oldSafeValue = TheSafeToDumpData();
-  TheSafeToDumpData() = false;
+  int oldSafeValue = TheSafeToDumpData();
+
+  //  printf("old safe value:start %d\n", oldSafeValue);
+  TheSafeToDumpData() = 0;
   //Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_START(tone);
     /* nested */

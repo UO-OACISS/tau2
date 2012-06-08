@@ -135,6 +135,7 @@ int TauTraceGetFlushEvents() {
 
 /* Check that the trace file is initialized */
 static int checkTraceFileInitialized(int tid) {
+
   if ( !(TraceFileInitialized[tid]) && (RtsLayer::myNode() > -1)) { 
     TraceFileInitialized[tid] = 1;
     const char *dirname;
@@ -147,6 +148,9 @@ static int checkTraceFileInitialized(int tid) {
       perror (tracefilename);
       exit (1);
     }
+
+    //    printf("checkTraceFileInitialized [%d]: TauTraceFd[%d] for [%s] is %d\n", RtsLayer::myNode(), 
+    //	   tid, tracefilename, TauTraceFd[tid]);
 
     if (TraceBuffer[tid][0].ev == TAU_EV_INIT) { 
       /* first record is init */
@@ -166,10 +170,11 @@ static int checkTraceFileInitialized(int tid) {
 
 /* Flush the trace buffer */
 void TauTraceFlushBuffer(int tid) {
+  Tau_global_incr_insideTAU_tid(tid);
   checkTraceFileInitialized(tid);
 
   int ret;
-  if (TauTraceFd[tid] == 0) {
+  if (TauTraceFd[tid] == -1) {
     printf("Error: TauTraceFlush(%d): Fd is -1. Trace file not initialized \n", tid);
     if (RtsLayer::myNode() == -1) {
       fprintf (stderr, "ERROR in configuration. Trace file not initialized. If this is an MPI application, please ensure that TAU MPI wrapper library is linked. If not, please ensure that TAU_PROFILE_SET_NODE(id); is called in the program (0 for sequential).\n");
@@ -195,6 +200,7 @@ void TauTraceFlushBuffer(int tid) {
     }
   }
   TauCurrentEvent[tid] = 0;
+  Tau_global_decr_insideTAU_tid(tid);
 }
 
 
@@ -351,19 +357,19 @@ void TauTraceEventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts, int
   TauCurrentEvent[tid]++;
 
   if (TauCurrentEvent[tid] >= TauMaxTraceRecords-2) {
-    //TauTraceEventSimple (TAU_EV_FLUSH_ENTER, 0, tid);
+    //TauTraceEventSimple (TAU_EV_FLUSH, 0, tid);
     event = &TraceBuffer[tid][TauCurrentEvent[tid]];
-    event->ev = TAU_EV_FLUSH_ENTER;  event->ti = timestamp; event->par = 0;
+    event->ev = TAU_EV_FLUSH;  event->ti = timestamp; event->par = 1;
     event->nid = node_id; event->tid = tid; 
     TauCurrentEvent[tid]++;
 
     // Flush the buffer! 
     TauTraceFlushBuffer(tid); 
 
-    //TauTraceEventSimple (TAU_EV_FLUSH_EXIT, 0, tid);
+    //TauTraceEventSimple (TAU_EV_FLUSH, 0, tid);
     timestamp = TauTraceGetTimeStamp(tid);
     event = &TraceBuffer[tid][TauCurrentEvent[tid]];
-    event->ev = TAU_EV_FLUSH_EXIT;  event->ti = timestamp; event->par = 0;
+    event->ev = TAU_EV_FLUSH;  event->ti = timestamp; event->par = -1;
     event->nid = node_id; event->tid = tid; 
     TauCurrentEvent[tid]++;
   }
@@ -472,12 +478,14 @@ int TauTraceDumpEDF(int tid) {
 #endif	
   numEvents += numExtra;
   
-  fprintf(fp,"%d dynamic_trace_events\n", numEvents);
+  fprintf(fp,"%d dynamic_trace_events\n", numEvents+1);
   
   fprintf(fp,"# FunctionId Group Tag \"Name Type\" Parameters\n");
+
+  fprintf(fp,"0 TAUEVENT 0 \".TAU <unknown event>\" TriggerValue\n");
   
   for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
-    fprintf(fp, "%ld %s 0 \"%s %s\" EntryExit\n", (*it)->GetFunctionId(),
+    fprintf(fp, "%ld %s 0 \"%s %s\" EntryExit\n", (long)((*it)->GetFunctionId()),
 	    (*it)->GetPrimaryGroup(), (*it)->GetName(), (*it)->GetType() );
   }
   
@@ -487,13 +495,13 @@ int TauTraceDumpEDF(int tid) {
     if ((*uit)->GetMonotonicallyIncreasing()) { 
       monoInc = 1;
     }
-    fprintf(fp, "%ld TAUEVENT %d \"%s\" TriggerValue\n", (*uit)->GetEventId(), monoInc, (*uit)->GetEventName());
+    fprintf(fp, "%ld TAUEVENT %d \"%s\" TriggerValue\n", (long)((*uit)->GetEventId()), monoInc, (*uit)->GetEventName());
   }
 
   // Now add the nine extra events 
   fprintf(fp,"%ld TRACER 0 \"EV_INIT\" none\n", (long) TAU_EV_INIT); 
-  fprintf(fp,"%ld TRACER 0 \"FLUSH_ENTER\" none\n", (long) TAU_EV_FLUSH_ENTER); 
-  fprintf(fp,"%ld TRACER 0 \"FLUSH_EXIT\" none\n", (long) TAU_EV_FLUSH_EXIT); 
+  fprintf(fp,"%ld TRACER 0 \"FLUSH\" EntryExit\n", (long) TAU_EV_FLUSH); 
+//  fprintf(fp,"%ld TRACER 0 \"FLUSH_EXIT\" none\n", (long) TAU_EV_FLUSH_EXIT); 
   fprintf(fp,"%ld TRACER 0 \"FLUSH_CLOSE\" none\n", (long) TAU_EV_CLOSE); 
   fprintf(fp,"%ld TRACER 0 \"FLUSH_INITM\" none\n", (long) TAU_EV_INITM); 
   fprintf(fp,"%ld TRACER 0 \"WALL_CLOCK\" none\n", (long) TAU_EV_WALL_CLOCK); 

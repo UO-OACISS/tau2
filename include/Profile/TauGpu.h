@@ -31,14 +31,16 @@ using namespace tau;
 class gpuId {
 
 public:
-	virtual gpuId *getCopy() = 0;
-	virtual char * printId() = 0;
-	virtual x_uint64 id_p1() = 0;
-	virtual x_uint64 id_p2() = 0;
-	virtual bool equals(const gpuId *other) const = 0;
+	virtual gpuId *getCopy() const = 0;
+	virtual char * printId() const = 0;
+	virtual x_uint64 id_p1() const = 0;
+	virtual x_uint64 id_p2() const = 0;
+	virtual bool less_than(const gpuId *other) const = 0;
 	virtual double syncOffset() = 0;
 	//virtual bool operator<(const gpuId& A) const;
 };
+	
+typedef map<TauContextUserEvent*, TAU_EVENT_DATATYPE> TauGpuContextMap;
 
 class eventId {
 public:
@@ -48,10 +50,15 @@ public:
 	// rountine where this gpu Kernel was launched.
 	FunctionInfo* callingSite;
 
-	eventId(const char* n, gpuId* d, FunctionInfo *s) {
+	//map of context event to be trigger with the kernel
+	TauGpuContextMap* contextEventMap;
+
+	eventId(const char* n, gpuId* d, FunctionInfo *s,
+	TauGpuContextMap* map) {
 		name = n;
 		device = d;
 		callingSite = s;
+		contextEventMap = map;
 	}
 };
 
@@ -81,7 +88,7 @@ extern "C" void Tau_gpu_exit_memcpy_event(const char *functionName,
 gpuId *device, int memcpyType);
 
 /* Creates a GPU event that to be passed on to the register calls later. */
-eventId Tau_gpu_create_gpu_event(const char* name, gpuId *device, FunctionInfo* callingSite);
+eventId Tau_gpu_create_gpu_event(const char* name, gpuId *device, FunctionInfo* callingSite, TauGpuContextMap* m);
 
 /* Callback for a GPU event that occurred earlier in the execution of the
  * program. Times are pre-aligned to the CPU clock. */

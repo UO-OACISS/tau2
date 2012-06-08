@@ -1,4 +1,4 @@
-#include <pomp2_lib.h>
+#include <opari2/pomp2_lib.h>
 
 #define POMP2_DLIST_00001 shared(pomp2_region_1,pomp2_region_2,pomp2_region_3)
 static POMP2_Region_handle pomp2_region_1 = NULL;
@@ -17,11 +17,11 @@ static POMP2_Region_handle pomp2_region_8 = NULL;
 void POMP2_Init_regions_000()
 {
     POMP2_Assign_handle( &pomp2_region_1, "99*regionType=parallel*sscl=test8.c:36:36*escl=test8.c:55:55*hasIf=1*hasNumThreads=1*hasReduction=1**" );
-    POMP2_Assign_handle( &pomp2_region_2, "111*regionType=for*sscl=test8.c:40:40*escl=test8.c:45:45*hasReduction=1*hasSchedule=1*hasCollapse=1*hasOrdered=1**" );
+    POMP2_Assign_handle( &pomp2_region_2, "107*regionType=for*sscl=test8.c:40:40*escl=test8.c:45:45*hasReduction=1*scheduleType=dynamic,5*hasCollapse=1**" );
     POMP2_Assign_handle( &pomp2_region_3, "89*regionType=sections*sscl=test8.c:47:47*escl=test8.c:54:54*numSections=2*hasReduction=1**" );
     POMP2_Assign_handle( &pomp2_region_4, "60*regionType=parallel*sscl=test8.c:57:57*escl=test8.c:63:63**" );
     POMP2_Assign_handle( &pomp2_region_5, "76*regionType=task*sscl=test8.c:59:59*escl=test8.c:62:62*hasIf=1*hasUntied=1**" );
-    POMP2_Assign_handle( &pomp2_region_6, "115*regionType=parallelfor*sscl=test8.c:66:66*escl=test8.c:73:73*hasIf=1*hasNumThreads=1*hasReduction=1*hasOrdered=1**" );
+    POMP2_Assign_handle( &pomp2_region_6, "157*regionType=parallelfor*sscl=test8.c:66:66*escl=test8.c:73:73*hasIf=1*hasNumThreads=1*hasReduction=1*scheduleType=static,chunkif*hasCollapse=1*hasOrdered=1**" );
     POMP2_Assign_handle( &pomp2_region_7, "59*regionType=ordered*sscl=test8.c:69:69*escl=test8.c:70:70**" );
     POMP2_Assign_handle( &pomp2_region_8, "107*regionType=parallelsections*sscl=test8.c:75:75*escl=test8.c:82:82*hasIf=1*hasNumThreads=1*hasReduction=1**" );
 }

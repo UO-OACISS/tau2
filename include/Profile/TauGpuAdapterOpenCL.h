@@ -13,28 +13,37 @@ using namespace std;
 
 class openCLGpuId : public gpuId {
 
+public:
+	x_uint64 commandId;
 	cl_device_id id;
 	double sync_offset;
 
-public:
 /*	cudaGpuId(const NvU64 cId, const NvU32 dId) :
 		contextId(cId), deviceId(dId) {} */
 	
-	openCLGpuId(cl_device_id id, double sync);
-	openCLGpuId *getCopy() { 
+	openCLGpuId(cl_device_id id, x_uint64 commandId, double sync);
+	openCLGpuId *getCopy() const { 
 			openCLGpuId *c = new openCLGpuId(*this);
 			return c;
 	}
 
-	bool equals(const gpuId *other) const
+	bool less_than(const gpuId *other) const
 	{
-		return id  == ((openCLGpuId *)other)->id;
+		if (this->id_p1() == other->id_p1())
+		{
+			return this->id_p2() < other->id_p2();
+		}
+		else
+		{
+			return this->id_p1() < other->id_p1();
+		}
+		//return strcmp(printId(), ((openCLGpuId *)o)->printId()) < 0;
 	}
 	double syncOffset();
 	
-  char* printId();
-	x_uint64 id_p1() { return (x_uint64) id; }
-	x_uint64 id_p2() { return 0; }
+  char* printId() const;
+	x_uint64 id_p1() const { return (x_uint64) id; }
+	x_uint64 id_p2() const { return (x_uint64) commandId; }
 };
 
 class callback_data
@@ -46,9 +55,12 @@ class callback_data
 	cl_event* event;
 	int memcpy_type;
 	openCLGpuId *id;
+	TauGpuContextMap *contextEventMap;
 
 	callback_data(char* n, openCLGpuId *id, FunctionInfo* cs, cl_event* ev);
 	callback_data(char* n, openCLGpuId *id, FunctionInfo* cs, cl_event* ev, int memtype);
+	callback_data(char* n, openCLGpuId *id, FunctionInfo* cs, cl_event* ev, TauGpuContextMap *m);
+	callback_data(char* n, openCLGpuId *id, FunctionInfo* cs, cl_event* ev, int memtype, TauGpuContextMap *m);
 	bool isMemcpy();
 	~callback_data();
 };
@@ -67,11 +79,9 @@ void Tau_opencl_enter_memcpy_event(const char *name, openCLGpuId *id, int size, 
 
 void Tau_opencl_exit_memcpy_event(const char *name, openCLGpuId *id, int MemcpyType);
 
-void Tau_opencl_register_gpu_event(const char *name, openCLGpuId *id, double start,
-double stop);
+void Tau_opencl_register_gpu_event(const char *name, openCLGpuId *id, double start, double stop, FunctionInfo* parent, TauGpuContextMap *m);
 
-void Tau_opencl_register_memcpy_event(const char *name, openCLGpuId *id, double start, double stop, int
-transferSize, int MemcpyType);
+void Tau_opencl_register_memcpy_event(const char *name, openCLGpuId *id, double start, double stop, int transferSize, int MemcpyType, FunctionInfo* parent, TauGpuContextMap *m);
 
 void Tau_opencl_enqueue_event(callback_data* new_data);
 

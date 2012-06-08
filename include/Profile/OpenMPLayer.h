@@ -43,6 +43,7 @@ class OpenMPLayer
         static int InitializeDBMutexData(void);     // init tauDB mutex
         static int InitializeEnvMutexData(void);     // init tauEnv mutex
 	static int GetThreadId(void); 	 // gets 0..N-1 thread id
+	static int GetTauThreadId(void); 	 //gets TAU thread id 
 	static int TotalThreads(void);   // gets number of threads
 	static int LockDB(void);	 // locks the tauDBMutex
 	static int UnLockDB(void);	 // unlocks the tauDBMutex

@@ -1,5 +1,13 @@
 #ifdef TAU_BFD
 
+#if (defined(TAU_BGP) || defined(TAU_BGQ)) && defined(TAU_XLC)
+// *CWL* - This is required to handle the different prototype for
+//         asprintf and vasprintf between gnu and xlc compilers
+//         on the BGP.
+#define HAVE_DECL_VASPRINTF 1
+#define HAVE_DECL_ASPRINTF 1
+#endif
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -15,15 +23,25 @@
 #if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
 #define HAVE_DECL_BASENAME 1
 #include <demangle.h>
-#define DEMANGLE_FLAGS (DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE | DMGL_TYPES)
+#define DEFAULT_DEMANGLE_FLAGS DMGL_PARAMS | DMGL_ANSI | DMGL_VERBOSE | DMGL_TYPES
 #endif /* HAVE_GNU_DEMANGLE */
 
-#ifdef TAU_BGP
+#ifdef __PGI
+#define DEMANGLE_FLAGS DEFAULT_DEMANGLE_FLAGS | DMGL_ARM
+#else
+#define DEMANGLE_FLAGS DEFAULT_DEMANGLE_FLAGS
+#endif
+
+#if (defined(TAU_BGP) || defined(TAU_BGQ))
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif /* _GNU_SOURCE */
 #include <link.h>
-#endif /* TAU_BGP */
+#endif /* TAU_BGP || TAU_BGQ */
+
+#ifdef __APPLE__
+#include <mach-o/dyld.h>
+#endif
 
 #if defined(TAU_WINDOWS) && defined(TAU_MINGW)
 #include <windows.h>
@@ -33,11 +51,13 @@
 using namespace std;
 
 static char const * Tau_bfd_internal_getExecutablePath();
+static void Tau_bfd_internal_reinitializeBfd();
 
 struct TauBfdModule
 {
 	TauBfdModule() :
 		bfdImage(NULL), syms(NULL), nr_all_syms(0), bfdOpen(false),
+		lastResolveFailed(false),
 		processCode(TAU_BFD_SYMTAB_NOT_LOADED)
 	{ }
 
@@ -46,7 +66,22 @@ struct TauBfdModule
 		delete bfdImage;
 	}
 
+        // Meant for consumption by the Intel12 workaround only.
+        void markLastResult(bool success) {
+	  lastResolveFailed = !success;
+        }
+
 	bool loadSymbolTable(char const * path) {
+
+#ifdef TAU_INTEL12
+		// Nasty hack because Intel 12 is broken with Bfd 2.2x and
+		//   requires a complete reset of BFD. The latter's internals
+		//   becomes corrupted on a bad address from Intel 12 binaries.
+	  if (lastResolveFailed) {
+	    Tau_bfd_internal_reinitializeBfd();
+	    bfdOpen = false;
+	  }
+#endif /* TAU_INTEL12 */
 
 		// Executable symbol table is already loaded.
 		if (bfdOpen) return true;
@@ -90,6 +125,7 @@ struct TauBfdModule
 
 	// For EBS book-keeping
 	bool bfdOpen; // once open, symtabs are loaded and never released
+        bool lastResolveFailed;
 
 	// Remember the result of the last process to avoid reprocessing
 	int processCode;
@@ -146,16 +182,42 @@ static TauBfdModule * Tau_bfd_internal_getModuleFromIdx(
 static void Tau_bfd_internal_addExeAddressMap();
 static void Tau_bfd_internal_locateAddress(
 		bfd *bfdptr, asection *section, void *data ATTRIBUTE_UNUSED);
-static int Tau_bfd_internal_getBGPJobID(const char *path, char *name);
 static void Tau_bfd_internal_updateProcSelfMaps(TauBfdUnit *unit);
+
+#if (defined(TAU_BGP) || defined(TAU_BGQ))
+static int Tau_bfd_internal_getBGPJobID(const char *path, char *name);
 static void Tau_bfd_internal_updateBGPMaps(TauBfdUnit *unit);
+#endif /* TAU_BGP || TAU_BGQ */
 
 // BFD units (e.g. executables and their dynamic libraries)
-vector<TauBfdUnit*> bfdUnits;
+//vector<TauBfdUnit*> bfdUnits;
+//////////////////////////////////////////////////////////////////////
+// Instead of using a global var., use static inside a function  to
+// ensure that non-local static variables are initialised before being
+// used (Ref: Scott Meyers, Item 47 Eff. C++).
+//////////////////////////////////////////////////////////////////////
+std::vector<TauBfdUnit*>& ThebfdUnits(void)
+{ // FunctionDB contains pointers to each FunctionInfo static object
+
+  // we now use the above FIvector, which subclasses vector
+  //static vector<FunctionInfo*> FunctionDB;
+  static std::vector<TauBfdUnit*> internal_bfd_units;
+
+  static int flag = 1;
+  if (flag) {
+    flag = 0;
+  }
+
+  return internal_bfd_units;
+}
+
 
 //
 // Main interface functions
 //
+void Tau_bfd_internal_reinitializeBfd() {
+  bfd_init();
+}
 
 void Tau_bfd_initializeBfdIfNecessary() {
   static bool bfdInitialized = false;
@@ -167,8 +229,8 @@ void Tau_bfd_initializeBfdIfNecessary() {
 
 tau_bfd_handle_t Tau_bfd_registerUnit()
 {
-	tau_bfd_handle_t ret = bfdUnits.size();
-	bfdUnits.push_back(new TauBfdUnit);
+	tau_bfd_handle_t ret = ThebfdUnits().size();
+	ThebfdUnits().push_back(new TauBfdUnit);
 
 	TAU_VERBOSE("Tau_bfd_registerUnit: Unit %d registered and initialized\n", ret);
 
@@ -184,12 +246,13 @@ bool Tau_bfd_checkHandle(tau_bfd_handle_t handle)
     TAU_VERBOSE("TauBfd: Warning - attempt to use uninitialized BFD handle\n");
     return false;
   }
-  if (handle >= bfdUnits.size()) {
+  if (handle >= ThebfdUnits().size()) {
     TAU_VERBOSE("TauBfd: Warning - invalid BFD unit handle %d, max value %d\n",
-    		handle, bfdUnits.size());
+    		handle, ThebfdUnits().size());
     return false;
   }
   //  TAU_VERBOSE("TauBfd: Valid BFD Handle\n");
+  if (handle < 0) return false; 
   return true;
 }
 
@@ -199,9 +262,10 @@ static void Tau_bfd_internal_updateProcSelfMaps(TauBfdUnit *unit)
 	//         the BGP because the information acquired comes from the I/O nodes
 	//         and not the compute nodes. You could end up with an overlapping
 	//         range for address resolution if used!
-#ifndef TAU_BGP
+#if (defined (TAU_BGP) || defined(TAU_BGQ) || (TAU_WINDOWS))
+/* do nothing */
 	// *JCL* - Windows has no /proc filesystem, so don't try to use it
-#ifndef TAU_WINDOWS
+#else 
 
 	// Note: Linux systems only.
 	FILE *mapsfile = fopen("/proc/self/maps", "r");
@@ -235,11 +299,10 @@ static void Tau_bfd_internal_updateProcSelfMaps(TauBfdUnit *unit)
 		}
 	}
 	fclose(mapsfile);
-#endif /* TAU_WINDOWS */
-#endif /* TAU_BGP */
+#endif /* TAU_BGP || TAU_BGQ || TAU_WINDOWS */
 }
 
-#ifdef TAU_BGP
+#if (defined(TAU_BGP) || defined(TAU_BGQ))
 static int Tau_bfd_internal_BGP_dl_iter_callback(
 		struct dl_phdr_info *info, size_t size, void *data)
 {
@@ -247,6 +310,8 @@ static int Tau_bfd_internal_BGP_dl_iter_callback(
 		TAU_VERBOSE("Tau_bfd_internal_BGP_dl_iter_callback: Nameless module. Ignored.\n");
 		return 0;
 	}
+	TAU_VERBOSE("Tau_bfd_internal_BGP_dl_iter_callback: Processing module [%s]\n",
+		    info->dlpi_name);
 
 	TauBfdUnit *unit = (TauBfdUnit *)data;
 	TauBfdAddrMap * map = new TauBfdAddrMap;
@@ -267,19 +332,19 @@ static int Tau_bfd_internal_BGP_dl_iter_callback(
 	map->end = map->start + max_addr;
 	map->offset = 0; // assume.
 	sprintf(map->name, "%s", info->dlpi_name);
-	TAU_VERBOSE("BGP Module: %s, %p-%p (%d)\n",
+	TAU_VERBOSE("BG Module: %s, %p-%p (%d)\n",
 			map->name, map->start, map->end, map->offset);
 	unit->addressMaps.push_back(map);
 	unit->modules.push_back(new TauBfdModule);
 	return 0;
 }
-#endif /* TAU_BGP */
+#endif /* TAU_BGP || TAU_BGQ */
 
+#if (defined(TAU_BGP) || defined(TAU_BGQ))
 static void Tau_bfd_internal_updateBGPMaps(TauBfdUnit *unit) {
-#ifdef TAU_BGP
     dl_iterate_phdr(Tau_bfd_internal_BGP_dl_iter_callback, (void *)unit);
-#endif /* TAU_BGP */
 }
+#endif /* TAU_BGP || TAU_BGQ */
 
 
 // *JCL* - Executables compiled by MinGW are strange beasts in that
@@ -369,7 +434,7 @@ void Tau_bfd_updateAddressMaps(tau_bfd_handle_t handle)
 	}
 
 	TAU_VERBOSE("Tau_bfd_updateAddressMaps: Updating object maps\n");
-	TauBfdUnit * unit = bfdUnits[handle];
+	TauBfdUnit * unit = ThebfdUnits()[handle];
 
 	unit->ClearMaps();
 	unit->ClearModules();
@@ -390,7 +455,7 @@ vector<TauBfdAddrMap*> const &
 Tau_bfd_getAddressMaps(tau_bfd_handle_t handle)
 {
 	Tau_bfd_checkHandle(handle);
-	return bfdUnits[handle]->addressMaps;
+	return ThebfdUnits()[handle]->addressMaps;
 }
 
 tau_bfd_module_handle_t Tau_bfd_getModuleHandle(tau_bfd_handle_t handle,
@@ -399,7 +464,7 @@ tau_bfd_module_handle_t Tau_bfd_getModuleHandle(tau_bfd_handle_t handle,
 	if (!Tau_bfd_checkHandle(handle)) {
 		return TAU_BFD_INVALID_MODULE;
 	}
-	TauBfdUnit *unit = bfdUnits[handle];
+	TauBfdUnit *unit = ThebfdUnits()[handle];
 
 	int matchingIdx = Tau_bfd_internal_getModuleIndex(unit, probeAddr);
 	if (matchingIdx != -1) {
@@ -415,7 +480,7 @@ Tau_bfd_getAddressMap(tau_bfd_handle_t handle, unsigned long probe_addr)
 		return NULL;
 	}
 
-	TauBfdUnit *unit = bfdUnits[handle];
+	TauBfdUnit *unit = ThebfdUnits()[handle];
 	int matchingIdx = Tau_bfd_internal_getModuleIndex(unit, probe_addr);
 	if (matchingIdx == -1) {
 		return NULL;
@@ -427,6 +492,11 @@ Tau_bfd_getAddressMap(tau_bfd_handle_t handle, unsigned long probe_addr)
 static char const *
 Tau_bfd_internal_tryDemangle(bfd * bfdImage, char const * funcname)
 {
+	/* Intel version 12 compilers output symbol with the extraneous '.text.'
+	 * prepended to the mangled name - S.B. */
+	if (strncmp(funcname, ".text.", 6) == 0) {
+		funcname = &funcname[6];
+	}
 	char const * demangled = NULL;
 #if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
 	if(funcname && bfdImage) {
@@ -446,7 +516,7 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle,
 		return false;
 	}
 
-	TauBfdUnit * unit = bfdUnits[handle];
+	TauBfdUnit * unit = ThebfdUnits()[handle];
 	TauBfdModule * module;
 	unsigned long addr0;
 	unsigned long addr1;
@@ -511,12 +581,25 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle,
 
 	bool resolved = data.found && (info.funcname != NULL);
 	if (resolved) {
+#ifdef TAU_INTEL12
+	  // For Intel 12 workaround. Inform the module that the previous resolve
+	  //   was successful.
+	  module->markLastResult(true);
+#endif /* TAU_INTEL12 */
 		info.funcname = Tau_bfd_internal_tryDemangle(
 				module->bfdImage, info.funcname);
 		if(info.filename == NULL) {
 			info.filename = "(unknown)";
+#ifdef TAU_INTEL12
+	  module->markLastResult(false);
+#endif /* TAU_INTEL12 */
 		}
 	} else {
+#ifdef TAU_INTEL12
+	  // For Intel 12 workaround. Inform the module that the previous resolve
+	  //   failed.
+	  module->markLastResult(false);
+#endif /* TAU_INTEL12 */
 		// Couldn't resolve the address.
 		// Fill in fields as best we can.
 		if(info.funcname == NULL) {
@@ -524,7 +607,11 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle,
 			sprintf((char*)info.funcname, "addr=<%p>", probeAddr);
 		}
 		if(info.filename == NULL) {
+		  if (matchingIdx != -1) {
 			info.filename = unit->addressMaps[matchingIdx]->name;
+		  } else {
+		    info.filename = unit->executablePath;
+		  }
 		}
 		info.probeAddr = probeAddr;
 		info.lineno = 0;
@@ -567,7 +654,7 @@ int Tau_bfd_processBfdExecInfo(tau_bfd_handle_t handle, TauBfdIterFn fn)
 	if (!Tau_bfd_checkHandle(handle)) {
 		return TAU_BFD_SYMTAB_LOAD_FAILED;
 	}
-	TauBfdUnit * unit = bfdUnits[handle];
+	TauBfdUnit * unit = ThebfdUnits()[handle];
 
 	char const * execName = unit->executablePath;
 	TauBfdModule * module = unit->executableModule;
@@ -600,7 +687,7 @@ int Tau_bfd_processBfdModuleInfo(tau_bfd_handle_t handle,
 	if (!Tau_bfd_checkHandle(handle)) {
 		return TAU_BFD_SYMTAB_LOAD_FAILED;
 	}
-	TauBfdUnit * unit = bfdUnits[handle];
+	TauBfdUnit * unit = ThebfdUnits()[handle];
 
 	unsigned int moduleIdx = (unsigned int)moduleHandle;
 	TauBfdModule * module = Tau_bfd_internal_getModuleFromIdx(unit, moduleIdx);
@@ -679,6 +766,7 @@ Tau_bfd_internal_getModuleFromIdx(TauBfdUnit * unit, int moduleIndex)
 	return unit->modules[moduleIndex];
 }
 
+#if (defined(TAU_BGP) || defined(TAU_BGQ))
 static int Tau_bfd_internal_getBGPJobID(const char *path, char *name) {
   DIR *pdir = NULL;
   pdir = opendir(path);
@@ -708,8 +796,10 @@ static int Tau_bfd_internal_getBGPExePath(char *path) {
     return -1;
   }
   sprintf (path, "/jobs/%s/exe", jobid);
+  TAU_VERBOSE("Tau_bfd_internal_getBGPExePath: [%s]\n", path);
   return 0;
 }
+#endif /* TAU_BGP || TAU_BGQ */
 
 static char const * Tau_bfd_internal_getExecutablePath()
 {
@@ -720,7 +810,8 @@ static char const * Tau_bfd_internal_getExecutablePath()
 #if defined(TAU_AIX)
 	// AIX
 	sprintf(path, "/proc/%d/object/a.out", getpid());
-#elif defined(TAU_BGP)
+// #elif defined(TAU_BGP)
+#elif (defined(TAU_BGP) || defined(TAU_BGQ))
 	// BlueGene
 	if (Tau_bfd_internal_getBGPExePath(path) != 0) {
 		fprintf(stderr, "Tau_bfd_internal_getExecutablePath: "
@@ -821,7 +912,7 @@ int Tau_bfd_processBfdModuleInfo(tau_bfd_handle_t handle,
 	if (!Tau_bfd_checkHandle(handle)) {
 		return TAU_BFD_SYMTAB_LOAD_FAILED;
 	}
-	TauBfdUnit *unit = bfdUnits[handle];
+	TauBfdUnit *unit = ThebfdUnits()[handle];
 
 	int moduleIndex = (int) moduleHandle;
 	char const * moduleName = unit->addressMaps[moduleIndex]->name;
@@ -866,8 +957,7 @@ int Tau_bfd_processBfdModuleInfo(tau_bfd_handle_t handle,
 
 			/* use demangled name if possible */
 #if defined(HAVE_GNU_DEMANGLE) && HAVE_GNU_DEMANGLE
-			dem_name = cplus_demangle(syms[i]->name, DMGL_PARAMS | DMGL_ANSI
-					| DMGL_VERBOSE | DMGL_TYPES);
+			dem_name = cplus_demangle(syms[i]->name, DEMANGLE_FLAGS);
 #endif /* HAVE_GNU_DEMANGLE */
 
 			const char *name = syms[i]->name;
@@ -892,7 +982,7 @@ int Tau_bfd_processBfdExecInfo(tau_bfd_handle_t handle, int maxProbe,
 	if (!Tau_bfd_checkHandle(handle)) {
 		return TAU_BFD_SYMTAB_LOAD_FAILED;
 	}
-	TauBfdUnit *unit = bfdUnits[handle];
+	TauBfdUnit *unit = ThebfdUnits()[handle];
 	char const * execName = unit->executablePath;
 	unsigned long offset = 0;
 	TauBfdModule *module = unit->executableModule;
@@ -960,7 +1050,7 @@ int Tau_bfd_getAddressMap(tau_bfd_handle_t handle, unsigned long probe_addr,
 		return 0;
 	}
 
-	TauBfdUnit * unit = bfdUnits[handle];
+	TauBfdUnit * unit = ThebfdUnits()[handle];
 	int matchingIdx = Tau_bfd_internal_getModuleIndex(unit, probe_addr);
 	if (matchingIdx == -1) {
 		return TAU_BFD_NULL_MODULE_HANDLE;
