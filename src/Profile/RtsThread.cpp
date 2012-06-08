@@ -213,6 +213,9 @@ int RtsLayer::myNode(void)
 //////////////////////////////////////////////////////////////////////
 int RtsLayer::myContext(void)
 {
+#ifdef KTAU_NG
+  return RtsLayer::getLinuxKernelTid(); //voorhees
+#endif /* KTAU_NG */
   return TheContext(); 
 }
 
