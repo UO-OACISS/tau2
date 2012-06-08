@@ -138,8 +138,12 @@ public class ParaProf implements ActionListener {
 		+ "  -v, --dumpsummary               Dump derived statistical data to TAU profile format\n"
 		+ "  --overwrite                     Allow overwriting of profiles\n"
 		+ "  -o, --oss                       Print profile data in OSS style text output\n"
+		+ "  -q, --dumpmpisummary            Print high level time and communication summary\n"
+		+ "  -d, --metadump                  Print profile metadata (works with --dumpmpisummary)\n"
+		+ "  -x, --suppressmetrics           Exclude child calls and exclusive time from --dumpmpisummary\n"		
 		+ "  -s, --summary                   Print only summary statistics\n"
-		+ "                                    (only applies to OSS output)\n" + "\n" + "Notes:\n"
+		+ "                                    (only applies to OSS output)\n" 
+		+ "\n" + "Notes:\n"
 		+ "  For the TAU profiles type, you can specify either a specific set of profile\n"
 		+ "files on the commandline, or you can specify a directory (by default the current\n"
 		+ "directory).  The specified directory will be searched for profile.*.*.* files,\n"
@@ -389,24 +393,30 @@ public class ParaProf implements ActionListener {
 
 	// Process command line arguments
 	CmdLineParser parser = new CmdLineParser();
-	CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
-	CmdLineParser.Option configfileOpt = parser.addStringOption('g', "configfile");
-	CmdLineParser.Option typeOpt = parser.addStringOption('f', "filetype");
-	CmdLineParser.Option fixOpt = parser.addBooleanOption('i', "fixnames");
+
 	CmdLineParser.Option mergeOpt = parser.addStringOption('a', "merge");
 	CmdLineParser.Option packOpt = parser.addStringOption('a', "pack");
+	CmdLineParser.Option schemaLocationOpt = parser.addStringOption('c', "schemadir");
+	CmdLineParser.Option metadumpOpt = parser.addBooleanOption('d', "metadump");
+	CmdLineParser.Option typeOpt = parser.addStringOption('f', "filetype");
+	CmdLineParser.Option configfileOpt = parser.addStringOption('g', "configfile");
+	CmdLineParser.Option helpOpt = parser.addBooleanOption('h', "help");
+	CmdLineParser.Option fixOpt = parser.addBooleanOption('i', "fixnames");
+	CmdLineParser.Option jarLocationOpt = parser.addStringOption('j', "jardir");
+	CmdLineParser.Option monitorOpt = parser.addBooleanOption('m', "monitor");
+	CmdLineParser.Option rangeOpt = parser.addStringOption('n', "range");
+	CmdLineParser.Option ossOpt = parser.addBooleanOption('o', "oss");
+	CmdLineParser.Option unpackMPISummOpt = parser.addBooleanOption('q', "dumpmpisummary");
+	CmdLineParser.Option unpackRankOpt = parser.addStringOption('r', "dumprank");
+	CmdLineParser.Option summaryOpt = parser.addBooleanOption('s', "summary");
 	CmdLineParser.Option unpackOpt = parser.addBooleanOption('u', "dump");
 	CmdLineParser.Option unpackSummOpt = parser.addBooleanOption('v', "dumpsummary");
-	CmdLineParser.Option unpackRankOpt = parser.addStringOption('r', "dumprank");
-	CmdLineParser.Option ossOpt = parser.addBooleanOption('o', "oss");
 	CmdLineParser.Option overwriteOpt = parser.addBooleanOption('w', "overwrite");
-	CmdLineParser.Option summaryOpt = parser.addBooleanOption('s', "summary");
-	CmdLineParser.Option monitorOpt = parser.addBooleanOption('m', "monitor");
-	CmdLineParser.Option demoOpt = parser.addBooleanOption('z', "demo");
-	CmdLineParser.Option jarLocationOpt = parser.addStringOption('j', "jardir");
-	CmdLineParser.Option schemaLocationOpt = parser.addStringOption('c', "schemadir");
+	CmdLineParser.Option suppressOpt = parser.addBooleanOption('x', "suppressmetrics");
 	CmdLineParser.Option controlOpt = parser.addBooleanOption('y', "control");
-	CmdLineParser.Option rangeOpt = parser.addStringOption('a', "range");
+	CmdLineParser.Option demoOpt = parser.addBooleanOption('z', "demo");
+	
+	
 
 	try {
 	    parser.parse(args);
@@ -424,9 +434,14 @@ public class ParaProf implements ActionListener {
 	String pack = (String) parser.getOptionValue(packOpt);
 	Boolean unpack = (Boolean) parser.getOptionValue(unpackOpt);
 	Boolean unpackSumm = (Boolean) parser.getOptionValue(unpackSummOpt);
+	
+	Boolean unpackMPISumm = (Boolean) parser.getOptionValue(unpackMPISummOpt);
+	Boolean suppress = (Boolean) parser.getOptionValue(suppressOpt);
+	Boolean metadump = (Boolean) parser.getOptionValue(metadumpOpt);
+	
 	Boolean overwrite = (Boolean) parser.getOptionValue(overwriteOpt);
 	String unpackrank = (String) parser.getOptionValue(unpackRankOpt);
-	if (unpackrank != null||unpackSumm!=null) {
+	if (unpackrank != null||unpackSumm!=null||unpackMPISumm!=null||metadump!=null) {
 	    unpack = Boolean.TRUE;
 	}
 	Boolean oss = (Boolean) parser.getOptionValue(ossOpt);
@@ -467,6 +482,11 @@ public class ParaProf implements ActionListener {
 	sourceFiles = new File[sourceFilenames.length];
 	for (int i = 0; i < sourceFilenames.length; i++) {
 	    sourceFiles[i] = new File(sourceFilenames[i]);
+//	    if(!sourceFiles[i].exists()){
+//	    	sourceFiles= new File[0];
+//	    	fileTypeString="profiles";
+//	    	break;
+//	    }
 	}
 
 	if (fixNames != null)
@@ -588,7 +608,7 @@ public class ParaProf implements ActionListener {
 		FileList fl = new FileList();
 		List<File[]> v = fl.helperFindProfiles(".");
 
-		if (overwrite == null) {
+		if (overwrite == null&&(unpackMPISumm==null||!unpackMPISumm)&&(metadump==null||!metadump)) {
 		    if (v.size() != 0) {
 			System.err.println("Error: profiles found in current directory, please remove first");
 			return;
@@ -605,6 +625,22 @@ public class ParaProf implements ActionListener {
 		    DataSourceExport.writeProfiles(dataSource, new File("."), node.getThreads());
 		}else if(unpackSumm !=null){
 			DataSourceExport.writeAggProfiles(dataSource, new File("."));
+		}else if(unpackMPISumm !=null||metadump!=null){
+			boolean dumpMetadata = false;
+			if(metadump!=null)
+				dumpMetadata=metadump.booleanValue();
+			boolean sup = false;
+			if(suppress!=null)
+				sup = suppress.booleanValue();
+			boolean unpackmpi = false;
+			if(unpackMPISumm!=null)
+				unpackmpi=unpackMPISumm.booleanValue();
+			if(unpackmpi)
+				DataSourceExport.writeAggMPISummary(dataSource,sup,dumpMetadata);
+			else if(dumpMetadata){
+				DataSourceExport.writeMetaDataSummary(dataSource);
+			}
+				
 		}else {
 		    DataSourceExport.writeProfiles(dataSource, new File("."));
 		}

@@ -36,7 +36,7 @@
  *              only print out messages and do not measure anything.*/
 
 #include <config.h>
-#include "pomp2_lib.h"
+#include <opari2/pomp2_lib.h>
 
 /* *INDENT-OFF*  */
 
@@ -817,13 +817,13 @@ POMP2_Ordered_exit( POMP2_Region_handle* pomp2_handle )
 
 void
 POMP2_Task_create_begin( POMP2_Region_handle* pomp2_handle,
+                         POMP2_Task_handle*   pomp2_new_task,
                          POMP2_Task_handle*   pomp2_old_task,
                          int                  pomp2_if,
                          const char           ctc_string[])
 {
     *pomp2_old_task = pomp2_current_task;
-    pomp2_current_task = POMP2_Get_new_task_handle();
-
+    *pomp2_new_task = POMP2_Get_new_task_handle();
     if ( pomp2_tracing )
     {
         fprintf( stderr, "%3d: task create begin\n", omp_get_thread_num() );
@@ -843,9 +843,9 @@ POMP2_Task_create_end( POMP2_Region_handle* pomp2_handle,
 
 void
 POMP2_Task_begin( POMP2_Region_handle* pomp2_handle,
-                  POMP2_Task_handle    pomp2_new_task )
+                  POMP2_Task_handle    pomp2_task )
 {
-    pomp2_current_task = pomp2_new_task;
+    pomp2_current_task = pomp2_task;
 
     if ( pomp2_tracing )
     {
@@ -864,12 +864,13 @@ POMP2_Task_end( POMP2_Region_handle* pomp2_handle )
 
 void
 POMP2_Untied_task_create_begin( POMP2_Region_handle* pomp2_handle,
+                                POMP2_Task_handle*   pomp2_new_task,
                                 POMP2_Task_handle*   pomp2_old_task,
                                 int                  pomp2_if,
                                 const char           ctc_string[] )
 {
+    *pomp2_new_task = POMP2_Get_new_task_handle();
     *pomp2_old_task = pomp2_current_task;
-    pomp2_current_task = POMP2_Get_new_task_handle();
 
     if ( pomp2_tracing )
     {
@@ -892,9 +893,9 @@ POMP2_Untied_task_create_end( POMP2_Region_handle* pomp2_handle,
 
 void
 POMP2_Untied_task_begin( POMP2_Region_handle* pomp2_handle,
-                         POMP2_Task_handle    pomp2_new_task )
+                         POMP2_Task_handle    pomp2_parent_task )
 {
-    pomp2_current_task = pomp2_new_task;
+    pomp2_current_task = POMP2_Get_new_task_handle();
 
     if ( pomp2_tracing )
     {

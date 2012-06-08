@@ -279,6 +279,12 @@ public class TraceReader extends TraceFile{
 		{
 			linebuf=edf.readLine();
 			
+			if(linebuf==null){
+				int c = i-1;
+				System.out.println("Warning: Expected "+numevents+" event definitions. Found "+c);
+				return false;
+			}
+			
 			if ( (linebuf.charAt(0) == '\n') || (linebuf.charAt(0) == '#') )
 			{
 				/* -- skip empty, header and comment lines -- */

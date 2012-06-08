@@ -127,6 +127,9 @@ static void TauInitialize_kill_handlers() {
 # ifdef SIGSEGV
   sighdlr[SIGSEGV] = signal (SIGSEGV, wrap_up);
 # endif
+# ifdef SIGCHLD
+  sighdlr[SIGCHLD] = signal (SIGCHLD, wrap_up);
+# endif
 }
 
 extern "C" int Tau_get_backtrace_off_by_one_correction(void) {
@@ -134,25 +137,31 @@ extern "C" int Tau_get_backtrace_off_by_one_correction(void) {
 }
 
 // **CWL** Added to be consistent for operation with Comp_gnu.cpp
-#ifndef TAU_XLC
-extern int tauPrintAddr(int i, char *token1, unsigned long addr);
-#endif /* TAU_XLC */
+//#ifndef TAU_XLC
+extern int Tau_Backtrace_writeMetadata(int i, char *token1, unsigned long addr);
+//#endif /* TAU_XLC */
 
 #ifndef TAU_DISABLE_SIGUSR
 
 //static void tauBacktraceHandler(int sig) {
+extern "C" void finalizeCallSites_if_necessary();
 void tauBacktraceHandler(int sig, siginfo_t *si, void *context) {
           char str[100+4096];
           char path[4096];
           char gdb_in_file[256];
           char gdb_out_file[256];
 
+	  if (TauEnv_get_callsite()) {
+	    finalizeCallSites_if_necessary();
+	  }
+
 #ifndef TAU_WINDOWS
 	  if (TauEnv_get_ebs_enabled()) {
 	    // *CWL* - If sampling is active, get it to stop and finalize immediately,
 	    //         we are about to halt execution!
-	    int tid = RtsLayer::myThread();
-	    Tau_sampling_finalize(tid);
+	    //	    int tid = RtsLayer::myThread();
+	    //	    Tau_sampling_finalize(tid);
+	    Tau_sampling_finalize_if_necessary();
 	  }
 #endif /* TAU_WINDOWS */
 
@@ -208,34 +217,48 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context) {
     // For dealing with badly implemented backtrace calls
     TAU_VERBOSE("TAU: ERROR: Backtrace not available!\n" );
   } else {
-    TAU_VERBOSE("TAU: Backtrace:\n");
+    TAU_VERBOSE("TAU: ::BACKTRACE:: has %d addresses:\n", n);
     char **names = backtrace_symbols( addresses, n );
     for ( int i = 2; i < n; i++ )
     {
-      TAU_VERBOSE("stacktrace %s\n",names[i]);
-      char *token1 = strtok(names[i],"[]");
-      TAU_VERBOSE("found it: token1 = %s\n", token1);
-      // *CWL* - This shouldn't be necessary. The expected format is [<addr>].
-      //         If this is not the absolute format, then some fancier parsing
-      //         is required.
-      //
-      //      char *token2 = strtok(NULL,"[]");
+      TAU_VERBOSE("**STACKTRACE** Entry %d = %s\n", i, names[i]);
+      char *temp = NULL;
+      char *token = NULL;
       unsigned long addr;
-      //sscanf(token2,"%lx", &addr);
-      sscanf(token1,"%lx", &addr);
-      TAU_VERBOSE("found it: addr = %lx\n", addr);
-      if (i > 2) { /* first address is correct */
-        addr=addr-Tau_get_backtrace_off_by_one_correction(); 
+      //  UPDATE 11/20: token2 is required if we encounter shared code in which
+      //         case the format is <path>(<func_name>+<offset>) [<addr>].
+      //         This is extremely fragile code and is at the mercy of backtrace
+      //         not changing its output formats over a wide variety of machines.
+      //         We must keep an eye on this. This has the potential to (it has
+      //         already) blow up in our faces repeatedly.
+      //
+      //  For now, the correct way to do this is to look for the last token.
+      temp = strtok(names[i],"[]");
+      while (temp != NULL) {
+	token = temp;
+	temp = strtok(NULL, "[]");
       }
-      // Backtrace messes up and gives you the address of the next instruction.
-      // We subtract one to compensate for the off-by-one error.
-
+      if (token == NULL) {
+	// If the backtrace string is completely invalid, then set to 0 and allow
+	//   tauPrintAddr to fail. Issue a verbose warning.
+	TAU_VERBOSE("No valid token in backtrace string!\n");
+	addr = 0;
+      } else {
+	TAU_VERBOSE("Found Address Token = %s\n", token);
+	sscanf(token,"%lx", &addr);
+	TAU_VERBOSE("Backtrace Address determined to be %p\n", addr);
+	if (i > 2) { /* first address is correct */
+	  // Backtrace messes up and gives you the address of the next instruction.
+	  // We subtract one to compensate for the off-by-one error.
+	  addr=addr-Tau_get_backtrace_off_by_one_correction(); 
+	}
+      }
 // **CWL** For correct operation with Comp_gnu.cpp
-#ifndef TAU_XLC
+//#ifndef TAU_XLC
       // Map the addresses found in backtrace to actual code symbols and line information
       //   for addition to TAU_METADATA.
-      tauPrintAddr(i, token1, addr);
-#endif /* TAU_XLC */
+      Tau_Backtrace_writeMetadata(i, names[i], addr);
+      //#endif /* TAU_XLC */
     }
     free(names);
   }
@@ -344,17 +367,24 @@ extern "C" int Tau_signal_initialization() {
 }
 
 #endif // TAU_DISABLE_SIGUSR
+static int initializing = 0;
+
+// used if other components want to guard against operating while TAU is being
+// initialized.
+extern "C" int Tau_init_initializingTAU() {
+	return initializing - tau_initialized;
+}
 
 extern "C" int Tau_init_initializeTAU() {
-  static int initialized = 0;
 
-  if (initialized) {
+	//protect against reentrancy
+  if (initializing) {
     return 0;
   }
 
   Tau_global_incr_insideTAU();
   
-  initialized = 1;
+  initializing = 1;
 
   /* initialize the Profiler stack */
   Tau_stack_initialization();
@@ -364,7 +394,7 @@ extern "C" int Tau_init_initializeTAU() {
 
 #ifdef TAU_EPILOG
   /* no more initialization necessary if using epilog/scalasca */
-  initialized = 1;
+  initializing = 1;
   Tau_init_epilog();
   return 0;
 #endif
@@ -372,7 +402,7 @@ extern "C" int Tau_init_initializeTAU() {
 
 #ifdef TAU_SCOREP
   /* no more initialization necessary if using SCOREP */
-  initialized = 1;
+  initializing = 1;
   SCOREP_Tau_InitMeasurement();
   SCOREP_Tau_RegisterExitCallback(Tau_profile_exit_all_threads); 
   return 0;
@@ -380,7 +410,7 @@ extern "C" int Tau_init_initializeTAU() {
 
 #ifdef TAU_VAMPIRTRACE
   /* no more initialization necessary if using vampirtrace */
-  initialized = 1;
+  initializing = 1;
   Tau_init_vampirTrace();
   return 0;
 #endif
@@ -417,7 +447,7 @@ extern "C" int Tau_init_initializeTAU() {
 
   /* TAU must me marked as initialized BEFORE Tau_compensate_initialize is called
      Otherwise re-entry to this function will take place and bad things will happen */
-  initialized = 1;
+  initializing = 1;
 
   /* initialize compensation */
   if (TauEnv_get_compensate()) {
@@ -437,7 +467,7 @@ extern "C" int Tau_init_initializeTAU() {
        after MPI_Init()
     */
 #if !defined(TAU_MPI) && !defined(TAU_WINDOWS)
-    Tau_sampling_init(0);
+    Tau_sampling_init_if_necessary();
 #endif /* TAU_MPI && TAU_WINDOWS */
   }
 #ifdef TAU_PGI

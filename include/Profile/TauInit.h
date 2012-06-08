@@ -23,5 +23,6 @@
 
 extern "C" int Tau_init_initializeTAU();
 extern "C" int Tau_init_check_initialized();
+extern "C" int Tau_init_initializingTAU();
 
 #endif /* _TAU_INIT_H_ */

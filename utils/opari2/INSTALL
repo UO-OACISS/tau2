@@ -1,7 +1,7 @@
 For generic installation instructions see below.
 
-Configuration of opari 2.x
-**************************
+Configuration of OPARI2
+***********************
 
 Optional Features:
   --disable-FEATURE       do not include FEATURE (same as --enable-FEATURE=no)
@@ -54,7 +54,7 @@ environment that defines CC as well as CC_FOR_BUILD etc.)
               Fortran 77 compiler flags for the frontend build
   FCFLAGS_FOR_BUILD
               Fortran compiler flags for the frontend build
-  LD_FLAGS_FOR_BUILD
+  LDFLAGS_FOR_BUILD
               linker flags for the frontend build, e.g. -L<lib dir> if you
               have libraries in a nonstandard directory <lib dir>
   LIBS_FOR_BUILD
@@ -79,7 +79,7 @@ environment that defines CC as well as CC_FOR_BUILD etc.)
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
 
-Report bugs to <scorep-bugs@groups.tu-dresden.de>.
+Please report bugs to <scorep-bugs@groups.tu-dresden.de>.
 
 
 Installation Instructions

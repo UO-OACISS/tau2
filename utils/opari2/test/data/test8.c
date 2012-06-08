@@ -30,14 +30,14 @@ int j;
 int
 main()
 {
-    int i;
+    int i = 5;
     int k = 0;
 
 #pragma omp parallel if(k==0) num_threads(4) reduction(+:k)
     {
         printf( "parallel\n" );
 
-#pragma omp for reduction(+:k) schedule(dynamic) collapse(1)
+#pragma omp for reduction(+:k) schedule(dynamic, 5 ) collapse(1)
         for ( i = 0; i < 4; ++i )
         {
             printf( "for %d\n", i );
@@ -63,7 +63,7 @@ main()
     }
 }
 
-#pragma omp parallel for if(true) num_threads(4) reduction(+:k) schedule(static) collapse(1) ordered
+#pragma omp parallel for  num_threads(4) reduction(+:k) schedule(static,chunkif) collapse(1) ordered if(1)
 for ( i = 0; i < 4; ++i )
 {
      #pragma omp ordered
@@ -72,7 +72,7 @@ for ( i = 0; i < 4; ++i )
     k++;
 }
 
-#pragma omp parallel sections if(true) num_threads(4) reduction(+:k)
+#pragma omp parallel sections if((i+k)>5) num_threads(4) reduction(+:k)
 {
      #pragma omp section
     printf( "section 1\n" );

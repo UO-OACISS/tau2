@@ -21,9 +21,9 @@
 #include <Profile/TauSampling.h>
 #endif
 #include <Profile/TauSnapshot.h>
-#ifdef TAU_GPU
+//#ifdef TAU_GPU
 extern "C" int Tau_profile_exit_all_tasks();
-#endif
+//#endif
 //#include <tau_internal.h>
 
 #ifdef TAU_PERFSUITE
@@ -102,6 +102,11 @@ extern "C" int Tau_get_usesMPI();
 #if defined(TAUKTAU)
 #include <Profile/KtauProfiler.h>
 #endif /* TAUKTAU */
+
+#ifdef KTAU_NG
+#include <Profile/KtauNGProfiler.h>
+#endif /* KTAU_NG */
+
 
 // The rest of CurrentProfiler entries are initialized to null automatically
 //TauGroup_t RtsLayer::ProfileMask = TAU_DEFAULT;
@@ -197,7 +202,7 @@ void TauProfiler_EnableAllEventsOnCallStack(int tid, Profiler *current) {
 #endif /* TAU_MPITRACE */
 //////////////////////////////////////////////////////////////////////
 
-
+void Tau_unwind_unwindTauContext(Profiler *myProfiler);
 void Profiler::Start(int tid) { 
 #ifdef DEBUG_PROF
   fprintf (stderr, "[%d:%d-%d] Profiler::Start for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
@@ -260,10 +265,22 @@ void Profiler::Start(int tid) {
   /*** Extras ***/
   /********************************************************************************/
 
-  
+  // An initialization of sorts. Call Paths (if any) will update this.
+#ifndef TAU_WINDOWS
+  if (TauEnv_get_callsite() == 1) {
+    CallSiteAddPath(NULL, tid);
+  }
+#endif /* TAU_WINDOWS */
+
   if (TauEnv_get_callpath()) {
     CallPathStart(tid);
   }
+
+#ifndef TAU_WINDOWS
+  if (TauEnv_get_callsite() == 1) {
+    CallSiteStart(tid);
+  }
+#endif
 
 #ifdef TAU_PROFILEPARAM
   ProfileParamFunction = NULL;
@@ -304,9 +321,15 @@ void Profiler::Start(int tid) {
   // Inncrement the number of calls
   ThisFunction->IncrNumCalls(tid);
   
+
   // Increment the parent's NumSubrs()
   if (ParentProfiler != 0) {
-    ParentProfiler->ThisFunction->IncrNumSubrs(tid);	
+    ParentProfiler->ThisFunction->IncrNumSubrs(tid);
+    if (TauEnv_get_callsite()) {	
+      if (ParentProfiler->CallSiteFunction != NULL) {
+        ParentProfiler->CallSiteFunction->IncrNumSubrs(tid);
+      }
+    }    
   }
   
   // If this function is not already on the call stack, put it
@@ -348,7 +371,7 @@ static x_uint64 getTimeStamp() {
 }
 #endif /* TAU_PERFSUITE */
 
-
+extern "C" int TauCompensateInitialized(void);
 void Profiler::Stop(int tid, bool useLastTimeStamp) {
 #ifdef DEBUG_PROF
   fprintf (stderr, "[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
@@ -489,11 +512,16 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   /*** Tracing ***/
   /********************************************************************************/
     
-    
   if (TauEnv_get_callpath()) {
     CallPathStop(TotalTime, tid);
   }
-    
+
+#ifndef TAU_WINDOWS
+  if (TauEnv_get_callsite()) {
+    CallSiteStop(TotalTime, tid);
+  }
+#endif /* TAU_WINDOWS */
+
 #ifdef RENCI_STFF
   if (TauEnv_get_callpath()) {
     RenciSTFF::recordValues(CallPathFunction, TimeStamp, TotalTime, tid);
@@ -535,6 +563,14 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 	CallPathFunction->ResetExclTimeIfNegative(tid); 
       }
     }
+    if (TauEnv_get_callsite()) {
+      if (ParentProfiler != NULL) {
+	if (CallSiteFunction != NULL) {
+	  CallSiteFunction->ResetExclTimeIfNegative(tid);
+	}
+      }
+    }
+
 #ifdef TAU_PROFILEPARAM
     if (ProfileParamFunction != NULL) {
       ProfileParamFunction->ResetExclTimeIfNegative(tid);
@@ -581,6 +617,17 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   /********************************************************************************/
     
   if (ParentProfiler == (Profiler *) NULL) {
+    //    printf("No parent profiler on stop\n");
+    if (TauEnv_get_extras()) {
+      /*** Profile Compensation ***/
+      if (TauEnv_get_compensate()) {
+	// If I am still compensating, I do not expect a top level timer. Just pretend
+	// this never happened.
+	if (!TauCompensateInitialized()) {
+	  return;
+	}
+      }
+    }
     /* Should we detect memory leaks here? */
     if (TheSafeToDumpData() && !RtsLayer::isCtorDtor(ThisFunction->GetName())) {
       Tau_global_callWriteHooks();
@@ -600,6 +647,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
     if (strcmp(ThisFunction->GetName(), "_fini") == 0) {
       TheSafeToDumpData() = 0;
     }
+		if (tid == 0) {
+	  	Tau_profile_exit_all_tasks();
+		}
 #ifdef TAU_GPU
 		//Stop all other running tasks.
 		if (tid == 0) {
@@ -624,6 +674,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
         TAU_VERBOSE("TAU: <Node=%d.Thread=%d>:<pid=%d>: %s initiated TauProfile_StoreData\n",
           RtsLayer::myNode(), RtsLayer::myThread(), getpid(), ThisFunction->GetName());
 #endif
+#ifdef TAU_DMAPP
+	TAU_DISABLE_INSTRUMENTATION(); 
+#endif /* TAU_DMAPP */
 
 	  
 #if defined(TAUKTAU) 
@@ -982,10 +1035,12 @@ static int writeUserEvents(FILE *fp, int tid) {
   // Print UserEvent Data if any
   int numEvents = 0;
   for (it = TheEventDB().begin(); it != TheEventDB().end(); ++it) {
-    if ((*it)->GetNumEvents(tid) == 0) { // skip user events with no calls
+    if ((*it) && (*it)->GetNumEvents(tid) == 0) { // skip user events with no calls
       continue;
     }
-    numEvents++;
+    if ((*it)) {
+      numEvents++;
+    }
   }
   
   if (numEvents > 0) {
@@ -996,7 +1051,7 @@ static int writeUserEvents(FILE *fp, int tid) {
     fprintf(fp, "# eventname numevents max min mean sumsqr\n");
     
     for(it = TheEventDB().begin(); it != TheEventDB().end(); ++it) {
-      if ((*it)->GetNumEvents(tid) == 0) { // skip user events with no calls
+      if ((*it) && (*it)->GetNumEvents(tid) == 0) { // skip user events with no calls
 	continue;
       }
       fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n", 
@@ -1153,6 +1208,7 @@ extern "C" int Tau_profiler_initialization() {
 
 
 // Store profile data at the end of execution (when top level timer stops)
+extern "C" void finalizeCallSites_if_necessary();
 int TauProfiler_StoreData(int tid) {
 
   profileWriteCount[tid]++;
@@ -1167,9 +1223,16 @@ int TauProfiler_StoreData(int tid) {
     RtsLayer::UnLockDB();
   }
   finalizeTrace(tid);
+  
 #ifndef TAU_WINDOWS  
+
+  if (TauEnv_get_callsite()) {
+    finalizeCallSites_if_necessary();
+  }
+
   if (TauEnv_get_ebs_enabled()) {
-    Tau_sampling_finalize(tid);
+    // Tau_sampling_finalize(tid);
+    Tau_sampling_finalize_if_necessary();
   }
 #endif
   if (TauEnv_get_profiling()) {
@@ -1196,7 +1259,21 @@ int TauProfiler_StoreData(int tid) {
 
 // Returns directory name for the location of a particular metric
 static int getProfileLocation(int metric, char *str) {
+#ifndef KTAU_NG
   const char *profiledir = TauEnv_get_profiledir();
+#else
+  static char *profiledir;
+  if(profiledir == NULL){
+    int written_bytes = 0;
+    unsigned int profile_dir_len = KTAU_NG_PREFIX_LEN + HOSTNAME_LEN;
+    profiledir = new char[profile_dir_len];
+    written_bytes = sprintf(profiledir, "%s.", KTAU_NG_PREFIX);
+    gethostname(profiledir + written_bytes, profile_dir_len - written_bytes);
+    
+    // profiledir = new char[KTAU_NG_PREFIX_LEN + (Tau_metadata_getMetaData()["Hostname"]).length() + 1]; //This will remain in memory until TAU closes since their is no corresponding delete.
+    // sprintf(profiledir, "%s.%s", KTAU_NG_PREFIX, Tau_metadata_getMetaData()["Hostname"].c_str());
+  }
+#endif
 
   if (Tau_Global_numCounters <= 1) { 
     sprintf (str, "%s", profiledir);
@@ -1380,8 +1457,14 @@ bool TauProfiler_createDirectories() {
       }
     }
     flag = false;
+  }else{
+#ifdef KTAU_NG
+	char *newdirname = new char[1024];
+	getProfileLocation(Tau_Global_numCounters, newdirname);
+	mkdir(newdirname, S_IRWXU | S_IRGRP | S_IXGRP);
+#endif
+	flag = false;
   }
-
   return true;
 }
 

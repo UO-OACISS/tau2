@@ -29,11 +29,11 @@
 !$omp  parallel
 !$omp+ do
 !$omp+ lastprivate(k)
-!$omp+ private(i,j)
+!$omp+ private(i,j),
 !$omp+ lastprivate
 !$omp+ (
-!$omp+   l
-!$omp+ ) schedule(dynamic
+!$omp+   l  !random comment
+!$omp+ ), schedule(dynamic
 !$omp+ )
       do i=1,4
          write(*,*) "parallel do ", i

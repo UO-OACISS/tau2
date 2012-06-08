@@ -38,11 +38,11 @@ static map<cl_command_queue, openCLGpuId*> IdentityMap;
 double Tau_opencl_sync_clocks(cl_command_queue commandQueue, cl_context
 context);
 
-char* openCLGpuId::printId() 
+char* openCLGpuId::printId() const 
 {	
 		//printf("in printId, id: %d.\n", id);
-		char r[20];
-		sprintf(r, "%d", id);
+		char r[40];
+		sprintf(r, "%d:%lld", id, commandId);
 		return r;
 }
 
@@ -65,17 +65,18 @@ class openCLEventId : public eventId
 	}
 };
 
-openCLGpuId::openCLGpuId(cl_device_id i, double sync)
+openCLGpuId::openCLGpuId(cl_device_id i, x_uint64 cId, double sync)
 {
 	id = i;
+	commandId = cId;
 	sync_offset = sync;
 }
 
 openCLGpuId *Tau_opencl_retrive_gpu(cl_command_queue q)
 {
-	//printf("Adapter: command queue is: %d.\n", q);
+	//printf("Adapter: command queue is: %lld.\n", q);
 	if (q == NULL)
-	{	printf("NULL command queue passed. exiting.\n");
+	{	//printf("NULL command queue passed. exiting.\n");
 		exit(1); }
 	//map<cl_command_queue, openCLGpuId*>::iterator it = IdentityMap.end();
 	map<cl_command_queue, openCLGpuId*>::iterator it = IdentityMap.find(q);
@@ -97,19 +98,20 @@ openCLGpuId *Tau_opencl_retrive_gpu(cl_command_queue q)
 			if (err == CL_INVALID_COMMAND_QUEUE)
 				printf("invalid command queue.\n");
 		}
+		err = clGetCommandQueueInfo(q, CL_QUEUE_CONTEXT, sizeof(cl_context), &context, NULL);
+		if (err != CL_SUCCESS)
+		{	printf("error in clGetCommandQueueInfo CONTEXT.\n"); }
+	
 		//err = clGetDeviceInfo(id, CL_DEVICE_VENDOR_ID, sizeof(cl_uint), &vendor, NULL);
 
 
 		//printf("device id: %d.\n", id);
+		//printf("command id: %lld.\n", q);
 		//printf("vendor id: %d.\n", vendor);
-		clGetCommandQueueInfo(q, CL_QUEUE_CONTEXT, sizeof(cl_context), &context, NULL);
-		if (err != CL_SUCCESS)
-		{	printf("error in clGetCommandQueueInfo CONTEXT.\n"); }
-	
 		double sync_offset;
 		sync_offset = Tau_opencl_sync_clocks(q, context);
 	
-		openCLGpuId *gId = new openCLGpuId(id, sync_offset);
+		openCLGpuId *gId = new openCLGpuId(id, (x_uint64) q, sync_offset);
 		IdentityMap[q] = gId;
 		
 		return gId;
@@ -117,13 +119,25 @@ openCLGpuId *Tau_opencl_retrive_gpu(cl_command_queue q)
 	}
 }
 
-callback_data::callback_data(char* n, openCLGpuId *i, FunctionInfo* cs, cl_event* ev)
+callback_data::callback_data(char* n, openCLGpuId *i, FunctionInfo* cs,
+cl_event* ev)
 {
 	name  = n;
 	id = i->getCopy();
 	callingSite = cs;
 	event = ev;
 	memcpy_type = -1;
+	contextEventMap = NULL;
+}
+callback_data::callback_data(char* n, openCLGpuId *i, FunctionInfo* cs,
+cl_event* ev, TauGpuContextMap *m)
+{
+	name  = n;
+	id = i->getCopy();
+	callingSite = cs;
+	event = ev;
+	memcpy_type = -1;
+	contextEventMap = m;
 }
 callback_data::callback_data(char* n, openCLGpuId *i, FunctionInfo* cs, cl_event* ev, int
 memtype)
@@ -133,6 +147,17 @@ memtype)
 	callingSite = cs;
 	event = ev;
 	memcpy_type = memtype;
+	contextEventMap = NULL;
+}
+callback_data::callback_data(char* n, openCLGpuId *i, FunctionInfo* cs, cl_event* ev, int
+memtype,  TauGpuContextMap *m)
+{
+	name  = n;
+	id = i->getCopy();
+	callingSite = cs;
+	event = ev;
+	memcpy_type = memtype;
+	contextEventMap = m;
 }
 callback_data::~callback_data()
 {
@@ -150,7 +175,7 @@ pthread_mutex_t callback_lock;
 int init_callback() 
 {
 #ifdef TAU_OPENCL_LOCKING
-	printf("initalize pthread locking.\n");
+	//printf("initalize pthread locking.\n");
 	pthread_mutexattr_t lock_attr;
 	pthread_mutexattr_init(&lock_attr);
 	pthread_mutex_init(&callback_lock, &lock_attr);
@@ -250,25 +275,25 @@ void Tau_opencl_exit_memcpy_event(const char *name, openCLGpuId *id, int MemcpyT
 }
 
 void Tau_opencl_register_gpu_event(const char *name, openCLGpuId *gId, double start,
-double stop, FunctionInfo* parent)
+double stop, FunctionInfo* parent, TauGpuContextMap* map)
 {
 	lock_callback();
 	//printf("locked for: %s.\n", name);
-	eventId evId = Tau_gpu_create_gpu_event(name, gId, parent);
+	eventId evId = Tau_gpu_create_gpu_event(name, gId, parent, map);
 	Tau_gpu_register_gpu_event(evId, start/1e3, stop/1e3);
 	//printf("released for: %s.\n", name);
 	release_callback();
 }
 
 void Tau_opencl_register_memcpy_event(const char *name, openCLGpuId *gId, double start, double stop, int
-transferSize, int MemcpyType, FunctionInfo* parent)
+transferSize, int MemcpyType, FunctionInfo* parent, TauGpuContextMap* map)
 {
 	//printf("in Tau_open.\n");
 	//printf("Memcpy type is %d.\n", MemcpyType);
 	lock_callback();
 	//printf("locked for: %s.\n", name);
 	FunctionInfo* p;
-	eventId evId = Tau_gpu_create_gpu_event(name, gId, parent);
+	eventId evId = Tau_gpu_create_gpu_event(name, gId, parent, map);
 	Tau_gpu_register_memcpy_event(evId, start/1e3, stop/1e3, transferSize, MemcpyType);
 	//printf("released for: %s.\n", name);
 	release_callback();
@@ -324,10 +349,24 @@ void Tau_opencl_register_sync_event()
  while(!KernelBuffer.empty() 
  	 && buffer_front_is_complete())
  {
- 	 cl_ulong startTime, endTime;
+ 	 cl_ulong startTime, endTime, queuedTime, submitTime;
 
 	 callback_data* kernel_data = KernelBuffer.front();
 	 cl_int err;
+  err = clGetEventProfilingInfo_noinst(*kernel_data->event, CL_PROFILING_COMMAND_QUEUED,
+															 sizeof(cl_ulong), &queuedTime, NULL);
+	if (err != CL_SUCCESS)
+	{
+		printf("Cannot get queued time for Kernel event.\n");
+	  exit(1);	
+	}
+  err = clGetEventProfilingInfo_noinst(*kernel_data->event, CL_PROFILING_COMMAND_SUBMIT,
+															 sizeof(cl_ulong), &submitTime, NULL);
+	if (err != CL_SUCCESS)
+	{
+		printf("Cannot get submit time for Kernel event.\n");
+	  exit(1);	
+	}
 	 err = clGetEventProfilingInfo_noinst(*kernel_data->event, CL_PROFILING_COMMAND_START,
 																	 sizeof(cl_ulong), &startTime, NULL);
 		if (err != CL_SUCCESS)
@@ -343,19 +382,30 @@ void Tau_opencl_register_sync_event()
 			printf("Cannot get end time for Kernel event.\n");
 			exit(1);	
 		}
+		
+		//Add context events to gpu event.
+		TauGpuContextMap map;
+		static TauContextUserEvent *qt;
+		static TauContextUserEvent *st;
+		Tau_get_context_userevent((void**) &qt, "Time in Queue (us)");
+		Tau_get_context_userevent((void**) &st, "Time in Submitted (us)");
+		map[qt] = (startTime - queuedTime)/1e3;
+		map[st] = (startTime - submitTime)/1e3;
+		kernel_data->contextEventMap = &map;
+
 
 		if (kernel_data->isMemcpy())
 		{
 			//printf("TAU (opencl): isMemcpy kind: %d.\n", kernel_data->memcpy_type);
 			Tau_opencl_register_memcpy_event(kernel_data->name, kernel_data->id, (double) startTime,
 			(double) endTime, TAU_GPU_UNKNOW_TRANSFER_SIZE, kernel_data->memcpy_type,
-			kernel_data->callingSite);
+			kernel_data->callingSite, &map);
 		}
 		else
 		{
 			//printf("TAU (opencl): isKernel.\n");
 			Tau_opencl_register_gpu_event(kernel_data->name, kernel_data->id, (double) startTime,
-			(double) endTime, kernel_data->callingSite);
+			(double) endTime, kernel_data->callingSite, &map);
 		}
 		KernelBuffer.pop();
 
@@ -400,7 +450,7 @@ void CL_CALLBACK Tau_opencl_memcpy_callback(cl_event event, cl_int command_stat,
 	//printf("DtoH calling Tau_open.\n");
 	Tau_opencl_register_memcpy_event(memcpy_data->name, 0, (double) startTime,
 	(double) endTime, TAU_GPU_UNKNOW_TRANSFER_SIZE, memcpy_data->memcpy_type,
-	memcpy_data->callingSite);
+	memcpy_data->callingSite, NULL);
 	
 	free(data);
 }
@@ -431,8 +481,9 @@ void CL_CALLBACK Tau_opencl_kernel_callback(cl_event event, cl_int command_stat,
 	}
 		//printf("OpenCL.cpp: start timestamp: %.7f stop time %.7f.", (double) startTime, (double)endTime);
 	  //printf("in TauGpuAdapt name: %s.\n", kernel_data->name);
+
 		Tau_opencl_register_gpu_event(kernel_data->name, 0, (double) startTime,
-		(double) endTime, kernel_data->callingSite);
+		(double) endTime, kernel_data->callingSite, NULL);
 	free(data);
 }
 

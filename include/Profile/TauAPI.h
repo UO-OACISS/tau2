@@ -16,8 +16,9 @@
 #ifndef _TAU_API_H_
 #define _TAU_API_H_
 
+
 #ifdef TAU_ENABLED
-#include <stdint.h> /* uint64_t */
+#include <Profile/tau_types.h>
 
 #if (defined(TAU_WINDOWS))
 #pragma warning( disable : 4786 )
@@ -159,6 +160,7 @@ extern "C" {
 #define TAU_EVENT(event, data)			Tau_userevent(event, data);
 #define TAU_EVENT_THREAD(event, data, tid)				Tau_userevent_thread(event, data, tid)
 #define TAU_CONTEXT_EVENT(event, data)		Tau_context_userevent(event, data);
+#define TAU_CONTEXT_EVENT_THREAD(event, data, tid) Tau_context_userevent_thread(event, data, tid);
 #define TAU_EVENT_SET_NAME(event, name)	Tau_set_event_name(event, name); 	
 #define TAU_REPORT_STATISTICS()		Tau_report_statistics();
 #define TAU_REPORT_THREAD_STATISTICS()  Tau_report_thread_statistics();
@@ -224,6 +226,10 @@ extern "C" {
 #define TAU_PROFILE_SNAPSHOT(name)              Tau_profile_snapshot(name);
 #define TAU_PROFILE_SNAPSHOT_1L(name, expr)     Tau_profile_snapshot_1l(name, expr);
 #define TAU_METADATA(name, value)               Tau_metadata(name, value);
+#define TAU_METADATA_ITERATION(name,iteration,value) {char meta_buf[1024]; \
+        sprintf(meta_buf,"%s_|_%d",name,iteration); \
+        TAU_METADATA(meta_buf,value);}
+
 #define TAU_CONTEXT_METADATA(name, value)       Tau_context_metadata(name, value);
 #define TAU_PHASE_METADATA(name, value)         Tau_phase_metadata(name, value);
 
@@ -329,6 +335,7 @@ void Tau_get_exclusive_values(void *handle, double* values, int tid);
 void Tau_set_exclusive_values(void *handle, double* values, int tid);
 void Tau_get_counter_info(const char ***counterlist, int *numcounters);
 int TAUDECL Tau_get_tid(void);
+int TAUDECL Tau_create_tid(void);
 int TAUDECL Tau_get_node(void);
 int  Tau_create_task(void);
 void Tau_destructor_trigger();
@@ -413,8 +420,8 @@ void TAUDECL Tau_phase_metadata(char *name, char *value);
 void TAUDECL Tau_context_metadata(char *name, char *value);
 
 void TAUDECL Tau_Bg_hwp_counters_start(int *error); 
-void TAUDECL Tau_Bg_hwp_counters_stop(int* numCounters, uint64_t counters[], int* mode, int *error); 
-void TAUDECL Tau_Bg_hwp_counters_output(int* numCounters, uint64_t counters[], int* mode, int* error);
+void TAUDECL Tau_Bg_hwp_counters_stop(int* numCounters, x_uint64 counters[], int* mode, int *error); 
+void TAUDECL Tau_Bg_hwp_counters_output(int* numCounters, x_uint64 counters[], int* mode, int* error);
 
 void Tau_set_user_clock(double value);
 void Tau_set_user_clock_thread(double value, int tid);
@@ -445,6 +452,7 @@ void Tau_get_context_userevent(void **ptr, char *name);
 void Tau_userevent(void *event, double data);
 void Tau_userevent_thread(void *event, double data, int tid);
 void Tau_context_userevent(void *event, double data);
+void Tau_context_userevent_thread(void *event, double data, int tid);
 void Tau_set_event_name(void *event, char * name);
 void Tau_report_statistics(void);
 void Tau_report_thread_statistics(void);

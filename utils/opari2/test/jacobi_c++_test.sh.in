@@ -2,7 +2,8 @@
 set -e
 
 opari_dir=`pwd`
-test_dir="../test"
+test_dir="../test/tmp"
+mkdir -p ${test_dir}
 test_data_dir=@abs_srcdir@/data
 
 CXX="@CXX@"
@@ -17,10 +18,11 @@ CXXFLAGS="@CXXFLAGS@"
 
 rm -rf $test_dir/jacobi/C++
 mkdir -p $test_dir/jacobi/C++
-cp -r $test_data_dir/jacobi/C++/jacobi.cpp $test_dir/jacobi/C++
-cp -r $test_data_dir/jacobi/C++/jacobi.h $test_dir/jacobi/C++
-cp -r $test_data_dir/jacobi/C++/main.cpp $test_dir/jacobi/C++
-cp @abs_srcdir@/../src/pomp-lib-dummy/pomp2_lib.h  $test_dir/jacobi/C++/
+mkdir -p $test_dir/jacobi/C++/opari2
+cp -r $test_data_dir/jacobi/C++/jacobi.cpp    $test_dir/jacobi/C++/
+cp -r $test_data_dir/jacobi/C++/jacobi.h      $test_dir/jacobi/C++/
+cp -r $test_data_dir/jacobi/C++/main.cpp      $test_dir/jacobi/C++/
+cp @abs_srcdir@/../include/opari2/pomp2_lib.h $test_dir/jacobi/C++/opari2/
 
 cd $test_dir/jacobi/C++
 #make instrument
@@ -32,7 +34,7 @@ $CXX -I$INCDIR $OPENMP $CXXFLAGS -c main.mod.cpp
 $CXX -I$INCDIR $OPENMP $CXXFLAGS -c jacobi.mod.cpp
 
 #make build
-@NM@ jacobi.mod.o main.mod.o | @EGREP@ -i "T \.{0,1}_{0,2}pomp2_init_regions" | `$OPARI2_CONFIG --awk_cmd` -f `$OPARI2_CONFIG --awk_script` > pomp_init_file.c
+@NM@ jacobi.mod.o main.mod.o | @EGREP@ -i "T \.{0,1}_{0,2}pomp2_init_regions" | `$OPARI2_CONFIG --awk-cmd` -f `$OPARI2_CONFIG --awk-script` > pomp_init_file.c
 $CC -I$INCDIR  -c pomp_init_file.c
 $CXX $OPENMP $CXXFLAGS pomp_init_file.o jacobi.mod.o main.mod.o $LDFLAGS -o jacobi.$EXEEXT
 

@@ -75,14 +75,14 @@ int main() {
   POMP2_Barrier_exit( &pomp2_region_4, pomp2_old_task ); }
 #line 47 "test2.c"
 
-    { POMP2_For_enter( &pomp2_region_5, "53*regionType=for*sscl=test2.c:48:48*escl=test2.c:0:0**" );
+    { POMP2_For_enter( &pomp2_region_5, "66*regionType=for*sscl=test2.c:48:48*escl=test2.c:0:0*hasOrdered=1**" );
 #line 48 "test2.c"
    #pragma omp for ordered nowait
    for(i=0; i<4; ++i) {
-    { POMP2_Ordered_begin( &pomp2_region_6, "57*regionType=ordered*sscl=test2.c:50:50*escl=test2.c:0:0**" );
+    { POMP2_Ordered_enter( &pomp2_region_6, "57*regionType=ordered*sscl=test2.c:50:50*escl=test2.c:0:0**" );
 #line 50 "test2.c"
-     #pragma omp ordered POMP2_DLIST_00006
-{   POMP2_Ordered_enter( &pomp2_region_6 );
+     #pragma omp ordered
+{   POMP2_Ordered_begin( &pomp2_region_6 );
 #line 51 "test2.c"
      {
        printf("for %d\n", i);
@@ -211,16 +211,17 @@ int main() {
 {
   int pomp_if = 1;
 { POMP2_Task_handle pomp2_old_task;
-    POMP2_Task_create_begin( &pomp2_region_14, &pomp2_old_task, pomp_if, "54*regionType=task*sscl=test2.c:93:93*escl=test2.c:0:0**" );
+  POMP2_Task_handle pomp2_new_task;
+    if (pomp_if) POMP2_Task_create_begin( &pomp2_region_14, &pomp2_new_task, &pomp2_old_task, pomp_if, "54*regionType=task*sscl=test2.c:93:93*escl=test2.c:0:0**" );
 #line 93 "test2.c"
-   #pragma omp task POMP2_DLIST_00014 if(pomp_if) firstprivate(pomp2_old_task)
-{   POMP2_Task_begin( &pomp2_region_14, pomp2_old_task );
+   #pragma omp task POMP2_DLIST_00014 if(pomp_if) firstprivate(pomp2_new_task, pomp_if)
+{ if (pomp_if)  POMP2_Task_begin( &pomp2_region_14, pomp2_new_task );
 #line 94 "test2.c"
    {
      printf("task\n");
    }
-  POMP2_Task_end( &pomp2_region_14 ); }
-  POMP2_Task_create_end( &pomp2_region_14, pomp2_old_task ); }
+if (pomp_if)  POMP2_Task_end( &pomp2_region_14 ); }
+if (pomp_if)  POMP2_Task_create_end( &pomp2_region_14, pomp2_old_task ); }
 }
 #line 97 "test2.c"
 

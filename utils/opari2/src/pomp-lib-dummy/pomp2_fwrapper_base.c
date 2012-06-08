@@ -37,7 +37,7 @@
 #include <stdlib.h>
 
 #include "pomp2_fwrapper_base.h"
-#include "pomp2_lib.h"
+#include <opari2/pomp2_lib.h>
 #include "pomp2_fwrapper_def.h"
 
 extern int pomp2_tracing;

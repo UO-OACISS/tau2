@@ -198,7 +198,9 @@ unify_merge_object_t *Tau_unify_mergeObjects(vector<unify_object_t*> &objects) {
     }
  
     // the next string is given in nextString at this point
-    mergedObject->strings.push_back(nextString);
+    if (nextString != NULL) {
+      mergedObject->strings.push_back(nextString);
+    }
 
     finished = true;
 
@@ -215,8 +217,10 @@ unify_merge_object_t *Tau_unify_mergeObjects(vector<unify_object_t*> &objects) {
 	}
       }
     }
-
-    count++;
+    
+    if (nextString != NULL) {
+      count++;
+    }
   }
 
   mergedObject->numStrings = count;
@@ -274,14 +278,18 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
 	int recv_buflen;
 	PMPI_Recv(&recv_buflen, 1, MPI_INT, source, 0, MPI_COMM_WORLD, &status);
 
-	// allocate buffer
-	char *recv_buf = (char *) TAU_UTIL_MALLOC(recv_buflen);
-
-	// receive buffer
-	PMPI_Recv(recv_buf, recv_buflen, MPI_CHAR, source, 0, MPI_COMM_WORLD, &status);
-
-	// add unification object to array
-	unifyObjects->push_back(Tau_unify_processBuffer(recv_buf, source));
+	// Only receive and allocate memory if there's something to receive.
+	//   Note that this condition only applies to Atomic events.
+	if (recv_buflen > 0) {
+	  // allocate buffer
+	  char *recv_buf = (char *) TAU_UTIL_MALLOC(recv_buflen);
+	  
+	  // receive buffer
+	  PMPI_Recv(recv_buf, recv_buflen, MPI_CHAR, source, 0, MPI_COMM_WORLD, &status);
+	  
+	  // add unification object to array
+	  unifyObjects->push_back(Tau_unify_processBuffer(recv_buf, source));
+	}
       }
 
     } else {
@@ -305,9 +313,12 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
       // send length
       PMPI_Send(&defBufSize, 1, MPI_INT, parent, 0, MPI_COMM_WORLD);
       
-      // send data
-      PMPI_Send(defBuf, defBufSize, MPI_CHAR, parent, 0, MPI_COMM_WORLD);
-
+      // Send data only if the buffer size is greater than 0.
+      //   This applies only to Atomic events.
+      if (defBufSize > 0) {
+	// send data
+	PMPI_Send(defBuf, defBufSize, MPI_CHAR, parent, 0, MPI_COMM_WORLD);
+      }
       break;
     }
     mask <<= 1;
@@ -373,7 +384,7 @@ Tau_unify_object_t *Tau_unify_unifyEvents(EventLister *eventLister) {
   // the local object
   unify_object_t *object = (*unifyObjects)[0];
 
-  MPI_Bcast (&globalNumItems, 1, MPI_INT, 0, MPI_COMM_WORLD);
+  PMPI_Bcast (&globalNumItems, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
   Tau_unify_object_t *tau_unify_object = (Tau_unify_object_t*) TAU_UTIL_MALLOC(sizeof(Tau_unify_object_t));
   tau_unify_object->globalNumItems = globalNumItems;
@@ -437,7 +448,7 @@ extern "C" int TauGetMpiRank(void)
 {
   int rank;
 
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   return rank;
 }
 #else /* !TAU_MPI */

@@ -93,6 +93,8 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
 
     // normalized or not
     private boolean normalized = true;
+    
+    
 
     // single line means that the bars go along one line
     // the comparison window is the only one not using singleLine
@@ -604,10 +606,14 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
                         } else {
                             if (value < 0) { // negative means no value
                                 subDrawObjects.add(null);
-                            } else if (length < threshold) {
-                                subDrawObjects.add(null);
-                                otherValue += value;
-                            } else {
+                            } 
+                            //Disabling this shows a distinct line for every event that exists and gets a column of its own, rather than dividing an event between its own column and 'other'.
+//                            else if (length < threshold) {
+//                                subDrawObjects.add(null);
+//                                otherValue += value;
+//                            } 
+                            
+                            else {
 
                                 if (i == mouseCol) {
                                     color = lighter(color);
@@ -921,6 +927,8 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
         this.normalized = normalized;
         this.preferredSizeSet = false;
     }
+    
+
 
     public boolean getStacked() {
         return stacked;

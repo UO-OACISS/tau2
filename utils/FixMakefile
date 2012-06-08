@@ -87,25 +87,30 @@ case $1 in
 	echo "s,^BFDINCLUDE=.*$,BFDINCLUDE=$bfdinclude,g" >> $sedout
 	;;
 
-     ebs_unwind_flag=*)
-       ebs_unwind_flag=`echo $1 | sed -e 's/^ebs_unwind_flag=//'`
-        echo "s,^EBS_UNWIND_FLAG=.*$,EBS_UNWIND_FLAG=$ebs_unwind_flag,g" >> $sedout
+     unwind_flag=*)
+       unwind_flag=`echo $1 | sed -e 's/^unwind_flag=//'`
+        echo "s,^UNWIND_FLAG=.*$,UNWIND_FLAG=$unwind_flag,g" >> $sedout
         ;;
 
-     ebs_unwind_inc=*)
-       ebs_unwind_inc=`echo $1 | sed -e 's/^ebs_unwind_inc=//'`
-        echo "s,^EBS_UNWIND_INC=.*$,EBS_UNWIND_INC=$ebs_unwind_inc,g" >> $sedout
+     unwind_inc=*)
+       unwind_inc=`echo $1 | sed -e 's/^unwind_inc=//'`
+        echo "s,^UNWIND_INC=.*$,UNWIND_INC=$unwind_inc,g" >> $sedout
         ;;
 
-     ebs_unwind_lib=*)
-        ebs_unwind_lib=`echo $1 | sed -e 's/^ebs_unwind_lib=//'`
-        echo "s,^EBS_UNWIND_LIB=.*$,EBS_UNWIND_LIB=$ebs_unwind_lib,g" >> $sedout
+     unwind_lib=*)
+        unwind_lib=`echo $1 | sed -e 's/^unwind_lib=//'`
+        echo "s,^UNWIND_LIB=.*$,UNWIND_LIB=$unwind_lib,g" >> $sedout
         ;;
 
-     ebs_unwind_lib_flag=*)
-        ebs_unwind_lib_flag=`echo $1 | sed -e 's/^ebs_unwind_lib_flag=//'`
-       echo "s,^EBS_UNWIND_LIB_FLAG=.*$,EBS_UNWIND_LIB_FLAG=$ebs_unwind_lib_flag,g" >> $sedout
+     unwind_lib_flag=*)
+        unwind_lib_flag=`echo $1 | sed -e 's/^unwind_lib_flag=//'`
+       echo "s,^UNWIND_LIB_FLAG=.*$,UNWIND_LIB_FLAG=$unwind_lib_flag,g" >> $sedout
         ;;
+
+     unwind_extras=*)
+        unwind_extras=`echo $1 | sed -e 's/^unwind_extras=//' -e 's/#/ /g'`
+	echo "s,^UNWIND_EXTRAS=.*$,UNWIND_EXTRAS=$unwind_extras,g" >> $sedout
+	;;
 
      perfsuitelink=*)
         perfsuitelink=`echo $1 | sed -e 's/^perfsuitelink=//' -e 's/#/ /g'`
@@ -149,6 +154,11 @@ case $1 in
      oparidir=*)
         oparidir=`echo $1 | sed -e 's/^oparidir=//'`
 	echo "s,^OPARIDIR=.*$,OPARIDIR=$oparidir,g" >> $sedout
+	;;
+
+     oparicomp=*)
+        oparicomp=`echo $1 | sed -e 's/^oparicomp=//'`
+	echo "s,^OPARICOMP=.*$,OPARICOMP=$oparicomp,g" >> $sedout
 	;;
 
      scorepdir=*)
@@ -473,8 +483,16 @@ case $1 in
         echo NOTE: Using BFD support
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
-     TAU_EBS_UNWIND)
-        echo NOTE: Enabling EBS Stack Unwinding support
+     TAU_UNWIND)
+        echo NOTE: Enabling Stack Unwinding support
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     TAU_UNWIND_LIBUNWIND)
+        echo NOTE: Using libunwind Unwinder.
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     TAU_UNWIND_STACKWALKER)
+        echo NOTE: Using stackwalker API Unwinder
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      TAU_DEMANGLE)
@@ -803,12 +821,20 @@ case $1 in
 	echo NOTE: Building POSIX I/O wrapper
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     DMAPP)
+	echo NOTE: Building Cray DMAPP wrapper
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      ARMCI)
 	echo NOTE: Building ARMCI wrapper
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      KTAU)
 	echo NOTE: Using Kernel Profiling
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     KTAU_NG)
+	echo NOTE: Using New Generation Kernel Profiling - KTAU_NG
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      KTAU_MERGE)
@@ -885,6 +911,10 @@ case $1 in
         ;;
      SGIGNU)
 	echo NOTE: Using GNU C++ compiler on SGI
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     GNU46PLUS)
+	echo NOTE: Using fixes for GNU 4.6+ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CRAYCC)
@@ -1042,12 +1072,24 @@ case $1 in
 	echo "NOTE: *** Using gfortran. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     BGQ)
+	echo "NOTE: *** IBM BlueGene/Q development environment found. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     BGQ_GFORTRAN)
+	echo "NOTE: *** Using gfortran. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      ZEPTO_GFORTRAN)
 	echo "NOTE: *** Using ZeptoOS BGP gfortran. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      BGPPAPI)
 	echo "NOTE: *** IBM BlueGene/P PAPI found. ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     BGQPAPI)
+	echo "NOTE: *** IBM BlueGene/Q PAPI found. ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      T3D)
@@ -1247,6 +1289,10 @@ case $1 in
 	echo "NOTE: Using VAMPIRTRACE 5.7 API ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     VAMPIRTRACE_5_12_API)
+	echo "NOTE: Using VAMPIRTRACE 5.12 API ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      VAMPIRTRACEINTS)
 	echo "NOTE: Using -DTAU_64BITTYPES_NEEDED -DHAVE_INTTYPES_H for VampirTrace ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1321,7 +1367,15 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      UPCC)
-	echo "NOTE: Enabled UPC GASP support in TAU."
+	echo "NOTE: Enabled Berkeley UPC (upcc) GASP support in TAU."
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     GNU_UPC)
+	echo "NOTE: Enabled GNU UPC GASP support in TAU"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     CRAY_UPC)
+	echo "NOTE: Enabled Cray UPC support in TAU"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      KAI)
@@ -1345,6 +1399,10 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      BGPTIMERS)
+	echo "NOTE: Using IBM BlueGene/Q Fast Low-Overhead Timers for Profiling"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     BGQTIMERS)
 	echo "NOTE: Using IBM BlueGene/P Fast Low-Overhead Timers for Profiling"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
@@ -1684,12 +1742,18 @@ case $1 in
      INTEL10FIX)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     INTEL12FIX)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      COMPINST_GNU)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      COMPINST_CRAYCC)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     CRAYCNL_PAPI_SHARED)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      COMPINST_PGI)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;

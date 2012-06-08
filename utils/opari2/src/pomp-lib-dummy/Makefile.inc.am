@@ -5,7 +5,7 @@ if OPENMP_SUPPORTED
 noinst_LTLIBRARIES += libpomp.la
 libpomp_la_SOURCES =                                    \
     $(SRC_ROOT)src/pomp-lib-dummy/pomp2_lib.c           \
-    $(SRC_ROOT)src/pomp-lib-dummy/pomp2_lib.h           \
+    $(PUBLIC_INC_SRC)pomp2_lib.h                        \
     $(SRC_ROOT)src/pomp-lib-dummy/pomp2_region_info.c   \
     $(SRC_ROOT)src/pomp-lib-dummy/pomp2_region_info.h
 
@@ -15,7 +15,7 @@ libpomp_la_SOURCES =                                    \
 
 # CFLAGS are sufficient here, CPPFLAGS would cause duplication
 libpomp_la_CFLAGS   = $(AM_CFLAGS) $(OPENMP_CFLAGS)
-
+libpomp_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(PUBLIC_INC_DIR)
 
 
 if SCOREP_HAVE_F77 

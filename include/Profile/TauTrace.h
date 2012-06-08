@@ -27,8 +27,8 @@
 
 /* TAU tracer events */
 #define TAU_EV_INIT         60000
-#define TAU_EV_FLUSH_ENTER  60001
-#define TAU_EV_FLUSH_EXIT   60002
+#define TAU_EV_FLUSH        60001
+//#define TAU_EV_FLUSH_EXIT   60002
 #define TAU_EV_CLOSE        60003
 #define TAU_EV_INITM        60004
 #define TAU_EV_WALL_CLOCK   60005
