@@ -1227,11 +1227,13 @@ int Tau_sampling_init(int tid) {
    //int alarmType = SIGALRM;
  */
 
-  // int which = ITIMER_PROF;
-  // int alarmType = SIGPROF;
-
+#if defined(PTHREADS) || defined(TAU_OPENMP)
+  int which = ITIMER_PROF;
+  int alarmType = SIGPROF;
+#else
   int which = ITIMER_REAL;
   int alarmType = SIGALRM;
+#endif
   
   /*  *CWL* - NOTE: It is fine to establish the timer interrupts here
       (and the PAPI overflow interrupts elsewhere) only because we
@@ -1384,6 +1386,17 @@ extern "C" void Tau_sampling_init_if_necessary(void) {
 extern "C" void Tau_sampling_finalize_if_necessary(void) {
   static bool finalized = false;
   static bool thrFinalized[TAU_MAX_THREADS];
+
+/* Kevin: before wrapping things up, stop listening to signals. */
+  sigset_t x;
+  sigemptyset(&x);
+  sigaddset(&x, SIGPROF);
+  sigaddset(&x, SIGALRM);
+#if defined(PTHREADS) || defined(TAU_OPENMP)
+  pthread_sigmask(SIG_BLOCK, &x, NULL);
+#else
+  sigprocmask(SIG_BLOCK, &x, NULL);
+#endif
 
   if (!finalized) {
     RtsLayer::LockEnv();
