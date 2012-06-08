@@ -374,7 +374,7 @@ for arg in "$@"; do
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
     echo "-tag=<unique name> ........ Specify a tag to identify the installation."
     echo "-TRACE ..................................... Generate TAU event traces."
-    echo "-MPITRACE ... Generate event traces for MPI events and their ancestors."
+#    echo "-MPITRACE ... Generate event traces for MPI events and their ancestors."
     echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
     echo "-PROFILECALLPATH ......................... Generate call path profiles."
     echo "-PROFILEPARAM .... Generate profiles with parameter mapped event data ."
@@ -509,7 +509,7 @@ for arg in "$@"; do
     echo "-stff=<dir> .... Location of RENCI Scalable Time-series filter library."
     echo "-sddf=<dir> ...... SDDF library location; Only required for RENCI STFF."
     echo "-TRACE ..................................... Generate TAU event traces."
-    echo "-MPITRACE ... Generate event traces for MPI events and their ancestors."
+#    echo "-MPITRACE ... Generate event traces for MPI events and their ancestors."
     echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
     echo "-PROFILECALLPATH ......................... Generate call path profiles."
     echo "-PROFILEPARAM .... Generate profiles with parameter mapped event data ."
@@ -2095,6 +2095,11 @@ case $machine in
 	gunzip -c tools/src/contrib/jogl/arm_linux/libjogl.so.gz > $JARTARGET/libjogl.so
 	gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_awt.so.gz > $JARTARGET/libjogl_awt.so
 	gunzip -c tools/src/contrib/jogl/arm_linux/libjogl_drihack.so.gz > $JARTARGET/libjogl_drihack.so
+        if [ ! -r /usr/lib/libGL.so.1 ]
+        then
+	  echo "NOTE: Did not find OpenGL library, copying TAU's Mesa libGL.so.1 to arm_linux/lib directory"
+	  gunzip -c tools/src/contrib/jogl/arm_linux/libGL.so.1.gz > $JARTARGET/libGL.so.1
+        fi
 
 	;;
     
@@ -6529,6 +6534,11 @@ if [ $scorep = yes ] ; then
     fixmakeargs="$fixmakeargs scorepmpilibs=$scorepLibs"
     fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"
     fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/scorep"
+
+if [ $phase = yes ] ; then
+     echo "********scorep and phase are on"
+fi
+
 fi
 
 if [ $epilog = yes ] ; then

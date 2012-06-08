@@ -752,6 +752,12 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 	public void handleDelete(Object object) throws SQLException,
 	DatabaseException {
 
+		int confirm = JOptionPane.showConfirmDialog(tree, "Are you sure you want to permanently delete this item?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
+		
+		if(confirm!=0){
+			return;
+		}
+		
 		if (object instanceof TreePath[]) {
 			TreePath[] paths = (TreePath[]) object;
 			for (int i = 0; i < paths.length; i++) {
