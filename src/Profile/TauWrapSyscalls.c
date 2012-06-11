@@ -131,7 +131,9 @@ pid_t fork(void) {
 
   if (pid_ret == 0) {
     TAU_REGISTER_FORK(getpid(), TAU_EXCLUDE_PARENT_DATA);
+    //TAU_REGISTER_FORK(getpid(), TAU_INCLUDE_PARENT_DATA);
 
+#if 0
    int catch_fork = TauEnv_get_child_forkdirs();
    if(catch_fork!=0)
    {
@@ -155,6 +157,7 @@ pid_t fork(void) {
     setenv("PROFILEDIR",newdirname,1);
     setenv("TRACEDIR",newdirname,1);
    }
+#endif
     dprintf ("[%d] Registered Fork!\n", getpid());
    
   }
@@ -163,6 +166,64 @@ pid_t fork(void) {
 }
 #endif /* TAU_DISABLE_SYSCALL_WRAPPER */
 
+
+/////////////////////////////////////////////////////////////////////////
+// Define the clone wrapper
+/////////////////////////////////////////////////////////////////////////
+
+#if 0
+#ifndef TAU_DISABLE_SYSCALL_WRAPPER
+typedef struct tau_wrapper_child_call {
+  int (*child_function)(void*);
+  void *child_argument;
+} TAU_WRAPPER_CHILD_CALL;
+
+int tau_clone_child_wrapper(void *arg) {
+// cast the arg to our data structure
+  TAU_WRAPPER_CHILD_CALL *signature = (TAU_WRAPPER_CHILD_CALL*)(arg);
+// get the data inside the structure (so we can later free the signature object)
+  int (*child_function)(void*) = signature->child_function;
+  void *child_argument = signature->child_argument;
+// free the allocated signature object
+  free(arg);
+// tell tau that this is a new process/thread/whatever
+  TAU_REGISTER_FORK(getpid(), TAU_EXCLUDE_PARENT_DATA);
+// call the child function
+  dprintf("WRAPPER: child_argument: %d\n", child_argument);
+  int retval = child_function(child_argument);
+  dprintf("WRAPPER: done!\n");
+// in case the child process did not exit, dump the profile
+  TAU_DB_DUMP_PREFIX("profile");
+  return(retval);
+}
+
+
+pid_t clone (int (*a1) (void *a2), void *a3, int a4, void *a2, ...) {
+// can we safely ignore the variable arguments?
+  static int (*_clone) (int (*a1) (void *a2), void *a3,
+                  int a4, void *a2, ...) = NULL;
+
+  pid_t pid_ret;
+
+  if (_clone == NULL) {
+    _clone = (int (*) (int (*a1) (void *a2), void *a3, int a4, void *a2, ...)) dlsym(RTLD_NEXT, "clone");
+  }
+
+// we have to wrap the child call, in order to register the fork and
+// record the correct process id
+  TAU_WRAPPER_CHILD_CALL *signature = (TAU_WRAPPER_CHILD_CALL*)(malloc(sizeof(TAU_WRAPPER_CHILD_CALL)));
+  signature->child_function = a1;
+  signature->child_argument = a2;
+
+// now call the system clone function
+  TAU_VERBOSE("TAU: Clone Wrapper");
+  dprintf("TAU: calling _clone \n");
+  pid_ret = (*_clone)(tau_clone_child_wrapper, a3, a4, signature);
+  dprintf("CLONE: pid_ret: %d\n", pid_ret);
+
+}
+#endif /* TAU_DISABLE_SYSCALL_WRAPPER */
+#endif
 
 /////////////////////////////////////////////////////////////////////////
 // Define the kill wrapper
