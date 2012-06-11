@@ -271,13 +271,15 @@ unsigned long get_pc(void *p) {
 extern "C" void Tau_sampling_suspend(int tid) {
   //  int tid = RtsLayer::myThread();
   suspendSampling[tid] = 1;
-  TAU_VERBOSE("Tau_sampling_suspend: on thread %d\n", tid);
+  //int nid = RtsLayer::myNode();
+  //TAU_VERBOSE("Tau_sampling_suspend: on thread %d:%d\n", nid, tid);
 }
 
 extern "C" void Tau_sampling_resume(int tid) {
   //  int tid = RtsLayer::myThread();
   suspendSampling[tid] = 0;
-  TAU_VERBOSE("Tau_sampling_resume: on thread %d\n", tid);
+  //int nid = RtsLayer::myNode();
+  //TAU_VERBOSE("Tau_sampling_resume: on thread %d:%d\n", nid, tid);
 }
 
 extern "C" void Tau_sampling_dlopen() {
@@ -796,7 +798,7 @@ void Tau_sampling_finalizeProfile(int tid) {
       */
       candidate->sampleCount = item->second;
       candidate->tauContext = parentTauContext;
-      //      printf("TESTING: context name [%s] has SAMPLES\n", candidate->tauContext->GetName());
+      TAU_VERBOSE("%d:%d TESTING: context name [%s] has SAMPLES\n", RtsLayer::myNode(), tid, candidate->tauContext->GetName());
       candidates->push_back(candidate);
       delete item;
       item = parentTauContext->pathHistogram[tid]->nextIter();
@@ -1014,7 +1016,7 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
   Tau_global_incr_insideTAU_tid(tid);
 
   // *CWL* - Too "noisy" and useless a verbose output.
-  //TAU_VERBOSE("[tid=%d] EBS profile sample with pc %p\n", tid, (unsigned long)pc);
+  TAU_VERBOSE("[tid=%d] EBS profile sample with pc %p\n", tid, (unsigned long)pc);
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
   FunctionInfo *samplingContext;
 
@@ -1056,7 +1058,7 @@ void Tau_sampling_event_start(int tid, void **addresses) {
 
   Tau_global_incr_insideTAU_tid(tid);
 
-  TAU_VERBOSE("Tau_sampling_event_start: tid = %d address = %p\n", tid, addresses);
+  //TAU_VERBOSE("Tau_sampling_event_start: tid = %d address = %p\n", tid, addresses);
 
   //#ifdef TAU_USE_HPCTOOLKIT
   //  Tau_sampling_event_startHpctoolkit(tid, addresses);
@@ -1148,7 +1150,7 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *context) {
   unsigned long pc;
   pc = get_pc(context);
 
-  //   TAU_VERBOSE("Tau_sampling_handler invoked\n");
+  //TAU_VERBOSE("Tau_sampling_handler invoked\n");
   Tau_sampling_handle_sample((void *)pc, (ucontext_t *)context);
 }
 
@@ -1391,7 +1393,7 @@ extern "C" void Tau_sampling_finalize_if_necessary(void) {
   sigset_t x;
   sigemptyset(&x);
   sigaddset(&x, SIGPROF);
-  sigaddset(&x, SIGALRM);
+  //sigaddset(&x, SIGALRM);
 #if defined(PTHREADS) || defined(TAU_OPENMP)
   pthread_sigmask(SIG_BLOCK, &x, NULL);
 #else
@@ -1411,12 +1413,15 @@ extern "C" void Tau_sampling_finalize_if_necessary(void) {
     RtsLayer::UnLockEnv();
   }
 
-  int myTid = RtsLayer::myThread();
-
-  if (!thrFinalized[myTid]) {
-    //    printf("Sampling thread %d finalizing!\n", myTid);
-    Tau_sampling_finalize(myTid);
-    thrFinalized[myTid] = true;
+  //int myTid = RtsLayer::myThread();
+// Kevin: should we finalize all threads on this process? I think so.
+  for (int i = 0; i < RtsLayer::getTotalThreads(); i++) {
+    int myTid = i;
+    if (!thrFinalized[myTid]) {
+      TAU_VERBOSE("Sampling thread %d finalizing!\n", myTid);
+      Tau_sampling_finalize(myTid);
+      thrFinalized[myTid] = true;
+    }
   }
 }
 
