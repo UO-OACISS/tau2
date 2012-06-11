@@ -3351,8 +3351,8 @@ case $cxx_compiler in
 #       be set appropriately to account for libgmp.so.10
 #	    cxx_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicxx
 #	    c_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicc
-	    cxx_compiler=/bgsys/drivers/ppcfloor/comm/bin/mpicxx
-	    c_compiler=/bgsys/drivers/ppcfloor/comm/bin/mpicc
+	    cxx_compiler=/bgsys/drivers/ppcfloor/comm/xl/bin/mpicxx
+	    c_compiler=/bgsys/drivers/ppcfloor/comm/xl/bin/mpicc
 	    tauoptions="${tauoptions}-gnu"
 	else
 	    echo "ERROR Unknown C++ compiler: $cxx_compiler"
@@ -3623,7 +3623,7 @@ then
 	mpiinc=/bgl/BlueLight/ppcfloor/bglsys/include
         ;;
   bgp)
-	mpiinc=/bgsys/drivers/ppcfloor/comm/include
+	mpiinc=/bgsys/drivers/ppcfloor/comm/xl/include
         ;;
   bgq)
 	mpiinc=/bgsys/drivers/ppcfloor/comm/xl/include
@@ -3754,7 +3754,7 @@ then
 	additional_mpilibs='-lmsglayer.rts -ldevices.rts -lrts.rts -ldevices.rts'
         ;;
   bgp)
-        mpilib=/bgsys/drivers/ppcfloor/comm/lib
+        mpilib=/bgsys/drivers/ppcfloor/comm/xl/lib
 	additional_mpilibs='-ldcmfcoll.cnk -ldcmf.cnk -lpthread -L/bgsys/drivers/ppcfloor/runtime/SPI -lSPI.cna' 
 	;;
   bgq)
