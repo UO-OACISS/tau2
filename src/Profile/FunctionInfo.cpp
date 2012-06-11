@@ -545,6 +545,7 @@ void FunctionInfo::addPcSample(unsigned long *pcStack, int tid) {
   }
   // Add to the mmap-ed histogram. We start with a temporary conversion. This
   //   becomes unnecessary once we stop using the vector.
+  TAU_VERBOSE("TAU<%d,%d>: addPcSample()\n", RtsLayer::myNode(), RtsLayer::myThread());
   unsigned long *count;
   count = pathHistogram[tid]->get(pcStack);
   if (count == NULL) {
