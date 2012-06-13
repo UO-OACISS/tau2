@@ -65,13 +65,14 @@ using std::exit;
 #include "handler.h"
 
 string pomp_tpd;
-bool   copytpd        = false;
-bool   task_abort     = false;
-bool   task_warn      = false;
-bool   task_remove    = false;
-bool   untied_abort   = false;
-bool   untied_keep    = false;
-bool   untied_no_warn = false;
+bool   copytpd             = false;
+bool   task_abort          = false;
+bool   task_warn           = false;
+bool   task_remove         = false;
+bool   untied_abort        = false;
+bool   untied_keep         = false;
+bool   untied_no_warn      = false;
+bool   tpd_in_extern_block = false;
 
 namespace
 {
@@ -116,7 +117,7 @@ main( int   argc,
     char*       infile        = 0;
     const char* disabled      = 0;
     pomp_tpd = SCOREP_STR( POMP_TPD_MANGLED );
-    int         retval = gettimeofday( &compiletime, NULL );
+    int retval = gettimeofday( &compiletime, NULL );
     assert( retval == 0 );
 
 
@@ -170,11 +171,13 @@ main( int   argc,
                      strcmp( tpd_arg, "intel" ) == 0 || strcmp( tpd_arg, "pgi" ) == 0 ||
                      strcmp( tpd_arg, "cray" )  == 0 )
                 {
-                    pomp_tpd = "pomp_tpd_";
+                    pomp_tpd            = "pomp_tpd_";
+                    tpd_in_extern_block = false;
                 }
                 else if ( strcmp( tpd_arg, "ibm" ) == 0 )
                 {
-                    pomp_tpd = "pomp_tpd";
+                    pomp_tpd            = "pomp_tpd";
+                    tpd_in_extern_block = true;
                 }
                 else
                 {
@@ -304,11 +307,13 @@ main( int   argc,
                 a++;
                 if ( strcmp( argv[ a ], "gnu" ) == 0 || strcmp( argv[ a ], "sun" ) == 0 || strcmp( argv[ a ], "intel" ) == 0 || strcmp( argv[ a ], "pgi" ) == 0 || strcmp( argv[ a ], "cray" ) == 0 )
                 {
-                    pomp_tpd = "pomp_tpd_";
+                    pomp_tpd            = "pomp_tpd_";
+                    tpd_in_extern_block = false;
                 }
                 else if ( strcmp( argv[ a ], "ibm" ) == 0 )
                 {
-                    pomp_tpd = "pomp_tpd";
+                    pomp_tpd            = "pomp_tpd";
+                    tpd_in_extern_block = true;
                 }
                 else
                 {
@@ -497,25 +502,33 @@ main( int   argc,
     char* incfile       = 0;
     char* incfileNoPath = 0;
 
-    if ( lang & L_FORTRAN )
+    //if ( lang & L_FORTRAN )
+    //{
+    // only need base filename without path for include statement
+    // in Fortran files and if an output file without dir is used
+    const char* dirsep = strrchr( infile, '/' );
+    if ( dirsep )
     {
-        // only need base filename without path for include statement
-        // in Fortran files
-        const char* dirsep = strrchr( infile, '/' );
-        if ( dirsep )
-        {
-            incfileNoPath = new char[ strlen( dirsep ) + 12 ];
-            sprintf( incfileNoPath, "%s.opari.inc", dirsep + 1 );
-        }
-        else
-        {
-            incfileNoPath = new char[ strlen( infile ) + 13 ];
-            sprintf( incfileNoPath, "%s.opari.inc", infile );
-        }
+        incfileNoPath = new char[ strlen( dirsep ) + 12 ];
+        sprintf( incfileNoPath, "%s.opari.inc", dirsep + 1 );
     }
-
-    incfile = new char[ strlen( infile ) + 12 ];
-    sprintf( incfile, "%s.opari.inc", infile );
+    else
+    {
+        incfileNoPath = new char[ strlen( infile ) + 13 ];
+        sprintf( incfileNoPath, "%s.opari.inc", infile );
+    }
+    char* sep = strrchr( out_filename, '/' );
+    if ( sep )
+    {
+        incfile = new char[ ( sep - out_filename + 2 ) + strlen( incfileNoPath ) ];
+        strncpy( incfile, out_filename, ( sep - out_filename + 1 ) );
+        strncpy( incfile + ( sep - out_filename + 1 ), incfileNoPath, strlen( incfileNoPath ) + 1 );
+    }
+    else
+    {
+        incfile = new char[ strlen( incfileNoPath ) + 1 ];
+        strcpy( incfile, incfileNoPath );
+    }
 
     // transform
     do_transform = true;
