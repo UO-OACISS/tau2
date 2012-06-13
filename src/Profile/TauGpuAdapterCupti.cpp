@@ -107,7 +107,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 			{
 				FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->ThisFunction;
 				functionInfoMap[cbInfo->correlationId] = p;	
-				cuptiGpuId new_id = cuptiGpuId((uint32_t)0, cbInfo->contextUid, cbInfo->correlationId);
+				CuptiGpuEvent new_id = CuptiGpuEvent(TAU_GPU_USE_DEFAULT_NAME, (uint32_t)0, cbInfo->contextUid, cbInfo->correlationId, NULL, 0);
 				Tau_gpu_enter_memcpy_event(
 					cbInfo->functionName,
 					&new_id,
@@ -117,9 +117,10 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 			}
 			else
 			{
+				CuptiGpuEvent new_id = CuptiGpuEvent(TAU_GPU_USE_DEFAULT_NAME, (uint32_t)0, cbInfo->contextUid, cbInfo->correlationId, NULL, 0);
 				Tau_gpu_exit_memcpy_event(
 					cbInfo->functionName,
-					&cuptiGpuId((uint32_t)0, cbInfo->contextUid, cbInfo->correlationId),
+					&new_id,
 					getMemcpyType(kind)
 				);
 				if (function_is_sync(id))
@@ -244,10 +245,10 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			{
 				id = memcpy->correlationId;
 			}
-			cuptiGpuId gId = cuptiGpuId(memcpy->streamId, memcpy->contextId, id);
-			cuptiRecord cuRec = cuptiRecord(TAU_GPU_USE_DEFAULT_NAME, &gId, NULL); 
+			CuptiGpuEvent gId = CuptiGpuEvent(TAU_GPU_USE_DEFAULT_NAME, memcpy->streamId, memcpy->contextId, id, NULL, 0);
+			//cuptiGpuEvent cuRec = cuptiGpuEvent(TAU_GPU_USE_DEFAULT_NAME, &gId, NULL); 
 			Tau_gpu_register_memcpy_event(
-				cuRec,
+				&gId,
 				memcpy->start / 1e3, 
 				memcpy->end / 1e3, 
 				TAU_GPU_UNKNOW_TRANSFER_SIZE, 
@@ -261,7 +262,9 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       CUpti_ActivityKernel *kernel = (CUpti_ActivityKernel *)record;
 			//cerr << "recording kernel: " << kernel->name << ", " << kernel->end - kernel->start << "ns.\n" << endl;
 
-			TauGpuContextMap map;
+			GpuEventAttributes *map;
+			int map_size = 5;
+			map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
 			static TauContextUserEvent* bs;
 			static TauContextUserEvent* dm;
 			static TauContextUserEvent* sm;
@@ -272,14 +275,14 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			Tau_get_context_userevent((void **) &sm, "Shared Static Memory (bytes)");
 			Tau_get_context_userevent((void **) &lm, "Local Memory (bytes per thread)");
 			Tau_get_context_userevent((void **) &lr, "Local Registers (per thread)");
-			map[bs] = kernel->blockX * kernel->blockY * kernel->blockZ;
-			map[dm] = kernel->dynamicSharedMemory;
-			map[sm] = kernel->staticSharedMemory;
-			map[lm] = kernel->localMemoryPerThread;
-			map[lr] = kernel->registersPerThread;
+			map[0] = {bs, kernel->blockX * kernel->blockY * kernel->blockZ};
+			map[1] = {dm, kernel->dynamicSharedMemory};
+			map[2] = {sm, kernel->staticSharedMemory};
+			map[3] = {lm, kernel->localMemoryPerThread};
+			map[4] = {lr, kernel->registersPerThread};
 
 			const char* name;
-			int id;
+			uint32_t id;
 			if (cupti_api_runtime())
 			{
 				id = kernel->runtimeCorrelationId;
@@ -291,10 +294,10 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			}
 			name = demangleName(kernel->name);
 		  //cerr << "recording kernel on device: " << kernel->streamId << "/" << id << endl;
-			cuptiGpuId gId = cuptiGpuId(kernel->streamId, kernel->contextId, id);
-			cuptiRecord cuRec = cuptiRecord(name, &gId, &map);
+			CuptiGpuEvent gId = CuptiGpuEvent(name, kernel->streamId, kernel->contextId, id, map, map_size);
+			//cuptiGpuEvent cuRec = cuptiGpuEvent(name, &gId, &map);
 			Tau_gpu_register_gpu_event(
-				cuRec, 
+				&gId, 
 				kernel->start / 1e3,
 				kernel->end / 1e3);
 				
