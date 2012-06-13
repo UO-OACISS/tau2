@@ -119,8 +119,15 @@ OMPRegion::generate_header_cxx( ostream& os )
         os << "#include <stdint.h>\n";
         os << "extern \"C\" \n{\n";
         os << "extern int64_t " << MAKE_STR( FORTRAN_ALIGNED ) " " << pomp_tpd << ";\n";
+        if ( !tpd_in_extern_block )
+        {
+            os << "}\n";
+        }
         os << "#pragma omp threadprivate(" << pomp_tpd << ")\n";
-        os << "}\n";
+        if ( tpd_in_extern_block )
+        {
+            os << "}\n";
+        }
     }
 }
 /** @brief Generate a function to allow initialization of all ompregion handles for Fortran.
@@ -170,6 +177,7 @@ OMPRegion::generate_init_handle_calls_c( ostream& os )
     //int     retval = gettimeofday( &compiletime, NULL );
     //assert( retval == 0 );
 
+    os << "\n#ifdef __cplusplus \n extern \"C\" \n#endif";
     os << "\nvoid POMP2_Init_regions_"
        << compiletime.tv_sec << compiletime.tv_usec
        << "_" << OMPRegion::maxId << "()\n{\n"
