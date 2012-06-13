@@ -137,6 +137,7 @@ typedef struct {
 typedef struct {
   unsigned long *pcStack;
   unsigned int sampleCount;
+  double counters[TAU_MAX_COUNTERS];
   FunctionInfo *tauContext;
 } CallSiteCandidate;
 
@@ -179,6 +180,7 @@ int suspendSampling[TAU_MAX_THREADS];
 long long numSamples[TAU_MAX_THREADS];
 long long samplesDroppedTau[TAU_MAX_THREADS];
 long long samplesDroppedSuspended[TAU_MAX_THREADS];
+x_uint64 previousTimestamp[TAU_MAX_COUNTERS * TAU_MAX_THREADS];
 
 // *CWL* This technique does NOT work when you have to rely on tau_exec for initialization
 //   through the preload mechanism. Essentially, sampling initialization relies on
@@ -783,7 +785,7 @@ void Tau_sampling_finalizeProfile(int tid) {
 	   parentTauContext->pathHistogram[tid]->size());
     parentTauContext->pathHistogram[tid]->printTable();
     */
-    pair<unsigned long *, unsigned long> *item = NULL;
+    pair<unsigned long *, TauPathAccumulator> *item = NULL;
     parentTauContext->pathHistogram[tid]->resetIter();
     item = parentTauContext->pathHistogram[tid]->nextIter();
     while (item != NULL) {
@@ -796,9 +798,10 @@ void Tau_sampling_finalizeProfile(int tid) {
       }
       printf("\n");
       */
-      candidate->sampleCount = item->second;
+      candidate->sampleCount = item->second.count;
+      candidate->counters[0] = item->second.accumulator;
       candidate->tauContext = parentTauContext;
-      TAU_VERBOSE("%d:%d TESTING: context name [%s] has SAMPLES\n", RtsLayer::myNode(), tid, candidate->tauContext->GetName());
+      TAU_VERBOSE("%d:%d TESTING: context name [%s] has %d SAMPLES of value %f\n", RtsLayer::myNode(), tid, candidate->tauContext->GetName(), candidate->sampleCount, item->second.accumulator);
       candidates->push_back(candidate);
       delete item;
       item = parentTauContext->pathHistogram[tid]->nextIter();
@@ -846,7 +849,8 @@ void Tau_sampling_finalizeProfile(int tid) {
       ebsSourceMetricIndex = 0;
     }
     unsigned int binFreq = candidate->sampleCount;
-    metricValue = binFreq*TauEnv_get_ebs_period();
+    //metricValue = binFreq*TauEnv_get_ebs_period();
+    metricValue = candidate->counters[0];
 
     // *CWL* - BFD is thread unsafe.
     RtsLayer::LockDB();
@@ -1016,7 +1020,7 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
   Tau_global_incr_insideTAU_tid(tid);
 
   // *CWL* - Too "noisy" and useless a verbose output.
-  TAU_VERBOSE("[tid=%d] EBS profile sample with pc %p\n", tid, (unsigned long)pc);
+  //TAU_VERBOSE("[tid=%d] EBS profile sample with pc %p\n", tid, (unsigned long)pc);
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
   FunctionInfo *samplingContext;
 
@@ -1044,7 +1048,16 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
   } else {
     samplingContext = profiler->ThisFunction;
   }
-  samplingContext->addPcSample(pcStack, tid);
+  /* Get the current metric values */
+  double values[TAU_MAX_COUNTERS];
+  double deltaValues[TAU_MAX_COUNTERS];
+  TauMetrics_getMetrics(tid, values);
+  int localIndex = tid*TAU_MAX_COUNTERS;
+  for (int i = 0; i < Tau_Global_numCounters; i++) {
+    deltaValues[i] = values[i] - previousTimestamp[localIndex + i];
+    previousTimestamp[localIndex + i] = values[i];
+  }
+  samplingContext->addPcSample(pcStack, tid, deltaValues);
 
   Tau_global_decr_insideTAU_tid(tid);
 }
@@ -1293,6 +1306,18 @@ int Tau_sampling_init(int tid) {
       return -1;
     }
     TAU_VERBOSE("Tau_sampling_init: pid = %d, tid = %d Signals set up.\n", getpid(), tid);
+
+    // set up the base timers
+    double values[TAU_MAX_COUNTERS];
+    /* Get the current metric values */
+    TauMetrics_getMetrics(tid, values);
+    int localIndex = 0;
+    for (int x = 0; x < TAU_MAX_THREADS; x++) {
+      localIndex = x*TAU_MAX_COUNTERS;
+      for (int y = 0; y < Tau_Global_numCounters; y++) {
+        previousTimestamp[localIndex + y] = values[y];
+      }
+    }
   }
 
   samplingEnabled[tid] = 1;
