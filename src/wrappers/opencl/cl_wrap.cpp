@@ -1692,16 +1692,16 @@ cl_int clEnqueueCopyBuffer(cl_command_queue a1, cl_mem a2, cl_mem a3, size_t a4,
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-#ifdef TAU_ENABLE_CL_CALLBACK
-	OpenCLGpuEvent *mem_data = (OpenCLGpuEvent*) malloc(memcpy_data_size);
-	strcpy(mem_data->name, "CopyBuffer");
-	mem_data->memcpy_type = MemcpyDtoD;
 	if (a9 == NULL)
 	{
 		//printf("cl_event is null.\n");
 		cl_event* new_event = (cl_event*) malloc(sizeof(cl_event));
 		a9 = &(*new_event);
 	}
+#ifdef TAU_ENABLE_CL_CALLBACK
+	OpenCLGpuEvent *mem_data = (OpenCLGpuEvent*) malloc(memcpy_data_size);
+	strcpy(mem_data->name, "CopyBuffer");
+	mem_data->memcpy_type = MemcpyDtoD;
 	Tau_opencl_enter_memcpy_event("cl_int clEnqueueCopyBuffer(cl_command_queue, cl_mem, cl_mem, size_t, size_t, size_t, cl_uint, const cl_event *, cl_event *) C", 2, a6, MemcpyDtoD); 
 
   retval  =  (*clEnqueueCopyBuffer_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7,  a8,  a9);
