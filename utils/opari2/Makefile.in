@@ -814,7 +814,7 @@ prohibit-svn-files-in-dist:
 
 common-uninstall:
 	rm -rf $(DESTDIR)$(docdir)
-	rm -rf $(DESTDIR)$(datadir)/@PACKAGE_NAME@
+	rm -rf $(DESTDIR)$(datadir)/@PACKAGE@
 
 @SVN_CONTROLLED_TRUE@doxygen-user-install:
 
@@ -847,7 +847,7 @@ common-uninstall:
 @HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@doxygen-user: doxygen-project-number doc/doxygen-user/main.dox
 @HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	$(MKDIR_P) "$(USER_DOC_DIR)/tags"
 @HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	echo "OUTPUT_DIRECTORY = $(USER_DOC_DIR)" > doc/doxygen-user-at-make-time.cfg
-@HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	echo "GENERATE_TAGFILE = $(USER_DOC_DIR)/tags/@PACKAGE_NAME@.tag" >> doc/doxygen-user-at-make-time.cfg
+@HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	echo "GENERATE_TAGFILE = $(USER_DOC_DIR)/tags/@PACKAGE@.tag" >> doc/doxygen-user-at-make-time.cfg
 @HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	cat doc/doxygen-project-number.cfg doc/doxygen-user-at-make-time.cfg doc/doxygen-user-common.cfg doc/doxygen-user-component.cfg > doc/doxygen-user.cfg
 @HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	$(MKDIR_P) "$(USER_DOC_DIR)/html"
 @HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	cp $(abs_srcdir)/doc/images/* $(USER_DOC_DIR)/html
@@ -867,7 +867,7 @@ common-uninstall:
 @HAVE_DOXYGEN_LATEX_TRUE@@SVN_CONTROLLED_TRUE@	make;                     \
 @HAVE_DOXYGEN_LATEX_TRUE@@SVN_CONTROLLED_TRUE@	mv refman.pdf ../;        \
 @HAVE_DOXYGEN_LATEX_TRUE@@SVN_CONTROLLED_TRUE@	rm -f *;                  \
-@HAVE_DOXYGEN_LATEX_TRUE@@SVN_CONTROLLED_TRUE@	mv ../refman.pdf @PACKAGE_NAME@.pdf
+@HAVE_DOXYGEN_LATEX_TRUE@@SVN_CONTROLLED_TRUE@	mv ../refman.pdf @PACKAGE@.pdf
 
 @HAVE_DOXYGEN_LATEX_FALSE@@SVN_CONTROLLED_TRUE@doxygen-user-pdf: doxygen-user
 @HAVE_DOXYGEN_LATEX_FALSE@@SVN_CONTROLLED_TRUE@	echo "WARNING: pdflatex not available. Can not generate doxygen pdf documentation." >&2

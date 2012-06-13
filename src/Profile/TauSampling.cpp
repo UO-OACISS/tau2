@@ -137,6 +137,7 @@ typedef struct {
 typedef struct {
   unsigned long *pcStack;
   unsigned int sampleCount;
+  double counters[TAU_MAX_COUNTERS];
   FunctionInfo *tauContext;
 } CallSiteCandidate;
 
@@ -179,6 +180,13 @@ int suspendSampling[TAU_MAX_THREADS];
 long long numSamples[TAU_MAX_THREADS];
 long long samplesDroppedTau[TAU_MAX_THREADS];
 long long samplesDroppedSuspended[TAU_MAX_THREADS];
+// save the previous timestamp so that we can increment the accumulator
+// each time we get a sample
+x_uint64 previousTimestamp[TAU_MAX_COUNTERS * TAU_MAX_THREADS];
+
+// When we register our signal handler, we have to save any existing handler,
+// so that we can call it when we are done.
+static struct sigaction application_sa;
 
 // *CWL* This technique does NOT work when you have to rely on tau_exec for initialization
 //   through the preload mechanism. Essentially, sampling initialization relies on
@@ -777,13 +785,12 @@ void Tau_sampling_finalizeProfile(int tid) {
 		  parentTauContext->GetName());
       continue;
     }
-
     /*
     printf("Sampled Parent %s has %d elements\n", parentTauContext->GetName(),
 	   parentTauContext->pathHistogram[tid]->size());
     parentTauContext->pathHistogram[tid]->printTable();
     */
-    pair<unsigned long *, unsigned long> *item = NULL;
+    pair<unsigned long *, TauPathAccumulator> *item = NULL;
     parentTauContext->pathHistogram[tid]->resetIter();
     item = parentTauContext->pathHistogram[tid]->nextIter();
     while (item != NULL) {
@@ -796,9 +803,13 @@ void Tau_sampling_finalizeProfile(int tid) {
       }
       printf("\n");
       */
-      candidate->sampleCount = item->second;
+      candidate->sampleCount = item->second.count;
       candidate->tauContext = parentTauContext;
-      TAU_VERBOSE("%d:%d TESTING: context name [%s] has SAMPLES\n", RtsLayer::myNode(), tid, candidate->tauContext->GetName());
+      TAU_VERBOSE("Tau Context %s has %d samples.\n", candidate->tauContext->GetName(), candidate->sampleCount);
+      for (int i = 0 ; i < Tau_Global_numCounters ; i++) {
+        candidate->counters[i] = item->second.accumulator[i];
+        //TAU_VERBOSE("%s[%d] = %f ", candidate->tauContext->GetName(), i, item->second.accumulator[i]);
+      }
       candidates->push_back(candidate);
       delete item;
       item = parentTauContext->pathHistogram[tid]->nextIter();
@@ -835,7 +846,7 @@ void Tau_sampling_finalizeProfile(int tid) {
     // STEP 0: Set up the metric values based on the candidate 
     //         to eventually be assigned to various FunctionInfo
     //         entities.
-    double metricValue; 
+    //double metricValue; 
 
     // Determine the EBS_SOURCE metric index and update the appropriate
     //   sample approximations.
@@ -846,7 +857,8 @@ void Tau_sampling_finalizeProfile(int tid) {
       ebsSourceMetricIndex = 0;
     }
     unsigned int binFreq = candidate->sampleCount;
-    metricValue = binFreq*TauEnv_get_ebs_period();
+    //metricValue = binFreq*TauEnv_get_ebs_period();
+    //metricValue = candidate->counters[0];
 
     // *CWL* - BFD is thread unsafe.
     RtsLayer::LockDB();
@@ -913,8 +925,10 @@ void Tau_sampling_finalizeProfile(int tid) {
     // Accumulate the histogram into the Intermediate FunctionInfo objects.
     intermediatePathLeaf->SetCalls(tid, intermediatePathLeaf->GetCalls(tid)+binFreq);
     intermediateGlobalLeaf->SetCalls(tid, intermediateGlobalLeaf->GetCalls(tid)+binFreq);
-    intermediatePathLeaf->AddInclTimeForCounter(metricValue, tid, ebsSourceMetricIndex);
-    intermediateGlobalLeaf->AddInclTimeForCounter(metricValue, tid, ebsSourceMetricIndex);
+    for (int m = 0 ; m < Tau_Global_numCounters ; m++) {
+      intermediatePathLeaf->AddInclTimeForCounter(candidate->counters[m], tid, m);
+      intermediateGlobalLeaf->AddInclTimeForCounter(candidate->counters[m], tid, m);
+    }
 
     // STEP 3: For each sample, construct all FunctionInfo objects
     //    associated with the unwound addresses and the PC.
@@ -975,17 +989,20 @@ void Tau_sampling_finalizeProfile(int tid) {
       
       // Update the count and time for the end of the path for sampled event.
       samplePathLeaf->SetCalls(tid, samplePathLeaf->GetCalls(tid)+binFreq);
-      samplePathLeaf->AddInclTimeForCounter(metricValue, tid, ebsSourceMetricIndex);
-      // Exclusive times are only incremented for actual sample data 
-      //   and not unwound data
-      if (i == 0) {
-	samplePathLeaf->AddExclTimeForCounter(metricValue, tid, ebsSourceMetricIndex);
-      }
-      // Accumulate the count and time into the global leaf representative sampled event.
       sampleGlobalLeaf->SetCalls(tid, sampleGlobalLeaf->GetCalls(tid)+binFreq);
-      sampleGlobalLeaf->AddInclTimeForCounter(metricValue, tid, ebsSourceMetricIndex);
-      if (i == 0) {
-	sampleGlobalLeaf->AddExclTimeForCounter(metricValue, tid, ebsSourceMetricIndex);
+
+      for (int m = 0 ; m < Tau_Global_numCounters ; m++) {
+        samplePathLeaf->AddInclTimeForCounter(candidate->counters[m], tid, m);
+        // Exclusive times are only incremented for actual sample data 
+        //   and not unwound data
+        if (i == 0) {
+	  samplePathLeaf->AddExclTimeForCounter(candidate->counters[m], tid, m);
+        }
+        // Accumulate the count and time into the global leaf representative sampled event.
+        sampleGlobalLeaf->AddInclTimeForCounter(candidate->counters[m], tid, m);
+        if (i == 0) {
+	  sampleGlobalLeaf->AddExclTimeForCounter(candidate->counters[m], tid, m);
+        }
       }
     }
   }
@@ -1016,7 +1033,7 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
   Tau_global_incr_insideTAU_tid(tid);
 
   // *CWL* - Too "noisy" and useless a verbose output.
-  TAU_VERBOSE("[tid=%d] EBS profile sample with pc %p\n", tid, (unsigned long)pc);
+  //TAU_VERBOSE("[tid=%d] EBS profile sample with pc %p\n", tid, (unsigned long)pc);
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
   FunctionInfo *samplingContext;
 
@@ -1044,7 +1061,16 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
   } else {
     samplingContext = profiler->ThisFunction;
   }
-  samplingContext->addPcSample(pcStack, tid);
+  /* Get the current metric values */
+  double values[TAU_MAX_COUNTERS];
+  double deltaValues[TAU_MAX_COUNTERS];
+  TauMetrics_getMetrics(tid, values);
+  int localIndex = tid*TAU_MAX_COUNTERS;
+  for (int i = 0; i < Tau_Global_numCounters; i++) {
+    deltaValues[i] = values[i] - previousTimestamp[localIndex + i];
+    previousTimestamp[localIndex + i] = values[i];
+  }
+  samplingContext->addPcSample(pcStack, tid, deltaValues);
 
   Tau_global_decr_insideTAU_tid(tid);
 }
@@ -1152,6 +1178,24 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *context) {
 
   //TAU_VERBOSE("Tau_sampling_handler invoked\n");
   Tau_sampling_handle_sample((void *)pc, (ucontext_t *)context);
+
+  // now, apply the application's action.
+  if (&application_sa == NULL || application_sa.sa_handler == SIG_IGN) {
+    // if there is no handler, or the action is ignore
+    return;
+  } else if (application_sa.sa_handler == SIG_DFL) {
+    // do nothing, because we are only handling SIGPROF
+    // and if we do the "default", that would lead to termination.
+    return;
+  } else {
+    //TAU_VERBOSE("Executing the application's handler!\n");
+    // Invoke the application's handler.
+    if (application_sa.sa_flags & SA_SIGINFO) {
+      (*application_sa.sa_sigaction)(signum, si, context);
+    } else {
+      (*application_sa.sa_handler)(signum);
+    }
+  }
 }
 
 /*********************************************************************
@@ -1229,13 +1273,13 @@ int Tau_sampling_init(int tid) {
    //int alarmType = SIGALRM;
  */
 
-#if defined(PTHREADS) || defined(TAU_OPENMP)
+//#if defined(PTHREADS) || defined(TAU_OPENMP)
   int which = ITIMER_PROF;
   int alarmType = SIGPROF;
-#else
-  int which = ITIMER_REAL;
-  int alarmType = SIGALRM;
-#endif
+//#else
+  //int which = ITIMER_REAL;
+  //int alarmType = SIGALRM;
+//#endif
   
   /*  *CWL* - NOTE: It is fine to establish the timer interrupts here
       (and the PAPI overflow interrupts elsewhere) only because we
@@ -1270,7 +1314,12 @@ int Tau_sampling_init(int tid) {
     act.sa_sigaction = Tau_sampling_handler;
     act.sa_flags     = SA_SIGINFO|SA_RESTART;
     
-    ret = sigaction(alarmType, &act, NULL);
+    // initialize the application signal action, so we can apply it
+    // after we run our signal handler
+    memset(&application_sa, 0, sizeof(struct sigaction));
+    ret = sigemptyset(&application_sa.sa_mask);
+
+    ret = sigaction(alarmType, &act, &application_sa);
     if (ret != 0) {
       fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
       return -1;
@@ -1293,6 +1342,18 @@ int Tau_sampling_init(int tid) {
       return -1;
     }
     TAU_VERBOSE("Tau_sampling_init: pid = %d, tid = %d Signals set up.\n", getpid(), tid);
+
+    // set up the base timers
+    double values[TAU_MAX_COUNTERS];
+    /* Get the current metric values */
+    TauMetrics_getMetrics(tid, values);
+    int localIndex = 0;
+    for (int x = 0; x < TAU_MAX_THREADS; x++) {
+      localIndex = x*TAU_MAX_COUNTERS;
+      for (int y = 0; y < Tau_Global_numCounters; y++) {
+        previousTimestamp[localIndex + y] = values[y];
+      }
+    }
   }
 
   samplingEnabled[tid] = 1;
@@ -1407,6 +1468,8 @@ extern "C" void Tau_sampling_finalize_if_necessary(void) {
       //      printf("Sampling global finalizing!\n");
       for (int i=0; i<TAU_MAX_THREADS; i++) {
 	thrFinalized[i] = false;
+        // just in case, disable sampling.
+        samplingEnabled[i] == 0;
       }
       finalized = true;
     }
@@ -1424,6 +1487,5 @@ extern "C" void Tau_sampling_finalize_if_necessary(void) {
     }
   }
 }
-
 
 #endif //TAU_WINDOWS
