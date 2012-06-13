@@ -24,7 +24,7 @@
 #include <cstring>
 #include <cstdlib>
 using namespace std;
-int debugPrint = 1;
+int debugPrint = 0;
 int remoteThread = -1;
 bool multiThreaded = false;
 #define dprintf if (debugPrint) printf
