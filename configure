@@ -2663,8 +2663,12 @@ case $machine in
 
 	# unless specified, use g++
 	if [ $pdt_cxx_compiler = default ] ; then
-	    pdt_cxx_full_path=/usr/bin/g++
-	    pdt_cxx_compiler=/usr/bin/g++
+      # DO NOT SPECIFY THE PATH! If the user has compiled
+      # pdt with a different g++ than the one in /usr/bin, 
+      # problems will happen. TRUST that /usr/bin is in the
+      # user's path, and if not, they don't want that g++.
+      pdt_cxx_full_path=g++
+      pdt_cxx_compiler=g++
 	fi
     ;;
    hitachi)
