@@ -19,6 +19,9 @@ static POMP2_Region_handle pomp2_region_13 = NULL;
 static POMP2_Region_handle pomp2_region_14 = NULL;
 static POMP2_Region_handle pomp2_region_15 = NULL;
 
+#ifdef __cplusplus 
+ extern "C" 
+#endif
 void POMP2_Init_regions_000()
 {
     POMP2_Assign_handle( &pomp2_region_1, "60*regionType=parallel*sscl=test2.c:34:34*escl=test2.c:89:89**" );

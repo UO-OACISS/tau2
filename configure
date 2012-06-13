@@ -2663,8 +2663,12 @@ case $machine in
 
 	# unless specified, use g++
 	if [ $pdt_cxx_compiler = default ] ; then
-	    pdt_cxx_full_path=/usr/bin/g++
-	    pdt_cxx_compiler=/usr/bin/g++
+      # DO NOT SPECIFY THE PATH! If the user has compiled
+      # pdt with a different g++ than the one in /usr/bin, 
+      # problems will happen. TRUST that /usr/bin is in the
+      # user's path, and if not, they don't want that g++.
+      pdt_cxx_full_path=g++
+      pdt_cxx_compiler=g++
 	fi
     ;;
    hitachi)
@@ -3351,8 +3355,8 @@ case $cxx_compiler in
 #       be set appropriately to account for libgmp.so.10
 #	    cxx_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicxx
 #	    c_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicc
-	    cxx_compiler=/bgsys/drivers/ppcfloor/comm/bin/mpicxx
-	    c_compiler=/bgsys/drivers/ppcfloor/comm/bin/mpicc
+	    cxx_compiler=/bgsys/drivers/ppcfloor/comm/xl/bin/mpicxx
+	    c_compiler=/bgsys/drivers/ppcfloor/comm/xl/bin/mpicc
 	    tauoptions="${tauoptions}-gnu"
 	else
 	    echo "ERROR Unknown C++ compiler: $cxx_compiler"
@@ -3623,7 +3627,7 @@ then
 	mpiinc=/bgl/BlueLight/ppcfloor/bglsys/include
         ;;
   bgp)
-	mpiinc=/bgsys/drivers/ppcfloor/comm/include
+	mpiinc=/bgsys/drivers/ppcfloor/comm/xl/include
         ;;
   bgq)
 	mpiinc=/bgsys/drivers/ppcfloor/comm/xl/include
@@ -3754,7 +3758,7 @@ then
 	additional_mpilibs='-lmsglayer.rts -ldevices.rts -lrts.rts -ldevices.rts'
         ;;
   bgp)
-        mpilib=/bgsys/drivers/ppcfloor/comm/lib
+        mpilib=/bgsys/drivers/ppcfloor/comm/xl/lib
 	additional_mpilibs='-ldcmfcoll.cnk -ldcmf.cnk -lpthread -L/bgsys/drivers/ppcfloor/runtime/SPI -lSPI.cna' 
 	;;
   bgq)

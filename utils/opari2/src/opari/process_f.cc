@@ -117,7 +117,6 @@ is_sub_unit_header( string& lowline, bool inHeader )
 
     size_t pos;
     pos = lowline.find_first_not_of( " \t" );
-
     /*string is empty*/
     if ( pos == string::npos )
     {
@@ -136,6 +135,7 @@ is_sub_unit_header( string& lowline, bool inHeader )
     if ( ( line.find( "program" ) == 0 )                               ||
          ( ( line.find( "module" ) == 0 ) && !inProgram )               ||
          ( ( line.find( "interface" ) == 0 ) && inModule )             ||
+         ( ( line.find( "abstractinterface" ) == 0 ) && inModule )             ||
          ( ( line.find( "contains" ) != string::npos ) && inModule )     ||
          ( line.find( "subroutine" ) == 0 )                            ||
          ( ( line.find( "function" ) == string::npos )   &&
@@ -151,7 +151,7 @@ is_sub_unit_header( string& lowline, bool inHeader )
     //Check if we enter a module block
     inModule = !inProgram && ( inModule || ( line.find( "module" ) == 0 ) );
     //Check if we enter an interface block
-    inInterface = inModule && ( inInterface || ( line.find( "interface" ) == 0 ) );
+    inInterface = inModule && ( inInterface || ( line.find( "interface" ) == 0 ) || ( line.find( "abstractinterface" ) == 0 ) );
     //Check if we enter a contains block
     inContains = inModule && ( inContains || ( line.find( "contains" ) != string::npos ) );
 
@@ -186,6 +186,7 @@ is_sub_unit_header( string& lowline, bool inHeader )
            line.find( "endprogram" )    == string::npos         &&
            ( ( line.find( "=" ) >= line.find( "!" )             ||
                line.find( "=" ) > line.find( "kind" )           ||
+               line.find( "=" ) > line.find( "only:" )           ||
                line.find( "=" ) == ( line.find( ">" ) - 1 ) ) ) )     ||
          ( line.find( "#" ) == 0 && inHeader )                  ||
          ( line.find( "&" ) == 0 && inHeader )                  ||
@@ -593,7 +594,7 @@ del_strings_and_comments( string & lowline,
             /* -- zero out partial line F90 comments -- */
             for (; i < lowline.size(); ++i )
             {
-                lowline[ i ] = 'C';
+                lowline[ i ] = ' ';
             }
             break;
         }
