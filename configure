@@ -6285,11 +6285,15 @@ if [ $vtf = yes ] ; then
   fixmakeargs="$fixmakeargs VTF vtfdir=$vtfdir"
 fi
 
-if [ $otf = yes ] ; then
-  fixmakeargs="$fixmakeargs OTF otfdir=$otfdir"
-  if [ ! -d $otfdir/${architecture} ] ; then
-    fixmakeargs="$fixmakeargs OTFSRC"
-  fi  
+if [ -d $otfdir/include/otf2 ]; then
+  fixmakeargs="$fixmakeargs OTF2 otfdir=$otfdir"
+else
+  if [ $otf = yes ] ; then
+    fixmakeargs="$fixmakeargs OTF otfdir=$otfdir"
+    if [ ! -d $otfdir/${architecture} ] ; then
+      fixmakeargs="$fixmakeargs OTFSRC"
+    fi  
+  fi
 fi
 
 if [ "x$unwinder" != "xnone" ] ; then
