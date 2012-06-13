@@ -1,5 +1,6 @@
 
 #include <map>
+#include <cstdlib>
 #include <Profile/TauRequest.h>
 
 using namespace std;
@@ -14,7 +15,7 @@ request_data * TauAddRequestData(int status, int count, MPI_Datatype datatype,
         int persistent)
 {
 	int typesize;
-	request_data * rq = NULL;
+	request_data * rq = (request_data*)(void*)0;
 
 	if ((other != MPI_PROC_NULL) && 
         (returnVal == MPI_SUCCESS) &&
