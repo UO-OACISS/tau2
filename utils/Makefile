@@ -121,6 +121,7 @@ SELECTFILE 	= tau_selectfile
 PDT_ABI = $(ABI)
 #MIPS32LINUX#PDT_ABI = #ENDIF#
 #MIPS64LINUX#PDT_ABI = #ENDIF#
+#MMIC#PDT_ABI = #ENDIF#
 
 # Do we use a different compiler for PDT based tau_instrumentor?
 PDT_CXX_COMP = $(CXX) $(INTELOPTS)
