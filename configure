@@ -622,6 +622,7 @@ mpi2=no
 mpiio=no
 mpiinc=
 mpilib=
+mpilibargs_added_to_fixmakeargs=no
 mpilibrary=no
 mon_mpi=no
 mrnet=no
@@ -802,7 +803,7 @@ for arg in "$@"; do
 
   -cc=*)
     myarg=`echo $arg | sed 's/-cc=//'`
-    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc ]
+    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc -o $myarg = mpiicc ]
       then
         c_compiler=$myarg
       else
@@ -810,7 +811,7 @@ for arg in "$@"; do
         testmp=`echo $myarg | sed -e 's/^mp//'`
         if [ "y$testxlc" = "y$myarg"  -a "y$testmp" = "y$myarg" ]
         then
-          echo "WARNING: valid options for cc are 'cc', 'gcc', 'gcc4', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', 'orcc', 'qk-pgcc', 'powerpc64-bgq-linux-gcc', 'powerpc-bgp-linux-gcc', 'x86_64-w64-mingw32-gcc', and 'pgcc' "
+          echo "WARNING: valid options for cc are 'cc', 'gcc', 'gcc4', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', 'orcc', 'qk-pgcc', 'powerpc64-bgq-linux-gcc', 'powerpc-bgp-linux-gcc', 'x86_64-w64-mingw32-gcc', 'mpiicc', and 'pgcc' "
 #       exit 1
         else
 	  if [ "y$testxlc" != "y$myarg" ]
@@ -826,7 +827,7 @@ for arg in "$@"; do
 
   -c++=*)
     myarg=`echo $arg | sed 's/-c++=//'`
-    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++ ] 
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc ] 
       then
         cxx_compiler=$myarg
       else
@@ -834,7 +835,7 @@ for arg in "$@"; do
         testmp=`echo $myarg | sed -e 's/^mp//'`
 	if [ "y$testxlc" = "y$myarg" -a "y$testmp" = "y$myarg" ]
         then
-          echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'g++4', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'pgcpp', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'pathCC', 'c++', 'qk-pgCC', 'x86_64-w64-mingw32-g++', and 'orCC'"
+          echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'g++4', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'pgcpp', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'pathCC', 'c++', 'qk-pgCC', 'x86_64-w64-mingw32-g++', 'mpiicpc', and 'orCC'"
 #       exit 1
         else
 	  if [ "y$testxlc" != "y$myarg" ]
@@ -858,14 +859,14 @@ for arg in "$@"; do
 
   -fortran=*)
     myarg=`echo $arg | sed 's/-fortran=//'`
-    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 ] ; then
+    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = mpiifort ] ; then
 	if [ $myarg = gnu ] ; then
 	    fortran_compiler=gfortran
 	else
 	    fortran_compiler=$myarg
 	fi
     else
-	echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'g95', and 'open64'"
+	echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'g95', 'open64', and 'mpiifort' "
 	exit 1
     fi
     shift
@@ -2976,6 +2977,11 @@ fi
 if [ $machine = freebsd ] ; then
     fixmakeargs="$fixmakeargs FREEBSD"
 fi
+
+if [ $machine = mic_linux ] ; then
+    fixmakeargs="$fixmakeargs MIC_LINUX"
+    turnbfdoff=yes
+fi
     
 if [ $machine = apple ] ; then
   if [ $cxx_compiler = g++ -o $cxx_compiler = c++  -o $cxx_compiler = icpc ] ; then
@@ -3315,6 +3321,21 @@ case $cxx_compiler in
         fixmakeargs="$fixmakeargs INTELCXXLIBICC"
       fi
 
+      ;;
+    mpiicpc)
+      echo "Default C++ compiler will be Intel mpiicpc C++ compiler"
+      fixmakeargs="$fixmakeargs MPIICPC USE_INTELCXX"
+      tauoptions="${tauoptions}-icpc"
+      intel=yes
+      if [ $fortran_compiler = no  -o $fortran_compiler = mpiifort -o $fortran_compiler = intel ]
+      then
+        intelifort=`which mpiifort 2>/dev/null`
+        if [ "y$intelifort" != "y"  -a -x "$intelifort" ] ; then 
+          fortran_compiler=intel
+          extradir=`which mpiifort | sed -e 's/\/bin\/mpiifort$//'`
+          fixmakeargs="$fixmakeargs MPIIFORT"
+        fi
+      fi
       ;;
    pathCC|scpathCC)
       echo "Default C++ compiler will be PathScale pathCC C++ compiler"
@@ -3668,11 +3689,24 @@ then
           additional_mpiincs="$additional_mpiincs -DUSE_MPI -D__ZCL__ -DZCL_AD_HOC -I$zeptodir/include/ "
         fi
         ;;
+  mic_linux)
+        mpiinc=`which mpiicpc | sed -e 's/\/bin\/mpiicpc$//'`/include
+        if [ -d $mpiinc ]
+        then
+          echo "Using MPI include directory $mpiinc"
+        fi
+	;;
   *)
         mpiinc=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/include
         if [ -d $mpiinc ]
         then
           echo "Using MPI include directory $mpiinc"
+	else
+	  mpiinc=`which mpiexec | sed -e 's/\/bin\/mpiexec$//'`/include
+          if [ -d $mpiinc ]
+          then
+            echo "Using MPI include directory $mpiinc"
+          fi
         fi
 	;;
   esac
@@ -4697,6 +4731,14 @@ case $machine in
         fi
 	;;
 
+     mic_linux)
+	echo Found a \"$machine\" configuration definition
+	fixmakeargs="arch=$machine $fixmakeargs"
+        if [ $cxx_compiler = mpiicpc -o $cxx_compiler=icpc ]; then
+          fixmakeargs="$fixmakeargs MMIC"
+        fi
+        ;;
+
      sunx86_64)
 	echo Found a \"$machine\" configuration definition
 	fixmakeargs="arch=$machine $fixmakeargs SUNX86_64"
@@ -5169,6 +5211,7 @@ EOF
   /bin/rm -rf mpi_thread_test.$msuf mpi_thread_test.o mpi2.$msuf mpi2.o mpi2iorequest.o mpi2iorequest.$msuf mpi2grequest.o mpi2grequest.$msuf mpi2datarep.$msuf mpi2datarep.o mpi2errhandler.o mpi2errhandler.$msuf mpi2hpconst.o mpi2hpconst.$msuf mpi2attr.o mpi2attr.$msuf mpi2typeex.o mpi2typeex.$msuf mpi2add.o mpi2add.$msuf mpistatus.o mpistatus.$msuf mpi2file.$msuf mpi2file.o
 else
   fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
+  mpilibargs_added_to_fixmakeargs=yes
 fi
 
 
@@ -5514,6 +5557,7 @@ if [ $mpi = yes ] ; then
       mpiflibargs="-L$papidir/$\(PAPISUBDIR\)#$mpiflibargs"
     fi
     fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
+    mpilibargs_added_to_fixmakeargs=yes
 
     # now throw in non-wrapped MPI library lines
     wrapperF=$wrapperlib
@@ -5563,9 +5607,8 @@ fi
 
 
 # Special magic for xt3 and craycnl
-if [ $mpi = yes ] ; then
-    if [ "x$machine" = "xxt3" -o "x$machine" = "xcraycnl" ] ; then
-	if [ $epilog = no -a $vampirtrace = no ] ; then
+if [ $mpi = yes -a $mpilibargs_added_to_fixmakeargs = no ] ; then
+	if [ $epilog = no -a $vampirtrace = no -a $scorep = no ]; then 
 # On Crays, Pathscale compilers require  a -lmpichcxx for C and Fortran
 	  if [ $pathscale = yes ] ; then
 	    mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#-lmpichcxx"
@@ -5579,7 +5622,6 @@ if [ $mpi = yes ] ; then
 	    mpiflibargs=$mpilibargs
 	    fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs"
 	fi
-    fi
 fi
 
 #####################################################################
@@ -6285,11 +6327,15 @@ if [ $vtf = yes ] ; then
   fixmakeargs="$fixmakeargs VTF vtfdir=$vtfdir"
 fi
 
-if [ $otf = yes ] ; then
-  fixmakeargs="$fixmakeargs OTF otfdir=$otfdir"
-  if [ ! -d $otfdir/${architecture} ] ; then
-    fixmakeargs="$fixmakeargs OTFSRC"
-  fi  
+if [ -d $otfdir/include/otf2 ]; then
+  fixmakeargs="$fixmakeargs OTF2 otfdir=$otfdir"
+else
+  if [ $otf = yes ] ; then
+    fixmakeargs="$fixmakeargs OTF otfdir=$otfdir"
+    if [ ! -d $otfdir/${architecture} ] ; then
+      fixmakeargs="$fixmakeargs OTFSRC"
+    fi  
+  fi
 fi
 
 if [ "x$unwinder" != "xnone" ] ; then
@@ -6366,6 +6412,10 @@ if [ $pdt = yes ] ; then
 
   if [ $pdtarchdir != unknown ] ; then
     fixmakeargs="$fixmakeargs PDTARCHITECTURE pdtarchdir=$pdtarchdir"
+  fi
+
+  if [ $machine = mic_linux -a $pdtarchdir = unknown ]; then
+    fixmakeargs="$fixmakeargs PDTARCHITECTURE pdtarchdir=x86_64"
   fi
 
 # Check if PDT has Fortran statement level information
@@ -6720,7 +6770,7 @@ fi
 
 
 # CHECK if Intel 8.0 compilers are available. 
-if [ $cxx_compiler = icpc ] ; then
+if [ $cxx_compiler = icpc -o $cxx_compiler = mpiicpc ] ; then
     echo "Checking version (8.0/8.1+) of Intel compilers"
       # Intel compilers changed from -cxxlib-icc to -cxxlib-gcc (default) in 8.1
     cat << EOF > f1.cpp
@@ -6777,7 +6827,7 @@ EOF
 fi
 
 
-if [ $cxx_compiler = icpc ] ; then
+if [ $cxx_compiler = icpc -o $cxx_compiler = mpiicpc ] ; then
     echo "Checking version (10.0+) of Intel compilers"
     version=`icpc -v 2>&1`
     t="Version 1"
@@ -6822,7 +6872,7 @@ if [ $cxx_compiler = icpc ] ; then
     fixmakeargs="$fixmakeargs ifortlibdir=$libdir" 
 fi
 
-if [ $cxx_compiler = icpc ] ; then
+if [ $cxx_compiler = icpc -o $cxx_compiler = mpiicpc ] ; then
     echo "Checking version (12.x) of Intel compilers"
     version=`icpc -v 2>&1`
     t="Version 12"
