@@ -173,6 +173,7 @@ UNWIND_EXTRAS=
 #######################################################################
 F90_ABI	= $(ABI) 
 #IBM64_FORTRAN#F90_ABI	     = -q64 		  #ENDIF#
+#MMIC#F90_ABI	     = -mmic  #ENDIF#
 #######################################################################
 
 ##############################################
@@ -279,7 +280,6 @@ TAU_OPENMP_OPTION =
 #BGL#TAU_F90         = blrts_xlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #IBM64_FORTRAN#TAU_F90       = xlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #IBMXLFAPPLE#TAU_F90       = xlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
-#MPIIFORT#TAU_F90       = mpiifort $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #CRAY_FORTRAN#TAU_F90        = f90              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #CRAY_X1_FORTRAN#TAU_F90     = ftn              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #OPENSHMEM#TAU_F90     = oshfort              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
@@ -301,6 +301,7 @@ TAU_OPENMP_OPTION =
 #INTEL_FORTRAN#TAU_F90       = efc 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #INTEL32_FORTRAN#TAU_F90     = ifc 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #INTELIFORT#TAU_F90     = ifort 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#MPIIFORT#TAU_F90       = mpiifort $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #PATHSCALE_FORTRAN#TAU_F90     = pathf90         $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #SC_PATHSCALE#TAU_F90     = scpathf95         $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #OPEN64ORC_FORTRAN#TAU_F90     = orf90         $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
