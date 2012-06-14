@@ -85,12 +85,15 @@ SELECTFILE 	= tau_selectfile
 #TRACE#INSTALLTAU_TIMECORRECT	= $(INSTALLDEST)/tau_timecorrect #ENDIF#
 #VTF#TAU2VTF 	= tau2vtf #ENDIF#
 #OTF#TAU2OTF 	= tau2otf #ENDIF#
+#OTF2#TAU2OTF 	= tau2otf2 #ENDIF#
 #VTF#VTF2PROFILE 	= vtfconverter/vtf2profile #ENDIF#
 #VTF#INSTALLTAU2VTF 	= $(INSTALLDEST)/tau2vtf #ENDIF#
 #VTF#INSTALLVTF2PROFILE 	= $(INSTALLDEST)/vtf2profile #ENDIF#
 #OTF#INSTALLTAU2OTF 	= $(INSTALLDEST)/tau2otf #ENDIF#
+#OTF2#INSTALLTAU2OTF 	= $(INSTALLDEST)/tau2otf2 #ENDIF#
 #OTF#OTFLIBS 	= -L$(OTFDIR)/$(TAU_ARCH)/lib -lotf $(TAU_TRACE_INPUT_LIB) #ENDIF#
 #OTFSRC#OTFLIBS 	= -L$(OTFDIR)/lib -lotf -lz $(TAU_TRACE_INPUT_LIB) #ENDIF#
+#OTF2#OTFLIBS 	= -L$(OTFDIR)/lib -lotf2 -lscorep_parser_tools -lscorep_utilities $(TAU_TRACE_INPUT_LIB) #ENDIF#
 #EBS2OTF#INSTALL_EBS2OTF = $(INSTALLLIBDEST)/ebs2otf.so #ENDIF#
 #TAU2EPILOG#TAU2ELG = elgconverter/tau2elg #ENDIF#
 #TAU2EPILOG#INSTALLTAU2ELG = $(INSTALLDEST)/tau2elg #ENDIF#
@@ -220,6 +223,11 @@ tau2otf: 	tau2otf.o
 
 tau2otf.o:	tau2otf.cpp
 		$(CXX) $(CFLAGS)  tau2otf.cpp -c -I$(OTFDIR)/include -I$(OTFDIR)/include/vampirtrace
+tau2otf2: 	tau2otf2.o
+		$(CXX) $(CFLAGS) tau2otf2.o -o tau2otf2 -lm $(LEXTRA) $(OTFLIBS)
+
+tau2otf2.o:	tau2otf2.cpp
+		$(CXX) $(CFLAGS)  tau2otf2.cpp -c -I$(OTFDIR)/include
 
 ebs2otf/ebs2otf.so:
 		cd ebs2otf ; $(MAKE)
@@ -416,6 +424,14 @@ $(INSTALLDEST)/tau2otf: tau2otf
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
+
+$(INSTALLDEST)/tau2otf2: tau2otf2
+		@echo Installing $? in $(INSTALLDEST)
+		if [ -d $(INSTALLDEST) ] ; then true; \
+                   else mkdir $(INSTALLDEST) ;fi 
+		/bin/rm -f $(INSTALLDEST)/tau2otf
+		$(TAU_INSTALL) $? $(INSTALLDEST)
+		ln -s $(INSTALLDEST)/tau2otf2 $(INSTALLDEST)/tau2otf
 
 $(INSTALLDEST)/vtf2profile: vtfconverter/vtf2profile
 		@echo Installing $? in $(INSTALLDEST)
