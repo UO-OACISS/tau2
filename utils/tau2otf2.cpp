@@ -638,7 +638,7 @@ int main(int argc, char **argv)
   char *edf_file;
   char *out_file = NULL; 
   int no_message_flag=0;
-  int compress_flag = 0; /* by default do not compress traces */
+  OTF2_Compression compress_flag = OTF2_COMPRESSION_NONE; /* by default do not compress traces */
   //OTF_FileCompression compression = OTF_FILECOMPRESSION_UNCOMPRESSED;
   int i; 
   /* main program: Usage app <trc> <edf> [-a] [-nomessage] */
@@ -646,14 +646,14 @@ int main(int argc, char **argv)
   {
     printf("Usage: %s <TAU trace> <edf file> <out file> [-n streams] [-nomessage]  [-z] [-v]\n", 
 		    argv[0]);
-    printf(" -n <streams> : Specifies the number of output streams (default 1)\n");
+//    printf(" -n <streams> : Specifies the number of output streams (default 1)\n");
     printf(" -nomessage : Suppress printing of message information in the trace\n");
     printf(" -z : Enable compression of trace files. By default it is uncompressed.\n");
     printf(" -v         : Verbose\n");
     printf(" Trace format of <out file> is OTF \n");
 
     printf(" e.g.,\n");
-    printf(" %s merged.trc tau.edf app.otf\n", argv[0]);
+    printf(" %s merged.trc tau.edf app\n", argv[0]);
     exit(1);
   }
   
@@ -689,7 +689,7 @@ int main(int argc, char **argv)
 	}
 	if (strcmp(argv[i], "-z")==0)
 	{
-	  compress_flag = 1;
+	  compress_flag = OTF2_COMPRESSION_ZLIB;
 	}
 	if (strcmp(argv[i], "-v") == 0)
         {
@@ -719,7 +719,7 @@ int main(int argc, char **argv)
                                              1024 * 1024,
                                              4 * 1024 * 1024,
                                              OTF2_SUBSTRATE_POSIX,
-                                             OTF2_COMPRESSION_NONE );
+                                             compress_flag );
   check_pointer( archive, "Create archive" );
 
   //manager = OTF_FileManager_open(TAU_OTF_FILE_MANAGER_LIMIT);
@@ -749,7 +749,7 @@ int main(int argc, char **argv)
   check_status( status, "Set master slave mode." );
   status = OTF2_Archive_SetDescription( archive, "Data converted from TAU trace output" );
   check_status( status, "Set description." );
-  status = OTF2_Archive_SetCreator( archive, "tau2otf converter version 2.21.x" );
+  status = OTF2_Archive_SetCreator( archive, "tau2otf2 converter version 2.21.x" );
   check_status( status, "Set creator." );
 
   /* check and verify that it was opened properly
@@ -763,10 +763,10 @@ int main(int argc, char **argv)
   /* enble compression if it is specified by the user
   if (compress_flag)
   {
-    compression = OTF_FILECOMPRESSION_COMPRESSED; 
+    compression = OTF2_FILECOMPRESSION_COMPRESSED;
     OTF2_EvtWriter_setCompression((OTF2_EvtWriter *)fcb, compression);
-  }
-*/
+  }*/
+
   /* Write the trace file header
  
   
