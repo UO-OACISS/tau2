@@ -549,15 +549,17 @@ void FunctionInfo::addPcSample(unsigned long *pcStack, int tid, double interval[
   TauPathAccumulator *accumulator;
   accumulator = pathHistogram[tid]->get(pcStack);
   if (accumulator == NULL) {
-    accumulator = new TauPathAccumulator(1,interval[0]);
+    accumulator = new TauPathAccumulator(1,interval);
     bool success = pathHistogram[tid]->insert(pcStack, *accumulator);
     if (!success) {
       fprintf(stderr,"addPcSample: Failed to insert sample.\n");
     }
   } else {
     (accumulator->count)++;
-    (accumulator->accumulator) += interval[0];
-    // Kevin: also, add time!
+    int i;
+    for (i = 0; i < Tau_Global_numCounters; i++) {
+      accumulator->accumulator[i] += interval[i];
+    }
   }
 }
 #endif // TAU_WINDOWS
