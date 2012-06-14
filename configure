@@ -622,6 +622,7 @@ mpi2=no
 mpiio=no
 mpiinc=
 mpilib=
+mpilibargs_added_to_fixmakeargs=no
 mpilibrary=no
 mon_mpi=no
 mrnet=no
@@ -3332,6 +3333,7 @@ case $cxx_compiler in
         if [ "y$intelifort" != "y"  -a -x "$intelifort" ] ; then 
           fortran_compiler=intel
           extradir=`which mpiifort | sed -e 's/\/bin\/mpiifort$//'`
+          fixmakeargs="$fixmakeargs MPIIFORT"
         fi
       fi
       ;;
@@ -5209,6 +5211,7 @@ EOF
   /bin/rm -rf mpi_thread_test.$msuf mpi_thread_test.o mpi2.$msuf mpi2.o mpi2iorequest.o mpi2iorequest.$msuf mpi2grequest.o mpi2grequest.$msuf mpi2datarep.$msuf mpi2datarep.o mpi2errhandler.o mpi2errhandler.$msuf mpi2hpconst.o mpi2hpconst.$msuf mpi2attr.o mpi2attr.$msuf mpi2typeex.o mpi2typeex.$msuf mpi2add.o mpi2add.$msuf mpistatus.o mpistatus.$msuf mpi2file.$msuf mpi2file.o
 else
   fixmakeargs="$fixmakeargs mpiincargs=$mpiincargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
+  mpilibargs_added_to_fixmakeargs=yes
 fi
 
 
@@ -5554,6 +5557,7 @@ if [ $mpi = yes ] ; then
       mpiflibargs="-L$papidir/$\(PAPISUBDIR\)#$mpiflibargs"
     fi
     fixmakeargs="$fixmakeargs mpilibargs=$mpilibargs mpiflibargs=$mpiflibargs mpilib=$mpilib"
+    mpilibargs_added_to_fixmakeargs=yes
 
     # now throw in non-wrapped MPI library lines
     wrapperF=$wrapperlib
@@ -5604,7 +5608,7 @@ fi
 
 # Special magic for xt3 and craycnl
 if [ $mpi = yes ] ; then
-	if [ $epilog = no -a $vampirtrace = no -a $scorep = no ] ; then
+	if [ $epilog = no -a $vampirtrace = no -a $scorep = no -a $mpilibargs_added_to_fixmakeargs = no ] ; then
 # On Crays, Pathscale compilers require  a -lmpichcxx for C and Fortran
 	  if [ $pathscale = yes ] ; then
 	    mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#-lmpichcxx"
@@ -6766,7 +6770,7 @@ fi
 
 
 # CHECK if Intel 8.0 compilers are available. 
-if [ $cxx_compiler = icpc ] ; then
+if [ $cxx_compiler = icpc -o $cxx_compiler = mpiicpc ] ; then
     echo "Checking version (8.0/8.1+) of Intel compilers"
       # Intel compilers changed from -cxxlib-icc to -cxxlib-gcc (default) in 8.1
     cat << EOF > f1.cpp
