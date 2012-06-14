@@ -5607,8 +5607,8 @@ fi
 
 
 # Special magic for xt3 and craycnl
-if [ $mpi = yes ] ; then
-	if [ $epilog = no -a $vampirtrace = no -a $scorep = no -a $mpilibargs_added_to_fixmakeargs = no ] ; then
+if [ $mpi = yes -a $mpilibargs_added_to_fixmakeargs = no ] ; then
+	if [ $epilog = no -a $vampirtrace = no -a $scorep = no ]; then 
 # On Crays, Pathscale compilers require  a -lmpichcxx for C and Fortran
 	  if [ $pathscale = yes ] ; then
 	    mpilibargs="-L$tautoplevel/$machine/lib#-lTauMpi\$(TAU_CONFIG)#-lmpichcxx"
