@@ -204,7 +204,7 @@ opari/opari:
 		cd opari ; $(MAKE) opari
 
 opari2/_build/bin/opari2:
-		cd opari2 ;mkdir _build; cd _build; CXX=$(CONFIG_CXX) CC=$(CONFIG_CC) ../configure --prefix=`pwd` --with-compiler-suite=$(OPARICOMP); $(MAKE) ; $(MAKE) install
+		cd opari2 ;/bin/rm -rf  _build; mkdir _build; cd _build; CXX=$(CONFIG_CXX) CC=$(CONFIG_CC) ../configure --prefix=`pwd` --with-compiler-suite=$(OPARICOMP); $(MAKE) ; $(MAKE) install
 
 tau_timecorrect.o:	tau_timecorrect.cpp
 		$(CXX) $(CFLAGS) tau_timecorrect.cpp -c
@@ -330,6 +330,7 @@ user_event_data.o:	user_event_data.cpp
 clean:
 		/bin/rm -rf *.o $(EXECUTABLES) *.dep lib*$(LSX) *.ii *.ti ti_files cxx_repository ii_files rii_files 
 		cd opari ; make clean
+		cd opari2 ; /bin/rm -rf _build
 		cd ebs2otf ; $(MAKE) clean
 
 $(INSTALLDEST)/pprof: pprof
