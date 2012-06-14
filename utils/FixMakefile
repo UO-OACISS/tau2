@@ -1426,6 +1426,18 @@ case $1 in
 	echo "NOTE: Using Cray XMT options"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     MIC_LINUX)
+	echo "NOTE: Using Intel MIC Linux options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     MMIC)
+	echo "NOTE: Using Intel -mmic compute node MIC compilation options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     MPIICPC)
+	echo "NOTE: Using Intel mpiicpc compilation options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      CRAYCNL)
 	echo "NOTE: Using Cray Compute Node Linux options"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
