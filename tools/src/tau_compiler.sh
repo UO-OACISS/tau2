@@ -685,6 +685,8 @@ for arg in "$@" ; do
 		    -optCompInst)
 			optCompInst=$TRUE
 			disablePdtStep=$TRUE
+			# force the debug flag so we get symbolic information
+		    optCompile="$optCompile -g"
 			echoIfDebug "\tUsing Compiler-based Instrumentation"
 			;;
 		    -optPDTInst)
