@@ -27,7 +27,7 @@ def loadDB(app, exp, trial):
 	return input
 
 def loadFromDB():
-	Utilities.setSession("alcf-working")
+	Utilities.setSession("alcf")
 	inputs = ArrayList()
 	inputs.add(loadDB("GPAW r8581 (paper)", "Au_bulk4x2x2", "Au_bulk2x4x4_16_vn_ZYXT"))
 	inputs.add(loadDB("GPAW r8581 (paper)", "Au_bulk4x2x2", "Au_bulk2x4x4_32_vn_ZYXT"))
@@ -46,7 +46,7 @@ def loadFromDB2():
 	return inputs
 
 def drawGraph(results):
-	# change this to P_WALL_CLOCK_TIME as necessary
+	# change this as necessary
 	metric = "BGP_TIMERS"
 	grapher = DrawGraph(results)
 	metrics = HashSet()

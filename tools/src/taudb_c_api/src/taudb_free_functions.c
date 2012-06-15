@@ -117,8 +117,7 @@ void taudb_delete_counters(TAUDB_COUNTER* counters, int count) {
   for (i = 0 ; i < count ; i++) {
     taudb_delete_counter_groups(counters[i].groups, counters[i].group_count);
     taudb_delete_counter_values(counters[i].values, counters[i].value_count);
-    free(counters[i].short_name);
-    free(counters[i].full_name);
+    free(counters[i].name);
     free(counters[i].source_file);
   }
   free(counters);
