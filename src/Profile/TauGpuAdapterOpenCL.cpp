@@ -309,8 +309,10 @@ void Tau_opencl_register_sync_event()
 		Tau_get_context_userevent((void**) &qt, "Time in Queue (us)");
 		Tau_get_context_userevent((void**) &st, "Time in Submitted (us)");
 		map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * 2);
-		map[0] = {qt, (startTime - queuedTime)/1e3};
-		map[1] = {st, (startTime - submitTime)/1e3};
+		map[0].userEvent = qt;
+		map[0].data = (startTime - queuedTime)/1e3;
+		map[1].userEvent = st;
+		map[1].data = (startTime - submitTime)/1e3;
 		kernel_data->gpu_event_attr = map;
 
 
@@ -318,7 +320,7 @@ void Tau_opencl_register_sync_event()
 		{
 			//printf("TAU (opencl): isMemcpy kind: %d.\n", kernel_data->memcpy_type);
 			Tau_opencl_register_memcpy_event(kernel_data, (double) startTime,
-			(double) endTime, TAU_GPU_UNKNOW_TRANSFER_SIZE, kernel_data->memcpy_type);
+			(double) endTime, TAU_GPU_UNKNOWN_TRANSFER_SIZE, kernel_data->memcpy_type);
 		}
 		else
 		{
@@ -367,7 +369,7 @@ void CL_CALLBACK Tau_opencl_memcpy_callback(cl_event event, cl_int command_stat,
 	}
 	//printf("DtoH calling Tau_open.\n");
 	Tau_opencl_register_memcpy_event(memcpy_data, (double) startTime,
-	(double) endTime, TAU_GPU_UNKNOW_TRANSFER_SIZE, memcpy_data->memcpy_type);
+	(double) endTime, TAU_GPU_UNKNOWN_TRANSFER_SIZE, memcpy_data->memcpy_type);
 	
 	free(data);
 }

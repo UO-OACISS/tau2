@@ -125,8 +125,8 @@ public:
 			sprintf(r, "%d:%lld", id, commandId);
 			return r;
 	}
-	const x_uint64 id_p1() const { return (x_uint64) id; }
-	const x_uint64 id_p2() const { return (x_uint64) commandId; }
+	x_uint64 id_p1() const { return (x_uint64) id; }
+	x_uint64 id_p2() const { return (x_uint64) commandId; }
 };
 /*
 class callback_data

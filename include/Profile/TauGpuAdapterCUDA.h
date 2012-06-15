@@ -92,8 +92,8 @@ int enqueue_stop_event()
 	return 0;
 }
 	
-	virtual const x_uint64 id_p1() const = 0;
-	virtual const x_uint64 id_p2() const = 0;
+	virtual x_uint64 id_p1() const = 0;
+	virtual x_uint64 id_p2() const = 0;
 	//virtual bool operator<(const CudaGpuEvent& other) const = 0;
 	virtual bool less_than(const GpuEvent *other) const = 0;
 	virtual double syncOffset() const = 0;
@@ -148,8 +148,8 @@ public:
 			sprintf(rtn, "[%d:%d]", device, stream);
 			return rtn;
 	}
-	const x_uint64 id_p1(void) const { return device; }
-	const x_uint64 id_p2(void) const { return (const x_uint64) stream; }
+	x_uint64 id_p1(void) const { return device; }
+	x_uint64 id_p2(void) const { return (x_uint64) stream; }
 	cudaStream_t getStream() { return stream; }
 	int getDevice() { return device; }
 	CUcontext getContext() { return 0; }
@@ -223,8 +223,8 @@ public:
 			sprintf(rtn, "%d:%d:%d (Device,Context,Stream)", device, context, stream);
 			return rtn;
 	}
-	const x_uint64 id_p1(void) const { return device; }
-	const x_uint64 id_p2(void) const { return (x_uint64) stream; }
+	x_uint64 id_p1(void) const { return device; }
+	x_uint64 id_p2(void) const { return (x_uint64) stream; }
 	cudaStream_t getStream() { return stream; }
 	int getDevice() { return device; }
 	CUcontext getContext() { return context; }

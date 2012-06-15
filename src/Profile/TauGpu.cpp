@@ -127,7 +127,7 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, GpuEvent
 	}
 
 	if (memcpyType == MemcpyHtoD) {
-		if (transferSize != TAU_GPU_UNKNOW_TRANSFER_SIZE)
+		if (transferSize != TAU_GPU_UNKNOWN_TRANSFER_SIZE)
 		{
 			TAU_CONTEXT_EVENT(MemoryCopyEventHtoD, transferSize);
 			//TAU_EVENT(MemoryCopyEventHtoD(), transferSize);
@@ -139,7 +139,7 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, GpuEvent
 	}
 	else if (memcpyType == MemcpyDtoH)
 	{
-		if (transferSize != TAU_GPU_UNKNOW_TRANSFER_SIZE)
+		if (transferSize != TAU_GPU_UNKNOWN_TRANSFER_SIZE)
 		{
 			TAU_CONTEXT_EVENT(MemoryCopyEventDtoH, transferSize);
 			//TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
@@ -151,7 +151,7 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, GpuEvent
 	}
   else
 	{
-		if (transferSize != TAU_GPU_UNKNOW_TRANSFER_SIZE)
+		if (transferSize != TAU_GPU_UNKNOWN_TRANSFER_SIZE)
 		{
 			TAU_CONTEXT_EVENT(MemoryCopyEventDtoD, transferSize);
 		}
@@ -367,7 +367,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
 		stage_gpu_event(functionName, task,
 				startTime + id->syncOffset(), id->getCallingSite());
 		//TAU_REGISTER_EVENT(MemoryCopyEventHtoD, "Memory copied from Host to Device");
-		if (transferSize != TAU_GPU_UNKNOW_TRANSFER_SIZE)
+		if (transferSize != TAU_GPU_UNKNOWN_TRANSFER_SIZE)
 		{
 			counted_memcpys++;
 			TAU_CONTEXT_EVENT(MemoryCopyEventHtoD, transferSize);
@@ -388,7 +388,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
 		stage_gpu_event(functionName, task,
 				startTime + id->syncOffset(), id->getCallingSite());
 		//TAU_REGISTER_EVENT(MemoryCopyEventDtoH, "Memory copied from Device to Host");
-		if (transferSize != TAU_GPU_UNKNOW_TRANSFER_SIZE)
+		if (transferSize != TAU_GPU_UNKNOWN_TRANSFER_SIZE)
 		{
 			counted_memcpys++;
 			TAU_CONTEXT_EVENT(MemoryCopyEventDtoH, transferSize);
@@ -410,7 +410,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
 		stage_gpu_event(functionName, task,
 				startTime + id->syncOffset(), id->getCallingSite());
 		//TAU_REGISTER_EVENT(MemoryCopyEventDtoH, "Memory copied from Device to Host");
-		if (transferSize != TAU_GPU_UNKNOW_TRANSFER_SIZE)
+		if (transferSize != TAU_GPU_UNKNOWN_TRANSFER_SIZE)
 		{
 			counted_memcpys++;
 			TAU_CONTEXT_EVENT(MemoryCopyEventDtoD, transferSize);

@@ -6,7 +6,7 @@
 
 enum Memcpy { MemcpyHtoD = 0, MemcpyDtoH = 1, MemcpyDtoD = 2, MemcpyUnknown = 3 };
 
-#define TAU_GPU_UNKNOW_TRANSFER_SIZE -1
+#define TAU_GPU_UNKNOWN_TRANSFER_SIZE -1
 #define TAU_GPU_USE_DEFAULT_NAME ""
 
 #define TAU_MAX_NUMBER_OF_GPU_THREADS TAU_MAX_THREADS
@@ -25,6 +25,10 @@ typedef struct {
 	TAU_EVENT_DATATYPE data;
 
 } GpuEventAttributes;
+
+#define GPU_ATTRIBUTE(attr, event, data) \
+attr.userEvent = event; \
+attr.data = data;
 
 /*
  * GPU Event class. This a virtual class that is extended by each GPU adapter.
@@ -59,8 +63,8 @@ public:
 
 	//return the conponents of the gpu identifier, used for store the gpu id in
 	//the trace files.
-	virtual const x_uint64 id_p1() const = 0;
-	virtual const x_uint64 id_p2() const = 0;
+	virtual x_uint64 id_p1() const = 0;
+	virtual x_uint64 id_p2() const = 0;
 
 };
 
