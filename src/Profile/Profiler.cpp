@@ -1158,6 +1158,10 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
       continue;
     } 
 
+    if (fi->GetCalls(tid) == 0) { // skip this function
+      continue;
+    } 
+
     // get currently stored values
     double incltime = fi->getDumpInclusiveValues(tid)[metric];
     double excltime = fi->getDumpExclusiveValues(tid)[metric];
@@ -1179,10 +1183,28 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
   return 0;
 }
 
+// Writes function event data
+static int getTrueFunctionCount(int count, int tid, const char **inFuncs, int numFuncs) {
+  int trueCount = count;
+  for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
+    FunctionInfo *fi = *it;
+
+    if (-1 == matchFunction(*it, inFuncs, numFuncs)) { // skip this function
+      trueCount--;
+    } else if (fi->GetCalls(tid) == 0) {
+      trueCount--;
+    }
+  }
+
+  return trueCount;
+}
+
 // Writes a single profile file
 static int writeProfile(FILE *fp, char *metricName, int tid, int metric, 
 			const char **inFuncs, int numFuncs) {
-  writeHeader(fp, TheFunctionDB().size(), metricName);
+  int trueCount = getTrueFunctionCount(TheFunctionDB().size(), tid, inFuncs, numFuncs);
+  //writeHeader(fp, TheFunctionDB().size(), metricName);
+  writeHeader(fp, trueCount, metricName);
   fprintf(fp, " # ");	
   Tau_metadata_writeMetaData(fp, metric);
   fprintf(fp, "\n");
@@ -1210,6 +1232,7 @@ extern "C" int Tau_profiler_initialization() {
 // Store profile data at the end of execution (when top level timer stops)
 extern "C" void finalizeCallSites_if_necessary();
 int TauProfiler_StoreData(int tid) {
+  TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData\n", RtsLayer::myNode(), tid);
 
   profileWriteCount[tid]++;
   if ((tid !=0) && (profileWriteCount[tid] > 1)) return 0;
@@ -1243,7 +1266,7 @@ int TauProfiler_StoreData(int tid) {
       TauProfiler_DumpData(false, tid, "profile");
     }
   }
-#ifdef PTHREADS
+#if defined(PTHREADS) || defined(TAU_OPENMP)
   if (RtsLayer::myThread() == 0 && tid == 0) {
     /* clean up other threads? */
     for (int i =1; i < TAU_MAX_THREADS; i++) {
@@ -1297,6 +1320,7 @@ static int getProfileLocation(int metric, char *str) {
 
 
 int TauProfiler_DumpData(bool increment, int tid, const char *prefix) {
+  TAU_VERBOSE("TAU<%d,%d>: TauProfiler_DumpData\n", RtsLayer::myNode(), tid);
   return TauProfiler_writeData(tid, prefix, increment);
 }
 
@@ -1362,7 +1386,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
 	char cwd[1024];
 	char *tst = getcwd(cwd, 1024);
 #ifndef TAU_WINDOWS
-	TAU_VERBOSE("[pid=%d] TAU: Writing profile %s, cwd = %s\n", getpid(), dumpfile, cwd);
+	TAU_VERBOSE("[pid=%d], TAU: Writing profile %s, cwd = %s\n", getpid(), dumpfile, cwd);
 #endif
 
       } else {
@@ -1428,6 +1452,7 @@ int TauProfiler_dumpFunctionValues(const char **inFuncs,
   
   TAU_PROFILE("TAU_DUMP_FUNC_VALS()", " ", TAU_IO);
 
+  TAU_VERBOSE("TAU<%d,%d>: TauProfiler_dumpFunctionValues\n", RtsLayer::myNode(), RtsLayer::myThread());
   TauProfiler_writeData(tid, prefix, increment, inFuncs, numFuncs);
   return 0;
 }

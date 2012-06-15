@@ -209,7 +209,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
       //   the need to create and allocate memory for EBS post-processed
       //   objects.
       if (strstr(ProfileGroupName, "TAU_SAMPLE") == NULL) {
-	pathHistogram[i] = new TauPathHashTable<unsigned long>(i);
+	pathHistogram[i] = new TauPathHashTable<TauPathAccumulator>(i);
       }
     }
   }
@@ -531,7 +531,7 @@ string *FunctionInfo::GetFullName() {
 /* EBS Sampling Profiles */
 
 #ifndef TAU_WINDOWS
-void FunctionInfo::addPcSample(unsigned long *pcStack, int tid) {
+void FunctionInfo::addPcSample(unsigned long *pcStack, int tid, double interval[TAU_MAX_COUNTERS]) {
   //  static int numSamples = 0;
   if (!TauEnv_get_ebs_enabled()) {
     // This should be an error! We'll ignore it for now!
@@ -541,20 +541,25 @@ void FunctionInfo::addPcSample(unsigned long *pcStack, int tid) {
   if (pathHistogram[tid] == NULL) {
     // *CWL* - For the use of the PathHash, we *cannot* initialize the
     //         mmap memory manager here! That risks signal safety issues.
-    pathHistogram[tid] = new TauPathHashTable<unsigned long>(tid);
+    pathHistogram[tid] = new TauPathHashTable<TauPathAccumulator>(tid);
   }
   // Add to the mmap-ed histogram. We start with a temporary conversion. This
   //   becomes unnecessary once we stop using the vector.
-  unsigned long *count;
-  count = pathHistogram[tid]->get(pcStack);
-  if (count == NULL) {
-    bool success = 
-      pathHistogram[tid]->insert(pcStack, 1);
+  //TAU_VERBOSE("TAU<%d,%d>: addPcSample()\n", RtsLayer::myNode(), RtsLayer::myThread());
+  TauPathAccumulator *accumulator;
+  accumulator = pathHistogram[tid]->get(pcStack);
+  if (accumulator == NULL) {
+    accumulator = new TauPathAccumulator(1,interval);
+    bool success = pathHistogram[tid]->insert(pcStack, *accumulator);
     if (!success) {
       fprintf(stderr,"addPcSample: Failed to insert sample.\n");
     }
   } else {
-    (*count)++;
+    (accumulator->count)++;
+    int i;
+    for (i = 0; i < Tau_Global_numCounters; i++) {
+      accumulator->accumulator[i] += interval[i];
+    }
   }
 }
 #endif // TAU_WINDOWS

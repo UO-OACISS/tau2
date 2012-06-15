@@ -83,14 +83,13 @@ TAUDB_COUNTER* taudb_query_counters(PGconn* connection, TAUDB_TRIAL* trial) {
 	  } else if (strcmp(PQfname(res, j), "trial") == 0) {
 	    counters[i].trial = atoi(PQgetvalue(res, i, j));
 	  } else if (strcmp(PQfname(res, j), "name") == 0) {
-	    //counters[i].name = PQgetvalue(res, i, j);
-		counters[i].full_name = taudb_create_string(strlen(PQgetvalue(res,i,j)));
-		counters[i].short_name = taudb_create_string(strlen(PQgetvalue(res,i,j)));
-		strcpy(counters[i].full_name, PQgetvalue(res,i,j));
-		strcpy(counters[i].short_name, PQgetvalue(res,i,j));
-#ifdef TAUDB_DEBUG
-        //printf("Got counter '%s'\n", counters[i].name);
-#endif
+	    char* tmp = PQgetvalue(res,i,j);
+		counters[i].name = taudb_create_string(strlen(tmp));
+		strcpy(counters[i].name, tmp);
+//#ifdef TAUDB_DEBUG
+		if (i>1)
+        printf("Got counter '%s'\n", counters[2].name);
+//#endif
 	  } else if (strcmp(PQfname(res, j), "source_file") == 0) {
 	    //counters[i].source_file = PQgetvalue(res, i, j);
 		counters[i].source_file = taudb_create_string(strlen(PQgetvalue(res,i,j)));
