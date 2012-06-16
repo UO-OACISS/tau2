@@ -46,6 +46,11 @@ bool multiThreaded = false;
 
 
 
+static inline int
+localmax(int a,int b){
+	if(a>b)return a;
+	return b;
+}
 
 
 static inline void
@@ -170,6 +175,8 @@ int sampgroupid = 1;
 int sampclassid = 2; 
 vector<stack <unsigned int> > callstack;
 int *offset = 0; 
+
+int maxTauStringId=0;
 
 
 /* FIX GlobalID so it takes into account numthreads */
@@ -327,6 +334,7 @@ int DefStateGroup( void *userData, unsigned int stateGroupToken,
   OTF2_GlobalDefWriter* glob_def_writer = (OTF2_GlobalDefWriter*)userData;
   OTF2_GlobalDefWriter_WriteString( glob_def_writer,stateGroupToken ,
                                                    stateGroupName);
+  maxTauStringId=localmax(maxTauStringId,stateGroupToken);
 //TODO: I guess we need to make a bucket for each group and count them ourselves.
   /* create a default activity (group) */
   OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, stateGroupToken, stateGroupToken, OTF2_GROUP_TYPE_REGIONS,0,0);
@@ -377,6 +385,7 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
   OTF2_GlobalDefWriter_WriteString( glob_def_writer,
                                                  stateToken,
                                                  name );
+  maxTauStringId=localmax(maxTauStringId,stateToken);
   status = OTF2_GlobalDefWriter_WriteRegion( glob_def_writer,
                                              stateToken,
                                              stateToken,
@@ -424,6 +433,7 @@ int DefUserEvent( void *userData, unsigned int userEventToken,
   OTF2_GlobalDefWriter_WriteString( glob_def_writer,
                                                  userEventToken,
                                                  name );
+  maxTauStringId=localmax(maxTauStringId,userEventToken);
 
 
   /* create a state record */
@@ -778,8 +788,15 @@ int main(int argc, char **argv)
       glob_def_writer = OTF2_Archive_GetGlobalDefWriter( archive );
 
 
-      OTF2_GlobalDefWriter_WriteLocationGroup( glob_def_writer, 0, 1, OTF2_LOCATION_GROUP_TYPE_PROCESS, 0 );
+      char name_buffer[ 64 ];
 
+      sprintf( name_buffer, "" );
+      OTF2_GlobalDefWriter_WriteString( glob_def_writer,STRING_EMPTY, name_buffer );
+
+
+/*This doesn't seem to be necessary since we write our groups below...
+      OTF2_GlobalDefWriter_WriteLocationGroup( glob_def_writer, 0, 1, OTF2_LOCATION_GROUP_TYPE_PROCESS, 0 );
+*/
 
   int totalnidtids;
 
@@ -893,7 +910,21 @@ int main(int argc, char **argv)
       master_threads[ rank ] = rank << 16;
   }
 
-  uint32_t string = STRING_EMPTY + 1;
+
+
+  /*We can't overlap string ids, so the first location id must be above the last tau event id*/
+  uint32_t string = maxTauStringId + 1;
+
+  sprintf( name_buffer, "System" );//PRIu64
+status = OTF2_GlobalDefWriter_WriteString( glob_def_writer,
+                                       string,
+                                       name_buffer );
+check_status( status, "Write string definition." );
+
+OTF2_GlobalDefWriter_WriteSystemTreeNode (glob_def_writer, 0,  string,string, OTF2_UNDEFINED_UINT32);
+string++;
+
+
 
   /* Write location group and location definitions. */
   for ( uint64_t rank = 0; rank < nodes; ++rank )
@@ -906,11 +937,12 @@ int main(int argc, char **argv)
                                                  name_buffer );
       check_status( status, "Write string definition." );
 
+
       status = OTF2_GlobalDefWriter_WriteLocationGroup( glob_def_writer,
                                                         rank,
                                                         string,
                                                         OTF2_LOCATION_GROUP_TYPE_PROCESS,
-                                                        ( rank / 2 ) + 1 );
+                                                        0);//( rank / 2 ) + 1 );
       check_status( status, "Write location group definition." );
       string++;
 
@@ -924,6 +956,8 @@ int main(int argc, char **argv)
           check_status( status, "Write string definition." );
 
           OTF2_EvtWriter* evt_writer = OTF2_Archive_GetEvtWriter( archive, locations[ numthreads[rank] * rank + thread ] );
+
+
           //check_pointer( evt_writer, "Get event writer." );
 
           uint64_t num_events = -1;
@@ -1009,6 +1043,11 @@ int main(int argc, char **argv)
   
   /* Go through each record until the end of the trace file */
 
+
+
+
+
+
   do {
     recs_read = Ttf_ReadNumEvents(fh,cb, 1024);
 #ifdef DEBUG  
@@ -1022,6 +1061,15 @@ int main(int argc, char **argv)
   Ttf_CloseFile(fh);
 
 
+  sprintf( name_buffer, "MPI_COMM_WORLD" );//PRIu64
+status = OTF2_GlobalDefWriter_WriteString( glob_def_writer,
+                                       string,
+                                       name_buffer );
+check_status( status, "Write string definition." );
+int COMM_STRING=string;
+status =OTF2_GlobalDefWriter_WriteMpiComm (glob_def_writer, TAU_DEFAULT_COMMUNICATOR, COMM_STRING, OTF2_GROUP_TYPE_MPI_GROUP, OTF2_UNDEFINED_UINT32 );
+check_status( status, "Write communicator." );
+
 
   /* write local mappings for MPI communicators and metrics */
       /* write local mappings for metrics, this is an identity map, just to write
@@ -1034,6 +1082,7 @@ int main(int argc, char **argv)
       {
           OTF2_IdMap_AddIdPair( metric_map, c, c );
       }
+
 
       for ( uint64_t rank = 0; rank < nodes; rank++ )
       {
@@ -1074,6 +1123,8 @@ int main(int argc, char **argv)
               status = OTF2_DefWriter_WriteClockOffset( def_writer,
                                                         lastt, 0, 0.0 );
               check_status( status, "Write end clock offset." );
+
+
           }
 
           OTF2_IdMap_Free( mpi_comm_map );
