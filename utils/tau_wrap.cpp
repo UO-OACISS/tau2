@@ -840,10 +840,13 @@ void generateMakefile(string& package, string &outFileName, int runtime, string&
 {
   string makefileName("Makefile");
   ofstream makefile(string(libname+"_wrapper/"+string(makefileName)).c_str());
+
+  string compiler_name("$(TAU_CC)");
+  if (upc_wrapper) compiler_name=string("$(TAU_UPCC)");
   
   if (runtime == 0) {
     string text("include ${TAU_MAKEFILE} \n\
-CC=$(TAU_CC) \n\
+CC="+compiler_name+" \n\
 CFLAGS=$(TAU_DEFS) "+ extradefs+ " $(TAU_INCLUDE) $(TAU_MPI_INCLUDE) -I.. \n\
 \n\
 AR=ar \n\
@@ -862,7 +865,7 @@ clean:\n\
   else { 
     if (runtime == 1) { 
       string text("include ${TAU_MAKEFILE} \n\
-CC=$(TAU_CC) \n\
+CC="+compiler_name+" \n\
 CFLAGS=$(TAU_DEFS) "+ extradefs+ " $(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE) $(TAU_MPI_INCLUDE)  -I.. -fPIC \n\
 \n\
 lib"+package+"_wrap.so: "+package+"_wrap.o \n\
@@ -878,7 +881,7 @@ clean:\n\
     } else { 
       if (runtime == -1) {
         string text("include ${TAU_MAKEFILE} \n\
-CC=$(TAU_CC) \n\
+CC="+compiler_name+" \n\
 ARFLAGS=rcv \n\
 CFLAGS=$(TAU_DEFS) "+ extradefs + " $(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE)  $(TAU_MPI_INCLUDE) -I.. \n\
 \n\
