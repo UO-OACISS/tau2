@@ -507,6 +507,24 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, const char * p
     } else {
       argtypename=(*argsit).type()->name();
     }
+/* Originally, we were only checking { } in arg names for upc_wrapper. Now
+ * we do it for all cases because PDB files from Rose have this artifact.*/
+      if (1) {
+        /* upc headers sometimes have struct members in the argument name:
+ *         const struct upc_filevec {upc_off_t offset;size_t len;}*
+ *                 We need to erase everything between the two curly braces */
+        int pos1, pos2;
+#ifdef DEBUG
+        cout <<"BEFORE ARG type="<<argtypename<<endl;
+#endif /* DEBUG */
+        pos1=argtypename.find("{");
+        pos2=argtypename.find("}");
+        if (pos1 > 0 && pos2 > 0) argtypename.erase(pos1,pos2-pos1+1);
+#ifdef DEBUG
+        cout <<"AFTER  ARG type="<<argtypename<<endl;
+#endif /* DEBUG */
+      }
+
     proto.append(argtypename);
     funchandle.append(argtypename);
 
@@ -794,7 +812,7 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, ofstream& header, ofstream& impl, ofs
   // open source file
   ifstream istr(file.c_str());
   if (!istr) {
-    cerr << "Error: Cannot open '" << file << "'" << endl;
+    cerr << "Error: Cannot Open '" << file << "'" << endl;
     return false;
   }
 #ifdef DEBUG
@@ -842,7 +860,11 @@ void generateMakefile(string& package, string &outFileName, int runtime, string&
   ofstream makefile(string(libname+"_wrapper/"+string(makefileName)).c_str());
 
   string compiler_name("$(TAU_CC)");
-  if (upc_wrapper) compiler_name=string("$(TAU_UPCC)");
+  string upcprefix("");
+  if (upc_wrapper) {
+    compiler_name=string("$(TAU_UPCC)");
+    upcprefix="$(UPCC_C_PREFIX)";
+  }
   
   if (runtime == 0) {
     string text("include ${TAU_MAKEFILE} \n\
@@ -866,7 +888,7 @@ clean:\n\
     if (runtime == 1) { 
       string text("include ${TAU_MAKEFILE} \n\
 CC="+compiler_name+" \n\
-CFLAGS=$(TAU_DEFS) "+ extradefs+ " $(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE) $(TAU_MPI_INCLUDE)  -I.. -fPIC \n\
+CFLAGS=$(TAU_DEFS) "+ extradefs+ " " + upcprefix+"$(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE) $(TAU_MPI_INCLUDE)  -I.. -fPIC \n\
 \n\
 lib"+package+"_wrap.so: "+package+"_wrap.o \n\
 	$(CC) $(TAU_SHFLAGS) $@ $< $(TAU_SHLIBS) -ldl\n\
@@ -883,7 +905,7 @@ clean:\n\
         string text("include ${TAU_MAKEFILE} \n\
 CC="+compiler_name+" \n\
 ARFLAGS=rcv \n\
-CFLAGS=$(TAU_DEFS) "+ extradefs + " $(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE)  $(TAU_MPI_INCLUDE) -I.. \n\
+CFLAGS=$(TAU_DEFS) "+ extradefs + " " + upcprefix+"$(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE)  $(TAU_MPI_INCLUDE) -I.. \n\
 \n\
 lib"+package+"_wrap.a: "+package+"_wrap.o \n\
 	$(TAU_AR) $(ARFLAGS) $@ $< \n\
@@ -1040,7 +1062,7 @@ int main(int argc, char **argv)
   system(dircmd.c_str());
   ofstream linkoptsfile(string(libname+"_wrapper/link_options.tau").c_str()); 
   if (!linkoptsfile) {
-    cerr << "Error: Cannot open '" << libname+"_wrapper/link_options.tau" << "'" << endl;
+    cerr << "Error: Cannot open: '" << libname+"_wrapper/link_options.tau" << "'" << endl;
     return false;
   }
 
@@ -1048,7 +1070,7 @@ int main(int argc, char **argv)
   ofstream impl(string(libname+"_wrapper/"+outFileName).c_str()); /* actual implementation goes in here */
   ofstream header(string(libname+"_wrapper/"+string(filename)).c_str()); /* use the same file name as the original */
   if (!impl) {
-    cerr << "Error: Cannot open '" << outFileName << "'" << endl;
+    cerr << "Error: Cannot open output file '" << outFileName << "'" << endl;
     return false;
   }
   if (!header) {
@@ -1104,6 +1126,9 @@ int main(int argc, char **argv)
 */
      if (instrumentThisFile = processFileForInstrumentation(string(filename)))
      { /* should we instrument this file? Yes */
+#ifdef DEBUG
+       cout <<"Instrument file: "<<filename<<" "<< (*it)->name()<<endl;
+#endif /* DEBUG */
        instrumentCFile(p, *it, header, impl, linkoptsfile, group_name, header_file, runtime, runtime_libname, libname);
      }
   }
