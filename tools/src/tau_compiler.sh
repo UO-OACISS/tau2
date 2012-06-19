@@ -31,7 +31,7 @@ declare -i isCXXUsedForC=$FALSE
 
 declare -i isCurrentFileC=$FALSE
 declare -i isDebug=$FALSE
-declare -i isDebug=$TRUE
+#declare -i isDebug=$TRUE
 #Set isDebug=$TRUE for printing debug messages.
 
 declare -i opari=$FALSE
@@ -694,7 +694,12 @@ for arg in "$@" ; do
 			optCompInst=$TRUE
 			disablePdtStep=$TRUE
 			# force the debug flag so we get symbolic information
-		    optCompile="$optCompile -g"
+                        if [ $berkeley_upcc == $TRUE ]; 
+		        then
+		          optCompile="$optCompile -Wc,-g"
+                        else
+		          optCompile="$optCompile -g"
+                        fi
 			echoIfDebug "\tUsing Compiler-based Instrumentation"
 			;;
 		    -optPDTInst)
