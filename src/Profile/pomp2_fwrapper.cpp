@@ -34,7 +34,9 @@
  *              Peter Philippen <p.philippen@fz-juelich.de>
  *
  *  @brief      This file contains fortran wrapper functions.*/
+#ifndef _OPENMP
 #define _OPENMP
+#endif /* _OPENMP */
  extern "C"{
 
 #include <config.h>
