@@ -1264,6 +1264,10 @@ cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${listOfObjectFiles} | `${op
       linkCmd="$linkCmd `cat $optWrappersDir/upc/bupc/link_options.tau` $optLinking"
       echoIfDebug "Linking command is $linkCmd"
     fi
+    if [ $trackUPCR == $TRUE -a $berkeley_upcc == $FALSE -a -r $optWrappersDir/upc/cray/link_options.tau -a -r $optWrappersDir/../libcray_upc_runtime_wrap.a ] ; then
+      linkCmd="$linkCmd `cat $optWrappersDir/upc/cray/link_options.tau` $optLinking"
+      echoIfDebug "Linking command is $linkCmd"
+    fi
     
     if [ "x$tauWrapFile" != "x" ]; then
       linkCmd="$linkCmd `cat $tauWrapFile` "           
@@ -1763,6 +1767,11 @@ cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} | `
         echoIfDebug "trackUPCR = $trackUPCR, wrappers = $optWrappersDir/upc/bupc/link_options.tau "
         if [ $trackUPCR == $TRUE -a $berkeley_upcc == $TRUE -a -r $optWrappersDir/upc/bupc/link_options.tau ] ; then 
           newCmd="$newCmd `cat $optWrappersDir/upc/bupc/link_options.tau`"
+          echoIfDebug "Linking command is $newCmd"
+        fi
+
+        if [ $trackUPCR == $TRUE -a $berkeley_upcc == $FALSE -a -r $optWrappersDir/upc/cray/link_options.tau -a -r $optWrappersDir/../libcray_upc_runtime_wrap.a ] ; then
+          newCmd="$newCmd `cat $optWrappersDir/upc/cray/link_options.tau`"
           echoIfDebug "Linking command is $newCmd"
         fi
 
