@@ -488,6 +488,12 @@ void TauMetrics_getMetrics(int tid, double values[])
   }
 }
 
+extern "C" void TauMetrics_internal_alwaysSafeToGetMetrics(int tid, double values[]) {
+  for (int i = 0; i < nfunctions; i++) {
+    functionArray[i](tid, i, values);
+  }
+}
+
 
 extern "C" x_uint64 TauMetrics_getInitialTimeStamp() {
   return initialTimeStamp;
