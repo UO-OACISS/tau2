@@ -84,6 +84,7 @@ TAUOPENCL=src/wrappers/opencl
 MEMORYWRAPPER=src/wrappers/memory
 #GASNET#TAU_UPCC_WRAPPER=src/wrappers/upc/bupc/upcr #ENDIF#
 #UPCC#UPCWRAPPER=$(TAU_UPCC_WRAPPER) #ENDIF#
+#COMPINST_CRAYCC#UPCWRAPPER=src/wrappers/upc/crayupc #ENDIF#
 
 
 # Subdirectories to make resursively
