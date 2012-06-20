@@ -862,7 +862,7 @@ void generateMakefile(string& package, string &outFileName, int runtime, string&
   string compiler_name("$(TAU_CC)");
   string upcprefix("");
   if (upc_wrapper) {
-    compiler_name=string("$(TAU_UPCC)");
+    //compiler_name=string("$(TAU_UPCC)");
     upcprefix="$(UPCC_C_PREFIX)";
   }
   
