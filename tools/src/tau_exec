@@ -345,6 +345,9 @@ if [ $qsub_mode = false ]; then
 
     # always use the basic preload library now
     TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libTAU-preload$TAU_SHLIBX
+    
+    # always use the ld auditor
+    TAUEX_LD_AUDITOR=$BASEDIR/lib/$theBinding/libTAU-dl-auditor$TAU_SHLIBX
 fi
 
 
@@ -359,6 +362,7 @@ if [ $verbose = "true" ] ; then
     echo ""
     echo "Setting LD_LIBRARY_PATH to $TAUEX_LD_LIBRARY_PATH"
     echo "Setting LD_PRELOAD to $TAUEX_LD_PRELOAD"
+    echo "Setting LD_AUDIT to $TAUEX_LD_AUDITOR"
     echo ""
 fi
 
@@ -418,6 +422,7 @@ else
 	    echo "export DYLD_FORCE_FLAT_NAMESPACE="
 	else
 	    echo "export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH"
+	    echo "export LD_AUDIT=$TAUEX_LD_AUDITOR"
 	    echo "export LD_PRELOAD=$TAUEX_LD_PRELOAD"
 	fi
 	echo "$@"
@@ -429,6 +434,7 @@ else
 	    export DYLD_FORCE_FLAT_NAMESPACE=""
 	else
 	    export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
+	    export LD_AUDIT=$TAUEX_LD_AUDITOR
 	    export LD_PRELOAD=$TAUEX_LD_PRELOAD
 	fi
 	"$@"
