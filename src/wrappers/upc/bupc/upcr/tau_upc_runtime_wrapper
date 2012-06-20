@@ -129,7 +129,8 @@ cd ${dirname}
 make
 cd ..
 rm -f ${headerfile}.pdb 
-mkdir -p $basedir/wrappers/upc/bupc
+mkdir -p $basedir/lib/wrappers/upc
+mkdir -p $basedir/lib/wrappers/upc/bupc
 echo cp ${dirname}/link_options.tau $basedir/lib/wrappers/upc/bupc
 cp ${dirname}/link_options.tau $basedir/lib/wrappers/upc/bupc
 echo cp ${dirname}/libtau_upcr_wrap.a $basedir/lib/
