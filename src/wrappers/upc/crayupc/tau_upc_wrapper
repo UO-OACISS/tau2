@@ -62,12 +62,12 @@ tauarch=`tau-config | grep TAUARCH | sed -e 's@TAUARCH=@@g' `
 basedir=`tau-config | grep BASEDIR | sed -e 's@BASEDIR=@@g' `
 
 parser=$pdtdir/$tauarch/bin/upcparse
-if [ ! -x $parser ]; then
-  echo "ERROR: Can't execute $parser: Using PDT = $pdtdir, ARCH = $tauarch"
-  exit 1
-fi
 baseheader=`basename $headerfile .h`
 if [ -d $pdtdir ]; then 
+  if [ ! -x $parser ]; then
+    echo "ERROR: Can't execute upcparse: $parser: Using PDT = $pdtdir, ARCH = $tauarch. Please upgrade to the latest PDT from http://tau.uoregon.edu/pdt.tgz"
+    exit 1
+  fi
   $parser $headerfile `tau_cc.sh -tau:showincludes` 
   mv $baseheader.pdb $headerfile.pdb 
 
