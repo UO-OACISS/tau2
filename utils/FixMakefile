@@ -236,6 +236,11 @@ case $1 in
 	echo "s,^UPCNETWORK=.*$,UPCNETWORK=$upcnetwork,g" >> $sedout
 	;;
 
+     gasnet=*)
+	gasnetdir=`echo $1 | sed -e 's/^gasnet=//' -e 's/#/ /g'`
+	echo "s,^TAU_GASNET_DIR=.*$,TAU_GASNET_DIR=$gasnetdir,g" >> $sedout
+	;;
+
      sicortexlink=*)
         sicortexlink=`echo $1 | sed -e 's/^sicortexlink=//' -e 's/#/ /g'`
 	echo "s@^SICORTEXLINK=.*\$@SICORTEXLINK=$sicortexlink@g" >> $sedout
@@ -919,6 +924,10 @@ case $1 in
 	;;
      CRAYCC)
 	echo NOTE: Using The Cray T3E CC C++ compiler 
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     GASNET)
+	echo NOTE: Using The GASNET directory 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CRAYX1CC)

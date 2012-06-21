@@ -1217,6 +1217,7 @@ void Tau_sampling_papi_overflow_handler(int EventSet, void *address, x_int64 ove
 /*********************************************************************
  * Initialize the sampling trace system
  ********************************************************************/
+extern "C" void TauMetrics_internal_alwaysSafeToGetMetrics(int tid, double values[]);
 int Tau_sampling_init(int tid) {
   int ret;
 
@@ -1346,7 +1347,12 @@ int Tau_sampling_init(int tid) {
     // set up the base timers
     double values[TAU_MAX_COUNTERS];
     /* Get the current metric values */
-    TauMetrics_getMetrics(tid, values);
+    //    TauMetrics_getMetrics(tid, values);
+    // *CWL* - sampling_init can happen within the TAU init in the non-MPI case.
+    //         So, we invoke a call that insists that TAU Metrics are available
+    //         and ready to use. This requires that sampling init happens after
+    //         metric init under all possible initialization conditions.
+    TauMetrics_internal_alwaysSafeToGetMetrics(tid, values);
     int localIndex = 0;
     for (int x = 0; x < TAU_MAX_THREADS; x++) {
       localIndex = x*TAU_MAX_COUNTERS;
