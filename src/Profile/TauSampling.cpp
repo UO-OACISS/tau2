@@ -1169,6 +1169,8 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
   Tau_global_decr_insideTAU_tid(tid);
 }
 
+extern "C" void TauMetrics_internal_alwaysSafeToGetMetrics(int tid, double values[]);
+
 /*********************************************************************
  * Handler for itimer interrupt
  ********************************************************************/
@@ -1176,15 +1178,19 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *context) {
   unsigned long pc;
   pc = get_pc(context);
 
-  //TAU_VERBOSE("Tau_sampling_handler invoked\n");
+#ifdef DEBUG_PROF
+  double values[TAU_MAX_COUNTERS];
+  double values2[TAU_MAX_COUNTERS];
+  TauMetrics_internal_alwaysSafeToGetMetrics(0, values);
   Tau_sampling_handle_sample((void *)pc, (ucontext_t *)context);
+#endif // DEBUG_PROF
 
   // now, apply the application's action.
   if (application_sa.sa_handler == SIG_IGN || application_sa.sa_handler == SIG_DFL) {
     // if there is no handler, or the action is ignore
     // do nothing, because we are only handling SIGPROF
     // and if we do the "default", that would lead to termination.
-    return;
+    //return;
   } else {
     //TAU_VERBOSE("Executing the application's handler!\n");
     // Invoke the application's handler.
@@ -1194,6 +1200,10 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *context) {
       (*application_sa.sa_handler)(signum);
     }
   }
+#ifdef DEBUG_PROF
+  TauMetrics_internal_alwaysSafeToGetMetrics(0, values2);
+  printf("Sampling took %f usec\n", values2[0] - values[0]);
+#endif // DEBUG_PROF
   return;
 }
 
@@ -1216,7 +1226,6 @@ void Tau_sampling_papi_overflow_handler(int EventSet, void *address, x_int64 ove
 /*********************************************************************
  * Initialize the sampling trace system
  ********************************************************************/
-extern "C" void TauMetrics_internal_alwaysSafeToGetMetrics(int tid, double values[]);
 int Tau_sampling_init(int tid) {
   int ret;
 
@@ -1328,16 +1337,21 @@ int Tau_sampling_init(int tid) {
         fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
         return -1;
       }
-      // the old handler was just the default.
+      // the old handler was just the default or ignore.
       memset(&application_sa, 0, sizeof(struct sigaction));
       sigemptyset(&application_sa.sa_mask);
-      application_sa.sa_handler = SIG_DFL;
+      application_sa.sa_handler = query_action.sa_handler;
     } else {
-      // save and call the old handler
-      ret = sigaction(alarmType, &act, &application_sa);
-      if (ret != 0) {
-        fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
-        return -1;
+      // FIRST! check if this is us! (i.e. we got initialized twize)
+      if (query_action.sa_sigaction == Tau_sampling_handler) {
+        TAU_VERBOSE("WARNING! Tau_sampling_init called twice!\n");
+      } else {
+        // install our handler, and save the old handler
+        ret = sigaction(alarmType, &act, &application_sa);
+        if (ret != 0) {
+          fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
+          return -1;
+        }
       }
     }
     
