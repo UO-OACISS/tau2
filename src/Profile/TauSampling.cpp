@@ -83,7 +83,27 @@
 // For STL string support
 #include <string>
 
-/*************************************
+/*
+   see:
+   http://ftp.gnu.org/old-gnu/Manuals/glibc-2.2.3/html_node/libc_463.html#SEC473
+   for details.  When using SIGALRM and ITIMER_REAL on MareNostrum (Linux on
+   PPC970MP) the network barfs.  When using ITIMER_PROF and SIGPROF, everything
+   was fine...
+   //int which = ITIMER_REAL;
+   //int TAU_ALARM_TYPE = SIGALRM;
+ */
+
+/* always use SIGPROF, for now... */
+
+//#if defined(PTHREADS) || defined(TAU_OPENMP)
+  int TAU_ITIMER_TYPE = ITIMER_PROF;
+  int TAU_ALARM_TYPE = SIGPROF;
+//#else
+  //int TAU_ITIMER_TYPE = ITIMER_REAL;
+  //int TAU_ALARM_TYPE = SIGALRM;
+//#endif
+
+ /*************************************
  * Shared Unwinder function prototypes.
  * These are internal to TAU and does
  *   not need to be extern "C"
@@ -1180,10 +1200,10 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *context) {
 
 #ifdef DEBUG_PROF
   double values[TAU_MAX_COUNTERS];
-  double values2[TAU_MAX_COUNTERS];
   TauMetrics_internal_alwaysSafeToGetMetrics(0, values);
-  Tau_sampling_handle_sample((void *)pc, (ucontext_t *)context);
 #endif // DEBUG_PROF
+
+  Tau_sampling_handle_sample((void *)pc, (ucontext_t *)context);
 
   // now, apply the application's action.
   if (application_sa.sa_handler == SIG_IGN || application_sa.sa_handler == SIG_DFL) {
@@ -1201,6 +1221,7 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *context) {
     }
   }
 #ifdef DEBUG_PROF
+  double values2[TAU_MAX_COUNTERS];
   TauMetrics_internal_alwaysSafeToGetMetrics(0, values2);
   printf("Sampling took %f usec\n", values2[0] - values[0]);
 #endif // DEBUG_PROF
@@ -1272,31 +1293,15 @@ int Tau_sampling_init(int tid) {
   if (TauEnv_get_profiling()) {
   }
   */
-/*
-   see:
-   http://ftp.gnu.org/old-gnu/Manuals/glibc-2.2.3/html_node/libc_463.html#SEC473
-   for details.  When using SIGALRM and ITIMER_REAL on MareNostrum (Linux on
-   PPC970MP) the network barfs.  When using ITIMER_PROF and SIGPROF, everything
-   was fine...
-   //int which = ITIMER_REAL;
-   //int alarmType = SIGALRM;
- */
 
-//#if defined(PTHREADS) || defined(TAU_OPENMP)
-  int which = ITIMER_PROF;
-  int alarmType = SIGPROF;
-//#else
-  //int which = ITIMER_REAL;
-  //int alarmType = SIGALRM;
-//#endif
-  
   /*  *CWL* - NOTE: It is fine to establish the timer interrupts here
       (and the PAPI overflow interrupts elsewhere) only because we
       enable sample handling for each thread after init(tid) completes.
       See Tau_sampling_handle_sample().
    */
   // only thread 0 sets up the timer interrupts.
-  if ((strcmp(TauEnv_get_ebs_source(), "itimer") == 0) && (tid == 0)) {
+  if (((strcmp(TauEnv_get_ebs_source(), "itimer") == 0) ||
+       (strcmp(TauEnv_get_ebs_source(), "TIME") == 0)) && (tid == 0)) {
     struct sigaction act;
 
     // If TIME isn't on the list of TAU_METRICS, then do not sample.
@@ -1315,7 +1320,7 @@ int Tau_sampling_init(int tid) {
       fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
       return -1;
     }
-    ret = sigaddset(&act.sa_mask, alarmType);
+    ret = sigaddset(&act.sa_mask, TAU_ALARM_TYPE);
     if (ret != 0) {
       fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
       return -1;
@@ -1326,17 +1331,18 @@ int Tau_sampling_init(int tid) {
     // initialize the application signal action, so we can apply it
     // after we run our signal handler
     struct sigaction query_action;
-    ret = sigaction(alarmType, NULL, &query_action);
+    ret = sigaction(TAU_ALARM_TYPE, NULL, &query_action);
     if (ret != 0) {
       fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
       return -1;
     }
     if (query_action.sa_handler == SIG_DFL || query_action.sa_handler == SIG_IGN) {
-      ret = sigaction(alarmType, &act, NULL);
+      ret = sigaction(TAU_ALARM_TYPE, &act, NULL);
       if (ret != 0) {
         fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
         return -1;
       }
+      TAU_VERBOSE("Tau_sampling_init: pid = %d, tid = %d sigaction called.\n", getpid(), tid);
       // the old handler was just the default or ignore.
       memset(&application_sa, 0, sizeof(struct sigaction));
       sigemptyset(&application_sa.sa_mask);
@@ -1346,23 +1352,26 @@ int Tau_sampling_init(int tid) {
       if (query_action.sa_sigaction == Tau_sampling_handler) {
         TAU_VERBOSE("WARNING! Tau_sampling_init called twice!\n");
       } else {
+        TAU_VERBOSE("WARNING! Tau_sampling_init found another handler!\n");
         // install our handler, and save the old handler
-        ret = sigaction(alarmType, &act, &application_sa);
+        ret = sigaction(TAU_ALARM_TYPE, &act, &application_sa);
         if (ret != 0) {
           fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
           return -1;
         }
+        TAU_VERBOSE("Tau_sampling_init: pid = %d, tid = %d sigaction called.\n", getpid(), tid);
       }
     }
     
     struct itimerval ovalue, pvalue;
-    getitimer(which, &pvalue);
+    getitimer(TAU_ITIMER_TYPE, &pvalue);
     
-    ret = setitimer(which, &itval, &ovalue);
+    ret = setitimer(TAU_ITIMER_TYPE, &itval, &ovalue);
     if (ret != 0) {
       fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
       return -1;
     }
+    TAU_VERBOSE("Tau_sampling_init: pid = %d, tid = %d setitimer called.\n", getpid(), tid);
     
     if (ovalue.it_interval.tv_sec != pvalue.it_interval.tv_sec  ||
 	ovalue.it_interval.tv_usec != pvalue.it_interval.tv_usec ||
@@ -1488,8 +1497,7 @@ extern "C" void Tau_sampling_finalize_if_necessary(void) {
 /* Kevin: before wrapping things up, stop listening to signals. */
   sigset_t x;
   sigemptyset(&x);
-  sigaddset(&x, SIGPROF);
-  //sigaddset(&x, SIGALRM);
+  sigaddset(&x, TAU_ALARM_TYPE);
 #if defined(PTHREADS) || defined(TAU_OPENMP)
   pthread_sigmask(SIG_BLOCK, &x, NULL);
 #else
