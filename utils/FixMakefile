@@ -236,6 +236,11 @@ case $1 in
 	echo "s,^UPCNETWORK=.*$,UPCNETWORK=$upcnetwork,g" >> $sedout
 	;;
 
+     gasnet=*)
+	gasnetdir=`echo $1 | sed -e 's/^gasnet=//' -e 's/#/ /g'`
+	echo "s,^TAU_GASNET_DIR=.*$,TAU_GASNET_DIR=$gasnetdir,g" >> $sedout
+	;;
+
      sicortexlink=*)
         sicortexlink=`echo $1 | sed -e 's/^sicortexlink=//' -e 's/#/ /g'`
 	echo "s@^SICORTEXLINK=.*\$@SICORTEXLINK=$sicortexlink@g" >> $sedout
@@ -921,6 +926,10 @@ case $1 in
 	echo NOTE: Using The Cray T3E CC C++ compiler 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     GASNET)
+	echo NOTE: Using The GASNET directory 
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      CRAYX1CC)
 	echo NOTE: Using The Cray CC C++ compiler 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1190,6 +1199,10 @@ case $1 in
 	echo "NOTE: Using OTF library to build tau2otf trace converter ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     OTF2)
+	echo "NOTE: Using OTF2 library to build tau2otf2 trace converter ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      OTFSRC)
 	echo "NOTE: Using OTF source based distribution to build tau2otf trace converter ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1420,6 +1433,18 @@ case $1 in
 	;;
      CRAYXMT)
 	echo "NOTE: Using Cray XMT options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     MIC_LINUX)
+	echo "NOTE: Using Intel MIC Linux options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     MMIC)
+	echo "NOTE: Using Intel -mmic compute node MIC compilation options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     MPIICPC)
+	echo "NOTE: Using Intel mpiicpc compilation options"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CRAYCNL)
@@ -1658,6 +1683,10 @@ case $1 in
         ;;
      IBM64LINUX_XLF)
         echo "NOTE: IBM 64 bit xlf90 compiler for Linux options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     MPIIFORT)
+        echo "NOTE: Intel mpiifort compiler options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
      IBM64LINUX_XLC)

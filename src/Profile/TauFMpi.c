@@ -6017,7 +6017,7 @@ MPI_Fint *ierr;
 
 /******************************************************/
 /******************************************************/
-
+#ifndef TAU_MPI_F_STATUSES_IGNORE_ABSENT
 void  mpi_waitall_( count, array_of_requests, array_of_statuses, ierr )
 MPI_Fint *count;
 MPI_Fint * array_of_requests;
@@ -6052,6 +6052,7 @@ MPI_Fint *ierr;
     TAU_FREE_LOCAL(local_statuses);
   }
 }
+#endif /* TAU_MPI_F_STATUSES_IGNORE_ABSENT */
 
 void  mpi_waitall__( count, array_of_requests, array_of_statuses, ierr )
 MPI_Fint *count;
