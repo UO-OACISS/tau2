@@ -66,7 +66,8 @@
 /* if we are doing EBS sampling, set the default sampling period */
 #define TAU_EBS_DEFAULT 0
 #define TAU_EBS_KEEP_UNRESOLVED_ADDR_DEFAULT 0
-#define TAU_EBS_PERIOD_DEFAULT 1000
+#define TAU_EBS_PERIOD_DEFAULT 100000 // Kevin made this bigger,
+// because smaller causes problems sometimes.
 /* if we are doing EBS sampling, set whether we want inclusive samples */
 /* that is, main->foo->mpi_XXX is a sample for main, foo and mpi_xxx */
 #define TAU_EBS_INCLUSIVE_DEFAULT 0
