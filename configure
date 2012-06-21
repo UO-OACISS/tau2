@@ -491,6 +491,7 @@ for arg in "$@"; do
 #    echo "                                 interface.                            "
     echo "-scorep=<dir>  .................... Specify location of SCOREP package."
     echo "-upcnetwork=<value> .. Specify network (mpi, udp,...) for Berkeley UPC."
+    echo "-gasnet=<dir>  ............ Specify location of GASNET for UPC wrapper."
     echo "-python .. Automatically choose python options based on Python in path."
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
@@ -1258,6 +1259,12 @@ for arg in "$@"; do
   -upcnetwork=*)
       upc=yes
       upcnetwork=`echo $arg | sed -e 's/-upcnetwork=//'`
+      shift
+      ;;
+  -gasnet=*)
+      gasnet=yes
+      gasnetdir=`echo $arg | sed -e 's/-gasnet=//'`
+      fixmakeargs="$fixmakeargs gasnet=$gasnetdir GASNET"
       shift
       ;;
 
