@@ -256,12 +256,20 @@ fi
 if [ $track_io = "true" ] ; then
     # Add the io wrapper library to the LD_PRELOAD list
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-iowrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+    #use the auditor
+    TAUEX_LD_AUDITOR=$BASEDIR/lib/$theBinding/libTAU-dl-auditor$TAU_SHLIBX
+    #Needed for the auditor
+    export LD_BIND_NOW=1
 fi
 
 if [ $track_memory = "true" ] ; then
     # Add the memory wrapper library to the LD_PRELOAD list
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-memorywrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
     export TAU_MEMORY_WRAPPER_ENABLED=1
+    #use the auditor
+    TAUEX_LD_AUDITOR=$BASEDIR/lib/$theBinding/libTAU-dl-auditor$TAU_SHLIBX
+    #Needed for the auditor
+    export LD_BIND_NOW=1
 fi
 if [ $track_cuda = "true" ] ; then
 		# Add the CUDA wrapper library to the LD_PRELOAD list
@@ -346,8 +354,6 @@ if [ $qsub_mode = false ]; then
     # always use the basic preload library now
     TAUEX_LD_PRELOAD=$TAUEX_LD_PRELOAD:$BASEDIR/lib/$theBinding/libTAU-preload$TAU_SHLIBX
     
-    # always use the ld auditor
-    TAUEX_LD_AUDITOR=$BASEDIR/lib/$theBinding/libTAU-dl-auditor$TAU_SHLIBX
 fi
 
 
@@ -414,6 +420,10 @@ else
     if [ $dryrun = "true" ]; then
 	if [ $track_memory = "true" ] ; then
 	    echo "export TAU_MEMORY_WRAPPER_ENABLED=1"
+			echo "export LD_BIND_NOW=1"
+	fi
+	if [ $track_io = "true" ] ; then
+			echo "export LD_BIND_NOW=1"
 	fi
 
 	if [ $apple = 1 ]; then
