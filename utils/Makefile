@@ -170,6 +170,8 @@ INSTALL_OTF_TOOLS = $(INSTALL_EBS2OTF)
 #DYNINST#INSTALLTAURUN 	= $(INSTALLDEST)/tau_run #ENDIF#
 #SP1#LARGEFILEOPT = -DTAU_LARGEFILE -D_LARGEFILE64_SOURCE -D_LARGE_FILE_API #ENDIF#
 
+#CRAYCNL#CRAY_OPARI2_CONFIG= --build=cray CC_FOR_BUILD=cc CXX_FOR_BUILD=CC FC_FOR_BUILD=ftn CC=cc CXX=CC FC=ftn F77_FOR_BUILD=ftn F77=ftn #ENDIF#
+
 CFLAGS        = $(USER_OPT) -I../include $(CEXTRA) $(CWARNING) $(COMPSPECIFIC) $(COMPILEROPT) $(PKGOPT) $(LARGEFILEOPT) $(DEBUGOPT) $(GNUOPT)
 
 PDTCFLAGS     = $(USER_OPT) -I../include $(CEXTRA) $(CWARNING) $(COMPSPECIFIC) $(COMPILEROPT) $(PKGOPT) $(LARGEFILEOPT) $(DEBUGOPT)
@@ -208,7 +210,7 @@ opari/opari:
 		cd opari ; $(MAKE) opari
 
 opari2/_build/bin/opari2:
-		cd opari2 ;/bin/rm -rf  _build; mkdir _build; cd _build; CXX=$(CONFIG_CXX) CC=$(CONFIG_CC) ../configure --prefix=`pwd` --with-compiler-suite=$(OPARICOMP); $(MAKE) ; $(MAKE) install
+		cd opari2 ;/bin/rm -rf  _build; mkdir _build; cd _build; CXX=$(CONFIG_CXX) CC=$(CONFIG_CC) ../configure --prefix=`pwd` --with-compiler-suite=$(OPARICOMP) $(CRAY_OPARI2_CONFIG); $(MAKE) ; $(MAKE) install
 
 tau_timecorrect.o:	tau_timecorrect.cpp
 		$(CXX) $(CFLAGS) tau_timecorrect.cpp -c
