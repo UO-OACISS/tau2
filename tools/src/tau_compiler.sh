@@ -697,8 +697,10 @@ for arg in "$@" ; do
                         if [ $berkeley_upcc == $TRUE ]; 
 		        then
 		          optCompile="$optCompile -Wc,-g"
+		          optLinking="$optLinking -Wc,-g"
                         else
 		          optCompile="$optCompile -g"
+		          optLinking="$optLinking -g"
                         fi
 			echoIfDebug "\tUsing Compiler-based Instrumentation"
 			;;
