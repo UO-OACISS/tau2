@@ -1180,10 +1180,8 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *context) {
   Tau_sampling_handle_sample((void *)pc, (ucontext_t *)context);
 
   // now, apply the application's action.
-  if (&application_sa == NULL || application_sa.sa_handler == SIG_IGN) {
+  if (application_sa.sa_handler == SIG_IGN || application_sa.sa_handler == SIG_DFL) {
     // if there is no handler, or the action is ignore
-    return;
-  } else if (application_sa.sa_handler == SIG_DFL) {
     // do nothing, because we are only handling SIGPROF
     // and if we do the "default", that would lead to termination.
     return;
@@ -1196,6 +1194,7 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *context) {
       (*application_sa.sa_handler)(signum);
     }
   }
+  return;
 }
 
 /*********************************************************************
@@ -1317,13 +1316,29 @@ int Tau_sampling_init(int tid) {
     
     // initialize the application signal action, so we can apply it
     // after we run our signal handler
-    memset(&application_sa, 0, sizeof(struct sigaction));
-    ret = sigemptyset(&application_sa.sa_mask);
-
-    ret = sigaction(alarmType, &act, &application_sa);
+    struct sigaction query_action;
+    ret = sigaction(alarmType, NULL, &query_action);
     if (ret != 0) {
       fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
       return -1;
+    }
+    if (query_action.sa_handler == SIG_DFL || query_action.sa_handler == SIG_IGN) {
+      ret = sigaction(alarmType, &act, NULL);
+      if (ret != 0) {
+        fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
+        return -1;
+      }
+      // the old handler was just the default.
+      memset(&application_sa, 0, sizeof(struct sigaction));
+      sigemptyset(&application_sa.sa_mask);
+      application_sa.sa_handler = SIG_DFL;
+    } else {
+      // save and call the old handler
+      ret = sigaction(alarmType, &act, &application_sa);
+      if (ret != 0) {
+        fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
+        return -1;
+      }
     }
     
     struct itimerval ovalue, pvalue;
