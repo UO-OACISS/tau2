@@ -483,7 +483,11 @@ extern "C" int Tau_init_initializeTAU() {
   return 0;
 }
 
+#ifdef TAU_TRACK_LD_LOADER
+static int dl_initialized = 1;
+#else
 static int dl_initialized = 0;
+#endif
 
 extern "C" void Tau_init_dl_initialized() {
 	dl_initialized = 1;
