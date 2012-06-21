@@ -2,15 +2,14 @@
 #include <dlfcn.h>
 #include <link.h>
 #include <stdio.h>
-//void Tau_init_dl_initialized();
 
 // This auditor supports all API versions.
 unsigned int la_version(unsigned int version) {
 	return version;
 }
 
-void la_preinit(uintptr_t *cookie) {
 
+void la_preinit(uintptr_t *cookie) {
 	typedef void (*Tau_init_dl_initialized_p) ();
   static Tau_init_dl_initialized_p Tau_init_dl_initialized_h = NULL;
 
@@ -25,8 +24,7 @@ void la_preinit(uintptr_t *cookie) {
 		}
 		else {
 			(*Tau_init_dl_initialized_h)();
-			//initialize_func();
 		}
+		dlclose(tau_so);
 	}
 }
-
