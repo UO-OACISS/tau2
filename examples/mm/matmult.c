@@ -114,19 +114,19 @@ int main (int argc, char *argv[])
 #ifdef PTHREADS
   if (ret = pthread_create(&tid1, NULL, threaded_func, NULL) )
   {
-    perror("Error: pthread_create (1) fails ret = %d\n", ret);
+    printf("Error: pthread_create (1) fails ret = %d\n", ret);
     exit(1);
   }   
 
   if (ret = pthread_create(&tid2, NULL, threaded_func, NULL) )
   {
-    perror("Error: pthread_create (2) fails ret = %d\n", ret);
+    printf("Error: pthread_create (2) fails ret = %d\n", ret);
     exit(1);
   }   
 
   if (ret = pthread_create(&tid2, NULL, threaded_func, NULL) )
   {
-    perror("Error: pthread_create (3) fails ret = %d\n", ret);
+    printf("Error: pthread_create (3) fails ret = %d\n", ret);
     exit(1);
   }   
 
@@ -138,19 +138,19 @@ int main (int argc, char *argv[])
 #ifdef PTHREADS 
   if (ret = pthread_join(tid1, NULL) )
   {
-    perror("Error: pthread_join (1) fails ret = %d\n", ret);
+    printf("Error: pthread_join (1) fails ret = %d\n", ret);
     exit(1);
   }   
 
   if (ret = pthread_join(tid2, NULL) )
   {
-    perror("Error: pthread_join (2) fails ret = %d\n", ret);
+    printf("Error: pthread_join (2) fails ret = %d\n", ret);
     exit(1);
   }   
 
   if (ret = pthread_join(tid3, NULL) )
   {
-    perror("Error: pthread_join (3) fails ret = %d\n", ret);
+    printf("Error: pthread_join (3) fails ret = %d\n", ret);
     exit(1);
   }   
 
