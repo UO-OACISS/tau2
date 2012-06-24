@@ -20,6 +20,10 @@
 This is not a parallel implementation */
 #endif /* TAU_MPI */
 
+#ifdef PTHREADS
+#include <pthread.h>
+#endif /* PTHREADS */
+
 #ifndef MATRIX_SIZE
 #define MATRIX_SIZE 500
 #endif
@@ -124,7 +128,7 @@ int main (int argc, char *argv[])
     exit(1);
   }   
 
-  if (ret = pthread_create(&tid2, NULL, threaded_func, NULL) )
+  if (ret = pthread_create(&tid3, NULL, threaded_func, NULL) )
   {
     printf("Error: pthread_create (3) fails ret = %d\n", ret);
     exit(1);
