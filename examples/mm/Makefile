@@ -13,11 +13,8 @@
  
 
 TAU_MAKEFILE ?=../../include/Makefile
-TAU_OPTIONS ?='-optTauSelectFile=select.tau -optVerbose'
 
 include $(TAU_MAKEFILE)
-
-CXX		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cxx.sh 
 
 CC		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh
 
@@ -45,5 +42,5 @@ matmult_initialize.o: matmult_initialize.c matmult_initialize.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean: 	
-	$(RM) $(OBJS) $(TARGET) profile.* *.trc *.edf *.z MULT*
+	$(RM) $(OBJS) $(TARGET) profile.* *.trc *.edf *.z MULT* *.inst.* *.pdb Comp_gnu.o
 ##############################################
