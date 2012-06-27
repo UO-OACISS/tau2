@@ -4439,21 +4439,24 @@ fi
 # Checking the availability of the LD auditor. We need glibc 2.4 or greater and
 # link.h and dlfn.h
 cat << EOF > gccAuditorTest.c
+#include <features.h>
 #include <dlfcn.h>
 #include <link.h>
 #if ((__GLIBC__ == 2 && __GLIBC_MINOR__ >= 4) || __GLIBC__ > 2)
+#else
 #error "GLIBC LD AUDITOR available."
 #endif 
 EOF
 
-if $cc_compiler $orig_useropt -c gccAuditorTest.c 1> /dev/null 2>&1 
+$c_compiler $orig_useropt -c gccAuditorTest.c 1> /dev/null 2>&1
+if [ "$?" == "1" ]
 then
   echo "LD AUDITOR unavailable, disabling" 
 else
   echo "Using LD AUDITOR."
   fixmakeargs="$fixmakeargs LD_AUDITOR_AVAILABLE"
 fi
-/bin/rm -f gccAuditorTest.*
+#/bin/rm -f gccAuditorTest.*
 
 
 ######################################################################
