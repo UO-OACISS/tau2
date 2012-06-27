@@ -1,4 +1,5 @@
 #define _GNU_SOURCE
+#ifdef TAU_TRACK_LD_LOADER
 #include <dlfcn.h>
 #include <link.h>
 #include <stdio.h>
@@ -28,3 +29,4 @@ void la_preinit(uintptr_t *cookie) {
 		dlclose(tau_so);
 	}
 }
+#endif //TAU_TRACK_LD_LOADER
