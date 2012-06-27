@@ -1162,7 +1162,7 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
   */
   if (samplingEnabled[tid] == 0) {
     // Do not track counts when sampling is not enabled.
-    TAU_VERBOSE("Tau_sampling_handle_sample: sampling not enabled\n");
+    //TAU_VERBOSE("Tau_sampling_handle_sample: sampling not enabled\n");
     return;
   }
   numSamples[tid]++;
@@ -1300,8 +1300,9 @@ int Tau_sampling_init(int tid) {
       See Tau_sampling_handle_sample().
    */
   // only thread 0 sets up the timer interrupts.
-  if (((strcmp(TauEnv_get_ebs_source(), "itimer") == 0) ||
-       (strcmp(TauEnv_get_ebs_source(), "TIME") == 0)) && (tid == 0)) {
+  if ((strcmp(TauEnv_get_ebs_source(), "itimer") == 0) ||
+      (strcmp(TauEnv_get_ebs_source(), "TIME") == 0)) {
+    if (tid == 0) {
     struct sigaction act;
 
     // If TIME isn't on the list of TAU_METRICS, then do not sample.
@@ -1362,6 +1363,7 @@ int Tau_sampling_init(int tid) {
         TAU_VERBOSE("Tau_sampling_init: pid = %d, tid = %d sigaction called.\n", getpid(), tid);
       }
     }
+  }
     
     struct itimerval ovalue, pvalue;
     getitimer(TAU_ITIMER_TYPE, &pvalue);
