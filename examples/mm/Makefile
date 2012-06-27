@@ -11,30 +11,20 @@
 ##  Indiana University  University of Oregon  University of Rennes   ##
 #######################################################################
  
-CXX		= tau_cxx.sh
-#CXX		= g++
 
-CC		= tau_cc.sh
-#CC		= gcc
+TAU_MAKEFILE ?=../../include/Makefile
 
-F90		= tau_f90.sh
-#F90		= gfortran
+include $(TAU_MAKEFILE)
 
-CFLAGS          = 
-
-LIBS            = 
-
-LDFLAGS	      	= $(CFLAGS)
-
-MAKEFILE      	= Makefile
+CC		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh
 
 PRINT	      	= pr
 
-RM 	      	= /bin/rm -f
+RM 	      	= /bin/rm -rf
 
-TARGET	      	= mandel
+TARGET	      	= matmult
 
-EXTRAOBJS     	= 
+OBJS     	= matmult.o matmult_initialize.o
 
 ##############################################
 
@@ -42,21 +32,15 @@ all:		$(TARGET)
 
 install: 	$(TARGET)
 
-$(TARGET):	$(TARGET).o mytimer.o ppm.o
-	$(F90) $(LDFLAGS) $(TARGET).o mytimer.o ppm.o -o $@ $(LIBS)
+$(TARGET):	$(OBJS)
+	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
 
-$(TARGET).o : $(TARGET).f90 ppm.mod
-	$(F90)  -c $(TARGET).f90
+matmult.o: matmult.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-mytimer.o : mytimer.c
-	$(CC) -c $<
-
-ppm.o : ppm.f90
-	$(F90)  -c $<
-
-ppm.mod: ppm.f90
-	$(F90) -c $<
+matmult_initialize.o: matmult_initialize.c matmult_initialize.h
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean: 	
-	$(RM) *.o *.mod $(TARGET) 
+	$(RM) $(OBJS) $(TARGET) profile.* *.trc *.edf *.z MULT* *.inst.* *.pdb Comp_gnu.o
 ##############################################

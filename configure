@@ -4106,7 +4106,7 @@ EOF
               fi  
             fi
           fi 
-	  /bin/rm -f tau_papi_test.c tau_papi_test tau_papi_test.o
+	  /bin/rm -f tau_papi_test.c tau_papi_test tau_papi_test.o libtau_papi_test.so
       fi		
 fi
 
