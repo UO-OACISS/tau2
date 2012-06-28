@@ -15,14 +15,18 @@ void Tau_CuptiLayer_finalize() {}
 
 void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev) {}
 
-void Tau_CuptiLayer_read_counters(uint64_t * cBuffer) {}
+void Tau_CuptiLayer_read_counter(uint64_t * cBuffer, int id) {}
 
 counter_map_t Tau_CuptiLayer_Counter_Map;
 counter_map_t Tau_CuptiLayer_map() {return Tau_CuptiLayer_Counter_Map;}
 
+counter_id_map_t internal_id_map; 
+counter_id_map_t internal_id_map() {return internal_id_map;}
+
 #endif
 
 counter_map_t Tau_CuptiLayer_Counter_Map;
+counter_id_map_t internal_id_map; 
 counter_vec_t Tau_CuptiLayer_Added_counters;
 CUpti_EventGroup eventGroup;	
 
@@ -261,11 +265,9 @@ void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev)
 {	
 		Tau_CuptiLayer_Added_counters.push_back(ev);	
 }
-/* counterDataBuffer is assumed to be pointing to a memory location of size:
-   Tau_CuptiLayer_num_events * sizeof ( uint64_t ); */
-void Tau_CuptiLayer_read_counters(void* cb)
+uint64_t Tau_CuptiLayer_read_counter(int id)
 {	
-	uint64_t * counterDataBuffer = (uint64_t *) cb;
+	uint64_t * counterDataBuffer = (uint64_t *) malloc(Tau_CuptiLayer_get_num_events() * sizeof(uint64_t));
 	if (Tau_CuptiLayer_is_initialized())
 	{
 		CUresult cuErr;
@@ -273,7 +275,7 @@ void Tau_CuptiLayer_read_counters(void* cb)
 		//cuErr = cuCtxGetCurrent( &cuCtx );
 		// check if there is a current context
 		//printf("cupti layer finalized? %d context current? %d.\n",
-			//Tau_CuptiLayer_finalized, cuErr == CUDA_SUCCESS);
+	  //		Tau_CuptiLayer_finalized, cuErr == CUDA_SUCCESS);
 		if (Tau_CuptiLayer_finalized || !Tau_CuptiLayer_enabled)
 		{
 			for (int i=0; i<Tau_CuptiLayer_get_num_events(); i++)
@@ -324,12 +326,19 @@ void Tau_CuptiLayer_read_counters(void* cb)
 		*/
 	}
 	else
-	{
+	{ 
+		return 0;
+		/*
 		for (int i=0; i<Tau_CuptiLayer_get_num_events(); i++)
 		{
 			counterDataBuffer[i] = 0;
 		}
+		*/
 	}
+	//printf("[%d] cupti actual value: %llu.\n", internal_id_map[id], counterDataBuffer[internal_id_map[id]]);
+	uint64_t cb = counterDataBuffer[internal_id_map[id]];
+	free(counterDataBuffer);
+	return cb;
 }
 void retrieve_available_counters()
 {
@@ -414,9 +423,11 @@ bool Tau_CuptiLayer_is_cupti_counter(char* str)
 	return Tau_CuptiLayer_map().count(string(str)) > 0;
 }
 
-void Tau_CuptiLayer_register_string(char *str)
+void Tau_CuptiLayer_register_string(char *str, int metric_n)
 {
 	Tau_CuptiLayer_register_counter(Tau_CuptiLayer_map()[str]);
+	internal_id_map[metric_n] = Tau_CuptiLayer_Added_counters.size() - 1;
+	//printf("adding counter with id: %d.\n", metric_n);
 }
 
 #endif

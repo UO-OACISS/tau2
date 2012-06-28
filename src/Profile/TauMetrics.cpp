@@ -347,7 +347,7 @@ static void initialize_functionArray()
 			/* CUPTI handled separately */
 			/* setup CUPTI metrics */
 			functionArray[pos++] = metric_read_cupti;
-			Tau_CuptiLayer_register_string(metricv[i]);
+			Tau_CuptiLayer_register_string(metricv[i], pos - 1);
 #endif //CUPTI
 #ifdef TAU_PAPI
     } else if (compareMetricString(metricv[i], "P_WALL_CLOCK_TIME")) {
