@@ -4449,7 +4449,7 @@ cat << EOF > gccAuditorTest.c
 EOF
 
 $c_compiler $orig_useropt -c gccAuditorTest.c 1> /dev/null 2>&1
-if [ "$?" == "1" ]
+if [ "$?" = "1" ]
 then
   echo "LD AUDITOR unavailable, disabling" 
 else
