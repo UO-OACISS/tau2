@@ -676,8 +676,8 @@ bool RtsLayer::isCtorDtor(const char *name) {
 //////////////////////////////////////////////////////////////////////
 string RtsLayer::PrimaryGroup(const char *ProfileGroupName) {
   string groups = ProfileGroupName;
-  string primary; 
-  string separators = " |"; 
+  string primary = ProfileGroupName;
+  const char *separators = " |"; 
   int start, stop, n;
 
   start = groups.find_first_not_of(separators, 0);
@@ -685,8 +685,10 @@ string RtsLayer::PrimaryGroup(const char *ProfileGroupName) {
   stop = groups.find_first_of(separators, start); 
 
   if ((stop < 0) || (stop > n)) stop = n;
+  int end = stop - start;
 
-  primary = groups.substr(start, stop - start) ;
+  if (end > 0 && end != stop)
+    primary = groups.substr(start, end) ;
   return primary;
 
 }
