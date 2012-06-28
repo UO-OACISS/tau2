@@ -28,7 +28,6 @@ printf ("[%s:%d] Error %d for CUPTI API function '%s'. cuptiQuery failed\n", __F
 
 #define TAU_CUPTI_MAX_NAME 40
 #define TAU_CUPTI_MAX_DESCRIPTION 480
-#define TAU_CUPTI_MAX_EVENTS 160
 		
 //#define DISABLE_CUPTI
 
@@ -58,6 +57,7 @@ public:
 typedef map<std::string, CuptiCounterEvent*> counter_map_t;
 typedef vector<CuptiCounterEvent*> counter_vec_t;
 typedef map<std::string, CuptiCounterEvent*>::iterator counter_map_it; 
+typedef map<int, int> counter_id_map_t; 
 
 #ifdef DISABLE_CUPTI
 
@@ -78,6 +78,9 @@ extern void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev) {}
 counter_map_t Tau_CuptiLayer_Counter_Map;
 extern counter_map_t Tau_CuptiLayer_map() {return Tau_CuptiLayer_Counter_Map;}
 
+/* mapping the metric number to the cupti metric number */
+counter_id_map_t internal_id_map; 
+extern counter_id_map_t internal_id_map() {return internal_id_map;}
 #else
 
 extern bool Tau_CuptiLayer_is_initialized();
@@ -94,6 +97,7 @@ extern void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev);
 
 extern counter_map_t Tau_CuptiLayer_map();
 
+extern counter_id_map_t interal_id_map();
 #endif
 #endif //__GNUC__
 
@@ -105,13 +109,15 @@ extern counter_map_t Tau_CuptiLayer_map();
 
 #include <stdint.h>
 
+
+
 extern "C" int Tau_CuptiLayer_get_num_events();
 
-extern "C" void Tau_CuptiLayer_read_counters(void * cBuffer);
+extern "C" uint64_t Tau_CuptiLayer_read_counter(int metric_n);
 
 extern "C" bool Tau_CuptiLayer_is_cupti_counter(char *str);
 
-extern "C" void Tau_CuptiLayer_register_string(char *str);
+extern "C" void Tau_CuptiLayer_register_string(char *str, int metric_n);
 
 //counter_map_it Tau_CuptiLayer_counters_iterator();
 
