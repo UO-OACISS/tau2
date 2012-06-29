@@ -675,7 +675,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
           RtsLayer::myNode(), RtsLayer::myThread(), getpid(), ThisFunction->GetName());
 #endif
 #ifdef TAU_DMAPP
-	TAU_DISABLE_INSTRUMENTATION(); 
+	if (RtsLayer::myThread() == 0) {
+		TAU_DISABLE_INSTRUMENTATION(); 
+	}
 #endif /* TAU_DMAPP */
 
 	  

@@ -25,4 +25,9 @@ extern "C" int Tau_init_initializeTAU();
 extern "C" int Tau_init_check_initialized();
 extern "C" int Tau_init_initializingTAU();
 
+//call by wrappers/taupreload/dl_auditor.
+extern "C" void Tau_init_dl_initialized();
+extern "C" int Tau_init_check_dl_initialized();
+
+
 #endif /* _TAU_INIT_H_ */

@@ -482,3 +482,18 @@ extern "C" int Tau_init_initializeTAU() {
   Tau_global_decr_insideTAU();
   return 0;
 }
+
+//Rely on the dl auditor (src/wrapper/taupreload) to set dl_initialized if the audit feature is//available (GLIBC version 2.4 or greater).
+#ifdef TAU_TRACK_LD_LOADER
+static int dl_initialized = 0;
+#else
+static int dl_initialized = 1;
+#endif
+
+extern "C" void Tau_init_dl_initialized() {
+	dl_initialized = 1;
+}
+extern "C" int Tau_init_check_dl_initialized() {
+	return dl_initialized;
+}
+
