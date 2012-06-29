@@ -158,7 +158,7 @@ public:
   //         eventually.
   //  map<unsigned long, unsigned int> *pcHistogram;
 #ifndef TAU_WINDOWS
-  TauPathHashTable<unsigned long> *pathHistogram[TAU_MAX_THREADS];
+  TauPathHashTable<TauPathAccumulator> *pathHistogram[TAU_MAX_THREADS];
 
   // For CallSite discovery
   bool isCallSite;
@@ -170,7 +170,7 @@ public:
   const char* GetShortName() const { return ShortenedName; }
 
   /* EBS Sampling Profiles */
-  void addPcSample(unsigned long *pc, int tid);
+  void addPcSample(unsigned long *pc, int tid, double interval[TAU_MAX_COUNTERS]);
 #endif // TAU_WINDOWS
 
   inline double *getDumpExclusiveValues(int tid) {
