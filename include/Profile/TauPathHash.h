@@ -38,6 +38,33 @@ using namespace std;
 #define HASH_FILTER 0xf0000000 /* 4-byte unsigned */
 #endif
 
+// Kevin: This is the class that will be contained in the hash table.
+class TauPathAccumulator {
+ public:
+  unsigned long count;
+  // Kevin: when we update PAPI support, this should be an array
+  double accumulator[TAU_MAX_COUNTERS];
+  // destructor
+  ~TauPathAccumulator() {}
+  // constructor
+  TauPathAccumulator(int inCount, double firstValues[TAU_MAX_COUNTERS]) {
+    count = inCount;
+    int i;
+    for (i = 0; i < Tau_Global_numCounters ; i++) {
+      accumulator[i] = firstValues[i];
+    }
+  }
+  // default constructor
+  TauPathAccumulator() {
+    count = 0;
+    int i;
+    for (i = 0; i < Tau_Global_numCounters ; i++) {
+      accumulator[i] = 0.0;
+    }
+  }
+};
+
+
 template <class T> class TauPathHashTable {
  private:
   int tid; /* This will be needed for accessing the right manager blocks without locks */

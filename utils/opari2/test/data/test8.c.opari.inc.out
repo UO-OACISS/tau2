@@ -14,6 +14,9 @@ static POMP2_Region_handle pomp2_region_7 = NULL;
 #define POMP2_DLIST_00008 shared(pomp2_region_8)
 static POMP2_Region_handle pomp2_region_8 = NULL;
 
+#ifdef __cplusplus 
+ extern "C" 
+#endif
 void POMP2_Init_regions_000()
 {
     POMP2_Assign_handle( &pomp2_region_1, "99*regionType=parallel*sscl=test8.c:36:36*escl=test8.c:55:55*hasIf=1*hasNumThreads=1*hasReduction=1**" );

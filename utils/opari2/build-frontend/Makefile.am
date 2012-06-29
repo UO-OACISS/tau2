@@ -98,8 +98,8 @@ install-example:
 endif
 
 install-pomp2_region_info:
-	$(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE_NAME@/devel
-	$(INSTALL_DATA) $(abs_srcdir)/../src/pomp-lib-dummy/pomp2_region_info.c $(DESTDIR)$(datadir)/@PACKAGE_NAME@/devel/
-	$(INSTALL_DATA) $(abs_srcdir)/../src/pomp-lib-dummy/pomp2_region_info.h $(DESTDIR)$(datadir)/@PACKAGE_NAME@/devel/
+	$(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE@/devel
+	$(INSTALL_DATA) $(abs_srcdir)/../src/pomp-lib-dummy/pomp2_region_info.c $(DESTDIR)$(datadir)/@PACKAGE@/devel/
+	$(INSTALL_DATA) $(abs_srcdir)/../src/pomp-lib-dummy/pomp2_region_info.h $(DESTDIR)$(datadir)/@PACKAGE@/devel/
 
 install-data-local: install-example install-pomp2_region_info
