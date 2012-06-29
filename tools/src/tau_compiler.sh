@@ -54,6 +54,7 @@ declare -i trackIO=$FALSE
 declare -i trackUPCR=$FALSE
 declare -i linkOnly=$FALSE
 declare -i trackDMAPP=$FALSE
+declare -i trackPthread=$FALSE
 declare -i revertOnError=$TRUE
 declare -i revertForced=$FALSE
 
@@ -97,6 +98,7 @@ printUsage () {
     echo -e "  -optTrackIO\t\t\tSpecify wrapping of POSIX I/O calls at link time."
     echo -e "  -optTrackUPCR\t\t\tSpecify wrapping of UPC runtime calls at link time."
     echo -e "  -optTrackDMAPP\t\tSpecify wrapping of Cray DMAPP library calls at link time."
+    echo -e "  -optTrackPthread\t\tSpecify wrapping of Pthread library calls at link time."
     echo -e "  -optWrappersDir=\"\"\t\tSpecify the location of the link wrappers directory."
     echo -e "  -optPDBFile=\"\"\t\tSpecify PDB file for tau_instrumentor. Skips parsing stage."
     echo -e "  -optTau=\"\"\t\t\tSpecify options for tau_instrumentor"
@@ -324,6 +326,12 @@ for arg in "$@" ; do
 		    -optTrackDMAPP)
 			trackDMAPP=$TRUE
 			echoIfDebug "NOTE: turning TrackDMAPP on"
+			# use the wrapper link_options.tau during linking
+			;;
+		    
+				-optTrackPthread)
+			trackPthread=$TRUE
+			echoIfDebug "NOTE: turning TrackPthread on"
 			# use the wrapper link_options.tau during linking
 			;;
 
@@ -1260,6 +1268,11 @@ cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${listOfObjectFiles} | `${op
       linkCmd="$linkCmd `cat $optWrappersDir/dmapp_wrapper/link_options.tau`"
       echoIfDebug "Linking command is $linkCmd "
     fi
+    
+		if [ $trackPthread == $TRUE -a -r $optWrappersDir/pthread_wrapper/link_options.tau ] ; then 
+      linkCmd="$linkCmd `cat $optWrappersDir/pthread_wrapper/link_options.tau`"
+      echoIfDebug "Linking command is $linkCmd "
+    fi
 
     echoIfDebug "trackUPCR = $trackUPCR, wrappers = $optWrappersDir/upc/bupc/link_options.tau "
     if [ $trackUPCR == $TRUE -a $berkeley_upcc == $TRUE -a -r $optWrappersDir/upc/bupc/link_options.tau ] ; then 
@@ -1272,7 +1285,6 @@ cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${listOfObjectFiles} | `${op
     fi
     
     if [ "x$tauWrapFile" != "x" ]; then
-      linkCmd="$linkCmd `cat $tauWrapFile` "           
       echoIfDebug "Linking command is $linkCmd"
     fi 
 
@@ -1765,6 +1777,11 @@ cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} | `
           newCmd="$newCmd `cat $optWrappersDir/dmapp_wrapper/link_options.tau`"
           echoIfDebug "Linking command is $linkCmd"
         fi
+		
+				if [ $trackPthread == $TRUE -a -r $optWrappersDir/pthread_wrapper/link_options.tau ] ; then 
+					newCmd="$newCmd `cat $optWrappersDir/pthread_wrapper/link_options.tau`"
+					echoIfDebug "Linking command is $linkCmd "
+				fi
 
         echoIfDebug "trackUPCR = $trackUPCR, wrappers = $optWrappersDir/upc/bupc/link_options.tau "
         if [ $trackUPCR == $TRUE -a $berkeley_upcc == $TRUE -a -r $optWrappersDir/upc/bupc/link_options.tau ] ; then 
