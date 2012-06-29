@@ -7,7 +7,7 @@
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 ****************************************************************************/
 /***************************************************************************
-**	File 		: TauWrapSyscalls.c				  **
+**	File 		: sys_wrap.c				  **
 **	Description 	: TAU Profiling Package RTS Layer definitions     **
 **			  for wrapping syscalls like exit                 **
 **	Contact		: tau-team@cs.uoregon.edu 		 	  **
@@ -22,6 +22,7 @@
 #define _GNU_SOURCE
 #endif
 
+#include <dlfcn.h>
 #include <stdio.h>
 #include <TAU.h>
 #include <stdlib.h>
@@ -30,49 +31,71 @@
 #include <signal.h>
 #include <Profile/TauEnv.h>
 
-extern int Tau_init_check_initialized();
-
 #define dprintf TAU_VERBOSE 
 
 #if (defined (TAU_BGP) || defined(TAU_XLC))
 #define TAU_DISABLE_SYSCALL_WRAPPER
 #endif /* TAU_BGP || TAU_XLC */
 
-int Tau_wrap_syscalls_checkPassThrough() {
-	//Do not wrap system calls that occur outside of TAU
-	if (Tau_init_check_initialized() == 0) {
-		return 1;
-	}
-	else {
-		return 0;
-	}
-}
-
 /////////////////////////////////////////////////////////////////////////
-// Define the exit wrapper
+// Define the fork wrapper
 /////////////////////////////////////////////////////////////////////////
 #ifndef TAU_DISABLE_SYSCALL_WRAPPER
-void exit(int status) {
-  dprintf("TAU: Inside tau_wrap.c: exit(): status = %d\n", status);
+pid_t __real_fork(void);
+pid_t __wrap_fork(void) {
+  pid_t pid_ret;
+  pid_ret = __real_fork();
+  dprintf("TAU: calling _fork \n");
+  
+	if (pid_ret == 0) {
+    TAU_REGISTER_FORK(getpid(), TAU_EXCLUDE_PARENT_DATA);
+    dprintf ("[%d] Registered Fork!\n", getpid());
+  }
+  return pid_ret;
 
-  TAU_PROFILE_EXIT("EXITING from TAU...");
+}
+#endif /* TAU_DISABLE_SYSCALL_WRAPPER */
+/////////////////////////////////////////////////////////////////////////
+// Define the kill wrapper
+/////////////////////////////////////////////////////////////////////////
+#ifndef TAU_DISABLE_SYSCALL_WRAPPER
+int __real_kill(pid_t pid, int sig);
+int __wrap_kill(pid_t pid, int sig) {
 
-  dprintf("TAU: calling _internal_exit \n");
-  _exit(status);
+  int ret;
+
+  TAU_PROFILE_TIMER(t,"sleep inside kill timer","" ,TAU_DEFAULT);
+  TAU_VERBOSE("TAU Kill Wrapper");
+  if(sig==SIGKILL||sig==SIGTERM){
+  ret = __real_kill(pid, SIGUSR1);
+   TAU_PROFILE_START(t);
+   sleep(5);
+   TAU_PROFILE_STOP(t);
+  }
+  else{
+    ret = 0;
+  }
+
+  if(ret == 0) {
+    dprintf("TAU: calling _kill \n");
+    ret = kill(pid, sig);
+  }
+
+  return ret;
 }
 #endif /* TAU_DISABLE_SYSCALL_WRAPPER */
 
-#ifdef TAU_LINUX
 /////////////////////////////////////////////////////////////////////////
-// Define the exit_group wrapper
+// Define the _exit wrapper
 /////////////////////////////////////////////////////////////////////////
-void exit_group(int status) {
-  dprintf("TAU: Inside tau_wrap.c: exit_group(): status = %d\n", status);
+void __real__exit(int status);
+void __wrap__exit(int status) {
+  dprintf("TAU: Inside tau_wrap.c: _exit(): status = %d\n", status);
 
-  TAU_PROFILE_EXIT("EXIT_GROUPING from TAU...");
+  TAU_PROFILE_EXIT("_EXITING from TAU...");
 
-  dprintf("TAU: calling _internal_exit_group \n");
-  _exit_group(status);
+  dprintf("TAU: calling _internal__exit \n");
+  __real__exit(status);
 }
-#endif
+
 
