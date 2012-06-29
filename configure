@@ -4436,6 +4436,30 @@ if [ $cxx_compiler = g++ -o $cxx_compiler = g++4 -o $cxx_compiler = egcs -o $cxx
     fixmakeargs="$fixmakeargs taugcclibdir=$taugcclibdir taugccstdcxxlibdir=$taugccstdcxxlibdir" 
 fi
 ######################################################################
+# Checking the availability of the LD auditor. We need glibc 2.4 or greater and
+# link.h and dlfn.h
+cat << EOF > gccAuditorTest.c
+#include <features.h>
+#include <dlfcn.h>
+#include <link.h>
+#if ((__GLIBC__ == 2 && __GLIBC_MINOR__ >= 4) || __GLIBC__ > 2)
+#else
+#error "GLIBC LD AUDITOR available."
+#endif 
+EOF
+
+$c_compiler $orig_useropt -c gccAuditorTest.c 1> /dev/null 2>&1
+if [ "$?" = "1" ]
+then
+  echo "LD AUDITOR unavailable, disabling" 
+else
+  echo "Using LD AUDITOR."
+  fixmakeargs="$fixmakeargs LD_AUDITOR_AVAILABLE"
+fi
+#/bin/rm -f gccAuditorTest.*
+
+
+######################################################################
 # TEST FOR ALL MACHINE TYPES
 case $machine in
      hp9000s700 | hp9000s800)
