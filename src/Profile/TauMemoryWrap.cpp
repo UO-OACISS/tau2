@@ -111,7 +111,8 @@ extern "C" int Tau_memorywrap_getWrapperActive() {
  * return whether we should pass through and not track the IO
  ********************************************************************/
 extern "C" int Tau_memorywrap_checkPassThrough() {
-  if (Tau_global_get_insideTAU() > 0 || Tau_global_getLightsOut() || Tau_init_check_initialized() == 0) {
+  if (Tau_global_get_insideTAU() > 0 || Tau_global_getLightsOut() || 
+			Tau_init_check_initialized() == 0 || Tau_init_check_dl_initialized() == 0) {
     return 1;
   } else {
     return 0;

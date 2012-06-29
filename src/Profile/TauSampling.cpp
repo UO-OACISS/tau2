@@ -195,6 +195,8 @@ FILE *ebsTrace[TAU_MAX_THREADS];
 
 /* Sample processing enabled/disabled */
 int samplingEnabled[TAU_MAX_THREADS];
+/* we need a process-wide flag for disabling sampling at program exit. */
+int collectingSamples = 0;
 /* Sample processing suspended/resumed */
 int suspendSampling[TAU_MAX_THREADS];
 long long numSamples[TAU_MAX_THREADS];
@@ -1160,7 +1162,7 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
   TAU_VERBOSE("Tau_sampling_handle_sample: tid=%d got sample [%p]\n",
   	      tid, (unsigned long)pc);
   */
-  if (samplingEnabled[tid] == 0) {
+  if (samplingEnabled[tid] == 0 || collectingSamples == 0) {
     // Do not track counts when sampling is not enabled.
     //TAU_VERBOSE("Tau_sampling_handle_sample: sampling not enabled\n");
     return;
@@ -1268,6 +1270,8 @@ int Tau_sampling_init(int tid) {
   
   itval.it_interval.tv_usec = itval.it_value.tv_usec = threshold % 1000000;
   itval.it_interval.tv_sec =  itval.it_value.tv_sec = threshold / 1000000;
+  TAU_VERBOSE("Tau_sampling_init: tid = %d itimer values %d %d\n", 
+	      tid, itval.it_interval.tv_usec, itval.it_interval.tv_sec);
 
   const char *profiledir = TauEnv_get_profiledir();
 
@@ -1380,6 +1384,7 @@ int Tau_sampling_init(int tid) {
 	ovalue.it_value.tv_sec != pvalue.it_value.tv_sec ||
 	ovalue.it_value.tv_usec != pvalue.it_value.tv_usec) {
       fprintf(stderr,"TAU [tid = %d]: Sampling error - Real time interval timer mismatch.\n", tid);
+      fprintf(stderr,"[tid = %d]: %d %d %d %d, %d %d %d %d.\n", tid, ovalue.it_interval.tv_sec, ovalue.it_interval.tv_usec, ovalue.it_value.tv_sec, ovalue.it_value.tv_usec, pvalue.it_interval.tv_sec, pvalue.it_interval.tv_usec, pvalue.it_value.tv_sec, pvalue.it_value.tv_usec);
       return -1;
     }
     TAU_VERBOSE("Tau_sampling_init: pid = %d, tid = %d Signals set up.\n", getpid(), tid);
@@ -1403,6 +1408,7 @@ int Tau_sampling_init(int tid) {
   }
 
   samplingEnabled[tid] = 1;
+  collectingSamples = 1;
   Tau_global_decr_insideTAU_tid(tid);
   return 0;
 }
@@ -1428,6 +1434,7 @@ int Tau_sampling_finalize(int tid) {
 
   /* Disable sampling first */
   samplingEnabled[tid] = 0;
+  collectingSamples = 0;
 
   struct itimerval itval;
   int ret;
@@ -1514,8 +1521,9 @@ extern "C" void Tau_sampling_finalize_if_necessary(void) {
       for (int i=0; i<TAU_MAX_THREADS; i++) {
 	thrFinalized[i] = false;
         // just in case, disable sampling.
-        samplingEnabled[i] == 0;
+        samplingEnabled[i] = 0;
       }
+      collectingSamples = 0;
       finalized = true;
     }
     RtsLayer::UnLockEnv();
