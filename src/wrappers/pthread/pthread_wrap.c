@@ -59,7 +59,7 @@ typedef struct tau_pthread_pack {
 static int (*_pthread_barrier_wait) (pthread_barrier_t *barrier) = NULL;
 #endif /* TAU_PTHREAD_BARRIER_AVAILABLE */
 
-extern int pthread_create (pthread_t* thread, const pthread_attr_t* attr, 
+int pthread_create (pthread_t* thread, const pthread_attr_t* attr, 
 		    void *(*start_routine)(void*), void* arg) {
   if (_pthread_create == NULL) {
     _pthread_create = (int (*) (pthread_t* thread, const pthread_attr_t* attr, void *(*start_routine)(void*), void* arg)) dlsym(RTLD_NEXT, "pthread_create");
@@ -72,7 +72,7 @@ extern int pthread_create (pthread_t* thread, const pthread_attr_t* attr,
   return _pthread_create(thread, (pthread_attr_t*) attr, tau_pthread_function, (void*)pack);
 }
 
-extern int pthread_join (pthread_t thread, void **retval) {
+int pthread_join (pthread_t thread, void **retval) {
   int ret;
   if (_pthread_join == NULL) {
     _pthread_join = (int (*) (pthread_t, void **)) dlsym(RTLD_NEXT, "pthread_join"); 
@@ -83,7 +83,7 @@ extern int pthread_join (pthread_t thread, void **retval) {
    TAU_PROFILE_STOP(timer);
    return ret;
 }
-extern void pthread_exit (void *value_ptr) {
+void pthread_exit (void *value_ptr) {
 
   if (_pthread_exit == NULL) {
     _pthread_exit = (void (*) (void *value_ptr)) dlsym(RTLD_NEXT, "pthread_exit");
