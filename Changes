@@ -44,6 +44,11 @@ Version 2.21 changes (from 2.20):
 30. Added support for -arch=arm_linux.
 31. Added jogl.jar and libjogl.* changes for IBM BG/Q and ARM Linux.
 32. Enhancements for TAU sampling and TAU_TRACK_SIGNALS for IBM BG/Q.
+33. Enhancements to TAU to support parameter and phase based profiling in Score-P. 
+34. Added support for Cray and Berkeley UPC runtime library wrapper using -optTrackUPCR TAU_OPTIONS.
+35. Reduced MPI overhead using a hash table, fixed BGP & BGQTIMERS. 
+36. Added support for ARM (arm_linux) and Intel MIC. 
+37. Added support for OTF2 (tau2otf2 -> tau2otf). 
 
 
 

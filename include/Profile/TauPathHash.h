@@ -43,18 +43,24 @@ class TauPathAccumulator {
  public:
   unsigned long count;
   // Kevin: when we update PAPI support, this should be an array
-  double accumulator;
+  double accumulator[TAU_MAX_COUNTERS];
   // destructor
   ~TauPathAccumulator() {}
   // constructor
-  TauPathAccumulator(int inCount, double firstValue) {
+  TauPathAccumulator(int inCount, double firstValues[TAU_MAX_COUNTERS]) {
     count = inCount;
-    accumulator = firstValue;
+    int i;
+    for (i = 0; i < Tau_Global_numCounters ; i++) {
+      accumulator[i] = firstValues[i];
+    }
   }
   // default constructor
   TauPathAccumulator() {
     count = 0;
-    accumulator = 0.0;
+    int i;
+    for (i = 0; i < Tau_Global_numCounters ; i++) {
+      accumulator[i] = 0.0;
+    }
   }
 };
 
