@@ -49,6 +49,21 @@ extern "C" {
 #ifndef TAU_COMPONENT_PAPI
 // if there is no component papi, then we pretend that there is just one component
 #define PAPI_COMPONENT_INDEX(a) 0
+/*
+ *CWL* - 6/21/2012 - Thanks to Vince Weaver who has backported the old interface
+                     for the use of PAPI_COMPONENT_INDEX, we should not need this
+		     exception anymore. We should keep this code around just in 
+		     case, however.
+#else
+// *CWL* - Disable for the PAPI 5.0 pre-release (4.9) until we know what to do.
+//         The interface for PAPI 5.0 where the acquisition of the PAPI Component
+//         Index is concerned has also changed, so if it is appropriate (eg.
+//         direct-mapping), some redefine of PAPI_COMPONENT_INDEX is probably
+//         the best way forward.
+#if (PAPI_VERSION_MAJOR(PAPI_VERSION) >= 4 && PAPI_VERSION_MINOR(PAPI_VERSION) >= 9)
+#define PAPI_COMPONENT_INDEX(a) 0
+#endif
+*/
 #endif
 
 //#define TAU_PAPI_DEBUG 

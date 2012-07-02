@@ -48,7 +48,7 @@ CEXTRA =
 #PGINOPRELINK#PRELINK_PHASE = #ENDIF#
 #############################################
 
-OPARI2_INCLUDE = -I$(TAUROOT)/utils/opari2/_build/include -I$(TAUROOT)/utils/opari2/_build/src/ -I$(TAUROOT)/utils/opari2/_build/build-frontend -I$(TAUROOT)/utils/opari2/src -DHAVE_CONFIG_H  -DFRONTEND_BUILD -DCROSS_BUILD
+#OPARI2#OPARI2_INCLUDE = -I$(TAUROOT)/utils/opari2/_build/include -I$(TAUROOT)/utils/opari2/_build/src/ -I$(TAUROOT)/utils/opari2/_build/build-frontend -I$(TAUROOT)/utils/opari2/src -DHAVE_CONFIG_H  -DFRONTEND_BUILD -DCROSS_BUILD #ENDIF#
 
 DEFINES = -DTAU_LIBRARY_SOURCE
 
@@ -217,6 +217,7 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 #APPLECXX#TAU_APPLE_SHFLAGS = -dynamiclib -flat_namespace -undefined suppress #ENDIF#
 #PYTHON#TAU_APPLE_SHFLAGS   = -bundle -flat_namespace -undefined suppress     #ENDIF#
 #USE_INTELCXX#AR_SHFLAGS  	= -shared 		#ENDIF#
+#MMIC#AR_SHFLAGS 		= -shared -mmic 	#ENDIF#
 #APPLECXX#AR_SHFLAGS = $(TAU_APPLE_SHFLAGS)     #ENDIF#
 #SOL2#AR_SHFLAGS  		= -G 		#ENDIF#
 #SUNCC#AR_SHFLAGS  		= -G 		#ENDIF#
@@ -421,7 +422,7 @@ $(TAU_DISABLE): TauDisable.o $(TAU_DISABLE_SHARED) TauKojakOpariDisable.o
 		$(TAU_CREATE_SYMLINKS)
 
 $(TAU_DISABLE_SHARED) : TauDisable.o TauKojakOpariDisable.o
-		$(TAU_CXX) $(TAU_ARFLAGS) $(TAU_DISABLE_SHARED) TauDisable.o TauKojakOpariDisable.o
+		$(TAU_CXX) $(TAU_ARFLAGS)  $(TAU_DISABLE_SHARED) $(TAU_DISABLE_SHARED_COMPILATION_FLAG) TauDisable.o TauKojakOpariDisable.o
 
 libTauMpi$(TAU_CONFIG)$(LSX): TauMpi.c TauRequest.cpp TauTranslateRank.cpp TauFMpi.c ClockSync.c TauProfileMerge.cpp TauMpiExtensions.c TauMetaDataMerge.cpp
 		$(MAKE) -f Makefile.wrapper  

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh 
 
 # converted to sh, (12/14/2007)
 
@@ -42,6 +42,11 @@ if [ "y$test_arg" != "y$uname_output" ]
 then
     TAU_CCOM=gcc
     ARCH=arm_linux
+fi
+
+if [ -d /usr/linux-k1om-* ]
+then
+    ARCH=mic_linux
 fi
 
 
