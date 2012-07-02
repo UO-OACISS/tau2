@@ -116,6 +116,7 @@ TAU_MPILIB_DIR=
 TAU_MPILIB_DIRLIB=
 TAU_MPI_NOWRAP_LIB=
 TAU_MPI_NOWRAP_FLIB=
+TAU_GASNET_DIR=
 FULL_CXX=
 FULL_CC=
 TAU_PREFIX_INSTALL_DIR=
@@ -273,7 +274,7 @@ TAU_OPENMP_OPTION =
 #SC_GFORTRAN#TAU_F90         = scgfortran              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #SGI_FORTRAN#TAU_F90         = f90              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #IBM_FORTRAN#TAU_F90         = xlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
-#BGP#TAU_F90         = /bgsys/drivers/ppcfloor/comm/bin/mpixlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#BGP#TAU_F90         = /bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #BGP_GFORTRAN#TAU_F90         = mpif90    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #BGQ#TAU_F90         = /bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #BGQ_GFORTRAN#TAU_F90         = /bgsys/drivers/ppcfloor/comm/gcc/bin/mpif90    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
@@ -707,7 +708,7 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 #IBMXLCAPPLE#TAU_FORLIBDIR =lib       #ENDIF#
 #IBMXLCAPPLE#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/$(TAU_FORLIBDIR) -libmc++ -lstdc++       #ENDIF#
 #BGL#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/blrts_dev_lib -L$(EXTRADIRCXX)/blrts_lib -libmc++ -L/bgl/BlueLight/ppcfloor/blrts-gnu/powerpc-bgl-blrts-gnu/lib -lstdc++      #ENDIF#
-#BGP#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/bglib -libmc++ -lstdc++ -L$(EXTRADIR)/bglib -lxlf90$(TAU_R) -lxlfmath   -lxlomp_ser  #ENDIF#
+#BGP#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/bglib -libmc++ -lstdc++ -L$(EXTRADIR)/bglib -lxlf90$(TAU_R) -lxlfmath   $(TAU_OMP_SERIAL)  #ENDIF#
 #BGQ#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/bglib64 -libmc++ -lstdc++  -L$(EXTRADIR)/bglib64 -lxlf90_r  -lxlfmath     #ENDIF#
 #SP1#TAU_XLCLIBS         = -lC  -lm            #ENDIF#
 #USE_IBMXLC#TAU_CXXLIBS         = $(TAU_XLCLIBS) #ENDIF#
@@ -874,7 +875,6 @@ HPCTOOLKIT_LINK=
 #       we can find a permanent fix.
 EXTRA_LINKER_ARGS=
 #APPLECXX#EXTRA_LINKER_ARGS = -rdynamic#ENDIF#
-#CRAYCNL##PTHREAD_AVAILABLE#EXTRA_LINKER_ARGS+= -dynamic	       #ENDIF##ENDIF#
 TAU_LINKER_OPT14=$(EXTRA_LINKER_ARGS)
 
 
@@ -935,6 +935,10 @@ EBS_CLOCK_RES=
 #KTAU_NG#PROFILEOPT86 = -DKTAU_NG #ENDIF#
 #MMIC#PROFILEOPT87 = -mmic #ENDIF#
 
+##############################################
+# DL_AUDITOR
+##############################################
+#LD_AUDITOR_AVAILABLE#PROFILEOPT88 = -DTAU_TRACK_LD_LOADER #ENDIF#
 
 
 ##############################################
@@ -960,7 +964,7 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 	      $(PROFILEOPT73) $(PROFILEOPT74) $(PROFILEOPT75) $(PROFILEOPT76) \
 	      $(PROFILEOPT77) $(PROFILEOPT78) $(PROFILEOPT79) $(PROFILEOPT80) \
               $(PROFILEOPT81) $(PROFILEOPT82) $(PROFILEOPT83) $(PROFILEOPT84) \
-              $(PROFILEOPT85) $(PROFILEOPT86) $(PROFILEOPT87) \
+              $(PROFILEOPT85) $(PROFILEOPT86) $(PROFILEOPT87) $(PROFILEOPT88)\
               $(TRACEOPT)
 
 
@@ -1020,7 +1024,11 @@ TAU_DEFS	= $(TAUDEFS)
 TAU_INCLUDE 	= -I$(TAU_INC_DIR)
 #PERFLIB#TAU_INCLUDE = -I$(PERFINCDIR) #ENDIF#
 #PERFLIB#TAU_DEFS = #ENDIF#
-#PERFLIB#TAU_COMPILER_EXTRA_OPTIONS=-optTau=-p #ENDIF#
+#PERFLIB#TAU_COMPILER_EXTRA_OPTIONS1=-optTau=-p #ENDIF#
+
+#PTHREAD_AVAILABLE#TAU_COMPILER_EXTRA_OPTIONS2=-optTrackPthread #ENDIF#
+
+TAU_COMPILER_EXTRA_OPTIONS=$(TAU_COMPILER_EXTRA_OPTIONS1) $(TAU_COMPILER_EXTRA_OPTIONS2) 
 
 TAU_INCLUDE_MEMORY = -I$(TAU_INC_DIR)/Memory
 #IBMXLCAPPLE#TAU_INCLUDE_MEMORY = -I$(TAU_INC_DIR)/MemoryWrapper #ENDIF#
@@ -1078,7 +1086,7 @@ TAU_TRACE_INPUT_LIB = -L$(TAU_LIB_DIR) -lTAU_traceinput$(TAU_CONFIG)
 #GPSHMEM#SHMEM_OBJS		     = TauShmemGpshmem.o  #ENDIF#
 
 TAU_CCOMPILER     = $(TAU_CC)
-#UPCC#TAU_CCOMPILER     = $(TAU_UPCC)  #ENDIF#
+#UPCC##TAU_CCOMPILER     = $(TAU_UPCC)  #ENDIF#
 #GNU_UPC#TAU_CCOMPILER     = $(TAU_UPCC)  #ENDIF#
 #CRAY_UPC#TAU_UPC_COMPILER_OPTIONS  = -h upc #ENDIF#
 
@@ -1124,7 +1132,7 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
 	-optCompInstOption="$(TAU_COMPINST_OPTION) $(TAU_COMPINST_PTHREAD_OPTIONS)"\
 	-optCompInstFortranOption="$(TAU_FORTRAN_COMPINST_OPTION) $(TAU_COMPINST_PTHREAD_OPTIONS)"\
 	-optCompInstLinking="$(TAU_COMPINST_LINKING)"\
-	-optWrappersDir="$(TAU_LIB_DIR)/wrappers"
+	-optWrappersDir="$(TAU_LIB_DIR)/wrappers" $(TAU_EXTRA_WRAPPER_OPTIONS)
 #############################################
 
 TAU_SHAREDLIBS=$(TAUHELPER) -L$(TAU_LIB_DIR) -lTAU $(TAU_LINKER_OPTS) $(TAU_LINKER_SHOPTS)

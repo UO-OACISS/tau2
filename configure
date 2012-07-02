@@ -491,6 +491,7 @@ for arg in "$@"; do
 #    echo "                                 interface.                            "
     echo "-scorep=<dir>  .................... Specify location of SCOREP package."
     echo "-upcnetwork=<value> .. Specify network (mpi, udp,...) for Berkeley UPC."
+    echo "-gasnet=<dir>  ............ Specify location of GASNET for UPC wrapper."
     echo "-python .. Automatically choose python options based on Python in path."
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
@@ -1258,6 +1259,12 @@ for arg in "$@"; do
   -upcnetwork=*)
       upc=yes
       upcnetwork=`echo $arg | sed -e 's/-upcnetwork=//'`
+      shift
+      ;;
+  -gasnet=*)
+      gasnet=yes
+      gasnetdir=`echo $arg | sed -e 's/-gasnet=//'`
+      fixmakeargs="$fixmakeargs gasnet=$gasnetdir GASNET"
       shift
       ;;
 
@@ -4099,7 +4106,7 @@ EOF
               fi  
             fi
           fi 
-	  /bin/rm -f tau_papi_test.c tau_papi_test tau_papi_test.o
+	  /bin/rm -f tau_papi_test.c tau_papi_test tau_papi_test.o libtau_papi_test.so
       fi		
 fi
 
@@ -4428,6 +4435,30 @@ if [ $cxx_compiler = g++ -o $cxx_compiler = g++4 -o $cxx_compiler = egcs -o $cxx
     echo "Using GNU stdc++ lib dir as $taugccstdcxxlibdir"
     fixmakeargs="$fixmakeargs taugcclibdir=$taugcclibdir taugccstdcxxlibdir=$taugccstdcxxlibdir" 
 fi
+######################################################################
+# Checking the availability of the LD auditor. We need glibc 2.4 or greater and
+# link.h and dlfn.h
+cat << EOF > gccAuditorTest.c
+#include <features.h>
+#include <dlfcn.h>
+#include <link.h>
+#if ((__GLIBC__ == 2 && __GLIBC_MINOR__ >= 4) || __GLIBC__ > 2)
+#else
+#error "GLIBC LD AUDITOR available."
+#endif 
+EOF
+
+$c_compiler $orig_useropt -c gccAuditorTest.c 1> /dev/null 2>&1
+if [ "$?" = "1" ]
+then
+  echo "LD AUDITOR unavailable, disabling" 
+else
+  echo "Using LD AUDITOR."
+  fixmakeargs="$fixmakeargs LD_AUDITOR_AVAILABLE"
+fi
+#/bin/rm -f gccAuditorTest.*
+
+
 ######################################################################
 # TEST FOR ALL MACHINE TYPES
 case $machine in
