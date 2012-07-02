@@ -12,6 +12,7 @@ LDPRELOAD_INSTALL_CMD=@echo "NOTE: Not building TAU's PTHREAD DSO"
 #PTHREAD_AVAILABLE#PTHREAD_LD_LIB=libTauPthreadWrap.a #ENDIF#
 #PTHREAD_AVAILABLE#PTHREAD_LDPRELOAD_LIB=libTAU-pthread$(TAU_SHLIBX) #ENDIF#
 #NOSHARED#PTHREAD_LDPRELOAD_LIB= #ENDIF#
+
 install: install-ld-lib install-preload-lib
 
 install-ld-lib: $(PTHREAD_LD_LIB)
