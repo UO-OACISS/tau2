@@ -1662,13 +1662,13 @@ int *provided;
 
 
 
-/*
 int  MPI_Initialized( flag )
 int * flag;
 {
   int  returnVal;
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Initialized()",  " ", TAU_MESSAGE);
+  Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Initialized( flag );
@@ -1677,7 +1677,7 @@ int * flag;
 
   return returnVal;
 }
-*/
+
 
 #ifdef TAU_ENABLE_MPI_WTIME
 double  MPI_Wtick(  )

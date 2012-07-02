@@ -31,7 +31,7 @@ pthread_wrap_ld.o: pthread_wrap.c
 	$(CC) -DTAU_LIBRARY_SOURCE $(CFLAGS) -g -c $<  -o $@
 
 $(PTHREAD_LDPRELOAD_LIB): pthread_wrap_preload.o
-	$(CC) $(TAU_SHFLAGS) $(TAU_SHLIBS) -L$(INSTALLDEST) $< -o $@ -ldl
+	$(CC) $(TAU_SHFLAGS) $@ $(TAU_SHLIBS) -L$(INSTALLDEST) $< -ldl
 
 pthread_wrap_preload.o: pthread_wrap.c
 	$(CC) -DTAU_LIBRARY_SOURCE -DTAU_PRELOAD_LIB $(CFLAGS) -g -c $< -o $@
