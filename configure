@@ -4456,7 +4456,7 @@ else
   echo "Using LD AUDITOR."
   fixmakeargs="$fixmakeargs LD_AUDITOR_AVAILABLE"
 fi
-#/bin/rm -f gccAuditorTest.*
+/bin/rm -f gccAuditorTest.*
 
 
 ######################################################################
