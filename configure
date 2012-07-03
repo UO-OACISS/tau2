@@ -5396,21 +5396,27 @@ if [ $mpi = yes ] ; then
       #echo "libmpi.* found!!"
 	# OpenMPI
 	mpilibrary_current=""
-	if [ "x$mpilibrary" = "xno" ] ; then
-	    mpilibrary_current=""
-        else
+	if [ "x$mpilibrary" != "xno" ] ; then
+	    # *CWL* - Set a temporary variable to hold any previously set value of mpilibrary
             mpilibrary_current="$mpilibrary"
         fi
+
+	# *CWL* - Work only on the temporary variable in this section
         if [ -r $mpilib/libmpi_cxx.so -o -r $mpilib/libmpi_cxx.dylib ] ; then
-            mpilibrary="$mpilibrary_current -lmpi -lmpi_cxx"
+            mpilibrary_current="$mpilibrary_current -lmpi -lmpi_cxx"
         fi
 
         if [ -r $mpilib/libmpi_f90.so -o -r $mpilib/libmpi_f90.dylib ] ; then
-            mpilibrary="$mpilibrary_current -lmpi_f90"
+            mpilibrary_current="$mpilibrary_current -lmpi_f90"
         fi
 
         if [ -r $mpilib/libmpi_f77.so -o -r $mpilib/libmpi_f77.dylib ] ; then
-            mpilibrary="$mpilibrary_current -lmpi_f77"
+            mpilibrary_current="$mpilibrary_current -lmpi_f77"
+        fi
+
+	# *CWL* - Propagate any changes to the temporary variable back to mpilibrary
+	if [ "x$mpilibrary_current" != "x" ] ; then
+	    mpilibrary="$mpilibrary_current"
         fi
 
 	if [ "x$mpilibrary" = "xno" ] ; then 
