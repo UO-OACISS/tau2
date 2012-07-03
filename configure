@@ -5395,16 +5395,22 @@ if [ $mpi = yes ] ; then
     if [ -r $mpilib/libmpi.a -o -r $mpilib/libmpi.so -o -r $mpilib/libmpi.dylib ] ; then
       #echo "libmpi.* found!!"
 	# OpenMPI
+	mpilibrary_current=""
+	if [ "x$mpilibrary" = "xno" ] ; then
+	    mpilibrary_current=""
+        else
+            mpilibrary_current="$mpilibrary"
+        fi
         if [ -r $mpilib/libmpi_cxx.so -o -r $mpilib/libmpi_cxx.dylib ] ; then
-            mpilibrary="$mpilibrary -lmpi -lmpi_cxx"
+            mpilibrary="$mpilibrary_current -lmpi -lmpi_cxx"
         fi
 
         if [ -r $mpilib/libmpi_f90.so -o -r $mpilib/libmpi_f90.dylib ] ; then
-            mpilibrary="$mpilibrary -lmpi_f90"
+            mpilibrary="$mpilibrary_current -lmpi_f90"
         fi
 
         if [ -r $mpilib/libmpi_f77.so -o -r $mpilib/libmpi_f77.dylib ] ; then
-            mpilibrary="$mpilibrary -lmpi_f77"
+            mpilibrary="$mpilibrary_current -lmpi_f77"
         fi
 
 	if [ "x$mpilibrary" = "xno" ] ; then 
