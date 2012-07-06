@@ -372,6 +372,8 @@ bool TauPathHashTable<T>::insert(const unsigned long *key, T val) {
       return true;
     }
   }
+  // Silence a compiler warning
+  return false;
 }
 
 template <class T> 
