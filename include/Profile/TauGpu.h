@@ -1,8 +1,6 @@
 #ifndef _TAU_GPU_INTERFACE
 #define _TAU_GPU_INTERFACE
 
-#include <map>
-
 #define MESSAGE_SEND 0
 #define MESSAGE_RECV 1
 
@@ -23,6 +21,7 @@ enum Memcpy { MemcpyHtoD = 0, MemcpyDtoH = 1, MemcpyDtoD = 2, MemcpyUnknown = 3 
 #ifdef __cplusplus
 
 #include <Profile/Profiler.h>
+#include <map>
 
 /**********************************************
 	* Callback into the driver adapter to retrive information about the device ids
