@@ -38,6 +38,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <map>
 #ifdef TAU_OPENMP
 #  include <omp.h>
 #endif
@@ -47,6 +48,8 @@
 #else
 #define COMP_INST_KEY "_2.ITC.0"
 #endif
+
+using namespace std;
 
 
 static int intel_init = 1;

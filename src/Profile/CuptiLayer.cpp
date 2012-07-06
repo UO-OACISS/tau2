@@ -1,6 +1,10 @@
 
 #include "Profile/CuptiLayer.h"
 
+// Moved from header file
+using namespace std;
+
+
 #if CUPTI_API_VERSION >= 2
 
 #ifdef FALSE

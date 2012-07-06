@@ -1,10 +1,18 @@
 #ifndef TAU_PATH_HASH_H_
 #define TAU_PATH_HASH_H_
 
-#include <stdio.h>
-#include <string.h>
+#include <utility>
+#include <cstdio>
+#include <cstring>
 
-using namespace std;
+// Putting "using namespace" statements in header files can create ambiguity
+// between user-defined symbols and std symbols, creating unparsable code
+// or even changing the behavior of user codes.  This is also widely considered
+// to be bad practice.  Here's a code PDT can't parse because of this line:
+//   EX: #include <complex>
+//   EX: typedef double real;
+//
+//using namespace std;
 
 /* *CWL* - Uses the mmap memory manager for signal-safety. Note that allocating
    TauPathHashTable itself is signal-unsafe. So care must be taken to ensure
@@ -135,7 +143,7 @@ template <class T> class TauPathHashTable {
   //   hash table is still being actively updated. Not signal-safe unlike
   //   the rest of the hash table.
   void resetIter();
-  pair<unsigned long *, T> *nextIter();
+  std::pair<unsigned long *, T> *nextIter();
 
   // for debugging
   void printTable();
@@ -374,7 +382,10 @@ void TauPathHashTable<T>::resetIter() {
 }
 
 template <class T> 
-pair<unsigned long *, T> *TauPathHashTable<T>::nextIter() {
+std::pair<unsigned long *, T> *TauPathHashTable<T>::nextIter()
+{
+    typedef std::pair<unsigned long*, T> pair_t;
+
   //  printf("numElements = %d\n", numElements);
   //  printf("IterPtr starts at %p\n", iterPtr);
   if (iterCount == numElements) {
@@ -399,8 +410,7 @@ pair<unsigned long *, T> *TauPathHashTable<T>::nextIter() {
     if (found) {
       iterPtr = table[iterTblIdx];
       //      printf("IterPtr found in table entry at %p\n", iterPtr);
-      pair<unsigned long *, T> *item = new
-	pair<unsigned long *, T>(iterPtr->pair->key, iterPtr->pair->value);
+      pair_t * item = new pair_t(iterPtr->pair->key, iterPtr->pair->value);
       //      printf("Found key %p value %d\n", item->first, item->second);
       iterCount++;
       return item;
@@ -413,8 +423,7 @@ pair<unsigned long *, T> *TauPathHashTable<T>::nextIter() {
     //   iterPtr != NULL && iterPtr->next != NULL
     iterPtr = iterPtr->next;
     //    printf("IterPtr found in chain at %p\n", iterPtr);
-    pair<unsigned long *, T> *item = new
-      pair<unsigned long *, T>(iterPtr->pair->key, iterPtr->pair->value);
+    pair_t * item = new pair_t(iterPtr->pair->key, iterPtr->pair->value);
     //      printf("Found key %p value %d\n", item->first, item->second);
     iterCount++;
     return item;

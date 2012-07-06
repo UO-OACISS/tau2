@@ -19,17 +19,20 @@
 #include "TAU_tf_headers.h"
 #include <Profile/tau_types.h>
 
-extern "C" long Tau_convert_ptr_to_long_trc(void *ptr) {
-  long long a = (long long) ptr;
-  long ret = (long) a;
-  return ret;
-}
-
 
 #ifdef __cplusplus
+// Moved from header file
+using namespace std;
+
+
 extern "C" {
 #endif /* __cplusplus */
 
+  long Tau_convert_ptr_to_long_trc(void *ptr) {
+    long long a = (long long) ptr;
+    long ret = (long) a;
+    return ret;
+  }
 
 
   static void checkFlush(Ttf_fileT *tFile) {

@@ -23,6 +23,10 @@
 #include <TauMetaData.h>
 #include <TauMetrics.h>
 
+// Moved from header file
+using namespace std;
+
+
 extern "C" int TAU_MPI_Finalized();
 
 

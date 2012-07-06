@@ -39,6 +39,10 @@
 #include <Profile/TauSnapshot.h>
 #include <Profile/TauMetaData.h>
 
+// Moved from header file
+using namespace std;
+
+
 
 #ifdef TAU_VAMPIRTRACE 
 #include <Profile/TauVampirTrace.h>
