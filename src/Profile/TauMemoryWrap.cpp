@@ -27,6 +27,10 @@
 #include <Profile/Profiler.h>
 #include <Profile/TauInit.h>
 
+// Moved from header file
+using namespace std;
+using namespace tau;
+
 
 /*********************************************************************
  * This object represents a memory allocation, it consists of 

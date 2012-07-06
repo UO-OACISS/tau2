@@ -25,10 +25,14 @@
 #include <Profile/TauTrace.h>
 #ifdef CUPTI
 #include <Profile/CuptiLayer.h>
+// Moved from header file
+using namespace std;
 #endif //CUPTI
 
 #ifdef TAUKTAU_SHCTR
 #include "Profile/KtauCounters.h"
+// Moved from header file
+using namespace std;
 #endif //TAUKTAU_SHCTR
 
 

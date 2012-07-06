@@ -1,6 +1,8 @@
 #ifndef _TAU_GPU_INTERFACE
 #define _TAU_GPU_INTERFACE
 
+#include <map>
+
 #define MESSAGE_SEND 0
 #define MESSAGE_RECV 1
 
@@ -21,7 +23,7 @@ enum Memcpy { MemcpyHtoD = 0, MemcpyDtoH = 1, MemcpyDtoD = 2, MemcpyUnknown = 3 
 #ifdef __cplusplus
 
 #include <Profile/Profiler.h>
-using namespace tau;
+
 /**********************************************
 	* Callback into the driver adapter to retrive information about the device ids
 	* and event ids 
@@ -40,7 +42,7 @@ public:
 	//virtual bool operator<(const gpuId& A) const;
 };
 	
-typedef map<TauContextUserEvent*, TAU_EVENT_DATATYPE> TauGpuContextMap;
+typedef std::map<TauContextUserEvent*, TAU_EVENT_DATATYPE> TauGpuContextMap;
 
 class eventId {
 public:

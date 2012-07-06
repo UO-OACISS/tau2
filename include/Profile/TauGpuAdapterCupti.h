@@ -1,7 +1,11 @@
 #include <Profile/TauGpu.h>
 #include <cuda.h>
 #include <cupti.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <sstream>
+#include <map>
 #include <vector>
 
 #if CUPTI_API_VERSION >= 2
@@ -34,7 +38,7 @@ uint8_t *activityBuffer;
 CUpti_SubscriberHandle subscriber;
 
 int number_of_streams;
-vector<int> streamIds;
+std::vector<int> streamIds;
 
 void Tau_cupti_register_sync_event(CUcontext c, uint32_t stream);
 
@@ -62,7 +66,7 @@ bool registered_sync = false;
 bool cupti_api_runtime();
 bool cupti_api_driver();
 
-map<uint32_t, FunctionInfo*> functionInfoMap;
+std::map<uint32_t, FunctionInfo*> functionInfoMap;
 
 class cuptiGpuId : public gpuId
 {
@@ -125,7 +129,7 @@ public:
 	FunctionInfo* getParentFunction(uint32_t id)
 	{
 		FunctionInfo *funcInfo = NULL;
-		map<uint32_t, FunctionInfo*>::iterator it = functionInfoMap.find(id);
+		std::map<uint32_t, FunctionInfo*>::iterator it = functionInfoMap.find(id);
 		if (it != functionInfoMap.end())
 		{
 			funcInfo = it->second;
