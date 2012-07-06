@@ -26,6 +26,9 @@ extern "C" int Tau_profile_exit_all_tasks();
 //#endif
 //#include <tau_internal.h>
 
+// Moved from header file
+using namespace tau;
+
 #ifdef TAU_PERFSUITE
   #include <pshwpc.h>
   extern "C" int ps_hwpc_xml_write(const char *filename);
@@ -82,6 +85,10 @@ void esd_exit (elg_ui4 rid);
 
 #include <TauTrace.h>
 #include <TauMetaData.h>
+
+// Moved from header file
+using namespace std;
+
 
 #ifdef RENCI_STFF
 #include "Profile/RenciSTFF.h"
