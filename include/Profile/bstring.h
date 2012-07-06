@@ -78,9 +78,14 @@ void check_bounds
 
 #ifdef TAU_STDCXXLIB
 #include <vector>
-using std::vector;
+// This using statement is dangerous and will break user codes when
+// conditions are right.  Stay safe! Keep using statements in cpp files,
+// use typedef to shorten names, or just type the extra "std::".
+//using std::vector;
+typedef std::vector tau_vector_t;
 #else /* TAU_STDCXXLIB */
 #include <vector.h>
+typedef vector tau_vector_t;
 #endif /* TAU_STDCXXLIB */
 
 #ifdef __MMULTITHREAD
@@ -367,7 +372,7 @@ typedef  string_char_baggage<charT>  baggage_type;
 
     basic_string_ref (charT c, size_t rep) _THROW_ALLOC_LENGTH ;
 
-    basic_string_ref (const vector<charT>& vec) _THROW_ALLOC_LENGTH ;
+    basic_string_ref (const tau_vector_t<charT>& vec) _THROW_ALLOC_LENGTH ;
 
     ~basic_string_ref () _THROW_NONE ;
 
@@ -487,7 +492,7 @@ public:
 
     basic_string (charT c, size_t rep = 1) _THROW_ALLOC_LENGTH ;
 
-    basic_string (const vector<charT>& vec) _THROW_ALLOC_LENGTH ;
+    basic_string (const tau_vector_t<charT>& vec) _THROW_ALLOC_LENGTH ;
 
     ~basic_string () _THROW_NONE ;
 
@@ -509,8 +514,8 @@ public:
     basic_string<charT>&
     operator+= (charT c) _THROW_ALLOC_LENGTH ;
 
-    operator vector<charT> () const _THROW_ALLOC { 
-        return vector<charT> (data(), data()+length());
+    operator tau_vector_t<charT> () const _THROW_ALLOC {
+        return tau_vector_t<charT> (data(), data()+length());
 	}
 
     basic_string<charT>&
@@ -1218,7 +1223,7 @@ basic_string_ref<charT>::basic_string_ref (charT c, size_t rep)
 }
 
 template <class charT>
-basic_string_ref<charT>::basic_string_ref (const vector<charT>& vec)
+basic_string_ref<charT>::basic_string_ref (const tau_vector_t<charT>& vec)
                                            _THROW_ALLOC_LENGTH
 {
     size_t  n = vec.size();
@@ -1596,7 +1601,7 @@ basic_string<charT>::basic_string (charT c, size_t rep) _THROW_ALLOC_LENGTH
 }
 
 template <class charT>
-basic_string<charT>::basic_string (const vector<charT>& vec) _THROW_ALLOC_LENGTH
+basic_string<charT>::basic_string (const tau_vector_t<charT>& vec) _THROW_ALLOC_LENGTH
 {
     reference = new basic_string_ref<charT> (vec);
     c_str_ptr = 0;

@@ -37,9 +37,12 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <vector>
 #ifdef TAU_OPENMP
 #  include <omp.h>
 #endif
+
+using namespace std;
 
 
 struct s1 {
