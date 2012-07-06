@@ -77,6 +77,7 @@ extern "C" int Tau_metadataMerge_mergeMetaData() {
     PMPI_Bcast(Buffer, BufferSize, MPI_CHAR, 0, MPI_COMM_WORLD);
     Tau_metadata_removeDuplicates(Buffer, BufferSize);
   }
+  return 0;
 }
 
 #endif
