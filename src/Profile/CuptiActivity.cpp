@@ -81,7 +81,8 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 		CUpti_SynchronizeData *sync = (CUpti_SynchronizeData *) params;
 		uint32_t stream;
 		CUptiResult err;
-		//Tau_cupti_register_sync_event(NULL, 0);
+		//Global Buffer
+		Tau_cupti_register_sync_event(NULL, 0);
 		err = cuptiGetStreamId(sync->context, sync->stream, &stream);
 		Tau_cupti_register_sync_event(sync->context, stream);
 		for (int s=0; s<number_of_streams; s++)
@@ -104,7 +105,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 				Tau_cupti_register_calling_site(cbInfo->correlationId, p);
 				//functionInfoMap[cbInfo->correlationId] = p;	
 				Tau_cupti_enter_memcpy_event(
-					TAU_GPU_USE_DEFAULT_NAME, 0, cbInfo->contextUid, cbInfo->correlationId, 
+					TAU_GPU_USE_DEFAULT_NAME, -1, 0, cbInfo->contextUid, cbInfo->correlationId, 
 					count, getMemcpyType(kind)
 				);
 				/*
@@ -120,7 +121,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 			else
 			{
 				Tau_cupti_exit_memcpy_event(
-					TAU_GPU_USE_DEFAULT_NAME, 0, cbInfo->contextUid, cbInfo->correlationId, 
+					TAU_GPU_USE_DEFAULT_NAME, -1, 0, cbInfo->contextUid, cbInfo->correlationId, 
 					count, getMemcpyType(kind)
 				);
 				/*
@@ -238,6 +239,8 @@ void Tau_cupti_register_sync_event(CUcontext context, uint32_t stream)
 
 void Tau_cupti_record_activity(CUpti_Activity *record)
 {
+
+	
 	//printf("in record activity.\n");
   switch (record->kind) {
   	case CUPTI_ACTIVITY_KIND_MEMCPY:
@@ -256,6 +259,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			}
 			Tau_cupti_register_memcpy_event(
 				TAU_GPU_USE_DEFAULT_NAME,
+				memcpy->deviceId,
 				memcpy->streamId,
 				memcpy->contextId,
 				id,
@@ -318,8 +322,9 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 				//printf("correlationid: %d.\n", id);
 			}
 			name = demangleName(kernel->name);
-		  //cerr << "recording kernel on device: " << kernel->streamId << "/" << id << endl;
-			Tau_cupti_register_gpu_event(name,
+		  //cerr << "recording kernel (device/stream/context/correlation): " << 
+			//kernel->deviceId << "/" << kernel->streamId << "/" << kernel->contextId << "/" << id << endl;
+			Tau_cupti_register_gpu_event(name, kernel->deviceId,
 				kernel->streamId, kernel->contextId, id, map, map_size,
 				kernel->start / 1e3, kernel->end / 1e3);
 			/*
@@ -334,35 +339,34 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 		}
   	case CUPTI_ACTIVITY_KIND_DEVICE:
 		{
-
-			static bool recorded_metadata = false;
-			if (!recorded_metadata)
-			{
-
-				CUpti_ActivityDevice *device = (CUpti_ActivityDevice *)record;
-				
-				//first the name.
-				Tau_metadata("GPU Name", device->name);
-
-				//the rest.
-				RECORD_DEVICE_METADATA(computeCapabilityMajor, device);
-				RECORD_DEVICE_METADATA(computeCapabilityMinor, device);
-				RECORD_DEVICE_METADATA(constantMemorySize, device);
-				RECORD_DEVICE_METADATA(coreClockRate, device);
-				RECORD_DEVICE_METADATA(globalMemoryBandwidth, device);
-				RECORD_DEVICE_METADATA(globalMemorySize, device);
-				RECORD_DEVICE_METADATA(l2CacheSize, device);
-				RECORD_DEVICE_METADATA(maxIPC, device);
-				RECORD_DEVICE_METADATA(maxRegistersPerBlock, device);
-				RECORD_DEVICE_METADATA(maxSharedMemoryPerBlock, device);
-				RECORD_DEVICE_METADATA(maxThreadsPerBlock, device);
-				RECORD_DEVICE_METADATA(maxWarpsPerMultiprocessor, device);
-				RECORD_DEVICE_METADATA(numMemcpyEngines, device);
-				RECORD_DEVICE_METADATA(numMultiprocessors, device);
-				RECORD_DEVICE_METADATA(numThreadsPerWarp, device);
+			CUpti_ActivityDevice *device = (CUpti_ActivityDevice *)record;
 			
-				recorded_metadata = true;
-			}
+			GpuMetadata *metadata = (GpuMetadata *) malloc(sizeof(GpuMetadata) * 16);
+			int id = 0;
+			//first the name.
+			metadata[id].name = "GPU Name";
+			metadata[id].value = device->name;
+			id++;
+
+			//the rest.
+			RECORD_DEVICE_METADATA(computeCapabilityMajor, device);
+			RECORD_DEVICE_METADATA(computeCapabilityMinor, device);
+			RECORD_DEVICE_METADATA(constantMemorySize, device);
+			RECORD_DEVICE_METADATA(coreClockRate, device);
+			RECORD_DEVICE_METADATA(globalMemoryBandwidth, device);
+			RECORD_DEVICE_METADATA(globalMemorySize, device);
+			RECORD_DEVICE_METADATA(l2CacheSize, device);
+			RECORD_DEVICE_METADATA(maxIPC, device);
+			RECORD_DEVICE_METADATA(maxRegistersPerBlock, device);
+			RECORD_DEVICE_METADATA(maxSharedMemoryPerBlock, device);
+			RECORD_DEVICE_METADATA(maxThreadsPerBlock, device);
+			RECORD_DEVICE_METADATA(maxWarpsPerMultiprocessor, device);
+			RECORD_DEVICE_METADATA(numMemcpyEngines, device);
+			RECORD_DEVICE_METADATA(numMultiprocessors, device);
+			RECORD_DEVICE_METADATA(numThreadsPerWarp, device);
+	
+			//cerr << "recording metadata (device): " << device->id << endl;
+			Tau_cupti_register_metadata(device->id, metadata, 16);
 			break;
 		}
 	}
