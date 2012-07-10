@@ -18,10 +18,14 @@ int foo(int x)
   return 0;
 }
 
+extern "C" void Tau_metadata_task(char *c, const char *v, int t);
+
 int main(int argc, char **argv)
 {
    /* Initialize */
   
+	Tau_metadata_task("test", "task id: 0", 0);
+	Tau_metadata_task("test", "task id: 1", 1);
 
   void *ptr, *top;
   long calls, childcalls;
@@ -31,8 +35,14 @@ int main(int argc, char **argv)
   TAU_INIT(&argc, &argv);
   TAU_PROFILE_SET_NODE(0);
   TAU_CREATE_TASK(taskid);
+
+	//TAU_CREATE_TASK return the current task, increment it to create a new task
+	taskid++;
+
   TAU_PROFILER_CREATE(top, "Top-level-timer","", TAU_USER);
   TAU_PROFILER_CREATE(ptr, "foo","", TAU_USER);
+
+	printf("Task id given: %d.\n", taskid);
 
   TAU_PROFILER_START_TASK(top, taskid);
   TAU_PROFILER_START_TASK(ptr, taskid);
@@ -73,8 +83,8 @@ int main(int argc, char **argv)
 
   // Comment out one of these lines. It dumps the profile on a stop or an
   // explicit DB_DUMP call. 
-  TAU_DB_DUMP_PREFIX_TASK("profile", taskid);
-  //TAU_PROFILER_STOP_TASK(top, taskid);
+  //TAU_DB_DUMP_PREFIX_TASK("profile", taskid);
+  TAU_PROFILER_STOP_TASK(top, taskid);
 
   return 0;
 }
