@@ -1,3 +1,19 @@
+------------------- Released version 1.0.4 ---------------------------
+
+- Provide correct region line numbers also for lazy initialization
+  during runtime. Previosly the region end line was always 0 for lazy
+  initialization.
+
+- Improved region end line number handling in conjunction with omitted
+  Fortran '!$omp end do' or '!$omp end parallel do' directives.
+
+- Fix invalid insertion of <file>.opari.inc in Fortran77 codes with
+  arbitrary continuation line characters in column 6.
+
+- Fix invalid insertion of <file>.opari.inc in Fortran codes in
+  conjunction with subroutine calls that distribute their arguments
+  over several lines.
+
 ------------------- Released version 1.0.3 ---------------------------
 
 - Prevent OPARI2 from instrumenting Fortran 'abstract interfaces'.
