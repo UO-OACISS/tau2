@@ -109,6 +109,7 @@ int enqueue_stop_event()
 		num = 0;
 		gA = NULL;
 	}
+	void recordMetadata(int i) const {}
 
 };
 
