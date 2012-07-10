@@ -2543,7 +2543,7 @@ case $machine in
       if [ $machine = bgp ]; then 
         fixmakeargs="$fixmakeargs GNU BGP_GFORTRAN COMPINST_GNU"
       else 
-        fixmakeargs="$fixmakeargs GNU BGQ_GFORTRAN COMPINST_GNU"
+        fixmakeargs="$fixmakeargs GNU BGQ_GFORTRAN COMPINST_GNU GNU46PLUS"
       fi
     fi
 
