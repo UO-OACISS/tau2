@@ -25,6 +25,13 @@
 
 #include <mpi.h>
 
+// Moved from header file
+#ifdef __cplusplus
+using namespace std;
+#endif
+
+
+
 #ifdef MRNET_LIGHTWEIGHT
 extern "C" {
 #endif /* MRNET_LIGHTWEIGHT */

@@ -25,6 +25,10 @@
 #include <TauXML.h>
 #include <TauUnify.h>
 
+// Moved from header file
+using namespace std;
+
+
 static int Tau_snapshot_writeSnapshot(const char *name, int to_buffer);
 static int startNewSnapshotFile(char *threadid, int tid, int to_buffer);
 

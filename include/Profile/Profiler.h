@@ -239,6 +239,7 @@ public:
 };
 }
 #ifdef TAU_LIBRARY_SOURCE
+// This could be dangerous.  We need to phase this out.
 using tau::Profiler;
 #endif /* TAU_LIBRARY_SOURCE */
 

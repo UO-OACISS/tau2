@@ -33,12 +33,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <omp.h>
+#include <string>
 #include <Profile/Profiler.h>
 #ifdef TAU_OPENMP
 #ifndef _OPENMP
 #define _OPENMP
 #endif /* _OPENMP */
 #endif /* TAU_OPENMP */
+using std::string;
 
 
 
