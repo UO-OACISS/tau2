@@ -43,5 +43,6 @@
 
 const std::string
 region_id_prefix( "pomp2_region_" );
-
+const std::string
+string_id_prefix( "pomp2_ctc_" );
 #endif /* COMMON_H */
