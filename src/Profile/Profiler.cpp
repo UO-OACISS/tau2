@@ -1215,7 +1215,7 @@ static int writeProfile(FILE *fp, char *metricName, int tid, int metric,
   //writeHeader(fp, TheFunctionDB().size(), metricName);
   writeHeader(fp, trueCount, metricName);
   fprintf(fp, " # ");	
-  Tau_metadata_writeMetaData(fp, metric);
+  Tau_metadata_writeMetaData(fp, metric, tid);
   fprintf(fp, "\n");
   fflush(fp);
   writeFunctionData(fp, tid, metric, inFuncs, numFuncs);
