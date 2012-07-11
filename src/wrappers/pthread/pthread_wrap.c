@@ -37,6 +37,15 @@
 #define TAU_DISABLE_SYSCALL_WRAPPER
 #endif /* TAU_BGP || TAU_XLC */
 
+typedef int (*pthread_create_call_p) 
+	(pthread_t *threadp,
+	const pthread_attr_t *attr,
+	void *(*start_routine) (void *),
+	void *arg);
+
+extern int tau_pthread_create_wrapper (pthread_create_call_p pthread_create_call,
+pthread_t *threadp, const pthread_attr_t *attr, void *(*start_routine) (void *),
+void *arg);
 
 /********************************/
 /* LD_PRELOAD wrapper functions */
@@ -64,12 +73,13 @@ int pthread_create (pthread_t* thread, const pthread_attr_t* attr,
   if (_pthread_create == NULL) {
     _pthread_create = (int (*) (pthread_t* thread, const pthread_attr_t* attr, void *(*start_routine)(void*), void* arg)) dlsym(RTLD_NEXT, "pthread_create");
   }
-
+	/*
   tau_pthread_pack *pack = (tau_pthread_pack*) malloc (sizeof(tau_pthread_pack));
   pack->start_routine = start_routine;
   pack->arg = arg;
   pack->id = -1;
-  return _pthread_create(thread, (pthread_attr_t*) attr, tau_pthread_function, (void*)pack);
+	*/
+  return tau_pthread_create_wrapper(_pthread_create, thread, attr, start_routine, arg);
 }
 
 int pthread_join (pthread_t thread, void **retval) {
@@ -127,11 +137,13 @@ int __real_pthread_create (pthread_t* thread, const pthread_attr_t* attr,
 		    void *(*start_routine)(void*), void* arg);
 extern int __wrap_pthread_create (pthread_t* thread, const pthread_attr_t* attr, 
 		    void *(*start_routine)(void*), void* arg) {
+	/*
   tau_pthread_pack *pack = (tau_pthread_pack*) malloc (sizeof(tau_pthread_pack));
   pack->start_routine = start_routine;
   pack->arg = arg;
   pack->id = -1;
-  return __real_pthread_create(thread, (pthread_attr_t*) attr, tau_pthread_function, (void*)pack);
+	*/
+  return tau_pthread_create_wrapper(__real_pthread_create, thread, attr, start_routine, arg);
 }
 
 int __real_pthread_join (pthread_t thread, void **retval);
