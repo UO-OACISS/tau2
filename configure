@@ -804,7 +804,7 @@ for arg in "$@"; do
 
   -cc=*)
     myarg=`echo $arg | sed 's/-cc=//'`
-    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc -o $myarg = mpiicc -o $myarg = mpifcc -o $myarg = mpifccpx ]
+    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc -o $myarg = mpiicc -o $myarg = mpifcc -o $myarg = mpifccpx -o $myarg = mpc_cc ]
       then
         c_compiler=$myarg
       else
@@ -828,7 +828,7 @@ for arg in "$@"; do
 
   -c++=*)
     myarg=`echo $arg | sed 's/-c++=//'`
-    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiFCC -o $myarg = mpiFCCpx ] 
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx ] 
       then
         cxx_compiler=$myarg
       else
@@ -3384,6 +3384,19 @@ case $cxx_compiler in
       fi
       ;;
 
+    mpc_cxx)
+	if [ $machine = x86_64 ] ; then
+            full_cxx_compiler=`mpc_cxx -show | awk '{print $1;}'`
+            full_cc_compiler=`mpc_cc -show | awk '{ print $1;}'`
+            mpilibrary=`mpc_cxx -show | sed -e "s@$full_cxx_compiler@@g" | sed -e "s/ /#/g"`
+	    #echo "CC=$cc_compiler"
+	    #echo "CXX=$cxx_compiler"
+	    #echo "mpilibrary=$mpilibrary"
+	    tauoptions="${tauoptions}-mpc"
+            fixmakeargs="$fixmakeargs MPC"
+        fi
+        ;;
+
     mpicxx)
 	if [ $machine = bgq ] ; then
 	    echo "Using GNU Compilers for BGQ"
@@ -3594,8 +3607,12 @@ case $fortran_compiler in
 esac
 
 # Encode the full path of the C++/C compiler in the stub Makefile
-full_cxx_compiler=`which $cxx_compiler`
-full_cc_compiler=`which $c_compiler`
+if [ "x$full_cxx_compiler" = "x" ]
+then 
+  full_cxx_compiler=`which $cxx_compiler`
+  full_cc_compiler=`which $c_compiler`
+fi
+# This takes care of mpc_cxx setting this above
 if [ $shmem = yes ]
 then
   oshcc_var=`which oshcc 2>/dev/null`
