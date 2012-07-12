@@ -732,6 +732,7 @@ unwind_lib_flag=
 unwind_extras=
 tau_links_rt=no
 opari=no
+mpc=no
 opari1=no
 oparicomp=no
 epilog=no
@@ -3394,6 +3395,7 @@ case $cxx_compiler in
 	    #echo "mpilibrary=$mpilibrary"
 	    tauoptions="${tauoptions}-mpc"
             fixmakeargs="$fixmakeargs MPC"
+            mpc=yes
         fi
         ;;
 
@@ -3734,16 +3736,21 @@ then
         fi
 	;;
   *)
-        mpiinc=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/include
-        if [ -d $mpiinc ]
+        if [ $mpc = yes ]
         then
-          echo "Using MPI include directory $mpiinc"
-	  echo "machine is $machine"
-	else
-	  mpiinc=`which mpiexec | sed -e 's/\/bin\/mpiexec$//'`/include
+          mpiinc=`which mpcrun | sed -e 's/\/bin\/mpcrun$//'`/include
+        else
+          mpiinc=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/include
           if [ -d $mpiinc ]
           then
             echo "Using MPI include directory $mpiinc"
+	    echo "machine is $machine"
+	  else
+	    mpiinc=`which mpiexec | sed -e 's/\/bin\/mpiexec$//'`/include
+            if [ -d $mpiinc ]
+            then
+              echo "Using MPI include directory $mpiinc"
+            fi
           fi
         fi
 	;;
@@ -3864,13 +3871,18 @@ then
         fi
         ;;
   *)    
-        mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/lib
-        if [ ! -d $mpilib ] ; then
-         # Try the ".../lib64" directory instead of ".../lib"
-         mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/lib64
-        fi
-        if [ -d $mpilib ] ; then
-          echo "Using MPI lib directory $mpilib"
+        if [ $mpc = yes ] 
+        then
+          mpilib=`which mpcrun | sed -e 's/\/bin\/mpcrun$//'`/lib
+        else
+          mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/lib
+          if [ ! -d $mpilib ] ; then
+           # Try the ".../lib64" directory instead of ".../lib"
+           mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/lib64
+          fi
+          if [ -d $mpilib ] ; then
+            echo "Using MPI lib directory $mpilib"
+          fi
         fi
 	;;
   esac
