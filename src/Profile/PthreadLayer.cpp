@@ -266,6 +266,9 @@ typedef int (*pthread_create_call_p)
 	void *(*start_routine) (void *),
 	void *arg);
 
+#ifdef TAU_MPC
+#define tau_pthread_create_wrapper tau_sctk_user_thread_create_wrapper
+#endif /* TAU_MPC */
 extern "C" int tau_pthread_create_wrapper (pthread_create_call_p pthread_create_call,
 pthread_t *threadp, const pthread_attr_t *attr, void *(*start_routine) (void *), void *arg)
 {
