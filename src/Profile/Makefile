@@ -213,6 +213,7 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 #PGI#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#
 #APPLEPGI#AR_SHFLAGS 		= -shared #ENDIF#
 #SGICC#AR_SHFLAGS 		= -shared  	#ENDIF#
+#FX#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#
 #OPEN64ORC#AR_SHFLAGS 		= -shared -fpic 	#ENDIF#
 #APPLECXX#TAU_APPLE_SHFLAGS = -dynamiclib -flat_namespace -undefined suppress #ENDIF#
 #PYTHON#TAU_APPLE_SHFLAGS   = -bundle -flat_namespace -undefined suppress     #ENDIF#
