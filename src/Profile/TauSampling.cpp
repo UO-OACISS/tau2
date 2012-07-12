@@ -1318,8 +1318,56 @@ int Tau_sampling_init(int tid) {
     //   a member of TAU_METRICS.
     int checkVal = TauMetrics_getMetricIndexFromName("TIME");
     if (checkVal == -1) {
-      fprintf(stderr, "TAU Sampling Warning: TIME is not a member of TAU_METRICS. No sampling is enabled.\n");
-      return -1;
+      // *CWL* - Attempt other default (or pseudo-default) timer options.
+      //         This is probably not the best nor most efficient way. 
+      //         The only saving grace is that these pseudo-default
+      //         timers are probably not going to overlap in the same run.
+      //         
+      //         Essentially, we don't
+      //         really care what these timers do, if EBS_SOURCE=TIME, we
+      //         just want to find ANY time-based metric to latch the 
+      //         data to.
+      const char *temp = NULL;
+      checkVal = TauMetrics_getMetricIndexFromName("TAUGPU_TIME");
+      if (checkVal != -1) {
+	temp = "TAUGPU_TIME";
+      }
+
+      checkVal = TauMetrics_getMetricIndexFromName("LINUX_TIMERS");
+      if (checkVal != -1) {
+	temp = "LINUX_TIMERS";
+      }
+
+      checkVal = TauMetrics_getMetricIndexFromName("BGL_TIMERS");
+      if (checkVal != -1) {
+	temp = "BGL_TIMERS";
+      }
+
+      checkVal = TauMetrics_getMetricIndexFromName("BGP_TIMERS");
+      if (checkVal != -1) {
+	temp = "BGP_TIMERS";
+      }
+
+      checkVal = TauMetrics_getMetricIndexFromName("BGQ_TIMERS");
+      if (checkVal != -1) {
+	temp = "BGQ_TIMERS";
+      }
+
+      checkVal = TauMetrics_getMetricIndexFromName("CRAY_TIMERS");
+      if (checkVal != -1) {
+	temp = "CRAY_TIMERS";
+      }
+
+      // If *some* pseudo-default timer is used, then override the EBS_SOURCE string.
+      //   The overriden value will eventually be used in the final EBS data resolution
+      //   phase to latch the EBS data to the appropriate metric data (which uses the
+      //   EBS_SOURCE string to figure out the metric index).
+      if (temp != NULL) {
+	TauEnv_override_ebs_source(temp);
+      } else {
+	fprintf(stderr, "TAU Sampling Warning: No time-related metric found in TAU_METRICS. Sampling is disabled for TAU_EBS_SOURCE %s.\n", TauEnv_get_ebs_source());
+	return -1;
+      }
     }
 
     memset(&act, 0, sizeof(struct sigaction));
