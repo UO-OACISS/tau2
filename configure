@@ -732,6 +732,7 @@ unwind_lib_flag=
 unwind_extras=
 tau_links_rt=no
 opari=no
+mpc=no
 opari1=no
 oparicomp=no
 epilog=no
@@ -804,7 +805,7 @@ for arg in "$@"; do
 
   -cc=*)
     myarg=`echo $arg | sed 's/-cc=//'`
-    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc -o $myarg = mpiicc ]
+    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc -o $myarg = mpiicc -o $myarg = mpifcc -o $myarg = mpifccpx -o $myarg = mpc_cc ]
       then
         c_compiler=$myarg
       else
@@ -828,7 +829,7 @@ for arg in "$@"; do
 
   -c++=*)
     myarg=`echo $arg | sed 's/-c++=//'`
-    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc ] 
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx ] 
       then
         cxx_compiler=$myarg
       else
@@ -836,7 +837,7 @@ for arg in "$@"; do
         testmp=`echo $myarg | sed -e 's/^mp//'`
 	if [ "y$testxlc" = "y$myarg" -a "y$testmp" = "y$myarg" ]
         then
-          echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'g++4', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'pgcpp', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'pathCC', 'c++', 'qk-pgCC', 'x86_64-w64-mingw32-g++', 'mpiicpc', and 'orCC'"
+          echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'g++4', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'pgcpp', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'pathCC', 'c++', 'qk-pgCC', 'x86_64-w64-mingw32-g++', 'mpiicpc', 'mpiFCC', 'mpiFCCpx', and 'orCC'"
 #       exit 1
         else
 	  if [ "y$testxlc" != "y$myarg" ]
@@ -860,14 +861,14 @@ for arg in "$@"; do
 
   -fortran=*)
     myarg=`echo $arg | sed 's/-fortran=//'`
-    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = mpiifort ] ; then
+    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt ] ; then
 	if [ $myarg = gnu ] ; then
 	    fortran_compiler=gfortran
 	else
 	    fortran_compiler=$myarg
 	fi
     else
-	echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'g95', 'open64', and 'mpiifort' "
+	echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'g95', 'open64', 'mpiifort', 'mpifrtpx', 'frtpx', 'frt', and 'mpifrt' "
 	exit 1
     fi
     shift
@@ -3199,14 +3200,27 @@ case $cxx_compiler in
       fi
       ;;
 
-   FCC)
+   FCC|mpiFCCpx|mpiFCC)
       echo "Default C++ compiler will be Fujitsu C++ Compiler"	 
       fujitsu=yes
-      fixmakeargs="$fixmakeargs FUJITSU"
-      if [ $fortran_compiler = no ]
+      fixmakeargs="$fixmakeargs FX"
+      #mpiinc=`which mpiFCCpx | sed -e 's/\/bin\/mpiFCCpx$//'`/include
+      mpiinc=`which mpiFCCpx | sed -e 's/\/bin\/mpiFCCpx$//'`/include/mpi/fujitsu
+      if [ ! -d $mpiinc -a -r /opt/FJSVfxlang/1.2.0/include/mpi/fujitsu/mpi.h ] 
+      then
+        mpiinc=/opt/FJSVfxlang/1.2.0/include/mpi/fujitsu/
+      fi
+
+      if [ -d $mpiinc ]
+      then
+        echo "Using MPI include directory $mpiinc"
+      fi
+      fixmakeargs="$fixmakeargs mpiincargs=-I$mpiinc"
+      echo "Adding -I$mpiinc to MPI include"
+      if [ $fortran_compiler = no -o $fortran_compiler = mpifrtpx -o $fortran_compiler = fujitsu ]
       then 
-        extradir=`which FCC | sed s/FCC/../`
-        fixmakeargs="$fixmakeargs FUJITSU_FORTRAN"
+        extradir=`which mpiFCCpx | sed s/mpiFCCpx/../`
+        #fixmakeargs="$fixmakeargs FUJITSU_FORTRAN"
         fortran_compiler=yes
       fi
       if [ $machine = solaris2 -o $machine = solaris2-64 ] 
@@ -3370,6 +3384,20 @@ case $cxx_compiler in
         fortran_compiler=yes
       fi
       ;;
+
+    mpc_cxx)
+	if [ $machine = x86_64 ] ; then
+            full_cxx_compiler=`mpc_cxx -show | awk '{print $1;}'`
+            full_cc_compiler=`mpc_cc -show | awk '{ print $1;}'`
+            mpilibrary=`mpc_cxx -show | sed -e "s@$full_cxx_compiler@@g" | sed -e "s/ /#/g"`
+	    #echo "CC=$cc_compiler"
+	    #echo "CXX=$cxx_compiler"
+	    #echo "mpilibrary=$mpilibrary"
+	    tauoptions="${tauoptions}-mpc"
+            fixmakeargs="$fixmakeargs MPC"
+            mpc=yes
+        fi
+        ;;
 
     mpicxx)
 	if [ $machine = bgq ] ; then
@@ -3581,8 +3609,12 @@ case $fortran_compiler in
 esac
 
 # Encode the full path of the C++/C compiler in the stub Makefile
-full_cxx_compiler=`which $cxx_compiler`
-full_cc_compiler=`which $c_compiler`
+if [ "x$full_cxx_compiler" = "x" ]
+then 
+  full_cxx_compiler=`which $cxx_compiler`
+  full_cc_compiler=`which $c_compiler`
+fi
+# This takes care of mpc_cxx setting this above
 if [ $shmem = yes ]
 then
   oshcc_var=`which oshcc 2>/dev/null`
@@ -3704,15 +3736,21 @@ then
         fi
 	;;
   *)
-        mpiinc=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/include
-        if [ -d $mpiinc ]
+        if [ $mpc = yes ]
         then
-          echo "Using MPI include directory $mpiinc"
-	else
-	  mpiinc=`which mpiexec | sed -e 's/\/bin\/mpiexec$//'`/include
+          mpiinc=`which mpcrun | sed -e 's/\/bin\/mpcrun$//'`/include
+        else
+          mpiinc=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/include
           if [ -d $mpiinc ]
           then
             echo "Using MPI include directory $mpiinc"
+	    echo "machine is $machine"
+	  else
+	    mpiinc=`which mpiexec | sed -e 's/\/bin\/mpiexec$//'`/include
+            if [ -d $mpiinc ]
+            then
+              echo "Using MPI include directory $mpiinc"
+            fi
           fi
         fi
 	;;
@@ -3833,13 +3871,18 @@ then
         fi
         ;;
   *)    
-        mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/lib
-        if [ ! -d $mpilib ] ; then
-         # Try the ".../lib64" directory instead of ".../lib"
-         mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/lib64
-        fi
-        if [ -d $mpilib ] ; then
-          echo "Using MPI lib directory $mpilib"
+        if [ $mpc = yes ] 
+        then
+          mpilib=`which mpcrun | sed -e 's/\/bin\/mpcrun$//'`/lib
+        else
+          mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/lib
+          if [ ! -d $mpilib ] ; then
+           # Try the ".../lib64" directory instead of ".../lib"
+           mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/lib64
+          fi
+          if [ -d $mpilib ] ; then
+            echo "Using MPI lib directory $mpilib"
+          fi
         fi
 	;;
   esac

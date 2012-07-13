@@ -87,6 +87,7 @@ MEMORYWRAPPER=src/wrappers/memory
 #COMPINST_CRAYCC#UPCWRAPPER=src/wrappers/upc/crayupc #ENDIF#
 
 #TAU_PTHREAD_WRAP#PTHREAD_WRAPPER=src/wrappers/pthread #ENDIF#
+#MPC#PTHREAD_WRAPPER=src/wrappers/mpcthread #ENDIF#
 
 # Subdirectories to make resursively
 SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(VTFCONVERTER) \
