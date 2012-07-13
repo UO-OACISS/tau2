@@ -620,6 +620,11 @@ const char *TauEnv_get_ebs_source() {
   return env_ebs_source;
 }
 
+void TauEnv_override_ebs_source(const char *newName) {
+  env_ebs_source = newName;
+  TAU_METADATA("TAU_EBS_PERIOD (Override)", newName);
+}
+
 int TauEnv_get_stat_precompute() {
   return env_stat_precompute;
 }
@@ -1052,6 +1057,9 @@ void TauEnv_initialize() {
       if ((env_ebs_source = getconf("TAU_EBS_SOURCE")) == NULL) {
 	env_ebs_source = "itimer";
       }
+      sprintf(tmpstr, "%s", env_ebs_source);
+      TAU_METADATA("TAU_EBS_PERIOD", tmpstr);
+
       TAU_VERBOSE("TAU: EBS Source: %s\n", env_ebs_source);
 
       /* TAU sampling period */
