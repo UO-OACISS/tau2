@@ -260,7 +260,7 @@ extern "C" void *tau_pthread_function (void *arg) {
   return ret; 
 }
 
-typedef int (*pthread_create_call_p) 
+extern "C" typedef int (*pthread_create_call_p) 
 	(pthread_t *threadp,
 	const pthread_attr_t *attr,
 	void *(*start_routine) (void *),
@@ -316,7 +316,8 @@ extern "C" int tau_pthread_create (pthread_t * threadp,
   pack->id = -1; // none specified
   return pthread_create(threadp, (pthread_attr_t*) attr, tau_pthread_function, (void*)pack);
 	*/
-	tau_pthread_create_wrapper(pthread_create, threadp, attr, start_routine, arg);
+     return tau_pthread_create_wrapper(pthread_create, threadp, attr, start_routine, arg);
+
 }
 
 extern "C" void tau_pthread_exit (void *value_ptr) {
