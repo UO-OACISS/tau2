@@ -27,11 +27,15 @@ import java.util.Map;
 import java.util.Queue;
 
 import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.DBDataSource;
+import edu.uoregon.tau.perfdmf.DataSource;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.DatabaseException;
 import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.Function;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.TAUdbDataSource;
 import edu.uoregon.tau.perfdmf.View;
 import edu.uoregon.tau.perfdmf.TAUdbDatabaseAPI;
 import edu.uoregon.tau.perfdmf.Trial;
@@ -1741,11 +1745,17 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		try {
 			this.session.setTrial(trialID, false);
 		} catch (DatabaseException e) {}
-		List<IntervalEvent> events = this.session.getIntervalEvents();
+        DataSource dbDataSource = null;
+		if(this.session.getDb().getSchemaVersion() >0 ){
+			dbDataSource = new TAUdbDataSource(this.session);
+		}else{
+			dbDataSource = new DBDataSource(this.session);
+		}
+		Map<Integer, Function> events = this.session.getIntervalEvents(dbDataSource, metricIndex);
 		List<RMISortableIntervalEvent> sortedEvents = new ArrayList<RMISortableIntervalEvent>();
-		for (Iterator<IntervalEvent> i = events.iterator() ; i.hasNext() ; ) {
-			IntervalEvent e = i.next();
-			sortedEvents.add(new RMISortableIntervalEvent(e, this.session, metricIndex));
+		for (Iterator<Function> i = events.values().iterator() ; i.hasNext() ; ) {
+			Function e = i.next();
+			sortedEvents.add(new RMISortableIntervalEvent(e, trialID, this.session, metricIndex));
 		}
 		Collections.sort(sortedEvents);
 		return sortedEvents;

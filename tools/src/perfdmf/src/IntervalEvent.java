@@ -6,8 +6,10 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 import edu.uoregon.tau.perfdmf.database.DB;
@@ -41,184 +43,14 @@ import edu.uoregon.tau.perfdmf.database.DB;
  * @see		IntervalLocationProfile
  */
 public class IntervalEvent {
-    private int intervalEventID; // for 2012 schema, doubles as timer ID
-    private String name;
-    private String group;
-    private int trialID;
-    private IntervalLocationProfile meanSummary = null;
-    private IntervalLocationProfile totalSummary = null;
-    private DatabaseAPI dataSession = null;
-    private int timerCallpathID;
-
-    /**
-	 * @return the timerCallpathID
-	 */
-	public int getTimerCallpathID() {
-		return timerCallpathID;
-	}
-
-	/**
-	 * @param timerCallpathID the timerCallpathID to set
-	 */
-	public void setTimerCallpathID(int timerCallpathID) {
-		this.timerCallpathID = timerCallpathID;
-	}
-
-	public IntervalEvent(DatabaseAPI dataSession) {
-        this.dataSession = dataSession;
-    }
-
-    /**
-     * Gets the unique identifier of this intervalEvent object.
-     *
-     * @return	the unique identifier of the intervalEvent
-     */
-    public int getID() {
-        return this.intervalEventID;
-    }
-
-    /**
-     * Gets the intervalEvent name.
-     *
-     * @return	the name of the intervalEvent
-     */
-    public String getName() {
-        return this.name;
-    }
-
-    /**
-     * Gets the TAU group of this intervalEvent object.
-     *
-     * @return	the TAU group the intervalEvent is in.
-     */
-    public String getGroup() {
-        return this.group;
-    }
-
-    /**
-     * Gets the trial ID of this intervalEvent object.
-     *
-     * @return	the trial ID for the intervalEvent.
-     */
-    public int getTrialID() {
-        return this.trialID;
-    }
-
-    /**
-     * Gets mean summary data for the intervalEvent object.
-     * The Trial object associated with this intervalEvent has a vector of metric
-     * names that represent the metric data stored for each intervalEvent in the
-     * application.  Multiple metrics can be recorded for each trial.  If the
-     * user has selected a metric before calling getIntervalEvents(), then this method
-     * can be used to return the mean metric data for this 
-     * intervalEvent/trial/experiment/application combination.
-     * The mean data is averaged across all locations, defined as any combination
-     * of node/context/thread.
-     *
-     * @return	the IntervalLocationProfile containing the mean data for this intervalEvent/metric combination.
-     * @see		Trial
-     * @see		IntervalLocationProfile
-     * @see		DataSession#getIntervalEvents
-     * @see		DataSession#setMetric(Metric)
-     */
-    public IntervalLocationProfile getMeanSummary() throws SQLException {
-        if (this.meanSummary == null)
-            dataSession.getIntervalEventDetail(this);
-        return (this.meanSummary);
-    }
-
-    /**
-     * Gets total summary data for the intervalEvent object.
-     * The Trial object associated with this intervalEvent has a vector of metric
-     * names that represent the metric data stored for each intervalEvent in the
-     * application.  Multiple metrics can be recorded for each trial.  If the
-     * user has selected a metric before calling getIntervalEvents(), then this method
-     * can be used to return the total metric data for this 
-     * intervalEvent/trial/experiment/application combination.
-     * The total data is summed across all locations, defined as any combination
-     * of node/context/thread.
-     *
-     * @return	the IntervalLocationProfile containing the total data for this intervalEvent/metric combination.
-     * @see		Trial
-     * @see		IntervalLocationProfile
-     * @see		DataSession#getIntervalEvents
-     */
-    public IntervalLocationProfile getTotalSummary() throws SQLException {
-        if (this.totalSummary == null)
-            dataSession.getIntervalEventDetail(this);
-        return (this.totalSummary);
-    }
-
-    /**
-     * Sets the unique ID associated with this interval event.
-     * <i> NOTE: This method is used by the DataSession object to initialize
-     * the object.  Not currently intended for use by any other code.</i>
-     *
-     * @param	id unique ID associated with this intervalEvent
-     */
-    public void setID(int id) {
-        this.intervalEventID = id;
-    }
-
-    /**
-     * Sets the intervalEvent name.
-     * <i> NOTE: This method is used by the DataSession object to initialize
-     * the object.  Not currently intended for use by any other code.</i>
-     *
-     * @param	name the name of the intervalEvent
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    /**
-     * Sets the TAU group of this intervalEvent object.
-     * <i> NOTE: This method is used by the DataSession object to initialize
-     * the object.  Not currently intended for use by any other code.</i>
-     *
-     * @param	group the TAU group the intervalEvent is in.
-     */
-    public void setGroup(String group) {
-        this.group = group;
-    }
-
-    /**
-     * Sets the trial ID of this intervalEvent object.
-     * <i> NOTE: This method is used by the DataSession object to initialize
-     * the object.  Not currently intended for use by any other code.</i>
-     *
-     * @param	id the trial ID for the intervalEvent.
-     */
-    public void setTrialID(int id) {
-        this.trialID = id;
-    }
-
-    /**
-     * Adds a IntervalLocationProfile to the intervalEvent as a mean summary.
-     * <i> NOTE: This method is used by the DataSession object to initialize
-     * the object.  Not currently intended for use by any other code.</i>
-     *
-     * @param	meanSummary the mean summary object for the intervalEvent.
-     */
-    public void setMeanSummary(IntervalLocationProfile meanSummary) {
-        this.meanSummary = meanSummary;
-    }
-
-    /**
-     * Adds a IntervalLocationProfile to the intervalEvent as a total summary.
-     * <i> NOTE: This method is used by the DataSession object to initialize
-     * the object.  Not currently intended for use by any other code.</i>
-     *
-     * @param	totalSummary the total summary object for the intervalEvent.
-     */
-    public void setTotalSummary(IntervalLocationProfile totalSummary) {
-        this.totalSummary = totalSummary;
+	// can't instantiate this class!
+	private IntervalEvent() {
     }
 
     // returns a Vector of IntervalEvents
-    public static Vector<IntervalEvent> getIntervalEvents(DatabaseAPI dataSession, DB db, String whereClause) {
-    	if(db.getSchemaVersion() >0) return getTAUdbIntervalEvents(dataSession,db,  whereClause);
-        Vector<IntervalEvent> events = new Vector<IntervalEvent>();
+    public static Map<Integer, Function> getIntervalEvents(DatabaseAPI dataSession, DB db, String whereClause, DataSource dataSource, int numberOfMetrics) {
+    	if(db.getSchemaVersion() >0) return getTAUdbIntervalEvents(dataSession,db,  whereClause, dataSource, numberOfMetrics);
+        Map<Integer, Function> events = new HashMap<Integer, Function>();
         // create a string to hit the database
         StringBuffer buf = new StringBuffer();
         buf.append("select id, name, group_name, trial ");
@@ -243,12 +75,13 @@ public class IntervalEvent {
 
             //IntervalEvent tmpIntervalEvent = null;
             while (resultSet.next() != false) {
-                IntervalEvent event = new IntervalEvent(dataSession);
-                event.setID(resultSet.getInt(1));
-                event.setName(resultSet.getString(2));
-                event.setGroup(resultSet.getString(3));
-                event.setTrialID(resultSet.getInt(4));
-                events.addElement(event);
+                int id = resultSet.getInt(1);
+                String name = resultSet.getString(2);
+                String groups = resultSet.getString(3);
+                int trialID = resultSet.getInt(4);
+            	Function function = new Function(name, id, numberOfMetrics);
+                dataSource.addGroups(groups, function);
+                events.put(id, function);
             }
             resultSet.close();
         } catch (Exception ex) {
@@ -259,14 +92,14 @@ public class IntervalEvent {
         return events;
     }
 
-    private static Vector<IntervalEvent> getTAUdbIntervalEvents(
-			DatabaseAPI dataSession, DB db, String whereClause) {
+    private static Map<Integer, Function> getTAUdbIntervalEvents(
+			DatabaseAPI dataSession, DB db, String whereClause, DataSource dataSource, int numberOfMetrics) {
 //    	SELECT timer.id, timer.trial, timer.name, timer_group.group_name 
 //    	FROM timer
 //    	LEFT JOIN timer_group
 //    	ON timer.id=timer_group.timer
     	
-    	 Vector<IntervalEvent> events = new Vector<IntervalEvent>();
+    	 Map<Integer, Function> events = new HashMap<Integer, Function>();
          // create a string to hit the database
          StringBuffer buf = new StringBuffer();
          buf.append("with recursive cp (id, parent, timer, name) as (");
@@ -305,31 +138,20 @@ public class IntervalEvent {
          try {
              ResultSet resultSet = db.executeQuery(buf.toString());
              //IntervalEvent tmpIntervalEvent = null;
+             Function last = null;
              while (resultSet.next() != false) {
-            	 if(events.size()>0){
-            		 IntervalEvent last = events.get(events.size()-1);
-            		 IntervalEvent event = new IntervalEvent(dataSession);
-            		 event.setID(resultSet.getInt(1));  // this is the timer_callpath ID
-            		 event.setTimerCallpathID(resultSet.getInt(2));
-            		 event.setName(resultSet.getString(3));
-            		 // ignore other columns for now... this needs refactoring!
-            		 event.setGroup(resultSet.getString(10));
-            		 event.setTrialID(resultSet.getInt(11));
-            		 if(last.getID() == event.getID()){
-            			 String group = last.getGroup() +"|"+ event.getGroup(); 
-            			 last.setGroup(group);
-            		 }else{
-            			 events.addElement(event);
-            		 }
-            	 }else{
-            		 IntervalEvent event = new IntervalEvent(dataSession);
-            		 event.setID(resultSet.getInt(1));
-            		 event.setTimerCallpathID(resultSet.getInt(2));
-            		 event.setName(resultSet.getString(3));
-            		 event.setGroup(resultSet.getString(10));
-            		 event.setTrialID(resultSet.getInt(11));
-            		 events.addElement(event);
-            	 }
+                 int id = resultSet.getInt(1);
+                 String name = resultSet.getString(2);
+                 String group = resultSet.getString(10);
+                 int trialID = resultSet.getInt(11);
+                 if (last != null && last.getID() == id) {
+                	 dataSource.addGroups(group, last);
+                 } else {
+                 	Function function = new Function(name, id, numberOfMetrics);
+                    dataSource.addGroups(group, function);
+                    events.put(id, function);
+                    last = function;
+                 }
              }
              resultSet.close();
          } catch (Exception ex) {
@@ -338,12 +160,11 @@ public class IntervalEvent {
          }
 
          return events;
-		
 	}
 
-	public int saveIntervalEvent(DB db, int newTrialID, Hashtable<Integer, Integer> newMetHash, int saveMetricIndex)
+	public static int saveIntervalEvent(DB db, int newTrialID, Function function, Hashtable<Integer, Integer> newMetHash, int saveMetricIndex)
             throws SQLException {
-    	if(db.getSchemaVersion() >0) return saveTAUdbIntervalEvent(db, newTrialID, newMetHash, saveMetricIndex);
+    	if(db.getSchemaVersion() >0) return saveTAUdbIntervalEvent(db, newTrialID, function, newMetHash, saveMetricIndex);
         int newIntervalEventID = -1;
 
         PreparedStatement statement = null;
@@ -352,8 +173,8 @@ public class IntervalEvent {
             statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
                     + "interval_event (trial, name, group_name) VALUES (?, ?, ?)");
             statement.setInt(1, newTrialID);
-            statement.setString(2, name);
-            statement.setString(3, group);
+            statement.setString(2, function.getName());
+            statement.setString(3, function.getGroupString());
             statement.executeUpdate();
             statement.close();
 
@@ -383,7 +204,7 @@ public class IntervalEvent {
                 statement = db.prepareStatement("SELECT id FROM " + db.getSchemaPrefix()
                         + "interval_event where name = ? and trial = ?");
 
-            statement.setString(1, name);
+            statement.setString(1, function.getName());
             statement.setInt(2, newTrialID);
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next() != false) {
@@ -394,22 +215,24 @@ public class IntervalEvent {
         }
         
         if (newIntervalEventID == -1) {
-            throw new RuntimeException("Unable to find event in database, event: " + name, null);
+            throw new RuntimeException("Unable to find event in database, event: " + function.getName(), null);
         }
 
         // save the intervalEvent mean summary
-        if (meanSummary != null) {
-            meanSummary.saveMeanSummary(db, newIntervalEventID, newMetHash, saveMetricIndex);
+        if (function.getMeanProfile() != null) {
+        	System.out.println("TODO! SAVE THE MEAN SUMMARY!");
+            //meanSummary.saveMeanSummary(db, newIntervalEventID, newMetHash, saveMetricIndex);
         }
 
         // save the intervalEvent total summary
-        if (totalSummary != null) {
-            totalSummary.saveTotalSummary(db, newIntervalEventID, newMetHash, saveMetricIndex);
+        if (function.getTotalProfile() != null) {
+        	System.out.println("TODO! SAVE THE TOTAL SUMMARY!");
+            //totalSummary.saveTotalSummary(db, newIntervalEventID, newMetHash, saveMetricIndex);
         }
         return newIntervalEventID;
     }
     
-	public int saveTAUdbIntervalEvent(DB db, int newTrialID, Hashtable<Integer, Integer> newMetHash, int saveMetricIndex)
+	public static int saveTAUdbIntervalEvent(DB db, int newTrialID, Function function, Hashtable<Integer, Integer> newMetHash, int saveMetricIndex)
             throws SQLException {
         int newIntervalEventID = -1;
 
@@ -418,7 +241,7 @@ public class IntervalEvent {
             statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
                     + "timer (trial, name) VALUES (?, ?)");
             statement.setInt(1, newTrialID);
-            statement.setString(2, name);
+            statement.setString(2, function.getName());
             // TODO: What about short_name, file, column, line, etc?
             statement.executeUpdate();
             statement.close();
@@ -439,12 +262,12 @@ public class IntervalEvent {
             newIntervalEventID = Integer.parseInt(db.getDataItem(tmpStr));
 
 			// save the groups
-			String[] groups = group.split("|");
+            List<Group> groups = function.getGroups();
             statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
                	+ "timer_group (timer, group_name) VALUES (?, ?)");
-			for (int i = 0 ; i < groups.length ; i++) {
+			for (int i = 0 ; i < groups.size() ; i++) {
 				statement.setInt(1,newIntervalEventID);
-				statement.setString(2,groups[i].trim());
+				statement.setString(2,groups.get(i).getName().trim());
 				statement.addBatch();
 			}
 			statement.executeBatch();
@@ -461,7 +284,7 @@ public class IntervalEvent {
                 statement = db.prepareStatement("SELECT id FROM " + db.getSchemaPrefix()
                         + "interval_event where name = ? and trial = ?");
 
-            statement.setString(1, name);
+            statement.setString(1, function.getName());
             statement.setInt(2, newTrialID);
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next() != false) {
@@ -472,7 +295,7 @@ public class IntervalEvent {
         }
         
         if (newIntervalEventID == -1) {
-            throw new RuntimeException("Unable to find event in database, event: " + name, null);
+            throw new RuntimeException("Unable to find event in database, event: " + function.getName(), null);
         }
 
         // TODO: mean, total. etc should all be saved when aggregate threads are saved.

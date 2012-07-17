@@ -135,15 +135,7 @@ public class TAUdbDataSource extends DataSource {
         Map<Integer, Function> ieMap = new HashMap<Integer, Function>();
 
         // iterate over interval events (functions), create the function objects and add them to the map
-        List<IntervalEvent> intervalEvents = databaseAPI.getIntervalEvents();
-        ListIterator<IntervalEvent> lIE = intervalEvents.listIterator();
-        while (lIE.hasNext()) {
-            IntervalEvent ie = lIE.next();
-            Function function = this.addFunction(ie.getName(), numberOfMetrics);
-            addGroups(ie.getGroup(), function);
-            ieMap.put(new Integer(ie.getID()), function);
-        }
-        databaseAPI.getTrial().setFunctionMap(ieMap);
+        ieMap = databaseAPI.getIntervalEvents(this, numberOfMetrics);
 
         //getIntervalEventData(ieMap);
         fastGetIntervalEventData(trialID,ieMap, metricMap);
