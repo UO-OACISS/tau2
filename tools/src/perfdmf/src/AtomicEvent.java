@@ -52,7 +52,7 @@ public class AtomicEvent {
                 + db.getSchemaPrefix() + "trial t on u.trial = t.id ");
         buf.append("inner join " + db.getSchemaPrefix() + "experiment e on t.experiment = e.id ");
         buf.append(whereClause);
-        buf.append(" order by id ");
+        buf.append(" order by u.id ");
         // System.out.println(buf.toString());
 
         // get the results
@@ -83,7 +83,7 @@ public class AtomicEvent {
         buf.append("select u.id, u.trial, u.name, u.parent ");
         buf.append("from " + db.getSchemaPrefix() + "counter u ");
         buf.append(whereClause);
-        buf.append(" order by id ");
+        buf.append(" order by u.id ");
         //System.out.println(buf.toString());
 
         // get the results
@@ -133,6 +133,8 @@ public class AtomicEvent {
                 tmpStr = "select LAST_INSERT_ID();";
             else if (db.getDBType().compareTo("derby") == 0)
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM atomic_event";
+            else if (db.getDBType().compareTo("sqlite") == 0)
+                tmpStr = "select seq from sqlite_sequence where name = 'atomic_event'";
             else if (db.getDBType().compareTo("h2") == 0)
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM atomic_event";
             else if (db.getDBType().compareTo("db2") == 0)
@@ -171,6 +173,8 @@ public class AtomicEvent {
                 tmpStr = "select LAST_INSERT_ID();";
             else if (db.getDBType().compareTo("derby") == 0)
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM counter";
+            else if (db.getDBType().compareTo("sqlite") == 0)
+                tmpStr = "select seq from sqlite_sequence where name = 'counter'";
             else if (db.getDBType().compareTo("h2") == 0)
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM counter";
             else if (db.getDBType().compareTo("db2") == 0)

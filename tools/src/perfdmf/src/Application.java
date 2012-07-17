@@ -418,6 +418,8 @@ public class Application implements Serializable {
                 tmpStr = "select LAST_INSERT_ID();";
             } else if (db.getDBType().compareTo("db2") == 0) {
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM application";
+            } else if (db.getDBType().compareTo("sqlite") == 0) {
+                tmpStr = "SELECT seq FROM sqlite_sequence WHERE name='application'";
             } else if (db.getDBType().compareTo("derby") == 0) {
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM application";
             } else if (db.getDBType().compareTo("h2") == 0) {

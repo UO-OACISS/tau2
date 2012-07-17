@@ -437,6 +437,8 @@ public class View implements Serializable {
                 tmpStr = "select LAST_INSERT_ID();";
             } else if (db.getDBType().compareTo("db2") == 0) {
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM taudb_view";
+            } else if (db.getDBType().compareTo("sqlite") == 0) {
+                tmpStr = "select seq from sqlite_sequence where name = 'taudb_view'";
             } else if (db.getDBType().compareTo("derby") == 0) {
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM taudb_view";
             } else if (db.getDBType().compareTo("h2") == 0) {

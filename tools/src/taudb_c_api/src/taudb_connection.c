@@ -16,6 +16,7 @@ PGconn* taudb_connect(char* host, char* port, char* database, char* login, char*
   char* pgtty = NULL;
   PGconn* connection;
   connection = PQsetdbLogin(host, port, pgoptions, pgtty, database, login, password);
+  printf("Connecting to host: %s, port: %s, db: %s, login: %s", host, port, database, login);
   /* Check to see that the backend connection was successfully made */
   if (PQstatus(connection) != CONNECTION_OK)
   {

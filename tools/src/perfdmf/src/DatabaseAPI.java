@@ -517,6 +517,8 @@ public class DatabaseAPI {
             tmpStr = "select LAST_INSERT_ID();";
         else if (db.getDBType().compareTo("db2") == 0)
             tmpStr = "select IDENTITY_VAL_LOCAL() FROM metric";
+        else if (db.getDBType().compareTo("sqlite") == 0)
+            tmpStr = "select seq from sqlite_sequence where name = 'metric'";
         else if (db.getDBType().compareTo("derby") == 0)
             tmpStr = "select IDENTITY_VAL_LOCAL() FROM metric";
         else if (db.getDBType().compareTo("h2") == 0)
@@ -849,6 +851,8 @@ public class DatabaseAPI {
                 tmpStr = "select LAST_INSERT_ID();";
             else if (db.getDBType().compareTo("db2") == 0)
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM metric";
+            else if (db.getDBType().compareTo("sqlite") == 0)
+                tmpStr = "select seq from sqlite_sequence where name = 'metric'";
             else if (db.getDBType().compareTo("derby") == 0)
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM metric";
             else if (db.getDBType().compareTo("h2") == 0)
@@ -900,6 +904,8 @@ public class DatabaseAPI {
                 tmpStr = "select LAST_INSERT_ID();";
             else if (db.getDBType().compareTo("db2") == 0)
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM interval_event";
+            else if (db.getDBType().compareTo("sqlite") == 0)
+                tmpStr = "select seq from sqlite_sequence where name = 'interval_event'";
             else if (db.getDBType().compareTo("derby") == 0)
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM interval_event";
             else if (db.getDBType().compareTo("h2") == 0)
@@ -940,6 +946,8 @@ public class DatabaseAPI {
                 tmpStr = "select LAST_INSERT_ID();";
             else if (db.getDBType().compareTo("db2") == 0)
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM atomic_event";
+            else if (db.getDBType().compareTo("sqlite") == 0)
+                tmpStr = "select seq from sqlite_sequence where name = 'atomic_event'";
             else if (db.getDBType().compareTo("derby") == 0)
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM atomic_event";
             else if (db.getDBType().compareTo("h2") == 0)
@@ -1252,6 +1260,7 @@ public class DatabaseAPI {
                 appid = application.saveApplication(db);
             }
         } catch (SQLException e) {
+        	System.err.println(e.getMessage());
             throw new DatabaseException("Error saving application", e);
         }
         return appid;
