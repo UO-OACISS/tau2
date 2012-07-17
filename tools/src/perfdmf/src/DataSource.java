@@ -272,7 +272,10 @@ public abstract class DataSource {
         return functions.size();
     }
 
-    public Iterator<Function> getFunctions() {
+    public List<Function> getFunctions() {
+    	return new ArrayList<Function>(functions.values());
+    }
+    public Iterator<Function> getFunctionIterator() {
         return functions.values().iterator();
     }
     
@@ -630,7 +633,7 @@ public abstract class DataSource {
 
         List<Function> functions = new ArrayList<Function>();
 
-        for (Iterator<Function> l = this.getFunctions(); l.hasNext();) {
+        for (Iterator<Function> l = this.getFunctionIterator(); l.hasNext();) {
             Function function = l.next();
             functions.add(function);
         }
@@ -712,7 +715,7 @@ public abstract class DataSource {
         // reset the list of all threads so that it will be recreated
         allThreads = null;
 
-        if (CallPathUtilFuncs.checkCallPathsPresent(getFunctions())) {
+        if (CallPathUtilFuncs.checkCallPathsPresent(getFunctionIterator())) {
             setCallPathDataPresent(true);
         }
 
@@ -999,7 +1002,7 @@ public abstract class DataSource {
     				stddevDataAll.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
     		}
 
-    		for (Iterator<Function> l = this.getFunctions(); l.hasNext();) { // for each function
+    		for (Iterator<Function> l = this.getFunctionIterator(); l.hasNext();) { // for each function
     			Function function = l.next();
 
     			// get/create the FunctionProfile for mean
@@ -1435,7 +1438,7 @@ public abstract class DataSource {
         if (tau_phase != null) {
             phasesPresent = true;
 
-            for (Iterator<Function> it = this.getFunctions(); it.hasNext();) {
+            for (Iterator<Function> it = this.getFunctionIterator(); it.hasNext();) {
                 Function function = it.next();
 
                 if (function.isGroupMember(tau_phase)) {
@@ -1444,7 +1447,7 @@ public abstract class DataSource {
                 }
             }
 
-            for (Iterator<Function> it = this.getFunctions(); it.hasNext();) {
+            for (Iterator<Function> it = this.getFunctionIterator(); it.hasNext();) {
                 Function function = it.next();
 
                 int location = function.getName().indexOf("=>");
@@ -1473,7 +1476,7 @@ public abstract class DataSource {
             Group tau_phase = this.getGroup("TAU_PHASE");
             ArrayList<Function> phases = new ArrayList<Function>();
 
-            for (Iterator<Function> it = this.getFunctions(); it.hasNext();) {
+            for (Iterator<Function> it = this.getFunctionIterator(); it.hasNext();) {
                 Function function = it.next();
                 if (function.isGroupMember(tau_phase)) {
                     phases.add(function);

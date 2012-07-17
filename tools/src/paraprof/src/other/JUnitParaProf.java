@@ -109,7 +109,7 @@ public class JUnitParaProf extends JFCTestCase {
             ParaProfTrial ppTrial = trials.get(i);
             System.out.println("Trial:" + ppTrial.getName());
 
-            for (Iterator<Function> it = ppTrial.getDataSource().getFunctions(); it.hasNext() && count-- != 0;) {
+            for (Iterator<Function> it = ppTrial.getDataSource().getFunctionIterator(); it.hasNext() && count-- != 0;) {
 
                 Function f = (Function) it.next();
                 HistogramWindow hw = new HistogramWindow(ppTrial, f, null);
@@ -377,7 +377,7 @@ public class JUnitParaProf extends JFCTestCase {
                 ParaProfTrial ppTrial = trials.get(i);
                 System.out.println("Trial:" + ppTrial.getName());
 
-                for (Iterator<Function> it = ppTrial.getDataSource().getFunctions(); it.hasNext() && count-- != 0;) {
+                for (Iterator<Function> it = ppTrial.getDataSource().getFunctionIterator(); it.hasNext() && count-- != 0;) {
                     Function f = (Function) it.next();
 
                     checkHistogram(ppTrial, f);

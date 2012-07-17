@@ -123,7 +123,7 @@ public class DataSourceExport {
 		Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
 		int numFunctions = 0;
 
-		for (Iterator<Function> it = dataSource.getFunctions(); it.hasNext();) {
+		for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
 			Function function = it.next();
 			if (!function.isGroupMember(derived)) {
 				numFunctions++;
@@ -213,7 +213,7 @@ public class DataSourceExport {
 		Function functions[] = new Function[numFunctions];
 		idx = 0;
 		p.writeInt(numFunctions);
-		for (Iterator<Function> it = dataSource.getFunctions(); it.hasNext();) {
+		for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
 			Function function = it.next();
 			if (!function.isGroupMember(derived)) {
 
@@ -492,7 +492,7 @@ public class DataSourceExport {
 		Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
 
 		int numFunctions = 0;
-		for (Iterator<Function> it = dataSource.getFunctions(); it.hasNext();) {
+		for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
 			Function function = it.next();
 			if (function.isGroupMember(derived)) {
 				continue;
@@ -513,7 +513,7 @@ public class DataSourceExport {
 		idx = 0;
 
 		// write out function names
-		for (Iterator<Function> it = dataSource.getFunctions(); it.hasNext();) {
+		for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
 			Function function = it.next();
 
 			if (!function.isGroupMember(derived)) {
@@ -581,7 +581,7 @@ public class DataSourceExport {
 		Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
 
 		int numFunctions = 0;
-		for (Iterator<Function> it = dataSource.getFunctions(); it.hasNext();) {
+		for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
 			Function function = it.next();
 			if (function.isGroupMember(derived)) {
 				continue;
@@ -602,7 +602,7 @@ public class DataSourceExport {
 		idx = 0;
 
 		// write out function names
-		for (Iterator<Function> it = dataSource.getFunctions(); it.hasNext();) {
+		for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
 			Function function = it.next();
 
 			if (!function.isGroupMember(derived)) {

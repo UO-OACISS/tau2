@@ -15,6 +15,7 @@ import edu.uoregon.tau.perfexplorer.common.ChartDataType;
 import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 import edu.uoregon.tau.perfexplorer.common.RMIChartData;
 import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
+import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
 
 /**
  * The ChartData class is used to select data from the database which 
@@ -849,13 +850,13 @@ buf.append("where t.experiment in (");
 			List<Object> selections = model.getMultiSelection();
 			if (selections == null) {
 				// just one selection
-				buf.append (model.getEvent().getID());
+				buf.append (model.getEvent().getFunction().getID());
 			} else {
 				for (int i = 0 ; i < selections.size() ; i++) {
-					IntervalEvent event = (IntervalEvent)selections.get(i);
+					RMISortableIntervalEvent event = (RMISortableIntervalEvent)selections.get(i);
 					if (i > 0)
 						buf.append(",");
-					buf.append(event.getID());
+					buf.append(event.getFunction().getID());
 				}
 			}
 			buf.append(") order by 1,2 ");

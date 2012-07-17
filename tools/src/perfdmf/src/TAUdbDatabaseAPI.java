@@ -261,7 +261,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 		for (Metric metric : dataSource.getMetrics()) {
 			Integer metricID = metricMap.get(metric);
 
-			for (Iterator<Function> func = dataSource.getFunctions(); func
+			for (Iterator<Function> func = dataSource.getFunctionIterator(); func
 					.hasNext();) {
 				Function function = func.next();
 				if (function.isGroupMember(derived)) {
@@ -358,7 +358,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 
 		Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
 		Map<Function, Integer> callpathMap = new HashMap<Function, Integer>();
-		Iterator<Function> funcs = dataSource.getFunctions();
+		Iterator<Function> funcs = dataSource.getFunctionIterator();
 		while (funcs.hasNext()) {
 			Function function = funcs.next();
 			if (function.isGroupMember(derived)) {
@@ -727,7 +727,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 		PreparedStatement statement = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
 				+ "timer (trial, name, source_file, line_number, line_number_end, column_number, column_number_end, short_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 
-		for (Iterator<Function> it = dataSource.getFunctions(); it.hasNext();) {
+		for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
 			Function f = it.next();
 			if (f.isGroupMember(derived)) {
 				continue; //Should we save the derived callpath functions??
@@ -794,7 +794,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 		for (Metric metric : dataSource.getMetrics()) {
 			Integer metricID = metricMap.get(metric);
 
-			for (Iterator<Function> func = dataSource.getFunctions(); func
+			for (Iterator<Function> func = dataSource.getFunctionIterator(); func
 					.hasNext();) {
 				Function function = func.next();
 				if (function.isGroupMember(derived)) {
@@ -861,7 +861,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 		for (Metric metric:  dataSource.getMetrics()) {
 			Integer metricID = metricMap.get(metric);
 
-			for (Iterator<Function> func = dataSource.getFunctions(); func.hasNext();) {
+			for (Iterator<Function> func = dataSource.getFunctionIterator(); func.hasNext();) {
 				Function function = func.next();
 				if (function.isGroupMember(derived)) {
 					continue;

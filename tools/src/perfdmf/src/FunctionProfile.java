@@ -174,7 +174,10 @@ public class FunctionProfile {
 
     public double getNumCalls(int snapshot) {
         if (snapshot == -1) {
-            snapshot = thread.getNumSnapshots() - 1;
+        	if (thread != null)
+        		snapshot = thread.getNumSnapshots() - 1;
+        	else
+        		snapshot = 0;
         }
         return getDouble(snapshot, 0, CALLS);
     }
@@ -193,7 +196,10 @@ public class FunctionProfile {
 
     public double getNumSubr(int snapshot) {
         if (snapshot == -1) {
-            snapshot = thread.getNumSnapshots() - 1;
+        	if (thread != null)
+        		snapshot = thread.getNumSnapshots() - 1;
+        	else
+        		snapshot = 0;
         }
         return getDouble(snapshot, 0, SUBR);
     }
@@ -360,8 +366,12 @@ public class FunctionProfile {
     }
 
     private void putDouble(int metric, int offset, double inDouble) {
-        int snapshot = thread.getNumSnapshots() - 1;
-        int numMetrics = thread.getNumMetrics();
+        int snapshot = 0;
+        int numMetrics = metric;
+    	if (thread != null) {
+    		snapshot = thread.getNumSnapshots() - 1;
+    		numMetrics = thread.getNumMetrics();
+    	}
         int location = (snapshot * (METRIC_SIZE * (numMetrics + 1))) + (metric * METRIC_SIZE) + offset;
         data[location] = inDouble;
     }
@@ -371,15 +381,21 @@ public class FunctionProfile {
             snapshot = thread.getNumSnapshots() - 1;
         }
 
-        int numMetrics = thread.getNumMetrics();
+        int numMetrics = metric;
+        if (thread != null)
+        	numMetrics = thread.getNumMetrics();
         int location = (snapshot * (METRIC_SIZE * (numMetrics + 1))) + (metric * METRIC_SIZE) + offset;
         return data[location];
     }
 
     private double getDouble(int metric, int offset) {
         // use the last snapshot (final value)
-        int snapshot = thread.getNumSnapshots() - 1;
-        int numMetrics = thread.getNumMetrics();
+        int snapshot = 0;
+        int numMetrics = metric;
+    	if (thread != null) {
+    		snapshot = thread.getNumSnapshots() - 1;
+    		numMetrics = thread.getNumMetrics();
+    	}
         int location = (snapshot * (METRIC_SIZE * (numMetrics + 1))) + (metric * METRIC_SIZE) + offset;
         return data[location];
     }

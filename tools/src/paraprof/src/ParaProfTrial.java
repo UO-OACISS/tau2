@@ -99,7 +99,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
     public Iterator<Function> getFunctions() {
-        return getDataSource().getFunctions();
+        return getDataSource().getFunctionIterator();
     }
 
     public Thread getMeanThread() {
@@ -363,7 +363,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     public List<Function> getDisplayedFunctions() {
         List<Function> displayedFunctions = new ArrayList<Function>();
 
-        for (Iterator<Function> it = this.getDataSource().getFunctions(); it.hasNext();) {
+        for (Iterator<Function> it = this.getDataSource().getFunctionIterator(); it.hasNext();) {
             Function function = it.next();
             if (this.displayFunction(function)) {
                 displayedFunctions.add(function);
@@ -381,7 +381,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
     public void showGroup(Group group) {
-        for (Iterator<Function> it = getDataSource().getFunctions(); it.hasNext();) {
+        for (Iterator<Function> it = getDataSource().getFunctionIterator(); it.hasNext();) {
             Function function = it.next();
             if (function.isGroupMember(group)) {
                 functionMask[function.getID()] = true;
@@ -393,7 +393,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
     public void hideGroup(Group group) {
-        for (Iterator<Function> it = getDataSource().getFunctions(); it.hasNext();) {
+        for (Iterator<Function> it = getDataSource().getFunctionIterator(); it.hasNext();) {
             Function function = it.next();
             if (function.isGroupMember(group)) {
                 functionMask[function.getID()] = false;
@@ -405,7 +405,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
     public void showGroupOnly(Group group) {
-        for (Iterator<Function> it = getDataSource().getFunctions(); it.hasNext();) {
+        for (Iterator<Function> it = getDataSource().getFunctionIterator(); it.hasNext();) {
             Function function = it.next();
             if (function.isGroupMember(group)) {
                 functionMask[function.getID()] = true;
@@ -419,7 +419,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
     public void showAllExcept(Group group) {
-        for (Iterator<Function> it = getDataSource().getFunctions(); it.hasNext();) {
+        for (Iterator<Function> it = getDataSource().getFunctionIterator(); it.hasNext();) {
             Function function = it.next();
             if (function.isGroupMember(group)) {
                 functionMask[function.getID()] = false;
@@ -469,7 +469,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
             }
         }
 
-        for (Iterator<Function> it = getDataSource().getFunctions(); it.hasNext();) {
+        for (Iterator<Function> it = getDataSource().getFunctionIterator(); it.hasNext();) {
             Function function = it.next();
             String name = function.getName();
             if (caseSensitive) {

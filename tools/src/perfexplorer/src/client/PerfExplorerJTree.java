@@ -288,7 +288,7 @@ public class PerfExplorerJTree extends JTree {
 	PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 	// get the events
 	ListIterator<RMISortableIntervalEvent> events = server.getEventList(trial.getID(), metricIndex);
-	IntervalEvent event = null;
+	RMISortableIntervalEvent event = null;
 	DefaultMutableTreeNode eventNode = null;
 	// loop through all the events, and print out some info
 	while(events.hasNext())

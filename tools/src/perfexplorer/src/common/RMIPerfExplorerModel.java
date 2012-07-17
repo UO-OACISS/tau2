@@ -74,7 +74,7 @@ public class RMIPerfExplorerModel implements Serializable {
 	protected Trial trial = null;
 	protected View view = null;
 	protected Metric metric = null;
-	protected IntervalEvent event = null;
+	protected RMISortableIntervalEvent event = null;
 	protected int analysisID = 0;
 	protected Object[] fullPath = null;
 	protected int connectionIndex = 0;
@@ -200,7 +200,7 @@ public class RMIPerfExplorerModel implements Serializable {
 	 * 
 	 * @return
 	 */
-	public IntervalEvent getEvent() {
+	public RMISortableIntervalEvent getEvent() {
 		return event;
 	}
 
@@ -271,7 +271,7 @@ public class RMIPerfExplorerModel implements Serializable {
 		} else if (currentSelection instanceof Metric) {
 			metric = (Metric)currentSelection;
 		} else if (currentSelection instanceof IntervalEvent) {
-			event = (IntervalEvent)currentSelection;
+			event = (RMISortableIntervalEvent)currentSelection;
 		}
 		this.currentSelection = currentSelection;
 	}
@@ -306,7 +306,7 @@ public class RMIPerfExplorerModel implements Serializable {
 			} else if (objectPath[i] instanceof Metric) {
 				metric = (Metric)objectPath[i];
 			} else if (objectPath[i] instanceof IntervalEvent) {
-				event = (IntervalEvent)objectPath[i];
+				event = (RMISortableIntervalEvent)objectPath[i];
 			}
 			currentSelection = objectPath[i];
 		}
@@ -397,13 +397,13 @@ public class RMIPerfExplorerModel implements Serializable {
 			return tmpStr;
 		} else if (multiSelectionType == SelectionType.VIEW) {
 			return "Custom View";
-		} else if (currentSelection instanceof IntervalEvent) {
-			IntervalEvent event = (IntervalEvent)currentSelection;
+		} else if (currentSelection instanceof RMISortableIntervalEvent) {
+			RMISortableIntervalEvent event = (RMISortableIntervalEvent)currentSelection;
 			String tmpStr1 = (application == null) ? "" : application.getName();
 			String tmpStr2 = (experiment == null) ? "" : experiment.getName();
 			String tmpStr3 = (trial == null) ? "" : trial.getName();
 			String tmpStr4 = (metric == null) ? "" : metric.getName();
-			String tmpStr5 = event.getName();
+			String tmpStr5 = event.getFunction().getName();
 			String tmpStr = tmpStr1 + ":" + tmpStr2 + ":" + tmpStr3 + ":" + tmpStr4 + ":" + tmpStr5;
 			return tmpStr;
 		} else if (currentSelection instanceof Metric) {
@@ -446,13 +446,13 @@ public class RMIPerfExplorerModel implements Serializable {
      * @return
      */
 	public String toShortString() {
-		if (currentSelection instanceof IntervalEvent) {
-			IntervalEvent event = (IntervalEvent)currentSelection;
+		if (currentSelection instanceof RMISortableIntervalEvent) {
+			RMISortableIntervalEvent event = (RMISortableIntervalEvent)currentSelection;
 			String tmpStr1 = (application == null) ? "" : "" + application.getID();
 			String tmpStr2 = (experiment == null) ? "" : "" + experiment.getID();
 			String tmpStr3 = (trial == null) ? "" : "" + trial.getID();
 			String tmpStr4 = (metric == null) ? "" : "" + metric.getID();
-			String tmpStr5 = "" + event.getID();
+			String tmpStr5 = "" + event.getFunction().getID();
 			String tmpStr = tmpStr1 + ":" + tmpStr2 + ":" + tmpStr3 + ":" + tmpStr4 + ":" + tmpStr5;
 			return tmpStr;
 		}

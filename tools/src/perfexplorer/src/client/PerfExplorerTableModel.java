@@ -11,6 +11,7 @@ import javax.swing.table.AbstractTableModel;
 
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.FunctionProfile;
 import edu.uoregon.tau.perfdmf.IntervalLocationProfile;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.View;
@@ -30,7 +31,7 @@ public class PerfExplorerTableModel extends AbstractTableModel {
     private Trial trial = null;
     private Metric metric = null;
     private RMISortableIntervalEvent event = null;
-    private IntervalLocationProfile ilp = null;
+    private FunctionProfile ilp = null;
     private View view = null;
     private int type = -1;
     private String[] columnNames = { "Field", "Value" };
@@ -81,9 +82,9 @@ public class PerfExplorerTableModel extends AbstractTableModel {
             type = 3;
         } else if (object instanceof RMISortableIntervalEvent) {
             this.event = (RMISortableIntervalEvent) object;
-            try {
+//            try {
                 ilp = event.getMeanSummary();
-            } catch (SQLException exception) {}
+//            } catch (SQLException exception) {}
             type = 4;
         } else if (object instanceof View) {
             this.view = (View) object;
@@ -264,13 +265,13 @@ public class PerfExplorerTableModel extends AbstractTableModel {
                 case (6):
                     return "Exclusive";
                 case (7):
-                    return "Exclusive Percentage";
-                case (8):
                     return "Inclusive";
-                case (9):
-                    return "Inclusive Percentage";
-                case (10):
+                case (8):
                     return "Inclusive Per Call";
+//                case (9):
+//              return "Exclusive Percentage";
+//                case (10):
+//                    return "Inclusive Percentage";
                 default:
                     return "";
                 }
@@ -281,36 +282,38 @@ public class PerfExplorerTableModel extends AbstractTableModel {
                 StringBuffer s = new StringBuffer();
                 switch (r) {
                 case (0):
-                    return event.getName();
+                    return event.getFunction().getName();
                 case (1):
-                    return new Integer(event.getID());
+                    return new Integer(event.getFunction().getID());
                 case (2):
-                    return event.getGroup();
+                    return event.getFunction().getGroupString();
                 case (3):
                     return new Integer(event.getTrialID());
                 case (4):
                     intFormat.format(ilp.getNumCalls(), s, f);
                     return s.toString();
                 case (5):
-                    intFormat.format(ilp.getNumSubroutines(), s, f);
+                    intFormat.format(ilp.getNumSubr(), s, f);
                     return s.toString();
                 case (6):
                     doubleFormat.format(ilp.getExclusive(event.metricIndex), s, f);
                     return s.toString();
                 case (7):
-                    doubleFormat.format(ilp.getExclusivePercentage(event.metricIndex), s, f);
-                    s.append("%");
-                    return s.toString();
-                case (8):
                     doubleFormat.format(ilp.getInclusive(event.metricIndex), s, f);
                     return s.toString();
-                case (9):
-                    doubleFormat.format(ilp.getInclusivePercentage(event.metricIndex), s, f);
+                case (8):
+                    double inc = ilp.getInclusive(event.metricIndex);
+                	double call = ilp.getNumCalls();
+                    doubleFormat.format(inc/call, s, f);
+                    return s.toString();
+/*                case (9):
+                    //doubleFormat.format(ilp.getExclusivePercent(event.metricIndex), s, f);
                     s.append("%");
                     return s.toString();
                 case (10):
-                    doubleFormat.format(ilp.getInclusivePerCall(event.metricIndex), s, f);
-                    return s.toString();
+                    //doubleFormat.format(ilp.getInclusivePercent(event.metricIndex), s, f);
+                    s.append("%");
+                    return s.toString(); */
                 default:
                     return "";
                 }

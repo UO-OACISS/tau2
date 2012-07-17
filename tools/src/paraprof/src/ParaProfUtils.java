@@ -544,7 +544,7 @@ public class ParaProfUtils {
         ActionListener fActionListener = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 FunctionSelectorDialog fSelector = new FunctionSelectorDialog(owner, true,
-                        ppTrial.getDataSource().getFunctions(), null, false, false);
+                        ppTrial.getDataSource().getFunctionIterator(), null, false, false);
                 if (fSelector.choose()) {
                     Function selectedFunction = (Function) fSelector.getSelectedObject();
 
@@ -1340,7 +1340,7 @@ public class ParaProfUtils {
             return;
         }
 
-        FunctionSelectorDialog fSelector = new FunctionSelectorDialog(owner, true, srcPpTrial.getDataSource().getFunctions(),
+        FunctionSelectorDialog fSelector = new FunctionSelectorDialog(owner, true, srcPpTrial.getDataSource().getFunctionIterator(),
                 null, false, true);
         fSelector.setTitle("Choose Phases");
 

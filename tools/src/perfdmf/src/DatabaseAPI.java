@@ -34,7 +34,7 @@ public class DatabaseAPI {
     private List<Integer> nodes = null;
     private List<Integer> contexts = null;
     private List<Integer> threads = null;
-    private Vector<IntervalEvent> intervalEvents = null;
+    private List<Function> intervalEvents = null;
     private List<UserEvent> atomicEvents = null;
     private List<Metric> metrics = null;
     
@@ -48,7 +48,7 @@ public class DatabaseAPI {
     // from datasession
     protected DB db = null;
     protected ConnectionManager connector;
-    private Map<Integer, IntervalEvent> intervalEventHash = null;
+    private Map<Integer, Function> intervalEventHash = null;
     private Map<Integer, UserEvent> atomicEventHash = null;
     //private String configFileName = null;
 
@@ -327,88 +327,31 @@ public class DatabaseAPI {
     }
 
     // returns a List of IntervalEvents
-    public List<IntervalEvent> getIntervalEvents() {
-    	if(db.getSchemaVersion()>0) return getTAUdbINtervalEvents();
+    public Map<Integer, Function> getIntervalEvents(DataSource dataSource, int numberOfMetrics) {
         String whereClause = new String();
-        if (trial != null) {
-            whereClause = " WHERE trial = " + trial.getID();
-        } else if (experiment != null) {
-            whereClause = " WHERE experiment = " + experiment.getID();
-        } else if (application != null) {
-            whereClause = " WHERE application = " + application.getID();
-        }
-
-        intervalEvents = IntervalEvent.getIntervalEvents(this, db, whereClause);
-
-        if (intervalEventHash == null) {
-            intervalEventHash = new Hashtable<Integer, IntervalEvent>();
-        }
-        IntervalEvent fun;
-        for (Enumeration<IntervalEvent> en = intervalEvents.elements(); en.hasMoreElements();) {
-            fun = en.nextElement();
-            intervalEventHash.put(new Integer(fun.getID()), fun);
-        }
-        return intervalEvents;
-    }
-
-    private List<IntervalEvent> getTAUdbINtervalEvents() {
-    	  String whereClause = new String();
-          if (trial != null) {
-              whereClause = " WHERE trial = " + trial.getID();
-          } else if (experiment != null) {
-        	  System.err.println("Need to query meta-data for experiment");
-//              whereClause = " WHERE experiment = " + experiment.getID();
-          } else if (application != null) {
-        	  System.err.println("Need to query meta-data for application");
-//              whereClause = " WHERE application = " + application.getID();
-          }
-
-          intervalEvents = IntervalEvent.getIntervalEvents(this, db, whereClause);
-
-          if (intervalEventHash == null) {
-              intervalEventHash = new Hashtable<Integer, IntervalEvent>();
-          }
-          IntervalEvent fun;
-          Enumeration<IntervalEvent> en = intervalEvents.elements();
-          while( en.hasMoreElements()) {
-              fun = en.nextElement();
-              intervalEventHash.put(new Integer(fun.getID()), fun);
-          }
-          return intervalEvents;
-	}
-
-	// gets the mean & total data for a intervalEvent
-    public void getIntervalEventDetail(IntervalEvent intervalEvent) throws SQLException {
-        StringBuffer buf = new StringBuffer();
-        String tableAlias = "ms.";
-        String timerName = "interval_event";
-        if (this.db().getSchemaVersion() > 0) {
-        	tableAlias = "tv.";
-        	timerName = "timer";
-        }
-        buf.append(" WHERE ");
-        buf.append(tableAlias);
-        buf.append(timerName);
-        buf.append(" = " + intervalEvent.getID());
-        if (metrics != null && metrics.size() > 0) {
-            buf.append(" AND ms.metric in (");
-            Metric metric;
-            for (Iterator<Metric> en = metrics.iterator(); en.hasNext();) {
-                metric = en.next();
-                buf.append(metric.getID());
-                if (en.hasNext()) {
-                    buf.append(", ");
-                } else {
-                    buf.append(") ");
-                }
+    	if(db.getSchemaVersion()>0) {
+            if (trial != null) {
+                whereClause = " WHERE trial = " + trial.getID();
+            } else if (experiment != null) {
+          	  System.err.println("Need to query meta-data for experiment");
+            } else if (application != null) {
+          	  System.err.println("Need to query meta-data for application");
             }
-        }
-        if (this.db().getSchemaVersion() > 0) {
-        	IntervalLocationProfile.getTimerValues(db, intervalEvent, buf.toString());
-        } else {
-        	IntervalLocationProfile.getIntervalEventDetail(db, intervalEvent, buf.toString());
-        }
+    	} else {
+            if (trial != null) {
+                whereClause = " WHERE trial = " + trial.getID();
+            } else if (experiment != null) {
+                whereClause = " WHERE experiment = " + experiment.getID();
+            } else if (application != null) {
+                whereClause = " WHERE application = " + application.getID();
+            }
+    	}
+
+        intervalEventHash = IntervalEvent.getIntervalEvents(this, db, whereClause, dataSource, numberOfMetrics);
+        intervalEvents = new ArrayList<Function>(intervalEventHash.values());
+        return intervalEventHash;
     }
+
 
     // returns a List of AtomicEvents
     public Map<Integer,UserEvent> getAtomicEvents() {
@@ -424,19 +367,6 @@ public class DatabaseAPI {
             atomicEventHash = AtomicEvent.getAtomicEvents(this, db, whereClause);
         }
         return this.atomicEventHash;
-    }
-
-    // sets the current intervalEvent
-    public IntervalEvent setIntervalEvent(int id) {
-        IntervalEvent intervalEvent = null;
-        this.intervalEvents = new Vector<IntervalEvent>();
-        intervalEvent = getIntervalEvent(id);
-        if (intervalEvent != null) {
-            this.intervalEvents.addElement(intervalEvent);
-            // we need this to get the metric data...
-            setTrial(intervalEvent.getTrialID(), false);
-        }
-        return intervalEvent;
     }
 
     // clears the interval event selection
@@ -467,100 +397,6 @@ public class DatabaseAPI {
         this.threads = new ArrayList<Integer>();
         this.threads.add(thread);
         return;
-    }
-
-    public List<IntervalLocationProfile> getIntervalEventData() throws SQLException {
-        // check to make sure this is a meaningful request
-        if (trial == null && intervalEvents == null) {
-            System.out.println("Please select a trial or a set of intervalEvents before getting intervalEvent data.");
-            return null;
-        }
-
-        // get the hash of intervalEvent names first
-        //if (intervalEvents == null) {
-        //getIntervalEvents();
-        //}
-
-        // get the metric count
-        int metricCount = 0;
-        if (metrics != null && metrics.size() > 0) {
-            metricCount = metrics.size();
-        } else {
-            metricCount = trial.getMetricCount();
-        }
-
-        // create a string to hit the database
-        boolean gotWhere = false;
-        StringBuffer buf = new StringBuffer();
-        if (trial != null) {
-            buf.append(" WHERE e.trial = " + trial.getID());
-            gotWhere = true;
-        }
-        if (intervalEvents != null && intervalEvents.size() > 0) {
-            if (gotWhere)
-                buf.append(" AND p.interval_event in (");
-            else
-                buf.append(" WHERE p.interval_event in (");
-            IntervalEvent intervalEvent;
-            for (Enumeration<IntervalEvent> en = intervalEvents.elements(); en.hasMoreElements();) {
-                intervalEvent = en.nextElement();
-                buf.append(intervalEvent.getID());
-                if (en.hasMoreElements())
-                    buf.append(", ");
-                else
-                    buf.append(") ");
-            }
-        }
-        if (nodes != null && nodes.size() > 0) {
-            buf.append(" AND p.node IN (");
-            Integer node;
-            for (Iterator<Integer> iter = nodes.iterator(); iter.hasNext();) {
-                node = iter.next();
-                buf.append(node);
-                if (iter.hasNext())
-                    buf.append(", ");
-                else
-                    buf.append(") ");
-            }
-        }
-        if (contexts != null && contexts.size() > 0) {
-            buf.append(" AND p.context IN (");
-            Integer context;
-            for (Iterator<Integer> iter = contexts.iterator(); iter.hasNext();) {
-                context = iter.next();
-                buf.append(context);
-                if (iter.hasNext())
-                    buf.append(", ");
-                else
-                    buf.append(") ");
-            }
-        }
-        if (threads != null && threads.size() > 0) {
-            buf.append(" AND p.thread IN (");
-            Integer thread;
-            for (Iterator<Integer> iter = threads.iterator(); iter.hasNext();) {
-                thread = iter.next();
-                buf.append(thread);
-                if (iter.hasNext())
-                    buf.append(", ");
-                else
-                    buf.append(") ");
-            }
-        }
-        if (metrics != null && metrics.size() > 0) {
-            buf.append(" AND p.metric IN (");
-            Metric metric;
-            for (Iterator<Metric> en = metrics.iterator(); en.hasNext();) {
-                metric = en.next();
-                buf.append(metric.getID());
-                if (en.hasNext())
-                    buf.append(", ");
-                else
-                    buf.append(") ");
-            }
-        }
-        intervalEventData = IntervalLocationProfile.getIntervalEventData(db, metricCount, buf.toString());
-        return intervalEventData;
     }
 
     public List<UserEventProfile> getAtomicEventData(DataSource dataSource) {
@@ -639,26 +475,6 @@ public class DatabaseAPI {
         return atomicEventData;
     }
 
-    public IntervalEvent getIntervalEvent(int id) {
-        IntervalEvent intervalEvent = null;
-        if (intervalEventHash != null) {
-            intervalEvent = intervalEventHash.get(new Integer(id));
-        }
-        if (intervalEvent == null) {
-            // create a string to hit the database
-            String whereClause;
-            whereClause = " WHERE id = " + id;
-            Vector<IntervalEvent> intervalEvents = IntervalEvent.getIntervalEvents(this, db, whereClause);
-            if (intervalEvents.size() == 1) {
-                intervalEvent = intervalEvents.elementAt(0);
-            } //else exception?
-            if (intervalEventHash == null)
-                intervalEventHash = new Hashtable<Integer, IntervalEvent>();
-            intervalEventHash.put(new Integer(intervalEvent.getID()), intervalEvent);
-        }
-        return intervalEvent;
-    }
-
     public int saveApplication(Application app) {
         try {
             return app.saveApplication(db);
@@ -731,12 +547,8 @@ public class DatabaseAPI {
     private Hashtable<Integer, Integer> saveIntervalEvents(int newTrialID, Hashtable<Integer, Integer> newMetHash, int saveMetricIndex) throws SQLException {
         //      System.out.print("Saving the intervalEvents: ");
         Hashtable<Integer, Integer> newFunHash = new Hashtable<Integer, Integer>();
-        Enumeration<IntervalEvent> en = intervalEvents.elements();
-        IntervalEvent intervalEvent;
-        //int count = 0;
-        while (en.hasMoreElements()) {
-            intervalEvent = en.nextElement();
-            int newIntervalEventID = intervalEvent.saveIntervalEvent(db, newTrialID, newMetHash, saveMetricIndex);
+       	for (Function intervalEvent : intervalEvents) {
+            int newIntervalEventID = IntervalEvent.saveIntervalEvent(db, newTrialID, intervalEvent, newMetHash, saveMetricIndex);
             newFunHash.put(new Integer(intervalEvent.getID()), new Integer(newIntervalEventID));
             //System.out.print("\rSaving the intervalEvents: " + ++count + " records saved...");
             //DatabaseAPI.itemsDone++;
@@ -789,18 +601,6 @@ public class DatabaseAPI {
         return trial.saveTrial(db);
     }
 
-    /**
-     * Saves the IntervalEvent.
-     * 
-     * @param intervalEvent
-     * @param newTrialID
-     * @param newMetHash
-     * @return database index ID of the saved intervalEvent record
-     */
-    public int saveIntervalEvent(IntervalEvent intervalEvent, int newTrialID, Hashtable<Integer, Integer> newMetHash) throws SQLException {
-        return intervalEvent.saveIntervalEvent(db, newTrialID, newMetHash, -1);
-    }
-
     // this stuff is a total hack to get some functionality that the new database API will have
     private int totalItems;
     private int itemsDone;
@@ -841,7 +641,7 @@ public class DatabaseAPI {
         int metricCount = metrics.size();
 
         // create the Vectors to store the data
-        intervalEvents = new Vector<IntervalEvent>();
+        intervalEvents = new ArrayList<Function>();
         intervalEventData = new Vector<IntervalLocationProfile>();
         atomicEvents = new ArrayList<UserEvent>();
         atomicEventData = new Vector<UserEventProfile>();
@@ -851,8 +651,8 @@ public class DatabaseAPI {
 
         Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
 
-        // create the intervalEvents
-        for (Iterator<Function> it = dataSource.getFunctions(); it.hasNext();) {
+/*        // create the intervalEvents
+        for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
             Function f = it.next();
             if (!f.isGroupMember(derived)) {
                 // create a intervalEvent
@@ -903,7 +703,8 @@ public class DatabaseAPI {
                 intervalEvent.setMeanSummary(ilpMean);
             }
         }
-
+*/
+        this.intervalEvents = dataSource.getFunctions();
         this.atomicEvents = dataSource.getUserEvents();
 
         for (Iterator<Thread> it = trial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
@@ -1067,7 +868,7 @@ public class DatabaseAPI {
         Map<Function, Integer> map = new HashMap<Function, Integer>();
 
         Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
-        for (Iterator<Function> it = dataSource.getFunctions(); it.hasNext();) {
+        for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
             Function f = it.next();
             if (f.isGroupMember(derived)) {
                 continue;
@@ -1258,7 +1059,7 @@ public class DatabaseAPI {
             Metric metric = it5.next();
             Integer dbMetricID = metricMap.get(metric);
 
-            for (Iterator<Function> it4 = dataSource.getFunctions(); it4.hasNext();) {
+            for (Iterator<Function> it4 = dataSource.getFunctionIterator(); it4.hasNext();) {
                 Function function = it4.next();
                 if (function.isGroupMember(derived)) {
                     continue;
@@ -1347,7 +1148,7 @@ public class DatabaseAPI {
     private void computeUploadSize(DataSource dataSource) {
         this.totalItems = 0;
 
-        for (Iterator<Function> it4 = dataSource.getFunctions(); it4.hasNext();) {
+        for (Iterator<Function> it4 = dataSource.getFunctionIterator(); it4.hasNext();) {
             //Function function = (Function) 
             it4.next();
             this.totalItems++;
@@ -1355,7 +1156,7 @@ public class DatabaseAPI {
 
         int numMetrics = dataSource.getMetrics().size();
 
-        for (Iterator<Function> it4 = dataSource.getFunctions(); it4.hasNext();) {
+        for (Iterator<Function> it4 = dataSource.getFunctionIterator(); it4.hasNext();) {
             Function function = it4.next();
 
             this.totalItems += numMetrics; // total
@@ -1684,6 +1485,26 @@ public class DatabaseAPI {
 
     public Trial getTrial() {
         return trial;
+    }
+
+    // gets the mean & total data for a intervalEvent
+    public FunctionProfile getIntervalEventDetail(Function intervalEvent) throws SQLException {
+        StringBuffer buf = new StringBuffer();
+        buf.append(" WHERE ms.interval_event = " + intervalEvent.getID());
+        if (metrics != null && metrics.size() > 0) {
+            buf.append(" AND ms.metric in (");
+            Metric metric;
+            for (Iterator<Metric> en = metrics.iterator(); en.hasNext();) {
+                metric = en.next();
+                buf.append(metric.getID());
+                if (en.hasNext()) {
+                    buf.append(", ");
+                } else {
+                    buf.append(") ");
+                }
+            }
+        }
+        return IntervalLocationProfile.getIntervalEventDetail(db, intervalEvent, buf.toString());
     }
 
 };
