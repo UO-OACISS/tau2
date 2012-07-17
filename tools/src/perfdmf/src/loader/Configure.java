@@ -187,6 +187,7 @@ public class Configure {
                    || tmpString.compareTo("derby") == 0
                    || tmpString.compareTo("db2") == 0 
                    || tmpString.compareTo("h2") == 0 
+                   || tmpString.compareTo("sqlite") == 0 
                    || tmpString.length() == 0) {
                     if (tmpString.length() > 0) {
                         jdbc_db_type = tmpString;
@@ -227,6 +228,15 @@ public class Configure {
                     jdbc_db_driver = "org.apache.derby.jdbc.EmbeddedDriver";
                     db_schemafile = schemadir + File.separator + "dbschema.derby.txt";
                     db_dbname = jardir + File.separator + "perfdmf";
+                    db_hostname = "";
+                    db_portnum = "";
+                } else if (jdbc_db_type.compareTo("sqlite") == 0 && old_jdbc_db_type.compareTo("sqlite") != 0) {
+                    // if the user has chosen sqlite and the config file is not already set for it
+                    //String os = System.getProperty("os.name").toLowerCase();
+                    jdbc_db_jarfile = jardir + File.separator + "sqlite.jar";
+                    jdbc_db_driver = "org.sqlite.JDBC";
+                    db_schemafile = schemadir + File.separator + "dbschema.sqlite.txt";
+                    db_dbname = jardir + File.separator + configuration_name + ".db";
                     db_hostname = "";
                     db_portnum = "";
                  } else if (jdbc_db_type.compareTo("h2") == 0 && old_jdbc_db_type.compareTo("h2") != 0) {
@@ -292,6 +302,14 @@ public class Configure {
                     jdbc_db_driver = "org.apache.derby.jdbc.EmbeddedDriver";
                     db_schemafile = "dbschema.derby.txt";
                     db_dbname = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf";
+                    db_hostname = "";
+                    db_portnum = "";
+                } else if (jdbc_db_type.compareTo("sqlite") == 0) {
+                    // if the user has chosen sqlite and the config file is not already set for it
+                    jdbc_db_jarfile = "sqlite.jar";
+                    jdbc_db_driver = "org.sqlite.JDBC";
+                    db_schemafile = "dbschema.sqlite.txt";
+                    db_dbname = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + configuration_name + ".db";
                     db_hostname = "";
                     db_portnum = "";
                  } else if (jdbc_db_type.compareTo("h2") == 0) {
@@ -448,7 +466,8 @@ public class Configure {
             if (tmpString.length() > 0)
                 jdbc_db_driver = tmpString;
 
-            if ((jdbc_db_type.compareTo("derby") != 0) && (jdbc_db_type.compareTo("h2") != 0)){
+            if ((jdbc_db_type.compareTo("derby") != 0) && (jdbc_db_type.compareTo("h2") != 0) &&
+            		(jdbc_db_type.compareTo("sqlite") != 0)){
                 // Prompt for database hostname
                 System.out.print("Please enter the hostname for the database server.\n(" + db_hostname + "):");
                 tmpString = reader.readLine();
@@ -476,7 +495,8 @@ public class Configure {
             tmpString = reader.readLine();
             if (tmpString.length() > 0) {
                 // if the user used the ~ shortcut, expand it to $HOME.
-                if ((jdbc_db_type.compareTo("derby") == 0) || (jdbc_db_type.compareTo("h2") == 0)) {
+                if ((jdbc_db_type.compareTo("derby") == 0) || (jdbc_db_type.compareTo("h2") == 0)
+                		|| (jdbc_db_type.compareTo("sqlite") == 0)) {
                     db_dbname = tmpString.replaceAll("~", System.getProperty("user.home"));
                 } else {
                     db_dbname = tmpString;

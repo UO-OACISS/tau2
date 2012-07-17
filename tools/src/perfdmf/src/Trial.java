@@ -626,7 +626,7 @@ public class Trial implements Serializable, Comparable<Trial> {
 
                 for (int i = 0; i < database.getTrialFieldNames().length; i++) {
                     if (database.getTrialFieldNames()[i].equalsIgnoreCase(XML_METADATA_GZ)) {
-                        if (getXMLMetadata) {
+                        if (getXMLMetadata && db.getDBType().compareTo("sqlite") != 0) {
                             InputStream compressedStream = resultSet.getBinaryStream(pos++);
                             String tmp = Gzip.decompress(compressedStream);
                             //trial.setField(i, tmp);
@@ -736,8 +736,13 @@ public class Trial implements Serializable, Comparable<Trial> {
             if (getDataSource() != null) {
                 String tmp = getDataSource().getMetadataString();
                 if (tmp != null && tmp.length() > 0) {
-                    setField(XML_METADATA, null);
-                    setField(XML_METADATA_GZ, tmp);
+                    if (db.getDBType().compareTo("sqlite") == 0) {
+                        setField(XML_METADATA, tmp);
+                        setField(XML_METADATA_GZ, null);
+                    } else {
+                        setField(XML_METADATA, null);
+                        setField(XML_METADATA_GZ, tmp);
+                    }
                 }
             }
 
@@ -845,6 +850,8 @@ public class Trial implements Serializable, Comparable<Trial> {
                     tmpStr = "select LAST_INSERT_ID();";
                 else if (db.getDBType().compareTo("db2") == 0)
                     tmpStr = "select IDENTITY_VAL_LOCAL() FROM trial";
+                else if (db.getDBType().compareTo("sqlite") == 0)
+                    tmpStr = "select seq from sqlite_sequence where name = 'trial'";
                 else if (db.getDBType().compareTo("derby") == 0)
                     tmpStr = "select IDENTITY_VAL_LOCAL() FROM trial";
                 else if (db.getDBType().compareTo("h2") == 0)

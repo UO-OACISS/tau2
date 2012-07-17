@@ -214,7 +214,7 @@ public class DBConnector implements DB {
         }
         //        conn.setAutoCommit(false);
         //        statement.setFetchSize(100);
-        //	System.out.println ("executing query: " + query.trim());
+        System.out.println ("executing query: " + query.trim());
         return statement.executeQuery(query.trim());
     }
 

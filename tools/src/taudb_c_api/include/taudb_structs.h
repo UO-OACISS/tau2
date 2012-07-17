@@ -30,14 +30,14 @@ struct perfdmf_experiment;
 struct perfdmf_application;
 
 typedef struct taudb_configuration {
-  char* jdbc_db_type;
-  char* db_hostname;
-  char* db_portnum;
-  char* db_dbname;
-  char* db_schemaprefix;
-  char* db_username;
-  char* db_password;
-  char* db_schemafile;
+  char* jdbc_db_type;  // to identify DBMS vendor. postgresql, mysql, h2, derby, etc.
+  char* db_hostname;   // server host name
+  char* db_portnum;    // server port number
+  char* db_dbname;     // the database name at the server
+  char* db_schemaprefix;  // the schema prefix. This is appended to all table names for some DBMSs
+  char* db_username;   // the database username
+  char* db_password;   // the database password for username
+  char* db_schemafile; // full or relative path to the schema file, used for configuration, not used in C API
 } TAUDB_CONFIGURATION;
 
 enum taudb_database_schema_version {
@@ -69,21 +69,21 @@ typedef struct taudb_trial {
  char* name;
  char* collection_date;
  struct taudb_data_source* data_source;
- int node_count;
- int contexts_per_node;
- int threads_per_context;
+ int node_count;             // i.e. number of processes.
+ int contexts_per_node;      // rarely used, usually 1.
+ int threads_per_context;    // max number of threads per process (can be less on individual processes)
  // array sizes
- int metric_count;
- int thread_count;
- int derived_thread_count;
- int timer_count;
- int timer_group_count;
- int timer_callpath_count;
- int timer_call_data_count;
- int counter_count;
- int counter_value_count;
- int primary_metadata_count;
- int secondary_metadata_count;
+ int metric_count;           // how many metrics were collected. Usually 1 (Time), can be hardware counters.
+ int thread_count;           // TOTAL number of threads. helpful to know - can be less than nodes*threads_per_node.
+ int derived_thread_count;   // number of derived threads. There should be 7, with negative thread indexes.
+ int timer_count;            // number of timers. not all timers seen or collected on all threads.
+ int timer_group_count;      // number of timer groups. examples include TAU_USER, TAU_DEFAULT, MPI, IO, etc.
+ int timer_callpath_count;   // how many nodes are there in the combined callpath tree?
+ int timer_call_data_count;  // should be less than timer_callpath_count * thread_count (not all timers seen on all threads)
+ int counter_count;          // how many counters did we collect?
+ int counter_value_count;    // should be the same as counter_count * thread_count
+ int primary_metadata_count; // primary metadata fields
+ int secondary_metadata_count; // secondary metadata fields
  // arrays of data for this trial
  struct taudb_metric* metrics;
  struct taudb_thread* threads;
@@ -101,13 +101,15 @@ typedef struct taudb_trial {
 /* data dimensions */
 /*********************************************/
 
+/* thread represents one physical & logical location for a measurement. */
+
 typedef struct taudb_thread {
  int id; // database id, also key to hash
  struct taudb_trial* trial;
- int node_rank;
- int context_rank;
- int thread_rank;
- int index;
+ int node_rank;    // which process does this thread belong to?
+ int context_rank; // which context? USUALLY 0
+ int thread_rank;  // what is this thread's rank in the process
+ int index;        // what is this threads OVERALL index? ranges from 0 to trial.thread_count-1
  int secondary_metadata_count;
  struct taudb_secondary_metadata* secondary_metadata;
  UT_hash_handle hh;
@@ -118,27 +120,29 @@ typedef struct taudb_thread {
 typedef struct taudb_metric {
  int id; // database value, also key to hash
  char* name;
- boolean derived;
+ boolean derived;  // was this metric measured, or created by a post-processing tool?
  UT_hash_handle hh;
 } TAUDB_METRIC;
 
 /* timers are interval timers, capturing some interval value.  for callpath or
-   phase profiles, the parent refers to the calling function or phase. */
+   phase profiles, the parent refers to the calling function or phase.
+   timers can also be sample locations, or phases (dynamic or static), or
+   sample aggregations (intermediate) */
 
 typedef struct taudb_timer {
  int id; // database value, also key to hash
- struct taudb_trial* trial;
- char* name;
- char* short_name;
- char* source_file;
- int line_number;
- int line_number_end;
- int column_number;
- int column_number_end;
- int group_count;
- int parameter_count;
- struct taudb_timer_group* groups;
- struct taudb_timer_parameter* parameters;
+ struct taudb_trial* trial;  // pointer back to trial - NOTE: Necessary?
+ char* name;                 // the full timer name, can have file, line, etc.
+ char* short_name;           // just the function name, for example
+ char* source_file;          // what source file does this function live in?
+ int line_number;            // what line does the timer start on?
+ int line_number_end;        // what line does the timer end on?
+ int column_number;          // what column number does the timer start on?
+ int column_number_end;      // what column number does the timer end on?
+ int group_count;            // how many groups does this timer belong to?
+ int parameter_count;        // how many parameters does this timer have?
+ struct taudb_timer_group* groups;   // array of groups
+ struct taudb_timer_parameter* parameters;   // array of parameters
  UT_hash_handle hh;
 } TAUDB_TIMER;
 
@@ -154,8 +158,8 @@ typedef struct taudb_timer {
 typedef struct taudb_timer_group {
  int id; // database reference, and hash key
  char* name;
- int timer_count;
- struct taudb_timer* timers;
+ int timer_count;    // how many timers are in this group?
+ struct taudb_timer* timers;   // array of timers
  UT_hash_handle hh;
 } TAUDB_TIMER_GROUP;
 
@@ -164,6 +168,7 @@ typedef struct taudb_timer_group {
    timer would be the index of the timer with the
    name 'foo (x,y) <x>=<4> <y>=<10>'. this table would have two
    entries, one for the x value and one for the y value.
+   The parameter can also be a phase / iteration index.
 */
 
 typedef struct taudb_timer_parameter {
@@ -190,11 +195,11 @@ typedef struct taudb_timer_call_data {
  int id; // link back to database
  struct taudb_timer_callpath *timer_callpath; // link back to database
  struct taudb_thread *thread; // link back to database, roundabout way
- char *key; // hash table key - thread:timer_string (all names)
- int calls;
- int subroutines;
- char* timestamp;
- int timer_value_count;
+ char *key; // hash table key - constructed as taudb_thread.index:taudb_timer.name
+ int calls;  // number of times this timer was seen
+ int subroutines;  // number of timers this timer calls
+ char* timestamp;  // when was the timer_callpath visited?
+ int timer_value_count;  // should be equal to taudb_trial.metric_count
  struct taudb_timer_value* timer_values;
  UT_hash_handle hh;
 } TAUDB_TIMER_CALL_DATA;
@@ -203,12 +208,12 @@ typedef struct taudb_timer_call_data {
    observations of the node of the callgraph on a thread. */
 
 typedef struct taudb_timer_value {
- struct taudb_metric* metric; 
- double inclusive;
- double exclusive;
- double inclusive_percentage;
- double exclusive_percentage;
- double sum_exclusive_squared;
+ struct taudb_metric* metric;   // which metric is this?
+ double inclusive;              // the inclusive value of this metric
+ double exclusive;              // the exclusive value of this metric
+ double inclusive_percentage;   // the inclusive percentage of total time of the application
+ double exclusive_percentage;   // the exclusive percentage of total time of the application
+ double sum_exclusive_squared;  // how much variance did we see every time we measured this timer?
  char *key; // hash table key - thread:timer_string:metric (all names)
  UT_hash_handle hh;
 } TAUDB_TIMER_VALUE;
@@ -217,7 +222,8 @@ typedef struct taudb_timer_value {
 /* counter related structures  */
 /*********************************************/
 
-/* counters measure some counted value. */
+/* counters measure some counted value. An example would be MPI message size
+ * for an MPI_Send.  */
 
 typedef struct taudb_counter {
  int id; // database reference
@@ -232,11 +238,11 @@ typedef struct taudb_counter_value {
  struct taudb_thread* thread;   // where this measurement is
  struct taudb_timer_callpath* context; // the calling context (can be null)
  char* timestamp; // timestamp in case we are in a snapshot or something
- int sample_count;
- double maximum_value;
- double minimum_value;
- double mean_value;
- double standard_deviation;
+ int sample_count;          // how many times did we see take this count?
+ double maximum_value;      // what was the max value we saw?
+ double minimum_value;      // what was the min value we saw?
+ double mean_value;         // what was the average value we saw?
+ double standard_deviation; // how much variance was there?
 } TAUDB_COUNTER_VALUE;
 
 /*********************************************/

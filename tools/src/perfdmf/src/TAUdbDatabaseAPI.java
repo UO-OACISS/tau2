@@ -339,6 +339,8 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
                 tmpStr = "select LAST_INSERT_ID();";
             else if (db.getDBType().compareTo("db2") == 0)
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM timer_callpath";
+            else if (db.getDBType().compareTo("sqlite") == 0)
+                tmpStr = "select seq from sqlite_sequence where name = 'timer_callpath'";
             else if (db.getDBType().compareTo("derby") == 0)
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM timer_callpath";
             else if (db.getDBType().compareTo("h2") == 0)
@@ -1092,6 +1094,8 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 	                tmpStr = "select IDENTITY_VAL_LOCAL() FROM secondary_metadata";
 	            else if (db.getDBType().compareTo("derby") == 0)
 	                tmpStr = "select IDENTITY_VAL_LOCAL() FROM secondary_metadata";
+	            else if (db.getDBType().compareTo("sqlite") == 0)
+	                tmpStr = "select seq from sqlite_sequence where name = 'secondary_metadata'";
 	            else if (db.getDBType().compareTo("h2") == 0)
 	                tmpStr = "select IDENTITY_VAL_LOCAL() FROM secondary_metadata";
 	            else if (db.getDBType().compareTo("oracle") == 0)

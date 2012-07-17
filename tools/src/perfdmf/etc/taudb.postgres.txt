@@ -140,8 +140,6 @@ INSERT INTO derived_thread_type (id, name, description)
 CREATE TABLE trial (
  id                  SERIAL NOT NULL PRIMARY KEY,
  name                VARCHAR,
- /* extract this from the metadata */
- collection_date     TIMESTAMP,
  /* where did this data come from? */
  data_source         INT,
  /* number of processes */
@@ -397,6 +395,10 @@ CREATE TABLE secondary_metadata (
  thread   INT,
  /* this metadata value could be associated with a timer that happened */
  timer_call_data    INT,
+ /* which call to the context timer was this? */
+ call_number    INT,
+ /* which call to the context timer was this? */
+ timestamp    TIMESTAMP,
  /* this metadata value could be a nested structure */
  parent   INT,
  /* the name of the metadata field */
