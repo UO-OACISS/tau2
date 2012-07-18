@@ -2831,7 +2831,7 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 	public void expandTrial(ParaProfTrial ppTrial) {
 		DefaultMutableTreeNode trialNode = null;
 		if (ppTrial.getView() != null) {
-			//trialNode = this.expandView(ppTrial.getView(), ppTrial);
+			trialNode = this.expandView(ppTrial.getView(), ppTrial);
 		} else {
 			trialNode = this.expandExperiment(ppTrial.getExperiment(), ppTrial);
 		}
@@ -2841,6 +2841,76 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 				tree.collapsePath(new TreePath(trialNode.getPath()));
 			tree.expandPath(new TreePath(trialNode.getPath()));
 		}
+	}
+
+	private DefaultMutableTreeNode expandView(ParaProfView view) {
+		DefaultMutableTreeNode dbNode = null;
+		// Database db = null;
+		try {
+			for (int i = 0; i < root.getChildCount(); i++) {
+				DefaultMutableTreeNode node = (DefaultMutableTreeNode) root
+				.getChildAt(i);
+				if (node.getUserObject() == view.getDatabase()) {
+					dbNode = node;
+					// db = (Database)
+					node.getUserObject();
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		// Test to see if dbApps is expanded, if not, expand it.
+		if (!(tree.isExpanded(new TreePath(dbNode.getPath()))))
+			tree.expandPath(new TreePath(dbNode.getPath()));
+
+		// Try and find the required view node.
+		for (int i = dbNode.getChildCount(); i > 0; i--) {
+			DefaultMutableTreeNode defaultMutableTreeNode = (DefaultMutableTreeNode) dbNode
+			.getChildAt(i - 1);
+			if (view.getID() == ((ParaProfView) defaultMutableTreeNode
+					.getUserObject()).getID())
+				return defaultMutableTreeNode;
+		}
+		// Required view node was not found, try adding it.
+		if (view != null) {
+			DefaultMutableTreeNode viewNode = new DefaultMutableTreeNode(
+					view);
+			view.setDMTN(viewNode);
+			getTreeModel().insertNodeInto(viewNode, dbNode,
+					dbNode.getChildCount());
+			return viewNode;
+		}
+		return null;
+	}
+	
+	private DefaultMutableTreeNode expandView(ParaProfView view,
+			ParaProfTrial ppTrial) {
+		DefaultMutableTreeNode viewNode = this.expandView(view);
+		if (viewNode != null) {
+			// Expand the experiment.
+			tree.expandPath(new TreePath(viewNode.getPath()));
+
+			// Try and find the required trial node.
+			for (int i = viewNode.getChildCount(); i > 0; i--) {
+				DefaultMutableTreeNode defaultMutableTreeNode = (DefaultMutableTreeNode) viewNode
+				.getChildAt(i - 1);
+				if (ppTrial.getID() == ((ParaProfTrial) defaultMutableTreeNode
+						.getUserObject()).getID())
+					return defaultMutableTreeNode;
+			}
+			// Required trial node was not found, try adding it.
+			if (ppTrial != null) {
+				DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(
+						ppTrial);
+				ppTrial.setDMTN(trialNode);
+				getTreeModel().insertNodeInto(trialNode, viewNode,
+						viewNode.getChildCount());
+				return trialNode;
+			}
+			return null;
+		}
+		return null;
 	}
 
 	public void expandTrial(int type, int applicationID, int experimentID,

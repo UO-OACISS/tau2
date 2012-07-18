@@ -34,9 +34,6 @@ public class TAUdbTrial extends Trial {
 		}
 
 		try {
-
-			java.sql.Timestamp collection_date = new Timestamp(
-					System.currentTimeMillis());
 			int node_count = dataSource.getMaxNode();
 			int contexts_per_node = dataSource.getMaxContextPerNode();
 			int threads_per_context =dataSource.getMaxThreadsPerContext();
@@ -45,19 +42,18 @@ public class TAUdbTrial extends Trial {
 
 			String sql = "INSERT INTO "
 					+ db.getSchemaPrefix()
-					+ "trial (name, collection_date, data_source,  node_count, contexts_per_node, threads_per_context, total_threads)"
-					+ "VALUES (?,?,?,?,?,?,?" +
+					+ "trial (name, data_source,  node_count, contexts_per_node, threads_per_context, total_threads)"
+					+ "VALUES (?,?,?,?,?,?" +
 					") ";
 			PreparedStatement statement = db.prepareStatement(sql);
 			statement.setString(1, name);
 
-			statement.setTimestamp(2, collection_date);
-			statement.setInt(3, datasource_id);
+			statement.setInt(2, datasource_id);
 
-			statement.setInt(4, node_count);
-			statement.setInt(5, contexts_per_node);
-			statement.setInt(6, threads_per_context);
-			statement.setInt(7, total_threads);
+			statement.setInt(3, node_count);
+			statement.setInt(4, contexts_per_node);
+			statement.setInt(5, threads_per_context);
+			statement.setInt(6, total_threads);
 
 			statement.executeUpdate();
 			statement.close();
@@ -110,7 +106,7 @@ public class TAUdbTrial extends Trial {
 
 		            // create a string to hit the database
 		            String buf = 
-		            "SELECT t.id, t.name, t.collection_date, t.data_source, t.node_count, t.contexts_per_node, t.threads_per_context, t.total_threads, metadata.app, metadata.exp FROM " +
+		            "SELECT t.id, t.name, t.data_source, t.node_count, t.contexts_per_node, t.threads_per_context, t.total_threads, metadata.app, metadata.exp FROM " +
 		            "( SELECT DISTINCT A.value as app, E.value as exp, A.trial as trial " +
 		            "FROM " +
 		            db.getSchemaPrefix()+"primary_metadata A, " +
@@ -129,7 +125,6 @@ public class TAUdbTrial extends Trial {
 		                int pos = 1;
 		                trial.setID(resultSet.getInt(pos++));
 		                trial.setName(resultSet.getString(pos++));
-		                trial.setField("collection_date", resultSet.getString(pos++));
 		                trial.setField("data_source", resultSet.getString(pos++));
 		                trial.setField("node_count", resultSet.getString(pos++));
 		                trial.setField("contexts_per_node", resultSet.getString(pos++));

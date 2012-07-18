@@ -60,7 +60,7 @@ public class Function implements Serializable, Comparable<Function> {
 
     public Function(String name, int id, int numMetrics) {
         this.name = name;
-        this.id = id;
+        this.setID(id);
     }
 
     public int getID() {
@@ -535,7 +535,7 @@ public class Function implements Serializable, Comparable<Function> {
     }
     
     public int compareTo(Function o) {
-        return this.id -  o.getID();
+        return this.getID() -  o.getID();
     }
 
     public boolean isPhase() {
@@ -575,4 +575,19 @@ public class Function implements Serializable, Comparable<Function> {
         this.parentPhase = parentPhase;
     }
 
+    public void setSourceRegion(SourceRegion sourceRegion) {
+    	this.sourceLink = sourceRegion;
+    }
+
+	public String getShortName() {
+		return short_name;
+	}
+
+	public void setShortName(String short_name) {
+		this.short_name = short_name;
+	}
+
+	public void setID(int id) {
+		this.id = id;
+	}
 }

@@ -79,7 +79,8 @@ public class IntervalEvent {
                 String name = resultSet.getString(2);
                 String groups = resultSet.getString(3);
                 int trialID = resultSet.getInt(4);
-            	Function function = new Function(name, id, numberOfMetrics);
+                Function function = dataSource.addFunction(name, numberOfMetrics);
+//                function.setID(id);
                 dataSource.addGroups(groups, function);
                 events.put(id, function);
             }
@@ -111,7 +112,7 @@ public class IntervalEvent {
          buf.append("timer t on tc.timer = t.id WHERE tc.parent is null ");
          buf.append("UNION ALL ");
          /* recursive part */
-         buf.append("SELECT d.id, d.parent, d.timer, concat (cp.name, ' -> ', dt.name) FROM ");
+         buf.append("SELECT d.id, d.parent, d.timer, concat (cp.name, ' => ', dt.name) FROM ");
          buf.append(db.getSchemaPrefix());
          buf.append("timer_callpath AS d JOIN cp on (d.parent = cp.id) JOIN ");
          buf.append(db.getSchemaPrefix());
@@ -141,15 +142,27 @@ public class IntervalEvent {
              Function last = null;
              while (resultSet.next() != false) {
                  int id = resultSet.getInt(1);
-                 String name = resultSet.getString(2);
+                 String name = resultSet.getString(3);
                  String group = resultSet.getString(10);
                  int trialID = resultSet.getInt(11);
                  if (last != null && last.getID() == id) {
                 	 dataSource.addGroups(group, last);
                  } else {
-                 	Function function = new Function(name, id, numberOfMetrics);
+                    Function function = dataSource.addFunction(name, numberOfMetrics);
+//                    function.setID(id);
                     dataSource.addGroups(group, function);
                     events.put(id, function);
+                    SourceRegion sourceRegion = new SourceRegion();
+                    sourceRegion.setFilename(resultSet.getString(5));
+                    sourceRegion.setStartLine(resultSet.getInt(6));
+                    sourceRegion.setEndLine(resultSet.getInt(7));
+                    sourceRegion.setStartColumn(resultSet.getInt(8));
+                    sourceRegion.setEndColumn(resultSet.getInt(9));
+                    if (name.contains(" => ")) {
+                    	function.callpathFunction = true;
+                    }
+                    function.setShortName(resultSet.getString(4));
+                    function.setSourceRegion(sourceRegion);
                     last = function;
                  }
              }

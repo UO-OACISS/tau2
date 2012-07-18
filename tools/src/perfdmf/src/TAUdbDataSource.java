@@ -35,14 +35,14 @@ public class TAUdbDataSource extends DataSource {
         int numMetrics = getNumberOfMetrics();
         DB db = databaseAPI.getDb();
 
- 
-		String buf = "select v.timer, v.metric, h.node_rank as node, h.context_rank as context, h.thread_rank as thread, " +
-				"v.inclusive_value as inclusive, v.exclusive_value as inclusive, cp.calls, cp.subroutines " +
-				"from timer_value v left outer join " +
-				db.getSchemaPrefix() +"timer t on v.timer = t.id " +
-				"left outer join " +
-				db.getSchemaPrefix() +"thread h on v.thread = h.id left outer join" +
-				db.getSchemaPrefix() +" timer_callpath cp on v.timer = cp.timer and v.thread = cp.thread where h.node_rank > -1 and t.trial = "+trialID;
+        String buf = "select cp.id, v.metric, h.node_rank as node, h.context_rank as context, h.thread_rank as thread, " +
+          "v.inclusive_value as inclusive, v.exclusive_value as inclusive, tcd.calls, tcd.subroutines " +
+          "from " + db.getSchemaPrefix() + "timer_value v " +
+          "left outer join " + db.getSchemaPrefix() + "timer_call_data tcd on v.timer_call_data = tcd.id " + 
+          "left outer join " + db.getSchemaPrefix() + "timer_callpath cp on tcd.timer_callpath = cp.id " + 
+          "left outer join " + db.getSchemaPrefix() + "timer t on cp.timer = t.id " + 
+          "left outer join " + db.getSchemaPrefix() + "thread h on tcd.thread = h.id " + 
+          "where h.node_rank > -1 and t.trial = " + trialID;
 
         /*
          1 - timer

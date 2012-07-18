@@ -28,31 +28,31 @@ import edu.uoregon.tau.perfdmf.database.DB;
  */
 public class DatabaseAPI {
 
-    private Application application = null;
-    private Experiment experiment = null;
-    private Trial trial = null;
-    private List<Integer> nodes = null;
-    private List<Integer> contexts = null;
-    private List<Integer> threads = null;
-    private List<Function> intervalEvents = null;
-    private List<UserEvent> atomicEvents = null;
-    private List<Metric> metrics = null;
+    protected Application application = null;
+    protected Experiment experiment = null;
+    protected Trial trial = null;
+    protected List<Integer> nodes = null;
+    protected List<Integer> contexts = null;
+    protected List<Integer> threads = null;
+    protected List<Function> intervalEvents = null;
+    protected List<UserEvent> atomicEvents = null;
+    protected List<Metric> metrics = null;
     
-    private Map<Integer, Application> applications = null;
-    private Map<Integer, Experiment> experiments = null;
+    protected Map<Integer, Application> applications = null;
+    protected Map<Integer, Experiment> experiments = null;
     protected Map<Integer, Trial> trials = null;
     
-    private Vector<IntervalLocationProfile> intervalEventData = null;
-    private Vector<UserEventProfile> atomicEventData = null;
+    protected Vector<IntervalLocationProfile> intervalEventData = null;
+    protected Vector<UserEventProfile> atomicEventData = null;
 
     // from datasession
     protected DB db = null;
     protected ConnectionManager connector;
-    private Map<Integer, Function> intervalEventHash = null;
-    private Map<Integer, UserEvent> atomicEventHash = null;
-    //private String configFileName = null;
+    protected Map<Integer, Function> intervalEventHash = null;
+    protected Map<Integer, UserEvent> atomicEventHash = null;
+    //protected String configFileName = null;
 
-    private boolean cancelUpload = false;
+    protected boolean cancelUpload = false;
 
     protected Database database;
 
