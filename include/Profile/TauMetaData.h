@@ -23,8 +23,7 @@
 
 #include <TauUtil.h>
 #include <map>
-using namespace std;
-map<string,string> &Tau_metadata_getMetaData();
+std::map<std::string,std::string> &Tau_metadata_getMetaData();
 int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int counter, int tid);
 int Tau_metadata_writeMetaData(FILE *fp, int counter, int tid);
 int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int tid);
