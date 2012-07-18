@@ -106,6 +106,23 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
         this.database = api.database;
         this.connector = api.connector;
         this.db = this.connector.getDB();
+        this.application = api.application;
+        this.experiment = api.experiment;
+        this.trial = api.trial;
+        this.nodes = api.nodes;
+        this.contexts = api.contexts;
+        this.threads = api.threads;
+        this.intervalEvents = api.intervalEvents;
+        this.atomicEvents = api.atomicEvents;
+        this.metrics = api.metrics;
+        this.applications = api.applications;
+        this.experiments = api.experiments;
+        this.trials = api.trials;
+        this.intervalEventData = api.intervalEventData;
+        this.atomicEventData = api.atomicEventData;
+        this.intervalEventHash = api.intervalEventHash;
+        this.atomicEventHash = api.atomicEventHash;
+        this.cancelUpload = api.cancelUpload;
 	}
 
 	public TAUdbDatabaseAPI() {

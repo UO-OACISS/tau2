@@ -80,7 +80,7 @@ public class AtomicEvent {
         Map<Integer,UserEvent> atomicEvents = new HashMap<Integer,UserEvent>();
         // create a string to hit the database
         StringBuffer buf = new StringBuffer();
-        buf.append("select u.id, u.trial, u.name, u.parent ");
+        buf.append("select u.id, u.trial, u.name ");
         buf.append("from " + db.getSchemaPrefix() + "counter u ");
         buf.append(whereClause);
         buf.append(" order by u.id ");
@@ -94,8 +94,8 @@ public class AtomicEvent {
                 int id = resultSet.getInt(1);
                 String name = resultSet.getString(3);
                 UserEvent ue = new UserEvent(name, id);
-                int parent = resultSet.getInt(4);
             	/*
+                int parent = resultSet.getInt(4);
                 if (parent > 0) {
             		// TODO - SET THE PARENT! But we can't because we don't
             		// yet have a map of parents to Function/IntervalEvent objects.
