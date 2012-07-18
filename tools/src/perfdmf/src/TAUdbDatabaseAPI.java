@@ -887,9 +887,13 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 				}
 				for (Thread thread : dataSource.getAllThreads()) {
 					TimerCallData tcd = new TimerCallData(function, thread, 0.0); //TODO - this should be a timestamp, not null
-					int timerCallDataID = timerCallDataMap.get(tcd).intValue();
-					insertDerivedThreadValue(timerValueInsert, metric,
+					Integer ID = timerCallDataMap.get(tcd);
+					// not all threads call all functions! If null, skip this permutation.
+					if (ID != null) {
+						int timerCallDataID = ID.intValue();
+						insertDerivedThreadValue(timerValueInsert, metric,
 							metricID, timerCallDataID, thread, function);
+					}
 				}
 			}
 		}
