@@ -538,7 +538,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 				"timer_callpath AS d JOIN cp ON (d.parent = cp.id) join " +
 				db.getSchemaPrefix() +
 				"timer dt on d.timer = dt.id) " +
-				"SELECT distinct tcd.id, tcd.timestamp, cp.name, h.node_rank, h.context_rank, h.thread_rank FROM cp join ");
+				"SELECT distinct tcd.id, tcd.time_range, cp.name, h.node_rank, h.context_rank, h.thread_rank FROM cp join ");
 		sb.append(db.getSchemaPrefix());
 		sb.append("timer_call_data tcd on tcd.timer_callpath = cp.id join ");
 		sb.append(db.getSchemaPrefix());

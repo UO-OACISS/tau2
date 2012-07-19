@@ -25,12 +25,14 @@ DROP TABLE IF EXISTS timer_call_data;
 DROP TABLE IF EXISTS timer_group;
 DROP TABLE IF EXISTS timer_parameter;
 /* data dimensions */
+DROP TABLE IF EXISTS time_range;
 DROP TABLE IF EXISTS timer;
 DROP TABLE IF EXISTS metric;
 DROP TABLE IF EXISTS thread;
 /* the top level object */
 DROP TABLE IF EXISTS trial;
 /* static tables */
+DROP TABLE IF EXISTS time_range_type;
 DROP TABLE IF EXISTS derived_thread_type;
 DROP TABLE IF EXISTS data_source;
 DROP TABLE IF EXISTS schema_version;
@@ -271,10 +273,36 @@ CREATE TABLE timer_callpath (
    ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
+/* By definition, profiles have no time data. However, there are a few
+ * examples where time ranges make sense, such as tracking call stacks
+ * or associating metadata to a particular phase. The time_range table
+ * is used to give other measurements a time context. */
+
+CREATE TABLE time_range_type (
+ id INT NOT NULL PRIMARY KEY,
+ name VARCHAR NOT NULL
+);
+
+insert into time_range_type (id, name) values (1, 'TIMESTAMP');
+insert into time_range_type (id, name) values (2, 'ITERATION NUMBER');
+insert into time_range_type (id, name) values (3, 'CALL NUMBER');
+
+CREATE TABLE time_range (
+ id SERIAL NOT NULL PRIMARY KEY,
+ /* what type of time_range is this? */
+ type INT NOT NULL,
+ /* starting value */
+ start INT NOT NULL,
+ /* ending value. Null indicates end = start */
+ end INT,
+ FOREIGN KEY(type) REFERENCES time_range_type(id)
+   ON DELETE NO ACTION ON UPDATE NO ACTION
+);
+
 /* timer_call_data records have the dynamic information for when a node
  * in the callgraph is visited by a thread. If you are tracking dynamic
- * callstacks, you would use the timestamp field. If you are storing
- * snapshot data, you would use the timestamp field. */
+ * callstacks, you would use the time_range field. If you are storing
+ * snapshot data, you would use the time_range field. */
 
 CREATE TABLE timer_call_data (
  id          SERIAL NOT NULL PRIMARY KEY,
@@ -286,12 +314,14 @@ CREATE TABLE timer_call_data (
  calls       INT,
  /* how many subroutines this timer called */
  subroutines INT,
- /* what is the timestamp? this is for supporting snapshots */
- timestamp   DOUBLE PRECISION,
+ /* what is the time_range? this is for supporting snapshots */
+ time_range  INT,
  FOREIGN KEY(timer_callpath) REFERENCES timer_callpath(id)
    ON DELETE NO ACTION ON UPDATE NO ACTION,
  FOREIGN KEY(thread) REFERENCES thread(id)
    ON DELETE NO ACTION ON UPDATE NO ACTION,
+ FOREIGN KEY(time_range) REFERENCES time_range(id)
+   ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
 /* timer values have the timer of one timer
@@ -398,7 +428,7 @@ CREATE TABLE secondary_metadata (
  /* which call to the context timer was this? */
  call_number    INT,
  /* which call to the context timer was this? */
- timestamp    TIMESTAMP,
+ time_range    INT,
  /* this metadata value could be a nested structure */
  parent   INT,
  /* the name of the metadata field */
@@ -414,6 +444,8 @@ CREATE TABLE secondary_metadata (
  FOREIGN KEY(timer_call_data) REFERENCES timer_call_data(id)
    ON DELETE NO ACTION ON UPDATE NO ACTION,
  FOREIGN KEY(parent) REFERENCES secondary_metadata(id)
+   ON DELETE NO ACTION ON UPDATE NO ACTION,
+ FOREIGN KEY(time_range) REFERENCES time_range(id)
    ON DELETE NO ACTION ON UPDATE NO ACTION
 );
 
