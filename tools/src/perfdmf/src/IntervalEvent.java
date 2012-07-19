@@ -290,19 +290,24 @@ public class IntervalEvent {
 			statement.executeBatch();
 			statement.close();
         } else {
-
+        	String query = "with recursive cp (id, parent, timer, name) as " +
+        			"(SELECT tc.id, tc.parent, tc.timer, t.name FROM timer_callpath tc " + 
+        			"INNER JOIN timer t on tc.timer = t.id WHERE tc.parent is null " +
+        			"UNION ALL SELECT d.id, d.parent, d.timer, concat (cp.name, ' => ', dt.name) " +
+        			"FROM timer_callpath AS d JOIN cp on (d.parent = cp.id) " +
+        			"JOIN timer dt on d.timer = dt.id) " +
+        			"SELECT distinct cp.id, cp.timer, cp.name, t.trial " +
+        			"FROM cp join timer t on cp.timer = t.id " +
+        			"join timer_group g on t.id = g.timer WHERE trial = ? and ";
             if (db.getDBType().compareTo("oracle") == 0)
-                statement = db.prepareStatement("SELECT id FROM " + db.getSchemaPrefix()
-                        + "interval_event where dbms_lob.instr(name, ?) > 0 and trial = ?");
+                statement = db.prepareStatement(query + "dbms_lob.instr(cp.name, ?) > 0");
             else if (db.getDBType().compareTo("derby") == 0)
-                statement = db.prepareStatement("SELECT id FROM " + db.getSchemaPrefix()
-                        + "interval_event where cast(name as varchar(4000)) = ? and trial = ?");
+                statement = db.prepareStatement(query + "cast(cp.name as varchar(4000)) = ?");
             else
-                statement = db.prepareStatement("SELECT id FROM " + db.getSchemaPrefix()
-                        + "interval_event where name = ? and trial = ?");
+            	statement = db.prepareStatement(query + "cp.name = ?");
 
-            statement.setString(1, function.getName());
-            statement.setInt(2, newTrialID);
+            statement.setInt(1, newTrialID);
+            statement.setString(2, function.getName());
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next() != false) {
                 newIntervalEventID = resultSet.getInt(1);
