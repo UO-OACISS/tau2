@@ -4,6 +4,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -277,6 +278,10 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 						+ " exclusive_value) VALUES (?, ?, ?, ?, ?, ?)");
 		for (Metric metric : dataSource.getMetrics()) {
 			Integer metricID = metricMap.get(metric);
+			if (metricID == null) {
+				// not saving this metric
+				continue;
+			}
 
 			for (Iterator<Function> func = dataSource.getFunctionIterator(); func
 					.hasNext();) {
@@ -879,6 +884,10 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 
 		for (Metric metric:  dataSource.getMetrics()) {
 			Integer metricID = metricMap.get(metric);
+			if (metricID == null) {
+				// skip this metric
+				continue;
+			}
 
 			for (Iterator<Function> func = dataSource.getFunctionIterator(); func.hasNext();) {
 				Function function = func.next();
@@ -1201,5 +1210,122 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 		return new ArrayList<Trial>(trials.values());
 	}
 
+    /**
+     * Saves the Trial object to the database
+     * 
+     * @param trial
+     * @param saveMetricIndex
+     * @return the database index ID of the saved trial record
+     */
+
+    public synchronized int saveTrial(Trial trial, Metric saveMetric) throws DatabaseException {
+        //long start = System.currentTimeMillis();
+
+        DataSource dataSource = trial.getDataSource();
+
+        //Build an array of group names. This speeds lookup of group names.
+        List<String> groupList = new ArrayList<String>();
+        for (Iterator<Group> groupIterator = dataSource.getGroups(); groupIterator.hasNext();) {
+            Group g = groupIterator.next();
+            groupList.add(g.getName());
+        }
+
+        // get the metric count
+        metrics = trial.getDataSource().getMetrics();
+        int metricCount = metrics.size();
+
+        // create the Vectors to store the data
+        intervalEvents = new ArrayList<Function>();
+        intervalEventData = new Vector<IntervalLocationProfile>();
+        atomicEvents = new ArrayList<UserEvent>();
+        atomicEventData = new Vector<UserEventProfile>();
+
+        //int fcount = 0;
+        //int ucount = 0;
+
+        Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
+
+        this.intervalEvents = dataSource.getFunctions();
+        this.atomicEvents = dataSource.getUserEvents();
+
+        totalItems = intervalEvents.size() + intervalEventData.size() + atomicEvents.size() + atomicEventData.size();
+
+        // Now upload to the database
+        try {
+            db.setAutoCommit(false);
+        } catch (SQLException e) {
+            throw new DatabaseException("Saving Trial Failed: couldn't set AutoCommit to false", e);
+        }
+
+        int newTrialID = 0;
+
+        int saveMetricIndex = -1;
+        if (saveMetric != null) {
+            saveMetricIndex = saveMetric.getID();
+        }
+
+        try {
+            // output the trial data, which also saves the intervalEvents,
+            // intervalEvent data, user events and user event data
+
+            Hashtable<Integer, Integer> metricHash = null;
+            if (saveMetric == null) { // this means save the whole thing???
+            	uploadTrial(db, trial);
+            } else {
+                newTrialID = trial.getID();
+                metricHash = saveMetrics(newTrialID, trial, saveMetricIndex);
+                Map<Metric, Integer> metricMap = new HashMap<Metric, Integer>();
+                // create a hash map with one metric, so that we can reuse code but only save one metric.
+                metricMap.put(trial.getDataSource().getMetrics().get(saveMetricIndex), metricHash.get(saveMetricIndex));
+                Map<TimerCallData, Integer> timerCallDataMap = getCallDataMap(newTrialID, dataSource, db);
+
+                // now upload the measurements
+                if(db.getDBType().equals("postgresql")){
+                    uploadFunctionProfilesPSQL(dataSource, timerCallDataMap, metricMap, db);
+                }else{
+                    uploadFunctionProfiles(dataSource, timerCallDataMap, metricMap, db);
+                    uploadStatistics(dataSource, timerCallDataMap, metricMap, db);
+                }
+            }
+
+            for (Iterator<Integer> it = metricHash.keySet().iterator(); it.hasNext();) {
+                Integer key = it.next();
+                int value = metricHash.get(key).intValue();
+
+                for (Iterator<Metric> it2 = trial.getDataSource().getMetrics().iterator(); it2.hasNext();) {
+                    Metric metric = it2.next();
+                    if (metric.getID() == key.intValue()) {
+                        if (value != -1) {
+                            metric.setDbMetricID(value);
+                        }
+                    }
+                }
+            }
+
+        } catch (SQLException e) {
+            try {
+                db.rollback();
+                e.printStackTrace();
+                throw new DatabaseException("Saving Trial Failed, rollbacks successful", e);
+            } catch (SQLException e2) {
+                throw new DatabaseException("Saving Trial Failed, rollbacks failed!", e2);
+            }
+
+        }
+
+        try {
+            db.commit();
+            db.setAutoCommit(true);
+        } catch (SQLException e) {
+            throw new DatabaseException("Saving Trial Failed: commit failed!", e);
+        }
+
+        //long stop = System.currentTimeMillis();
+        //long elapsedMillis = stop - start;
+        //double elapsedSeconds = (double) (elapsedMillis) / 1000.0;
+        //System.out.println("Elapsed time: " + elapsedSeconds + " seconds.");
+        return newTrialID;
+    }
+	
 
 }

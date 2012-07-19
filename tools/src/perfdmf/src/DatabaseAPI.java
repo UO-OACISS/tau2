@@ -531,7 +531,7 @@ public class DatabaseAPI {
         return newMetricID;
     }
 
-    private Hashtable<Integer, Integer> saveMetrics(int newTrialID, Trial trial, int saveMetricIndex) throws SQLException {
+    protected Hashtable<Integer, Integer> saveMetrics(int newTrialID, Trial trial, int saveMetricIndex) throws SQLException {
         Hashtable<Integer, Integer> metricHash = new Hashtable<Integer, Integer>();
         int idx = 0;
         for (Iterator<Metric> it = trial.getDataSource().getMetrics().iterator(); it.hasNext();) {
@@ -604,7 +604,7 @@ public class DatabaseAPI {
     }
 
     // this stuff is a total hack to get some functionality that the new database API will have
-    private int totalItems;
+    protected int totalItems;
     private int itemsDone;
 
     public int getProgress() {
