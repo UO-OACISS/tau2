@@ -1516,6 +1516,11 @@ int  MPI_Finalize(  )
 
   /* Create a merged profile if requested */
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
+    /* *CWL* - properly record intermediate values (the same way snapshots work).
+               Note that we do not want to shut down the timers as yet. There is
+	       still potentially life after MPI_Finalize where TAU is concerned.
+     */
+    TauProfiler_updateAllIntermediateStatistics();
     Tau_mergeProfiles();
   }
   
