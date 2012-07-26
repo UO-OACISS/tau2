@@ -76,6 +76,10 @@
         gsub("cb[0-9_]*", "cb000", $0)
         print $0
     }
+    else if(match($0,"CHARACTER*")){
+        gsub("CHARACTER\\*[0-9]*", "CHARACTER*999", $0)
+        print $0
+    }
     else{
         print $0
     }
