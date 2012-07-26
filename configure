@@ -6102,6 +6102,7 @@ fi
   cat <<EOF > conftest_ss_alloc.cpp
 #include <Profile/TauSsAllocator.h>
 #include <map>
+#include <stddef.h>
 using namespace std;
 
 int main() {
