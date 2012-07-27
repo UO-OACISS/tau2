@@ -30,19 +30,14 @@ typedef struct _request_data
 } request_data;
 
 
-int translateRankToWorld(MPI_Comm comm, int rank);
-
-
 request_data * 
 TauAddRequestData(int status, int count, MPI_Datatype datatype, int other,
                   int tag, MPI_Comm comm, MPI_Request * request, int returnVal, 
                   int persistent);
 
-request_data * 
-TauGetRequestData(MPI_Request * request);
+request_data * TauGetRequestData(MPI_Request * request);
 
-void 
-TauDeleteRequestData(MPI_Request * request);
+void TauDeleteRequestData(MPI_Request * request);
 
 #ifdef __cplusplus
 } /* extern "C" */
