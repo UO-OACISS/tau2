@@ -19,6 +19,8 @@
 
 #ifdef TAU_ENABLED
 #include <Profile/tau_types.h>
+#include <Profile/TauMetaDataTypes.h>
+#include <string.h>
 
 #if (defined(TAU_WINDOWS))
 #pragma warning( disable : 4786 )
@@ -225,17 +227,66 @@ extern "C" {
 
 #define TAU_PROFILE_SNAPSHOT(name)              Tau_profile_snapshot(name);
 #define TAU_PROFILE_SNAPSHOT_1L(name, expr)     Tau_profile_snapshot_1l(name, expr);
+
+
+// metadata functions
+
 #define TAU_METADATA(name, value)               Tau_metadata(name, value);
 #define TAU_METADATA_ITERATION(name,iteration,value) {char meta_buf[1024]; \
         sprintf(meta_buf,"%s_|_%d",name,iteration); \
         TAU_METADATA(meta_buf,value);}
 
 #define TAU_CONTEXT_METADATA(name, value)       Tau_context_metadata(name, value);
+
 #define TAU_PHASE_METADATA(name, value)         Tau_phase_metadata(name, value);
 
+#define TAU_METADATA_OBJECT(name, key, value) Tau_metadata_value_t* name = NULL; \
+        Tau_metadata_create_value(&name, TAU_METADATA_TYPE_OBJECT); \
+        { Tau_metadata_object_t* object = NULL; \
+        Tau_metadata_create_object(&object, key, value); \
+        name->data.oval = object; }
 
+#define TAU_METADATA_ARRAY(name, length)        Tau_metadata_value_t* name = NULL; \
+        Tau_metadata_create_value(&name, TAU_METADATA_TYPE_ARRAY); \
+		{ Tau_metadata_array_t* array = NULL; \
+        Tau_metadata_create_array(&array, length); \
+        name->data.aval = array; }
 
+#define TAU_METADATA_STRING(name, value)   Tau_metadata_value_t* name = NULL; \
+        Tau_metadata_create_value(&name, TAU_METADATA_TYPE_STRING); \
+        name->data.cval = malloc((sizeof(char))*(strlen(value))); \
+        strcpy(name->data.cval, value);
 
+#define TAU_METADATA_INTEGER(name, value)       Tau_metadata_value_t* name = NULL; \
+        Tau_metadata_create_value(&name, TAU_METADATA_TYPE_INTEGER); \
+		name->data.ival = value;
+
+#define TAU_METADATA_DOUBLE(name, value)        Tau_metadata_value_t* name = NULL; \
+        Tau_metadata_create_value(&name, TAU_METADATA_TYPE_DOUBLE); \
+		name->data.dval = value;
+
+#define TAU_METADATA_TRUE(name)                 Tau_metadata_value_t* name = NULL; \
+        Tau_metadata_create_value(&name, TAU_METADATA_TYPE_TRUE);
+
+#define TAU_METADATA_FALSE(name)                Tau_metadata_value_t* name = NULL; \
+        Tau_metadata_create_value(&name, TAU_METADATA_TYPE_FALSE);
+
+#define TAU_METADATA_NULL(name)                 Tau_metadata_value_t* name = NULL; \
+        Tau_metadata_create_value(&name, TAU_METADATA_TYPE_NULL);
+
+#define TAU_STRUCTURED_METADATA(name, invalue)   {  Tau_metadata_object_t* object = NULL; \
+        Tau_metadata_create_object(&object, name, invalue); \
+		Tau_structured_metadata(object, 0); }
+
+#define TAU_STRUCTURED_CONTEXT_METADATA(object)  {  Tau_metadata_object_t* object = NULL; \
+        Tau_metadata_create_object(&object, name, invalue); \
+		Tau_structured_metadata(object, 1); }
+
+// if the index is greater than the array length, resize?
+//#define TAU_METADATA_ARRAY_PUT(array, index, value)  array->data.aval->values[index] = value;
+#define TAU_METADATA_ARRAY_PUT(array, index, value) Tau_metadata_array_put(array, index, value);
+
+#define TAU_METADATA_OBJECT_PUT(object, name, value) Tau_metadata_object_put(object, name, value);
 
 
 #ifdef TAU_PROFILEPARAM
@@ -415,9 +466,17 @@ void TAUDECL Tau_trace_recvmsg_remote(int type, int source, int length, int remo
 void TAUDECL Tau_trace_sendmsg_remote(int type, int destination, int length, int remoteid);
 void TAUDECL Tau_create_top_level_timer_if_necessary(void);
 void TAUDECL Tau_stop_top_level_timer_if_necessary(void);
-void TAUDECL Tau_metadata(char *name, const char *value);
-void TAUDECL Tau_phase_metadata(char *name, char *value);
-void TAUDECL Tau_context_metadata(char *name, char *value);
+
+// metadata functions
+void TAUDECL Tau_metadata(const char *name, const char *value);
+void TAUDECL Tau_phase_metadata(const char *name, const char *value);
+void TAUDECL Tau_context_metadata(const char *name, const char *value);
+void TAUDECL Tau_metadata_create_value(Tau_metadata_value_t** value, const Tau_metadata_type_t type);
+void TAUDECL Tau_metadata_create_object(Tau_metadata_object_t** object, const char* name, Tau_metadata_value_t* value);
+void TAUDECL Tau_metadata_create_array(Tau_metadata_array_t** array, const int length);
+void TAUDECL Tau_metadata_array_put(Tau_metadata_value_t* array, const int index, Tau_metadata_value_t* value);
+void TAUDECL Tau_metadata_object_put(Tau_metadata_value_t* object, const char *name, Tau_metadata_value_t* value);
+
 
 void TAUDECL Tau_Bg_hwp_counters_start(int *error); 
 void TAUDECL Tau_Bg_hwp_counters_stop(int* numCounters, x_uint64 counters[], int* mode, int *error); 

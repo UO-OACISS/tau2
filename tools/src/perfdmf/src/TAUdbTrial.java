@@ -6,8 +6,13 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Vector;
 
+import edu.uoregon.tau.common.MetaDataMap;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataValue;
 import edu.uoregon.tau.perfdmf.database.DB;
 
 public class TAUdbTrial extends Trial {
@@ -282,11 +287,15 @@ public class TAUdbTrial extends Trial {
 		        statement.execute();
 		    }
 		 
-		public void loadXMLMetadata(DB db) {
-			loadMetadata(db);
+		public void loadXMLMetadata(DB db, Map<Integer, Function> ieMap) {
+			loadMetadata(db, ieMap);
+		}
+		public void loadMetadata(DB db) {
+			Map<Integer, Function> ieMap = new HashMap<Integer, Function>();
+			loadMetadata(db, ieMap);
 		}
 //Shouldn't this method override loadXMLMetadata?
-		public void loadMetadata(DB db) {
+		public void loadMetadata(DB db, Map<Integer, Function> ieMap) {
 			StringBuffer iHateThis = new StringBuffer();
 			iHateThis.append("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>");
 			iHateThis.append("<tau:metadata xmlns:tau=\"http://www.cs.uoregon.edu/research/tau\">");
@@ -315,9 +324,10 @@ public class TAUdbTrial extends Trial {
 				int thread = -1;
 				boolean inThread = false;
 				
-	            statement = db.prepareStatement("SELECT sm.name, sm.value, t.node_rank, t.context_rank, t.thread_rank FROM " + 
+	            statement = db.prepareStatement("SELECT sm.name, sm.value, t.node_rank, t.context_rank, t.thread_rank, timer_callpath, iteration_start, time_start parent FROM " + 
 	            		db.getSchemaPrefix() + "secondary_metadata sm left outer join " + db.getSchemaPrefix() + 
-	            		"thread t on sm.thread = t.id WHERE sm.trial = ? order by t.node_rank, t.context_rank, t.thread_rank");
+	            		"thread t on sm.thread = t.id inner join " + db.getSchemaPrefix() + 
+	            		"time_range tr on sm.time_range = tr.id WHERE sm.trial = ? order by t.node_rank, t.context_rank, t.thread_rank");
 	            statement.setInt(1, this.trialID);
 	            results = statement.executeQuery();
 	            Thread currentThread = null;
@@ -335,17 +345,34 @@ public class TAUdbTrial extends Trial {
             			iHateThis.append("<tau:ProfileAttributes context=\"" + context + "\" node=\"" + node + "\" thread=\"" + thread + "\">");
             			inThread = true;
 	            	}
-	                String name = results.getString(1);
+	                MetaDataKey key = this.uncommonMetaData.new MetaDataKey(results.getString(1));
+	                Function f = ieMap.get(results.getInt(6));
+	                if (f == null) {
+	                	key.timer_context = "";
+	                } else {
+	                	key.timer_context = f.getName();
+	                }
+	                key.call_number = results.getInt(7);
+	                key.timestamp = results.getLong(8);
 	                String value = results.getString(2);
 	                // put this value in the trial's uncommon metadata map
-	                this.uncommonMetaData.put(name, value);
+	                this.uncommonMetaData.put(key, value);
 	                // put this value in the thread's metadata map
 	                if (currentThread != null) {
-		                currentThread.getMetaData().put(name, value);
+		                currentThread.getMetaData().put(key, value);
 	                }
 	                iHateThis.append("<tau:attribute><tau:name>");
-	                iHateThis.append(name);
-	                iHateThis.append("</tau:name><tau:value>");
+	                // for now, we need to build a super long string. Ugh.
+	                String tmpName = key.timer_context + " : " + key.call_number + " : " + key.timestamp + " : " + key.name; 
+	                iHateThis.append(tmpName);
+	                // iHateThis.append(key.name);
+	                iHateThis.append("</tau:name><tau:timer_context>");
+	                iHateThis.append(key.timer_context);
+	                iHateThis.append("</tau:timer_context><tau:call_number>");
+	                iHateThis.append(key.call_number);
+	                iHateThis.append("</tau:call_number><tau:timestamp>");
+	                iHateThis.append(key.timestamp);
+	                iHateThis.append("</tau:timestamp><tau:value>");
 	                iHateThis.append(value);
 	                iHateThis.append("</tau:value></tau:attribute>");
 	            }

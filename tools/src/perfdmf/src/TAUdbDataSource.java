@@ -146,7 +146,7 @@ public class TAUdbDataSource extends DataSource {
 
        //downloadMetaData();
         Trial t = databaseAPI.getTrial();
-        databaseAPI.getTrial().loadXMLMetadata(db);
+        databaseAPI.getTrial().loadXMLMetadata(db, ieMap);
         //ParaProf uses the metadata in the datas ource to load the side bar rather than 
         //what's in the trial so you have to do both.
         this.setMetaData(t.getMetaData());

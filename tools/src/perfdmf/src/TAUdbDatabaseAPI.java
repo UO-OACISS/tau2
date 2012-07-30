@@ -25,6 +25,8 @@ import org.postgresql.copy.CopyManager;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
+import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataValue;
 import edu.uoregon.tau.perfdmf.database.ConnectionManager;
 import edu.uoregon.tau.perfdmf.database.DB;
 
@@ -187,9 +189,9 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
            uploadUserEvents(newTrialID, functionMap, dataSource, db);
            Map<UserEvent, Integer> userEventMap = getUserEventsMap(newTrialID, dataSource, db);
 
-            uploadUserEventProfiles( dataSource, userEventMap, db, threadMap);
+            uploadUserEventProfiles(dataSource, userEventMap, db, threadMap);
                         
-            uploadMetadata(trial, functionMap, threadMap, db);
+            uploadMetadata(dataSource, trial, callpathMap, threadMap, db);
 
           //TODO: Deal with cancel upload
 //          if (this.cancelUpload) {
@@ -1018,7 +1020,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 
 	}
 
-	private static void uploadMetadata(Trial trial,
+	private static void uploadMetadata(DataSource dataSource, Trial trial,
 			Map<Function, Integer> functionMap, Map<Thread, Integer> threadMap,
 			DB db) throws SQLException {
 		int trialID = trial.getID();
@@ -1027,9 +1029,9 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 		
         PreparedStatement stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
                 + "primary_metadata (trial, name, value) VALUES (?, ?, ?)");
-		for (Map.Entry<String, String> entry : trial.getMetaData().entrySet()) {
-		    String key = entry.getKey();
-		    String value = entry.getValue();
+		for (Map.Entry<MetaDataKey, MetaDataValue> entry : trial.getMetaData().entrySet()) {
+		    String key = entry.getKey().name;
+		    String value = entry.getValue().value.toString();
             stmt.setInt(1, trialID);
             stmt.setString(2, key);
             stmt.setString(3, value);
@@ -1038,20 +1040,59 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
         stmt.executeBatch();
         stmt.close();
         
-        stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
-                + "secondary_metadata (trial, thread, name, value) VALUES (?, ?, ?, ?)");
         for (Thread thread : trial.getDataSource().getThreads()) {
-			for (String key : trial.getUncommonMetaData().keySet()) {
-			    String value = thread.getMetaData().get(key);
+			for (MetaDataKey key : trial.getUncommonMetaData().keySet()) {
+			    MetaDataValue value = thread.getMetaData().get(key);
+			    if (value == null) { continue; }
+			    // first, create the time_range objects
+		        stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
+		                + "time_range (iteration_start, iteration_end, time_start, time_end) VALUES (?, ?, ?, ?)");
+		        stmt.setInt(1, key.call_number);
+		        stmt.setInt(2, key.call_number);
+		        stmt.setLong(3, key.timestamp);
+		        stmt.setLong(4, key.timestamp);
+		        stmt.execute();
+		        stmt.close();
+		        
+		        // get the id of the new time_range object
+	            String tmpStr = new String();
+	            if (db.getDBType().compareTo("mysql") == 0)
+	                tmpStr = "select LAST_INSERT_ID();";
+	            else if (db.getDBType().compareTo("db2") == 0)
+	                tmpStr = "select IDENTITY_VAL_LOCAL() FROM time_range";
+	            else if (db.getDBType().compareTo("derby") == 0)
+	                tmpStr = "select IDENTITY_VAL_LOCAL() FROM time_range";
+	            else if (db.getDBType().compareTo("sqlite") == 0)
+	                tmpStr = "select seq from sqlite_sequence where name = 'time_range'";
+	            else if (db.getDBType().compareTo("h2") == 0)
+	                tmpStr = "select IDENTITY_VAL_LOCAL() FROM time_range";
+	            else if (db.getDBType().compareTo("oracle") == 0)
+	                tmpStr = "select " + db.getSchemaPrefix() + "time_range_id_seq.currval FROM dual";
+	            else
+	                tmpStr = "select currval('time_range_id_seq');";
+	            int time_range = Integer.parseInt(db.getDataItem(tmpStr));
+			    
+		        stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
+		                + "secondary_metadata (trial, thread, timer_callpath, time_range, parent, name, value, is_array) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 	            stmt.setInt(1, trialID);
 	            stmt.setInt(2, threadMap.get(thread));
-	            stmt.setString(3, key);
-	            stmt.setString(4, value);
-	            stmt.addBatch();
+	            if (key.timer_context != null) {
+		            int timer_callpath = functionMap.get(dataSource.getFunction(key.timer_context));
+		            stmt.setInt(3, timer_callpath);
+		            stmt.setInt(4, time_range);
+		            stmt.setNull(5, java.sql.Types.INTEGER);
+	            } else {
+		            stmt.setNull(3, java.sql.Types.INTEGER);
+		            stmt.setNull(4, java.sql.Types.INTEGER);
+		            stmt.setNull(5, java.sql.Types.INTEGER);
+	            }
+	            stmt.setString(6, key.name);
+	            stmt.setString(7, value.value.toString());
+	            stmt.setBoolean(8, false);
+		        stmt.execute();
+		        stmt.close();
 			}
     	}
-        stmt.executeBatch();
-        stmt.close();
 
         if (trial.getDataSource().getMetadataFile() != null) {
         	try {

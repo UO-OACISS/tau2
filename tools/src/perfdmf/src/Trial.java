@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -29,6 +30,8 @@ import org.xml.sax.helpers.XMLReaderFactory;
 
 import edu.uoregon.tau.common.AlphanumComparator;
 import edu.uoregon.tau.common.Gzip;
+import edu.uoregon.tau.common.MetaDataMap;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
 import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfdmf.database.DBConnector;
 
@@ -74,8 +77,8 @@ public class Trial implements Serializable, Comparable<Trial> {
     protected DataSource dataSource;
 
     protected Database database;
-    protected Map<String, String> metaData = new TreeMap<String, String>();
-    protected Map<String, String> uncommonMetaData = new TreeMap<String, String>();
+    protected MetaDataMap metaData = new MetaDataMap();
+    protected MetaDataMap uncommonMetaData = new MetaDataMap();
 	protected Map<Integer, Function> intervalEventMap = null;
     protected Map<Integer, AtomicEvent> atomicEventMap = null;
 
@@ -95,9 +98,10 @@ public class Trial implements Serializable, Comparable<Trial> {
         private StringBuffer accumulator = new StringBuffer();
         private String currentName = "";
 
-        private Map<String, String> common, other, current;
+        private MetaDataMap common, other, current;
+        private MetaDataKey key = null;
 
-        public XMLParser(Map<String, String> common, Map<String, String> other) {
+        public XMLParser(MetaDataMap common, MetaDataMap other) {
             this.common = common;
             this.other = other;
             current = common;
@@ -115,9 +119,17 @@ public class Trial implements Serializable, Comparable<Trial> {
         public void endElement(String uri, String localName, String qName) throws SAXException {
             if (localName.equals("name")) {
                 currentName = accumulator.toString().trim();
+            	key = current.newKey(accumulator.toString().trim());
             } else if (localName.equals("value")) {
                 String currentValue = accumulator.toString().trim();
-                current.put(currentName, currentValue);
+                current.put(key, currentValue);
+                key = null;
+            } else if (localName.equals("timer_context") || localName.equals("tau:timer_context")) {
+            	key.timer_context = accumulator.toString().trim();
+            } else if (localName.equals("call_number") || localName.equals("tau:call_number")) {
+            	key.call_number = Integer.parseInt(accumulator.toString().trim());
+            } else if (localName.equals("timestamp") || localName.equals("tau:timestamp")) {
+            	key.timestamp = Long.parseLong(accumulator.toString().trim());
             }
         }
 
@@ -128,7 +140,7 @@ public class Trial implements Serializable, Comparable<Trial> {
 
     private void parseMetaData(String string) {
         try {
-            metaData = new TreeMap<String, String>();
+            metaData = new MetaDataMap();
             XMLReader xmlreader = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
             XMLParser parser = new XMLParser(metaData, uncommonMetaData);
             xmlreader.setContentHandler(parser);
@@ -180,6 +192,11 @@ public class Trial implements Serializable, Comparable<Trial> {
     }
 
     public void loadXMLMetadata(DB db) throws SQLException {
+		Map<Integer, Function> ieMap = new HashMap<Integer, Function>();
+		loadXMLMetadata(db, ieMap);
+	}
+    
+    public void loadXMLMetadata(DB db, Map<Integer, Function> ieMap) throws SQLException {
 
         if (isXmlMetaDataLoaded()) {
             return;
@@ -1162,11 +1179,11 @@ public class Trial implements Serializable, Comparable<Trial> {
         }
     }
 
-    public Map<String, String> getMetaData() {
+    public MetaDataMap getMetaData() {
         return metaData;
     }
 
-    public void setMetaData(Map<String, String> metaDataMap) {
+    public void setMetaData(MetaDataMap metaDataMap) {
         this.metaData = metaDataMap;
     }
 
@@ -1180,11 +1197,11 @@ public class Trial implements Serializable, Comparable<Trial> {
 
     }
 
-    public Map<String, String> getUncommonMetaData() {
+    public MetaDataMap getUncommonMetaData() {
         return uncommonMetaData;
     }
 
-    public void setUncommonMetaData(Map<String, String> uncommonMetaData) {
+    public void setUncommonMetaData(MetaDataMap uncommonMetaData) {
         this.uncommonMetaData = uncommonMetaData;
     }
 

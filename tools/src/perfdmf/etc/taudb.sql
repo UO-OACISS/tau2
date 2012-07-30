@@ -32,7 +32,6 @@ DROP TABLE IF EXISTS thread;
 /* the top level object */
 DROP TABLE IF EXISTS trial;
 /* static tables */
-DROP TABLE IF EXISTS time_range_type;
 DROP TABLE IF EXISTS derived_thread_type;
 DROP TABLE IF EXISTS data_source;
 DROP TABLE IF EXISTS schema_version;
@@ -276,27 +275,20 @@ CREATE TABLE timer_callpath (
 /* By definition, profiles have no time data. However, there are a few
  * examples where time ranges make sense, such as tracking call stacks
  * or associating metadata to a particular phase. The time_range table
- * is used to give other measurements a time context. */
-
-CREATE TABLE time_range_type (
- id INT NOT NULL PRIMARY KEY,
- name VARCHAR NOT NULL
-);
-
-insert into time_range_type (id, name) values (1, 'TIMESTAMP');
-insert into time_range_type (id, name) values (2, 'ITERATION NUMBER');
-insert into time_range_type (id, name) values (3, 'CALL NUMBER');
+ * is used to give other measurements a time context. The iteration
+ * start and end can be used to indicate which loop iterations or 
+ * calls to a function are relevant for this time range. */
 
 CREATE TABLE time_range (
  id SERIAL NOT NULL PRIMARY KEY,
- /* what type of time_range is this? */
- type INT NOT NULL,
- /* starting value */
- start INT NOT NULL,
- /* ending value. Null indicates end = start */
- end INT,
- FOREIGN KEY(type) REFERENCES time_range_type(id)
-   ON DELETE NO ACTION ON UPDATE NO ACTION
+ /* starting iteration */
+ iteration_start INT NOT NULL,
+ /* ending iteration. */
+ iteration_end INT,
+ /* starting timestamp */
+ time_start BIGINT NOT NULL,
+ /* ending timestamp. */
+ time_end BIGINT
 );
 
 /* timer_call_data records have the dynamic information for when a node
@@ -424,9 +416,7 @@ CREATE TABLE secondary_metadata (
  /* this metadata value could be associated with a thread */
  thread   INT,
  /* this metadata value could be associated with a timer that happened */
- timer_call_data    INT,
- /* which call to the context timer was this? */
- call_number    INT,
+ timer_callpath    INT,
  /* which call to the context timer was this? */
  time_range    INT,
  /* this metadata value could be a nested structure */
@@ -441,7 +431,7 @@ CREATE TABLE secondary_metadata (
    ON DELETE NO ACTION ON UPDATE NO ACTION,
  FOREIGN KEY(thread) REFERENCES thread(id)
    ON DELETE NO ACTION ON UPDATE NO ACTION,
- FOREIGN KEY(timer_call_data) REFERENCES timer_call_data(id)
+ FOREIGN KEY(timer_callpath) REFERENCES timer_callpath(id)
    ON DELETE NO ACTION ON UPDATE NO ACTION,
  FOREIGN KEY(parent) REFERENCES secondary_metadata(id)
    ON DELETE NO ACTION ON UPDATE NO ACTION,

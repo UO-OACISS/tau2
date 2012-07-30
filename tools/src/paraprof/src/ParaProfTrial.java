@@ -27,6 +27,7 @@ import java.util.Vector;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
+import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
 import edu.uoregon.tau.paraprof.script.ParaProfScript;
 import edu.uoregon.tau.paraprof.script.ParaProfTrialScript;
 import edu.uoregon.tau.paraprof.util.FileMonitor;
@@ -814,10 +815,10 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
 	public Vector<String> getTopologyArray() {
-		Set<String> keys = getDataSource().getMetaData().keySet();
+		Set<MetaDataKey> keys = getDataSource().getMetaData().keySet();
 		Vector<String> topos = new Vector<String>();
-		for(Iterator<String> it = keys.iterator(); it.hasNext();){
-			String key = it.next();
+		for(Iterator<MetaDataKey> it = keys.iterator(); it.hasNext();){
+			String key = it.next().name;
 			if(key.contains(" isTorus")||key.contains(" Period")){
 				topos.add(key.split(" ")[0]);
 			}
