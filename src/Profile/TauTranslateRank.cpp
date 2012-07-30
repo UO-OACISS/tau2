@@ -1,5 +1,6 @@
 
 #include <map>
+#include <cstdlib>
 #include <mpi.h>
 
 using namespace std;

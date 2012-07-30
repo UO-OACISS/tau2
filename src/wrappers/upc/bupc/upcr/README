@@ -1,0 +1,5 @@
+Sample usage for this directory:
+./configure  -gasnet=/usr/local/packages/gasnet-1.18.0-mpi-smp -mpi -pdt=/usr/local/packages/pdt -bfd=download -iowrapper -upcnetwork=mpi -upc=upcc
+make install
+tau_upc_runtime_wrapper tau_upcr.h -lm -gasnet=/usr/local/packages/gasnet-1.18.0-mpi-smp -gasnetconduit=mpi-conduit -upc=/usr/local/packages/bupc-2.14.2/opt_inst
+

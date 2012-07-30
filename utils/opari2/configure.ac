@@ -1,5 +1,5 @@
 AC_PREREQ([2.68])
-AC_INIT([opari2], m4_esyscmd([vendor/common/build-config/generate-package-version.sh build-config/VERSION]), [scorep-bugs@groups.tu-dresden.de])
+AC_INIT([OPARI2], m4_esyscmd([vendor/common/build-config/generate-package-version.sh build-config/VERSION]), [scorep-bugs@groups.tu-dresden.de], [opari2])
 
 #echo "cross_compiling = $cross_compiling"
 
