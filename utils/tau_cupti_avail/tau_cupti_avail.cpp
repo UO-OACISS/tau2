@@ -1,6 +1,7 @@
 //#include "cupti_events.h"
 //#include <cuda_runtime_api.h>
 #include <Profile/CuptiLayer.h>
+#include <unistd.h>
 //#include <stdio.h>
 //#include <iostream>
 //#include <sstream>

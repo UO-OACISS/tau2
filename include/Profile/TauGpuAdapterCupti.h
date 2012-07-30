@@ -1,5 +1,5 @@
 #include <Profile/TauGpu.h>
-
+#include <stdlib.h>
 
 #define uint32_t unsigned int
 
