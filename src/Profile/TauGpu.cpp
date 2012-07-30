@@ -262,12 +262,12 @@ FunctionInfo* parent)
 int get_task(GpuEvent *new_task)
 {
 	map<GpuEvent*, int>::iterator it = TheGpuEventMap().begin();
-	
-	/*for (it; it != TheGpuEventMap().end(); it++)
+	/*	
+	for (it; it != TheGpuEventMap().end(); it++)
 	{
-		printf("tasks [%s] = %d.\n", it->first->printId(), it->second);
-	}*/
-	
+		printf("tasks [%s] = %d.\n", it->first->gpuIdentifier(), it->second);
+	}
+	*/	
 	int task = 0;
 	//map<GpuEvent*, int>::iterator it = TheGpuEventMap().find(new_task);
 	it = TheGpuEventMap().find(new_task);
@@ -275,11 +275,13 @@ int get_task(GpuEvent *new_task)
 	{
 		GpuEvent *create_task = new_task->getCopy();
 		task = Tau_RtsLayer_createThread();
+		//new task, record metadata.
+		create_task->recordMetadata(task);
 		TheGpuEventMap().insert( pair<GpuEvent *, int>(create_task, task));
 		number_of_tasks++;
 		Tau_set_thread_fake(task);
 		//TAU_CREATE_TASK(task);
-		//printf("new task: %s id: %d.\n", create_task->printId(), task);
+		//printf("new task: %s id: %d.\n", create_task->gpuIdentifier(), task);
 	} else
 	{
 		task = (*it).second;
@@ -304,6 +306,7 @@ void Tau_gpu_register_gpu_event(GpuEvent *id, double startTime, double endTime)
 {
 	//printf("Tau gpu name: %s.\n", id->getName());
 	int task = get_task(id);
+	//printf("registering gpu event, name: %s. task: %d.\n", id->getName(), task);
   
 	//printf("in TauGpu.cpp, registering gpu event.\n");
 	//printf("Tau gpu name: %s.\n", name);
@@ -445,7 +448,6 @@ void Tau_gpu_init(void)
 #endif
 
 }
-
 
 /*
 	finalization routine for TAU

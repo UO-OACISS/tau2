@@ -114,6 +114,8 @@ public:
 		num = number_of_gpu_events;
 		gA = gpu_event_attr;
 	}
+
+	void recordMetadata(int i) const {}
 	
 	/* CUDA Event are uniquely identified as the pair of two other ids:
 	 * context and call (API).

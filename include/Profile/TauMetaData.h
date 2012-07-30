@@ -25,8 +25,9 @@
 #include <map>
 using namespace std;
 map<string,string> &Tau_metadata_getMetaData();
-int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int counter);
-int Tau_metadata_writeMetaData(FILE *fp, int counter);
+int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int counter, int tid);
+int Tau_metadata_writeMetaData(FILE *fp, int counter, int tid);
+int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int tid);
 int Tau_metadata_writeMetaData(Tau_util_outputDevice *out);
 int Tau_metadata_fillMetaData();
 Tau_util_outputDevice *Tau_metadata_generateMergeBuffer();

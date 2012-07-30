@@ -245,9 +245,9 @@ extern "C" void *tau_pthread_function (void *arg) {
   } else {
     TAU_REGISTER_THREAD();
   }
-  TAU_START(".TAU application  ");
+  Tau_create_top_level_timer_if_necessary();
   ret = pack->start_routine(pack->arg);
-  TAU_STOP(".TAU application  ");
+  Tau_stop_top_level_timer_if_necessary();
   return ret; 
 }
 
