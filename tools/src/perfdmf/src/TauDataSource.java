@@ -242,9 +242,9 @@ public class TauDataSource extends DataSource {
                                 int end = inputString.indexOf("</metadata>") + 11;
                                 String metadata = inputString.substring(start, end);
                                 try {
-                                    MetaDataParser.parse(thread.getMetaData(), metadata);
+                                    thread.setMetaData(MetaDataParser.parse(metadata, thread));
                                 } catch (Exception exception) {
-                                    //exception.printStackTrace();
+                                    exception.printStackTrace();
                                     throw new CorruptFileException("Unable to parse metadata block");
                                 }
                             }

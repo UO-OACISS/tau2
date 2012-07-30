@@ -49,6 +49,7 @@ import javax.swing.event.MenuListener;
 
 import edu.uoregon.tau.common.ExternalTool;
 import edu.uoregon.tau.common.ImageExport;
+import edu.uoregon.tau.common.MetaDataMap;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.common.VectorExport;
 import edu.uoregon.tau.paraprof.barchart.BarChart;
@@ -896,7 +897,7 @@ public class ParaProfUtils {
                         params.metric = metricName;
                         params.nodeID = thread.getNodeID();
                         params.threadID = thread.getThreadID();
-                        Map<String,String> map = new TreeMap<String,String>();
+                        MetaDataMap map = new MetaDataMap();
                         map.putAll(thread.getMetaData());
                         map.putAll(ppTrial.getDataSource().getMetaData());
                         params.metadata = map;
@@ -1095,7 +1096,7 @@ public class ParaProfUtils {
         JMenuItem jMenuItem = new JMenuItem(text);
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                Map<String,String> map = new TreeMap<String,String>();
+                MetaDataMap map = new MetaDataMap();
                 map.putAll(thread.getMetaData());
                 map.putAll(ppTrial.getDataSource().getMetaData());
                 Frame w = new MapViewer("Metadata for " + thread, map);

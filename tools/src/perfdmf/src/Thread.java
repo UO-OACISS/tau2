@@ -2,6 +2,7 @@ package edu.uoregon.tau.perfdmf;
 
 import java.util.*;
 
+import edu.uoregon.tau.common.MetaDataMap;
 import edu.uoregon.tau.common.TauRuntimeException;
 
 /**
@@ -37,9 +38,17 @@ public class Thread implements Comparable<Thread> {
     public static final int STDDEV_ALL = -7;
 
     private List<Snapshot> snapshots = new ArrayList<Snapshot>();
-    private Map<String,String> metaData = new TreeMap<String,String>();
+//    private Map<String,String> metaData = new TreeMap<String,String>();
+    private MetaDataMap metaData = null;
 
-    private boolean firstSnapshotFound;
+    /**
+	 * @param metaData the metaData to set
+	 */
+	public void setMetaData(MetaDataMap metaData) {
+		this.metaData = metaData;
+	}
+
+	private boolean firstSnapshotFound;
 
     // two dimensional, snapshots x metrics
     private ThreadData[][] threadData;
@@ -278,9 +287,11 @@ public class Thread implements Comparable<Thread> {
         startMetric = 0;
         endMetric = getNumMetrics() - 1;
 
-        String startString = (String) getMetaData().get("Starting Timestamp");
-        if (startString != null) {
-            setStartTime(Long.parseLong(startString));
+        if (getMetaData() != null) {
+	        String startString = (String) getMetaData().get("Starting Timestamp");
+	        if (startString != null) {
+	            setStartTime(Long.parseLong(startString));
+	        }
         }
 
         for (int snapshot = startSnapshot; snapshot <= endSnapshot; snapshot++) {
@@ -345,7 +356,10 @@ public class Thread implements Comparable<Thread> {
         }
     }
 
-    public Map<String,String> getMetaData() {
+    public MetaDataMap getMetaData() {
+    	if (metaData == null) {
+    		metaData = new MetaDataMap();
+    	}
         return metaData;
     }
 

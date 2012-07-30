@@ -16,7 +16,10 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import edu.uoregon.tau.common.MetaDataMap;
 import edu.uoregon.tau.common.Utility;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataValue;
 
 /**
  * This class represents a data source.  After loading, data is availiable through the
@@ -96,8 +99,8 @@ public abstract class DataSource {
 
     protected volatile boolean reloading;
 
-    protected Map<String, String> metaData = new TreeMap<String, String>();
-    protected Map<String, String> uncommonMetaData = new TreeMap<String, String>();
+    protected MetaDataMap metaData = new MetaDataMap();
+    protected MetaDataMap uncommonMetaData = new MetaDataMap();
 
     private File metadataFile;
     private StringBuffer metadataString = new StringBuffer();
@@ -1524,11 +1527,11 @@ public abstract class DataSource {
         return reverseDataAvailable;
     }
 
-    public Map<String, String> getMetaData() {
+    public MetaDataMap getMetaData() {
         return metaData;
     }
 
-    public void setMetaData(Map<String, String> metaData) {
+    public void setMetaData(MetaDataMap metaData) {
         this.metaData = metaData;
     }
 
@@ -1557,8 +1560,8 @@ public abstract class DataSource {
 
                 // output the first thread of name / value pairs, like this:
                 // <attribute><name>xxx</name><value>yyy</value></attribute>
-                for (Iterator<String> it2 = metaData.keySet().iterator(); it2.hasNext();) {
-                    String name = it2.next();
+                for (Iterator<MetaDataKey> it2 = metaData.keySet().iterator(); it2.hasNext();) {
+                    String name = it2.next().name;
                     String value = metaData.get(name);
                     Element attribute = (Element) document.createElement("tau:attribute");
                     master.appendChild(attribute);
@@ -1586,8 +1589,8 @@ public abstract class DataSource {
 
                 boolean addit = false;
 
-                for (Iterator<String> it2 = thread.getMetaData().keySet().iterator(); it2.hasNext();) {
-                    String name = it2.next();
+                for (Iterator<MetaDataKey> it2 = thread.getMetaData().keySet().iterator(); it2.hasNext();) {
+                    String name = it2.next().name;
                     String value = (String) thread.getMetaData().get(name);
                     // if this name/value pair is not in the master, then 
                     // append it to the tree.
@@ -1624,7 +1627,7 @@ public abstract class DataSource {
             		// don't do this here! do it in the TAUdbDatabaseAPI.uploadMetadata() function
             	} else {
             		// put the metadata fields in the map
-            		MetaDataParser.parse(this.getMetaData(), data);
+            		MetaDataParser.parse(this.getMetaData(), data, null);
             		Document oldDocument = builder.parse(metadataFile);
             		// get the root elements, so we can move it
             		Element oldRoot = oldDocument.getDocumentElement();
@@ -1735,23 +1738,24 @@ public abstract class DataSource {
         }
 
         // First, add all name/value pairs from the first node (any node, really)
-        for (Iterator<String> it = node0.getMetaData().keySet().iterator(); it.hasNext();) {
-            String name = it.next();
-            String value = (String) node0.getMetaData().get(name);
-            metaData.put(name, value);
+//        metaData.putAll(node0.getMetaData());
+        for (Iterator<MetaDataKey> it = node0.getMetaData().keySet().iterator(); it.hasNext();) {
+            MetaDataKey key = it.next();
+            MetaDataValue value = node0.getMetaData().get(key);
+            metaData.put(key, value);
         }
 
         // Now iterate through all nodes and remove from the master set (metaData) any that differ
         for (Iterator<Thread> it = getAllThreads().iterator(); it.hasNext();) {
             Thread thread = it.next();
-            for (Iterator<String> it2 = thread.getMetaData().keySet().iterator(); it2.hasNext();) {
-                String name = it2.next();
-                String value = (String) thread.getMetaData().get(name);
+            for (Iterator<MetaDataKey> it2 = thread.getMetaData().keySet().iterator(); it2.hasNext();) {
+                MetaDataKey key = it2.next();
+                MetaDataValue value = thread.getMetaData().get(key);
 
-                String trialValue = metaData.get(name);
-                if (trialValue == null || !value.equals(trialValue)) {
-                    metaData.remove(name);
-                    uncommonMetaData.put(name, value);
+                MetaDataValue trialValue = metaData.get(key);
+                if (trialValue == null || !value.equals(trialValue) || key.timer_context != null) {
+                    metaData.remove(key);
+                    uncommonMetaData.put(key, value);
                 }
             }
         }
@@ -1759,9 +1763,9 @@ public abstract class DataSource {
         // Now remove the normalized name/value pairs from the thread-specific structures
         for (Iterator<Thread> it = getAllThreads().iterator(); it.hasNext();) {
             Thread thread = it.next();
-            for (Iterator<String> it2 = metaData.keySet().iterator(); it2.hasNext();) {
-                String name = it2.next();
-                thread.getMetaData().remove(name);
+            for (Iterator<MetaDataKey> it2 = metaData.keySet().iterator(); it2.hasNext();) {
+                MetaDataKey key = it2.next();
+                thread.getMetaData().remove(key);
             }
         }
 
@@ -1792,7 +1796,7 @@ public abstract class DataSource {
         return wellBehavedSnapshots;
     }
 
-    public Map<String, String> getUncommonMetaData() {
+    public MetaDataMap getUncommonMetaData() {
         return uncommonMetaData;
     }
 
