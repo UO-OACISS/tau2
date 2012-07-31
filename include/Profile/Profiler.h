@@ -41,6 +41,7 @@ pid_t tau_fork (void);
 /* pthread_create wrapper */
 
 #include <pthread.h>
+#ifndef TAU_MPC
 #undef pthread_create
 #define pthread_create(thread, attr, function, arg) \
         tau_pthread_create(thread, attr, function, arg)
@@ -52,6 +53,8 @@ pid_t tau_fork (void);
 #define pthread_barrier_wait(barrier) \
   tau_track_pthread_barrier_wait(barrier)
 #endif /* TAU_PTHREAD_BARRIER_AVAILABLE */
+
+#endif /* TAU_MPC */
 
 #ifdef __cplusplus
 extern "C" {
@@ -239,6 +242,7 @@ public:
 };
 }
 #ifdef TAU_LIBRARY_SOURCE
+// This could be dangerous.  We need to phase this out.
 using tau::Profiler;
 #endif /* TAU_LIBRARY_SOURCE */
 

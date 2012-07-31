@@ -44,6 +44,10 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #include <TauXML.h>
 #include <TauMetaData.h>
 
+// Moved from header file
+using namespace std;
+
+
 #ifdef TAU_BGL
 #include <rts.h>
 #include <bglpersonality.h>

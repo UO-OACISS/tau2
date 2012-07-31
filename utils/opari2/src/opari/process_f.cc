@@ -102,7 +102,7 @@ look_for( const string&              lowline,
 /**@brief Check if the line belonges to the header of a subroutine or function.
  *        After lines in the header, we ca insert our variable definitions.*/
 bool
-is_sub_unit_header( string& lowline, bool inHeader )
+is_sub_unit_header( string& lowline, bool inHeader, Language lang )
 {
     string      line;
     string      lline;
@@ -116,8 +116,10 @@ is_sub_unit_header( string& lowline, bool inHeader )
     static bool inContains   = false;
 
     size_t pos;
+
     pos = lowline.find_first_not_of( " \t" );
     /*string is empty*/
+
     if ( pos == string::npos )
     {
         pos = 0;
@@ -140,10 +142,16 @@ is_sub_unit_header( string& lowline, bool inHeader )
          ( line.find( "subroutine" ) == 0 )                            ||
          ( ( line.find( "function" ) == string::npos )   &&
            !inHeader                                &&
-           ( ( line.find( "=" ) >= line.find( "!" ) )             ||
+           ( ( line.find( "=" ) > line.find( "!" ) )             ||
              ( line.find( "=" ) > line.find( "kind" ) ) ) ) )
     {
         openbrackets = 0;
+    }
+
+    //Check if we are in Fortran77 and have a character in column 6
+    if ( ( lang & L_F77 ) && lowline[ 5 ] != ' ' )
+    {
+        continuation = true;
     }
 
     //Check if we enter a program block
@@ -247,6 +255,14 @@ is_sub_unit_header( string& lowline, bool inHeader )
             break;
         }
     }
+    /*
+       static bool continuation = false;
+       static int  openbrackets = 0;
+       static bool inProgram    = false;
+       static bool inModule     = false;
+       static bool inInterface  = false;
+       static bool inContains   = false;
+     */
     return result;
 }
 
@@ -533,7 +549,7 @@ test_and_insert_ompenddo( ostream &     os,
                 pragma += " ";
             }
             pragma   += "!$omp end do ";
-            newPragma = new OMPragmaF( infile, lineno, ppos + 6, pragma, pomp, a );
+            newPragma = new OMPragmaF( infile, lineno - 1, ppos + 6, pragma, pomp, a );
             process_pragma( newPragma, os );
             //	lineno++;
         }
@@ -551,7 +567,7 @@ test_and_insert_ompenddo( ostream &     os,
                 pragma += " ";
             }
             pragma   += "!$omp end parallel do ";
-            newPragma = new OMPragmaF( infile, lineno, ppos + 6, pragma, pomp, a );
+            newPragma = new OMPragmaF( infile, lineno - 1, ppos + 6, pragma, pomp, a );
             process_pragma( newPragma, os );
         }
     }
@@ -696,7 +712,6 @@ process_fortran( istream &   is,
 
     while ( getline( is, line ) )
     {
-        //                  std::cerr << line << '\n';
         /* workaround for bogus getline implementations */
         if ( line.size() == 1 && line[ 0 ] == '\0' )
         {
@@ -903,7 +918,7 @@ process_fortran( istream &   is,
             {
                 // really normal line
                 del_strings_and_comments( lowline, inString );
-                if ( is_sub_unit_header( lowline, inHeader ) )
+                if ( is_sub_unit_header( lowline, inHeader, lang ) )
                 {
                     inHeader = true;
                 }

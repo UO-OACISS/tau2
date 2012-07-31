@@ -10,9 +10,9 @@ struct {
 	int length;
 	} typedef metadata_struct;
 
-map<uint32_t, FunctionInfo*> functionInfoMap;
+std::map<uint32_t, FunctionInfo*> functionInfoMap;
 
-map<uint32_t, metadata_struct> deviceInfoMap;
+std::map<uint32_t, metadata_struct> deviceInfoMap;
 
 class CuptiGpuEvent : public GpuEvent
 {
@@ -86,7 +86,7 @@ public:
 
 	void recordMetadata(int id) const
 	{
-		map<uint32_t, metadata_struct>::iterator it = deviceInfoMap.find(deviceId);
+		std::map<uint32_t, metadata_struct>::iterator it = deviceInfoMap.find(deviceId);
 		if (it != deviceInfoMap.end())
 		{
 			GpuMetadata *gpu_metadata = it->second.list;
@@ -105,7 +105,7 @@ public:
 	FunctionInfo* getCallingSite() const
 	{
 		FunctionInfo *funcInfo = NULL;
-		map<uint32_t, FunctionInfo*>::iterator it = functionInfoMap.find(correlationId);
+		std::map<uint32_t, FunctionInfo*>::iterator it = functionInfoMap.find(correlationId);
 		if (it != functionInfoMap.end())
 		{
 			funcInfo = it->second;
