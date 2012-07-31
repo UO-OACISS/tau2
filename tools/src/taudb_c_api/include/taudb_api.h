@@ -54,6 +54,10 @@ extern TAUDB_THREAD* taudb_query_derived_threads(PGconn* connection, TAUDB_TRIAL
 extern TAUDB_METRIC* taudb_query_metrics(PGconn* connection, TAUDB_TRIAL* trial);
 extern TAUDB_METRIC* taudb_get_metric(TAUDB_METRIC* metrics, const char* name);
 
+// get the time_ranges for a trial
+extern TAUDB_TIME_RANGE* taudb_query_time_range(PGconn* connection, TAUDB_TRIAL* trial);
+extern TAUDB_TIME_RANGE* taudb_get_time_range(TAUDB_TIME_RANGE* time_ranges, const int id);
+
 // get the timers for a trial
 extern TAUDB_TIMER* taudb_query_timers(PGconn* connection, TAUDB_TRIAL* trial);
 extern TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(PGconn* connection, TAUDB_TRIAL* trial, TAUDB_TIMER* timer);
@@ -89,6 +93,7 @@ extern PERFDMF_EXPERIMENT*       perfdmf_create_experiments(int count);
 extern TAUDB_CONFIGURATION*      taudb_create_configuration();
 extern TAUDB_TRIAL*              taudb_create_trials(int count);
 extern TAUDB_METRIC*             taudb_create_metrics(int count);
+extern TAUDB_TIME_RANGE*         taudb_create_time_ranges(int count);
 extern TAUDB_THREAD*             taudb_create_threads(int count);
 extern TAUDB_SECONDARY_METADATA* taudb_create_secondary_metadata(int count);
 extern TAUDB_PRIMARY_METADATA*   taudb_create_primary_metadata(int count);

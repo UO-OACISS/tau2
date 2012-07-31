@@ -31,6 +31,11 @@ TAUDB_METRIC* taudb_create_metrics(int count){
  return metrics;
 }
 
+TAUDB_TIME_RANGE* taudb_create_time_ranges(int count){ 
+ TAUDB_TIME_RANGE* time_ranges = (TAUDB_TIME_RANGE*) (calloc (count, sizeof (TAUDB_TIME_RANGE)));
+ return time_ranges;
+}
+
 TAUDB_THREAD* taudb_create_threads(int count){ 
  TAUDB_THREAD* threads = (TAUDB_THREAD*) (calloc (count, sizeof (TAUDB_THREAD)));
  return threads;
