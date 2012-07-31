@@ -53,6 +53,7 @@ class PthreadLayer
 	static int UnLockEnv(void);	 // unlocks the tauEnvMutex
   private:
 	static pthread_key_t 	   tauPthreadId; // tid 
+// flag to protect against multiple wrappers wrapping pthread_create.
 	static pthread_mutex_t     tauThreadcountMutex; // to protect counter
 	static pthread_mutexattr_t tauThreadcountAttr; // count attribute 
 	static int 		   tauThreadCount;     // counter
@@ -61,6 +62,8 @@ class PthreadLayer
 	static pthread_mutexattr_t tauDBAttr;   // DB mutex attribute
 	
 };
+	
+	static pthread_key_t 	   tau_is_wrapping_pthread; 	
 #endif // PTHREADS 
 
 #endif // _PTHREADLAYER_H_

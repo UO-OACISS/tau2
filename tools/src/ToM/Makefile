@@ -3,7 +3,7 @@
 # If shared libraries are disabled (probably due to system restrictions)
 #NOSHARED#TOM_EXTRA_DEF=-DTOM_NO_SHARED #ENDIF#
 
-TAUROOT=
+TAUROOT=/home/users/scottb/tau2
 MRNET_ROOT=
 MRNET_INCLUDE=
 MRNET_LIBS=

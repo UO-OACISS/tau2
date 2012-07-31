@@ -99,6 +99,7 @@ int PthreadLayer::RegisterThread(void)
   pthread_setspecific(tauPthreadId, threadId);
 
   return 0;
+
 }
 
 
@@ -150,6 +151,10 @@ int PthreadLayer::InitializeThreadData(void) {
     initflag = 1;
     // Initialize the mutex
     pthread_key_create(&tauPthreadId, NULL);
+    pthread_key_create(&tau_is_wrapping_pthread, NULL);
+		int *flag = new int;
+		*flag = 0;
+		pthread_setspecific(tau_is_wrapping_pthread, flag);
     pthread_mutexattr_init(&tauThreadcountAttr);
     pthread_mutex_init(&tauThreadcountMutex, &tauThreadcountAttr);
     //cout << "PthreadLayer::Initialize() done! " <<endl;
@@ -238,28 +243,81 @@ typedef struct tau_pthread_pack {
 } tau_pthread_pack;
 
 extern "C" void *tau_pthread_function (void *arg) {
-  void *ret; 
+  void *ret;
   tau_pthread_pack *pack = (tau_pthread_pack*)arg;
+	/*
   if (pack->id != -1) {
     TAU_PROFILE_SET_THREAD(pack->id);
   } else {
-    TAU_REGISTER_THREAD();
   }
-  Tau_create_top_level_timer_if_necessary();
+	*/
+  
+	TAU_REGISTER_THREAD();
+  
+	Tau_create_top_level_timer_if_necessary();
   ret = pack->start_routine(pack->arg);
   Tau_stop_top_level_timer_if_necessary();
   return ret; 
 }
 
+extern "C" typedef int (*pthread_create_call_p) 
+	(pthread_t *threadp,
+	const pthread_attr_t *attr,
+	void *(*start_routine) (void *),
+	void *arg);
+
+#ifdef TAU_MPC
+#define tau_pthread_create_wrapper tau_sctk_user_thread_create_wrapper
+#endif /* TAU_MPC */
+extern "C" int tau_pthread_create_wrapper (pthread_create_call_p pthread_create_call,
+pthread_t *threadp, const pthread_attr_t *attr, void *(*start_routine) (void *), void *arg)
+{
+  tau_pthread_pack *pack = (tau_pthread_pack*) malloc (sizeof(tau_pthread_pack));
+  pack->start_routine = start_routine;
+  pack->arg = arg;
+
+	//check specific	
+  int *id = (int *) pthread_getspecific(tau_is_wrapping_pthread);
+
+	//already wrapped this pthread_create, just call pthread_create.
+	if (*id == 1)
+	{
+		return (*pthread_create_call)
+			(threadp, attr, start_routine, arg);
+	}
+	//have not wrapped pthread_create yet, do so.
+	else
+	{
+		//set specific
+		int *flag = new int;
+		*flag = 1;
+		pthread_setspecific(tau_is_wrapping_pthread, flag);
+
+		int retval = (*pthread_create_call)
+			(threadp, attr, tau_pthread_function, (void *) pack);
+
+		//done wrapping pthread_create, reset specific	
+		*flag = 0;
+		pthread_setspecific(tau_is_wrapping_pthread, flag);
+		
+		return retval;
+	}
+}
+
+
 extern "C" int tau_pthread_create (pthread_t * threadp,
 		    const pthread_attr_t *attr,
 		    void *(*start_routine) (void *),
 		    void *arg) {
+	/*
   tau_pthread_pack *pack = (tau_pthread_pack*) malloc (sizeof(tau_pthread_pack));
   pack->start_routine = start_routine;
   pack->arg = arg;
   pack->id = -1; // none specified
   return pthread_create(threadp, (pthread_attr_t*) attr, tau_pthread_function, (void*)pack);
+	*/
+     return tau_pthread_create_wrapper(pthread_create, threadp, attr, start_routine, arg);
+
 }
 
 extern "C" void tau_pthread_exit (void *value_ptr) {

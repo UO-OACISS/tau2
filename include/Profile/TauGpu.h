@@ -15,6 +15,7 @@ enum Memcpy { MemcpyHtoD = 0, MemcpyDtoH = 1, MemcpyDtoD = 2, MemcpyUnknown = 3 
 #ifdef __cplusplus
 
 #include <Profile/Profiler.h>
+#include <map>
 
 //typedef map<TauContextUserEvent*, TAU_EVENT_DATATYPE> TauGpuContextMap;
 
@@ -75,9 +76,9 @@ public:
 	//the trace files.
 	virtual x_uint64 id_p1() const = 0;
 	virtual x_uint64 id_p2() const = 0;
-
+	
 };
-
+	
 /************************************************************************
  * Performance Hooks. The following routines are hooks into the execution
  * of GPU applications. 

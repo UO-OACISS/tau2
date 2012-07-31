@@ -1,6 +1,6 @@
 # Set by TAU configure script
-CONFIG_ARCH=default
-TAU_PREFIX_INSTALL_DIR=
+CONFIG_ARCH=x86_64
+TAU_PREFIX_INSTALL_DIR=/home/users/scottb/tau2
 OTFINC=
 OTFLIB=
 

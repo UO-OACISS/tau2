@@ -9,7 +9,15 @@
 
 #define TAU_MAX_FUNCTIONNAME 200
 
-using namespace std;
+// Putting "using namespace" statements in header files can create ambiguity
+// between user-defined symbols and std symbols, creating unparsable code
+// or even changing the behavior of user codes.  This is also widely considered
+// to be bad practice.  Here's a code PDT can't parse because of this line:
+//   EX: #include <complex>
+//   EX: typedef double real;
+//
+//using namespace std;
+
 
 //The time in microseconds that the GPU is ahead of the CPU clock.
 double sync_offset = 0;
