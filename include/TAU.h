@@ -16,8 +16,8 @@
 #ifndef _TAU_H_
 #define _TAU_H_
 
-#define TAU_VERSION "2.21.2-git"
-#define TAU_MAKEFILE "default"
+#define TAU_VERSION "2.21.3-git"
+#define TAU_MAKEFILE "/home/users/scottb/tau2/x86_64/lib/Makefile.tau-cupti"
 
 
 #ifndef TAU_DISABLE_API

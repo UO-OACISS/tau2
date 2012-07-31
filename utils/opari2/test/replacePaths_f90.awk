@@ -64,6 +64,10 @@
         gsub("cb[0-9_]*", "cb000", $0)
         print $0
     }
+    else if(match($0,"LEN=")){
+        gsub("LEN=[0-9]*", "LEN=999", $0)
+        print $0
+    }
     else{
         print $0
     }

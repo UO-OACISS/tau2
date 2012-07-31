@@ -1,9 +1,12 @@
 #include <TAU.h>
 #include <Profile/TauBfd.h>
+#include <vector>
 
 #ifdef __GNUC__
 #include <cxxabi.h>
 #endif /* __GNUC__ */
+
+using namespace std;
 
 static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
 

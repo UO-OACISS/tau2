@@ -32,6 +32,12 @@
 #include <TauUtil.h>
 #include <TauXML.h>
 
+// Moved from header file
+#ifdef __cplusplus
+using namespace std;
+#endif
+
+
 extern "C" int TAUDECL Tau_RtsLayer_myThread();
 
 

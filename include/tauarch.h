@@ -1,3 +1,3 @@
-#define TAU_default
-#define TAU_ARCH "default"
-#define TAU_BIN_DIR "default"
+#define TAU_x86_64
+#define TAU_ARCH "x86_64"
+#define TAU_BIN_DIR "/home/users/scottb/tau2/x86_64/bin"

@@ -23,6 +23,10 @@
 #include <iomanip>
 #include <Profile/OpenMPLayer.h>
 #include <stdlib.h>
+#include <map>
+
+// Moved from header file
+using namespace std;
 
 void *main_ptr, *gpu_ptr;
 

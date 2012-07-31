@@ -7,6 +7,10 @@
 #include <sys/time.h>
 #include <queue>
 #include "TauGpuAdapterOpenCL.h"
+
+// Moved from header file
+using namespace std;
+
 #ifdef TAU_OPENCL_LOCKING
 #include <pthread.h>
 #else
