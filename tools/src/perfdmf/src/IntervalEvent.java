@@ -112,8 +112,13 @@ public class IntervalEvent {
          buf.append("timer t on tc.timer = t.id WHERE tc.parent is null ");
          buf.append("UNION ALL ");
          /* recursive part */
-         buf.append("SELECT d.id, d.parent, d.timer, concat (cp.name, ' => ', dt.name) FROM ");
-         buf.append(db.getSchemaPrefix());
+         buf.append("SELECT d.id, d.parent, d.timer, ");
+		        if (db.getDBType().compareTo("h2") == 0) {
+					buf.append("concat (cp.name, ' => ', dt.name) FROM ");
+		        } else {
+					buf.append("cp.name || ' => ' || dt.name FROM ");
+		        }
+				buf.append(db.getSchemaPrefix());
          buf.append("timer_callpath AS d JOIN cp on (d.parent = cp.id) JOIN ");
          buf.append(db.getSchemaPrefix());
          buf.append("timer dt on d.timer = dt.id) ");
@@ -290,21 +295,27 @@ public class IntervalEvent {
 			statement.executeBatch();
 			statement.close();
         } else {
-        	String query = "with recursive cp (id, parent, timer, name) as " +
+        	StringBuilder query = new StringBuilder();
+        	query.append("with recursive cp (id, parent, timer, name) as " +
         			"(SELECT tc.id, tc.parent, tc.timer, t.name FROM timer_callpath tc " + 
         			"INNER JOIN timer t on tc.timer = t.id WHERE tc.parent is null " +
-        			"UNION ALL SELECT d.id, d.parent, d.timer, concat (cp.name, ' => ', dt.name) " +
-        			"FROM timer_callpath AS d JOIN cp on (d.parent = cp.id) " +
+        			"UNION ALL SELECT d.id, d.parent, d.timer, ");
+		        if (db.getDBType().compareTo("h2") == 0) {
+					query.append("concat (cp.name, ' => ', dt.name) FROM ");
+		        } else {
+					query.append("cp.name || ' => ' || dt.name FROM ");
+		        }
+				query.append("timer_callpath AS d JOIN cp on (d.parent = cp.id) " +
         			"JOIN timer dt on d.timer = dt.id) " +
         			"SELECT distinct cp.id, cp.timer, cp.name, t.trial " +
         			"FROM cp join timer t on cp.timer = t.id " +
-        			"join timer_group g on t.id = g.timer WHERE trial = ? and ";
+        			"join timer_group g on t.id = g.timer WHERE trial = ? and ");
             if (db.getDBType().compareTo("oracle") == 0)
-                statement = db.prepareStatement(query + "dbms_lob.instr(cp.name, ?) > 0");
+                statement = db.prepareStatement(query.toString() + "dbms_lob.instr(cp.name, ?) > 0");
             else if (db.getDBType().compareTo("derby") == 0)
-                statement = db.prepareStatement(query + "cast(cp.name as varchar(4000)) = ?");
+                statement = db.prepareStatement(query.toString() + "cast(cp.name as varchar(4000)) = ?");
             else
-            	statement = db.prepareStatement(query + "cp.name = ?");
+            	statement = db.prepareStatement(query.toString() + "cp.name = ?");
 
             statement.setInt(1, newTrialID);
             statement.setString(2, function.getName());
