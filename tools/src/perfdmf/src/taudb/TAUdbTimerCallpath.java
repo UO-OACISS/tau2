@@ -125,9 +125,13 @@ public class TAUdbTimerCallpath {
 				"timer t on tc.timer = t.id where " +
 				"t.trial = " + trial.getId() + " and tc.parent is null " +
 				"UNION ALL " +
-				"SELECT d.id, d.parent, d.timer, " +
-				"concat (cp.name, ' => ', dt.name) FROM " +
-				db.getSchemaPrefix() +
+				"SELECT d.id, d.parent, d.timer, ");
+		        if (db.getDBType().compareTo("h2") == 0) {
+					sb.append("concat (cp.name, ' => ', dt.name) FROM ");
+		        } else {
+					sb.append("cp.name || ' => ' || dt.name FROM ");
+		        }
+				sb.append(db.getSchemaPrefix() +
 				"timer_callpath AS d JOIN cp ON (d.parent = cp.id) join " +
 				db.getSchemaPrefix() +
 				"timer dt on d.timer = dt.id) " +
