@@ -82,7 +82,7 @@ uint8_t *activityBuffer;
 CUpti_SubscriberHandle subscriber;
 
 int number_of_streams;
-vector<int> streamIds;
+std::vector<int> streamIds;
 
 void Tau_cupti_register_sync_event(CUcontext c, uint32_t stream);
 

@@ -1,4 +1,5 @@
 #include <Profile/TauGpu.h>
+#include <stdlib.h>
 
 extern "C" void Tau_metadata_task(char *name, const char* value, int tid);
 

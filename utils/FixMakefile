@@ -735,7 +735,12 @@ case $1 in
         cuptiinclude=`echo $1 | sed -e 's/^cuptiinclude=//' -e 's/#/ /g'`
       echo "NOTE: Using CUPTI for GPU analysis, source in $cuptiinclude"
 			echo "s@^TAU_CUPTI_INC=\(.*\)@TAU_CUPTI_INC=$cuptiinclude@g" >> $sedout
-		;;	
+		;;
+		cudalibrary=*)
+			cudalibrary=`echo $1 | sed -e 's/^cudalibrary=//' -e 's/#/ /g'`
+			echo "NOTE: Adding $cudalibrary when linking to the cuda driver library."
+			echo "s@^TAU_CUDA_LIBRARY=\(.*\)@TAU_CUDA_LIBRARY=$cudalibrary@g" >> $sedout
+		;;
 
 ###############################################################
 # Set the CONFIG_ARCH=<machine-name> in the Makefiles.
