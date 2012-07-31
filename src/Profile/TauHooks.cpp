@@ -18,6 +18,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <Profile/Profiler.h>
 
@@ -25,13 +26,10 @@
 #include <cxxabi.h>
 #endif /* __GNUC__ */
 
-#ifdef TAU_WINDOWS
-//#include <vector>
-//#include <string>
+#include <vector>
+#include <string>
 using namespace std;
-#endif
 
-#include <stdlib.h>
 
 //#define DEBUG_PROF
 //int debugPrint = 1;

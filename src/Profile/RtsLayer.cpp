@@ -25,9 +25,9 @@
 #ifdef TAU_AIX
 #include "Profile/aix.h" 
 #endif /* TAU_AIX */
-#ifdef FUJITSU
+#ifdef TAU_FUJITSU
 #include "Profile/fujitsu.h"
-#endif /* FUJITSU */
+#endif /* TAU_FUJITSU */
 #ifdef TAU_HITACHI
 #include "Profile/hitachi.h"
 #endif /* HITACHI */

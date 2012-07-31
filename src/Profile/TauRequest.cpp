@@ -6,7 +6,11 @@
 using namespace std;
 
 typedef std::map<MPI_Request,request_data*> request_map;
-request_map requests;
+static request_map & GetRequestMap()
+{
+	static request_map requests;
+	return requests;
+}
 
 
 extern "C"
@@ -15,12 +19,13 @@ request_data * TauAddRequestData(int status, int count, MPI_Datatype datatype,
         int persistent)
 {
 	int typesize;
+	request_map & requests = GetRequestMap();
 	request_data * rq = (request_data*)(void*)0;
 
 	if ((other != MPI_PROC_NULL) && 
-        (returnVal == MPI_SUCCESS) &&
-	    (requests.find(*request) != requests.end()))
-    {
+            (returnVal == MPI_SUCCESS) &&
+	    (requests.find(*request) == requests.end()))
+       {
 		rq = new request_data;
 		PMPI_Type_size(datatype, &typesize);	
 		rq->request = request;
@@ -40,6 +45,7 @@ request_data * TauAddRequestData(int status, int count, MPI_Datatype datatype,
 extern "C"
 request_data * TauGetRequestData(MPI_Request * request)
 {
+	request_map & requests = GetRequestMap();
 	request_map::iterator it = requests.find(*request);
 	if(it != requests.end()) {
 		return it->second;
@@ -52,6 +58,7 @@ request_data * TauGetRequestData(MPI_Request * request)
 extern "C"
 void TauDeleteRequestData(MPI_Request * request)
 {
+	request_map & requests = GetRequestMap();
 	request_map::iterator it = requests.find(*request);
 	if(it != requests.end()) {
 		delete it->second;

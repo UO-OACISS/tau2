@@ -1,5 +1,8 @@
 #include "Profile/CuptiLayer.h"
 
+// Moved from header file
+using namespace std;
+
 #include <sys/time.h>
 #include <tau_types.h>
 #if CUPTI_API_VERSION == 1

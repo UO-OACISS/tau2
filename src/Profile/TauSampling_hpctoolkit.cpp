@@ -6,6 +6,10 @@
 
 #include <TAU.h>
 
+// Moved from header file
+using namespace std;
+
+
 extern "C" {
   #include <unwind.h>
 }

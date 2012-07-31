@@ -33,16 +33,16 @@ int main() {
 
   l=0;
 {
-  int pomp_num_threads = omp_get_max_threads();
-  int pomp_if = 1;
+  int pomp2_num_threads = omp_get_max_threads();
+  int pomp2_if = 1;
   POMP2_Task_handle pomp2_old_task;
-    POMP2_Parallel_fork(&pomp2_region_1, pomp_if, pomp_num_threads, &pomp2_old_task, "82*regionType=parallelfor*sscl=test5.c:31:39*escl=test5.c:0:0*scheduleType=dynamic**" );
+  POMP2_Parallel_fork(&pomp2_region_1, pomp2_if, pomp2_num_threads, &pomp2_old_task, pomp2_ctc_1 );
 #line 31 "test5.c"
   #pragma omp parallel                        \
       private(i,j)                                \
-        POMP2_DLIST_00001 firstprivate(pomp2_old_task) if(pomp_if) num_threads(pomp_num_threads)
+        POMP2_DLIST_00001 firstprivate(pomp2_old_task) if(pomp2_if) num_threads(pomp2_num_threads)
 {   POMP2_Parallel_begin( &pomp2_region_1 );
-    { POMP2_For_enter( &pomp2_region_1, "82*regionType=parallelfor*sscl=test5.c:31:39*escl=test5.c:0:0*scheduleType=dynamic**" );
+{   POMP2_For_enter( &pomp2_region_1, pomp2_ctc_1  );
 #line 31 "test5.c"
   #pragma omp                                 \
       for                                \
@@ -67,20 +67,20 @@ int main() {
 #line 44 "test5.c"
 
 {
-  int pomp_num_threads = 2;
-  int pomp_if = (int)( k );
+  int pomp2_num_threads = 2;
+  int pomp2_if = (int)( k );
   POMP2_Task_handle pomp2_old_task;
-    POMP2_Parallel_fork(&pomp2_region_2, pomp_if, pomp_num_threads, &pomp2_old_task, "105*regionType=parallelsections*sscl=test5.c:45:45*escl=test5.c:0:0*hasIf=1*hasNumThreads=1*hasReduction=1**" );
+  POMP2_Parallel_fork(&pomp2_region_2, pomp2_if, pomp2_num_threads, &pomp2_old_task, pomp2_ctc_2 );
 #line 45 "test5.c"
-#pragma omp parallel                                              firstprivate(j) default(shared) copyin(t) reduction(+:l) POMP2_DLIST_00002 firstprivate(pomp2_old_task) if(pomp_if) num_threads(pomp_num_threads)
+#pragma omp parallel                                              firstprivate(j) default(shared) copyin(t) reduction(+:l) POMP2_DLIST_00002 firstprivate(pomp2_old_task) if(pomp2_if) num_threads(pomp2_num_threads)
 {   POMP2_Parallel_begin( &pomp2_region_2 );
-    { POMP2_Sections_enter( &pomp2_region_2, "105*regionType=parallelsections*sscl=test5.c:45:45*escl=test5.c:0:0*hasIf=1*hasNumThreads=1*hasReduction=1**" );
+{   POMP2_Sections_enter( &pomp2_region_2, pomp2_ctc_2  );
 #line 45 "test5.c"
 #pragma omp          sections                      lastprivate(i)                                                                            nowait
   {
 #line 47 "test5.c"
     #pragma omp section
-    { POMP2_Section_begin( &pomp2_region_2, "105*regionType=parallelsections*sscl=test5.c:45:45*escl=test5.c:0:0*hasIf=1*hasNumThreads=1*hasReduction=1**" );
+{   POMP2_Section_begin( &pomp2_region_2, pomp2_ctc_2  );
 #line 48 "test5.c"
     {
       printf("Section 1\n");
@@ -88,7 +88,7 @@ int main() {
   POMP2_Section_end( &pomp2_region_2 ); }
 #line 51 "test5.c"
     #pragma omp section
-    { POMP2_Section_begin( &pomp2_region_2, "105*regionType=parallelsections*sscl=test5.c:45:45*escl=test5.c:0:0*hasIf=1*hasNumThreads=1*hasReduction=1**" );
+{   POMP2_Section_begin( &pomp2_region_2, pomp2_ctc_2  );
 #line 52 "test5.c"
     {
       printf("Section 2\n");
@@ -96,7 +96,7 @@ int main() {
   POMP2_Section_end( &pomp2_region_2 ); }
 #line 55 "test5.c"
     #pragma omp section
-    { POMP2_Section_begin( &pomp2_region_2, "105*regionType=parallelsections*sscl=test5.c:45:45*escl=test5.c:0:0*hasIf=1*hasNumThreads=1*hasReduction=1**" );
+{   POMP2_Section_begin( &pomp2_region_2, pomp2_ctc_2  );
 #line 56 "test5.c"
     {
       printf("Section 3\n");

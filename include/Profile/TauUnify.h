@@ -55,7 +55,15 @@ Tau_unify_object_t *Tau_unify_getAtomicUnifier();
 #ifdef __cplusplus
 
 #include <sstream>
-using namespace std;
+
+// Putting "using namespace" statements in header files can create ambiguity
+// between user-defined symbols and std symbols, creating unparsable code
+// or even changing the behavior of user codes.  This is also widely considered
+// to be bad practice.  Here's a code PDT can't parse because of this line:
+//   EX: #include <complex>
+//   EX: typedef double real;
+//
+//using namespace std;
 
 /** EventLister interface class */
 class EventLister {

@@ -33,12 +33,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <omp.h>
+#include <string>
 #include <Profile/Profiler.h>
 #ifdef TAU_OPENMP
 #ifndef _OPENMP
 #define _OPENMP
 #endif /* _OPENMP */
 #endif /* TAU_OPENMP */
+using std::string;
 
 
 
@@ -290,7 +292,8 @@ void TauStartOpenMPRegionTimer(my_pomp2_region *r, int index)
    start the timer. */
 
   omp_set_lock(&tau_ompregdescr_lock);
-
+if(r == NULL)
+printf("TAU WARNING: a POMP2 Region was not initialized.  Something went wrong during the creation of pompregions.c\n");
   if (!r->data) {
 #ifdef TAU_OPENMP_PARTITION_REGION
     FunctionInfo **flist = new FunctionInfo*[NUM_OMP_TYPES];

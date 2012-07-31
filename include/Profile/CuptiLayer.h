@@ -10,7 +10,14 @@
 #include <map>
 #include <string>
 #include <vector>
-using namespace std;
+// Putting "using namespace" statements in header files can create ambiguity
+// between user-defined symbols and std symbols, creating unparsable code
+// or even changing the behavior of user codes.  This is also widely considered
+// to be bad practice.  Here's a code PDT can't parse because of this line:
+//   EX: #include <complex>
+//   EX: typedef double real;
+//
+//using namespace std;
 
 /* Specific errors from CUDA lib */
 #define CHECK_CU_ERROR(err, cufunc) \
@@ -39,11 +46,11 @@ public:
 	CUpti_EventDomainID domain;
 	CUpti_EventID event;
 
-	string device_name;
-	string domain_name;
-	string event_name;
-	string event_description;
-	string tag; // string presented to the user.
+	std::string device_name;
+	std::string domain_name;
+	std::string event_name;
+	std::string event_description;
+	std::string tag; // string presented to the user.
 
 	CuptiCounterEvent(int device_n, int domain_n, int event_n);
 
@@ -54,10 +61,10 @@ public:
 		
 };
 
-typedef map<std::string, CuptiCounterEvent*> counter_map_t;
-typedef vector<CuptiCounterEvent*> counter_vec_t;
-typedef map<std::string, CuptiCounterEvent*>::iterator counter_map_it; 
-typedef map<int, int> counter_id_map_t; 
+typedef std::map<std::string, CuptiCounterEvent*> counter_map_t;
+typedef std::vector<CuptiCounterEvent*> counter_vec_t;
+typedef std::map<std::string, CuptiCounterEvent*>::iterator counter_map_it;
+typedef std::map<int, int> counter_id_map_t;
 
 #ifdef DISABLE_CUPTI
 

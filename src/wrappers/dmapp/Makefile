@@ -1,4 +1,4 @@
-TAUROOT=
+TAUROOT=/home/users/scottb/tau2
 include $(TAUROOT)/include/Makefile
 CC=$(TAU_CC) 
 ARFLAGS=rcv 

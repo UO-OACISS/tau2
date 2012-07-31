@@ -3,6 +3,10 @@
 #include "Profile/TauSampling_unwind.h"
 #include <ucontext.h>
 
+// Moved from header file
+using namespace std;
+
+
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
 

@@ -66,9 +66,13 @@
     _uniqueId_nRegions = splitResult[2];
     if (!(_uniqueId_nRegions in regions))
     {
-      regions[_uniqueId_nRegions] = $i;
       split(_uniqueId_nRegions, tokens, "_");
-      nRegions += tokens[3];
+      number_regions = tokens[3];
+      if( number_regions != 0 )
+      {
+         regions[_uniqueId_nRegions] = $i;
+         nRegions += number_regions;
+      }
     }
   }
 }
