@@ -23,6 +23,7 @@ struct taudb_counter_value;
 struct taudb_counter;
 struct taudb_primary_metadata;
 struct taudb_secondary_metadata;
+struct taudb_time_range;
 struct taudb_thread;
 struct taudb_metric;
 struct taudb_trial;
@@ -74,6 +75,7 @@ typedef struct taudb_trial {
  int threads_per_context;    // max number of threads per process (can be less on individual processes)
  // array sizes
  int metric_count;           // how many metrics were collected. Usually 1 (Time), can be hardware counters.
+ int time_range_count;       // how many time_ranges were collected.
  int thread_count;           // TOTAL number of threads. helpful to know - can be less than nodes*threads_per_node.
  int derived_thread_count;   // number of derived threads. There should be 7, with negative thread indexes.
  int timer_count;            // number of timers. not all timers seen or collected on all threads.
@@ -87,6 +89,7 @@ typedef struct taudb_trial {
  // arrays of data for this trial
  struct taudb_metric* metrics;
  struct taudb_thread* threads;
+ struct taudb_time_range* time_ranges;
  struct taudb_timer* timers;
  struct taudb_timer_group* timer_groups;
  struct taudb_timer_callpath* timer_callpaths;
@@ -123,6 +126,19 @@ typedef struct taudb_metric {
  boolean derived;  // was this metric measured, or created by a post-processing tool?
  UT_hash_handle hh;
 } TAUDB_METRIC;
+
+/* Time ranges are ways to delimit the profile data within time ranges.
+   They are also useful for secondary metadata which is associated with
+   a specific call to a function. */
+
+typedef struct taudb_time_range {
+ int id; // database value, also key to hash
+ int iteration_start;
+ int iteration_end;
+ uint64_t time_start;
+ uint64_t time_end;  // was this metric measured, or created by a post-processing tool?
+ UT_hash_handle hh;
+} TAUDB_TIME_RANGE;
 
 /* timers are interval timers, capturing some interval value.  for callpath or
    phase profiles, the parent refers to the calling function or phase.
