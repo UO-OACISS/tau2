@@ -5,9 +5,13 @@
 
 int main (int argc, char** argv) {
    printf("Connecting...\n");
-   //char* config = "facets";
-   char* config = "taudb";
-   PGconn* connection = taudb_connect_config(config);
+   PGconn* connection = NULL;
+   if (argc >= 2) {
+     connection = taudb_connect_config(argv[1]);
+   } else {
+     fprintf(stderr, "Please specify a TAUdb config file.\n");
+     exit(1);
+   }
    printf("Checking connection...\n");
    taudb_check_connection(connection);
    printf("Testing queries...\n");

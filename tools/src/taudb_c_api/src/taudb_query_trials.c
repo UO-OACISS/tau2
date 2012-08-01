@@ -66,23 +66,25 @@ TAUDB_TRIAL* taudb_private_query_trials(PGconn* connection, boolean full, char* 
   for (i = 0; i < PQntuples(res); i++)
   {
     int metaIndex = 0;
-    trials[i].primary_metadata = taudb_create_primary_metadata(nFields-6);
+    //trials[i].primary_metadata = taudb_create_primary_metadata(nFields-6);
     /* the columns */
     for (j = 0; j < nFields; j++) {
       if (strcmp(PQfname(res, j), "id") == 0) {
         trials[i].id = atoi(PQgetvalue(res, i, j));
       } else if (strcmp(PQfname(res, j), "name") == 0) {
         trials[i].name = taudb_create_and_copy_string(PQgetvalue(res,i,j));
-      } else if (strcmp(PQfname(res, j), "collection_date") == 0) {
-        trials[i].collection_date = taudb_create_and_copy_string(PQgetvalue(res,i,j));
-      } else if (strcmp(PQfname(res, j), "date") == 0) {
-        trials[i].collection_date = taudb_create_and_copy_string(PQgetvalue(res,i,j));
+      //} else if (strcmp(PQfname(res, j), "date") == 0) {
+        //trials[i].collection_date = taudb_create_and_copy_string(PQgetvalue(res,i,j));
       } else if (strcmp(PQfname(res, j), "node_count") == 0) {
         trials[i].node_count = atoi(PQgetvalue(res, i, j));
       } else if (strcmp(PQfname(res, j), "contexts_per_node") == 0) {
         trials[i].contexts_per_node = atoi(PQgetvalue(res, i, j));
       } else if (strcmp(PQfname(res, j), "threads_per_context") == 0) {
         trials[i].threads_per_context = atoi(PQgetvalue(res, i, j));
+      } else if (strcmp(PQfname(res, j), "total_threads") == 0) {
+        trials[i].total_threads = atoi(PQgetvalue(res, i, j));
+      } else if (strcmp(PQfname(res, j), "data_source") == 0) {
+        trials[i].data_source = atoi(PQgetvalue(res, i, j));
       } else if (strcmp(PQfname(res, j), "xml_metadata") == 0) {
         // TODO we need to handle this!
         continue;
@@ -90,12 +92,13 @@ TAUDB_TRIAL* taudb_private_query_trials(PGconn* connection, boolean full, char* 
         // TODO we need to handle this!
         continue;
       } else {
-        trials[i].primary_metadata[metaIndex].name = taudb_create_and_copy_string(PQfname(res, j));
-        trials[i].primary_metadata[metaIndex].value = taudb_create_and_copy_string(PQgetvalue(res,i,j));
-        metaIndex++;
+        //trials[i].primary_metadata[metaIndex].name = taudb_create_and_copy_string(PQfname(res, j));
+        //trials[i].primary_metadata[metaIndex].value = taudb_create_and_copy_string(PQgetvalue(res,i,j));
+        //metaIndex++;
       }
     } 
-    trials[i].primary_metadata_count = metaIndex;
+    //trials[i].primary_metadata_count = metaIndex;
+    trials[i].primary_metadata_count = 0;
  }
 
   PQclear(res);

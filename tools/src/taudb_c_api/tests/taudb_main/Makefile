@@ -38,7 +38,7 @@ $(OBJS): $(HEADERS) Makefile ../../Makefile.inc
 
 test: $(TARGET)
 	echo " Testing : $(TARGET)..."
-	#time `./$(TARGET) >& $(TARGET).log`
+	#time `./$(TARGET) $(TEST_CONFIG) $(TEST_TRIAL_ID) >& $(TARGET).log`
 	time `./$(TARGET)`
 	echo " \n...Done. Contents of $(TARGET).log: \n"
 	cat $(TARGET).log
