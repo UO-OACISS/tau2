@@ -49,7 +49,6 @@ void taudb_delete_trials(TAUDB_TRIAL* trials, int count) {
     taudb_delete_threads(trials[i].threads, trials[i].thread_count);
     taudb_delete_metrics(trials[i].metrics, trials[i].metric_count);
     free(trials[i].name);
-    free(trials[i].collection_date);
   }
   free(trials);
 }

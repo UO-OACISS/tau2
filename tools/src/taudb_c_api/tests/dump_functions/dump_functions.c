@@ -15,7 +15,7 @@ void dump_trial(PGconn* connection, TAUDB_TRIAL* filter) {
    TAUDB_TRIAL* trial = taudb_query_trials(connection, FALSE, filter);
 
    TAUDB_TIMER* timer = taudb_query_main_timer(connection, trial);
-   printf("Trial name: '%s', date: %s, id: %d, main: '%s'\n\n", trial->name, trial->collection_date, trial->id, timer->name);
+   printf("Trial name: '%s', id: %d, main: '%s'\n\n", trial->name, trial->id, timer->name);
 }
 
 void dump_timers(PGconn* connection, TAUDB_TRIAL* filter) {

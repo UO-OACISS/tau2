@@ -68,11 +68,11 @@ typedef struct taudb_trial {
  // actual data from the database
  int id;
  char* name;
- char* collection_date;
  struct taudb_data_source* data_source;
  int node_count;             // i.e. number of processes.
  int contexts_per_node;      // rarely used, usually 1.
  int threads_per_context;    // max number of threads per process (can be less on individual processes)
+ int total_threads;          // total number of threads
  // array sizes
  int metric_count;           // how many metrics were collected. Usually 1 (Time), can be hardware counters.
  int time_range_count;       // how many time_ranges were collected.
