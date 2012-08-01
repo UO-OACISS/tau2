@@ -882,7 +882,6 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			}
 		}
 		// copy data from the given input stream to the table
-		System.out.println(buf.toString());
 		InputStream input = new ByteArrayInputStream(buf.toString().getBytes());
 		try {
 			copy.copyIn(
