@@ -110,6 +110,9 @@ public class IntervalEvent {
          buf.append("timer_callpath tc INNER JOIN ");
          buf.append(db.getSchemaPrefix());
          buf.append("timer t on tc.timer = t.id WHERE tc.parent is null ");
+         if (dataSession.getTrial() != null) {
+        	 buf.append("and t.trial = " + dataSession.getTrial().getID() + " ");
+         }
          buf.append("UNION ALL ");
          /* recursive part */
          buf.append("SELECT d.id, d.parent, d.timer, ");
@@ -121,7 +124,11 @@ public class IntervalEvent {
 				buf.append(db.getSchemaPrefix());
          buf.append("timer_callpath AS d JOIN cp on (d.parent = cp.id) JOIN ");
          buf.append(db.getSchemaPrefix());
-         buf.append("timer dt on d.timer = dt.id) ");
+         buf.append("timer dt on d.timer = dt.id ");
+         if (dataSession.getTrial() != null) {
+        	 buf.append("where dt.trial = " + dataSession.getTrial().getID() + " ");
+         }
+         buf.append(") ");
          buf.append("SELECT distinct cp.id, cp.timer, cp.name, t.short_name, t.source_file, t.line_number, ");
          buf.append("t.line_number_end, t.column_number, t.column_number_end, g.group_name, t.trial FROM cp join ");
          buf.append(db.getSchemaPrefix());
@@ -298,7 +305,8 @@ public class IntervalEvent {
         	StringBuilder query = new StringBuilder();
         	query.append("with recursive cp (id, parent, timer, name) as " +
         			"(SELECT tc.id, tc.parent, tc.timer, t.name FROM timer_callpath tc " + 
-        			"INNER JOIN timer t on tc.timer = t.id WHERE tc.parent is null " +
+        			"INNER JOIN timer t on tc.timer = t.id WHERE t.trial = " + 
+        			newTrialID + " and tc.parent is null " +
         			"UNION ALL SELECT d.id, d.parent, d.timer, ");
 		        if (db.getDBType().compareTo("h2") == 0) {
 					query.append("concat (cp.name, ' => ', dt.name) FROM ");
@@ -306,7 +314,8 @@ public class IntervalEvent {
 					query.append("cp.name || ' => ' || dt.name FROM ");
 		        }
 				query.append("timer_callpath AS d JOIN cp on (d.parent = cp.id) " +
-        			"JOIN timer dt on d.timer = dt.id) " +
+        			"JOIN timer dt on d.timer = dt.idi " +
+					"where dt.trial = " + newTrialID + " ) " +
         			"SELECT distinct cp.id, cp.timer, cp.name, t.trial " +
         			"FROM cp join timer t on cp.timer = t.id " +
         			"join timer_group g on t.id = g.timer WHERE trial = ? and ");

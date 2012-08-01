@@ -483,3 +483,10 @@ INSERT INTO taudb_view (parent, name, conjoin) VALUES (NULL, 'All Trials', 'and'
 INSERT INTO taudb_view (parent, name, conjoin) VALUES (NULL, 'Test View', 'and');
 INSERT INTO taudb_view_parameter (taudb_view, table_name, column_name, operator, value) VALUES (2, 'primary_metadata', 'Application', '=', 'application');
 
+/* Performance indexes! */
+create index trial_name_index on trial(name);
+create index timer_name_index on timer(name);
+CREATE INDEX timer_callpath_parent on timer_callpath(parent);
+CREATE INDEX thread_trial on thread(trial);
+CREATE INDEX timer_call_data_timer_callpath on timer_call_data(timer_callpath);
+
