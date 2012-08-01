@@ -535,10 +535,13 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 				db.getSchemaPrefix() +
 				"timer_callpath tc inner join " +
 				db.getSchemaPrefix() +
-				"timer t on tc.timer = t.id where " +
-				//"t.trial = ? and tc.parent is null " +
-				"tc.parent is null " +
-				"UNION ALL " +
+				"timer t on tc.timer = t.id where ");
+		        if (db.getDBType().compareTo("h2") == 0) {
+					sb.append("tc.parent is null ");
+		        } else {
+					sb.append("t.trial = ? and tc.parent is null ");
+		        }
+				sb.append("UNION ALL " +
 				"SELECT d.id, d.parent, d.timer, ");
         if (db.getDBType().compareTo("h2") == 0) {
 			sb.append("concat (cp.name, ' => ', dt.name) FROM ");
@@ -547,18 +550,23 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
         }
 			sb.append(db.getSchemaPrefix() +
 				"timer_callpath AS d JOIN cp ON (d.parent = cp.id) join " +
-				db.getSchemaPrefix() +
-//				"timer dt on d.timer = dt.id where dt.trial = ?) " +
-				"timer dt on d.timer = dt.id) " +
-				"SELECT distinct tcd.id, tcd.time_range, cp.name, h.node_rank, h.context_rank, h.thread_rank FROM cp join ");
+				db.getSchemaPrefix());
+	        if (db.getDBType().compareTo("h2") == 0) {
+				sb.append("timer dt on d.timer = dt.id) ");
+	        } else {
+	        	sb.append("timer dt on d.timer = dt.id where dt.trial = ?) ");
+	        }
+	        	sb.append("SELECT distinct tcd.id, tcd.time_range, cp.name, h.node_rank, h.context_rank, h.thread_rank FROM cp join ");
 		sb.append(db.getSchemaPrefix());
 		sb.append("timer_call_data tcd on tcd.timer_callpath = cp.id join ");
 		sb.append(db.getSchemaPrefix());
 		sb.append("thread h on tcd.thread = h.id where h.trial = ?");
 		PreparedStatement statement = db.prepareStatement(sb.toString());
 		statement.setInt(1, trialID);
-//		statement.setInt(2, trialID);
-//		statement.setInt(3, trialID);
+        if (db.getDBType().compareTo("h2") != 0) {
+        	statement.setInt(2, trialID);
+        	statement.setInt(3, trialID);
+        }
 		statement.execute();
 		ResultSet results = statement.getResultSet();
 
