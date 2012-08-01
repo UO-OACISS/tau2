@@ -850,7 +850,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 					TimerCallData tcd = new TimerCallData(function, thread, 0.0);
 					Integer timerCallDataID = timerCallDataMap.get(tcd);
 					FunctionProfile fp = thread.getFunctionProfile(function);
-					if (fp != null) { // only if this thread calls this function
+					if (fp != null && timerCallDataID != null) { // only if this thread calls this function
 						buf.append(timerCallDataID + "\t");
 						buf.append(metricID + "\t");
 
@@ -867,7 +867,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 					TimerCallData tcd = new TimerCallData(function, thread, 0.0);
 					Integer timerCallDataID = timerCallDataMap.get(tcd);
 					FunctionProfile fp = thread.getFunctionProfile(function);
-					if (fp != null) { // only if this thread calls this function
+					if (fp != null && timerCallDataID != null) { // only if this thread calls this function
 						buf.append(timerCallDataID + "\t");
 						buf.append(metricID + "\t");
 
@@ -882,6 +882,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			}
 		}
 		// copy data from the given input stream to the table
+		System.out.println(buf.toString());
 		InputStream input = new ByteArrayInputStream(buf.toString().getBytes());
 		try {
 			copy.copyIn(
