@@ -326,7 +326,7 @@ public class TAUdbTrial extends Trial {
 				
 	            statement = db.prepareStatement("SELECT sm.name, sm.value, t.node_rank, t.context_rank, t.thread_rank, timer_callpath, iteration_start, time_start parent FROM " + 
 	            		db.getSchemaPrefix() + "secondary_metadata sm left outer join " + db.getSchemaPrefix() + 
-	            		"thread t on sm.thread = t.id inner join " + db.getSchemaPrefix() + 
+	            		"thread t on sm.thread = t.id left outer join " + db.getSchemaPrefix() + 
 	            		"time_range tr on sm.time_range = tr.id WHERE sm.trial = ? order by t.node_rank, t.context_rank, t.thread_rank");
 	            statement.setInt(1, this.trialID);
 	            results = statement.executeQuery();
