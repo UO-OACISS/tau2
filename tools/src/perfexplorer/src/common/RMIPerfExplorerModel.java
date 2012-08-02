@@ -380,7 +380,7 @@ public class RMIPerfExplorerModel implements Serializable {
 			return tmpStr;
 		} else if (multiSelectionType == SelectionType.TRIAL) {
 			String tmpStr1 = (application == null) ? "" : application.getName();
-			String tmpStr2 = experiment.getName();
+			String tmpStr2 = (experiment == null) ? "" : experiment.getName();
 			String tmpStr = tmpStr1 + ":" + tmpStr2;
 			return tmpStr;
 		} else if (multiSelectionType == SelectionType.METRIC) {
@@ -783,11 +783,11 @@ public class RMIPerfExplorerModel implements Serializable {
      * @param dbType
      * @return
      */
-	public String getViewSelectionPath (boolean joinApp, boolean joinExp, String dbType) {
+	public String getViewSelectionPath (boolean joinApp, boolean joinExp, String dbType, int dbVersion) {
 		StringBuilder buf = new StringBuilder();
-		if (joinExp)
+		if (joinExp && dbVersion == 0)
 			buf.append(" inner join experiment e on t.experiment = e.id ");
-		if (joinApp)
+		if (joinApp && dbVersion == 0)
 			buf.append(" inner join application a on e.application = a.id ");
 		buf.append(" WHERE ");
 		boolean doAnd = false;
