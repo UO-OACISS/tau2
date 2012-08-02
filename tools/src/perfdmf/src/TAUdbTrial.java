@@ -110,16 +110,26 @@ public class TAUdbTrial extends Trial {
 		            Trial.getMetaData(db);
 
 		            // create a string to hit the database
-		            String buf = 
-		            "SELECT t.id, t.name, t.data_source, t.node_count, t.contexts_per_node, t.threads_per_context, t.total_threads, metadata.app, metadata.exp FROM " +
-		            "( SELECT DISTINCT A.value as app, E.value as exp, A.trial as trial " +
-		            "FROM " +
-		            db.getSchemaPrefix()+"primary_metadata A, " +
-		            		db.getSchemaPrefix()+"primary_metadata E " +
-		            "WHERE A.trial=E.trial AND A.name='Application' AND E.name='Experiment'" +
-		            ") as metadata LEFT JOIN " +
-		            db.getSchemaPrefix()+"trial as t ON metadata.trial=t.id  " + whereClause ;
-
+		            String buf = new String();
+		            if (whereClause.contains("application") || whereClause.contains("experiment")) {
+		            	buf = "SELECT t.id, t.name, t.data_source, t.node_count, t.contexts_per_node, t.threads_per_context, t.total_threads, metadata.app, metadata.exp FROM " +
+			            "( SELECT DISTINCT A.value as app, E.value as exp, A.trial as trial " +
+			            "FROM " +
+			            db.getSchemaPrefix()+"primary_metadata A, " +
+			            		db.getSchemaPrefix()+"primary_metadata E " +
+			            "WHERE A.trial=E.trial AND A.name='Application' AND E.name='Experiment'" +
+			            ") as metadata LEFT JOIN " +
+			            db.getSchemaPrefix()+"trial as t ON metadata.trial=t.id  " + whereClause ;
+		            } else {// faster query for selecting trials
+			            buf = "SELECT t.id, t.name, t.data_source, t.node_count, t.contexts_per_node, " +
+			            "t.threads_per_context, t.total_threads, m1.value as app, m2.value as exp " +
+			            "FROM " +
+			            db.getSchemaPrefix()+"trial t " +
+			            "left outer join " +
+			            db.getSchemaPrefix()+"primary_metadata m1 on t.id = m1.trial and m1.name = 'Application' "+
+			            "left outer join " +
+			            db.getSchemaPrefix()+"primary_metadata m2 on t.id = m2.trial and m2.name = 'Experiment' " + whereClause ;
+		            }
 		            Vector<Trial> trials = new Vector<Trial>();
 
 		            //System.out.println(buf.toString());
