@@ -238,8 +238,17 @@ public class TAUdbTrial extends Trial {
 		            statement.execute();
 		            
 		            statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
-		                    + "timer_value WHERE timer IN (SELECT id FROM " + db.getSchemaPrefix()
-		                    + "timer WHERE trial = ?)");
+		                    + "timer_value tv WHERE tv.timer_call_data IN (SELECT tcd.id FROM " + db.getSchemaPrefix()
+		                    + "timer_call_data tcd WHERE tcd.timer_callpath IN (SELECT tcp.id FROM " + db.getSchemaPrefix()
+		                    + "timer_callpath tcp WHERE tcp.timer IN (SELECT t.id FROM " + db.getSchemaPrefix()
+		                    + "timer t WHERE trial = ?)))");
+		            statement.setInt(1, trialID);
+		            statement.execute();
+		            
+		            statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
+		                    + "timer_call_data tcd WHERE tcd.timer_callpath IN (SELECT tcp.id FROM " + db.getSchemaPrefix()
+		                    + "timer_callpath tcp WHERE tcp.timer IN (SELECT t.id FROM " + db.getSchemaPrefix()
+		                    + "timer t WHERE trial = ?))");
 		            statement.setInt(1, trialID);
 		            statement.execute();
 		            
