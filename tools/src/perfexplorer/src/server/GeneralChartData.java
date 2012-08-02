@@ -229,10 +229,12 @@ public class GeneralChartData extends RMIGeneralChartData {
 				buf.append("inner join temp_xml_metadata ");
 				buf.append("on temp_event.trial = temp_xml_metadata.trial ");
 			}
-			buf.append("inner join experiment ");
-			buf.append("on temp_trial.experiment = experiment.id ");
-			buf.append("inner join application ");
-			buf.append("on experiment.application = application.id ");
+			if (db.getSchemaVersion() == 0) {
+				buf.append("inner join experiment ");
+				buf.append("on temp_trial.experiment = experiment.id ");
+				buf.append("inner join application ");
+				buf.append("on experiment.application = application.id ");
+			}
 			// no where clause (thanks to the temporary tables)
 			// group by clause, in case there are operations on the columns
 			//buf.append("group by " + fixClause(seriesName, db));
@@ -681,10 +683,12 @@ public class GeneralChartData extends RMIGeneralChartData {
 	private void createPopulateTempTrailTable(DB db) throws SQLException {
 		buf = buildCreateTableStatement("trial", "temp_trial", db, true, false);
 		buf.append("(select trial.* from trial ");
-		buf.append("inner join experiment ");
-		buf.append("on trial.experiment = experiment.id ");
-		buf.append("inner join application ");
-		buf.append("on experiment.application = application.id ");
+		if (db.getSchemaVersion() == 0) {
+			buf.append("inner join experiment ");
+			buf.append("on trial.experiment = experiment.id ");
+			buf.append("inner join application ");
+			buf.append("on experiment.application = application.id ");
+		}
 		buf.append("where ");
 		// add the where clause
 		List<Object> selections = model.getMultiSelection();
@@ -887,10 +891,12 @@ public class GeneralChartData extends RMIGeneralChartData {
 			// create and populate the temporary trial table
 			buf = buildCreateTableStatement("trial", "temp_trial", db, true, false);
 			buf.append("(select trial.* from trial ");
-			buf.append("inner join experiment ");
-			buf.append("on trial.experiment = experiment.id ");
-			buf.append("inner join application ");
-			buf.append("on experiment.application = application.id ");
+			if (db.getSchemaVersion() == 0) {
+				buf.append("inner join experiment ");
+				buf.append("on trial.experiment = experiment.id ");
+				buf.append("inner join application ");
+				buf.append("on experiment.application = application.id ");
+			}
 			buf.append("where ");
 			// add the where clause
 			List<Object> selections = model.getMultiSelection();

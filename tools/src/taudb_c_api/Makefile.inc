@@ -20,11 +20,11 @@ TEST_TRIAL_ID=4
 
 # POSTGRESQL_INCLUDES=-I/usr/local/pgsql/include
 # POSTGRESQL_LIBRARIES=-L/usr/local/pgsql/lib -lpq
-# POSTGRESQL_LIBRARIES=-lpq
+POSTGRESQL_LIBRARIES=-lpq
 # Mist
-PQDIR=/home/users/khuck/src/postgresql-8.4.9/src
-POSTGRESQL_INCLUDES=-I$(PQDIR)/interfaces/libpq -I$(PQDIR)/include
-POSTGRESQL_LIBRARIES=-L$(PQDIR)/interfaces/libpq -lpq -Wl,-rpath=$(PQDIR)/interfaces/libpq
+# PQDIR=/home/users/khuck/src/postgresql-8.4.9/src
+# POSTGRESQL_INCLUDES=-I$(PQDIR)/interfaces/libpq -I$(PQDIR)/include
+# POSTGRESQL_LIBRARIES=-L$(PQDIR)/interfaces/libpq -lpq -Wl,-rpath=$(PQDIR)/interfaces/libpq
 
 FLAGS=-g
 # FLAGS=-ggdb -Waddress -Warray-bounds -Wchar-subscripts -Wimplicit-int -Wimplicit-function-declaration -Wcomment -Wformat -Wmain -Wmissing-braces -Wnonnull -Wparentheses -Wpointer-sign -Wreturn-type -Wsequence-point -Wstrict-aliasing -Wstrict-overflow=1 -Wswitch -Wtrigraphs -Wuninitialized -Wunknown-pragmas -Wunused-function -Wunused-label -Wunused-value -Wvolatile-register-var -Wextra

@@ -16,6 +16,10 @@ import edu.uoregon.tau.common.MetaDataMap.MetaDataValue;
 import edu.uoregon.tau.perfdmf.database.DB;
 
 public class TAUdbTrial extends Trial {
+	public TAUdbTrial() {
+		super();
+	}
+	
 	public  int saveTrial(DB db) {
 		return TAUdbTrial.saveTrialTAUdb(db, trialID, dataSource, name);
 	}

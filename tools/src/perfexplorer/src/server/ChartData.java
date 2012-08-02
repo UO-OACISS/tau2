@@ -258,7 +258,7 @@ public class ChartData extends RMIChartData {
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
 			if (object instanceof View) {
-				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
+				buf.append(model.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
 			} else {
 				buf.append("where t.experiment in (");
 				
@@ -322,7 +322,7 @@ public class ChartData extends RMIChartData {
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
 			if (object instanceof View) {
-				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
+				buf.append(model.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
 			} else {
 				buf.append("inner join experiment e on t.experiment = e.id ");
 				buf.append("where t.experiment in (");
@@ -390,7 +390,7 @@ public class ChartData extends RMIChartData {
 			buf.append("inner join metric m on m.id = ims.metric ");
 			buf.append("inner join experiment e on t.experiment = e.id ");
 			if (object instanceof View) {
-				buf.append(model.getViewSelectionPath(true, false, db.getDBType()));
+				buf.append(model.getViewSelectionPath(true, false, db.getDBType(), db.getSchemaVersion()));
 			} else {
 				buf.append("where t.experiment in (");
 				List<Object> selections = model.getMultiSelection();
@@ -476,7 +476,7 @@ public class ChartData extends RMIChartData {
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
 			if (object instanceof View) {
-				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
+				buf.append(model.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
 			} else {
 			
 			buf.append("where t.experiment in (");
@@ -560,7 +560,7 @@ public class ChartData extends RMIChartData {
 				buf.append("working_table w on w.name = ie.name ");
 			}
 			if (object instanceof View) {
-				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
+				buf.append(model.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
 			} else {
 buf.append("where t.experiment in (");
     List<Object> selections = model.getMultiSelection();
@@ -622,7 +622,7 @@ buf.append("where t.experiment in (");
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
 			if (object instanceof View) {
-				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
+				buf.append(model.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
 			} else {
 				buf.append("inner join experiment e on t.experiment = e.id ");
 				buf.append("where t.experiment in (");
@@ -688,7 +688,7 @@ buf.append("where t.experiment in (");
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
 			if (object instanceof View) {
-				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
+				buf.append(model.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
 			} else {
 				buf.append("where t.experiment = ? ");
 			}
@@ -749,7 +749,7 @@ buf.append("where t.experiment in (");
 			buf.append("inner join metric m on m.id = ims.metric ");
 			statement = null;
 			if (object instanceof View) {
-				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
+				buf.append(model.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
 			} else {
 				buf.append("where t.experiment in (");
 				List<Object> selections = model.getMultiSelection();
@@ -886,7 +886,7 @@ buf.append("where t.experiment in (");
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
 			if (object instanceof View) {
-				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
+				buf.append(model.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
 			} else {
 		buf.append("where t.experiment in (");
     List<Object> selections = model.getMultiSelection();
@@ -967,7 +967,7 @@ buf.append("where t.experiment in (");
 			else
 				buf.append("working_table w on w.name = ie.name ");
 			if (object instanceof View) {
-				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
+				buf.append(model.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
 			} else {
     List<Object> selections = model.getMultiSelection();
 	buf.append("where t.experiment in (");
@@ -1019,7 +1019,7 @@ buf.append("where t.experiment in (");
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("inner join metric m on m.id = ims.metric ");
 			if (object instanceof View) {
-				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
+				buf.append(model.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
 			} else {
 	buf.append("where t.experiment in (");
     List<Object> selections = model.getMultiSelection();
