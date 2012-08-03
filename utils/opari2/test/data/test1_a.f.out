@@ -36,6 +36,8 @@
       end subroutine s0
       
       integer function f1(a)    !interface
+      implicit
+     >none
       include 'test1_a.f.opari.inc'
       integer :: a, result
       write (*,*) "function f1"
@@ -44,6 +46,8 @@
       end function f1
 
       recursive subroutine s1(a)
+      implicit
+     $none
       include 'test1_a.f.opari.inc'
       integer :: a
       write (*,*) "subroutine s1"

@@ -13,7 +13,7 @@
  
 TAUROOTDIR	= ../..
 
-include $(TAUROOTDIR)/include/Makefile
+include $(TAUROOTDIR)/x86_64/lib/Makefile.tau-cupti
 
 CXX		= $(TAU_CXX)
 
