@@ -15,7 +15,7 @@
 #**      Documentation   : See http://www.cs.uoregon.edu/research/tau       **
 #****************************************************************************
 
-TAUROOT=/home/users/scottb/tau2
+TAUROOT=
 include $(TAUROOT)/include/Makefile
 
 CXX = $(TAU_CXX)
@@ -24,8 +24,8 @@ CC  = $(TAU_CC)
 #This includes all profile options in $(PROFILEOPTS).
 
 
-BFDINCLUDE=-I/home/users/scottb/tau2/x86_64/binutils-2.20/include
-BFDLINK=-L/home/users/scottb/tau2/x86_64/binutils-2.20/lib -L/home/users/scottb/tau2/x86_64/binutils-2.20/lib64
+BFDINCLUDE=
+BFDLINK=
 
 #TAU_PERFSUITE#PERFSUITE_OPT=-DTAU_PERFSUITE #ENDIF#
 PERFSUITEINCLUDE=
@@ -120,8 +120,8 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 # Python Binding OBJECTS
 #############################################
 #PYTHON#PYTHON_O  = PyGroups.o PyExceptions.o PyDatabase.o PyBindings.o PyTimer.o PyTau.o PyMemory.o ctau_impl.o #ENDIF#
-TAU_CUPTI_COUNTER_OBJS=CuptiLayer40.o #ENDIF##CUPTI#
-TAU_CUPTI_COUNTER_OBJS=CuptiLayer.o #ENDIF##CUPTI_ACTIVITY#
+#CUPTI#TAU_CUPTI_COUNTER_OBJS=CuptiLayer40.o #ENDIF#
+#CUPTI_ACTIVITY#TAU_CUPTI_COUNTER_OBJS=CuptiLayer.o #ENDIF#
 
 
 OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauMemoryWrap.o \
@@ -142,15 +142,15 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauMemoryWrap.o \
 #       be built. The same is true for static builds of TAU if BFD is 
 #       not available.
 TAU_BFD_STATIC_O = TauBfdUnimplemented.o
-TAU_BFD_STATIC_O = TauBfd.o #ENDIF##TAU_BFD#
+#TAU_BFD#TAU_BFD_STATIC_O = TauBfd.o #ENDIF#
 TAU_BFD_SHARED_O = TauBfdUnimplemented.o
-TAU_BFD_SHARED_O = TauBfd.o #ENDIF##TAU_BFDSHAREDLINK#
+#TAU_BFDSHAREDLINK#TAU_BFD_SHARED_O = TauBfd.o #ENDIF#
 STATIC_OBJS   = $(TAU_BFD_STATIC_O) $(PGIACC_STATIC_O)
 SHARED_OBJS   = $(TAU_BFD_SHARED_O) $(PGIACC_O)
 #SICORTEX#SHARED_OBJS = TauBfd.o #ENDIF#
-SHARED_LIBS = $(BFDLINK) $(BFDLIBS) -liberty #ENDIF##TAU_BFDSHAREDLINK#
+#TAU_BFDSHAREDLINK#SHARED_LIBS = $(BFDLINK) $(BFDLIBS) -liberty #ENDIF#
 
-SHARED_LIBS = -L$(TAU_CUDA_INC)/../lib -L$(TAU_CUDA_INC)/../lib -L$(TAU_CUDA_INC)/../lib64 -lcudart -L$(TAU_CUPTI_INC)/../lib -L$(TAU_CUPTI_INC)/../lib64 -lcupti #ENDIF##CUPTI#
+#CUPTI#SHARED_LIBS = -L$(TAU_CUDA_INC)/../lib -L$(TAU_CUDA_INC)/../lib -L$(TAU_CUDA_INC)/../lib64 -lcudart -L$(TAU_CUPTI_INC)/../lib -L$(TAU_CUPTI_INC)/../lib64 -lcupti #ENDIF#
 
 PRINT	      = pr
 
@@ -206,7 +206,7 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 ##############################################
 # For making libTAU.so Dynamic Shared Object
 ##############################################
-AR_SHFLAGS 		= -shared  	#ENDIF##GNU#
+#GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SUNX86_64#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SOL2CC#AR_SHFLAGS 		= -G  	#ENDIF#
 #USE_PATHCC#AR_SHFLAGS 		= -shared -fPIC  	#ENDIF#
@@ -330,17 +330,17 @@ TAU_MPI_FOR_SHARED=$(TAU_MPI_WRAPPER)
 CRAY_PGI_HACK=
 #CRAYCNL#CRAY_PGI_HACK=$(INSTALLDEST)/libpgnod_prof.a #ENDIF#
 
-TAU_OPENCL_LIB=libTAU-OCLci.so #ENDIF##OPENCL#
-TAU_OPENCL_OBJS=TauGpuAdapterOpenCL.o TauGpu.o #ENDIF##OPENCL#
-TAU_OPENCL_DEF=-DTAU_GPU #ENDIF##OPENCL#
-TAU_OPENCL_DEP=TauGpuAdapterOpenCL.d #ENDIF##OPENCL#
-GPU_INSTALL+=$(TAU_SHAREDDIR)/$(TAU_OPENCL_LIB)  #ENDIF##OPENCL#
+#OPENCL#TAU_OPENCL_LIB=libTAU-OCLci.so #ENDIF#
+#OPENCL#TAU_OPENCL_OBJS=TauGpuAdapterOpenCL.o TauGpu.o #ENDIF#
+#OPENCL#TAU_OPENCL_DEF=-DTAU_GPU #ENDIF#
+#OPENCL#TAU_OPENCL_DEP=TauGpuAdapterOpenCL.d #ENDIF#
+#OPENCL#GPU_INSTALL+=$(TAU_SHAREDDIR)/$(TAU_OPENCL_LIB)  #ENDIF#
 
 
-TAU_CUDA_LIB=libTAU-CudaQP.so #ENDIF##CUDA#
-TAU_CUDA_OBJS=TauGpuAdapterCUDA.o TauGpu.o #ENDIF##CUDA#
-TAU_CUDA_DEF=-DTAU_GPU #ENDIF##CUDA#
-GPU_INSTALL+=$(TAU_SHAREDDIR)/$(TAU_CUDA_LIB)  #ENDIF##CUDA#
+#CUDA#TAU_CUDA_LIB=libTAU-CudaQP.so #ENDIF#
+#CUDA#TAU_CUDA_OBJS=TauGpuAdapterCUDA.o TauGpu.o #ENDIF#
+#CUDA#TAU_CUDA_DEF=-DTAU_GPU #ENDIF#
+#CUDA#GPU_INSTALL+=$(TAU_SHAREDDIR)/$(TAU_CUDA_LIB)  #ENDIF#
 
 #PYCUDA#TAU_PYCUDA_OBJS = TauGpuAdapterPyCuda.o #ENDIF#
 #PYCUDA#TAU_PYCUDA_LIB  = pytau_cuda.so #ENDIF#
@@ -348,15 +348,15 @@ GPU_INSTALL+=$(TAU_SHAREDDIR)/$(TAU_CUDA_LIB)  #ENDIF##CUDA#
 #PYCUDA#GPU_INSTALL+=$(INSTALLDEST)/$(TAU_CUDA_LIB)  #ENDIF#
 #PYCUDA#GPU_INSTALL+=$(INSTALLDEST)/$(TAU_PYCUDA_LIB)  #ENDIF#
 
-TAU_CUPTI_LIB=libTAU-CUpti.so #ENDIF##CUPTI#
-TAU_CUPTI_OBJS=TauGpuAdapterCupti40.o TauGpu.o #ENDIF##CUPTI#
-TAU_CUPTI_LIB=libTAU-CUpti.so #ENDIF##CUPTI_ACTIVITY#
-TAU_CUPTI_OBJS=TauGpuAdapterCupti.o TauGpu.o #ENDIF##CUPTI_ACTIVITY#
-TAU_CUPTI_ACTIVITY_LIB=libTAU-CUact.so #ENDIF##CUPTI_ACTIVITY#
-TAU_CUPTI_ACTIVITY_OBJS=CuptiActivity.o #ENDIF##CUPTI_ACTIVITY#
-GPU_INSTALL+=$(TAU_SHAREDDIR)/$(TAU_CUPTI_ACTIVITY_LIB)  #ENDIF##CUPTI_ACTIVITY#
-TAU_CUPTI_DEF=-DTAU_GPU #ENDIF##CUPTI#
-GPU_INSTALL+=$(TAU_SHAREDDIR)/$(TAU_CUPTI_LIB)  #ENDIF##CUPTI#
+#CUPTI#TAU_CUPTI_LIB=libTAU-CUpti.so #ENDIF#
+#CUPTI#TAU_CUPTI_OBJS=TauGpuAdapterCupti40.o TauGpu.o #ENDIF#
+#CUPTI_ACTIVITY#TAU_CUPTI_LIB=libTAU-CUpti.so #ENDIF#
+#CUPTI_ACTIVITY#TAU_CUPTI_OBJS=TauGpuAdapterCupti.o TauGpu.o #ENDIF#
+#CUPTI_ACTIVITY#TAU_CUPTI_ACTIVITY_LIB=libTAU-CUact.so #ENDIF#
+#CUPTI_ACTIVITY#TAU_CUPTI_ACTIVITY_OBJS=CuptiActivity.o #ENDIF#
+#CUPTI_ACTIVITY#GPU_INSTALL+=$(TAU_SHAREDDIR)/$(TAU_CUPTI_ACTIVITY_LIB)  #ENDIF#
+#CUPTI#TAU_CUPTI_DEF=-DTAU_GPU #ENDIF#
+#CUPTI#GPU_INSTALL+=$(TAU_SHAREDDIR)/$(TAU_CUPTI_LIB)  #ENDIF#
 
 CXXFLAGS+= $(TAU_CUDA_DEF) $(TAU_CUPTI_DEF) $(TAU_OPENCL_DEF)
 
