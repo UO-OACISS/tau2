@@ -234,6 +234,18 @@ public class TAUdbTrial extends Trial {
 		        
 //There's a chances that these might not work with MySQL, but after reading the manual 
 
+		        statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix() + "primary_metadata WHERE trial = ?");
+		        statement.setInt(1, trialID);
+		        statement.execute();
+		        
+		        statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix() + "time_range WHERE id in (select time_range from secondary_metadata where trial = ?)");
+		        statement.setInt(1, trialID);
+		        statement.execute();
+		        
+		        statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix() + "secondary_metadata WHERE trial = ?");
+		        statement.setInt(1, trialID);
+		        statement.execute();
+		        
 		            // Postgresql, oracle, and DB2?
 		            statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix()
 		                    + "counter_value WHERE counter in (SELECT id FROM " + db.getSchemaPrefix()
@@ -279,20 +291,10 @@ public class TAUdbTrial extends Trial {
 		            statement.setInt(1, trialID);
 		            statement.execute();
 		            
-		        		     
-
 		        statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix() + "counter WHERE trial = ?");
 		        statement.setInt(1, trialID);
 		        statement.execute();
 
-		        statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix() + "primary_metadata WHERE trial = ?");
-		        statement.setInt(1, trialID);
-		        statement.execute();
-		        
-		        statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix() + "secondary_metadata WHERE trial = ?");
-		        statement.setInt(1, trialID);
-		        statement.execute();
-		        
 		        statement = db.prepareStatement(" DELETE FROM " + db.getSchemaPrefix() + "thread WHERE trial = ?");
 		        statement.setInt(1, trialID);
 		        statement.execute();

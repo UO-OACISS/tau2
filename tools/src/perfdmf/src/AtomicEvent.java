@@ -93,7 +93,8 @@ public class AtomicEvent {
             while (resultSet.next() != false) {
                 int id = resultSet.getInt(1);
                 String name = resultSet.getString(3);
-                UserEvent ue = new UserEvent(name, id);
+            	UserEvent ue = datasource.getTrial().getDataSource().addUserEvent(name);
+//                UserEvent ue = new UserEvent(name, id);
             	/*
                 int parent = resultSet.getInt(4);
                 if (parent > 0) {
@@ -105,7 +106,7 @@ public class AtomicEvent {
                 	}
                 }
                	*/
-                atomicEvents.put(ue.getID(),ue);
+                atomicEvents.put(id,ue);
             }
             resultSet.close();
         } catch (Exception ex) {
