@@ -14,12 +14,12 @@
 #######################################################################
  
 ########### Automatically modified by the configure script ############
-CONFIG_ARCH=x86_64
+CONFIG_ARCH=default
 CONFIG_CC=gcc
 CONFIG_CXX=g++
 PCXX_OPT=-g
-USER_OPT=-g -O2 -DTAU_MAX_THREADS=32
-TAUROOT=/home/users/scottb/tau2
+USER_OPT=-g
+TAUROOT=
 #######################################################################
  
 include include/Makefile
@@ -79,7 +79,7 @@ TRACE2PROFILE=utils/trace2profile
 
 TAUPRELOAD=src/wrappers/taupreload
 TAUCUDA=src/wrappers/cuda
-TAU_CUPTI_AVAIL=utils/tau_cupti_avail #ENDIF##CUPTI#
+#CUPTI#TAU_CUPTI_AVAIL=utils/tau_cupti_avail #ENDIF#
 TAUOPENCL=src/wrappers/opencl
 MEMORYWRAPPER=src/wrappers/memory
 #GASNET#TAU_UPCC_WRAPPER=src/wrappers/upc/bupc/upcr #ENDIF#
