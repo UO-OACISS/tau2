@@ -28,20 +28,20 @@ program test2
 #line 25 "test2.f90"
   !$omp threadprivate(j)
 
-      pomp_num_threads = pomp2_lib_get_max_threads()
-      pomp_if = .true.
+      pomp2_num_threads = pomp2_lib_get_max_threads()
+      pomp2_if = .true.
       call POMP2_Parallel_fork(pomp2_region_1,&
-      pomp_if, pomp_num_threads, pomp2_old_task, &
-        "62*regionType=parallel*sscl=test2.f90:27:27*escl=test2.f90:0:0**" )
+      pomp2_if, pomp2_num_threads, pomp2_old_task, &
+      pomp2_ctc_1 )
 #line 27 "test2.f90"
   !$omp parallel &
   !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
-  !$omp if(pomp_if) num_threads(pomp_num_threads)
+  !$omp if(pomp2_if) num_threads(pomp2_num_threads)
       call POMP2_Parallel_begin(pomp2_region_1)
 #line 28 "test2.f90"
   write(*,*) "parallel"
       call POMP2_Do_enter(pomp2_region_2, &
-        "56*regionType=do*sscl=test2.f90:29:29*escl=test2.f90:0:0**" )
+     pomp2_ctc_2 )
 #line 29 "test2.f90"
   !$omp do
   do i=1,4
@@ -56,19 +56,19 @@ program test2
 #line 34 "test2.f90"
   
       call POMP2_Flush_enter(pomp2_region_3, &
-        "59*regionType=flush*sscl=test2.f90:35:35*escl=test2.f90:0:0**" )
+     pomp2_ctc_3 )
 #line 35 "test2.f90"
   !$omp flush(k)
       call POMP2_Flush_exit(pomp2_region_3)
 #line 36 "test2.f90"
   
       call POMP2_Do_enter(pomp2_region_4, &
-        "69*regionType=do*sscl=test2.f90:37:37*escl=test2.f90:0:0*hasOrdered=1**" )
+     pomp2_ctc_4 )
 #line 37 "test2.f90"
   !$omp do ordered
   do i=1,4
       call POMP2_Ordered_enter(pomp2_region_5, &
-        "61*regionType=ordered*sscl=test2.f90:39:39*escl=test2.f90:0:0**" )
+     pomp2_ctc_5 )
 #line 39 "test2.f90"
      !$omp ordered
       call POMP2_Ordered_begin(pomp2_region_5)
@@ -89,27 +89,27 @@ program test2
 #line 44 "test2.f90"
   
       call POMP2_Barrier_enter(pomp2_region_6, pomp2_old_task, &
-        "61*regionType=barrier*sscl=test2.f90:45:45*escl=test2.f90:0:0**" )
+     pomp2_ctc_6 )
 #line 45 "test2.f90"
   !$omp barrier
       call POMP2_Barrier_exit(pomp2_region_6, pomp2_old_task)
 #line 46 "test2.f90"
   
       call POMP2_Sections_enter(pomp2_region_7, &
-        "76*regionType=sections*sscl=test2.f90:47:47*escl=test2.f90:0:0*numSections=0**" )
+     pomp2_ctc_7 )
 #line 47 "test2.f90"
   !$omp sections
 #line 48 "test2.f90"
   !$omp section
       call POMP2_Section_begin(pomp2_region_7, &
-        "76*regionType=sections*sscl=test2.f90:47:47*escl=test2.f90:0:0*numSections=0**" )
+     pomp2_ctc_7 )
 #line 49 "test2.f90"
   write(*,*) "section 1"
       call POMP2_Section_end(pomp2_region_7)
 #line 50 "test2.f90"
   !$omp section
       call POMP2_Section_begin(pomp2_region_7, &
-        "76*regionType=sections*sscl=test2.f90:47:47*escl=test2.f90:0:0*numSections=1**" )
+     pomp2_ctc_7 )
 #line 51 "test2.f90"
   write(*,*) "section 2"
       call POMP2_Section_end(pomp2_region_7)
@@ -124,7 +124,7 @@ program test2
 #line 54 "test2.f90"
   !$omp master
       call POMP2_Master_begin(pomp2_region_8, &
-        "60*regionType=master*sscl=test2.f90:54:54*escl=test2.f90:0:0**" )
+     pomp2_ctc_8 )
 #line 55 "test2.f90"
   write(*,*) "master"
       call POMP2_Master_end(pomp2_region_8)
@@ -132,7 +132,7 @@ program test2
   !$omp end master
   
       call POMP2_Critical_enter(pomp2_region_9, &
-        "62*regionType=critical*sscl=test2.f90:58:58*escl=test2.f90:0:0**" )
+     pomp2_ctc_9 )
 #line 58 "test2.f90"
   !$omp critical
       call POMP2_Critical_begin(pomp2_region_9)
@@ -145,7 +145,7 @@ program test2
 #line 61 "test2.f90"
   
       call POMP2_Critical_enter(pomp2_region_10, &
-        "82*regionType=critical*sscl=test2.f90:62:62*escl=test2.f90:0:0*criticalName=foobar**" )
+     pomp2_ctc_10 )
 #line 62 "test2.f90"
   !$omp critical(foobar)
       call POMP2_Critical_begin(pomp2_region_10)
@@ -158,7 +158,7 @@ program test2
 #line 65 "test2.f90"
   
       call POMP2_Atomic_enter(pomp2_region_11, &
-        "60*regionType=atomic*sscl=test2.f90:66:66*escl=test2.f90:0:0**" )
+     pomp2_ctc_11 )
 #line 66 "test2.f90"
   !$omp atomic
   ! do this atomic
@@ -167,7 +167,7 @@ program test2
 #line 69 "test2.f90"
   
       call POMP2_Single_enter(pomp2_region_12, &
-        "60*regionType=single*sscl=test2.f90:70:70*escl=test2.f90:0:0**" )
+     pomp2_ctc_12 )
 #line 70 "test2.f90"
   !$omp single
       call POMP2_Single_begin(pomp2_region_12)
@@ -183,7 +183,7 @@ program test2
 #line 73 "test2.f90"
   
       call POMP2_Workshare_enter(pomp2_region_13, &
-        "63*regionType=workshare*sscl=test2.f90:74:74*escl=test2.f90:0:0**" )
+     pomp2_ctc_13 )
 #line 74 "test2.f90"
   !$omp workshare
   a = b + c
@@ -204,43 +204,43 @@ program test2
       call POMP2_Parallel_join(pomp2_region_1, pomp2_old_task)
 #line 79 "test2.f90"
 
-      pomp_num_threads = pomp2_lib_get_max_threads()
-      pomp_if = .true.
+      pomp2_num_threads = pomp2_lib_get_max_threads()
+      pomp2_if = .true.
       call POMP2_Parallel_fork(pomp2_region_14,&
-      pomp_if, pomp_num_threads, pomp2_old_task, &
-        "62*regionType=parallel*sscl=test2.f90:80:80*escl=test2.f90:0:0**" )
+      pomp2_if, pomp2_num_threads, pomp2_old_task, &
+      pomp2_ctc_14 )
 #line 80 "test2.f90"
   !$omp parallel &
   !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
-  !$omp if(pomp_if) num_threads(pomp_num_threads)
+  !$omp if(pomp2_if) num_threads(pomp2_num_threads)
       call POMP2_Parallel_begin(pomp2_region_14)
 #line 81 "test2.f90"
-      pomp_if = .true.
-      if (pomp_if) then
+      pomp2_if = .true.
+      if (pomp2_if) then
       call POMP2_Task_create_begin(pomp2_region_15, pomp2_new_task, &
       pomp2_old_task, &
-      pomp_if, &
-        "58*regionType=task*sscl=test2.f90:81:81*escl=test2.f90:0:0**" )
+      pomp2_if, &
+     pomp2_ctc_15 )
       end if
 #line 81 "test2.f90"
-  !$omp task if(pomp_if) firstprivate(pomp2_new_task, pomp_if)
-      if (pomp_if) then
+  !$omp task if(pomp2_if) firstprivate(pomp2_new_task, pomp2_if)
+      if (pomp2_if) then
       call POMP2_Task_begin(pomp2_region_15, pomp2_new_task)
       end if
 #line 82 "test2.f90"
   write(*,*) "task"
-      if (pomp_if) then
+      if (pomp2_if) then
       call POMP2_Task_end(pomp2_region_15)
       end if
 #line 83 "test2.f90"
   !$omp end task
-      if (pomp_if) then
+      if (pomp2_if) then
       call POMP2_Task_create_end(pomp2_region_15, pomp2_old_task)
       end if
 #line 84 "test2.f90"
 
       call POMP2_Taskwait_begin(pomp2_region_16, pomp2_old_task, &
-        "62*regionType=taskwait*sscl=test2.f90:85:85*escl=test2.f90:0:0**" )
+     pomp2_ctc_16 )
 #line 85 "test2.f90"
   !$omp taskwait
       call POMP2_Taskwait_end(pomp2_region_16, pomp2_old_task)
@@ -261,35 +261,35 @@ program test2
       subroutine POMP2_Init_regions_000()
          include 'test2.f90.opari.inc'
          call POMP2_Assign_handle( pomp2_region_1, &
-        "64*regionType=parallel*sscl=test2.f90:27:27*escl=test2.f90:78:78**" )
+         pomp2_ctc_1 )
          call POMP2_Assign_handle( pomp2_region_2, &
-        "58*regionType=do*sscl=test2.f90:29:29*escl=test2.f90:33:33**" )
+         pomp2_ctc_2 )
          call POMP2_Assign_handle( pomp2_region_3, &
-        "59*regionType=flush*sscl=test2.f90:35:35*escl=test2.f90:0:0**" )
+         pomp2_ctc_3 )
          call POMP2_Assign_handle( pomp2_region_4, &
-        "71*regionType=do*sscl=test2.f90:37:37*escl=test2.f90:43:43*hasOrdered=1**" )
+         pomp2_ctc_4 )
          call POMP2_Assign_handle( pomp2_region_5, &
-        "63*regionType=ordered*sscl=test2.f90:39:39*escl=test2.f90:41:41**" )
+         pomp2_ctc_5 )
          call POMP2_Assign_handle( pomp2_region_6, &
-        "61*regionType=barrier*sscl=test2.f90:45:45*escl=test2.f90:0:0**" )
+         pomp2_ctc_6 )
          call POMP2_Assign_handle( pomp2_region_7, &
-        "78*regionType=sections*sscl=test2.f90:47:47*escl=test2.f90:52:52*numSections=2**" )
+         pomp2_ctc_7 )
          call POMP2_Assign_handle( pomp2_region_8, &
-        "62*regionType=master*sscl=test2.f90:54:54*escl=test2.f90:56:56**" )
+         pomp2_ctc_8 )
          call POMP2_Assign_handle( pomp2_region_9, &
-        "64*regionType=critical*sscl=test2.f90:58:58*escl=test2.f90:60:60**" )
+         pomp2_ctc_9 )
          call POMP2_Assign_handle( pomp2_region_10, &
-        "84*regionType=critical*sscl=test2.f90:62:62*escl=test2.f90:64:64*criticalName=foobar**" )
+         pomp2_ctc_10 )
          call POMP2_Assign_handle( pomp2_region_11, &
-        "62*regionType=atomic*sscl=test2.f90:66:66*escl=test2.f90:68:68**" )
+         pomp2_ctc_11 )
          call POMP2_Assign_handle( pomp2_region_12, &
-        "62*regionType=single*sscl=test2.f90:70:70*escl=test2.f90:72:72**" )
+         pomp2_ctc_12 )
          call POMP2_Assign_handle( pomp2_region_13, &
-        "65*regionType=workshare*sscl=test2.f90:74:74*escl=test2.f90:76:76**" )
+         pomp2_ctc_13 )
          call POMP2_Assign_handle( pomp2_region_14, &
-        "64*regionType=parallel*sscl=test2.f90:80:80*escl=test2.f90:86:86**" )
+         pomp2_ctc_14 )
          call POMP2_Assign_handle( pomp2_region_15, &
-        "60*regionType=task*sscl=test2.f90:81:81*escl=test2.f90:83:83**" )
+         pomp2_ctc_15 )
          call POMP2_Assign_handle( pomp2_region_16, &
-        "62*regionType=taskwait*sscl=test2.f90:85:85*escl=test2.f90:0:0**" )
+         pomp2_ctc_16 )
       end

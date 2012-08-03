@@ -1,4 +1,4 @@
-TAUROOT=
+TAUROOT=/home/users/scottb/tau2
 include $(TAUROOT)/include/Makefile
 
 TAU_ARMCI_SHARED=libTAU-armciwrap$(TAU_SHLIBX)
