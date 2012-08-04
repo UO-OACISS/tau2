@@ -251,12 +251,23 @@ public class ChartData extends RMIChartData {
 			}
 			buf.append(tmpBuf.toString());
 			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
-			buf.append(" avg(ims.exclusive_percentage), max(ims.inclusive) ");  // this ensures we get the main routine?
-			buf.append("from interval_mean_summary ims ");
-			buf.append("inner join interval_event ie ");
-			buf.append("on ims.interval_event = ie.id ");
-			buf.append("inner join trial t on ie.trial = t.id ");
-			buf.append("inner join metric m on m.id = ims.metric ");
+			if (db.getSchemaVersion() == 0) {
+				buf.append(" avg(ims.exclusive_percentage), max(ims.inclusive) ");  // this ensures we get the main routine?
+				buf.append("from interval_mean_summary ims ");
+				buf.append("inner join interval_event ie ");
+				buf.append("on ims.interval_event = ie.id ");
+				buf.append("inner join trial t on ie.trial = t.id ");
+				buf.append("inner join metric m on m.id = ims.metric ");
+			} else {
+				buf.append(" avg(ims.exclusive_percent), max(ims.inclusive_value) ");  // this ensures we get the main routine?
+				buf.append("from timer_value ims ");
+				buf.append("inner join timer_call_data tcd on tcd.id = ims.timer_call_data ");
+				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id and tcp.parent is null ");
+				buf.append("inner join timer ie on tcp.timer = ie.id ");
+				buf.append("inner join trial t on ie.trial = t.id ");
+				buf.append("inner join thread h on h.trial = t.id and h.thread_index = -1 ");
+				buf.append("inner join metric m on m.id = ims.metric ");
+			}
 			if (object instanceof View) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
 			} else {
@@ -282,14 +293,19 @@ public class ChartData extends RMIChartData {
 			} else {
 				buf.append(" and m.name = ? ");
 			}
-			buf.append("and ims.exclusive_percentage > ");
-			buf.append(model.getXPercent());
-			buf.append(" and (ie.group_name is null or (");
-			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and ie.group_name not like '%TAU_PARAM%' ");
-			buf.append("and ie.group_name not like '%TAU_PHASE%')");
-			buf.append("or ims.exclusive_percentage = 100.0) ");
-			buf.append("group by ");
+			if (db.getSchemaVersion() == 0) {
+				buf.append("and ims.exclusive_percentage > ");
+				buf.append(model.getXPercent());
+				buf.append(" and (ie.group_name is null or (");
+				buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
+				buf.append("and ie.group_name not like '%TAU_PARAM%' ");
+				buf.append("and ie.group_name not like '%TAU_PHASE%')");
+				buf.append("or ims.exclusive_percentage = 100.0) ");
+			} else {
+				buf.append("and ims.exclusive_percent > ");
+				buf.append(model.getXPercent());
+			}
+			buf.append(" group by ");
 			buf.append(tmpBuf.toString());
 			buf.append(" t.node_count, t.contexts_per_node, t.threads_per_context ");
 			buf.append("order by 1, 2, 3, 4");
@@ -315,15 +331,29 @@ public class ChartData extends RMIChartData {
 					tmpBuf.append("e.name");
 				}
 			}
-			buf.append(" " + tmpBuf.toString() + ", ");
-			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
-			buf.append("max(ims.inclusive) from interval_mean_summary ims ");
-			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
-			buf.append("inner join trial t on ie.trial = t.id ");
-			buf.append("inner join metric m on m.id = ims.metric ");
+			
+			if (db.getSchemaVersion() == 0) {
+				buf.append(" " + tmpBuf.toString() + ", ");
+				buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
+				buf.append("max(ims.inclusive) from interval_mean_summary ims ");
+				buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
+				buf.append("inner join trial t on ie.trial = t.id ");
+				buf.append("inner join metric m on m.id = ims.metric ");
+			} else {
+				buf.append(" " + tmpBuf.toString() + ", ");
+				buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
+				buf.append("max(ims.inclusive_value) from timer_value ims ");
+				buf.append("inner join timer_call_data tcd on ims.timer_call_data = tcd.id ");
+				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id ");
+				buf.append("inner join timer ie on tcp.timer = ie.id ");
+				buf.append("inner join trial t on ie.trial = t.id ");
+				buf.append("inner join thread h on h.trial = t.id and h.thread_index = -1 ");
+				buf.append("inner join metric m on m.id = ims.metric ");
+			}
 			if (object instanceof View) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
 			} else {
+				// Assumption: this will only happen for PerfDMF schema version 0
 				buf.append("inner join experiment e on t.experiment = e.id ");
 				buf.append("where t.experiment in (");
      selections = model.getMultiSelection();
@@ -379,16 +409,26 @@ public class ChartData extends RMIChartData {
 			buf.append(tmpBuf.toString());
 			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
 
-			if (db.getDBType().compareTo("oracle") == 0) {
-				buf.append("sum(ims.excl) from interval_mean_summary ims ");
+			if (db.getSchemaVersion() == 0) {
+				if (db.getDBType().compareTo("oracle") == 0) {
+					buf.append("sum(ims.excl) from interval_mean_summary ims ");
+				} else {
+					buf.append("sum(ims.exclusive) from interval_mean_summary ims ");
+				}
+				buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
+				buf.append("inner join trial t on ie.trial = t.id ");
+				buf.append("inner join metric m on m.id = ims.metric ");
+				buf.append("inner join experiment e on t.experiment = e.id ");
 			} else {
-				buf.append("sum(ims.exclusive) from interval_mean_summary ims ");
+				buf.append("sum(ims.exclusive_value) from timer_value ims ");
+				buf.append("inner join timer_call_data tcd on ims.timer_call_data = tcd.id ");
+				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id  and tcp.parent is null ");
+				buf.append("inner join timer ie on tcp.timer = ie.id ");
+				buf.append("inner join timer_group tg on ie.id = tg.timer and tg.group_name = ? ");
+				buf.append("inner join trial t on ie.trial = t.id ");
+				buf.append("inner join metric m on m.id = ims.metric ");
 			}
-
-			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
-			buf.append("inner join trial t on ie.trial = t.id ");
-			buf.append("inner join metric m on m.id = ims.metric ");
-			buf.append("inner join experiment e on t.experiment = e.id ");
+			
 			if (object instanceof View) {
 				buf.append(model.getViewSelectionPath(true, false, db.getDBType(), db.getSchemaVersion()));
 			} else {
@@ -408,26 +448,41 @@ public class ChartData extends RMIChartData {
 				buf.append(") ");
 			}
 
-			if (db.getDBType().compareTo("db2") == 0) {
-				buf.append(" and m.name like ? ");
-				buf.append(" and ie.group_name like ? group by ");
+			if (db.getSchemaVersion() == 0) {
+				if (db.getDBType().compareTo("db2") == 0) {
+					buf.append(" and m.name like ? ");
+					buf.append(" and ie.group_name like ? group by ");
+				} else {
+					buf.append(" and m.name = ? ");
+					buf.append(" and ie.group_name = ? group by ");
+				}
+
+				buf.append(tmpBuf.toString());
+				buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
+				if (db.getDBType().compareTo("db2") == 0) {
+					buf.append("cast (ie.group_name as varchar(256)) order by 1, 2, 3, 4");
+				} else {
+					buf.append("ie.group_name order by 1, 2, 3, 4");
+				}
+				//PerfExplorerOutput.println(buf.toString());
+				statement = db.prepareStatement(buf.toString());
+				statement.setString(1, metricName);
+				statement.setString(2, groupName);
 			} else {
-				buf.append(" and m.name = ? ");
-				buf.append(" and ie.group_name = ? group by ");
+				buf.append(" and m.name = ? group by ");
+				buf.append(tmpBuf.toString());
+				buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
+				if (db.getDBType().compareTo("db2") == 0) {
+					buf.append("cast (tg.group_name as varchar(256)) order by 1, 2, 3, 4");
+				} else {
+					buf.append("tg.group_name order by 1, 2, 3, 4");
+				}
+				//PerfExplorerOutput.println(buf.toString());
+				statement = db.prepareStatement(buf.toString());
+				statement.setString(1, groupName);
+				statement.setString(2, metricName);
 			}
 
-			buf.append(tmpBuf.toString());
-			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
-			if (db.getDBType().compareTo("db2") == 0) {
-				buf.append("cast (ie.group_name as varchar(256)) order by 1, 2, 3, 4");
-			} else {
-				buf.append("ie.group_name order by 1, 2, 3, 4");
-			}
-
-			//PerfExplorerOutput.println(buf.toString());
-			statement = db.prepareStatement(buf.toString());
-			statement.setString(1, metricName);
-			statement.setString(2, groupName);
 		} else if ((dataType == ChartDataType.RELATIVE_EFFICIENCY_EVENTS) ||
 			(dataType == ChartDataType.CORRELATION_DATA)) {
 			// The user wants to know the relative efficiency or speedup
@@ -471,10 +526,21 @@ public class ChartData extends RMIChartData {
 			} else {
 				buf.append("ie.name ");
 			}
-			buf.append("from interval_mean_summary ims ");
-			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
-			buf.append("inner join trial t on ie.trial = t.id ");
-			buf.append("inner join metric m on m.id = ims.metric ");
+			
+			if (db.getSchemaVersion() == 0) {
+				buf.append("from interval_mean_summary ims ");
+				buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
+				buf.append("inner join trial t on ie.trial = t.id ");
+				buf.append("inner join metric m on m.id = ims.metric ");
+			} else {
+				buf.append("from timer_value ims ");
+				buf.append("inner join timer_call_data tcd on ims.timer_call_data = tcd.id ");
+				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id  and tcp.parent is null ");
+				buf.append("inner join timer ie on tcp.timer = ie.id ");
+				buf.append("inner join trial t on ie.trial = t.id ");
+				buf.append("inner join thread h on h.trial = t.id and h.thread_index = -1 ");
+				buf.append("inner join metric m on m.id = ims.metric ");
+			}
 			if (object instanceof View) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
 			} else {
@@ -499,14 +565,20 @@ public class ChartData extends RMIChartData {
 			} else {
 				buf.append(" and m.name = ? ");
 			}
-			buf.append("and ims.exclusive_percentage > ");
-			buf.append(model.getXPercent());
-			buf.append(" and (ie.group_name is null or (");
-			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and ie.group_name not like '%TAU_PARAM%' ");
-			buf.append("and ie.group_name not like '%TAU_PHASE%')");
-			buf.append("or ims.exclusive_percentage = 100.0) ");
-			buf.append("and ims.inclusive_percentage < 100.0) ");
+			if (db.getSchemaVersion() == 0) {
+				buf.append("and ims.exclusive_percentage > ");
+				buf.append(model.getXPercent());
+				buf.append(" and (ie.group_name is null or (");
+				buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
+				buf.append("and ie.group_name not like '%TAU_PARAM%' ");
+				buf.append("and ie.group_name not like '%TAU_PHASE%')");
+				buf.append("or ims.exclusive_percentage = 100.0) ");
+				buf.append("and ims.inclusive_percentage < 100.0) ");
+			} else {
+				buf.append("and ims.exclusive_percent > ");
+				buf.append(model.getXPercent());
+				buf.append("and ims.inclusive_percent < 100.0) ");				
+			}
 
 			//PerfExplorerOutput.println(buf.toString());
 			try {
@@ -535,22 +607,25 @@ public class ChartData extends RMIChartData {
 			buf.append(tmpBuf.toString());
 			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
 
-			if (dataType == ChartDataType.CORRELATION_DATA) {
+			if (db.getSchemaVersion() == 0) {
 				if (db.getDBType().compareTo("oracle") == 0) {
 					buf.append("avg(ims.excl) from interval_mean_summary ims ");
 				} else {
 					buf.append("avg(ims.exclusive) from interval_mean_summary ims ");
 				}
+				buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
+				buf.append("inner join trial t on ie.trial = t.id ");
+				buf.append("inner join metric m on m.id = ims.metric ");
 			} else {
-				if (db.getDBType().compareTo("oracle") == 0) {
-					buf.append("avg(ims.excl) from interval_mean_summary ims ");
-				} else {
-					buf.append("avg(ims.exclusive) from interval_mean_summary ims ");
-				}
+				buf.append("avg(ims.exclusive_value) from timer_value ims ");
+				buf.append("inner join timer_call_data tcd on ims.timer_call_data = tcd.id ");
+				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id  and tcp.parent is null ");
+				buf.append("inner join timer ie on tcp.timer = ie.id ");
+				buf.append("inner join trial t on ie.trial = t.id ");
+				buf.append("inner join thread h on h.trial = t.id and h.thread_index = -1 ");
+				buf.append("inner join metric m on m.id = ims.metric ");
 			}
-			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
-			buf.append("inner join trial t on ie.trial = t.id ");
-			buf.append("inner join metric m on m.id = ims.metric ");
+
 			buf.append("inner join ");
 			if (db.getDBType().compareTo("derby") == 0)
 				buf.append("SESSION.");
@@ -562,8 +637,8 @@ public class ChartData extends RMIChartData {
 			if (object instanceof View) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
 			} else {
-buf.append("where t.experiment in (");
-    List<Object> selections = model.getMultiSelection();
+				buf.append("where t.experiment in (");
+				List<Object> selections = model.getMultiSelection();
 				if (selections == null) {
 					// just one selection
 					buf.append (model.getExperiment().getID());
@@ -613,14 +688,25 @@ buf.append("where t.experiment in (");
 			}
 			buf.append(tmpBuf.toString());
 			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
-			if (db.getDBType().compareTo("oracle") == 0) {
-				buf.append("avg(ims.excl) from interval_mean_summary ims ");
+			if (db.getSchemaVersion() == 0) {
+				if (db.getDBType().compareTo("oracle") == 0) {
+					buf.append("avg(ims.excl) from interval_mean_summary ims ");
+				} else {
+					buf.append("avg(ims.exclusive) from interval_mean_summary ims ");
+				}
+				buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
+				buf.append("inner join trial t on ie.trial = t.id ");
+				buf.append("inner join metric m on m.id = ims.metric ");
 			} else {
-				buf.append("avg(ims.exclusive) from interval_mean_summary ims ");
+				buf.append("avg(ims.exclusive_value) from timer_value ims ");
+				buf.append("inner join timer_call_data tcd on ims.timer_call_data = tcd.id ");
+				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id  and tcp.parent is null ");
+				buf.append("inner join timer ie on tcp.timer = ie.id ");
+				buf.append("inner join trial t on ie.trial = t.id ");
+				buf.append("inner join thread h on h.trial = t.id and h.thread_index = -1 ");
+				buf.append("inner join metric m on m.id = ims.metric ");
 			}
-			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
-			buf.append("inner join trial t on ie.trial = t.id ");
-			buf.append("inner join metric m on m.id = ims.metric ");
+			
 			if (object instanceof View) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
 			} else {
@@ -681,12 +767,23 @@ buf.append("where t.experiment in (");
 					tmpBuf.append(" ie.name, ");
 				}
 			}
+			
 			buf.append(tmpBuf.toString());
 			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
-			buf.append("avg(ims.inclusive) from interval_mean_summary ims ");
-			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
-			buf.append("inner join trial t on ie.trial = t.id ");
-			buf.append("inner join metric m on m.id = ims.metric ");
+			if (db.getSchemaVersion() == 0) {
+				buf.append("avg(ims.inclusive) from interval_mean_summary ims ");
+				buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
+				buf.append("inner join trial t on ie.trial = t.id ");
+				buf.append("inner join metric m on m.id = ims.metric ");
+			} else {
+				buf.append("avg(ims.inclusive_value) from timer_value ims ");
+				buf.append("inner join timer_call_data tcd on ims.timer_call_data = tcd.id ");
+				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id  and tcp.parent is null ");
+				buf.append("inner join timer ie on tcp.timer = ie.id ");
+				buf.append("inner join trial t on ie.trial = t.id ");
+				buf.append("inner join thread h on h.trial = t.id and h.thread_index = -1 ");
+				buf.append("inner join metric m on m.id = ims.metric ");
+			}
 			if (object instanceof View) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
 			} else {
@@ -741,12 +838,23 @@ buf.append("where t.experiment in (");
 					tmpBuf.append(" ie.name, ");
 				}
 			}
+			
 			buf.append(tmpBuf.toString());
 			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
-			buf.append("avg(ims.inclusive_percentage) from interval_mean_summary ims ");
-			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
-			buf.append("inner join trial t on ie.trial = t.id ");
-			buf.append("inner join metric m on m.id = ims.metric ");
+			if(db.getSchemaVersion() == 0) {
+				buf.append("avg(ims.inclusive_percentage) from interval_mean_summary ims ");
+				buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
+				buf.append("inner join trial t on ie.trial = t.id ");
+				buf.append("inner join metric m on m.id = ims.metric ");
+			} else {
+				buf.append("avg(ims.inclusive_percent) from timer_value ims ");
+				buf.append("inner join timer_call_data tcd on ims.timer_call_data = tcd.id ");
+				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id  and tcp.parent is null ");
+				buf.append("inner join timer ie on tcp.timer = ie.id ");
+				buf.append("inner join trial t on ie.trial = t.id ");
+				buf.append("inner join thread h on h.trial = t.id and h.thread_index = -1 ");
+				buf.append("inner join metric m on m.id = ims.metric ");
+			}
 			statement = null;
 			if (object instanceof View) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
@@ -795,35 +903,55 @@ buf.append("where t.experiment in (");
 			} else {
 				buf.append("select ie.name, ");
 			}
-			buf.append("(p.node * t.contexts_per_node * ");
-			buf.append("t.threads_per_context) + (p.context * ");
-			buf.append("t.threads_per_context) + p.thread as thread, ");
-            
-            if (db.getDBType().compareTo("oracle") == 0) {
-                buf.append("p.excl ");
-            } else {
-                buf.append("p.exclusive ");
-            }
-
-			buf.append("from interval_event ie ");
-			buf.append("inner join interval_mean_summary s ");
-			buf.append("on ie.id = s.interval_event and s.exclusive_percentage > ");
-			buf.append(model.getXPercent());
-			buf.append(" left outer join interval_location_profile p ");
-			buf.append("on ie.id = p.interval_event ");
-			buf.append("and p.metric = s.metric ");
-			buf.append("inner join trial t on ie.trial = t.id ");
-			buf.append("where ie.trial = ? ");
-			buf.append("and p.metric = ? ");
-			buf.append("and (ie.group_name is null or (");
-			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and ie.group_name not like '%TAU_PARAM%' ");
-			buf.append("and ie.group_name not like '%TAU_PHASE%')");
-			buf.append("or s.exclusive_percentage = 100.0) ");
-			buf.append(" order by 1,2 ");
-			statement = db.prepareStatement(buf.toString());
-			statement.setInt(1, model.getTrial().getID());
-			statement.setInt(2, ((Metric)(model.getCurrentSelection())).getID());
+			if (db.getSchemaVersion() == 0) {
+				buf.append("(p.node * t.contexts_per_node * ");
+				buf.append("t.threads_per_context) + (p.context * ");
+				buf.append("t.threads_per_context) + p.thread as thread, ");
+	            if (db.getDBType().compareTo("oracle") == 0) {
+	                buf.append("p.excl ");
+	            } else {
+	                buf.append("p.exclusive ");
+	            }
+				buf.append("from interval_event ie ");
+				buf.append("inner join interval_mean_summary s ");
+				buf.append("on ie.id = s.interval_event and s.exclusive_percentage > ");
+				buf.append(model.getXPercent());
+				buf.append(" left outer join interval_location_profile p ");
+				buf.append("on ie.id = p.interval_event ");
+				buf.append("and p.metric = s.metric ");
+				buf.append("inner join trial t on ie.trial = t.id ");
+				buf.append("where ie.trial = ? ");
+				buf.append("and p.metric = ? ");
+				buf.append("and (ie.group_name is null or (");
+				buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
+				buf.append("and ie.group_name not like '%TAU_PARAM%' ");
+				buf.append("and ie.group_name not like '%TAU_PHASE%')");
+				buf.append("or s.exclusive_percentage = 100.0) ");
+				buf.append(" order by 1,2 ");
+				statement = db.prepareStatement(buf.toString());
+				statement.setInt(1, model.getTrial().getID());
+				statement.setInt(2, ((Metric)(model.getCurrentSelection())).getID());
+			} else {
+				buf.append(" thread.thread_index as thread, p.exclusive_value from timer ie "); 
+				buf.append("left outer join timer_callpath tcp on ie.id = tcp.timer and tcp.parent is null  ");
+				buf.append("left outer join timer_call_data tcd on tcd.timer_callpath = tcp.id  ");
+				buf.append("left outer join timer_value p on tcd.id = p.timer_call_data  ");
+				buf.append("inner join thread on tcd.thread = thread.id and thread.thread_index >= 0 ");
+				buf.append("inner join trial t on ie.trial = t.id where ie.trial = ? and p.metric = ? ");
+				buf.append("and ie.id in ( select ie.id from timer ie  ");
+				buf.append("left outer join timer_callpath tcp on ie.id = tcp.timer and tcp.parent is null  ");
+				buf.append("left outer join timer_call_data tcd on tcd.timer_callpath = tcp.id  ");
+				buf.append("left outer join timer_value p on tcd.id = p.timer_call_data  ");
+				buf.append("inner join thread on tcd.thread = thread.id and thread.thread_index = -1");
+				buf.append("inner join trial t on ie.trial = t.id where ie.trial = ? and p.metric = ? and p.exclusive_value > ? ");
+				buf.append(") order by 1,2  ");
+				statement = db.prepareStatement(buf.toString());
+				statement.setInt(1, model.getTrial().getID());
+				statement.setInt(2, ((Metric)(model.getCurrentSelection())).getID());
+				statement.setInt(3, model.getTrial().getID());
+				statement.setInt(4, ((Metric)(model.getCurrentSelection())).getID());
+				statement.setDouble(5, model.getXPercent());
+			}
 		} else if (dataType == ChartDataType.DISTRIBUTION_DATA) {
 			if (db.getDBType().compareTo("db2") == 0) {
 				buf.append("select cast (ie.name as varchar(256)), ");
@@ -833,16 +961,24 @@ buf.append("where t.experiment in (");
 			buf.append("(p.node * t.contexts_per_node * ");
 			buf.append("t.threads_per_context) + (p.context * ");
 			buf.append("t.threads_per_context) + p.thread as thread, ");
-            
-            if (db.getDBType().compareTo("oracle") == 0) {
-                buf.append("p.excl ");
-            } else {
-                buf.append("p.exclusive ");
-            }
 
-			buf.append("from interval_event ie ");
-			buf.append(" left outer join interval_location_profile p ");
-			buf.append("on ie.id = p.interval_event ");
+			if (db.getSchemaVersion() == 0) {
+	            if (db.getDBType().compareTo("oracle") == 0) {
+	                buf.append("p.excl ");
+	            } else {
+	                buf.append("p.exclusive ");
+	            }
+				buf.append("from interval_event ie ");
+				buf.append(" left outer join interval_location_profile p ");
+				buf.append("on ie.id = p.interval_event ");
+			} else {
+			    buf.append("p.exclusive_value ");
+	 			buf.append("from timer ie ");
+	 			buf.append("left outer join timer_callpath tcp on ie.id = tcd.timer ");
+	 			buf.append("left outer join timer_call_data tcd on tcp.id = tcd.timer_callpath ");
+				buf.append("left outer join timer_value p ");
+				buf.append("on tcd.id = p.timer_call_data ");
+			}
 			buf.append("inner join trial t on ie.trial = t.id ");
 			buf.append("where ie.trial = ? ");
 			buf.append("and p.metric = ? ");
@@ -875,16 +1011,27 @@ buf.append("where t.experiment in (");
 		PreparedStatement statement = null;
 		buf = new StringBuilder();
 		Object object = model.getCurrentSelection();
+		
 		if (dataType == ChartDataType.FRACTION_OF_TOTAL) {
 			// The user wants to know the runtime breakdown by events of one 
 			// experiment as the number of threads of execution increases.
 			buf.append("select ");
 			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
-			buf.append("sum(ims.exclusive_percentage) from interval_mean_summary ims ");
-			buf.append("inner join interval_event ie ");
-			buf.append("on ims.interval_event = ie.id ");
-			buf.append("inner join trial t on ie.trial = t.id ");
-			buf.append("inner join metric m on m.id = ims.metric ");
+			if (db.getSchemaVersion() == 0) {
+				buf.append("sum(ims.exclusive_percentage) from interval_mean_summary ims ");
+				buf.append("inner join interval_event ie ");
+				buf.append("on ims.interval_event = ie.id ");
+				buf.append("inner join trial t on ie.trial = t.id ");
+				buf.append("inner join metric m on m.id = ims.metric ");
+			} else {
+				buf.append("sum(ims.exclusive_percent) from timer_value ims ");
+				buf.append("inner join timer_call_data tcd on tcd.id = ims.timer_call_data ");
+				buf.append("inner join timer_callpath tcp on tcp.id = tcd.timer_callpath ");
+				buf.append("inner join timer ie on tcp.timer = ie.id ");
+				buf.append("inner join trial t on ie.trial = t.id ");
+				buf.append("inner join thread on tcd.thread = thread.id and thread.thread_index = -1 ");
+				buf.append("inner join metric m on m.id = ims.metric ");
+			}
 			if (object instanceof View) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
 			} else {
@@ -909,14 +1056,21 @@ buf.append("where t.experiment in (");
 			} else {
 				buf.append(" and m.name = ? ");
 			}
-			buf.append("and ims.inclusive_percentage < 100.0 ");
-			buf.append("and ims.exclusive_percentage < ");
-			buf.append(model.getXPercent());
-			buf.append(" and (ie.group_name is null or (");
-			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and ie.group_name not like '%TAU_PARAM%' ");
-			buf.append("and ie.group_name not like '%TAU_PHASE%')");
-			buf.append("or ims.exclusive_percentage = 100.0) group by t.node_count, t.contexts_per_node, t.threads_per_context order by 1, 2, 3");
+			if (db.getSchemaVersion() == 0) {
+				buf.append("and ims.inclusive_percentage < 100.0 ");
+				buf.append("and ims.exclusive_percentage < ");
+				buf.append(model.getXPercent());
+				buf.append(" and (ie.group_name is null or (");
+				buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
+				buf.append("and ie.group_name not like '%TAU_PARAM%' ");
+				buf.append("and ie.group_name not like '%TAU_PHASE%')");
+				buf.append("or ims.exclusive_percentage = 100.0) ");
+			} else {
+				buf.append("and ims.inclusive_percent < 100.0 ");
+				buf.append("and ims.exclusive_percent < ");
+				buf.append(model.getXPercent());
+			}
+			buf.append(" group by t.node_count, t.contexts_per_node, t.threads_per_context order by 1, 2, 3");
 			
 			//PerfExplorerOutput.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
@@ -926,39 +1080,29 @@ buf.append("where t.experiment in (");
 			// The user wants to know the relative efficiency or speedup
 			// of all the events for one experiment, as the number of threads of 
 			// execution increases.
-			/*
-			buf.append("insert into (select distinct ");
-			buf.append("ie.name from interval_mean_summary ims ");
-			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
-			buf.append("inner join trial t on ie.trial = t.id ");
-			buf.append("inner join metric m on m.id = ims.metric ");
-			if (object instanceof RMIView) {
-				buf.append(model.getViewSelectionPath(true, true, db.getDBType()));
-			} else {
-				buf.append("where t.experiment = ");
-				buf.append(model.getExperiment().getID() + " ");
-			}
-			buf.append(" and m.name = ? ");
-			buf.append("and ims.exclusive_percentage > ");
-			buf.append(model.getXPercent());
-			buf.append(" and (ie.group_name is null or (");
-			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and ie.group_name not like '%TAU_PARAM%' ");
-			buf.append("and ie.group_name not like '%TAU_PHASE%'));");
-			*/
-
+			
 			buf.append("select ");
 			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
 
-			if (db.getDBType().compareTo("oracle") == 0) {
-				buf.append("sum(ims.excl) from interval_mean_summary ims ");
+			if (db.getSchemaVersion() == 0) {
+				if (db.getDBType().compareTo("oracle") == 0) {
+					buf.append("sum(ims.excl) from interval_mean_summary ims ");
+				} else {
+					buf.append("sum(ims.exclusive) from interval_mean_summary ims ");
+				}
+				buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
+				buf.append("inner join trial t on ie.trial = t.id ");
+				buf.append("inner join metric m on m.id = ims.metric ");
 			} else {
-				buf.append("sum(ims.exclusive) from interval_mean_summary ims ");
+				buf.append("sum(ims.exclusive_value) from timer_value ims ");
+				buf.append("inner join timer_call_data tcd on ims.timer_call_data = tcd.id ");
+				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id  ");
+				buf.append("inner join timer ie on tcp.timer = ie.id ");
+				buf.append("inner join trial t on ie.trial = t.id ");
+				buf.append("inner join thread on tcd.thread = thread.id and thread.thread_index = -1 ");
+				buf.append("inner join metric m on m.id = ims.metric ");
 			}
 
-			buf.append("inner join interval_event ie on ims.interval_event = ie.id ");
-			buf.append("inner join trial t on ie.trial = t.id ");
-			buf.append("inner join metric m on m.id = ims.metric ");
 			buf.append("left outer join ");
 			if (db.getDBType().compareTo("derby") == 0)
 				buf.append("SESSION.");
@@ -969,8 +1113,8 @@ buf.append("where t.experiment in (");
 			if (object instanceof View) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
 			} else {
-    List<Object> selections = model.getMultiSelection();
-	buf.append("where t.experiment in (");
+				List<Object> selections = model.getMultiSelection();
+				buf.append("where t.experiment in (");
 				if (selections == null) {
 					// just one selection
 					buf.append (model.getExperiment().getID());
@@ -991,7 +1135,7 @@ buf.append("where t.experiment in (");
 				buf.append(" and m.name = ? ");
 			}
 			buf.append("and w.name is null ");
-			buf.append("group by t.node_count, t.contexts_per_node, t.threads_per_context order by 1, 2, 3 ");
+			buf.append(" group by t.node_count, t.contexts_per_node, t.threads_per_context order by 1, 2, 3 ");
 
 			//PerfExplorerOutput.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
@@ -1007,17 +1151,29 @@ buf.append("where t.experiment in (");
 		PreparedStatement statement = null;
 		buf = new StringBuilder();
 		Object object = model.getCurrentSelection();
+		
 		if (dataType == ChartDataType.CORRELATION_DATA) {
 			// The user wants to know the runtime breakdown by events of one 
 			// experiment as the number of threads of execution increases.
 			buf.append("select 'TOTAL', ");
 			buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
-			buf.append(" max(ims.inclusive) ");
-			buf.append("from interval_mean_summary ims ");
-			buf.append("inner join interval_event ie ");
-			buf.append("on ims.interval_event = ie.id ");
-			buf.append("inner join trial t on ie.trial = t.id ");
-			buf.append("inner join metric m on m.id = ims.metric ");
+			if (db.getSchemaVersion() == 0) {
+				buf.append(" max(ims.inclusive) ");
+				buf.append("from interval_mean_summary ims ");
+				buf.append("inner join interval_event ie ");
+				buf.append("on ims.interval_event = ie.id ");
+				buf.append("inner join trial t on ie.trial = t.id ");
+				buf.append("inner join metric m on m.id = ims.metric ");
+			} else {
+				buf.append(" max(ims.inclusive_value) ");
+				buf.append("from timer_value ims ");
+				buf.append("inner join timer_call_data tcd on ims.timer_call_data = tcd.id ");
+				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id  ");
+				buf.append("inner join timer ie on tcp.timer = ie.id ");
+				buf.append("inner join trial t on ie.trial = t.id ");
+				buf.append("inner join thread on tcd.thread = thread.id and thread.thread_index = -1 ");
+				buf.append("inner join metric m on m.id = ims.metric ");
+			}
 			if (object instanceof View) {
 				buf.append(model.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
 			} else {
@@ -1043,12 +1199,14 @@ buf.append("where t.experiment in (");
 			}
 			//buf.append("and ims.exclusive_percentage > ");
 			//buf.append(model.getXPercent());
-			buf.append(" and (ie.group_name is null or (");
-			buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
-			buf.append("and ie.group_name not like '%TAU_PARAM%' ");
-			buf.append("and ie.group_name not like '%TAU_PHASE%')");
-			buf.append("or ims.exclusive_percentage = 100.0) ");
-			buf.append("group by t.node_count, t.contexts_per_node, t.threads_per_context order by 2, 3, 4 ");
+			if (db.getSchemaVersion() == 0) {
+				buf.append(" and (ie.group_name is null or (");
+				buf.append("ie.group_name not like '%TAU_CALLPATH%' ");
+				buf.append("and ie.group_name not like '%TAU_PARAM%' ");
+				buf.append("and ie.group_name not like '%TAU_PHASE%')");
+				buf.append("or ims.exclusive_percentage = 100.0) ");
+			}
+			buf.append(" group by t.node_count, t.contexts_per_node, t.threads_per_context order by 2, 3, 4 ");
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
 		}
@@ -1071,8 +1229,13 @@ buf.append("where t.experiment in (");
 		PreparedStatement statement = null;
 		boolean returnValue = true;
 		try {
-			statement = db.prepareStatement ("select table_name, column_name from trial_view where parent = ?");
-			statement.setString(1, model.getViewID());
+			if (db.getSchemaVersion() == 0) {
+				statement = db.prepareStatement ("select table_name, column_name from trial_view where parent = ?");
+				statement.setString(1, model.getViewID());
+			} else {
+				statement = db.prepareStatement ("select 'Trial', name from taudb_view where parent = ?");
+				statement.setInt(1, Integer.parseInt(model.getViewID()));
+			}
 			ResultSet results = statement.executeQuery();
 			if (results.next() != false) {
 				String tableName = results.getString(1);

@@ -789,29 +789,16 @@ public class RMIPerfExplorerModel implements Serializable {
 			buf.append(" inner join experiment e on t.experiment = e.id ");
 		if (joinApp && dbVersion == 0)
 			buf.append(" inner join application a on e.application = a.id ");
-		buf.append(" WHERE ");
 		boolean doAnd = false;
 		for (int i = 0 ; i < fullPath.length ; i++) {
-			if (i > 0 && doAnd) {
-				buf.append (" AND ");
-			}
 			if (fullPath[i] instanceof View) {
 				View view = (View) fullPath[i];
-				if (dbType.equalsIgnoreCase("db2"))
-					buf.append(" cast (");
-				if (view.getField("table_name").equalsIgnoreCase("Application")) {
-					buf.append (" a.");
-				} else if (view.getField("table_name").equalsIgnoreCase("Experiment")) {
-					buf.append (" e.");
-				} else /*if (view.getField("table_name").equalsIgnoreCase("Trial")) */ {
-					buf.append (" t.");
+				if (i > 0 && doAnd) {
+					buf.append (" AND ");
+				} else if (view.getWhereClause(dbType) != ""){
+					buf.append(" WHERE ");
 				}
-				buf.append (view.getField("column_name"));
-				if (dbType.equalsIgnoreCase("db2"))
-					buf.append(" as varchar(256)) ");
-				buf.append (" " + view.getField("operator") + " '");
-				buf.append (view.getField("value"));
-				buf.append ("' ");
+				buf.append(view.getWhereClause(dbType));
 				doAnd = true;
 			}
 		}
