@@ -1082,6 +1082,15 @@ static int writeHeader(FILE *fp, int numFunc, char *metricName) {
 }
 
 
+extern "C" int TauProfiler_updateAllIntermediateStatistics() {
+  TAU_VERBOSE("Updating Intermediate Stats for All %d Threads\n", RtsLayer::getTotalThreads());
+  RtsLayer::LockDB();
+  for (int tid=0; tid<RtsLayer::getTotalThreads(); tid++) {
+    TauProfiler_updateIntermediateStatistics(tid);
+  }
+  RtsLayer::UnLockDB();
+}
+
 // This is a very important function, it must be called before writing function data to disk.
 // This function fills in the values that will be dumped to disk.
 // It performs the calculations for timers that are still on the stack.
@@ -1098,7 +1107,7 @@ int TauProfiler_updateIntermediateStatistics(int tid) {
     
     double *incltime = fi->getDumpInclusiveValues(tid);
     double *excltime = fi->getDumpExclusiveValues(tid);
-    
+
     // get currently stored values
     fi->getInclusiveValues(tid, incltime);
     fi->getExclusiveValues(tid, excltime);
@@ -1116,8 +1125,20 @@ int TauProfiler_updateIntermediateStatistics(int tid) {
       // 2) Add to the exclusive value by subtracting the start time of the current
       //    child (if there is one) from the duration of this function so far.
 
+
+      // *CWL* - This is stupid, but I do not currently have the time nor energy to
+      //         attempt to refactor, especially since both forms are actively used.
+      //         a) incltime and excltime are used for non-threaded programs
+      //            Note that getDump*Values(tid) grants pointer-access to the 
+      //            internal structures stored in the FunctionInfo object.
+      //         b) InclTime and ExclTime are used for threaded programs.
+      //            Note that InclTime and ExclTime allocates memory.
+      double *InclTime = fi->GetInclTime(tid);
+      double *ExclTime = fi->GetExclTime(tid);
+
       double inclusiveToAdd[TAU_MAX_COUNTERS];
       double prevStartTime[TAU_MAX_COUNTERS];
+
       for (c=0; c<Tau_Global_numCounters; c++) {
 	inclusiveToAdd[c] = 0;
 	prevStartTime[c] = 0;
@@ -1128,6 +1149,13 @@ int TauProfiler_updateIntermediateStatistics(int tid) {
 	  for (c=0; c<Tau_Global_numCounters; c++) {
 	    inclusiveToAdd[c] = currentTime[c] - current->getStartValues()[c]; 
 	    excltime[c] += inclusiveToAdd[c] - prevStartTime[c];
+	    // *CWL* - followup to the data structure insanity issues
+	    ExclTime[c] += inclusiveToAdd[c] - prevStartTime[c];
+	    /*
+	    TAU_VERBOSE("[%d] currentTime=%f startValue=%f prevStartTime=%f excltime=%f ExclTime=%f!\n", 
+			tid, currentTime[c], current->getStartValues()[c],
+			prevStartTime[c], excltime[c], ExclTime[c]);
+	    */
 	  }
 	}
 	for (c=0; c<Tau_Global_numCounters; c++) {
@@ -1136,7 +1164,15 @@ int TauProfiler_updateIntermediateStatistics(int tid) {
       }
       for (c=0; c<Tau_Global_numCounters; c++) {
 	incltime[c] += inclusiveToAdd[c];
+	// *CWL* - followup to the data structure insanity issues
+	InclTime[c] += inclusiveToAdd[c];
       }
+
+      // *CWL* - followup to the data structure insanity issues
+      fi->SetInclTime(tid, InclTime);
+      fi->SetExclTime(tid, ExclTime);
+      free(InclTime);
+      free(ExclTime);
     }
   }
   return 0;
@@ -1215,7 +1251,7 @@ static int writeProfile(FILE *fp, char *metricName, int tid, int metric,
   //writeHeader(fp, TheFunctionDB().size(), metricName);
   writeHeader(fp, trueCount, metricName);
   fprintf(fp, " # ");	
-  Tau_metadata_writeMetaData(fp, metric);
+  Tau_metadata_writeMetaData(fp, metric, tid);
   fprintf(fp, "\n");
   fflush(fp);
   writeFunctionData(fp, tid, metric, inFuncs, numFuncs);

@@ -82,7 +82,7 @@ extern "C" {
   void TAUDECL TauTraceSendMsgRemote(int type, int destination, int length, int remoteid);
   void TAUDECL TauTraceRecvMsgRemote(int type, int source, int length, int remoteid);
 #if TAU_GPU
-  void TAUDECL TauTraceOneSidedMsg(bool type, gpuId *gpu, int length, int thread);
+  void TAUDECL TauTraceOneSidedMsg(bool type, GpuEvent *gpu, int length, int thread);
 #endif // TAU_GPU
   /* Returns a pointer to the (singleton) offset info struct */
   TauTraceOffsetInfo* TAUDECL TheTauTraceOffsetInfo();
