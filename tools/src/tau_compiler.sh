@@ -36,6 +36,7 @@ declare -i isDebug=$FALSE
 
 declare -i opari=$FALSE
 declare -i opari2=$FALSE
+declare -i opari2init=$TRUE
 
 declare -i errorStatus=$FALSE
 declare -i gotoNextStep=$TRUE
@@ -55,6 +56,7 @@ declare -i trackUPCR=$FALSE
 declare -i linkOnly=$FALSE
 declare -i trackDMAPP=$FALSE
 declare -i trackPthread=$FALSE
+declare -i trackMPCThread=$FALSE
 declare -i revertOnError=$TRUE
 declare -i revertForced=$FALSE
 
@@ -99,6 +101,7 @@ printUsage () {
     echo -e "  -optTrackUPCR\t\t\tSpecify wrapping of UPC runtime calls at link time."
     echo -e "  -optTrackDMAPP\t\tSpecify wrapping of Cray DMAPP library calls at link time."
     echo -e "  -optTrackPthread\t\tSpecify wrapping of Pthread library calls at link time."
+    echo -e "  -optTrackMPCThread\t\tSpecify wrapping of MPC Thread library calls at link time."
     echo -e "  -optWrappersDir=\"\"\t\tSpecify the location of the link wrappers directory."
     echo -e "  -optPDBFile=\"\"\t\tSpecify PDB file for tau_instrumentor. Skips parsing stage."
     echo -e "  -optTau=\"\"\t\t\tSpecify options for tau_instrumentor"
@@ -117,6 +120,8 @@ printUsage () {
     echo -e "  -optLinkOnly\t\t\tDisable instrumentation during compilation, do link in the TAU libs"
     echo -e "  -optOpariDir=\"<path>\"\t\tSpecifies the location of the Opari directory"
     echo -e "  -optOpariOpts=\"\"\t\tSpecifies optional arguments to the Opari tool"
+    echo -e "  -optOpariNoInit=\"\"\t\t Do not initlize the POMP2 regions."
+    echo -e "  -optOpariLibs=\"\"\t\t Specifies the libraries that have POMP2 regions. (Overrides optOpariNoInit"
     echo -e "  -optOpariReset=\"\"\t\tResets options passed to the Opari tool"
     echo -e "  -optOpari2Tool=\"<path/opari2>\"\tSpecifies the location of the Opari tool"
     echo -e "  -optOpari2ConfigTool=\"<path/opari2-config>\"\tSpecifies the location of the Opari tool"
@@ -329,9 +334,15 @@ for arg in "$@" ; do
 			# use the wrapper link_options.tau during linking
 			;;
 		    
-				-optTrackPthread)
+		   -optTrackPthread)
 			trackPthread=$TRUE
 			echoIfDebug "NOTE: turning TrackPthread on"
+			# use the wrapper link_options.tau during linking
+			;;
+
+		   -optTrackMPCThread)
+			trackMPCThread=$TRUE
+			echoIfDebug "NOTE: turning TrackMPCThread on"
 			# use the wrapper link_options.tau during linking
 			;;
 
@@ -622,7 +633,14 @@ for arg in "$@" ; do
                         optOpariOpts="${arg#"-optOpariReset="}"
                         echoIfDebug "\tOpari Tool used: $optOpariOpts"
                         ;;
-
+                    -optOpariLibs*)
+                        optOpariLibs="${arg#"-optOpariLibs="}"
+                        echoIfDebug "\tOpari Init libs: $optOpariLibs"
+                        ;;
+                    -optOpariNoInit*)
+                        opari2init=$FALSE
+                        echoIfDebug "\tDon't make pompregions."
+                        ;;
 		    -optOpari2Dir*)
 			optOpari2Dir="${arg#"-optOpari2Dir="}"
 			echoIfDebug "\tOpari2 Dir used: $optOpari2Dir"
@@ -1224,14 +1242,22 @@ if [ $numFiles == 0 ]; then
     if [ "x$check_lc" = "x-lc" ] ; then
 	optLinking="$optLinking -lc"
     fi
-
+    if [ $opari2 == $TRUE -a "x$optOpariLibs" != "x" ]; then
+        opari2init=$TRUE
+    fi
 
     if [ $hasAnOutputFile == $FALSE ]; then
 	passedOutputFile="a.out"
 	linkCmd="$compilerSpecified $regularCmd $optLinking -o $passedOutputFile"
+    if [ $opari2 == $TRUE -a $passCount == 1 -a $opari2init == $TRUE ]; then
+	linkCmd="$compilerSpecified  $regularCmd pompregions.o $optLinking -o $passedOutputFile"
+    fi
     else
 	#Do not add -o, since the regular command has it already.
 	linkCmd="$compilerSpecified $regularCmd $optLinking"
+    if [ $opari2 == $TRUE -a $passCount == 1 -a $opari2init == $TRUE ]; then
+	linkCmd="$compilerSpecified  pompregions.o $regularCmd   $optLinking "
+    fi
     fi	
 
     if [ $opari == $TRUE ]; then
@@ -1242,18 +1268,13 @@ if [ $numFiles == 0 ]; then
     fi
    
     #If this is the second pass, opari was already used, don't do it again`
-    if [ $opari2 == $TRUE -a $passCount == 1 ]; then
+    if [ $opari2 == $TRUE -a $passCount == 1 -a  $opari2init == $TRUE  ]; then
         evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
-      
-        #cmdCreatePompRegions="${NM} ${listOfObjectFiles} | ${GREP} -i POMP2_Init_regions | ${AWK} -f ${AWK_SCRIPT} > pompregions.c"
-
-cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${listOfObjectFiles} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_regions |  `${optOpari2ConfigTool} --awk-cmd` -f `${optOpari2ConfigTool} --awk-script` > pompregions.c"
-
-
+        cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${listOfObjectFiles} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_regions |  `${optOpari2ConfigTool} --awk-cmd` -f `${optOpari2ConfigTool} --awk-script` > pompregions.c"
         evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
         cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
         evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
-        linkCmd="$linkCmd pompregions.o"
+        #linkCmd="$linkCmd pompregions.o"
     fi
 
 
@@ -1269,8 +1290,13 @@ cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${listOfObjectFiles} | `${op
       echoIfDebug "Linking command is $linkCmd "
     fi
     
-		if [ $trackPthread == $TRUE -a -r $optWrappersDir/pthread_wrapper/link_options.tau ] ; then 
+    if [ $trackPthread == $TRUE -a -r $optWrappersDir/pthread_wrapper/link_options.tau ] ; then 
       linkCmd="$linkCmd `cat $optWrappersDir/pthread_wrapper/link_options.tau`"
+      echoIfDebug "Linking command is $linkCmd "
+    fi
+
+    if [ $trackMPCThread == $TRUE -a -r $optWrappersDir/mpcthread_wrapper/link_options.tau ] ; then 
+      linkCmd="$linkCmd `cat $optWrappersDir/mpcthread_wrapper/link_options.tau`"
       echoIfDebug "Linking command is $linkCmd "
     fi
 
@@ -1746,15 +1772,19 @@ if [ $gotoNextStep == $TRUE ]; then
 	    evalWithDebugMessage "$cmdCompileOpariTab" "Compiling opari.tab.c"
 	    objectFilesForLinking="$objectFilesForLinking opari.tab.o"
 	fi
-	if [ $opari2 == $TRUE ]; then
+
+    if [ $opari2 == $TRUE -a "x$optOpariLibs" != "x" ]; then
+        opari2init=$TRUE
+    fi
+	if [ $opari2 == $TRUE -a $opari2init == $TRUE ]; then
             evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
       
-cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_regions |  `${optOpari2ConfigTool} --awk-cmd` -f `${optOpari2ConfigTool} --awk-script` > pompregions.c"
+cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_regions |  `${optOpari2ConfigTool} --awk-cmd` -f `${optOpari2ConfigTool} --awk-script` > pompregions.c"
         evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
         cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
         evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
         linkCmd="$linkCmd pompregions.o"
-	   objectFilesForLinking="$objectFilesForLinking pompregions.o"
+	   objectFilesForLinking="pompregions.o $objectFilesForLinking"
 	fi
 
 	newCmd="$CMD $listOfObjectFiles $objectFilesForLinking $argsRemaining $OUTPUTARGSFORTAU $optLinking -o $passedOutputFile"
@@ -1778,10 +1808,15 @@ cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} | `
           echoIfDebug "Linking command is $linkCmd"
         fi
 		
-				if [ $trackPthread == $TRUE -a -r $optWrappersDir/pthread_wrapper/link_options.tau ] ; then 
-					newCmd="$newCmd `cat $optWrappersDir/pthread_wrapper/link_options.tau`"
-					echoIfDebug "Linking command is $linkCmd "
-				fi
+        if [ $trackPthread == $TRUE -a -r $optWrappersDir/pthread_wrapper/link_options.tau ] ; then 
+	  newCmd="$newCmd `cat $optWrappersDir/pthread_wrapper/link_options.tau`"
+	  echoIfDebug "Linking command is $linkCmd "
+	fi
+
+        if [ $trackMPCThread == $TRUE -a -r $optWrappersDir/mpcthread_wrapper/link_options.tau ] ; then 
+	  newCmd="$newCmd `cat $optWrappersDir/mpcthread_wrapper/link_options.tau`"
+	  echoIfDebug "Linking command is $linkCmd "
+	fi
 
         echoIfDebug "trackUPCR = $trackUPCR, wrappers = $optWrappersDir/upc/bupc/link_options.tau "
         if [ $trackUPCR == $TRUE -a $berkeley_upcc == $TRUE -a -r $optWrappersDir/upc/bupc/link_options.tau ] ; then 

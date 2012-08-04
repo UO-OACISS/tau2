@@ -136,14 +136,17 @@ public :
 
 // Static holder for metadata name/value pairs
 // These come from Tau_metadata_register calls
-map<string,string> &Tau_metadata_getMetaData() {
-  static MetaDataRepo metadata;
-  return metadata;
+map<string,string> &Tau_metadata_getMetaData_task(int tid) {
+  static MetaDataRepo metadata[TAU_MAX_THREADS];
+  return metadata[tid];
+}
+
+map<string,string> &Tau_metadata_getMetaData(void) {
+	return Tau_metadata_getMetaData_task(0);
 }
 
 
-
-extern "C" void Tau_metadata(char *name, const char *value) {
+extern "C" void Tau_metadata_task(char *name, const char *value, int tid) {
 #ifdef TAU_DISABLE_METADATA
   return;
 #endif
@@ -152,8 +155,11 @@ extern "C" void Tau_metadata(char *name, const char *value) {
   char *myName = strdup(name);
   char *myValue = strdup(value);
   RtsLayer::LockDB();
-  Tau_metadata_getMetaData()[myName] = myValue;
+  Tau_metadata_getMetaData_task(tid)[myName] = myValue;
   RtsLayer::UnLockDB();
+}
+extern "C" void Tau_metadata(char *name, const char *value) {
+	Tau_metadata_task(name, value, 0);
 }
 
 
@@ -584,7 +590,7 @@ int Tau_metadata_fillMetaData() {
 }
 
 
-static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter) {
+static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, int tid) {
   const char *endl = "";
   if (newline) {
     endl = "\n";
@@ -609,7 +615,7 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter) 
 
 
   // write out the user-specified (some from TAU) attributes
-  for (map<string,string>::iterator it = Tau_metadata_getMetaData().begin(); it != Tau_metadata_getMetaData().end(); ++it) {
+  for (map<string,string>::iterator it = Tau_metadata_getMetaData_task(tid).begin(); it != Tau_metadata_getMetaData_task(tid).end(); ++it) {
     const char *name = it->first.c_str();
     const char *value = it->second.c_str();
     Tau_XML_writeAttribute(out, name, value, newline);
@@ -675,33 +681,37 @@ extern "C" void Tau_phase_metadata(char *name, char *value) {
 }
 
 
-int Tau_metadata_writeMetaData(Tau_util_outputDevice *out) {
+int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int tid) {
 
 #ifdef TAU_DISABLE_METADATA
   return 0;
 #endif
 
   //Tau_metadata_fillMetaData();
-  return writeMetaData(out, true, -1);
+  return writeMetaData(out, true, -1, tid);
 }
 
-int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int counter) {
+int Tau_metadata_writeMetaData(Tau_util_outputDevice *out) {
+  return writeMetaData(out, true, -1, 0);
+}
+
+int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int counter, int tid) {
 #ifdef TAU_DISABLE_METADATA
   return 0;
 #endif
 
   //Tau_metadata_fillMetaData();
   int retval;
-  retval = writeMetaData(out, false, counter);
+  retval = writeMetaData(out, false, counter, tid);
   return retval;
 }
 
 /* helper function to write to already established file pointer */
-int Tau_metadata_writeMetaData(FILE *fp, int counter) {
+int Tau_metadata_writeMetaData(FILE *fp, int counter, int tid) {
   Tau_util_outputDevice out;
   out.fp = fp;
   out.type = TAU_UTIL_OUTPUT_FILE;
-  return Tau_metadata_writeMetaData(&out, counter);
+  return Tau_metadata_writeMetaData(&out, counter, tid);
 }
 
 

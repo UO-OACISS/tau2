@@ -2714,12 +2714,74 @@ CUresult cuLaunch(CUfunction a1) {
 		CUcontext ctx;
 		cuCtxPopCurrent(&ctx);
 		cuCtxPushCurrent(ctx);
-		Tau_cuda_enqueue_kernel_enter_event((const char*) a1, 
-																				&cudaDriverGpuId(device, ctx, 0));
+		CudaDriverGpuEvent *gId = new CudaDriverGpuEvent(device, ctx, 0);
+		Tau_cuda_enqueue_kernel_enter_event(gId);
 #endif
   	retval  =  (*cuLaunch_h)( a1);
 #ifdef TRACK_KERNEL
-		Tau_cuda_enqueue_kernel_exit_event(), 
+		Tau_cuda_enqueue_kernel_exit_event(gId), 
+#endif
+  TAU_PROFILE_STOP(t);
+  }
+  return retval;
+
+}
+
+CUresult cuLaunchKernel(CUfunction a1, 
+	unsigned int a2,
+	unsigned int a3,
+	unsigned int a4,
+	unsigned int a5,
+	unsigned int a6,
+	unsigned int a7,
+	unsigned int a8,
+	CUstream     a9,
+	void **      a10,
+	void **      a11
+) {
+
+  typedef CUresult (*cuLaunchKernel_p_h) (CUfunction,
+	unsigned int,
+	unsigned int,
+	unsigned int,
+	unsigned int,
+	unsigned int,
+	unsigned int,
+	unsigned int,
+	CUstream    ,
+	void **     ,
+	void **     );
+  static cuLaunchKernel_p_h cuLaunchKernel_h = NULL;
+  CUresult retval;
+  TAU_PROFILE_TIMER(t,"CUresult cuLaunchKernel(CUfunction, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, unsigned int, CUstream, void **, void **) C", "", CUDA_API);
+  if (tau_handle == NULL) 
+    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
+
+  if (tau_handle == NULL) { 
+    perror("Error opening library in dlopen call"); 
+    return retval;
+  } 
+  else { 
+    if (cuLaunchKernel_h == NULL)
+	cuLaunchKernel_h = (cuLaunchKernel_p_h) dlsym(tau_handle,"cuLaunchKernel"); 
+    if (cuLaunchKernel_h == NULL) {
+      perror("Error obtaining symbol info from dlopen'ed lib"); 
+      return retval;
+    }
+  TAU_PROFILE_START(t);
+#ifdef TRACK_KERNEL
+		Tau_cuda_init();
+		int device;
+		cuCtxGetDevice(&device);
+		CUcontext ctx;
+		cuCtxPopCurrent(&ctx);
+		cuCtxPushCurrent(ctx);
+		CudaDriverGpuEvent *gId = new CudaDriverGpuEvent(device, ctx, 0);
+		Tau_cuda_enqueue_kernel_enter_event(gId);
+#endif
+  	retval  =  (*cuLaunchKernel_h)(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11);
+#ifdef TRACK_KERNEL
+		Tau_cuda_enqueue_kernel_exit_event(gId), 
 #endif
   TAU_PROFILE_STOP(t);
   }
@@ -2755,12 +2817,12 @@ CUresult cuLaunchGrid(CUfunction a1, int a2, int a3) {
 		CUcontext ctx;
 		cuCtxPopCurrent(&ctx);
 		cuCtxPushCurrent(ctx);
-		Tau_cuda_enqueue_kernel_enter_event((const char*)a1,
-			&cudaDriverGpuId(device,ctx,0));
+		CudaDriverGpuEvent *gId = new CudaDriverGpuEvent(device,ctx,0);
+		Tau_cuda_enqueue_kernel_enter_event(gId);
 #endif
   	retval  =  (*cuLaunchGrid_h)( a1,  a2,  a3);
 #ifdef TRACK_KERNEL
-		Tau_cuda_enqueue_kernel_exit_event();
+		Tau_cuda_enqueue_kernel_exit_event(gId);
 #endif
   TAU_PROFILE_STOP(t);
   }
@@ -2796,12 +2858,12 @@ CUresult cuLaunchGridAsync(CUfunction a1, int a2, int a3, CUstream a4) {
 		CUcontext ctx;
 		cuCtxPopCurrent(&ctx);
 		cuCtxPushCurrent(ctx);
-		Tau_cuda_enqueue_kernel_enter_event((const char*)a1,
-			&cudaDriverGpuId(device,ctx,a4));
+		CudaDriverGpuEvent *gId = new CudaDriverGpuEvent(device,ctx,a4);
+		Tau_cuda_enqueue_kernel_enter_event(gId);
 #endif
   	retval  =  (*cuLaunchGridAsync_h)( a1,  a2,  a3,  a4);
 #ifdef TRACK_KERNEL
-		Tau_cuda_enqueue_kernel_exit_event();
+		Tau_cuda_enqueue_kernel_exit_event(gId);
 #endif
   TAU_PROFILE_STOP(t);
   }

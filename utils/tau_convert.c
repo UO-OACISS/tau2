@@ -19,6 +19,12 @@
 # include <fcntl.h>
 //# include <stdbool.h>
 
+#if (defined (TAU_MPC) && defined (__cplusplus))
+#include <iostream>
+using namespace std;
+#endif /* TAU_MPC && __cplusplus */
+
+
 #ifdef TAU_WINDOWS
   #include <io.h>
 #else
