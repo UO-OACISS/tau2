@@ -817,7 +817,12 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @return List
 	 */
 	public List<String> getXMLFields(RMIPerfExplorerModel modelData) {
-		List<String> chartData = GeneralChartData.getXMLFields(modelData);
+		List<String> chartData = null;
+		if (this.getDB().getSchemaVersion() == 0) {
+			chartData = GeneralChartData.getXMLFields(modelData);
+		} else {
+			chartData = this.getPotentialPrimaryMetadata(modelData);
+		}
 		return chartData;
 	}
 
@@ -835,8 +840,13 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		try {
 			DB db = this.getDB();
 			StringBuilder buf;
-			buf = new StringBuilder("select distinct ie.group_name ");
-			buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
+			if (db.getSchemaVersion() == 0) {
+				buf = new StringBuilder("select distinct ie.group_name ");
+				buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
+			} else {
+				buf = new StringBuilder("select distinct tg.group_name ");
+				buf.append(" from timer_group tg inner join timer on tg.timer = timer.id inner join trial t on timer.trial = t.id ");
+			}
 			Object object = modelData.getCurrentSelection();
 			if (object instanceof View) {
 				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
@@ -927,7 +937,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			if (object instanceof View) {
 				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
 			} else {
-				buf.append(" inner join experiment e on t.experiment = e.id ");
+				if (db.getSchemaVersion() == 0) {
+					buf.append(" inner join experiment e on t.experiment = e.id ");
+				}
 				List<Object> selections = modelData.getMultiSelection();
 				if (selections == null) {
 					// just one selection
@@ -1024,7 +1036,12 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			} else {
 				buf.append("select distinct ie.name ");
 			}
-			buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
+			if (db.getSchemaVersion() == 0) {
+				buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
+			} else {
+				buf.append(" from timer ie inner join trial t on ie.trial = t.id ");
+				buf.append("inner join timer_callpath tcp on tcp.timer = ie.id and tcp.parent is not null ");
+			}
 			Object object = modelData.getCurrentSelection();
 			if (object instanceof View) {
 				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
@@ -1076,7 +1093,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 					}
 				}
 			}
-			buf.append(" and (group_name is null or group_name like '%TAU_CALLPATH%') ");
+			if (db.getSchemaVersion() == 0) {
+				buf.append(" and (group_name is null or group_name like '%TAU_CALLPATH%') ");
+			}
 			PreparedStatement statement = db.prepareStatement(buf.toString());
 			//PerfExplorerOutput.println(statement.toString());
 			ResultSet results = statement.executeQuery();
@@ -1110,12 +1129,19 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			} else {
 				buf.append("select distinct ie.name ");
 			}
-			buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
+			if (db.getSchemaVersion() == 0) {
+				buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
+			} else {
+				buf.append(" from timer ie inner join trial t on ie.trial = t.id ");
+				buf.append("inner join timer_callpath tcp on tcp.timer = ie.id and tcp.parent is null ");
+			}
 			Object object = modelData.getCurrentSelection();
 			if (object instanceof View) {
 				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
 			} else {
-				buf.append(" inner join experiment e on t.experiment = e.id ");
+				if (db.getSchemaVersion() == 0) {
+					buf.append(" inner join experiment e on t.experiment = e.id ");
+				}
 				List<Object> selections = modelData.getMultiSelection();
 				if (selections == null) {
 					// just one selection
@@ -1162,7 +1188,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 					}
 				}
 			}
-			buf.append(" and (group_name is null or group_name not like '%TAU_CALLPATH%') ");
+			if (db.getSchemaVersion() == 0) {
+				buf.append(" and (group_name is null or group_name not like '%TAU_CALLPATH%') ");
+			}
 			PreparedStatement statement = db.prepareStatement(buf.toString());
 			//PerfExplorerOutput.println(statement.toString());
 			ResultSet results = statement.executeQuery();
@@ -1197,12 +1225,18 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			} else {
 				buf.append("select distinct ae.name ");
 			}
-			buf.append(" from atomic_event ae inner join trial t on ae.trial = t.id ");
+			if (db.getSchemaVersion() == 0) {
+				buf.append(" from atomic_event ae inner join trial t on ae.trial = t.id ");
+			} else {
+				buf.append(" from counter ae inner join trial t on ae.trial = t.id ");
+			}
 			Object object = modelData.getCurrentSelection();
 			if (object instanceof View) {
 				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
 			} else {
-				buf.append(" inner join experiment e on t.experiment = e.id ");
+				if (db.getSchemaVersion() == 0) {
+					buf.append(" inner join experiment e on t.experiment = e.id ");
+				}
 				List<Object> selections = modelData.getMultiSelection();
 				if (selections == null) {
 					// just one selection
@@ -1239,6 +1273,66 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 						buf.append(")");
 					} else if (selection instanceof Trial) {
 						buf.append(" where t.id in (");
+						for (int i = 0 ; i < selections.size() ; i++) {
+							Trial trial = (Trial)selections.get(i);
+							if (i > 0)
+								buf.append(",");
+							buf.append(trial.getID());
+						}
+						buf.append(")");
+					}
+				}
+			}
+			PreparedStatement statement = db.prepareStatement(buf.toString());
+			//PerfExplorerOutput.println(statement.toString());
+			ResultSet results = statement.executeQuery();
+			while (results.next() != false) {
+				events.add(results.getString(1));
+			}
+			statement.close();
+		} catch (Exception e) {
+			String error = "ERROR: Couldn't select the events from the database!";
+			System.err.println(error);
+			e.printStackTrace();
+		}
+		return events;
+	}
+
+	/**
+	 * Get the events defined in these profiles.  The client passes in a model
+	 * with one or more experiments selected, and the code will get all the
+	 * events which are common among all trials for those experiemnts.
+	 * 
+	 * @param modelData
+	 * @return List
+	 */
+	public List<String> getPotentialPrimaryMetadata(RMIPerfExplorerModel modelData) {
+		List<String> events = new ArrayList<String>();
+		try {
+			DB db = this.getDB();
+			StringBuilder buf = new StringBuilder();
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append("select distinct cast (name as VARCHAR(256))");
+			} else {
+				buf.append("select distinct name ");
+			}
+			buf.append(" from primary_metadata pm ");
+			Object object = modelData.getCurrentSelection();
+			if (object instanceof View) {
+				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
+			} else {
+				List<Object> selections = modelData.getMultiSelection();
+				if (selections == null) {
+					// just one selection
+					Object selection = modelData.getCurrentSelection();
+					if (selection instanceof Trial) {
+						buf.append(" where trial = ");
+						buf.append(modelData.getTrial().getID());
+					}
+				} else {
+					Object selection = modelData.getCurrentSelection();
+					if (selection instanceof Trial) {
+						buf.append(" where trial in (");
 						for (int i = 0 ; i < selections.size() ; i++) {
 							Trial trial = (Trial)selections.get(i);
 							if (i > 0)
@@ -1842,24 +1936,46 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 					list.add ("experiment." + exp[i]);
 				}
 			}
-		}
-		list.add ("trial.id");
-		list.add ("trial.name");
-		list.add ("trial.experiment");
-		if (db != null) {
-			String[] trial = Trial.getFieldNames(db);
-			for (int i = 0 ; i < trial.length ; i++) {
-				if (trial[i].equalsIgnoreCase(Trial.XML_METADATA_GZ)) {
-					// don't add it
-				} else if (trial[i].equalsIgnoreCase("node_count") ||
-						   trial[i].equalsIgnoreCase("contexts_per_node")) {
-					// don't add it
-				} else if (trial[i].equalsIgnoreCase("threads_per_context")) {
-					list.add ("trial.threads_of_execution");
-				} else {
-					list.add ("trial." + trial[i]);
+			list.add ("trial.id");
+			list.add ("trial.name");
+			list.add ("trial.experiment");
+			if (db != null) {
+				String[] trial = Trial.getFieldNames(db);
+				for (int i = 0 ; i < trial.length ; i++) {
+					if (trial[i].equalsIgnoreCase(Trial.XML_METADATA_GZ)) {
+						// don't add it
+					} else if (trial[i].equalsIgnoreCase("node_count") ||
+							   trial[i].equalsIgnoreCase("contexts_per_node")) {
+						// don't add it
+					} else if (trial[i].equalsIgnoreCase("threads_per_context")) {
+						list.add ("trial.threads_of_execution");
+					} else {
+						list.add ("trial." + trial[i]);
+					}
 				}
 			}
+		} else {
+			list.add ("trial.id");
+			list.add ("trial.name");
+			if (db != null) {
+				String[] trial = Trial.getFieldNames(db);
+				for (int i = 0 ; i < trial.length ; i++) {
+					if (trial[i].equalsIgnoreCase("node_count") ||
+							   trial[i].equalsIgnoreCase("contexts_per_node")) {
+						// don't add it
+					} else if (trial[i].equalsIgnoreCase("data_source")) {
+						// don't add it
+					} else if (trial[i].equalsIgnoreCase("threads_per_context")) {
+						// don't add it
+					} else if (trial[i].equalsIgnoreCase("total_threads")) {
+						list.add ("trial.threads_of_execution");
+					} else {
+						list.add ("trial." + trial[i]);
+					}
+				}
+			}
+			list.add ("primary_metadata.name");
+//			list.add ("secondary_metadata.name");
 		}
 		return list;
 	}
@@ -1983,7 +2099,11 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		StringBuilder buf = new StringBuilder();
 		try {
 			DB db = this.getDB();
-			buf.append("select t.id, node_count * contexts_per_node * threads_per_context, t.experiment ");
+			if (db.getSchemaVersion() == 0) {
+				buf.append("select t.id, node_count * contexts_per_node * threads_per_context, t.experiment ");
+			} else {
+				buf.append("select t.id, t.total_threads, 0 ");
+			}
 			buf.append(" from trial t ");
 			Object object = modelData.getCurrentSelection();
 			if (object instanceof View) {

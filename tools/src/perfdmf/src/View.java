@@ -39,8 +39,24 @@ public class View implements Serializable {
 	private View parent = null;
     private Database database;
     private int viewID = 0;
+    private String whereClause = "";
+    private String joinClause = "";
 
-    public Database getDatabase() {
+    /**
+	 * @return the joinClause
+	 */
+	public String getJoinClause() {
+		return joinClause;
+	}
+
+	/**
+	 * @param joinClause the joinClause to set
+	 */
+	public void setJoinClause(String joinClause) {
+		this.joinClause = joinClause;
+	}
+
+	public Database getDatabase() {
         return database;
     }
 
@@ -240,31 +256,14 @@ public class View implements Serializable {
 		List<Trial> trials = new ArrayList<Trial>();
 		try {
 			StringBuilder whereClause = new StringBuilder();
-			whereClause.append(" inner join application a on e.application = a.id WHERE ");
+			whereClause.append(" inner join application a on e.application = a.id ");
+			whereClause.append(" where ");
 			for (int i = 0 ; i < views.size() ; i++) {
 				if (i > 0) {
 					whereClause.append (" AND ");
 				}
 				View view = views.get(i);
-
-				if (db.getDBType().compareTo("db2") == 0) {
-					whereClause.append(" cast (");
-				}
-				if (view.getField("TABLE_NAME").equalsIgnoreCase("Application")) {
-					whereClause.append (" a.");
-				} else if (view.getField("TABLE_NAME").equalsIgnoreCase("Experiment")) {
-					whereClause.append (" e.");
-				} else /*if (view.getField("table_name").equalsIgnoreCase("Trial")) */ {
-					whereClause.append (" t.");
-				}
-				whereClause.append (view.getField("COLUMN_NAME"));
-				if (db.getDBType().compareTo("db2") == 0) {
-					whereClause.append(" as varchar(256)) ");
-				}
-				whereClause.append (" " + view.getField("OPERATOR") + " '");
-				whereClause.append (view.getField("VALUE"));
-				whereClause.append ("' ");
-
+				whereClause.append(view.getWhereClause(db.getDBType()));
 			}
 			//PerfExplorerOutput.println(whereClause.toString());
 			trials = Trial.getTrialList(db, whereClause.toString(), getXMLMetadata);
@@ -298,7 +297,7 @@ public class View implements Serializable {
 			PreparedStatement statement = db.prepareStatement(sql.toString());
 			int i = 1;
 			for (View view : views) {
-				statement.setInt(1, Integer.valueOf(view.getField("ID")));
+				statement.setInt(i, Integer.valueOf(view.getField("ID")));
 				i++;
 			}
 			ResultSet results = statement.executeQuery();
@@ -456,6 +455,35 @@ public class View implements Serializable {
 
 	public int getNumFields() {
 		return this.getFieldCount();
+	}
+
+	public String getWhereClause(String dbType) {
+		if (whereClause == null) {
+			StringBuilder wc = new StringBuilder();
+			if (dbType.compareTo("db2") == 0) {
+				wc.append(" cast (");
+			}
+			if (getField("TABLE_NAME").equalsIgnoreCase("Application")) {
+				wc.append (" a.");
+			} else if (getField("TABLE_NAME").equalsIgnoreCase("Experiment")) {
+				wc.append (" e.");
+			} else /*if (view.getField("table_name").equalsIgnoreCase("Trial")) */ {
+				wc.append (" t.");
+			}
+			wc.append (getField("COLUMN_NAME"));
+			if (dbType.compareTo("db2") == 0) {
+				wc.append(" as varchar(256)) ");
+			}
+			wc.append (" " + getField("OPERATOR") + " '");
+			wc.append (getField("VALUE"));
+			wc.append ("' ");
+			setWhereClause(wc.toString());
+		}
+		return whereClause;
+	}
+
+	public void setWhereClause(String whereClause) {
+		this.whereClause = whereClause;
 	}
 
 
