@@ -261,7 +261,6 @@ TAU_OPENMP_OPTION =
 #OPENMP#TAU_F90_OPT = $(TAU_OPENMP_OPTION) #ENDIF#
 
 #ZEPTO_GFORTRAN#TAU_F90_OPT = -fno-underscoring     #ENDIF#
-#FX#TAU_F90_OPT = -Xg #ENDIF#
 
 #THREADSAFE_COMPILERS#TAU_R         =_r     #ENDIF#
 #BGP#TAU_R         =_r     #ENDIF#
@@ -594,6 +593,7 @@ TAU_GCCLIB	= -lgcc_s
 #USE_IBMXLC#TAU_IBM_FORTRANLIBS	       =  -bh:4 -bpT:0x10000000 -bpD:0x20000000 /lib/crt0.o -lxlf90$(TAU_R) -lm -lc #ENDIF#
 #GNU#TAU_IBM_FORTRANLIBS	       =  -Wl,-bh:4 -Wl,-bpT:0x10000000 -Wl,-bpD:0x20000000 /lib/crt0.o -lxlf90$(TAU_R) -lm -lc #ENDIF#
 #KAI#TAU_IBM_FORTRANLIBS	       =  --backend -bh:4 --backend -bpT:0x10000000 --backend -bpD:0x20000000 /lib/crt0.o -lxlf90$(TAU_R) -lm -lc #ENDIF#
+#FX#TAU_FORTRANLIBS       = -Ntl_notrt -lmpi_f90 -lmpi_f77 --linkfortran #ENDIF#
 #IBM_FORTRAN#TAU_FORTRANLIBS = $(TAU_IBM_FORTRANLIBS) #ENDIF#
 
 #USE_IBMXLC#TAU_IBM64_FORTRANLIBS      =  -bh:4 -bpT:0x10000000 -bpD:0x20000000 -b64 /lib/crt0_64.o -lxlf90$(TAU_R) -lm -lc #ENDIF#
@@ -708,6 +708,7 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 #SUNX86_64#TAU_CXXLIBS   = $(TAU_CXXLIBS_SUN_OPTERON) #ENDIF#
 #FUJITSU_SOLARIS#TAU_CXXLIBS               = -lstd -lstdm #ENDIF#
 #FX#TAU_CXXLIBS               = -lmpi_cxx -lstdc++ -lstd_mt -lm #ENDIF#
+#FX#TAU_CXXLIBS               = -lmpi_cxx -Ntl_notrt #ENDIF#
 #PPC64XLC#TAU_PPC64_LIBS         = -L$(EXTRADIRCXX)/$(TAU_FORLIBDIR) -libmc++ -lstdc++       #ENDIF#
 #IBM64LINUX_XLC#TAU_IBM64LINUX_LIBS         = -L$(EXTRADIRCXX)/$(TAU_FORLIBDIR) -libmc++ -lstdc++       #ENDIF#
 #USE_IBMXLC#TAU_XLCLIBS         = $(TAU_IBM64LINUX_LIBS) $(TAU_PPC64_LIBS)     #ENDIF#
