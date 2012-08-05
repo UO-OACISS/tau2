@@ -708,7 +708,7 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 #SUNX86_64#TAU_CXXLIBS   = $(TAU_CXXLIBS_SUN_OPTERON) #ENDIF#
 #FUJITSU_SOLARIS#TAU_CXXLIBS               = -lstd -lstdm #ENDIF#
 #FX#TAU_CXXLIBS               = -lmpi_cxx -lstdc++ -lstd_mt -lm #ENDIF#
-#FX#TAU_CXXLIBS               = -lmpi_cxx -Ntl_notrt #ENDIF#
+#FX#TAU_CXXLIBS               = -lmpi_cxx -Ntl_notrt -lmpi_f90 -lmpi_f77 --linkfortran #ENDIF#
 #PPC64XLC#TAU_PPC64_LIBS         = -L$(EXTRADIRCXX)/$(TAU_FORLIBDIR) -libmc++ -lstdc++       #ENDIF#
 #IBM64LINUX_XLC#TAU_IBM64LINUX_LIBS         = -L$(EXTRADIRCXX)/$(TAU_FORLIBDIR) -libmc++ -lstdc++       #ENDIF#
 #USE_IBMXLC#TAU_XLCLIBS         = $(TAU_IBM64LINUX_LIBS) $(TAU_PPC64_LIBS)     #ENDIF#
@@ -1035,6 +1035,8 @@ TAU_INCLUDE 	= -I$(TAU_INC_DIR)
 #PERFLIB#TAU_INCLUDE = -I$(PERFINCDIR) #ENDIF#
 #PERFLIB#TAU_DEFS = #ENDIF#
 #PERFLIB#TAU_COMPILER_EXTRA_OPTIONS1=-optTau=-p #ENDIF#
+
+#FX#TAU_COMPILER_EXTRA_OPTIONS1=-optFujitsu #ENDIF#
 
 #PTHREAD_AVAILABLE#TAU_COMPILER_EXTRA_OPTIONS2=-optTrackPthread #ENDIF#
 #MPC#TAU_COMPILER_EXTRA_OPTIONS2=-optTrackMPCThread #ENDIF#
