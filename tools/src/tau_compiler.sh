@@ -23,6 +23,7 @@ declare -i needToCleanPdbInstFiles=$TRUE
 declare -i pdbFileSpecified=$FALSE
 declare -i optResetUsed=$FALSE
 declare -i optDetectMemoryLeaks=$FALSE
+declare -i optFujitsu=$FALSE
 
 declare -i optPdtF95ResetSpecified=$FALSE
 
@@ -673,6 +674,11 @@ for arg in "$@" ; do
 			echoIfDebug "\tOpari Tool used: $optOpari2Opts"
 			;;
 
+		    -optFujitsu*)
+			optFujitsu=$TRUE
+			echoIfDebug "\t Fujitsu mpiFCCpx used as linker for C and Fortran"
+			;;
+
 		    -optAppCC*)
 			optAppCC="${arg#"-optAppCC="}"
 			echoIfDebug "\tFallback C Compiler: $optAppCC"
@@ -1314,6 +1320,9 @@ if [ $numFiles == 0 ]; then
       echoIfDebug "Linking command is $linkCmd"
     fi 
 
+    if [ $optFujitsu == $TRUE ]; then
+      linkCmd=`echo $linkCmd | sed -e 's/fccpx/FCCpx/g' -e 's/frtpx/FCCpx/g'`
+    fi
     evalWithDebugMessage "$linkCmd" "Linking with TAU Options"
     buildSuccess=$?
 	    
