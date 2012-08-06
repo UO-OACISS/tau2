@@ -653,7 +653,6 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				}
 			} 
 			if (getXML) {
-				
 				//Object objSer = series.getSelectedItem();
 				String tmpSer = (String)series.getSelectedItem();
 				//Object objX = xaxisValue.getSelectedItem();
@@ -830,6 +829,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			
 		}
 		facade.setChartTitle(title);
+		facade.setCategoricalXAxis(this.alwaysCategory.isSelected());
 
 		// series name
 		Object obj = series.getSelectedItem();
@@ -1143,15 +1143,10 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		JFreeChart chart = null;
 		XYSeries ideal=null;
 		Map<String,XYSeries> labelMap=new HashMap<String,XYSeries>();
-		if (rawData.getCategoryType() == Integer.class) 
+		if (rawData.getCategoryType() == Integer.class || rawData.getCategoryType() == Double.class) 
 		{
 
 			if (model.getChartScalability()) {
-
-				// create an "ideal" line.
-				//dataset.addValue(1.0, IDEAL, new Integer(rawData.getMinimum()));
-				//				dataset.addValue(rawData.getMaximum()/rawData.getMinimum(),IDEAL, 
-				//						new Integer(rawData.getMaximum()));
 
 				// get the baseline values
 				edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData.CategoryDataRow baseline = rawData.getRowData(0);
@@ -1234,18 +1229,21 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 			} else {
 
-				for (int y = 0 ; y < rawData.getRows() ; y++) {
-					CategoryDataRow row = rawData.getRowData(y);
+				// iterate through the values
+				for (int i = 0 ; i < rawData.getRows() ; i++) {
+					edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
 					XYSeries s = labelMap.get(row.series);
 					if(s==null){
 						s=new XYSeries(shortName(row.series), true, false);
 						labelMap.put(row.series, s);
-
 					}
-					dataset.addValue(row.value / conversion, shortName(row.series), row.categoryInteger);
-
-					s.add(row.categoryInteger.doubleValue(), row.value/conversion);
-
+					if (row.categoryInteger != null) {
+						dataset.addValue(row.value, shortName(row.series), row.categoryInteger);
+						s.add(row.categoryInteger.doubleValue(), row.value);
+					} else {
+						dataset.addValue(Double.parseDouble(row.categoryString), shortName(row.series), new Double(row.value));
+						s.add(Double.parseDouble(row.categoryString), row.value);
+					}
 				}
 
 			}

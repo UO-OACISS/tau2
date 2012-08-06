@@ -374,7 +374,7 @@ public class DBConnector implements DB {
     }
 
     public PreparedStatement prepareStatement(String statement) throws SQLException {
-        System.out.println("statement = " + statement);
+//        System.out.println("statement = " + statement);
         return getConnection().prepareStatement(statement);
     }
 
