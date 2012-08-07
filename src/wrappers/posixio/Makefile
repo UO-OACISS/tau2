@@ -1,4 +1,4 @@
-TAUROOT=/home/users/scottb/tau2
+TAUROOT=
 include $(TAUROOT)/include/Makefile
 
 TAU_IOWRAP_SHARED=libTAU-iowrap$(TAU_SHLIBX)

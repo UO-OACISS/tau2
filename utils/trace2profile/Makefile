@@ -14,7 +14,7 @@
 include ../../include/Makefile
 ########### Automatically modified by the configure script ############
 
-CONFIG_ARCH=x86_64
+CONFIG_ARCH=default
 CXX=$(CONFIG_CXX) $(ABI) $(ISA)
 #CRAYXMT#CC = $(TAU_CC_FE) $(ABI) $(ISA) #ENDIF#
 #CRAYXMT#CXX = $(TAU_CXX_FE) $(ABI) $(ISA) #ENDIF#

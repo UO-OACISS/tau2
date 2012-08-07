@@ -166,6 +166,8 @@ CREATE INDEX @DATABASE_PREFIX@its_fun_met_idx on @DATABASE_PREFIX@interval_total
 CREATE INDEX @DATABASE_PREFIX@ims_fun_met_idx on @DATABASE_PREFIX@interval_mean_summary (interval_event, metric);
 CREATE INDEX @DATABASE_PREFIX@ilp_f_m_n_c_t_idx on @DATABASE_PREFIX@interval_location_profile (interval_event, metric, node, context, thread);
 CREATE INDEX @DATABASE_PREFIX@ilp_met_idx on @DATABASE_PREFIX@interval_location_profile (metric);
+CREATE INDEX @DATABASE_PREFIX@atomic_event_trial_index on @DATABASE_PREFIX@atomic_event(trial);
+CREATE INDEX @DATABASE_PREFIX@atomic_location_profile_index on @DATABASE_PREFIX@atomic_location_profile(atomic_event);
 
 
 
