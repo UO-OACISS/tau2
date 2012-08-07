@@ -1865,6 +1865,7 @@ for arg in "$@"; do
     fi
 		if [ -f "$cupti/include/cupti_events.h" ] ; then
       fixmakeargs="$fixmakeargs CUPTI cuptiinclude=$cupti/include"
+			cupti=yes
 		else
 			echo "Error: Cannot find CUPTI headers."
       exit 1
@@ -6351,7 +6352,7 @@ EOF
 				fi
 				rm -f opencl.cpp opencl.o
 			fi
-			if [ -f "$cudainclude/../extras/CUPTI/include/cupti_events.h" ] ; then
+			if [ $cupti = no -a -f "$cudainclude/../extras/CUPTI/include/cupti_events.h" ] ; then
 				tauoptions="${tauoptions}-cupti"
 				cupti="$cudainclude/../extras/CUPTI"
 				fixmakeargs="$fixmakeargs CUPTI cuptiinclude=$cupti/include"
