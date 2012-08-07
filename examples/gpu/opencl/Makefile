@@ -1,4 +1,4 @@
-TAU_OPENCL_INC=/usr/local/packages/cuda/5.0//include
+TAU_OPENCL_INC=
 TAU_OPENCL_LIB=-L$(TAU_OPENCL_INC)/../lib -lOpenCL
 
 all: matmult
