@@ -33,11 +33,12 @@ typedef int64_t               off64_t;
 int __wrap_fsync( int fd)
 {
   int ret;
-  Tau_iowrap_checkInit();
+  
   if (Tau_iowrap_checkPassThrough()) {
     return __real_fsync(fd); 
   }
   Tau_global_incr_insideTAU();
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "fsync()", " ", TAU_IO);
   TAU_PROFILE_START(t);
   ret = __real_fsync(fd);
@@ -65,7 +66,7 @@ int __wrap_open(const char *pathname, int flags, ...)
   int mode = 0;
   int mode_specified = 0; 
   TAU_VERBOSE("__wrap_open: pathname = %s\n", pathname); 
-  Tau_iowrap_checkInit();
+ 
   if (flags & O_CREAT) {
     va_list arg;
     va_start(arg, flags);
@@ -81,7 +82,7 @@ int __wrap_open(const char *pathname, int flags, ...)
       return __real_open(pathname, flags, mode); 
   }
   Tau_global_incr_insideTAU();
-
+ Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "open()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -116,7 +117,7 @@ int __wrap_open64(const char *pathname, int flags, ...)
   int ret;
   int mode = 0;
   int mode_specified = 0;
-  Tau_iowrap_checkInit();
+  
   if (flags & O_CREAT) {
     va_list arg;
     va_start(arg, flags);
@@ -132,7 +133,7 @@ int __wrap_open64(const char *pathname, int flags, ...)
       return __real_open64(pathname, flags, mode);
   }
   Tau_global_incr_insideTAU();
-
+Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "open()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -165,13 +166,13 @@ int __wrap_open64(const char *pathname, int flags, ...)
 int __wrap_creat(const char *pathname, mode_t mode) 
 {
   int ret;
-  Tau_iowrap_checkInit();
+  
 
   if (Tau_iowrap_checkPassThrough()) {
     return __real_creat(pathname, mode);
   }
   Tau_global_incr_insideTAU();
-
+Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "creat()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -201,13 +202,13 @@ int __wrap_creat(const char *pathname, mode_t mode)
 int __wrap_creat64(const char *pathname, mode_t mode)
 {
   int ret;
-  Tau_iowrap_checkInit();
+
 
   if (Tau_iowrap_checkPassThrough()) {
     return __real_creat64(pathname, mode);
   }
   Tau_global_incr_insideTAU();
-
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "creat64()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -238,13 +239,13 @@ FILE * __real_fopen(const char *pathname, const char * mode);
 FILE * __wrap_fopen(const char *pathname, const char * mode)
 {
   FILE * ret;
-  Tau_iowrap_checkInit();
+
 
   if (Tau_iowrap_checkPassThrough()) {
     return __real_fopen(pathname, mode);
   }
   Tau_global_incr_insideTAU();
-
+    Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "fopen()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -275,13 +276,13 @@ FILE*  __real_fopen64(const char *pathname, const char * mode);
 FILE * __wrap_fopen64(const char *pathname, const char * mode)
 {
   FILE * ret;
-  Tau_iowrap_checkInit();
+
 
   if (Tau_iowrap_checkPassThrough()) {
     return __real_fopen64(pathname, mode);
   }
   Tau_global_incr_insideTAU();
-
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "fopen64()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -316,13 +317,13 @@ FILE * __wrap_fopen64(const char *pathname, const char * mode)
 int __wrap_pipe(int filedes[2])
 {
   int ret;
-  Tau_iowrap_checkInit();
+
 
   if (Tau_iowrap_checkPassThrough()) {
     return __real_pipe(filedes);
   }
   Tau_global_incr_insideTAU();
-
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "pipe()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -383,13 +384,13 @@ char * Tau_wrapper_get_socket_name(const struct sockaddr *sa, char *s, size_t le
  ********************************************************************/
 int __wrap_socket(int domain, int type, int protocol) {
   int ret;
-  Tau_iowrap_checkInit();
+
 
   if (Tau_iowrap_checkPassThrough()) {
     return __real_socket(domain, type, protocol);
   }
   Tau_global_incr_insideTAU();
-
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "socket()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -422,13 +423,13 @@ int __wrap_socket(int domain, int type, int protocol) {
  ********************************************************************/
 int __wrap_socketpair(int domain, int type, int protocol, int sv[2]) {
   int ret;
-  Tau_iowrap_checkInit();
+
 
   if (Tau_iowrap_checkPassThrough()) {
     return __real_socketpair(domain, type, protocol, sv);
   }
   Tau_global_incr_insideTAU();
-
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "socketpair()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -464,14 +465,14 @@ int __wrap_socketpair(int domain, int type, int protocol, int sv[2]) {
 int __wrap_bind(int socket, const struct sockaddr *address, socklen_t address_len) 
 {
   int ret;
-  Tau_iowrap_checkInit();
+
   char socketname[TAU_MAX_SOCKET_LEN];
 
   if (Tau_iowrap_checkPassThrough()) {
     return __real_bind(socket, address, address_len);
   }
   Tau_global_incr_insideTAU();
-
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "bind()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -504,14 +505,14 @@ int __wrap_bind(int socket, const struct sockaddr *address, socklen_t address_le
 int __wrap_connect(int socket, struct sockaddr *address, socklen_t address_len)
 {
   int ret;
-  Tau_iowrap_checkInit();
+
   char socketname[TAU_MAX_SOCKET_LEN];
 
   if (Tau_iowrap_checkPassThrough()) {
     return __real_connect(socket, address, address_len);
   }
   Tau_global_incr_insideTAU();
-
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "connect()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -545,14 +546,14 @@ int __wrap_connect(int socket, struct sockaddr *address, socklen_t address_len)
 int __wrap_accept(int socket, struct sockaddr *address, socklen_t* address_len)
 {
   int ret;
-  Tau_iowrap_checkInit();
+
   char socketname[TAU_MAX_SOCKET_LEN];
 
   if (Tau_iowrap_checkPassThrough()) {
     return __real_accept(socket, address, address_len);
   }
   Tau_global_incr_insideTAU();
-
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "accept()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -627,11 +628,12 @@ size_t __wrap_read(int fd, void *buf, size_t nbytes)
   int ret;
   double currentRead = 0.0;
   struct timeval t1, t2; 
-  Tau_iowrap_checkInit();
+
   if (Tau_iowrap_checkPassThrough()) {
     return __real_read(fd, buf, nbytes);
   }
   Tau_global_incr_insideTAU();
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "read()", " ", TAU_READ|TAU_IO);
   TAU_GET_IOWRAP_EVENT(re, READ_BW, fd);
   TAU_GET_IOWRAP_EVENT(bytesread, READ_BYTES, fd);
@@ -684,11 +686,12 @@ size_t __wrap_fread(void *ptr, size_t size, size_t nmemb, FILE *stream)
   unsigned long long count; 
   int fd;
   fd = fileno(stream);
-  Tau_iowrap_checkInit();
+
   if (Tau_iowrap_checkPassThrough()) {
     return __real_fread(ptr, size, nmemb, stream);
   }
   Tau_global_incr_insideTAU();
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "fread()", " ", TAU_READ|TAU_IO);
   TAU_GET_IOWRAP_EVENT(re, READ_BW, fd);
   TAU_GET_IOWRAP_EVENT(bytesread, READ_BYTES, fd);
@@ -740,13 +743,14 @@ ssize_t __wrap_readv(int fd, const struct iovec *vec, int count)
   double currentRead = 0.0;
   struct timeval t1, t2;
 
-  Tau_iowrap_checkInit();
+
 
   if (Tau_iowrap_checkPassThrough()) {
     return __real_readv(fd, vec, count);
   }
 
   Tau_global_incr_insideTAU();
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "readv()", " ", TAU_READ|TAU_IO);
   TAU_GET_IOWRAP_EVENT(re, READ_BW, fd);
   TAU_GET_IOWRAP_EVENT(bytesread, READ_BYTES, fd);
@@ -800,11 +804,12 @@ size_t __wrap_write(int fd, void *buf, size_t nbytes)
   double currentWrite = 0.0;
   struct timeval t1, t2; 
   double bw = 0.0; 
-  Tau_iowrap_checkInit();
+
   if (Tau_iowrap_checkPassThrough()) {
     return __real_write(fd, buf, nbytes);
   }
   Tau_global_incr_insideTAU();
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "write()", " ", TAU_WRITE|TAU_IO);
   TAU_GET_IOWRAP_EVENT(wb, WRITE_BW, fd);
   TAU_GET_IOWRAP_EVENT(byteswritten, WRITE_BYTES, fd);
@@ -854,12 +859,13 @@ size_t __wrap_fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream)
   struct timeval t1, t2; 
   double bw = 0.0; 
 
-  Tau_iowrap_checkInit();
+
   if (Tau_iowrap_checkPassThrough()) {
     return __real_fwrite(ptr, size, nmemb, stream);
   }
 
   Tau_global_incr_insideTAU();
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "fwrite()", " ", TAU_WRITE|TAU_IO);
   TAU_GET_IOWRAP_EVENT(wb, WRITE_BW, fileno(stream));
   TAU_GET_IOWRAP_EVENT(byteswritten, WRITE_BYTES, fileno(stream));
@@ -909,11 +915,12 @@ ssize_t __wrap_writev(int fd,  const struct iovec *vec, int count)
   double currentWrite = 0.0;
   struct timeval t1, t2;
   double bw = 0.0;
-  Tau_iowrap_checkInit();
+
   if (Tau_iowrap_checkPassThrough()) {
     return __real_writev(fd, vec, count);
   }
   Tau_global_incr_insideTAU();
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "writev()", " ", TAU_WRITE|TAU_IO);
   TAU_GET_IOWRAP_EVENT(wb, WRITE_BW, fd);
   TAU_GET_IOWRAP_EVENT(byteswritten, WRITE_BYTES, fd);
@@ -961,11 +968,12 @@ ssize_t __wrap_pwrite(int fd, void *buf, size_t nbytes, off_t offset)
   double currentWrite = 0.0;
   struct timeval t1, t2; 
   double bw = 0.0; 
-  Tau_iowrap_checkInit();
+
   if (Tau_iowrap_checkPassThrough()) {
     return __real_pwrite(fd, buf, nbytes, offset);
   }
   Tau_global_incr_insideTAU();
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "pwrite()", " ", TAU_WRITE|TAU_IO);
   TAU_GET_IOWRAP_EVENT(wb, WRITE_BW, fd);
   TAU_GET_IOWRAP_EVENT(byteswritten, WRITE_BYTES, fd);
@@ -1015,11 +1023,12 @@ ssize_t __wrap_pwrite64(int fd, void *buf, size_t nbytes, off64_t offset)
   double currentWrite = 0.0;
   struct timeval t1, t2;
   double bw = 0.0;
-  Tau_iowrap_checkInit();
+
   if (Tau_iowrap_checkPassThrough()) {
     return __real_pwrite64(fd, buf, nbytes, offset);
   }
   Tau_global_incr_insideTAU();
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "pwrite64()", " ", TAU_WRITE|TAU_IO);
   TAU_GET_IOWRAP_EVENT(wb, WRITE_BW, fd);
   TAU_GET_IOWRAP_EVENT(byteswritten, WRITE_BYTES, fd);
@@ -1068,11 +1077,12 @@ ssize_t __wrap_pread(int fd, void *buf, size_t nbytes, off_t offset)
   ssize_t ret;
   double currentRead = 0.0;
   struct timeval t1, t2; 
-  Tau_iowrap_checkInit();
+
   if (Tau_iowrap_checkPassThrough()) {
     return __real_pread(fd, buf, nbytes, offset);
   }
   Tau_global_incr_insideTAU();
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "pread()", " ", TAU_READ|TAU_IO);
   TAU_GET_IOWRAP_EVENT(re, READ_BW, fd);
   TAU_GET_IOWRAP_EVENT(bytesread, READ_BYTES, fd);
@@ -1124,11 +1134,12 @@ ssize_t __wrap_pread64(int fd, void *buf, size_t nbytes, off64_t offset)
   ssize_t ret;
   double currentRead = 0.0;
   struct timeval t1, t2; 
-  Tau_iowrap_checkInit();
+
   if (Tau_iowrap_checkPassThrough()) {
     return __real_pread64(fd, buf, nbytes, offset);
   }
   Tau_global_incr_insideTAU();
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "pread64()", " ", TAU_READ|TAU_IO);
   TAU_GET_IOWRAP_EVENT(re, READ_BW, fd);
   TAU_GET_IOWRAP_EVENT(bytesread, READ_BYTES, fd);
@@ -1178,11 +1189,12 @@ ssize_t __wrap_pread64(int fd, void *buf, size_t nbytes, off64_t offset)
 size_t __wrap_close(int fd)
 {
   int ret;
-  Tau_iowrap_checkInit();
+
   if (Tau_iowrap_checkPassThrough()) {
     return __real_close(fd);
   }
   Tau_global_incr_insideTAU();
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "close()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -1211,11 +1223,12 @@ int __wrap_fclose(FILE *fp)
   int ret;
   int fd; 
 
-  Tau_iowrap_checkInit();
+
   if (Tau_iowrap_checkPassThrough()) {
     return __real_fclose(fp);
   }
   Tau_global_incr_insideTAU();
+  Tau_iowrap_checkInit();
   fd = fileno(fp);
   TAU_PROFILE_TIMER(t, "fclose()", " ", TAU_IO);
   TAU_PROFILE_START(t);
@@ -1245,11 +1258,12 @@ int __wrap_fdatasync(int fd)
 {
   int ret;
 
-  Tau_iowrap_checkInit();
+
   if (Tau_iowrap_checkPassThrough()) {
     return __real_fdatasync(fd);
   }
   Tau_global_incr_insideTAU();
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "fdatasync()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -1278,11 +1292,12 @@ off_t __wrap_lseek(int fd, off_t offset, int whence)
 {
   int ret;
 
-  Tau_iowrap_checkInit();
+
   if (Tau_iowrap_checkPassThrough()) {
     return __real_lseek(fd, offset, whence);
   }
   Tau_global_incr_insideTAU();
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "lseek()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -1312,11 +1327,12 @@ off64_t __wrap_lseek64(int fd, off64_t offset, int whence)
 {
   int ret;
 
-  Tau_iowrap_checkInit();
+
   if (Tau_iowrap_checkPassThrough()) {
     return __real_lseek64(fd, offset, whence);
   }
   Tau_global_incr_insideTAU();
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "lseek64()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -1346,11 +1362,12 @@ off_t __wrap_fseek(FILE *stream, long offset, int whence)
 {
   int ret;
 
-  Tau_iowrap_checkInit();
+
   if (Tau_iowrap_checkPassThrough()) {
     return __real_fseek(stream, offset, whence);
   }
   Tau_global_incr_insideTAU();
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "fseek()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -1380,11 +1397,12 @@ int __wrap_stat(const char *path, struct stat *buf)
 {
   int ret;
 
-  Tau_iowrap_checkInit();
+
   if (Tau_iowrap_checkPassThrough()) {
     return __real_stat(path, buf);
   }
   Tau_global_incr_insideTAU();
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "stat()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -1411,11 +1429,12 @@ int __wrap_stat64(const char *path, struct stat *buf)
 {
   int ret;
 
-  Tau_iowrap_checkInit();
+
   if (Tau_iowrap_checkPassThrough()) {
     return __real_stat64(path, buf);
   }
   Tau_global_incr_insideTAU();
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "stat64()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -1442,11 +1461,12 @@ int __wrap_fstat(int filedes, struct stat64 *buf)
 {
   int ret;
 
-  Tau_iowrap_checkInit();
+
   if (Tau_iowrap_checkPassThrough()) {
     return __real_fstat(filedes, buf);
   }
   Tau_global_incr_insideTAU();
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "fstat()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -1474,11 +1494,12 @@ int __wrap_fstat64(int filedes, struct stat64 *buf)
 {
   int ret;
 
-  Tau_iowrap_checkInit();
+
   if (Tau_iowrap_checkPassThrough()) {
     return __real_fstat64(filedes, buf);
   }
   Tau_global_incr_insideTAU();
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "fstat64()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -1506,11 +1527,12 @@ int __wrap_lstat(const char *path, struct stat *buf)
 {
   int ret;
 
-  Tau_iowrap_checkInit();
+
   if (Tau_iowrap_checkPassThrough()) {
     return __real_lstat(path, buf);
   }
   Tau_global_incr_insideTAU();
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "lstat()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -1536,11 +1558,12 @@ int __wrap_lstat64(const char *path, struct stat64 *buf)
 {
   int ret;
 
-  Tau_iowrap_checkInit();
+
   if (Tau_iowrap_checkPassThrough()) {
     return __real_lstat64(path, buf);
   }
   Tau_global_incr_insideTAU();
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "lstat64()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -1566,11 +1589,12 @@ int __wrap_dup(int filedes)
 {
   int ret;
 
-  Tau_iowrap_checkInit();
+
   if (Tau_iowrap_checkPassThrough()) {
     return __real_dup(filedes);
   }
   Tau_global_incr_insideTAU();
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "dup()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -1599,11 +1623,12 @@ int __wrap_dup2(int filedes1, int filedes2)
 {
   int ret;
 
-  Tau_iowrap_checkInit();
+
   if (Tau_iowrap_checkPassThrough()) {
     return __real_dup2(filedes1, filedes2);
   }
   Tau_global_incr_insideTAU();
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "dup2()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
@@ -1635,11 +1660,12 @@ int __wrap_select(int nfds, fd_set *readfds, fd_set *writefds,
   fd_set *exceptfds, const struct timeval *timeout)
 {
   int ret;
-  Tau_iowrap_checkInit();
+
   if (Tau_iowrap_checkPassThrough()) {
     return __real_select(nfds, readfds, writefds, exceptfds, timeout);
   }
   Tau_global_incr_insideTAU();
+  Tau_iowrap_checkInit();
   TAU_PROFILE_TIMER(t, "select()", " ", TAU_IO);
   TAU_PROFILE_START(t);
 
