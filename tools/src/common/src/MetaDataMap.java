@@ -81,7 +81,6 @@ public class MetaDataMap {
 			this.name = name;
 		}
 
-		@Override
 		public int compareTo(Object arg0) {
 			if (!(arg0 instanceof MetaDataKey)) {
 				return 1;
