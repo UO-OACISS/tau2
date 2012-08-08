@@ -160,17 +160,13 @@ public class GeneralChartData extends RMIGeneralChartData {
 					// second item - the y axis
 					buf.append(fixClause(yAxisName, db) + " ");
 				} else {
-					if (db.getSchemaVersion() == 0) {
-						if(model.isChartSeriesXML()){
-							buf.append("'");
-						}
-						// first item - the series name
-						buf.append(fixClause(seriesName, db));
-						if(model.isChartSeriesXML()){
-							buf.append("'");
-						}
-					} else {
-						buf.append(fixClause("primary_metadata.value", db));
+					if(model.isChartSeriesXML()){
+						buf.append("'");
+					}
+					// first item - the series name
+					buf.append(fixClause(seriesName, db));
+					if(model.isChartSeriesXML()){
+						buf.append("'");
 					}
 					buf.append(" as series_name, ");
 					// second item - the x axis
