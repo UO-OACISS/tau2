@@ -109,6 +109,8 @@ import edu.uoregon.tau.perfdmf.database.DBManagerListener;
 import edu.uoregon.tau.perfdmf.database.DatabaseManagerWindow;
 import edu.uoregon.tau.perfdmf.database.ParseConfig;
 import edu.uoregon.tau.perfdmf.database.PasswordCallback;
+import edu.uoregon.tau.perfdmf.viewcreator.ViewCreator;
+import edu.uoregon.tau.perfdmf.viewcreator.ViewCreatorGUI;
 
 public class ParaProfManagerWindow extends JFrame implements ActionListener,
 TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
@@ -138,7 +140,9 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 	// private boolean metaDataRetrieved;
 
 	// Popup menu stuff.
-	private JPopupMenu popup1 = new JPopupMenu();
+	private JPopupMenu databasePopUp = new JPopupMenu();
+	private JPopupMenu TAUdbPopUp = new JPopupMenu();
+
 	private JPopupMenu stdAppPopup = new JPopupMenu();
 	private JPopupMenu stdExpPopup = new JPopupMenu();
 	private JPopupMenu stdTrialPopup = new JPopupMenu();
@@ -393,13 +397,17 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 							} else if (userObject instanceof Database) {
 								// standard or database
 								clickedOnObject = selectedNode;
-								popup1.show(tree, evt.getX(), evt.getY());
-
+								if(((Database)userObject).isTAUdb()){
+									TAUdbPopUp.show(tree, evt.getX(), evt.getY());
+								}else{
+									databasePopUp.show(tree, evt.getX(), evt.getY());
+								}
+							
 							} else if (userObject instanceof String) {
 								// standard or database
 								clickedOnObject = selectedNode;
 								if (((String) userObject).indexOf("Standard") != -1) {
-									popup1.show(tree, evt.getX(), evt.getY());
+									databasePopUp.show(tree, evt.getX(), evt.getY());
 								}
 
 							}
@@ -595,13 +603,21 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		// popup menus
 		JMenuItem jMenuItem = new JMenuItem("Add Application");
 		jMenuItem.addActionListener(this);
-		popup1.add(jMenuItem);
+		databasePopUp.add(jMenuItem);
 		jMenuItem = new JMenuItem("Add Experiment");
 		jMenuItem.addActionListener(this);
-		popup1.add(jMenuItem);
+		databasePopUp.add(jMenuItem);
 		jMenuItem = new JMenuItem("Add Trial");
 		jMenuItem.addActionListener(this);
-		popup1.add(jMenuItem);
+		databasePopUp.add(jMenuItem);
+		
+		// popup menus
+		jMenuItem = new JMenuItem("Add Trial");
+		jMenuItem.addActionListener(this);
+		TAUdbPopUp.add(jMenuItem);
+		jMenuItem = new JMenuItem("Add View");
+		jMenuItem.addActionListener(this);
+		TAUdbPopUp.add(jMenuItem);
 
 		jMenuItem = new JMenuItem("Monitor Application");
 		jMenuItem.addActionListener(this);
@@ -744,6 +760,8 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		jMenuItem = new JMenuItem("Delete");
 		jMenuItem.addActionListener(this);
 		multiPopup.add(jMenuItem);
+		
+		
 
 	}
 
@@ -1188,6 +1206,22 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 						}
 
 					}
+					
+					
+					
+					
+				}else if (arg.equals("Add View")) {
+
+					Database database = (Database) ((DefaultMutableTreeNode) clickedOnObject)
+							.getUserObject();
+					DatabaseAPI dbAPI = this.getDatabaseAPI(database);
+					ViewCreator vc = new ViewCreator(dbAPI.getDb());
+					ViewCreatorGUI frame = new ViewCreatorGUI(vc);
+
+					// Display the window.
+					frame.pack();
+					frame.setVisible(true);
+
 				} else if (arg.equals("Upload Application to DB")) {
 
 					java.lang.Thread thread = new java.lang.Thread(
