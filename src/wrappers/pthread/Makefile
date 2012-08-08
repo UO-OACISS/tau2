@@ -97,3 +97,7 @@ $(PTHREAD_LDPRELOAD_LIB): pthread_wrap_preload.o
 
 pthread_wrap_preload.o: pthread_wrap.c
 	$(CC) -DTAU_LIBRARY_SOURCE -DTAU_PRELOAD_LIB $(CFLAGS) -g -c $< -o $@
+
+# *CWL* This is REQUIRED for any component of TAU for a successful new build!
+clean:
+	/bin/rm -f pthread_wrap_preload.o pthread_wrap_ld.o $(PTHREAD_LD_LIB) $(PTHREAD_LDPRELOAD_LIB)
