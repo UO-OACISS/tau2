@@ -544,6 +544,17 @@ void tau_trace_exit(int* id) {
   traceExit(*id);
 }
 
+#ifndef TAU_PEBIL_DISABLE
+#include <pthread.h>
+void* tool_thread_init(pthread_t args) {
+  dprintf("TAU: initializing thread %#lx\n", args); 
+}
+
+void* tool_thread_fini(pthread_t args) {
+  dprintf("TAU: finalizing thread %#lx\n", args); 
+}
+#endif /* TAU_PEBIL_DISABLE */
+
 } /* extern "C" */
   
 
