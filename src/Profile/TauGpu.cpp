@@ -123,11 +123,15 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, GpuEvent
 	//Inorder to capture the entire memcpy transaction time start the send/recived
 	//at the start of the event
 	if (memcpyType == MemcpyDtoH) {
+	  if (TauEnv_get_tracing()) {
 		TauTraceOneSidedMsg(MESSAGE_RECV, device, -1, 0);
+	  }
 	}
 	else
 	{
+	  if (TauEnv_get_tracing()) {
 		TauTraceOneSidedMsg(MESSAGE_SEND, device, transferSize, 0);
+	  }
 	}
 
 	if (memcpyType == MemcpyHtoD) {
@@ -389,7 +393,9 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
 				endTime + id->syncOffset(), id->getCallingSite());
 		//Inorder to capture the entire memcpy transaction time start the send/recived
 		//at the start of the event
+	  if (TauEnv_get_tracing()) {
 		TauTraceOneSidedMsg(MESSAGE_RECV, id, transferSize, task);
+	  }
 	}
 	else if (memcpyType == MemcpyDtoH) {
 		stage_gpu_event(functionName, task,
@@ -411,7 +417,9 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
 				endTime + id->syncOffset(), id->getCallingSite());
 		//Inorder to capture the entire memcpy transaction time start the send/recived
 		//at the start of the event
+	  if (TauEnv_get_tracing()) {
 		TauTraceOneSidedMsg(MESSAGE_SEND, id, transferSize, task);
+	  }
 	}
 	else {
 		stage_gpu_event(functionName, task,
