@@ -548,10 +548,12 @@ void tau_trace_exit(int* id) {
 #include <pthread.h>
 void* tool_thread_init(pthread_t args) {
   dprintf("TAU: initializing thread %#lx\n", args); 
+  Tau_create_top_level_timer_if_necessary();
 }
 
 void* tool_thread_fini(pthread_t args) {
   dprintf("TAU: finalizing thread %#lx\n", args); 
+  Tau_stop_top_level_timer_if_necessary(); 
 }
 #endif /* TAU_PEBIL_DISABLE */
 
