@@ -25,7 +25,7 @@ public class ViewCreator {
 
 		ResultSet results = statement.executeQuery();
 		while(results.next()){
-			names.add(results.getString(0));
+			names.add(results.getString(1));
 		}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block

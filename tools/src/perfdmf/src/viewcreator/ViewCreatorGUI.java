@@ -309,9 +309,9 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 	}
     private String[] getMetaDataList() {
 		//List of names should be looked up in database
-    	String[] returnS = {"Aplication","CPU Cores","Username"};
-    	//String[] returnS = new String[0];
-    	//returnS = viewCreator.getMetadataNames().toArray(returnS);
+    	//String[] returnS = {"Aplication","CPU Cores","Username"};
+    	String[] returnS = new String[0];
+    	returnS = viewCreator.getMetadataNames().toArray(returnS);
 		return returnS;
 	}
     private Component addNumberField(){
