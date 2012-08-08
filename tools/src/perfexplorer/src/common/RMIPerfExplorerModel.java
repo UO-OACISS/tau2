@@ -59,7 +59,7 @@ public class RMIPerfExplorerModel implements Serializable {
 	protected boolean chartHorizontal = false;
 	protected boolean showZero = true;
 	protected String chartUnits = null;
-
+	protected boolean categoricalXAxis = false;
 
 	// more cluster settings
 	protected AnalysisType clusterMethod = null;
@@ -1218,4 +1218,20 @@ public class RMIPerfExplorerModel implements Serializable {
 	public void setChartSeriesXML(boolean chartSeriesXML) {
 		this.chartSeriesXML = chartSeriesXML;
 	}
+
+
+	/**
+	 * @return the categoricalXAxis
+	 */
+	public boolean isCategoricalXAxis() {
+		return categoricalXAxis;
+	}
+
+	/**
+	 * @param categoricalXAxis the categoricalXAxis to set
+	 */
+	public void setCategoricalXAxis(boolean categoricalXAxis) {
+		this.categoricalXAxis = categoricalXAxis;
+	}
+	
 }
