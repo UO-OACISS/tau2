@@ -20,6 +20,9 @@ using namespace std;
 #define TAU_BFD_UNIMPLEMENTED_HANDLE -1337
 #define TAU_BFD_UNIMPLEMENTED_MODULE_HANDLE -11337
 
+typedef int tau_bfd_handle_t;
+typedef int tau_bfd_module_handle_t;
+
 static vector<TauBfdAddrMap*> addressMaps;
 
 // Empty interface functions
@@ -102,7 +105,6 @@ int Tau_bfd_processBfdExecInfo(tau_bfd_handle_t handle, TauBfdIterFn fn)
 	}
 	return TAU_BFD_SYMTAB_LOAD_FAILED;
 }
-
 
 //
 // Deprecated interface functions maintained for backwards compatibility.
