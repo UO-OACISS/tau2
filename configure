@@ -1826,7 +1826,7 @@ for arg in "$@"; do
       echo "Error: Cannot access GPU include directory $cudainclude"
       exit 1
     fi
-		useropt="$useropt#-DTAU_MAX_THREADS=32"
+#		useropt="$useropt#-DTAU_MAX_THREADS=32"
 		cuda=yes
     shift
     ;;
@@ -1848,7 +1848,7 @@ for arg in "$@"; do
       exit 1
     fi
 		if [ -f "$openclinclude/CL/cl.h" ] ; then
-			useropt="$useropt#-DTAU_MAX_THREADS=32"
+#			useropt="$useropt#-DTAU_MAX_THREADS=32"
       fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$openclinclude"
 		else
 			echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
