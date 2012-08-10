@@ -135,7 +135,7 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauMemoryWrap.o \
 		$(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
 		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) $(TAU_SAMPLING_O) \
 		TauIoWrap.o TauCompensate.o $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
-		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_GASPU_O) $(TAU_CUPTI_COUNTER_OBJS) \
+		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_CUPTI_COUNTER_OBJS) \
 		$(TAU_WINDOWS_OBJ) $(TAU_SHMEM_OBJS) $(TAU_IBM_BG_HWP_OBJS)
 
 # CWL - BFD Functionality for libTAU.so is faked if no shared BFD object can
@@ -838,9 +838,6 @@ TauMemory.o : TauMemory.cpp $(HDRS)
 
 TauGASP.o : TauGASP.c $(HDRS)
 	$(TAU_UPCC) $(UPCFLAGS) -c $(@:.o=.c)
-
-TauGASPU.o : TauGASPU.upc $(HDRS)
-	$(TAU_UPCC) $(UPCFLAGS) -c $(@:.o=.upc)
 
 TauBgHwpCounters.o : TauBgHwpCounters.c $(HDRS) 
 	$(CC) $(CFLAGS) -c $(@:.o=.c)
