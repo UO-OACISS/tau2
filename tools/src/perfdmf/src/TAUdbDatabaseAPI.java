@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.LinkedHashMap;
 import java.util.ArrayList;
+import java.util.UUID;
 import java.util.Vector;
 import java.util.Map.Entry;
 import java.io.ByteArrayInputStream;
@@ -29,6 +30,7 @@ import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
 import edu.uoregon.tau.common.MetaDataMap.MetaDataValue;
 import edu.uoregon.tau.perfdmf.database.ConnectionManager;
 import edu.uoregon.tau.perfdmf.database.DB;
+//import org.h2.util.Profiler;
 
 public class TAUdbDatabaseAPI extends DatabaseAPI {
 	final static int MEAN_WITHOUT_NULL = -1;
@@ -143,7 +145,9 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
         }
 
         int newTrialID = -1;
-
+        Map<Function, Integer> callpathMap = null;
+        Map<Thread, Integer> threadMap = null;
+        
         try {
             // save the trial metadata (which returns the new id)
             newTrialID = trial.saveTrial(db);
@@ -160,7 +164,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
             Map<Function, Integer> functionMap = getFunctionsIDMap(newTrialID, dataSource, db);
             
             uploadThreads(newTrialID, dataSource, db);
-            Map<Thread, Integer> threadMap = getThreadsMap(newTrialID, dataSource, db);
+            threadMap = getThreadsMap(newTrialID, dataSource, db);
             
             uploadTimerGroups(functionMap, db);
             uploadTimerParameter(functionMap, db);
@@ -168,7 +172,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
             // which are just the flat profile. This call will upload the full call graph,
             // including all the nodes and edges. However, they are mapped from Function
             // objects to timer_callpath rows in the database.
-            Map<Function, Integer> callpathMap = uploadCallpathInfo(dataSource, functionMap, db);
+            callpathMap = uploadCallpathInfo(dataSource, functionMap, db);
             
             // now that the graph is created, insert the call and subroutine data.
             uploadCallDataInfo(dataSource, callpathMap, metricMap, threadMap, db, false);
@@ -1093,22 +1097,24 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 	            int time_range = Integer.parseInt(db.getDataItem(tmpStr));
 			    
 		        stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
-		                + "secondary_metadata (trial, thread, timer_callpath, time_range, parent, name, value, is_array) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-	            stmt.setInt(1, trialID);
-	            stmt.setInt(2, threadMap.get(thread));
+		                + "secondary_metadata (id, trial, thread, timer_callpath, time_range, parent, name, value, is_array) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+		        stmt.setString(1, UUID.randomUUID().toString());
+		        stmt.setInt(2, trialID);
+	            stmt.setInt(3, threadMap.get(thread));
 	            if (key.timer_context != null) {
 		            int timer_callpath = functionMap.get(dataSource.getFunction(key.timer_context));
-		            stmt.setInt(3, timer_callpath);
-		            stmt.setInt(4, time_range);
-		            stmt.setNull(5, java.sql.Types.INTEGER);
+		            stmt.setInt(4, timer_callpath);
+		            stmt.setInt(5, time_range);
+		            stmt.setNull(6, java.sql.Types.VARCHAR);
 	            } else {
-		            stmt.setNull(3, java.sql.Types.INTEGER);
 		            stmt.setNull(4, java.sql.Types.INTEGER);
 		            stmt.setNull(5, java.sql.Types.INTEGER);
+		            stmt.setNull(6, java.sql.Types.INTEGER);
 	            }
-	            stmt.setString(6, key.name);
-	            stmt.setString(7, value.value.toString());
-	            stmt.setBoolean(8, false);
+	            stmt.setString(7, key.name);
+	            stmt.setString(8, value.value.toString());
+	            stmt.setBoolean(9, false);
+				System.out.println(stmt.toString());
 		        stmt.execute();
 		        stmt.close();
 			}
@@ -1116,16 +1122,29 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 
         if (trial.getDataSource().getMetadataFile() != null) {
         	try {
+        		System.out.print("Parsing metadata file: " + trial.getDataSource().getMetadataFile() + "...");
 	        	String meta = DataSource.readFileAsString(trial.getDataSource().getMetadataFile());
 	        	if (MetaDataParserJSON.isJSON(meta)) {
+	        		//Profiler prof = new Profiler();
+	        		//prof.startCollecting();
 	        		Gson gson = new Gson();
 	        		Object obj = gson.fromJson(meta, Object.class);
+	        		System.out.print("done.\nUploading to database...");
 	        		if (obj.getClass() == LinkedHashMap.class) {
 	        			Map<String, Object> map = (LinkedHashMap<String,Object>)obj;
+	    		        stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
+	    		                + "secondary_metadata (id, trial, name, value, parent, is_array) VALUES (?, ?, ?, ?, ?, ?)");
+	    		        int count = 0;
 	        			for (Map.Entry<String, Object> entry : map.entrySet()) {
-	        				processElement(entry, null, trialID, db);
+	        				count = processElement(stmt, entry, null, trialID);
 	        			}
+        				System.out.print("Metadata Fields Processed: " + count);
+		        		System.out.print(", executing batch... ");
+	        			stmt.executeBatch();
+	        			stmt.close();
 	        		}
+	        		//prof.stopCollecting();
+	        		//System.out.println(prof.getTop(10));
 	        	}
         	} catch (IOException ioe) {
         		System.err.println("Error parsing metadata file.");
@@ -1137,95 +1156,72 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
         }
 	}
 	
-	private static void processElement(Entry<String, Object> entry,
-			Integer parent, int trialID, DB db) throws SQLException {
+	private static int processElement(PreparedStatement stmt, Entry<String, Object> entry,
+			String parent, int trialID) throws SQLException {
+		int count = 0;
 		String key = entry.getKey();
 		Object value = entry.getValue();
-        PreparedStatement stmt = null;
+		String myID = UUID.randomUUID().toString();
         // handle special case of top-level metadata with no value
 		if (value == null && parent == null) {
-	        stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
-	                + "primary_metadata (trial, name, value) VALUES (?, ?, ?)");
-	        stmt.setInt(1, trialID);
-	        stmt.setString(2, key);
-	        stmt.setNull(3, java.sql.Types.VARCHAR);
-	        stmt.execute();
-	        stmt.close();
+	        stmt.setString(1, myID);
+	        stmt.setInt(2, trialID);
+	        stmt.setString(3, key);
+	        stmt.setNull(4, java.sql.Types.VARCHAR);
+	        stmt.setNull(5, java.sql.Types.VARCHAR);
+	        stmt.setBoolean(6, false);
+	        stmt.addBatch();
+	        count++;
 	    // second case, nested metadata with null value
 		} else if (value == null) {
-	        stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
-	                + "secondary_metadata (trial, name, value, parent) VALUES (?, ?, ?, ?)");
-	        stmt.setInt(1, trialID);
-	        stmt.setString(2, key);
-	        stmt.setNull(3, java.sql.Types.VARCHAR);
-	        stmt.setInt(4, parent);
-	        stmt.execute();
-	        stmt.close();
+	        stmt.setString(1, myID);
+			stmt.setInt(2, trialID);
+	        stmt.setString(3, key);
+	        stmt.setString(4, parent);
+	        stmt.setNull(5, java.sql.Types.VARCHAR);
+	        stmt.setBoolean(6, false);
+	        stmt.addBatch();
+	        count++;
 	    // ok, we have a value.
 		} else {
 			// is there an inner object?
 			if (value.getClass() == LinkedHashMap.class) {
 				// insert this object as the parent
-		        stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
-		                + "secondary_metadata (trial, name, value, parent) VALUES (?, ?, ?, ?)");
-		        stmt.setInt(1, trialID);
-		        stmt.setString(2, key);
-		        stmt.setNull(3, java.sql.Types.VARCHAR);
+		        stmt.setString(1, myID);
+		        stmt.setInt(2, trialID);
+		        stmt.setString(3, key);
+		        stmt.setNull(4, java.sql.Types.VARCHAR);
 		        if (parent == null) {
-		        	stmt.setNull(4, java.sql.Types.INTEGER);
+		        	stmt.setNull(5, java.sql.Types.VARCHAR);
 		        } else {
-		        	stmt.setInt(4, parent);
+		        	stmt.setString(5, parent);
 		        }
-		        stmt.execute();
-		        stmt.close();
-	            String tmpStr = new String();
-	            if (db.getDBType().compareTo("mysql") == 0)
-	                tmpStr = "select LAST_INSERT_ID();";
-	            else if (db.getDBType().compareTo("db2") == 0)
-	                tmpStr = "select IDENTITY_VAL_LOCAL() FROM secondary_metadata";
-	            else if (db.getDBType().compareTo("derby") == 0)
-	                tmpStr = "select IDENTITY_VAL_LOCAL() FROM secondary_metadata";
-	            else if (db.getDBType().compareTo("sqlite") == 0)
-	                tmpStr = "select seq from sqlite_sequence where name = 'secondary_metadata'";
-	            else if (db.getDBType().compareTo("h2") == 0)
-	                tmpStr = "select IDENTITY_VAL_LOCAL() FROM secondary_metadata";
-	            else if (db.getDBType().compareTo("oracle") == 0)
-	                tmpStr = "select " + db.getSchemaPrefix() + "secondary_metadata_id_seq.currval FROM dual";
-	            else
-	                tmpStr = "select currval('secondary_metadata_id_seq');";
-	            int newParent = Integer.parseInt(db.getDataItem(tmpStr));
+		        stmt.setBoolean(6, false);
+		        stmt.addBatch();
+		        count++;
 
 	            // process the children
 	            Map<String, Object> map = (LinkedHashMap<String,Object>)value;
 				for (Map.Entry<String, Object> innerEntry : map.entrySet()) {
-					processElement(innerEntry, newParent, trialID, db);
+					count += processElement(stmt, innerEntry, myID, trialID);
 				}
 			// this is a regular value, could be nested.
 			} else {
-		        if (parent == null && !(value.getClass() == ArrayList.class)) {
-			        stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
-			                + "primary_metadata (trial, name, value) VALUES (?, ?, ?)");
-			        stmt.setInt(1, trialID);
-			        stmt.setString(2, key);
-			        stmt.setString(3, value.toString());
+		        stmt.setString(1, myID);
+		        stmt.setInt(2, trialID);
+		        stmt.setString(3, key);
+		        stmt.setString(4, value.toString());
+		        if (parent == null) {
+		        	stmt.setNull(5, java.sql.Types.VARCHAR);
 		        } else {
-			        stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
-			                + "secondary_metadata (trial, name, value, parent, is_array) VALUES (?, ?, ?, ?, ?)");
-			        stmt.setInt(1, trialID);
-			        stmt.setString(2, key);
-			        stmt.setString(3, value.toString());
-			        if (parent == null) {
-			        	stmt.setNull(4, java.sql.Types.INTEGER);
-			        } else {
-			        	stmt.setInt(4, parent);
-			        }
-			        // if this value is an array, say so.
-		        	stmt.setBoolean(5, (value.getClass() == ArrayList.class));
+		        	stmt.setString(5, parent);
 		        }
-		        stmt.execute();
-		        stmt.close();
+		        stmt.setBoolean(6, (value.getClass() == ArrayList.class));
+		        stmt.addBatch();
+		        count++;
 			}
 		}
+		return count;
 	}
 
 	public void setView(View view) {
