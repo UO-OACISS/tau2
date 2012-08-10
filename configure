@@ -6667,30 +6667,59 @@ if [ $vampirtrace = yes ] ; then
     fi
 fi
 
+#if [ $scorep = yes ] ; then
+#    fixmakeargs="$fixmakeargs SCOREP scorepdir=$scorepdir"
+#    tauoptions="${tauoptions}-scorep"
+#    scorepCommonLibs="-lbfd#-liberty#-lotf2#-lscorep_utilities"
+#    if [ $mpi = yes ] ; then 
+#      if [ $openmp = yes ] ; then
+#        fixmakeargs="$fixmakeargs SCOREPOMPI" 
+#	scorepLibs="-L${scorepdir}/lib#-lscorep_mpi#$scorepCommonLibs"
+#      else
+#        fixmakeargs="$fixmakeargs SCOREPMPI"
+#	scorepLibs="-L${scorepdir}/lib#-lscorep_mpi#$scorepCommonLibs"
+#      fi 
+#    else
+#      if [ $openmp = yes ] ; then
+#        fixmakeargs="$fixmakeargs SCOREPOMP" 
+#	scorepLibs="-L${scorepdir}/lib#-lscorep_serial#$scorepCommonLibs"
+#      else
+#	scorepLibs="-L${scorepdir}/lib#-lscorep_serial#$scorepCommonLibs"
+#      fi
+#    fi
+
+#    fixmakeargs="$fixmakeargs scorepmpilibs=$scorepLibs"
+#    fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"
+#    fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/scorep"
+
+
 if [ $scorep = yes ] ; then
     fixmakeargs="$fixmakeargs SCOREP scorepdir=$scorepdir"
     tauoptions="${tauoptions}-scorep"
-    scorepCommonLibs="-lbfd#-liberty#-lotf2#-lscorep_utilities"
     if [ $mpi = yes ] ; then 
       if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs SCOREPOMPI" 
-	scorepLibs="-L${scorepdir}/lib#-lscorep_mpi#$scorepCommonLibs"
+        scorepLibs=`${scorepdir}/bin/scorep-config --hyb --libs`
       else
         fixmakeargs="$fixmakeargs SCOREPMPI"
-	scorepLibs="-L${scorepdir}/lib#-lscorep_mpi#$scorepCommonLibs"
+        scorepLibs=`${scorepdir}/bin/scorep-config --mpi --libs`
       fi 
     else
       if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs SCOREPOMP" 
-	scorepLibs="-L${scorepdir}/lib#-lscorep_serial#$scorepCommonLibs"
+        scorepLibs=`${scorepdir}/bin/scorep-config --omp --libs`
       else
-	scorepLibs="-L${scorepdir}/lib#-lscorep_serial#$scorepCommonLibs"
+        scorepLibs=`${scorepdir}/bin/scorep-config --seq --libs`
       fi
     fi
-
+    scorepLibs=`echo $scorepLibs | sed "s/ /#/g"`
+    scorepLibs=`echo $scorepLibs | sed "s/,//g"`
+echo $scorepLibs
     fixmakeargs="$fixmakeargs scorepmpilibs=$scorepLibs"
     fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"
     fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/scorep"
+
+
 
 if [ $phase = yes ] ; then
      echo "********scorep and phase are on"
