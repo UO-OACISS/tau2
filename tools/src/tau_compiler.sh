@@ -479,7 +479,12 @@ for arg in "$@" ; do
 		
 		    -optTauWrapFile*)
 			tauWrapFile="$tauWrapFile ${arg#"-optTauWrapFile="}"
-			echoIfDebug "\ttauWrapFile is: "$tauWrapFile
+			echoIfDebug "\ttauWrapFile is: $tauWrapFile"
+			;;
+
+		    -optTauGASPU*)
+			optTauGASPU="${arg#"-optTauGASPU="}"
+			echoIfDebug "\toptTauGASPU is: $optTauGASPU"
 			;;
 
 		    -optTauSelectFile*)
@@ -1320,6 +1325,11 @@ if [ $numFiles == 0 ]; then
       echoIfDebug "Linking command is $linkCmd"
     fi 
 
+    if [ "x$optTauGASPU" != "x" ]; then
+      linkCmd="$linkCmd $optTauGASPU"
+      echoIfDebug "Linking command is $linkCmd"
+    fi 
+
     if [ $optFujitsu == $TRUE ]; then
       linkCmd=`echo $linkCmd | sed -e 's/fccpx/FCCpx/g' -e 's/frtpx/FCCpx/g'`
     fi
@@ -1842,6 +1852,11 @@ cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} ${o
           newCmd="$newCmd `cat $tauWrapFile` "
           echoIfDebug "Linking command is $newCmd"
         fi
+
+    if [ "x$optTauGASPU" != "x" ]; then
+      newCmd="$newCmd $optTauGASPU"
+      echoIfDebug "Linking command is $newCmd"
+    fi 
 
 	madeToLinkStep=$TRUE
 	evalWithDebugMessage "$newCmd" "Linking (Together) object files"
