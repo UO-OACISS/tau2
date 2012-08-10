@@ -56,7 +56,6 @@ using namespace std;
 #include <sys/stat.h>
 #include <fcntl.h>
 
-
 #include <stdio.h> 
 #include <time.h>
 #include <stdlib.h>
@@ -1313,12 +1312,21 @@ int TauProfiler_StoreData(int tid) {
   }
 #if defined(PTHREADS) || defined(TAU_OPENMP)
   if (RtsLayer::myThread() == 0 && tid == 0) {
+    int otherThreads = 0;
     /* clean up other threads? */
     for (int i =1; i < TAU_MAX_THREADS; i++) {
       if (TauInternal_ParentProfiler(i) != (Profiler *) NULL) {
+        otherThreads++;
         TauProfiler_StoreData(i);
       }
     }
+#if defined(TAU_OPENMP)
+    if (otherThreads == 0) {
+      // issue a warning, because this is a multithreaded config,
+      // and we saw no threads other than 0!
+      fprintf(stderr, "\nTAU: WARNING! TAU did not detect more than one thread.\nIf running an OpenMP application with tau_exec and you expected\nmore than one thread, try using the '-T pthread' configuration,\nor instrument your code with TAU.\n\n");
+    }
+#endif /* OPENMP */
   }
 #endif /* PTHREADS */
   return 1;
