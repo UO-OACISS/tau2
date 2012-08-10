@@ -40,6 +40,8 @@ package edu.uoregon.tau.perfdmf.viewcreator;
 import java.awt.*;
 import java.awt.event.*;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Date;
 
 import javax.swing.*;
@@ -83,9 +85,11 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 	 static final String STRING_ENDS = "ends with";
 	 static final String STRING_CONTAINS = "contains";
 	 static final String STRING_EXACTLY = "is exactly";
+	 static final String STRING_NOT = "is not";
 	 static final String STRING_BEGINS = "beings with";
 	
 	 static final String NUMBER_EQUAL = "is equal to";
+	 static final String NUMBER_NOT = "is not equal to";
 	 static final String NUMBER_LESS = "is less than";
 	 static final String NUMBER_RANGE = "is in the range";
 	 static final String NUMBER_GREATER = "is greater than";
@@ -105,6 +109,8 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 	private JPanel panel;
 	private JPanel rulePane;
 	private ViewCreator viewCreator;
+	private List<RuleListener> ruleListeners;
+	private String anyOrAll;
 
 	
     
@@ -115,6 +121,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
              //UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
          } catch (Exception e) {}
     	this.viewCreator = vc;
+    	this.ruleListeners = new ArrayList<RuleListener>();
     	this.setTitle("TAUdb View Creator");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             	
@@ -179,71 +186,20 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 			
 		}else if ("Cancel".equals(e.getActionCommand())){
 			close();
+		}else if ("comboBoxChanged".equals(e.getActionCommand())){
+			anyOrAll =((JComboBox) e.getSource()).getSelectedItem().toString();
 		}
 		
 	}
 
 	private void saveView(String saveName) {
-		// TODO: Some how collects the information on the screen.
-		int numRules = rulePane.getComponentCount();
+		System.out.println(anyOrAll);
 
-		for (Component pane : rulePane.getComponents()) {
-
-			JPanel rule = (JPanel) pane;
-
-			JComboBox metadataCB = (JComboBox) rule.getComponent(0);
-			String metadataName = metadataCB.getSelectedItem().toString();
-			System.out.println("Metadata Name: " + metadataName);
-			JComboBox readAsCB = (JComboBox) rule.getComponent(1);
-			String type = readAsCB.getSelectedItem().toString();
-			System.out.println("Type: " + type);
-			JComboBox comparCB = (JComboBox) ((JPanel) ((JPanel) rule
-					.getComponent(2)).getComponent(0)).getComponent(0);
-			String comparator = comparCB.getSelectedItem().toString();
-			System.out.println("Comp: " + comparator);
-			
-			JPanel valuePanel = (JPanel) ((JPanel) ((JPanel) rule.getComponent(2)).getComponent(0)).getComponent(1);
-
-			 if (comparator.equals(STRING_EXACTLY)) {
-					JTextField text = (JTextField) ((JPanel) valuePanel.getComponent(0)).getComponent(0);
-					String value = text.getText();
-					System.out.println(value);
-			 }else if (comparator.equals(STRING_BEGINS)) {
-				JTextField text = (JTextField) ((JPanel) valuePanel.getComponent(1)).getComponent(0);
-				String value = text.getText();
-				System.out.println(value);
-		
-			} else if (comparator.equals(STRING_ENDS)) {
-				JTextField text = (JTextField) ((JPanel) valuePanel.getComponent(2)).getComponent(0);
-				String value = text.getText();
-				System.out.println(value);
-			} else if (comparator.equals(STRING_CONTAINS)) {
-				JTextField text = (JTextField) ((JPanel) valuePanel.getComponent(3)).getComponent(0);
-				String value = text.getText();
-				System.out.println(value);
-			}
-
-			else if (comparator.equals(NUMBER_EQUAL)) {
-				JFormattedTextField text = (JFormattedTextField) ((JPanel) valuePanel.getComponent(0)).getComponent(0);
-				String value = text.getText();
-				System.out.println(value);
-			} else if (comparator.equals(NUMBER_GREATER)) {
-			} else if (comparator.equals(NUMBER_LESS)) {
-			} else if (comparator.equals(NUMBER_RANGE)) {
-			} 
-			
-			else if (comparator.equals(DATE_IS)) {
-			} else if (comparator.equals(DATE_AFTER)) {
-			} else if (comparator.equals(DATE_BEFORE)) {
-
-			} else if (comparator.equals(NUMBER_RANGE)) {
-
-			}
-
+		for(RuleListener rule : ruleListeners){
+			System.out.println(rule.getColumn_name());
+			System.out.println(rule.getValue());
+			System.out.println(rule.getOperator());
 		}
-
-		// and sent it to the DB
-		System.out.println("Saving " + saveName);
 
 	}
 	private JPanel getMatch() {
@@ -252,6 +208,8 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 		JComboBox comboBox = new JComboBox(comboBoxItems);
 		JLabel label1 = new JLabel("Match ");
 		JLabel label2 = new JLabel(" of the following rules.");
+		
+		comboBox.addActionListener(this);
 
 		panel.add(label1);
 		panel.add(comboBox);
@@ -280,11 +238,15 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         JComboBox cb = new JComboBox(comboBoxItems);
         cb.setEditable(false);
         
-        cards = new JPanel(new CardLayout());
         
-        cards.add(addStringField(), STRING);
-        cards.add(addNumberField(),NUMBER);
+        cards = new JPanel(new CardLayout());
+        RuleListener listener = new RuleListener();
+        ruleListeners.add(listener);
+        cb.addActionListener(listener);
+        cards.add(addStringField(listener), STRING);
+        cards.add(addNumberField(listener),NUMBER);
         cards.add(addDateField(), DATE);
+        
         
         ViewCreatorListner listner = new ViewCreatorListner(cards);
         cb.addItemListener(listner);
@@ -297,6 +259,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         
         String metadataList[] = getMetaDataList();
         JComboBox metadataCB = new JComboBox(metadataList);
+        metadataCB.addActionListener(listener);
         metadataCB.setEditable(false);
         
         comboBoxPane.add(metadataCB, BorderLayout.WEST);
@@ -309,15 +272,15 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 	}
     private String[] getMetaDataList() {
 		//List of names should be looked up in database
-    	//String[] returnS = {"Aplication","CPU Cores","Username"};
-    	String[] returnS = new String[0];
-    	returnS = viewCreator.getMetadataNames().toArray(returnS);
+    	String[] returnS = {"Aplication","CPU Cores","Username"};
+//    	String[] returnS = new String[0];
+//    	returnS = viewCreator.getMetadataNames().toArray(returnS);
 		return returnS;
 	}
-    private Component addNumberField(){
+    private Component addNumberField(RuleListener listener){
         //Put the JComboBox in a JPanel to get a nicer look.
         JPanel comboBoxPane = new JPanel(); //use FlowLayout
-        String comboBoxItems[] = {NUMBER_EQUAL, NUMBER_GREATER, NUMBER_LESS, NUMBER_RANGE};
+        String comboBoxItems[] = {NUMBER_EQUAL, NUMBER_NOT, NUMBER_GREATER, NUMBER_LESS, NUMBER_RANGE};
         JComboBox cb = new JComboBox(comboBoxItems);
         cb.setEditable(false);
         
@@ -326,6 +289,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         JFormattedTextField text = new JFormattedTextField(new NumberFormatter());
         text.setValue(0.0);  
         text.setPreferredSize(new Dimension(100, 20));
+        text.getDocument().addDocumentListener(listener);
         greaterCard.add(text);
         
         
@@ -333,22 +297,36 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
          text = new JFormattedTextField(new NumberFormatter());
         text.setValue(0.0);  
         text.setPreferredSize(new Dimension(100, 20));
+        text.getDocument().addDocumentListener(listener);
         lessCard.add(text);
         
         JPanel equalCard = new JPanel();
          text = new JFormattedTextField(new NumberFormatter());
         text.setValue(0.0);  
         text.setPreferredSize(new Dimension(100, 20));
+        text.getDocument().addDocumentListener(listener);
         equalCard.add(text);
+        
+        JPanel notEqualCard = new JPanel();
+        text = new JFormattedTextField(new NumberFormatter());
+       text.setValue(0.0);  
+       text.setPreferredSize(new Dimension(100, 20));
+       text.getDocument().addDocumentListener(listener);
+       notEqualCard.add(text);
         
         JPanel rangeCard = new JPanel();
         text = new JFormattedTextField(new NumberFormatter());
         text.setValue(0.0);  
         text.setPreferredSize(new Dimension(100, 20));
+        text.getDocument().addDocumentListener(listener);
+        text.getDocument().putProperty(NUMBER_RANGE,"begin");
         rangeCard.add(text);
+
          text = new JFormattedTextField(new NumberFormatter());
         text.setValue(0.0);  
         text.setPreferredSize(new Dimension(100, 20));
+        text.getDocument().addDocumentListener(listener);
+        text.getDocument().putProperty(NUMBER_RANGE,"end");
         rangeCard.add(text);
 
 
@@ -356,6 +334,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         //Create the panel that contains the "cards".
         JPanel comparators = new JPanel(new CardLayout());
         comparators.add(equalCard, NUMBER_EQUAL);
+        comparators.add(notEqualCard, NUMBER_NOT);
         comparators.add(greaterCard, NUMBER_GREATER);
         comparators.add(lessCard, NUMBER_LESS);
         comparators.add(rangeCard, NUMBER_RANGE);
@@ -417,25 +396,35 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         return comboBoxPane;
     	
     }
-	private Component addStringField(){
+	private Component addStringField(RuleListener listener){
         //Put the JComboBox in a JPanel to get a nicer look.
         JPanel comboBoxPane = new JPanel(); //use FlowLayout
         String comboBoxItems[] = {STRING_EXACTLY,STRING_BEGINS, STRING_ENDS, STRING_CONTAINS};
         JComboBox cb = new JComboBox(comboBoxItems);
         cb.setEditable(false);
+        cb.setName(STRING);
+        cb.addActionListener(listener);
         
         //Create the "cards".
         JPanel beginCard = new JPanel();
-        beginCard.add(new JTextField("", 20));
+        JTextField begin = new JTextField("", 20);
+        begin.getDocument().addDocumentListener(listener);
+        beginCard.add(begin);
         
         JPanel containsCard = new JPanel();
-        containsCard.add(new JTextField("", 20));
+        JTextField contains = new JTextField("", 20);
+        contains.getDocument().addDocumentListener(listener);
+        containsCard.add(contains);
         
         JPanel endCard = new JPanel();
-        endCard.add(new JTextField("", 20));
+        JTextField end = new JTextField("", 20);
+        end.getDocument().addDocumentListener(listener);
+        endCard.add(end);
         
         JPanel exactlyCard = new JPanel();
-        exactlyCard.add(new JTextField("", 20));
+        JTextField exactly = new JTextField("", 20);
+        exactly.getDocument().addDocumentListener(listener);
+        exactlyCard.add(exactly);
         
 
         
