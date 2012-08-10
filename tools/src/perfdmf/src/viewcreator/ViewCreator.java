@@ -10,30 +10,32 @@ import edu.uoregon.tau.perfdmf.database.DB;
 
 public class ViewCreator {
 	DB db;
+	List<String> metadataNames;
 	public ViewCreator(DB db){
 		this.db = db;
+		this.metadataNames = new ArrayList<String>();
 	}
 	public List<String> getMetadataNames()  {
-		ArrayList<String> names = new ArrayList<String>();
+		
 		try {
 		String sql = "SELECT DISTINCT name FROM "
 				+ db.getSchemaPrefix()
-				+ "primary_metadata";
+				+ "primary_metadata ORDER BY name";
 		PreparedStatement statement;
 		
 			statement = db.prepareStatement(sql);
 
 		ResultSet results = statement.executeQuery();
 		while(results.next()){
-			names.add(results.getString(1));
+			metadataNames.add(results.getString(1));
 		}
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-    	System.out.println(names);
-
-		return names;
+    	System.out.println(metadataNames);
+    	
+		return metadataNames;
 	}
 		
 	
