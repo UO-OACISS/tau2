@@ -336,12 +336,11 @@ void gasp_event_notifyVA(gasp_context_t context, unsigned int evttag, gasp_evtty
     
     if(evttype==GASP_START)
     {
-
-	TAU_START(tagstr);
+      TAU_START(tagstr);
     }
     else if(evttype==GASP_END)
     {
-	TAU_STOP(tagstr);
+      TAU_STOP(tagstr);
     }
     else if(evttype=GASP_ATOMIC)
     {
@@ -350,10 +349,10 @@ void gasp_event_notifyVA(gasp_context_t context, unsigned int evttag, gasp_evtty
 #ifdef GASP_BUPC_STATIC_SHARED
          if (evttag == GASP_BUPC_STATIC_SHARED) {
            int nblocks, nbytes;
-               nblocks = (int)va_arg(argptr, int);
-               nbytes = (int)va_arg(argptr, int);
-               TAU_REGISTER_EVENT(variable, tagstr);	 
-	       TAU_EVENT(variable, nbytes);
+           nblocks = (int)va_arg(argptr, int);
+           nbytes = (int)va_arg(argptr, int);
+           TAU_REGISTER_EVENT(variable, tagstr);	 
+	         TAU_EVENT(variable, nbytes);
          }
 #endif /* GASP_BUPC_STATIC_SHARED */
     }
