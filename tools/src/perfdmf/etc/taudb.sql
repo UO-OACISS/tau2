@@ -410,7 +410,7 @@ CREATE INDEX primary_metadata_index on primary_metadata (trial, name);
    contain unique data for each thread, and could be an array. */
 
 CREATE TABLE secondary_metadata (
- id       SERIAL NOT NULL PRIMARY KEY,
+ id       VARCHAR NOT NULL PRIMARY KEY,
  /* trial this value belongs to */
  trial    INT NOT NULL,
  /* this metadata value could be associated with a thread */
@@ -420,7 +420,7 @@ CREATE TABLE secondary_metadata (
  /* which call to the context timer was this? */
  time_range    INT,
  /* this metadata value could be a nested structure */
- parent   INT,
+ parent   VARCHAR,
  /* the name of the metadata field */
  name     VARCHAR NOT NULL,
  /* the value of the metadata field */
@@ -493,65 +493,67 @@ CREATE INDEX counter_name_index on counter(name);
 
 /* SHORT TERM FIX! These views make sure that charts (mostly) work... for now. */
 
-DROP VIEW interval_location_profile;
-DROP VIEW interval_mean_summary;
-DROP VIEW interval_total_summary;
-DROP VIEW interval_event_value;
-DROP VIEW interval_event;
-DROP VIEW atomic_location_profile;
-DROP VIEW atomic_mean_summary;
-DROP VIEW atomic_total_summary;
-DROP VIEW atomic_event_value;
-DROP VIEW atomic_event;
+DROP VIEW IF EXISTS interval_location_profile;
+DROP VIEW IF EXISTS interval_mean_summary;
+DROP VIEW IF EXISTS interval_total_summary;
+DROP VIEW IF EXISTS interval_event_value;
+DROP VIEW IF EXISTS interval_event;
+DROP VIEW IF EXISTS atomic_location_profile;
+DROP VIEW IF EXISTS atomic_mean_summary;
+DROP VIEW IF EXISTS atomic_total_summary;
+DROP VIEW IF EXISTS atomic_event_value;
+DROP VIEW IF EXISTS atomic_event;
 
 CREATE OR REPLACE VIEW interval_event 
-(id, trial, name, group_name, source_file, line_number, line_number_end)
-AS SELECT tcp.id, t.trial, t.name, tg.name, t.source_file, t.line_number, t.line_number_end
-FROM timer_callpath tcp 
-INNER JOIN timer t ON tcp.timer = t.id
-INNER JOIN timer_group tg ON tg.timer = t.id;
+(id, trial, name, group_name, source_file, line_number, line_number_end) 
+AS  
+SELECT tcp.id, t.trial, t.name, tg.group_name,  
+t.source_file, t.line_number, t.line_number_end  
+FROM timer_callpath tcp  
+INNER JOIN timer t ON tcp.timer = t.id  
+INNER JOIN timer_group tg ON tg.timer = t.id; 
 
-CREATE OR REPLACE VIEW interval_event_value
-(interval_event, node, context, thread, metric, inclusive_percentage, 
-inclusive, exclusive_percentage, exclusive, call, subroutines, 
-inclusive_per_call, sum_exclusive_squared)
-AS SELECT tcd.timer_callpath, t.node_rank, t.context_rank, 
-t.thread_rank, tv.metric, tv.inclusive_percent, 
-tv.inclusive_value, tv.exclusive_percent, tv.exclusive_value, tcd.calls, tcd.subroutines,
-tv.inclusive_value / tcd.calls, tv.sum_exclusive_squared
-FROM timer_value tv
-INNER JOIN timer_call_data tcd on tv.timer_call_data = tcd.id
-INNER JOIN thread t on tcd.thread = t.id;
+CREATE OR REPLACE VIEW interval_event_value 
+(interval_event, node, context, thread, metric, inclusive_percentage,  
+inclusive, exclusive_percentage, exclusive, call, subroutines,  
+inclusive_per_call, sum_exclusive_squared) 
+AS SELECT tcd.timer_callpath, t.node_rank, t.context_rank,  
+t.thread_rank, tv.metric, tv.inclusive_percent,  
+tv.inclusive_value, tv.exclusive_percent, tv.exclusive_value, tcd.calls, tcd.subroutines, 
+tv.inclusive_value / tcd.calls, tv.sum_exclusive_squared 
+FROM timer_value tv 
+INNER JOIN timer_call_data tcd on tv.timer_call_data = tcd.id 
+INNER JOIN thread t on tcd.thread = t.id; 
 
-CREATE OR REPLACE VIEW interval_location_profile
-AS SELECT * from interval_event_value WHERE thread >= 0;
+CREATE OR REPLACE VIEW interval_location_profile 
+AS SELECT * from interval_event_value WHERE thread >= 0; 
+ 
+CREATE OR REPLACE VIEW interval_total_summary 
+AS SELECT * from interval_event_value WHERE thread = -2; 
+ 
+CREATE OR REPLACE VIEW interval_mean_summary 
+AS SELECT * from interval_event_value WHERE thread = -1; 
+ 
+ 
+CREATE OR REPLACE VIEW atomic_event  
+(id, trial, name, group_name, source_file, line_number) 
+AS SELECT c.id, c.trial, c.name, NULL, NULL, NULL 
+FROM counter c; 
 
-CREATE OR REPLACE VIEW interval_total_summary
-AS SELECT * from interval_event_value WHERE thread = -2;
-
-CREATE OR REPLACE VIEW interval_mean_summary
-AS SELECT * from interval_event_value WHERE thread = -1;
-
-
-CREATE OR REPLACE VIEW atomic_event 
-(id, trial, name, group_name, source_file, line_number)
-AS SELECT c.id, c.trial, c.name, NULL, NULL, NULL
-FROM counter c;
-
-CREATE OR REPLACE VIEW atomic_event_value
-(atomic_event, node, context, thread, sample_count,
-maximum_value, minimum_value, mean_value, standard_deviation)
-AS SELECT cv.counter, t.node_rank, t.context_rank, t.thread_rank, cv.sample_count,
-cv.maximum_value, cv.minimum_value, cv.mean_value, cv.standard_deviation
-FROM counter_value cv
+CREATE OR REPLACE VIEW atomic_event_value 
+(atomic_event, node, context, thread, sample_count, 
+maximum_value, minimum_value, mean_value, standard_deviation) 
+AS SELECT cv.counter, t.node_rank, t.context_rank, t.thread_rank, cv.sample_count, 
+cv.maximum_value, cv.minimum_value, cv.mean_value, cv.standard_deviation 
+FROM counter_value cv 
 INNER JOIN thread t ON cv.thread = t.id;
-
-CREATE OR REPLACE VIEW atomic_location_profile
-AS SELECT * FROM atomic_event_value WHERE thread >= 0;
-
-CREATE OR REPLACE VIEW atomic_total_summary
-AS SELECT * FROM atomic_event_value WHERE thread = -2;
-
-CREATE OR REPLACE VIEW atomic_mean_summary
-AS SELECT * FROM atomic_event_value WHERE thread >= -1;
-
+ 
+CREATE OR REPLACE VIEW atomic_location_profile 
+AS SELECT * FROM atomic_event_value WHERE thread >= 0; 
+ 
+CREATE OR REPLACE VIEW atomic_total_summary 
+AS SELECT * FROM atomic_event_value WHERE thread = -2; 
+ 
+CREATE OR REPLACE VIEW atomic_mean_summary 
+AS SELECT * FROM atomic_event_value WHERE thread >= -1; 
+  
