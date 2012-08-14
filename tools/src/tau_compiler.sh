@@ -31,8 +31,8 @@ declare -i isVerbose=$FALSE
 declare -i isCXXUsedForC=$FALSE
 
 declare -i isCurrentFileC=$FALSE
-declare -i isDebug=$FALSE
-#declare -i isDebug=$TRUE
+#declare -i isDebug=$FALSE
+declare -i isDebug=$TRUE
 #Set isDebug=$TRUE for printing debug messages.
 
 declare -i opari=$FALSE
@@ -69,6 +69,7 @@ declare -i madeToLinkStep=$FALSE
 
 declare -i optFixHashIf=$FALSE
 declare -i tauPreProcessor=$TRUE
+declare -i optOffloadMIC=$FALSE
 
 headerInstDir=".tau_tmp_$$"
 headerInstFlag=""
@@ -143,6 +144,7 @@ printUsage () {
     echo -e "  -optHeaderInst\t\tEnable instrumentation of headers"
     echo -e "  -optDisableHeaderInst\t\tDisable instrumentation of headers"
     echo -e "  -optFixHashIf"
+    echo -e "  -optOffloadMIC\t\tLinks code for Intel MIC offloading, requires both host and MIC TAU libraries"
     
     if [ $1 == 0 ]; then #Means there are no other option passed with the myscript. It is better to exit then.
 	exit
@@ -754,6 +756,19 @@ for arg in "$@" ; do
 			echoIfDebug "\tFixing Hash-Ifs"
 			;;
 
+		    -optOffloadMICLinking*)
+			optOffloadMICLinking="${arg#"-optOffloadMICLinking="} $optOffloadMICLinking"
+			echoIfDebug "\tLinking Options are: $optOffloadMICLinking"
+			;;
+		    -optOffloadMICSharedLinking*)
+			optOffloadMICSharedLinking="${arg#"-optOffloadMICSharedLinking="} $optOffloadMICSharedLinking"
+			echoIfDebug "\tLinking Options are: $optOffloadMICSharedLinking"
+			;;
+		    -optOffloadMIC)
+			optOffloadMIC=$TRUE
+			echoIfDebug "\tLinking for MIC Offloading"
+			;;
+
 		esac #end case for parsing script Options
 		;;
 
@@ -1192,7 +1207,21 @@ if [ $berkeley_upcc == $TRUE ]; then
    echoIfDebug "optLinking modified to accomodate -Wl,-Wl for upcc. optLinking=$optLinking"
 fi
 
-
+if [ $optOffloadMIC == $TRUE ]; then
+	#optMICLinking=`echo $optLinking | sed -e 's@x86_64/lib@mic_linux/lib@g'`
+	#if [ $optMICLinking == ""]; then
+	#	echo "Error: x86_64 architecture not found. Please set TAU_MAKEFILE to a
+	#	x86_64 configuration."
+	#	exit 1
+	#fi
+	#hybridLinking="$optLinking -offload-build -offload-ldopts='$optMICLinking'"
+	#echoIfDebug "Hybrid linking options: $hybridLinking"
+	if [ $optShared = $TRUE ]; then
+		optLinking=$optOffloadMICSharedLinking
+	else
+		optLinking=$optOffloadMICLinking
+	fi
+fi
 
 ####################################################################
 # Linking if there are no Source Files passed.
