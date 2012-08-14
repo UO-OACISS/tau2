@@ -3419,8 +3419,12 @@ case $cxx_compiler in
 #       be set appropriately to account for libgmp.so.10
 #	    cxx_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicxx
 #	    c_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicc
-	    cxx_compiler=/bgsys/drivers/ppcfloor/comm/xl/bin/mpicxx
-	    c_compiler=/bgsys/drivers/ppcfloor/comm/xl/bin/mpicc
+#
+# *CWL* - Opps, they did it again.
+#	    cxx_compiler=/bgsys/drivers/ppcfloor/comm/xl/bin/mpicxx
+#	    c_compiler=/bgsys/drivers/ppcfloor/comm/xl/bin/mpicc
+	    cxx_compiler=/bgsys/drivers/ppcfloor/comm/bin/mpicxx
+	    c_compiler=/bgsys/drivers/ppcfloor/comm/bin/mpicc
 	    tauoptions="${tauoptions}-gnu"
 	else
 	    echo "ERROR Unknown C++ compiler: $cxx_compiler"
