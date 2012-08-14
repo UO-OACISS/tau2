@@ -429,10 +429,10 @@ void record_gpu_occupancy(CUpti_ActivityKernel *kernel, const char *name, GpuEve
 		ceil(
 			kernel->registersPerThread*
 			device.numThreadsPerWarp,
-			device.computeCapabilityMajor < 3 ? 64 : 256
+			device.computeCapabilityMajor < 3 ? 128 : 256
 		)*
 		ceil(
-			myWarpsPerBlock, 2
+			myWarpsPerBlock, device.computeCapabilityMajor < 3 ? 2 : 4
 		);
 
 	int allocatable_registers = (int)floor(
@@ -480,6 +480,7 @@ void record_gpu_occupancy(CUpti_ActivityKernel *kernel, const char *name, GpuEve
 
 	int occupancy = myWarpsPerBlock * allocatable_blocks;
 
+//#define RESULTS_TO_STDOUT 1
 #ifdef RESULTS_TO_STDOUT
 	printf("[%s] occupancy calculator:\n", name);
 
