@@ -1147,8 +1147,8 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
         -optLinking="$(TAU_MPI_FLIBS) $(TAU_LIBS) $(TAU_LDFLAGS) $(TAU_CXXLIBS) $(TAU_SHMEM_LIBS) "\
         -optSharedLinking="-L$(TAU_LIB_DIR)/shared$(TAU_CONFIG) $(TAU_MPI_FLIBS)  $(TAU_SHMEM_LIBS) $(TAU_EXLIBS) $(TAU_LDFLAGS) $(TAU_CXXLIBS)"\
 	$(TAU_COMPILER_EXTRA_OPTIONS) \
-				-optOffloadMICLinking="$(MIC_OFFLOAD_LINKING)"\
-				-optOffloadMICSharedLinking="$(MIC_OFFLOAD_SHARED_LINKING)"\
+				-optMICOffloadLinking="$(MIC_OFFLOAD_LINKING)"\
+				-optMICOffloadSharedLinking="$(MIC_OFFLOAD_SHARED_LINKING)"\
         -optIncludeMemory="$(TAU_INCLUDE_MEMORY)"\
 	-optCompInstOption="$(TAU_COMPINST_OPTION) $(TAU_COMPINST_PTHREAD_OPTIONS)"\
 	-optCompInstFortranOption="$(TAU_FORTRAN_COMPINST_OPTION) $(TAU_COMPINST_PTHREAD_OPTIONS)"\
