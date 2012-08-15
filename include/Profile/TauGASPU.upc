@@ -13,9 +13,6 @@
 #include <stdio.h>
 #include <string.h>
 
-
-typedef uint64_t gasp_tick_t;
-
 /* NOTE: this file is currently compiled with every instrumented application, 
          therefore its contents should be kept to a minimum */
 
@@ -26,6 +23,8 @@ typedef uint64_t gasp_tick_t;
   /* ensure code in this file does not disturb line numbering */
   #pragma UPCR NO_SRCPOS 
 #endif
+
+typedef uint64_t gasp_tick_t;
 
 int gaspu_zero = 0;
 void gaspu_init(int *pmythread, int *pthreads) {
