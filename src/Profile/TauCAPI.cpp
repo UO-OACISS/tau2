@@ -1204,7 +1204,6 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
   
 	FunctionInfo *ptr;
   if (TauInternal_CurrentProfiler(tid) == NULL) {
-			printf("in create_top_level_timer.\n");
     initthread[tid] = true;
     ptr = (FunctionInfo *) Tau_get_profiler(".TAU application", " ", TAU_DEFAULT, "TAU_DEFAULT");
     if (ptr) {

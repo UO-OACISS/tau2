@@ -1327,10 +1327,17 @@ int TauProfiler_StoreData(int tid) {
 
 // Returns directory name for the location of a particular metric
 static int getProfileLocation(int metric, char *str) {
-#ifndef KTAU_NG
-  const char *profiledir = TauEnv_get_profiledir();
-#else
-  static char *profiledir;
+const char *profiledir;
+#ifdef __MIC__
+if (TauEnv_get_mic_offload())
+{
+	profiledir = "./proxyfs";
+}
+else
+{
+  profiledir = TauEnv_get_profiledir();
+}
+#elif defined(KTAU_NG)
   if(profiledir == NULL){
     int written_bytes = 0;
     unsigned int profile_dir_len = KTAU_NG_PREFIX_LEN + HOSTNAME_LEN;
@@ -1341,6 +1348,8 @@ static int getProfileLocation(int metric, char *str) {
     // profiledir = new char[KTAU_NG_PREFIX_LEN + (Tau_metadata_getMetaData()["Hostname"]).length() + 1]; //This will remain in memory until TAU closes since their is no corresponding delete.
     // sprintf(profiledir, "%s.%s", KTAU_NG_PREFIX, Tau_metadata_getMetaData()["Hostname"].c_str());
   }
+#else
+  profiledir = TauEnv_get_profiledir();
 #endif
 
   if (Tau_Global_numCounters <= 1) { 
@@ -1442,6 +1451,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
 	int mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
 #endif
 	int node = RtsLayer::myNode();
+
 	sprintf(dumpfile,"%s/%s%s.%d.%d.%d", profileLocation, selectivePrefix, prefix, 
 		node, RtsLayer::myContext(), tid);
 

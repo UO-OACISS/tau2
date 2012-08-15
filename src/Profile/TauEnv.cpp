@@ -134,6 +134,8 @@
 
 #define TAU_CUPTI_API_DEFAULT "runtime"
 
+#define TAU_MIC_OFFLOAD_DEFAULT 0
+
 // forward declartion of cuserid. need for c++ compilers on Cray.
 extern "C" char *cuserid(char *);
 
@@ -421,6 +423,7 @@ static const char *env_tracedir = NULL;
 static const char *env_metrics = NULL;
 static const char *env_cupti_api = NULL;
 
+static int env_mic_offload = 0;
 /*********************************************************************
  * Write to stderr if verbose mode is on
  ********************************************************************/
@@ -635,6 +638,10 @@ int TauEnv_get_child_forkdirs(){
 
 const char* TauEnv_get_cupti_api(){
   return env_cupti_api;
+}
+
+int TauEnv_get_mic_offload(){
+  return env_mic_offload;
 }
 
 /*********************************************************************
@@ -1188,7 +1195,12 @@ void TauEnv_initialize() {
       TAU_VERBOSE("TAU: CUPTI API tracking: %s\n", env_cupti_api);
       TAU_METADATA("TAU_CUPTI_API", env_cupti_api);
 		}
-
+		tmp = getconf("TAU_MIC_OFFLOAD");
+    if (parse_bool(tmp, TAU_MIC_OFFLOAD_DEFAULT)) {
+      env_mic_offload = 1;
+      TAU_VERBOSE("TAU: MIC offloading Enabled\n");
+      TAU_METADATA("TAU_MIC_OFFLOAD", "on");
+		}
   }
 }
 } /* C linkage */

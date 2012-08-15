@@ -31,8 +31,8 @@ declare -i isVerbose=$FALSE
 declare -i isCXXUsedForC=$FALSE
 
 declare -i isCurrentFileC=$FALSE
-#declare -i isDebug=$FALSE
-declare -i isDebug=$TRUE
+declare -i isDebug=$FALSE
+#declare -i isDebug=$TRUE
 #Set isDebug=$TRUE for printing debug messages.
 
 declare -i opari=$FALSE
@@ -69,7 +69,7 @@ declare -i madeToLinkStep=$FALSE
 
 declare -i optFixHashIf=$FALSE
 declare -i tauPreProcessor=$TRUE
-declare -i optOffloadMIC=$FALSE
+declare -i optMICOffload=$FALSE
 
 headerInstDir=".tau_tmp_$$"
 headerInstFlag=""
@@ -144,7 +144,7 @@ printUsage () {
     echo -e "  -optHeaderInst\t\tEnable instrumentation of headers"
     echo -e "  -optDisableHeaderInst\t\tDisable instrumentation of headers"
     echo -e "  -optFixHashIf"
-    echo -e "  -optOffloadMIC\t\tLinks code for Intel MIC offloading, requires both host and MIC TAU libraries"
+    echo -e "  -optMICOffload\t\tLinks code for Intel MIC offloading, requires both host and MIC TAU libraries"
     
     if [ $1 == 0 ]; then #Means there are no other option passed with the myscript. It is better to exit then.
 	exit
@@ -709,6 +709,7 @@ for arg in "$@" ; do
 		    -optShared)
 			optShared=$TRUE
 			optLinking=$optSharedLinking
+			optMICOffloadLinking=$optMICOffloadSharedLinking
 			echoIfDebug "\tUsing shared library"
 			;;
 
@@ -756,16 +757,16 @@ for arg in "$@" ; do
 			echoIfDebug "\tFixing Hash-Ifs"
 			;;
 
-		    -optOffloadMICLinking*)
-			optOffloadMICLinking="${arg#"-optOffloadMICLinking="} $optOffloadMICLinking"
-			echoIfDebug "\tLinking Options are: $optOffloadMICLinking"
+		    -optMICOffloadLinking*)
+			optMICOffloadLinking="${arg#"-optMICOffloadLinking="} $optMICOffloadLinking"
+			echoIfDebug "\tLinking Options are: $optMICOffloadLinking"
 			;;
-		    -optOffloadMICSharedLinking*)
-			optOffloadMICSharedLinking="${arg#"-optOffloadMICSharedLinking="} $optOffloadMICSharedLinking"
-			echoIfDebug "\tLinking Options are: $optOffloadMICSharedLinking"
+		    -optMICOffloadSharedLinking*)
+			optMICOffloadSharedLinking="${arg#"-optMICOffloadSharedLinking="} $optMICOffloadSharedLinking"
+			echoIfDebug "\tLinking Options are: $optMICOffloadSharedLinking"
 			;;
-		    -optOffloadMIC)
-			optOffloadMIC=$TRUE
+		    -optMICOffload)
+			optMICOffload=$TRUE
 			echoIfDebug "\tLinking for MIC Offloading"
 			;;
 
@@ -1207,7 +1208,7 @@ if [ $berkeley_upcc == $TRUE ]; then
    echoIfDebug "optLinking modified to accomodate -Wl,-Wl for upcc. optLinking=$optLinking"
 fi
 
-if [ $optOffloadMIC == $TRUE ]; then
+if [ $optMICOffload == $TRUE ]; then
 	#optMICLinking=`echo $optLinking | sed -e 's@x86_64/lib@mic_linux/lib@g'`
 	#if [ $optMICLinking == ""]; then
 	#	echo "Error: x86_64 architecture not found. Please set TAU_MAKEFILE to a
@@ -1216,10 +1217,10 @@ if [ $optOffloadMIC == $TRUE ]; then
 	#fi
 	#hybridLinking="$optLinking -offload-build -offload-ldopts='$optMICLinking'"
 	#echoIfDebug "Hybrid linking options: $hybridLinking"
-	if [ $optShared = $TRUE ]; then
-		optLinking=$optOffloadMICSharedLinking
+	if [ $optShared == $TRUE ]; then
+		optLinking=$optMICOffloadSharedLinking
 	else
-		optLinking=$optOffloadMICLinking
+		optLinking=$optMICOffloadLinking
 	fi
 fi
 

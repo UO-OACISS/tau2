@@ -76,6 +76,7 @@ extern "C" {
   const char* TAUDECL TauEnv_get_tracedir();
   const char* TAUDECL TauEnv_get_metrics();
   const char* TAUDECL TauEnv_get_cupti_api();
+  int TAUDECL TauEnv_get_mic_offload();
 
 
 #define TAU_FORMAT_PROFILE 1
