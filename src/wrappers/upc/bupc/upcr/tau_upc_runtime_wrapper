@@ -21,7 +21,7 @@ usage()
 }
 
 upcdir=/usr/local/packages/bupc-2.14.2/opt_inst
-gasnetdir=/usr/local/packages/gasnet-1.18.0-mpi-smp
+gasnetdir=/usr/local/packages/gasnet-1.18.0
 gasnetconduit=mpi-conduit
 runtime_specified=0;
 header_redirection_specified=0;
@@ -111,7 +111,9 @@ nm -A $upcdir/lib/*.a | grep " upcr" | awk '{ print $3;}' | sed -e 's/upcr/"# up
 nm -A $upcdir/lib/*.a | grep " _bupc_" | awk '{ print $3;}' | sed -e 's/_bupc_/"# _bupc_/g' -e 's/$/(#"/g' >> select.tau
 #nm -A $upcdir/lib/*.a | grep " bupc_" | awk '{ print $3;}' | sed -e 's/bupc_/"# bupc_/g' -e 's/$/(#"/g' >> select.tau
 echo "END_INCLUDE_LIST" >> select.tau
-$basedir/bin/tau_wrap $headerfile.pdb $headerfile -o wr.c $runtimeopt $library $* -f select.tau
+
+echo $basedir/bin/tau_wrap $headerfile.pdb $headerfile -o wr.c $runtimeopt $library $* -f select.tau --upc
+$basedir/bin/tau_wrap $headerfile.pdb $headerfile -o wr.c $runtimeopt $library $* -f select.tau --upc
 dirname=`basename ${headerfile} .h`_wrapper
 
 # replace bupc_smemvec_t [] a with bupc_smemvec_t * a
