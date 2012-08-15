@@ -36,7 +36,6 @@ using namespace std;
 //#define DEBUG 1
 extern bool wildcardCompare(char *wild, char *string, char kleenestar);
 extern bool instrumentEntity(const string& function_name);
-extern bool fuzzyMatch(const string& a, const string& b);
 extern bool memory_flag;
 bool isVoidRoutine(const pdbItem* r);
 int parseLanguageString(const string& str);
@@ -58,6 +57,52 @@ bool noinline_flag = false; /* instrument inlined functions by default */
 bool use_spec = false;   /* by default, do not use code from specification file */
 
 ///////////////////////////////////////////////////////////////////////////
+
+/* -------------------------------------------------------------------------- */
+/* -- Fuzzy Match. Allows us to match files that don't quite match properly, 
+ * but infact refer to the same file. For e.g., /home/pkg/foo.cpp and ./foo.cpp
+ * or foo.cpp and ./foo.cpp. This routine allows us to match such files! 
+ * -------------------------------------------------------------------------- */
+static bool fuzzyMatch(const string & a, const string & b)
+{ /* This function allows us to match string like ./foo.cpp with
+     /home/pkg/foo.cpp */
+  if (a == b)
+  { /* the two files do match */
+#ifdef DEBUG
+    cout <<"fuzzyMatch returns true for "<<a<<" and "<<b<<endl;
+#endif /* DEBUG */
+    return true;
+  }
+  else 
+  { /* fuzzy match */
+    /* Extract the name without the / character */
+    int loca = a.find_last_of(TAU_DIR_CHARACTER);
+    int locb = b.find_last_of(TAU_DIR_CHARACTER);
+
+    /* truncate the strings */
+    string trunca(a,loca+1);
+    string truncb(b,locb+1);
+    /*
+       cout <<"trunca = "<<trunca<<endl;
+       cout <<"truncb = "<<truncb<<endl;
+     */
+    if (trunca == truncb) 
+    {
+#ifdef DEBUG
+      cout <<"fuzzyMatch returns true for "<<a<<" and "<<b<<endl;
+#endif /* DEBUG */
+      return true;
+    }
+    else
+    {
+#ifdef DEBUG
+      cout <<"fuzzyMatch returns false for "<<a<<" and "<<b<<endl;
+#endif /* DEBUG */
+      return false;
+    }
+  }
+}
+
 
 /* Constructors */
 ///////////////////////////////////////////////////////////////////////////
@@ -2459,7 +2504,6 @@ bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef *>& it
     printf("Instrumenting memory references for Fortran when selective instrumentation file was not specified. Using memory file=\"*\" routine = \"#\"\n");
 #endif /* DEBUG */
     instrumentList.push_back(new tauInstrument(string("*"), string("#"), TAU_MEMORY));
-
   }
   for (it = instrumentList.begin(); it != instrumentList.end(); it++) 
   {

@@ -1337,9 +1337,6 @@ static int getProfileLocation(int metric, char *str) {
     profiledir = new char[profile_dir_len];
     written_bytes = sprintf(profiledir, "%s.", KTAU_NG_PREFIX);
     gethostname(profiledir + written_bytes, profile_dir_len - written_bytes);
-    
-    // profiledir = new char[KTAU_NG_PREFIX_LEN + (Tau_metadata_getMetaData()["Hostname"]).length() + 1]; //This will remain in memory until TAU closes since their is no corresponding delete.
-    // sprintf(profiledir, "%s.%s", KTAU_NG_PREFIX, Tau_metadata_getMetaData()["Hostname"].c_str());
   }
 #endif
 
