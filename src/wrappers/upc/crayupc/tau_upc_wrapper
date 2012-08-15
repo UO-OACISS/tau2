@@ -82,7 +82,7 @@ if [ "x$pdtdir" != "x" ]; then
   fi
 
 #echo "tau_wrap $headerfile.pdb $headerfile -o wr.c $runtimeopt $library $*"
-  tau_wrap $headerfile.pdb $headerfile -o wr.c --upc $runtimeopt $library $*
+  tau_wrap $headerfile.pdb $headerfile -o wr.c --crayupc $runtimeopt $library $*
   dirname=`basename ${headerfile} .h`_wrapper
   echo sed -e 's@-L.*\$@-lcray_upc_runtime_wrap@g' ${dirname}/link_options.tau > ${dirname}/link_options.tau~
   sed -e 's@-L.*$@-lcray_upc_runtime_wrap@g' ${dirname}/link_options.tau > ${dirname}/link_options.tau~

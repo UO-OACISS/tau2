@@ -77,7 +77,8 @@ extern bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef
 bool memory_flag = false;   /* by default, do not insert malloc.h in instrumented C/C++ files */
 bool strict_typing = false; /* by default unless --strict option is used. */
 bool shmem_wrapper = false; /* by default unless --shmem option is used. */
-bool upc_wrapper = false; /* by default unless --upc option is used. */
+bool upc_wrapper = false;   /* by default unless --upc or --crayupc option is used. */
+bool cray_upc = false;      /* by default unless --crayupc option is used. */
 bool pshmem_use_underscore_instead_of_p = false; /* by default unless --pshmem_use_underscore_instead_of_p option is used. */
 
 
@@ -134,23 +135,15 @@ static bool isReturnTypeVoid(pdbRoutine *r)
 static bool doesRoutineNameContainGet(string const & rname)
 {
   size_t namelen = rname.size();
-  if (upc_wrapper) {
-    return (rname.find("_memget") != string::npos);
-  } else {
-    return ((rname.find("get") != string::npos) || 
-            ((rname[namelen-2] == '_') && (rname[namelen-1] == 'g')));
-  }
+  return ((rname.find("get") != string::npos) || 
+          ((rname[namelen-2] == '_') && (rname[namelen-1] == 'g')));
 }
 
 static bool doesRoutineNameContainPut(string const & rname)
 {
   size_t namelen = rname.size();
-  if (upc_wrapper) {
-    return (rname.find("_memput") != string::npos);
-  } else {
-    return ((rname.find("put") != string::npos) || 
-            ((rname[namelen-2] == '_') && (rname[namelen-1] == 'p')));
-  }
+  return ((rname.find("put") != string::npos) || 
+          ((rname[namelen-2] == '_') && (rname[namelen-1] == 'p')));
 }
 
 /* Fetch and operate operations include swap, fadd and finc */
@@ -193,6 +186,25 @@ static char const * getMultiplierString(string const & rname)
   return "";
 }
 
+static string upc_mythread()
+{
+  if (cray_upc) {
+    return "MYTHREAD";
+  } else {
+    return "upcr_mythread()";
+  }
+}
+
+static string upc_threadof(string const & shared)
+{
+  
+  if(cray_upc) {
+    return "upc_threadof(" + shared + ")";
+  } else {
+    return "upcr_threadof_shared(" + shared + ")";
+  }
+}
+
 void printUPCMessageBeforeRoutine(pdbRoutine * r, ofstream & impl, FunctionSignatureInfo sig)
 {
   string const & rname = r->name();
@@ -228,21 +240,22 @@ void printUPCMessageBeforeRoutine(pdbRoutine * r, ofstream & impl, FunctionSigna
   } else if (rname.find("_memset") != string::npos) {
     isPut = true;
   }
-  
+
   if (isGet) {
-    impl << "  TAU_TRACE_SENDMSG_REMOTE(TAU_UPC_TAGID_NEXT, upcr_mythread(), a3, upcr_threadof_shared(a2));" << endl;
+    impl << "  TAU_TRACE_SENDMSG_REMOTE(TAU_UPC_TAGID_NEXT, " 
+         << upc_mythread() << ", a3, " << upc_threadof("a2") << ");" << endl;
   } else if (isPut) {
     if (isSig) {
       // This is unsafe.... Maybe in future map the semephore to a tag?
       // In any case, we need support for _sem_wait for this to work.
       //impl << "  TAU_TRACE_SENDMSG((int)a4, upcr_threadof_shared(a1), a3);" << endl;
     } else {
-      impl << "  TAU_TRACE_SENDMSG(TAU_UPC_TAGID_NEXT, upcr_threadof_shared(a1), a3);" << endl;
+      impl << "  TAU_TRACE_SENDMSG(TAU_UPC_TAGID_NEXT, " << upc_threadof("a1") << ", a3);" << endl;
     }
   } else if (isCpy) {
-    impl << "  size_t dst_thread = upcr_threadof_shared(a1);\n"
-         << "  size_t src_thread = upcr_threadof_shared(a2);\n"
-         << "  size_t my_thread = upcr_mythread();\n"
+    impl << "  size_t dst_thread = " << upc_threadof("a1") << ";\n"
+         << "  size_t src_thread = " << upc_threadof("a2") << ";\n"
+         << "  size_t my_thread = " << upc_mythread() << ";\n"
          << "  if (my_thread == src_thread) {\n"
          << "    TAU_TRACE_SENDMSG(TAU_UPC_TAGID_NEXT, dst_thread, a3);\n"
          << "  } else {\n"
@@ -290,9 +303,10 @@ void  printUPCMessageAfterRoutine(pdbRoutine * r, ofstream & impl,  FunctionSign
   }
   
   if (isGet) {
-    impl <<"  TAU_TRACE_RECVMSG(TAU_UPC_TAGID, upcr_threadof_shared(a2), a3);"<<endl;
+    impl <<"  TAU_TRACE_RECVMSG(TAU_UPC_TAGID, " << upc_threadof("a2") << ", a3);" << endl;
   } else if (isPut && !isSig) {
-    impl <<"  TAU_TRACE_RECVMSG_REMOTE(TAU_UPC_TAGID, upcr_mythread(), a3, upcr_threadof_shared(a1));"<<endl;
+    impl <<"  TAU_TRACE_RECVMSG_REMOTE(TAU_UPC_TAGID, " << upc_mythread() << ", a3, " 
+         << upc_threadof("a1") << ");" << endl;
   } else if (isCpy) {
     impl << "  if (my_thread == src_thread) {\n"
          << "    TAU_TRACE_RECVMSG_REMOTE(TAU_UPC_TAGID, my_thread, a3, dst_thread);\n"
@@ -830,7 +844,7 @@ void generateMakefile(string const & package, string const & outFileName,
   char const * compiler_name = "$(TAU_CC)";
   char const * upcprefix = "";
 
-  //if (upc_wrapper) {
+  //if (cray_upc) {
   //  compiler_name = "$(TAU_UPCC)";
   //  upcprefix = "$(UPCC_C_PREFIX)";
   //}
@@ -949,9 +963,17 @@ int main(int argc, char **argv)
     }
     else if (strcmp(argv[i], "--upc") == 0) {
       upc_wrapper = true;
-      //extradefs = "$(TAU_UPC_COMPILER_OPTIONS)";
 #ifdef DEBUG
       cout << "upc_wrapper = true" << endl;
+#endif /* DEBUG */
+    } 
+    else if (strcmp(argv[i], "--crayupc") == 0) {
+      upc_wrapper = true;
+      cray_upc = true;
+      extradefs = "$(TAU_UPC_COMPILER_OPTIONS)";
+#ifdef DEBUG
+      cout << "upc_wrapper = true" << endl;
+      cout << "cray_upc = true" << endl;
 #endif /* DEBUG */
     } 
     else if (strcmp(argv[i], "--shmem") == 0) {
