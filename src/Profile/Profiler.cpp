@@ -56,7 +56,6 @@ using namespace std;
 #include <sys/stat.h>
 #include <fcntl.h>
 
-
 #include <stdio.h> 
 #include <time.h>
 #include <stdlib.h>
@@ -693,7 +692,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 	//ThisKtauProfiler->KernProf.DumpKProfile();
 	ThisKtauProfiler->KernProf.DumpKProfileOut();
 #endif /*TAUKTAU */
-
+ 
 #ifdef TAU_TRACK_IDLE_THREADS /* Check if we need to shut off .TAU applications on other tids */
 	if (tid == 0) {
 	  int i; 
@@ -1321,6 +1320,16 @@ int TauProfiler_StoreData(int tid) {
     }
   }
 #endif /* PTHREADS */
+
+#if defined(TAU_OPENMP)
+  //fprintf(stderr, "Total Threads: %d\n", RtsLayer::getTotalThreads());
+  if (RtsLayer::getTotalThreads() == 1) {
+    // issue a warning, because this is a multithreaded config,
+    // and we saw no threads other than 0!
+    fprintf(stderr, "\nTAU: WARNING! TAU did not detect more than one thread.\nIf running an OpenMP application with tau_exec and you expected\nmore than one thread, try using the '-T pthread' configuration,\nor instrument your code with TAU.\n\n");
+  }
+#endif /* OPENMP */
+
   return 1;
 } 
 
