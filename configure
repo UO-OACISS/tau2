@@ -3064,6 +3064,39 @@ if [ $debugprof = yes ] ; then
 fi
 
 
+if [ $cxx_compiler = mpicxx ]; then 
+    if [ $machine = bgq ] ; then
+            echo "Using GNU Compilers for BGQ"
+            cxx_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx
+            c_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc
+            tauoptions="${tauoptions}-gnu"
+    elif [ $machine = bgp ] ; then
+            echo "Using GNU Compilers for BGP"
+# CWL - 4.3.2 won't quite work out of the box. Requires LD_LIBRARY_PATH to
+#       be set appropriately to account for libgmp.so.10
+#           cxx_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicxx
+#           c_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicc
+#
+# *CWL* - Opps, they did it again.
+#           cxx_compiler=/bgsys/drivers/ppcfloor/comm/xl/bin/mpicxx
+#           c_compiler=/bgsys/drivers/ppcfloor/comm/xl/bin/mpicc
+            cxx_compiler=/bgsys/drivers/ppcfloor/comm/bin/mpicxx
+            c_compiler=/bgsys/drivers/ppcfloor/comm/bin/mpicc
+            tauoptions="${tauoptions}-gnu"
+    else 
+    	c_compiler=`mpicc -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+    	cxx_compiler=`mpicxx -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+    	fortran_compiler=`mpif90 -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+    	if [ $mpilibrary = no ]; then
+      	  mpilibrary=`mpicc -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
+    	fi
+    	full_cxx_compiler=`mpicxx -show | awk '{ print $1; }'`
+    	full_cc_compiler=`mpicc -show | awk '{ print $1; }'`
+    	fixmakeargs="$fixmakeargs fullcxx=$full_cxx_compiler fullcc=$full_cc_compiler"
+    	mpi=yes
+    fi
+fi
+
 ######################################################################
 # Set default C++ compiler in all Makefiles
 case $cxx_compiler in
@@ -3410,33 +3443,10 @@ case $cxx_compiler in
     mpicxx)
 	if [ $machine = bgq ] ; then
 	    echo "Using GNU Compilers for BGQ"
-	    cxx_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx
-	    c_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc
-	    tauoptions="${tauoptions}-gnu"
 	elif [ $machine = bgp ] ; then
 	    echo "Using GNU Compilers for BGP"
-# CWL - 4.3.2 won't quite work out of the box. Requires LD_LIBRARY_PATH to
-#       be set appropriately to account for libgmp.so.10
-#	    cxx_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicxx
-#	    c_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicc
-#
-# *CWL* - Opps, they did it again.
-#	    cxx_compiler=/bgsys/drivers/ppcfloor/comm/xl/bin/mpicxx
-#	    c_compiler=/bgsys/drivers/ppcfloor/comm/xl/bin/mpicc
-	    cxx_compiler=/bgsys/drivers/ppcfloor/comm/bin/mpicxx
-	    c_compiler=/bgsys/drivers/ppcfloor/comm/bin/mpicc
-	    tauoptions="${tauoptions}-gnu"
 	else
-	    c_compiler=`mpicc -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-	    cxx_compiler=`mpicxx -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-	    fortran_compiler=`mpif90 -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-            if [ $mpilibrary = no ]; then
-              mpilibrary=`mpicc -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
-            fi
-            full_cxx_compiler=`mpicxx -show | awk '{ print $1; }'`
-            full_cc_compiler=`mpicc -show | awk '{ print $1; }'`
-            fixmakeargs="$fixmakeargs fullcxx=$full_cxx_compiler fullcc=$full_cc_compiler"
-            mpi=yes
+          echo "ERROR Unknown C++ compiler: $cxx_compiler"
 	fi
 	;;
    *)
