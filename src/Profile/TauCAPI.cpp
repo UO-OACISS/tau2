@@ -1232,27 +1232,30 @@ extern "C" void Tau_event_disable_stddev(void *ue) {
 
 ///////////////////////////////////////////////////////////////////////////
 
-extern "C" void Tau_profile_c_timer(void **ptr, const char *name, const char *type, TauGroup_t group, 
-	const char *group_name) {
+extern "C" void Tau_profile_c_timer(void **ptr, const char *name, const char *type, 
+    TauGroup_t group, const char *group_name) 
+{
   if (*ptr == 0) {
     RtsLayer::LockEnv();
     if (*ptr == 0) {  
       Tau_global_incr_insideTAU();
       // remove garbage characters from the end of name
-      char *fixedname = strdup(name);
-      for (unsigned int i=0; i<strlen(fixedname); i++) {
-	if (!isprint(fixedname[i])) {
-	  fixedname[i] = '\0';
-	  break;
-	}
+      unsigned int len=0;
+      while(isprint(name[len])) {
+        ++len;
       }
+
+      char * fixedname = (char*)malloc(len+1);
+      memcpy(fixedname, name, len);
+      fixedname[len] = '\0';
+
       *ptr = Tau_get_profiler(fixedname, type, group, group_name);
-      free (fixedname);
+
+      free((void*)fixedname);
       Tau_global_decr_insideTAU();
     }
     RtsLayer::UnLockEnv();
   }
-  return;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1773,7 +1776,6 @@ extern "C" int Tau_create_tid(void) {
 // ensuring that the profiles are written out while the objects are still valid
 void Tau_destructor_trigger() {
   Tau_stop_top_level_timer_if_necessary();
-  //printf ("FIvector destructor\n");
   Tau_global_setLightsOut();
   if ((TheUsingDyninst() || TheUsingCompInst()) && TheSafeToDumpData()) {
 #ifndef TAU_VAMPIRTRACE

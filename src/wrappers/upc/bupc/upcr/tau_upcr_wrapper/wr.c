@@ -1,6 +1,18 @@
 #include <tau_upcr.h>
 #include <Profile/Profiler.h>
 #include <stdio.h>
+
+
+#pragma pupc off
+
+#ifdef __BERKELEY_UPC__
+#pragma UPCR NO_SRCPOS 
+#endif
+
+static int tau_upc_tagid_f=0;
+#define TAU_UPC_TAGID (tau_upc_tagid_f = (tau_upc_tagid_f & 255))
+#define TAU_UPC_TAGID_NEXT ((++tau_upc_tagid_f) & 255)
+
 #warning "TAU: Not generating wrapper for vararg function upcri_err"
 #warning "TAU: Not generating wrapper for vararg function upcri_errno"
 #warning "TAU: Not generating wrapper for vararg function upcri_gaserr"
@@ -1616,7 +1628,22 @@ upcr_handle_t   __wrap__upcr_do_memcpy(upcr_shared_ptr_t  a1, upcr_shared_ptr_t 
   upcr_handle_t  retval = 0;
   TAU_PROFILE_TIMER(t,"upcr_handle_t _upcr_do_memcpy(upcr_shared_ptr_t, upcr_shared_ptr_t, size_t, int)  C", "", TAU_USER);
   TAU_PROFILE_START(t);
+  size_t dst_thread = upcr_threadof_shared(a1);
+  size_t src_thread = upcr_threadof_shared(a2);
+  size_t my_thread = upcr_mythread();
+  if (my_thread == src_thread) {
+    TAU_TRACE_SENDMSG(TAU_UPC_TAGID_NEXT, dst_thread, a3);
+  } else {
+    TAU_TRACE_SENDMSG_REMOTE(TAU_UPC_TAGID_NEXT, dst_thread, a3, src_thread);
+  }
+
   retval  =  __real__upcr_do_memcpy(a1, a2, a3, a4);
+  if (my_thread == src_thread) {
+    TAU_TRACE_RECVMSG_REMOTE(TAU_UPC_TAGID, my_thread, a3, dst_thread);
+  } else {
+    TAU_TRACE_RECVMSG(TAU_UPC_TAGID, src_thread, a3);
+  }
+
   TAU_PROFILE_STOP(t);
   return retval;
 
@@ -1729,7 +1756,22 @@ bupc_handle_t   __wrap__bupc_memcpy_async(upcr_shared_ptr_t  a1, upcr_shared_ptr
   bupc_handle_t  retval = 0;
   TAU_PROFILE_TIMER(t,"bupc_handle_t _bupc_memcpy_async(upcr_shared_ptr_t, upcr_shared_ptr_t, size_t)  C", "", TAU_USER);
   TAU_PROFILE_START(t);
+  size_t dst_thread = upcr_threadof_shared(a1);
+  size_t src_thread = upcr_threadof_shared(a2);
+  size_t my_thread = upcr_mythread();
+  if (my_thread == src_thread) {
+    TAU_TRACE_SENDMSG(TAU_UPC_TAGID_NEXT, dst_thread, a3);
+  } else {
+    TAU_TRACE_SENDMSG_REMOTE(TAU_UPC_TAGID_NEXT, dst_thread, a3, src_thread);
+  }
+
   retval  =  __real__bupc_memcpy_async(a1, a2, a3);
+  if (my_thread == src_thread) {
+    TAU_TRACE_RECVMSG_REMOTE(TAU_UPC_TAGID, my_thread, a3, dst_thread);
+  } else {
+    TAU_TRACE_RECVMSG(TAU_UPC_TAGID, src_thread, a3);
+  }
+
   TAU_PROFILE_STOP(t);
   return retval;
 
@@ -1746,7 +1788,9 @@ bupc_handle_t   __wrap__bupc_memget_async(void *  a1, upcr_shared_ptr_t  a2, siz
   bupc_handle_t  retval = 0;
   TAU_PROFILE_TIMER(t,"bupc_handle_t _bupc_memget_async(void *, upcr_shared_ptr_t, size_t)  C", "", TAU_USER);
   TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG_REMOTE(TAU_UPC_TAGID_NEXT, upcr_mythread(), a3, upcr_threadof_shared(a2));
   retval  =  __real__bupc_memget_async(a1, a2, a3);
+  TAU_TRACE_RECVMSG(TAU_UPC_TAGID, upcr_threadof_shared(a2), a3);
   TAU_PROFILE_STOP(t);
   return retval;
 
@@ -1763,7 +1807,9 @@ bupc_handle_t   __wrap__bupc_memput_async(upcr_shared_ptr_t  a1, const void *  a
   bupc_handle_t  retval = 0;
   TAU_PROFILE_TIMER(t,"bupc_handle_t _bupc_memput_async(upcr_shared_ptr_t, const void *, size_t)  C", "", TAU_USER);
   TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG(TAU_UPC_TAGID_NEXT, upcr_threadof_shared(a1), a3);
   retval  =  __real__bupc_memput_async(a1, a2, a3);
+  TAU_TRACE_RECVMSG_REMOTE(TAU_UPC_TAGID, upcr_mythread(), a3, upcr_threadof_shared(a1));
   TAU_PROFILE_STOP(t);
   return retval;
 
@@ -1780,7 +1826,9 @@ bupc_handle_t   __wrap__bupc_memset_async(upcr_shared_ptr_t  a1, int  a2, size_t
   bupc_handle_t  retval = 0;
   TAU_PROFILE_TIMER(t,"bupc_handle_t _bupc_memset_async(upcr_shared_ptr_t, int, size_t)  C", "", TAU_USER);
   TAU_PROFILE_START(t);
+  TAU_TRACE_SENDMSG(TAU_UPC_TAGID_NEXT, upcr_threadof_shared(a1), a3);
   retval  =  __real__bupc_memset_async(a1, a2, a3);
+  TAU_TRACE_RECVMSG_REMOTE(TAU_UPC_TAGID, upcr_mythread(), a3, upcr_threadof_shared(a1));
   TAU_PROFILE_STOP(t);
   return retval;
 

@@ -508,7 +508,7 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 }
 
 
-string *FunctionInfo::GetFullName() {
+char const * FunctionInfo::GetFullName() {
 
   if (FullName == NULL) {
     ostringstream ostr;
@@ -517,13 +517,8 @@ string *FunctionInfo::GetFullName() {
     } else {
       ostr << GetName() << ":GROUP:" << GetAllGroups();
     }
-    FullName = new string;
 
-    string tmpstr = ostr.str();
-    char *tmp = strdup(tmpstr.c_str());
-    tmp = Tau_util_removeRuns(tmp);
-    *FullName = tmp;
-
+    FullName = Tau_util_removeRuns(ostr.str().c_str());
   }
   return FullName;
 }

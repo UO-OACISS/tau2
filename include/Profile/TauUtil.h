@@ -41,7 +41,7 @@ void Tau_util_destroyOutputDevice(Tau_util_outputDevice *out);
 int Tau_util_getOutputBufferLength(Tau_util_outputDevice *out);
 int Tau_util_output(Tau_util_outputDevice *out, const char *format, ...);
 int Tau_util_readFullLine(char *line, FILE *fp);
-char *Tau_util_removeRuns(char *str);
+char const * Tau_util_removeRuns(char const * str);
 
 void TAU_ABORT(const char *format, ...);
 

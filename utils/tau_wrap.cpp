@@ -1,19 +1,19 @@
 /****************************************************************************
-**                      TAU Portable Profiling Package                     **
-**                      http://www.cs.uoregon.edu/research/paracomp/tau    ** 
-*****************************************************************************
-**    Copyright 2007                                                       **
-**    Department of Computer and Information Science, University of Oregon **
-**    Advanced Computing Laboratory, Los Alamos National Laboratory        **
-****************************************************************************/
+ **                      TAU Portable Profiling Package                     **
+ **                      http://www.cs.uoregon.edu/research/paracomp/tau    ** 
+ *****************************************************************************
+ **    Copyright 2007                                                       **
+ **    Department of Computer and Information Science, University of Oregon **
+ **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+ ****************************************************************************/
 /***************************************************************************
-**      File            : tau_wrap.cpp                                    **
-**      Description     : Generates a wrapper library for external pkgs   **
-**                        for instrumentation with TAU.                   **
-**      Author          : Sameer Shende                                   **
-**      Contact         : sameer@cs.uoregon.edu sameer@paratools.com      **
-**      Documentation   :                                                 **
-***************************************************************************/ 
+ **      File            : tau_wrap.cpp                                    **
+ **      Description     : Generates a wrapper library for external pkgs   **
+ **                        for instrumentation with TAU.                   **
+ **      Author          : Sameer Shende                                   **
+ **      Contact         : sameer@cs.uoregon.edu sameer@paratools.com      **
+ **      Documentation   :                                                 **
+ ***************************************************************************/ 
 
 /* Headers */
 #include <stdio.h>
@@ -51,77 +51,65 @@ using namespace std;
 #else
 #define TAU_DIR_CHARACTER '/' 
 #endif /* TAU_WINDOWS */
- 
 
-
+/* Function call interception types:
+ * runtime interception: bar remains bar 
+ * preprocessor interception: bar becomes tau_bar
+ * wrapper library interception: bar becomes __wrap_bar
+ */
+#define RUNTIME_INTERCEPT  1
+#define PREPROC_INTERCEPT  0
+#define WRAPPER_INTERCEPT -1
 
 //#define DEBUG 1
+
 /* For selective instrumentation */
 extern int processInstrumentationRequests(char *fname);
 extern bool instrumentEntity(const string& function_name);
 extern bool processFileForInstrumentation(const string& file_name);
 extern bool isInstrumentListEmpty(void);
-/* Prototypes for selective instrumentation */
-extern bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector        <itemRef *>& itemvec);
 
+/* Prototypes for selective instrumentation */
+extern bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef*> & itemvec);
 
 
 /* Globals */
 bool memory_flag = false;   /* by default, do not insert malloc.h in instrumented C/C++ files */
 bool strict_typing = false; /* by default unless --strict option is used. */
 bool shmem_wrapper = false; /* by default unless --shmem option is used. */
-bool upc_wrapper = false; /* by default unless --upc option is used. */
+bool upc_wrapper = false;   /* by default unless --upc or --crayupc option is used. */
+bool cray_upc = false;      /* by default unless --crayupc option is used. */
 bool pshmem_use_underscore_instead_of_p = false; /* by default unless --pshmem_use_underscore_instead_of_p option is used. */
 
 
-///////////////////////////////////////////////////////////////////////////
+struct FunctionSignatureInfo
+{
+  FunctionSignatureInfo(pdbRoutine * r) :
+    shmem_fortran_interface(false),
+    shmem_len_argcount(0),
+    shmem_pe_argcount(0),
+    shmem_cond_argcount(0),
+    func(r->name()),
+    proto(r->name())
+  { }
+
+  // For shmem wrapping
+  bool shmem_fortran_interface;
+  int shmem_len_argcount;
+  int shmem_pe_argcount;
+  int shmem_cond_argcount;
+
+  // For upc wrapping
+  // ...
+
+  string func;
+  string proto;
+  string returntypename;
+  string funchandle;
+  string rcalledfunc;
+};
 
 
-
-/* -------------------------------------------------------------------------- */
-/* -- Fuzzy Match. Allows us to match files that don't quite match properly, 
- * but infact refer to the same file. For e.g., /home/pkg/foo.cpp and ./foo.cpp
- * or foo.cpp and ./foo.cpp. This routine allows us to match such files! 
- * -------------------------------------------------------------------------- */
-bool fuzzyMatch(const string& a, const string& b)
-{ /* This function allows us to match string like ./foo.cpp with
-     /home/pkg/foo.cpp */
-  if (a == b)
-  { /* the two files do match */
-#ifdef DEBUG
-    cout <<"fuzzyMatch returns true for "<<a<<" and "<<b<<endl;
-#endif /* DEBUG */
-    return true;
-  }
-  else 
-  { /* fuzzy match */
-    /* Extract the name without the / character */
-    int loca = a.find_last_of(TAU_DIR_CHARACTER);
-    int locb = b.find_last_of(TAU_DIR_CHARACTER);
-
-    /* truncate the strings */
-    string trunca(a,loca+1);
-    string truncb(b,locb+1);
-    /*
-    cout <<"trunca = "<<trunca<<endl;
-    cout <<"truncb = "<<truncb<<endl;
-    */
-    if (trunca == truncb) 
-    {
-#ifdef DEBUG
-      cout <<"fuzzyMatch returns true for "<<a<<" and "<<b<<endl;
-#endif /* DEBUG */
-      return true;
-    }
-    else
-    {
-#ifdef DEBUG
-      cout <<"fuzzyMatch returns false for "<<a<<" and "<<b<<endl;
-#endif /* DEBUG */
-      return false;
-    }
-  }
-}
 ///////////////////////////////////////////////////////////////////////////
 //
 ///////////////////////////////////////////////////////////////////////////
@@ -130,182 +118,212 @@ bool fuzzyMatch(const string& a, const string& b)
 /* -- Get a list of instrumentation points for a C program ------------------ */
 /* -------------------------------------------------------------------------- */
 /* Create a vector of items that need action: such as BODY_BEGIN, RETURN etc.*/
-void getCReferencesForWrapper(vector<itemRef *>& itemvec, PDB& pdb, pdbFile *file) {
-
+static void getCReferencesForWrapper(vector<itemRef*> & itemvec, PDB& pdb, pdbFile *file) 
+{
   /* moved selective instrumentation file processing here */
-  if (!isInstrumentListEmpty()) 
-  { /* there are finite instrumentation requests, add requests for this file */
+  if (!isInstrumentListEmpty()) {
+    /* there are finite instrumentation requests, add requests for this file */
     addFileInstrumentationRequests(pdb, file, itemvec);
   }
 }
 
-#ifdef OLD
+static bool isReturnTypeVoid(pdbRoutine *r)
 {
-  /* we used to keep the selective instrumentation file processing at the
-     entry. But, when a routine is specified as a phase, we need to annotate
-     its itemRef accordingly. This needs the entry/exit records to be created
-     prior to processing the selective instrumentation file. N/A for wrappers
-     as there are no entry/exit records created.*/
+  return (r->signature()->returnType()->name().compare(0, 4, "void") == 0);
+}
 
-  PDB::croutinevec routines = pdb.getCRoutineVec();
-  for (PDB::croutinevec::const_iterator rit=routines.begin();
-       rit!=routines.end(); ++rit)
-  {
-    pdbRoutine::locvec retlocations = (*rit)->returnLocations();
-    if ( (*rit)->location().file() == file && !(*rit)->isCompilerGenerated()
-	 && (instrumentEntity((*rit)->fullName())) )
-    {
-        itemvec.push_back(new itemRef(*rit, BODY_BEGIN,
-                (*rit)->bodyBegin().line(), (*rit)->bodyBegin().col()));
-#ifdef DEBUG
-        cout <<" Location begin: "<< (*rit)->location().line() << " col "
-             << (*rit)->location().col() <<endl;
-        cout <<" Location head Begin: "<< (*rit)->headBegin().line() << " col "             << (*rit)->headBegin().col() <<endl;
-        cout <<" Location head End: "<< (*rit)->headEnd().line() << " col "
-             << (*rit)->headEnd().col() <<endl;
-        cout <<" Location body Begin: "<< (*rit)->bodyBegin().line() << " col "             << (*rit)->bodyBegin().col() <<endl;
-        cout <<" Location body End: "<< (*rit)->bodyEnd().line() << " col "
-             << (*rit)->bodyEnd().col() <<endl;
-#endif /* DEBUG */
-        for(pdbRoutine::locvec::iterator rlit = retlocations.begin();
-           rlit != retlocations.end(); rlit++)
-        {
-#ifdef DEBUG 
-          cout <<" Return Locations : "<< (*rlit)->line() << " col "
-             << (*rlit)->col() <<endl;
-#endif /* DEBUG */
-          itemvec.push_back(new itemRef(*rit, RETURN,
-                (*rlit)->line(), (*rlit)->col()));
-        }
-        itemvec.push_back(new itemRef(*rit, BODY_END,
-                (*rit)->bodyEnd().line(), (*rit)->bodyEnd().col()));
-#ifdef DEBUG 
-        cout <<" Return type: " << (*rit)->signature()->returnType()->name()<<endl;
-        cout <<" Routine name: "<<(*rit)->name() <<" Signature: " <<
-                (*rit)->signature()->name() <<endl;
-#endif /* DEBUG */
+static bool doesRoutineNameContainGet(string const & rname)
+{
+  size_t namelen = rname.size();
+  return ((rname.find("get") != string::npos) || 
+          ((rname[namelen-2] == '_') && (rname[namelen-1] == 'g')));
+}
 
-	/* See if the current routine calls exit() */
-	pdbRoutine::callvec c = (*rit)->callees(); 
+static bool doesRoutineNameContainPut(string const & rname)
+{
+  size_t namelen = rname.size();
+  return ((rname.find("put") != string::npos) || 
+          ((rname[namelen-2] == '_') && (rname[namelen-1] == 'p')));
+}
+
+/* Fetch and operate operations include swap, fadd and finc */
+static bool doesRoutineNameContainFetchOp(string const & rname)
+{
+  return ((rname.find("swap") != string::npos) || 
+          (rname.find("fadd") != string::npos) ||
+          (rname.find("finc") != string::npos));
+}
+
+/* Fetch and operate operations include swap, fadd and finc */
+static bool doesRoutineNameContainCondFetchOp(string const & rname)
+{
+  return (rname.find("cswap") != string::npos); 
+}
+
+static char const * getMultiplierString(string const & rname) 
+{
+  static char const * names[] = {
+    // List is searched in order, first match returns
+    "char", "short", "int",
+    "longlong", "longdouble", "long", 
+    "double", "float", "16", "32", "64", "128",
+    "4", "8",
+    (char*)0 /* End of list marker */
+  };
+  static char const * values[] = {
+    "sizeof(char)*", "sizeof(short)*", "sizeof(int)*",
+    "sizeof(long long)*", "sizeof(long double)*", "sizeof(long)*", 
+    "sizeof(double)*", "sizeof(float)*", "2*", "4*", "8*", "16*",
+    "4*", "8*",
+    (char*)0 /* End of list marker */
+  };
+
+  for(int i=0; names[i]; ++i) {
+    if(rname.find(names[i]) != string::npos) {
+      return values[i];
     }
   }
-
-  /* All instrumentation requests are in. Sort these now and remove duplicates */
-#ifdef DEBUG
-  for(vector<itemRef *>::iterator iter = itemvec.begin(); iter != itemvec.end();
-   iter++)
-  {
-    cout <<"Before SORT: Items ("<<(*iter)->line<<", "<<(*iter)->col<<")"
-	 <<"snippet = "<<(*iter)->snippet<<endl;
-  }
-#endif /* DEBUG */
-#ifdef DEBUG
-  for(vector<itemRef *>::iterator iter = itemvec.begin(); iter != itemvec.end();
-   iter++)
-  {
-    cout <<"Items ("<<(*iter)->line<<", "<<(*iter)->col<<")"
-	 <<"snippet = "<<(*iter)->snippet<<endl;
-  }
-#endif /* DEBUG */
+  return "";
 }
-#endif /* OLD - delete */
 
-bool isReturnTypeVoid(pdbRoutine *r)
+static string upc_mythread()
 {
-  if ((strcmp(r->signature()->returnType()->name().c_str(), "void") == 0) || 
-(strcmp(r->signature()->returnType()->name().c_str(), "void ") == 0))
-  {
-#ifdef DEBUG
-     cout <<"Return type is void for "<<r->name()<<endl;
-#endif /* DEBUG */
-     return true;
-  }
-  else 
-     return false;
-}
-
-bool doesRoutineNameContainGet(const char *rname, int namelen) {
-  if ((strstr(rname, "get") != 0 ) || 
-     ((rname[namelen-2] == '_') && (rname[namelen-1] == 'g')))
-    return true;
-  else
-    return false;
-}
-
-bool doesRoutineNameContainPut(const char *rname, int namelen) {
-  if ((strstr(rname, "put") != 0 ) || 
-     ((rname[namelen-2] == '_') && (rname[namelen-1] == 'p')))
-    return true;
-  else
-    return false;
-}
-
-/* Fetch and operate operations include swap, fadd and finc */
-bool doesRoutineNameContainFetchOp(const char *rname, int namelen) {
-  if ((strstr(rname, "swap") != 0 ) || (strstr(rname, "fadd") != 0) ||
-      (strstr(rname, "finc") != 0 ))
-    return true;
-  else
-    return false;
-}
-
-/* Fetch and operate operations include swap, fadd and finc */
-bool doesRoutineNameContainCondFetchOp(const char *rname, int namelen) {
-  if (strstr(rname, "cswap") != 0 ) 
-    return true;
-  else
-    return false;
-}
-
-void getMultiplierString(const char *rname, string& multiplier_string) {
-  if (strstr(rname, "char") !=0) { // char is found 
-    multiplier_string=string("sizeof(char)*"); return;
-  }
-  if (strstr(rname, "short") !=0) { // short is found 
-    multiplier_string=string("sizeof(short)*"); return;
-  }
-  if (strstr(rname, "int") !=0) { // int is found 
-    multiplier_string=string("sizeof(int)*"); return;
-  }
-  if (strstr(rname, "longlong") !=0) { // long long is found 
-    multiplier_string=string("sizeof(long long)*"); return;
-  }
-  if (strstr(rname, "longdouble") !=0) { // float is found 
-    multiplier_string=string("sizeof(long double)*"); return;
-  }
-  if (strstr(rname, "long") !=0) { // long is found 
-    multiplier_string=string("sizeof(long)*"); return;
-  }
-  if (strstr(rname, "double") !=0) { // double is found 
-    multiplier_string=string("sizeof(double)*"); return;
-  }
-  if (strstr(rname, "float") !=0) { // float is found 
-    multiplier_string=string("sizeof(float)*"); return;
-  }
-  if (strstr(rname, "16") !=0) { 
-    multiplier_string=string("2*"); return;
-  }
-  if (strstr(rname, "32") !=0) {
-    multiplier_string=string("4*"); return;
-  }
-  if (strstr(rname, "64") !=0) {
-    multiplier_string=string("8*"); return;
-  }
-  if (strstr(rname, "128") !=0) {
-    multiplier_string=string("16*"); return;
-  }
-  if (strstr(rname, "4") !=0) { // INT4_SWAP uses 4 bytes not 4 bits. 
-    multiplier_string=string("4*"); return;
-  }
-  if (strstr(rname, "8") !=0) { // INT8_SWAP uses 8 bytes not 8 bits. = 64
-    multiplier_string=string("8*"); return;
+  if (cray_upc) {
+    return "MYTHREAD";
+  } else {
+    return "upcr_mythread()";
   }
 }
 
-void  printShmemMessageBeforeRoutine(pdbRoutine *r, ofstream& impl, int len_argument_no, int pe_argument_no, bool fortran_interface) {
-  const char *rname = r->name().c_str();
-  int routine_len = r->name().size();
-  string multiplier_string(""); 
+static string upc_threadof(string const & shared)
+{
+  
+  if(cray_upc) {
+    return "upc_threadof(" + shared + ")";
+  } else {
+    return "upcr_threadof_shared(" + shared + ")";
+  }
+}
+
+void printUPCMessageBeforeRoutine(pdbRoutine * r, ofstream & impl, FunctionSignatureInfo sig)
+{
+  string const & rname = r->name();
+
+  bool isPut = false;
+  bool isGet = false;
+  bool isCpy = false;
+  bool isSig = false;
+
+  // FIXME: list functions not supported at this time
+  if ((rname.find("_vlist") != string::npos) ||
+      (rname.find("_ilist") != string::npos)) {
+    return;
+  }
+  // FIXME: strided functions not supported at this time
+  if (rname.find("strided") != string::npos) {
+    return;
+  }
+  // FIXME: semephore functions not supported at this time
+  if (rname.find("_sem_") != string::npos) {
+    return;
+  }
+
+  if (rname.find("_memput") != string::npos) {
+    isPut = true;
+    if (rname.find("_signal") != string::npos) {
+      isSig = true;
+    }
+  } else if (rname.find("_memget") != string::npos) {
+    isGet = true;
+  } else if (rname.find("_memcpy") != string::npos) {
+    isCpy = true;
+  } else if (rname.find("_memset") != string::npos) {
+    isPut = true;
+  }
+
+  if (isGet) {
+    impl << "  TAU_TRACE_SENDMSG_REMOTE(TAU_UPC_TAGID_NEXT, " 
+         << upc_mythread() << ", a3, " << upc_threadof("a2") << ");" << endl;
+  } else if (isPut) {
+    if (isSig) {
+      // This is unsafe.... Maybe in future map the semephore to a tag?
+      // In any case, we need support for _sem_wait for this to work.
+      //impl << "  TAU_TRACE_SENDMSG((int)a4, upcr_threadof_shared(a1), a3);" << endl;
+    } else {
+      impl << "  TAU_TRACE_SENDMSG(TAU_UPC_TAGID_NEXT, " << upc_threadof("a1") << ", a3);" << endl;
+    }
+  } else if (isCpy) {
+    impl << "  size_t dst_thread = " << upc_threadof("a1") << ";\n"
+         << "  size_t src_thread = " << upc_threadof("a2") << ";\n"
+         << "  size_t my_thread = " << upc_mythread() << ";\n"
+         << "  if (my_thread == src_thread) {\n"
+         << "    TAU_TRACE_SENDMSG(TAU_UPC_TAGID_NEXT, dst_thread, a3);\n"
+         << "  } else {\n"
+         << "    TAU_TRACE_SENDMSG_REMOTE(TAU_UPC_TAGID_NEXT, dst_thread, a3, src_thread);\n"
+         << "  }\n"
+         << endl;
+  }
+
+}
+
+void  printUPCMessageAfterRoutine(pdbRoutine * r, ofstream & impl,  FunctionSignatureInfo sig)
+{
+  string const & rname = r->name();
+
+  bool isPut = false;
+  bool isGet = false;
+  bool isCpy = false;
+  bool isSig = false;
+
+  // FIXME: list functions not supported at this time
+  if ((rname.find("_vlist") != string::npos) ||
+      (rname.find("_ilist") != string::npos)) {
+    return;
+  }
+  // FIXME: strided functions not supported at this time
+  if (rname.find("strided") != string::npos) {
+    return;
+  }
+  // FIXME: semephore functions not supported at this time
+  if (rname.find("_sem_") != string::npos) {
+    return;
+  }
+
+  if (rname.find("_memput") != string::npos) {
+    isPut = true;
+    if (rname.find("_signal") != string::npos) {
+      isSig = true;
+    }
+  } else if (rname.find("_memget") != string::npos) {
+    isGet = true;
+  } else if (rname.find("_memcpy") != string::npos) {
+    isCpy = true;
+  } else if (rname.find("_memset") != string::npos) {
+    isPut = true;
+  }
+  
+  if (isGet) {
+    impl <<"  TAU_TRACE_RECVMSG(TAU_UPC_TAGID, " << upc_threadof("a2") << ", a3);" << endl;
+  } else if (isPut && !isSig) {
+    impl <<"  TAU_TRACE_RECVMSG_REMOTE(TAU_UPC_TAGID, " << upc_mythread() << ", a3, " 
+         << upc_threadof("a1") << ");" << endl;
+  } else if (isCpy) {
+    impl << "  if (my_thread == src_thread) {\n"
+         << "    TAU_TRACE_RECVMSG_REMOTE(TAU_UPC_TAGID, my_thread, a3, dst_thread);\n"
+         << "  } else {\n"
+         << "    TAU_TRACE_RECVMSG(TAU_UPC_TAGID, src_thread, a3);\n"
+         << "  }\n"
+         << endl;
+  }
+}
+
+
+void printShmemMessageBeforeRoutine(pdbRoutine *r, ofstream& impl, FunctionSignatureInfo sig)
+{
+  int len_argument_no = sig.shmem_len_argcount;
+  int pe_argument_no = sig.shmem_pe_argcount;
+  bool fortran_interface = sig.shmem_fortran_interface;
+  string const & rname = r->name();
   char length_string[1024];
   char processor_arg[256];
 
@@ -315,44 +333,41 @@ void  printShmemMessageBeforeRoutine(pdbRoutine *r, ofstream& impl, int len_argu
     sprintf(processor_arg, "a%d", pe_argument_no);
   }
 
+  char const * multiplier_string = getMultiplierString(rname);
 #ifdef DEBUG
-  printf("Size = %d, name = %s\n", routine_len, rname);
-#endif /* DEBUG */
-  getMultiplierString(rname, multiplier_string); 
-#ifdef DEBUG
-  printf("Multiplier string = %s\n", multiplier_string.c_str());
+  printf("Multiplier string = %s\n", multiplier_string);
 #endif /* DEBUG */
   if (len_argument_no != 0) {
     if (fortran_interface) {
-      sprintf(length_string, "%s (*a%d)", multiplier_string.c_str(), len_argument_no);
+      sprintf(length_string, "%s (*a%d)", multiplier_string, len_argument_no);
     } else {
-      sprintf(length_string, "%sa%d", multiplier_string.c_str(), len_argument_no);
+      sprintf(length_string, "%sa%d", multiplier_string, len_argument_no);
     }
   } else {
-    sprintf(length_string, "%s1", multiplier_string.c_str());
+    sprintf(length_string, "%s1", multiplier_string);
   }
-  
-  if ((doesRoutineNameContainGet(rname, routine_len) == true) || 
-      (doesRoutineNameContainFetchOp(rname, routine_len) == true)) { /* Get */
+
+  if (doesRoutineNameContainGet(rname) || doesRoutineNameContainFetchOp(rname)) {
 #ifdef DEBUG
-    printf("Routine name %s contains Get variant\n", rname);
+    cout << "Routine name " << rname << " contains Get variant" << endl;
 #endif /* DEBUG */
     impl <<"  TAU_TRACE_SENDMSG_REMOTE(TAU_SHMEM_TAGID_NEXT, Tau_get_node(), "<<length_string<<", "<<processor_arg<<");"<<endl;
   }
-  if (doesRoutineNameContainPut(rname, routine_len) == true) {
+  if (doesRoutineNameContainPut(rname)) {
 #ifdef DEBUG
-    printf("Routine name %s contains Put variant\n", rname);
+    cout << "Routine name " << rname << " contains Put variant" << endl;
 #endif /* DEBUG */
     impl <<"  TAU_TRACE_SENDMSG(TAU_SHMEM_TAGID_NEXT, "<<processor_arg<<", "<<length_string<<");"<<endl;
   }
-   
-
 }
 
-void  printShmemMessageAfterRoutine(pdbRoutine *r, ofstream& impl, int len_argument_no, int pe_argument_no, int cond_argument_no, bool fortran_interface) {
-  const char *rname = r->name().c_str();
-  int routine_len = r->name().size();
-  string multiplier_string("");
+void  printShmemMessageAfterRoutine(pdbRoutine *r, ofstream& impl, FunctionSignatureInfo sig)
+{
+  int len_argument_no = sig.shmem_len_argcount;
+  int pe_argument_no = sig.shmem_pe_argcount;
+  int cond_argument_no = sig.shmem_cond_argcount;
+  bool fortran_interface = sig.shmem_fortran_interface;
+  string const & rname = r->name();
   char length_string[1024];
   char processor_arg[256];
   char cond_string[1024];
@@ -367,47 +382,44 @@ void  printShmemMessageAfterRoutine(pdbRoutine *r, ofstream& impl, int len_argum
     sprintf(processor_arg, "a%d", pe_argument_no);
   }
 
+  char const * multiplier_string = getMultiplierString(rname);
 #ifdef DEBUG
-  printf("Size = %d, name = %s\n", routine_len, rname);
-#endif /* DEBUG */
-  getMultiplierString(rname, multiplier_string);
-#ifdef DEBUG
-  printf("Multiplier string = %s\n", multiplier_string.c_str());
+  printf("Multiplier string = %s\n", multiplier_string);
 #endif /* DEBUG */
   if (len_argument_no != 0) {
     if (fortran_interface) {
-      sprintf(length_string, "%s (*a%d)", multiplier_string.c_str(), len_argument_no);
+      sprintf(length_string, "%s (*a%d)", multiplier_string, len_argument_no);
     } else {
-      sprintf(length_string, "%sa%d", multiplier_string.c_str(), len_argument_no);
+      sprintf(length_string, "%sa%d", multiplier_string, len_argument_no);
     }
   } else {
-    sprintf(length_string, "%s1", multiplier_string.c_str());
+    sprintf(length_string, "%s1", multiplier_string);
   }
-  is_it_a_get = doesRoutineNameContainGet(rname, routine_len);
-  is_it_a_fetchop = doesRoutineNameContainFetchOp(rname, routine_len); 
-  is_it_a_cond_fetchop = doesRoutineNameContainCondFetchOp(rname, routine_len); 
+  is_it_a_get = doesRoutineNameContainGet(rname);
+  is_it_a_fetchop = doesRoutineNameContainFetchOp(rname);
+  is_it_a_cond_fetchop = doesRoutineNameContainCondFetchOp(rname);
 
-  if ((strstr(rname, "start_pes") != 0) || (strstr(rname, "shmem_init") != 0)) { /* if it is either of these */
-     if (pshmem_use_underscore_instead_of_p) {
-       impl << "  tau_totalnodes(1,_shmem_n_pes());"<<endl;
-       impl << "  TAU_PROFILE_SET_NODE(_shmem_my_pe());"<<endl;
-     } else {
-       impl << "  tau_totalnodes(1,pshmem_n_pes());"<<endl;
-       impl << "  TAU_PROFILE_SET_NODE(pshmem_my_pe());"<<endl;
-     }
+  if ((rname.find("start_pes") != string::npos) || 
+      (rname.find("shmem_init") != string::npos)) {
+    if (pshmem_use_underscore_instead_of_p) {
+      impl << "  tau_totalnodes(1,_shmem_n_pes());"<<endl;
+      impl << "  TAU_PROFILE_SET_NODE(_shmem_my_pe());"<<endl;
+    } else {
+      impl << "  tau_totalnodes(1,pshmem_n_pes());"<<endl;
+      impl << "  TAU_PROFILE_SET_NODE(pshmem_my_pe());"<<endl;
+    }
   }
 
   if (is_it_a_get || is_it_a_fetchop ) { /* Get */
 #ifdef DEBUG
-    printf("Routine name %s contains Get variant\n", rname);
+    cout << "Routine name " << rname << " contains Get variant" << endl;
 #endif /* DEBUG */
     impl <<"  TAU_TRACE_RECVMSG(TAU_SHMEM_TAGID, "<<processor_arg<<", "<<length_string<<");"<<endl;
   }
   if (is_it_a_cond_fetchop || is_it_a_fetchop) { /* add condition */
     if (is_it_a_cond_fetchop && (cond_argument_no == 0)) {
 #ifdef DEBUG
-      printf("WARNING: in fetchop function %s, cond_argument_no is 0???\n", 
-	rname); 
+      cout << "WARNING: in fetchop function " << rname << ", cond_argument_no is 0???" << endl;
 #endif /* DEBUG */
     }
     string indent(""); /* no indent by default */
@@ -426,114 +438,116 @@ void  printShmemMessageAfterRoutine(pdbRoutine *r, ofstream& impl, int len_argum
       impl<<indent<<"}"<<endl;
     }
   }
-  if (doesRoutineNameContainPut(rname, routine_len) == true) {
+  if (doesRoutineNameContainPut(rname)) {
 #ifdef DEBUG
-    printf("Routine name %s contains Put variant\n", rname);
+    cout << "Routine name " << rname << " contains Put variant" << endl;
 #endif /* DEBUG */
     impl <<"  TAU_TRACE_RECVMSG_REMOTE(TAU_SHMEM_TAGID, Tau_get_node(), "<<length_string<<", "<<processor_arg<<");"<<endl;
   }
 
 }
 
-void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, const char * prefix, string& returntypename, int& shmem_len_argcount, int& shmem_pe_argcount, int& shmem_cond_argcount, bool& fortran_interface, string& func, string& proto, string& funchandle, string& rcalledfunc) {
-  /* First put the return type */
-  impl <<returntypename<<prefix; 
-  func = r->name();
-  proto = r->name();
-  funchandle = string("_h) (");
-  rcalledfunc = string("(*"+r->name()+"_h)");
+void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * prefix, FunctionSignatureInfo & sig)
+{
+  sig.func = r->name() + "(";
+  sig.proto = r->name() + "(";
+  sig.rcalledfunc = "(*" + r->name() + "_h)";
+  sig.funchandle = "_h) (";
 
-  func.append("(");
-  rcalledfunc.append("(");
-  proto.append("(");
+  pdbGroup const * grp = r->signature()->returnType()->isGroup();
+  if (grp) { 
+    sig.returntypename = grp->name();
+  } else {
+    sig.returntypename = r->signature()->returnType()->name();
+    if (upc_wrapper && (sig.returntypename.compare(0, 10, "shared[1] ") == 0)) {
+      sig.returntypename.replace(0, 10, "shared   ");
+    }
+  }
+  impl << sig.returntypename << prefix << sig.func; 
 
-  impl<<func;
 #ifdef DEBUG
   cout <<"Examining "<<r->name()<<endl;
-  cout <<"Return type :"<<returntypename<<endl;
+  cout <<"Return type :"<<sig.returntypename<<endl;
 #endif /* DEBUG */
-  pdbType::argvec av = r->signature()->arguments();
+
   int argcount = 1;
+  pdbType::argvec const & av = r->signature()->arguments();
   for(pdbType::argvec::const_iterator argsit = av.begin();
       argsit != av.end(); argsit++, argcount++)
   {
-    char number[256];
 #ifdef DEBUG
-    cout <<"Argument "<<(*argsit).name()<<" Type "<<(*argsit).type()->name()<<endl;
+    cout <<"Argument " << argsit->name() <<" Type " << argsit->type()->name() << endl;
 #endif /* DEBUG */
 
     if (shmem_wrapper) {
-#ifdef DEBUG
-      cout <<"Argument "<<(*argsit).name()<<" Type "<<(*argsit).type()->name()<<endl;
-#endif /* DEBUG */
-      if ((strcmp((*argsit).name().c_str(), "len") == 0) || (strcmp((*argsit).name().c_str(), "nelems") == 0)) {
+      if ((argsit->name().compare("len") == 0) || 
+          (argsit->name().compare("nelems") == 0)) {
 #ifdef DEBUG
         printf("Argcount = %d for len\n", argcount); 
 #endif /* DEBUG */
-        shmem_len_argcount = argcount; 
-        if ((*argsit).type()->kind() == pdbItem::TY_PTR) {
-          fortran_interface = true;
+        sig.shmem_len_argcount = argcount; 
+        if (argsit->type()->kind() == pdbItem::TY_PTR) {
+          sig.shmem_fortran_interface = true;
         }
       }
-      if (strcmp((*argsit).name().c_str(), "pe") == 0) {
+      if (argsit->name().compare("pe") == 0) {
 #ifdef DEBUG
         printf("Argcount = %d for pe\n", argcount); 
 #endif /* DEBUG */
-        shmem_pe_argcount = argcount; 
-        if ((*argsit).type()->kind() == pdbItem::TY_PTR) {
-          fortran_interface = true;
+        sig.shmem_pe_argcount = argcount; 
+        if (argsit->type()->kind() == pdbItem::TY_PTR) {
+          sig.shmem_fortran_interface = true;
         }
       }
-      if ((strcmp((*argsit).name().c_str(), "match") == 0) || 
-         (strcmp((*argsit).name().c_str(), "cond") == 0)) {
+      if ((argsit->name().compare("match") == 0) || 
+          (argsit->name().compare("cond") == 0)) {
 #ifdef DEBUG
         printf("Argcount = %d for match/cond\n", argcount); 
 #endif /* DEBUG */
-        shmem_cond_argcount = argcount; 
+        sig.shmem_cond_argcount = argcount; 
       }
     }
+
     if (argcount != 1) { /* not a startup */
-      func.append(", ");
-      proto.append(", ");
-      funchandle.append(", ");
-      rcalledfunc.append(", ");
+      sig.func.append(", ");
+      sig.proto.append(", ");
+      sig.rcalledfunc.append(", ");
+      sig.funchandle.append(", ");
       impl<<", ";
     }
+
+    char number[256];
     sprintf(number, "%d", argcount);
     const pdbGroup *gr;
     string argtypename;
-    if ( (gr=(*argsit).type()->isGroup()) != 0) {
-      argtypename=gr->name();
+    if ((gr = argsit->type()->isGroup()) != 0) {
+      argtypename = gr->name();
     } else {
-      argtypename=(*argsit).type()->name();
+      argtypename = argsit->type()->name();
     }
-/* Originally, we were only checking { } in arg names for upc_wrapper. Now
- * we do it for all cases because PDB files from Rose have this artifact.*/
-      if (1) {
-        /* upc headers sometimes have struct members in the argument name:
- *         const struct upc_filevec {upc_off_t offset;size_t len;}*
- *                 We need to erase everything between the two curly braces */
-        int pos1, pos2;
-#ifdef DEBUG
-        cout <<"BEFORE ARG type="<<argtypename<<endl;
-#endif /* DEBUG */
-        pos1=argtypename.find("{");
-        pos2=argtypename.find("}");
-        if (pos1 > 0 && pos2 > 0) argtypename.erase(pos1,pos2-pos1+1);
-#ifdef DEBUG
-        cout <<"AFTER  ARG type="<<argtypename<<endl;
-#endif /* DEBUG */
-      }
 
-    proto.append(argtypename);
-    funchandle.append(argtypename);
+    /* upc headers sometimes have struct members in the argument name:
+     *         const struct upc_filevec {upc_off_t offset;size_t len;}*
+     *                 We need to erase everything between the two curly braces */
+    int pos1 = argtypename.find("{");
+    int pos2 = argtypename.find("}");
+    if (pos1 != string::npos && pos2 != string::npos) {
+#ifdef DEBUG
+      cout <<"BEFORE ARG type="<<argtypename<<endl;
+#endif /* DEBUG */
+      argtypename.erase(pos1, pos2-pos1+1);
+#ifdef DEBUG
+      cout <<"AFTER  ARG type="<<argtypename<<endl;
+#endif /* DEBUG */
+    }
 
-    proto.append(" " + string("a")+string(number));
-    rcalledfunc.append(" " + string("a")+string(number));
-    func.append(string("a")+string(number));
+    sig.func.append("a" + string(number));
+    sig.proto.append(argtypename + " a" + string(number));
+    sig.funchandle.append(argtypename);
+    sig.rcalledfunc.append(" a" + string(number));
 
     /* We need to handle the case int (*)[] separately generating 
-    int (*a1)[]  instead of int (*)[] a1 in the impl file */
+       int (*a1)[]  instead of int (*)[] a1 in the impl file */
     const char *found;
     const char *examinedarg = argtypename.c_str();
     if ((found = strstr(examinedarg, "(*)")) != 0) {
@@ -549,24 +563,23 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, const char * p
         //printf("after number Printing %c\n", examinedarg[i]);
         impl << examinedarg[i];
       }
-
-    }
-    else {
+    } else {
       /* print: for (int a, double b), this prints "int" */
       if (upc_wrapper) {
         /* upc headers sometimes have struct members in the argument name:
-	const struct upc_filevec {upc_off_t offset;size_t len;}* 
-	We need to erase everything between the two curly braces */
-        int pos1, pos2;
+           const struct upc_filevec {upc_off_t offset;size_t len;}* 
+           We need to erase everything between the two curly braces */
+        size_t pos1 = argtypename.find("{");
+        size_t pos2 = argtypename.find("}");
+        if (pos1 != string::npos && pos2 != string::npos) {
 #ifdef DEBUG
-        cout <<"BEFORE ARG type="<<argtypename<<endl;
+          cout <<"BEFORE ARG type="<<argtypename<<endl;
 #endif /* DEBUG */
-        pos1=argtypename.find("{");
-        pos2=argtypename.find("}");
-        if (pos1 > 0 && pos2 > 0) argtypename.erase(pos1,pos2-pos1+1);
+          argtypename.erase(pos1, pos2-pos1+1);
 #ifdef DEBUG
-        cout <<"AFTER  ARG type="<<argtypename<<endl;
+          cout <<"AFTER  ARG type="<<argtypename<<endl;
 #endif /* DEBUG */
+        }
       } 
       impl<<argtypename<<" ";
       /* print: for (int a, double b), this prints "a1" in int a1, */
@@ -577,57 +590,27 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, const char * p
       impl<<", ...";
     }
   }
-  func.append(")");
-  proto.append(")");
-  rcalledfunc.append(")");
+  sig.func.append(")");
+  sig.proto.append(")");
+  sig.rcalledfunc.append(")");
   impl<<") ";
-
 }
 
-void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, string& group_name, int runtime, string& runtime_libname)
+void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, string& group_name, int runtime, string& runtime_libname)
 {
+  FunctionSignatureInfo sig(r);
+
+  string protoname = r->name() + "_p";
   string macro("#define ");
-  string func(r->name());
-  string proto(r->name());
-  string protoname(r->name());
-  string funchandle("_h) (");
-  string rcalledfunc("(*"+r->name()+"_h)");
-  string wcalledfunc("__real_"+r->name());
-  string dltext;
-  string returntypename;
   string retstring("    return;");
-  const pdbGroup *grp;
-  func.append("(");
-  proto.append("(");
-  protoname.append("_p");
-  bool fortran_interface = false; /* if *len or *pe appears in the arglist */
-  int shmem_len_argcount = 0; 
-  int shmem_pe_argcount = 0; 
-  int shmem_cond_argcount = 0; 
+  string dltext;
 
   if (r->signature()->hasEllipsis()) {
     // For a full discussion of why vararg functions are difficult to wrap
     // please see: http://www.swig.org/Doc1.3/Varargs.html#Varargs
- 
     impl <<"#warning \"TAU: Not generating wrapper for vararg function "<<r->name()<<"\""<<endl;
     cout <<"TAU: Not generating wrapper for vararg function "<<r->name()<<endl;
     return;
-  }
-  if ((grp = r->signature()->returnType()->isGroup()) != 0) { 
-    returntypename = grp->name();
-  } else {
-    returntypename = r->signature()->returnType()->name();
-    if (upc_wrapper) {
-#ifdef DEBUG
-      cout <<"RETURN Type name = "<< r->signature()->returnType()->name()<<endl;
-#endif /* DEBUG */
-      if (strncmp(returntypename.c_str(), "shared[1] ",10)==0) {
-#ifdef DEBUG
-        cout <<"SHARED[1] found!"<<endl;
-#endif /* DEBUG */
-	returntypename.replace(0,10,string("shared   "));
-      }
-    }
   }
 
   impl << endl; 
@@ -636,150 +619,157 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
   impl << " **********************************************************/"<<endl<<endl;
 
   bool isVoid = isReturnTypeVoid(r);
-  if (runtime == -1) { /* linker-based instrumentation */
-    printFunctionNameInOutputFile(r, impl, "  __real_", returntypename, shmem_len_argcount, shmem_pe_argcount, shmem_cond_argcount, fortran_interface, func, proto, funchandle, rcalledfunc);
+  if (runtime == WRAPPER_INTERCEPT) { /* linker-based instrumentation */
+    printFunctionNameInOutputFile(r, impl, "  __real_", sig);
     impl <<";"<<endl;
   }
 
-  if (shmem_wrapper == true) {
-    //impl << returntypename << " "; /* nothing else */
-    printFunctionNameInOutputFile(r, impl, " ", returntypename, shmem_len_argcount, shmem_pe_argcount, shmem_cond_argcount, fortran_interface, func, proto, funchandle, rcalledfunc);
-  }
-  else {
+  char const * prefix = " ";
+  if (!shmem_wrapper) {
     switch (runtime) {
-    case 1: /* for runtime interception, put a blank, the name stays the same*/
-      //impl<<returntypename<<" "; /* put in return type */
-      printFunctionNameInOutputFile(r, impl, " ", returntypename, shmem_len_argcount, shmem_pe_argcount, shmem_cond_argcount, fortran_interface, func, proto, funchandle, rcalledfunc);
-      break;
-    case 0: /* for standard preprocessor redirection, bar becomes tau_bar */
-      //impl<<returntypename<<"  tau_"; /* put in return type */
-      printFunctionNameInOutputFile(r, impl, "  tau_", returntypename, shmem_len_argcount, shmem_pe_argcount, shmem_cond_argcount, fortran_interface, func, proto, funchandle, rcalledfunc);
-      break;
-    case -1: /* for wrapper library interception, it becomes __wrap_bar */
-      //impl<<returntypename<<"  __wrap_"; /* put in return type */
-      printFunctionNameInOutputFile(r, impl, "  __wrap_", returntypename, shmem_len_argcount, shmem_pe_argcount, shmem_cond_argcount, fortran_interface, func, proto, funchandle, rcalledfunc);
-      break;
-    default: /* hmmm, what about any other case? Just use __wrap_bar */
-      //impl<<returntypename<<"  __wrap_"; /* put in return type */
-      printFunctionNameInOutputFile(r, impl, "  __wrap_", returntypename, shmem_len_argcount, shmem_pe_argcount, shmem_cond_argcount, fortran_interface, func, proto, funchandle, rcalledfunc);
-      break;
+      case RUNTIME_INTERCEPT: 
+        /* for runtime interception, put a blank, the name stays the same*/
+        prefix = "  ";
+        break;
+      case PREPROC_INTERCEPT:
+        /* for standard preprocessor redirection, bar becomes tau_bar */
+        prefix = "  tau_";
+        break;
+      case WRAPPER_INTERCEPT:
+        /* for wrapper library interception, it becomes __wrap_bar */
+        prefix = "  __wrap_";
+        break;
+      default: 
+        /* hmmm, what about any other case? Just use __wrap_bar */
+        prefix = "  __wrap_";
+        break;
     }
   }
 
-  impl<<" {" <<endl<<endl;
-	string funcprototype = funchandle + string(");");
- 	funchandle.append(") = NULL;");
-  if (runtime == 1) {
-    if (!isVoid) {
-			if (strict_typing)
-			{
-				impl << "  typedef " << returntypename << " (*"<<protoname<<funcprototype<<endl;
-				impl << "  static "  << protoname << "_h " << r->name() << "_h = NULL;"<<endl;
-			}
-			else
-			{
-      	impl <<"  static "<<returntypename<<" (*"<<r->name()<<funchandle<<endl;
-			}
-      retstring = string("    return retval;");
+  printFunctionNameInOutputFile(r, impl, prefix, sig);
+  impl << " {\n" << endl;
+
+  string funcprototype = sig.funchandle + ");";
+  string funchandle = sig.funchandle + ") = NULL;";
+
+  if (runtime == RUNTIME_INTERCEPT) {
+
+    if (isVoid) {
+      if (strict_typing) {
+        impl << "  typedef void (*"<<protoname<<funcprototype<<endl;
+        impl << "  static "  << protoname << "_h " << r->name() << "_h = NULL;"<<endl;
+      } else {
+        impl <<"  static void (*"<<r->name()<<funchandle<<endl;
+      }
     } else {
-			if (strict_typing)
-			{
-				impl << "  typedef void (*"<<protoname<<funcprototype<<endl;
-				impl << "  static "  << protoname << "_h " << r->name() << "_h = NULL;"<<endl;
-			}
-			else
-			{
-      	impl <<"  static void (*"<<r->name()<<funchandle<<endl;
-			}
+      if (strict_typing) {
+        impl << "  typedef " << sig.returntypename << " (*"<<protoname<<funcprototype<<endl;
+        impl << "  static "  << protoname << "_h " << r->name() << "_h = NULL;"<<endl;
+      } else {
+        impl <<"  static "<<sig.returntypename<<" (*"<<r->name()<<funchandle<<endl;
+      }
+      retstring = string("    return retval;");
     }
-		string dlsym = "";
-		if (strict_typing)
-		{
-		  dlsym = r->name() + string("_h = (") + protoname + string("_h) dlsym(tau_handle,\"")+r->name() + string("\"); \n");
-		}
-		else	
-		{
-			dlsym = r->name() + string("_h = dlsym(tau_handle,\"")+r->name() +
-			string("\"); \n");
-		}
-    dltext = string("  if (tau_handle == NULL) \n") + 
-    string("    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); \n\n") + 
-    string("  if (tau_handle == NULL) { \n") + 
-    string("    perror(\"Error opening library in dlopen call\"); \n")+ retstring + string("\n") + 
-    string("  } \n") + 
-    string("  else { \n") + 
-    string("    if (") + r->name() + string("_h == NULL)\n\t") + dlsym + 
-    string("    if (") + r->name() + string ("_h == NULL) {\n") + 
-    string("      perror(\"Error obtaining symbol info from dlopen'ed lib\"); \n") + string("  ")+ retstring + string("\n    }\n");
 
-  }
+    ostringstream buff;
+    buff << "  if (tau_handle == NULL) \n"
+         << "    tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); \n\n"
+         << "  if (tau_handle == NULL) { \n"
+         << "    perror(\"Error opening library in dlopen call\"); \n"
+         << retstring << "\n"
+         << "  } else { \n"
+         << "    if (" << r->name() << "_h == NULL)\n"
+         << "      ";
+    if (strict_typing)
+      buff << r->name() << "_h = (" << protoname << "_h) dlsym(tau_handle,\"" << r->name() << "\"); \n";
+    else
+      buff << r->name() << "_h = dlsym(tau_handle,\"" << r->name() << "\"); \n";
+    buff << "    if (" << r->name() << "_h == NULL) {\n"
+         << "      perror(\"Error obtaining symbol info from dlopen'ed lib\"); \n"
+         << "  " << retstring << "\n"
+         << "    }\n";
+     dltext = buff.str();
+  } /* if (runtime == RUNTIME_INTERCEPT) */
 
   if (!isVoid) {
-    impl<<"  "<<returntypename<< " retval = 0;"<<endl;
+    impl<<"  "<<sig.returntypename<< " retval = 0;"<<endl;
   }
+
   /* Now put in the body of the routine */
-  
-  impl<<"  TAU_PROFILE_TIMER(t,\""<<r->fullName()<<"\", \"\", "
-      <<group_name<<");"<<endl;
-  if (runtime == 1)
+
+  impl<<"  TAU_PROFILE_TIMER(t,\""<<r->fullName()<<"\", \"\", "<<group_name<<");"<<endl;
+  if (runtime == RUNTIME_INTERCEPT)
     impl <<dltext;
   impl<<"  TAU_PROFILE_START(t);"<<endl;
   if (shmem_wrapper) { /* generate pshmem calls here */
-    printShmemMessageBeforeRoutine(r, impl, shmem_len_argcount, shmem_pe_argcount, fortran_interface);
+    printShmemMessageBeforeRoutine(r, impl, sig);
     if (!isVoid)
     {
       impl<<"  retval  =";
     }
-    if (runtime == 1) {
-      impl<<"  "<<rcalledfunc<<";"<<endl;
+    if (runtime == RUNTIME_INTERCEPT) {
+      impl<<"  "<<sig.rcalledfunc<<";"<<endl;
     } else {
       if (pshmem_use_underscore_instead_of_p) {
-        impl <<"   _"<<func<<";"<<endl;
+        impl <<"   _"<<sig.func<<";"<<endl;
       } else {
-        impl <<"   p"<<func<<";"<<endl;
+        impl <<"   p"<<sig.func<<";"<<endl;
       }
     }
-    printShmemMessageAfterRoutine(r, impl, shmem_len_argcount, shmem_pe_argcount, shmem_cond_argcount, fortran_interface);
-  }
-  else {
-    if (!isVoid)
-    {
+    printShmemMessageAfterRoutine(r, impl, sig);
+  } else if (upc_wrapper) {
+    printUPCMessageBeforeRoutine(r, impl, sig);
+    if (!isVoid) {
       impl<<"  retval  =";
     }
-    if (runtime == 1) {
-      impl<<"  "<<rcalledfunc<<";"<<endl;
+    if (runtime == RUNTIME_INTERCEPT) {
+      impl<<"  "<<sig.rcalledfunc<<";"<<endl;
     }
     else {
-      if (runtime == -1) { /* link time instrumentation using -Wl,-wrap,bar */
-        impl<<"  __real_"<<func<<";"<<endl;
+      if (runtime == WRAPPER_INTERCEPT) { /* link time instrumentation using -Wl,-wrap,bar */
+        impl<<"  __real_"<<sig.func<<";"<<endl;
       } else { /* default case when we use redirection of bar -> tau_bar */
-        impl<<"  "<<func<<";"<<endl;
+        impl<<"  "<<sig.func<<";"<<endl;
+      }
+    }
+    printUPCMessageAfterRoutine(r, impl, sig);
+  } else {
+    if (!isVoid) {
+      impl<<"  retval  =";
+    }
+    if (runtime == RUNTIME_INTERCEPT) {
+      impl<<"  "<<sig.rcalledfunc<<";"<<endl;
+    }
+    else {
+      if (runtime == WRAPPER_INTERCEPT) { /* link time instrumentation using -Wl,-wrap,bar */
+        impl<<"  __real_"<<sig.func<<";"<<endl;
+      } else { /* default case when we use redirection of bar -> tau_bar */
+        impl<<"  "<<sig.func<<";"<<endl;
       }
     }
   }
   impl<<"  TAU_PROFILE_STOP(t);"<<endl;
 
-  if (runtime == 1) {
+  if (runtime == RUNTIME_INTERCEPT) {
     impl<<"  }"<<endl;
   }
 
-  if (!isVoid)
-  {
+  if (!isVoid) {
     impl<<"  return retval;"<<endl;
   }
   impl<<endl;
 
-  impl<<"}"<<endl<<endl;
-  if (runtime == 0) { /* preprocessor instrumentation */
-    macro.append(" "+func+" " +"tau_"+func);
+  impl<<"}\n"<<endl;
+  if (runtime == PREPROC_INTERCEPT) { /* preprocessor instrumentation */
+    macro.append(" "+sig.func+" " +"tau_"+sig.func);
 #ifdef DEBUG
     cout <<"macro = "<<macro<<endl;
-    cout <<"func = "<<func<<endl;
+    cout <<"func = "<<sig.func<<endl;
 #endif /* DEBUG */
 
-  /* The macro goes in header file, the implementation goes in the other file */
+    /* The macro goes in header file, the implementation goes in the other file */
     header <<macro<<endl;  
-    header <<"extern "<<returntypename<<" tau_"<<proto<<";"<<endl<<endl;
+    header <<"extern "<<sig.returntypename<<" tau_"<<sig.proto<<";\n"<<endl;
   }
 
 }
@@ -787,28 +777,21 @@ void  printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, 
 /* -------------------------------------------------------------------------- */
 /* -- Extract the package name from the header file name:  netcdf.h -> netcdf */
 /* -------------------------------------------------------------------------- */
-void extractLibName(const char *filename, string& libname)
+string extractLibName(string const & filename)
 {
-  char *name = strdup(filename);
-  int len = strlen(name); /* length */
-  int i;
-
-  for (i=0; i < len; i++)
-  {
-    if (name[i] == '.') name[i] = '\0'; /* truncate it if . is found */
-  }
-  libname=string(name);
+  return filename.substr(0, filename.find("."));
 } 
 
 
 /* -------------------------------------------------------------------------- */
 /* -- Instrumentation routine for a C program ------------------------------- */
 /* -------------------------------------------------------------------------- */
-bool instrumentCFile(PDB& pdb, pdbFile* f, ofstream& header, ofstream& impl, ofstream& linkoptsfile, string& group_name, string& header_file, int runtime, string& runtime_libname, string& libname)
+bool instrumentCFile(PDB& pdb, pdbFile* f, ofstream& header, ofstream& impl, 
+                     ofstream& linkoptsfile, string& group_name, string& header_file, 
+                     int runtime, string& runtime_libname, string& libname)
 {
-  //static int firsttime=0;
   string file(f->name());
-  
+
   // open source file
   ifstream istr(file.c_str());
   if (!istr) {
@@ -820,111 +803,121 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, ofstream& header, ofstream& impl, ofs
 #endif
 
   // initialize reference vector
-  vector<itemRef *> itemvec;
+  vector<itemRef*> itemvec;
   getCReferencesForWrapper(itemvec, pdb, f);
   PDB::croutinevec routines = pdb.getCRoutineVec();
-  for (PDB::croutinevec::const_iterator rit=routines.begin();
-       rit!=routines.end(); ++rit)   {
+  for (PDB::croutinevec::const_iterator rit=routines.begin(); rit!=routines.end(); ++rit) {
     pdbRoutine::locvec retlocations = (*rit)->returnLocations();
-    if ( (*rit)->location().file() == f && !(*rit)->isCompilerGenerated()
-         && (instrumentEntity((*rit)->fullName())) )
+    if ( (*rit)->location().file() == f
+        && !(*rit)->isCompilerGenerated()
+        && (instrumentEntity((*rit)->fullName())) )
     {
-       printRoutineInOutputFile(*rit, header, impl, group_name, runtime, runtime_libname);
-       if (runtime == -1) { /* -Wl,-wrap,<func>,-wrap,<func> */
-	 if (!(*rit)->signature()->hasEllipsis()) { /* does not have varargs */
-           linkoptsfile <<"-Wl,-wrap,"<<(*rit)->name()<<" ";
-         }
-       }
-
+      printRoutineInOutputFile(*rit, header, impl, group_name, runtime, runtime_libname);
+      if (runtime == WRAPPER_INTERCEPT) { /* -Wl,-wrap,<func>,-wrap,<func> */
+        if (!(*rit)->signature()->hasEllipsis()) { /* does not have varargs */
+          linkoptsfile <<"-Wl,-wrap,"<<(*rit)->name()<<" ";
+        }
+      }
     }
   }
   return true;
-
 } 
+
 /* -------------------------------------------------------------------------- */
 /* -- Define a TAU group after <Profile/Profiler.h> ------------------------- */
 /* -------------------------------------------------------------------------- */
-void defineTauGroup(ofstream& ostr, string& group_name)
+void defineTauGroup(ofstream& ostr, string & group_name)
 {
-  if (strcmp(group_name.c_str(), "TAU_USER") != 0)
-  { /* Write the following lines only when -DTAU_GROUP=string is defined */
+  if (group_name.compare("TAU_USER") != 0) {
+    /* Write the following lines only when -DTAU_GROUP=string is defined */
     ostr<< "#ifndef "<<group_name<<endl;
     ostr<< "#define "<<group_name << " TAU_GET_PROFILE_GROUP(\""<<group_name.substr(10)<<"\")"<<endl;
     ostr<< "#endif /* "<<group_name << " */ "<<endl;
   }
 }
 
-void generateMakefile(string& package, string &outFileName, int runtime, string& runtime_libname, string& libname, string& extradefs)
+void generateMakefile(string const & package, string const & outFileName, 
+                      int runtime, string const & runtime_libname, string const & libname, 
+                      string const & extradefs)
 {
-  string makefileName("Makefile");
-  ofstream makefile(string(libname+"_wrapper/"+string(makefileName)).c_str());
+  char const * makefileName = "Makefile";
+  char const * compiler_name = "$(TAU_CC)";
+  char const * upcprefix = "";
 
-  string compiler_name("$(TAU_CC)");
-  string upcprefix("");
-  if (upc_wrapper) {
-    //compiler_name=string("$(TAU_UPCC)");
-    upcprefix="$(UPCC_C_PREFIX)";
-  }
-  
-  if (runtime == 0) {
-    string text("include ${TAU_MAKEFILE} \n\
-CC="+compiler_name+" \n\
-CFLAGS=$(TAU_DEFS) "+ extradefs+ " $(TAU_INCLUDE) $(TAU_MPI_INCLUDE) -I.. \n\
-\n\
-AR=ar \n\
-ARFLAGS=rcv \n\
-\n\
-lib"+package+"_wrap.a: "+package+"_wrap.o \n\
-	$(AR) $(ARFLAGS) $@ $<\n\
-\n\
-"+package+"_wrap.o: "+outFileName+"\n\
-	$(CC) $(CFLAGS) -c $< -o $@\n\
-clean:\n\
-	/bin/rm -f "+package+"_wrap.o lib"+package+"_wrap.a\n\
-");
-    makefile <<text<<endl;
-  }
-  else { 
-    if (runtime == 1) { 
-      string text("include ${TAU_MAKEFILE} \n\
-CC="+compiler_name+" \n\
-CFLAGS=$(TAU_DEFS) "+ extradefs+ " " + upcprefix+"$(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE) $(TAU_MPI_INCLUDE)  -I.. -fPIC \n\
-\n\
-lib"+package+"_wrap.so: "+package+"_wrap.o \n\
-	$(CC) $(TAU_SHFLAGS) $@ $< $(TAU_SHLIBS) -ldl\n\
-\n\
-"+package+"_wrap.o: "+outFileName+"\n\
-	$(CC) $(CFLAGS) -c $< -o $@\n\
-clean:\n\
-	/bin/rm -f "+package+"_wrap.o lib"+package+"_wrap.so\n\
-");
+  //if (cray_upc) {
+  //  compiler_name = "$(TAU_UPCC)";
+  //  upcprefix = "$(UPCC_C_PREFIX)";
+  //}
 
-      makefile <<text<<endl;
-    } else { 
-      if (runtime == -1) {
-        string text("include ${TAU_MAKEFILE} \n\
-CC="+compiler_name+" \n\
-ARFLAGS=rcv \n\
-CFLAGS=$(TAU_DEFS) "+ extradefs + " " + upcprefix+"$(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE)  $(TAU_MPI_INCLUDE) -I.. \n\
-\n\
-lib"+package+"_wrap.a: "+package+"_wrap.o \n\
-	$(TAU_AR) $(ARFLAGS) $@ $< \n\
-\n\
-"+package+"_wrap.o: "+outFileName+"\n\
-	$(CC) $(CFLAGS) -c $< -o $@\n\
-clean:\n\
-	/bin/rm -f "+package+"_wrap.o lib"+package+"_wrap.a\n\
-");
-        makefile <<text<<endl;
+  char buffer[1024];
+  sprintf(buffer, "%s_wrapper/%s", libname.c_str(), makefileName);
 
-      }
-    }
+  ofstream makefile(buffer);
+  switch(runtime) {
+    case PREPROC_INTERCEPT:
+      makefile << "include ${TAU_MAKEFILE}\n"
+               << "CC=" << compiler_name << "\n"
+               << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE) $(TAU_MPI_INCLUDE) -I..\n"
+               << "\n"
+               << "AR=ar\n"
+               << "ARFLAGS=rcv\n"
+               << "\n"
+               << "lib" << package << "_wrap.a: " << package << "_wrap.o \n"
+               << "\t$(AR) $(ARFLAGS) $@ $<\n"
+               << "\n"
+               << package << "_wrap.o: " << outFileName << "\n"
+               << "\t$(CC) $(CFLAGS) -c $< -o $@\n"
+               << "clean:\n"
+               << "\t/bin/rm -f " << package << "_wrap.o lib" << package << "_wrap.a\n"
+               << endl;
+      break;
+    case RUNTIME_INTERCEPT:
+      makefile << "include ${TAU_MAKEFILE}\n"
+               << "CC=" << compiler_name << " \n"
+               << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE) $(TAU_MPI_INCLUDE)  -I.. -fPIC\n"
+               << "\n"
+               << "lib" << package << "_wrap.so: " << package << "_wrap.o \n"
+               << "\t$(CC) $(TAU_SHFLAGS) $@ $< $(TAU_SHLIBS) -ldl\n"
+               << "\n"
+               << package << "_wrap.o: " << outFileName << "\n"
+               << "\t$(CC) $(CFLAGS) -c $< -o $@\n"
+               << "clean:\n"
+               << "\t/bin/rm -f " << package << "_wrap.o lib" << package << "_wrap.so\n"
+               << endl;
+      break;
+    case WRAPPER_INTERCEPT:
+      makefile << "include ${TAU_MAKEFILE} \n"
+               << "CC=" << compiler_name << " \n"
+               << "ARFLAGS=rcv \n"
+               << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE)  $(TAU_MPI_INCLUDE) -I..\n"
+               << "\n"
+               << "lib" << package << "_wrap.a: " << package << "_wrap.o \n"
+               << "\t$(TAU_AR) $(ARFLAGS) $@ $< \n"
+               << "\n"
+               << package << "_wrap.o: " << outFileName << "\n"
+               << "\t$(CC) $(CFLAGS) -c $< -o $@\n"
+               << "clean:\n"
+               << "\t/bin/rm -f " << package << "_wrap.o lib" << package << "_wrap.a\n"
+               << endl;
+      break;
+    default:
+      // Unknown runtime flag!
+      break;
   }
 }
 
 
+void show_usage(char const * argv0)
+{
+  cout <<"Usage : "<< argv0 <<" <pdbfile> <sourcefile> [-o <outputfile>] [-w librarytobewrapped] [-r runtimelibname] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] [--strict]"<<endl;
+  cout <<" To use runtime library interposition, -r <name> must be specified\n"<<endl;
+  cout <<" --strict enforces strict typing (no dynamic function pointer casting). \n"<<endl;
+  cout <<" e.g., "<<endl;
+  cout <<"   tau_wrap hdf5.h.pdb hdf5.h libhdf5.a -o wrap_hdf5.c -w /usr/lib/libhdf5.a "; 
+  cout <<"----------------------------------------------------------------------------------------------------------"<<endl;
+}
 
- 
+
 /* -------------------------------------------------------------------------- */
 /* -- Instrument the program using C, C++ or F90 instrumentation routines --- */
 /* -------------------------------------------------------------------------- */
@@ -935,167 +928,171 @@ int main(int argc, char **argv)
   string runtime_libname("libc.so"); /* Default: if nothing else is defined */
   string header_file("Profile/Profiler.h");
   string extradefs("");
-  int runtime = 0; /* by default generate PDT based re-direction library*/
   bool retval;
-        /* Default: if nothing else is defined */
-
-  if (argc < 3)
-  {
-    cout <<"Usage : "<<argv[0] <<" <pdbfile> <sourcefile> [-o <outputfile>] [-w librarytobewrapped] [-r runtimelibname] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] [--strict]"<<endl;
-    cout <<" To use runtime library interposition, -r <name> must be specified\n"<<endl;
-    cout <<" --strict enforces strict typing (no dynamic function pointer casting). \n"<<endl;
-    cout <<" e.g., "<<endl;
-    cout <<" % tau_wrap hdf5.h.pdb hdf5.h libhdf5.a -o wrap_hdf5.c -w /usr/lib/libhdf5.a "; 
-    cout<<"----------------------------------------------------------------------------------------------------------"<<endl;
-  }
-  PDB p(argv[1]); if ( !p ) return 1;
-  /* setGroupName(p, group_name); */
   bool outFileNameSpecified = false;
-  int i;
-  const char *filename;
-  for(i=0; i < argc; i++)
-  {
-    switch(i) 
-    {
-      case 0:
-#ifdef DEBUG
-        printf("Name of pdb file = %s\n", argv[1]);
-#endif /* DEBUG */
-        break;
-      case 1:
-#ifdef DEBUG
-        printf("Name of source file = %s\n", argv[2]);
-#endif /* DEBUG */
-        filename = argv[2];
-        break;
-      default:
-        if (strcmp(argv[i], "-o")== 0)
-        {
-          ++i;
-#ifdef DEBUG
-          printf("output file = %s\n", argv[i]);
-#endif /* DEBUG */
-          outFileName = string(argv[i]);
-          outFileNameSpecified = true;
-        }
 
-        if (strcmp(argv[i], "--upc") == 0)
-        {
-	  upc_wrapper = true;
-	  extradefs=string("$(TAU_UPC_COMPILER_OPTIONS)");
-        } 
+  /* by default generate PDT based re-direction library*/
+  int runtime = PREPROC_INTERCEPT;
 
-        if (strcmp(argv[i], "--shmem") == 0)
-        {
-	  shmem_wrapper = true;
-        } 
+  if (argc < 3) {
+    show_usage(argv[0]);
+    return 1;
+  }
 
-        if (strcmp(argv[i], "--pshmem_use_underscore_instead_of_p") == 0)
-        {
-	  pshmem_use_underscore_instead_of_p = true;
-        } 
+  PDB p(argv[1]); 
+  if ( !p ) {
+    show_usage(argv[0]);
+    cout << "Invalid PDB file: " << argv[1] << endl;
+    return 1;
+  }
 
-        if (strcmp(argv[i], "-r") == 0)
-        {
-          ++i;
-          runtime_libname = string(argv[i]);
-          runtime = 1; /* 1 is for runtime interposition LD_PRELOAD */
-#ifdef DEBUG
-          printf("Runtime library name: %s\n", runtime_libname.c_str());
-#endif /* DEBUG */
-        }
+  string filename = argv[2];
 
-        if (strcmp(argv[i], "-w") == 0)
-        {
-          ++i;
-          runtime_libname = string(argv[i]);
-          runtime = -1; /* -1 is for link time -Wl,-wrap,func interposition */
 #ifdef DEBUG
-          printf("Link time -Wl,-wrap library name: %s\n", runtime_libname.c_str());
+  cout << "Name of pdb file = " << argv[1] << endl;
+  cout << "Name of source file = " << argv[2] << endl;
 #endif /* DEBUG */
-        }
 
-        if (strcmp(argv[i], "-g") == 0)
-        {
-          ++i;
-          group_name = string("TAU_GROUP_")+string(argv[i]);
+  for(int i=3; i<argc; i++) {
+    if (strcmp(argv[i], "-o") == 0) {
+      outFileName = argv[i+1];
 #ifdef DEBUG
-          printf("Group %s\n", group_name.c_str());
+      cout << "output file = " << outFileName << endl;
 #endif /* DEBUG */
-        }
-        if (strcmp(argv[i], "-i") == 0)
-        {
-          ++i;
-          header_file = string(argv[i]);
+      outFileNameSpecified = true;
+    }
+    else if (strcmp(argv[i], "--upc") == 0) {
+      upc_wrapper = true;
 #ifdef DEBUG
-          printf("Header file %s\n", header_file.c_str());
+      cout << "upc_wrapper = true" << endl;
 #endif /* DEBUG */
-        }
-        if (strcmp(argv[i], "-f") == 0)
-        {
-          ++i;
-          processInstrumentationRequests(argv[i]);
+    } 
+    else if (strcmp(argv[i], "--crayupc") == 0) {
+      upc_wrapper = true;
+      cray_upc = true;
+      extradefs = "$(TAU_UPC_COMPILER_OPTIONS)";
 #ifdef DEBUG
-          printf("Using instrumentation requests file: %s\n", argv[i]);
+      cout << "upc_wrapper = true" << endl;
+      cout << "cray_upc = true" << endl;
 #endif /* DEBUG */
-        }
-        if (strcmp(argv[i], "--strict") == 0)
-				{
-					strict_typing = true;	
+    } 
+    else if (strcmp(argv[i], "--shmem") == 0) {
+      shmem_wrapper = true;
 #ifdef DEBUG
-          printf("Using strict typing. \n");
+      cout << "shmem_wrapper = true" << endl;
 #endif /* DEBUG */
-				}
-        break; /* end of default case */
+    } 
+    else if (strcmp(argv[i], "--pshmem_use_underscore_instead_of_p") == 0) {
+      pshmem_use_underscore_instead_of_p = true;
+#ifdef DEBUG
+      cout << "pshmem_use_underscore_instead_of_p = true" << endl;
+#endif /* DEBUG */
+    } 
+    else if (strcmp(argv[i], "-r") == 0) {
+      runtime_libname = argv[i+1];
+      runtime = RUNTIME_INTERCEPT;
+#ifdef DEBUG
+      cout << "Runtime library name: " << runtime_libname << endl;
+#endif /* DEBUG */
+    }
+    else if (strcmp(argv[i], "-w") == 0) {
+      runtime_libname = argv[i+1];
+      runtime = WRAPPER_INTERCEPT;
+#ifdef DEBUG
+      cout << "Link time -Wl,-wrap library name: " << runtime_libname << endl;
+#endif /* DEBUG */
+    }
+    else if (strcmp(argv[i], "-g") == 0) {
+      group_name = string("TAU_GROUP_")+string(argv[i+1]);
+#ifdef DEBUG
+      printf("Group %s\n", group_name.c_str());
+#endif /* DEBUG */
+    }
+    else if (strcmp(argv[i], "-i") == 0) {
+      header_file = string(argv[i+1]);
+#ifdef DEBUG
+      printf("Header file %s\n", header_file.c_str());
+#endif /* DEBUG */
+    }
+    else if (strcmp(argv[i], "-f") == 0) {
+      processInstrumentationRequests(argv[i+1]);
+#ifdef DEBUG
+      printf("Using instrumentation requests file: %s\n", argv[i]);
+#endif /* DEBUG */
+    }
+    else if (strcmp(argv[i], "--strict") == 0) {
+      strict_typing = true;	
+#ifdef DEBUG
+      printf("Using strict typing. \n");
+#endif /* DEBUG */
     }
   }
 
-  if (!outFileNameSpecified)
-  { /* if name is not specified on the command line */
-    outFileName = string(filename + string(".ins"));
+  if (!outFileNameSpecified) {
+    /* if name is not specified on the command line */
+    outFileName = filename + string(".ins");
   }
+
   /* should we make a directory and put it in there? */
-  string libname;
-  extractLibName(filename, libname);
+  string libname = extractLibName(filename);
   string dircmd("mkdir -p "+libname+"_wrapper");
-  //system("mkdir -p wrapper");
   system(dircmd.c_str());
-  ofstream linkoptsfile(string(libname+"_wrapper/link_options.tau").c_str()); 
+
+  ostringstream buff;
+  buff << libname << "_wrapper/link_options.tau";
+  string linkoptsfileName = buff.str();
+
+  ofstream linkoptsfile(linkoptsfileName.c_str());
   if (!linkoptsfile) {
-    cerr << "Error: Cannot open: '" << libname+"_wrapper/link_options.tau" << "'" << endl;
+    cerr << "Error: Cannot open: '" << linkoptsfileName << "'" << endl;
     return false;
   }
 
   system(dircmd.c_str());
   ofstream impl(string(libname+"_wrapper/"+outFileName).c_str()); /* actual implementation goes in here */
-  ofstream header(string(libname+"_wrapper/"+string(filename)).c_str()); /* use the same file name as the original */
+  ofstream header(string(libname+"_wrapper/"+filename).c_str()); /* use the same file name as the original */
   if (!impl) {
     cerr << "Error: Cannot open output file '" << outFileName << "'" << endl;
     return false;
   }
   if (!header) {
-    cerr << "Error: Cannot open wrapper/" <<filename  << "" << endl;
+    cerr << "Error: Cannot open wrapper/" << filename << endl;
     return false;
   }
+
   /* files created properly */
-  //header <<"#include <"<<filename<<">"<<endl;
-  impl <<"#include <"<<filename<<">"<<endl;
-  impl <<"#include <"<<header_file<<">"<<endl; /* Profile/Profiler.h */
-  impl <<"#include <stdio.h>"<<endl;
+  impl << "#include <" << filename << ">\n"
+       << "#include <" << header_file << ">\n"
+       << "#include <stdio.h>\n"
+       << endl;
   if (shmem_wrapper) {
-    impl <<"int TAUDECL tau_totalnodes(int set_or_get, int value);"<<endl;
-    impl <<"static int tau_shmem_tagid_f=0 ; "<<endl;
-    impl <<"#define TAU_SHMEM_TAGID tau_shmem_tagid_f=tau_shmem_tagid_f%250"<<endl;
-    impl <<"#define TAU_SHMEM_TAGID_NEXT (++tau_shmem_tagid_f) % 250 "<<endl;
+    impl << "int TAUDECL tau_totalnodes(int set_or_get, int value);\n"
+         << "static int tau_shmem_tagid_f=0;\n"
+         << "#define TAU_SHMEM_TAGID (tau_shmem_tagid_f = (tau_shmem_tagid_f & 255))\n"
+         << "#define TAU_SHMEM_TAGID_NEXT ((++tau_shmem_tagid_f) & 255)\n"
+         << endl;
+  }
+  if (upc_wrapper) {
+    impl //<< "extern size_t upc_threadof(upcr_shared_ptr_t a1);\n"
+         << "\n"
+         << "#pragma pupc off\n"
+         << "\n"
+         << "#ifdef __BERKELEY_UPC__\n"
+         << "#pragma UPCR NO_SRCPOS \n"
+         << "#endif\n"
+         << "\n"
+         << "static int tau_upc_tagid_f=0;\n"
+         << "#define TAU_UPC_TAGID (tau_upc_tagid_f = (tau_upc_tagid_f & 255))\n"
+         << "#define TAU_UPC_TAGID_NEXT ((++tau_upc_tagid_f) & 255)\n"
+         << endl;
   }
 
-
-  if (runtime == 1) {
-  /* add the runtime library calls */
-     impl <<"#include <dlfcn.h>"<<endl<<endl;
-     impl <<"const char * tau_orig_libname = "<<"\""<<
-	runtime_libname<<"\";"<<endl; 
-     impl <<"static void *tau_handle = NULL;"<<endl<<endl<<endl;
+  if (runtime == RUNTIME_INTERCEPT) {
+    /* add the runtime library calls */
+    impl <<"#include <dlfcn.h>"<<endl<<endl;
+    impl <<"const char * tau_orig_libname = "<<"\""<<
+      runtime_libname<<"\";"<<endl; 
+    impl <<"static void *tau_handle = NULL;"<<endl<<endl<<endl;
   }
 
   defineTauGroup(impl, group_name); 
@@ -1110,34 +1107,21 @@ int main(int argc, char **argv)
   header <<"#ifdef __cplusplus"<<endl;
   header <<"extern \"C\" {"<<endl;
   header <<"#endif /*  __cplusplus */"<<endl<<endl;
-  bool instrumentThisFile;
+
   bool fuzzyMatchResult;
   bool fileInstrumented = false;
-  for (PDB::filevec::const_iterator it=p.getFileVec().begin();
-       it!=p.getFileVec().end(); ++it)
-  {
-     /* reset this variable at the beginning of the loop */
-     instrumentThisFile = false;
-
-     /* for headers, we should only use the processFileForInstrumentation check */
-/*
-     if ((fuzzyMatchResult = fuzzyMatch((*it)->name(), string(filename))) &&
-         (instrumentThisFile = processFileForInstrumentation(string(filename))))     
-*/
-     if (instrumentThisFile = processFileForInstrumentation(string(filename)))
-     { /* should we instrument this file? Yes */
+  if (processFileForInstrumentation(filename)) {
+    for (PDB::filevec::const_iterator it=p.getFileVec().begin(); it!=p.getFileVec().end(); it++) {
 #ifdef DEBUG
-       cout <<"Instrument file: "<<filename<<" "<< (*it)->name()<<endl;
+      cout <<"Instrument file: "<<filename<<" "<< (*it)->name()<<endl;
 #endif /* DEBUG */
-       instrumentCFile(p, *it, header, impl, linkoptsfile, group_name, header_file, runtime, runtime_libname, libname);
-     }
+      instrumentCFile(p, *it, header, impl, linkoptsfile, group_name, header_file, runtime, runtime_libname, libname);
+    }
   }
-  if (runtime == -1) {
-    char * dirname = new char[1024]; 
-    char *dirnameptr; 
-    dirnameptr=getcwd(dirname, 1024); 
-    linkoptsfile <<"-L"<<dirnameptr<<"/"<<libname<<"_wrapper/ -l"<< libname<<"_wrap "<<runtime_libname<<endl;
-    delete[] dirname;
+  if (runtime == WRAPPER_INTERCEPT) {
+    char dirname[1024]; 
+    getcwd(dirname, sizeof(dirname)); 
+    linkoptsfile <<"-L"<<dirname<<"/"<<libname<<"_wrapper/ -l"<< libname<<"_wrap "<<runtime_libname<<endl;
   }
   header <<"#ifdef __cplusplus"<<endl;
   header <<"}"<<endl;
@@ -1146,10 +1130,10 @@ int main(int argc, char **argv)
 
   header.close();
 
-  if (runtime != 0) { /* 0 is for default preprocessor based wrapping */
-    string hfile = string(libname+"_wrapper/"+string(filename));
+  if (runtime != PREPROC_INTERCEPT) { /* 0 is for default preprocessor based wrapping */
+    string hfile = libname+"_wrapper/"+filename;
 #ifdef DEBUG
-    cout <<"Deleting foo.h"<<endl;
+    cout <<"Deleting " << hfile << endl;
 #endif /* DEBUG */
     /* delete the header file, we do not need it */
     unlink(hfile.c_str());
