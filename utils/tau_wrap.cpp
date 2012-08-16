@@ -199,7 +199,7 @@ static string upc_threadof(string const & shared)
 {
   
   if(cray_upc) {
-    return "upc_threadof(" + shared + ")";
+    return "__real_upc_threadof(" + shared + ")";
   } else {
     return "upcr_threadof_shared(" + shared + ")";
   }

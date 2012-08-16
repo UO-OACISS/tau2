@@ -37,7 +37,8 @@ void TAU_ABORT(const char *format, ...) {
 /*********************************************************************
  * Create an buffer output device
  ********************************************************************/
-Tau_util_outputDevice *Tau_util_createBufferOutputDevice() {
+Tau_util_outputDevice *Tau_util_createBufferOutputDevice() 
+{
   Tau_util_outputDevice *out = (Tau_util_outputDevice*) TAU_UTIL_MALLOC (sizeof(Tau_util_outputDevice));
   if (out == NULL) {
     return NULL;
@@ -45,7 +46,7 @@ Tau_util_outputDevice *Tau_util_createBufferOutputDevice() {
   out->type = TAU_UTIL_OUTPUT_BUFFER;
   out->bufidx = 0;
   out->buflen = TAU_UTIL_INITIAL_BUFFER;
-  out->buffer = (char *) malloc (out->buflen);
+  out->buffer = (char *)malloc(out->buflen + 1);
   return out;
 }
 
@@ -107,6 +108,8 @@ int Tau_util_readFullLine(char *line, FILE *fp) {
   while ( (ch = fgetc(fp)) && ch != EOF && ch != (int) '\n') {
     line[i++] = (unsigned char) ch;
   }
+  // Be careful to check that line is large enough:
+  // sizeof(line) == strlen(str) + 1
   line[i] = '\0'; 
   return i; 
 }
@@ -128,7 +131,7 @@ char const * Tau_util_removeRuns(char const * spaced_str)
 
   // String copy
   int len = strlen(spaced_str);
-  char * str = (char *)malloc(len);
+  char * str = (char *)malloc(len+1);
 
   // Copy from spaced_str ignoring runs of multiple spaces
   char c;
