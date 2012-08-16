@@ -363,9 +363,6 @@ extern "C" void Tau_lite_start_timer(void *functionInfo, int phase, int tid) {
     FunctionInfo *fi = (FunctionInfo *) functionInfo;
     Profiler *pp = TauInternal_ParentProfiler(tid);
     RtsLayer::getUSecD(tid, &timeStamp);   
-    if (pp) {
-      printf("lite_start: %s pp %s\n", fi->GetName(), pp->ThisFunction->GetName());
-    }
     if (fi) {
       fi->IncrNumCalls(tid); // increment number of calls 
     }
@@ -1540,7 +1537,7 @@ extern "C" void Tau_pure_stop(const char *name) {
 
 extern "C" void Tau_static_phase_start(char *name) {
 
-printf("Static phase: %s\n", name);
+//printf("Static phase: %s\n", name);
   FunctionInfo *fi = 0;
   string n = string(name);
   TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
