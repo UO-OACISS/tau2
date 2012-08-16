@@ -60,6 +60,7 @@ void esd_exit (elg_ui4 rid);
 #include <Profile/TauSCOREP.h>
 #endif
 
+extern int tau_env_lite;
 
 extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup_t group, const char *gr_name) {
   FunctionInfo *f;
@@ -353,6 +354,51 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   Tau_global_insideTAU[tid]--;
 }
 
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_lite_start_timer(void *functionInfo, int phase, int tid) {
+  if (tau_env_lite){
+    double timeStamp;
+    // move the stack pointer
+    Tau_global_stackpos[tid]++; /* push */
+    FunctionInfo *fi = (FunctionInfo *) functionInfo;
+    Profiler *pp = TauInternal_ParentProfiler(tid);
+    RtsLayer::getUSecD(tid, &timeStamp);   
+    if (fi) {
+      fi->IncrNumCalls(tid); // increment number of calls 
+    }
+    if (pp && pp->ThisFunction) {
+      pp->ThisFunction->IncrNumSubrs(tid); // increment parent's child calls
+    }
+
+    
+    if (Tau_global_stackpos[tid] >= Tau_global_stackdepth[tid]) {
+      int oldDepth = Tau_global_stackdepth[tid];
+      int newDepth = oldDepth + STACK_DEPTH_INCREMENT;
+      Profiler *newStack = (Profiler *) malloc(sizeof(Profiler)*newDepth);
+      memcpy(newStack, Tau_global_stack[tid], oldDepth*sizeof(Profiler));
+      Tau_global_stack[tid] = newStack;
+      Tau_global_stackdepth[tid] = newDepth;
+    }
+    Profiler *p = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
+    p->StartTime[0] = timeStamp;
+
+    p->MyProfileGroup_ = fi->GetProfileGroup();
+    p->ThisFunction = fi;
+
+    // if this function is not already on the callstack, put it
+    if (fi->GetAlreadyOnStack(tid) == false) {
+      p->AddInclFlag = true; 
+      fi->SetAlreadyOnStack(true,tid);
+    } else {
+      p->AddInclFlag = false;
+    }
+
+  } else { // not lite - default 
+    Tau_start_timer(functionInfo, phase, tid);
+  }
+}
+    
+
 
 
 
@@ -486,6 +532,46 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 
   Tau_global_insideTAU[tid]--;
   return 0;
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" int Tau_lite_stop_timer(void *function_info, int tid ) {
+  if (tau_env_lite) {
+    double timeStamp;
+    double delta ; 
+    RtsLayer::getUSecD(tid, &timeStamp);   
+
+    FunctionInfo *fi = (FunctionInfo *) function_info;
+    Profiler *profiler;
+    profiler = (Profiler *) &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
+
+    delta = timeStamp - profiler->StartTime[0]; 
+
+    if (profiler && profiler->ThisFunction != fi) { /* Check for overlapping timers */
+      reportOverlap (profiler->ThisFunction, fi);
+    }
+    if (profiler && profiler->AddInclFlag == true) { 
+      fi->SetAlreadyOnStack(false, tid); // while exiting 
+      fi->AddInclTime(&delta, tid); // ok to add both excl and incl times
+    }
+    else {
+      //printf("Couldn't add incl time: profiler= %p, profiler->AddInclFlag=%d\n", profiler, profiler->AddInclFlag);
+    }
+    fi->AddExclTime(&delta, tid); 
+    Profiler *pp = TauInternal_ParentProfiler(tid); 
+    
+    if (pp) { 
+      pp->ThisFunction->ExcludeTime(&delta, tid); 
+    }
+    else {
+      //printf("Tau_lite_stop: parent profiler = 0x0: Function name = %s, StoreData?\n", fi->GetName()); 
+      TauProfiler_StoreData(tid);
+    }
+    Tau_global_stackpos[tid]--; /* pop */
+
+  } else {
+    Tau_stop_timer(function_info, tid);
+  }
 }
 
 
@@ -1451,7 +1537,7 @@ extern "C" void Tau_pure_stop(const char *name) {
 
 extern "C" void Tau_static_phase_start(char *name) {
 
-printf("Static phase: %s\n", name);
+//printf("Static phase: %s\n", name);
   FunctionInfo *fi = 0;
   string n = string(name);
   TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
