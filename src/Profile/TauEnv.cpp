@@ -115,6 +115,8 @@
 
 #define TAU_TRACK_MESSAGE_DEFAULT 0
 
+#define TAU_LITE_DEFAULT 0
+
 #define TAU_TRACK_IO_PARAMS_DEFAULT 0
 
 #define TAU_TRACK_SIGNALS_DEFAULT 0
@@ -393,6 +395,7 @@ static int env_depth_limit = 0;
 static int env_track_message = 0;
 static int env_comm_matrix = 0;
 static int env_track_memory_heap = 0;
+int tau_env_lite = 0;
 static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
 static int env_track_io_params = 0;
@@ -521,6 +524,10 @@ int TauEnv_get_signals_gdb() {
 
 int TauEnv_get_track_message() {
   return env_track_message;
+}
+
+int TauEnv_get_lite() {
+  return tau_env_lite;
 }
 
 int TauEnv_get_track_memory_heap() {
@@ -664,6 +671,13 @@ void TauEnv_initialize() {
     TAU_VERBOSE("TAU: Initialized TAU (TAU_VERBOSE=1)\n");
 
     /*** Options that can be used with Scalasca and VampirTrace ***/
+    tmp = getconf("TAU_LITE");
+    if (parse_bool(tmp,tau_env_lite)) {
+      TAU_VERBOSE("TAU: LITE measurement enabled\n");
+      TAU_METADATA("TAU_LITE", "on");
+      tau_env_lite = 1;
+    }
+
     tmp = getconf("TAU_TRACK_HEAP");
     if (parse_bool(tmp, env_track_memory_heap)) {
       TAU_VERBOSE("TAU: Entry/Exit Memory tracking Enabled\n");
@@ -723,7 +737,6 @@ void TauEnv_initialize() {
       TAU_VERBOSE("TAU: Generating only summary data: TAU_SUMMARY enabled\n");
       TAU_METADATA("TAU_SUMMARY", "on");
       env_summary_only = 1;
-      env_extras = 1;
     } else {
       TAU_METADATA("TAU_SUMMARY", "off");
       env_summary_only = 0;
@@ -734,7 +747,6 @@ void TauEnv_initialize() {
       TAU_VERBOSE("TAU: IBM UPC HWP counter data collection enabled\n");
       TAU_METADATA("TAU_IBM_BG_HWP_COUNTERS", "on");
       env_ibm_bg_hwp_counters = 1;
-      env_extras = 1;
     } else {
       TAU_METADATA("TAU_IBM_BG_HWP_COUNTERS", "off");
       env_ibm_bg_hwp_counters = 0;
