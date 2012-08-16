@@ -1081,6 +1081,7 @@ static int writeHeader(FILE *fp, int numFunc, char *metricName) {
 }
 
 
+#if 0
 extern "C" int TauProfiler_updateAllIntermediateStatistics() {
   TAU_VERBOSE("Updating Intermediate Stats for All %d Threads\n", RtsLayer::getTotalThreads());
   RtsLayer::LockDB();
@@ -1089,6 +1090,7 @@ extern "C" int TauProfiler_updateAllIntermediateStatistics() {
   }
   RtsLayer::UnLockDB();
 }
+#endif
 
 // This is a very important function, it must be called before writing function data to disk.
 // This function fills in the values that will be dumped to disk.
@@ -1285,7 +1287,11 @@ int TauProfiler_StoreData(int tid) {
     RtsLayer::LockDB();
     if (profileWriteWarningPrinted == 0) {
       profileWriteWarningPrinted = 1;
-      fprintf (stderr, "TAU: Warning: Profile data for at least one thread has been written out more than 10 times!\nTAU: This could cause extreme overhead and be due to an error\nTAU: in instrumentation (lack of top level timer).\nTAU: If using OpenMP, make sure -opari is enabled.\n");
+      fprintf (stderr, 
+          "TAU: Warning: Profile data for at least one thread has been written out more than 10 times!\n"
+          "TAU: This could cause extreme overhead and be due to an error\n"
+          "TAU: in instrumentation (lack of top level timer).\n"
+          "TAU: If using OpenMP, make sure -opari is enabled.\n");
     }
     RtsLayer::UnLockDB();
   }
@@ -1303,9 +1309,7 @@ int TauProfiler_StoreData(int tid) {
   }
 #endif
   if (TauEnv_get_profiling()) {
-
     Tau_snapshot_writeFinal("final");
-    
     if (TauEnv_get_profile_format() == TAU_FORMAT_PROFILE) {
       TauProfiler_DumpData(false, tid, "profile");
     }
@@ -1326,7 +1330,11 @@ int TauProfiler_StoreData(int tid) {
   if (RtsLayer::getTotalThreads() == 1) {
     // issue a warning, because this is a multithreaded config,
     // and we saw no threads other than 0!
-    fprintf(stderr, "\nTAU: WARNING! TAU did not detect more than one thread.\nIf running an OpenMP application with tau_exec and you expected\nmore than one thread, try using the '-T pthread' configuration,\nor instrument your code with TAU.\n\n");
+    fprintf(stderr, 
+        "\nTAU: WARNING! TAU did not detect more than one thread.\n"
+        "If running an OpenMP application with tau_exec and you expected\n"
+        "more than one thread, try using the '-T pthread' configuration,\n"
+        "or instrument your code with TAU.\n\n");
   }
 #endif /* OPENMP */
 
