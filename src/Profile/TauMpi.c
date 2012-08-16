@@ -1658,7 +1658,9 @@ int *provided;
   TAU_METADATA("MPI Processor Name", procname);
 
   if (TauEnv_get_synchronize_clocks()) {
-    TauSyncClocks(procid_0, size);
+    TauSyncClocks();
+    //TauSyncClocks takes no arguments.
+    //TauSyncClocks(procid_0, size);
   }
 
   return returnVal;
