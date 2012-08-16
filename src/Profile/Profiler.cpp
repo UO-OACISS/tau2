@@ -1081,7 +1081,6 @@ static int writeHeader(FILE *fp, int numFunc, char *metricName) {
 }
 
 
-#if 0
 extern "C" int TauProfiler_updateAllIntermediateStatistics() {
   TAU_VERBOSE("Updating Intermediate Stats for All %d Threads\n", RtsLayer::getTotalThreads());
   RtsLayer::LockDB();
@@ -1090,7 +1089,6 @@ extern "C" int TauProfiler_updateAllIntermediateStatistics() {
   }
   RtsLayer::UnLockDB();
 }
-#endif
 
 // This is a very important function, it must be called before writing function data to disk.
 // This function fills in the values that will be dumped to disk.
