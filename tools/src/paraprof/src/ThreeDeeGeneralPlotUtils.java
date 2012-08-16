@@ -107,11 +107,14 @@ public class ThreeDeeGeneralPlotUtils {
 			String value = t.getMetaData().get(key);
 
 			if (value == null) {
+				
+				value=t.getDataSource().getMetaData().get(key);
+				if(value==null){
 				System.out.println("Metadata key " + key
-						+ " not found in node,thread " + t.getNodeID() + ","
+						+ " not found at top or in node,thread " + t.getNodeID() + ","
 						+ t.getThreadID() + ". Using 0");
 				value = "0";
-			}
+			}}
 			
 			try{
 			Double.parseDouble(value);

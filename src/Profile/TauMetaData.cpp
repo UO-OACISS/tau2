@@ -125,38 +125,40 @@ int tau_bgq_init(void) {
 #include <signal.h>
 #include <stdarg.h>
 
-
-
-class MetaDataRepo : public map<string,string> {
+// STL containers are not designed for this.
+// They do not have virtual destructors, so overriding the destructor
+// in this way is unsafe.  Is there some reason atexit() isn't enough?
+class MetaDataRepo : public metadata_map_t {
 public :
-  ~MetaDataRepo() {
+  virtual ~MetaDataRepo() {
     Tau_destructor_trigger();
   }
 };
 
-// Static holder for metadata name/value pairs
+
 // These come from Tau_metadata_register calls
-map<string,string> &Tau_metadata_getMetaData_task(int tid) {
+metadata_map_t & Tau_metadata_getMetaData_task(int tid) {
   static MetaDataRepo metadata[TAU_MAX_THREADS];
   return metadata[tid];
 }
 
-map<string,string> &Tau_metadata_getMetaData(void) {
+metadata_map_t & Tau_metadata_getMetaData(void) {
 	return Tau_metadata_getMetaData_task(0);
 }
 
 
-extern "C" void Tau_metadata_task(char *name, const char *value, int tid) {
+extern "C" void Tau_metadata_task(char const * name, char const * value, int tid) {
 #ifdef TAU_DISABLE_METADATA
   return;
-#endif
-
+#else
   // make copies
-  char *myName = strdup(name);
-  char *myValue = strdup(value);
+  char * myName = strdup(name);
+  char * myValue = strdup(value);
+  //TAU_VERBOSE("Metadata: %s = %s\n", name, value);
   RtsLayer::LockDB();
   Tau_metadata_getMetaData_task(tid)[myName] = myValue;
   RtsLayer::UnLockDB();
+#endif
 }
 extern "C" void Tau_metadata(char *name, const char *value) {
 	Tau_metadata_task(name, value, 0);
@@ -468,123 +470,130 @@ int Tau_metadata_fillMetaData() {
 #endif /* TAU_BGQ */
 
 #ifdef __linux__
-  // doesn't work on ia64 for some reason
-  //Tau_util_output (out, "\t<linux_tid>%d</linux_tid>\n", gettid());
+   // doesn't work on ia64 for some reason
+   //Tau_util_output (out, "\t<linux_tid>%d</linux_tid>\n", gettid());
 
-  // try to grab CPU info
-  FILE *f = fopen("/proc/cpuinfo", "r");
-  if (f) {
-    char line[4096];
-    while (Tau_util_readFullLine(line, f)) {
-      char *value = strstr(line,":");
-      if (!value) {
-	break;
-      } else {
-	/* skip over colon */
-	value += 2;
-      }
+   // try to grab CPU info
+   FILE *f = fopen("/proc/cpuinfo", "r");
+   if (f) {
+     char line[4096];
+     while (Tau_util_readFullLine(line, f)) {
+       char const * value = strstr(line,":");
+       if (!value) {
+         break;
+       } else {
+         /* skip over colon */
+         value += 2;
+       }
 
-      value = Tau_util_removeRuns(value);
+       // Allocates a string
+       value = Tau_util_removeRuns(value);
 
-      if (strncmp(line, "vendor_id", 9) == 0) {
-	Tau_metadata_register("CPU Vendor", value);
-      }
-      if (strncmp(line, "vendor", 6) == 0) {
-	Tau_metadata_register("CPU Vendor", value);
-      }
-      if (strncmp(line, "cpu MHz", 7) == 0) {
-	Tau_metadata_register("CPU MHz", value);
-      }
-      if (strncmp(line, "clock", 5) == 0) {
-	Tau_metadata_register("CPU MHz", value);
-      }
-      if (strncmp(line, "model name", 10) == 0) {
-	Tau_metadata_register("CPU Type", value);
-      }
-      if (strncmp(line, "family", 6) == 0) {
-	Tau_metadata_register("CPU Type", value);
-      }
-      if (strncmp(line, "cpu\t", 4) == 0) {
-	Tau_metadata_register("CPU Type", value);
-      }
-      if (strncmp(line, "cache size", 10) == 0) {
-	Tau_metadata_register("Cache Size", value);
-      }
-      if (strncmp(line, "cpu cores", 9) == 0) {
-	Tau_metadata_register("CPU Cores", value);
-      }
-    }
-    fclose(f);
-  }
+       if (strncmp(line, "vendor_id", 9) == 0) {
+         Tau_metadata_register("CPU Vendor", value);
+       }
+       if (strncmp(line, "vendor", 6) == 0) {
+         Tau_metadata_register("CPU Vendor", value);
+       }
+       if (strncmp(line, "cpu MHz", 7) == 0) {
+         Tau_metadata_register("CPU MHz", value);
+       }
+       if (strncmp(line, "clock", 5) == 0) {
+         Tau_metadata_register("CPU MHz", value);
+       }
+       if (strncmp(line, "model name", 10) == 0) {
+         Tau_metadata_register("CPU Type", value);
+       }
+       if (strncmp(line, "family", 6) == 0) {
+         Tau_metadata_register("CPU Type", value);
+       }
+       if (strncmp(line, "cpu\t", 4) == 0) {
+         Tau_metadata_register("CPU Type", value);
+       }
+       if (strncmp(line, "cache size", 10) == 0) {
+         Tau_metadata_register("Cache Size", value);
+       }
+       if (strncmp(line, "cpu cores", 9) == 0) {
+         Tau_metadata_register("CPU Cores", value);
+       }
 
-  f = fopen("/proc/meminfo", "r");
-  if (f) {
-    char line[4096];
-    while (Tau_util_readFullLine(line, f)) {
-      char *value = strstr(line,":");
+       // Deallocates the string
+       free((void*)value);
+     }
+     fclose(f);
+   }
 
-      if (!value) {
-	break;
-      } else {
-	value += 2;
-      }
+   f = fopen("/proc/meminfo", "r");
+   if (f) {
+     char line[4096];
+     while (Tau_util_readFullLine(line, f)) {
+       char const * value = strstr(line,":");
 
-      value = Tau_util_removeRuns(value);
+       if (!value) {
+         break;
+       } else {
+         value += 2;
+       }
 
-      if (strncmp(line, "MemTotal", 8) == 0) {
-	Tau_metadata_register("Memory Size", value);
-      }
-    }
-    fclose(f);
-  }
+       // Allocates a string
+       value = Tau_util_removeRuns(value);
 
-  char buffer[4096];
-  bzero(buffer, 4096);
-  int rc = readlink("/proc/self/exe", buffer, 4096);
-  if (rc != -1) {
-    Tau_metadata_register("Executable", buffer);
-  }
-  bzero(buffer, 4096);
-  rc = readlink("/proc/self/cwd", buffer, 4096);
-  if (rc != -1) {
-    Tau_metadata_register("CWD", buffer);
-  }
+       if (strncmp(line, "MemTotal", 8) == 0) {
+         Tau_metadata_register("Memory Size", value);
+       }
+
+       free((void*)value);
+     }
+     fclose(f);
+   }
+
+   char buffer[4096];
+   bzero(buffer, 4096);
+   int rc = readlink("/proc/self/exe", buffer, 4096);
+   if (rc != -1) {
+     Tau_metadata_register("Executable", buffer);
+   }
+   bzero(buffer, 4096);
+   rc = readlink("/proc/self/cwd", buffer, 4096);
+   if (rc != -1) {
+     Tau_metadata_register("CWD", buffer);
+   }
 
 
-  f = fopen("/proc/self/cmdline", "r");
-  if (f) {
-    char line[4096];
+   f = fopen("/proc/self/cmdline", "r");
+   if (f) {
+     char line[4096];
 
-    /* *CWL* - STL cannot be used in PGI init sections???
-    std::ostringstream os;
+     /* *CWL* - STL cannot be used in PGI init sections???
+        std::ostringstream os;
 
-    while (Tau_util_readFullLine(line, f)) {
-      if (os.str().length() != 0) {
-	os << " ";
-      }
-      os << line;
-    }
-    Tau_metadata_register("Command Line", os.str().c_str());
-    */
-    string os;
-    // *CWL* - The following loop performs newline to space conversions
-    while (Tau_util_readFullLine(line, f)) {
-      if (os.length() != 0) {
-	os.append(" ");
-      }
-      os.append(string(line));
-    }    
-    Tau_metadata_register("Command Line", os.c_str());
-    fclose(f);
-  }
+        while (Tau_util_readFullLine(line, f)) {
+        if (os.str().length() != 0) {
+        os << " ";
+        }
+        os << line;
+        }
+        Tau_metadata_register("Command Line", os.str().c_str());
+      */
+     string os;
+     // *CWL* - The following loop performs newline to space conversions
+     while (Tau_util_readFullLine(line, f)) {
+       if (os.length() != 0) {
+         os.append(" ");
+       }
+       os.append(string(line));
+     }    
+     Tau_metadata_register("Command Line", os.c_str());
+     fclose(f);
+   }
 #endif /* __linux__ */
 
-  char *user = getenv("USER");
-  if (user != NULL) {
-    Tau_metadata_register("username", user);
-  }
+   char *user = getenv("USER");
+   if (user != NULL) {
+     Tau_metadata_register("username", user);
+   }
 
-  return 0;
+   return 0;
 #endif
 
 }
@@ -595,13 +604,11 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, 
   if (newline) {
     endl = "\n";
   }
-
   Tau_util_output (out, "<metadata>%s", endl);
 
   if (counter != -1) {
     Tau_XML_writeAttribute(out, "Metric Name", RtsLayer::getCounterName(counter), newline);
   }
-
 
   // Write data from the Tau_metadata_register environment variable
   // char *tauMetaDataEnvVar = getenv("Tau_metadata_register");
@@ -613,17 +620,16 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, 
   //   }
   // }
 
-
   // write out the user-specified (some from TAU) attributes
-  for (map<string,string>::iterator it = Tau_metadata_getMetaData_task(tid).begin(); it != Tau_metadata_getMetaData_task(tid).end(); ++it) {
-    const char *name = it->first.c_str();
-    const char *value = it->second.c_str();
+  metadata_map_t const & metadata = Tau_metadata_getMetaData_task(tid);
+  for (metadata_map_t::const_iterator it=metadata.begin(); it != metadata.end(); it++) {
+    const char *name = it->first;
+    const char *value = it->second;
     Tau_XML_writeAttribute(out, name, value, newline);
   }
 
   Tau_util_output (out, "</metadata>%s", endl);
   return 0;
-
 }
 
 
@@ -631,31 +637,28 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, 
 
 
 extern "C" void Tau_context_metadata(char *name, char *value) {
-
 #ifdef TAU_DISABLE_METADATA
   return;
-#endif
-
+#else
   // get the current calling context
   Profiler *current = TauInternal_CurrentProfiler(RtsLayer::getTid());
   FunctionInfo *fi = current->ThisFunction;
   const char *fname = fi->GetName();
 
   char *myName = (char*) malloc (strlen(name) + strlen(fname) + 10);
-  sprintf (myName, "%s => %s", fname, name);
+  sprintf(myName, "%s => %s", fname, name);
   char *myValue = strdup(value);
   RtsLayer::LockDB();
   Tau_metadata_getMetaData()[myName] = myValue;
   RtsLayer::UnLockDB();
+#endif
 }
 
 extern "C" void Tau_phase_metadata(char *name, char *value) {
-
 #ifdef TAU_DISABLE_METADATA
   return;
-#endif
-
-  #ifdef TAU_PROFILEPHASE
+#else
+#ifdef TAU_PROFILEPHASE
   // get the current calling context
   Profiler *current = TauInternal_CurrentProfiler(RtsLayer::getTid());
   std::string myString = "";
@@ -675,9 +678,10 @@ extern "C" void Tau_phase_metadata(char *name, char *value) {
   RtsLayer::LockDB();
   Tau_metadata_getMetaData()[myName] = myValue;
   RtsLayer::UnLockDB();
-  #else
+#else
   Tau_context_metadata(name, value);
-  #endif
+#endif
+#endif
 }
 
 
@@ -715,16 +719,15 @@ int Tau_metadata_writeMetaData(FILE *fp, int counter, int tid) {
 }
 
 
-
-
 Tau_util_outputDevice *Tau_metadata_generateMergeBuffer() {
   Tau_util_outputDevice *out = Tau_util_createBufferOutputDevice();
 
   Tau_util_output(out,"%d%c", Tau_metadata_getMetaData().size(), '\0');
 
-  for (map<string,string>::iterator it = Tau_metadata_getMetaData().begin(); it != Tau_metadata_getMetaData().end(); ++it) {
-    const char *name = it->first.c_str();
-    const char *value = it->second.c_str();
+  metadata_map_t const & metadata = Tau_metadata_getMetaData();
+  for (metadata_map_t::const_iterator it=metadata.begin(); it != metadata.end(); it++) {
+    const char *name = it->first;
+    const char *value = it->second;
     Tau_util_output(out,"%s%c", name, '\0');
     Tau_util_output(out,"%s%c", value, '\0');
   }
@@ -748,11 +751,12 @@ void Tau_metadata_removeDuplicates(char *buffer, int buflen) {
     const char *value = buffer;
     buffer = strchr(buffer, '\0')+1;
 
-    map<string,string>::iterator iter = Tau_metadata_getMetaData().find(attribute);
-    if (iter != Tau_metadata_getMetaData().end()) {
-      const char *my_value = iter->second.c_str();
+    metadata_map_t const & metadata = Tau_metadata_getMetaData();
+    metadata_map_t::const_iterator it = metadata.find(attribute);
+    if (it != metadata.end()) {
+      const char *my_value = it->second;
       if (0 == strcmp(value, my_value)) {
-	Tau_metadata_getMetaData().erase(attribute);
+        Tau_metadata_getMetaData().erase(attribute);
       }
     }
   }

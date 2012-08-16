@@ -22,6 +22,14 @@
 
 #include <Profile/TauGASP.h>
 
+/* disable instrumentation in this file, if possible */
+#pragma pupc off
+
+#ifdef __BERKELEY_UPC__
+  /* ensure code in this file does not disturb line numbering */
+  #pragma UPCR NO_SRCPOS 
+#endif
+
 /* internal tool events, placed at end of user event range */
 #define GASPI_EVT_BASE          (GASP_UPC_USEREVT_END - GASPI_RESERVEDEVTS)
 #define GASPI_INIT              GASPI_EVT_BASE+0
@@ -322,13 +330,23 @@ void gasp_event_notifyVA(gasp_context_t context, unsigned int evttag, gasp_evtty
   #endif
 
     default:
-      if (evttag >= GASP_UPC_USEREVT_START &&
-        evttag <= GASP_UPC_USEREVT_END) { /* it's a user event */
+      if (evttag >= GASP_UPC_USEREVT_START && 
+          evttag <= GASP_UPC_USEREVT_END) 
+      { 
+        /* it's a user event */
         int id = evttag - GASP_UPC_USEREVT_START;
-        assert(id < context->userevt_cnt);
-        tagstr = context->userevt[id].name;
-        argstr = context->userevt[id].desc;
-        is_user_evt = 1;
+        if(id < context->userevt_cnt) {
+          tagstr = context->userevt[id].name;
+          argstr = context->userevt[id].desc;
+          is_user_evt = 1;
+        } 
+        #if 1
+        else {
+          printf("ERROR: id=%d < userevt_cnt=%d.  "
+                 "Check that %s was compiled with UPC compiler.\n",
+                 __FILE__, id, context->userevt_cnt);
+        }
+        #endif
       }
   }
 
