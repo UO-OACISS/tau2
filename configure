@@ -3447,7 +3447,7 @@ case $cxx_compiler in
         fi
         ;;
 
-    mpicxx)
+    *mpicxx)
 	if [ $machine = bgq ] ; then
 	    echo "Using GNU Compilers for BGQ"
 	elif [ $machine = bgp ] ; then
