@@ -3101,6 +3101,8 @@ then
 # Do not use the internal compiler from mpicxx when BGP/BGQ is used. 
     else
       echo "NOTE: Didn't find mpicxx in the path, using default values"
+      gnu=yes
+      tauoptions="${tauoptions}-gnu"
       if [ $machine = bgq ] ; then
         if [ -r /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx -a -r /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc ] ; then 
           echo "NOTE: Using /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx"
@@ -3500,6 +3502,7 @@ case $cxx_compiler in
               ;;
            *xlC*)
 	      echo "Using IBM Compilers"
+              ibmxlc=yes
               fixmakeargs="$fixmakeargs USE_IBMXLC COMPINST_XL"
 	      extradir=`which xlf90 | sed s/xlf90/../`
       	      fixmakeargs="$fixmakeargs IBM_FORTRAN"
