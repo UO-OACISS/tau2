@@ -2547,13 +2547,13 @@ case $machine in
 
     elif [ $cxx_compiler = mpicxx ] ; then
       cxx_compiler=mpicxx
-      c_compiler=mpicc
-      gnu=yes
-      if [ $machine = bgp ]; then 
-        fixmakeargs="$fixmakeargs GNU BGP_GFORTRAN COMPINST_GNU"
-      else 
-        fixmakeargs="$fixmakeargs GNU BGQ_GFORTRAN COMPINST_GNU GNU46PLUS"
-      fi
+#      c_compiler=mpicc
+#      gnu=yes
+#      if [ $machine = bgp ]; then 
+#        fixmakeargs="$fixmakeargs GNU BGP_GFORTRAN COMPINST_GNU"
+#      else 
+#        fixmakeargs="$fixmakeargs GNU BGQ_GFORTRAN COMPINST_GNU GNU46PLUS"
+#      fi
     fi
 
 
@@ -3068,37 +3068,76 @@ if [ $debugprof = yes ] ; then
 fi
 
 
-if [ $cxx_compiler = mpicxx ]; then 
-    if [ $machine = bgq ] ; then
-            echo "Using GNU Compilers for BGQ"
-            cxx_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx
-            c_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc
-            tauoptions="${tauoptions}-gnu"
-    elif [ $machine = bgp ] ; then
-            echo "Using GNU Compilers for BGP"
-# CWL - 4.3.2 won't quite work out of the box. Requires LD_LIBRARY_PATH to
-#       be set appropriately to account for libgmp.so.10
-#           cxx_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicxx
-#           c_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicc
-#
-# *CWL* - Opps, they did it again.
-#           cxx_compiler=/bgsys/drivers/ppcfloor/comm/xl/bin/mpicxx
-#           c_compiler=/bgsys/drivers/ppcfloor/comm/xl/bin/mpicc
-            cxx_compiler=/bgsys/drivers/ppcfloor/comm/bin/mpicxx
-            c_compiler=/bgsys/drivers/ppcfloor/comm/bin/mpicc
-            tauoptions="${tauoptions}-gnu"
-    else 
-    	c_compiler=`mpicc -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-    	cxx_compiler=`mpicxx -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-    	fortran_compiler=`mpif90 -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-    	if [ $mpilibrary = no ]; then
-      	  mpilibrary=`mpicc -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
-    	fi
-    	full_cxx_compiler=`mpicxx -show | awk '{ print $1; }'`
-    	full_cc_compiler=`mpicc -show | awk '{ print $1; }'`
-    	fixmakeargs="$fixmakeargs fullcxx=$full_cxx_compiler fullcc=$full_cc_compiler"
-    	mpi=yes
+if [ $cxx_compiler = mpicxx ]
+then 
+    cxxloaded=`which mpicxx 2>/dev/null | wc -l`
+
+    if [ "x$cxxloaded" = "x1" ]
+    then
+      c_compiler=`mpicc -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+      cxx_compiler=`mpicxx -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+      fortran_compiler=`mpif90 -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+      echo "NOTE: Found mpicxx in the path"
+      if [ $machine = bgq -o $machine = bgp ]; then
+        c_compiler=mpicc
+        cxx_compiler=mpicxx
+      else 
+# All other machines besides IBM BG*
+        is_internal_compiler_loaded=`which $cxx_compiler 2>/dev/null | wc -l`
+        if [ "x$is_internal_compiler_loaded" = "x0" ]; then 
+       # Compiler is not loaded, use full path to it
+          c_compiler=`mpicc -show | awk '{ print $1;}' ` 
+          cxx_compiler=`mpicxx -show | awk '{ print $1;}' `
+          fortran_compiler=`mpif90 -show | awk '{ print $1;}' `
+        fi
+        if [ $mpilibrary = no ]; then
+          mpilibrary=`mpicc -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
+        fi
+        full_cxx_compiler=`mpicxx -show | awk '{ print $1; }'`
+        full_cc_compiler=`mpicc -show | awk '{ print $1; }'`
+        fixmakeargs="$fixmakeargs fullcxx=$full_cxx_compiler fullcc=$full_cc_compiler"
+        mpi=yes
+      fi
+# Do not use the internal compiler from mpicxx when BGP/BGQ is used. 
+    else
+      echo "NOTE: Didn't find mpicxx in the path, using default values"
+      gnu=yes
+      tauoptions="${tauoptions}-gnu"
+      if [ $machine = bgq ] ; then
+        if [ -r /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx -a -r /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc ] ; then 
+          echo "NOTE: Using /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx"
+          cxx_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx
+          c_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc
+        else
+          echo "ERROR: Please set your path to include mpicxx and reconfigure TAU." 
+	  exit 1
+        fi
+      elif [ $machine = bgp ]; then 
+        if [ -r /soft/apps/gcc-4.3.2/comm/default/bin/mpicxx -a -r /soft/apps/gcc-4.3.2/comm/default/bin/mpicc ]; then 
+          echo "NOTE: Using /soft/apps/gcc-4.3.2/comm/default/bin/mpicxx"
+          cxx_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicxx
+          c_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicc
+        else
+          echo "ERROR: Please set your path to include mpicxx and reconfigure TAU." 
+	  exit 1
+        fi
+      fi
+           
     fi
+# Check for BG/P or BG/Q for GNU
+#    is_gnu_compiler=`$cxx_compiler -show  2>/dev/null | awk ' { print $1;}' | xargs grep g++ | wc -l'
+#    if [ "x$is_gnu_compiler" = "x1" ]; then 
+#      gnu=yes
+#      if [ $machine = bgp ]; then 
+#          fixmakeargs="$fixmakeargs GNU BGP_GFORTRAN COMPINST_GNU"
+#          tauoptions="${tauoptions}-gnu"
+#      elif [ $machine = bgq ]; then 
+#          fixmakeargs="$fixmakeargs GNU BGQ_GFORTRAN COMPINST_GNU GNU46PLUS"
+#	  NOTE: FOUND GNU configuration"
+#          tauoptions="${tauoptions}-gnu"
+#      fi
+#    fi
+   
 fi
 
 ######################################################################
@@ -3305,7 +3344,7 @@ case $cxx_compiler in
       fi
         
       ;;
-   orCC)
+   openCC|orCC)
       echo "Default C++ compiler will ORC Open64 orCC compiler"
       fixmakeargs="$fixmakeargs OPEN64ORC"
       tauoptions="${tauoptions}-orcc"
@@ -3448,13 +3487,35 @@ case $cxx_compiler in
         ;;
 
     *mpicxx)
-	if [ $machine = bgq ] ; then
-	    echo "Using GNU Compilers for BGQ"
-	elif [ $machine = bgp ] ; then
-	    echo "Using GNU Compilers for BGP"
-	else
-          echo "ERROR Unknown C++ compiler: $cxx_compiler"
-	fi
+        internal_compiler=`$cxx_compiler -show | awk '{ print $1;}'`
+        case $internal_compiler in 
+           *g++)
+	      if [ $machine = bgq ] ; then
+	        echo "Using GNU Compilers for BGQ"
+		fixmakeargs="$fixmakeargs GNU BGQ_GFORTRAN COMPINST_GNU GNU46PLUS"
+	      elif [ $machine = bgp ] ; then
+	        echo "Using GNU Compilers for BGP"
+                fixmakeargs="$fixmakeargs GNU BGP_GFORTRAN COMPINST_GNU"
+	      else
+                echo "ERROR Unknown C++ compiler: $cxx_compiler"
+              fi
+              ;;
+           *xlC*)
+	      echo "Using IBM Compilers"
+              ibmxlc=yes
+              fixmakeargs="$fixmakeargs USE_IBMXLC COMPINST_XL"
+	      extradir=`which xlf90 | sed s/xlf90/../`
+      	      fixmakeargs="$fixmakeargs IBM_FORTRAN"
+
+              ;;
+           *clang*)
+	      echo "Using CLANG Compilers"
+              fixmakeargs="$fixmakeargs CLANG"
+              ;;
+           *)
+              echo "ERROR Unknown C++ compiler in mpicxx: $cxx_compiler"
+              ;;
+        esac
 	;;
    *)
       echo "ERROR Unknown C++ compiler: $cxx_compiler"

@@ -389,8 +389,11 @@ int Tau_mergeProfiles() {
     }
 #endif /* TAU_UNIFY */
 
+    fflush(f);
+    
+#ifdef TAU_FCLOSE_MERGE
     fclose(f);
-
+#endif
   } else {
 
     /* recieve ok to go */
