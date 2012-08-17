@@ -710,6 +710,11 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 #FUJITSU_SOLARIS#TAU_CXXLIBS               = -lstd -lstdm #ENDIF#
 #FX#TAU_CXXLIBS               = -lmpi_cxx -lstdc++ -lstd_mt -lm #ENDIF#
 #FX#TAU_CXXLIBS               = -lmpi_cxx -Ntl_notrt -lmpi_f90 -lmpi_f77 --linkfortran #ENDIF#
+
+#FX#TAU_CXXLIBS               = -Ntl_notrt -lmpi_f90 -lmpi_f77 #ENDIF#
+# NOTE:  No -lmpi_cxx and --linkfortran for Fujitsu by default. 
+# Please add manually if needed
+
 #PPC64XLC#TAU_PPC64_LIBS         = -L$(EXTRADIRCXX)/$(TAU_FORLIBDIR) -libmc++ -lstdc++       #ENDIF#
 #IBM64LINUX_XLC#TAU_IBM64LINUX_LIBS         = -L$(EXTRADIRCXX)/$(TAU_FORLIBDIR) -libmc++ -lstdc++       #ENDIF#
 #USE_IBMXLC#TAU_XLCLIBS         = $(TAU_IBM64LINUX_LIBS) $(TAU_PPC64_LIBS)     #ENDIF#
@@ -1126,6 +1131,9 @@ TAU_CUDA_LIBRARY=-L/opt/nvidia/cudatoolkit/4.1.28/lib64 -L/opt/nvidia/cudatoolki
 #CUPTI#TAU_INTERNAL_FLAGS+=-DCUPTI #ENDIF#
 
 
+TAU_MPI_COMPILE_INCLUDE=$(TAU_MPI_INCLUDE)
+#FX#TAU_MPI_COMPILE_INCLUDE= #ENDIF#
+# Fujitsu doesn't want TAU_MPI_INC to propagate to the command line
 
 #############################################
 # TAU COMPILER SHELL SCRIPT OPTIONS
@@ -1139,7 +1147,7 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
 	-optTauCC="$(TAU_CCOMPILER)" \
 	-optTauIncludes="$(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(TAU_SHMEM_INCLUDE) $(OPARIINCDIR)" \
 	-optTauDefs="$(TAU_DEFS)" $(TAU_IBM_NOCOMPINST) \
-        -optTauCompile="$(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(TAU_DEFS) "\
+        -optTauCompile="$(TAU_INCLUDE) $(TAU_MPI_COMPILE_INCLUDE) $(TAU_DEFS) "\
         -optLinking="$(TAU_MPI_FLIBS) $(TAU_LIBS) $(TAU_LDFLAGS) $(TAU_CXXLIBS) $(TAU_SHMEM_LIBS) "\
         -optSharedLinking="-L$(TAU_LIB_DIR)/shared$(TAU_CONFIG) $(TAU_MPI_FLIBS)  $(TAU_SHMEM_LIBS) $(TAU_EXLIBS) $(TAU_LDFLAGS) $(TAU_CXXLIBS)"\
 	$(TAU_COMPILER_EXTRA_OPTIONS) \
