@@ -1520,7 +1520,9 @@ int  MPI_Finalize(  )
                Note that we do not want to shut down the timers as yet. There is
 	       still potentially life after MPI_Finalize where TAU is concerned.
      */
-    TauProfiler_updateAllIntermediateStatistics();
+    /* KAH - NO! this is the wrong time to do this. THis is also done in the
+     * snapshot writer. If you do it twice, you get double values for main... */
+    //TauProfiler_updateAllIntermediateStatistics();
     Tau_mergeProfiles();
   }
   
@@ -1668,7 +1670,7 @@ int *provided;
 #endif /* TAU_MPI_THREADED */
 
 
-
+#if 0
 int  MPI_Initialized( flag )
 int * flag;
 {
@@ -1684,6 +1686,7 @@ int * flag;
 
   return returnVal;
 }
+#endif
 
 
 #ifdef TAU_ENABLE_MPI_WTIME
