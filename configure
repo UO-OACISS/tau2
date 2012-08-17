@@ -3244,6 +3244,9 @@ case $cxx_compiler in
    FCC|mpiFCCpx|mpiFCC)
       echo "Default C++ compiler will be Fujitsu C++ Compiler"	 
       fujitsu=yes
+      orig_useropt="-O2"
+      useropt="-O2"
+# -g interferes with optimizations for Fujitsu.
       fixmakeargs="$fixmakeargs FX"
       #mpiinc=`which mpiFCCpx | sed -e 's/\/bin\/mpiFCCpx$//'`/include
       mpiinc=`which mpiFCCpx | sed -e 's/\/bin\/mpiFCCpx$//'`/include/mpi/fujitsu
@@ -3643,6 +3646,13 @@ if [ "x$full_cxx_compiler" = "x" ]
 then 
   full_cxx_compiler=`which $cxx_compiler`
   full_cc_compiler=`which $c_compiler`
+  if [ $fujitsu = yes ]
+  then
+# Fujitsu does not want full path to point to the absolute paths due to
+# frequent updates to the compiler on that system.
+    full_cxx_compiler=$cxx_compiler
+    full_cc_compiler=$c_compiler
+  fi
 fi
 # This takes care of mpc_cxx setting this above
 if [ $shmem = yes ]
