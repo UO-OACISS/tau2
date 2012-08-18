@@ -3004,7 +3004,7 @@ if [ $machine = mic_linux ] ; then
 fi
     
 if [ $machine = apple ] ; then
-  if [ $cxx_compiler = g++ -o $cxx_compiler = c++  -o $cxx_compiler = icpc ] ; then
+  if [ $cxx_compiler = g++ -o $cxx_compiler = mpicxx -o $cxx_compiler = c++  -o $cxx_compiler = icpc ] ; then
       fixmakeargs="$fixmakeargs APPLECXX"
   fi
   if [ $cxx_compiler = pgCC -o $cxx_compiler = pgcpp ] ; then
@@ -3071,12 +3071,19 @@ fi
 if [ $cxx_compiler = mpicxx ]
 then 
     cxxloaded=`which mpicxx 2>/dev/null | wc -l`
-
-    if [ "x$cxxloaded" = "x1" ]
+    mpi=yes
+    if [ $cxxloaded = 1 ]
     then
       c_compiler=`mpicc -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
       cxx_compiler=`mpicxx -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-      fortran_compiler=`mpif90 -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+      f90loaded=`which mpif90 2>/dev/null | wc -l`
+      if [ $f90loaded = 1 ]
+      then 
+        fortran_compiler=`mpif90 -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+      else
+        fortran_compiler=no
+      fi
+
       echo "NOTE: Found mpicxx in the path"
       if [ $machine = bgq -o $machine = bgp ]; then
         c_compiler=mpicc
@@ -3511,12 +3518,24 @@ case $cxx_compiler in
            *clang*)
 	      echo "Using CLANG Compilers"
               fixmakeargs="$fixmakeargs CLANG"
+	      if [ $machine = apple ]; then
+# MPI on Apple OS X has issues with shared objects
+                fixmakeargs="$fixmakeargs NOSHARED"
+              fi
               ;;
            *)
               echo "ERROR Unknown C++ compiler in mpicxx: $cxx_compiler"
               ;;
         esac
 	;;
+   *llvm*|*clang*)
+	echo "Using CLANG Compilers"
+        fixmakeargs="$fixmakeargs CLANG"
+	if [ $machine = apple ]; then
+# MPI on Apple OS X has issues with shared objects
+          fixmakeargs="$fixmakeargs NOSHARED APPLECXX"
+        fi
+        ;;
    *)
       echo "ERROR Unknown C++ compiler: $cxx_compiler"
       exit 1
@@ -3856,6 +3875,10 @@ then
             then
               echo "Using MPI include directory $mpiinc"
             fi
+          fi
+          if [ ! -r $mpiinc/mpi.h -a $mpiinc/mpich2/mpi.h ] ; then
+            mpiinc=$mpiinc/mpich2 
+            echo "Correction: Using MPI include directory $mpiinc instead"
           fi
         fi
 	;;

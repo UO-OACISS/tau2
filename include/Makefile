@@ -519,6 +519,7 @@ SDDF_DIR=
 #For F90 support for all platforms
 FWRAPPER	       = TauFMpi.o       
 #MPI2#MPI2EXTENSIONS	       = TauMpiExtensions.o       #ENDIF#
+#APPLECXX#MPI2EXTENSIONS	       =  #ENDIF#
 #CRAYX1CC#MPI2EXTENSIONS	       =        #ENDIF#
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
@@ -736,6 +737,7 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 #INTELCXXLIBICC#TAU_CXXLIBS_INTEL        = -lcprts #ENDIF#
 #USE_INTELCXX#TAU_CXXLIBS        = $(TAU_CXXLIBS_INTEL) #ENDIF#
 #APPLECXX#TAU_CXXLIBS 		= -lstdc++ -L$(TAUGCCLIBDIR)  $(TAUGCCLIBOPTS) -lgcc_s.1 -lSystemStubs #ENDIF#
+#APPLECXX#TAU_CXXLIBS 		= -lstdc++ -L$(TAUGCCLIBDIR)  $(TAUGCCLIBOPTS) -lgcc_s.1 #ENDIF#
 
 # EXTERNAL PACKAGES: EPILOG
 #SCALASCA#TAU_ELG_SERIAL_SUFFIX =.ser #ENDIF#
