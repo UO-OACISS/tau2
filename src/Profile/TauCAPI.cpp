@@ -357,12 +357,10 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_lite_start_timer(void *functionInfo, int phase, int tid) {
   if (tau_env_lite){
-    double timeStamp;
     // move the stack pointer
     Tau_global_stackpos[tid]++; /* push */
     FunctionInfo *fi = (FunctionInfo *) functionInfo;
     Profiler *pp = TauInternal_ParentProfiler(tid);
-    RtsLayer::getUSecD(tid, &timeStamp);   
     if (fi) {
       fi->IncrNumCalls(tid); // increment number of calls 
     }
@@ -380,10 +378,11 @@ extern "C" void Tau_lite_start_timer(void *functionInfo, int phase, int tid) {
       Tau_global_stackdepth[tid] = newDepth;
     }
     Profiler *p = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
-    p->StartTime[0] = timeStamp;
+    RtsLayer::getUSecD(tid, p->StartTime);
 
     p->MyProfileGroup_ = fi->GetProfileGroup();
     p->ThisFunction = fi;
+    p->ParentProfiler = pp; 
 
     // if this function is not already on the callstack, put it
     if (fi->GetAlreadyOnStack(tid) == false) {
@@ -537,31 +536,33 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_lite_stop_timer(void *function_info, int tid ) {
   if (tau_env_lite) {
-    double timeStamp;
-    double delta ; 
-    RtsLayer::getUSecD(tid, &timeStamp);   
+    double timeStamp[TAU_MAX_COUNTERS] = {0};
+    double delta [TAU_MAX_COUNTERS] = {0}; 
+    RtsLayer::getUSecD(tid, timeStamp);   
 
     FunctionInfo *fi = (FunctionInfo *) function_info;
     Profiler *profiler;
     profiler = (Profiler *) &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
 
-    delta = timeStamp - profiler->StartTime[0]; 
+    for (int k=0; k<Tau_Global_numCounters; k++) {
+      delta[k] = timeStamp[k] - profiler->StartTime[k];
+    }
 
     if (profiler && profiler->ThisFunction != fi) { /* Check for overlapping timers */
       reportOverlap (profiler->ThisFunction, fi);
     }
     if (profiler && profiler->AddInclFlag == true) { 
       fi->SetAlreadyOnStack(false, tid); // while exiting 
-      fi->AddInclTime(&delta, tid); // ok to add both excl and incl times
+      fi->AddInclTime(delta, tid); // ok to add both excl and incl times
     }
     else {
       //printf("Couldn't add incl time: profiler= %p, profiler->AddInclFlag=%d\n", profiler, profiler->AddInclFlag);
     }
-    fi->AddExclTime(&delta, tid); 
+    fi->AddExclTime(delta, tid); 
     Profiler *pp = TauInternal_ParentProfiler(tid); 
     
     if (pp) { 
-      pp->ThisFunction->ExcludeTime(&delta, tid); 
+      pp->ThisFunction->ExcludeTime(delta, tid); 
     }
     else {
       //printf("Tau_lite_stop: parent profiler = 0x0: Function name = %s, StoreData?\n", fi->GetName()); 
