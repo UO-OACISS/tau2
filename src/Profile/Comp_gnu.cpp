@@ -155,6 +155,11 @@ void ___cyg_profile_func_exit(void*, void*);
 __attribute__((no_instrument_function))
 void __pat_tp_func_return(const void *ea, const void *ra);
 
+__attribute__((no_instrument_function))
+void profile_func_enter(void*, void*);
+
+__attribute__((no_instrument_function))
+void profile_func_exit(void*, void*);
 
 #if (defined(TAU_SICORTEX) || defined(TAU_SCOREP))
 #pragma weak __cyg_profile_func_enter
@@ -296,6 +301,9 @@ void __pat_tp_func_entry(const void *ea, const void *ra) {
   
 }
 
+void profile_func_enter(void* func, void* callsite) {
+  __cyg_profile_func_enter(func, callsite);
+}
 
 void ___cyg_profile_func_enter(void* func, void* callsite) {
   __cyg_profile_func_enter(func, callsite);
@@ -345,6 +353,10 @@ void _cyg_profile_func_exit(void* func, void* callsite) {
 }
 
 void ___cyg_profile_func_exit(void* func, void* callsite) {
+  __cyg_profile_func_exit(func, callsite);
+}
+
+void profile_func_exit(void* func, void* callsite) {
   __cyg_profile_func_exit(func, callsite);
 }
 

@@ -2,7 +2,6 @@
 #include <Profile/CuptiLayer.h>
 #include <cuda.h>
 #include <cupti.h>
-#include <math.h>
 
 #if CUPTI_API_VERSION >= 2
 
@@ -110,10 +109,6 @@ bool registered_sync = false;
 
 bool cupti_api_runtime();
 bool cupti_api_driver();
-
-void record_gpu_occupancy(CUpti_ActivityKernel *k, const char *name, GpuEventAttributes *m);
-
-std::map<uint32_t, CUpti_ActivityDevice> deviceMap;
 
 #define CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(name, id, info, kind, count) \
 	if ((id) == CUPTI_RUNTIME_TRACE_CBID_##name##_v3020) \

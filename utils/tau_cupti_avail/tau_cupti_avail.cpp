@@ -252,13 +252,12 @@ int main(int argc, char **argv)
 
 	if (listCounters)
 	{
+		Tau_CuptiLayer_Initialize_Map();
 		CuptiCounterEvent::printHeader();
-		for(counter_map_it it = Tau_CuptiLayer_map().begin(); it != Tau_CuptiLayer_map().end(); it++)
+		for(counter_map_it it = Tau_CuptiLayer_Counter_Map.begin(); it != Tau_CuptiLayer_Counter_Map.end(); it++)
 		{
 			it->second->print();
-			//ev->print();
 		}
-
 	}
 
 	if (checkCounters)
@@ -286,11 +285,11 @@ int main(int argc, char **argv)
 
 		for(vector<string>::iterator it = tags.begin(); it != tags.end(); it++)
 		{
-			//printf("size of available counters: %d.\n", Tau_CuptiLayer_map().size());
+			//printf("size of available counters: %d.\n", Tau_CuptiLayer_Counter_Map.size());
 			
-			if (Tau_CuptiLayer_map().count(*it) > 0)
+			if (Tau_CuptiLayer_Counter_Map.count(*it) > 0)
 			{
-				CuptiCounterEvent* ev = Tau_CuptiLayer_map().find(*it)->second;
+				CuptiCounterEvent* ev = Tau_CuptiLayer_Counter_Map.find(*it)->second;
 				//ev->print();
 				tags_added.push_back(*it);
 				counters_added.push_back(ev);

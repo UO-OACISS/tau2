@@ -1091,9 +1091,36 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
   double deltaValues[TAU_MAX_COUNTERS];
   TauMetrics_getMetrics(tid, values);
   int localIndex = tid*TAU_MAX_COUNTERS;
+
+  int ebsSourceMetricIndex = 
+    TauMetrics_getMetricIndexFromName(TauEnv_get_ebs_source());
+  //  printf("%s\n", TauMetrics_getMetricName(ebsSourceMetricIndex));
+  int ebsPeriod = TauEnv_get_ebs_period();
   for (int i = 0; i < Tau_Global_numCounters; i++) {
-    deltaValues[i] = values[i] - previousTimestamp[localIndex + i];
-    previousTimestamp[localIndex + i] = values[i];
+    /*
+    if (previousTimestamp[localIndex + i] == 0) {
+      // "We don't believe you!". Should only happen for non EBS_SOURCE
+      // metrics. Hypothesis - the first sample would find the
+      // previousTimestamp for events unset.
+      previousTimestamp[localIndex + i] == profiler->StartTime[i];
+    }
+    */
+    if ((ebsSourceMetricIndex == i) && (values[i] < ebsPeriod)) {
+      // "We don't believe you either!". Should only happen for EBS_SOURCE.
+      // Hypothesis: Triggering PAPI overflows resets the values to 0.
+      //             (or close to 0).
+      deltaValues[i] = ebsPeriod;
+      previousTimestamp[localIndex + i] += ebsPeriod;
+    } else {
+      deltaValues[i] = values[i] - previousTimestamp[localIndex + i];
+      /*
+      printf("[%s] tid=%d ctr=%d, Delta computed as %f minus %lld = %f\n", 
+	     samplingContext->GetName(),
+	     tid, i, 
+	     values[i], previousTimestamp[localIndex + i], deltaValues[i]);
+      */
+      previousTimestamp[localIndex + i] = values[i];
+    }
   }
   samplingContext->addPcSample(pcStack, tid, deltaValues);
 
@@ -1123,7 +1150,40 @@ void Tau_sampling_event_start(int tid, void **addresses) {
 #endif /* TAU_UNWIND */
 
   if (TauEnv_get_profiling()) {
-    // nothing for now
+    // *CWL* - 8/18/2012. The new way of measuring a sample's contribution
+    //         (in light of the uneven distribution of samples in threads)
+    //         necessitates the use of a measured event's time stamp to
+    //         serve as a bounding value for subsequent deductions.
+    //
+    //         Note that this is still a fudge. In the face of limited
+    //         measured events, this can end up accounting metric
+    //         contributions to samples that can sometimes seem bizarre.
+    //         (e.g., Source=PAPI_TOT_CYC, Metric=PAPI_FP_OPS can result
+    //         in strange attribution of values to samples depending on
+    //         the interplay of high FLOPS/s events and low FLOPS/s
+    //         events).
+    //
+    //         Without handling the event boundaries, another observed
+    //         (bad) effect is in cases where PAPI_FP_OPS is used as
+    //         TAU_EBS_SOURCE. A good chunk of the events leading up
+    //         to a reasonable period of say 1,000,000 FP_OPS as a
+    //         sample are likely to do very little FP_OPS. However,
+    //         at the first sample, the deltas computed for the sample's
+    //         TIME metric are likely to stretch all the way back to
+    //         main() if event boundary limits are not established.
+    //
+    //         Statistical sampling, being what it is, can never avoid
+    //         this fudging. The previous approach of counting had the
+    //         advantage of limiting the fudge factor to some factor of
+    //         TAU_EBS_PERIOD.
+        
+    double values[TAU_MAX_COUNTERS];
+    TauMetrics_getMetrics(tid, values);
+    int localIndex = tid*TAU_MAX_COUNTERS;
+    for (int i = 0; i < Tau_Global_numCounters; i++) {
+      previousTimestamp[localIndex + i] = values[i];
+    }
+    
   }
   Tau_global_decr_insideTAU_tid(tid);
 }
@@ -1430,6 +1490,9 @@ int Tau_sampling_init(int tid) {
     }
     TAU_VERBOSE("Tau_sampling_init: pid = %d, tid = %d setitimer called.\n", getpid(), tid);
     
+
+    /*
+     *CWL* - 8/18/2012. I think this is an unnecessarily strict check.
     if (ovalue.it_interval.tv_sec != pvalue.it_interval.tv_sec  ||
 	ovalue.it_interval.tv_usec != pvalue.it_interval.tv_usec ||
 	ovalue.it_value.tv_sec != pvalue.it_value.tv_sec ||
@@ -1438,6 +1501,7 @@ int Tau_sampling_init(int tid) {
       fprintf(stderr,"[tid = %d]: %d %d %d %d, %d %d %d %d.\n", tid, ovalue.it_interval.tv_sec, ovalue.it_interval.tv_usec, ovalue.it_value.tv_sec, ovalue.it_value.tv_usec, pvalue.it_interval.tv_sec, pvalue.it_interval.tv_usec, pvalue.it_value.tv_sec, pvalue.it_value.tv_usec);
       return -1;
     }
+    */
     TAU_VERBOSE("Tau_sampling_init: pid = %d, tid = %d Signals set up.\n", getpid(), tid);
 
     // set up the base timers
