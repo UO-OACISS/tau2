@@ -134,7 +134,8 @@ sed -e 's/\[\]/\*/g' ${dirname}/wr.c > ${dirname}/wr.c~
 mv ${dirname}/wr.c~ ${dirname}/wr.c 
 
 # Add correct paths and arguments to Makefile
-sed -e "s@^EXTRA_FLAGS=@EXTRA_FLAGS=-DGASNET_SEQ -I$upcdir/include -DUPCRI_BUILDING_LIBUPCR=1 -I$gasnetdir/include -I$gasnetdir/include/$gasnetconduit -DGASNETT_USE_GCC_ATTRIBUTE_MAYALIAS@" $dirname/Makefile.master > $dirname/Makefile
+sed -e "s@^EXTRA_FLAGS=@EXTRA_FLAGS=-DGASNET_SEQ -I$upcdir/include -DUPCRI_BUILDING_LIBUPCR=1 -I$gasnetdir/include -I$gasnetdir/include/$gasnetconduit -DGASNETT_USE_GCC_ATTRIBUTE_MAYALIAS@" $dirname/Makefile > $dirname/Makefile~
+mv $dirname/Makefile~ $dirname/Makefile
 
 # Add library to link options
 sed -e "s/@@WRAPPER_LIBRARY@@/-l${headerbase}_wrap/" $dirname/link_options.tau.master > $dirname/link_options.tau

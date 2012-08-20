@@ -26,6 +26,8 @@ void   __wrap_upc_global_exit(int  a1)  {
     if (tau_upc_node == -1) {
       __real_upc_global_exit(a1);
       return;
+    } else {
+      tau_totalnodes(1,THREADS);
     }
   }
 
@@ -49,6 +51,8 @@ shared   void *   __wrap_upc_global_alloc(size_t  a1, size_t  a2)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real_upc_global_alloc(a1, a2);
+    } else {
+      tau_totalnodes(1,THREADS);
     }
   }
 
@@ -73,6 +77,8 @@ shared   void *   __wrap_upc_all_alloc(size_t  a1, size_t  a2)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real_upc_all_alloc(a1, a2);
+    } else {
+      tau_totalnodes(1,THREADS);
     }
   }
 
@@ -97,6 +103,8 @@ shared   void *   __wrap_upc_alloc(size_t  a1)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real_upc_alloc(a1);
+    } else {
+      tau_totalnodes(1,THREADS);
     }
   }
 
@@ -121,6 +129,8 @@ shared   void *   __wrap_upc_local_alloc(size_t  a1, size_t  a2)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real_upc_local_alloc(a1, a2);
+    } else {
+      tau_totalnodes(1,THREADS);
     }
   }
 
@@ -145,6 +155,8 @@ void   __wrap_upc_free(shared void *  a1)  {
     if (tau_upc_node == -1) {
       __real_upc_free(a1);
       return;
+    } else {
+      tau_totalnodes(1,THREADS);
     }
   }
 
@@ -168,6 +180,8 @@ size_t   __wrap_upc_threadof(shared void *  a1)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real_upc_threadof(a1);
+    } else {
+      tau_totalnodes(1,THREADS);
     }
   }
 
@@ -192,6 +206,8 @@ size_t   __wrap_upc_phaseof(shared void *  a1)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real_upc_phaseof(a1);
+    } else {
+      tau_totalnodes(1,THREADS);
     }
   }
 
@@ -216,6 +232,8 @@ shared   void *   __wrap_upc_resetphase(shared void *  a1)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real_upc_resetphase(a1);
+    } else {
+      tau_totalnodes(1,THREADS);
     }
   }
 
@@ -240,6 +258,8 @@ size_t   __wrap_upc_addrfield(shared void *  a1)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real_upc_addrfield(a1);
+    } else {
+      tau_totalnodes(1,THREADS);
     }
   }
 
@@ -264,6 +284,8 @@ size_t   __wrap_upc_affinitysize(size_t  a1, size_t  a2, size_t  a3)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real_upc_affinitysize(a1, a2, a3);
+    } else {
+      tau_totalnodes(1,THREADS);
     }
   }
 
@@ -288,6 +310,8 @@ upc_lock_t *   __wrap_upc_global_lock_alloc()  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real_upc_global_lock_alloc();
+    } else {
+      tau_totalnodes(1,THREADS);
     }
   }
 
@@ -312,6 +336,8 @@ upc_lock_t *   __wrap_upc_all_lock_alloc()  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real_upc_all_lock_alloc();
+    } else {
+      tau_totalnodes(1,THREADS);
     }
   }
 
@@ -336,6 +362,8 @@ void   __wrap_upc_lock_free(upc_lock_t *  a1)  {
     if (tau_upc_node == -1) {
       __real_upc_lock_free(a1);
       return;
+    } else {
+      tau_totalnodes(1,THREADS);
     }
   }
 
@@ -359,6 +387,8 @@ void   __wrap_upc_lock(upc_lock_t *  a1)  {
     if (tau_upc_node == -1) {
       __real_upc_lock(a1);
       return;
+    } else {
+      tau_totalnodes(1,THREADS);
     }
   }
 
@@ -382,6 +412,8 @@ int   __wrap_upc_lock_attempt(upc_lock_t *  a1)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real_upc_lock_attempt(a1);
+    } else {
+      tau_totalnodes(1,THREADS);
     }
   }
 
@@ -406,6 +438,8 @@ void   __wrap_upc_unlock(upc_lock_t *  a1)  {
     if (tau_upc_node == -1) {
       __real_upc_unlock(a1);
       return;
+    } else {
+      tau_totalnodes(1,THREADS);
     }
   }
 
@@ -429,6 +463,8 @@ void   __wrap_upc_memcpy(shared void *restrict  a1, shared const void *restrict 
     if (tau_upc_node == -1) {
       __real_upc_memcpy(a1, a2, a3);
       return;
+    } else {
+      tau_totalnodes(1,THREADS);
     }
   }
 
@@ -467,6 +503,8 @@ void   __wrap_upc_memget(void *restrict  a1, shared const void *restrict  a2, si
     if (tau_upc_node == -1) {
       __real_upc_memget(a1, a2, a3);
       return;
+    } else {
+      tau_totalnodes(1,THREADS);
     }
   }
 
@@ -492,6 +530,8 @@ void   __wrap_upc_memput(shared void *restrict  a1, const void *restrict  a2, si
     if (tau_upc_node == -1) {
       __real_upc_memput(a1, a2, a3);
       return;
+    } else {
+      tau_totalnodes(1,THREADS);
     }
   }
 
@@ -517,6 +557,8 @@ void   __wrap_upc_memset(shared void *  a1, int  a2, size_t  a3)  {
     if (tau_upc_node == -1) {
       __real_upc_memset(a1, a2, a3);
       return;
+    } else {
+      tau_totalnodes(1,THREADS);
     }
   }
 

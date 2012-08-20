@@ -1899,13 +1899,20 @@ for arg in "$@"; do
   esac
 done
 
-upcnetworkdefault=smp
 if [ "x$upcnetwork" == "x" ] ; then
-  echo "NOTE: UPC network not specified.  Assuming $upcnetworkdefault."
-  upcnetwork=$upcnetworkdefault
+  if [ "$mpi" == "no" ] ; then
+    echo "NOTE: UPC network and MPI not specified.  Assuming -upcnetwork=smp."
+    upcnetwork=smp
+  else
+    echo "NOTE: UPC network not specified.  Assuming -upcnetwork=mpi."
+    upcnetwork=mpi
+  fi
+else
+  if [ "$mpi" == "no" ] ; then
+    echo "NOTE: Assuming -mpi because -upcnetwork=mpi."
+    mpi=yes
+  fi
 fi
-
-
 
 
 # -- some functions

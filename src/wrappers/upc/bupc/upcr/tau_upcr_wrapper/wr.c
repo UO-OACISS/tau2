@@ -33,6 +33,8 @@ unsigned int   __wrap__bupc_thread_distance(int  a1, int  a2)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_thread_distance(a1, a2);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -57,6 +59,8 @@ int   __wrap__upcri_rand()  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcri_rand();
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -81,6 +85,8 @@ void   __wrap__upcri_srand(unsigned int  a1)  {
     if (tau_upc_node == -1) {
       __real__upcri_srand(a1);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -104,6 +110,8 @@ void   __wrap__upcri_rand_init()  {
     if (tau_upc_node == -1) {
       __real__upcri_rand_init();
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -127,6 +135,8 @@ void   __wrap_upcri_clock_init()  {
     if (tau_upc_node == -1) {
       __real_upcri_clock_init();
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -150,6 +160,8 @@ clock_t   __wrap_upcri_clock()  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real_upcri_clock();
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -174,6 +186,8 @@ int   __wrap__upcri_isvalid_shared(upcr_shared_ptr_t  a1)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcri_isvalid_shared(a1);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -198,6 +212,8 @@ int   __wrap__upcri_isvalid_pshared(upcr_pshared_ptr_t  a1)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcri_isvalid_pshared(a1);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -222,6 +238,8 @@ void   __wrap_upcri_print_shared(upcr_shared_ptr_t  a1)  {
     if (tau_upc_node == -1) {
       __real_upcri_print_shared(a1);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -245,6 +263,8 @@ void   __wrap_upcri_print_pshared(upcr_pshared_ptr_t  a1)  {
     if (tau_upc_node == -1) {
       __real_upcri_print_pshared(a1);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -268,6 +288,8 @@ int   __wrap__bupc_dump_shared(upcr_shared_ptr_t  a1, char *  a2, int  a3)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_dump_shared(a1, a2, a3);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -292,6 +314,8 @@ upcr_shared_ptr_t   __wrap__bupc_local_to_shared(void *  a1, int  a2, int  a3)  
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_local_to_shared(a1, a2, a3);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -316,6 +340,8 @@ upcr_shared_ptr_t   __wrap__bupc_inverse_cast(void *  a1)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_inverse_cast(a1);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -340,6 +366,8 @@ void   __wrap__upcri_locksystem_init()  {
     if (tau_upc_node == -1) {
       __real__upcri_locksystem_init();
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -363,6 +391,8 @@ upcr_shared_ptr_t   __wrap__upcr_global_lock_alloc()  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_global_lock_alloc();
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -387,6 +417,8 @@ upcr_shared_ptr_t   __wrap__upcr_all_lock_alloc()  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_all_lock_alloc();
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -411,6 +443,8 @@ void   __wrap__upcr_lock(upcr_shared_ptr_t  a1)  {
     if (tau_upc_node == -1) {
       __real__upcr_lock(a1);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -434,6 +468,8 @@ int   __wrap__upcr_lock_attempt(upcr_shared_ptr_t  a1)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_lock_attempt(a1);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -458,6 +494,8 @@ void   __wrap__upcr_unlock(upcr_shared_ptr_t  a1)  {
     if (tau_upc_node == -1) {
       __real__upcr_unlock(a1);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -481,6 +519,8 @@ void   __wrap__upcr_lock_free(upcr_shared_ptr_t  a1)  {
     if (tau_upc_node == -1) {
       __real__upcr_lock_free(a1);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -504,6 +544,8 @@ void   __wrap__upcr_all_lock_free(upcr_shared_ptr_t  a1)  {
     if (tau_upc_node == -1) {
       __real__upcr_all_lock_free(a1);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -527,6 +569,8 @@ upcr_pshared_ptr_t   __wrap__bupc_sem_alloc(int  a1)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_sem_alloc(a1);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -551,6 +595,8 @@ void   __wrap__bupc_sem_free(upcr_pshared_ptr_t  a1)  {
     if (tau_upc_node == -1) {
       __real__bupc_sem_free(a1);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -574,6 +620,8 @@ void   __wrap__bupc_sem_post(upcr_pshared_ptr_t  a1)  {
     if (tau_upc_node == -1) {
       __real__bupc_sem_post(a1);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -597,6 +645,8 @@ void   __wrap__bupc_sem_postN(upcr_pshared_ptr_t  a1, size_t  a2)  {
     if (tau_upc_node == -1) {
       __real__bupc_sem_postN(a1, a2);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -620,6 +670,8 @@ void   __wrap__bupc_sem_wait(upcr_pshared_ptr_t  a1)  {
     if (tau_upc_node == -1) {
       __real__bupc_sem_wait(a1);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -643,6 +695,8 @@ void   __wrap__bupc_sem_waitN(upcr_pshared_ptr_t  a1, size_t  a2)  {
     if (tau_upc_node == -1) {
       __real__bupc_sem_waitN(a1, a2);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -666,6 +720,8 @@ int   __wrap__bupc_sem_try(upcr_pshared_ptr_t  a1)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_sem_try(a1);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -690,6 +746,8 @@ int   __wrap__bupc_sem_tryN(upcr_pshared_ptr_t  a1, size_t  a2)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_sem_tryN(a1, a2);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -714,6 +772,8 @@ void   __wrap__bupc_memput_signal(upcr_shared_ptr_t  a1, const void *  a2, size_
     if (tau_upc_node == -1) {
       __real__bupc_memput_signal(a1, a2, a3, a4, a5);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -737,6 +797,8 @@ void   __wrap__bupc_memput_signal_async(upcr_shared_ptr_t  a1, const void *  a2,
     if (tau_upc_node == -1) {
       __real__bupc_memput_signal_async(a1, a2, a3, a4, a5);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -760,6 +822,8 @@ void   __wrap__upcr_notify(int  a1, int  a2)  {
     if (tau_upc_node == -1) {
       __real__upcr_notify(a1, a2);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -783,6 +847,8 @@ void   __wrap__upcr_wait(int  a1, int  a2)  {
     if (tau_upc_node == -1) {
       __real__upcr_wait(a1, a2);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -806,6 +872,8 @@ int   __wrap__upcr_try_wait(int  a1, int  a2)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_try_wait(a1, a2);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -830,6 +898,8 @@ void   __wrap_upcri_coll_init()  {
     if (tau_upc_node == -1) {
       __real_upcri_coll_init();
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -853,6 +923,8 @@ void   __wrap__upcri_coll_init_thread()  {
     if (tau_upc_node == -1) {
       __real__upcri_coll_init_thread();
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -876,6 +948,8 @@ void   __wrap__upcr_all_broadcast(upcr_shared_ptr_t  a1, upcr_shared_ptr_t  a2, 
     if (tau_upc_node == -1) {
       __real__upcr_all_broadcast(a1, a2, a3, a4);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -899,6 +973,8 @@ bupc_coll_handle_t   __wrap__upcr_team_broadcast(bupc_team_t  a1, upcr_shared_pt
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_team_broadcast(a1, a2, a3, a4, a5);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -923,6 +999,8 @@ void   __wrap__upcr_all_scatter(upcr_shared_ptr_t  a1, upcr_shared_ptr_t  a2, si
     if (tau_upc_node == -1) {
       __real__upcr_all_scatter(a1, a2, a3, a4);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -946,6 +1024,8 @@ void   __wrap__upcr_all_gather(upcr_shared_ptr_t  a1, upcr_shared_ptr_t  a2, siz
     if (tau_upc_node == -1) {
       __real__upcr_all_gather(a1, a2, a3, a4);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -969,6 +1049,8 @@ void   __wrap__upcr_all_gather_all(upcr_shared_ptr_t  a1, upcr_shared_ptr_t  a2,
     if (tau_upc_node == -1) {
       __real__upcr_all_gather_all(a1, a2, a3, a4);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -992,6 +1074,8 @@ void   __wrap__upcr_all_exchange(upcr_shared_ptr_t  a1, upcr_shared_ptr_t  a2, s
     if (tau_upc_node == -1) {
       __real__upcr_all_exchange(a1, a2, a3, a4);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1015,6 +1099,8 @@ bupc_coll_handle_t   __wrap__upcr_team_exchange(bupc_team_t  a1, upcr_shared_ptr
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_team_exchange(a1, a2, a3, a4, a5);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1039,6 +1125,8 @@ void   __wrap__upcr_all_permute(upcr_shared_ptr_t  a1, upcr_shared_ptr_t  a2, up
     if (tau_upc_node == -1) {
       __real__upcr_all_permute(a1, a2, a3, a4, a5);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1062,6 +1150,8 @@ bupc_team_t   __wrap__upcr_team_split(bupc_team_t  a1, int  a2, int  a3)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_team_split(a1, a2, a3);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1086,6 +1176,8 @@ void   __wrap__upcr_all_reduceC(upcr_shared_ptr_t  a1, upcr_shared_ptr_t  a2, up
     if (tau_upc_node == -1) {
       __real__upcr_all_reduceC(a1, a2, a3, a4, a5, a6, a7, a8);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1109,6 +1201,8 @@ void   __wrap__upcr_all_prefix_reduceC(upcr_shared_ptr_t  a1, upcr_shared_ptr_t 
     if (tau_upc_node == -1) {
       __real__upcr_all_prefix_reduceC(a1, a2, a3, a4, a5, a6, a7);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1132,6 +1226,8 @@ void   __wrap__upcr_all_reduceUC(upcr_shared_ptr_t  a1, upcr_shared_ptr_t  a2, u
     if (tau_upc_node == -1) {
       __real__upcr_all_reduceUC(a1, a2, a3, a4, a5, a6, a7, a8);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1155,6 +1251,8 @@ void   __wrap__upcr_all_prefix_reduceUC(upcr_shared_ptr_t  a1, upcr_shared_ptr_t
     if (tau_upc_node == -1) {
       __real__upcr_all_prefix_reduceUC(a1, a2, a3, a4, a5, a6, a7);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1178,6 +1276,8 @@ void   __wrap__upcr_all_reduceS(upcr_shared_ptr_t  a1, upcr_shared_ptr_t  a2, up
     if (tau_upc_node == -1) {
       __real__upcr_all_reduceS(a1, a2, a3, a4, a5, a6, a7, a8);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1201,6 +1301,8 @@ void   __wrap__upcr_all_prefix_reduceS(upcr_shared_ptr_t  a1, upcr_shared_ptr_t 
     if (tau_upc_node == -1) {
       __real__upcr_all_prefix_reduceS(a1, a2, a3, a4, a5, a6, a7);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1224,6 +1326,8 @@ void   __wrap__upcr_all_reduceUS(upcr_shared_ptr_t  a1, upcr_shared_ptr_t  a2, u
     if (tau_upc_node == -1) {
       __real__upcr_all_reduceUS(a1, a2, a3, a4, a5, a6, a7, a8);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1247,6 +1351,8 @@ void   __wrap__upcr_all_prefix_reduceUS(upcr_shared_ptr_t  a1, upcr_shared_ptr_t
     if (tau_upc_node == -1) {
       __real__upcr_all_prefix_reduceUS(a1, a2, a3, a4, a5, a6, a7);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1270,6 +1376,8 @@ void   __wrap__upcr_all_reduceI(upcr_shared_ptr_t  a1, upcr_shared_ptr_t  a2, up
     if (tau_upc_node == -1) {
       __real__upcr_all_reduceI(a1, a2, a3, a4, a5, a6, a7, a8);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1293,6 +1401,8 @@ void   __wrap__upcr_all_prefix_reduceI(upcr_shared_ptr_t  a1, upcr_shared_ptr_t 
     if (tau_upc_node == -1) {
       __real__upcr_all_prefix_reduceI(a1, a2, a3, a4, a5, a6, a7);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1316,6 +1426,8 @@ void   __wrap__upcr_all_reduceUI(upcr_shared_ptr_t  a1, upcr_shared_ptr_t  a2, u
     if (tau_upc_node == -1) {
       __real__upcr_all_reduceUI(a1, a2, a3, a4, a5, a6, a7, a8);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1339,6 +1451,8 @@ void   __wrap__upcr_all_prefix_reduceUI(upcr_shared_ptr_t  a1, upcr_shared_ptr_t
     if (tau_upc_node == -1) {
       __real__upcr_all_prefix_reduceUI(a1, a2, a3, a4, a5, a6, a7);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1362,6 +1476,8 @@ void   __wrap__upcr_all_reduceL(upcr_shared_ptr_t  a1, upcr_shared_ptr_t  a2, up
     if (tau_upc_node == -1) {
       __real__upcr_all_reduceL(a1, a2, a3, a4, a5, a6, a7, a8);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1385,6 +1501,8 @@ void   __wrap__upcr_all_prefix_reduceL(upcr_shared_ptr_t  a1, upcr_shared_ptr_t 
     if (tau_upc_node == -1) {
       __real__upcr_all_prefix_reduceL(a1, a2, a3, a4, a5, a6, a7);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1408,6 +1526,8 @@ void   __wrap__upcr_all_reduceUL(upcr_shared_ptr_t  a1, upcr_shared_ptr_t  a2, u
     if (tau_upc_node == -1) {
       __real__upcr_all_reduceUL(a1, a2, a3, a4, a5, a6, a7, a8);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1431,6 +1551,8 @@ void   __wrap__upcr_all_prefix_reduceUL(upcr_shared_ptr_t  a1, upcr_shared_ptr_t
     if (tau_upc_node == -1) {
       __real__upcr_all_prefix_reduceUL(a1, a2, a3, a4, a5, a6, a7);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1454,6 +1576,8 @@ void   __wrap__upcr_all_reduceF(upcr_shared_ptr_t  a1, upcr_shared_ptr_t  a2, up
     if (tau_upc_node == -1) {
       __real__upcr_all_reduceF(a1, a2, a3, a4, a5, a6, a7, a8);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1477,6 +1601,8 @@ void   __wrap__upcr_all_prefix_reduceF(upcr_shared_ptr_t  a1, upcr_shared_ptr_t 
     if (tau_upc_node == -1) {
       __real__upcr_all_prefix_reduceF(a1, a2, a3, a4, a5, a6, a7);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1500,6 +1626,8 @@ void   __wrap__upcr_all_reduceD(upcr_shared_ptr_t  a1, upcr_shared_ptr_t  a2, up
     if (tau_upc_node == -1) {
       __real__upcr_all_reduceD(a1, a2, a3, a4, a5, a6, a7, a8);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1523,6 +1651,8 @@ void   __wrap__upcr_all_prefix_reduceD(upcr_shared_ptr_t  a1, upcr_shared_ptr_t 
     if (tau_upc_node == -1) {
       __real__upcr_all_prefix_reduceD(a1, a2, a3, a4, a5, a6, a7);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1546,6 +1676,8 @@ void   __wrap__upcr_all_reduceLD(upcr_shared_ptr_t  a1, upcr_shared_ptr_t  a2, u
     if (tau_upc_node == -1) {
       __real__upcr_all_reduceLD(a1, a2, a3, a4, a5, a6, a7, a8);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1569,6 +1701,8 @@ void   __wrap__upcr_all_prefix_reduceLD(upcr_shared_ptr_t  a1, upcr_shared_ptr_t
     if (tau_upc_node == -1) {
       __real__upcr_all_prefix_reduceLD(a1, a2, a3, a4, a5, a6, a7);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1592,6 +1726,8 @@ upcr_pshared_ptr_t   __wrap__upcr_all_fopen(const char *  a1, int  a2, size_t  a
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_all_fopen(a1, a2, a3, a4);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1616,6 +1752,8 @@ int   __wrap__upcr_all_fclose(upcr_pshared_ptr_t  a1)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_all_fclose(a1);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1640,6 +1778,8 @@ int   __wrap__upcr_all_fsync(upcr_pshared_ptr_t  a1)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_all_fsync(a1);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1664,6 +1804,8 @@ upc_off_t   __wrap__upcr_all_fseek(upcr_pshared_ptr_t  a1, upc_off_t  a2, int  a
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_all_fseek(a1, a2, a3);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1688,6 +1830,8 @@ int   __wrap__upcr_all_fset_size(upcr_pshared_ptr_t  a1, upc_off_t  a2)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_all_fset_size(a1, a2);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1712,6 +1856,8 @@ upc_off_t   __wrap__upcr_all_fget_size(upcr_pshared_ptr_t  a1)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_all_fget_size(a1);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1736,6 +1882,8 @@ int   __wrap__upcr_all_fpreallocate(upcr_pshared_ptr_t  a1, upc_off_t  a2)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_all_fpreallocate(a1, a2);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1760,6 +1908,8 @@ int   __wrap__upcr_all_fcntl(upcr_pshared_ptr_t  a1, int  a2, void *  a3)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_all_fcntl(a1, a2, a3);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1784,6 +1934,8 @@ upc_off_t   __wrap__upcr_all_fread_local(upcr_pshared_ptr_t  a1, void *  a2, siz
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_all_fread_local(a1, a2, a3, a4, a5);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1808,6 +1960,8 @@ upc_off_t   __wrap__upcr_all_fwrite_local(upcr_pshared_ptr_t  a1, void *  a2, si
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_all_fwrite_local(a1, a2, a3, a4, a5);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1832,6 +1986,8 @@ upc_off_t   __wrap__upcr_all_fread_shared(upcr_pshared_ptr_t  a1, bupc_sharedptr
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_all_fread_shared(a1, a2, a3, a4, a5, a6);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1856,6 +2012,8 @@ upc_off_t   __wrap__upcr_all_fwrite_shared(upcr_pshared_ptr_t  a1, bupc_sharedpt
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_all_fwrite_shared(a1, a2, a3, a4, a5, a6);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1880,6 +2038,8 @@ upc_off_t   __wrap__upcr_all_fread_list_local(upcr_pshared_ptr_t  a1, size_t  a2
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_all_fread_list_local(a1, a2, a3, a4, a5, a6);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1904,6 +2064,8 @@ upc_off_t   __wrap__upcr_all_fread_list_shared(upcr_pshared_ptr_t  a1, size_t  a
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_all_fread_list_shared(a1, a2, a3, a4, a5, a6);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1928,6 +2090,8 @@ upc_off_t   __wrap__upcr_all_fwrite_list_local(upcr_pshared_ptr_t  a1, size_t  a
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_all_fwrite_list_local(a1, a2, a3, a4, a5, a6);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1952,6 +2116,8 @@ upc_off_t   __wrap__upcr_all_fwrite_list_shared(upcr_pshared_ptr_t  a1, size_t  
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_all_fwrite_list_shared(a1, a2, a3, a4, a5, a6);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1976,6 +2142,8 @@ void   __wrap__upcr_all_fread_local_async(upcr_pshared_ptr_t  a1, void *  a2, si
     if (tau_upc_node == -1) {
       __real__upcr_all_fread_local_async(a1, a2, a3, a4, a5);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -1999,6 +2167,8 @@ void   __wrap__upcr_all_fwrite_local_async(upcr_pshared_ptr_t  a1, void *  a2, s
     if (tau_upc_node == -1) {
       __real__upcr_all_fwrite_local_async(a1, a2, a3, a4, a5);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2022,6 +2192,8 @@ void   __wrap__upcr_all_fread_shared_async(upcr_pshared_ptr_t  a1, bupc_sharedpt
     if (tau_upc_node == -1) {
       __real__upcr_all_fread_shared_async(a1, a2, a3, a4, a5, a6);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2045,6 +2217,8 @@ void   __wrap__upcr_all_fwrite_shared_async(upcr_pshared_ptr_t  a1, bupc_sharedp
     if (tau_upc_node == -1) {
       __real__upcr_all_fwrite_shared_async(a1, a2, a3, a4, a5, a6);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2068,6 +2242,8 @@ void   __wrap__upcr_all_fread_list_local_async(upcr_pshared_ptr_t  a1, size_t  a
     if (tau_upc_node == -1) {
       __real__upcr_all_fread_list_local_async(a1, a2, a3, a4, a5, a6);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2091,6 +2267,8 @@ void   __wrap__upcr_all_fread_list_shared_async(upcr_pshared_ptr_t  a1, size_t  
     if (tau_upc_node == -1) {
       __real__upcr_all_fread_list_shared_async(a1, a2, a3, a4, a5, a6);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2114,6 +2292,8 @@ void   __wrap__upcr_all_fwrite_list_local_async(upcr_pshared_ptr_t  a1, size_t  
     if (tau_upc_node == -1) {
       __real__upcr_all_fwrite_list_local_async(a1, a2, a3, a4, a5, a6);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2137,6 +2317,8 @@ void   __wrap__upcr_all_fwrite_list_shared_async(upcr_pshared_ptr_t  a1, size_t 
     if (tau_upc_node == -1) {
       __real__upcr_all_fwrite_list_shared_async(a1, a2, a3, a4, a5, a6);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2160,6 +2342,8 @@ upc_off_t   __wrap__upcr_all_fwait_async(upcr_pshared_ptr_t  a1)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_all_fwait_async(a1);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2184,6 +2368,8 @@ upc_off_t   __wrap__upcr_all_ftest_async(upcr_pshared_ptr_t  a1, int *  a2)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_all_ftest_async(a1, a2);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2208,6 +2394,8 @@ upcr_shared_ptr_t   __wrap__upcr_local_alloc(size_t  a1, size_t  a2)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_local_alloc(a1, a2);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2232,6 +2420,8 @@ upcr_shared_ptr_t   __wrap__upcr_global_alloc(size_t  a1, size_t  a2)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_global_alloc(a1, a2);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2256,6 +2446,8 @@ upcr_shared_ptr_t   __wrap__upcr_all_alloc(size_t  a1, size_t  a2)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_all_alloc(a1, a2);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2280,6 +2472,8 @@ void   __wrap__upcr_free(upcr_shared_ptr_t  a1)  {
     if (tau_upc_node == -1) {
       __real__upcr_free(a1);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2303,6 +2497,8 @@ void   __wrap__upcr_all_free(upcr_shared_ptr_t  a1)  {
     if (tau_upc_node == -1) {
       __real__upcr_all_free(a1);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2326,6 +2522,8 @@ void   __wrap_upcri_getheapstats(const char *  a1, char *  a2, size_t  a3)  {
     if (tau_upc_node == -1) {
       __real_upcri_getheapstats(a1, a2, a3);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2349,6 +2547,8 @@ gasnet_handlerentry_t *   __wrap_upcri_get_handlertable()  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real_upcri_get_handlertable();
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2373,6 +2573,8 @@ size_t   __wrap_upcri_get_handlertable_count()  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real_upcri_get_handlertable_count();
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2397,6 +2599,8 @@ upcr_handle_t   __wrap__upcr_do_memcpy(upcr_shared_ptr_t  a1, upcr_shared_ptr_t 
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__upcr_do_memcpy(a1, a2, a3, a4);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2436,6 +2640,8 @@ void   __wrap__bupc_waitsync(bupc_handle_t  a1)  {
     if (tau_upc_node == -1) {
       __real__bupc_waitsync(a1);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2459,6 +2665,8 @@ int   __wrap__bupc_trysync(bupc_handle_t  a1)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_trysync(a1);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2483,6 +2691,8 @@ void   __wrap__bupc_waitsync_all(bupc_handle_t *  a1, size_t  a2)  {
     if (tau_upc_node == -1) {
       __real__bupc_waitsync_all(a1, a2);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2506,6 +2716,8 @@ int   __wrap__bupc_trysync_all(bupc_handle_t *  a1, size_t  a2)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_trysync_all(a1, a2);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2530,6 +2742,8 @@ void   __wrap__bupc_waitsync_some(bupc_handle_t *  a1, size_t  a2)  {
     if (tau_upc_node == -1) {
       __real__bupc_waitsync_some(a1, a2);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2553,6 +2767,8 @@ int   __wrap__bupc_trysync_some(bupc_handle_t *  a1, size_t  a2)  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_trysync_some(a1, a2);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2577,6 +2793,8 @@ bupc_handle_t   __wrap__bupc_memcpy_async(upcr_shared_ptr_t  a1, upcr_shared_ptr
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_memcpy_async(a1, a2, a3);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2616,6 +2834,8 @@ bupc_handle_t   __wrap__bupc_memget_async(void *  a1, upcr_shared_ptr_t  a2, siz
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_memget_async(a1, a2, a3);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2642,6 +2862,8 @@ bupc_handle_t   __wrap__bupc_memput_async(upcr_shared_ptr_t  a1, const void *  a
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_memput_async(a1, a2, a3);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2668,6 +2890,8 @@ bupc_handle_t   __wrap__bupc_memset_async(upcr_shared_ptr_t  a1, int  a2, size_t
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_memset_async(a1, a2, a3);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2694,6 +2918,8 @@ bupc_handle_t   __wrap__bupc_end_accessregion()  {
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_end_accessregion();
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2718,6 +2944,8 @@ bupc_handle_t   __wrap__bupc_memcpy_vlist_async(size_t  a1, const bupc_smemvec_t
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_memcpy_vlist_async(a1, a2, a3, a4);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2742,6 +2970,8 @@ bupc_handle_t   __wrap__bupc_memput_vlist_async(size_t  a1, const bupc_smemvec_t
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_memput_vlist_async(a1, a2, a3, a4);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2766,6 +2996,8 @@ bupc_handle_t   __wrap__bupc_memget_vlist_async(size_t  a1, const bupc_pmemvec_t
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_memget_vlist_async(a1, a2, a3, a4);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2790,6 +3022,8 @@ bupc_handle_t   __wrap__bupc_memcpy_ilist_async(size_t  a1, const upcr_shared_pt
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_memcpy_ilist_async(a1, a2, a3, a4, a5, a6);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2814,6 +3048,8 @@ bupc_handle_t   __wrap__bupc_memput_ilist_async(size_t  a1, const upcr_shared_pt
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_memput_ilist_async(a1, a2, a3, a4, a5, a6);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2838,6 +3074,8 @@ bupc_handle_t   __wrap__bupc_memget_ilist_async(size_t  a1, void *const *  a2, s
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_memget_ilist_async(a1, a2, a3, a4, a5, a6);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2862,6 +3100,8 @@ bupc_handle_t   __wrap__bupc_memcpy_fstrided_async(upcr_shared_ptr_t  a1, size_t
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_memcpy_fstrided_async(a1, a2, a3, a4, a5, a6, a7, a8);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2886,6 +3126,8 @@ bupc_handle_t   __wrap__bupc_memput_fstrided_async(upcr_shared_ptr_t  a1, size_t
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_memput_fstrided_async(a1, a2, a3, a4, a5, a6, a7, a8);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2910,6 +3152,8 @@ bupc_handle_t   __wrap__bupc_memget_fstrided_async(void *  a1, size_t  a2, size_
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_memget_fstrided_async(a1, a2, a3, a4, a5, a6, a7, a8);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2934,6 +3178,8 @@ bupc_handle_t   __wrap__bupc_memcpy_strided_async(upcr_shared_ptr_t  a1, const s
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_memcpy_strided_async(a1, a2, a3, a4, a5, a6);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2958,6 +3204,8 @@ bupc_handle_t   __wrap__bupc_memput_strided_async(upcr_shared_ptr_t  a1, const s
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_memput_strided_async(a1, a2, a3, a4, a5, a6);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -2982,6 +3230,8 @@ bupc_handle_t   __wrap__bupc_memget_strided_async(void *  a1, const size_t *  a2
     tau_upc_node = TAU_PROFILE_GET_NODE();
     if (tau_upc_node == -1) {
       return __real__bupc_memget_strided_async(a1, a2, a3, a4, a5, a6);
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -3006,6 +3256,8 @@ void   __wrap_upcr_startup_init(int *  a1, char ***  a2, upcr_thread_t  a3, upcr
     if (tau_upc_node == -1) {
       __real_upcr_startup_init(a1, a2, a3, a4, a5);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -3029,6 +3281,8 @@ void   __wrap_upcr_startup_attach(uintptr_t  a1, uintptr_t  a2, int  a3)  {
     if (tau_upc_node == -1) {
       __real_upcr_startup_attach(a1, a2, a3);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -3052,6 +3306,8 @@ void   __wrap_upcr_startup_spawn(int *  a1, char ***  a2, uintptr_t  a3, uintptr
     if (tau_upc_node == -1) {
       __real_upcr_startup_spawn(a1, a2, a3, a4, a5);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -3075,6 +3331,8 @@ void   __wrap_upcr_exit(int  a1)  {
     if (tau_upc_node == -1) {
       __real_upcr_exit(a1);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -3098,6 +3356,8 @@ void   __wrap_upcr_global_exit(int  a1)  {
     if (tau_upc_node == -1) {
       __real_upcr_global_exit(a1);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -3121,6 +3381,8 @@ void   __wrap_upcri_do_exit(int  a1)  {
     if (tau_upc_node == -1) {
       __real_upcri_do_exit(a1);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -3144,6 +3406,8 @@ void   __wrap__upcr_startup_shalloc(upcr_startup_shalloc_t *  a1, size_t  a2)  {
     if (tau_upc_node == -1) {
       __real__upcr_startup_shalloc(a1, a2);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -3167,6 +3431,8 @@ void   __wrap__upcr_startup_pshalloc(upcr_startup_pshalloc_t *  a1, size_t  a2) 
     if (tau_upc_node == -1) {
       __real__upcr_startup_pshalloc(a1, a2);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -3190,6 +3456,8 @@ void   __wrap__upcr_startup_initarray(upcr_shared_ptr_t  a1, void *  a2, upcr_st
     if (tau_upc_node == -1) {
       __real__upcr_startup_initarray(a1, a2, a3, a4, a5, a6);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
@@ -3213,6 +3481,8 @@ void   __wrap__upcr_startup_initparray(upcr_pshared_ptr_t  a1, void *  a2, upcr_
     if (tau_upc_node == -1) {
       __real__upcr_startup_initparray(a1, a2, a3, a4, a5, a6);
       return;
+    } else {
+      tau_totalnodes(1,upcr_threads());
     }
   }
 
