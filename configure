@@ -1908,7 +1908,7 @@ if [ "x$upcnetwork" == "x" ] ; then
     upcnetwork=mpi
   fi
 else
-  if [ "$mpi" == "no" ] ; then
+  if [ "$upcnetwork" == mpi ] && [ "$mpi" == "no" ] ; then
     echo "NOTE: Assuming -mpi because -upcnetwork=mpi."
     mpi=yes
   fi
