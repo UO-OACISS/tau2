@@ -211,6 +211,16 @@ static string upc_threadof(string const & shared)
   } 
 }
 
+static string upc_threads()
+{
+  switch (upc) {
+    case BERKELEY: return "upcr_threads()";
+    case CRAY: return "THREADS";
+    case GNU: return "THREADS";
+    default: return "THREADS";
+  }
+}
+
 void printUPCMessageBeforeRoutine(pdbRoutine * r, ofstream & impl, FunctionSignatureInfo sig)
 {
   string const & rname = r->name();
@@ -717,7 +727,9 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
     } else {
       impl << "      return __real_" << sig.func << ";" << endl;
     }
-    impl << "    }\n"
+    impl << "    } else {\n"
+         << "      tau_totalnodes(1," << upc_threads() << ");\n"
+         << "    }\n"
          << "  }\n"
          << endl;
   } 
@@ -880,12 +892,13 @@ void generateMakefile(string const & package, string const & outFileName,
   sprintf(buffer, "%s_wrapper/%s", libname.c_str(), makefileName);
 
   ofstream makefile(buffer);
+
   switch(runtime) {
     case PREPROC_INTERCEPT:
       makefile << "include ${TAU_MAKEFILE}\n"
                << "CC=" << compiler_name << "\n"
                << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE) $(TAU_MPI_INCLUDE) -I..\n"
-               << "EXTRA_FLAGS=\n" << 
+               << "EXTRA_FLAGS=\n"
                << "\n"
                << "AR=ar\n"
                << "ARFLAGS=rcv\n"
@@ -894,7 +907,7 @@ void generateMakefile(string const & package, string const & outFileName,
                << "\t$(AR) $(ARFLAGS) $@ $<\n"
                << "\n"
                << package << "_wrap.o: " << outFileName << "\n"
-               << "\t$(CC) $(CFLAGS) -c $< -o $@\n"
+               << "\t$(CC) $(CFLAGS) $(EXTRA_FLAGS) -c $< -o $@\n"
                << "clean:\n"
                << "\t/bin/rm -f " << package << "_wrap.o lib" << package << "_wrap.a\n"
                << endl;
@@ -902,14 +915,14 @@ void generateMakefile(string const & package, string const & outFileName,
     case RUNTIME_INTERCEPT:
       makefile << "include ${TAU_MAKEFILE}\n"
                << "CC=" << compiler_name << " \n"
-               << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE) $(TAU_MPI_INCLUDE)  -I.. -fPIC\n"
-               << "EXTRA_FLAGS=\n" << 
+               << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE) $(TAU_MPI_INCLUDE)  -I..\n"
+               << "EXTRA_FLAGS=\n"
                << "\n"
                << "lib" << package << "_wrap.so: " << package << "_wrap.o \n"
                << "\t$(CC) $(TAU_SHFLAGS) $@ $< $(TAU_SHLIBS) -ldl\n"
                << "\n"
                << package << "_wrap.o: " << outFileName << "\n"
-               << "\t$(CC) $(CFLAGS) -c $< -o $@\n"
+               << "\t$(CC) $(CFLAGS) $(EXTRA_FLAGS) -c $< -o $@\n"
                << "clean:\n"
                << "\t/bin/rm -f " << package << "_wrap.o lib" << package << "_wrap.so\n"
                << endl;
@@ -917,15 +930,17 @@ void generateMakefile(string const & package, string const & outFileName,
     case WRAPPER_INTERCEPT:
       makefile << "include ${TAU_MAKEFILE} \n"
                << "CC=" << compiler_name << " \n"
-               << "ARFLAGS=rcv \n"
                << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE)  $(TAU_MPI_INCLUDE) -I..\n"
-               << "EXTRA_FLAGS=\n" << 
+               << "EXTRA_FLAGS=\n"
+               << "\n"
+               << "AR=$(TAU_AR)\n"
+               << "ARFLAGS=rcv \n"
                << "\n"
                << "lib" << package << "_wrap.a: " << package << "_wrap.o \n"
-               << "\t$(TAU_AR) $(ARFLAGS) $@ $< \n"
+               << "\t$(AR) $(ARFLAGS) $@ $< \n"
                << "\n"
                << package << "_wrap.o: " << outFileName << "\n"
-               << "\t$(CC) $(CFLAGS) -c $< -o $@\n"
+               << "\t$(CC) $(CFLAGS) $(EXTRA_FLAGS) -c $< -o $@\n"
                << "clean:\n"
                << "\t/bin/rm -f " << package << "_wrap.o lib" << package << "_wrap.a\n"
                << endl;

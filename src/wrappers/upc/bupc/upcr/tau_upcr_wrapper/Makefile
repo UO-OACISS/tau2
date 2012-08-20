@@ -1,14 +1,16 @@
 include ${TAU_MAKEFILE} 
 CC=$(TAU_CC) 
-ARFLAGS=rcv 
-CFLAGS=$(TAU_DEFS)  $(TAU_INCLUDE)  $(TAU_MPI_INCLUDE) -I.. 
+CFLAGS=$(TAU_DEFS)  $(TAU_INCLUDE)  $(TAU_MPI_INCLUDE) -I..
 EXTRA_FLAGS=
 
+AR=$(TAU_AR)
+ARFLAGS=rcv 
+
 libtau_upcr_wrap.a: tau_upcr_wrap.o 
-	$(TAU_AR) $(ARFLAGS) $@ $< 
+	$(AR) $(ARFLAGS) $@ $< 
 
 tau_upcr_wrap.o: wr.c
-	$(CC) $(CFLAGS) $(WRAPPER_FLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(EXTRA_FLAGS) -c $< -o $@
 clean:
 	/bin/rm -f tau_upcr_wrap.o libtau_upcr_wrap.a
 
