@@ -32,8 +32,8 @@ declare -i isVerbose=$FALSE
 declare -i isCXXUsedForC=$FALSE
 
 declare -i isCurrentFileC=$FALSE
-#declare -i isDebug=$FALSE
-declare -i isDebug=$TRUE
+declare -i isDebug=$FALSE
+#declare -i isDebug=$TRUE
 #Set isDebug=$TRUE for printing debug messages.
 
 declare -i opari=$FALSE
@@ -209,6 +209,7 @@ compilerSpecified=""
 #constitute the regular command, with the first command (immediately) 
 #after the sequence, being the compiler.  In this "for" loops, the 
 #regular command is being read.
+
 for arg in "$@"; do
 
   case $arg in
@@ -219,20 +220,21 @@ for arg in "$@"; do
         CMD=$arg
         #The first command (immediately) after the -opt sequence is the compiler.
         case $CMD in
-          upcc)
+          upcc|*/upcc)
             upc="berkeley"
             echoIfDebug "Berkeley UPCC: TRUE!"
             ;;
-          upc)
+          upc|*/upc)
             upc="gnu"
             echoIfDebug "GNU UPC: TRUE!"
             ;;
-          cc)
+          cc|*/cc)
             upc="cray"
             echoIfDebug "CRAY UPCC: TRUE!"
             ;;
           *)
             upc="unknown"
+            echoIfDebug "WARNING: UNKNOWN UPC"
             ;;
         esac
       fi

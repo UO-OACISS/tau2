@@ -134,7 +134,9 @@ static void getCReferencesForWrapper(vector<itemRef*> & itemvec, PDB& pdb, pdbFi
 
 static bool isReturnTypeVoid(pdbRoutine *r)
 {
-  return (r->signature()->returnType()->name().compare(0, 4, "void") == 0);
+  string const & rname = r->signature()->returnType()->name();
+  return ((rname.compare(0, 4, "void") == 0) &&
+          (rname.find("*") == string::npos));
 }
 
 static bool doesRoutineNameContainGet(string const & rname)
@@ -1134,6 +1136,8 @@ int main(int argc, char **argv)
          << "static int tau_upc_tagid_f = 0;\n"
          << "#define TAU_UPC_TAGID (tau_upc_tagid_f = (tau_upc_tagid_f & 255))\n"
          << "#define TAU_UPC_TAGID_NEXT ((++tau_upc_tagid_f) & 255)\n"
+         << "\n"
+         << "void tau_totalnodes(int, int);\n"
          << endl;
   }
 
