@@ -650,7 +650,7 @@ extrashlibopts=
 pthread=no
 papithread=no
 papipfm=no
-gnu_upc=no
+gupc=no
 papiperfctr=no
 papisubdir=
 charm=no
@@ -1899,7 +1899,11 @@ for arg in "$@"; do
   esac
 done
 
-
+upcnetworkdefault=smp
+if [ "x$upcnetwork" == "x" ] ; then
+  echo "NOTE: UPC network not specified.  Assuming $upcnetworkdefault."
+  upcnetwork=$upcnetworkdefault
+fi
 
 
 
@@ -4349,7 +4353,7 @@ fi
 
 if [ $upc_compiler = gcc -o $upc_compiler = upc ] 
 then
-  gnu_upc=yes
+  gupc=yes
 fi
 if [ $c_compiler != gcc4 ]
   then
@@ -6855,19 +6859,20 @@ if [ $upc_compiler = cc -o $upc_compiler = default ]; then
 fi
 
 if [ $upc = yes ]; then
-  tauoptions="${tauoptions}-upc"
   # If MPI is used -mpi already appears in the name. If it is not, add it
-  if [ "x$upcnetwork" != "xmpi" -a $upc_compiler = upcc ]; then
+  if [ "x$upcnetwork" != "xmpi" ]; then
     tauoptions="${tauoptions}-$upcnetwork"
   fi
-  if [ $upc_compiler = upcc ] 
-  then
-    fixmakeargs="$fixmakeargs UPCC upcnetwork=$upcnetwork"
-  fi
 
-  if [ $upc_compiler = gcc -o $upc_compiler = upc ]; then
-    tauoptions="${tauoptions}-gnuupc"
-    fixmakeargs="$fixmakeargs GNU_UPC"
+  if [ "$upc_compiler" == "upcc" ] ; then
+    tauoptions="${tauoptions}-bupc"
+    fixmakeargs="$fixmakeargs BUPC upcnetwork=$upcnetwork"
+  elif [ $upc_compiler = gcc -o $upc_compiler = upc ]; then
+    tauoptions="${tauoptions}-gupc"
+    fixmakeargs="$fixmakeargs GUPC upcnetwork=$upcnetwork"
+  else
+    # default case: probably Cray upc
+    tauoptions="${tauoptions}-upc"
   fi
 fi
 

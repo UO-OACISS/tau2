@@ -8,7 +8,8 @@ declare -i group_f_F=1
 declare -i group_c=2
 declare -i group_C=3
 declare -i group_upc=4
-declare -i berkeley_upcc=$FALSE
+# Replaced with more flexible "upc" variable
+#declare -i berkeley_upcc=$FALSE
 
 declare -i disablePdtStep=$FALSE
 declare -i hasAnOutputFile=$FALSE
@@ -31,8 +32,8 @@ declare -i isVerbose=$FALSE
 declare -i isCXXUsedForC=$FALSE
 
 declare -i isCurrentFileC=$FALSE
-declare -i isDebug=$FALSE
-#declare -i isDebug=$TRUE
+#declare -i isDebug=$FALSE
+declare -i isDebug=$TRUE
 #Set isDebug=$TRUE for printing debug messages.
 
 declare -i opari=$FALSE
@@ -210,36 +211,46 @@ compilerSpecified=""
 #regular command is being read.
 for arg in "$@"; do
 
-    case $arg in
+  case $arg in
+    -opt*)
+      ;;
+    *)
+      if [ $tempCounter == 0 ]; then
+        CMD=$arg
+        #The first command (immediately) after the -opt sequence is the compiler.
+        case $CMD in
+          upcc)
+            upc="berkeley"
+            echoIfDebug "Berkeley UPCC: TRUE!"
+            ;;
+          upc)
+            upc="gnu"
+            echoIfDebug "GNU UPC: TRUE!"
+            ;;
+          cc)
+            upc="cray"
+            echoIfDebug "CRAY UPCC: TRUE!"
+            ;;
+          *)
+            upc="unknown"
+            ;;
+        esac
+      fi
 
-	-opt*)
-	    ;;
+      # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
+      modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g' -e 's#(#\\\(#g' -e 's#)#\\\)#g'`
+      #modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
+      THEARGS="$THEARGS $modarg"
 
-	*)
-	    if [ $tempCounter == 0 ]; then
-		CMD=$arg
-			#The first command (immediately) after the -opt sequence is the compiler.
-                if [ $CMD == upcc ]; then
-                  berkeley_upcc=$TRUE
-                  echoIfDebug "Berkeley UPCC: TRUE!"
-                fi
-	    fi
-
-                # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
-	    modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g' -e 's#(#\\\(#g' -e 's#)#\\\)#g'`
-		#modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
-	    THEARGS="$THEARGS $modarg"
-
-	    if [ $foundFirstArg == 0 ]; then
-		foundFirstArg=1
-		compilerSpecified="$modarg"
-	    else
-		regularCmd="$regularCmd $modarg"	
-	    fi
-
-	    tempCounter=tempCounter+1
-	    ;;
-    esac
+      if [ $foundFirstArg == 0 ]; then
+        foundFirstArg=1
+        compilerSpecified="$modarg"
+      else
+        regularCmd="$regularCmd $modarg"	
+      fi
+      tempCounter=tempCounter+1
+      ;;
+  esac
 done
 echoIfDebug "\nRegular command passed is --  $regularCmd "; 
 echoIfDebug "The compiler being read is $CMD \n"
@@ -276,7 +287,7 @@ for arg in "$@" ; do
     else
 	
         case $arg in
-	    --help)   # Do not use -h as Cray compilers specifie -h upc -h ... 
+	    --help)   # Do not use -h as Cray compilers specify -h upc -h ... 
 		printUsage 0 
 		;;
 
@@ -731,14 +742,13 @@ for arg in "$@" ; do
 			optCompInst=$TRUE
 			disablePdtStep=$TRUE
 			# force the debug flag so we get symbolic information
-                        if [ $berkeley_upcc == $TRUE ]; 
-		        then
-		          optCompile="$optCompile -Wc,-g"
-		          optLinking="$optLinking -Wc,-g"
-                        else
-		          optCompile="$optCompile -g"
-		          optLinking="$optLinking -g"
-                        fi
+      if [ $upc == "berkeley" ] ;  then
+        optCompile="$optCompile -Wc,-g"
+        optLinking="$optLinking -Wc,-g"
+      else
+        optCompile="$optCompile -g"
+        optLinking="$optLinking -g"
+      fi
 			echoIfDebug "\tUsing Compiler-based Instrumentation"
 			;;
 		    -optPDTInst)
@@ -1192,7 +1202,7 @@ if [ $optCompInst == $TRUE ]; then
     optLinking="$optLinking $optCompInstLinking"
 fi
 
-if [ $berkeley_upcc == $TRUE ]; then
+if [ $upc == "berkeley" ]; then
    optLinking=`echo $optLinking| sed -e 's@-Wl@-Wl,-Wl@g'`
    echoIfDebug "optLinking modified to accomodate -Wl,-Wl for upcc. optLinking=$optLinking"
 fi
@@ -1311,16 +1321,38 @@ if [ $numFiles == 0 ]; then
       echoIfDebug "Linking command is $linkCmd "
     fi
 
-    echoIfDebug "trackUPCR = $trackUPCR, wrappers = $optWrappersDir/upc/bupc/link_options.tau "
-    if [ $trackUPCR == $TRUE -a $berkeley_upcc == $TRUE -a -r $optWrappersDir/upc/bupc/link_options.tau ] ; then 
-      linkCmd="$linkCmd `cat $optWrappersDir/upc/bupc/link_options.tau` $optLinking"
-      echoIfDebug "Linking command is $linkCmd"
+    if [ $trackUPCR == $TRUE ] ; then
+      case $upc in
+        berkeley)
+          if [ -r $optWrappersDir/upc/bupc/link_options.tau ] ; then
+            linkCmd="$linkCmd `cat $optWrappersDir/upc/bupc/link_options.tau` $optLinking"
+            echoIfDebug "Linking command is $linkCmd"
+          else
+            echo "Warning: can't locate link_options.tau for Berkeley UPC runtime tracking"
+          fi
+        ;;
+        gnu)
+          if [ -r $optWrappersDir/upc/gupc/link_options.tau ] ; then
+            linkCmd="$linkCmd `cat $optWrappersDir/upc/gupc/link_options.tau` $optLinking"
+            echoIfDebug "Linking command is $linkCmd"
+          else
+            echo "Warning: can't locate link_options.tau for GNU UPC runtime tracking"
+          fi
+        ;;
+        cray)
+          if [ -r $optWrappersDir/upc/cray/link_options.tau -a -r $optWrappersDir/../libcray_upc_runtime_wrap.a ] ; then
+            linkCmd="$linkCmd `cat $optWrappersDir/upc/cray/link_options.tau` $optLinking"
+            echoIfDebug "Linking command is $linkCmd"
+          else
+            echo "Warning: can't locate link_options.tau for CRAY UPC runtime tracking"
+          fi
+        ;;
+        *)
+          echoIfDebug "upc = $upc"
+        ;;
+      esac
     fi
-    if [ $trackUPCR == $TRUE -a $berkeley_upcc == $FALSE -a -r $optWrappersDir/upc/cray/link_options.tau -a -r $optWrappersDir/../libcray_upc_runtime_wrap.a ] ; then
-      linkCmd="$linkCmd `cat $optWrappersDir/upc/cray/link_options.tau` $optLinking"
-      echoIfDebug "Linking command is $linkCmd"
-    fi
-    
+
     if [ "x$tauWrapFile" != "x" ]; then
       echoIfDebug "Linking command is $linkCmd"
     fi 
@@ -1837,15 +1869,37 @@ cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} ${o
 	  echoIfDebug "Linking command is $linkCmd "
 	fi
 
-        echoIfDebug "trackUPCR = $trackUPCR, wrappers = $optWrappersDir/upc/bupc/link_options.tau "
-        if [ $trackUPCR == $TRUE -a $berkeley_upcc == $TRUE -a -r $optWrappersDir/upc/bupc/link_options.tau ] ; then 
-          newCmd="$newCmd `cat $optWrappersDir/upc/bupc/link_options.tau`"
-          echoIfDebug "Linking command is $newCmd"
-        fi
 
-        if [ $trackUPCR == $TRUE -a $berkeley_upcc == $FALSE -a -r $optWrappersDir/upc/cray/link_options.tau -a -r $optWrappersDir/../libcray_upc_runtime_wrap.a ] ; then
-          newCmd="$newCmd `cat $optWrappersDir/upc/cray/link_options.tau`"
-          echoIfDebug "Linking command is $newCmd"
+        if [ $trackUPCR == $TRUE ] ; then
+          case $upc in
+            berkeley)
+              if [ -r $optWrappersDir/upc/bupc/link_options.tau ] ; then
+                newCmd="$newCmd `cat $optWrappersDir/upc/bupc/link_options.tau` $optLinking"
+                echoIfDebug "Linking command is $newCmd"
+              else
+                echo "Warning: can't locate link_options.tau for Berkeley UPC runtime tracking"
+              fi
+            ;;
+            gnu)
+              if [ -r $optWrappersDir/upc/gupc/link_options.tau ] ; then
+                newCmd="$newCmd `cat $optWrappersDir/upc/gupc/link_options.tau` $optLinking"
+                echoIfDebug "Linking command is $newCmd"
+              else
+                echo "Warning: can't locate link_options.tau for GNU UPC runtime tracking"
+              fi
+            ;;
+            cray)
+              if [ -r $optWrappersDir/upc/cray/link_options.tau -a -r $optWrappersDir/../libcray_upc_runtime_wrap.a ] ; then
+                newCmd="$newCmd `cat $optWrappersDir/upc/cray/link_options.tau` $optLinking"
+                echoIfDebug "Linking command is $newCmd"
+              else
+                echo "Warning: can't locate link_options.tau for CRAY UPC runtime tracking"
+              fi
+            ;;
+            *)
+              echoIfDebug "upc = $upc"
+            ;;
+          esac
         fi
 
         if [ "x$tauWrapFile" != "x" ]; then 

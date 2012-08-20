@@ -61,6 +61,11 @@ using namespace std;
 #define PREPROC_INTERCEPT  0
 #define WRAPPER_INTERCEPT -1
 
+/* Known UPC environments */
+#define BERKELEY 1
+#define GNU 2
+#define CRAY 3
+
 //#define DEBUG 1
 
 /* For selective instrumentation */
@@ -77,9 +82,9 @@ extern bool addFileInstrumentationRequests(PDB& p, pdbFile *file, vector<itemRef
 bool memory_flag = false;   /* by default, do not insert malloc.h in instrumented C/C++ files */
 bool strict_typing = false; /* by default unless --strict option is used. */
 bool shmem_wrapper = false; /* by default unless --shmem option is used. */
-bool upc_wrapper = false;   /* by default unless --upc or --crayupc option is used. */
-bool cray_upc = false;      /* by default unless --crayupc option is used. */
 bool pshmem_use_underscore_instead_of_p = false; /* by default unless --pshmem_use_underscore_instead_of_p option is used. */
+
+int upc = 0;                /* UPC environment */
 
 
 struct FunctionSignatureInfo
@@ -188,21 +193,22 @@ static char const * getMultiplierString(string const & rname)
 
 static string upc_mythread()
 {
-  if (cray_upc) {
-    return "MYTHREAD";
-  } else {
-    return "upcr_mythread()";
+  switch (upc) {
+    case BERKELEY: return "upcr_mythread()";
+    case CRAY: return "MYTHREAD";
+    case GNU: return "MYTHREAD";
+    default: return "MYTHREAD";
   }
 }
 
 static string upc_threadof(string const & shared)
 {
-  
-  if(cray_upc) {
-    return "__real_upc_threadof(" + shared + ")";
-  } else {
-    return "upcr_threadof_shared(" + shared + ")";
-  }
+  switch (upc) {
+    case BERKELEY: return "upcr_threadof_shared(" + shared + ")";
+    case CRAY: return "__real_upc_threadof(" + shared + ")";
+    case GNU: return "__real_upc_threadof(" + shared + ")";
+    default: return "upc_threadof(" + shared + ")";
+  } 
 }
 
 void printUPCMessageBeforeRoutine(pdbRoutine * r, ofstream & impl, FunctionSignatureInfo sig)
@@ -303,9 +309,9 @@ void  printUPCMessageAfterRoutine(pdbRoutine * r, ofstream & impl,  FunctionSign
   }
   
   if (isGet) {
-    impl <<"  TAU_TRACE_RECVMSG(TAU_UPC_TAGID, " << upc_threadof("a2") << ", a3);" << endl;
+    impl << "  TAU_TRACE_RECVMSG(TAU_UPC_TAGID, " << upc_threadof("a2") << ", a3);" << endl;
   } else if (isPut && !isSig) {
-    impl <<"  TAU_TRACE_RECVMSG_REMOTE(TAU_UPC_TAGID, " << upc_mythread() << ", a3, " 
+    impl << "  TAU_TRACE_RECVMSG_REMOTE(TAU_UPC_TAGID, " << upc_mythread() << ", a3, " 
          << upc_threadof("a1") << ");" << endl;
   } else if (isCpy) {
     impl << "  if (my_thread == src_thread) {\n"
@@ -459,7 +465,7 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
     sig.returntypename = grp->name();
   } else {
     sig.returntypename = r->signature()->returnType()->name();
-    if (upc_wrapper && (sig.returntypename.compare(0, 10, "shared[1] ") == 0)) {
+    if (upc && (sig.returntypename.compare(0, 10, "shared[1] ") == 0)) {
       sig.returntypename.replace(0, 10, "shared   ");
     }
   }
@@ -526,9 +532,9 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
       argtypename = argsit->type()->name();
     }
 
-    /* upc headers sometimes have struct members in the argument name:
-     *         const struct upc_filevec {upc_off_t offset;size_t len;}*
-     *                 We need to erase everything between the two curly braces */
+    /* headers sometimes have struct members in the argument name:
+     *    const struct upc_filevec {upc_off_t offset;size_t len;}*
+     * We need to erase everything between the two curly braces */
     int pos1 = argtypename.find("{");
     int pos2 = argtypename.find("}");
     if (pos1 != string::npos && pos2 != string::npos) {
@@ -539,6 +545,10 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
 #ifdef DEBUG
       cout <<"AFTER  ARG type="<<argtypename<<endl;
 #endif /* DEBUG */
+    }
+
+    if ((upc == GNU) && argtypename.compare(0, 10, "shared[1] ") == 0) {
+      argtypename.replace(0, 10, "shared ");
     }
 
     sig.func.append("a" + string(number));
@@ -565,7 +575,7 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
       }
     } else {
       /* print: for (int a, double b), this prints "int" */
-      if (upc_wrapper) {
+      if (upc) {
         /* upc headers sometimes have struct members in the argument name:
            const struct upc_filevec {upc_off_t offset;size_t len;}* 
            We need to erase everything between the two curly braces */
@@ -697,10 +707,26 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
 
   /* Now put in the body of the routine */
 
+  if(upc) {
+    impl << "  if (tau_upc_node == -1) {\n"
+         << "    tau_upc_node = TAU_PROFILE_GET_NODE();\n"
+         << "    if (tau_upc_node == -1) {\n";
+    if (isVoid) {
+      impl << "      __real_" << sig.func << ";\n"
+           << "      return;" << endl;
+    } else {
+      impl << "      return __real_" << sig.func << ";" << endl;
+    }
+    impl << "    }\n"
+         << "  }\n"
+         << endl;
+  } 
+
   impl<<"  TAU_PROFILE_TIMER(t,\""<<r->fullName()<<"\", \"\", "<<group_name<<");"<<endl;
   if (runtime == RUNTIME_INTERCEPT)
     impl <<dltext;
   impl<<"  TAU_PROFILE_START(t);"<<endl;
+
   if (shmem_wrapper) { /* generate pshmem calls here */
     printShmemMessageBeforeRoutine(r, impl, sig);
     if (!isVoid)
@@ -717,7 +743,7 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
       }
     }
     printShmemMessageAfterRoutine(r, impl, sig);
-  } else if (upc_wrapper) {
+  } else if (upc) {
     printUPCMessageBeforeRoutine(r, impl, sig);
     if (!isVoid) {
       impl<<"  retval  =";
@@ -748,7 +774,8 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
       }
     }
   }
-  impl<<"  TAU_PROFILE_STOP(t);"<<endl;
+
+  impl << "  TAU_PROFILE_STOP(t);" << endl;
 
   if (runtime == RUNTIME_INTERCEPT) {
     impl<<"  }"<<endl;
@@ -844,10 +871,10 @@ void generateMakefile(string const & package, string const & outFileName,
   char const * compiler_name = "$(TAU_CC)";
   char const * upcprefix = "";
 
-  //if (cray_upc) {
-  //  compiler_name = "$(TAU_UPCC)";
-  //  upcprefix = "$(UPCC_C_PREFIX)";
-  //}
+  if (upc == GNU) {
+    compiler_name = "$(TAU_UPCC)";
+    upcprefix = "$(UPCC_C_PREFIX)";
+  }
 
   char buffer[1024];
   sprintf(buffer, "%s_wrapper/%s", libname.c_str(), makefileName);
@@ -858,6 +885,7 @@ void generateMakefile(string const & package, string const & outFileName,
       makefile << "include ${TAU_MAKEFILE}\n"
                << "CC=" << compiler_name << "\n"
                << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE) $(TAU_MPI_INCLUDE) -I..\n"
+               << "EXTRA_FLAGS=\n" << 
                << "\n"
                << "AR=ar\n"
                << "ARFLAGS=rcv\n"
@@ -875,6 +903,7 @@ void generateMakefile(string const & package, string const & outFileName,
       makefile << "include ${TAU_MAKEFILE}\n"
                << "CC=" << compiler_name << " \n"
                << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE) $(TAU_MPI_INCLUDE)  -I.. -fPIC\n"
+               << "EXTRA_FLAGS=\n" << 
                << "\n"
                << "lib" << package << "_wrap.so: " << package << "_wrap.o \n"
                << "\t$(CC) $(TAU_SHFLAGS) $@ $< $(TAU_SHLIBS) -ldl\n"
@@ -890,6 +919,7 @@ void generateMakefile(string const & package, string const & outFileName,
                << "CC=" << compiler_name << " \n"
                << "ARFLAGS=rcv \n"
                << "CFLAGS=$(TAU_DEFS) " << extradefs << " $(TAU_INCLUDE)  $(TAU_MPI_INCLUDE) -I..\n"
+               << "EXTRA_FLAGS=\n" << 
                << "\n"
                << "lib" << package << "_wrap.a: " << package << "_wrap.o \n"
                << "\t$(TAU_AR) $(ARFLAGS) $@ $< \n"
@@ -962,18 +992,24 @@ int main(int argc, char **argv)
       outFileNameSpecified = true;
     }
     else if (strcmp(argv[i], "--upc") == 0) {
-      upc_wrapper = true;
+      if(i == (argc - 1)) {
+        cout << "ERROR: --upc requires an argument" << endl;
+        exit(1);
+      }
+      char const * arg = argv[i+1];
+      if (strncmp(arg, "berkeley", 4) == 0) {
+        upc = BERKELEY;
+      } else if (strncmp(arg, "gnu", 4) == 0) {
+        upc = GNU;
+      } else if (strncmp(arg, "cray", 4) == 0) {
+        upc = CRAY;
+        extradefs = "$(TAU_UPC_COMPILER_OPTIONS)";
+      } else {
+        cout << "ERROR: invalid --upc argument: " << arg << endl;
+        exit(1);
+      } 
 #ifdef DEBUG
-      cout << "upc_wrapper = true" << endl;
-#endif /* DEBUG */
-    } 
-    else if (strcmp(argv[i], "--crayupc") == 0) {
-      upc_wrapper = true;
-      cray_upc = true;
-      extradefs = "$(TAU_UPC_COMPILER_OPTIONS)";
-#ifdef DEBUG
-      cout << "upc_wrapper = true" << endl;
-      cout << "cray_upc = true" << endl;
+      cout << "upc = " << upc << endl;
 #endif /* DEBUG */
     } 
     else if (strcmp(argv[i], "--shmem") == 0) {
@@ -1072,16 +1108,15 @@ int main(int argc, char **argv)
          << "#define TAU_SHMEM_TAGID_NEXT ((++tau_shmem_tagid_f) & 255)\n"
          << endl;
   }
-  if (upc_wrapper) {
-    impl //<< "extern size_t upc_threadof(upcr_shared_ptr_t a1);\n"
-         << "\n"
-         << "#pragma pupc off\n"
+  if (upc) {
+    impl << "#pragma pupc off\n"
          << "\n"
          << "#ifdef __BERKELEY_UPC__\n"
          << "#pragma UPCR NO_SRCPOS \n"
          << "#endif\n"
          << "\n"
-         << "static int tau_upc_tagid_f=0;\n"
+         << "static int tau_upc_node = -1;\n"
+         << "static int tau_upc_tagid_f = 0;\n"
          << "#define TAU_UPC_TAGID (tau_upc_tagid_f = (tau_upc_tagid_f & 255))\n"
          << "#define TAU_UPC_TAGID_NEXT ((++tau_upc_tagid_f) & 255)\n"
          << endl;
