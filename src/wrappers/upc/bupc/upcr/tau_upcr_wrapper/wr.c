@@ -13,6 +13,8 @@ static int tau_upc_tagid_f = 0;
 #define TAU_UPC_TAGID (tau_upc_tagid_f = (tau_upc_tagid_f & 255))
 #define TAU_UPC_TAGID_NEXT ((++tau_upc_tagid_f) & 255)
 
+void tau_totalnodes(int, int);
+
 #warning "TAU: Not generating wrapper for vararg function upcri_err"
 #warning "TAU: Not generating wrapper for vararg function upcri_errno"
 #warning "TAU: Not generating wrapper for vararg function upcri_gaserr"
