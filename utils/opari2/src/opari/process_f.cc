@@ -102,9 +102,10 @@ look_for( const string&              lowline,
 /**@brief Check if the line belonges to the header of a subroutine or function.
  *        After lines in the header, we ca insert our variable definitions.*/
 bool
-is_sub_unit_header( string& lowline, bool inHeader )
+is_sub_unit_header( string& lowline, bool inHeader, Language lang )
 {
     string      line;
+    string      lline;
     string      keyword;
     bool        result;
     static bool continuation = false;
@@ -115,9 +116,10 @@ is_sub_unit_header( string& lowline, bool inHeader )
     static bool inContains   = false;
 
     size_t pos;
-    pos = lowline.find_first_not_of( " \t" );
 
+    pos = lowline.find_first_not_of( " \t" );
     /*string is empty*/
+
     if ( pos == string::npos )
     {
         pos = 0;
@@ -127,6 +129,7 @@ is_sub_unit_header( string& lowline, bool inHeader )
     {
         line = lowline.substr( pos );
     }
+    lline = line;
     line.erase( remove_if( line.begin(), line.end(), isspace ), line.end() );
 
     //Set number of open brackets to 0 if new unit begins, since we might have missed
@@ -134,14 +137,21 @@ is_sub_unit_header( string& lowline, bool inHeader )
     if ( ( line.find( "program" ) == 0 )                               ||
          ( ( line.find( "module" ) == 0 ) && !inProgram )               ||
          ( ( line.find( "interface" ) == 0 ) && inModule )             ||
+         ( ( line.find( "abstractinterface" ) == 0 ) && inModule )             ||
          ( ( line.find( "contains" ) != string::npos ) && inModule )     ||
          ( line.find( "subroutine" ) == 0 )                            ||
          ( ( line.find( "function" ) == string::npos )   &&
            !inHeader                                &&
-           ( ( line.find( "=" ) >= line.find( "!" ) )             ||
+           ( ( line.find( "=" ) > line.find( "!" ) )             ||
              ( line.find( "=" ) > line.find( "kind" ) ) ) ) )
     {
         openbrackets = 0;
+    }
+
+    //Check if we are in Fortran77 and have a character in column 6
+    if ( ( lang & L_F77 ) && lowline[ 5 ] != ' ' )
+    {
+        continuation = true;
     }
 
     //Check if we enter a program block
@@ -149,7 +159,7 @@ is_sub_unit_header( string& lowline, bool inHeader )
     //Check if we enter a module block
     inModule = !inProgram && ( inModule || ( line.find( "module" ) == 0 ) );
     //Check if we enter an interface block
-    inInterface = inModule && ( inInterface || ( line.find( "interface" ) == 0 ) );
+    inInterface = inModule && ( inInterface || ( line.find( "interface" ) == 0 ) || ( line.find( "abstractinterface" ) == 0 ) );
     //Check if we enter a contains block
     inContains = inModule && ( inContains || ( line.find( "contains" ) != string::npos ) );
 
@@ -158,13 +168,25 @@ is_sub_unit_header( string& lowline, bool inHeader )
     //we can insert variable definitions, these keywords are:
     //program, function, result, subroutine, save, implicit, parameter,
     //and use
-    if ( ( ( ( line.find( "program" ) == 0 )                ||
-             ( line.find( "function" )   != string::npos )  ||
-             ( line.find( "subroutine" ) != string::npos )  ||
-             ( line.find( "save" )     == 0 && inHeader )   ||
-             ( line.find( "result" )   == 0 && inHeader )   ||
-             ( line.find( "implicit" ) == 0 && inHeader )   ||
-             ( line.find( "use" )      == 0 && inHeader )   ||
+    if ( ( ( ( line.find( "program" ) == 0 )                                    ||
+             ( ( lline.find( "function" )   != string::npos )           &&
+               !( lline.length() >= ( lline.find( "function" ) + 8 )        &&
+                  ( isalnum( lline[ lline.find( "function" ) + 8 ] ) ||
+                    ( lline[ lline.find( "function" ) + 8 ] == '_' ) ) )     &&
+               !( ( lline.find( "function" ) != 0 )                       &&
+                  ( isalnum( lline[ lline.find( "function" ) - 1 ] ) ) ||
+                  ( lline[ lline.find( "function" ) - 1 ] == '_' ) ) )             ||
+             ( ( lline.find( "subroutine" )   != string::npos )                 &&
+               !( lline.length() >= ( lline.find( "subroutine" ) + 10 )     &&
+                  ( isalnum( lline[ lline.find( "subroutine" ) + 10 ] ) ||
+                    ( lline[ lline.find( "subroutine" ) + 10 ] == '_' ) ) )  &&
+               !( ( lline.find( "subroutine" ) != 0 )                     &&
+                  ( isalnum( lline[ lline.find( "subroutine" ) - 1 ] ) ) ||
+                  ( lline[ lline.find( "subroutine" ) - 1 ] == '_' ) ) )           ||
+             ( line.find( "save" )     == 0 && inHeader )                       ||
+             ( line.find( "result" )   == 0 && inHeader )                       ||
+             ( line.find( "implicit" ) == 0 && inHeader )                       ||
+             ( line.find( "use" )      == 0 && inHeader )                       ||
              ( line.find( "include" )  == 0 && inHeader ) )     &&
            line.find( "endfunction" )   == string::npos         &&
            line.find( "endsubroutine" ) == string::npos         &&
@@ -172,6 +194,7 @@ is_sub_unit_header( string& lowline, bool inHeader )
            line.find( "endprogram" )    == string::npos         &&
            ( ( line.find( "=" ) >= line.find( "!" )             ||
                line.find( "=" ) > line.find( "kind" )           ||
+               line.find( "=" ) > line.find( "only:" )           ||
                line.find( "=" ) == ( line.find( ">" ) - 1 ) ) ) )     ||
          ( line.find( "#" ) == 0 && inHeader )                  ||
          ( line.find( "&" ) == 0 && inHeader )                  ||
@@ -197,7 +220,7 @@ is_sub_unit_header( string& lowline, bool inHeader )
     //Check if we leave an contains block
     inContains = inContains && line.find( "endmodule" ) == string::npos;
 
-    if ( line[ line.length() - 1 ] == '&' )
+    if ( line[ line.length() - 1 ] == '&' || line.find( "&!" ) != string::npos )
     {
         continuation = true;
     }
@@ -232,6 +255,14 @@ is_sub_unit_header( string& lowline, bool inHeader )
             break;
         }
     }
+    /*
+       static bool continuation = false;
+       static int  openbrackets = 0;
+       static bool inProgram    = false;
+       static bool inModule     = false;
+       static bool inInterface  = false;
+       static bool inContains   = false;
+     */
     return result;
 }
 
@@ -518,7 +549,7 @@ test_and_insert_ompenddo( ostream &     os,
                 pragma += " ";
             }
             pragma   += "!$omp end do ";
-            newPragma = new OMPragmaF( infile, lineno, ppos + 6, pragma, pomp, a );
+            newPragma = new OMPragmaF( infile, lineno - 1, ppos + 6, pragma, pomp, a );
             process_pragma( newPragma, os );
             //	lineno++;
         }
@@ -536,7 +567,7 @@ test_and_insert_ompenddo( ostream &     os,
                 pragma += " ";
             }
             pragma   += "!$omp end parallel do ";
-            newPragma = new OMPragmaF( infile, lineno, ppos + 6, pragma, pomp, a );
+            newPragma = new OMPragmaF( infile, lineno - 1, ppos + 6, pragma, pomp, a );
             process_pragma( newPragma, os );
         }
     }
@@ -579,7 +610,7 @@ del_strings_and_comments( string & lowline,
             /* -- zero out partial line F90 comments -- */
             for (; i < lowline.size(); ++i )
             {
-                lowline[ i ] = 'C';
+                lowline[ i ] = ' ';
             }
             break;
         }
@@ -681,7 +712,6 @@ process_fortran( istream &   is,
 
     while ( getline( is, line ) )
     {
-        //                  std::cerr << line << '\n';
         /* workaround for bogus getline implementations */
         if ( line.size() == 1 && line[ 0 ] == '\0' )
         {
@@ -888,7 +918,7 @@ process_fortran( istream &   is,
             {
                 // really normal line
                 del_strings_and_comments( lowline, inString );
-                if ( is_sub_unit_header( lowline, inHeader ) )
+                if ( is_sub_unit_header( lowline, inHeader, lang ) )
                 {
                     inHeader = true;
                 }

@@ -1,3 +1,59 @@
+------------------- Released version 1.0.4 ---------------------------
+
+- Provide correct region line numbers also for lazy initialization
+  during runtime. Previosly the region end line was always 0 for lazy
+  initialization.
+
+- Improved region end line number handling in conjunction with omitted
+  Fortran '!$omp end do' or '!$omp end parallel do' directives.
+
+- Fix invalid insertion of <file>.opari.inc in Fortran77 codes with
+  arbitrary continuation line characters in column 6.
+
+- Fix invalid insertion of <file>.opari.inc in Fortran codes in
+  conjunction with subroutine calls that distribute their arguments
+  over several lines.
+
+------------------- Released version 1.0.3 ---------------------------
+
+- Prevent OPARI2 from instrumenting Fortran 'abstract interfaces'.
+
+- Fix invalid insertion of <file>.opari.inc in conjunction with
+  Fortran 'USE' statements that contain line continuations.
+
+- Fix invalid insertion of <file>.opari.inc in conjunction with
+  user-defined operators containing '=' in Fortran 'USE' statements.
+
+- Fix instrumentation of .c files that produce a linker/mangling error
+  when compiled with a C++ compiler.
+
+- Support for out-of-place a.k.a. VPATH builds. Generate
+  <file>.opari.inc in the directory of the output file.
+
+- Fix instrumentation bug (C++ files only) where IBM and PGI compilers
+  expect threadprivate variables in different locations.
+
+------------------- Released version 1.0.2 ---------------------------
+
+- Renaming of the configure related variable LD_FLAGS_FOR_BUILD to 
+  LDFLAGS_FOR_BUILD for consistency.
+
+- Renaming of the installed script pomp2_parse_init_regions.awk to 
+  pomp2-parse-init-regions.awk for consistency.
+
+- In Fortran, improved parsing of function and subroutine keywords.
+
+- In in-place builds, the [dist]clean targets accidentially removed
+  files. 
+
+- Create task events only for tasks that actually get created.
+
+- In Fortran, added `integer ( kind=4 )' to all integer variables 
+  instrumented by opari2.
+
+- In Fortran, continuation lines ending with comments were not 
+  detected as continuation lines (Ticket 77).
+
 ------------------- Released version 1.0.1 ---------------------------
 
 - In Fortran, continued format descriptors resulted in invalid include

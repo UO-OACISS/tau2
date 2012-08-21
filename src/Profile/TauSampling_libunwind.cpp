@@ -3,6 +3,10 @@
 #include "Profile/TauSampling_unwind.h"
 #include <ucontext.h>
 
+// Moved from header file
+using namespace std;
+
+
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
 
@@ -28,11 +32,14 @@ void show_backtrace_unwind(void *pc) {
   }
 }
 
-void printStack(vector<unsigned long> *pcStack) {
+void printStack(unsigned long *pcStack) {
+  if (pcStack == NULL) {
+    return;
+  }
+  int length = pcStack[0];
   printf("PC Stack: ");
-  vector<unsigned long>::iterator it;
-  for (it = pcStack->begin(); it != pcStack->end(); it++) {
-    printf("%p ", (void *)(*it));
+  for (int i=0; i<length; i++) {
+    printf("%p ", pcStack[i+1]);
   }
   printf("end\n");
 }
@@ -122,19 +129,19 @@ void Tau_sampling_unwindTauContext(int tid, void **addresses) {
   }
 }
 
-extern "C" FunctionInfo *findTopContext(Profiler *currentProfiler, void *address);
-vector<unsigned long> *Tau_sampling_unwind(int tid, Profiler *profiler,
-					   void *pc, void *context) {
+void Tau_sampling_unwind(int tid, Profiler *profiler,
+			 void *pc, void *context, unsigned long pcStack[]) {
+  // stack points to valid array of max length TAU_SAMP_NUM_ADDRESSES + 1.
   unw_cursor_t cursor;
   unw_context_t uc;
   unw_word_t unwind_ip, sp;
   unw_word_t curr_ip;
 
-  vector<unsigned long> *pcStack = new vector<unsigned long>();
-  int unwindDepth = 0;
+  int unwindDepth = 1; // We need to include the PC in unwind depth calculations
   int depthCutoff = TauEnv_get_ebs_unwind_depth();
 
-  pcStack->push_back((unsigned long)pc);
+  int index = 1;
+  pcStack[index++] = (unsigned long)pc;
 
   // Commence the unwind
 
@@ -147,14 +154,14 @@ vector<unsigned long> *Tau_sampling_unwind(int tid, Profiler *profiler,
     unw_get_reg(&cursor, UNW_REG_IP, &unwind_ip);
     if ((unwindDepth >= depthCutoff) ||
 	(unwind_cutoff(profiler->address, (void *)unwind_ip))) {
-      pcStack->push_back((unsigned long)unwind_ip);
+      pcStack[index++] = (unsigned long)unwind_ip;
       unwindDepth++;  // for accounting only
       break; // always break when limit or cutoff is reached.
     } // Cut-off or limit check conditional
-    pcStack->push_back((unsigned long)unwind_ip);
+    pcStack[index++] = (unsigned long)unwind_ip;
     unwindDepth++;
   }
-  return pcStack;
+  pcStack[0] = index-1;
 }
 
 #endif /* TAU_USE_LIBUNWIND */

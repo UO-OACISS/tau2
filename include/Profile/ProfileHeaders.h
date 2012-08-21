@@ -23,13 +23,20 @@
 #include <utility>
 #include <list>
 #include <map>
-using std::string;
+
+// These using statements are dangerous and will break user codes when
+// conditions are right.  Stay safe! Keep using statements in cpp files,
+// use typedef to shorten names, or just type the extra "std::".
+//using std::string;
 #define TAU_STD_NAMESPACE std::
 #ifdef TAU_LIBRARY_SOURCE
-using std::vector;
-using std::pair;
-using std::list;
-using std::map;
+// These using statements are dangerous and will break user codes when
+// conditions are right.  Stay safe! Keep using statements in cpp files,
+// use typedef to shorten names, or just type the extra "std::".
+//using std::vector;
+//using std::pair;
+//using std::list;
+//using std::map;
 #endif /* TAU_LIBRARY_SOURCE */
 #else
 #define __BOOL_DEFINED 
@@ -45,7 +52,10 @@ using std::map;
 #include <typeinfo.h>
 #else /* RTTI */
 #include <typeinfo>
-using std::type_info;
+// These using statements are dangerous and will break user codes when
+// conditions are right.  Stay safe! Keep using statements in cpp files,
+// use typedef to shorten names, or just type the extra "std::".
+//using std::type_info;
 /* This is by default */ 
 #endif /* RTTI */
 #endif /* NO_RTTI */

@@ -34,6 +34,9 @@
  *              Peter Philippen <p.philippen@fz-juelich.de>
  *
  *  @brief      This file contains fortran wrapper functions.*/
+#ifndef _OPENMP
+#define _OPENMP
+#endif /* _OPENMP */
  extern "C"{
 
 #include <config.h>
@@ -43,6 +46,7 @@
 #include <string.h>
 #include <opari2/pomp2_lib.h>
 #include "pomp2_fwrapper_def.h"
+#include <omp.h>
 
 /*
  * Fortran wrappers calling the C versions

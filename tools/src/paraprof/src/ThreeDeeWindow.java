@@ -729,14 +729,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 				vm = ThreeDeeGeneralPlotUtils.getEvaluation(
 						rankIndex,
 						numThreads,
-						thread.getNodeID(),
-						thread.getContextID(),
-						thread.getThreadID(),
-						ppTrial.getDataSource().getNumberOfNodes(),
-						ppTrial.getDataSource().getNumberOfContexts(
-								thread.getNodeID()),
-						ppTrial.getDataSource().getNumberOfThreads(
-								thread.getNodeID(), thread.getContextID()),
+						thread,
+						ppTrial,
 						topoVals, varMins, varMaxs, varMeans, settings
 								.getCustomTopoAxes(), expressions);
 
@@ -834,8 +828,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 				tsizes = tempsizes;
 			}
 			
-			threadTopo = new Thread[tsizes[0]][tsizes[1]][tsizes[2]];
-			
+			threadTopo = new Thread[Math.max(1,tsizes[0])][Math.max(1,tsizes[1])][Math.max(1,tsizes[2])];
 			
 			for (int i = 0; i < 3; i++) {
 				if(!isBGQ)
@@ -878,7 +871,10 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 					
 				}
 				
-				threadTopo[(int)values[threadIndex][0]][(int)values[threadIndex][2]][(int)values[threadIndex][1]]=thread;
+				int dex0=(int)values[threadIndex][0];
+				int dex1=(int)values[threadIndex][1];
+				int dex2=(int)values[threadIndex][2];
+				threadTopo[dex0][dex1][dex2]=thread;
 
 				
 				float color = getColorValue(thread);

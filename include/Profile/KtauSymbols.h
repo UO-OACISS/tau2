@@ -25,28 +25,35 @@
 #include <string>
 #include <map>
 
-using namespace std;
+// Putting "using namespace" statements in header files can create ambiguity
+// between user-defined symbols and std symbols, creating unparsable code
+// or even changing the behavior of user codes.  This is also widely considered
+// to be bad practice.  Here's a code PDT can't parse because of this line:
+//   EX: #include <complex>
+//   EX: typedef double real;
+//
+//using namespace std;
 
 class KtauSymbols {
 
 	public:
 	//cons / dest
-	KtauSymbols(const string& path);
+	KtauSymbols(const std::string& path);
 	~KtauSymbols();
 
-	string& MapSym(unsigned int);
-	unsigned long MapRevSym(string);
+	std::string& MapSym(unsigned int);
+	unsigned long MapRevSym(std::string);
 	int ReadKallsyms();
 
 	private:
 	//stl map to hold the addr-to-name lookup data
-	typedef map<unsigned int, string> KERN_SYMTAB;
+	typedef std::map<unsigned int, std::string> KERN_SYMTAB;
 	KERN_SYMTAB table;
-	typedef map<string, unsigned long> KERN_REV_SYMTAB;
+	typedef std::map<std::string, unsigned long> KERN_REV_SYMTAB;
 	KERN_REV_SYMTAB rev_table;
 
 	//file-path to the kernel-symbol info
-	const string filepath;
+	const std::string filepath;
 };
 
 #endif /* _KTAUSYMBOLS_H_  */

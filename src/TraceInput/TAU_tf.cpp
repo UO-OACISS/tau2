@@ -17,6 +17,11 @@
 #include <TAU_tf_headers.h>
 
 #ifdef __cplusplus
+
+// Moved from header file
+using namespace std;
+
+
 extern "C" {
 #endif /* __cplusplus */
 

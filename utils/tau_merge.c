@@ -70,11 +70,19 @@ int dynamic = TRUE ; /* by default events.<node>.edf files exist */
 int dontblock = FALSE; /* by default, block waiting for records, online merge*/
 char *mergededffile = NULL; /* default merged EDF file name */
 
+#if (defined(TAU_MPC) && defined(__cplusplus))
+#include <iostream>
+using namespace std; /* needed for __mpc_user_main */
+extern "C" {
+#endif /* TAU_MPC && __cplusplus */
 int open_edf_file(char *prefix, int nodeid, int prefix_is_filename);
 int parse_edf_file(int node);
 int store_merged_edffile(char *filename);
 const char *get_event_name(int gid);
 int GID(int node, long localEventId); 
+#if (defined(TAU_MPC) && defined(__cplusplus))
+}
+#endif /* TAU_MPC && __cplusplus */
 
 
 struct trcdescr

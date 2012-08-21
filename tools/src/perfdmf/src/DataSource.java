@@ -32,15 +32,16 @@ public abstract class DataSource {
 
     public static final int PPK = 0;
     public static final int TAUPROFILE = 1;
-    public static final int DYNAPROF = 2;
-    public static final int MPIP = 3;
-    public static final int HPM = 4;
-    public static final int GPROF = 5;
-    public static final int PSRUN = 6;
-    public static final int PPROF = 7;
-    public static final int CUBE = 8;    // using CubeReader.jar from Cube package
-    public static final int HPCTOOLKIT = 9;
-    public static final int SNAP = 10;
+    public static final int SNAP = 2;
+    public static final int DYNAPROF = 3;
+    public static final int MPIP = 4;
+    public static final int HPM = 5;
+    public static final int GPROF = 6;
+    public static final int PSRUN = 7;
+    public static final int PPROF = 8;
+    public static final int CUBE = 9;    // using CubeReader.jar from Cube package
+    public static final int HPCTOOLKIT = 10;
+
     public static final int OMPP = 11;
     public static final int PERIXML = 12;
     public static final int GPTL = 13; // General Purpose Timing Library - Jim Rosinski
@@ -53,8 +54,8 @@ public abstract class DataSource {
     public static final String FILE_TYPE_INDEX = "File Type Index";
     public static final String FILE_TYPE_NAME = "File Type Name";
 
-    public static String formatTypeStrings[] = { "ParaProf Packed Profile", "Tau profiles", "Dynaprof", "MpiP", "HPMToolkit",
-            "Gprof", "PSRun", "Tau pprof.dat", "Cube", "HPCToolkit", "TAU Snapshot", "ompP", "PERI-XML",
+    public static String formatTypeStrings[] = { "ParaProf Packed Profile", "TAU profiles", "TAU Snapshot", "Dynaprof", "MpiP", "HPMToolkit",
+            "Gprof", "PSRun", "Tau pprof.dat", "Cube", "HPCToolkit", "ompP", "PERI-XML",
             "General Purpose Timing Library (GPTL)", "Paraver", "IPM", "Google PerfTools", "Cube 3 (Old parser)" };
 
     private static boolean meanIncludeNulls = true;
@@ -753,24 +754,24 @@ public abstract class DataSource {
 
                     // get/create the userEventProfile for mean
                     UserEventProfile meanProfile = meanData.getUserEventProfile(ue);
-                    if (meanProfile == null) {
+                    //if (meanProfile == null) {
                         meanProfile = new UserEventProfile(ue, numSnapshots);
                         meanData.addUserEventProfile(meanProfile);
-                    }
+                    //}
 
                     // get/create the userEventProfile for total
                     UserEventProfile totalProfile = totalData.getUserEventProfile(ue);
-                    if (totalProfile == null) {
+                    //if (totalProfile == null) {
                         totalProfile = new UserEventProfile(ue, numSnapshots);
                         totalData.addUserEventProfile(totalProfile);
-                    }
+                   // }
 
                     // get/create the userEventProfile for stddev
                     UserEventProfile stddevProfile = stddevData.getUserEventProfile(ue);
-                    if (stddevProfile == null) {
+                   // if (stddevProfile == null) {
                         stddevProfile = new UserEventProfile(ue, numSnapshots);
                         stddevData.addUserEventProfile(stddevProfile);
-                    }
+                   // }
 
                     numProfiles[ue.getID()]++;
 

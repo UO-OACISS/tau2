@@ -197,22 +197,22 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   //         while in the middle of some other malloc call.
 #ifndef TAU_WINDOWS
   for (int i=0; i<TAU_MAX_THREADS; i++) {
-    pcHistogram[i] = NULL;
+    pathHistogram[i] = NULL;
+    // create structure only if EBS is required.
     if (TauEnv_get_ebs_enabled()) {
-      // create structure only if EBS is required.
-      /* *CWL* Pathscale compilers on Cray XE6 does not like this form
-	 of instantiating the data. */
-#ifndef TAU_PATHSCALE
-      //      pcHistogram[i] = new map<unsigned long, unsigned int, std::less<unsigned long>, SS_ALLOCATOR< std::pair<const unsigned long, unsigned int> > >();
-      pcHistogram[i] = new map< vector<unsigned long>, unsigned int, 
-	std::less< vector<unsigned long> >, 
-	SS_ALLOCATOR< std::pair<const vector<unsigned long>, unsigned int> > >();
-#else
-      pcHistogram[i] = new map< vector<unsigned long>, unsigned int>();
-#endif /* TAU_PATHSCALE */
+
+      // Necessary for signal-reentrancy to ensure the mmap memory manager
+      //   is ready at this point.
+      Tau_MemMgr_initIfNecessary(); 
+
+      // Thread-safe, all (const char *) parameters. This check removes
+      //   the need to create and allocate memory for EBS post-processed
+      //   objects.
+      if (strstr(ProfileGroupName, "TAU_SAMPLE") == NULL) {
+	pathHistogram[i] = new TauPathHashTable<TauPathAccumulator>(i);
+      }
     }
   }
-  parentTauContext = NULL;
 
   // Initialization of CallSite discovery structures.
   isCallSite = false;
@@ -236,6 +236,16 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 #else
 #ifdef TAU_SCOREP
   string tau_silc_name(string(Name)+" "+string(Type));
+if (strstr(ProfileGroupName, "TAU_PHASE") != NULL) {
+  FunctionId =  SCOREP_Tau_DefineRegion( tau_silc_name.c_str(),
+				   SCOREP_TAU_INVALID_SOURCE_FILE,
+				   SCOREP_TAU_INVALID_LINE_NO,
+				   SCOREP_TAU_INVALID_LINE_NO,
+				   SCOREP_TAU_ADAPTER_COMPILER,
+                                   SCOREP_TAU_REGION_PHASE
+				   );
+
+}else{
   FunctionId =  SCOREP_Tau_DefineRegion( tau_silc_name.c_str(),
 				   SCOREP_TAU_INVALID_SOURCE_FILE,
 				   SCOREP_TAU_INVALID_LINE_NO,
@@ -243,7 +253,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 				   SCOREP_TAU_ADAPTER_COMPILER,
 				   SCOREP_TAU_REGION_FUNCTION
 				   );
-
+}
 #endif /* TAU_SCOREP */
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
@@ -498,7 +508,7 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 }
 
 
-string *FunctionInfo::GetFullName() {
+char const * FunctionInfo::GetFullName() {
 
   if (FullName == NULL) {
     ostringstream ostr;
@@ -507,13 +517,8 @@ string *FunctionInfo::GetFullName() {
     } else {
       ostr << GetName() << ":GROUP:" << GetAllGroups();
     }
-    FullName = new string;
 
-    string tmpstr = ostr.str();
-    char *tmp = strdup(tmpstr.c_str());
-    tmp = Tau_util_removeRuns(tmp);
-    *FullName = tmp;
-
+    FullName = Tau_util_removeRuns(ostr.str().c_str());
   }
   return FullName;
 }
@@ -521,39 +526,35 @@ string *FunctionInfo::GetFullName() {
 /* EBS Sampling Profiles */
 
 #ifndef TAU_WINDOWS
-void FunctionInfo::addPcSample(vector<unsigned long> *pcStack, int tid) {
+void FunctionInfo::addPcSample(unsigned long *pcStack, int tid, double interval[TAU_MAX_COUNTERS]) {
   //  static int numSamples = 0;
   if (!TauEnv_get_ebs_enabled()) {
     // This should be an error! We'll ignore it for now!
     return;
   }
   // *CWL* - pcHistogram should never be NULL but ...
-  if (pcHistogram[tid] == NULL) {
-    /* *CWL* - Pathscale unhappiness ... */
-#ifndef TAU_PATHSCALE
-    pcHistogram[tid] = new map< vector<unsigned long>, unsigned int, 
-      std::less< vector<unsigned long> >, 
-      SS_ALLOCATOR< std::pair<const vector<unsigned long>, unsigned int> > >();
-#else
-    pcHistogram[tid] = new map< vector<unsigned long>, unsigned int>();
-#endif /* TAU_PATHSCALE */
+  if (pathHistogram[tid] == NULL) {
+    // *CWL* - For the use of the PathHash, we *cannot* initialize the
+    //         mmap memory manager here! That risks signal safety issues.
+    pathHistogram[tid] = new TauPathHashTable<TauPathAccumulator>(tid);
   }
-  map< vector<unsigned long>, unsigned int,
-    std::less< vector<unsigned long> >, 
-    SS_ALLOCATOR< std::pair<const vector<unsigned long>, unsigned int> > >::iterator it;
-  it = pcHistogram[tid]->find(*pcStack);
-  //  numSamples++;
-  if (it == pcHistogram[tid]->end()) {
-    /* *CWL* - Too verbose, use for debug only.
-      TAU_VERBOSE("FunctionInfo::addPcSample [tid=%d] inserting sample [%p]\n", 
-		tid, (unsigned long)pc);
-    */
-    pcHistogram[tid]->insert(std::pair<const vector<unsigned long>, unsigned int>(*pcStack,1));
+  // Add to the mmap-ed histogram. We start with a temporary conversion. This
+  //   becomes unnecessary once we stop using the vector.
+  //TAU_VERBOSE("TAU<%d,%d>: addPcSample()\n", RtsLayer::myNode(), RtsLayer::myThread());
+  TauPathAccumulator *accumulator;
+  accumulator = pathHistogram[tid]->get(pcStack);
+  if (accumulator == NULL) {
+    accumulator = new TauPathAccumulator(1,interval);
+    bool success = pathHistogram[tid]->insert(pcStack, *accumulator);
+    if (!success) {
+      fprintf(stderr,"addPcSample: Failed to insert sample.\n");
+    }
   } else {
-    // *CWL* PGI does NOT like the following code.
-    //    (*pcHistogram[tid])[pc] = it->second++;
-    (it->second)++;
-    //    printf("Num Samples = %d, local samples = %d\n", numSamples, it->second);
+    (accumulator->count)++;
+    int i;
+    for (i = 0; i < Tau_Global_numCounters; i++) {
+      accumulator->accumulator[i] += interval[i];
+    }
   }
 }
 #endif // TAU_WINDOWS

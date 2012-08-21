@@ -44,6 +44,8 @@ TAU_CUDA_CXX=g++
 #BGP#TAU_CXX_FE=g++ #ENDIF#
 #BGQ#TAU_CC_FE=gcc #ENDIF#
 #BGQ#TAU_CXX_FE=g++ #ENDIF#
+#MMIC#TAU_CXX_FE=g++ #ENDIF#
+#MMIC#TAU_CC_FE=gcc #ENDIF#
 #CATAMOUNT#TAU_CC_FE=gcc #ENDIF#
 #CATAMOUNT#TAU_CC_FE=gcc #ENDIF#
 #CATAMOUNT#TAU_CXX_FE=g++ #ENDIF#
@@ -114,6 +116,7 @@ TAU_MPILIB_DIR=
 TAU_MPILIB_DIRLIB=
 TAU_MPI_NOWRAP_LIB=
 TAU_MPI_NOWRAP_FLIB=
+TAU_GASNET_DIR=
 FULL_CXX=
 FULL_CC=
 TAU_PREFIX_INSTALL_DIR=
@@ -171,26 +174,31 @@ UNWIND_EXTRAS=
 #######################################################################
 F90_ABI	= $(ABI) 
 #IBM64_FORTRAN#F90_ABI	     = -q64 		  #ENDIF#
+#MMIC#F90_ABI	     = -mmic  #ENDIF#
 #######################################################################
 
 ##############################################
 # UPC Flags 
 ##############################################
-#UPCC#UPCC_C_PREFIX=-Wc,#ENDIF#
-#UPCC#UPCC_LINK_PREFIX=-Wl,#ENDIF#
-#UPCC#TAU_UPCC= upcc $(UPCC_C_PREFIX)-fPIC "-inst-toolname=gasp-tau" -inst -network=$(UPCNETWORK) #ENDIF#
-#GNU_UPC#TAU_UPCC= upc $(UPCC_C_PREFIX)-fPIC -inst #ENDIF#
 
-#UPCC#TAU_GASP_O=TauGASP.o #ENDIF#
-#UPCC#TAU_GASPU_O=TauGASPU.o #ENDIF#
-#GNU_UPC#TAU_GASP_O=TauGASP.o #ENDIF#
-#GNU_UPC#TAU_GASPU_O=TauGASPU.o #ENDIF#
+#BUPC#UPCC_C_PREFIX=-Wc,#ENDIF#
+#BUPC#UPCC_LINK_PREFIX=-Wl,#ENDIF#
+#BUPC#TAU_UPCC=upcc -inst-toolname=gasp-tau -inst -network=$(UPCNETWORK) $(UPCC_C_PREFIX)-fPIC #ENDIF#
+#BUPC#TAU_GASP_O=TauGASP.o #ENDIF#
+#BUPC#TAU_GASPU_UPC=$(TAU_INC_DIR)/Profile/TauGASPU.upc #ENDIF#
+
+#GUPC#UPCC_C_PREFIX= #ENDIF#
+#GUPC#UPCC_LINK_PREFIX=-Wl,#ENDIF#
+#GUPC#TAU_UPCC=upc -fupc-instrument -fupc-debug -fPIC #ENDIF#
+#GUPC#TAU_GASP_O=TauGASP.o #ENDIF#
+#####GUPC#TAU_GASPU_UPC=$(TAU_INC_DIR)/Profile/TauGASPU.upc #ENDIF#
+
 ############# Standard Defines ##############
 TAU_CC = $(CONFIG_CC) $(ABI) $(ISA)
 TAU_CXX = $(CONFIG_CXX) $(ABI) $(ISA)
 TAU_RUN_CC = $(FULL_CC) $(ABI) $(ISA)
-#UPCC#TAU_RUN_CC = $(TAU_UPCC) #ENDIF#
-#GNU_UPC#TAU_RUN_CC = $(TAU_UPCC) #ENDIF#
+#BUPC#TAU_RUN_CC = $(TAU_UPCC) #ENDIF#
+#GUPC#TAU_RUN_CC = $(TAU_UPCC) #ENDIF#
 TAU_RUN_CXX = $(FULL_CXX) $(ABI) $(ISA)
 TAU_INSTALL = /bin/cp
 TAU_SHELL = /bin/sh
@@ -248,6 +256,7 @@ TAU_OPENMP_OPTION =
 #COMPAQCXX_OPENMP#TAU_OPENMP_OPTION = -omp #ENDIF#
 #IBMXLC_OPENMP#TAU_OPENMP_OPTION = -qsmp=omp -qthreaded #ENDIF#
 #OPEN64_OPENMP#TAU_OPENMP_OPTION = -mp #ENDIF#
+#OPEN64_OPENMP#TAU_OPARI2_OPTION = --nodecl #ENDIF#
 #GUIDE#TAU_OPENMP_OPTION = #ENDIF#
 #PGIOPENMP#TAU_OPENMP_OPTION = -mp #ENDIF#
 #INTELOPENMP#TAU_OPENMP_OPTION = -openmp #ENDIF#
@@ -270,10 +279,10 @@ TAU_OPENMP_OPTION =
 #SC_GFORTRAN#TAU_F90         = scgfortran              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #SGI_FORTRAN#TAU_F90         = f90              $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #IBM_FORTRAN#TAU_F90         = xlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
-#BGP#TAU_F90         = /bgsys/drivers/ppcfloor/comm/bin/mpixlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#BGP#TAU_F90         = /bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #BGP_GFORTRAN#TAU_F90         = mpif90    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #BGQ#TAU_F90         = /bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
-#BGQ_GFORTRAN#TAU_F90         = mpif90    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#BGQ_GFORTRAN#TAU_F90         = /bgsys/drivers/ppcfloor/comm/gcc/bin/mpif90    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #BGL#TAU_F90         = blrts_xlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #IBM64_FORTRAN#TAU_F90       = xlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #IBMXLFAPPLE#TAU_F90       = xlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
@@ -298,9 +307,12 @@ TAU_OPENMP_OPTION =
 #INTEL_FORTRAN#TAU_F90       = efc 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #INTEL32_FORTRAN#TAU_F90     = ifc 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #INTELIFORT#TAU_F90     = ifort 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#MPIIFORT#TAU_F90       = mpiifort $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#FX#TAU_F90       = mpifrtpx $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #PATHSCALE_FORTRAN#TAU_F90     = pathf90         $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #SC_PATHSCALE#TAU_F90     = scpathf95         $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #OPEN64ORC_FORTRAN#TAU_F90     = orf90         $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#OPEN64ORC_FORTRAN#TAU_F90     = openf90         $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #NEC_FORTRAN#TAU_F90         = f90 	        $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #CRAYCNL#TAU_F90         = ftn            $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #ZEPTO_GFORTRAN#TAU_F90         = /bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gfortran    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
@@ -335,8 +347,11 @@ TAU_F77 = $(TAU_F90)
 #NORTTI#PROFILEOPT9            = -DNO_RTTI             #ENDIF#
 #RTTI#PROFILEOPT9              = -DRTTI                #ENDIF#
 #USE_CC#PROFILEOPT10           = -DTAU_DOT_H_LESS_HEADERS #ENDIF#
+#CLANG#PROFILEOPT10           = -DTAU_CLANG -DTAU_DOT_H_LESS_HEADERS -fPIC #ENDIF#
 #CRAYCNL_SHARED#PROFILEOPT10           = -DTAU_DOT_H_LESS_HEADERS -fPIC #ENDIF#
 #GNU#PROFILEOPT10              = -DTAU_GNU -DTAU_DOT_H_LESS_HEADERS #ENDIF#
+#MPC#PROFILEOPT10              = -DTAU_MPC -DTAU_DOT_H_LESS_HEADERS -DTAU_MPI_F_STATUSES_IGNORE_ABSENT -fPIC #ENDIF#
+#INTEL12FIX#PROFILEOPT10              = -DTAU_INTEL12 -DTAU_DOT_H_LESS_HEADERS #ENDIF#
 #CRAYXMT#PROFILEOPT10              = -DTAU_CRAYXMT -DTAU_DOT_H_LESS_HEADERS #ENDIF#
 #APPLECXX#PROFILEOPT10         = -DTAU_GNU  -DTAU_DOT_H_LESS_HEADERS -fPIC #ENDIF#
 #SOL2CC#PROFILEOPT10           = -DTAU_SOL2CC  -DTAU_DOT_H_LESS_HEADERS #ENDIF#
@@ -381,7 +396,8 @@ TAU_F77 = $(TAU_F90)
 #PGI#PROFILEOPT19  	       = -DTAU_DOT_H_LESS_HEADERS   -fPIC #ENDIF#
 #APPLEPGI#PROFILEOPT19  	       = -DTAU_DOT_H_LESS_HEADERS   -DTAU_APPLE_PGI #ENDIF#
 #ACC#PROFILEOPT19  	       = -AA +z -DTAU_DOT_H_LESS_HEADERS -DTAU_HPUX #ENDIF#
-#FUJITSU#PROFILEOPT19  	       = -DFUJITSU -DTAU_DOT_H_LESS_HEADERS   #ENDIF#
+#FUJITSU#PROFILEOPT19  	       = -DTAU_FUJITSU -DTAU_DOT_H_LESS_HEADERS   #ENDIF#
+#FX#PROFILEOPT19  	       = -Xg -DTAU_FUJITSU -DTAU_DOT_H_LESS_HEADERS -fPIC  #ENDIF#
 #KAINOEX#PROFILEOPT20  	       = --no_exceptions   #ENDIF#
 #SGICCNOEX#PROFILEOPT20  	       = -LANG:exceptions=off  #ENDIF#
 #HPGNU#PROFILEOPT21	       = -fPIC #ENDIF#
@@ -397,9 +413,11 @@ TAU_F77 = $(TAU_F90)
 #JAVA#PROFILEOPT23	       = -DJAVA 		#ENDIF#
 #JVMTI#PROFILEOPT23	       = -DJAVA -DTAU_JVMTI     #ENDIF#
 PROFILEOPT24 =
-#JAVA#PROFILEOPT25 = -I$(JDKDIR)/include -I$(JDKDIR)/include/$(JDKARCH) #ENDIF#
+#JAVA#PROFILEOPT25 = -I$(JDKDIR)/include -I$(JDKDIR)/include/$(JDKARCH) -I$(JDKDIR)/Headers#ENDIF#
 #MPI#PROFILEOPT26 = -DTAU_MPI -DTAU_UNIFY #ENDIF#
 #MPI_THREADED#PROFILEOPT26 = -DTAU_MPI -DTAU_UNIFY -DTAU_MPI_THREADED #ENDIF#
+JDKBINDIR = $(JDKDIR)/bin
+#APPLECXX#JDKBINDIR = $(JDKDIR)/Commands#ENDIF#
 
 #PGIOPENMP#TAU_OPENMP_EXTRA_DEFS = -U_RWSTD_MULTI_THREAD -U_REENTRANT #ENDIF#
 #OPENMP#PROFILEOPT27 = $(TAU_OPENMP_OPTION) $(TAU_OPENMP_EXTRA_DEFS) -DTAU_OPENMP#ENDIF#
@@ -423,7 +441,8 @@ PROFILEOPT24 =
 #VAMPIRTRACE#PROFILEOPT36	       = -DTAU_VAMPIRTRACE $(VAMPIRTRACEINCS) $(TAU_VAMPIRTRACEOPTS)#ENDIF#
 #PROFILECALLPATH#PROFILEOPT36  = -DTAU_CALLPATH #ENDIF#
 #PROFILEPHASE#PROFILEOPT36  = -DTAU_CALLPATH -DTAU_PROFILEPHASE#ENDIF#
-#SCOREP#PROFILEOPT36	       = -DTAU_SILC -DTAU_SCOREP $(SCOREPINCS) #ENDIF#
+#PROFILEPHASE#SCOREPPROFILE= -DTAU_CALLPATH -DTAU_PROFILEPHASE#ENDIF#
+#SCOREP#PROFILEOPT36	       = -DTAU_SILC -DTAU_SCOREP $(SCOREPINCS) $(SCOREPPROFILE)#ENDIF#
 #PYTHON#PROFILEOPT37  = -I$(PYTHON_INCDIR) #ENDIF#
 #NOCOMM#PROFILEOPT38  = -DTAU_NOCOMM #ENDIF#
 #SETNODE0#PROFILEOPT40  = -DTAU_SETNODE0 #ENDIF#
@@ -505,6 +524,7 @@ SDDF_DIR=
 #For F90 support for all platforms
 FWRAPPER	       = TauFMpi.o       
 #MPI2#MPI2EXTENSIONS	       = TauMpiExtensions.o       #ENDIF#
+#APPLECXX#MPI2EXTENSIONS	       =  #ENDIF#
 #CRAYX1CC#MPI2EXTENSIONS	       =        #ENDIF#
 
 #SGICOUNTERS#LEXTRA	       = -lperfex 	       #ENDIF#
@@ -518,6 +538,7 @@ FWRAPPER	       = TauFMpi.o
 #PAPI#TAU_CNL_PAPI_FLAGS =  $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a #ENDIF#
 #PAPI#TAU_CNL_PAPI_CRAYCC_FLAGS  = -L$(PAPIDIR)/$(PAPISUBDIR) -lpapi #ENDIF#
 #COMPINST_CRAYCC#TAU_CNL_PAPI_FLAGS  = $(TAU_CNL_PAPI_CRAYCC_FLAGS) #ENDIF#
+#CRAYCNL_PAPI_SHARED#TAU_CNL_PAPI_FLAGS  = $(TAU_CNL_PAPI_CRAYCC_FLAGS) #ENDIF#
 #CRAYCNL#LEXTRA  = $(TAU_CNL_PAPI_FLAGS) #ENDIF#
 #SOL2PAPI#LEXTRA	       = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a -lcpc #ENDIF#
 #IBMPAPI#LEXTRA  = $(PAPIDIR)/$(PAPISUBDIR)/libpapi.a -L/usr/lpp/pmtoolkit/lib -L/usr/pmapi/lib -lpmapi#ENDIF#
@@ -566,6 +587,7 @@ TAU_GCCLIB	= -lgcc_s
 #INTEL32_ON_64#TAU_GCCLIB	= -lgcc #ENDIF#
 #FREEBSD#TAU_GCCLIB	= -lgcc #ENDIF#
 #BGL#TAU_GCCLIB	= -lgcc #ENDIF#
+#BGQ#TAU_GCCLIB	= -lgcc #ENDIF#
 #GNU#TAU_FORTRANLIBS       = -L$(TAUGCCLIBDIR) $(TAUGCCLIBOPTS) -lstdc++ $(TAU_GCCLIB) #ENDIF#
 #OPEN64ORC_FORTRAN#TAU_FORTRANLIBS       = -lfortran -lffio #ENDIF#
 #PATHSCALE_FORTRAN#TAU_FORTRANLIBS       = -lpathfstart -lpathfortran #ENDIF#
@@ -576,28 +598,32 @@ TAU_GCCLIB	= -lgcc_s
 #GNU_GFORTRAN#TAU_FORTRANLIBS	       = -L$(TAUGFORTRANLIBDIR) -lgfortran -lgfortranbegin       #ENDIF#
 #SC_GFORTRAN#TAU_FORTRANLIBS	       = -lgfortran -lgfortranbegin       #ENDIF#
 #SGI_FORTRAN#TAU_FORTRANLIBS	       = -lfortran -lftn       #ENDIF#
-#USE_IBMXLC#TAU_IBM_FORTRANLIBS	       =  -bh:4 -bpT:0x10000000 -bpD:0x20000000 /lib/crt0.o -lxlf90 -lm -lc #ENDIF#
-#GNU#TAU_IBM_FORTRANLIBS	       =  -Wl,-bh:4 -Wl,-bpT:0x10000000 -Wl,-bpD:0x20000000 /lib/crt0.o -lxlf90 -lm -lc #ENDIF#
-#KAI#TAU_IBM_FORTRANLIBS	       =  --backend -bh:4 --backend -bpT:0x10000000 --backend -bpD:0x20000000 /lib/crt0.o -lxlf90 -lm -lc #ENDIF#
+#USE_IBMXLC#TAU_IBM_FORTRANLIBS	       =  -bh:4 -bpT:0x10000000 -bpD:0x20000000 /lib/crt0.o -lxlf90$(TAU_R) -lm -lc #ENDIF#
+#GNU#TAU_IBM_FORTRANLIBS	       =  -Wl,-bh:4 -Wl,-bpT:0x10000000 -Wl,-bpD:0x20000000 /lib/crt0.o -lxlf90$(TAU_R) -lm -lc #ENDIF#
+#KAI#TAU_IBM_FORTRANLIBS	       =  --backend -bh:4 --backend -bpT:0x10000000 --backend -bpD:0x20000000 /lib/crt0.o -lxlf90$(TAU_R) -lm -lc #ENDIF#
+#FX#TAU_FORTRANLIBS       = -Ntl_notrt -lmpi_f90 -lmpi_f77 #ENDIF#
 #IBM_FORTRAN#TAU_FORTRANLIBS = $(TAU_IBM_FORTRANLIBS) #ENDIF#
 
-#USE_IBMXLC#TAU_IBM64_FORTRANLIBS      =  -bh:4 -bpT:0x10000000 -bpD:0x20000000 -b64 /lib/crt0_64.o -lxlf90 -lm -lc #ENDIF#
-#GNU#TAU_IBM64_FORTRANLIBS      =  -Wl,-bh:4 -Wl,-bpT:0x10000000 -Wl,-bpD:0x20000000 -Wl,-b64 /lib/crt0_64.o -lxlf90 -lm -lc #ENDIF#
-#KAI#TAU_IBM64_FORTRANLIBS      =  --backend -bh:4 --backend -bpT:0x10000000 --backend -bpD:0x20000000 --backend -b64 /lib/crt0_64.o -lxlf90 -lm -lc #ENDIF#
+#USE_IBMXLC#TAU_IBM64_FORTRANLIBS      =  -bh:4 -bpT:0x10000000 -bpD:0x20000000 -b64 /lib/crt0_64.o -lxlf90$(TAU_R) -lm -lc #ENDIF#
+#GNU#TAU_IBM64_FORTRANLIBS      =  -Wl,-bh:4 -Wl,-bpT:0x10000000 -Wl,-bpD:0x20000000 -Wl,-b64 /lib/crt0_64.o -lxlf90$(TAU_R) -lm -lc #ENDIF#
+#KAI#TAU_IBM64_FORTRANLIBS      =  --backend -bh:4 --backend -bpT:0x10000000 --backend -bpD:0x20000000 --backend -b64 /lib/crt0_64.o -lxlf90$(TAU_R) -lm -lc #ENDIF#
 #IBM64_FORTRAN#TAU_FORTRANLIBS = $(TAU_IBM64_FORTRANLIBS) #ENDIF#
 #IBM64_FORTRAN#TAU_FORLIBDIR=lib64 #ENDIF#
 #IBM_FORTRAN#TAU_FORLIBDIR=lib #ENDIF#
 #BGL#TAU_FORLIBDIR=blrts_dev_lib #ENDIF#
 #BGP#TAU_FORLIBDIR=bglib #ENDIF#
 #BGQ#TAU_FORLIBDIR=bglib64 #ENDIF#
-#PPC64XLF#TAU_FORTRANLIBS = -L$(EXTRADIR)/$(TAU_FORLIBDIR) -lxlf90 -lxlfmath -lxl -lxlomp_ser #ENDIF#
-#IBM64LINUX_XLF#TAU_FORTRANLIBS = -L$(EXTRADIR)/$(TAU_FORLIBDIR) -lxlf90 -lxlfmath -lxl -lxlomp_ser #ENDIF#
-#BGL#TAU_FORTRANLIBS = -L$(EXTRADIR)/$(TAU_FORLIBDIR) -L$(EXTRADIR)/blrts_lib -lxlf90 -lxlfmath -lxl #ENDIF#
+#PPC64XLF#TAU_FORTRANLIBS = -L$(EXTRADIR)/$(TAU_FORLIBDIR) -lxlf90$(TAU_R) -lxlfmath -lxl -lxlomp_ser #ENDIF#
+#IBM64LINUX_XLF#TAU_FORTRANLIBS = -L$(EXTRADIR)/$(TAU_FORLIBDIR) -lxlf90$(TAU_R) -lxlfmath -lxl -lxlomp_ser #ENDIF#
+#BGL#TAU_FORTRANLIBS = -L$(EXTRADIR)/$(TAU_FORLIBDIR) -L$(EXTRADIR)/blrts_lib -lxlf90$(TAU_R) -lxlfmath -lxl #ENDIF#
+#BGP#TAU_IBM_FORTRANLIBS             =  -L/bgsys/drivers/ppcfloor/comm/xl/lib -lxlf90$(TAU_R) -lm -lc #ENDIF#
+#BGQ#TAU_IBM_FORTRANLIBS             =  -L/bgsys/drivers/ppcfloor/comm/xl/lib -lxlf90$(TAU_R) -lm -lc #ENDIF#
+
 
 #BGP#TAU_BGL_OMP_SERIAL= -lxlomp_ser #ENDIF#
 #OPENMP#TAU_BGL_OMP_SERIAL= #ENDIF#
 #BGP#TAU_OMP_SERIAL=$(TAU_BGL_OMP_SERIAL) #ENDIF#
-#BGP#TAU_FORTRANLIBS = -L$(EXTRADIR)/$(TAU_FORLIBDIR) -lxlf90 -lxlfmath $(TAU_OMP_SERIAL) #ENDIF#
+#BGP#TAU_FORTRANLIBS = -L$(EXTRADIR)/$(TAU_FORLIBDIR) -lxlf90$(TAU_R) -lxlfmath $(TAU_OMP_SERIAL) #ENDIF#
 #BGP_GFORTRAN#TAU_FORTRANLIBS = -lgfortran -lgfortranbegin -lm #ENDIF#
 
 #IBMXLFAPPLE#TAU_FORTRANLIBS	       = -L$(EXTRADIR)/lib -lxlf90 -lxlfmath -lxl      #ENDIF#
@@ -611,6 +637,7 @@ TAU_GCCLIB	= -lgcc_s
 #INTEL_FORTRAN#TAU_FORTRANLIBS         = -lcprts -lPEPCF90   #ENDIF#
 #INTEL32_FORTRAN#TAU_FORTRANLIBS       = -lcprts -lCEPCF90 -lF90 #ENDIF#
 #INTELIFORT#TAU_FORTRANLIBS       = -lcprts #ENDIF#
+#CRAYCNL#TAU_FORTRANLIBS = #ENDIF#
 #INTEL81FIX#TAU_FORTRANLIBS       = -L$(TAUGCCLIBDIR) $(TAUGCCLIBOPTS) -lstdc++ $(TAU_GCCLIB) -lcxa -lunwind -L$(EXTRADIR)/lib -lifcore $(EXTRADIR)/lib/for_main.o #ENDIF#
 #INTEL10FIX#TAU_FORTRANLIBS       = -L$(TAUGCCLIBDIR) $(TAUGCCLIBOPTS) -lstdc++ $(TAU_GCCLIB) -L$(IFORTLIBDIR) -lifcore $(IFORTLIBDIR)/for_main.o #ENDIF#
 #INTELCXXLIBICC#TAU_FORTRANLIBS       = -lcprts -L$(EXTRADIR)/lib -lifcore $(EXTRADIR)/lib/for_main.o #ENDIF#
@@ -650,6 +677,7 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 #PATHSCALE_FORTRAN#TAU_CXXLIBS		= -lstdc++ #ENDIF#
 #LAHEY_FORTRAN#TAU_CXXLIBS		= $(TAU_GNUCXXLIBS) -lc #ENDIF#
 #NAGWARE_FORTRAN#TAU_CXXLIBS		= $(TAUGCCSTDCXXLIBDIR)/libstdc++.a #ENDIF#
+#CLANG#TAU_CXXLIBS		= -lstdc++ -ldl #ENDIF#
 #PGI#TAU_CXXLIBS        	= -lstd -lC        #ENDIF#
 #APPLEPGI#TAU_CXXLIBS        	= -lstd -lcpp       #ENDIF#
 #PGI_FORTRAN#TAU_CXXLIBS_PGI_CNL       	= -L$(EXTRADIR)/lib -lstd -lC -lstdc++     #ENDIF#
@@ -664,6 +692,7 @@ TAU_MPICHCXX_CNL_SHARED_LIB = -lmpichcxx
 #CRAYCNL#TAU_CXXLIBS       	= $(TAU_CXXLIBS_PGI_CNL) $(TAU_CXXLIBS_PATHSCALE_CNL) $(TAU_CXXLIBS_GNU_CNL) $(TAU_CXXLIBS_INTEL_CNL) $(TAU_CXXLIBS_CRAY_CNL) #ENDIF#
 #CATAMOUNT#TAU_CXXLIBS       	= $(TAU_CXXLIBS_PGI_CNL) $(TAU_CXXLIBS_PATHSCALE_CNL) $(TAU_CXXLIBS_GNU_CNL)   #ENDIF#
 #CRAYX1CC#TAU_CXXLIBS        	= -L/opt/ctl/CC/CC/lib -lC       #ENDIF#
+#MPC#TAU_CXXLIBS        	= -lstdc++ #ENDIF#
 
 ## Set the gfortran options on BGP
 #BGP_GFORTRAN#TAU_CXXLIBS		= -lstdc++ -lm #ENDIF#
@@ -687,14 +716,21 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 #SUNCC#TAU_CXXLIBS   = $(TAU_CXXLIBS_SUNCC) #ENDIF#
 #SUNX86_64#TAU_CXXLIBS   = $(TAU_CXXLIBS_SUN_OPTERON) #ENDIF#
 #FUJITSU_SOLARIS#TAU_CXXLIBS               = -lstd -lstdm #ENDIF#
+#FX#TAU_CXXLIBS               = -lmpi_cxx -lstdc++ -lstd_mt -lm #ENDIF#
+#FX#TAU_CXXLIBS               = -lmpi_cxx -Ntl_notrt -lmpi_f90 -lmpi_f77 --linkfortran #ENDIF#
+
+#FX#TAU_CXXLIBS               = -Ntl_notrt -lmpi_f90 -lmpi_f77 #ENDIF#
+# NOTE:  No -lmpi_cxx and --linkfortran for Fujitsu by default. 
+# Please add manually if needed
+
 #PPC64XLC#TAU_PPC64_LIBS         = -L$(EXTRADIRCXX)/$(TAU_FORLIBDIR) -libmc++ -lstdc++       #ENDIF#
 #IBM64LINUX_XLC#TAU_IBM64LINUX_LIBS         = -L$(EXTRADIRCXX)/$(TAU_FORLIBDIR) -libmc++ -lstdc++       #ENDIF#
 #USE_IBMXLC#TAU_XLCLIBS         = $(TAU_IBM64LINUX_LIBS) $(TAU_PPC64_LIBS)     #ENDIF#
 #IBMXLCAPPLE#TAU_FORLIBDIR =lib       #ENDIF#
 #IBMXLCAPPLE#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/$(TAU_FORLIBDIR) -libmc++ -lstdc++       #ENDIF#
 #BGL#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/blrts_dev_lib -L$(EXTRADIRCXX)/blrts_lib -libmc++ -L/bgl/BlueLight/ppcfloor/blrts-gnu/powerpc-bgl-blrts-gnu/lib -lstdc++      #ENDIF#
-#BGP#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/bglib -libmc++ -lstdc++      #ENDIF#
-#BGQ#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/bglib64 -libmc++ -lstdc++      #ENDIF#
+#BGP#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/bglib -libmc++ -lstdc++ -L$(EXTRADIR)/bglib -lxlf90$(TAU_R) -lxlfmath   $(TAU_OMP_SERIAL)  #ENDIF#
+#BGQ#TAU_XLCLIBS         = -L$(EXTRADIRCXX)/bglib64 -libmc++ -lstdc++  -L$(EXTRADIR)/bglib64 -lxlf90_r  -lxlfmath     #ENDIF#
 #SP1#TAU_XLCLIBS         = -lC  -lm            #ENDIF#
 #USE_IBMXLC#TAU_CXXLIBS         = $(TAU_XLCLIBS) #ENDIF#
 #USE_DECCXX#TAU_CXXLIBS         = -lcxxstd -lcxx #ENDIF#
@@ -706,6 +742,7 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 #INTELCXXLIBICC#TAU_CXXLIBS_INTEL        = -lcprts #ENDIF#
 #USE_INTELCXX#TAU_CXXLIBS        = $(TAU_CXXLIBS_INTEL) #ENDIF#
 #APPLECXX#TAU_CXXLIBS 		= -lstdc++ -L$(TAUGCCLIBDIR)  $(TAUGCCLIBOPTS) -lgcc_s.1 -lSystemStubs #ENDIF#
+#APPLECXX#TAU_CXXLIBS 		= -lstdc++ -L$(TAUGCCLIBDIR)  $(TAUGCCLIBOPTS) -lgcc_s.1 #ENDIF#
 
 # EXTERNAL PACKAGES: EPILOG
 #SCALASCA#TAU_ELG_SERIAL_SUFFIX =.ser #ENDIF#
@@ -786,19 +823,23 @@ TAU_LINKER_OPT4 = $(LEXTRA1)
 ##############################################
 # Flags to build a shared object: TAU_SHFLAGS
 #GNU#AR_SHFLAGS 		= -shared  	        #ENDIF#
+#CLANG#AR_SHFLAGS 		= -shared  	        #ENDIF#
 #USE_PATHCC#AR_SHFLAGS 		= -shared -fPIC  	#ENDIF#
 #PGI#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#
 #APPLEPGI#AR_SHFLAGS 		= -shared               #ENDIF#
 #SGICC#AR_SHFLAGS 		= -shared  	        #ENDIF#
 #OPEN64ORC#AR_SHFLAGS 		= -shared -fpic 	#ENDIF#
+#MPC#AR_SHFLAGS 		= -shared -fPIC 	#ENDIF#
 #APPLECXX#TAU_APPLE_SHFLAGS = -dynamiclib -flat_namespace -undefined suppress #ENDIF#
 #PYTHON#TAU_APPLE_SHFLAGS   = -bundle -flat_namespace -undefined suppress     #ENDIF#
 #USE_INTELCXX#AR_SHFLAGS  	= -shared 		#ENDIF#
+#MMIC#AR_SHFLAGS  	= -shared -mmic #ENDIF#
 #APPLECXX#AR_SHFLAGS = $(TAU_APPLE_SHFLAGS)             #ENDIF#
 #SOL2#AR_SHFLAGS  		= -G 		        #ENDIF#
 #SUNCC#AR_SHFLAGS  		= -G 		        #ENDIF#
 #SOL2CC#AR_SHFLAGS  		= -G 		        #ENDIF#
 #CRAYCNL#AR_SHFLAGS  		= -shared 		#ENDIF#
+#FX#AR_SHFLAGS  		= -shared 		#ENDIF#
 TAU_BGP_AR_SHFLAGS = -shared
 #USE_IBMXLC#AR_SHFLAGS          = -G 		        #ENDIF#
 #USE_IBMXLC#TAU_BGP_AR_SHFLAGS          = -qmkshrobj    #ENDIF#
@@ -826,6 +867,7 @@ TAU_AR                 = ar
 #MINGW#TAU_AR          = x86_64-w64-mingw32-ar #ENDIF#
 #SP1#TAU_AR            = ar -X32        #ENDIF#
 #IBM64#TAU_AR          = ar -X64        #ENDIF#
+#FX#TAU_AR          = sparc64-unknown-linux-gnu-ar        #ENDIF#
 #PPC64#TAU_AR          = ar 		#ENDIF#
 #IBM64LINUX#TAU_AR     = ar             #ENDIF#
 
@@ -873,8 +915,11 @@ BFDLIBS=
 #PTHREAD_AVAILABLE#TAU_COMPINST_PTHREAD_OPTIONS= -Dpthread_create=tau_pthread_create -Dpthread_exit=tau_pthread_exit#ENDIF#
 #COMPINST_INTEL9#TAU_COMPINST_OPTION=$(UPCC_C_PREFIX)-tcollect #ENDIF#
 #COMPINST_INTEL9#TAU_COMPINST_LINKING= #ENDIF#
-#COMPINST_GNU#TAU_COMPINST_OPTION=$(UPCC_PREFIX)-g $(UPCC_C_PREFIX)-finstrument-functions #ENDIF#
-#MINGW#TAU_COMPINST_OPTION=$(UPCC_PREFIX)-gstabs3 $(UPCC_C_PREFIX)-finstrument-functions #ENDIF#
+#COMPINST_GNU#TAU_COMPINST_OPTION=$(UPCC_C_PREFIX)-g $(UPCC_C_PREFIX)-finstrument-functions #ENDIF#
+#OPEN64ORC#TAU_COMPINST_OPTION=$(UPCC_C_PREFIX)-g $(UPCC_C_PREFIX)-finstrument-functions #ENDIF#
+#CLANG#TAU_COMPINST_OPTION=$(UPCC_C_PREFIX)-g $(UPCC_C_PREFIX)-finstrument-functions #ENDIF#
+#BUPC#TAU_COMPINST_OPTION=$(UPCC_C_PREFIX)-g $(UPCC_C_PREFIX)-finstrument-functions #ENDIF#
+#MINGW#TAU_COMPINST_OPTION=-gstabs3 -finstrument-functions #ENDIF#
 #TAU_BFD#TAU_LINKER_OPT13=$(TAU_BFDLIB) #ENDIF#
 #COMPINST_PGI#TAU_COMPINST_OPTION=$(UPCC_C_PREFIX)-Mprof=func #ENDIF#
 #COMPINST_PGI#TAU_COMPINST_LINKING=$(UPCC_LINK_PREFIX)-Mprof=func #ENDIF#
@@ -910,12 +955,26 @@ EBS_CLOCK_RES=
 ##############################################
 #TAU_UNWIND#PROFILEOPT85 = -DTAU_UNWIND $(UNWIND_FLAG) -I$(UNWIND_INC) #ENDIF#
 #TAU_UNWIND#TAU_LINKER_OPT17 = -L$(UNWIND_LIB) $(UNWIND_LIB_FLAG) $(UNWIND_EXTRAS)#ENDIF#
+#MMIC#TAU_LINKER_OPT18=-mmic #ENDIF#
 
 ##############################################
 # KTAU-NG!!
 ##############################################
 #KTAU_NG#PROFILEOPT86 = -DKTAU_NG #ENDIF#
+#MMIC#PROFILEOPT87 = -mmic #ENDIF#
 
+##############################################
+# DL_AUDITOR
+##############################################
+#LD_AUDITOR_AVAILABLE#PROFILEOPT88 = -DTAU_TRACK_LD_LOADER #ENDIF#
+
+
+##############################################
+# DL_AUDITOR
+##############################################
+#BUPC#PROFILEOPT89= -DTAU_UPC -DTAU_BUPC
+#GUPC#PROFILEOPT89= -DTAU_UPC -DTAU_GPUC
+#CRAY_UPC#PROFILEOPT89= -DTAU_UPC -DTAU_CRAY_UPC
 
 
 ##############################################
@@ -941,8 +1000,8 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 	      $(PROFILEOPT73) $(PROFILEOPT74) $(PROFILEOPT75) $(PROFILEOPT76) \
 	      $(PROFILEOPT77) $(PROFILEOPT78) $(PROFILEOPT79) $(PROFILEOPT80) \
               $(PROFILEOPT81) $(PROFILEOPT82) $(PROFILEOPT83) $(PROFILEOPT84) \
-              $(PROFILEOPT85) $(PROFILEOPT86)\
-              $(TRACEOPT)
+              $(PROFILEOPT85) $(PROFILEOPT86) $(PROFILEOPT87) $(PROFILEOPT88)\
+              $(PROFILEOPT89) $(TRACEOPT)
 
 
 ##############################################
@@ -956,6 +1015,7 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 #USE_IBMXLC#TAU_BGQ_INTERNAL_FLAG1    = -qpic -DTAU_IBM_XLC_BGQ #ENDIF#
 #USE_IBMXLC#TAU_BGQ_INTERNAL_FLAG2    = -DTAU_IBM_XLC_BGQ #ENDIF#
 #BGQ#TAU_INTERNAL_FLAG1    = $(TAU_BGQ_INTERNAL_FLAG1) #ENDIF#
+#MMIC#TAU_INTERNAL_FLAG1    = -mmic #ENDIF#
 #BGQTIMERS#TAU_INTERNAL_FLAG1    = $(TAU_BGQ_INTERNAL_FLAG2) #ENDIF#
 #GNU#TAU_INTERNAL_FLAG1             = -fPIC #ENDIF#
 #CRAYXMT#TAU_INTERNAL_FLAG1             = #ENDIF#
@@ -972,7 +1032,7 @@ TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
                   $(TAU_LINKER_OPT10) $(TAU_LINKER_OPT11) $(TAU_LINKER_OPT12) \
 		  $(TAU_LINKER_OPT13) $(PERFSUITELINK) $(VAMPIRTRACELIBS) $(SCOREPLIBS) $(HPCTOOLKIT_LINK) \
 		  $(TAU_LINKER_OPT14) $(TAU_LINKER_OPT15) $(TAU_LINKER_OPT16) \
-                  $(TAU_LINKER_OPT17)
+                  $(TAU_LINKER_OPT17) $(TAU_LINKER_OPT18)
 
 ##############################################
 
@@ -1000,7 +1060,14 @@ TAU_DEFS	= $(TAUDEFS)
 TAU_INCLUDE 	= -I$(TAU_INC_DIR)
 #PERFLIB#TAU_INCLUDE = -I$(PERFINCDIR) #ENDIF#
 #PERFLIB#TAU_DEFS = #ENDIF#
-#PERFLIB#TAU_COMPILER_EXTRA_OPTIONS=-optTau=-p #ENDIF#
+#PERFLIB#TAU_COMPILER_EXTRA_OPTIONS1=-optTau=-p #ENDIF#
+
+#FX#TAU_COMPILER_EXTRA_OPTIONS1=-optFujitsu #ENDIF#
+
+#PTHREAD_AVAILABLE#TAU_COMPILER_EXTRA_OPTIONS2=-optTrackPthread #ENDIF#
+#MPC#TAU_COMPILER_EXTRA_OPTIONS2=-optTrackMPCThread #ENDIF#
+
+TAU_COMPILER_EXTRA_OPTIONS=$(TAU_COMPILER_EXTRA_OPTIONS1) $(TAU_COMPILER_EXTRA_OPTIONS2) 
 
 TAU_INCLUDE_MEMORY = -I$(TAU_INC_DIR)/Memory
 #IBMXLCAPPLE#TAU_INCLUDE_MEMORY = -I$(TAU_INC_DIR)/MemoryWrapper #ENDIF#
@@ -1008,13 +1075,13 @@ TAU_INCLUDE_MEMORY = -I$(TAU_INC_DIR)/Memory
 
 #TAU_LIBS	= $(TAUHELPER) -L$(TAU_LIB_DIR) -ltau$(TAU_CONFIG) $(TAU_LINKER_OPTS) -L/usr/local/packages/sw1.2beta1/x86_64-unknown-linux2.4/lib -lstackwalk -lsymtabAPI -lcommon -L/usr/local/packages/libdwarf-20091230/lib -ldwarf -lelf -liberty -ldlmalloc
 
-#GNU46PLUS#TAU_EXTRA_MPI_LIBRARIES_FOR_GCC=$(TAU_MPI_NOWRAP_LIB) -ldl -lm #ENDIF#
+TAU_LIBDL=-ldl
+#TAU_WINDOWS#TAU_LIBDL=  #ENDIF#
+
+#GNU46PLUS#TAU_EXTRA_MPI_LIBRARIES_FOR_GCC=$(TAU_MPI_NOWRAP_LIB) $(TAU_LIBDL) -lm #ENDIF#
 TAU_LIBS	= $(TAUHELPER) -L$(TAU_LIB_DIR) -ltau$(TAU_CONFIG) $(TAU_LINKER_OPTS) $(TAU_EXTRA_MPI_LIBRARIES_FOR_GCC)
 
 #PERFLIB#TAU_LIBS = #ENDIF#
-
-TAU_LIBDL=-ldl
-#TAU_WINDOWS#TAU_LIBDL=  #ENDIF#
 
 TAU_SHLIBS	= $(TAUHELPER) -L$(TAU_LIB_DIR) -lTAUsh$(TAU_CONFIG) $(TAU_LINKER_OPTS) $(TAU_LINKER_SHOPTS) $(TAU_MPI_LIB) $(TAU_LIBDL)
 #PERFLIB#TAU_SHLIBS = #ENDIF#
@@ -1058,8 +1125,8 @@ TAU_TRACE_INPUT_LIB = -L$(TAU_LIB_DIR) -lTAU_traceinput$(TAU_CONFIG)
 #GPSHMEM#SHMEM_OBJS		     = TauShmemGpshmem.o  #ENDIF#
 
 TAU_CCOMPILER     = $(TAU_CC)
-#UPCC#TAU_CCOMPILER     = $(TAU_UPCC)  #ENDIF#
-#GNU_UPC#TAU_CCOMPILER     = $(TAU_UPCC)  #ENDIF#
+#BUPC##TAU_CCOMPILER     = $(TAU_UPCC)  #ENDIF#
+#GUPC#TAU_CCOMPILER     = $(TAU_UPCC)  #ENDIF#
 #CRAY_UPC#TAU_UPC_COMPILER_OPTIONS  = -h upc #ENDIF#
 
 
@@ -1078,11 +1145,15 @@ TAU_CUPTI_INC=
 #CUDA#TAU_CUDA_INCLUDE=-I$(TAU_CUDA_INC)#ENDIF#
 #CUPTI#TAU_CUPTI_INCLUDE=-I$(TAU_CUPTI_INC)#ENDIF#
 #CUPTI#LEXTRA=-L$(TAU_CUPTI_INC)/../lib -L$(TAU_CUPTI_INC)/../lib64 -lcupti#ENDIF#
+TAU_CUDA_LIBRARY=-L/opt/nvidia/cudatoolkit/4.1.28/lib64 -L/opt/nvidia/cudatoolkit/4.1.28/extras/CUPTI/lib64 -lcupti -L/opt/cray/nvidia/default/lib64 -lcuda
 #############################################
 
 #CUPTI#TAU_INTERNAL_FLAGS+=-DCUPTI #ENDIF#
 
 
+TAU_MPI_COMPILE_INCLUDE=$(TAU_MPI_INCLUDE)
+#FX#TAU_MPI_COMPILE_INCLUDE= #ENDIF#
+# Fujitsu doesn't want TAU_MPI_INC to propagate to the command line
 
 #############################################
 # TAU COMPILER SHELL SCRIPT OPTIONS
@@ -1092,11 +1163,11 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
         -optTauInstr="$(TAU_BIN_DIR)/tau_instrumentor" \
         -optNoMpi \
 	-optOpariDir="$(OPARIDIR)" -optOpari2Tool="$(TAU_OPARI2_TOOL)" -optOpari2ConfigTool="$(TAU_OPARI_CONFIG_TOOL)"  \
+	-optOpari2Opts="$(TAU_OPARI2_OPTION)" \
 	-optOpariTool="$(TAU_OPARI_TOOL)"  \
 	-optTauCC="$(TAU_CCOMPILER)" \
-	-optTauIncludes="$(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(TAU_SHMEM_INCLUDE) $(OPARIINCDIR)" \
+	-optTauIncludes="$(TAU_INCLUDE) $(TAU_MPI_COMPILE_INCLUDE) $(TAU_SHMEM_INCLUDE) $(OPARIINCDIR)" \
 	-optTauDefs="$(TAU_DEFS)" $(TAU_IBM_NOCOMPINST) \
-        -optTauCompile="$(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(TAU_DEFS) "\
         -optLinking="$(TAU_MPI_FLIBS) $(TAU_LIBS) $(TAU_LDFLAGS) $(TAU_CXXLIBS) $(TAU_SHMEM_LIBS) "\
         -optSharedLinking="-L$(TAU_LIB_DIR)/shared$(TAU_CONFIG) $(TAU_MPI_FLIBS)  $(TAU_SHMEM_LIBS) $(TAU_EXLIBS) $(TAU_LDFLAGS) $(TAU_CXXLIBS)"\
 	$(TAU_COMPILER_EXTRA_OPTIONS) \
@@ -1104,7 +1175,7 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
 	-optCompInstOption="$(TAU_COMPINST_OPTION) $(TAU_COMPINST_PTHREAD_OPTIONS)"\
 	-optCompInstFortranOption="$(TAU_FORTRAN_COMPINST_OPTION) $(TAU_COMPINST_PTHREAD_OPTIONS)"\
 	-optCompInstLinking="$(TAU_COMPINST_LINKING)"\
-	-optWrappersDir="$(TAU_LIB_DIR)/wrappers"
+	-optWrappersDir="$(TAU_LIB_DIR)/wrappers" $(TAU_EXTRA_WRAPPER_OPTIONS)
 #############################################
 
 TAU_SHAREDLIBS=$(TAUHELPER) -L$(TAU_LIB_DIR) -lTAU $(TAU_LINKER_OPTS) $(TAU_LINKER_SHOPTS)
