@@ -770,6 +770,10 @@ for arg in "$@" ; do
 			optFixHashIf=$TRUE
 			echoIfDebug "\tFixing Hash-Ifs"
 			;;
+		    -opt*)
+			#Assume any other options should be passed on to the compiler.
+			argsRemaining="$argsRemaining ${arg%% *}"
+			;;
 
 		esac #end case for parsing script Options
 		;;
