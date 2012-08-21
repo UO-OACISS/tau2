@@ -1369,7 +1369,12 @@ if [ $numFiles == 0 ]; then
     fi 
 
     if [ $optFujitsu == $TRUE ]; then
+      oldLinkCmd=$linkCmd
       linkCmd=`echo $linkCmd | sed -e 's/fccpx/FCCpx/g' -e 's/frtpx/FCCpx/g'`
+      if [ "x$linkCmd" != "x$oldLinkCmd" ] ; then
+        echoIfDebug "We changed the linker to use FCCpx compilers. We need to add --linkfortran to the link line"
+	linkCmd="$linkCmd --linkfortran"
+      fi
     fi
     evalWithDebugMessage "$linkCmd" "Linking with TAU Options"
     buildSuccess=$?
@@ -1919,6 +1924,15 @@ cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} ${o
     fi 
 
 	madeToLinkStep=$TRUE
+        if [ $optFujitsu == $TRUE ]; then
+          oldLinkCmd=$newCmd
+          newCmd=`echo $newCmd | sed -e 's/fccpx/FCCpx/g' -e 's/frtpx/FCCpx/g'`
+          if [ "x$newCmd" != "x$oldLinkCmd" ] ; then
+            echoIfDebug "We changed the linker to use FCCpx compilers. We need to add --linkfortran to the link line"
+            newCmd="$newCmd --linkfortran"
+          fi
+        fi
+
 	evalWithDebugMessage "$newCmd" "Linking (Together) object files"
 
 	if [ ! -e $passedOutputFile ] ; then
