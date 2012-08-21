@@ -2899,27 +2899,27 @@ void MPI_FILE_OPEN( MPI_Fint *  comm, char * filename, MPI_Fint *  amode, MPI_Fi
 /******************************************************
 ***      MPI_File_open wrapper function 
 ******************************************************/
-void mpi_file_open( MPI_Fint *  comm, char * filename, MPI_Fint *  amode, MPI_Fint *  info, MPI_Fint * fh, MPI_Fint * ierr)
+void mpi_file_open( MPI_Fint *  comm, char * filename, MPI_Fint *  amode, MPI_Fint *  info, MPI_Fint * fh, MPI_Fint * ierr, int filename_len)
 {
-  MPI_FILE_OPEN( comm, filename, amode, info, fh, ierr) ; 
+  MPI_FILE_OPEN( comm, filename, amode, info, fh, ierr, filename_len) ; 
   return ; 
 }
 
 /******************************************************
 ***      MPI_File_open wrapper function 
 ******************************************************/
-void mpi_file_open_( MPI_Fint *  comm, char * filename, MPI_Fint *  amode, MPI_Fint *  info, MPI_Fint * fh, MPI_Fint * ierr)
+void mpi_file_open_( MPI_Fint *  comm, char * filename, MPI_Fint *  amode, MPI_Fint *  info, MPI_Fint * fh, MPI_Fint * ierr, int filename_len)
 {
-  MPI_FILE_OPEN( comm, filename, amode, info, fh, ierr) ; 
+  MPI_FILE_OPEN( comm, filename, amode, info, fh, ierr, filename_len) ; 
   return ; 
 }
 
 /******************************************************
 ***      MPI_File_open wrapper function 
 ******************************************************/
-void mpi_file_open__( MPI_Fint *  comm, char * filename, MPI_Fint *  amode, MPI_Fint *  info, MPI_Fint * fh, MPI_Fint * ierr)
+void mpi_file_open__( MPI_Fint *  comm, char * filename, MPI_Fint *  amode, MPI_Fint *  info, MPI_Fint * fh, MPI_Fint * ierr, int filename_len)
 {
-  MPI_FILE_OPEN( comm, filename, amode, info, fh, ierr) ; 
+  MPI_FILE_OPEN( comm, filename, amode, info, fh, ierr, filename_len) ; 
   return ; 
 }
 
@@ -3012,27 +3012,27 @@ void MPI_FILE_DELETE( char * filename, MPI_Fint *  info, MPI_Fint * ierr, int fi
 /******************************************************
 ***      MPI_File_delete wrapper function 
 ******************************************************/
-void mpi_file_delete( char * filename, MPI_Fint *  info, MPI_Fint * ierr)
+void mpi_file_delete( char * filename, MPI_Fint *  info, MPI_Fint * ierr, int filename_length)
 {
-  MPI_FILE_DELETE( filename, info, ierr) ; 
+  MPI_FILE_DELETE( filename, info, ierr, filename_length) ; 
   return ; 
 }
 
 /******************************************************
 ***      MPI_File_delete wrapper function 
 ******************************************************/
-void mpi_file_delete_( char * filename, MPI_Fint *  info, MPI_Fint * ierr)
+void mpi_file_delete_( char * filename, MPI_Fint *  info, MPI_Fint * ierr, int filename_length)
 {
-  MPI_FILE_DELETE( filename, info, ierr) ; 
+  MPI_FILE_DELETE( filename, info, ierr, filename_length) ; 
   return ; 
 }
 
 /******************************************************
 ***      MPI_File_delete wrapper function 
 ******************************************************/
-void mpi_file_delete__( char * filename, MPI_Fint *  info, MPI_Fint * ierr)
+void mpi_file_delete__( char * filename, MPI_Fint *  info, MPI_Fint * ierr, int filename_length)
 {
-  MPI_FILE_DELETE( filename, info, ierr) ; 
+  MPI_FILE_DELETE( filename, info, ierr, filename_length) ; 
   return ; 
 }
 
