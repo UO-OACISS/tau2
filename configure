@@ -3091,7 +3091,7 @@ then
       if [ $f90loaded = 1 ]
       then 
         fortran_compiler=`mpif90 -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-        if [ $fortran_compiler = ifort ]; then 
+        if [ "x$fortran_compiler" = "xifort" ]; then 
 	  fortran_compiler=intel
 	fi
       else
@@ -3305,7 +3305,7 @@ case $cxx_compiler in
         fixmakeargs="$fixmakeargs PGI PGICC"
       fi
 
-      if [ $fortran_compiler = no ]
+      if [ "x$fortran_compiler" = "xno" ]
       then 
         extradir=`which pgcc | sed s/pgcc/../`
         fixmakeargs="$fixmakeargs PGI_FORTRAN"
@@ -7046,7 +7046,7 @@ fi
 
 
 
-if [ $fortran_compiler = intel ] ; then
+if [ "x$fortran_compiler" = "xintel" ] ; then
     intelifort=`which ifort 2>/dev/null`
     if [ "y$intelifort" != "y" ] ; then 
 	if [ -x $intelifort ]
@@ -7534,7 +7534,7 @@ pr=examples
 exampleslist="instrument/Makefile mapping/embedded/Makefile \
   mapping/external/Makefile fork/Makefile selectiveAccess/Makefile"
 
-if [ $fortran_compiler != no ] ; then
+if [ "x$fortran_compiler" != "xno" ] ; then
   exampleslist="$exampleslist fortran/Makefile f90/Makefile"
 fi
 
@@ -7561,7 +7561,7 @@ fi
 
 if [ $mpi = yes ] ; then
   exampleslist="$exampleslist pi/Makefile mpishlib/Makefile"
-  if [ $fortran_compiler != no ] ; then
+  if [ "x$fortran_compiler" != "xno" ] ; then
     exampleslist="$exampleslist NPB2.3/config/make.def"
   fi
   if [ $openmp = yes ] ; then 
