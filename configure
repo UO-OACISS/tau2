@@ -1899,8 +1899,8 @@ for arg in "$@"; do
   esac
 done
 
-if [ "x$upcnetwork" == "x" ] ; then
-  if [ "$mpi" == "no" ] ; then
+if [ "x$upcnetwork" = "x" ] ; then
+  if [ "$mpi" = "no" ] ; then
     echo "NOTE: UPC network and MPI not specified.  Assuming -upcnetwork=smp."
     upcnetwork=smp
   else
@@ -3890,7 +3890,21 @@ then
             then
               echo "Using MPI include directory $mpiinc"
 	    else 
+	      if [ -d $mpiinc -a ! -r $mpiinc/mpi.h ] ; then
+	        if [ -r $mpiinc/mpich2/mpi.h ] ; then
+	          mpiinc=$mpiinc/mpich2 
+                  echo "Correction: Using MPI include directory $mpiinc instead"
+                else
+                  if [ -r $mpiinc/openmpi/mpi.h ] ; then
+	            mpiinc=$mpiinc/openmpi
+                    echo "Correction: Using MPI include directory $mpiinc instead"
+                  else
+                    mpiinc=""
+                  fi
+                fi
+	    else	    
 	      mpiinc=""
+            fi
             fi
           fi
           if [ ! -r $mpiinc/mpi.h -a -r $mpiinc/mpich2/mpi.h ] ; then
