@@ -1323,6 +1323,7 @@ int TauProfiler_StoreData(int tid) {
   }
 #endif /* PTHREADS */
 
+#ifndef TAU_SCOREP
 #if defined(TAU_OPENMP)
   //fprintf(stderr, "Total Threads: %d\n", RtsLayer::getTotalThreads());
   if (RtsLayer::getTotalThreads() == 1) {
@@ -1335,7 +1336,7 @@ int TauProfiler_StoreData(int tid) {
         "or instrument your code with TAU.\n\n");
   }
 #endif /* OPENMP */
-
+#endif /* SCOREP */
   return 1;
 } 
 
