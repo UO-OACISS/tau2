@@ -47,7 +47,7 @@ $(CONFIG_HEADER_FRONTEND): $(builddir)/opari2_config.dat
 	$(AM_V_GEN)( \
 	    echo "#define NM      \"$(NM)\""; \
 	    echo "#define AWK     \"$(AWK)\""; \
-	    echo "#define SCRIPT  \"$(prefix)/bin/pomp2_parse_init_regions.awk\""; \
+	    echo "#define SCRIPT  \"$(prefix)/bin/pomp2-parse-init-regions.awk\""; \
 	    echo "#define EGREP   \"$(EGREP)\""; \
 	    echo "#define VERSION \"$(PACKAGE_VERSION)\""; \
 	    echo "#define POMP2_API_VERSION \"$(LIBRARY_INTERFACE_VERSION)\""; \
@@ -58,7 +58,7 @@ $(builddir)/opari2_config.dat:
 	$(AM_V_GEN)( \
 	    echo NM=\"$(NM)\"; \
 	    echo AWK=\"$(AWK)\"; \
-	    echo OPARI_SCRIPT=\"$(PWD)/../build-frontend/pomp2_parse_init_regions.awk\"; \
+	    echo OPARI_SCRIPT=\"$(PWD)/../build-frontend/pomp2-parse-init-regions.awk\"; \
 	    echo VERSION=\"$(PACKAGE_VERSION)\"; \
 	    echo EGREP=\"$(EGREP)\"; \
 	    echo CFLAGS=\"-I$(abs_srcdir)/../include\"; \
@@ -98,8 +98,8 @@ install-example:
 endif
 
 install-pomp2_region_info:
-	$(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE_NAME@/devel
-	$(INSTALL_DATA) $(abs_srcdir)/../src/pomp-lib-dummy/pomp2_region_info.c $(DESTDIR)$(datadir)/@PACKAGE_NAME@/devel/
-	$(INSTALL_DATA) $(abs_srcdir)/../src/pomp-lib-dummy/pomp2_region_info.h $(DESTDIR)$(datadir)/@PACKAGE_NAME@/devel/
+	$(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE@/devel
+	$(INSTALL_DATA) $(abs_srcdir)/../src/pomp-lib-dummy/pomp2_region_info.c $(DESTDIR)$(datadir)/@PACKAGE@/devel/
+	$(INSTALL_DATA) $(abs_srcdir)/../src/pomp-lib-dummy/pomp2_region_info.h $(DESTDIR)$(datadir)/@PACKAGE@/devel/
 
 install-data-local: install-example install-pomp2_region_info

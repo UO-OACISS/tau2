@@ -26,6 +26,9 @@ extern "C" int Tau_profile_exit_all_tasks();
 //#endif
 //#include <tau_internal.h>
 
+// Moved from header file
+using namespace tau;
+
 #ifdef TAU_PERFSUITE
   #include <pshwpc.h>
   extern "C" int ps_hwpc_xml_write(const char *filename);
@@ -52,7 +55,6 @@ using namespace std;
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-
 
 #include <stdio.h> 
 #include <time.h>
@@ -82,6 +84,10 @@ void esd_exit (elg_ui4 rid);
 
 #include <TauTrace.h>
 #include <TauMetaData.h>
+
+// Moved from header file
+using namespace std;
+
 
 #ifdef RENCI_STFF
 #include "Profile/RenciSTFF.h"
@@ -266,17 +272,21 @@ void Profiler::Start(int tid) {
   /********************************************************************************/
 
   // An initialization of sorts. Call Paths (if any) will update this.
+#ifndef TAU_WINDOWS
   if (TauEnv_get_callsite() == 1) {
     CallSiteAddPath(NULL, tid);
   }
+#endif /* TAU_WINDOWS */
 
   if (TauEnv_get_callpath()) {
     CallPathStart(tid);
   }
 
+#ifndef TAU_WINDOWS
   if (TauEnv_get_callsite() == 1) {
     CallSiteStart(tid);
   }
+#endif
 
 #ifdef TAU_PROFILEPARAM
   ProfileParamFunction = NULL;
@@ -512,9 +522,11 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
     CallPathStop(TotalTime, tid);
   }
 
+#ifndef TAU_WINDOWS
   if (TauEnv_get_callsite()) {
     CallSiteStop(TotalTime, tid);
   }
+#endif /* TAU_WINDOWS */
 
 #ifdef RENCI_STFF
   if (TauEnv_get_callpath()) {
@@ -669,7 +681,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
           RtsLayer::myNode(), RtsLayer::myThread(), getpid(), ThisFunction->GetName());
 #endif
 #ifdef TAU_DMAPP
-	TAU_DISABLE_INSTRUMENTATION(); 
+	if (RtsLayer::myThread() == 0) {
+		TAU_DISABLE_INSTRUMENTATION(); 
+	}
 #endif /* TAU_DMAPP */
 
 	  
@@ -678,7 +692,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 	//ThisKtauProfiler->KernProf.DumpKProfile();
 	ThisKtauProfiler->KernProf.DumpKProfileOut();
 #endif /*TAUKTAU */
-
+ 
 #ifdef TAU_TRACK_IDLE_THREADS /* Check if we need to shut off .TAU applications on other tids */
 	if (tid == 0) {
 	  int i; 
@@ -1029,10 +1043,12 @@ static int writeUserEvents(FILE *fp, int tid) {
   // Print UserEvent Data if any
   int numEvents = 0;
   for (it = TheEventDB().begin(); it != TheEventDB().end(); ++it) {
-    if ((*it)->GetNumEvents(tid) == 0) { // skip user events with no calls
+    if ((*it) && (*it)->GetNumEvents(tid) == 0) { // skip user events with no calls
       continue;
     }
-    numEvents++;
+    if ((*it)) {
+      numEvents++;
+    }
   }
   
   if (numEvents > 0) {
@@ -1043,7 +1059,7 @@ static int writeUserEvents(FILE *fp, int tid) {
     fprintf(fp, "# eventname numevents max min mean sumsqr\n");
     
     for(it = TheEventDB().begin(); it != TheEventDB().end(); ++it) {
-      if ((*it)->GetNumEvents(tid) == 0) { // skip user events with no calls
+      if ((*it) && (*it)->GetNumEvents(tid) == 0) { // skip user events with no calls
 	continue;
       }
       fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n", 
@@ -1065,6 +1081,15 @@ static int writeHeader(FILE *fp, int numFunc, char *metricName) {
 }
 
 
+extern "C" int TauProfiler_updateAllIntermediateStatistics() {
+  TAU_VERBOSE("Updating Intermediate Stats for All %d Threads\n", RtsLayer::getTotalThreads());
+  RtsLayer::LockDB();
+  for (int tid=0; tid<RtsLayer::getTotalThreads(); tid++) {
+    TauProfiler_updateIntermediateStatistics(tid);
+  }
+  RtsLayer::UnLockDB();
+}
+
 // This is a very important function, it must be called before writing function data to disk.
 // This function fills in the values that will be dumped to disk.
 // It performs the calculations for timers that are still on the stack.
@@ -1081,7 +1106,7 @@ int TauProfiler_updateIntermediateStatistics(int tid) {
     
     double *incltime = fi->getDumpInclusiveValues(tid);
     double *excltime = fi->getDumpExclusiveValues(tid);
-    
+
     // get currently stored values
     fi->getInclusiveValues(tid, incltime);
     fi->getExclusiveValues(tid, excltime);
@@ -1099,8 +1124,20 @@ int TauProfiler_updateIntermediateStatistics(int tid) {
       // 2) Add to the exclusive value by subtracting the start time of the current
       //    child (if there is one) from the duration of this function so far.
 
+
+      // *CWL* - This is stupid, but I do not currently have the time nor energy to
+      //         attempt to refactor, especially since both forms are actively used.
+      //         a) incltime and excltime are used for non-threaded programs
+      //            Note that getDump*Values(tid) grants pointer-access to the 
+      //            internal structures stored in the FunctionInfo object.
+      //         b) InclTime and ExclTime are used for threaded programs.
+      //            Note that InclTime and ExclTime allocates memory.
+      double *InclTime = fi->GetInclTime(tid);
+      double *ExclTime = fi->GetExclTime(tid);
+
       double inclusiveToAdd[TAU_MAX_COUNTERS];
       double prevStartTime[TAU_MAX_COUNTERS];
+
       for (c=0; c<Tau_Global_numCounters; c++) {
 	inclusiveToAdd[c] = 0;
 	prevStartTime[c] = 0;
@@ -1111,6 +1148,13 @@ int TauProfiler_updateIntermediateStatistics(int tid) {
 	  for (c=0; c<Tau_Global_numCounters; c++) {
 	    inclusiveToAdd[c] = currentTime[c] - current->getStartValues()[c]; 
 	    excltime[c] += inclusiveToAdd[c] - prevStartTime[c];
+	    // *CWL* - followup to the data structure insanity issues
+	    ExclTime[c] += inclusiveToAdd[c] - prevStartTime[c];
+	    /*
+	    TAU_VERBOSE("[%d] currentTime=%f startValue=%f prevStartTime=%f excltime=%f ExclTime=%f!\n", 
+			tid, currentTime[c], current->getStartValues()[c],
+			prevStartTime[c], excltime[c], ExclTime[c]);
+	    */
 	  }
 	}
 	for (c=0; c<Tau_Global_numCounters; c++) {
@@ -1119,7 +1163,15 @@ int TauProfiler_updateIntermediateStatistics(int tid) {
       }
       for (c=0; c<Tau_Global_numCounters; c++) {
 	incltime[c] += inclusiveToAdd[c];
+	// *CWL* - followup to the data structure insanity issues
+	InclTime[c] += inclusiveToAdd[c];
       }
+
+      // *CWL* - followup to the data structure insanity issues
+      fi->SetInclTime(tid, InclTime);
+      fi->SetExclTime(tid, ExclTime);
+      free(InclTime);
+      free(ExclTime);
     }
   }
   return 0;
@@ -1150,6 +1202,10 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
       continue;
     } 
 
+    if (fi->GetCalls(tid) == 0) { // skip this function
+      continue;
+    } 
+
     // get currently stored values
     double incltime = fi->getDumpInclusiveValues(tid)[metric];
     double excltime = fi->getDumpExclusiveValues(tid)[metric];
@@ -1171,12 +1227,30 @@ static int writeFunctionData(FILE *fp, int tid, int metric, const char **inFuncs
   return 0;
 }
 
+// Writes function event data
+static int getTrueFunctionCount(int count, int tid, const char **inFuncs, int numFuncs) {
+  int trueCount = count;
+  for (vector<FunctionInfo*>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
+    FunctionInfo *fi = *it;
+
+    if (-1 == matchFunction(*it, inFuncs, numFuncs)) { // skip this function
+      trueCount--;
+    } else if (fi->GetCalls(tid) == 0) {
+      trueCount--;
+    }
+  }
+
+  return trueCount;
+}
+
 // Writes a single profile file
 static int writeProfile(FILE *fp, char *metricName, int tid, int metric, 
 			const char **inFuncs, int numFuncs) {
-  writeHeader(fp, TheFunctionDB().size(), metricName);
+  int trueCount = getTrueFunctionCount(TheFunctionDB().size(), tid, inFuncs, numFuncs);
+  //writeHeader(fp, TheFunctionDB().size(), metricName);
+  writeHeader(fp, trueCount, metricName);
   fprintf(fp, " # ");	
-  Tau_metadata_writeMetaData(fp, metric);
+  Tau_metadata_writeMetaData(fp, metric, tid);
   fprintf(fp, "\n");
   fflush(fp);
   writeFunctionData(fp, tid, metric, inFuncs, numFuncs);
@@ -1202,6 +1276,7 @@ extern "C" int Tau_profiler_initialization() {
 // Store profile data at the end of execution (when top level timer stops)
 extern "C" void finalizeCallSites_if_necessary();
 int TauProfiler_StoreData(int tid) {
+  TAU_VERBOSE("TAU<%d,%d>: TauProfiler_StoreData\n", RtsLayer::myNode(), tid);
 
   profileWriteCount[tid]++;
   if ((tid !=0) && (profileWriteCount[tid] > 1)) return 0;
@@ -1210,7 +1285,11 @@ int TauProfiler_StoreData(int tid) {
     RtsLayer::LockDB();
     if (profileWriteWarningPrinted == 0) {
       profileWriteWarningPrinted = 1;
-      fprintf (stderr, "TAU: Warning: Profile data for at least one thread has been written out more than 10 times!\nTAU: This could cause extreme overhead and be due to an error\nTAU: in instrumentation (lack of top level timer).\nTAU: If using OpenMP, make sure -opari is enabled.\n");
+      fprintf (stderr, 
+          "TAU: Warning: Profile data for at least one thread has been written out more than 10 times!\n"
+          "TAU: This could cause extreme overhead and be due to an error\n"
+          "TAU: in instrumentation (lack of top level timer).\n"
+          "TAU: If using OpenMP, make sure -opari is enabled.\n");
     }
     RtsLayer::UnLockDB();
   }
@@ -1228,14 +1307,12 @@ int TauProfiler_StoreData(int tid) {
   }
 #endif
   if (TauEnv_get_profiling()) {
-
     Tau_snapshot_writeFinal("final");
-    
     if (TauEnv_get_profile_format() == TAU_FORMAT_PROFILE) {
       TauProfiler_DumpData(false, tid, "profile");
     }
   }
-#ifdef PTHREADS
+#if defined(PTHREADS) || defined(TAU_OPENMP)
   if (RtsLayer::myThread() == 0 && tid == 0) {
     /* clean up other threads? */
     for (int i =1; i < TAU_MAX_THREADS; i++) {
@@ -1245,6 +1322,26 @@ int TauProfiler_StoreData(int tid) {
     }
   }
 #endif /* PTHREADS */
+
+// this doesn't work... apparently "getTotalThreads() lies to us.
+// Is there a reliable way to get the number of threads seen by
+// OpenMP???
+#if 0
+#ifndef TAU_SCOREP
+#if defined(TAU_OPENMP)
+  fprintf(stderr, "Total Threads: %d\n", RtsLayer::getTotalThreads());
+  if (RtsLayer::getTotalThreads() == 1) {
+    // issue a warning, because this is a multithreaded config,
+    // and we saw no threads other than 0!
+    fprintf(stderr, 
+        "\nTAU: WARNING! TAU did not detect more than one thread.\n"
+        "If running an OpenMP application with tau_exec and you expected\n"
+        "more than one thread, try using the '-T pthread' configuration,\n"
+        "or instrument your code with TAU.\n\n");
+  }
+#endif /* OPENMP */
+#endif /* SCOREP */
+#endif
   return 1;
 } 
 
@@ -1261,9 +1358,6 @@ static int getProfileLocation(int metric, char *str) {
     profiledir = new char[profile_dir_len];
     written_bytes = sprintf(profiledir, "%s.", KTAU_NG_PREFIX);
     gethostname(profiledir + written_bytes, profile_dir_len - written_bytes);
-    
-    // profiledir = new char[KTAU_NG_PREFIX_LEN + (Tau_metadata_getMetaData()["Hostname"]).length() + 1]; //This will remain in memory until TAU closes since their is no corresponding delete.
-    // sprintf(profiledir, "%s.%s", KTAU_NG_PREFIX, Tau_metadata_getMetaData()["Hostname"].c_str());
   }
 #endif
 
@@ -1289,6 +1383,7 @@ static int getProfileLocation(int metric, char *str) {
 
 
 int TauProfiler_DumpData(bool increment, int tid, const char *prefix) {
+  TAU_VERBOSE("TAU<%d,%d>: TauProfiler_DumpData\n", RtsLayer::myNode(), tid);
   return TauProfiler_writeData(tid, prefix, increment);
 }
 
@@ -1354,7 +1449,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
 	char cwd[1024];
 	char *tst = getcwd(cwd, 1024);
 #ifndef TAU_WINDOWS
-	TAU_VERBOSE("[pid=%d] TAU: Writing profile %s, cwd = %s\n", getpid(), dumpfile, cwd);
+	TAU_VERBOSE("[pid=%d], TAU: Writing profile %s, cwd = %s\n", getpid(), dumpfile, cwd);
 #endif
 
       } else {
@@ -1420,6 +1515,7 @@ int TauProfiler_dumpFunctionValues(const char **inFuncs,
   
   TAU_PROFILE("TAU_DUMP_FUNC_VALS()", " ", TAU_IO);
 
+  TAU_VERBOSE("TAU<%d,%d>: TauProfiler_dumpFunctionValues\n", RtsLayer::myNode(), RtsLayer::myThread());
   TauProfiler_writeData(tid, prefix, increment, inFuncs, numFuncs);
   return 0;
 }

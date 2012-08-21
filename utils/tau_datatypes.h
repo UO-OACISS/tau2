@@ -4,7 +4,6 @@
 *****************************************************************************/
 
 #include <string>
-using std::string;
 
 enum instrumentKind_t { TAU_LOOPS, TAU_LINE, TAU_ROUTINE_DECL, TAU_ROUTINE_ENTRY, TAU_ROUTINE_EXIT, TAU_ABORT, TAU_NOT_SPECIFIED, TAU_IO, TAU_MEMORY, TAU_TIMER, TAU_PHASE, TAU_INIT, TAU_FORALL, TAU_BARRIER, TAU_FENCE, TAU_NOTIFY };
 
@@ -19,8 +18,8 @@ enum tau_language_t { tau_c, tau_cplusplus, tau_fortran, tau_upc };
 struct itemRef {
   itemRef(const pdbItem *i, bool isT);
   itemRef(const pdbItem *i, itemKind_t k, int l, int c);
-  itemRef(const pdbItem *i, itemKind_t k, int l, int c, string code, itemAttr_t);
-  //itemRef(const pdbItem *i, itemKind_t k, itemQualifier_t q, string name);
+  itemRef(const pdbItem *i, itemKind_t k, int l, int c, std::string code, itemAttr_t);
+  //itemRef(const pdbItem *i, itemKind_t k, itemQualifier_t q, std::string name);
   itemRef(const pdbItem *i, bool isT, int l, int c);
   itemRef(const pdbItem *i, itemKind_t k, pdbLoc start, pdbLoc stop);
   const pdbItem *item;
@@ -32,12 +31,10 @@ struct itemRef {
   int      col;
   pdbLoc   begin;
   pdbLoc   end;
-  string   snippet;
+  std::string   snippet;
   itemAttr_t attribute;
 };
 #endif /* TAU_DYNINST */
-
-extern bool fuzzyMatch(const string& a, const string& b);
 
 /***************************************************************************
  * $RCSfile: tau_datatypes.h,v $   $Author: geimer $

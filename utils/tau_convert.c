@@ -19,6 +19,12 @@
 # include <fcntl.h>
 //# include <stdbool.h>
 
+#if (defined (TAU_MPC) && defined (__cplusplus))
+#include <iostream>
+using namespace std;
+#endif /* TAU_MPC && __cplusplus */
+
+
 #ifdef TAU_WINDOWS
   #include <io.h>
 #else
@@ -111,7 +117,7 @@ void *tmpbuffer; /* for threaded program */
 
 static x_uint64 currentTime[TAU_MAX_NODES] = {0};  /* -- timestamp of previous event record for this thread, used for computing duration of running states   -- */
 
-static enum format_t { alog, SDDF, pv, dump, paraver } outFormat = pv;
+static enum format_t { alog, SDDF, pv, dump, paraver, dumpname } outFormat = pv;
 static enum pvmode_t { user, pvclass, all } pvMode = user;
 static int pvCompact = FALSE;
 static int pvComm = TRUE;
@@ -1277,7 +1283,7 @@ int main (int argc, char *argv[])
 
   if ( argc < 4 )
   {
-    fprintf (stderr, "usage: %s [-alog | -SDDF | -dump | -paraver [-t] |", argv[0]);
+    fprintf (stderr, "usage: %s [-alog | -SDDF | -dump | -dumpname | -paraver [-t] |", argv[0]);
     fprintf (stderr, " -pv | -vampir [-longsymbolbugfix] [-compact] [-user|-class|-all] [-nocomm]]");
     fprintf (stderr, " inputtrc edffile [outputtrc]\n");
     fprintf (stderr, " Note: -vampir option assumes multiple threads/node\n");
@@ -1321,6 +1327,11 @@ int main (int argc, char *argv[])
   else if ( strcmp (argv[1], "-dump") == 0 || strcmp (argv[1], "-d") == 0 )
   {
     outFormat = dump;
+    fileIdx = 2;
+  }
+  else if ( strcmp (argv[1], "-dumpname") == 0 || strcmp (argv[1], "-n") == 0 )
+  {
+    outFormat = dumpname;
     fileIdx = 2;
   }
   else if ( strcmp (argv[1], "-paraver") == 0 || strcmp (argv[1], "-prv") == 0 ) {
@@ -1709,6 +1720,24 @@ int main (int argc, char *argv[])
 #endif
     fprintf (outfp, "#=NO= =======================EVENT==");
     fprintf (outfp, " ==TIME [us]= =NODE= =THRD= ==PARAMETER=\n");
+  }
+  else if ( outFormat == dumpname )
+  {
+    fprintf (outfp, "#  creation program: tau_convert -dumpname\n");
+    fprintf (outfp, "#     creation date: %s\n", Today());
+    fprintf (outfp, "#    number records: %ld\n", intrc.numrec);
+    fprintf (outfp, "# number processors: %d\n", numproc);
+    fprintf (outfp, "# max processor num: %d\n", intrc.numproc);
+
+#ifdef TAU_WINDOWS
+    fprintf (outfp, "#   first timestamp: %I64u\n", intrc.firsttime);
+    fprintf (outfp, "#    last timestamp: %I64u\n\n", intrc.lasttime);
+#else
+    fprintf (outfp, "#   first timestamp: %llu\n", intrc.firsttime);
+    fprintf (outfp, "#    last timestamp: %llu\n\n", intrc.lasttime);
+#endif
+    fprintf (outfp, "#=NO=");
+    fprintf (outfp, " ==TIME [us]= =NODE= =THRD= ==PARAMETER= =======================EVENT==\n");
   }
   else if ( outFormat == paraver ){
       char date[50];
@@ -2483,6 +2512,39 @@ int main (int argc, char *argv[])
 #else
         fprintf (outfp, "%5ld %30.30s %12llu %6d %6d\n",
                  intrc.numrec, ptr, event_GetTi(&intrc,erec,0), GetNodeId(&intrc,erec), event_GetTid(&intrc,erec,0));
+#endif
+        /* Changed 12lu to 12llu for unsigned long long time */
+      }
+    } else if (outFormat == dumpname) {
+      ptr = GetEventName (event_GetEv(&intrc,erec,0), &hasParam);
+      if ( hasParam ) {
+
+        if (IsDoubleParam(event_GetEv(&intrc,erec,0))) { /* user events parameter is a double */
+#ifdef TAU_WINDOWS
+        fprintf (outfp, "%5ld %12I64u %6d %6d %12G %s\n",
+                 intrc.numrec, event_GetTi(&intrc,erec,0), GetNodeId(&intrc,erec), event_GetTid(&intrc,erec,0), event_GetPar(&intrc,erec,0), ptr);
+#else
+        fprintf (outfp, "%5ld %12llu %6d %6d %12 %sG\n",
+                 intrc.numrec, event_GetTi(&intrc,erec,0), GetNodeId(&intrc,erec), event_GetTid(&intrc,erec,0), event_GetPar(&intrc,erec,0), ptr);
+#endif
+        } else {
+#ifdef TAU_WINDOWS
+        fprintf (outfp, "%5ld %12I64u %6d %6d %12I64d %s\n",
+                 intrc.numrec, event_GetTi(&intrc,erec,0), GetNodeId(&intrc,erec), event_GetTid(&intrc,erec,0), event_GetPar(&intrc,erec,0), ptr);
+#else
+        fprintf (outfp, "%5ld %12llu %6d %6d %12lld %s\n",
+                 intrc.numrec, event_GetTi(&intrc,erec,0), GetNodeId(&intrc,erec), event_GetTid(&intrc,erec,0), event_GetPar(&intrc,erec,0), ptr);
+#endif
+        }
+
+
+      } else {
+#ifdef TAU_WINDOWS
+        fprintf (outfp, "%5ld %12I64u %6d %6d %s\n",
+                 intrc.numrec, event_GetTi(&intrc,erec,0), GetNodeId(&intrc,erec), event_GetTid(&intrc,erec,0), ptr);
+#else
+        fprintf (outfp, "%5ld %12llu %6d %6d %s\n",
+                 intrc.numrec, event_GetTi(&intrc,erec,0), GetNodeId(&intrc,erec), event_GetTid(&intrc,erec,0), ptr);
 #endif
         /* Changed 12lu to 12llu for unsigned long long time */
       }

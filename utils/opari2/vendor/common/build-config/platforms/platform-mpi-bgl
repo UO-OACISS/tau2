@@ -3,7 +3,7 @@ MPICXX=blrts_xlC
 MPIF77=blrts_xlf
 MPIFC=blrts_xlf
 
-MPI_LD_FLAGS=-L/bgl/BlueLight/ppcfloor/bglsys/lib
+MPI_LDFLAGS=-L/bgl/BlueLight/ppcfloor/bglsys/lib
 MPI_LIBS=-lmpich.rts
 MPI_CPPFLAGS=-I/bgl/BlueLight/ppcfloor/bglsys/include
 #MPI_CFLAGS=

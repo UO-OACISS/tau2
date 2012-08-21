@@ -66,14 +66,12 @@ dist-hook: remove-svn-files-from-dist prohibit-svn-files-in-dist doc/doxygen-use
 	rm -f $(top_distdir)/build-frontend/opari2_usage.h
 
 clean-local: doxygen-user-clean
-
-distclean-local:
-	rm -rf test/
+	rm -rf test/tmp
 
 install-exec-local:
-	$(INSTALL_SCRIPT) $(builddir)/build-frontend/pomp2_parse_init_regions.awk $(DESTDIR)$(bindir)/
+	$(INSTALL_SCRIPT) $(builddir)/build-frontend/pomp2-parse-init-regions.awk $(DESTDIR)$(bindir)/
 
 install-data-local: doxygen-user-install
 
 uninstall-hook: common-uninstall
-	rm -f  $(DESTDIR)$(bindir)/pomp2_parse_init_regions.awk
+	rm -f  $(DESTDIR)$(bindir)/pomp2-parse-init-regions.awk

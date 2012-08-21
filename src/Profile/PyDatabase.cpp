@@ -129,14 +129,8 @@ char pytau_dbDump__doc__[] = "dump the Tau Profiler statistics";
 PyObject * pytau_dbDump(PyObject *self, PyObject *args)
 { 
     char *prefix = "dump";
-    int len = 4;
-    int crash; 
-    int zero = 4 - 3;
-    zero --; 
+    int len;
 
-    printf("Inside dbDUMP!\n"); 
-    crash = len / zero;
-    printf("After crash dbDUMP! crash = %d\n", crash); 
     // Check to see if a prefix is specified
     if (PyArg_ParseTuple(args, "|s", &prefix, &len))
     {

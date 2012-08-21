@@ -16,7 +16,7 @@
 #ifndef _TAU_H_
 #define _TAU_H_
 
-#define TAU_VERSION "2.21.1-git"
+#define TAU_VERSION "2.21.4-git"
 #define TAU_MAKEFILE "default"
 
 
@@ -179,6 +179,7 @@ extern void Tau_pure_stop_task(const char *name, int tid);
 #define TAU_PROFILE_SNAPSHOT(name)
 #define TAU_PROFILE_SNAPSHOT_1L(name, expr)
 #define TAU_METADATA(name, value)
+#define TAU_METADATA_ITERATION(name, iteration, value)
 #define TAU_PHASE_METADATA(name, value)
 #define TAU_CONTEXT_METADATA(name, value)
 

@@ -25,6 +25,13 @@
 
 #include <mpi.h>
 
+// Moved from header file
+#ifdef __cplusplus
+using namespace std;
+#endif
+
+
+
 #ifdef MRNET_LIGHTWEIGHT
 extern "C" {
 #endif /* MRNET_LIGHTWEIGHT */
@@ -39,6 +46,9 @@ extern "C" {
 using namespace MRN;
 using namespace std;
 #endif
+
+#define FAKE_NUM_THREADS 1
+
 double tomGetData(int tomType, FunctionInfo *fi, int counter, int tid);
 double tomGetFunData(int tomType, FunctionInfo *fi, int tid);
 double tomGetCtrData(int tomType, FunctionInfo *fi, int counter, int tid);
@@ -230,7 +240,8 @@ extern "C" void protocolLoop(int *globalToLocal, int numGlobal) {
   double *mins;
   double *maxes;
 
-  int numThreads = RtsLayer::getNumThreads();
+  //  int numThreads = RtsLayer::getNumThreads();
+  int numThreads = FAKE_NUM_THREADS;
   int numCounters = Tau_Global_numCounters;
 
   while (processProtocol) {
@@ -708,7 +719,8 @@ extern "C" void Tau_mon_internal_onlineDump() {
   // *DEBUG* printf("Tau Mon data ready for dump.\n");
 
   // Need to get data loaded and computed from the stacks
-  int numThreads = RtsLayer::getNumThreads();
+  //  int numThreads = RtsLayer::getNumThreads();
+  int numThreads = FAKE_NUM_THREADS;
   for (int tid = 0; tid<numThreads; tid++) {
     TauProfiler_updateIntermediateStatistics(tid);
   }

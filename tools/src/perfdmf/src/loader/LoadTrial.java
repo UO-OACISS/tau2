@@ -21,6 +21,7 @@ public class LoadTrial {
     private Experiment exp;
     private boolean fixNames;
     private boolean summaryOnly;
+    private boolean useNulls;
     private int expID;
     public int trialID;
     private DataSource dataSource;
@@ -57,6 +58,7 @@ public class LoadTrial {
                 + "                                    snap, perixml, gptl, paraver, ipm, google\n"
                 + "  -t, --trialid <number>          Specify trial ID\n"
                 + "  -i, --fixnames                  Use the fixnames option for gprof\n"
+                + "  -z, --usenull                   Include NULL values as 0 for mean calculation\n"
                 + "  -m, --metadata <filename>       XML metadata for the trial\n\n" + "Notes:\n"
                 + "  For the TAU profiles type, you can specify either a specific set of profile\n"
                 + "files on the commandline, or you can specify a directory (by default the current\n"
@@ -133,6 +135,7 @@ public class LoadTrial {
 
         try {
             dataSource = UtilFncs.initializeDataSource(files, fileType, fixNames);
+			dataSource.setMeanIncludeNulls(useNulls);
         } catch (DataSourceException e) {
             e.printStackTrace();
             System.err.println("Error: Unable to initialize datasource!");
@@ -263,6 +266,7 @@ public class LoadTrial {
         CmdLineParser.Option appNameOpt = parser.addStringOption('a', "applicationname");
         CmdLineParser.Option expNameOpt = parser.addStringOption('x', "experimentname");
         CmdLineParser.Option summaryOpt = parser.addBooleanOption('s', "summaryonly");
+        CmdLineParser.Option useNullOpt = parser.addBooleanOption('z', "usenull");
 
         try {
             parser.parse(args);
@@ -287,6 +291,7 @@ public class LoadTrial {
         Boolean fixNames = (Boolean) parser.getOptionValue(fixOpt);
         String metadataFile = (String) parser.getOptionValue(metadataOpt);
         Boolean summaryOnly = (Boolean) parser.getOptionValue(summaryOpt);
+        Boolean useNull = (Boolean) parser.getOptionValue(useNullOpt);
 
         if (help != null && help.booleanValue()) {
             LoadTrial.outputHelp();
@@ -393,6 +398,9 @@ public class LoadTrial {
         if (summaryOnly == null) {
             summaryOnly = new Boolean(false);
         }
+        if (useNull == null) {
+            useNull = new Boolean(false);
+        }
         
         
         if(multippk){
@@ -431,6 +439,7 @@ public class LoadTrial {
         trans.fixNames = fixNames.booleanValue();
         trans.metadataFile = metadataFile;
         trans.summaryOnly = summaryOnly.booleanValue();
+        trans.useNulls = useNull.booleanValue();
         trans.loadTrial(fileType);
         // the trial will be saved when the load is finished (update is called)
         }

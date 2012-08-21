@@ -17,6 +17,11 @@
 #ifndef _RTSLAYER_H_
 #define _RTSLAYER_H_
 
+#include <map>
+#include <string>
+#include <functional>
+#include <utility>
+
 //////////////////////////////////////////////////////////////////////
 //
 // class RtsLayer
@@ -29,7 +34,7 @@
 // restrained to this class. 
 //////////////////////////////////////////////////////////////////////
 
-typedef std::map<std::string, TauGroup_t, std::less<string> > ProfileMap_t;
+typedef std::map<std::string, TauGroup_t, std::less<std::string> > ProfileMap_t;
 
 
 double TauWindowsUsecD(void);
@@ -65,7 +70,7 @@ public:
   static int setAndParseProfileGroups (char *prog, char *str) ;
   static bool isEnabled(TauGroup_t  ProfileGroup) ; 
   static void ProfileInit(int& argc, char**& argv);
-  static string PrimaryGroup(const char *ProfileGroupName);
+  static std::string PrimaryGroup(const char *ProfileGroupName);
   static bool isCtorDtor(const char *name);
 
   static std::string GetRTTI(const char *name); 
@@ -102,8 +107,6 @@ public:
 
   static int threadId(void);
   
-	static int getNumThreads();
-
   static int getPid();
   static int getTid();
 
@@ -122,6 +125,7 @@ public:
   static void LockEnv(void);
   static void UnLockEnv(void);
 
+  static int getTotalThreads();
 
 
 private:
@@ -137,7 +141,7 @@ private:
 
   static bool initLocks();
   static bool initEnvLocks();
-  static int *numThreads();
+  //  static int *numThreads();
 
 };
 

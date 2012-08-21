@@ -80,13 +80,13 @@ if [ ! -d ${LIB4} ]; then
                 echo "Please download this file manually: "
                 echo "http://www.cs.uoregon.edu/research/paracomp/tau/java-1.4_jars.tgz"
                 RESPONSE=""
-                while [ "x$RESPONSE" = "x" ]; do
+#                while [ "x$RESPONSE" = "x" ]; do
                     $echo "Have you already downloaded the file? (y/n) ${nnl}"
                     read RESPONSE
                     case $RESPONSE in
                         [yY]|[Yy][Ee][Ss]) RESPONSE=y ;;
                         [nN]|[Nn][Oo]) RESPONSE=n ;;            esac
-                done
+#                done
 
                 if [ "${RESPONSE}" == "y" ]; then
                     $echo "Where is java-1.4_jars.tgz? ${nnl}"

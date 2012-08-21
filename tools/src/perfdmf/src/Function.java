@@ -112,7 +112,7 @@ public class Function implements Serializable, Comparable<Function> {
 
     public SourceRegion getSourceLink() {
         if (this.sourceLink == null) {
-            if (isGroupMember("TAU_CALLPATH_DERIVED")) {
+            if (isCallPathFunction(name)){//(isGroupMember("TAU_CALLPATH_DERIVED")) {
                 this.sourceLink = getSourceLink(UtilFncs.getLeftSide(name));
             } else {
                 this.sourceLink = getSourceLink(this.name);

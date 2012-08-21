@@ -210,7 +210,7 @@ if [ $invoke_with_tau = yes ] ; then
 cat <<EOF > /tmp/makefile.tau.$USER.$$
 include $MAKEFILE
 all:
-	@\$(TAU_COMPILER) $TAUCOMPILER_OPTIONS \$(TAU_RUN_CC) \$(TAU_UPC_COMPILER_OPTIONS) $TAUARGS
+	@\$(TAU_COMPILER) $TAUCOMPILER_OPTIONS -optTauGASPU=\$(TAU_GASPU_UPC) \$(TAU_RUN_CC) \$(TAU_UPC_COMPILER_OPTIONS) $TAUARGS
 EOF
 make -s -f /tmp/makefile.tau.$USER.$$ 
 retval=$?

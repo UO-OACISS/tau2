@@ -25,21 +25,20 @@
 
       real a(5,5), b(5,5), c(5,5)
 
-      pomp_num_threads = pomp2_lib_get_max_threads()
-      pomp_if = .true.
+      pomp2_num_threads = pomp2_lib_get_max_threads()
+      pomp2_if = .true.
       call POMP2_Parallel_fork(pomp2_region_1,
-     &pomp_if, pomp_num_threads, pomp2_old_task,
-     &"59*regionType=parallel*sscl=test4.f:25:25*escl=test4.f:0:0*"//
-     &"*" )
+     &pomp2_if, pomp2_num_threads, pomp2_old_task,
+     &pomp2_ctc_1 )
 #line 25 "test4.f"
 !$omp parallel
 !$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)
-!$omp& if(pomp_if) num_threads(pomp_num_threads) 
+!$omp& if(pomp2_if) num_threads(pomp2_num_threads) 
       call POMP2_Parallel_begin(pomp2_region_1)
 #line 26 "test4.f"
       write(*,*) "parallel"
       call POMP2_Do_enter(pomp2_region_2,
-     &"53*regionType=do*sscl=test4.f:27:27*escl=test4.f:0:0**" )
+     &pomp2_ctc_2 )
 #line 27 "test4.f"
 !$omp do
       do i=1,4
@@ -51,23 +50,20 @@
 #line 32 "test4.f"
       
       call POMP2_Sections_enter(pomp2_region_3,
-     &"73*regionType=sections*sscl=test4.f:33:33*escl=test4.f:0:0*"//
-     &"numSections=0**" )
+     &pomp2_ctc_3 )
 #line 33 "test4.f"
 !$omp sections
 #line 34 "test4.f"
 !$omp section
       call POMP2_Section_begin(pomp2_region_3,
-     &"73*regionType=sections*sscl=test4.f:33:33*escl=test4.f:0:0*"//
-     &"numSections=0**" )
+     &pomp2_ctc_3 )
 #line 35 "test4.f"
       write(*,*) "section nowait 1"
       call POMP2_Section_end(pomp2_region_3)
 #line 36 "test4.f"
 !$omp section
       call POMP2_Section_begin(pomp2_region_3,
-     &"73*regionType=sections*sscl=test4.f:33:33*escl=test4.f:0:0*"//
-     &"numSections=1**" )
+     &pomp2_ctc_3 )
 #line 37 "test4.f"
       write(*,*) "section nowait 2"
       call POMP2_Section_end(pomp2_region_3)
@@ -77,8 +73,7 @@
 #line 39 "test4.f"
       
       call POMP2_Single_enter(pomp2_region_4,
-     &"57*regionType=single*sscl=test4.f:40:40*escl=test4.f:0:0**""//
-     &" )
+     &pomp2_ctc_4 )
 #line 40 "test4.f"
 !$omp single
       call POMP2_Single_begin(pomp2_region_4)
@@ -91,8 +86,7 @@
 #line 43 "test4.f"
       
       call POMP2_Workshare_enter(pomp2_region_5,
-     &"60*regionType=workshare*sscl=test4.f:44:44*escl=test4.f:0:0"//
-     &"**" )
+     &pomp2_ctc_5 )
 #line 44 "test4.f"
 !$omp workshare
       a = b + c
@@ -101,22 +95,29 @@
       call POMP2_Workshare_exit(pomp2_region_5)
 #line 47 "test4.f"
 
-      pomp_if = .true.
+      pomp2_if = .true.
+      if (pomp2_if) then
       call POMP2_Task_create_begin(pomp2_region_6, pomp2_new_task,
      &pomp2_old_task, 
-     &pomp_if,
-     &"67*regionType=task*sscl=test4.f:48:48*escl=test4.f:0:0*hasU"//
-     &"ntied=1**" )
+     &pomp2_if,
+     &pomp2_ctc_6 )
+      end if
 #line 48 "test4.f"
 !$omp task       
-!$omp& if(pomp_if) firstprivate(pomp2_new_task)
+!$omp& if(pomp2_if) firstprivate(pomp2_new_task, pomp2_if)
+      if (pomp2_if) then
       call POMP2_Task_begin(pomp2_region_6, pomp2_new_task)
+      end if
 #line 49 "test4.f"
       write(*,*) "task"
+      if (pomp2_if) then
       call POMP2_Task_end(pomp2_region_6)
+      end if
 #line 50 "test4.f"
 !$omp end task
+      if (pomp2_if) then
       call POMP2_Task_create_end(pomp2_region_6, pomp2_old_task)
+      end if
 #line 51 "test4.f"
             
       call POMP2_Implicit_barrier_enter(pomp2_region_1, pomp2_old_task)
@@ -133,20 +134,15 @@
       subroutine POMP2_Init_regions_000()
          include 'test4.f.opari.inc'
          call POMP2_Assign_handle( pomp2_region_1, 
-     &"61*regionType=parallel*sscl=test4.f:25:25*escl=test4.f:52:5"//
-     &"2**" )
+     &   pomp2_ctc_1 )
          call POMP2_Assign_handle( pomp2_region_2, 
-     &"55*regionType=do*sscl=test4.f:27:27*escl=test4.f:31:31**" )
+     &   pomp2_ctc_2 )
          call POMP2_Assign_handle( pomp2_region_3, 
-     &"75*regionType=sections*sscl=test4.f:33:33*escl=test4.f:38:3"//
-     &"8*numSections=2**" )
+     &   pomp2_ctc_3 )
          call POMP2_Assign_handle( pomp2_region_4, 
-     &"59*regionType=single*sscl=test4.f:40:40*escl=test4.f:42:42*"//
-     &"*" )
+     &   pomp2_ctc_4 )
          call POMP2_Assign_handle( pomp2_region_5, 
-     &"62*regionType=workshare*sscl=test4.f:44:44*escl=test4.f:46:"//
-     &"46**" )
+     &   pomp2_ctc_5 )
          call POMP2_Assign_handle( pomp2_region_6, 
-     &"69*regionType=task*sscl=test4.f:48:48*escl=test4.f:50:50*ha"//
-     &"sUntied=1**" )
+     &   pomp2_ctc_6 )
       end

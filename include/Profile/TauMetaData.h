@@ -23,10 +23,21 @@
 
 #include <TauUtil.h>
 #include <map>
-using namespace std;
-map<string,string> &Tau_metadata_getMetaData();
-int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int counter);
-int Tau_metadata_writeMetaData(FILE *fp, int counter);
+
+// Note: using std::string in a std::map is dangerous 
+// for some libstdc++ implementations.  The risky code is:
+//     std::map<std::string, std::string> mymap;
+//     mymap["hello"] = "world";
+// You need to remember to use:
+//     mymap["hello"] = string("world");
+// It's faster, safer, and easier to use a char*, especially
+// since TAU (over)uses strdup on most function arguments.
+typedef std::map<char const *, char const *> metadata_map_t;
+
+metadata_map_t & Tau_metadata_getMetaData();
+int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int counter, int tid);
+int Tau_metadata_writeMetaData(FILE *fp, int counter, int tid);
+int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int tid);
 int Tau_metadata_writeMetaData(Tau_util_outputDevice *out);
 int Tau_metadata_fillMetaData();
 Tau_util_outputDevice *Tau_metadata_generateMergeBuffer();

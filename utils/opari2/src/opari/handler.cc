@@ -198,22 +198,22 @@ generate_num_threads( ostream&   os,
     {
         if ( r->has_num_threads )
         {
-            os << "      pomp_num_threads = " << p->arg_num_threads << "\n";
+            os << "      pomp2_num_threads = " << p->arg_num_threads << "\n";
         }
         else
         {
-            os << "      pomp_num_threads = pomp2_lib_get_max_threads()\n";
+            os << "      pomp2_num_threads = pomp2_lib_get_max_threads()\n";
         }
     }
     else
     {
         if ( r->has_num_threads )
         {
-            os << "  int pomp_num_threads = " << p->arg_num_threads << ";\n";
+            os << "  int pomp2_num_threads = " << p->arg_num_threads << ";\n";
         }
         else
         {
-            os << "  int pomp_num_threads = omp_get_max_threads();\n";
+            os << "  int pomp2_num_threads = omp_get_max_threads();\n";
         }
     }
 }
@@ -227,22 +227,22 @@ generate_if( ostream&   os,
     {
         if ( r->has_if )
         {
-            os << "      pomp_if = ( " << p->arg_if << " )\n";
+            os << "      pomp2_if = ( " << p->arg_if << " )\n";
         }
         else
         {
-            os << "      pomp_if = .true.\n";
+            os << "      pomp2_if = .true.\n";
         }
     }
     else
     {
         if ( r->has_if )
         {
-            os << "  int pomp_if = (int)( " << p->arg_if << " );\n";
+            os << "  int pomp2_if = (int)( " << p->arg_if << " );\n";
         }
         else
         {
-            os << "  int pomp_if = 1;\n";
+            os << "  int pomp2_if = 1;\n";
         }
     }
 }
@@ -259,6 +259,10 @@ generate_call( const char* event,
 
     if ( lang & L_FORTRAN )
     {
+        if ( strcmp( type, "task" ) == 0 || strcmp( type, "untied_task" ) == 0 )
+        {
+            os << "      if (pomp2_if) then\n";
+        }
         os << "      call POMP2_" << c1 << ( type + 1 )
            << "_" << event << "(" << region_id_prefix << id;
         if ( strstr( type, "task" ) != NULL &&
@@ -271,14 +275,18 @@ generate_call( const char* event,
         {
             if ( lang & L_F77 )
             {
-                os << ",\n     &" << r->generate_ctc_string( lang ) << " ";
+                os << ",\n     &" << r->ctc_string_variable << " ";
             }
             else
             {
-                os << ", &\n     " << r->generate_ctc_string( lang ) << " ";
+                os << ", &\n     " << r->ctc_string_variable << " ";
             }
         }
         os << ")\n";
+        if ( strcmp( type, "task" ) == 0 || strcmp( type, "untied_task" ) == 0 )
+        {
+            os << "      end if\n";
+        }
     }
     else
     {
@@ -286,6 +294,12 @@ generate_call( const char* event,
         {
             os << "{ ";
         }
+
+        if ( strcmp( type, "task" ) == 0 || strcmp( type, "untied_task" ) == 0 )
+        {
+            os << "if (pomp2_if)";
+        }
+
         os << "  POMP2_" << c1 << ( type + 1 )
            << "_" << event << "( &" << region_id_prefix << id;
 
@@ -298,7 +312,7 @@ generate_call( const char* event,
 
         if ( r != NULL )
         {
-            os << ", " << r->generate_ctc_string( lang ) << " ";
+            os << ", " << r->ctc_string_variable << " ";
         }
         os << " );";
         if ( strcmp( event, "end" ) == 0 )
@@ -325,6 +339,10 @@ generate_call_save_task_id( const char* event,
 
     if ( lang & L_FORTRAN )
     {
+        if ( strcmp( type, "task_create" ) == 0 || strcmp( type, "untied_task_create" ) == 0 )
+        {
+            os << "      if (pomp2_if) then\n";
+        }
         os << "      call POMP2_" << c1 << ( type + 1 )
            << "_" << event << "(" << region_id_prefix << id;
         if ( ( strcmp( type, "task_create" ) == 0 ) || ( strcmp( type, "untied_task_create" ) == 0 )  )
@@ -349,20 +367,24 @@ generate_call_save_task_id( const char* event,
             {
                 if ( r->name == "task" )
                 {
-                    os << ", \n     &pomp_if";
+                    os << ", \n     &pomp2_if";
                 }
-                os << ",\n     &" << r->generate_ctc_string( lang ) << " ";
+                os << ",\n     &" << r->ctc_string_variable << " ";
             }
             else
             {
                 if ( r->name == "task" )
                 {
-                    os << ", &\n      pomp_if";
+                    os << ", &\n      pomp2_if";
                 }
-                os << ", &\n     " << r->generate_ctc_string( lang ) << " ";
+                os << ", &\n     " << r->ctc_string_variable << " ";
             }
         }
         os << ")\n";
+        if ( strcmp( type, "task_create" ) == 0 || strcmp( type, "untied_task_create" ) == 0 )
+        {
+            os << "      end if\n";
+        }
     }
     else
     {
@@ -370,6 +392,10 @@ generate_call_save_task_id( const char* event,
         if ( ( strcmp( type, "task_create" ) == 0 ) || ( strcmp( type, "untied_task_create" ) == 0 )  )
         {
             os << "  POMP2_Task_handle pomp2_new_task;\n";
+        }
+        if ( strcmp( type, "task_create" ) == 0 || strcmp( type, "untied_task_create" ) == 0 )
+        {
+            os << "if (pomp2_if)";
         }
         os << "  POMP2_" << c1 << ( type + 1 )
            << "_" << event << "( &" << region_id_prefix << id;
@@ -382,9 +408,9 @@ generate_call_save_task_id( const char* event,
         {
             if ( r->name == "task" )
             {
-                os << ", pomp_if";
+                os << ", pomp2_if";
             }
-            os << ", " << r->generate_ctc_string( lang ) << " ";
+            os << ", " << r->ctc_string_variable << " ";
         }
         os << " );\n";
     }
@@ -401,19 +427,31 @@ generate_call_restore_task_id( const char* event,
 
     if ( lang & L_FORTRAN )
     {
+        if ( strcmp( type, "task_create" ) == 0 || strcmp( type, "untied_task_create" ) == 0 )
+        {
+            os << "      if (pomp2_if) then\n";
+        }
         os << "      call POMP2_" << c1 << ( type + 1 )
            << "_" << event << "(" << region_id_prefix << id;
         os << ", pomp2_old_task" << ")\n";
+        if ( strcmp( type, "task_create" ) == 0 || strcmp( type, "untied_task_create" ) == 0 )
+        {
+            os << "      end if\n";
+        }
     }
     else
     {
+        if ( strcmp( type, "task_create" ) == 0 || strcmp( type, "untied_task_create" ) == 0 )
+        {
+            os << "if (pomp2_if)";
+        }
         os << "  POMP2_" << c1 << ( type + 1 )
            << "_" << event << "( &" << region_id_prefix << id;
         os << ", pomp2_old_task ); }\n";
     }
 }
 
-/** @brief Instrument an OpenMP Fork. The pomp_num_threads variable is
+/** @brief Instrument an OpenMP Fork. The pomp2_num_threads variable is
  *         used to pass the number of requested threads for the
  *         parallel region to the POMP library. It is either the
  *         result of omp_get_max_threads() or of the num_threads()
@@ -443,18 +481,18 @@ generate_fork_call( const char* event,
            << "_" << event << "(" << region_id_prefix << id;
         if ( lang & L_F77 )
         {
-            os << ",\n     &pomp_if, pomp_num_threads, pomp2_old_task";
+            os << ",\n     &pomp2_if, pomp2_num_threads, pomp2_old_task";
             if ( r != NULL )
             {
-                os << ",\n     &" << r->generate_ctc_string( lang ) << " ";
+                os << ",\n     &" << r->ctc_string_variable << " ";
             }
         }
         else
         {
-            os << ",&\n      pomp_if, pomp_num_threads, pomp2_old_task";
+            os << ",&\n      pomp2_if, pomp2_num_threads, pomp2_old_task";
             if ( r != NULL )
             {
-                os << ", &\n      " << r->generate_ctc_string( lang ) << " ";
+                os << ", &\n      " << r->ctc_string_variable << " ";
             }
         }
         os << ")\n";
@@ -463,11 +501,11 @@ generate_fork_call( const char* event,
     {
         os << "  POMP2_Task_handle pomp2_old_task;\n";
         os << "  POMP2_" << c1 << ( type + 1 ) << "_" << event
-           << "(&" << region_id_prefix << id << ", pomp_if, pomp_num_threads, "
+           << "(&" << region_id_prefix << id << ", pomp2_if, pomp2_num_threads, "
            << "&pomp2_old_task";
         if ( r != 0 )
         {
-            os << ", " << r->generate_ctc_string( lang ) << " ";
+            os << ", " << r->ctc_string_variable << " ";
         }
         os << ");\n";
     }
@@ -476,8 +514,15 @@ generate_fork_call( const char* event,
 /** @brief Generate the OpenMP pragma. */
 void
 generate_pragma( const char* p,
+                 int         lineNo,
                  ostream&    os )
 {
+    if ( lineNo && keepSrcInfo )
+    {
+        // print original source location information reset pragma
+        os << "#line " << lineNo << " \"" << infile << "\"" << "\n";
+    }
+
     if ( lang & L_FORTRAN )
     {
         os << "!$omp " << p << "\n";
@@ -493,12 +538,12 @@ generate_barrier( int      n,
                   ostream& os )
 {
     generate_call_save_task_id( "enter", "implicit_barrier", n, os, NULL );
-    generate_pragma( "barrier", os );
+    generate_pragma( "barrier", 0, os );
     generate_call_restore_task_id( "exit", "implicit_barrier", n, os );
 }
 
 /**@brief Print the OpenMP Pragma. Insert num_threads clause, if
- *        needed to pass pomp_num_therads to the OpenMP runtime. The
+ *        needed to pass pomp2_num_therads to the OpenMP runtime. The
  *        num_threads clause, if it was presend, may not appear here
  *        again, since it would be evaluated twice and it may have
  *        side effects.*/
@@ -542,7 +587,7 @@ print_pragma_task( OMPragma* p,
                 {
                     os << p->lines.back() << "\n";
                     os << "!$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)\n";
-                    os << "!$omp& if(pomp_if) num_threads(pomp_num_threads) copyin(" << pomp_tpd << ")\n";
+                    os << "!$omp& if(pomp2_if) num_threads(pomp2_num_threads) copyin(" << pomp_tpd << ")\n";
                     if ( p->changed_default() )
                     {
                         os << "!$omp& shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)\n";
@@ -552,7 +597,7 @@ print_pragma_task( OMPragma* p,
                 {
                     os << p->lines.back() << "\n";
                     os << "!$omp& firstprivate(pomp2_old_task) private(pomp2_new_task)\n";
-                    os << "!$omp& if(pomp_if) num_threads(pomp_num_threads) \n";
+                    os << "!$omp& if(pomp2_if) num_threads(pomp2_num_threads) \n";
                     if ( p->changed_default() )
                     {
                         os << "!$omp& shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)\n";
@@ -565,7 +610,7 @@ print_pragma_task( OMPragma* p,
                 {
                     os << p->lines.back() << " &\n";
                     os << "  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &\n";
-                    os << "  !$omp if(pomp_if) num_threads(pomp_num_threads) copyin(" << pomp_tpd << ")";
+                    os << "  !$omp if(pomp2_if) num_threads(pomp2_num_threads) copyin(" << pomp_tpd << ")";
                     if ( p->changed_default() )
                     {
                         os << " &\n  !$omp shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)";
@@ -576,7 +621,7 @@ print_pragma_task( OMPragma* p,
                 {
                     os << p->lines.back() << " &\n";
                     os << "  !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &\n";
-                    os << "  !$omp if(pomp_if) num_threads(pomp_num_threads)";
+                    os << "  !$omp if(pomp2_if) num_threads(pomp2_num_threads)";
                     if ( p->changed_default() )
                     {
                         os << " &\n  !$omp shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)";
@@ -590,7 +635,7 @@ print_pragma_task( OMPragma* p,
             if ( copytpd )
             {
                 os << p->lines.back();
-                os << " firstprivate(pomp2_old_task) if(pomp_if) num_threads(pomp_num_threads) copyin(" << pomp_tpd << ")";
+                os << " firstprivate(pomp2_old_task) if(pomp2_if) num_threads(pomp2_num_threads) copyin(" << pomp_tpd << ")";
                 if ( lang & L_FORTRAN )
                 {
                     os << " private(pomp2_new_task)";
@@ -600,7 +645,7 @@ print_pragma_task( OMPragma* p,
             else
             {
                 os << p->lines.back();
-                os << " firstprivate(pomp2_old_task) if(pomp_if) num_threads(pomp_num_threads)";
+                os << " firstprivate(pomp2_old_task) if(pomp2_if) num_threads(pomp2_num_threads)";
                 if ( lang & L_FORTRAN )
                 {
                     os << " private(pomp2_new_task)";
@@ -619,7 +664,7 @@ print_pragma_task( OMPragma* p,
         if ( lang & L_F77 )
         {
             os << p->lines.back() << "\n";
-            os << "!$omp& if(pomp_if) firstprivate(pomp2_new_task)\n";
+            os << "!$omp& if(pomp2_if) firstprivate(pomp2_new_task, pomp2_if)\n";
             if ( p->changed_default() )
             {
                 os << "!$omp& shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)\n ";
@@ -628,7 +673,7 @@ print_pragma_task( OMPragma* p,
         else if ( lang & L_FORTRAN )
         {
             os << p->lines.back();
-            os << " if(pomp_if) firstprivate(pomp2_new_task)";
+            os << " if(pomp2_if) firstprivate(pomp2_new_task, pomp2_if)";
             if ( p->changed_default() )
             {
                 os << "&\n  !$omp shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)";
@@ -638,7 +683,7 @@ print_pragma_task( OMPragma* p,
         else
         {
             os << p->lines.back();
-            os << " if(pomp_if) firstprivate(pomp2_new_task)\n";
+            os << " if(pomp2_if) firstprivate(pomp2_new_task, pomp2_if)\n";
         }
     }
     else
@@ -1254,11 +1299,11 @@ h_endparalleldo( OMPragma* p,
                  ostream&  os )
 {
     int n = RExit( p, true );
-    generate_pragma( "end do nowait", os );
+    generate_pragma( "end do nowait", p->lineno, os );
     generate_barrier( n, os );
     generate_call( "exit", "do", n, os, NULL );
     generate_call( "end", "parallel", n, os, NULL );
-    generate_pragma( "end parallel", os );
+    generate_pragma( "end parallel", p->lineno, os );
     generate_call_restore_task_id( "join", "parallel", n, os );
     if ( keepSrcInfo )
     {
@@ -1333,11 +1378,11 @@ h_endparallelsections( OMPragma* p,
 {
     int n = RExit( p, true );
     generate_call( "end", "section", n, os, NULL );
-    generate_pragma( "end sections nowait", os );
+    generate_pragma( "end sections nowait", p->lineno, os );
     generate_barrier( n, os );
     generate_call( "exit", "sections", n, os, NULL );
     generate_call( "end", "parallel", n, os, NULL );
-    generate_pragma( "end parallel", os );
+    generate_pragma( "end parallel", p->lineno, os );
     generate_call_restore_task_id( "join", "parallel", n, os );
     if ( keepSrcInfo )
     {
@@ -1351,7 +1396,7 @@ h_barrier( OMPragma* p,
 {
     OMPRegion* r = new OMPRegion( p->name, p->filename,
                                   p->lineno, p->lineno + p->lines.size() - 1 );
-    int        n = r->id;
+    int n = r->id;
     regions.push_back( r );
     generate_call_save_task_id( "enter", "barrier", n, os, r );
     print_pragma( p, os );
@@ -1368,7 +1413,7 @@ h_flush( OMPragma* p,
 {
     OMPRegion* r = new OMPRegion( p->name, p->filename,
                                   p->lineno, p->lineno + p->lines.size() - 1 );
-    int        n = r->id;
+    int n = r->id;
     regions.push_back( r );
     generate_call( "enter", "flush", n, os, r );
     print_pragma( p, os );
@@ -1385,7 +1430,7 @@ h_atomic( OMPragma* p,
 {
     OMPRegion* r = new OMPRegion( p->name, p->filename,
                                   p->lineno, p->lineno + p->lines.size() - 1 );
-    int        n = r->id;
+    int n = r->id;
     regions.push_back( r );
     if ( enabled & C_ATOMIC )
     {
@@ -1459,11 +1504,11 @@ h_endparallelworkshare( OMPragma* p,
                         ostream&  os )
 {
     int n = RExit( p, true );
-    generate_pragma( "end workshare nowait", os );
+    generate_pragma( "end workshare nowait", p->lineno, os );
     generate_barrier( n, os );
     generate_call( "exit", "workshare", n, os, NULL );
     generate_call( "end", "parallel", n, os, NULL );
-    generate_pragma( "end parallel", os );
+    generate_pragma( "end parallel", p->lineno, os );
     generate_call_restore_task_id( "join", "parallel", n, os );
     if ( keepSrcInfo )
     {
@@ -1632,7 +1677,7 @@ h_taskwait( OMPragma* p,
 {
     OMPRegion* r = new OMPRegion( p->name, p->filename,
                                   p->lineno, p->lineno + p->lines.size() - 1 );
-    int        n = r->id;
+    int n = r->id;
     regions.push_back( r );
     generate_call_save_task_id( "begin", "taskwait", n, os, r );
     print_pragma( p, os );

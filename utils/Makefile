@@ -20,6 +20,7 @@ VTFDIR=
 OTFDIR=
 PDTDIR=
 DYNINSTDIR=
+OPARICOMP=
 #######################################################################
  
 #MIPSR8K#ISA          = -mips4		   #ENDIF#
@@ -44,8 +45,15 @@ LINKER	= $(CC)
 LEXTRA = 
 DWARFOPTS=
 #APPLECXX#CEXTRA = -DAPPLECXX #ENDIF#
+#CLANG#CEXTRA = -DTAU_CLANG -DTAU_DOT_H_LESS_HEADERS #ENDIF#
 #HP_CFLAGS#CEXTRA = -AA -DTAU_DOT_H_LESS_HEADERS #ENDIF#
+#FX#CEXTRA = -Xg -DTAU_DOT_H_LESS_HEADERS -DTAU_FUJITSU #ENDIF#
+# Remove -Xg from compilation for Fujitsu
+#FX#CEXTRA = -DTAU_DOT_H_LESS_HEADERS -DTAU_FUJITSU #ENDIF#
 #CRAYCC#CEXTRA = -DTAU_DOT_H_LESS_HEADERS #ENDIF#
+#MPC#CEXTRA = -DTAU_MPC -DTAU_DOT_H_LESS_HEADERS #ENDIF#
+#OPEN64ORC#CEXTRA = -DTAU_OPEN64 -DTAU_DOT_H_LESS_HEADERS #ENDIF#
+#MPC#CC = $(CONFIG_CXX) #ENDIF#
 #CRAYX1CC#CEXTRA = -DTAU_DOT_H_LESS_HEADERS #ENDIF#
 #MINGW#CEXTRA	       = -DTAU_WINDOWS -DTAU_DISABLE_SIGUSR -DTAU_MINGW -DTAU_ENABLE  -DTAU_GNU #ENDIF#
 #HPGNU#CEXTRA = -DTAU_HP_GNU #ENDIF#
@@ -84,12 +92,15 @@ SELECTFILE 	= tau_selectfile
 #TRACE#INSTALLTAU_TIMECORRECT	= $(INSTALLDEST)/tau_timecorrect #ENDIF#
 #VTF#TAU2VTF 	= tau2vtf #ENDIF#
 #OTF#TAU2OTF 	= tau2otf #ENDIF#
+#OTF2#TAU2OTF 	= tau2otf2 #ENDIF#
 #VTF#VTF2PROFILE 	= vtfconverter/vtf2profile #ENDIF#
 #VTF#INSTALLTAU2VTF 	= $(INSTALLDEST)/tau2vtf #ENDIF#
 #VTF#INSTALLVTF2PROFILE 	= $(INSTALLDEST)/vtf2profile #ENDIF#
 #OTF#INSTALLTAU2OTF 	= $(INSTALLDEST)/tau2otf #ENDIF#
-#OTF#OTFLIBS 	= -L$(OTFDIR)/$(TAU_ARCH)/lib -lotf $(TAU_TRACE_INPUT_LIB) #ENDIF#
-#OTFSRC#OTFLIBS 	= -L$(OTFDIR)/lib -lotf -lz $(TAU_TRACE_INPUT_LIB) #ENDIF#
+#OTF2#INSTALLTAU2OTF 	= $(INSTALLDEST)/tau2otf2 #ENDIF#
+#OTF#OTFLIBS 	= -L$(OTFDIR)/$(TAU_ARCH)/lib64 -L$(OTFDIR)/$(TAU_ARCH)/lib -lotf $(TAU_TRACE_INPUT_LIB) #ENDIF#
+#OTFSRC#OTFLIBS 	= -L$(OTFDIR)/lib64 -L$(OTFDIR)/lib -lotf -lz $(TAU_TRACE_INPUT_LIB) #ENDIF#
+#OTF2#OTFLIBS 	= -L$(OTFDIR)/lib64 -L$(OTFDIR)/lib -lotf2 -lscorep_parser_tools -lscorep_utilities $(TAU_TRACE_INPUT_LIB) #ENDIF#
 #EBS2OTF#INSTALL_EBS2OTF = $(INSTALLLIBDEST)/ebs2otf.so #ENDIF#
 #TAU2EPILOG#TAU2ELG = elgconverter/tau2elg #ENDIF#
 #TAU2EPILOG#INSTALLTAU2ELG = $(INSTALLDEST)/tau2elg #ENDIF#
@@ -117,6 +128,7 @@ SELECTFILE 	= tau_selectfile
 PDT_ABI = $(ABI)
 #MIPS32LINUX#PDT_ABI = #ENDIF#
 #MIPS64LINUX#PDT_ABI = #ENDIF#
+#MMIC#PDT_ABI = #ENDIF#
 
 # Do we use a different compiler for PDT based tau_instrumentor?
 PDT_CXX_COMP = $(CXX) $(INTELOPTS)
@@ -165,6 +177,8 @@ INSTALL_OTF_TOOLS = $(INSTALL_EBS2OTF)
 #DYNINST#INSTALLTAURUN 	= $(INSTALLDEST)/tau_run #ENDIF#
 #SP1#LARGEFILEOPT = -DTAU_LARGEFILE -D_LARGEFILE64_SOURCE -D_LARGE_FILE_API #ENDIF#
 
+#CRAYCNL#CRAY_OPARI2_CONFIG= --build=cray CC_FOR_BUILD=cc CXX_FOR_BUILD=CC FC_FOR_BUILD=ftn CC=cc CXX=CC FC=ftn F77_FOR_BUILD=ftn F77=ftn #ENDIF#
+
 CFLAGS        = $(USER_OPT) -I../include $(CEXTRA) $(CWARNING) $(COMPSPECIFIC) $(COMPILEROPT) $(PKGOPT) $(LARGEFILEOPT) $(DEBUGOPT) $(GNUOPT)
 
 PDTCFLAGS     = $(USER_OPT) -I../include $(CEXTRA) $(CWARNING) $(COMPSPECIFIC) $(COMPILEROPT) $(PKGOPT) $(LARGEFILEOPT) $(DEBUGOPT)
@@ -203,7 +217,7 @@ opari/opari:
 		cd opari ; $(MAKE) opari
 
 opari2/_build/bin/opari2:
-		cd opari2 ;mkdir _build; cd _build; CXX=$(CONFIG_CXX) CC=$(CONFIG_CC) ../configure -prefix=`pwd` ; $(MAKE) ; $(MAKE) install
+		cd opari2 ;/bin/rm -rf  _build; mkdir _build; cd _build; CXX=$(CONFIG_CXX) CC=$(CONFIG_CC) ../configure --prefix=`pwd` --with-compiler-suite=$(OPARICOMP) $(CRAY_OPARI2_CONFIG); $(MAKE) ; $(MAKE) install
 
 tau_timecorrect.o:	tau_timecorrect.cpp
 		$(CXX) $(CFLAGS) tau_timecorrect.cpp -c
@@ -219,6 +233,11 @@ tau2otf: 	tau2otf.o
 
 tau2otf.o:	tau2otf.cpp
 		$(CXX) $(CFLAGS)  tau2otf.cpp -c -I$(OTFDIR)/include -I$(OTFDIR)/include/vampirtrace
+tau2otf2: 	tau2otf2.o
+		$(CXX) $(CFLAGS) tau2otf2.o -o tau2otf2 -lm $(LEXTRA) $(OTFLIBS)
+
+tau2otf2.o:	tau2otf2.cpp
+		$(CXX) $(CFLAGS)  tau2otf2.cpp -c -I$(OTFDIR)/include
 
 ebs2otf/ebs2otf.so:
 		cd ebs2otf ; $(MAKE)
@@ -329,6 +348,7 @@ user_event_data.o:	user_event_data.cpp
 clean:
 		/bin/rm -rf *.o $(EXECUTABLES) *.dep lib*$(LSX) *.ii *.ti ti_files cxx_repository ii_files rii_files 
 		cd opari ; make clean
+		cd opari2 ; /bin/rm -rf _build
 		cd ebs2otf ; $(MAKE) clean
 
 $(INSTALLDEST)/pprof: pprof
@@ -414,6 +434,14 @@ $(INSTALLDEST)/tau2otf: tau2otf
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
+
+$(INSTALLDEST)/tau2otf2: tau2otf2
+		@echo Installing $? in $(INSTALLDEST)
+		if [ -d $(INSTALLDEST) ] ; then true; \
+                   else mkdir $(INSTALLDEST) ;fi 
+		/bin/rm -f $(INSTALLDEST)/tau2otf
+		$(TAU_INSTALL) $? $(INSTALLDEST)
+		ln -s $(INSTALLDEST)/tau2otf2 $(INSTALLDEST)/tau2otf
 
 $(INSTALLDEST)/vtf2profile: vtfconverter/vtf2profile
 		@echo Installing $? in $(INSTALLDEST)

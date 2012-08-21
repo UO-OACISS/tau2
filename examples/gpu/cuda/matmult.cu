@@ -1,5 +1,9 @@
 #include <stdlib.h>
+#include <unistd.h>
 #include <iostream>
+#include <string>
+#include <sstream>
+using namespace std;
 #include "cuda_runtime_api.h"
 
 #define SIZE_OF_MATRIX 1000
@@ -79,49 +83,49 @@ int lda)
 	}
 }
 
-void multiply_by_element(dim3 grid, dim3 threads, float *d_a, float *d_b, float *d_c, int m)
+void multiply_by_element(dim3 grid, dim3 threads, float *d_a, float *d_b, float *d_c, int m, cudaStream_t cStream)
 {
 
 	cudaError err;
 	unsigned int matsize = SIZE_OF_MATRIX*SIZE_OF_MATRIX*sizeof(float);
 	float* c = (float*)malloc(matsize);
 	
-	multiply_matrices<<< grid, threads >>>(d_a, d_b, d_c, m);
+	multiply_matrices<<< grid, threads, 0, cStream >>>(d_a, d_b, d_c, m);
 	err = cudaGetLastError();
 	if (err != cudaSuccess)
 	{
-		std::cout << "error in kernel, " << cudaGetErrorString(err) << std::endl;
+		cout << "error in kernel, " << cudaGetErrorString(err) << endl;
 	}
 	
-	cudaDeviceSynchronize();
-	err = cudaMemcpy(c, d_c, matsize, cudaMemcpyDeviceToHost);
+	cudaStreamSynchronize(cStream);
+	err = cudaMemcpyAsync(c, d_c, matsize, cudaMemcpyDeviceToHost, cStream);
 	if (err != cudaSuccess)
 	{
-		std::cout << "error in memcpy, #=" << cudaGetErrorString(err) << std::endl;
+		cout << "error in memcpy, #=" << cudaGetErrorString(err) << endl;
 	}
 
 
 }
 
-void multiply_by_block(dim3 grid, dim3 threads, float *d_a, float *d_b, float *d_c, int m)
+void multiply_by_block(dim3 grid, dim3 threads, float *d_a, float *d_b, float *d_c, int m, cudaStream_t cStream)
 {
 	cudaError err;
 	unsigned int matsize = SIZE_OF_MATRIX*SIZE_OF_MATRIX*sizeof(float);
 	float* c = (float*)malloc(matsize);
 
-	multiply_matrices_shared_blocks<<< grid, threads >>>(d_a, d_b, d_c, m);
+	multiply_matrices_shared_blocks<<< grid, threads, 0, cStream >>>(d_a, d_b, d_c, m);
 
 	err = cudaGetLastError();
 	if (err != cudaSuccess)
 	{
-		std::cout << "error in kernel, " << cudaGetErrorString(err) << std::endl;
+		cout << "error in kernel, " << cudaGetErrorString(err) << endl;
 	}
 
-	cudaDeviceSynchronize();
-	err = cudaMemcpy(c, d_c, matsize, cudaMemcpyDeviceToHost);
+	cudaStreamSynchronize(cStream);
+	err = cudaMemcpyAsync(c, d_c, matsize, cudaMemcpyDeviceToHost, cStream);
 	if (err != cudaSuccess)
 	{
-		std::cout << "error in memcpy, #=" << cudaGetErrorString(err) << std::endl;
+		cout << "error in memcpy, #=" << cudaGetErrorString(err) << endl;
 	}
 }
 
@@ -137,11 +141,10 @@ int main(int argc, char** argv)
 
 	unsigned int matsize = SIZE_OF_MATRIX*SIZE_OF_MATRIX*sizeof(float);
 
-	//std::cout << "blocks: " << number_of_blocks << " threads: " <<
-	//number_of_threads << std::endl;
+	//cout << "blocks: " << number_of_blocks << " threads: " <<
+	//number_of_threads << endl;
 
-	std::cout.flush();
-	cudaSetDevice(0);
+	//cout.flush();
 
 	float* a = (float*)malloc(matsize);
 	float* b = (float*)malloc(matsize);
@@ -155,75 +158,180 @@ int main(int argc, char** argv)
 			a[i*m+j] = i-j*2 + i-j+1 + 1;
 			b[i*m+j] = i-j*2 + i-j+1 + 1;
 			c[i*m+j] = 0;
-			//std::cout << a[i*m+j] << ", ";
+			//cout << a[i*m+j] << ", ";
 		}
-		//std::cout << std::endl;
+		//cout << endl;
 	}
-
-	float *d_a, *d_b, *d_c;
 	cudaError_t err;
-	err = cudaMalloc((void **) &d_a, matsize);
-	if (err != cudaSuccess)
-	{
-		std::cout << "error in malloc, #=" << cudaGetErrorString(err) << std::endl;
+
+	int count = 0;
+
+	err = cudaGetDeviceCount(&count);
+
+	cout << count << " devices found." << endl;
+
+	string device_list("");
+	int number_of_iterations = 1;
+	
+	int opt = getopt(argc, argv, "d:i:");
+	while(opt != -1) {
+		stringstream str;
+		switch(opt) {
+			case 'd':
+				device_list = string(optarg);
+				break;
+			case 'i':
+				str << optarg;
+				str >> number_of_iterations;
+				break;
+			case '?':
+				if (optopt == 'd')
+					cerr << "Error, option -d requires argument: comma delimted list of devices to run on." << endl;
+				else if (optopt == 'i')
+					cerr << "Error, option -i requires argument: number of iterations to run." << endl;
+				else
+					cerr << "Error, unknow option. Usage:\nmatmult [-d <device id>,...] [-i <number of iterations]" << endl;
+				return 1;
+			default:
+				break;
+		}
+	  opt = getopt(argc, argv, "d:i:");
 	}
-	err = cudaMalloc((void **) &d_b, matsize);
-	if (err != cudaSuccess)
+	int devices[count];
+	int nDevices = 0;
+	//default: use all the devices
+	if (device_list.compare("") == 0)
 	{
-		std::cout << "error in malloc, #=" << cudaGetErrorString(err) << std::endl;
+		for (int d=0;d<count;d++)
+		{
+			devices[d] = d;
+		}
+		nDevices = count;
 	}
-	err = cudaMalloc((void **) &d_c, matsize);
-	if (err != cudaSuccess)
+	else
 	{
-		std::cout << "error in malloc, #=" << cudaGetErrorString(err) << std::endl;
+		for (int d=0;d<count;d++)
+		{
+			stringstream str;
+			str << d;
+			char c = 0;
+			if (str >> c) {
+				if (device_list.find(c) != string::npos) {
+					devices[nDevices++] = d;
+				}
+			}
+		}
+	}
+	//cout << "finnished mapping devices." << endl;
+	float *d_a[nDevices], *d_b[nDevices], *d_c[nDevices];
+	cudaStream_t streams[nDevices];
+	for (int d=0;d<nDevices;d++)
+	{
+		cudaSetDevice(devices[d]);
+		cudaDeviceProp deviceProp;
+		cudaGetDeviceProperties(&deviceProp, devices[d]);
+		cout << "Using device " << devices[d] << ", name: " << deviceProp.name << endl;
+
+		err = cudaSetDevice(devices[d]);
+		if (err != cudaSuccess)
+		{
+			cout << "error setting device, #=" << cudaGetErrorString(err) << endl;
+		}
+		err = cudaStreamCreate(&streams[d]);
+		if (err != cudaSuccess)
+		{
+			cout << "error in stream creation, #=" << cudaGetErrorString(err) << endl;
+		}
+
+
+
+		err = cudaMalloc((void **) &d_a[d], matsize);
+		if (err != cudaSuccess)
+		{
+			cout << "error in malloc, #=" << cudaGetErrorString(err) << endl;
+		}
+		err = cudaMalloc((void **) &d_b[d], matsize);
+		if (err != cudaSuccess)
+		{
+			cout << "error in malloc, #=" << cudaGetErrorString(err) << endl;
+		}
+		err = cudaMalloc((void **) &d_c[d], matsize);
+		if (err != cudaSuccess)
+		{
+			cout << "error in malloc, #=" << cudaGetErrorString(err) << endl;
+		}
+		
 	}
 
-	err = cudaMemcpy(d_a, a, matsize, cudaMemcpyHostToDevice);
-	if (err != cudaSuccess)
+	for (int i=0; i<number_of_iterations*nDevices; i++)
 	{
-		std::cout << "error in memcpy, #=" << cudaGetErrorString(err) << std::endl;
+		int cDevice = i%nDevices;
+		cudaStream_t cStream = streams[cDevice];
+		cudaSetDevice(devices[cDevice]);
+		if (err != cudaSuccess)
+		{
+			cout << "error setting device: " << devices[i%nDevices] << " #=" << cudaGetErrorString(err) << endl;
+		}
+
+		err = cudaMemcpyAsync(d_a[cDevice], a, matsize, cudaMemcpyHostToDevice, cStream);
+		if (err != cudaSuccess)
+		{
+			cout << "error in memcpy, #=" << cudaGetErrorString(err) << endl;
+		}
+		err = cudaMemcpyAsync(d_b[cDevice], b, matsize, cudaMemcpyHostToDevice, cStream);
+		if (err != cudaSuccess)
+		{
+			cout << "error in memcpy, #=" << cudaGetErrorString(err) << endl;
+		}
+
+		//cout << "running on device " << cDevice << endl;
+
+		dim3 grid(number_of_blocks, number_of_blocks);
+		dim3 threads(number_of_threads, number_of_threads, 1);
+
+		//multiply each element at a time.
+		multiply_by_element(grid, threads, d_a[cDevice], d_b[cDevice], d_c[cDevice], m, cStream);
+
+		//multiply by first load a 16x16 submatrix into shared memory.
+		multiply_by_block(grid, threads, d_a[cDevice], d_b[cDevice], d_c[cDevice], m, cStream);
 	}
-	err = cudaMemcpy(d_b, b, matsize, cudaMemcpyHostToDevice);
-	if (err != cudaSuccess)
+
+	cout << "Finnished " << number_of_iterations << " iterations on " << nDevices << " devices." << endl;
+
+	for (int d=0;d<nDevices;d++)
 	{
-		std::cout << "error in memcpy, #=" << cudaGetErrorString(err) << std::endl;
+		cudaSetDevice(devices[d]);
+		cudaStreamSynchronize(streams[d]);
 	}
-
-	dim3 grid(number_of_blocks, number_of_blocks);
-	dim3 threads(number_of_threads, number_of_threads, 1);
-
-	//multiply each element at a time.
-	multiply_by_element(grid, threads, d_a, d_b, d_c, m);
-
-	//multiply by first load a 16x16 submatrix into shared memory.
-	multiply_by_block(grid, threads, d_a, d_b, d_c, m);
+	for (int d=0;d<nDevices;d++)
+	{
+		cudaStreamDestroy(streams[d]);
+	}
 	//print c	
 	/*
-	std::cout << " results: " << std::endl;
+	cout << " results: " << endl;
 	for (int i=0; i<m; i++) {
 		for (int j=0; j<m; j++) {
-			std::cout << c[i*m+j] << ", ";
+			cout << c[i*m+j] << ", ";
 		}
-		std::cout << std::endl;
+		cout << endl;
 	}
 	*/
 	
 	
 	//print c	
 	/*
-	std::cout << " results: " << std::endl;
+	cout << " results: " << endl;
 	for (int i=0; i<m; i++) {
 		for (int j=0; j<m; j++) {
-			std::cout << c[i*m+j] << ", ";
+			cout << c[i*m+j] << ", ";
 		}
-		std::cout << std::endl;
+		cout << endl;
 	}
 	*/
-
 	cudaFree(d_a);
 	cudaFree(d_b);
 	cudaFree(d_c);
 
-	cudaDeviceSynchronize();
 	cudaThreadExit();
 }

@@ -670,7 +670,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         heightAxisStrings.add(PlotFactory.getSaneDoubleString(maxHeightValue * .75));
         heightAxisStrings.add(PlotFactory.getSaneDoubleString(maxHeightValue));
 
-        axes.setStrings("receiver", "sender", metricStrings[heightMetric], threadNames, threadNames, heightAxisStrings);
+        axes.setStrings("sender", "receiver", metricStrings[heightMetric], threadNames, threadNames, heightAxisStrings);
         axes.setOnEdge(true);
 
         //colorScale.setStrings(Float.toString(minColorValue), Float.toString(maxColorValue), metricStrings[colorMetric]);
