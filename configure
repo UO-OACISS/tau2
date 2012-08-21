@@ -1904,7 +1904,7 @@ if [ "x$upcnetwork" == "x" ] ; then
     echo "NOTE: UPC network and MPI not specified.  Assuming -upcnetwork=smp."
     upcnetwork=smp
   else
-    echo "NOTE: UPC network not specified.  Assuming -upcnetwork=mpi."
+    #echo "NOTE: UPC network not specified.  Assuming -upcnetwork=mpi."
     upcnetwork=mpi
   fi
 else
@@ -3874,21 +3874,23 @@ then
   *)
         if [ $mpc = yes ]
         then
-          mpiinc=`which mpcrun | sed -e 's/\/bin\/mpcrun$//'`/include
+          mpiinc=`which mpcrun | sed -e 's/\/bin\/mpcrun$//' -e 's/\/bin64\/mpcrun$//'`/include
         else
-          mpiinc=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/include
-          if [ -d $mpiinc ]
+          mpiinc=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpcrun$//'`/include
+          if [ -d $mpiinc -a -r $mpiinc/mpi.h ]
           then
             echo "Using MPI include directory $mpiinc"
 	    echo "machine is $machine"
 	  else
-	    mpiinc=`which mpiexec | sed -e 's/\/bin\/mpiexec$//'`/include
-            if [ -d $mpiinc ]
+	    mpiinc=`which mpiexec | sed -e 's/\/bin\/mpiexec$//' -e 's/\/bin64\/mpiexec$//'`/include
+            if [ -d $mpiinc -a -r $mpiinc/mpi.h ]
             then
               echo "Using MPI include directory $mpiinc"
+	    else 
+	      mpiinc=""
             fi
           fi
-          if [ ! -r $mpiinc/mpi.h -a $mpiinc/mpich2/mpi.h ] ; then
+          if [ ! -r $mpiinc/mpi.h -a -r $mpiinc/mpich2/mpi.h ] ; then
             mpiinc=$mpiinc/mpich2 
             echo "Correction: Using MPI include directory $mpiinc instead"
           fi
@@ -4015,13 +4017,15 @@ then
         then
           mpilib=`which mpcrun | sed -e 's/\/bin\/mpcrun$//'`/lib
         else
-          mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/lib
+          mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpirun$//'`/lib
           if [ ! -d $mpilib ] ; then
            # Try the ".../lib64" directory instead of ".../lib"
-           mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/lib64
+           mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpirun$//'`/lib64
           fi
           if [ -d $mpilib ] ; then
             echo "Using MPI lib directory $mpilib"
+	  else
+ 	    mpilib=""
           fi
         fi
 	;;
@@ -5321,6 +5325,9 @@ EOF
       echo "yes"
       if [ -r $mpilib/libmpi.so -a -r $mpilib/libmpi++.so -a -r $mpilib/libsma.so -a -r $mpilib/libxmpi.so ] ; then
 	  # Don't enable this for SGI Altix. Their MPI2 is not complete
+	  # SGI MPI2 is ok now. We can enable it. Perhaps...
+	  useropt="$useropt#-DTAU_MPI_F_STATUSES_IGNORE_ABSENT"
+	  fixmakeargs="$fixmakeargs MPI2 useropt=$useropt"
 	  echo "SGI MPI detected. Disabling MPI2 wrappers for SGI MPI"
       elif [ -r $mpilib/libfmpi.so -a -r $mpilib/libmpio.so  -a -r $mpilib/libtvscampi.so ] ; then
           # Scali does not use MPI2 PMPI interface properly. 
