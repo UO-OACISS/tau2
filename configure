@@ -6789,13 +6789,13 @@ fi
 if [ $opari = yes ] ; then
     fixmakeargs="$fixmakeargs OPARI2 oparidir=$oparidir"
     if [ $oparicomp = no ] ; then
-          if [ $fortran_compiler = intel ] ; then
+          if [ "x$fortran_compiler" = "xintel" ] ; then
              oparicomp="$fortran_compiler"
           fi
-          if [ $fortran_compiler = pathscale ] ; then
+          if [ "x$fortran_compiler" = "xpathscale" ] ; then
              oparicomp="$fortran_compiler"
           fi
-          if [ $fortran_compiler = pgi ] ; then
+          if [ "x$fortran_compiler" = "xpgi" ] ; then
              oparicomp="$fortran_compiler"
           fi
     fi 
