@@ -1317,6 +1317,21 @@ int Tau_sampling_init(int tid) {
 
   static struct itimerval itval;
 
+#ifdef TAU_BGQ
+  static bool warningPrinted = false;
+  // *CWL* - Vesta is having issues translating PC addresses now.
+  //         This warning is issued as a part of a punt for EBS
+  //         support on the BGQ for the August 2012 release.
+  //
+  //         Please remove this check after the problem is fixed.
+  int myNode = RtsLayer::TheNode();
+  if ((myNode <= 0) && (tid == 0)) {
+    // Only one process will print this warning exactly once on thread 0. (Node 0 or -1).
+    printf("Warning: No current EBS support for the BlueGene/Q. No Samples will be recorded.\n");
+    warningPrinted = true;
+    return -1;
+  }
+#endif /* TAU_BGQ */
 
   Tau_global_incr_insideTAU_tid(tid);
 
