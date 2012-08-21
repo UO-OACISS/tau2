@@ -3091,6 +3091,9 @@ then
       if [ $f90loaded = 1 ]
       then 
         fortran_compiler=`mpif90 -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+        if [ $fortran_compiler = ifort ]; then 
+	  fortran_compiler=intel
+	fi
       else
         fortran_compiler=no
       fi
