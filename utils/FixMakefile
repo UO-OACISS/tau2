@@ -1269,7 +1269,7 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      OPARI2)
-	echo "NOTE: Using Opari2 OpenMP directive rewriting tooln ***"
+	echo "NOTE: Using Opari2 OpenMP directive rewriting tool ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      KOJAKOPARI)
