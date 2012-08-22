@@ -719,8 +719,9 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 #FX#TAU_CXXLIBS               = -lmpi_cxx -lstdc++ -lstd_mt -lm #ENDIF#
 #FX#TAU_CXXLIBS               = -lmpi_cxx -Ntl_notrt -lmpi_f90 -lmpi_f77 --linkfortran #ENDIF#
 
-#FX#TAU_CXXLIBS               = -Ntl_notrt -lmpi_f90 -lmpi_f77 #ENDIF#
-# NOTE:  No -lmpi_cxx and --linkfortran for Fujitsu by default. 
+#FX#TAU_CXXLIBS               = -Ntl_notrt #ENDIF#
+# NOTE:  No -lmpi_cxx, -lmpi_f90, -lmpi_f77, and --linkfortran for Fujitsu 
+# by default. See tau_compiler.sh $optFujitsu==true
 # Please add manually if needed
 
 #PPC64XLC#TAU_PPC64_LIBS         = -L$(EXTRADIRCXX)/$(TAU_FORLIBDIR) -libmc++ -lstdc++       #ENDIF#
