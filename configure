@@ -5456,7 +5456,7 @@ fi
     
 if [ $mpi = yes ] ; then
   #Check for SGI MPI
-  which mpiexec_mpt &> /dev/null
+  mpimptloc=`which mpiexec_mpt`
   hasMPT=$?
   if [ $hasMPT = 0 ] ; then
     echo "Found SGI MPT MPI"
