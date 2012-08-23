@@ -3,6 +3,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 #include <Profile/TauUtil.h>
 /******************************************************/
 /******************************************************/
@@ -7139,7 +7140,7 @@ void mpi_add_error_code__( MPI_Fint *  errorclass, MPI_Fint *  errorcode, MPI_Fi
 /******************************************************
 ***      MPI_Add_error_string wrapper function 
 ******************************************************/
-int MPI_Add_error_string( int errorcode, char * string)
+int MPI_Add_error_string( int errorcode, const char * string)
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Add_error_string()", "", TAU_MESSAGE); 
