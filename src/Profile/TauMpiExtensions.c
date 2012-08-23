@@ -7140,7 +7140,11 @@ void mpi_add_error_code__( MPI_Fint *  errorclass, MPI_Fint *  errorcode, MPI_Fi
 /******************************************************
 ***      MPI_Add_error_string wrapper function 
 ******************************************************/
+#ifdef TAU_SGI_MPT_MPI
 int MPI_Add_error_string( int errorcode, const char * string)
+#else
+int MPI_Add_error_string( int errorcode, char * string)
+#endif /* TAU_SGI_MPT_MPI  */
 {
   int retvalue; 
   TAU_PROFILE_TIMER(t, "MPI_Add_error_string()", "", TAU_MESSAGE); 
