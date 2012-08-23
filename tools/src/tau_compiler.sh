@@ -1926,12 +1926,13 @@ cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} ${o
 
 	madeToLinkStep=$TRUE
         if [ $optFujitsu == $TRUE ]; then
-          oldLinkCmd=$newCmd
-          newCmd=`echo $newCmd | sed -e 's/fccpx/FCCpx/g' -e 's/frtpx/FCCpx/g'`
+          oldLinkCmd=`echo $newCmd`
+          newCmd=`echo $newCmd | sed -e 's/frtpx/FCCpx/g'`
           if [ "x$newCmd" != "x$oldLinkCmd" ] ; then
             echoIfDebug "We changed the linker to use FCCpx compilers. We need to add --linkfortran to the link line"
-            newCmd="$newCmd --linkfortran"
+            newCmd="$newCmd --linkfortran -lmpi_f90 -lmpi_f77"
           fi
+          newCmd=`echo $newCmd | sed -e 's/fccpx/FCCpx/g'`
         fi
 
 	evalWithDebugMessage "$newCmd" "Linking (Together) object files"
