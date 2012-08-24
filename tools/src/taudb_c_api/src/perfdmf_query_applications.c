@@ -4,96 +4,55 @@
 #include <stdio.h>
 #include <string.h>
 
-PERFDMF_APPLICATION* perfdmf_query_applications(PGconn* connection) {
+PERFDMF_APPLICATION* perfdmf_query_applications(TAUDB_CONNECTION* connection) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling perfdmf_query_applications()\n");
 #endif
-  PGresult   *res;
   int                     nFields;
   int                     i, j;
 
-  /*
-   * Our test case here involves using a cursor, for which we must be
-   * inside a transaction block.  We could do the whole thing with a
-   * single PQexec() of "select * from table_name", but that's too
-   * trivial to make a good example.
-   */
-
   /* Start a transaction block */
-  res = PQexec(connection, "BEGIN");
-  if (PQresultStatus(res) != PGRES_COMMAND_OK)
-  {
-    fprintf(stderr, "BEGIN command failed: %s", PQerrorMessage(connection));
-    PQclear(res);
-    taudb_exit_nicely(connection);
-  }
-
-  /*
-   * Should PQclear PGresult whenever it is no longer needed to avoid
-   * memory leaks
-   */
-  PQclear(res);
+  taudb_begin_transaction(connection);
 
   /*
    * Fetch rows from table_name, the system catalog of databases
    */
-  char my_query[256] = "DECLARE myportal CURSOR FOR select * from application";
+  char my_query[256] = "select * from application";
 #ifdef TAUDB_DEBUG
   printf("'%s'\n",my_query);
 #endif
-  res = PQexec(connection, my_query);
-  if (PQresultStatus(res) != PGRES_COMMAND_OK)
-  {
-    fprintf(stderr, "DECLARE CURSOR failed: %s", PQerrorMessage(connection));
-    PQclear(res);
-    taudb_exit_nicely(connection);
-  }
-  PQclear(res);
 
-  res = PQexec(connection, "FETCH ALL in myportal");
-  if (PQresultStatus(res) != PGRES_TUPLES_OK)
-  {
-    fprintf(stderr, "FETCH ALL failed: %s", PQerrorMessage(connection));
-    PQclear(res);
-    taudb_exit_nicely(connection);
-  }
+  void* res = taudb_execute_query(connection, my_query);
 
-  int nRows = PQntuples(res);
+  int nRows = taudb_get_num_rows(res);
   PERFDMF_APPLICATION* applications = perfdmf_create_applications(nRows);
   taudb_numItems = nRows;
 
-  nFields = PQnfields(res);
+  nFields = taudb_get_num_columns(res);
 
   /* the rows */
-  for (i = 0; i < PQntuples(res); i++)
+  for (i = 0; i < nRows; i++)
   {
     int metaIndex = 0;
     applications[i].primary_metadata = taudb_create_primary_metadata(nFields);
     /* the columns */
     for (j = 0; j < nFields; j++) {
-	  if (strcmp(PQfname(res, j), "id") == 0) {
-	    applications[i].id = atoi(PQgetvalue(res, i, j));
-	  } else if (strcmp(PQfname(res, j), "name") == 0) {
-	    //applications[i].name = PQgetvalue(res, i, j);
-		applications[i].name = taudb_create_and_copy_string(PQgetvalue(res,i,j));
+	  if (strcmp(taudb_get_column_name(res, j), "id") == 0) {
+	    applications[i].id = atoi(taudb_get_value(res, i, j));
+	  } else if (strcmp(taudb_get_column_name(res, j), "name") == 0) {
+	    //applications[i].name = taudb_get_value(res, i, j);
+		applications[i].name = taudb_create_and_copy_string(taudb_get_value(res,i,j));
 	  } else {
-	    applications[i].primary_metadata[metaIndex].name = PQfname(res, j);
-	    applications[i].primary_metadata[metaIndex].value = PQgetvalue(res, i, j);
+	    applications[i].primary_metadata[metaIndex].name = taudb_get_column_name(res, j);
+	    applications[i].primary_metadata[metaIndex].value = taudb_get_value(res, i, j);
 		metaIndex++;
 	  }
 	} 
     applications[i].primary_metadata_count = metaIndex;
   }
 
-  PQclear(res);
+  taudb_clear_result(res);
+  taudb_close_transaction(connection);
 
-  /* close the portal ... we don't bother to check for errors ... */
-  res = PQexec(connection, "CLOSE myportal");
-  PQclear(res);
-
-  /* end the transaction */
-  res = PQexec(connection, "END");
-  PQclear(res);
-  
   return applications;
 }

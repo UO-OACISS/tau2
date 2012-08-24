@@ -13,7 +13,7 @@
 
 include Makefile.inc
 
-TARGET=libtaudb.a
+TARGET=lib/libtaudb.a
 
 # rebuild everything if the headers or the makefile changes
 all: Makefile Makefile.inc

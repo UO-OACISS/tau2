@@ -11,14 +11,14 @@ void dump_metadata(TAUDB_PRIMARY_METADATA *metadata, int count) {
    }
 }
 
-void dump_trial(PGconn* connection, TAUDB_TRIAL* filter) {
+void dump_trial(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter) {
    TAUDB_TRIAL* trial = taudb_query_trials(connection, FALSE, filter);
 
    TAUDB_TIMER* timer = taudb_query_main_timer(connection, trial);
    printf("Trial name: '%s', id: %d, main: '%s'\n\n", trial->name, trial->id, timer->name);
 }
 
-void dump_timers(PGconn* connection, TAUDB_TRIAL* filter) {
+void dump_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter) {
    TAUDB_TRIAL* trial = taudb_query_trials(connection, FALSE, filter);
    printf("Trial name: '%s', id: %d\n\n", trial->name, trial->id);
 
@@ -27,7 +27,6 @@ void dump_timers(PGconn* connection, TAUDB_TRIAL* filter) {
    printf("Found %d timers\n", numTimers);
 
    int e;
-   int total = 0;
    for (e = 0 ; e < numTimers ; e++) {
      printf("%s\n", timers[e].name);
    }
@@ -35,7 +34,7 @@ void dump_timers(PGconn* connection, TAUDB_TRIAL* filter) {
    //taudb_delete_timers(timers, 1);
 }
 
-void dump_counters(PGconn* connection, TAUDB_TRIAL* filter) {
+void dump_counters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter) {
    TAUDB_TRIAL* trial = taudb_query_trials(connection, FALSE, filter);
    printf("Trial name: '%s', id: %d\n\n", trial->name, trial->id);
 
@@ -44,7 +43,6 @@ void dump_counters(PGconn* connection, TAUDB_TRIAL* filter) {
    printf("Found %d counters\n", numTimers);
 
    int e;
-   int total = 0;
    for (e = 0 ; e < numTimers ; e++) {
      printf("%s\n", counters[e].name);
    }
@@ -52,7 +50,7 @@ void dump_counters(PGconn* connection, TAUDB_TRIAL* filter) {
    //taudb_delete_counters(timers, 1);
 }
 
-void dump_metrics(PGconn* connection, TAUDB_TRIAL* filter) {
+void dump_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter) {
    TAUDB_TRIAL* trial = taudb_query_trials(connection, FALSE, filter);
    printf("Trial name: '%s', id: %d\n\n", trial->name, trial->id);
 
@@ -61,7 +59,6 @@ void dump_metrics(PGconn* connection, TAUDB_TRIAL* filter) {
    printf("Found %d metrics\n", numMetrics);
 
    int m;
-   int total = 0;
    for (m = 0 ; m < numMetrics ; m++) {
      printf("%s\n", metrics[m].name);
    }
@@ -69,7 +66,7 @@ void dump_metrics(PGconn* connection, TAUDB_TRIAL* filter) {
    //taudb_delete_metrics(metrics, 1);
 }
 
-void dump_threads(PGconn* connection, TAUDB_TRIAL* filter) {
+void dump_threads(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter) {
    TAUDB_TRIAL* trial = taudb_query_trials(connection, FALSE, filter);
    printf("Trial name: '%s', id: %d\n\n", trial->name, trial->id);
 
@@ -78,7 +75,6 @@ void dump_threads(PGconn* connection, TAUDB_TRIAL* filter) {
    printf("Found %d threads\n", numThreads);
 
    int t;
-   int total = 0;
    for (t = 0 ; t < numThreads ; t++) {
      printf("%d %d %d %d\n", threads[t].index, threads[t].node_rank, threads[t].context_rank, threads[t].thread_rank);
    }
@@ -86,7 +82,7 @@ void dump_threads(PGconn* connection, TAUDB_TRIAL* filter) {
    //taudb_delete_threads(threads, 1);
 }
 
-void dump_timer_callpaths(PGconn* connection, TAUDB_TRIAL* filter) {
+void dump_timer_callpaths(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter) {
 /*
    TAUDB_TRIAL* trial = taudb_query_trials(connection, FALSE, filter);
    printf("Trial name: '%s', id: %d\n\n", trial->name, trial->id);
@@ -128,7 +124,7 @@ void dump_timer_callpaths(PGconn* connection, TAUDB_TRIAL* filter) {
    */
 }
 
-void dump_timer_values(PGconn* connection, TAUDB_TRIAL* filter) {
+void dump_timer_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter) {
 /*
    TAUDB_TRIAL* trial = taudb_query_trials(connection, TRUE, filter);
 
@@ -168,7 +164,7 @@ void dump_timer_values(PGconn* connection, TAUDB_TRIAL* filter) {
    */
 }
 
-void dump_timer_stats(PGconn* connection, TAUDB_TRIAL* filter) {
+void dump_timer_stats(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter) {
 /*
    TAUDB_TRIAL* trial = taudb_query_trials(connection, FALSE, filter);
    printf("Trial name: '%s', id: %d\n\n", trial->name, trial->id);

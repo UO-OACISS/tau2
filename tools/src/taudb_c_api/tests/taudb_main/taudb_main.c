@@ -5,7 +5,7 @@
 
 int main (int argc, char** argv) {
    printf("Connecting...\n");
-   PGconn* connection = NULL;
+   TAUDB_CONNECTION* connection = NULL;
    if (argc >= 2) {
      connection = taudb_connect_config(argv[1]);
    } else {
@@ -16,9 +16,7 @@ int main (int argc, char** argv) {
    taudb_check_connection(connection);
    printf("Testing queries...\n");
 
-   int i = 0;
-   int j = 0;
-   int a, e, t;
+   int t;
 
    // test the "find trials" method to populate the trial
    TAUDB_TRIAL* filter = taudb_create_trials(1);
@@ -27,7 +25,7 @@ int main (int argc, char** argv) {
    TAUDB_TRIAL* trials = taudb_query_trials(connection, TRUE, filter);
    int numTrials = taudb_numItems;
    for (t = 0 ; t < numTrials ; t = t+1) {
-      printf("  Trial name: '%s', date: %s, id: %d\n", trials[t].name, trials[t].collection_date, trials[t].id);
+      printf("  Trial name: '%s', id: %d\n", trials[t].name, trials[t].id);
       dump_metadata(trials[t].primary_metadata, trials[t].primary_metadata_count);
       dump_trial(connection, &(trials[t]));
    }

@@ -19,13 +19,15 @@ int main (int argc, char** argv) {
    char config_file[256];
    dp = opendir (config_dir);
    if (dp != NULL) {
-     while (ep = readdir(dp)) {
+     ep = readdir(dp);
+     while (ep != NULL) {
 	   if (strncmp(ep->d_name, config_prefix, 11) == 0) {
           sprintf(config_file, "%s/%s", config_dir, ep->d_name);
           printf("Parsing config file %s...\n", config_file);
           TAUDB_CONFIGURATION* config = taudb_parse_config_file(config_file);
 		  printf ("Database: %s, %s, %s\n", config->db_hostname, config->db_portnum, config->db_dbname);
 	   }
+       ep = readdir(dp);
 	 }
 	 closedir(dp);
    } else {

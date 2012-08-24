@@ -5,7 +5,7 @@
 
 int main (int argc, char** argv) {
    printf("Connecting...\n");
-   PGconn* connection = NULL;
+   TAUDB_CONNECTION* connection = NULL;
    if (argc >= 2) {
      connection = taudb_connect_config(argv[1]);
    } else {
@@ -16,9 +16,7 @@ int main (int argc, char** argv) {
    taudb_check_connection(connection);
    printf("Testing queries...\n");
 
-   int i = 0;
-   int j = 0;
-   int a, e, t;
+   int t;
 
    if (taudb_version == TAUDB_2012_SCHEMA) {
      // test the "find trials" method to populate the trial

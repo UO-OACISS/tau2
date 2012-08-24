@@ -32,24 +32,24 @@ taudb_query_timer_callpaths_test \
 perfdmf_test \
 query_all
 
-TEST_TARGETS=taudb_query_counters_test
-# TEST_TARGETS=parse_config_test \
+TEST_TARGETS=parse_config_test \
 perfdmf_query_trial_test \
-perfdmf_query_timers_test \
 perfdmf_query_metrics_test \
 perfdmf_query_threads_test \
+perfdmf_query_timers_test \
 perfdmf_query_timer_callpaths_test \
-taudb_main \
-taudb_query_trial_test \
-taudb_query_timers_test \
-taudb_query_metrics_test \
-taudb_query_threads_test \
-taudb_query_timer_values_test \
-taudb_query_stats_test \
-taudb_query_timer_callpaths_test
+
+#taudb_main \
+#taudb_query_trial_test \
+#taudb_query_timers_test \
+#taudb_query_metrics_test \
+#taudb_query_threads_test \
+#taudb_query_timer_values_test \
+#taudb_query_stats_test \
+#taudb_query_timer_callpaths_test
 
 # rebuild everything if the makefile changes
-all: Makefile ../libtaudb.a
+all: Makefile ../lib/libtaudb.a
 	@for i in $(BUILD_TARGETS) ; do (cd $$i; $(MAKE) "MAKE=$(MAKE)" || exit 0); done
 
 test: all

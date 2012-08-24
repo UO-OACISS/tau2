@@ -21,6 +21,11 @@ TAUDB_CONFIGURATION* taudb_create_configuration(){
  return config;
 }
 
+TAUDB_DATA_SOURCE* taudb_create_data_sources(int count){ 
+ TAUDB_DATA_SOURCE* data_sources = (TAUDB_DATA_SOURCE*) (calloc (count, sizeof (TAUDB_DATA_SOURCE)));
+ return data_sources;
+}
+
 TAUDB_TRIAL* taudb_create_trials(int count){ 
  TAUDB_TRIAL* trials = (TAUDB_TRIAL*) (calloc (count, sizeof (TAUDB_TRIAL)));
  return trials;

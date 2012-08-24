@@ -5,9 +5,11 @@
 
 int main (int argc, char** argv) {
    printf("Connecting...\n");
-   PGconn* connection = NULL;
+   TAUDB_CONNECTION* connection = NULL;
+   int trialid = 1;
    if (argc >= 2) {
      connection = taudb_connect_config(argv[1]);
+     trialid = atoi(argv[2]);
    } else {
      fprintf(stderr, "Please specify a TAUdb config file.\n");
 	 exit(1);
@@ -21,8 +23,7 @@ int main (int argc, char** argv) {
    if (taudb_version == TAUDB_2005_SCHEMA) {
      // test the "find trials" method to populate the trial
      TAUDB_TRIAL* filter = taudb_create_trials(1);
-     //filter->id = 216;
-     filter->id = 209;
+     filter->id = trialid;
      TAUDB_TRIAL* trials = taudb_query_trials(connection, TRUE, filter);
      int numTrials = taudb_numItems;
      for (t = 0 ; t < numTrials ; t = t+1) {
