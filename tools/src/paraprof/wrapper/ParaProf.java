@@ -54,7 +54,7 @@ public class ParaProf implements ActionListener {
 	}
     }
 
-    private final static String VERSION = "Fri Aug 24 10:31:43 PDT 2012";
+    private final static String VERSION = "Fri Aug 24 15:12:28 PDT 2012";
 
     public static int defaultNumberPrecision = 6;
 
@@ -489,8 +489,8 @@ public class ParaProf implements ActionListener {
 //	    }
 	}
 	
-	if(sourceFiles!=null){
-		if(sourceFiles[0].exists()){
+	if(sourceFiles!=null&&sourceFiles.length>0){
+		if(sourceFiles[0]!=null&&sourceFiles[0].exists()){
 			if(sourceFiles[0].isDirectory()){
 				try {
 					LoadTrialWindow.lastDirectory=sourceFiles[0].getCanonicalPath();
@@ -499,7 +499,9 @@ public class ParaProf implements ActionListener {
 			}
 			else{
 				try {
-					LoadTrialWindow.lastDirectory=sourceFiles[0].getParentFile().getCanonicalPath();
+					File pf=sourceFiles[0].getParentFile();
+					if(pf!=null&&pf.exists())
+						LoadTrialWindow.lastDirectory=pf.getCanonicalPath();
 				} catch (IOException e) {
 				}
 			}
