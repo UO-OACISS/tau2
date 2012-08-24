@@ -150,7 +150,7 @@ void taudb_delete_timers(TAUDB_TIMER* timers, int count) {
   int i = 0;
   for (i = count-1 ; i >= 0 ; i++) {
     taudb_delete_timer_parameters(timers[i].parameters, timers[i].parameter_count);
-    taudb_delete_timer_groups(timers[i].groups, timers[i].group_count);
+    free(timers[i].groups); // these will be deleted by the trial, later
     free(timers[i].name);
     free(timers[i].short_name);
     free(timers[i].source_file);

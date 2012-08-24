@@ -6,7 +6,7 @@
 
 TAUDB_SECONDARY_METADATA* taudb_query_secondary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial) {
 #ifdef TAUDB_DEBUG_DEBUG
-  printf("Calling taudb_query_secondary_metadata(%d, %p)\n", full, trial);
+  printf("Calling taudb_query_secondary_metadata(%p)\n", trial);
 #endif
   void *res;
   int nFields;

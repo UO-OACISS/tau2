@@ -28,14 +28,16 @@ TAUDB_DATA_SOURCE* taudb_query_data_sources(TAUDB_CONNECTION* connection) {
   int nRows = taudb_get_num_rows(res);
   taudb_numItems = nRows;
 
-  TAUDB_DATA_SOURCE* data_sources = taudb_create_data_sources(taudb_numItems);
+  //TAUDB_DATA_SOURCE* data_sources = taudb_create_data_sources(taudb_numItems);
+  // NO! THE UThash will manage it.
+  TAUDB_DATA_SOURCE* data_sources = NULL;
 
   nFields = taudb_get_num_columns(res);
 
   /* the rows */
   for (i = 0; i < nRows; i++)
   {
-    TAUDB_DATA_SOURCE* data_source = &(data_sources[i]);
+    TAUDB_DATA_SOURCE* data_source = malloc(sizeof(TAUDB_DATA_SOURCE));
     /* the columns */
     for (j = 0; j < nFields; j++) {
 	  if (strcmp(taudb_get_column_name(res, j), "id") == 0) {
@@ -49,7 +51,7 @@ TAUDB_DATA_SOURCE* taudb_query_data_sources(TAUDB_CONNECTION* connection) {
 	    taudb_exit_nicely(connection);
 	  }
 	} 
-	HASH_ADD_INT(data_sources, id, &(data_sources[i]));
+	HASH_ADD_INT(data_sources, id, data_sources);
   }
 
   taudb_clear_result(res);

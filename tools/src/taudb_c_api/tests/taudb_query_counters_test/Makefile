@@ -39,9 +39,10 @@ $(OBJS): $(HEADERS) Makefile ../../Makefile.inc
 
 test: $(TARGET)
 	echo " Testing : $(TARGET)..."
-	`./$(TARGET) $(TEST_CONFIG) $(TEST_TRIAL_ID) >& $(TARGET).log`
-	echo " \n...Done. Contents of $(TARGET).log: \n"
-	cat $(TARGET).log
+	./$(TARGET) $(TEST_CONFIG) $(TEST_TRIAL_ID)
+	# `./$(TARGET) $(TEST_CONFIG) $(TEST_TRIAL_ID) >& $(TARGET).log`
+	# echo " \n...Done. Contents of $(TARGET).log: \n"
+	# cat $(TARGET).log
 	echo ""
 
 clean:

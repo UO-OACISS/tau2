@@ -87,7 +87,7 @@ TAUDB_TIMER_GROUP* taudb_create_timer_groups(int count){
 }
 
 TAUDB_TIMER_GROUP* taudb_resize_timer_groups(int count, TAUDB_TIMER_GROUP* old_groups){ 
- TAUDB_TIMER_GROUP* timer_groups = (TAUDB_TIMER_GROUP*) (realloc (old_groups, count * sizeof (TAUDB_TIMER_GROUP)));
+ TAUDB_TIMER_GROUP* timer_groups = (TAUDB_TIMER_GROUP*) (realloc ((void*)(old_groups), count * (sizeof (TAUDB_TIMER_GROUP))));
  return timer_groups;
 }
 

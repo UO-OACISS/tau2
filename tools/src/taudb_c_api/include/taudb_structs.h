@@ -138,9 +138,10 @@ typedef struct taudb_thread {
 
 typedef struct taudb_metric {
  int id; /* database value, also key to hash */
- char* name;
+ char* name; /* key to hash hh2 */
  boolean derived;  /* was this metric measured, or created by a post-processing tool? */
- UT_hash_handle hh;
+ UT_hash_handle hh; /* hash */
+ //UT_hash_handle hh2; /* hash */
 } TAUDB_METRIC;
 
 /* Time ranges are ways to delimit the profile data within time ranges.
@@ -173,7 +174,7 @@ typedef struct taudb_timer {
  int column_number_end;      /* what column number does the timer end on? */
  int group_count;            /* how many groups does this timer belong to? */
  int parameter_count;        /* how many parameters does this timer have? */
- struct taudb_timer_group* groups;   /* array of groups */
+ struct taudb_timer_group** groups;   /* array of pointers to groups */
  struct taudb_timer_parameter* parameters;   /* array of parameters */
  UT_hash_handle hh;
 } TAUDB_TIMER;
@@ -191,8 +192,8 @@ typedef struct taudb_timer_group {
  int id; /* database reference, and hash key */
  char* name;
  int timer_count;    /* how many timers are in this group? */
- struct taudb_timer* timers;   /* array of timers */
- UT_hash_handle hh;
+ struct taudb_timer** timers;   /* array of timer pointers */
+ UT_hash_handle hh; 
 } TAUDB_TIMER_GROUP;
 
 /* timer parameters are parameter based profile values. 
@@ -261,6 +262,7 @@ typedef struct taudb_counter {
  int id; /* database reference */
  struct taudb_trial* trial;
  char* name;
+ UT_hash_handle hh;
 } TAUDB_COUNTER;
 
 /* counters are atomic counters, not just interval timers */

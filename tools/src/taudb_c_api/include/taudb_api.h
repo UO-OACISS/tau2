@@ -55,7 +55,8 @@ extern TAUDB_THREAD* taudb_query_derived_threads(TAUDB_CONNECTION* connection, T
 
 /* get the metrics for a trial */
 extern TAUDB_METRIC* taudb_query_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial);
-extern TAUDB_METRIC* taudb_get_metric(TAUDB_METRIC* metrics, const char* name);
+extern TAUDB_METRIC* taudb_get_metric_by_name(TAUDB_METRIC* metrics, const char* name);
+extern TAUDB_METRIC* taudb_get_metric_by_id(TAUDB_METRIC* metrics, const int id);
 
 /* get the time_ranges for a trial */
 extern TAUDB_TIME_RANGE* taudb_query_time_range(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial);
@@ -63,6 +64,10 @@ extern TAUDB_TIME_RANGE* taudb_get_time_range(TAUDB_TIME_RANGE* time_ranges, con
 
 /* get the timers for a trial */
 extern TAUDB_TIMER* taudb_query_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial);
+extern TAUDB_TIMER* taudb_get_timer_by_id(TAUDB_TIMER* timers, int id);
+extern TAUDB_TIMER_GROUP* taudb_query_timer_groups(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial);
+extern void taudb_parse_timer_group_names(TAUDB_TRIAL* trial, TAUDB_TIMER* timer, char* group_names);
+extern TAUDB_TIMER_GROUP* taudb_get_timer_group_by_name(TAUDB_TIMER_GROUP* timers, const char* name);
 extern TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, TAUDB_TIMER* timer);
 extern TAUDB_TIMER_CALLPATH* taudb_query_all_timer_callpaths(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial);
 extern char* taudb_get_callpath_string(TAUDB_TIMER_CALLPATH* timer_callpath);
