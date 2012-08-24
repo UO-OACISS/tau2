@@ -15,7 +15,7 @@ TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection
   // validate inputs
   if (trial == NULL) {
     fprintf(stderr, "Error: trial parameter null. Please provide a valid trial.\n");
-	return NULL;
+    return NULL;
   }
 
 /*
@@ -35,21 +35,21 @@ TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection
    */
   char my_query[1024];
   if (taudb_version == TAUDB_2005_SCHEMA) {
-    sprintf(my_query,"select ilp.*, ie.name as timer_name, m.name as metric_name from interval_location_profile ilp inner join interval_event ie on ilp.interval_event = ie.id left outer join metric m on ilp.metric = m.id");
+    sprintf(my_query,"select ilp.*, ie.name as timer_name, ie.metric from interval_location_profile ilp inner join interval_event ie on ilp.interval_event = ie.id");
     char* conjoiner = "where";
     if (trial != NULL) {
       sprintf(my_query,"%s where ie.trial = %d", my_query, trial->id);
       conjoiner = "and";
     } 
     if (timer_callpath != NULL) {
-	  fprintf(stderr, "TODO: THE CALLPATH IS NOT VALID IN PERFDMF\n");
+      fprintf(stderr, "TODO: THE CALLPATH IS NOT VALID IN PERFDMF\n");
       sprintf(my_query,"%s %s ie.id = %d", my_query, conjoiner, timer_callpath->id);
       conjoiner = "and";
     }
     if (metric != NULL) {
       if ((strcmp(metric->name, "calls") == 0) ||
           (strcmp(metric->name, "subroutines") == 0)) {
-		  // we need just one metric, but from this trial
+          // we need just one metric, but from this trial
         sprintf(my_query,"%s %s m.id = (select max(id) from metric where trial = %d)", my_query, conjoiner, trial->id);
       } else {
         sprintf(my_query,"%s %s m.id = %d", my_query, conjoiner, metric->id);
@@ -61,7 +61,7 @@ TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection
     }
   } else {
     //sprintf(my_query,"select * from timer where trial = %d", trial->id);
-    sprintf(my_query,"select tv.*, h.thread_index as index from timer_value tv inner join timer_call_data td on tv.timer_call_data = td.id inner join timer_callpath tc on td.timer_callpath = tc.id left outer join metric m on tv.metric = m.id left outer join thread h on tv.thread = h.id");
+    sprintf(my_query,"select tv.*, h.thread_index as index from timer_value tv inner join timer_call_data td on tv.timer_call_data = td.id inner join timer_callpath tc on td.timer_callpath = tc.id left outer join thread h on tv.thread = h.id");
     char* conjoiner = "where";
     if (trial != NULL) {
       sprintf(my_query,"%s where t.trial = %d", my_query, trial->id);
@@ -72,18 +72,18 @@ TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection
       conjoiner = "and";
     }
     if (metric != NULL) {
-      sprintf(my_query,"%s %s m.id = %d", my_query, conjoiner, metric->id);
+      sprintf(my_query,"%s %s tv.metric = %d", my_query, conjoiner, metric->id);
       conjoiner = "and";
     }
     if (thread != NULL) {
       sprintf(my_query,"%s %s h.thread_index = %d ", my_query, conjoiner, thread->index);
       conjoiner = "and";
     }
-	if (derived) {
+    if (derived) {
       sprintf(my_query,"%s %s h.thread_index < 0 order by h.thread_index desc", my_query, conjoiner);
-	} else {
+    } else {
       sprintf(my_query,"%s %s h.thread_index > -1 order by h.thread_index asc", my_query, conjoiner);
-	}
+    }
   }
 #ifdef TAUDB_DEBUG
   printf("%s\n", my_query);
@@ -104,8 +104,8 @@ TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection
     int context = 0;
     int thread = 0;
     int index = 0;
-	char* metric_str;
-	char* timer_str;
+    int metric_id;
+    char* timer_str;
     TAUDB_TIMER_VALUE* timer_value = taudb_create_timer_values(1);
     /* the columns */
     for (j = 0; j < nFields; j++) {
@@ -125,16 +125,16 @@ TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection
         thread = atoi(taudb_get_value(res, i, j));
       } else if (strcmp(taudb_get_column_name(res, j), "index") == 0) {
         index = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "metric_name") == 0) {
-        metric_str = taudb_get_value(res, i, j);
+      } else if (strcmp(taudb_get_column_name(res, j), "metric") == 0) {
+        metric_id = atoi(taudb_get_value(res, i, j));
       } else if (strcmp(taudb_get_column_name(res, j), "timer_name") == 0) {
         timer_str = taudb_get_value(res, i, j);
       } else if (strcmp(taudb_get_column_name(res, j), "metric") == 0) {
-	    if (metric != NULL)
+        if (metric != NULL)
           timer_value->metric = metric;
-		else {
-		  timer_value->metric = taudb_get_metric(trial->metrics, taudb_get_value(res, i, j));
-		}
+        else {
+          timer_value->metric = taudb_get_metric_by_id(trial->metrics, atoi(taudb_get_value(res, i, j)));
+        }
 // these two are the same
       } else if (strcmp(taudb_get_column_name(res, j), "inclusive_percentage") == 0) {
         timer_value->inclusive_percentage = atof(taudb_get_value(res, i, j));
@@ -172,16 +172,16 @@ TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection
         taudb_exit_nicely(connection);
       }
     } 
-	/*
-	if (node < 0) {
-	  timer_value->thread = index;
-	} else {
+    /*
+    if (node < 0) {
+      timer_value->thread = index;
+    } else {
       timer_value->thread = (node * (trial->contexts_per_node * trial->threads_per_context)) +
                            (context * (trial->threads_per_context)) + 
                            thread;
-	}
-	timer_value->thread = taudb_get_thread(trial->threads, index);
-	*/
+    }
+    timer_value->thread = taudb_get_thread(trial->threads, index);
+    */
 
     //timer_value->key = taudb_create_hash_key_3(timer_value->thread, timer_str, metric_str);
     //HASH_ADD_KEYPTR(hh, timer_values, timer_value->key, strlen(timer_value->key), timer_value);

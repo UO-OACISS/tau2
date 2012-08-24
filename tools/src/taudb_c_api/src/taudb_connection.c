@@ -14,17 +14,17 @@ void taudb_exit_nicely(TAUDB_CONNECTION* connection) {
 }
 
 TAUDB_CONNECTION* taudb_connect(char* host, char* port, char* database, char* login, char* password) {
-  TAUDB_CONNECTION* taudb_connection = malloc (sizeof (taudb_connection));
+  TAUDB_CONNECTION* taudb_connection = (TAUDB_CONNECTION*)malloc(sizeof (TAUDB_CONNECTION));
 #ifdef __TAUDB_POSTGRESQL__
   char* pgoptions = NULL;
   char* pgtty = NULL;
   PGconn* connection;
   connection = PQsetdbLogin(host, port, pgoptions, pgtty, database, login, password);
-  printf("Connecting to host: %s, port: %s, db: %s, login: %s", host, port, database, login);
+  printf("Connecting to host: %s, port: %s, db: %s, login: %s\n", host, port, database, login);
   /* Check to see that the backend connection was successfully made */
   if (PQstatus(connection) != CONNECTION_OK)
   {
-    fprintf(stderr, "Connection to database failed: %s",
+    fprintf(stderr, "Connection to database failed: %s\n",
            PQerrorMessage(connection));
     taudb_exit_nicely(taudb_connection);
   }
@@ -33,6 +33,11 @@ TAUDB_CONNECTION* taudb_connect(char* host, char* port, char* database, char* lo
 
   /* what version of the schema do we have? */
   taudb_check_schema_version(taudb_connection);
+
+  /* get the data sources, if available */
+  if (taudb_connection->schema_version == TAUDB_2012_SCHEMA) {
+    taudb_query_data_sources(taudb_connection);
+  }
 
   return taudb_connection;
 }
@@ -98,7 +103,9 @@ TAUDB_CONNECTION* taudb_connect_config(char* config_name) {
 
 TAUDB_CONNECTION* taudb_connect_config_file(char* config_file_name) {
   TAUDB_CONFIGURATION* config = taudb_parse_config_file(config_file_name);
-  return taudb_connect(config->db_hostname, config->db_portnum, config->db_dbname, config->db_username, config->db_password);
+  TAUDB_CONNECTION* connection = taudb_connect(config->db_hostname, config->db_portnum, config->db_dbname, config->db_username, config->db_password);
+  connection->configuration = config;
+  return connection;
 }
 
 void taudb_begin_transaction(TAUDB_CONNECTION *connection) {
@@ -123,7 +130,7 @@ void* taudb_execute_query(TAUDB_CONNECTION *connection, char* my_query) {
   void* result;
   const char* portal_string = "DECLARE myportal CURSOR FOR";
 #ifdef __TAUDB_POSTGRESQL__
-  char* full_query = malloc(sizeof(char) * (strlen(my_query) + strlen(portal_string)));
+  char* full_query = malloc(sizeof(char) * (strlen(my_query) + strlen(portal_string) + 2));
   sprintf(full_query, "%s %s", portal_string, my_query);
   PGresult   *res;
   res = PQexec(connection->connection, full_query);

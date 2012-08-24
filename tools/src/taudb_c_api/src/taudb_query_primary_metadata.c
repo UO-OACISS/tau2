@@ -6,7 +6,7 @@
 
 TAUDB_PRIMARY_METADATA* taudb_query_primary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial) {
 #ifdef TAUDB_DEBUG_DEBUG
-  printf("Calling taudb_query_primary_metadata(%d, %p)\n", full, trial);
+  printf("Calling taudb_query_primary_metadata(%p)\n", trial);
 #endif
   void *res;
   int nFields;

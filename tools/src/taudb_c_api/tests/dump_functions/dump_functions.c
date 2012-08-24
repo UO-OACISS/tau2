@@ -26,9 +26,10 @@ void dump_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter) {
    int numTimers = taudb_numItems;
    printf("Found %d timers\n", numTimers);
 
-   int e;
-   for (e = 0 ; e < numTimers ; e++) {
-     printf("%s\n", timers[e].name);
+   // iterate over the hash
+   TAUDB_TIMER* timer;
+   for (timer = timers ; timer != NULL ; timer=timer->hh.next) {
+     printf("%s\n", timer->name);
    }
 
    //taudb_delete_timers(timers, 1);
@@ -42,9 +43,10 @@ void dump_counters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter) {
    int numTimers = taudb_numItems;
    printf("Found %d counters\n", numTimers);
 
-   int e;
-   for (e = 0 ; e < numTimers ; e++) {
-     printf("%s\n", counters[e].name);
+   // iterate over the hash
+   TAUDB_COUNTER* counter;
+   for (counter = counters ; counter != NULL ; counter=counter->hh.next) {
+     printf("%s\n", counter->name);
    }
 
    //taudb_delete_counters(timers, 1);
@@ -58,9 +60,10 @@ void dump_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter) {
    int numMetrics = taudb_numItems;
    printf("Found %d metrics\n", numMetrics);
 
-   int m;
-   for (m = 0 ; m < numMetrics ; m++) {
-     printf("%s\n", metrics[m].name);
+   // iterate over the hash
+   TAUDB_METRIC* metric;
+   for (metric = metrics ; metric != NULL ; metric=metric->hh.next) {
+     printf("%s\n", metric->name);
    }
 
    //taudb_delete_metrics(metrics, 1);
@@ -74,9 +77,10 @@ void dump_threads(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter) {
    int numThreads = taudb_numItems;
    printf("Found %d threads\n", numThreads);
 
-   int t;
-   for (t = 0 ; t < numThreads ; t++) {
-     printf("%d %d %d %d\n", threads[t].index, threads[t].node_rank, threads[t].context_rank, threads[t].thread_rank);
+   // iterate over the hash
+   TAUDB_THREAD* thread;
+   for (thread = threads ; thread != NULL ; thread=thread->hh.next) {
+     printf("%d %d %d %d\n", thread->index, thread->node_rank, thread->context_rank, thread->thread_rank);
    }
 
    //taudb_delete_threads(threads, 1);

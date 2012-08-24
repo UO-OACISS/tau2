@@ -38,14 +38,16 @@ TAUDB_METRIC* taudb_query_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* tri
   int nRows = taudb_get_num_rows(res);
   taudb_numItems = nRows;
 
-  TAUDB_METRIC* metrics = taudb_create_metrics(taudb_numItems);
+  //TAUDB_METRIC* metrics = taudb_create_metrics(taudb_numItems);
+  // allocation handled by the UThash structure!
+  TAUDB_METRIC* metrics = NULL;
 
   nFields = taudb_get_num_columns(res);
 
   /* the rows */
   for (i = 0; i < taudb_get_num_rows(res); i++)
   {
-    TAUDB_METRIC* metric = &(metrics[i]);
+    TAUDB_METRIC* metric = calloc(1, sizeof(TAUDB_METRIC));
     /* the columns */
     for (j = 0; j < nFields; j++) {
 	  if (strcmp(taudb_get_column_name(res, j), "id") == 0) {
@@ -61,7 +63,8 @@ TAUDB_METRIC* taudb_query_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* tri
 	    taudb_exit_nicely(connection);
 	  }
 	} 
-	HASH_ADD_KEYPTR(hh, metrics, metric->name, strlen(metric->name), metric);
+	HASH_ADD_INT(metrics, id, metric);
+	//HASH_ADD_KEYPTR(hh2, metrics, metric->name, strlen(metric->name), metric);
   }
 
   taudb_clear_result(res);
@@ -70,9 +73,9 @@ TAUDB_METRIC* taudb_query_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* tri
   return (metrics);
 }
 
-TAUDB_METRIC* taudb_get_metric(TAUDB_METRIC* metrics, const char* name) {
+TAUDB_METRIC* taudb_get_metric_by_name(TAUDB_METRIC* metrics, const char* name) {
 #ifdef TAUDB_DEBUG_DEBUG
-  printf("Calling taudb_get_metric(%p,%s)\n", metrics, name);
+  printf("Calling taudb_get_metric_by_id(%p,%s)\n", metrics, name);
 #endif
   if (metrics == NULL) {
     fprintf(stderr, "Error: metric parameter null. Please provide a valid set of metrics.\n");
@@ -84,7 +87,25 @@ TAUDB_METRIC* taudb_get_metric(TAUDB_METRIC* metrics, const char* name) {
   }
 
   TAUDB_METRIC* metric = NULL;
-  HASH_FIND_STR(metrics, name, metric);
+  //HASH_FIND(hh2, metrics, name, strlen(name), metric);
+  return metric;
+}
+
+TAUDB_METRIC* taudb_get_metric_by_id(TAUDB_METRIC* metrics, const int id) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("Calling taudb_get_metric_by_id(%p,%d)\n", metrics, id);
+#endif
+  if (metrics == NULL) {
+    fprintf(stderr, "Error: metric parameter null. Please provide a valid set of metrics.\n");
+    return NULL;
+  }
+  if (id == 0) {
+    fprintf(stderr, "Error: name parameter null. Please provide a valid name.\n");
+    return NULL;
+  }
+
+  TAUDB_METRIC* metric = NULL;
+  HASH_FIND_INT(metrics, &id, metric);
   return metric;
 }
 

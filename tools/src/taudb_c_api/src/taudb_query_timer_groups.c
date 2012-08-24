@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
-TAUDB_TIMER_GROUP* taudb_query_groups(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial) {
+TAUDB_TIMER_GROUP* taudb_query_timer_groups(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_group(%p)\n", trial);
 #endif
@@ -41,7 +41,7 @@ TAUDB_TIMER_GROUP* taudb_query_groups(TAUDB_CONNECTION* connection, TAUDB_TRIAL*
   res = taudb_execute_query(connection, my_query);
 
   int nRows = taudb_get_num_rows(res);
-  TAUDB_TIMER_GROUP* timer_groups = taudb_create_timer_groups(nRows);
+  TAUDB_TIMER_GROUP* timer_groups = NULL;
   taudb_numItems = nRows;
 
   nFields = taudb_get_num_columns(res);
@@ -49,7 +49,7 @@ TAUDB_TIMER_GROUP* taudb_query_groups(TAUDB_CONNECTION* connection, TAUDB_TRIAL*
   /* the rows */
   for (i = 0; i < taudb_get_num_rows(res); i++)
   {
-    TAUDB_TIMER_GROUP* timer_group = &(timer_groups[i]);
+    TAUDB_TIMER_GROUP* timer_group = malloc(sizeof(TAUDB_TIMER_GROUP));
     /* the columns */
     for (j = 0; j < nFields; j++) {
       if (strcmp(taudb_get_column_name(res, j), "name") == 0) {
@@ -92,8 +92,8 @@ TAUDB_TIMER_GROUP* taudb_query_groups(TAUDB_CONNECTION* connection, TAUDB_TRIAL*
       // TODO - Populate the rest properly?
       timer_group->timer_count = 0;
       timer_group->timers = NULL;
-      HASH_ADD_KEYPTR(hh, timer_groups, timer_group->name, strlen(timer_group->name), timer_group);
     } 
+    HASH_ADD_KEYPTR(hh, timer_groups, timer_group->name, strlen(timer_group->name), timer_group);
   }
 
   taudb_clear_result(res);
@@ -102,12 +102,12 @@ TAUDB_TIMER_GROUP* taudb_query_groups(TAUDB_CONNECTION* connection, TAUDB_TRIAL*
   return (timer_groups);
 }
 
-TAUDB_TIMER_GROUP* taudb_get_timer_group(TAUDB_TIMER_GROUP* timer_groups, const char* name) {
+TAUDB_TIMER_GROUP* taudb_get_timer_group_by_name(TAUDB_TIMER_GROUP* timer_groups, const char* name) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_get_timer_group(%p,%s)\n", timer_groups, name);
 #endif
   if (timer_groups == NULL) {
-    fprintf(stderr, "Error: timer_groups parameter null. Please provide a valid set of timer_groups.\n");
+    // the hash isn't populated yet
     return NULL;
   }
   if (name == NULL) {

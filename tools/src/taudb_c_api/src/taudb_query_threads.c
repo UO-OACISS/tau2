@@ -5,28 +5,30 @@
 #include <string.h>
 
 TAUDB_THREAD* taudb_query_threads_2005(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean derived) {
+  TAUDB_THREAD* threads = NULL;
   if (derived) {
     taudb_numItems = 2;
-    TAUDB_THREAD* threads = taudb_create_threads(taudb_numItems);
-    threads[0].id = 0;
-    threads[0].trial = trial;
-    threads[0].node_rank = TAUDB_MEAN_WITHOUT_NULLS;
-    threads[0].context_rank = TAUDB_MEAN_WITHOUT_NULLS;
-    threads[0].thread_rank = TAUDB_MEAN_WITHOUT_NULLS;
-    threads[0].index = TAUDB_MEAN_WITHOUT_NULLS;;
-	HASH_ADD_INT(threads, index, &(threads[0]));
-    threads[1].id = 0;
-    threads[1].trial = trial;
-    threads[1].node_rank = TAUDB_TOTAL;
-    threads[1].context_rank = TAUDB_TOTAL;
-    threads[1].thread_rank = TAUDB_TOTAL;
-    threads[1].index = TAUDB_TOTAL;
-	HASH_ADD_INT(threads, index, &(threads[1]));
+    TAUDB_THREAD* thread = malloc(sizeof(TAUDB_THREAD));
+    thread->id = 0;
+    thread->trial = trial;
+    thread->node_rank = TAUDB_MEAN_WITHOUT_NULLS;
+    thread->context_rank = TAUDB_MEAN_WITHOUT_NULLS;
+    thread->thread_rank = TAUDB_MEAN_WITHOUT_NULLS;
+    thread->index = TAUDB_MEAN_WITHOUT_NULLS;;
+    HASH_ADD_INT(threads, index, thread);
+    thread = malloc(sizeof(TAUDB_THREAD));
+    thread->id = 0;
+    thread->trial = trial;
+    thread->node_rank = TAUDB_TOTAL;
+    thread->context_rank = TAUDB_TOTAL;
+    thread->thread_rank = TAUDB_TOTAL;
+    thread->index = TAUDB_TOTAL;
+    HASH_ADD_INT(threads, index, threads);
     return threads;
   } else {
     int i, j, k;
     taudb_numItems = trial->node_count * trial->contexts_per_node * trial->threads_per_context;
-    TAUDB_THREAD* threads = taudb_create_threads(taudb_numItems);
+    TAUDB_THREAD* threads = NULL;
     int threadIndex = 0;
     for (i = 0; i < trial->node_count; i++)
     {
@@ -34,15 +36,14 @@ TAUDB_THREAD* taudb_query_threads_2005(TAUDB_CONNECTION* connection, TAUDB_TRIAL
       {
         for (k = 0; k < trial->threads_per_context; k++)
         {
-          TAUDB_THREAD* thread = &(threads[threadIndex]);
+          TAUDB_THREAD* thread = malloc(sizeof(TAUDB_THREAD));
           thread->id = 0;
           thread->trial = trial;
           thread->node_rank = i;
           thread->context_rank = j;
           thread->thread_rank = k;
           thread->index = threadIndex;
-	      //HASH_ADD_INT(threads, index, thread);
-		  HASH_ADD(hh,threads,index,sizeof(int),thread);
+          HASH_ADD_INT(threads, index, thread);
           threadIndex++;
         }
       } 
@@ -88,7 +89,7 @@ TAUDB_THREAD* taudb_query_threads_2012(TAUDB_CONNECTION* connection, TAUDB_TRIAL
   res = taudb_execute_query(connection, my_query);
 
   int nRows = taudb_get_num_rows(res);
-  TAUDB_THREAD* threads = taudb_create_threads(nRows);
+  TAUDB_THREAD* threads = NULL;
   taudb_numItems = nRows;
 
   nFields = taudb_get_num_columns(res);
@@ -96,7 +97,7 @@ TAUDB_THREAD* taudb_query_threads_2012(TAUDB_CONNECTION* connection, TAUDB_TRIAL
   /* the rows */
   for (i = 0; i < taudb_get_num_rows(res); i++)
   {
-    TAUDB_THREAD* thread = &(threads[i]);
+    TAUDB_THREAD* thread = malloc(sizeof(TAUDB_THREAD));
     /* the columns */
     for (j = 0; j < nFields; j++) {
       if (strcmp(taudb_get_column_name(res, j), "id") == 0) {
@@ -114,7 +115,7 @@ TAUDB_THREAD* taudb_query_threads_2012(TAUDB_CONNECTION* connection, TAUDB_TRIAL
       }
     } 
     thread->secondary_metadata_count = 0;
-	HASH_ADD_INT(threads, index, thread);
+    HASH_ADD_INT(threads, index, thread);
   }
 
   taudb_clear_result(res);
