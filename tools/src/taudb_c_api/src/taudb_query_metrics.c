@@ -4,11 +4,11 @@
 #include <stdio.h>
 #include <string.h>
 
-TAUDB_METRIC* taudb_query_metrics(PGconn* connection, TAUDB_TRIAL* trial) {
+TAUDB_METRIC* taudb_query_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_metrics(%p)\n", trial);
 #endif
-  PGresult *res;
+  void *res;
   int nFields;
   int i, j;
 
@@ -23,85 +23,50 @@ TAUDB_METRIC* taudb_query_metrics(PGconn* connection, TAUDB_TRIAL* trial) {
     return trial->metrics;
   }
 
-  /* Start a transaction block */
-  res = PQexec(connection, "BEGIN");
-  if (PQresultStatus(res) != PGRES_COMMAND_OK)
-  {
-    fprintf(stderr, "BEGIN command failed: %s", PQerrorMessage(connection));
-    PQclear(res);
-    taudb_exit_nicely(connection);
-  }
-
-  /*
-   * Should PQclear PGresult whenever it is no longer needed to avoid
-   * memory leaks
-   */
-  PQclear(res);
+  taudb_begin_transaction(connection);
 
   /*
    * Fetch rows from table_name, the system catalog of databases
    */
   char my_query[256];
-  sprintf(my_query,"DECLARE myportal CURSOR FOR select * from metric where trial = %d", trial->id);
+  sprintf(my_query,"select * from metric where trial = %d", trial->id);
 #ifdef TAUDB_DEBUG
   printf("Query: %s\n", my_query);
 #endif
-  res = PQexec(connection, my_query);
-  if (PQresultStatus(res) != PGRES_COMMAND_OK)
-  {
-    fprintf(stderr, "DECLARE CURSOR failed: %s", PQerrorMessage(connection));
-    PQclear(res);
-    taudb_exit_nicely(connection);
-  }
-  PQclear(res);
+  res = taudb_execute_query(connection, my_query);
 
-  res = PQexec(connection, "FETCH ALL in myportal");
-  if (PQresultStatus(res) != PGRES_TUPLES_OK)
-  {
-    fprintf(stderr, "FETCH ALL failed: %s", PQerrorMessage(connection));
-    PQclear(res);
-    taudb_exit_nicely(connection);
-  }
-
-  int nRows = PQntuples(res);
+  int nRows = taudb_get_num_rows(res);
   taudb_numItems = nRows;
 
   TAUDB_METRIC* metrics = taudb_create_metrics(taudb_numItems);
 
-  nFields = PQnfields(res);
+  nFields = taudb_get_num_columns(res);
 
   /* the rows */
-  for (i = 0; i < PQntuples(res); i++)
+  for (i = 0; i < taudb_get_num_rows(res); i++)
   {
     TAUDB_METRIC* metric = &(metrics[i]);
     /* the columns */
     for (j = 0; j < nFields; j++) {
-	  if (strcmp(PQfname(res, j), "id") == 0) {
-	    metric->id = atoi(PQgetvalue(res, i, j));
-	  } else if (strcmp(PQfname(res, j), "trial") == 0) {
+	  if (strcmp(taudb_get_column_name(res, j), "id") == 0) {
+	    metric->id = atoi(taudb_get_value(res, i, j));
+	  } else if (strcmp(taudb_get_column_name(res, j), "trial") == 0) {
 	    //metric->trial = trial;
-	  } else if (strcmp(PQfname(res, j), "name") == 0) {
-	    metric->name = taudb_create_and_copy_string(PQgetvalue(res,i,j));
-	  } else if (strcmp(PQfname(res, j), "derived") == 0) {
-	    metric->derived = atoi(PQgetvalue(res, i, j));
+	  } else if (strcmp(taudb_get_column_name(res, j), "name") == 0) {
+	    metric->name = taudb_create_and_copy_string(taudb_get_value(res,i,j));
+	  } else if (strcmp(taudb_get_column_name(res, j), "derived") == 0) {
+	    metric->derived = atoi(taudb_get_value(res, i, j));
 	  } else {
-	    printf("Error: unknown column '%s'\n", PQfname(res, j));
+	    printf("Error: unknown column '%s'\n", taudb_get_column_name(res, j));
 	    taudb_exit_nicely(connection);
 	  }
 	} 
 	HASH_ADD_KEYPTR(hh, metrics, metric->name, strlen(metric->name), metric);
   }
 
-  PQclear(res);
+  taudb_clear_result(res);
+  taudb_close_transaction(connection);
 
-  /* close the portal ... we don't bother to check for errors ... */
-  res = PQexec(connection, "CLOSE myportal");
-  PQclear(res);
-
-  /* end the transaction */
-  res = PQexec(connection, "END");
-  PQclear(res);
-  
   return (metrics);
 }
 

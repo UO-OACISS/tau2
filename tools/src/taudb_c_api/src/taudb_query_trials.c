@@ -4,113 +4,71 @@
 #include <stdio.h>
 #include <string.h>
 
-TAUDB_TRIAL* taudb_private_query_trials(PGconn* connection, boolean full, char* my_query) {
+TAUDB_TRIAL* taudb_private_query_trials(TAUDB_CONNECTION* connection, boolean full, char* my_query) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_private_query_trials(%d, %s)\n", full, my_query);
 #endif
-  PGresult *res;
+  void *res;
   int nFields;
   int i, j;
 
-  /*
-   * Our test case here involves using a cursor, for which we must be
-   * inside a transaction block.  We could do the whole thing with a
-   * single PQexec() of "select * from table_name", but that's too
-   * trivial to make a good example.
-   */
-
-  /* Start a transaction block */
-  res = PQexec(connection, "BEGIN");
-  if (PQresultStatus(res) != PGRES_COMMAND_OK)
-  {
-    fprintf(stderr, "BEGIN command failed: %s", PQerrorMessage(connection));
-    PQclear(res);
-    taudb_exit_nicely(connection);
-  }
-
-  /*
-   * Should PQclear PGresult whenever it is no longer needed to avoid
-   * memory leaks
-   */
-  PQclear(res);
-
+  taudb_begin_transaction(connection);
   /*
    * Fetch rows from table_name, the system catalog of databases
    */
 #ifdef TAUDB_DEBUG
   printf("%s\n", my_query);
 #endif
-  res = PQexec(connection, my_query);
-  if (PQresultStatus(res) != PGRES_COMMAND_OK)
-  {
-    fprintf(stderr, "DECLARE CURSOR failed: %s", PQerrorMessage(connection));
-    PQclear(res);
-    taudb_exit_nicely(connection);
-  }
-  PQclear(res);
+  res = taudb_execute_query(connection, my_query);
 
-  res = PQexec(connection, "FETCH ALL in myportal");
-  if (PQresultStatus(res) != PGRES_TUPLES_OK)
-  {
-    fprintf(stderr, "FETCH ALL failed: %s", PQerrorMessage(connection));
-    PQclear(res);
-    taudb_exit_nicely(connection);
-  }
-
-  int nRows = PQntuples(res);
+  int nRows = taudb_get_num_rows(res);
   TAUDB_TRIAL* trials = taudb_create_trials(nRows);
 
-  nFields = PQnfields(res);
+  nFields = taudb_get_num_columns(res);
 
   /* the rows */
-  for (i = 0; i < PQntuples(res); i++)
+  for (i = 0; i < taudb_get_num_rows(res); i++)
   {
-    int metaIndex = 0;
+    //int metaIndex = 0;
     //trials[i].primary_metadata = taudb_create_primary_metadata(nFields-6);
     /* the columns */
     for (j = 0; j < nFields; j++) {
-      if (strcmp(PQfname(res, j), "id") == 0) {
-        trials[i].id = atoi(PQgetvalue(res, i, j));
-      } else if (strcmp(PQfname(res, j), "name") == 0) {
-        trials[i].name = taudb_create_and_copy_string(PQgetvalue(res,i,j));
-      //} else if (strcmp(PQfname(res, j), "date") == 0) {
-        //trials[i].collection_date = taudb_create_and_copy_string(PQgetvalue(res,i,j));
-      } else if (strcmp(PQfname(res, j), "node_count") == 0) {
-        trials[i].node_count = atoi(PQgetvalue(res, i, j));
-      } else if (strcmp(PQfname(res, j), "contexts_per_node") == 0) {
-        trials[i].contexts_per_node = atoi(PQgetvalue(res, i, j));
-      } else if (strcmp(PQfname(res, j), "threads_per_context") == 0) {
-        trials[i].threads_per_context = atoi(PQgetvalue(res, i, j));
-      } else if (strcmp(PQfname(res, j), "total_threads") == 0) {
-        trials[i].total_threads = atoi(PQgetvalue(res, i, j));
-      } else if (strcmp(PQfname(res, j), "data_source") == 0) {
-        trials[i].data_source = atoi(PQgetvalue(res, i, j));
-      } else if (strcmp(PQfname(res, j), "xml_metadata") == 0) {
+      if (strcmp(taudb_get_column_name(res, j), "id") == 0) {
+        trials[i].id = atoi(taudb_get_value(res, i, j));
+      } else if (strcmp(taudb_get_column_name(res, j), "name") == 0) {
+        trials[i].name = taudb_create_and_copy_string(taudb_get_value(res,i,j));
+      //} else if (strcmp(taudb_get_column_name(res, j), "date") == 0) {
+        //trials[i].collection_date = taudb_create_and_copy_string(taudb_get_value(res,i,j));
+      } else if (strcmp(taudb_get_column_name(res, j), "node_count") == 0) {
+        trials[i].node_count = atoi(taudb_get_value(res, i, j));
+      } else if (strcmp(taudb_get_column_name(res, j), "contexts_per_node") == 0) {
+        trials[i].contexts_per_node = atoi(taudb_get_value(res, i, j));
+      } else if (strcmp(taudb_get_column_name(res, j), "threads_per_context") == 0) {
+        trials[i].threads_per_context = atoi(taudb_get_value(res, i, j));
+      } else if (strcmp(taudb_get_column_name(res, j), "total_threads") == 0) {
+        trials[i].total_threads = atoi(taudb_get_value(res, i, j));
+      } else if (strcmp(taudb_get_column_name(res, j), "data_source") == 0) {
+        int data_source = atoi(taudb_get_value(res, i, j));
+        trials[i].data_source = taudb_get_data_source(connection->data_sources, data_source);
+      } else if (strcmp(taudb_get_column_name(res, j), "xml_metadata") == 0) {
         // TODO we need to handle this!
         continue;
-      } else if (strcmp(PQfname(res, j), "xml_metadata_gz") == 0) {
+      } else if (strcmp(taudb_get_column_name(res, j), "xml_metadata_gz") == 0) {
         // TODO we need to handle this!
         continue;
       } else {
-        //trials[i].primary_metadata[metaIndex].name = taudb_create_and_copy_string(PQfname(res, j));
-        //trials[i].primary_metadata[metaIndex].value = taudb_create_and_copy_string(PQgetvalue(res,i,j));
+        //trials[i].primary_metadata[metaIndex].name = taudb_create_and_copy_string(taudb_get_column_name(res, j));
+        //trials[i].primary_metadata[metaIndex].value = taudb_create_and_copy_string(taudb_get_value(res,i,j));
         //metaIndex++;
       }
     } 
     //trials[i].primary_metadata_count = metaIndex;
     trials[i].primary_metadata_count = 0;
- }
+  }
 
-  PQclear(res);
+  taudb_clear_result(res);
+  taudb_close_transaction(connection);
 
-  /* close the portal ... we don't bother to check for errors ... */
-  res = PQexec(connection, "CLOSE myportal");
-  PQclear(res);
-
-  /* end the transaction */
-  res = PQexec(connection, "END");
-  PQclear(res);
-  
   for (i = 0 ; i < nRows ; i++) {
     if (taudb_version == TAUDB_2005_SCHEMA) {
 	  fprintf(stderr,"Did not load the PerfDMF metadata...\n");
@@ -145,15 +103,15 @@ TAUDB_TRIAL* taudb_private_query_trials(PGconn* connection, boolean full, char* 
   return trials;
 }
 
-TAUDB_TRIAL* taudb_query_trials(PGconn* connection, boolean full, TAUDB_TRIAL* trial) {
+TAUDB_TRIAL* taudb_query_trials(TAUDB_CONNECTION* connection, boolean full, TAUDB_TRIAL* trial) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_trials(%d, %p)\n", full, trial);
 #endif
   char my_query[1024];
   if (trial->id > 0) { // the user wants a specific trial, so get it
-    sprintf(my_query,"DECLARE myportal CURSOR FOR select * from trial where id = %d", trial->id);
+    sprintf(my_query,"select * from trial where id = %d", trial->id);
   } else {
-    sprintf(my_query,"DECLARE myportal CURSOR FOR select * from trial where");
+    sprintf(my_query,"select * from trial where");
     if (trial->name != NULL) {
       sprintf(my_query,"%s name = '%s'", my_query, trial->name);
     } 
@@ -161,12 +119,12 @@ TAUDB_TRIAL* taudb_query_trials(PGconn* connection, boolean full, TAUDB_TRIAL* t
   return taudb_private_query_trials(connection, full, my_query);
 }
 
-TAUDB_TRIAL* perfdmf_query_trials(PGconn* connection, PERFDMF_EXPERIMENT* experiment) {
+TAUDB_TRIAL* perfdmf_query_trials(TAUDB_CONNECTION* connection, PERFDMF_EXPERIMENT* experiment) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling perfdmf_query_trials(%p)\n", experiment);
 #endif
   char my_query[256];
-  sprintf(my_query,"DECLARE myportal CURSOR FOR select * from trial where experiment = %d", experiment->id);
+  sprintf(my_query,"select * from trial where experiment = %d", experiment->id);
 
   return taudb_private_query_trials(connection, FALSE, my_query);
 }

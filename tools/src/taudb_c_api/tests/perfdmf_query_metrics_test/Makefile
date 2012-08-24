@@ -18,7 +18,7 @@ SOURCES=${wildcard *.c}
 OBJS=${patsubst %.c, %.o, ${SOURCES}}
 
 TARGET=perfdmf_query_metrics_test
-TAUDBLIB=../../libtaudb.a
+TAUDBLIB=../../lib/libtaudb.a
 DUMP_FUNCS=../libtaudb_dump.a
 LIBS=$(POSTGRESQL_LIBRARIES)
 INCLUDE=-I. -I../../include $(POSTGRESQL_INCLUDES) -I../dump_functions
@@ -38,7 +38,8 @@ $(OBJS): $(HEADERS) Makefile ../../Makefile.inc
 
 test: $(TARGET)
 	echo " Testing : $(TARGET)..."
-	time `./$(TARGET) $(TEST_CONFIG) $(TEST_TRIAL_ID) >& $(TARGET).log`
+	#time `./$(TARGET) $(TEST_CONFIG) $(TEST_TRIAL_ID) >& $(TARGET).log`
+	./$(TARGET) $(TEST_CONFIG) $(TEST_TRIAL_ID)
 	echo " \n...Done. Contents of $(TARGET).log: \n"
 	cat $(TARGET).log
 	echo ""

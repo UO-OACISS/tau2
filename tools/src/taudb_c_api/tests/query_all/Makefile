@@ -18,7 +18,7 @@ SOURCES=${wildcard *.c}
 OBJS=${patsubst %.c, %.o, ${SOURCES}}
 
 TARGET=query_all
-TAUDBLIB=../../libtaudb.a
+TAUDBLIB=../../lib/libtaudb.a
 DUMP_FUNCS=../libtaudb_dump.a
 LIBS=$(POSTGRESQL_LIBRARIES)
 INCLUDE=-I. -I../../include $(POSTGRESQL_INCLUDES) -I../dump_functions

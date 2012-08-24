@@ -17,7 +17,7 @@ HEADERS=${wildcard ../include/*.h}
 SOURCES=${wildcard *.c}
 OBJS=${patsubst %.c, %.o, ${SOURCES}}
 
-TARGET=../libtaudb.a
+TARGET=../lib/libtaudb.a
 LIBS=$(POSTGRESQL_LIBRARIES)
 INCLUDE=-I../include $(POSTGRESQL_INCLUDES)
 

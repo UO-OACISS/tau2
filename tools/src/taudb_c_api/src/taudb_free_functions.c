@@ -65,6 +65,18 @@ void taudb_delete_metrics(TAUDB_METRIC* metrics, int count) {
   free(metrics);
 }
 
+void taudb_delete_data_sources(TAUDB_DATA_SOURCE* data_sources, int count) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("Calling taudb_delete_data_sources(%p,%d)\n", data_sources, count);
+#endif
+  if (count == 0 || data_sources == NULL) return;
+  int i = 0;
+  for (i = count-1 ; i >= 0 ; i++) {
+    free(data_sources[i].name);
+  }
+  free(data_sources);
+}
+
 void taudb_delete_threads(TAUDB_THREAD* threads, int count) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_delete_threads(%p,%d)\n", threads, count);

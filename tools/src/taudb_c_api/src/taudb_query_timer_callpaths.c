@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
-TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(PGconn* connection, TAUDB_TRIAL* trial, TAUDB_TIMER* timer) {
+TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, TAUDB_TIMER* timer) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_private_query_timer_callpaths(%p,%p)\n", trial, timer);
 #endif
@@ -25,7 +25,7 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(PGconn* connection, TAUDB_TRIA
 
   if (taudb_version == TAUDB_2005_SCHEMA) {
   /*
-    sprintf(my_query,"DECLARE myportal CURSOR FOR select ilp.node, ilp.context, ilp.thread, ilp.call, ilp.subroutines, ie.name as timer_name from interval_location_profile ilp inner join interval_event ie on ilp.interval_event = ie.id left outer join metric m on ilp.metric = m.id");
+    sprintf(my_query,"select ilp.node, ilp.context, ilp.thread, ilp.call, ilp.subroutines, ie.name as timer_name from interval_location_profile ilp inner join interval_event ie on ilp.interval_event = ie.id left outer join metric m on ilp.metric = m.id");
     sprintf(my_query,"%s where ie.trial = %d", my_query, trial->id);
     if (timer != NULL) {
       sprintf(my_query,"%s and ie.id = %d", my_query, timer->id);
@@ -40,26 +40,12 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(PGconn* connection, TAUDB_TRIA
 	return NULL;
   } 
 
-  res = PQexec(connection, "BEGIN");
-  if (PQresultStatus(res) != PGRES_COMMAND_OK)
-  {
-    fprintf(stderr, "BEGIN command failed: %s", PQerrorMessage(connection));
-    PQclear(res);
-    taudb_exit_nicely(connection);
-  }
-
-  /*
-   * Should PQclear PGresult whenever it is no longer needed to avoid
-   * memory leaks
-   */
-  PQclear(res);
-
   /*
    * Fetch rows from table_name, the system catalog of databases
    */
   char my_query[1024];
-  //sprintf(my_query,"DECLARE myportal CURSOR FOR select * from timer where trial = %d", trial->id);
-  sprintf(my_query,"DECLARE myportal CURSOR FOR select * from timer_callpath tc inner join timer t on tc.timer = t.id");
+  //sprintf(my_query,"select * from timer where trial = %d", trial->id);
+  sprintf(my_query,"select * from timer_callpath tc inner join timer t on tc.timer = t.id");
   if (timer != NULL) {
     sprintf(my_query,"%s inner join timer t on tc.timer = t.id", my_query);
   }
@@ -67,51 +53,36 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(PGconn* connection, TAUDB_TRIA
   if (timer != NULL) {
     sprintf(my_query,"%s and t.id = %d", my_query, timer->id);
   }
-  sprintf(my_query,"%s order by parent", my_query, timer->id);
+  sprintf(my_query,"%s order by parent", my_query);
 #ifdef TAUDB_DEBUG
   printf("%s\n", my_query);
 #endif
-  res = PQexec(connection, my_query);
-  if (PQresultStatus(res) != PGRES_COMMAND_OK)
-  {
-    fprintf(stderr, "DECLARE CURSOR failed: %s", PQerrorMessage(connection));
-    PQclear(res);
-    taudb_exit_nicely(connection);
-  }
-  PQclear(res);
+  res = taudb_execute_query(connection, my_query);
 
-  res = PQexec(connection, "FETCH ALL in myportal");
-  if (PQresultStatus(res) != PGRES_TUPLES_OK)
-  {
-    fprintf(stderr, "FETCH ALL failed: %s", PQerrorMessage(connection));
-    PQclear(res);
-    taudb_exit_nicely(connection);
-  }
-
-  int nRows = PQntuples(res);
+  int nRows = taudb_get_num_rows(res);
   TAUDB_TIMER_CALLPATH* timer_callpaths = taudb_create_timer_callpaths(nRows);
   taudb_numItems = nRows;
 
-  nFields = PQnfields(res);
+  nFields = taudb_get_num_columns(res);
 
   /* the rows */
-  for (i = 0; i < PQntuples(res); i++)
+  for (i = 0; i < taudb_get_num_rows(res); i++)
   {
     TAUDB_TIMER_CALLPATH* timer_callpath = &(timer_callpaths[i]);
     /* the columns */
     for (j = 0; j < nFields; j++) {
-      if (strcmp(PQfname(res, j), "id") == 0) {
-        timer_callpath->id = atoi(PQgetvalue(res, i, j));
-      } else if (strcmp(PQfname(res, j), "timer") == 0) {
-        // timer_callpath->timer = atoi(PQgetvalue(res, i, j));
+      if (strcmp(taudb_get_column_name(res, j), "id") == 0) {
+        timer_callpath->id = atoi(taudb_get_value(res, i, j));
+      } else if (strcmp(taudb_get_column_name(res, j), "timer") == 0) {
+        // timer_callpath->timer = atoi(taudb_get_value(res, i, j));
 		fprintf(stderr, "TODO: need to lookup the timer for a reference!\n");
-      } else if (strcmp(PQfname(res, j), "parent") == 0) {
+      } else if (strcmp(taudb_get_column_name(res, j), "parent") == 0) {
         TAUDB_TIMER_CALLPATH* parent = NULL;
-        int parent_id = atoi(PQgetvalue(res, i, j));
+        int parent_id = atoi(taudb_get_value(res, i, j));
         HASH_FIND_INT(timer_callpaths, &(parent_id), parent);
 		timer_callpath->parent = parent;
       } else {
-        printf("Error: unknown column '%s'\n", PQfname(res, j));
+        printf("Error: unknown column '%s'\n", taudb_get_column_name(res, j));
         taudb_exit_nicely(connection);
       }
     } 
@@ -119,21 +90,14 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(PGconn* connection, TAUDB_TRIA
 	HASH_ADD_INT(timer_callpaths, id, timer_callpath);
   }
 
-  PQclear(res);
+  taudb_clear_result(res);
+  taudb_close_transaction(connection);
 
-  /* close the portal ... we don't bother to check for errors ... */
-  res = PQexec(connection, "CLOSE myportal");
-  PQclear(res);
-
-  /* end the transaction */
-  res = PQexec(connection, "END");
-  PQclear(res);
-  
   return (timer_callpaths);
 }
 
 // convenience method
-TAUDB_TIMER_CALLPATH* taudb_query_all_timer_callpaths(PGconn* connection, TAUDB_TRIAL* trial) {
+TAUDB_TIMER_CALLPATH* taudb_query_all_timer_callpaths(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial) {
   return taudb_query_timer_callpaths(connection, trial, NULL);
 }
 
