@@ -54,7 +54,7 @@ public class ParaProf implements ActionListener {
 	}
     }
 
-    private final static String VERSION = "Wed Aug 22 14:44:56 PDT 2012";
+    private final static String VERSION = "Fri Aug 24 10:31:43 PDT 2012";
 
     public static int defaultNumberPrecision = 6;
 
@@ -487,6 +487,23 @@ public class ParaProf implements ActionListener {
 //	    	fileTypeString="profiles";
 //	    	break;
 //	    }
+	}
+	
+	if(sourceFiles!=null){
+		if(sourceFiles[0].exists()){
+			if(sourceFiles[0].isDirectory()){
+				try {
+					LoadTrialWindow.lastDirectory=sourceFiles[0].getCanonicalPath();
+				} catch (IOException e) {
+				}
+			}
+			else{
+				try {
+					LoadTrialWindow.lastDirectory=sourceFiles[0].getParentFile().getCanonicalPath();
+				} catch (IOException e) {
+				}
+			}
+		}
 	}
 
 	if (fixNames != null)
