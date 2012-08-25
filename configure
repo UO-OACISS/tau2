@@ -5482,6 +5482,15 @@ fi
 
     
 if [ $mpi = yes ] ; then
+  #Check for SGI MPI
+  mpimptloc=`which mpiexec_mpt`
+  hasMPT=$?
+  if [ $hasMPT = 0 ] ; then
+    echo "Found SGI MPT MPI"
+    fixmakeargs="$fixmakeargs SGI_MPT_MPI"
+  fi
+
+
   wrapperlib="-L$tautoplevel/$machine/lib -lTauMpi\$(TAU_CONFIG)"
 
   # Epilog

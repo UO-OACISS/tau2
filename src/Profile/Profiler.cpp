@@ -1088,6 +1088,8 @@ extern "C" int TauProfiler_updateAllIntermediateStatistics() {
     TauProfiler_updateIntermediateStatistics(tid);
   }
   RtsLayer::UnLockDB();
+
+  return 0;
 }
 
 // This is a very important function, it must be called before writing function data to disk.

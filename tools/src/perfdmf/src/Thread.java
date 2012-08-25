@@ -194,7 +194,6 @@ public class Thread implements Comparable<Thread> {
     public void addUserEventProfile(UserEventProfile uep) {
         int id = uep.getUserEvent().getID();
         // increase the size of the userEventProfiles list if necessary
-
         userEventProfiles.put(new Integer(id), uep);
 
     }
