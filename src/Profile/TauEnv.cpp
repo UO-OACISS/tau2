@@ -396,7 +396,7 @@ static int env_depth_limit = 0;
 static int env_track_message = 0;
 static int env_comm_matrix = 0;
 static int env_track_memory_heap = 0;
-int tau_env_lite = 0;
+static int tau_env_lite = 0;
 static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
 static int env_track_io_params = 0;
@@ -643,6 +643,10 @@ int TauEnv_get_child_forkdirs(){
 
 const char* TauEnv_get_cupti_api(){
   return env_cupti_api;
+}
+
+int TauEnv_get_lite_enabled() {
+  return tau_env_lite;
 }
 
 /*********************************************************************
