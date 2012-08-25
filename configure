@@ -3807,6 +3807,17 @@ then
           fi
           additional_mpiincs="$additional_mpiincs $mpiincf90dir"
         fi
+
+        if [ -r /opt/ibmhpc/pecurrent/pempi/include/mpi.h ]
+        then
+          mpiinc=/opt/ibmhpc/pecurrent/pempi/include
+          mpiincf90dir='-I/opt/ibmhpc/pecurrent/pempi/include/thread'
+          if [ $machine = ibm64linux ]
+          then
+            mpiincf90dir='-I/opt/ibmhpc/pecurrent/pempi/include/thread64'
+          fi
+          additional_mpiincs="$additional_mpiincs $mpiincf90dir"
+        fi
         ;;
   rs6000|ibm64)
 	mpiinc=/usr/lpp/ppe.poe/include
@@ -3952,14 +3963,22 @@ if [ $mpi = yes -a "x$mpilib" = "x" ]
 then
   case $machine in 
   ppc64) 
+	mpilib=no
         if [ -r /opt/ibmhpc/ppe.poe/lib/libmpi/libmpi_ibm.so ] 
         then
-          additional_mpilibs='-lpoe -llapi'
           mpilib=/opt/ibmhpc/ppe.poe/lib/libmpi
+        fi
+        if [ -r /opt/ibmhpc/pecurrent/ppe.poe/lib/libmpi/libmpi_ibm.so ] 
+        then
+          mpilib=/opt/ibmhpc/pecurrent/ppe.poe/lib/libmpi
+        fi
+        if [ "x$mpilib" != "xno" ]; then
+          additional_mpilibs='-lpoe -llapi'
           mpilibrary="-lmpi_ibm $additional_mpilibs"
         fi
         ;;
   ibm64linux) 
+	mpilib=no
         if [ -r /opt/ibmhpc/ppe.poe/lib/libmpi64/libmpi_ibm.so ] 
         then
           mpilib=/opt/ibmhpc/ppe.poe/lib/libmpi64
@@ -3971,6 +3990,14 @@ then
         then
           mpilib=/opt/ibmhpc/ppe.poe/lib64/
           additional_mpilibs='-lpoe -llapi'
+        fi
+        if [ -r /opt/ibmhpc/pecurrent/pempi/gnu/lib/libmpi64/libmpi_ibm.so -a -r /opt/ibmhpc/pecurrent/base/gnu/lib64/libpami.so ]
+        then
+          mpilib=/opt/ibmhpc/pecurrent/pempi/gnu/lib/libmpi64
+          additional_mpilibs='-lpoe -L/opt/ibmhpc/pecurrent/base/gnu/lib64 -lpami'
+        fi
+
+        if [ "x$mpilib" != "xno" ]; then
           mpilibrary="-lmpi_ibm $additional_mpilibs"
           echo "Adding MPI libs from $mpilib"
           # Cases
