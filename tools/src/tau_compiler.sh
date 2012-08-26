@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash  
 
 declare -i FALSE=-1
 declare -i TRUE=1
@@ -227,6 +227,10 @@ for arg in "$@"; do
           upc|*/upc)
             upc="gnu"
             echoIfDebug "GNU UPC: TRUE!"
+            ;;
+          xlupc|*/xlupc)
+            upc="xlupc"
+            echoIfDebug "XLUPC UPC: TRUE!"
             ;;
           cc|*/cc)
             upc="cray"
@@ -1337,6 +1341,14 @@ if [ $numFiles == 0 ]; then
             echo "Warning: can't locate link_options.tau for Berkeley UPC runtime tracking"
           fi
         ;;
+        xlupc)
+          if [ -r $optWrappersDir/upc/xlupc/link_options.tau ] ; then
+            linkCmd="$linkCmd `cat $optWrappersDir/upc/xlupc/link_options.tau` $optLinking"
+            echoIfDebug "Linking command is $linkCmd"
+          else
+            echo "Warning: can't locate link_options.tau for IBM XL UPC runtime tracking"
+          fi
+	;;
         gnu)
           if [ -r $optWrappersDir/upc/gupc/link_options.tau ] ; then
             linkCmd="$linkCmd `cat $optWrappersDir/upc/gupc/link_options.tau` $optLinking"
@@ -1892,6 +1904,14 @@ cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} ${o
                 echo "Warning: can't locate link_options.tau for Berkeley UPC runtime tracking"
               fi
             ;;
+            xlupc)
+            if [ -r $optWrappersDir/upc/xlupc/link_options.tau ] ; then
+              newCmd="$newCmd `cat $optWrappersDir/upc/xlupc/link_options.tau` $optLinking"
+              echoIfDebug "Linking command is $newCmd"
+            else
+              echo "Warning: can't locate link_options.tau for IBM XL UPC runtime tracking"
+            fi
+	    ;;
             gnu)
               if [ -r $optWrappersDir/upc/gupc/link_options.tau ] ; then
                 newCmd="$newCmd `cat $optWrappersDir/upc/gupc/link_options.tau` $optLinking"
