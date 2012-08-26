@@ -877,12 +877,12 @@ for arg in "$@"; do
     ;;
   -upc=*)
     myarg=`echo $arg | sed 's/-upc=//'`
-    if [ $myarg = cc -o $myarg = upc -o $myarg = gcc -o $myarg = upcc ]
+    if [ $myarg = cc -o $myarg = upc -o $myarg = gcc -o $myarg = upcc -o $myarg = xlupc ]
       then
         upc_compiler=$myarg
         upc=yes
       else
-	echo "WARNING: valid options for upc are 'cc (Cray CCE UPC compiler)', 'upc (GNU UPC compiler)', 'upcc (Berkeley UPC compiler)', and 'gcc'"
+	echo "WARNING: valid options for upc are 'cc (Cray CCE UPC compiler)', 'upc (GNU UPC compiler)', 'upcc (Berkeley UPC compiler)', 'xlupc (IBM XL UPC compiler)', and 'gcc'"
 	exit 1
     fi
     shift
@@ -4509,6 +4509,12 @@ if [ $upc_compiler = gcc -o $upc_compiler = upc ]
 then
   gupc=yes
 fi
+
+if [ $upc_compiler = xlupc ]
+then
+  fixmakeargs="$fixmakeargs XLUPC"
+fi
+
 if [ $c_compiler != gcc4 ]
   then
     echo Default C compiler will be $c_compiler
