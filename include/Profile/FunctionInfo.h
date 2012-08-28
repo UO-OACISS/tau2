@@ -157,8 +157,8 @@ public:
   char *Type;
   char *GroupName;
   char *AllGroups;
+  char const * FullName;
   x_uint64 FunctionId;
-  std::string *FullName;
 
   /* For EBS Sampling Profiles */
   // *CWL* - these need to be per-thread structures, just like the
@@ -207,8 +207,7 @@ public:
     AllGroups = strdup(newname.c_str()); /* to make it to the profile */
   }
 
-  std::string *GetFullName(); /* created on demand, cached */
-
+  char const * GetFullName(); /* created on demand, cached */
 
   x_uint64 GetFunctionId() ;
   long GetCalls(int tid) { return NumCalls[tid]; }

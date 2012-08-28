@@ -729,14 +729,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 				vm = ThreeDeeGeneralPlotUtils.getEvaluation(
 						rankIndex,
 						numThreads,
-						thread.getNodeID(),
-						thread.getContextID(),
-						thread.getThreadID(),
-						ppTrial.getDataSource().getNumberOfNodes(),
-						ppTrial.getDataSource().getNumberOfContexts(
-								thread.getNodeID()),
-						ppTrial.getDataSource().getNumberOfThreads(
-								thread.getNodeID(), thread.getContextID()),
+						thread,
+						ppTrial,
 						topoVals, varMins, varMaxs, varMeans, settings
 								.getCustomTopoAxes(), expressions);
 

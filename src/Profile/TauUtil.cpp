@@ -37,7 +37,8 @@ void TAU_ABORT(const char *format, ...) {
 /*********************************************************************
  * Create an buffer output device
  ********************************************************************/
-Tau_util_outputDevice *Tau_util_createBufferOutputDevice() {
+Tau_util_outputDevice *Tau_util_createBufferOutputDevice() 
+{
   Tau_util_outputDevice *out = (Tau_util_outputDevice*) TAU_UTIL_MALLOC (sizeof(Tau_util_outputDevice));
   if (out == NULL) {
     return NULL;
@@ -45,7 +46,7 @@ Tau_util_outputDevice *Tau_util_createBufferOutputDevice() {
   out->type = TAU_UTIL_OUTPUT_BUFFER;
   out->bufidx = 0;
   out->buflen = TAU_UTIL_INITIAL_BUFFER;
-  out->buffer = (char *) malloc (out->buflen);
+  out->buffer = (char *)malloc(out->buflen + 1);
   return out;
 }
 
@@ -107,41 +108,46 @@ int Tau_util_readFullLine(char *line, FILE *fp) {
   while ( (ch = fgetc(fp)) && ch != EOF && ch != (int) '\n') {
     line[i++] = (unsigned char) ch;
   }
+  // Be careful to check that line is large enough:
+  // sizeof(line) == strlen(str) + 1
   line[i] = '\0'; 
   return i; 
 }
 
 /*********************************************************************
- * Replaces all the runs of spaces with a single space in a string.
- * This modifies the string, but the user should use the return string
- * because the pointer may change while removing leading whitespace.
+ * Duplicates a string and replaces all the runs of spaces with a 
+ * single space.
  ********************************************************************/
-char *Tau_util_removeRuns(char *str) {
-  int i, idx;
-  int len; 
-
-  if (!str) {
-    return str; /* do nothing with a null string */
+char const * Tau_util_removeRuns(char const * spaced_str) 
+{
+  if (!spaced_str) {
+    return spaced_str; /* do nothing with a null string */
   }
 
-  // also remove leading whitespace
-  while (*str && *str == ' ') {
-    str++;
+  // Skip over spaces at start of string
+  while (*spaced_str && *spaced_str == ' ') {
+    ++spaced_str;
   }
 
-  len = strlen(str);
-  for (i=0; i<len; i++) {
-    if (str[i] == ' ') {
-      idx = i+1;
-      while (idx < len && str[idx] == ' ') {
-	idx++;
-      }
-      int skip = idx - i - 1;
-      for (int j=i+1; j<=len-skip; j++) {
-	str[j] = str[j+skip];
-      }
-    }
+  // String copy
+  int len = strlen(spaced_str);
+  char * str = (char *)malloc(len+1);
+
+  // Copy from spaced_str ignoring runs of multiple spaces
+  char c;
+  char * dst = str;
+  char const * src = spaced_str;
+  char const * end = spaced_str + len;
+  while ((c = *src) && src < end) {
+    ++src;
+    *dst = c;
+    ++dst;
+    if(c == ' ')
+      while(*src == ' ')
+        ++src;
   }
+  *dst = '\0';
+
   return str;
 }
 

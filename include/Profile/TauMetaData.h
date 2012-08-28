@@ -22,18 +22,19 @@
 
 
 #include <TauUtil.h>
-#include <string>
 #include <map>
-// Putting "using namespace" statements in header files can create ambiguity
-// between user-defined symbols and std symbols, creating unparsable code
-// or even changing the behavior of user codes.  This is also widely considered
-// to be bad practice.  Here's a code PDT can't parse because of this line:
-//   EX: #include <complex>
-//   EX: typedef double real;
-//
-//using namespace std;
 
-std::map<std::string,std::string> &Tau_metadata_getMetaData();
+// Note: using std::string in a std::map is dangerous 
+// for some libstdc++ implementations.  The risky code is:
+//     std::map<std::string, std::string> mymap;
+//     mymap["hello"] = "world";
+// You need to remember to use:
+//     mymap["hello"] = string("world");
+// It's faster, safer, and easier to use a char*, especially
+// since TAU (over)uses strdup on most function arguments.
+typedef std::map<char const *, char const *> metadata_map_t;
+
+metadata_map_t & Tau_metadata_getMetaData();
 int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int counter, int tid);
 int Tau_metadata_writeMetaData(FILE *fp, int counter, int tid);
 int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int tid);
