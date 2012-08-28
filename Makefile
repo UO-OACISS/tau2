@@ -82,8 +82,13 @@ TAUCUDA=src/wrappers/cuda
 #CUPTI#TAU_CUPTI_AVAIL=utils/tau_cupti_avail #ENDIF#
 TAUOPENCL=src/wrappers/opencl
 MEMORYWRAPPER=src/wrappers/memory
-#GASNET#TAU_UPCC_WRAPPER=src/wrappers/upc/bupc/upcr #ENDIF#
-#UPCC#UPCWRAPPER=$(TAU_UPCC_WRAPPER) #ENDIF#
+
+#BUPC#TAU_UPCC_WRAPPER=src/wrappers/upc/bupc/upcr #ENDIF#
+#BUPC#UPCWRAPPER=$(TAU_UPCC_WRAPPER) #ENDIF#
+
+#GUPC#TAU_UPCC_WRAPPER=src/wrappers/upc/gupc #ENDIF#
+#GUPC#UPCWRAPPER=$(TAU_UPCC_WRAPPER) #ENDIF#
+
 #COMPINST_CRAYCC#UPCWRAPPER=src/wrappers/upc/crayupc #ENDIF#
 
 #TAU_PTHREAD_WRAP#PTHREAD_WRAPPER=src/wrappers/pthread #ENDIF#

@@ -7,7 +7,9 @@ using namespace std;
 
 typedef std::map<int,int> rank_map;
 typedef std::map<MPI_Comm,rank_map> comm_map;
-comm_map comms;
+// this is STATIC, because otherwise it can get freed by std::map more than once,
+// when using tau_exec on an instrumented program.
+static comm_map comms;
 
 
 extern "C"

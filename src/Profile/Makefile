@@ -135,7 +135,7 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauMemoryWrap.o \
 		$(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
 		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) $(TAU_SAMPLING_O) \
 		TauIoWrap.o TauCompensate.o $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
-		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_GASPU_O) $(TAU_CUPTI_COUNTER_OBJS) \
+		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_CUPTI_COUNTER_OBJS) \
 		$(TAU_WINDOWS_OBJ) $(TAU_SHMEM_OBJS) $(TAU_IBM_BG_HWP_OBJS)
 
 # CWL - BFD Functionality for libTAU.so is faked if no shared BFD object can
@@ -207,6 +207,7 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 # For making libTAU.so Dynamic Shared Object
 ##############################################
 #GNU#AR_SHFLAGS 		= -shared  	#ENDIF#
+#CLANG#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SUNX86_64#AR_SHFLAGS 		= -shared  	#ENDIF#
 #SOL2CC#AR_SHFLAGS 		= -G  	#ENDIF#
 #USE_PATHCC#AR_SHFLAGS 		= -shared -fPIC  	#ENDIF#
@@ -227,6 +228,8 @@ TAU_DISABLE_SHARED   = libTauDisable$(TAU_SHLIBX)
 TAU_BGP_AR_SHFLAGS = -shared
 #USE_IBMXLC#AR_SHFLAGS          = -G 		#ENDIF#
 #USE_IBMXLC#TAU_BGP_AR_SHFLAGS          = -qmkshrobj                #ENDIF#
+#USE_IBMXLC#TAU_BGQ_AR_SHFLAGS          = -qmkshrobj    #ENDIF#
+#BGQ# AR_SHFLAGS          = $(TAU_BGQ_AR_SHFLAGS)        #ENDIF#
 #BGP#AR_SHFLAGS          = $(TAU_BGP_AR_SHFLAGS)                #ENDIF#
 #USE_DECCXX#AR_SHFLAGS  	= -shared 		#ENDIF#
 #ACC#AR_SHFLAGS  		= -b 		#ENDIF#
@@ -838,9 +841,6 @@ TauMemory.o : TauMemory.cpp $(HDRS)
 
 TauGASP.o : TauGASP.c $(HDRS)
 	$(TAU_UPCC) $(UPCFLAGS) -c $(@:.o=.c)
-
-TauGASPU.o : TauGASPU.upc $(HDRS)
-	$(TAU_UPCC) $(UPCFLAGS) -c $(@:.o=.upc)
 
 TauBgHwpCounters.o : TauBgHwpCounters.c $(HDRS) 
 	$(CC) $(CFLAGS) -c $(@:.o=.c)

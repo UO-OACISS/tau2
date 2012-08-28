@@ -104,7 +104,16 @@ int tau_track_pthread_barrier_wait(pthread_barrier_t *barrier);
 
 #else
 #ifndef TAU_MAX_THREADS
+/* *CWL* - If useropt is not specified, then GPUs need to override the non-threaded default of 1. 
+         - If thread packages are used, their defaults (> 32) are used.
+	 Ultimately, we would like some way of setting TAU_MAX_THREADS as a cumulative value of
+         each component value (e.g., PTHREADS + GPU = 128 + 32 = 160).
+*/
+#ifdef TAU_GPU
+#define TAU_MAX_THREADS 32
+#else /* TAU_GPU */
 #define TAU_MAX_THREADS 1
+#endif /* TAU_GPU */
 #endif /* TAU_MAX_THREADS */
 #endif /* PTHREADS || TULIPTHREADS || JAVA || TAU_WINDOWS || OPENMP || SPROC */
 

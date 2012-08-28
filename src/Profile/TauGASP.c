@@ -22,6 +22,14 @@
 
 #include <Profile/TauGASP.h>
 
+/* disable instrumentation in this file, if possible */
+#pragma pupc off
+
+#ifdef __BERKELEY_UPC__
+  /* ensure code in this file does not disturb line numbering */
+  #pragma UPCR NO_SRCPOS 
+#endif
+
 /* internal tool events, placed at end of user event range */
 #define GASPI_EVT_BASE          (GASP_UPC_USEREVT_END - GASPI_RESERVEDEVTS)
 #define GASPI_INIT              GASPI_EVT_BASE+0
@@ -108,9 +116,10 @@ unsigned int gasp_create_event(gasp_context_t context, const char *name, const c
   return retval;
 }
 
-gasp_context_t gasp_init(gasp_model_t srcmodel, int *argc, char ***argv) {
-
+gasp_context_t gasp_init(gasp_model_t srcmodel, int *argc, char ***argv) 
+{
   int nodeid;
+
   /* allocate a local context */
   gasp_context_t context = (gasp_context_t)calloc(1,sizeof(struct _gasp_context_S));
   assert(context->srcmodel == GASP_MODEL_UPC); /* for now */
@@ -119,22 +128,42 @@ gasp_context_t gasp_init(gasp_model_t srcmodel, int *argc, char ***argv) {
   context->enabled = 1; 
 
   /* query system parameters */
-
   context->forceflush = gaspi_getenvYN(context,"GASP_FLUSH",0);
 
-  //gasp_event_notify(context, GASPI_INIT, GASP_ATOMIC, NULL, 0, 0, argstr);
-
   Tau_create_top_level_timer_if_necessary();
-//TAU_REGISTER_THREAD();
+
+  if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_init_if_necessary();
+  }
+
+#ifndef TAU_DISABLE_SIGUSR
+  Tau_signal_initialization(); 
+#endif
+
+#ifdef TAU_MONITORING
+  Tau_mon_connect();
+#endif /* TAU_MONITORING */
+
+#ifdef TAU_BGP
+  if (TauEnv_get_ibm_bg_hwp_counters()) {
+    int upcErr; 
+    Tau_Bg_hwp_counters_start(&upcErr); 
+    if (upcErr != 0) {
+      printf("TAU ERROR: ** Error starting IBM BGP UPC hardware performance counters\n");
+    }
+  }
+#endif /* TAU_BGP */
+
   nodeid = TAU_PROFILE_GET_NODE();
   if (nodeid == -1) {
     TAU_PROFILE_SET_NODE(context->mythread);
   }
-//Tau_set_usesMPI(1);
-//       printf("Thread is %i\n",context->mythread);
 
-  //TAU_START("main");
-          //TAU_PROFILE_TIMER(context->tautimer, "otherstuff",  " ", TAU_MESSAGE);
+#ifdef TAU_MPI
+  if (TauEnv_get_synchronize_clocks()) {
+    TauSyncClocks();
+  }
+#endif
 
   return context;
 }
@@ -322,13 +351,23 @@ void gasp_event_notifyVA(gasp_context_t context, unsigned int evttag, gasp_evtty
   #endif
 
     default:
-      if (evttag >= GASP_UPC_USEREVT_START &&
-        evttag <= GASP_UPC_USEREVT_END) { /* it's a user event */
+      if (evttag >= GASP_UPC_USEREVT_START && 
+          evttag <= GASP_UPC_USEREVT_END) 
+      { 
+        /* it's a user event */
         int id = evttag - GASP_UPC_USEREVT_START;
-        assert(id < context->userevt_cnt);
-        tagstr = context->userevt[id].name;
-        argstr = context->userevt[id].desc;
-        is_user_evt = 1;
+        if(id < context->userevt_cnt) {
+          tagstr = context->userevt[id].name;
+          argstr = context->userevt[id].desc;
+          is_user_evt = 1;
+        } 
+        #if 1
+        else {
+          printf("ERROR: id=%d < userevt_cnt=%d.  "
+                 "Check that %s was compiled with UPC compiler.\n",
+                 __FILE__, id, context->userevt_cnt);
+        }
+        #endif
       }
   }
 
@@ -336,12 +375,11 @@ void gasp_event_notifyVA(gasp_context_t context, unsigned int evttag, gasp_evtty
     
     if(evttype==GASP_START)
     {
-
-	TAU_START(tagstr);
+      TAU_START(tagstr);
     }
     else if(evttype==GASP_END)
     {
-	TAU_STOP(tagstr);
+      TAU_STOP(tagstr);
     }
     else if(evttype=GASP_ATOMIC)
     {
@@ -350,10 +388,10 @@ void gasp_event_notifyVA(gasp_context_t context, unsigned int evttag, gasp_evtty
 #ifdef GASP_BUPC_STATIC_SHARED
          if (evttag == GASP_BUPC_STATIC_SHARED) {
            int nblocks, nbytes;
-               nblocks = (int)va_arg(argptr, int);
-               nbytes = (int)va_arg(argptr, int);
-               TAU_REGISTER_EVENT(variable, tagstr);	 
-	       TAU_EVENT(variable, nbytes);
+           nblocks = (int)va_arg(argptr, int);
+           nbytes = (int)va_arg(argptr, int);
+           TAU_REGISTER_EVENT(variable, tagstr);	 
+	         TAU_EVENT(variable, nbytes);
          }
 #endif /* GASP_BUPC_STATIC_SHARED */
     }

@@ -56,7 +56,6 @@ using namespace std;
 #include <sys/stat.h>
 #include <fcntl.h>
 
-
 #include <stdio.h> 
 #include <time.h>
 #include <stdlib.h>
@@ -693,7 +692,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 	//ThisKtauProfiler->KernProf.DumpKProfile();
 	ThisKtauProfiler->KernProf.DumpKProfileOut();
 #endif /*TAUKTAU */
-
+ 
 #ifdef TAU_TRACK_IDLE_THREADS /* Check if we need to shut off .TAU applications on other tids */
 	if (tid == 0) {
 	  int i; 
@@ -1286,7 +1285,11 @@ int TauProfiler_StoreData(int tid) {
     RtsLayer::LockDB();
     if (profileWriteWarningPrinted == 0) {
       profileWriteWarningPrinted = 1;
-      fprintf (stderr, "TAU: Warning: Profile data for at least one thread has been written out more than 10 times!\nTAU: This could cause extreme overhead and be due to an error\nTAU: in instrumentation (lack of top level timer).\nTAU: If using OpenMP, make sure -opari is enabled.\n");
+      fprintf (stderr, 
+          "TAU: Warning: Profile data for at least one thread has been written out more than 10 times!\n"
+          "TAU: This could cause extreme overhead and be due to an error\n"
+          "TAU: in instrumentation (lack of top level timer).\n"
+          "TAU: If using OpenMP, make sure -opari is enabled.\n");
     }
     RtsLayer::UnLockDB();
   }
@@ -1304,9 +1307,7 @@ int TauProfiler_StoreData(int tid) {
   }
 #endif
   if (TauEnv_get_profiling()) {
-
     Tau_snapshot_writeFinal("final");
-    
     if (TauEnv_get_profile_format() == TAU_FORMAT_PROFILE) {
       TauProfiler_DumpData(false, tid, "profile");
     }
@@ -1321,6 +1322,20 @@ int TauProfiler_StoreData(int tid) {
     }
   }
 #endif /* PTHREADS */
+
+#if defined(TAU_OPENMP)
+  //fprintf(stderr, "Total Threads: %d\n", RtsLayer::getTotalThreads());
+  if (RtsLayer::getTotalThreads() == 1) {
+    // issue a warning, because this is a multithreaded config,
+    // and we saw no threads other than 0!
+    fprintf(stderr, 
+        "\nTAU: WARNING! TAU did not detect more than one thread.\n"
+        "If running an OpenMP application with tau_exec and you expected\n"
+        "more than one thread, try using the '-T pthread' configuration,\n"
+        "or instrument your code with TAU.\n\n");
+  }
+#endif /* OPENMP */
+
   return 1;
 } 
 
@@ -1344,9 +1359,6 @@ else
     profiledir = new char[profile_dir_len];
     written_bytes = sprintf(profiledir, "%s.", KTAU_NG_PREFIX);
     gethostname(profiledir + written_bytes, profile_dir_len - written_bytes);
-    
-    // profiledir = new char[KTAU_NG_PREFIX_LEN + (Tau_metadata_getMetaData()["Hostname"]).length() + 1]; //This will remain in memory until TAU closes since their is no corresponding delete.
-    // sprintf(profiledir, "%s.%s", KTAU_NG_PREFIX, Tau_metadata_getMetaData()["Hostname"].c_str());
   }
 #else
   profiledir = TauEnv_get_profiledir();
