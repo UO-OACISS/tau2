@@ -18,9 +18,9 @@ TAUDB_METRIC* taudb_query_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* tri
   }
 
   //if the Trial already has the data, return it.
-  if (trial->metrics != NULL && trial->metric_count > 0) {
+  if (trial->metrics_by_id != NULL && trial->metric_count > 0) {
     taudb_numItems = trial->metric_count;
-    return trial->metrics;
+    return trial->metrics_by_id;
   }
 
   taudb_begin_transaction(connection);
@@ -40,7 +40,8 @@ TAUDB_METRIC* taudb_query_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* tri
 
   //TAUDB_METRIC* metrics = taudb_create_metrics(taudb_numItems);
   // allocation handled by the UThash structure!
-  TAUDB_METRIC* metrics = NULL;
+  trial->metrics_by_id = NULL;
+  trial->metrics_by_name = NULL;
 
   nFields = taudb_get_num_columns(res);
 
@@ -63,14 +64,14 @@ TAUDB_METRIC* taudb_query_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* tri
 	    taudb_exit_nicely(connection);
 	  }
 	} 
-	HASH_ADD_INT(metrics, id, metric);
-	//HASH_ADD_KEYPTR(hh2, metrics, metric->name, strlen(metric->name), metric);
+	HASH_ADD(hh1, trial->metrics_by_id, id, sizeof(int), metric);
+	HASH_ADD(hh2, trial->metrics_by_name, name, strlen(metric->name), metric);
   }
 
   taudb_clear_result(res);
   taudb_close_transaction(connection);
 
-  return (metrics);
+  return (trial->metrics_by_id);
 }
 
 TAUDB_METRIC* taudb_get_metric_by_name(TAUDB_METRIC* metrics, const char* name) {
@@ -87,7 +88,7 @@ TAUDB_METRIC* taudb_get_metric_by_name(TAUDB_METRIC* metrics, const char* name) 
   }
 
   TAUDB_METRIC* metric = NULL;
-  //HASH_FIND(hh2, metrics, name, strlen(name), metric);
+  HASH_FIND(hh2, metrics, name, strlen(name), metric);
   return metric;
 }
 
@@ -105,7 +106,7 @@ TAUDB_METRIC* taudb_get_metric_by_id(TAUDB_METRIC* metrics, const int id) {
   }
 
   TAUDB_METRIC* metric = NULL;
-  HASH_FIND_INT(metrics, &id, metric);
+  HASH_FIND(hh1, metrics, &id, sizeof(int), metric);
   return metric;
 }
 

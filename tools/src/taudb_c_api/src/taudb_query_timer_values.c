@@ -133,7 +133,7 @@ TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection
         if (metric != NULL)
           timer_value->metric = metric;
         else {
-          timer_value->metric = taudb_get_metric_by_id(trial->metrics, atoi(taudb_get_value(res, i, j)));
+          timer_value->metric = taudb_get_metric_by_id(trial->metrics_by_id, atoi(taudb_get_value(res, i, j)));
         }
 // these two are the same
       } else if (strcmp(taudb_get_column_name(res, j), "inclusive_percentage") == 0) {
