@@ -65,7 +65,7 @@ TAUDB_METRIC* taudb_query_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* tri
 	  }
 	} 
 	HASH_ADD(hh1, trial->metrics_by_id, id, sizeof(int), metric);
-	HASH_ADD(hh2, trial->metrics_by_name, name, strlen(metric->name), metric);
+	HASH_ADD_KEYPTR(hh2, trial->metrics_by_name, metric->name, strlen(metric->name), metric);
   }
 
   taudb_clear_result(res);
