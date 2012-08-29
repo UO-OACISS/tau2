@@ -49,7 +49,7 @@ TAUDB_TRIAL* taudb_private_query_trials(TAUDB_CONNECTION* connection, boolean fu
         trials[i].total_threads = atoi(taudb_get_value(res, i, j));
       } else if (strcmp(taudb_get_column_name(res, j), "data_source") == 0) {
         int data_source = atoi(taudb_get_value(res, i, j));
-        trials[i].data_source = taudb_get_data_source(connection->data_sources, data_source);
+        trials[i].data_source = taudb_get_data_source_by_id(connection->data_sources_by_id, data_source);
       } else if (strcmp(taudb_get_column_name(res, j), "xml_metadata") == 0) {
         // TODO we need to handle this!
         continue;
@@ -79,13 +79,13 @@ TAUDB_TRIAL* taudb_private_query_trials(TAUDB_CONNECTION* connection, boolean fu
     if (full) {
       trials[i].threads = taudb_query_threads(connection, &(trials[i]));
       trials[i].thread_count = taudb_numItems;
-      trials[i].timers = taudb_query_timers(connection, &(trials[i]));
+      trials[i].timers_by_id = taudb_query_timers(connection, &(trials[i]));
       trials[i].timer_count = taudb_numItems;
-      trials[i].timer_callpaths = taudb_query_all_timer_callpaths(connection, &(trials[i]));
+      trials[i].timer_callpaths_by_id = taudb_query_all_timer_callpaths(connection, &(trials[i]));
       trials[i].timer_callpath_count = taudb_numItems;
       //trials[i].timer_callpath_stats = taudb_query_all_timer_callpath_stats(connection, &(trials[i]));
       //trials[i].callpath_stat_count = taudb_numItems;
-      trials[i].metrics = taudb_query_metrics(connection, &(trials[i]));
+      trials[i].metrics_by_id = taudb_query_metrics(connection, &(trials[i]));
       trials[i].metric_count = taudb_numItems;
       //trials[i].timer_values = taudb_query_all_timer_values(connection, &(trials[i]));
       //trials[i].value_count = taudb_numItems;

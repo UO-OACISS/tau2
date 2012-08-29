@@ -5,7 +5,7 @@
 
 #define MAX_RECORD_LENGTH 256
 
-void trim(char * s) {
+void taudb_trim(char * s) {
     char * p = s;
     int l = strlen(p);
 
@@ -42,7 +42,7 @@ TAUDB_CONFIGURATION* taudb_parse_config_file(char* config_name) {
   // parse the config file, one line at a time
   while (!feof(ifp)) {
 	fgets(line, MAX_RECORD_LENGTH, ifp);
-	trim(line);
+	taudb_trim(line);
     if (strlen(line) == 0) {
 	  continue;
 	} else if (strncmp(line, "#", 1) == 0) {

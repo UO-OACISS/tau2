@@ -36,6 +36,9 @@ void taudb_delete_trials(TAUDB_TRIAL* trials, int count) {
 #endif
   if (count == 0 || trials == NULL) return;
 
+  // until we can do this properly, don't do it.
+  return;
+
   int i = 0;
   for (i = count-1 ; i >= 0 ; i++) {
     taudb_delete_secondary_metadata(trials[i].secondary_metadata, trials[i].secondary_metadata_count);
@@ -43,11 +46,11 @@ void taudb_delete_trials(TAUDB_TRIAL* trials, int count) {
     taudb_delete_counter_values(trials[i].counter_values, trials[i].counter_value_count);
     taudb_delete_counters(trials[i].counters, trials[i].counter_count);
     taudb_delete_timer_call_data(trials[i].timer_call_data, trials[i].timer_call_data_count);
-    taudb_delete_timer_callpaths(trials[i].timer_callpaths, trials[i].timer_callpath_count);
+    taudb_delete_timer_callpaths(trials[i].timer_callpaths_by_id, trials[i].timer_callpath_count);
     taudb_delete_timer_groups(trials[i].timer_groups, trials[i].timer_group_count);
-    taudb_delete_timers(trials[i].timers, trials[i].timer_count);
+    taudb_delete_timers(trials[i].timers_by_id, trials[i].timer_count);
     taudb_delete_threads(trials[i].threads, trials[i].thread_count);
-    taudb_delete_metrics(trials[i].metrics, trials[i].metric_count);
+    taudb_delete_metrics(trials[i].metrics_by_id, trials[i].metric_count);
     free(trials[i].name);
   }
   free(trials);
@@ -57,12 +60,12 @@ void taudb_delete_metrics(TAUDB_METRIC* metrics, int count) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_delete_metrics(%p,%d)\n", metrics, count);
 #endif
-  if (count == 0 || metrics == NULL) return;
-  int i = 0;
-  for (i = count-1 ; i >= 0 ; i++) {
-    free(metrics[i].name);
+  TAUDB_METRIC *current, *tmp;
+  HASH_ITER(hh1, metrics, current, tmp) {
+    HASH_DELETE(hh1, metrics, current);
+    free(current->name);
+    free(current);
   }
-  free(metrics);
 }
 
 void taudb_delete_data_sources(TAUDB_DATA_SOURCE* data_sources, int count) {
@@ -147,15 +150,16 @@ void taudb_delete_timers(TAUDB_TIMER* timers, int count) {
   printf("Calling taudb_delete_timers(%p,%d)\n", timers, count);
 #endif
   if (count == 0 || timers == NULL) return;
-  int i = 0;
-  for (i = count-1 ; i >= 0 ; i++) {
-    taudb_delete_timer_parameters(timers[i].parameters, timers[i].parameter_count);
-    free(timers[i].groups); // these will be deleted by the trial, later
-    free(timers[i].name);
-    free(timers[i].short_name);
-    free(timers[i].source_file);
+  TAUDB_TIMER *current, *tmp;
+  HASH_ITER(hh1, timers, current, tmp) {
+    HASH_DELETE(hh1, timers, current);
+    taudb_delete_timer_parameters(current->parameters, current->parameter_count);
+    free(current->groups); // these will be deleted by the trial, later
+    free(current->name);
+    free(current->short_name);
+    free(current->source_file);
+    free(current);
   }
-  free(timers);
 }
 
 void taudb_delete_timer_parameters(TAUDB_TIMER_PARAMETER* timer_parameters, int count) {
@@ -199,7 +203,12 @@ void taudb_delete_timer_callpaths(TAUDB_TIMER_CALLPATH* timer_callpaths, int cou
   printf("Calling taudb_delete_timer_callpaths(%p,%d)\n", timer_callpaths, count);
 #endif
   if (count == 0 || timer_callpaths == NULL) return;
-  free(timer_callpaths);
+  TAUDB_TIMER_CALLPATH *current, *tmp;
+  HASH_ITER(hh1, timer_callpaths, current, tmp) {
+    HASH_DELETE(hh1, timer_callpaths, current);
+    free(current->name);
+    free(current);
+  }
 }
 
 void taudb_delete_timer_call_data(TAUDB_TIMER_CALL_DATA* timer_call_data, int count) {
