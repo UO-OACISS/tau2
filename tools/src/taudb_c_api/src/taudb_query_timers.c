@@ -94,7 +94,13 @@ TAUDB_TIMER* taudb_query_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial
     } 
     // save this in the hash
     HASH_ADD(hh1, trial->timers_by_id, id, sizeof(int), timer);
-    HASH_ADD(hh2, trial->timers_by_name, name, sizeof(timer->name), timer);
+    if (taudb_get_timer_by_id(trial->timers_by_id, timer->id) == NULL) {
+      fprintf(stderr, "TIMER NOT IN THE ID HASH! %d\n", timer->id);
+    }
+    HASH_ADD_KEYPTR(hh2, trial->timers_by_name, timer->name, sizeof(timer->name), timer);
+    if (taudb_get_timer_by_name(trial->timers_by_name, timer->name) == NULL) {
+      fprintf(stderr, "TIMER NOT IN THE NAME HASH! %s\n", timer->name);
+    }
   }
 
   taudb_clear_result(res);
@@ -118,6 +124,16 @@ TAUDB_TIMER* taudb_get_timer_by_id(TAUDB_TIMER* timers, const int id) {
 
   TAUDB_TIMER* timer = NULL;
   HASH_FIND(hh1, timers, &id, sizeof(int), timer);
+  // HASH_FIND is not working so well... now we iterate. Sigh.
+  if (timer == NULL) {
+    TAUDB_TIMER *current, *tmp;
+    HASH_ITER(hh1, timers, current, tmp) {
+      printf ("TIMER: '%s'\n", current->name);
+      if (current->id == id) {
+        return current;
+      }
+    }
+  }
   return timer;
 }
 
@@ -136,9 +152,14 @@ TAUDB_TIMER* taudb_get_timer_by_name(TAUDB_TIMER* timers, const char* name) {
 
   TAUDB_TIMER* timer = NULL;
   HASH_FIND(hh2, timers, name, sizeof(name), timer);
+  // HASH_FIND is not working so well... now we iterate. Sigh.
   if (timer == NULL) {
-    for (timer=timers ; timer != NULL ; timer=timer->hh2.next) {
-      printf ("TIMER: '%s'\n", timer->name);
+    TAUDB_TIMER *current, *tmp;
+    HASH_ITER(hh2, timers, current, tmp) {
+      printf ("TIMER: '%s'\n", current->name);
+      if (strcmp(current->name, name) == 0) {
+        return current;
+      }
     }
   }
   return timer;
@@ -163,7 +184,7 @@ void taudb_parse_timer_group_names(TAUDB_TRIAL* trial, TAUDB_TIMER* timer, char*
         group = calloc (1, sizeof(TAUDB_TIMER_GROUP));
         group->name = taudb_create_and_copy_string(group_name);
         // add the group to the trial
-        HASH_ADD(hh, trial->timer_groups, name, strlen(group->name), group);
+        HASH_ADD_KEYPTR(hh, trial->timer_groups, group->name, strlen(group->name), group);
       }
       // add this timer group to our timer
       timer->groups[(timer->group_count)-1] = group;

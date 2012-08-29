@@ -52,7 +52,7 @@ TAUDB_DATA_SOURCE* taudb_query_data_sources(TAUDB_CONNECTION* connection) {
       }
     } 
     HASH_ADD(hh1, data_sources, id, sizeof(int), data_sources);
-    HASH_ADD(hh2, data_sources, name, strlen(data_sources->name), data_sources);
+    HASH_ADD_KEYPTR(hh2, data_sources, data_sources->name, strlen(data_sources->name), data_sources);
   }
 
   taudb_clear_result(res);

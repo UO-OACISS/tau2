@@ -55,7 +55,8 @@ typedef struct taudb_data_source {
  int id;
  char* name;
  char*description;
- UT_hash_handle hh;
+ UT_hash_handle hh1; /* hash index for hashing by id */
+ UT_hash_handle hh2; /* hash index for hashing by name */
 } TAUDB_DATA_SOURCE;
 
 typedef struct taudb_connection {
@@ -65,7 +66,8 @@ typedef struct taudb_connection {
 #endif
   TAUDB_SCHEMA_VERSION schema_version;
   int data_source_count;
-  TAUDB_DATA_SOURCE* data_sources;
+  TAUDB_DATA_SOURCE* data_sources_by_id;
+  TAUDB_DATA_SOURCE* data_sources_by_name;
 } TAUDB_CONNECTION;
 
 /* these are the derived thread indexes. */
@@ -103,12 +105,15 @@ typedef struct taudb_trial {
  int primary_metadata_count; /* primary metadata fields */
  int secondary_metadata_count; /* secondary metadata fields */
  /* arrays of data for this trial */
- struct taudb_metric* metrics;
+ struct taudb_metric* metrics_by_id;
+ struct taudb_metric* metrics_by_name;
  struct taudb_thread* threads;
  struct taudb_time_range* time_ranges;
- struct taudb_timer* timers;
+ struct taudb_timer* timers_by_id;
+ struct taudb_timer* timers_by_name;
  struct taudb_timer_group* timer_groups;
- struct taudb_timer_callpath* timer_callpaths;
+ struct taudb_timer_callpath* timer_callpaths_by_id;
+ struct taudb_timer_callpath* timer_callpaths_by_name;
  struct taudb_timer_call_data* timer_call_data;
  struct taudb_counter* counters;
  struct taudb_counter_value* counter_values;
@@ -140,8 +145,8 @@ typedef struct taudb_metric {
  int id; /* database value, also key to hash */
  char* name; /* key to hash hh2 */
  boolean derived;  /* was this metric measured, or created by a post-processing tool? */
- UT_hash_handle hh; /* hash */
- //UT_hash_handle hh2; /* hash */
+ UT_hash_handle hh1; /* hash index for hashing by id */
+ UT_hash_handle hh2; /* hash index for hashing by name */
 } TAUDB_METRIC;
 
 /* Time ranges are ways to delimit the profile data within time ranges.
@@ -176,7 +181,8 @@ typedef struct taudb_timer {
  int parameter_count;        /* how many parameters does this timer have? */
  struct taudb_timer_group** groups;   /* array of pointers to groups */
  struct taudb_timer_parameter* parameters;   /* array of parameters */
- UT_hash_handle hh;
+ UT_hash_handle hh1;          /* hash key for id lookup */
+ UT_hash_handle hh2;         /* hash key for name lookup in temporary hash */
 } TAUDB_TIMER;
 
 /*********************************************/
@@ -189,7 +195,6 @@ typedef struct taudb_timer {
    and groups */
 
 typedef struct taudb_timer_group {
- int id; /* database reference, and hash key */
  char* name;
  int timer_count;    /* how many timers are in this group? */
  struct taudb_timer** timers;   /* array of timer pointers */
@@ -218,7 +223,9 @@ typedef struct taudb_timer_callpath {
  int id; /* link back to database, and hash key */
  struct taudb_timer* timer; /* which timer is this? */
  struct taudb_timer_callpath *parent; /* callgraph parent */
- UT_hash_handle hh;
+ char* name; /* a string which has the aggregated callpath. */
+ UT_hash_handle hh1; /* hash key for hash by id */
+ UT_hash_handle hh2;         /* hash key for name (a => b => c...) lookup */
 } TAUDB_TIMER_CALLPATH;
 
 /* timer_call_data objects are observations of a node of the callgraph
@@ -262,7 +269,8 @@ typedef struct taudb_counter {
  int id; /* database reference */
  struct taudb_trial* trial;
  char* name;
- UT_hash_handle hh;
+ UT_hash_handle hh1; /* hash key for hashing by id */
+ UT_hash_handle hh2; /* hash key for hashing by name */
 } TAUDB_COUNTER;
 
 /* counters are atomic counters, not just interval timers */

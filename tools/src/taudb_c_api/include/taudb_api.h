@@ -42,7 +42,8 @@ extern TAUDB_TRIAL*         perfdmf_query_trials(TAUDB_CONNECTION* connection, P
 
 /* get the data sources */
 extern TAUDB_DATA_SOURCE* taudb_query_data_sources(TAUDB_CONNECTION* connection);
-extern TAUDB_DATA_SOURCE* taudb_get_data_source(TAUDB_DATA_SOURCE* data_sources, const int id);
+extern TAUDB_DATA_SOURCE* taudb_get_data_source_by_id(TAUDB_DATA_SOURCE* data_sources, const int id);
+extern TAUDB_DATA_SOURCE* taudb_get_data_source_by_name(TAUDB_DATA_SOURCE* data_sources, const char* name);
 
 /* using the properties set in the filter, find a set of trials */
 extern TAUDB_TRIAL* taudb_query_trials(TAUDB_CONNECTION* connection, boolean complete, TAUDB_TRIAL* filter);
@@ -65,6 +66,7 @@ extern TAUDB_TIME_RANGE* taudb_get_time_range(TAUDB_TIME_RANGE* time_ranges, con
 /* get the timers for a trial */
 extern TAUDB_TIMER* taudb_query_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial);
 extern TAUDB_TIMER* taudb_get_timer_by_id(TAUDB_TIMER* timers, int id);
+extern TAUDB_TIMER* taudb_get_timer_by_name(TAUDB_TIMER* timers, const char* id);
 extern TAUDB_TIMER_GROUP* taudb_query_timer_groups(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial);
 extern void taudb_parse_timer_group_names(TAUDB_TRIAL* trial, TAUDB_TIMER* timer, char* group_names);
 extern TAUDB_TIMER_GROUP* taudb_get_timer_group_by_name(TAUDB_TIMER_GROUP* timers, const char* name);
