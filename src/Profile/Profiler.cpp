@@ -1087,6 +1087,8 @@ extern "C" int TauProfiler_updateAllIntermediateStatistics() {
     TauProfiler_updateIntermediateStatistics(tid);
   }
   RtsLayer::UnLockDB();
+
+  return 0;
 }
 
 // This is a very important function, it must be called before writing function data to disk.
@@ -1322,8 +1324,13 @@ int TauProfiler_StoreData(int tid) {
   }
 #endif /* PTHREADS */
 
+// this doesn't work... apparently "getTotalThreads() lies to us.
+// Is there a reliable way to get the number of threads seen by
+// OpenMP???
+#if 0
+#ifndef TAU_SCOREP
 #if defined(TAU_OPENMP)
-  //fprintf(stderr, "Total Threads: %d\n", RtsLayer::getTotalThreads());
+  fprintf(stderr, "Total Threads: %d\n", RtsLayer::getTotalThreads());
   if (RtsLayer::getTotalThreads() == 1) {
     // issue a warning, because this is a multithreaded config,
     // and we saw no threads other than 0!
@@ -1334,7 +1341,8 @@ int TauProfiler_StoreData(int tid) {
         "or instrument your code with TAU.\n\n");
   }
 #endif /* OPENMP */
-
+#endif /* SCOREP */
+#endif
   return 1;
 } 
 
