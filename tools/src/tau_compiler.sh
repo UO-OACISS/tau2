@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash  
 
 declare -i FALSE=-1
 declare -i TRUE=1
@@ -229,6 +229,10 @@ for arg in "$@"; do
           upc|*/upc)
             upc="gnu"
             echoIfDebug "GNU UPC: TRUE!"
+            ;;
+          xlupc|*/xlupc)
+            upc="xlupc"
+            echoIfDebug "XLUPC UPC: TRUE!"
             ;;
           cc|*/cc)
             upc="cray"
@@ -1326,7 +1330,7 @@ if [ $numFiles == 0 ]; then
     #If this is the second pass, opari was already used, don't do it again`
     if [ $opari2 == $TRUE -a $passCount == 1 -a  $opari2init == $TRUE  ]; then
         evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
-        cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${listOfObjectFiles} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_regions |  `${optOpari2ConfigTool} --awk-cmd` -f `${optOpari2ConfigTool} --awk-script` > pompregions.c"
+        cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${listOfObjectFiles} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_regions |  `${optOpari2ConfigTool} --awk-cmd` -f pomp2-parse-init-regions.awk > pompregions.c"
         evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
         cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
         evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
@@ -1366,6 +1370,14 @@ if [ $numFiles == 0 ]; then
             echo "Warning: can't locate link_options.tau for Berkeley UPC runtime tracking"
           fi
         ;;
+        xlupc)
+          if [ -r $optWrappersDir/upc/xlupc/link_options.tau ] ; then
+            linkCmd="$linkCmd `cat $optWrappersDir/upc/xlupc/link_options.tau` $optLinking"
+            echoIfDebug "Linking command is $linkCmd"
+          else
+            echo "Warning: can't locate link_options.tau for IBM XL UPC runtime tracking"
+          fi
+	;;
         gnu)
           if [ -r $optWrappersDir/upc/gupc/link_options.tau ] ; then
             linkCmd="$linkCmd `cat $optWrappersDir/upc/gupc/link_options.tau` $optLinking"
@@ -1398,7 +1410,13 @@ if [ $numFiles == 0 ]; then
     fi 
 
     if [ $optFujitsu == $TRUE ]; then
-      linkCmd=`echo $linkCmd | sed -e 's/fccpx/FCCpx/g' -e 's/frtpx/FCCpx/g'`
+      oldLinkCmd=`echo $linkCmd`
+      linkCmd=`echo $linkCmd | sed -e 's/frtpx/FCCpx/g'`
+      if [ "x$linkCmd" != "x$oldLinkCmd" ] ; then
+        echoIfDebug "We changed the linker to use FCCpx compilers. We need to add --linkfortran to the link line"
+        linkCmd="$linkCmd --linkfortran -lmpi_f90 -lmpi_f77"
+      fi
+      linkCmd=`echo $linkCmd | sed -e 's/fccpx/FCCpx/g'`
     fi
     evalWithDebugMessage "$linkCmd" "Linking with TAU Options"
     buildSuccess=$?
@@ -1865,7 +1883,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	if [ $opari2 == $TRUE -a $opari2init == $TRUE ]; then
             evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
       
-cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_regions |  `${optOpari2ConfigTool} --awk-cmd` -f `${optOpari2ConfigTool} --awk-script` > pompregions.c"
+cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_regions |  `${optOpari2ConfigTool} --awk-cmd` -f pomp2-parse-init-regions.awk > pompregions.c"
         evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
         cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
         evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
@@ -1915,6 +1933,14 @@ cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} ${o
                 echo "Warning: can't locate link_options.tau for Berkeley UPC runtime tracking"
               fi
             ;;
+            xlupc)
+            if [ -r $optWrappersDir/upc/xlupc/link_options.tau ] ; then
+              newCmd="$newCmd `cat $optWrappersDir/upc/xlupc/link_options.tau` $optLinking"
+              echoIfDebug "Linking command is $newCmd"
+            else
+              echo "Warning: can't locate link_options.tau for IBM XL UPC runtime tracking"
+            fi
+	    ;;
             gnu)
               if [ -r $optWrappersDir/upc/gupc/link_options.tau ] ; then
                 newCmd="$newCmd `cat $optWrappersDir/upc/gupc/link_options.tau` $optLinking"
@@ -1948,6 +1974,16 @@ cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} ${o
     fi 
 
 	madeToLinkStep=$TRUE
+        if [ $optFujitsu == $TRUE ]; then
+          oldLinkCmd=`echo $newCmd`
+          newCmd=`echo $newCmd | sed -e 's/frtpx/FCCpx/g'`
+          if [ "x$newCmd" != "x$oldLinkCmd" ] ; then
+            echoIfDebug "We changed the linker to use FCCpx compilers. We need to add --linkfortran to the link line"
+            newCmd="$newCmd --linkfortran -lmpi_f90 -lmpi_f77"
+          fi
+          newCmd=`echo $newCmd | sed -e 's/fccpx/FCCpx/g'`
+        fi
+
 	evalWithDebugMessage "$newCmd" "Linking (Together) object files"
 
 	if [ ! -e $passedOutputFile ] ; then

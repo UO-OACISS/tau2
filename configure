@@ -877,12 +877,12 @@ for arg in "$@"; do
     ;;
   -upc=*)
     myarg=`echo $arg | sed 's/-upc=//'`
-    if [ $myarg = cc -o $myarg = upc -o $myarg = gcc -o $myarg = upcc ]
+    if [ $myarg = cc -o $myarg = upc -o $myarg = gcc -o $myarg = upcc -o $myarg = xlupc ]
       then
         upc_compiler=$myarg
         upc=yes
       else
-	echo "WARNING: valid options for upc are 'cc (Cray CCE UPC compiler)', 'upc (GNU UPC compiler)', 'upcc (Berkeley UPC compiler)', and 'gcc'"
+	echo "WARNING: valid options for upc are 'cc (Cray CCE UPC compiler)', 'upc (GNU UPC compiler)', 'upcc (Berkeley UPC compiler)', 'xlupc (IBM XL UPC compiler)', and 'gcc'"
 	exit 1
     fi
     shift
@@ -1899,8 +1899,8 @@ for arg in "$@"; do
   esac
 done
 
-if [ "x$upcnetwork" == "x" ] ; then
-  if [ "$mpi" == "no" ] ; then
+if [ "x$upcnetwork" = "x" ] ; then
+  if [ "$mpi" = "no" ] ; then
     echo "NOTE: UPC network and MPI not specified.  Assuming -upcnetwork=smp."
     upcnetwork=smp
   else
@@ -3091,7 +3091,7 @@ then
       if [ $f90loaded = 1 ]
       then 
         fortran_compiler=`mpif90 -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
-        if [ $fortran_compiler = ifort ]; then 
+        if [ "x$fortran_compiler" = "xifort" ]; then 
 	  fortran_compiler=intel
 	fi
       else
@@ -3305,7 +3305,7 @@ case $cxx_compiler in
         fixmakeargs="$fixmakeargs PGI PGICC"
       fi
 
-      if [ $fortran_compiler = no ]
+      if [ "x$fortran_compiler" = "xno" ]
       then 
         extradir=`which pgcc | sed s/pgcc/../`
         fixmakeargs="$fixmakeargs PGI_FORTRAN"
@@ -3807,6 +3807,17 @@ then
           fi
           additional_mpiincs="$additional_mpiincs $mpiincf90dir"
         fi
+
+        if [ -r /opt/ibmhpc/pecurrent/pempi/include/mpi.h ]
+        then
+          mpiinc=/opt/ibmhpc/pecurrent/pempi/include
+          mpiincf90dir='-I/opt/ibmhpc/pecurrent/pempi/include/thread'
+          if [ $machine = ibm64linux ]
+          then
+            mpiincf90dir='-I/opt/ibmhpc/pecurrent/pempi/include/thread64'
+          fi
+          additional_mpiincs="$additional_mpiincs $mpiincf90dir"
+        fi
         ;;
   rs6000|ibm64)
 	mpiinc=/usr/lpp/ppe.poe/include
@@ -3890,7 +3901,21 @@ then
             then
               echo "Using MPI include directory $mpiinc"
 	    else 
+	      if [ -d $mpiinc -a ! -r $mpiinc/mpi.h ] ; then
+	        if [ -r $mpiinc/mpich2/mpi.h ] ; then
+	          mpiinc=$mpiinc/mpich2 
+                  echo "Correction: Using MPI include directory $mpiinc instead"
+                else
+                  if [ -r $mpiinc/openmpi/mpi.h ] ; then
+	            mpiinc=$mpiinc/openmpi
+                    echo "Correction: Using MPI include directory $mpiinc instead"
+                  else
+                    mpiinc=""
+                  fi
+                fi
+	    else	    
 	      mpiinc=""
+            fi
             fi
           fi
           if [ ! -r $mpiinc/mpi.h -a -r $mpiinc/mpich2/mpi.h ] ; then
@@ -3938,14 +3963,22 @@ if [ $mpi = yes -a "x$mpilib" = "x" ]
 then
   case $machine in 
   ppc64) 
+	mpilib=no
         if [ -r /opt/ibmhpc/ppe.poe/lib/libmpi/libmpi_ibm.so ] 
         then
-          additional_mpilibs='-lpoe -llapi'
           mpilib=/opt/ibmhpc/ppe.poe/lib/libmpi
+        fi
+        if [ -r /opt/ibmhpc/pecurrent/ppe.poe/lib/libmpi/libmpi_ibm.so ] 
+        then
+          mpilib=/opt/ibmhpc/pecurrent/ppe.poe/lib/libmpi
+        fi
+        if [ "x$mpilib" != "xno" ]; then
+          additional_mpilibs='-lpoe -llapi'
           mpilibrary="-lmpi_ibm $additional_mpilibs"
         fi
         ;;
   ibm64linux) 
+	mpilib=no
         if [ -r /opt/ibmhpc/ppe.poe/lib/libmpi64/libmpi_ibm.so ] 
         then
           mpilib=/opt/ibmhpc/ppe.poe/lib/libmpi64
@@ -3957,6 +3990,14 @@ then
         then
           mpilib=/opt/ibmhpc/ppe.poe/lib64/
           additional_mpilibs='-lpoe -llapi'
+        fi
+        if [ -r /opt/ibmhpc/pecurrent/pempi/gnu/lib/libmpi64/libmpi_ibm.so -a -r /opt/ibmhpc/pecurrent/base/gnu/lib64/libpami.so ]
+        then
+          mpilib=/opt/ibmhpc/pecurrent/pempi/gnu/lib/libmpi64
+          additional_mpilibs='-lpoe -L/opt/ibmhpc/pecurrent/base/gnu/lib64 -lpami'
+        fi
+
+        if [ "x$mpilib" != "xno" ]; then
           mpilibrary="-lmpi_ibm $additional_mpilibs"
           echo "Adding MPI libs from $mpilib"
           # Cases
@@ -4468,6 +4509,12 @@ if [ $upc_compiler = gcc -o $upc_compiler = upc ]
 then
   gupc=yes
 fi
+
+if [ $upc_compiler = xlupc ]
+then
+  fixmakeargs="$fixmakeargs XLUPC"
+fi
+
 if [ $c_compiler != gcc4 ]
   then
     echo Default C compiler will be $c_compiler
@@ -5441,6 +5488,15 @@ fi
 
     
 if [ $mpi = yes ] ; then
+  #Check for SGI MPI
+  mpimptloc=`which mpiexec_mpt 2>/dev/null`
+  hasMPT=$?
+  if [ $hasMPT = 0 ] ; then
+    echo "Found SGI MPT MPI"
+    fixmakeargs="$fixmakeargs SGI_MPT_MPI"
+  fi
+
+
   wrapperlib="-L$tautoplevel/$machine/lib -lTauMpi\$(TAU_CONFIG)"
 
   # Epilog
@@ -6775,13 +6831,13 @@ fi
 if [ $opari = yes ] ; then
     fixmakeargs="$fixmakeargs OPARI2 oparidir=$oparidir"
     if [ $oparicomp = no ] ; then
-          if [ $fortran_compiler = intel ] ; then
+          if [ "x$fortran_compiler" = "xintel" ] ; then
              oparicomp="$fortran_compiler"
           fi
-          if [ $fortran_compiler = pathscale ] ; then
+          if [ "x$fortran_compiler" = "xpathscale" ] ; then
              oparicomp="$fortran_compiler"
           fi
-          if [ $fortran_compiler = pgi ] ; then
+          if [ "x$fortran_compiler" = "xpgi" ] ; then
              oparicomp="$fortran_compiler"
           fi
     fi 
@@ -7032,7 +7088,7 @@ fi
 
 
 
-if [ $fortran_compiler = intel ] ; then
+if [ "x$fortran_compiler" = "xintel" ] ; then
     intelifort=`which ifort 2>/dev/null`
     if [ "y$intelifort" != "y" ] ; then 
 	if [ -x $intelifort ]
@@ -7520,7 +7576,7 @@ pr=examples
 exampleslist="instrument/Makefile mapping/embedded/Makefile \
   mapping/external/Makefile fork/Makefile selectiveAccess/Makefile"
 
-if [ $fortran_compiler != no ] ; then
+if [ "x$fortran_compiler" != "xno" ] ; then
   exampleslist="$exampleslist fortran/Makefile f90/Makefile"
 fi
 
@@ -7547,7 +7603,7 @@ fi
 
 if [ $mpi = yes ] ; then
   exampleslist="$exampleslist pi/Makefile mpishlib/Makefile"
-  if [ $fortran_compiler != no ] ; then
+  if [ "x$fortran_compiler" != "xno" ] ; then
     exampleslist="$exampleslist NPB2.3/config/make.def"
   fi
   if [ $openmp = yes ] ; then 

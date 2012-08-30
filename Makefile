@@ -89,6 +89,8 @@ MEMORYWRAPPER=src/wrappers/memory
 #GUPC#TAU_UPCC_WRAPPER=src/wrappers/upc/gupc #ENDIF#
 #GUPC#UPCWRAPPER=$(TAU_UPCC_WRAPPER) #ENDIF#
 
+#XLUPC#UPCWRAPPER=src/wrappers/upc/xlupc#ENDIF#
+
 #COMPINST_CRAYCC#UPCWRAPPER=src/wrappers/upc/crayupc #ENDIF#
 
 #TAU_PTHREAD_WRAP#PTHREAD_WRAPPER=src/wrappers/pthread #ENDIF#
