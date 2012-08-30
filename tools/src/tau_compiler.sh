@@ -773,11 +773,6 @@ for arg in "$@" ; do
 			optFixHashIf=$TRUE
 			echoIfDebug "\tFixing Hash-Ifs"
 			;;
-		    -opt*)
-			#Assume any other options should be passed on to the compiler.
-			argsRemaining="$argsRemaining ${arg%% *}"
-			;;
-
 		    -optMICOffloadLinking*)
 			optMICOffloadLinking="${arg#"-optMICOffloadLinking="} $optMICOffloadLinking"
 			echoIfDebug "\tLinking Options are: $optMICOffloadLinking"
@@ -789,6 +784,10 @@ for arg in "$@" ; do
 		    -optMICOffload)
 			optMICOffload=$TRUE
 			echoIfDebug "\tLinking for MIC Offloading"
+			;;
+		    -opt*)
+			#Assume any other options should be passed on to the compiler.
+			argsRemaining="$argsRemaining ${arg%% *}"
 			;;
 
 		esac #end case for parsing script Options
@@ -1237,7 +1236,7 @@ if [ $optMICOffload == $TRUE ]; then
 	#	exit 1
 	#fi
 	#hybridLinking="$optLinking -offload-build -offload-ldopts='$optMICLinking'"
-	#echoIfDebug "Hybrid linking options: $hybridLinking"
+	echoIfDebug "MIC offload linking enabled."
 	if [ $optShared == $TRUE ]; then
 		optLinking=$optMICOffloadSharedLinking
 	else

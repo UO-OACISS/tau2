@@ -481,6 +481,9 @@ extern "C" int Tau_init_initializeTAU() {
 	Tau_metadata_fillMetaData();
 #endif
 
+  tau_initialized = 1;
+  Tau_global_decr_insideTAU();
+
 #ifdef __MIC__
 	if (TauEnv_get_mic_offload())
 	{
@@ -489,8 +492,6 @@ extern "C" int Tau_init_initializeTAU() {
 	}
 #endif
 
-  tau_initialized = 1;
-  Tau_global_decr_insideTAU();
   return 0;
 }
 
