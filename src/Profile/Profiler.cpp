@@ -257,7 +257,6 @@ void Profiler::Start(int tid) {
   RtsLayer::getUSecD(tid, StartTime);	  
   TimeStamp = (x_uint64) StartTime[0]; // USE COUNTER1 for tracing
 
-  
   /********************************************************************************/
   /*** Extras ***/
   /********************************************************************************/
