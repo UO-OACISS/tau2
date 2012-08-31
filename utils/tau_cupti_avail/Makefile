@@ -1,7 +1,7 @@
 include ../../include/Makefile
 
 CC     = $(TAU_CC)
-CXX		 = $(TAU_CUDA_CXX)
+CXX		 = $(TAU_CXX)
 
 
 RM      = /bin/rm -f
@@ -13,8 +13,6 @@ INSTALLDEST	= $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin
 
 all: $(TAU_CUPTI_AVAIL)
 install: $(INSTALLTAU_CUPTI_AVAIL)
-
-#USE_INTELCXX#EXTRA_LIBS=-L$(IFORTLIBDIR) -lirc#ENDIF#
 
 $(TAU_CUPTI_AVAIL): tau_cupti_avail.o $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib/libTAUsh$(TAU_CONFIG).so
 		$(CXX) -L$(TAU_CUPTI_INC)/../lib -lcupti -L$(TAU_CUDA_INC)/../lib \
