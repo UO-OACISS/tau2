@@ -420,7 +420,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   //int tid = RtsLayer::myThread();
   Profiler *profiler;
 
-  if ( !RtsLayer::TheEnableInstrumentation() || !(fi->GetProfileGroup()) & RtsLayer::TheProfileMask()) {
+  if ( !RtsLayer::TheEnableInstrumentation() || !(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
 #ifndef TAU_WINDOWS
     if (TauEnv_get_ebs_enabled()) {
       Tau_sampling_resume(tid);
