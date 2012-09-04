@@ -877,12 +877,12 @@ for arg in "$@"; do
     ;;
   -upc=*)
     myarg=`echo $arg | sed 's/-upc=//'`
-    if [ $myarg = cc -o $myarg = upc -o $myarg = gcc -o $myarg = upcc ]
+    if [ $myarg = cc -o $myarg = upc -o $myarg = gcc -o $myarg = upcc -o $myarg = xlupc ]
       then
         upc_compiler=$myarg
         upc=yes
       else
-	echo "WARNING: valid options for upc are 'cc (Cray CCE UPC compiler)', 'upc (GNU UPC compiler)', 'upcc (Berkeley UPC compiler)', and 'gcc'"
+	echo "WARNING: valid options for upc are 'cc (Cray CCE UPC compiler)', 'upc (GNU UPC compiler)', 'upcc (Berkeley UPC compiler)', 'xlupc (IBM XL UPC compiler)', and 'gcc'"
 	exit 1
     fi
     shift
@@ -3807,6 +3807,17 @@ then
           fi
           additional_mpiincs="$additional_mpiincs $mpiincf90dir"
         fi
+
+        if [ -r /opt/ibmhpc/pecurrent/pempi/include/mpi.h ]
+        then
+          mpiinc=/opt/ibmhpc/pecurrent/pempi/include
+          mpiincf90dir='-I/opt/ibmhpc/pecurrent/pempi/include/thread'
+          if [ $machine = ibm64linux ]
+          then
+            mpiincf90dir='-I/opt/ibmhpc/pecurrent/pempi/include/thread64'
+          fi
+          additional_mpiincs="$additional_mpiincs $mpiincf90dir"
+        fi
         ;;
   rs6000|ibm64)
 	mpiinc=/usr/lpp/ppe.poe/include
@@ -3952,14 +3963,22 @@ if [ $mpi = yes -a "x$mpilib" = "x" ]
 then
   case $machine in 
   ppc64) 
+	mpilib=no
         if [ -r /opt/ibmhpc/ppe.poe/lib/libmpi/libmpi_ibm.so ] 
         then
-          additional_mpilibs='-lpoe -llapi'
           mpilib=/opt/ibmhpc/ppe.poe/lib/libmpi
+        fi
+        if [ -r /opt/ibmhpc/pecurrent/ppe.poe/lib/libmpi/libmpi_ibm.so ] 
+        then
+          mpilib=/opt/ibmhpc/pecurrent/ppe.poe/lib/libmpi
+        fi
+        if [ "x$mpilib" != "xno" ]; then
+          additional_mpilibs='-lpoe -llapi'
           mpilibrary="-lmpi_ibm $additional_mpilibs"
         fi
         ;;
   ibm64linux) 
+	mpilib=no
         if [ -r /opt/ibmhpc/ppe.poe/lib/libmpi64/libmpi_ibm.so ] 
         then
           mpilib=/opt/ibmhpc/ppe.poe/lib/libmpi64
@@ -3971,6 +3990,14 @@ then
         then
           mpilib=/opt/ibmhpc/ppe.poe/lib64/
           additional_mpilibs='-lpoe -llapi'
+        fi
+        if [ -r /opt/ibmhpc/pecurrent/pempi/gnu/lib/libmpi64/libmpi_ibm.so -a -r /opt/ibmhpc/pecurrent/base/gnu/lib64/libpami.so ]
+        then
+          mpilib=/opt/ibmhpc/pecurrent/pempi/gnu/lib/libmpi64
+          additional_mpilibs='-lpoe -L/opt/ibmhpc/pecurrent/base/gnu/lib64 -lpami'
+        fi
+
+        if [ "x$mpilib" != "xno" ]; then
           mpilibrary="-lmpi_ibm $additional_mpilibs"
           echo "Adding MPI libs from $mpilib"
           # Cases
@@ -4482,6 +4509,12 @@ if [ $upc_compiler = gcc -o $upc_compiler = upc ]
 then
   gupc=yes
 fi
+
+if [ $upc_compiler = xlupc ]
+then
+  fixmakeargs="$fixmakeargs XLUPC"
+fi
+
 if [ $c_compiler != gcc4 ]
   then
     echo Default C compiler will be $c_compiler
@@ -5455,6 +5488,15 @@ fi
 
     
 if [ $mpi = yes ] ; then
+  #Check for SGI MPI
+  mpimptloc=`which mpiexec_mpt 2>/dev/null`
+  hasMPT=$?
+  if [ $hasMPT = 0 ] ; then
+    echo "Found SGI MPT MPI"
+    fixmakeargs="$fixmakeargs SGI_MPT_MPI"
+  fi
+
+
   wrapperlib="-L$tautoplevel/$machine/lib -lTauMpi\$(TAU_CONFIG)"
 
   # Epilog

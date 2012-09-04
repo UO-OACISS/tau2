@@ -43,7 +43,7 @@ extern "C" {
   void TAUDECL TauEnv_set_depth_limit(int value);
   int  TAUDECL TauEnv_get_comm_matrix();
   int  TAUDECL TauEnv_get_track_message();
-  int  TAUDECL TauEnv_get_lite();
+  int  TAUDECL TauEnv_get_lite_enabled();
   int  TAUDECL TauEnv_get_compensate();
   int  TAUDECL TauEnv_get_track_memory_heap();
   int  TAUDECL TauEnv_get_track_memory_leaks();
@@ -77,6 +77,7 @@ extern "C" {
   const char* TAUDECL TauEnv_get_tracedir();
   const char* TAUDECL TauEnv_get_metrics();
   const char* TAUDECL TauEnv_get_cupti_api();
+  int TAUDECL TauEnv_get_mic_offload();
 
 
 #define TAU_FORMAT_PROFILE 1

@@ -65,6 +65,7 @@ using namespace std;
 #define BERKELEY 1
 #define GNU 2
 #define CRAY 3
+#define XLUPC 4
 
 //#define DEBUG 1
 
@@ -199,6 +200,7 @@ static string upc_mythread()
     case BERKELEY: return "upcr_mythread()";
     case CRAY: return "MYTHREAD";
     case GNU: return "MYTHREAD";
+    case XLUPC: return "MYTHREAD";
     default: return "MYTHREAD";
   }
 }
@@ -209,6 +211,7 @@ static string upc_threadof(string const & shared)
     case BERKELEY: return "upcr_threadof_shared(" + shared + ")";
     case CRAY: return "__real_upc_threadof(" + shared + ")";
     case GNU: return "__real_upc_threadof(" + shared + ")";
+    case XLUPC: return "__real_upc_threadof(" + shared + ")";
     default: return "upc_threadof(" + shared + ")";
   } 
 }
@@ -219,6 +222,7 @@ static string upc_threads()
     case BERKELEY: return "upcr_threads()";
     case CRAY: return "THREADS";
     case GNU: return "THREADS";
+    case XLUPC: return "THREADS";
     default: return "THREADS";
   }
 }
@@ -720,8 +724,11 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
   /* Now put in the body of the routine */
 
   if(upc) {
-    impl << "  if (tau_upc_node == -1) {\n"
-         << "    tau_upc_node = TAU_PROFILE_GET_NODE();\n"
+    impl << "  if (tau_upc_node == -1) {\n";
+      if (upc == XLUPC) {
+        impl << "    TAU_PROFILE_SET_NODE(MYTHREAD); \n";
+      }
+      impl  << "    tau_upc_node = TAU_PROFILE_GET_NODE();\n"
          << "    if (tau_upc_node == -1) {\n";
     if (isVoid) {
       impl << "      __real_" << sig.func << ";\n"
@@ -1018,6 +1025,8 @@ int main(int argc, char **argv)
         upc = BERKELEY;
       } else if (strncmp(arg, "gnu", 4) == 0) {
         upc = GNU;
+      } else if (strncmp(arg, "xlupc", 5) == 0) {
+        upc = XLUPC;
       } else if (strncmp(arg, "cray", 4) == 0) {
         upc = CRAY;
         extradefs = "$(TAU_UPC_COMPILER_OPTIONS)";

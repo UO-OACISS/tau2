@@ -1404,6 +1404,10 @@ case $1 in
 	echo "NOTE: Enabled Cray UPC support in TAU"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     XLUPC)
+	echo "NOTE: Enabled IBM XLUPC support in TAU"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      KAI)
 	echo "NOTE: Using KAI KCC options"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1821,6 +1825,9 @@ case $1 in
 	echo "NOTE: Disabling building of shared objects"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     SGI_MPT_MPI)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      *)
 	echo "ERROR: Unknown argument directive \`$1' to FixMakefile"
 	;;
