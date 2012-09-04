@@ -218,7 +218,7 @@ opari/opari:
 		cd opari ; $(MAKE) opari
 
 opari2/_build/bin/opari2:
-		cd opari2 ;/bin/rm -rf  _build; mkdir _build; cd _build; CXX=$(CONFIG_CXX) CC=$(CONFIG_CC) ../configure --prefix=`pwd` --with-compiler-suite=$(OPARICOMP) $(CRAY_OPARI2_CONFIG); $(MAKE) ; $(MAKE) install
+		cd opari2 ;/bin/rm -rf  _build; mkdir _build; cd _build; CXX=$(CONFIG_CXX) CC=$(CONFIG_CC) ../configure --prefix=`pwd` --with-compiler-suite=$(OPARICOMP) $(CRAY_OPARI2_CONFIG); $(MAKE) install
 
 tau_timecorrect.o:	tau_timecorrect.cpp
 		$(CXX) $(CFLAGS) tau_timecorrect.cpp -c
@@ -461,7 +461,7 @@ $(INSTALLDEST)/opari2-config: opari2/_build/bin/opari2
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) opari2/_build/bin/opari2-config $(INSTALLDEST)
-$(INSTALLDEST)/pomp2-parse-init-regions.awk: opari2/_build/bin/pomp2-parse-init-regions.awk
+$(INSTALLDEST)/pomp2-parse-init-regions.awk: opari2/_build/bin/opari2
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
