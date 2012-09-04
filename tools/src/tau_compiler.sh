@@ -77,6 +77,7 @@ headerInstFlag=""
 preprocessorOpts="-P  -traditional-cpp"
 defaultParser="noparser"
 optWrappersDir="/tmp"
+TAU_BIN_DIR="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 printUsage () {
     echo -e "Usage: tau_compiler.sh"
