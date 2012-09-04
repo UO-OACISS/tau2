@@ -136,6 +136,8 @@
 
 #define TAU_CUPTI_API_DEFAULT "runtime"
 
+#define TAU_MIC_OFFLOAD_DEFAULT 0
+
 // forward declartion of cuserid. need for c++ compilers on Cray.
 extern "C" char *cuserid(char *);
 
@@ -396,7 +398,7 @@ static int env_depth_limit = 0;
 static int env_track_message = 0;
 static int env_comm_matrix = 0;
 static int env_track_memory_heap = 0;
-int tau_env_lite = 0;
+static int tau_env_lite = 0;
 static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
 static int env_track_io_params = 0;
@@ -425,6 +427,7 @@ static const char *env_tracedir = NULL;
 static const char *env_metrics = NULL;
 static const char *env_cupti_api = NULL;
 
+static int env_mic_offload = 0;
 /*********************************************************************
  * Write to stderr if verbose mode is on
  ********************************************************************/
@@ -643,6 +646,13 @@ int TauEnv_get_child_forkdirs(){
 
 const char* TauEnv_get_cupti_api(){
   return env_cupti_api;
+}
+
+int TauEnv_get_mic_offload(){
+  return env_mic_offload;
+}
+int TauEnv_get_lite_enabled() {
+  return tau_env_lite;
 }
 
 /*********************************************************************
@@ -1193,8 +1203,13 @@ void TauEnv_initialize()
     else {
       TAU_VERBOSE("TAU: CUPTI API tracking: %s\n", env_cupti_api);
       TAU_METADATA("TAU_CUPTI_API", env_cupti_api);
-    }
-
+		}
+		tmp = getconf("TAU_MIC_OFFLOAD");
+    if (parse_bool(tmp, TAU_MIC_OFFLOAD_DEFAULT)) {
+      env_mic_offload = 1;
+      TAU_VERBOSE("TAU: MIC offloading Enabled\n");
+      TAU_METADATA("TAU_MIC_OFFLOAD", "on");
+		}
 
     initialized = 1;
     TAU_VERBOSE("TAU: Initialized TAU (TAU_VERBOSE=1)\n");

@@ -60,7 +60,6 @@ void esd_exit (elg_ui4 rid);
 #include <Profile/TauSCOREP.h>
 #endif
 
-extern int tau_env_lite;
 
 extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup_t group, const char *gr_name) {
   FunctionInfo *f;
@@ -356,7 +355,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_lite_start_timer(void *functionInfo, int phase, int tid) {
-  if (tau_env_lite){
+  if (TauEnv_get_lite_enabled()){
     // move the stack pointer
     Tau_global_stackpos[tid]++; /* push */
     FunctionInfo *fi = (FunctionInfo *) functionInfo;
@@ -535,7 +534,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_lite_stop_timer(void *function_info, int tid ) {
-  if (tau_env_lite) {
+  if (TauEnv_get_lite_enabled()) {
     double timeStamp[TAU_MAX_COUNTERS] = {0};
     double delta [TAU_MAX_COUNTERS] = {0}; 
     RtsLayer::getUSecD(tid, timeStamp);   
@@ -569,9 +568,9 @@ extern "C" int Tau_lite_stop_timer(void *function_info, int tid ) {
       TauProfiler_StoreData(tid);
     }
     Tau_global_stackpos[tid]--; /* pop */
-
+    return 0;
   } else {
-    Tau_stop_timer(function_info, tid);
+    return Tau_stop_timer(function_info, tid);
   }
 }
 
@@ -1301,7 +1300,6 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
   
 	FunctionInfo *ptr;
   if (TauInternal_CurrentProfiler(tid) == NULL) {
-			printf("in create_top_level_timer.\n");
     initthread[tid] = true;
     ptr = (FunctionInfo *) Tau_get_profiler(".TAU application", " ", TAU_DEFAULT, "TAU_DEFAULT");
     if (ptr) {

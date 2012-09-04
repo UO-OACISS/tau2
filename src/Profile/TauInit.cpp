@@ -381,11 +381,12 @@ extern "C" int Tau_init_initializingTAU() {
 }
 
 extern "C" int Tau_init_initializeTAU() {
-
+	
 	//protect against reentrancy
   if (initializing) {
     return 0;
   }
+
 
   Tau_global_incr_insideTAU();
   
@@ -482,6 +483,15 @@ extern "C" int Tau_init_initializeTAU() {
 
   tau_initialized = 1;
   Tau_global_decr_insideTAU();
+
+#ifdef __MIC__
+	if (TauEnv_get_mic_offload())
+	{
+		TAU_PROFILE_SET_NODE(0);
+		Tau_create_top_level_timer_if_necessary();
+	}
+#endif
+
   return 0;
 }
 

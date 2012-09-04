@@ -257,7 +257,6 @@ void Profiler::Start(int tid) {
   RtsLayer::getUSecD(tid, StartTime);	  
   TimeStamp = (x_uint64) StartTime[0]; // USE COUNTER1 for tracing
 
-  
   /********************************************************************************/
   /*** Extras ***/
   /********************************************************************************/
@@ -1088,6 +1087,8 @@ extern "C" int TauProfiler_updateAllIntermediateStatistics() {
     TauProfiler_updateIntermediateStatistics(tid);
   }
   RtsLayer::UnLockDB();
+
+  return 0;
 }
 
 // This is a very important function, it must be called before writing function data to disk.
@@ -1348,10 +1349,17 @@ int TauProfiler_StoreData(int tid) {
 
 // Returns directory name for the location of a particular metric
 static int getProfileLocation(int metric, char *str) {
-#ifndef KTAU_NG
-  const char *profiledir = TauEnv_get_profiledir();
-#else
-  static char *profiledir;
+const char *profiledir;
+#ifdef __MIC__
+if (TauEnv_get_mic_offload())
+{
+	profiledir = "./proxyfs";
+}
+else
+{
+  profiledir = TauEnv_get_profiledir();
+}
+#elif defined(KTAU_NG)
   if(profiledir == NULL){
     int written_bytes = 0;
     unsigned int profile_dir_len = KTAU_NG_PREFIX_LEN + HOSTNAME_LEN;
@@ -1359,6 +1367,8 @@ static int getProfileLocation(int metric, char *str) {
     written_bytes = sprintf(profiledir, "%s.", KTAU_NG_PREFIX);
     gethostname(profiledir + written_bytes, profile_dir_len - written_bytes);
   }
+#else
+  profiledir = TauEnv_get_profiledir();
 #endif
 
   if (Tau_Global_numCounters <= 1) { 
@@ -1460,6 +1470,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
 	int mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
 #endif
 	int node = RtsLayer::myNode();
+
 	sprintf(dumpfile,"%s/%s%s.%d.%d.%d", profileLocation, selectivePrefix, prefix, 
 		node, RtsLayer::myContext(), tid);
 
