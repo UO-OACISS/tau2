@@ -15,7 +15,7 @@ all: $(TAU_CUPTI_AVAIL)
 install: $(INSTALLTAU_CUPTI_AVAIL)
 
 $(TAU_CUPTI_AVAIL): tau_cupti_avail.o $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib/libtau$(TAU_CONFIG).a
-		$(CXX) -L$(TAU_CUPTI_INC)/../lib -lcupti -L$(TAU_CUDA_INC)/../lib \
+		$(CXX) -dynamic -L$(TAU_CUPTI_INC)/../lib -lcupti -L$(TAU_CUDA_INC)/../lib \
 		-L$(TAU_CUDA_INC)/../lib64 -lcuda -lcudart \
 		$(TAU_CUDA_LIBRARY) -o $@ $< $(TAU_LINK)
 
