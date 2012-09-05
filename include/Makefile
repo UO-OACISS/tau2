@@ -1152,7 +1152,7 @@ TAU_CUPTI_INC=
 #CUDA#TAU_CUDA_INCLUDE=-I$(TAU_CUDA_INC)#ENDIF#
 #CUPTI#TAU_CUPTI_INCLUDE=-I$(TAU_CUPTI_INC)#ENDIF#
 #CUPTI#LEXTRA=-L$(TAU_CUPTI_INC)/../lib -L$(TAU_CUPTI_INC)/../lib64 -lcupti#ENDIF#
-TAU_CUDA_LIBRARY=-L/opt/nvidia/cudatoolkit/4.1.28/lib64 -L/opt/nvidia/cudatoolkit/4.1.28/extras/CUPTI/lib64 -lcupti -L/opt/cray/nvidia/default/lib64 -lcuda
+TAU_CUDA_LIBRARY=-L/opt/cray/nvidia/default/lib64
 #############################################
 
 #CUPTI#TAU_INTERNAL_FLAGS+=-DCUPTI #ENDIF#
@@ -1169,7 +1169,7 @@ TAU_MPI_COMPILE_INCLUDE=$(TAU_MPI_INCLUDE)
 # Fujitsu doesn't want TAU_MPI_INC to propagate to the command line
 
 TAU_LINK=$(TAU_MPI_FLIBS) $(TAU_LIBS) $(TAU_LDFLAGS) $(TAU_CXXLIBS) $(TAU_SHMEM_LIBS)
-TAU_SHARED_LINK=-L$(TAU_LIB_DIR)/shared$(TAU_CONFIG) $(TAU_MPI_FLIBS)  $(TAU_SHMEM_LIBS) $(TAU_EXLIBS) $(TAU_LDFLAGS) $(TAU_CXXLIBS) $(TAU_COMPILER_EXTRA_OPTIONS)
+TAU_SHARED_LINK=-L$(TAU_LIB_DIR)/shared$(TAU_CONFIG) $(TAU_MPI_FLIBS)  $(TAU_SHMEM_LIBS) $(TAU_EXLIBS) $(TAU_LDFLAGS) $(TAU_CXXLIBS)
 
 #############################################
 # TAU COMPILER SHELL SCRIPT OPTIONS
