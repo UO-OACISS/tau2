@@ -1249,6 +1249,8 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
     samplesDroppedSuspended[tid]++;
     return;
   }
+  // disable sampling until we handle this sample
+  suspendSampling[tid] = 1;
 
   Tau_global_incr_insideTAU_tid(tid);
   if (TauEnv_get_tracing()) {
@@ -1259,6 +1261,8 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
     Tau_sampling_handle_sampleProfile(pc, context);
   }
   Tau_global_decr_insideTAU_tid(tid);
+  // re-enable sampling 
+  suspendSampling[tid] = 0;
 }
 
 extern "C" void TauMetrics_internal_alwaysSafeToGetMetrics(int tid, double values[]);
