@@ -1489,7 +1489,6 @@ for arg in "$@"; do
     ;;
  
   -useropt=*)
-   echo "EEEEEEY!!!"
 # Note you might be passed -g#-O3 which becomes -g -O3
     orig_useropt=`echo $arg | sed -e 's/-useropt=//' -e 's/#/ /g'`
 # Note you might be passed -g -O3 which becomes -g#-O3 here
