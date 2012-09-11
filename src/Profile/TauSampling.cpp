@@ -1220,12 +1220,19 @@ int Tau_sampling_event_stop(int tid, double *stopTime) {
  * Sample Handling
  ********************************************************************/
 void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
+  // DO THIS CHECK FIRST! otherwise, the RtsLayer::myThread() call will barf.
+  if (collectingSamples == 0) {
+    // Do not track counts when sampling is not enabled.
+    //TAU_VERBOSE("Tau_sampling_handle_sample: sampling not enabled\n");
+    return;
+  }
+
   int tid = RtsLayer::myThread();
   /* *CWL* too fine-grained for anything but debug.
   TAU_VERBOSE("Tau_sampling_handle_sample: tid=%d got sample [%p]\n",
   	      tid, (unsigned long)pc);
   */
-  if (samplingEnabled[tid] == 0 || collectingSamples == 0) {
+  if (samplingEnabled[tid] == 0) {
     // Do not track counts when sampling is not enabled.
     //TAU_VERBOSE("Tau_sampling_handle_sample: sampling not enabled\n");
     return;
@@ -1242,6 +1249,8 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
     samplesDroppedSuspended[tid]++;
     return;
   }
+  // disable sampling until we handle this sample
+  suspendSampling[tid] = 1;
 
   Tau_global_incr_insideTAU_tid(tid);
   if (TauEnv_get_tracing()) {
@@ -1252,6 +1261,8 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
     Tau_sampling_handle_sampleProfile(pc, context);
   }
   Tau_global_decr_insideTAU_tid(tid);
+  // re-enable sampling 
+  suspendSampling[tid] = 0;
 }
 
 extern "C" void TauMetrics_internal_alwaysSafeToGetMetrics(int tid, double values[]);
