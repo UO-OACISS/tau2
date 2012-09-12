@@ -1490,9 +1490,10 @@ for arg in "$@"; do
  
   -useropt=*)
 # Note you might be passed -g#-O3 which becomes -g -O3
-    orig_useropt="$orig_useropt "`echo $arg | sed -e 's/-useropt=//' -e 's/#/ /g'`
+    orig_useropt=`echo $arg | sed -e 's/-useropt=//' -e 's/#/ /g'`
 # Note you might be passed -g -O3 which becomes -g#-O3 here
-    useropt="$useropt#"`echo $arg | sed -e 's/-useropt=//' -e 's/ /#/g'`
+    useropt=`echo $arg | sed -e 's/-useropt=//' -e 's/ /#/g'`
+    echo "NOTE: Compiler optimization must be specified manually with useropt"
     shift
     ;;
 
