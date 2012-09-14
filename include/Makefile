@@ -137,6 +137,7 @@ UNWIND_EXTRAS=
 #OPARI2#TAU_OPARI2_TOOL=$(TAU_BIN_DIR)/opari2        #ENDIF#
 #OPARI2#TAU_OPARI_CONFIG_TOOL=$(TAU_BIN_DIR)/opari2-config        #ENDIF#
 #OPARI2#OPARIINCDIR=-I$(TAUROOT)/utils/opari2/include #ENDIF#
+#IBM64#TAU_IBM64= -X 64 		  #ENDIF#
 #ENABLE64BIT#ABI 	     = -mabi=64		  #ENDIF#
 #ENABLEN32BIT#ABI 	     = -mabi=n32	  #ENDIF#
 #ENABLE32BIT#ABI 	     = -mabi=32		  #ENDIF#
@@ -1179,7 +1180,7 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
         -optTauInstr="$(TAU_BIN_DIR)/tau_instrumentor" \
         -optNoMpi \
 	-optOpariDir="$(OPARIDIR)" -optOpari2Tool="$(TAU_OPARI2_TOOL)" -optOpari2ConfigTool="$(TAU_OPARI_CONFIG_TOOL)"  \
-	-optOpari2Opts="$(TAU_OPARI2_OPTION)" \
+	-optIBM64="$(TAU_IBM64)" -optOpari2Opts="$(TAU_OPARI2_OPTION)" \
 	-optOpariTool="$(TAU_OPARI_TOOL)"  \
 	-optTauCC="$(TAU_CCOMPILER)" \
 	-optTauIncludes="$(TAU_INCLUDE) $(TAU_MPI_COMPILE_INCLUDE) $(TAU_SHMEM_INCLUDE) $(OPARIINCDIR)" \
