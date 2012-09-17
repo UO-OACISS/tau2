@@ -35,7 +35,6 @@ using namespace std;
 //int debugPrint = 1;
 // control debug printf statements
 //#define dprintf if (debugPrint) printf
-#define dprintf TAU_VERBOSE
 #ifdef DEBUG_PROF
 #define dprintf printf
 #else // DEBUG_PROF 
