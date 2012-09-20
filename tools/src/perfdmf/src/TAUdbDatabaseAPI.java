@@ -1119,7 +1119,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 	            stmt.setString(7, key.name);
 	            stmt.setString(8, value.value.toString());
 	            stmt.setBoolean(9, false);
-				System.out.println(stmt.toString());
+				//System.out.println(stmt.toString());
 		        stmt.execute();
 		        stmt.close();
 			}
