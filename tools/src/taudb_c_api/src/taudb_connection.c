@@ -216,8 +216,9 @@ void taudb_close_transaction(TAUDB_CONNECTION *connection) {
 
 boolean gzipInflate( char* compressedBytes, int length, char** uncompressedBytes ) {  
   
-  if ( length == 0 ) {  
-    uncompressedBytes[0] = '\0';  
+  if ( length == 0 ) {
+	/* return null pointer if there's nothing to decompress */
+    *uncompressedBytes = 0;  
     return TRUE ;  
   }  
   
@@ -298,6 +299,7 @@ char* taudb_get_binary_value(void* result, int row, int column) {
   unsigned char * unescaped = PQunescapeBytea(value, &length);
   char* expanded = NULL;
   gzipInflate(unescaped, length, &expanded);
+  PQfreemem(expanded);
   printf("%s\n", expanded);
 #endif
   return (value);
