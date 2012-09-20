@@ -2,6 +2,7 @@
 #include "libpq-fe.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include "zlib.h"
 
 int taudb_numItems = 0;
 enum taudb_database_schema_version taudb_version = TAUDB_2005_SCHEMA;
@@ -211,6 +212,94 @@ void taudb_close_transaction(TAUDB_CONNECTION *connection) {
   res = PQexec(connection->connection, "END");
   PQclear(res);
 #endif
+}
+
+boolean gzipInflate( char* compressedBytes, int length, char* uncompressedBytes ) {  
+  
+  if ( strlen(compressedBytes) == 0 ) {  
+    uncompressedBytes = compressedBytes ;  
+    return TRUE ;  
+  }  
+  
+  unsigned int full_length = length ;  
+  unsigned int half_length = full_length / 2;  
+  
+  unsigned int uncompLength = full_length ;  
+  char* uncomp = (char*) calloc( sizeof(char), uncompLength );  
+  
+  z_stream strm;  
+  strm.next_in = (Bytef *) compressedBytes;  
+  strm.avail_in = length ;  
+  strm.total_out = 0;  
+  strm.zalloc = Z_NULL;  
+  strm.zfree = Z_NULL;  
+  
+  boolean done = FALSE ;  
+  
+  if (inflateInit2(&strm, (16+MAX_WBITS)) != Z_OK) {  
+    free( uncomp );  
+    return FALSE;  
+  }  
+  
+  while (!done) {  
+    // If our output buffer is too small  
+    if (strm.total_out >= uncompLength ) {  
+      // Increase size of output buffer  
+      char* uncomp2 = (char*) calloc( sizeof(char), uncompLength + half_length );  
+      memcpy( uncomp2, uncomp, uncompLength );  
+      uncompLength += half_length ;  
+      free( uncomp );  
+      uncomp = uncomp2 ;  
+    }  
+  
+    strm.next_out = (Bytef *) (uncomp + strm.total_out);  
+    strm.avail_out = uncompLength - strm.total_out;  
+  
+    // Inflate another chunk.  
+    int err = inflate (&strm, Z_SYNC_FLUSH);  
+    if (err == Z_STREAM_END) done = TRUE;  
+    else if (err != Z_OK)  {  
+	  printf("%s\n", strm.msg);
+      break;  
+    }  
+  }  
+  
+  if (inflateEnd (&strm) != Z_OK) {  
+    free( uncomp );  
+    return FALSE;  
+  }  
+  
+  size_t i;
+  for ( i=0; i<strm.total_out; ++i ) {  
+    uncompressedBytes += uncomp[ i ];  
+  }  
+  free( uncomp );  
+  return TRUE ;  
+}  
+
+char* taudb_get_binary_value(void* result, int row, int column) {
+  char* value;
+#ifdef __TAUDB_POSTGRESQL__
+  PGresult* res = (PGresult*)result;
+  value = PQgetvalue(res, row, column);
+/* The binary representation of BYTEA is a bunch of bytes, which could
+ * include embedded nulls so we have to pay attention to field length.
+ */
+  int blen = PQgetlength(res, row, column);
+  printf("tuple %d: got\n", row);
+  printf(" XML_METADATA_GZ = (%d bytes) ", blen);
+  char* gzipped = calloc(blen, sizeof(char));
+  int j;
+  for (j = 0; j < blen; j++) {
+    //printf("\\%03o", value[j]);
+	gzipped[j] = value[j];
+  }
+  //printf("\n\n");
+  char* expanded = NULL;
+  gzipInflate(gzipped, blen, expanded);
+  printf("%s\n", expanded);
+#endif
+  return (value);
 }
 
 

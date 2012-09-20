@@ -65,6 +65,7 @@ extern int taudb_get_num_columns(void* result);
 extern int taudb_get_num_rows(void* result);
 extern char* taudb_get_column_name(void* result, int column);
 extern char* taudb_get_value(void* result, int row, int column);
+extern char* taudb_get_binary_value(void* result, int row, int column);
 extern void taudb_clear_result(void* result);
 extern void taudb_close_transaction(TAUDB_CONNECTION *connection);
 
