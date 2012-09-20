@@ -18,10 +18,9 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "Profile/Profiler.h"
+#include <map>
 
-#ifdef TAU_WINDOWS
 using namespace std;
-#endif
 
 struct lTauGroup {
   bool operator()(const TauGroup_t s1, const TauGroup_t s2) const {

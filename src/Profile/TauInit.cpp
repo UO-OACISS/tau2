@@ -39,6 +39,10 @@
 #include <Profile/TauSnapshot.h>
 #include <Profile/TauMetaData.h>
 
+// Moved from header file
+using namespace std;
+
+
 
 #ifdef TAU_VAMPIRTRACE 
 #include <Profile/TauVampirTrace.h>
@@ -128,7 +132,9 @@ static void TauInitialize_kill_handlers() {
   sighdlr[SIGSEGV] = signal (SIGSEGV, wrap_up);
 # endif
 # ifdef SIGCHLD
+#ifndef TAU_UPC
   sighdlr[SIGCHLD] = signal (SIGCHLD, wrap_up);
+#endif
 # endif
 }
 
@@ -137,13 +143,12 @@ extern "C" int Tau_get_backtrace_off_by_one_correction(void) {
 }
 
 // **CWL** Added to be consistent for operation with Comp_gnu.cpp
-#ifndef TAU_XLC
-extern int tauPrintAddr(int i, char *token1, unsigned long addr);
-#endif /* TAU_XLC */
+//#ifndef TAU_XLC
+extern int Tau_Backtrace_writeMetadata(int i, char *token1, unsigned long addr);
+//#endif /* TAU_XLC */
 
 #ifndef TAU_DISABLE_SIGUSR
 
-//static void tauBacktraceHandler(int sig) {
 extern "C" void finalizeCallSites_if_necessary();
 void tauBacktraceHandler(int sig, siginfo_t *si, void *context) {
           char str[100+4096];
@@ -254,11 +259,11 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context) {
 	}
       }
 // **CWL** For correct operation with Comp_gnu.cpp
-#ifndef TAU_XLC
+//#ifndef TAU_XLC
       // Map the addresses found in backtrace to actual code symbols and line information
       //   for addition to TAU_METADATA.
-      tauPrintAddr(i, names[i], addr);
-#endif /* TAU_XLC */
+      Tau_Backtrace_writeMetadata(i, names[i], addr);
+      //#endif /* TAU_XLC */
     }
     free(names);
   }
@@ -376,11 +381,12 @@ extern "C" int Tau_init_initializingTAU() {
 }
 
 extern "C" int Tau_init_initializeTAU() {
-
+	
 	//protect against reentrancy
   if (initializing) {
     return 0;
   }
+
 
   Tau_global_incr_insideTAU();
   
@@ -417,7 +423,6 @@ extern "C" int Tau_init_initializeTAU() {
   
   /* we need the timestamp of the "start" */
   Tau_snapshot_initialization();
-
 
 #ifndef TAU_DISABLE_SIGUSR
   /* register SIGUSR1 handler */
@@ -459,8 +464,6 @@ extern "C" int Tau_init_initializeTAU() {
     TauInitialize_kill_handlers();
   }
   
-  //TauInitialize_kill_handlers();
-
   /* initialize sampling if requested */
   if (TauEnv_get_ebs_enabled()) {
     /* Work-around for MVAPHICH 2 to move sampling initialization to 
@@ -480,5 +483,29 @@ extern "C" int Tau_init_initializeTAU() {
 
   tau_initialized = 1;
   Tau_global_decr_insideTAU();
+
+#ifdef __MIC__
+	if (TauEnv_get_mic_offload())
+	{
+		TAU_PROFILE_SET_NODE(0);
+		Tau_create_top_level_timer_if_necessary();
+	}
+#endif
+
   return 0;
 }
+
+//Rely on the dl auditor (src/wrapper/taupreload) to set dl_initialized if the audit feature is//available (GLIBC version 2.4 or greater).
+#ifdef TAU_TRACK_LD_LOADER
+static int dl_initialized = 0;
+#else
+static int dl_initialized = 1;
+#endif
+
+extern "C" void Tau_init_dl_initialized() {
+	dl_initialized = 1;
+}
+extern "C" int Tau_init_check_dl_initialized() {
+	return dl_initialized;
+}
+

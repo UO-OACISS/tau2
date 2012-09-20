@@ -12,10 +12,13 @@
 #######################################################################
  
 CXX		= tau_cxx.sh
+#CXX		= g++
 
 CC		= tau_cc.sh
+#CC		= gcc
 
 F90		= tau_f90.sh
+#F90		= gfortran
 
 CFLAGS          = 
 
@@ -39,10 +42,10 @@ all:		$(TARGET)
 
 install: 	$(TARGET)
 
-$(TARGET):	$(TARGET).o mytimer.o ppm.o 
+$(TARGET):	$(TARGET).o mytimer.o ppm.o
 	$(F90) $(LDFLAGS) $(TARGET).o mytimer.o ppm.o -o $@ $(LIBS)
 
-$(TARGET).o : $(TARGET).f90
+$(TARGET).o : $(TARGET).f90 ppm.mod
 	$(F90)  -c $(TARGET).f90
 
 mytimer.o : mytimer.c
@@ -51,6 +54,9 @@ mytimer.o : mytimer.c
 ppm.o : ppm.f90
 	$(F90)  -c $<
 
+ppm.mod: ppm.f90
+	$(F90) -c $<
+
 clean: 	
-	$(RM) *.o $(TARGET) 
+	$(RM) *.o *.mod $(TARGET) 
 ##############################################

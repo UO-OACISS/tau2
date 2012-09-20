@@ -18,6 +18,10 @@
 #ifndef _TAU_TF_DECL_H_
 #define _TAU_TF_DECL_H_
 
+#include <map>
+#include <utility>
+#include <functional>
+
 #include "Profile/tau_types.h"
 
 /* general declarations */
@@ -104,12 +108,12 @@ typedef TAU_EV TAU_EV_NATIVE;
 
 
 
-typedef map< pair<int, int>, int, less < pair<int, int> > > NidTidMapT;
-typedef map< long int , Ttf_EventDescrT, less <long int> > EventIdMapT;
-typedef map< const char *, int, Ttf_ltstr > GroupIdMapT;
+typedef std::map< std::pair<int, int>, int, std::less < std::pair<int, int> > > NidTidMapT;
+typedef std::map< long int , Ttf_EventDescrT, std::less <long int> > EventIdMapT;
+typedef std::map< const char *, int, Ttf_ltstr > GroupIdMapT;
 
 /* for trace writing */
-typedef map< int, const char * > GroupNameMapT;
+typedef std::map< int, const char * > GroupNameMapT;
 
 typedef struct Ttf_file 
 {

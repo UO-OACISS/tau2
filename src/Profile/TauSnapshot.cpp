@@ -25,6 +25,10 @@
 #include <TauXML.h>
 #include <TauUnify.h>
 
+// Moved from header file
+using namespace std;
+
+
 static int Tau_snapshot_writeSnapshot(const char *name, int to_buffer);
 static int startNewSnapshotFile(char *threadid, int tid, int to_buffer);
 
@@ -68,14 +72,19 @@ extern "C" int Tau_snapshot_initialization() {
   return 0;
 }
 
-extern "C" char *Tau_snapshot_getBuffer() {
-  // only support thread 0 right now
-  char *buf = Tau_snapshot_getFiles()[0]->buffer;
-  return buf;
+extern "C" void Tau_snapshot_getBuffer(char *buf) {
+	strcpy(buf, Tau_snapshot_getFiles()[0]->buffer);
+	for (int tid = 1; tid<RtsLayer::getTotalThreads(); tid++) {
+		strcat(buf, Tau_snapshot_getFiles()[tid]->buffer);
+	}
 }
 
 extern "C" int Tau_snapshot_getBufferLength() {
-  return Tau_snapshot_getFiles()[0]->bufidx;
+	int length = 0;
+	for (int tid = 0; tid<RtsLayer::getTotalThreads(); tid++) {
+		length +=	Tau_snapshot_getFiles()[tid]->bufidx; 
+	}
+  return length;
 }
 
 // Static holder for snapshot event counts
@@ -231,8 +240,8 @@ static int Tau_snapshot_writeSnapshot(const char *name, int to_buffer) {
 }
 
 #ifdef TAU_UNIFY
-int Tau_snapshot_writeUnifiedBuffer() {
-  int tid = RtsLayer::myThread();
+int Tau_snapshot_writeUnifiedBuffer(int tid) {
+  //int tid = RtsLayer::myThread();
   int i, c;
   Tau_util_outputDevice *out = Tau_snapshot_getFiles()[tid];
   
@@ -295,9 +304,17 @@ int Tau_snapshot_writeUnifiedBuffer() {
       FunctionInfo *fi = TheFunctionDB()[local_index];
       
       // get currently stored values
-      double *incltime = fi->getDumpInclusiveValues(tid);
-      double *excltime = fi->getDumpExclusiveValues(tid);
-      
+			double *incltime, *excltime;
+			if (tid == 0)
+			{
+				incltime = fi->getDumpInclusiveValues(tid);
+				excltime = fi->getDumpExclusiveValues(tid);
+     	}
+			else
+			{
+				incltime = fi->GetInclTime(tid);
+				excltime = fi->GetExclTime(tid);
+			}
       //fprintf (stderr, "local=%d, global=%d, name=%s\n", i, functionUnifier->mapping[functionUnifier->sortMap[i]], fi->GetName());
       Tau_util_output (out, "%d %ld %ld ", e, fi->GetCalls(tid), fi->GetSubrs(tid));
       for (c=0; c<Tau_Global_numCounters; c++) {

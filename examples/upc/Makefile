@@ -1,4 +1,5 @@
-UPC=tau_upc.sh -tau_makefile=../../include/Makefile
+UPC=tau_upc.sh -tau_makefile=../../include/Makefile -optTrackUPCR -optTauSelectFile=select.tau #
+#-g -optCompInst
 APP=CAMEL
 # APP=upctest
 
