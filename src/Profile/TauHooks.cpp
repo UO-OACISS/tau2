@@ -18,22 +18,23 @@
 //////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <Profile/Profiler.h>
 
-#ifdef TAU_WINDOWS
-//#include <vector>
-//#include <string>
-using namespace std;
-#endif
+#ifdef __GNUC__
+#include <cxxabi.h>
+#endif /* __GNUC__ */
 
-#include <stdlib.h>
+#include <vector>
+#include <string>
+using namespace std;
+
 
 //#define DEBUG_PROF
 //int debugPrint = 1;
 // control debug printf statements
 //#define dprintf if (debugPrint) printf
-#define dprintf TAU_VERBOSE
 #ifdef DEBUG_PROF
 #define dprintf printf
 #else // DEBUG_PROF 
@@ -501,9 +502,62 @@ void tau_dyninst_cleanup()
   dprintf("Inside tau_dyninst_cleanup\n");
 }
 
-
+/* PEBIL */
+char * tau_demangle_name(char **funcname) {
+  std::size_t len=1024;
+  int stat;
+  char *out_buf= (char *) malloc (len);
+  char *dem_name = NULL; 
+#ifdef __GNUC__
+  char *name = abi::__cxa_demangle(*funcname, out_buf, &len, &stat);
+  if (stat == 0) dem_name = out_buf;
+  else dem_name = *funcname;
+  return dem_name; 
+#else  /* __GNUC__ */
+  return *funcname; 
+  /* return the original name pass it through c++filt <name> */
+#endif /* __GNUC__ */
+  
 }
-// extern "C"
+
+void  tau_register_func(char **func, char** file, int* lineno, 
+  int* id) {
+    if (*file == NULL){
+      dprintf("TAU: tau_register_func: name = %s, id = %d\n", *func, *id);
+      trace_register_func(tau_demangle_name(func), *id);
+    } else {
+      char funcname[2048];
+      sprintf(funcname, "%s [{%s}{%d}]", tau_demangle_name(func), *file, *lineno);
+      trace_register_func(funcname, *id);
+      dprintf("TAU : tau_register_func: name = %s, id = %d\n", funcname, *id);
+    }
+}
+
+void tau_trace_entry(int* id) {
+  dprintf("TAU: tau_trace_entry: id = %d\n", *id);
+  traceEntry(*id);
+}
+
+void tau_trace_exit(int* id) {
+  dprintf("TAU: tau_trace_exit : id = %d\n", *id);
+  traceExit(*id);
+}
+
+#if !defined(TAU_PEBIL_DISABLE) && !defined(TAU_WINDOWS)
+#include <pthread.h>
+void* tool_thread_init(pthread_t args) {
+  dprintf("TAU: initializing thread %#lx\n", args); 
+  Tau_create_top_level_timer_if_necessary();
+}
+
+void* tool_thread_fini(pthread_t args) {
+  dprintf("TAU: finalizing thread %#lx\n", args); 
+  Tau_stop_top_level_timer_if_necessary(); 
+}
+#endif /* TAU_PEBIL_DISABLE */
+
+} /* extern "C" */
+  
 
 // EOF TauHooks.cpp
 /***************************************************************************

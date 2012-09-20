@@ -5,7 +5,14 @@ export LANG
 
 eval `tau-config`
 
-if [ ! -x $BASEDIR/bin/tau_maqao ] 
+if [ "x$MAQAO_BINARY" = "x" ]; then
+  maqao_bin=$BASEDIR/bin/tau_maqao
+else
+  maqao_bin=$MAQAO_BINARY
+  echo "tau_rewrite: Using maqao binary from MAQAO_BINARY environment variable: $maqao_bin"
+fi
+
+if [ ! -x $maqao_bin ] 
 then
   echo "$0: Couldn't locate smaqao in PDT"
   if [ -x $BASEDIR/bin/tau_run ]
@@ -34,8 +41,6 @@ then
     echo "$0: To use TAU's binary rewriting capabilities, please install MAQAO from PDT v3.17+ (x86_64 only at present) or DyninstAPI"
     exit 1; 
   fi
-else
-  maqao_bin=$BASEDIR/bin/tau_maqao
 fi
 
 
@@ -303,7 +308,7 @@ fi
 
 # Now we write to the $outfile
 luafile="events = {
-  run_dir = \"$outputdir\",
+  run_dir = \"$outputdir/\",
   functions_global_blacklist = {
           {subtype = \"stringlist\",value = {\"call_gmon_start\",\"_init\",\"_fini\",\"_start\",\"frame_dummy\"}},
           {subtype = \"regexplist\",value = {\"^irc__.*\",\"^__do_global_.*\",\"^__libc_csu_.*\",\"^__intel_.*\",\"^__pthread_.*\",\"pgf90_.*\", \"pghpf_\", \"__hpf_\"}}
@@ -318,6 +323,8 @@ luafile="events = {
         properties={
           enable_function_instrumentation = true, 
           enable_demangling = true, 
+          distinguish_inlined_functions = true,
+          distinguish_suffix = \"_omp\", 
           generate_runfile   = true
         },
         path= \"$outputdir/$baseinfile\",
@@ -365,6 +372,8 @@ do
         {
                 properties={
                   enable_function_instrumentation = true
+                  distinguish_inlined_functions = true,
+                  distinguish_suffix = \"_omp\", 
                 },
                 path = \"$extralibs\",
                 output_suffix = \"_inst\",

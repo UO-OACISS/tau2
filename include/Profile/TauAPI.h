@@ -51,8 +51,8 @@ extern "C" {
 #define TAU_PROFILE_CREATE_TIMER(var,name,type,group) Tau_profile_c_timer(&var, name, type, group, #group);
 
 
-#define TAU_PROFILE_START(var) Tau_start_timer(var, 0, Tau_get_tid());
-#define TAU_PROFILE_STOP(var) Tau_stop_timer(var, Tau_get_tid());
+#define TAU_PROFILE_START(var) Tau_lite_start_timer(var, 0, Tau_get_tid());
+#define TAU_PROFILE_STOP(var) Tau_lite_stop_timer(var, Tau_get_tid());
 #define TAU_PROFILE_STMT(stmt) stmt;
 
 
@@ -459,7 +459,9 @@ void TAUDECL Tau_reducescatter_data(int data);
 void TAUDECL Tau_scan_data(int data);
 void TAUDECL Tau_set_node(int node);
 void TAUDECL Tau_start_timer(void *profiler, int phase, int tid);
+void TAUDECL Tau_lite_start_timer(void *profiler, int phase, int tid);
 int TAUDECL Tau_stop_timer(void *profiler, int tid); 
+int TAUDECL Tau_lite_stop_timer(void *profiler, int tid); 
 void TAUDECL Tau_trace_sendmsg(int type, int destination, int length);
 void TAUDECL Tau_trace_recvmsg(int type, int source, int length);
 void TAUDECL Tau_trace_recvmsg_remote(int type, int source, int length, int remoteid);

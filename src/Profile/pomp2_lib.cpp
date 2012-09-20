@@ -32,13 +32,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include <omp.h>
+#include <string>
 #include <Profile/Profiler.h>
 #ifdef TAU_OPENMP
 #ifndef _OPENMP
 #define _OPENMP
 #endif /* _OPENMP */
 #endif /* TAU_OPENMP */
+using std::string;
 
 
 
@@ -290,13 +292,14 @@ void TauStartOpenMPRegionTimer(my_pomp2_region *r, int index)
    start the timer. */
 
   omp_set_lock(&tau_ompregdescr_lock);
-
+if(r == NULL)
+printf("TAU WARNING: a POMP2 Region was not initialized.  Something went wrong during the creation of pompregions.c\n");
   if (!r->data) {
 #ifdef TAU_OPENMP_PARTITION_REGION
     FunctionInfo **flist = new FunctionInfo*[NUM_OMP_TYPES];
     for (int i=0; i < NUM_OMP_TYPES; i++) {
       char rname[1024], rtype[1024];
-      sprintf(rname, "%s %s (%s)", r->name, r->sub_name, omp_names[i]);
+      sprintf(rname, "%s (%s)",  r->sub_name, omp_names[i]);
       sprintf(rtype, "[OpenMP location: file:%s <%d, %d>]",
 	      r->start_file_name, r->start_line_1, r->end_line_1);
       
@@ -306,7 +309,7 @@ void TauStartOpenMPRegionTimer(my_pomp2_region *r, int index)
     r->data = (void*)flist;
 #else
     char rname[1024], rtype[1024];
-    sprintf(rname, "%s %s", r->rtype, r->name);
+    sprintf(rname, "%s", r->rtype);
     sprintf(rtype, "[OpenMP location: file:%s <%d, %d>]",
 	    r->start_file_name, r->start_line_1, r->end_line_1);
     
@@ -320,7 +323,10 @@ void TauStartOpenMPRegionTimer(my_pomp2_region *r, int index)
 #else 
   FunctionInfo *f = (FunctionInfo *)r->data;
 #endif
-  Tau_start_timer(f, 0, Tau_create_tid());
+//Have to register new threads with global threading framework.
+//Doesn't matter if this is called by a thread more than once 
+  Tau_create_tid();
+  Tau_start_timer(f, 0, Tau_get_tid());
   
   omp_unset_lock(&tau_ompregdescr_lock);
 }
@@ -555,17 +561,6 @@ POMP2_Atomic_exit( POMP2_Region_handle* pomp2_handle )
 #endif /* DEBUG_PROF */
 }
 
-void
-POMP2_Implicit_barrier_enter( POMP2_Region_handle* pomp2_handle,POMP2_Task_handle*   pomp2_old_task )
-{
-    POMP2_Barrier_enter( pomp2_handle, pomp2_old_task,  "" );
-}
-
-extern void
-POMP2_Implicit_barrier_exit( POMP2_Region_handle* pomp2_handle, POMP2_Task_handle   pomp2_old_task )
-{
-    POMP2_Barrier_exit( pomp2_handle, pomp2_old_task );
-}
 
 
 void
@@ -642,6 +637,17 @@ POMP2_Barrier_exit( POMP2_Region_handle* pomp2_handle, POMP2_Task_handle    pomp
 #endif /* DEBUG_PROF */
 }
 
+void
+POMP2_Implicit_barrier_enter( POMP2_Region_handle* pomp2_handle,POMP2_Task_handle*   pomp2_old_task )
+{
+    POMP2_Barrier_enter( pomp2_handle, pomp2_old_task,  "" );
+}
+
+extern void
+POMP2_Implicit_barrier_exit( POMP2_Region_handle* pomp2_handle, POMP2_Task_handle   pomp2_old_task )
+{
+    POMP2_Barrier_exit( pomp2_handle, pomp2_old_task );
+}
 void
 POMP2_Flush_enter( POMP2_Region_handle* pomp2_handle,
 		   const char           ctc_string[] )

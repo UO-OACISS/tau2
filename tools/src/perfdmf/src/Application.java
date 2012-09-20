@@ -369,7 +369,9 @@ public class Application implements Serializable {
         }
         resultSet.close();
         statement.close();
-
+        if(database!= null && !itExists){
+        	this.setFields(new String[0]);
+        }
         StringBuffer buf = new StringBuffer();
         if (itExists) {
             buf.append("UPDATE " + db.getSchemaPrefix() + "application SET name = ?");

@@ -1,0 +1,6 @@
+This example has one experiment, and the experiment has 5 trials.
+
+The goal is to build a stacked area chart of time spent only in
+SCF-cycle and the other functions under it in the call tree. The
+first script, graph.py, is just the first level of functions under
+SCF-cycle, and the other script has all functions under SCF-cycle.

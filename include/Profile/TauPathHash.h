@@ -1,10 +1,18 @@
 #ifndef TAU_PATH_HASH_H_
 #define TAU_PATH_HASH_H_
 
-#include <stdio.h>
-#include <string.h>
+#include <utility>
+#include <cstdio>
+#include <cstring>
 
-using namespace std;
+// Putting "using namespace" statements in header files can create ambiguity
+// between user-defined symbols and std symbols, creating unparsable code
+// or even changing the behavior of user codes.  This is also widely considered
+// to be bad practice.  Here's a code PDT can't parse because of this line:
+//   EX: #include <complex>
+//   EX: typedef double real;
+//
+//using namespace std;
 
 /* *CWL* - Uses the mmap memory manager for signal-safety. Note that allocating
    TauPathHashTable itself is signal-unsafe. So care must be taken to ensure
@@ -29,7 +37,41 @@ using namespace std;
 
    TODO - define new filters for 32-bit platforms?
  */
+#include <limits.h>
+#if WORD_BIT > 32
+#define HALF_SIZEOF_PTR 4
 #define HASH_FILTER 0xf000000000000000 /* 8-byte unsigned */
+#else
+#define HALF_SIZEOF_PTR 2
+#define HASH_FILTER 0xf0000000 /* 4-byte unsigned */
+#endif
+
+// Kevin: This is the class that will be contained in the hash table.
+class TauPathAccumulator {
+ public:
+  unsigned long count;
+  // Kevin: when we update PAPI support, this should be an array
+  double accumulator[TAU_MAX_COUNTERS];
+  // destructor
+  ~TauPathAccumulator() {}
+  // constructor
+  TauPathAccumulator(int inCount, double firstValues[TAU_MAX_COUNTERS]) {
+    count = inCount;
+    int i;
+    for (i = 0; i < Tau_Global_numCounters ; i++) {
+      accumulator[i] = firstValues[i];
+    }
+  }
+  // default constructor
+  TauPathAccumulator() {
+    count = 0;
+    int i;
+    for (i = 0; i < Tau_Global_numCounters ; i++) {
+      accumulator[i] = 0.0;
+    }
+  }
+};
+
 
 template <class T> class TauPathHashTable {
  private:
@@ -101,7 +143,7 @@ template <class T> class TauPathHashTable {
   //   hash table is still being actively updated. Not signal-safe unlike
   //   the rest of the hash table.
   void resetIter();
-  pair<unsigned long *, T> *nextIter();
+  std::pair<unsigned long *, T> *nextIter();
 
   // for debugging
   void printTable();
@@ -137,11 +179,11 @@ unsigned long TauPathHashTable<T>::hashSequence(const unsigned long *keySequence
   unsigned long g = 0; // temp
   int length = (int)keySequence[0];
   // Convert bytes to bits. For the 4-bit shifts.
-  int shiftOffset = sizeof(unsigned long)*8 - 8; 
+  int shiftOffset = sizeof(unsigned long)*2*HALF_SIZEOF_PTR - 2*HALF_SIZEOF_PTR; 
 
   for (int i=0; i<length; i++) {
     // The top 4 bits of h are all zero
-    h = (h << 4) + keySequence[i+1];  // shift h 4 bits left, add in ki
+    h = (h << HALF_SIZEOF_PTR) + keySequence[i+1];  // shift h 4 bits left, add in ki
     g = h & HASH_FILTER;              // get the top 4 bits of h
     if (g != 0) {                     // if the top 4 bits aren't zero,
       h = h ^ (g >> shiftOffset);     //   move them to the low end of h
@@ -330,6 +372,8 @@ bool TauPathHashTable<T>::insert(const unsigned long *key, T val) {
       return true;
     }
   }
+  // Silence a compiler warning
+  return false;
 }
 
 template <class T> 
@@ -340,7 +384,10 @@ void TauPathHashTable<T>::resetIter() {
 }
 
 template <class T> 
-pair<unsigned long *, T> *TauPathHashTable<T>::nextIter() {
+std::pair<unsigned long *, T> *TauPathHashTable<T>::nextIter()
+{
+    typedef std::pair<unsigned long*, T> pair_t;
+
   //  printf("numElements = %d\n", numElements);
   //  printf("IterPtr starts at %p\n", iterPtr);
   if (iterCount == numElements) {
@@ -365,8 +412,7 @@ pair<unsigned long *, T> *TauPathHashTable<T>::nextIter() {
     if (found) {
       iterPtr = table[iterTblIdx];
       //      printf("IterPtr found in table entry at %p\n", iterPtr);
-      pair<unsigned long *, T> *item = new
-	pair<unsigned long *, T>(iterPtr->pair->key, iterPtr->pair->value);
+      pair_t * item = new pair_t(iterPtr->pair->key, iterPtr->pair->value);
       //      printf("Found key %p value %d\n", item->first, item->second);
       iterCount++;
       return item;
@@ -379,8 +425,7 @@ pair<unsigned long *, T> *TauPathHashTable<T>::nextIter() {
     //   iterPtr != NULL && iterPtr->next != NULL
     iterPtr = iterPtr->next;
     //    printf("IterPtr found in chain at %p\n", iterPtr);
-    pair<unsigned long *, T> *item = new
-      pair<unsigned long *, T>(iterPtr->pair->key, iterPtr->pair->value);
+    pair_t * item = new pair_t(iterPtr->pair->key, iterPtr->pair->value);
     //      printf("Found key %p value %d\n", item->first, item->second);
     iterCount++;
     return item;

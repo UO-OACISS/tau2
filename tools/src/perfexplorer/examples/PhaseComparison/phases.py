@@ -9,7 +9,7 @@ True = 1
 False = 0
 
 tauData = "phases.ppk"
-prefix = "Iteration"
+prefix = "iteration"
 
 def getParameters():
 	global tauData
@@ -44,7 +44,6 @@ def loadFile(fileName):
 
 def drawGraph(results):
 	grapher = DrawGraph(results)
-	metrics = HashSet()
 	grapher.setLogYAxis(False)
 	grapher.setShowZero(True)
 	grapher.setTitle("Graph of Phases")
@@ -82,6 +81,7 @@ def main():
 	inputData = loadFile(tauData)
 
 	# get rid of callpath events
+	inputData.setIgnoreWarnings(True)
 	extractor = ExtractNonCallpathEventOperation(inputData)
 	extracted = extractor.processData().get(0)
 

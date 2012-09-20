@@ -209,7 +209,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
       //   the need to create and allocate memory for EBS post-processed
       //   objects.
       if (strstr(ProfileGroupName, "TAU_SAMPLE") == NULL) {
-	pathHistogram[i] = new TauPathHashTable<unsigned long>(i);
+	pathHistogram[i] = new TauPathHashTable<TauPathAccumulator>(i);
       }
     }
   }
@@ -236,6 +236,16 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 #else
 #ifdef TAU_SCOREP
   string tau_silc_name(string(Name)+" "+string(Type));
+if (strstr(ProfileGroupName, "TAU_PHASE") != NULL) {
+  FunctionId =  SCOREP_Tau_DefineRegion( tau_silc_name.c_str(),
+				   SCOREP_TAU_INVALID_SOURCE_FILE,
+				   SCOREP_TAU_INVALID_LINE_NO,
+				   SCOREP_TAU_INVALID_LINE_NO,
+				   SCOREP_TAU_ADAPTER_COMPILER,
+                                   SCOREP_TAU_REGION_PHASE
+				   );
+
+}else{
   FunctionId =  SCOREP_Tau_DefineRegion( tau_silc_name.c_str(),
 				   SCOREP_TAU_INVALID_SOURCE_FILE,
 				   SCOREP_TAU_INVALID_LINE_NO,
@@ -243,7 +253,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 				   SCOREP_TAU_ADAPTER_COMPILER,
 				   SCOREP_TAU_REGION_FUNCTION
 				   );
-
+}
 #endif /* TAU_SCOREP */
 #endif /* TAU_EPILOG */
 #endif /* TAU_VAMPIRTRACE */
@@ -498,7 +508,7 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
 }
 
 
-string *FunctionInfo::GetFullName() {
+char const * FunctionInfo::GetFullName() {
 
   if (FullName == NULL) {
     ostringstream ostr;
@@ -507,13 +517,8 @@ string *FunctionInfo::GetFullName() {
     } else {
       ostr << GetName() << ":GROUP:" << GetAllGroups();
     }
-    FullName = new string;
 
-    string tmpstr = ostr.str();
-    char *tmp = strdup(tmpstr.c_str());
-    tmp = Tau_util_removeRuns(tmp);
-    *FullName = tmp;
-
+    FullName = Tau_util_removeRuns(ostr.str().c_str());
   }
   return FullName;
 }
@@ -521,7 +526,7 @@ string *FunctionInfo::GetFullName() {
 /* EBS Sampling Profiles */
 
 #ifndef TAU_WINDOWS
-void FunctionInfo::addPcSample(unsigned long *pcStack, int tid) {
+void FunctionInfo::addPcSample(unsigned long *pcStack, int tid, double interval[TAU_MAX_COUNTERS]) {
   //  static int numSamples = 0;
   if (!TauEnv_get_ebs_enabled()) {
     // This should be an error! We'll ignore it for now!
@@ -531,20 +536,36 @@ void FunctionInfo::addPcSample(unsigned long *pcStack, int tid) {
   if (pathHistogram[tid] == NULL) {
     // *CWL* - For the use of the PathHash, we *cannot* initialize the
     //         mmap memory manager here! That risks signal safety issues.
-    pathHistogram[tid] = new TauPathHashTable<unsigned long>(tid);
+    pathHistogram[tid] = new TauPathHashTable<TauPathAccumulator>(tid);
   }
   // Add to the mmap-ed histogram. We start with a temporary conversion. This
   //   becomes unnecessary once we stop using the vector.
-  unsigned long *count;
-  count = pathHistogram[tid]->get(pcStack);
-  if (count == NULL) {
-    bool success = 
-      pathHistogram[tid]->insert(pcStack, 1);
+  //TAU_VERBOSE("TAU<%d,%d>: addPcSample()\n", RtsLayer::myNode(), RtsLayer::myThread());
+  TauPathAccumulator *accumulator;
+  accumulator = pathHistogram[tid]->get(pcStack);
+  if (accumulator == NULL) {
+    /* KAH - Whoops!! We can't call "new" here, because malloc is not
+     * safe in signal handling. therefore, use the special memory
+     * allocation routines */
+    //accumulator = new TauPathAccumulator(1,interval);
+    accumulator = (TauPathAccumulator*)Tau_MemMgr_malloc(1, sizeof(TauPathAccumulator));
+    /*  now, use the pacement new function to create a object in
+     *  pre-allocated memory. NOTE - this memory needs to be explicitly
+     *  deallocated by explicitly calling the destructor. 
+     *  I think the best place for that is in the destructor for
+     *  the hash table. */
+    new(accumulator) TauPathAccumulator(1,interval);
+
+    bool success = pathHistogram[tid]->insert(pcStack, *accumulator);
     if (!success) {
       fprintf(stderr,"addPcSample: Failed to insert sample.\n");
     }
   } else {
-    (*count)++;
+    (accumulator->count)++;
+    int i;
+    for (i = 0; i < Tau_Global_numCounters; i++) {
+      accumulator->accumulator[i] += interval[i];
+    }
   }
 }
 #endif // TAU_WINDOWS

@@ -25,10 +25,14 @@
 #include <Profile/TauTrace.h>
 #ifdef CUPTI
 #include <Profile/CuptiLayer.h>
+// Moved from header file
+using namespace std;
 #endif //CUPTI
 
 #ifdef TAUKTAU_SHCTR
 #include "Profile/KtauCounters.h"
+// Moved from header file
+using namespace std;
 #endif //TAUKTAU_SHCTR
 
 
@@ -229,7 +233,16 @@ static void read_env_vars() {
     }
 
     if (nmetrics == 0) {
+#if defined(BGL_TIMERS)
+      metricv_add("BGL_TIMERS");
+#elif defined(BGP_TIMERS)
+      metricv_add("BGP_TIMERS");
+#elif defined(BGQ_TIMERS)
+      metricv_add("BGQ_TIMERS");
+#else
+      // NOTE: Probably need more #elif defined() for other platforms...
       metricv_add("TIME");
+#endif
     }
   }
 }
@@ -290,7 +303,8 @@ static int is_cupti_metric(char *str) {
 /*********************************************************************
  * Initialize the function array
  ********************************************************************/
-static void initialize_functionArray() {
+static void initialize_functionArray() 
+{
   int usingPAPI = 0;
   int pos = 0;
   int found = 0;
@@ -337,7 +351,7 @@ static void initialize_functionArray() {
 			/* CUPTI handled separately */
 			/* setup CUPTI metrics */
 			functionArray[pos++] = metric_read_cupti;
-			Tau_CuptiLayer_register_string(metricv[i]);
+			Tau_CuptiLayer_register_string(metricv[i], pos - 1);
 #endif //CUPTI
 #ifdef TAU_PAPI
     } else if (compareMetricString(metricv[i], "P_WALL_CLOCK_TIME")) {
@@ -462,8 +476,13 @@ int TauMetrics_getMetricUsed(int metric) {
  * Read the metrics
  ********************************************************************/
 extern "C"  bool TauCompensateInitialized(void);
-void TauMetrics_getMetrics(int tid, double values[]) {
-  if (!Tau_init_check_initialized()) {
+void TauMetrics_getMetrics(int tid, double values[]) 
+{
+  if (Tau_init_check_initialized()) {
+      for (int i = 0; i < nfunctions; i++) {
+        functionArray[i](tid, i, values);
+      }
+  } else {
     // *CWL* - Safe only if Compensation is safely initialized. Otherwise
     //         we would be in the middle of re-entrant behavior and
     //         would be re-initializing metrics each time.
@@ -471,6 +490,9 @@ void TauMetrics_getMetrics(int tid, double values[]) {
       TauMetrics_init();
     }
   }
+}
+
+extern "C" void TauMetrics_internal_alwaysSafeToGetMetrics(int tid, double values[]) {
   for (int i = 0; i < nfunctions; i++) {
     functionArray[i](tid, i, values);
   }

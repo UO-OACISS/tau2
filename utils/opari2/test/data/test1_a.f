@@ -32,6 +32,8 @@
       end subroutine s0
       
       integer function f1(a)    !interface
+      implicit
+     >none
       integer :: a, result
       write (*,*) "function f1"
       f1 = a
@@ -39,6 +41,8 @@
       end function f1
 
       recursive subroutine s1(a)
+      implicit
+     $none
       integer :: a
       write (*,*) "subroutine s1"
       write (*,*) "keyword interface inside a string"

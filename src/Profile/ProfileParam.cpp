@@ -94,6 +94,7 @@ long * TauCreateProfileParamArray(long FuncId, long key) {
 
 #ifdef TAU_MPI
 extern "C" char *Tau_printRanks(void *comm_ptr);
+static void *Tau_Global_comm;
 #endif /* TAU_MPI */
 
 FunctionInfo * TauGetProfileParamFI(int tid, long key, string& keyname) {
@@ -114,17 +115,32 @@ FunctionInfo * TauGetProfileParamFI(int tid, long key, string& keyname) {
   
   if (it == TheTimerProfileParamMap().end()) {
     /* Couldn't find it */
-    char keystr[256]; 
 #ifdef TAU_EXP_TRACK_COMM
-    memset(keystr, 0, 256);
-    sprintf(keystr, "%s", Tau_printRanks((void *)key));
-    //strcpy(keystr, Tau_printRanks(key));
+    char* keystr = NULL;
+    string name;
+	/* print out the ranks of the processes in the communicator */
+	if (keyname.compare("comm") == 0) {
+	  char* ranks = Tau_printRanks((void *)key);
+	  keystr = (char*)(calloc(strlen(ranks)+1,sizeof(char)));
+      sprintf(keystr, "%s", ranks);
+	  Tau_Global_comm = (void*)key;
+      name = f->GetName() + string(" ") + f->GetType()+ string(" [ <")
+		  +keyname+ string("> = <")+ keystr + string("> ]"); 
+	} else {
+	  char* ranks = Tau_printRanks(Tau_Global_comm);
+	  keystr = (char*)(calloc(256,sizeof(char)));
+      sprintf(keystr, "%ld", key);
+      name = f->GetName() + string(" ") + f->GetType() 
+	      +string(" [ <comm> = <")+ ranks + string("> <")
+		  +keyname+ string("> = <")+ keystr + string("> ]"); 
+	}
 #else
+    char keystr[256]; 
     sprintf(keystr, "%ld", key); 
-#endif /* TAU_EXP_TRACK_COMM */
-    
     string name ( f->GetName() + string(" ") + f->GetType()+ string(" [ <")
 		  +keyname+ string("> = <")+ keystr + string("> ]")); 
+#endif /* TAU_EXP_TRACK_COMM */
+    
     DEBUGPROFMSG("Name created = "<<name<<endl;);
     string grname = string("TAU_PARAM | ") + RtsLayer::PrimaryGroup(f->GetAllGroups());
     
