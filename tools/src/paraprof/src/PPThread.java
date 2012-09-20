@@ -50,11 +50,11 @@ public class PPThread {
     }
 
     public String getName() {
-        if (this.getNodeID() == -1) {
+        if (this.getNodeID() == -1 || this.getNodeID() == -6) {
             return "mean";
         } else if (this.getNodeID() == -2) {
             return "total";
-        } else if (this.getNodeID() == -3) {
+        } else if (this.getNodeID() == -3 || this.getNodeID() == -7) {
             return "std. dev.";
         } else {
             return "n,c,t " + (this.getNodeID()) + "," + (this.getContextID()) + "," + (this.getThreadID());
@@ -62,11 +62,11 @@ public class PPThread {
     }
 
     public String getFullName() {
-        if (thread.getNodeID() == -1) {
+        if (thread.getNodeID() == -1 || this.getNodeID() == -6) {
             return "Mean Data";
         } else if (thread.getNodeID() == -2) {
             return "Total Data";
-        } else if (thread.getNodeID() == -3) {
+        } else if (thread.getNodeID() == -3 || this.getNodeID() == -7) {
             return "Standard Deviation Data";
         } else {
             return getName();
