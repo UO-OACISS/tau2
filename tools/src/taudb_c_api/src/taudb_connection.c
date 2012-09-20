@@ -214,10 +214,10 @@ void taudb_close_transaction(TAUDB_CONNECTION *connection) {
 #endif
 }
 
-boolean gzipInflate( char* compressedBytes, int length, char* uncompressedBytes ) {  
+boolean gzipInflate( char* compressedBytes, int length, char** uncompressedBytes ) {  
   
-  if ( strlen(compressedBytes) == 0 ) {  
-    uncompressedBytes = compressedBytes ;  
+  if ( length == 0 ) {  
+    uncompressedBytes[0] = '\0';  
     return TRUE ;  
   }  
   
@@ -236,8 +236,9 @@ boolean gzipInflate( char* compressedBytes, int length, char* uncompressedBytes 
   
   boolean done = FALSE ;  
   
-  if (inflateInit2(&strm, (16+MAX_WBITS)) != Z_OK) {  
-    free( uncomp );  
+  if (inflateInit2(&strm, (32+MAX_WBITS)) != Z_OK) {  
+    free( uncomp );
+	fprintf(stderr, "Unable to inflateInit2\n");  
     return FALSE;  
   }  
   
@@ -269,10 +270,10 @@ boolean gzipInflate( char* compressedBytes, int length, char* uncompressedBytes 
     return FALSE;  
   }  
   
-  size_t i;
-  for ( i=0; i<strm.total_out; ++i ) {  
-    uncompressedBytes += uncomp[ i ];  
-  }  
+  char * result = malloc(strm.total_out * sizeof(char));
+  memcpy(result, uncomp, strm.total_out * sizeof(char));
+  *uncompressedBytes = result; 
+  
   free( uncomp );  
   return TRUE ;  
 }  
@@ -285,18 +286,22 @@ char* taudb_get_binary_value(void* result, int row, int column) {
 /* The binary representation of BYTEA is a bunch of bytes, which could
  * include embedded nulls so we have to pay attention to field length.
  */
+/*
+ * It turns out that Postgres doesn't return raw bytes; it returns a
+ * string consisting of '\x' followed by the characters of the hex
+ * representation of the bytes, so we need to convert back to bytes.
+ */	 
   int blen = PQgetlength(res, row, column);
   printf("tuple %d: got\n", row);
   printf(" XML_METADATA_GZ = (%d bytes) ", blen);
-  char* gzipped = calloc(blen, sizeof(char));
-  int j;
-  for (j = 0; j < blen; j++) {
-    //printf("\\%03o", value[j]);
-	gzipped[j] = value[j];
+  char* gzipped = calloc(blen/2, sizeof(char));
+  int j,k;
+  for (j=2, k=0; j < blen; j+=2, k++) {
+	  sscanf(&(value[j]), "%2hhx", &(gzipped[k]));
+	//gzipped[j] = value[j];
   }
-  //printf("\n\n");
   char* expanded = NULL;
-  gzipInflate(gzipped, blen, expanded);
+  gzipInflate(gzipped, blen/2, &expanded);
   printf("%s\n", expanded);
 #endif
   return (value);
