@@ -1,4 +1,4 @@
-#include "taudb_api.h"
+#include "taudb_internal.h"
 #include "libpq-fe.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -13,7 +13,7 @@ TAUDB_DATA_SOURCE* taudb_query_data_sources(TAUDB_CONNECTION* connection) {
   int i, j;
 
   //if the connection already has the data, return it.
-  if (connection->data_sources_by_id != NULL && HASH_CNT(hh1, connection->data_sources_by_id) > 0) {
+  if (connection->data_sources_by_id != NULL) {
     taudb_numItems = HASH_CNT(hh1, connection->data_sources_by_id);
     return connection->data_sources_by_id;
   }

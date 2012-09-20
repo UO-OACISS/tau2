@@ -1,4 +1,4 @@
-#include "taudb_api.h"
+#include "taudb_internal.h"
 #include "libpq-fe.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -22,7 +22,7 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(TAUDB_CONNECTION* connection, 
   }
   
   // if the Trial already has the callpath data, return it.
-  if (trial->timer_callpaths_by_id != NULL && trial->timer_callpath_count > 0) {
+  if (trial->timer_callpaths_by_id != NULL) {
     taudb_numItems = trial->timer_callpath_count;
     return trial->timer_callpaths_by_id;
   }
@@ -262,4 +262,65 @@ void taudb_process_callpath_timer(TAUDB_TRIAL* trial, TAUDB_TIMER_CALLPATH* time
   HASH_ADD_KEYPTR(hh2, trial->timer_callpaths_by_name, leaf_callpath->name, strlen(leaf_callpath->name), leaf_callpath);
   return;
 }
+
+TAUDB_TIMER_CALLPATH* taudb_get_timer_callpath_by_id(TAUDB_TIMER_CALLPATH* timer_callpaths, const int id) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("Calling taudb_get_timer_callpath_by_id(%p,%d)\n", timer_callpaths, id);
+#endif
+  if (timer_callpaths == NULL) {
+    fprintf(stderr, "Error: timer_callpath parameter null. Please provide a valid set of timer_callpaths.\n");
+    return NULL;
+  }
+  if (id == 0) {
+    fprintf(stderr, "Error: id parameter null. Please provide a valid name.\n");
+    return NULL;
+  }
+
+  TAUDB_TIMER_CALLPATH* timer_callpath = NULL;
+  HASH_FIND(hh1, timer_callpaths, &id, sizeof(int), timer_callpath);
+  // HASH_FIND is not working so well... now we iterate. Sigh.
+  if (timer_callpath == NULL) {
+    TAUDB_TIMER_CALLPATH *current, *tmp;
+    HASH_ITER(hh1, timer_callpaths, current, tmp) {
+#ifdef TAUDB_DEBUG_DEBUG
+      printf ("TIMER_CALLPATH: '%s'\n", current->name);
+#endif
+      if (current->id == id) {
+        return current;
+      }
+    }
+  }
+  return timer_callpath;
+}
+
+TAUDB_TIMER_CALLPATH* taudb_get_timer_callpath_by_name(TAUDB_TIMER_CALLPATH* timer_callpaths, const char* name) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("Calling taudb_get_timer_callpath_by_name(%p,%s)\n", timer_callpaths, name);
+#endif
+  if (timer_callpaths == NULL) {
+    fprintf(stderr, "Error: timer_callpath parameter null. Please provide a valid set of timer_callpaths.\n");
+    return NULL;
+  }
+  if (name == NULL) {
+    fprintf(stderr, "Error: name parameter null. Please provide a valid name.\n");
+    return NULL;
+  }
+
+  TAUDB_TIMER_CALLPATH* timer_callpath = NULL;
+  HASH_FIND(hh2, timer_callpaths, name, sizeof(name), timer_callpath);
+  // HASH_FIND is not working so well... now we iterate. Sigh.
+  if (timer_callpath == NULL) {
+    TAUDB_TIMER_CALLPATH *current, *tmp;
+    HASH_ITER(hh2, timer_callpaths, current, tmp) {
+#ifdef TAUDB_DEBUG_DEBUG
+      printf ("TIMER_CALLPATH: '%s'\n", current->name);
+#endif
+      if (strcmp(current->name, name) == 0) {
+        return current;
+      }
+    }
+  }
+  return timer_callpath;
+}
+
 

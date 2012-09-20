@@ -1,4 +1,4 @@
-#include "taudb_api.h"
+#include "taudb_internal.h"
 #include "libpq-fe.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -21,7 +21,7 @@ TAUDB_TIMER* taudb_query_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial
   }
 
   //if the Trial already has the data, return it.
-  if (trial->timers_by_id != NULL && trial->timer_count > 0) {
+  if (trial->timers_by_id != NULL) {
     taudb_numItems = trial->timer_count;
     return trial->timers_by_id;
   }
@@ -94,13 +94,7 @@ TAUDB_TIMER* taudb_query_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial
     } 
     // save this in the hash
     HASH_ADD(hh1, trial->timers_by_id, id, sizeof(int), timer);
-    if (taudb_get_timer_by_id(trial->timers_by_id, timer->id) == NULL) {
-      fprintf(stderr, "TIMER NOT IN THE ID HASH! %d\n", timer->id);
-    }
     HASH_ADD_KEYPTR(hh2, trial->timers_by_name, timer->name, sizeof(timer->name), timer);
-    if (taudb_get_timer_by_name(trial->timers_by_name, timer->name) == NULL) {
-      fprintf(stderr, "TIMER NOT IN THE NAME HASH! %s\n", timer->name);
-    }
   }
 
   taudb_clear_result(res);
@@ -128,7 +122,9 @@ TAUDB_TIMER* taudb_get_timer_by_id(TAUDB_TIMER* timers, const int id) {
   if (timer == NULL) {
     TAUDB_TIMER *current, *tmp;
     HASH_ITER(hh1, timers, current, tmp) {
+#ifdef TAUDB_DEBUG_DEBUG
       printf ("TIMER: '%s'\n", current->name);
+#endif
       if (current->id == id) {
         return current;
       }
@@ -156,7 +152,9 @@ TAUDB_TIMER* taudb_get_timer_by_name(TAUDB_TIMER* timers, const char* name) {
   if (timer == NULL) {
     TAUDB_TIMER *current, *tmp;
     HASH_ITER(hh2, timers, current, tmp) {
+#ifdef TAUDB_DEBUG_DEBUG
       printf ("TIMER: '%s'\n", current->name);
+#endif
       if (strcmp(current->name, name) == 0) {
         return current;
       }

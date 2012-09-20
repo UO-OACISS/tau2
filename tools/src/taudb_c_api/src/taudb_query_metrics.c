@@ -1,4 +1,4 @@
-#include "taudb_api.h"
+#include "taudb_internal.h"
 #include "libpq-fe.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -18,7 +18,7 @@ TAUDB_METRIC* taudb_query_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* tri
   }
 
   //if the Trial already has the data, return it.
-  if (trial->metrics_by_id != NULL && trial->metric_count > 0) {
+  if (trial->metrics_by_id != NULL) {
     taudb_numItems = trial->metric_count;
     return trial->metrics_by_id;
   }

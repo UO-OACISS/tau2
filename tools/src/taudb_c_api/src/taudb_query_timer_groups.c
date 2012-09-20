@@ -1,4 +1,4 @@
-#include "taudb_api.h"
+#include "taudb_internal.h"
 #include "libpq-fe.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -18,7 +18,7 @@ TAUDB_TIMER_GROUP* taudb_query_timer_groups(TAUDB_CONNECTION* connection, TAUDB_
   }
 
   //if the Trial already has the data, return it.
-  if (trial->timer_groups != NULL && trial->timer_group_count > 0) {
+  if (trial->timer_groups != NULL) {
     taudb_numItems = trial->timer_group_count;
     return trial->timer_groups;
   }

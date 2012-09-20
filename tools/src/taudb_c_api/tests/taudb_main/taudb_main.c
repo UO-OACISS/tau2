@@ -20,8 +20,7 @@ int main (int argc, char** argv) {
 
    // test the "find trials" method to populate the trial
    TAUDB_TRIAL* filter = taudb_create_trials(1);
-   //filter->id = 216;
-   filter->id = 1;
+   filter->id = atoi(argv[2]);
    TAUDB_TRIAL* trials = taudb_query_trials(connection, TRUE, filter);
    int numTrials = taudb_numItems;
    for (t = 0 ; t < numTrials ; t = t+1) {

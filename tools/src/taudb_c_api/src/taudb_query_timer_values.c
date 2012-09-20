@@ -1,4 +1,4 @@
-#include "taudb_api.h"
+#include "taudb_internal.h"
 #include "libpq-fe.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -35,7 +35,7 @@ TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection
    */
   char my_query[1024];
   if (taudb_version == TAUDB_2005_SCHEMA) {
-    sprintf(my_query,"select ilp.*, ie.name as timer_name, ie.metric from interval_location_profile ilp inner join interval_event ie on ilp.interval_event = ie.id");
+    sprintf(my_query,"select ilp.*, ie.name as timer_name, ilp.metric from interval_location_profile ilp inner join interval_event ie on ilp.interval_event = ie.id");
     char* conjoiner = "where";
     if (trial != NULL) {
       sprintf(my_query,"%s where ie.trial = %d", my_query, trial->id);
@@ -105,18 +105,19 @@ TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection
     int thread = 0;
     int index = 0;
     int metric_id;
+    int timer_call_data_id;
+    int timer_id;
     char* timer_str;
     TAUDB_TIMER_VALUE* timer_value = taudb_create_timer_values(1);
     /* the columns */
     for (j = 0; j < nFields; j++) {
-      if (strcmp(taudb_get_column_name(res, j), "id") == 0) {
-        //timer_value->id = atoi(taudb_get_value(res, i, j));
+      if (strcmp(taudb_get_column_name(res, j), "timer_call_data") == 0) {
+        timer_call_data_id = atoi(taudb_get_value(res, i, j));
 // these two are the same
       } else if (strcmp(taudb_get_column_name(res, j), "interval_event") == 0) {
-        //timer_value->timer = atoi(taudb_get_value(res, i, j));
+        timer_id = atoi(taudb_get_value(res, i, j));
       } else if (strcmp(taudb_get_column_name(res, j), "timer") == 0) {
-        //timer_value->timer = atoi(taudb_get_value(res, i, j));
-
+        timer_id = atoi(taudb_get_value(res, i, j));
       } else if (strcmp(taudb_get_column_name(res, j), "node") == 0) {
         node = atoi(taudb_get_value(res, i, j));
       } else if (strcmp(taudb_get_column_name(res, j), "context") == 0) {
@@ -172,19 +173,22 @@ TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection
         taudb_exit_nicely(connection);
       }
     } 
-    /*
-    if (node < 0) {
-      timer_value->thread = index;
+    TAUDB_TIMER_CALL_DATA* timer_call_data = NULL;
+    if (taudb_version == TAUDB_2005_SCHEMA) {
+      index = (node * (trial->contexts_per_node * trial->threads_per_context)) +
+              (context * (trial->threads_per_context)) + 
+              thread;
+      TAUDB_THREAD* thread = taudb_get_thread(trial->threads, index);
+      timer_value->metric = taudb_get_metric_by_id(trial->metrics_by_id, metric_id);
+      TAUDB_TIMER_CALLPATH* timer_callpath = taudb_get_timer_callpath_by_id(trial->timer_callpaths_by_id, timer_id);
+      // find the timer_call_data object
+      timer_call_data = taudb_get_timer_call_data_by_key(trial->timer_call_data_by_key, timer_callpath, thread, NULL);
     } else {
-      timer_value->thread = (node * (trial->contexts_per_node * trial->threads_per_context)) +
-                           (context * (trial->threads_per_context)) + 
-                           thread;
+      timer_value->metric = taudb_get_metric_by_id(trial->metrics_by_id, metric_id);
+      timer_call_data = taudb_get_timer_call_data_by_id(trial->timer_call_data_by_id, timer_call_data_id);
     }
-    timer_value->thread = taudb_get_thread(trial->threads, index);
-    */
 
-    //timer_value->key = taudb_create_hash_key_3(timer_value->thread, timer_str, metric_str);
-    //HASH_ADD_KEYPTR(hh, timer_values, timer_value->key, strlen(timer_value->key), timer_value);
+    HASH_ADD(hh, timer_call_data->timer_values, metric->name, strlen(timer_value->metric->name), timer_value);
   }
 
   taudb_clear_result(res);
@@ -221,20 +225,12 @@ TAUDB_TIMER_VALUE* taudb_query_timer_stats(TAUDB_CONNECTION* connection, TAUDB_T
   return taudb_private_query_timer_values(connection, trial, timer_callpath, thread, metric, TRUE);
 }
 
-TAUDB_TIMER_VALUE* taudb_get_timer_value(TAUDB_TIMER_VALUE* timer_values, TAUDB_TIMER_CALLPATH* timer_callpath, TAUDB_THREAD* thread, TAUDB_METRIC* metric) {
+TAUDB_TIMER_VALUE* taudb_get_timer_value(TAUDB_TIMER_CALL_DATA* timer_call_data, TAUDB_METRIC* metric) {
 #ifdef TAUDB_DEBUG_DEBUG
-  printf("Calling taudb_get_timer_value(%p,%p,%p,%p)\n", timer_values, timer_callpath, thread, metric);
+  printf("Calling taudb_get_timer_value(%p,%p)\n", timer_call_data, metric);
 #endif
-  if (timer_values == NULL) {
-    fprintf(stderr, "Error: timer_values parameter null. Please provide a valid set of timer_values.\n");
-    return NULL;
-  }
-  if (timer_callpath == NULL) {
+  if (timer_call_data == NULL) {
     fprintf(stderr, "Error: timer_callpath parameter null. Please provide a valid timer_callpath.\n");
-    return NULL;
-  }
-  if (thread == NULL) {
-    fprintf(stderr, "Error: thread parameter null. Please provide a valid thread.\n");
     return NULL;
   }
   if (metric == NULL) {
@@ -242,10 +238,20 @@ TAUDB_TIMER_VALUE* taudb_get_timer_value(TAUDB_TIMER_VALUE* timer_values, TAUDB_
     return NULL;
   }
   
-  char *key = taudb_create_hash_key_3(thread->index, taudb_get_callpath_string(timer_callpath), metric->name);
-  //printf("%s\n", key);
-
   TAUDB_TIMER_VALUE* timer_value = NULL;
-  HASH_FIND_STR(timer_values, key, timer_value);
+  HASH_FIND(hh, timer_call_data->timer_values, metric->name, strlen(metric->name), timer_value);
+  // HASH_FIND is not working so well... now we iterate. Sigh.
+  if (timer_value == NULL) {
+    TAUDB_TIMER_VALUE *current, *tmp;
+    HASH_ITER(hh, timer_call_data->timer_values, current, tmp) {
+#ifdef TAUDB_DEBUG_DEBUG
+      printf("METRIC NAME: (%s)\n", current->metric->name);
+#endif
+      if (strcmp(current->metric->name, metric->name) == 0) {
+        return current;
+      }
+    }
+  }
+  
   return timer_value;
 }
