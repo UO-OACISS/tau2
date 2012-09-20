@@ -1186,11 +1186,11 @@ public class ParaProfUtils {
 
         String ident;
 
-        if (thread.getNodeID() == -1) {
+        if (thread.getNodeID() == -1 || thread.getNodeID() == -6) {
             ident = "Mean";
         } else if (thread.getNodeID() == -2) {
             ident = "Total";
-        } else if (thread.getNodeID() == -3) {
+        } else if (thread.getNodeID() == -3 || thread.getNodeID() == -7) {
             ident = "Standard Deviation";
         } else {
             ident = "Thread";
@@ -1517,11 +1517,11 @@ public class ParaProfUtils {
 
     public static String getThreadLabel(Thread thread) {
 
-        if (thread.getNodeID() == -1) {
+        if (thread.getNodeID() == -1 || thread.getNodeID() == -6) {
             return "Mean";
         } else if (thread.getNodeID() == -2) {
             return "Total";
-        } else if (thread.getNodeID() == -3) {
+        } else if (thread.getNodeID() == -3 || thread.getNodeID() == -7) {
             return "Std. Dev.";
         }
         else if (thread.getNodeID() == -4) {
