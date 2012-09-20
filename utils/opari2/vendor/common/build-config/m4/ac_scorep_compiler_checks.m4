@@ -189,7 +189,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]],
 )
 
 if test "x${has_alignment_attribute}" = "xyes"; then
-  AC_DEFINE([FORTRAN_ALIGNED],[__attribute__((aligned (16)))],[Makes C variable allignement consistent with Fortran])
+  AC_DEFINE([FORTRAN_ALIGNED],[__attribute__((aligned (16)))],[Makes C variable alignment consistent with Fortran])
 else
   AC_DEFINE([FORTRAN_ALIGNED],[],[Alignment attribute not supported])
 fi

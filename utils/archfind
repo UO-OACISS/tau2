@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh 
 
 # converted to sh, (12/14/2007)
 
@@ -32,6 +32,21 @@ fi
 if [ `uname -s ` = "Darwin" ];  then
     TAU_CCOM=c++
     ARCH=apple
+fi
+
+# check for ARM linux so it covers uname -m output such as armv7l or arm*
+uname_output=`uname -m`
+match_string="arm"
+test_arg=${uname_output#$match_string}
+if [ "y$test_arg" != "y$uname_output" ]
+then
+    TAU_CCOM=gcc
+    ARCH=arm_linux
+fi
+
+if [ -d /usr/linux-k1om-* ]
+then
+    ARCH=mic_linux
 fi
 
 
@@ -95,7 +110,7 @@ if [ $ARCH = rs6000 ]; then
 fi
 
 if [ $ARCH = unknown ]; then
-#See if users path finds an 'arch' command, it so, use it! (a little sloppy)
+#See if users path finds an 'arch' command, if so, use it! (a little sloppy)
     arch &> /dev/null
     if [ $? != 0 ]; then
 #This machine does not have an 'arch' command

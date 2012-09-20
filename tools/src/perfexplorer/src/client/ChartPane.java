@@ -1319,6 +1319,9 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			Utility.applyDefaultChartTheme(chart);
 
 			customizeCategoryChart(model, rawData, chart);
+			if(exportdata.isSelected()){
+				printData(dataset);
+			}
 		}
 
 		PerfExplorerChart pec = new PerfExplorerChart(chart, model.getChartTitle());
@@ -1376,6 +1379,41 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			}
 		}
 
+	}
+	private void printData(PECategoryDataset dataset) {
+		if(getFiletoSave()){
+			try {
+				File savefile =  fc.getSelectedFile();
+				//File savefile = new File("/Users/somillstein/Desktop/chartdata");
+				FileOutputStream write;
+				write = new FileOutputStream(savefile);
+				PerfExplorerModel model = PerfExplorerModel.getModel();
+				writeln(model.getChartTitle(),write);
+				writeln(model.getChartXAxisLabel(),write);
+				writeln(model.getChartYAxisLabel(),write);
+				
+				for(int row=0; row<dataset.getRowCount();row++){
+					 Comparable<Object> rowName = dataset.getRowKey(row);
+					writeln(rowName, write);
+					for(int i=0;i<dataset.getColumnCount();i++){
+						Number value = dataset.getValue(row, i);
+						if(value != null){
+						write(dataset.getColumnKey(i)+ "\t", write);
+						writeln(dataset.getValue(row, i) + "\t", write);
+						}
+					}
+
+				}
+			} catch (FileNotFoundException e) {
+				StringBuilder sb = new StringBuilder();
+				sb.append("File not found.\n");
+				JOptionPane.showMessageDialog(PerfExplorerClient.getMainFrame(), sb.toString(),
+						"Selection Warning", JOptionPane.ERROR_MESSAGE);
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 	private void writeln(Object s, FileOutputStream write) throws IOException {
 		write(s+"\n",write);

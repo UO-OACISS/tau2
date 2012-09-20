@@ -1162,7 +1162,7 @@ cudaError_t cudaLaunch(const char * a1) {
 		found = kernelNamesHead;
 
 		//printf("looking for %d .\n", a1);
-
+		CudaRuntimeGpuEvent *gE;
 		while (found != NULL)
 		{
 			if (a1 == found->host)
@@ -1184,13 +1184,13 @@ cudaError_t cudaLaunch(const char * a1) {
 			//char device_name[1024];
 			//strcpy(device_name, found->dev);
 	    //cout << "in cudaLaunch... stream is " << curr_stream << endl;
-			Tau_cuda_enqueue_kernel_enter_event(found->dev,
-				&cudaRuntimeGpuId(device,curr_stream));
+			gE = new CudaRuntimeGpuEvent(found->dev, device, curr_stream); 
+			Tau_cuda_enqueue_kernel_enter_event(gE);
 		}
 #endif
 		retval  =  (*cudaLaunch_h)( a1);
 #ifdef TRACK_KERNEL
-		Tau_cuda_enqueue_kernel_exit_event();
+		Tau_cuda_enqueue_kernel_exit_event(gE);
 #endif
 		TAU_PROFILE_STOP(t);
   }

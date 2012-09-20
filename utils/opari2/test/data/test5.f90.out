@@ -30,19 +30,19 @@ program test5
   !$omp threadprivate(t)
   
   
-      pomp_num_threads = pomp2_lib_get_max_threads()
-      pomp_if = .true.
+      pomp2_num_threads = pomp2_lib_get_max_threads()
+      pomp2_if = .true.
       call POMP2_Parallel_fork(pomp2_region_1,&
-      pomp_if, pomp_num_threads, pomp2_old_task, &
-        "85*regionType=paralleldo*sscl=test5.f90:29:37*escl=test5.f90:0:0*scheduleType=dynamic**" )
+      pomp2_if, pomp2_num_threads, pomp2_old_task, &
+      pomp2_ctc_1 )
 #line 29 "test5.f90"
   !$omp   parallel            &            
   !$omp & private(i,j)                      &
   !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
-  !$omp if(pomp_if) num_threads(pomp_num_threads)
+  !$omp if(pomp2_if) num_threads(pomp2_num_threads)
       call POMP2_Parallel_begin(pomp2_region_1)
       call POMP2_Do_enter(pomp2_region_1, &
-        "85*regionType=paralleldo*sscl=test5.f90:29:37*escl=test5.f90:0:0*scheduleType=dynamic**" )
+     pomp2_ctc_1 )
 #line 29 "test5.f90"
   !$omp   do                  &        
   !$omp & lastprivate(k)      &           
@@ -55,27 +55,29 @@ program test5
      write(*,*) "parallel do ", i
      k=k+i
   end do
+#line 42 "test5.f90"
 !$omp end do nowait
       call POMP2_Implicit_barrier_enter(pomp2_region_1, pomp2_old_task)
 !$omp barrier
       call POMP2_Implicit_barrier_exit(pomp2_region_1, pomp2_old_task)
       call POMP2_Do_exit(pomp2_region_1)
       call POMP2_Parallel_end(pomp2_region_1)
+#line 42 "test5.f90"
 !$omp end parallel
       call POMP2_Parallel_join(pomp2_region_1, pomp2_old_task)
 #line 43 "test5.f90"
       
   if(k .gt. 0) l = .true.
-      pomp_num_threads = 2
-      pomp_if = ( l )
+      pomp2_num_threads = 2
+      pomp2_if = ( l )
       call POMP2_Parallel_fork(pomp2_region_2,&
-      pomp_if, pomp_num_threads, pomp2_old_task, &
-        "109*regionType=parallelsections*sscl=test5.f90:45:46*escl=test5.f90:0:0*hasIf=1*hasNumThreads=1*hasReduction=1**" )
+      pomp2_if, pomp2_num_threads, pomp2_old_task, &
+      pomp2_ctc_2 )
 #line 45 "test5.f90"
   !$omp  parallel                               default(shared)   &
   !$omp &firstprivate(j)                copyin(t) reduction(+:l) &
   !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
-  !$omp if(pomp_if) num_threads(pomp_num_threads)
+  !$omp if(pomp2_if) num_threads(pomp2_num_threads)
       call POMP2_Parallel_begin(pomp2_region_2)
       call POMP2_Sections_enter(pomp2_region_2)
 #line 45 "test5.f90"
@@ -84,56 +86,60 @@ program test5
 #line 47 "test5.f90"
   !$omp  section
       call POMP2_Section_begin(pomp2_region_2, &
-        "109*regionType=parallelsections*sscl=test5.f90:45:46*escl=test5.f90:0:0*hasIf=1*hasNumThreads=1*hasReduction=1**" )
+     pomp2_ctc_2 )
 #line 48 "test5.f90"
   write(*,*) "section1"
       call POMP2_Section_end(pomp2_region_2)
 #line 49 "test5.f90"
   !$omp  section
       call POMP2_Section_begin(pomp2_region_2, &
-        "109*regionType=parallelsections*sscl=test5.f90:45:46*escl=test5.f90:0:0*hasIf=1*hasNumThreads=1*hasReduction=1**" )
+     pomp2_ctc_2 )
 #line 50 "test5.f90"
   write(*,*) "section2"
       call POMP2_Section_end(pomp2_region_2)
 #line 51 "test5.f90"
   !$omp  section
       call POMP2_Section_begin(pomp2_region_2, &
-        "109*regionType=parallelsections*sscl=test5.f90:45:46*escl=test5.f90:0:0*hasIf=1*hasNumThreads=1*hasReduction=1**" )
+     pomp2_ctc_2 )
 #line 52 "test5.f90"
   write(*,*) "section3"
       call POMP2_Section_end(pomp2_region_2)
+#line 53 "test5.f90"
 !$omp end sections nowait
       call POMP2_Implicit_barrier_enter(pomp2_region_2, pomp2_old_task)
 !$omp barrier
       call POMP2_Implicit_barrier_exit(pomp2_region_2, pomp2_old_task)
       call POMP2_Sections_exit(pomp2_region_2)
       call POMP2_Parallel_end(pomp2_region_2)
+#line 53 "test5.f90"
 !$omp end parallel
       call POMP2_Parallel_join(pomp2_region_2, pomp2_old_task)
 #line 54 "test5.f90"
 
-      pomp_num_threads = pomp2_lib_get_max_threads()
-      pomp_if = .true.
+      pomp2_num_threads = pomp2_lib_get_max_threads()
+      pomp2_if = .true.
       call POMP2_Parallel_fork(pomp2_region_3,&
-      pomp_if, pomp_num_threads, pomp2_old_task, &
-        "71*regionType=parallelworkshare*sscl=test5.f90:55:55*escl=test5.f90:0:0**" )
+      pomp2_if, pomp2_num_threads, pomp2_old_task, &
+      pomp2_ctc_3 )
 #line 55 "test5.f90"
   !$omp parallel           &
   !$omp firstprivate(pomp2_old_task) private(pomp2_new_task) &
-  !$omp if(pomp_if) num_threads(pomp_num_threads)
+  !$omp if(pomp2_if) num_threads(pomp2_num_threads)
       call POMP2_Parallel_begin(pomp2_region_3)
       call POMP2_Workshare_enter(pomp2_region_3, &
-        "71*regionType=parallelworkshare*sscl=test5.f90:55:55*escl=test5.f90:0:0**" )
+     pomp2_ctc_3 )
 #line 55 "test5.f90"
   !$omp          workshare
   AA = BB
   BB = CC
+#line 58 "test5.f90"
 !$omp end workshare nowait
       call POMP2_Implicit_barrier_enter(pomp2_region_3, pomp2_old_task)
 !$omp barrier
       call POMP2_Implicit_barrier_exit(pomp2_region_3, pomp2_old_task)
       call POMP2_Workshare_exit(pomp2_region_3)
       call POMP2_Parallel_end(pomp2_region_3)
+#line 58 "test5.f90"
 !$omp end parallel
       call POMP2_Parallel_join(pomp2_region_3, pomp2_old_task)
 #line 59 "test5.f90"
@@ -142,9 +148,9 @@ end program test5
       subroutine POMP2_Init_regions_000()
          include 'test5.f90.opari.inc'
          call POMP2_Assign_handle( pomp2_region_1, &
-        "87*regionType=paralleldo*sscl=test5.f90:29:37*escl=test5.f90:42:42*scheduleType=dynamic**" )
+         pomp2_ctc_1 )
          call POMP2_Assign_handle( pomp2_region_2, &
-        "111*regionType=parallelsections*sscl=test5.f90:45:46*escl=test5.f90:53:53*hasIf=1*hasNumThreads=1*hasReduction=1**" )
+         pomp2_ctc_2 )
          call POMP2_Assign_handle( pomp2_region_3, &
-        "73*regionType=parallelworkshare*sscl=test5.f90:55:55*escl=test5.f90:58:58**" )
+         pomp2_ctc_3 )
       end

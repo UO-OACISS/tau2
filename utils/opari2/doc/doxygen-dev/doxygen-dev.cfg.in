@@ -39,7 +39,7 @@ PROJECT_NAME           = @PACKAGE_NAME@
 # If a relative path is entered, it will be relative to the location 
 # where doxygen was started. If left blank the current directory will be used.
 
-OUTPUT_DIRECTORY = @abs_top_builddir@/doxygen-dev-doc/@PACKAGE_NAME@
+OUTPUT_DIRECTORY = @abs_top_builddir@/doxygen-dev-doc/@PACKAGE@
 
 # If the CREATE_SUBDIRS tag is set to YES, then doxygen will create 
 # 4096 sub-directories (in 2 levels) under the output directory of each output 
@@ -1294,7 +1294,7 @@ TAGFILES = @abs_top_builddir@/doxygen-dev-doc/otf2/tags/otf2.tag=../../otf2/html
 # When a file name is specified after GENERATE_TAGFILE, doxygen will create 
 # a tag file that is based on the input files it reads.
 
-GENERATE_TAGFILE = @abs_top_builddir@/doxygen-dev-doc/@PACKAGE_NAME@/tags/@PACKAGE_NAME@.tag
+GENERATE_TAGFILE = @abs_top_builddir@/doxygen-dev-doc/@PACKAGE@/tags/@PACKAGE@.tag
 
 # If the ALLEXTERNALS tag is set to YES all external classes will be listed 
 # in the class index. If set to NO only the inherited external classes 

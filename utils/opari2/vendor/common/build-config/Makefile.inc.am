@@ -100,7 +100,7 @@ DOC_SRC_DIR = $(srcdir)/doc
 
 common-uninstall:
 	rm -rf $(DESTDIR)$(docdir)
-	rm -rf $(DESTDIR)$(datadir)/@PACKAGE_NAME@
+	rm -rf $(DESTDIR)$(datadir)/@PACKAGE@
 
 
 ###############################################################################
@@ -164,7 +164,7 @@ if HAVE_DOXYGEN #-----------------------------------------------------
 doxygen-user: doxygen-project-number doc/doxygen-user/main.dox
 	$(MKDIR_P) "$(USER_DOC_DIR)/tags"
 	echo "OUTPUT_DIRECTORY = $(USER_DOC_DIR)" > doc/doxygen-user-at-make-time.cfg
-	echo "GENERATE_TAGFILE = $(USER_DOC_DIR)/tags/@PACKAGE_NAME@.tag" >> doc/doxygen-user-at-make-time.cfg
+	echo "GENERATE_TAGFILE = $(USER_DOC_DIR)/tags/@PACKAGE@.tag" >> doc/doxygen-user-at-make-time.cfg
 	cat doc/doxygen-project-number.cfg doc/doxygen-user-at-make-time.cfg doc/doxygen-user-common.cfg doc/doxygen-user-component.cfg > doc/doxygen-user.cfg
 	$(MKDIR_P) "$(USER_DOC_DIR)/html"
 	cp $(abs_srcdir)/doc/images/* $(USER_DOC_DIR)/html
@@ -192,7 +192,7 @@ doxygen-user-pdf: doxygen-user
 	make;                     \
 	mv refman.pdf ../;        \
 	rm -f *;                  \
-	mv ../refman.pdf @PACKAGE_NAME@.pdf
+	mv ../refman.pdf @PACKAGE@.pdf
 
 else # i.e. ! HAVE_DOXYGEN_LATEX -------------------------------------
 

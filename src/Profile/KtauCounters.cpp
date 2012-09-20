@@ -32,6 +32,9 @@ using namespace std;
 #include "Profile/KtauSymbols.h"
 #include "Profile/KtauProfiler.h"
 
+// Moved from header file
+using namespace std;
+
 //#define TAU_KTAUCTR_DEBUG 
 #define TAU_KTAUCTR_DEBUG_LEVEL 0
 // level 0 will perform backward running counter checking and output critical errors
