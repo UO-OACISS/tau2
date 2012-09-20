@@ -480,6 +480,11 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			for (Thread thread : threads) {
 				Integer threadID = threadMap.get(thread);
 
+				if (threadID == null) { 
+					System.out.println("Can't find Thread ID for thread!");
+					continue;
+				}
+				
 				FunctionProfile fp = thread.getFunctionProfile(function);
 
 				if (fp != null) { // only if this thread calls this function
