@@ -1102,7 +1102,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 	            int time_range = Integer.parseInt(db.getDataItem(tmpStr));
 			    
 		        stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
-		                + "secondary_metadata (id, trial, thread, timer_callpath, time_range, parent, name, value, is_array) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+		                + "secondary_metadata (id, trial, thread, timer_callpath, time_range, parent, name, value, is_array) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 		        stmt.setString(1, UUID.randomUUID().toString());
 		        stmt.setInt(2, trialID);
 	            stmt.setInt(3, threadMap.get(thread));
