@@ -23,28 +23,27 @@ TEST_TRIAL_ID=1
 TAUDB_DATABASE_DEFINE="-D__TAUDB_POSTGRESQL__"
 # MacBook Pro
 # POSTGRESQL_INCLUDES=$(TAUDB_DATABASE_DEFINE) 
-# POSTGRESQL_LIBRARIES=-lpq
+# POSTGRESQL_LIBRARIES=-lpq -lz
 
 # MacBook Air
-# PQDIR=/Library/PostgreSQL/9.2
-# POSTGRESQL_INCLUDES=$(TAUDB_DATABASE_DEFINE)  -I$(PQDIR)/include
-# POSTGRESQL_LIBRARIES=-L$(PQDIR)/lib -lpq
+PQDIR=/Library/PostgreSQL/9.2
+POSTGRESQL_INCLUDES=$(TAUDB_DATABASE_DEFINE)  -I$(PQDIR)/include
+POSTGRESQL_LIBRARIES=-L$(PQDIR)/lib -lpq -lz
 
 # Paratools03
-PQDIR=/usr/local/pgsql
-POSTGRESQL_INCLUDES=$(TAUDB_DATABASE_DEFINE) -I$(PQDIR)/include
-POSTGRESQL_LIBRARIES=-L$(PQDIR)/lib -lpq
+# PQDIR=/usr/local/pgsql
+# POSTGRESQL_INCLUDES=$(TAUDB_DATABASE_DEFINE) -I$(PQDIR)/include
+# POSTGRESQL_LIBRARIES=-L$(PQDIR)/lib -lpq -lz
 
 # Mist / Tank
 # PQDIR=/home/users/khuck/src/postgresql-8.4.9/src
 # POSTGRESQL_INCLUDES=$(TAUDB_DATABASE_DEFINE) -I$(PQDIR)/interfaces/libpq -I$(PQDIR)/include
-# POSTGRESQL_LIBRARIES=-L$(PQDIR)/interfaces/libpq -lpq -Wl,-rpath=$(PQDIR)/interfaces/libpq
+# POSTGRESQL_LIBRARIES=-L$(PQDIR)/interfaces/libpq -lpq -Wl,-rpath=$(PQDIR)/interfaces/libpq -lz
 
 FLAGS=-g -Wall
-# FLAGS=-ggdb -Waddress -Warray-bounds -Wchar-subscripts -Wimplicit-int -Wimplicit-function-declaration -Wcomment -Wformat -Wmain -Wmissing-braces -Wnonnull -Wparentheses -Wpointer-sign -Wreturn-type -Wsequence-point -Wstrict-aliasing -Wstrict-overflow=1 -Wswitch -Wtrigraphs -Wuninitialized -Wunknown-pragmas -Wunused-function -Wunused-label -Wunused-value -Wvolatile-register-var -Wextra
 PERFDMF_SUPPORT=-DTAUDB_PERFDMF
 
 # Debugging levels
-DEBUG=
-#DEBUG=-DTAUDB_DEBUG -DHASH_DEBUG=1
+#DEBUG=
+DEBUG=-DTAUDB_DEBUG -DHASH_DEBUG=1
 #DEBUG=-DTAUDB_DEBUG -DTAUDB_DEBUG_DEBUG -DHASH_DEBUG=1

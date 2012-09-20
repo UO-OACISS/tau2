@@ -54,6 +54,7 @@ TAUDB_TRIAL* taudb_private_query_trials(TAUDB_CONNECTION* connection, boolean fu
         // TODO we need to handle this!
         continue;
       } else if (strcmp(taudb_get_column_name(res, j), "xml_metadata_gz") == 0) {
+        char* value = taudb_get_binary_value(res, i, j);
         // TODO we need to handle this!
         continue;
       } else {
