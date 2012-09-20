@@ -286,22 +286,18 @@ char* taudb_get_binary_value(void* result, int row, int column) {
 /* The binary representation of BYTEA is a bunch of bytes, which could
  * include embedded nulls so we have to pay attention to field length.
  */
-/*
- * It turns out that Postgres doesn't return raw bytes; it returns a
- * string consisting of '\x' followed by the characters of the hex
- * representation of the bytes, so we need to convert back to bytes.
- */	 
   int blen = PQgetlength(res, row, column);
   printf("tuple %d: got\n", row);
-  printf(" XML_METADATA_GZ = (%d bytes) ", blen);
-  char* gzipped = calloc(blen/2, sizeof(char));
-  int j,k;
-  for (j=2, k=0; j < blen; j+=2, k++) {
-	  sscanf(&(value[j]), "%2hhx", &(gzipped[k]));
-	//gzipped[j] = value[j];
-  }
+  printf(" XMAL_METADATA_GZ = (%d bytes) ", blen);
+ /*
+  * It turns out that Postgres doesn't return raw bytes; it returns a
+  * string consisting of '\x' followed by the characters of the hex
+  * representation of the bytes, so we need to convert back to bytes.
+  */	 
+  size_t length = 0;
+  unsigned char * unescaped = PQunescapeBytea(value, &length);
   char* expanded = NULL;
-  gzipInflate(gzipped, blen/2, &expanded);
+  gzipInflate(unescaped, length, &expanded);
   printf("%s\n", expanded);
 #endif
   return (value);
