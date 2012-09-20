@@ -17,17 +17,30 @@ import com.graphbuilder.math.ExpressionTree;
 import com.graphbuilder.math.FuncMap;
 import com.graphbuilder.math.VarMap;
 
+import edu.uoregon.tau.perfdmf.Thread;
+
 public class ThreeDeeGeneralPlotUtils {
 
 	static final String BEGIN = "BEGIN_VIZ";
 	static final String END = "END_VIZ";
 
-	public static VarMap getEvaluation(int rank, int maxRank, int node,
-			int context, int thread, int maxNode, int maxContext,
-			int maxThread, float[] topoVals, float[] varMins, float varMaxs[],
-			float varMeans[],  int[] axisDim,
-			Map<String, String> expressions) {// String[] expressions, int rank,
-												// int maxRank){  float[] atomValue,
+	public static VarMap getEvaluation(int rank,
+			int maxRank,
+			Thread thread,
+			ParaProfTrial pptrial,
+
+			// int node,
+			// int context, int thread, int maxNode, int maxContext,
+			// int maxThread,
+			float[] topoVals, float[] varMins, float varMaxs[],
+			float varMeans[], int[] axisDim, Map<String, String> expressions) {// String[]
+																				// expressions,
+																				// int
+																				// rank,
+																				// int
+																				// maxRank){
+																				// float[]
+																				// atomValue,
 		// System.out.println(rank);
 		FuncMap fm = new FuncMap();
 		fm.loadDefaultFunctions();
@@ -35,9 +48,9 @@ public class ThreeDeeGeneralPlotUtils {
 		vm.setValue("maxRank", maxRank);
 		vm.setValue("rank", rank);
 		vm.setValue("color", topoVals[3]);
-		vm.setValue("node", node);
-		vm.setValue("context", context);
-		vm.setValue("thread", thread);
+		vm.setValue("node", thread.getNodeID());
+		vm.setValue("context", thread.getContextID());
+		vm.setValue("thread", thread.getThreadID());
 		vm.setValue("event0.val", topoVals[0]);
 		vm.setValue("event1.val", topoVals[1]);
 		vm.setValue("event2.val", topoVals[2]);
@@ -54,10 +67,10 @@ public class ThreeDeeGeneralPlotUtils {
 		vm.setValue("event1.mean", varMeans[1]);
 		vm.setValue("event2.mean", varMeans[2]);
 		vm.setValue("event3.mean", varMeans[3]);
-//		vm.setValue("atomic0", atomValue[0]);
-//		vm.setValue("atomic1", atomValue[1]);
-//		vm.setValue("atomic2", atomValue[2]);
-//		vm.setValue("atomic3", atomValue[3]);
+		// vm.setValue("atomic0", atomValue[0]);
+		// vm.setValue("atomic1", atomValue[1]);
+		// vm.setValue("atomic2", atomValue[2]);
+		// vm.setValue("atomic3", atomValue[3]);
 		vm.setValue("axisDimX", axisDim[0]);
 		vm.setValue("axisDimY", axisDim[1]);
 		vm.setValue("axisDimZ", axisDim[2]);
@@ -69,13 +82,54 @@ public class ThreeDeeGeneralPlotUtils {
 
 		while (it.hasNext()) {
 			Entry<String, String> e = it.next();
-			x = ExpressionTree.parse(e.getValue());
+
+			x = ExpressionTree
+					.parse(insertMetaDataValues(e.getValue(), thread));
 			res = x.eval(vm, fm);
 			// System.out.println(e.getKey()+" "+res);
 			vm.setValue(e.getKey(), res);
 		}
 		return vm;
 
+	}
+
+	private static final String metadata = "metadata(";
+
+	private static String insertMetaDataValues(String s, Thread t) {
+		int dex = 0;
+		while (dex >= 0) {
+			int loc = s.indexOf(metadata, dex);
+			if (loc == -1)
+				return s;
+			int cloc = s.indexOf(')', loc);
+			String key = s.substring(loc + 9, cloc);
+
+			String value = t.getMetaData().get(key);
+
+			if (value == null) {
+				
+				value=t.getDataSource().getMetaData().get(key);
+				if(value==null){
+				System.out.println("Metadata key " + key
+						+ " not found at top or in node,thread " + t.getNodeID() + ","
+						+ t.getThreadID() + ". Using 0");
+				value = "0";
+			}}
+			
+			try{
+			Double.parseDouble(value);
+			}
+			catch(NumberFormatException e){
+				System.out.println("Metadata key " + key
+						+ " is non-numeric in node,thread " + t.getNodeID() + ","
+						+ t.getThreadID() + ". Using 0");
+				value = "0";
+			}
+			s=s.substring(0,loc)+value+s.substring(cloc+1);
+
+			dex = cloc;
+		}
+		return s;
 	}
 
 	private static String[] splitEQ(String s) {
@@ -187,22 +241,21 @@ public class ThreeDeeGeneralPlotUtils {
 		return coords;
 	}
 
-	
-	public static int[] parseMPIProcName(String pname){
-		
-		String s = pname.substring(pname.indexOf('('),pname.indexOf(')')+1);
-		
-		return(parseTuple(s));
-		
+	public static int[] parseMPIProcName(String pname) {
+
+		String s = pname.substring(pname.indexOf('('), pname.indexOf(')') + 1);
+
+		return (parseTuple(s));
+
 	}
-	
+
 	public static int[] parseTuple(String tuple) {
 
 		tuple = tuple.substring(1, tuple.length() - 1);
 		String[] tmp = tuple.split(",");
-		int tmplen=tmp.length;
-		if(tmplen<3){
-			tmplen=3;
+		int tmplen = tmp.length;
+		if (tmplen < 3) {
+			tmplen = 3;
 		}
 		int[] tres = new int[tmplen];
 		for (int i = 0; i < tmplen; i++) {
@@ -317,41 +370,40 @@ public class ThreeDeeGeneralPlotUtils {
 					int core = num.indexOf('1');
 					// System.out.println("Core: "+ core);
 					coords[rank][3] = core;
-				} else 
-				{
-					String[]duo = s.split(":");
+				} else {
+					String[] duo = s.split(":");
 					int rank = Integer.parseInt(duo[0]);
-					int place=nodes.indexOf(duo[1]);
-					
-					if(place==-1){
+					int place = nodes.indexOf(duo[1]);
+
+					if (place == -1) {
 						nodes.add(duo[1]);
-						place=nodes.size()-1;
+						place = nodes.size() - 1;
 					}
-					//nodes.insert(rank,duo[1]);
-					coords[rank][0]=place%10;
-					coords[rank][1]=(place/10)%8;
-					coords[rank][2]=(place/10/8);
-				}
-					
-					
-//					if (s.indexOf(',') > 0) {
-//					String[] corexyz = s.split(",");
-//					// System.out.println(corexyz[0]+", "+corexyz[1]+", "+corexyz[2]+", "+corexyz[3]);
-//					int core = Integer.parseInt(corexyz[0]);
-//					for (int i = 0; i < 3; i++) {
-//						coords[core][i] = Integer.parseInt(corexyz[i + 1]);
-//					}
+					// nodes.insert(rank,duo[1]);
+					coords[rank][0] = place % 10;
+					coords[rank][1] = (place / 10) % 8;
+					coords[rank][2] = (place / 10 / 8);
 				}
 
-				// int x1 = s.indexOf('=');
-				// //int x2 = s.indexOf('"', x1 + 1);
-				//
-				// //String id = s.substring(0,x1);
-				// String name= s.substring(x1+1);
-				// names.add(name);//expressions.put(id, exp);
+				// if (s.indexOf(',') > 0) {
+				// String[] corexyz = s.split(",");
+				// //
+				// System.out.println(corexyz[0]+", "+corexyz[1]+", "+corexyz[2]+", "+corexyz[3]);
+				// int core = Integer.parseInt(corexyz[0]);
+				// for (int i = 0; i < 3; i++) {
+				// coords[core][i] = Integer.parseInt(corexyz[i + 1]);
 				// }
+			}
 
-			//}
+			// int x1 = s.indexOf('=');
+			// //int x2 = s.indexOf('"', x1 + 1);
+			//
+			// //String id = s.substring(0,x1);
+			// String name= s.substring(x1+1);
+			// names.add(name);//expressions.put(id, exp);
+			// }
+
+			// }
 
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -370,10 +422,12 @@ public class ThreeDeeGeneralPlotUtils {
 		for (int i = 0; i < ranks; i++) {
 			int node = coords[i][3];
 			for (int j = 0; j < 3; j++) {
-				int sub=1;
-				if(j==1)sub=2;
-				if(j==2)sub=6;
-				int cc = (node/sub) % coremax[j];
+				int sub = 1;
+				if (j == 1)
+					sub = 2;
+				if (j == 2)
+					sub = 6;
+				int cc = (node / sub) % coremax[j];
 				// int cy=node%cymax;
 				// int cz=node%czmax;
 				int c = cc + coords[i][j] * (coremax[j] + space);
@@ -390,7 +444,8 @@ public class ThreeDeeGeneralPlotUtils {
 				// done[i][1]=y;
 				// done[i][2]=z;
 			}
-			System.out.println(i + ": " + done[i][0] + "," + done[i][1] + ","+ done[i][2]);
+			System.out.println(i + ": " + done[i][0] + "," + done[i][1] + ","
+					+ done[i][2]);
 		}
 		System.out.println("min: " + min[0] + "," + min[1] + "," + min[2]);
 		System.out.println("max: " + max[0] + "," + max[1] + "," + max[2]);

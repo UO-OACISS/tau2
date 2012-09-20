@@ -122,8 +122,8 @@ int OpenMPLayer::GetTauThreadId(void)
 		
 		RtsLayer::UnLockEnv();
 	}
-	return omp_thread_id;
 #endif /* TAU_OPENMP_NESTED */
+	return omp_thread_id;
 #endif /* TAU_OPENMP */
 }
 

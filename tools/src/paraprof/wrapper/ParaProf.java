@@ -488,6 +488,25 @@ public class ParaProf implements ActionListener {
 //	    	break;
 //	    }
 	}
+	
+	if(sourceFiles!=null&&sourceFiles.length>0){
+		if(sourceFiles[0]!=null&&sourceFiles[0].exists()){
+			if(sourceFiles[0].isDirectory()){
+				try {
+					LoadTrialWindow.lastDirectory=sourceFiles[0].getCanonicalPath();
+				} catch (IOException e) {
+				}
+			}
+			else{
+				try {
+					File pf=sourceFiles[0].getParentFile();
+					if(pf!=null&&pf.exists())
+						LoadTrialWindow.lastDirectory=pf.getCanonicalPath();
+				} catch (IOException e) {
+				}
+			}
+		}
+	}
 
 	if (fixNames != null)
 	    ParaProf.fixNames = fixNames.booleanValue();

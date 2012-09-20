@@ -8,8 +8,8 @@ int tau_dmapp_tagid=0 ;
 extern int TAUDECL tau_totalnodes(int set_or_get, int value);
 #define dprintf if (0) printf
 
-#define TAU_DMAPP_TAGID tau_dmapp_tagid=tau_dmapp_tagid%250
-#define TAU_DMAPP_TAGID_NEXT (++tau_dmapp_tagid) % 250
+#define TAU_DMAPP_TAGID (tau_dmapp_tagid = (tau_dmapp_tagid & 255))
+#define TAU_DMAPP_TAGID_NEXT ((++tau_dmapp_tagid) & 255)
 
 int Tau_get_dmapp_size(dmapp_type_t data) {
   int size;
@@ -505,11 +505,11 @@ dmapp_return_t  __wrap_dmapp_put_ixpe_nb(void * a1, dmapp_seg_desc_t * a2, dmapp
   TAU_PROFILE_START(t);
   for (i = 0; i < a4; i ++) { 
   /* a3 contains target_pe_list and a4 is num_target_pes */
-    TAU_TRACE_SENDMSG((TAU_DMAPP_TAGID+1+i)%250, a3[i], len);
+    TAU_TRACE_SENDMSG((TAU_DMAPP_TAGID+1+i)&255, a3[i], len);
   }
   retval  =  __real_dmapp_put_ixpe_nb(a1, a2, a3, a4, a5, a6, a7, a8);
   for (i = 0; i < a4; i ++) {
-    TAU_TRACE_RECVMSG_REMOTE((TAU_DMAPP_TAGID+1+i)%250, Tau_get_node(), len, a3[i]); 
+    TAU_TRACE_RECVMSG_REMOTE((TAU_DMAPP_TAGID+1+i)&255, Tau_get_node(), len, a3[i]); 
   }
   TAU_PROFILE_STOP(t);
   return retval;
@@ -533,12 +533,12 @@ dmapp_return_t  __wrap_dmapp_put_ixpe_nbi(void * a1, dmapp_seg_desc_t * a2, dmap
   for (i = 0; i < a4; i ++) { 
   /* a3 contains target_pe_list and a4 is num_target_pes */
     dprintf("__wrap_dmapp_put_ixpe_nbi:<%d>: Before sendmsg: i = %d, a3[i] = %d\n", Tau_get_node(), i, a3[i]);
-    TAU_TRACE_SENDMSG((TAU_DMAPP_TAGID+1+i)%250, a3[i], len);
+    TAU_TRACE_SENDMSG((TAU_DMAPP_TAGID+1+i)&255, a3[i], len);
   }
   retval  =  __real_dmapp_put_ixpe_nbi(a1, a2, a3, a4, a5, a6, a7);
   for (i = 0; i < a4; i ++) {
     dprintf("__wrap_dmapp_put_ixpe_nbi:<%d>: i = %d, a3[i] = %d\n", Tau_get_node(), i, a3[i]);
-    TAU_TRACE_RECVMSG_REMOTE((TAU_DMAPP_TAGID+1+i)%250, Tau_get_node(), len, a3[i]); 
+    TAU_TRACE_RECVMSG_REMOTE((TAU_DMAPP_TAGID+1+i)&255, Tau_get_node(), len, a3[i]); 
   }
   TAU_PROFILE_STOP(t);
   return retval;
@@ -560,11 +560,11 @@ dmapp_return_t  __wrap_dmapp_put_ixpe(void * a1, dmapp_seg_desc_t * a2, dmapp_pe
   TAU_PROFILE_START(t);
   for (i = 0; i < a4; i ++) { 
   /* a3 contains target_pe_list and a4 is num_target_pes */
-    TAU_TRACE_SENDMSG((TAU_DMAPP_TAGID+1+i)%250, a3[i], len);
+    TAU_TRACE_SENDMSG((TAU_DMAPP_TAGID+1+i)&255, a3[i], len);
   }
   retval  =  __real_dmapp_put_ixpe(a1, a2, a3, a4, a5, a6, a7);
   for (i = 0; i < a4; i ++) {
-    TAU_TRACE_RECVMSG_REMOTE((TAU_DMAPP_TAGID+1+i)%250, Tau_get_node(), len, a3[i]); 
+    TAU_TRACE_RECVMSG_REMOTE((TAU_DMAPP_TAGID+1+i)&255, Tau_get_node(), len, a3[i]); 
   }
   TAU_PROFILE_STOP(t);
   return retval;

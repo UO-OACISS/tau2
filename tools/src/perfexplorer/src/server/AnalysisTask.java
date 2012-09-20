@@ -147,7 +147,7 @@ public class AnalysisTask extends TimerTask {
 			if(i>=0 && j>=0){
 			List<String> s= centroids.getEventNames();
 			
-			statement.setString(2, new String(s.get(i).substring(0, Math.min(s.get(i).length(),120))+" vs "+s.get(j).substring(0,Math.min(s.get(j).length(),120))));
+			statement.setString(2, new String(s.get(i).substring(0, Math.min(s.get(i).length(),120))+" vs "+s.get(j).substring(0,Math.min(s.get(j).length(),120))+" R:"+rCorrelation));
 			}
 			else statement.setString(2, "analysis_result");
 			

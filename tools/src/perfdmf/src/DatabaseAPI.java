@@ -1082,8 +1082,9 @@ public class DatabaseAPI {
                 //addBatchFunctionProfile(meanInsertStatement, meanData, metric.getID(), dbMetricID.intValue(),
                 //       function.getMeanProfile(), intervalEventID.intValue(), false, dataSource.getAllThreads().size());
 
-                addBatchFunctionProfile(meanInsertStatement, totalData, metric.getID(), dbMetricID.intValue(),
-                        function.getTotalProfile(), intervalEventID.intValue(), true, dataSource.getAllThreads().size());
+                edu.uoregon.tau.perfdmf.Thread meanData = dataSource.getMeanData();
+                addBatchFunctionProfile(meanInsertStatement, meanData, metric.getID(), dbMetricID.intValue(),
+                        function.getMeanProfile(), intervalEventID.intValue(), false, dataSource.getAllThreads().size());
 
                 for (Iterator<Thread> it = dataSource.getAllThreads().iterator(); it.hasNext() && summaryOnly == false;) {
                     edu.uoregon.tau.perfdmf.Thread thread = it.next();

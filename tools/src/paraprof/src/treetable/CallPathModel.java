@@ -71,12 +71,28 @@ public class CallPathModel extends AbstractTreeTableModel {
         Group derived = ppTrial.getGroup("TAU_CALLPATH_DERIVED");
 
         if (window.getTreeMode()) {
+        	String checkCallpath = dataSource.getMetaData().get("TAU_CALLPATH");
+        	boolean isCallpath=false;
+        	if(checkCallpath!=null&&checkCallpath.equals("on"))
+        		isCallpath=true;
+        		
             for (Iterator<PPFunctionProfile> it = functionProfileList.iterator(); it.hasNext();) {
                 // Find all the rootNames (as strings)
                 PPFunctionProfile ppFunctionProfile = it.next();
                 FunctionProfile fp = ppFunctionProfile.getFunctionProfile();
 
-                if (fp != null && fp.isCallPathFunction()) {
+                boolean showInTree=false;
+                
+                if(isCallpath)
+                {
+                	showInTree=(fp != null && fp.isCallPathFunction());
+                }
+                else{
+                	String groups = fp.getFunction().getGroupString();
+                	showInTree=(fp != null && (fp.isCallPathFunction() || !groups.contains("TAU_SAMPLE")));
+                }
+                
+                if (showInTree) {
                     String rootName;
                     if (reversedCallPaths) {
                         rootName = UtilFncs.getRevLeftSide(fp.getFunction().getReversedName());

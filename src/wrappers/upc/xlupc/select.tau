@@ -1,0 +1,9 @@
+BEGIN_EXCLUDE_LIST
+"# upc_phaseof(#"
+"# #__xlupc_atomicU#"
+"# #__xlupc_memcpy_vlist#"
+"# #__xlupc_trysynci#"
+"# #__xlupc_memcpy_vlist_async#"
+"# #__xlupc_memcpy_async#"
+"# #upc_resetphase(#"
+END_EXCLUDE_LIST
