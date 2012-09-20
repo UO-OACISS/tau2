@@ -103,8 +103,10 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 	 static final String NUMBER = "read as a number";
 	 static final String DATE = "read as a date";
 	 
-	 static final String ANY="any";
-	 static final String ALL="all";
+	 static final String ANY="or";
+	 static final String ALL="and";
+	 static final String METADATA = "METADATA";
+	 static final String READ_TYPE = "Read Type";
 	 
 	private JPanel panel;
 	private JPanel rulePane;
@@ -143,7 +145,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         rulePane.setVisible(true);
 
 
-    	panel.add(getMatch());
+    	panel.add(addMatch());
     	panel.add(scrollRule);
     	panel.add(getSaveButtons());
     	panel.validate();
@@ -193,16 +195,20 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 	}
 
 	private void saveView(String saveName) {
+		
 		System.out.println(anyOrAll);
-
+		int viewID = viewCreator.saveView(null, saveName, anyOrAll);
 		for(RuleListener rule : ruleListeners){
-			System.out.println(rule.getColumn_name());
-			System.out.println(rule.getValue());
-			System.out.println(rule.getOperator());
+			System.out.println("COL: "+rule.getColumn_name());
+			System.out.println("VALUE: "+rule.getValue());
+			System.out.println("OP: "+rule.getOperator());
+			System.out.println("TABLE: "+rule.getTable_name());
+			viewCreator.saveViewParameter(viewID, rule.getTable_name(), rule.getColumn_name(), rule.getOperator(), rule.getValue());
 		}
 
+		
 	}
-	private JPanel getMatch() {
+	private JPanel addMatch() {
 		JPanel panel = new JPanel();
 		String[] comboBoxItems = {ALL,  ANY};
 		JComboBox comboBox = new JComboBox(comboBoxItems);
@@ -210,6 +216,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 		JLabel label2 = new JLabel(" of the following rules.");
 		
 		comboBox.addActionListener(this);
+		comboBox.setSelectedIndex(0);
 
 		panel.add(label1);
 		panel.add(comboBox);
@@ -237,6 +244,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         String comboBoxItems[] = comparatorTypes ;
         JComboBox cb = new JComboBox(comboBoxItems);
         cb.setEditable(false);
+        cb.setName(READ_TYPE);
         
         
         cards = new JPanel(new CardLayout());
@@ -261,6 +269,9 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         JComboBox metadataCB = new JComboBox(metadataList);
         metadataCB.addActionListener(listener);
         metadataCB.setEditable(false);
+        metadataCB.setName(METADATA);
+        if(metadataList.length>0)
+        metadataCB.setSelectedIndex(0);
         
         comboBoxPane.add(metadataCB, BorderLayout.WEST);
         comboBoxPane.add(cb, BorderLayout.CENTER);
@@ -272,9 +283,9 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 	}
     private String[] getMetaDataList() {
 		//List of names should be looked up in database
-    	String[] returnS = {"Aplication","CPU Cores","Username"};
-//    	String[] returnS = new String[0];
-//    	returnS = viewCreator.getMetadataNames().toArray(returnS);
+//    	String[] returnS = {"Aplication","CPU Cores","Username"};
+    	String[] returnS = new String[0];
+    	returnS = viewCreator.getMetadataNames().toArray(returnS);
 		return returnS;
 	}
     private Component addNumberField(RuleListener listener){
@@ -282,7 +293,10 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         JPanel comboBoxPane = new JPanel(); //use FlowLayout
         String comboBoxItems[] = {NUMBER_EQUAL, NUMBER_NOT, NUMBER_GREATER, NUMBER_LESS, NUMBER_RANGE};
         JComboBox cb = new JComboBox(comboBoxItems);
+        cb.addActionListener(listener);
         cb.setEditable(false);
+        cb.setSelectedIndex(0);
+        
         
         //Create the "cards".
         JPanel greaterCard = new JPanel();
@@ -354,6 +368,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         String comboBoxItems[] = {DATE_IS, DATE_AFTER, DATE_BEFORE, DATE_RANGE};
         JComboBox cb = new JComboBox(comboBoxItems);
         cb.setEditable(false);
+        cb.setSelectedIndex(0);
         
         //Create the "cards".
         JPanel greaterCard = new JPanel();
@@ -404,6 +419,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         cb.setEditable(false);
         cb.setName(STRING);
         cb.addActionListener(listener);
+        cb.setSelectedIndex(0);
         
         //Create the "cards".
         JPanel beginCard = new JPanel();

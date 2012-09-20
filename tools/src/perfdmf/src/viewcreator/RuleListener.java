@@ -60,12 +60,13 @@ VALUES (2, 'primary_metadata', 'Application', '=', 'application');
 	public void setCompare(String compare) {
 		this.compare = compare;
 	}
-	String table_name; //primary or secondary metadata
-	String column_name; //Metadata name
-	String operator; //= > < 
-	String value; //value of field
-	String value2;
-	private String compare;
+	String table_name="primary_metadata"; //primary or secondary metadata
+	String column_name=""; //Metadata name
+	String operator=""; //= > < 
+	String value=""; //value of field
+	String value2="";
+	String type = "";
+	private String compare="";
 
 	private void change (DocumentEvent e){
 		// TODO Auto-generated method stub
@@ -105,30 +106,34 @@ VALUES (2, 'primary_metadata', 'Application', '=', 'application');
 			JComboBox combo = (JComboBox) arg.getSource();
 			if(combo.getName() == ViewCreatorGUI.STRING || combo.getName() == ViewCreatorGUI.NUMBER){
 			 compare = combo.getSelectedItem().toString();
-//			}else if(combo.getName() == ViewCreatorGUI.STRING_BEGINS){
-//				operator = "like";
-//			}else if(combo.getName() == ViewCreatorGUI.STRING_CONTAINS){
-//				operator = "like";
-//			}else if(combo.getName() == ViewCreatorGUI.STRING_ENDS){
-//				operator = "like";
-//			}else if(combo.getName() == ViewCreatorGUI.STRING_EXACTLY){
-//				operator = "=";
-//			}else if(combo.getName() == ViewCreatorGUI.NUMBER_EQUAL){
-//				operator = "=";
-//			}else if(combo.getName() == ViewCreatorGUI.NUMBER_GREATER){
-//				operator = ">";
-//			}else if(combo.getName() == ViewCreatorGUI.NUMBER_LESS){
-//				operator = "<";
-//			}else if(combo.getName() == ViewCreatorGUI.NUMBER_NOT){
-//				operator = "!=";
-//
-//			}else if(combo.getName() == ViewCreatorGUI.NUMBER_RANGE){
-//				operator = ViewCreatorGUI.NUMBER_RANGE;
+			}else if(combo.getName() == ViewCreatorGUI.STRING_BEGINS){
+				operator = "like";
+			}else if(combo.getName() == ViewCreatorGUI.STRING_CONTAINS){
+				operator = "like";
+			}else if(combo.getName() == ViewCreatorGUI.STRING_ENDS){
+				operator = "like";
+			}else if(combo.getName() == ViewCreatorGUI.STRING_EXACTLY){
+				operator = "=";
+			}else if(combo.getName() == ViewCreatorGUI.NUMBER_EQUAL){
+				operator = "=";
+			}else if(combo.getName() == ViewCreatorGUI.NUMBER_GREATER){
+				operator = ">";
+			}else if(combo.getName() == ViewCreatorGUI.NUMBER_LESS){
+				operator = "<";
+			}else if(combo.getName() == ViewCreatorGUI.NUMBER_NOT){
+				operator = "!=";
+
+			}else if(combo.getName() == ViewCreatorGUI.NUMBER_RANGE){
+				operator = ViewCreatorGUI.NUMBER_RANGE;
 System.out.println(compare);
-			}	else {
-			
+			}else if(combo.getName() == ViewCreatorGUI.METADATA){
 				column_name = combo.getSelectedItem().toString();
 				System.out.println("colname: "+column_name);
+			}else if(combo.getName() == ViewCreatorGUI.READ_TYPE){
+				type = combo.getSelectedItem().toString();
+			}else {
+				System.out.println("Op:  "+combo.getSelectedItem().toString());
+				operator = combo.getSelectedItem().toString();
 			}
 		}
 	}
@@ -147,6 +152,8 @@ System.out.println(compare);
 			operator = "=";
 		}else if(compare == ViewCreatorGUI.NUMBER_EQUAL){
 			operator = "=";
+		}else if(compare == ViewCreatorGUI.NUMBER_NOT){
+			operator = "!=";
 		}else if(compare == ViewCreatorGUI.NUMBER_GREATER){
 			operator = ">";
 		}else if(compare == ViewCreatorGUI.NUMBER_LESS){
@@ -155,5 +162,6 @@ System.out.println(compare);
 			//Need to create two rules in this case.
 			operator = ViewCreatorGUI.NUMBER_RANGE;
 		}
+		System.out.println("fix: "+operator);
 	}
 }
