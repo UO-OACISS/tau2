@@ -1,4 +1,4 @@
-#include "taudb_api.h"
+#include "taudb_internal.h"
 #include "libpq-fe.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -44,8 +44,8 @@ void taudb_delete_trials(TAUDB_TRIAL* trials, int count) {
     taudb_delete_secondary_metadata(trials[i].secondary_metadata, trials[i].secondary_metadata_count);
     taudb_delete_primary_metadata(trials[i].primary_metadata, trials[i].primary_metadata_count);
     taudb_delete_counter_values(trials[i].counter_values, trials[i].counter_value_count);
-    taudb_delete_counters(trials[i].counters, trials[i].counter_count);
-    taudb_delete_timer_call_data(trials[i].timer_call_data, trials[i].timer_call_data_count);
+    taudb_delete_counters(trials[i].counters_by_id, trials[i].counter_count);
+    taudb_delete_timer_call_data(trials[i].timer_call_data_by_id, trials[i].timer_call_data_count);
     taudb_delete_timer_callpaths(trials[i].timer_callpaths_by_id, trials[i].timer_callpath_count);
     taudb_delete_timer_groups(trials[i].timer_groups, trials[i].timer_group_count);
     taudb_delete_timers(trials[i].timers_by_id, trials[i].timer_count);
@@ -126,11 +126,12 @@ void taudb_delete_counters(TAUDB_COUNTER* counters, int count) {
   printf("Calling taudb_delete_counters(%p,%d)\n", counters, count);
 #endif
   if (count == 0 || counters == NULL) return;
-  int i = 0;
-  for (i = count-1 ; i >= 0 ; i++) {
-    free(counters[i].name);
+  TAUDB_COUNTER *current, *tmp;
+  HASH_ITER(hh1, counters, current, tmp) {
+    HASH_DELETE(hh1, counters, current);
+    free(current->name);
+    free(current);
   }
-  free(counters);
 }
 
 void taudb_delete_counter_values(TAUDB_COUNTER_VALUE* counter_values, int count) {
@@ -138,11 +139,12 @@ void taudb_delete_counter_values(TAUDB_COUNTER_VALUE* counter_values, int count)
   printf("Calling taudb_delete_counter_values(%p,%d)\n", counter_values, count);
 #endif
   if (count == 0 || counter_values == NULL) return;
-  int i = 0;
-  for (i = count-1 ; i >= 0 ; i++) {
-    free(counter_values[i].timestamp);
+  TAUDB_COUNTER_VALUE *current, *tmp;
+  HASH_ITER(hh1, counter_values, current, tmp) {
+    HASH_DELETE(hh1, counter_values, current);
+    free(current->key.timestamp);
+    free(current);
   }
-  free(counter_values);
 }
 
 void taudb_delete_timers(TAUDB_TIMER* timers, int count) {
@@ -216,11 +218,12 @@ void taudb_delete_timer_call_data(TAUDB_TIMER_CALL_DATA* timer_call_data, int co
   printf("Calling taudb_delete_timer_call_data(%p,%d)\n", timer_call_data, count);
 #endif
   if (count == 0 || timer_call_data == NULL) return;
-  int i = 0;
-  for (i = count-1 ; i >= 0 ; i++) {
-    free(timer_call_data[i].timestamp);
-	taudb_delete_timer_values(timer_call_data[i].timer_values, timer_call_data[i].timer_value_count);
+  TAUDB_TIMER_CALL_DATA *current, *tmp;
+  HASH_ITER(hh1, timer_call_data, current, tmp) {
+    HASH_DELETE(hh1, timer_call_data, current);
+    taudb_delete_timer_values(current->timer_values, current->timer_value_count);
+    free(current->key.timestamp);
+    free(current);
   }
-  free(timer_call_data);
 }
 

@@ -114,8 +114,10 @@ typedef struct taudb_trial {
  struct taudb_timer_group* timer_groups;
  struct taudb_timer_callpath* timer_callpaths_by_id;
  struct taudb_timer_callpath* timer_callpaths_by_name;
- struct taudb_timer_call_data* timer_call_data;
- struct taudb_counter* counters;
+ struct taudb_timer_call_data* timer_call_data_by_id;
+ struct taudb_timer_call_data* timer_call_data_by_key;
+ struct taudb_counter* counters_by_id;
+ struct taudb_counter* counters_by_name;
  struct taudb_counter_value* counter_values;
  struct taudb_primary_metadata* primary_metadata;
  struct taudb_secondary_metadata* secondary_metadata;
@@ -231,17 +233,21 @@ typedef struct taudb_timer_callpath {
 /* timer_call_data objects are observations of a node of the callgraph
    for one of the threads. */
 
-typedef struct taudb_timer_call_data {
- int id; /* link back to database */
+typedef struct taudb_call_data_key {
  struct taudb_timer_callpath *timer_callpath; /* link back to database */
  struct taudb_thread *thread; /* link back to database, roundabout way */
- char *key; /* hash table key - constructed as taudb_thread.index:taudb_timer.name */
+ char* timestamp; /* timestamp in case we are in a snapshot or something */
+} TAUDB_TIMER_CALL_DATA_KEY;
+
+typedef struct taudb_timer_call_data {
+ int id; /* link back to database */
+ TAUDB_TIMER_CALL_DATA_KEY key; /* hash table key */
  int calls;  /* number of times this timer was seen */
  int subroutines;  /* number of timers this timer calls */
- char* timestamp;  /* when was the timer_callpath visited? */
  int timer_value_count;  /* should be equal to taudb_trial.metric_count */
  struct taudb_timer_value* timer_values;
- UT_hash_handle hh;
+ UT_hash_handle hh1;
+ UT_hash_handle hh2;
 } TAUDB_TIMER_CALL_DATA;
 
 /* finally, timer_values are specific measurements during one of the
@@ -254,7 +260,7 @@ typedef struct taudb_timer_value {
  double inclusive_percentage;   /* the inclusive percentage of total time of the application */
  double exclusive_percentage;   /* the exclusive percentage of total time of the application */
  double sum_exclusive_squared;  /* how much variance did we see every time we measured this timer? */
- char *key; /* hash table key - thread:timer_string:metric (all names) */
+ char *key; /* hash table key - metric name */
  UT_hash_handle hh;
 } TAUDB_TIMER_VALUE;
 
@@ -275,16 +281,21 @@ typedef struct taudb_counter {
 
 /* counters are atomic counters, not just interval timers */
 
-typedef struct taudb_counter_value {
+typedef struct taudb_counter_value_key {
  struct taudb_counter* counter; /* the counter we are measuring */
  struct taudb_thread* thread;   /* where this measurement is */
  struct taudb_timer_callpath* context; /* the calling context (can be null) */
  char* timestamp; /* timestamp in case we are in a snapshot or something */
+} TAUDB_COUNTER_VALUE_KEY;
+
+typedef struct taudb_counter_value {
+ TAUDB_COUNTER_VALUE_KEY key;
  int sample_count;          /* how many times did we see take this count? */
  double maximum_value;      /* what was the max value we saw? */
  double minimum_value;      /* what was the min value we saw? */
  double mean_value;         /* what was the average value we saw? */
  double standard_deviation; /* how much variance was there? */
+ UT_hash_handle hh1; /* hash key for hashing by key */
 } TAUDB_COUNTER_VALUE;
 
 /*********************************************/

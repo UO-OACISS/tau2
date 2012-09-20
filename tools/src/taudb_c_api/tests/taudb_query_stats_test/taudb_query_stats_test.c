@@ -18,19 +18,18 @@ int main (int argc, char** argv) {
 
    int t;
 
-   if (taudb_version == TAUDB_2012_SCHEMA) {
+   //if (taudb_version == TAUDB_2012_SCHEMA) {
      // test the "find trials" method to populate the trial
      TAUDB_TRIAL* filter = taudb_create_trials(1);
-     //filter->id = 216;
-     filter->id = 1;
+     filter->id = atoi(argv[2]);
      TAUDB_TRIAL* trials = taudb_query_trials(connection, FALSE, filter);
      int numTrials = taudb_numItems;
      for (t = 0 ; t < numTrials ; t = t+1) {
         printf("  Trial name: '%s', id: %d\n", trials[t].name, trials[t].id);
 	    dump_metadata(trials[t].primary_metadata, trials[t].primary_metadata_count);
-        dump_timer_stats(connection, &(trials[t]), TRUE);
+        //dump_timer_stats(connection, &(trials[t]), TRUE);
      }
-   }
+   //}
 
    printf("Disconnecting...\n");
    taudb_disconnect(connection);

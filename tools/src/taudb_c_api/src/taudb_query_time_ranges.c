@@ -1,4 +1,4 @@
-#include "taudb_api.h"
+#include "taudb_internal.h"
 #include "libpq-fe.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -18,7 +18,7 @@ TAUDB_TIME_RANGE* taudb_query_time_ranges(TAUDB_CONNECTION* connection, TAUDB_TR
   }
 
   //if the Trial already has the data, return it.
-  if (trial->time_ranges != NULL && trial->time_range_count > 0) {
+  if (trial->time_ranges != NULL) {
     taudb_numItems = trial->time_range_count;
     return trial->time_ranges;
   }

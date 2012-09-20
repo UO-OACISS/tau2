@@ -1,4 +1,4 @@
-#include "taudb_api.h"
+#include "taudb_internal.h"
 #include "libpq-fe.h"
 #include <stdlib.h>
 #include <stdio.h>

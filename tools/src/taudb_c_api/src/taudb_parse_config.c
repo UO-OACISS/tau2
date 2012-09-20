@@ -1,4 +1,4 @@
-#include "taudb_api.h"
+#include "taudb_internal.h"
 #include <string.h>
 #include <ctype.h>
 #include <stdio.h>
