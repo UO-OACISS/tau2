@@ -25,6 +25,8 @@
 #include <stdio.h>
 #include <mpi.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <signal.h>
 
 #include <string.h>
 
@@ -1493,6 +1495,9 @@ int errorcode;
   TAU_PROFILE_TIMER(tautimer, "MPI_Abort()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  if (TauEnv_get_track_signals()) {
+    kill(getpid(), SIGABRT);
+  }
   TAU_TRACK_COMM(comm);
   TAU_PROFILE_EXIT("MPI_Abort");
   returnVal = PMPI_Abort( comm, errorcode );
@@ -1723,7 +1728,9 @@ char *** argv;
   
   returnVal = PMPI_Init( argc, argv );
 #ifndef TAU_WINDOWS
-  Tau_sampling_init_if_necessary();
+  if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_init_if_necessary();
+  }
 #endif /* TAU_WINDOWS */
 #ifndef TAU_DISABLE_SIGUSR
   Tau_signal_initialization(); 
