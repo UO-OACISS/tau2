@@ -14,6 +14,7 @@ import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.TAUdbDatabaseAPI;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.UtilFncs;
+import edu.uoregon.tau.perfdmf.SnapshotDataSource;
 
 public class LoadTrial {
 
@@ -173,8 +174,8 @@ public class LoadTrial {
         }
 
         try {
-            if (databaseAPI.db().getSchemaVersion()>=0) {
-            	dataSource.setMeanIncludeNulls(false);
+		    // generate all the statistics - unless we already have them!
+            if (databaseAPI.db().getSchemaVersion()>=0 && !(dataSource instanceof SnapshotDataSource)) {
             	dataSource.setGenerateTAUdbStatistics(true);
             }
             dataSource.load();
