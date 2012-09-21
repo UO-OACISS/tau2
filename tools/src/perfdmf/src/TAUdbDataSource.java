@@ -30,7 +30,64 @@ public class TAUdbDataSource extends DataSource {
         return;
     }
 
-
+    private Thread makeDerivedThread(int nodeID) {
+		int numMetrics = this.getNumberOfMetrics();
+		//Thread firstThread = getAllThreads().get(0);
+		Thread current = null;
+		switch (nodeID) {
+			case -1:
+				if (meanDataNoNull == null) {
+					meanDataNoNull = new Thread(-1, -1, -1, numMetrics, this);
+    		        //addDerivedSnapshots(firstThread, meanDataNoNull);
+				}
+				current = meanDataNoNull;
+				break;
+			case -2:
+				  if (totalData == null) {
+				    totalData = new Thread(-2, -2, -2, numMetrics, this);
+    		        //addDerivedSnapshots(firstThread, totalData);
+				  }
+				  current = totalData;
+				  break;
+			    case -3:
+				  if (stddevDataNoNull == null) {
+				    stddevDataNoNull = new Thread(-3, -3, -3, numMetrics, this);
+    		        //addDerivedSnapshots(firstThread, stddevDataNoNull);
+				  }
+				  current = stddevDataNoNull;
+				  break;
+			    case -4:
+				  if (minData == null) {
+				    minData = new Thread(-4, -4, -4, numMetrics, this);
+    		        //addDerivedSnapshots(firstThread, minData);
+				  }
+				  current = minData;
+				  break;
+			    case -5:
+				  if (maxData == null) {
+				    maxData = new Thread(-5, -5, -5, numMetrics, this);
+    		        //addDerivedSnapshots(firstThread, maxData);
+				  }
+				  current = maxData;
+				  break;
+			    case -6:
+				  if (meanDataAll == null) {
+				    meanDataAll = new Thread(-6, -6, -6, numMetrics, this);
+    		        //addDerivedSnapshots(firstThread, meanDataAll);
+				  }
+				  current = meanDataAll;
+				  break;
+			    case -7:
+				  if (stddevDataAll == null) {
+				    stddevDataAll = new Thread(-7, -7, -7, numMetrics, this);
+    		        //addDerivedSnapshots(firstThread, stddevDataAll);
+				  }
+				  current = stddevDataAll;
+				  break;
+		      }
+			  return current;
+			  }
+	
     private void fastGetIntervalEventData(int trialID, Map<Integer, Function> ieMap, Map<Integer, Metric> metricMap) throws SQLException {
         int numMetrics = getNumberOfMetrics();
         DB db = databaseAPI.getDb();
@@ -42,7 +99,8 @@ public class TAUdbDataSource extends DataSource {
           "left outer join " + db.getSchemaPrefix() + "timer_callpath cp on tcd.timer_callpath = cp.id " + 
           "left outer join " + db.getSchemaPrefix() + "timer t on cp.timer = t.id " + 
           "left outer join " + db.getSchemaPrefix() + "thread h on tcd.thread = h.id " + 
-          "where h.node_rank > -1 and t.trial = " + trialID;
+          "where t.trial = " + trialID;
+          //"where h.node_rank > -1 and t.trial = " + trialID;
 
         /*
          1 - timer
@@ -74,7 +132,13 @@ public class TAUdbDataSource extends DataSource {
             int contextID = resultSet.getInt(4);
             int threadID = resultSet.getInt(5);
 
-            Thread thread = addThread(nodeID, contextID, threadID);
+            Thread thread = null;
+            if (nodeID >= 0) {
+              thread = addThread(nodeID, contextID, threadID);
+			} else {
+              thread = makeDerivedThread(nodeID);
+			}
+
             FunctionProfile functionProfile = thread.getFunctionProfile(function);
 
             if (functionProfile == null) {
@@ -98,6 +162,15 @@ public class TAUdbDataSource extends DataSource {
         time = (System.currentTimeMillis()) - time;
         //System.out.println("Processing : " + time);
         //System.out.print(time + ", ");
+
+		derivedProvided = true;
+    	if(meanIncludeNulls){
+    		meanData=meanDataAll;
+    		stddevData=stddevDataAll;
+    	}else{
+    		meanData=meanDataNoNull;
+    		stddevData=stddevDataNoNull;
+    	}
 
         resultSet.close();
     }
@@ -159,6 +232,8 @@ public class TAUdbDataSource extends DataSource {
         // But, we need to compute other statistics anyway
         //TODO Deal with derived data.  Most of it will be saved in the DB?
         generateDerivedData();
+
+		// get the stats
     }
 
 }

@@ -214,10 +214,11 @@ void taudb_close_transaction(TAUDB_CONNECTION *connection) {
 #endif
 }
 
-boolean gzipInflate( char* compressedBytes, int length, char* uncompressedBytes ) {  
+boolean gzipInflate( char* compressedBytes, int length, char** uncompressedBytes ) {  
   
-  if ( strlen(compressedBytes) == 0 ) {  
-    uncompressedBytes = compressedBytes ;  
+  if ( length == 0 ) {
+	/* return null pointer if there's nothing to decompress */
+    *uncompressedBytes = 0;  
     return TRUE ;  
   }  
   
@@ -236,8 +237,9 @@ boolean gzipInflate( char* compressedBytes, int length, char* uncompressedBytes 
   
   boolean done = FALSE ;  
   
-  if (inflateInit2(&strm, (16+MAX_WBITS)) != Z_OK) {  
-    free( uncomp );  
+  if (inflateInit2(&strm, (32+MAX_WBITS)) != Z_OK) {  
+    free( uncomp );
+	fprintf(stderr, "Unable to inflateInit2\n");  
     return FALSE;  
   }  
   
@@ -269,10 +271,10 @@ boolean gzipInflate( char* compressedBytes, int length, char* uncompressedBytes 
     return FALSE;  
   }  
   
-  size_t i;
-  for ( i=0; i<strm.total_out; ++i ) {  
-    uncompressedBytes += uncomp[ i ];  
-  }  
+  char * result = malloc(strm.total_out * sizeof(char));
+  memcpy(result, uncomp, strm.total_out * sizeof(char));
+  *uncompressedBytes = result; 
+  
   free( uncomp );  
   return TRUE ;  
 }  
@@ -287,16 +289,16 @@ char* taudb_get_binary_value(void* result, int row, int column) {
  */
   int blen = PQgetlength(res, row, column);
   printf("tuple %d: got\n", row);
-  printf(" XML_METADATA_GZ = (%d bytes) ", blen);
-  char* gzipped = calloc(blen, sizeof(char));
-  int j;
-  for (j = 0; j < blen; j++) {
-    //printf("\\%03o", value[j]);
-	gzipped[j] = value[j];
-  }
-  //printf("\n\n");
+  printf(" XMAL_METADATA_GZ = (%d bytes) ", blen);
+ /*
+  * It turns out that Postgres doesn't return raw bytes; it returns a
+  * string consisting of '\x' followed by the characters of the hex
+  * representation of the bytes, so we need to convert back to bytes.
+  */	 
+  size_t length = 0;
+  unsigned char * unescaped = PQunescapeBytea(value, &length);
   char* expanded = NULL;
-  gzipInflate(gzipped, blen, expanded);
+  gzipInflate(unescaped, length, &expanded);
   printf("%s\n", expanded);
 #endif
   return (value);
