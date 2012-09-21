@@ -18,6 +18,7 @@ import java.util.Set;
  */
 public class TAUdbTrial {
 
+	public static final String[] TRIAL_COLUMNS =  {"name", "data_source", "node_count", "contexts_per_node", "threads_per_context", "total_threads"};
 	private TAUdbSession session = null;
 	private int id = 0; // database ID, zero indicates not set
 	private String name = null;
