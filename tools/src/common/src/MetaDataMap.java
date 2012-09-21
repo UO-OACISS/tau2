@@ -79,6 +79,9 @@ public class MetaDataMap {
 		
 		public MetaDataKey(String name) {
 			this.name = name;
+			this.timer_context = null;
+			this.call_number = 0;
+			this.timestamp = 0;
 		}
 
 		public int compareTo(Object arg0) {
@@ -191,6 +194,15 @@ public class MetaDataMap {
 		MetaDataValue value = theMap.get(key);
 		if (value != null) {
 			return value.value.toString();
+		} else {
+		// iterate? this is a horrible hack, but it works. IF you have performance
+		// problems, fix this somehow.
+			for (MetaDataKey key2 : theMap.keySet()) {
+				if (key2.name.equals(name)) {
+					value = theMap.get(key2);
+					return value.value.toString();
+				}
+			}
 		}
 		return nullValue;
 	}

@@ -61,7 +61,7 @@ public abstract class DataSource {
             "Gprof", "PSRun", "Tau pprof.dat", "Cube", "HPCToolkit", "ompP", "PERI-XML",
             "General Purpose Timing Library (GPTL)", "Paraver", "IPM", "Google PerfTools", "Cube 3 (Old parser)" };
 
-    private static boolean meanIncludeNulls = true;
+    protected static boolean meanIncludeNulls = true;
 
     private boolean userEventsPresent = false;
     private boolean callPathDataPresent = false;
@@ -696,7 +696,7 @@ public abstract class DataSource {
 
     }
 
-    private void addDerivedSnapshots(Thread thread, Thread derivedThread) {
+    protected void addDerivedSnapshots(Thread thread, Thread derivedThread) {
         if (wellBehavedSnapshots) {
 
             derivedThread.setStartTime(avgStartTime);
