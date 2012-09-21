@@ -47,6 +47,8 @@ import java.util.Date;
 import javax.swing.*;
 import javax.swing.text.NumberFormatter;
 
+import edu.uoregon.tau.perfdmf.taudb.TAUdbTrial;
+
 
 
 public class ViewCreatorGUI extends JFrame implements ActionListener{
@@ -107,6 +109,8 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 	 static final String ALL="and";
 	 static final String METADATA = "METADATA";
 	 static final String READ_TYPE = "Read Type";
+	 
+
 	 
 	private JPanel panel;
 	private JPanel rulePane;
@@ -203,7 +207,12 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 			System.out.println("VALUE: "+rule.getValue());
 			System.out.println("OP: "+rule.getOperator());
 			System.out.println("TABLE: "+rule.getTable_name());
-			viewCreator.saveViewParameter(viewID, rule.getTable_name(), rule.getColumn_name(), rule.getOperator(), rule.getValue());
+			if(rule.getOperator().equals(NUMBER_RANGE)){
+				   viewCreator.saveViewParameter(viewID, rule.getTable_name(), rule.getColumn_name(),">=", rule.getValue());
+				   viewCreator.saveViewParameter(viewID, rule.getTable_name(), rule.getColumn_name(), "<=", rule.getValue2());
+			}else{
+			   viewCreator.saveViewParameter(viewID, rule.getTable_name(), rule.getColumn_name(), rule.getOperator(), rule.getValue());
+			}
 		}
 
 		
@@ -237,7 +246,8 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 	
 	public void createNewRule() {
 
-		String[] comparatorTypes = {STRING,NUMBER, DATE};
+		//String[] comparatorTypes = {STRING,NUMBER, DATE};
+		String[] comparatorTypes = {STRING,NUMBER};
 
     	JPanel cards;
         JPanel comboBoxPane = new JPanel(); //use FlowLayout
@@ -251,9 +261,10 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         RuleListener listener = new RuleListener();
         ruleListeners.add(listener);
         cb.addActionListener(listener);
+       
         cards.add(addStringField(listener), STRING);
         cards.add(addNumberField(listener),NUMBER);
-        cards.add(addDateField(), DATE);
+//        cards.add(addDateField(), DATE);
         
         
         ViewCreatorListner listner = new ViewCreatorListner(cards);
@@ -282,11 +293,12 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         rulePane.add(comboBoxPane);
 	}
     private String[] getMetaDataList() {
-		//List of names should be looked up in database
-//    	String[] returnS = {"Aplication","CPU Cores","Username"};
     	String[] returnS = new String[0];
-    	returnS = viewCreator.getMetadataNames().toArray(returnS);
-		return returnS;
+    	List<String> names = viewCreator.getMetadataNames();
+    	for (String s:TAUdbTrial.TRIAL_COLUMNS )
+    		names.add(s);
+    		
+		return names.toArray(returnS);
 	}
     private Component addNumberField(RuleListener listener){
         //Put the JComboBox in a JPanel to get a nicer look.
@@ -295,7 +307,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         JComboBox cb = new JComboBox(comboBoxItems);
         cb.addActionListener(listener);
         cb.setEditable(false);
-        cb.setSelectedIndex(0);
+        //cb.setSelectedIndex(0);
         
         
         //Create the "cards".
@@ -417,7 +429,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         String comboBoxItems[] = {STRING_EXACTLY,STRING_BEGINS, STRING_ENDS, STRING_CONTAINS};
         JComboBox cb = new JComboBox(comboBoxItems);
         cb.setEditable(false);
-        cb.setName(STRING);
+      //  cb.setName(STRING);
         cb.addActionListener(listener);
         cb.setSelectedIndex(0);
         

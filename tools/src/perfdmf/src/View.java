@@ -321,12 +321,12 @@ public class View implements Serializable {
 					conjoin = " " + results.getString(1) + " ";
 				}
 				if (tableName.equalsIgnoreCase("trial")) {
-					whereClause.append(conjoin + tableName + "." + columnName + " " + operator + " " + "'" + value + "'");
+					whereClause.append(conjoin +   "t." + columnName + " " + operator + " " + "'" + value + "'");
 				} else {
 					// otherwise, we have primary_metadata or secondary_metadata
 					joinClause.append(" left outer join " + tableName + " t" + alias + " on t.id = t" + alias + ".trial");
 					whereClause.append(conjoin + "t" + alias + ".name = '" + columnName + "' ");
-					whereClause.append("and  t" + alias + ".value = '" + value + "' ");
+					whereClause.append("and  t" + alias + ".value "+operator+" '" + value + "' ");
 				}
 				alias++;
 				currentView = viewid;
