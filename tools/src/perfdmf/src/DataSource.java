@@ -984,13 +984,23 @@ public abstract class DataSource {
     		// must always iterate through all metrics regardless to find the top level timers, I think???
     		for (int i = startMetric; i <= endMetric; i++) { // for each metric
     			double topLevelInclSum[] = new double[numMetrics];
-    			for (Iterator<Thread> it = allThreads.iterator(); it.hasNext();) { // for each thread
-    				Thread thread = it.next();
-    				if (wellBehavedSnapshots) {
-    					topLevelInclSum[i] += thread.getMaxInclusive(i, snapshot);
-    				} else { // pick the last from each thread
-    					topLevelInclSum[i] += thread.getMaxInclusive(i, thread.getNumSnapshots() - 1);
-    				}
+    			if (derivedProvided) {
+    				// the totalData thread doesn't have max values set (yet), so let's find it
+					topLevelInclSum[i] = 0.0;
+    	    		for (Iterator<Function> l = this.getFunctionIterator(); l.hasNext();) { // for each function
+    	    			Function function = l.next();
+    	    			FunctionProfile totalProfile = totalData.getFunctionProfile(function);
+    	    			topLevelInclSum[i] = java.lang.Math.max(topLevelInclSum[i], totalProfile.getInclusive(i));
+    	    		}
+    			} else {
+	    			for (Iterator<Thread> it = allThreads.iterator(); it.hasNext();) { // for each thread
+	    				Thread thread = it.next();
+	    				if (wellBehavedSnapshots) {
+	    					topLevelInclSum[i] += thread.getMaxInclusive(i, snapshot);
+	    				} else { // pick the last from each thread
+	    					topLevelInclSum[i] += thread.getMaxInclusive(i, thread.getNumSnapshots() - 1);
+	    				}
+	    			}
     			}
 
     			totalData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
