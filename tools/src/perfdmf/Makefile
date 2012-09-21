@@ -18,12 +18,13 @@ LOADER_SOURCES=$(wildcard $(SRC_PATH)/loader/*.java)
 DSS_SOURCES=$(wildcard $(SRC_PATH)/*.java)
 ANALYSIS_SOURCES=$(wildcard $(SRC_PATH)/analysis/*.java)
 VIEWCREATOR_SOURCES=$(wildcard $(SRC_PATH)/viewcreator/*.java)
+TAUDB_SOURCES=$(wildcard $(SRC_PATH)/taudb/*.java)
 EXAMPLE_CLASSES=./src/examples/*.class
 EXAMPLE_SOURCES=./src/examples/*.java
 
 JAVAC=javac
 
-SOURCES = $(DATABASE_SOURCES) $(DSS_SOURCES) $(LOADER_SOURCES) $(ANALYSIS_SOURCES) $(VIEWCREATOR_SOURCES)
+SOURCES = $(DATABASE_SOURCES) $(DSS_SOURCES) $(LOADER_SOURCES) $(ANALYSIS_SOURCES) $(TAUDB_SOURCES) $(VIEWCREATOR_SOURCES) 
 CLASSES = $(subst ./src/, ./classes/, $(patsubst %.java, %.class, $(SOURCES)))
 
 # We only want to use Java 1.5
