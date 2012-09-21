@@ -288,8 +288,10 @@ char* taudb_get_binary_value(void* result, int row, int column) {
  * include embedded nulls so we have to pay attention to field length.
  */
   int blen = PQgetlength(res, row, column);
+#ifdef TAUDB_DEBUG
   printf("tuple %d: got\n", row);
-  printf(" XMAL_METADATA_GZ = (%d bytes) ", blen);
+  printf(" XML_METADATA_GZ = (%d bytes) ", blen);
+#endif
  /*
   * It turns out that Postgres doesn't return raw bytes; it returns a
   * string consisting of '\x' followed by the characters of the hex
@@ -299,9 +301,13 @@ char* taudb_get_binary_value(void* result, int row, int column) {
   unsigned char * unescaped = PQunescapeBytea(value, &length);
   char* expanded = NULL;
   gzipInflate(unescaped, length, &expanded);
-  printf("%s\n", expanded);
+  PQfreemem(expanded);
+#ifdef TAUDB_DEBUG
+  printf("%s\n\n", expanded);
 #endif
-  return (value);
+#endif
+  char * retVal = strdup(expanded);
+  return (retVal);
 }
 
 
