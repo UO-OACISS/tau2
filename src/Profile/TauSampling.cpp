@@ -260,10 +260,6 @@ unsigned long get_pc(void *p) {
 #ifdef sun
   issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on solaris\n");
   return 0;
-  //#elif defined(TAU_BGQ)
-  // uc_mcontext->ss.srr0 *may* be the way forward.
-  //  issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not currently work on BGQ\n");
-  //  return 0;
 #elif __APPLE__
   issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on apple\n");
   return 0;
@@ -1220,12 +1216,19 @@ int Tau_sampling_event_stop(int tid, double *stopTime) {
  * Sample Handling
  ********************************************************************/
 void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
+  // DO THIS CHECK FIRST! otherwise, the RtsLayer::myThread() call will barf.
+  if (collectingSamples == 0) {
+    // Do not track counts when sampling is not enabled.
+    //TAU_VERBOSE("Tau_sampling_handle_sample: sampling not enabled\n");
+    return;
+  }
+
   int tid = RtsLayer::myThread();
   /* *CWL* too fine-grained for anything but debug.
   TAU_VERBOSE("Tau_sampling_handle_sample: tid=%d got sample [%p]\n",
   	      tid, (unsigned long)pc);
   */
-  if (samplingEnabled[tid] == 0 || collectingSamples == 0) {
+  if (samplingEnabled[tid] == 0) {
     // Do not track counts when sampling is not enabled.
     //TAU_VERBOSE("Tau_sampling_handle_sample: sampling not enabled\n");
     return;
@@ -1242,6 +1245,8 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
     samplesDroppedSuspended[tid]++;
     return;
   }
+  // disable sampling until we handle this sample
+  suspendSampling[tid] = 1;
 
   Tau_global_incr_insideTAU_tid(tid);
   if (TauEnv_get_tracing()) {
@@ -1252,6 +1257,8 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
     Tau_sampling_handle_sampleProfile(pc, context);
   }
   Tau_global_decr_insideTAU_tid(tid);
+  // re-enable sampling 
+  suspendSampling[tid] = 0;
 }
 
 extern "C" void TauMetrics_internal_alwaysSafeToGetMetrics(int tid, double values[]);
@@ -1316,22 +1323,6 @@ int Tau_sampling_init(int tid) {
   int ret;
 
   static struct itimerval itval;
-
-#ifdef TAU_BGQ
-  static bool warningPrinted = false;
-  // *CWL* - Vesta is having issues translating PC addresses now.
-  //         This warning is issued as a part of a punt for EBS
-  //         support on the BGQ for the August 2012 release.
-  //
-  //         Please remove this check after the problem is fixed.
-  int myNode = RtsLayer::TheNode();
-  if ((myNode <= 0) && (tid == 0)) {
-    // Only one process will print this warning exactly once on thread 0. (Node 0 or -1).
-    printf("Warning: No current EBS support for the BlueGene/Q. No Samples will be recorded.\n");
-    warningPrinted = true;
-    return -1;
-  }
-#endif /* TAU_BGQ */
 
   Tau_global_incr_insideTAU_tid(tid);
 
