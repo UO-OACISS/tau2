@@ -1146,6 +1146,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
         				System.out.print("Primary Metadata Fields Processed: " + count);
 		        		System.out.print(", executing batch... ");
 	        			stmt.executeBatch();
+		        		System.out.println("done.");
 	        			stmt.close();
 	    		        stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
 	    		                + "secondary_metadata (id, trial, name, value, parent, is_array) VALUES (?, ?, ?, ?, ?, ?)");
@@ -1156,6 +1157,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 						if (count > 1) {
 		        		  System.out.print(", executing batch... ");
 	        			  stmt.executeBatch();
+		        		  System.out.println("done.");
 						}
 	        			stmt.close();
 	        		}
