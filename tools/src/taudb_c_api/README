@@ -13,5 +13,13 @@ Notes:
 - You will need to set the path to the PostgreSQL header and library
   in Makefile.inc.
 
-- To use the test database, modify the perfdmf.cfg.test file in the db
-  directory.
+Building:
+
+- Modify the settings in Makefile.inc as necessary
+- run "make"
+
+Testing:
+
+- To use the test database, modify the Makefile.inc fields TEST_CONFIG and
+  TEST_TRIAL_ID.
+- run "make test"

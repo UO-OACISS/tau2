@@ -305,7 +305,6 @@ char* taudb_get_binary_value(void* result, int row, int column) {
 #ifdef TAUDB_DEBUG
   printf("%s\n\n", expanded);
 #endif
-#endif
   char * retVal = strdup(expanded);
   return (retVal);
 }
