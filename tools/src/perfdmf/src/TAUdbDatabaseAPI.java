@@ -1138,14 +1138,25 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 	        		if (obj.getClass() == LinkedHashMap.class) {
 	        			Map<String, Object> map = (LinkedHashMap<String,Object>)obj;
 	    		        stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
-	    		                + "secondary_metadata (id, trial, name, value, parent, is_array) VALUES (?, ?, ?, ?, ?, ?)");
+	    		                + "primary_metadata (trial, name, value) VALUES (?, ?, ?)");
 	    		        int count = 0;
+	        			for (Map.Entry<String, Object> entry : map.entrySet()) {
+	        				count = processPrimaryElement(stmt, entry, null, trialID);
+	        			}
+        				System.out.print("Primary Metadata Fields Processed: " + count);
+		        		System.out.print(", executing batch... ");
+	        			stmt.executeBatch();
+	        			stmt.close();
+	    		        stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
+	    		                + "secondary_metadata (id, trial, name, value, parent, is_array) VALUES (?, ?, ?, ?, ?, ?)");
 	        			for (Map.Entry<String, Object> entry : map.entrySet()) {
 	        				count = processElement(stmt, entry, null, trialID);
 	        			}
-        				System.out.print("Metadata Fields Processed: " + count);
-		        		System.out.print(", executing batch... ");
-	        			stmt.executeBatch();
+        				System.out.print("Secondary Metadata Fields Processed: " + count);
+						if (count > 1) {
+		        		  System.out.print(", executing batch... ");
+	        			  stmt.executeBatch();
+						}
 	        			stmt.close();
 	        		}
 	        		//prof.stopCollecting();
@@ -1222,6 +1233,38 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 		        	stmt.setString(5, parent);
 		        }
 		        stmt.setBoolean(6, (value.getClass() == ArrayList.class));
+		        stmt.addBatch();
+		        count++;
+			}
+		}
+		return count;
+	}
+
+	private static int processPrimaryElement(PreparedStatement stmt, Entry<String, Object> entry,
+			String parent, int trialID) throws SQLException {
+		int count = 0;
+		String key = entry.getKey();
+		Object value = entry.getValue();
+		String myID = UUID.randomUUID().toString();
+        // handle special case of top-level metadata with no value
+		if (value == null && parent == null) {
+	        stmt.setInt(1, trialID);
+	        stmt.setString(2, key);
+	        stmt.setString(3, "false");
+	        stmt.addBatch();
+	        count++;
+	    // second case, nested metadata with null value
+		} else if (value == null) {
+			// skip it.
+		} else {
+			// is there an inner object?
+			if (value.getClass() == LinkedHashMap.class) {
+			    // skip it.
+			// this is a regular value, could be nested.
+			} else {
+		        stmt.setInt(1, trialID);
+		        stmt.setString(2, key);
+		        stmt.setString(3, value.toString());
 		        stmt.addBatch();
 		        count++;
 			}
