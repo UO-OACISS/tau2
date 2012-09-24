@@ -1241,7 +1241,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 						dataset.addValue(row.value, shortName(row.series), row.categoryInteger);
 						s.add(row.categoryInteger.doubleValue(), row.value);
 					} else {
-						dataset.addValue(Double.parseDouble(row.categoryString), shortName(row.series), new Double(row.value));
+						dataset.addValue(new Double(row.value), shortName(row.series), Double.parseDouble(row.categoryString));
 						s.add(Double.parseDouble(row.categoryString), row.value);
 					}
 				}
