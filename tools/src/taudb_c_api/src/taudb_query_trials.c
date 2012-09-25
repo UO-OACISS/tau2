@@ -27,36 +27,36 @@ boolean taudb_private_primary_metadata_from_xml(TAUDB_TRIAL * trial, char * xml)
 	/* Initialize libxml and verify installed library is compatible with headers used */
 	LIBXML_TEST_VERSION;
 
+#ifdef TAUDB_DEBUG
+    printf("parsing xml: %s\n\n", xml);
+#endif
+
 	xmlDocPtr doc;
-	printf("%s\n\n", xml);
 	doc = xmlReadMemory(xml, strlen(xml), "noname.xml", NULL, XML_PARSE_RECOVER | XML_PARSE_NONET);
 	if(doc == NULL) {
 		fprintf(stderr, "Unable to parse XML metadata\n");
+        xmlCleanupParser();
 		return FALSE;
 	}
 	
 	xmlNodePtr metadata_tag = taudb_private_find_xml_child_named(xmlDocGetRootElement(doc), "metadata");
 	if(metadata_tag == NULL) {
+        xmlFreeDoc(doc);
+        xmlCleanupParser();
 		return FALSE;
 	}
 	xmlNodePtr common_profile_attributes_tag = taudb_private_find_xml_child_named(metadata_tag, "CommonProfileAttributes");
 	if(common_profile_attributes_tag == NULL) {
+        xmlFreeDoc(doc);
+        xmlCleanupParser();
 		return FALSE;
 	}
 	
-	/* Count the number of attributes under CommonProfileAttributes */
 	xmlNodePtr cur_node;
-	size_t num_attributes = 0;
+    size_t i = 0;
+    trial->primary_metadata = NULL;
 	for(cur_node = common_profile_attributes_tag->children; cur_node != NULL; cur_node = cur_node -> next) {
-		if(xmlStrcmp(cur_node->name,"attribute") == 0) {
-			num_attributes++;
-		}
-	}
-	trial->primary_metadata = taudb_create_primary_metadata(num_attributes);
-	trial->primary_metadata_count = num_attributes;
-	size_t i = 0;
-	for(cur_node = common_profile_attributes_tag->children; cur_node != NULL; cur_node = cur_node -> next) {
-		if(xmlStrcmp(cur_node->name,"attribute") == 0) {
+		if(xmlStrcmp(cur_node->name,(unsigned char *)"attribute") == 0) {
 			xmlNodePtr name_tag  = taudb_private_find_xml_child_named(cur_node, "name");
 			xmlNodePtr value_tag = taudb_private_find_xml_child_named(cur_node, "value");
 			if(name_tag != NULL && value_tag != NULL) {
@@ -65,12 +65,18 @@ boolean taudb_private_primary_metadata_from_xml(TAUDB_TRIAL * trial, char * xml)
 #ifdef TAUDB_DEBUG
 				printf("Adding metadata %s : %s\n", name_str, value_str);
 #endif
-				trial->primary_metadata[i].name  = taudb_create_and_copy_string(name_str);
-				trial->primary_metadata[i].value = taudb_create_and_copy_string(value_str);
-				i++;
+                TAUDB_PRIMARY_METADATA * primary_metadata = taudb_create_primary_metadata(1);
+				primary_metadata->name  = taudb_create_and_copy_string((char *)name_str);
+				primary_metadata->value = taudb_create_and_copy_string((char *)value_str);
+                HASH_ADD_KEYPTR(hh, trial->primary_metadata, primary_metadata->name, strlen((char *)name_str), primary_metadata);
+                xmlFree(name_str);
+                xmlFree(value_str);
+                i++;
 			}
 		}
 	}
+
+    trial->primary_metadata_count = i;
 	
 	xmlFreeDoc(doc);
 	xmlCleanupParser();

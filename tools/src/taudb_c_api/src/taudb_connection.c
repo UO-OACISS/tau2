@@ -280,7 +280,7 @@ boolean gzipInflate( char* compressedBytes, int length, char** uncompressedBytes
 }  
 
 char* taudb_get_binary_value(void* result, int row, int column) {
-  char* value;
+  char* value, * retVal;
 #ifdef __TAUDB_POSTGRESQL__
   PGresult* res = (PGresult*)result;
   value = PQgetvalue(res, row, column);
@@ -305,7 +305,8 @@ char* taudb_get_binary_value(void* result, int row, int column) {
 #ifdef TAUDB_DEBUG
   printf("%s\n\n", expanded);
 #endif
-  char * retVal = strdup(expanded);
+  retVal = strdup(expanded);
+#endif
   return (retVal);
 }
 
