@@ -3839,9 +3839,15 @@ then
         ;;
   bgp)
 	mpiinc=/bgsys/drivers/ppcfloor/comm/xl/include
+        if [ $cxx_compiler = mpicxx ]; then
+	  mpiinc=/bgsys/drivers/ppcfloor/comm/include
+        fi
         ;;
   bgq)
 	mpiinc=/bgsys/drivers/ppcfloor/comm/xl/include
+        if [ $cxx_compiler = mpicxx ]; then
+	  mpiinc=/bgsys/drivers/ppcfloor/comm/include
+        fi
         ;;
   t3e|crayx1|craysv1)
 	mpiinc=/opt/ctl/mpt/mpt/include
@@ -4025,10 +4031,16 @@ then
         ;;
   bgp)
         mpilib=/bgsys/drivers/ppcfloor/comm/xl/lib
+        if [ $cxx_compiler = mpicxx ]; then
+	  mpilib=/bgsys/drivers/ppcfloor/comm/lib
+        fi
 	additional_mpilibs='-ldcmfcoll.cnk -ldcmf.cnk -lpthread -L/bgsys/drivers/ppcfloor/runtime/SPI -lSPI.cna' 
 	;;
   bgq)
         mpilib=/bgsys/drivers/ppcfloor/comm/xl/lib
+        if [ $cxx_compiler = mpicxx ]; then
+	  mpilib=/bgsys/drivers/ppcfloor/comm/lib
+        fi
 	#additional_mpilibs='-ldcmfcoll.cnk -ldcmf.cnk -lpthread -L/bgsys/drivers/ppcfloor/runtime/SPI -lSPI.cna' 
 	additional_mpilibs='-L/bgsys/drivers/ppcfloor/gnu-linux/powerpc64-bgq-linux/lib -lc -lnss_files -lnss_dns -lresolv'
 	;;
