@@ -4,13 +4,6 @@
 #include "dump_functions.h"
 
 void dump_metadata(TAUDB_PRIMARY_METADATA *metadata, int count) {
-/*
-   int j;
-   printf("%d metadata fields:\n", count);
-   for (j = 0 ; j < count ; j = j+1) {
-      printf("  %s = %s\n", metadata[j].name, metadata[j].value);
-   }
-*/
    printf("%d metadata fields:\n", count);
    TAUDB_PRIMARY_METADATA * cur;
    for(cur = metadata; cur != NULL; cur = cur->hh.next) {

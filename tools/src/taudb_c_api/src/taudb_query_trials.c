@@ -32,6 +32,9 @@ boolean taudb_private_primary_metadata_from_xml(TAUDB_TRIAL * trial, char * xml)
 #endif
 
 	xmlDocPtr doc;
+#ifdef TAUDB_DEBUG_DEBUG
+	printf("%s\n\n", xml);
+#endif
 	doc = xmlReadMemory(xml, strlen(xml), "noname.xml", NULL, XML_PARSE_RECOVER | XML_PARSE_NONET);
 	if(doc == NULL) {
 		fprintf(stderr, "Unable to parse XML metadata\n");
@@ -135,26 +138,20 @@ TAUDB_TRIAL* taudb_private_query_trials(TAUDB_CONNECTION* connection, boolean fu
         continue;
       } else if (strcmp(taudb_get_column_name(res, j), "xml_metadata_gz") == 0) {
         char* value = taudb_get_binary_value(res, i, j);
+#ifdef TAUDB_DEBUG_DEBUG
 		printf("%s\n\n", value);
+#endif
         taudb_private_primary_metadata_from_xml(&(trials[i]), value);
         continue;
-      } else {
-        //trials[i].primary_metadata[metaIndex].name = taudb_create_and_copy_string(taudb_get_column_name(res, j));
-        //trials[i].primary_metadata[metaIndex].value = taudb_create_and_copy_string(taudb_get_value(res,i,j));
-        //metaIndex++;
       }
     } 
-    //trials[i].primary_metadata_count = metaIndex;
-    //trials[i].primary_metadata_count = 0;
   }
 
   taudb_clear_result(res);
   taudb_close_transaction(connection);
 
   for (i = 0 ; i < nRows ; i++) {
-    if (taudb_version == TAUDB_2005_SCHEMA) {
-	  fprintf(stderr,"Did not load the PerfDMF metadata...\n");
-	} else {
+    if (taudb_version != TAUDB_2005_SCHEMA) {
       trials[i].primary_metadata = taudb_query_primary_metadata(connection, &(trials[i]));
       trials[i].primary_metadata_count = taudb_numItems;
 	}
