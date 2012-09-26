@@ -302,11 +302,12 @@ char* taudb_get_binary_value(void* result, int row, int column) {
   char* expanded = NULL;
   gzipInflate(unescaped, length, &expanded);
   PQfreemem(expanded);
+#endif
+
 #ifdef TAUDB_DEBUG
   printf("%s\n\n", expanded);
 #endif
   retVal = strdup(expanded);
-#endif
   return (retVal);
 }
 

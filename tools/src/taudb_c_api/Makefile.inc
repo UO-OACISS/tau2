@@ -27,7 +27,7 @@ TAUDB_DATABASE_DEFINE="-D__TAUDB_POSTGRESQL__"
 
 # MacBook Air
 PQDIR=/Library/PostgreSQL/9.2
-POSTGRESQL_INCLUDES=$(TAUDB_DATABASE_DEFINE)  -I$(PQDIR)/include
+POSTGRESQL_INCLUDES=$(TAUDB_DATABASE_DEFINE)  -I$(PQDIR)/include -I/usr/include/libxml2
 POSTGRESQL_LIBRARIES=-L/usr/lib -L$(PQDIR)/lib -lpq -lz -lxml2
 
 # Paratools03
