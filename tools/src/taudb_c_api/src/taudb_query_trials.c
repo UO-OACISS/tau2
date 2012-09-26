@@ -27,14 +27,11 @@ boolean taudb_private_primary_metadata_from_xml(TAUDB_TRIAL * trial, char * xml)
 	/* Initialize libxml and verify installed library is compatible with headers used */
 	LIBXML_TEST_VERSION;
 
-#ifdef TAUDB_DEBUG
-    printf("parsing xml: %s\n\n", xml);
+#ifdef TAUDB_DEBUG_DEBUG
+    //printf("parsing xml: %s\n\n", xml);
 #endif
 
 	xmlDocPtr doc;
-#ifdef TAUDB_DEBUG_DEBUG
-	printf("%s\n\n", xml);
-#endif
 	doc = xmlReadMemory(xml, strlen(xml), "noname.xml", NULL, XML_PARSE_RECOVER | XML_PARSE_NONET);
 	if(doc == NULL) {
 		fprintf(stderr, "Unable to parse XML metadata\n");
@@ -99,15 +96,15 @@ TAUDB_TRIAL* taudb_private_query_trials(TAUDB_CONNECTION* connection, boolean fu
   /*
    * Fetch rows from table_name, the system catalog of databases
    */
-#ifdef TAUDB_DEBUG
-  printf("%s\n", my_query);
-#endif
   res = taudb_execute_query(connection, my_query);
 
   int nRows = taudb_get_num_rows(res);
   TAUDB_TRIAL* trials = taudb_create_trials(nRows);
 
   nFields = taudb_get_num_columns(res);
+#ifdef TAUDB_DEBUG
+  printf("Found %d rows, %d columns\n", nRows, nFields);
+#endif
 
   /* the rows */
   for (i = 0; i < taudb_get_num_rows(res); i++)
@@ -138,9 +135,6 @@ TAUDB_TRIAL* taudb_private_query_trials(TAUDB_CONNECTION* connection, boolean fu
         continue;
       } else if (strcmp(taudb_get_column_name(res, j), "xml_metadata_gz") == 0) {
         char* value = taudb_get_binary_value(res, i, j);
-#ifdef TAUDB_DEBUG_DEBUG
-		printf("%s\n\n", value);
-#endif
         taudb_private_primary_metadata_from_xml(&(trials[i]), value);
         continue;
       }

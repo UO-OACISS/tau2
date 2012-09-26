@@ -15,7 +15,11 @@ void taudb_exit_nicely(TAUDB_CONNECTION* connection) {
 }
 
 TAUDB_CONNECTION* taudb_connect(char* host, char* port, char* database, char* login, char* password) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("calling taudb_connect()\n");
+#endif
   TAUDB_CONNECTION* taudb_connection = (TAUDB_CONNECTION*)malloc(sizeof (TAUDB_CONNECTION));
+  taudb_connection->inTransaction = FALSE;
 #ifdef __TAUDB_POSTGRESQL__
   char* pgoptions = NULL;
   char* pgtty = NULL;
@@ -37,13 +41,16 @@ TAUDB_CONNECTION* taudb_connect(char* host, char* port, char* database, char* lo
 
   /* get the data sources, if available */
   if (taudb_connection->schema_version == TAUDB_2012_SCHEMA) {
-    taudb_query_data_sources(taudb_connection);
+    //taudb_query_data_sources(taudb_connection);
   }
 
   return taudb_connection;
 }
 
 int taudb_check_connection(TAUDB_CONNECTION* connection) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("calling taudb_check_connection()\n");
+#endif
 #ifdef __TAUDB_POSTGRESQL__
   char* feedback;
   int status = PQstatus(connection->connection);
@@ -88,6 +95,9 @@ int taudb_check_connection(TAUDB_CONNECTION* connection) {
 }
 
 int taudb_disconnect(TAUDB_CONNECTION* connection) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("calling taudb_disconnect()\n");
+#endif
 #ifdef __TAUDB_POSTGRESQL__
   PQfinish(connection->connection);
 #endif
@@ -95,6 +105,9 @@ int taudb_disconnect(TAUDB_CONNECTION* connection) {
 }
 
 TAUDB_CONNECTION* taudb_connect_config(char* config_name) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("calling taudb_connect_config()\n");
+#endif
    const char* config_prefix = "perfdmf.cfg";
    const char* home = getenv("HOME");
    char config_file[256];
@@ -103,6 +116,9 @@ TAUDB_CONNECTION* taudb_connect_config(char* config_name) {
 }
 
 TAUDB_CONNECTION* taudb_connect_config_file(char* config_file_name) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("calling taudb_connect_config_file()\n");
+#endif
   TAUDB_CONFIGURATION* config = taudb_parse_config_file(config_file_name);
   TAUDB_CONNECTION* connection = taudb_connect(config->db_hostname, config->db_portnum, config->db_dbname, config->db_username, config->db_password);
   connection->configuration = config;
@@ -110,8 +126,19 @@ TAUDB_CONNECTION* taudb_connect_config_file(char* config_file_name) {
 }
 
 void taudb_begin_transaction(TAUDB_CONNECTION *connection) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("calling taudb_begin_transaction()\n");
+#endif
+  if (connection->inTransaction) {
+    printf("already in transaction!\n");
+    //taudb_close_transaction(connection);
+	//return;
+  }
 #ifdef __TAUDB_POSTGRESQL__
   PGresult   *res;
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("QUERY: '%s'\n", "BEGIN");
+#endif
   res = PQexec(connection->connection, "BEGIN");
   if (PQresultStatus(res) != PGRES_COMMAND_OK)
   {
@@ -124,16 +151,23 @@ void taudb_begin_transaction(TAUDB_CONNECTION *connection) {
    * memory leaks
    */
   PQclear(res);
+  connection->inTransaction = TRUE;
 #endif
 }
 
 void* taudb_execute_query(TAUDB_CONNECTION *connection, char* my_query) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("calling taudb_execute_query()\n");
+#endif
   void* result;
   const char* portal_string = "DECLARE myportal CURSOR FOR";
 #ifdef __TAUDB_POSTGRESQL__
   char* full_query = malloc(sizeof(char) * (strlen(my_query) + strlen(portal_string) + 2));
   sprintf(full_query, "%s %s", portal_string, my_query);
   PGresult   *res;
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("QUERY: '%s'\n", full_query);
+#endif
   res = PQexec(connection->connection, full_query);
   if (PQresultStatus(res) != PGRES_COMMAND_OK)
   {
@@ -143,6 +177,9 @@ void* taudb_execute_query(TAUDB_CONNECTION *connection, char* my_query) {
   }
   PQclear(res);
 
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("QUERY: '%s'\n", "FETCH ALL in myportal");
+#endif
   res = PQexec(connection->connection, "FETCH ALL in myportal");
   if (PQresultStatus(res) != PGRES_TUPLES_OK)
   {
@@ -194,6 +231,9 @@ char* taudb_get_value(void* result, int row, int column) {
 }
 
 void taudb_clear_result(void* result) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("calling taudb_clear_result()\n");
+#endif
 #ifdef __TAUDB_POSTGRESQL__
   PGresult* res = (PGresult*)result;
   PQclear(res);
@@ -202,19 +242,32 @@ void taudb_clear_result(void* result) {
 }
 
 void taudb_close_transaction(TAUDB_CONNECTION *connection) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("calling taudb_close_transaction()\n");
+#endif
 #ifdef __TAUDB_POSTGRESQL__
   PGresult* res;
   /* close the portal ... we don't bother to check for errors ... */
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("QUERY: '%s'\n", "CLOSE myportal");
+#endif
   res = PQexec(connection->connection, "CLOSE myportal");
   PQclear(res);
 
   /* end the transaction */
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("QUERY: '%s'\n", "END");
+#endif
   res = PQexec(connection->connection, "END");
   PQclear(res);
+  connection->inTransaction = FALSE;
 #endif
 }
 
 boolean gzipInflate( char* compressedBytes, int length, char** uncompressedBytes ) {  
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("calling gzipInflate()\n");
+#endif
   
   if ( length == 0 ) {
 	/* return null pointer if there's nothing to decompress */
@@ -280,6 +333,9 @@ boolean gzipInflate( char* compressedBytes, int length, char** uncompressedBytes
 }  
 
 char* taudb_get_binary_value(void* result, int row, int column) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("calling taudb_get_binary_value()\n");
+#endif
   char* value, * retVal;
 #ifdef __TAUDB_POSTGRESQL__
   PGresult* res = (PGresult*)result;
@@ -304,8 +360,8 @@ char* taudb_get_binary_value(void* result, int row, int column) {
   PQfreemem(expanded);
 #endif
 
-#ifdef TAUDB_DEBUG
-  printf("%s\n\n", expanded);
+#ifdef TAUDB_DEBUG_DEBUG
+  //printf("%s\n\n", expanded);
 #endif
   retVal = strdup(expanded);
   return (retVal);

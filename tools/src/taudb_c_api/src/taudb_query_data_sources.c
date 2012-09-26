@@ -18,6 +18,7 @@ TAUDB_DATA_SOURCE* taudb_query_data_sources(TAUDB_CONNECTION* connection) {
     return connection->data_sources_by_id;
   }
 
+  taudb_begin_transaction(connection);
   char my_query[256];
   sprintf(my_query,"select * from data_source");
 #ifdef TAUDB_DEBUG
@@ -27,10 +28,6 @@ TAUDB_DATA_SOURCE* taudb_query_data_sources(TAUDB_CONNECTION* connection) {
 
   int nRows = taudb_get_num_rows(res);
   taudb_numItems = nRows;
-
-  //TAUDB_DATA_SOURCE* data_sources = taudb_create_data_sources(taudb_numItems);
-  // NO! THE UThash will manage it.
-  TAUDB_DATA_SOURCE* data_sources = NULL;
 
   nFields = taudb_get_num_columns(res);
 
@@ -51,14 +48,14 @@ TAUDB_DATA_SOURCE* taudb_query_data_sources(TAUDB_CONNECTION* connection) {
         taudb_exit_nicely(connection);
       }
     } 
-    HASH_ADD(hh1, data_sources, id, sizeof(int), data_sources);
-    HASH_ADD_KEYPTR(hh2, data_sources, data_sources->name, strlen(data_sources->name), data_sources);
+    HASH_ADD(hh1, connection->data_sources_by_id, id, sizeof(int), data_source);
+    HASH_ADD_KEYPTR(hh2, connection->data_sources_by_name, data_source->name, strlen(data_source->name), data_source);
   }
 
   taudb_clear_result(res);
   taudb_close_transaction(res);
 
-  return (data_sources);
+  return (connection->data_sources_by_id);
 }
 
 TAUDB_DATA_SOURCE* taudb_get_data_source_by_id(TAUDB_DATA_SOURCE* data_sources, const int id) {
