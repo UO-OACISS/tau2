@@ -66,6 +66,7 @@ typedef struct taudb_connection {
 #endif
   TAUDB_SCHEMA_VERSION schema_version;
   int data_source_count;
+  boolean inTransaction;
   TAUDB_DATA_SOURCE* data_sources_by_id;
   TAUDB_DATA_SOURCE* data_sources_by_name;
 } TAUDB_CONNECTION;

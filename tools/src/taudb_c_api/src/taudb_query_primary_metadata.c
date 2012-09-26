@@ -30,8 +30,8 @@ TAUDB_PRIMARY_METADATA* taudb_query_primary_metadata(TAUDB_CONNECTION* connectio
   res = taudb_execute_query(connection, my_query);
 
   int nRows = taudb_get_num_rows(res);
-  int metaIndex = trial->primary_metadata_count;
-  TAUDB_PRIMARY_METADATA* pm = taudb_resize_primary_metadata(nRows+trial->primary_metadata_count, trial->primary_metadata);
+  //int metaIndex = trial->primary_metadata_count;
+  //TAUDB_PRIMARY_METADATA* pm = taudb_resize_primary_metadata(nRows+trial->primary_metadata_count, trial->primary_metadata);
   // the resize should do this, but just in case...
   //for (i = 0; i < trial->primary_metadata_count; i++) {
     //pm[i].name = trial->primary_metadata[i].name;
@@ -43,23 +43,24 @@ TAUDB_PRIMARY_METADATA* taudb_query_primary_metadata(TAUDB_CONNECTION* connectio
   /* the rows */
   for (i = 0; i < taudb_get_num_rows(res); i++)
   {
+    TAUDB_PRIMARY_METADATA* pm = taudb_create_primary_metadata(1);
     /* the columns */
     for (j = 0; j < nFields; j++) {
       if (strcmp(taudb_get_column_name(res, j), "name") == 0) {
-        pm[metaIndex].name = taudb_create_and_copy_string(taudb_get_value(res,i,j));
+        pm->name = taudb_create_and_copy_string(taudb_get_value(res,i,j));
       } else if (strcmp(taudb_get_column_name(res, j), "value") == 0) {
-        pm[metaIndex].value = taudb_create_and_copy_string(taudb_get_value(res,i,j));
-        metaIndex++;
+        pm->value = taudb_create_and_copy_string(taudb_get_value(res,i,j));
       } else {
 	    fprintf(stderr,"Unknown primary_metadata column: %s\n", taudb_get_column_name(res, j));
       }
     } 
+    HASH_ADD_KEYPTR(hh, trial->primary_metadata, pm->name, strlen(pm->name), pm);
   }
 
   taudb_clear_result(res);
   taudb_close_transaction(connection);
 
-  taudb_numItems = metaIndex;
+  taudb_numItems = nRows;
 
-  return pm;
+  return trial->primary_metadata;
 }

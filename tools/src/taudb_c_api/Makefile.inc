@@ -15,10 +15,11 @@
 CC=gcc
 AR=ar
 #CC=tau_cc.sh -tau_makefile=${HOME}/src/tau2/x86_64/lib/Makefile.tau-pdt -optQuiet -optPreProcess
-TEST_CONFIG=alcf_working
+TEST_CONFIG=ccsm
+#TEST_CONFIG=alcf_working
 # TEST_CONFIG=facets
-TEST_TRIAL_ID=1
-# TEST_TRIAL_ID=34
+# TEST_TRIAL_ID=1 # alcf_working
+TEST_TRIAL_ID=25 # ccsm
 
 TAUDB_DATABASE_DEFINE="-D__TAUDB_POSTGRESQL__"
 # MacBook Pro

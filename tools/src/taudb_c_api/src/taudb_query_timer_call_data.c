@@ -143,7 +143,7 @@ TAUDB_TIMER_CALL_DATA* taudb_query_timer_call_data_stats(TAUDB_CONNECTION* conne
 // convenience method for indexing into the hash
 TAUDB_TIMER_CALL_DATA* taudb_get_timer_call_data_by_key(TAUDB_TIMER_CALL_DATA* timer_call_data, TAUDB_TIMER_CALLPATH* callpath, TAUDB_THREAD* thread, char* timestamp) {
 #ifdef TAUDB_DEBUG_DEBUG
-  printf("Calling taudb_get_timer_call_data(%p,%p,%p)\n", timer_call_data, timer, thread);
+  printf("Calling taudb_get_timer_call_data(%p,%p,%p)\n", timer_call_data, callpath, thread);
 #endif
   if (timer_call_data == NULL) {
     fprintf(stderr, "Error: timer_call_data parameter null. Please provide a valid set of timer_call_data.\n");
