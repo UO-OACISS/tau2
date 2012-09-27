@@ -40,8 +40,8 @@ TAUDB_TIMER_CALL_DATA* taudb_private_query_timer_call_data(TAUDB_CONNECTION* con
     }
   } else {
     //sprintf(my_query,"select * from timer where trial = %d", trial->id);
-    sprintf(my_query,"select h.node_rank as node, h.context_rank as context, h.thread_rank as thread, h.thread_index as index, td.calls as call, td.subroutines as subroutines, td.timer_callpath from timer_call_data td inner join thread h on tc.thread = h.id");
-    sprintf(my_query,"%s where t.trial = %d", my_query, trial->id);
+    sprintf(my_query,"select h.node_rank as node, h.context_rank as context, h.thread_rank as thread, h.thread_index as index, td.calls as call, td.subroutines as subroutines, td.timer_callpath from timer_call_data td inner join thread h on td.thread = h.id");
+    sprintf(my_query,"%s where h.trial = %d", my_query, trial->id);
     if (timer_callpath != NULL) {
       sprintf(my_query,"%s and td.timer_callpath = %d", my_query, timer_callpath->id);
     }
