@@ -104,7 +104,7 @@ TAUDB_TIMER_CALLPATH* taudb_create_timer_callpaths(int count){
 char* taudb_create_and_copy_string(const char* in_string) {
   // add one more character for the null terminator
   int length = strlen(in_string) + 1;
-  char* new_string = calloc(length, sizeof(char));
+  char* new_string = (char*)calloc(length, sizeof(char));
   strcpy(new_string, in_string);
   return new_string;
 }
@@ -114,7 +114,7 @@ char* taudb_create_hash_key_2(int thread, const char* timer) {
   sprintf(str_thread, "%d", thread);
   // add colon character and null terminator
   int length = strlen(str_thread) + strlen(timer) + 2;
-  char* key = calloc(length, sizeof(char));
+  char* key = (char*)calloc(length, sizeof(char));
   sprintf(key, "%d:%s", thread, timer);
   return key;
 }
@@ -124,7 +124,7 @@ char* taudb_create_hash_key_3(int thread, const char* timer, const char* metric)
   sprintf(str_thread, "%d", thread);
   // add colon characters and null terminator
   int length = strlen(str_thread) + strlen(timer) + strlen(metric) + 3;
-  char* key = calloc(length, sizeof(char));
+  char* key = (char*)calloc(length, sizeof(char));
   sprintf(key, "%d:%s:%s", thread, timer, metric);
   return key;
 }

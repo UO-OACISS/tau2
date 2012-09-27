@@ -7,7 +7,7 @@
 TAUDB_THREAD* taudb_query_threads_2005(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean derived) {
   if (derived) {
     taudb_numItems = 2;
-    TAUDB_THREAD* thread = malloc(sizeof(TAUDB_THREAD));
+    TAUDB_THREAD* thread = (TAUDB_THREAD*)malloc(sizeof(TAUDB_THREAD));
     thread->id = 0;
     thread->trial = trial;
     thread->node_rank = TAUDB_MEAN_WITHOUT_NULLS;
@@ -15,7 +15,7 @@ TAUDB_THREAD* taudb_query_threads_2005(TAUDB_CONNECTION* connection, TAUDB_TRIAL
     thread->thread_rank = TAUDB_MEAN_WITHOUT_NULLS;
     thread->index = TAUDB_MEAN_WITHOUT_NULLS;;
     HASH_ADD_INT(trial->threads, index, thread);
-    thread = malloc(sizeof(TAUDB_THREAD));
+    thread = (TAUDB_THREAD*)malloc(sizeof(TAUDB_THREAD));
     thread->id = 0;
     thread->trial = trial;
     thread->node_rank = TAUDB_TOTAL;
@@ -34,7 +34,7 @@ TAUDB_THREAD* taudb_query_threads_2005(TAUDB_CONNECTION* connection, TAUDB_TRIAL
       {
         for (k = 0; k < trial->threads_per_context; k++)
         {
-          TAUDB_THREAD* thread = malloc(sizeof(TAUDB_THREAD));
+          TAUDB_THREAD* thread = (TAUDB_THREAD*)malloc(sizeof(TAUDB_THREAD));
           thread->id = 0;
           thread->trial = trial;
           thread->node_rank = i;
@@ -94,7 +94,7 @@ TAUDB_THREAD* taudb_query_threads_2012(TAUDB_CONNECTION* connection, TAUDB_TRIAL
   /* the rows */
   for (i = 0; i < taudb_get_num_rows(res); i++)
   {
-    TAUDB_THREAD* thread = malloc(sizeof(TAUDB_THREAD));
+    TAUDB_THREAD* thread = (TAUDB_THREAD*)malloc(sizeof(TAUDB_THREAD));
     /* the columns */
     for (j = 0; j < nFields; j++) {
       if (strcmp(taudb_get_column_name(res, j), "id") == 0) {
