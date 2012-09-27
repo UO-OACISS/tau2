@@ -205,7 +205,7 @@ void dump_timer_call_data(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter, boo
      for (callpath = trial->timer_callpaths_by_id ; callpath != NULL ; callpath=callpath->hh1.next) {
        call_data = taudb_get_timer_call_data_by_key(trial->timer_call_data_by_key, callpath, thread, NULL);
        if (call_data != NULL) {
-         printf("%d, %d, '%s'\n", call_data->calls, call_data->subroutines, callpath->name);
+         printf("%d, %d, %d, '%s'\n", call_data->id, call_data->calls, call_data->subroutines, callpath->name);
          total++;
        }
      }
