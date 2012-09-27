@@ -37,7 +37,7 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(TAUDB_CONNECTION* connection, 
    */
   char my_query[1024];
   //sprintf(my_query,"select * from timer where trial = %d", trial->id);
-  sprintf(my_query,"select * from timer_callpath tc inner join timer t on tc.timer = t.id");
+  sprintf(my_query,"select tc.* from timer_callpath tc inner join timer t on tc.timer = t.id");
   if (timer != NULL) {
     sprintf(my_query,"%s inner join timer t on tc.timer = t.id", my_query);
   }

@@ -252,8 +252,10 @@ void dump_timer_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter, boolea
        if (call_data != NULL) {
          for (metric = trial->metrics_by_id ; metric != NULL ; metric=metric->hh1.next) {
            value = taudb_get_timer_value(call_data, metric);
-           printf("%d, %d, %d, %s, %f, %f, '%s'\n", thread->index, call_data->calls, call_data->subroutines, metric->name, value->inclusive, value->exclusive, callpath->name);
+		   if (value != NULL) {
+             printf("%d, %d, %d, %s, %f, %f, '%s'\n", thread->index, call_data->calls, call_data->subroutines, metric->name, value->inclusive, value->exclusive, callpath->name);
            total++;
+			}
          }
        }
      }

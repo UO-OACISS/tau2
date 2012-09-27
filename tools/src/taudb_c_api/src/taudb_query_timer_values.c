@@ -61,10 +61,10 @@ TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection
     }
   } else {
     //sprintf(my_query,"select * from timer where trial = %d", trial->id);
-    sprintf(my_query,"select tv.*, h.thread_index as index from timer_value tv inner join timer_call_data td on tv.timer_call_data = td.id inner join timer_callpath tc on td.timer_callpath = tc.id left outer join thread h on tv.thread = h.id");
+    sprintf(my_query,"select tv.*, h.thread_index as index from timer_value tv inner join timer_call_data td on tv.timer_call_data = td.id inner join timer_callpath tc on td.timer_callpath = tc.id left outer join thread h on td.thread = h.id");
     char* conjoiner = "where";
     if (trial != NULL) {
-      sprintf(my_query,"%s where t.trial = %d", my_query, trial->id);
+      sprintf(my_query,"%s where h.trial = %d", my_query, trial->id);
       conjoiner = "and";
     } 
     if (timer_callpath != NULL) {
@@ -188,7 +188,11 @@ TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection
       timer_call_data = taudb_get_timer_call_data_by_id(trial->timer_call_data_by_id, timer_call_data_id);
     }
 
-    HASH_ADD(hh, timer_call_data->timer_values, metric->name, strlen(timer_value->metric->name), timer_value);
+	if (timer_call_data == NULL) {
+	  printf("Failed to find timer_call_data %d\n");
+	} else {
+      HASH_ADD(hh, timer_call_data->timer_values, metric->name, strlen(timer_value->metric->name), timer_value);
+	}
   }
 
   taudb_clear_result(res);
