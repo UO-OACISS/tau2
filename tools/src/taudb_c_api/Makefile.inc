@@ -15,6 +15,7 @@
 CC=gcc
 AR=ar
 #CC=tau_cc.sh -tau_makefile=${HOME}/src/tau2/x86_64/lib/Makefile.tau-pdt -optQuiet -optPreProcess
+#CC=tau_cc.sh -tau_makefile=${HOME}/src/tau2-taudb-branch/apple/lib/Makefile.tau-pdt -optQuiet
 #TEST_CONFIG=ccsm
 TEST_CONFIG=regression_taudb
 #TEST_CONFIG=alcf_working

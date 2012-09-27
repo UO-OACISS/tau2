@@ -50,7 +50,7 @@ TAUDB_COUNTER* taudb_query_counters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* t
   /* the rows */
   for (i = 0; i < taudb_get_num_rows(res); i++)
   {
-    TAUDB_COUNTER* counter = calloc(1, sizeof(TAUDB_COUNTER));
+    TAUDB_COUNTER* counter = (TAUDB_COUNTER*)calloc(1, sizeof(TAUDB_COUNTER));
     /* the columns */
     for (j = 0; j < nFields; j++) {
 	  if (strcmp(taudb_get_column_name(res, j), "id") == 0) {

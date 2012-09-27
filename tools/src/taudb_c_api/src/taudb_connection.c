@@ -162,7 +162,7 @@ void* taudb_execute_query(TAUDB_CONNECTION *connection, char* my_query) {
   void* result;
   const char* portal_string = "DECLARE myportal CURSOR FOR";
 #ifdef __TAUDB_POSTGRESQL__
-  char* full_query = malloc(sizeof(char) * (strlen(my_query) + strlen(portal_string) + 2));
+  char* full_query = (char*)malloc(sizeof(char) * (strlen(my_query) + strlen(portal_string) + 2));
   sprintf(full_query, "%s %s", portal_string, my_query);
   PGresult   *res;
 #ifdef TAUDB_DEBUG_DEBUG
@@ -264,7 +264,7 @@ void taudb_close_transaction(TAUDB_CONNECTION *connection) {
 #endif
 }
 
-boolean gzipInflate( char* compressedBytes, int length, char** uncompressedBytes ) {  
+boolean gzipInflate( unsigned char* compressedBytes, int length, char** uncompressedBytes ) {  
 #ifdef TAUDB_DEBUG_DEBUG
   printf("calling gzipInflate()\n");
 #endif
@@ -324,7 +324,7 @@ boolean gzipInflate( char* compressedBytes, int length, char** uncompressedBytes
     return FALSE;  
   }  
   
-  char * result = malloc(strm.total_out * sizeof(char));
+  char * result = (char*)malloc(strm.total_out * sizeof(char));
   memcpy(result, uncomp, strm.total_out * sizeof(char));
   *uncompressedBytes = result; 
   
@@ -354,7 +354,7 @@ char* taudb_get_binary_value(void* result, int row, int column) {
   * representation of the bytes, so we need to convert back to bytes.
   */	 
   size_t length = 0;
-  unsigned char * unescaped = PQunescapeBytea(value, &length);
+  unsigned char * unescaped = PQunescapeBytea((const unsigned char *)value, &length);
   char* expanded = NULL;
   gzipInflate(unescaped, length, &expanded);
   PQfreemem(expanded);

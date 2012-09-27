@@ -34,7 +34,7 @@ TAUDB_DATA_SOURCE* taudb_query_data_sources(TAUDB_CONNECTION* connection) {
   /* the rows */
   for (i = 0; i < nRows; i++)
   {
-    TAUDB_DATA_SOURCE* data_source = malloc(sizeof(TAUDB_DATA_SOURCE));
+    TAUDB_DATA_SOURCE* data_source = (TAUDB_DATA_SOURCE*)malloc(sizeof(TAUDB_DATA_SOURCE));
     /* the columns */
     for (j = 0; j < nFields; j++) {
       if (strcmp(taudb_get_column_name(res, j), "id") == 0) {
@@ -53,7 +53,7 @@ TAUDB_DATA_SOURCE* taudb_query_data_sources(TAUDB_CONNECTION* connection) {
   }
 
   taudb_clear_result(res);
-  taudb_close_transaction(res);
+  taudb_close_transaction(connection);
 
   return (connection->data_sources_by_id);
 }

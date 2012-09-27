@@ -53,7 +53,7 @@ TAUDB_TIMER* taudb_query_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial
   /* the rows */
   for (i = 0; i < taudb_get_num_rows(res); i++)
   {
-    TAUDB_TIMER* timer = calloc(1, sizeof(TAUDB_TIMER));
+    TAUDB_TIMER* timer = taudb_create_timers(1);
     /* the columns */
     for (j = 0; j < nFields; j++) {
       if (strcmp(taudb_get_column_name(res, j), "id") == 0) {
@@ -171,7 +171,6 @@ void taudb_parse_timer_group_names(TAUDB_TRIAL* trial, TAUDB_TIMER* timer, char*
     char* group_name = strtok(group_names, "|");
     while (group_name != NULL) {
       timer->group_count++;
-      timer->groups = realloc(timer->groups, (timer->group_count * sizeof(TAUDB_TIMER_GROUP*)));
       // see if the group exists
       TAUDB_TIMER_GROUP* group = taudb_get_timer_group_by_name(trial->timer_groups, group_name);
       if (group != NULL) {
@@ -179,7 +178,7 @@ void taudb_parse_timer_group_names(TAUDB_TRIAL* trial, TAUDB_TIMER* timer, char*
         printf("FOUND GROUP: %s\n", group_name);
 #endif
       } else {
-        group = calloc (1, sizeof(TAUDB_TIMER_GROUP));
+        group = taudb_create_timer_groups(1);
         group->name = taudb_create_and_copy_string(group_name);
         // add the group to the trial
         HASH_ADD_KEYPTR(hh, trial->timer_groups, group->name, strlen(group->name), group);
@@ -188,7 +187,7 @@ void taudb_parse_timer_group_names(TAUDB_TRIAL* trial, TAUDB_TIMER* timer, char*
       timer->groups[(timer->group_count)-1] = group;
       // add this timer to the list of timers in the group
       group->timer_count++;
-      group->timers = realloc(group->timers, (group->timer_count * sizeof(TAUDB_TIMER*)));
+      group->timers = (TAUDB_TIMER**)realloc(group->timers, (group->timer_count * sizeof(TAUDB_TIMER*)));
       group->timers[(group->timer_count)-1] = timer;
       // get the next token
       group_name = strtok(NULL, "|");

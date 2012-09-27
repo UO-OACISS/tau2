@@ -8,7 +8,7 @@ TAUDB_TIME_RANGE* taudb_query_time_ranges(TAUDB_CONNECTION* connection, TAUDB_TR
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_time_ranges(%p)\n", trial);
 #endif
-  PGresult *res;
+  void *res;
   int nFields;
   int i, j;
 

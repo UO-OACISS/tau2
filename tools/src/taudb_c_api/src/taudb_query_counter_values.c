@@ -50,7 +50,7 @@ TAUDB_COUNTER_VALUE* taudb_query_counter_values(TAUDB_CONNECTION* connection, TA
   /* the rows */
   for (i = 0; i < taudb_get_num_rows(res); i++)
   {
-    TAUDB_COUNTER_VALUE* counter_value = calloc(1, sizeof(TAUDB_COUNTER_VALUE));
+    TAUDB_COUNTER_VALUE* counter_value = (TAUDB_COUNTER_VALUE*)calloc(1, sizeof(TAUDB_COUNTER_VALUE));
     memset(&(counter_value->key), 0, sizeof(TAUDB_COUNTER_VALUE_KEY));
     /* the columns */
     int node = 0;

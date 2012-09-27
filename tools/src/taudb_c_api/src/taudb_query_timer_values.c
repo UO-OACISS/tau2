@@ -8,7 +8,7 @@ TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_private_query_timer_values(%p,%p,%p,%p)\n", trial, timer_callpath, thread, metric);
 #endif
-  PGresult *res;
+  void *res;
   int nFields;
   int i, j;
 

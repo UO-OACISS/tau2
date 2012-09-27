@@ -52,7 +52,7 @@ PERFDMF_APPLICATION* perfdmf_query_application(TAUDB_CONNECTION* connection, cha
   }
 
   taudb_clear_result(res);
-  taudb_close_transaction(res);
+  taudb_close_transaction(connection);
  
   return application;
 }

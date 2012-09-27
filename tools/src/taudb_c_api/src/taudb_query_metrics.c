@@ -48,7 +48,7 @@ TAUDB_METRIC* taudb_query_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* tri
   /* the rows */
   for (i = 0; i < taudb_get_num_rows(res); i++)
   {
-    TAUDB_METRIC* metric = calloc(1, sizeof(TAUDB_METRIC));
+    TAUDB_METRIC* metric = (TAUDB_METRIC*)calloc(1, sizeof(TAUDB_METRIC));
     /* the columns */
     for (j = 0; j < nFields; j++) {
 	  if (strcmp(taudb_get_column_name(res, j), "id") == 0) {

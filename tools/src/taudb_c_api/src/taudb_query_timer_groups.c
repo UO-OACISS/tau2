@@ -49,7 +49,7 @@ TAUDB_TIMER_GROUP* taudb_query_timer_groups(TAUDB_CONNECTION* connection, TAUDB_
   /* the rows */
   for (i = 0; i < taudb_get_num_rows(res); i++)
   {
-    TAUDB_TIMER_GROUP* timer_group = malloc(sizeof(TAUDB_TIMER_GROUP));
+    TAUDB_TIMER_GROUP* timer_group = (TAUDB_TIMER_GROUP*)malloc(sizeof(TAUDB_TIMER_GROUP));
     /* the columns */
     for (j = 0; j < nFields; j++) {
       if (strcmp(taudb_get_column_name(res, j), "name") == 0) {

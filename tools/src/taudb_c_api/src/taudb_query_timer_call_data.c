@@ -8,7 +8,7 @@ TAUDB_TIMER_CALL_DATA* taudb_private_query_timer_call_data(TAUDB_CONNECTION* con
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_private_query_timer_call_data(%p,%p,%p)\n", trial, timer_callpath, thread);
 #endif
-  PGresult *res;
+  void *res;
   int nFields;
   int i, j;
 
@@ -72,7 +72,7 @@ TAUDB_TIMER_CALL_DATA* taudb_private_query_timer_call_data(TAUDB_CONNECTION* con
     int context = 0;
     int thread = 0;
     int index = 0;
-    TAUDB_TIMER_CALL_DATA* timer_call_datum = calloc(1, sizeof(TAUDB_TIMER_CALL_DATA));
+    TAUDB_TIMER_CALL_DATA* timer_call_datum = (TAUDB_TIMER_CALL_DATA*)calloc(1, sizeof(TAUDB_TIMER_CALL_DATA));
     /* the columns */
     for (j = 0; j < nFields; j++) {
       if (strcmp(taudb_get_column_name(res, j), "id") == 0) {
