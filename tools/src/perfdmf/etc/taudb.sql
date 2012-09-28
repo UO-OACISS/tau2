@@ -8,6 +8,7 @@ DROP INDEX IF EXISTS primary_metadata_index;
 DROP INDEX IF EXISTS timer_value_index;
 DROP INDEX IF EXISTS timer_group_index;
 DROP INDEX IF EXISTS timer_trial_index;
+DROP INDEX IF EXISTS timer_call_data_thread;
 
 /* view related */
 DROP TABLE IF EXISTS taudb_view_parameter;
@@ -490,6 +491,7 @@ CREATE INDEX timer_callpath_parent on timer_callpath(parent);
 CREATE INDEX thread_trial on thread(trial);
 CREATE INDEX timer_call_data_timer_callpath on timer_call_data(timer_callpath);
 CREATE INDEX counter_name_index on counter(name);
+CREATE INDEX timer_call_data_thread on timer_call_data(thread);
 
 /* SHORT TERM FIX! These views make sure that charts (mostly) work... for now. */
 
