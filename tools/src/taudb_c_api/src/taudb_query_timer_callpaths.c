@@ -96,8 +96,10 @@ char* taudb_get_callpath_string(TAUDB_TIMER_CALLPATH* timer_callpath) {
   while (parent != NULL) {
     // resize for "string -> string" with null terminator
     int new_length = strlen(full_string) + strlen(parent->timer->name) + 5;
+    char* tmp_full_string = taudb_create_and_copy_string(full_string);
     full_string = (char*)realloc(full_string, new_length);
-	sprintf(full_string, "%s => %s", parent->timer->name, full_string);
+	sprintf(full_string, "%s => %s", parent->timer->name, tmp_full_string);
+	free(tmp_full_string);
     parent = parent->parent;
   }
   return full_string;
