@@ -78,12 +78,12 @@ INSTALL_LD_LIB=install-ld-lib
 
 install: $(INSTALL_LD_LIB) install-preload-lib
 
-$(INSTALL_LD_LIB): $(PTHREAD_LD_LIB)
+$(INSTALL_LD_LIB): $(PTHREAD_LDPRELOAD_LIB)
 	mkdir -p $(INSTALLDEST)/wrappers/pthread_wrapper
 	cp link_options.tau $(INSTALLDEST)/wrappers/pthread_wrapper
-	$(TAU_SHAREDDIR_INSTALL_CMD)
+	$(TAU_SHARED_INSTALL_CMD)
 
-install-preload-lib: $(PTHREAD_LDPRELOAD_LIB)
+install-preload-lib: $(PTHREAD_LD_LIB)
 	$(TAU_STATIC_INSTALL_CMD)
 
 $(PTHREAD_LD_LIB): pthread_wrap_ld.o
