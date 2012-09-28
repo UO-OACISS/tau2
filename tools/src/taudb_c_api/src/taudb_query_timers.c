@@ -65,7 +65,9 @@ TAUDB_TIMER* taudb_query_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial
         printf("Got timer '%s'\n", timer->name);
 #endif
       } else if (strcmp(taudb_get_column_name(connection, j), "short_name") == 0) {
+#ifdef TAUDB_DEBUG_DEBUG
         printf("Short Name: %s\n", taudb_get_value(connection,i,j));
+#endif
         timer->short_name = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
       } else if (strcmp(taudb_get_column_name(connection, j), "source_file") == 0) {
         timer->source_file = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
@@ -90,7 +92,7 @@ TAUDB_TIMER* taudb_query_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial
     } 
     // save this in the hash
     HASH_ADD(hh1, trial->timers_by_id, id, sizeof(int), timer);
-    HASH_ADD_KEYPTR(hh2, trial->timers_by_name, timer->name, sizeof(timer->name), timer);
+    HASH_ADD_KEYPTR(hh2, trial->timers_by_name, timer->name, strlen(timer->name), timer);
   }
 
   taudb_clear_result(connection);
