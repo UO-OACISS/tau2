@@ -1,5 +1,4 @@
 #include "taudb_internal.h"
-#include "libpq-fe.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -8,7 +7,6 @@ TAUDB_PRIMARY_METADATA* taudb_query_primary_metadata(TAUDB_CONNECTION* connectio
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_primary_metadata(%p)\n", trial);
 #endif
-  void *res;
   int nFields;
   int i, j;
 
@@ -27,9 +25,9 @@ TAUDB_PRIMARY_METADATA* taudb_query_primary_metadata(TAUDB_CONNECTION* connectio
 #ifdef TAUDB_DEBUG
   printf("%s\n", my_query);
 #endif
-  res = taudb_execute_query(connection, my_query);
+  taudb_execute_query(connection, my_query);
 
-  int nRows = taudb_get_num_rows(res);
+  int nRows = taudb_get_num_rows(connection);
   //int metaIndex = trial->primary_metadata_count;
   //TAUDB_PRIMARY_METADATA* pm = taudb_resize_primary_metadata(nRows+trial->primary_metadata_count, trial->primary_metadata);
   // the resize should do this, but just in case...
@@ -38,26 +36,26 @@ TAUDB_PRIMARY_METADATA* taudb_query_primary_metadata(TAUDB_CONNECTION* connectio
     //pm[i].value = trial->primary_metadata[i].value;
   //}
 
-  nFields = taudb_get_num_columns(res);
+  nFields = taudb_get_num_columns(connection);
 
   /* the rows */
-  for (i = 0; i < taudb_get_num_rows(res); i++)
+  for (i = 0; i < taudb_get_num_rows(connection); i++)
   {
     TAUDB_PRIMARY_METADATA* pm = taudb_create_primary_metadata(1);
     /* the columns */
     for (j = 0; j < nFields; j++) {
-      if (strcmp(taudb_get_column_name(res, j), "name") == 0) {
-        pm->name = taudb_create_and_copy_string(taudb_get_value(res,i,j));
-      } else if (strcmp(taudb_get_column_name(res, j), "value") == 0) {
-        pm->value = taudb_create_and_copy_string(taudb_get_value(res,i,j));
+      if (strcmp(taudb_get_column_name(connection, j), "name") == 0) {
+        pm->name = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "value") == 0) {
+        pm->value = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
       } else {
-	    fprintf(stderr,"Unknown primary_metadata column: %s\n", taudb_get_column_name(res, j));
+	    fprintf(stderr,"Unknown primary_metadata column: %s\n", taudb_get_column_name(connection, j));
       }
     } 
     HASH_ADD_KEYPTR(hh, trial->primary_metadata, pm->name, strlen(pm->name), pm);
   }
 
-  taudb_clear_result(res);
+  taudb_clear_result(connection);
   taudb_close_transaction(connection);
 
   taudb_numItems = nRows;

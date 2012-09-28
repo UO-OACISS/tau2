@@ -1,5 +1,4 @@
 #include "taudb_internal.h"
-#include "libpq-fe.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -8,7 +7,6 @@ TAUDB_DATA_SOURCE* taudb_query_data_sources(TAUDB_CONNECTION* connection) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_data_sources()\n");
 #endif
-  void *res;
   int nFields;
   int i, j;
 
@@ -24,27 +22,27 @@ TAUDB_DATA_SOURCE* taudb_query_data_sources(TAUDB_CONNECTION* connection) {
 #ifdef TAUDB_DEBUG
   printf("Query: %s\n", my_query);
 #endif
-  res = taudb_execute_query(connection, my_query);
+  taudb_execute_query(connection, my_query);
 
-  int nRows = taudb_get_num_rows(res);
+  int nRows = taudb_get_num_rows(connection);
   taudb_numItems = nRows;
 
-  nFields = taudb_get_num_columns(res);
+  nFields = taudb_get_num_columns(connection);
 
   /* the rows */
   for (i = 0; i < nRows; i++)
   {
-    TAUDB_DATA_SOURCE* data_source = (TAUDB_DATA_SOURCE*)malloc(sizeof(TAUDB_DATA_SOURCE));
+    TAUDB_DATA_SOURCE* data_source = taudb_create_data_sources(1);
     /* the columns */
     for (j = 0; j < nFields; j++) {
-      if (strcmp(taudb_get_column_name(res, j), "id") == 0) {
-        data_source->id = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "name") == 0) {
-        data_source->name = taudb_create_and_copy_string(taudb_get_value(res,i,j));
-      } else if (strcmp(taudb_get_column_name(res, j), "description") == 0) {
-        data_source->description = taudb_create_and_copy_string(taudb_get_value(res, i, j));
+      if (strcmp(taudb_get_column_name(connection, j), "id") == 0) {
+        data_source->id = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "name") == 0) {
+        data_source->name = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "description") == 0) {
+        data_source->description = taudb_create_and_copy_string(taudb_get_value(connection, i, j));
       } else {
-        printf("Error: unknown column '%s'\n", taudb_get_column_name(res, j));
+        printf("Error: unknown column '%s'\n", taudb_get_column_name(connection, j));
         taudb_exit_nicely(connection);
       }
     } 
@@ -52,7 +50,7 @@ TAUDB_DATA_SOURCE* taudb_query_data_sources(TAUDB_CONNECTION* connection) {
     HASH_ADD_KEYPTR(hh2, connection->data_sources_by_name, data_source->name, strlen(data_source->name), data_source);
   }
 
-  taudb_clear_result(res);
+  taudb_clear_result(connection);
   taudb_close_transaction(connection);
 
   return (connection->data_sources_by_id);

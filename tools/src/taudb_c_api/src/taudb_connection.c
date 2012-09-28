@@ -1,5 +1,4 @@
 #include "taudb_internal.h"
-#include "libpq-fe.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include "zlib.h"
@@ -8,8 +7,10 @@ int taudb_numItems = 0;
 enum taudb_database_schema_version taudb_version = TAUDB_2005_SCHEMA;
 
 void taudb_exit_nicely(TAUDB_CONNECTION* connection) {
-#ifdef __TAUDB_POSTGRESQL__
+#if defined __TAUDB_POSTGRESQL__
   PQfinish(connection->connection);
+#elif defined __TAUDB_SQLITE__
+  sqlite3_close_v2(connection->connection);
 #endif
   exit (1);
 }
@@ -18,9 +19,9 @@ TAUDB_CONNECTION* taudb_connect(char* host, char* port, char* database, char* lo
 #ifdef TAUDB_DEBUG_DEBUG
   printf("calling taudb_connect()\n");
 #endif
-  TAUDB_CONNECTION* taudb_connection = (TAUDB_CONNECTION*)malloc(sizeof (TAUDB_CONNECTION));
+  TAUDB_CONNECTION* taudb_connection = taudb_create_connection();
   taudb_connection->inTransaction = FALSE;
-#ifdef __TAUDB_POSTGRESQL__
+#if defined __TAUDB_POSTGRESQL__
   char* pgoptions = NULL;
   char* pgtty = NULL;
   PGconn* connection;
@@ -33,8 +34,13 @@ TAUDB_CONNECTION* taudb_connect(char* host, char* port, char* database, char* lo
            PQerrorMessage(connection));
     taudb_exit_nicely(taudb_connection);
   }
-  taudb_connection->connection = connection;
+#elif defined __TAUDB_SQLITE__
+  sqlite3 *connection;
+  // get HOME
+  
+  int rc = sqlite3_open_v2(database, &connection);
 #endif
+  taudb_connection->connection = connection;
 
   /* what version of the schema do we have? */
   taudb_check_schema_version(taudb_connection);
@@ -90,6 +96,8 @@ int taudb_check_connection(TAUDB_CONNECTION* connection) {
 
   PQerrorMessage(connection->connection);
   printf("%d : %s\n", status, feedback);
+#elif defined __TAUDB_SQLITE__
+  //?
 #endif
   return 0;
 }
@@ -98,8 +106,10 @@ int taudb_disconnect(TAUDB_CONNECTION* connection) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("calling taudb_disconnect()\n");
 #endif
-#ifdef __TAUDB_POSTGRESQL__
+#if defined __TAUDB_POSTGRESQL__
   PQfinish(connection->connection);
+#elif defined __TAUDB_SQLITE__
+  sqlite3_close_v2(connection->connection);
 #endif
   return 0;
 }
@@ -134,11 +144,12 @@ void taudb_begin_transaction(TAUDB_CONNECTION *connection) {
     //taudb_close_transaction(connection);
 	//return;
   }
-#ifdef __TAUDB_POSTGRESQL__
-  PGresult   *res;
 #ifdef TAUDB_DEBUG_DEBUG
   printf("QUERY: '%s'\n", "BEGIN");
 #endif
+
+#ifdef __TAUDB_POSTGRESQL__
+  PGresult   *res;
   res = PQexec(connection->connection, "BEGIN");
   if (PQresultStatus(res) != PGRES_COMMAND_OK)
   {
@@ -155,88 +166,84 @@ void taudb_begin_transaction(TAUDB_CONNECTION *connection) {
 #endif
 }
 
-void* taudb_execute_query(TAUDB_CONNECTION *connection, char* my_query) {
+void taudb_execute_query(TAUDB_CONNECTION *connection, char* my_query) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("calling taudb_execute_query()\n");
 #endif
-  void* result;
   const char* portal_string = "DECLARE myportal CURSOR FOR";
+
 #ifdef __TAUDB_POSTGRESQL__
   char* full_query = (char*)malloc(sizeof(char) * (strlen(my_query) + strlen(portal_string) + 2));
   sprintf(full_query, "%s %s", portal_string, my_query);
-  PGresult   *res;
 #ifdef TAUDB_DEBUG_DEBUG
   printf("QUERY: '%s'\n", full_query);
 #endif
-  res = PQexec(connection->connection, full_query);
-  if (PQresultStatus(res) != PGRES_COMMAND_OK)
+  connection->res = PQexec(connection->connection, full_query);
+  if (PQresultStatus(connection->res) != PGRES_COMMAND_OK)
   {
     fprintf(stderr, "DECLARE CURSOR failed: %s", PQerrorMessage(connection->connection));
-    PQclear(res);
+    PQclear(connection->res);
     taudb_exit_nicely(connection);
   }
-  PQclear(res);
+  PQclear(connection->res);
 
 #ifdef TAUDB_DEBUG_DEBUG
   printf("QUERY: '%s'\n", "FETCH ALL in myportal");
 #endif
-  res = PQexec(connection->connection, "FETCH ALL in myportal");
-  if (PQresultStatus(res) != PGRES_TUPLES_OK)
+  connection->res = PQexec(connection->connection, "FETCH ALL in myportal");
+  if (PQresultStatus(connection->res) != PGRES_TUPLES_OK)
   {
     fprintf(stderr, "FETCH ALL failed: %s", PQerrorMessage(connection->connection));
-    PQclear(res);
+    PQclear(connection->res);
     taudb_exit_nicely(connection);
   }
-
-  /* return the result to be used by the calling code */
-  result = ((void*)res);
+#elif defined __TAUDB_SQLITE__
+  int rc = sqlite3_prepare_v2(connection->connection, my_query, strlen(my_query), &(connection->ppStmt), NULL);
+  if( rc!=SQLITE_OK ){
+    taudb_exit_nicely(connection);
+  } 
 #endif
-  return (result);
+  return;
 }
 
-int taudb_get_num_columns(void* result) {
+int taudb_get_num_columns(TAUDB_CONNECTION *connection) {
   int columns = 0;
 #ifdef __TAUDB_POSTGRESQL__
-  PGresult* res = (PGresult*)result;
-  columns = PQnfields(res);
+  columns = PQnfields(connection->res);
 #endif
   return (columns);
 }
 
-int taudb_get_num_rows(void* result) {
+int taudb_get_num_rows(TAUDB_CONNECTION *connection) {
   int rows = 0;
 #ifdef __TAUDB_POSTGRESQL__
-  PGresult* res = (PGresult*)result;
-  rows = PQntuples(res);
+  rows = PQntuples(connection->res);
 #endif
   return (rows);
 }
 
-char* taudb_get_column_name(void* result, int column) {
+char* taudb_get_column_name(TAUDB_CONNECTION *connection, int column) {
   char* name;
 #ifdef __TAUDB_POSTGRESQL__
-  PGresult* res = (PGresult*)result;
-  name = PQfname(res, column);
+  name = PQfname(connection->res, column);
 #endif
   return (name);
 }
 
-char* taudb_get_value(void* result, int row, int column) {
+char* taudb_get_value(TAUDB_CONNECTION *connection, int row, int column) {
   char* value;
 #ifdef __TAUDB_POSTGRESQL__
-  PGresult* res = (PGresult*)result;
-  value = PQgetvalue(res, row, column);
+  value = PQgetvalue(connection->res, row, column);
 #endif
   return (value);
 }
 
-void taudb_clear_result(void* result) {
+void taudb_clear_result(TAUDB_CONNECTION *connection) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("calling taudb_clear_result()\n");
 #endif
 #ifdef __TAUDB_POSTGRESQL__
-  PGresult* res = (PGresult*)result;
-  PQclear(res);
+  PQclear(connection->res);
 #endif
   return;
 }
@@ -264,9 +271,9 @@ void taudb_close_transaction(TAUDB_CONNECTION *connection) {
 #endif
 }
 
-boolean gzipInflate( unsigned char* compressedBytes, int length, char** uncompressedBytes ) {  
+boolean taudb_gzip_inflate( unsigned char* compressedBytes, int length, char** uncompressedBytes ) {  
 #ifdef TAUDB_DEBUG_DEBUG
-  printf("calling gzipInflate()\n");
+  printf("calling taudb_gzip_inflate()\n");
 #endif
   
   if ( length == 0 ) {
@@ -332,19 +339,18 @@ boolean gzipInflate( unsigned char* compressedBytes, int length, char** uncompre
   return TRUE ;  
 }  
 
-char* taudb_get_binary_value(void* result, int row, int column) {
+char* taudb_get_binary_value(TAUDB_CONNECTION *connection, int row, int column) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("calling taudb_get_binary_value()\n");
 #endif
   char* value, * retVal;
 #ifdef __TAUDB_POSTGRESQL__
-  PGresult* res = (PGresult*)result;
-  value = PQgetvalue(res, row, column);
+  value = PQgetvalue(connection->res, row, column);
 /* The binary representation of BYTEA is a bunch of bytes, which could
  * include embedded nulls so we have to pay attention to field length.
  */
-  int blen = PQgetlength(res, row, column);
 #ifdef TAUDB_DEBUG
+  int blen = PQgetlength(connection->res, row, column);
   printf("tuple %d: got\n", row);
   printf(" XML_METADATA_GZ = (%d bytes) ", blen);
 #endif
@@ -356,7 +362,7 @@ char* taudb_get_binary_value(void* result, int row, int column) {
   size_t length = 0;
   unsigned char * unescaped = PQunescapeBytea((const unsigned char *)value, &length);
   char* expanded = NULL;
-  gzipInflate(unescaped, length, &expanded);
+  taudb_gzip_inflate(unescaped, length, &expanded);
   PQfreemem(expanded);
 #endif
 

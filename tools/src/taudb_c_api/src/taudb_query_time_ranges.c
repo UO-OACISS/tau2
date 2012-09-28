@@ -1,5 +1,4 @@
 #include "taudb_internal.h"
-#include "libpq-fe.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -8,7 +7,6 @@ TAUDB_TIME_RANGE* taudb_query_time_ranges(TAUDB_CONNECTION* connection, TAUDB_TR
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_time_ranges(%p)\n", trial);
 #endif
-  void *res;
   int nFields;
   int i, j;
 
@@ -19,7 +17,7 @@ TAUDB_TIME_RANGE* taudb_query_time_ranges(TAUDB_CONNECTION* connection, TAUDB_TR
 
   //if the Trial already has the data, return it.
   if (trial->time_ranges != NULL) {
-    taudb_numItems = trial->time_range_count;
+    taudb_numItems = HASH_COUNT(trial->time_ranges);
     return trial->time_ranges;
   }
 
@@ -33,42 +31,42 @@ TAUDB_TIME_RANGE* taudb_query_time_ranges(TAUDB_CONNECTION* connection, TAUDB_TR
 #ifdef TAUDB_DEBUG
   printf("Query: %s\n", my_query);
 #endif
-  res = taudb_execute_query(connection, my_query);
+  taudb_execute_query(connection, my_query);
 
-  int nRows = taudb_get_num_rows(res);
+  int nRows = taudb_get_num_rows(connection);
   taudb_numItems = nRows;
 
   TAUDB_TIME_RANGE* time_ranges = taudb_create_time_ranges(taudb_numItems);
 
-  nFields = taudb_get_num_columns(res);
+  nFields = taudb_get_num_columns(connection);
 
   /* the rows */
-  for (i = 0; i < taudb_get_num_rows(res); i++)
+  for (i = 0; i < taudb_get_num_rows(connection); i++)
   {
     TAUDB_TIME_RANGE* time_range = &(time_ranges[i]);
     /* the columns */
     for (j = 0; j < nFields; j++) {
-	  if (strcmp(taudb_get_column_name(res, j), "id") == 0) {
-	    time_range->id = atoi(taudb_get_value(res, i, j));
-	  } else if (strcmp(taudb_get_column_name(res, j), "trial") == 0) {
+	  if (strcmp(taudb_get_column_name(connection, j), "id") == 0) {
+	    time_range->id = atoi(taudb_get_value(connection, i, j));
+	  } else if (strcmp(taudb_get_column_name(connection, j), "trial") == 0) {
 	    //time_range->trial = trial;
-	  } else if (strcmp(taudb_get_column_name(res, j), "iteration_start") == 0) {
-	    time_range->iteration_start = atoi(taudb_get_value(res,i,j));
-	  } else if (strcmp(taudb_get_column_name(res, j), "iteration_end") == 0) {
-	    time_range->iteration_end = atoi(taudb_get_value(res,i,j));
-	  } else if (strcmp(taudb_get_column_name(res, j), "time_start") == 0) {
-	    time_range->time_start = atoll(taudb_get_value(res,i,j));
-	  } else if (strcmp(taudb_get_column_name(res, j), "time_end") == 0) {
-	    time_range->time_end = atoll(taudb_get_value(res,i,j));
+	  } else if (strcmp(taudb_get_column_name(connection, j), "iteration_start") == 0) {
+	    time_range->iteration_start = atoi(taudb_get_value(connection,i,j));
+	  } else if (strcmp(taudb_get_column_name(connection, j), "iteration_end") == 0) {
+	    time_range->iteration_end = atoi(taudb_get_value(connection,i,j));
+	  } else if (strcmp(taudb_get_column_name(connection, j), "time_start") == 0) {
+	    time_range->time_start = atoll(taudb_get_value(connection,i,j));
+	  } else if (strcmp(taudb_get_column_name(connection, j), "time_end") == 0) {
+	    time_range->time_end = atoll(taudb_get_value(connection,i,j));
 	  } else {
-	    printf("Error: unknown column '%s'\n", taudb_get_column_name(res, j));
+	    printf("Error: unknown column '%s'\n", taudb_get_column_name(connection, j));
 	    taudb_exit_nicely(connection);
 	  }
 	} 
 	HASH_ADD_INT(time_ranges, id, time_range);
   }
 
-  taudb_clear_result(res);
+  taudb_clear_result(connection);
   taudb_close_transaction(connection);
 
   return (time_ranges);

@@ -9,7 +9,6 @@
 #****************************************************************************
 
 .SUFFIXES : .c
-.SILENT :
 
 include ../../Makefile.inc
 
@@ -20,8 +19,7 @@ OBJS=${patsubst %.c, %.o, ${SOURCES}}
 TARGET=taudb_query_timer_values_test
 TAUDBLIB=../../lib/libtaudb.a
 DUMP_FUNCS=../libtaudb_dump.a
-LIBS=$(POSTGRESQL_LIBRARIES)
-INCLUDE=-I. -I../../include $(POSTGRESQL_INCLUDES) -I../dump_functions
+INCLUDE=-I. -I../../include $(INCLUDES) -I../dump_functions
 
 all: $(TARGET)
 

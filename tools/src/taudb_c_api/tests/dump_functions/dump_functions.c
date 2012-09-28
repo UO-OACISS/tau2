@@ -3,8 +3,8 @@
 #include <string.h>
 #include "dump_functions.h"
 
-void dump_metadata(TAUDB_PRIMARY_METADATA *metadata, int count) {
-   printf("%d metadata fields:\n", count);
+void dump_metadata(TAUDB_PRIMARY_METADATA *metadata) {
+   printf("%d metadata fields:\n", HASH_COUNT(metadata));
    TAUDB_PRIMARY_METADATA * cur;
    for(cur = metadata; cur != NULL; cur = (TAUDB_PRIMARY_METADATA*)cur->hh.next) {
      printf("  %s = %s\n", cur->name, cur->value);

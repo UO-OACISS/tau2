@@ -9,7 +9,6 @@
 #****************************************************************************
 
 .SUFFIXES : .c
-.SILENT :
 
 include ../Makefile.inc
 
@@ -33,21 +32,21 @@ taudb_query_timer_call_data_test \
 perfdmf_test \
 query_all
 
-TEST_TARGETS=taudb_query_timer_values_test
-#parse_config_test \
-#taudb_query_trial_test \
-#taudb_query_timers_test \
-#taudb_query_metrics_test \
-#taudb_query_threads_test \
-#taudb_query_stats_test \
-#taudb_query_timer_callpaths_test \
-#taudb_query_timer_call_data_test \
-#perfdmf_query_trial_test \
-#perfdmf_query_metrics_test \
-#perfdmf_query_threads_test \
-#perfdmf_query_timers_test \
-#perfdmf_query_timer_callpaths_test \
-#taudb_main \
+TEST_TARGETS=parse_config_test \
+taudb_query_trial_test \
+taudb_query_timers_test \
+taudb_query_metrics_test \
+taudb_query_threads_test \
+taudb_query_stats_test \
+taudb_query_timer_callpaths_test \
+taudb_query_timer_call_data_test \
+taudb_query_timer_values_test \
+perfdmf_query_trial_test \
+perfdmf_query_metrics_test \
+perfdmf_query_threads_test \
+perfdmf_query_timers_test \
+perfdmf_query_timer_callpaths_test \
+taudb_main
 
 # rebuild everything if the makefile changes
 all: Makefile ../lib/libtaudb.a

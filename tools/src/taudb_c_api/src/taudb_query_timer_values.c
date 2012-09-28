@@ -1,5 +1,4 @@
 #include "taudb_internal.h"
-#include "libpq-fe.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -8,7 +7,6 @@ TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_private_query_timer_values(%p,%p,%p,%p)\n", trial, timer_callpath, thread, metric);
 #endif
-  void *res;
   int nFields;
   int i, j;
 
@@ -88,17 +86,17 @@ TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection
 #ifdef TAUDB_DEBUG
   printf("%s\n", my_query);
 #endif
-  res = taudb_execute_query(connection, my_query);
+  taudb_execute_query(connection, my_query);
 
-  int nRows = taudb_get_num_rows(res);
+  int nRows = taudb_get_num_rows(connection);
   //TAUDB_TIMER_VALUE* timer_values = taudb_create_timer_values(nRows);
   TAUDB_TIMER_VALUE* timer_values = NULL;
   taudb_numItems = nRows;
 
-  nFields = taudb_get_num_columns(res);
+  nFields = taudb_get_num_columns(connection);
 
   /* the rows */
-  for (i = 0; i < taudb_get_num_rows(res); i++)
+  for (i = 0; i < taudb_get_num_rows(connection); i++)
   {
     int node = 0;
     int context = 0;
@@ -111,65 +109,65 @@ TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection
     TAUDB_TIMER_VALUE* timer_value = taudb_create_timer_values(1);
     /* the columns */
     for (j = 0; j < nFields; j++) {
-      if (strcmp(taudb_get_column_name(res, j), "timer_call_data") == 0) {
-        timer_call_data_id = atoi(taudb_get_value(res, i, j));
+      if (strcmp(taudb_get_column_name(connection, j), "timer_call_data") == 0) {
+        timer_call_data_id = atoi(taudb_get_value(connection, i, j));
 // these two are the same
-      } else if (strcmp(taudb_get_column_name(res, j), "interval_event") == 0) {
-        timer_id = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "timer") == 0) {
-        timer_id = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "node") == 0) {
-        node = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "context") == 0) {
-        context = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "thread") == 0) {
-        thread = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "index") == 0) {
-        index = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "metric") == 0) {
-        metric_id = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "timer_name") == 0) {
-        timer_str = taudb_get_value(res, i, j);
-      } else if (strcmp(taudb_get_column_name(res, j), "metric") == 0) {
+      } else if (strcmp(taudb_get_column_name(connection, j), "interval_event") == 0) {
+        timer_id = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "timer") == 0) {
+        timer_id = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "node") == 0) {
+        node = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "context") == 0) {
+        context = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "thread") == 0) {
+        thread = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "index") == 0) {
+        index = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "metric") == 0) {
+        metric_id = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "timer_name") == 0) {
+        timer_str = taudb_get_value(connection, i, j);
+      } else if (strcmp(taudb_get_column_name(connection, j), "metric") == 0) {
         if (metric != NULL)
           timer_value->metric = metric;
         else {
-          timer_value->metric = taudb_get_metric_by_id(trial->metrics_by_id, atoi(taudb_get_value(res, i, j)));
+          timer_value->metric = taudb_get_metric_by_id(trial->metrics_by_id, atoi(taudb_get_value(connection, i, j)));
         }
 // these two are the same
-      } else if (strcmp(taudb_get_column_name(res, j), "inclusive_percentage") == 0) {
-        timer_value->inclusive_percentage = atof(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "inclusive_percent") == 0) {
-        timer_value->inclusive_percentage = atof(taudb_get_value(res, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "inclusive_percentage") == 0) {
+        timer_value->inclusive_percentage = atof(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "inclusive_percent") == 0) {
+        timer_value->inclusive_percentage = atof(taudb_get_value(connection, i, j));
 // these two are the same
-      } else if (strcmp(taudb_get_column_name(res, j), "exclusive_percentage") == 0) {
-        timer_value->exclusive_percentage = atof(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "exclusive_percent") == 0) {
-        timer_value->exclusive_percentage = atof(taudb_get_value(res, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "exclusive_percentage") == 0) {
+        timer_value->exclusive_percentage = atof(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "exclusive_percent") == 0) {
+        timer_value->exclusive_percentage = atof(taudb_get_value(connection, i, j));
 // these two are the same
-      } else if (strcmp(taudb_get_column_name(res, j), "inclusive") == 0) {
-        timer_value->inclusive = atof(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "inclusive_value") == 0) {
-        timer_value->inclusive = atof(taudb_get_value(res, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "inclusive") == 0) {
+        timer_value->inclusive = atof(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "inclusive_value") == 0) {
+        timer_value->inclusive = atof(taudb_get_value(connection, i, j));
 // these two are the same
-      } else if (strcmp(taudb_get_column_name(res, j), "exclusive") == 0) {
-        timer_value->exclusive = atof(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "exclusive_value") == 0) {
-        timer_value->exclusive = atof(taudb_get_value(res, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "exclusive") == 0) {
+        timer_value->exclusive = atof(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "exclusive_value") == 0) {
+        timer_value->exclusive = atof(taudb_get_value(connection, i, j));
 
-      } else if (strcmp(taudb_get_column_name(res, j), "sum_exclusive_squared") == 0) {
-        timer_value->sum_exclusive_squared = atof(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "inclusive_per_call") == 0) {
+      } else if (strcmp(taudb_get_column_name(connection, j), "sum_exclusive_squared") == 0) {
+        timer_value->sum_exclusive_squared = atof(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "inclusive_per_call") == 0) {
         // ignore this
         continue;
-      } else if (strcmp(taudb_get_column_name(res, j), "call") == 0) {
+      } else if (strcmp(taudb_get_column_name(connection, j), "call") == 0) {
         // ignore this
         continue;
-      } else if (strcmp(taudb_get_column_name(res, j), "subroutines") == 0) {
+      } else if (strcmp(taudb_get_column_name(connection, j), "subroutines") == 0) {
         // ignore this
         continue;
       } else {
-        printf("Error: unknown column '%s'\n", taudb_get_column_name(res, j));
+        printf("Error: unknown column '%s'\n", taudb_get_column_name(connection, j));
         taudb_exit_nicely(connection);
       }
     } 
@@ -189,13 +187,13 @@ TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection
     }
 
 	if (timer_call_data == NULL) {
-	  printf("Failed to find timer_call_data %d\n");
+	  printf("Failed to find timer_call_data %d\n", timer_call_data_id);
 	} else {
       HASH_ADD(hh, timer_call_data->timer_values, metric->name, strlen(timer_value->metric->name), timer_value);
 	}
   }
 
-  taudb_clear_result(res);
+  taudb_clear_result(connection);
   taudb_close_transaction(connection);
 
   return (timer_values);

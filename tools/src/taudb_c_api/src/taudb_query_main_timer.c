@@ -1,5 +1,4 @@
 #include "taudb_internal.h"
-#include "libpq-fe.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -8,7 +7,6 @@ TAUDB_TIMER* taudb_query_main_timer(TAUDB_CONNECTION* connection, TAUDB_TRIAL* t
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_main_timer(%p)\n", trial);
 #endif
-  void *res;
   int nFields;
   int i, j;
 
@@ -31,62 +29,61 @@ TAUDB_TIMER* taudb_query_main_timer(TAUDB_CONNECTION* connection, TAUDB_TRIAL* t
 #ifdef TAUDB_DEBUG
   printf("Query: %s\n", my_query);
 #endif
-  res = taudb_execute_query(connection, my_query);
+  taudb_execute_query(connection, my_query);
 
-  int nRows = taudb_get_num_rows(res);
+  int nRows = taudb_get_num_rows(connection);
   TAUDB_TIMER* timers = taudb_create_timers(nRows);
   taudb_numItems = nRows;
 
-  nFields = taudb_get_num_columns(res);
+  nFields = taudb_get_num_columns(connection);
 
   /* the rows */
-  for (i = 0; i < taudb_get_num_rows(res); i++)
+  for (i = 0; i < taudb_get_num_rows(connection); i++)
   {
     /* the columns */
     for (j = 0; j < nFields; j++) {
-      if (strcmp(taudb_get_column_name(res, j), "id") == 0) {
-        timers[i].id = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "trial") == 0) {
+      if (strcmp(taudb_get_column_name(connection, j), "id") == 0) {
+        timers[i].id = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "trial") == 0) {
         timers[i].trial = trial;
-      } else if (strcmp(taudb_get_column_name(res, j), "name") == 0) {
-        //timers[i].name = taudb_get_value(res, i, j);
-        timers[i].name = taudb_create_and_copy_string(taudb_get_value(res,i,j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "name") == 0) {
+        //timers[i].name = taudb_get_value(connection, i, j);
+        timers[i].name = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
 #ifdef TAUDB_DEBUG
         //printf("Got timer '%s'\n", timers[i].name);
 #endif
-      } else if (strcmp(taudb_get_column_name(res, j), "short_name") == 0) {
-        timers[i].short_name = taudb_create_and_copy_string(taudb_get_value(res,i,j));
-      } else if (strcmp(taudb_get_column_name(res, j), "source_file") == 0) {
-        //timers[i].source_file = taudb_get_value(res, i, j);
-        timers[i].source_file = taudb_create_and_copy_string(taudb_get_value(res,i,j));
-      } else if (strcmp(taudb_get_column_name(res, j), "line_number") == 0) {
-        timers[i].line_number = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "line_number_end") == 0) {
-        timers[i].line_number_end = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "column_number") == 0) {
-        timers[i].column_number = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "column_number_end") == 0) {
-        timers[i].column_number_end = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "group_name") == 0) {
+      } else if (strcmp(taudb_get_column_name(connection, j), "short_name") == 0) {
+        timers[i].short_name = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "source_file") == 0) {
+        //timers[i].source_file = taudb_get_value(connection, i, j);
+        timers[i].source_file = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "line_number") == 0) {
+        timers[i].line_number = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "line_number_end") == 0) {
+        timers[i].line_number_end = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "column_number") == 0) {
+        timers[i].column_number = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "column_number_end") == 0) {
+        timers[i].column_number_end = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "group_name") == 0) {
         // tokenize the string, something like 'TAU_USER|MPI|...'
-        char* group_names = taudb_get_value(res, i, j);
+        char* group_names = taudb_get_value(connection, i, j);
         if (strlen(group_names) > 0) {
           taudb_parse_timer_group_names(trial, &(timers[i]), group_names);
         } else {
-          timers[i].group_count = 0;
           timers[i].groups = NULL;
         }
-      } else if (strcmp(taudb_get_column_name(res, j), "inclusive") == 0) {
+      } else if (strcmp(taudb_get_column_name(connection, j), "inclusive") == 0) {
         continue;
       } else {
-        printf("Error: unknown column '%s'\n", taudb_get_column_name(res, j));
+        printf("Error: unknown column '%s'\n", taudb_get_column_name(connection, j));
         taudb_exit_nicely(connection);
       }
       // TODO - Populate the rest properly?
     } 
   }
 
-  taudb_clear_result(res);
+  taudb_clear_result(connection);
   taudb_close_transaction(connection);
 
   return (timers);
