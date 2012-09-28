@@ -983,7 +983,8 @@ for arg in "$@" ; do
 		;;
 
 	    -o*)
- 		if [ "x$arg" != "x-openmp" -a "x$arg" != "x-override_limits" -a "x$arg" != "x-openmp-stubs"  -a "x$arg" != "x-openmp_stubs" ]; then
+		testomp=`echo $myarg | sed -e 's/-openmp//'`
+ 		if [ "x$arg" = "x$testomp" -a "x$arg" != "x-override_limits" ]; then
 		    hasAnOutputFile=$TRUE
 		    passedOutputFile="${arg#"-o"}"
 		    echoIfDebug "\tHas an output file = $passedOutputFile"
