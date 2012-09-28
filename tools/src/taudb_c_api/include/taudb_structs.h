@@ -5,8 +5,10 @@
 #include "uthash.h"
 #include "taudb_structs.h"
 
-#ifdef __TAUDB_POSTGRESQL__
+#if defined __TAUDB_POSTGRESQL__
 #include "libpq-fe.h"
+#elif defined __TAUDB_SQLITE__
+#include "sqlite3.h"
 #endif
 
 #ifndef boolean
@@ -61,11 +63,15 @@ typedef struct taudb_data_source {
 
 typedef struct taudb_connection {
   TAUDB_CONFIGURATION *configuration;
-#ifdef __TAUDB_POSTGRESQL__
+#if defined __TAUDB_POSTGRESQL__
   PGconn *connection;
+  PGresult *res;
+#elif defined __TAUDB_SQLITE__
+  sqlite3 *connection;
+  sqlite3_stmt *ppStmt;
+  int rc; 
 #endif
   TAUDB_SCHEMA_VERSION schema_version;
-  int data_source_count;
   boolean inTransaction;
   TAUDB_DATA_SOURCE* data_sources_by_id;
   TAUDB_DATA_SOURCE* data_sources_by_name;
@@ -92,19 +98,6 @@ typedef struct taudb_trial {
  int contexts_per_node;      /* rarely used, usually 1. */
  int threads_per_context;    /* max number of threads per process (can be less on individual processes) */
  int total_threads;          /* total number of threads */
- /* array sizes */
- int metric_count;           /* how many metrics were collected. Usually 1 (Time), can be hardware counters. */
- int time_range_count;       /* how many time_ranges were collected. */
- int thread_count;           /* TOTAL number of threads. helpful to know - can be less than nodes*threads_per_node. */
- int derived_thread_count;   /* number of derived threads. There should be 7, with negative thread indexes. */
- int timer_count;            /* number of timers. not all timers seen or collected on all threads. */
- int timer_group_count;      /* number of timer groups. examples include TAU_USER, TAU_DEFAULT, MPI, IO, etc. */
- int timer_callpath_count;   /* how many nodes are there in the combined callpath tree? */
- int timer_call_data_count;  /* should be less than timer_callpath_count * thread_count (not all timers seen on all threads) */
- int counter_count;          /* how many counters did we collect? */
- int counter_value_count;    /* should be the same as counter_count * thread_count */
- int primary_metadata_count; /* primary metadata fields */
- int secondary_metadata_count; /* secondary metadata fields */
  /* arrays of data for this trial */
  struct taudb_metric* metrics_by_id;
  struct taudb_metric* metrics_by_name;
@@ -137,7 +130,6 @@ typedef struct taudb_thread {
  int context_rank; /* which context? USUALLY 0 */
  int thread_rank;  /* what is this thread's rank in the process */
  int index;        /* what is this threads OVERALL index? ranges from 0 to trial.thread_count-1 */
- int secondary_metadata_count;
  struct taudb_secondary_metadata* secondary_metadata;
  UT_hash_handle hh;
 } TAUDB_THREAD;
@@ -180,8 +172,7 @@ typedef struct taudb_timer {
  int line_number_end;        /* what line does the timer end on? */
  int column_number;          /* what column number does the timer start on? */
  int column_number_end;      /* what column number does the timer end on? */
- int group_count;            /* how many groups does this timer belong to? */
- int parameter_count;        /* how many parameters does this timer have? */
+ int group_count;
  struct taudb_timer_group** groups;   /* array of pointers to groups */
  struct taudb_timer_parameter* parameters;   /* array of parameters */
  UT_hash_handle hh1;          /* hash key for id lookup */
@@ -245,7 +236,6 @@ typedef struct taudb_timer_call_data {
  TAUDB_TIMER_CALL_DATA_KEY key; /* hash table key */
  int calls;  /* number of times this timer was seen */
  int subroutines;  /* number of timers this timer calls */
- int timer_value_count;  /* should be equal to taudb_trial.metric_count */
  struct taudb_timer_value* timer_values;
  UT_hash_handle hh1;
  UT_hash_handle hh2;
@@ -334,14 +324,12 @@ typedef struct taudb_secondary_metadata {
 typedef struct perfdmf_experiment {
  int id;
  char* name;
- int primary_metadata_count;
  struct taudb_primary_metadata* primary_metadata;
 } PERFDMF_EXPERIMENT;
 
 typedef struct perfdmf_application {
  int id;
  char* name;
- int primary_metadata_count;
  struct taudb_primary_metadata* primary_metadata;
 } PERFDMF_APPLICATION;
 

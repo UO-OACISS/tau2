@@ -1,5 +1,4 @@
 #include "taudb_internal.h"
-#include "libpq-fe.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -8,7 +7,6 @@ TAUDB_COUNTER_VALUE* taudb_query_counter_values(TAUDB_CONNECTION* connection, TA
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_counter_values(%p)\n", trial);
 #endif
-  void *res;
   int nFields;
   int i, j;
 
@@ -19,7 +17,7 @@ TAUDB_COUNTER_VALUE* taudb_query_counter_values(TAUDB_CONNECTION* connection, TA
 
   // if the Trial already has the data, return it.
   if (trial->counter_values != NULL) {
-    taudb_numItems = trial->counter_value_count;
+    taudb_numItems = HASH_CNT(hh1,trial->counter_values);
     return trial->counter_values;
   }
 
@@ -37,50 +35,50 @@ TAUDB_COUNTER_VALUE* taudb_query_counter_values(TAUDB_CONNECTION* connection, TA
 #ifdef TAUDB_DEBUG
   printf("'%s'\n",my_query);
 #endif
-  res = taudb_execute_query(connection, my_query);
+  taudb_execute_query(connection, my_query);
 
-  int nRows = taudb_get_num_rows(res);
+  int nRows = taudb_get_num_rows(connection);
   taudb_numItems = nRows;
 #ifdef TAUDB_DEBUG
   printf("'%d' rows returned\n",nRows);
 #endif
 
-  nFields = taudb_get_num_columns(res);
+  nFields = taudb_get_num_columns(connection);
 
   /* the rows */
-  for (i = 0; i < taudb_get_num_rows(res); i++)
+  for (i = 0; i < taudb_get_num_rows(connection); i++)
   {
-    TAUDB_COUNTER_VALUE* counter_value = (TAUDB_COUNTER_VALUE*)calloc(1, sizeof(TAUDB_COUNTER_VALUE));
+    TAUDB_COUNTER_VALUE* counter_value = taudb_create_counter_values(1);
     memset(&(counter_value->key), 0, sizeof(TAUDB_COUNTER_VALUE_KEY));
     /* the columns */
     int node = 0;
     int context = 0;
     int thread = 0;
     for (j = 0; j < nFields; j++) {
-      if (strcmp(taudb_get_column_name(res, j), "atomic_event") == 0) {
-        counter_value->key.counter = taudb_get_counter_by_id(trial->counters_by_id, atoi(taudb_get_value(res, i, j)));
-      } else if (strcmp(taudb_get_column_name(res, j), "counter") == 0) {
-        counter_value->key.counter = taudb_get_counter_by_id(trial->counters_by_id, atoi(taudb_get_value(res, i, j)));
-      } else if (strcmp(taudb_get_column_name(res, j), "timer_callpath") == 0) {
-        counter_value->key.context = taudb_get_timer_callpath_by_id(trial->timer_callpaths_by_id, atoi(taudb_get_value(res, i, j)));
-      } else if (strcmp(taudb_get_column_name(res, j), "node") == 0) {
-        node = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "context") == 0) {
-        context = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "thread") == 0) {
-        thread = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "sample_count") == 0) {
-        counter_value->sample_count = atoi(taudb_get_value(res,i,j));
-      } else if (strcmp(taudb_get_column_name(res, j), "maximum_value") == 0) {
-        counter_value->maximum_value = atof(taudb_get_value(res,i,j));
-      } else if (strcmp(taudb_get_column_name(res, j), "minimum_value") == 0) {
-        counter_value->minimum_value = atof(taudb_get_value(res,i,j));
-      } else if (strcmp(taudb_get_column_name(res, j), "mean_value") == 0) {
-        counter_value->mean_value = atof(taudb_get_value(res,i,j));
-      } else if (strcmp(taudb_get_column_name(res, j), "standard_deviation") == 0) {
-        counter_value->standard_deviation = atof(taudb_get_value(res,i,j));
+      if (strcmp(taudb_get_column_name(connection, j), "atomic_event") == 0) {
+        counter_value->key.counter = taudb_get_counter_by_id(trial->counters_by_id, atoi(taudb_get_value(connection, i, j)));
+      } else if (strcmp(taudb_get_column_name(connection, j), "counter") == 0) {
+        counter_value->key.counter = taudb_get_counter_by_id(trial->counters_by_id, atoi(taudb_get_value(connection, i, j)));
+      } else if (strcmp(taudb_get_column_name(connection, j), "timer_callpath") == 0) {
+        counter_value->key.context = taudb_get_timer_callpath_by_id(trial->timer_callpaths_by_id, atoi(taudb_get_value(connection, i, j)));
+      } else if (strcmp(taudb_get_column_name(connection, j), "node") == 0) {
+        node = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "context") == 0) {
+        context = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "thread") == 0) {
+        thread = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "sample_count") == 0) {
+        counter_value->sample_count = atoi(taudb_get_value(connection,i,j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "maximum_value") == 0) {
+        counter_value->maximum_value = atof(taudb_get_value(connection,i,j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "minimum_value") == 0) {
+        counter_value->minimum_value = atof(taudb_get_value(connection,i,j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "mean_value") == 0) {
+        counter_value->mean_value = atof(taudb_get_value(connection,i,j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "standard_deviation") == 0) {
+        counter_value->standard_deviation = atof(taudb_get_value(connection,i,j));
       } else {
-        printf("Error: unknown column '%s'\n", taudb_get_column_name(res, j));
+        printf("Error: unknown column '%s'\n", taudb_get_column_name(connection, j));
         taudb_exit_nicely(connection);
       }
     } 
@@ -92,7 +90,7 @@ TAUDB_COUNTER_VALUE* taudb_query_counter_values(TAUDB_CONNECTION* connection, TA
     counter_value->key.thread = taudb_get_thread(trial->threads, thread_index);
     HASH_ADD(hh1, trial->counter_values, key, sizeof(TAUDB_COUNTER_VALUE_KEY), counter_value);
   }
-  taudb_clear_result(res);
+  taudb_clear_result(connection);
   taudb_close_transaction(connection);
 
   return (trial->counter_values);

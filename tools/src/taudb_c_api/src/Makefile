@@ -9,7 +9,6 @@
 #****************************************************************************
 
 .SUFFIXES : .c
-.SILENT :
 
 include ../Makefile.inc
 
@@ -18,13 +17,12 @@ SOURCES=${wildcard *.c}
 OBJS=${patsubst %.c, %.o, ${SOURCES}}
 
 TARGET=../lib/libtaudb.a
-LIBS=$(POSTGRESQL_LIBRARIES)
-INCLUDE=-I../include $(POSTGRESQL_INCLUDES)
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS) $(HEADERS)
 	echo "  Making : $@"
+	rm -f $(TARGET)
 	$(AR) -qc $(TARGET) $(OBJS)
 
 # rebuild everything if the headers or the makefile changes
@@ -32,11 +30,7 @@ $(OBJS): $(HEADERS) Makefile ../Makefile.inc
 
 .c.o:
 	echo "Building : $@ from $<"
-	# $(CC) $(FLAGS) -E $(INCLUDE) $< $(PERFDMF_SUPPORT) $(DEBUG) > /tmp/a.c
-	# egrep -v '^#' /tmp/a.c > /tmp/$<
-	# indent /tmp/$<
-	# $(CC) $(FLAGS) -c $(INCLUDE) /tmp/$< -o $@ $(PERFDMF_SUPPORT) $(DEBUG)
-	$(CC) $(FLAGS) -c $(INCLUDE) $< -o $@ $(PERFDMF_SUPPORT) $(DEBUG)
+	$(CC) $(FLAGS) -c -I../include $(INCLUDE) $< -o $@ $(DEBUG)
 
 clean:
 	echo "Removing : $(OBJS) $(TARGET)"

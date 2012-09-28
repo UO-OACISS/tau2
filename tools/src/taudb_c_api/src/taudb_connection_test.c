@@ -1,5 +1,4 @@
 #include "taudb_internal.h"
-#include "libpq-fe.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -51,23 +50,23 @@ int taudb_api_test(TAUDB_CONNECTION* connection, char* table_name) {
   printf("Selecting from %s...\n", table_name);
   char my_query[256] = "select * from ";
   strcat(my_query, table_name);
-  void* res = taudb_execute_query(connection, my_query);
+  taudb_execute_query(connection, my_query);
 
   /* first, print out the attribute names */
-  nFields = taudb_get_num_columns(res);
+  nFields = taudb_get_num_columns(connection);
   for (i = 0; i < nFields; i++) {
-    printf("%-15s", taudb_get_column_name(res, i));
+    printf("%-15s", taudb_get_column_name(connection, i));
   }
   printf("\n\n");
 
   /* next, print out the rows */
-  for (i = 0; i < taudb_get_num_rows(res); i++)
+  for (i = 0; i < taudb_get_num_rows(connection); i++)
   {
     for (j = 0; j < nFields; j++)
-            printf("%-15s", taudb_get_value(res, i, j));
+            printf("%-15s", taudb_get_value(connection, i, j));
     printf("\n");
   }
-  taudb_clear_result(res);
+  taudb_clear_result(connection);
   taudb_close_transaction(connection);
   return 0;
 }

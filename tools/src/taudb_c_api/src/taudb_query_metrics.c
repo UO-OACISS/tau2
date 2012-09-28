@@ -1,5 +1,4 @@
 #include "taudb_internal.h"
-#include "libpq-fe.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -8,7 +7,6 @@ TAUDB_METRIC* taudb_query_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* tri
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_metrics(%p)\n", trial);
 #endif
-  void *res;
   int nFields;
   int i, j;
 
@@ -19,7 +17,7 @@ TAUDB_METRIC* taudb_query_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* tri
 
   //if the Trial already has the data, return it.
   if (trial->metrics_by_id != NULL) {
-    taudb_numItems = trial->metric_count;
+    taudb_numItems = HASH_CNT(hh1,trial->metrics_by_id);
     return trial->metrics_by_id;
   }
 
@@ -33,9 +31,9 @@ TAUDB_METRIC* taudb_query_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* tri
 #ifdef TAUDB_DEBUG
   printf("Query: %s\n", my_query);
 #endif
-  res = taudb_execute_query(connection, my_query);
+  taudb_execute_query(connection, my_query);
 
-  int nRows = taudb_get_num_rows(res);
+  int nRows = taudb_get_num_rows(connection);
   taudb_numItems = nRows;
 
   //TAUDB_METRIC* metrics = taudb_create_metrics(taudb_numItems);
@@ -43,24 +41,24 @@ TAUDB_METRIC* taudb_query_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* tri
   trial->metrics_by_id = NULL;
   trial->metrics_by_name = NULL;
 
-  nFields = taudb_get_num_columns(res);
+  nFields = taudb_get_num_columns(connection);
 
   /* the rows */
-  for (i = 0; i < taudb_get_num_rows(res); i++)
+  for (i = 0; i < taudb_get_num_rows(connection); i++)
   {
-    TAUDB_METRIC* metric = (TAUDB_METRIC*)calloc(1, sizeof(TAUDB_METRIC));
+    TAUDB_METRIC* metric = taudb_create_metrics(1);
     /* the columns */
     for (j = 0; j < nFields; j++) {
-	  if (strcmp(taudb_get_column_name(res, j), "id") == 0) {
-	    metric->id = atoi(taudb_get_value(res, i, j));
-	  } else if (strcmp(taudb_get_column_name(res, j), "trial") == 0) {
+	  if (strcmp(taudb_get_column_name(connection, j), "id") == 0) {
+	    metric->id = atoi(taudb_get_value(connection, i, j));
+	  } else if (strcmp(taudb_get_column_name(connection, j), "trial") == 0) {
 	    //metric->trial = trial;
-	  } else if (strcmp(taudb_get_column_name(res, j), "name") == 0) {
-	    metric->name = taudb_create_and_copy_string(taudb_get_value(res,i,j));
-	  } else if (strcmp(taudb_get_column_name(res, j), "derived") == 0) {
-	    metric->derived = atoi(taudb_get_value(res, i, j));
+	  } else if (strcmp(taudb_get_column_name(connection, j), "name") == 0) {
+	    metric->name = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
+	  } else if (strcmp(taudb_get_column_name(connection, j), "derived") == 0) {
+	    metric->derived = atoi(taudb_get_value(connection, i, j));
 	  } else {
-	    printf("Error: unknown column '%s'\n", taudb_get_column_name(res, j));
+	    printf("Error: unknown column '%s'\n", taudb_get_column_name(connection, j));
 	    taudb_exit_nicely(connection);
 	  }
 	} 
@@ -68,7 +66,7 @@ TAUDB_METRIC* taudb_query_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* tri
 	HASH_ADD_KEYPTR(hh2, trial->metrics_by_name, metric->name, strlen(metric->name), metric);
   }
 
-  taudb_clear_result(res);
+  taudb_clear_result(connection);
   taudb_close_transaction(connection);
 
   return (trial->metrics_by_id);

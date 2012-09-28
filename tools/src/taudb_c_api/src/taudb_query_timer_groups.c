@@ -1,5 +1,4 @@
 #include "taudb_internal.h"
-#include "libpq-fe.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -8,7 +7,6 @@ TAUDB_TIMER_GROUP* taudb_query_timer_groups(TAUDB_CONNECTION* connection, TAUDB_
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_group(%p)\n", trial);
 #endif
-  void *res;
   int nFields;
   int i, j;
 
@@ -19,7 +17,7 @@ TAUDB_TIMER_GROUP* taudb_query_timer_groups(TAUDB_CONNECTION* connection, TAUDB_
 
   //if the Trial already has the data, return it.
   if (trial->timer_groups != NULL) {
-    taudb_numItems = trial->timer_group_count;
+    taudb_numItems = HASH_CNT(hh,trial->timer_groups);
     return trial->timer_groups;
   }
 
@@ -38,29 +36,29 @@ TAUDB_TIMER_GROUP* taudb_query_timer_groups(TAUDB_CONNECTION* connection, TAUDB_
 #ifdef TAUDB_DEBUG
   printf("%s\n", my_query);
 #endif
-  res = taudb_execute_query(connection, my_query);
+  taudb_execute_query(connection, my_query);
 
-  int nRows = taudb_get_num_rows(res);
+  int nRows = taudb_get_num_rows(connection);
   TAUDB_TIMER_GROUP* timer_groups = NULL;
   taudb_numItems = nRows;
 
-  nFields = taudb_get_num_columns(res);
+  nFields = taudb_get_num_columns(connection);
 
   /* the rows */
-  for (i = 0; i < taudb_get_num_rows(res); i++)
+  for (i = 0; i < taudb_get_num_rows(connection); i++)
   {
-    TAUDB_TIMER_GROUP* timer_group = (TAUDB_TIMER_GROUP*)malloc(sizeof(TAUDB_TIMER_GROUP));
+    TAUDB_TIMER_GROUP* timer_group = taudb_create_timer_groups(1);
     /* the columns */
     for (j = 0; j < nFields; j++) {
-      if (strcmp(taudb_get_column_name(res, j), "name") == 0) {
-        timer_group->name = taudb_create_and_copy_string(taudb_get_value(res,i,j));
+      if (strcmp(taudb_get_column_name(connection, j), "name") == 0) {
+        timer_group->name = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
 #ifdef TAUDB_DEBUG_DEBUG
         printf("Got group '%s'\n", timer_group->name);
 #endif
-      } else if (strcmp(taudb_get_column_name(res, j), "group_name") == 0) {
+      } else if (strcmp(taudb_get_column_name(connection, j), "group_name") == 0) {
 	  /*
         // tokenize the string, something like 'TAU_USER|MPI|...'
-        char* group_names = taudb_get_value(res, i, j);
+        char* group_names = taudb_get_value(connection, i, j);
         char* group = strtok(group_names, "|");
         if (group != NULL && (strlen(group_names) > 0)) {
 #ifdef TAUDB_DEBUG
@@ -86,7 +84,7 @@ TAUDB_TIMER_GROUP* taudb_query_timer_groups(TAUDB_CONNECTION* connection, TAUDB_
         }
 		  */
       } else {
-        printf("Error: unknown column '%s'\n", taudb_get_column_name(res, j));
+        printf("Error: unknown column '%s'\n", taudb_get_column_name(connection, j));
         taudb_exit_nicely(connection);
       }
       // TODO - Populate the rest properly?
@@ -96,7 +94,7 @@ TAUDB_TIMER_GROUP* taudb_query_timer_groups(TAUDB_CONNECTION* connection, TAUDB_
     HASH_ADD_KEYPTR(hh, timer_groups, timer_group->name, strlen(timer_group->name), timer_group);
   }
 
-  taudb_clear_result(res);
+  taudb_clear_result(connection);
   taudb_close_transaction(connection);
  
   return (timer_groups);

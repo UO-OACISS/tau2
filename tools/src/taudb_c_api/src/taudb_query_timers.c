@@ -1,5 +1,4 @@
 #include "taudb_internal.h"
-#include "libpq-fe.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -11,7 +10,6 @@ TAUDB_TIMER* taudb_query_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_timers(%p)\n", trial);
 #endif
-  void *res;
   int nFields;
   int i, j;
 
@@ -22,7 +20,7 @@ TAUDB_TIMER* taudb_query_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial
 
   //if the Trial already has the data, return it.
   if (trial->timers_by_id != NULL) {
-    taudb_numItems = trial->timer_count;
+    taudb_numItems = HASH_CNT(hh1,trial->timers_by_id);
     return trial->timers_by_id;
   }
 
@@ -43,61 +41,59 @@ TAUDB_TIMER* taudb_query_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial
 #ifdef TAUDB_DEBUG
   printf("%s\n", my_query);
 #endif
-  res = taudb_execute_query(connection, my_query);
+  taudb_execute_query(connection, my_query);
 
-  int nRows = taudb_get_num_rows(res);
+  int nRows = taudb_get_num_rows(connection);
   taudb_numItems = nRows;
 
-  nFields = taudb_get_num_columns(res);
+  nFields = taudb_get_num_columns(connection);
 
   /* the rows */
-  for (i = 0; i < taudb_get_num_rows(res); i++)
+  for (i = 0; i < taudb_get_num_rows(connection); i++)
   {
     TAUDB_TIMER* timer = taudb_create_timers(1);
     /* the columns */
     for (j = 0; j < nFields; j++) {
-      if (strcmp(taudb_get_column_name(res, j), "id") == 0) {
-        timer->id = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "trial") == 0) {
+      if (strcmp(taudb_get_column_name(connection, j), "id") == 0) {
+        timer->id = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "trial") == 0) {
         timer->trial = trial;
-      } else if (strcmp(taudb_get_column_name(res, j), "name") == 0) {
-        timer->name = taudb_create_and_copy_string(taudb_get_value(res,i,j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "name") == 0) {
+        timer->name = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
         taudb_trim(timer->name);
 #ifdef TAUDB_DEBUG_DEBUG
         printf("Got timer '%s'\n", timer->name);
 #endif
-      } else if (strcmp(taudb_get_column_name(res, j), "short_name") == 0) {
-        printf("Short Name: %s\n", taudb_get_value(res,i,j));
-        timer->short_name = taudb_create_and_copy_string(taudb_get_value(res,i,j));
-      } else if (strcmp(taudb_get_column_name(res, j), "source_file") == 0) {
-        timer->source_file = taudb_create_and_copy_string(taudb_get_value(res,i,j));
-      } else if (strcmp(taudb_get_column_name(res, j), "line_number") == 0) {
-        timer->line_number = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "line_number_end") == 0) {
-        timer->line_number_end = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "column_number") == 0) {
-        timer->column_number = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "column_number_end") == 0) {
-        timer->column_number_end = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "group_name") == 0) {
+      } else if (strcmp(taudb_get_column_name(connection, j), "short_name") == 0) {
+        printf("Short Name: %s\n", taudb_get_value(connection,i,j));
+        timer->short_name = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "source_file") == 0) {
+        timer->source_file = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "line_number") == 0) {
+        timer->line_number = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "line_number_end") == 0) {
+        timer->line_number_end = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "column_number") == 0) {
+        timer->column_number = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "column_number_end") == 0) {
+        timer->column_number_end = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "group_name") == 0) {
         // tokenize the string, something like 'TAU_USER|MPI|...'
-        char* group_names = taudb_get_value(res, i, j);
+        char* group_names = taudb_get_value(connection, i, j);
         taudb_parse_timer_group_names(trial, timer, group_names);
-      } else if (strcmp(taudb_get_column_name(res, j), "order_rank") == 0) {
+      } else if (strcmp(taudb_get_column_name(connection, j), "order_rank") == 0) {
         continue; // ignore this synthetic value
       } else {
-        printf("Error: unknown column '%s'\n", taudb_get_column_name(res, j));
+        printf("Error: unknown column '%s'\n", taudb_get_column_name(connection, j));
         taudb_exit_nicely(connection);
       }
-      // TODO - Populate the rest properly?
-      timer->parameter_count = 0;
     } 
     // save this in the hash
     HASH_ADD(hh1, trial->timers_by_id, id, sizeof(int), timer);
     HASH_ADD_KEYPTR(hh2, trial->timers_by_name, timer->name, sizeof(timer->name), timer);
   }
 
-  taudb_clear_result(res);
+  taudb_clear_result(connection);
   taudb_close_transaction(connection);
 
   return (trial->timers_by_id);

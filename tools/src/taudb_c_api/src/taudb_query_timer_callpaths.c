@@ -1,5 +1,4 @@
 #include "taudb_internal.h"
-#include "libpq-fe.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -12,7 +11,6 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(TAUDB_CONNECTION* connection, 
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_private_query_timer_callpaths(%p,%p)\n", trial, timer);
 #endif
-  void *res;
   int nFields;
   int i, j;
 
@@ -23,7 +21,7 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(TAUDB_CONNECTION* connection, 
   
   // if the Trial already has the callpath data, return it.
   if (trial->timer_callpaths_by_id != NULL) {
-    taudb_numItems = trial->timer_callpath_count;
+    taudb_numItems = HASH_CNT(hh1,trial->timer_callpaths_by_id);
     return trial->timer_callpaths_by_id;
   }
 
@@ -49,30 +47,30 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(TAUDB_CONNECTION* connection, 
 #ifdef TAUDB_DEBUG
   printf("%s\n", my_query);
 #endif
-  res = taudb_execute_query(connection, my_query);
+  taudb_execute_query(connection, my_query);
 
-  int nRows = taudb_get_num_rows(res);
+  int nRows = taudb_get_num_rows(connection);
   taudb_numItems = nRows;
 
-  nFields = taudb_get_num_columns(res);
+  nFields = taudb_get_num_columns(connection);
 
   /* the rows */
-  for (i = 0; i < taudb_get_num_rows(res); i++)
+  for (i = 0; i < taudb_get_num_rows(connection); i++)
   {
-    TAUDB_TIMER_CALLPATH* timer_callpath = (TAUDB_TIMER_CALLPATH*)calloc(1, sizeof(TAUDB_TIMER_CALLPATH));
+    TAUDB_TIMER_CALLPATH* timer_callpath = taudb_create_timer_callpaths(1);
     /* the columns */
     for (j = 0; j < nFields; j++) {
-      if (strcmp(taudb_get_column_name(res, j), "id") == 0) {
-        timer_callpath->id = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "timer") == 0) {
-        timer_callpath->timer = taudb_get_timer_by_id(trial->timers_by_id, atoi(taudb_get_value(res, i, j)));
-      } else if (strcmp(taudb_get_column_name(res, j), "parent") == 0) {
+      if (strcmp(taudb_get_column_name(connection, j), "id") == 0) {
+        timer_callpath->id = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "timer") == 0) {
+        timer_callpath->timer = taudb_get_timer_by_id(trial->timers_by_id, atoi(taudb_get_value(connection, i, j)));
+      } else if (strcmp(taudb_get_column_name(connection, j), "parent") == 0) {
         TAUDB_TIMER_CALLPATH* parent = NULL;
-        int parent_id = atoi(taudb_get_value(res, i, j));
+        int parent_id = atoi(taudb_get_value(connection, i, j));
         HASH_FIND(hh1, trial->timer_callpaths_by_id, &(parent_id), sizeof(int), parent);
 		timer_callpath->parent = parent;
       } else {
-        printf("Error: unknown column '%s'\n", taudb_get_column_name(res, j));
+        printf("Error: unknown column '%s'\n", taudb_get_column_name(connection, j));
         taudb_exit_nicely(connection);
       }
     } 
@@ -81,7 +79,7 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(TAUDB_CONNECTION* connection, 
     HASH_ADD_KEYPTR(hh2, trial->timer_callpaths_by_name, timer_callpath->name, strlen(timer_callpath->name), timer_callpath);
   }
 
-  taudb_clear_result(res);
+  taudb_clear_result(connection);
   taudb_close_transaction(connection);
 
   return (trial->timer_callpaths_by_id);
@@ -93,8 +91,7 @@ TAUDB_TIMER_CALLPATH* taudb_query_all_timer_callpaths(TAUDB_CONNECTION* connecti
 }
 
 char* taudb_get_callpath_string(TAUDB_TIMER_CALLPATH* timer_callpath) {
-  char* full_string = (char*)calloc(strlen(timer_callpath->timer->name) + 1, sizeof(char));
-  strcpy(full_string, timer_callpath->timer->name);
+  char* full_string = taudb_create_and_copy_string(timer_callpath->timer->name);
   TAUDB_TIMER_CALLPATH* parent = timer_callpath->parent;
   while (parent != NULL) {
     // resize for "string -> string" with null terminator
@@ -108,7 +105,6 @@ char* taudb_get_callpath_string(TAUDB_TIMER_CALLPATH* timer_callpath) {
 
 
 TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths_2005(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, TAUDB_TIMER* timer) {
-  void *res;
   int nFields;
   int i, j;
 
@@ -117,7 +113,7 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths_2005(TAUDB_CONNECTION* connect
   /* iterate over the timers, and create flat profile callpaths for the timers */
   TAUDB_TIMER *current, *tmp;
   HASH_ITER(hh1, trial->timers_by_id, current, tmp) {
-    TAUDB_TIMER_CALLPATH* timer_callpath = (TAUDB_TIMER_CALLPATH*)calloc(1, sizeof(TAUDB_TIMER_CALLPATH));
+    TAUDB_TIMER_CALLPATH* timer_callpath = taudb_create_timer_callpaths(1);
     timer_callpath->id = current->id;
     timer_callpath->timer = current;
     timer_callpath->name = taudb_create_and_copy_string(current->name);
@@ -140,23 +136,23 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths_2005(TAUDB_CONNECTION* connect
 #ifdef TAUDB_DEBUG
   printf("%s\n", my_query);
 #endif
-  res = taudb_execute_query(connection, my_query);
+  taudb_execute_query(connection, my_query);
 
-  int nRows = taudb_get_num_rows(res);
+  int nRows = taudb_get_num_rows(connection);
   taudb_numItems += nRows;
 
-  nFields = taudb_get_num_columns(res);
+  nFields = taudb_get_num_columns(connection);
 
   /* the rows */
-  for (i = 0; i < taudb_get_num_rows(res); i++)
+  for (i = 0; i < taudb_get_num_rows(connection); i++)
   {
-    TAUDB_TIMER_CALLPATH* timer_callpath = (TAUDB_TIMER_CALLPATH*)calloc(1, sizeof(TAUDB_TIMER_CALLPATH));
+    TAUDB_TIMER_CALLPATH* timer_callpath = taudb_create_timer_callpaths(1);
     /* the columns */
     for (j = 0; j < nFields; j++) {
-      if (strcmp(taudb_get_column_name(res, j), "id") == 0) {
-        timer_callpath->id = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "name") == 0) {
-        timer_callpath->name = taudb_create_and_copy_string(taudb_get_value(res,i,j));
+      if (strcmp(taudb_get_column_name(connection, j), "id") == 0) {
+        timer_callpath->id = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "name") == 0) {
+        timer_callpath->name = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
         taudb_trim(timer_callpath->name);
 #ifdef TAUDB_DEBUG_DEBUG
         printf("Got timer_callpath '%s'\n", timer_callpath->name);
@@ -167,7 +163,7 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths_2005(TAUDB_CONNECTION* connect
     free(timer_callpath);
   }
 
-  taudb_clear_result(res);
+  taudb_clear_result(connection);
   taudb_close_transaction(connection);
 
   return (trial->timer_callpaths_by_id);
@@ -207,7 +203,7 @@ void taudb_process_callpath_timer(TAUDB_TRIAL* trial, TAUDB_TIMER_CALLPATH* time
 #endif
     } else {
       // make the timer, and add it to the name hash
-      parent_callpath = (TAUDB_TIMER_CALLPATH*)calloc(1, sizeof(TAUDB_TIMER_CALLPATH));
+      parent_callpath = taudb_create_timer_callpaths(1);
       parent_callpath->timer = parent_timer;
       parent_callpath->name = taudb_create_and_copy_string(tmp_callpath);
       parent_callpath->parent = last_parent;
@@ -252,7 +248,7 @@ void taudb_process_callpath_timer(TAUDB_TRIAL* trial, TAUDB_TIMER_CALLPATH* time
 #endif
   } else {
     // make the timer, and add it to the name hash
-    leaf_callpath = (TAUDB_TIMER_CALLPATH*)calloc(1, sizeof(TAUDB_TIMER_CALLPATH));
+    leaf_callpath = taudb_create_timer_callpaths(1);
   }
   leaf_callpath->id = timer_callpath->id;
   leaf_callpath->timer = leaf_timer;

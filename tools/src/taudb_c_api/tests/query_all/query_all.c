@@ -24,19 +24,19 @@ int main (int argc, char** argv) {
      int numApplications = taudb_numItems;
      for (a = 0 ; a < numApplications ; a = a+1) {
        printf("  Application name: %s, id: %d\n", applications[a].name, applications[a].id);
-	   dump_metadata(applications[a].primary_metadata, applications[a].primary_metadata_count);
+	   dump_metadata(applications[a].primary_metadata);
        PERFDMF_EXPERIMENT* experiments = perfdmf_query_experiments(connection, &(applications[a]));
        printf("%d experiments:\n", taudb_numItems);
        int numExperiments = taudb_numItems;
        for (e = 0 ; e < numExperiments ; e = e+1) {
          printf("  Experiment name: %s, id: %d\n", experiments[e].name, experiments[e].id);
-	     dump_metadata(experiments[e].primary_metadata, experiments[e].primary_metadata_count);
+	     dump_metadata(experiments[e].primary_metadata);
          TAUDB_TRIAL* trials = perfdmf_query_trials(connection, &(experiments[e]));
          printf("%d trials:\n", taudb_numItems);
          int numTrials = taudb_numItems;
          for (t = 0 ; t < numTrials ; t = t+1) {
            printf("  Trial name: '%s', id: %d\n", trials[t].name, trials[t].id);
-	       dump_metadata(trials[t].primary_metadata, trials[t].primary_metadata_count);
+	       dump_metadata(trials[t].primary_metadata);
            dump_trial(connection, &(trials[t]), TRUE);
          }
        }
@@ -52,7 +52,7 @@ int main (int argc, char** argv) {
      int numTrials = taudb_numItems;
      for (t = 0 ; t < numTrials ; t = t+1) {
         printf("  Trial name: '%s', id: %d\n", trials[t].name, trials[t].id);
-	    dump_metadata(trials[t].primary_metadata, trials[t].primary_metadata_count);
+	    dump_metadata(trials[t].primary_metadata);
         dump_trial(connection, &(trials[t]), TRUE);
      }
    }

@@ -1,10 +1,8 @@
 #include "taudb_internal.h"
-#include "libpq-fe.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-#ifdef TAUDB_PERFDMF
 PERFDMF_APPLICATION* perfdmf_create_applications(int count){ 
  PERFDMF_APPLICATION* applications = (PERFDMF_APPLICATION*) (calloc (count, sizeof (PERFDMF_APPLICATION)));
  return applications;
@@ -14,10 +12,14 @@ PERFDMF_EXPERIMENT* perfdmf_create_experiments(int count){
  PERFDMF_EXPERIMENT* experiments = (PERFDMF_EXPERIMENT*) (calloc (count, sizeof (PERFDMF_EXPERIMENT)));
  return experiments;
 }
-#endif
 
 TAUDB_CONFIGURATION* taudb_create_configuration(){ 
  TAUDB_CONFIGURATION* config = (TAUDB_CONFIGURATION*) (calloc (1, sizeof (TAUDB_CONFIGURATION)));
+ return config;
+}
+
+TAUDB_CONNECTION* taudb_create_connection(){ 
+ TAUDB_CONNECTION* config = (TAUDB_CONNECTION*) (calloc (1, sizeof (TAUDB_CONNECTION)));
  return config;
 }
 
@@ -99,6 +101,11 @@ TAUDB_TIMER_VALUE* taudb_create_timer_values(int count){
 TAUDB_TIMER_CALLPATH* taudb_create_timer_callpaths(int count){ 
  TAUDB_TIMER_CALLPATH* timer_callpaths = (TAUDB_TIMER_CALLPATH*) (calloc (count, sizeof (TAUDB_TIMER_CALLPATH)));
  return timer_callpaths;
+}
+
+TAUDB_TIMER_CALL_DATA* taudb_create_timer_call_data(int count){ 
+ TAUDB_TIMER_CALL_DATA* timer_call_data = (TAUDB_TIMER_CALL_DATA*) (calloc (count, sizeof (TAUDB_TIMER_CALL_DATA)));
+ return timer_call_data;
 }
 
 char* taudb_create_and_copy_string(const char* in_string) {

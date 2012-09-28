@@ -9,7 +9,6 @@
 #****************************************************************************
 
 .SUFFIXES : .c
-.SILENT :
 
 include ../../Makefile.inc
 
@@ -18,8 +17,7 @@ SOURCES=${wildcard *.c}
 OBJS=${patsubst %.c, %.o, ${SOURCES}}
 
 TAUDBLIB=../../lib/libtaudb.a
-LIBS=$(POSTGRESQL_LIBRARIES)
-INCLUDE=-I. -I../../include $(POSTGRESQL_INCLUDES)
+INCLUDE=-I. -I../../include $(INCLUDES)
 TARGET=../libtaudb_dump.a
 
 all: $(TARGET)

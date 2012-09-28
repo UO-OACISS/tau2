@@ -1,6 +1,6 @@
 #include "taudb_api.h"
 
-extern void dump_metadata(TAUDB_PRIMARY_METADATA *metadata, int count);
+extern void dump_metadata(TAUDB_PRIMARY_METADATA *metadata);
 extern void dump_trial(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter, boolean haveTrial);
 extern void dump_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter, boolean haveTrial);
 extern void dump_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter, boolean haveTrial);
