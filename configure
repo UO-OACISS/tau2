@@ -297,7 +297,7 @@ for arg in "$@"; do
     echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
     echo "    options [CC|KCC|g++|*xlC*|cxx|pgCC|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
     echo "                                          g++4|icpc|scgcc|pathCC|orCC]."
-    echo "-useropt='<param>' ....... arguments to compilers (defaults to -g -O2)."
+    echo "-useropt='<param>' .......... arguments to compilers (defaults to -O2)."
     echo ""
     echo "Installation Options:"
     echo "-prefix=<dir> ................ Specify a target installation directory."
@@ -425,7 +425,7 @@ for arg in "$@"; do
     echo "                                          g++4|icpc|scgcc|pathCC|orCC]."
     echo "-pdtcompdir=<compilerdir> . specify a different PDT compiler directory."
     echo "-pdtarchdir=<archdir> . specify a different PDT architecture directory."
-    echo "-useropt='<param>' ....... arguments to compilers (defaults to -g -O2)."
+    echo "-useropt='<param>' .......... arguments to compilers (defaults to -O2)."
     echo "-extrashlibopts='<parameters>' ...... arguments for building libTAU.so." 
     echo "-prefix=<dir> ................ Specify a target installation directory."
     echo "-exec-prefix=<arch> .......... Specify a target architecture directory."
@@ -615,11 +615,11 @@ c_compiler=default
 cxx_compiler=default
 pdt_cxx_compiler=default
 fixmakeargs=""
-useropt=-g#-O2
+useropt=-O2
 tag=no
 pathscale=no
 tautag=
-orig_useropt="-g -O2"
+orig_useropt="-O2"
 mpi=no
 mpi2=no
 mpiio=no
@@ -1490,9 +1490,10 @@ for arg in "$@"; do
  
   -useropt=*)
 # Note you might be passed -g#-O3 which becomes -g -O3
-    orig_useropt="$orig_useropt "`echo $arg | sed -e 's/-useropt=//' -e 's/#/ /g'`
+    orig_useropt=`echo $arg | sed -e 's/-useropt=//' -e 's/#/ /g'`
 # Note you might be passed -g -O3 which becomes -g#-O3 here
-    useropt="$useropt#"`echo $arg | sed -e 's/-useropt=//' -e 's/ /#/g'`
+    useropt=`echo $arg | sed -e 's/-useropt=//' -e 's/ /#/g'`
+    echo "NOTE: Compiler optimization must be specified manually with useropt"
     shift
     ;;
 
@@ -3838,9 +3839,15 @@ then
         ;;
   bgp)
 	mpiinc=/bgsys/drivers/ppcfloor/comm/xl/include
+        if [ $cxx_compiler = mpicxx ]; then
+	  mpiinc=/bgsys/drivers/ppcfloor/comm/include
+        fi
         ;;
   bgq)
 	mpiinc=/bgsys/drivers/ppcfloor/comm/xl/include
+        if [ $cxx_compiler = mpicxx ]; then
+	  mpiinc=/bgsys/drivers/ppcfloor/comm/include
+        fi
         ;;
   t3e|crayx1|craysv1)
 	mpiinc=/opt/ctl/mpt/mpt/include
@@ -4024,10 +4031,16 @@ then
         ;;
   bgp)
         mpilib=/bgsys/drivers/ppcfloor/comm/xl/lib
+        if [ $cxx_compiler = mpicxx ]; then
+	  mpilib=/bgsys/drivers/ppcfloor/comm/lib
+        fi
 	additional_mpilibs='-ldcmfcoll.cnk -ldcmf.cnk -lpthread -L/bgsys/drivers/ppcfloor/runtime/SPI -lSPI.cna' 
 	;;
   bgq)
         mpilib=/bgsys/drivers/ppcfloor/comm/xl/lib
+        if [ $cxx_compiler = mpicxx ]; then
+	  mpilib=/bgsys/drivers/ppcfloor/comm/lib
+        fi
 	#additional_mpilibs='-ldcmfcoll.cnk -ldcmf.cnk -lpthread -L/bgsys/drivers/ppcfloor/runtime/SPI -lSPI.cna' 
 	additional_mpilibs='-L/bgsys/drivers/ppcfloor/gnu-linux/powerpc64-bgq-linux/lib -lc -lnss_files -lnss_dns -lresolv'
 	;;
