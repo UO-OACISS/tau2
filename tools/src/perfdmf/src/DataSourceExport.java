@@ -711,13 +711,13 @@ public class DataSourceExport {
 			metType = metType + " (Counts)";
 
 		int metListLen = 15;
-		String headerFormat = "%-8s%-8s%-8s%-8s%-8s%-8s%-16s%-16s%-16s%-16s%-16s%-16s%-16s%-16s%-16s";
+		String headerFormat = "%-12s%-12s%-12s%-12s%-12s%-12s%-16s%-16s%-16s%-16s%-16s%-16s%-16s%-16s%-16s";
 		if (suppress) {
 			metListLen = 9;
-			System.out.format("%-24s%-48s%-48s%-8s", "   Calls",
+			System.out.format("%-36s%-48s%-48s%-8s", "   Calls",
 					"   Inclusive " + metType, "   Bytes Transferred",
 					"   Name");
-			headerFormat = "%-8s%-8s%-8s%-16s%-16s%-16s%-16s%-16s%-16s";
+			headerFormat = "%-12s%-12s%-12s%-16s%-16s%-16s%-16s%-16s%-16s";
 		} else {
 			System.out.format("%-24s%-24s%-48s%-48s%-48s%-8s", "   Calls",
 					"   Child Calls", "   Exclusive " + metType,
@@ -805,12 +805,12 @@ public class DataSourceExport {
 
 		if (suppress) {
 			System.out.format(
-					"%8.3f%8.3f%8.3f%16.5f%16.5f%16.5f%16.5f%16.5f%16.5f",
+					"%12.3f%12.3f%12.3f%16.5f%16.5f%16.5f%16.5f%16.5f%16.5f",
 					values[0], values[1], values[2], values[9], values[10],
 					values[11], values[12], values[13], values[14]);
 		} else {
 			System.out
-					.format("%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f%16.5f%16.5f%16.5f%16.5f%16.5f%16.5f%16.5f%16.5f%16.5f",
+					.format("%12.3f%12.3f%12.3f%12.3f%12.3f%12.3f%16.5f%16.5f%16.5f%16.5f%16.5f%16.5f%16.5f%16.5f%16.5f",
 							values[0], values[1], values[2], values[3],
 							values[4], values[5], values[6], values[7],
 							values[8], values[9], values[10], values[11],
