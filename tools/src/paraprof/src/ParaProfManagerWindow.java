@@ -795,6 +795,7 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 			}
 		}
 		
+		
 		if (object instanceof TreePath[]) {
 			TreePath[] paths = (TreePath[]) object;
 			for (int i = 0; i < paths.length; i++) {
