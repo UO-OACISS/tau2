@@ -771,7 +771,7 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 				DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) paths[i]
 				                                                                     .getLastPathComponent();
 				Object userObject = selectedNode.getUserObject();
-				handleDelete(userObject);
+				handleDelete(userObject, false);
 			}
 
 		} else if (object instanceof ParaProfApplication) {
