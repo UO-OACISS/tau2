@@ -749,14 +749,21 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		}
 	}
 
-	public void handleDelete(Object object) throws SQLException,
-	DatabaseException {
+	public void handleDelete(Object object) throws SQLException,DatabaseException {
+			handleDelete(object, true);
+	}
+	private void handleDelete(Object object, boolean ShowConfirmation) throws SQLException,DatabaseException {
 
-		int confirm = JOptionPane.showConfirmDialog(tree, "Are you sure you want to permanently delete this item?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
-		
-		if(confirm!=0){
-			return;
+		if (ShowConfirmation) {
+			int confirm = JOptionPane.showConfirmDialog(tree,
+					"Are you sure you want to permanently delete this item?",
+					"Confirm Delete", JOptionPane.YES_NO_OPTION);
+
+			if (confirm != 0) {
+				return;
+			}
 		}
+		
 		
 		if (object instanceof TreePath[]) {
 			TreePath[] paths = (TreePath[]) object;
