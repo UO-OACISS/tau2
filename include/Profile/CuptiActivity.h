@@ -115,6 +115,18 @@ void record_gpu_occupancy(CUpti_ActivityKernel *k, const char *name, GpuEventAtt
 
 std::map<uint32_t, CUpti_ActivityDevice> deviceMap;
 
+typedef struct cupti_kernel {
+
+	CUpti_ActivityKernel *activity_kernel;
+	const char *name;
+	GpuEventAttributes *attributes;
+	uint32_t id;
+	int number_of_attributes;
+
+} cupti_kernel_t;
+
+std::vector<cupti_kernel> postponedKernels;
+
 #define CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(name, id, info, kind, count) \
 	if ((id) == CUPTI_RUNTIME_TRACE_CBID_##name##_v3020) \
 	{ \
