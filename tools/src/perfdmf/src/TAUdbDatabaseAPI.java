@@ -1316,6 +1316,32 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 		}
 		return new ArrayList<Trial>(trials.values());
 	}
+	  /**
+     * This returns a list of all unique primary metadata names
+     * @return
+     */
+	public List<String> getPrimaryMetadataNames() {
+		List<String> metadataNames = new ArrayList<String>();
+		try {
+			String sql = "SELECT DISTINCT name FROM " + db.getSchemaPrefix()
+					+ "primary_metadata ORDER BY name";
+			PreparedStatement statement;
+
+			statement = db.prepareStatement(sql);
+
+			ResultSet results = statement.executeQuery();
+			while (results.next()) {
+				metadataNames.add(results.getString(1));
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		//System.out.println(metadataNames);
+
+		return metadataNames;
+	}
+
 
     /**
      * Saves the Trial object to the database

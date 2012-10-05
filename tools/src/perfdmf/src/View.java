@@ -452,6 +452,115 @@ public class View implements Serializable {
         return newViewID;
 
     }
+	
+	public static int saveView(DB db, String name, String conjoin, int parent) throws SQLException {
+
+		StringBuffer buf = new StringBuffer();
+		buf.append("INSERT INTO " + db.getSchemaPrefix()
+				+ "taudb_view  (parent, name, conjoin) ");
+
+		buf.append(" VALUES (?,?,?)");
+		PreparedStatement statement;
+			statement = db.prepareStatement(buf.toString());
+			if (parent >= 0)
+				statement.setInt(1, parent);
+			else
+				statement.setNull(1, java.sql.Types.INTEGER);
+			statement.setString(2, name);
+			statement.setString(3, conjoin);
+//			System.out.println(statement.toString());
+
+			statement.executeUpdate();
+			statement.close();
+
+			String tmpStr = new String();
+			if (db.getDBType().compareTo("mysql") == 0) {
+				tmpStr = "select LAST_INSERT_ID();";
+			} else if (db.getDBType().compareTo("db2") == 0) {
+				tmpStr = "select IDENTITY_VAL_LOCAL() FROM taudb_view";
+			} else if (db.getDBType().compareTo("sqlite") == 0) {
+				tmpStr = "select seq from sqlite_sequence where name = 'taudb_view'";
+			} else if (db.getDBType().compareTo("derby") == 0) {
+				tmpStr = "select IDENTITY_VAL_LOCAL() FROM taudb_view";
+			} else if (db.getDBType().compareTo("h2") == 0) {
+				tmpStr = "select IDENTITY_VAL_LOCAL() FROM taudb_view";
+			} else if (db.getDBType().compareTo("oracle") == 0) {
+				tmpStr = "SELECT " + db.getSchemaPrefix()
+						+ "taudb_view_id_seq.currval FROM DUAL";
+			} else { // postgresql
+				tmpStr = "select currval('taudb_view_id_seq');";
+			}
+			return Integer.parseInt(db.getDataItem(tmpStr));
+	}
+	public static void saveViewParameter(DB db, int viewID, String table, String column, String operator, String value) throws SQLException {
+
+		StringBuffer buf = new StringBuffer();
+		buf.append("INSERT INTO "
+				+ db.getSchemaPrefix()
+				+ "taudb_view_parameter   (taudb_view, table_name, column_name, operator, value) ");
+		buf.append(" VALUES (?,?,?,?,?)");
+		PreparedStatement statement;
+
+			statement = db.prepareStatement(buf.toString());
+
+			statement.setInt(1, viewID);
+			statement.setString(2, table);
+			statement.setString(3, column);
+			statement.setString(4, operator);
+			statement.setString(5, value);
+//			System.out.println(statement.toString());
+
+			statement.executeUpdate();
+			statement.close();
+
+	}
+
+public static void deleteView(int viewID, DB db) throws SQLException{
+	
+		ArrayList<Integer> allChildern = getAllChildern(viewID, db);
+
+		PreparedStatement statementView = null;
+		PreparedStatement statementParam = null;
+
+		statementView = db.prepareStatement("DELETE FROM "
+				+ db.getSchemaPrefix()
+				+ "taudb_view WHERE id = ?");
+
+		statementParam = db.prepareStatement("DELETE FROM "
+				+ db.getSchemaPrefix()
+				+ "taudb_view_parameter WHERE taudb_view = ?");
+		statementView.setInt(1, viewID);
+		statementView.addBatch();
+		statementParam.setInt(1, viewID);
+		statementParam.addBatch();
+
+		for (Integer i : allChildern) {
+			statementView.setInt(1, i);
+			statementView.addBatch();
+			statementParam.setInt(1, i);
+			statementParam.addBatch();
+		}
+		statementParam.executeBatch();
+		statementView.executeBatch();
+}
+	public static ArrayList<Integer> getAllChildern(int viewID, DB db) throws SQLException {
+	    ArrayList<Integer> childern = new ArrayList<Integer>();	    
+	    getAllChildern(viewID,db,childern);
+	    return childern;
+}
+
+	private static void getAllChildern(int id, DB db,
+			ArrayList<Integer> childern) throws SQLException {
+		PreparedStatement statement;
+	    statement = db.prepareStatement(" SELECT id FROM " + db.getSchemaPrefix() + "taudb_view WHERE parent = ?");
+	    statement.setInt(1, id);
+	    ResultSet r = statement.executeQuery();	
+	    while(r.next()){
+	    	int child = r.getInt(1);
+	    	childern.add(child);
+		    getAllChildern(child,db,childern);
+	    }
+	}
 
 	public int getNumFields() {
 		return this.getFieldCount();

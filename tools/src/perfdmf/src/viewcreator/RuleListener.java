@@ -82,15 +82,11 @@ VALUES (2, 'primary_metadata', 'Application', '=', 'application');
 				String range = (String)e.getDocument().getProperty(ViewCreatorGUI.NUMBER_RANGE) ;
 				if(range.equals("begin")){
 					value = e.getDocument().getText(0, e.getDocument().getLength());
-					System.out.println("insert update: " +value);
 				}else{
 					value2 = e.getDocument().getText(0, e.getDocument().getLength());
-					System.out.println("insert update (value2): " +value2);
-
 				}
 			}else{
 				value = e.getDocument().getText(0, e.getDocument().getLength());
-				System.out.println("insert update: " +value);
 			}
 		} catch (BadLocationException e1) {
 			e1.printStackTrace();
@@ -118,11 +114,9 @@ VALUES (2, 'primary_metadata', 'Application', '=', 'application');
 				}else{
 					table_name="primary_metadata";
 				}
-				System.out.println("colname: "+column_name);
 			}else if(combo.getName() == ViewCreatorGUI.READ_TYPE){
 				type = combo.getSelectedItem().toString();
 			}else {
-				System.out.println("Op:  "+combo.getSelectedItem().toString());
 				operator = combo.getSelectedItem().toString();
 			
 				if(operator == ViewCreatorGUI.STRING_EXACTLY){
