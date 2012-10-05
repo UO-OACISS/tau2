@@ -105,7 +105,7 @@ import edu.uoregon.tau.perfdmf.database.DBManagerListener;
 import edu.uoregon.tau.perfdmf.database.DatabaseManagerWindow;
 import edu.uoregon.tau.perfdmf.database.ParseConfig;
 import edu.uoregon.tau.perfdmf.database.PasswordCallback;
-import edu.uoregon.tau.perfdmf.viewcreator.ViewCreatorGUI;
+import edu.uoregon.tau.perfdmf.taudb.ViewCreatorGUI;
 
 public class ParaProfManagerWindow extends JFrame implements ActionListener,
 TreeSelectionListener, TreeWillExpandListener, DBManagerListener {

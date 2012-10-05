@@ -1,4 +1,4 @@
-package edu.uoregon.tau.perfdmf.viewcreator;
+package edu.uoregon.tau.perfdmf.taudb;
 
 /*
  * Copyright (c) 1995, 2008, Oracle and/or its affiliates. All rights reserved.
@@ -52,7 +52,6 @@ import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.TAUdbDatabaseAPI;
 import edu.uoregon.tau.perfdmf.View;
 import edu.uoregon.tau.perfdmf.database.DB;
-import edu.uoregon.tau.perfdmf.taudb.TAUdbTrial;
 
 
 
@@ -119,7 +118,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 	 
 	private JPanel panel;
 	private JPanel rulePane;
-	private List<RuleListener> ruleListeners;
+	private List<ViewCreatorRuleListener> ruleListeners;
 	private String anyOrAll;
 	private TAUdbDatabaseAPI databaseAPI;
 	private DB db;
@@ -139,7 +138,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
     	this.databaseAPI = databaseAPI;
     	this.db = databaseAPI.getDb();
     	this.parentID = parentID;
-    	this.ruleListeners = new ArrayList<RuleListener>();
+    	this.ruleListeners = new ArrayList<ViewCreatorRuleListener>();
     	this.setTitle("TAUdb View Creator");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             	
@@ -216,7 +215,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 		try {
 			viewID = View.saveView(db, saveName, anyOrAll, parentID);
 
-			for (RuleListener rule : ruleListeners) {
+			for (ViewCreatorRuleListener rule : ruleListeners) {
 
 				if (rule.getOperator().equals(NUMBER_RANGE)) {
 					View.saveViewParameter(db, viewID, rule.getTable_name(),
@@ -276,7 +275,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         
         
         cards = new JPanel(new CardLayout());
-        RuleListener listener = new RuleListener();
+        ViewCreatorRuleListener listener = new ViewCreatorRuleListener();
         ruleListeners.add(listener);
         cb.addActionListener(listener);
        
@@ -317,7 +316,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
     		names.add(s);
 		return names.toArray(returnS);
 	}
-    private Component addNumberField(RuleListener listener){
+    private Component addNumberField(ViewCreatorRuleListener listener){
         //Put the JComboBox in a JPanel to get a nicer look.
         JPanel comboBoxPane = new JPanel(); //use FlowLayout
         String comboBoxItems[] = {NUMBER_EQUAL, NUMBER_NOT, NUMBER_GREATER, NUMBER_LESS, NUMBER_RANGE};
@@ -440,7 +439,7 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
         return comboBoxPane;
     	
     }
-	private Component addStringField(RuleListener listener){
+	private Component addStringField(ViewCreatorRuleListener listener){
         //Put the JComboBox in a JPanel to get a nicer look.
         JPanel comboBoxPane = new JPanel(); //use FlowLayout
         String comboBoxItems[] = {STRING_EXACTLY,STRING_BEGINS, STRING_ENDS, STRING_CONTAINS};
