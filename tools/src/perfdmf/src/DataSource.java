@@ -754,24 +754,24 @@ public abstract class DataSource {
 
                     // get/create the userEventProfile for mean
                     UserEventProfile meanProfile = meanData.getUserEventProfile(ue);
-                    //if (meanProfile == null) {
+                    if (meanProfile == null) {
                         meanProfile = new UserEventProfile(ue, numSnapshots);
                         meanData.addUserEventProfile(meanProfile);
-                    //}
+                    }
 
                     // get/create the userEventProfile for total
                     UserEventProfile totalProfile = totalData.getUserEventProfile(ue);
-                    //if (totalProfile == null) {
+                    if (totalProfile == null) {
                         totalProfile = new UserEventProfile(ue, numSnapshots);
                         totalData.addUserEventProfile(totalProfile);
-                   // }
+                    }
 
                     // get/create the userEventProfile for stddev
                     UserEventProfile stddevProfile = stddevData.getUserEventProfile(ue);
-                   // if (stddevProfile == null) {
+                    if (stddevProfile == null) {
                         stddevProfile = new UserEventProfile(ue, numSnapshots);
                         stddevData.addUserEventProfile(stddevProfile);
-                   // }
+                    }
 
                     numProfiles[ue.getID()]++;
 
@@ -780,7 +780,7 @@ public abstract class DataSource {
                     totalProfile.setMinValue(totalProfile.getMinValue() + uep.getMinValue(snapshot), snapshot);
                     totalProfile.setMeanValue(totalProfile.getMeanValue() + uep.getMeanValue(snapshot), snapshot);
                     totalProfile.setStdDev(totalProfile.getStdDev() + uep.getStdDev(snapshot), snapshot);
-
+                    
                     stddevProfile.setNumSamples(stddevProfile.getNumSamples()
                             + (uep.getNumSamples(snapshot) * uep.getNumSamples(snapshot)), snapshot);
                     stddevProfile.setMaxValue(stddevProfile.getMaxValue()
@@ -797,7 +797,7 @@ public abstract class DataSource {
 
             for (Iterator<UserEvent> it = this.getUserEvents(); it.hasNext();) {
                 UserEvent ue = it.next();
-
+                
                 UserEventProfile meanProfile = meanData.getUserEventProfile(ue);
                 UserEventProfile totalProfile = totalData.getUserEventProfile(ue);
                 UserEventProfile stddevProfile = stddevData.getUserEventProfile(ue);
@@ -806,7 +806,7 @@ public abstract class DataSource {
                 if (!meanIncludeNulls) { // do we include null values as zeroes in the computation or not?
                     divider = numProfiles[ue.getID()];
                 }
-
+                
                 meanProfile.setNumSamples((totalProfile.getNumSamples() / divider), snapshot);
                 meanProfile.setMaxValue(totalProfile.getMaxValue(snapshot) / divider, snapshot);
                 meanProfile.setMinValue(totalProfile.getMinValue(snapshot) / divider, snapshot);

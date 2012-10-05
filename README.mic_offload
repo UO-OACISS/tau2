@@ -1,0 +1,18 @@
+Configuring TAU for MIC offload applications.
+
+TAU can track both the host and mic sides of a MIC offloaded application. 
+
+1. Configure TAU with both '-arch=mic_linux' and '-arch=x86_64'.
+
+2. Set TAU makefile to x86_64 Makefile. Set TAU option '-optMICOffload', compile
+and link application with the TAU compiler wrappers.
+
+4. Set TAU environment variable: TAU_MIC_OFFLOAD=1, and MIC_PROXY_FS_ROOT=`pwd`
+then run the application.
+
+5. Host profile will be written out as profile.0.0.* and MIC profiles will be
+written out as profile.0.<pid>.*.
+
+NOTE: MIC offloading does not work with opari/pomp. Because it obfuscates the
+instrumentation process the compiler can not tell which portions of the
+measurement library needs to be compiled for the MIC architecture.

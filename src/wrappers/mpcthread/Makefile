@@ -18,8 +18,7 @@ install: install-ld-lib install-preload-lib
 
 install-ld-lib: $(PTHREAD_LD_LIB)
 	mkdir -p $(INSTALLDEST)/wrappers/mpcthread_wrapper
-	cp link_options.tau $(INSTALLDEST)/wrappers/mpcthread_wrapper
-	cp $(PTHREAD_LD_LIB) $(INSTALLDEST)
+	$(TAU_STATIC_INSTALL_CMD)
 
 install-preload-lib: $(PTHREAD_LDPRELOAD_LIB)
 	$(LDPRELOAD_INSTALL_CMD)

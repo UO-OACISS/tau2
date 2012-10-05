@@ -212,9 +212,15 @@ int RtsLayer::myNode(void)
 // myContext() returns the current context id (0..N-1)
 //////////////////////////////////////////////////////////////////////
 int RtsLayer::myContext(void)
-{
+{	
 #ifdef KTAU_NG
   return RtsLayer::getLinuxKernelTid(); //voorhees
+#elif defined(__MIC__)
+if (TauEnv_get_mic_offload())
+{
+	return getpid();
+}
+else
 #endif /* KTAU_NG */
   return TheContext(); 
 }
