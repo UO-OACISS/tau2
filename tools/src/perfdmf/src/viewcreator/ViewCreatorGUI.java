@@ -39,6 +39,7 @@ package edu.uoregon.tau.perfdmf.viewcreator;
  */
 import java.awt.*;
 import java.awt.event.*;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +48,10 @@ import java.util.Date;
 import javax.swing.*;
 import javax.swing.text.NumberFormatter;
 
+import edu.uoregon.tau.perfdmf.DatabaseAPI;
+import edu.uoregon.tau.perfdmf.TAUdbDatabaseAPI;
+import edu.uoregon.tau.perfdmf.View;
+import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfdmf.taudb.TAUdbTrial;
 
 
@@ -114,19 +119,26 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 	 
 	private JPanel panel;
 	private JPanel rulePane;
-	private ViewCreator viewCreator;
 	private List<RuleListener> ruleListeners;
 	private String anyOrAll;
+	private TAUdbDatabaseAPI databaseAPI;
+	private DB db;
+	private int parentID;
 
 	
     
-    public ViewCreatorGUI(ViewCreator vc) {
+    public ViewCreatorGUI(TAUdbDatabaseAPI databaseAPI) {
+    	this(databaseAPI, -1);
+    }
+    public ViewCreatorGUI(TAUdbDatabaseAPI databaseAPI, int parentID) {
     	super();
     	 try {
-    		 UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
-             //UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+    		// UIManager.setLookAndFeel("javax.swing.plaf.metal.MetalLookAndFeel");
+             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
          } catch (Exception e) {}
-    	this.viewCreator = vc;
+    	this.databaseAPI = databaseAPI;
+    	this.db = databaseAPI.getDb();
+    	this.parentID = parentID;
     	this.ruleListeners = new ArrayList<RuleListener>();
     	this.setTitle("TAUdb View Creator");
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -199,23 +211,29 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 	}
 
 	private void saveView(String saveName) {
-		
-		System.out.println(anyOrAll);
-		int viewID = viewCreator.saveView(null, saveName, anyOrAll);
-		for(RuleListener rule : ruleListeners){
-			System.out.println("COL: "+rule.getColumn_name());
-			System.out.println("VALUE: "+rule.getValue());
-			System.out.println("OP: "+rule.getOperator());
-			System.out.println("TABLE: "+rule.getTable_name());
-			if(rule.getOperator().equals(NUMBER_RANGE)){
-				   viewCreator.saveViewParameter(viewID, rule.getTable_name(), rule.getColumn_name(),">=", rule.getValue());
-				   viewCreator.saveViewParameter(viewID, rule.getTable_name(), rule.getColumn_name(), "<=", rule.getValue2());
-			}else{
-			   viewCreator.saveViewParameter(viewID, rule.getTable_name(), rule.getColumn_name(), rule.getOperator(), rule.getValue());
+
+		int viewID;
+		try {
+			viewID = View.saveView(db, saveName, anyOrAll, parentID);
+
+			for (RuleListener rule : ruleListeners) {
+
+				if (rule.getOperator().equals(NUMBER_RANGE)) {
+					View.saveViewParameter(db, viewID, rule.getTable_name(),
+							rule.getColumn_name(), ">=", rule.getValue());
+					View.saveViewParameter(db, viewID, rule.getTable_name(),
+							rule.getColumn_name(), "<=", rule.getValue2());
+				} else {
+					View.saveViewParameter(db, viewID, rule.getTable_name(),
+							rule.getColumn_name(), rule.getOperator(),
+							rule.getValue());
+				}
 			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
-		
 	}
 	private JPanel addMatch() {
 		JPanel panel = new JPanel();
@@ -294,10 +312,9 @@ public class ViewCreatorGUI extends JFrame implements ActionListener{
 	}
     private String[] getMetaDataList() {
     	String[] returnS = new String[0];
-    	List<String> names = viewCreator.getMetadataNames();
+    	List<String> names = databaseAPI.getPrimaryMetadataNames();
     	for (String s:TAUdbTrial.TRIAL_COLUMNS )
     		names.add(s);
-    		
 		return names.toArray(returnS);
 	}
     private Component addNumberField(RuleListener listener){

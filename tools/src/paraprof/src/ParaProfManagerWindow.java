@@ -66,8 +66,6 @@ import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
 import javax.swing.event.TreeExpansionEvent;
-import javax.swing.event.TreeModelEvent;
-import javax.swing.event.TreeModelListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.event.TreeWillExpandListener;
@@ -99,8 +97,6 @@ import edu.uoregon.tau.perfdmf.DatabaseException;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.TAUdbDataSource;
-import edu.uoregon.tau.perfdmf.TAUdbDatabaseAPI;
-import edu.uoregon.tau.perfdmf.TAUdbTrial;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.UtilFncs;
 import edu.uoregon.tau.perfdmf.View;
@@ -109,7 +105,6 @@ import edu.uoregon.tau.perfdmf.database.DBManagerListener;
 import edu.uoregon.tau.perfdmf.database.DatabaseManagerWindow;
 import edu.uoregon.tau.perfdmf.database.ParseConfig;
 import edu.uoregon.tau.perfdmf.database.PasswordCallback;
-import edu.uoregon.tau.perfdmf.viewcreator.ViewCreator;
 import edu.uoregon.tau.perfdmf.viewcreator.ViewCreatorGUI;
 
 public class ParaProfManagerWindow extends JFrame implements ActionListener,
@@ -142,6 +137,7 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 	// Popup menu stuff.
 	private JPopupMenu databasePopUp = new JPopupMenu();
 	private JPopupMenu TAUdbPopUp = new JPopupMenu();
+	private JPopupMenu ViewPopUp = new JPopupMenu();
 
 	private JPopupMenu stdAppPopup = new JPopupMenu();
 	private JPopupMenu stdExpPopup = new JPopupMenu();
@@ -410,6 +406,9 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 									databasePopUp.show(tree, evt.getX(), evt.getY());
 								}
 
+							} else if (userObject instanceof View){
+								clickedOnObject = selectedNode;
+								ViewPopUp.show(tree,  evt.getX(), evt.getY());
 							}
 						} else {
 
@@ -618,6 +617,15 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		jMenuItem = new JMenuItem("Add View");
 		jMenuItem.addActionListener(this);
 		TAUdbPopUp.add(jMenuItem);
+		
+		jMenuItem = new JMenuItem("Add Sub-View");
+		jMenuItem.addActionListener(this);
+		ViewPopUp.add(jMenuItem);
+		jMenuItem = new JMenuItem("Delete");
+		jMenuItem.addActionListener(this);
+		ViewPopUp.add(jMenuItem);
+		
+		
 
 		jMenuItem = new JMenuItem("Monitor Application");
 		jMenuItem.addActionListener(this);
@@ -772,13 +780,19 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		}
 	}
 
-	public void handleDelete(Object object) throws SQLException,
-	DatabaseException {
+	public void handleDelete(Object object) throws SQLException,DatabaseException {
+			handleDelete(object, true);
+	}
+	private void handleDelete(Object object, boolean ShowConfirmation) throws SQLException,DatabaseException {
 
-		int confirm = JOptionPane.showConfirmDialog(tree, "Are you sure you want to permanently delete this item?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
-		
-		if(confirm!=0){
-			return;
+		if (ShowConfirmation) {
+			int confirm = JOptionPane.showConfirmDialog(tree,
+					"Are you sure you want to permanently delete this item?",
+					"Confirm Delete", JOptionPane.YES_NO_OPTION);
+
+			if (confirm != 0) {
+				return;
+			}
 		}
 		
 		if (object instanceof TreePath[]) {
@@ -787,7 +801,7 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 				DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) paths[i]
 				                                                                     .getLastPathComponent();
 				Object userObject = selectedNode.getUserObject();
-				handleDelete(userObject);
+				handleDelete(userObject, false);
 			}
 
 		} else if (object instanceof ParaProfApplication) {
@@ -882,7 +896,16 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		} else if (object instanceof ParaProfMetric) {
 			ParaProfMetric ppMetric = (ParaProfMetric) object;
 			deleteMetric(ppMetric);
+		} else if (object instanceof DefaultMutableTreeNode){
+			
+			View view = (View) ((DefaultMutableTreeNode)object).getUserObject();
+			deleteView(view);
+		} else if (object instanceof View){
+			
+			View view = (View) object;
+			deleteView(view);
 		}
+		
 	}
 
 	private boolean isLoaded(ParaProfTrial ppTrial) {
@@ -1221,12 +1244,33 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 					Database database = (Database) ((DefaultMutableTreeNode) clickedOnObject)
 							.getUserObject();
 					DatabaseAPI dbAPI = this.getDatabaseAPI(database);
-					ViewCreator vc = new ViewCreator(dbAPI.getDb());
-					ViewCreatorGUI frame = new ViewCreatorGUI(vc);
+					if(dbAPI instanceof TAUdbDatabaseAPI){
+						ViewCreatorGUI frame = new ViewCreatorGUI((TAUdbDatabaseAPI) dbAPI);
+
+						// Display the window.
+						frame.pack();
+						frame.setVisible(true);
+
+						}else{
+							System.out.println("Error: Cannot create a view on a non TAUdb database.");
+						}
+					
+				}else if (arg.equals("Add Sub-View")) {
+					View view = (View) ((DefaultMutableTreeNode) clickedOnObject)
+							.getUserObject();
+
+					Database database = view.getDatabase();
+					DatabaseAPI dbAPI = this.getDatabaseAPI(database);
+					if(dbAPI instanceof TAUdbDatabaseAPI){
+					ViewCreatorGUI frame = new ViewCreatorGUI((TAUdbDatabaseAPI) dbAPI, view.getID());
 
 					// Display the window.
 					frame.pack();
 					frame.setVisible(true);
+
+					}else{
+						System.out.println("Error: Cannot create a view on a non TAUdb database.");
+					}
 
 				} else if (arg.equals("Upload Application to DB")) {
 
@@ -1412,6 +1456,18 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 				}
 			}
 		} catch (Exception e) {
+			ParaProfUtils.handleException(e);
+		}
+	}
+
+	private void deleteView(View view)  {
+		Database database = view.getDatabase();
+		DatabaseAPI dbAPI = this.getDatabaseAPI(database);
+	
+		try {
+			View.deleteView(view.getID(), dbAPI.getDb());
+			getTreeModel().removeNodeFromParent(view.getDMTN());		
+		} catch (SQLException e) {
 			ParaProfUtils.handleException(e);
 		}
 	}

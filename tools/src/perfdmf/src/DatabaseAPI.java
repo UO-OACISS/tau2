@@ -1516,5 +1516,5 @@ public class DatabaseAPI {
         }
         return IntervalLocationProfile.getIntervalEventDetail(db, intervalEvent, buf.toString());
     }
-
+  
 };
