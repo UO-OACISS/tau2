@@ -82,6 +82,8 @@ extern void Tau_CuptiLayer_disable() {}
 
 extern void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev) {}
 
+extern int Tau_CuptiLayer_Initialize_callbacks();
+
 extern void Tau_CuptiLayer_Initialize_Map();
 
 counter_map_t Tau_CuptiLayer_Counter_Map;
@@ -102,6 +104,8 @@ extern void Tau_CuptiLayer_init();
 extern void Tau_CuptiLayer_finalize();
 
 extern void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev);
+
+extern int Tau_CuptiLayer_Initialize_callbacks();
 
 extern void Tau_CuptiLayer_Initialize_Map();
 
