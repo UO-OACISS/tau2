@@ -284,7 +284,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 		{
 			//find FunctionInfo object from FunctionInfoMap
       CUpti_ActivityKernel *kernel = (CUpti_ActivityKernel *)record;
-			cerr << "recording kernel: " << kernel->name << ", " << kernel->end - kernel->start << "ns.\n" << endl;
+			//cerr << "recording kernel: " << kernel->name << ", " << kernel->end - kernel->start << "ns.\n" << endl;
 
 			GpuEventAttributes *map;
 			int map_size = 9;
@@ -325,31 +325,11 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			name = demangleName(kernel->name);
 		  //cerr << "recording kernel (device/stream/context/correlation): " << 
 			//kernel->deviceId << "/" << kernel->streamId << "/" << kernel->contextId << "/" << id << endl;
-			
-			if (deviceMap.count(kernel->deviceId) != 0)
-			{
-
 			record_gpu_occupancy(kernel, name, map);
 			
 			Tau_cupti_register_gpu_event(name, kernel->deviceId,
 				kernel->streamId, kernel->contextId, id, map, map_size,
 				kernel->start / 1e3, kernel->end / 1e3);
-			}
-			else
-			{
-				//postpone recording this kernel until device information has been
-				//gathered.
-				
-				cerr << "postponing Kernel (device): " << kernel->deviceId << endl;
-				cupti_kernel_t k;
-				k.activity_kernel = kernel;
-				k.name = name;
-				k.attributes = map;
-				k.number_of_attributes = map_size;
-				k.id = id;
-
-				postponedKernels.push_back(k);
-			}
 			/*
 			CuptiGpuEvent gId = CuptiGpuEvent(name, kernel->streamId, kernel->contextId, id, map, map_size);
 			//cuptiGpuEvent cuRec = cuptiGpuEvent(name, &gId, &map);
@@ -392,29 +372,9 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			RECORD_DEVICE_METADATA(numMultiprocessors, device);
 			RECORD_DEVICE_METADATA(numThreadsPerWarp, device);
 	
-			cerr << "recording metadata (device): " << device->id << endl;
+			//cerr << "recording metadata (device): " << device->id << endl;
 			deviceMap[device->id] = *device;
 			Tau_cupti_register_metadata(device->id, metadata, nMeta);
-
-			for (std::vector<cupti_kernel_t>::iterator it = postponedKernels.begin(); it != postponedKernels.end(); it++)
-			{
-				if (it->activity_kernel->deviceId == device->id)
-				{
-					cerr << "recording postponed Kernel (device): " << device->id << endl;
-					CUpti_ActivityKernel *kernel = it->activity_kernel;
-					const char *name = it->name;
-					GpuEventAttributes *map = it->attributes;
-					int map_size = it->number_of_attributes;
-					uint32_t id = it->id;
-					record_gpu_occupancy(kernel, name, map);
-					
-					Tau_cupti_register_gpu_event(name, kernel->deviceId,
-						kernel->streamId, kernel->contextId, id, map, map_size,
-						kernel->start / 1e3, kernel->end / 1e3);
-				}
-			}
-
-
 			break;
 		}
 	}
