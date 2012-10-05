@@ -111,12 +111,10 @@ public class View implements Serializable {
 					resultSet = dbMeta.getColumns(null, null, allLowerCase, "%");
 				}
 
-				int i = 0;
 				while (resultSet.next() != false) {
 					String name =
 					resultSet.getString("COLUMN_NAME").toUpperCase();
 					fieldNames.add(name);
-					i++;
 				}
 				resultSet.close();
 			} catch (SQLException e) {

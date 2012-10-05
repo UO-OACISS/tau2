@@ -1,4 +1,4 @@
-package edu.uoregon.tau.perfdmf.viewcreator;
+package edu.uoregon.tau.perfdmf.taudb;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -8,9 +8,8 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 
-import edu.uoregon.tau.perfdmf.taudb.TAUdbTrial;
 
-public class RuleListener implements DocumentListener, ActionListener {
+public class ViewCreatorRuleListener implements DocumentListener, ActionListener {
 	private static final String WILDCARD = "%";
 	/*
 	 * simple view where the metadata field "Application" is equal to "application" 
