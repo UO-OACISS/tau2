@@ -27,11 +27,18 @@ ARFLAGS = rcv
 
 INSTALLDEST = $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
-install: libTauIOWrapper.a libTauPosixWrap.a $(TAU_IOWRAP_SHARED)
-	cp libTauIOWrapper.a libTauPosixWrap.a $(INSTALLDEST)
+install-static-io: libTauIOWrapper.a
+	$(TAU_STATIC_INSTALL_CMD)
+
+install-static-posix: libTauPosixWrap.a
+	$(TAU_STATIC_INSTALL_CMD)
+
+install-shared: $(TAU_IOWRAP_SHARED)
+	$(TAU_SHARED_INSTALL_CMD)
+
+install: install-static-io install-static-posix install-shared
 	mkdir -p $(INSTALLDEST)/wrappers/io_wrapper
 	cp link_options.tau $(INSTALLDEST)/wrappers/io_wrapper
-	$(TAU_IOWRAP_INSTALL_CMD)
 
 libTauPosixWrap.a: iowrap_link.o
 	$(TAU_AR) $(ARFLAGS) libTauPosixWrap.a iowrap_link.o

@@ -35,7 +35,6 @@ using namespace std;
 //int debugPrint = 1;
 // control debug printf statements
 //#define dprintf if (debugPrint) printf
-#define dprintf TAU_VERBOSE
 #ifdef DEBUG_PROF
 #define dprintf printf
 #else // DEBUG_PROF 
@@ -544,7 +543,7 @@ void tau_trace_exit(int* id) {
   traceExit(*id);
 }
 
-#ifndef TAU_PEBIL_DISABLE
+#if !defined(TAU_PEBIL_DISABLE) && !defined(TAU_WINDOWS)
 #include <pthread.h>
 void* tool_thread_init(pthread_t args) {
   dprintf("TAU: initializing thread %#lx\n", args); 

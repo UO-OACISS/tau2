@@ -1392,16 +1392,20 @@ case $1 in
 	echo "NOTE: Enabled Tracing. Compiling with -DTRACING_ON"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     UPCC)
+     BUPC)
 	echo "NOTE: Enabled Berkeley UPC (upcc) GASP support in TAU."
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     GNU_UPC)
+     GUPC)
 	echo "NOTE: Enabled GNU UPC GASP support in TAU"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CRAY_UPC)
 	echo "NOTE: Enabled Cray UPC support in TAU"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     XLUPC)
+	echo "NOTE: Enabled IBM XLUPC support in TAU"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      KAI)
@@ -1821,6 +1825,9 @@ case $1 in
 	echo "NOTE: Disabling building of shared objects"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     SGI_MPT_MPI)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      *)
 	echo "ERROR: Unknown argument directive \`$1' to FixMakefile"
 	;;

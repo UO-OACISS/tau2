@@ -117,8 +117,39 @@ static int tau_calloc_freed = 0;
 void *calloc (size_t nmemb, size_t size) {
    static void* (*_calloc)(size_t nmemb, size_t size) = NULL;
 
+
    static int checkinit = 0;
    static int numcalls = 0;
+
+
+   if(Tau_memorywrap_checkPassThrough()){
+      if (checkinit == 0) {
+         checkinit = 1;
+         _calloc = ( void* (*)(size_t nmemb, size_t size)) dlsym(RTLD_NEXT, "calloc");
+       }       
+
+       /* *CWL* Work-around for the fact that dlsym makes exactly 1 calloc call.
+       As a result, TAU needs to manage the memory for that one call.
+       */
+     if (_calloc == NULL && tau_calloc_used == 0  && size < TAU_EXTRA_MEM_SIZE) {
+     /* if (size > ) { */
+     /*   printf("TAU: Error: Static array exceeds initial allocation request in calloc: size = %d\n", (int) size); */
+     /*   exit(1); */
+     /* } */
+     tau_calloc_used = 1;
+     memset (tau_calloc_mem, 0, size); 
+     tau_calloc_mem_size = nmemb * size;
+
+     /* Tau_memorywrap_add_ptr(tau_calloc_mem, nmemb * size); */
+     return (void *) tau_calloc_mem;  
+   }
+   return _calloc(nmemb, size);
+
+   }
+   else{
+   
+
+
    numcalls++;
    if (checkinit == 0) {
      checkinit = 1;
@@ -172,8 +203,11 @@ void *calloc (size_t nmemb, size_t size) {
    if (!(numcalls == 3 && size == 1040)) {
      Tau_memorywrap_add_ptr(ptr, nmemb * size);
    }
-   Tau_global_decr_insideTAU();
+   Tau_global_decr_insideTAU(); 
    return ptr;
+   }
+   
+   
 }
 
 

@@ -60,7 +60,6 @@ void esd_exit (elg_ui4 rid);
 #include <Profile/TauSCOREP.h>
 #endif
 
-extern int tau_env_lite;
 
 extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup_t group, const char *gr_name) {
   FunctionInfo *f;
@@ -356,7 +355,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_lite_start_timer(void *functionInfo, int phase, int tid) {
-  if (tau_env_lite){
+  if (TauEnv_get_lite_enabled()){
     // move the stack pointer
     Tau_global_stackpos[tid]++; /* push */
     FunctionInfo *fi = (FunctionInfo *) functionInfo;
@@ -421,7 +420,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   //int tid = RtsLayer::myThread();
   Profiler *profiler;
 
-  if ( !RtsLayer::TheEnableInstrumentation() || !(fi->GetProfileGroup()) & RtsLayer::TheProfileMask()) {
+  if ( !RtsLayer::TheEnableInstrumentation() || !(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
 #ifndef TAU_WINDOWS
     if (TauEnv_get_ebs_enabled()) {
       Tau_sampling_resume(tid);
@@ -535,7 +534,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_lite_stop_timer(void *function_info, int tid ) {
-  if (tau_env_lite) {
+  if (TauEnv_get_lite_enabled()) {
     double timeStamp[TAU_MAX_COUNTERS] = {0};
     double delta [TAU_MAX_COUNTERS] = {0}; 
     RtsLayer::getUSecD(tid, timeStamp);   
@@ -569,9 +568,9 @@ extern "C" int Tau_lite_stop_timer(void *function_info, int tid ) {
       TauProfiler_StoreData(tid);
     }
     Tau_global_stackpos[tid]--; /* pop */
-
+    return 0;
   } else {
-    Tau_stop_timer(function_info, tid);
+    return Tau_stop_timer(function_info, tid);
   }
 }
 
@@ -907,15 +906,15 @@ extern "C" TauGroup_t Tau_disable_all_groups(void) {
 extern "C" int& tau_totalnodes(int set_or_get, int value)
 {
   static int nodes = 1;
-  if (set_or_get == 1)
-    {
-      nodes = value;
-    }
+  if (set_or_get == 1) {
+    nodes = value;
+  }
   return nodes;
 }
 
 
-#if (defined(TAU_MPI) || defined(TAU_SHMEM) || defined(TAU_DMAPP) )
+
+#if (defined(TAU_MPI) || defined(TAU_SHMEM) || defined(TAU_DMAPP) || defined(TAU_UPC))
 
 
 
@@ -978,11 +977,10 @@ extern "C" int shmem_n_pes(void);
 #endif /* TAU_SHMEM */
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
+extern "C" void Tau_trace_sendmsg(int type, int destination, int length) 
+{
   if (!RtsLayer::TheEnableInstrumentation()) return; 
   static int initialize = register_events();
-#ifdef DEBUG_PROF
-#endif /* DEBUG_PROF */
 
 #ifdef TAU_PROFILEPARAM
 #ifndef TAU_DISABLE_PROFILEPARAM_IN_MPI
@@ -994,11 +992,15 @@ extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
 
   if (TauEnv_get_comm_matrix()) {
     if (destination >= tau_totalnodes(0,0)) {
-#if (defined (TAU_SHMEM))
+#ifdef TAU_SHMEM
       tau_totalnodes(1,shmem_n_pes());
       register_events();
 #else /* TAU_SHMEM */
-      fprintf(stderr, "TAU Error: Comm Matrix destination %d exceeds node count %d. Was MPI_Init/shmem_init wrapper never called? Please disable TAU_COMM_MATRIX or add calls to the init function in your source code.\n", destination, tau_totalnodes(0,0));
+      fprintf(stderr, 
+          "TAU Error: Comm Matrix destination %d exceeds node count %d. "
+          "Was MPI_Init/shmem_init wrapper never called? "
+          "Please disable TAU_COMM_MATRIX or add calls to the init function in your source code.\n", 
+          destination, tau_totalnodes(0,0));
       exit(-1);
 #endif /* TAU_SHMEM */
     }
@@ -1031,8 +1033,8 @@ extern "C" void Tau_trace_recvmsg(int type, int source, int length) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_trace_recvmsg_remote(int type, int source, int length, int remoteid) {
-
+extern "C" void Tau_trace_recvmsg_remote(int type, int source, int length, int remoteid) 
+{
   if (!RtsLayer::TheEnableInstrumentation()) return; 
   if (TauEnv_get_tracing()) {
     if (source >= 0) {
@@ -1042,7 +1044,8 @@ extern "C" void Tau_trace_recvmsg_remote(int type, int source, int length, int r
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_trace_sendmsg_remote(int type, int destination, int length, int remoteid) {
+extern "C" void Tau_trace_sendmsg_remote(int type, int destination, int length, int remoteid) 
+{
   if (!RtsLayer::TheEnableInstrumentation()) return; 
 
   if (TauEnv_get_tracing()) {
@@ -1050,32 +1053,32 @@ extern "C" void Tau_trace_sendmsg_remote(int type, int destination, int length, 
       TauTraceSendMsgRemote(type, destination, length, remoteid);
     }
   }
+
   if (TauEnv_get_comm_matrix())  {
-  static int initialize = register_events();
-#ifdef DEBUG_PROF
-#endif /* DEBUG_PROF */
+    static int initialize = register_events();
 
 #ifdef TAU_PROFILEPARAM
 #ifndef TAU_DISABLE_PROFILEPARAM_IN_MPI
-  TAU_PROFILE_PARAM1L(length, "message size");
+    TAU_PROFILE_PARAM1L(length, "message size");
 #endif /* TAU_DISABLE_PROFILEPARAM_IN_MPI */
 #endif  /* TAU_PROFILEPARAM */
 
-  //TAU_EVENT(TheSendEvent(), length); 
-
-  if (TauEnv_get_comm_matrix()) {
-    if (destination >= tau_totalnodes(0,0)) {
-     
-#if (defined (TAU_SHMEM))
-      tau_totalnodes(1,shmem_n_pes());
-      register_events();
+    if (TauEnv_get_comm_matrix()) {
+      if (destination >= tau_totalnodes(0,0)) {
+#ifdef TAU_SHMEM
+        tau_totalnodes(1,shmem_n_pes());
+        register_events();
 #else /* TAU_SHMEM */
-      fprintf(stderr, "TAU Error: Comm Matrix destination %d exceeds node count %d. Was MPI_Init/shmem_init wrapper never called? Please disable TAU_COMM_MATRIX or add calls to the init function in your source code.\n", destination, tau_totalnodes(0,0));
-      exit(-1);
+        fprintf(stderr, 
+            "TAU Error: Comm Matrix destination %d exceeds node count %d. "
+            "Was MPI_Init/shmem_init wrapper never called? "
+            "Please disable TAU_COMM_MATRIX or add calls to the init function in your source code.\n", 
+            destination, tau_totalnodes(0,0));
+        exit(-1);
 #endif /* TAU_SHMEM */
+      }
+      TheMsgVolContextEvent()[remoteid]->TriggerEvent(length, RtsLayer::myThread());
     }
-    TheMsgVolContextEvent()[remoteid]->TriggerEvent(length, RtsLayer::myThread());
-  }
 
   }
 }
@@ -1120,7 +1123,9 @@ extern "C" void Tau_scan_data(int data) {
 extern "C" void Tau_reducescatter_data(int data) {
   TAU_EVENT(TheReduceScatterEvent(), data);
 }
+
 #else /* !(TAU_MPI || TAU_SHMEM || TAU_DMAPP)*/
+
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
   TauTraceSendMsg(type, destination, length);
@@ -1137,6 +1142,7 @@ extern "C" void Tau_trace_recvmsg(int type, int source, int length) {
 extern "C" void Tau_trace_recvmsg_remote(int type, int source, int length, int remoteid) {
   TauTraceRecvMsgRemote(type, source, length, remoteid);
 }
+
 #endif /* TAU_MPI || TAU_SHMEM*/
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1294,7 +1300,6 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
   
 	FunctionInfo *ptr;
   if (TauInternal_CurrentProfiler(tid) == NULL) {
-			printf("in create_top_level_timer.\n");
     initthread[tid] = true;
     ptr = (FunctionInfo *) Tau_get_profiler(".TAU application", " ", TAU_DEFAULT, "TAU_DEFAULT");
     if (ptr) {
