@@ -1908,6 +1908,9 @@ public abstract class DataSource {
 	 * @param floor
 	 */
 	public void reduceTrial(double minPercent, int metric) {
+		int reducedTimers = 0;
+		int totalTimers = 0;
+		int remainingTimers = 0;
 		// create the "other" function
 		Function otherFunction = addFunction("other");
 		otherFunction.addGroup(this.getGroup("TAU_USER"));
@@ -1917,10 +1920,15 @@ public abstract class DataSource {
 			for (Thread thread : this.getAllThreads()) {
 				ReductionStats stats = reduceTrialThread(minPercent, metric, otherFunction, snapshot,
 						thread);
-				System.out.println ("Removed " + stats.reducedTimers + " of " + stats.totalTimers +
-					" timers from thread " + thread.getNodeID() + " leaving " + stats.remainingTimers);
+				//System.out.println ("Removed " + stats.reducedTimers + " of " + stats.totalTimers +
+					//" timers from thread " + thread.getNodeID() + " leaving " + stats.remainingTimers);
+				reducedTimers += stats.reducedTimers;
+				totalTimers += stats.totalTimers;
+				remainingTimers += stats.remainingTimers;
 			}
 		}
+		System.out.println ("Removed " + reducedTimers + " of " + totalTimers +
+			" timers from all threads, leaving " + remainingTimers);
 
 		// NOTE:
 		// Don't iterate over the derived threads, because we want to retain
@@ -1978,7 +1986,7 @@ public abstract class DataSource {
 					otherProfile.setNumSubr(otherProfile.getNumSubr() + fp.getNumSubr());
 					//fp.setNumSubr(0);
 					for (int i = 0; i <= this.getNumberOfMetrics(); i++) { // for each metric
-						otherProfile.setExclusive(snapshot, i, otherProfile.getInclusive(snapshot, i) + fp.getInclusive(snapshot, i));
+						otherProfile.setExclusive(snapshot, i, otherProfile.getInclusive(snapshot, i) + fp.getExclusive(snapshot, i));
 						//fp.setExclusive(snapshot, i, 0.0);
 						// the inclusive is somewhat meaningless for "other"
 						otherProfile.setInclusive(snapshot, i, otherProfile.getExclusive(snapshot, i));

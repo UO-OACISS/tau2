@@ -157,31 +157,60 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
           //  computeUploadSize(dataSource);
             
             // upload the metrics and get a map that maps the metrics 0 -> n-1 to their unique DB IDs (e.g. 83, 84)
+			long before = System.currentTimeMillis();
+			System.out.print("Inserting metrics...");
             uploadMetrics(newTrialID, dataSource.getMetrics(), db);
             Map<Metric, Integer> metricMap = getMetricIDMap(newTrialID, dataSource, db);
+			long after = System.currentTimeMillis();
+			System.out.println(" done. (" + (after - before) / 1000 + " seconds)");
+			before = after;
             
+			System.out.print("Inserting timers...");
             uploadFunctions(newTrialID, dataSource, db);
             Map<Function, Integer> functionMap = getFunctionsIDMap(newTrialID, dataSource, db);
+			after = System.currentTimeMillis();
+			System.out.println(" done. (" + (after - before) / 1000 + " seconds)");
+			before = after;
             
+			System.out.print("Inserting threads...");
             uploadThreads(newTrialID, dataSource, db);
             threadMap = getThreadsMap(newTrialID, dataSource, db);
+			after = System.currentTimeMillis();
+			System.out.println(" done. (" + (after - before) / 1000 + " seconds)");
+			before = after;
             
+			System.out.print("Inserting timer groups and parameters...");
             uploadTimerGroups(functionMap, db);
             uploadTimerParameter(functionMap, db);
+			after = System.currentTimeMillis();
+			System.out.println(" done. (" + (after - before) / 1000 + " seconds)");
+			before = after;
             // this seems confusing... but let me explain. We have uploaded the timers,
             // which are just the flat profile. This call will upload the full call graph,
             // including all the nodes and edges. However, they are mapped from Function
             // objects to timer_callpath rows in the database.
+			System.out.print("Inserting call graph...");
             callpathMap = uploadCallpathInfo(dataSource, functionMap, db);
+			after = System.currentTimeMillis();
+			System.out.println(" done. (" + (after - before) / 1000 + " seconds)");
+			before = after;
             
             // now that the graph is created, insert the call and subroutine data.
+			System.out.print("Inserting per-thread call data...");
             uploadCallDataInfo(dataSource, callpathMap, metricMap, threadMap, db, false);
+			after = System.currentTimeMillis();
+			System.out.println(" done. (" + (after - before) / 1000 + " seconds)");
+			before = after;
             // also do it for the derived threads
-            Map<Thread, Integer> derivedThreadMap = uploadDerivedThreads(newTrialID, dataSource, db);            
+			System.out.print("Inserting derived threads...");
+            Map<Thread, Integer> derivedThreadMap = uploadDerivedThreads(newTrialID, dataSource, db);
             uploadCallDataInfo(dataSource, callpathMap, metricMap, derivedThreadMap, db, true);
-            
             Map<TimerCallData, Integer> timerCallDataMap = getCallDataMap(newTrialID, dataSource, db);
+			after = System.currentTimeMillis();
+			System.out.println(" done. (" + (after - before) / 1000 + " seconds)");
+			before = after;
 
+			System.out.print("Inserting timer measurements...");
             // now upload the measurements
             if(db.getDBType().equals("postgresql")){
                 uploadFunctionProfilesPSQL(dataSource, timerCallDataMap, metricMap, db);
@@ -189,13 +218,23 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
                 uploadFunctionProfiles(dataSource, timerCallDataMap, metricMap, db);
                 uploadStatistics(dataSource, timerCallDataMap, metricMap, db);
             }
+			after = System.currentTimeMillis();
+			System.out.println(" done. (" + (after - before) / 1000 + " seconds)");
+			before = after;
 
+			System.out.print("Inserting counters...");
            uploadUserEvents(newTrialID, functionMap, dataSource, db);
            Map<UserEvent, Integer> userEventMap = getUserEventsMap(newTrialID, dataSource, db);
 
             uploadUserEventProfiles(dataSource, userEventMap, db, threadMap);
+			after = System.currentTimeMillis();
+			System.out.println(" done. (" + (after - before) / 1000 + " seconds)");
+			before = after;
                         
+			System.out.print("Inserting metadata...");
             uploadMetadata(dataSource, trial, callpathMap, threadMap, db);
+			after = System.currentTimeMillis();
+			System.out.println(" done. (" + (after - before) / 1000 + " seconds)");
 
           //TODO: Deal with cancel upload
 //          if (this.cancelUpload) {
