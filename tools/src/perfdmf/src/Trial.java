@@ -1232,5 +1232,4 @@ public class Trial implements Serializable, Comparable<Trial> {
 		this.atomicEventMap = atomicEventMap;
 	}
 
-
 }

@@ -715,7 +715,7 @@ public abstract class DataSource {
      */
     public void generateDerivedData() {
         //long time = System.currentTimeMillis();
-
+    	
         // reset the list of all threads so that it will be recreated
         allThreads = null;
 
@@ -990,7 +990,10 @@ public abstract class DataSource {
     	    		for (Iterator<Function> l = this.getFunctionIterator(); l.hasNext();) { // for each function
     	    			Function function = l.next();
     	    			FunctionProfile totalProfile = totalData.getFunctionProfile(function);
-    	    			topLevelInclSum[i] = java.lang.Math.max(topLevelInclSum[i], totalProfile.getInclusive(i));
+    	    			// it is possible for this timer to not exist on this thread, if the trial was reduced
+    	    			if (totalProfile != null) {
+    	    				topLevelInclSum[i] = java.lang.Math.max(topLevelInclSum[i], totalProfile.getInclusive(i));
+    	    			}
     	    		}
     			} else {
 	    			for (Iterator<Thread> it = allThreads.iterator(); it.hasNext();) { // for each thread
@@ -1885,4 +1888,129 @@ public abstract class DataSource {
 	public void setGenerateTAUdbStatistics(boolean b) {
 		this.generateTAUdbStatistics = b;
 	}
+
+	class ReductionStats {
+		public int totalTimers = 0;
+		public int reducedTimers = 0;
+		public int remainingTimers = 0;
+		public ReductionStats(int totalTimers, int reducedTimers) {
+			this.totalTimers = totalTimers;
+			this.reducedTimers = reducedTimers;
+			this.remainingTimers = totalTimers - reducedTimers;
+		}
+	}
+	
+	/*** 
+	 * Eliminate all values for timers which are less than "floor" percent
+	 * of the total runtime. The boolean type indicates whether to use 
+	 * inclusive or exclusive values.
+	 * 
+	 * @param floor
+	 */
+	public void reduceTrial(double minPercent, int metric) {
+		// create the "other" function
+		Function otherFunction = addFunction("other");
+		otherFunction.addGroup(this.getGroup("TAU_USER"));
+		// iterate over the snapshots
+		for (int snapshot = 0; snapshot < meanData.getNumSnapshots(); snapshot++) {
+			// iterate over the threads
+			for (Thread thread : this.getAllThreads()) {
+				ReductionStats stats = reduceTrialThread(minPercent, metric, otherFunction, snapshot,
+						thread);
+				System.out.println ("Removed " + stats.reducedTimers + " of " + stats.totalTimers +
+					" timers from thread " + thread.getNodeID() + " leaving " + stats.remainingTimers);
+			}
+		}
+
+		// NOTE:
+		// Don't iterate over the derived threads, because we want to retain
+		// the details in the summary statistics.
+		
+		if (meanIncludeNulls) {
+		    otherFunction.setMeanAllProfile(meanDataAll.getFunctionProfile(otherFunction));
+		    otherFunction.setStddevAllProfile(stddevDataAll.getFunctionProfile(otherFunction));
+		} else {
+		    //meanDataNoNull.getFunctionProfile(otherFunction));
+			//otherFunction.setMeanProfile(meanDataNoNull.getFunctionProfile(otherFunction));
+			otherFunction.setMeanProfile(meanData.getFunctionProfile(otherFunction));
+		    otherFunction.setStddevProfile(stddevData.getFunctionProfile(otherFunction));
+		}
+	    otherFunction.setTotalProfile(totalData.getFunctionProfile(otherFunction));
+	    otherFunction.setMinProfile(minData.getFunctionProfile(otherFunction));
+	    otherFunction.setMaxProfile(maxData.getFunctionProfile(otherFunction));
+		
+		return;
+	}
+
+	private ReductionStats reduceTrialThread(double minPercent, int metric,
+			Function otherFunction, int snapshot, Thread thread) {
+		double mainInclusive = 0.0;
+		// find the top level timer
+		if (wellBehavedSnapshots) {
+			mainInclusive = thread.getMaxInclusive(metric, snapshot);
+		} else { // pick the last from each thread
+			mainInclusive = thread.getMaxInclusive(metric, thread.getNumSnapshots() - 1);
+		}
+		
+		// ok, so we have the top level timer value. Let's get X% of that.
+		double minValue = mainInclusive * (minPercent / 100.0);
+		//System.out.println("Main value: " + mainInclusive + ", min value: " + minValue);
+		
+		FunctionProfile otherProfile = thread.getFunctionProfile(otherFunction);
+		if (otherProfile == null) {
+			otherProfile = new FunctionProfile(otherFunction, this.getNumberOfMetrics(), thread.getNumSnapshots());
+			thread.addFunctionProfile(otherProfile);
+		}
+		
+		int totalTimers = 0;
+		int reducedTimers = 0;
+		// now, iterate over the timers to test if they meet the standard
+		for (FunctionProfile fp : thread.getFunctionProfiles()) {
+			if (fp != null && fp.getFunction() != otherFunction) {
+				totalTimers++;
+				if (fp.getInclusive(metric) < minValue ||
+					fp.getExclusive(metric) < minValue) {
+					reducedTimers++;
+					//System.out.println("Removing function " + fp.getFunction().getName() + " on thread " + thread.getNodeID() + " with value " + fp.getInclusive(metric));
+					// add the values to "other"
+					otherProfile.setNumCalls(otherProfile.getNumCalls() + fp.getNumCalls());
+					//fp.setNumCalls(0);
+					otherProfile.setNumSubr(otherProfile.getNumSubr() + fp.getNumSubr());
+					//fp.setNumSubr(0);
+					for (int i = 0; i <= this.getNumberOfMetrics(); i++) { // for each metric
+						otherProfile.setExclusive(snapshot, i, otherProfile.getInclusive(snapshot, i) + fp.getInclusive(snapshot, i));
+						//fp.setExclusive(snapshot, i, 0.0);
+						// the inclusive is somewhat meaningless for "other"
+						otherProfile.setInclusive(snapshot, i, otherProfile.getExclusive(snapshot, i));
+						//fp.setInclusive(snapshot, i, 0.0);
+					}
+					thread.deleteFunctionProfile(fp);
+				}
+			}
+		}
+		ReductionStats stats = new ReductionStats(totalTimers, reducedTimers);
+		return stats;
+	}
+	
+	public void reduceTrial(double minPercent) {
+	    int metricIndex = 0;
+		for (Metric metric : getMetrics()) {
+			if (metric.isTimeMetric()) {
+				System.out.println("Using metric: " + metric.getName());
+				reduceTrial(minPercent, metricIndex);
+				return;
+			}
+			metricIndex++;
+		}
+		// couldn't find the TIME metric, just use the first one.
+		reduceTrial(minPercent, 0);
+		return;
+	}
+
+	public void reduceTrial() {
+		reduceTrial(1.0);
+		return;
+	}
+
+
 }
