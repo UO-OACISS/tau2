@@ -102,9 +102,9 @@ TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection
     int context = 0;
     int thread = 0;
     int index = 0;
-    int metric_id;
-    int timer_call_data_id;
-    int timer_id;
+    int metric_id = 0;
+    int timer_call_data_id = 0;
+    int timer_id = 0;
     char* timer_str;
     TAUDB_TIMER_VALUE* timer_value = taudb_create_timer_values(1);
     /* the columns */
