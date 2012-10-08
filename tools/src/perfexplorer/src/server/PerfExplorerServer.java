@@ -394,9 +394,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 					statement.setString(5, AnalysisType.CORRELATION_ANALYSIS.toString());
 				} else {
 					statement = db.prepareStatement("select id from analysis_settings where trial = ? and metric = ? and method = ? order by id desc");
-					statement.setInt(3, model.getTrial().getID());
-					statement.setInt(4, ((Metric)(model.getCurrentSelection())).getID());
-					statement.setString(5, AnalysisType.CORRELATION_ANALYSIS.toString());
+					statement.setInt(1, model.getTrial().getID());
+					statement.setInt(2, ((Metric)(model.getCurrentSelection())).getID());
+					statement.setString(3, AnalysisType.CORRELATION_ANALYSIS.toString());
 				}
 			}else {
 				if (db.getSchemaVersion() == 0) {
@@ -407,8 +407,8 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 					statement.setString(4, AnalysisType.CORRELATION_ANALYSIS.toString());
 				} else {
 					statement = db.prepareStatement("select id from analysis_settings where trial = ? and metric is null and method = ? order by id desc");
-					statement.setInt(3, model.getTrial().getID());
-					statement.setString(4, AnalysisType.CORRELATION_ANALYSIS.toString());			
+					statement.setInt(1, model.getTrial().getID());
+					statement.setString(2, AnalysisType.CORRELATION_ANALYSIS.toString());			
 				}
 			}
 			//PerfExplorerOutput.println(statement.toString());
@@ -542,10 +542,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 					}
 				} else {
 					statement = db.prepareStatement("select id from analysis_settings where trial = ? and metric = ? and method in (" + qmarks.toString() + ") order by id desc");
-					statement.setInt(3, model.getTrial().getID());
-					statement.setInt(4, ((Metric)(model.getCurrentSelection())).getID());
+					statement.setInt(1, model.getTrial().getID());
+					statement.setInt(2, ((Metric)(model.getCurrentSelection())).getID());
 					for (int i = 0 ; i < methods.length ; i++) {
-						statement.setString(5+i, methods[i].toString());
+						statement.setString(3+i, methods[i].toString());
 					}
 				}
 			} else {
@@ -559,9 +559,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 					}
 				} else {
 					statement = db.prepareStatement("select id from analysis_settings where trial = ? and metric is null and method in (" + qmarks.toString() + ") order by id desc");
-					statement.setInt(3, model.getTrial().getID());
+					statement.setInt(1, model.getTrial().getID());
 					for (int i = 0 ; i < methods.length ; i++) {
-						statement.setString(4+i, methods[i].toString());
+						statement.setString(2+i, methods[i].toString());
 					}
 				}
 			}
