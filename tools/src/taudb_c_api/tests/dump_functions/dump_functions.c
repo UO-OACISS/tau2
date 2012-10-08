@@ -11,6 +11,14 @@ void dump_metadata(TAUDB_PRIMARY_METADATA *metadata) {
    }
 }
 
+void dump_secondary_metadata(TAUDB_SECONDARY_METADATA *metadata) {
+   printf("%d secondary metadata fields:\n", HASH_COUNT(metadata));
+   TAUDB_SECONDARY_METADATA * cur;
+   for(cur = metadata; cur != NULL; cur = (TAUDB_SECONDARY_METADATA*)cur->hh.next) {
+     printf("  %s = %s\n", cur->name, cur->value[0]);
+   }
+}
+
 
 void dump_trial(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter, boolean haveTrial) {
    TAUDB_TRIAL* trial;

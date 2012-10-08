@@ -306,10 +306,11 @@ typedef struct taudb_primary_metadata {
    contain unique data for each thread, and could be an array. */
 
 typedef struct taudb_secondary_metadata {
- int id; /* link back to database */
- struct taudb_timer_call_data* timer_call_data; 
+ char* id; /* link back to database */
+ struct taudb_timer_callpath* timer_callpath; 
  struct taudb_thread* thread; 
  struct taudb_secondary_metadata* parent; /* self-referencing */
+ struct taudb_time_range* time_range;
  int num_values; /* can have arrays of data */
  char* name;
  char** value;

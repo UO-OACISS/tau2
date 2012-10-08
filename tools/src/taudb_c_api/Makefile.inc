@@ -18,13 +18,13 @@ AR=ar
 #CC=tau_cc.sh -tau_makefile=${HOME}/src/tau2-taudb-branch/apple/lib/Makefile.tau-pdt -optQuiet
 #TEST_CONFIG=ccsm
 #TEST_CONFIG=sqlite
-TEST_CONFIG=localpsql
-#TEST_CONFIG=regression_taudb
+#TEST_CONFIG=localpsql
+TEST_CONFIG=regression_taudb
 #TEST_CONFIG=alcf_working
 #TEST_CONFIG=facets
-TEST_TRIAL_ID=1 # alcf_working
+#TEST_TRIAL_ID=1 # alcf_working
 #TEST_TRIAL_ID=25 # ccsm
-#TEST_TRIAL_ID=5 # regression_taudb
+TEST_TRIAL_ID=5 # regression_taudb
 
 ################# POSTGRESQL ####################
 TAUDB_DATABASE_DEFINE="-D__TAUDB_POSTGRESQL__"
@@ -54,10 +54,10 @@ XML_LIBRARIES=-L/opt/local/lib -lxml2
 ZLIB_INCLUDES=
 ZLIB_LIBRARIES=-lz
 
-FLAGS=-g -Wall -O2
+FLAGS=-g -Wall
 
 # Debugging levels
-DEBUG=
+DEBUG=-O2
 #DEBUG=-DTAUDB_DEBUG -DHASH_DEBUG=1
 #DEBUG=-DTAUDB_DEBUG -DTAUDB_DEBUG_DEBUG -DHASH_DEBUG=1
 

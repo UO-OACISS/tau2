@@ -50,6 +50,8 @@ TAUDB_THREAD* taudb_create_threads(int count){
 
 TAUDB_SECONDARY_METADATA* taudb_create_secondary_metadata(int count){ 
  TAUDB_SECONDARY_METADATA* metadata = (TAUDB_SECONDARY_METADATA*) (calloc (count, sizeof (TAUDB_SECONDARY_METADATA)));
+ metadata->child_count = 0;
+ metadata->num_values = 0;
  return metadata;
 }
 
