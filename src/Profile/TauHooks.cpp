@@ -521,26 +521,26 @@ char * tau_demangle_name(char **funcname) {
 }
 
 void  tau_register_func(char **func, char** file, int* lineno, 
-  int* id) {
+  int id) {
     if (*file == NULL){
-      dprintf("TAU: tau_register_func: name = %s, id = %d\n", *func, *id);
-      trace_register_func(tau_demangle_name(func), *id);
+      dprintf("TAU: tau_register_func: name = %s, id = %d\n", *func, id);
+      trace_register_func(tau_demangle_name(func), id);
     } else {
       char funcname[2048];
       sprintf(funcname, "%s [{%s}{%d}]", tau_demangle_name(func), *file, *lineno);
-      trace_register_func(funcname, *id);
-      dprintf("TAU : tau_register_func: name = %s, id = %d\n", funcname, *id);
+      trace_register_func(funcname, id);
+      dprintf("TAU : tau_register_func: name = %s, id = %d\n", funcname, id);
     }
 }
 
-void tau_trace_entry(int* id) {
-  dprintf("TAU: tau_trace_entry: id = %d\n", *id);
-  traceEntry(*id);
+void tau_trace_entry(int id) {
+  dprintf("TAU: tau_trace_entry: id = %d\n", id);
+  traceEntry(id);
 }
 
-void tau_trace_exit(int* id) {
-  dprintf("TAU: tau_trace_exit : id = %d\n", *id);
-  traceExit(*id);
+void tau_trace_exit(int id) {
+  dprintf("TAU: tau_trace_exit : id = %d\n", id);
+  traceExit(id);
 }
 
 #if !defined(TAU_PEBIL_DISABLE) && !defined(TAU_WINDOWS)
