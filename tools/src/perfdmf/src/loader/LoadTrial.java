@@ -36,6 +36,7 @@ public class LoadTrial {
 
     private DatabaseAPI databaseAPI;
     private Trial trial;
+	private Double reducePercentage;
 
     public static void usage() {
         System.err.println("Usage: perfdmf_loadtrial -a <appName> -x <expName> -n <name> [options] <files>\n\n"
@@ -63,6 +64,7 @@ public class LoadTrial {
                 + "  -t, --trialid <number>          Specify trial ID\n"
                 + "  -i, --fixnames                  Use the fixnames option for gprof\n"
                 + "  -z, --usenull                   Include NULL values as 0 for mean calculation\n"
+                + "  -r, --reduce <percentage>       Aggregate all timers less than percentage as \"other\"\n"
                 + "  -m, --metadata <filename>       XML metadata for the trial\n\n" + "Notes:\n"
                 + "  For the TAU profiles type, you can specify either a specific set of profile\n"
                 + "files on the commandline, or you can specify a directory (by default the current\n"
@@ -179,6 +181,9 @@ public class LoadTrial {
             	dataSource.setGenerateTAUdbStatistics(true);
             }
             dataSource.load();
+            if (reducePercentage != null && reducePercentage > 0.0) {
+            	dataSource.reduceTrial(reducePercentage);
+            }
         } catch (Exception e) {
             System.err.println("Error Loading Trial:");
             e.printStackTrace();
@@ -289,6 +294,7 @@ public class LoadTrial {
         CmdLineParser.Option appNameOpt = parser.addStringOption('a', "applicationname");
         CmdLineParser.Option expNameOpt = parser.addStringOption('x', "experimentname");
         CmdLineParser.Option summaryOpt = parser.addBooleanOption('s', "summaryonly");
+        CmdLineParser.Option percentageOpt = parser.addDoubleOption('r', "reduce");
         CmdLineParser.Option useNullOpt = parser.addBooleanOption('z', "usenull");
 
         try {
@@ -307,6 +313,7 @@ public class LoadTrial {
         String trialName = (String) parser.getOptionValue(nameOpt);
         String appName = (String) parser.getOptionValue(appNameOpt);
         String expName = (String) parser.getOptionValue(expNameOpt);
+        Double percentage = (Double) parser.getOptionValue(percentageOpt);
 
         //String problemFile = (String)parser.getOptionValue(problemOpt);
         String trialID = (String) parser.getOptionValue(trialOpt);
@@ -424,6 +431,9 @@ public class LoadTrial {
         if (useNull == null) {
             useNull = new Boolean(false);
         }
+        if (percentage == null) {
+        	percentage = new Double(0.0);
+        }
         
         
         if(multippk){
@@ -445,6 +455,7 @@ public class LoadTrial {
             trans.fixNames = fixNames.booleanValue();
             trans.metadataFile = metadataFile;
             trans.summaryOnly = summaryOnly.booleanValue();
+            trans.reducePercentage = percentage;
             trans.loadTrial(fileType);
         	}
         }
@@ -469,6 +480,7 @@ public class LoadTrial {
         trans.appName = appName;
         trans.expName = expName;
         trans.useNulls = useNull.booleanValue();
+        trans.reducePercentage = percentage;
         trans.loadTrial(fileType);
         // the trial will be saved when the load is finished (update is called)
         }

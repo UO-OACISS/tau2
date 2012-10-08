@@ -208,6 +208,11 @@ public class Thread implements Comparable<Thread> {
         fp.setThread(this);
     }
 
+    public void deleteFunctionProfile(FunctionProfile fp) {
+        int id = fp.getFunction().getID();
+        functionProfiles.set(id, null);
+    }
+
     public void addUserEventProfile(UserEventProfile uep) {
         int id = uep.getUserEvent().getID();
         // increase the size of the userEventProfiles list if necessary
