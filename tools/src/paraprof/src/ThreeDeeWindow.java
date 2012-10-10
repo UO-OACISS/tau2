@@ -722,7 +722,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 							}
 						}
 					}
-					else if(settings.getDataType(i)==1) {
+					else if(settings.getDataType(i)==2) {
 						String metaKey=settings.getTopoMetadata(i);
 						if(metaKey!=null&&metaKey.trim().length()>0){
 							String metaVal=thread.getMetaData().get(metaKey);

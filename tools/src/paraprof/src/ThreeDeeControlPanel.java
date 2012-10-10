@@ -533,7 +533,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         		
         		String fname=null;
         		
-        		if(atomic.getSelectedIndex()==0){
+        		if(atomic.getSelectedIndex()==1){
         			
         			int numUE = ppTrial.getDataSource().getNumUserEvents();
         			if(numUE<1){
@@ -555,7 +555,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         			}
         			fname=settings.getTopoAtomic(dex).getName();
         		}
-        		else if(atomic.getSelectedIndex()==1){
+        		else if(atomic.getSelectedIndex()==0){
         			metricBox.setEnabled(true);
         			valueBox.setEditable(true);
         			valueBox.removeAllItems();
@@ -569,6 +569,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         			metricBox.setEnabled(false);
         			valueBox.removeAllItems();
         			valueBox.setEditable(false);
+        			fname=settings.getTopoMetadata(dex);
         			//valueBox.setSelectedIndex(settings.meticETDex[dex]);
         			//fname = settings.getTopoMetric(dex);
         			//TODO: Metadata support
