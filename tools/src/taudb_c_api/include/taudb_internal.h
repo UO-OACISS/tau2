@@ -3,6 +3,9 @@
 
 #include "taudb_api.h"
 
+/* parse configuration files */
+extern TAUDB_CONFIGURATION* taudb_parse_config_file(char* config_file_name);
+
 /* to connect to the database */
 extern TAUDB_CONNECTION* taudb_private_connect(char* host, char* port, char* database,
                          char* login, char* password);

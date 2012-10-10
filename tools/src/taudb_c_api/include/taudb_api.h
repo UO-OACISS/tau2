@@ -10,9 +10,6 @@ extern int taudb_numItems;
 /* the database version */
 extern enum taudb_database_schema_version taudb_version;
 
-/* parse configuration files */
-extern TAUDB_CONFIGURATION* taudb_parse_config_file(char* config_file_name);
-
 /* to connect to the database */
 extern TAUDB_CONNECTION* taudb_connect_config(char* config_name);
 extern TAUDB_CONNECTION* taudb_connect_config_file(char* config_file_name);
@@ -27,7 +24,7 @@ extern int taudb_disconnect(TAUDB_CONNECTION* connection);
 /* query functions */
 /************************************************/
 
-/* functions to support the old database schema */
+/* functions to support the old database schema - avoid these if you can */
 extern PERFDMF_APPLICATION* perfdmf_query_applications(TAUDB_CONNECTION* connection);
 extern PERFDMF_EXPERIMENT*  perfdmf_query_experiments(TAUDB_CONNECTION* connection, PERFDMF_APPLICATION* application);
 extern PERFDMF_APPLICATION* perfdmf_query_application(TAUDB_CONNECTION* connection, char* name);
