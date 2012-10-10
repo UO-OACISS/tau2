@@ -78,7 +78,7 @@ public class TAUdbTimerParameter {
 		String query = "select tp.timer, tp.parameter_name, tp.parameter_value, t.trial from timer_parameter tp join timer t on tg.timer = t.id where t.trial = ?;";
 		try {
 			PreparedStatement statement = session.getDB().prepareStatement(query);
-			statement.setInt(1, trial.getId());
+			statement.setInt(1, trial.getID());
 			ResultSet results = statement.executeQuery();
 			while(results.next()) {
 				Integer timerID = results.getInt(1);

@@ -207,7 +207,7 @@ public class TAUdbSecondaryMetadata {
 		String query = "select id, thread, timer_callpath, parent, name, value, is_array from secondary_metadata where trial = ?";
 		try {
 			PreparedStatement statement = session.getDB().prepareStatement(query);
-			statement.setInt(1, trial.getId());
+			statement.setInt(1, trial.getID());
 			ResultSet results = statement.executeQuery();
 			while(results.next()) {
 				Integer id = results.getInt(1);

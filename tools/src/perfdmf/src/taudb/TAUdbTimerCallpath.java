@@ -123,7 +123,7 @@ public class TAUdbTimerCallpath {
 				"timer_callpath tc inner join " +
 				db.getSchemaPrefix() +
 				"timer t on tc.timer = t.id where " +
-				"t.trial = " + trial.getId() + " and tc.parent is null " +
+				"t.trial = " + trial.getID() + " and tc.parent is null " +
 				"UNION ALL " +
 				"SELECT d.id, d.parent, d.timer, ");
 		        if (db.getDBType().compareTo("h2") == 0) {

@@ -7,7 +7,7 @@ import java.io.File;
 import java.sql.SQLException;
 import java.util.Map;
 
-import edu.uoregon.tau.perfdmf.TAUdbDatabaseAPI;
+import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.database.DB;
 
 /**
@@ -16,10 +16,12 @@ import edu.uoregon.tau.perfdmf.database.DB;
  */
 public class TAUdbSession {
 
-	private Map<Integer, TAUdbDataSource> sources = null;
+	private Map<Integer, TAUdbDataSourceType> sources = null;
 	private TAUdbDatabaseAPI api = null;
 	private boolean connected = false;
 	private TAUdbTrial currentTrial = null;
+	
+	private DB db;
 	
 	/**
 	 * 
@@ -31,11 +33,14 @@ public class TAUdbSession {
 		try {
 			api.initialize(configFile, false);
 			connected = true;
-			sources = TAUdbDataSource.getDataSources(this);
+			sources = TAUdbDataSourceType.getDataSourceTypes(this);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}		
+	}
+	public TAUdbSession(DB db){
+		this.db = db;
 	}
 	
 	public void close() {
@@ -53,11 +58,13 @@ public class TAUdbSession {
 		close();
 	}
 	
-	public Map<Integer, TAUdbDataSource> getDataSources() {
+	public Map<Integer, TAUdbDataSourceType> getDataSources() {
 		return sources;
 	}
 	
 	public DB getDB() {
+		if(api == null)
+			return db;
 		return api.db();
 	}
 

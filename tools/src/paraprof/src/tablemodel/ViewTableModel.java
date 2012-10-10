@@ -10,7 +10,7 @@ import javax.swing.tree.DefaultTreeModel;
 import edu.uoregon.tau.paraprof.ParaProfView;
 import edu.uoregon.tau.paraprof.ParaProfManagerWindow;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
-import edu.uoregon.tau.perfdmf.TAUdbDatabaseAPI;
+import edu.uoregon.tau.perfdmf.taudb.TAUdbDatabaseAPI;
 
 public class ViewTableModel extends AbstractTableModel {
 

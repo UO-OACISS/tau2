@@ -34,6 +34,7 @@ import edu.uoregon.tau.common.MetaDataMap;
 import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
 import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfdmf.database.DBConnector;
+import edu.uoregon.tau.perfdmf.taudb.TAUdbTrial;
 
 /**
  * Holds all the data for a trial in the database. This object is returned by

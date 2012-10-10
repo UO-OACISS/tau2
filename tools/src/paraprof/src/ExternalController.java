@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.taudb.TAUdbDatabaseAPI;
 
 public class ExternalController {
 

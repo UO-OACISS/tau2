@@ -9,45 +9,36 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
+import edu.uoregon.tau.perfdmf.Metric;
+
 /**
  * @author khuck
  *
  */
-public class TAUdbMetric {
-	private int id = 0;
+public class TAUdbMetric extends Metric{
+	//private int id = 0;
 	private TAUdbTrial trial = null;
 	private TAUdbSession session = null;
-	private String name = null;
-	private boolean derived = false;
 
 	/**
 	 * 
 	 */
 	public TAUdbMetric(TAUdbSession session, int id, TAUdbTrial trial, String name, boolean derived) {
-		this.id = id;
+		super();
+		this.metricID = id;
+		this.dbMetricID = id;
+		this.trialID = trial.getID();
 		this.trial = trial;
 		this.session = session;
 		this.name = name;
-		this.derived = derived;
+		this.derivedMetric = derived;
 	}
 
 	public String toString() {
 		return this.name;
 	}
 
-	/**
-	 * @return the id
-	 */
-	public int getId() {
-		return id;
-	}
-
-	/**
-	 * @param id the id to set
-	 */
-	public void setId(int id) {
-		this.id = id;
-	}
+	
 
 	/**
 	 * @return the trial
@@ -95,26 +86,26 @@ public class TAUdbMetric {
 	 * @return the derived
 	 */
 	public boolean isDerived() {
-		return derived;
+		return derivedMetric;
 	}
 
 	/**
 	 * @param derived the derived to set
 	 */
 	public void setDerived(boolean derived) {
-		this.derived = derived;
+		this.derivedMetric = derived;
 	}
 
 	public static Map<Integer, TAUdbMetric> getMetrics(TAUdbSession session, TAUdbTrial trial) {
 		// if the trial has already loaded them, don't get them again.
 		if (trial.getMetrics() != null && trial.getMetrics().size() > 0) {
-			return trial.getMetrics();
+			return trial.getTAUdbMetrics();
 		}
 		Map<Integer, TAUdbMetric> metrics = new HashMap<Integer, TAUdbMetric>();
 		String query = "select id, name, derived from metric where trial = ?";
 		try {
 			PreparedStatement statement = session.getDB().prepareStatement(query);
-			statement.setInt(1, trial.getId());
+			statement.setInt(1, trial.getID());
 			ResultSet results = statement.executeQuery();
 			while(results.next()) {
 				Integer id = results.getInt(1);

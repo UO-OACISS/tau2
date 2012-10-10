@@ -15,7 +15,7 @@ import edu.uoregon.tau.perfdmf.FunctionProfile;
 import edu.uoregon.tau.perfdmf.IntervalLocationProfile;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.View;
-import edu.uoregon.tau.perfdmf.TAUdbTrial;
+import edu.uoregon.tau.perfdmf.taudb.TAUdbTrial;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
 import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
