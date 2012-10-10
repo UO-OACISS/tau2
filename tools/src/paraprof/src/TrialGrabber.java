@@ -14,7 +14,7 @@ import edu.uoregon.tau.perfdmf.DataSource;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.PackedProfileDataSource;
-import edu.uoregon.tau.perfdmf.TAUdbDatabaseAPI;
+import edu.uoregon.tau.perfdmf.taudb.TAUdbDatabaseAPI;
 import edu.uoregon.tau.perfdmf.Trial;
 
 class PPKFileFilter implements FilenameFilter {
