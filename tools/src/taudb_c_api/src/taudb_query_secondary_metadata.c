@@ -32,7 +32,7 @@ TAUDB_SECONDARY_METADATA* taudb_query_secondary_metadata(TAUDB_CONNECTION* conne
   nFields = taudb_get_num_columns(connection);
 
   /* the rows */
-  for (i = 0; i < taudb_get_num_rows(connection); i++)
+  for (i = 0; i < nRows; i++)
   {
     boolean is_array = FALSE;
 	int tmpID = 0;
