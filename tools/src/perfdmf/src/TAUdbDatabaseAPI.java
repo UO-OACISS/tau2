@@ -162,28 +162,28 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
             uploadMetrics(newTrialID, dataSource.getMetrics(), db);
             Map<Metric, Integer> metricMap = getMetricIDMap(newTrialID, dataSource, db);
 			long after = System.currentTimeMillis();
-			System.out.println(" done. (" + (after - before) / 1000 + " seconds)");
+			System.out.println(" done. (" + (after - before) / 1000.0 + " seconds)");
 			before = after;
             
 			System.out.print("Inserting timers...");
             uploadFunctions(newTrialID, dataSource, db);
             Map<Function, Integer> functionMap = getFunctionsIDMap(newTrialID, dataSource, db);
 			after = System.currentTimeMillis();
-			System.out.println(" done. (" + (after - before) / 1000 + " seconds)");
+			System.out.println(" done. (" + (after - before) / 1000.0 + " seconds)");
 			before = after;
             
 			System.out.print("Inserting threads...");
             uploadThreads(newTrialID, dataSource, db);
             threadMap = getThreadsMap(newTrialID, dataSource, db);
 			after = System.currentTimeMillis();
-			System.out.println(" done. (" + (after - before) / 1000 + " seconds)");
+			System.out.println(" done. (" + (after - before) / 1000.0 + " seconds)");
 			before = after;
             
 			System.out.print("Inserting timer groups and parameters...");
             uploadTimerGroups(functionMap, db);
             uploadTimerParameter(functionMap, db);
 			after = System.currentTimeMillis();
-			System.out.println(" done. (" + (after - before) / 1000 + " seconds)");
+			System.out.println(" done. (" + (after - before) / 1000.0 + " seconds)");
 			before = after;
             // this seems confusing... but let me explain. We have uploaded the timers,
             // which are just the flat profile. This call will upload the full call graph,
@@ -192,22 +192,31 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			System.out.print("Inserting call graph...");
             callpathMap = uploadCallpathInfo(dataSource, functionMap, db);
 			after = System.currentTimeMillis();
-			System.out.println(" done. (" + (after - before) / 1000 + " seconds)");
+			System.out.println(" done. (" + (after - before) / 1000.0 + " seconds)");
 			before = after;
             
             // now that the graph is created, insert the call and subroutine data.
 			System.out.print("Inserting per-thread call data...");
             uploadCallDataInfo(dataSource, callpathMap, metricMap, threadMap, db, false);
 			after = System.currentTimeMillis();
-			System.out.println(" done. (" + (after - before) / 1000 + " seconds)");
+			System.out.println(" done. (" + (after - before) / 1000.0 + " seconds)");
 			before = after;
+
             // also do it for the derived threads
 			System.out.print("Inserting derived threads...");
             Map<Thread, Integer> derivedThreadMap = uploadDerivedThreads(newTrialID, dataSource, db);
+			after = System.currentTimeMillis();
+			System.out.println(" done. (" + (after - before) / 1000.0 + " seconds)");
+			before = after;
+			System.out.print("Inserting derived threads call data...");
             uploadCallDataInfo(dataSource, callpathMap, metricMap, derivedThreadMap, db, true);
+			after = System.currentTimeMillis();
+			System.out.println(" done. (" + (after - before) / 1000.0 + " seconds)");
+			before = after;
+			System.out.print("Querying new call data for IDs...");
             Map<TimerCallData, Integer> timerCallDataMap = getCallDataMap(newTrialID, dataSource, db);
 			after = System.currentTimeMillis();
-			System.out.println(" done. (" + (after - before) / 1000 + " seconds)");
+			System.out.println(" done. (" + (after - before) / 1000.0 + " seconds)");
 			before = after;
 
 			System.out.print("Inserting timer measurements...");
@@ -219,7 +228,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
                 uploadStatistics(dataSource, timerCallDataMap, metricMap, db);
             }
 			after = System.currentTimeMillis();
-			System.out.println(" done. (" + (after - before) / 1000 + " seconds)");
+			System.out.println(" done. (" + (after - before) / 1000.0 + " seconds)");
 			before = after;
 
 			System.out.print("Inserting counters...");
@@ -228,13 +237,13 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 
             uploadUserEventProfiles(dataSource, userEventMap, db, threadMap);
 			after = System.currentTimeMillis();
-			System.out.println(" done. (" + (after - before) / 1000 + " seconds)");
+			System.out.println(" done. (" + (after - before) / 1000.0 + " seconds)");
 			before = after;
                         
 			System.out.print("Inserting metadata...");
             uploadMetadata(dataSource, trial, callpathMap, threadMap, db);
 			after = System.currentTimeMillis();
-			System.out.println(" done. (" + (after - before) / 1000 + " seconds)");
+			System.out.println(" done. (" + (after - before) / 1000.0 + " seconds)");
 
           //TODO: Deal with cancel upload
 //          if (this.cancelUpload) {
@@ -578,6 +587,8 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 	private static Map<TimerCallData, Integer> getCallDataMap(int trialID, DataSource dataSource, DB db) throws SQLException {
 		Map<TimerCallData, Integer> map = new HashMap<TimerCallData, Integer>();
 		StringBuilder sb = new StringBuilder();
+		/* Apparently, the H2 database doesn't handle parameters in the 
+		   recursive part of the query. So, we don't add them as parameters. */
 		sb.append("with recursive cp (id, parent, timer, name) as ( " +
 				"SELECT tc.id, tc.parent, tc.timer, t.name FROM " +
 				db.getSchemaPrefix() +
@@ -585,12 +596,11 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 				db.getSchemaPrefix() +
 				"timer t on tc.timer = t.id where ");
 		        if (db.getDBType().compareTo("h2") == 0) {
-					sb.append("tc.parent is null ");
+					sb.append("t.trial = " + trialID + " and tc.parent is null ");
 		        } else {
 					sb.append("t.trial = ? and tc.parent is null ");
 		        }
-				sb.append("UNION ALL " +
-				"SELECT d.id, d.parent, d.timer, ");
+				sb.append("UNION ALL SELECT d.id, d.parent, d.timer, ");
         if (db.getDBType().compareTo("h2") == 0) {
 			sb.append("concat (cp.name, ' => ', dt.name) FROM ");
         } else {
@@ -602,19 +612,18 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 	        if (db.getDBType().compareTo("h2") == 0) {
 				sb.append("timer dt on d.timer = dt.id) ");
 	        } else {
-	        	sb.append("timer dt on d.timer = dt.id where dt.trial = ?) ");
+	        	sb.append("timer dt on d.timer = dt.id) ");
 	        }
 	        	sb.append("SELECT distinct tcd.id, tcd.time_range, cp.name, h.node_rank, h.context_rank, h.thread_rank FROM cp join ");
 		sb.append(db.getSchemaPrefix());
 		sb.append("timer_call_data tcd on tcd.timer_callpath = cp.id join ");
 		sb.append(db.getSchemaPrefix());
-		sb.append("thread h on tcd.thread = h.id where h.trial = ?");
+		sb.append("thread h on tcd.thread = h.id");
 		PreparedStatement statement = db.prepareStatement(sb.toString());
-		statement.setInt(1, trialID);
         if (db.getDBType().compareTo("h2") != 0) {
-        	statement.setInt(2, trialID);
-        	statement.setInt(3, trialID);
+			statement.setInt(1, trialID);
         }
+		//System.out.println(statement);
 		statement.execute();
 		ResultSet results = statement.getResultSet();
 
@@ -1107,49 +1116,29 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 		}
         stmt.executeBatch();
         stmt.close();
+        Map<List<Integer>, Integer> timestampMap = new HashMap<List<Integer>, Integer>();
         
         for (Thread thread : trial.getDataSource().getThreads()) {
 			for (MetaDataKey key : trial.getUncommonMetaData().keySet()) {
 			    MetaDataValue value = thread.getMetaData().get(key);
 			    if (value == null) { continue; }
-			    // first, create the time_range objects
-		        stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
-		                + "time_range (iteration_start, iteration_end, time_start, time_end) VALUES (?, ?, ?, ?)");
-		        stmt.setInt(1, key.call_number);
-		        stmt.setInt(2, key.call_number);
-		        stmt.setLong(3, key.timestamp);
-		        stmt.setLong(4, key.timestamp);
-		        stmt.execute();
-		        stmt.close();
-		        
-		        // get the id of the new time_range object
-	            String tmpStr = new String();
-	            if (db.getDBType().compareTo("mysql") == 0)
-	                tmpStr = "select LAST_INSERT_ID();";
-	            else if (db.getDBType().compareTo("db2") == 0)
-	                tmpStr = "select IDENTITY_VAL_LOCAL() FROM time_range";
-	            else if (db.getDBType().compareTo("derby") == 0)
-	                tmpStr = "select IDENTITY_VAL_LOCAL() FROM time_range";
-	            else if (db.getDBType().compareTo("sqlite") == 0)
-	                tmpStr = "select seq from sqlite_sequence where name = 'time_range'";
-	            else if (db.getDBType().compareTo("h2") == 0)
-	                tmpStr = "select IDENTITY_VAL_LOCAL() FROM time_range";
-	            else if (db.getDBType().compareTo("oracle") == 0)
-	                tmpStr = "select " + db.getSchemaPrefix() + "time_range_id_seq.currval FROM dual";
-	            else
-	                tmpStr = "select currval('time_range_id_seq');";
-	            int time_range = Integer.parseInt(db.getDataItem(tmpStr));
-			    
+
+			    int timer_callpath = 0;
+			    int time_range = 0;
+	            if (key.timer_context != null) {
+		            timer_callpath = functionMap.get(dataSource.getFunction(key.timer_context));
+					time_range = getTimestampID(db, key, timestampMap, stmt);
+	            }
+	            
 		        stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
 		                + "secondary_metadata (id, trial, thread, timer_callpath, time_range, parent, name, value, is_array) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 		        stmt.setString(1, UUID.randomUUID().toString());
 		        stmt.setInt(2, trialID);
 	            stmt.setInt(3, threadMap.get(thread));
 	            if (key.timer_context != null) {
-		            int timer_callpath = functionMap.get(dataSource.getFunction(key.timer_context));
 		            stmt.setInt(4, timer_callpath);
 		            stmt.setInt(5, time_range);
-		            stmt.setNull(6, java.sql.Types.VARCHAR);
+		            stmt.setNull(6, java.sql.Types.INTEGER);
 	            } else {
 		            stmt.setNull(4, java.sql.Types.INTEGER);
 		            stmt.setNull(5, java.sql.Types.INTEGER);
@@ -1159,10 +1148,11 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 	            stmt.setString(8, value.value.toString());
 	            stmt.setBoolean(9, false);
 				//System.out.println(stmt.toString());
-		        stmt.execute();
-		        stmt.close();
+	            stmt.addBatch();
 			}
     	}
+      	stmt.executeBatch();
+        stmt.close();
 
         if (trial.getDataSource().getMetadataFile() != null) {
         	try {
@@ -1211,6 +1201,53 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
         		System.err.println(jse.getMessage());
         	}
         }
+	}
+
+	private static int getTimestampID(DB db, MetaDataKey key, Map<List<Integer>, Integer> timestampMap, PreparedStatement stmt)
+			throws SQLException {
+		List<Long> timestamp = new ArrayList<Long>(2);
+		timestamp.set(0, new Long(key.call_number));
+		timestamp.set(1, new Long(key.timestamp));
+		Integer time_range = timestampMap.get(timestamp);
+		if (time_range != null) {
+			return time_range.intValue();
+		}
+		
+		//ok, execute the current batch, if necessary
+        try {
+        	stmt.executeBatch();
+        } catch (SQLException esql) {
+        	// this batch might have been empty. Ignore?
+        }
+
+		// first, create the time_range objects
+		PreparedStatement stmt2 = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
+		        + "time_range (iteration_start, iteration_end, time_start, time_end) VALUES (?, ?, ?, ?)");
+		stmt2.setInt(1, key.call_number);
+		stmt2.setInt(2, key.call_number);
+		stmt2.setLong(3, key.timestamp);
+		stmt2.setLong(4, key.timestamp);
+		stmt2.execute();
+		stmt2.close();
+		
+		// get the id of the new time_range object
+		String tmpStr = new String();
+		if (db.getDBType().compareTo("mysql") == 0)
+		    tmpStr = "select LAST_INSERT_ID();";
+		else if (db.getDBType().compareTo("db2") == 0)
+		    tmpStr = "select IDENTITY_VAL_LOCAL() FROM time_range";
+		else if (db.getDBType().compareTo("derby") == 0)
+		    tmpStr = "select IDENTITY_VAL_LOCAL() FROM time_range";
+		else if (db.getDBType().compareTo("sqlite") == 0)
+		    tmpStr = "select seq from sqlite_sequence where name = 'time_range'";
+		else if (db.getDBType().compareTo("h2") == 0)
+		    tmpStr = "select IDENTITY_VAL_LOCAL() FROM time_range";
+		else if (db.getDBType().compareTo("oracle") == 0)
+		    tmpStr = "select " + db.getSchemaPrefix() + "time_range_id_seq.currval FROM dual";
+		else
+		    tmpStr = "select currval('time_range_id_seq');";
+		time_range = Integer.parseInt(db.getDataItem(tmpStr));
+		return time_range.intValue();
 	}
 	
 	private static int processElement(PreparedStatement stmt, Entry<String, Object> entry,
