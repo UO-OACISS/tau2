@@ -153,8 +153,10 @@ void metric_read_clock_gettime(int tid, int idx, double values[]) {
   /* Mac OS X currently (up to 10.6.8) does not support clock_gettime. */
   metric_read_gettimeofday(tid, idx, values);
 #elif TAU_BGQ
-  /* clock_gettime appears broken on the back end of BGQ, too. */
-  metric_read_gettimeofday(tid, idx, values);
+  /* clock_gettime does not support MONOTONIC on the back end of BGQ. */
+  struct timespec tm;
+  clock_gettime(CLOCK_REALTIME, &tm);
+  values[idx] = ((double)tm.tv_sec * 1e6 + (tm.tv_nsec*1e-3));
 #else
   struct timespec tm;
   clock_gettime(CLOCK_MONOTONIC, &tm);
