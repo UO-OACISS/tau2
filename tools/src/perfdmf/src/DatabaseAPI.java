@@ -15,6 +15,7 @@ import java.util.Vector;
 
 import edu.uoregon.tau.perfdmf.database.ConnectionManager;
 import edu.uoregon.tau.perfdmf.database.DB;
+import edu.uoregon.tau.perfdmf.taudb.TAUdbDatabaseAPI;
 
 /**
  * This is the top level class for the Database API.
@@ -58,6 +59,31 @@ public class DatabaseAPI {
 
     public void cancelUpload() {
         this.cancelUpload = true;
+    }
+    public void copy(DatabaseAPI copy){
+    	
+    	 copy.database = this.database;
+         copy.connector = this.connector;
+         copy.db = this.connector.getDB();
+         copy.application = this.application;
+         copy.experiment = this.experiment;
+         copy.trial = this.trial;
+         copy.nodes = this.nodes;
+         copy.contexts = this.contexts;
+         copy.threads = this.threads;
+         copy.intervalEvents = this.intervalEvents;
+         copy.atomicEvents = this.atomicEvents;
+         copy.metrics = this.metrics;
+         copy.applications = this.applications;
+         copy.experiments = this.experiments;
+         copy.trials = this.trials;
+         copy.intervalEventData = this.intervalEventData;
+         copy.atomicEventData = this.atomicEventData;
+         copy.intervalEventHash = this.intervalEventHash;
+         copy.atomicEventHash = this.atomicEventHash;
+         copy.cancelUpload = this.cancelUpload;
+
+    	
     }
 
     public String getMetricName(int metricID) {

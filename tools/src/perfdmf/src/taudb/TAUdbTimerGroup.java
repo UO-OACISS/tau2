@@ -41,7 +41,7 @@ public class TAUdbTimerGroup {
 		String query = "select tg.group_name, tg.timer, t.trial from timer_group tg join timer t on tg.timer = t.id where t.trial = ?;";
 		try {
 			PreparedStatement statement = session.getDB().prepareStatement(query);
-			statement.setInt(1, trial.getId());
+			statement.setInt(1, trial.getID());
 			ResultSet results = statement.executeQuery();
 			while(results.next()) {
 				String name = results.getString(1);

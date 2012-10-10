@@ -125,7 +125,7 @@ public class TAUdbCounter {
 		String query = "select id, name from counter where trial = ?;";
 		try {
 			PreparedStatement statement = session.getDB().prepareStatement(query);
-			statement.setInt(1, trial.getId());
+			statement.setInt(1, trial.getID());
 			ResultSet results = statement.executeQuery();
 			while(results.next()) {
 				Integer id = results.getInt(1);

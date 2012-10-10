@@ -181,7 +181,7 @@ public class TAUdbTimerValue {
 		String query = "select v.timer_call_data, v.metric, v.inclusive_value, v.exclusive_value, v.inclusive_percent, v.exclusive_percent, v.sum_exclusive_squared from timer_value v join timer_call_data td on v.timer_call_data = td.id join thread t on td.thread = t.id where t.trial = ?";
 		try {
 			PreparedStatement statement = session.getDB().prepareStatement(query);
-			statement.setInt(1, trial.getId());
+			statement.setInt(1, trial.getID());
 			ResultSet results = statement.executeQuery();
 			while(results.next()) {
 				Integer timerCallID = results.getInt(1);
@@ -192,7 +192,7 @@ public class TAUdbTimerValue {
 				double exclusivePercent = results.getDouble(6);
 				double sumExclusiveSquared = results.getDouble(7);
 				TAUdbTimerCall timerCall = trial.getTimerCalls().get(timerCallID);
-				TAUdbMetric metric = trial.getMetrics().get(metricID);
+				TAUdbMetric metric = trial.getTAUdbMetrics().get(metricID);
 				TAUdbTimerValue timerValue = new TAUdbTimerValue (session, trial, timerCall, metric, inclusive, exclusive, inclusivePercent, exclusivePercent, sumExclusiveSquared);
 				timerValues.add(timerValue);
 			}

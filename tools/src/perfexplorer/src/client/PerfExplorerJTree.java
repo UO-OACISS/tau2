@@ -133,8 +133,8 @@ public class PerfExplorerJTree extends JTree {
 	while (views.hasNext()) {
 	    View view = views.next();
 	    DefaultMutableTreeNode node = new PerfExplorerTreeNode (view);
-	    addViewNodes(node, view.getField("ID"));
 	    parentNode.add(node);
+	    addViewNodes(node, view.getField("ID"));
 	}
 	if (viewVector.size() == 0) {
 	    leafViews.add(parentNode);
@@ -255,6 +255,9 @@ public class PerfExplorerJTree extends JTree {
 		trialNode = new PerfExplorerTreeNode (trial);
 		//addMetricNodes(trialNode, trial);
 		node.add(trialNode);
+		//trialNode.setParent(node);
+		trialNode.getParent();
+
 	    }
 	}
     }
@@ -301,7 +304,7 @@ public class PerfExplorerJTree extends JTree {
 
     public static int getConnectionIndex(DefaultMutableTreeNode node) {
     	//Don't silent ignore if the connection index is not found
-	int index = -1;
+	
 	// find the connection node for this subtree
 	DefaultMutableTreeNode parent = node;
 	Object obj = parent.getUserObject();
@@ -314,9 +317,9 @@ public class PerfExplorerJTree extends JTree {
 
 	if (obj != null && obj instanceof ConnectionNodeObject) {
 	    ConnectionNodeObject conn = (ConnectionNodeObject)obj;
-	    index = conn.index;
+	    return conn.index;
 	}
-	return index;
+	return -1;
     }
 
     public static void setConnectionIndex(DefaultMutableTreeNode node) {

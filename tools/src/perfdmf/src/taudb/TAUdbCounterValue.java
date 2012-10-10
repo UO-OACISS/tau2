@@ -59,7 +59,7 @@ public class TAUdbCounterValue {
 		String query = "select v.counter, v.timer_callpath, v.thread, v.sample_count, v.maximum_value, v.minimum_value, v.mean_value, v.standard_deviation from counter_value v join counter c on v.counter = c.id where c.trial = ?";
 		try {
 			PreparedStatement statement = session.getDB().prepareStatement(query);
-			statement.setInt(1, trial.getId());
+			statement.setInt(1, trial.getID());
 			ResultSet results = statement.executeQuery();
 			while(results.next()) {
 				Integer counterID = results.getInt(1);

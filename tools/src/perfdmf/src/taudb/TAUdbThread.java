@@ -164,7 +164,7 @@ public class TAUdbThread {
 		String query = "select id, node_rank, context_rank, thread_rank, thread_index from thread where trial = ? and " + condition + " order by thread_index;";
 		try {
 			PreparedStatement statement = session.getDB().prepareStatement(query);
-			statement.setInt(1, trial.getId());
+			statement.setInt(1, trial.getID());
 			ResultSet results = statement.executeQuery();
 			while(results.next()) {
 				Integer id = results.getInt(1);

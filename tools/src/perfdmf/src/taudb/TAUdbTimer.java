@@ -246,7 +246,7 @@ public class TAUdbTimer {
 		String query = "select id, name, short_name, source_file, line_number, line_number_end, column_number, column_number_end from timer where trial = ?;";
 		try {
 			PreparedStatement statement = session.getDB().prepareStatement(query);
-			statement.setInt(1, trial.getId());
+			statement.setInt(1, trial.getID());
 			ResultSet results = statement.executeQuery();
 			while(results.next()) {
 				Integer id = results.getInt(1);

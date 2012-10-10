@@ -166,7 +166,7 @@ public class TAUdbTimerCall {
 		String query = "select tc.id, tc.timer_callpath, tc.thread, tc.calls, tc.subroutines, tc.timestamp from timer_call_data tc join thread t on tc.thread = t.id where t.trial = ?";
 		try {
 			PreparedStatement statement = session.getDB().prepareStatement(query);
-			statement.setInt(1, trial.getId());
+			statement.setInt(1, trial.getID());
 			ResultSet results = statement.executeQuery();
 			while(results.next()) {
 				Integer id = results.getInt(1);

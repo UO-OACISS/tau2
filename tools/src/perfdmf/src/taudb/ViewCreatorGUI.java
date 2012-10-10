@@ -49,7 +49,6 @@ import javax.swing.*;
 import javax.swing.text.NumberFormatter;
 
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
-import edu.uoregon.tau.perfdmf.TAUdbDatabaseAPI;
 import edu.uoregon.tau.perfdmf.View;
 import edu.uoregon.tau.perfdmf.database.DB;
 
