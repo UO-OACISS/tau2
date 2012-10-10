@@ -1114,7 +1114,8 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
         stmt.executeBatch();
         stmt.close();
         Map<List<Integer>, Integer> timestampMap = new HashMap<List<Integer>, Integer>();
-        
+        stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
+                + "secondary_metadata (id, trial, thread, timer_callpath, time_range, parent, name, value, is_array) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
         for (Thread thread : trial.getDataSource().getThreads()) {
 			for (MetaDataKey key : trial.getUncommonMetaData().keySet()) {
 			    MetaDataValue value = thread.getMetaData().get(key);
@@ -1127,8 +1128,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 					time_range = getTimestampID(db, key, timestampMap, stmt);
 	            }
 	            
-		        stmt = db.prepareStatement("INSERT INTO " + db.getSchemaPrefix()
-		                + "secondary_metadata (id, trial, thread, timer_callpath, time_range, parent, name, value, is_array) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+		       
 		        stmt.setString(1, UUID.randomUUID().toString());
 		        stmt.setInt(2, trialID);
 	            stmt.setInt(3, threadMap.get(thread));
