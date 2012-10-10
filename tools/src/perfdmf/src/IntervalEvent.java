@@ -109,10 +109,11 @@ public class IntervalEvent {
          buf.append(db.getSchemaPrefix());
          buf.append("timer_callpath tc INNER JOIN ");
          buf.append(db.getSchemaPrefix());
-         buf.append("timer t on tc.timer = t.id WHERE tc.parent is null ");
+         buf.append("timer t on tc.timer = t.id WHERE ");
          if (dataSession.getTrial() != null) {
-        	 buf.append("and t.trial = " + dataSession.getTrial().getID() + " ");
+        	 buf.append(" t.trial = " + dataSession.getTrial().getID() + " AND ");
          }
+         buf.append(" tc.parent is null ");
          buf.append("UNION ALL ");
          /* recursive part */
          buf.append("SELECT d.id, d.parent, d.timer, ");
