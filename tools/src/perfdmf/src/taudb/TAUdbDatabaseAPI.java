@@ -1127,7 +1127,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 		            timer_callpath = functionMap.get(dataSource.getFunction(key.timer_context));
 					time_range = getTimestampID(db, key, timestampMap, stmt);
 	            }
-	            
+	      
 		       
 		        stmt.setString(1, UUID.randomUUID().toString());
 		        stmt.setInt(2, trialID);
@@ -1353,6 +1353,22 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 	
 	public View getView() {
 		return this.view;
+	}
+	public View getView(int ID){
+		List<View> vs = null;
+		if (views == null) {
+			int parent = 0;
+			if (view != null)
+				parent = view.getID();
+			vs = View.getViews(parent, db);
+			views = new HashMap<Integer, View>();
+			for (View v : vs) {
+				v.setParent(view);
+				views.put(v.getID(), v);
+			}
+		}
+		return views.get(ID);
+
 	}
 	
 	// returns Vector of View objects
