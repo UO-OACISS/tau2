@@ -1217,22 +1217,36 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 						ParaProfExperiment experiment = (ParaProfExperiment) clickedOnObject;
 						(new LoadTrialWindow(this, null, experiment, false,
 								false)).setVisible(true);
-					} else {
-						// a database
-						ParaProfApplication application = addApplication(true,
-								(DefaultMutableTreeNode) clickedOnObject);
-						if (application != null) {
-							this.expandApplicationType(2, application.getID(),
-									application);
-							ParaProfExperiment experiment = addExperiment(true,
-									application);
-							if (experiment != null) {
-								this.expandApplication(2, application,
-										experiment);
-								(new LoadTrialWindow(this, application,
-										experiment, true, true))
-										.setVisible(true);
+					} else if (clickedOnObject instanceof DefaultMutableTreeNode){
+						DefaultMutableTreeNode node = (DefaultMutableTreeNode) clickedOnObject;
+						Database database = (Database) node.getUserObject();
+						if (!database.isTAUdb()) {
+							// a database
+							ParaProfApplication application = addApplication(
+									true,
+									(DefaultMutableTreeNode) clickedOnObject);
+							if (application != null) {
+								this.expandApplicationType(2,
+										application.getID(), application);
+								ParaProfExperiment experiment = addExperiment(
+										true, application);
+								if (experiment != null) {
+									this.expandApplication(2, application,
+											experiment);
+									(new LoadTrialWindow(this, application,
+											experiment, true, true))
+											.setVisible(true);
+								}
 							}
+						}else{
+//							new TAUdbLoadTrialWindow(this).setVisible(true);
+							TAUdbDatabaseAPI api = (TAUdbDatabaseAPI) getDatabaseAPI(database);
+							
+							
+							
+							
+							new LoadTrialWindow(this, api.getView(1)).setVisible(true);
+							
 						}
 
 					}
@@ -2538,8 +2552,15 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		return experiment;
 	}
 
-	public void addTrial(ParaProfApplication application,
-			ParaProfExperiment experiment, File files[], int fileType,
+	public void addTrial(ParaProfExperiment experiment, File files[], int fileType,
+			boolean fixGprofNames, boolean monitorProfiles, String range) {
+		addTrial(experiment,null, files, fileType, fixGprofNames, monitorProfiles, range);
+	}
+	public void addTrial(ParaProfView view, File files[], int fileType,
+			boolean fixGprofNames, boolean monitorProfiles, String range) {
+		addTrial(null, view, files, fileType, fixGprofNames, monitorProfiles, range);
+	}
+	private void addTrial(ParaProfExperiment experiment, ParaProfView view,  File files[], int fileType,
 			boolean fixGprofNames, boolean monitorProfiles, String range) {
 		ParaProfTrial ppTrial = null;
 		DataSource dataSource = null;
@@ -2569,10 +2590,13 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		ppTrial.setLoading(true);
 		dataSource.setMonitored(monitorProfiles);
 		ppTrial.setMonitored(monitorProfiles);
-
-		ppTrial.setExperiment(experiment);
-		ppTrial.setApplicationID(experiment.getApplicationID());
-		ppTrial.setExperimentID(experiment.getID());
+		if (experiment != null) {
+			ppTrial.setExperiment(experiment);
+			ppTrial.setApplicationID(experiment.getApplicationID());
+			ppTrial.setExperimentID(experiment.getID());
+		}
+		if(view != null)
+		ppTrial.setView(view);
 		if (files.length != 0) {
 			ppTrial.setPaths(files[0].getPath());
 		} else {
@@ -2584,7 +2608,7 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		} else {
 			ppTrial.getTrial().setName(ppTrial.getPathReverse());
 		}
-		if (experiment.dBExperiment()) {
+		if (experiment == null || experiment.dBExperiment()) {
 			loadedDBTrials.add(ppTrial);
 			ppTrial.setUpload(true); // This trial is not set to a db trial
 			// until after it has finished loading.
@@ -2592,29 +2616,19 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 			experiment.addTrial(ppTrial);
 		}
 
-		// if (experiment.dBExperiment()) // Check needs to occur on the
-		// experiment as trial
-		// // not yet a recognized db trial.
-		// this.expandTrial(2, ppTrial.getApplicationID(),
-		// ppTrial.getExperimentID(), ppTrial.getID(),
-		// application, experiment, ppTrial);
-		// else
-		// this.expandTrial(0, ppTrial.getApplicationID(),
-		// ppTrial.getExperimentID(), ppTrial.getID(),
-		// application, experiment, ppTrial);
-		//
-		//
 		LoadTrialProgressWindow lpw = new LoadTrialProgressWindow(this,
 				dataSource, ppTrial, false);
 		lpw.setVisible(true);
 	}
 
+
 	public void addTrial(ParaProfApplication application,
 			ParaProfExperiment experiment, File files[], int fileType,
 			boolean fixGprofNames, boolean monitorProfiles) {
 
-		addTrial(application, experiment, files, fileType, fixGprofNames,
+		addTrial(experiment, files, fileType, fixGprofNames,
 				monitorProfiles, null);
+		
 
 	}
 
@@ -2992,6 +3006,7 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 			for (int i = viewNode.getChildCount(); i > 0; i--) {
 				DefaultMutableTreeNode defaultMutableTreeNode = (DefaultMutableTreeNode) viewNode
 				.getChildAt(i - 1);
+				if( defaultMutableTreeNode.getUserObject() instanceof ParaProfTrial)
 				if (ppTrial.getID() == ((ParaProfTrial) defaultMutableTreeNode
 						.getUserObject()).getID())
 					return defaultMutableTreeNode;
