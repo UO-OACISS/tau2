@@ -207,7 +207,7 @@ static int TauTranslateRankToWorld(MPI_Comm comm, int rank) {
 
 
 void TauProcessRecv ( request, status, note )
-MPI_Request request;
+MPI_Request * request;
 MPI_Status *status;
 char *note;
 {
@@ -222,11 +222,11 @@ char *note;
   PMPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 #endif /* DEBUG */
 
-  rq = TauGetRequestData(&request);
+  rq = TauGetRequestData(request);
 
   if (!rq) {
 #ifdef DEBUG
-    fprintf( stderr, "Node %d: Request not found in '%s'.\n",myrank, note );
+    fprintf( stderr, "Node %d: Request %lx not found in '%s'.\n",myrank, *request, note );
 #endif /* DEBUG */
     // TAU_PROFILE_STOP(tautimer);
     return;                /* request not found */
@@ -252,7 +252,7 @@ char *note;
   }
 
   if (!rq->is_persistent) {
-    TauDeleteRequestData(&request);
+    TauDeleteRequestData(request);
   }
   
   // TAU_PROFILE_STOP(tautimer);
@@ -264,7 +264,7 @@ char *note;
 
 
 void TauProcessSend ( request, note )
-MPI_Request request;
+MPI_Request * request;
 char *note;
 {
   request_data * rq;
@@ -275,7 +275,7 @@ char *note;
   PMPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 #endif /* DEBUG */
 
-  rq = TauGetRequestData(&request);
+  rq = TauGetRequestData(request);
 
   if (!rq) {
 #ifdef DEBUG
@@ -989,7 +989,7 @@ void tau_exp_track_comm_split (MPI_Comm oldcomm, MPI_Comm newcomm) {
   }
 
 /*   printf ("buffer is %s\n", buffer); */
-  sprintf (namebuffer, "MPI_Comm %lu", newcommhandle);
+  sprintf (namebuffer, "MPI_Comm %p", newcommhandle);
   TAU_METADATA(namebuffer, buffer);
 }
 #endif /* TAU_EXP_TRACK_COMM */
@@ -1516,6 +1516,13 @@ int  MPI_Finalize(  )
 
   /* Create a merged profile if requested */
   if (TauEnv_get_profile_format() == TAU_FORMAT_MERGED) {
+    /* *CWL* - properly record intermediate values (the same way snapshots work).
+               Note that we do not want to shut down the timers as yet. There is
+	       still potentially life after MPI_Finalize where TAU is concerned.
+     */
+    /* KAH - NO! this is the wrong time to do this. THis is also done in the
+     * snapshot writer. If you do it twice, you get double values for main... */
+    //TauProfiler_updateAllIntermediateStatistics();
     Tau_mergeProfiles();
   }
   
@@ -1653,7 +1660,9 @@ int *provided;
   TAU_METADATA("MPI Processor Name", procname);
 
   if (TauEnv_get_synchronize_clocks()) {
-    TauSyncClocks(procid_0, size);
+    TauSyncClocks();
+    //TauSyncClocks takes no arguments.
+    //TauSyncClocks(procid_0, size);
   }
 
   return returnVal;
@@ -1661,7 +1670,7 @@ int *provided;
 #endif /* TAU_MPI_THREADED */
 
 
-
+#if 0
 int  MPI_Initialized( flag )
 int * flag;
 {
@@ -1677,6 +1686,7 @@ int * flag;
 
   return returnVal;
 }
+#endif
 
 
 #ifdef TAU_ENABLE_MPI_WTIME
@@ -2456,7 +2466,7 @@ MPI_Request * request;
 
   if (TauEnv_get_track_message()) {
     rq = TauGetRequestData(request);
-    TauProcessSend(*request, "MPI_Start");
+    TauProcessSend(request, "MPI_Start");
   }
 
   returnVal = PMPI_Start( request );
@@ -2509,7 +2519,7 @@ MPI_Status * status;
   
   if (TauEnv_get_track_message()) {
     if (*flag) {
-      TauProcessRecv(saverequest, status, "MPI_Test");
+      TauProcessRecv(&saverequest, status, "MPI_Test");
     }
   }
   
@@ -2547,7 +2557,7 @@ MPI_Status * array_of_statuses;
     if (*flag) { 
       /* at least one completed */
       for(i=0; i < count; i++) {
-	TauProcessRecv(saverequest[i], &array_of_statuses[i], "MPI_Testall");
+	TauProcessRecv(&saverequest[i], &array_of_statuses[i], "MPI_Testall");
       }
     }
     if (need_to_free) {
@@ -2589,7 +2599,7 @@ MPI_Status * status;
   
   if (TauEnv_get_track_message()) {
     if (*flag && (*index != MPI_UNDEFINED)) {
-      TauProcessRecv(saverequest[*index], status, "MPI_Testany");
+      TauProcessRecv(&saverequest[*index], status, "MPI_Testany");
     }
     
   }
@@ -2642,7 +2652,7 @@ MPI_Status * array_of_statuses;
   
   if (TauEnv_get_track_message()) {
     for (i=0; i < *outcount; i++) {
-      TauProcessRecv( (saverequest [array_of_indices[i]]),
+      TauProcessRecv( &saverequest[array_of_indices[i]],
 		      &(array_of_statuses[i]),
 		      "MPI_Testsome" );
     }
@@ -2905,7 +2915,7 @@ MPI_Status * status;
   returnVal = PMPI_Wait( request, status );
   
   if (TauEnv_get_track_message()) {
-    TauProcessRecv(saverequest, status, "MPI_Wait");
+    TauProcessRecv(&saverequest, status, "MPI_Wait");
   }
   
   TAU_PROFILE_STOP(tautimer);
@@ -2941,7 +2951,7 @@ MPI_Status * array_of_statuses;
   
   if (TauEnv_get_track_message()) {
     for(i=0; i < count; i++) {
-      TauProcessRecv(saverequest[i], &array_of_statuses[i], "MPI_Waitall");
+      TauProcessRecv(&saverequest[i], &array_of_statuses[i], "MPI_Waitall");
     }
     
     if (need_to_free) {
@@ -2981,8 +2991,7 @@ MPI_Status * status;
 
 
   if (TauEnv_get_track_message()) {
-    TauProcessRecv( (saverequest[*index]),
-		    status, "MPI_Waitany" );
+    TauProcessRecv( &saverequest[*index], status, "MPI_Waitany" );
   }
   
   TAU_PROFILE_STOP(tautimer);
@@ -3021,9 +3030,7 @@ MPI_Status * array_of_statuses;
   
   if (TauEnv_get_track_message()) {
     for (i=0; i < *outcount; i++) {
-      TauProcessRecv( (saverequest [array_of_indices[i]]),
-		      &(array_of_statuses[i]),
-		      "MPI_Waitsome" );
+      TauProcessRecv( &saverequest[array_of_indices[i]], &(array_of_statuses[i]), "MPI_Waitsome" );
     }
     if (need_to_free) {
       free(array_of_statuses);

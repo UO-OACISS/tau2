@@ -244,7 +244,11 @@ else
   TAU_SHLIBX=.so
 fi
 
-TAUEX_LD_LIBRARY_PATH=$BASEDIR/lib/$theBinding:$LD_LIBRARY_PATH
+if [ "x$LD_LIBRARY_PATH" = "x" ] ; then
+  TAUEX_LD_LIBRARY_PATH=$BASEDIR/lib/$theBinding:$BASEDIR/lib
+else
+  TAUEX_LD_LIBRARY_PATH=$BASEDIR/lib/$theBinding:$BASEDIR/lib:$LD_LIBRARY_PATH
+fi
 if [ $apple = 1 ]; then
   TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
 else
@@ -294,6 +298,7 @@ if [ $track_cupti = "true" ] ; then
 			exit
 		else
 			# Add the memory wrapper library to the LD_PRELOAD list
+			TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUact.so:$TAUEX_LD_PRELOAD
 			TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUpti.so:$TAUEX_LD_PRELOAD
 			TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP.so:$TAUEX_LD_PRELOAD
 			if [ `echo $TAU_METRICS | grep "TIME"` ]; then

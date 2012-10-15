@@ -87,7 +87,7 @@ dl_auditor.o: dl_auditor.c
 	$(CC) $(CFLAGS) -c dl_auditor.c
 
 libTAU-dl-auditor$(TAU_SHLIBX): dl_auditor.o
-	$(CC) -lc -ldl $(TAU_SHFLAGS) libTAU-dl-auditor$(TAU_SHLIBX) dl_auditor.o
+	$(CC) -lc -ldl $(TAU_SHFLAGS) libTAU-dl-auditor$(TAU_SHLIBX) dl_auditor.o -ldl
 
 clean:
 	/bin/rm -f taupreload.o libTAU-preload$(TAU_SHLIBX) dl_auditor.o libTAU-dl-auditor$(TAU_SHLIBX)

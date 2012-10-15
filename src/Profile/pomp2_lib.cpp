@@ -292,7 +292,8 @@ void TauStartOpenMPRegionTimer(my_pomp2_region *r, int index)
    start the timer. */
 
   omp_set_lock(&tau_ompregdescr_lock);
-
+if(r == NULL)
+printf("TAU WARNING: a POMP2 Region was not initialized.  Something went wrong during the creation of pompregions.c\n");
   if (!r->data) {
 #ifdef TAU_OPENMP_PARTITION_REGION
     FunctionInfo **flist = new FunctionInfo*[NUM_OMP_TYPES];
