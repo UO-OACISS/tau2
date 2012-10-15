@@ -115,6 +115,8 @@
 
 #define TAU_TRACK_MESSAGE_DEFAULT 0
 
+#define TAU_LITE_DEFAULT 0
+
 #define TAU_TRACK_IO_PARAMS_DEFAULT 0
 
 #define TAU_TRACK_SIGNALS_DEFAULT 0
@@ -133,6 +135,8 @@
 #endif /* TAU_MPI */
 
 #define TAU_CUPTI_API_DEFAULT "runtime"
+
+#define TAU_MIC_OFFLOAD_DEFAULT 0
 
 // forward declartion of cuserid. need for c++ compilers on Cray.
 extern "C" char *cuserid(char *);
@@ -377,6 +381,7 @@ char * Tau_check_dirname(const char * dir) {
 /****************************************************************************/
 
 extern "C" { /* C linkage */
+
 static int env_synchronize_clocks = 0;
 static int env_verbose = 0;
 static int env_throttle = 0;
@@ -393,6 +398,7 @@ static int env_depth_limit = 0;
 static int env_track_message = 0;
 static int env_comm_matrix = 0;
 static int env_track_memory_heap = 0;
+static int tau_env_lite = 0;
 static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
 static int env_track_io_params = 0;
@@ -421,6 +427,7 @@ static const char *env_tracedir = NULL;
 static const char *env_metrics = NULL;
 static const char *env_cupti_api = NULL;
 
+static int env_mic_offload = 0;
 /*********************************************************************
  * Write to stderr if verbose mode is on
  ********************************************************************/
@@ -523,6 +530,10 @@ int TauEnv_get_track_message() {
   return env_track_message;
 }
 
+int TauEnv_get_lite() {
+  return tau_env_lite;
+}
+
 int TauEnv_get_track_memory_heap() {
   return env_track_memory_heap;
 }
@@ -620,6 +631,11 @@ const char *TauEnv_get_ebs_source() {
   return env_ebs_source;
 }
 
+void TauEnv_override_ebs_source(const char *newName) {
+  env_ebs_source = newName;
+  TAU_METADATA("TAU_EBS_PERIOD (Override)", newName);
+}
+
 int TauEnv_get_stat_precompute() {
   return env_stat_precompute;
 }
@@ -632,10 +648,18 @@ const char* TauEnv_get_cupti_api(){
   return env_cupti_api;
 }
 
+int TauEnv_get_mic_offload(){
+  return env_mic_offload;
+}
+int TauEnv_get_lite_enabled() {
+  return tau_env_lite;
+}
+
 /*********************************************************************
  * Initialize the TauEnv module, get configuration values
  ********************************************************************/
-void TauEnv_initialize() {
+void TauEnv_initialize() 
+{
   char tmpstr[512];
 
   /* unset LD_PRELOAD so that vt_unify and elg_unify work */
@@ -656,9 +680,15 @@ void TauEnv_initialize() {
     /* Read the configuration file */
     TauConf_read();
 
-    TAU_VERBOSE("TAU: Initialized TAU (TAU_VERBOSE=1)\n");
 
     /*** Options that can be used with Scalasca and VampirTrace ***/
+    tmp = getconf("TAU_LITE");
+    if (parse_bool(tmp,tau_env_lite)) {
+      TAU_VERBOSE("TAU: LITE measurement enabled\n");
+      TAU_METADATA("TAU_LITE", "on");
+      tau_env_lite = 1;
+    }
+
     tmp = getconf("TAU_TRACK_HEAP");
     if (parse_bool(tmp, env_track_memory_heap)) {
       TAU_VERBOSE("TAU: Entry/Exit Memory tracking Enabled\n");
@@ -700,12 +730,12 @@ void TauEnv_initialize() {
       env_extras = 1;
       tmp = getconf("TAU_SIGNALS_GDB");
       if (parse_bool(tmp, env_signals_gdb)) {
-	TAU_VERBOSE("TAU: SIGNALS GDB output enabled\n");
-	TAU_METADATA("TAU_SIGNALS_GDB", "on");
-	env_signals_gdb = 1;
+        TAU_VERBOSE("TAU: SIGNALS GDB output enabled\n");
+        TAU_METADATA("TAU_SIGNALS_GDB", "on");
+        env_signals_gdb = 1;
       } else {
-	TAU_METADATA("TAU_SIGNALS_GDB", "off");
-	env_signals_gdb = 0;
+        TAU_METADATA("TAU_SIGNALS_GDB", "off");
+        env_signals_gdb = 0;
       }
     } else {
       TAU_METADATA("TAU_TRACK_SIGNALS", "off");
@@ -718,7 +748,6 @@ void TauEnv_initialize() {
       TAU_VERBOSE("TAU: Generating only summary data: TAU_SUMMARY enabled\n");
       TAU_METADATA("TAU_SUMMARY", "on");
       env_summary_only = 1;
-      env_extras = 1;
     } else {
       TAU_METADATA("TAU_SUMMARY", "off");
       env_summary_only = 0;
@@ -729,7 +758,6 @@ void TauEnv_initialize() {
       TAU_VERBOSE("TAU: IBM UPC HWP counter data collection enabled\n");
       TAU_METADATA("TAU_IBM_BG_HWP_COUNTERS", "on");
       env_ibm_bg_hwp_counters = 1;
-      env_extras = 1;
     } else {
       TAU_METADATA("TAU_IBM_BG_HWP_COUNTERS", "off");
       env_ibm_bg_hwp_counters = 0;
@@ -767,13 +795,11 @@ void TauEnv_initialize() {
     if ((env_profiledir = getconf("PROFILEDIR")) == NULL) {
       env_profiledir = ".";   /* current directory */
     }
-    /* env_profiledir=Tau_check_dirname(env_profiledir); */
     TAU_VERBOSE("TAU: PROFILEDIR is \"%s\"\n", env_profiledir);
 
     if ((env_tracedir = getconf("TRACEDIR")) == NULL) {
       env_tracedir = ".";   /* current directory */
     }
-    /* env_tracedir=Tau_check_dirname(env_tracedir); */
     TAU_VERBOSE("TAU: TRACEDIR is \"%s\"\n", env_tracedir);
 
     int profiling_default = TAU_PROFILING_DEFAULT;
@@ -850,7 +876,7 @@ void TauEnv_initialize() {
     sprintf(tmpstr, "%d", env_callsite_limit);
     TAU_METADATA("TAU_CALLSITE_LIMIT", tmpstr);
 
-#if (defined(TAU_MPI) || defined(TAU_SHMEM) || defined(TAU_DMAPP))
+#if (defined(TAU_MPI) || defined(TAU_SHMEM) || defined(TAU_DMAPP) || defined(TAU_UPC))
     /* track comm (opposite of old -nocomm option) */
     tmp = getconf("TAU_TRACK_MESSAGE");
     if (parse_bool(tmp, env_track_message)) {
@@ -879,27 +905,25 @@ void TauEnv_initialize() {
       TAU_VERBOSE("TAU: Message Tracking Disabled\n");
       TAU_METADATA("TAU_TRACK_MESSAGE", "off");
     }
-#endif /* TAU_MPI || TAU_SHMEM || TAU_DMAPP */
+#endif /* TAU_MPI || TAU_SHMEM || TAU_DMAPP || TAU_UPC */
 
     /* clock synchronization */
     if (env_tracing == 0) {
       env_synchronize_clocks = 0;
     } else {
-      tmp = getconf("TAU_SYNCHRONIZE_CLOCKS");
-      if (parse_bool(tmp, TAU_SYNCHRONIZE_CLOCKS_DEFAULT)) {
-        env_synchronize_clocks = 1;
-      } else {
-        env_synchronize_clocks = 0;
-      }
 #ifndef TAU_MPI
       /* If there is no MPI, there can't be any sync, so forget it */
       env_synchronize_clocks = 0;
       TAU_VERBOSE("TAU: Clock Synchronization Disabled (MPI not available)\n");
+      TAU_METADATA("TAU_SYNCHRONIZE_CLOCKS", "off");
 #else
-      if (env_synchronize_clocks) {
+      tmp = getconf("TAU_SYNCHRONIZE_CLOCKS");
+      if (parse_bool(tmp, TAU_SYNCHRONIZE_CLOCKS_DEFAULT)) {
+        env_synchronize_clocks = 1;
         TAU_VERBOSE("TAU: Clock Synchronization Enabled\n");
         TAU_METADATA("TAU_SYNCHRONIZE_CLOCKS", "on");
       } else {
+        env_synchronize_clocks = 0;
         TAU_VERBOSE("TAU: Clock Synchronization Disabled\n");
         TAU_METADATA("TAU_SYNCHRONIZE_CLOCKS", "off");
       }
@@ -911,9 +935,6 @@ void TauEnv_initialize() {
     env_callpath_depth = TAU_CALLPATH_DEPTH_DEFAULT;
     if (depth) {
       env_callpath_depth = atoi(depth);
-/*      if (env_callpath_depth <= 1) { */
-/*        env_callpath_depth = TAU_CALLPATH_DEPTH_DEFAULT; */
-/*      } */
       if (env_callpath_depth < 0) {
         env_callpath_depth = TAU_CALLPATH_DEPTH_DEFAULT;
       }
@@ -1038,7 +1059,7 @@ void TauEnv_initialize() {
       env_ebs_keep_unresolved_addr = 0;
       TAU_METADATA("TAU_EBS_KEEP_UNRESOLVED_ADDR", "off");
     }
-    
+
     if (TauEnv_get_ebs_enabled()) {
 
       // *CWL* Acquire the sampling source. This has to be done first
@@ -1050,8 +1071,11 @@ void TauEnv_initialize() {
       //       sensitive (ie. 1000 microseconds is fine for timer
       //       interrutps, but 1000 PAPI_TOT_CYC is way too small).
       if ((env_ebs_source = getconf("TAU_EBS_SOURCE")) == NULL) {
-	env_ebs_source = "itimer";
+        env_ebs_source = "itimer";
       }
+      sprintf(tmpstr, "%s", env_ebs_source);
+      TAU_METADATA("TAU_EBS_PERIOD", tmpstr);
+
       TAU_VERBOSE("TAU: EBS Source: %s\n", env_ebs_source);
 
       /* TAU sampling period */
@@ -1068,18 +1092,18 @@ void TauEnv_initialize() {
       //         The check for PAPI sources will be extremely naive for
       //         now.
       if (strncmp(env_ebs_source, "PAPI", 4) == 0) {
-	default_ebs_period = 133337;
+        default_ebs_period = 133337;
       }
       env_ebs_period = default_ebs_period;
       if (ebs_period) {
-	// Try setting it to the user value.
-	env_ebs_period = atoi(ebs_period);
-	// *CWL* - 0 is not a valid ebs_period. Plus atoi() returns 0
-	//         if the string is not a number.
-	if (env_ebs_period <= 0) {
-	  // go back to default on failure or bad value.
-	  env_ebs_period = default_ebs_period;
-	}
+        // Try setting it to the user value.
+        env_ebs_period = atoi(ebs_period);
+        // *CWL* - 0 is not a valid ebs_period. Plus atoi() returns 0
+        //         if the string is not a number.
+        if (env_ebs_period <= 0) {
+          // go back to default on failure or bad value.
+          env_ebs_period = default_ebs_period;
+        }
       }
       TAU_VERBOSE("TAU: EBS period = %d \n", env_ebs_period);
       sprintf(tmpstr, "%d", env_ebs_period);
@@ -1088,59 +1112,59 @@ void TauEnv_initialize() {
       bool ebs_period_forced = false;
 #ifdef EBS_CLOCK_RES
       if (strcmp(env_ebs_source, "itimer") != 0) {
-	// *CWL* - force the clock period to be of a sane value
-	//         if the desired (or default) value is not
-	//         supported by the machine. ONLY valid for "itimer"
-	//         EBS_SOURCE.
-	if (env_ebs_period < EBS_CLOCK_RES) {
-	  env_ebs_period = EBS_CLOCK_RES;
-	  ebs_period_forced = true;
-	}
+        // *CWL* - force the clock period to be of a sane value
+        //         if the desired (or default) value is not
+        //         supported by the machine. ONLY valid for "itimer"
+        //         EBS_SOURCE.
+        if (env_ebs_period < EBS_CLOCK_RES) {
+          env_ebs_period = EBS_CLOCK_RES;
+          ebs_period_forced = true;
+        }
       }
 #endif
       if (ebs_period_forced) {
-	sprintf(tmpstr, "%d", env_ebs_period);
-	TAU_METADATA("TAU_EBS_PERIOD (FORCED)", tmpstr);
+        sprintf(tmpstr, "%d", env_ebs_period);
+        TAU_METADATA("TAU_EBS_PERIOD (FORCED)", tmpstr);
       }
-      
+
       const char *ebs_inclusive = getconf("TAU_EBS_INCLUSIVE");
       env_ebs_inclusive = TAU_EBS_INCLUSIVE_DEFAULT;
       if (ebs_inclusive) {
-	env_ebs_inclusive = atoi(ebs_inclusive);
-	if (env_ebs_inclusive < 0) {
-	  env_ebs_inclusive = TAU_EBS_INCLUSIVE_DEFAULT;
-	}
+        env_ebs_inclusive = atoi(ebs_inclusive);
+        if (env_ebs_inclusive < 0) {
+          env_ebs_inclusive = TAU_EBS_INCLUSIVE_DEFAULT;
+        }
       }
       TAU_VERBOSE("TAU: EBS inclusive = %d usec\n", env_ebs_inclusive);
       sprintf(tmpstr, "%d usec", env_ebs_inclusive);
       TAU_METADATA("TAU_EBS_INCLUSIVE", tmpstr);
-      
+
 #ifdef TAU_UNWIND
       tmp = getconf("TAU_EBS_UNWIND");
       if (parse_bool(tmp, TAU_EBS_UNWIND_DEFAULT)) {
-	env_ebs_unwind_enabled = 1;
-	TAU_METADATA("TAU_EBS_UNWIND", "on");
+        env_ebs_unwind_enabled = 1;
+        TAU_METADATA("TAU_EBS_UNWIND", "on");
       } else {
-	env_ebs_unwind_enabled = 0;
-	TAU_METADATA("TAU_EBS_UNWIND", "off");
+        env_ebs_unwind_enabled = 0;
+        TAU_METADATA("TAU_EBS_UNWIND", "off");
       }
 
       if (env_ebs_unwind_enabled == 1) {
-	const char *depth = getconf("TAU_EBS_UNWIND_DEPTH");
-	env_ebs_unwind_depth = TAU_EBS_UNWIND_DEPTH_DEFAULT;
-	if (depth) {
-	  env_ebs_unwind_depth = atoi(depth);
-	  if (env_ebs_unwind_depth < 0) {
-	    env_ebs_unwind_depth = TAU_CALLPATH_DEPTH_DEFAULT;
-	  }
-	}
+        const char *depth = getconf("TAU_EBS_UNWIND_DEPTH");
+        env_ebs_unwind_depth = TAU_EBS_UNWIND_DEPTH_DEFAULT;
+        if (depth) {
+          env_ebs_unwind_depth = atoi(depth);
+          if (env_ebs_unwind_depth < 0) {
+            env_ebs_unwind_depth = TAU_CALLPATH_DEPTH_DEFAULT;
+          }
+        }
       }
 #endif /* TAU_UNWIND */
-      
+
       if (TauEnv_get_tracing()) {
-	env_callpath = 1;
-	env_callpath_depth = 300;
-	TAU_VERBOSE("TAU: EBS Overriding callpath settings, callpath enabled, depth = 300\n");
+        env_callpath = 1;
+        env_callpath_depth = 300;
+        TAU_VERBOSE("TAU: EBS Overriding callpath settings, callpath enabled, depth = 300\n");
       }
     }
 
@@ -1167,7 +1191,7 @@ void TauEnv_initialize() {
     } else {
       env_child_forkdirs = 0;
       /*TAU_VERBOSE("TAU: Profiling Disabled\n");
-      TAU_METADATA("TAU_PROFILE", "off");*/
+        TAU_METADATA("TAU_PROFILE", "off");*/
     }
 
     env_cupti_api = getconf("TAU_CUPTI_API");
@@ -1175,12 +1199,22 @@ void TauEnv_initialize() {
       env_cupti_api = TAU_CUPTI_API_DEFAULT;
       TAU_VERBOSE("TAU: CUPTI API tracking: %s\n", env_cupti_api);
       TAU_METADATA("TAU_CUPTI_API", env_cupti_api);
-		}
-		else {
+    }
+    else {
       TAU_VERBOSE("TAU: CUPTI API tracking: %s\n", env_cupti_api);
       TAU_METADATA("TAU_CUPTI_API", env_cupti_api);
 		}
+		tmp = getconf("TAU_MIC_OFFLOAD");
+    if (parse_bool(tmp, TAU_MIC_OFFLOAD_DEFAULT)) {
+      env_mic_offload = 1;
+      TAU_VERBOSE("TAU: MIC offloading Enabled\n");
+      TAU_METADATA("TAU_MIC_OFFLOAD", "on");
+		}
 
+    initialized = 1;
+    TAU_VERBOSE("TAU: Initialized TAU (TAU_VERBOSE=1)\n");
   }
+
 }
+
 } /* C linkage */

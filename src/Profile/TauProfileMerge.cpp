@@ -123,7 +123,7 @@ int Tau_mergeProfiles() {
   PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
   PMPI_Comm_size(MPI_COMM_WORLD, &size);
 
-	buflen = Tau_snapshot_getBufferLength();
+	buflen = Tau_snapshot_getBufferLength()+1;
 	buf = (char *) malloc(buflen);
 	Tau_snapshot_getBuffer(buf);
 
@@ -293,7 +293,7 @@ int Tau_mergeProfiles() {
     }
     Tau_snapshot_writeMetaDataBlock();
 
-    buflen = Tau_snapshot_getBufferLength();
+    buflen = Tau_snapshot_getBufferLength()+1;
 		buf = (char *) malloc(buflen);
     Tau_snapshot_getBuffer(buf);
     fwrite (buf, buflen, 1, f);
@@ -389,8 +389,11 @@ int Tau_mergeProfiles() {
     }
 #endif /* TAU_UNIFY */
 
+    fflush(f);
+    
+#ifdef TAU_FCLOSE_MERGE
     fclose(f);
-
+#endif
   } else {
 
     /* recieve ok to go */

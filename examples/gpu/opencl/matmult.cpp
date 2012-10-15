@@ -273,7 +273,7 @@ int main(int argc, char**argv)
 	cl_kernel OpenCL_multiply_matrices = clCreateKernel(OpenCLProgram, "multiply_matrices", &ci);
 	CHECK_CL_ERROR(ci);
 
-	cl_event event, event_mem;
+	cl_event event, event_mem, event_read;
 	cl_mem d_a, d_b, d_c;
 
 	for (int i=0; i<number_of_iterations*nDevices; i++)
@@ -287,7 +287,6 @@ int main(int argc, char**argv)
 		CL_MEM_COPY_HOST_PTR, matsize, b, &ci);
 		CHECK_CL_ERROR(ci);
 
-		c = NULL;
 		d_c = clCreateBuffer(GPUContext, CL_MEM_WRITE_ONLY, matsize, c, &ci);
 		CHECK_CL_ERROR(ci);
 
@@ -296,8 +295,10 @@ int main(int argc, char**argv)
 		clSetKernelArg(OpenCL_multiply_matrices, 2, sizeof(cl_mem), (void *) &d_c);
 		clSetKernelArg(OpenCL_multiply_matrices, 3, sizeof(int), (void *) &m);
 
+		event_mem = clCreateUserEvent(GPUContext, &ci);
 		clEnqueueWriteBuffer(cCQ, d_a, CL_TRUE, 0, matsize, a, 0, NULL, &event_mem);
 		clEnqueueWriteBuffer(cCQ, d_b, CL_TRUE, 0, matsize, b, 0, NULL, &event_mem);
+		clWaitForEvents(1, &event_mem);
 		
 		event = clCreateUserEvent(GPUContext, &ci);
 		CHECK_CL_ERROR(ci);
@@ -308,11 +309,13 @@ int main(int argc, char**argv)
 		
 		//clWaitForEvents(1, &shared_event);
 		clWaitForEvents(1, &event);
-		event_mem = clCreateUserEvent(GPUContext, &ci);
 		CHECK_CL_ERROR(ci);
 
-		clEnqueueReadBuffer(cCQ, d_c, CL_TRUE, 0, matsize, c, 0, NULL, &event_mem);
-		//clWaitForEvents(1, &event_mem);
+		event_read = clCreateUserEvent(GPUContext, &ci);
+		ci = clEnqueueReadBuffer(cCQ, d_c, CL_TRUE, 0, matsize, c, 0, NULL, &event_read);
+		CHECK_CL_ERROR(ci);
+		//clWaitForEvents(1, &event_read);
+		//clFinish(cCQ);
 
 	}
 	
@@ -326,7 +329,10 @@ int main(int argc, char**argv)
 		std::cout << std::endl;
 	}
 	*/	
-	 
+
+	free(a);
+	free(b);
+	free(c);
 
 	clReleaseKernel(OpenCL_multiply_matrices);
 	clReleaseProgram(OpenCLProgram);

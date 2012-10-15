@@ -131,7 +131,7 @@ extern "C" int Tau_snapshot_writeMetaDataBlock() {
   // thread identifier
   Tau_util_output (out, "\n<thread id=\"%s\" node=\"%d\" context=\"%d\" thread=\"%d\">\n", 
 	   threadid, RtsLayer::myNode(), RtsLayer::myContext(), tid);
-  Tau_metadata_writeMetaData(out);
+  Tau_metadata_writeMetaData(out, tid);
   Tau_util_output (out, "</thread>\n");
 
   // end of profile block
@@ -405,7 +405,7 @@ static int startNewSnapshotFile(char *threadid, int tid, int to_buffer) {
   // thread identifier
   Tau_util_output (out, "\n<thread id=\"%s\" node=\"%d\" context=\"%d\" thread=\"%d\">\n", 
 	   threadid, RtsLayer::myNode(), RtsLayer::myContext(), tid);
-  Tau_metadata_writeMetaData(out);
+  Tau_metadata_writeMetaData(out, tid);
   Tau_util_output (out, "</thread>\n");
   
   // definition block

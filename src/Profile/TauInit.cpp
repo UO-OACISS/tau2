@@ -132,7 +132,9 @@ static void TauInitialize_kill_handlers() {
   sighdlr[SIGSEGV] = signal (SIGSEGV, wrap_up);
 # endif
 # ifdef SIGCHLD
+#ifndef TAU_UPC
   sighdlr[SIGCHLD] = signal (SIGCHLD, wrap_up);
+#endif
 # endif
 }
 
@@ -147,7 +149,6 @@ extern int Tau_Backtrace_writeMetadata(int i, char *token1, unsigned long addr);
 
 #ifndef TAU_DISABLE_SIGUSR
 
-//static void tauBacktraceHandler(int sig) {
 extern "C" void finalizeCallSites_if_necessary();
 void tauBacktraceHandler(int sig, siginfo_t *si, void *context) {
           char str[100+4096];
@@ -380,11 +381,12 @@ extern "C" int Tau_init_initializingTAU() {
 }
 
 extern "C" int Tau_init_initializeTAU() {
-
+	
 	//protect against reentrancy
   if (initializing) {
     return 0;
   }
+
 
   Tau_global_incr_insideTAU();
   
@@ -421,7 +423,6 @@ extern "C" int Tau_init_initializeTAU() {
   
   /* we need the timestamp of the "start" */
   Tau_snapshot_initialization();
-
 
 #ifndef TAU_DISABLE_SIGUSR
   /* register SIGUSR1 handler */
@@ -463,8 +464,6 @@ extern "C" int Tau_init_initializeTAU() {
     TauInitialize_kill_handlers();
   }
   
-  //TauInitialize_kill_handlers();
-
   /* initialize sampling if requested */
   if (TauEnv_get_ebs_enabled()) {
     /* Work-around for MVAPHICH 2 to move sampling initialization to 
@@ -484,6 +483,15 @@ extern "C" int Tau_init_initializeTAU() {
 
   tau_initialized = 1;
   Tau_global_decr_insideTAU();
+
+#ifdef __MIC__
+	if (TauEnv_get_mic_offload())
+	{
+		TAU_PROFILE_SET_NODE(0);
+		Tau_create_top_level_timer_if_necessary();
+	}
+#endif
+
   return 0;
 }
 

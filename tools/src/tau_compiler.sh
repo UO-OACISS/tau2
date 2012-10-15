@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash  
 
 declare -i FALSE=-1
 declare -i TRUE=1
@@ -8,7 +8,8 @@ declare -i group_f_F=1
 declare -i group_c=2
 declare -i group_C=3
 declare -i group_upc=4
-declare -i berkeley_upcc=$FALSE
+# Replaced with more flexible "upc" variable
+#declare -i berkeley_upcc=$FALSE
 
 declare -i disablePdtStep=$FALSE
 declare -i hasAnOutputFile=$FALSE
@@ -23,6 +24,7 @@ declare -i needToCleanPdbInstFiles=$TRUE
 declare -i pdbFileSpecified=$FALSE
 declare -i optResetUsed=$FALSE
 declare -i optDetectMemoryLeaks=$FALSE
+declare -i optFujitsu=$FALSE
 
 declare -i optPdtF95ResetSpecified=$FALSE
 
@@ -36,6 +38,7 @@ declare -i isDebug=$FALSE
 
 declare -i opari=$FALSE
 declare -i opari2=$FALSE
+declare -i opari2init=$TRUE
 
 declare -i errorStatus=$FALSE
 declare -i gotoNextStep=$TRUE
@@ -55,6 +58,7 @@ declare -i trackUPCR=$FALSE
 declare -i linkOnly=$FALSE
 declare -i trackDMAPP=$FALSE
 declare -i trackPthread=$FALSE
+declare -i trackMPCThread=$FALSE
 declare -i revertOnError=$TRUE
 declare -i revertForced=$FALSE
 
@@ -66,12 +70,14 @@ declare -i madeToLinkStep=$FALSE
 
 declare -i optFixHashIf=$FALSE
 declare -i tauPreProcessor=$TRUE
+declare -i optMICOffload=$FALSE
 
 headerInstDir=".tau_tmp_$$"
 headerInstFlag=""
 preprocessorOpts="-P  -traditional-cpp"
 defaultParser="noparser"
 optWrappersDir="/tmp"
+TAU_BIN_DIR="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 printUsage () {
     echo -e "Usage: tau_compiler.sh"
@@ -99,6 +105,7 @@ printUsage () {
     echo -e "  -optTrackUPCR\t\t\tSpecify wrapping of UPC runtime calls at link time."
     echo -e "  -optTrackDMAPP\t\tSpecify wrapping of Cray DMAPP library calls at link time."
     echo -e "  -optTrackPthread\t\tSpecify wrapping of Pthread library calls at link time."
+    echo -e "  -optTrackMPCThread\t\tSpecify wrapping of MPC Thread library calls at link time."
     echo -e "  -optWrappersDir=\"\"\t\tSpecify the location of the link wrappers directory."
     echo -e "  -optPDBFile=\"\"\t\tSpecify PDB file for tau_instrumentor. Skips parsing stage."
     echo -e "  -optTau=\"\"\t\t\tSpecify options for tau_instrumentor"
@@ -117,6 +124,8 @@ printUsage () {
     echo -e "  -optLinkOnly\t\t\tDisable instrumentation during compilation, do link in the TAU libs"
     echo -e "  -optOpariDir=\"<path>\"\t\tSpecifies the location of the Opari directory"
     echo -e "  -optOpariOpts=\"\"\t\tSpecifies optional arguments to the Opari tool"
+    echo -e "  -optOpariNoInit=\"\"\t\t Do not initlize the POMP2 regions."
+    echo -e "  -optOpariLibs=\"\"\t\t Specifies the libraries that have POMP2 regions. (Overrides optOpariNoInit"
     echo -e "  -optOpariReset=\"\"\t\tResets options passed to the Opari tool"
     echo -e "  -optOpari2Tool=\"<path/opari2>\"\tSpecifies the location of the Opari tool"
     echo -e "  -optOpari2ConfigTool=\"<path/opari2-config>\"\tSpecifies the location of the Opari tool"
@@ -137,6 +146,7 @@ printUsage () {
     echo -e "  -optHeaderInst\t\tEnable instrumentation of headers"
     echo -e "  -optDisableHeaderInst\t\tDisable instrumentation of headers"
     echo -e "  -optFixHashIf"
+    echo -e "  -optMICOffload\t\tLinks code for Intel MIC offloading, requires both host and MIC TAU libraries"
     
     if [ $1 == 0 ]; then #Means there are no other option passed with the myscript. It is better to exit then.
 	exit
@@ -202,38 +212,54 @@ compilerSpecified=""
 #constitute the regular command, with the first command (immediately) 
 #after the sequence, being the compiler.  In this "for" loops, the 
 #regular command is being read.
+
 for arg in "$@"; do
 
-    case $arg in
+  case $arg in
+    -opt*)
+      ;;
+    *)
+      if [ $tempCounter == 0 ]; then
+        CMD=$arg
+        #The first command (immediately) after the -opt sequence is the compiler.
+        case $CMD in
+          upcc|*/upcc)
+            upc="berkeley"
+            echoIfDebug "Berkeley UPCC: TRUE!"
+            ;;
+          upc|*/upc)
+            upc="gnu"
+            echoIfDebug "GNU UPC: TRUE!"
+            ;;
+          xlupc|*/xlupc)
+            upc="xlupc"
+            echoIfDebug "XLUPC UPC: TRUE!"
+            ;;
+          cc|*/cc)
+            upc="cray"
+            echoIfDebug "CRAY UPCC: TRUE!"
+            ;;
+          *)
+            upc="unknown"
+            echoIfDebug "WARNING: UNKNOWN UPC"
+            ;;
+        esac
+      fi
 
-	-opt*)
-	    ;;
+      # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
+      modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g' -e 's#(#\\\(#g' -e 's#)#\\\)#g'`
+      #modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
+      THEARGS="$THEARGS $modarg"
 
-	*)
-	    if [ $tempCounter == 0 ]; then
-		CMD=$arg
-			#The first command (immediately) after the -opt sequence is the compiler.
-                if [ $CMD == upcc ]; then
-                  berkeley_upcc=$TRUE
-                  echoIfDebug "Berkeley UPCC: TRUE!"
-                fi
-	    fi
-
-                # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
-	    modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g' -e 's#(#\\\(#g' -e 's#)#\\\)#g'`
-		#modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
-	    THEARGS="$THEARGS $modarg"
-
-	    if [ $foundFirstArg == 0 ]; then
-		foundFirstArg=1
-		compilerSpecified="$modarg"
-	    else
-		regularCmd="$regularCmd $modarg"	
-	    fi
-
-	    tempCounter=tempCounter+1
-	    ;;
-    esac
+      if [ $foundFirstArg == 0 ]; then
+        foundFirstArg=1
+        compilerSpecified="$modarg"
+      else
+        regularCmd="$regularCmd $modarg"	
+      fi
+      tempCounter=tempCounter+1
+      ;;
+  esac
 done
 echoIfDebug "\nRegular command passed is --  $regularCmd "; 
 echoIfDebug "The compiler being read is $CMD \n"
@@ -270,7 +296,7 @@ for arg in "$@" ; do
     else
 	
         case $arg in
-	    --help)   # Do not use -h as Cray compilers specifie -h upc -h ... 
+	    --help)   # Do not use -h as Cray compilers specify -h upc -h ... 
 		printUsage 0 
 		;;
 
@@ -329,9 +355,15 @@ for arg in "$@" ; do
 			# use the wrapper link_options.tau during linking
 			;;
 		    
-				-optTrackPthread)
+		   -optTrackPthread)
 			trackPthread=$TRUE
 			echoIfDebug "NOTE: turning TrackPthread on"
+			# use the wrapper link_options.tau during linking
+			;;
+
+		   -optTrackMPCThread)
+			trackMPCThread=$TRUE
+			echoIfDebug "NOTE: turning TrackMPCThread on"
 			# use the wrapper link_options.tau during linking
 			;;
 
@@ -467,7 +499,12 @@ for arg in "$@" ; do
 		
 		    -optTauWrapFile*)
 			tauWrapFile="$tauWrapFile ${arg#"-optTauWrapFile="}"
-			echoIfDebug "\ttauWrapFile is: "$tauWrapFile
+			echoIfDebug "\ttauWrapFile is: $tauWrapFile"
+			;;
+
+		    -optTauGASPU*)
+			optTauGASPU="${arg#"-optTauGASPU="}"
+			echoIfDebug "\toptTauGASPU is: $optTauGASPU"
 			;;
 
 		    -optTauSelectFile*)
@@ -622,7 +659,14 @@ for arg in "$@" ; do
                         optOpariOpts="${arg#"-optOpariReset="}"
                         echoIfDebug "\tOpari Tool used: $optOpariOpts"
                         ;;
-
+                    -optOpariLibs*)
+                        optOpariLibs="${arg#"-optOpariLibs="}"
+                        echoIfDebug "\tOpari Init libs: $optOpariLibs"
+                        ;;
+                    -optOpariNoInit*)
+                        opari2init=$FALSE
+                        echoIfDebug "\tDon't make pompregions."
+                        ;;
 		    -optOpari2Dir*)
 			optOpari2Dir="${arg#"-optOpari2Dir="}"
 			echoIfDebug "\tOpari2 Dir used: $optOpari2Dir"
@@ -645,6 +689,11 @@ for arg in "$@" ; do
 			    opari2=$TRUE
 			fi
 			;;
+		    -optIBM64*)
+			currentopt="${arg#"-optIBM64="}"
+			optIBM64="$currentopt $optIBM64"
+			echoIfDebug "\tOpari2 Opts used: $optIBM64"
+			;;
 		    -optOpari2Opts*)
 			currentopt="${arg#"-optOpari2Opts="}"
 			optOpari2Opts="$currentopt $optOpari2Opts"
@@ -653,6 +702,11 @@ for arg in "$@" ; do
 		    -optOpari2Reset*)
 			optOpari2Opts="${arg#"-optOpari2Reset="}"
 			echoIfDebug "\tOpari Tool used: $optOpari2Opts"
+			;;
+
+		    -optFujitsu*)
+			optFujitsu=$TRUE
+			echoIfDebug "\t Fujitsu mpiFCCpx used as linker for C and Fortran"
 			;;
 
 		    -optAppCC*)
@@ -683,6 +737,7 @@ for arg in "$@" ; do
 		    -optShared)
 			optShared=$TRUE
 			optLinking=$optSharedLinking
+			optMICOffloadLinking=$optMICOffloadSharedLinking
 			echoIfDebug "\tUsing shared library"
 			;;
 
@@ -702,14 +757,13 @@ for arg in "$@" ; do
 			optCompInst=$TRUE
 			disablePdtStep=$TRUE
 			# force the debug flag so we get symbolic information
-                        if [ $berkeley_upcc == $TRUE ]; 
-		        then
-		          optCompile="$optCompile -Wc,-g"
-		          optLinking="$optLinking -Wc,-g"
-                        else
-		          optCompile="$optCompile -g"
-		          optLinking="$optLinking -g"
-                        fi
+      if [ $upc == "berkeley" ] ;  then
+        optCompile="$optCompile -Wc,-g"
+        optLinking="$optLinking -Wc,-g"
+      else
+        optCompile="$optCompile -g"
+        optLinking="$optLinking -g"
+      fi
 			echoIfDebug "\tUsing Compiler-based Instrumentation"
 			;;
 		    -optPDTInst)
@@ -728,6 +782,22 @@ for arg in "$@" ; do
 		    -optFixHashIf)
 			optFixHashIf=$TRUE
 			echoIfDebug "\tFixing Hash-Ifs"
+			;;
+		    -optMICOffloadLinking*)
+			optMICOffloadLinking="${arg#"-optMICOffloadLinking="} $optMICOffloadLinking"
+			echoIfDebug "\tLinking Options are: $optMICOffloadLinking"
+			;;
+		    -optMICOffloadSharedLinking*)
+			optMICOffloadSharedLinking="${arg#"-optMICOffloadSharedLinking="} $optMICOffloadSharedLinking"
+			echoIfDebug "\tLinking Options are: $optMICOffloadSharedLinking"
+			;;
+		    -optMICOffload)
+			optMICOffload=$TRUE
+			echoIfDebug "\tLinking for MIC Offloading"
+			;;
+		    -opt*)
+			#Assume any other options should be passed on to the compiler.
+			argsRemaining="$argsRemaining ${arg%% *}"
 			;;
 
 		esac #end case for parsing script Options
@@ -913,7 +983,8 @@ for arg in "$@" ; do
 		;;
 
 	    -o*)
- 		if [ "x$arg" != "x-openmp" -a "x$arg" != "x-override_limits" -a "x$arg" != "x-openmp-stubs"  -a "x$arg" != "x-openmp_stubs" ]; then
+		testomp=`echo $myarg | sed -e 's/-openmp//'`
+ 		if [ "x$arg" = "x$testomp" -a "x$arg" != "x-override_limits" ]; then
 		    hasAnOutputFile=$TRUE
 		    passedOutputFile="${arg#"-o"}"
 		    echoIfDebug "\tHas an output file = $passedOutputFile"
@@ -1138,6 +1209,9 @@ while [ $tempCounter -lt $numFiles ]; do
         if [ "x$groupType" = "x$group_f_F" -a "x$suf" = "x.FOR" ] ; then
             newFile=${arrFileName[$tempCounter]}.pdb
         fi
+        if [ "x$groupType" = "x$group_f_F" -a "x$suf" = "x.F95" ] ; then
+            newFile=${arrFileName[$tempCounter]}.pdb
+        fi
 
     else
 	newFile=$optPDBFile; 
@@ -1163,12 +1237,26 @@ if [ $optCompInst == $TRUE ]; then
     optLinking="$optLinking $optCompInstLinking"
 fi
 
-if [ $berkeley_upcc == $TRUE ]; then
+if [ $upc == "berkeley" ]; then
    optLinking=`echo $optLinking| sed -e 's@-Wl@-Wl,-Wl@g'`
    echoIfDebug "optLinking modified to accomodate -Wl,-Wl for upcc. optLinking=$optLinking"
 fi
 
-
+if [ $optMICOffload == $TRUE ]; then
+	#optMICLinking=`echo $optLinking | sed -e 's@x86_64/lib@mic_linux/lib@g'`
+	#if [ $optMICLinking == ""]; then
+	#	echo "Error: x86_64 architecture not found. Please set TAU_MAKEFILE to a
+	#	x86_64 configuration."
+	#	exit 1
+	#fi
+	#hybridLinking="$optLinking -offload-build -offload-ldopts='$optMICLinking'"
+	echoIfDebug "MIC offload linking enabled."
+	if [ $optShared == $TRUE ]; then
+		optLinking=$optMICOffloadSharedLinking
+	else
+		optLinking=$optMICOffloadLinking
+	fi
+fi
 
 ####################################################################
 # Linking if there are no Source Files passed.
@@ -1224,14 +1312,22 @@ if [ $numFiles == 0 ]; then
     if [ "x$check_lc" = "x-lc" ] ; then
 	optLinking="$optLinking -lc"
     fi
-
+    if [ $opari2 == $TRUE -a "x$optOpariLibs" != "x" ]; then
+        opari2init=$TRUE
+    fi
 
     if [ $hasAnOutputFile == $FALSE ]; then
 	passedOutputFile="a.out"
 	linkCmd="$compilerSpecified $regularCmd $optLinking -o $passedOutputFile"
+    if [ $opari2 == $TRUE -a $passCount == 1 -a $opari2init == $TRUE ]; then
+	linkCmd="$compilerSpecified  $regularCmd pompregions.o $optLinking -o $passedOutputFile"
+    fi
     else
 	#Do not add -o, since the regular command has it already.
 	linkCmd="$compilerSpecified $regularCmd $optLinking"
+    if [ $opari2 == $TRUE -a $passCount == 1 -a $opari2init == $TRUE ]; then
+	linkCmd="$compilerSpecified  pompregions.o $regularCmd   $optLinking "
+    fi
     fi	
 
     if [ $opari == $TRUE ]; then
@@ -1242,18 +1338,13 @@ if [ $numFiles == 0 ]; then
     fi
    
     #If this is the second pass, opari was already used, don't do it again`
-    if [ $opari2 == $TRUE -a $passCount == 1 ]; then
+    if [ $opari2 == $TRUE -a $passCount == 1 -a  $opari2init == $TRUE  ]; then
         evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
-      
-        #cmdCreatePompRegions="${NM} ${listOfObjectFiles} | ${GREP} -i POMP2_Init_regions | ${AWK} -f ${AWK_SCRIPT} > pompregions.c"
-
-cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${listOfObjectFiles} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_regions |  `${optOpari2ConfigTool} --awk-cmd` -f `${optOpari2ConfigTool} --awk-script` > pompregions.c"
-
-
+        cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${optIBM64} ${listOfObjectFiles} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_regions |  `${optOpari2ConfigTool} --awk-cmd` -f ${TAU_BIN_DIR}/pomp2-parse-init-regions.awk > pompregions.c"
         evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
         cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
         evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
-        linkCmd="$linkCmd pompregions.o"
+        #linkCmd="$linkCmd pompregions.o"
     fi
 
 
@@ -1269,25 +1360,74 @@ cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${listOfObjectFiles} | `${op
       echoIfDebug "Linking command is $linkCmd "
     fi
     
-		if [ $trackPthread == $TRUE -a -r $optWrappersDir/pthread_wrapper/link_options.tau ] ; then 
+    if [ $trackPthread == $TRUE -a -r $optWrappersDir/pthread_wrapper/link_options.tau ] ; then 
       linkCmd="$linkCmd `cat $optWrappersDir/pthread_wrapper/link_options.tau`"
       echoIfDebug "Linking command is $linkCmd "
     fi
 
-    echoIfDebug "trackUPCR = $trackUPCR, wrappers = $optWrappersDir/upc/bupc/link_options.tau "
-    if [ $trackUPCR == $TRUE -a $berkeley_upcc == $TRUE -a -r $optWrappersDir/upc/bupc/link_options.tau ] ; then 
-      linkCmd="$linkCmd `cat $optWrappersDir/upc/bupc/link_options.tau` $optLinking"
-      echoIfDebug "Linking command is $linkCmd"
+    if [ $trackMPCThread == $TRUE -a -r $optWrappersDir/mpcthread_wrapper/link_options.tau ] ; then 
+      linkCmd="$linkCmd `cat $optWrappersDir/mpcthread_wrapper/link_options.tau`"
+      echoIfDebug "Linking command is $linkCmd "
     fi
-    if [ $trackUPCR == $TRUE -a $berkeley_upcc == $FALSE -a -r $optWrappersDir/upc/cray/link_options.tau -a -r $optWrappersDir/../libcray_upc_runtime_wrap.a ] ; then
-      linkCmd="$linkCmd `cat $optWrappersDir/upc/cray/link_options.tau` $optLinking"
-      echoIfDebug "Linking command is $linkCmd"
+
+    if [ $trackUPCR == $TRUE ] ; then
+      case $upc in
+        berkeley)
+          if [ -r $optWrappersDir/upc/bupc/link_options.tau ] ; then
+            linkCmd="$linkCmd `cat $optWrappersDir/upc/bupc/link_options.tau` $optLinking"
+            echoIfDebug "Linking command is $linkCmd"
+          else
+            echo "Warning: can't locate link_options.tau for Berkeley UPC runtime tracking"
+          fi
+        ;;
+        xlupc)
+          if [ -r $optWrappersDir/upc/xlupc/link_options.tau ] ; then
+            linkCmd="$linkCmd `cat $optWrappersDir/upc/xlupc/link_options.tau` $optLinking"
+            echoIfDebug "Linking command is $linkCmd"
+          else
+            echo "Warning: can't locate link_options.tau for IBM XL UPC runtime tracking"
+          fi
+	;;
+        gnu)
+          if [ -r $optWrappersDir/upc/gupc/link_options.tau ] ; then
+            linkCmd="$linkCmd `cat $optWrappersDir/upc/gupc/link_options.tau` $optLinking"
+            echoIfDebug "Linking command is $linkCmd"
+          else
+            echo "Warning: can't locate link_options.tau for GNU UPC runtime tracking"
+          fi
+        ;;
+        cray)
+          if [ -r $optWrappersDir/upc/cray/link_options.tau -a -r $optWrappersDir/../libcray_upc_runtime_wrap.a ] ; then
+            linkCmd="$linkCmd `cat $optWrappersDir/upc/cray/link_options.tau` $optLinking"
+            echoIfDebug "Linking command is $linkCmd"
+          else
+            echo "Warning: can't locate link_options.tau for CRAY UPC runtime tracking"
+          fi
+        ;;
+        *)
+          echoIfDebug "upc = $upc"
+        ;;
+      esac
     fi
-    
+
     if [ "x$tauWrapFile" != "x" ]; then
       echoIfDebug "Linking command is $linkCmd"
     fi 
 
+    if [ "x$optTauGASPU" != "x" ]; then
+      linkCmd="$linkCmd $optTauGASPU"
+      echoIfDebug "Linking command is $linkCmd"
+    fi 
+
+    if [ $optFujitsu == $TRUE ]; then
+      oldLinkCmd=`echo $linkCmd`
+      linkCmd=`echo $linkCmd | sed -e 's/frtpx/FCCpx/g'`
+      if [ "x$linkCmd" != "x$oldLinkCmd" ] ; then
+        echoIfDebug "We changed the linker to use FCCpx compilers. We need to add --linkfortran to the link line"
+        linkCmd="$linkCmd --linkfortran -lmpi_f90 -lmpi_f77"
+      fi
+      linkCmd=`echo $linkCmd | sed -e 's/fccpx/FCCpx/g'`
+    fi
     evalWithDebugMessage "$linkCmd" "Linking with TAU Options"
     buildSuccess=$?
 	    
@@ -1746,15 +1886,19 @@ if [ $gotoNextStep == $TRUE ]; then
 	    evalWithDebugMessage "$cmdCompileOpariTab" "Compiling opari.tab.c"
 	    objectFilesForLinking="$objectFilesForLinking opari.tab.o"
 	fi
-	if [ $opari2 == $TRUE ]; then
+
+    if [ $opari2 == $TRUE -a "x$optOpariLibs" != "x" ]; then
+        opari2init=$TRUE
+    fi
+	if [ $opari2 == $TRUE -a $opari2init == $TRUE ]; then
             evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
       
-cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_regions |  `${optOpari2ConfigTool} --awk-cmd` -f `${optOpari2ConfigTool} --awk-script` > pompregions.c"
+cmdCreatePompRegions="`${optOpari2ConfigTool}   --nm` ${optIBM64}  ${objectFilesForLinking} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_regions |  `${optOpari2ConfigTool} --awk-cmd` -f ${TAU_BIN_DIR}/pomp2-parse-init-regions.awk > pompregions.c"
         evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
         cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
         evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
         linkCmd="$linkCmd pompregions.o"
-	   objectFilesForLinking="$objectFilesForLinking pompregions.o"
+	   objectFilesForLinking="pompregions.o $objectFilesForLinking"
 	fi
 
 	newCmd="$CMD $listOfObjectFiles $objectFilesForLinking $argsRemaining $OUTPUTARGSFORTAU $optLinking -o $passedOutputFile"
@@ -1778,20 +1922,55 @@ cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} | `
           echoIfDebug "Linking command is $linkCmd"
         fi
 		
-				if [ $trackPthread == $TRUE -a -r $optWrappersDir/pthread_wrapper/link_options.tau ] ; then 
-					newCmd="$newCmd `cat $optWrappersDir/pthread_wrapper/link_options.tau`"
-					echoIfDebug "Linking command is $linkCmd "
-				fi
+        if [ $trackPthread == $TRUE -a -r $optWrappersDir/pthread_wrapper/link_options.tau ] ; then 
+	  newCmd="$newCmd `cat $optWrappersDir/pthread_wrapper/link_options.tau`"
+	  echoIfDebug "Linking command is $linkCmd "
+	fi
 
-        echoIfDebug "trackUPCR = $trackUPCR, wrappers = $optWrappersDir/upc/bupc/link_options.tau "
-        if [ $trackUPCR == $TRUE -a $berkeley_upcc == $TRUE -a -r $optWrappersDir/upc/bupc/link_options.tau ] ; then 
-          newCmd="$newCmd `cat $optWrappersDir/upc/bupc/link_options.tau`"
-          echoIfDebug "Linking command is $newCmd"
-        fi
+        if [ $trackMPCThread == $TRUE -a -r $optWrappersDir/mpcthread_wrapper/link_options.tau ] ; then 
+	  newCmd="$newCmd `cat $optWrappersDir/mpcthread_wrapper/link_options.tau`"
+	  echoIfDebug "Linking command is $linkCmd "
+	fi
 
-        if [ $trackUPCR == $TRUE -a $berkeley_upcc == $FALSE -a -r $optWrappersDir/upc/cray/link_options.tau -a -r $optWrappersDir/../libcray_upc_runtime_wrap.a ] ; then
-          newCmd="$newCmd `cat $optWrappersDir/upc/cray/link_options.tau`"
-          echoIfDebug "Linking command is $newCmd"
+
+        if [ $trackUPCR == $TRUE ] ; then
+          case $upc in
+            berkeley)
+              if [ -r $optWrappersDir/upc/bupc/link_options.tau ] ; then
+                newCmd="$newCmd `cat $optWrappersDir/upc/bupc/link_options.tau` $optLinking"
+                echoIfDebug "Linking command is $newCmd"
+              else
+                echo "Warning: can't locate link_options.tau for Berkeley UPC runtime tracking"
+              fi
+            ;;
+            xlupc)
+            if [ -r $optWrappersDir/upc/xlupc/link_options.tau ] ; then
+              newCmd="$newCmd `cat $optWrappersDir/upc/xlupc/link_options.tau` $optLinking"
+              echoIfDebug "Linking command is $newCmd"
+            else
+              echo "Warning: can't locate link_options.tau for IBM XL UPC runtime tracking"
+            fi
+	    ;;
+            gnu)
+              if [ -r $optWrappersDir/upc/gupc/link_options.tau ] ; then
+                newCmd="$newCmd `cat $optWrappersDir/upc/gupc/link_options.tau` $optLinking"
+                echoIfDebug "Linking command is $newCmd"
+              else
+                echo "Warning: can't locate link_options.tau for GNU UPC runtime tracking"
+              fi
+            ;;
+            cray)
+              if [ -r $optWrappersDir/upc/cray/link_options.tau -a -r $optWrappersDir/../libcray_upc_runtime_wrap.a ] ; then
+                newCmd="$newCmd `cat $optWrappersDir/upc/cray/link_options.tau` $optLinking"
+                echoIfDebug "Linking command is $newCmd"
+              else
+                echo "Warning: can't locate link_options.tau for CRAY UPC runtime tracking"
+              fi
+            ;;
+            *)
+              echoIfDebug "upc = $upc"
+            ;;
+          esac
         fi
 
         if [ "x$tauWrapFile" != "x" ]; then 
@@ -1799,7 +1978,22 @@ cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} | `
           echoIfDebug "Linking command is $newCmd"
         fi
 
+    if [ "x$optTauGASPU" != "x" ]; then
+      newCmd="$newCmd $optTauGASPU"
+      echoIfDebug "Linking command is $newCmd"
+    fi 
+
 	madeToLinkStep=$TRUE
+        if [ $optFujitsu == $TRUE ]; then
+          oldLinkCmd=`echo $newCmd`
+          newCmd=`echo $newCmd | sed -e 's/frtpx/FCCpx/g'`
+          if [ "x$newCmd" != "x$oldLinkCmd" ] ; then
+            echoIfDebug "We changed the linker to use FCCpx compilers. We need to add --linkfortran to the link line"
+            newCmd="$newCmd --linkfortran -lmpi_f90 -lmpi_f77"
+          fi
+          newCmd=`echo $newCmd | sed -e 's/fccpx/FCCpx/g'`
+        fi
+
 	evalWithDebugMessage "$newCmd" "Linking (Together) object files"
 
 	if [ ! -e $passedOutputFile ] ; then

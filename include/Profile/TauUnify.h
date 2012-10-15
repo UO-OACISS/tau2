@@ -97,7 +97,7 @@ class FunctionEventLister : public EventLister {
     return TheFunctionDB().size();
   }
   const char *getEvent(int id) {
-    return TheFunctionDB()[id]->GetFullName()->c_str();
+    return TheFunctionDB()[id]->GetFullName();
   }
 };
 
