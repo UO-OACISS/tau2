@@ -21,6 +21,7 @@
 
       program test1
       include 'test1.f.opari.inc'
+#line 21 "test1.f"
       integer a
 !************************************************
 !* The following pragmas should be instrumented *
@@ -36,25 +37,32 @@ c$omp parallel
 !$omp& if(pomp2_if) num_threads(pomp2_num_threads) 
       call POMP2_Parallel_begin(pomp2_region_1)
 #line 26 "test1.f"
-      call POMP2_Barrier_enter(pomp2_region_2, pomp2_old_task,
+      call POMP2_Barrier_enter(pomp2_region_2,
+     &pomp2_old_task,
      &pomp2_ctc_2 )
 #line 26 "test1.f"
 *$omp barrier
-      call POMP2_Barrier_exit(pomp2_region_2, pomp2_old_task)
+      call POMP2_Barrier_exit(pomp2_region_2,
+     &pomp2_old_task)
 #line 27 "test1.f"
-      call POMP2_Barrier_enter(pomp2_region_3, pomp2_old_task,
+      call POMP2_Barrier_enter(pomp2_region_3,
+     &pomp2_old_task,
      &pomp2_ctc_3 )
 #line 27 "test1.f"
 !$omp barrier
-      call POMP2_Barrier_exit(pomp2_region_3, pomp2_old_task)
+      call POMP2_Barrier_exit(pomp2_region_3,
+     &pomp2_old_task)
 #line 28 "test1.f"
-      call POMP2_Implicit_barrier_enter(pomp2_region_1, pomp2_old_task)
+      call POMP2_Implicit_barrier_enter(pomp2_region_1,
+     &pomp2_old_task)
 !$omp barrier
-      call POMP2_Implicit_barrier_exit(pomp2_region_1, pomp2_old_task)
+      call POMP2_Implicit_barrier_exit(pomp2_region_1,
+     &pomp2_old_task)
       call POMP2_Parallel_end(pomp2_region_1)
 #line 28 "test1.f"
 !$omp end parallel
-      call POMP2_Parallel_join(pomp2_region_1, pomp2_old_task)
+      call POMP2_Parallel_join(pomp2_region_1,
+     &pomp2_old_task)
 #line 29 "test1.f"
 
       pomp2_num_threads = pomp2_lib_get_max_threads()
@@ -69,14 +77,17 @@ c$omp parallel
 !$omp& if(pomp2_if) num_threads(pomp2_num_threads) 
       call POMP2_Parallel_begin(pomp2_region_4)
 #line 32 "test1.f"
-      call POMP2_Implicit_barrier_enter(pomp2_region_4, pomp2_old_task)
+      call POMP2_Implicit_barrier_enter(pomp2_region_4,
+     &pomp2_old_task)
 !$omp barrier
-      call POMP2_Implicit_barrier_exit(pomp2_region_4, pomp2_old_task)
+      call POMP2_Implicit_barrier_exit(pomp2_region_4,
+     &pomp2_old_task)
       call POMP2_Parallel_end(pomp2_region_4)
 #line 32 "test1.f"
 !$omp    end
 !$omp+   parallel
-      call POMP2_Parallel_join(pomp2_region_4, pomp2_old_task)
+      call POMP2_Parallel_join(pomp2_region_4,
+     &pomp2_old_task)
 #line 34 "test1.f"
 
       pomp2_num_threads = pomp2_lib_get_max_threads()
@@ -91,15 +102,18 @@ c$omp parallel
 !$omp& if(pomp2_if) num_threads(pomp2_num_threads) 
       call POMP2_Parallel_begin(pomp2_region_5)
 #line 37 "test1.f"
-      call POMP2_Implicit_barrier_enter(pomp2_region_5, pomp2_old_task)
+      call POMP2_Implicit_barrier_enter(pomp2_region_5,
+     &pomp2_old_task)
 !$omp barrier
-      call POMP2_Implicit_barrier_exit(pomp2_region_5, pomp2_old_task)
+      call POMP2_Implicit_barrier_exit(pomp2_region_5,
+     &pomp2_old_task)
       call POMP2_Parallel_end(pomp2_region_5)
 #line 37 "test1.f"
 !$omp end
 !$omp+ 
 !$omp+ parallel
-      call POMP2_Parallel_join(pomp2_region_5, pomp2_old_task)
+      call POMP2_Parallel_join(pomp2_region_5,
+     &pomp2_old_task)
 #line 40 "test1.f"
 
       pomp2_num_threads = pomp2_lib_get_max_threads()
@@ -115,14 +129,17 @@ c$omp parallel
       call POMP2_Parallel_begin(pomp2_region_6)
 #line 43 "test1.f"
 
-      call POMP2_Implicit_barrier_enter(pomp2_region_6, pomp2_old_task)
+      call POMP2_Implicit_barrier_enter(pomp2_region_6,
+     &pomp2_old_task)
 !$omp barrier
-      call POMP2_Implicit_barrier_exit(pomp2_region_6, pomp2_old_task)
+      call POMP2_Implicit_barrier_exit(pomp2_region_6,
+     &pomp2_old_task)
       call POMP2_Parallel_end(pomp2_region_6)
 #line 46 "test1.f"
 !$omp end 
 !$omp&parallel
-      call POMP2_Parallel_join(pomp2_region_6, pomp2_old_task)
+      call POMP2_Parallel_join(pomp2_region_6,
+     &pomp2_old_task)
 #line 48 "test1.f"
 
 
@@ -138,7 +155,7 @@ c     comment
       end program test1
 
 
-      subroutine POMP2_Init_regions_000()
+      subroutine POMP2_Init_reg_000()
          include 'test1.f.opari.inc'
          call POMP2_Assign_handle( pomp2_region_1, 
      &   pomp2_ctc_1 )

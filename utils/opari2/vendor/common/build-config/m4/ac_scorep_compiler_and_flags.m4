@@ -198,6 +198,7 @@ AC_ARG_WITH([mpi],
                      ["mpich2"],      [ac_scorep_compilers_mpi="${path_to_compiler_files}compiler-mpi-mpich2"],
                      ["impi"],        [ac_scorep_compilers_mpi="${path_to_compiler_files}compiler-mpi-impi"],
                      ["openmpi"],     [ac_scorep_compilers_mpi="${path_to_compiler_files}compiler-mpi-openmpi"],
+                     ["no"],          [], # suppress warning for '--without-mpi'
                      [AC_MSG_WARN([MPI compiler suite "${withval}" not supported by --with-mpi, ignoring.])])],
             [])
 

@@ -149,8 +149,8 @@ OMPRegion::generate_init_handle_calls_f( ostream& os, const char* incfile )
     if ( OMPRegion::init_handle_calls.rdbuf()->in_avail() != 0 )
     {
         //add a Function to initialize the handles at the end of the file
-        os << "\n      subroutine POMP2_Init_regions_"
-           << compiletime.tv_sec << compiletime.tv_usec
+        os << "\n      subroutine POMP2_Init_reg_"
+           << infile_inode
            << "_" << OMPRegion::maxId << "()\n"
            << "         include \'" << incfile << "\'\n"
            << OMPRegion::init_handle_calls.str()
@@ -169,8 +169,8 @@ OMPRegion::generate_init_handle_calls_cxx( ostream& os )
     //assert( retval == 0 );
 
     os << "extern \"C\" \n{"
-       << "\nvoid POMP2_Init_regions_"
-       << compiletime.tv_sec << compiletime.tv_usec
+       << "\nvoid POMP2_Init_reg_"
+       << infile_inode
        << "_" << OMPRegion::maxId << "()\n{\n"
        << OMPRegion::init_handle_calls.str()
        << "}\n}\n";
@@ -186,8 +186,8 @@ OMPRegion::generate_init_handle_calls_c( ostream& os )
     //assert( retval == 0 );
 
     os << "\n#ifdef __cplusplus \n extern \"C\" \n#endif";
-    os << "\nvoid POMP2_Init_regions_"
-       << compiletime.tv_sec << compiletime.tv_usec
+    os << "\nvoid POMP2_Init_reg_"
+       << infile_inode
        << "_" << OMPRegion::maxId << "()\n{\n"
        << OMPRegion::init_handle_calls.str()
        << "}\n";
@@ -239,7 +239,7 @@ OMPRegion::finalize_descrs( ostream& os, Language lang )
             os << "      logical :: pomp2_if \n";
             os << "      integer ( kind=4 ) :: pomp2_num_threads \n";
         }
-        os << "      common /" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/ " << region_id_prefix << *it++;
+        os << "      common /" << "cb" << infile_inode << "/ " << region_id_prefix << *it++;
         for (; it < common_block.end(); it++ )
         {
             if ( lang & L_F77 )
@@ -426,7 +426,8 @@ OMPRegion::finish()
     }
 }
 
-timeval                 compiletime;
+//timeval                 compiletime;
+ino_t                   infile_inode;
 stringstream OMPRegion::init_handle_calls;
 vector<int> OMPRegion:: common_block;
 OMPRegion* OMPRegion::  outer_ptr = 0;
