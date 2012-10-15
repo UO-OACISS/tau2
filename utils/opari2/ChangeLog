@@ -1,3 +1,28 @@
+------------------- Released version 1.0.6 ---------------------------
+
+- Changed opari-config option --pomp2-api-version to
+  --interface-version to make it consitent with otf2-config and
+  cube-config.
+
+------------------- Released version 1.0.5 ---------------------------
+
+- Fix invalid insertion of <file>.opari.inc in conjunction with
+  continued 'dimension' statements.
+
+- Improved Fortran 'end do' detection.
+
+- CTC-strings grew to long for Fortran77. Size reduced.
+
+- Use inode instead of gettimeofday as unique region identifier. In
+  very special circumstances gettimeofday resolution leads to
+  non-unique identifiers.
+
+- CTC-strings contained wrong line-number information.
+
+- Create temporary files in the directory of the output file.
+
+- Detection of conditional compilation in free form Fortran improved.
+
 ------------------- Released version 1.0.4 ---------------------------
 
 - Provide correct region line numbers also for lazy initialization
@@ -63,4 +88,3 @@
   opari.inc file (Ticket 75).
 
 ------------------- Released version 1.0 -----------------------------
-

@@ -39,6 +39,8 @@
 #ifndef HANDLER_H
 #define HANDLER_H
 
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <sys/time.h>
 #include "opari2.h"
 #include "ompragma.h"
@@ -74,6 +76,7 @@ genLineStmts();
 void
 print_regstack_top();
 
-extern bool    do_transform;
-extern timeval compiletime;
+extern bool do_transform;
+//extern timeval compiletime;
+extern ino_t infile_inode;
 #endif

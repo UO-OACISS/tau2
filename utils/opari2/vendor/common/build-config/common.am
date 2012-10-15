@@ -3,7 +3,7 @@
 ## 
 ## This file is part of the Score-P software (http://www.score-p.org)
 ##
-## Copyright (c) 2009-2011, 
+## Copyright (c) 2009-2012,
 ##    RWTH Aachen, Germany
 ##    Gesellschaft fuer numerische Simulation mbH Braunschweig, Germany
 ##    Technische Universitaet Dresden, Germany
@@ -46,7 +46,6 @@ SRC_ROOT = ../
 
 ## Convenience variables, use for referencing include directories,
 ## e.g.  foo_CPPFLAGS = $(AM_CPPFLAGS) -I$(INC_ROOT)src/bar
-## -I$(INC_DIR_UTIL) -I$(PUBLIC_INC_DIR).
 ## Note: we need different convenience variable for SRC and INC
 ## because they are evaluated at different times. The SRC_ROOT
 ## variable is evaluated at autoreconf time where it is not
@@ -54,6 +53,15 @@ SRC_ROOT = ../
 ## variable is evaluated during configure.
 INC_ROOT = $(srcdir)/../
 PUBLIC_INC_DIR = $(INC_ROOT)include
+
+# The include path to the common utils headers.
+INC_DIR_COMMON_UTILS = $(INC_ROOT)vendor/common/src/utils/include
+
+##  Where to find the Jenkins' hash headers.
+INC_DIR_COMMON_HASH = $(INC_ROOT)vendor/common/hash
+
+##  Where to find the Jenkins' hash headers.
+INC_DIR_COMMON_CUTEST = $(INC_ROOT)vendor/common/cutest
 
 ## Not really needed but already in use.
 LIB_ROOT =
@@ -100,3 +108,7 @@ beautify:
 check-build: $(BUILT_SOURCES) all-am $(check_PROGRAMS) $(check_LTLIBRARIES)
 
 DISTCLEANFILES += $(builddir)/config.summary
+
+# this propagates changes to vendor/common/build-config/config-common.h
+../src/config-common.h: $(srcdir)/../vendor/common/build-config/config-common.h
+	@$(am__cd) .. && $(MAKE) $(AM_MAKEFLAGS) src/config-common.h

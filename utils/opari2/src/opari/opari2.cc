@@ -117,8 +117,8 @@ main( int   argc,
     char*       infile        = 0;
     const char* disabled      = 0;
     pomp_tpd = SCOREP_STR( POMP_TPD_MANGLED );
-    int retval = gettimeofday( &compiletime, NULL );
-    assert( retval == 0 );
+    struct stat infile_status;
+
 
 
     while ( a < argc && argv[ a ][ 0 ] == '-' )
@@ -141,7 +141,7 @@ main( int   argc,
         }
         else if ( strcmp( argv[ a ], "--version" ) == 0 )
         {
-            std::cout << "opari version " << PACKAGE_VERSION << std::endl;
+            std::cout << "opari2 version " << PACKAGE_VERSION << std::endl;
             return 0;
         }
         else if ( strcmp( argv[ a ], "--help" ) == 0 )
@@ -498,6 +498,11 @@ main( int   argc,
         exit( 1 );
     }
 
+    // query inode number of the infile as unique attribute
+    int retval = stat( infile, &infile_status );
+    assert( retval == 0 );
+    infile_inode = infile_status.st_ino;
+
     // generate opari include file name
     char* incfile       = 0;
     char* incfileNoPath = 0;
@@ -542,7 +547,7 @@ main( int   argc,
         {
             os << "#line 1 \"" << infile << "\"" << "\n";
         }
-        process_fortran( is, infile, os, addSharedDecl, incfileNoPath, lang );
+        process_fortran( is, infile, os, addSharedDecl, incfileNoPath, lang, keepSrcInfo );
     }
     else
     {

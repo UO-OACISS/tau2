@@ -17,7 +17,7 @@
 # pomp2_parse_init_regions.awk
 #
 # Expects the output of
-# $(NM) $ALL_OBJS_AND_LIBS | $(GREP) -i POMP2_Init_regions | $(GREP) " [TD] "
+# $(NM) $ALL_OBJS_AND_LIBS | $(GREP) -i POMP2_Init_reg | $(GREP) " [TD] "
 # as input. See <prefix/share/opari/doc/example/Makefile> for a working
 # example.
 #
@@ -26,7 +26,7 @@
 #
 # void POMP2_Init_regions(): need to be called from your POMP2 library to
 # initialize all instrumented POMP2 region by calling the instrumented
-# functions POMP2_Init_regions_*.
+# functions POMP2_Init_reg_*.
 #
 # size_t POMP2_Get_num_regions() returns the number of POMP2 regions found
 # in $ALL_OBJS_AND_LIBS.
@@ -42,37 +42,39 @@
 /_[0-9][0-9]*_[0-9][0-9]*_?_?$/ {  
   for (i = 1; i <= NF; i++)
   {
-    if (index($i,"POMP2_Init_regions") != 0)
+    if (index($i,"POMP2_Init_reg") != 0)
     {
-      separator = "POMP2_Init_regions";
+      separator = "POMP2_Init_reg";
     }
-    else if (index($i,"pomp2_init_regions") != 0)
+    else if (index($i,"pomp2_init_reg") != 0)
     {
-      separator = "pomp2_init_regions";
+      separator = "pomp2_init_reg";
     }
-    else if (index($i,"POMP2_INIT_REGIONS") != 0)
+    else if (index($i,"POMP2_INIT_REG") != 0)
     {
-      separator = "POMP2_INIT_REGIONS";
+      separator = "POMP2_INIT_REG";
     }
     else
     {
       continue;
     }
 
-    # $i looks like "POMP2_Init_regions_uniqueId_nRegions" or
-    # like "pomp2_init_regions_uniqueId_nRegions" or
-    # like "POMP2_INIT_REGIONS_uniqueId_nRegions"
+    # $i looks like "POMP2_Init_reg_uniqueId_nRegions" or
+    # like "pomp2_init_reg_uniqueId_nRegions" or
+    # like "POMP2_INIT_REG_uniqueId_nRegions"
     split ($i,splitResult,separator);
     _uniqueId_nRegions = splitResult[2];
     if (!(_uniqueId_nRegions in regions))
     {
       split(_uniqueId_nRegions, tokens, "_");
       number_regions = tokens[3];
+
       if( number_regions != 0 )
       {
          regions[_uniqueId_nRegions] = $i;
          nRegions += number_regions;
       }
+
     }
   }
 }
@@ -92,13 +94,13 @@ END{
     sub(/^\./, "", regions[i]);
   }
 
-  # declare POMP2_Init_regions_* functions extern
+  # declare POMP2_Init_reg_* functions extern
   for (i in regions)
   {
     print "extern void " regions[i] "();";
   }
 
-  # define POMP2_Init_regions() and call all POMP2_Init_regions_* functions
+  # define POMP2_Init_regions() and call all POMP2_Init_reg_* functions
   print "\nvoid POMP2_Init_regions()"
   print "{"
   for (i in regions)
