@@ -743,16 +743,6 @@ void TauEnv_initialize()
       env_track_signals = 0;
     }
 
-    tmp = getconf("TAU_SUMMARY");
-    if (parse_bool(tmp, env_summary_only)) {
-      TAU_VERBOSE("TAU: Generating only summary data: TAU_SUMMARY enabled\n");
-      TAU_METADATA("TAU_SUMMARY", "on");
-      env_summary_only = 1;
-    } else {
-      TAU_METADATA("TAU_SUMMARY", "off");
-      env_summary_only = 0;
-    }
-
     tmp = getconf("TAU_IBM_BG_HWP_COUNTERS");
     if (parse_bool(tmp, env_ibm_bg_hwp_counters)) {
       TAU_VERBOSE("TAU: IBM UPC HWP counter data collection enabled\n");
@@ -1007,7 +997,7 @@ void TauEnv_initialize()
       sprintf(tmpstr, "%g", env_throttle_numcalls);
       TAU_METADATA("TAU_THROTTLE_NUMCALLS", tmpstr);
     }
-
+		
     const char *profileFormat = getconf("TAU_PROFILE_FORMAT");
     if (profileFormat != NULL && 0 == strcasecmp(profileFormat, "snapshot")) {
       env_profile_format = TAU_FORMAT_SNAPSHOT;
@@ -1032,6 +1022,25 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Output Format: profile\n");
       TAU_METADATA("TAU_PROFILE_FORMAT", "profile");
     }
+
+    tmp = getconf("TAU_SUMMARY");
+    if (parse_bool(tmp, env_summary_only)) {
+#ifdef TAU_MPI
+			if (env_profile_format == TAU_FORMAT_MERGED) {
+				TAU_VERBOSE("TAU: Generating only summary data: TAU_SUMMARY enabled\n");
+				TAU_METADATA("TAU_SUMMARY", "on");
+				env_summary_only = 1;
+			} else {
+      	TAU_VERBOSE("TAU: Summary requires merged format, reverting non-summary profiling.\n");
+				TAU_METADATA("TAU_SUMMARY", "off");
+				env_summary_only = 0;
+			}
+#else
+      TAU_VERBOSE("TAU: Summary requires merged format, which is not supported without MPI, reverting non-summary profiling.\n");
+      TAU_METADATA("TAU_SUMMARY", "off");
+      env_summary_only = 0;
+#endif /* TAU_MPI */
+		}
 
     if ((env_metrics = getconf("TAU_METRICS")) == NULL) {
       env_metrics = "";   /* default to 'time' */
