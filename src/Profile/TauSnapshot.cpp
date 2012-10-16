@@ -206,16 +206,17 @@ static int Tau_snapshot_writeSnapshot(const char *name, int to_buffer) {
    for (i=0; i < numFunc; i++) {
      FunctionInfo *fi = TheFunctionDB()[i];
 
-     // get currently stored values
-     double *incltime = fi->getDumpInclusiveValues(tid);
-     double *excltime = fi->getDumpExclusiveValues(tid);
-  
-     
-     Tau_util_output (out, "%d %ld %ld ", i, fi->GetCalls(tid), fi->GetSubrs(tid));
-     for (c=0; c<Tau_Global_numCounters; c++) {
-       Tau_util_output (out, "%.16G %.16G ", excltime[c], incltime[c]);
+     if (fi->GetCalls(tid) > 0) {
+       // get currently stored values
+       double *incltime = fi->getDumpInclusiveValues(tid);
+       double *excltime = fi->getDumpExclusiveValues(tid);
+       Tau_util_output (out, "%d %ld %ld ", i, fi->GetCalls(tid), fi->GetSubrs(tid));
+       for (c=0; c<Tau_Global_numCounters; c++) {
+         Tau_util_output (out, "%.16G %.16G ", excltime[c], incltime[c]);
+       }
+       Tau_util_output (out, "\n");
+	 } else {
      }
-     Tau_util_output (out, "\n");
    }
    Tau_util_output (out, "</interval_data>\n");
 
@@ -224,9 +225,11 @@ static int Tau_snapshot_writeSnapshot(const char *name, int to_buffer) {
    Tau_util_output (out, "<atomic_data>\n");
    for (i=0; i < numEvents; i++) {
      TauUserEvent *ue = TheEventDB()[i];
+     if (ue->GetNumEvents(tid) > 0) {
            Tau_util_output (out, "%d %ld %.16G %.16G %.16G %.16G\n", 
 	     i, ue->GetNumEvents(tid), ue->GetMax(tid),
 	     ue->GetMin(tid), ue->GetMean(tid), ue->GetSumSqr(tid));
+     }
    }
    Tau_util_output (out, "</atomic_data>\n");
 
@@ -302,6 +305,7 @@ int Tau_snapshot_writeUnifiedBuffer(int tid) {
       
       int local_index = functionUnifier->sortMap[globalmap[e]];
       FunctionInfo *fi = TheFunctionDB()[local_index];
+      if (fi->GetCalls(tid) > 0) {
       
       // get currently stored values
 			double *incltime, *excltime;
@@ -315,12 +319,12 @@ int Tau_snapshot_writeUnifiedBuffer(int tid) {
 				incltime = fi->GetInclTime(tid);
 				excltime = fi->GetExclTime(tid);
 			}
-      //fprintf (stderr, "local=%d, global=%d, name=%s\n", i, functionUnifier->mapping[functionUnifier->sortMap[i]], fi->GetName());
       Tau_util_output (out, "%d %ld %ld ", e, fi->GetCalls(tid), fi->GetSubrs(tid));
       for (c=0; c<Tau_Global_numCounters; c++) {
 	Tau_util_output (out, "%.16G %.16G ", excltime[c], incltime[c]);
       }
       Tau_util_output (out, "\n");
+	  }
     }
   }
   
