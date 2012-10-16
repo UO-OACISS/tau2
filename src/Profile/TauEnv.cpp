@@ -748,6 +748,15 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Generating only summary data: TAU_SUMMARY enabled\n");
       TAU_METADATA("TAU_SUMMARY", "on");
       env_summary_only = 1;
+#ifdef TAU_MPI
+      env_profile_format = TAU_FORMAT_MERGED;
+      TAU_VERBOSE("TAU: Output Format: merged\n");
+      TAU_METADATA("TAU_PROFILE_FORMAT", "merged");
+#else
+      env_profile_format = TAU_FORMAT_PROFILE;
+      TAU_VERBOSE("TAU: Output Format: merged format not supported without MPI, reverting to profile\n");
+      TAU_METADATA("TAU_PROFILE_FORMAT", "profile");
+#endif /* TAU_MPI */
     } else {
       TAU_METADATA("TAU_SUMMARY", "off");
       env_summary_only = 0;
