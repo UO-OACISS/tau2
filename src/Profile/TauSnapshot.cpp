@@ -159,6 +159,10 @@ static int Tau_snapshot_writeSnapshot(const char *name, int to_buffer) {
    } else {
      Tau_util_output (out, "<profile_xml>\n");
    }
+	 
+   if (TauEnv_get_summary_only()) { /* skip writing event definitions */
+	 	 return 0;
+	 }
    
    // write out new events since the last snapshot
    if (Tau_snapshot_getEventCounts()[tid] != numFunc) {
@@ -260,6 +264,10 @@ int Tau_snapshot_writeUnifiedBuffer(int tid) {
      Tau_util_output (out, "<profile_xml>\n");
    }
    
+   if (TauEnv_get_summary_only()) { /* skip event unification. */
+	 return 0;
+   }
+
    Tau_unify_object_t *functionUnifier, *atomicUnifier;
    functionUnifier = Tau_unify_getFunctionUnifier();
    atomicUnifier = Tau_unify_getAtomicUnifier();
@@ -398,6 +406,10 @@ static int startNewSnapshotFile(char *threadid, int tid, int to_buffer) {
     
   // assign it back to the global structure for this thread
   Tau_snapshot_getFiles()[tid] = out;
+	
+  if (TauEnv_get_summary_only()) { /* skip thread id for summary */
+		return 0;
+	}
 
   // start of a profile block
   Tau_util_output (out, "<profile_xml>\n");
