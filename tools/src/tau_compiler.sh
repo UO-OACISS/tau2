@@ -1209,6 +1209,9 @@ while [ $tempCounter -lt $numFiles ]; do
         if [ "x$groupType" = "x$group_f_F" -a "x$suf" = "x.FOR" ] ; then
             newFile=${arrFileName[$tempCounter]}.pdb
         fi
+        if [ "x$groupType" = "x$group_f_F" -a "x$suf" = "x.F95" ] ; then
+            newFile=${arrFileName[$tempCounter]}.pdb
+        fi
 
     else
 	newFile=$optPDBFile; 
