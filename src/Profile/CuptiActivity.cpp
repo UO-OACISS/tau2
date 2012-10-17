@@ -26,7 +26,7 @@ void Tau_cupti_onload()
 	err = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_SYNCHRONIZE); 
 	err = cuptiEnableDomain(1, subscriber, CUPTI_CB_DOMAIN_RESOURCE); 
 
-	CUDA_CHECK_ERROR(err, "Cannot set Domain.\n");
+	CUDA_CHECK_ERROR(err, "Cannot set Domain, check if the CUDA toolkit version is supported by the install CUDA driver.\n");
 
 	//setup global activity queue.
 	activityBuffer = (uint8_t *)malloc(ACTIVITY_BUFFER_SIZE);
