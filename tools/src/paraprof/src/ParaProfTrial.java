@@ -357,7 +357,13 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
     public void setMeanData(int metricID) {
+    	// save the old derived provided state
+    	boolean tmpVal = trial.getDataSource().isDerivedProvided();
+    	// set to false, so we compute new statistics for the new metric
+    	trial.getDataSource().setDerivedProvided(false);
         trial.getDataSource().generateStatistics(metricID, metricID);
+        // restore the old value
+    	trial.getDataSource().setDerivedProvided(tmpVal);
     }
 
     // return a vector of only those functions that are currently "displayed" (i.e. group masks, etc)
