@@ -1294,9 +1294,21 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
 	  // whichever thread got here first, has the lock and will create the
 	  // FunctionInfo object for the top level timer.
       if (TauInternal_CurrentProfiler(tid) == NULL) {
+#if 0 // see note below
+  /* I would prefer to use pure_start_task, but it creates a new string object
+     and this function gets called from the sampling handler. 
+     Until I can figure out a way around that, each thread is going to ahve to 
+     create and start a top level timer. Bummer. */
+
         Tau_pure_start_task(".TAU application", tid);
+#else
+        FunctionInfo *ptr = (FunctionInfo *) Tau_get_profiler(".TAU application", " ", TAU_DEFAULT, "TAU_DEFAULT");
+        if (ptr) {
+          Tau_start_timer(ptr, 0, tid);
+        }
+#endif
         initthread[tid] = true;
-	  }
+      }
     }
     initialized = true;
     RtsLayer::UnLockDB();
@@ -1309,9 +1321,22 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
   // if there is no top-level timer, create one - But only create one FunctionInfo object.
   // that should be handled by the Tau_pure_start_task call.
   if (TauInternal_CurrentProfiler(tid) == NULL) {
-    Tau_pure_start_task(".TAU application", tid);
     initthread[tid] = true;
+#if 0 // see note below
+  /* I would prefer to use pure_start_task, but it creates a new string object
+     and this function gets called from the sampling handler. 
+     Until I can figure out a way around that, each thread is going to ahve to 
+     create and start a top level timer. Bummer. */
+
+    Tau_pure_start_task(".TAU application", tid);
+#else
+    FunctionInfo *ptr = (FunctionInfo *) Tau_get_profiler(".TAU application", " ", TAU_DEFAULT, "TAU_DEFAULT");
+    if (ptr) {
+      Tau_start_timer(ptr, 0, tid);
+    }
+#endif
   }
+
   atexit(Tau_destructor_trigger);
 }
 
@@ -1791,7 +1816,7 @@ const char *Tau_query_event_name(void *event) {
 }
 
 void *Tau_query_parent_event(void *event) {
-  Profiler *profiler = (Profiler*) event;
+  //Profiler *profiler = (Profiler*) event;
   int tid = RtsLayer::myThread();
   void *topOfStack = &(Tau_global_stack[tid][0]);
   if (event == topOfStack) {
