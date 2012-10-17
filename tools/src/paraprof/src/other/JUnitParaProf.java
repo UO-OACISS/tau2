@@ -35,7 +35,7 @@ import edu.uoregon.tau.perfdmf.DBDataSource;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Function;
-import edu.uoregon.tau.perfdmf.TAUdbDatabaseAPI;
+import edu.uoregon.tau.perfdmf.taudb.TAUdbDatabaseAPI;
 import edu.uoregon.tau.perfdmf.Trial;
 
 public class JUnitParaProf extends JFCTestCase {
