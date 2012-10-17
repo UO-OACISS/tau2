@@ -392,6 +392,10 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			String parentName = CallPathUtilFuncs.getParentName(current.getName());
 			if (!parentName.equals("")) {
 				Function parentFunction = dataSource.getFunction(parentName);
+				if (parentFunction == null) {
+					//System.out.println("Creating non-existent timer! : " + parentName);				
+					parentFunction = dataSource.addFunction(parentName, dataSource.getNumberOfMetrics());
+				}
                 parent = getIDForCallpath(dataSource, db, parentFunction, callpathMap, functionMap);
 			}
 			// get the timer name
@@ -437,7 +441,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 
 		Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
 		Map<Function, Integer> callpathMap = new HashMap<Function, Integer>();
-		Iterator<Function> funcs = dataSource.getFunctionIterator();
+		Iterator<Function> funcs = dataSource.getFunctionIteratorCopy();
 		while (funcs.hasNext()) {
 			Function function = funcs.next();
 			if (function.isGroupMember(derived)) {

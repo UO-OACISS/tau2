@@ -279,8 +279,15 @@ public abstract class DataSource {
     public List<Function> getFunctions() {
     	return new ArrayList<Function>(functions.values());
     }
+
     public Iterator<Function> getFunctionIterator() {
         return functions.values().iterator();
+    }
+    
+    public Iterator<Function> getFunctionIteratorCopy() {
+    	// copy this set, so we can add to it!
+    	Set tmpValues = new HashSet(functions.values());
+        return tmpValues.iterator();
     }
     
     public UserEvent addUserEvent(String name) {
