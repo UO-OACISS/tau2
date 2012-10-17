@@ -449,28 +449,32 @@ public abstract class DataSource {
      *            Metric to be added
      */
     public void addMetric(Metric metric) {
-        if (this.metrics == null) {
-            this.metrics = new ArrayList<Metric>();
-        } else {
-            for (Iterator<Thread> it = getAllThreads().iterator(); it.hasNext();) {
-                Thread thread = it.next();
-                thread.addMetric();
-            }
+    	if (this.metrics == null) {
+    		this.metrics = new ArrayList<Metric>();
+    	} else {
+    		for (Iterator<Thread> it = getAllThreads().iterator(); it.hasNext();) {
+    			Thread thread = it.next();
+    			thread.addMetric();
+    		}
 
-            if (meanData != null) {
-                meanData.addMetric();
-                totalData.addMetric();
-                stddevData.addMetric();
-                
-                if(maxData!=null&&minData!=null){
-                	maxData.addMetric();
-                	minData.addMetric();
-                }
-            }
-        }
+    		if (meanDataNoNull != null)
+    			meanDataNoNull.addMetric();
+    		if (totalData != null)
+    			totalData.addMetric();
+    		if(stddevDataNoNull != null)
+    			stddevDataNoNull.addMetric();
+    		if(minData!=null)
+    			minData.addMetric();
+    		if(maxData!=null)
+    			maxData.addMetric();
+    		if (meanDataAll != null)
+    			meanDataAll.addMetric();
+    		if(stddevDataAll != null)
+    			stddevDataAll.addMetric();
+    	}
 
-        metric.setID(this.getNumberOfMetrics());
-        metrics.add(metric);
+    	metric.setID(this.getNumberOfMetrics());
+    	metrics.add(metric);
     }
 
     /**
@@ -768,13 +772,20 @@ public abstract class DataSource {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        this.meanData.setThreadDataAllMetrics();
-        this.totalData.setThreadDataAllMetrics();
-        this.stddevData.setThreadDataAllMetrics();
+        if(this.meanDataNoNull!=null)
+        	this.meanDataNoNull.setThreadDataAllMetrics();
+        if(this.totalData!=null)
+        	this.totalData.setThreadDataAllMetrics();
+        if(this.stddevDataNoNull!=null)
+        	this.stddevDataNoNull.setThreadDataAllMetrics();
         if(this.maxData!=null)
         	this.maxData.setThreadDataAllMetrics();
         if(this.minData!=null)
         	this.minData.setThreadDataAllMetrics();
+        if(this.meanDataAll!=null)
+        	this.meanDataAll.setThreadDataAllMetrics();
+        if(this.stddevDataAll!=null)
+        	this.stddevDataAll.setThreadDataAllMetrics();
 
         this.generateAtomicEventStatistics();
 
@@ -819,12 +830,19 @@ public abstract class DataSource {
                     UserEvent ue = uep.getUserEvent();
 
                     // get/create the userEventProfile for mean
-                    UserEventProfile meanProfile = meanData.getUserEventProfile(ue);
-                    if (meanProfile == null) {
-                        meanProfile = new UserEventProfile(ue, numSnapshots);
-                        meanData.addUserEventProfile(meanProfile);
+                    UserEventProfile meanNoNullProfile = meanDataNoNull.getUserEventProfile(ue);
+                    if (meanNoNullProfile == null) {
+                        meanNoNullProfile = new UserEventProfile(ue, numSnapshots);
+                        meanDataNoNull.addUserEventProfile(meanNoNullProfile);
                     }
 
+                    // get/create the userEventProfile for mean
+                    UserEventProfile meanAllProfile = meanDataAll.getUserEventProfile(ue);
+                    if (meanAllProfile == null) {
+                        meanAllProfile = new UserEventProfile(ue, numSnapshots);
+                        meanDataAll.addUserEventProfile(meanAllProfile);
+                    }
+                    
                     // get/create the userEventProfile for total
                     UserEventProfile totalProfile = totalData.getUserEventProfile(ue);
                     if (totalProfile == null) {
@@ -833,10 +851,17 @@ public abstract class DataSource {
                     }
 
                     // get/create the userEventProfile for stddev
-                    UserEventProfile stddevProfile = stddevData.getUserEventProfile(ue);
-                    if (stddevProfile == null) {
-                        stddevProfile = new UserEventProfile(ue, numSnapshots);
-                        stddevData.addUserEventProfile(stddevProfile);
+                    UserEventProfile stddevNoNullProfile = stddevDataNoNull.getUserEventProfile(ue);
+                    if (stddevNoNullProfile == null) {
+                        stddevNoNullProfile = new UserEventProfile(ue, numSnapshots);
+                        stddevDataNoNull.addUserEventProfile(stddevNoNullProfile);
+                    }
+
+                    // get/create the userEventProfile for stddev
+                    UserEventProfile stddevAllProfile = stddevDataAll.getUserEventProfile(ue);
+                    if (stddevAllProfile == null) {
+                        stddevAllProfile = new UserEventProfile(ue, numSnapshots);
+                        stddevDataAll.addUserEventProfile(stddevAllProfile);
                     }
 
                     Integer count = numProfiles.get(ue.getID());
@@ -849,15 +874,26 @@ public abstract class DataSource {
                     totalProfile.setMeanValue(totalProfile.getMeanValue() + uep.getMeanValue(snapshot), snapshot);
                     totalProfile.setStdDev(totalProfile.getStdDev() + uep.getStdDev(snapshot), snapshot);
                     
-                    stddevProfile.setNumSamples(stddevProfile.getNumSamples()
+                    stddevNoNullProfile.setNumSamples(stddevNoNullProfile.getNumSamples()
                             + (uep.getNumSamples(snapshot) * uep.getNumSamples(snapshot)), snapshot);
-                    stddevProfile.setMaxValue(stddevProfile.getMaxValue()
+                    stddevNoNullProfile.setMaxValue(stddevNoNullProfile.getMaxValue()
                             + (uep.getMaxValue(snapshot) * uep.getMaxValue(snapshot)), snapshot);
-                    stddevProfile.setMinValue(stddevProfile.getMinValue()
+                    stddevNoNullProfile.setMinValue(stddevNoNullProfile.getMinValue()
                             + (uep.getMinValue(snapshot) * uep.getMinValue(snapshot)), snapshot);
-                    stddevProfile.setMeanValue(stddevProfile.getMeanValue()
+                    stddevNoNullProfile.setMeanValue(stddevNoNullProfile.getMeanValue()
                             + (uep.getMeanValue(snapshot) * uep.getMeanValue(snapshot)), snapshot);
-                    stddevProfile.setStdDev(stddevProfile.getStdDev() + (uep.getStdDev(snapshot) * uep.getStdDev(snapshot)),
+                    stddevNoNullProfile.setStdDev(stddevNoNullProfile.getStdDev() + (uep.getStdDev(snapshot) * uep.getStdDev(snapshot)),
+                            snapshot);
+
+                    stddevAllProfile.setNumSamples(stddevAllProfile.getNumSamples()
+                            + (uep.getNumSamples(snapshot) * uep.getNumSamples(snapshot)), snapshot);
+                    stddevAllProfile.setMaxValue(stddevAllProfile.getMaxValue()
+                            + (uep.getMaxValue(snapshot) * uep.getMaxValue(snapshot)), snapshot);
+                    stddevAllProfile.setMinValue(stddevAllProfile.getMinValue()
+                            + (uep.getMinValue(snapshot) * uep.getMinValue(snapshot)), snapshot);
+                    stddevAllProfile.setMeanValue(stddevAllProfile.getMeanValue()
+                            + (uep.getMeanValue(snapshot) * uep.getMeanValue(snapshot)), snapshot);
+                    stddevAllProfile.setStdDev(stddevAllProfile.getStdDev() + (uep.getStdDev(snapshot) * uep.getStdDev(snapshot)),
                             snapshot);
 
                 }
@@ -866,31 +902,48 @@ public abstract class DataSource {
             for (Iterator<UserEvent> it = this.getUserEventIterator(); it.hasNext();) {
                 UserEvent ue = it.next();
                 
-                UserEventProfile meanProfile = meanData.getUserEventProfile(ue);
+                UserEventProfile meanNoNullProfile = meanDataNoNull.getUserEventProfile(ue);
                 UserEventProfile totalProfile = totalData.getUserEventProfile(ue);
-                UserEventProfile stddevProfile = stddevData.getUserEventProfile(ue);
+                UserEventProfile stddevNoNullProfile = stddevDataNoNull.getUserEventProfile(ue);
+                UserEventProfile meanAllProfile = meanDataAll.getUserEventProfile(ue);
+                UserEventProfile stddevAllProfile = stddevDataAll.getUserEventProfile(ue);
 
-                int divider = numThreads;
-                if (!meanIncludeNulls) { // do we include null values as zeroes in the computation or not?
-                    divider = numProfiles.get(ue.getID());
-                }
+                // for computing nonull values - the others use numThreads
+                int divider = numProfiles.get(ue.getID());
                 
-                meanProfile.setNumSamples((totalProfile.getNumSamples() / divider), snapshot);
-                meanProfile.setMaxValue(totalProfile.getMaxValue(snapshot) / divider, snapshot);
-                meanProfile.setMinValue(totalProfile.getMinValue(snapshot) / divider, snapshot);
-                meanProfile.setMeanValue(totalProfile.getMeanValue(snapshot) / divider, snapshot);
-                meanProfile.setStdDev(totalProfile.getStdDev(snapshot) / divider, snapshot);
+                meanNoNullProfile.setNumSamples((totalProfile.getNumSamples() / divider), snapshot);
+                meanNoNullProfile.setMaxValue(totalProfile.getMaxValue(snapshot) / divider, snapshot);
+                meanNoNullProfile.setMinValue(totalProfile.getMinValue(snapshot) / divider, snapshot);
+                meanNoNullProfile.setMeanValue(totalProfile.getMeanValue(snapshot) / divider, snapshot);
+                meanNoNullProfile.setStdDev(totalProfile.getStdDev(snapshot) / divider, snapshot);
 
-                stddevProfile.setNumSamples(computeStdDev(stddevProfile.getNumSamples(snapshot),
-                        meanProfile.getNumSamples(snapshot), divider), snapshot);
-                stddevProfile.setMaxValue(computeStdDev(stddevProfile.getMaxValue(snapshot), meanProfile.getMaxValue(snapshot),
+                meanAllProfile.setNumSamples((totalProfile.getNumSamples() / numThreads), snapshot);
+                meanAllProfile.setMaxValue(totalProfile.getMaxValue(snapshot) / numThreads, snapshot);
+                meanAllProfile.setMinValue(totalProfile.getMinValue(snapshot) / numThreads, snapshot);
+                meanAllProfile.setMeanValue(totalProfile.getMeanValue(snapshot) / numThreads, snapshot);
+                meanAllProfile.setStdDev(totalProfile.getStdDev(snapshot) / numThreads, snapshot);
+
+                stddevNoNullProfile.setNumSamples(computeStdDev(stddevNoNullProfile.getNumSamples(snapshot),
+                        meanNoNullProfile.getNumSamples(snapshot), divider), snapshot);
+                stddevNoNullProfile.setMaxValue(computeStdDev(stddevNoNullProfile.getMaxValue(snapshot), meanNoNullProfile.getMaxValue(snapshot),
                         divider), snapshot);
-                stddevProfile.setMinValue(computeStdDev(stddevProfile.getMinValue(snapshot), meanProfile.getMinValue(snapshot),
+                stddevNoNullProfile.setMinValue(computeStdDev(stddevNoNullProfile.getMinValue(snapshot), meanNoNullProfile.getMinValue(snapshot),
                         divider), snapshot);
-                stddevProfile.setMeanValue(computeStdDev(stddevProfile.getMeanValue(snapshot),
-                        meanProfile.getMeanValue(snapshot), divider), snapshot);
-                stddevProfile.setStdDev(
-                        computeStdDev(stddevProfile.getStdDev(snapshot), meanProfile.getStdDev(snapshot), divider), snapshot);
+                stddevNoNullProfile.setMeanValue(computeStdDev(stddevNoNullProfile.getMeanValue(snapshot),
+                        meanNoNullProfile.getMeanValue(snapshot), divider), snapshot);
+                stddevNoNullProfile.setStdDev(
+                        computeStdDev(stddevNoNullProfile.getStdDev(snapshot), meanNoNullProfile.getStdDev(snapshot), divider), snapshot);
+
+                stddevAllProfile.setNumSamples(computeStdDev(stddevAllProfile.getNumSamples(snapshot),
+                        meanAllProfile.getNumSamples(snapshot), numThreads), snapshot);
+                stddevAllProfile.setMaxValue(computeStdDev(stddevAllProfile.getMaxValue(snapshot), meanAllProfile.getMaxValue(snapshot),
+                        numThreads), snapshot);
+                stddevAllProfile.setMinValue(computeStdDev(stddevAllProfile.getMinValue(snapshot), meanAllProfile.getMinValue(snapshot),
+                        numThreads), snapshot);
+                stddevAllProfile.setMeanValue(computeStdDev(stddevAllProfile.getMeanValue(snapshot),
+                        meanAllProfile.getMeanValue(snapshot), numThreads), snapshot);
+                stddevAllProfile.setStdDev(
+                        computeStdDev(stddevAllProfile.getStdDev(snapshot), meanAllProfile.getStdDev(snapshot), numThreads), snapshot);
             }
         }
 
@@ -928,21 +981,11 @@ public abstract class DataSource {
     	 *     inclpercall = total.inclpercall
     	 */
 
-    	if(derivedProvided && !generateTAUdbStatistics){
-    		if(meanIncludeNulls){
-    			meanData=meanDataAll;
-    			stddevData=stddevDataAll;
-    		}else{
-    			meanData=meanDataNoNull;
-    			stddevData=stddevDataNoNull;
-    		}
-    	}
-
     	int numMetrics = this.getNumberOfMetrics();
     	Thread firstThread = getAllThreads().get(0);
-    	if (meanData == null) {
-    		meanData = new Thread(-1, -1, -1, numMetrics, this);
-    		addDerivedSnapshots(firstThread, meanData);
+    	if (meanDataNoNull == null) {
+    		meanDataNoNull = new Thread(-1, -1, -1, numMetrics, this);
+    		addDerivedSnapshots(firstThread, meanDataNoNull);
     	}
 
     	if (totalData == null) {
@@ -950,27 +993,35 @@ public abstract class DataSource {
     		addDerivedSnapshots(firstThread, totalData);
     	}
 
-    	if (stddevData == null) {
-    		stddevData = new Thread(-3, -3, -3, numMetrics, this);
-    		addDerivedSnapshots(firstThread, stddevData);
+    	if (stddevDataNoNull == null) {
+    		stddevDataNoNull = new Thread(-3, -3, -3, numMetrics, this);
+    		addDerivedSnapshots(firstThread, stddevDataNoNull);
     	}
 
-    	if (generateTAUdbStatistics) {
-    		if (minData == null) {
-    			minData = new Thread(-4, -4, -4, numMetrics, this);
-    			addDerivedSnapshots(firstThread, minData);
-    		}
-    		if (maxData == null) {
-    			maxData = new Thread(-5, -5, -5, numMetrics, this);
-    			addDerivedSnapshots(firstThread, maxData);
-    		}
-    		if (meanDataAll == null) {
-    			meanDataAll = new Thread(-6, -6, -6, numMetrics, this);
-    			addDerivedSnapshots(firstThread, meanDataAll);
-    		}
-    		if (stddevDataAll == null) {
-    			stddevDataAll = new Thread(-7, -7, -7, numMetrics, this);
-    			addDerivedSnapshots(firstThread, stddevDataAll);
+		if (minData == null) {
+			minData = new Thread(-4, -4, -4, numMetrics, this);
+			addDerivedSnapshots(firstThread, minData);
+		}
+		if (maxData == null) {
+			maxData = new Thread(-5, -5, -5, numMetrics, this);
+			addDerivedSnapshots(firstThread, maxData);
+		}
+		if (meanDataAll == null) {
+			meanDataAll = new Thread(-6, -6, -6, numMetrics, this);
+			addDerivedSnapshots(firstThread, meanDataAll);
+		}
+		if (stddevDataAll == null) {
+			stddevDataAll = new Thread(-7, -7, -7, numMetrics, this);
+			addDerivedSnapshots(firstThread, stddevDataAll);
+		}
+
+    	if(derivedProvided && !generateTAUdbStatistics){
+    		if(meanIncludeNulls){
+    			meanData=meanDataAll;
+    			stddevData=stddevDataAll;
+    		}else{
+    			meanData=meanDataNoNull;
+    			stddevData=stddevDataNoNull;
     		}
     	}
 
@@ -1013,9 +1064,12 @@ public abstract class DataSource {
 	    			}
     			}
 
-    			totalData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
-    			meanData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
-    			stddevData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
+    			if(totalData!=null)
+    				totalData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
+    			if(meanDataNoNull!=null)
+    				meanDataNoNull.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
+    			if(stddevDataNoNull!=null)
+    				stddevDataNoNull.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
     			if(minData!=null)
     				minData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
     			if(maxData!=null)
@@ -1030,28 +1084,30 @@ public abstract class DataSource {
     			Function function = l.next();
 
     			// get/create the FunctionProfile for mean
-    			FunctionProfile meanProfile = meanData.getFunctionProfile(function);
-    			if (meanProfile == null) {
-    				meanProfile = new FunctionProfile(function, numMetrics, meanData.getNumSnapshots());
-    				meanData.addFunctionProfile(meanProfile);
+    			FunctionProfile meanNoNullProfile = meanDataNoNull.getFunctionProfile(function);
+    			if (meanNoNullProfile == null) {
+    				meanNoNullProfile = new FunctionProfile(function, numMetrics, meanDataNoNull.getNumSnapshots());
+    				meanDataNoNull.addFunctionProfile(meanNoNullProfile);
     			}
-    			function.setMeanProfile(meanProfile);
+    			// this is the "no null" version...
+    			function.setMeanProfile(meanNoNullProfile);
 
     			// get/create the FunctionProfile for total
     			FunctionProfile totalProfile = totalData.getFunctionProfile(function);
     			if (totalProfile == null) {
-    				totalProfile = new FunctionProfile(function, numMetrics, meanData.getNumSnapshots());
+    				totalProfile = new FunctionProfile(function, numMetrics, meanDataNoNull.getNumSnapshots());
     				totalData.addFunctionProfile(totalProfile);
     			}
     			function.setTotalProfile(totalProfile);
 
     			// get/create the FunctionProfile for stddev
-    			FunctionProfile stddevProfile = stddevData.getFunctionProfile(function);
-    			if (stddevProfile == null) {
-    				stddevProfile = new FunctionProfile(function, numMetrics, meanData.getNumSnapshots());
-    				stddevData.addFunctionProfile(stddevProfile);
+    			FunctionProfile stddevNoNullProfile = stddevDataNoNull.getFunctionProfile(function);
+    			if (stddevNoNullProfile == null) {
+    				stddevNoNullProfile = new FunctionProfile(function, numMetrics, meanDataNoNull.getNumSnapshots());
+    				stddevDataNoNull.addFunctionProfile(stddevNoNullProfile);
     			}
-    			function.setStddevProfile(stddevProfile);
+    			// this is the "no null" version
+    			function.setStddevProfile(stddevNoNullProfile);
 
     			FunctionProfile minProfile = null;
     			FunctionProfile maxProfile = null;
@@ -1060,7 +1116,7 @@ public abstract class DataSource {
     			if(minData!=null){
     				minProfile = minData.getFunctionProfile(function);
     				if (minProfile == null) {
-    					minProfile = new FunctionProfile(function, numMetrics, meanData.getNumSnapshots());
+    					minProfile = new FunctionProfile(function, numMetrics, meanDataNoNull.getNumSnapshots());
     					minData.addFunctionProfile(minProfile);
     				}
     				function.setMinProfile(minProfile);
@@ -1069,7 +1125,7 @@ public abstract class DataSource {
     			if(maxData!=null){
     				maxProfile = maxData.getFunctionProfile(function);
     				if (maxProfile == null) {
-    					maxProfile = new FunctionProfile(function, numMetrics, meanData.getNumSnapshots());
+    					maxProfile = new FunctionProfile(function, numMetrics, meanDataNoNull.getNumSnapshots());
     					maxData.addFunctionProfile(maxProfile);
     				}
     				function.setMaxProfile(maxProfile);
@@ -1078,7 +1134,7 @@ public abstract class DataSource {
     			if(stddevDataAll!=null){
     				stddevAllProfile = stddevDataAll.getFunctionProfile(function);
     				if (stddevAllProfile == null) {
-    					stddevAllProfile = new FunctionProfile(function, numMetrics, meanData.getNumSnapshots());
+    					stddevAllProfile = new FunctionProfile(function, numMetrics, meanDataNoNull.getNumSnapshots());
     					stddevDataAll.addFunctionProfile(stddevAllProfile);
     				}
     				function.setStddevAllProfile(stddevAllProfile);
@@ -1087,7 +1143,7 @@ public abstract class DataSource {
     			if(meanDataAll!=null){
     				meanAllProfile = meanDataAll.getFunctionProfile(function);
     				if (meanAllProfile == null) {
-    					meanAllProfile = new FunctionProfile(function, numMetrics, meanData.getNumSnapshots());
+    					meanAllProfile = new FunctionProfile(function, numMetrics, meanDataNoNull.getNumSnapshots());
     					meanDataAll.addFunctionProfile(meanAllProfile);
     				}
     				function.setMeanAllProfile(meanAllProfile);
@@ -1152,10 +1208,8 @@ public abstract class DataSource {
 						}
     				}
 
-    				int divider = numThreads;
-    				if (!meanIncludeNulls) { // do we include null values as zeroes in the computation or not?
-    					divider = numEvents;
-    				}
+    				int allDivider = numThreads;
+    				int noNullDivider = numEvents;
 
     				// we don't want to set the calls and subroutines if we're just computing mean data for a derived metric!
     				if (startMetric == 0) {
@@ -1164,37 +1218,36 @@ public abstract class DataSource {
     					totalProfile.setNumSubr(snapshot, subrSum);
 
     					// mean is just the total / divider
-    					meanProfile.setNumCalls(snapshot, (double) callSum / divider);
-    					meanProfile.setNumSubr(snapshot, (double) subrSum / divider);
+    					meanNoNullProfile.setNumCalls(snapshot, (double) callSum / noNullDivider);
+    					meanAllProfile.setNumCalls(snapshot, (double) callSum / allDivider);
+    					meanNoNullProfile.setNumSubr(snapshot, (double) subrSum / noNullDivider);
+    					meanAllProfile.setNumSubr(snapshot, (double) subrSum / allDivider);
 
     					double stdDev = 0;
-    					if (divider > 1) {
-    						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((callSumSqr / (divider))
-    								- (meanProfile.getNumCalls(snapshot) * meanProfile.getNumCalls(snapshot))));
+    					if (noNullDivider > 1) {
+    						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((callSumSqr / (noNullDivider))
+    								- (meanNoNullProfile.getNumCalls(snapshot) * meanNoNullProfile.getNumCalls(snapshot))));
+    						stddevNoNullProfile.setNumCalls(snapshot, stdDev);
+    						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((subrSumSqr / (noNullDivider))
+    								- (meanNoNullProfile.getNumSubr(snapshot) * meanNoNullProfile.getNumSubr(snapshot))));
+        					stddevNoNullProfile.setNumSubr(snapshot, stdDev);
+    					} else {
+    						stddevNoNullProfile.setNumCalls(snapshot, 0.0);
+        					stddevNoNullProfile.setNumSubr(snapshot, 0.0);
     					}
-    					stddevProfile.setNumCalls(snapshot, stdDev);
 
-    					stdDev = 0;
-    					if (divider > 1) {
-    						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((subrSumSqr / (divider))
-    								- (meanProfile.getNumSubr(snapshot) * meanProfile.getNumSubr(snapshot))));
-    					}
-    					stddevProfile.setNumSubr(snapshot, stdDev);
-
-    					if (this.generateTAUdbStatistics) {
-    						meanAllProfile.setNumCalls(snapshot, (double) callSum / numThreads);
-    						meanAllProfile.setNumSubr(snapshot, (double) subrSum / numThreads);
-    						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((callSumSqr / (numThreads))
-    								- (meanAllProfile.getNumCalls(snapshot) * meanAllProfile.getNumCalls(snapshot))));
-    						stddevProfile.setNumCalls(snapshot, stdDev);
-    						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((subrSumSqr / (numThreads))
-    								- (meanAllProfile.getNumSubr(snapshot) * meanAllProfile.getNumSubr(snapshot))));
-    						stddevProfile.setNumSubr(snapshot, stdDev);
-    						minProfile.setNumCalls(snapshot, callMin);
-    						maxProfile.setNumCalls(snapshot, callMax);
-    						minProfile.setNumSubr(snapshot, subrMin);
-    						maxProfile.setNumSubr(snapshot, subrMax);
-    					}
+						meanAllProfile.setNumCalls(snapshot, (double) callSum / allDivider);
+						meanAllProfile.setNumSubr(snapshot, (double) subrSum / allDivider);
+						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((callSumSqr / (allDivider))
+								- (meanAllProfile.getNumCalls(snapshot) * meanAllProfile.getNumCalls(snapshot))));
+						stddevAllProfile.setNumCalls(snapshot, stdDev);
+						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((subrSumSqr / (allDivider))
+								- (meanAllProfile.getNumSubr(snapshot) * meanAllProfile.getNumSubr(snapshot))));
+						stddevAllProfile.setNumSubr(snapshot, stdDev);
+						minProfile.setNumCalls(snapshot, callMin);
+						maxProfile.setNumCalls(snapshot, callMax);
+						minProfile.setNumSubr(snapshot, subrMin);
+						maxProfile.setNumSubr(snapshot, subrMax);
     				}
 
     				for (int m = startMetric; m <= endMetric; m++) {
@@ -1203,41 +1256,39 @@ public abstract class DataSource {
     					totalProfile.setInclusive(snapshot, m, inclSum[m]);
 
     					// mean data computed as above in comments
-    					meanProfile.setExclusive(snapshot, m, exclSum[m] / divider);
-    					meanProfile.setInclusive(snapshot, m, inclSum[m] / divider);
+    					meanNoNullProfile.setExclusive(snapshot, m, exclSum[m] / noNullDivider);
+    					meanNoNullProfile.setInclusive(snapshot, m, inclSum[m] / noNullDivider);
 
     					double stdDev = 0;
-    					if (divider > 1) {
+    					if (noNullDivider > 1) {
     						// see http://cuwu.editthispage.com/stories/storyReader$13 for why I don't multiply by n/(n-1)
 
     						//stdDev = java.lang.Math.sqrt(((double) divider / (divider - 1))
     						//        * java.lang.Math.abs((exclSumSqr[i] / (divider))
     						//                - (meanProfile.getExclusive(i) * meanProfile.getExclusive(i))));
-    						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((exclSumSqr[m] / (divider))
-    								- (meanProfile.getExclusive(snapshot, m) * meanProfile.getExclusive(snapshot, m))));
+    						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((exclSumSqr[m] / (noNullDivider))
+    								- (meanNoNullProfile.getExclusive(snapshot, m) * meanNoNullProfile.getExclusive(snapshot, m))));
+        					stddevNoNullProfile.setExclusive(snapshot, m, stdDev);
+    						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((inclSumSqr[m] / (noNullDivider))
+    								- (meanNoNullProfile.getInclusive(snapshot, m) * meanNoNullProfile.getInclusive(snapshot, m))));
+        					stddevNoNullProfile.setInclusive(snapshot, m, stdDev);
+    					} else {
+    						stddevNoNullProfile.setExclusive(snapshot, m, 0.0);
+        					stddevNoNullProfile.setInclusive(snapshot, m, 0.0);
     					}
-    					stddevProfile.setExclusive(snapshot, m, stdDev);
 
-    					stdDev = 0;
-    					if (divider > 1) {
-    						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((inclSumSqr[m] / (divider))
-    								- (meanProfile.getInclusive(snapshot, m) * meanProfile.getInclusive(snapshot, m))));
-    					}
-    					stddevProfile.setInclusive(snapshot, m, stdDev);
-    					if (this.generateTAUdbStatistics) {
-        					meanAllProfile.setExclusive(snapshot, m, exclSum[m] / numThreads);
-        					meanAllProfile.setInclusive(snapshot, m, inclSum[m] / numThreads);
-    						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((exclSumSqr[m] / (numThreads))
-    								- (meanAllProfile.getExclusive(snapshot, m) * meanAllProfile.getExclusive(snapshot, m))));
-        					stddevAllProfile.setExclusive(snapshot, m, stdDev);
-    						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((inclSumSqr[m] / (numThreads))
-    								- (meanAllProfile.getInclusive(snapshot, m) * meanAllProfile.getInclusive(snapshot, m))));
-    						stddevAllProfile.setInclusive(snapshot, m, stdDev);
-    						minProfile.setExclusive(snapshot,  m, exclMin[m]);
-    						minProfile.setInclusive(snapshot,  m, inclMin[m]);
-    						maxProfile.setExclusive(snapshot,  m, exclMax[m]);
-    						maxProfile.setInclusive(snapshot,  m, inclMax[m]);
-    					}
+    					meanAllProfile.setExclusive(snapshot, m, exclSum[m] / allDivider);
+    					meanAllProfile.setInclusive(snapshot, m, inclSum[m] / allDivider);
+						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((exclSumSqr[m] / (allDivider))
+								- (meanAllProfile.getExclusive(snapshot, m) * meanAllProfile.getExclusive(snapshot, m))));
+    					stddevAllProfile.setExclusive(snapshot, m, stdDev);
+						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((inclSumSqr[m] / (allDivider))
+								- (meanAllProfile.getInclusive(snapshot, m) * meanAllProfile.getInclusive(snapshot, m))));
+						stddevAllProfile.setInclusive(snapshot, m, stdDev);
+						minProfile.setExclusive(snapshot,  m, exclMin[m]);
+						minProfile.setInclusive(snapshot,  m, inclMin[m]);
+						maxProfile.setExclusive(snapshot,  m, exclMax[m]);
+						maxProfile.setInclusive(snapshot,  m, inclMax[m]);
     				} // metrics
     			}// if statistics not provided
     		}  // for each function
@@ -1413,8 +1464,8 @@ public abstract class DataSource {
     
     private void initAggThreadsList(){
     	aggThreads = new ArrayList<Thread>();
-    	aggThreads.add(meanData);
-    	aggThreads.add(stddevData);
+    	aggThreads.add(meanDataNoNull);
+    	aggThreads.add(stddevDataNoNull);
     	aggThreads.add(totalData);
     	if(maxData!=null)
     		aggThreads.add(maxData);
@@ -1947,8 +1998,8 @@ public abstract class DataSource {
 		} else {
 		    //meanDataNoNull.getFunctionProfile(otherFunction));
 			//otherFunction.setMeanProfile(meanDataNoNull.getFunctionProfile(otherFunction));
-			otherFunction.setMeanProfile(meanData.getFunctionProfile(otherFunction));
-		    otherFunction.setStddevProfile(stddevData.getFunctionProfile(otherFunction));
+			otherFunction.setMeanProfile(meanDataNoNull.getFunctionProfile(otherFunction));
+		    otherFunction.setStddevProfile(stddevDataNoNull.getFunctionProfile(otherFunction));
 		}
 	    otherFunction.setTotalProfile(totalData.getFunctionProfile(otherFunction));
 	    otherFunction.setMinProfile(minData.getFunctionProfile(otherFunction));
