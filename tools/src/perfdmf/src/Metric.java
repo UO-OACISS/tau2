@@ -23,12 +23,12 @@ public class Metric implements Serializable {
     /**
 	 * 
 	 */
-	private static final long serialVersionUID = 3475626853258503810L;
-	private int metricID;
-    private int trialID;
-    private String name;
-    private int dbMetricID;
-    private boolean derivedMetric = false;
+	protected static final long serialVersionUID = 3475626853258503810L;
+	protected int metricID;
+	protected int trialID;
+	protected String name;
+	protected int dbMetricID;
+	protected boolean derivedMetric = false;
 
     public int getDbMetricID() {
         return dbMetricID;

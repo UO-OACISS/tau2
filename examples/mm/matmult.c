@@ -35,9 +35,9 @@ This is not a parallel implementation */
 
 double** allocateMatrix(int rows, int cols) {
   int i;
-  double **matrix = malloc((sizeof(double*)) * rows);
+  double **matrix = (double**)malloc((sizeof(double*)) * rows);
   for (i=0; i<rows; i++) {
-    matrix[i] = malloc((sizeof(double)) * cols);
+    matrix[i] = (double*)malloc((sizeof(double)) * cols);
   }
   return matrix;
 }
@@ -108,6 +108,7 @@ double do_work(void) {
 void * threaded_func(void *data)
 {
   do_work();
+  return NULL;
 }
 
 int main (int argc, char *argv[]) 

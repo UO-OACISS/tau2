@@ -113,14 +113,14 @@ public class DataSourceResult extends AbstractResult {
 		}
 
 		// get the functions
-		Iterator<Function> functions = source.getFunctions();
+		Iterator<Function> functions = source.getFunctionIterator();
 		while (functions.hasNext()) {
 			Function function = functions.next();
 			String name = function.getName();
 			events.add(name);
 		}
 
-		Iterator<UserEvent> userEvents = source.getUserEvents();
+		Iterator<UserEvent> userEvents = source.getUserEventIterator();
 		while (userEvents.hasNext()) {
 			UserEvent userEvent = userEvents.next();
 			String name = userEvent.getName();
@@ -212,7 +212,7 @@ public class DataSourceResult extends AbstractResult {
 			for (Thread thread : threadList) {
 				int m = 0;
 				mainMetric = source.getMetric(m).getName();
-				Iterator<Function> functions = source.getFunctions();
+				Iterator<Function> functions = source.getFunctionIterator();
 				while (functions.hasNext()) {
 					Function function = functions.next();
 					String name = function.getName();
