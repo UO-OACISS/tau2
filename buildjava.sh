@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # set JAVA_HOME
-export JAVA_HOME=/home/khuck/jdk1.6.0_32
-export PATH=$PATH:$JAVA_HOME/bin
+# export JAVA_HOME=/home/khuck/jdk1.6.0_32
+# export PATH=$PATH:$JAVA_HOME/bin
 
 # check that javac exists
 JAVAC=`which javac`
