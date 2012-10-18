@@ -6923,8 +6923,9 @@ if [ $scorep = yes ] ; then
         scorepLibs=`${scorepdir}/bin/scorep-config --seq --libs`
       fi
     fi
+    scorepLibs="-L${scorepdir}/lib -L${scorepdir}/lib/backend  $scorepLibs"
     scorepLibs=`echo $scorepLibs | sed "s/ /#/g"`
-    scorepLibs=`echo $scorepLibs | sed "s/,//g"`
+    scorepLibs=`echo $scorepLibs | sed "s/,/#/g"`
 echo $scorepLibs
     fixmakeargs="$fixmakeargs scorepmpilibs=$scorepLibs"
     fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"
