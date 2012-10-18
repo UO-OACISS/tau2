@@ -1264,6 +1264,8 @@ extern "C" void Tau_profile_c_timer(void **ptr, const char *name, const char *ty
 
 ///////////////////////////////////////////////////////////////////////////
 
+static string gTauApplication = string(".TAU application");
+extern void Tau_pure_start_task_string(const string name, int tid);
 
 /* We need a routine that will create a top level parent profiler and give
  * it a dummy name for the application, if just the MPI wrapper interposition
@@ -1294,13 +1296,13 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
 	  // whichever thread got here first, has the lock and will create the
 	  // FunctionInfo object for the top level timer.
       if (TauInternal_CurrentProfiler(tid) == NULL) {
-#if 0 // see note below
+#if 1 // see note below
   /* I would prefer to use pure_start_task, but it creates a new string object
      and this function gets called from the sampling handler. 
      Until I can figure out a way around that, each thread is going to ahve to 
      create and start a top level timer. Bummer. */
 
-        Tau_pure_start_task(".TAU application", tid);
+        Tau_pure_start_task_string(gTauApplication, tid);
 #else
         FunctionInfo *ptr = (FunctionInfo *) Tau_get_profiler(".TAU application", " ", TAU_DEFAULT, "TAU_DEFAULT");
         if (ptr) {
@@ -1322,13 +1324,13 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
   // that should be handled by the Tau_pure_start_task call.
   if (TauInternal_CurrentProfiler(tid) == NULL) {
     initthread[tid] = true;
-#if 0 // see note below
+#if 1 // see note below
   /* I would prefer to use pure_start_task, but it creates a new string object
      and this function gets called from the sampling handler. 
      Until I can figure out a way around that, each thread is going to ahve to 
      create and start a top level timer. Bummer. */
 
-    Tau_pure_start_task(".TAU application", tid);
+    Tau_pure_start_task_string(gTauApplication, tid);
 #else
     FunctionInfo *ptr = (FunctionInfo *) Tau_get_profiler(".TAU application", " ", TAU_DEFAULT, "TAU_DEFAULT");
     if (ptr) {
@@ -1501,40 +1503,53 @@ map<string, int *>& TheIterationMap() {
   return iterationMap;
 }
 
-extern "C" void Tau_pure_start_task(const char *name, int tid)
+void Tau_pure_start_task_string(const string name, int tid)
 {
   FunctionInfo *fi = 0;
-  string n = string(name);
   RtsLayer::LockDB();
-  TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
+  TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(name);
   if (it == ThePureMap().end()) {
-    tauCreateFI((void**)&fi,n,"",TAU_USER,"TAU_USER");
-    ThePureMap()[n] = fi;
+    tauCreateFI((void**)&fi,name,"",TAU_USER,"TAU_USER");
+    ThePureMap()[name] = fi;
   } else {
     fi = (*it).second;
   }
   RtsLayer::UnLockDB();
   Tau_start_timer(fi,0, tid);
 }
-extern "C" void Tau_pure_start(const char *name) {
-  Tau_pure_start_task(name, Tau_get_tid());
+
+extern "C" void Tau_pure_start_task(const char *name, int tid)
+{
+  string n = string(name);
+  Tau_pure_start_task_string(n, tid);
 }
 
-extern "C" void Tau_pure_stop_task(const char *name, int tid) {
-  FunctionInfo *fi;
+extern "C" void Tau_pure_start(const char *name) {
   string n = string(name);
+  Tau_pure_start_task_string(n, Tau_get_tid());
+}
+
+void Tau_pure_stop_task_string(const string name, int tid) {
+  FunctionInfo *fi;
   RtsLayer::LockDB();
-  TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
+  TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(name);
   if (it == ThePureMap().end()) {
-    fprintf (stderr, "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\nTAU Error: You will likely get an overlapping timer message next\n\n", name);
+    fprintf (stderr, "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\nTAU Error: You will likely get an overlapping timer message next\n\n", name.c_str());
   } else {
     fi = (*it).second;
   }
   RtsLayer::UnLockDB();
   Tau_stop_timer(fi, tid);
 }
+
+extern "C" void Tau_pure_stop_task(const char *name, int tid) {
+  string n = string(name);
+  Tau_pure_stop_task_string(n, tid);
+}
+
 extern "C" void Tau_pure_stop(const char *name) {
-  Tau_pure_stop_task(name, Tau_get_tid());
+  string n = string(name);
+  Tau_pure_stop_task_string(n, Tau_get_tid());
 }
 
 extern "C" void Tau_static_phase_start(char *name) {
