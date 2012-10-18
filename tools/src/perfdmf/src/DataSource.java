@@ -1015,7 +1015,7 @@ public abstract class DataSource {
 			addDerivedSnapshots(firstThread, stddevDataAll);
 		}
 
-    	if(derivedProvided && !generateTAUdbStatistics){
+    	//if(derivedProvided && !generateTAUdbStatistics){
     		if(meanIncludeNulls){
     			meanData=meanDataAll;
     			stddevData=stddevDataAll;
@@ -1023,7 +1023,7 @@ public abstract class DataSource {
     			meanData=meanDataNoNull;
     			stddevData=stddevDataNoNull;
     		}
-    	}
+    	//}
 
     	double[] exclSum = new double[numMetrics];
     	double[] inclSum = new double[numMetrics];
