@@ -44,7 +44,8 @@ public class TAUdbSession {
 	}
 	
 	public void close() {
-		api.db().close();
+		if (api != null)
+			api.db().close();
 		connected = false;
 	}
 	

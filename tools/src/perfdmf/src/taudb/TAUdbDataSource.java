@@ -132,6 +132,10 @@ public class TAUdbDataSource extends DataSource {
 //SELECT node, context, thread, metric, incl, exc, calls, sub FROM timer_values v, JOIN timer t ON v.timer=t.id
             int intervalEventID = resultSet.getInt(1);
             Function function = ieMap.get(new Integer(intervalEventID));
+            if (function == null) {
+            	System.err.println("Warning! Can't find timer_callpath id " + intervalEventID);
+            	continue;
+            }
 
             int nodeID = resultSet.getInt(3);
             int contextID = resultSet.getInt(4);

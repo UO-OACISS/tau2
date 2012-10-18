@@ -150,6 +150,7 @@ public class IntervalEvent {
 
          // get the results
          try {
+        	 //System.out.println(buf.toString());
              ResultSet resultSet = db.executeQuery(buf.toString());
              //IntervalEvent tmpIntervalEvent = null;
              Function last = null;
@@ -158,7 +159,8 @@ public class IntervalEvent {
                  String name = resultSet.getString(3);
                  String group = resultSet.getString(10);
                  int trialID = resultSet.getInt(11);
-                 if (last != null && last.getID() == id) {
+                 last = events.get(id);
+                 if (last != null) {
                 	 dataSource.addGroups(group, last);
                  } else {
                     Function function = dataSource.addFunction(name, numberOfMetrics);
@@ -176,7 +178,6 @@ public class IntervalEvent {
                     }
                     function.setShortName(resultSet.getString(4));
                     function.setSourceRegion(sourceRegion);
-                    last = function;
                  }
              }
              resultSet.close();
