@@ -227,7 +227,7 @@ public class ConfigureTest {
         }
 
         try {
-            String query = new String("SELECT * FROM " + db.getSchemaPrefix() + "application");
+            String query = new String("SELECT * FROM " + db.getSchemaPrefix() + "trial");
             //ResultSet resultSet = 
             	db.executeQuery(query);
         } catch (SQLException e) {
@@ -276,7 +276,7 @@ public class ConfigureTest {
         }
 
         try {
-            String query = new String("SELECT * FROM " + db.getSchemaPrefix() + "application");
+            String query = new String("SELECT * FROM " + db.getSchemaPrefix() + "trial");
             //ResultSet resultSet = 
             	db.executeQuery(query);
         } catch (SQLException e) {

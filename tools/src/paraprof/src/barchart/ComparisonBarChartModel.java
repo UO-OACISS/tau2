@@ -152,10 +152,10 @@ public class ComparisonBarChartModel extends AbstractBarChartModel {
         {
         	for(int i =0; i<threads.size();i++){
         		Thread t = threads.get(i);
-        		if(t.getThreadID()==-1){
+        		if(t.getThreadID()==-1 || t.getThreadID() == -6){
         			threads.set(i, t.getDataSource().getMeanData());
         		}
-        		else if(t.getThreadID()==-3){
+        		else if(t.getThreadID()==-3 || t.getThreadID() == -7){
         			threads.set(i, t.getDataSource().getStdDevData());
         		}
         	}

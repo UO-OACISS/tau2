@@ -10,6 +10,9 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 
+import edu.uoregon.tau.common.MetaDataMap;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataValue;
 import edu.uoregon.tau.paraprof.ParaProfUtils;
 
 public class MapViewer extends JFrame {
@@ -21,18 +24,18 @@ public class MapViewer extends JFrame {
 
 	String[][] items=null;
 	
-	public MapViewer(String title, Map<String,String> map) {
+	public MapViewer(String title, MetaDataMap map) {
         JTable table;
 
         int num = map.size();
         items = new String[num][2];
 
         int index = 0;
-        for (Iterator<String> it = map.keySet().iterator(); it.hasNext();) {
-            String key = it.next();
-            String value = map.get(key);
-            items[index][0] = key;
-            items[index][1] = value;
+        for (Iterator<MetaDataKey> it = map.keySet().iterator(); it.hasNext();) {
+            MetaDataKey key = it.next();
+            MetaDataValue value = map.get(key);
+            items[index][0] = key.name;
+            items[index][1] = value.value.toString();
             index++;
         }
 

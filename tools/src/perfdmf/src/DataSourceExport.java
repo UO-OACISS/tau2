@@ -17,6 +17,10 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
+import edu.uoregon.tau.common.MetaDataMap;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataValue;
+
 public class DataSourceExport {
 
 	private static int findGroupID(Group groups[], Group group) {
@@ -123,7 +127,7 @@ public class DataSourceExport {
 		Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
 		int numFunctions = 0;
 
-		for (Iterator<Function> it = dataSource.getFunctions(); it.hasNext();) {
+		for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
 			Function function = it.next();
 			if (!function.isGroupMember(derived)) {
 				numFunctions++;
@@ -156,14 +160,14 @@ public class DataSourceExport {
 		if (dataSource.getMetaData() != null) {
 			// write out the trial meta-data, this data is normalized across all
 			// threads (i.e. it applies to all threads)
-			Map<String, String> metaData = dataSource.getMetaData();
+			MetaDataMap metaData = dataSource.getMetaData();
 			headerData.writeInt(metaData.size());
-			for (Iterator<String> it2 = metaData.keySet().iterator(); it2
+			for (Iterator<MetaDataKey> it2 = metaData.keySet().iterator(); it2
 					.hasNext();) {
-				String name = it2.next();
-				String value = metaData.get(name);
-				headerData.writeUTF(name);
-				headerData.writeUTF(value);
+				MetaDataKey key = it2.next();
+				MetaDataValue value = metaData.get(key);
+				headerData.writeUTF(key.name);
+				headerData.writeUTF(value.value.toString());
 			}
 		} else {
 			headerData.writeInt(0);
@@ -173,17 +177,17 @@ public class DataSourceExport {
 		for (Iterator<Thread> it = dataSource.getAllThreads().iterator(); it
 				.hasNext();) {
 			Thread thread = it.next();
-			Map<String, String> metaData = thread.getMetaData();
+			MetaDataMap metaData = thread.getMetaData();
 			headerData.writeInt(thread.getNodeID());
 			headerData.writeInt(thread.getContextID());
 			headerData.writeInt(thread.getThreadID());
 			headerData.writeInt(metaData.size());
-			for (Iterator<String> it2 = metaData.keySet().iterator(); it2
+			for (Iterator<MetaDataKey> it2 = metaData.keySet().iterator(); it2
 					.hasNext();) {
-				String name = it2.next();
-				String value = metaData.get(name);
-				headerData.writeUTF(name);
-				headerData.writeUTF(value);
+				MetaDataKey key = it2.next();
+				MetaDataValue value = metaData.get(key);
+				headerData.writeUTF(key.name);
+				headerData.writeUTF(value.value.toString());
 			}
 		}
 		headerData.close();
@@ -213,7 +217,7 @@ public class DataSourceExport {
 		Function functions[] = new Function[numFunctions];
 		idx = 0;
 		p.writeInt(numFunctions);
-		for (Iterator<Function> it = dataSource.getFunctions(); it.hasNext();) {
+		for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
 			Function function = it.next();
 			if (!function.isGroupMember(derived)) {
 
@@ -237,7 +241,7 @@ public class DataSourceExport {
 		UserEvent userEvents[] = new UserEvent[numUserEvents];
 		idx = 0;
 		p.writeInt(numUserEvents);
-		for (Iterator<UserEvent> it = dataSource.getUserEvents(); it.hasNext();) {
+		for (Iterator<UserEvent> it = dataSource.getUserEventIterator(); it.hasNext();) {
 			UserEvent userEvent = it.next();
 			userEvents[idx++] = userEvent;
 			p.writeUTF(userEvent.getName());
@@ -324,12 +328,12 @@ public class DataSourceExport {
 	}
 
 	private static void writeXMLSnippet(BufferedWriter bw,
-			Map<String, String> metaData) throws IOException {
-		for (Iterator<String> it2 = metaData.keySet().iterator(); it2.hasNext();) {
-			String name = it2.next();
-			String value = metaData.get(name);
-			bw.write("<attribute><name>" + xmlFixUp(name) + "</name><value>"
-					+ xmlFixUp(value) + "</value></attribute>");
+			MetaDataMap metaDataMap) throws IOException {
+		for (Iterator<MetaDataKey> it2 = metaDataMap.keySet().iterator(); it2.hasNext();) {
+			MetaDataKey key = it2.next();
+			MetaDataValue value = metaDataMap.get(key);
+			bw.write("<attribute><name>" + xmlFixUp(key.name) + "</name><value>"
+					+ xmlFixUp(value.value.toString()) + "</value></attribute>");
 		}
 	}
 
@@ -459,22 +463,22 @@ public class DataSourceExport {
 
 	public static void writeMetaDataSummary(DataSource dataSource)
 			throws IOException {
-		Map<String, String> m = dataSource.getMetaData();
+		MetaDataMap m = dataSource.getMetaData();
 		System.out.println("Metadata:");
 
-		Iterator<String> iks = m.keySet().iterator();
+		Iterator<MetaDataKey> iks = m.keySet().iterator();
 		int maxKeyLength = 0;
 		while (iks.hasNext()) {
-			String k = iks.next();
+			String k = iks.next().name;
 			maxKeyLength = Math.max(maxKeyLength, k.length());
 		}
 
-		Set<Entry<String, String>> ms = m.entrySet();
-		Iterator<Entry<String, String>> ims = ms.iterator();
+		Set<Entry<MetaDataKey, MetaDataValue>> ms = m.entrySet();
+		Iterator<Entry<MetaDataKey, MetaDataValue>> ims = ms.iterator();
 		while (ims.hasNext()) {
-			Entry<String, String> ems = ims.next();
-			System.out.format("%-" + maxKeyLength + "s%s", ems.getKey(), ": "
-					+ ems.getValue());
+			Entry<MetaDataKey, MetaDataValue> ems = ims.next();
+			System.out.format("%-" + maxKeyLength + "s%s", ems.getKey().name, ": "
+					+ ems.getValue().value.toString());
 			System.out.println();
 			// System.out.println(ems.getKey() + " = " + ems.getValue());
 		}
@@ -492,7 +496,7 @@ public class DataSourceExport {
 		Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
 
 		int numFunctions = 0;
-		for (Iterator<Function> it = dataSource.getFunctions(); it.hasNext();) {
+		for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
 			Function function = it.next();
 			if (function.isGroupMember(derived)) {
 				continue;
@@ -513,7 +517,7 @@ public class DataSourceExport {
 		idx = 0;
 
 		// write out function names
-		for (Iterator<Function> it = dataSource.getFunctions(); it.hasNext();) {
+		for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
 			Function function = it.next();
 
 			if (!function.isGroupMember(derived)) {
@@ -545,7 +549,7 @@ public class DataSourceExport {
 		UserEvent userEvents[] = new UserEvent[numUserEvents];
 		idx = 0;
 		// collect user event names
-		for (Iterator<UserEvent> it = dataSource.getUserEvents(); it.hasNext();) {
+		for (Iterator<UserEvent> it = dataSource.getUserEventIterator(); it.hasNext();) {
 			UserEvent userEvent = it.next();
 			userEvents[idx++] = userEvent;
 		}
@@ -581,7 +585,7 @@ public class DataSourceExport {
 		Group derived = dataSource.getGroup("TAU_CALLPATH_DERIVED");
 
 		int numFunctions = 0;
-		for (Iterator<Function> it = dataSource.getFunctions(); it.hasNext();) {
+		for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
 			Function function = it.next();
 			if (function.isGroupMember(derived)) {
 				continue;
@@ -602,7 +606,7 @@ public class DataSourceExport {
 		idx = 0;
 
 		// write out function names
-		for (Iterator<Function> it = dataSource.getFunctions(); it.hasNext();) {
+		for (Iterator<Function> it = dataSource.getFunctionIterator(); it.hasNext();) {
 			Function function = it.next();
 
 			if (!function.isGroupMember(derived)) {
@@ -634,7 +638,7 @@ public class DataSourceExport {
 		UserEvent userEvents[] = new UserEvent[numUserEvents];
 		idx = 0;
 		// collect user event names
-		for (Iterator<UserEvent> it = dataSource.getUserEvents(); it.hasNext();) {
+		for (Iterator<UserEvent> it = dataSource.getUserEventIterator(); it.hasNext();) {
 			UserEvent userEvent = it.next();
 			userEvents[idx++] = userEvent;
 		}

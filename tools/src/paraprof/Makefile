@@ -24,7 +24,9 @@ else
   TARGET=badversion
 endif
 
-all : $(TARGET)
+default: override
+
+all : $(TARGET_JAR)
 
 build : $(TARGET_JAR)
 

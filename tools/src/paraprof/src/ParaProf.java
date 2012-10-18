@@ -196,9 +196,9 @@ public class ParaProf implements ActionListener {
 			filelist.add(new File(file));
 		    }
 		}
-		paraProfManagerWindow.addTrial(app, experiment, (File[]) filelist.toArray(sourceFiles), fileType, fixNames, monitorProfiles, range);
+		paraProfManagerWindow.addTrial(experiment, (File[]) filelist.toArray(sourceFiles), fileType, fixNames, monitorProfiles, range);
 	    }else {
-		paraProfManagerWindow.addTrial(app, experiment, sourceFiles, fileType, fixNames, monitorProfiles, range);
+		paraProfManagerWindow.addTrial(experiment, sourceFiles, fileType, fixNames, monitorProfiles, range);
 	    }
 	} catch (java.security.AccessControlException ace) {
 	    // running as Java Web Start without permission
