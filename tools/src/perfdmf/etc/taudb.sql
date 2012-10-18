@@ -10,6 +10,9 @@ DROP INDEX IF EXISTS timer_group_index;
 DROP INDEX IF EXISTS timer_trial_index;
 DROP INDEX IF EXISTS timer_call_data_thread;
 
+/* perfexplorer related */
+DROP TABLE IF EXISTS analysis_settings;
+DROP TABLE IF EXISTS analysis_result;
 /* view related */
 DROP TABLE IF EXISTS taudb_view_parameter;
 DROP TABLE IF EXISTS taudb_view;
@@ -484,7 +487,38 @@ INSERT INTO taudb_view (parent, name, conjoin) VALUES (NULL, 'All Trials', 'and'
 INSERT INTO taudb_view (parent, name, conjoin) VALUES (NULL, 'Test View', 'and');
 INSERT INTO taudb_view_parameter (taudb_view, table_name, column_name, operator, value) VALUES (2, 'primary_metadata', 'Application', '=', 'application');
 
-/* Performance indexes! */
+/* the application and experiment columns are not used in the latest schema, but
+   keeping them makes the code in PerfExplorer simpler. */
+create table analysis_settings (
+    id                  SERIAL          NOT NULL    PRIMARY KEY,
+    taudb_view          INTEGER         NULL,
+    application         INTEGER         NULL,
+    experiment          INTEGER         NULL,
+    trial               INTEGER         NULL,
+    metric              INTEGER         NULL,
+    method              VARCHAR(255)    NOT NULL,
+    dimension_reduction VARCHAR(255)    NOT NULL,
+    normalization       VARCHAR(255)    NOT NULL,
+    FOREIGN KEY (taudb_view) REFERENCES taudb_view(id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (trial) REFERENCES trial(id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (metric) REFERENCES metric(id)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+create table analysis_result (
+    id                  SERIAL          NOT NULL    PRIMARY KEY,
+    analysis_settings   INTEGER         NOT NULL,
+    description         VARCHAR(255)    NOT NULL,
+    thumbnail_size      INTEGER         NULL,
+    image_size          INTEGER         NULL,
+    thumbnail           BYTEA           NULL,
+    image               BYTEA           NULL,
+    result_type         INTEGER         NOT NULL
+);
+
+ /* Performance indexes! */
 create index trial_name_index on trial(name);
 create index timer_name_index on timer(name);
 CREATE INDEX timer_callpath_parent on timer_callpath(parent);
@@ -558,4 +592,5 @@ AS SELECT * FROM atomic_event_value WHERE thread = -2;
  
 CREATE OR REPLACE VIEW atomic_mean_summary 
 AS SELECT * FROM atomic_event_value WHERE thread >= -1; 
-  
+
+
