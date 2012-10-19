@@ -371,30 +371,42 @@ public class DataSorter implements Comparator<FunctionProfile> {
     public List<Thread> getThreads(int[] exclude){
         ArrayList<Thread> threads = new ArrayList<Thread>();
         Thread thread=null;
-        if (ppTrial.getDataSource().getAllThreads().size() > 1) {
+        //if (ppTrial.getDataSource().getAllThreads().size() > 1) {
         	thread=ppTrial.getDataSource().getStdDevData();
-        	if(filterThread(thread,exclude)){
+			if (thread != null) {
+        	  if(filterThread(thread,exclude)){
         		threads.add(thread);
-        	}
-            //threads.add(ppTrial.getDataSource().getStdDevData());
+        	  }
+			}
             
             thread=ppTrial.getDataSource().getMeanData();
-        	if(filterThread(thread,exclude)){
+			if (thread != null) {
+        	  if(filterThread(thread,exclude)){
         		threads.add(thread);
-        	}
+        	  }
+			}
+
             thread=ppTrial.getDataSource().getTotalData();
-        	if(filterThread(thread,exclude)){
+			if (thread != null) {
+        	  if(filterThread(thread,exclude)){
         		threads.add(thread);
-        	}
+        	  }
+			}
             
             thread=ppTrial.getDataSource().getMaxData();
-            if(filterThread(thread,exclude))
+			if (thread != null) {
+              if(filterThread(thread,exclude)) {
             	threads.add(thread);
+			  }
+			}
             thread=ppTrial.getDataSource().getMinData();
-            if(filterThread(thread,exclude))
+			if (thread != null) {
+              if(filterThread(thread,exclude)) {
             	threads.add(thread);
+			  }
+			}
             
-        }
+        //}
 
         // add all the other threads
         for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
