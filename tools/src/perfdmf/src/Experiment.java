@@ -68,6 +68,10 @@ public class Experiment implements Serializable, Comparable<Experiment> {
     }
 
     public static void getMetaData(DB db) {
+    	if (db.getSchemaVersion() >0){
+    		//No need to worry about Experiment Metadata, there isn't any
+    		return;
+    	}
         Database database = db.getDatabase();
 
         //see if we've already have them
@@ -256,6 +260,13 @@ public class Experiment implements Serializable, Comparable<Experiment> {
     }
 
     public static Vector<Experiment> getExperimentList(DB db, String whereClause) throws DatabaseException {
+       	if(db.getSchemaVersion()>0){
+       		if(!whereClause.equals("")){
+    		System.err.println("WARNING: A list of experiments was requested with where clause: " + whereClause);
+    		return new Vector<Experiment>();
+       		}
+       		return TAUdbExperiment.getExperimentList(db);
+    	}
         try {
             Experiment.getMetaData(db);
             Database database = db.getDatabase();
@@ -311,8 +322,17 @@ public class Experiment implements Serializable, Comparable<Experiment> {
         }
     }
 
-    public int saveExperiment(DB db) throws SQLException {
+ 
+
+	public int saveExperiment(DB db) throws SQLException {
+    	
+      	if(db.getSchemaVersion()>0){
+    		System.err.println("WARNING: Attemped to save an experiment, but no experiments exist in TAUdb.");
+    		return 0;
+    	}
         boolean itExists = exists(db);
+
+        
         int newExperimentID = 0;
 
         StringBuffer buf = new StringBuffer();
@@ -364,6 +384,8 @@ public class Experiment implements Serializable, Comparable<Experiment> {
                 tmpStr = "select LAST_INSERT_ID();";
             } else if (db.getDBType().compareTo("db2") == 0) {
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM experiment";
+            } else if (db.getDBType().compareTo("sqlite") == 0) {
+                tmpStr = "select seq from sqlite_sequence where name = 'experiment'";
             } else if (db.getDBType().compareTo("derby") == 0) {
                 tmpStr = "select IDENTITY_VAL_LOCAL() FROM experiment";
             } else if (db.getDBType().compareTo("h2") == 0) {
@@ -433,7 +455,10 @@ public class Experiment implements Serializable, Comparable<Experiment> {
 
     public void setDatabase(Database database) {
         this.database = database;
+        //If TAUdb is used, the field names will never be set
+        if( database.getExpFieldNames() != null){
         fields = new String[database.getExpFieldNames().length];
+        }
     }
 
     public int compareTo(Experiment arg0) {

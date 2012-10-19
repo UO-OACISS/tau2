@@ -90,7 +90,7 @@ static int nextThread = 1;
 int RtsLayer::createThread()
 {
 
-  LockEnv();
+  threadLockEnv();
 
 	RtsThread* newThread;
 	
@@ -106,7 +106,7 @@ int RtsLayer::createThread()
 		newThread->active = true;
 		nextThread = newThread->next_available;
 	}
-	UnLockEnv();
+	threadUnLockEnv();
 
 	return newThread->thread_rank;
 }
@@ -162,7 +162,7 @@ int RtsLayer::myThread(void)
   return JavaThreadLayer::GetThreadId(); 
 	// C++ app shouldn't use this unless there's a VM
 #elif TAU_OPENMP
-  return OpenMPLayer::GetThreadId();
+  return OpenMPLayer::GetTauThreadId();
 #elif TAU_PAPI_THREADS
   return PapiThreadLayer::GetThreadId();
 #else  // if no other thread package is available 

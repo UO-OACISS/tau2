@@ -250,7 +250,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 			if (modelData.getCurrentSelection() instanceof Metric) {
 				statement.setInt(2, ((Metric)(modelData.getCurrentSelection())).getID());
 			}
-			// System.out.println(statement.toString());
+			//System.out.println(statement.toString());
 			ResultSet results = statement.executeQuery();
 			if (results.next() != false) {
 				numRows = results.getInt(1);
