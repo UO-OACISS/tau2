@@ -267,10 +267,6 @@ int Tau_snapshot_writeUnifiedBuffer(int tid) {
      Tau_util_output (out, "<profile_xml>\n");
    }
    
-   if (TauEnv_get_summary_only()) { /* skip event unification. */
-	 return 0;
-   }
-
    Tau_unify_object_t *functionUnifier, *atomicUnifier;
    functionUnifier = Tau_unify_getFunctionUnifier();
    atomicUnifier = Tau_unify_getAtomicUnifier();
@@ -284,6 +280,11 @@ int Tau_snapshot_writeUnifiedBuffer(int tid) {
      globalmap[functionUnifier->mapping[i]] = i; // set reverse mapping
    }
 
+   TauProfiler_updateIntermediateStatistics(tid);
+
+   if (TauEnv_get_summary_only()) { /* skip event unification. */
+     return 0;
+   }
 
    // now write the actual profile data for this snapshot
    Tau_util_output (out, "\n<profile thread=\"%s\">\n", threadid);
@@ -301,12 +302,8 @@ int Tau_snapshot_writeUnifiedBuffer(int tid) {
    }
    Tau_util_output (out, "<interval_data metrics=\"%s\">\n", metricList);
 
-   TauProfiler_updateIntermediateStatistics(tid);
-
-
   // the global number of events
   int numItems = functionUnifier->globalNumItems;
-
 
   for (int e=0; e<numItems; e++) { // for each event
     if (globalmap[e] != -1) { // if it occurred in our rank
@@ -337,7 +334,6 @@ int Tau_snapshot_writeUnifiedBuffer(int tid) {
   }
   
   Tau_util_output (out, "</interval_data>\n");
-
 
   free (globalmap);
   // create a reverse mapping, not strictly necessary, but it makes things easier
