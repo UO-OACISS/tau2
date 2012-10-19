@@ -1284,32 +1284,26 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
     return;
   }
 
+  /* After creating the ".TAU application" timer, we start it. In the
+     timer start code, it will call this function, so in that case,
+  	 return right away. */
   static bool initialized = false;
-  static bool initthread[TAU_MAX_THREADS];
+  static bool initthread[TAU_MAX_THREADS] = {false};
+  static bool initializing[TAU_MAX_THREADS] = {false};
 
   if (!initialized) {
+    if (initializing[tid]) {
+      return;
+    }
     RtsLayer::LockDB();
     if (!initialized) {
-      for (int i=0; i<TAU_MAX_THREADS; i++) {
-	    initthread[i] = false;
-      }
 	  // whichever thread got here first, has the lock and will create the
 	  // FunctionInfo object for the top level timer.
       if (TauInternal_CurrentProfiler(tid) == NULL) {
-#if 1 // see note below
-  /* I would prefer to use pure_start_task, but it creates a new string object
-     and this function gets called from the sampling handler. 
-     Until I can figure out a way around that, each thread is going to ahve to 
-     create and start a top level timer. Bummer. */
-
-        Tau_pure_start_task_string(gTauApplication, tid);
-#else
-        FunctionInfo *ptr = (FunctionInfo *) Tau_get_profiler(".TAU application", " ", TAU_DEFAULT, "TAU_DEFAULT");
-        if (ptr) {
-          Tau_start_timer(ptr, 0, tid);
-        }
-#endif
         initthread[tid] = true;
+		initializing[tid] = true;
+        Tau_pure_start_task_string(gTauApplication, tid);
+		initializing[tid] = false;
       }
     }
     initialized = true;
@@ -1324,19 +1318,9 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
   // that should be handled by the Tau_pure_start_task call.
   if (TauInternal_CurrentProfiler(tid) == NULL) {
     initthread[tid] = true;
-#if 1 // see note below
-  /* I would prefer to use pure_start_task, but it creates a new string object
-     and this function gets called from the sampling handler. 
-     Until I can figure out a way around that, each thread is going to ahve to 
-     create and start a top level timer. Bummer. */
-
+    initializing[tid] = true;
     Tau_pure_start_task_string(gTauApplication, tid);
-#else
-    FunctionInfo *ptr = (FunctionInfo *) Tau_get_profiler(".TAU application", " ", TAU_DEFAULT, "TAU_DEFAULT");
-    if (ptr) {
-      Tau_start_timer(ptr, 0, tid);
-    }
-#endif
+    initializing[tid] = false;
   }
 
   atexit(Tau_destructor_trigger);
