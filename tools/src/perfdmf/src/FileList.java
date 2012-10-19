@@ -52,6 +52,31 @@ class ProfileFileFilter implements FilenameFilter {
     }
 }
 
+class GPTLFileFilter implements FilenameFilter {
+    String prefix;
+
+    public GPTLFileFilter(String prefix) {
+        this.prefix = prefix;
+    }
+
+    public boolean accept(File okplace, String name) {
+        if (name.startsWith(prefix + ".")) {
+            // try to parse into node index. if it craps out, it must not be a valid name
+            try {
+                String n = name.substring(name.indexOf(".") + 1);
+
+                int testInt = Integer.parseInt(n);
+                if (testInt < 0)
+                    return false;
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+        return false;
+    }
+}
+
 class RangeProfileFilter implements FilenameFilter{
 	String prefix;
 	RangeBox rb;
@@ -292,6 +317,32 @@ public class FileList {
         if (v.size() == 0) {
             v = helperFindProfilesPrefixMulti(path, "dump");
         }
+        return v;
+    }
+
+    public List<File[]> helperFindGPTLProfiles(String path) {
+        List<File[]> v = new ArrayList<File[]>();
+
+        File file = new File(path);
+        if (file.isDirectory() == false) {
+            return v;
+        }
+        String prefix = "";
+        // find the stats file
+        for (File tmp : file.listFiles()) {
+        	if (tmp.getName().endsWith("_stats")) {
+        		File stats[] = new File[1];
+        		stats[0] = tmp;
+        		v.add(stats);
+        		prefix = tmp.getName().replace("_stats", "");
+        		break;
+        	}
+        }
+        
+        FilenameFilter prefixFilter ;
+        prefixFilter= new GPTLFileFilter(prefix);
+        File files[] = file.listFiles(prefixFilter);
+        v.add(files);
         return v;
     }
 

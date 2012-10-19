@@ -31,8 +31,17 @@ public class Database implements Serializable {
     private String intervalEventFieldTypeNames[];
     private String atomicEventFieldNames[];
     private String atomicEventFieldTypeNames[];
+	private boolean isTAUdb;
 
-    public String getName() {
+    public boolean isTAUdb() {
+		return isTAUdb;
+	}
+
+	public void setTAUdb(boolean isTAUdb) {
+		this.isTAUdb = isTAUdb;
+	}
+
+	public String getName() {
         return name;
     }
     
@@ -89,6 +98,11 @@ public class Database implements Serializable {
         this.id = idCounter;
         idCounter++;
         this.config = config;
+        if(config.getDBSchema().contains("taudb")){
+        this.isTAUdb=true;	
+        }else{
+        	this.isTAUdb=false;
+        }
     }
 
     public Database(String name, String configFilename) {
@@ -109,6 +123,7 @@ public class Database implements Serializable {
 
     private static Database createDatabase(String name, String configFile) {
         ParseConfig config = new ParseConfig(configFile.toString());
+
         Database database = new Database(name, config);
         return database;
     }

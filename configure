@@ -2085,6 +2085,7 @@ cp ${tauroot}/tools/src/perfexplorer/perfexplorer-1.4.jar $JARTARGET
 cp ${tauroot}/tools/src/vis/bin/vis.jar $JARTARGET
 cp ${tauroot}/tools/src/common/bin/tau-common.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/jargs.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/google-gson-2.1/gson-2.1.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/batik-combined.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/jfreechart-1.0.12.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/jcommon-1.0.15.jar $JARTARGET
@@ -2457,6 +2458,11 @@ case $machine in
      if [ -f INSTALL ]
        then
 	mv INSTALL INSTALL.txt
+     fi
+
+     # change it back for Git. Stupid Git.
+     if [ $default = true ]; then
+       mv INSTALL.txt INSTALL
      fi
 
      if [ $c_compiler = default ]
@@ -3839,9 +3845,15 @@ then
         ;;
   bgp)
 	mpiinc=/bgsys/drivers/ppcfloor/comm/xl/include
+        if [ $cxx_compiler = mpicxx ]; then
+	  mpiinc=/bgsys/drivers/ppcfloor/comm/include
+        fi
         ;;
   bgq)
 	mpiinc=/bgsys/drivers/ppcfloor/comm/xl/include
+        if [ $cxx_compiler = mpicxx ]; then
+	  mpiinc=/bgsys/drivers/ppcfloor/comm/include
+        fi
         ;;
   t3e|crayx1|craysv1)
 	mpiinc=/opt/ctl/mpt/mpt/include
@@ -4025,10 +4037,16 @@ then
         ;;
   bgp)
         mpilib=/bgsys/drivers/ppcfloor/comm/xl/lib
+        if [ $cxx_compiler = mpicxx ]; then
+	  mpilib=/bgsys/drivers/ppcfloor/comm/lib
+        fi
 	additional_mpilibs='-ldcmfcoll.cnk -ldcmf.cnk -lpthread -L/bgsys/drivers/ppcfloor/runtime/SPI -lSPI.cna' 
 	;;
   bgq)
         mpilib=/bgsys/drivers/ppcfloor/comm/xl/lib
+        if [ $cxx_compiler = mpicxx ]; then
+	  mpilib=/bgsys/drivers/ppcfloor/comm/lib
+        fi
 	#additional_mpilibs='-ldcmfcoll.cnk -ldcmf.cnk -lpthread -L/bgsys/drivers/ppcfloor/runtime/SPI -lSPI.cna' 
 	additional_mpilibs='-L/bgsys/drivers/ppcfloor/gnu-linux/powerpc64-bgq-linux/lib -lc -lnss_files -lnss_dns -lresolv'
 	;;

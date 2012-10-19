@@ -260,9 +260,16 @@ public class ScriptFacade {
 
 	}
 
-
 	public void setChartSeriesXML(boolean chartSeriesXML) {
 		model.setChartSeriesXML(chartSeriesXML);
+	}
+
+	public void setCategoricalXAxis(boolean categoricalXAxis) {
+		model.setCategoricalXAxis(categoricalXAxis);
+	}
+	
+	public boolean isCategoricalXAxis() {
+		return model.isCategoricalXAxis();
 	}
 
 

@@ -435,7 +435,6 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 //        return panel;
 //    }
 //    
-    //TODO: Make this swap from interval to atomic
     private JPanel createTopoIntervalSelectionPanel(String name, final int dex) {
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
@@ -446,9 +445,11 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         gbc.anchor = GridBagConstraints.WEST;
         gbc.weightx = 0.1;
         gbc.weighty = 0.1;
-
-        final JCheckBox atomic = new JCheckBox("Atomic");
-        atomic.setToolTipText("Check for Atomic events, uncheck for interval events");
+        
+        Object[] profDataTypes={"Timer","Atomic","Metadata"};
+        
+        final JComboBox atomic = new JComboBox(profDataTypes);
+        atomic.setToolTipText("Select type of values to use for this axis");
         //addCompItem(panel, new JLabel(name), gbc, 0, 0, 1, 2);
 
         final JTextField functionField;
@@ -491,22 +492,27 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
             public void actionPerformed(ActionEvent evt) {
             	
                 try {
-                	
-                	if(valueBox.getSelectedItem()==null)
+                	Object si=valueBox.getSelectedItem();
+                	if(si==null)
                 	{
                 		return;
                 	}
                 	
-                	if(!atomic.isSelected()){
+                	if(atomic.getSelectedIndex()==0&&si instanceof ValueType){//!atomic.isSelected()){
 
                     settings.setTopoValueType((ValueType) valueBox.getSelectedItem(),dex);
                     settings.setTopoMetric((Metric) metricBox.getSelectedItem(),dex);
                     settings.intervalETDex[dex]=valueBox.getSelectedIndex();
                 	
                 	}
-                	else{
+                	else if(atomic.getSelectedIndex()==1 && si instanceof UserEventValueType){
                 		 settings.setTopoUserEventValueType((UserEventValueType) valueBox.getSelectedItem(), dex);
                 		 settings.atomicETDex[dex]=valueBox.getSelectedIndex();
+                	}
+                	else if(atomic.getSelectedIndex()==2){
+                		//settings.setTopoMetadata(valueBox.getSelectedItem(),dex);
+                		//settings.metadataETDex[dex]=valueBox.getSelectedIndex();
+                		//TODO: Make sure we don't need to set anything else here.
                 	}
                 	 window.redraw();
                      minTopoField.setText(window.getSelectedMinTopoValue());
@@ -527,15 +533,16 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         		
         		String fname=null;
         		
-        		if(atomic.isSelected()){
+        		if(atomic.getSelectedIndex()==1){
         			
         			int numUE = ppTrial.getDataSource().getNumUserEvents();
         			if(numUE<1){
-        				atomic.setSelected(false);
+        				atomic.setSelectedIndex(0);//.setSelected(false);
         				return;
         			}
         			
         			metricBox.setEnabled(false);
+        			valueBox.setEditable(true);
         			valueBox.removeAllItems();
         			for(int i=0;i<UserEventValueType.VALUES.length;i++){
         				valueBox.addItem(UserEventValueType.VALUES[i]);
@@ -543,13 +550,14 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         			valueBox.setSelectedIndex(settings.atomicETDex[dex]);
         			if(settings.getTopoAtomic(dex)==null){
         				
-        				UserEvent tmpUE = ppTrial.getDataSource().getUserEvents().next();
+        				UserEvent tmpUE = ppTrial.getDataSource().getUserEventIterator().next();
         				settings.setTopoAtomic(tmpUE, dex);
         			}
         			fname=settings.getTopoAtomic(dex).getName();
         		}
-        		else{
+        		else if(atomic.getSelectedIndex()==0){
         			metricBox.setEnabled(true);
+        			valueBox.setEditable(true);
         			valueBox.removeAllItems();
         			for(int i=0;i<ValueType.VALUES.length;i++){
         				valueBox.addItem(ValueType.VALUES[i]);
@@ -557,9 +565,18 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         			valueBox.setSelectedIndex(settings.intervalETDex[dex]);
         			fname = ParaProfUtils.getDisplayName(settings.getTopoFunction(dex));
         		}
+        		else if(atomic.getSelectedIndex()==2){
+        			metricBox.setEnabled(false);
+        			valueBox.removeAllItems();
+        			valueBox.setEditable(false);
+        			fname=settings.getTopoMetadata(dex);
+        			//valueBox.setSelectedIndex(settings.meticETDex[dex]);
+        			//fname = settings.getTopoMetric(dex);
+        			//TODO: Metadata support
+        		}
         		
         		
-        		settings.setAtomic(atomic.isSelected(), dex);
+        		settings.setDataType(atomic.getSelectedIndex(), dex);
         		
         		functionField.setText(fname);
                 functionField.setToolTipText(fname);
@@ -582,7 +599,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                 	if(fname==null||fname.length()==0) 
                 		fname = "   <none>";
                 	
-                	if(!atomic.isSelected()){
+                	if(atomic.getSelectedIndex()==0){
                 	
                     FunctionSelectorDialog fSelector = new FunctionSelectorDialog(window, true,
                             ppTrial.getDisplayedFunctions().iterator(), settings.getTopoFunction(dex), true, false);
@@ -600,9 +617,9 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                     }
                     
                 	}
-                	else{
+                	else if(atomic.getSelectedIndex()==1){
                         FunctionSelectorDialog fSelector = new FunctionSelectorDialog(window, true,
-                        		ppTrial.getDataSource().getUserEvents(), settings.getTopoAtomic(dex), true, false);
+                        		ppTrial.getDataSource().getUserEventIterator(), settings.getTopoAtomic(dex), true, false);
 
                         if (fSelector.choose()) {
                             UserEvent selectedFunction = (UserEvent) fSelector.getSelectedObject();
@@ -616,7 +633,28 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                             
                         }
                 	}
-                	
+                	else if(atomic.getSelectedIndex()==2){
+                		Thread t = ppTrial.getDataSource().getThread(0, 0, 0);
+                		if(t==null){
+                			t=ppTrial.getDataSource().getThreads().get(0);
+                		}
+                		t.getMetaData().keySet().iterator();
+                		FunctionSelectorDialog fSelector = new FunctionSelectorDialog(window, true,
+                				t.getMetaData().keySet().iterator(), settings.getTopoMetadata(dex), true, false);
+                		
+                		
+                		if (fSelector.choose()) {
+                            String metadataKey = (String) fSelector.getSelectedObject();
+                            settings.setTopoMetadata(metadataKey,dex);
+
+                            //String fname = "   <none>";
+                            if (settings.getTopoMetadata(dex) != null) {
+                                fname = settings.getTopoMetadata(dex);
+                            }
+
+                		}
+                		//TODO: metadata support
+                	}
                 	functionField.setText(fname);
                     functionField.setToolTipText(fname);
                 	window.redraw();
