@@ -676,7 +676,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 	TauProfiler_StoreData(tid);
 #ifndef TAU_WINDOWS
         // getpid() not available on Windows
-        TAU_VERBOSE("TAU: <Node=%d.Thread=%d>:<pid=%d>: %s initiated TauProfile_StoreData\n",
+        TAU_VERBOSE("TAU: <Node=%d.Thread=%d>:<pid=%d>: %s initiated TauProfiler_StoreData\n",
           RtsLayer::myNode(), RtsLayer::myThread(), getpid(), ThisFunction->GetName());
 #endif
 #ifdef TAU_DMAPP

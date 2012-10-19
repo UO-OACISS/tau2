@@ -81,6 +81,7 @@ public class SnapshotDataSource extends DataSource {
             
             EBSTraceReader.processEBSTraces(this, new File(System.getProperty("user.dir")));
             //System.out.println("found " + this.getThread(0,0,0).getNumSnapshots() + " snapshots");
+            this.derivedProvided = true;
             this.generateDerivedData();
             this.aggregateMetaData();
 

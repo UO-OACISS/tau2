@@ -50,11 +50,11 @@ public class FunctionBarChartModel extends AbstractBarChartModel {
         if (window.isPhaseDisplay()) {
             barString = UtilFncs.getLeftSide(ppFunctionProfile.getDisplayName());
         } else {
-            if (ppFunctionProfile.getNodeID() == -1) {
+            if (ppFunctionProfile.getNodeID() == -1 || ppFunctionProfile.getNodeID() == -6) {
                 barString = "mean";
             } else if (ppFunctionProfile.getNodeID() == -2) {
                 barString = "total";
-            } else if (ppFunctionProfile.getNodeID() == -3) {
+            } else if (ppFunctionProfile.getNodeID() == -3 || ppFunctionProfile.getNodeID() == -7) {
                 barString = "std. dev.";
             }else if (ppFunctionProfile.getNodeID() == -4) {
                 barString = "min";

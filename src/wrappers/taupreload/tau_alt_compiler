@@ -1,5 +1,9 @@
 #!/bin/sh
 . $MODULESHOME/init/bash
+module unload tpsl pmi
 module switch PrgEnv-pgi PrgEnv-gnu
+module load tpsl pmi
 ./tau_alt_gnu_compiler cc $*
+module unload tpsl pmi
 module switch PrgEnv-gnu PrgEnv-pgi
+module load tpsl pmi
