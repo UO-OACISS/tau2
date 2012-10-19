@@ -1,11 +1,24 @@
 package edu.uoregon.tau.perfdmf;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SourceRegion {
 
     private String filename;
     private int startLine, endLine, startColumn, endColumn;
+    private List<Parameter> parameters = new ArrayList<Parameter>();
+    private String shortName;
 
-    public SourceRegion() {}
+    public String getShortName() {
+		return shortName;
+	}
+
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
+	}
+
+	public SourceRegion() {}
 
     public String toString() {
         return filename + " " + startLine + " " + startColumn + " " + endLine + " " + endColumn;
@@ -50,5 +63,13 @@ public class SourceRegion {
     public void setStartLine(int startLine) {
         this.startLine = startLine;
     }
+
+	public List<Parameter> getParameters() {
+		return parameters;
+	}
+
+	public void setParameters(List<Parameter> parameters) {
+		this.parameters = parameters;
+	}
 
 }

@@ -21,6 +21,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
+import edu.uoregon.tau.common.MetaDataMap;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataValue;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
@@ -55,13 +58,13 @@ public class TrialMetadata {
 	private void getMetadata() {
 		try {
 			// get the common attributes
-			Map<String,String> metaData = trial.getMetaData();
-			Iterator<String> iter = metaData.keySet().iterator();
+			MetaDataMap metaData = trial.getMetaData();
+			Iterator<MetaDataKey> iter = metaData.keySet().iterator();
 			while (iter.hasNext()) {
 				// we can safely assume that the name is a string
-				String key = iter.next();
-				String value = metaData.get(key);
-				commonAttributes.put(key, value);
+				MetaDataKey key = iter.next();
+				MetaDataValue value = metaData.get(key);
+				commonAttributes.put(key.name, value.value.toString());
 			}
 			
 			// add the trial name

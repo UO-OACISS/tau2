@@ -186,7 +186,7 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
     private void sortLocalData() {
         list = new Vector<LedgerDataElement>();
         if (this.windowType == FUNCTION_LEGEND) {
-            for (Iterator<Function> it = ppTrial.getDataSource().getFunctions(); it.hasNext();) {
+            for (Iterator<Function> it = ppTrial.getDataSource().getFunctionIterator(); it.hasNext();) {
                 list.addElement(new LedgerDataElement(it.next()));
             }
         } else if (this.windowType == GROUP_LEGEND) {
@@ -194,12 +194,12 @@ public class LedgerWindow extends JFrame implements Observer, ParaProfWindow {
                 list.addElement(new LedgerDataElement(it.next()));
             }
         } else if (this.windowType == USEREVENT_LEGEND) {
-            for (Iterator<UserEvent> it = ppTrial.getDataSource().getUserEvents(); it.hasNext();) {
+            for (Iterator<UserEvent> it = ppTrial.getDataSource().getUserEventIterator(); it.hasNext();) {
                 list.addElement(new LedgerDataElement(it.next()));
             }
         } else if (this.windowType == PHASE_LEGEND) {
             Group group = ppTrial.getDataSource().getGroup("TAU_PHASE");
-            for (Iterator<Function> it = ppTrial.getDataSource().getFunctions(); it.hasNext();) {
+            for (Iterator<Function> it = ppTrial.getDataSource().getFunctionIterator(); it.hasNext();) {
                 Function function = it.next();
                 if (function.isGroupMember(group)) {
                     list.addElement(new LedgerDataElement(function));

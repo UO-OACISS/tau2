@@ -51,7 +51,18 @@ public class RMIGeneralChartData implements Serializable {
 		data.add(row);
 		rowLabels.add(series);
 		if (row.categoryType == String.class) {
-			this.categoryType = String.class;
+			try {
+				// is it a double?
+				double tmpDouble = Double.parseDouble(category);
+				this.categoryType = Double.class;
+				try {
+					// is it an integer?
+					Integer tmpInteger = Integer.parseInt(category);
+					this.categoryType = Integer.class;
+				} catch (NumberFormatException ie) { }
+			} catch (NumberFormatException de) {
+				this.categoryType = String.class;
+			}
 		} else {
 			if (this.xMaximum == -1 || row.categoryInteger.intValue() > this.xMaximum) {
 				this.xMaximum = row.categoryInteger.intValue();
