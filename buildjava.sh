@@ -17,9 +17,10 @@ if [ "${JAVAC}" == "" ] ; then
 fi
 
 # check the version
-JAVA_FIVE=`java -version 2>&1 | grep version | /usr/bin/awk '{ print $$3; }'| sed -e s/\"//g | sed -e s/1\.5\..*// | wc -c`
+JAVA_FIVE=`java -version 2>&1 | grep version | /usr/bin/awk '{ print $3; }'| sed -e s/\"//g | sed -e s/java\ version//g | sed -e s/1\.5\..*// | wc -c`
 
-if [ "${JAVA_FIVE}" -le "14" ] ; then
+# if we have less than 5 characters (i.e. 1.5.0) then quit
+if [ "${JAVA_FIVE}" -le "5" ] ; then
   echo "javac version less than 1.5 - TAU tools require 1.5 or newer."
   exit
 fi
