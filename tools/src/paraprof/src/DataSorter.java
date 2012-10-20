@@ -151,8 +151,6 @@ public class DataSorter implements Comparator<FunctionProfile> {
 
         PPThread order = null;
 
-        // if there is only one thread, don't show mean and stddev
-        if (ppTrial.getDataSource().getAllThreads().size() > 1) {
             thread = ppTrial.getDataSource().getStdDevData();
             ppThread = new PPThread(thread, this.ppTrial);
             for (Iterator<FunctionProfile> it = thread.getFunctionProfiles().iterator(); it.hasNext();) {
@@ -181,21 +179,6 @@ public class DataSorter implements Comparator<FunctionProfile> {
 
             order = ppThread;
 
-            //            thread = ppTrial.getDataSource().getTotalData();
-            //            ppThread = new PPThread(thread, this.ppTrial);
-            //            for (Iterator e4 = thread.getFunctionProfiles().iterator(); e4.hasNext();) {
-            //                FunctionProfile functionProfile = (FunctionProfile) e4.next();
-            //                if (functionProfile != null && ppTrial.displayFunction(functionProfile.getFunction())
-            //                        && functionProfile.getFunction().isPhaseMember(phase)) {
-            //                    PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
-            //                    ppThread.addFunction(ppFunctionProfile);
-            //                }
-            //            }
-            //            Collections.sort(ppThread.getFunctionList());
-            //            threads.add(ppThread);
-
-        }
-
         for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
             thread = it.next();
 
@@ -214,41 +197,6 @@ public class DataSorter implements Comparator<FunctionProfile> {
             }
 
         }
-
-        //        for (Iterator it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
-        //            thread = (edu.uoregon.tau.perfdmf.Thread) it.next();
-        //
-        //            //Counts the number of ppFunctionProfiles that are actually added.
-        //            //It is possible (because of selection criteria - groups for example) to filter
-        //            //out all functions on a particular thread. The default at present is not to add.
-        //
-        //            int counter = 0; //Counts the number of PPFunctionProfile that are actually added.
-        //            ppThread = new PPThread(thread, this.ppTrial);
-        //
-        //            //Do not add thread to the context until we have verified counter is not zero (done after next loop).
-        //            //Now enter the thread data loops for this thread.
-        //            for (Iterator e4 = thread.getFunctionProfiles().iterator(); e4.hasNext();) {
-        //                FunctionProfile functionProfile = (FunctionProfile) e4.next();
-        //                if (functionProfile != null && ppTrial.displayFunction(functionProfile.getFunction())
-        //                        && functionProfile.getFunction().isPhaseMember(phase)) {
-        //                    PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
-        //                    ppThread.addFunction(ppFunctionProfile);
-        //                    counter++;
-        //                }
-        //            }
-        //
-        //            // sort thread and add to the list
-        //            if (counter != 0) {
-        //                Collections.sort(ppThread.getFunctionList());
-        //                threads.add(ppThread);
-        //            }
-        //        }
-
-        //        if (ppTrial.getDataSource().getAllThreads().size() > 1 && threads.size() == 4) {
-        //            threads.remove(0);
-        //            threads.remove(0);
-        //            threads.remove(0);
-        //        }
 
         time = (System.currentTimeMillis()) - time;
         //System.out.println("Time for getAllFunctionProfiles : " + time);
@@ -371,43 +319,41 @@ public class DataSorter implements Comparator<FunctionProfile> {
     public List<Thread> getThreads(int[] exclude){
         ArrayList<Thread> threads = new ArrayList<Thread>();
         Thread thread=null;
-        //if (ppTrial.getDataSource().getAllThreads().size() > 1) {
-        	thread=ppTrial.getDataSource().getStdDevData();
-			if (thread != null) {
-        	  if(filterThread(thread,exclude)){
-        		threads.add(thread);
-        	  }
-			}
-            
-            thread=ppTrial.getDataSource().getMeanData();
-			if (thread != null) {
-        	  if(filterThread(thread,exclude)){
-        		threads.add(thread);
-        	  }
-			}
+       	thread=ppTrial.getDataSource().getStdDevData();
+		if (thread != null) {
+       	  if(filterThread(thread,exclude)){
+       		threads.add(thread);
+       	  }
+		}
+           
+        thread=ppTrial.getDataSource().getMeanData();
+		if (thread != null) {
+      	  if(filterThread(thread,exclude)){
+       		threads.add(thread);
+      	  }
+		}
 
-            thread=ppTrial.getDataSource().getTotalData();
-			if (thread != null) {
-        	  if(filterThread(thread,exclude)){
-        		threads.add(thread);
-        	  }
-			}
+        thread=ppTrial.getDataSource().getTotalData();
+		if (thread != null) {
+       	  if(filterThread(thread,exclude)){
+       		threads.add(thread);
+       	  }
+		}
             
-            thread=ppTrial.getDataSource().getMaxData();
-			if (thread != null) {
-              if(filterThread(thread,exclude)) {
-            	threads.add(thread);
-			  }
-			}
-            thread=ppTrial.getDataSource().getMinData();
-			if (thread != null) {
-              if(filterThread(thread,exclude)) {
-            	threads.add(thread);
-			  }
-			}
-            
-        //}
+        thread=ppTrial.getDataSource().getMaxData();
+		if (thread != null) {
+          if(filterThread(thread,exclude)) {
+          	threads.add(thread);
+		  }
+		}
 
+        thread=ppTrial.getDataSource().getMinData();
+		if (thread != null) {
+          if(filterThread(thread,exclude)) {
+           	threads.add(thread);
+		  }
+		}
+           
         // add all the other threads
         for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
             thread = it.next();
@@ -418,27 +364,6 @@ public class DataSorter implements Comparator<FunctionProfile> {
     }
     
     public List<Thread> getThreads() {
-//        ArrayList<Thread> threads = new ArrayList<Thread>();
-//        if (ppTrial.getDataSource().getAllThreads().size() > 1) {
-//            threads.add(ppTrial.getDataSource().getStdDevData());
-//            
-//            threads.add(ppTrial.getDataSource().getMeanData());
-//            threads.add(ppTrial.getDataSource().getTotalData());
-//            
-//            Thread maxData=ppTrial.getDataSource().getMaxData();
-//            if(maxData!=null)
-//            	threads.add(maxData);
-//            Thread minData=ppTrial.getDataSource().getMinData();
-//            if(minData!=null)
-//            	threads.add(minData);
-//            
-//        }
-//
-//        // add all the other threads
-//        for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
-//            Thread thread = it.next();
-//            threads.add(thread);
-//        }
         return getThreads(null);
     }
 
@@ -447,54 +372,37 @@ public class DataSorter implements Comparator<FunctionProfile> {
 
         Thread thread;
 
-        if (ppTrial.getDataSource().getAllThreads().size() > 1) {
-            if (includeMean) {
-                thread = ppTrial.getDataSource().getMeanData();
-                FunctionProfile functionProfile = thread.getFunctionProfile(function);
-                if (functionProfile != null) {
-                    //Create a new thread data object.
-                    PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
-                    newList.add(ppFunctionProfile);
-                }
-                
-                
-                thread=ppTrial.getDataSource().getMinData();
-                
-                if(thread!=null){
-                
-                functionProfile = thread.getFunctionProfile(function);
-                
-                	PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
-                    newList.add(ppFunctionProfile);
-                }
-                
-                thread=ppTrial.getDataSource().getMaxData();
-                if(thread!=null){
-                	
-                    functionProfile = thread.getFunctionProfile(function);
-                	PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
-                    newList.add(ppFunctionProfile);
-                }
-                
+        if (includeMean) {
+            thread = ppTrial.getDataSource().getMeanData();
+            FunctionProfile functionProfile = thread.getFunctionProfile(function);
+            if (functionProfile != null) {
+                //Create a new thread data object.
+                PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
+                newList.add(ppFunctionProfile);
             }
+                
+            thread=ppTrial.getDataSource().getMinData();
+            if(thread!=null){
+                functionProfile = thread.getFunctionProfile(function);
+            	PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
+                newList.add(ppFunctionProfile);
+            }
+                
+            thread=ppTrial.getDataSource().getMaxData();
+            if(thread!=null){
+                functionProfile = thread.getFunctionProfile(function);
+            	PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
+                newList.add(ppFunctionProfile);
+            }
+        }
 
-            if (includeStdDev) {
-                thread = ppTrial.getDataSource().getStdDevData();
-                FunctionProfile functionProfile = thread.getFunctionProfile(function);
-                if (functionProfile != null) {
-                    //Create a new thread data object.
-                    PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
-                    newList.add(ppFunctionProfile);
-                }
-
-                //                thread = ppTrial.getDataSource().getTotalData();
-                //                functionProfile = thread.getFunctionProfile(function);
-                //                if (functionProfile != null) {
-                //                    //Create a new thread data object.
-                //                    PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
-                //                    newList.add(ppFunctionProfile);
-                //                }
-
+        if (includeStdDev) {
+            thread = ppTrial.getDataSource().getStdDevData();
+            FunctionProfile functionProfile = thread.getFunctionProfile(function);
+            if (functionProfile != null) {
+                //Create a new thread data object.
+                PPFunctionProfile ppFunctionProfile = new PPFunctionProfile(this, thread, functionProfile);
+                newList.add(ppFunctionProfile);
             }
         }
         for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads().iterator(); it.hasNext();) {
