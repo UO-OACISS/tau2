@@ -18,6 +18,8 @@
 
 #include <TauUtil.h>
 #include <TauMetrics.h>
+#include <TauMetaData.h>
+#include <TauXML.h>
 
 #include <string.h>
 #include <stdio.h>
@@ -112,6 +114,106 @@ void Tau_XML_writeAttribute(Tau_util_outputDevice *out, const char *name, const 
   Tau_util_output (out, "</value>%s</attribute>%s", endl, endl);
 }
 
+void Tau_XML_writeAttribute(Tau_util_outputDevice *out, const Tau_metadata_array_t *array, bool newline) {
+  const char *endl = "";
+  if (newline) {
+    endl = "\n";
+  }
+
+  int i;
+  for (i = 0 ; i < array->length ; i++) {
+    Tau_util_output (out, "<array_element>", endl);
+	Tau_metadata_value_t *metadata = array->values[i];
+    switch (metadata->type) {
+      case TAU_METADATA_TYPE_STRING:
+        Tau_XML_writeString(out, metadata->data.cval);
+	    break;
+      case TAU_METADATA_TYPE_INTEGER:
+        Tau_util_output (out,"%d",metadata->data.ival);
+	    break;
+      case TAU_METADATA_TYPE_DOUBLE:
+        Tau_util_output (out,"%f",metadata->data.dval);
+	    break;
+      case TAU_METADATA_TYPE_NULL:
+        Tau_util_output (out,"NULL");
+	    break;
+      case TAU_METADATA_TYPE_FALSE:
+        Tau_util_output (out,"FALSE");
+	    break;
+      case TAU_METADATA_TYPE_TRUE:
+        Tau_util_output (out,"TRUE");
+	    break;
+      case TAU_METADATA_TYPE_ARRAY:
+        Tau_XML_writeAttribute(out, metadata->data.aval, newline);
+	    break;
+      case TAU_METADATA_TYPE_OBJECT:
+	    for (int i = 0 ; i < metadata->data.oval->count; i++) {
+	      Tau_metadata_key *key = new Tau_metadata_key();
+	      key->name = strdup(metadata->data.oval->names[i]);
+          Tau_XML_writeAttribute(out, key, metadata->data.oval->values[i], newline);
+		}
+	    break;
+    }
+    Tau_util_output (out, "</array_element>", endl);
+  }
+}
+
+
+/*********************************************************************
+ * writes a complex attribute value
+ ********************************************************************/
+void Tau_XML_writeAttribute(Tau_util_outputDevice *out, const Tau_metadata_key *key, const Tau_metadata_value_t *metadata, bool newline) {
+  const char *endl = "";
+  if (newline) {
+    endl = "\n";
+  }
+
+  //Tau_util_output (out, "<attribute timer=\"%s\" call_number=%d timestamp=%llu>%s<name>", key->timer_context, key->call_number, key->timestamp, endl);
+  Tau_util_output (out, "<attribute>%s<name>", endl);
+  Tau_XML_writeString(out, key->name);
+  if (key->timer_context == NULL) {
+    Tau_util_output (out, "</name>%s<value>", endl);
+  } else {
+    Tau_util_output (out, "</name>%s<timer_context>", endl);
+    Tau_XML_writeString(out, key->timer_context);
+    Tau_util_output (out, "</timer_context>%s<call_number>", endl);
+    Tau_util_output (out, "%d", key->call_number);
+    Tau_util_output (out, "</call_number>%s<timestamp>", endl);
+    Tau_util_output (out, "%llu", key->timestamp);
+    Tau_util_output (out, "</timestamp>%s<value>", endl);
+  }
+  switch (metadata->type) {
+    case TAU_METADATA_TYPE_STRING:
+      Tau_XML_writeString(out, metadata->data.cval);
+	  break;
+    case TAU_METADATA_TYPE_INTEGER:
+      Tau_util_output (out,"%d",metadata->data.ival);
+	  break;
+    case TAU_METADATA_TYPE_DOUBLE:
+      Tau_util_output (out,"%f",metadata->data.dval);
+	  break;
+    case TAU_METADATA_TYPE_NULL:
+      Tau_util_output (out,"NULL");
+	  break;
+    case TAU_METADATA_TYPE_FALSE:
+      Tau_util_output (out,"FALSE");
+	  break;
+    case TAU_METADATA_TYPE_TRUE:
+      Tau_util_output (out,"TRUE");
+	  break;
+    case TAU_METADATA_TYPE_ARRAY:
+      Tau_XML_writeAttribute(out, metadata->data.aval, newline);
+	  break;
+    case TAU_METADATA_TYPE_OBJECT:
+	  for (int i = 0 ; i < metadata->data.oval->count; i++) {
+	    Tau_metadata_key *key = new Tau_metadata_key();
+	    key->name = strdup(metadata->data.oval->names[i]);
+        Tau_XML_writeAttribute(out, key, metadata->data.oval->values[i], newline);
+      }
+	  break;
+  }
+  Tau_util_output (out, "</value>%s</attribute>%s", endl, endl);
+}
 
 /*********************************************************************
  * writes an attribute entity with an int value

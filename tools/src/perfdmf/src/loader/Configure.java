@@ -45,7 +45,7 @@ public class Configure {
     private String db_password = "";
     private String db_schemaprefix = "";
     private boolean store_db_password = false;
-    private String db_schemafile = "dbschema.h2.txt";
+    private String db_schemafile = "taudb.sql";
     private String xml_parser = "xerces.jar";
     private ParseConfig parser;
     private boolean configFileFound = false;
@@ -136,7 +136,7 @@ public class Configure {
         jdbc_db_jarfile = jardir + File.separator + "h2.jar";
         db_dbname = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf/perfdmf";
         jdbc_db_driver = "org.h2.Driver";
-        db_schemafile = schemadir + File.separator + "dbschema.h2.txt";
+        db_schemafile = schemadir + File.separator + "taudb.sql";
         db_hostname = "";
         db_portnum = "";
         store_db_password = true;
@@ -187,6 +187,7 @@ public class Configure {
                    || tmpString.compareTo("derby") == 0
                    || tmpString.compareTo("db2") == 0 
                    || tmpString.compareTo("h2") == 0 
+                   || tmpString.compareTo("sqlite") == 0 
                    || tmpString.length() == 0) {
                     if (tmpString.length() > 0) {
                         jdbc_db_type = tmpString;
@@ -200,7 +201,7 @@ public class Configure {
                     // if the user has chosen postgresql and the config file is not already set for it
                     jdbc_db_jarfile = jardir + File.separator + "postgresql.jar";
                     jdbc_db_driver = "org.postgresql.Driver";
-                    db_schemafile = schemadir + File.separator + "dbschema.txt";
+                    db_schemafile = schemadir + File.separator + "taudb.sql";
                     db_portnum = "5432";
                     db_hostname = "localhost";
                     db_dbname = "perfdmf";
@@ -208,7 +209,7 @@ public class Configure {
                     // if the user has chosen mysql and the config file is not already set for it
                     jdbc_db_jarfile = jardir + File.separator + "mysql.jar";
                     jdbc_db_driver = "org.gjt.mm.mysql.Driver";
-                    db_schemafile = schemadir + File.separator + "dbschema.mysql.txt";
+                    db_schemafile = schemadir + File.separator + "taudb.mysql.sql";
                     db_portnum = "3306";
                     db_hostname = "localhost";
                     db_dbname = "perfdmf";
@@ -216,7 +217,7 @@ public class Configure {
                     // if the user has chosen oracle and the config file is not already set for it
                     jdbc_db_jarfile = getUserJarDir() + "ojdbc14.jar";
                     jdbc_db_driver = "oracle.jdbc.OracleDriver";
-                    db_schemafile = schemadir + File.separator + "dbschema.oracle.txt";
+                    db_schemafile = schemadir + File.separator + "taudb.oracle.sql";
                     db_portnum = "1521";
                     db_hostname = "localhost";
                     db_dbname = "perfdmf";
@@ -225,8 +226,17 @@ public class Configure {
                     //String os = System.getProperty("os.name").toLowerCase();
                     jdbc_db_jarfile = jardir + File.separator + "derby.jar";
                     jdbc_db_driver = "org.apache.derby.jdbc.EmbeddedDriver";
-                    db_schemafile = schemadir + File.separator + "dbschema.derby.txt";
+                    db_schemafile = schemadir + File.separator + "taudb.derby.sql";
                     db_dbname = jardir + File.separator + "perfdmf";
+                    db_hostname = "";
+                    db_portnum = "";
+                } else if (jdbc_db_type.compareTo("sqlite") == 0 && old_jdbc_db_type.compareTo("sqlite") != 0) {
+                    // if the user has chosen sqlite and the config file is not already set for it
+                    //String os = System.getProperty("os.name").toLowerCase();
+                    jdbc_db_jarfile = jardir + File.separator + "sqlite.jar";
+                    jdbc_db_driver = "org.sqlite.JDBC";
+                    db_schemafile = schemadir + File.separator + "taudb.sqlite.sql";
+                    db_dbname = jardir + File.separator + configuration_name + ".db";
                     db_hostname = "";
                     db_portnum = "";
                  } else if (jdbc_db_type.compareTo("h2") == 0 && old_jdbc_db_type.compareTo("h2") != 0) {
@@ -234,7 +244,7 @@ public class Configure {
                     //String os = System.getProperty("os.name").toLowerCase();
                     jdbc_db_jarfile = jardir + File.separator + "h2.jar";
                     jdbc_db_driver = "org.h2.Driver";
-                    db_schemafile = schemadir + File.separator + "dbschema.h2.txt";
+                    db_schemafile = schemadir + File.separator + "taudb.sql";
                     db_dbname = jardir + File.separator + configuration_name;
                     db_hostname = "";
                     db_portnum = "";
@@ -243,7 +253,7 @@ public class Configure {
 
                     jdbc_db_jarfile = ""; // there are 3 jar files...
                     jdbc_db_driver = "com.ibm.db2.jcc.DB2Driver";
-                    db_schemafile = schemadir + File.separator + "dbschema.db2.txt";
+                    db_schemafile = schemadir + File.separator + "taudb.db2.sql";
                     db_dbname = "perfdmf";
                     db_schemaprefix = "perfdmf";
                     db_hostname = "localhost";
@@ -269,43 +279,51 @@ public class Configure {
                     // if the user has chosen postgresql and the config file is not already set for it
                     jdbc_db_jarfile = "postgresql.jar";
                     jdbc_db_driver = "org.postgresql.Driver";
-                    db_schemafile = "dbschema.txt";
+                    db_schemafile = "taudb.sql";
                     db_hostname = "localhost";
                     db_portnum = "5432";
                 } else if (jdbc_db_type.compareTo("mysql") == 0) {
                     // if the user has chosen mysql and the config file is not already set for it
                     jdbc_db_jarfile = "mysql.jar";
                     jdbc_db_driver = "org.gjt.mm.mysql.Driver";
-                    db_schemafile = "dbschema.mysql.txt";
+                    db_schemafile = "taudb.mysql.sql";
                     db_hostname = "localhost";
                     db_portnum = "3306";
                 } else if (jdbc_db_type.compareTo("oracle") == 0) {
                     // if the user has chosen oracle and the config file is not already set for it
                     jdbc_db_jarfile = "ojdbc14.jar";
                     jdbc_db_driver = "oracle.jdbc.OracleDriver";
-                    db_schemafile = "dbschema.oracle.txt";
+                    db_schemafile = "taudb.oracle.sql";
                     db_hostname = "localhost";
                     db_portnum = "1521";
                 } else if (jdbc_db_type.compareTo("derby") == 0) {
                     // if the user has chosen derby and the config file is not already set for it
                     jdbc_db_jarfile = "derby.jar";
                     jdbc_db_driver = "org.apache.derby.jdbc.EmbeddedDriver";
-                    db_schemafile = "dbschema.derby.txt";
+                    db_schemafile = "taudb.derby.sql";
                     db_dbname = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + "perfdmf";
+                    db_hostname = "";
+                    db_portnum = "";
+                } else if (jdbc_db_type.compareTo("sqlite") == 0) {
+                    // if the user has chosen sqlite and the config file is not already set for it
+                    jdbc_db_jarfile = "sqlite.jar";
+                    jdbc_db_driver = "org.sqlite.JDBC";
+                    db_schemafile = "taudb.sqlite.sql";
+                    db_dbname = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + configuration_name + ".db";
                     db_hostname = "";
                     db_portnum = "";
                  } else if (jdbc_db_type.compareTo("h2") == 0) {
                     // if the user has chosen h2 and the config file is not already set for it
                     jdbc_db_jarfile = "h2.jar";
                     jdbc_db_driver = "org.h2.Driver";
-                    db_schemafile = "dbschema.h2.txt";
+                    db_schemafile = "taudb.sql";
                     db_dbname = System.getProperty("user.home") + File.separator + ".ParaProf" + File.separator + configuration_name;
                     db_hostname = "";
                     db_portnum = "";
                 } else if (jdbc_db_type.compareTo("db2") == 0) {
                     jdbc_db_jarfile = ""; // there are 3 jar files...
                     jdbc_db_driver = "com.ibm.db2.jcc.DB2Driver";
-                    db_schemafile = "dbschema.db2.txt";
+                    db_schemafile = "taudb.db2.sql";
                     db_dbname = "perfdmf";
                     db_schemaprefix = "perfdmf";
                     db_hostname = "localhost";
@@ -448,7 +466,8 @@ public class Configure {
             if (tmpString.length() > 0)
                 jdbc_db_driver = tmpString;
 
-            if ((jdbc_db_type.compareTo("derby") != 0) && (jdbc_db_type.compareTo("h2") != 0)){
+            if ((jdbc_db_type.compareTo("derby") != 0) && (jdbc_db_type.compareTo("h2") != 0) &&
+            		(jdbc_db_type.compareTo("sqlite") != 0)){
                 // Prompt for database hostname
                 System.out.print("Please enter the hostname for the database server.\n(" + db_hostname + "):");
                 tmpString = reader.readLine();
@@ -476,7 +495,8 @@ public class Configure {
             tmpString = reader.readLine();
             if (tmpString.length() > 0) {
                 // if the user used the ~ shortcut, expand it to $HOME.
-                if ((jdbc_db_type.compareTo("derby") == 0) || (jdbc_db_type.compareTo("h2") == 0)) {
+                if ((jdbc_db_type.compareTo("derby") == 0) || (jdbc_db_type.compareTo("h2") == 0)
+                		|| (jdbc_db_type.compareTo("sqlite") == 0)) {
                     db_dbname = tmpString.replaceAll("~", System.getProperty("user.home"));
                 } else {
                     db_dbname = tmpString;
@@ -814,7 +834,7 @@ public class Configure {
             throw new DatabaseException("Error Connection to Database" + db_dbname, e);
         }
         try {
-            String query = new String("select * from application;");
+            String query = new String("select * from trial;");
             ResultSet resultSet = db.executeQuery(query);
             resultSet.close();
             connector.dbclose();

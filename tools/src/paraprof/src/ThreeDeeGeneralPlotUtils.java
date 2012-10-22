@@ -107,7 +107,6 @@ public class ThreeDeeGeneralPlotUtils {
 			String value = t.getMetaData().get(key);
 
 			if (value == null) {
-				
 				value=t.getDataSource().getMetaData().get(key);
 				if(value==null){
 				System.out.println("Metadata key " + key

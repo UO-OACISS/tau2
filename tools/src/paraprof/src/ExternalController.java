@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import edu.uoregon.tau.perfdmf.*;
+import edu.uoregon.tau.perfdmf.taudb.TAUdbDatabaseAPI;
 
 public class ExternalController {
 
@@ -69,6 +70,11 @@ public class ExternalController {
 
         DatabaseAPI databaseAPI = new DatabaseAPI();
         databaseAPI.initialize(Database.getDatabases().get(dbID));
+		if (databaseAPI.db().getSchemaVersion() > 0) {
+			// copy the DatabaseAPI object data into a new TAUdbDatabaseAPI object
+			databaseAPI = new TAUdbDatabaseAPI(databaseAPI);
+		}
+
         databaseAPI.setTrial(trialID, false);
         DBDataSource dbDataSource = new DBDataSource(databaseAPI);
         dbDataSource.load();
@@ -158,6 +164,10 @@ public class ExternalController {
 
         DatabaseAPI databaseAPI = new DatabaseAPI();
         databaseAPI.initialize(Database.getDatabases().get(dbID));
+		if (databaseAPI.db().getSchemaVersion() > 0) {
+			// copy the DatabaseAPI object data into a new TAUdbDatabaseAPI object
+			databaseAPI = new TAUdbDatabaseAPI(databaseAPI);
+		}
         databaseAPI.setExperiment(expID);
 
         List<Trial> trials = databaseAPI.getTrialList(false);
