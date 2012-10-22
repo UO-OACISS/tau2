@@ -33,6 +33,7 @@ import javax.swing.JSplitPane;
 import com.graphbuilder.math.VarMap;
 
 import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataValue;
 import edu.uoregon.tau.paraprof.ThreeDeeGeneralPlotUtils.CoordMap;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
@@ -394,7 +395,12 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 		}else if(settings.getDataType(3)==2){
 			MetaDataKey metaKey=settings.getTopoMetadata(3);//.toString();
 			if(metaKey!=null){
-				String metaVal=thread.getMetaData().get(metaKey).toString();
+				MetaDataValue mdVal=thread.getMetaData().get(metaKey);
+				if(mdVal==null){
+					mdVal=ppTrial.getDataSource().getMetaData().get(metaKey);
+				}
+						
+				String metaVal=mdVal.toString();
 				float tmp=Float.NaN;
 				try{
 				tmp = Float.parseFloat(metaVal);
