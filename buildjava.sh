@@ -25,9 +25,12 @@ if [ "${JAVA_FIVE}" -le "5" ] ; then
   exit
 fi
 
+myarch=`./utils/archfind`
+if [ ! -d "./$myarch" ] ; then
 # configure WITHOUT prefix, so the java jars are in the right place
 # for compiling
-./configure
+  ./configure
+fi
 cd tools/src/common
 make clean ; make
 cd ../vis
