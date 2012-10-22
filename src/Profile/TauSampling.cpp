@@ -84,6 +84,10 @@
 #include <string>
 #include <vector>
 
+#ifdef TAU_OPENMP
+#include <omp.h>
+#endif
+
 using namespace std;
 
 /*
@@ -1056,6 +1060,10 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
   // *CWL* - Too "noisy" and useless a verbose output.
   //TAU_VERBOSE("[tid=%d] EBS profile sample with pc %p\n", tid, (unsigned long)pc);
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
+  if (profiler == NULL) {
+    Tau_create_top_level_timer_if_necessary();
+    profiler = TauInternal_CurrentProfiler(tid);
+  }
   FunctionInfo *samplingContext;
 
   // ok to be temporary. Hash table on the other end will copy the details.
@@ -1587,25 +1595,9 @@ int Tau_sampling_finalize(int tid) {
 /* *CWL* - This is workaround code for MPI where mvapich2 on Hera was
    found to conflict with EBS sampling operations if EBS was initialized
    before MPI_Init().
-
-   Assume no threading in this debug version.
  */
 extern "C" void Tau_sampling_init_if_necessary(void) {
-  static bool initialized = false;
-  static bool thrInitialized[TAU_MAX_THREADS];
-
-  if (!initialized) {
-    RtsLayer::LockEnv();
-    // check again, someone else might already have initialized by now.
-    if (!initialized) {
-      //      printf("Sampling global initializing!\n");
-      for (int i=0; i<TAU_MAX_THREADS; i++) {
-	thrInitialized[i] = false;
-      }
-      initialized = true;
-    }
-    RtsLayer::UnLockEnv();
-  }
+  static bool thrInitialized[TAU_MAX_THREADS] = {false};
 
 /* Greetings, intrepid thread developer. We had a problem with OpenMP applications
  * which did not call instrumented functions or regions from an OpenMP region. In
@@ -1613,21 +1605,40 @@ extern "C" void Tau_sampling_init_if_necessary(void) {
  * than thread 0. By making this region an OpenMP parallel region, we initialize
  * sampling on all (currently known) OpenMP threads. Any threads created after this
  * point may not be recognized by TAU. But this should catch the 99% case. */
-#ifdef TAU_OPENMP
+#if defined(TAU_OPENMP) and !defined(TAU_PTHREAD)
+  // if the master thread is in TAU, in a non-parallel region
+  if (omp_get_num_threads() == 1) {
+  /* WE HAVE TO DO THIS! Otherwise, we end up with deadlock. Don't worry,
+   * it is OK, because we know(?) there are no other active threads
+   * thanks to the #define three lines above this */
+    RtsLayer::UnLockEnv();
+	// do this for all threads
 #pragma omp parallel shared (thrInitialized)
+    {
+	  // but do it sequentially.
+#pragma omp critical (creatingtopleveltimer)
+      {
+	    // this will likely register the currently executing OpenMP thread.
+        int myTid = RtsLayer::myThread();
+        if (!thrInitialized[myTid]) {
+          thrInitialized[myTid] = true;
+          Tau_sampling_init(myTid);
+        }
+      } // critical
+    } // parallel
+	/* WE HAVE TO DO THIS! The environment was locked before we entered
+	 * this function, we unlocked it, so re-lock it for safety */
+    RtsLayer::LockEnv();
+	/* return, because our work is done for this special case. */
+	return;
+  }
 #endif
-  {
-    int myTid = RtsLayer::myThread();
 
-    if (!thrInitialized[myTid]) {
-      //    printf("Sampling thread %d initializing!\n", myTid);
-      Tau_sampling_init(myTid);
-      thrInitialized[myTid] = true;
-    }
-/* now that we have started sampling on this thread, create a top level timer */
-#ifdef TAU_OPENMP
-    Tau_create_top_level_timer_if_necessary();
-#endif
+// handle all other cases!
+  int myTid = RtsLayer::myThread();
+  if (!thrInitialized[myTid]) {
+    thrInitialized[myTid] = true;
+    Tau_sampling_init(myTid);
   }
 }
 
