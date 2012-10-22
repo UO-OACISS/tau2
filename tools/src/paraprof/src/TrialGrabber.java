@@ -14,6 +14,7 @@ import edu.uoregon.tau.perfdmf.DataSource;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.PackedProfileDataSource;
+import edu.uoregon.tau.perfdmf.taudb.TAUdbDatabaseAPI;
 import edu.uoregon.tau.perfdmf.Trial;
 
 class PPKFileFilter implements FilenameFilter {
@@ -110,6 +111,11 @@ public class TrialGrabber {
         DatabaseAPI dbApi = new DatabaseAPI();
         try {
             dbApi.initialize(config, false);
+			if (dbApi.db().getSchemaVersion() > 0) {
+				// copy the DatabaseAPI object data into a new TAUdbDatabaseAPI object
+				dbApi = new TAUdbDatabaseAPI(dbApi);
+			}
+
         } catch (Exception e) {
             e.printStackTrace();
         }
