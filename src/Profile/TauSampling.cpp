@@ -1607,12 +1607,27 @@ extern "C" void Tau_sampling_init_if_necessary(void) {
     RtsLayer::UnLockEnv();
   }
 
-  int myTid = RtsLayer::myThread();
+/* Greetings, intrepid thread developer. We had a problem with OpenMP applications
+ * which did not call instrumented functions or regions from an OpenMP region. In
+ * those cases, TAU does not get a chance to initialize sampling on any thread other
+ * than thread 0. By making this region an OpenMP parallel region, we initialize
+ * sampling on all (currently known) OpenMP threads. Any threads created after this
+ * point may not be recognized by TAU. But this should catch the 99% case. */
+#ifdef TAU_OPENMP
+#pragma omp parallel shared (thrInitialized)
+#endif
+  {
+    int myTid = RtsLayer::myThread();
 
-  if (!thrInitialized[myTid]) {
-    //    printf("Sampling thread %d initializing!\n", myTid);
-    Tau_sampling_init(myTid);
-    thrInitialized[myTid] = true;
+    if (!thrInitialized[myTid]) {
+      //    printf("Sampling thread %d initializing!\n", myTid);
+      Tau_sampling_init(myTid);
+      thrInitialized[myTid] = true;
+    }
+/* now that we have started sampling on this thread, create a top level timer */
+#ifdef TAU_OPENMP
+    Tau_create_top_level_timer_if_necessary();
+#endif
   }
 }
 
