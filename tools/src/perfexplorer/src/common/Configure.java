@@ -152,23 +152,13 @@ public class Configure {
                 String filename = "";
 
                 if (perfExplorerSchema == null) {
-                    if (db.getDBType().compareTo("oracle") == 0) {
-                        filename = tau_root + File.separator + "dbschema.oracle";
-                    } else if (db.getDBType().compareTo("derby") == 0) {
-                        filename = tau_root + File.separator + "dbschema.derby";
-                    } else if (db.getDBType().compareTo("h2") == 0) {
-                        filename = tau_root + File.separator + "dbschema.h2";
-                    } else if (db.getDBType().compareTo("mysql") == 0) {
-                        filename = tau_root + File.separator + "dbschema.mysql";
-                    } else if (db.getDBType().compareTo("postgresql") == 0) {
-                        filename = tau_root + File.separator + "dbschema.postgresql";
-                    } else if (db.getDBType().compareTo("db2") == 0) {
-                        filename = tau_root + File.separator + "dbschema.db2";
-                    } else {
-                        PerfExplorerOutput.println("Unknown database type: " + db.getDBType());
-                        System.exit(-1);
-                    }
+                	String schemaName = "dbschema.";
+                	if (db.getSchemaVersion() > 0)
+                		schemaName = "taudb.";
+                	filename = tau_root + File.separator + schemaName + db.getDBType().toLowerCase();
                 } else {
+                	if (db.getSchemaVersion() > 0)
+                		perfExplorerSchema = perfExplorerSchema.replaceAll("dbschema", "taudb");
                     filename = perfExplorerSchema;
                 }
 

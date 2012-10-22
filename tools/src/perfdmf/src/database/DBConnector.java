@@ -12,7 +12,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -41,6 +43,8 @@ public class DBConnector implements DB {
     private String JDBCjarFileName;
 
     private Database database;
+    
+    private int schemaVersion = -1;
 
     
     private static Map<String, String> passwordMap = new HashMap<String, String>();
@@ -210,7 +214,7 @@ public class DBConnector implements DB {
         }
         //        conn.setAutoCommit(false);
         //        statement.setFetchSize(100);
-        //	System.out.println ("executing query: " + query.trim());
+        //System.out.println ("executing query: " + query.trim());
         return statement.executeQuery(query.trim());
     }
 
@@ -370,7 +374,7 @@ public class DBConnector implements DB {
     }
 
     public PreparedStatement prepareStatement(String statement) throws SQLException {
-        //System.out.println("statement = " + statement);
+//        System.out.println("statement = " + statement);
         return getConnection().prepareStatement(statement);
     }
 
@@ -468,7 +472,7 @@ public class DBConnector implements DB {
     // 	return false;
     //     }
 
-    public int checkTable(DatabaseMetaData dbMeta, String tableName, String columns[]) throws SQLException {
+   	public int checkTable(DatabaseMetaData dbMeta, String tableName, Object columns[]) throws SQLException {
         boolean checks[] = new boolean[columns.length];
 
         ResultSet resultSet = null;
@@ -493,7 +497,7 @@ public class DBConnector implements DB {
 
                 for (int i = 0; i < columns.length; i++) {
             		//System.out.println (cname.toUpperCase() + ", " + columns[i].toUpperCase());
-                    if (columns[i].toUpperCase().compareTo(cname.toUpperCase()) == 0) {
+                    if (columns[i].toString().toUpperCase().compareTo(cname.toUpperCase()) == 0) {
                         checks[i] = true;
                     }
                 }
@@ -512,6 +516,9 @@ public class DBConnector implements DB {
     }
 
     public int checkSchema() throws SQLException {
+    	if (getSchemaVersion() > 0) {
+    		return checkTAUdbSchema();
+    	}
 
         //ResultSet resultSet = null;
         DatabaseMetaData dbMeta = this.getMetaData();
@@ -579,12 +586,159 @@ public class DBConnector implements DB {
         return 0;
     }
 
-    public Database getDatabase() {
+    private int checkTAUdbSchema() throws SQLException {
+        //ResultSet resultSet = null;
+        DatabaseMetaData dbMeta = this.getMetaData();
+
+        List<String> columns = new ArrayList<String>();
+        columns.add("version");
+        if (checkTable(dbMeta, "schema_version", columns.toArray()) != 0)
+            return -1;
+
+        columns.clear();
+        columns.add("id");
+        columns.add("name");
+        columns.add("description");
+        if (checkTable(dbMeta, "data_source", columns.toArray()) != 0)
+            return -1;
+
+        columns.clear();
+        columns.add("id");
+        columns.add("name");
+        if (checkTable(dbMeta, "trial", columns.toArray()) != 0)
+            return -1;
+        if (checkTable(dbMeta, "derived_thread_type", columns.toArray()) != 0)
+            return -1;
+
+        columns.clear();
+        columns.add("trial");
+        columns.add("name");
+        columns.add("value");
+        if (checkTable(dbMeta, "primary_metadata", columns.toArray()) != 0)
+            return -1;
+        if (checkTable(dbMeta, "secondary_metadata", columns.toArray()) != 0)
+            return -1;
+
+        columns.clear();
+        columns.add("id");
+        columns.add("trial");
+        if (checkTable(dbMeta, "thread", columns.toArray()) != 0)
+            return -1;
+        columns.add("name");
+        if (checkTable(dbMeta, "metric", columns.toArray()) != 0)
+            return -1;
+        if (checkTable(dbMeta, "timer", columns.toArray()) != 0)
+            return -1;
+        if (checkTable(dbMeta, "counter", columns.toArray()) != 0)
+            return -1;
+
+        columns.clear();
+        columns.add("timer");
+        if (checkTable(dbMeta, "timer_group", columns.toArray()) != 0)
+            return -1;
+        if (checkTable(dbMeta, "timer_parameter", columns.toArray()) != 0)
+            return -1;
+        if (checkTable(dbMeta, "timer_callpath", columns.toArray()) != 0)
+            return -1;
+        columns.clear();
+        columns.add("timer_callpath");
+        columns.add("thread");
+        if (checkTable(dbMeta, "timer_call_data", columns.toArray()) != 0)
+            return -1;
+
+
+        columns.clear();
+        columns.add("timer_call_data");
+        columns.add("metric");
+        columns.add("inclusive_value");
+        columns.add("exclusive_value");
+        columns.add("inclusive_percent");
+        columns.add("exclusive_percent");
+        columns.add("sum_exclusive_squared");
+
+        if (checkTable(dbMeta, "timer_value", columns.toArray()) != 0)
+            return -1;
+
+        columns.clear();
+        columns.add("counter");
+        columns.add("thread");
+        columns.add("sample_count");
+        columns.add("minimum_value");
+        columns.add("maximum_value");
+        columns.add("mean_value");
+        columns.add("standard_deviation");
+        if (checkTable(dbMeta, "counter_value", columns.toArray()) != 0)
+            return -1;
+
+        columns.clear();
+        columns.add("id");
+        columns.add("parent");
+        columns.add("name");
+        if (checkTable(dbMeta, "taudb_view", columns.toArray()) != 0)
+            return -1;
+
+        columns.clear();
+        columns.add("taudb_view");
+        columns.add("table_name");
+        columns.add("column_name");
+        if (checkTable(dbMeta, "taudb_view_parameter", columns.toArray()) != 0)
+            return -1;
+
+        return 0;
+	}
+
+	public Database getDatabase() {
         return database;
     }
     
     public static void setPasswordCallback(PasswordCallback callback) {
         passwordCallback = callback;
     }
+
+	public int getSchemaVersion()  {
+		if (schemaVersion == -1){
+			setSchemaVersion();
+		}
+		return schemaVersion;
+	}
+
+
+	private void setSchemaVersion() {
+			boolean hasSchemaVersionTable = false;
+			DatabaseMetaData meta;
+			try {
+				meta = getMetaData();
+
+                String tmpStr = null;
+                if (this.getDBType().compareTo("h2") == 0) {
+                    tmpStr = "SCHEMA_VERSION";
+                } else {
+                    tmpStr = "schema_version";
+                }
+                ResultSet r = meta.getTables(null, null, tmpStr, null);
+            
+                while (r.next()) {
+                    String tablename = r.getString("TABLE_NAME");
+                    if (tablename.equalsIgnoreCase("schema_version")) {
+                        hasSchemaVersionTable = true;
+                    }
+			    }
+			
+			    if (hasSchemaVersionTable) {
+				    String query = "SELECT version FROM " + getSchemaPrefix()
+						    + "schema_version";
+				    ResultSet resultSet = executeQuery(query);
+    
+				    if (resultSet.next()){
+					    schemaVersion = resultSet.getInt(1);
+					    return;
+				    }
+			    }
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			schemaVersion = 0;
+		}
 
 }

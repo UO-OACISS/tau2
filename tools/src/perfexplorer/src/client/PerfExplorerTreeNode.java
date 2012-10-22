@@ -6,7 +6,7 @@ package edu.uoregon.tau.perfexplorer.client;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
-import edu.uoregon.tau.perfexplorer.common.RMIView;
+import edu.uoregon.tau.perfdmf.View;
 
 
 public class PerfExplorerTreeNode extends DefaultMutableTreeNode {
@@ -18,8 +18,8 @@ public class PerfExplorerTreeNode extends DefaultMutableTreeNode {
 
     public PerfExplorerTreeNode(Object nodeObject) {
         super(nodeObject);
-		if (nodeObject instanceof RMIView) {
-			RMIView view = (RMIView)nodeObject;
+		if (nodeObject instanceof View) {
+			View view = (View)nodeObject;
 			view.setDMTN(this);
 		}
     }

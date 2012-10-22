@@ -28,13 +28,13 @@ import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.View;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.common.AnalysisType;
 import edu.uoregon.tau.perfexplorer.common.Console;
 import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
 import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
-import edu.uoregon.tau.perfexplorer.common.RMIView;
 import edu.uoregon.tau.perfexplorer.common.ScriptThread;
 import edu.uoregon.tau.perfexplorer.common.TransformationType;
 import edu.uoregon.tau.perfexplorer.constants.Constants;
@@ -731,7 +731,7 @@ public class PerfExplorerActionListener implements ActionListener {
 			return false;
 		}
 */		// allow Experiments or 1 view
-		if (!(selection instanceof Experiment) && !(selection instanceof RMIView)) {
+		if (!(selection instanceof Experiment) && !(selection instanceof View)) {
 		// allow Experiments or 1 view
 		// if (!(selection instanceof Experiment) && !(selection instanceof RMIView)) {
 			JOptionPane.showMessageDialog(mainFrame, "Please select one or more Experiments or one View.",

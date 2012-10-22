@@ -11,7 +11,11 @@ import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
@@ -39,6 +43,8 @@ import javax.swing.plaf.basic.BasicComboPopup;
 import javax.swing.plaf.basic.ComboPopup;
 import javax.swing.plaf.metal.MetalComboBoxUI;
 
+import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataValue;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
@@ -550,7 +556,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         			valueBox.setSelectedIndex(settings.atomicETDex[dex]);
         			if(settings.getTopoAtomic(dex)==null){
         				
-        				UserEvent tmpUE = ppTrial.getDataSource().getUserEvents().next();
+        				UserEvent tmpUE = ppTrial.getDataSource().getUserEventIterator().next();
         				settings.setTopoAtomic(tmpUE, dex);
         			}
         			fname=settings.getTopoAtomic(dex).getName();
@@ -569,7 +575,19 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         			metricBox.setEnabled(false);
         			valueBox.removeAllItems();
         			valueBox.setEditable(false);
-        			fname=settings.getTopoMetadata(dex);
+        			MetaDataKey mdk=settings.getTopoMetadata(dex);
+        			
+        			if(mdk==null){
+        				Thread t = ppTrial.getDataSource().getThread(0, 0, 0);
+                		if(t==null){
+                			t=ppTrial.getDataSource().getThreads().get(0);
+                		}
+                		mdk=t.getMetaData().keySet().iterator().next();
+                		
+                		settings.setTopoMetadata(mdk, dex);
+        			}
+        			
+        			fname=mdk.toString();
         			//valueBox.setSelectedIndex(settings.meticETDex[dex]);
         			//fname = settings.getTopoMetric(dex);
         			//TODO: Metadata support
@@ -619,7 +637,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                 	}
                 	else if(atomic.getSelectedIndex()==1){
                         FunctionSelectorDialog fSelector = new FunctionSelectorDialog(window, true,
-                        		ppTrial.getDataSource().getUserEvents(), settings.getTopoAtomic(dex), true, false);
+                        		ppTrial.getDataSource().getUserEventIterator(), settings.getTopoAtomic(dex), true, false);
 
                         if (fSelector.choose()) {
                             UserEvent selectedFunction = (UserEvent) fSelector.getSelectedObject();
@@ -638,18 +656,22 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                 		if(t==null){
                 			t=ppTrial.getDataSource().getThreads().get(0);
                 		}
-                		t.getMetaData().keySet().iterator();
-                		FunctionSelectorDialog fSelector = new FunctionSelectorDialog(window, true,
-                				t.getMetaData().keySet().iterator(), settings.getTopoMetadata(dex), true, false);
                 		
+                		Set<MetaDataKey> mdkSet= new TreeSet<MetaDataKey>();
+                		mdkSet.addAll(t.getMetaData().keySet());
+                		mdkSet.addAll(ppTrial.getDataSource().getMetaData().keySet());
+                		         		
+                		//t.getMetaData().keySet().iterator();
+                		FunctionSelectorDialog fSelector = new FunctionSelectorDialog(window, true,
+                				mdkSet.iterator(), settings.getTopoMetadata(dex), true, false);
                 		
                 		if (fSelector.choose()) {
-                            String metadataKey = (String) fSelector.getSelectedObject();
+                            MetaDataKey metadataKey = (MetaDataKey) fSelector.getSelectedObject();
                             settings.setTopoMetadata(metadataKey,dex);
 
                             //String fname = "   <none>";
                             if (settings.getTopoMetadata(dex) != null) {
-                                fname = settings.getTopoMetadata(dex);
+                                fname = settings.getTopoMetadata(dex).toString();
                             }
 
                 		}

@@ -157,7 +157,7 @@ public class PSRunDataSource extends DataSource {
         for (Iterator<Thread> it = getThreads().iterator(); it.hasNext();) {
             Thread thread = it.next();
             for (int i = 1; i < thread.getNumSnapshots(); i++) {
-                for (Iterator<Function> it2 = getFunctions(); it2.hasNext();) {
+                for (Iterator<Function> it2 = getFunctionIterator(); it2.hasNext();) {
                     Function function = it2.next();
                     FunctionProfile fp = thread.getFunctionProfile(function);
                     if (fp != null) {

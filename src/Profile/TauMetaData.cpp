@@ -51,7 +51,7 @@ using namespace std;
 #ifdef TAU_BGL
 #include <rts.h>
 #include <bglpersonality.h>
-#endif
+#endif /* TAU_BGL */
 
 
 /* Re-enabled since we believe this is now working (2009-11-02) */
@@ -76,7 +76,7 @@ using namespace std;
 #include <spi/include/kernel/location.h>
 #ifdef __GNUC__
 #include <hwi/include/bqc/A2_inlines.h>
-#endif
+#endif // __GNUC__
 #include <hwi/include/common/uci.h>
 
 static Personality_t tau_bgq_personality;
@@ -120,15 +120,12 @@ int tau_bgq_init(void) {
 
 #if (defined (TAU_CATAMOUNT) && defined (PTHREADS))
 #define _BITS_PTHREADTYPES_H 1
-#endif
+#endif // TAU_CATAMOUNT, PTHREADS
 
 #include <signal.h>
 #include <stdarg.h>
 
-// STL containers are not designed for this.
-// They do not have virtual destructors, so overriding the destructor
-// in this way is unsafe.  Is there some reason atexit() isn't enough?
-class MetaDataRepo : public metadata_map_t {
+class MetaDataRepo : public map<Tau_metadata_key,Tau_metadata_value_t*,Tau_Metadata_Compare> {
 public :
   virtual ~MetaDataRepo() {
     Tau_destructor_trigger();
@@ -137,41 +134,89 @@ public :
 
 
 // These come from Tau_metadata_register calls
-metadata_map_t & Tau_metadata_getMetaData_task(int tid) {
+map<Tau_metadata_key,Tau_metadata_value_t*,Tau_Metadata_Compare> &Tau_metadata_getMetaData(int tid) {
   static MetaDataRepo metadata[TAU_MAX_THREADS];
   return metadata[tid];
 }
 
-metadata_map_t & Tau_metadata_getMetaData(void) {
-	return Tau_metadata_getMetaData_task(0);
+extern "C" void Tau_metadata_create_value(Tau_metadata_value_t** tmv, const Tau_metadata_type_t type) {
+  // allocate a new value, and set the type
+  (*tmv) = (Tau_metadata_value_t*)malloc(sizeof(Tau_metadata_value_t));
+  (*tmv)->type = type;
+  return ;
 }
 
+extern "C" void Tau_metadata_create_object(Tau_metadata_object_t** tmo, const char *name, Tau_metadata_value_t* value) {
+  // allocate an object with one name and one value, and store the name and value
+  (*tmo) = (Tau_metadata_object_t*)malloc(sizeof(Tau_metadata_object_t));
+  (*tmo)->count = 1;
+  (*tmo)->names = (char**)malloc(sizeof(char*)*1);
+  (*tmo)->names[0] = strdup(name);
+  (*tmo)->values = (Tau_metadata_value_t**)malloc(sizeof(Tau_metadata_value_t*)*1);
+  (*tmo)->values[0] = value;
+  return ;
+}
 
-extern "C" void Tau_metadata_task(char const * name, char const * value, int tid) {
+extern "C" void Tau_metadata_create_array(Tau_metadata_array_t** tma, const int length) {
+  // allocate an array of declared size
+  (*tma) = (Tau_metadata_array_t*)malloc(sizeof(Tau_metadata_array_t));
+  (*tma)->length = length;
+  (*tma)->values = (Tau_metadata_value_t**)malloc(sizeof(Tau_metadata_value_t*) * length);
+  return ;
+}
+
+extern "C" void Tau_metadata_array_put(Tau_metadata_value_t* tmv, const int index, Tau_metadata_value_t *value) {
+  // put a value in the array. If the array is too small, reallocate it.
+  Tau_metadata_array_t *tma = tmv->data.aval;
+  if (tma->length <= index) {
+    // issue a warning!
+	TAU_VERBOSE("WARNING! Reallocating metadata array due to access beyond declared length!\n");
+	tma->length = index+1;
+    tma->values = (Tau_metadata_value_t**)realloc(tma->values, sizeof(Tau_metadata_value_t*) * tma->length);
+  }
+  tma->values[index] = value;
+  return;
+}
+
+extern "C" void Tau_metadata_object_put(Tau_metadata_value_t* tmv, const char *name, Tau_metadata_value_t *value) {
+  // get the object
+  Tau_metadata_object_t *tmo = tmv->data.oval;
+  // save the old count as the index
+  int index = tmo->count;
+  // increment the count
+  tmo->count++;
+  // reallocate the arrays
+  tmo->names = (char**)realloc(tmo->names, sizeof(Tau_metadata_value_t*) * tmo->count);
+  tmo->values = (Tau_metadata_value_t**)realloc(tmo->values, sizeof(Tau_metadata_value_t*) * tmo->count);
+  // store the new tuple
+  tmo->names[index] = strdup(name);
+  tmo->values[index] = value;
+  return;
+}
+
+extern "C" void Tau_metadata(const char *name, const char *value) {
 #ifdef TAU_DISABLE_METADATA
   return;
-#else
-  // make copies
-  char * myName = strdup(name);
-  char * myValue = strdup(value);
-  //TAU_VERBOSE("Metadata: %s = %s\n", name, value);
+#endif // TAU_DISABLE_METADATA
+  // make the key
+  Tau_metadata_key *key = new Tau_metadata_key();
+  key->name = strdup(name);
+  // make the value
+  Tau_metadata_value_t* tmv = NULL;
+  Tau_metadata_create_value(&tmv, TAU_METADATA_TYPE_STRING);
+  tmv->data.cval = strdup(value);
   RtsLayer::LockDB();
-  Tau_metadata_getMetaData_task(tid)[myName] = myValue;
+  Tau_metadata_getMetaData(RtsLayer::myThread())[*key] = tmv;
   RtsLayer::UnLockDB();
-#endif
-}
-extern "C" void Tau_metadata(char *name, const char *value) {
-	Tau_metadata_task(name, value, 0);
 }
 
-
-void Tau_metadata_register(char *name, int value) {
+void Tau_metadata_register(const char *name, int value) {
   char buf[256];
   sprintf (buf, "%d", value);
   Tau_metadata(name, buf);
 }
 
-void Tau_metadata_register(char *name, const char *value) {
+void Tau_metadata_register(const char *name, const char *value) {
   Tau_global_incr_insideTAU();
   Tau_metadata(name, value);
   Tau_global_decr_insideTAU();
@@ -195,7 +240,7 @@ int Tau_metadata_fillMetaData()
   const char *timeFormat = "%I64d";
 #else
   const char *timeFormat = "%lld";
-#endif
+#endif // TAU_WINDOWS
 
 
   char tmpstr[4096];
@@ -251,7 +296,7 @@ int Tau_metadata_fillMetaData()
   Tau_metadata_register("TAU Version", TAU_VERSION);
 
   Tau_metadata_register("pid", (int)getpid());
-#endif
+#endif // windows
 
 #ifdef TAU_BGL
   char bglbuffer[4096];
@@ -590,13 +635,13 @@ int Tau_metadata_fillMetaData()
   }
 
   return 0;
-#endif
+#endif // TAU_DISABLE_METADATA
 
 }
 
-
 static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, int tid) {
   const char *endl = "";
+  //newline = true;
   if (newline) {
     endl = "\n";
   }
@@ -606,73 +651,144 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, 
     Tau_XML_writeAttribute(out, "Metric Name", RtsLayer::getCounterName(counter), newline);
   }
 
-  // Write data from the Tau_metadata_register environment variable
-  // char *tauMetaDataEnvVar = getenv("Tau_metadata_register");
-  // if (tauMetaDataEnvVar != NULL) {
-  //   if (strncmp(tauMetaDataEnvVar, "<attribute>", strlen("<attribute>")) != 0) {
-  //     fprintf (stderr, "Error in formating TAU_METADATA environment variable\n");
-  //   } else {
-  //     Tau_util_output (out, tauMetaDataEnvVar);
-  //   }
-  // }
+  /*
+   * In order to support thread-specific metadata, we will need to aggregate
+   * the metadata which is common to all threads in this process (thread 0
+   * metadata, basically) with the thread-specific metata. If the current
+   * thread is 0, we have no aggregation to do.
+   */
+  map<Tau_metadata_key,Tau_metadata_value_t*,Tau_Metadata_Compare> *localRepo = NULL;
+  if (tid == 0) {
+    // just get a reference to thread 0 metadata
+    localRepo = &(Tau_metadata_getMetaData(tid));
+  } else {
+    // create a new aggregator
+    localRepo = new MetaDataRepo();
+	// copy all metadata from thread 0
+    for (map<Tau_metadata_key,Tau_metadata_value_t*,Tau_Metadata_Compare>::iterator it = Tau_metadata_getMetaData(0).begin(); it != Tau_metadata_getMetaData(0).end(); it++) {
+	  // DON'T copy the context metadata fields
+	  if (it->first.timer_context == NULL) {
+        (*localRepo)[it->first] = it->second;
+	  }
+	}
+ 	// overwrite with thread-specific data
+    for (map<Tau_metadata_key,Tau_metadata_value_t*,Tau_Metadata_Compare>::iterator it = Tau_metadata_getMetaData(tid).begin(); it != Tau_metadata_getMetaData(tid).end(); it++) {
+      (*localRepo)[it->first] = it->second;
+	}
+  }
+  int thread0 = Tau_metadata_getMetaData(0).size();
+  int local = localRepo->size();
+  int threadi = Tau_metadata_getMetaData(tid).size();
 
   // write out the user-specified (some from TAU) attributes
-  metadata_map_t const & metadata = Tau_metadata_getMetaData_task(tid);
-  for (metadata_map_t::const_iterator it=metadata.begin(); it != metadata.end(); it++) {
-    const char *name = it->first;
-    const char *value = it->second;
-    Tau_XML_writeAttribute(out, name, value, newline);
+  int i = 0;
+  for (map<Tau_metadata_key,Tau_metadata_value_t*,Tau_Metadata_Compare>::iterator it = (*localRepo).begin(); it != (*localRepo).end(); it++) {
+  /*
+	if (it->first.timer_context == NULL) {
+      const char *name = it->first.name;
+      const char *value = it->second->data.cval;
+      Tau_XML_writeAttribute(out, name, value, newline);
+	} else {
+	*/
+      Tau_XML_writeAttribute(out, &(it->first), it->second, newline);
+	//}
+	i++;
   }
 
   Tau_util_output (out, "</metadata>%s", endl);
   return 0;
 }
 
+extern "C" void Tau_context_metadata(const char *name, const char *value) {
 
+#ifdef TAU_DISABLE_METADATA
+  return;
+#endif
 
+  //printf("%s, %s\n", name, value);
+  RtsLayer::LockDB();
+  // get the current calling context
+  Profiler *current = TauInternal_CurrentProfiler(RtsLayer::myThread());
+  Tau_metadata_key *key = new Tau_metadata_key();
+  // it IS possible to request metadata with no active timer.
+  if (current != NULL) {
+    FunctionInfo *fi = current->ThisFunction;
+    char *fname = (char*)(malloc(sizeof(char)*(strlen(fi->GetName()) + strlen(fi->GetType()) + 2)));
+    sprintf(fname, "%s %s", fi->GetName(), fi->GetType());
+	key->timer_context = fname;
+	key->call_number = fi->GetCalls(RtsLayer::myThread());
+	key->timestamp = (x_uint64)current->StartTime[0];
+  }
+  key->name = strdup(name);
+  Tau_metadata_value_t* tmv = NULL;
+  Tau_metadata_create_value(&tmv, TAU_METADATA_TYPE_STRING);
+  tmv->data.cval = strdup(value);
+  //printf("%p  %s:%s:%d:%d:%llu = %s\n", &(Tau_metadata_getMetaData(RtsLayer::myThread())), key->name, key->timer_context, RtsLayer::myThread(), key->call_number, key->timestamp, tmv->data.cval);
+  int before = Tau_metadata_getMetaData(RtsLayer::myThread()).size();
+  Tau_metadata_getMetaData(RtsLayer::myThread())[*key] = tmv;
+  int after = Tau_metadata_getMetaData(RtsLayer::myThread()).size();
+  //printf("before: %d items, after %d items\n", before, after);
+  RtsLayer::UnLockDB();
+}
 
+extern "C" void Tau_structured_metadata(const Tau_metadata_object_t *object, bool context) {
 
-extern "C" void Tau_context_metadata(char *name, char *value) {
 #ifdef TAU_DISABLE_METADATA
   return;
 #else
-  // get the current calling context
-  Profiler *current = TauInternal_CurrentProfiler(RtsLayer::getTid());
-  FunctionInfo *fi = current->ThisFunction;
-  const char *fname = fi->GetName();
 
-  char *myName = (char*) malloc (strlen(name) + strlen(fname) + 10);
-  sprintf(myName, "%s => %s", fname, name);
-  char *myValue = strdup(value);
-  RtsLayer::LockDB();
-  Tau_metadata_getMetaData()[myName] = myValue;
+  Tau_metadata_key *key = new Tau_metadata_key();
+  if (context) {
+    RtsLayer::LockDB();
+    // get the current calling context
+    Profiler *current = TauInternal_CurrentProfiler(RtsLayer::myThread());
+    // it IS possible to request metadata with no active timer.
+    if (current != NULL) {
+      FunctionInfo *fi = current->ThisFunction;
+      char *fname = (char*)(malloc(sizeof(char)*(strlen(fi->GetName()) + strlen(fi->GetType()) + 2)));
+      sprintf(fname, "%s %s", fi->GetName(), fi->GetType());
+	  key->timer_context = fname;
+	  key->call_number = fi->GetCalls(RtsLayer::myThread());
+	  key->timestamp = (x_uint64)current->StartTime[0];
+    }
+  }
+  int i;
+  for (i = 0 ; i < object->count ; i++) {
+    key->name = strdup(object->names[i]);
+    Tau_metadata_value_t* tmv = object->values[i];
+    //printf("%p  %s:%s:%d:%llu = %s\n", &(Tau_metadata_getMetaData(RtsLayer::myThread())), key->name, key->timer_context, key->call_number, key->timestamp, tmv->data.cval);
+    Tau_metadata_getMetaData(RtsLayer::myThread())[*key] = tmv;
+  }
   RtsLayer::UnLockDB();
 #endif
 }
 
-extern "C" void Tau_phase_metadata(char *name, char *value) {
+extern "C" void Tau_phase_metadata(const char *name, const char *value) {
 #ifdef TAU_DISABLE_METADATA
   return;
 #else
 #ifdef TAU_PROFILEPHASE
   // get the current calling context
-  Profiler *current = TauInternal_CurrentProfiler(RtsLayer::getTid());
-  std::string myString = "";
+  Profiler *current = TauInternal_CurrentProfiler(RtsLayer::myThread());
+  Tau_metadata_key *key = new Tau_metadata_key();
+  key->name = strdup(name);
   while (current != NULL) {
     if (current->GetPhase()) {
       FunctionInfo *fi = current->ThisFunction;
-      const char *fname = fi->GetName();
-      myString = std::string(fname) + " => " + myString;
+      char *fname = (char*)(malloc(sizeof(char)*(strlen(fi->GetName()) + strlen(fi->GetType()) + 2)));
+      sprintf(fname, "%s %s", fi->GetName(), fi->GetType());
+	  key->timer_context = fname;
+	  key->call_number = fi->GetCalls(RtsLayer::myThread());
+	  key->timestamp = (x_uint64)current->StartTime[0];
+	  break;
     }    
     current = current->ParentProfiler;
   }
-
-  myString = myString + name;
-  char *myName = strdup(myString.c_str());
-  char *myValue = strdup(value);
- 
+  Tau_metadata_value_t* tmv = NULL;
+  Tau_create_metadata_value(&tmv, TAU_METADATA_TYPE_STRING);
+  tmv->data.cval = strdup(value);
   RtsLayer::LockDB();
-  Tau_metadata_getMetaData()[myName] = myValue;
+  Tau_metadata_getMetaData(RtsLayer::myThread())[*key] = tmv;
   RtsLayer::UnLockDB();
 #else
   Tau_context_metadata(name, value);
@@ -718,20 +834,41 @@ int Tau_metadata_writeMetaData(FILE *fp, int counter, int tid) {
 Tau_util_outputDevice *Tau_metadata_generateMergeBuffer() {
   Tau_util_outputDevice *out = Tau_util_createBufferOutputDevice();
 
-  Tau_util_output(out,"%d%c", Tau_metadata_getMetaData().size(), '\0');
+  Tau_util_output(out,"%d%c", Tau_metadata_getMetaData(RtsLayer::myThread()).size(), '\0');
 
-  metadata_map_t const & metadata = Tau_metadata_getMetaData();
-  for (metadata_map_t::const_iterator it=metadata.begin(); it != metadata.end(); it++) {
-    const char *name = it->first;
-    const char *value = it->second;
+  for (map<Tau_metadata_key,Tau_metadata_value_t*,Tau_Metadata_Compare>::iterator it = Tau_metadata_getMetaData(RtsLayer::myThread()).begin(); it != Tau_metadata_getMetaData(RtsLayer::myThread()).end(); ++it) {
+    const char *name = it->first.name;
     Tau_util_output(out,"%s%c", name, '\0');
-    Tau_util_output(out,"%s%c", value, '\0');
+	switch (it->second->type) {
+	  case TAU_METADATA_TYPE_STRING:
+        Tau_util_output(out,"%s%c", it->second->data.cval, '\0');
+		break;
+	  case TAU_METADATA_TYPE_INTEGER:
+        Tau_util_output(out,"%d%c", it->second->data.ival, '\0');
+		break;
+	  case TAU_METADATA_TYPE_DOUBLE:
+        Tau_util_output(out,"%f%c", it->second->data.dval, '\0');
+		break;
+	  case TAU_METADATA_TYPE_NULL:
+        Tau_util_output(out,"NULL%c", '\0');
+		break;
+	  case TAU_METADATA_TYPE_FALSE:
+        Tau_util_output(out,"FALSE%c", '\0');
+		break;
+	  case TAU_METADATA_TYPE_TRUE:
+        Tau_util_output(out,"TRUE%c", '\0');
+		break;
+	  default:
+        Tau_util_output(out,"%c", '\0');
+	    break;
+	}
   }
   return out;
 }
 
 
 void Tau_metadata_removeDuplicates(char *buffer, int buflen) {
+  //printf ("************* REMOVING DUPLICATES ************* \n");
   // read the number of items and allocate arrays
   int numItems;
   sscanf(buffer,"%d", &numItems);
@@ -747,13 +884,16 @@ void Tau_metadata_removeDuplicates(char *buffer, int buflen) {
     const char *value = buffer;
     buffer = strchr(buffer, '\0')+1;
 
-    metadata_map_t const & metadata = Tau_metadata_getMetaData();
-    metadata_map_t::const_iterator it = metadata.find(attribute);
-    if (it != metadata.end()) {
-      const char *my_value = it->second;
-      if (0 == strcmp(value, my_value)) {
-        Tau_metadata_getMetaData().erase(attribute);
-      }
+    Tau_metadata_key *key = new Tau_metadata_key();
+	key->name = strdup(attribute);
+    map<Tau_metadata_key,Tau_metadata_value_t*,Tau_Metadata_Compare>::iterator iter = Tau_metadata_getMetaData(RtsLayer::myThread()).find(*key);
+    if (iter != Tau_metadata_getMetaData(RtsLayer::myThread()).end()) {
+	  if (iter->second->type == TAU_METADATA_TYPE_STRING) {
+        const char *my_value = iter->second->data.cval;
+        if (0 == strcmp(value, my_value)) {
+          Tau_metadata_getMetaData(RtsLayer::myThread()).erase(*key);
+        }
+	  }
     }
   }
 }
