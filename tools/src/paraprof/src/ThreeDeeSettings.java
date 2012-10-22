@@ -1,5 +1,6 @@
 package edu.uoregon.tau.paraprof;
 
+import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.enums.VisType;
@@ -152,11 +153,11 @@ public void setTopoAtomic(UserEvent ue, int i){
 	topoUserEvent[i]=ue;
 }
 
-private String[] topoMetadata=new String[4];
-public String getTopoMetadata(int i){
+private MetaDataKey[] topoMetadata=new MetaDataKey[4];
+public MetaDataKey getTopoMetadata(int i){
 	return topoMetadata[i];
 }
-public void setTopoMetadata(String ue, int i){
+public void setTopoMetadata(MetaDataKey ue, int i){
 	topoMetadata[i]=ue;
 }
 
