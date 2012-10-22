@@ -32,6 +32,7 @@ import javax.swing.JSplitPane;
 
 import com.graphbuilder.math.VarMap;
 
+import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
 import edu.uoregon.tau.paraprof.ThreeDeeGeneralPlotUtils.CoordMap;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
@@ -391,9 +392,9 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 				}
 			}
 		}else if(settings.getDataType(3)==2){
-			String metaKey=settings.getTopoMetadata(3);
-			if(metaKey!=null&&metaKey.trim().length()>0){
-				String metaVal=thread.getMetaData().get(metaKey);
+			MetaDataKey metaKey=settings.getTopoMetadata(3);//.toString();
+			if(metaKey!=null){
+				String metaVal=thread.getMetaData().get(metaKey).toString();
 				float tmp=Float.NaN;
 				try{
 				tmp = Float.parseFloat(metaVal);
@@ -723,9 +724,9 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 						}
 					}
 					else if(settings.getDataType(i)==2) {
-						String metaKey=settings.getTopoMetadata(i);
-						if(metaKey!=null&&metaKey.trim().length()>0){
-							String metaVal=thread.getMetaData().get(metaKey);
+						MetaDataKey metaKey=settings.getTopoMetadata(i);
+						if(metaKey!=null){
+							String metaVal=thread.getMetaData().get(metaKey).toString();
 							float tmp=Float.NaN;
 							try{
 							tmp = Float.parseFloat(metaVal);
@@ -2265,9 +2266,9 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 			}
 		}
 		else if(settings.getDataType(3)==2){			
-			String metaKey=settings.getTopoMetadata(3);
-		if(metaKey!=null&&metaKey.trim().length()>0){
-			String toDisplay = metaKey;
+			MetaDataKey metaKey=settings.getTopoMetadata(3);
+		if(metaKey!=null){
+			String toDisplay = metaKey.toString();
 			if (toDisplay.length() > 30) {
 				toDisplay = toDisplay.substring(0, 30) + "...";
 			}
