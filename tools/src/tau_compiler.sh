@@ -131,6 +131,7 @@ printUsage () {
     echo -e "  -optOpari2ConfigTool=\"<path/opari2-config>\"\tSpecifies the location of the Opari tool"
     echo -e "  -optOpari2Opts=\"\"\t\tSpecifies optional arguments to the Opari tool"
     echo -e "  -optOpari2Reset=\"\"\t\tResets options passed to the Opari tool"
+    echo -e "  -optOpari2Dir=\"<path>\"\t\tSpecifies the location of the Opari directory"
     echo -e "  -optNoMpi\t\t\tRemoves -l*mpi* libraries during linking"
     echo -e "  -optMpi\t\t\tDoes not remove -l*mpi* libraries during linking (default)"
     echo -e "  -optNoRevert\t\t\tExit on error. Does not revert to the original compilation rule on error."
@@ -667,10 +668,6 @@ for arg in "$@" ; do
                         opari2init=$FALSE
                         echoIfDebug "\tDon't make pompregions."
                         ;;
-		    -optOpari2Dir*)
-			optOpari2Dir="${arg#"-optOpari2Dir="}"
-			echoIfDebug "\tOpari2 Dir used: $optOpari2Dir"
-			;;
 		    -optOpari2Tool*)
 			optOpari2Tool="${arg#"-optOpari2Tool="}"
 			echoIfDebug "\tOpari2 Tool used: $optOpari2Tool"
@@ -689,6 +686,15 @@ for arg in "$@" ; do
 			    opari2=$TRUE
 			fi
 			;;
+                    -optOpari2Dir*)
+                        optOpari2Dir="${arg#"-optOpari2Dir="}"
+                        echoIfDebug "\tOpari Dir used: $optOpari2Dir"
+                        if [ "x$optOpari2Dir" != "x" ] ; then
+			    optOpari2Tool="$optOpari2Dir/bin/opari2"
+			    optOpari2ConfigTool="$optOpari2Dir/bin/opari2-config"
+                        echoIfDebug "\tOpari Tool used: $optOpari2Tool"
+                        fi
+                        ;;
 		    -optIBM64*)
 			currentopt="${arg#"-optIBM64="}"
 			optIBM64="$currentopt $optIBM64"
