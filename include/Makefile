@@ -1203,7 +1203,7 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
         -optPdtCxxOpts="$(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE) $(TAU_SHMEM_INCLUDE) $(OPARIINCDIR)"\
         -optTauInstr="$(TAU_BIN_DIR)/tau_instrumentor" \
         -optNoMpi \
-	-optOpariDir="$(OPARIDIR)" -optOpari2Tool="$(TAU_OPARI2_TOOL)" -optOpari2ConfigTool="$(TAU_OPARI_CONFIG_TOOL)"  \
+	-optOpari2Tool="$(TAU_OPARI2_TOOL)" -optOpari2ConfigTool="$(TAU_OPARI_CONFIG_TOOL)" -optOpari2Dir="$(OPARIDIR)" \
 	-optIBM64="$(TAU_IBM64)" -optOpari2Opts="$(TAU_OPARI2_OPTION)" \
 	-optOpariTool="$(TAU_OPARI_TOOL)"  \
 	-optTauCC="$(TAU_CCOMPILER)" \
