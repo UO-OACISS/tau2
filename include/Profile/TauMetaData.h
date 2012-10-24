@@ -36,7 +36,7 @@ class Tau_metadata_key {
   x_uint64 timestamp;
   Tau_metadata_key() {
     name = NULL;
-    timer_context = strdup(""); 
+    timer_context = NULL;
     call_number = 0;
     timestamp = 0;
   }
