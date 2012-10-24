@@ -24,6 +24,7 @@ program test6
 use omp_lib
 
       include 'test6.f90.opari.inc'
+#line 24 "test6.f90"
 integer (kind=omp_lock_kind)      lock1
 integer (kind=omp_nest_lock_kind) lock2
 integer (kind=omp_sched_kind)     sched
