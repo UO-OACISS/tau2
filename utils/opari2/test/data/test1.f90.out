@@ -24,6 +24,7 @@ program test1
 !* The following pragmas should be instrumented *
 !************************************************
       include 'test1.f90.opari.inc'
+#line 24 "test1.f90"
       pomp2_num_threads = pomp2_lib_get_max_threads()
       pomp2_if = .true.
       call POMP2_Parallel_fork(pomp2_region_1,&
@@ -35,13 +36,14 @@ program test1
   !$omp if(pomp2_if) num_threads(pomp2_num_threads)
       call POMP2_Parallel_begin(pomp2_region_1)
 #line 25 "test1.f90"
-      call POMP2_Barrier_enter(pomp2_region_2, pomp2_old_task, &
-     pomp2_ctc_2 )
+      call POMP2_Barrier_enter(pomp2_region_2,&
+      pomp2_old_task, pomp2_ctc_2 )
 #line 25 "test1.f90"
   !$omp barrier
       call POMP2_Barrier_exit(pomp2_region_2, pomp2_old_task)
 #line 26 "test1.f90"
-      call POMP2_Implicit_barrier_enter(pomp2_region_1, pomp2_old_task)
+      call POMP2_Implicit_barrier_enter(pomp2_region_1,&
+      pomp2_old_task)
 !$omp barrier
       call POMP2_Implicit_barrier_exit(pomp2_region_1, pomp2_old_task)
       call POMP2_Parallel_end(pomp2_region_1)
@@ -62,7 +64,8 @@ program test1
   !$omp if(pomp2_if) num_threads(pomp2_num_threads)
       call POMP2_Parallel_begin(pomp2_region_3)
 #line 30 "test1.f90"
-      call POMP2_Implicit_barrier_enter(pomp2_region_3, pomp2_old_task)
+      call POMP2_Implicit_barrier_enter(pomp2_region_3,&
+      pomp2_old_task)
 !$omp barrier
       call POMP2_Implicit_barrier_exit(pomp2_region_3, pomp2_old_task)
       call POMP2_Parallel_end(pomp2_region_3)
@@ -84,7 +87,8 @@ program test1
   !$omp if(pomp2_if) num_threads(pomp2_num_threads)
       call POMP2_Parallel_begin(pomp2_region_4)
 #line 35 "test1.f90"
-      call POMP2_Implicit_barrier_enter(pomp2_region_4, pomp2_old_task)
+      call POMP2_Implicit_barrier_enter(pomp2_region_4,&
+      pomp2_old_task)
 !$omp barrier
       call POMP2_Implicit_barrier_exit(pomp2_region_4, pomp2_old_task)
       call POMP2_Parallel_end(pomp2_region_4)
@@ -106,7 +110,7 @@ program test1
   write(*,*) """!$omp parallel"""
 end program test1
 
-      subroutine POMP2_Init_regions_000()
+      subroutine POMP2_Init_reg_000()
          include 'test1.f90.opari.inc'
          call POMP2_Assign_handle( pomp2_region_1, &
          pomp2_ctc_1 )

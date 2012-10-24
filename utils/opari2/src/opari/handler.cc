@@ -347,19 +347,22 @@ generate_call_save_task_id( const char* event,
            << "_" << event << "(" << region_id_prefix << id;
         if ( ( strcmp( type, "task_create" ) == 0 ) || ( strcmp( type, "untied_task_create" ) == 0 )  )
         {
-            os << ", pomp2_new_task";
             if ( lang & L_F77 )
             {
-                os << ",\n     &pomp2_old_task";
+                os << ",\n     &pomp2_new_task";
             }
             else
             {
-                os << ", &\n      pomp2_old_task";
+                os << ", pomp2_new_task";
             }
+        }
+        if ( lang & L_F77 )
+        {
+            os << ",\n     &pomp2_old_task";
         }
         else
         {
-            os << ", pomp2_old_task";
+            os << ",&\n      pomp2_old_task";
         }
         if ( r != NULL )
         {
@@ -375,9 +378,9 @@ generate_call_save_task_id( const char* event,
             {
                 if ( r->name == "task" )
                 {
-                    os << ", &\n      pomp2_if";
+                    os << ", pomp2_if";
                 }
-                os << ", &\n     " << r->ctc_string_variable << " ";
+                os << ", " << r->ctc_string_variable << " ";
             }
         }
         os << ")\n";
@@ -433,7 +436,14 @@ generate_call_restore_task_id( const char* event,
         }
         os << "      call POMP2_" << c1 << ( type + 1 )
            << "_" << event << "(" << region_id_prefix << id;
-        os << ", pomp2_old_task" << ")\n";
+        if ( lang & L_F77 )
+        {
+            os << ",\n     &pomp2_old_task)\n";
+        }
+        else
+        {
+            os << ", pomp2_old_task)\n";
+        }
         if ( strcmp( type, "task_create" ) == 0 || strcmp( type, "untied_task_create" ) == 0 )
         {
             os << "      end if\n";
@@ -590,7 +600,7 @@ print_pragma_task( OMPragma* p,
                     os << "!$omp& if(pomp2_if) num_threads(pomp2_num_threads) copyin(" << pomp_tpd << ")\n";
                     if ( p->changed_default() )
                     {
-                        os << "!$omp& shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)\n";
+                        os << "!$omp& shared(/" << "cb" << infile_inode << "/)\n";
                     }
                 }
                 else
@@ -600,7 +610,7 @@ print_pragma_task( OMPragma* p,
                     os << "!$omp& if(pomp2_if) num_threads(pomp2_num_threads) \n";
                     if ( p->changed_default() )
                     {
-                        os << "!$omp& shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)\n";
+                        os << "!$omp& shared(/" << "cb" << infile_inode << "/)\n";
                     }
                 }
             }
@@ -613,7 +623,7 @@ print_pragma_task( OMPragma* p,
                     os << "  !$omp if(pomp2_if) num_threads(pomp2_num_threads) copyin(" << pomp_tpd << ")";
                     if ( p->changed_default() )
                     {
-                        os << " &\n  !$omp shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)";
+                        os << " &\n  !$omp shared(/" << "cb" << infile_inode << "/)";
                     }
                     os << "\n";
                 }
@@ -624,7 +634,7 @@ print_pragma_task( OMPragma* p,
                     os << "  !$omp if(pomp2_if) num_threads(pomp2_num_threads)";
                     if ( p->changed_default() )
                     {
-                        os << " &\n  !$omp shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)";
+                        os << " &\n  !$omp shared(/" << "cb" << infile_inode << "/)";
                     }
                     os << "\n";
                 }
@@ -667,7 +677,7 @@ print_pragma_task( OMPragma* p,
             os << "!$omp& if(pomp2_if) firstprivate(pomp2_new_task, pomp2_if)\n";
             if ( p->changed_default() )
             {
-                os << "!$omp& shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)\n ";
+                os << "!$omp& shared(/" << "cb" << infile_inode << "/)\n ";
             }
         }
         else if ( lang & L_FORTRAN )
@@ -676,7 +686,7 @@ print_pragma_task( OMPragma* p,
             os << " if(pomp2_if) firstprivate(pomp2_new_task, pomp2_if)";
             if ( p->changed_default() )
             {
-                os << "&\n  !$omp shared(/" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/)";
+                os << "&\n  !$omp shared(/" << "cb" << infile_inode << "/)";
             }
             os << "\n";
         }
@@ -731,8 +741,9 @@ RTop( OMPragma* p )
 {
     if ( regStack.empty() )
     {
-        cerr << infile << ":" << p->lineno
-             << "663: ERROR: unbalanced pragma/directive nesting\n";
+        cerr << infile << ":" << p->lineno << ":"
+             << "663: ERROR: unbalanced pragma/directive nesting for "
+             << p->name << " directive \n";
         cleanup_and_exit();
     }
     else
