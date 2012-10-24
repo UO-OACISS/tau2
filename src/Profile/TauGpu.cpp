@@ -28,8 +28,6 @@
 // Moved from header file
 using namespace std;
 
-void *main_ptr, *gpu_ptr;
-
 static TauContextUserEvent *MemoryCopyEventHtoD;
 static TauContextUserEvent *MemoryCopyEventDtoH;
 static TauContextUserEvent *MemoryCopyEventDtoD;
@@ -78,7 +76,8 @@ void check_gpu_event(int gpuTask)
 			exit(1);
 		}
 		//printf("starting top level timer total=%d map total=%d id=%d.\n", number_of_tasks, TheGpuEventMap().size(), gpuTask);
-		TAU_PROFILER_START_TASK(gpu_ptr, gpuTask);
+		//TAU_PROFILER_START_TASK(gpu_ptr, gpuTask);
+		Tau_create_top_level_timer_if_necessary_task(gpuTask);
 		number_of_top_level_task_events++;
 	}
 }
@@ -452,7 +451,7 @@ void Tau_gpu_init(void)
 		Tau_get_context_userevent((void **) &MemoryCopyEventDtoH, "Bytes copied from Device to Host");
 		Tau_get_context_userevent((void **) &MemoryCopyEventDtoD, "Bytes copied (Other)");
 
-		TAU_PROFILER_CREATE(gpu_ptr, ".TAU application  ", "", TAU_USER);
+		//TAU_PROFILER_CREATE(gpu_ptr, ".TAU application  ", "", TAU_USER);
 
 		
 #ifdef DEBUG_PROF
@@ -477,7 +476,7 @@ void Tau_gpu_exit(void)
 		map<GpuEvent*, int>::iterator it;
 		for (it = TheGpuEventMap().begin(); it != TheGpuEventMap().end(); it++)
 		{
-			TAU_PROFILER_STOP_TASK(gpu_ptr, it->second);
+			Tau_create_top_level_timer_if_necessary_task(it->second);
 		}
 #ifdef DEBUG_PROF
 		printf("stopping level 1.\n");
