@@ -50,7 +50,8 @@ process_fortran( istream&    is,
                  ostream&    os,
                  bool        addSharedDecl,
                  char*       incfile,
-                 Language    lang );
+                 Language    lang,
+                 bool        keepSrcInfo );
 
 void
 process_c_or_cxx( istream&    is,

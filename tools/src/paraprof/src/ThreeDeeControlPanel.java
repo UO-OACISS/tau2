@@ -11,7 +11,11 @@ import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
@@ -40,6 +44,7 @@ import javax.swing.plaf.basic.ComboPopup;
 import javax.swing.plaf.metal.MetalComboBoxUI;
 
 import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataValue;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
@@ -651,10 +656,14 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                 		if(t==null){
                 			t=ppTrial.getDataSource().getThreads().get(0);
                 		}
+                		
+                		Set<MetaDataKey> mdkSet= new TreeSet<MetaDataKey>();
+                		mdkSet.addAll(t.getMetaData().keySet());
+                		mdkSet.addAll(ppTrial.getDataSource().getMetaData().keySet());
+                		         		
                 		//t.getMetaData().keySet().iterator();
                 		FunctionSelectorDialog fSelector = new FunctionSelectorDialog(window, true,
-                				t.getMetaData().keySet().iterator(), settings.getTopoMetadata(dex), true, false);
-                		
+                				mdkSet.iterator(), settings.getTopoMetadata(dex), true, false);
                 		
                 		if (fSelector.choose()) {
                             MetaDataKey metadataKey = (MetaDataKey) fSelector.getSelectedObject();
