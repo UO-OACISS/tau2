@@ -1331,14 +1331,17 @@ extern "C" void Tau_create_top_level_timer_if_necessary(void) {
 }
 
 
-extern "C" void Tau_stop_top_level_timer_if_necessary(void) {
-  int tid = RtsLayer::myThread();
+extern "C" void Tau_stop_top_level_timer_if_necessary_task(int tid) {
   if (TauInternal_CurrentProfiler(tid) && 
       TauInternal_CurrentProfiler(tid)->ParentProfiler == NULL && 
       strcmp(TauInternal_CurrentProfiler(tid)->ThisFunction->GetName(), ".TAU application") == 0) {
     DEBUGPROFMSG("Found top level .TAU application timer"<<endl;);  
     TAU_GLOBAL_TIMER_STOP();
   }
+}
+
+extern "C" void Tau_stop_top_level_timer_if_necessary(void) {
+   Tau_stop_top_level_timer_if_necessary_task(RtsLayer::myThread());
 }
 
 
