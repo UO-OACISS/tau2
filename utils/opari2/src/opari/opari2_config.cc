@@ -48,20 +48,22 @@ opari2_print_help( char** argv )
     std::cout << argv[ 0 ] << "\n\n"
               << "Usage: opari2-config [OPTION] ... <command>\n\n"
               << "with following commands:\n"
-              << "   --nm                   Prints the nm command.\n"
-              << "   --awk-cmd              Prints the awk command.\n"
-              << "   --awk-script           Prints the awk script.\n"
-              << "   --egrep                Prints the egrep command.\n"
-              << "   --create-pomp2-regions Prints the whole command necessary\n"
-              << "                          for creating the initialization file.\n"
-              << "   --cflags               Prints compiler options to include installed headers.\n"
-              << "   --version              Prints the opari2 version number.\n"
-              << "   --pomp2-api-version    Prints the pomp2 API version that instrumented files\n"
-              << "                          conform too.\n\n"
-              << "   --opari2-revision      prints the revision number of the OPARI2 package\n"
-              << "   --common-revision      prints the revision number of the common package\n\n"
-              << "and following options:\n"
+              << "   --nm                    Prints the nm command.\n"
+              << "   --awk-cmd               Prints the awk command.\n"
+              << "   --awk-script            Prints the awk script.\n"
+              << "   --egrep                 Prints the egrep command.\n"
+              << "   --create-pomp2-regions <object files> Prints the whole command necessary\n"
+              << "                           for creating the initialization file.\n"
+              << "   --cflags                Prints compiler options to include installed headers.\n"
+              << "   --version               Prints the opari2 version number.\n"
+              << "   --interface-version     Prints the pomp2 API version that instrumented files\n"
+              << "                           conform too.\n\n"
+              << "   --opari2-revision       prints the revision number of the OPARI2 package\n"
+              << "   --common-revision       prints the revision number of the common package\n\n"
               << "   --help                  Prints this help text.\n"
+              << "and following options:\n"
+              << "   --build-check           Tells opari2-config to use build paths instead of install paths.\n"
+              << "                           Used for build testing."
               << "   --config=<config file>  Reads in a configuration from the given file.\n\n"
               << "Report bugs to <scorep-bugs@groups.tu-dresden.de>."
               << std::endl;
@@ -132,7 +134,7 @@ main( int    argc,
         {
             action = ACTION_VERSION;
         }
-        else if ( strcmp( argv[ i ], "--pomp2-api-version" ) == 0 )
+        else if ( strcmp( argv[ i ], "--interface-version" ) == 0 )
         {
             action = ACTION_POMP2_API_VERSION;
         }
@@ -159,6 +161,10 @@ main( int    argc,
                 return EXIT_FAILURE;
             }
         }
+        else if ( strcmp( argv[ i ], "--build-check" ) == 0 )
+        {
+            app.setBuildCheck();
+        }
         else
         {
             std::cerr << "\nUnknown option " << argv[ i ] << ". Abort.\n" << std::endl;
@@ -171,7 +177,7 @@ main( int    argc,
     /* read data in case a config file was specified */
     if ( config_file != NULL )
     {
-        app.ReadConfigFile( config_file );
+        app.readConfigFile( config_file );
     }
 
     switch ( action )
@@ -207,7 +213,7 @@ main( int    argc,
             {
                 std::cout << obj_files[ i ] << " ";
             }
-            std::cout << " | " << app.egrep << " -i POMP2_Init_regions | "
+            std::cout << " | " << app.egrep << " -i POMP2_Init_reg | "
                       << app.egrep << " \" [TD] \" | "
                       << app.awk << " -f " << app.script;
             break;
@@ -245,7 +251,14 @@ OPARI_Config::~OPARI_Config()
 }
 
 void
-OPARI_Config::ReadConfigFile( std::string config_file )
+OPARI_Config::setBuildCheck()
+{
+    script = BUILD_SCRIPT;
+    cflags = BUILD_CFLAGS;
+}
+
+void
+OPARI_Config::readConfigFile( std::string config_file )
 {
     std::ifstream inFile;
 

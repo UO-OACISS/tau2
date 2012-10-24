@@ -31,13 +31,5 @@
  *
  */
 
-/**
- * Conditionally compile on macro values that are either 0 or 1.
- *
- * E.g. if you have the macro @c HAVE_DECL_MPI_ACCUMULATE that is either 0 or
- * 1, you should use <tt>\#if HAVE(DECL_MPI_ACCUMULATE)</tt> in your code
- * to conditionally compile if @c HAVE_DECL_MPI_ACCUMULATE is defined to 1.
- */
-#define HAVE( H ) ( defined( HAVE_##H ) && HAVE_##H )
 
 #endif /* CONFIG_CUSTOM_H */

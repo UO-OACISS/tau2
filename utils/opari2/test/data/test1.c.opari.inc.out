@@ -10,7 +10,7 @@ static POMP2_Region_handle pomp2_region_2 = NULL;
 #ifdef __cplusplus 
  extern "C" 
 #endif
-void POMP2_Init_regions_000()
+void POMP2_Init_reg_000()
 {
     POMP2_Assign_handle( &pomp2_region_1, pomp2_ctc_1 );
     POMP2_Assign_handle( &pomp2_region_2, pomp2_ctc_2 );
