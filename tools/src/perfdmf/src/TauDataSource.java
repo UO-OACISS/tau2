@@ -549,12 +549,12 @@ public class TauDataSource extends DataSource {
         }
 
         //if (numcalls != 0) {
-            Function func = this.addFunction(name, 1);
+            Function func = this.addFunction(name, this.dirs.size());
 
             FunctionProfile functionProfile = thread.getFunctionProfile(func);
 
             if (functionProfile == null) {
-                functionProfile = new FunctionProfile(func);
+                functionProfile = new FunctionProfile(func, this.dirs.size());
                 thread.addFunctionProfile(functionProfile);
             }
 
