@@ -432,18 +432,18 @@ public class GPTLDataSource extends DataSource {
 					previousLineBlank = false;
 					// end of the data section
 					inData = false;
-				}
-				// Total recursive calls = 0
-				else if (inputString.trim().startsWith("Total recursive calls")) {
-					previousLineBlank = false;
-					// end of the data section
-					inData = false;
 					// clear the event stack for the next thread
 					while (!eventStack.isEmpty()) {
 						eventStack.pop();
 					}
 					// save the thread data in the list
 					dataList.add(data);
+				}
+				// Total recursive calls = 0
+				else if (inputString.trim().startsWith("Total recursive calls")) {
+					previousLineBlank = false;
+					// end of the data section
+					inData = false;
 				}
 				// thread 0 had some hash collisions:
 				else if (inputString.trim().startsWith("thread")) {

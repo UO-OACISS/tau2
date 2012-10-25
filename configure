@@ -6917,20 +6917,25 @@ if [ $scorep = yes ] ; then
       if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs SCOREPOMPI" 
         scorepLibs=`${scorepdir}/bin/scorep-config --hyb --libs`
+        scorepLD=`${scorepdir}/bin/scorep-config --hyb --ldflags`
       else
         fixmakeargs="$fixmakeargs SCOREPMPI"
         scorepLibs=`${scorepdir}/bin/scorep-config --mpi --libs`
+        scorepLD=`${scorepdir}/bin/scorep-config --mpi --ldflags`
       fi 
     else
       if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs SCOREPOMP" 
+	scorepLD=`${scorepdir}/bin/scorep-config --omp --ldflags`
         scorepLibs=`${scorepdir}/bin/scorep-config --omp --libs`
       else
         scorepLibs=`${scorepdir}/bin/scorep-config --seq --libs`
+        scorepLD=`${scorepdir}/bin/scorep-config --seq --ldflags`
       fi
     fi
+    scorepLibs="$scorepLD $scorepLibs"
+    scorepLibs=`echo $scorepLibs | sed "s/Wl,-rpath -Wl,/L/g"`
     scorepLibs=`echo $scorepLibs | sed "s/ /#/g"`
-    scorepLibs=`echo $scorepLibs | sed "s/,//g"`
 echo $scorepLibs
     fixmakeargs="$fixmakeargs scorepmpilibs=$scorepLibs"
     fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"

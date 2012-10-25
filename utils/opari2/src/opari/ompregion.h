@@ -82,17 +82,17 @@ public:
     static void
     generate_header_cxx( ostream& os );
 
-    /** generate call POMP2_Init_region_XXX function to initialize
+    /** generate call POMP2_Init_reg_XXX function to initialize
      *  all handles, in the C case*/
     static void
     generate_init_handle_calls_c( ostream& os );
 
-    /** generate call POMP2_Init_region_XXX function to initialize
+    /** generate call POMP2_Init_reg_XXX function to initialize
      *  all handles, in the C++ case*/
     static void
     generate_init_handle_calls_cxx( ostream& os );
 
-    /** generate call POMP2_Init_region_XXX function to initialize
+    /** generate call POMP2_Init_reg_XXX function to initialize
      *  all handles, in the Fortran case*/
     static void
     generate_init_handle_calls_f( ostream&    os,

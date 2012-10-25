@@ -18,6 +18,8 @@
 
 AC_DEFUN([AC_SCOREP_REVISION],
 [
+AC_REQUIRE([AC_SCOREP_PACKAGE_AND_LIBRARY_VERSION])
+
     # When working with a svn checkout, write a REVISION file. The REVISION
     # file is updated during each configure call and also at make doxygen-user
     # and make dist.
@@ -47,20 +49,26 @@ AC_DEFUN([AC_SCOREP_REVISION],
         common_revision=`cat $srcdir/build-config/REVISION_COMMON`
         AC_MSG_WARN([distribution does not match a single, unmodified revision, but $component_revision (${PACKAGE_NAME}) and $common_revision (common).])
     fi
+])
 
+
+AC_DEFUN([AC_SCOREP_PACKAGE_AND_LIBRARY_VERSION],
+[
     AC_SUBST([PACKAGE_MAJOR],
-             m4_esyscmd([vendor/common/build-config/generate-package-version.sh build-config/VERSION "echo \$major"]))
+             m4_esyscmd($1[vendor/common/build-config/generate-package-version.sh ] $1[build-config/VERSION "echo \$major"]))
     AC_SUBST([PACKAGE_MINOR],
-             m4_esyscmd([vendor/common/build-config/generate-package-version.sh build-config/VERSION "echo \$minor"]))
+             m4_esyscmd($1[vendor/common/build-config/generate-package-version.sh ] $1[build-config/VERSION "echo \$minor"]))
     AC_SUBST([PACKAGE_BUGFIX],
-             m4_esyscmd([vendor/common/build-config/generate-package-version.sh build-config/VERSION "echo \$bugfix"]))
+             m4_esyscmd($1[vendor/common/build-config/generate-package-version.sh ] $1[build-config/VERSION "echo \$bugfix"]))
+    AC_SUBST([PACKAGE_SUFFIX],
+             m4_esyscmd($1[vendor/common/build-config/generate-package-version.sh ] $1[build-config/VERSION "echo \$suffix"]))
 
     AC_SUBST([LIBRARY_CURRENT],
-             m4_esyscmd([vendor/common/build-config/generate-library-version.sh build-config/VERSION "echo \$current"]))
+             m4_esyscmd($1[vendor/common/build-config/generate-library-version.sh ] $1[build-config/VERSION "echo \$current"]))
     AC_SUBST([LIBRARY_REVISION],
-             m4_esyscmd([vendor/common/build-config/generate-library-version.sh build-config/VERSION "echo \$revision"]))
+             m4_esyscmd($1[vendor/common/build-config/generate-library-version.sh ] $1[build-config/VERSION "echo \$revision"]))
     AC_SUBST([LIBRARY_AGE],
-             m4_esyscmd([vendor/common/build-config/generate-library-version.sh build-config/VERSION "echo \$age"]))
+             m4_esyscmd($1[vendor/common/build-config/generate-library-version.sh ] $1[build-config/VERSION "echo \$age"]))
 ])
 
 
