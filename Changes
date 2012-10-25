@@ -58,6 +58,7 @@ Version 2.21 changes (from 2.20):
 44. Added -z to perfdmf_loadtrial to provide two ways to compute mean in PerfDMF. Preferences in ParaProf.
 45. Opari support for multiple libraries in tau_compiler.sh (-optOpariLibs) for POMP2 registrations.
 46. CUPTI updates. 
+47. Added support for GPI wrapper [www.gpi-site.com]. 
 
 
 
