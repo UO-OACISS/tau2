@@ -44,9 +44,9 @@
         }
         print line
     }
-    else if(match($0,"POMP2_Init_regions")){
+    else if(match($0,"POMP2_Init_reg")){
         #remove the timestamp based region identifier
-        gsub("Init_regions_[0-9_]+","Init_regions_000",$0)
+        gsub("Init_reg_[0-9_]+","Init_reg_000",$0)
         print $0
     }
     else if(match($0,"#line")){

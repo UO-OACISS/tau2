@@ -15,6 +15,39 @@
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
+/* Set if we are building for the AIX platform */
+#undef HAVE_PLATFORM_AIX
+
+/* Set if we are building for the ALTIX platform */
+#undef HAVE_PLATFORM_ALTIX
+
+/* Set if we are building for the ARM platform */
+#undef HAVE_PLATFORM_ARM
+
+/* Set if we are building for the BG/L platform */
+#undef HAVE_PLATFORM_BGL
+
+/* Set if we are building for the BG/P platform */
+#undef HAVE_PLATFORM_BGP
+
+/* Set if we are building for the BG/Q platform */
+#undef HAVE_PLATFORM_BGQ
+
+/* Set if we are building for the Cray XT platform */
+#undef HAVE_PLATFORM_CRAYXT
+
+/* Set if we are building for the Linux platform */
+#undef HAVE_PLATFORM_LINUX
+
+/* Set if we are building for the Mac platform */
+#undef HAVE_PLATFORM_MAC
+
+/* Set if we are building for the NEC SX platform */
+#undef HAVE_PLATFORM_NECSX
+
+/* Set if we are building for the Solaris platform */
+#undef HAVE_PLATFORM_SOLARIS
+
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
 
@@ -81,5 +114,3 @@
 
 /* Version number of package */
 #undef VERSION
-
-#include <config-custom.h>

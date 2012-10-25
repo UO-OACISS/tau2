@@ -21,6 +21,7 @@
 
 program test5
       include 'test5.f90.opari.inc'
+#line 21 "test5.f90"
   integer i,j,k,m
   logical l
   integer, dimension(10,10) :: AA, BB, CC
@@ -57,7 +58,8 @@ program test5
   end do
 #line 42 "test5.f90"
 !$omp end do nowait
-      call POMP2_Implicit_barrier_enter(pomp2_region_1, pomp2_old_task)
+      call POMP2_Implicit_barrier_enter(pomp2_region_1,&
+      pomp2_old_task)
 !$omp barrier
       call POMP2_Implicit_barrier_exit(pomp2_region_1, pomp2_old_task)
       call POMP2_Do_exit(pomp2_region_1)
@@ -106,7 +108,8 @@ program test5
       call POMP2_Section_end(pomp2_region_2)
 #line 53 "test5.f90"
 !$omp end sections nowait
-      call POMP2_Implicit_barrier_enter(pomp2_region_2, pomp2_old_task)
+      call POMP2_Implicit_barrier_enter(pomp2_region_2,&
+      pomp2_old_task)
 !$omp barrier
       call POMP2_Implicit_barrier_exit(pomp2_region_2, pomp2_old_task)
       call POMP2_Sections_exit(pomp2_region_2)
@@ -134,7 +137,8 @@ program test5
   BB = CC
 #line 58 "test5.f90"
 !$omp end workshare nowait
-      call POMP2_Implicit_barrier_enter(pomp2_region_3, pomp2_old_task)
+      call POMP2_Implicit_barrier_enter(pomp2_region_3,&
+      pomp2_old_task)
 !$omp barrier
       call POMP2_Implicit_barrier_exit(pomp2_region_3, pomp2_old_task)
       call POMP2_Workshare_exit(pomp2_region_3)
@@ -145,7 +149,7 @@ program test5
 #line 59 "test5.f90"
 end program test5
 
-      subroutine POMP2_Init_regions_000()
+      subroutine POMP2_Init_reg_000()
          include 'test5.f90.opari.inc'
          call POMP2_Assign_handle( pomp2_region_1, &
          pomp2_ctc_1 )

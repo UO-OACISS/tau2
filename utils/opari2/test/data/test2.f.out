@@ -21,6 +21,7 @@
 
       program test2
       include 'test2.f.opari.inc'
+#line 21 "test2.f"
       integer i
       integer k
       
@@ -51,9 +52,11 @@
       enddo
 #line 35 "test2.f"
 !$omp end do nowait
-      call POMP2_Implicit_barrier_enter(pomp2_region_2, pomp2_old_task)
+      call POMP2_Implicit_barrier_enter(pomp2_region_2,
+     &pomp2_old_task)
 !$omp barrier
-      call POMP2_Implicit_barrier_exit(pomp2_region_2, pomp2_old_task)
+      call POMP2_Implicit_barrier_exit(pomp2_region_2,
+     &pomp2_old_task)
       call POMP2_Do_exit(pomp2_region_2)
 #line 36 "test2.f"
       
@@ -64,11 +67,13 @@
       call POMP2_Flush_exit(pomp2_region_3)
 #line 38 "test2.f"
 
-      call POMP2_Barrier_enter(pomp2_region_4, pomp2_old_task,
+      call POMP2_Barrier_enter(pomp2_region_4,
+     &pomp2_old_task,
      &pomp2_ctc_4 )
 #line 39 "test2.f"
 !$omp barrier
-      call POMP2_Barrier_exit(pomp2_region_4, pomp2_old_task)
+      call POMP2_Barrier_exit(pomp2_region_4,
+     &pomp2_old_task)
 #line 40 "test2.f"
 
       call POMP2_Do_enter(pomp2_region_5,
@@ -91,9 +96,11 @@
       enddo
 #line 47 "test2.f"
 !$omp end do nowait
-      call POMP2_Implicit_barrier_enter(pomp2_region_5, pomp2_old_task)
+      call POMP2_Implicit_barrier_enter(pomp2_region_5,
+     &pomp2_old_task)
 !$omp barrier
-      call POMP2_Implicit_barrier_exit(pomp2_region_5, pomp2_old_task)
+      call POMP2_Implicit_barrier_exit(pomp2_region_5,
+     &pomp2_old_task)
       call POMP2_Do_exit(pomp2_region_5)
 #line 48 "test2.f"
 
@@ -117,9 +124,11 @@
       call POMP2_Section_end(pomp2_region_7)
 #line 54 "test2.f"
 !$omp end sections nowait
-      call POMP2_Implicit_barrier_enter(pomp2_region_7, pomp2_old_task)
+      call POMP2_Implicit_barrier_enter(pomp2_region_7,
+     &pomp2_old_task)
 !$omp barrier
-      call POMP2_Implicit_barrier_exit(pomp2_region_7, pomp2_old_task)
+      call POMP2_Implicit_barrier_exit(pomp2_region_7,
+     &pomp2_old_task)
       call POMP2_Sections_exit(pomp2_region_7)
 #line 55 "test2.f"
       
@@ -178,9 +187,11 @@
       call POMP2_Single_end(pomp2_region_12)
 #line 74 "test2.f"
 !$omp end single nowait
-      call POMP2_Implicit_barrier_enter(pomp2_region_12, pomp2_old_task)
+      call POMP2_Implicit_barrier_enter(pomp2_region_12,
+     &pomp2_old_task)
 !$omp barrier
-      call POMP2_Implicit_barrier_exit(pomp2_region_12, pomp2_old_task)
+      call POMP2_Implicit_barrier_exit(pomp2_region_12,
+     &pomp2_old_task)
       call POMP2_Single_exit(pomp2_region_12)
 #line 75 "test2.f"
       
@@ -191,19 +202,24 @@
       a = b + c
 #line 78 "test2.f"
 !$omp end workshare nowait
-      call POMP2_Implicit_barrier_enter(pomp2_region_13, pomp2_old_task)
+      call POMP2_Implicit_barrier_enter(pomp2_region_13,
+     &pomp2_old_task)
 !$omp barrier
-      call POMP2_Implicit_barrier_exit(pomp2_region_13, pomp2_old_task)
+      call POMP2_Implicit_barrier_exit(pomp2_region_13,
+     &pomp2_old_task)
       call POMP2_Workshare_exit(pomp2_region_13)
 #line 79 "test2.f"
 
-      call POMP2_Implicit_barrier_enter(pomp2_region_1, pomp2_old_task)
+      call POMP2_Implicit_barrier_enter(pomp2_region_1,
+     &pomp2_old_task)
 !$omp barrier
-      call POMP2_Implicit_barrier_exit(pomp2_region_1, pomp2_old_task)
+      call POMP2_Implicit_barrier_exit(pomp2_region_1,
+     &pomp2_old_task)
       call POMP2_Parallel_end(pomp2_region_1)
 #line 80 "test2.f"
 !$omp end parallel
-      call POMP2_Parallel_join(pomp2_region_1, pomp2_old_task)
+      call POMP2_Parallel_join(pomp2_region_1,
+     &pomp2_old_task)
 #line 81 "test2.f"
 
       pomp2_num_threads = pomp2_lib_get_max_threads()
@@ -219,7 +235,8 @@
 #line 83 "test2.f"
       pomp2_if = .true.
       if (pomp2_if) then
-      call POMP2_Task_create_begin(pomp2_region_15, pomp2_new_task,
+      call POMP2_Task_create_begin(pomp2_region_15,
+     &pomp2_new_task,
      &pomp2_old_task, 
      &pomp2_if,
      &pomp2_ctc_15 )
@@ -238,26 +255,32 @@
 #line 85 "test2.f"
 !$omp end task
       if (pomp2_if) then
-      call POMP2_Task_create_end(pomp2_region_15, pomp2_old_task)
+      call POMP2_Task_create_end(pomp2_region_15,
+     &pomp2_old_task)
       end if
 #line 86 "test2.f"
 
 #line 87 "test2.f"
 !$omp this should be ignored by opari and the compiler
 
-      call POMP2_Taskwait_begin(pomp2_region_16, pomp2_old_task,
+      call POMP2_Taskwait_begin(pomp2_region_16,
+     &pomp2_old_task,
      &pomp2_ctc_16 )
 #line 90 "test2.f"
 !$omp taskwait
-      call POMP2_Taskwait_end(pomp2_region_16, pomp2_old_task)
+      call POMP2_Taskwait_end(pomp2_region_16,
+     &pomp2_old_task)
 #line 91 "test2.f"
-      call POMP2_Implicit_barrier_enter(pomp2_region_14, pomp2_old_task)
+      call POMP2_Implicit_barrier_enter(pomp2_region_14,
+     &pomp2_old_task)
 !$omp barrier
-      call POMP2_Implicit_barrier_exit(pomp2_region_14, pomp2_old_task)
+      call POMP2_Implicit_barrier_exit(pomp2_region_14,
+     &pomp2_old_task)
       call POMP2_Parallel_end(pomp2_region_14)
 #line 91 "test2.f"
 !$omp end parallel
-      call POMP2_Parallel_join(pomp2_region_14, pomp2_old_task)
+      call POMP2_Parallel_join(pomp2_region_14,
+     &pomp2_old_task)
 #line 92 "test2.f"
 
 ! $ omp this should be ignored by opari and the compiler
@@ -266,7 +289,7 @@
       end program test2
       
 
-      subroutine POMP2_Init_regions_000()
+      subroutine POMP2_Init_reg_000()
          include 'test2.f.opari.inc'
          call POMP2_Assign_handle( pomp2_region_1, 
      &   pomp2_ctc_1 )

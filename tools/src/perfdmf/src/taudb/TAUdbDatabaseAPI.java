@@ -155,6 +155,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
             
             // upload the metrics and get a map that maps the metrics 0 -> n-1 to their unique DB IDs (e.g. 83, 84)
 			long before = System.currentTimeMillis();
+			long veryStart = before;
 			System.out.print("Inserting metrics...");
             uploadMetrics(newTrialID, dataSource.getMetrics(), db);
             Map<Metric, Integer> metricMap = getMetricIDMap(newTrialID, dataSource, db);
@@ -241,6 +242,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
             uploadMetadata(dataSource, trial, callpathMap, threadMap, db);
 			after = System.currentTimeMillis();
 			System.out.println(" done. (" + (after - before) / 1000.0 + " seconds)");
+			System.out.println("Total time to load : " + (after - veryStart) / 1000.0 + " seconds");
 
           //TODO: Deal with cancel upload
 //          if (this.cancelUpload) {
