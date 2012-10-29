@@ -34,6 +34,7 @@ CC		= $(TAU_CC)
 #BGP#CXX = $(TAU_CXX_FE) $(ABI) $(ISA) #ENDIF#
 #BGQ#CC = $(TAU_CC_FE) $(ABI) $(ISA) #ENDIF#
 #BGQ#CXX = $(TAU_CXX_FE) $(ABI) $(ISA) #ENDIF#
+#MMIC#CXX = $(TAU_CXX_FE) $(ABI) $(ISA) #ENDIF#
 
 
 AR		= $(TAU_AR)

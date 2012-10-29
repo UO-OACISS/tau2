@@ -23,6 +23,10 @@
 #include <iomanip>
 #include <Profile/OpenMPLayer.h>
 #include <stdlib.h>
+#include <map>
+
+// Moved from header file
+using namespace std;
 
 void *main_ptr, *gpu_ptr;
 
@@ -119,11 +123,15 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, GpuEvent
 	//Inorder to capture the entire memcpy transaction time start the send/recived
 	//at the start of the event
 	if (memcpyType == MemcpyDtoH) {
+	  if (TauEnv_get_tracing()) {
 		TauTraceOneSidedMsg(MESSAGE_RECV, device, -1, 0);
+	  }
 	}
 	else
 	{
+	  if (TauEnv_get_tracing()) {
 		TauTraceOneSidedMsg(MESSAGE_SEND, device, transferSize, 0);
+	  }
 	}
 
 	if (memcpyType == MemcpyHtoD) {
@@ -262,12 +270,12 @@ FunctionInfo* parent)
 int get_task(GpuEvent *new_task)
 {
 	map<GpuEvent*, int>::iterator it = TheGpuEventMap().begin();
-	
-	/*for (it; it != TheGpuEventMap().end(); it++)
+	/*	
+	for (it; it != TheGpuEventMap().end(); it++)
 	{
-		printf("tasks [%s] = %d.\n", it->first->printId(), it->second);
-	}*/
-	
+		printf("tasks [%s] = %d.\n", it->first->gpuIdentifier(), it->second);
+	}
+	*/	
 	int task = 0;
 	//map<GpuEvent*, int>::iterator it = TheGpuEventMap().find(new_task);
 	it = TheGpuEventMap().find(new_task);
@@ -275,11 +283,13 @@ int get_task(GpuEvent *new_task)
 	{
 		GpuEvent *create_task = new_task->getCopy();
 		task = Tau_RtsLayer_createThread();
+		//new task, record metadata.
+		create_task->recordMetadata(task);
 		TheGpuEventMap().insert( pair<GpuEvent *, int>(create_task, task));
 		number_of_tasks++;
 		Tau_set_thread_fake(task);
 		//TAU_CREATE_TASK(task);
-		//printf("new task: %s id: %d.\n", create_task->printId(), task);
+		//printf("new task: %s id: %d.\n", create_task->gpuIdentifier(), task);
 	} else
 	{
 		task = (*it).second;
@@ -304,6 +314,7 @@ void Tau_gpu_register_gpu_event(GpuEvent *id, double startTime, double endTime)
 {
 	//printf("Tau gpu name: %s.\n", id->getName());
 	int task = get_task(id);
+	//printf("registering gpu event, name: %s. task: %d.\n", id->getName(), task);
   
 	//printf("in TauGpu.cpp, registering gpu event.\n");
 	//printf("Tau gpu name: %s.\n", name);
@@ -375,14 +386,16 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
 		//TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, transferSize, RtsLayer::myThread()); 
 #ifdef DEBUG_PROF		
 		printf("[%f] onesided event mem recv: %f, id: %s.\n", startTime, transferSize,
-		id->printId());
+		id->gpuIdentifier());
 #endif
 		}
 		break_gpu_event(functionName, task,
 				endTime + id->syncOffset(), id->getCallingSite());
 		//Inorder to capture the entire memcpy transaction time start the send/recived
 		//at the start of the event
+	  if (TauEnv_get_tracing()) {
 		TauTraceOneSidedMsg(MESSAGE_RECV, id, transferSize, task);
+	  }
 	}
 	else if (memcpyType == MemcpyDtoH) {
 		stage_gpu_event(functionName, task,
@@ -395,7 +408,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
 			//TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
 #ifdef DEBUG_PROF		
 		printf("[%f] onesided event mem send: %f, id: %s\n", startTime, transferSize,
-		id->printId());
+		id->gpuIdentifier());
 #endif
 		}
 		//printf("TAU: putting message into trace file.\n");
@@ -404,7 +417,9 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
 				endTime + id->syncOffset(), id->getCallingSite());
 		//Inorder to capture the entire memcpy transaction time start the send/recived
 		//at the start of the event
+	  if (TauEnv_get_tracing()) {
 		TauTraceOneSidedMsg(MESSAGE_SEND, id, transferSize, task);
+	  }
 	}
 	else {
 		stage_gpu_event(functionName, task,
@@ -417,7 +432,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
 			//TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
 #ifdef DEBUG_PROF		
 		printf("[%f] onesided event mem send: %f, id: %s\n", startTime, transferSize,
-		id->printId());
+		id->gpuIdentifier());
 #endif
 		}
 		//TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, transferSize, RtsLayer::myThread()); 
@@ -445,7 +460,6 @@ void Tau_gpu_init(void)
 #endif
 
 }
-
 
 /*
 	finalization routine for TAU

@@ -44,6 +44,22 @@ Version 2.21 changes (from 2.20):
 30. Added support for -arch=arm_linux.
 31. Added jogl.jar and libjogl.* changes for IBM BG/Q and ARM Linux.
 32. Enhancements for TAU sampling and TAU_TRACK_SIGNALS for IBM BG/Q.
+33. Enhancements to TAU to support parameter and phase based profiling in Score-P. 
+34. Added support for Cray and Berkeley UPC runtime library wrapper using -optTrackUPCR TAU_OPTIONS.
+35. Reduced MPI overhead using a hash table, fixed BGP & BGQTIMERS. 
+36. Added support for ARM (arm_linux) and Intel MIC. 
+37. Added support for OTF2 (tau2otf2 -> tau2otf). 
+38. Added support for UPC wrapper generator with communication tracking. 
+39. Improved ParaProf 3D displays with wraparound torus configurations. 
+40. Added support for Fujitsu FX10. 
+41. Added support MPC. 
+42. Added support for LLVM. 
+43. Added support for TAU_LITE=1 for reduced overhead profiling. 
+44. Added -z to perfdmf_loadtrial to provide two ways to compute mean in PerfDMF. Preferences in ParaProf.
+45. Opari support for multiple libraries in tau_compiler.sh (-optOpariLibs) for POMP2 registrations.
+46. CUPTI updates. 
+47. Added support for GPI wrapper [www.gpi-site.com]. 
+
 
 
 

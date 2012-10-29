@@ -14,6 +14,10 @@
 # PARTICULAR PURPOSE.
 
 @SET_MAKE@
+
+# Create platform entries for EXTRA_DIST using e.g.:
+# cd vendor/common/build-config/platforms
+# for i in *; do echo "              \$(srcdir)/vendor/common/build-config/platforms/$i \\"; done
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
@@ -36,6 +40,7 @@ host_triplet = @host@
 DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in \
 	$(srcdir)/vendor/common/build-config/Makefile.inc.am \
+	$(srcdir)/vendor/common/build-config/platforms.am \
 	$(top_srcdir)/configure \
 	$(top_srcdir)/doc/doxygen-dev/doxygen-dev.cfg.in \
 	$(top_srcdir)/doc/doxygen-user/doxygen-user-component.cfg.in \
@@ -43,6 +48,7 @@ DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(top_srcdir)/test/c_test.sh.in \
 	$(top_srcdir)/test/f77_test.sh.in \
 	$(top_srcdir)/test/f90_test.sh.in \
+	$(top_srcdir)/vendor/common/build-config/config-common.h \
 	$(top_srcdir)/vendor/common/build_related/doxygen/doxygen-user-common.cfg.in \
 	AUTHORS COPYING ChangeLog INSTALL NEWS \
 	build-config/config.guess build-config/config.sub \
@@ -75,8 +81,8 @@ am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
 mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES = doc/doxygen-user-common.cfg \
 	doc/doxygen-user-component.cfg doc/doxygen-dev.cfg \
-	test/c_test.sh test/f90_test.sh test/f77_test.sh \
-	build-frontend/pomp2-parse-init-regions.awk
+	src/config-common.h test/c_test.sh test/f90_test.sh \
+	test/f77_test.sh build-frontend/pomp2-parse-init-regions.awk
 CONFIG_CLEAN_VPATH_FILES =
 AM_V_GEN = $(am__v_GEN_$(V))
 am__v_GEN_ = $(am__v_GEN_$(AM_DEFAULT_VERBOSITY))
@@ -146,6 +152,7 @@ AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 CYGPATH_W = @CYGPATH_W@
 DEFS = @DEFS@
+DOXYGEN = @DOXYGEN@
 ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
@@ -169,6 +176,7 @@ PACKAGE_MAJOR = @PACKAGE_MAJOR@
 PACKAGE_MINOR = @PACKAGE_MINOR@
 PACKAGE_NAME = @PACKAGE_NAME@
 PACKAGE_STRING = @PACKAGE_STRING@
+PACKAGE_SUFFIX = @PACKAGE_SUFFIX@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
@@ -200,7 +208,6 @@ docdir = @docdir@
 dvidir = @dvidir@
 exec_prefix = @exec_prefix@
 have_dot = @have_dot@
-have_doxygen = @have_doxygen@
 have_doxygen_latex = @have_doxygen_latex@
 have_makeindex = @have_makeindex@
 have_pdflatex = @have_pdflatex@
@@ -236,10 +243,9 @@ top_srcdir = @top_srcdir@
 SUBDIRS = $(subdirs) $(subdirs_custom)
 ACLOCAL_AMFLAGS = -I vendor/common/build-config/m4
 
-# Create platform entries for EXTRA_DIST using e.g.:
-# cd vendor/common/build-config/platforms
-# for i in *; do echo "              \$(srcdir)/vendor/common/build-config/platforms/$i \\"; done
-EXTRA_DIST =  \
+# Testing framework
+EXTRA_DIST = $(srcdir)/vendor/common/cutest/CuTest.c \
+	$(srcdir)/vendor/common/cutest/CuTest.h \
 	$(srcdir)/vendor/common/build-config/process_arguments.awk \
 	$(srcdir)/vendor/common/build-config/platforms/compiler-frontend-gcc \
 	$(srcdir)/vendor/common/build-config/platforms/compiler-frontend-ibm \
@@ -257,58 +263,61 @@ EXTRA_DIST =  \
 	$(srcdir)/vendor/common/build-config/platforms/compiler-nocross-pgi \
 	$(srcdir)/vendor/common/build-config/platforms/compiler-nocross-studio \
 	$(srcdir)/vendor/common/build-config/platforms/platform-backend-altix \
+	$(srcdir)/vendor/common/build-config/platforms/platform-backend-arm \
 	$(srcdir)/vendor/common/build-config/platforms/platform-backend-bgl \
 	$(srcdir)/vendor/common/build-config/platforms/platform-backend-bgp \
-	$(srcdir)/vendor/common/build-config/platforms/platform-backend-crayx1 \
+	$(srcdir)/vendor/common/build-config/platforms/platform-backend-bgq \
 	$(srcdir)/vendor/common/build-config/platforms/platform-backend-crayxt \
-	$(srcdir)/vendor/common/build-config/platforms/platform-backend-ibm \
+	$(srcdir)/vendor/common/build-config/platforms/platform-backend-aix \
 	$(srcdir)/vendor/common/build-config/platforms/platform-backend-linux \
 	$(srcdir)/vendor/common/build-config/platforms/platform-backend-mac \
 	$(srcdir)/vendor/common/build-config/platforms/platform-backend-necsx \
-	$(srcdir)/vendor/common/build-config/platforms/platform-backend-sicortex \
-	$(srcdir)/vendor/common/build-config/platforms/platform-backend-sun \
+	$(srcdir)/vendor/common/build-config/platforms/platform-backend-solaris \
 	$(srcdir)/vendor/common/build-config/platforms/platform-backend-user-provided \
 	$(srcdir)/vendor/common/build-config/platforms/platform-frontend-altix \
+	$(srcdir)/vendor/common/build-config/platforms/platform-frontend-arm \
 	$(srcdir)/vendor/common/build-config/platforms/platform-frontend-bgl \
 	$(srcdir)/vendor/common/build-config/platforms/platform-frontend-bgp \
-	$(srcdir)/vendor/common/build-config/platforms/platform-frontend-crayx1 \
+	$(srcdir)/vendor/common/build-config/platforms/platform-frontend-bgq \
 	$(srcdir)/vendor/common/build-config/platforms/platform-frontend-crayxt \
-	$(srcdir)/vendor/common/build-config/platforms/platform-frontend-ibm \
+	$(srcdir)/vendor/common/build-config/platforms/platform-frontend-aix \
 	$(srcdir)/vendor/common/build-config/platforms/platform-frontend-linux \
 	$(srcdir)/vendor/common/build-config/platforms/platform-frontend-mac \
 	$(srcdir)/vendor/common/build-config/platforms/platform-frontend-necsx \
-	$(srcdir)/vendor/common/build-config/platforms/platform-frontend-sicortex \
-	$(srcdir)/vendor/common/build-config/platforms/platform-frontend-sun \
+	$(srcdir)/vendor/common/build-config/platforms/platform-frontend-solaris \
 	$(srcdir)/vendor/common/build-config/platforms/platform-frontend-user-provided \
 	$(srcdir)/vendor/common/build-config/platforms/platform-mpi-altix \
+	$(srcdir)/vendor/common/build-config/platforms/platform-mpi-arm \
 	$(srcdir)/vendor/common/build-config/platforms/platform-mpi-bgl \
 	$(srcdir)/vendor/common/build-config/platforms/platform-mpi-bgp \
-	$(srcdir)/vendor/common/build-config/platforms/platform-mpi-crayx1 \
+	$(srcdir)/vendor/common/build-config/platforms/platform-mpi-bgq \
 	$(srcdir)/vendor/common/build-config/platforms/platform-mpi-crayxt \
-	$(srcdir)/vendor/common/build-config/platforms/platform-mpi-ibm \
+	$(srcdir)/vendor/common/build-config/platforms/platform-mpi-aix \
 	$(srcdir)/vendor/common/build-config/platforms/platform-mpi-linux \
 	$(srcdir)/vendor/common/build-config/platforms/platform-mpi-mac \
 	$(srcdir)/vendor/common/build-config/platforms/platform-mpi-necsx \
-	$(srcdir)/vendor/common/build-config/platforms/platform-mpi-sicortex \
-	$(srcdir)/vendor/common/build-config/platforms/platform-mpi-sun \
+	$(srcdir)/vendor/common/build-config/platforms/platform-mpi-solaris \
 	$(srcdir)/vendor/common/build-config/platforms/platform-mpi-user-provided \
-	$(srcdir)/vendor/common/cutest/CuTest.c \
-	$(srcdir)/vendor/common/cutest/CuTest.h $(srcdir)/src/config.h \
-	$(srcdir)/src/config-custom.h \
+	$(srcdir)/src/config.h $(srcdir)/src/config-custom.h \
 	$(srcdir)/test/replacePaths_c.awk \
 	$(srcdir)/test/replacePaths_f77.awk \
 	$(srcdir)/test/replacePaths_f90.awk \
 	$(srcdir)/doc/example/example.c \
-	$(srcdir)/doc/example/example.f \
+	$(srcdir)/doc/example/example.f90 \
 	$(srcdir)/doc/example_user_instrumentation/example_user_instrumentation.c \
-	$(srcdir)/doc/example_user_instrumentation/example_user_instrumentation.f \
+	$(srcdir)/doc/example_user_instrumentation/example_user_instrumentation.f90 \
 	$(srcdir)/doc/doxygen-user/opari2_usage.dox.in \
 	$(srcdir)/test/data $(am__append_4)
-CLEANFILES = $(builddir)/user_provided_configure_args \
+BUILT_SOURCES = 
+CLEANFILES = $(am__append_1) $(am__append_2) \
+	$(builddir)/user_provided_configure_args \
 	$(builddir)/mpi_compiler_suite \
-	$(builddir)/mpi_compiler_suite_to_source $(am__append_1) \
-	$(am__append_2) doc/doxygen-user/main.dox
-DISTCLEANFILES = $(builddir)/config.summary
+	$(builddir)/mpi_compiler_suite_to_source \
+	doc/doxygen-user/main.dox
+DISTCLEANFILES = $(builddir)/config.summary \
+	$(builddir)/@PACKAGE@.summary
+CONFIG_STATUS_DEPENDENCIES = $(srcdir)/build-config/VERSION
+CONFIGURE_DEPENDENCIES = $(srcdir)/build-config/VERSION
 DOC_SRC_DIR = $(srcdir)/doc
 
 ###############################################################################
@@ -316,12 +325,13 @@ DOC_SRC_DIR = $(srcdir)/doc
 
 ###############################################################################
 SCOREP_RECURSIVE_TARGETS = $(am__append_3) check-build-recursive
-all: all-recursive
+all: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
 .SUFFIXES:
 am--refresh:
 	@:
-$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/vendor/common/build-config/Makefile.inc.am $(am__configure_deps)
+$(srcdir)/Makefile.in:  $(srcdir)/Makefile.am $(srcdir)/vendor/common/build-config/Makefile.inc.am $(srcdir)/vendor/common/build-config/platforms.am $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
 	    *$$dep*) \
@@ -358,6 +368,8 @@ doc/doxygen-user-common.cfg: $(top_builddir)/config.status $(top_srcdir)/vendor/
 doc/doxygen-user-component.cfg: $(top_builddir)/config.status $(top_srcdir)/doc/doxygen-user/doxygen-user-component.cfg.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 doc/doxygen-dev.cfg: $(top_builddir)/config.status $(top_srcdir)/doc/doxygen-dev/doxygen-dev.cfg.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+src/config-common.h: $(top_builddir)/config.status $(top_srcdir)/vendor/common/build-config/config-common.h
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 test/c_test.sh: $(top_builddir)/config.status $(top_srcdir)/test/c_test.sh.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
@@ -682,11 +694,13 @@ distcleancheck: distclean
 	       $(distcleancheck_listfiles) ; \
 	       exit 1; } >&2
 check-am: all-am
-check: check-recursive
+check: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) check-recursive
 all-am: Makefile
 installdirs: installdirs-recursive
 installdirs-am:
-install: install-recursive
+install: $(BUILT_SOURCES)
+	$(MAKE) $(AM_MAKEFLAGS) install-recursive
 install-exec: install-exec-recursive
 install-data: install-data-recursive
 uninstall: uninstall-recursive
@@ -713,6 +727,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
 clean: clean-recursive
 
 clean-am: clean-generic clean-local mostlyclean-am
@@ -783,8 +798,9 @@ ps-am:
 uninstall-am:
 	@$(NORMAL_INSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) uninstall-hook
-.MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) ctags-recursive \
-	install-am install-strip tags-recursive uninstall-am
+.MAKE: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) all check \
+	ctags-recursive install install-am install-strip \
+	tags-recursive uninstall-am
 
 .PHONY: $(RECURSIVE_CLEAN_TARGETS) $(RECURSIVE_TARGETS) CTAGS GTAGS \
 	all all-am am--refresh check check-am clean clean-generic \
@@ -814,7 +830,7 @@ prohibit-svn-files-in-dist:
 
 common-uninstall:
 	rm -rf $(DESTDIR)$(docdir)
-	rm -rf $(DESTDIR)$(datadir)/@PACKAGE_NAME@
+	rm -rf $(DESTDIR)$(datadir)/@PACKAGE@
 
 @SVN_CONTROLLED_TRUE@doxygen-user-install:
 
@@ -847,11 +863,11 @@ common-uninstall:
 @HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@doxygen-user: doxygen-project-number doc/doxygen-user/main.dox
 @HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	$(MKDIR_P) "$(USER_DOC_DIR)/tags"
 @HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	echo "OUTPUT_DIRECTORY = $(USER_DOC_DIR)" > doc/doxygen-user-at-make-time.cfg
-@HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	echo "GENERATE_TAGFILE = $(USER_DOC_DIR)/tags/@PACKAGE_NAME@.tag" >> doc/doxygen-user-at-make-time.cfg
+@HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	echo "GENERATE_TAGFILE = $(USER_DOC_DIR)/tags/@PACKAGE@.tag" >> doc/doxygen-user-at-make-time.cfg
 @HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	cat doc/doxygen-project-number.cfg doc/doxygen-user-at-make-time.cfg doc/doxygen-user-common.cfg doc/doxygen-user-component.cfg > doc/doxygen-user.cfg
 @HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	$(MKDIR_P) "$(USER_DOC_DIR)/html"
 @HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	cp $(abs_srcdir)/doc/images/* $(USER_DOC_DIR)/html
-@HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	doxygen doc/doxygen-user.cfg
+@HAVE_DOXYGEN_TRUE@@SVN_CONTROLLED_TRUE@	$(DOXYGEN) doc/doxygen-user.cfg
 
 @HAVE_DOXYGEN_FALSE@@SVN_CONTROLLED_TRUE@doxygen-user:
 @HAVE_DOXYGEN_FALSE@@SVN_CONTROLLED_TRUE@	echo "WARNING: doxygen not available. Can not generate documentation." >&2
@@ -862,12 +878,13 @@ common-uninstall:
 @HAVE_DOXYGEN_LATEX_TRUE@@SVN_CONTROLLED_TRUE@	echo "GENERATE_LATEX   = YES"   >> doc/doxygen-user-pdf.cfg
 @HAVE_DOXYGEN_LATEX_TRUE@@SVN_CONTROLLED_TRUE@	echo "GENERATE_HTML    = NO"    >> doc/doxygen-user-pdf.cfg
 @HAVE_DOXYGEN_LATEX_TRUE@@SVN_CONTROLLED_TRUE@	cp $(abs_srcdir)/vendor/common/build_related/doxygen/scorep.sty $(USER_DOC_DIR)/pdf/
-@HAVE_DOXYGEN_LATEX_TRUE@@SVN_CONTROLLED_TRUE@	doxygen doc/doxygen-user-pdf.cfg
-@HAVE_DOXYGEN_LATEX_TRUE@@SVN_CONTROLLED_TRUE@	cd "$(USER_DOC_DIR)/pdf"; \
-@HAVE_DOXYGEN_LATEX_TRUE@@SVN_CONTROLLED_TRUE@	make;                     \
-@HAVE_DOXYGEN_LATEX_TRUE@@SVN_CONTROLLED_TRUE@	mv refman.pdf ../;        \
-@HAVE_DOXYGEN_LATEX_TRUE@@SVN_CONTROLLED_TRUE@	rm -f *;                  \
-@HAVE_DOXYGEN_LATEX_TRUE@@SVN_CONTROLLED_TRUE@	mv ../refman.pdf @PACKAGE_NAME@.pdf
+@HAVE_DOXYGEN_LATEX_TRUE@@SVN_CONTROLLED_TRUE@	-cp $(DOC_SRC_DIR)/images/project_logo_large.png $(USER_DOC_DIR)/pdf/
+@HAVE_DOXYGEN_LATEX_TRUE@@SVN_CONTROLLED_TRUE@	$(DOXYGEN) doc/doxygen-user-pdf.cfg
+@HAVE_DOXYGEN_LATEX_TRUE@@SVN_CONTROLLED_TRUE@	cd "$(USER_DOC_DIR)/pdf" && \
+@HAVE_DOXYGEN_LATEX_TRUE@@SVN_CONTROLLED_TRUE@	make &&                     \
+@HAVE_DOXYGEN_LATEX_TRUE@@SVN_CONTROLLED_TRUE@	mv refman.pdf ../ &&        \
+@HAVE_DOXYGEN_LATEX_TRUE@@SVN_CONTROLLED_TRUE@	rm -f * &&                  \
+@HAVE_DOXYGEN_LATEX_TRUE@@SVN_CONTROLLED_TRUE@	mv ../refman.pdf @PACKAGE@.pdf
 
 @HAVE_DOXYGEN_LATEX_FALSE@@SVN_CONTROLLED_TRUE@doxygen-user-pdf: doxygen-user
 @HAVE_DOXYGEN_LATEX_FALSE@@SVN_CONTROLLED_TRUE@	echo "WARNING: pdflatex not available. Can not generate doxygen pdf documentation." >&2

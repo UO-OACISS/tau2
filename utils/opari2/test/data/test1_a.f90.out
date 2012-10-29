@@ -39,6 +39,7 @@
 !              integer functionkind     THIS IS TOO EVIL FOR NOW, WILL TAKE CARE OF LATER
 !              functionkind = 4
       include 'test1_a.f90.opari.inc'
+#line 39 "test1_a.f90"
               write (*,*) "function mf0"
               mf0 = 5
               return
@@ -46,6 +47,7 @@
 
             subroutine ms0
       include 'test1_a.f90.opari.inc'
+#line 45 "test1_a.f90"
               write (*,*) "subroutine ms0"
             end subroutine ms0
         end module mmm
@@ -56,6 +58,7 @@
         contains
           subroutine r1()
       include 'test1_a.f90.opari.inc'
+#line 54 "test1_a.f90"
             write (*,*) "Subroutine 1"
             call f1()
           end subroutine r1
@@ -66,6 +69,7 @@
           implicit &
             none
       include 'test1_a.f90.opari.inc'
+#line 63 "test1_a.f90"
           double precision :: d
           write (*,*) "function f0"
           f0 = 5
@@ -74,12 +78,14 @@
 
         subroutine s0
       include 'test1_a.f90.opari.inc'
+#line 70 "test1_a.f90"
           write (*,*) "subroutine s0"
         end subroutine s0
 
         integer function f1(a) !interface
           use mmm
       include 'test1_a.f90.opari.inc'
+#line 75 "test1_a.f90"
           integer :: a, result
           write (*,*) "function f1"
           f1 = a
@@ -88,6 +94,7 @@
 
         subroutine s1(a) 
       include 'test1_a.f90.opari.inc'
+#line 82 "test1_a.f90"
           integer :: a
           write (*,*) "subroutine s1"
           write (*,*) "keyword interface inside a string"
@@ -96,6 +103,7 @@
           contains
             subroutine ss1()
       include 'test1_a.f90.opari.inc'
+#line 89 "test1_a.f90"
               write (*,*) "subroutine ss1"
             end subroutine ss1
         end subroutine s1
@@ -103,9 +111,10 @@
         program otest
           use mmm
           use rename_test, bar => foo
+      include 'test1_a.f90.opari.inc'
+#line 96 "test1_a.f90"
           integer :: i, f0, f1, function
 
-      include 'test1_a.f90.opari.inc'
           function = 0
           write (*,*) 'program otest'
           i = f0()

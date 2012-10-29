@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.util.TreeMap;
 import java.util.zip.GZIPInputStream;
 
+import edu.uoregon.tau.common.MetaDataMap;
 import edu.uoregon.tau.common.TrackerInputStream;
 
 /**
@@ -118,7 +119,7 @@ public class PackedProfileDataSource extends DataSource {
 					+ "2");
 		}
 
-		metaData = new TreeMap<String, String>();
+		metaData = new MetaDataMap();
 		if (version >= 2) {
 			//int metadataHeaderSize = 
 			p.readInt(); // older versions will skip over this many bytes

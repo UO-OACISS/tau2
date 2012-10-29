@@ -105,7 +105,7 @@ public class ColorMap extends Observable implements Serializable {
     }
 
     public void assignColorsFromTrial(ParaProfTrial ppTrial) {
-        for (Iterator<Function> it = ppTrial.getDataSource().getFunctions(); it.hasNext();) {
+        for (Iterator<Function> it = ppTrial.getDataSource().getFunctionIterator(); it.hasNext();) {
             Function f = it.next();
             colors.put(f.getName(), f.getColor());
         }

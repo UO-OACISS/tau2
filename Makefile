@@ -74,6 +74,7 @@ TRACE2PROFILE=utils/trace2profile
 
 #IOWRAPPER#IOWRAPPER=src/wrappers/posixio#ENDIF#
 #DMAPP#DMAPPWRAPPER=src/wrappers/dmapp#ENDIF#
+#GPI#GPIWRAPPER=src/wrappers/gpi#ENDIF#
 
 #ARMCI#ARMCIWRAPPER=src/wrappers/armci#ENDIF#
 
@@ -83,10 +84,25 @@ TAUCUDA=src/wrappers/cuda
 TAUOPENCL=src/wrappers/opencl
 MEMORYWRAPPER=src/wrappers/memory
 
+#BUPC#TAU_UPCC_WRAPPER=src/wrappers/upc/bupc/upcr #ENDIF#
+#BUPC#UPCWRAPPER=$(TAU_UPCC_WRAPPER) #ENDIF#
+
+#GUPC#TAU_UPCC_WRAPPER=src/wrappers/upc/gupc #ENDIF#
+#GUPC#UPCWRAPPER=$(TAU_UPCC_WRAPPER) #ENDIF#
+
+#XLUPC#UPCWRAPPER=src/wrappers/upc/xlupc#ENDIF#
+
+#COMPINST_CRAYCC#UPCWRAPPER=src/wrappers/upc/crayupc #ENDIF#
+
+#TAU_PTHREAD_WRAP#PTHREAD_WRAPPER=src/wrappers/pthread #ENDIF#
+#MPC#PTHREAD_WRAPPER=src/wrappers/mpcthread #ENDIF#
+
 # Subdirectories to make resursively
 SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(VTFCONVERTER) \
           $(ELGCONVERTER) $(TRACE2PROFILE) $(IOWRAPPER) $(TAUPRELOAD) \
-			$(MEMORYWRAPPER) $(TAUCUDA) $(TAU_CUPTI_AVAIL) $(TAUOPENCL) $(ARMCIWRAPPER) $(DMAPPWRAPPER)
+	  $(MEMORYWRAPPER) $(TAUCUDA) $(TAU_CUPTI_AVAIL) $(TAUOPENCL) \
+	  $(GPIWRAPPER) $(ARMCIWRAPPER) $(DMAPPWRAPPER) $(UPCWRAPPER) \
+	  $(PTHREAD_WRAPPER)
 
 
 CONFIGQUERY=`utils/ConfigQuery -arch`

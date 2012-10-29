@@ -56,7 +56,7 @@ OMPRegion::OMPRegion( const string& n,
                       bool          outr )
     : name( n ), file_name( file ), id( ++maxId ),
       begin_first_line( bfl ), begin_last_line( bll ),
-      end_first_line( 0 ), end_last_line( 0 ),
+      end_first_line( bfl ), end_last_line( bll ),
       num_sections( 0 ), noWaitAdded( false ), has_untied( false ),
       has_if( false ), has_num_threads( false ), has_reduction( false ),
       has_schedule( false ), arg_schedule( "" ), has_collapse( false ),
@@ -71,6 +71,10 @@ OMPRegion::OMPRegion( const string& n,
     {
         outer_ptr->descrs.insert( id );
     }
+
+    stringstream stream;
+    stream << string_id_prefix << id;
+    ctc_string_variable = stream.str();
 }
 
 OMPRegion::OMPRegion( const OMPRegion& parent,
@@ -81,7 +85,7 @@ OMPRegion::OMPRegion( const OMPRegion& parent,
                       bool             outr )
     : name( n ), file_name( file ), id( parent.id ),
       begin_first_line( bfl ), begin_last_line( bll ),
-      end_first_line( 0 ), end_last_line( 0 ),
+      end_first_line( bfl ), end_last_line( bll ),
       num_sections( 0 ), noWaitAdded( false ), has_untied( false ),
       has_if( false ), has_num_threads( false ), has_reduction( false ),
       has_schedule( false ), arg_schedule( "" ), has_collapse( false ),
@@ -96,6 +100,10 @@ OMPRegion::OMPRegion( const OMPRegion& parent,
     {
         outer_ptr->descrs.insert( id );
     }
+
+    stringstream stream;
+    stream << string_id_prefix << id << "_c";
+    ctc_string_variable = stream.str();
 }
 
 void
@@ -119,8 +127,15 @@ OMPRegion::generate_header_cxx( ostream& os )
         os << "#include <stdint.h>\n";
         os << "extern \"C\" \n{\n";
         os << "extern int64_t " << MAKE_STR( FORTRAN_ALIGNED ) " " << pomp_tpd << ";\n";
+        if ( !tpd_in_extern_block )
+        {
+            os << "}\n";
+        }
         os << "#pragma omp threadprivate(" << pomp_tpd << ")\n";
-        os << "}\n";
+        if ( tpd_in_extern_block )
+        {
+            os << "}\n";
+        }
     }
 }
 /** @brief Generate a function to allow initialization of all ompregion handles for Fortran.
@@ -134,8 +149,8 @@ OMPRegion::generate_init_handle_calls_f( ostream& os, const char* incfile )
     if ( OMPRegion::init_handle_calls.rdbuf()->in_avail() != 0 )
     {
         //add a Function to initialize the handles at the end of the file
-        os << "\n      subroutine POMP2_Init_regions_"
-           << compiletime.tv_sec << compiletime.tv_usec
+        os << "\n      subroutine POMP2_Init_reg_"
+           << infile_inode
            << "_" << OMPRegion::maxId << "()\n"
            << "         include \'" << incfile << "\'\n"
            << OMPRegion::init_handle_calls.str()
@@ -154,8 +169,8 @@ OMPRegion::generate_init_handle_calls_cxx( ostream& os )
     //assert( retval == 0 );
 
     os << "extern \"C\" \n{"
-       << "\nvoid POMP2_Init_regions_"
-       << compiletime.tv_sec << compiletime.tv_usec
+       << "\nvoid POMP2_Init_reg_"
+       << infile_inode
        << "_" << OMPRegion::maxId << "()\n{\n"
        << OMPRegion::init_handle_calls.str()
        << "}\n}\n";
@@ -170,8 +185,9 @@ OMPRegion::generate_init_handle_calls_c( ostream& os )
     //int     retval = gettimeofday( &compiletime, NULL );
     //assert( retval == 0 );
 
-    os << "\nvoid POMP2_Init_regions_"
-       << compiletime.tv_sec << compiletime.tv_usec
+    os << "\n#ifdef __cplusplus \n extern \"C\" \n#endif";
+    os << "\nvoid POMP2_Init_reg_"
+       << infile_inode
        << "_" << OMPRegion::maxId << "()\n{\n"
        << OMPRegion::init_handle_calls.str()
        << "}\n";
@@ -214,16 +230,16 @@ OMPRegion::finalize_descrs( ostream& os, Language lang )
         if ( lang & L_F77 )
         {
             os << "      integer*8 pomp2_old_task, pomp2_new_task \n";
-            os << "      logical pomp_if \n";
-            os << "      integer*4 pomp_num_threads \n";
+            os << "      logical pomp2_if \n";
+            os << "      integer*4 pomp2_num_threads \n";
         }
         else
         {
             os << "      integer ( kind=8 ) :: pomp2_old_task, pomp2_new_task \n";
-            os << "      logical :: pomp_if \n";
-            os << "      integer ( kind=4 ) :: pomp_num_threads \n";
+            os << "      logical :: pomp2_if \n";
+            os << "      integer ( kind=4 ) :: pomp2_num_threads \n";
         }
-        os << "      common /" << "cb" << compiletime.tv_sec << compiletime.tv_usec << "/ " << region_id_prefix << *it++;
+        os << "      common /" << "cb" << infile_inode << "/ " << region_id_prefix << *it++;
         for (; it < common_block.end(); it++ )
         {
             if ( lang & L_F77 )
@@ -303,7 +319,8 @@ OMPRegion::generate_ctc_string( Language lang )
     ctc_string = stream1.str();
 
     stream2 << "\"" << ctc_string.length() - 2 << ctc_string;
-    ctc_string = stream2.str();
+    ctc_string        = stream2.str();
+    ctc_string_length = ctc_string.length() - 2;
 
     if ( lang & L_FORTRAN )
     {
@@ -329,13 +346,20 @@ OMPRegion::generate_ctc_string( Language lang )
 void
 OMPRegion::generate_descr_f( ostream& os, Language lang )
 {
+    string ctc_string = generate_ctc_string( lang );
+
     if ( lang & L_F77 )
     {
         os << "      INTEGER*8 " << region_id_prefix << id << "\n";
+        os << "      CHARACTER*" << ctc_string_length << " " << ctc_string_variable << "\n";
+        os << "      PARAMETER (" << ctc_string_variable << "=\n";
+        os << "     &" << ctc_string << ")\n\n";
     }
     else
     {
-        os << "      INTEGER( KIND=8 ) :: " << region_id_prefix << id << "\n";
+        os << "      INTEGER( KIND=8 ) :: " << region_id_prefix << id << "\n\n";
+        os << "      CHARACTER (LEN=" << ctc_string_length << "), parameter :: ";
+        os << ctc_string_variable << " =&\n      " << ctc_string << "\n\n";
     }
     common_block.push_back( id );
 
@@ -343,14 +367,14 @@ OMPRegion::generate_descr_f( ostream& os, Language lang )
                       << region_id_prefix << id << ", ";
     if ( lang & L_F77 )
     {
-        init_handle_calls << "\n     &";
+        init_handle_calls << "\n     &   ";
     }
     else
     {
-        init_handle_calls << "&\n     ";
+        init_handle_calls << "&\n         ";
     }
 
-    init_handle_calls << generate_ctc_string( lang ) << " )\n";
+    init_handle_calls << ctc_string_variable << " )\n";
 }
 
 /** @brief generate region descriptors in C.*/
@@ -387,9 +411,10 @@ OMPRegion::generate_descr_c( ostream& os )
     }
 
     os << "static POMP2_Region_handle " << region_id_prefix << id << " = NULL;\n";
+    os << "static const char " << ctc_string_variable << "[] = " << generate_ctc_string( L_C ) << ";\n";
 
     init_handle_calls << "    POMP2_Assign_handle( &" << region_id_prefix << id
-                      << ", " << generate_ctc_string( L_C ) << " );\n";
+                      << ", " << ctc_string_variable << " );\n";
 }
 
 void
@@ -401,7 +426,8 @@ OMPRegion::finish()
     }
 }
 
-timeval                 compiletime;
+//timeval                 compiletime;
+ino_t                   infile_inode;
 stringstream OMPRegion::init_handle_calls;
 vector<int> OMPRegion:: common_block;
 OMPRegion* OMPRegion::  outer_ptr = 0;

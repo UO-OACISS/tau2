@@ -17,6 +17,9 @@
 // Include Files 
 //////////////////////////////////////////////////////////////////////
 
+#include <string>
+
+
 #define TAU_EVENT_DATATYPE  double
 
 class TauContextUserEvent;
@@ -31,7 +34,7 @@ class TauUserEvent {
     TAU_STORAGE(TAU_EVENT_DATATYPE, UserFunctionValue);
     TAU_STORAGE(long, NumEvents);
     bool DisableMin, DisableMax, DisableMean, DisableStdDev, MonotonicallyIncreasing;
-    string EventName;
+    std::string EventName;
     x_uint64 EventId;
     TauContextUserEvent *ctxevt;
 
@@ -52,7 +55,7 @@ class TauUserEvent {
     const char *  GetEventName (void) const;
     x_uint64 GetEventId(void);
     void SetEventName(const char * newname); 
-    void SetEventName(string newname); 
+    void SetEventName(std::string newname);
     bool GetDisableMin(void);
     bool GetDisableMax(void);
     bool GetDisableMean(void);

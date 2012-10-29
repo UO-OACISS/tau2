@@ -2,6 +2,7 @@
 #include <Profile/CuptiLayer.h>
 #include <cuda.h>
 #include <cupti.h>
+#include <math.h>
 
 #if CUPTI_API_VERSION >= 2
 
@@ -29,12 +30,18 @@
 
 #define ACTIVITY_BUFFER_SIZE (4096 * 1024)
 
+extern "C" void Tau_cupti_register_metadata(
+						uint32_t deviceId,
+						GpuMetadata *metadata,
+						int metadata_size);
+
 extern "C" void Tau_cupti_register_calling_site(
 						uint32_t correlationId,
 						FunctionInfo *current_function);
 
 extern "C" void Tau_cupti_enter_memcpy_event(
 						const char *name,
+						uint32_t deviceId,
 						uint32_t streamId,
 						uint32_t contextId,
 						uint32_t correlationId,
@@ -43,6 +50,7 @@ extern "C" void Tau_cupti_enter_memcpy_event(
 
 extern "C" void Tau_cupti_exit_memcpy_event(
 						const char *name,
+						uint32_t deviceId,
 						uint32_t streamId,
 						uint32_t contextId,
 						uint32_t correlationId,
@@ -51,6 +59,7 @@ extern "C" void Tau_cupti_exit_memcpy_event(
 
 extern "C" void Tau_cupti_register_memcpy_event(
 						const char *name,
+						uint32_t deviceId,
 						uint32_t streamId,
 						uint32_t contextId,
 						uint32_t correlationId,
@@ -61,6 +70,7 @@ extern "C" void Tau_cupti_register_memcpy_event(
 
 extern "C" void Tau_cupti_register_gpu_event(
 						const char *name,
+						uint32_t deviceId,
 						uint32_t streamId,
 						uint32_t contextId,
 						uint32_t correlationId,
@@ -73,7 +83,7 @@ uint8_t *activityBuffer;
 CUpti_SubscriberHandle subscriber;
 
 int number_of_streams;
-vector<int> streamIds;
+std::vector<int> streamIds;
 
 void Tau_cupti_register_sync_event(CUcontext c, uint32_t stream);
 
@@ -101,6 +111,10 @@ bool registered_sync = false;
 bool cupti_api_runtime();
 bool cupti_api_driver();
 
+void record_gpu_occupancy(CUpti_ActivityKernel *k, const char *name, GpuEventAttributes *m);
+
+std::map<uint32_t, CUpti_ActivityDevice> deviceMap;
+
 #define CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(name, id, info, kind, count) \
 	if ((id) == CUPTI_RUNTIME_TRACE_CBID_##name##_v3020) \
 	{ \
@@ -110,11 +124,16 @@ bool cupti_api_driver();
 
 #define S(x) #x
 #define SX(x) S(x)
-#define RECORD_DEVICE_METADATA(name, device) \
-  std::ostringstream str_##name; \
-	str_##name << device->name; \
-	Tau_metadata("GPU " SX(name), str_##name.str().c_str()); 
-
+#define RECORD_DEVICE_METADATA(n, device) \
+  std::ostringstream str_##n; \
+	str_##n << device->n; \
+	int string_length_##n = strlen(str_##n.str().c_str()) + 1; \
+	char *stored_name_##n = (char*) malloc(sizeof(char)*string_length_##n); \
+	strcpy(stored_name_##n, str_##n.str().c_str()); \
+	metadata[id].name = "GPU " SX(n); \
+	metadata[id].value = stored_name_##n; \
+	id++
 #endif
 
+	//Tau_metadata("GPU " SX(name), str_##name.str().c_str()); 
 

@@ -72,6 +72,11 @@ case $1 in
 	echo "s,^PAPIDIR=.*$,PAPIDIR=$papidir,g" >> $sedout
 	;;
 
+     gpidir=*)
+        gpidir=`echo $1 | sed -e 's/^gpidir=//'`
+	echo "s,^GPIDIR=.*$,GPIDIR=$gpidir,g" >> $sedout
+	;;
+
      bfdlink=*)
         bfdlink=`echo $1 | sed -e 's/^bfdlink=//' -e 's/#/ /g'`
 	echo "s,^BFDLINK=.*$,BFDLINK=$bfdlink,g" >> $sedout
@@ -234,6 +239,11 @@ case $1 in
      upcnetwork=*)
 	upcnetwork=`echo $1 | sed -e 's/^upcnetwork=//' -e 's/#/ /g'`
 	echo "s,^UPCNETWORK=.*$,UPCNETWORK=$upcnetwork,g" >> $sedout
+	;;
+
+     gasnet=*)
+	gasnetdir=`echo $1 | sed -e 's/^gasnet=//' -e 's/#/ /g'`
+	echo "s,^TAU_GASNET_DIR=.*$,TAU_GASNET_DIR=$gasnetdir,g" >> $sedout
 	;;
 
      sicortexlink=*)
@@ -665,6 +675,11 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+     GPI)
+        echo "NOTE: Using the TAU's GPI Wrapper Interface "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
      OPENSHMEM)
         echo NOTE: Using the TAU OpenSHMEM Profiling Interface 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -730,7 +745,12 @@ case $1 in
         cuptiinclude=`echo $1 | sed -e 's/^cuptiinclude=//' -e 's/#/ /g'`
       echo "NOTE: Using CUPTI for GPU analysis, source in $cuptiinclude"
 			echo "s@^TAU_CUPTI_INC=\(.*\)@TAU_CUPTI_INC=$cuptiinclude@g" >> $sedout
-		;;	
+		;;
+		cudalibrary=*)
+			cudalibrary=`echo $1 | sed -e 's/^cudalibrary=//' -e 's/#/ /g'`
+			echo "NOTE: Adding $cudalibrary when linking to the cuda driver library."
+			echo "s@^TAU_CUDA_LIBRARY=\(.*\)@TAU_CUDA_LIBRARY=$cudalibrary@g" >> $sedout
+		;;
 
 ###############################################################
 # Set the CONFIG_ARCH=<machine-name> in the Makefiles.
@@ -811,6 +831,10 @@ case $1 in
 	;;
      COMPAQCXX_PTHREAD)
 	echo NOTE: Using the Compaq cxx -pthread option
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     MPC)
+	echo NOTE: Using the TAU MPC options
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      COMPENSATE)
@@ -917,8 +941,16 @@ case $1 in
 	echo NOTE: Using fixes for GNU 4.6+ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     CLANG)
+	echo NOTE: Using CLANG C++ compiler 
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      CRAYCC)
 	echo NOTE: Using The Cray T3E CC C++ compiler 
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     GASNET)
+	echo NOTE: Using The GASNET directory 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CRAYX1CC)
@@ -1190,6 +1222,10 @@ case $1 in
 	echo "NOTE: Using OTF library to build tau2otf trace converter ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     OTF2)
+	echo "NOTE: Using OTF2 library to build tau2otf2 trace converter ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      OTFSRC)
 	echo "NOTE: Using OTF source based distribution to build tau2otf trace converter ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1366,16 +1402,20 @@ case $1 in
 	echo "NOTE: Enabled Tracing. Compiling with -DTRACING_ON"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     UPCC)
+     BUPC)
 	echo "NOTE: Enabled Berkeley UPC (upcc) GASP support in TAU."
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     GNU_UPC)
+     GUPC)
 	echo "NOTE: Enabled GNU UPC GASP support in TAU"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CRAY_UPC)
 	echo "NOTE: Enabled Cray UPC support in TAU"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     XLUPC)
+	echo "NOTE: Enabled IBM XLUPC support in TAU"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      KAI)
@@ -1420,6 +1460,18 @@ case $1 in
 	;;
      CRAYXMT)
 	echo "NOTE: Using Cray XMT options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     MIC_LINUX)
+	echo "NOTE: Using Intel MIC Linux options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     MMIC)
+	echo "NOTE: Using Intel -mmic compute node MIC compilation options"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     MPIICPC)
+	echo "NOTE: Using Intel mpiicpc compilation options"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CRAYCNL)
@@ -1660,6 +1712,14 @@ case $1 in
         echo "NOTE: IBM 64 bit xlf90 compiler for Linux options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     MPIIFORT)
+        echo "NOTE: Intel mpiifort compiler options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+     FX)
+        echo "NOTE: Fujitsu mpifrtpx compiler options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      IBM64LINUX_XLC)
         echo "NOTE: IBM 64 bit xlc compiler for Linux options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1771,6 +1831,13 @@ case $1 in
 	echo "NOTE: Disabling building of shared objects"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     LD_AUDITOR_AVAILABLE)
+	echo "NOTE: Disabling building of shared objects"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     SGI_MPT_MPI)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      *)
 	echo "ERROR: Unknown argument directive \`$1' to FixMakefile"
 	;;

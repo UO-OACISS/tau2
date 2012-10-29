@@ -74,6 +74,7 @@ DIST_COMMON = $(am__configure_deps) $(dist_bin_SCRIPTS) \
 	$(top_srcdir)/../doc/example/Makefile.in \
 	$(top_srcdir)/../doc/example_user_instrumentation/Makefile.in \
 	$(top_srcdir)/../src/config-frontend.h.in \
+	$(top_srcdir)/../src/opari/opari2_config_tool_frontend.h.in \
 	$(top_srcdir)/../test/jacobi_c++_test.sh.in \
 	$(top_srcdir)/../test/jacobi_c_test.sh.in \
 	$(top_srcdir)/../test/jacobi_f77_test.sh.in \
@@ -86,37 +87,36 @@ bin_PROGRAMS = opari2$(EXEEXT) opari2-config$(EXEEXT)
 noinst_PROGRAMS = $(am__EXEEXT_1)
 check_PROGRAMS =
 XFAIL_TESTS =
-@OPENMP_SUPPORTED_TRUE@am__append_1 = libpomp.la
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@am__append_2 = \
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@    $(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper.c      \
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@    $(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper_base.c \
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@    $(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper_base.h 
+@HAVE_OPENMP_SUPPORT_TRUE@am__append_1 = libpomp.la
+@HAVE_OPENMP_SUPPORT_TRUE@@SCOREP_HAVE_F77_TRUE@am__append_2 = \
+@HAVE_OPENMP_SUPPORT_TRUE@@SCOREP_HAVE_F77_TRUE@    $(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper.c      \
+@HAVE_OPENMP_SUPPORT_TRUE@@SCOREP_HAVE_F77_TRUE@    $(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper_base.c \
+@HAVE_OPENMP_SUPPORT_TRUE@@SCOREP_HAVE_F77_TRUE@    $(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper_base.h 
 
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@am__append_3 = pomp2_fwrapper_def.h
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@am__append_4 = pomp2_fwrapper_def.h
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@am__append_5 = getfname
-@OPENMP_SUPPORTED_TRUE@am__append_6 = $(SRC_ROOT)src/pomp-lib-dummy/pomp2_parse_init_regions.awk.in
-@OPENMP_SUPPORTED_TRUE@am__append_7 =  \
-@OPENMP_SUPPORTED_TRUE@	$(SRC_ROOT)test/jacobi_c_test.sh \
-@OPENMP_SUPPORTED_TRUE@	$(SRC_ROOT)test/jacobi_c++_test.sh
-@FORTRAN_SUPPORT_ALLOCATABLE_TRUE@@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_FC_TRUE@am__append_8 = $(SRC_ROOT)test/jacobi_f90_test.sh
-@FORTRAN_SUPPORT_ALLOCATABLE_TRUE@@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@am__append_9 = $(SRC_ROOT)test/jacobi_f77_test.sh
+@HAVE_OPENMP_SUPPORT_TRUE@@SCOREP_HAVE_F77_TRUE@am__append_3 = pomp2_fwrapper_def.h
+@HAVE_OPENMP_SUPPORT_TRUE@@SCOREP_HAVE_F77_TRUE@am__append_4 = pomp2_fwrapper_def.h
+@HAVE_OPENMP_SUPPORT_TRUE@@SCOREP_HAVE_F77_TRUE@am__append_5 = getfname
+@HAVE_OPENMP_SUPPORT_TRUE@am__append_6 = $(SRC_ROOT)src/pomp-lib-dummy/pomp2_parse_init_regions.awk.in
+@HAVE_OPENMP_SUPPORT_TRUE@am__append_7 =  \
+@HAVE_OPENMP_SUPPORT_TRUE@	$(SRC_ROOT)test/jacobi_c_test.sh \
+@HAVE_OPENMP_SUPPORT_TRUE@	$(SRC_ROOT)test/jacobi_c++_test.sh
+@FORTRAN_SUPPORT_ALLOCATABLE_TRUE@@HAVE_OPENMP_SUPPORT_TRUE@@SCOREP_HAVE_FC_TRUE@am__append_8 = $(SRC_ROOT)test/jacobi_f90_test.sh
+@FORTRAN_SUPPORT_ALLOCATABLE_TRUE@@HAVE_OPENMP_SUPPORT_TRUE@@SCOREP_HAVE_F77_TRUE@am__append_9 = $(SRC_ROOT)test/jacobi_f77_test.sh
 subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/../vendor/common/build-config/m4/ac_opari_common_checks.m4 \
+	$(top_srcdir)/../vendor/common/build-config/m4/ac_scorep_c99.m4 \
 	$(top_srcdir)/../vendor/common/build-config/m4/ac_scorep_compiler_and_flags.m4 \
 	$(top_srcdir)/../vendor/common/build-config/m4/ac_scorep_compiler_checks.m4 \
 	$(top_srcdir)/../vendor/common/build-config/m4/ac_scorep_fortran_checks.m4 \
 	$(top_srcdir)/../vendor/common/build-config/m4/ac_scorep_svn_controlled.m4 \
 	$(top_srcdir)/../vendor/common/build-config/m4/ac_scorep_sys_detection.m4 \
 	$(top_srcdir)/../vendor/common/build-config/m4/ac_scorep_version_and_revision.m4 \
-	$(top_srcdir)/../vendor/common/build-config/m4/ah_scorep_config_header_custom.m4 \
 	$(top_srcdir)/../vendor/common/build-config/m4/libtool.m4 \
 	$(top_srcdir)/../vendor/common/build-config/m4/ltoptions.m4 \
 	$(top_srcdir)/../vendor/common/build-config/m4/ltsugar.m4 \
 	$(top_srcdir)/../vendor/common/build-config/m4/ltversion.m4 \
 	$(top_srcdir)/../vendor/common/build-config/m4/lt~obsolete.m4 \
-	$(top_srcdir)/../vendor/common/build-config/m4/scorep_c.m4 \
 	$(top_srcdir)/../vendor/common/build-config/m4/status.m4 \
 	$(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -128,7 +128,8 @@ CONFIG_HEADER = $(top_builddir)/../src/config-frontend.h
 CONFIG_CLEAN_FILES = ../test/jacobi_c_test.sh \
 	../test/jacobi_c++_test.sh ../test/jacobi_f90_test.sh \
 	../test/jacobi_f77_test.sh ../doc/example/Makefile \
-	../doc/example_user_instrumentation/Makefile
+	../doc/example_user_instrumentation/Makefile \
+	../src/opari2_config_tool_frontend.h
 CONFIG_CLEAN_VPATH_FILES =
 am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
 am__vpath_adj = case $$p in \
@@ -163,12 +164,12 @@ am__libpomp_la_SOURCES_DIST =  \
 	$(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper.c \
 	$(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper_base.c \
 	$(SRC_ROOT)src/pomp-lib-dummy/pomp2_fwrapper_base.h
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@am__objects_1 = libpomp_la-pomp2_fwrapper.lo \
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@	libpomp_la-pomp2_fwrapper_base.lo
-@OPENMP_SUPPORTED_TRUE@am_libpomp_la_OBJECTS =  \
-@OPENMP_SUPPORTED_TRUE@	libpomp_la-pomp2_lib.lo \
-@OPENMP_SUPPORTED_TRUE@	libpomp_la-pomp2_region_info.lo \
-@OPENMP_SUPPORTED_TRUE@	$(am__objects_1)
+@HAVE_OPENMP_SUPPORT_TRUE@@SCOREP_HAVE_F77_TRUE@am__objects_1 = libpomp_la-pomp2_fwrapper.lo \
+@HAVE_OPENMP_SUPPORT_TRUE@@SCOREP_HAVE_F77_TRUE@	libpomp_la-pomp2_fwrapper_base.lo
+@HAVE_OPENMP_SUPPORT_TRUE@am_libpomp_la_OBJECTS =  \
+@HAVE_OPENMP_SUPPORT_TRUE@	libpomp_la-pomp2_lib.lo \
+@HAVE_OPENMP_SUPPORT_TRUE@	libpomp_la-pomp2_region_info.lo \
+@HAVE_OPENMP_SUPPORT_TRUE@	$(am__objects_1)
 libpomp_la_OBJECTS = $(am_libpomp_la_OBJECTS)
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
@@ -176,14 +177,13 @@ am__v_lt_0 = --silent
 libpomp_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(libpomp_la_CFLAGS) \
 	$(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
-@OPENMP_SUPPORTED_TRUE@am_libpomp_la_rpath =
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@am__EXEEXT_1 = getfname$(EXEEXT)
+@HAVE_OPENMP_SUPPORT_TRUE@am_libpomp_la_rpath =
+@HAVE_OPENMP_SUPPORT_TRUE@@SCOREP_HAVE_F77_TRUE@am__EXEEXT_1 = getfname$(EXEEXT)
 PROGRAMS = $(bin_PROGRAMS) $(noinst_PROGRAMS)
 am__getfname_SOURCES_DIST = $(SRC_ROOT)src/pomp-lib-dummy/foos.c \
 	$(SRC_ROOT)src/pomp-lib-dummy/getfname.f
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@am_getfname_OBJECTS =  \
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@	foos.$(OBJEXT) \
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@	getfname.$(OBJEXT)
+@HAVE_OPENMP_SUPPORT_TRUE@@SCOREP_HAVE_F77_TRUE@am_getfname_OBJECTS = foos.$(OBJEXT) \
+@HAVE_OPENMP_SUPPORT_TRUE@@SCOREP_HAVE_F77_TRUE@	getfname.$(OBJEXT)
 getfname_OBJECTS = $(am_getfname_OBJECTS)
 getfname_LDADD = $(LDADD)
 am_opari2_OBJECTS = opari2-handler.$(OBJEXT) opari2-ompragma.$(OBJEXT) \
@@ -338,7 +338,10 @@ LD = @LD@
 LDFLAGS = @LDFLAGS@
 LDFLAGS_FOR_BUILD = @LDFLAGS_FOR_BUILD@
 LIBOBJS = @LIBOBJS@
+LIBRARY_AGE = @LIBRARY_AGE@
+LIBRARY_CURRENT = @LIBRARY_CURRENT@
 LIBRARY_INTERFACE_VERSION = @LIBRARY_INTERFACE_VERSION@
+LIBRARY_REVISION = @LIBRARY_REVISION@
 LIBS = @LIBS@
 LIBS_FOR_BUILD = @LIBS_FOR_BUILD@
 LIBTOOL = @LIBTOOL@
@@ -360,9 +363,13 @@ OPENMP_FFLAGS = @OPENMP_FFLAGS@
 OTOOL = @OTOOL@
 OTOOL64 = @OTOOL64@
 PACKAGE = @PACKAGE@
+PACKAGE_BUGFIX = @PACKAGE_BUGFIX@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
+PACKAGE_MAJOR = @PACKAGE_MAJOR@
+PACKAGE_MINOR = @PACKAGE_MINOR@
 PACKAGE_NAME = @PACKAGE_NAME@
 PACKAGE_STRING = @PACKAGE_STRING@
+PACKAGE_SUFFIX = @PACKAGE_SUFFIX@
 PACKAGE_TARNAME = @PACKAGE_TARNAME@
 PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
@@ -433,12 +440,16 @@ AM_CPPFLAGS = -I$(srcdir)/../src -DFRONTEND_BUILD -DCROSS_BUILD
 SRC_ROOT = ../
 INC_ROOT = $(srcdir)/../
 PUBLIC_INC_DIR = $(INC_ROOT)include
+
+# The include path to the common utils headers.
+INC_DIR_COMMON_UTILS = $(INC_ROOT)vendor/common/src/utils/include
+INC_DIR_COMMON_HASH = $(INC_ROOT)vendor/common/hash
+INC_DIR_COMMON_CUTEST = $(INC_ROOT)vendor/common/cutest
 LIB_ROOT = 
 lib_LTLIBRARIES = 
 noinst_LTLIBRARIES = $(am__append_1)
 nobase_include_HEADERS = $(PUBLIC_INC_SRC)pomp2_lib.h
-BUILT_SOURCES = create-config-tool-headers opari2_usage.h \
-	$(am__append_3)
+BUILT_SOURCES = opari2_usage.h $(am__append_3)
 CLEANFILES = opari2_usage.h $(am__append_4)
 DISTCLEANFILES = $(builddir)/config.summary
 EXTRA_DIST = $(am__append_6)
@@ -473,24 +484,23 @@ opari2_CPPFLAGS = $(AM_CPPFLAGS) -DPACKAGE_VERSION="\"@PACKAGE_VERSION@\""
 opari2_config_SOURCES = $(SRC_ROOT)src/opari/opari2_config.cc \
                          $(SRC_ROOT)src/opari/opari2_config.h
 
-@OPENMP_SUPPORTED_TRUE@libpomp_la_SOURCES = $(SRC_ROOT)src/pomp-lib-dummy/pomp2_lib.c \
-@OPENMP_SUPPORTED_TRUE@	$(PUBLIC_INC_SRC)pomp2_lib.h \
-@OPENMP_SUPPORTED_TRUE@	$(SRC_ROOT)src/pomp-lib-dummy/pomp2_region_info.c \
-@OPENMP_SUPPORTED_TRUE@	$(SRC_ROOT)src/pomp-lib-dummy/pomp2_region_info.h \
-@OPENMP_SUPPORTED_TRUE@	$(am__append_2)
+@HAVE_OPENMP_SUPPORT_TRUE@libpomp_la_SOURCES = $(SRC_ROOT)src/pomp-lib-dummy/pomp2_lib.c \
+@HAVE_OPENMP_SUPPORT_TRUE@	$(PUBLIC_INC_SRC)pomp2_lib.h \
+@HAVE_OPENMP_SUPPORT_TRUE@	$(SRC_ROOT)src/pomp-lib-dummy/pomp2_region_info.c \
+@HAVE_OPENMP_SUPPORT_TRUE@	$(SRC_ROOT)src/pomp-lib-dummy/pomp2_region_info.h \
+@HAVE_OPENMP_SUPPORT_TRUE@	$(am__append_2)
 
 # Currently, the fortran wrappers get a int* parameter whereas the new
 # POMP_Region_handle is of type void*. Ask a fortran guru if this may cause
 # problems.
 
 # CFLAGS are sufficient here, CPPFLAGS would cause duplication
-@OPENMP_SUPPORTED_TRUE@libpomp_la_CFLAGS = $(AM_CFLAGS) $(OPENMP_CFLAGS)
-@OPENMP_SUPPORTED_TRUE@libpomp_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(PUBLIC_INC_DIR)
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@getfname_SOURCES = \
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@    $(SRC_ROOT)src/pomp-lib-dummy/foos.c     \
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@    $(SRC_ROOT)src/pomp-lib-dummy/getfname.f
+@HAVE_OPENMP_SUPPORT_TRUE@libpomp_la_CFLAGS = $(AM_CFLAGS) $(OPENMP_CFLAGS)
+@HAVE_OPENMP_SUPPORT_TRUE@libpomp_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(PUBLIC_INC_DIR)
+@HAVE_OPENMP_SUPPORT_TRUE@@SCOREP_HAVE_F77_TRUE@getfname_SOURCES = \
+@HAVE_OPENMP_SUPPORT_TRUE@@SCOREP_HAVE_F77_TRUE@    $(SRC_ROOT)src/pomp-lib-dummy/foos.c     \
+@HAVE_OPENMP_SUPPORT_TRUE@@SCOREP_HAVE_F77_TRUE@    $(SRC_ROOT)src/pomp-lib-dummy/getfname.f
 
-CONFIG_HEADER_FRONTEND = ../src/opari2_config_tool_frontend.h
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am
 
@@ -558,6 +568,8 @@ distclean-hdr:
 ../doc/example/Makefile: $(top_builddir)/config.status $(top_srcdir)/../doc/example/Makefile.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 ../doc/example_user_instrumentation/Makefile: $(top_builddir)/config.status $(top_srcdir)/../doc/example_user_instrumentation/Makefile.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+../src/opari2_config_tool_frontend.h: $(top_builddir)/config.status $(top_srcdir)/../src/opari/opari2_config_tool_frontend.h.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 
 clean-checkLTLIBRARIES:
@@ -1377,7 +1389,7 @@ maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
 	-test -z "$(BUILT_SOURCES)" || rm -f $(BUILT_SOURCES)
-@OPENMP_SUPPORTED_FALSE@installcheck-local:
+@HAVE_OPENMP_SUPPORT_FALSE@installcheck-local:
 clean: clean-am
 
 clean-am: clean-binPROGRAMS clean-checkLTLIBRARIES clean-checkPROGRAMS \
@@ -1491,65 +1503,45 @@ beautify:
 
 check-build: $(BUILT_SOURCES) all-am $(check_PROGRAMS) $(check_LTLIBRARIES)
 
+# this propagates changes to vendor/common/build-config/config-common.h
+../src/config-common.h: $(srcdir)/../vendor/common/build-config/config-common.h
+	@$(am__cd) .. && $(MAKE) $(AM_MAKEFLAGS) src/config-common.h
+
 opari2_usage.h: $(INC_ROOT)doc/doxygen-user/opari2_usage.dox.in
 	$(AWK) '{print "\"" $$0 "\\n\""}' $(INC_ROOT)doc/doxygen-user/opari2_usage.dox.in > opari2_usage.h
 
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@pomp2_fwrapper_def.h: Makefile getfname$(EXEEXT)
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@	./getfname
+@HAVE_OPENMP_SUPPORT_TRUE@@SCOREP_HAVE_F77_TRUE@pomp2_fwrapper_def.h: Makefile getfname$(EXEEXT)
+@HAVE_OPENMP_SUPPORT_TRUE@@SCOREP_HAVE_F77_TRUE@	./getfname
 
 clean-local:
 	rm -rf ../test/jacobi
-	rm -f $(CONFIG_HEADER_FRONTEND) $(builddir)/opari2_config.dat
 
-create-config-tool-headers: $(CONFIG_HEADER_FRONTEND)
+@HAVE_OPENMP_SUPPORT_TRUE@@SCOREP_HAVE_F77_TRUE@installcheck-local:
+@HAVE_OPENMP_SUPPORT_TRUE@@SCOREP_HAVE_F77_TRUE@	@$(am__cd) $(DESTDIR)$(docdir)/example/ && $(MAKE) $(AM_MAKEFLAGS)
+@HAVE_OPENMP_SUPPORT_TRUE@@SCOREP_HAVE_F77_TRUE@	@$(am__cd) $(DESTDIR)$(docdir)/example_user_instrumentation/ && $(MAKE) $(AM_MAKEFLAGS)
+@HAVE_OPENMP_SUPPORT_TRUE@@SCOREP_HAVE_F77_FALSE@installcheck-local:
+@HAVE_OPENMP_SUPPORT_TRUE@@SCOREP_HAVE_F77_FALSE@	@$(am__cd) $(DESTDIR)$(docdir)/doc/example/ && $(MAKE) $(AM_MAKEFLAGS) c
+@HAVE_OPENMP_SUPPORT_TRUE@@SCOREP_HAVE_F77_FALSE@	@$(am__cd) $(DESTDIR)$(docdir)/doc/example_user_instrumentation/ && $(MAKE) $(AM_MAKEFLAGS) c
 
-$(CONFIG_HEADER_FRONTEND): $(builddir)/opari2_config.dat
-	$(AM_V_GEN)( \
-	    echo "#define NM      \"$(NM)\""; \
-	    echo "#define AWK     \"$(AWK)\""; \
-	    echo "#define SCRIPT  \"$(prefix)/bin/pomp2-parse-init-regions.awk\""; \
-	    echo "#define EGREP   \"$(EGREP)\""; \
-	    echo "#define VERSION \"$(PACKAGE_VERSION)\""; \
-	    echo "#define POMP2_API_VERSION \"$(LIBRARY_INTERFACE_VERSION)\""; \
-	    echo "#define CFLAGS  \"-I$(prefix)/include\""; \
-	) >$@
-
-$(builddir)/opari2_config.dat:
-	$(AM_V_GEN)( \
-	    echo NM=\"$(NM)\"; \
-	    echo AWK=\"$(AWK)\"; \
-	    echo OPARI_SCRIPT=\"$(PWD)/../build-frontend/pomp2-parse-init-regions.awk\"; \
-	    echo VERSION=\"$(PACKAGE_VERSION)\"; \
-	    echo EGREP=\"$(EGREP)\"; \
-	    echo CFLAGS=\"-I$(abs_srcdir)/../include\"; \
-	) >$@
-
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@installcheck-local:
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@	@$(am__cd) $(DESTDIR)$(docdir)/example/ && $(MAKE) $(AM_MAKEFLAGS)
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_TRUE@	@$(am__cd) $(DESTDIR)$(docdir)/example_user_instrumentation/ && $(MAKE) $(AM_MAKEFLAGS)
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_FALSE@installcheck-local:
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_FALSE@	@$(am__cd) $(DESTDIR)$(docdir)/doc/example/ && $(MAKE) $(AM_MAKEFLAGS) c
-@OPENMP_SUPPORTED_TRUE@@SCOREP_HAVE_F77_FALSE@	@$(am__cd) $(DESTDIR)$(docdir)/doc/example_user_instrumentation/ && $(MAKE) $(AM_MAKEFLAGS) c
-
-@OPENMP_SUPPORTED_TRUE@install-example:
-@OPENMP_SUPPORTED_TRUE@	$(MKDIR_P) $(DESTDIR)$(docdir)/example
-@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_srcdir)/../doc/example/example.*            $(DESTDIR)$(docdir)/example/
-@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_srcdir)/../include/opari2/pomp2_lib.h       $(DESTDIR)$(docdir)/example/
-@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_builddir)/../doc/example/Makefile           $(DESTDIR)$(docdir)/example/
-@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_builddir)/../build-frontend/.libs/libpomp.* $(DESTDIR)$(docdir)/example/
-@OPENMP_SUPPORTED_TRUE@	rm -f $(DESTDIR)$(docdir)/example/libpomp.la
-@OPENMP_SUPPORTED_TRUE@	$(MKDIR_P) $(DESTDIR)$(docdir)/example_user_instrumentation
-@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_srcdir)/../doc/example_user_instrumentation/example_user_instrumentation.*  $(DESTDIR)$(docdir)/example_user_instrumentation/
-@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_srcdir)/../include/opari2/pomp2_lib.h                                       $(DESTDIR)$(docdir)/example_user_instrumentation/
-@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_builddir)/../doc/example_user_instrumentation/Makefile                      $(DESTDIR)$(docdir)/example_user_instrumentation/
-@OPENMP_SUPPORTED_TRUE@	$(INSTALL_DATA) $(abs_builddir)/../build-frontend/.libs/libpomp.*                                 $(DESTDIR)$(docdir)/example_user_instrumentation/
-@OPENMP_SUPPORTED_TRUE@	rm -f $(DESTDIR)$(docdir)/example_user_instrumentation/libpomp.la
-@OPENMP_SUPPORTED_FALSE@install-example:
+@HAVE_OPENMP_SUPPORT_TRUE@install-example:
+@HAVE_OPENMP_SUPPORT_TRUE@	$(MKDIR_P) $(DESTDIR)$(docdir)/example
+@HAVE_OPENMP_SUPPORT_TRUE@	$(INSTALL_DATA) $(abs_srcdir)/../doc/example/example.*            $(DESTDIR)$(docdir)/example/
+@HAVE_OPENMP_SUPPORT_TRUE@	$(INSTALL_DATA) $(abs_srcdir)/../include/opari2/pomp2_lib.h       $(DESTDIR)$(docdir)/example/
+@HAVE_OPENMP_SUPPORT_TRUE@	$(INSTALL_DATA) $(abs_builddir)/../doc/example/Makefile           $(DESTDIR)$(docdir)/example/
+@HAVE_OPENMP_SUPPORT_TRUE@	$(INSTALL_DATA) $(abs_builddir)/../build-frontend/.libs/libpomp.* $(DESTDIR)$(docdir)/example/
+@HAVE_OPENMP_SUPPORT_TRUE@	rm -f $(DESTDIR)$(docdir)/example/libpomp.la
+@HAVE_OPENMP_SUPPORT_TRUE@	$(MKDIR_P) $(DESTDIR)$(docdir)/example_user_instrumentation
+@HAVE_OPENMP_SUPPORT_TRUE@	$(INSTALL_DATA) $(abs_srcdir)/../doc/example_user_instrumentation/example_user_instrumentation.*  $(DESTDIR)$(docdir)/example_user_instrumentation/
+@HAVE_OPENMP_SUPPORT_TRUE@	$(INSTALL_DATA) $(abs_srcdir)/../include/opari2/pomp2_lib.h                                       $(DESTDIR)$(docdir)/example_user_instrumentation/
+@HAVE_OPENMP_SUPPORT_TRUE@	$(INSTALL_DATA) $(abs_builddir)/../doc/example_user_instrumentation/Makefile                      $(DESTDIR)$(docdir)/example_user_instrumentation/
+@HAVE_OPENMP_SUPPORT_TRUE@	$(INSTALL_DATA) $(abs_builddir)/../build-frontend/.libs/libpomp.*                                 $(DESTDIR)$(docdir)/example_user_instrumentation/
+@HAVE_OPENMP_SUPPORT_TRUE@	rm -f $(DESTDIR)$(docdir)/example_user_instrumentation/libpomp.la
+@HAVE_OPENMP_SUPPORT_FALSE@install-example:
 
 install-pomp2_region_info:
-	$(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE_NAME@/devel
-	$(INSTALL_DATA) $(abs_srcdir)/../src/pomp-lib-dummy/pomp2_region_info.c $(DESTDIR)$(datadir)/@PACKAGE_NAME@/devel/
-	$(INSTALL_DATA) $(abs_srcdir)/../src/pomp-lib-dummy/pomp2_region_info.h $(DESTDIR)$(datadir)/@PACKAGE_NAME@/devel/
+	$(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE@/devel
+	$(INSTALL_DATA) $(abs_srcdir)/../src/pomp-lib-dummy/pomp2_region_info.c $(DESTDIR)$(datadir)/@PACKAGE@/devel/
+	$(INSTALL_DATA) $(abs_srcdir)/../src/pomp-lib-dummy/pomp2_region_info.h $(DESTDIR)$(datadir)/@PACKAGE@/devel/
 
 install-data-local: install-example install-pomp2_region_info
 

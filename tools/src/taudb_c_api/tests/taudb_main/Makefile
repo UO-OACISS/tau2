@@ -9,7 +9,6 @@
 #****************************************************************************
 
 .SUFFIXES : .c
-.SILENT :
 
 include ../../Makefile.inc
 
@@ -18,10 +17,9 @@ SOURCES=${wildcard *.c}
 OBJS=${patsubst %.c, %.o, ${SOURCES}}
 
 TARGET=taudb_main
-TAUDBLIB=../../libtaudb.a
+TAUDBLIB=../../lib/libtaudb.a
 DUMP_FUNCS=../libtaudb_dump.a
-LIBS=$(POSTGRESQL_LIBRARIES)
-INCLUDE=-I. -I../../include $(POSTGRESQL_INCLUDES) -I../dump_functions
+INCLUDE=-I. -I../../include $(INCLUDES) -I../dump_functions
 
 all: $(TARGET)
 
@@ -38,9 +36,10 @@ $(OBJS): $(HEADERS) Makefile ../../Makefile.inc
 
 test: $(TARGET)
 	echo " Testing : $(TARGET)..."
-	time `./$(TARGET) >& $(TARGET).log`
-	echo " \n...Done. Contents of $(TARGET).log: \n"
-	cat $(TARGET).log
+	./$(TARGET) $(TEST_CONFIG) $(TEST_TRIAL_ID) 
+	#time `./$(TARGET) $(TEST_CONFIG) $(TEST_TRIAL_ID) >& $(TARGET).log`
+	# echo " \n...Done. Contents of $(TARGET).log: \n"
+	# cat $(TARGET).log
 	echo ""
 
 clean:

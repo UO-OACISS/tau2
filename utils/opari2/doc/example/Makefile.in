@@ -2,7 +2,7 @@
 #  Compiler                                          #
 ######################################################
 CC=@CC@
-FORTRAN=@F77@
+FORTRAN=@FC@
 OPENMP_C_FLAG=@OPENMP_CFLAGS@
 OPENMP_F_FLAG=@OPENMP_FFLAGS@
 
@@ -48,7 +48,7 @@ pompregions_c.o : pompregions_c.c
 # object file of the instrumented user code. Then the 
 # awk script generates these functions.
 pompregions_c.c : example_c.mod.o
-	$(NM) example_c.mod.o | $(GREP) -i POMP2_Init_regions | $(GREP) " [TD] " | $(AWK) -f $(AWK_SCRIPT) > pompregions_c.c
+	$(NM) example_c.mod.o | $(GREP) -i POMP2_Init_reg | $(GREP) " [TD] " | $(AWK) -f $(AWK_SCRIPT) > pompregions_c.c
 
 example_c.mod.o: example.mod.c
 	$(CC) $(OPENMP_C_FLAG)  $(POMP_INC) -c $? -o $@
@@ -63,7 +63,7 @@ example.mod.c: example.c
 fortran: example_f example_f_inst
 
 # Build without instrumentation
-example_f: example.f
+example_f: example.f90
 	$(FORTRAN) $(OPENMP_F_FLAG) $? -o $@
 
 # Linking step
@@ -77,13 +77,13 @@ pompregions_f.o : pompregions_f.c
 # object file of the instrumented user code. Then the 
 # awk script generates these functions.
 pompregions_f.c : example_f.mod.o
-	$(NM) example_f.mod.o | $(GREP) -i POMP2_Init_regions | $(AWK) -f $(AWK_SCRIPT) > pompregions_f.c
+	$(NM) example_f.mod.o | $(GREP) -i POMP2_Init_reg | $(AWK) -f $(AWK_SCRIPT) > pompregions_f.c
 
-example_f.mod.o : example.mod.F
+example_f.mod.o : example.mod.F90
 	$(FORTRAN) $(OPENMP_F_FLAG) -c -o $@ $?
 
-example.mod.F: example.f
-	$(OPARI) example.f
+example.mod.F90: example.f90
+	$(OPARI) example.f90
 
 ######################################################
 
