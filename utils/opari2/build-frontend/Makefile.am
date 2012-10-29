@@ -34,52 +34,25 @@ AM_CPPFLAGS += -DFRONTEND_BUILD -DCROSS_BUILD
 
 include ../build-includes/frontend-only.am
 
-CONFIG_HEADER_FRONTEND = ../src/opari2_config_tool_frontend.h
-
-
 clean-local:
 	rm -rf ../test/jacobi
-	rm -f $(CONFIG_HEADER_FRONTEND) $(builddir)/opari2_config.dat
-
-create-config-tool-headers: $(CONFIG_HEADER_FRONTEND)
-
-$(CONFIG_HEADER_FRONTEND): $(builddir)/opari2_config.dat
-	$(AM_V_GEN)( \
-	    echo "#define NM      \"$(NM)\""; \
-	    echo "#define AWK     \"$(AWK)\""; \
-	    echo "#define SCRIPT  \"$(prefix)/bin/pomp2-parse-init-regions.awk\""; \
-	    echo "#define EGREP   \"$(EGREP)\""; \
-	    echo "#define VERSION \"$(PACKAGE_VERSION)\""; \
-	    echo "#define POMP2_API_VERSION \"$(LIBRARY_INTERFACE_VERSION)\""; \
-	    echo "#define CFLAGS  \"-I$(prefix)/include\""; \
-	) >$@
-
-$(builddir)/opari2_config.dat:
-	$(AM_V_GEN)( \
-	    echo NM=\"$(NM)\"; \
-	    echo AWK=\"$(AWK)\"; \
-	    echo OPARI_SCRIPT=\"$(PWD)/../build-frontend/pomp2-parse-init-regions.awk\"; \
-	    echo VERSION=\"$(PACKAGE_VERSION)\"; \
-	    echo EGREP=\"$(EGREP)\"; \
-	    echo CFLAGS=\"-I$(abs_srcdir)/../include\"; \
-	) >$@
 
 
 if SCOREP_HAVE_F77
-if OPENMP_SUPPORTED
+if HAVE_OPENMP_SUPPORT
 installcheck-local:
 	@$(am__cd) $(DESTDIR)$(docdir)/example/ && $(MAKE) $(AM_MAKEFLAGS)
 	@$(am__cd) $(DESTDIR)$(docdir)/example_user_instrumentation/ && $(MAKE) $(AM_MAKEFLAGS)
 endif
 else
-if OPENMP_SUPPORTED
+if HAVE_OPENMP_SUPPORT
 installcheck-local:
 	@$(am__cd) $(DESTDIR)$(docdir)/doc/example/ && $(MAKE) $(AM_MAKEFLAGS) c
 	@$(am__cd) $(DESTDIR)$(docdir)/doc/example_user_instrumentation/ && $(MAKE) $(AM_MAKEFLAGS) c
 endif
 endif
 
-if OPENMP_SUPPORTED
+if HAVE_OPENMP_SUPPORT
 install-example:
 	$(MKDIR_P) $(DESTDIR)$(docdir)/example
 	$(INSTALL_DATA) $(abs_srcdir)/../doc/example/example.*            $(DESTDIR)$(docdir)/example/
@@ -98,8 +71,8 @@ install-example:
 endif
 
 install-pomp2_region_info:
-	$(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE_NAME@/devel
-	$(INSTALL_DATA) $(abs_srcdir)/../src/pomp-lib-dummy/pomp2_region_info.c $(DESTDIR)$(datadir)/@PACKAGE_NAME@/devel/
-	$(INSTALL_DATA) $(abs_srcdir)/../src/pomp-lib-dummy/pomp2_region_info.h $(DESTDIR)$(datadir)/@PACKAGE_NAME@/devel/
+	$(MKDIR_P) $(DESTDIR)$(datadir)/@PACKAGE@/devel
+	$(INSTALL_DATA) $(abs_srcdir)/../src/pomp-lib-dummy/pomp2_region_info.c $(DESTDIR)$(datadir)/@PACKAGE@/devel/
+	$(INSTALL_DATA) $(abs_srcdir)/../src/pomp-lib-dummy/pomp2_region_info.h $(DESTDIR)$(datadir)/@PACKAGE@/devel/
 
 install-data-local: install-example install-pomp2_region_info

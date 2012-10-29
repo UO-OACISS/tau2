@@ -82,8 +82,35 @@
 
 // For STL string support
 #include <string>
+#include <vector>
 
-/*************************************
+#ifdef TAU_OPENMP
+#include <omp.h>
+#endif
+
+using namespace std;
+
+/*
+   see:
+   http://ftp.gnu.org/old-gnu/Manuals/glibc-2.2.3/html_node/libc_463.html#SEC473
+   for details.  When using SIGALRM and ITIMER_REAL on MareNostrum (Linux on
+   PPC970MP) the network barfs.  When using ITIMER_PROF and SIGPROF, everything
+   was fine...
+   //int which = ITIMER_REAL;
+   //int TAU_ALARM_TYPE = SIGALRM;
+ */
+
+/* always use SIGPROF, for now... */
+
+//#if defined(PTHREADS) || defined(TAU_OPENMP)
+  int TAU_ITIMER_TYPE = ITIMER_PROF;
+  int TAU_ALARM_TYPE = SIGPROF;
+//#else
+  //int TAU_ITIMER_TYPE = ITIMER_REAL;
+  //int TAU_ALARM_TYPE = SIGALRM;
+//#endif
+
+ /*************************************
  * Shared Unwinder function prototypes.
  * These are internal to TAU and does
  *   not need to be extern "C"
@@ -175,12 +202,20 @@ FILE *ebsTrace[TAU_MAX_THREADS];
 
 /* Sample processing enabled/disabled */
 int samplingEnabled[TAU_MAX_THREADS];
+/* we need a process-wide flag for disabling sampling at program exit. */
+int collectingSamples = 0;
 /* Sample processing suspended/resumed */
 int suspendSampling[TAU_MAX_THREADS];
 long long numSamples[TAU_MAX_THREADS];
 long long samplesDroppedTau[TAU_MAX_THREADS];
 long long samplesDroppedSuspended[TAU_MAX_THREADS];
+// save the previous timestamp so that we can increment the accumulator
+// each time we get a sample
 x_uint64 previousTimestamp[TAU_MAX_COUNTERS * TAU_MAX_THREADS];
+
+// When we register our signal handler, we have to save any existing handler,
+// so that we can call it when we are done.
+static struct sigaction application_sa;
 
 // *CWL* This technique does NOT work when you have to rely on tau_exec for initialization
 //   through the preload mechanism. Essentially, sampling initialization relies on
@@ -229,10 +264,6 @@ unsigned long get_pc(void *p) {
 #ifdef sun
   issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on solaris\n");
   return 0;
-  //#elif defined(TAU_BGQ)
-  // uc_mcontext->ss.srr0 *may* be the way forward.
-  //  issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not currently work on BGQ\n");
-  //  return 0;
 #elif __APPLE__
   issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on apple\n");
   return 0;
@@ -779,7 +810,6 @@ void Tau_sampling_finalizeProfile(int tid) {
 		  parentTauContext->GetName());
       continue;
     }
-
     /*
     printf("Sampled Parent %s has %d elements\n", parentTauContext->GetName(),
 	   parentTauContext->pathHistogram[tid]->size());
@@ -799,9 +829,12 @@ void Tau_sampling_finalizeProfile(int tid) {
       printf("\n");
       */
       candidate->sampleCount = item->second.count;
-      candidate->counters[0] = item->second.accumulator;
       candidate->tauContext = parentTauContext;
-      TAU_VERBOSE("%d:%d TESTING: context name [%s] has %d SAMPLES of value %f\n", RtsLayer::myNode(), tid, candidate->tauContext->GetName(), candidate->sampleCount, item->second.accumulator);
+      TAU_VERBOSE("Tau Context %s has %d samples.\n", candidate->tauContext->GetName(), candidate->sampleCount);
+      for (int i = 0 ; i < Tau_Global_numCounters ; i++) {
+        candidate->counters[i] = item->second.accumulator[i];
+        //TAU_VERBOSE("%s[%d] = %f ", candidate->tauContext->GetName(), i, item->second.accumulator[i]);
+      }
       candidates->push_back(candidate);
       delete item;
       item = parentTauContext->pathHistogram[tid]->nextIter();
@@ -838,7 +871,7 @@ void Tau_sampling_finalizeProfile(int tid) {
     // STEP 0: Set up the metric values based on the candidate 
     //         to eventually be assigned to various FunctionInfo
     //         entities.
-    double metricValue; 
+    //double metricValue; 
 
     // Determine the EBS_SOURCE metric index and update the appropriate
     //   sample approximations.
@@ -850,7 +883,7 @@ void Tau_sampling_finalizeProfile(int tid) {
     }
     unsigned int binFreq = candidate->sampleCount;
     //metricValue = binFreq*TauEnv_get_ebs_period();
-    metricValue = candidate->counters[0];
+    //metricValue = candidate->counters[0];
 
     // *CWL* - BFD is thread unsafe.
     RtsLayer::LockDB();
@@ -917,8 +950,10 @@ void Tau_sampling_finalizeProfile(int tid) {
     // Accumulate the histogram into the Intermediate FunctionInfo objects.
     intermediatePathLeaf->SetCalls(tid, intermediatePathLeaf->GetCalls(tid)+binFreq);
     intermediateGlobalLeaf->SetCalls(tid, intermediateGlobalLeaf->GetCalls(tid)+binFreq);
-    intermediatePathLeaf->AddInclTimeForCounter(metricValue, tid, ebsSourceMetricIndex);
-    intermediateGlobalLeaf->AddInclTimeForCounter(metricValue, tid, ebsSourceMetricIndex);
+    for (int m = 0 ; m < Tau_Global_numCounters ; m++) {
+      intermediatePathLeaf->AddInclTimeForCounter(candidate->counters[m], tid, m);
+      intermediateGlobalLeaf->AddInclTimeForCounter(candidate->counters[m], tid, m);
+    }
 
     // STEP 3: For each sample, construct all FunctionInfo objects
     //    associated with the unwound addresses and the PC.
@@ -979,17 +1014,20 @@ void Tau_sampling_finalizeProfile(int tid) {
       
       // Update the count and time for the end of the path for sampled event.
       samplePathLeaf->SetCalls(tid, samplePathLeaf->GetCalls(tid)+binFreq);
-      samplePathLeaf->AddInclTimeForCounter(metricValue, tid, ebsSourceMetricIndex);
-      // Exclusive times are only incremented for actual sample data 
-      //   and not unwound data
-      if (i == 0) {
-	samplePathLeaf->AddExclTimeForCounter(metricValue, tid, ebsSourceMetricIndex);
-      }
-      // Accumulate the count and time into the global leaf representative sampled event.
       sampleGlobalLeaf->SetCalls(tid, sampleGlobalLeaf->GetCalls(tid)+binFreq);
-      sampleGlobalLeaf->AddInclTimeForCounter(metricValue, tid, ebsSourceMetricIndex);
-      if (i == 0) {
-	sampleGlobalLeaf->AddExclTimeForCounter(metricValue, tid, ebsSourceMetricIndex);
+
+      for (int m = 0 ; m < Tau_Global_numCounters ; m++) {
+        samplePathLeaf->AddInclTimeForCounter(candidate->counters[m], tid, m);
+        // Exclusive times are only incremented for actual sample data 
+        //   and not unwound data
+        if (i == 0) {
+	  samplePathLeaf->AddExclTimeForCounter(candidate->counters[m], tid, m);
+        }
+        // Accumulate the count and time into the global leaf representative sampled event.
+        sampleGlobalLeaf->AddInclTimeForCounter(candidate->counters[m], tid, m);
+        if (i == 0) {
+	  sampleGlobalLeaf->AddExclTimeForCounter(candidate->counters[m], tid, m);
+        }
       }
     }
   }
@@ -1022,6 +1060,10 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
   // *CWL* - Too "noisy" and useless a verbose output.
   //TAU_VERBOSE("[tid=%d] EBS profile sample with pc %p\n", tid, (unsigned long)pc);
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
+  if (profiler == NULL) {
+    Tau_create_top_level_timer_if_necessary();
+    profiler = TauInternal_CurrentProfiler(tid);
+  }
   FunctionInfo *samplingContext;
 
   // ok to be temporary. Hash table on the other end will copy the details.
@@ -1053,9 +1095,36 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
   double deltaValues[TAU_MAX_COUNTERS];
   TauMetrics_getMetrics(tid, values);
   int localIndex = tid*TAU_MAX_COUNTERS;
+
+  int ebsSourceMetricIndex = 
+    TauMetrics_getMetricIndexFromName(TauEnv_get_ebs_source());
+  //  printf("%s\n", TauMetrics_getMetricName(ebsSourceMetricIndex));
+  int ebsPeriod = TauEnv_get_ebs_period();
   for (int i = 0; i < Tau_Global_numCounters; i++) {
-    deltaValues[i] = values[i] - previousTimestamp[localIndex + i];
-    previousTimestamp[localIndex + i] = values[i];
+    /*
+    if (previousTimestamp[localIndex + i] == 0) {
+      // "We don't believe you!". Should only happen for non EBS_SOURCE
+      // metrics. Hypothesis - the first sample would find the
+      // previousTimestamp for events unset.
+      previousTimestamp[localIndex + i] == profiler->StartTime[i];
+    }
+    */
+    if ((ebsSourceMetricIndex == i) && (values[i] < ebsPeriod)) {
+      // "We don't believe you either!". Should only happen for EBS_SOURCE.
+      // Hypothesis: Triggering PAPI overflows resets the values to 0.
+      //             (or close to 0).
+      deltaValues[i] = ebsPeriod;
+      previousTimestamp[localIndex + i] += ebsPeriod;
+    } else {
+      deltaValues[i] = values[i] - previousTimestamp[localIndex + i];
+      /*
+      printf("[%s] tid=%d ctr=%d, Delta computed as %f minus %lld = %f\n", 
+	     samplingContext->GetName(),
+	     tid, i, 
+	     values[i], previousTimestamp[localIndex + i], deltaValues[i]);
+      */
+      previousTimestamp[localIndex + i] = values[i];
+    }
   }
   samplingContext->addPcSample(pcStack, tid, deltaValues);
 
@@ -1085,7 +1154,40 @@ void Tau_sampling_event_start(int tid, void **addresses) {
 #endif /* TAU_UNWIND */
 
   if (TauEnv_get_profiling()) {
-    // nothing for now
+    // *CWL* - 8/18/2012. The new way of measuring a sample's contribution
+    //         (in light of the uneven distribution of samples in threads)
+    //         necessitates the use of a measured event's time stamp to
+    //         serve as a bounding value for subsequent deductions.
+    //
+    //         Note that this is still a fudge. In the face of limited
+    //         measured events, this can end up accounting metric
+    //         contributions to samples that can sometimes seem bizarre.
+    //         (e.g., Source=PAPI_TOT_CYC, Metric=PAPI_FP_OPS can result
+    //         in strange attribution of values to samples depending on
+    //         the interplay of high FLOPS/s events and low FLOPS/s
+    //         events).
+    //
+    //         Without handling the event boundaries, another observed
+    //         (bad) effect is in cases where PAPI_FP_OPS is used as
+    //         TAU_EBS_SOURCE. A good chunk of the events leading up
+    //         to a reasonable period of say 1,000,000 FP_OPS as a
+    //         sample are likely to do very little FP_OPS. However,
+    //         at the first sample, the deltas computed for the sample's
+    //         TIME metric are likely to stretch all the way back to
+    //         main() if event boundary limits are not established.
+    //
+    //         Statistical sampling, being what it is, can never avoid
+    //         this fudging. The previous approach of counting had the
+    //         advantage of limiting the fudge factor to some factor of
+    //         TAU_EBS_PERIOD.
+        
+    double values[TAU_MAX_COUNTERS];
+    TauMetrics_getMetrics(tid, values);
+    int localIndex = tid*TAU_MAX_COUNTERS;
+    for (int i = 0; i < Tau_Global_numCounters; i++) {
+      previousTimestamp[localIndex + i] = values[i];
+    }
+    
   }
   Tau_global_decr_insideTAU_tid(tid);
 }
@@ -1122,6 +1224,13 @@ int Tau_sampling_event_stop(int tid, double *stopTime) {
  * Sample Handling
  ********************************************************************/
 void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
+  // DO THIS CHECK FIRST! otherwise, the RtsLayer::myThread() call will barf.
+  if (collectingSamples == 0) {
+    // Do not track counts when sampling is not enabled.
+    //TAU_VERBOSE("Tau_sampling_handle_sample: sampling not enabled\n");
+    return;
+  }
+
   int tid = RtsLayer::myThread();
   /* *CWL* too fine-grained for anything but debug.
   TAU_VERBOSE("Tau_sampling_handle_sample: tid=%d got sample [%p]\n",
@@ -1129,7 +1238,7 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
   */
   if (samplingEnabled[tid] == 0) {
     // Do not track counts when sampling is not enabled.
-    TAU_VERBOSE("Tau_sampling_handle_sample: sampling not enabled\n");
+    //TAU_VERBOSE("Tau_sampling_handle_sample: sampling not enabled\n");
     return;
   }
   numSamples[tid]++;
@@ -1144,6 +1253,8 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
     samplesDroppedSuspended[tid]++;
     return;
   }
+  // disable sampling until we handle this sample
+  suspendSampling[tid] = 1;
 
   Tau_global_incr_insideTAU_tid(tid);
   if (TauEnv_get_tracing()) {
@@ -1154,7 +1265,11 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
     Tau_sampling_handle_sampleProfile(pc, context);
   }
   Tau_global_decr_insideTAU_tid(tid);
+  // re-enable sampling 
+  suspendSampling[tid] = 0;
 }
+
+extern "C" void TauMetrics_internal_alwaysSafeToGetMetrics(int tid, double values[]);
 
 /*********************************************************************
  * Handler for itimer interrupt
@@ -1163,8 +1278,34 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *context) {
   unsigned long pc;
   pc = get_pc(context);
 
-  //TAU_VERBOSE("Tau_sampling_handler invoked\n");
+#ifdef DEBUG_PROF
+  double values[TAU_MAX_COUNTERS];
+  TauMetrics_internal_alwaysSafeToGetMetrics(0, values);
+#endif // DEBUG_PROF
+
   Tau_sampling_handle_sample((void *)pc, (ucontext_t *)context);
+
+  // now, apply the application's action.
+  if (application_sa.sa_handler == SIG_IGN || application_sa.sa_handler == SIG_DFL) {
+    // if there is no handler, or the action is ignore
+    // do nothing, because we are only handling SIGPROF
+    // and if we do the "default", that would lead to termination.
+    //return;
+  } else {
+    //TAU_VERBOSE("Executing the application's handler!\n");
+    // Invoke the application's handler.
+    if (application_sa.sa_flags & SA_SIGINFO) {
+      (*application_sa.sa_sigaction)(signum, si, context);
+    } else {
+      (*application_sa.sa_handler)(signum);
+    }
+  }
+#ifdef DEBUG_PROF
+  double values2[TAU_MAX_COUNTERS];
+  TauMetrics_internal_alwaysSafeToGetMetrics(0, values2);
+  printf("Sampling took %f usec\n", values2[0] - values[0]);
+#endif // DEBUG_PROF
+  return;
 }
 
 /*********************************************************************
@@ -1191,7 +1332,6 @@ int Tau_sampling_init(int tid) {
 
   static struct itimerval itval;
 
-
   Tau_global_incr_insideTAU_tid(tid);
 
   //int threshold = 1000;
@@ -1207,6 +1347,8 @@ int Tau_sampling_init(int tid) {
   
   itval.it_interval.tv_usec = itval.it_value.tv_usec = threshold % 1000000;
   itval.it_interval.tv_sec =  itval.it_value.tv_sec = threshold / 1000000;
+  TAU_VERBOSE("Tau_sampling_init: tid = %d itimer values %d %d\n", 
+	      tid, itval.it_interval.tv_usec, itval.it_interval.tv_sec);
 
   const char *profiledir = TauEnv_get_profiledir();
 
@@ -1232,31 +1374,16 @@ int Tau_sampling_init(int tid) {
   if (TauEnv_get_profiling()) {
   }
   */
-/*
-   see:
-   http://ftp.gnu.org/old-gnu/Manuals/glibc-2.2.3/html_node/libc_463.html#SEC473
-   for details.  When using SIGALRM and ITIMER_REAL on MareNostrum (Linux on
-   PPC970MP) the network barfs.  When using ITIMER_PROF and SIGPROF, everything
-   was fine...
-   //int which = ITIMER_REAL;
-   //int alarmType = SIGALRM;
- */
 
-#if defined(PTHREADS) || defined(TAU_OPENMP)
-  int which = ITIMER_PROF;
-  int alarmType = SIGPROF;
-#else
-  int which = ITIMER_REAL;
-  int alarmType = SIGALRM;
-#endif
-  
   /*  *CWL* - NOTE: It is fine to establish the timer interrupts here
       (and the PAPI overflow interrupts elsewhere) only because we
       enable sample handling for each thread after init(tid) completes.
       See Tau_sampling_handle_sample().
    */
   // only thread 0 sets up the timer interrupts.
-  if ((strcmp(TauEnv_get_ebs_source(), "itimer") == 0) && (tid == 0)) {
+  if ((strcmp(TauEnv_get_ebs_source(), "itimer") == 0) ||
+      (strcmp(TauEnv_get_ebs_source(), "TIME") == 0)) {
+    if (tid == 0) {
     struct sigaction act;
 
     // If TIME isn't on the list of TAU_METRICS, then do not sample.
@@ -1265,8 +1392,56 @@ int Tau_sampling_init(int tid) {
     //   a member of TAU_METRICS.
     int checkVal = TauMetrics_getMetricIndexFromName("TIME");
     if (checkVal == -1) {
-      fprintf(stderr, "TAU Sampling Warning: TIME is not a member of TAU_METRICS. No sampling is enabled.\n");
-      return -1;
+      // *CWL* - Attempt other default (or pseudo-default) timer options.
+      //         This is probably not the best nor most efficient way. 
+      //         The only saving grace is that these pseudo-default
+      //         timers are probably not going to overlap in the same run.
+      //         
+      //         Essentially, we don't
+      //         really care what these timers do, if EBS_SOURCE=TIME, we
+      //         just want to find ANY time-based metric to latch the 
+      //         data to.
+      const char *temp = NULL;
+      checkVal = TauMetrics_getMetricIndexFromName("TAUGPU_TIME");
+      if (checkVal != -1) {
+	temp = "TAUGPU_TIME";
+      }
+
+      checkVal = TauMetrics_getMetricIndexFromName("LINUX_TIMERS");
+      if (checkVal != -1) {
+	temp = "LINUX_TIMERS";
+      }
+
+      checkVal = TauMetrics_getMetricIndexFromName("BGL_TIMERS");
+      if (checkVal != -1) {
+	temp = "BGL_TIMERS";
+      }
+
+      checkVal = TauMetrics_getMetricIndexFromName("BGP_TIMERS");
+      if (checkVal != -1) {
+	temp = "BGP_TIMERS";
+      }
+
+      checkVal = TauMetrics_getMetricIndexFromName("BGQ_TIMERS");
+      if (checkVal != -1) {
+	temp = "BGQ_TIMERS";
+      }
+
+      checkVal = TauMetrics_getMetricIndexFromName("CRAY_TIMERS");
+      if (checkVal != -1) {
+	temp = "CRAY_TIMERS";
+      }
+
+      // If *some* pseudo-default timer is used, then override the EBS_SOURCE string.
+      //   The overriden value will eventually be used in the final EBS data resolution
+      //   phase to latch the EBS data to the appropriate metric data (which uses the
+      //   EBS_SOURCE string to figure out the metric index).
+      if (temp != NULL) {
+	TauEnv_override_ebs_source(temp);
+      } else {
+	fprintf(stderr, "TAU Sampling Warning: No time-related metric found in TAU_METRICS. Sampling is disabled for TAU_EBS_SOURCE %s.\n", TauEnv_get_ebs_source());
+	return -1;
+      }
     }
 
     memset(&act, 0, sizeof(struct sigaction));
@@ -1275,7 +1450,7 @@ int Tau_sampling_init(int tid) {
       fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
       return -1;
     }
-    ret = sigaddset(&act.sa_mask, alarmType);
+    ret = sigaddset(&act.sa_mask, TAU_ALARM_TYPE);
     if (ret != 0) {
       fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
       return -1;
@@ -1283,34 +1458,75 @@ int Tau_sampling_init(int tid) {
     act.sa_sigaction = Tau_sampling_handler;
     act.sa_flags     = SA_SIGINFO|SA_RESTART;
     
-    ret = sigaction(alarmType, &act, NULL);
+    // initialize the application signal action, so we can apply it
+    // after we run our signal handler
+    struct sigaction query_action;
+    ret = sigaction(TAU_ALARM_TYPE, NULL, &query_action);
     if (ret != 0) {
       fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
       return -1;
     }
+    if (query_action.sa_handler == SIG_DFL || query_action.sa_handler == SIG_IGN) {
+      ret = sigaction(TAU_ALARM_TYPE, &act, NULL);
+      if (ret != 0) {
+        fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
+        return -1;
+      }
+      TAU_VERBOSE("Tau_sampling_init: pid = %d, tid = %d sigaction called.\n", getpid(), tid);
+      // the old handler was just the default or ignore.
+      memset(&application_sa, 0, sizeof(struct sigaction));
+      sigemptyset(&application_sa.sa_mask);
+      application_sa.sa_handler = query_action.sa_handler;
+    } else {
+      // FIRST! check if this is us! (i.e. we got initialized twize)
+      if (query_action.sa_sigaction == Tau_sampling_handler) {
+        TAU_VERBOSE("WARNING! Tau_sampling_init called twice!\n");
+      } else {
+        TAU_VERBOSE("WARNING! Tau_sampling_init found another handler!\n");
+        // install our handler, and save the old handler
+        ret = sigaction(TAU_ALARM_TYPE, &act, &application_sa);
+        if (ret != 0) {
+          fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
+          return -1;
+        }
+        TAU_VERBOSE("Tau_sampling_init: pid = %d, tid = %d sigaction called.\n", getpid(), tid);
+      }
+    }
+  }
     
     struct itimerval ovalue, pvalue;
-    getitimer(which, &pvalue);
+    getitimer(TAU_ITIMER_TYPE, &pvalue);
     
-    ret = setitimer(which, &itval, &ovalue);
+    ret = setitimer(TAU_ITIMER_TYPE, &itval, &ovalue);
     if (ret != 0) {
       fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
       return -1;
     }
+    TAU_VERBOSE("Tau_sampling_init: pid = %d, tid = %d setitimer called.\n", getpid(), tid);
     
+
+    /*
+     *CWL* - 8/18/2012. I think this is an unnecessarily strict check.
     if (ovalue.it_interval.tv_sec != pvalue.it_interval.tv_sec  ||
 	ovalue.it_interval.tv_usec != pvalue.it_interval.tv_usec ||
 	ovalue.it_value.tv_sec != pvalue.it_value.tv_sec ||
 	ovalue.it_value.tv_usec != pvalue.it_value.tv_usec) {
       fprintf(stderr,"TAU [tid = %d]: Sampling error - Real time interval timer mismatch.\n", tid);
+      fprintf(stderr,"[tid = %d]: %d %d %d %d, %d %d %d %d.\n", tid, ovalue.it_interval.tv_sec, ovalue.it_interval.tv_usec, ovalue.it_value.tv_sec, ovalue.it_value.tv_usec, pvalue.it_interval.tv_sec, pvalue.it_interval.tv_usec, pvalue.it_value.tv_sec, pvalue.it_value.tv_usec);
       return -1;
     }
+    */
     TAU_VERBOSE("Tau_sampling_init: pid = %d, tid = %d Signals set up.\n", getpid(), tid);
 
     // set up the base timers
     double values[TAU_MAX_COUNTERS];
     /* Get the current metric values */
-    TauMetrics_getMetrics(tid, values);
+    //    TauMetrics_getMetrics(tid, values);
+    // *CWL* - sampling_init can happen within the TAU init in the non-MPI case.
+    //         So, we invoke a call that insists that TAU Metrics are available
+    //         and ready to use. This requires that sampling init happens after
+    //         metric init under all possible initialization conditions.
+    TauMetrics_internal_alwaysSafeToGetMetrics(tid, values);
     int localIndex = 0;
     for (int x = 0; x < TAU_MAX_THREADS; x++) {
       localIndex = x*TAU_MAX_COUNTERS;
@@ -1321,6 +1537,7 @@ int Tau_sampling_init(int tid) {
   }
 
   samplingEnabled[tid] = 1;
+  collectingSamples = 1;
   Tau_global_decr_insideTAU_tid(tid);
   return 0;
 }
@@ -1346,6 +1563,7 @@ int Tau_sampling_finalize(int tid) {
 
   /* Disable sampling first */
   samplingEnabled[tid] = 0;
+  collectingSamples = 0;
 
   struct itimerval itval;
   int ret;
@@ -1377,32 +1595,50 @@ int Tau_sampling_finalize(int tid) {
 /* *CWL* - This is workaround code for MPI where mvapich2 on Hera was
    found to conflict with EBS sampling operations if EBS was initialized
    before MPI_Init().
-
-   Assume no threading in this debug version.
  */
 extern "C" void Tau_sampling_init_if_necessary(void) {
-  static bool initialized = false;
-  static bool thrInitialized[TAU_MAX_THREADS];
+  static bool thrInitialized[TAU_MAX_THREADS] = {false};
 
-  if (!initialized) {
-    RtsLayer::LockEnv();
-    // check again, someone else might already have initialized by now.
-    if (!initialized) {
-      //      printf("Sampling global initializing!\n");
-      for (int i=0; i<TAU_MAX_THREADS; i++) {
-	thrInitialized[i] = false;
-      }
-      initialized = true;
-    }
+/* Greetings, intrepid thread developer. We had a problem with OpenMP applications
+ * which did not call instrumented functions or regions from an OpenMP region. In
+ * those cases, TAU does not get a chance to initialize sampling on any thread other
+ * than thread 0. By making this region an OpenMP parallel region, we initialize
+ * sampling on all (currently known) OpenMP threads. Any threads created after this
+ * point may not be recognized by TAU. But this should catch the 99% case. */
+#if defined(TAU_OPENMP) and !defined(TAU_PTHREAD)
+  // if the master thread is in TAU, in a non-parallel region
+  if (omp_get_num_threads() == 1) {
+  /* WE HAVE TO DO THIS! Otherwise, we end up with deadlock. Don't worry,
+   * it is OK, because we know(?) there are no other active threads
+   * thanks to the #define three lines above this */
     RtsLayer::UnLockEnv();
+	// do this for all threads
+#pragma omp parallel shared (thrInitialized)
+    {
+	  // but do it sequentially.
+#pragma omp critical (creatingtopleveltimer)
+      {
+	    // this will likely register the currently executing OpenMP thread.
+        int myTid = RtsLayer::myThread();
+        if (!thrInitialized[myTid]) {
+          thrInitialized[myTid] = true;
+          Tau_sampling_init(myTid);
+        }
+      } // critical
+    } // parallel
+	/* WE HAVE TO DO THIS! The environment was locked before we entered
+	 * this function, we unlocked it, so re-lock it for safety */
+    RtsLayer::LockEnv();
+	/* return, because our work is done for this special case. */
+	return;
   }
+#endif
 
+// handle all other cases!
   int myTid = RtsLayer::myThread();
-
   if (!thrInitialized[myTid]) {
-    //    printf("Sampling thread %d initializing!\n", myTid);
-    Tau_sampling_init(myTid);
     thrInitialized[myTid] = true;
+    Tau_sampling_init(myTid);
   }
 }
 
@@ -1417,8 +1653,7 @@ extern "C" void Tau_sampling_finalize_if_necessary(void) {
 /* Kevin: before wrapping things up, stop listening to signals. */
   sigset_t x;
   sigemptyset(&x);
-  sigaddset(&x, SIGPROF);
-  //sigaddset(&x, SIGALRM);
+  sigaddset(&x, TAU_ALARM_TYPE);
 #if defined(PTHREADS) || defined(TAU_OPENMP)
   pthread_sigmask(SIG_BLOCK, &x, NULL);
 #else
@@ -1432,7 +1667,10 @@ extern "C" void Tau_sampling_finalize_if_necessary(void) {
       //      printf("Sampling global finalizing!\n");
       for (int i=0; i<TAU_MAX_THREADS; i++) {
 	thrFinalized[i] = false;
+        // just in case, disable sampling.
+        samplingEnabled[i] = 0;
       }
+      collectingSamples = 0;
       finalized = true;
     }
     RtsLayer::UnLockEnv();
@@ -1449,6 +1687,5 @@ extern "C" void Tau_sampling_finalize_if_necessary(void) {
     }
   }
 }
-
 
 #endif //TAU_WINDOWS

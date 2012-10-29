@@ -78,7 +78,7 @@ public class PerfExplorerCorrelationPane extends JScrollPane implements ActionLi
 			}
 			//sortByR=corsort.isSelected();
 			imagePanel.setVisible(false);
-			updateImagePanel();
+			updateImagePanel(false);
 			
 			imagePanel.repaint();
 			imagePanel.setVisible(true);
@@ -86,7 +86,12 @@ public class PerfExplorerCorrelationPane extends JScrollPane implements ActionLi
 	}
 	CorSortListener CSL = new CorSortListener();
 	
-	public void updateImagePanel () {
+	
+	public void updateImagePanel(){
+		updateImagePanel(true);
+	}
+	
+	private void updateImagePanel (boolean reissue) {
 		
 		
 		imagePanel.removeAll();
@@ -96,8 +101,10 @@ public class PerfExplorerCorrelationPane extends JScrollPane implements ActionLi
 			// check to see if we have these results already
 			//results = (RMIPerformanceResults)resultsHash.get(model.toString());
 			//if (results == null) {
+			if(reissue){
 				PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 				results = server.getCorrelationResults(model);
+			}
 			//}
 			if (results.getResultCount() == 0) {
 				return;

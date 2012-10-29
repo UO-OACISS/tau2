@@ -262,12 +262,12 @@ public class GlobalBarChartModel extends AbstractBarChartModel {
 
         if (ParaProf.getHelpWindow().isShowing()) {
             ParaProf.getHelpWindow().clearText();
-            if (thread.getNodeID() == -1) {
+            if (thread.getNodeID() == -1 || thread.getNodeID() == -6) {
                 ParaProf.getHelpWindow().writeText("This line represents the mean statistics (over all threads).\n");
 
             } else if (thread.getNodeID() == -2) {
 
-            } else if (thread.getNodeID() == -3) {
+            } else if (thread.getNodeID() == -3 || thread.getNodeID() == -7) {
                 ParaProf.getHelpWindow().writeText(
                         "This line represents the standard deviation of each function (over threads).\n");
 

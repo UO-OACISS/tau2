@@ -6,6 +6,7 @@
 #pragma warning(disable:4018) //signed/unsigned mismatch
 #pragma warning(disable:4290) // exception spec ignored
 #endif
+#include <stddef.h>
 #include <new>
 #include <list>
 #include <algorithm>

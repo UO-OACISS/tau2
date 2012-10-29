@@ -39,7 +39,7 @@ AC_SCOREP_COMPILER_CHECKS
 ## declarations in for loops, and variable length arrays.  After calling this
 ## macro you can check whether the C compiler has been set to accept C99; if
 ## not, the shell variable ac_cv_prog_cc_c99 is set to `no'.
-AC_REQUIRE([SCOREP_PROG_CC_C99])
+AC_SCOREP_PROG_CC_C99([], [AC_MSG_ERROR([No ISO C99 support in C compiler.])])
 
 ## Determine a C++ compiler to use. Check whether the environment variable CXX 
 ## or CCC (in that order) is set; if so, then set output variable CXX to its 
@@ -113,11 +113,11 @@ AC_LANG_PUSH([C])
 AC_OPENMP
 AC_LANG_POP([C])
 
-AM_CONDITIONAL([OPENMP_SUPPORTED], 
+AM_CONDITIONAL([HAVE_OPENMP_SUPPORT],
                [test "x${ac_cv_prog_c_openmp}" != "xunsupported" && test "x${enable_openmp}" != "xno"])
 
 if test "x${ac_cv_prog_c_openmp}" = "xunsupported"; then
-    AC_MSG_WARN([no suitbale OpenMP compilers found. POMP2 dummy lib will not be build.])
+    AC_MSG_WARN([no suitable OpenMP compilers found. POMP2 dummy lib will not be build.])
 else
     AC_LANG_PUSH([C++])
     AC_OPENMP
@@ -133,7 +133,7 @@ else
 fi
 
 AC_SCOREP_FORTRAN_SUPPORT_ALLOCATABLE
-SCOREP_ATTRIBUTE_ALIGNMENT
+AC_SCOREP_ATTRIBUTE_ALIGNMENT
 AC_PROG_RANLIB
 AC_SCOREP_DEFINE_REVISIONS
 ])

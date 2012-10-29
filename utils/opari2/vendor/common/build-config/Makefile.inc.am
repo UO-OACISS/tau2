@@ -19,73 +19,19 @@
 ## maintainer Christian Roessel <c.roessel@fz-juelich.de>
 
 EXTRA_DIST =
+BUILT_SOURCES =
 CLEANFILES =
 DISTCLEANFILES =
 
-# Create platform entries for EXTRA_DIST using e.g.:
-# cd vendor/common/build-config/platforms
-# for i in *; do echo "              \$(srcdir)/vendor/common/build-config/platforms/$i \\"; done
-
-EXTRA_DIST += $(srcdir)/vendor/common/build-config/process_arguments.awk \
-              $(srcdir)/vendor/common/build-config/platforms/compiler-frontend-gcc  \
-              $(srcdir)/vendor/common/build-config/platforms/compiler-frontend-ibm  \
-              $(srcdir)/vendor/common/build-config/platforms/compiler-frontend-intel  \
-              $(srcdir)/vendor/common/build-config/platforms/compiler-frontend-pathscale  \
-              $(srcdir)/vendor/common/build-config/platforms/compiler-frontend-pgi  \
-              $(srcdir)/vendor/common/build-config/platforms/compiler-frontend-studio  \
-              $(srcdir)/vendor/common/build-config/platforms/compiler-mpi-impi  \
-              $(srcdir)/vendor/common/build-config/platforms/compiler-mpi-mpich2  \
-              $(srcdir)/vendor/common/build-config/platforms/compiler-mpi-openmpi  \
-              $(srcdir)/vendor/common/build-config/platforms/compiler-nocross-gcc  \
-              $(srcdir)/vendor/common/build-config/platforms/compiler-nocross-ibm  \
-              $(srcdir)/vendor/common/build-config/platforms/compiler-nocross-intel  \
-              $(srcdir)/vendor/common/build-config/platforms/compiler-nocross-pathscale  \
-              $(srcdir)/vendor/common/build-config/platforms/compiler-nocross-pgi  \
-              $(srcdir)/vendor/common/build-config/platforms/compiler-nocross-studio  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-backend-altix  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-backend-bgl  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-backend-bgp  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-backend-crayx1  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-backend-crayxt  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-backend-ibm  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-backend-linux  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-backend-mac  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-backend-necsx  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-backend-sicortex  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-backend-sun  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-backend-user-provided  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-altix  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-bgl  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-bgp  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-crayx1  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-crayxt  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-ibm  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-linux  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-mac  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-necsx  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-sicortex  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-sun  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-frontend-user-provided  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-altix  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-bgl  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-bgp  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-crayx1  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-crayxt  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-ibm  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-linux  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-mac  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-necsx  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-sicortex  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-sun  \
-              $(srcdir)/vendor/common/build-config/platforms/platform-mpi-user-provided \
-              $(srcdir)/vendor/common/cutest/CuTest.c \
+# Testing framework
+EXTRA_DIST += $(srcdir)/vendor/common/cutest/CuTest.c \
               $(srcdir)/vendor/common/cutest/CuTest.h
 
-CLEANFILES += $(builddir)/user_provided_configure_args \
-              $(builddir)/mpi_compiler_suite           \
-              $(builddir)/mpi_compiler_suite_to_source
-
 DISTCLEANFILES += $(builddir)/config.summary
+DISTCLEANFILES += $(builddir)/@PACKAGE@.summary
+
+CONFIG_STATUS_DEPENDENCIES = $(srcdir)/build-config/VERSION
+CONFIGURE_DEPENDENCIES = $(srcdir)/build-config/VERSION
 
 prohibit-svn-files-in-dist:
 	@find $(top_distdir) -type d | grep "\.svn"; \
@@ -100,7 +46,7 @@ DOC_SRC_DIR = $(srcdir)/doc
 
 common-uninstall:
 	rm -rf $(DESTDIR)$(docdir)
-	rm -rf $(DESTDIR)$(datadir)/@PACKAGE_NAME@
+	rm -rf $(DESTDIR)$(datadir)/@PACKAGE@
 
 
 ###############################################################################
@@ -164,11 +110,11 @@ if HAVE_DOXYGEN #-----------------------------------------------------
 doxygen-user: doxygen-project-number doc/doxygen-user/main.dox
 	$(MKDIR_P) "$(USER_DOC_DIR)/tags"
 	echo "OUTPUT_DIRECTORY = $(USER_DOC_DIR)" > doc/doxygen-user-at-make-time.cfg
-	echo "GENERATE_TAGFILE = $(USER_DOC_DIR)/tags/@PACKAGE_NAME@.tag" >> doc/doxygen-user-at-make-time.cfg
+	echo "GENERATE_TAGFILE = $(USER_DOC_DIR)/tags/@PACKAGE@.tag" >> doc/doxygen-user-at-make-time.cfg
 	cat doc/doxygen-project-number.cfg doc/doxygen-user-at-make-time.cfg doc/doxygen-user-common.cfg doc/doxygen-user-component.cfg > doc/doxygen-user.cfg
 	$(MKDIR_P) "$(USER_DOC_DIR)/html"
 	cp $(abs_srcdir)/doc/images/* $(USER_DOC_DIR)/html
-	doxygen doc/doxygen-user.cfg
+	$(DOXYGEN) doc/doxygen-user.cfg
 
 CLEANFILES += doc/doxygen-user.cfg doc/doxygen-user-at-make-time.cfg doxygen.err
 
@@ -187,12 +133,13 @@ doxygen-user-pdf: doxygen-user
 	echo "GENERATE_LATEX   = YES"   >> doc/doxygen-user-pdf.cfg
 	echo "GENERATE_HTML    = NO"    >> doc/doxygen-user-pdf.cfg
 	cp $(abs_srcdir)/vendor/common/build_related/doxygen/scorep.sty $(USER_DOC_DIR)/pdf/
-	doxygen doc/doxygen-user-pdf.cfg
-	cd "$(USER_DOC_DIR)/pdf"; \
-	make;                     \
-	mv refman.pdf ../;        \
-	rm -f *;                  \
-	mv ../refman.pdf @PACKAGE_NAME@.pdf
+	-cp $(DOC_SRC_DIR)/images/project_logo_large.png $(USER_DOC_DIR)/pdf/
+	$(DOXYGEN) doc/doxygen-user-pdf.cfg
+	cd "$(USER_DOC_DIR)/pdf" && \
+	make &&                     \
+	mv refman.pdf ../ &&        \
+	rm -f * &&                  \
+	mv ../refman.pdf @PACKAGE@.pdf
 
 else # i.e. ! HAVE_DOXYGEN_LATEX -------------------------------------
 

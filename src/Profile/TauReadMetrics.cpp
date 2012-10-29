@@ -68,10 +68,14 @@ extern "C" {
 
 #ifdef CUPTI
 #include "Profile/CuptiLayer.h"
+// Moved from header file
+using namespace std;
 #endif //CUPTI
 
 #ifdef TAUKTAU_SHCTR
 #include "Profile/KtauCounters.h"
+// Moved from header file
+using namespace std;
 #endif //TAUKTAU_SHCTR
 
 #ifdef TAU_MPI
@@ -148,6 +152,11 @@ void metric_read_clock_gettime(int tid, int idx, double values[]) {
 #elif __APPLE__
   /* Mac OS X currently (up to 10.6.8) does not support clock_gettime. */
   metric_read_gettimeofday(tid, idx, values);
+#elif TAU_BGQ
+  /* clock_gettime does not support MONOTONIC on the back end of BGQ. */
+  struct timespec tm;
+  clock_gettime(CLOCK_REALTIME, &tm);
+  values[idx] = ((double)tm.tv_sec * 1e6 + (tm.tv_nsec*1e-3));
 #else
   struct timespec tm;
   clock_gettime(CLOCK_MONOTONIC, &tm);
@@ -344,18 +353,10 @@ void metric_read_cupti(int tid, int idx, double values[])
 {
 
 	//printf("is the cupti layer is initialized? %d\n", Tau_CuptiLayer_is_initialized());
-	uint64_t* counterDataBuffer = (uint64_t*) malloc
-		(Tau_CuptiLayer_get_num_events()*sizeof(uint64_t));
-	Tau_CuptiLayer_read_counters(counterDataBuffer);
+	//printf("requesting counter id: %d.\n", idx);
+	uint64_t counterData = Tau_CuptiLayer_read_counter(idx);
 
-	if (counterDataBuffer)
-	{
-		for (int i=0; i<Tau_CuptiLayer_get_num_events(); i++)
-		{
-			values[idx + i] = (double) counterDataBuffer[i];
-			//printf("cupti value %d is: %lf.\n", i, values[idx + i]);
-		}
-	}
-	free(counterDataBuffer);
+	values[idx] = (double) counterData;
+	//printf("cupti value %d is: %lf.\n", idx, values[idx]);
 }
 #endif //CUPTI

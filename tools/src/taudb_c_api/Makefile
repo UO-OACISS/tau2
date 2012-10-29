@@ -9,14 +9,14 @@
 #****************************************************************************
 
 .SUFFIXES : .c
-.SILENT :
 
 include Makefile.inc
 
-TARGET=libtaudb.a
+TARGET=lib/libtaudb.a
 
 # rebuild everything if the headers or the makefile changes
 all: Makefile Makefile.inc
+	mkdir -p lib
 	@for i in src tests ; do (cd $$i; $(MAKE) "MAKE=$(MAKE)" || exit 0); done
 
 test: all $(TARGET)

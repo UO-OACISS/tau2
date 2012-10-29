@@ -1,5 +1,6 @@
 package edu.uoregon.tau.paraprof;
 
+import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
 import edu.uoregon.tau.paraprof.enums.VisType;
@@ -152,14 +153,28 @@ public void setTopoAtomic(UserEvent ue, int i){
 	topoUserEvent[i]=ue;
 }
 
-
-private boolean[] atomic ={false,false,false,false};
-public boolean getAtomic(int i){
-	return atomic[i];
+private MetaDataKey[] topoMetadata=new MetaDataKey[4];
+public MetaDataKey getTopoMetadata(int i){
+	return topoMetadata[i];
 }
-public void setAtomic(boolean b, int i)
+public void setTopoMetadata(MetaDataKey ue, int i){
+	topoMetadata[i]=ue;
+}
+
+
+private int[] dataType ={0,0,0,0};//0=timer/counter,1=atomic, 2=metadata
+public int getDataType(int i){
+	return dataType[i];
+}
+
+/**
+ * 
+ * @param b 0=timer/counter,1=atomic, 2=metadata
+ * @param i index of the selector being changed
+ */
+public void setDataType(int b, int i)
 {
-	atomic[i]=b;
+	dataType[i]=b;
 }
 
 private UserEventValueType[] topoUserEventValueType = {UserEventValueType.MAX,UserEventValueType.MAX,UserEventValueType.MAX,UserEventValueType.MAX};

@@ -33,6 +33,9 @@
 #include "Profile/Profiler.h"
 #include <tau_internal.h>
 
+// Moved from header file
+using namespace tau;
+
 #include <stdio.h>
 #include <fcntl.h>
 #include <stdlib.h>

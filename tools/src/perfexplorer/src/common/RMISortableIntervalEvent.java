@@ -6,8 +6,8 @@ import java.text.DecimalFormat;
 import java.text.FieldPosition;
 
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
-import edu.uoregon.tau.perfdmf.IntervalEvent;
-import edu.uoregon.tau.perfdmf.IntervalLocationProfile;
+import edu.uoregon.tau.perfdmf.Function;
+import edu.uoregon.tau.perfdmf.FunctionProfile;
 
 
 /**
@@ -20,43 +20,62 @@ import edu.uoregon.tau.perfdmf.IntervalLocationProfile;
  * @since   0.1
  *
  */
-public class RMISortableIntervalEvent extends IntervalEvent implements Serializable, Comparable<IntervalEvent> {
+public class RMISortableIntervalEvent implements Serializable, Comparable<RMISortableIntervalEvent> {
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -4062837640988586241L;
 	public int metricIndex;
-	public RMISortableIntervalEvent (IntervalEvent e, DatabaseAPI dataSession, int metricIndex) {
-		super(dataSession);
-		this.setID(e.getID());
-		this.setName(e.getName());
-		this.setGroup(e.getGroup());
-		this.setTrialID(e.getTrialID());
-        try {
-			this.setMeanSummary(e.getMeanSummary());
-			this.setTotalSummary(e.getTotalSummary());
-        } catch (SQLException exception) {
-        }
+	private Function function;
+	private int trialID;
+	private DatabaseAPI dataSession;
+	public RMISortableIntervalEvent (Function f, int trialID, DatabaseAPI dataSession, int metricIndex) {
+		super();
+		this.function = f;
+		this.trialID = trialID;
 		this.metricIndex = metricIndex;
+		this.dataSession = dataSession;
+	}
+	
+	public FunctionProfile getMeanSummary() {
+		if (this.function.getMeanProfile() != null)
+			return this.function.getMeanProfile();
+		else {
+			FunctionProfile meanSummary = null;
+            try {
+				meanSummary = dataSession.getIntervalEventDetail(this.function);
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			this.function.setMeanProfile(meanSummary);
+			return meanSummary;
+		}
 	}
 
+	public Function getFunction() {
+		return function;
+	}
+	
+	public int getTrialID() {
+		return this.trialID;
+	}
+	
 	public String toString() {
 		StringBuffer buf = new StringBuffer();
         try {
 			DecimalFormat format = new DecimalFormat("00.00");
 			FieldPosition f = new FieldPosition(0);
-			format.format(this.getMeanSummary().getExclusivePercentage(metricIndex), buf, f);
-			buf.append("%");
+			format.format(this.function.getMeanProfile().getExclusive(metricIndex), buf, f);
         } catch (Exception exception) {}
 		buf.append(" : ");
-		buf.append(this.getName());
+		buf.append(this.function.getName());
 		return buf.toString();
 	}
 
-    public int compareTo(IntervalEvent o) {
-        IntervalEvent e = (IntervalEvent) o;
-        IntervalLocationProfile ms1 = null;
-        IntervalLocationProfile ms2 = null;
+    public int compareTo(RMISortableIntervalEvent e) {
+        FunctionProfile ms1 = null;
+        FunctionProfile ms2 = null;
         try {
             ms1 = this.getMeanSummary();
             ms2 = e.getMeanSummary();

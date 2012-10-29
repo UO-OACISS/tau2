@@ -25,10 +25,14 @@
 #include <Profile/TauTrace.h>
 #ifdef CUPTI
 #include <Profile/CuptiLayer.h>
+// Moved from header file
+using namespace std;
 #endif //CUPTI
 
 #ifdef TAUKTAU_SHCTR
 #include "Profile/KtauCounters.h"
+// Moved from header file
+using namespace std;
 #endif //TAUKTAU_SHCTR
 
 
@@ -63,8 +67,9 @@ static void metricv_add(const char *name);
 static void read_env_vars();
 static void initialize_functionArray();
 
+#ifndef TAU_MAX_METRICS
 #define TAU_MAX_METRICS 25
-
+#endif
 /* Global Variable holding the number of counters */
 int Tau_Global_numCounters = -1;
 
@@ -136,8 +141,9 @@ static int compareMetricString(char *one, const char *two) {
 static void metricv_add(const char *name) {
   int i;
   if (nmetrics >= TAU_MAX_METRICS) {
-    fprintf(stderr, "Number of counters exceeds TAU_MAX_METRICS\n");
-  } else {
+    fprintf(stderr, "Number of counters exceeds TAU_MAX_METRICS (%d), please reconfigure TAU with -useropt=-DTAU_MAX_METRICS=<higher number>.\n", TAU_MAX_METRICS);
+ 		exit(1); 
+	} else {
     for (i = 0; i < nmetrics; i++) {
       if (compareMetricString(metricv[i], name)) {
         return;
@@ -347,7 +353,7 @@ static void initialize_functionArray()
 			/* CUPTI handled separately */
 			/* setup CUPTI metrics */
 			functionArray[pos++] = metric_read_cupti;
-			Tau_CuptiLayer_register_string(metricv[i]);
+			Tau_CuptiLayer_register_string(metricv[i], pos - 1);
 #endif //CUPTI
 #ifdef TAU_PAPI
     } else if (compareMetricString(metricv[i], "P_WALL_CLOCK_TIME")) {
@@ -485,6 +491,12 @@ void TauMetrics_getMetrics(int tid, double values[])
     if (TauCompensateInitialized()) {
       TauMetrics_init();
     }
+  }
+}
+
+extern "C" void TauMetrics_internal_alwaysSafeToGetMetrics(int tid, double values[]) {
+  for (int i = 0; i < nfunctions; i++) {
+    functionArray[i](tid, i, values);
   }
 }
 

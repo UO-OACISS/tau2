@@ -60,7 +60,7 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
     private JTextField name = new JTextField(15);
     private JPanel configurations = new JPanel();
     private JPanel editConfiguration = new JPanel();
-    private String[] adapters = { "mysql", "postgresql", "oracle", "derby", "db2", "h2" };
+    private String[] adapters = { "mysql", "postgresql", "oracle", "derby", "db2", "h2", "sqlite" };
     private JComboBox adapter = new JComboBox(adapters);
     private JTextField driver = new JTextField(15);
     private JTextField host = new JTextField(15);
@@ -612,6 +612,20 @@ public class DatabaseManagerWindow extends JFrame implements ActionListener, Obs
             labelDatabaseName.setText("Path to Database:");
             this.driver.setText("org.apache.derby.jdbc.EmbeddedDriver");
             String jarlocation = jarLocation + File.separator + "derby.jar";
+            this.jarfile.setText(jarlocation);
+        } else if (newAdapter.compareTo("sqlite") == 0) {
+            host.setEnabled(false);
+            host.setText("");
+            databasePassword.setEditable(false);
+            databasePassword.setEnabled(false);
+            databasePassword.setText("");
+            savePassword.setEnabled(false);
+            port.setEnabled(false);
+            port.setText("");
+            download.setEnabled(false);
+            labelDatabaseName.setText("Path to Database:");
+            this.driver.setText("org.sqlite.JDBC");
+            String jarlocation = jarLocation + File.separator + "sqlite.jar";
             this.jarfile.setText(jarlocation);
         } else if (newAdapter.compareTo("h2") == 0) {
             host.setEnabled(false);

@@ -81,7 +81,8 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 		CUpti_SynchronizeData *sync = (CUpti_SynchronizeData *) params;
 		uint32_t stream;
 		CUptiResult err;
-		//Tau_cupti_register_sync_event(NULL, 0);
+		//Global Buffer
+		Tau_cupti_register_sync_event(NULL, 0);
 		err = cuptiGetStreamId(sync->context, sync->stream, &stream);
 		Tau_cupti_register_sync_event(sync->context, stream);
 		for (int s=0; s<number_of_streams; s++)
@@ -104,7 +105,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 				Tau_cupti_register_calling_site(cbInfo->correlationId, p);
 				//functionInfoMap[cbInfo->correlationId] = p;	
 				Tau_cupti_enter_memcpy_event(
-					TAU_GPU_USE_DEFAULT_NAME, 0, cbInfo->contextUid, cbInfo->correlationId, 
+					TAU_GPU_USE_DEFAULT_NAME, -1, 0, cbInfo->contextUid, cbInfo->correlationId, 
 					count, getMemcpyType(kind)
 				);
 				/*
@@ -120,7 +121,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 			else
 			{
 				Tau_cupti_exit_memcpy_event(
-					TAU_GPU_USE_DEFAULT_NAME, 0, cbInfo->contextUid, cbInfo->correlationId, 
+					TAU_GPU_USE_DEFAULT_NAME, -1, 0, cbInfo->contextUid, cbInfo->correlationId, 
 					count, getMemcpyType(kind)
 				);
 				/*
@@ -238,6 +239,8 @@ void Tau_cupti_register_sync_event(CUcontext context, uint32_t stream)
 
 void Tau_cupti_record_activity(CUpti_Activity *record)
 {
+
+	
 	//printf("in record activity.\n");
   switch (record->kind) {
   	case CUPTI_ACTIVITY_KIND_MEMCPY:
@@ -256,6 +259,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			}
 			Tau_cupti_register_memcpy_event(
 				TAU_GPU_USE_DEFAULT_NAME,
+				memcpy->deviceId,
 				memcpy->streamId,
 				memcpy->contextId,
 				id,
@@ -283,7 +287,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			//cerr << "recording kernel: " << kernel->name << ", " << kernel->end - kernel->start << "ns.\n" << endl;
 
 			GpuEventAttributes *map;
-			int map_size = 5;
+			int map_size = 9;
 			map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
 			static TauContextUserEvent* bs;
 			static TauContextUserEvent* dm;
@@ -306,6 +310,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			map[4].userEvent = lr;
 			map[4].data = kernel->registersPerThread;
 
+			
 			const char* name;
 			uint32_t id;
 			if (cupti_api_runtime())
@@ -318,8 +323,11 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 				//printf("correlationid: %d.\n", id);
 			}
 			name = demangleName(kernel->name);
-		  //cerr << "recording kernel on device: " << kernel->streamId << "/" << id << endl;
-			Tau_cupti_register_gpu_event(name,
+		  //cerr << "recording kernel (device/stream/context/correlation): " << 
+			//kernel->deviceId << "/" << kernel->streamId << "/" << kernel->contextId << "/" << id << endl;
+			record_gpu_occupancy(kernel, name, map);
+			
+			Tau_cupti_register_gpu_event(name, kernel->deviceId,
 				kernel->streamId, kernel->contextId, id, map, map_size,
 				kernel->start / 1e3, kernel->end / 1e3);
 			/*
@@ -330,42 +338,168 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 				kernel->start / 1e3,
 				kernel->end / 1e3);
 			*/	
-				break;
+
+			break;
 		}
   	case CUPTI_ACTIVITY_KIND_DEVICE:
 		{
+			CUpti_ActivityDevice *device = (CUpti_ActivityDevice *)record;
 
-			static bool recorded_metadata = false;
-			if (!recorded_metadata)
-			{
-
-				CUpti_ActivityDevice *device = (CUpti_ActivityDevice *)record;
-				
-				//first the name.
-				Tau_metadata("GPU Name", device->name);
-
-				//the rest.
-				RECORD_DEVICE_METADATA(computeCapabilityMajor, device);
-				RECORD_DEVICE_METADATA(computeCapabilityMinor, device);
-				RECORD_DEVICE_METADATA(constantMemorySize, device);
-				RECORD_DEVICE_METADATA(coreClockRate, device);
-				RECORD_DEVICE_METADATA(globalMemoryBandwidth, device);
-				RECORD_DEVICE_METADATA(globalMemorySize, device);
-				RECORD_DEVICE_METADATA(l2CacheSize, device);
-				RECORD_DEVICE_METADATA(maxIPC, device);
-				RECORD_DEVICE_METADATA(maxRegistersPerBlock, device);
-				RECORD_DEVICE_METADATA(maxSharedMemoryPerBlock, device);
-				RECORD_DEVICE_METADATA(maxThreadsPerBlock, device);
-				RECORD_DEVICE_METADATA(maxWarpsPerMultiprocessor, device);
-				RECORD_DEVICE_METADATA(numMemcpyEngines, device);
-				RECORD_DEVICE_METADATA(numMultiprocessors, device);
-				RECORD_DEVICE_METADATA(numThreadsPerWarp, device);
+			int nMeta = 17;
 			
-				recorded_metadata = true;
-			}
+			GpuMetadata *metadata = (GpuMetadata *) malloc(sizeof(GpuMetadata) * nMeta);
+			int id = 0;
+			//first the name.
+			metadata[id].name = "GPU Name";
+			metadata[id].value = device->name;
+			id++;
+
+			//the rest.
+			RECORD_DEVICE_METADATA(computeCapabilityMajor, device);
+			RECORD_DEVICE_METADATA(computeCapabilityMinor, device);
+			RECORD_DEVICE_METADATA(constantMemorySize, device);
+			RECORD_DEVICE_METADATA(coreClockRate, device);
+			RECORD_DEVICE_METADATA(globalMemoryBandwidth, device);
+			RECORD_DEVICE_METADATA(globalMemorySize, device);
+			RECORD_DEVICE_METADATA(l2CacheSize, device);
+			RECORD_DEVICE_METADATA(maxIPC, device);
+			RECORD_DEVICE_METADATA(maxRegistersPerBlock, device);
+			RECORD_DEVICE_METADATA(maxSharedMemoryPerBlock, device);
+			RECORD_DEVICE_METADATA(maxThreadsPerBlock, device);
+			RECORD_DEVICE_METADATA(maxWarpsPerMultiprocessor, device);
+			RECORD_DEVICE_METADATA(maxBlocksPerMultiprocessor, device);
+			RECORD_DEVICE_METADATA(numMemcpyEngines, device);
+			RECORD_DEVICE_METADATA(numMultiprocessors, device);
+			RECORD_DEVICE_METADATA(numThreadsPerWarp, device);
+	
+			//cerr << "recording metadata (device): " << device->id << endl;
+			deviceMap[device->id] = *device;
+			Tau_cupti_register_metadata(device->id, metadata, nMeta);
 			break;
 		}
 	}
+}
+
+//Helper function givens ceiling with given significance.
+int ceil(float value, int significance)
+{
+	return ceil(value/significance)*significance;
+}
+
+void record_gpu_occupancy(CUpti_ActivityKernel *kernel, const char *name, GpuEventAttributes *map)
+{
+	CUpti_ActivityDevice device = deviceMap[kernel->deviceId];
+
+	if ((device.computeCapabilityMajor > 3) ||
+		device.computeCapabilityMajor == 3 &&
+		device.computeCapabilityMinor > 5)
+	{
+		TAU_VERBOSE("Warning: GPU occupancy calculator is not implemented for devices of compute capability > 3.5.");
+		return;
+	}
+
+	int myWarpsPerBlock = ceil(
+				(kernel->blockX * kernel->blockY * kernel->blockZ)/
+				device.numThreadsPerWarp
+			); 
+
+	int allocatable_warps = min(
+		(int)device.maxBlocksPerMultiprocessor, 
+		(int)floor(
+			(float) device.maxWarpsPerMultiprocessor/
+			myWarpsPerBlock	
+		)
+	);
+
+
+	static TauContextUserEvent* alW;
+	Tau_get_context_userevent((void **) &alW, "Allocatable Blocks per SM given Thread count (Blocks)");
+	map[5].userEvent = alW;
+	map[5].data = allocatable_warps;
+
+	int myRegistersPerBlock = device.computeCapabilityMajor < 2 ?
+		ceil(
+			ceil(
+				(float)myWarpsPerBlock, 2	
+			)*
+			kernel->registersPerThread*
+			device.numThreadsPerWarp,
+			device.computeCapabilityMinor < 2 ? 256 : 512
+		) :
+		ceil(
+			kernel->registersPerThread*
+			device.numThreadsPerWarp,
+			device.computeCapabilityMajor < 3 ? 128 : 256
+		)*
+		ceil(
+			myWarpsPerBlock, device.computeCapabilityMajor < 3 ? 2 : 4
+		);
+
+	int allocatable_registers = (int)floor(
+		device.maxRegistersPerBlock/
+		max(
+			myRegistersPerBlock, 1
+			)
+		);
+	
+	if (allocatable_registers == 0)
+		allocatable_registers = device.maxBlocksPerMultiprocessor;
+	
+
+	static TauContextUserEvent* alR;
+	Tau_get_context_userevent((void **) &alR, "Allocatable Blocks Per SM given Registers used (Blocks)");
+	map[6].userEvent = alR;
+	map[6].data = allocatable_registers;
+
+	int sharedMemoryUnit;
+	switch(device.computeCapabilityMajor)
+	{
+		case 1: sharedMemoryUnit = 512; break;
+		case 2: sharedMemoryUnit = 128; break;
+		case 3: sharedMemoryUnit = 256; break;
+	}
+	int mySharedMemoryPerBlock = ceil(
+		kernel->staticSharedMemory,
+		sharedMemoryUnit
+	);
+
+	int allocatable_shared_memory = mySharedMemoryPerBlock > 0 ?
+		floor(
+			device.maxSharedMemoryPerBlock/
+			mySharedMemoryPerBlock
+		) :
+		device.maxThreadsPerBlock
+		;
+	
+	static TauContextUserEvent* alS;
+	Tau_get_context_userevent((void **) &alS, "Allocatable Blocks Per SM given Shared Memory usage (Blocks)");
+	map[7].userEvent = alS;
+	map[7].data = allocatable_shared_memory;
+
+	int allocatable_blocks = min(allocatable_warps, min(allocatable_registers, allocatable_shared_memory));
+
+	int occupancy = myWarpsPerBlock * allocatable_blocks;
+
+//#define RESULTS_TO_STDOUT 1
+#ifdef RESULTS_TO_STDOUT
+	printf("[%s] occupancy calculator:\n", name);
+
+	printf("myWarpsPerBlock            = %d.\n", myWarpsPerBlock);
+	printf("allocatable warps          = %d.\n", allocatable_warps);
+	printf("myRegistersPerBlock        = %d.\n", myRegistersPerBlock);
+	printf("allocatable registers      = %d.\n", allocatable_registers);
+	printf("mySharedMemoryPerBlock     = %d.\n", mySharedMemoryPerBlock);
+	printf("allocatable shared memory  = %d.\n", allocatable_shared_memory);
+
+	printf("              >> occupancy = %d (%2.0f%% of %d).\n", 
+		occupancy, ((float)occupancy/device.maxWarpsPerMultiprocessor)*100, device.maxWarpsPerMultiprocessor);
+#endif
+
+	static TauContextUserEvent* occ;
+	Tau_get_context_userevent((void **) &occ, "GPU Occupancy (Warps)");
+	map[8].userEvent = occ;
+	map[8].data = occupancy;
+
 }
 
 bool function_is_sync(CUpti_CallbackId id)

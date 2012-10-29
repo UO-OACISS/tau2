@@ -13,6 +13,8 @@ import edu.uoregon.tau.perfdmf.DatabaseException;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.UtilFncs;
+import edu.uoregon.tau.perfdmf.SnapshotDataSource;
+import edu.uoregon.tau.perfdmf.taudb.TAUdbDatabaseAPI;
 
 public class LoadTrial {
 
@@ -21,16 +23,20 @@ public class LoadTrial {
     private Experiment exp;
     private boolean fixNames;
     private boolean summaryOnly;
+    private boolean useNulls;
     private int expID;
     public int trialID;
     private DataSource dataSource;
     public String trialName;
+    public String appName;
+    public String expName;
     public String problemFile;
     public String configuration;
     public boolean terminate = true;
 
     private DatabaseAPI databaseAPI;
     private Trial trial;
+	private Double reducePercentage;
 
     public static void usage() {
         System.err.println("Usage: perfdmf_loadtrial -a <appName> -x <expName> -n <name> [options] <files>\n\n"
@@ -57,6 +63,8 @@ public class LoadTrial {
                 + "                                    snap, perixml, gptl, paraver, ipm, google\n"
                 + "  -t, --trialid <number>          Specify trial ID\n"
                 + "  -i, --fixnames                  Use the fixnames option for gprof\n"
+                + "  -z, --usenull                   Include NULL values as 0 for mean calculation\n"
+                + "  -r, --reduce <percentage>       Aggregate all timers less than percentage as \"other\"\n"
                 + "  -m, --metadata <filename>       XML metadata for the trial\n\n" + "Notes:\n"
                 + "  For the TAU profiles type, you can specify either a specific set of profile\n"
                 + "files on the commandline, or you can specify a directory (by default the current\n"
@@ -80,6 +88,12 @@ public class LoadTrial {
         databaseAPI = new DatabaseAPI();
         try {
             databaseAPI.initialize(configFileName, true);
+			if (databaseAPI.db().getSchemaVersion() > 0) {
+				// copy the DatabaseAPI object data into a new TAUdbDatabaseAPI object
+				
+				databaseAPI = new TAUdbDatabaseAPI(databaseAPI);
+			}
+
         } catch (Exception e) {
             e.printStackTrace();
             System.exit(-1);
@@ -88,6 +102,12 @@ public class LoadTrial {
     }
 
     public boolean checkForExp(String expid, String appName, String expName) {
+    	if(databaseAPI.db().getSchemaVersion() >0){
+    		System.err.println("Ignore Exp in load trial");
+//            Experiment exp = databaseAPI.getExperiment(appName, expName, true);
+//            return exp != null;
+    		return true;
+    	}
         if (expid != null) {
             this.expID = Integer.parseInt(expid);
 
@@ -133,6 +153,7 @@ public class LoadTrial {
 
         try {
             dataSource = UtilFncs.initializeDataSource(files, fileType, fixNames);
+			dataSource.setMeanIncludeNulls(useNulls);
         } catch (DataSourceException e) {
             e.printStackTrace();
             System.err.println("Error: Unable to initialize datasource!");
@@ -156,7 +177,14 @@ public class LoadTrial {
         }
 
         try {
+		    // generate all the statistics - unless we already have them!
+            if (databaseAPI.db().getSchemaVersion()>=0 && !(dataSource instanceof SnapshotDataSource)) {
+            	dataSource.setGenerateTAUdbStatistics(true);
+            }
             dataSource.load();
+            if (reducePercentage != null && reducePercentage > 0.0) {
+            	dataSource.reduceTrial(reducePercentage);
+            }
         } catch (Exception e) {
             System.err.println("Error Loading Trial:");
             e.printStackTrace();
@@ -178,6 +206,10 @@ public class LoadTrial {
 
     public void saveTrial() {
         trial.setName(trialName);
+        if (this.appName != null)
+        	trial.getMetaData().put("Application", this.appName);
+        if (this.expName != null)
+        	trial.getMetaData().put("Experiment", this.expName);
 
         System.err.println("TrialName: " + trialName);
         trial.setExperimentID(expID);
@@ -263,6 +295,8 @@ public class LoadTrial {
         CmdLineParser.Option appNameOpt = parser.addStringOption('a', "applicationname");
         CmdLineParser.Option expNameOpt = parser.addStringOption('x', "experimentname");
         CmdLineParser.Option summaryOpt = parser.addBooleanOption('s', "summaryonly");
+        CmdLineParser.Option percentageOpt = parser.addDoubleOption('r', "reduce");
+        CmdLineParser.Option useNullOpt = parser.addBooleanOption('z', "usenull");
 
         try {
             parser.parse(args);
@@ -280,6 +314,7 @@ public class LoadTrial {
         String trialName = (String) parser.getOptionValue(nameOpt);
         String appName = (String) parser.getOptionValue(appNameOpt);
         String expName = (String) parser.getOptionValue(expNameOpt);
+        Double percentage = (Double) parser.getOptionValue(percentageOpt);
 
         //String problemFile = (String)parser.getOptionValue(problemOpt);
         String trialID = (String) parser.getOptionValue(trialOpt);
@@ -287,6 +322,7 @@ public class LoadTrial {
         Boolean fixNames = (Boolean) parser.getOptionValue(fixOpt);
         String metadataFile = (String) parser.getOptionValue(metadataOpt);
         Boolean summaryOnly = (Boolean) parser.getOptionValue(summaryOpt);
+        Boolean useNull = (Boolean) parser.getOptionValue(useNullOpt);
 
         if (help != null && help.booleanValue()) {
             LoadTrial.outputHelp();
@@ -393,6 +429,12 @@ public class LoadTrial {
         if (summaryOnly == null) {
             summaryOnly = new Boolean(false);
         }
+        if (useNull == null) {
+            useNull = new Boolean(false);
+        }
+        if (percentage == null) {
+        	percentage = new Double(0.0);
+        }
         
         
         if(multippk){
@@ -414,13 +456,18 @@ public class LoadTrial {
             trans.fixNames = fixNames.booleanValue();
             trans.metadataFile = metadataFile;
             trans.summaryOnly = summaryOnly.booleanValue();
+            trans.reducePercentage = percentage;
             trans.loadTrial(fileType);
         	}
         }
         else
         {
         LoadTrial trans = new LoadTrial(configFile, sourceFiles);
-        trans.checkForExp(experimentID, appName, expName);
+        if (trans.databaseAPI.db().getSchemaVersion()==0) {
+            trans.checkForExp(experimentID, appName, expName);
+        } else {
+        	System.err.println("Warning - this is the TAUdb schema, there is no Experiment table");
+        }
         if (trialID != null) {
             trans.checkForTrial(trialID);
             trans.trialID = Integer.parseInt(trialID);
@@ -431,6 +478,10 @@ public class LoadTrial {
         trans.fixNames = fixNames.booleanValue();
         trans.metadataFile = metadataFile;
         trans.summaryOnly = summaryOnly.booleanValue();
+        trans.appName = appName;
+        trans.expName = expName;
+        trans.useNulls = useNull.booleanValue();
+        trans.reducePercentage = percentage;
         trans.loadTrial(fileType);
         // the trial will be saved when the load is finished (update is called)
         }

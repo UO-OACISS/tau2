@@ -38,6 +38,7 @@ extern bool   task_remove;
 extern bool   untied_abort;
 extern bool   untied_keep;
 extern bool   untied_no_warn;
+extern bool   tpd_in_extern_block;
 
 enum Language { L_NA  = 0x00,
                 L_F77 = 0x01, L_F90 = 0x02, L_FORTRAN  = 0x03,
@@ -49,7 +50,8 @@ process_fortran( istream&    is,
                  ostream&    os,
                  bool        addSharedDecl,
                  char*       incfile,
-                 Language    lang );
+                 Language    lang,
+                 bool        keepSrcInfo );
 
 void
 process_c_or_cxx( istream&    is,

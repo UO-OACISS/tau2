@@ -49,6 +49,8 @@ public interface DB {
 
     public String getConnectString();
     
+    public int getSchemaVersion();
+    
     
     public Database getDatabase();
 }

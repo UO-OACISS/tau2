@@ -99,8 +99,8 @@ process_preStmt( vector<string>&   preStmt,
                  bool*             f,
                  bool              asd )
 {
-    unsigned       s         = preStmt.size();
-    bool           inComment = false;
+    unsigned s         = preStmt.size();
+    bool     inComment = false;
 
     vector<string> origStmt;
 

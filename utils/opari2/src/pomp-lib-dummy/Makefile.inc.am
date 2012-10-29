@@ -1,6 +1,6 @@
 # -*- mode: makefile -*-
 
-if OPENMP_SUPPORTED
+if HAVE_OPENMP_SUPPORT
 
 noinst_LTLIBRARIES += libpomp.la
 libpomp_la_SOURCES =                                    \

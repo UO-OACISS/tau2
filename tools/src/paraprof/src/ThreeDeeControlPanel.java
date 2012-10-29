@@ -11,7 +11,11 @@ import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
@@ -39,6 +43,8 @@ import javax.swing.plaf.basic.BasicComboPopup;
 import javax.swing.plaf.basic.ComboPopup;
 import javax.swing.plaf.metal.MetalComboBoxUI;
 
+import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataValue;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
@@ -435,7 +441,6 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
 //        return panel;
 //    }
 //    
-    //TODO: Make this swap from interval to atomic
     private JPanel createTopoIntervalSelectionPanel(String name, final int dex) {
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
@@ -446,9 +451,11 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         gbc.anchor = GridBagConstraints.WEST;
         gbc.weightx = 0.1;
         gbc.weighty = 0.1;
-
-        final JCheckBox atomic = new JCheckBox("Atomic");
-        atomic.setToolTipText("Check for Atomic events, uncheck for interval events");
+        
+        Object[] profDataTypes={"Timer","Atomic","Metadata"};
+        
+        final JComboBox atomic = new JComboBox(profDataTypes);
+        atomic.setToolTipText("Select type of values to use for this axis");
         //addCompItem(panel, new JLabel(name), gbc, 0, 0, 1, 2);
 
         final JTextField functionField;
@@ -491,22 +498,27 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
             public void actionPerformed(ActionEvent evt) {
             	
                 try {
-                	
-                	if(valueBox.getSelectedItem()==null)
+                	Object si=valueBox.getSelectedItem();
+                	if(si==null)
                 	{
                 		return;
                 	}
                 	
-                	if(!atomic.isSelected()){
+                	if(atomic.getSelectedIndex()==0&&si instanceof ValueType){//!atomic.isSelected()){
 
                     settings.setTopoValueType((ValueType) valueBox.getSelectedItem(),dex);
                     settings.setTopoMetric((Metric) metricBox.getSelectedItem(),dex);
                     settings.intervalETDex[dex]=valueBox.getSelectedIndex();
                 	
                 	}
-                	else{
+                	else if(atomic.getSelectedIndex()==1 && si instanceof UserEventValueType){
                 		 settings.setTopoUserEventValueType((UserEventValueType) valueBox.getSelectedItem(), dex);
                 		 settings.atomicETDex[dex]=valueBox.getSelectedIndex();
+                	}
+                	else if(atomic.getSelectedIndex()==2){
+                		//settings.setTopoMetadata(valueBox.getSelectedItem(),dex);
+                		//settings.metadataETDex[dex]=valueBox.getSelectedIndex();
+                		//TODO: Make sure we don't need to set anything else here.
                 	}
                 	 window.redraw();
                      minTopoField.setText(window.getSelectedMinTopoValue());
@@ -527,15 +539,16 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         		
         		String fname=null;
         		
-        		if(atomic.isSelected()){
+        		if(atomic.getSelectedIndex()==1){
         			
         			int numUE = ppTrial.getDataSource().getNumUserEvents();
         			if(numUE<1){
-        				atomic.setSelected(false);
+        				atomic.setSelectedIndex(0);//.setSelected(false);
         				return;
         			}
         			
         			metricBox.setEnabled(false);
+        			valueBox.setEditable(true);
         			valueBox.removeAllItems();
         			for(int i=0;i<UserEventValueType.VALUES.length;i++){
         				valueBox.addItem(UserEventValueType.VALUES[i]);
@@ -543,13 +556,14 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         			valueBox.setSelectedIndex(settings.atomicETDex[dex]);
         			if(settings.getTopoAtomic(dex)==null){
         				
-        				UserEvent tmpUE = ppTrial.getDataSource().getUserEvents().next();
+        				UserEvent tmpUE = ppTrial.getDataSource().getUserEventIterator().next();
         				settings.setTopoAtomic(tmpUE, dex);
         			}
         			fname=settings.getTopoAtomic(dex).getName();
         		}
-        		else{
+        		else if(atomic.getSelectedIndex()==0){
         			metricBox.setEnabled(true);
+        			valueBox.setEditable(true);
         			valueBox.removeAllItems();
         			for(int i=0;i<ValueType.VALUES.length;i++){
         				valueBox.addItem(ValueType.VALUES[i]);
@@ -557,9 +571,30 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         			valueBox.setSelectedIndex(settings.intervalETDex[dex]);
         			fname = ParaProfUtils.getDisplayName(settings.getTopoFunction(dex));
         		}
+        		else if(atomic.getSelectedIndex()==2){
+        			metricBox.setEnabled(false);
+        			valueBox.removeAllItems();
+        			valueBox.setEditable(false);
+        			MetaDataKey mdk=settings.getTopoMetadata(dex);
+        			
+        			if(mdk==null){
+        				Thread t = ppTrial.getDataSource().getThread(0, 0, 0);
+                		if(t==null){
+                			t=ppTrial.getDataSource().getThreads().get(0);
+                		}
+                		mdk=t.getMetaData().keySet().iterator().next();
+                		
+                		settings.setTopoMetadata(mdk, dex);
+        			}
+        			
+        			fname=mdk.toString();
+        			//valueBox.setSelectedIndex(settings.meticETDex[dex]);
+        			//fname = settings.getTopoMetric(dex);
+        			//TODO: Metadata support
+        		}
         		
         		
-        		settings.setAtomic(atomic.isSelected(), dex);
+        		settings.setDataType(atomic.getSelectedIndex(), dex);
         		
         		functionField.setText(fname);
                 functionField.setToolTipText(fname);
@@ -582,7 +617,7 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                 	if(fname==null||fname.length()==0) 
                 		fname = "   <none>";
                 	
-                	if(!atomic.isSelected()){
+                	if(atomic.getSelectedIndex()==0){
                 	
                     FunctionSelectorDialog fSelector = new FunctionSelectorDialog(window, true,
                             ppTrial.getDisplayedFunctions().iterator(), settings.getTopoFunction(dex), true, false);
@@ -600,9 +635,9 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                     }
                     
                 	}
-                	else{
+                	else if(atomic.getSelectedIndex()==1){
                         FunctionSelectorDialog fSelector = new FunctionSelectorDialog(window, true,
-                        		ppTrial.getDataSource().getUserEvents(), settings.getTopoAtomic(dex), true, false);
+                        		ppTrial.getDataSource().getUserEventIterator(), settings.getTopoAtomic(dex), true, false);
 
                         if (fSelector.choose()) {
                             UserEvent selectedFunction = (UserEvent) fSelector.getSelectedObject();
@@ -616,7 +651,32 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                             
                         }
                 	}
-                	
+                	else if(atomic.getSelectedIndex()==2){
+                		Thread t = ppTrial.getDataSource().getThread(0, 0, 0);
+                		if(t==null){
+                			t=ppTrial.getDataSource().getThreads().get(0);
+                		}
+                		
+                		Set<MetaDataKey> mdkSet= new TreeSet<MetaDataKey>();
+                		mdkSet.addAll(t.getMetaData().keySet());
+                		mdkSet.addAll(ppTrial.getDataSource().getMetaData().keySet());
+                		         		
+                		//t.getMetaData().keySet().iterator();
+                		FunctionSelectorDialog fSelector = new FunctionSelectorDialog(window, true,
+                				mdkSet.iterator(), settings.getTopoMetadata(dex), true, false);
+                		
+                		if (fSelector.choose()) {
+                            MetaDataKey metadataKey = (MetaDataKey) fSelector.getSelectedObject();
+                            settings.setTopoMetadata(metadataKey,dex);
+
+                            //String fname = "   <none>";
+                            if (settings.getTopoMetadata(dex) != null) {
+                                fname = settings.getTopoMetadata(dex).toString();
+                            }
+
+                		}
+                		//TODO: metadata support
+                	}
                 	functionField.setText(fname);
                     functionField.setToolTipText(fname);
                 	window.redraw();
@@ -781,10 +841,10 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                     window.redraw();
                     resetTopoAxisSliders(true);
                     
-                    for(int i=0;i<customAxisSliders.length;i++)
+                    for(int i=0;i<customAxisSpinners.length;i++)
                     {
-                    	if(customAxisSliders[i]!=null)
-                    		customAxisSliders[i].setEnabled(settings.getTopoCart().equals("Custom"));
+                    	if(customAxisSpinners[i]!=null)
+                    		customAxisSpinners[i].setEnabled(settings.getTopoCart().equals("Custom"));
                     }
                 } catch (Exception e) {
                     ParaProfUtils.handleException(e);
@@ -1039,7 +1099,7 @@ JButton mapFileButton = new JButton("map");
     }
     
     JLabel[] customAxisLabels = new JLabel[3];
-    JSpinner[] customAxisSliders = new JSpinner[3]; 
+    JSpinner[] customAxisSpinners = new JSpinner[3]; 
     
     JLabel[] selectAxisLabels = new JLabel[3];
     JSlider[] selectAxisSliders = new JSlider[3];
@@ -1100,7 +1160,7 @@ JButton mapFileButton = new JButton("map");
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         addCompItem(panel, selectAxisSliders[dex], gbc, 0, 0, 1, 1);
-
+//TODO: Fix these: Proper activation and length
         return panel;
     }
     
@@ -1115,18 +1175,18 @@ JButton mapFileButton = new JButton("map");
         gbc.weightx = 0.1;
         gbc.weighty = 0.1;
         
-        customAxisSliders[dex] = new JSpinner();
+        customAxisSpinners[dex] = new JSpinner();
         SpinnerModel model = new SpinnerNumberModel(20, //initial value
                                    0, //min
                                    1000, //max
                                    1);                //step
-        customAxisSliders[dex].setModel(model);
-        customAxisSliders[dex].setEnabled(((String)topoComboBox.getSelectedItem()).equals("Custom"));
+        customAxisSpinners[dex].setModel(model);
+        customAxisSpinners[dex].setEnabled(((String)topoComboBox.getSelectedItem()).equals("Custom"));
 
         final int idex = dex;
         int v = settings.getCustomTopoAxis(dex);
         if(v>0)
-        	customAxisSliders[dex].setValue(settings.getCustomTopoAxis(dex));
+        	customAxisSpinners[dex].setValue(settings.getCustomTopoAxis(dex));
         else{
         	settings.setCustomTopoAxis(50, dex);
         }
@@ -1135,9 +1195,11 @@ JButton mapFileButton = new JButton("map");
 
 				 try {
 					 //if(!firstSet){
-						 int val = (Integer) customAxisSliders[idex].getModel().getValue();
+						 int val = (Integer) customAxisSpinners[idex].getModel().getValue();
 						 settings.setCustomTopoAxis(val,idex);
+						 resetTopoAxisSliders(true);
 	                    window.redraw();
+						 resetTopoAxisSliders(true);
 //	                    if(val==-1){
 //	                    	selectAxisLabels[idex].setText(topoLabelStrings[idex]);
 //	                    }else selectAxisLabels[idex].setText(topoLabelStrings[idex]+": "+val);
@@ -1158,14 +1220,14 @@ JButton mapFileButton = new JButton("map");
 			}
         };
         
-        customAxisSliders[dex].addChangeListener(topoSelector);
+        customAxisSpinners[dex].addChangeListener(topoSelector);
 
         gbc.insets = new Insets(1, 1, 1, 1);
 
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        addCompItem(panel, customAxisSliders[dex], gbc, 0, 0, 1, 1);
+        addCompItem(panel, customAxisSpinners[dex], gbc, 0, 0, 1, 1);
 
         return panel;
     }
@@ -1487,7 +1549,7 @@ JButton mapFileButton = new JButton("map");
         	{
         		firstSet=true;
         		this.selectAxisSliders[i].setMaximum(window.tsizes[i]);
-        		if(window.tsizes[i]<=1){
+        		if(window.tsizes[i]<1){
         			selectAxisSliders[i].setEnabled(false);
         		}else
         			selectAxisSliders[i].setEnabled(true);

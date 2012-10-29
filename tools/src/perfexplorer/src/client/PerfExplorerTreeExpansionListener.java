@@ -15,8 +15,8 @@ import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.View;
 import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfexplorer.common.RMIView;
 
 
 public class PerfExplorerTreeExpansionListener implements TreeExpansionListener, TreeWillExpandListener {
@@ -45,8 +45,15 @@ public class PerfExplorerTreeExpansionListener implements TreeExpansionListener,
 		if (node.isRoot()) {
 			PerfExplorerJTree.refreshDatabases();
 		} else if (node.toString() != null && node.toString().startsWith("jdbc:")) {
-			PerfExplorerJTree.addApplicationNodes(node, false);
-			PerfExplorerJTree.getTree().addViewNode(node);
+			// get the schema version for the connection
+			int index = PerfExplorerJTree.getConnectionIndex(node);
+			int schemaVersion = PerfExplorerConnection.getConnection().getSchemaVersion(index);
+            if (schemaVersion < 1) {
+            	PerfExplorerJTree.addApplicationNodes(node, false);
+            	PerfExplorerJTree.getTree().addViewNode(node);
+            } else {
+				PerfExplorerJTree.addTAUdbViewNodes (node, "0");            	
+            }
 		} else if (node.toString() != null && node.toString().equals("Views")) {
 			PerfExplorerJTree.addViewNodes(node, "0");
 		} else {
@@ -76,8 +83,8 @@ public class PerfExplorerTreeExpansionListener implements TreeExpansionListener,
 				}
 			} else if (object instanceof IntervalEvent) {
 				// do nothing
-			} else if (object instanceof RMIView) {
-				RMIView view = (RMIView) object;
+			} else if (object instanceof View) {
+				View view = (View) object;
 				PerfExplorerJTree.addViewNodes(node, view.getField("id"));
 			} else {
 				System.out.println("unknown!");

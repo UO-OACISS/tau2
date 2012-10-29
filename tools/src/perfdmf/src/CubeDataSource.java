@@ -565,15 +565,17 @@ public class CubeDataSource extends DataSource
 	{
 		Node node = addNode((int)process.getRank());
 		Context context = node.addContext(0);
+		int threadID=0;
 		for (Object _thread: process.getAllChildren().toArray())
 		{
-			addThread((scalasca.cubex.cube.Thread)_thread, context);
+			addThread((scalasca.cubex.cube.Thread)_thread, context,threadID);
+			threadID++;
 		}
 	}
 
-	private void addThread(scalasca.cubex.cube.Thread thread, Context context)
+	private void addThread(scalasca.cubex.cube.Thread thread, Context context, int threadID)
 	{
-		Thread tau_thread = context.addThread((int)thread.getRank(), getNumberOfMetrics());
+		Thread tau_thread = context.addThread(threadID, getNumberOfMetrics());
 		cube2tau_threads.put(thread, tau_thread);
 // 		System.out.println("         Added "+ thread.getName());
 	}

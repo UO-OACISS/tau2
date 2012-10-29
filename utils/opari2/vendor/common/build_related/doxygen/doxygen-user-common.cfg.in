@@ -429,7 +429,7 @@ GENERATE_BUGLIST       = YES
 # disable (NO) the deprecated list. This list is created by putting 
 # \deprecated commands in the documentation.
 
-GENERATE_DEPRECATEDLIST= YES
+GENERATE_DEPRECATEDLIST= NO
 
 # The ENABLED_SECTIONS tag can be used to enable conditional 
 # documentation sections, marked by \if sectionname ... \endif.
@@ -777,7 +777,7 @@ HTML_STYLESHEET        =
 # pixels and the maximum width should not exceed 200 pixels. Doxygen will copy
 # the logo to the output directory.
 
-PROJECT_LOGO           = @abs_top_srcdir@/doc/images/project_logo.png
+PROJECT_LOGO           = @abs_top_srcdir@/doc/images/project_logo_small.png
 
 # If the HTML_ALIGN_MEMBERS tag is set to YES, the members of classes, 
 # files or namespaces will be aligned in HTML using tables. If set to 
@@ -1032,7 +1032,7 @@ LATEX_BATCHMODE        = NO
 # include the index chapters (such as File Index, Compound Index, etc.) 
 # in the output.
 
-LATEX_HIDE_INDICES     = NO
+LATEX_HIDE_INDICES     = YES
 
 #---------------------------------------------------------------------------
 # configuration options related to the RTF output
@@ -1194,7 +1194,7 @@ PERLMOD_MAKEVAR_PREFIX =
 # evaluate all C-preprocessor directives found in the sources and include 
 # files.
 
-ENABLE_PREPROCESSING   = NO
+ENABLE_PREPROCESSING   = YES
 
 # If the MACRO_EXPANSION tag is set to YES Doxygen will expand all macro 
 # names in the source code. If set to NO (the default) only conditional 
@@ -1279,7 +1279,7 @@ SKIP_FUNCTION_MACROS   = YES
 # When a file name is specified after GENERATE_TAGFILE, doxygen will create a
 # tag file that is based on the input files it reads.
 
-#GENERATE_TAGFILE = @PACKAGE@-@VERSION@/doc/@PACKAGE_NAME@/tags/@PACKAGE_NAME@.tag
+#GENERATE_TAGFILE = @PACKAGE@-@VERSION@/doc/@PACKAGE@/tags/@PACKAGE@.tag
 
 # If the ALLEXTERNALS tag is set to YES all external classes will be listed 
 # in the class index. If set to NO only the inherited external classes 
@@ -1517,6 +1517,7 @@ ALIASES                = scorep=Score-P \
                          cube=CUBE \
                          cube4=CUBE4 \
                          opari2=OPARI2 \
+                         otf2=OTF2 \
                          mpi=MPI \
                          pmpi=PMPI \
                          openmp=OpenMP \
