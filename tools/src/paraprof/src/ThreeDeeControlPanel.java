@@ -43,6 +43,8 @@ import javax.swing.plaf.basic.BasicComboPopup;
 import javax.swing.plaf.basic.ComboPopup;
 import javax.swing.plaf.metal.MetalComboBoxUI;
 
+import org.apache.batik.ext.swing.GridBagConstants;
+
 import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
 import edu.uoregon.tau.common.MetaDataMap.MetaDataValue;
 import edu.uoregon.tau.common.Utility;
@@ -1772,7 +1774,14 @@ JButton mapFileButton = new JButton("map");
         addCompItem(selectionPanel, functionSelectorPanel, gbc, 1, 0, 1, 1);
         addCompItem(selectionPanel, nodeSelectorPanel, gbc, 1, 1, 1, 1);
         addCompItem(selectionPanel, heightValueField, gbc, 1, 2, 1, 1);
-        addCompItem(selectionPanel, colorValueField, gbc, 1, 3, 1, 1);
+        
+        GridBagConstraints gbcCF=(GridBagConstraints) gbc.clone();
+        
+        gbcCF.fill = GridBagConstraints.NONE;
+        gbcCF.weightx = 0.0;
+        addCompItem(selectionPanel, colorValueField, gbcCF, 1, 3, 1, 1);
+        //gbc.fill = GridBagConstraints.BOTH;
+        //gbc.weightx = 1.0;
 
         addCompItem(regularPanel, selectionPanel, gbc, 0, 4, 2, 1);
 
