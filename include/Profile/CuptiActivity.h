@@ -114,6 +114,7 @@ bool registered_sync = false;
 bool cupti_api_runtime();
 bool cupti_api_driver();
 
+int gpu_occupancy_available(int deviceId);
 void record_gpu_occupancy(CUpti_ActivityKernel *k, const char *name, GpuEventAttributes *m);
 
 std::map<uint32_t, CUpti_ActivityDevice> deviceMap;

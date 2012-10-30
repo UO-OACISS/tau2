@@ -335,10 +335,22 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			//find FunctionInfo object from FunctionInfoMap
       CUpti_ActivityKernel *kernel = (CUpti_ActivityKernel *)record;
 			//cerr << "recording kernel: " << kernel->name << ", " << kernel->end - kernel->start << "ns.\n" << endl;
+			const char* name;
+			name = demangleName(kernel->name);
 
 			GpuEventAttributes *map;
-			int map_size = 9;
-			map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
+			int map_size;
+			if (gpu_occupancy_available(kernel->deviceId))
+			{
+				map_size = 9; // 4 occupancy + 5 other
+				map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
+				record_gpu_occupancy(kernel, name, map);
+			}
+			else 
+			{
+				map_size = 5;
+				map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
+			}
 			static TauContextUserEvent* bs;
 			static TauContextUserEvent* dm;
 			static TauContextUserEvent* sm;
@@ -361,7 +373,6 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			map[4].data = kernel->registersPerThread;
 
 			
-			const char* name;
 			uint32_t id;
 			if (cupti_api_runtime())
 			{
@@ -372,11 +383,8 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 				id = kernel->correlationId;
 				//printf("correlationid: %d.\n", id);
 			}
-			name = demangleName(kernel->name);
 		  //cerr << "recording kernel (device/stream/context/correlation): " << 
 			//kernel->deviceId << "/" << kernel->streamId << "/" << kernel->contextId << "/" << id << endl;
-			record_gpu_occupancy(kernel, name, map);
-			
 			Tau_cupti_register_gpu_event(name, kernel->deviceId,
 				kernel->streamId, kernel->contextId, id, map, map_size,
 				kernel->start / 1e3, kernel->end / 1e3);
@@ -436,17 +444,31 @@ int ceil(float value, int significance)
 	return ceil(value/significance)*significance;
 }
 
-void record_gpu_occupancy(CUpti_ActivityKernel *kernel, const char *name, GpuEventAttributes *map)
+int gpu_occupancy_available(int deviceId)
 {
-	CUpti_ActivityDevice device = deviceMap[kernel->deviceId];
+	//device callback not called.
+	if (deviceMap.empty())
+	{
+		return 0;
+	}
+
+	CUpti_ActivityDevice device = deviceMap[deviceId];
 
 	if ((device.computeCapabilityMajor > 3) ||
 		device.computeCapabilityMajor == 3 &&
 		device.computeCapabilityMinor > 5)
 	{
 		TAU_VERBOSE("Warning: GPU occupancy calculator is not implemented for devices of compute capability > 3.5.");
-		return;
+		return 0;
 	}
+	//gpu occupancy available.
+	return 1;	
+}
+
+void record_gpu_occupancy(CUpti_ActivityKernel *kernel, const char *name, GpuEventAttributes *map)
+{
+	CUpti_ActivityDevice device = deviceMap[kernel->deviceId];
+
 
 	int myWarpsPerBlock = ceil(
 				(kernel->blockX * kernel->blockY * kernel->blockZ)/
