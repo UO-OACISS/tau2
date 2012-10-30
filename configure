@@ -1096,6 +1096,7 @@ for arg in "$@"; do
           exit 1
       fi
       fixmakeargs="$fixmakeargs GPI gpidir=$gpidir"
+      tauoptions="${tauoptions}-gpi"
       shift
       ;;
 
