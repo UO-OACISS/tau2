@@ -841,10 +841,10 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                     window.redraw();
                     resetTopoAxisSliders(true);
                     
-                    for(int i=0;i<customAxisSliders.length;i++)
+                    for(int i=0;i<customAxisSpinners.length;i++)
                     {
-                    	if(customAxisSliders[i]!=null)
-                    		customAxisSliders[i].setEnabled(settings.getTopoCart().equals("Custom"));
+                    	if(customAxisSpinners[i]!=null)
+                    		customAxisSpinners[i].setEnabled(settings.getTopoCart().equals("Custom"));
                     }
                 } catch (Exception e) {
                     ParaProfUtils.handleException(e);
@@ -1099,7 +1099,7 @@ JButton mapFileButton = new JButton("map");
     }
     
     JLabel[] customAxisLabels = new JLabel[3];
-    JSpinner[] customAxisSliders = new JSpinner[3]; 
+    JSpinner[] customAxisSpinners = new JSpinner[3]; 
     
     JLabel[] selectAxisLabels = new JLabel[3];
     JSlider[] selectAxisSliders = new JSlider[3];
@@ -1160,7 +1160,7 @@ JButton mapFileButton = new JButton("map");
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         addCompItem(panel, selectAxisSliders[dex], gbc, 0, 0, 1, 1);
-
+//TODO: Fix these: Proper activation and length
         return panel;
     }
     
@@ -1175,18 +1175,18 @@ JButton mapFileButton = new JButton("map");
         gbc.weightx = 0.1;
         gbc.weighty = 0.1;
         
-        customAxisSliders[dex] = new JSpinner();
+        customAxisSpinners[dex] = new JSpinner();
         SpinnerModel model = new SpinnerNumberModel(20, //initial value
                                    0, //min
                                    1000, //max
                                    1);                //step
-        customAxisSliders[dex].setModel(model);
-        customAxisSliders[dex].setEnabled(((String)topoComboBox.getSelectedItem()).equals("Custom"));
+        customAxisSpinners[dex].setModel(model);
+        customAxisSpinners[dex].setEnabled(((String)topoComboBox.getSelectedItem()).equals("Custom"));
 
         final int idex = dex;
         int v = settings.getCustomTopoAxis(dex);
         if(v>0)
-        	customAxisSliders[dex].setValue(settings.getCustomTopoAxis(dex));
+        	customAxisSpinners[dex].setValue(settings.getCustomTopoAxis(dex));
         else{
         	settings.setCustomTopoAxis(50, dex);
         }
@@ -1195,9 +1195,11 @@ JButton mapFileButton = new JButton("map");
 
 				 try {
 					 //if(!firstSet){
-						 int val = (Integer) customAxisSliders[idex].getModel().getValue();
+						 int val = (Integer) customAxisSpinners[idex].getModel().getValue();
 						 settings.setCustomTopoAxis(val,idex);
+						 resetTopoAxisSliders(true);
 	                    window.redraw();
+						 resetTopoAxisSliders(true);
 //	                    if(val==-1){
 //	                    	selectAxisLabels[idex].setText(topoLabelStrings[idex]);
 //	                    }else selectAxisLabels[idex].setText(topoLabelStrings[idex]+": "+val);
@@ -1218,14 +1220,14 @@ JButton mapFileButton = new JButton("map");
 			}
         };
         
-        customAxisSliders[dex].addChangeListener(topoSelector);
+        customAxisSpinners[dex].addChangeListener(topoSelector);
 
         gbc.insets = new Insets(1, 1, 1, 1);
 
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        addCompItem(panel, customAxisSliders[dex], gbc, 0, 0, 1, 1);
+        addCompItem(panel, customAxisSpinners[dex], gbc, 0, 0, 1, 1);
 
         return panel;
     }
@@ -1547,7 +1549,7 @@ JButton mapFileButton = new JButton("map");
         	{
         		firstSet=true;
         		this.selectAxisSliders[i].setMaximum(window.tsizes[i]);
-        		if(window.tsizes[i]<=1){
+        		if(window.tsizes[i]<1){
         			selectAxisSliders[i].setEnabled(false);
         		}else
         			selectAxisSliders[i].setEnabled(true);

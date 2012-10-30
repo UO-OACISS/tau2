@@ -1417,6 +1417,7 @@ if [ $numFiles == 0 ]; then
     fi
 
     if [ "x$tauWrapFile" != "x" ]; then
+      linkCmd="$linkCmd `cat $tauWrapFile` "
       echoIfDebug "Linking command is $linkCmd"
     fi 
 
