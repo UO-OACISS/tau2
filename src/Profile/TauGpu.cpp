@@ -58,6 +58,10 @@ int counted_memcpys = 0;
 extern "C" void metric_set_gpu_timestamp(int tid, double value);
 extern "C" void Tau_set_thread_fake(int tid);
 
+extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid);
+extern "C" void Tau_stop_top_level_timer_if_necessary_task(int tid);
+
+
 #include<map>
 using namespace std;
 
