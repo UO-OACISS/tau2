@@ -280,7 +280,7 @@ void Tau_cupti_register_sync_event(CUcontext context, uint32_t stream)
 		//printf("TAU: Activity queue is empty.\n");
 		//CUDA_CHECK_ERROR(err, "Cannot dequeue buffer.\n");
 	} else if (err != CUPTI_ERROR_INVALID_PARAMETER) {
-		CUDA_CHECK_ERROR(err, "Cannot dequeue buffer, invalid buffer.\n");
+		//CUDA_CHECK_ERROR(err, "Cannot dequeue buffer, invalid buffer.\n");
 	} else {
 		printf("TAU: Unknown error cannot read from buffer.\n");
 	}
