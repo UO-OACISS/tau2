@@ -679,7 +679,10 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
         TAU_VERBOSE("TAU: <Node=%d.Thread=%d>:<pid=%d>: %s initiated TauProfiler_StoreData\n",
           RtsLayer::myNode(), RtsLayer::myThread(), getpid(), ThisFunction->GetName());
 #endif
-#ifdef TAU_DMAPP
+// Be careful here, we can not disable instrumentation in multithreaded
+// application because that will cause profilers on any other stack to never get
+// stopped.
+#if defined(TAU_DMAPP) && TAU_MAX_THREADS == 1
 	if (RtsLayer::myThread() == 0) {
 		TAU_DISABLE_INSTRUMENTATION(); 
 	}
