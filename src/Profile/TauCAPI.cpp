@@ -914,7 +914,7 @@ extern "C" int& tau_totalnodes(int set_or_get, int value)
 
 
 
-#if (defined(TAU_MPI) || defined(TAU_SHMEM) || defined(TAU_DMAPP) || defined(TAU_UPC))
+#if (defined(TAU_MPI) || defined(TAU_SHMEM) || defined(TAU_DMAPP) || defined(TAU_UPC) || defined(TAU_GPI) )
 
 
 
@@ -1124,7 +1124,7 @@ extern "C" void Tau_reducescatter_data(int data) {
   TAU_EVENT(TheReduceScatterEvent(), data);
 }
 
-#else /* !(TAU_MPI || TAU_SHMEM || TAU_DMAPP)*/
+#else /* !(TAU_MPI || TAU_SHMEM || TAU_DMAPP || TAU_GPI)*/
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
