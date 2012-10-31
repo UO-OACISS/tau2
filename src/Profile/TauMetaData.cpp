@@ -198,7 +198,7 @@ extern "C" void Tau_metadata_object_put(Tau_metadata_value_t* tmv, const char *n
   return;
 }
 
-extern "C" void Tau_metadata(const char *name, const char *value) {
+extern "C" void Tau_metadata_task(const char *name, const char *value, int tid) {
 #ifdef TAU_DISABLE_METADATA
   return;
 #endif // TAU_DISABLE_METADATA
@@ -210,8 +210,12 @@ extern "C" void Tau_metadata(const char *name, const char *value) {
   Tau_metadata_create_value(&tmv, TAU_METADATA_TYPE_STRING);
   tmv->data.cval = strdup(value);
   RtsLayer::LockDB();
-  Tau_metadata_getMetaData(RtsLayer::myThread())[*key] = tmv;
+  Tau_metadata_getMetaData(tid)[*key] = tmv;
   RtsLayer::UnLockDB();
+}
+
+extern "C" void Tau_metadata(const char *name, const char *value) {
+	Tau_metadata_task(name, value, RtsLayer::myThread()); 
 }
 
 void Tau_metadata_register(const char *name, int value) {

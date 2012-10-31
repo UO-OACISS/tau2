@@ -7,7 +7,7 @@ CFLAGS=$(TAU_DEFS) $(TAU_INTERNAL_FLAG1) $(TAU_INCLUDE)  $(TAU_MPI_INCLUDE) $(CR
 INSTALLDEST = $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
 install: libTauDmappWrap.a 
-	cp link_options.tau $(INSTALLDEST)/wrappers/dmapp_wrapper
+	mkdir -p $(INSTALLDEST)/wrappers/dmapp_wrapper && cp link_options.tau $(INSTALLDEST)/wrappers/dmapp_wrapper
 	$(TAU_STATIC_INSTALL_CMD)
 
 libTauDmappWrap.a: dmapp_wrap.o 
