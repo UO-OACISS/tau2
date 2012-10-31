@@ -443,15 +443,15 @@ int Tau_metadata_fillMetaData()
 
   switch (dim) {
   case 1: 
-    retcode = FJMPI_Topology_rank2x(RtsLayer::mynode(), &xrank); 
+    retcode = FJMPI_Topology_rank2x(RtsLayer::myNode(), &xrank); 
     sprintf (fbuffer, "(%d)", xrank);
     break;
   case 2:
-    retcode = FJMPI_Topology_rank2xy(RtsLayer::mynode(), &xrank, &yrank); 
+    retcode = FJMPI_Topology_rank2xy(RtsLayer::myNode(), &xrank, &yrank); 
     sprintf (fbuffer, "(%d,%d)", xrank, yrank);
     break;
   case 3:
-    retcode = FJMPI_Topology_rank2xyz(RtsLayer::mynode(), &xrank, &yrank, &zrank); 
+    retcode = FJMPI_Topology_rank2xyz(RtsLayer::myNode(), &xrank, &yrank, &zrank); 
     sprintf (fbuffer, "(%d,%d,%d)", xrank, yrank, zrank);
     break;
   default:
