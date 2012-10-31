@@ -198,7 +198,7 @@ public class HPCToolkitXMLHandler extends DefaultHandler {
 				// Is this a thread metric?
 				Matcher m1 = Pattern.compile(".*(\\[(\\d*),(\\d*)\\]).*")
 						.matcher(hpcMetric.getName());
-				Matcher m2 = Pattern.compile("(\\d*)..*").matcher(
+				Matcher m2 = Pattern.compile("(\\d+)..*").matcher(
 						hpcMetric.getName());
 				if (m1.matches()) {
 

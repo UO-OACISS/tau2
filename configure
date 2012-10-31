@@ -334,6 +334,7 @@ for arg in "$@"; do
     echo "-shmemlibrary=<library> ............ Specify a different SHMEM library."
     echo "            e.g., -shmemlibrary=-lsmac                                 "
     echo ""
+    echo "-gpi=<dir> .................. Specify use of TAU's GPI wrapper library."
     echo "GPGPU Options:"
     echo "-cuda=<dir> ................ Specify location of the top level CUDA SDK"
     echo "directory with include subdirectory. Enables OpenCL and CUDA profiling."
@@ -634,6 +635,11 @@ mrnet_root=
 mrnet_lib=
 ibmmpi=no
 shmem=no
+gpi=no
+gpidir=
+gpiinc=
+gpilib=
+gpilibrary=no
 shmeminc=
 shmemlib=
 shmemlibrary=no
@@ -1079,6 +1085,18 @@ for arg in "$@"; do
           echo "Error: Cannot access PAPI directory $papidir"
           exit 1
       fi
+      shift
+      ;;
+
+  -gpi=*)
+      gpi=yes
+      gpidir=`echo $arg | sed -e 's/-gpi=//'`
+      if [ ! -d $gpidir ] ; then
+          echo "Error: Cannot access GPI directory $papidir"
+          exit 1
+      fi
+      fixmakeargs="$fixmakeargs GPI gpidir=$gpidir"
+      tauoptions="${tauoptions}-gpi"
       shift
       ;;
 
