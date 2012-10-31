@@ -526,15 +526,14 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 
 			} else if (aNode.getUserObject() instanceof ParaProfTrial) {
 				ParaProfTrial ppTrial = (ParaProfTrial) aNode.getUserObject();
-				ppTrial.getTrial().setName(name);
+				
 				if (ppTrial.dBTrial()) {
 					DatabaseAPI databaseAPI = getDatabaseAPI(ppTrial
 							.getDatabase());
-					if (databaseAPI != null) {
-						databaseAPI.saveTrial(ppTrial.getTrial());
-						databaseAPI.terminate();
-					}
+					ppTrial.setDatabaseAPI(databaseAPI);
 				}
+				ppTrial.rename(name);
+
 			}
 		}
 
