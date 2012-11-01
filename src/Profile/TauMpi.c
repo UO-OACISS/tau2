@@ -1460,6 +1460,7 @@ int  MPI_Finalize(  )
   TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  writeMetaDataAfterMPI_Init(); 
 
   if (TauEnv_get_synchronize_clocks()) {
     TauSyncFinalClocks();
