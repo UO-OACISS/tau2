@@ -304,7 +304,6 @@ static int TauConf_read() {
     Tau_get_cwd_of_exe(exedir);  
     sprintf(conf_file_name, "%s/tau.conf", exedir.c_str()); 
     TAU_VERBOSE("Trying %s\n", conf_file_name);
-    printf("Trying %s\n", conf_file_name);
     cfgFile = fopen(conf_file_name, "r");
   }
   if (cfgFile) {
@@ -328,7 +327,7 @@ static int TauConf_read() {
  ********************************************************************/
 static const char *getconf(const char *key) {
   const char *val = TauConf_getval(key);
-  TAU_VERBOSE("%s=%s\n", key, val);
+  //TAU_VERBOSE("%s=%s\n", key, val);
   if (val) {
     return val;
   }
