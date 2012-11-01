@@ -836,7 +836,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 		boolean foundTopo=false;
 		for(Iterator<MetaDataKey> it = keys.iterator(); it.hasNext();){
 			String key = it.next().name;
-			if(key.contains(" isTorus")||key.contains(" Period")){
+			if(key.contains(" isTorus")||key.contains(" Period")||key.contains(" Dimension")){
 				topos.add(key.split(" ")[0]);
 				foundTopo=true;
 			}
