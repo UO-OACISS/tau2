@@ -134,6 +134,16 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     public void setID(int id) {
         trial.setID(id);
     }
+    
+    public void rename(String newName){
+    	if(dBTrial){
+			DatabaseAPI databaseAPI = getDatabaseAPI();
+			if (databaseAPI != null) {
+				this.trial.rename(databaseAPI.getDb(), newName);
+			}
+		}
+		trial.setName(newName);
+    }
 
     public String getName() {
         return trial.getName();

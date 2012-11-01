@@ -1,0 +1,16 @@
+./configure -pdt=<dir> -gpi=<dir> 
+make install
+
+setenv TAU_MAKEFILE <taudir>/x86_64/lib/Makefile.tau-gpi-pdt
+set path=(<taudir>/x86_64/bin $path)
+make 
+./gatherscatter.x 
+cp gatherscatter.x <gpidir>/apps
+salloc -N 4 
+squeue
+(see the first compute node)
+ssh compute_node_1
+cd <gpidir>/apps
+./gatherscatter.x
+pprof
+paraprof
