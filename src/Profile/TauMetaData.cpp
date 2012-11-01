@@ -43,6 +43,10 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #include <TauUtil.h>
 #include <TauXML.h>
 #include <TauMetaData.h>
+#if (defined(TAU_FUJITSU) && defined(TAU_MPI))
+#include <mpi.h>
+#include <mpi-ext.h>
+#endif /* TAU_FUJITSU && TAU_MPI */
 
 // Moved from header file
 using namespace std;
@@ -641,6 +645,60 @@ int Tau_metadata_fillMetaData()
   return 0;
 #endif // TAU_DISABLE_METADATA
 
+}
+
+extern "C" int writeMetaDataAfterMPI_Init(void) {
+
+#if (defined(TAU_FUJITSU) && defined(TAU_MPI))
+  int xrank, yrank, zrank, xshape, yshape, zshape; 
+  int retcode, dim; 
+  char fbuffer[4096]; 
+
+
+  retcode  = FJMPI_Topology_get_dimension(&dim);  
+  if (retcode != MPI_SUCCESS) {
+    fprintf(stderr, "FJMPI_Topology_get_dimension ERROR in TauMetaData.cpp\n");
+    return 0;
+  }
+
+  switch (dim) {
+  case 1: 
+    retcode = FJMPI_Topology_rank2x(RtsLayer::myNode(), &xrank); 
+    sprintf (fbuffer, "(%d)", xrank);
+    break;
+  case 2:
+    retcode = FJMPI_Topology_rank2xy(RtsLayer::myNode(), &xrank, &yrank); 
+    sprintf (fbuffer, "(%d,%d)", xrank, yrank);
+    break;
+  case 3:
+    retcode = FJMPI_Topology_rank2xyz(RtsLayer::myNode(), &xrank, &yrank, &zrank); 
+    sprintf (fbuffer, "(%d,%d,%d)", xrank, yrank, zrank);
+    break;
+  default:
+    fprintf(stderr, "FJMPI_Topology_get_dimension ERROR in switch TauMetaData.cpp\n");
+    return 0;
+  }
+  if (retcode != MPI_SUCCESS) {
+    fprintf(stderr, "FJMPI_Topology_rank2x ERROR in switch TauMetaData.cpp\n");
+    return 0;
+  }
+
+  Tau_metadata_register("FUJITSU Coords", fbuffer);
+  retcode = FJMPI_Topology_get_shape(&xshape, &yshape, &zshape); 
+  if (retcode != MPI_SUCCESS) {
+    fprintf(stderr, "FJMPI_Topology_get_shape ERROR in TauMetaData.cpp\n");
+    return 0;
+  }
+
+
+  sprintf (fbuffer, "(%d,%d,%d)", xshape, yshape, zshape);
+  Tau_metadata_register("FUJITSU Size", fbuffer);
+
+  sprintf (fbuffer, "%d", dim);
+  Tau_metadata_register("FUJITSU Dimension", fbuffer);
+
+#endif /* TAU_FUJITSU && TAU_MPI */
+  return 0;
 }
 
 static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, int tid) {
