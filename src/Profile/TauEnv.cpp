@@ -304,7 +304,6 @@ static int TauConf_read() {
     Tau_get_cwd_of_exe(exedir);  
     sprintf(conf_file_name, "%s/tau.conf", exedir.c_str()); 
     TAU_VERBOSE("Trying %s\n", conf_file_name);
-    printf("Trying %s\n", conf_file_name);
     cfgFile = fopen(conf_file_name, "r");
   }
   if (cfgFile) {
