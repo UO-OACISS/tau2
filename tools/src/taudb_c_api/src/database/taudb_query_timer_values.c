@@ -242,6 +242,7 @@ TAUDB_TIMER_VALUE* taudb_get_timer_value(TAUDB_TIMER_CALL_DATA* timer_call_data,
   
   TAUDB_TIMER_VALUE* timer_value = NULL;
   HASH_FIND(hh, timer_call_data->timer_values, metric->name, strlen(metric->name), timer_value);
+#ifdef ITERATE_ON_FAILURE
   // HASH_FIND is not working so well... now we iterate. Sigh.
   if (timer_value == NULL) {
     TAUDB_TIMER_VALUE *current, *tmp;
@@ -254,6 +255,7 @@ TAUDB_TIMER_VALUE* taudb_get_timer_value(TAUDB_TIMER_CALL_DATA* timer_call_data,
       }
     }
   }
+#endif
   
   return timer_value;
 }

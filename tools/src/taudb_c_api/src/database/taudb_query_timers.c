@@ -91,7 +91,7 @@ TAUDB_TIMER* taudb_query_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial
       }
     } 
     // save this in the hash
-    HASH_ADD(hh1, trial->timers_by_id, id, sizeof(int), timer);
+    //HASH_ADD(hh1, trial->timers_by_id, id, sizeof(int), timer);
     HASH_ADD_KEYPTR(hh2, trial->timers_by_name, timer->name, strlen(timer->name), timer);
   }
 
@@ -145,9 +145,12 @@ TAUDB_TIMER* taudb_get_timer_by_name(TAUDB_TIMER* timers, const char* name) {
   }
 
   TAUDB_TIMER* timer = NULL;
-  HASH_FIND(hh2, timers, name, sizeof(name), timer);
+  HASH_FIND(hh2, timers, name, strlen(name), timer);
   // HASH_FIND is not working so well... now we iterate. Sigh.
   if (timer == NULL) {
+#ifdef TAUDB_DEBUG
+      printf ("TIMER not found, iterating...\n");
+#endif
     TAUDB_TIMER *current, *tmp;
     HASH_ITER(hh2, timers, current, tmp) {
 #ifdef TAUDB_DEBUG_DEBUG
@@ -161,15 +164,31 @@ TAUDB_TIMER* taudb_get_timer_by_name(TAUDB_TIMER* timers, const char* name) {
   return timer;
 }
 
+int taudb_count_bars(const char* instring) {
+  int count = 0;
+  int i;
+  int length = strlen(instring);
+  for (i = 0; i < length; i++) {
+    if (instring[i] == '|') {
+      count++;
+	}
+  }
+  return count;
+}
+
+
 void taudb_parse_timer_group_names(TAUDB_TRIAL* trial, TAUDB_TIMER* timer, char* group_names) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Got timer groups '%s'\n", group_names);
 #endif
   if (strlen(group_names) > 0) {
+    int group_count = taudb_count_bars(group_names) + 1;
+	timer->groups = (TAUDB_TIMER_GROUP**)malloc(group_count * sizeof(TAUDB_TIMER_GROUP*));
     char* group_name = strtok(group_names, "|");
     while (group_name != NULL) {
       timer->group_count++;
       // see if the group exists
+	  taudb_trim(group_name);
       TAUDB_TIMER_GROUP* group = taudb_get_timer_group_by_name(trial->timer_groups, group_name);
       if (group != NULL) {
 #ifdef TAUDB_DEBUG_DEBUG
@@ -177,6 +196,7 @@ void taudb_parse_timer_group_names(TAUDB_TRIAL* trial, TAUDB_TIMER* timer, char*
 #endif
       } else {
         group = taudb_create_timer_groups(1);
+		taudb_trim(group_name);
         group->name = taudb_create_and_copy_string(group_name);
         // add the group to the trial
         HASH_ADD_KEYPTR(hh, trial->timer_groups, group->name, strlen(group->name), group);
@@ -184,9 +204,11 @@ void taudb_parse_timer_group_names(TAUDB_TRIAL* trial, TAUDB_TIMER* timer, char*
       // add this timer group to our timer
       timer->groups[(timer->group_count)-1] = group;
       // add this timer to the list of timers in the group
+#if 0
       group->timer_count++;
       group->timers = (TAUDB_TIMER**)realloc(group->timers, (group->timer_count * sizeof(TAUDB_TIMER*)));
       group->timers[(group->timer_count)-1] = timer;
+#endif
       // get the next token
       group_name = strtok(NULL, "|");
     }

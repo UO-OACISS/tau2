@@ -62,3 +62,40 @@ TAUDB_PRIMARY_METADATA* taudb_query_primary_metadata(TAUDB_CONNECTION* connectio
 
   return trial->primary_metadata;
 }
+
+TAUDB_PRIMARY_METADATA* taudb_get_primary_metadata_by_name(TAUDB_PRIMARY_METADATA* primary_metadatas, const char* name) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("Calling taudb_get_primary_metadata_by_id(%p,%s)\n", primary_metadatas, name);
+#endif
+  if (primary_metadatas == NULL) {
+    fprintf(stderr, "Error: primary_metadata parameter null. Please provide a valid set of primary_metadatas.\n");
+    return NULL;
+  }
+  if (name == NULL) {
+    fprintf(stderr, "Error: name parameter null. Please provide a valid name.\n");
+    return NULL;
+  }
+
+  TAUDB_PRIMARY_METADATA* primary_metadata = NULL;
+  HASH_FIND(hh, primary_metadatas, name, strlen(name), primary_metadata);
+#ifdef ITERATE_ON_FAILURE
+  // HASH_FIND is not working so well... now we iterate. Sigh.
+  if (primary_metadata == NULL) {
+#ifdef TAUDB_DEBUG
+      printf ("PRIMARY_METADATA not found, iterating...\n");
+#endif
+    TAUDB_PRIMARY_METADATA *current, *tmp;
+    HASH_ITER(hh, primary_metadatas, current, tmp) {
+#ifdef TAUDB_DEBUG_DEBUG
+      printf ("PRIMARY_METADATA: '%s'\n", current->name);
+#endif
+      if (strcmp(current->name, name) == 0) {
+        return current;
+      }
+    }
+  }
+#endif
+  return primary_metadata;
+}
+
+

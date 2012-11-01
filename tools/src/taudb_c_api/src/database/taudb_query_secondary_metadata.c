@@ -46,17 +46,17 @@ TAUDB_SECONDARY_METADATA* taudb_query_secondary_metadata(TAUDB_CONNECTION* conne
       } else if (strcmp(taudb_get_column_name(connection, j), "thread") == 0) {
         tmpID = atoi(taudb_get_value(connection, i, j));
 		if (tmpID > 0) {
-		  secondary_metadata->thread = taudb_get_thread(trial->threads, tmpID);
+		  secondary_metadata->key.thread = taudb_get_thread(trial->threads, tmpID);
 		}
       } else if (strcmp(taudb_get_column_name(connection, j), "timer_callpath") == 0) {
         tmpID = atoi(taudb_get_value(connection, i, j));
 		if (tmpID > 0) {
-          secondary_metadata->timer_callpath = taudb_get_timer_callpath_by_id(trial->timer_callpaths_by_id, tmpID);
+          secondary_metadata->key.timer_callpath = taudb_get_timer_callpath_by_id(trial->timer_callpaths_by_id, tmpID);
 		}
       } else if (strcmp(taudb_get_column_name(connection, j), "time_range") == 0) {
         tmpID = atoi(taudb_get_value(connection, i, j));
 		if (tmpID > 0) {
-          secondary_metadata->time_range = taudb_get_time_range(trial->time_ranges, tmpID);
+          secondary_metadata->key.time_range = taudb_get_time_range(trial->time_ranges, tmpID);
 		}
       } else if (strcmp(taudb_get_column_name(connection, j), "parent") == 0) {
 	    // don't need to copy this, we will only need it temporarily
@@ -71,7 +71,7 @@ TAUDB_SECONDARY_METADATA* taudb_query_secondary_metadata(TAUDB_CONNECTION* conne
 		  fprintf(stderr, "WARNING! Array metadata not yet supported...\n");
 		}
       } else if (strcmp(taudb_get_column_name(connection, j), "name") == 0) {
-        secondary_metadata->name = taudb_create_and_copy_string(taudb_get_value(connection, i, j));
+        secondary_metadata->key.name = taudb_create_and_copy_string(taudb_get_value(connection, i, j));
       } else if (strcmp(taudb_get_column_name(connection, j), "value") == 0) {
 	    // just get the whole thing now, TODO: split into array later?
 	    secondary_metadata->value = (char**)calloc(1,sizeof(char*));
@@ -81,7 +81,8 @@ TAUDB_SECONDARY_METADATA* taudb_query_secondary_metadata(TAUDB_CONNECTION* conne
 	    fprintf(stderr,"Unknown secondary_metadata column: %s\n", taudb_get_column_name(connection, j));
       }
     } 
-	HASH_ADD(hh, trial->secondary_metadata, id, strlen(secondary_metadata->id), secondary_metadata);
+	HASH_ADD_KEYPTR(hh, trial->secondary_metadata, secondary_metadata->id, strlen(secondary_metadata->id), secondary_metadata);
+	HASH_ADD_KEYPTR(hh2, trial->secondary_metadata, &(secondary_metadata->key), sizeof(secondary_metadata->key), secondary_metadata);
   }
 
   taudb_clear_result(connection);

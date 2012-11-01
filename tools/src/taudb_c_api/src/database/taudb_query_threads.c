@@ -1,34 +1,31 @@
-#include "taudb_api.h"
-#include "libpq-fe.h"
+#include "taudb_internal.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
 TAUDB_THREAD* taudb_query_threads_2005(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean derived) {
-  TAUDB_THREAD* threads = NULL;
   if (derived) {
     taudb_numItems = 2;
-    TAUDB_THREAD* thread = malloc(sizeof(TAUDB_THREAD));
+    TAUDB_THREAD* thread = taudb_create_threads(1);
     thread->id = 0;
     thread->trial = trial;
     thread->node_rank = TAUDB_MEAN_WITHOUT_NULLS;
     thread->context_rank = TAUDB_MEAN_WITHOUT_NULLS;
     thread->thread_rank = TAUDB_MEAN_WITHOUT_NULLS;
     thread->index = TAUDB_MEAN_WITHOUT_NULLS;;
-    HASH_ADD_INT(threads, index, thread);
-    thread = malloc(sizeof(TAUDB_THREAD));
+    HASH_ADD_INT(trial->threads, index, thread);
+    thread = taudb_create_threads(1);
     thread->id = 0;
     thread->trial = trial;
     thread->node_rank = TAUDB_TOTAL;
     thread->context_rank = TAUDB_TOTAL;
     thread->thread_rank = TAUDB_TOTAL;
     thread->index = TAUDB_TOTAL;
-    HASH_ADD_INT(threads, index, threads);
-    return threads;
+    HASH_ADD_INT(trial->threads, index, thread);
+    return trial->threads;
   } else {
     int i, j, k;
     taudb_numItems = trial->node_count * trial->contexts_per_node * trial->threads_per_context;
-    TAUDB_THREAD* threads = NULL;
     int threadIndex = 0;
     for (i = 0; i < trial->node_count; i++)
     {
@@ -36,19 +33,19 @@ TAUDB_THREAD* taudb_query_threads_2005(TAUDB_CONNECTION* connection, TAUDB_TRIAL
       {
         for (k = 0; k < trial->threads_per_context; k++)
         {
-          TAUDB_THREAD* thread = malloc(sizeof(TAUDB_THREAD));
+          TAUDB_THREAD* thread = taudb_create_threads(1);
           thread->id = 0;
           thread->trial = trial;
           thread->node_rank = i;
           thread->context_rank = j;
           thread->thread_rank = k;
           thread->index = threadIndex;
-          HASH_ADD_INT(threads, index, thread);
+          HASH_ADD_INT(trial->threads, index, thread);
           threadIndex++;
         }
       } 
     }
-    return threads;
+    return trial->threads;
   }
 }
 
@@ -56,7 +53,6 @@ TAUDB_THREAD* taudb_query_threads_2012(TAUDB_CONNECTION* connection, TAUDB_TRIAL
 #ifdef TAUDB_DEBUG
   printf("Calling taudb_query_threads(%p)\n", trial);
 #endif
-  void *res;
   int nFields;
   int i, j;
 
@@ -66,8 +62,8 @@ TAUDB_THREAD* taudb_query_threads_2012(TAUDB_CONNECTION* connection, TAUDB_TRIAL
   }
 
   //if the Trial already has the data, return it.
-  if (trial->threads != NULL && trial->thread_count > 0) {
-    taudb_numItems = trial->thread_count;
+  if (trial->threads != NULL) {
+    taudb_numItems = HASH_CNT(hh,trial->threads);
     return trial->threads;
   }
 
@@ -86,42 +82,40 @@ TAUDB_THREAD* taudb_query_threads_2012(TAUDB_CONNECTION* connection, TAUDB_TRIAL
 #ifdef TAUDB_DEBUG
   printf("Query: %s\n", my_query);
 #endif
-  res = taudb_execute_query(connection, my_query);
+  taudb_execute_query(connection, my_query);
 
-  int nRows = taudb_get_num_rows(res);
-  TAUDB_THREAD* threads = NULL;
+  int nRows = taudb_get_num_rows(connection);
   taudb_numItems = nRows;
 
-  nFields = taudb_get_num_columns(res);
+  nFields = taudb_get_num_columns(connection);
 
   /* the rows */
-  for (i = 0; i < taudb_get_num_rows(res); i++)
+  for (i = 0; i < taudb_get_num_rows(connection); i++)
   {
-    TAUDB_THREAD* thread = malloc(sizeof(TAUDB_THREAD));
+    TAUDB_THREAD* thread = taudb_create_threads(1);
     /* the columns */
     for (j = 0; j < nFields; j++) {
-      if (strcmp(taudb_get_column_name(res, j), "id") == 0) {
-        thread->id = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "trial") == 0) {
+      if (strcmp(taudb_get_column_name(connection, j), "id") == 0) {
+        thread->id = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "trial") == 0) {
         thread->trial = trial;
-      } else if (strcmp(taudb_get_column_name(res, j), "node_rank") == 0) {
-        thread->node_rank = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "context_rank") == 0) {
-        thread->context_rank = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "thread_rank") == 0) {
-        thread->thread_rank = atoi(taudb_get_value(res, i, j));
-      } else if (strcmp(taudb_get_column_name(res, j), "thread_index") == 0) {
-        thread->index = atoi(taudb_get_value(res, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "node_rank") == 0) {
+        thread->node_rank = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "context_rank") == 0) {
+        thread->context_rank = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "thread_rank") == 0) {
+        thread->thread_rank = atoi(taudb_get_value(connection, i, j));
+      } else if (strcmp(taudb_get_column_name(connection, j), "thread_index") == 0) {
+        thread->index = atoi(taudb_get_value(connection, i, j));
       }
     } 
-    thread->secondary_metadata_count = 0;
-    HASH_ADD_INT(threads, index, thread);
+    HASH_ADD_INT(trial->threads, index, thread);
   }
 
-  taudb_clear_result(res);
+  taudb_clear_result(connection);
   taudb_close_transaction(connection);
 
-  return threads;
+  return trial->threads;
 }
 
 TAUDB_THREAD* taudb_query_threads(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial) {
@@ -147,7 +141,24 @@ TAUDB_THREAD* taudb_query_derived_threads(TAUDB_CONNECTION* connection, TAUDB_TR
 }
 
 TAUDB_THREAD* taudb_get_thread(TAUDB_THREAD* threads, int index) {
+#ifdef TAUDB_DEBUG
+  printf("Calling taudb_get_thread(%p,%d)\n", threads, index);
+#endif
   TAUDB_THREAD* thread;
   HASH_FIND_INT(threads, &(index), thread);
+#ifdef ITERATE_ON_FAILURE
+  // HASH_FIND is not working so well... now we iterate. Sigh.
+  if (thread == NULL) {
+    TAUDB_THREAD *current, *tmp;
+    HASH_ITER(hh, threads, current, tmp) {
+#ifdef TAUDB_DEBUG_DEBUG
+      printf ("THREAD: '%d'\n", current->index);
+#endif
+      if (current->index == index) {
+        return current;
+      }
+    }
+  }
+#endif
   return thread;
 }

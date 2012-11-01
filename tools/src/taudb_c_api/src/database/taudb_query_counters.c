@@ -97,6 +97,7 @@ TAUDB_COUNTER* taudb_get_counter_by_id(TAUDB_COUNTER* counters, const int id) {
 
   TAUDB_COUNTER* counter = NULL;
   HASH_FIND(hh1, counters, &id, sizeof(int), counter);
+#ifdef ITERATE_ON_FAILURE
   // HASH_FIND is not working so well... now we iterate. Sigh.
   if (counter == NULL) {
     TAUDB_COUNTER *current, *tmp;
@@ -109,6 +110,7 @@ TAUDB_COUNTER* taudb_get_counter_by_id(TAUDB_COUNTER* counters, const int id) {
       }
     }
   }
+#endif
   return counter;
 }
 
@@ -126,7 +128,8 @@ TAUDB_COUNTER* taudb_get_counter_by_name(TAUDB_COUNTER* counters, const char* na
   }
 
   TAUDB_COUNTER* counter = NULL;
-  HASH_FIND(hh2, counters, name, sizeof(name), counter);
+  HASH_FIND(hh2, counters, name, strlen(name), counter);
+#ifdef ITERATE_ON_FAILURE
   // HASH_FIND is not working so well... now we iterate. Sigh.
   if (counter == NULL) {
     TAUDB_COUNTER *current, *tmp;
@@ -139,6 +142,7 @@ TAUDB_COUNTER* taudb_get_counter_by_name(TAUDB_COUNTER* counters, const char* na
       }
     }
   }
+#endif
   return counter;
 }
 

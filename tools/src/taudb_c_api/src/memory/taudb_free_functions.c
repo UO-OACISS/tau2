@@ -103,10 +103,11 @@ void taudb_delete_secondary_metadata(TAUDB_SECONDARY_METADATA* metadata) {
   HASH_ITER(hh, metadata, current, tmp) {
     HASH_DELETE(hh, metadata, current);
     taudb_delete_secondary_metadata(current->children);
-    free(current->name);
+    free(current->key.name);
 	for (j = current->num_values ; j >= 0 ; j--) {
       free(current->value[j]);
 	}
+    free(current->id);
     free(current);
   }
 }
