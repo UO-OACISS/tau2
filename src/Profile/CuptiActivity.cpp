@@ -147,14 +147,12 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 			get_values_from_memcpy(cbInfo, id, domain, kind, count);
 			if (cbInfo->callbackSite == CUPTI_API_ENTER)
 			{
-				FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->ThisFunction;
-				Tau_cupti_register_calling_site(cbInfo->correlationId, p);
-				//functionInfoMap[cbInfo->correlationId] = p;	
-				//cerr << "callback for " << cbInfo->functionName << ", enter." << endl;
 				Tau_cupti_enter_memcpy_event(
 					cbInfo->functionName, -1, 0, cbInfo->contextUid, cbInfo->correlationId, 
 					count, getMemcpyType(kind)
 				);
+				FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->ThisFunction;
+				Tau_cupti_register_calling_site(cbInfo->correlationId, p);
 				/*
 				CuptiGpuEvent new_id = CuptiGpuEvent(TAU_GPU_USE_DEFAULT_NAME, (uint32_t)0, cbInfo->contextUid, cbInfo->correlationId, NULL, 0);
 				Tau_gpu_enter_memcpy_event(
@@ -200,7 +198,8 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 					//Stop collecting cupti counters.
 					Tau_CuptiLayer_finalize();
 				}
-				else if (function_is_launch(id))
+				Tau_gpu_enter_event(cbInfo->functionName);
+				if (function_is_launch(id))
 				{
 					FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->ThisFunction;
 					Tau_cupti_register_calling_site(cbInfo->correlationId, p);
@@ -209,7 +208,6 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 					Tau_CuptiLayer_init();
 				}
 				//cerr << "callback for " << cbInfo->functionName << ", enter." << endl;
-				Tau_gpu_enter_event(cbInfo->functionName);
 			}
 			else if (cbInfo->callbackSite == CUPTI_API_EXIT)
 			{
@@ -307,6 +305,11 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			{
 				id = memcpy->correlationId;
 			}
+			//We do not always know on the corresponding host event on
+			//the CPU what type of copy we have so we need to register 
+			//the bytes copied here. Be careful we only want to record 
+			//the bytes copied once.
+			int bytes = memcpy->bytes; //record bytes on this device.
 			Tau_cupti_register_memcpy_event(
 				TAU_GPU_USE_DEFAULT_NAME,
 				memcpy->deviceId,
@@ -315,7 +318,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 				id,
 				memcpy->start / 1e3,
 				memcpy->end / 1e3,
-				TAU_GPU_UNKNOWN_TRANSFER_SIZE,
+				bytes,
 				getMemcpyType(memcpy->copyKind)
 			);
 			/*
@@ -704,10 +707,11 @@ int getMemcpyType(int kind)
 	{
 		case CUPTI_ACTIVITY_MEMCPY_KIND_HTOD:
 			return MemcpyHtoD;
-		case CUPTI_ACTIVITY_MEMCPY_KIND_HTOA:
-			return MemcpyHtoD;
 		case CUPTI_ACTIVITY_MEMCPY_KIND_DTOH:
 			return MemcpyDtoH;
+		/*
+		case CUPTI_ACTIVITY_MEMCPY_KIND_HTOA:
+			return MemcpyHtoD;
 		case CUPTI_ACTIVITY_MEMCPY_KIND_ATOH:
 			return MemcpyDtoH;
 		case CUPTI_ACTIVITY_MEMCPY_KIND_ATOA:
@@ -716,6 +720,7 @@ int getMemcpyType(int kind)
 			return MemcpyDtoD;
 		case CUPTI_ACTIVITY_MEMCPY_KIND_DTOA:
 			return MemcpyDtoD;
+		*/
 		case CUPTI_ACTIVITY_MEMCPY_KIND_DTOD:
 			return MemcpyDtoD;
 		default:
