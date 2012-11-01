@@ -838,6 +838,32 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 
 			else {
 				
+			if(prefix.contains("Cray")){
+				String node_key=prefix+" Nodename";
+				
+				List<Integer>[] sizes = new List[5];
+				for(int i=0;i<5;i++){
+					sizes[i]=new ArrayList();
+				}
+				int[] dimension = new int[5];
+				//String lastcoord=null;//Potentially used to check when moving to a new node
+				int numCores=24;
+				
+				for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads()
+						.iterator(); it.hasNext();) {
+					Thread thread = it.next();
+
+					String coord = thread.getMetaData().get(node_key).trim();
+					if (coord == null) {
+						continue;
+					}
+					System.out.println(ThreeDeeGeneralPlotUtils.parseCrayNodeID(coord));
+				}
+				
+				
+			}//Cray Topology
+			else
+			{
 			String coord_key = prefix + " Coords";
 			String size_key = prefix + " Size";
 			
@@ -890,8 +916,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 					values[threadIndex][2] = coords[2]*tempsizes[3]+coords[3]+offset*coords[2];
 					
 					for (int i = 0; i < 3; i++) {
-					maxScatterValues[i] = Math.max(maxScatterValues[i], values[threadIndex][i]);
-				}
+						maxScatterValues[i] = Math.max(maxScatterValues[i], values[threadIndex][i]);
+					}
 					
 					
 				}
@@ -921,7 +947,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 				}
 
 				threadIndex++;
-			}
+			}//Values populator loop
+			}//Non-Cray Topology
 			}
 
 		return values;
