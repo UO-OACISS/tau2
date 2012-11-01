@@ -1,0 +1,7 @@
+As of Nov. 1, 2012, the CubeReader.jar distributed  with CUBE uses Java 6, so a Java 5 verison must be made.  
+To Do this, build CUBE on a machine with Java 5:
+
+mkdir _build; cd _build
+../configure --prefix=$HOME/cube --with-java-reader --without-gui
+make && make install;
+cp build-frontend/CubeReader.jar ~/tau2/tools/src/contrib/
