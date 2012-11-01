@@ -7,10 +7,10 @@
 #include <libxml/tree.h>
 
 extern void taudb_trim(char * s);
-extern void taudb_parse_tau_profile_file(char* filename, TAUDB_TRIAL* trial, const int thread_index);
+extern void taudb_parse_tau_profile_file(char* filename, TAUDB_TRIAL* trial, int* counts);
 extern void taudb_parse_tau_profile_function(char* line, TAUDB_TRIAL* trial, TAUDB_METRIC* metric, TAUDB_THREAD* thread);
 extern void taudb_parse_tau_profile_counter(char* line, TAUDB_TRIAL* trial, TAUDB_THREAD* thread);
-extern TAUDB_THREAD* taudb_parse_tau_profile_thread(char* filename, TAUDB_TRIAL* trial);
+extern TAUDB_THREAD* taudb_parse_tau_profile_thread(char* filename, TAUDB_TRIAL* trial, int* counts);
 extern TAUDB_METRIC* taudb_parse_tau_profile_metric(char* line, TAUDB_TRIAL* trial);
 extern TAUDB_TIMER* taudb_create_timer(TAUDB_TRIAL* trial, const char* timer_name);
 extern TAUDB_COUNTER* taudb_create_counter(TAUDB_TRIAL* trial, const char* counter_name);
@@ -28,15 +28,18 @@ extern void taudb_consolidate_metadata (TAUDB_TRIAL* trial);
 extern void taudb_parse_timer_group_names(TAUDB_TRIAL* trial, TAUDB_TIMER* timer, char* group_names);
 extern char* taudb_getline(FILE* infile);
 
+extern void count_profiles(const char* directory_name, int* counts);
+extern void process_directory(const char* directory_name, int* counts, TAUDB_TRIAL* trial);
+
 TAUDB_TRIAL* taudb_parse_tau_profiles(const char* directory_name) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_parse_tau_profiles(%s)\n", directory_name);
 #endif
 
   printf("\nWarning: not fully functional. Missing support for:\n");
-  printf(" - multiple metrics\n");
   printf(" - parsing timer groups\n");
   printf(" - parsing timer parameters\n\n");
+  printf(" - computing statistics \n\n");
 
   // validate the config file name
   if (directory_name == NULL || strlen(directory_name) == 0) {
@@ -46,14 +49,26 @@ TAUDB_TRIAL* taudb_parse_tau_profiles(const char* directory_name) {
 
   TAUDB_TRIAL* trial = taudb_create_trials(1);
 
+  int counts[3] = {0,0,0};
+  count_profiles(directory_name, counts);
+  printf("Profiles found: %d, %d, %d\n", counts[0], counts[1], counts[2]);
+
+  process_directory(directory_name, counts, trial);
+
+// compute stats!
+
+  taudb_consolidate_metadata (trial);
+  return trial;
+}
+
+void process_directory(const char* directory_name, int* counts, TAUDB_TRIAL* trial) {
   const char* profile_prefix = "profile.";
-  //const char* papi_prefix = "MULTI__";
+  const char* papi_prefix = "MULTI__";
 
   DIR *dp = NULL;
   struct dirent *ep = NULL;
-  char profile_file[256] = {0};
+  char profile_file[1024] = {0};
   dp = opendir (directory_name);
-  int thread_index = 0;
   if (dp != NULL) {
     ep = readdir(dp);
     while (ep != NULL) {
@@ -63,22 +78,79 @@ TAUDB_TRIAL* taudb_parse_tau_profiles(const char* directory_name) {
 #ifdef TAUDB_DEBUG
         printf("Parsing profile file %s...\n", profile_file);
 #endif
-        taudb_parse_tau_profile_file(profile_file, trial, thread_index);
-		thread_index = thread_index + 1;
-      }
+        taudb_parse_tau_profile_file(profile_file, trial, counts);
+      } else if (strncmp(ep->d_name, papi_prefix, 7) == 0) {
       // check for MULTI__* directories
+        sprintf(profile_file, "%s/%s", directory_name, ep->d_name);
+        process_directory(profile_file, counts, trial);
+      }
       ep = readdir(dp);
     }
     closedir(dp);
   } else {
     fprintf(stderr, "No TAUdb config files found.\n");
   }
-  taudb_consolidate_metadata (trial);
-
-  return trial;
 }
 
-void taudb_parse_tau_profile_file(char* filename, TAUDB_TRIAL* trial, const int thread_index) {
+void count_profiles(const char* directory_name, int* counts) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("Calling count_profiles(%s)\n", directory_name);
+#endif
+
+  const char* profile_prefix = "profile.";
+  const char* papi_prefix = "MULTI__";
+  int last_rank[3] = {-1,-1,-1};
+  int rank[3] = {0,0,0};
+
+  DIR *dp = NULL;
+  struct dirent *ep = NULL;
+  char subdir[1024] = {0};
+  dp = opendir (directory_name);
+  if (dp != NULL) {
+    ep = readdir(dp);
+    while (ep != NULL) {
+      // check for profile.x.x.x files
+      if (strncmp(ep->d_name, profile_prefix, 8) == 0) {
+	    // get the node, context, thread values
+        char* tmp = strtok(ep->d_name, ".");
+	    tmp = strtok(NULL, ".");
+        rank[0] = atoi(tmp);
+        tmp = strtok(NULL, ".");
+        rank[1] = atoi(tmp);
+        tmp = strtok(NULL, ".");
+	    rank[2] = atoi(tmp);
+		// the process rank can start at 0, or can be a pid...
+        if (rank[0] != last_rank[0]) {
+		  counts[0] = counts[0] + 1;
+		  last_rank[0] = rank[0];
+		} 
+		// thankfully, the context id is from 0
+		if (rank[1]+1 > counts[1]) {
+		  counts[1] = rank[1] + 1;
+		} 
+		// thankfully, the thread id is from 0
+		if (rank[2]+1 > counts[2]) {
+		  counts[2] = rank[2] + 1;
+		}
+      } else if (strncmp(ep->d_name, papi_prefix, 7) == 0) {
+      // check for MULTI__* directories
+        sprintf(subdir, "%s/%s", directory_name, ep->d_name);
+	    // recurse
+		int tmp_counts[3] = {0,0,0};
+        count_profiles(subdir, tmp_counts);
+		counts[0] = counts[0] > tmp_counts[0] ? counts[0] : tmp_counts[0];
+		counts[1] = counts[1] > tmp_counts[1] ? counts[1] : tmp_counts[1];
+		counts[2] = counts[2] > tmp_counts[2] ? counts[2] : tmp_counts[2];
+      }
+      ep = readdir(dp);
+    }
+    closedir(dp);
+  } else {
+    fprintf(stderr, "No TAUdb config files found.\n");
+  }
+}
+
+void taudb_parse_tau_profile_file(char* filename, TAUDB_TRIAL* trial, int* counts) {
   // open the file
   FILE* ifp = fopen (filename, "r");
   if (ifp == NULL) {
@@ -86,8 +158,7 @@ void taudb_parse_tau_profile_file(char* filename, TAUDB_TRIAL* trial, const int 
     return;
   }
 
-  TAUDB_THREAD* thread = taudb_parse_tau_profile_thread(filename, trial);
-  thread->index = thread_index;
+  TAUDB_THREAD* thread = taudb_parse_tau_profile_thread(filename, trial, counts);
 
   char* line = NULL;
   boolean functions = FALSE;
@@ -153,18 +224,30 @@ void taudb_parse_tau_profile_file(char* filename, TAUDB_TRIAL* trial, const int 
   return;
 }
 
-TAUDB_THREAD* taudb_parse_tau_profile_thread(char* filename, TAUDB_TRIAL* trial) {
+TAUDB_THREAD* taudb_parse_tau_profile_thread(char* filename, TAUDB_TRIAL* trial, int* counts) {
   // create a thread
-  TAUDB_THREAD* thread = taudb_create_threads(1);
-  thread->trial = trial;
+  TAUDB_THREAD* thread = NULL;
   char* tmp = strtok(filename, ".");
   tmp = strtok(NULL, ".");
-  thread->node_rank = atoi(tmp);
+  int node = atoi(tmp);
   tmp = strtok(NULL, ".");
-  thread->context_rank = atoi(tmp);
+  int context = atoi(tmp);
   tmp = strtok(NULL, ".");
-  thread->thread_rank = atoi(tmp);
-  HASH_ADD(hh, trial->threads, index, sizeof(int), thread);
+  int thr = atoi(tmp);
+  int index = (node * counts[1] * counts[2]) +
+              (context * counts[1]) +
+  			  (thr);
+
+  thread = taudb_get_thread(trial->threads, index);
+  if (thread == NULL) {
+    thread = taudb_create_threads(1);
+    thread->trial = trial;
+    thread->node_rank = node;
+    thread->context_rank = context;
+    thread->thread_rank = thr;
+    thread->index = index;
+    HASH_ADD(hh, trial->threads, index, sizeof(int), thread);
+  }
   return thread;
 }
 
@@ -273,7 +356,7 @@ void taudb_parse_tau_profile_function(char* line, TAUDB_TRIAL* trial, TAUDB_METR
 #ifdef TAUDB_DEBUG_DEBUG
 	  printf("group: %s\n", groups);
 #endif
-      taudb_parse_timer_group_names(trial, timer, groups);
+      //taudb_parse_timer_group_names(trial, timer, groups);
     }
     // get/create timer_callpath
     timer_callpath = taudb_create_timer_callpath(trial, timer, NULL);
@@ -384,8 +467,8 @@ TAUDB_TIMER_CALL_DATA* taudb_create_timer_call_datum(TAUDB_TRIAL* trial, TAUDB_T
     timer_call_data->calls = calls;
     timer_call_data->subroutines = calls;
     HASH_ADD(hh2, trial->timer_call_data_by_key, key, sizeof(TAUDB_TIMER_CALL_DATA_KEY), timer_call_data);
-  } else {
-	printf("TIMER_CALL_DATA: %s\n", timer_call_data->key.timer_callpath->name);
+  //} else {
+	//printf("TIMER_CALL_DATA: %s\n", timer_call_data->key.timer_callpath->name);
   }
   return timer_call_data;
 }
