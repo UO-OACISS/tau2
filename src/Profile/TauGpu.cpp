@@ -125,18 +125,19 @@ void Tau_gpu_enter_memcpy_event(const char *functionName, GpuEvent
 
 	//Inorder to capture the entire memcpy transaction time start the send/recived
 	//at the start of the event
-	if (memcpyType == MemcpyDtoH) {
-	  if (TauEnv_get_tracing()) {
-		TauTraceOneSidedMsg(MESSAGE_RECV, device, -1, 0);
-	  }
+	if (TauEnv_get_tracing()) {
+		if (memcpyType == MemcpyDtoH) {
+			TauTraceOneSidedMsg(MESSAGE_RECV, device, -1, 0);
+		}
+		else if (memcpyType == MemcpyHtoD)
+		{
+			TauTraceOneSidedMsg(MESSAGE_SEND, device, transferSize, 0);
+		}
+		else
+		{
+			TauTraceOneSidedMsg(MESSAGE_UNKNOWN, device, transferSize, 0);
+		}
 	}
-	else
-	{
-	  if (TauEnv_get_tracing()) {
-		TauTraceOneSidedMsg(MESSAGE_SEND, device, transferSize, 0);
-	  }
-	}
-
 	if (memcpyType == MemcpyHtoD) {
 		if (transferSize != TAU_GPU_UNKNOWN_TRANSFER_SIZE)
 		{

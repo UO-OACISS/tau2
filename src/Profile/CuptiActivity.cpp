@@ -296,6 +296,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       CUpti_ActivityMemcpy *memcpy = (CUpti_ActivityMemcpy *)record;
 			//cerr << "recording memcpy: " << memcpy->end - memcpy->start << "ns.\n" << endl;
 		  //cerr << "recording memcpy on device: " << memcpy->streamId << "/" << memcpy->runtimeCorrelationId << endl;
+		  //cerr << "recording memcpy kind: " << getMemcpyType(memcpy->copyKind) << endl;
 			int id;
 			if (cupti_api_runtime())
 			{
