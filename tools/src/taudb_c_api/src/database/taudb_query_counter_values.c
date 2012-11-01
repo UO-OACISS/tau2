@@ -123,6 +123,7 @@ TAUDB_COUNTER_VALUE* taudb_get_counter_value(TAUDB_COUNTER_VALUE* counter_values
  
   TAUDB_COUNTER_VALUE* counter_value = NULL;
   HASH_FIND(hh1, counter_values, &key, sizeof(TAUDB_COUNTER_VALUE_KEY), counter_value);
+#ifdef ITERATE_ON_FAILURE
   // HASH_FIND is not working so well... now we iterate. Sigh.
   if (counter_value == NULL) {
     TAUDB_COUNTER_VALUE *current, *tmp;
@@ -135,6 +136,7 @@ TAUDB_COUNTER_VALUE* taudb_get_counter_value(TAUDB_COUNTER_VALUE* counter_values
       }
     }
   }
+#endif
   return counter_value;
 }
 

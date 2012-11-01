@@ -14,6 +14,7 @@
 
 CC=gcc
 AR=ar
+RANLIB=ranlib
 #CC=tau_cc.sh -tau_makefile=${HOME}/src/tau2/x86_64/lib/Makefile.tau-pdt -optQuiet -optPreProcess
 #CC=tau_cc.sh -tau_makefile=${HOME}/src/tau2-taudb-branch/apple/lib/Makefile.tau-pdt -optQuiet
 #TEST_CONFIG=ccsm
@@ -56,10 +57,14 @@ ZLIB_LIBRARIES=-lz
 
 FLAGS=-g -Wall
 
+# If the Hash Table is acting weird, try enabling this...
+# ITERATE=-DITERATE_ON_FAILURE
+
 # Debugging levels
-DEBUG=-O2
-#DEBUG=-DTAUDB_DEBUG -DHASH_DEBUG=1
-#DEBUG=-DTAUDB_DEBUG -DTAUDB_DEBUG_DEBUG -DHASH_DEBUG=1
+#DEBUG=-O2 $(ITERATE)
+#DEBUG=-O0 $(ITERATE)
+DEBUG=-DTAUDB_DEBUG -DHASH_DEBUG=1 $(ITERATE)
+#DEBUG=-DTAUDB_DEBUG -DTAUDB_DEBUG_DEBUG -DHASH_DEBUG=1 $(ITERATE)
 
 INCLUDE=$(XML_INCLUDES) $(ZLIB_INCLUDES) $(DB_INCLUDES)
 LIBS=$(XML_LIBRARIES) $(ZLIB_LIBRARIES) $(DB_LIBRARIES)

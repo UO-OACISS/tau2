@@ -164,18 +164,23 @@ TAUDB_TIMER_CALL_DATA* taudb_get_timer_call_data_by_key(TAUDB_TIMER_CALL_DATA* t
   key.timestamp = timestamp;
  
   HASH_FIND(hh2, timer_call_data, &key, sizeof(TAUDB_TIMER_CALL_DATA_KEY), timer_call_datum);
+#ifdef ITERATE_ON_FAILURE
   // HASH_FIND is not working so well... now we iterate. Sigh.
   if (timer_call_datum == NULL) {
     TAUDB_TIMER_CALL_DATA *current, *tmp;
     HASH_ITER(hh2, timer_call_data, current, tmp) {
 #ifdef TAUDB_DEBUG_DEBUG
-      printf("COUNTER VALUE: (%p,%p,%p)\n", current->key.timer_callpath, current->key.thread, current->key.timestamp);
+      printf("TIMER CALL DATA KEY: '%s',%d,%p\n", current->key.timer_callpath->name, current->key.thread->index, current->key.timestamp);
 #endif
-      if ((current->key.timer_callpath->id == callpath->id) && (current->key.thread == thread) && ((current->key.timestamp == NULL && timestamp == NULL) || (strcmp(current->key.timestamp, timestamp) == 0))) {
+      if ((current->key.timer_callpath == callpath) && 
+	      (current->key.thread == thread) && 
+		  ((current->key.timestamp == NULL && timestamp == NULL) || 
+		   (strcmp(current->key.timestamp, timestamp) == 0))) {
         return current;
       }
     }
   }
+#endif
   return timer_call_datum;
 }
 
@@ -196,17 +201,19 @@ TAUDB_TIMER_CALL_DATA* taudb_get_timer_call_data_by_id(TAUDB_TIMER_CALL_DATA* ti
   TAUDB_TIMER_CALL_DATA* timer_call_datum = NULL;
 
   HASH_FIND(hh1, timer_call_data, &id, sizeof(int), timer_call_datum);
+#ifdef ITERATE_ON_FAILURE
   // HASH_FIND is not working so well... now we iterate. Sigh.
   if (timer_call_datum == NULL) {
     TAUDB_TIMER_CALL_DATA *current, *tmp;
     HASH_ITER(hh2, timer_call_data, current, tmp) {
 #ifdef TAUDB_DEBUG_DEBUG
-      printf("COUNTER VALUE: (%p,%p,%p)\n", current->key.timer_callpath, current->key.thread, current->key.timestamp);
+      printf("TIMER CALL DATA KEY: (%p,%p,%p)\n", current->key.timer_callpath, current->key.thread, current->key.timestamp);
 #endif
       if (current->id == id) {
         return current;
       }
     }
   }
+#endif
   return timer_call_datum;
 }

@@ -39,6 +39,7 @@ extern TAUDB_DATA_SOURCE* taudb_get_data_source_by_name(TAUDB_DATA_SOURCE* data_
 /* using the properties set in the filter, find a set of trials */
 extern TAUDB_TRIAL* taudb_query_trials(TAUDB_CONNECTION* connection, boolean complete, TAUDB_TRIAL* filter);
 extern TAUDB_PRIMARY_METADATA* taudb_query_primary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter);
+extern TAUDB_PRIMARY_METADATA* taudb_get_primary_metadata_by_name(TAUDB_PRIMARY_METADATA* primary_metadata, const char* name);
 extern TAUDB_SECONDARY_METADATA* taudb_query_secondary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter);
 
 /* get the threads for a trial */
@@ -97,6 +98,10 @@ extern TAUDB_TIMER* taudb_query_main_timer(TAUDB_CONNECTION* connection, TAUDB_T
 /* memory functions */
 /************************************************/
 
-extern TAUDB_TRIAL*              taudb_create_trials(int count);
+extern TAUDB_TRIAL* taudb_create_trials(int count);
 extern void taudb_delete_trials(TAUDB_TRIAL* trials, int count);
+
+/* Profile parsers */
+extern TAUDB_TRIAL* taudb_parse_tau_profiles(const char* directory_name);
+
 #endif /* TAUDB_API_H */

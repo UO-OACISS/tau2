@@ -102,7 +102,7 @@ TAUDB_TIMER_GROUP* taudb_query_timer_groups(TAUDB_CONNECTION* connection, TAUDB_
 
 TAUDB_TIMER_GROUP* taudb_get_timer_group_by_name(TAUDB_TIMER_GROUP* timer_groups, const char* name) {
 #ifdef TAUDB_DEBUG_DEBUG
-  printf("Calling taudb_get_timer_group(%p,%s)\n", timer_groups, name);
+  printf("Calling taudb_get_timer_group_by_name(%p,'%s')\n", timer_groups, name);
 #endif
   if (timer_groups == NULL) {
     // the hash isn't populated yet
