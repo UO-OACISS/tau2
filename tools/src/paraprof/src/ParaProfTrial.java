@@ -833,12 +833,27 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 	public Vector<String> getTopologyArray() {
 		Set<MetaDataKey> keys = getDataSource().getMetaData().keySet();
 		Vector<String> topos = new Vector<String>();
+		boolean foundTopo=false;
 		for(Iterator<MetaDataKey> it = keys.iterator(); it.hasNext();){
 			String key = it.next().name;
-			if(key.contains(" isTorus")||key.contains(" Period")){
+			if(key.contains(" isTorus")||key.contains(" Period")||key.contains(" Dimension")){
 				topos.add(key.split(" ")[0]);
+				foundTopo=true;
 			}
 		}
+		
+		if(!foundTopo){
+			keys = getDataSource().getThread(0, 0, 0).getMetaData().keySet();
+			for(Iterator<MetaDataKey> it = keys.iterator(); it.hasNext();){
+				String key = it.next().name;
+				if((key.startsWith("Cray")&&key.contains("Nodename")))
+				{
+					topos.add(key.split(" ")[0]);
+					foundTopo=true;
+				}
+			}
+		}
+		
 //		if(topos.size()==0){
 //			return new String[]{null};
 //		}
