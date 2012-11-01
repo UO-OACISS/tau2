@@ -290,7 +290,7 @@ public class CubeDataSource extends DataSource
 			progress_value = 1.; // finish
 			progress_message = "Generate derived data...done";
 			time = (System.currentTimeMillis()) - time;
-			System.out.println("Time to process (in milliseconds): " + time);
+			//System.out.println("Time to process (in milliseconds): " + time);
 		}
 		catch(BadSyntaxException e)
 		{
