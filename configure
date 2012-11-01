@@ -1235,6 +1235,7 @@ for arg in "$@"; do
       
   -opari)
       opari=yes
+      oparidir=`echo $arg | sed -e 's/-opari=//' -e 's/ /#/g'
       openmp=yes
       shift
       ;;
@@ -6952,7 +6953,6 @@ if [ $scorep = yes ] ; then
       fi
     fi
     scorepLibs="$scorepLD $scorepLibs"
-    scorepLibs=`echo $scorepLibs | sed "s/Wl,-rpath -Wl,/L/g"`
     scorepLibs=`echo $scorepLibs | sed "s/ /#/g"`
 echo $scorepLibs
     fixmakeargs="$fixmakeargs scorepmpilibs=$scorepLibs"
