@@ -122,13 +122,13 @@ public class TreeTableWindow extends JFrame implements TreeExpansionListener, Ob
 
         setLocation(WindowPlacer.getNewLocation(this, invoker));
 
-        if (thread.getNodeID() == -1) {
+        if (thread.getNodeID() == -1 || thread.getNodeID() == -6) {
             this.setTitle("TAU: ParaProf: Mean Statistics - "
                     + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         } else if (thread.getNodeID() == -2) {
             this.setTitle("TAU: ParaProf: Total Statistics - "
                     + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
-        } else if (thread.getNodeID() == -3) {
+        } else if (thread.getNodeID() == -3 || thread.getNodeID() == -7) {
             this.setTitle("TAU: ParaProf: Std. Dev. Statistics - "
                     + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         } else {

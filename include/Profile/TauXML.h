@@ -21,11 +21,14 @@
 #define _TAU_XML_H_
 
 #include <TauUtil.h>
+#include <TauMetaData.h>
 
 void Tau_XML_writeString(Tau_util_outputDevice *out, const char *string);
 void Tau_XML_writeTag(Tau_util_outputDevice *out, const char *tag, const char *string, bool newline);
 void Tau_XML_writeAttribute(Tau_util_outputDevice *out, const char *name, const char *value, bool newline);
 void Tau_XML_writeAttribute(Tau_util_outputDevice *out, const char *name, const int value, bool newline);
+void Tau_XML_writeAttribute(Tau_util_outputDevice *out, const Tau_metadata_key *key, const Tau_metadata_value_t *metadata, bool newline);
+void Tau_XML_writeAttribute(Tau_util_outputDevice *out, const Tau_metadata_array_t *array, bool newline);
 int  Tau_XML_writeTime(Tau_util_outputDevice *out, bool newline);
 
 #endif /* _TAU_XML_H_ */

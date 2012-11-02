@@ -72,6 +72,11 @@ case $1 in
 	echo "s,^PAPIDIR=.*$,PAPIDIR=$papidir,g" >> $sedout
 	;;
 
+     gpidir=*)
+        gpidir=`echo $1 | sed -e 's/^gpidir=//'`
+	echo "s,^GPIDIR=.*$,GPIDIR=$gpidir,g" >> $sedout
+	;;
+
      bfdlink=*)
         bfdlink=`echo $1 | sed -e 's/^bfdlink=//' -e 's/#/ /g'`
 	echo "s,^BFDLINK=.*$,BFDLINK=$bfdlink,g" >> $sedout
@@ -172,13 +177,13 @@ case $1 in
 	;;
 
      scoreplibs=*)
-	scoreplibs=`echo $1 | sed -e 's/^scoreplibs=//' -e 's/#/ /g'`
-	echo "s,^SCOREPLIBS=.*$,SCOREPLIBS=$scoreplibs,g" >> $sedout
+       scoreplibs=`echo $1 | sed -e 's+^scoreplibs=++' -e 's+#+ +g'`
+       echo "s+^SCOREPLIBS=.*$+SCOREPLIBS=$scoreplibs+g" >> $sedout
 	;;
 
      scorepmpilibs=*)
-	scorepmpilibs=`echo $1 | sed -e 's/^scorepmpilibs=//' -e 's/#/ /g'`
-	echo "s,^SCOREPMPILIBS=.*$,SCOREPMPILIBS=$scorepmpilibs,g" >> $sedout
+       scorepmpilibs=`echo $1 | sed -e 's+^scorepmpilibs=++' -e 's+#+ +g'`
+       echo "s+^SCOREPMPILIBS=.*$+SCOREPMPILIBS=$scorepmpilibs+g" >> $sedout
 	;;
 
      scorepdir=*)
@@ -670,6 +675,11 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+     GPI)
+        echo "NOTE: Using the TAU's GPI Wrapper Interface "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
      OPENSHMEM)
         echo NOTE: Using the TAU OpenSHMEM Profiling Interface 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -735,7 +745,12 @@ case $1 in
         cuptiinclude=`echo $1 | sed -e 's/^cuptiinclude=//' -e 's/#/ /g'`
       echo "NOTE: Using CUPTI for GPU analysis, source in $cuptiinclude"
 			echo "s@^TAU_CUPTI_INC=\(.*\)@TAU_CUPTI_INC=$cuptiinclude@g" >> $sedout
-		;;	
+		;;
+		cudalibrary=*)
+			cudalibrary=`echo $1 | sed -e 's/^cudalibrary=//' -e 's/#/ /g'`
+			echo "NOTE: Adding $cudalibrary when linking to the cuda driver library."
+			echo "s@^TAU_CUDA_LIBRARY=\(.*\)@TAU_CUDA_LIBRARY=$cudalibrary@g" >> $sedout
+		;;
 
 ###############################################################
 # Set the CONFIG_ARCH=<machine-name> in the Makefiles.
@@ -816,6 +831,10 @@ case $1 in
 	;;
      COMPAQCXX_PTHREAD)
 	echo NOTE: Using the Compaq cxx -pthread option
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     MPC)
+	echo NOTE: Using the TAU MPC options
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      COMPENSATE)
@@ -920,6 +939,10 @@ case $1 in
 	;;
      GNU46PLUS)
 	echo NOTE: Using fixes for GNU 4.6+ compiler
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     CLANG)
+	echo NOTE: Using CLANG C++ compiler 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CRAYCC)
@@ -1379,16 +1402,20 @@ case $1 in
 	echo "NOTE: Enabled Tracing. Compiling with -DTRACING_ON"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     UPCC)
+     BUPC)
 	echo "NOTE: Enabled Berkeley UPC (upcc) GASP support in TAU."
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
-     GNU_UPC)
+     GUPC)
 	echo "NOTE: Enabled GNU UPC GASP support in TAU"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CRAY_UPC)
 	echo "NOTE: Enabled Cray UPC support in TAU"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     XLUPC)
+	echo "NOTE: Enabled IBM XLUPC support in TAU"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      KAI)
@@ -1689,6 +1716,10 @@ case $1 in
         echo "NOTE: Intel mpiifort compiler options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
+     FX)
+        echo "NOTE: Fujitsu mpifrtpx compiler options used"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      IBM64LINUX_XLC)
         echo "NOTE: IBM 64 bit xlc compiler for Linux options used"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1804,6 +1835,9 @@ case $1 in
 	echo "NOTE: Disabling building of shared objects"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     SGI_MPT_MPI)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      *)
 	echo "ERROR: Unknown argument directive \`$1' to FixMakefile"
 	;;

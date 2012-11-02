@@ -1,8 +1,6 @@
 AC_PREREQ([2.68])
 AC_INIT([OPARI2], m4_esyscmd([vendor/common/build-config/generate-package-version.sh build-config/VERSION]), [scorep-bugs@groups.tu-dresden.de], [opari2])
 
-#echo "cross_compiling = $cross_compiling"
-
 AC_SCOREP_REVISION
 
 AC_SCOREP_TOPLEVEL_ARGS
@@ -49,6 +47,7 @@ AC_SCOREP_SVN_CONTROLLED
 AC_SCOREP_UNCRUSTIFY
 
 AC_SCOREP_DOXYGEN
+AC_SCOREP_DOXYGEN_CONFIG_FILES
 
 ## Autoconf supports changing the names of programs when installing them. In
 ## order to use these transformations, configure.ac must call the macro
@@ -68,7 +67,10 @@ AC_CONFIG_SUBDIR_CUSTOM([build-frontend], [${args} ac_scorep_platform=${ac_score
 #sed is needed for check target
 AC_PROG_SED
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([
+    Makefile
+    src/config-common.h:vendor/common/build-config/config-common.h
+])
 AC_CONFIG_FILES([test/c_test.sh], [chmod +x test/c_test.sh]) 
 AC_CONFIG_FILES([test/f90_test.sh], [chmod +x test/f90_test.sh]) 
 AC_CONFIG_FILES([test/f77_test.sh], [chmod +x test/f77_test.sh])

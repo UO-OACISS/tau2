@@ -1,0 +1,160 @@
+#!/bin/sh
+usage()
+{
+    cmd=`basename $0`
+    echo ""
+    echo " $cmd - Generates a wrapper library that can intercept "
+    echo " at link time or at runtime UPC routines specified in a header file"
+    echo " Usage: $cmd <headerfile> <library>  [-w (default) | -d | -r] -gasnet=<dir> -gasnetconduit=<conduit> -upc=<dir> "
+    echo " -w (default): generates wrappers for re-linking the application"
+    echo " -d : generates wrappers by redefining routines during compilation in header files"
+    echo " -r : generates wrappers that may be pre-loaded using tau_exec at runtime"
+    echo " -gasnet=<dir> : specifies the location of the gasnet directory"
+    echo " -gasnetconduit=<conduit> : specifies the conduit (smp, mpi, etc.) for gasnet"
+    echo " -upc=<dir> : specifies the upc directory"
+    echo "NOTE: $cmd reads the TAU_MAKEFILE  environment variable to get PDT settings"
+    echo " Example: "
+    echo " % $cmd tau_upcr.h -lm -gasnet=/usr/local/packages/gasnet-1.18.0 -gasnetconduit=mpi -upc=/usr/local/packages/gupc-4.7.0.2"
+    echo " generates a wrapper library that may be linked in using TAU_OPTIONS -optTauWrapFile=<wrapperdir>/link_options.tau"
+    echo "" 
+    exit 1
+}
+
+upcdir=/usr/local/packages/gupc
+gasnetdir=/usr/local/packages/gasnet
+gasnetconduit=mpi
+runtime_specified=0;
+header_redirection_specified=0;
+headerfile=""
+library=""
+modarg=""
+if [ $# = 0 ] ; then
+    usage
+fi
+
+if [ $# -gt 1 ]; then
+  headerfile=$1
+  library=$2
+  shift;
+  shift;
+fi
+
+for arg in "$@"; do
+  case $arg in 
+    -r)
+      runtime_specified=1; 
+      shift; 
+      ;;
+    -d)
+      header_redirection_specified=1; 
+      shift; 
+      ;;
+    -gasnet=*)
+      gasnetdir=`echo $arg | sed -e 's/-gasnet=//g'`
+      shift;
+      ;;
+    -gasnetconduit=*)
+      gasnetconduit="`echo $arg | sed -e 's/-gasnetconduit=//g'`-conduit"
+      shift;
+      ;;
+    -upc=*)
+      upcdir=`echo $arg | sed -e 's/-upc=//g'`
+      shift;
+      ;;
+  esac
+done
+
+if [ "x$TAU_MAKEFILE" = "x" ] ;then
+  echo "ERROR: Please set the TAU_MAKEFILE environment variable."
+  exit 1
+fi
+
+if [ ! -r $TAU_MAKEFILE ] ;then
+  echo "ERROR: environment variable TAU_MAKEFILE is set but the file is not readable"
+  exit 1
+fi
+
+if [ ! -d "$upcdir" ] ; then
+  echo "ERROR: invalid UPC directory: $upcdir"
+  exit 1
+fi
+
+if [ ! -d "$gasnetdir" ] ; then
+  echo "ERROR: invalid GASNet directory: $gasnetdir"
+  exit 1
+fi
+
+if [ ! -d "$gasnetdir/include/$gasnetconduit" ] ; then
+  echo "ERROR: GASNet conduit $gasnetconduit not found in $gasnetdir"
+  exit 1
+fi
+
+pdtdir="`grep PDTDIR= $TAU_MAKEFILE | sed -e 's/PDTDIR=//g' `"
+tauarch="`tau-config | grep TAUARCH | sed -e 's@TAUARCH=@@g' `"
+basedir="`tau-config | grep BASEDIR | sed -e 's@BASEDIR=@@g' `"
+
+parser=$pdtdir/$tauarch/bin/upcparse
+if [ ! -x $parser ]; then
+  echo "ERROR: Can't execute $parser: Using PDT = $pdtdir, ARCH = $tauarch"
+  exit 1
+fi
+baseheader=`basename $headerfile .h`
+
+echo $parser $headerfile -DGASNET_SEQ -I$upcdir/include -DUPCRI_BUILDING_LIBUPCR=1 -I$gasnetdir/include -I$gasnetdir/include/$gasnetconduit -DGASNETT_USE_GCC_ATTRIBUTE_MAYALIAS
+$parser $headerfile -DGASNET_SEQ -I$upcdir/include -I$gasnetdir/include -I$gasnetdir/include/$gasnetconduit -DGASNETT_USE_GCC_ATTRIBUTE_MAYALIAS
+mv $baseheader.pdb $headerfile.pdb 
+
+if [ $runtime_specified = 1 ] ; then
+  runtimeopt='-r'
+else
+  if [ $header_redirection_specified = 1 ]; then
+    runtimeopt=''
+  else 
+    runtimeopt='-w'
+  fi
+fi
+
+
+# Locate libgupc.a
+if [ -r "$upcdir/lib64/libgupc.a" ] ; then
+  libgupc="$upcdir/lib64/libgupc.a"
+elif [ -r "$upcdir/lib/libgupc.a" ] ; then
+  libgupc="$upcdir/lib/libgupc.a"
+else
+  echo "ERROR: Cannot locate libgupc.a in $upcdir"
+  exit 1
+fi
+
+# Generate select.tau
+echo "BEGIN_INCLUDE_LIST" > select.tau
+for sym in _upc upc upcr ; do
+  nm -A $libgupc | grep " $sym" | awk '{ print $3;}' | sed -e "s/$sym/\"# $sym/g" -e 's/$/(#"/g' >> select.tau
+done
+echo "END_INCLUDE_LIST" >> select.tau
+
+# Generate wr.c
+echo $basedir/bin/tau_wrap $headerfile.pdb $headerfile -o wr.c $runtimeopt $library $* -f select.tau --upc gnu
+$basedir/bin/tau_wrap $headerfile.pdb $headerfile -o wr.c $runtimeopt $library $* -f select.tau --upc gnu
+dirname=`basename ${headerfile} .h`_wrapper
+
+# Fix the Makefile with the correct smp args.
+sed -e "s@^EXTRA_FLAGS=@EXTRA_FLAGS=-DGASNET_SEQ -I$upcdir/include -I$gasnetdir/include -I$gasnetdir/include/$gasnetconduit -DGASNETT_USE_GCC_ATTRIBUTE_MAYALIAS @g" $dirname/Makefile > $dirname/Makefile~
+mv -f $dirname/Makefile~ $dirname/Makefile
+
+# Add the library to the link options
+# GNU UPC can't link static archives of UPC code as of Aug. 2012.
+# Link the object file directly.
+sed -e "s@WRAPPER_LIBRARY@$basedir/lib/wrappers/upc/gupc/tau_gupc_wrap.o@" $dirname/link_options.tau.master > $dirname/link_options.tau
+
+# Build and install
+cd $dirname
+make
+cd ..
+rm -f ${headerfile}.pdb
+mkdir -p $basedir/lib/wrappers/upc/gupc
+echo cp $dirname/link_options.tau $basedir/lib/wrappers/upc/gupc
+cp $dirname/link_options.tau $basedir/lib/wrappers/upc/gupc
+echo cp $dirname/tau_gupc_wrap.o $basedir/lib/wrappers/upc/gupc
+cp $dirname/tau_gupc_wrap.o $basedir/lib/wrappers/upc/gupc
+echo cp $dirname/libtau_gupc_wrap.a $basedir/lib/
+cp $dirname/libtau_gupc_wrap.a $basedir/lib/

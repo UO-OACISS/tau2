@@ -9,6 +9,7 @@ public class ConnectionNodeObject implements Serializable {
 	private static final long serialVersionUID = -913455767552337894L;
 	public String string = null;
 	public int index = 0;
+	public int schemaVersion = 0;
 	
 	public ConnectionNodeObject(String string, int index) {
 		this.string = string;

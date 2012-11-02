@@ -42,6 +42,7 @@ class OpenMPLayer
         static int InitializeThreadData(void);     // init thread mutexes
         static int InitializeDBMutexData(void);     // init tauDB mutex
         static int InitializeEnvMutexData(void);     // init tauEnv mutex
+        static int InitializeRegisterMutexData(void);     // init tauEnv mutex
 	static int GetThreadId(void); 	 // gets 0..N-1 thread id
 	static int GetTauThreadId(void); 	 //gets TAU thread id 
 	static int TotalThreads(void);   // gets number of threads
@@ -53,6 +54,7 @@ class OpenMPLayer
   private:
 	static omp_lock_t tauDBmutex;  // to protect TheFunctionDB
 	static omp_lock_t tauEnvmutex;  // second lock
+	static omp_lock_t tauRegistermutex;  // lock around thread registration
 	
 };
 #endif // TAU_OPENMP

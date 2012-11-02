@@ -45,8 +45,15 @@ LINKER	= $(CC)
 LEXTRA = 
 DWARFOPTS=
 #APPLECXX#CEXTRA = -DAPPLECXX #ENDIF#
+#CLANG#CEXTRA = -DTAU_CLANG -DTAU_DOT_H_LESS_HEADERS #ENDIF#
 #HP_CFLAGS#CEXTRA = -AA -DTAU_DOT_H_LESS_HEADERS #ENDIF#
+#FX#CEXTRA = -Xg -DTAU_DOT_H_LESS_HEADERS -DTAU_FUJITSU #ENDIF#
+# Remove -Xg from compilation for Fujitsu
+#FX#CEXTRA = -DTAU_DOT_H_LESS_HEADERS -DTAU_FUJITSU #ENDIF#
 #CRAYCC#CEXTRA = -DTAU_DOT_H_LESS_HEADERS #ENDIF#
+#MPC#CEXTRA = -DTAU_MPC -DTAU_DOT_H_LESS_HEADERS #ENDIF#
+#OPEN64ORC#CEXTRA = -DTAU_OPEN64 -DTAU_DOT_H_LESS_HEADERS #ENDIF#
+#MPC#CC = $(CONFIG_CXX) #ENDIF#
 #CRAYX1CC#CEXTRA = -DTAU_DOT_H_LESS_HEADERS #ENDIF#
 #MINGW#CEXTRA	       = -DTAU_WINDOWS -DTAU_DISABLE_SIGUSR -DTAU_MINGW -DTAU_ENABLE  -DTAU_GNU #ENDIF#
 #HPGNU#CEXTRA = -DTAU_HP_GNU #ENDIF#
@@ -91,9 +98,9 @@ SELECTFILE 	= tau_selectfile
 #VTF#INSTALLVTF2PROFILE 	= $(INSTALLDEST)/vtf2profile #ENDIF#
 #OTF#INSTALLTAU2OTF 	= $(INSTALLDEST)/tau2otf #ENDIF#
 #OTF2#INSTALLTAU2OTF 	= $(INSTALLDEST)/tau2otf2 #ENDIF#
-#OTF#OTFLIBS 	= -L$(OTFDIR)/$(TAU_ARCH)/lib -lotf $(TAU_TRACE_INPUT_LIB) #ENDIF#
-#OTFSRC#OTFLIBS 	= -L$(OTFDIR)/lib -lotf -lz $(TAU_TRACE_INPUT_LIB) #ENDIF#
-#OTF2#OTFLIBS 	= -L$(OTFDIR)/lib -lotf2 -lscorep_parser_tools -lscorep_utilities $(TAU_TRACE_INPUT_LIB) #ENDIF#
+#OTF#OTFLIBS 	= -L$(OTFDIR)/$(TAU_ARCH)/lib64 -L$(OTFDIR)/$(TAU_ARCH)/lib -lotf $(TAU_TRACE_INPUT_LIB) #ENDIF#
+#OTFSRC#OTFLIBS 	= -L$(OTFDIR)/lib64 -L$(OTFDIR)/lib -lotf -lz $(TAU_TRACE_INPUT_LIB) #ENDIF#
+#OTF2#OTFLIBS 	= -L$(OTFDIR)/lib64 -L$(OTFDIR)/lib -lotf2 -lscorep_parser_tools -lscorep_utilities $(TAU_TRACE_INPUT_LIB) #ENDIF#
 #EBS2OTF#INSTALL_EBS2OTF = $(INSTALLLIBDEST)/ebs2otf.so #ENDIF#
 #TAU2EPILOG#TAU2ELG = elgconverter/tau2elg #ENDIF#
 #TAU2EPILOG#INSTALLTAU2ELG = $(INSTALLDEST)/tau2elg #ENDIF#
@@ -166,6 +173,7 @@ INSTALL_OTF_TOOLS = $(INSTALL_EBS2OTF)
 #OPARI#INSTALLTAUOMPCHECK 	= $(INSTALLPDTOMPCHECK) #ENDIF#
 #OPARI2#INSTALLOPARI2 	=$(INSTALLDEST)/opari2  #ENDIF#
 #OPARI2#INSTALLOPARI2CONFIG 	=$(INSTALLDEST)/opari2-config  #ENDIF#
+#OPARI2#INSTALLOPARI2AWK 	=$(INSTALLDEST)/pomp2-parse-init-regions.awk  #ENDIF#
 #DYNINST#INSTALLTAURUN 	= $(INSTALLDEST)/tau_run #ENDIF#
 #DYNINST#INSTALLTAURUN 	= $(INSTALLDEST)/tau_run #ENDIF#
 #SP1#LARGEFILEOPT = -DTAU_LARGEFILE -D_LARGEFILE64_SOURCE -D_LARGE_FILE_API #ENDIF#
@@ -210,7 +218,7 @@ opari/opari:
 		cd opari ; $(MAKE) opari
 
 opari2/_build/bin/opari2:
-		cd opari2 ;/bin/rm -rf  _build; mkdir _build; cd _build; CXX=$(CONFIG_CXX) CC=$(CONFIG_CC) ../configure --prefix=`pwd` --with-compiler-suite=$(OPARICOMP) $(CRAY_OPARI2_CONFIG); $(MAKE) ; $(MAKE) install
+		cd opari2 ;/bin/rm -rf  _build; mkdir _build; cd _build; CXX=$(CONFIG_CXX) CC=$(CONFIG_CC) ../configure --prefix=`pwd` --with-compiler-suite=$(OPARICOMP) $(CRAY_OPARI2_CONFIG); $(MAKE) install
 
 tau_timecorrect.o:	tau_timecorrect.cpp
 		$(CXX) $(CFLAGS) tau_timecorrect.cpp -c
@@ -453,6 +461,11 @@ $(INSTALLDEST)/opari2-config: opari2/_build/bin/opari2
 		if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) opari2/_build/bin/opari2-config $(INSTALLDEST)
+$(INSTALLDEST)/pomp2-parse-init-regions.awk: opari2/_build/bin/opari2
+		@echo Installing $? in $(INSTALLDEST)
+		if [ -d $(INSTALLDEST) ] ; then true; \
+                   else mkdir $(INSTALLDEST) ;fi
+		$(TAU_INSTALL) opari2/_build/bin/pomp2-parse-init-regions.awk $(INSTALLDEST)
 $(INSTALLDEST)/opari2: opari2/_build/bin/opari2
 		@echo Installing $? in $(INSTALLDEST)
 		if [ -d $(INSTALLDEST) ] ; then true; \
@@ -484,7 +497,7 @@ $(INSTALLDEST)/tau_merge $(INSTALLDEST)/tau_convert $(INSTALLDEST)/opari  $(INST
 $(INSTALLTRACE2PROFILE) $(INSTALLTAU_TIMECORRECT) $(INSTALLPCXX) $(INSTALLINSTR) \
 $(INSTALLTAURUN) $(INSTALLTAU2VTF) $(INSTALLVTF2PROFILE) $(INSTALLTAU2OTF) \
 $(INSTALLTAU2ELG) $(INSTALLTAUOMPCHECK) $(INSTALLPERF2TAU) $(INSTALLWRAP) \
-$(INSTALLHEADERLIST) $(INSTALLSELECTFILE) $(INSTALL_OTF_TOOLS) $(INSTALLOPARI2CONFIG) 
+$(INSTALLHEADERLIST) $(INSTALLSELECTFILE) $(INSTALL_OTF_TOOLS) $(INSTALLOPARI2CONFIG) $(INSTALLOPARI2AWK)
 
 program:        $(PROGRAM)
 

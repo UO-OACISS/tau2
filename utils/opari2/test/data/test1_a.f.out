@@ -24,6 +24,7 @@
       implicit
      &none
       include 'test1_a.f.opari.inc'
+#line 24 "test1_a.f"
       double precision :: d
       write (*,*) "function f0"
       f0 = 5
@@ -32,11 +33,15 @@
       
       subroutine s0
       include 'test1_a.f.opari.inc'
+#line 31 "test1_a.f"
       write (*,*) "subroutine s0"
       end subroutine s0
       
       integer function f1(a)    !interface
+      implicit
+     >none
       include 'test1_a.f.opari.inc'
+#line 37 "test1_a.f"
       integer :: a, result
       write (*,*) "function f1"
       f1 = a
@@ -44,7 +49,10 @@
       end function f1
 
       recursive subroutine s1(a)
+      implicit
+     $none
       include 'test1_a.f.opari.inc'
+#line 46 "test1_a.f"
       integer :: a
       write (*,*) "subroutine s1"
       write (*,*) "keyword interface inside a string"
@@ -55,9 +63,10 @@
       end subroutine s1
 
       program otest
+      include 'test1_a.f.opari.inc'
+#line 56 "test1_a.f"
       integer :: i, f0, f1, function
       
-      include 'test1_a.f.opari.inc'
       function = 0
       write (*,*) 'program otest'
       i = f0()

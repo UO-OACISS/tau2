@@ -108,6 +108,46 @@ AC_PREREQ([2.50])dnl
 am_aux_dir=`cd $ac_aux_dir && pwd`
 ])
 
+# AM_COND_IF                                            -*- Autoconf -*-
+
+# Copyright (C) 2008 Free Software Foundation, Inc.
+#
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# serial 1
+
+# _AM_COND_IF
+# _AM_COND_ELSE
+# _AM_COND_ENDIF
+# --------------
+# These macros are only used for tracing.
+m4_define([_AM_COND_IF])
+m4_define([_AM_COND_ELSE])
+m4_define([_AM_COND_ENDIF])
+
+
+# AM_COND_IF(COND, [IF-TRUE], [IF-FALSE])
+# ---------------------------------------
+# If the shell condition matching COND is true, execute IF-TRUE,
+# otherwise execute IF-FALSE.  Allow automake to learn about conditional
+# instantiating macros (the AC_CONFIG_FOOS).
+AC_DEFUN([AM_COND_IF],
+[m4_ifndef([_AM_COND_VALUE_$1],
+	   [m4_fatal([$0: no such condition "$1"])])dnl
+_AM_COND_IF([$1])dnl
+if _AM_COND_VALUE_$1; then
+  m4_default([$2], [:])
+m4_ifval([$3],
+[_AM_COND_ELSE([$1])dnl
+else
+  $3
+])dnl
+_AM_COND_ENDIF([$1])dnl
+fi[]dnl
+])
+
 # AM_CONDITIONAL                                            -*- Autoconf -*-
 
 # Copyright (C) 1997, 2000, 2001, 2003, 2004, 2005, 2006, 2008
@@ -1029,17 +1069,16 @@ AC_SUBST([am__untar])
 ]) # _AM_PROG_TAR
 
 m4_include([../vendor/common/build-config/m4/ac_opari_common_checks.m4])
+m4_include([../vendor/common/build-config/m4/ac_scorep_c99.m4])
 m4_include([../vendor/common/build-config/m4/ac_scorep_compiler_and_flags.m4])
 m4_include([../vendor/common/build-config/m4/ac_scorep_compiler_checks.m4])
 m4_include([../vendor/common/build-config/m4/ac_scorep_fortran_checks.m4])
 m4_include([../vendor/common/build-config/m4/ac_scorep_svn_controlled.m4])
 m4_include([../vendor/common/build-config/m4/ac_scorep_sys_detection.m4])
 m4_include([../vendor/common/build-config/m4/ac_scorep_version_and_revision.m4])
-m4_include([../vendor/common/build-config/m4/ah_scorep_config_header_custom.m4])
 m4_include([../vendor/common/build-config/m4/libtool.m4])
 m4_include([../vendor/common/build-config/m4/ltoptions.m4])
 m4_include([../vendor/common/build-config/m4/ltsugar.m4])
 m4_include([../vendor/common/build-config/m4/ltversion.m4])
 m4_include([../vendor/common/build-config/m4/lt~obsolete.m4])
-m4_include([../vendor/common/build-config/m4/scorep_c.m4])
 m4_include([../vendor/common/build-config/m4/status.m4])

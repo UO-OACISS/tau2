@@ -1,5 +1,4 @@
-#include "taudb_api.h"
-#include "libpq-fe.h"
+#include "taudb_internal.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -19,6 +18,16 @@ TAUDB_CONFIGURATION* taudb_create_configuration(){
  return config;
 }
 
+TAUDB_CONNECTION* taudb_create_connection(){ 
+ TAUDB_CONNECTION* config = (TAUDB_CONNECTION*) (calloc (1, sizeof (TAUDB_CONNECTION)));
+ return config;
+}
+
+TAUDB_DATA_SOURCE* taudb_create_data_sources(int count){ 
+ TAUDB_DATA_SOURCE* data_sources = (TAUDB_DATA_SOURCE*) (calloc (count, sizeof (TAUDB_DATA_SOURCE)));
+ return data_sources;
+}
+
 TAUDB_TRIAL* taudb_create_trials(int count){ 
  TAUDB_TRIAL* trials = (TAUDB_TRIAL*) (calloc (count, sizeof (TAUDB_TRIAL)));
  return trials;
@@ -29,6 +38,11 @@ TAUDB_METRIC* taudb_create_metrics(int count){
  return metrics;
 }
 
+TAUDB_TIME_RANGE* taudb_create_time_ranges(int count){ 
+ TAUDB_TIME_RANGE* time_ranges = (TAUDB_TIME_RANGE*) (calloc (count, sizeof (TAUDB_TIME_RANGE)));
+ return time_ranges;
+}
+
 TAUDB_THREAD* taudb_create_threads(int count){ 
  TAUDB_THREAD* threads = (TAUDB_THREAD*) (calloc (count, sizeof (TAUDB_THREAD)));
  return threads;
@@ -36,6 +50,8 @@ TAUDB_THREAD* taudb_create_threads(int count){
 
 TAUDB_SECONDARY_METADATA* taudb_create_secondary_metadata(int count){ 
  TAUDB_SECONDARY_METADATA* metadata = (TAUDB_SECONDARY_METADATA*) (calloc (count, sizeof (TAUDB_SECONDARY_METADATA)));
+ metadata->child_count = 0;
+ metadata->num_values = 0;
  return metadata;
 }
 
@@ -44,24 +60,14 @@ TAUDB_PRIMARY_METADATA* taudb_create_primary_metadata(int count){
  return metadata;
 }
 
+TAUDB_PRIMARY_METADATA* taudb_resize_primary_metadata(int count, TAUDB_PRIMARY_METADATA* old_primary_metadata){ 
+ TAUDB_PRIMARY_METADATA* primary_metadata = (TAUDB_PRIMARY_METADATA*) (realloc (old_primary_metadata, count * sizeof (TAUDB_PRIMARY_METADATA)));
+ return primary_metadata;
+}
+
 TAUDB_COUNTER* taudb_create_counters(int count){ 
  TAUDB_COUNTER* counters = (TAUDB_COUNTER*) (calloc (count, sizeof (TAUDB_COUNTER)));
- int i = 0;
- for (i = 0 ; i < count ; i++) {
-   counters[i].group_count = 0;
-   counters[i].value_count = 0;
- }
  return counters;
-}
-
-TAUDB_COUNTER_GROUP* taudb_create_counter_groups(int count){ 
- TAUDB_COUNTER_GROUP* groups = (TAUDB_COUNTER_GROUP*) (calloc (count, sizeof (TAUDB_COUNTER_GROUP)));
- return groups;
-}
-
-TAUDB_COUNTER_GROUP* taudb_resize_counter_groups(int count, TAUDB_COUNTER_GROUP* old_groups){ 
- TAUDB_COUNTER_GROUP* counter_groups = (TAUDB_COUNTER_GROUP*) (realloc (old_groups, count * sizeof (TAUDB_COUNTER_GROUP)));
- return counter_groups;
 }
 
 TAUDB_COUNTER_VALUE* taudb_create_counter_values(int count){ 
@@ -71,12 +77,6 @@ TAUDB_COUNTER_VALUE* taudb_create_counter_values(int count){
 
 TAUDB_TIMER* taudb_create_timers(int count){ 
  TAUDB_TIMER* timers = (TAUDB_TIMER*) (calloc (count, sizeof (TAUDB_TIMER)));
- int i = 0;
- for (i = 0 ; i < count ; i++) {
-   timers[i].child_count = 0;
-   timers[i].group_count = 0;
-   timers[i].parameter_count = 0;
- }
  return timers;
 }
 
@@ -91,7 +91,7 @@ TAUDB_TIMER_GROUP* taudb_create_timer_groups(int count){
 }
 
 TAUDB_TIMER_GROUP* taudb_resize_timer_groups(int count, TAUDB_TIMER_GROUP* old_groups){ 
- TAUDB_TIMER_GROUP* timer_groups = (TAUDB_TIMER_GROUP*) (realloc (old_groups, count * sizeof (TAUDB_TIMER_GROUP)));
+ TAUDB_TIMER_GROUP* timer_groups = (TAUDB_TIMER_GROUP*) (realloc ((void*)(old_groups), count * (sizeof (TAUDB_TIMER_GROUP))));
  return timer_groups;
 }
 
@@ -105,8 +105,37 @@ TAUDB_TIMER_CALLPATH* taudb_create_timer_callpaths(int count){
  return timer_callpaths;
 }
 
-char* taudb_create_string(int length) {
- char* string = (char*) (calloc (length, sizeof (char)));
- return string;
+TAUDB_TIMER_CALL_DATA* taudb_create_timer_call_data(int count){ 
+ TAUDB_TIMER_CALL_DATA* timer_call_data = (TAUDB_TIMER_CALL_DATA*) (calloc (count, sizeof (TAUDB_TIMER_CALL_DATA)));
+ return timer_call_data;
 }
+
+char* taudb_create_and_copy_string(const char* in_string) {
+  // add one more character for the null terminator
+  int length = strlen(in_string) + 1;
+  char* new_string = (char*)calloc(length, sizeof(char));
+  strcpy(new_string, in_string);
+  return new_string;
+}
+
+char* taudb_create_hash_key_2(int thread, const char* timer) {
+  char str_thread[15];
+  sprintf(str_thread, "%d", thread);
+  // add colon character and null terminator
+  int length = strlen(str_thread) + strlen(timer) + 2;
+  char* key = (char*)calloc(length, sizeof(char));
+  sprintf(key, "%d:%s", thread, timer);
+  return key;
+}
+
+char* taudb_create_hash_key_3(int thread, const char* timer, const char* metric) {
+  char str_thread[15];
+  sprintf(str_thread, "%d", thread);
+  // add colon characters and null terminator
+  int length = strlen(str_thread) + strlen(timer) + strlen(metric) + 3;
+  char* key = (char*)calloc(length, sizeof(char));
+  sprintf(key, "%d:%s:%s", thread, timer, metric);
+  return key;
+}
+
 

@@ -2,6 +2,7 @@ package edu.uoregon.tau.perfdmf;
 
 import java.io.Serializable;
 import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -23,12 +24,12 @@ public class Metric implements Serializable {
     /**
 	 * 
 	 */
-	private static final long serialVersionUID = 3475626853258503810L;
-	private int metricID;
-    private int trialID;
-    private String name;
-    private int dbMetricID;
-    private boolean derivedMetric = false;
+	protected static final long serialVersionUID = 3475626853258503810L;
+	protected int metricID;
+	protected int trialID;
+	protected String name;
+	protected int dbMetricID;
+	protected boolean derivedMetric = false;
 
     public int getDbMetricID() {
         return dbMetricID;
@@ -37,7 +38,26 @@ public class Metric implements Serializable {
     public void setDbMetricID(int dbMetricID) {
         this.dbMetricID = dbMetricID;
     }
-
+    public void rename(DB db, String newName){
+      	 StringBuffer buf = new StringBuffer();
+         buf.append("UPDATE " + db.getSchemaPrefix() + "metric SET name = ?");
+         buf.append(" WHERE id = ?");
+         PreparedStatement statement;
+         
+			try {
+				statement = db.prepareStatement(buf.toString());
+		        statement.setString(1, newName);
+	            statement.setInt(2, dbMetricID);
+	            
+	            int i = statement.executeUpdate();
+	            statement.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+         
+    	name = newName;
+    }
 
     public void setDerivedMetric(boolean derivedMetric) {
         this.derivedMetric = derivedMetric;
@@ -53,7 +73,7 @@ public class Metric implements Serializable {
             return false;
         }
 
-        return (this.name.equals(inMetric.getName())) ? true : false;
+        return this.name.equals(inMetric.getName());
     }
 
     public boolean equals(Object inObject) {
