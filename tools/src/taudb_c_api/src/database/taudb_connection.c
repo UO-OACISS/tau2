@@ -21,6 +21,7 @@ TAUDB_CONNECTION* taudb_connect(char* host, char* port, char* database, char* lo
 #endif
   TAUDB_CONNECTION* taudb_connection = taudb_create_connection();
   taudb_connection->inTransaction = FALSE;
+  taudb_connection->inPortal = FALSE;
 #if defined __TAUDB_POSTGRESQL__
   char* pgoptions = NULL;
   char* pgtty = NULL;
@@ -141,8 +142,6 @@ void taudb_begin_transaction(TAUDB_CONNECTION *connection) {
 #endif
   if (connection->inTransaction) {
     printf("already in transaction!\n");
-    //taudb_close_transaction(connection);
-	//return;
   }
 #ifdef TAUDB_DEBUG_DEBUG
   printf("QUERY: '%s'\n", "BEGIN");
@@ -186,6 +185,7 @@ void taudb_execute_query(TAUDB_CONNECTION *connection, char* my_query) {
     taudb_exit_nicely(connection);
   }
   PQclear(connection->res);
+  connection->inPortal = TRUE;
 
 #ifdef TAUDB_DEBUG_DEBUG
   printf("QUERY: '%s'\n", "FETCH ALL in myportal");
@@ -258,8 +258,11 @@ void taudb_close_transaction(TAUDB_CONNECTION *connection) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("QUERY: '%s'\n", "CLOSE myportal");
 #endif
-  res = PQexec(connection->connection, "CLOSE myportal");
-  PQclear(res);
+  if (connection->inPortal) {
+    res = PQexec(connection->connection, "CLOSE myportal");
+    PQclear(res);
+    connection->inPortal = FALSE;
+  }
 
   /* end the transaction */
 #ifdef TAUDB_DEBUG_DEBUG
@@ -268,6 +271,24 @@ void taudb_close_transaction(TAUDB_CONNECTION *connection) {
   res = PQexec(connection->connection, "END");
   PQclear(res);
   connection->inTransaction = FALSE;
+#endif
+}
+
+void taudb_close_query(TAUDB_CONNECTION *connection) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("calling taudb_close_query()\n");
+#endif
+#ifdef __TAUDB_POSTGRESQL__
+  PGresult* res;
+  /* close the portal ... we don't bother to check for errors ... */
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("QUERY: '%s'\n", "CLOSE myportal");
+#endif
+  if (connection->inPortal) {
+    res = PQexec(connection->connection, "CLOSE myportal");
+    PQclear(res);
+    connection->inPortal = FALSE;
+  }
 #endif
 }
 
@@ -372,5 +393,51 @@ char* taudb_get_binary_value(TAUDB_CONNECTION *connection, int row, int column) 
   retVal = strdup(expanded);
   return (retVal);
 }
+
+void taudb_prepare_statement(TAUDB_CONNECTION* connection, const char* statement_name, const char* statement, int nParams) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("calling taudb_prepare_statement('%s')\n", statement);
+#endif
+
+#ifdef __TAUDB_POSTGRESQL__
+  // have we prepared this statement already?
+  TAUDB_PREPARED_STATEMENT* prepared_statement = NULL;
+  HASH_FIND(hh, connection->statements, statement_name, strlen(statement_name), prepared_statement);
+  if (prepared_statement == NULL) {
+    PGresult* res;
+    res = PQprepare(connection->connection, statement_name, statement, nParams, NULL);
+    if (PQresultStatus(res) != PGRES_COMMAND_OK)
+    {
+      fprintf(stderr, "Preparing statement failed: %s", PQerrorMessage(connection->connection));
+      PQclear(res);
+      taudb_exit_nicely(connection);
+    } else {
+      PQclear(res);
+	  prepared_statement = malloc(sizeof(TAUDB_PREPARED_STATEMENT));
+	  prepared_statement->name = taudb_strdup(statement_name);
+      HASH_ADD_KEYPTR(hh, connection->statements, statement_name, strlen(statement_name), prepared_statement);
+    }
+  }
+#endif
+}
+
+void taudb_execute_statement(TAUDB_CONNECTION* connection, const char* statement_name, int nParams, const char ** paramValues) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("calling taudb_execute_statement()\n");
+#endif
+
+#ifdef __TAUDB_POSTGRESQL__
+  PGresult* res;
+  res = PQexecPrepared(connection->connection, statement_name, nParams, paramValues, NULL, NULL, 0);
+  if (PQresultStatus(res) != PGRES_COMMAND_OK)
+  {
+    fprintf(stderr, "Execucting statement failed: %s", PQerrorMessage(connection->connection));
+    PQclear(res);
+    taudb_exit_nicely(connection);
+  }
+#endif
+}
+
+
 
 

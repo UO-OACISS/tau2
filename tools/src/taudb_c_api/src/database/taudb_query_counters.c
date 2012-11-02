@@ -57,7 +57,7 @@ TAUDB_COUNTER* taudb_query_counters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* t
 	    counter->trial = trial;
 	  } else if (strcmp(taudb_get_column_name(connection, j), "name") == 0) {
 	    //counter->name = taudb_get_value(connection, i, j);
-		counter->name = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
+		counter->name = taudb_strdup(taudb_get_value(connection,i,j));
 #ifdef TAUDB_DEBUG
         //printf("Got counter '%s'\n", counter->name);
 #endif
@@ -147,3 +147,6 @@ TAUDB_COUNTER* taudb_get_counter_by_name(TAUDB_COUNTER* counters, const char* na
 }
 
 
+extern void taudb_save_counters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
+  printf("Counters not supported yet.\n");
+}

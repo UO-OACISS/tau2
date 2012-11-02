@@ -45,9 +45,9 @@ TAUDB_PRIMARY_METADATA* taudb_query_primary_metadata(TAUDB_CONNECTION* connectio
     /* the columns */
     for (j = 0; j < nFields; j++) {
       if (strcmp(taudb_get_column_name(connection, j), "name") == 0) {
-        pm->name = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
+        pm->name = taudb_strdup(taudb_get_value(connection,i,j));
       } else if (strcmp(taudb_get_column_name(connection, j), "value") == 0) {
-        pm->value = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
+        pm->value = taudb_strdup(taudb_get_value(connection,i,j));
       } else {
 	    fprintf(stderr,"Unknown primary_metadata column: %s\n", taudb_get_column_name(connection, j));
       }
@@ -99,3 +99,6 @@ TAUDB_PRIMARY_METADATA* taudb_get_primary_metadata_by_name(TAUDB_PRIMARY_METADAT
 }
 
 
+extern void taudb_save_primary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
+  printf("Primary metadata not supported yet.\n");
+}

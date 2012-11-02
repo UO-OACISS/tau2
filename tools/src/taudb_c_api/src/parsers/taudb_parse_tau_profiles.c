@@ -7,10 +7,10 @@
 #include <libxml/tree.h>
 
 extern void taudb_trim(char * s);
-extern void taudb_parse_tau_profile_file(char* filename, TAUDB_TRIAL* trial, int* counts);
+extern void taudb_parse_tau_profile_file(char* filename, TAUDB_TRIAL* trial);
 extern void taudb_parse_tau_profile_function(char* line, TAUDB_TRIAL* trial, TAUDB_METRIC* metric, TAUDB_THREAD* thread);
 extern void taudb_parse_tau_profile_counter(char* line, TAUDB_TRIAL* trial, TAUDB_THREAD* thread);
-extern TAUDB_THREAD* taudb_parse_tau_profile_thread(char* filename, TAUDB_TRIAL* trial, int* counts);
+extern TAUDB_THREAD* taudb_parse_tau_profile_thread(char* filename, TAUDB_TRIAL* trial);
 extern TAUDB_METRIC* taudb_parse_tau_profile_metric(char* line, TAUDB_TRIAL* trial);
 extern TAUDB_TIMER* taudb_create_timer(TAUDB_TRIAL* trial, const char* timer_name);
 extern TAUDB_COUNTER* taudb_create_counter(TAUDB_TRIAL* trial, const char* counter_name);
@@ -29,7 +29,7 @@ extern void taudb_parse_timer_group_names(TAUDB_TRIAL* trial, TAUDB_TIMER* timer
 extern char* taudb_getline(FILE* infile);
 
 extern void count_profiles(const char* directory_name, int* counts);
-extern void process_directory(const char* directory_name, int* counts, TAUDB_TRIAL* trial);
+extern void process_directory(const char* directory_name, TAUDB_TRIAL* trial);
 
 TAUDB_TRIAL* taudb_parse_tau_profiles(const char* directory_name) {
 #ifdef TAUDB_DEBUG_DEBUG
@@ -38,7 +38,7 @@ TAUDB_TRIAL* taudb_parse_tau_profiles(const char* directory_name) {
 
   printf("\nWarning: not fully functional. Missing support for:\n");
   printf(" - parsing timer groups\n");
-  printf(" - parsing timer parameters\n\n");
+  printf(" - parsing timer parameters\n");
   printf(" - computing statistics \n\n");
 
   // validate the config file name
@@ -52,8 +52,12 @@ TAUDB_TRIAL* taudb_parse_tau_profiles(const char* directory_name) {
   int counts[3] = {0,0,0};
   count_profiles(directory_name, counts);
   printf("Profiles found: %d, %d, %d\n", counts[0], counts[1], counts[2]);
+  trial->node_count = counts[0];
+  trial->contexts_per_node = counts[1];
+  trial->threads_per_context = counts[2];
+  trial->total_threads = 0;
 
-  process_directory(directory_name, counts, trial);
+  process_directory(directory_name, trial);
 
 // compute stats!
 
@@ -61,7 +65,7 @@ TAUDB_TRIAL* taudb_parse_tau_profiles(const char* directory_name) {
   return trial;
 }
 
-void process_directory(const char* directory_name, int* counts, TAUDB_TRIAL* trial) {
+void process_directory(const char* directory_name, TAUDB_TRIAL* trial) {
   const char* profile_prefix = "profile.";
   const char* papi_prefix = "MULTI__";
 
@@ -78,11 +82,12 @@ void process_directory(const char* directory_name, int* counts, TAUDB_TRIAL* tri
 #ifdef TAUDB_DEBUG
         printf("Parsing profile file %s...\n", profile_file);
 #endif
-        taudb_parse_tau_profile_file(profile_file, trial, counts);
+        taudb_parse_tau_profile_file(profile_file, trial);
+        trial->total_threads++;
       } else if (strncmp(ep->d_name, papi_prefix, 7) == 0) {
       // check for MULTI__* directories
         sprintf(profile_file, "%s/%s", directory_name, ep->d_name);
-        process_directory(profile_file, counts, trial);
+        process_directory(profile_file, trial);
       }
       ep = readdir(dp);
     }
@@ -150,7 +155,7 @@ void count_profiles(const char* directory_name, int* counts) {
   }
 }
 
-void taudb_parse_tau_profile_file(char* filename, TAUDB_TRIAL* trial, int* counts) {
+void taudb_parse_tau_profile_file(char* filename, TAUDB_TRIAL* trial) {
   // open the file
   FILE* ifp = fopen (filename, "r");
   if (ifp == NULL) {
@@ -158,7 +163,7 @@ void taudb_parse_tau_profile_file(char* filename, TAUDB_TRIAL* trial, int* count
     return;
   }
 
-  TAUDB_THREAD* thread = taudb_parse_tau_profile_thread(filename, trial, counts);
+  TAUDB_THREAD* thread = taudb_parse_tau_profile_thread(filename, trial);
 
   char* line = NULL;
   boolean functions = FALSE;
@@ -224,7 +229,7 @@ void taudb_parse_tau_profile_file(char* filename, TAUDB_TRIAL* trial, int* count
   return;
 }
 
-TAUDB_THREAD* taudb_parse_tau_profile_thread(char* filename, TAUDB_TRIAL* trial, int* counts) {
+TAUDB_THREAD* taudb_parse_tau_profile_thread(char* filename, TAUDB_TRIAL* trial) {
   // create a thread
   TAUDB_THREAD* thread = NULL;
   char* tmp = strtok(filename, ".");
@@ -234,8 +239,8 @@ TAUDB_THREAD* taudb_parse_tau_profile_thread(char* filename, TAUDB_TRIAL* trial,
   int context = atoi(tmp);
   tmp = strtok(NULL, ".");
   int thr = atoi(tmp);
-  int index = (node * counts[1] * counts[2]) +
-              (context * counts[1]) +
+  int index = (node * trial->contexts_per_node * trial->threads_per_context) +
+              (context * trial->threads_per_context) +
   			  (thr);
 
   thread = taudb_get_thread(trial->threads, index);
@@ -283,7 +288,7 @@ TAUDB_METRIC* taudb_parse_tau_profile_metric(char* line, TAUDB_TRIAL* trial) {
   }
   if (metric == NULL) {
     metric = taudb_create_metrics(1);
-    metric->name = taudb_create_and_copy_string(tmp);
+    metric->name = taudb_strdup(tmp);
     metric->derived = 0;
     HASH_ADD_KEYPTR(hh2, trial->metrics_by_name, metric->name, strlen(metric->name), metric);
   }
@@ -379,7 +384,7 @@ TAUDB_TIMER* taudb_create_timer(TAUDB_TRIAL* trial, const char* timer_name) {
   }
   if (timer == NULL) {
     timer = taudb_create_timers(1);
-    timer->name = taudb_create_and_copy_string(timer_name);
+    timer->name = taudb_strdup(timer_name);
 	timer->trial = trial;
     // extract the short name
     // extract the file name
@@ -415,7 +420,7 @@ TAUDB_TIMER_CALLPATH* taudb_create_timer_callpath(TAUDB_TRIAL* trial, TAUDB_TIME
     timer_callpath->id = timer->id;
     timer_callpath->timer = timer;
     if (parent == NULL) {
-      timer_callpath->name = taudb_create_and_copy_string(timer->name);
+      timer_callpath->name = taudb_strdup(timer->name);
     } else {
 	  timer_callpath->name = tmp_name;
 	}
@@ -488,23 +493,23 @@ void taudb_process_timer_name(TAUDB_TIMER* timer) {
   const char* intermediate = "[INTERMEDIATE]";
   const char* openmp = "[OpenMP]";
   const char* openmplocation = "[OpenMP location:";
-  char* working = taudb_create_and_copy_string(timer->name);
+  char* working = taudb_strdup(timer->name);
   // printf("'%s'\n", working);
   // parse the components out of the timer name
   if (strstr(timer->name, sampleunresolved) != NULL) {
     // special case, handle it
-	timer->short_name = taudb_create_and_copy_string(timer->name);
+	timer->short_name = taudb_strdup(timer->name);
   } else if (strstr(timer->name, sample) != NULL) {
     // '[SAMPLE] uniform_space_dist_ [{/global/u2/k/khuck/src/XGC-1_CPU/./load.F95} {244}]'
     // special case, handle it
 	// get the function signature
     char* tmp = strtok(working, "{");
 	taudb_trim(tmp);
-	timer->short_name = taudb_create_and_copy_string(tmp);
+	timer->short_name = taudb_strdup(tmp);
 	// trim the " ["
 	timer->short_name[strlen(timer->short_name)-2] = 0;
     tmp = strtok(NULL, "}");
-	timer->source_file = taudb_create_and_copy_string(tmp);
+	timer->source_file = taudb_strdup(tmp);
     tmp = strtok(NULL, " {},-");
 	timer->line_number = atoi(tmp);
 	timer->line_number_end = atoi(tmp);
@@ -517,17 +522,17 @@ void taudb_process_timer_name(TAUDB_TIMER* timer) {
   } else if (strstr(timer->name, openmp) != NULL) {
     // 'barrier enter/exit [OpenMP]'
     // special case, handle it
-	timer->short_name = taudb_create_and_copy_string(timer->name);
+	timer->short_name = taudb_strdup(timer->name);
   } else if (strstr(timer->name, openmplocation) != NULL) {
     // 'paralleldo [OpenMP location: file:/global/u2/k/khuck/src/XGC-1_CPU/pushe2.F95 <72, 150>]'
     // special case, handle it
     char* tmp = strtok(working, " ");
 	taudb_trim(tmp);
-	timer->short_name = taudb_create_and_copy_string(tmp);
+	timer->short_name = taudb_strdup(tmp);
     tmp = strtok(NULL, ":");
     tmp = strtok(NULL, ":");
     tmp = strtok(NULL, " ");
-	timer->source_file = taudb_create_and_copy_string(tmp);
+	timer->source_file = taudb_strdup(tmp);
     tmp = strtok(NULL, " <,>]");
 	timer->line_number = atoi(tmp);
     tmp = strtok(NULL, " <,>]");
@@ -537,10 +542,10 @@ void taudb_process_timer_name(TAUDB_TIMER* timer) {
 	// get the function signature
     char* tmp = strtok(working, "[");
 	taudb_trim(tmp);
-	timer->short_name = taudb_create_and_copy_string(tmp);
+	timer->short_name = taudb_strdup(tmp);
 	// get the filename
     tmp = strtok(NULL, "}");
-	timer->source_file = taudb_create_and_copy_string(tmp+1);
+	timer->source_file = taudb_strdup(tmp+1);
 	// get the line and column numbers
     tmp = strtok(NULL, " {},-");
 	timer->line_number = atoi(tmp);
@@ -552,7 +557,7 @@ void taudb_process_timer_name(TAUDB_TIMER* timer) {
 	timer->column_number_end = atoi(tmp);
   } else {
     // simple case.
-	timer->short_name = taudb_create_and_copy_string(timer->name);
+	timer->short_name = taudb_strdup(timer->name);
   }
   free(working);
   return;
@@ -611,19 +616,19 @@ boolean taudb_private_secondary_metadata_from_xml(TAUDB_TRIAL * trial, TAUDB_THR
 				secondary_metadata->key.thread = thread;
 				secondary_metadata->key.parent = NULL;
 				secondary_metadata->key.time_range = NULL;
-				secondary_metadata->key.name  = taudb_create_and_copy_string((char *)name_str);
+				secondary_metadata->key.name  = taudb_strdup((char *)name_str);
 				secondary_metadata->num_values = 1;
 				secondary_metadata->child_count = 0;
 				secondary_metadata->children = NULL;
 				secondary_metadata->value = (char**)malloc(sizeof(char*));
-				secondary_metadata->value[0] = taudb_create_and_copy_string((char *)value_str);
+				secondary_metadata->value[0] = taudb_strdup((char *)value_str);
                 HASH_ADD_KEYPTR(hh2, trial->secondary_metadata_by_key, &(secondary_metadata->key), sizeof(secondary_metadata->key), secondary_metadata);
 				// put it in the primary_metadata, if exists
                 TAUDB_PRIMARY_METADATA* pm = NULL;
                 if (thread->index == 0) {
                   pm = taudb_create_primary_metadata(1);
-				  pm->name  = taudb_create_and_copy_string((char *)name_str);
-				  pm->value = taudb_create_and_copy_string((char *)value_str);
+				  pm->name  = taudb_strdup((char *)name_str);
+				  pm->value = taudb_strdup((char *)value_str);
                   HASH_ADD_KEYPTR(hh, trial->primary_metadata, pm->name, strlen(pm->name), pm);
                 } else {
                   pm = taudb_get_primary_metadata_by_name(trial->primary_metadata, (const char*)name_str);
@@ -745,7 +750,7 @@ TAUDB_COUNTER* taudb_create_counter(TAUDB_TRIAL* trial, const char* counter_name
   }
   if (counter == NULL) {
     counter = taudb_create_counters(1);
-    counter->name = taudb_create_and_copy_string(counter_name);
+    counter->name = taudb_strdup(counter_name);
 	counter->trial = trial;
 #ifdef TAUDB_DEBUG_DEBUG
 	printf("Adding: '%s'\n", counter->name);

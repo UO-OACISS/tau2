@@ -141,3 +141,6 @@ TAUDB_COUNTER_VALUE* taudb_get_counter_value(TAUDB_COUNTER_VALUE* counter_values
 }
 
 
+extern void taudb_save_counter_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
+  printf("Counter values not supported yet.\n");
+}

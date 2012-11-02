@@ -44,11 +44,11 @@ PERFDMF_EXPERIMENT* perfdmf_query_experiments(TAUDB_CONNECTION* connection, PERF
 	  if (strcmp(taudb_get_column_name(connection, j), "id") == 0) {
 	    experiments[i].id = atoi(taudb_get_value(connection, i, j));
 	  } else if (strcmp(taudb_get_column_name(connection, j), "name") == 0) {
-		experiments[i].name = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
+		experiments[i].name = taudb_strdup(taudb_get_value(connection,i,j));
 	  } else {
     	TAUDB_PRIMARY_METADATA* primary_metadata = taudb_create_primary_metadata(nFields);
-	    primary_metadata->name = taudb_create_and_copy_string(taudb_get_column_name(connection, j));
-	    primary_metadata->value = taudb_create_and_copy_string(taudb_get_value(connection, i, j));
+	    primary_metadata->name = taudb_strdup(taudb_get_column_name(connection, j));
+	    primary_metadata->value = taudb_strdup(taudb_get_value(connection, i, j));
         HASH_ADD(hh, experiments[i].primary_metadata, name, (strlen(primary_metadata->name)), primary_metadata);
 	  }
 	} 

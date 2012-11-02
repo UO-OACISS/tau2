@@ -65,8 +65,8 @@ boolean taudb_private_primary_metadata_from_xml(TAUDB_TRIAL * trial, char * xml)
 				printf("Adding metadata %s : %s\n", name_str, value_str);
 #endif
                 TAUDB_PRIMARY_METADATA * primary_metadata = taudb_create_primary_metadata(1);
-				primary_metadata->name  = taudb_create_and_copy_string((char *)name_str);
-				primary_metadata->value = taudb_create_and_copy_string((char *)value_str);
+				primary_metadata->name  = taudb_strdup((char *)name_str);
+				primary_metadata->value = taudb_strdup((char *)value_str);
                 HASH_ADD_KEYPTR(hh, trial->primary_metadata, primary_metadata->name, strlen((char *)name_str), primary_metadata);
                 xmlFree(name_str);
                 xmlFree(value_str);
@@ -112,9 +112,9 @@ TAUDB_TRIAL* taudb_private_query_trials(TAUDB_CONNECTION* connection, boolean fu
       if (strcmp(taudb_get_column_name(connection, j), "id") == 0) {
         trials[i].id = atoi(taudb_get_value(connection, i, j));
       } else if (strcmp(taudb_get_column_name(connection, j), "name") == 0) {
-        trials[i].name = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
+        trials[i].name = taudb_strdup(taudb_get_value(connection,i,j));
       //} else if (strcmp(taudb_get_column_name(connection, j), "date") == 0) {
-        //trials[i].collection_date = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
+        //trials[i].collection_date = taudb_strdup(taudb_get_value(connection,i,j));
       } else if (strcmp(taudb_get_column_name(connection, j), "node_count") == 0) {
         trials[i].node_count = atoi(taudb_get_value(connection, i, j));
       } else if (strcmp(taudb_get_column_name(connection, j), "contexts_per_node") == 0) {
@@ -190,5 +190,95 @@ TAUDB_TRIAL* perfdmf_query_trials(TAUDB_CONNECTION* connection, PERFDMF_EXPERIME
   sprintf(my_query,"select * from trial where experiment = %d", experiment->id);
 
   return taudb_private_query_trials(connection, FALSE, my_query);
+}
+
+void taudb_save_trial(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update, boolean cascade) {
+  const char* my_query;
+  const char* statement_name;
+  int nParams = 7;
+
+  // Are we updating, or inserting?
+  if (update && trial->id > 0) {
+    nParams = 7;
+	statement_name = "TAUDB_UPDATE_TRIAL";
+    my_query = "update trial set name=$1, data_source=$2, node_count=$3, contexts_per_node=$4, threads_per_context=$5, total_threads=$6 where id = $7;";
+  } else {
+    nParams = 6;
+	statement_name = "TAUDB_INSERT_TRIAL";
+    my_query = "insert into trial (name, data_source, node_count, contexts_per_node, threads_per_context, total_threads) values ($1, $2, $3, $4, $5, $6);";
+  }
+
+  // begin the transaction.
+  taudb_begin_transaction(connection);
+  // make the prepared statement.
+  taudb_prepare_statement(connection, statement_name, my_query, nParams);
+  
+  // make array of nParms character pointers - if we have 1 too many, that's ok
+  // static declaration is preferable to doing a malloc.
+  const char* paramValues[7] = {0};
+  // populate the array of string values
+  paramValues[0] = trial->name;
+  if (trial->data_source == NULL) {
+    paramValues[1] = NULL;
+  } else {
+    char data_source[32] = {0};
+    sprintf(data_source, "%d", trial->data_source->id);
+    paramValues[1] = data_source;
+  }
+  char nodes[32] = {0};
+  sprintf(nodes, "%d", trial->node_count);
+  paramValues[2] = nodes;
+  char contexts[32] = {0};
+  sprintf(contexts, "%d", trial->contexts_per_node);
+  paramValues[3] = contexts;
+  char threads[32] = {0};
+  sprintf(threads, "%d", trial->threads_per_context);
+  paramValues[4] = threads;
+  char total[32] = {0};
+  sprintf(total, "%d", trial->total_threads);
+  paramValues[5] = total;
+
+  // if we are updating, add the ID to the query
+  if (update && trial->id > 0) {
+    char id[32] = {0};
+    sprintf(id, "%d", trial->id);
+    paramValues[6] = id;
+  }
+
+  // execute the statement
+  taudb_execute_statement(connection, statement_name, nParams, paramValues);
+
+  // if we did an insert, get the new trial ID
+  if (!(update && trial->id > 0)) {
+    taudb_execute_query(connection, "select currval('trial_id_seq');");
+
+    int nRows = taudb_get_num_rows(connection);
+    if (nRows == 1) {
+      trial->id = atoi(taudb_get_value(connection, 0, 0));
+      printf("New Trial: %d\n", trial->id);
+    } else {
+      printf("Failed.\n");
+    }
+    taudb_close_query(connection);
+  }
+
+  // should we save the entire trial?
+  if (cascade) {
+    taudb_save_metrics(connection, trial, update);
+    taudb_save_threads(connection, trial, update);
+    taudb_save_timers(connection, trial, update);
+    taudb_save_time_ranges(connection, trial, update);
+    taudb_save_timer_groups(connection, trial, update);
+    taudb_save_timer_parameters(connection, trial, update);
+    taudb_save_timer_callpaths(connection, trial, update);
+    taudb_save_timer_call_data(connection, trial, update);
+    taudb_save_timer_values(connection, trial, update);
+    taudb_save_counters(connection, trial, update);
+    taudb_save_counter_values(connection, trial, update);
+    taudb_save_primary_metadata(connection, trial, update);
+    taudb_save_secondary_metadata(connection, trial, update);
+  }
+  taudb_close_transaction(connection);
+  taudb_clear_result(connection);
 }
 

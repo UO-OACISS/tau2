@@ -59,7 +59,7 @@ TAUDB_TIMER* taudb_query_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial
       } else if (strcmp(taudb_get_column_name(connection, j), "trial") == 0) {
         timer->trial = trial;
       } else if (strcmp(taudb_get_column_name(connection, j), "name") == 0) {
-        timer->name = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
+        timer->name = taudb_strdup(taudb_get_value(connection,i,j));
         taudb_trim(timer->name);
 #ifdef TAUDB_DEBUG_DEBUG
         printf("Got timer '%s'\n", timer->name);
@@ -68,9 +68,9 @@ TAUDB_TIMER* taudb_query_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial
 #ifdef TAUDB_DEBUG_DEBUG
         printf("Short Name: %s\n", taudb_get_value(connection,i,j));
 #endif
-        timer->short_name = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
+        timer->short_name = taudb_strdup(taudb_get_value(connection,i,j));
       } else if (strcmp(taudb_get_column_name(connection, j), "source_file") == 0) {
-        timer->source_file = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
+        timer->source_file = taudb_strdup(taudb_get_value(connection,i,j));
       } else if (strcmp(taudb_get_column_name(connection, j), "line_number") == 0) {
         timer->line_number = atoi(taudb_get_value(connection, i, j));
       } else if (strcmp(taudb_get_column_name(connection, j), "line_number_end") == 0) {
@@ -197,7 +197,7 @@ void taudb_parse_timer_group_names(TAUDB_TRIAL* trial, TAUDB_TIMER* timer, char*
       } else {
         group = taudb_create_timer_groups(1);
 		taudb_trim(group_name);
-        group->name = taudb_create_and_copy_string(group_name);
+        group->name = taudb_strdup(group_name);
         // add the group to the trial
         HASH_ADD_KEYPTR(hh, trial->timer_groups, group->name, strlen(group->name), group);
       }
@@ -218,4 +218,48 @@ void taudb_parse_timer_group_names(TAUDB_TRIAL* trial, TAUDB_TIMER* timer, char*
   }
 }
 
+void taudb_save_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
+  const char* my_query = "insert into timer (trial, name, short_name, source_file, line_number, line_number_end, column_number, column_number_end) values ($1, $2, $3, $4, $5, $6, $7, $8);";
+  const char* statement_name = "TAUDB_INSERT_TIMER";
+  taudb_prepare_statement(connection, statement_name, my_query, 8);
+  TAUDB_TIMER *timer, *tmp;
+  HASH_ITER(hh2, trial->timers_by_name, timer, tmp) {
+    // make array of 6 character pointers
+    const char* paramValues[8] = {0};
+    char trialid[32] = {0};
+    sprintf(trialid, "%d", trial->id);
+    paramValues[0] = trialid;
+    paramValues[1] = timer->name;
+    paramValues[2] = timer->short_name;
+    paramValues[3] = timer->source_file;
+    char line_number[32] = {0};
+    sprintf(line_number, "%d", timer->line_number);
+    paramValues[4] = line_number;
+    char line_number_end[32] = {0};
+    sprintf(line_number_end, "%d", timer->line_number_end);
+    paramValues[5] = line_number_end;
+    char column_number[32] = {0};
+    sprintf(column_number, "%d", timer->column_number);
+    paramValues[6] = column_number;
+    char column_number_end[32] = {0};
+    sprintf(column_number_end, "%d", timer->column_number_end);
+    paramValues[7] = column_number_end;
 
+    taudb_execute_statement(connection, statement_name, 8, paramValues);
+    taudb_execute_query(connection, "select currval('timer_id_seq');");
+
+    int nRows = taudb_get_num_rows(connection);
+    if (nRows == 1) {
+      timer->id = atoi(taudb_get_value(connection, 0, 0));
+      printf("New Timer: %d\n", timer->id);
+    } else {
+      printf("Failed.\n");
+    }
+	taudb_close_query(connection);
+  }
+  taudb_clear_result(connection);
+}
+
+void taudb_save_timer_parameters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
+  printf("Timer parameters not supported yet.\n");
+}

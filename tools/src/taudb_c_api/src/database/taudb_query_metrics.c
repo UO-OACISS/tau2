@@ -54,7 +54,7 @@ TAUDB_METRIC* taudb_query_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* tri
 	  } else if (strcmp(taudb_get_column_name(connection, j), "trial") == 0) {
 	    //metric->trial = trial;
 	  } else if (strcmp(taudb_get_column_name(connection, j), "name") == 0) {
-	    metric->name = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
+	    metric->name = taudb_strdup(taudb_get_value(connection,i,j));
 	  } else if (strcmp(taudb_get_column_name(connection, j), "derived") == 0) {
 	    metric->derived = atoi(taudb_get_value(connection, i, j));
 	  } else {
@@ -106,5 +106,36 @@ TAUDB_METRIC* taudb_get_metric_by_id(TAUDB_METRIC* metrics, const int id) {
   TAUDB_METRIC* metric = NULL;
   HASH_FIND(hh1, metrics, &id, sizeof(int), metric);
   return metric;
+}
+
+void taudb_save_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
+  const char* my_query = "insert into metric (trial, name, derived) values ($1, $2, $3);";
+  const char* statement_name = "TAUDB_INSERT_METRIC";
+  taudb_prepare_statement(connection, statement_name, my_query, 3);
+  TAUDB_METRIC *metric, *tmp;
+  HASH_ITER(hh2, trial->metrics_by_name, metric, tmp) {
+    // make array of 6 character pointers
+    const char* paramValues[3] = {0};
+    char trialid[32] = {0};
+    sprintf(trialid, "%d", trial->id);
+    paramValues[0] = trialid;
+    paramValues[1] = metric->name;
+    char derived[32] = {0};
+    sprintf(derived, "%d", metric->derived);
+    paramValues[2] = derived;
+
+    taudb_execute_statement(connection, statement_name, 3, paramValues);
+    taudb_execute_query(connection, "select currval('metric_id_seq');");
+
+    int nRows = taudb_get_num_rows(connection);
+    if (nRows == 1) {
+      metric->id = atoi(taudb_get_value(connection, 0, 0));
+      printf("New Metric: %d\n", metric->id);
+    } else {
+      printf("Failed.\n");
+    }
+	taudb_close_query(connection);
+  }
+  taudb_clear_result(connection);
 }
 
