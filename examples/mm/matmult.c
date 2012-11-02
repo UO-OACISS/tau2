@@ -15,6 +15,7 @@
 #include "matmult_initialize.h"
 
 #ifdef TAU_MPI
+int provided;
 #include <mpi.h>
 /* NOTE: MPI is just used to spawn multiple copies of the kernel to different ranks.
 This is not a parallel implementation */
@@ -34,9 +35,9 @@ This is not a parallel implementation */
 
 double** allocateMatrix(int rows, int cols) {
   int i;
-  double **matrix = malloc((sizeof(double*)) * rows);
+  double **matrix = (double**)malloc((sizeof(double*)) * rows);
   for (i=0; i<rows; i++) {
-    matrix[i] = malloc((sizeof(double)) * cols);
+    matrix[i] = (double*)malloc((sizeof(double)) * cols);
   }
   return matrix;
 }
@@ -91,6 +92,14 @@ double do_work(void) {
   initialize(c, NRA, NCB);
 
   compute(a, b, c, NRA, NCA, NCB);
+#ifdef TAU_MPI
+  if (provided == MPI_THREAD_MULTIPLE)
+  { 
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+//    printf("Rank: %d: provided is MPI_THREAD_MULTIPLE\n", rank);
+  }
+#endif /* TAU_MPI */
   compute_interchange(a, b, c, NRA, NCA, NCB);
 
   return c[0][1]; 
@@ -99,6 +108,7 @@ double do_work(void) {
 void * threaded_func(void *data)
 {
   do_work();
+  return NULL;
 }
 
 int main (int argc, char *argv[]) 
@@ -112,7 +122,12 @@ int main (int argc, char *argv[])
 
 
 #ifdef TAU_MPI
+#if (defined(PTHREADS) || defined(TAU_OPENMP))
+  MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+  printf("MPI_Init_thread: provided = %d, MPI_THREAD_MULTIPLE=%d\n", provided, MPI_THREAD_MULTIPLE);
+#else
   MPI_Init(&argc, &argv); 
+#endif /* THREADS */
 #endif /* TAU_MPI */
 
 #ifdef PTHREADS

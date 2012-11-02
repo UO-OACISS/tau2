@@ -62,9 +62,9 @@ extern char *optarg;
 extern int optind, opterr, optopt;
 #endif
 
-#ifdef FUJITSU
+#ifdef TAU_FUJITSU
 #include <Profile/fujitsu.h>
-#endif /* FUJITSU */
+#endif /* TAU_FUJITSU */
 
 #ifndef DBL_MULTIN
 #include <float.h>

@@ -50,7 +50,13 @@ public:
        @returns SCOREP_SUCCESS if the file was successfully parsed.
      */
     void
-    ReadConfigFile( std::string arg0 );
+    readConfigFile( std::string arg0 );
+
+    /**
+       Changes from the install path to the build path.
+     */
+    void
+    setBuildCheck();
 
     /* **************************************** Protected implmented methods */
 private:

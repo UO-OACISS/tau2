@@ -1,10 +1,11 @@
-#include "taudb_api.h"
+#include "taudb_internal.h"
 #include <string.h>
+#include <ctype.h>
 #include <stdio.h>
 
 #define MAX_RECORD_LENGTH 256
 
-void trim(char * s) {
+void taudb_trim(char * s) {
     char * p = s;
     int l = strlen(p);
 
@@ -41,7 +42,7 @@ TAUDB_CONFIGURATION* taudb_parse_config_file(char* config_name) {
   // parse the config file, one line at a time
   while (!feof(ifp)) {
 	fgets(line, MAX_RECORD_LENGTH, ifp);
-	trim(line);
+	taudb_trim(line);
     if (strlen(line) == 0) {
 	  continue;
 	} else if (strncmp(line, "#", 1) == 0) {
@@ -56,29 +57,21 @@ TAUDB_CONFIGURATION* taudb_parse_config_file(char* config_name) {
 	    strcpy(value, tmp);
 	  }
 	  if (strcmp(name, "jdbc_db_type") == 0) {
-	    config->jdbc_db_type = taudb_create_string(strlen(value));
-	    strcpy(config->jdbc_db_type, value);
+	    config->jdbc_db_type = taudb_create_and_copy_string(value);
 	  } else if (strcmp(name, "db_hostname") == 0) {
-	    config->db_hostname = taudb_create_string(strlen(value));
-	    strcpy(config->db_hostname, value);
+	    config->db_hostname = taudb_create_and_copy_string(value);
 	  } else if (strcmp(name, "db_portnum") == 0) {
-	    config->db_portnum = taudb_create_string(strlen(value));
-	    strcpy(config->db_portnum, value);
+	    config->db_portnum = taudb_create_and_copy_string(value);
 	  } else if (strcmp(name, "db_dbname") == 0) {
-	    config->db_dbname = taudb_create_string(strlen(value));
-	    strcpy(config->db_dbname, value);
+	    config->db_dbname = taudb_create_and_copy_string(value);
 	  } else if (strcmp(name, "db_schemaprefix") == 0) {
-	    config->db_schemaprefix = taudb_create_string(strlen(value));
-	    strcpy(config->db_schemaprefix, value);
+	    config->db_schemaprefix = taudb_create_and_copy_string(value);
 	  } else if (strcmp(name, "db_username") == 0) {
-	    config->db_username = taudb_create_string(strlen(value));
-	    strcpy(config->db_username, value);
+	    config->db_username = taudb_create_and_copy_string(value);
 	  } else if (strcmp(name, "db_password") == 0) {
-	    config->db_password = taudb_create_string(strlen(value));
-	    strcpy(config->db_password, value);
+	    config->db_password = taudb_create_and_copy_string(value);
 	  } else if (strcmp(name, "db_schemafile") == 0) {
-	    config->db_schemafile = taudb_create_string(strlen(value));
-	    strcpy(config->db_schemafile, value);
+	    config->db_schemafile = taudb_create_and_copy_string(value);
 	  }
 	}
   }

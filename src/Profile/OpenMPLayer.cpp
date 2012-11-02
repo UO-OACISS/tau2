@@ -43,6 +43,7 @@ using namespace std;
 
 omp_lock_t OpenMPLayer::tauDBmutex;
 omp_lock_t OpenMPLayer::tauEnvmutex;
+omp_lock_t OpenMPLayer::tauRegistermutex;
 
 #ifdef TAU_OPENMP_NESTED
 static int threadId = -1;
@@ -107,7 +108,9 @@ int OpenMPLayer::GetTauThreadId(void)
 	}
 	else
 	{
-		RtsLayer::LockEnv();
+		// ONLY INITIALIZE THE LOCK ONCE!
+        static int registerInitFlag = InitializeRegisterMutexData();
+        omp_set_lock(&OpenMPLayer::tauRegistermutex);
 
 		map<int, int>::iterator it = TheOMPMap().find(omp_thread_id);
 		if (it == TheOMPMap().end())
@@ -120,7 +123,7 @@ int OpenMPLayer::GetTauThreadId(void)
 			tau_thread_id = it->second;
 		}
 		
-		RtsLayer::UnLockEnv();
+        omp_unset_lock(&OpenMPLayer::tauRegistermutex);
 	}
 #endif /* TAU_OPENMP_NESTED */
 	return omp_thread_id;
@@ -175,6 +178,15 @@ int OpenMPLayer::InitializeDBMutexData(void)
   // Initialize the mutex
   omp_init_lock(&OpenMPLayer::tauDBmutex);
   //cout <<" Initialized the functionDB Mutex data " <<endl;
+  return 1;
+}
+
+////////////////////////////////////////////////////////////////////////
+int OpenMPLayer::InitializeRegisterMutexData(void)
+{
+  // For locking thread registration process 
+  // Initialize the mutex
+  omp_init_lock(&OpenMPLayer::tauRegistermutex);
   return 1;
 }
 

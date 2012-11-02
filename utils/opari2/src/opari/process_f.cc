@@ -102,7 +102,7 @@ look_for( const string&              lowline,
 /**@brief Check if the line belonges to the header of a subroutine or function.
  *        After lines in the header, we ca insert our variable definitions.*/
 bool
-is_sub_unit_header( string& lowline, bool inHeader )
+is_sub_unit_header( string& lowline, bool inHeader, Language lang )
 {
     string      line;
     string      lline;
@@ -116,8 +116,10 @@ is_sub_unit_header( string& lowline, bool inHeader )
     static bool inContains   = false;
 
     size_t pos;
+
     pos = lowline.find_first_not_of( " \t" );
     /*string is empty*/
+
     if ( pos == string::npos )
     {
         pos = 0;
@@ -140,10 +142,16 @@ is_sub_unit_header( string& lowline, bool inHeader )
          ( line.find( "subroutine" ) == 0 )                            ||
          ( ( line.find( "function" ) == string::npos )   &&
            !inHeader                                &&
-           ( ( line.find( "=" ) >= line.find( "!" ) )             ||
+           ( ( line.find( "=" ) > line.find( "!" ) )             ||
              ( line.find( "=" ) > line.find( "kind" ) ) ) ) )
     {
         openbrackets = 0;
+    }
+
+    //Check if we are in Fortran77 and have a character in column 6
+    if ( ( lang & L_F77 ) && lowline[ 5 ] != ' ' )
+    {
+        continuation = true;
     }
 
     //Check if we enter a program block
@@ -166,15 +174,17 @@ is_sub_unit_header( string& lowline, bool inHeader )
                   ( isalnum( lline[ lline.find( "function" ) + 8 ] ) ||
                     ( lline[ lline.find( "function" ) + 8 ] == '_' ) ) )     &&
                !( ( lline.find( "function" ) != 0 )                       &&
-                  ( isalnum( lline[ lline.find( "function" ) - 1 ] ) ) ||
-                  ( lline[ lline.find( "function" ) - 1 ] == '_' ) ) )             ||
+                  ( isalnum( lline[ lline.find( "function" ) - 1 ] )      ||
+                    ( lline[ lline.find( "function" ) - 1 ] == '_' ) ) )  &&
+               ( isalpha( line[ line.find( "function" ) + 8 ] ) ) )       ||
              ( ( lline.find( "subroutine" )   != string::npos )                 &&
                !( lline.length() >= ( lline.find( "subroutine" ) + 10 )     &&
                   ( isalnum( lline[ lline.find( "subroutine" ) + 10 ] ) ||
                     ( lline[ lline.find( "subroutine" ) + 10 ] == '_' ) ) )  &&
                !( ( lline.find( "subroutine" ) != 0 )                     &&
-                  ( isalnum( lline[ lline.find( "subroutine" ) - 1 ] ) ) ||
-                  ( lline[ lline.find( "subroutine" ) - 1 ] == '_' ) ) )           ||
+                  ( isalnum( lline[ lline.find( "subroutine" ) - 1 ] )   ||
+                    ( lline[ lline.find( "subroutine" ) - 1 ] == '_' ) ) ) &&
+               ( isalpha( line[ line.find( "subroutine" ) + 10 ] ) ) )          ||
              ( line.find( "save" )     == 0 && inHeader )                       ||
              ( line.find( "result" )   == 0 && inHeader )                       ||
              ( line.find( "implicit" ) == 0 && inHeader )                       ||
@@ -212,7 +222,7 @@ is_sub_unit_header( string& lowline, bool inHeader )
     //Check if we leave an contains block
     inContains = inContains && line.find( "endmodule" ) == string::npos;
 
-    if ( line[ line.length() - 1 ] == '&' || line.find( "&!" ) != string::npos )
+    if ( line[ line.length() - 1 ] == '&' )
     {
         continuation = true;
     }
@@ -247,6 +257,14 @@ is_sub_unit_header( string& lowline, bool inHeader )
             break;
         }
     }
+    /*
+       static bool continuation = false;
+       static int  openbrackets = 0;
+       static bool inProgram    = false;
+       static bool inModule     = false;
+       static bool inInterface  = false;
+       static bool inContains   = false;
+     */
     return result;
 }
 
@@ -256,26 +274,55 @@ is_comment_line( string & lowline,
                  string & line,
                  Language lang )
 {
-    if ( lowline[ 0 ] == '!' ||
-         ( ( lang & L_F77 ) && ( lowline[ 0 ] == '*' || lowline[ 0 ] == 'c' ) ) )
+    if ( lang & L_F77 )
     {
-        // fixed form comment
-
-        if ( lowline[ 1 ] == '$' &&
-             lowline.find_first_not_of( " \t0123456789", 2 ) > 5 )
+        if ( lowline[ 0 ] == '!' ||
+             ( ( lang & L_F77 ) && ( lowline[ 0 ] == '*' || lowline[ 0 ] == 'c' ) ) )
         {
-            // OpenMP Conditional Compilation
-            lowline[ 0 ] = ' ';
-            lowline[ 1 ] = ' ';
+            // fixed form comment
+
+            if ( lowline[ 1 ] == '$' &&
+                 lowline.find_first_not_of( " \t0123456789", 2 ) > 5 )
+            {
+                // OpenMP Conditional Compilation for fixed form
+                lowline[ 0 ] = ' ';
+                lowline[ 1 ] = ' ';
+                return false;
+            }
+            else if ( lowline[ 1 ] == 'p' && lowline[ 2 ] == '$' &&
+                      lowline.find_first_not_of( " \t0123456789", 3 ) > 5 )
+            {
+                // POMP Conditional Compilation for fixed form
+                lowline[ 0 ] = line[ 0 ] = ' ';
+                lowline[ 1 ] = line[ 1 ] = ' ';
+                lowline[ 2 ] = line[ 2 ] = ' ';
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+    }
+    // free form comment
+    int first_char = lowline.find_first_not_of( " \t" );
+    if ( lowline[ first_char ] == '!' )
+    {
+        if ( lowline[ first_char + 1 ] == '$' &&
+             ( lowline[ first_char + 2 ] == ' ' || lowline[ first_char + 2 ] == '\t' ) )
+        {
+            // OpenMP Conditional Compilation for free form
+            lowline[ first_char ]     = ' ';
+            lowline[ first_char + 1 ] = ' ';
             return false;
         }
-        else if ( lowline[ 1 ] == 'p' && lowline[ 2 ] == '$' &&
-                  lowline.find_first_not_of( " \t0123456789", 3 ) > 5 )
+        else if ( lowline[ first_char + 1 ] == 'p' && lowline[ first_char + 2 ] == '$' &&
+                  ( lowline[ first_char + 3 ] == ' ' || lowline[ first_char + 3 ] == '\t' ) )
         {
-            // POMP Conditional Compilation
-            lowline[ 0 ] = line[ 0 ] = ' ';
-            lowline[ 1 ] = line[ 1 ] = ' ';
-            lowline[ 2 ] = line[ 2 ] = ' ';
+            // POMP Conditional Compilation for free form
+            lowline[ first_char ]     = line[ first_char ] = ' ';
+            lowline[ first_char + 1 ] = line[ first_char + 1 ] = ' ';
+            lowline[ first_char + 2 ] = line[ first_char + 2 ] = ' ';
             return false;
         }
         else
@@ -283,6 +330,8 @@ is_comment_line( string & lowline,
             return true;
         }
     }
+
+
 
     string::size_type s = lowline.find_first_not_of( " \n" );
     if ( s != string::npos && lowline[ s ] == '!' )
@@ -310,7 +359,7 @@ is_comment_line( string & lowline,
     }
     return false;
 }
-/**@brief check if this line startes a do loop*/
+/**@brief check if this line starts a do loop*/
 bool
 is_loop_start( string & lowline,
                string & line,
@@ -533,7 +582,7 @@ test_and_insert_ompenddo( ostream &     os,
                 pragma += " ";
             }
             pragma   += "!$omp end do ";
-            newPragma = new OMPragmaF( infile, lineno, ppos + 6, pragma, pomp, a );
+            newPragma = new OMPragmaF( infile, lineno - 1, ppos + 6, pragma, pomp, a );
             process_pragma( newPragma, os );
             //	lineno++;
         }
@@ -551,7 +600,7 @@ test_and_insert_ompenddo( ostream &     os,
                 pragma += " ";
             }
             pragma   += "!$omp end parallel do ";
-            newPragma = new OMPragmaF( infile, lineno, ppos + 6, pragma, pomp, a );
+            newPragma = new OMPragmaF( infile, lineno - 1, ppos + 6, pragma, pomp, a );
             process_pragma( newPragma, os );
         }
     }
@@ -673,7 +722,8 @@ process_fortran( istream &   is,
                  ostream &   os,
                  bool        addSharedDecl,
                  char*       incfile,
-                 Language    lang )
+                 Language    lang,
+                 bool        keepSrcInfo )
 {
     string            line;
     int               lineno     = 0;
@@ -696,7 +746,6 @@ process_fortran( istream &   is,
 
     while ( getline( is, line ) )
     {
-        //                  std::cerr << line << '\n';
         /* workaround for bogus getline implementations */
         if ( line.size() == 1 && line[ 0 ] == '\0' )
         {
@@ -749,6 +798,10 @@ process_fortran( istream &   is,
             {
                 inHeader = false;
                 os << "      include \'" << incfile << "\'" << std::endl;
+                if ( keepSrcInfo )
+                {
+                    os << "#line " << lineno << " \"" << infile << "\"" << "\n";
+                }
             }
 
             int pomp = ( ( lowline[ 1 ] == 'p' ) || ( lowline[ 2 ] == 'p' ) );
@@ -804,6 +857,10 @@ process_fortran( istream &   is,
             {
                 inHeader = false;
                 os << "      include \'" << incfile << "\'" << std::endl;
+                if ( keepSrcInfo )
+                {
+                    os << "#line " << lineno << " \"" << infile << "\"" << "\n";
+                }
             }
 
             /*
@@ -903,7 +960,7 @@ process_fortran( istream &   is,
             {
                 // really normal line
                 del_strings_and_comments( lowline, inString );
-                if ( is_sub_unit_header( lowline, inHeader ) )
+                if ( is_sub_unit_header( lowline, inHeader, lang ) )
                 {
                     inHeader = true;
                 }
@@ -911,6 +968,10 @@ process_fortran( istream &   is,
                 {
                     inHeader = false;
                     os << "      include \'" << incfile << "\'" << std::endl;
+                    if ( keepSrcInfo )
+                    {
+                        os << "#line " << lineno << " \"" << infile << "\"" << "\n";
+                    }
                 }
                 if ( instrument_locks() )
                 {

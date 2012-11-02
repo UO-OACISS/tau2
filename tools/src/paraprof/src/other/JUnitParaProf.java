@@ -35,6 +35,7 @@ import edu.uoregon.tau.perfdmf.DBDataSource;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Function;
+import edu.uoregon.tau.perfdmf.taudb.TAUdbDatabaseAPI;
 import edu.uoregon.tau.perfdmf.Trial;
 
 public class JUnitParaProf extends JFCTestCase {
@@ -108,7 +109,7 @@ public class JUnitParaProf extends JFCTestCase {
             ParaProfTrial ppTrial = trials.get(i);
             System.out.println("Trial:" + ppTrial.getName());
 
-            for (Iterator<Function> it = ppTrial.getDataSource().getFunctions(); it.hasNext() && count-- != 0;) {
+            for (Iterator<Function> it = ppTrial.getDataSource().getFunctionIterator(); it.hasNext() && count-- != 0;) {
 
                 Function f = (Function) it.next();
                 HistogramWindow hw = new HistogramWindow(ppTrial, f, null);
@@ -336,6 +337,10 @@ public class JUnitParaProf extends JFCTestCase {
             DatabaseAPI dbApi = new DatabaseAPI();
 
             dbApi.initialize(ParaProf.preferences.getDatabaseConfigurationFile(), false);
+			if (dbApi.db().getSchemaVersion() > 0) {
+				// copy the DatabaseAPI object data into a new TAUdbDatabaseAPI object
+				dbApi = new TAUdbDatabaseAPI(dbApi);
+			}
 
             dbApi.getApplicationList();
             ListIterator<Application> apps = dbApi.getApplicationList().listIterator();
@@ -372,7 +377,7 @@ public class JUnitParaProf extends JFCTestCase {
                 ParaProfTrial ppTrial = trials.get(i);
                 System.out.println("Trial:" + ppTrial.getName());
 
-                for (Iterator<Function> it = ppTrial.getDataSource().getFunctions(); it.hasNext() && count-- != 0;) {
+                for (Iterator<Function> it = ppTrial.getDataSource().getFunctionIterator(); it.hasNext() && count-- != 0;) {
                     Function f = (Function) it.next();
 
                     checkHistogram(ppTrial, f);

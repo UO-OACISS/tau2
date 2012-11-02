@@ -32,6 +32,8 @@ import javax.swing.JSplitPane;
 
 import com.graphbuilder.math.VarMap;
 
+import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataValue;
 import edu.uoregon.tau.paraprof.ThreeDeeGeneralPlotUtils.CoordMap;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
@@ -362,7 +364,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 
 		float color = Float.NaN;
 
-		if (!settings.getAtomic(3)) {
+		if (settings.getDataType(3)==0) {
 			Function topoFunction = settings.getTopoFunction(3);
 			ValueType topoValueType = settings.getTopoValueType(3);
 			Metric topoMetricID = settings.getTopoMetric(3);
@@ -378,7 +380,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 					return 0;
 				}
 			}
-		} else {
+		} else if(settings.getDataType(3)==1){
 			UserEvent ue = settings.getTopoAtomic(3);
 			if (ue != null) {
 				UserEventProfile uep = thread.getUserEventProfile(ue);
@@ -390,6 +392,24 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 								ppTrial.getSelectedSnapshot());
 				}
 			}
+		}else if(settings.getDataType(3)==2){
+			MetaDataKey metaKey=settings.getTopoMetadata(3);//.toString();
+			if(metaKey!=null){
+				MetaDataValue mdVal=thread.getMetaData().get(metaKey);
+				if(mdVal==null){
+					mdVal=ppTrial.getDataSource().getMetaData().get(metaKey);
+				}
+						
+				String metaVal=mdVal.toString();
+				float tmp=Float.NaN;
+				try{
+				tmp = Float.parseFloat(metaVal);
+				}catch(NumberFormatException e){
+					return tmp;
+				}
+				color=tmp;
+			}
+			//TODO: Handle non-numerical metadata?
 		}
 
 		return color;
@@ -684,7 +704,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 
 				float[] topoVals = { 0, 0, 0, 0 };
 				for (int i = 0; i < 4; i++) {
-					if (!settings.getAtomic(i)) {
+					if (settings.getDataType(i)==0) {
 						Function f = settings.getTopoFunction(i);
 						if (f != null) {
 							FunctionProfile fp = thread.getFunctionProfile(f);
@@ -695,7 +715,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 										ppTrial.getSelectedSnapshot());
 							}
 						}
-					} else {
+					} else if(settings.getDataType(i)==1) {
 						UserEvent ue = settings.getTopoAtomic(i);
 						if (ue != null) {
 							UserEventProfile uep = thread
@@ -708,6 +728,20 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 											ppTrial.getSelectedSnapshot());
 							}
 						}
+					}
+					else if(settings.getDataType(i)==2) {
+						MetaDataKey metaKey=settings.getTopoMetadata(i);
+						if(metaKey!=null){
+							String metaVal=thread.getMetaData().get(metaKey).toString();
+							float tmp=Float.NaN;
+							try{
+							tmp = Float.parseFloat(metaVal);
+							}catch(NumberFormatException e){
+								
+							}
+							topoVals[i]=tmp;
+						}
+						//TODO: Metadata support
 					}
 				}
 				// float[] ueVal={0,0,0,0};
@@ -729,14 +763,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 				vm = ThreeDeeGeneralPlotUtils.getEvaluation(
 						rankIndex,
 						numThreads,
-						thread.getNodeID(),
-						thread.getContextID(),
-						thread.getThreadID(),
-						ppTrial.getDataSource().getNumberOfNodes(),
-						ppTrial.getDataSource().getNumberOfContexts(
-								thread.getNodeID()),
-						ppTrial.getDataSource().getNumberOfThreads(
-								thread.getNodeID(), thread.getContextID()),
+						thread,
+						ppTrial,
 						topoVals, varMins, varMaxs, varMeans, settings
 								.getCustomTopoAxes(), expressions);
 
@@ -810,6 +838,32 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 
 			else {
 				
+			if(prefix.contains("Cray")){
+				String node_key=prefix+" Nodename";
+				
+				List<Integer>[] sizes = new List[5];
+				for(int i=0;i<5;i++){
+					sizes[i]=new ArrayList();
+				}
+				int[] dimension = new int[5];
+				//String lastcoord=null;//Potentially used to check when moving to a new node
+				int numCores=24;
+				
+				for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads()
+						.iterator(); it.hasNext();) {
+					Thread thread = it.next();
+
+					String coord = thread.getMetaData().get(node_key).trim();
+					if (coord == null) {
+						continue;
+					}
+					System.out.println(ThreeDeeGeneralPlotUtils.parseCrayNodeID(coord));
+				}
+				
+				
+			}//Cray Topology
+			else
+			{
 			String coord_key = prefix + " Coords";
 			String size_key = prefix + " Size";
 			
@@ -862,8 +916,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 					values[threadIndex][2] = coords[2]*tempsizes[3]+coords[3]+offset*coords[2];
 					
 					for (int i = 0; i < 3; i++) {
-					maxScatterValues[i] = Math.max(maxScatterValues[i], values[threadIndex][i]);
-				}
+						maxScatterValues[i] = Math.max(maxScatterValues[i], values[threadIndex][i]);
+					}
 					
 					
 				}
@@ -893,7 +947,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 				}
 
 				threadIndex++;
-			}
+			}//Values populator loop
+			}//Non-Cray Topology
 			}
 
 		return values;
@@ -2036,9 +2091,9 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 
 		int units = this.units;
 		
-		boolean atomic = settings.getAtomic(3);
+		int dataType = settings.getDataType(3);
 		
-		if(!atomic){
+		if(dataType==0){
 		
 		ParaProfMetric ppMetric = (ParaProfMetric) settings.getTopoMetric(3);
 		if (!ppMetric.isTimeMetric()
@@ -2050,9 +2105,14 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 				ppMetric.isTimeDenominator()).trim()
 				+ getUnitsString(units, settings.getTopoValueType(3), ppMetric);
 		}
-		else{
+		else if(dataType==1){
 			return val+" counts";
 		}
+		else if(dataType==2){
+			//TODO: metadata support
+			return val+" counts";
+		}
+		return val+" counts";
 	}
 
 	private String getUnitsString(int units, ValueType valueType,
@@ -2193,7 +2253,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 		String low = "none";
 		String high = "none";
 		
-		if (!settings.getAtomic(3)) {//If this is an interval value
+		if (settings.getDataType(3)==0) {//If this is an interval value
 			ParaProfMetric ppMetric = (ParaProfMetric) settings
 					.getTopoMetric(3);
 			int units = settings.getTopoValueType(3).getUnits(this.units,
@@ -2224,7 +2284,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 						ppMetric.isTimeDenominator()).trim();
 				
 			} 
-		} else {//if this is an atomic value
+		} else if(settings.getDataType(3)==1){//if this is an atomic value
 			UserEventValueType colorUEVT = settings.getTopoUserEventValueType(3);
 			UserEvent colorAtom = settings.getTopoAtomic(3);
 			if(colorAtom!=null){
@@ -2237,6 +2297,20 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 				low = Float.toString(minScatterValues[3]);
 				high = Float.toString(maxScatterValues[3]);
 			}
+		}
+		else if(settings.getDataType(3)==2){			
+			MetaDataKey metaKey=settings.getTopoMetadata(3);
+		if(metaKey!=null){
+			String toDisplay = metaKey.toString();
+			if (toDisplay.length() > 30) {
+				toDisplay = toDisplay.substring(0, 30) + "...";
+			}
+			colorName = toDisplay ;//+ "\n("
+					//+ colorUEVT.toString()+ ")";
+			low = Float.toString(minScatterValues[3]);
+			high = Float.toString(maxScatterValues[3]);
+		}
+			//TODO: Metadata Support
 		}
 
 		colorScale.setStrings(low,	high, colorName);
@@ -2394,7 +2468,6 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 	 * @see java.awt.event.KeyListener#keyPressed(java.awt.event.KeyEvent)
 	 */
 	public void keyPressed(KeyEvent e) {
-		// TODO Auto-generated method stub
 
 	}
 
@@ -2404,8 +2477,6 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 	 * @see java.awt.event.KeyListener#keyReleased(java.awt.event.KeyEvent)
 	 */
 	public void keyReleased(KeyEvent e) {
-		// TODO Auto-generated method stub
-
 	}
 
 	/*
@@ -2414,7 +2485,6 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 	 * @see java.awt.event.KeyListener#keyTyped(java.awt.event.KeyEvent)
 	 */
 	public void keyTyped(KeyEvent e) {
-		// TODO Auto-generated method stub
 		try {
 			// zoom in and out on +/-
 			if (e.getKeyChar() == '+') {
@@ -2444,7 +2514,6 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 	}
 
 	public void createNewCanvas() {
-		// TODO Auto-generated method stub
 		visCanvas = new VisCanvas(visRenderer);
 
 		visCanvas.addKeyListener(this);

@@ -284,7 +284,7 @@ public class ColorChooser implements WindowListener {
 
         if ((selection == -1) || (selection == 2)) {
             int numberOfColors = this.getNumberOfColors();
-            for (Iterator<UserEvent> i = ppTrial.getDataSource().getUserEvents(); i.hasNext();) {
+            for (Iterator<UserEvent> i = ppTrial.getDataSource().getUserEventIterator(); i.hasNext();) {
                 UserEvent userEvent = i.next();
                 userEvent.setColor(this.getColor((userEvent.getID()) % numberOfColors));
             }
