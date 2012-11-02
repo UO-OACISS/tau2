@@ -418,18 +418,19 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 	}
 
 	public String toString() {
-		StringBuilder b = new StringBuilder();
-		b.append("id = " + trialID + ", ");
-		b.append("name = " + name + ", ");
-		b.append("dataSource = " + dataSourceType + ", ");
-		b.append("nodeCount = " + nodeCount + ", ");
-		b.append("contextsPerNode = " + contextsPerNode + ", ");
-		b.append("threadsPerContext = " + threadsPerContext + ", ");
-		b.append("totalThreads = " + totalThreads + "\n");
-		for (String key : primaryMetadata.keySet()) {
-			b.append(key + ": " + primaryMetadata.get(key) + "\n");
-		}
-		return b.toString();
+//		StringBuilder b = new StringBuilder();
+//		b.append("id = " + trialID + ", ");
+//		b.append("name = " + name + ", ");
+//		b.append("dataSource = " + dataSourceType + ", ");
+//		b.append("nodeCount = " + nodeCount + ", ");
+//		b.append("contextsPerNode = " + contextsPerNode + ", ");
+//		b.append("threadsPerContext = " + threadsPerContext + ", ");
+//		b.append("totalThreads = " + totalThreads + "\n");
+//		for (String key : primaryMetadata.keySet()) {
+//			b.append(key + ": " + primaryMetadata.get(key) + "\n");
+//		}
+//		return b.toString();
+		return name;
 	}
 
 	public static Map<Integer, TAUdbTrial> getTrials(TAUdbSession session) {
@@ -483,7 +484,27 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 	public int saveTrial(DB db) {
 		return TAUdbTrial.saveTrialTAUdb(db, trialID, dataSource, name);
 	}
+	
+	public void rename(DB db, String newName) {
+		String sql = "UPDATE "
+				+ db.getSchemaPrefix()
+				+ "trial SET name=? where id=?";
+		PreparedStatement statement;
+		try {
+			statement = db.prepareStatement(sql);
+			statement.setString(1, name);
+			statement.setInt(2, trialID);
+			statement.executeUpdate();
+			statement.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
+		
+		this.setName(newName);
+		
+	}
 	public static int saveTrialTAUdb(DB db, int trialID, DataSource dataSource,
 			String name) {
 		if (db.getSchemaVersion() < 1) {
