@@ -51,7 +51,7 @@ TAUDB_TIMER_GROUP* taudb_query_timer_groups(TAUDB_CONNECTION* connection, TAUDB_
     /* the columns */
     for (j = 0; j < nFields; j++) {
       if (strcmp(taudb_get_column_name(connection, j), "name") == 0) {
-        timer_group->name = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
+        timer_group->name = taudb_strdup(taudb_get_value(connection,i,j));
 #ifdef TAUDB_DEBUG_DEBUG
         printf("Got group '%s'\n", timer_group->name);
 #endif
@@ -68,13 +68,13 @@ TAUDB_TIMER_GROUP* taudb_query_timer_groups(TAUDB_CONNECTION* connection, TAUDB_
           TAUDB_TIMER_GROUP_TIMER_GROUP* groups = taudb_create_group_groups(1);
           groups[0].id = 0;
           groups[0].group = 0;
-          groups[0].name = taudb_create_and_copy_string(group);
+          groups[0].name = taudb_strdup(group);
           group = strtok(NULL, "|");
           while (group != NULL) {
             TAUDB_TIMER_GROUP_TIMER_GROUP* groups = taudb_resize_group_groups(groups[i].group_count+1, groups);
             groups[groups[i].group_count].id = 0;
             groups[groups[i].group_count].group = 0;
-            groups[groups[i].group_count].name = taudb_create_and_copy_string(group);
+            groups[groups[i].group_count].name = taudb_strdup(group);
             groups[i].group_count++;
             group = strtok(NULL, "|");
           }
@@ -118,3 +118,6 @@ TAUDB_TIMER_GROUP* taudb_get_timer_group_by_name(TAUDB_TIMER_GROUP* timer_groups
   return timer_group;
 }
 
+extern void taudb_save_timer_groups(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
+  printf("Timer groups not supported yet.\n");
+}

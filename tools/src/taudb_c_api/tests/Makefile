@@ -12,7 +12,8 @@
 
 include ../Makefile.inc
 
-BUILD_TARGETS=parse_tau_profile_test \
+BUILD_TARGETS=save_trial \
+parse_tau_profile_test \
 dump_functions \
 parse_config_test \
 perfdmf_query_trial_test \
@@ -33,8 +34,9 @@ taudb_query_timer_call_data_test \
 perfdmf_test \
 query_all
 
-TEST_TARGETS=parse_tau_profile_test
-#taudb_main\
+TEST_TARGETS=save_trial \
+#parse_tau_profile_test \
+taudb_main\
 parse_config_test \
 taudb_query_trial_test \
 taudb_query_timers_test \

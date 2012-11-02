@@ -110,7 +110,7 @@ TAUDB_TIMER_CALL_DATA* taudb_create_timer_call_data(int count){
  return timer_call_data;
 }
 
-char* taudb_create_and_copy_string(const char* in_string) {
+char* taudb_strdup(const char* in_string) {
   // add one more character for the null terminator
   int length = strlen(in_string) + 1;
   char* new_string = (char*)calloc(length, sizeof(char));

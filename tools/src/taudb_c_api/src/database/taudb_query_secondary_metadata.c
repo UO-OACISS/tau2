@@ -41,7 +41,7 @@ TAUDB_SECONDARY_METADATA* taudb_query_secondary_metadata(TAUDB_CONNECTION* conne
     /* the columns */
     for (j = 0; j < nFields; j++) {
       if (strcmp(taudb_get_column_name(connection, j), "id") == 0) {
-        secondary_metadata->id = taudb_create_and_copy_string(taudb_get_value(connection, i, j));
+        secondary_metadata->id = taudb_strdup(taudb_get_value(connection, i, j));
       } else if (strcmp(taudb_get_column_name(connection, j), "trial") == 0) {
       } else if (strcmp(taudb_get_column_name(connection, j), "thread") == 0) {
         tmpID = atoi(taudb_get_value(connection, i, j));
@@ -71,11 +71,11 @@ TAUDB_SECONDARY_METADATA* taudb_query_secondary_metadata(TAUDB_CONNECTION* conne
 		  fprintf(stderr, "WARNING! Array metadata not yet supported...\n");
 		}
       } else if (strcmp(taudb_get_column_name(connection, j), "name") == 0) {
-        secondary_metadata->key.name = taudb_create_and_copy_string(taudb_get_value(connection, i, j));
+        secondary_metadata->key.name = taudb_strdup(taudb_get_value(connection, i, j));
       } else if (strcmp(taudb_get_column_name(connection, j), "value") == 0) {
 	    // just get the whole thing now, TODO: split into array later?
 	    secondary_metadata->value = (char**)calloc(1,sizeof(char*));
-        secondary_metadata->value[0] = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
+        secondary_metadata->value[0] = taudb_strdup(taudb_get_value(connection,i,j));
         secondary_metadata->num_values = 1;
       } else {
 	    fprintf(stderr,"Unknown secondary_metadata column: %s\n", taudb_get_column_name(connection, j));
@@ -91,4 +91,8 @@ TAUDB_SECONDARY_METADATA* taudb_query_secondary_metadata(TAUDB_CONNECTION* conne
   taudb_numItems = nFields;
 
   return trial->secondary_metadata;
+}
+
+extern void taudb_save_secondary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
+  printf("Secondary metadata not supported yet.\n");
 }

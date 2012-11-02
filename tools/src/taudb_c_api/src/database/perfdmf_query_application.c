@@ -37,12 +37,12 @@ PERFDMF_APPLICATION* perfdmf_query_application(TAUDB_CONNECTION* connection, cha
 	    application->id = atoi(taudb_get_value(connection, i, j));
 	  } else if (strcmp(taudb_get_column_name(connection, j), "name") == 0) {
 	    //application->name = taudb_get_value(connection, i, j);
-		application->name = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
+		application->name = taudb_strdup(taudb_get_value(connection,i,j));
 
 	  } else {
   		TAUDB_PRIMARY_METADATA* primary_metadata = taudb_create_primary_metadata(1);
-	    primary_metadata->name = taudb_create_and_copy_string(taudb_get_column_name(connection,j));
-	    primary_metadata->value = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
+	    primary_metadata->name = taudb_strdup(taudb_get_column_name(connection,j));
+	    primary_metadata->value = taudb_strdup(taudb_get_value(connection,i,j));
 		HASH_ADD(hh, application->primary_metadata, name, (strlen(primary_metadata->name)), primary_metadata);
 	  }
 	} 

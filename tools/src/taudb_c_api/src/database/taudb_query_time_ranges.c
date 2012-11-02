@@ -90,3 +90,6 @@ TAUDB_TIME_RANGE* taudb_get_time_range(TAUDB_TIME_RANGE* time_ranges, const int 
   return time_range;
 }
 
+extern void taudb_save_time_ranges(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
+  printf("Time ranges not supported yet.\n");
+}

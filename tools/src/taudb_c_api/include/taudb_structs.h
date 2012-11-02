@@ -17,6 +17,11 @@
 typedef int boolean;
 #endif
 
+typedef struct taudb_prepared_statement {
+ char* name;
+ UT_hash_handle hh; /* hash index for hashing by name */
+} TAUDB_PREPARED_STATEMENT;
+
 /* forward declarations to ease objects that need to know about each other 
  * and have doubly-linked relationships */
 
@@ -66,6 +71,7 @@ typedef struct taudb_connection {
 #if defined __TAUDB_POSTGRESQL__
   PGconn *connection;
   PGresult *res;
+  TAUDB_PREPARED_STATEMENT *statements;
 #elif defined __TAUDB_SQLITE__
   sqlite3 *connection;
   sqlite3_stmt *ppStmt;
@@ -73,6 +79,7 @@ typedef struct taudb_connection {
 #endif
   TAUDB_SCHEMA_VERSION schema_version;
   boolean inTransaction;
+  boolean inPortal;
   TAUDB_DATA_SOURCE* data_sources_by_id;
   TAUDB_DATA_SOURCE* data_sources_by_name;
 } TAUDB_CONNECTION;

@@ -217,3 +217,7 @@ TAUDB_TIMER_CALL_DATA* taudb_get_timer_call_data_by_id(TAUDB_TIMER_CALL_DATA* ti
 #endif
   return timer_call_datum;
 }
+
+extern void taudb_save_timer_call_data(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
+  printf("Timer call data not supported yet.\n");
+}

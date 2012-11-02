@@ -48,15 +48,15 @@ TAUDB_TIMER* taudb_query_main_timer(TAUDB_CONNECTION* connection, TAUDB_TRIAL* t
         timers[i].trial = trial;
       } else if (strcmp(taudb_get_column_name(connection, j), "name") == 0) {
         //timers[i].name = taudb_get_value(connection, i, j);
-        timers[i].name = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
+        timers[i].name = taudb_strdup(taudb_get_value(connection,i,j));
 #ifdef TAUDB_DEBUG
         //printf("Got timer '%s'\n", timers[i].name);
 #endif
       } else if (strcmp(taudb_get_column_name(connection, j), "short_name") == 0) {
-        timers[i].short_name = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
+        timers[i].short_name = taudb_strdup(taudb_get_value(connection,i,j));
       } else if (strcmp(taudb_get_column_name(connection, j), "source_file") == 0) {
         //timers[i].source_file = taudb_get_value(connection, i, j);
-        timers[i].source_file = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
+        timers[i].source_file = taudb_strdup(taudb_get_value(connection,i,j));
       } else if (strcmp(taudb_get_column_name(connection, j), "line_number") == 0) {
         timers[i].line_number = atoi(taudb_get_value(connection, i, j));
       } else if (strcmp(taudb_get_column_name(connection, j), "line_number_end") == 0) {

@@ -259,3 +259,7 @@ TAUDB_TIMER_VALUE* taudb_get_timer_value(TAUDB_TIMER_CALL_DATA* timer_call_data,
   
   return timer_value;
 }
+
+extern void taudb_save_timer_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
+  printf("Timer values not supported yet.\n");
+}

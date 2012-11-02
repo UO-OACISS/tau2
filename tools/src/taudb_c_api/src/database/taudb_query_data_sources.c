@@ -38,9 +38,9 @@ TAUDB_DATA_SOURCE* taudb_query_data_sources(TAUDB_CONNECTION* connection) {
       if (strcmp(taudb_get_column_name(connection, j), "id") == 0) {
         data_source->id = atoi(taudb_get_value(connection, i, j));
       } else if (strcmp(taudb_get_column_name(connection, j), "name") == 0) {
-        data_source->name = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
+        data_source->name = taudb_strdup(taudb_get_value(connection,i,j));
       } else if (strcmp(taudb_get_column_name(connection, j), "description") == 0) {
-        data_source->description = taudb_create_and_copy_string(taudb_get_value(connection, i, j));
+        data_source->description = taudb_strdup(taudb_get_value(connection, i, j));
       } else {
         printf("Error: unknown column '%s'\n", taudb_get_column_name(connection, j));
         taudb_exit_nicely(connection);
@@ -92,3 +92,6 @@ TAUDB_DATA_SOURCE* taudb_get_data_source_by_name(TAUDB_DATA_SOURCE* data_sources
   return data_source;
 }
 
+extern void taudb_save_data_sources(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
+  printf("Data sources not supported yet.\n");
+}

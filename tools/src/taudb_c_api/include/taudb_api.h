@@ -52,6 +52,7 @@ extern TAUDB_METRIC* taudb_query_metrics(TAUDB_CONNECTION* connection, TAUDB_TRI
 extern TAUDB_METRIC* taudb_get_metric_by_name(TAUDB_METRIC* metrics, const char* name);
 extern TAUDB_METRIC* taudb_get_metric_by_id(TAUDB_METRIC* metrics, const int id);
 
+
 /* get the time_ranges for a trial */
 extern TAUDB_TIME_RANGE* taudb_query_time_range(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial);
 extern TAUDB_TIME_RANGE* taudb_get_time_range(TAUDB_TIME_RANGE* time_ranges, const int id);
@@ -94,10 +95,27 @@ extern TAUDB_TIMER_VALUE* taudb_get_timer_value(TAUDB_TIMER_CALL_DATA* timer_cal
 /* find main */
 extern TAUDB_TIMER* taudb_query_main_timer(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial);
 
+/* save everything */
+extern void taudb_save_trial(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update, boolean cascade);
+extern void taudb_save_threads(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update);
+extern void taudb_save_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update);
+extern void taudb_save_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update);
+extern void taudb_save_time_ranges(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update);
+extern void taudb_save_timer_groups(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update);
+extern void taudb_save_timer_parameters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update);
+extern void taudb_save_timer_callpaths(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update);
+extern void taudb_save_timer_call_data(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update);
+extern void taudb_save_timer_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update);
+extern void taudb_save_counters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update);
+extern void taudb_save_counter_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update);
+extern void taudb_save_primary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update);
+extern void taudb_save_secondary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update);
+
 /************************************************/
 /* memory functions */
 /************************************************/
 
+extern char* taudb_strdup(const char* in_string);
 extern TAUDB_TRIAL* taudb_create_trials(int count);
 extern void taudb_delete_trials(TAUDB_TRIAL* trials, int count);
 
