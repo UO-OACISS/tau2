@@ -482,6 +482,10 @@ create table taudb_view_parameter (
 
 /* simple view of all trials */
 INSERT INTO taudb_view (parent, name, conjoin) VALUES (NULL, 'All Trials', 'and');
+/* must have a parameter or else the sub views for this view do not work correctly*/`
+INSERT INTO taudb_view_parameter (taudb_view, table_name, column_name, operator, value) VALUES (1, 'trial', 'total_threads', '>', '-1');
+
+
 
 
 /* the application and experiment columns are not used in the latest schema, but
