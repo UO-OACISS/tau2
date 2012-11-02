@@ -72,6 +72,11 @@ case $1 in
 	echo "s,^PAPIDIR=.*$,PAPIDIR=$papidir,g" >> $sedout
 	;;
 
+     gpidir=*)
+        gpidir=`echo $1 | sed -e 's/^gpidir=//'`
+	echo "s,^GPIDIR=.*$,GPIDIR=$gpidir,g" >> $sedout
+	;;
+
      bfdlink=*)
         bfdlink=`echo $1 | sed -e 's/^bfdlink=//' -e 's/#/ /g'`
 	echo "s,^BFDLINK=.*$,BFDLINK=$bfdlink,g" >> $sedout
@@ -172,13 +177,13 @@ case $1 in
 	;;
 
      scoreplibs=*)
-	scoreplibs=`echo $1 | sed -e 's/^scoreplibs=//' -e 's/#/ /g'`
-	echo "s,^SCOREPLIBS=.*$,SCOREPLIBS=$scoreplibs,g" >> $sedout
+       scoreplibs=`echo $1 | sed -e 's+^scoreplibs=++' -e 's+#+ +g'`
+       echo "s+^SCOREPLIBS=.*$+SCOREPLIBS=$scoreplibs+g" >> $sedout
 	;;
 
      scorepmpilibs=*)
-	scorepmpilibs=`echo $1 | sed -e 's/^scorepmpilibs=//' -e 's/#/ /g'`
-	echo "s,^SCOREPMPILIBS=.*$,SCOREPMPILIBS=$scorepmpilibs,g" >> $sedout
+       scorepmpilibs=`echo $1 | sed -e 's+^scorepmpilibs=++' -e 's+#+ +g'`
+       echo "s+^SCOREPMPILIBS=.*$+SCOREPMPILIBS=$scorepmpilibs+g" >> $sedout
 	;;
 
      scorepdir=*)
@@ -667,6 +672,11 @@ case $1 in
 ###############################################################
      SHMEM)
         echo NOTE: Using the TAU SHMEM Profiling Interface 
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
+     GPI)
+        echo "NOTE: Using the TAU's GPI Wrapper Interface "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 

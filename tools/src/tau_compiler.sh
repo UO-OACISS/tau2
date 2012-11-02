@@ -131,6 +131,7 @@ printUsage () {
     echo -e "  -optOpari2ConfigTool=\"<path/opari2-config>\"\tSpecifies the location of the Opari tool"
     echo -e "  -optOpari2Opts=\"\"\t\tSpecifies optional arguments to the Opari tool"
     echo -e "  -optOpari2Reset=\"\"\t\tResets options passed to the Opari tool"
+    echo -e "  -optOpari2Dir=\"<path>\"\t\tSpecifies the location of the Opari directory"
     echo -e "  -optNoMpi\t\t\tRemoves -l*mpi* libraries during linking"
     echo -e "  -optMpi\t\t\tDoes not remove -l*mpi* libraries during linking (default)"
     echo -e "  -optNoRevert\t\t\tExit on error. Does not revert to the original compilation rule on error."
@@ -667,10 +668,6 @@ for arg in "$@" ; do
                         opari2init=$FALSE
                         echoIfDebug "\tDon't make pompregions."
                         ;;
-		    -optOpari2Dir*)
-			optOpari2Dir="${arg#"-optOpari2Dir="}"
-			echoIfDebug "\tOpari2 Dir used: $optOpari2Dir"
-			;;
 		    -optOpari2Tool*)
 			optOpari2Tool="${arg#"-optOpari2Tool="}"
 			echoIfDebug "\tOpari2 Tool used: $optOpari2Tool"
@@ -689,6 +686,15 @@ for arg in "$@" ; do
 			    opari2=$TRUE
 			fi
 			;;
+                    -optOpari2Dir*)
+                        optOpari2Dir="${arg#"-optOpari2Dir="}"
+                        echoIfDebug "\tOpari Dir used: $optOpari2Dir"
+                        if [ "x$optOpari2Dir" != "x" ] ; then
+			    optOpari2Tool="$optOpari2Dir/bin/opari2"
+			    optOpari2ConfigTool="$optOpari2Dir/bin/opari2-config"
+                        echoIfDebug "\tOpari Tool used: $optOpari2Tool"
+                        fi
+                        ;;
 		    -optIBM64*)
 			currentopt="${arg#"-optIBM64="}"
 			optIBM64="$currentopt $optIBM64"
@@ -1340,7 +1346,7 @@ if [ $numFiles == 0 ]; then
     #If this is the second pass, opari was already used, don't do it again`
     if [ $opari2 == $TRUE -a $passCount == 1 -a  $opari2init == $TRUE  ]; then
         evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
-        cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${optIBM64} ${listOfObjectFiles} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_regions |  `${optOpari2ConfigTool} --awk-cmd` -f ${TAU_BIN_DIR}/pomp2-parse-init-regions.awk > pompregions.c"
+        cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${optIBM64} ${listOfObjectFiles} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_reg |  `${optOpari2ConfigTool} --awk-cmd` -f ${TAU_BIN_DIR}/pomp2-parse-init-regions.awk > pompregions.c"
         evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
         cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
         evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
@@ -1411,6 +1417,7 @@ if [ $numFiles == 0 ]; then
     fi
 
     if [ "x$tauWrapFile" != "x" ]; then
+      linkCmd="$linkCmd `cat $tauWrapFile` "
       echoIfDebug "Linking command is $linkCmd"
     fi 
 
@@ -1497,7 +1504,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	    optCompile="$optCompile $optDefs $optIncludes"
 
             if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]} ]; then
-		evalWithDebugMessage "mv ${arrFileName[$tempCounter]} ${arrFileName[$tempCounter]}~; sed -e 's@return\([ \t]*\);@{return \1;}@g' ${arrFileName[$tempCounter]}~ > ${arrFileName[$tempCounter]};" "Making temporary file for parsing with ROSE"
+		evalWithDebugMessage "mv ${arrFileName[$tempCounter]} ${arrFileName[$tempCounter]}~; sed -e  's@\(\s*\)[^-a-zA-Z0-9_\$]return\(\s*\);@\1{ return \2;}@g' -e 's@^return\(\s*\);@{ return \1;}@g' ${arrFileName[$tempCounter]}~ > ${arrFileName[$tempCounter]};" "Making temporary file for parsing with ROSE"
 	    fi
 	    ;;
 
@@ -1511,7 +1518,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	    optCompile="$optCompile $optDefs $optIncludes"
 
             if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]} ]; then
-		evalWithDebugMessage "mv ${arrFileName[$tempCounter]} ${arrFileName[$tempCounter]}~; sed -e 's@return\([ \t]*\);@{return \1;}@g' ${arrFileName[$tempCounter]}~ > ${arrFileName[$tempCounter]};" "Making temporary file for parsing with ROSE"
+		evalWithDebugMessage "mv ${arrFileName[$tempCounter]} ${arrFileName[$tempCounter]}~; sed -e 's@\(\s*\)[^-a-zA-Z0-9_\$]return\(\s*\);@\1{ return \2;}@g' -e 's@^return\(\s*\);@{ return \1;}@g' ${arrFileName[$tempCounter]}~ > ${arrFileName[$tempCounter]};" "Making temporary file for parsing with ROSE"
 	    fi
 	    ;;
 
@@ -1893,7 +1900,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	if [ $opari2 == $TRUE -a $opari2init == $TRUE ]; then
             evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
       
-cmdCreatePompRegions="`${optOpari2ConfigTool}   --nm` ${optIBM64}  ${objectFilesForLinking} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_regions |  `${optOpari2ConfigTool} --awk-cmd` -f ${TAU_BIN_DIR}/pomp2-parse-init-regions.awk > pompregions.c"
+cmdCreatePompRegions="`${optOpari2ConfigTool}   --nm` ${optIBM64}  ${objectFilesForLinking} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_reg |  `${optOpari2ConfigTool} --awk-cmd` -f ${TAU_BIN_DIR}/pomp2-parse-init-regions.awk > pompregions.c"
         evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
         cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
         evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"

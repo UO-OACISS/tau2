@@ -120,11 +120,6 @@ int Tau_mergeProfiles() {
 
   tid = Tau_RtsLayer_myThread();
 
-  if (tid != 0) {
-    fprintf (stderr, "TAU: Merged file format does not support threads yet!\n");
-    return 0;
-  }
-
   // temp: write regular profiles too, for comparison
   //TauProfiler_DumpData(false, 0, "profile");
   

@@ -32,6 +32,8 @@ import javax.swing.JSplitPane;
 
 import com.graphbuilder.math.VarMap;
 
+import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataValue;
 import edu.uoregon.tau.paraprof.ThreeDeeGeneralPlotUtils.CoordMap;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
@@ -391,9 +393,14 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 				}
 			}
 		}else if(settings.getDataType(3)==2){
-			String metaKey=settings.getTopoMetadata(3);
-			if(metaKey!=null&&metaKey.trim().length()>0){
-				String metaVal=thread.getMetaData().get(metaKey);
+			MetaDataKey metaKey=settings.getTopoMetadata(3);//.toString();
+			if(metaKey!=null){
+				MetaDataValue mdVal=thread.getMetaData().get(metaKey);
+				if(mdVal==null){
+					mdVal=ppTrial.getDataSource().getMetaData().get(metaKey);
+				}
+						
+				String metaVal=mdVal.toString();
 				float tmp=Float.NaN;
 				try{
 				tmp = Float.parseFloat(metaVal);
@@ -723,9 +730,9 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 						}
 					}
 					else if(settings.getDataType(i)==2) {
-						String metaKey=settings.getTopoMetadata(i);
-						if(metaKey!=null&&metaKey.trim().length()>0){
-							String metaVal=thread.getMetaData().get(metaKey);
+						MetaDataKey metaKey=settings.getTopoMetadata(i);
+						if(metaKey!=null){
+							String metaVal=thread.getMetaData().get(metaKey).toString();
 							float tmp=Float.NaN;
 							try{
 							tmp = Float.parseFloat(metaVal);
@@ -831,6 +838,32 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 
 			else {
 				
+			if(prefix.contains("Cray")){
+				String node_key=prefix+" Nodename";
+				
+				List<Integer>[] sizes = new List[5];
+				for(int i=0;i<5;i++){
+					sizes[i]=new ArrayList();
+				}
+				int[] dimension = new int[5];
+				//String lastcoord=null;//Potentially used to check when moving to a new node
+				int numCores=24;
+				
+				for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads()
+						.iterator(); it.hasNext();) {
+					Thread thread = it.next();
+
+					String coord = thread.getMetaData().get(node_key).trim();
+					if (coord == null) {
+						continue;
+					}
+					System.out.println(ThreeDeeGeneralPlotUtils.parseCrayNodeID(coord));
+				}
+				
+				
+			}//Cray Topology
+			else
+			{
 			String coord_key = prefix + " Coords";
 			String size_key = prefix + " Size";
 			
@@ -883,8 +916,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 					values[threadIndex][2] = coords[2]*tempsizes[3]+coords[3]+offset*coords[2];
 					
 					for (int i = 0; i < 3; i++) {
-					maxScatterValues[i] = Math.max(maxScatterValues[i], values[threadIndex][i]);
-				}
+						maxScatterValues[i] = Math.max(maxScatterValues[i], values[threadIndex][i]);
+					}
 					
 					
 				}
@@ -914,7 +947,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 				}
 
 				threadIndex++;
-			}
+			}//Values populator loop
+			}//Non-Cray Topology
 			}
 
 		return values;
@@ -2265,9 +2299,9 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 			}
 		}
 		else if(settings.getDataType(3)==2){			
-			String metaKey=settings.getTopoMetadata(3);
-		if(metaKey!=null&&metaKey.trim().length()>0){
-			String toDisplay = metaKey;
+			MetaDataKey metaKey=settings.getTopoMetadata(3);
+		if(metaKey!=null){
+			String toDisplay = metaKey.toString();
 			if (toDisplay.length() > 30) {
 				toDisplay = toDisplay.substring(0, 30) + "...";
 			}
