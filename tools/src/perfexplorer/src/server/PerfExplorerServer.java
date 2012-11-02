@@ -251,7 +251,11 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 //				break;
 //		}
 		File defaultConfig = new File(newConfig);
-		if (!defaultConfig.exists() && tauHome!=null && tauArch!=null && tauHome.length() > 0 && tauArch.length() > 0) {
+		if (!defaultConfig.exists() 
+				&& tauHome!=null 
+				&& tauArch!=null 
+				&& tauHome.length() > 0 
+				&& tauArch.length() > 0) {
 			try {
 				System.out.println("Default working database does not exist, creating...");
 				String dbName = System.getProperty("user.home") + 
