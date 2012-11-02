@@ -1589,8 +1589,8 @@ if [ $gotoNextStep == $TRUE -a $optCompInst == $FALSE ]; then
 
 	if [ $disablePdtStep == $FALSE ]; then
 	    evalWithDebugMessage "$tauCmd" "Instrumenting with TAU"
-	    if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]}~ ]; then
-	      evalWithDebugMessage "mv ${arrFileName[$tempCounter]}~ ${arrFileName[$tempCounter]}" "Moving temporary file"
+	    if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]}.$$ ]; then
+	      evalWithDebugMessage "mv ${arrFileName[$tempCounter]}.$$ ${arrFileName[$tempCounter]}" "Moving temporary file"
             fi
 	else
 	    echoIfDebug "Not instrumenting source code. PDT not available."
