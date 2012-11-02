@@ -1504,7 +1504,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	    optCompile="$optCompile $optDefs $optIncludes"
 
             if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]} ]; then
-		evalWithDebugMessage "mv ${arrFileName[$tempCounter]} ${arrFileName[$tempCounter]}~; sed -e 's@return\([ \t]*\);@{return \1;}@g' ${arrFileName[$tempCounter]}~ > ${arrFileName[$tempCounter]};" "Making temporary file for parsing with ROSE"
+		evalWithDebugMessage "mv ${arrFileName[$tempCounter]} ${arrFileName[$tempCounter]}~; sed -e  's@\(\s*\)[^-a-zA-Z0-9_\$]return\(\s*\);@\1{ return \2;}@g' -e 's@^return\(\s*\);@{ return \1;}@g' ${arrFileName[$tempCounter]}~ > ${arrFileName[$tempCounter]};" "Making temporary file for parsing with ROSE"
 	    fi
 	    ;;
 
@@ -1518,7 +1518,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	    optCompile="$optCompile $optDefs $optIncludes"
 
             if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]} ]; then
-		evalWithDebugMessage "mv ${arrFileName[$tempCounter]} ${arrFileName[$tempCounter]}~; sed -e 's@return\([ \t]*\);@{return \1;}@g' ${arrFileName[$tempCounter]}~ > ${arrFileName[$tempCounter]};" "Making temporary file for parsing with ROSE"
+		evalWithDebugMessage "mv ${arrFileName[$tempCounter]} ${arrFileName[$tempCounter]}~; sed -e 's@\(\s*\)[^-a-zA-Z0-9_\$]return\(\s*\);@\1{ return \2;}@g' -e 's@^return\(\s*\);@{ return \1;}@g' ${arrFileName[$tempCounter]}~ > ${arrFileName[$tempCounter]};" "Making temporary file for parsing with ROSE"
 	    fi
 	    ;;
 
