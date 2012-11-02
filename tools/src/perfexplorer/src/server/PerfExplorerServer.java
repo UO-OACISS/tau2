@@ -931,6 +931,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		StringBuilder buf = new StringBuilder();
 		try {
 			DB db = this.getDB();
+			if(db.getDatabase().isTAUdb()) return getPotentialMetricsTAUdb(modelData);
 			if (db.getDBType().compareTo("db2") == 0) {
 				buf.append("select distinct count(cast (m.name as VARCHAR(256))), cast (m.name as VARCHAR(256)) ");
 			} else {
@@ -1000,6 +1001,84 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				buf.append(" group by m.name order by count(m.name) desc");
 			}
 //			PerfExplorerOutput.println(buf.toString());
+			PreparedStatement statement = db.prepareStatement(buf.toString());
+			ResultSet results = statement.executeQuery();
+			// only get the metrics that are in all trials.
+			// KAH - changed - get all metrics from all trials.
+//			int trialCount = 0;
+			while (results.next() != false) {
+/*				if (trialCount == 0)
+					trialCount = results.getInt(1);
+				if (results.getInt(1) == trialCount)
+*/					metrics.add(results.getString(2));
+			}
+			results.close();
+			statement.close();
+		} catch (Exception e) {
+			String error = "ERROR: Couldn't select the metrics from the database!";
+			System.err.println(error);
+			System.err.println(buf.toString());
+			e.printStackTrace();
+		}
+		return metrics;
+	}
+	/**
+	 * Get the metrics defined in these profiles.  The client passes in a model
+	 * with one or more experiments selected, and the code will get all the
+	 * metrics which are common among all trials for those experiemnts.
+	 * 
+	 * @param modelData
+	 * @return List
+	 */
+	private List<String> getPotentialMetricsTAUdb(RMIPerfExplorerModel modelData) {
+		//PerfExplorerOutput.println("getPotentialMetrics()...");
+		List<String> metrics = new ArrayList<String>();
+		StringBuilder buf = new StringBuilder();
+		try {
+			DB db = this.getDB();
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append("select distinct count(cast (m.name as VARCHAR(256))), cast (m.name as VARCHAR(256)) ");
+			} else {
+				buf.append("select distinct count(m.name), m.name ");
+			}
+			buf.append(" from metric m inner join trial t on m.trial = t.id ");
+			Object object = modelData.getCurrentSelection();
+			if (object instanceof View) {
+				buf.append(modelData.getViewSelectionPath(false, false, db.getDBType(), db.getSchemaVersion()));
+			} else {
+				List<Object> selections = modelData.getMultiSelection();
+				if (selections == null) {
+					// just one selection
+					Object selection = modelData.getCurrentSelection();
+	
+					if (selection instanceof Trial) {
+						buf.append(" where t.id = ");
+						buf.append(modelData.getTrial().getID());
+					}
+				} else {
+					Object selection = modelData.getCurrentSelection();
+					if (selection instanceof Trial) {
+						buf.append(" where t.id in (");
+						for (int i = 0 ; i < selections.size() ; i++) {
+							Trial trial = (Trial)selections.get(i);
+							if (i > 0)
+								buf.append(",");
+							buf.append(trial.getID());
+						}
+						buf.append(")");
+					}
+				}
+			}
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append(" group by cast (m.name as VARCHAR(256)) order by 1 desc");
+			} else if (db.getDBType().compareTo("mysql") == 0) {
+				buf.append(" group by 2 order by 1 desc");
+			//} else if (db.getDBType().compareTo("mysql") == 0) {
+					//buf.append(" group by m.name order by 1 desc");
+			} else {
+				buf.append(" group by m.name order by count(m.name) desc");
+			}
+			PerfExplorerOutput.println(buf.toString());
 			PreparedStatement statement = db.prepareStatement(buf.toString());
 			ResultSet results = statement.executeQuery();
 			// only get the metrics that are in all trials.
