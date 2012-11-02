@@ -11,7 +11,11 @@ import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
@@ -39,6 +43,10 @@ import javax.swing.plaf.basic.BasicComboPopup;
 import javax.swing.plaf.basic.ComboPopup;
 import javax.swing.plaf.metal.MetalComboBoxUI;
 
+import org.apache.batik.ext.swing.GridBagConstants;
+
+import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataValue;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
 import edu.uoregon.tau.paraprof.enums.ValueType;
@@ -569,7 +577,19 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
         			metricBox.setEnabled(false);
         			valueBox.removeAllItems();
         			valueBox.setEditable(false);
-        			fname=settings.getTopoMetadata(dex);
+        			MetaDataKey mdk=settings.getTopoMetadata(dex);
+        			
+        			if(mdk==null){
+        				Thread t = ppTrial.getDataSource().getThread(0, 0, 0);
+                		if(t==null){
+                			t=ppTrial.getDataSource().getThreads().get(0);
+                		}
+                		mdk=t.getMetaData().keySet().iterator().next();
+                		
+                		settings.setTopoMetadata(mdk, dex);
+        			}
+        			
+        			fname=mdk.toString();
         			//valueBox.setSelectedIndex(settings.meticETDex[dex]);
         			//fname = settings.getTopoMetric(dex);
         			//TODO: Metadata support
@@ -638,18 +658,22 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                 		if(t==null){
                 			t=ppTrial.getDataSource().getThreads().get(0);
                 		}
-                		t.getMetaData().keySet().iterator();
-                		FunctionSelectorDialog fSelector = new FunctionSelectorDialog(window, true,
-                				t.getMetaData().keySet().iterator(), settings.getTopoMetadata(dex), true, false);
                 		
+                		Set<MetaDataKey> mdkSet= new TreeSet<MetaDataKey>();
+                		mdkSet.addAll(t.getMetaData().keySet());
+                		mdkSet.addAll(ppTrial.getDataSource().getMetaData().keySet());
+                		         		
+                		//t.getMetaData().keySet().iterator();
+                		FunctionSelectorDialog fSelector = new FunctionSelectorDialog(window, true,
+                				mdkSet.iterator(), settings.getTopoMetadata(dex), true, false);
                 		
                 		if (fSelector.choose()) {
-                            String metadataKey = (String) fSelector.getSelectedObject();
+                            MetaDataKey metadataKey = (MetaDataKey) fSelector.getSelectedObject();
                             settings.setTopoMetadata(metadataKey,dex);
 
                             //String fname = "   <none>";
                             if (settings.getTopoMetadata(dex) != null) {
-                                fname = settings.getTopoMetadata(dex);
+                                fname = settings.getTopoMetadata(dex).toString();
                             }
 
                 		}
@@ -819,10 +843,10 @@ public class ThreeDeeControlPanel extends JPanel implements ActionListener {
                     window.redraw();
                     resetTopoAxisSliders(true);
                     
-                    for(int i=0;i<customAxisSliders.length;i++)
+                    for(int i=0;i<customAxisSpinners.length;i++)
                     {
-                    	if(customAxisSliders[i]!=null)
-                    		customAxisSliders[i].setEnabled(settings.getTopoCart().equals("Custom"));
+                    	if(customAxisSpinners[i]!=null)
+                    		customAxisSpinners[i].setEnabled(settings.getTopoCart().equals("Custom"));
                     }
                 } catch (Exception e) {
                     ParaProfUtils.handleException(e);
@@ -1077,7 +1101,7 @@ JButton mapFileButton = new JButton("map");
     }
     
     JLabel[] customAxisLabels = new JLabel[3];
-    JSpinner[] customAxisSliders = new JSpinner[3]; 
+    JSpinner[] customAxisSpinners = new JSpinner[3]; 
     
     JLabel[] selectAxisLabels = new JLabel[3];
     JSlider[] selectAxisSliders = new JSlider[3];
@@ -1138,7 +1162,7 @@ JButton mapFileButton = new JButton("map");
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         addCompItem(panel, selectAxisSliders[dex], gbc, 0, 0, 1, 1);
-
+//TODO: Fix these: Proper activation and length
         return panel;
     }
     
@@ -1153,18 +1177,18 @@ JButton mapFileButton = new JButton("map");
         gbc.weightx = 0.1;
         gbc.weighty = 0.1;
         
-        customAxisSliders[dex] = new JSpinner();
+        customAxisSpinners[dex] = new JSpinner();
         SpinnerModel model = new SpinnerNumberModel(20, //initial value
                                    0, //min
                                    1000, //max
                                    1);                //step
-        customAxisSliders[dex].setModel(model);
-        customAxisSliders[dex].setEnabled(((String)topoComboBox.getSelectedItem()).equals("Custom"));
+        customAxisSpinners[dex].setModel(model);
+        customAxisSpinners[dex].setEnabled(((String)topoComboBox.getSelectedItem()).equals("Custom"));
 
         final int idex = dex;
         int v = settings.getCustomTopoAxis(dex);
         if(v>0)
-        	customAxisSliders[dex].setValue(settings.getCustomTopoAxis(dex));
+        	customAxisSpinners[dex].setValue(settings.getCustomTopoAxis(dex));
         else{
         	settings.setCustomTopoAxis(50, dex);
         }
@@ -1173,9 +1197,11 @@ JButton mapFileButton = new JButton("map");
 
 				 try {
 					 //if(!firstSet){
-						 int val = (Integer) customAxisSliders[idex].getModel().getValue();
+						 int val = (Integer) customAxisSpinners[idex].getModel().getValue();
 						 settings.setCustomTopoAxis(val,idex);
+						 resetTopoAxisSliders(true);
 	                    window.redraw();
+						 resetTopoAxisSliders(true);
 //	                    if(val==-1){
 //	                    	selectAxisLabels[idex].setText(topoLabelStrings[idex]);
 //	                    }else selectAxisLabels[idex].setText(topoLabelStrings[idex]+": "+val);
@@ -1196,14 +1222,14 @@ JButton mapFileButton = new JButton("map");
 			}
         };
         
-        customAxisSliders[dex].addChangeListener(topoSelector);
+        customAxisSpinners[dex].addChangeListener(topoSelector);
 
         gbc.insets = new Insets(1, 1, 1, 1);
 
         gbc.weightx = 1.0;
         gbc.weighty = 1.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        addCompItem(panel, customAxisSliders[dex], gbc, 0, 0, 1, 1);
+        addCompItem(panel, customAxisSpinners[dex], gbc, 0, 0, 1, 1);
 
         return panel;
     }
@@ -1525,7 +1551,7 @@ JButton mapFileButton = new JButton("map");
         	{
         		firstSet=true;
         		this.selectAxisSliders[i].setMaximum(window.tsizes[i]);
-        		if(window.tsizes[i]<=1){
+        		if(window.tsizes[i]<1){
         			selectAxisSliders[i].setEnabled(false);
         		}else
         			selectAxisSliders[i].setEnabled(true);
@@ -1748,7 +1774,14 @@ JButton mapFileButton = new JButton("map");
         addCompItem(selectionPanel, functionSelectorPanel, gbc, 1, 0, 1, 1);
         addCompItem(selectionPanel, nodeSelectorPanel, gbc, 1, 1, 1, 1);
         addCompItem(selectionPanel, heightValueField, gbc, 1, 2, 1, 1);
-        addCompItem(selectionPanel, colorValueField, gbc, 1, 3, 1, 1);
+        
+        GridBagConstraints gbcCF=(GridBagConstraints) gbc.clone();
+        
+        gbcCF.fill = GridBagConstraints.NONE;
+        gbcCF.weightx = 0.0;
+        addCompItem(selectionPanel, colorValueField, gbcCF, 1, 3, 1, 1);
+        //gbc.fill = GridBagConstraints.BOTH;
+        //gbc.weightx = 1.0;
 
         addCompItem(regularPanel, selectionPanel, gbc, 0, 4, 2, 1);
 

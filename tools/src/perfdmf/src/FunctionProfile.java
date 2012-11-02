@@ -243,6 +243,16 @@ public class FunctionProfile {
             int source = (s * METRIC_SIZE * (numMetrics + 1));
             int dest = (s * METRIC_SIZE * (newMetricSize + 1));
             for (int m = 0; m < METRIC_SIZE * (numMetrics + 1); m++) {
+            	if(dest+m>=newArray.length||dest+m>=data.length)
+            	{
+            		if(dest+m>=newArray.length){
+            			System.out.println(function.getName()+", metric "+m+": New metric data array entry out of bounds (addMetric)");
+            		}
+            		if(dest+m>=data.length){
+            			System.out.println(function.getName()+", metric "+m+": Metric data array access out of bounds (addMetric)");
+            		}
+            		continue;
+            	}
                 newArray[dest + m] = data[source + m];
             }
         }
@@ -373,6 +383,11 @@ public class FunctionProfile {
     		numMetrics = thread.getNumMetrics();
     	}
         int location = (snapshot * (METRIC_SIZE * (numMetrics + 1))) + (metric * METRIC_SIZE) + offset;
+        if(location>=data.length)
+        {
+        	System.out.println(function.getName()+", Metric "+metric+": Data array input out of bounds (putDouble)");
+        	return;
+        }
         data[location] = inDouble;
     }
 
@@ -397,6 +412,11 @@ public class FunctionProfile {
     		numMetrics = thread.getNumMetrics();
     	}
         int location = (snapshot * (METRIC_SIZE * (numMetrics + 1))) + (metric * METRIC_SIZE) + offset;
+        if(location>=data.length)
+        {
+        	System.out.println(function.getName()+", Metric "+metric+": Data array access out of bounds (getDouble)");
+        	return 0;
+        }
         return data[location];
     }
 

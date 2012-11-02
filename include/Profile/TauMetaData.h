@@ -48,8 +48,16 @@ struct Tau_Metadata_Compare: std::binary_function<Tau_metadata_key,Tau_metadata_
     stringstream left;
     stringstream right;
 	// what happens if timer_context is null? I guess it works...
-	left << lhs.name << lhs.timer_context << lhs.call_number << ":" << lhs.timestamp;
-	right << rhs.name << rhs.timer_context << rhs.call_number << ":" << rhs.timestamp;
+    if (lhs.timer_context == NULL) {
+      left << lhs.name;
+    } else {
+      left << lhs.name << lhs.timer_context << lhs.call_number << ":" << lhs.timestamp;
+    }
+    if (rhs.timer_context == NULL) {
+      right << rhs.name ;
+    } else {
+      right << rhs.name << rhs.timer_context << rhs.call_number << ":" << rhs.timestamp;
+    }
     if (strcmp(left.str().c_str(), right.str().c_str()) < 0) return true;
 	return false;
   }

@@ -112,6 +112,20 @@ public class MetaDataMap {
 			return (lhs.toString().compareTo(rhs.toString()));
 		}
 
+		@Override
+		public String toString() {
+			
+			if(timestamp==0&&timer_context==null&&call_number==0){
+				return name;
+			}
+			
+			return "name=" + name + ", timer_context="
+					+ timer_context + ", call_number=" + call_number
+					+ ", timestamp=" + timestamp;
+		}
+		
+		
+
 	}
 	
 	/* the object can be one of:
@@ -123,6 +137,10 @@ public class MetaDataMap {
 	 * Object (another name/value pair in the map)
 	 */
 	public class MetaDataValue {
+		@Override
+		public String toString() {
+			return value.toString();
+		}
 		/* (non-Javadoc)
 		 * @see java.lang.Object#equals(java.lang.Object)
 		 */

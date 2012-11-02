@@ -34,7 +34,7 @@ public class View implements Serializable {
 	 */
 	private static final long serialVersionUID = 7198343642137106238L;
 	private static List<String> fieldNames = null;
-	private List<String> fields = null;
+	protected List<String> fields = null;
 	private DefaultMutableTreeNode node = null;
 	private View parent = null;
     private Database database;
@@ -351,7 +351,9 @@ public class View implements Serializable {
 	public void setID(int id) {
 		this.viewID = id;
 	}
-
+	public void setField(String name, String field){
+		setField(fieldNames.indexOf(name.toUpperCase()), field);
+	}
     public void setField(int idx, String field) {
         if (DBConnector.isIntegerType(database.getAppFieldTypes()[idx]) && field != null) {
             try {
@@ -371,6 +373,18 @@ public class View implements Serializable {
             }
         }
         fields.set(idx, field);
+    }
+    public void rename(DB db, String newName) {
+    	try{
+        PreparedStatement statement = db.prepareStatement("UPDATE " + db.getSchemaPrefix() + "taudb_view SET name = ? WHERE id = ?");
+        statement.setString(1, newName);
+        statement.setInt(2, this.getID());
+
+        statement.executeUpdate();
+        setField("NAME",newName);
+    	}catch (SQLException ex){
+        	ex.printStackTrace();
+        }
     }
 
 	public int saveView(DB db) throws SQLException {

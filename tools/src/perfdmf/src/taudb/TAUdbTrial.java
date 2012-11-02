@@ -483,7 +483,27 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 	public int saveTrial(DB db) {
 		return TAUdbTrial.saveTrialTAUdb(db, trialID, dataSource, name);
 	}
+	
+	public void rename(DB db, String newName) {
+		String sql = "UPDATE "
+				+ db.getSchemaPrefix()
+				+ "trial SET name=? where id=?";
+		PreparedStatement statement;
+		try {
+			statement = db.prepareStatement(sql);
+			statement.setString(1, name);
+			statement.setInt(2, trialID);
+			statement.executeUpdate();
+			statement.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
+		
+		this.setName(newName);
+		
+	}
 	public static int saveTrialTAUdb(DB db, int trialID, DataSource dataSource,
 			String name) {
 		if (db.getSchemaVersion() < 1) {

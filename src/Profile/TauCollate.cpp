@@ -170,9 +170,9 @@ static double getStepValue(collate_step step, double prevValue,
     break;
   }
   case step_min: {
-    if (nextValue < 0) {
+    if (nextValue <= 0) {
       ret = prevValue;
-    } else if (prevValue < 0) {
+    } else if (prevValue <= 0) {
       ret = nextValue;
     } else {
       ret = (nextValue < prevValue)?nextValue:prevValue;

@@ -19,7 +19,7 @@
 # Save user provided arguments for use by sub-configures.
 AC_DEFUN([AC_SCOREP_TOPLEVEL_ARGS],
 [
-# Quote arguments with shell meta charatcers.
+# Quote arguments with shell meta characters.
 TOPLEVEL_CONFIGURE_ARGUMENTS=
 set -- "$progname" "$[@]"
 for ac_arg
