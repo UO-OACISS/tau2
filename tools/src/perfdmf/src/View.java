@@ -87,6 +87,7 @@ public class View implements Serializable {
 		this.viewID = view.viewID;
 	}
 
+
 	public static Iterator<String> getFieldNames(DB db) {
 		String allUpperCase = "TRIAL_VIEW";
 		String allLowerCase = "trial_view";
@@ -172,7 +173,7 @@ public class View implements Serializable {
 	}
 
 	public String toString() {
-		return getField("NAME");
+		return "View: " + getField("NAME");
 	}
 
 	public void setDMTN(DefaultMutableTreeNode node) {
