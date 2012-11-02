@@ -9,6 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -283,6 +284,15 @@ public class View implements Serializable {
 	public static List<Trial> getTrialsForTAUdbView (List<View> views, DB db) {
 		//PerfExplorerOutput.println("getTrialsForView()...");
 		List<Trial> trials = new ArrayList<Trial>();
+		HashMap<Integer, View> hashViews = new HashMap<Integer, View>();
+		for(View view: views){
+			hashViews.put(view.getID(), view);
+		}
+		return getTrialsForTAUdbView(views, hashViews, db);
+	}
+
+
+	private static List<Trial> getTrialsForTAUdbView(List<View> views,HashMap<Integer, View> hashViews, DB db) {
 		try {
 			StringBuilder sql = new StringBuilder();
 			sql.append("select conjoin, taudb_view, table_name, column_name, operator, value from taudb_view left outer join taudb_view_parameter on taudb_view.id = taudb_view_parameter.taudb_view where taudb_view.id in (");
@@ -329,17 +339,20 @@ public class View implements Serializable {
 				}
 				alias++;
 				currentView = viewid;
+				hashViews.get(currentView).setWhereClause(whereClause.toString());
+				hashViews.get(currentView).setJoinClause(joinClause.toString());
 			}
 			statement.close();
 			
 			//PerfExplorerOutput.println(whereClause.toString());
-			trials = Trial.getTrialList(db, joinClause.toString() + " " + whereClause.toString(), false);
+
+			return Trial.getTrialList(db, joinClause.toString() + " " + whereClause.toString(), false);
 		} catch (Exception e) {
 			String error = "ERROR: Couldn't select views from the database!";
 			System.err.println(error);
 			e.printStackTrace();
 		}
-		return trials;
+		return null;
 	}
 
 	public int getID() {
@@ -580,7 +593,7 @@ public static void deleteView(int viewID, DB db) throws SQLException{
 	}
 
 	public String getWhereClause(String dbType) {
-		if (whereClause == null) {
+		if (whereClause == null || whereClause.equals("")) {
 			StringBuilder wc = new StringBuilder();
 			if (dbType.compareTo("db2") == 0) {
 				wc.append(" cast (");
@@ -596,6 +609,7 @@ public static void deleteView(int viewID, DB db) throws SQLException{
 			if (dbType.compareTo("db2") == 0) {
 				wc.append(" as varchar(256)) ");
 			}
+
 			wc.append (" " + getField("OPERATOR") + " '");
 			wc.append (getField("VALUE"));
 			wc.append ("' ");
