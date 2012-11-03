@@ -1078,7 +1078,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			} else {
 				buf.append(" group by m.name order by count(m.name) desc");
 			}
-			PerfExplorerOutput.println(buf.toString());
+//			PerfExplorerOutput.println(buf.toString());
 			PreparedStatement statement = db.prepareStatement(buf.toString());
 			ResultSet results = statement.executeQuery();
 			// only get the metrics that are in all trials.
