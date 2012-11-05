@@ -11,12 +11,16 @@ import java.sql.DriverPropertyInfo;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+
+
+//import common.Logger;
 
 import edu.uoregon.tau.perfdmf.Database;
 
@@ -88,6 +92,10 @@ public class DBConnector implements DB {
         public boolean jdbcCompliant() {
             return this.driver.jdbcCompliant();
         }
+        public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException{
+        	throw new SQLFeatureNotSupportedException();
+        }
+
     }
 
     // it should be "org.postgresql.Driver" in PostgreSQL.
