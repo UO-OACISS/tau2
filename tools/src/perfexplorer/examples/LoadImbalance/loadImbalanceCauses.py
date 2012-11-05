@@ -36,6 +36,8 @@ def loadFile(fileName):
 	input = None
 	if fileName.endswith("ppk"):
 		input = DataSourceResult(DataSourceResult.PPK, files, False)
+	elif fileName.endswith("xml"):
+		input = DataSourceResult(DataSourceResult.SNAP, files, False)
 	else:
 		input = DataSourceResult(DataSourceResult.TAUPROFILE, files, False)
 	return input
