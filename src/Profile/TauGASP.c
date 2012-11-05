@@ -461,16 +461,35 @@ void gasp_event_notifyVA(gasp_context_t context, unsigned int evttag,
         TAU_TRACE_GASPI_PUT(dst, n);
         break;
     }
+#if 0 /* Disabled until we can prevent double-counting with -optTrackUPCR */
     case GASP_UPC_MEMCPY:
     {
-        int src_rank, dest_rank;
+        int src_rank, dst_rank;
         gasp_upc_PTS_t *dst = (gasp_upc_PTS_t *) va_arg(argptr, gasp_upc_PTS_t *);
         gasp_upc_PTS_t *src = (gasp_upc_PTS_t *) va_arg(argptr, gasp_upc_PTS_t *);
         size_t n = (int)va_arg(argptr, int);
-        //TAU_REGISTER_EVENT(upcevent, tagstr);
-        //TAU_EVENT(upcevent, n);
+        GASPI_UPCALL(context, src_rank=gaspu_upcall_threadof(src));
+        GASPI_UPCALL(context, dst_rank=gaspu_upcall_threadof(dst));
+        switch(evttype) {
+        case GASP_START:
+            if (context->mythread == src_rank) {
+                TAU_TRACE_SENDMSG(TAU_UPC_TAGID_NEXT, dst_rank, n);
+            } else {
+                TAU_TRACE_SENDMSG_REMOTE(TAU_UPC_TAGID_NEXT, dst_rank, n, src_rank);
+            }
+        case GASP_END:
+            if (context->mythread == src_rank) {
+                TAU_TRACE_RECVMSG_REMOTE(TAU_UPC_TAGID, context->mythread, n, dst_rank);
+            } else {
+                TAU_TRACE_RECVMSG(TAU_UPC_TAGID, src_rank, n);
+            }
+        case GASP_ATOMIC:
+            TAU_REGISTER_EVENT(upcevent, tagstr);
+            TAU_EVENT(upcevent, n);
+        }
         break;
     }
+#endif
     case GASP_UPC_MEMGET:
     {
         void *dst = (void *) va_arg(argptr, void *);
