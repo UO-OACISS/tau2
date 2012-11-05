@@ -10,34 +10,42 @@
 
 .SUFFIXES : .c
 
-include ../../Makefile.inc
+PWD=$(shell pwd)
+ROOTDIR?=$(PWD)/../..
+include $(ROOTDIR)/Makefile.inc
 
-HEADERS=${wildcard ../../include/*.h}
+HEADERS=${wildcard *.h}
 SOURCES=${wildcard *.c}
 OBJS=${patsubst %.c, %.o, ${SOURCES}}
 
-TAUDBLIB=../../lib/libtaudb.a
-INCLUDE=-I. -I../../include $(INCLUDES)
-TARGET=../libtaudb_dump.a
+TARGET=taudb_test
+TAUDBLIB=$(ROOTDIR)/lib/libtaudb.a
+DUMP_FUNCS=../libtaudb_dump.a
+INCLUDE=-I. -I$(ROOTDIR)/include $(INCLUDES) -I../dump_functions
 
 all: $(TARGET)
 
-$(TARGET): $(OBJS)
-	echo "  Making : $(TARGET)"
-	$(AR) -qc $(TARGET) $(OBJS)
-	$(RANLIB) $(TARGET)
+$(TARGET): $(TAUDBLIB) $(HEADERS) $(OBJS)
+	echo " Linking : $@"
+	$(CC) $(FLAGS) $@.o $(DUMP_FUNCS) -o $@ $(TAUDBLIB) $(LIBS)
 
 # rebuild everything if the headers or the makefile changes
-$(OBJS): $(HEADERS) Makefile
+$(OBJS): $(HEADERS) Makefile $(ROOTDIR)/Makefile.inc
 
 .c.o:
 	echo "Building : $@ from $<"
 	$(CC) $(FLAGS) -c $(INCLUDE) $< -o $@ $(PERFDMF_SUPPORT) $(DEBUG)
 
-clean:
-	echo "Removing : $(OBJS)"
-	/bin/rm -f $(OBJS) $(TARGET) *.pdb *.inst.c
+test: $(TARGET)
+	echo " Testing : $(TARGET)..."
+	#time `./$(TARGET) $(shell pwd) >& $(TARGET).log`
+	time $(shell ./$(TARGET) $(TEST_CONFIG) $(PWD) >& $(PWD)/$(TARGET).log)
+	echo " \n...Done. Contents of $(PWD)/$(TARGET).log: \n"
+	cat $(PWD)/$(TARGET).log
+	echo ""
 
-test:
+clean:
+	echo "Removing : $(OBJS) $(TARGET)"
+	/bin/rm -f $(OBJS) $(TARGET) $(TARGET).log *.pdb *.inst.c
 
 remake: clean all

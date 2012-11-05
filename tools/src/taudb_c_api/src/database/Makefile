@@ -10,32 +10,26 @@
 
 .SUFFIXES : .c
 
-include ../../Makefile.inc
+ROOTDIR?=$(shell pwd)/../..
+MAKEFILE_INC=$(ROOTDIR)/Makefile.inc
+include $(MAKEFILE_INC)
 
-HEADERS=${wildcard ../../include/*.h}
+HEADERS=${wildcard $(ROOTDIR)/include/*.h}
 SOURCES=${wildcard *.c}
 OBJS=${patsubst %.c, %.o, ${SOURCES}}
-
-TAUDBLIB=../../lib/libtaudb.a
-INCLUDE=-I. -I../../include $(INCLUDES)
-TARGET=../libtaudb_dump.a
+TARGET=$(OBJS)
 
 all: $(TARGET)
 
-$(TARGET): $(OBJS)
-	echo "  Making : $(TARGET)"
-	$(AR) -qc $(TARGET) $(OBJS)
-	$(RANLIB) $(TARGET)
-
 # rebuild everything if the headers or the makefile changes
-$(OBJS): $(HEADERS) Makefile
+$(OBJS): $(HEADERS) Makefile $(MAKEFILE_INC)
 
 .c.o:
 	echo "Building : $@ from $<"
-	$(CC) $(FLAGS) -c $(INCLUDE) $< -o $@ $(PERFDMF_SUPPORT) $(DEBUG)
+	$(CC) $(FLAGS) -c -I$(ROOTDIR)/include $(INCLUDE) $< -o $@ $(DEBUG)
 
 clean:
-	echo "Removing : $(OBJS)"
+	echo "Removing : $(OBJS) $(TARGET)"
 	/bin/rm -f $(OBJS) $(TARGET) *.pdb *.inst.c
 
 test:

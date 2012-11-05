@@ -14,3 +14,5 @@ void gaspu_dump_shared(void *ptr_to_ptr_to_shared, char *outputbuf, int bufsz);
 void gaspu_getenv(const char *key, const char **val);
 void gaspu_flags_to_string(int flags, char *str, int sz);
 void gaspu_collop_to_string(int op, char *str, int sz);
+
+int gaspu_upcall_threadof(void *ptr);
