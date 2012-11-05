@@ -5,6 +5,7 @@ import java.awt.Toolkit;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.StringTokenizer;
 
 import javax.swing.JFrame;
@@ -69,13 +70,13 @@ public class CommunicationMatrix {
 				if (data[thread][0] == 0) continue;
 				
 				// find events with communication matrix data - handle flat profile events
-				if (event.startsWith("Message size sent to node ") && !event.contains("=>")) {
+				if (event.startsWith("Message size") && !event.contains("=>")) {
 					foundData = true;
 					// split the string
 					extractData(data, thread, event, event, allPaths);
 				}
 				// find events with communication matrix data - handle context profile events
-				else if (event.startsWith("Message size sent to node ") && event.contains("=>")) {
+				else if (event.startsWith("Message size") && event.contains("=>")) {
 					foundData = true;
 					// split the string of callpath function names from the user event name
 					StringTokenizer st = new StringTokenizer(event, ":");
@@ -119,27 +120,24 @@ public class CommunicationMatrix {
 		window.setVisible(true);
 		return matrix.getWindow();
     }
-
-	private void extractData(double[][] data, Integer thread, String event, String first, String path) {
+	private void addHeatMapData(double[][] data, int sender,int receiver, String path) {
 		double numEvents, eventMax, eventMin, eventMean, eventSumSqr, volume = 0;
 		double[] empty = {0,0,0,0,0,0};
 
-		StringTokenizer st = new StringTokenizer(first, "Message size sent to node ");
-		if (st.hasMoreTokens()) {
-			int receiver = Integer.parseInt(st.nextToken());
 
-			double[] pointData = mapData.get(thread, receiver, path);
+
+			double[] pointData = mapData.get(sender, receiver, path);
 			if (pointData == null) {
 				pointData = empty;
 			}
 
-			numEvents = data[thread][COUNT];
+			numEvents = data[sender][COUNT];
 			pointData[COUNT] += numEvents;
 			
-			eventMax = data[thread][MAX];
+			eventMax = data[sender][MAX];
 			pointData[MAX] = Math.max(eventMax, pointData[MAX]);
 			
-			eventMin = data[thread][MIN];
+			eventMin = data[sender][MIN];
 			if (pointData[MIN] > 0) {
 				pointData[MIN] = Math.min(pointData[MIN],eventMin);
 			} else {
@@ -147,18 +145,50 @@ public class CommunicationMatrix {
 			}
 			
 			// we'll recompute this later.
-			eventMean = data[thread][MEAN];
+			eventMean = data[sender][MEAN];
 			pointData[MEAN] += eventMean;
 			
 			// we'll recompute this later.
-			eventSumSqr = data[thread][STDDEV];
+			eventSumSqr = data[sender][STDDEV];
 			pointData[STDDEV] += eventSumSqr;
 			
 			volume = numEvents * eventMean;
 			pointData[VOLUME] += volume;
-			mapData.put(thread, receiver, path, pointData);
-		}
+			mapData.put(sender, receiver, path, pointData);
+		
 	}
+	
+	private void extractData(double[][] data, Integer thread, String event,String first, String path) {
+
+		if (first.contains("all nodes")) {
+			return;
+		}
+		int receiver;
+		int sender;
+		Scanner st = new Scanner(first);
+		int readInt = -1;
+		while (st.hasNext()) {
+			if (!st.hasNextInt()) {
+				st.next();
+			} else {
+				readInt = st.nextInt();
+			}
+		}
+		if (first.contains("sent")) {
+			receiver = readInt;
+			sender = thread;
+			addHeatMapData(data, sender, receiver, path);
+		} else if (first.contains("received")) {
+			sender = readInt;
+			receiver = thread;
+			addHeatMapData(data, sender, receiver, path);
+
+		}
+
+	}
+	
+	
+	
 	
 	public JFrame getWindow() {
 		return window;
