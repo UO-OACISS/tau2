@@ -698,7 +698,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 
 	private void createPopulateTempTrailTable(DB db) throws SQLException {
 		buf = buildCreateTableStatement("trial", "temp_trial", db, true, false);
-		buf.append("(select trial.* from trial ");
+		buf.append("(select t.* from trial t ");
 		if (db.getSchemaVersion() == 0) {
 			buf.append("inner join experiment ");
 			buf.append("on trial.experiment = experiment.id ");
@@ -715,7 +715,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 			} else if (obj instanceof Experiment) {
 				buf.append("where experiment.id = " + model.getExperiment().getID());
 			} else if (obj instanceof Trial) {
-				buf.append("where trial.id = " + model.getTrial().getID());
+				buf.append("where t.id = " + model.getTrial().getID());
 			} else if (obj instanceof View) {
 				String whereClause = model.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion());
 				if (whereClause != null && whereClause.length() > 0) {
@@ -772,7 +772,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 						if (foundapp || foundexp) {
 							buf.append(" and ");
 						}
-						buf.append("trial.id in (");
+						buf.append("t.id in (");
 						foundtrial = true;
 					} else {
 						buf.append(",");

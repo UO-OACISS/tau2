@@ -418,18 +418,19 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 	}
 
 	public String toString() {
-		StringBuilder b = new StringBuilder();
-		b.append("id = " + trialID + ", ");
-		b.append("name = " + name + ", ");
-		b.append("dataSource = " + dataSourceType + ", ");
-		b.append("nodeCount = " + nodeCount + ", ");
-		b.append("contextsPerNode = " + contextsPerNode + ", ");
-		b.append("threadsPerContext = " + threadsPerContext + ", ");
-		b.append("totalThreads = " + totalThreads + "\n");
-		for (String key : primaryMetadata.keySet()) {
-			b.append(key + ": " + primaryMetadata.get(key) + "\n");
-		}
-		return b.toString();
+//		StringBuilder b = new StringBuilder();
+//		b.append("id = " + trialID + ", ");
+//		b.append("name = " + name + ", ");
+//		b.append("dataSource = " + dataSourceType + ", ");
+//		b.append("nodeCount = " + nodeCount + ", ");
+//		b.append("contextsPerNode = " + contextsPerNode + ", ");
+//		b.append("threadsPerContext = " + threadsPerContext + ", ");
+//		b.append("totalThreads = " + totalThreads + "\n");
+//		for (String key : primaryMetadata.keySet()) {
+//			b.append(key + ": " + primaryMetadata.get(key) + "\n");
+//		}
+//		return b.toString();
+		return name;
 	}
 
 	public static Map<Integer, TAUdbTrial> getTrials(TAUdbSession session) {
