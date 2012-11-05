@@ -45,6 +45,10 @@ public class UserEvent implements Serializable, Comparable<UserEvent> {
         return id;
     }
 
+    public void setID(int id) {
+    	this.id = id;
+    }
+    
     public void setMaxUserEventNumberValue(double maxUserEventNumberValue) {
         this.maxUserEventNumberValue = maxUserEventNumberValue;
     }

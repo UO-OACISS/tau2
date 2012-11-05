@@ -989,7 +989,7 @@ void tau_exp_track_comm_split (MPI_Comm oldcomm, MPI_Comm newcomm) {
   }
 
 /*   printf ("buffer is %s\n", buffer); */
-  sprintf (namebuffer, "MPI_Comm %lu", newcommhandle);
+  sprintf (namebuffer, "MPI_Comm %p", newcommhandle);
   TAU_METADATA(namebuffer, buffer);
 }
 #endif /* TAU_EXP_TRACK_COMM */
@@ -1460,6 +1460,7 @@ int  MPI_Finalize(  )
   TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
   
+  writeMetaDataAfterMPI_Init(); 
 
   if (TauEnv_get_synchronize_clocks()) {
     TauSyncFinalClocks();

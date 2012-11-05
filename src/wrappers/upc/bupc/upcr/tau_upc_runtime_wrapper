@@ -93,7 +93,7 @@ pdtdir="`grep PDTDIR= $TAU_MAKEFILE | sed -e 's/PDTDIR=//g' `"
 tauarch="`tau-config | grep TAUARCH | sed -e 's@TAUARCH=@@g' `"
 basedir="`tau-config | grep BASEDIR | sed -e 's@BASEDIR=@@g' `"
 
-parser=$pdtdir/$tauarch/bin/upcparse
+parser="$pdtdir/$tauarch/bin/cparse"
 if [ ! -x $parser ]; then
   echo "ERROR: Can't execute $parser: Using PDT = $pdtdir, ARCH = $tauarch"
   exit 1
@@ -101,8 +101,8 @@ fi
 baseheader=`basename $headerfile .h`
 
 # Parse the header file to create pdb file
-echo $parser $headerfile -DGASNET_SEQ -I$upcdir/include -DUPCRI_BUILDING_LIBUPCR=1 -I$gasnetdir/include -I$gasnetdir/include/$gasnetconduit -DGASNETT_USE_GCC_ATTRIBUTE_MAYALIAS
-$parser $headerfile -DGASNET_SEQ -I$upcdir/include -DUPCRI_BUILDING_LIBUPCR=1 -I$gasnetdir/include -I$gasnetdir/include/$gasnetconduit -DGASNETT_USE_GCC_ATTRIBUTE_MAYALIAS
+echo $parser $headerfile -DPLATFORM_COMPILER_GNU -DGASNET_SEQ -I$upcdir/include -DUPCRI_BUILDING_LIBUPCR=1 -I$gasnetdir/include -I$gasnetdir/include/$gasnetconduit -DGASNETT_USE_GCC_ATTRIBUTE_MAYALIAS
+$parser $headerfile -DPLATFORM_COMPILER_GNU -DGASNET_SEQ -I$upcdir/include -DUPCRI_BUILDING_LIBUPCR=1 -I$gasnetdir/include -I$gasnetdir/include/$gasnetconduit -DGASNETT_USE_GCC_ATTRIBUTE_MAYALIAS
 mv $baseheader.pdb $headerfile.pdb 
 
 if [ $runtime_specified = 1 ] ; then

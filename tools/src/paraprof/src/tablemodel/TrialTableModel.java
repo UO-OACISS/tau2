@@ -13,6 +13,8 @@ import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.tree.DefaultTreeModel;
 
+import edu.uoregon.tau.common.MetaDataMap;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
 import edu.uoregon.tau.paraprof.ParaProf;
 import edu.uoregon.tau.paraprof.ParaProfManagerWindow;
 import edu.uoregon.tau.paraprof.ParaProfTrial;
@@ -36,7 +38,7 @@ public class TrialTableModel extends AbstractTableModel {
     private DefaultTreeModel defaultTreeModel;
     private List<String> fieldNames;
 
-    private Map<String, String> metaData = new TreeMap<String, String>();
+    private MetaDataMap metaData = new MetaDataMap();
 
     public TrialTableModel(ParaProfManagerWindow paraProfManager, ParaProfTrial ppTrial, DefaultTreeModel defaultTreeModel) {
         this.ppTrial = ppTrial;
@@ -56,9 +58,9 @@ public class TrialTableModel extends AbstractTableModel {
         metaData.putAll(ppTrial.getTrial().getMetaData());
         metaData.putAll(ppTrial.getTrial().getUncommonMetaData());
 
-        for (Iterator<String> it = metaData.keySet().iterator(); it.hasNext();) {
-            String string = it.next();
-            fieldNames.add(string);
+        for (Iterator<MetaDataKey> it = metaData.keySet().iterator(); it.hasNext();) {
+            MetaDataKey key = it.next();
+            fieldNames.add(key.name);
         }
     }
 

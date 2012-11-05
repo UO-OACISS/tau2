@@ -18,7 +18,7 @@ import java.util.List;
 /**
  * @author amorris
  *
- * TODO ...
+ *
  */
 public class Function implements Serializable, Comparable<Function> {
 
@@ -27,6 +27,7 @@ public class Function implements Serializable, Comparable<Function> {
 	 */
 	private static final long serialVersionUID = 362090098221172924L;
 	private String name;
+	private String short_name;
     private String reversedName;
     private int id = -1;
     private List<Group> groups = new ArrayList<Group>();
@@ -44,6 +45,8 @@ public class Function implements Serializable, Comparable<Function> {
     private FunctionProfile totalProfile;
     private FunctionProfile minProfile;
     private FunctionProfile maxProfile;
+    private FunctionProfile meanAllProfile;
+    private FunctionProfile stddevAllProfile;
 
     // color settings
     private boolean colorFlag = false;
@@ -52,10 +55,12 @@ public class Function implements Serializable, Comparable<Function> {
 
     // source code link
     private SourceRegion sourceLink;
+    
+    
 
     public Function(String name, int id, int numMetrics) {
         this.name = name;
-        this.id = id;
+        this.setID(id);
     }
 
     public int getID() {
@@ -71,6 +76,15 @@ public class Function implements Serializable, Comparable<Function> {
         this.reversedName = null;
     }
 
+    public String getCallpathNodeName() {
+    	if (!this.isCallPathFunction()) {
+    		return this.name;
+    	}
+        String s = name;
+        int location = s.lastIndexOf("=>");
+        return s.substring(location + 3);
+    }
+    
     /**
      * Retrieve the reversed (callpath) name
      * If the function's name is "A => B => C", this will return "C <= B <= A"
@@ -123,6 +137,9 @@ public class Function implements Serializable, Comparable<Function> {
 
     public static SourceRegion getSourceLink(String name) {
         SourceRegion sourceLink = new SourceRegion();
+        
+        // initialize to the full name for now
+        sourceLink.setShortName(name);
 
         if (name.indexOf("OpenMP location:") != -1) { // opari instrumentation points
             // parse source location with format:
@@ -133,6 +150,7 @@ public class Function implements Serializable, Comparable<Function> {
             int comma = name.indexOf(",");
             int right = name.indexOf(">");
 
+            sourceLink.setShortName(name.substring(0,fileIndex));
             sourceLink.setFilename(name.substring(fileIndex + 5, left).trim());
             sourceLink.setStartLine(Integer.parseInt(name.substring(left + 1, comma).trim()));
             sourceLink.setEndLine(Integer.parseInt(name.substring(comma + 1, right).trim()));
@@ -167,6 +185,26 @@ public class Function implements Serializable, Comparable<Function> {
             name = name.substring(name.lastIndexOf("=>") + 2);
         }
 
+        // check for parameter based profile name
+    	List<Parameter> parameters = new ArrayList<Parameter>();
+        int parameterStart = name.indexOf("[ <");
+        while (parameterStart != -1) {
+        	
+        	// find the end of the name
+        	int parameterEnd = name.indexOf("> = <", parameterStart);
+        	String pname = name.substring(parameterStart+3, parameterEnd).trim();
+        	// find the start of the value
+        	parameterStart = name.indexOf("<", parameterEnd);
+        	// and the end of the value
+        	parameterEnd = name.indexOf(">", parameterStart);
+        	String pval = name.substring(parameterStart+1, parameterEnd).trim();
+        	// create a parameter and put it in the list.
+        	Parameter param = new Parameter(pname, pval, -1);
+        	parameters.add(param);
+            parameterStart = name.indexOf(", <", parameterEnd);
+        }        
+    	sourceLink.setParameters(parameters);
+
         int filenameStart = name.indexOf("[{");
         if (filenameStart == -1) {
             return sourceLink;
@@ -176,8 +214,10 @@ public class Function implements Serializable, Comparable<Function> {
             // quit, it's not valid
             return sourceLink;
         }
-
+        
         int openbracket1 = name.indexOf("{", filenameEnd + 1);
+        sourceLink.setShortName(name.substring(0,filenameStart).trim());
+        
         int comma1 = name.indexOf(",", filenameEnd + 1);
         int closebracket1 = name.indexOf("}", filenameEnd + 1);
         int dash = name.indexOf("-", closebracket1 + 1);
@@ -385,8 +425,16 @@ public class Function implements Serializable, Comparable<Function> {
         this.stddevProfile = fp;
     }
 
+    public void setStddevAllProfile(FunctionProfile fp) {
+        this.stddevAllProfile = fp;
+    }
+
     public FunctionProfile getStddevProfile() {
         return stddevProfile;
+    }
+
+    public FunctionProfile getStddevAllProfile() {
+        return stddevAllProfile;
     }
 
     // mean section
@@ -396,6 +444,14 @@ public class Function implements Serializable, Comparable<Function> {
 
     public FunctionProfile getMeanProfile() {
         return meanProfile;
+    }
+
+    public void setMeanAllProfile(FunctionProfile fp) {
+        this.meanAllProfile = fp;
+    }
+
+    public FunctionProfile getMeanAllProfile() {
+        return meanAllProfile;
     }
 
     public double getMeanInclusive(int metric) {
@@ -479,7 +535,7 @@ public class Function implements Serializable, Comparable<Function> {
     }
     
     public int compareTo(Function o) {
-        return this.id -  o.getID();
+        return this.getID() -  o.getID();
     }
 
     public boolean isPhase() {
@@ -519,4 +575,19 @@ public class Function implements Serializable, Comparable<Function> {
         this.parentPhase = parentPhase;
     }
 
+    public void setSourceRegion(SourceRegion sourceRegion) {
+    	this.sourceLink = sourceRegion;
+    }
+
+	public String getShortName() {
+		return short_name;
+	}
+
+	public void setShortName(String short_name) {
+		this.short_name = short_name;
+	}
+
+	public void setID(int id) {
+		this.id = id;
+	}
 }

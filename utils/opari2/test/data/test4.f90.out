@@ -21,6 +21,7 @@
 
 program test4
       include 'test4.f90.opari.inc'
+#line 21 "test4.f90"
   integer i
   
   real a(5,5), b(5,5), c(5,5)
@@ -97,10 +98,8 @@ program test4
   
       pomp2_if = .true.
       if (pomp2_if) then
-      call POMP2_Untied_task_create_begin(pomp2_region_6, pomp2_new_task, &
-      pomp2_old_task, &
-      pomp2_if, &
-     pomp2_ctc_6 )
+      call POMP2_Untied_task_create_begin(pomp2_region_6, pomp2_new_task,&
+      pomp2_old_task, pomp2_if, pomp2_ctc_6 )
       end if
 #line 48 "test4.f90"
   !$omp task untied if(pomp2_if) firstprivate(pomp2_new_task, pomp2_if)
@@ -119,7 +118,8 @@ program test4
       end if
 #line 51 "test4.f90"
   
-      call POMP2_Implicit_barrier_enter(pomp2_region_1, pomp2_old_task)
+      call POMP2_Implicit_barrier_enter(pomp2_region_1,&
+      pomp2_old_task)
 !$omp barrier
       call POMP2_Implicit_barrier_exit(pomp2_region_1, pomp2_old_task)
       call POMP2_Parallel_end(pomp2_region_1)
@@ -129,7 +129,7 @@ program test4
 #line 53 "test4.f90"
 end program test4
 
-      subroutine POMP2_Init_regions_000()
+      subroutine POMP2_Init_reg_000()
          include 'test4.f90.opari.inc'
          call POMP2_Assign_handle( pomp2_region_1, &
          pomp2_ctc_1 )

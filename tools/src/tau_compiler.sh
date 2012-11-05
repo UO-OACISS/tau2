@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/bash  
 
 declare -i FALSE=-1
 declare -i TRUE=1
@@ -70,12 +70,14 @@ declare -i madeToLinkStep=$FALSE
 
 declare -i optFixHashIf=$FALSE
 declare -i tauPreProcessor=$TRUE
+declare -i optMICOffload=$FALSE
 
 headerInstDir=".tau_tmp_$$"
 headerInstFlag=""
 preprocessorOpts="-P  -traditional-cpp"
 defaultParser="noparser"
 optWrappersDir="/tmp"
+TAU_BIN_DIR="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 printUsage () {
     echo -e "Usage: tau_compiler.sh"
@@ -129,6 +131,7 @@ printUsage () {
     echo -e "  -optOpari2ConfigTool=\"<path/opari2-config>\"\tSpecifies the location of the Opari tool"
     echo -e "  -optOpari2Opts=\"\"\t\tSpecifies optional arguments to the Opari tool"
     echo -e "  -optOpari2Reset=\"\"\t\tResets options passed to the Opari tool"
+    echo -e "  -optOpari2Dir=\"<path>\"\t\tSpecifies the location of the Opari directory"
     echo -e "  -optNoMpi\t\t\tRemoves -l*mpi* libraries during linking"
     echo -e "  -optMpi\t\t\tDoes not remove -l*mpi* libraries during linking (default)"
     echo -e "  -optNoRevert\t\t\tExit on error. Does not revert to the original compilation rule on error."
@@ -144,6 +147,7 @@ printUsage () {
     echo -e "  -optHeaderInst\t\tEnable instrumentation of headers"
     echo -e "  -optDisableHeaderInst\t\tDisable instrumentation of headers"
     echo -e "  -optFixHashIf"
+    echo -e "  -optMICOffload\t\tLinks code for Intel MIC offloading, requires both host and MIC TAU libraries"
     
     if [ $1 == 0 ]; then #Means there are no other option passed with the myscript. It is better to exit then.
 	exit
@@ -227,6 +231,10 @@ for arg in "$@"; do
           upc|*/upc)
             upc="gnu"
             echoIfDebug "GNU UPC: TRUE!"
+            ;;
+          xlupc|*/xlupc)
+            upc="xlupc"
+            echoIfDebug "XLUPC UPC: TRUE!"
             ;;
           cc|*/cc)
             upc="cray"
@@ -660,10 +668,6 @@ for arg in "$@" ; do
                         opari2init=$FALSE
                         echoIfDebug "\tDon't make pompregions."
                         ;;
-		    -optOpari2Dir*)
-			optOpari2Dir="${arg#"-optOpari2Dir="}"
-			echoIfDebug "\tOpari2 Dir used: $optOpari2Dir"
-			;;
 		    -optOpari2Tool*)
 			optOpari2Tool="${arg#"-optOpari2Tool="}"
 			echoIfDebug "\tOpari2 Tool used: $optOpari2Tool"
@@ -681,6 +685,20 @@ for arg in "$@" ; do
 			else
 			    opari2=$TRUE
 			fi
+			;;
+                    -optOpari2Dir*)
+                        optOpari2Dir="${arg#"-optOpari2Dir="}"
+                        echoIfDebug "\tOpari Dir used: $optOpari2Dir"
+                        if [ "x$optOpari2Dir" != "x" ] ; then
+			    optOpari2Tool="$optOpari2Dir/bin/opari2"
+			    optOpari2ConfigTool="$optOpari2Dir/bin/opari2-config"
+                        echoIfDebug "\tOpari Tool used: $optOpari2Tool"
+                        fi
+                        ;;
+		    -optIBM64*)
+			currentopt="${arg#"-optIBM64="}"
+			optIBM64="$currentopt $optIBM64"
+			echoIfDebug "\tOpari2 Opts used: $optIBM64"
 			;;
 		    -optOpari2Opts*)
 			currentopt="${arg#"-optOpari2Opts="}"
@@ -725,6 +743,7 @@ for arg in "$@" ; do
 		    -optShared)
 			optShared=$TRUE
 			optLinking=$optSharedLinking
+			optMICOffloadLinking=$optMICOffloadSharedLinking
 			echoIfDebug "\tUsing shared library"
 			;;
 
@@ -769,6 +788,18 @@ for arg in "$@" ; do
 		    -optFixHashIf)
 			optFixHashIf=$TRUE
 			echoIfDebug "\tFixing Hash-Ifs"
+			;;
+		    -optMICOffloadLinking*)
+			optMICOffloadLinking="${arg#"-optMICOffloadLinking="} $optMICOffloadLinking"
+			echoIfDebug "\tLinking Options are: $optMICOffloadLinking"
+			;;
+		    -optMICOffloadSharedLinking*)
+			optMICOffloadSharedLinking="${arg#"-optMICOffloadSharedLinking="} $optMICOffloadSharedLinking"
+			echoIfDebug "\tLinking Options are: $optMICOffloadSharedLinking"
+			;;
+		    -optMICOffload)
+			optMICOffload=$TRUE
+			echoIfDebug "\tLinking for MIC Offloading"
 			;;
 		    -opt*)
 			#Assume any other options should be passed on to the compiler.
@@ -958,7 +989,8 @@ for arg in "$@" ; do
 		;;
 
 	    -o*)
- 		if [ "x$arg" != "x-openmp" -a "x$arg" != "x-override_limits" -a "x$arg" != "x-openmp-stubs"  -a "x$arg" != "x-openmp_stubs" ]; then
+		testomp=`echo $myarg | sed -e 's/-openmp//'`
+ 		if [ "x$arg" = "x$testomp" -a "x$arg" != "x-override_limits" ]; then
 		    hasAnOutputFile=$TRUE
 		    passedOutputFile="${arg#"-o"}"
 		    echoIfDebug "\tHas an output file = $passedOutputFile"
@@ -1183,6 +1215,9 @@ while [ $tempCounter -lt $numFiles ]; do
         if [ "x$groupType" = "x$group_f_F" -a "x$suf" = "x.FOR" ] ; then
             newFile=${arrFileName[$tempCounter]}.pdb
         fi
+        if [ "x$groupType" = "x$group_f_F" -a "x$suf" = "x.F95" ] ; then
+            newFile=${arrFileName[$tempCounter]}.pdb
+        fi
 
     else
 	newFile=$optPDBFile; 
@@ -1209,11 +1244,26 @@ if [ $optCompInst == $TRUE ]; then
 fi
 
 if [ $upc == "berkeley" ]; then
-   optLinking=`echo $optLinking| sed -e 's@-Wl@-Wl,-Wl@g'`
-   echoIfDebug "optLinking modified to accomodate -Wl,-Wl for upcc. optLinking=$optLinking"
+    # Make any number of "-Wl," into exactly two "-Wl,"
+    optLinking=`echo $optLinking | sed -e 's@\(-Wl,\)\+@-Wl,@g' -e 's@-Wl,@-Wl,-Wl,@g'`
+    echoIfDebug "optLinking modified to accomodate -Wl,-Wl for upcc. optLinking=$optLinking"
 fi
 
-
+if [ $optMICOffload == $TRUE ]; then
+	#optMICLinking=`echo $optLinking | sed -e 's@x86_64/lib@mic_linux/lib@g'`
+	#if [ $optMICLinking == ""]; then
+	#	echo "Error: x86_64 architecture not found. Please set TAU_MAKEFILE to a
+	#	x86_64 configuration."
+	#	exit 1
+	#fi
+	#hybridLinking="$optLinking -offload-build -offload-ldopts='$optMICLinking'"
+	echoIfDebug "MIC offload linking enabled."
+	if [ $optShared == $TRUE ]; then
+		optLinking=$optMICOffloadSharedLinking
+	else
+		optLinking=$optMICOffloadLinking
+	fi
+fi
 
 ####################################################################
 # Linking if there are no Source Files passed.
@@ -1297,7 +1347,7 @@ if [ $numFiles == 0 ]; then
     #If this is the second pass, opari was already used, don't do it again`
     if [ $opari2 == $TRUE -a $passCount == 1 -a  $opari2init == $TRUE  ]; then
         evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
-        cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${listOfObjectFiles} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_regions |  `${optOpari2ConfigTool} --awk-cmd` -f `${optOpari2ConfigTool} --awk-script` > pompregions.c"
+        cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${optIBM64} ${listOfObjectFiles} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_reg |  `${optOpari2ConfigTool} --awk-cmd` -f ${TAU_BIN_DIR}/pomp2-parse-init-regions.awk > pompregions.c"
         evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
         cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
         evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
@@ -1337,6 +1387,14 @@ if [ $numFiles == 0 ]; then
             echo "Warning: can't locate link_options.tau for Berkeley UPC runtime tracking"
           fi
         ;;
+        xlupc)
+          if [ -r $optWrappersDir/upc/xlupc/link_options.tau ] ; then
+            linkCmd="$linkCmd `cat $optWrappersDir/upc/xlupc/link_options.tau` $optLinking"
+            echoIfDebug "Linking command is $linkCmd"
+          else
+            echo "Warning: can't locate link_options.tau for IBM XL UPC runtime tracking"
+          fi
+	;;
         gnu)
           if [ -r $optWrappersDir/upc/gupc/link_options.tau ] ; then
             linkCmd="$linkCmd `cat $optWrappersDir/upc/gupc/link_options.tau` $optLinking"
@@ -1360,6 +1418,7 @@ if [ $numFiles == 0 ]; then
     fi
 
     if [ "x$tauWrapFile" != "x" ]; then
+      linkCmd="$linkCmd `cat $tauWrapFile` "
       echoIfDebug "Linking command is $linkCmd"
     fi 
 
@@ -1369,12 +1428,13 @@ if [ $numFiles == 0 ]; then
     fi 
 
     if [ $optFujitsu == $TRUE ]; then
-      oldLinkCmd=$linkCmd
-      linkCmd=`echo $linkCmd | sed -e 's/fccpx/FCCpx/g' -e 's/frtpx/FCCpx/g'`
+      oldLinkCmd=`echo $linkCmd`
+      linkCmd=`echo $linkCmd | sed -e 's/frtpx/FCCpx/g'`
       if [ "x$linkCmd" != "x$oldLinkCmd" ] ; then
         echoIfDebug "We changed the linker to use FCCpx compilers. We need to add --linkfortran to the link line"
-	linkCmd="$linkCmd --linkfortran"
+        linkCmd="$linkCmd --linkfortran -lmpi_f90 -lmpi_f77"
       fi
+      linkCmd=`echo $linkCmd | sed -e 's/fccpx/FCCpx/g'`
     fi
     evalWithDebugMessage "$linkCmd" "Linking with TAU Options"
     buildSuccess=$?
@@ -1439,13 +1499,13 @@ if [ $gotoNextStep == $TRUE ]; then
 	    pdtCmd="$optPdtDir""/$pdtParserType"
 	    pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
 	    pdtCmd="$pdtCmd $optPdtCFlags $optPdtUser "
-            if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
-	       pdtCmd="$pdtCmd -I${arrFileNameDirectory[$tempCounter]}"
-            fi
+        if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
+	        pdtCmd="$pdtCmd -I${arrFileNameDirectory[$tempCounter]}"
+        fi
 	    optCompile="$optCompile $optDefs $optIncludes"
 
-            if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]} ]; then
-		evalWithDebugMessage "mv ${arrFileName[$tempCounter]} ${arrFileName[$tempCounter]}~; sed -e 's@return\([ \t]*\);@{return \1;}@g' ${arrFileName[$tempCounter]}~ > ${arrFileName[$tempCounter]};" "Making temporary file for parsing with ROSE"
+        if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]} ]; then
+		    evalWithDebugMessage "mv ${arrFileName[$tempCounter]} ${arrFileName[$tempCounter]}.$$; sed -e  's@\(\s*\)[^-a-zA-Z0-9_\$]return\(\s*\);@\1{ return \2;}@g' -e 's@^return\(\s*\);@{ return \1;}@g' ${arrFileName[$tempCounter]}.$$ > ${arrFileName[$tempCounter]};" "Making temporary file for parsing with ROSE"
 	    fi
 	    ;;
 
@@ -1453,13 +1513,13 @@ if [ $gotoNextStep == $TRUE ]; then
 	    pdtCmd="$optPdtDir""/$pdtParserType"
 	    pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
 	    pdtCmd="$pdtCmd $optPdtCxxFlags $optPdtUser "
-            if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
-	       pdtCmd="$pdtCmd -I${arrFileNameDirectory[$tempCounter]}"
-            fi
+        if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
+	        pdtCmd="$pdtCmd -I${arrFileNameDirectory[$tempCounter]}"
+        fi
 	    optCompile="$optCompile $optDefs $optIncludes"
 
-            if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]} ]; then
-		evalWithDebugMessage "mv ${arrFileName[$tempCounter]} ${arrFileName[$tempCounter]}~; sed -e 's@return\([ \t]*\);@{return \1;}@g' ${arrFileName[$tempCounter]}~ > ${arrFileName[$tempCounter]};" "Making temporary file for parsing with ROSE"
+        if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]} ]; then
+		  evalWithDebugMessage "mv ${arrFileName[$tempCounter]} ${arrFileName[$tempCounter]}.$$; sed -e 's@\(\s*\)[^-a-zA-Z0-9_\$]return\(\s*\);@\1{ return \2;}@g' -e 's@^return\(\s*\);@{ return \1;}@g' ${arrFileName[$tempCounter]}.$$ > ${arrFileName[$tempCounter]};" "Making temporary file for parsing with ROSE"
 	    fi
 	    ;;
 
@@ -1529,8 +1589,8 @@ if [ $gotoNextStep == $TRUE -a $optCompInst == $FALSE ]; then
 
 	if [ $disablePdtStep == $FALSE ]; then
 	    evalWithDebugMessage "$tauCmd" "Instrumenting with TAU"
-	    if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]}~ ]; then
-	      evalWithDebugMessage "mv ${arrFileName[$tempCounter]}~ ${arrFileName[$tempCounter]}" "Moving temporary file"
+	    if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]}.$$ ]; then
+	      evalWithDebugMessage "mv ${arrFileName[$tempCounter]}.$$ ${arrFileName[$tempCounter]}" "Moving temporary file"
             fi
 	else
 	    echoIfDebug "Not instrumenting source code. PDT not available."
@@ -1841,7 +1901,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	if [ $opari2 == $TRUE -a $opari2init == $TRUE ]; then
             evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
       
-cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_regions |  `${optOpari2ConfigTool} --awk-cmd` -f `${optOpari2ConfigTool} --awk-script` > pompregions.c"
+cmdCreatePompRegions="`${optOpari2ConfigTool}   --nm` ${optIBM64}  ${objectFilesForLinking} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_reg |  `${optOpari2ConfigTool} --awk-cmd` -f ${TAU_BIN_DIR}/pomp2-parse-init-regions.awk > pompregions.c"
         evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
         cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
         evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
@@ -1891,6 +1951,14 @@ cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} ${o
                 echo "Warning: can't locate link_options.tau for Berkeley UPC runtime tracking"
               fi
             ;;
+            xlupc)
+            if [ -r $optWrappersDir/upc/xlupc/link_options.tau ] ; then
+              newCmd="$newCmd `cat $optWrappersDir/upc/xlupc/link_options.tau` $optLinking"
+              echoIfDebug "Linking command is $newCmd"
+            else
+              echo "Warning: can't locate link_options.tau for IBM XL UPC runtime tracking"
+            fi
+	    ;;
             gnu)
               if [ -r $optWrappersDir/upc/gupc/link_options.tau ] ; then
                 newCmd="$newCmd `cat $optWrappersDir/upc/gupc/link_options.tau` $optLinking"
@@ -1925,12 +1993,13 @@ cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${objectFilesForLinking} ${o
 
 	madeToLinkStep=$TRUE
         if [ $optFujitsu == $TRUE ]; then
-          oldLinkCmd=$newCmd
-          newCmd=`echo $newCmd | sed -e 's/fccpx/FCCpx/g' -e 's/frtpx/FCCpx/g'`
+          oldLinkCmd=`echo $newCmd`
+          newCmd=`echo $newCmd | sed -e 's/frtpx/FCCpx/g'`
           if [ "x$newCmd" != "x$oldLinkCmd" ] ; then
             echoIfDebug "We changed the linker to use FCCpx compilers. We need to add --linkfortran to the link line"
-            newCmd="$newCmd --linkfortran"
+            newCmd="$newCmd --linkfortran -lmpi_f90 -lmpi_f77"
           fi
+          newCmd=`echo $newCmd | sed -e 's/fccpx/FCCpx/g'`
         fi
 
 	evalWithDebugMessage "$newCmd" "Linking (Together) object files"

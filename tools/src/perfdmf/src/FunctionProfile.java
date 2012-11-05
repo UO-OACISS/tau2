@@ -104,13 +104,13 @@ public class FunctionProfile {
                 return 0;
             }
             return getInclusive(snapshot, metric) / dividend;
-        } else if (thread.getNodeID() == Thread.TOTAL || thread.getNodeID() == Thread.MEAN|| thread.getNodeID() == Thread.MIN|| thread.getNodeID() == Thread.MAX) {
+        } else if (thread.getNodeID() == Thread.TOTAL || thread.getNodeID() == Thread.MEAN|| thread.getNodeID() == Thread.MIN|| thread.getNodeID() == Thread.MAX|| thread.getNodeID() == Thread.MEAN_ALL) {
             double dividend = thread.getPercentDivider(metric, snapshot);
             if (dividend == 0) {
                 return 0;
             }
             return function.getTotalProfile().getInclusive(snapshot, metric) / dividend;
-        } else if (thread.getNodeID() == Thread.STDDEV) {
+        } else if (thread.getNodeID() == Thread.STDDEV || thread.getNodeID() == Thread.STDDEV_ALL) {
             return getInclusive(snapshot, metric) / function.getMeanInclusive(metric) * 100.0;
         }
         throw new RuntimeException("Bad Thread ID = " + thread);
@@ -132,7 +132,7 @@ public class FunctionProfile {
                 return 0;
             }
             return getExclusive(snapshot, metric) / dividend;
-        } else if (thread.getNodeID() == Thread.TOTAL || thread.getNodeID() == Thread.MEAN || thread.getNodeID() == Thread.MIN || thread.getNodeID() == Thread.MAX) {
+        } else if (thread.getNodeID() == Thread.TOTAL || thread.getNodeID() == Thread.MEAN || thread.getNodeID() == Thread.MIN || thread.getNodeID() == Thread.MAX|| thread.getNodeID() == Thread.MEAN_ALL) {
             double dividend = thread.getPercentDivider(metric, snapshot);
             if (dividend == 0) {
                 return 0;
@@ -150,7 +150,7 @@ public class FunctionProfile {
                 dividend /= thread.getDataSource().getAllThreads().size();
                 return function.getMeanProfile().getExclusive(snapshot, metric) / dividend;
             }
-        } else if (thread.getNodeID() == Thread.STDDEV) {
+        } else if (thread.getNodeID() == Thread.STDDEV || thread.getNodeID() == Thread.STDDEV_ALL) {
             return getExclusive(metric) / function.getMeanExclusive(metric) * 100.0;
         }
         throw new RuntimeException("Bad Thread ID = " + thread);
@@ -174,7 +174,10 @@ public class FunctionProfile {
 
     public double getNumCalls(int snapshot) {
         if (snapshot == -1) {
-            snapshot = thread.getNumSnapshots() - 1;
+        	if (thread != null)
+        		snapshot = thread.getNumSnapshots() - 1;
+        	else
+        		snapshot = 0;
         }
         return getDouble(snapshot, 0, CALLS);
     }
@@ -193,7 +196,10 @@ public class FunctionProfile {
 
     public double getNumSubr(int snapshot) {
         if (snapshot == -1) {
-            snapshot = thread.getNumSnapshots() - 1;
+        	if (thread != null)
+        		snapshot = thread.getNumSnapshots() - 1;
+        	else
+        		snapshot = 0;
         }
         return getDouble(snapshot, 0, SUBR);
     }
@@ -237,6 +243,16 @@ public class FunctionProfile {
             int source = (s * METRIC_SIZE * (numMetrics + 1));
             int dest = (s * METRIC_SIZE * (newMetricSize + 1));
             for (int m = 0; m < METRIC_SIZE * (numMetrics + 1); m++) {
+            	if(dest+m>=newArray.length||dest+m>=data.length)
+            	{
+            		if(dest+m>=newArray.length){
+            			System.out.println(function.getName()+", metric "+m+": New metric data array entry out of bounds (addMetric)");
+            		}
+            		if(dest+m>=data.length){
+            			System.out.println(function.getName()+", metric "+m+": Metric data array access out of bounds (addMetric)");
+            		}
+            		continue;
+            	}
                 newArray[dest + m] = data[source + m];
             }
         }
@@ -360,9 +376,18 @@ public class FunctionProfile {
     }
 
     private void putDouble(int metric, int offset, double inDouble) {
-        int snapshot = thread.getNumSnapshots() - 1;
-        int numMetrics = thread.getNumMetrics();
+        int snapshot = 0;
+        int numMetrics = metric;
+    	if (thread != null) {
+    		snapshot = thread.getNumSnapshots() - 1;
+    		numMetrics = thread.getNumMetrics();
+    	}
         int location = (snapshot * (METRIC_SIZE * (numMetrics + 1))) + (metric * METRIC_SIZE) + offset;
+        if(location>=data.length)
+        {
+        	System.out.println(function.getName()+", Metric "+metric+": Data array input out of bounds (putDouble)");
+        	return;
+        }
         data[location] = inDouble;
     }
 
@@ -371,16 +396,27 @@ public class FunctionProfile {
             snapshot = thread.getNumSnapshots() - 1;
         }
 
-        int numMetrics = thread.getNumMetrics();
+        int numMetrics = metric;
+        if (thread != null)
+        	numMetrics = thread.getNumMetrics();
         int location = (snapshot * (METRIC_SIZE * (numMetrics + 1))) + (metric * METRIC_SIZE) + offset;
         return data[location];
     }
 
     private double getDouble(int metric, int offset) {
         // use the last snapshot (final value)
-        int snapshot = thread.getNumSnapshots() - 1;
-        int numMetrics = thread.getNumMetrics();
+        int snapshot = 0;
+        int numMetrics = metric;
+    	if (thread != null) {
+    		snapshot = thread.getNumSnapshots() - 1;
+    		numMetrics = thread.getNumMetrics();
+    	}
         int location = (snapshot * (METRIC_SIZE * (numMetrics + 1))) + (metric * METRIC_SIZE) + offset;
+        if(location>=data.length)
+        {
+        	System.out.println(function.getName()+", Metric "+metric+": Data array access out of bounds (getDouble)");
+        	return 0;
+        }
         return data[location];
     }
 

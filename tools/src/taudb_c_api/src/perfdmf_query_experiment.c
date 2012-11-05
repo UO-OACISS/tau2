@@ -1,100 +1,51 @@
-#include "taudb_api.h"
-#include "libpq-fe.h"
+#include "taudb_internal.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-PERFDMF_EXPERIMENT* perfdmf_query_experiment(PGconn* connection, PERFDMF_APPLICATION* application, char* name) {
+PERFDMF_EXPERIMENT* perfdmf_query_experiment(TAUDB_CONNECTION* connection, PERFDMF_APPLICATION* application, char* name) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling perfdmf_query_experiment(%p, '%s')\n", application, name);
 #endif
-  PGresult   *res;
   int                     nFields;
   int                     i, j;
 
-  /*
-   * Our test case here involves using a cursor, for which we must be
-   * inside a transaction block.  We could do the whole thing with a
-   * single PQexec() of "select * from table_name", but that's too
-   * trivial to make a good example.
-   */
-
-  /* Start a transaction block */
-  res = PQexec(connection, "BEGIN");
-  if (PQresultStatus(res) != PGRES_COMMAND_OK)
-  {
-    fprintf(stderr, "BEGIN command failed: %s", PQerrorMessage(connection));
-    PQclear(res);
-    taudb_exit_nicely(connection);
-  }
-
-  /*
-   * Should PQclear PGresult whenever it is no longer needed to avoid
-   * memory leaks
-   */
-  PQclear(res);
-
+  taudb_begin_transaction(connection);
   /*
    * Fetch rows from table_name, the system catalog of databases
    */
   char my_query[256];
-  sprintf(my_query, "DECLARE myportal CURSOR FOR select * from experiment where application = %d and name = '%s'", application->id, name);
+  sprintf(my_query, "select * from experiment where application = %d and name = '%s'", application->id, name);
 #ifdef TAUDB_DEBUG
   printf("'%s'\n",my_query);
 #endif
-  res = PQexec(connection, my_query);
-  if (PQresultStatus(res) != PGRES_COMMAND_OK)
-  {
-    fprintf(stderr, "DECLARE CURSOR failed: %s", PQerrorMessage(connection));
-    PQclear(res);
-    taudb_exit_nicely(connection);
-  }
-  PQclear(res);
-
-  res = PQexec(connection, "FETCH ALL in myportal");
-  if (PQresultStatus(res) != PGRES_TUPLES_OK)
-  {
-    fprintf(stderr, "FETCH ALL failed: %s", PQerrorMessage(connection));
-    PQclear(res);
-    taudb_exit_nicely(connection);
-  }
+  taudb_execute_query(connection, my_query);
 
   PERFDMF_EXPERIMENT* experiment = perfdmf_create_experiments(1);
 
   /* first, print out the attribute names */
-  nFields = PQnfields(res);
-  experiment->primary_metadata = taudb_create_primary_metadata(nFields);
+  nFields = taudb_get_num_columns(connection);
 
   /* next, print out the rows */
-  for (i = 0; i < PQntuples(res); i++)
+  for (i = 0; i < taudb_get_num_rows(connection); i++)
   {
-    int metaIndex = 0;
     for (j = 0; j < nFields; j++) {
-	  if (strcmp(PQfname(res, j), "id") == 0) {
-	    experiment->id = atoi(PQgetvalue(res, i, j));
-	  } else if (strcmp(PQfname(res, j), "name") == 0) {
-	    //experiment->name = PQgetvalue(res, i, j);
-		experiment->name = taudb_create_string(strlen(PQgetvalue(res,i,j)));
-		strcpy(experiment->name, PQgetvalue(res,i,j));
+	  if (strcmp(taudb_get_column_name(connection, j), "id") == 0) {
+	    experiment->id = atoi(taudb_get_value(connection, i, j));
+	  } else if (strcmp(taudb_get_column_name(connection, j), "name") == 0) {
+	    //experiment->name = taudb_get_value(connection, i, j);
+		experiment->name = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
 	  } else {
-	    experiment->primary_metadata[metaIndex].name = taudb_create_string(strlen(PQfname(res,j)));
-		strcpy(experiment->primary_metadata[metaIndex].name, PQfname(res, j));
-	    experiment->primary_metadata[metaIndex].value = taudb_create_string(strlen(PQgetvalue(res,i,j)));
-		strcpy(experiment->primary_metadata[metaIndex].value, PQgetvalue(res, i, j));
+	  	TAUDB_PRIMARY_METADATA* primary_metadata = taudb_create_primary_metadata(1);
+	    primary_metadata->name = taudb_create_and_copy_string(taudb_get_column_name(connection,j));
+	    primary_metadata->value = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
+		HASH_ADD(hh, experiment->primary_metadata, name, (strlen(primary_metadata->name)), primary_metadata);
 	  }
 	} 
-    experiment->primary_metadata_count = metaIndex;
   }
 
-  PQclear(res);
-
-  /* close the portal ... we don't bother to check for errors ... */
-  res = PQexec(connection, "CLOSE myportal");
-  PQclear(res);
-
-  /* end the transaction */
-  res = PQexec(connection, "END");
-  PQclear(res);
+  taudb_clear_result(connection);
+  taudb_close_transaction(connection);
   
   return experiment;
 }

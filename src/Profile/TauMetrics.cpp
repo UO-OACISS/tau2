@@ -67,8 +67,9 @@ static void metricv_add(const char *name);
 static void read_env_vars();
 static void initialize_functionArray();
 
+#ifndef TAU_MAX_METRICS
 #define TAU_MAX_METRICS 25
-
+#endif
 /* Global Variable holding the number of counters */
 int Tau_Global_numCounters = -1;
 
@@ -140,8 +141,9 @@ static int compareMetricString(char *one, const char *two) {
 static void metricv_add(const char *name) {
   int i;
   if (nmetrics >= TAU_MAX_METRICS) {
-    fprintf(stderr, "Number of counters exceeds TAU_MAX_METRICS\n");
-  } else {
+    fprintf(stderr, "Number of counters exceeds TAU_MAX_METRICS (%d), please reconfigure TAU with -useropt=-DTAU_MAX_METRICS=<higher number>.\n", TAU_MAX_METRICS);
+ 		exit(1); 
+	} else {
     for (i = 0; i < nmetrics; i++) {
       if (compareMetricString(metricv[i], name)) {
         return;

@@ -1,0 +1,14 @@
+To map MPI ranks to topology coordinates on Cray
+
+1: Build the get_node_loc application with 
+module load rca
+cc -o get_node_loc get_node_loc.c
+
+2: In the interactive session or job script set the environment variable
+MPICH_CPUMASK_DISPLAY=1
+
+3: Before running your application run get_node_loc and pipe the output to a file like 'application.map' with the same aprun arguments as you use on your application.
+
+4: Unset MPICH_CPUMASK_DISPLAY and run your application normally.
+
+5: Load the TAU profile results in paraprof and go to Windows-> 3D Visualization and select the Topology Plot option.  Select the 'map' button and open the map file you generated from your application run.  You can then select the map from your topology dropdown box to see a node mapping based on the coordinates in the file.

@@ -90,7 +90,7 @@ static int nextThread = 1;
 int RtsLayer::createThread()
 {
 
-  LockEnv();
+  threadLockEnv();
 
 	RtsThread* newThread;
 	
@@ -106,7 +106,7 @@ int RtsLayer::createThread()
 		newThread->active = true;
 		nextThread = newThread->next_available;
 	}
-	UnLockEnv();
+	threadUnLockEnv();
 
 	return newThread->thread_rank;
 }
@@ -162,7 +162,7 @@ int RtsLayer::myThread(void)
   return JavaThreadLayer::GetThreadId(); 
 	// C++ app shouldn't use this unless there's a VM
 #elif TAU_OPENMP
-  return OpenMPLayer::GetThreadId();
+  return OpenMPLayer::GetTauThreadId();
 #elif TAU_PAPI_THREADS
   return PapiThreadLayer::GetThreadId();
 #else  // if no other thread package is available 
@@ -212,9 +212,15 @@ int RtsLayer::myNode(void)
 // myContext() returns the current context id (0..N-1)
 //////////////////////////////////////////////////////////////////////
 int RtsLayer::myContext(void)
-{
+{	
 #ifdef KTAU_NG
   return RtsLayer::getLinuxKernelTid(); //voorhees
+#elif defined(__MIC__)
+if (TauEnv_get_mic_offload())
+{
+	return getpid();
+}
+else
 #endif /* KTAU_NG */
   return TheContext(); 
 }

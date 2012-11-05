@@ -84,6 +84,10 @@
 #include <string>
 #include <vector>
 
+#ifdef TAU_OPENMP
+#include <omp.h>
+#endif
+
 using namespace std;
 
 /*
@@ -260,10 +264,6 @@ unsigned long get_pc(void *p) {
 #ifdef sun
   issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on solaris\n");
   return 0;
-  //#elif defined(TAU_BGQ)
-  // uc_mcontext->ss.srr0 *may* be the way forward.
-  //  issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not currently work on BGQ\n");
-  //  return 0;
 #elif __APPLE__
   issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on apple\n");
   return 0;
@@ -1060,6 +1060,10 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
   // *CWL* - Too "noisy" and useless a verbose output.
   //TAU_VERBOSE("[tid=%d] EBS profile sample with pc %p\n", tid, (unsigned long)pc);
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
+  if (profiler == NULL) {
+    Tau_create_top_level_timer_if_necessary();
+    profiler = TauInternal_CurrentProfiler(tid);
+  }
   FunctionInfo *samplingContext;
 
   // ok to be temporary. Hash table on the other end will copy the details.
@@ -1220,12 +1224,19 @@ int Tau_sampling_event_stop(int tid, double *stopTime) {
  * Sample Handling
  ********************************************************************/
 void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
+  // DO THIS CHECK FIRST! otherwise, the RtsLayer::myThread() call will barf.
+  if (collectingSamples == 0) {
+    // Do not track counts when sampling is not enabled.
+    //TAU_VERBOSE("Tau_sampling_handle_sample: sampling not enabled\n");
+    return;
+  }
+
   int tid = RtsLayer::myThread();
   /* *CWL* too fine-grained for anything but debug.
   TAU_VERBOSE("Tau_sampling_handle_sample: tid=%d got sample [%p]\n",
   	      tid, (unsigned long)pc);
   */
-  if (samplingEnabled[tid] == 0 || collectingSamples == 0) {
+  if (samplingEnabled[tid] == 0) {
     // Do not track counts when sampling is not enabled.
     //TAU_VERBOSE("Tau_sampling_handle_sample: sampling not enabled\n");
     return;
@@ -1242,6 +1253,8 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
     samplesDroppedSuspended[tid]++;
     return;
   }
+  // disable sampling until we handle this sample
+  suspendSampling[tid] = 1;
 
   Tau_global_incr_insideTAU_tid(tid);
   if (TauEnv_get_tracing()) {
@@ -1252,6 +1265,8 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
     Tau_sampling_handle_sampleProfile(pc, context);
   }
   Tau_global_decr_insideTAU_tid(tid);
+  // re-enable sampling 
+  suspendSampling[tid] = 0;
 }
 
 extern "C" void TauMetrics_internal_alwaysSafeToGetMetrics(int tid, double values[]);
@@ -1316,22 +1331,6 @@ int Tau_sampling_init(int tid) {
   int ret;
 
   static struct itimerval itval;
-
-#ifdef TAU_BGQ
-  static bool warningPrinted = false;
-  // *CWL* - Vesta is having issues translating PC addresses now.
-  //         This warning is issued as a part of a punt for EBS
-  //         support on the BGQ for the August 2012 release.
-  //
-  //         Please remove this check after the problem is fixed.
-  int myNode = RtsLayer::TheNode();
-  if ((myNode <= 0) && (tid == 0)) {
-    // Only one process will print this warning exactly once on thread 0. (Node 0 or -1).
-    printf("Warning: No current EBS support for the BlueGene/Q. No Samples will be recorded.\n");
-    warningPrinted = true;
-    return -1;
-  }
-#endif /* TAU_BGQ */
 
   Tau_global_incr_insideTAU_tid(tid);
 
@@ -1596,32 +1595,50 @@ int Tau_sampling_finalize(int tid) {
 /* *CWL* - This is workaround code for MPI where mvapich2 on Hera was
    found to conflict with EBS sampling operations if EBS was initialized
    before MPI_Init().
-
-   Assume no threading in this debug version.
  */
 extern "C" void Tau_sampling_init_if_necessary(void) {
-  static bool initialized = false;
-  static bool thrInitialized[TAU_MAX_THREADS];
+  static bool thrInitialized[TAU_MAX_THREADS] = {false};
 
-  if (!initialized) {
-    RtsLayer::LockEnv();
-    // check again, someone else might already have initialized by now.
-    if (!initialized) {
-      //      printf("Sampling global initializing!\n");
-      for (int i=0; i<TAU_MAX_THREADS; i++) {
-	thrInitialized[i] = false;
-      }
-      initialized = true;
-    }
+/* Greetings, intrepid thread developer. We had a problem with OpenMP applications
+ * which did not call instrumented functions or regions from an OpenMP region. In
+ * those cases, TAU does not get a chance to initialize sampling on any thread other
+ * than thread 0. By making this region an OpenMP parallel region, we initialize
+ * sampling on all (currently known) OpenMP threads. Any threads created after this
+ * point may not be recognized by TAU. But this should catch the 99% case. */
+#if defined(TAU_OPENMP) and !defined(TAU_PTHREAD)
+  // if the master thread is in TAU, in a non-parallel region
+  if (omp_get_num_threads() == 1) {
+  /* WE HAVE TO DO THIS! Otherwise, we end up with deadlock. Don't worry,
+   * it is OK, because we know(?) there are no other active threads
+   * thanks to the #define three lines above this */
     RtsLayer::UnLockEnv();
+	// do this for all threads
+#pragma omp parallel shared (thrInitialized)
+    {
+	  // but do it sequentially.
+#pragma omp critical (creatingtopleveltimer)
+      {
+	    // this will likely register the currently executing OpenMP thread.
+        int myTid = RtsLayer::myThread();
+        if (!thrInitialized[myTid]) {
+          thrInitialized[myTid] = true;
+          Tau_sampling_init(myTid);
+        }
+      } // critical
+    } // parallel
+	/* WE HAVE TO DO THIS! The environment was locked before we entered
+	 * this function, we unlocked it, so re-lock it for safety */
+    RtsLayer::LockEnv();
+	/* return, because our work is done for this special case. */
+	return;
   }
+#endif
 
+// handle all other cases!
   int myTid = RtsLayer::myThread();
-
   if (!thrInitialized[myTid]) {
-    //    printf("Sampling thread %d initializing!\n", myTid);
-    Tau_sampling_init(myTid);
     thrInitialized[myTid] = true;
+    Tau_sampling_init(myTid);
   }
 }
 

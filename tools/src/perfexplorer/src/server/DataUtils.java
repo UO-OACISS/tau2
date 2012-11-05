@@ -39,6 +39,12 @@ public class DataUtils {
 	    List<String> eventIDs = null;
 	    String clusterType=modelData.getClusterValueType();
 		//String clusterPerType="inclusive_percentage";
+
+/* for TAUdb schema, do this query:
+
+select count(tcdo.id) from timer_call_data tcdo inner join thread ho on tcdo.thread = ho.id inner join timer_callpath tcpo on tcdo.timer_callpath = tcpo.id where ho.node_rank > -1 and tcpo.id in (select tcp.id from timer_value tv inner join timer_call_data tcd on tv.timer_call_data = tcd.id inner join timer_callpath tcp on tcd.timer_callpath = tcp.id inner join thread h on tcd.thread = h.id where h.node_rank = -1 and h.trial = 78 and tv.metric = 215 and tv.exclusive_percent > 1.0 and tcp.parent is null);
+
+*/
 		
 		PerfExplorerOutput.print("Getting constants...");
 		try {
@@ -86,7 +92,7 @@ public class DataUtils {
 			if (modelData.getCurrentSelection() instanceof Metric) {
 				statement.setInt(2, ((Metric)(modelData.getCurrentSelection())).getID());
 			}
-			// PerfExplorerOutput.println(statement.toString());
+			//PerfExplorerOutput.println(statement.toString());
 			ResultSet results = statement.executeQuery();
 			if (results.next() != false) {
 				//numRows = results.getInt(1);
