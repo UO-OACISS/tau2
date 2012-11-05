@@ -11,7 +11,6 @@ import java.sql.DriverPropertyInfo;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -92,8 +91,9 @@ public class DBConnector implements DB {
         public boolean jdbcCompliant() {
             return this.driver.jdbcCompliant();
         }
-        public java.util.logging.Logger getParentLogger() throws SQLFeatureNotSupportedException{
-        	throw new SQLFeatureNotSupportedException();
+        public java.util.logging.Logger getParentLogger(){
+        	//throw new Exception();
+        	return null;
         }
 
     }
