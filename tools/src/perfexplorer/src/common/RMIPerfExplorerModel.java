@@ -784,6 +784,8 @@ public class RMIPerfExplorerModel implements Serializable {
      * @return
      */
 	public String getViewSelectionPath (boolean joinApp, boolean joinExp, String dbType, int dbVersion) {
+		if(dbVersion >0 ) 		return ((View)fullPath[fullPath.length-1]).getWhereClause(dbType);
+
 		StringBuilder buf = new StringBuilder();
 		if (joinExp && dbVersion == 0)
 			buf.append(" inner join experiment e on t.experiment = e.id ");
@@ -795,7 +797,7 @@ public class RMIPerfExplorerModel implements Serializable {
 				View view = (View) fullPath[i];
 				if (i > 0 && doAnd) {
 					buf.append (" AND ");
-				} else if (view.getWhereClause(dbType) != ""){
+				} else if (view.getWhereClause(dbType) != "" && !(view.getWhereClause(dbType).contains("where")) ){
 					buf.append(" WHERE ");
 				}
 				buf.append(view.getWhereClause(dbType));
@@ -806,6 +808,7 @@ public class RMIPerfExplorerModel implements Serializable {
 		return buf.toString();
 	}
 
+   
     /**
      * Based on the current selection path, build the SQL where clause
      * to select the current trials.

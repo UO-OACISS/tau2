@@ -124,23 +124,24 @@ public class PerfExplorerJTree extends JTree {
 	node.add(viewTop);	
     }
 
-    public static void addViewNodes (DefaultMutableTreeNode parentNode, String parent) {
-	setConnectionIndex(parentNode);
-	// get the top level views
-	PerfExplorerConnection server = PerfExplorerConnection.getConnection();
-	List<View> viewVector = server.getViews(Integer.parseInt(parent));
-	Iterator<View> views = viewVector.iterator();
-	while (views.hasNext()) {
-	    View view = views.next();
-	    DefaultMutableTreeNode node = new PerfExplorerTreeNode (view);
-	    parentNode.add(node);
-	    addViewNodes(node, view.getField("ID"));
+	public static void addViewNodes(DefaultMutableTreeNode parentNode,
+			int parent) {
+		setConnectionIndex(parentNode);
+		// get the top level views
+		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
+		List<View> viewVector = server.getViews(parent);
+		Iterator<View> views = viewVector.iterator();
+		while (views.hasNext()) {
+			View view = views.next();
+			DefaultMutableTreeNode node = new PerfExplorerTreeNode(view);
+			parentNode.add(node);
+			addViewNodes(node, view.getID());
+		}
+		//if (viewVector.size() == 0) {
+			leafViews.add(parentNode);
+			addTrialsForView(parentNode);
+		//}
 	}
-	if (viewVector.size() == 0) {
-	    leafViews.add(parentNode);
-	    addTrialsForView(parentNode);
-	}
-    }
 
     public static void addApplicationNodes (DefaultMutableTreeNode parent, boolean getExperiments) {
 	setConnectionIndex(parent);
@@ -202,21 +203,21 @@ public class PerfExplorerJTree extends JTree {
 	}
     }
 
-    public static void addTAUdbViewNodes (DefaultMutableTreeNode parentNode, String parent) {
+    public static void addTAUdbViewNodes (DefaultMutableTreeNode parentNode, int parent) {
 	setConnectionIndex(parentNode);
 	if (parentNode.getUserObject() instanceof ConnectionNodeObject) {
 		leafViews = new ArrayList<DefaultMutableTreeNode>();
 	}
 	// get the top level views
 	PerfExplorerConnection server = PerfExplorerConnection.getConnection();
-	List<View> viewVector = server.getViews(Integer.parseInt(parent));
+	List<View> viewVector = server.getViews(parent);
 	Iterator<View> views = viewVector.iterator();
 	while (views.hasNext()) {
 	    View view = views.next();
 	    DefaultMutableTreeNode node = new PerfExplorerTreeNode (view);
 	    parentNode.add(node);
 
-	    addTAUdbViewNodes(node, view.getField("ID"));
+	    addTAUdbViewNodes(node, view.getID());
 	}
 	if (viewVector.size() == 0) {
 	    leafViews.add(parentNode);
@@ -232,35 +233,31 @@ public class PerfExplorerJTree extends JTree {
 	}
     }
 
-    public static void addTrialsForView (DefaultMutableTreeNode node) {
-	setConnectionIndex(node);
-	//System.out.println("trial nodes...");
-	Object[] objects = node.getUserObjectPath();
-	List<View> views = new ArrayList<View>();
-	for (int i = 0 ; i < objects.length ; i++) {
-	    if (objects[i] instanceof View) {
-		views.add((View)objects[i]);
-	    }
+	public static void addTrialsForView(DefaultMutableTreeNode node) {
+		setConnectionIndex(node);
+		// System.out.println("trial nodes...");
+		Object[] objects = node.getUserObjectPath();
+		List<View> views = new ArrayList<View>();
+		for (int i = 0; i < objects.length; i++) {
+			if (objects[i] instanceof View) {
+				views.add((View) objects[i]);
+			}
+		}
+		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
+		// get the trials
+		if (views.size() > 0) {
+			ListIterator<Trial> trials = server.getTrialsForView(views, false);
+			Trial trial = null;
+			DefaultMutableTreeNode trialNode = null;
+			// loop through all the trials, and print out some info
+			while (trials.hasNext()) {
+				trial = trials.next();
+				trialNode = new PerfExplorerTreeNode(trial);
+				node.add(trialNode);
+				trialNode.getParent();
+			}
+		}
 	}
-	PerfExplorerConnection server = PerfExplorerConnection.getConnection();
-	// get the trials
-	if (views.size() > 0) {
-	    ListIterator<Trial> trials = server.getTrialsForView(views,false);
-	    Trial trial = null;
-	    DefaultMutableTreeNode trialNode = null;
-	    // loop through all the trials, and print out some info
-	    while(trials.hasNext())
-	    {
-		trial = trials.next();
-		trialNode = new PerfExplorerTreeNode (trial);
-		//addMetricNodes(trialNode, trial);
-		node.add(trialNode);
-		//trialNode.setParent(node);
-		trialNode.getParent();
-
-	    }
-	}
-    }
 
 
     @SuppressWarnings("unchecked") // for trial.getMetrics() call

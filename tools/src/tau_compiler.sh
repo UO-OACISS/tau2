@@ -1244,8 +1244,9 @@ if [ $optCompInst == $TRUE ]; then
 fi
 
 if [ $upc == "berkeley" ]; then
-   optLinking=`echo $optLinking| sed -e 's@-Wl@-Wl,-Wl@g'`
-   echoIfDebug "optLinking modified to accomodate -Wl,-Wl for upcc. optLinking=$optLinking"
+    # Make any number of "-Wl," into exactly two "-Wl,"
+    optLinking=`echo $optLinking | sed -e 's@\(-Wl,\)\+@-Wl,@g' -e 's@-Wl,@-Wl,-Wl,@g'`
+    echoIfDebug "optLinking modified to accomodate -Wl,-Wl for upcc. optLinking=$optLinking"
 fi
 
 if [ $optMICOffload == $TRUE ]; then
@@ -1498,13 +1499,13 @@ if [ $gotoNextStep == $TRUE ]; then
 	    pdtCmd="$optPdtDir""/$pdtParserType"
 	    pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
 	    pdtCmd="$pdtCmd $optPdtCFlags $optPdtUser "
-            if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
-	       pdtCmd="$pdtCmd -I${arrFileNameDirectory[$tempCounter]}"
-            fi
+        if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
+	        pdtCmd="$pdtCmd -I${arrFileNameDirectory[$tempCounter]}"
+        fi
 	    optCompile="$optCompile $optDefs $optIncludes"
 
-            if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]} ]; then
-		evalWithDebugMessage "mv ${arrFileName[$tempCounter]} ${arrFileName[$tempCounter]}~; sed -e  's@\(\s*\)[^-a-zA-Z0-9_\$]return\(\s*\);@\1{ return \2;}@g' -e 's@^return\(\s*\);@{ return \1;}@g' ${arrFileName[$tempCounter]}~ > ${arrFileName[$tempCounter]};" "Making temporary file for parsing with ROSE"
+        if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]} ]; then
+		    evalWithDebugMessage "mv ${arrFileName[$tempCounter]} ${arrFileName[$tempCounter]}.$$; sed -e  's@\(\s*\)[^-a-zA-Z0-9_\$]return\(\s*\);@\1{ return \2;}@g' -e 's@^return\(\s*\);@{ return \1;}@g' ${arrFileName[$tempCounter]}.$$ > ${arrFileName[$tempCounter]};" "Making temporary file for parsing with ROSE"
 	    fi
 	    ;;
 
@@ -1512,13 +1513,13 @@ if [ $gotoNextStep == $TRUE ]; then
 	    pdtCmd="$optPdtDir""/$pdtParserType"
 	    pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
 	    pdtCmd="$pdtCmd $optPdtCxxFlags $optPdtUser "
-            if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
-	       pdtCmd="$pdtCmd -I${arrFileNameDirectory[$tempCounter]}"
-            fi
+        if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
+	        pdtCmd="$pdtCmd -I${arrFileNameDirectory[$tempCounter]}"
+        fi
 	    optCompile="$optCompile $optDefs $optIncludes"
 
-            if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]} ]; then
-		evalWithDebugMessage "mv ${arrFileName[$tempCounter]} ${arrFileName[$tempCounter]}~; sed -e 's@\(\s*\)[^-a-zA-Z0-9_\$]return\(\s*\);@\1{ return \2;}@g' -e 's@^return\(\s*\);@{ return \1;}@g' ${arrFileName[$tempCounter]}~ > ${arrFileName[$tempCounter]};" "Making temporary file for parsing with ROSE"
+        if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]} ]; then
+		  evalWithDebugMessage "mv ${arrFileName[$tempCounter]} ${arrFileName[$tempCounter]}.$$; sed -e 's@\(\s*\)[^-a-zA-Z0-9_\$]return\(\s*\);@\1{ return \2;}@g' -e 's@^return\(\s*\);@{ return \1;}@g' ${arrFileName[$tempCounter]}.$$ > ${arrFileName[$tempCounter]};" "Making temporary file for parsing with ROSE"
 	    fi
 	    ;;
 
@@ -1588,8 +1589,8 @@ if [ $gotoNextStep == $TRUE -a $optCompInst == $FALSE ]; then
 
 	if [ $disablePdtStep == $FALSE ]; then
 	    evalWithDebugMessage "$tauCmd" "Instrumenting with TAU"
-	    if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]}~ ]; then
-	      evalWithDebugMessage "mv ${arrFileName[$tempCounter]}~ ${arrFileName[$tempCounter]}" "Moving temporary file"
+	    if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]}.$$ ]; then
+	      evalWithDebugMessage "mv ${arrFileName[$tempCounter]}.$$ ${arrFileName[$tempCounter]}" "Moving temporary file"
             fi
 	else
 	    echoIfDebug "Not instrumenting source code. PDT not available."
