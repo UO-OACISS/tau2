@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.ArrayList;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
-import edu.uoregon.tau.perfexplorer.common.RMIView;
 
 public class PerfExplorerJTree extends JTree {
 
@@ -125,23 +124,24 @@ public class PerfExplorerJTree extends JTree {
 	node.add(viewTop);	
     }
 
-    public static void addViewNodes (DefaultMutableTreeNode parentNode, String parent) {
-	setConnectionIndex(parentNode);
-	// get the top level views
-	PerfExplorerConnection server = PerfExplorerConnection.getConnection();
-	List<RMIView> viewVector = server.getViews(Integer.parseInt(parent));
-	Iterator<RMIView> views = viewVector.iterator();
-	while (views.hasNext()) {
-	    RMIView view = views.next();
-	    DefaultMutableTreeNode node = new PerfExplorerTreeNode (view);
-	    addViewNodes(node, view.getField("ID"));
-	    parentNode.add(node);
+	public static void addViewNodes(DefaultMutableTreeNode parentNode,
+			int parent) {
+		setConnectionIndex(parentNode);
+		// get the top level views
+		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
+		List<View> viewVector = server.getViews(parent);
+		Iterator<View> views = viewVector.iterator();
+		while (views.hasNext()) {
+			View view = views.next();
+			DefaultMutableTreeNode node = new PerfExplorerTreeNode(view);
+			parentNode.add(node);
+			addViewNodes(node, view.getID());
+		}
+		//if (viewVector.size() == 0) {
+			leafViews.add(parentNode);
+			addTrialsForView(parentNode);
+		//}
 	}
-	if (viewVector.size() == 0) {
-	    leafViews.add(parentNode);
-	    addTrialsForView(parentNode);
-	}
-    }
 
     public static void addApplicationNodes (DefaultMutableTreeNode parent, boolean getExperiments) {
 	setConnectionIndex(parent);
@@ -203,6 +203,28 @@ public class PerfExplorerJTree extends JTree {
 	}
     }
 
+    public static void addTAUdbViewNodes (DefaultMutableTreeNode parentNode, int parent) {
+	setConnectionIndex(parentNode);
+	if (parentNode.getUserObject() instanceof ConnectionNodeObject) {
+		leafViews = new ArrayList<DefaultMutableTreeNode>();
+	}
+	// get the top level views
+	PerfExplorerConnection server = PerfExplorerConnection.getConnection();
+	List<View> viewVector = server.getViews(parent);
+	Iterator<View> views = viewVector.iterator();
+	while (views.hasNext()) {
+	    View view = views.next();
+	    DefaultMutableTreeNode node = new PerfExplorerTreeNode (view);
+	    parentNode.add(node);
+
+	    addTAUdbViewNodes(node, view.getID());
+	}
+	if (viewVector.size() == 0) {
+	    leafViews.add(parentNode);
+	    addTrialsForView(parentNode);
+	}
+    }
+
     public static void addTrialsForViews () {
 	Iterator<DefaultMutableTreeNode> e = leafViews.iterator();
 	while (e.hasNext()) {
@@ -211,32 +233,31 @@ public class PerfExplorerJTree extends JTree {
 	}
     }
 
-    public static void addTrialsForView (DefaultMutableTreeNode node) {
-	setConnectionIndex(node);
-	//System.out.println("trial nodes...");
-	Object[] objects = node.getUserObjectPath();
-	List<RMIView> views = new ArrayList<RMIView>();
-	for (int i = 0 ; i < objects.length ; i++) {
-	    if (objects[i] instanceof RMIView) {
-		views.add((RMIView)objects[i]);
-	    }
+	public static void addTrialsForView(DefaultMutableTreeNode node) {
+		setConnectionIndex(node);
+		// System.out.println("trial nodes...");
+		Object[] objects = node.getUserObjectPath();
+		List<View> views = new ArrayList<View>();
+		for (int i = 0; i < objects.length; i++) {
+			if (objects[i] instanceof View) {
+				views.add((View) objects[i]);
+			}
+		}
+		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
+		// get the trials
+		if (views.size() > 0) {
+			ListIterator<Trial> trials = server.getTrialsForView(views, false);
+			Trial trial = null;
+			DefaultMutableTreeNode trialNode = null;
+			// loop through all the trials, and print out some info
+			while (trials.hasNext()) {
+				trial = trials.next();
+				trialNode = new PerfExplorerTreeNode(trial);
+				node.add(trialNode);
+				trialNode.getParent();
+			}
+		}
 	}
-	PerfExplorerConnection server = PerfExplorerConnection.getConnection();
-	// get the trials
-	if (views.size() > 0) {
-	    ListIterator<Trial> trials = server.getTrialsForView(views,false);
-	    Trial trial = null;
-	    DefaultMutableTreeNode trialNode = null;
-	    // loop through all the trials, and print out some info
-	    while(trials.hasNext())
-	    {
-		trial = trials.next();
-		trialNode = new PerfExplorerTreeNode (trial);
-		//addMetricNodes(trialNode, trial);
-		node.add(trialNode);
-	    }
-	}
-    }
 
 
     @SuppressWarnings("unchecked") // for trial.getMetrics() call
@@ -267,7 +288,7 @@ public class PerfExplorerJTree extends JTree {
 	PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 	// get the events
 	ListIterator<RMISortableIntervalEvent> events = server.getEventList(trial.getID(), metricIndex);
-	IntervalEvent event = null;
+	RMISortableIntervalEvent event = null;
 	DefaultMutableTreeNode eventNode = null;
 	// loop through all the events, and print out some info
 	while(events.hasNext())
@@ -279,7 +300,8 @@ public class PerfExplorerJTree extends JTree {
     }
 
     public static int getConnectionIndex(DefaultMutableTreeNode node) {
-	int index = 0;
+    	//Don't silent ignore if the connection index is not found
+	
 	// find the connection node for this subtree
 	DefaultMutableTreeNode parent = node;
 	Object obj = parent.getUserObject();
@@ -292,9 +314,9 @@ public class PerfExplorerJTree extends JTree {
 
 	if (obj != null && obj instanceof ConnectionNodeObject) {
 	    ConnectionNodeObject conn = (ConnectionNodeObject)obj;
-	    index = conn.index;
+	    return conn.index;
 	}
-	return index;
+	return -1;
     }
 
     public static void setConnectionIndex(DefaultMutableTreeNode node) {
@@ -399,7 +421,7 @@ public class PerfExplorerJTree extends JTree {
 	    if (trial == null || trial.getID() != current.getID()) {
 		return;  // this isn't our current path, so don't expand
 	    }
-	} else if (obj instanceof RMIView) {
+	} else if (obj instanceof View) {
 	    return;  // this isn't our current path, so don't expand
 	} else if (obj instanceof Metric) {
 	    return;  // don't expand that deep

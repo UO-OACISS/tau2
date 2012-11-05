@@ -6,7 +6,9 @@ TAUROOT=
 # loader directory.  The first is for everything else.
 CLASSPATH=./classes
 CUBE_JAVA_READER=../contrib/CubeReader.jar
-LOADER_CLASSPATH=$(CLASSPATH):../contrib/jargs.jar:../contrib/xerces.jar:../common/bin/tau-common.jar:$(CUBE_JAVA_READER)
+JSON_CLASSPATH=../contrib/google-gson-2.1/gson-2.1.jar
+POSTGRESQL_CLASSPATH=../contrib/postgresql.jar
+LOADER_CLASSPATH=$(CLASSPATH):../contrib/jargs.jar:../contrib/xerces.jar:../common/bin/tau-common.jar:$(CUBE_JAVA_READER):$(JSON_CLASSPATH):$(POSTGRESQL_CLASSPATH)
 
 # These are class and source targets.
 DOC_PATH=./doc
@@ -15,33 +17,30 @@ DATABASE_SOURCES=$(wildcard $(SRC_PATH)/database/*.java)
 LOADER_SOURCES=$(wildcard $(SRC_PATH)/loader/*.java)
 DSS_SOURCES=$(wildcard $(SRC_PATH)/*.java)
 ANALYSIS_SOURCES=$(wildcard $(SRC_PATH)/analysis/*.java)
+VIEWCREATOR_SOURCES=$(wildcard $(SRC_PATH)/viewcreator/*.java)
+TAUDB_SOURCES=$(wildcard $(SRC_PATH)/taudb/*.java)
 EXAMPLE_CLASSES=./src/examples/*.class
 EXAMPLE_SOURCES=./src/examples/*.java
 
 JAVAC=javac
 
-SOURCES = $(DATABASE_SOURCES) $(DSS_SOURCES) $(LOADER_SOURCES) $(ANALYSIS_SOURCES)
+SOURCES = $(DATABASE_SOURCES) $(DSS_SOURCES) $(LOADER_SOURCES) $(ANALYSIS_SOURCES) $(TAUDB_SOURCES) $(VIEWCREATOR_SOURCES) 
 CLASSES = $(subst ./src/, ./classes/, $(patsubst %.java, %.class, $(SOURCES)))
-
-
 
 # We only want to use Java 1.5
 JAVA_FIVE=$(shell java -version 2>&1 | grep version | /usr/bin/awk '{ print $$3; }'| sed -e s/\"//g | sed -e s/1\.5\..*// | wc -c)
 ifeq ($(JAVA_FIVE),1)
   TARGET=build
 else
-  ifeq ($(override),1)
-    JAVAC=javac -source 1.5 -target 1.5
-    TARGET=build
-  else 
-    TARGET=badversion
-  endif
+  TARGET=badversion
 endif
 
 all: $(TARGET)
 
 build: bin/perfdmf.jar 
 
+override: build
+    JAVAC=javac -source 1.5 -target 1.5
 
 #all: perfdmf.jar javadoc rebuilddb buildtest simple
 
@@ -128,6 +127,6 @@ classes:
 
 
 badversion:
-	@echo "Error, ParaProf must be compiled with Java 1.5, use 'make override=1' to proceed anyway"
+	@echo "Error, ParaProf must be compiled with Java 1.5, use 'make override' to proceed anyway"
 
 

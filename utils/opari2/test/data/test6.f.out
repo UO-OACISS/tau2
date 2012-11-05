@@ -23,6 +23,7 @@
       include 'omp_lib.h'
 
       include 'test6.f.opari.inc'
+#line 23 "test6.f"
       integer (kind=omp_lock_kind)      lock1
       integer (kind=omp_nest_lock_kind) lock2
       integer (kind=omp_sched_kind)     sched

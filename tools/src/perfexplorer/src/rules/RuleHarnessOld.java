@@ -17,6 +17,7 @@ import org.drools.WorkingMemory;
 import org.drools.compiler.PackageBuilder;
 import org.drools.rule.Package;
 
+import edu.uoregon.tau.perfdmf.FunctionProfile;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.IntervalLocationProfile;
 import edu.uoregon.tau.perfdmf.Metric;
@@ -92,9 +93,9 @@ public class RuleHarnessOld {
 		private final int type;
 		private Trial trial;
 		private List<Metric> metrics;
-		private HashMap<IntervalEvent, IntervalLocationProfile> events;
-		private HashMap<String, IntervalEvent> eventNames;
-		private IntervalEvent main;
+		private HashMap<RMISortableIntervalEvent, FunctionProfile> events;
+		private HashMap<String, RMISortableIntervalEvent> eventNames;
+		private RMISortableIntervalEvent main;
 		private int timeIndex;
 		
 		public RelativeTrial (Trial trial, int type) {
@@ -105,27 +106,27 @@ public class RuleHarnessOld {
 			this.events = buildEventMap();
 		}
 		
-		private HashMap<IntervalEvent, IntervalLocationProfile> buildEventMap () {
-			HashMap<IntervalEvent, IntervalLocationProfile> eventMap = new HashMap<IntervalEvent, IntervalLocationProfile>();
-			this.eventNames = new HashMap<String, IntervalEvent>();
+		private HashMap<RMISortableIntervalEvent, FunctionProfile> buildEventMap () {
+			HashMap<RMISortableIntervalEvent, FunctionProfile> eventMap = new HashMap<RMISortableIntervalEvent, FunctionProfile>();
+			this.eventNames = new HashMap<String, RMISortableIntervalEvent>();
 			ListIterator<RMISortableIntervalEvent> events = facade.getEventList(this.trial, 0);
 			// if we don't have a time metric, just use the first metric available
 			int timeIndex = this.timeIndex==-1?0:this.timeIndex;
 			double inclusive = 0.0;
 			while (events.hasNext()) {
-				IntervalEvent event = events.next();
-				this.eventNames.put(event.getName(), event);
-				try {
-					IntervalLocationProfile ilp =event.getMeanSummary();
+				RMISortableIntervalEvent event = events.next();
+				this.eventNames.put(event.getFunction().getName(), event);
+//				try {
+					FunctionProfile ilp = event.getMeanSummary();
 					if (ilp.getInclusive(timeIndex) > inclusive) {
 						inclusive = ilp.getInclusive(timeIndex);
 						this.main = event;
 					}
 					eventMap.put(event, ilp);
-				} catch (SQLException e) {
+/*				} catch (SQLException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
-				}
+				}*/
 			}
 			return eventMap;
 		}
@@ -174,7 +175,7 @@ public class RuleHarnessOld {
 			return this.type;
 		}
 		
-		public IntervalEvent getMain() {
+		public RMISortableIntervalEvent getMain() {
 			return this.main;
 		}
 		
@@ -182,11 +183,11 @@ public class RuleHarnessOld {
 			return this.timeIndex;
 		}
 		
-		public Iterator<IntervalEvent> getEventIterator() {
+		public Iterator<RMISortableIntervalEvent> getEventIterator() {
 			return events.keySet().iterator();
 		}
 		
-		public IntervalEvent getEvent(String name) {
+		public RMISortableIntervalEvent getEvent(String name) {
 			return this.eventNames.get(name);
 		}
 	

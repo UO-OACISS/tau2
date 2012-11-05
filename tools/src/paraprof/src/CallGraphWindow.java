@@ -330,10 +330,10 @@ public class CallGraphWindow extends JFrame implements ActionListener, KeyListen
 
         functionProfileList = thread.getFunctionProfiles();
 
-        if (thread.getNodeID() == -1) {
+        if (thread.getNodeID() == -1 || thread.getNodeID() == -6) {
             this.setTitle("TAU: ParaProf: Mean Call Graph - "
                     + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
-        } else if (thread.getNodeID() == -3) {
+        } else if (thread.getNodeID() == -3 || thread.getNodeID() == -7) {
             this.setTitle("TAU: ParaProf: Standard Deviation Call Graph - "
                     + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         } else {

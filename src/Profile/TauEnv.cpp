@@ -37,6 +37,8 @@
 #include <TAU.h>
 #include <tauroot.h>
 #include <fcntl.h>
+#include <string>
+using namespace std;
 
 #ifndef TAU_BGP
 //#include <pwd.h>
@@ -135,6 +137,8 @@
 #endif /* TAU_MPI */
 
 #define TAU_CUPTI_API_DEFAULT "runtime"
+
+#define TAU_MIC_OFFLOAD_DEFAULT 0
 
 // forward declartion of cuserid. need for c++ compilers on Cray.
 extern "C" char *cuserid(char *);
@@ -258,23 +262,55 @@ static int TauConf_parse(FILE *cfgFile, const char *fname) {
   return 0;
 }
 
+extern int Tau_util_readFullLine(char *line, FILE *fp); 
+/*********************************************************************
+ * Get executable directory name: /usr/local/foo will return /usr/local
+ ********************************************************************/
+int Tau_get_cwd_of_exe(string& dirname) {
+  FILE *f;
+  f = fopen("/proc/self/cmdline", "r");
+  if (f) {
+    char line[4096];
+    if (Tau_util_readFullLine(line, f)) {
+      string fullpath = string(line);
+      int loc = fullpath.find_last_of("/\\");
+      dirname = fullpath.substr(0,loc);
+    //  dirname.append("/");
+      return 1; 
+    } else {
+      dirname=string("unknown");
+      return 0;
+    }
+  } else {
+    dirname = string("unknown");
+    return 0;
+  }
+}
+
 /*********************************************************************
  * Read configuration file
  ********************************************************************/
 static int TauConf_read() {
   const char *tmp;
+  char conf_file_name[1024]; 
 
   tmp = getenv("TAU_CONF");
   if (tmp == NULL) {
     tmp = "tau.conf";
   }
   FILE *cfgFile = fopen(tmp, "r");
+  if (! cfgFile) {
+    string exedir; 
+    Tau_get_cwd_of_exe(exedir);  
+    sprintf(conf_file_name, "%s/tau.conf", exedir.c_str()); 
+    TAU_VERBOSE("Trying %s\n", conf_file_name);
+    cfgFile = fopen(conf_file_name, "r");
+  }
   if (cfgFile) {
     TauConf_parse(cfgFile, tmp);
     fclose(cfgFile);
   }
   else {
-    char conf_file_name[1024]; 
     sprintf(conf_file_name,"%s/tau_system_defaults/tau.conf", TAUROOT);
     cfgFile = fopen(conf_file_name, "r");
     if (cfgFile) {
@@ -291,6 +327,7 @@ static int TauConf_read() {
  ********************************************************************/
 static const char *getconf(const char *key) {
   const char *val = TauConf_getval(key);
+  TAU_VERBOSE("%s=%s\n", key, val);
   if (val) {
     return val;
   }
@@ -396,7 +433,7 @@ static int env_depth_limit = 0;
 static int env_track_message = 0;
 static int env_comm_matrix = 0;
 static int env_track_memory_heap = 0;
-int tau_env_lite = 0;
+static int tau_env_lite = 0;
 static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
 static int env_track_io_params = 0;
@@ -425,6 +462,11 @@ static const char *env_tracedir = NULL;
 static const char *env_metrics = NULL;
 static const char *env_cupti_api = NULL;
 
+static int env_mic_offload = 0;
+#ifdef TAU_GPI 
+#include <GPI.h>
+#include <GpiLogger.h>
+#endif /* TAU_GPI */
 /*********************************************************************
  * Write to stderr if verbose mode is on
  ********************************************************************/
@@ -434,7 +476,11 @@ void TAU_VERBOSE(const char *format, ...) {
     return;
   }
   va_start(args, format);
+#ifdef TAU_GPI
+  gpi_vprintf(format, args);
+#else
   vfprintf(stderr, format, args);
+#endif
   va_end(args);
   fflush(stderr);
 }
@@ -645,6 +691,13 @@ const char* TauEnv_get_cupti_api(){
   return env_cupti_api;
 }
 
+int TauEnv_get_mic_offload(){
+  return env_mic_offload;
+}
+int TauEnv_get_lite_enabled() {
+  return tau_env_lite;
+}
+
 /*********************************************************************
  * Initialize the TauEnv module, get configuration values
  ********************************************************************/
@@ -677,6 +730,13 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: LITE measurement enabled\n");
       TAU_METADATA("TAU_LITE", "on");
       tau_env_lite = 1;
+    }
+
+    tmp = getconf("TAU_VERBOSE");
+    if (parse_bool(tmp,tau_env_lite)) {
+      env_verbose = 1;
+      TAU_VERBOSE("TAU: VERBOSE enabled\n");
+      TAU_METADATA("TAU_VERBOSE", "on");
     }
 
     tmp = getconf("TAU_TRACK_HEAP");
@@ -733,16 +793,6 @@ void TauEnv_initialize()
       env_track_signals = 0;
     }
 
-    tmp = getconf("TAU_SUMMARY");
-    if (parse_bool(tmp, env_summary_only)) {
-      TAU_VERBOSE("TAU: Generating only summary data: TAU_SUMMARY enabled\n");
-      TAU_METADATA("TAU_SUMMARY", "on");
-      env_summary_only = 1;
-    } else {
-      TAU_METADATA("TAU_SUMMARY", "off");
-      env_summary_only = 0;
-    }
-
     tmp = getconf("TAU_IBM_BG_HWP_COUNTERS");
     if (parse_bool(tmp, env_ibm_bg_hwp_counters)) {
       TAU_VERBOSE("TAU: IBM UPC HWP counter data collection enabled\n");
@@ -784,11 +834,31 @@ void TauEnv_initialize()
 
     if ((env_profiledir = getconf("PROFILEDIR")) == NULL) {
       env_profiledir = ".";   /* current directory */
+#ifdef TAU_GPI
+      // if exe is /usr/local/foo, this will return /usr/local where profiles
+      // may be stored if PROFILEDIR is not specified
+      string cwd; 
+      int ret = Tau_get_cwd_of_exe(cwd);
+      if (ret) {
+	env_profiledir = strdup(cwd.c_str());
+	TAU_VERBOSE("ENV_PROFILEDIR = %s\n", env_profiledir); 
+      }
+#endif /* TAU_GPI */
     }
     TAU_VERBOSE("TAU: PROFILEDIR is \"%s\"\n", env_profiledir);
 
     if ((env_tracedir = getconf("TRACEDIR")) == NULL) {
       env_tracedir = ".";   /* current directory */
+#ifdef TAU_GPI
+      // if exe is /usr/local/foo, this will return /usr/local where profiles
+      // may be stored if PROFILEDIR is not specified
+      string cwd; 
+      int ret = Tau_get_cwd_of_exe(cwd);
+      if (ret) {
+	env_tracedir = strdup(cwd.c_str());
+	TAU_VERBOSE("ENV_TRACEDIR = %s\n", env_tracedir); 
+      }
+#endif /* TAU_GPI */
     }
     TAU_VERBOSE("TAU: TRACEDIR is \"%s\"\n", env_tracedir);
 
@@ -866,7 +936,7 @@ void TauEnv_initialize()
     sprintf(tmpstr, "%d", env_callsite_limit);
     TAU_METADATA("TAU_CALLSITE_LIMIT", tmpstr);
 
-#if (defined(TAU_MPI) || defined(TAU_SHMEM) || defined(TAU_DMAPP) || defined(TAU_UPC))
+#if (defined(TAU_MPI) || defined(TAU_SHMEM) || defined(TAU_DMAPP) || defined(TAU_UPC) || defined(TAU_GPI))
     /* track comm (opposite of old -nocomm option) */
     tmp = getconf("TAU_TRACK_MESSAGE");
     if (parse_bool(tmp, env_track_message)) {
@@ -895,7 +965,7 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Message Tracking Disabled\n");
       TAU_METADATA("TAU_TRACK_MESSAGE", "off");
     }
-#endif /* TAU_MPI || TAU_SHMEM || TAU_DMAPP || TAU_UPC */
+#endif /* TAU_MPI || TAU_SHMEM || TAU_DMAPP || TAU_UPC || TAU_GPI */
 
     /* clock synchronization */
     if (env_tracing == 0) {
@@ -997,7 +1067,7 @@ void TauEnv_initialize()
       sprintf(tmpstr, "%g", env_throttle_numcalls);
       TAU_METADATA("TAU_THROTTLE_NUMCALLS", tmpstr);
     }
-
+		
     const char *profileFormat = getconf("TAU_PROFILE_FORMAT");
     if (profileFormat != NULL && 0 == strcasecmp(profileFormat, "snapshot")) {
       env_profile_format = TAU_FORMAT_SNAPSHOT;
@@ -1022,6 +1092,25 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Output Format: profile\n");
       TAU_METADATA("TAU_PROFILE_FORMAT", "profile");
     }
+
+    tmp = getconf("TAU_SUMMARY");
+    if (parse_bool(tmp, env_summary_only)) {
+#ifdef TAU_MPI
+			if (env_profile_format == TAU_FORMAT_MERGED) {
+				TAU_VERBOSE("TAU: Generating only summary data: TAU_SUMMARY enabled\n");
+				TAU_METADATA("TAU_SUMMARY", "on");
+				env_summary_only = 1;
+			} else {
+      	TAU_VERBOSE("TAU: Summary requires merged format, reverting non-summary profiling.\n");
+				TAU_METADATA("TAU_SUMMARY", "off");
+				env_summary_only = 0;
+			}
+#else
+      TAU_VERBOSE("TAU: Summary requires merged format, which is not supported without MPI, reverting non-summary profiling.\n");
+      TAU_METADATA("TAU_SUMMARY", "off");
+      env_summary_only = 0;
+#endif /* TAU_MPI */
+		}
 
     if ((env_metrics = getconf("TAU_METRICS")) == NULL) {
       env_metrics = "";   /* default to 'time' */
@@ -1193,8 +1282,13 @@ void TauEnv_initialize()
     else {
       TAU_VERBOSE("TAU: CUPTI API tracking: %s\n", env_cupti_api);
       TAU_METADATA("TAU_CUPTI_API", env_cupti_api);
-    }
-
+		}
+		tmp = getconf("TAU_MIC_OFFLOAD");
+    if (parse_bool(tmp, TAU_MIC_OFFLOAD_DEFAULT)) {
+      env_mic_offload = 1;
+      TAU_VERBOSE("TAU: MIC offloading Enabled\n");
+      TAU_METADATA("TAU_MIC_OFFLOAD", "on");
+		}
 
     initialized = 1;
     TAU_VERBOSE("TAU: Initialized TAU (TAU_VERBOSE=1)\n");

@@ -1,14 +1,12 @@
-#include "taudb_api.h"
-#include "libpq-fe.h"
+#include "taudb_internal.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-TAUDB_COUNTER* taudb_query_counters(PGconn* connection, TAUDB_TRIAL* trial) {
+TAUDB_COUNTER* taudb_query_counters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_counters(%p)\n", trial);
 #endif
-  PGresult *res;
   int nFields;
   int i, j;
 
@@ -18,127 +16,130 @@ TAUDB_COUNTER* taudb_query_counters(PGconn* connection, TAUDB_TRIAL* trial) {
   }
 
   // if the Trial already has the data, return it.
-  if (trial->counters != NULL && trial->counter_count > 0) {
-    taudb_numItems = trial->counter_count;
-    return trial->counters;
+  if (trial->counters_by_id != NULL) {
+    taudb_numItems = HASH_CNT(hh1,trial->counters_by_id);
+    return trial->counters_by_id;
   }
 
-  /* Start a transaction block */
-  res = PQexec(connection, "BEGIN");
-  if (PQresultStatus(res) != PGRES_COMMAND_OK)
-  {
-    fprintf(stderr, "BEGIN command failed: %s", PQerrorMessage(connection));
-    PQclear(res);
-    taudb_exit_nicely(connection);
-  }
-
-  /*
-   * Should PQclear PGresult whenever it is no longer needed to avoid
-   * memory leaks
-   */
-  PQclear(res);
+  taudb_begin_transaction(connection);
 
   /*
    * Fetch rows from table_name, the system catalog of databases
    */
   char my_query[256];
   if (taudb_version == TAUDB_2005_SCHEMA) {
-    sprintf(my_query,"DECLARE myportal CURSOR FOR select * from atomic_event where trial = %d", trial->id);
+    sprintf(my_query,"select * from atomic_event where trial = %d", trial->id);
   } else {
-    sprintf(my_query,"DECLARE myportal CURSOR FOR select * from counter where trial = %d", trial->id);
+    sprintf(my_query,"select * from counter where trial = %d", trial->id);
   }
 #ifdef TAUDB_DEBUG
   printf("'%s'\n",my_query);
 #endif
-  res = PQexec(connection, my_query);
-  if (PQresultStatus(res) != PGRES_COMMAND_OK)
-  {
-    fprintf(stderr, "DECLARE CURSOR failed: %s", PQerrorMessage(connection));
-    PQclear(res);
-    taudb_exit_nicely(connection);
-  }
-  PQclear(res);
+  taudb_execute_query(connection, my_query);
 
-  res = PQexec(connection, "FETCH ALL in myportal");
-  if (PQresultStatus(res) != PGRES_TUPLES_OK)
-  {
-    fprintf(stderr, "FETCH ALL failed: %s", PQerrorMessage(connection));
-    PQclear(res);
-    taudb_exit_nicely(connection);
-  }
-
-  int nRows = PQntuples(res);
-  TAUDB_COUNTER* counters = taudb_create_counters(nRows);
+  int nRows = taudb_get_num_rows(connection);
   taudb_numItems = nRows;
+#ifdef TAUDB_DEBUG
+  printf("'%d' rows returned\n",nRows);
+#endif
 
-  nFields = PQnfields(res);
+  nFields = taudb_get_num_columns(connection);
 
   /* the rows */
-  for (i = 0; i < PQntuples(res); i++)
+  for (i = 0; i < taudb_get_num_rows(connection); i++)
   {
+    TAUDB_COUNTER* counter = taudb_create_counters(1);
     /* the columns */
     for (j = 0; j < nFields; j++) {
-	  if (strcmp(PQfname(res, j), "id") == 0) {
-	    counters[i].id = atoi(PQgetvalue(res, i, j));
-	  } else if (strcmp(PQfname(res, j), "trial") == 0) {
-	    counters[i].trial = atoi(PQgetvalue(res, i, j));
-	  } else if (strcmp(PQfname(res, j), "name") == 0) {
-	    char* tmp = PQgetvalue(res,i,j);
-		counters[i].name = taudb_create_string(strlen(tmp));
-		strcpy(counters[i].name, tmp);
-//#ifdef TAUDB_DEBUG
-		if (i>1)
-        printf("Got counter '%s'\n", counters[2].name);
-//#endif
-	  } else if (strcmp(PQfname(res, j), "source_file") == 0) {
-	    //counters[i].source_file = PQgetvalue(res, i, j);
-		counters[i].source_file = taudb_create_string(strlen(PQgetvalue(res,i,j)));
-		strcpy(counters[i].source_file, PQgetvalue(res,i,j));
-	  } else if (strcmp(PQfname(res, j), "line_number") == 0) {
-	    counters[i].line_number = atoi(PQgetvalue(res, i, j));
-	  } else if (strcmp(PQfname(res, j), "group_name") == 0) {
-	    // tokenize the string, something like 'TAU_USER|MPI|...'
-	    char* group_names = PQgetvalue(res, i, j);
-		char* group = strtok(group_names, "|");
-		if (group != NULL && strlen(group_names) > 0) {
+	  if (strcmp(taudb_get_column_name(connection, j), "id") == 0) {
+	    counter->id = atoi(taudb_get_value(connection, i, j));
+	  } else if (strcmp(taudb_get_column_name(connection, j), "trial") == 0) {
+	    counter->trial = trial;
+	  } else if (strcmp(taudb_get_column_name(connection, j), "name") == 0) {
+	    //counter->name = taudb_get_value(connection, i, j);
+		counter->name = taudb_create_and_copy_string(taudb_get_value(connection,i,j));
 #ifdef TAUDB_DEBUG
-          //printf("Got counter groups '%s'\n", group_names);
+        //printf("Got counter '%s'\n", counter->name);
 #endif
-		  counters[i].group_count = 1;
-	      TAUDB_COUNTER_GROUP* groups = taudb_create_counter_groups(1);
-		  groups[0].id = 0;
-		  groups[0].counter = 0;
-		  groups[0].name = group;
-		  group = strtok(NULL, "|");
-		  while (group != NULL) {
-	        TAUDB_COUNTER_GROUP* groups = taudb_resize_counter_groups(counters[i].group_count+1, groups);
-		    groups[counters[i].group_count].id = 0;
-		    groups[counters[i].group_count].counter = 0;
-		    groups[counters[i].group_count].name = group;
-		    counters[i].group_count++;
-		    group = strtok(NULL, "|");
-		  }
-		} else {
-		  counters[i].group_count = 0;
-		  counters[i].groups = NULL;
-		}
+	  } else if (strcmp(taudb_get_column_name(connection, j), "source_file") == 0) {
+            // do nothing
+	  } else if (strcmp(taudb_get_column_name(connection, j), "line_number") == 0) {
+            // do nothing
+	  } else if (strcmp(taudb_get_column_name(connection, j), "group_name") == 0) {
+            // do nothing
 	  } else {
-	    printf("Error: unknown column '%s'\n", PQfname(res, j));
+	    printf("Error: unknown column '%s'\n", taudb_get_column_name(connection, j));
 	    taudb_exit_nicely(connection);
 	  }
 	  // TODO - Populate the rest properly?
 	} 
+    HASH_ADD(hh1, trial->counters_by_id, id, sizeof(int), counter);
+    HASH_ADD_KEYPTR(hh2, trial->counters_by_name, counter->name, strlen(counter->name), counter);
+  }
+  taudb_clear_result(connection);
+  taudb_close_transaction(connection);
+
+  return (trial->counters_by_id);
+}
+
+TAUDB_COUNTER* taudb_get_counter_by_id(TAUDB_COUNTER* counters, const int id) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("Calling taudb_get_counter_by_id(%p,%d)\n", counters, id);
+#endif
+  if (counters == NULL) {
+    fprintf(stderr, "Error: counter parameter null. Please provide a valid set of counters.\n");
+    return NULL;
+  }
+  if (id == 0) {
+    fprintf(stderr, "Error: id parameter null. Please provide a valid name.\n");
+    return NULL;
   }
 
-  PQclear(res);
-
-  /* close the portal ... we don't bother to check for errors ... */
-  res = PQexec(connection, "CLOSE myportal");
-  PQclear(res);
-
-  /* end the transaction */
-res = PQexec(connection, "END");
-  PQclear(res);
-  
-  return (counters);
+  TAUDB_COUNTER* counter = NULL;
+  HASH_FIND(hh1, counters, &id, sizeof(int), counter);
+  // HASH_FIND is not working so well... now we iterate. Sigh.
+  if (counter == NULL) {
+    TAUDB_COUNTER *current, *tmp;
+    HASH_ITER(hh1, counters, current, tmp) {
+#ifdef TAUDB_DEBUG_DEBUG
+      printf ("COUNTER: '%s'\n", current->name);
+#endif
+      if (current->id == id) {
+        return current;
+      }
+    }
+  }
+  return counter;
 }
+
+TAUDB_COUNTER* taudb_get_counter_by_name(TAUDB_COUNTER* counters, const char* name) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("Calling taudb_get_counter_by_name(%p,%s)\n", counters, name);
+#endif
+  if (counters == NULL) {
+    fprintf(stderr, "Error: counter parameter null. Please provide a valid set of counters.\n");
+    return NULL;
+  }
+  if (name == NULL) {
+    fprintf(stderr, "Error: name parameter null. Please provide a valid name.\n");
+    return NULL;
+  }
+
+  TAUDB_COUNTER* counter = NULL;
+  HASH_FIND(hh2, counters, name, sizeof(name), counter);
+  // HASH_FIND is not working so well... now we iterate. Sigh.
+  if (counter == NULL) {
+    TAUDB_COUNTER *current, *tmp;
+    HASH_ITER(hh2, counters, current, tmp) {
+#ifdef TAUDB_DEBUG_DEBUG
+      printf ("COUNTER: '%s'\n", current->name);
+#endif
+      if (strcmp(current->name, name) == 0) {
+        return current;
+      }
+    }
+  }
+  return counter;
+}
+
+

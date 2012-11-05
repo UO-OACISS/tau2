@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 import java.util.StringTokenizer;
@@ -21,13 +22,46 @@ public class GPTLDataSource extends DataSource {
 	private File file = null;
 	private GlobalData globalData = null;
     
+    private volatile int totalFiles = 0;
+    private volatile int filesRead = 0;
+
     private volatile long totalBytes = 0;
     private volatile TrackerInputStream tracker;
-
+    private List<File[]> dirs; // list of directories
+    private boolean oneFile = false;
+    private File globalFile = null; // global stats file
+    private boolean isPAPI = false; // do we have PAPI data?
+    private List<String> dataColumns = new ArrayList<String>(); // the data columns in the file
+    private int currentProcess = 0;
 	
+    private File fileToMonitor;
+
     public GPTLDataSource(File file) {
         super();
         this.file = file;
+        this.oneFile = true;
+    }
+
+    @SuppressWarnings("unchecked")
+	public GPTLDataSource(List<?> dirs) {
+        super();
+
+        if (dirs.size() > 0) {
+            if (dirs.get(0) instanceof File[]) {
+            	this.dirs=(List<File[]>)dirs;
+                File[] files = (File[])dirs.get(0);
+                if (files.length > 0) {
+                    fileToMonitor = files[0];
+                }
+            } else {
+                this.dirs = new ArrayList<File[]>();
+                File[] files = new File[1];
+                files[0] = (File) dirs.get(0);
+                this.dirs.add(files);
+                fileToMonitor = files[0];
+                //System.out.println(files[0].toString());
+            }
+        }
     }
 
     public void cancelLoad() {
@@ -35,13 +69,28 @@ public class GPTLDataSource extends DataSource {
     }
 
     public int getProgress() {
-        if (totalBytes != 0) {
-            return (int) ((float) tracker.byteCount() / (float) totalBytes * 100);
-        }
+    	if (oneFile) {
+	        if (totalBytes != 0) {
+	            return (int) ((float) tracker.byteCount() / (float) totalBytes * 100);
+	        }
+    	} else {
+            if (totalFiles != 0)
+                return (int) ((float) filesRead / (float) totalFiles * 100);
+    	}
         return 0;
     }
 
     public void load() throws FileNotFoundException, IOException {
+    	
+    	if (oneFile) {
+    		loadOneFile();
+    	} else {
+    		loadMultipleFiles();
+    	}
+    }
+    
+    public void loadOneFile() throws FileNotFoundException, IOException {
+    	
         //Record time.
         long time = System.currentTimeMillis();
 
@@ -49,8 +98,7 @@ public class GPTLDataSource extends DataSource {
         Context context = null;
         Thread thread = null;
         //int nodeID = -1;
-
-
+        
 		//System.out.println("Processing " + file + ", please wait ......");
 		FileInputStream fileIn = new FileInputStream(file);
 		tracker = new TrackerInputStream(fileIn);
@@ -64,8 +112,8 @@ public class GPTLDataSource extends DataSource {
 		//System.out.println("Num Tasks: " + globalData.numTasks);
 
 		// process the process/thread data
-		ThreadData data = processThreadData(br);
-		while ( data != null ) {
+		List<ThreadData> dataList = processThreadData(br);
+		for (ThreadData data : dataList) {
 
 			//clearMetrics();
 
@@ -85,9 +133,6 @@ public class GPTLDataSource extends DataSource {
 				}
 			}
         	this.generateDerivedData();
-			// get next thread
-			data = processThreadData(br);
-
 		} // while process/thread
 
 		setGroupNamesPresent(true);
@@ -96,6 +141,93 @@ public class GPTLDataSource extends DataSource {
         //System.out.println("Done processing data!");
         //System.out.println("Time to process (in milliseconds): " + time);
         fileIn.close();
+    }
+
+    public void loadMultipleFiles() throws FileNotFoundException, IOException {
+    	
+        //Record time.
+        long time = System.currentTimeMillis();
+
+        // first count the files (for progressbar)
+        for (Iterator<File[]> e = dirs.iterator(); e.hasNext();) {
+            File[] files = e.next();
+            for (int i = 0; i < files.length; i++) {
+                totalFiles++;
+                // and get the _stats file
+                if (files[i].getName().endsWith("_stats")) {
+                	globalFile = files[i];
+                }
+            }
+        }
+
+        Node node = null;
+        Context context = null;
+        Thread thread = null;
+        //int nodeID = -1;
+        
+        // Process the global file
+        file = globalFile;
+        
+		//System.out.println("Processing " + file + ", please wait ......");
+		FileInputStream fileIn = new FileInputStream(file);
+		tracker = new TrackerInputStream(fileIn);
+		InputStreamReader inReader = new InputStreamReader(tracker);
+		BufferedReader br = new BufferedReader(inReader);
+		
+		totalBytes = file.length();
+
+		// process the global section, and do what's necessary
+		globalData = processGlobalSection(br);
+		//System.out.println("Num Tasks: " + globalData.numTasks);
+        fileIn.close();
+
+        // iterate through the vector of File arrays (each directory)
+        for (Iterator<File[]> e = dirs.iterator(); e.hasNext();) {
+            File[] files = e.next();
+
+            for (int i = 0; i < files.length; i++) {
+                file = files[i];
+                if (file.getName().endsWith("_stats")) {
+                	continue; // we already handled this file
+                }
+                
+        		//System.out.println("Processing " + file + ", please wait ......");
+        		fileIn = new FileInputStream(file);
+        		tracker = new TrackerInputStream(fileIn);
+        		inReader = new InputStreamReader(tracker);
+        		br = new BufferedReader(inReader);
+        		
+        		totalBytes = file.length();
+        		// process the process/thread data
+        		List<ThreadData> dataList = processThreadData(br);
+        		for (ThreadData data : dataList) {
+
+        			//clearMetrics();
+
+        			// the data is loaded, so create the node/context/thread id
+        			// for this data set
+        			node = this.addNode(data.processid);
+        			context = node.addContext(0);
+        			thread = context.addThread(data.threadid);
+
+        			// cycle through the events
+        			for (int j = 0 ; j < data.eventData.size() ; j++ ) {
+        				EventData eventData = data.eventData.get(j);
+        				createFunction(thread, eventData, false);
+        				if (!eventData.callpathName.equals(eventData.name))
+        					createFunction(thread, eventData, true);
+        			}
+        			this.generateDerivedData();
+        		} // for data in dataList
+
+        		fileIn.close();
+            }
+    		setGroupNamesPresent(true);
+
+    		time = (System.currentTimeMillis()) - time;
+    		//System.out.println("Done processing data!");
+    		//System.out.println("Time to process (in milliseconds): " + time);
+        }
     }
 
 
@@ -107,6 +239,7 @@ public class GPTLDataSource extends DataSource {
 
 		if (doCallpath) {
 			function = this.addFunction(eventData.callpathName);
+			function.addGroup(this.addGroup("TAU_DEFAULT"));
 			function.addGroup(this.addGroup("TAU_CALLPATH"));
 		} else {
 			function = this.addFunction(eventData.name);
@@ -190,39 +323,25 @@ public class GPTLDataSource extends DataSource {
 				// name count wallmax (proc thrd) wallmin (proc thrd) ...
 				else if (inputString.trim().startsWith("name")) {
         			StringTokenizer st = new StringTokenizer(inputString, " \t\n\r()");
-					// name
-        			tmp = st.nextToken();
-					// count
-        			tmp = st.nextToken();
-					// wallmax
-					tmp = st.nextToken();
-					// proc
-       				tmp = st.nextToken();
-					// thread
-       				tmp = st.nextToken();
-					// wallmin
-       				tmp = st.nextToken();
-					// proc
-       				tmp = st.nextToken();
-					// thread
-       				tmp = st.nextToken();
-					// loop through the metrics, and get their names
-					while (st.hasMoreTokens()) {
-						// METRICmax
-						tmp = st.nextToken();
-						data.metrics.add(tmp.replaceAll("max",""));
-						// proc
+        			while (st.hasMoreTokens()) {
         				tmp = st.nextToken();
-						// thread
-        				tmp = st.nextToken();
-						// METRICmin
-        				tmp = st.nextToken();
-						// proc
-        				tmp = st.nextToken();
-						// thread
-        				tmp = st.nextToken();
-					}
-				}
+        				if (tmp.equalsIgnoreCase("name")) {/* do nothing */}
+        				else if (tmp.equalsIgnoreCase("processes")) {/* do nothing */}
+        				else if (tmp.equalsIgnoreCase("threads")) {/* do nothing */}
+        				else if (tmp.equalsIgnoreCase("count")) {/* do nothing */}
+        				else if (tmp.equalsIgnoreCase("walltotal")) {/* do nothing */}
+        				else if (tmp.equalsIgnoreCase("wallmax")) {/* do nothing */}
+        				else if (tmp.equalsIgnoreCase("wallmin")) {/* do nothing */}
+        				else if (tmp.equalsIgnoreCase("proc")) {/* do nothing */}
+        				else if (tmp.equalsIgnoreCase("thrd")) {/* do nothing */}
+        				else if (tmp.endsWith("max")) {
+        					data.metrics.add(tmp.replaceAll("max", ""));
+        				} else if (tmp.endsWith("min")) { /* do nothing */ }
+        			}
+/*        			if (data.metrics.size() == 0) {
+        				data.metrics.add("WALLTIME");
+        			}
+*/				}
 				else if (inputString.trim().length() == 0) {
 					// if we already have the metrics, then break out.
 					if (data.metrics.size() > 0)
@@ -240,19 +359,21 @@ public class GPTLDataSource extends DataSource {
 		return data;
 	}
 
-	private ThreadData processThreadData(BufferedReader br) {
+	private List<ThreadData> processThreadData(BufferedReader br) {
+		List<ThreadData> dataList = new ArrayList<ThreadData>();
 		ThreadData data = null;
 		String inputString = null;
 		String tmp = null;
+		boolean inFooter = false;
 		try {
 			boolean inData = false;
 			boolean previousLineBlank = false;
 			Stack<EventData> eventStack = new Stack<EventData>();
 			while((inputString = br.readLine()) != null){
+				//System.out.println(inputString);
 				// ************ PROCESS     0 (    0) ************
 				if (inputString.trim().startsWith("************ PROCESS")) {
 					previousLineBlank = false;
-					data = new ThreadData();
         			StringTokenizer st = new StringTokenizer(inputString, " \t\n\r()");
 					// stars
         			tmp = st.nextToken();
@@ -261,14 +382,17 @@ public class GPTLDataSource extends DataSource {
 					// process ID
         			tmp = st.nextToken();
 					// parse the process ID
-					data.processid = Integer.parseInt(tmp,10);
+        			currentProcess = Integer.parseInt(tmp,10);
 					// process ID again?
         			//tmp = st.nextToken();
 					//data.threadid = Integer.parseInt(tmp);
 				}
 				// Stats for thread 0:
-				else if (inputString.trim().startsWith("Stats for thread 0:")) {
+				else if (inputString.trim().startsWith("Stats for thread ")) {
 					previousLineBlank = false;
+					data = new ThreadData();
+					data.processid = currentProcess;
+					this.dataColumns.clear();
 					inData = true;
         			StringTokenizer st = new StringTokenizer(inputString, " \t\n\r:");
 					// Stats
@@ -281,11 +405,21 @@ public class GPTLDataSource extends DataSource {
         			tmp = st.nextToken();
 					data.threadid = Integer.parseInt(tmp);
 				}
+				// On Called Recurse Wallclock max min UTR Overhead
+				else if (inputString.trim().startsWith("On")) {
+					previousLineBlank = false;
+					// handle the header
+					inData = true;
+					isPAPI = false;
+					parseDataColumns(inputString);
+				}
 				// Called Recurse Wallclock max min % of TOTAL UTR Overhead TOT_CYC e6/sec FP_OPS e6/sec FP_INS e6/sec OH (cyc)...
 				else if (inputString.trim().startsWith("Called")) {
 					previousLineBlank = false;
 					// handle the header
 					inData = true;
+					isPAPI = true;
+					parseDataColumns(inputString);
 				}
 				// Overhead sum           =     0.012 wallclock seconds
 				else if (inputString.trim().startsWith("Overhead sum")) {
@@ -298,6 +432,12 @@ public class GPTLDataSource extends DataSource {
 					previousLineBlank = false;
 					// end of the data section
 					inData = false;
+					// clear the event stack for the next thread
+					while (!eventStack.isEmpty()) {
+						eventStack.pop();
+					}
+					// save the thread data in the list
+					dataList.add(data);
 				}
 				// Total recursive calls = 0
 				else if (inputString.trim().startsWith("Total recursive calls")) {
@@ -322,12 +462,10 @@ public class GPTLDataSource extends DataSource {
 					if (previousLineBlank && !inData)
 						break;
 					previousLineBlank = true;
-				}
-				else if (!inData) { 
+				} else if (!inData) { 
 					previousLineBlank = false;
 					// ignore this line
-				}
-				else if (inData) { 
+				} else if (inData) { 
 					previousLineBlank = false;
 					// this is a data line!
 					EventData eventData = processEventLine(inputString);
@@ -341,7 +479,6 @@ public class GPTLDataSource extends DataSource {
 						// if the just read event is deeper than the current parent,
 						// add it to the stack
 						if (eventData.depth > parent.depth) {
-							eventStack.push(eventData);
 							parent.children.add(eventData);
 							eventData.callpathName = parent.callpathName + " => " + eventData.callpathName;
 						}
@@ -349,22 +486,34 @@ public class GPTLDataSource extends DataSource {
 						// current parent and replace it with the just read event
 						else if (eventData.depth == parent.depth) {
 							eventStack.pop();
-							parent = eventStack.peek();
-							parent.children.add(eventData);
-							eventData.callpathName = parent.callpathName + " => " + eventData.callpathName;
-							eventStack.push(eventData);
+							if (eventStack.empty()) {
+								parent = null;
+							} else {
+								parent = eventStack.peek();
+								parent.children.add(eventData);
+								eventData.callpathName = parent.callpathName + " => " + eventData.callpathName;
+							}
 						}
 						// if the just read event is at a shallower depth, pop
 						// until we get to something which is at a higher level.
 						else if (eventData.depth < parent.depth) {
 							while (eventData.depth <= parent.depth) {
 								eventStack.pop();
-								parent = eventStack.peek();
+								if (eventStack.empty()) {
+									parent = null;
+									break;
+								} else {
+									parent = eventStack.peek();
+								}
 							}
-							parent.children.add(eventData);
-							eventData.callpathName = parent.callpathName + " => " + eventData.callpathName;
-							eventStack.push(eventData);
+							if (parent != null) {
+								parent.children.add(eventData);
+								eventData.callpathName = parent.callpathName + " => " + eventData.callpathName;
+							}
 						}
+						// this is the new top level event
+						eventStack.push(eventData);
+						//System.out.println(eventData.callpathName);
 					}
 				}
 			}
@@ -372,7 +521,15 @@ public class GPTLDataSource extends DataSource {
 			System.out.println(e.getMessage());
 			e.printStackTrace();
 		}
-		return data;
+		return dataList;
+	}
+
+	private void parseDataColumns(String inputString) {
+		StringTokenizer st = new StringTokenizer(inputString, " \t\n\r");
+		while (st.hasMoreTokens()) {
+			String tmp = st.nextToken();
+			this.dataColumns.add(tmp);
+		}
 	}
 
 	private EventData processEventLine(String inputString) {
@@ -391,31 +548,56 @@ public class GPTLDataSource extends DataSource {
 			data.depth = inputString.length() - inputString.trim().length();
 		}
 		data.callpathName = data.name;
-		// num calls
-        data.calls = Integer.parseInt(st.nextToken());
-		// recurse - what do do with this?
-        st.nextToken();
-		// Wallclock - the output is a total, so divide by the number of calls
-		data.inclusive.wallclock = Double.parseDouble(st.nextToken());
-		// WallclockMax
-		data.inclusive.wallclockMax = Double.parseDouble(st.nextToken());
-		// WallclockMin
-		data.inclusive.wallclockMin = Double.parseDouble(st.nextToken());
-		// % of total - ignore
-        st.nextToken();
-		// UTR Overhead
-		data.inclusive.utrOverhead = Double.parseDouble(st.nextToken());
-		// there are N PAPI events, and two measurements for each
-		data.inclusive.papi = new double[globalData.metrics.size()];
-		data.inclusive.papiE6OverSeconds = new double[globalData.metrics.size()];
-		for (int i = 0 ; i < globalData.metrics.size() ; i++) {
-			// PAPI - the output is a total, so divide by the number of calls
-			data.inclusive.papi[i] = Double.parseDouble(st.nextToken());
-			// e6/sec
-			data.inclusive.papiE6OverSeconds[i] = Double.parseDouble(st.nextToken());
-		}
-		// OH (cyc)
-		data.inclusive.ohCycles = Double.parseDouble(st.nextToken());
+        // keep track of where we are in the data columns
+		int skip = 0;
+        for (String column : this.dataColumns) {
+        	if (skip > 0) {
+        		skip--;
+        		continue;
+        	}
+        	if (column.equalsIgnoreCase("on")) {
+        		// do nothing
+                st.nextToken();
+        	} else if (column.equalsIgnoreCase("called")) {
+        		// num calls
+                data.calls = Integer.parseInt(st.nextToken());
+        	} else if (column.equalsIgnoreCase("recurse")) {
+        		// recurse - what do do with this?
+                st.nextToken();
+        	} else if (column.equalsIgnoreCase("wallclock")) {
+        		// Wallclock - the output is a total, so divide by the number of calls
+        		data.inclusive.wallclock = Double.parseDouble(st.nextToken());
+        	} else if (column.equalsIgnoreCase("max")) {
+        		// WallclockMax
+        		data.inclusive.wallclockMax = Double.parseDouble(st.nextToken());
+        	} else if (column.equalsIgnoreCase("min")) {
+        		// WallclockMin
+        		data.inclusive.wallclockMin = Double.parseDouble(st.nextToken());
+        	} else if (column.equalsIgnoreCase("%")) {
+        		// % of total - ignore
+                st.nextToken();
+                skip = 2; // skip the next two column tokens, "of" and "total"
+        	} else if (column.equalsIgnoreCase("utr")) {
+        		// UTR Overhead
+        		data.inclusive.utrOverhead = Double.parseDouble(st.nextToken());
+        		skip = 1; // skip the next column token, "Overhead"
+        	} else if (column.equalsIgnoreCase("OH")) {
+        		// OH (cyc)
+        		data.inclusive.ohCycles = Double.parseDouble(st.nextToken());
+        		skip = 1;
+        	} else {
+        		// there are N PAPI events, and two measurements for each
+        		data.inclusive.papi = new double[globalData.metrics.size()];
+        		data.inclusive.papiE6OverSeconds = new double[globalData.metrics.size()];
+        		for (int i = 0 ; i < globalData.metrics.size() ; i++) {
+        			// PAPI - the output is a total, so divide by the number of calls
+        			data.inclusive.papi[i] = Double.parseDouble(st.nextToken());
+        			// e6/sec
+        			data.inclusive.papiE6OverSeconds[i] = Double.parseDouble(st.nextToken());
+        			skip += 2;
+        		}
+        	}
+        }
 		// TODO: how to deal with an event that happens at two call sites?
 		return data;
 	}

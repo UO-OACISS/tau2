@@ -193,13 +193,21 @@ public class DBDataSource extends DataSource {
         try {
             DB db = databaseAPI.getDb();
             StringBuffer joe = new StringBuffer();
-            joe.append(" SELECT " + Trial.XML_METADATA_GZ);
+            if (db.getDBType().compareTo("sqlite") == 0)
+                joe.append("select " + Trial.XML_METADATA);
+            else
+            	joe.append(" SELECT " + Trial.XML_METADATA_GZ);
             joe.append(" FROM TRIAL WHERE id = ");
             joe.append(databaseAPI.getTrial().getID());
             ResultSet resultSet = db.executeQuery(joe.toString());
             resultSet.next();
-            InputStream compressedStream = resultSet.getBinaryStream(1);
-            String metaDataString = Gzip.decompress(compressedStream);
+            String metaDataString = null;
+            if (db.getDBType().compareTo("sqlite") == 0) {
+            	metaDataString = resultSet.getString(1);
+            } else {
+	            InputStream compressedStream = resultSet.getBinaryStream(1);
+	            metaDataString = Gzip.decompress(compressedStream);
+            }
             if (metaDataString != null) {
                 XMLReader xmlreader = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
                 XMLParser parser = new XMLParser();
@@ -221,7 +229,7 @@ public class DBDataSource extends DataSource {
 
         //System.out.println("Processing data, please wait ......");
         long time = System.currentTimeMillis();
-
+        databaseAPI.getTrial().setDataSource(this);
         DB db = databaseAPI.getDb();
         StringBuffer joe = new StringBuffer();
         joe.append("SELECT id, name ");
@@ -248,47 +256,14 @@ public class DBDataSource extends DataSource {
         Map<Integer, Function> ieMap = new HashMap<Integer, Function>();
 
         // iterate over interval events (functions), create the function objects and add them to the map
-        List<IntervalEvent> intervalEvents = databaseAPI.getIntervalEvents();
-        ListIterator<IntervalEvent> lIE = intervalEvents.listIterator();
-        while (lIE.hasNext()) {
-            IntervalEvent ie = lIE.next();
-            Function function = this.addFunction(ie.getName(), numberOfMetrics);
-            addGroups(ie.getGroup(), function);
-            ieMap.put(new Integer(ie.getID()), function);
-        }
+        ieMap = databaseAPI.getIntervalEvents(this, numberOfMetrics);
 
         //getIntervalEventData(ieMap);
         fastGetIntervalEventData(ieMap, metricMap);
 
         // map Interval Event ID's to Function objects
-        Map<Integer, UserEvent> aeMap = new HashMap<Integer, UserEvent>();
-
-        ListIterator<AtomicEvent> lAE = databaseAPI.getAtomicEvents().listIterator();
-        while (lAE.hasNext()) {
-            AtomicEvent atomicEvent = lAE.next();
-            UserEvent userEvent = addUserEvent(atomicEvent.getName());
-            aeMap.put(new Integer(atomicEvent.getID()), userEvent);
-        }
-
-        ListIterator<AtomicLocationProfile> lAD = databaseAPI.getAtomicEventData().listIterator();
-        while (lAD.hasNext()) {
-            AtomicLocationProfile alp = lAD.next();
-            Thread thread = addThread(alp.getNode(), alp.getContext(), alp.getThread());
-            UserEvent userEvent = aeMap.get(new Integer(alp.getAtomicEventID()));
-            UserEventProfile userEventProfile = thread.getUserEventProfile(userEvent);
-
-            if (userEventProfile == null) {
-                userEventProfile = new UserEventProfile(userEvent);
-                thread.addUserEventProfile(userEventProfile);
-            }
-
-            userEventProfile.setNumSamples(alp.getSampleCount());
-            userEventProfile.setMaxValue(alp.getMaximumValue());
-            userEventProfile.setMinValue(alp.getMinimumValue());
-            userEventProfile.setMeanValue(alp.getMeanValue());
-            userEventProfile.setSumSquared(alp.getSumSquared());
-            userEventProfile.updateMax();
-        }
+        databaseAPI.getAtomicEvents();
+        databaseAPI.getAtomicEventData(this);
 
         downloadMetaData();
 

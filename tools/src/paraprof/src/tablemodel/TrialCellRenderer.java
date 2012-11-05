@@ -7,6 +7,8 @@ import java.util.Map;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 
+import edu.uoregon.tau.common.MetaDataMap;
+
 public class TrialCellRenderer extends DefaultTableCellRenderer {
 
     /**
@@ -17,11 +19,11 @@ public class TrialCellRenderer extends DefaultTableCellRenderer {
     private Color green = new Color(0, 185, 0);
     private Color red = new Color(215, 0, 0);
 
-    private Map<String, String> common, other;
+    private MetaDataMap common, other;
 
-    public TrialCellRenderer(Map<String, String> common, Map<String, String> other) {
-        this.common = common;
-        this.other = other;
+    public TrialCellRenderer(MetaDataMap metaDataMap, MetaDataMap metaDataMap2) {
+        this.common = metaDataMap;
+        this.other = metaDataMap2;
     }
 
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row,

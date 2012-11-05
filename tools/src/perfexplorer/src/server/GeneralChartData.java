@@ -30,6 +30,7 @@ import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfdmf.View;
 import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfexplorer.common.ChartDataType;
 import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
@@ -137,13 +138,21 @@ public class GeneralChartData extends RMIGeneralChartData {
 				tableName = "atomic_location_profile";
 				buf.append("select ");
 				if (db.getDBType().compareTo("derby") == 0) {
-					// first item - the series name
-					if(model.isChartSeriesXML()){
-						buf.append("'");
-					}
-					buf.append(fixClause(seriesName, db));
-					if(model.isChartSeriesXML()){
-						buf.append("'");
+					if (gotXMLData) {
+						if (db.getSchemaVersion() == 0) {
+						// first item - the series name
+						if(model.isChartSeriesXML()){
+							buf.append("'");
+						}
+						buf.append(fixClause(seriesName, db));
+						if(model.isChartSeriesXML()){
+							buf.append("'");
+						}
+						} else {
+							buf.append(fixClause("primary_metadata.value", db));
+						}
+					} else {
+						buf.append(fixClause(seriesName, db));
 					}
 					buf.append(", ");
 					// second item - the x axis
@@ -154,7 +163,6 @@ public class GeneralChartData extends RMIGeneralChartData {
 					if(model.isChartSeriesXML()){
 						buf.append("'");
 					}
-
 					// first item - the series name
 					buf.append(fixClause(seriesName, db));
 					if(model.isChartSeriesXML()){
@@ -202,13 +210,17 @@ public class GeneralChartData extends RMIGeneralChartData {
 					buf.append(fixClause(yAxisName, db) + " ");
 				} else {
 					if(model.isChartSeriesXML()){
-						buf.append("'");
-					}
-
-					// first item - the series name
-					buf.append(fixClause(seriesName, db));
-					if(model.isChartSeriesXML()){
-						buf.append("'");
+						if (db.getSchemaVersion() == 0) {
+							buf.append("'");
+							// first item - the series name
+							buf.append(fixClause(seriesName, db));
+							buf.append("'");
+						} else {
+							buf.append("primary_metadata.value ");
+						}
+					} else {
+						// first item - the series name
+						buf.append(fixClause(seriesName, db));
 					}
 					buf.append(" as series_name, ");
 					// second item - the x axis
@@ -226,13 +238,19 @@ public class GeneralChartData extends RMIGeneralChartData {
 			buf.append("inner join temp_trial ");
 			buf.append("on temp_event.trial = temp_trial.id ");
 			if (gotXMLData) {
-				buf.append("inner join temp_xml_metadata ");
-				buf.append("on temp_event.trial = temp_xml_metadata.trial ");
+				if (db.getSchemaVersion() == 0) {
+					buf.append("inner join temp_xml_metadata ");
+					buf.append("on temp_event.trial = temp_xml_metadata.trial ");
+				} else {
+					buf.append("inner join primary_metadata on temp_event.trial = primary_metadata.trial and primary_metadata.name = '" + model.getChartMetadataFieldName() + "'");
+				}
 			}
-			buf.append("inner join experiment ");
-			buf.append("on temp_trial.experiment = experiment.id ");
-			buf.append("inner join application ");
-			buf.append("on experiment.application = application.id ");
+			if (db.getSchemaVersion() == 0) {
+				buf.append("inner join experiment ");
+				buf.append("on temp_trial.experiment = experiment.id ");
+				buf.append("inner join application ");
+				buf.append("on experiment.application = application.id ");
+			}
 			// no where clause (thanks to the temporary tables)
 			// group by clause, in case there are operations on the columns
 			//buf.append("group by " + fixClause(seriesName, db));
@@ -249,7 +267,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 					buf.append(" order by 1, 2 ");					
 				}
 			} else {
-				buf.append("group by series_name, xaxis_value ");
+				buf.append(" group by series_name, xaxis_value ");
 				// add the order by clause
 				buf.append("order by 1, 2 ");
 			}
@@ -680,23 +698,29 @@ public class GeneralChartData extends RMIGeneralChartData {
 
 	private void createPopulateTempTrailTable(DB db) throws SQLException {
 		buf = buildCreateTableStatement("trial", "temp_trial", db, true, false);
-		buf.append("(select trial.* from trial ");
-		buf.append("inner join experiment ");
-		buf.append("on trial.experiment = experiment.id ");
-		buf.append("inner join application ");
-		buf.append("on experiment.application = application.id ");
-		buf.append("where ");
+		buf.append("(select t.* from trial t ");
+		if (db.getSchemaVersion() == 0) {
+			buf.append("inner join experiment ");
+			buf.append("on trial.experiment = experiment.id ");
+			buf.append("inner join application ");
+			buf.append("on experiment.application = application.id ");
+		}
 		// add the where clause
 		List<Object> selections = model.getMultiSelection();
 		if (selections == null) {
 			// just one selection
 			Object obj = model.getCurrentSelection();
 			if (obj instanceof Application) {
-				buf.append("application.id = " + model.getApplication().getID());
+				buf.append("where application.id = " + model.getApplication().getID());
 			} else if (obj instanceof Experiment) {
-				buf.append("experiment.id = " + model.getExperiment().getID());
+				buf.append("where experiment.id = " + model.getExperiment().getID());
 			} else if (obj instanceof Trial) {
-				buf.append("trial.id = " + model.getTrial().getID());
+				buf.append("where t.id = " + model.getTrial().getID());
+			} else if (obj instanceof View) {
+				String whereClause = model.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion());
+				if (whereClause != null && whereClause.length() > 0) {
+					buf.append(whereClause);
+				}
 			}
 		} else {
 
@@ -748,7 +772,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 						if (foundapp || foundexp) {
 							buf.append(" and ");
 						}
-						buf.append("trial.id in (");
+						buf.append("t.id in (");
 						foundtrial = true;
 					} else {
 						buf.append(",");
@@ -887,10 +911,12 @@ public class GeneralChartData extends RMIGeneralChartData {
 			// create and populate the temporary trial table
 			buf = buildCreateTableStatement("trial", "temp_trial", db, true, false);
 			buf.append("(select trial.* from trial ");
-			buf.append("inner join experiment ");
-			buf.append("on trial.experiment = experiment.id ");
-			buf.append("inner join application ");
-			buf.append("on experiment.application = application.id ");
+			if (db.getSchemaVersion() == 0) {
+				buf.append("inner join experiment ");
+				buf.append("on trial.experiment = experiment.id ");
+				buf.append("inner join application ");
+				buf.append("on experiment.application = application.id ");
+			}
 			buf.append("where ");
 			// add the where clause
 			List<Object> selections = model.getMultiSelection();

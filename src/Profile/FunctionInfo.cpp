@@ -544,7 +544,18 @@ void FunctionInfo::addPcSample(unsigned long *pcStack, int tid, double interval[
   TauPathAccumulator *accumulator;
   accumulator = pathHistogram[tid]->get(pcStack);
   if (accumulator == NULL) {
-    accumulator = new TauPathAccumulator(1,interval);
+    /* KAH - Whoops!! We can't call "new" here, because malloc is not
+     * safe in signal handling. therefore, use the special memory
+     * allocation routines */
+    //accumulator = new TauPathAccumulator(1,interval);
+    accumulator = (TauPathAccumulator*)Tau_MemMgr_malloc(1, sizeof(TauPathAccumulator));
+    /*  now, use the pacement new function to create a object in
+     *  pre-allocated memory. NOTE - this memory needs to be explicitly
+     *  deallocated by explicitly calling the destructor. 
+     *  I think the best place for that is in the destructor for
+     *  the hash table. */
+    new(accumulator) TauPathAccumulator(1,interval);
+
     bool success = pathHistogram[tid]->insert(pcStack, *accumulator);
     if (!success) {
       fprintf(stderr,"addPcSample: Failed to insert sample.\n");

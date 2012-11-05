@@ -7,6 +7,7 @@ import java.util.Map;
 
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.View;
 import edu.uoregon.tau.perfdmf.Trial;
 
 /**
@@ -188,7 +189,7 @@ public interface RMIPerfExplorer extends Remote {
      * @return
      * @throws RemoteException
      */
-    public List<RMIView> getViews(int parent) throws RemoteException;
+    public List<View> getViews(int parent) throws RemoteException;
 
     /**
      * Get the trials which are filtered by the specifed views.
@@ -197,7 +198,7 @@ public interface RMIPerfExplorer extends Remote {
      * @return
      * @throws RemoteException
      */
-    public List<Trial> getTrialsForView(List<RMIView> views, boolean getXMLMetadata) throws RemoteException;
+    public List<Trial> getTrialsForView(List<View> views, boolean getXMLMetadata) throws RemoteException;
 
     /**
      * Gets the correlation results for the specified model.
@@ -338,5 +339,9 @@ public interface RMIPerfExplorer extends Remote {
 
    public Map<String, double[][]> getUserEventData(RMIPerfExplorerModel model)
    	throws RemoteException;
+
+   public List<Integer> getSchemaVersions()
+    throws RemoteException;
+   
 }
 

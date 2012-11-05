@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -29,8 +30,11 @@ import org.xml.sax.helpers.XMLReaderFactory;
 
 import edu.uoregon.tau.common.AlphanumComparator;
 import edu.uoregon.tau.common.Gzip;
+import edu.uoregon.tau.common.MetaDataMap;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
 import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfdmf.database.DBConnector;
+import edu.uoregon.tau.perfdmf.taudb.TAUdbTrial;
 
 /**
  * Holds all the data for a trial in the database. This object is returned by
@@ -64,18 +68,20 @@ public class Trial implements Serializable, Comparable<Trial> {
     public static final String XML_METADATA = "XML_METADATA";
     public static final String XML_METADATA_GZ = "XML_METADATA_GZ";
 
-    private int trialID;
+    protected int trialID;
     private int experimentID;
     private int applicationID;
-    private String name;
-    private List<Metric> metrics;
-    private String fields[];
+    protected String name;
+    protected List<Metric> metrics;
+    protected String fields[];
 
     protected DataSource dataSource;
 
-    private Database database;
-    private Map<String, String> metaData = new TreeMap<String, String>();
-    private Map<String, String> uncommonMetaData = new TreeMap<String, String>();
+    protected Database database;
+    protected MetaDataMap metaData = new MetaDataMap();
+    protected MetaDataMap uncommonMetaData = new MetaDataMap();
+	protected Map<Integer, Function> intervalEventMap = null;
+    protected Map<Integer, AtomicEvent> atomicEventMap = null;
 
     private boolean xmlMetaDataLoaded = false;
 
@@ -93,9 +99,10 @@ public class Trial implements Serializable, Comparable<Trial> {
         private StringBuffer accumulator = new StringBuffer();
         private String currentName = "";
 
-        private Map<String, String> common, other, current;
+        private MetaDataMap common, other, current;
+        private MetaDataKey key = null;
 
-        public XMLParser(Map<String, String> common, Map<String, String> other) {
+        public XMLParser(MetaDataMap common, MetaDataMap other) {
             this.common = common;
             this.other = other;
             current = common;
@@ -113,9 +120,17 @@ public class Trial implements Serializable, Comparable<Trial> {
         public void endElement(String uri, String localName, String qName) throws SAXException {
             if (localName.equals("name")) {
                 currentName = accumulator.toString().trim();
+            	key = current.newKey(accumulator.toString().trim());
             } else if (localName.equals("value")) {
                 String currentValue = accumulator.toString().trim();
-                current.put(currentName, currentValue);
+                current.put(key, currentValue);
+                key = null;
+            } else if (localName.equals("timer_context") || localName.equals("tau:timer_context")) {
+            	key.timer_context = accumulator.toString().trim();
+            } else if (localName.equals("call_number") || localName.equals("tau:call_number")) {
+            	key.call_number = Integer.parseInt(accumulator.toString().trim());
+            } else if (localName.equals("timestamp") || localName.equals("tau:timestamp")) {
+            	key.timestamp = Long.parseLong(accumulator.toString().trim());
             }
         }
 
@@ -126,7 +141,7 @@ public class Trial implements Serializable, Comparable<Trial> {
 
     private void parseMetaData(String string) {
         try {
-            metaData = new TreeMap<String, String>();
+            metaData = new MetaDataMap();
             XMLReader xmlreader = XMLReaderFactory.createXMLReader("org.apache.xerces.parsers.SAXParser");
             XMLParser parser = new XMLParser(metaData, uncommonMetaData);
             xmlreader.setContentHandler(parser);
@@ -178,6 +193,11 @@ public class Trial implements Serializable, Comparable<Trial> {
     }
 
     public void loadXMLMetadata(DB db) throws SQLException {
+		Map<Integer, Function> ieMap = new HashMap<Integer, Function>();
+		loadXMLMetadata(db, ieMap);
+	}
+    
+    public void loadXMLMetadata(DB db, Map<Integer, Function> ieMap) throws SQLException {
 
         if (isXmlMetaDataLoaded()) {
             return;
@@ -442,7 +462,7 @@ public class Trial implements Serializable, Comparable<Trial> {
 
 
     // gets the metric data for the trial
-    private void getTrialMetrics(DB db) {
+    public void getTrialMetrics(DB db) {
         // create a string to hit the database
         StringBuffer buf = new StringBuffer();
         buf.append("select id, name ");
@@ -490,7 +510,7 @@ public class Trial implements Serializable, Comparable<Trial> {
         // need to load each time in case we are working with a new database. 
         //        if (Trial.fieldNames != null)
         //            return;
-
+		
         try {
             ResultSet resultSet = null;
 
@@ -579,6 +599,10 @@ public class Trial implements Serializable, Comparable<Trial> {
     }
 
     public static Vector<Trial> getTrialList(DB db, String whereClause, boolean getXMLMetadata) {
+    	if(db.getSchemaVersion() >0){
+
+    		return TAUdbTrial.getTrialList(db, getXMLMetadata, whereClause);
+    	}
 
         try {
 
@@ -620,7 +644,7 @@ public class Trial implements Serializable, Comparable<Trial> {
 
                 for (int i = 0; i < database.getTrialFieldNames().length; i++) {
                     if (database.getTrialFieldNames()[i].equalsIgnoreCase(XML_METADATA_GZ)) {
-                        if (getXMLMetadata) {
+                        if (getXMLMetadata && db.getDBType().compareTo("sqlite") != 0) {
                             InputStream compressedStream = resultSet.getBinaryStream(pos++);
                             String tmp = Gzip.decompress(compressedStream);
                             //trial.setField(i, tmp);
@@ -667,10 +691,36 @@ public class Trial implements Serializable, Comparable<Trial> {
         }
 
     }
-
+    public void rename(DB db, String newName) {
+   	 StringBuffer buf = new StringBuffer();
+            buf.append("UPDATE " + db.getSchemaPrefix() + "trial SET name = ?");
+            buf.append(" WHERE id = ?");
+            PreparedStatement statement;
+            
+			try {
+				statement = db.prepareStatement(buf.toString());
+		        statement.setString(1, newName);
+	            statement.setInt(2, trialID);
+	            
+	            statement.executeUpdate();
+	            statement.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            
+            this.setName(newName);
+   }
+   
     public int saveTrial(DB db) {
-        boolean itExists = exists(db);
+    	//Needs to be here in case the db is a TAUdb.
+    	//This happens when loading a trial the first time
+    	//And could happen during a copy.
+    	if(db.getSchemaVersion()>0) return TAUdbTrial.saveTrialTAUdb(db, trialID, dataSource, name);
+    	
+    	boolean itExists = exists(db);
         int newTrialID = 0;
+  
 
         try {
             database = db.getDatabase();
@@ -723,8 +773,13 @@ public class Trial implements Serializable, Comparable<Trial> {
             if (getDataSource() != null) {
                 String tmp = getDataSource().getMetadataString();
                 if (tmp != null && tmp.length() > 0) {
-                    setField(XML_METADATA, null);
-                    setField(XML_METADATA_GZ, tmp);
+                    if (db.getDBType().compareTo("sqlite") == 0) {
+                        setField(XML_METADATA, tmp);
+                        setField(XML_METADATA_GZ, null);
+                    } else {
+                        setField(XML_METADATA, null);
+                        setField(XML_METADATA_GZ, tmp);
+                    }
                 }
             }
 
@@ -832,6 +887,8 @@ public class Trial implements Serializable, Comparable<Trial> {
                     tmpStr = "select LAST_INSERT_ID();";
                 else if (db.getDBType().compareTo("db2") == 0)
                     tmpStr = "select IDENTITY_VAL_LOCAL() FROM trial";
+                else if (db.getDBType().compareTo("sqlite") == 0)
+                    tmpStr = "select seq from sqlite_sequence where name = 'trial'";
                 else if (db.getDBType().compareTo("derby") == 0)
                     tmpStr = "select IDENTITY_VAL_LOCAL() FROM trial";
                 else if (db.getDBType().compareTo("h2") == 0)
@@ -916,6 +973,10 @@ public class Trial implements Serializable, Comparable<Trial> {
 //    }
 
     public static void deleteMetric(DB db, int trialID, int metricID) throws SQLException {
+    	if(db.getSchemaVersion()>0){
+    		TAUdbTrial.deleteMetric(db, trialID, metricID);
+    		return;
+    	}
         PreparedStatement statement = null;
 
         // delete from the interval_location_profile table
@@ -942,6 +1003,10 @@ public class Trial implements Serializable, Comparable<Trial> {
     }
 
     public static void deleteTrial(DB db, int trialID) throws SQLException {
+    	if(db.getSchemaVersion()>0) {
+    		TAUdbTrial.deleteTrial(db, trialID);
+    		return;
+    	}
         PreparedStatement statement = null;
 
         // delete from the atomic_location_profile table
@@ -1058,7 +1123,7 @@ public class Trial implements Serializable, Comparable<Trial> {
     //        fieldNames = null;
     //        fieldTypes = null;
     //    }
-    public void checkForMetadataColumn(DB db) {
+    private void checkForMetadataColumn(DB db) {
         String[] columns = Trial.getFieldNames(db);
         boolean found = false;
         // loop through the column names, and see if we have this column already
@@ -1096,7 +1161,7 @@ public class Trial implements Serializable, Comparable<Trial> {
         }
     }
 
-    public void checkForMetadataColumn2(DB db) {
+    private void checkForMetadataColumn2(DB db) {
         String[] columns = Trial.getFieldNames(db);
         boolean found = false;
         // loop through the column names, and see if we have this column already
@@ -1134,11 +1199,11 @@ public class Trial implements Serializable, Comparable<Trial> {
         }
     }
 
-    public Map<String, String> getMetaData() {
+    public MetaDataMap getMetaData() {
         return metaData;
     }
 
-    public void setMetaData(Map<String, String> metaDataMap) {
+    public void setMetaData(MetaDataMap metaDataMap) {
         this.metaData = metaDataMap;
     }
 
@@ -1152,16 +1217,39 @@ public class Trial implements Serializable, Comparable<Trial> {
 
     }
 
-    public Map<String, String> getUncommonMetaData() {
+    public MetaDataMap getUncommonMetaData() {
         return uncommonMetaData;
     }
 
-    public void setUncommonMetaData(Map<String, String> uncommonMetaData) {
+    public void setUncommonMetaData(MetaDataMap uncommonMetaData) {
         this.uncommonMetaData = uncommonMetaData;
     }
 
     public int compareTo(Trial arg0) {
         return alphanum.compare(this.getName(),  arg0.getName());
     }
+
+	public boolean hasMetadata() {
+		if (this.metaData.size() == 0) {
+			return false;
+		}
+		return true;
+	}
+
+    public Map<Integer, Function> getFunctionMap() {
+		return intervalEventMap;
+	}
+
+	public void setFunctionMap(Map<Integer, Function> intervalEventMap) {
+		this.intervalEventMap = intervalEventMap;
+	}
+
+	public Map<Integer, AtomicEvent> getAtomicEventMap() {
+		return atomicEventMap;
+	}
+
+	public void setAtomicEventMap(Map<Integer, AtomicEvent> atomicEventMap) {
+		this.atomicEventMap = atomicEventMap;
+	}
 
 }
