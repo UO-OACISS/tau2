@@ -612,14 +612,17 @@ vector<string> result;
   	  string phyTopo ("(");
   	  phyTopo=phyTopo+result[2]+","+result[3]+","+result[4]+","+result[5]+","+result[6]+")";
   	  Tau_metadata_register("Cray_Physical Coords", phyTopo.c_str());
-  	  Tau_metadata_register("Cray_Physical Size","(16,3,2,7,1)");
+  	  Tau_metadata_register("Cray_Physical Size","(16,3,2,7,1,24)");
+          Tau_metadata_register("Cray_Physical Dimension","6");
+
   	  
   	  
   	  string torTopo ("(");
   	  torTopo=torTopo+result[7]+","+result[8]+","+result[9]+")";
   	  
-  	   Tau_metadata_register("Cray_Torus Coords", phyTopo.c_str());
-  	   Tau_metadata_register("Cray_Torus Size", "(15,7,23)");
+  	   Tau_metadata_register("Cray_Torus Coords", torTopo.c_str());
+  	   Tau_metadata_register("Cray_Torus Size", "(16,8,24,24)");
+           Tau_metadata_register("Cray_Torus Dimension", "4");
   	  
   }
  }//found hostname in list

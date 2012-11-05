@@ -482,10 +482,11 @@ create table taudb_view_parameter (
 
 /* simple view of all trials */
 INSERT INTO taudb_view (parent, name, conjoin) VALUES (NULL, 'All Trials', 'and');
+/* must have a parameter or else the sub views for this view do not work correctly*/
+INSERT INTO taudb_view_parameter (taudb_view, table_name, column_name, operator, value) VALUES (1, 'trial', 'total_threads', '>', '-1');
 
-/* simple view where the metadata field "Application" is equal to "application" */
-INSERT INTO taudb_view (parent, name, conjoin) VALUES (NULL, 'Test View', 'and');
-INSERT INTO taudb_view_parameter (taudb_view, table_name, column_name, operator, value) VALUES (2, 'primary_metadata', 'Application', '=', 'application');
+
+
 
 /* the application and experiment columns are not used in the latest schema, but
    keeping them makes the code in PerfExplorer simpler. */
