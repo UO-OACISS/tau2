@@ -42,11 +42,29 @@ public class View implements Serializable {
     private int viewID = 0;
     private String whereClause = "";
     private String joinClause = "";
+    private String trialID = "";
 
     /**
+	 * @return the trialID
+	 */
+	public String getTrialID() {
+		return trialID;
+	}
+
+	/**
+	 * @param trialID the trialID to set
+	 */
+	public void setTrialID(String trialID) {
+		this.trialID = trialID;
+	}
+
+	/**
 	 * @return the joinClause
 	 */
 	public String getJoinClause() {
+		if (trialID.length() > 0) {
+			return "";
+		}
 		return joinClause;
 	}
 
@@ -248,29 +266,49 @@ public class View implements Serializable {
 	 * @return List
 	 */
 	public static List<Trial> getTrialsForView (List<View> views, boolean getXMLMetadata, DB db) {
-		if (db.getSchemaVersion() > 0) {
-			return View.getTrialsForTAUdbView(views, db);
-		}
-
 		//PerfExplorerOutput.println("getTrialsForView()...");
-		List<Trial> trials = new ArrayList<Trial>();
-		try {
-			StringBuilder whereClause = new StringBuilder();
-			whereClause.append(" inner join application a on e.application = a.id ");
-			whereClause.append(" where ");
-			for (int i = 0 ; i < views.size() ; i++) {
-				if (i > 0) {
-					whereClause.append (" AND ");
+		List<Trial> trials = null;
+		if (db.getSchemaVersion() > 0) {
+			trials = View.getTrialsForTAUdbView(views, db);
+		} else {
+			trials = new ArrayList<Trial>();
+			try {
+				StringBuilder whereClause = new StringBuilder();
+				whereClause.append(" inner join application a on e.application = a.id ");
+				whereClause.append(" where ");
+				for (int i = 0 ; i < views.size() ; i++) {
+					if (i > 0) {
+						whereClause.append (" AND ");
+					}
+					View view = views.get(i);
+					whereClause.append(view.getWhereClause(db.getDBType()));
 				}
-				View view = views.get(i);
-				whereClause.append(view.getWhereClause(db.getDBType()));
+				//PerfExplorerOutput.println(whereClause.toString());
+				trials = Trial.getTrialList(db, whereClause.toString(), getXMLMetadata);
+			} catch (Exception e) {
+				String error = "ERROR: Couldn't select views from the database!";
+				System.err.println(error);
+				e.printStackTrace();
 			}
-			//PerfExplorerOutput.println(whereClause.toString());
-			trials = Trial.getTrialList(db, whereClause.toString(), getXMLMetadata);
-		} catch (Exception e) {
-			String error = "ERROR: Couldn't select views from the database!";
-			System.err.println(error);
-			e.printStackTrace();
+		}
+		StringBuilder sb = new StringBuilder();
+		boolean started = false;
+		for (Trial trial : trials) {
+			if (started) {
+				sb.append(",");
+			} else {
+				sb.append("(");
+			}
+			sb.append(trial.trialID);
+			started = true;
+		}
+		if (started) {
+			sb.append(")");
+		}
+		for (View view : views) {
+			// this is overkill for the sub-views, but this string will be updated if/when
+			// they are expanded/selected
+			view.setTrialID(sb.toString());
 		}
 		return trials;
 	}
@@ -593,6 +631,10 @@ public static void deleteView(int viewID, DB db) throws SQLException{
 	}
 
 	public String getWhereClause(String dbType) {
+		if (trialID.length() > 0) {
+			String tmpWhere = " where t.id in " + trialID;
+			return tmpWhere;
+		}
 		if (whereClause == null || whereClause.equals("")) {
 			StringBuilder wc = new StringBuilder();
 			if (dbType.compareTo("db2") == 0) {
