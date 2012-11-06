@@ -1238,11 +1238,11 @@ public class ChartPane extends JScrollPane implements ActionListener {
 						labelMap.put(row.series, s);
 					}
 					if (row.categoryInteger != null) {
-						dataset.addValue(row.value, shortName(row.series), row.categoryInteger);
-						s.add(row.categoryInteger.doubleValue(), row.value);
+						dataset.addValue(row.value/conversion, shortName(row.series), row.categoryInteger);
+						s.add(row.categoryInteger.doubleValue(), row.value/conversion);
 					} else {
-						dataset.addValue(new Double(row.value), shortName(row.series), Double.parseDouble(row.categoryString));
-						s.add(Double.parseDouble(row.categoryString), row.value);
+						dataset.addValue(new Double(row.value)/conversion, shortName(row.series), Double.parseDouble(row.categoryString));
+						s.add(Double.parseDouble(row.categoryString), row.value/conversion);
 					}
 				}
 
