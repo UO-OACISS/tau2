@@ -164,7 +164,7 @@ public class IntervalEvent {
                 	 dataSource.addGroups(group, last);
                  } else {
                     Function function = dataSource.addFunction(name, numberOfMetrics);
-//                    function.setID(id);
+                    function.setDatabaseID(id);
                     dataSource.addGroups(group, function);
                     events.put(id, function);
                     SourceRegion sourceRegion = new SourceRegion();
