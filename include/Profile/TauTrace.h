@@ -35,10 +35,12 @@
 #define TAU_EV_CONT_EVENT   60006
 #define TAU_MESSAGE_SEND    60007
 #define TAU_MESSAGE_RECV    60008
+#define TAU_MESSAGE_UNKNOWN 60009
 
-/* TAU one-side events (for TAU_CUCDA) */
+/* TAU one-side events (for TAU_GPU) */
 #define TAU_ONESIDED_MESSAGE_SEND 70000
 #define TAU_ONESIDED_MESSAGE_RECV 70001
+#define TAU_ONESIDED_MESSAGE_UNKNOWN 70004
 #define TAU_ONESIDED_MESSAGE_ID_1 70002
 #define TAU_ONESIDED_MESSAGE_ID_2 70003
 
@@ -82,7 +84,7 @@ extern "C" {
   void TAUDECL TauTraceSendMsgRemote(int type, int destination, int length, int remoteid);
   void TAUDECL TauTraceRecvMsgRemote(int type, int source, int length, int remoteid);
 #if TAU_GPU
-  void TAUDECL TauTraceOneSidedMsg(bool type, GpuEvent *gpu, int length, int thread);
+  void TAUDECL TauTraceOneSidedMsg(int type, GpuEvent *gpu, int length, int thread);
 #endif // TAU_GPU
   /* Returns a pointer to the (singleton) offset info struct */
   TauTraceOffsetInfo* TAUDECL TheTauTraceOffsetInfo();
