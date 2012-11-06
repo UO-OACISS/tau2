@@ -1266,7 +1266,15 @@ extern "C" void Tau_profile_c_timer(void **ptr, const char *name, const char *ty
 
 ///////////////////////////////////////////////////////////////////////////
 
-static string gTauApplication = string(".TAU application");
+//static string gTauApplication = string(".TAU application");
+
+static string& gTauApplication()
+{
+	static string g = string(".TAU application");
+	return g;
+
+}
+
 extern void Tau_pure_start_task_string(const string name, int tid);
 
 /* We need a routine that will create a top level parent profiler and give
@@ -1304,7 +1312,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
       if (TauInternal_CurrentProfiler(tid) == NULL) {
         initthread[tid] = true;
 		initializing[tid] = true;
-        Tau_pure_start_task_string(gTauApplication, tid);
+        Tau_pure_start_task_string(gTauApplication(), tid);
 		initializing[tid] = false;
       }
     }
@@ -1321,7 +1329,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
   if (TauInternal_CurrentProfiler(tid) == NULL) {
     initthread[tid] = true;
     initializing[tid] = true;
-    Tau_pure_start_task_string(gTauApplication, tid);
+    Tau_pure_start_task_string(gTauApplication(), tid);
     initializing[tid] = false;
   }
 
