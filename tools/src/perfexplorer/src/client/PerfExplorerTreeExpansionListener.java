@@ -52,10 +52,10 @@ public class PerfExplorerTreeExpansionListener implements TreeExpansionListener,
             	PerfExplorerJTree.addApplicationNodes(node, false);
             	PerfExplorerJTree.getTree().addViewNode(node);
             } else {
-				PerfExplorerJTree.addTAUdbViewNodes (node, "0");            	
+				PerfExplorerJTree.addTAUdbViewNodes (node, 0);            	
             }
 		} else if (node.toString() != null && node.toString().equals("Views")) {
-			PerfExplorerJTree.addViewNodes(node, "0");
+			PerfExplorerJTree.addViewNodes(node, 0);
 		} else {
 			if (object instanceof Application) {
 				Application app = (Application)object;
@@ -85,7 +85,7 @@ public class PerfExplorerTreeExpansionListener implements TreeExpansionListener,
 				// do nothing
 			} else if (object instanceof View) {
 				View view = (View) object;
-				PerfExplorerJTree.addViewNodes(node, view.getField("id"));
+				PerfExplorerJTree.addViewNodes(node, view.getID());
 			} else {
 				System.out.println("unknown!");
 			}

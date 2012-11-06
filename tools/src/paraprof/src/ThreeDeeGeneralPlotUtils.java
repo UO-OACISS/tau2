@@ -335,6 +335,23 @@ public class ThreeDeeGeneralPlotUtils {
 		int[] max;
 		int[][] coords;
 	}
+	
+	public static int[] parseCrayNodeID(String nodename){
+		//TODO: only run this once per node
+		int[] nodeCoords = new int[5];
+		
+		int dash = nodename.indexOf('-');
+		int cdex = nodename.indexOf('c',dash);
+		int sdex = nodename.indexOf('s',cdex);
+		int ndex = nodename.indexOf('n',sdex);
+		nodeCoords[0]=Integer.parseInt(nodename.substring(1,dash));//cabinet x
+		nodeCoords[1]=Integer.parseInt(nodename.substring(dash+1,cdex));//cabinet y
+		nodeCoords[2]=Integer.parseInt(nodename.substring(cdex+1, sdex));//cage
+		nodeCoords[3]= Integer.parseInt(nodename.substring(sdex+1,ndex));//slot
+		nodeCoords[4]=Integer.parseInt(nodename.substring(ndex+1));//node
+		
+		return nodeCoords;
+	}
 
 	public static CoordMap parseMapFile(String fileLoc) {
 		BufferedReader br;

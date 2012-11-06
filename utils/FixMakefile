@@ -177,13 +177,13 @@ case $1 in
 	;;
 
      scoreplibs=*)
-	scoreplibs=`echo $1 | sed -e 's/^scoreplibs=//' -e 's/#/ /g'`
-	echo "s,^SCOREPLIBS=.*$,SCOREPLIBS=$scoreplibs,g" >> $sedout
+       scoreplibs=`echo $1 | sed -e 's+^scoreplibs=++' -e 's+#+ +g'`
+       echo "s+^SCOREPLIBS=.*$+SCOREPLIBS=$scoreplibs+g" >> $sedout
 	;;
 
      scorepmpilibs=*)
-	scorepmpilibs=`echo $1 | sed -e 's/^scorepmpilibs=//' -e 's/#/ /g'`
-	echo "s,^SCOREPMPILIBS=.*$,SCOREPMPILIBS=$scorepmpilibs,g" >> $sedout
+       scorepmpilibs=`echo $1 | sed -e 's+^scorepmpilibs=++' -e 's+#+ +g'`
+       echo "s+^SCOREPMPILIBS=.*$+SCOREPMPILIBS=$scorepmpilibs+g" >> $sedout
 	;;
 
      scorepdir=*)

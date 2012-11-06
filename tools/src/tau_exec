@@ -280,6 +280,11 @@ if [ $track_memory = "true" ] ; then
     export LD_BIND_NOW=1
 fi
 if [ $track_cuda = "true" ] ; then
+		cupti_exists=`test -f $BASEDIR/lib/$theBinding/libTAU-CUpti.so -a -f $BASEDIR/lib/$theBinding/libTAU-CudaQP.so`
+		if [ $? == 0 ] ; then
+			#tell the user cupti is available.
+			echo "NOTE: CUPTI is available with your TAU configuration use '-cupti' insteed of '-cuda' to get the latest available features."
+		fi
 		# Add the CUDA wrapper library to the LD_PRELOAD list
 		#TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDA.so:$TAUEX_LD_PRELOAD
 		TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUDArt.so:$TAUEX_LD_PRELOAD
@@ -307,6 +312,21 @@ if [ $track_cupti = "true" ] ; then
 				export TAU_METRICS=TAUGPU_TIME:$TAU_METRICS 
 			fi
 		fi
+		
+		#Attempt to find the CUPTI API type:
+		IFS=' ' && exe=($@)
+		cupti_api_driver=`ldd $exe | grep libcuda.so`
+		cupti_api_runtime=`ldd $exe | grep libcudart.so`
+		if [ -z "$TAU_CUPTI_API" ]; then
+			if [ -n "$cupti_api_driver" ]; then 
+					export TAU_CUPTI_API=driver
+			else
+				if [ -n "$cupti_api_runtime" ]; then
+					export TAU_CUPTI_API=runtime
+				fi
+			fi
+		fi
+		#echo "api found: $TAU_CUPTI_API"
 fi
 if [ $track_opencl = "true" ] ; then
     # Add the OpenCL wrapper library to the LD_PRELOAD list
