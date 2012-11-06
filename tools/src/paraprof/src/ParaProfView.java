@@ -16,6 +16,7 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
 import edu.uoregon.tau.perfdmf.View;
+import edu.uoregon.tau.perfdmf.database.DBConnector;
 
 public class ParaProfView extends View implements ParaProfTreeNodeUserObject {
 
@@ -103,15 +104,14 @@ public class ParaProfView extends View implements ParaProfTreeNodeUserObject {
         return Integer.toString(this.getID());
     }
 
-    public String toString() {
-        return super.getField("NAME");
+    public void setField(int idx, String field) {
+        fields.set(idx, field);
     }
 
     public void clearDefaultMutableTreeNode() {
         this.setDMTN(null);
     }
 
-	public void setField(int r, String string) {
-	}
+	
 
 }

@@ -39,7 +39,6 @@ extern TAUDB_TIMER_GROUP*        taudb_resize_timer_groups(int count, TAUDB_TIME
 extern TAUDB_TIMER_CALLPATH*     taudb_create_timer_callpaths(int count);
 extern TAUDB_TIMER_CALL_DATA*    taudb_create_timer_call_data(int count);
 extern TAUDB_TIMER_VALUE*        taudb_create_timer_values(int count);
-extern char*                     taudb_create_and_copy_string(const char* in_string);
 extern char*                     taudb_create_hash_key_2(int thread, const char* timer);
 extern char*                     taudb_create_hash_key_3(int thread, const char* timer, const char* metric);
 
@@ -72,5 +71,8 @@ extern char* taudb_get_value(TAUDB_CONNECTION *connection, int row, int column);
 extern char* taudb_get_binary_value(TAUDB_CONNECTION *connection, int row, int column);
 extern void taudb_clear_result(TAUDB_CONNECTION *connection);
 extern void taudb_close_transaction(TAUDB_CONNECTION *connection);
+extern void taudb_close_query(TAUDB_CONNECTION *connection);
+extern void taudb_prepare_statement(TAUDB_CONNECTION* connection, const char* statement_name, const char* statement, int nParams);
+extern void taudb_execute_statement(TAUDB_CONNECTION* connection, const char* statement_name, int nParams, const char ** paramValues);
 
 #endif /* TAUDB_INTERNAL_H */

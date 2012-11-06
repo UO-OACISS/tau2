@@ -43,6 +43,16 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #include <TauUtil.h>
 #include <TauXML.h>
 #include <TauMetaData.h>
+#if (defined(TAU_FUJITSU) && defined(TAU_MPI))
+#include <mpi.h>
+#include <mpi-ext.h>
+#endif /* TAU_FUJITSU && TAU_MPI */
+
+#ifdef TAU_CRAYCNL
+#include <iostream>
+#include <fstream>
+#include <string>
+#endif//TAU_CRAYCNL
 
 // Moved from header file
 using namespace std;
@@ -117,6 +127,7 @@ int tau_bgq_init(void) {
 }
 
 #endif /* TAU_BGQ */
+
 
 #if (defined (TAU_CATAMOUNT) && defined (PTHREADS))
 #define _BITS_PTHREADTYPES_H 1
@@ -514,6 +525,111 @@ int Tau_metadata_fillMetaData()
 
 #endif /* TAU_BGQ */
 
+#ifdef TAU_CRAYCNL
+//FILE *fp1 = popen("/bin/hostname", "r");
+
+//char buffer1[128];
+//while (fgets(buffer1, sizeof(buffer1), fp1))
+//{
+//
+//}
+//Tau_metadata_register("Hostname", buffer1);
+
+//pclose(fp1);
+
+string host(hostname);
+
+if(host.find("nid")==0)
+{
+host=host.substr(3);
+while (host.find(' ') == 0)
+    host.erase(0, 1);
+
+while (host.find('0') == 0)
+    host.erase(0, 1);
+
+//string command("topolcoords -n "+host);
+//printf(command.c_str());
+//FILE *fp = popen(command.c_str(), "r");
+
+//char buffer[1024];
+//while (fgets(buffer, sizeof(buffer), fp))
+//{
+//}
+
+//pclose(fp);
+
+
+
+
+string topo;
+//printf(host.c_str());//PRINT
+//printf(" is the host\n");
+int found = 0;
+ifstream infile;
+infile.open ("topolist.txt");
+if(infile.good()){
+while(!infile.eof()) 
+{
+  getline(infile,topo);
+  //printf(topo.c_str());
+  //printf(" is the current topo\n");
+  if(topo.find(host+" ")!=std::string::npos)
+  {
+    found=1;
+     //printf(topo.c_str());
+     //printf(" was found matching");
+    break;
+  }
+}
+infile.close();
+
+if(found==1){
+
+size_t current;
+size_t next = -1;
+vector<string> result;
+  do
+  {
+      next = topo.find_first_not_of( " ", next + 1 );
+      if (next == string::npos) break;
+      next -= 1;
+    current = next + 1;
+    next = topo.find_first_of( " ", current );
+    result.push_back( topo.substr( current, next - current ) );
+  }
+  while (next != string::npos);
+
+  if(result.size()==10){
+  	  Tau_metadata_register("CABX", result[2].c_str());
+  	  Tau_metadata_register("CABY", result[3].c_str());
+  	  Tau_metadata_register("CAGE", result[4].c_str());
+  	  Tau_metadata_register("SLOT", result[5].c_str());
+  	  Tau_metadata_register("NODE", result[6].c_str());
+  	  Tau_metadata_register("CRAY_X", result[7].c_str());
+  	  Tau_metadata_register("CRAY_Y", result[8].c_str());
+  	  Tau_metadata_register("CRAY_Z", result[9].c_str());
+  	  string phyTopo ("(");
+  	  phyTopo=phyTopo+result[2]+","+result[3]+","+result[4]+","+result[5]+","+result[6]+")";
+  	  Tau_metadata_register("Cray_Physical Coords", phyTopo.c_str());
+  	  Tau_metadata_register("Cray_Physical Size","(16,3,2,7,1,24)");
+          Tau_metadata_register("Cray_Physical Dimension","6");
+
+  	  
+  	  
+  	  string torTopo ("(");
+  	  torTopo=torTopo+result[7]+","+result[8]+","+result[9]+")";
+  	  
+  	   Tau_metadata_register("Cray_Torus Coords", torTopo.c_str());
+  	   Tau_metadata_register("Cray_Torus Size", "(16,8,24,24)");
+           Tau_metadata_register("Cray_Torus Dimension", "4");
+  	  
+  }
+ }//found hostname in list
+ }//topolist file good
+ } 
+#endif // TAU_CRAYCNL
+
 #ifdef __linux__
   // doesn't work on ia64 for some reason
   //Tau_util_output (out, "\t<linux_tid>%d</linux_tid>\n", gettid());
@@ -641,6 +757,60 @@ int Tau_metadata_fillMetaData()
   return 0;
 #endif // TAU_DISABLE_METADATA
 
+}
+
+extern "C" int writeMetaDataAfterMPI_Init(void) {
+
+#if (defined(TAU_FUJITSU) && defined(TAU_MPI))
+  int xrank, yrank, zrank, xshape, yshape, zshape; 
+  int retcode, dim; 
+  char fbuffer[4096]; 
+
+
+  retcode  = FJMPI_Topology_get_dimension(&dim);  
+  if (retcode != MPI_SUCCESS) {
+    fprintf(stderr, "FJMPI_Topology_get_dimension ERROR in TauMetaData.cpp\n");
+    return 0;
+  }
+
+  switch (dim) {
+  case 1: 
+    retcode = FJMPI_Topology_rank2x(RtsLayer::myNode(), &xrank); 
+    sprintf (fbuffer, "(%d)", xrank);
+    break;
+  case 2:
+    retcode = FJMPI_Topology_rank2xy(RtsLayer::myNode(), &xrank, &yrank); 
+    sprintf (fbuffer, "(%d,%d)", xrank, yrank);
+    break;
+  case 3:
+    retcode = FJMPI_Topology_rank2xyz(RtsLayer::myNode(), &xrank, &yrank, &zrank); 
+    sprintf (fbuffer, "(%d,%d,%d)", xrank, yrank, zrank);
+    break;
+  default:
+    fprintf(stderr, "FJMPI_Topology_get_dimension ERROR in switch TauMetaData.cpp\n");
+    return 0;
+  }
+  if (retcode != MPI_SUCCESS) {
+    fprintf(stderr, "FJMPI_Topology_rank2x ERROR in switch TauMetaData.cpp\n");
+    return 0;
+  }
+
+  Tau_metadata_register("FUJITSU Coords", fbuffer);
+  retcode = FJMPI_Topology_get_shape(&xshape, &yshape, &zshape); 
+  if (retcode != MPI_SUCCESS) {
+    fprintf(stderr, "FJMPI_Topology_get_shape ERROR in TauMetaData.cpp\n");
+    return 0;
+  }
+
+
+  sprintf (fbuffer, "(%d,%d,%d)", xshape, yshape, zshape);
+  Tau_metadata_register("FUJITSU Size", fbuffer);
+
+  sprintf (fbuffer, "%d", dim);
+  Tau_metadata_register("FUJITSU Dimension", fbuffer);
+
+#endif /* TAU_FUJITSU && TAU_MPI */
+  return 0;
 }
 
 static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, int tid) {

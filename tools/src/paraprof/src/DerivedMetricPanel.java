@@ -29,6 +29,8 @@ import javax.swing.JTextField;
 import javax.swing.KeyStroke;
 import javax.swing.tree.DefaultMutableTreeNode;
 
+import edu.uoregon.tau.perfdmf.Trial;
+
 public class DerivedMetricPanel extends JPanel implements ActionListener {
 
    /**
@@ -264,12 +266,12 @@ private ParaProfManagerWindow paraProfManager = null;
          return;
       }
 
-      ArrayList<Object> collectTrials = collectTrials(sel); 
+      ArrayList<ParaProfTrial> collectTrials = collectTrials(sel); 
 
       ArrayList<Object> errors = new ArrayList<Object>();
       for (int i=0;i<collectTrials.size();i++){
          try {
-            applyToTrial((ParaProfTrial) collectTrials.get(i), arg1Field.getText());
+            applyToTrial(collectTrials.get(i), arg1Field.getText());
          } catch (MetricNotFoundException e) {
             errors.add(collectTrials.get(i));
          }
@@ -282,44 +284,36 @@ private ParaProfManagerWindow paraProfManager = null;
       }
 
    }
-   @SuppressWarnings("unchecked")
-private ArrayList<Object> collectTrials(DefaultMutableTreeNode sel) {
+   
+   private ArrayList<ParaProfTrial> collectTrials(DefaultMutableTreeNode sel) {
+	   ArrayList<ParaProfTrial> collectTrials = new ArrayList<ParaProfTrial>();
+	   collectTrials(sel, collectTrials);
+	   return collectTrials;
+   }
 
-      Object selected = paraProfManager.getSelectedObject().getUserObject();
-      ArrayList<Object> collectTrials = new ArrayList<Object>();
+private void collectTrials(DefaultMutableTreeNode sel, ArrayList<ParaProfTrial> collectTrials ) {
+
+      Object selected = sel.getUserObject();
+      
       if(selected instanceof ParaProfMetric){
          ParaProfMetric met = (ParaProfMetric) selected;
          collectTrials .add(met.getParaProfTrial());
       }else if(selected instanceof ParaProfTrial){
-         collectTrials.add(sel.getUserObject());
-      }else if(selected instanceof ParaProfExperiment){
-         paraProfManager.expand(sel);
-         Enumeration<DefaultMutableTreeNode> trials = sel.children();
-         while(trials.hasMoreElements()){
-            DefaultMutableTreeNode next = (DefaultMutableTreeNode)trials.nextElement();
-            paraProfManager.expand(next);
-            collectTrials.add(next.getUserObject());
-         }
-      }else if(selected instanceof ParaProfApplication){
-         paraProfManager.expand( sel);
-         Enumeration<DefaultMutableTreeNode> exps = sel.children();
-         while(exps.hasMoreElements()){
-            DefaultMutableTreeNode next = (DefaultMutableTreeNode)exps.nextElement();
-            paraProfManager.expand(next);
-            Enumeration<DefaultMutableTreeNode> trls = next.children();
-            while(trls.hasMoreElements()){
-               DefaultMutableTreeNode node = (DefaultMutableTreeNode) trls.nextElement();
-               paraProfManager.expand(node);
-               collectTrials.add(node.getUserObject());
-            }
-         }
-
+         collectTrials.add((ParaProfTrial)(selected));
+      }else if(selected instanceof ParaProfExperiment|| selected instanceof ParaProfApplication|| selected instanceof ParaProfView){
+    	  paraProfManager.expand( sel);
+          Enumeration<DefaultMutableTreeNode> exps = sel.children();
+          while(exps.hasMoreElements()){
+        	  DefaultMutableTreeNode node = (DefaultMutableTreeNode) exps.nextElement();
+              paraProfManager.expand(node);
+              collectTrials(node, collectTrials);
+          }
       }else{
          JOptionPane.showMessageDialog(paraProfManager, 
                "Please select a trial, experiment or application.",
                "Warning", JOptionPane.WARNING_MESSAGE);
          //Please select a trial, experiment or application
-      }      return collectTrials;
+      }      
    }
 
    private static void sleep(int msec) {
@@ -432,11 +426,11 @@ private ArrayList<Object> collectTrials(DefaultMutableTreeNode sel) {
                      "Expression Error", JOptionPane.ERROR_MESSAGE);
             }else{
 
-               ArrayList<Object> collectTrials = collectTrials(sel); 
+               ArrayList<ParaProfTrial> collectTrials = collectTrials(sel); 
 
                for (int i=0;i<collectTrials.size();i++){
                   try {
-                     applyToTrial((ParaProfTrial) collectTrials.get(i), expression);
+                     applyToTrial( collectTrials.get(i), expression);
                   } catch (MetricNotFoundException e) {
                      errors.add(collectTrials.get(i));
                   }
