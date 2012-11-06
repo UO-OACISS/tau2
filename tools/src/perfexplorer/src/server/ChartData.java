@@ -305,9 +305,11 @@ public class ChartData extends RMIChartData {
 				buf.append("and ims.exclusive_percent > ");
 				buf.append(model.getXPercent());
 			}
-			buf.append(" group by 1, 2, 3, 4 ");
-//			buf.append(tmpBuf.toString());
-	//		buf.append(" t.node_count, t.contexts_per_node, t.threads_per_context ");
+			buf.append(" group by ");
+			if ((!tmpBuf.toString().contains("'")) && tmpBuf.toString().trim().length() > 0) {
+				buf.append(tmpBuf.toString()); // this tmpBuf already has a comma!
+			}
+			buf.append(" t.node_count, t.contexts_per_node, t.threads_per_context ");
 			buf.append("order by 1, 2, 3, 4");
 			statement = db.prepareStatement(buf.toString());
 			statement.setString(1, metricName);
@@ -377,11 +379,11 @@ public class ChartData extends RMIChartData {
 			} else {
 				buf.append(" and m.name = ?");
 			}
-			buf.append(" group by 1, 2, 3, 4 ");
-			//buf.append(" group by ");
-			//buf.append(tmpBuf.toString());
-			//buf.append(", ");
-			//buf.append(" t.node_count, t.contexts_per_node, t.threads_per_context ");
+			buf.append(" group by ");
+			if ((!tmpBuf.toString().contains("'")) && tmpBuf.toString().trim().length() > 0) {
+				buf.append(tmpBuf.toString() + ", ");
+			}
+			buf.append(" t.node_count, t.contexts_per_node, t.threads_per_context ");
 			buf.append("order by 1, 2, 3, 4");
 			//PerfExplorerOutput.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
@@ -458,8 +460,10 @@ public class ChartData extends RMIChartData {
 					buf.append(" and ie.group_name = ? group by ");
 				}
 
-				//buf.append(tmpBuf.toString());
-				//buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
+				if ((!tmpBuf.toString().contains("'")) && tmpBuf.toString().trim().length() > 0) {
+					buf.append(tmpBuf.toString() + ", ");
+				}
+				buf.append(" t.node_count, t.contexts_per_node, t.threads_per_context, ");
 				buf.append(" 1,2,3,4 ");
 				if (db.getDBType().compareTo("db2") == 0) {
 					buf.append("cast (ie.group_name as varchar(256)) order by 1, 2, 3, 4");
@@ -471,9 +475,11 @@ public class ChartData extends RMIChartData {
 				statement.setString(1, metricName);
 				statement.setString(2, groupName);
 			} else {
-				buf.append(" and m.name = ? group by 1, 2, 3, 4, ");
-//				buf.append(tmpBuf.toString());
-//				buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
+				buf.append(" and m.name = ? group by ");
+				if ((!tmpBuf.toString().contains("'")) && tmpBuf.toString().trim().length() > 0) {
+					buf.append(tmpBuf.toString() + ", ");
+				}
+				buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
 				if (db.getDBType().compareTo("db2") == 0) {
 					buf.append("cast (tg.group_name as varchar(256)) order by 1, 2, 3, 4");
 				} else {
@@ -661,9 +667,11 @@ public class ChartData extends RMIChartData {
 				buf.append(" and m.name = ? ");
 			}
 
-			buf.append(" group by 1, 2, 3, 4 ");
-			//buf.append(tmpBuf.toString());
-			//buf.append(" t.node_count, t.contexts_per_node, t.threads_per_context ");
+			buf.append(" group by ");
+			if ((!tmpBuf.toString().contains("'")) && tmpBuf.toString().trim().length() > 0) {
+				buf.append(tmpBuf.toString()); // this tmpBuf already has a comma at the end!
+			}
+			buf.append(" t.node_count, t.contexts_per_node, t.threads_per_context ");
 
 			buf.append(" order by 1, 2, 3, 4 ");
 			//PerfExplorerOutput.println(buf.toString());
@@ -737,9 +745,11 @@ public class ChartData extends RMIChartData {
 				buf.append("and ie.name = ? ");
 			}
 			
-			buf.append(" group by 1, 2, 3, 4 ");
-//			buf.append(tmpBuf.toString());
-//			buf.append(" t.node_count, t.contexts_per_node, t.threads_per_context ");
+			buf.append(" group by ");
+			if ((!tmpBuf.toString().contains("'")) && tmpBuf.toString().trim().length() > 0) {
+				buf.append(tmpBuf.toString() + ", ");
+			}
+			buf.append(" t.node_count, t.contexts_per_node, t.threads_per_context ");
 
 			buf.append(" order by 1, 2, 3, 4");
 			statement = db.prepareStatement(buf.toString());
@@ -802,9 +812,11 @@ public class ChartData extends RMIChartData {
 			buf.append(" and ie.group_name not like '%TAU_CALLPATH%' ");
 			buf.append(" and ie.group_name not like '%TAU_PARAM%' ");
 
-			buf.append(" group by 1, 2, 3, 4 ");
-//			buf.append(tmpBuf.toString());
-//			buf.append(" t.node_count, t.contexts_per_node, t.threads_per_context ");
+			buf.append(" group by ");
+			if ((!tmpBuf.toString().contains("'")) && tmpBuf.toString().trim().length() > 0) {
+				buf.append(tmpBuf.toString() + ", ");
+			}
+			buf.append(" t.node_count, t.contexts_per_node, t.threads_per_context ");
 
 			buf.append(" order by 1, 2, 3, 4");
 			
@@ -887,10 +899,11 @@ public class ChartData extends RMIChartData {
 			buf.append("and ie.group_name like '%TAU_PHASE%' ");
 			buf.append("and ie.group_name not like '%TAU_CALLPATH%' ");
 			buf.append("and ie.group_name not like '%TAU_PARAM%' ");
-			buf.append(" group by 1, 2, 3, 4 ");
-
-//			buf.append(tmpBuf.toString());
-//			buf.append(" t.node_count, t.contexts_per_node, t.threads_per_context ");
+			buf.append(" group by ");
+			if ((!tmpBuf.toString().contains("'")) && tmpBuf.toString().trim().length() > 0) {
+				buf.append(tmpBuf.toString() + ", ");
+			}
+			buf.append(" t.node_count, t.contexts_per_node, t.threads_per_context ");
 
 			buf.append("order by 1, 2, 3, 4");
 
