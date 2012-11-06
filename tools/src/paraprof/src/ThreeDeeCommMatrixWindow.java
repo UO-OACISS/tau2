@@ -658,8 +658,8 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         VisTools.addCompItem(selectionPanel, new JLabel("Height value"), gbc, 0, 2, 1, 1);
         VisTools.addCompItem(selectionPanel, new JLabel("Color value"), gbc, 0, 3, 1, 1);
 
-        JPanel functionSelectorPanel = createSelectorPanel(-1, threadNames.size(), threadNames, 0);
-        JPanel nodeSelectorPanel = createSelectorPanel(0, threadNames.size(), threadNames, 1);
+        JPanel functionSelectorPanel = createSelectorPanel(-1, threadNames.size(), threadNames, 1);
+        JPanel nodeSelectorPanel = createSelectorPanel(0, threadNames.size(), threadNames, 0);
 
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weightx = 1.0;
