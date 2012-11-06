@@ -2,6 +2,7 @@
 TAUROOT=@TAUROOTDIR@
 MACHINE=@ARCH@
 
+
 SCHEMADIR=${TAUROOT}/etc
 BINDIR=${TAUROOT}/${MACHINE}/bin
 LIBDIR=${TAUROOT}/${MACHINE}/lib
@@ -17,12 +18,20 @@ if [ $MACHINE = bgq -o $MACHINE = arm_linux ]; then
 fi
 
 APPLE_OPTIONS=""
+JAVA_VERSION=`java -version 2>&1 | head -1 | cut -d '.' -f2`
 if [ "$MACHINE" = "apple" ]; then
     OSX_BITS="-d32"
     if which sw_vers >/dev/null 2>&1 ; then
         OSX_VERSION=`sw_vers -productVersion 2>/dev/null | sed -e 's,\.,,g'`
         if [ $OSX_VERSION -ge 107 ] ; then
           OSX_BITS=""
+        fi
+
+	if [ $OSX_VERSION -ge 108 -a $JAVA_VERSION -ge 7 ]; then
+          if [ -d /System/Library/Frameworks/JavaVM.framework/Versions/1.6 ]; then
+	    export JAVA_VERSION=1.6
+	    OSX_BITS="-d32"
+	  fi
         fi
     fi
     APPLE_OPTIONS="$OSX_BITS -Xdock:name=ParaProf -Xdock:icon=${TAUROOT}/${MACHINE}/lib/tau-medium.png -Dapple.laf.useScreenMenuBar=true -Dcom.apple.mrj.application.growbox.intrudes=true"
@@ -55,7 +64,7 @@ else
 fi
 
 # Test for java 1.4+
-JAVA_VERSION=`java -version 2>&1 | head -1 | cut -d '.' -f2`
+# JAVA_VERSION=`java -version 2>&1 | head -1 | cut -d '.' -f2`
 if [ "x$JAVA_VERSION" = "x4" ] ; then
         echo ""
         echo "Java 1.5 or newer is required to run ParaProf."
