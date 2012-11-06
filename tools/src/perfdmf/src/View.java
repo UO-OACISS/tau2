@@ -9,6 +9,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -34,18 +35,36 @@ public class View implements Serializable {
 	 */
 	private static final long serialVersionUID = 7198343642137106238L;
 	private static List<String> fieldNames = null;
-	private List<String> fields = null;
+	protected List<String> fields = null;
 	private DefaultMutableTreeNode node = null;
 	private View parent = null;
     private Database database;
     private int viewID = 0;
     private String whereClause = "";
     private String joinClause = "";
+    private String trialID = "";
 
     /**
+	 * @return the trialID
+	 */
+	public String getTrialID() {
+		return trialID;
+	}
+
+	/**
+	 * @param trialID the trialID to set
+	 */
+	public void setTrialID(String trialID) {
+		this.trialID = trialID;
+	}
+
+	/**
 	 * @return the joinClause
 	 */
 	public String getJoinClause() {
+		if (trialID.length() > 0) {
+			return "";
+		}
 		return joinClause;
 	}
 
@@ -86,6 +105,7 @@ public class View implements Serializable {
 		this.database = view.database;
 		this.viewID = view.viewID;
 	}
+
 
 	public static Iterator<String> getFieldNames(DB db) {
 		String allUpperCase = "TRIAL_VIEW";
@@ -172,7 +192,7 @@ public class View implements Serializable {
 	}
 
 	public String toString() {
-		return getField("NAME");
+		return "View: " + getField("NAME");
 	}
 
 	public void setDMTN(DefaultMutableTreeNode node) {
@@ -246,29 +266,49 @@ public class View implements Serializable {
 	 * @return List
 	 */
 	public static List<Trial> getTrialsForView (List<View> views, boolean getXMLMetadata, DB db) {
-		if (db.getSchemaVersion() > 0) {
-			return View.getTrialsForTAUdbView(views, db);
-		}
-
 		//PerfExplorerOutput.println("getTrialsForView()...");
-		List<Trial> trials = new ArrayList<Trial>();
-		try {
-			StringBuilder whereClause = new StringBuilder();
-			whereClause.append(" inner join application a on e.application = a.id ");
-			whereClause.append(" where ");
-			for (int i = 0 ; i < views.size() ; i++) {
-				if (i > 0) {
-					whereClause.append (" AND ");
+		List<Trial> trials = null;
+		if (db.getSchemaVersion() > 0) {
+			trials = View.getTrialsForTAUdbView(views, db);
+		} else {
+			trials = new ArrayList<Trial>();
+			try {
+				StringBuilder whereClause = new StringBuilder();
+				whereClause.append(" inner join application a on e.application = a.id ");
+				whereClause.append(" where ");
+				for (int i = 0 ; i < views.size() ; i++) {
+					if (i > 0) {
+						whereClause.append (" AND ");
+					}
+					View view = views.get(i);
+					whereClause.append(view.getWhereClause(db.getDBType()));
 				}
-				View view = views.get(i);
-				whereClause.append(view.getWhereClause(db.getDBType()));
+				//PerfExplorerOutput.println(whereClause.toString());
+				trials = Trial.getTrialList(db, whereClause.toString(), getXMLMetadata);
+			} catch (Exception e) {
+				String error = "ERROR: Couldn't select views from the database!";
+				System.err.println(error);
+				e.printStackTrace();
 			}
-			//PerfExplorerOutput.println(whereClause.toString());
-			trials = Trial.getTrialList(db, whereClause.toString(), getXMLMetadata);
-		} catch (Exception e) {
-			String error = "ERROR: Couldn't select views from the database!";
-			System.err.println(error);
-			e.printStackTrace();
+		}
+		StringBuilder sb = new StringBuilder();
+		boolean started = false;
+		for (Trial trial : trials) {
+			if (started) {
+				sb.append(",");
+			} else {
+				sb.append("(");
+			}
+			sb.append(trial.trialID);
+			started = true;
+		}
+		if (started) {
+			sb.append(")");
+		}
+		for (View view : views) {
+			// this is overkill for the sub-views, but this string will be updated if/when
+			// they are expanded/selected
+			view.setTrialID(sb.toString());
 		}
 		return trials;
 	}
@@ -282,6 +322,15 @@ public class View implements Serializable {
 	public static List<Trial> getTrialsForTAUdbView (List<View> views, DB db) {
 		//PerfExplorerOutput.println("getTrialsForView()...");
 		List<Trial> trials = new ArrayList<Trial>();
+		HashMap<Integer, View> hashViews = new HashMap<Integer, View>();
+		for(View view: views){
+			hashViews.put(view.getID(), view);
+		}
+		return getTrialsForTAUdbView(views, hashViews, db);
+	}
+
+
+	private static List<Trial> getTrialsForTAUdbView(List<View> views,HashMap<Integer, View> hashViews, DB db) {
 		try {
 			StringBuilder sql = new StringBuilder();
 			sql.append("select conjoin, taudb_view, table_name, column_name, operator, value from taudb_view left outer join taudb_view_parameter on taudb_view.id = taudb_view_parameter.taudb_view where taudb_view.id in (");
@@ -328,17 +377,20 @@ public class View implements Serializable {
 				}
 				alias++;
 				currentView = viewid;
+				hashViews.get(currentView).setWhereClause(whereClause.toString());
+				hashViews.get(currentView).setJoinClause(joinClause.toString());
 			}
 			statement.close();
 			
 			//PerfExplorerOutput.println(whereClause.toString());
-			trials = Trial.getTrialList(db, joinClause.toString() + " " + whereClause.toString(), false);
+
+			return Trial.getTrialList(db, joinClause.toString() + " " + whereClause.toString(), false);
 		} catch (Exception e) {
 			String error = "ERROR: Couldn't select views from the database!";
 			System.err.println(error);
 			e.printStackTrace();
 		}
-		return trials;
+		return null;
 	}
 
 	public int getID() {
@@ -351,7 +403,9 @@ public class View implements Serializable {
 	public void setID(int id) {
 		this.viewID = id;
 	}
-
+	public void setField(String name, String field){
+		setField(fieldNames.indexOf(name.toUpperCase()), field);
+	}
     public void setField(int idx, String field) {
         if (DBConnector.isIntegerType(database.getAppFieldTypes()[idx]) && field != null) {
             try {
@@ -371,6 +425,18 @@ public class View implements Serializable {
             }
         }
         fields.set(idx, field);
+    }
+    public void rename(DB db, String newName) {
+    	try{
+        PreparedStatement statement = db.prepareStatement("UPDATE " + db.getSchemaPrefix() + "taudb_view SET name = ? WHERE id = ?");
+        statement.setString(1, newName);
+        statement.setInt(2, this.getID());
+
+        statement.executeUpdate();
+        setField("NAME",newName);
+    	}catch (SQLException ex){
+        	ex.printStackTrace();
+        }
     }
 
 	public int saveView(DB db) throws SQLException {
@@ -565,7 +631,11 @@ public static void deleteView(int viewID, DB db) throws SQLException{
 	}
 
 	public String getWhereClause(String dbType) {
-		if (whereClause == null) {
+		if (trialID.length() > 0) {
+			String tmpWhere = " where t.id in " + trialID;
+			return tmpWhere;
+		}
+		if (whereClause == null || whereClause.equals("")) {
 			StringBuilder wc = new StringBuilder();
 			if (dbType.compareTo("db2") == 0) {
 				wc.append(" cast (");
@@ -581,6 +651,7 @@ public static void deleteView(int viewID, DB db) throws SQLException{
 			if (dbType.compareTo("db2") == 0) {
 				wc.append(" as varchar(256)) ");
 			}
+
 			wc.append (" " + getField("OPERATOR") + " '");
 			wc.append (getField("VALUE"));
 			wc.append ("' ");

@@ -691,7 +691,26 @@ public class Trial implements Serializable, Comparable<Trial> {
         }
 
     }
-
+    public void rename(DB db, String newName) {
+   	 StringBuffer buf = new StringBuffer();
+            buf.append("UPDATE " + db.getSchemaPrefix() + "trial SET name = ?");
+            buf.append(" WHERE id = ?");
+            PreparedStatement statement;
+            
+			try {
+				statement = db.prepareStatement(buf.toString());
+		        statement.setString(1, newName);
+	            statement.setInt(2, trialID);
+	            
+	            statement.executeUpdate();
+	            statement.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            
+            this.setName(newName);
+   }
    
     public int saveTrial(DB db) {
     	//Needs to be here in case the db is a TAUdb.
