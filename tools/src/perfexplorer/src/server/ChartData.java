@@ -265,7 +265,7 @@ public class ChartData extends RMIChartData {
 				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id and tcp.parent is null ");
 				buf.append("inner join timer ie on tcp.timer = ie.id ");
 				buf.append("inner join trial t on ie.trial = t.id ");
-				buf.append("inner join thread h on h.trial = t.id and h.thread_index = -1 ");
+				buf.append("inner join thread h on tcd.thread = h.id and h.thread_index = -1 ");
 				buf.append("inner join metric m on m.id = ims.metric ");
 			}
 			if (object instanceof View) {
@@ -347,7 +347,7 @@ public class ChartData extends RMIChartData {
 				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id ");
 				buf.append("inner join timer ie on tcp.timer = ie.id ");
 				buf.append("inner join trial t on ie.trial = t.id ");
-				buf.append("inner join thread h on h.trial = t.id and h.thread_index = -1 ");
+				buf.append("inner join thread h on tcd.thread = h.id and h.thread_index = -1 ");
 				buf.append("inner join metric m on m.id = ims.metric ");
 			}
 			if (object instanceof View) {
@@ -540,7 +540,7 @@ public class ChartData extends RMIChartData {
 				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id  and tcp.parent is null ");
 				buf.append("inner join timer ie on tcp.timer = ie.id ");
 				buf.append("inner join trial t on ie.trial = t.id ");
-				buf.append("inner join thread h on h.trial = t.id and h.thread_index = -1 ");
+				buf.append("inner join thread h on tcd.thread = h.id and h.thread_index = -1 ");
 				buf.append("inner join metric m on m.id = ims.metric ");
 			}
 			if (object instanceof View) {
@@ -624,7 +624,7 @@ public class ChartData extends RMIChartData {
 				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id  and tcp.parent is null ");
 				buf.append("inner join timer ie on tcp.timer = ie.id ");
 				buf.append("inner join trial t on ie.trial = t.id ");
-				buf.append("inner join thread h on h.trial = t.id and h.thread_index = -1 ");
+				buf.append("inner join thread h on tcd.thread = h.id and h.thread_index = -1 ");
 				buf.append("inner join metric m on m.id = ims.metric ");
 			}
 
@@ -705,7 +705,7 @@ public class ChartData extends RMIChartData {
 				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id  and tcp.parent is null ");
 				buf.append("inner join timer ie on tcp.timer = ie.id ");
 				buf.append("inner join trial t on ie.trial = t.id ");
-				buf.append("inner join thread h on h.trial = t.id and h.thread_index = -1 ");
+				buf.append("inner join thread h on tcd.thread = h.id and h.thread_index = -1 ");
 				buf.append("inner join metric m on m.id = ims.metric ");
 			}
 			
@@ -783,7 +783,7 @@ public class ChartData extends RMIChartData {
 				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id  and tcp.parent is null ");
 				buf.append("inner join timer ie on tcp.timer = ie.id ");
 				buf.append("inner join trial t on ie.trial = t.id ");
-				buf.append("inner join thread h on h.trial = t.id and h.thread_index = -1 ");
+				buf.append("inner join thread h on tcd.thread = h.id and h.thread_index = -1 ");
 				buf.append("inner join metric m on m.id = ims.metric ");
 			}
 			if (object instanceof View) {
@@ -854,7 +854,7 @@ public class ChartData extends RMIChartData {
 				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id  and tcp.parent is null ");
 				buf.append("inner join timer ie on tcp.timer = ie.id ");
 				buf.append("inner join trial t on ie.trial = t.id ");
-				buf.append("inner join thread h on h.trial = t.id and h.thread_index = -1 ");
+				buf.append("inner join thread h on tcd.thread = h.id and h.thread_index = -1 ");
 				buf.append("inner join metric m on m.id = ims.metric ");
 			}
 			statement = null;
@@ -938,13 +938,13 @@ public class ChartData extends RMIChartData {
 				buf.append("left outer join timer_callpath tcp on ie.id = tcp.timer and tcp.parent is null  ");
 				buf.append("left outer join timer_call_data tcd on tcd.timer_callpath = tcp.id  ");
 				buf.append("left outer join timer_value p on tcd.id = p.timer_call_data  ");
-				buf.append("inner join thread on tcd.thread = thread.id and thread.thread_index >= 0 ");
+				buf.append("inner join thread h on tcd.thread = h.id and h.thread_index >= 0 ");
 				buf.append("inner join trial t on ie.trial = t.id where ie.trial = ? and p.metric = ? ");
 				buf.append("and ie.id in ( select ie.id from timer ie  ");
 				buf.append("left outer join timer_callpath tcp on ie.id = tcp.timer and tcp.parent is null  ");
 				buf.append("left outer join timer_call_data tcd on tcd.timer_callpath = tcp.id  ");
 				buf.append("left outer join timer_value p on tcd.id = p.timer_call_data  ");
-				buf.append("inner join thread on tcd.thread = thread.id and thread.thread_index = -1");
+				buf.append("inner join thread h on tcd.thread = h.id and h.thread_index = -1");
 				buf.append("inner join trial t on ie.trial = t.id where ie.trial = ? and p.metric = ? and p.exclusive_value > ? ");
 				buf.append(") order by 1,2  ");
 				statement = db.prepareStatement(buf.toString());
@@ -1031,7 +1031,7 @@ public class ChartData extends RMIChartData {
 				buf.append("inner join timer_callpath tcp on tcp.id = tcd.timer_callpath ");
 				buf.append("inner join timer ie on tcp.timer = ie.id ");
 				buf.append("inner join trial t on ie.trial = t.id ");
-				buf.append("inner join thread on tcd.thread = thread.id and thread.thread_index = -1 ");
+				buf.append("inner join thread h on tcd.thread = h.id and h.thread_index = -1 ");
 				buf.append("inner join metric m on m.id = ims.metric ");
 			}
 			if (object instanceof View) {
@@ -1101,7 +1101,7 @@ public class ChartData extends RMIChartData {
 				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id  ");
 				buf.append("inner join timer ie on tcp.timer = ie.id ");
 				buf.append("inner join trial t on ie.trial = t.id ");
-				buf.append("inner join thread on tcd.thread = thread.id and thread.thread_index = -1 ");
+				buf.append("inner join thread h on tcd.thread = h.id and h.thread_index = -1 ");
 				buf.append("inner join metric m on m.id = ims.metric ");
 			}
 
@@ -1173,7 +1173,7 @@ public class ChartData extends RMIChartData {
 				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id  ");
 				buf.append("inner join timer ie on tcp.timer = ie.id ");
 				buf.append("inner join trial t on ie.trial = t.id ");
-				buf.append("inner join thread on tcd.thread = thread.id and thread.thread_index = -1 ");
+				buf.append("inner join thread h on tcd.thread = h.id and h.thread_index = -1 ");
 				buf.append("inner join metric m on m.id = ims.metric ");
 			}
 			if (object instanceof View) {
