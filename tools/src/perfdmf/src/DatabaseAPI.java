@@ -1526,7 +1526,7 @@ public class DatabaseAPI {
     // gets the mean & total data for a intervalEvent
     public FunctionProfile getIntervalEventDetail(Function intervalEvent) throws SQLException {
         StringBuffer buf = new StringBuffer();
-        buf.append(" WHERE ms.interval_event = " + intervalEvent.getID());
+   		buf.append(" WHERE ms.interval_event = " + intervalEvent.getID());
         if (metrics != null && metrics.size() > 0) {
             buf.append(" AND ms.metric in (");
             Metric metric;
