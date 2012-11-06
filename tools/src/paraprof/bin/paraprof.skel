@@ -20,6 +20,7 @@ fi
 APPLE_OPTIONS=""
 JAVA_VERSION=`java -version 2>&1 | head -1 | cut -d '.' -f2`
 if [ "$MACHINE" = "apple" ]; then
+    IS_JAVA_64BIT=`java -version 2>&1 | tail -1 | grep 64 | wc -l`
     OSX_BITS="-d32"
     if which sw_vers >/dev/null 2>&1 ; then
         OSX_VERSION=`sw_vers -productVersion 2>/dev/null | sed -e 's,\.,,g'`
@@ -27,7 +28,7 @@ if [ "$MACHINE" = "apple" ]; then
           OSX_BITS=""
         fi
 
-	if [ $OSX_VERSION -ge 108 -a $JAVA_VERSION -ge 7 ]; then
+	if [ $OSX_VERSION -ge 107 -a $IS_JAVA_64BIT -ge 1 ]; then
           if [ -d /System/Library/Frameworks/JavaVM.framework/Versions/1.6 ]; then
 	    export JAVA_VERSION=1.6
 	    OSX_BITS="-d32"
