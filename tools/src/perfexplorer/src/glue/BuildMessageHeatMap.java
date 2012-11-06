@@ -112,6 +112,7 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
         		readInt =st.nextInt();
         	}
         }
+        if(readInt ==-1) return;
         if(first.contains("sent")){
         	receiver = readInt;
         	sender = thread; 

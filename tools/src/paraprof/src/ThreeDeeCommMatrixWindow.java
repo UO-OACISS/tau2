@@ -530,6 +530,7 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         		readInt =st.nextInt();
         	}
         }
+        if (readInt == -1) return; 
         if(first.contains("sent")){
         	receiver = readInt;
         	sender = thread; 
