@@ -914,7 +914,7 @@ extern "C" int& tau_totalnodes(int set_or_get, int value)
 
 
 
-#if (defined(TAU_MPI) || defined(TAU_SHMEM) || defined(TAU_DMAPP) || defined(TAU_UPC))
+#if (defined(TAU_MPI) || defined(TAU_SHMEM) || defined(TAU_DMAPP) || defined(TAU_UPC) || defined(TAU_GPI) )
 
 
 
@@ -945,30 +945,36 @@ TAU_GEN_EVENT(TheGatherEvent,"Message size for gather")
 TAU_GEN_EVENT(TheAllgatherEvent,"Message size for all-gather")
 TAU_GEN_CONTEXT_EVENT(TheWaitEvent,"Message size received in wait")
 
+TauContextUserEvent & TheMsgVolSendContextEvent(int tid) {
+    static TauContextUserEvent ** sendEvents = NULL;
 
-TauContextUserEvent**& TheMsgVolContextEvent() {
-  static TauContextUserEvent **u = 0; 
-  return u;
+    if(!sendEvents) {
+        sendEvents = (TauContextUserEvent**)calloc(tau_totalnodes(0,0), sizeof(TauContextUserEvent*));
+    }
+
+    if(!sendEvents[tid]) {
+        char buff[256];
+        sprintf(buff, "Message size sent to node %d", tid);
+        sendEvents[tid] = new TauContextUserEvent(buff);
+    }
+
+    return *(sendEvents[tid]);
 }
 
-int register_events(void) {
-  static int flag = 0; 
-  
-  if (flag == 0) {
+TauContextUserEvent & TheMsgVolRecvContextEvent(int tid) {
+    static TauContextUserEvent ** recvEvents = NULL;
 
-    if (TauEnv_get_comm_matrix()) {
-      char str[256];
-      int i;
-      
-      TheMsgVolContextEvent() = (TauContextUserEvent **) malloc(sizeof(TauContextUserEvent *)*tau_totalnodes(0,0));
-      for (i =0; i < tau_totalnodes(0,0); i++) {
-        sprintf(str, "Message size sent to node %d", i);
-        TheMsgVolContextEvent()[i] = (TauContextUserEvent *) new TauContextUserEvent((const char *)str);
-      }
+    if(!recvEvents) {
+        recvEvents = (TauContextUserEvent**)calloc(tau_totalnodes(0,0), sizeof(TauContextUserEvent*));
     }
-    flag = 1;
-  }
-  return 0;
+
+    if(!recvEvents[tid]) {
+        char buff[256];
+        sprintf(buff, "Message size received from node %d", tid);
+        recvEvents[tid] = new TauContextUserEvent(buff);
+    }
+
+    return *(recvEvents[tid]);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -980,7 +986,6 @@ extern "C" int shmem_n_pes(void);
 extern "C" void Tau_trace_sendmsg(int type, int destination, int length) 
 {
   if (!RtsLayer::TheEnableInstrumentation()) return; 
-  static int initialize = register_events();
 
 #ifdef TAU_PROFILEPARAM
 #ifndef TAU_DISABLE_PROFILEPARAM_IN_MPI
@@ -994,7 +999,6 @@ extern "C" void Tau_trace_sendmsg(int type, int destination, int length)
     if (destination >= tau_totalnodes(0,0)) {
 #ifdef TAU_SHMEM
       tau_totalnodes(1,shmem_n_pes());
-      register_events();
 #else /* TAU_SHMEM */
       fprintf(stderr, 
           "TAU Error: Comm Matrix destination %d exceeds node count %d. "
@@ -1004,7 +1008,7 @@ extern "C" void Tau_trace_sendmsg(int type, int destination, int length)
       exit(-1);
 #endif /* TAU_SHMEM */
     }
-    TheMsgVolContextEvent()[destination]->TriggerEvent(length, RtsLayer::myThread());
+    TheMsgVolSendContextEvent(destination).TriggerEvent(length, RtsLayer::myThread());
   }
 
   if (TauEnv_get_tracing()) {
@@ -1055,7 +1059,6 @@ extern "C" void Tau_trace_sendmsg_remote(int type, int destination, int length, 
   }
 
   if (TauEnv_get_comm_matrix())  {
-    static int initialize = register_events();
 
 #ifdef TAU_PROFILEPARAM
 #ifndef TAU_DISABLE_PROFILEPARAM_IN_MPI
@@ -1067,7 +1070,6 @@ extern "C" void Tau_trace_sendmsg_remote(int type, int destination, int length, 
       if (destination >= tau_totalnodes(0,0)) {
 #ifdef TAU_SHMEM
         tau_totalnodes(1,shmem_n_pes());
-        register_events();
 #else /* TAU_SHMEM */
         fprintf(stderr, 
             "TAU Error: Comm Matrix destination %d exceeds node count %d. "
@@ -1077,7 +1079,7 @@ extern "C" void Tau_trace_sendmsg_remote(int type, int destination, int length, 
         exit(-1);
 #endif /* TAU_SHMEM */
       }
-      TheMsgVolContextEvent()[remoteid]->TriggerEvent(length, RtsLayer::myThread());
+      TheMsgVolRecvContextEvent(remoteid).TriggerEvent(length, RtsLayer::myThread());
     }
 
   }
@@ -1124,7 +1126,7 @@ extern "C" void Tau_reducescatter_data(int data) {
   TAU_EVENT(TheReduceScatterEvent(), data);
 }
 
-#else /* !(TAU_MPI || TAU_SHMEM || TAU_DMAPP)*/
+#else /* !(TAU_MPI || TAU_SHMEM || TAU_DMAPP || TAU_GPI)*/
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {

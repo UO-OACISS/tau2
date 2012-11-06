@@ -24,7 +24,8 @@ all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	echo "  Making : $(TARGET)"
-	ar -cr $(TARGET) $(OBJS)
+	$(AR) -qc $(TARGET) $(OBJS)
+	$(RANLIB) $(TARGET)
 
 # rebuild everything if the headers or the makefile changes
 $(OBJS): $(HEADERS) Makefile

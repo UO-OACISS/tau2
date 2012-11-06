@@ -526,16 +526,33 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 
 			} else if (aNode.getUserObject() instanceof ParaProfTrial) {
 				ParaProfTrial ppTrial = (ParaProfTrial) aNode.getUserObject();
-				ppTrial.getTrial().setName(name);
+				
 				if (ppTrial.dBTrial()) {
 					DatabaseAPI databaseAPI = getDatabaseAPI(ppTrial
 							.getDatabase());
-					if (databaseAPI != null) {
-						databaseAPI.saveTrial(ppTrial.getTrial());
-						databaseAPI.terminate();
-					}
+					ppTrial.setDatabaseAPI(databaseAPI);
 				}
+				ppTrial.rename(name);
+
+			} else if (aNode.getUserObject() instanceof ParaProfMetric) {
+				ParaProfMetric metric = (ParaProfMetric) aNode.getUserObject();
+				if (metric.dbMetric()) {
+					DatabaseAPI databaseAPI = getDatabaseAPI(metric.getParaProfTrial()
+							.getDatabase());
+					metric.rename(databaseAPI.db(), name);
+				}
+				
+			} else if (aNode.getUserObject() instanceof ParaProfView) {
+				ParaProfView view = (ParaProfView) aNode.getUserObject();
+				DatabaseAPI databaseAPI = getDatabaseAPI(view.getDatabase());
+				DefaultMutableTreeNode DMT = view.getDMTN();
+
+				view.rename(databaseAPI.db(), name);
+				view.getDMTN();
+				
+
 			}
+
 		}
 
 	}
@@ -622,6 +639,9 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		jMenuItem.addActionListener(this);
 		ViewPopUp.add(jMenuItem);
 		jMenuItem = new JMenuItem("Delete");
+		jMenuItem.addActionListener(this);
+		ViewPopUp.add(jMenuItem);
+		jMenuItem = new JMenuItem("Rename");
 		jMenuItem.addActionListener(this);
 		ViewPopUp.add(jMenuItem);
 		
@@ -1115,16 +1135,24 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 				} else if (arg.equals("Rename")) {
 					if (clickedOnObject instanceof ParaProfApplication) {
 						tree.startEditingAtPath(new TreePath(
-								((ParaProfApplication) clickedOnObject)
-								.getDMTN().getPath()));
+								((ParaProfApplication) clickedOnObject).getDMTN()
+										.getPath()));
 					} else if (clickedOnObject instanceof ParaProfExperiment) {
 						tree.startEditingAtPath(new TreePath(
-								((ParaProfExperiment) clickedOnObject)
-								.getDMTN().getPath()));
+								((ParaProfExperiment) clickedOnObject).getDMTN()
+										.getPath()));
 					} else if (clickedOnObject instanceof ParaProfTrial) {
 						tree.startEditingAtPath(new TreePath(
 								((ParaProfTrial) clickedOnObject).getDMTN()
-								.getPath()));
+										.getPath()));
+					} else if (clickedOnObject instanceof ParaProfView) {
+						tree.startEditingAtPath(new TreePath(
+								((ParaProfView) clickedOnObject).getDMTN()
+										.getPath()));
+					} else if (clickedOnObject instanceof ParaProfMetric) {
+						tree.startEditingAtPath(new TreePath(
+								((ParaProfMetric) clickedOnObject).getDMTN()
+										.getPath()));
 					}
 				} else if (arg.equals("Add Application")) {
 					if (clickedOnObject == standard) {

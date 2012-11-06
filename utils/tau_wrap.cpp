@@ -62,10 +62,37 @@ using namespace std;
 #define WRAPPER_INTERCEPT -1
 
 /* Known UPC environments */
-#define BERKELEY 1
-#define GNU 2
-#define CRAY 3
-#define XLUPC 4
+#define UPC_UNKNOWN 0
+#define UPC_BERKELEY 1
+#define UPC_GNU 2
+#define UPC_CRAY 3
+#define UPC_XLUPC 4
+
+/* UPC environment */
+int upc_env = UPC_UNKNOWN;
+
+/* Note: order is important here */
+char const * upc_excluded_functions[][5] = {
+    { /* UPC_UNKNOWN */
+        NULL
+    },
+    { /* UPC_BERKELEY */
+        "_upcr_alloc",
+        "upcri_append_srcloc",
+        "upcri_barrier_init",
+        NULL
+    },
+    { /* UPC_GNU */
+        NULL,
+    },
+    { /* UPC_CRAY */
+        NULL,
+    },
+    { /* UPC_XLUPC */
+        NULL,
+    }
+};
+
 
 //#define DEBUG 1
 
@@ -84,8 +111,6 @@ bool memory_flag = false;   /* by default, do not insert malloc.h in instrumente
 bool strict_typing = false; /* by default unless --strict option is used. */
 bool shmem_wrapper = false; /* by default unless --shmem option is used. */
 bool pshmem_use_underscore_instead_of_p = false; /* by default unless --pshmem_use_underscore_instead_of_p option is used. */
-
-int upc = 0;                /* UPC environment */
 
 
 struct FunctionSignatureInfo
@@ -131,6 +156,19 @@ static void getCReferencesForWrapper(vector<itemRef*> & itemvec, PDB& pdb, pdbFi
     /* there are finite instrumentation requests, add requests for this file */
     addFileInstrumentationRequests(pdb, file, itemvec);
   }
+}
+
+static bool isExcluded(pdbRoutine *r) {
+    if (r->signature()->hasEllipsis()) {
+        // For a full discussion of why vararg functions are difficult to wrap
+        // please see: http://www.swig.org/Doc1.3/Varargs.html#Varargs
+        return true;
+    }
+    for(char const ** ptr=upc_excluded_functions[upc_env]; *ptr; ++ptr) {
+        if (r->name() == *ptr)
+            return true;
+    }
+    return false;
 }
 
 static bool isReturnTypeVoid(pdbRoutine *r)
@@ -196,33 +234,33 @@ static char const * getMultiplierString(string const & rname)
 
 static string upc_mythread()
 {
-  switch (upc) {
-    case BERKELEY: return "upcr_mythread()";
-    case CRAY: return "MYTHREAD";
-    case GNU: return "MYTHREAD";
-    case XLUPC: return "MYTHREAD";
+  switch (upc_env) {
+    case UPC_BERKELEY: return "upcr_mythread()";
+    case UPC_CRAY: return "MYTHREAD";
+    case UPC_GNU: return "MYTHREAD";
+    case UPC_XLUPC: return "MYTHREAD";
     default: return "MYTHREAD";
   }
 }
 
 static string upc_threadof(string const & shared)
 {
-  switch (upc) {
-    case BERKELEY: return "upcr_threadof_shared(" + shared + ")";
-    case CRAY: return "__real_upc_threadof(" + shared + ")";
-    case GNU: return "__real_upc_threadof(" + shared + ")";
-    case XLUPC: return "__real_upc_threadof(" + shared + ")";
+  switch (upc_env) {
+    case UPC_BERKELEY: return "upcr_threadof_shared(" + shared + ")";
+    case UPC_CRAY: return "__real_upc_threadof(" + shared + ")";
+    case UPC_GNU: return "__real_upc_threadof(" + shared + ")";
+    case UPC_XLUPC: return "__real_upc_threadof(" + shared + ")";
     default: return "upc_threadof(" + shared + ")";
   } 
 }
 
 static string upc_threads()
 {
-  switch (upc) {
-    case BERKELEY: return "upcr_threads()";
-    case CRAY: return "THREADS";
-    case GNU: return "THREADS";
-    case XLUPC: return "THREADS";
+  switch (upc_env) {
+    case UPC_BERKELEY: return "upcr_threads()";
+    case UPC_CRAY: return "THREADS";
+    case UPC_GNU: return "THREADS";
+    case UPC_XLUPC: return "THREADS";
     default: return "THREADS";
   }
 }
@@ -481,7 +519,7 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
     sig.returntypename = grp->name();
   } else {
     sig.returntypename = r->signature()->returnType()->name();
-    if (upc && (sig.returntypename.compare(0, 10, "shared[1] ") == 0)) {
+    if (upc_env && (sig.returntypename.compare(0, 10, "shared[1] ") == 0)) {
       sig.returntypename.replace(0, 10, "shared   ");
     }
   }
@@ -563,7 +601,7 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
 #endif /* DEBUG */
     }
 
-    if ((upc == GNU) && argtypename.compare(0, 10, "shared[1] ") == 0) {
+    if ((upc_env == UPC_GNU) && argtypename.compare(0, 10, "shared[1] ") == 0) {
       argtypename.replace(0, 10, "shared ");
     }
 
@@ -591,7 +629,7 @@ void printFunctionNameInOutputFile(pdbRoutine *r, ofstream& impl, char const * p
       }
     } else {
       /* print: for (int a, double b), this prints "int" */
-      if (upc) {
+      if (upc_env) {
         /* upc headers sometimes have struct members in the argument name:
            const struct upc_filevec {upc_off_t offset;size_t len;}* 
            We need to erase everything between the two curly braces */
@@ -631,11 +669,9 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
   string retstring("    return;");
   string dltext;
 
-  if (r->signature()->hasEllipsis()) {
-    // For a full discussion of why vararg functions are difficult to wrap
-    // please see: http://www.swig.org/Doc1.3/Varargs.html#Varargs
-    impl <<"#warning \"TAU: Not generating wrapper for vararg function "<<r->name()<<"\""<<endl;
-    cout <<"TAU: Not generating wrapper for vararg function "<<r->name()<<endl;
+  if (isExcluded(r)) {
+    impl <<"#warning \"TAU: Not generating wrapper for function "<<r->name()<<"\""<<endl;
+    cout <<"TAU: Not generating wrapper for function "<<r->name()<<endl;
     return;
   }
 
@@ -723,9 +759,9 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
 
   /* Now put in the body of the routine */
 
-  if(upc) {
+  if(upc_env) {
     impl << "  if (tau_upc_node == -1) {\n";
-      if (upc == XLUPC) {
+      if (upc_env == UPC_XLUPC) {
         impl << "    TAU_PROFILE_SET_NODE(MYTHREAD); \n";
       }
       impl  << "    tau_upc_node = TAU_PROFILE_GET_NODE();\n"
@@ -764,7 +800,7 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
       }
     }
     printShmemMessageAfterRoutine(r, impl, sig);
-  } else if (upc) {
+  } else if (upc_env) {
     printUPCMessageBeforeRoutine(r, impl, sig);
     if (!isVoid) {
       impl<<"  retval  =";
@@ -892,7 +928,7 @@ void generateMakefile(string const & package, string const & outFileName,
   char const * compiler_name = "$(TAU_CC)";
   char const * upcprefix = "";
 
-  if (upc == GNU) {
+  if (upc_env == UPC_GNU) {
     compiler_name = "$(TAU_UPCC)";
     upcprefix = "$(UPCC_C_PREFIX)";
   }
@@ -1022,20 +1058,20 @@ int main(int argc, char **argv)
       }
       char const * arg = argv[i+1];
       if (strncmp(arg, "berkeley", 4) == 0) {
-        upc = BERKELEY;
+        upc_env = UPC_BERKELEY;
       } else if (strncmp(arg, "gnu", 4) == 0) {
-        upc = GNU;
+        upc_env = UPC_GNU;
       } else if (strncmp(arg, "xlupc", 5) == 0) {
-        upc = XLUPC;
+        upc_env = UPC_XLUPC;
       } else if (strncmp(arg, "cray", 4) == 0) {
-        upc = CRAY;
+        upc_env = UPC_CRAY;
         extradefs = "$(TAU_UPC_COMPILER_OPTIONS)";
       } else {
         cout << "ERROR: invalid --upc argument: " << arg << endl;
         exit(1);
       } 
 #ifdef DEBUG
-      cout << "upc = " << upc << endl;
+      cout << "upc_env = " << upc_env << endl;
 #endif /* DEBUG */
     } 
     else if (strcmp(argv[i], "--shmem") == 0) {
@@ -1134,7 +1170,7 @@ int main(int argc, char **argv)
          << "#define TAU_SHMEM_TAGID_NEXT ((++tau_shmem_tagid_f) & 255)\n"
          << endl;
   }
-  if (upc) {
+  if (upc_env) {
     impl << "#pragma pupc off\n"
          << "\n"
          << "#ifdef __BERKELEY_UPC__\n"

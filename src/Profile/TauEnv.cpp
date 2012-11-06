@@ -732,6 +732,13 @@ void TauEnv_initialize()
       tau_env_lite = 1;
     }
 
+    tmp = getconf("TAU_VERBOSE");
+    if (parse_bool(tmp,tau_env_lite)) {
+      env_verbose = 1;
+      TAU_VERBOSE("TAU: VERBOSE enabled\n");
+      TAU_METADATA("TAU_VERBOSE", "on");
+    }
+
     tmp = getconf("TAU_TRACK_HEAP");
     if (parse_bool(tmp, env_track_memory_heap)) {
       TAU_VERBOSE("TAU: Entry/Exit Memory tracking Enabled\n");
@@ -842,6 +849,16 @@ void TauEnv_initialize()
 
     if ((env_tracedir = getconf("TRACEDIR")) == NULL) {
       env_tracedir = ".";   /* current directory */
+#ifdef TAU_GPI
+      // if exe is /usr/local/foo, this will return /usr/local where profiles
+      // may be stored if PROFILEDIR is not specified
+      string cwd; 
+      int ret = Tau_get_cwd_of_exe(cwd);
+      if (ret) {
+	env_tracedir = strdup(cwd.c_str());
+	TAU_VERBOSE("ENV_TRACEDIR = %s\n", env_tracedir); 
+      }
+#endif /* TAU_GPI */
     }
     TAU_VERBOSE("TAU: TRACEDIR is \"%s\"\n", env_tracedir);
 
@@ -919,7 +936,7 @@ void TauEnv_initialize()
     sprintf(tmpstr, "%d", env_callsite_limit);
     TAU_METADATA("TAU_CALLSITE_LIMIT", tmpstr);
 
-#if (defined(TAU_MPI) || defined(TAU_SHMEM) || defined(TAU_DMAPP) || defined(TAU_UPC))
+#if (defined(TAU_MPI) || defined(TAU_SHMEM) || defined(TAU_DMAPP) || defined(TAU_UPC) || defined(TAU_GPI))
     /* track comm (opposite of old -nocomm option) */
     tmp = getconf("TAU_TRACK_MESSAGE");
     if (parse_bool(tmp, env_track_message)) {
@@ -948,7 +965,7 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Message Tracking Disabled\n");
       TAU_METADATA("TAU_TRACK_MESSAGE", "off");
     }
-#endif /* TAU_MPI || TAU_SHMEM || TAU_DMAPP || TAU_UPC */
+#endif /* TAU_MPI || TAU_SHMEM || TAU_DMAPP || TAU_UPC || TAU_GPI */
 
     /* clock synchronization */
     if (env_tracing == 0) {
