@@ -327,7 +327,7 @@ static int TauConf_read() {
  ********************************************************************/
 static const char *getconf(const char *key) {
   const char *val = TauConf_getval(key);
-  TAU_VERBOSE("%s=%s\n", key, val);
+  //TAU_VERBOSE("%s=%s\n", key, val);
   if (val) {
     return val;
   }
