@@ -395,7 +395,7 @@ public abstract class DataSource {
             Node node = it.next();
             for (Iterator<Context> it2 = node.getContexts(); it2.hasNext();) {
                 Context context = it2.next();
-                int numThreads = context.getNodeID();
+                int numThreads = context.getNumberOfThreads();
                 threadsPerConext = threadsPerConext < numThreads ? numThreads: threadsPerConext;
             }
         }
