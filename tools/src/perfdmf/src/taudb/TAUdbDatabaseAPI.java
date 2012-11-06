@@ -1555,7 +1555,22 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
         return newTrialID;
     }
     public FunctionProfile getIntervalEventDetail(Function intervalEvent) throws SQLException {
-    	return new FunctionProfile(intervalEvent);
+        StringBuffer buf = new StringBuffer();
+		buf.append(" WHERE tcd.timer_callpath = " + intervalEvent.getDatabaseID());
+        if (metrics != null && metrics.size() > 0) {
+            buf.append(" AND tv.metric in (");
+            Metric metric;
+            for (Iterator<Metric> en = metrics.iterator(); en.hasNext();) {
+                metric = en.next();
+                buf.append(metric.getID());
+                if (en.hasNext()) {
+                    buf.append(", ");
+                } else {
+                    buf.append(") ");
+                }
+            }
+        }
+        return IntervalLocationProfile.getIntervalEventDetail(db, intervalEvent, buf.toString());
     }
 	
 
