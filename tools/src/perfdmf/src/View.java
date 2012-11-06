@@ -192,7 +192,7 @@ public class View implements Serializable {
 	}
 
 	public String toString() {
-		return "View: " + getField("NAME");
+		return getField("NAME");
 	}
 
 	public void setDMTN(DefaultMutableTreeNode node) {

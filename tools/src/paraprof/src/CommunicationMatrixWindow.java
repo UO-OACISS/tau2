@@ -145,6 +145,8 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Observer, Prin
         		readInt =st.nextInt();
         	}
         }
+        if(readInt ==-1) return;
+
         if(first.contains("sent")){
         	receiver = readInt;
         	sender = thread; 

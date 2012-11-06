@@ -10,6 +10,15 @@
 
 Change log:
 ------------
+Version 2.22 changes (from 2.21):
+1. Added support for TAUdb (formerly PerfDMF).
+2. Added support for GPI (www.gpi-site.com).
+3. Enhanced ParaProf 3D window configuration for Mac OS X, AMD64 architectures.
+4. Updates to Opari2. 
+5. Updated Score-P's interface with TAU. 
+6. Updated communication matrix display for one-sided calls. 
+7. Improved TAU_SUMMARY=1 for tracking totals, max, and mean.
+
 Version 2.21 changes (from 2.20):
 1. Added support for rewriting binaries using Maqao (tau_rewrite) using PDT 3.17+.
 2. Added support for event based sampling based on unwinding (TAU_EBS_UNWIND=1).
