@@ -34,7 +34,7 @@ $(TARGET_JAR): $(SOURCES)
 	rm -rf classes	
 	mkdir classes	
 	sed "s/XXXXX/$(NOW)/" src/ParaProf.java > wrapper/ParaProf.java
-	javac -d ./classes -classpath $(CLASSPATH) $(SOURCES) wrapper/ParaProf.java
+	javac -source 1.5 -target 1.5 -d ./classes -classpath $(CLASSPATH) $(SOURCES) wrapper/ParaProf.java
 	jar -cvf bin/paraprof.jar -C ./classes edu
 	rm -f $(TAUROOT)/$(CONFIG_ARCH)/lib/paraprof.jar
 	cp $(TOOLS_SRC)/paraprof/bin/paraprof.jar $(TAUROOT)/$(CONFIG_ARCH)/lib

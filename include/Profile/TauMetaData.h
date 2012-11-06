@@ -42,24 +42,36 @@ class Tau_metadata_key {
   }
 };
 
+
 struct Tau_Metadata_Compare: std::binary_function<Tau_metadata_key,Tau_metadata_key,bool>
 {
   bool operator()(const Tau_metadata_key& lhs, const Tau_metadata_key& rhs) const { 
-    stringstream left;
-    stringstream right;
+	
+    char *left;
+    char *right;
 	// what happens if timer_context is null? I guess it works...
     if (lhs.timer_context == NULL) {
-      left << lhs.name;
-    } else {
-      left << lhs.name << lhs.timer_context << lhs.call_number << ":" << lhs.timestamp;
+			left = (char *) calloc(strlen(lhs.name), sizeof(char));
+     	sprintf(left, "%s", lhs.name);
+    } 
+		else {
+			left = (char *) calloc(strlen(lhs.name)+strlen(lhs.timer_context)+64, sizeof(char));
+			sprintf(left, "%s%s%d:%d", lhs.name, lhs.timer_context, lhs.call_number, lhs.timestamp);
+    //  left << lhs.name << lhs.timer_context << lhs.call_number << string(":") << lhs.timestamp;
     }
     if (rhs.timer_context == NULL) {
-      right << rhs.name ;
-    } else {
-      right << rhs.name << rhs.timer_context << rhs.call_number << ":" << rhs.timestamp;
+			right = (char *) calloc(strlen(rhs.name), sizeof(char));
+      sprintf(right, "%s" ,rhs.name);
+    } 
+		else {
+			right = (char *) calloc(strlen(rhs.name)+strlen(rhs.timer_context)+64, sizeof(char));
+			sprintf(right, "%s%s%d:%d", rhs.name, rhs.timer_context, rhs.call_number, rhs.timestamp);
+    //  right << rhs.name << rhs.timer_context << rhs.call_number << string(":") << rhs.timestamp;
     }
-    if (strcmp(left.str().c_str(), right.str().c_str()) < 0) return true;
-	return false;
+    bool result = strcmp(left, right) < 0;
+		free(left);
+		free(right);
+		return result;
   }
 };
 
