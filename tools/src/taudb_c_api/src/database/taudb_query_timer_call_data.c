@@ -227,7 +227,7 @@ extern void taudb_save_timer_call_data(TAUDB_CONNECTION* connection, TAUDB_TRIAL
     const char* statement_name = "TAUDB_INSERT_TIMER_CALL_DATA";
     taudb_prepare_statement(connection, statement_name, my_query, 5);
     TAUDB_TIMER_CALL_DATA *timer_call_data, *tmp;
-    HASH_ITER(hh2, trial->timer_call_data_by_id, timer_call_data, tmp) {
+    HASH_ITER(hh2, trial->timer_call_data_by_key, timer_call_data, tmp) {
       const char* paramValues[5] = {0};
       char timer_callpath_id[32] = {0};
       sprintf(timer_callpath_id, "%d", timer_call_data->key.timer_callpath->id);
@@ -253,7 +253,7 @@ extern void taudb_save_timer_call_data(TAUDB_CONNECTION* connection, TAUDB_TRIAL
       } else {
         printf("Failed.\n");
       }
-  	taudb_close_query(connection);
+  	  taudb_close_query(connection);
     }
     taudb_clear_result(connection);
   

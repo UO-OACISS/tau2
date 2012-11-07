@@ -369,7 +369,7 @@ extern void taudb_save_timer_callpaths(TAUDB_CONNECTION* connection, TAUDB_TRIAL
       } else {
         printf("Failed.\n");
       }
-  	taudb_close_query(connection);
+  	  taudb_close_query(connection);
     }
     taudb_clear_result(connection);
   
