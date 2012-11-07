@@ -25,6 +25,7 @@ TAUDB_CONNECTION* taudb_connect(char* host, char* port, char* database, char* lo
 #if defined __TAUDB_POSTGRESQL__
   char* pgoptions = NULL;
   char* pgtty = NULL;
+  taudb_connection->res = NULL;
   PGconn* connection;
   connection = PQsetdbLogin(host, port, pgoptions, pgtty, database, login, password);
   printf("Connecting to host: %s, port: %s, db: %s, login: %s\n", host, port, database, login);
@@ -243,7 +244,10 @@ void taudb_clear_result(TAUDB_CONNECTION *connection) {
   printf("calling taudb_clear_result()\n");
 #endif
 #ifdef __TAUDB_POSTGRESQL__
-  PQclear(connection->res);
+  if (connection->res != NULL) {
+    PQclear(connection->res);
+    connection->res = NULL;
+  }
 #endif
   return;
 }
