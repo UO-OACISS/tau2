@@ -54,7 +54,7 @@ public class ParaProf implements ActionListener {
 	}
     }
 
-    private final static String VERSION = "Tue Oct  9 17:26:16 PDT 2012";
+    private final static String VERSION = "Tue Nov  6 17:41:17 PST 2012";
 
     public static int defaultNumberPrecision = 6;
 
@@ -196,9 +196,9 @@ public class ParaProf implements ActionListener {
 			filelist.add(new File(file));
 		    }
 		}
-		paraProfManagerWindow.addTrial(app, experiment, (File[]) filelist.toArray(sourceFiles), fileType, fixNames, monitorProfiles, range);
+		paraProfManagerWindow.addTrial(experiment, (File[]) filelist.toArray(sourceFiles), fileType, fixNames, monitorProfiles, range);
 	    }else {
-		paraProfManagerWindow.addTrial(app, experiment, sourceFiles, fileType, fixNames, monitorProfiles, range);
+		paraProfManagerWindow.addTrial(experiment, sourceFiles, fileType, fixNames, monitorProfiles, range);
 	    }
 	} catch (java.security.AccessControlException ace) {
 	    // running as Java Web Start without permission
