@@ -554,6 +554,20 @@ void* tool_thread_fini(pthread_t args) {
   dprintf("TAU: finalizing thread %#lx\n", args); 
   Tau_stop_top_level_timer_if_necessary(); 
 }
+void  tau_register_loop(char **func, char** file, int* lineno, 
+  int id) {
+
+  char lname[2048]; 
+  char *loopname;
+  if (((*file) != (char *)NULL) && (*lineno != 0)) {
+    sprintf(lname, "Loop: %s [{%s}{%d}]", *func, *file, *lineno); 
+  } else {
+    sprintf(lname, "Loop: %s ",*func);
+  }
+  loopname = strdup(lname);
+  tau_register_func(&loopname, file, lineno, id);
+
+}
 #endif /* TAU_PEBIL_DISABLE */
 
 } /* extern "C" */
