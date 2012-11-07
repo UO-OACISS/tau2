@@ -168,7 +168,7 @@ void taudb_save_threads(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolea
   const char* my_query = "insert into thread (trial, node_rank, context_rank, thread_rank, thread_index) values ($1, $2, $3, $4, $5);";
   const char* statement_name = "TAUDB_INSERT_THREAD";
 
-  taudb_prepare_statement(connection, statement_name, my_query, 3);
+  taudb_prepare_statement(connection, statement_name, my_query, 5);
   
   TAUDB_THREAD *thread, *tmp;
   HASH_ITER(hh, trial->threads, thread, tmp) {
