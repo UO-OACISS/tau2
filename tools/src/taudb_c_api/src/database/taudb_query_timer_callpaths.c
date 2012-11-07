@@ -359,7 +359,6 @@ extern void taudb_save_timer_callpaths(TAUDB_CONNECTION* connection, TAUDB_TRIAL
 		 paramValues[1] = NULL;
 	  }
 	  
-	  printf("Inserting callpath!\n");
       taudb_execute_statement(connection, statement_name, 2, paramValues);
       taudb_execute_query(connection, "select currval('timer_callpath_id_seq');");
 
