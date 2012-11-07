@@ -21,7 +21,9 @@ int main (int argc, char** argv) {
   trial->name = taudb_strdup("TEST TRIAL");
   trial->data_source = taudb_get_data_source_by_id(taudb_query_data_sources(connection), 1);
 
-  taudb_save_trial(connection, trial);
+  boolean update = FALSE;
+  boolean cascade = TRUE;
+  taudb_save_trial(connection, trial, update, cascade);
   
   printf("Disconnecting...\n");
   taudb_disconnect(connection);
