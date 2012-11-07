@@ -219,5 +219,43 @@ TAUDB_TIMER_CALL_DATA* taudb_get_timer_call_data_by_id(TAUDB_TIMER_CALL_DATA* ti
 }
 
 extern void taudb_save_timer_call_data(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
-  printf("Timer call data not supported yet.\n");
+    if(update) {
+    	printf("Updating timer call data not supported yet.");
+    }
+	
+	const char* my_query = "insert into timer_call_data (timer_callpath, thread, calls, subroutines, time_range) values ($1, $2, $3, $4, $5);";
+    const char* statement_name = "TAUDB_INSERT_TIMER_CALL_DATA";
+    taudb_prepare_statement(connection, statement_name, my_query, 5);
+    TAUDB_TIMER_CALL_DATA *timer_call_data, *tmp;
+    HASH_ITER(hh2, trial->timer_call_data_by_id, timer_call_data, tmp) {
+      const char* paramValues[5] = {0};
+      char timer_callpath_id[32] = {0};
+      sprintf(timer_callpath_id, "%d", timer_call_data->key.timer_callpath->id);
+      paramValues[0] = timer_callpath_id;
+	  char thread_id[32] = {0};
+	  sprintf(thread_id, "%d", timer_call_data->key.thread->id);
+	  paramValues[1] = thread_id;
+	  char calls[32] = {0};
+	  sprintf(calls, "%d", timer_call_data->calls);
+	  paramValues[2] = calls;
+	  char subroutines[32] = {0};
+	  sprintf(subroutines, "%d", timer_call_data->subroutines);
+	  paramValues[3] = subroutines;
+	  paramValues[4] = NULL; // TODO: Update this when support for saving time ranges is added
+	  
+      taudb_execute_statement(connection, statement_name, 5, paramValues);
+      taudb_execute_query(connection, "select currval('timer_call_data_id_seq');");
+
+      int nRows = taudb_get_num_rows(connection);
+      if (nRows == 1) {
+        timer_call_data->id = atoi(taudb_get_value(connection, 0, 0));
+        printf("New Timer Call Data: %d\n", timer_call_data->id);
+      } else {
+        printf("Failed.\n");
+      }
+  	taudb_close_query(connection);
+    }
+    taudb_clear_result(connection);
+  
+  
 }
