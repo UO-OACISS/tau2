@@ -83,9 +83,11 @@ public class ExternalController {
         
         Trial trial = new Trial();
         trial.setDataSource(dbDataSource);
+        trial.setID(trialID);
         
         ParaProfTrial ppTrial = new ParaProfTrial(trial);
         ppTrial.finishLoad();
+        ppTrial.setID(trial.getID());
         ppTrial.showMainWindow();
     }
 
