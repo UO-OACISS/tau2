@@ -261,5 +261,55 @@ TAUDB_TIMER_VALUE* taudb_get_timer_value(TAUDB_TIMER_CALL_DATA* timer_call_data,
 }
 
 extern void taudb_save_timer_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
-  printf("Timer values not supported yet.\n");
+    if(update) {
+    	printf("Updating timer values not supported yet.");
+    }	
+	
+	const char* my_query = "insert into timer_value (timer_call_data, metric, inclusive_value, exclusive_value, "
+		"inclusive_percent, exclusive_percent, sum_exclusive_squared) values ($1, $2, $3, $4, $5, $6, $7);";
+    const char* statement_name = "TAUDB_INSERT_TIMER_VALUE";
+    taudb_prepare_statement(connection, statement_name, my_query, 7);
+	
+	/* the timer value lists are stored inside taudb_timer_call_data */
+    TAUDB_TIMER_CALL_DATA *timer_call_data, *tmp;
+    HASH_ITER(hh2, trial->timer_call_data_by_key, timer_call_data, tmp) {
+	  TAUDB_TIMER_VALUE *timer_value, *tmp2;
+	  HASH_ITER(hh, timer_call_data->timer_values, timer_value, tmp2) {
+	      const char* paramValues[7] = {0};
+	      char timer_call_data_id[32] = {0};
+	      sprintf(timer_call_data_id, "%d", timer_call_data->id);
+	      paramValues[0] = timer_call_data_id;
+		  
+		  char metric_id[32] = {0};
+		  sprintf(metric_id, "%d", timer_value->metric->id);
+		  paramValues[1] = metric_id;
+		  
+		  char inclusive_value[64] = {};
+		  sprintf(inclusive_value, "%31.31f", timer_value->inclusive);
+		  paramValues[2] = inclusive_value;
+		  
+		  char exclusive_value[64] = {};
+		  sprintf(exclusive_value, "%31.31f", timer_value->exclusive);
+		  paramValues[3] = exclusive_value;
+		  
+		  char inclusive_percent[64] = {};
+		  sprintf(inclusive_percent, "%31.31f", timer_value->inclusive_percentage);
+		  paramValues[4] = inclusive_percent;
+		  
+		  char exclusive_percent[64] = {};
+		  sprintf(exclusive_percent, "%31.31f", timer_value->exclusive_percentage);
+		  paramValues[5] = exclusive_percent;
+		  
+		  char sum_exclusive_squared[64] = {};
+		  sprintf(sum_exclusive_squared, "%31.31f", timer_value->sum_exclusive_squared);
+		  paramValues[6] = sum_exclusive_squared;
+
+	      taudb_execute_statement(connection, statement_name, 7, paramValues);
+		  printf("New Timer Value: (%d, %d)\n", timer_call_data->id, timer_value->metric->id);
+
+		  /* timer_values don't have ids, so there's nothing to update */
+	    }
+	}
+    taudb_clear_result(connection);
+  
 }
