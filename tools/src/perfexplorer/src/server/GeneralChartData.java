@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -32,6 +33,7 @@ import edu.uoregon.tau.perfdmf.Metric;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.View;
 import edu.uoregon.tau.perfdmf.database.DB;
+import edu.uoregon.tau.perfdmf.taudb.TAUdbDatabaseAPI;
 import edu.uoregon.tau.perfexplorer.common.ChartDataType;
 import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 import edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData;
@@ -434,6 +436,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 						buf.append("where ");
 						didWhere = true;
 					}
+
 					if (db.getDBType().compareTo("db2") == 0) {
 						buf.append("interval_event.group_name like ? ");
 					} else {
@@ -441,6 +444,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 					}
 				}
 			}
+			  Map<String, ArrayList<Integer>> callPathMap = TAUdbDatabaseAPI.getCallDataMap(getListOfTrialIDs(),  db);
 
 			// if we want to see particular events
 			if (eventNames != null) {
@@ -453,11 +457,18 @@ public class GeneralChartData extends RMIGeneralChartData {
 					}else{
 						buf.append("or ");
 					}
-					
+					if(db.getSchemaVersion()>0){
+						ArrayList<Integer> eventIDs = callPathMap.get(eventNames.get(i));
+						for(int j =0;j<eventIDs.size();j++){
+							if(j!=0) buf.append(" or ");
+						buf.append("interval_event.id = ?");
+						}
+					}else{
 					if (db.getDBType().compareTo("db2") == 0) {
 						buf.append("interval_event.name like ? ");
 					} else {
 						buf.append("interval_event.name = ? ");
+					}
 					}
 				}
 			}
@@ -480,10 +491,16 @@ public class GeneralChartData extends RMIGeneralChartData {
 		}
 		// then event names...
 		if (eventNames != null) {
+			this.getListOfTrialIDs();
+			  Map<String, ArrayList<Integer>> callPathMap = TAUdbDatabaseAPI.getCallDataMap(getListOfTrialIDs(),  db);
+
 			for (int i = 0 ; i < eventNames.size() ; i++) {
 				String tmp = (String)eventNames.get(i);
-				statement.setString(currentParameter, tmp);
+				ArrayList< Integer> events = callPathMap.get(tmp);
+				for(Integer eID: events){
+				statement.setInt(currentParameter, eID);
 				currentParameter++;
+				}
 			}
 		}
 
@@ -493,6 +510,26 @@ public class GeneralChartData extends RMIGeneralChartData {
 		statement.close();
 	}
 
+	private List<Integer> getListOfTrialIDs() {
+		List<Integer> list = new ArrayList<Integer>();
+		List<Object> selections = model.getMultiSelection();
+		if (selections == null) {
+			// just one selection
+			Object selection = model.getCurrentSelection();
+			if (selection instanceof Trial) {
+				list.add(model.getTrial().getID());
+			}
+		} else {
+			Object selection = model.getCurrentSelection();
+			if (selection instanceof Trial) {
+				for (int i = 0; i < selections.size(); i++) {
+					list.add(((Trial) selections.get(i)).getID());
+				}
+			}
+		}
+		return list;
+
+	}
 	private void mainOnly(DB db) throws SQLException {
 		if (model.getMainEventOnly()) {
 			buf = new StringBuilder();
@@ -772,7 +809,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 						if (foundapp || foundexp) {
 							buf.append(" and ");
 						}
-						buf.append("t.id in (");
+						buf.append(" where t.id in (");
 						foundtrial = true;
 					} else {
 						buf.append(",");
