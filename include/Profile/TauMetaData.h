@@ -1,16 +1,16 @@
 /****************************************************************************
-**			TAU Portable Profiling Package			   **
-**			http://www.cs.uoregon.edu/research/tau	           **
+**            TAU Portable Profiling Package               **
+**            http://www.cs.uoregon.edu/research/tau               **
 *****************************************************************************
-**    Copyright 2010  						   	   **
+**    Copyright 2010                                    **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 ****************************************************************************/
 /****************************************************************************
-**	File 		: TauMetaData.h  				   **
-**	Description 	: TAU Profiling Package				   **
-**	Contact		: tau-bugs@cs.uoregon.edu               	   **
-**	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
+**    File         : TauMetaData.h                     **
+**    Description     : TAU Profiling Package                   **
+**    Contact        : tau-bugs@cs.uoregon.edu                      **
+**    Documentation    : See http://www.cs.uoregon.edu/research/tau       **
 **                                                                         **
 **      Description     : This file contains metadata related routines     **
 **                                                                         **
@@ -46,32 +46,36 @@ class Tau_metadata_key {
 struct Tau_Metadata_Compare: std::binary_function<Tau_metadata_key,Tau_metadata_key,bool>
 {
   bool operator()(const Tau_metadata_key& lhs, const Tau_metadata_key& rhs) const { 
-	
+    
     char *left;
     char *right;
-	// what happens if timer_context is null? I guess it works...
+    int allocate_left = 0;
+    int allocate_right = 0;
+
+	// we are using C methods, because the C++ methods didn't work with PGI on Cray XK6.
+
     if (lhs.timer_context == NULL) {
-			left = (char *) calloc(strlen(lhs.name), sizeof(char));
-     	sprintf(left, "%s", lhs.name);
-    } 
-		else {
-			left = (char *) calloc(strlen(lhs.name)+strlen(lhs.timer_context)+64, sizeof(char));
-			sprintf(left, "%s%s%d:%d", lhs.name, lhs.timer_context, lhs.call_number, lhs.timestamp);
-    //  left << lhs.name << lhs.timer_context << lhs.call_number << string(":") << lhs.timestamp;
+        left = lhs.name;
+    } else {
+	    allocate_left = strlen(lhs.name)+strlen(lhs.timer_context)+64;
+        left = (char *) calloc(allocate_left, sizeof(char));
+        sprintf(left, "%s%s%d:%d", lhs.name, lhs.timer_context, lhs.call_number, lhs.timestamp);
     }
     if (rhs.timer_context == NULL) {
-			right = (char *) calloc(strlen(rhs.name), sizeof(char));
-      sprintf(right, "%s" ,rhs.name);
-    } 
-		else {
-			right = (char *) calloc(strlen(rhs.name)+strlen(rhs.timer_context)+64, sizeof(char));
-			sprintf(right, "%s%s%d:%d", rhs.name, rhs.timer_context, rhs.call_number, rhs.timestamp);
-    //  right << rhs.name << rhs.timer_context << rhs.call_number << string(":") << rhs.timestamp;
+        right = rhs.name;
+    } else {
+        allocate_right = strlen(rhs.name)+strlen(rhs.timer_context)+64;
+        right = (char *) calloc(allocate_right, sizeof(char));
+        sprintf(right, "%s%s%d:%d", rhs.name, rhs.timer_context, rhs.call_number, rhs.timestamp);
     }
     bool result = strcmp(left, right) < 0;
-		free(left);
-		free(right);
-		return result;
+	if (allocate_left > 0) {
+        free(left);
+	}
+	if (allocate_right > 0) {
+        free(right);
+	}
+    return result;
   }
 };
 
