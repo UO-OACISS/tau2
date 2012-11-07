@@ -1309,6 +1309,25 @@ for arg in "$@"; do
           echo "Error: Cannot access SCALASCA directory $epilogdir"
           exit 1
       fi
+      if [ ! -r $epilogdir/bin/skin ]; then
+
+
+        scorepdir=`which scorep | sed -e 's@bin/scorep@@g'` 
+        echo "scorepdir=$scorepdir"
+        if [ -d $scorepdir ]; then
+          echo "Using the Score-P measurement substrate instead of Scalasca for vScalasca v2.0+"
+          echo "Using Score-P directory $scorepdir"
+          scalasca=no
+          epilog=no
+          epilogdir=no
+
+          trace=no
+
+          scorep=yes
+        else
+          echo "Please configure TAU with the Score-P measurement substrate instead of Scalasca for vScalasca v2.0+. See http://www.score-p.org"
+        fi
+      fi 
       shift
       ;;
 
@@ -6954,7 +6973,7 @@ if [ $scorep = yes ] ; then
     fi
     scorepLibs="$scorepLD $scorepLibs"
     scorepLibs=`echo $scorepLibs | sed "s/ /#/g"`
-echo $scorepLibs
+
     fixmakeargs="$fixmakeargs scorepmpilibs=$scorepLibs"
     fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"
     fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/scorep"
