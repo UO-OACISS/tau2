@@ -338,5 +338,40 @@ TAUDB_TIMER_CALLPATH* taudb_get_timer_callpath_by_name(TAUDB_TIMER_CALLPATH* tim
 
 
 extern void taudb_save_timer_callpaths(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
-  printf("Timer callpaths not supported yet.\n");
+    if(update) {
+    	printf("Updating timer callpaths not supported yet.");
+    }
+	
+	const char* my_query = "insert into timer_callpath (timer, parent) values ($1, $2);";
+    const char* statement_name = "TAUDB_INSERT_TIMER_CALLPATH";
+    taudb_prepare_statement(connection, statement_name, my_query, 2);
+    TAUDB_TIMER_CALLPATH *timer_callpath, *tmp;
+    HASH_ITER(hh2, trial->timer_callpaths_by_name, timer_callpath, tmp) {
+      const char* paramValues[2] = {0};
+      char timer_id[32] = {0};
+      sprintf(timer_id, "%d", timer_callpath->timer->id);
+      paramValues[0] = timer_id;
+	  char parent_id[32] = {0};
+	  if(timer_callpath->parent != NULL) {
+	  	 sprintf(parent_id, "%d", timer_callpath->parent->id);
+		 paramValues[1] = parent_id;
+	  } else {
+		 paramValues[1] = NULL;
+	  }
+	  
+	  printf("Inserting callpath!\n");
+      taudb_execute_statement(connection, statement_name, 2, paramValues);
+      taudb_execute_query(connection, "select currval('timer_callpath_id_seq');");
+
+      int nRows = taudb_get_num_rows(connection);
+      if (nRows == 1) {
+        timer_callpath->id = atoi(taudb_get_value(connection, 0, 0));
+        printf("New Timer Callpath: %d\n", timer_callpath->id);
+      } else {
+        printf("Failed.\n");
+      }
+  	taudb_close_query(connection);
+    }
+    taudb_clear_result(connection);
+  
 }
