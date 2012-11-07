@@ -18,6 +18,7 @@ Version 2.22 changes (from 2.21):
 5. Updated Score-P's interface with TAU. 
 6. Updated communication matrix display for one-sided calls. 
 7. Improved TAU_SUMMARY=1 for tracking totals, max, and mean.
+8. Improved support for topology visualization in ParaProf
 
 Version 2.21 changes (from 2.20):
 1. Added support for rewriting binaries using Maqao (tau_rewrite) using PDT 3.17+.
