@@ -218,6 +218,8 @@ void taudb_parse_timer_group_names(TAUDB_TRIAL* trial, TAUDB_TIMER* timer, char*
   }
 }
 
+extern void taudb_process_timer_name(TAUDB_TIMER* timer);
+
 void taudb_save_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
   const char* my_query = "insert into timer (trial, name, short_name, source_file, line_number, line_number_end, column_number, column_number_end) values ($1, $2, $3, $4, $5, $6, $7, $8);";
   const char* statement_name = "TAUDB_INSERT_TIMER";
@@ -230,6 +232,9 @@ void taudb_save_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean
     sprintf(trialid, "%d", trial->id);
     paramValues[0] = trialid;
     paramValues[1] = timer->name;
+	if (timer->short_name == NULL) {
+	  taudb_process_timer_name(timer);
+	}
     paramValues[2] = timer->short_name;
     paramValues[3] = timer->source_file;
     char line_number[32] = {0};
