@@ -19,6 +19,8 @@ Version 2.22 changes (from 2.21):
 6. Updated communication matrix display for one-sided calls. 
 7. Improved TAU_SUMMARY=1 for tracking totals, max, and mean.
 8. Improved support for topology visualization in ParaProf
+9. Added CUPTI support for Cray OpenACC compilers.
+10. Improved CUDA device to device communication profiling.
 
 Version 2.21 changes (from 2.20):
 1. Added support for rewriting binaries using Maqao (tau_rewrite) using PDT 3.17+.
@@ -36,7 +38,7 @@ Version 2.21 changes (from 2.20):
 13. Added TAU_SUMMARY=1 and pprof -f profile.Min/Max with paraprof -dumpsummary to generate just min/max/stddev/mean statistics instead of per-node data.
 14. Added support for systemwide tracking using tau.conf. 
 15. Added support for MINGW compiler to create binaries for Windows.
-16. Added support for Cray XK6 CUDA with Cray CCE compilers v8.0.x.
+16. Added CUDA Occupancy calculator.
 17. Added support for UPC compiler scripts (tau_upc.sh, tauupc).
 18. Updated Opari2. 
 19. Added EBS based on callstack unwinding.
@@ -69,6 +71,7 @@ Version 2.21 changes (from 2.20):
 45. Opari support for multiple libraries in tau_compiler.sh (-optOpariLibs) for POMP2 registrations.
 46. CUPTI updates. 
 47. Added support for GPI wrapper [www.gpi-site.com]. 
+48. Added support for CUDA and CUPTI v5.0 for NVIDIA. 
 
 
 
