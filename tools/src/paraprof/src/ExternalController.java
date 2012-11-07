@@ -141,12 +141,14 @@ public class ExternalController {
         databaseAPI.initialize(databases.get(id));
         if(databaseAPI.db().getSchemaVersion() >0){
         	System.out.println("This is a TAUdbDatabase which no longer supports applications.");
-        	return;
+        	outputCommand("return "+0+" default");
         }
+        else{
         List<Application> apps = databaseAPI.getApplicationList();
         for (Iterator<Application> it = apps.iterator(); it.hasNext();) {
             Application app = it.next();
             outputCommand("return " + app.getID() + " " + app.getName());
+        }
         }
         outputCommand("endreturn");
     }
@@ -163,12 +165,13 @@ public class ExternalController {
         databaseAPI.setApplication(appID);
         if(databaseAPI.db().getSchemaVersion() >0){
         	System.out.println("This is a TAUdbDatabase which no longer supports Experiments.");
-        	return;
-        }
+        	outputCommand("return "+0+" default");
+        }else{
         List<Experiment> exps = databaseAPI.getExperimentList();
         for (Iterator<Experiment> it = exps.iterator(); it.hasNext();) {
             Experiment exp = it.next();
             outputCommand("return " + exp.getID() + " " + exp.getName());
+        }
         }
         outputCommand("endreturn");
     }
