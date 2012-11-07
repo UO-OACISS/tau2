@@ -433,7 +433,7 @@ static int env_depth_limit = 0;
 static int env_track_message = 0;
 static int env_comm_matrix = 0;
 static int env_track_memory_heap = 0;
-static int tau_env_lite = 0;
+static int env_tau_lite = 0;
 static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
 static int env_track_io_params = 0;
@@ -573,10 +573,6 @@ int TauEnv_get_track_message() {
   return env_track_message;
 }
 
-int TauEnv_get_lite() {
-  return tau_env_lite;
-}
-
 int TauEnv_get_track_memory_heap() {
   return env_track_memory_heap;
 }
@@ -695,7 +691,7 @@ int TauEnv_get_mic_offload(){
   return env_mic_offload;
 }
 int TauEnv_get_lite_enabled() {
-  return tau_env_lite;
+  return env_tau_lite;
 }
 
 /*********************************************************************
@@ -726,17 +722,17 @@ void TauEnv_initialize()
 
     /*** Options that can be used with Scalasca and VampirTrace ***/
     tmp = getconf("TAU_LITE");
-    if (parse_bool(tmp,tau_env_lite)) {
+    if (parse_bool(tmp,env_tau_lite)) {
       TAU_VERBOSE("TAU: LITE measurement enabled\n");
       TAU_METADATA("TAU_LITE", "on");
-      tau_env_lite = 1;
+      env_tau_lite = 1;
     }
 
     tmp = getconf("TAU_VERBOSE");
-    if (parse_bool(tmp,tau_env_lite)) {
-      env_verbose = 1;
+    if (parse_bool(tmp,env_verbose)) {
       TAU_VERBOSE("TAU: VERBOSE enabled\n");
       TAU_METADATA("TAU_VERBOSE", "on");
+      env_verbose = 1;
     }
 
     tmp = getconf("TAU_TRACK_HEAP");
