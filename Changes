@@ -14,7 +14,7 @@ Version 2.22 changes (from 2.21):
 1. Added support for TAUdb (formerly PerfDMF).
 2. Added support for GPI (www.gpi-site.com).
 3. Enhanced ParaProf 3D window configuration for Mac OS X, AMD64 architectures.
-4. Updates to Opari2. 
+4. Updated to OPARI2 1.0.6. 
 5. Updated Score-P's interface with TAU. 
 6. Updated communication matrix display for one-sided calls. 
 7. Improved TAU_SUMMARY=1 for tracking totals, max, and mean.
