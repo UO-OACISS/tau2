@@ -8,6 +8,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import edu.uoregon.tau.common.MetaDataMap;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfdmf.taudb.TAUdbDatabaseAPI;
 
@@ -113,9 +115,17 @@ public class ExternalController {
         DatabaseAPI databaseAPI = new DatabaseAPI();
         databaseAPI.initialize(Database.getDatabases().get(dbID));
 
-        Experiment exp = databaseAPI.getExperiment(appName, expName, true);
         trial.setName(trialName);
+        if(databaseAPI.db().getSchemaVersion()==0){
+        Experiment exp = databaseAPI.getExperiment(appName, expName, true);
         trial.setExperimentID(exp.getID());
+        }else{
+        	MetaDataMap map = trial.getMetaData();
+        	MetaDataKey key = map.newKey("Application");
+        	map.put(key , appName);
+        	map.newKey("Experiment");
+        	map.put(key , expName);
+        }
         int trialID = databaseAPI.uploadTrial(trial, false);
         outputCommand("return " + trialID);
         outputCommand("endreturn");
@@ -125,9 +135,14 @@ public class ExternalController {
     static public void listApplications(String databaseID) throws SQLException {
         int id = Integer.parseInt(databaseID);
         List<Database> databases = Database.getDatabases();
+        
 
         DatabaseAPI databaseAPI = new DatabaseAPI();
         databaseAPI.initialize(databases.get(id));
+        if(databaseAPI.db().getSchemaVersion() >0){
+        	System.out.println("This is a TAUdbDatabase which no longer supports applications.");
+        	return;
+        }
         List<Application> apps = databaseAPI.getApplicationList();
         for (Iterator<Application> it = apps.iterator(); it.hasNext();) {
             Application app = it.next();
@@ -146,7 +161,10 @@ public class ExternalController {
         DatabaseAPI databaseAPI = new DatabaseAPI();
         databaseAPI.initialize(Database.getDatabases().get(dbID));
         databaseAPI.setApplication(appID);
-
+        if(databaseAPI.db().getSchemaVersion() >0){
+        	System.out.println("This is a TAUdbDatabase which no longer supports Experiments.");
+        	return;
+        }
         List<Experiment> exps = databaseAPI.getExperimentList();
         for (Iterator<Experiment> it = exps.iterator(); it.hasNext();) {
             Experiment exp = it.next();
@@ -167,9 +185,9 @@ public class ExternalController {
 		if (databaseAPI.db().getSchemaVersion() > 0) {
 			// copy the DatabaseAPI object data into a new TAUdbDatabaseAPI object
 			databaseAPI = new TAUdbDatabaseAPI(databaseAPI);
+		}else{
+			databaseAPI.setExperiment(expID);
 		}
-        databaseAPI.setExperiment(expID);
-
         List<Trial> trials = databaseAPI.getTrialList(false);
         for (Iterator<Trial> it = trials.iterator(); it.hasNext();) {
             Trial trial = it.next();
