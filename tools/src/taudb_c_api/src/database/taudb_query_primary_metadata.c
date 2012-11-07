@@ -100,5 +100,21 @@ TAUDB_PRIMARY_METADATA* taudb_get_primary_metadata_by_name(TAUDB_PRIMARY_METADAT
 
 
 extern void taudb_save_primary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
-  printf("Primary metadata not supported yet.\n");
+  const char* my_query = "insert into primary_metadata (trial, name, value) values ($1, $2, $3);";
+  const char* statement_name = "TAUDB_INSERT_PRIMARY_METADATA";
+  taudb_prepare_statement(connection, statement_name, my_query, 3);
+  TAUDB_PRIMARY_METADATA *primary_metadata, *tmp;
+  HASH_ITER(hh, trial->primary_metadata, primary_metadata, tmp) {
+    // make array of 6 character pointers
+    const char* paramValues[3] = {0};
+    char trialid[32] = {0};
+    sprintf(trialid, "%d", trial->id);
+    paramValues[0] = trialid;
+    paramValues[1] = primary_metadata->name;
+    paramValues[2] = primary_metadata->value;
+
+    taudb_execute_statement(connection, statement_name, 3, paramValues);
+  }
+  taudb_clear_result(connection);
 }
+
