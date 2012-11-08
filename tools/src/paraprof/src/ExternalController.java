@@ -125,7 +125,7 @@ public class ExternalController {
         	MetaDataMap map = trial.getMetaData();
         	MetaDataKey key = map.newKey("Application");
         	map.put(key , appName);
-        	map.newKey("Experiment");
+        	key = map.newKey("Experiment");
         	map.put(key , expName);
         }
         int trialID = databaseAPI.uploadTrial(trial, false);
