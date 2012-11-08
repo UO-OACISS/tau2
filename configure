@@ -1940,7 +1940,7 @@ done
 
 if [ "x$upcnetwork" = "x" ] ; then
   if [ "$mpi" = "no" ] ; then
-    echo "NOTE: UPC network and MPI not specified.  Assuming -upcnetwork=smp."
+    #echo "NOTE: UPC network and MPI not specified.  Assuming -upcnetwork=smp."
     upcnetwork=smp
   else
     #echo "NOTE: UPC network not specified.  Assuming -upcnetwork=mpi."
@@ -7517,6 +7517,7 @@ if [ $pdt = yes ] ; then
       fi 
     fi
     if [ -x ${pdtdir}/${pdtarchcompdir}/bin/pebil.static ]
+    then
       echo "TAU: PDT: Using binary rewriting capabilities from PEBIL in tau_pebil_rewrite"
       rm -f ${targetdir}/${architecture}/bin/pebil.static
       ln -s ${pdtdir}/${pdtarchcompdir}/bin/pebil.static ${targetdir}/${architecture}/bin/pebil.static
