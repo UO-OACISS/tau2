@@ -300,11 +300,32 @@ int TauRenameTimer(char *oldName, char *newName)
 
 static int tauFiniID = -1; 
 static int tauDyninstEnabled[TAU_MAX_THREADS];
-void trace_register_func(char *func, int id)
+
+char * tau_demangle_name(char **funcname) ;
+void trace_register_func(char *origname, int id)
 {
   static int invocations = 0;
   int i;
   int tid = RtsLayer::myThread();
+  int funclen;
+  char *func = origname;
+  //char *func;
+  if ((func[0] == '_') && (func[1] == 'Z')) {
+    funclen = strlen(func);
+    char *mirror=strdup(func);
+    for(i=0; i < funclen; i++) {
+      if ((mirror[i] == '[') &&(mirror[i-1] == ' ')) {
+        mirror[i-1] = '\0';
+        break; 
+      }
+    }  
+    char *dem = tau_demangle_name(&mirror);
+    char *newname = (char *) malloc(strlen(dem)+funclen-i+3); 
+    sprintf(newname, "%s %s", dem, &func[i-1]);
+    dprintf("name=%s, newname = %s\n", func, newname); 
+    free(mirror);
+    func = newname; 
+  }
   dprintf("trace_register_func: func = %s, id = %d\n", func, id); 
   if (invocations == 0) {
     if (!tauDyninstEnabled[tid]) {
@@ -506,9 +527,9 @@ void tau_dyninst_cleanup()
 char * tau_demangle_name(char **funcname) {
   std::size_t len=1024;
   int stat;
-  char *out_buf= (char *) malloc (len);
   char *dem_name = NULL; 
 #ifdef __GNUC__
+  char *out_buf= (char *) malloc (strlen(*funcname)+100);
   char *name = abi::__cxa_demangle(*funcname, out_buf, &len, &stat);
   if (stat == 0) dem_name = out_buf;
   else dem_name = *funcname;
