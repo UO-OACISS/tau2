@@ -1535,6 +1535,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			for (Trial t : ts) {
 				trials.put(t.getID(), t);
 			}
+			return ts;
 		}
 		return new ArrayList<Trial>(trials.values());
 	}

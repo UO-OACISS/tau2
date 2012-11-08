@@ -417,21 +417,7 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 		this.secondaryMetadata = secondaryMetadata;
 	}
 
-	public String toString() {
-//		StringBuilder b = new StringBuilder();
-//		b.append("id = " + trialID + ", ");
-//		b.append("name = " + name + ", ");
-//		b.append("dataSource = " + dataSourceType + ", ");
-//		b.append("nodeCount = " + nodeCount + ", ");
-//		b.append("contextsPerNode = " + contextsPerNode + ", ");
-//		b.append("threadsPerContext = " + threadsPerContext + ", ");
-//		b.append("totalThreads = " + totalThreads + "\n");
-//		for (String key : primaryMetadata.keySet()) {
-//			b.append(key + ": " + primaryMetadata.get(key) + "\n");
-//		}
-//		return b.toString();
-		return name;
-	}
+
 
 	public static Map<Integer, TAUdbTrial> getTrials(TAUdbSession session) {
 		Map<Integer, TAUdbTrial> trials = new HashMap<Integer, TAUdbTrial>();
@@ -605,7 +591,8 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 			// create a string to hit the database
 			String buf = "SELECT t.id, t.name, t.data_source, t.node_count, t.contexts_per_node, "
 					+ "t.threads_per_context, t.total_threads FROM "
-					+ db.getSchemaPrefix() + "trial t " + whereClause;
+					+ db.getSchemaPrefix() + "trial t " + whereClause
+					+" order by t.id";
 			Vector<Trial> trials = new Vector<Trial>();
 
 			// System.out.println(buf.toString());
