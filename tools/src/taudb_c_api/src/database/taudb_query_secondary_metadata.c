@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
+extern TAUDB_SECONDARY_METADATA* taudb_get_secondary_metadata_by_id(TAUDB_SECONDARY_METADATA* secondary_metadatas, const char* id);
+
 TAUDB_SECONDARY_METADATA* taudb_query_secondary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_secondary_metadata(%p)\n", trial);
@@ -62,8 +64,10 @@ TAUDB_SECONDARY_METADATA* taudb_query_secondary_metadata(TAUDB_CONNECTION* conne
 	    // don't need to copy this, we will only need it temporarily
         tmpStringID = taudb_get_value(connection, i, j);
 		if (tmpStringID > 0) {
-          //secondary_metadata->parent = taudb_get_secondary_metadata_by_id(trial->secondary_metadata, tmpID);
-	      //secondary_metadata->parent->child_count++;
+          secondary_metadata->key.parent = taudb_get_secondary_metadata_by_id(trial->secondary_metadata, tmpStringID);
+	      if (secondary_metadata->key.parent != NULL) {
+	        secondary_metadata->key.parent->child_count++;
+	      }
 		}
       } else if (strcmp(taudb_get_column_name(connection, j), "is_array") == 0) {
 	    if (strcmp(taudb_get_value(connection, i, j), "t") == 0) {
@@ -81,8 +85,12 @@ TAUDB_SECONDARY_METADATA* taudb_query_secondary_metadata(TAUDB_CONNECTION* conne
 	    fprintf(stderr,"Unknown secondary_metadata column: %s\n", taudb_get_column_name(connection, j));
       }
     } 
-	HASH_ADD_KEYPTR(hh, trial->secondary_metadata, secondary_metadata->id, strlen(secondary_metadata->id), secondary_metadata);
-	HASH_ADD_KEYPTR(hh2, trial->secondary_metadata, &(secondary_metadata->key), sizeof(secondary_metadata->key), secondary_metadata);
+	if (secondary_metadata->key.parent != NULL) {
+	  HASH_ADD_KEYPTR(hh2, secondary_metadata->key.parent->children, &(secondary_metadata->key), sizeof(secondary_metadata->key), secondary_metadata);
+	} else {
+	  HASH_ADD_KEYPTR(hh, trial->secondary_metadata, secondary_metadata->id, strlen(secondary_metadata->id), secondary_metadata);
+	  HASH_ADD_KEYPTR(hh2, trial->secondary_metadata, &(secondary_metadata->key), sizeof(secondary_metadata->key), secondary_metadata);
+	}
   }
 
   taudb_clear_result(connection);
@@ -93,6 +101,99 @@ TAUDB_SECONDARY_METADATA* taudb_query_secondary_metadata(TAUDB_CONNECTION* conne
   return trial->secondary_metadata;
 }
 
-extern void taudb_save_secondary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
-  printf("Secondary metadata not supported yet.\n");
+TAUDB_SECONDARY_METADATA* taudb_get_secondary_metadata_by_id(TAUDB_SECONDARY_METADATA* secondary_metadatas, const char* id) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("Calling taudb_get_secondary_metadata_by_id(%p,%s)\n", secondary_metadatas, id);
+#endif
+  if (secondary_metadatas == NULL) {
+    fprintf(stderr, "Error: secondary_metadata parameter null. Please provide a valid set of secondary_metadatas.\n");
+    return NULL;
+  }
+  if (id == NULL) {
+    fprintf(stderr, "Error: id parameter null. Please provide a valid id.\n");
+    return NULL;
+  }
+
+  TAUDB_SECONDARY_METADATA* secondary_metadata = NULL;
+  HASH_FIND(hh, secondary_metadatas, id, strlen(id), secondary_metadata);
+#ifdef ITERATE_ON_FAILURE
+  // HASH_FIND is not working so well... now we iterate. Sigh.
+  if (secondary_metadata == NULL) {
+#ifdef TAUDB_DEBUG
+      printf ("SECONDARY_METADATA not found, iterating...\n");
+#endif
+    TAUDB_SECONDARY_METADATA *current, *tmp;
+    HASH_ITER(hh, secondary_metadatas, current, tmp) {
+#ifdef TAUDB_DEBUG_DEBUG
+      printf ("SECONDARY_METADATA: '%s'\n", current->id);
+#endif
+      if (strcmp(current->id, id) == 0) {
+        return current;
+      }
+    }
+  }
+#endif
+  return secondary_metadata;
+}
+
+void taudb_private_save_secondary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, TAUDB_SECONDARY_METADATA* secondary_metadata, TAUDB_SECONDARY_METADATA* parent, const char* statement_name, boolean update) {
+    // make array of 6 character pointers
+    const char* paramValues[9] = {0};
+    paramValues[0] = secondary_metadata->id;
+    char trialid[32] = {0};
+    sprintf(trialid, "%d", trial->id);
+    paramValues[1] = trialid;
+    char thread[32] = {0};
+    sprintf(thread, "%d", secondary_metadata->key.thread->id);
+    paramValues[2] = thread;
+	if (secondary_metadata->key.timer_callpath != NULL) {
+      char timer_callpath[32] = {0};
+      sprintf(timer_callpath, "%d", secondary_metadata->key.timer_callpath->id);
+      paramValues[3] = timer_callpath;
+	}
+	if (secondary_metadata->key.time_range != NULL) {
+      char time_range[32] = {0};
+      sprintf(time_range, "%d", secondary_metadata->key.time_range->id);
+      paramValues[4] = time_range;
+	}
+	if (parent != NULL) {
+      paramValues[5] = parent->id;
+	}
+
+    paramValues[6] = secondary_metadata->key.name;
+	if (secondary_metadata->num_values > 1) {
+	  int i = 0;
+	  int length = 0;
+	  for (i = 0 ; i < secondary_metadata->num_values ; i++) {
+	    length = length + strlen(secondary_metadata->value[i]) + 1;
+	  }
+	  char *tmpstr = calloc(length, sizeof(char));
+	  sprintf(tmpstr, "[%s", secondary_metadata->value[i]);
+	  for (i = 1 ; i < secondary_metadata->num_values ; i++) {
+	    sprintf(tmpstr, "%s,%s", tmpstr, secondary_metadata->value[i]);
+	  }
+	  sprintf(tmpstr, "%s]", tmpstr);
+      paramValues[7] = tmpstr;
+      paramValues[8] = "TRUE";
+	} else {
+      paramValues[7] = secondary_metadata->value[0];
+      paramValues[8] = "FALSE";
+	}
+    taudb_execute_statement(connection, statement_name, 9, paramValues);
+
+    TAUDB_SECONDARY_METADATA *child, *tmp;
+    HASH_ITER(hh2, secondary_metadata->children, child, tmp) {
+      taudb_private_save_secondary_metadata(connection, trial, child, secondary_metadata, statement_name, update);
+	}
+}
+
+void taudb_save_secondary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
+  const char* my_query = "insert into secondary_metadata (id, trial, thread, timer_callpath, time_range, parent, name, value, is_array) values ($1, $2, $3, $4, $5, $6, $7, $8, $9);";
+  const char* statement_name = "TAUDB_INSERT_SECONDARY_METADATA";
+  taudb_prepare_statement(connection, statement_name, my_query, 9);
+  TAUDB_SECONDARY_METADATA *secondary_metadata, *tmp;
+  HASH_ITER(hh2, trial->secondary_metadata_by_key, secondary_metadata, tmp) {
+    taudb_private_save_secondary_metadata(connection, trial, secondary_metadata, NULL, statement_name, update);
+  }
+  taudb_clear_result(connection);
 }
