@@ -444,7 +444,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 					}
 				}
 			}
-			  Map<String, ArrayList<Integer>> callPathMap = TAUdbDatabaseAPI.getCallDataMap(getListOfTrialIDs(),  db);
+			  Map<String, ArrayList<Integer>> callPathMap = TAUdbDatabaseAPI.getCallDataMap(getListOfTrialIDs(db),  db);
 
 			// if we want to see particular events
 			if (eventNames != null) {
@@ -491,8 +491,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 		}
 		// then event names...
 		if (eventNames != null) {
-			this.getListOfTrialIDs();
-			  Map<String, ArrayList<Integer>> callPathMap = TAUdbDatabaseAPI.getCallDataMap(getListOfTrialIDs(),  db);
+			  Map<String, ArrayList<Integer>> callPathMap = TAUdbDatabaseAPI.getCallDataMap(getListOfTrialIDs(db),  db);
 
 			for (int i = 0 ; i < eventNames.size() ; i++) {
 				String tmp = (String)eventNames.get(i);
@@ -510,7 +509,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 		statement.close();
 	}
 
-	private List<Integer> getListOfTrialIDs() {
+	private List<Integer> getListOfTrialIDs(DB db) {
 		List<Integer> list = new ArrayList<Integer>();
 		List<Object> selections = model.getMultiSelection();
 		if (selections == null) {
@@ -518,12 +517,32 @@ public class GeneralChartData extends RMIGeneralChartData {
 			Object selection = model.getCurrentSelection();
 			if (selection instanceof Trial) {
 				list.add(model.getTrial().getID());
+			}else if (selection instanceof View){
+				View view = (View) selection;
+				ArrayList<View> views = new ArrayList<View>();
+				views.add(view);
+				List<Trial> trials = View.getTrialsForTAUdbView(views, db);
+				for(Trial t : trials){
+					list.add(t.getID());
+				}
+
 			}
 		} else {
 			Object selection = model.getCurrentSelection();
 			if (selection instanceof Trial) {
 				for (int i = 0; i < selections.size(); i++) {
 					list.add(((Trial) selections.get(i)).getID());
+				}
+			}else if(selection instanceof View){
+				ArrayList<View> views = new ArrayList<View>();
+				for(Object o : selections){
+					if(o instanceof View)
+						views.add((View) o);
+				}
+
+				List<Trial> trials = View.getTrialsForTAUdbView(views, db);
+				for(Trial t : trials){
+					list.add(t.getID());
 				}
 			}
 		}
