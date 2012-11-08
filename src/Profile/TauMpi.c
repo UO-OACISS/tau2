@@ -1695,7 +1695,8 @@ double  MPI_Wtick(  )
 {
   double  returnVal;
 
-  TAU_PROFILE_TIMER(tautimer, "MPI_Wtick()",  " ", TAU_MESSAGE);
+  /* To enable the instrumentation change group to TAU_MESSAGE */
+  TAU_PROFILE_TIMER(tautimer, "MPI_Wtick()",  " ", TAU_DISABLE);
   TAU_PROFILE_START(tautimer);
   
   returnVal = PMPI_Wtick(  );
@@ -1720,6 +1721,24 @@ double  MPI_Wtime(  )
   return returnVal;
 }
 #endif
+
+#ifdef TAU_ENABLE_MPI_GET_VERSION
+int MPI_Get_version( int *version, int *subversion )
+{
+  int  returnVal;
+
+  /* To enable the instrumentation change group to TAU_MESSAGE */
+  TAU_PROFILE_TIMER(tautimer, "MPI_Get_version()",  " ", TAU_DISABLE);
+  TAU_PROFILE_START(tautimer);
+  
+  returnVal = PMPI_Get_version( version, subversion );
+
+  TAU_PROFILE_STOP(tautimer);
+
+  return returnVal;
+}
+#endif
+
 
 int  MPI_Address( location, address )
 void * location;

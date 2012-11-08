@@ -46,6 +46,10 @@ using std::string;
 
 /* These two defines specify if we want region based views or construct based
 views or both */
+#ifndef TAU_OPENMP_PARTITION_REGION
+#define TAU_OPENMP_PARTITION_REGION
+#endif
+
 #ifdef TAU_OPARI_REGION
 #define TAU_OPENMP_REGION_VIEW
 #elif TAU_OPARI_CONSTRUCT

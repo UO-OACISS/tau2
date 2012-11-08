@@ -265,7 +265,7 @@ public class ChartData extends RMIChartData {
 				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id and tcp.parent is null ");
 				buf.append("inner join timer ie on tcp.timer = ie.id ");
 				buf.append("inner join trial t on ie.trial = t.id ");
-				buf.append("inner join thread h on h.trial = t.id and h.thread_index = -1 ");
+				buf.append("inner join thread h on tcd.thread = h.id and h.thread_index = -1 ");
 				buf.append("inner join metric m on m.id = ims.metric ");
 			}
 			if (object instanceof View) {
@@ -306,7 +306,9 @@ public class ChartData extends RMIChartData {
 				buf.append(model.getXPercent());
 			}
 			buf.append(" group by ");
-			buf.append(tmpBuf.toString());
+			if ((!tmpBuf.toString().contains("'")) && tmpBuf.toString().trim().length() > 0) {
+				buf.append(tmpBuf.toString()); // this tmpBuf already has a comma!
+			}
 			buf.append(" t.node_count, t.contexts_per_node, t.threads_per_context ");
 			buf.append("order by 1, 2, 3, 4");
 			statement = db.prepareStatement(buf.toString());
@@ -347,7 +349,7 @@ public class ChartData extends RMIChartData {
 				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id ");
 				buf.append("inner join timer ie on tcp.timer = ie.id ");
 				buf.append("inner join trial t on ie.trial = t.id ");
-				buf.append("inner join thread h on h.trial = t.id and h.thread_index = -1 ");
+				buf.append("inner join thread h on tcd.thread = h.id and h.thread_index = -1 ");
 				buf.append("inner join metric m on m.id = ims.metric ");
 			}
 			if (object instanceof View) {
@@ -378,8 +380,9 @@ public class ChartData extends RMIChartData {
 				buf.append(" and m.name = ?");
 			}
 			buf.append(" group by ");
-			buf.append(tmpBuf.toString());
-			buf.append(", ");
+			if ((!tmpBuf.toString().contains("'")) && tmpBuf.toString().trim().length() > 0) {
+				buf.append(tmpBuf.toString() + ", ");
+			}
 			buf.append(" t.node_count, t.contexts_per_node, t.threads_per_context ");
 			buf.append("order by 1, 2, 3, 4");
 			//PerfExplorerOutput.println(buf.toString());
@@ -457,8 +460,11 @@ public class ChartData extends RMIChartData {
 					buf.append(" and ie.group_name = ? group by ");
 				}
 
-				buf.append(tmpBuf.toString());
-				buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
+				if ((!tmpBuf.toString().contains("'")) && tmpBuf.toString().trim().length() > 0) {
+					buf.append(tmpBuf.toString() + ", ");
+				}
+				buf.append(" t.node_count, t.contexts_per_node, t.threads_per_context, ");
+				buf.append(" 1,2,3,4 ");
 				if (db.getDBType().compareTo("db2") == 0) {
 					buf.append("cast (ie.group_name as varchar(256)) order by 1, 2, 3, 4");
 				} else {
@@ -470,7 +476,9 @@ public class ChartData extends RMIChartData {
 				statement.setString(2, groupName);
 			} else {
 				buf.append(" and m.name = ? group by ");
-				buf.append(tmpBuf.toString());
+				if ((!tmpBuf.toString().contains("'")) && tmpBuf.toString().trim().length() > 0) {
+					buf.append(tmpBuf.toString() + ", ");
+				}
 				buf.append("t.node_count, t.contexts_per_node, t.threads_per_context, ");
 				if (db.getDBType().compareTo("db2") == 0) {
 					buf.append("cast (tg.group_name as varchar(256)) order by 1, 2, 3, 4");
@@ -538,7 +546,7 @@ public class ChartData extends RMIChartData {
 				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id  and tcp.parent is null ");
 				buf.append("inner join timer ie on tcp.timer = ie.id ");
 				buf.append("inner join trial t on ie.trial = t.id ");
-				buf.append("inner join thread h on h.trial = t.id and h.thread_index = -1 ");
+				buf.append("inner join thread h on tcd.thread = h.id and h.thread_index = -1 ");
 				buf.append("inner join metric m on m.id = ims.metric ");
 			}
 			if (object instanceof View) {
@@ -622,7 +630,7 @@ public class ChartData extends RMIChartData {
 				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id  and tcp.parent is null ");
 				buf.append("inner join timer ie on tcp.timer = ie.id ");
 				buf.append("inner join trial t on ie.trial = t.id ");
-				buf.append("inner join thread h on h.trial = t.id and h.thread_index = -1 ");
+				buf.append("inner join thread h on tcd.thread = h.id and h.thread_index = -1 ");
 				buf.append("inner join metric m on m.id = ims.metric ");
 			}
 
@@ -660,7 +668,9 @@ public class ChartData extends RMIChartData {
 			}
 
 			buf.append(" group by ");
-			buf.append(tmpBuf.toString());
+			if ((!tmpBuf.toString().contains("'")) && tmpBuf.toString().trim().length() > 0) {
+				buf.append(tmpBuf.toString()); // this tmpBuf already has a comma at the end!
+			}
 			buf.append(" t.node_count, t.contexts_per_node, t.threads_per_context ");
 
 			buf.append(" order by 1, 2, 3, 4 ");
@@ -703,7 +713,7 @@ public class ChartData extends RMIChartData {
 				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id  and tcp.parent is null ");
 				buf.append("inner join timer ie on tcp.timer = ie.id ");
 				buf.append("inner join trial t on ie.trial = t.id ");
-				buf.append("inner join thread h on h.trial = t.id and h.thread_index = -1 ");
+				buf.append("inner join thread h on tcd.thread = h.id and h.thread_index = -1 ");
 				buf.append("inner join metric m on m.id = ims.metric ");
 			}
 			
@@ -736,7 +746,9 @@ public class ChartData extends RMIChartData {
 			}
 			
 			buf.append(" group by ");
-			buf.append(tmpBuf.toString());
+			if ((!tmpBuf.toString().contains("'")) && tmpBuf.toString().trim().length() > 0) {
+				buf.append(tmpBuf.toString() + ", ");
+			}
 			buf.append(" t.node_count, t.contexts_per_node, t.threads_per_context ");
 
 			buf.append(" order by 1, 2, 3, 4");
@@ -781,7 +793,7 @@ public class ChartData extends RMIChartData {
 				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id  and tcp.parent is null ");
 				buf.append("inner join timer ie on tcp.timer = ie.id ");
 				buf.append("inner join trial t on ie.trial = t.id ");
-				buf.append("inner join thread h on h.trial = t.id and h.thread_index = -1 ");
+				buf.append("inner join thread h on tcd.thread = h.id and h.thread_index = -1 ");
 				buf.append("inner join metric m on m.id = ims.metric ");
 			}
 			if (object instanceof View) {
@@ -801,7 +813,9 @@ public class ChartData extends RMIChartData {
 			buf.append(" and ie.group_name not like '%TAU_PARAM%' ");
 
 			buf.append(" group by ");
-			buf.append(tmpBuf.toString());
+			if ((!tmpBuf.toString().contains("'")) && tmpBuf.toString().trim().length() > 0) {
+				buf.append(tmpBuf.toString() + ", ");
+			}
 			buf.append(" t.node_count, t.contexts_per_node, t.threads_per_context ");
 
 			buf.append(" order by 1, 2, 3, 4");
@@ -852,7 +866,7 @@ public class ChartData extends RMIChartData {
 				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id  and tcp.parent is null ");
 				buf.append("inner join timer ie on tcp.timer = ie.id ");
 				buf.append("inner join trial t on ie.trial = t.id ");
-				buf.append("inner join thread h on h.trial = t.id and h.thread_index = -1 ");
+				buf.append("inner join thread h on tcd.thread = h.id and h.thread_index = -1 ");
 				buf.append("inner join metric m on m.id = ims.metric ");
 			}
 			statement = null;
@@ -886,8 +900,9 @@ public class ChartData extends RMIChartData {
 			buf.append("and ie.group_name not like '%TAU_CALLPATH%' ");
 			buf.append("and ie.group_name not like '%TAU_PARAM%' ");
 			buf.append(" group by ");
-
-			buf.append(tmpBuf.toString());
+			if ((!tmpBuf.toString().contains("'")) && tmpBuf.toString().trim().length() > 0) {
+				buf.append(tmpBuf.toString() + ", ");
+			}
 			buf.append(" t.node_count, t.contexts_per_node, t.threads_per_context ");
 
 			buf.append("order by 1, 2, 3, 4");
@@ -936,13 +951,13 @@ public class ChartData extends RMIChartData {
 				buf.append("left outer join timer_callpath tcp on ie.id = tcp.timer and tcp.parent is null  ");
 				buf.append("left outer join timer_call_data tcd on tcd.timer_callpath = tcp.id  ");
 				buf.append("left outer join timer_value p on tcd.id = p.timer_call_data  ");
-				buf.append("inner join thread on tcd.thread = thread.id and thread.thread_index >= 0 ");
+				buf.append("inner join thread h on tcd.thread = h.id and h.thread_index >= 0 ");
 				buf.append("inner join trial t on ie.trial = t.id where ie.trial = ? and p.metric = ? ");
 				buf.append("and ie.id in ( select ie.id from timer ie  ");
 				buf.append("left outer join timer_callpath tcp on ie.id = tcp.timer and tcp.parent is null  ");
 				buf.append("left outer join timer_call_data tcd on tcd.timer_callpath = tcp.id  ");
 				buf.append("left outer join timer_value p on tcd.id = p.timer_call_data  ");
-				buf.append("inner join thread on tcd.thread = thread.id and thread.thread_index = -1");
+				buf.append("inner join thread h on tcd.thread = h.id and h.thread_index = -1");
 				buf.append("inner join trial t on ie.trial = t.id where ie.trial = ? and p.metric = ? and p.exclusive_value > ? ");
 				buf.append(") order by 1,2  ");
 				statement = db.prepareStatement(buf.toString());
@@ -1029,7 +1044,7 @@ public class ChartData extends RMIChartData {
 				buf.append("inner join timer_callpath tcp on tcp.id = tcd.timer_callpath ");
 				buf.append("inner join timer ie on tcp.timer = ie.id ");
 				buf.append("inner join trial t on ie.trial = t.id ");
-				buf.append("inner join thread on tcd.thread = thread.id and thread.thread_index = -1 ");
+				buf.append("inner join thread h on tcd.thread = h.id and h.thread_index = -1 ");
 				buf.append("inner join metric m on m.id = ims.metric ");
 			}
 			if (object instanceof View) {
@@ -1070,7 +1085,7 @@ public class ChartData extends RMIChartData {
 				buf.append("and ims.exclusive_percent < ");
 				buf.append(model.getXPercent());
 			}
-			buf.append(" group by t.node_count, t.contexts_per_node, t.threads_per_context order by 1, 2, 3");
+			buf.append(" group by t.node_count, t.contexts_per_node, t.threads_per_context order by 1, 2, 3 ");
 			
 			//PerfExplorerOutput.println(buf.toString());
 			statement = db.prepareStatement(buf.toString());
@@ -1099,7 +1114,7 @@ public class ChartData extends RMIChartData {
 				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id  ");
 				buf.append("inner join timer ie on tcp.timer = ie.id ");
 				buf.append("inner join trial t on ie.trial = t.id ");
-				buf.append("inner join thread on tcd.thread = thread.id and thread.thread_index = -1 ");
+				buf.append("inner join thread h on tcd.thread = h.id and h.thread_index = -1 ");
 				buf.append("inner join metric m on m.id = ims.metric ");
 			}
 
@@ -1171,7 +1186,7 @@ public class ChartData extends RMIChartData {
 				buf.append("inner join timer_callpath tcp on tcd.timer_callpath = tcp.id  ");
 				buf.append("inner join timer ie on tcp.timer = ie.id ");
 				buf.append("inner join trial t on ie.trial = t.id ");
-				buf.append("inner join thread on tcd.thread = thread.id and thread.thread_index = -1 ");
+				buf.append("inner join thread h on tcd.thread = h.id and h.thread_index = -1 ");
 				buf.append("inner join metric m on m.id = ims.metric ");
 			}
 			if (object instanceof View) {

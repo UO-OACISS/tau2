@@ -1309,6 +1309,25 @@ for arg in "$@"; do
           echo "Error: Cannot access SCALASCA directory $epilogdir"
           exit 1
       fi
+      if [ ! -r $epilogdir/bin/skin ]; then
+
+
+        scorepdir=`which scorep | sed -e 's@bin/scorep@@g'` 
+        echo "scorepdir=$scorepdir"
+        if [ -d $scorepdir ]; then
+          echo "Using the Score-P measurement substrate instead of Scalasca for vScalasca v2.0+"
+          echo "Using Score-P directory $scorepdir"
+          scalasca=no
+          epilog=no
+          epilogdir=no
+
+          trace=no
+
+          scorep=yes
+        else
+          echo "Please configure TAU with the Score-P measurement substrate instead of Scalasca for vScalasca v2.0+. See http://www.score-p.org"
+        fi
+      fi 
       shift
       ;;
 
@@ -1921,7 +1940,7 @@ done
 
 if [ "x$upcnetwork" = "x" ] ; then
   if [ "$mpi" = "no" ] ; then
-    echo "NOTE: UPC network and MPI not specified.  Assuming -upcnetwork=smp."
+    #echo "NOTE: UPC network and MPI not specified.  Assuming -upcnetwork=smp."
     upcnetwork=smp
   else
     #echo "NOTE: UPC network not specified.  Assuming -upcnetwork=mpi."
@@ -2023,6 +2042,7 @@ cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.db2 ${targetdir}/etc/.
 cp ${tauroot}/tools/src/perfexplorer/etc/java.policy ${targetdir}/etc/.
 if [ ! -d ${targetdir}/etc/topology ]; then
   cp -r ${tauroot}/etc/topology ${targetdir}/etc
+  cp ${tauroot}/etc/blacklist.txt ${targetdir}/etc/.
 fi
 
 # copy PerfDMF schema files
@@ -6954,7 +6974,7 @@ if [ $scorep = yes ] ; then
     fi
     scorepLibs="$scorepLD $scorepLibs"
     scorepLibs=`echo $scorepLibs | sed "s/ /#/g"`
-echo $scorepLibs
+
     fixmakeargs="$fixmakeargs scorepmpilibs=$scorepLibs"
     fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"
     fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/scorep"
@@ -7468,6 +7488,7 @@ cp ${tauroot}/tools/src/tauex.multiple $BINTARGET
 cp ${tauroot}/tools/src/tau_cxx.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_cc.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_rewrite $BINTARGET
+cp ${tauroot}/tools/src/tau_pebil_rewrite $BINTARGET
 cp ${tauroot}/tools/src/tau_f90.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_f77.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_upc.sh $BINTARGET
@@ -7494,6 +7515,12 @@ if [ $pdt = yes ] ; then
 	echo "NOTE: Found a newer tau_rewrite in PDT. Using it instead."
 	cp ${pdtdir}/${pdtarchcompdir}/bin/tau_rewrite  $BINTARGET
       fi 
+    fi
+    if [ -x ${pdtdir}/${pdtarchcompdir}/bin/pebil.static ]
+    then
+      echo "TAU: PDT: Using binary rewriting capabilities from PEBIL in tau_pebil_rewrite"
+      rm -f ${targetdir}/${architecture}/bin/pebil.static
+      ln -s ${pdtdir}/${pdtarchcompdir}/bin/pebil.static ${targetdir}/${architecture}/bin/pebil.static
     fi
 fi
 

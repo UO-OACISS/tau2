@@ -17,6 +17,11 @@
 typedef int boolean;
 #endif
 
+typedef struct taudb_prepared_statement {
+ char* name;
+ UT_hash_handle hh; /* hash index for hashing by name */
+} TAUDB_PREPARED_STATEMENT;
+
 /* forward declarations to ease objects that need to know about each other 
  * and have doubly-linked relationships */
 
@@ -66,6 +71,7 @@ typedef struct taudb_connection {
 #if defined __TAUDB_POSTGRESQL__
   PGconn *connection;
   PGresult *res;
+  TAUDB_PREPARED_STATEMENT *statements;
 #elif defined __TAUDB_SQLITE__
   sqlite3 *connection;
   sqlite3_stmt *ppStmt;
@@ -73,6 +79,7 @@ typedef struct taudb_connection {
 #endif
   TAUDB_SCHEMA_VERSION schema_version;
   boolean inTransaction;
+  boolean inPortal;
   TAUDB_DATA_SOURCE* data_sources_by_id;
   TAUDB_DATA_SOURCE* data_sources_by_name;
 } TAUDB_CONNECTION;
@@ -115,6 +122,7 @@ typedef struct taudb_trial {
  struct taudb_counter_value* counter_values;
  struct taudb_primary_metadata* primary_metadata;
  struct taudb_secondary_metadata* secondary_metadata;
+ struct taudb_secondary_metadata* secondary_metadata_by_key;
 } TAUDB_TRIAL;
 
 /*********************************************/
@@ -204,7 +212,6 @@ typedef struct taudb_timer_group {
 */
 
 typedef struct taudb_timer_parameter {
- int id; /* database reference, and hash key */
  char* name;
  char* value;
  UT_hash_handle hh;
@@ -305,19 +312,23 @@ typedef struct taudb_primary_metadata {
 /* primary metadata is metadata that could be nested, could
    contain unique data for each thread, and could be an array. */
 
-typedef struct taudb_secondary_metadata {
- char* id; /* link back to database */
- struct taudb_timer_callpath* timer_callpath; 
- struct taudb_thread* thread; 
+typedef struct taudb_secondary_metadata_key {
+ struct taudb_timer_callpath *timer_callpath; /* link back to database */
+ struct taudb_thread *thread; /* link back to database, roundabout way */
  struct taudb_secondary_metadata* parent; /* self-referencing */
  struct taudb_time_range* time_range;
- int num_values; /* can have arrays of data */
  char* name;
+} TAUDB_SECONDARY_METADATA_KEY;
+
+typedef struct taudb_secondary_metadata {
+ char* id; /* link back to database */
+ TAUDB_SECONDARY_METADATA_KEY key;
+ int num_values; /* can have arrays of data */
  char** value;
  int child_count;
  struct taudb_secondary_metadata* children; /* self-referencing  */
- char* key;
- UT_hash_handle hh; /* uses the key as a compound key */
+ UT_hash_handle hh; /* uses the id as a compound key */
+ UT_hash_handle hh2; /* uses the key as a compound key */
 } TAUDB_SECONDARY_METADATA;
 
 /* these are for supporting the older schema */

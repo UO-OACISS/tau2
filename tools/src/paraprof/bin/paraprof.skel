@@ -2,6 +2,7 @@
 TAUROOT=@TAUROOTDIR@
 MACHINE=@ARCH@
 
+
 SCHEMADIR=${TAUROOT}/etc
 BINDIR=${TAUROOT}/${MACHINE}/bin
 LIBDIR=${TAUROOT}/${MACHINE}/lib
@@ -12,17 +13,27 @@ CUBE_JAVA_READER=${TAUROOT}/${MACHINE}/lib/CubeReader.jar
 
 JARS=${JARDIR}/paraprof.jar:${JARDIR}/perfdmf.jar:${JARDIR}/tau-common.jar:${JARDIR}/vis.jar:${JARDIR}/jogl.jar:${JARDIR}/jatha.jar:${JARDIR}/jgraph.jar:${JARDIR}/xerces.jar:${JARDIR}/jargs.jar:${JARDIR}/batik-combined.jar:${JARDIR}/jfreechart-1.0.12.jar:${JARDIR}/jcommon-1.0.15.jar:${JARDIR}/jython.jar:${JARDIR}/mesp.jar:${CUBE_JAVA_READER}:${JARDIR}/gson-2.1.jar
 
-if [ $MACHINE = bgq -o $MACHINE = arm_linux ]; then
-  export LIBGL_ALWAYS_INDIRECT=1
-fi
+# If 3D window has problems, please uncomment
+#if [ $MACHINE = bgq -o $MACHINE = arm_linux ]; then
+export LIBGL_ALWAYS_INDIRECT=1
+#fi
 
 APPLE_OPTIONS=""
+JAVA_VERSION=`java -version 2>&1 | head -1 | cut -d '.' -f2`
 if [ "$MACHINE" = "apple" ]; then
+    IS_JAVA_64BIT=`java -version 2>&1 | tail -1 | grep 64 | wc -l`
     OSX_BITS="-d32"
     if which sw_vers >/dev/null 2>&1 ; then
         OSX_VERSION=`sw_vers -productVersion 2>/dev/null | sed -e 's,\.,,g'`
         if [ $OSX_VERSION -ge 107 ] ; then
           OSX_BITS=""
+        fi
+
+	if [ $OSX_VERSION -ge 107 -a $IS_JAVA_64BIT -ge 1 ]; then
+          if [ -d /System/Library/Frameworks/JavaVM.framework/Versions/1.6 ]; then
+	    export JAVA_VERSION=1.6
+	    OSX_BITS="-d32"
+	  fi
         fi
     fi
     APPLE_OPTIONS="$OSX_BITS -Xdock:name=ParaProf -Xdock:icon=${TAUROOT}/${MACHINE}/lib/tau-medium.png -Dapple.laf.useScreenMenuBar=true -Dcom.apple.mrj.application.growbox.intrudes=true"
@@ -55,7 +66,7 @@ else
 fi
 
 # Test for java 1.4+
-JAVA_VERSION=`java -version 2>&1 | head -1 | cut -d '.' -f2`
+# JAVA_VERSION=`java -version 2>&1 | head -1 | cut -d '.' -f2`
 if [ "x$JAVA_VERSION" = "x4" ] ; then
         echo ""
         echo "Java 1.5 or newer is required to run ParaProf."
@@ -115,6 +126,11 @@ javaLocation=`dirname $javaLocation`
 if [ ! -r $javaLocation/libjawt.so -a -r $javaLocation/../lib/x86_64/libjawt.so ]
 then
   javaLocation="$javaLocation:$javaLocation/../lib:$javaLocation/../lib/x86_64"
+fi
+
+if [ ! -r $javaLocation/libjawt.so -a -r $javaLocation/../lib/amd64/libjawt.so ]
+then
+  javaLocation="$javaLocation:$javaLocation/../lib:$javaLocation/../lib/amd64"
 fi
 
 if [ $MACHINE = arm_linux ]

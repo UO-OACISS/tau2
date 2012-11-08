@@ -586,6 +586,133 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 		stmt.executeBatch();
 		stmt.close();
 	}
+	public static Map<String, Integer> getCallDataMap(int trialID, DB db) throws SQLException {
+		Map<String, Integer> map = new HashMap<String, Integer>();
+		StringBuilder sb = new StringBuilder();
+		/* Apparently, the H2 database doesn't handle parameters in the 
+		   recursive part of the query. So, we don't add them as parameters. */
+		sb.append("with recursive cp (id, parent, timer, name) as ( " +
+				"SELECT tc.id, tc.parent, tc.timer, t.name FROM " +
+//				"SELECT tc.id,t.name FROM " +
+				db.getSchemaPrefix() +
+				"timer_callpath tc inner join " +
+				db.getSchemaPrefix() +
+				"timer t on tc.timer = t.id where ");
+		        if (db.getDBType().compareTo("h2") == 0) {
+					sb.append("t.trial = " + trialID + " and tc.parent is null ");
+		        } else {
+					sb.append("t.trial = ? and tc.parent is null ");
+		        }
+				sb.append("UNION ALL SELECT d.id, d.parent, d.timer, ");
+        if (db.getDBType().compareTo("h2") == 0) {
+			sb.append("concat (cp.name, ' => ', dt.name) FROM ");
+        } else {
+			sb.append("cp.name || ' => ' || dt.name FROM ");
+        }
+			sb.append(db.getSchemaPrefix() +
+				"timer_callpath AS d JOIN cp ON (d.parent = cp.id) join " +
+				db.getSchemaPrefix());
+	        if (db.getDBType().compareTo("h2") == 0) {
+				sb.append("timer dt on d.timer = dt.id) ");
+	        } else {
+	        	sb.append("timer dt on d.timer = dt.id) ");
+	        }
+	        	sb.append("SELECT distinct tcd.id, tcd.time_range, cp.name, h.node_rank, h.context_rank, h.thread_rank, cp.id FROM cp join ");
+		sb.append(db.getSchemaPrefix());
+		sb.append("timer_call_data tcd on tcd.timer_callpath = cp.id join ");
+		sb.append(db.getSchemaPrefix());
+		sb.append("thread h on tcd.thread = h.id");
+		PreparedStatement statement = db.prepareStatement(sb.toString());
+        if (db.getDBType().compareTo("h2") != 0) {
+			statement.setInt(1, trialID);
+        }
+		//System.out.println(statement);
+		statement.execute();
+		ResultSet results = statement.getResultSet();
+
+		while (results.next()) {
+			int id = results.getInt(1);
+			Double timestamp = results.getDouble(2);
+			String functionName = results.getString(3);
+			int node = results.getInt(4);
+			int context =results.getInt(5);
+			int thread = results.getInt(6);
+			int timerID = results.getInt(7);
+			//System.out.println(timerID);
+			map.put(functionName, timerID);
+		}
+		statement.close();
+        return map;
+	}
+	public static Map<String, ArrayList<Integer>> getCallDataMap(List<Integer> trials, DB db) throws SQLException {
+		 Map<String, ArrayList<Integer>>map = new  HashMap<String, ArrayList<Integer>>();
+		StringBuilder sb = new StringBuilder();
+		/* Apparently, the H2 database doesn't handle parameters in the 
+		   recursive part of the query. So, we don't add them as parameters. */
+		sb.append("with recursive cp (id, parent, timer, name) as ( " +
+				"SELECT tc.id, tc.parent, tc.timer, t.name FROM " +
+//				"SELECT tc.id,t.name FROM " +
+				db.getSchemaPrefix() +
+				"timer_callpath tc inner join " +
+				db.getSchemaPrefix() +
+				"timer t on tc.timer = t.id where (");
+		for(int i=0; i<trials.size();i++){
+			if(i!=0) sb.append(" or ");
+		        if (db.getDBType().compareTo("h2") == 0) {
+					sb.append("t.trial = " + trials.get(i) + " ");
+		        } else {
+					sb.append("t.trial = ?  ");
+		        }
+		}
+		sb.append(") and tc.parent is null ");
+
+				sb.append("UNION ALL SELECT d.id, d.parent, d.timer, ");
+        if (db.getDBType().compareTo("h2") == 0) {
+			sb.append("concat (cp.name, ' => ', dt.name) FROM ");
+        } else {
+			sb.append("cp.name || ' => ' || dt.name FROM ");
+        }
+			sb.append(db.getSchemaPrefix() +
+				"timer_callpath AS d JOIN cp ON (d.parent = cp.id) join " +
+				db.getSchemaPrefix());
+	        if (db.getDBType().compareTo("h2") == 0) {
+				sb.append("timer dt on d.timer = dt.id) ");
+	        } else {
+	        	sb.append("timer dt on d.timer = dt.id) ");
+	        }
+	        	sb.append("SELECT distinct tcd.id, tcd.time_range, cp.name, h.node_rank, h.context_rank, h.thread_rank, cp.id FROM cp join ");
+		sb.append(db.getSchemaPrefix());
+		sb.append("timer_call_data tcd on tcd.timer_callpath = cp.id join ");
+		sb.append(db.getSchemaPrefix());
+		sb.append("thread h on tcd.thread = h.id");
+		PreparedStatement statement = db.prepareStatement(sb.toString());
+        if (db.getDBType().compareTo("h2") != 0) {
+        	for(int i = 0 ; i<trials.size();i++)
+			statement.setInt(i+1, trials.get(i));
+        }
+		//System.out.println(statement);
+		statement.execute();
+		ResultSet results = statement.getResultSet();
+
+		while (results.next()) {
+			int id = results.getInt(1);
+			Double timestamp = results.getDouble(2);
+			String functionName = results.getString(3);
+			int node = results.getInt(4);
+			int context =results.getInt(5);
+			int thread = results.getInt(6);
+			int timerID = results.getInt(7);
+			//System.out.println(timerID);
+			ArrayList<Integer>array = map.get(functionName);
+			if(array == null){
+				array = new ArrayList<Integer>();
+				map.put(functionName, array);
+			}
+			array.add(timerID);
+		}
+		statement.close();
+        return map;
+	}
 	
 	private static Map<TimerCallData, Integer> getCallDataMap(int trialID, DataSource dataSource, DB db) throws SQLException {
 		Map<TimerCallData, Integer> map = new HashMap<TimerCallData, Integer>();
@@ -1408,6 +1535,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			for (Trial t : ts) {
 				trials.put(t.getID(), t);
 			}
+			return ts;
 		}
 		return new ArrayList<Trial>(trials.values());
 	}
@@ -1555,7 +1683,22 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
         return newTrialID;
     }
     public FunctionProfile getIntervalEventDetail(Function intervalEvent) throws SQLException {
-    	return new FunctionProfile(intervalEvent);
+        StringBuffer buf = new StringBuffer();
+		buf.append(" WHERE tcd.timer_callpath = " + intervalEvent.getDatabaseID());
+        if (metrics != null && metrics.size() > 0) {
+            buf.append(" AND tv.metric in (");
+            Metric metric;
+            for (Iterator<Metric> en = metrics.iterator(); en.hasNext();) {
+                metric = en.next();
+                buf.append(metric.getID());
+                if (en.hasNext()) {
+                    buf.append(", ");
+                } else {
+                    buf.append(") ");
+                }
+            }
+        }
+        return IntervalLocationProfile.getIntervalEventDetail(db, intervalEvent, buf.toString());
     }
 	
 
