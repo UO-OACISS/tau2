@@ -1314,9 +1314,9 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
 		initializing[tid] = true;
         Tau_pure_start_task_string(gTauApplication(), tid);
 		initializing[tid] = false;
+        initialized = true;
       }
     }
-    initialized = true;
     RtsLayer::UnLockDB();
   }
 
