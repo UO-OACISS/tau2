@@ -140,7 +140,45 @@ TAUDB_COUNTER_VALUE* taudb_get_counter_value(TAUDB_COUNTER_VALUE* counter_values
   return counter_value;
 }
 
+void taudb_save_counter_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
+  const char* my_query = "insert into counter_value (counter, timer_callpath, thread, sample_count, maximum_value, minimum_value, mean_value, standard_deviation) values ($1, $2, $3, $4, $5, $6, $7, $8);";
+  const char* statement_name = "TAUDB_INSERT_COUNTER_VALUE";
+  taudb_prepare_statement(connection, statement_name, my_query, 8);
+  TAUDB_COUNTER_VALUE *counter_value, *tmp;
+  HASH_ITER(hh1, trial->counter_values, counter_value, tmp) {
+    // make array of 6 character pointers
+    const char* paramValues[8] = {0};
+    char counterid[32] = {0};
+    sprintf(counterid, "%d", counter_value->key.counter->id);
+    paramValues[0] = counterid;
+	if (counter_value->key.context != NULL) {
+      char context[32] = {0};
+      sprintf(context, "%d", counter_value->key.context->id);
+      paramValues[1] = context;
+	}
+	if (counter_value->key.thread != NULL) {
+      char thread[32] = {0};
+      sprintf(thread, "%d", counter_value->key.thread->id);
+      paramValues[2] = thread;
+	}
+    char sample_count[32] = {0};
+    sprintf(sample_count, "%d", counter_value->sample_count);
+    paramValues[3] = sample_count;
+    char maximum_value[32] = {0};
+    sprintf(maximum_value, "%f", counter_value->maximum_value);
+    paramValues[4] = maximum_value;
+    char minimum_value[32] = {0};
+    sprintf(minimum_value, "%f", counter_value->minimum_value);
+    paramValues[5] = minimum_value;
+    char mean_value[32] = {0};
+    sprintf(mean_value, "%f", counter_value->mean_value);
+    paramValues[6] = mean_value;
+    char standard_deviation[32] = {0};
+    sprintf(standard_deviation, "%f", counter_value->standard_deviation);
+    paramValues[7] = standard_deviation;
 
-extern void taudb_save_counter_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
-  printf("Counter values not supported yet.\n");
+    taudb_execute_statement(connection, statement_name, 8, paramValues);
+  }
+  taudb_clear_result(connection);
 }
+
