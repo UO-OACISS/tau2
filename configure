@@ -2040,6 +2040,7 @@ cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.oracle ${targetdir}/etc/.
 cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.postgresql ${targetdir}/etc/.
 cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.db2 ${targetdir}/etc/.
 cp ${tauroot}/tools/src/perfexplorer/etc/java.policy ${targetdir}/etc/.
+cp ${tauroot}/etc/blacklist.txt ${targetdir}/etc/.
 if [ ! -d ${targetdir}/etc/topology ]; then
   cp -r ${tauroot}/etc/topology ${targetdir}/etc
 fi
@@ -7487,6 +7488,7 @@ cp ${tauroot}/tools/src/tauex.multiple $BINTARGET
 cp ${tauroot}/tools/src/tau_cxx.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_cc.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_rewrite $BINTARGET
+cp ${tauroot}/tools/src/tau_pebil_rewrite $BINTARGET
 cp ${tauroot}/tools/src/tau_f90.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_f77.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_upc.sh $BINTARGET
@@ -7513,6 +7515,11 @@ if [ $pdt = yes ] ; then
 	echo "NOTE: Found a newer tau_rewrite in PDT. Using it instead."
 	cp ${pdtdir}/${pdtarchcompdir}/bin/tau_rewrite  $BINTARGET
       fi 
+    fi
+    if [ -x ${pdtdir}/${pdtarchcompdir}/bin/pebil.static ]
+      echo "TAU: PDT: Using binary rewriting capabilities from PEBIL in tau_pebil_rewrite"
+      rm -f ${targetdir}/${architecture}/bin/pebil.static
+      ln -s ${pdtdir}/${pdtarchcompdir}/bin/pebil.static ${targetdir}/${architecture}/bin/pebil.static
     fi
 fi
 
