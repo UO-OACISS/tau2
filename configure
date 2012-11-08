@@ -2040,9 +2040,9 @@ cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.oracle ${targetdir}/etc/.
 cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.postgresql ${targetdir}/etc/.
 cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.db2 ${targetdir}/etc/.
 cp ${tauroot}/tools/src/perfexplorer/etc/java.policy ${targetdir}/etc/.
-cp ${tauroot}/etc/blacklist.txt ${targetdir}/etc/.
 if [ ! -d ${targetdir}/etc/topology ]; then
   cp -r ${tauroot}/etc/topology ${targetdir}/etc
+  cp ${tauroot}/etc/blacklist.txt ${targetdir}/etc/.
 fi
 
 # copy PerfDMF schema files
