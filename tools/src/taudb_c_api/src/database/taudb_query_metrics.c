@@ -130,7 +130,7 @@ void taudb_save_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolea
     int nRows = taudb_get_num_rows(connection);
     if (nRows == 1) {
       metric->id = atoi(taudb_get_value(connection, 0, 0));
-      printf("New Metric: %d\n", metric->id);
+      //printf("New Metric: %d\n", metric->id);
     } else {
       printf("Failed.\n");
     }

@@ -196,7 +196,7 @@ void taudb_save_threads(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolea
     int nRows = taudb_get_num_rows(connection);
     if (nRows == 1) {
       thread->id = atoi(taudb_get_value(connection, 0, 0));
-      printf("New Thread: %d\n", thread->id);
+      //printf("New Thread: %d\n", thread->id);
     } else {
       printf("Failed.\n");
     }
