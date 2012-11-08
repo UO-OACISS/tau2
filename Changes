@@ -21,6 +21,7 @@ Version 2.22 changes (from 2.21):
 8. Improved support for topology visualization in ParaProf
 9. Added CUPTI support for Cray OpenACC compilers.
 10. Improved CUDA device to device communication profiling.
+11. Added support for PEBIL based binary rewriter (tau_pebil_rewrite). 
 
 Version 2.21 changes (from 2.20):
 1. Added support for rewriting binaries using Maqao (tau_rewrite) using PDT 3.17+.
