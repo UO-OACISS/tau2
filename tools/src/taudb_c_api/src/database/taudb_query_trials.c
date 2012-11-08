@@ -4,6 +4,8 @@
 #include <string.h>
 #include <libxml/parser.h>
 #include <libxml/tree.h>
+#include <time.h>
+#include <sys/time.h>
 
 xmlNodePtr taudb_private_find_xml_child_named(xmlNodePtr parent, const char * name) {
 	xmlNodePtr cur_node = parent;
@@ -197,6 +199,15 @@ void taudb_save_trial(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean 
   const char* statement_name;
   int nParams = 7;
 
+  struct timeval begin_wall, end_wall, full_wall;  // to measure wall clock time
+  clock_t begin, end, full; // to measure CPU time
+  double time_spent, time_spent_wall;
+
+  gettimeofday(&begin_wall, NULL);
+  gettimeofday(&full_wall, NULL);
+  begin = clock();
+  full = begin;
+
   // Are we updating, or inserting?
   if (update && trial->id > 0) {
     nParams = 7;
@@ -264,20 +275,136 @@ void taudb_save_trial(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean 
 
   // should we save the entire trial?
   if (cascade) {
+    end = clock();
+    gettimeofday(&end_wall, NULL);
+    time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+	time_spent_wall = (double) (end_wall.tv_usec - begin_wall.tv_usec)/1000000 +
+	                  (double) (end_wall.tv_sec - begin_wall.tv_sec);
+	printf("Saved trial in:              %.2f seconds (%.2fs CPU, %.2fs database latency)...\n", time_spent_wall, time_spent, time_spent_wall - time_spent);
+    begin = clock();
+    gettimeofday(&begin_wall, NULL);
     taudb_save_metrics(connection, trial, update);
+    end = clock();
+    gettimeofday(&end_wall, NULL);
+    time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+	time_spent_wall = (double) (end_wall.tv_usec - begin_wall.tv_usec)/1000000 +
+	                  (double) (end_wall.tv_sec - begin_wall.tv_sec);
+	printf("Saved metrics in:            %.2f seconds (%.2fs CPU, %.2fs database latency)...\n", time_spent_wall, time_spent, time_spent_wall - time_spent);
+    begin = clock();
+    gettimeofday(&begin_wall, NULL);
     taudb_save_threads(connection, trial, update);
+    end = clock();
+    gettimeofday(&end_wall, NULL);
+    time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+	time_spent_wall = (double) (end_wall.tv_usec - begin_wall.tv_usec)/1000000 +
+	                  (double) (end_wall.tv_sec - begin_wall.tv_sec);
+	printf("Saved threads in:            %.2f seconds (%.2fs CPU, %.2fs database latency)...\n", time_spent_wall, time_spent, time_spent_wall - time_spent);
+    begin = clock();
+    gettimeofday(&begin_wall, NULL);
     taudb_save_timers(connection, trial, update);
+    end = clock();
+    gettimeofday(&end_wall, NULL);
+    time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+	time_spent_wall = (double) (end_wall.tv_usec - begin_wall.tv_usec)/1000000 +
+	                  (double) (end_wall.tv_sec - begin_wall.tv_sec);
+	printf("Saved timers in:             %.2f seconds (%.2fs CPU, %.2fs database latency)...\n", time_spent_wall, time_spent, time_spent_wall - time_spent);
+    begin = clock();
+    gettimeofday(&begin_wall, NULL);
     taudb_save_time_ranges(connection, trial, update);
+    end = clock();
+    gettimeofday(&end_wall, NULL);
+    time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+	time_spent_wall = (double) (end_wall.tv_usec - begin_wall.tv_usec)/1000000 +
+	                  (double) (end_wall.tv_sec - begin_wall.tv_sec);
+	printf("Saved time_ranges in:        %.2f seconds (%.2fs CPU, %.2fs database latency)...\n", time_spent_wall, time_spent, time_spent_wall - time_spent);
+    begin = clock();
+    gettimeofday(&begin_wall, NULL);
     taudb_save_timer_groups(connection, trial, update);
+    end = clock();
+    gettimeofday(&end_wall, NULL);
+    time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+	time_spent_wall = (double) (end_wall.tv_usec - begin_wall.tv_usec)/1000000 +
+	                  (double) (end_wall.tv_sec - begin_wall.tv_sec);
+	printf("Saved timer_groups in:       %.2f seconds (%.2fs CPU, %.2fs database latency)...\n", time_spent_wall, time_spent, time_spent_wall - time_spent);
+    begin = clock();
+    gettimeofday(&begin_wall, NULL);
     taudb_save_timer_parameters(connection, trial, update);
+    end = clock();
+    gettimeofday(&end_wall, NULL);
+    time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+	time_spent_wall = (double) (end_wall.tv_usec - begin_wall.tv_usec)/1000000 +
+	                  (double) (end_wall.tv_sec - begin_wall.tv_sec);
+	printf("Saved timer_parameters in:   %.2f seconds (%.2fs CPU, %.2fs database latency)...\n", time_spent_wall, time_spent, time_spent_wall - time_spent);
+    begin = clock();
+    gettimeofday(&begin_wall, NULL);
     taudb_save_timer_callpaths(connection, trial, update);
+    end = clock();
+    gettimeofday(&end_wall, NULL);
+    time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+	time_spent_wall = (double) (end_wall.tv_usec - begin_wall.tv_usec)/1000000 +
+	                  (double) (end_wall.tv_sec - begin_wall.tv_sec);
+	printf("Saved timer_callpaths in:    %.2f seconds (%.2fs CPU, %.2fs database latency)...\n", time_spent_wall, time_spent, time_spent_wall - time_spent);
+    begin = clock();
+    gettimeofday(&begin_wall, NULL);
     taudb_save_timer_call_data(connection, trial, update);
+    end = clock();
+    gettimeofday(&end_wall, NULL);
+    time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+	time_spent_wall = (double) (end_wall.tv_usec - begin_wall.tv_usec)/1000000 +
+	                  (double) (end_wall.tv_sec - begin_wall.tv_sec);
+	printf("Saved timer_call_data in:    %.2f seconds (%.2fs CPU, %.2fs database latency)...\n", time_spent_wall, time_spent, time_spent_wall - time_spent);
+    begin = clock();
+    gettimeofday(&begin_wall, NULL);
     taudb_save_timer_values(connection, trial, update);
+    end = clock();
+    gettimeofday(&end_wall, NULL);
+    time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+	time_spent_wall = (double) (end_wall.tv_usec - begin_wall.tv_usec)/1000000 +
+	                  (double) (end_wall.tv_sec - begin_wall.tv_sec);
+	printf("Saved timer_values in:       %.2f seconds (%.2fs CPU, %.2fs database latency)...\n", time_spent_wall, time_spent, time_spent_wall - time_spent);
+    begin = clock();
+    gettimeofday(&begin_wall, NULL);
     taudb_save_counters(connection, trial, update);
+    end = clock();
+    gettimeofday(&end_wall, NULL);
+    time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+	time_spent_wall = (double) (end_wall.tv_usec - begin_wall.tv_usec)/1000000 +
+	                  (double) (end_wall.tv_sec - begin_wall.tv_sec);
+	printf("Saved counters in:           %.2f seconds (%.2fs CPU, %.2fs database latency)...\n", time_spent_wall, time_spent, time_spent_wall - time_spent);
+    begin = clock();
+    gettimeofday(&begin_wall, NULL);
     taudb_save_counter_values(connection, trial, update);
+    end = clock();
+    gettimeofday(&end_wall, NULL);
+    time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+	time_spent_wall = (double) (end_wall.tv_usec - begin_wall.tv_usec)/1000000 +
+	                  (double) (end_wall.tv_sec - begin_wall.tv_sec);
+	printf("Saved counter_values in:     %.2f seconds (%.2fs CPU, %.2fs database latency)...\n", time_spent_wall, time_spent, time_spent_wall - time_spent);
+    begin = clock();
+    gettimeofday(&begin_wall, NULL);
     taudb_save_primary_metadata(connection, trial, update);
+    end = clock();
+    gettimeofday(&end_wall, NULL);
+    time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+	time_spent_wall = (double) (end_wall.tv_usec - begin_wall.tv_usec)/1000000 +
+	                  (double) (end_wall.tv_sec - begin_wall.tv_sec);
+	printf("Saved primary_metadata in:   %.2f seconds (%.2fs CPU, %.2fs database latency)...\n", time_spent_wall, time_spent, time_spent_wall - time_spent);
+    begin = clock();
+    gettimeofday(&begin_wall, NULL);
     taudb_save_secondary_metadata(connection, trial, update);
+    end = clock();
+    gettimeofday(&end_wall, NULL);
+    time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+	time_spent_wall = (double) (end_wall.tv_usec - begin_wall.tv_usec)/1000000 +
+	                  (double) (end_wall.tv_sec - begin_wall.tv_sec);
+	printf("Saved secondary_metadata in: %.2f seconds (%.2fs CPU, %.2fs database latency)...\n", time_spent_wall, time_spent, time_spent_wall - time_spent);
   }
+  end = clock();
+  gettimeofday(&end_wall, NULL);
+  time_spent = (double)(end - full) / CLOCKS_PER_SEC;
+  time_spent_wall = (double) (end_wall.tv_usec - full_wall.tv_usec)/1000000 +
+                    (double) (end_wall.tv_sec - full_wall.tv_sec);
+  printf("\nDone saving trial in: %.2f seconds (%.2fs CPU, %.2fs database latency).\n", time_spent_wall, time_spent, time_spent_wall - time_spent);
   taudb_close_transaction(connection);
   taudb_clear_result(connection);
 }
