@@ -113,6 +113,11 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
         	}
         }
         if(readInt ==-1) return;
+        if(readInt>=mapData.getSize())
+        {
+        	System.err.printf("Warning: %s but there is no node %d.\n",event,readInt);
+        	return;
+        }
         if(first.contains("sent")){
         	receiver = readInt;
         	sender = thread; 
