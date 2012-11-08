@@ -25,6 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.DBDataSource;
@@ -1110,9 +1111,11 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 */
 	public List<String> getPotentialCallPathEvents(RMIPerfExplorerModel modelData) {
 		//PerfExplorerOutput.println("getPotentialEvents()...");
+		
 		List<String> events = new ArrayList<String>();
 		try {
 			DB db = this.getDB();
+			if(db.getSchemaVersion()>0) return getPotentialCallPathEventsTAUdb(modelData);
 			StringBuilder buf = new StringBuilder();
 			if (db.getDBType().compareTo("db2") == 0) {
 				buf.append("select distinct cast (m.name as VARCHAR(256))");
@@ -1129,6 +1132,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			if (object instanceof View) {
 				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
 			} else {
+				if(db.getSchemaVersion()==0)
 				buf.append(" inner join experiment e on t.experiment = e.id ");
 				List<Object> selections = modelData.getMultiSelection();
 				if (selections == null) {
@@ -1191,6 +1195,69 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			System.err.println(error);
 			e.printStackTrace();
 		}
+		return events;
+	}
+	/**
+	 * Get the events defined in these profiles.  The client passes in a model
+	 * with one or more experiments selected, and the code will get all the
+	 * events which are common among all trials for those experiemnts.
+	 * 
+	 * @param modelData
+	 * @return List
+	 */
+	public List<String> getPotentialCallPathEventsTAUdb(RMIPerfExplorerModel modelData) {
+		//PerfExplorerOutput.println("getPotentialEvents()...");
+		List<String> events = new ArrayList<String>();
+		try {
+			DB db = this.getDB();
+//			StringBuilder buf = new StringBuilder();
+//			if (db.getDBType().compareTo("db2") == 0) {
+//				buf.append("select distinct cast (m.name as VARCHAR(256))");
+//			} else {
+//				buf.append("select distinct ie.name ");
+//			}
+//			if (db.getSchemaVersion() == 0) {
+//				buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
+//			} else {
+//				buf.append(" from timer ie inner join trial t on ie.trial = t.id ");
+//				buf.append("inner join timer_callpath tcp on tcp.timer = ie.id and tcp.parent is not null ");
+//			}
+//			Object object = modelData.getCurrentSelection();
+//			if (object instanceof View) {
+//				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
+//			} else {
+
+			Set<String> keyset = null;
+				List<Object> selections = modelData.getMultiSelection();
+				if (selections == null) {
+					// just one selection
+					Object selection = modelData.getCurrentSelection();
+					if (selection instanceof Trial) {
+						keyset = TAUdbDatabaseAPI.getCallDataMap(modelData.getTrial().getID(), db).keySet();
+					}
+				} else {
+					Object selection = modelData.getCurrentSelection();
+					if (selection instanceof Trial) {
+						ArrayList<Integer> trials = new ArrayList<Integer>();
+						for (int i = 0 ; i < selections.size() ; i++) {
+							trials.add( ((Trial)selections.get(i)).getID());
+						}
+						keyset = TAUdbDatabaseAPI.getCallDataMap(trials, db).keySet();
+
+					}
+				}
+//			}
+//
+
+			for(String s: keyset){
+				events.add(s);
+			}
+		} catch (Exception e) {
+			String error = "ERROR: Couldn't select the events from the database!";
+			System.err.println(error);
+			e.printStackTrace();
+		}
+
 		return events;
 	}
 	/**

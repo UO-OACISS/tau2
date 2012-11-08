@@ -12,17 +12,16 @@
 
 include Makefile.inc
 
-TARGET=lib/libtaudb.a
+ROOTDIR=$(shell pwd)
 
-# rebuild everything if the headers or the makefile changes
 all: Makefile Makefile.inc
-	mkdir -p lib
-	@for i in src tests ; do (cd $$i; $(MAKE) "MAKE=$(MAKE)" || exit 0); done
+	mkdir -p $(ROOTDIR)/lib
+	@for i in src tests ; do (cd $$i; $(MAKE) "MAKE=$(MAKE)" "ROOTDIR=$(ROOTDIR)" || exit 0); done
 
 test: all $(TARGET)
-	@for i in tests ; do (cd $$i; $(MAKE) "MAKE=$(MAKE)" test || exit 0); done
+	@for i in tests ; do (cd $$i; $(MAKE) "MAKE=$(MAKE)" "ROOTDIR=$(ROOTDIR)" test || exit 0); done
 
 clean:
-	@for i in src tests ; do (cd $$i; $(MAKE) "MAKE=$(MAKE)" clean || exit 0); done
+	@for i in src tests ; do (cd $$i; $(MAKE) "MAKE=$(MAKE)" "ROOTDIR=$(ROOTDIR)" clean || exit 0); done
 
 remake: clean all

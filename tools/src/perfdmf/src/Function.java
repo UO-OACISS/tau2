@@ -35,6 +35,7 @@ public class Function implements Serializable, Comparable<Function> {
     private Function actualPhase;
     private Function parentPhase;
     //private boolean phaseSet = false;
+    private int databaseID = 0;
 
     boolean callpathFunction = false;
     boolean callpathFunctionSet = false;
@@ -65,6 +66,10 @@ public class Function implements Serializable, Comparable<Function> {
 
     public int getID() {
         return id;
+    }
+
+    public int getDatabaseID() {
+        return databaseID;
     }
 
     public String getName() {
@@ -585,6 +590,10 @@ public class Function implements Serializable, Comparable<Function> {
 
 	public void setShortName(String short_name) {
 		this.short_name = short_name;
+	}
+
+	public void setDatabaseID(int id) {
+		this.databaseID = id;
 	}
 
 	public void setID(int id) {
