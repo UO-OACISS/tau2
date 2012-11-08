@@ -249,7 +249,7 @@ extern void taudb_save_timer_call_data(TAUDB_CONNECTION* connection, TAUDB_TRIAL
       int nRows = taudb_get_num_rows(connection);
       if (nRows == 1) {
         timer_call_data->id = atoi(taudb_get_value(connection, 0, 0));
-        printf("New Timer Call Data: %d\n", timer_call_data->id);
+        //printf("New Timer Call Data: %d\n", timer_call_data->id);
       } else {
         printf("Failed.\n");
       }
