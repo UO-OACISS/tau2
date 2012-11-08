@@ -212,7 +212,6 @@ typedef struct taudb_timer_group {
 */
 
 typedef struct taudb_timer_parameter {
- int id; /* database reference, and hash key */
  char* name;
  char* value;
  UT_hash_handle hh;

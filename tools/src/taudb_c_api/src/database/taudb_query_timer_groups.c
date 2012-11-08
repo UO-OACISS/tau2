@@ -118,6 +118,22 @@ TAUDB_TIMER_GROUP* taudb_get_timer_group_by_name(TAUDB_TIMER_GROUP* timer_groups
   return timer_group;
 }
 
-extern void taudb_save_timer_groups(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
-  printf("Timer groups not supported yet.\n");
+void taudb_save_timer_groups(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
+  const char* my_query = "insert into timer_group (timer, group_name) values ($1, $2);";
+  const char* statement_name = "TAUDB_INSERT_TIMER_GROUP";
+  taudb_prepare_statement(connection, statement_name, my_query, 2);
+  TAUDB_TIMER_GROUP *group, *tmp;
+  int i = 0;
+  HASH_ITER(hh, trial->timer_groups, group, tmp) {
+    for (i = 0 ; i < group->timer_count ; i++) {
+      // make array of 6 character pointers
+      const char* paramValues[2] = {0};
+      char timerid[32] = {0};
+      sprintf(timerid, "%d", group->timers[i]->id);
+      paramValues[0] = timerid;
+      paramValues[1] = group->name;
+      taudb_execute_statement(connection, statement_name, 2, paramValues);
+    }
+  }
+  taudb_clear_result(connection);
 }
