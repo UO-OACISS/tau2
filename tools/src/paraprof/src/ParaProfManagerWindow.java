@@ -2209,12 +2209,11 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 						getTreeModel().insertNodeInto(viewNode,
 								selectedNode, selectedNode.getChildCount());
 					}
-					ListIterator<Trial> l2 = databaseAPI.getTrialList(
-							true).listIterator();// TODO: Is xml
+					List<Trial> l2 = databaseAPI.getTrialList(
+							true);// TODO: Is xml
 					          // metadata required here?
-					while (l2.hasNext()) {
-						ParaProfTrial ppTrial = new ParaProfTrial(
-								(Trial) l2.next());
+					for(Trial trial:l2){
+						ParaProfTrial ppTrial = new ParaProfTrial( trial);
 						ppTrial.setDBTrial(true);
 						ppTrial.setView(parentView);
 						DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(
