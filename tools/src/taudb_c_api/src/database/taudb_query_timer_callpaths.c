@@ -365,7 +365,7 @@ extern void taudb_save_timer_callpaths(TAUDB_CONNECTION* connection, TAUDB_TRIAL
       int nRows = taudb_get_num_rows(connection);
       if (nRows == 1) {
         timer_callpath->id = atoi(taudb_get_value(connection, 0, 0));
-        printf("New Timer Callpath: %d\n", timer_callpath->id);
+        //printf("New Timer Callpath: %d\n", timer_callpath->id);
       } else {
         printf("Failed.\n");
       }

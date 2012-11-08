@@ -117,7 +117,7 @@ void taudb_save_time_ranges(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, bo
     int nRows = taudb_get_num_rows(connection);
     if (nRows == 1) {
       time_range->id = atoi(taudb_get_value(connection, 0, 0));
-      printf("New Time_Range: %d\n", time_range->id);
+      //printf("New Time_Range: %d\n", time_range->id);
     } else {
       printf("Failed.\n");
     }
