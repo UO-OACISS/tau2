@@ -256,7 +256,7 @@ void taudb_save_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean
     int nRows = taudb_get_num_rows(connection);
     if (nRows == 1) {
       timer->id = atoi(taudb_get_value(connection, 0, 0));
-      printf("New Timer: %d\n", timer->id);
+      //printf("New Timer: %d\n", timer->id);
     } else {
       printf("Failed.\n");
     }

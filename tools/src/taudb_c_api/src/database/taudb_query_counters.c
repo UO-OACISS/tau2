@@ -146,7 +146,31 @@ TAUDB_COUNTER* taudb_get_counter_by_name(TAUDB_COUNTER* counters, const char* na
   return counter;
 }
 
+void taudb_save_counters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
+  const char* my_query = "insert into counter (trial, name) values ($1, $2);";
+  const char* statement_name = "TAUDB_INSERT_COUNTER";
+  taudb_prepare_statement(connection, statement_name, my_query, 2);
+  TAUDB_COUNTER *counter, *tmp;
+  HASH_ITER(hh2, trial->counters_by_name, counter, tmp) {
+    // make array of 6 character pointers
+    const char* paramValues[2] = {0};
+    char trialid[32] = {0};
+    sprintf(trialid, "%d", trial->id);
+    paramValues[0] = trialid;
+    paramValues[1] = counter->name;
 
-extern void taudb_save_counters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
-  printf("Counters not supported yet.\n");
+    taudb_execute_statement(connection, statement_name, 2, paramValues);
+    taudb_execute_query(connection, "select currval('counter_id_seq');");
+
+    int nRows = taudb_get_num_rows(connection);
+    if (nRows == 1) {
+      counter->id = atoi(taudb_get_value(connection, 0, 0));
+      //printf("New Counter: %d\n", counter->id);
+    } else {
+      printf("Failed.\n");
+    }
+	taudb_close_query(connection);
+  }
+  taudb_clear_result(connection);
 }
+
