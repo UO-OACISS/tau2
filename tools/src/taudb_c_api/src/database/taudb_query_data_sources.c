@@ -3,6 +3,13 @@
 #include <stdio.h>
 #include <string.h>
 
+void taudb_add_data_source_to_connection(TAUDB_CONNECTION* connection, TAUDB_DATA_SOURCE* data_source) {
+  if (data_source->id > 0) {
+    HASH_ADD(hh1, connection->data_sources_by_id, id, sizeof(int), data_source);
+  }
+  HASH_ADD_KEYPTR(hh2, connection->data_sources_by_name, data_source->name, strlen(data_source->name), data_source);
+}
+
 TAUDB_DATA_SOURCE* taudb_query_data_sources(TAUDB_CONNECTION* connection) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_data_sources()\n");
@@ -46,8 +53,7 @@ TAUDB_DATA_SOURCE* taudb_query_data_sources(TAUDB_CONNECTION* connection) {
         taudb_exit_nicely(connection);
       }
     } 
-    HASH_ADD(hh1, connection->data_sources_by_id, id, sizeof(int), data_source);
-    HASH_ADD_KEYPTR(hh2, connection->data_sources_by_name, data_source->name, strlen(data_source->name), data_source);
+    taudb_add_data_source_to_connection(connection, data_source);
   }
 
   taudb_clear_result(connection);

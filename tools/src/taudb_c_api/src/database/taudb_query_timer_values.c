@@ -189,7 +189,7 @@ TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection
 	if (timer_call_data == NULL) {
 	  printf("Failed to find timer_call_data %d\n", timer_call_data_id);
 	} else {
-      HASH_ADD(hh, timer_call_data->timer_values, metric->name, strlen(timer_value->metric->name), timer_value);
+      taudb_add_timer_value_to_timer_call_data(timer_call_data, timer_value);
 	}
   }
 
@@ -197,6 +197,10 @@ TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection
   taudb_close_transaction(connection);
 
   return (timer_values);
+}
+
+void taudb_add_timer_value_to_timer_call_data(TAUDB_TIMER_CALL_DATA* timer_call_data, TAUDB_TIMER_VALUE* timer_value) {
+      HASH_ADD(hh, timer_call_data->timer_values, metric->name, strlen(timer_value->metric->name), timer_value);
 }
 
 TAUDB_TIMER_VALUE* taudb_query_all_timer_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial) {

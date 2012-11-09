@@ -52,7 +52,7 @@ TAUDB_PRIMARY_METADATA* taudb_query_primary_metadata(TAUDB_CONNECTION* connectio
 	    fprintf(stderr,"Unknown primary_metadata column: %s\n", taudb_get_column_name(connection, j));
       }
     } 
-    HASH_ADD_KEYPTR(hh, trial->primary_metadata, pm->name, strlen(pm->name), pm);
+    taudb_add_primary_metadata_to_trial(trial, pm);
   }
 
   taudb_clear_result(connection);
@@ -61,6 +61,10 @@ TAUDB_PRIMARY_METADATA* taudb_query_primary_metadata(TAUDB_CONNECTION* connectio
   taudb_numItems = nRows;
 
   return trial->primary_metadata;
+}
+
+void taudb_add_primary_metadata_to_trial(TAUDB_TRIAL* trial, TAUDB_PRIMARY_METADATA* primary_metadata) {
+  HASH_ADD_KEYPTR(hh, trial->primary_metadata, primary_metadata->name, strlen(primary_metadata->name), primary_metadata);
 }
 
 TAUDB_PRIMARY_METADATA* taudb_get_primary_metadata_by_name(TAUDB_PRIMARY_METADATA* primary_metadatas, const char* name) {

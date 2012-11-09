@@ -361,7 +361,7 @@ void taudb_parse_tau_profile_function(char* line, TAUDB_TRIAL* trial, TAUDB_METR
 #ifdef TAUDB_DEBUG_DEBUG
 	  printf("group: %s\n", groups);
 #endif
-      //taudb_parse_timer_group_names(trial, timer, groups);
+      taudb_parse_timer_group_names(trial, timer, groups);
     }
     // get/create timer_callpath
     timer_callpath = taudb_create_timer_callpath(trial, timer, NULL);

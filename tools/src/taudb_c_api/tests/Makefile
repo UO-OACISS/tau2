@@ -12,7 +12,8 @@
 
 include ../Makefile.inc
 
-BUILD_TARGETS=save_trial \
+BUILD_TARGETS=activeharmony \
+save_trial \
 parse_tau_profile_test \
 dump_functions \
 parse_config_test \
@@ -34,8 +35,9 @@ taudb_query_timer_call_data_test \
 perfdmf_test \
 query_all
 
-TEST_TARGETS=save_trial \
-#parse_tau_profile_test \
+TEST_TARGETS=activeharmony \
+#save_trial \
+parse_tau_profile_test \
 taudb_main\
 parse_config_test \
 taudb_query_trial_test \

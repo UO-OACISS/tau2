@@ -96,7 +96,6 @@ TAUDB_TIMER_CALL_DATA* taudb_private_query_timer_call_data(TAUDB_CONNECTION* con
         taudb_exit_nicely(connection);
       }
     } 
-    HASH_ADD(hh1, trial->timer_call_data_by_id, id, sizeof(int), timer_call_datum);
     if (timer_call_datum->key.thread == NULL) {
       int thread_index = node * trial->contexts_per_node * trial->threads_per_context;
       thread_index += context * trial->threads_per_context;
@@ -104,13 +103,20 @@ TAUDB_TIMER_CALL_DATA* taudb_private_query_timer_call_data(TAUDB_CONNECTION* con
       timer_call_datum->key.thread = taudb_get_thread(trial->threads, thread_index);
     }
     timer_call_datum->key.timestamp = NULL; // for now
-    HASH_ADD(hh2, trial->timer_call_data_by_key, key, sizeof(TAUDB_TIMER_CALL_DATA_KEY), timer_call_datum);
+    taudb_add_timer_call_data_to_trial(trial, timer_call_datum);
   }
 
   taudb_clear_result(connection);
   taudb_close_transaction(connection);
   
   return (trial->timer_call_data_by_id);
+}
+
+void taudb_add_timer_call_data_to_trial(TAUDB_TRIAL* trial, TAUDB_TIMER_CALL_DATA* timer_call_data) {
+  if (timer_call_data->id > 0) {
+    HASH_ADD(hh1, trial->timer_call_data_by_id, id, sizeof(int), timer_call_data);
+  }
+  HASH_ADD(hh2, trial->timer_call_data_by_key, key, sizeof(TAUDB_TIMER_CALL_DATA_KEY), timer_call_data);
 }
 
 // convenience method

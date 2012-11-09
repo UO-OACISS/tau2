@@ -69,7 +69,7 @@ boolean taudb_private_primary_metadata_from_xml(TAUDB_TRIAL * trial, char * xml)
                 TAUDB_PRIMARY_METADATA * primary_metadata = taudb_create_primary_metadata(1);
 				primary_metadata->name  = taudb_strdup((char *)name_str);
 				primary_metadata->value = taudb_strdup((char *)value_str);
-                HASH_ADD_KEYPTR(hh, trial->primary_metadata, primary_metadata->name, strlen((char *)name_str), primary_metadata);
+				taudb_add_primary_metadata_to_trial(trial, primary_metadata);
                 xmlFree(name_str);
                 xmlFree(value_str);
                 i++;

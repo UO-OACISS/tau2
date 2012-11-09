@@ -17,7 +17,7 @@ TAUDB_TIMER_GROUP* taudb_query_timer_groups(TAUDB_CONNECTION* connection, TAUDB_
 
   //if the Trial already has the data, return it.
   if (trial->timer_groups != NULL) {
-    taudb_numItems = HASH_CNT(hh,trial->timer_groups);
+    taudb_numItems = HASH_CNT(hh1,trial->timer_groups);
     return trial->timer_groups;
   }
 
@@ -56,48 +56,23 @@ TAUDB_TIMER_GROUP* taudb_query_timer_groups(TAUDB_CONNECTION* connection, TAUDB_
         printf("Got group '%s'\n", timer_group->name);
 #endif
       } else if (strcmp(taudb_get_column_name(connection, j), "group_name") == 0) {
-	  /*
-        // tokenize the string, something like 'TAU_USER|MPI|...'
-        char* group_names = taudb_get_value(connection, i, j);
-        char* group = strtok(group_names, "|");
-        if (group != NULL && (strlen(group_names) > 0)) {
-#ifdef TAUDB_DEBUG
-          //printf("Got group groups '%s'\n", group_names);
-#endif
-          groups[i].group_count = 1;
-          TAUDB_TIMER_GROUP_TIMER_GROUP* groups = taudb_create_group_groups(1);
-          groups[0].id = 0;
-          groups[0].group = 0;
-          groups[0].name = taudb_strdup(group);
-          group = strtok(NULL, "|");
-          while (group != NULL) {
-            TAUDB_TIMER_GROUP_TIMER_GROUP* groups = taudb_resize_group_groups(groups[i].group_count+1, groups);
-            groups[groups[i].group_count].id = 0;
-            groups[groups[i].group_count].group = 0;
-            groups[groups[i].group_count].name = taudb_strdup(group);
-            groups[i].group_count++;
-            group = strtok(NULL, "|");
-          }
-        } else {
-          groups[i].group_count = 0;
-          groups[i].groups = NULL;
-        }
-		  */
+	    // do nothing - this is handled elsewhere.
       } else {
         printf("Error: unknown column '%s'\n", taudb_get_column_name(connection, j));
         taudb_exit_nicely(connection);
       }
-      // TODO - Populate the rest properly?
-      timer_group->timer_count = 0;
-      timer_group->timers = NULL;
     } 
-    HASH_ADD_KEYPTR(hh, timer_groups, timer_group->name, strlen(timer_group->name), timer_group);
+    HASH_ADD_KEYPTR(hh1, timer_groups, timer_group->name, strlen(timer_group->name), timer_group);
   }
 
   taudb_clear_result(connection);
   taudb_close_transaction(connection);
  
   return (timer_groups);
+}
+
+void taudb_add_timer_group_to_trial(TAUDB_TRIAL* trial, TAUDB_TIMER_GROUP* timer_group) {
+    HASH_ADD_KEYPTR(hh1, trial->timer_groups, timer_group->name, strlen(timer_group->name), timer_group);
 }
 
 TAUDB_TIMER_GROUP* taudb_get_timer_group_by_name(TAUDB_TIMER_GROUP* timer_groups, const char* name) {
@@ -114,7 +89,7 @@ TAUDB_TIMER_GROUP* taudb_get_timer_group_by_name(TAUDB_TIMER_GROUP* timer_groups
   }
 
   TAUDB_TIMER_GROUP* timer_group = NULL;
-  HASH_FIND_STR(timer_groups, name, timer_group);
+  HASH_FIND(hh1, timer_groups, name, strlen(name), timer_group);
   return timer_group;
 }
 
@@ -123,13 +98,13 @@ void taudb_save_timer_groups(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, b
   const char* statement_name = "TAUDB_INSERT_TIMER_GROUP";
   taudb_prepare_statement(connection, statement_name, my_query, 2);
   TAUDB_TIMER_GROUP *group, *tmp;
-  int i = 0;
-  HASH_ITER(hh, trial->timer_groups, group, tmp) {
-    for (i = 0 ; i < group->timer_count ; i++) {
+  TAUDB_TIMER *timer, *tmp2;
+  HASH_ITER(hh1, trial->timer_groups, group, tmp) {
+    HASH_ITER(hh3, group->timers, timer, tmp2) {
       // make array of 6 character pointers
       const char* paramValues[2] = {0};
       char timerid[32] = {0};
-      sprintf(timerid, "%d", group->timers[i]->id);
+      sprintf(timerid, "%d", timer->id);
       paramValues[0] = timerid;
       paramValues[1] = group->name;
       taudb_execute_statement(connection, statement_name, 2, paramValues);

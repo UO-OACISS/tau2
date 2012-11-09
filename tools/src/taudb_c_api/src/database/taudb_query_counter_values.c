@@ -88,12 +88,16 @@ TAUDB_COUNTER_VALUE* taudb_query_counter_values(TAUDB_CONNECTION* connection, TA
 // make the key!
     counter_value->key.timestamp = NULL; // for now
     counter_value->key.thread = taudb_get_thread(trial->threads, thread_index);
-    HASH_ADD(hh1, trial->counter_values, key, sizeof(TAUDB_COUNTER_VALUE_KEY), counter_value);
+    taudb_add_counter_value_to_trial(trial, counter_value);
   }
   taudb_clear_result(connection);
   taudb_close_transaction(connection);
 
   return (trial->counter_values);
+}
+
+void taudb_add_counter_value_to_trial(TAUDB_TRIAL* trial, TAUDB_COUNTER_VALUE* counter_value) {
+  HASH_ADD(hh1, trial->counter_values, key, sizeof(TAUDB_COUNTER_VALUE_KEY), counter_value);
 }
 
 TAUDB_COUNTER_VALUE* taudb_get_counter_value(TAUDB_COUNTER_VALUE* counter_values, TAUDB_COUNTER* counter, TAUDB_THREAD* thread, TAUDB_TIMER_CALLPATH* context, char* timestamp) {
