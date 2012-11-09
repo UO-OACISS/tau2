@@ -110,13 +110,20 @@ int OpenMPLayer::GetTauThreadId(void)
 	{
 		// ONLY INITIALIZE THE LOCK ONCE!
         static int registerInitFlag = InitializeRegisterMutexData();
+		//fprintf(stderr, "Thread %d locking register\n", omp_thread_id);
         omp_set_lock(&OpenMPLayer::tauRegistermutex);
 
 		map<int, int>::iterator it = TheOMPMap().find(omp_thread_id);
 		if (it == TheOMPMap().end())
 		{
-			TheOMPMap()[omp_thread_id] = OpenMPLayer::RegisterThread();
-			tau_thread_id = TheOMPMap()[omp_thread_id];
+			//TheOMPMap()[omp_thread_id] = OpenMPLayer::RegisterThread();
+
+		    // unlock register
+            omp_unset_lock(&OpenMPLayer::tauRegistermutex);
+		    tau_thread_id = OpenMPLayer::RegisterThread();
+			// relock register
+            omp_set_lock(&OpenMPLayer::tauRegistermutex);
+			TheOMPMap()[omp_thread_id] = tau_thread_id;
 		}	
 		else
 		{
@@ -124,6 +131,7 @@ int OpenMPLayer::GetTauThreadId(void)
 		}
 		
         omp_unset_lock(&OpenMPLayer::tauRegistermutex);
+		//fprintf(stderr, "Thread %d unlocking register\n", omp_thread_id);
 	}
 #endif /* TAU_OPENMP_NESTED */
 	return omp_thread_id;
@@ -201,6 +209,7 @@ int OpenMPLayer::LockDB(void)
 {
   static int initflag=InitializeDBMutexData();
   // Lock the functionDB mutex
+  //fprintf(stderr, "Thread %d locking DB\n", omp_get_thread_num());
   omp_set_lock(&OpenMPLayer::tauDBmutex);
   return 1;
 }
@@ -211,6 +220,7 @@ int OpenMPLayer::LockDB(void)
 int OpenMPLayer::UnLockDB(void)
 {
   // Unlock the functionDB mutex
+  //fprintf(stderr, "Thread %d unlocking DB\n", omp_get_thread_num());
   omp_unset_lock(&OpenMPLayer::tauDBmutex);
   return 1;
 }  
@@ -236,6 +246,7 @@ int OpenMPLayer::LockEnv(void)
 {
   static int initflag=InitializeEnvMutexData();
   // Lock the functionEnv mutex
+  //fprintf(stderr, "Thread %d locking Env\n", omp_get_thread_num());
   omp_set_lock(&OpenMPLayer::tauEnvmutex);
   return 1;
 }
@@ -246,6 +257,7 @@ int OpenMPLayer::LockEnv(void)
 int OpenMPLayer::UnLockEnv(void)
 {
   // Unlock the functionEnv mutex
+  //fprintf(stderr, "Thread %d unlocking Env\n", omp_get_thread_num());
   omp_unset_lock(&OpenMPLayer::tauEnvmutex);
   return 1;
 }  
