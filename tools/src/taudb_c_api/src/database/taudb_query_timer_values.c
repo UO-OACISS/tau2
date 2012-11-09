@@ -305,7 +305,7 @@ extern void taudb_save_timer_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* t
 		  paramValues[6] = sum_exclusive_squared;
 
 	      taudb_execute_statement(connection, statement_name, 7, paramValues);
-		  printf("New Timer Value: (%d, %d)\n", timer_call_data->id, timer_value->metric->id);
+		  //printf("New Timer Value: (%d, %d)\n", timer_call_data->id, timer_value->metric->id);
 
 		  /* timer_values don't have ids, so there's nothing to update */
 	    }

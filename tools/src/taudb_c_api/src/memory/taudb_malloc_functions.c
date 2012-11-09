@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <uuid/uuid.h>
 
 PERFDMF_APPLICATION* perfdmf_create_applications(int count){ 
  PERFDMF_APPLICATION* applications = (PERFDMF_APPLICATION*) (calloc (count, sizeof (PERFDMF_APPLICATION)));
@@ -52,6 +53,11 @@ TAUDB_SECONDARY_METADATA* taudb_create_secondary_metadata(int count){
  TAUDB_SECONDARY_METADATA* metadata = (TAUDB_SECONDARY_METADATA*) (calloc (count, sizeof (TAUDB_SECONDARY_METADATA)));
  metadata->child_count = 0;
  metadata->num_values = 0;
+ uuid_t uuid;
+ uuid_generate(uuid);
+ uuid_string_t out;
+ uuid_unparse_upper(uuid, out);
+ metadata->id = taudb_strdup((char*)out);
  return metadata;
 }
 

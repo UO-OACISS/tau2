@@ -103,13 +103,13 @@ void taudb_save_time_ranges(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, bo
     paramValues[0] = istart;
     char iend[32] = {0};
     sprintf(iend, "%d", time_range->iteration_end);
-    paramValues[0] = iend;
+    paramValues[1] = iend;
     char tstart[32] = {0};
     sprintf(tstart, "%lld", time_range->time_start);
-    paramValues[0] = tstart;
+    paramValues[2] = tstart;
     char tend[32] = {0};
     sprintf(tend, "%lld", time_range->time_end);
-    paramValues[0] = tend;
+    paramValues[3] = tend;
 
     taudb_execute_statement(connection, statement_name, 4, paramValues);
     taudb_execute_query(connection, "select currval('time_range_id_seq');");
@@ -117,7 +117,7 @@ void taudb_save_time_ranges(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, bo
     int nRows = taudb_get_num_rows(connection);
     if (nRows == 1) {
       time_range->id = atoi(taudb_get_value(connection, 0, 0));
-      printf("New Time_Range: %d\n", time_range->id);
+      //printf("New Time_Range: %d\n", time_range->id);
     } else {
       printf("Failed.\n");
     }

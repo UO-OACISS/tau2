@@ -146,7 +146,11 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Observer, Prin
         	}
         }
         if(readInt ==-1) return;
-
+if(readInt>=size)
+{
+	System.err.printf("Warning: %s but there is no node %d.\n",event,readInt);
+	return;
+}
         if(first.contains("sent")){
         	receiver = readInt;
         	sender = thread; 
