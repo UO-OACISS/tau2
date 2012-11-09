@@ -117,7 +117,43 @@ extern void taudb_save_secondary_metadata(TAUDB_CONNECTION* connection, TAUDB_TR
 
 extern char* taudb_strdup(const char* in_string);
 extern TAUDB_TRIAL* taudb_create_trials(int count);
+extern TAUDB_METRIC*             taudb_create_metrics(int count);
+extern TAUDB_TIME_RANGE*         taudb_create_time_ranges(int count);
+extern TAUDB_THREAD*             taudb_create_threads(int count);
+extern TAUDB_SECONDARY_METADATA* taudb_create_secondary_metadata(int count);
+extern TAUDB_PRIMARY_METADATA*   taudb_create_primary_metadata(int count);
+extern TAUDB_PRIMARY_METADATA*   taudb_resize_primary_metadata(int count, TAUDB_PRIMARY_METADATA* old_primary_metadata);
+extern TAUDB_COUNTER*            taudb_create_counters(int count);
+extern TAUDB_COUNTER_VALUE*      taudb_create_counter_values(int count);
+extern TAUDB_TIMER*              taudb_create_timers(int count);
+extern TAUDB_TIMER_PARAMETER*    taudb_create_timer_parameters(int count);
+extern TAUDB_TIMER_GROUP*        taudb_create_timer_groups(int count);
+extern TAUDB_TIMER_GROUP*        taudb_resize_timer_groups(int count, TAUDB_TIMER_GROUP* old_groups);
+extern TAUDB_TIMER_CALLPATH*     taudb_create_timer_callpaths(int count);
+extern TAUDB_TIMER_CALL_DATA*    taudb_create_timer_call_data(int count);
+extern TAUDB_TIMER_VALUE*        taudb_create_timer_values(int count);
+
 extern void taudb_delete_trials(TAUDB_TRIAL* trials, int count);
+
+/************************************************/
+/* Adding objects to the hierarchy */
+/************************************************/
+
+extern void taudb_add_metric_to_trial(TAUDB_TRIAL* trial, TAUDB_METRIC* metric);
+extern void taudb_add_time_range_to_trial(TAUDB_TRIAL* trial, TAUDB_TIME_RANGE* time_range);
+extern void taudb_add_thread_to_trial(TAUDB_TRIAL* trial, TAUDB_THREAD* thread);
+extern void taudb_add_secondary_metadata_to_trial(TAUDB_TRIAL* trial, TAUDB_SECONDARY_METADATA* secondary_metadata);
+extern void taudb_add_secondary_metadata_to_secondary_metadata(TAUDB_SECONDARY_METADATA* parent, TAUDB_SECONDARY_METADATA* child);
+extern void taudb_add_primary_metadata_to_trial(TAUDB_TRIAL* trial, TAUDB_PRIMARY_METADATA* primary_metadata);
+extern void taudb_add_counter_to_trial(TAUDB_TRIAL* trial, TAUDB_COUNTER* counter);
+extern void taudb_add_counter_value_to_trial(TAUDB_TRIAL* trial, TAUDB_COUNTER_VALUE* counter_value);
+extern void taudb_add_timer_to_trial(TAUDB_TRIAL* trial, TAUDB_TIMER* timer);
+extern void taudb_add_timer_parameter_to_trial(TAUDB_TRIAL* trial, TAUDB_TIMER_PARAMETER* timer_parameter);
+extern void taudb_add_timer_group_to_trial(TAUDB_TRIAL* trial, TAUDB_TIMER_GROUP* timer_group);
+extern void taudb_add_timer_to_timer_group(TAUDB_TIMER_GROUP* timer_group, TAUDB_TIMER* timer);
+extern void taudb_add_timer_callpath_to_trial(TAUDB_TRIAL* trial, TAUDB_TIMER_CALLPATH* timer_callpath);
+extern void taudb_add_timer_call_data_to_trial(TAUDB_TRIAL* trial, TAUDB_TIMER_CALL_DATA* timer_call_data);
+extern void taudb_add_timer_value_to_timer_call_data(TAUDB_TIMER_CALL_DATA* timer_call_data, TAUDB_TIMER_VALUE* timer_value);
 
 /* Profile parsers */
 extern TAUDB_TRIAL* taudb_parse_tau_profiles(const char* directory_name);

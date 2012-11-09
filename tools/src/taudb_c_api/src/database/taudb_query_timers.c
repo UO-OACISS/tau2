@@ -91,14 +91,20 @@ TAUDB_TIMER* taudb_query_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial
       }
     } 
     // save this in the hash
-    //HASH_ADD(hh1, trial->timers_by_id, id, sizeof(int), timer);
-    HASH_ADD_KEYPTR(hh2, trial->timers_by_name, timer->name, strlen(timer->name), timer);
+    taudb_add_timer_to_trial(trial, timer);
   }
 
   taudb_clear_result(connection);
   taudb_close_transaction(connection);
 
   return (trial->timers_by_id);
+}
+
+void taudb_add_timer_to_trial(TAUDB_TRIAL* trial, TAUDB_TIMER* timer) {
+  if (timer->id > 0) {
+    HASH_ADD(hh1, trial->timers_by_id, id, sizeof(int), timer);
+  }
+  HASH_ADD_KEYPTR(hh2, trial->timers_by_name, timer->name, strlen(timer->name), timer);
 }
 
 TAUDB_TIMER* taudb_get_timer_by_id(TAUDB_TIMER* timers, const int id) {
@@ -182,11 +188,10 @@ void taudb_parse_timer_group_names(TAUDB_TRIAL* trial, TAUDB_TIMER* timer, char*
   printf("Got timer groups '%s'\n", group_names);
 #endif
   if (strlen(group_names) > 0) {
-    int group_count = taudb_count_bars(group_names) + 1;
-	timer->groups = (TAUDB_TIMER_GROUP**)malloc(group_count * sizeof(TAUDB_TIMER_GROUP*));
+    //int group_count = taudb_count_bars(group_names) + 1;
+	//timer->groups = (TAUDB_TIMER_GROUP**)malloc(group_count * sizeof(TAUDB_TIMER_GROUP*));
     char* group_name = strtok(group_names, "|");
     while (group_name != NULL) {
-      timer->group_count++;
       // see if the group exists
 	  taudb_trim(group_name);
       TAUDB_TIMER_GROUP* group = taudb_get_timer_group_by_name(trial->timer_groups, group_name);
@@ -199,23 +204,18 @@ void taudb_parse_timer_group_names(TAUDB_TRIAL* trial, TAUDB_TIMER* timer, char*
 		taudb_trim(group_name);
         group->name = taudb_strdup(group_name);
         // add the group to the trial
-        HASH_ADD_KEYPTR(hh, trial->timer_groups, group->name, strlen(group->name), group);
+		taudb_add_timer_group_to_trial(trial, group);
+		taudb_add_timer_to_timer_group(group, timer);
       }
-      // add this timer group to our timer
-      timer->groups[(timer->group_count)-1] = group;
-      // add this timer to the list of timers in the group
-#if 0
-      group->timer_count++;
-      group->timers = (TAUDB_TIMER**)realloc(group->timers, (group->timer_count * sizeof(TAUDB_TIMER*)));
-      group->timers[(group->timer_count)-1] = timer;
-#endif
       // get the next token
       group_name = strtok(NULL, "|");
     }
-  } else {
-    timer->group_count = 0;
-    timer->groups = NULL;
   }
+}
+
+void taudb_add_timer_to_timer_group(TAUDB_TIMER_GROUP* timer_group, TAUDB_TIMER* timer) {
+  HASH_ADD_KEYPTR(hh3, timer_group->timers, timer->name, strlen(timer->name), timer);
+  HASH_ADD_KEYPTR(hh2, timer->groups, timer_group->name, strlen(timer_group->name), timer_group);
 }
 
 extern void taudb_process_timer_name(TAUDB_TIMER* timer);

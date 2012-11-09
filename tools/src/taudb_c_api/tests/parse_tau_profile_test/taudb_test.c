@@ -42,7 +42,7 @@ int main (int argc, char** argv) {
   }
   printf("%d TIMERs found\n", count);
 
-  printf("%d TIMER_GROUPs found\n", HASH_CNT(hh, trial->timer_groups));
+  printf("%d TIMER_GROUPs found\n", HASH_CNT(hh1, trial->timer_groups));
 
   TAUDB_TIMER_CALLPATH* timer_callpaths = trial->timer_callpaths_by_name;
   // iterate over the hash

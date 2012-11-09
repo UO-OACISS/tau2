@@ -13,7 +13,7 @@ TAUDB_THREAD* taudb_query_threads_2005(TAUDB_CONNECTION* connection, TAUDB_TRIAL
     thread->context_rank = TAUDB_MEAN_WITHOUT_NULLS;
     thread->thread_rank = TAUDB_MEAN_WITHOUT_NULLS;
     thread->index = TAUDB_MEAN_WITHOUT_NULLS;;
-    HASH_ADD_INT(trial->threads, index, thread);
+	taudb_add_thread_to_trial(trial, thread);
     thread = taudb_create_threads(1);
     thread->id = 0;
     thread->trial = trial;
@@ -21,7 +21,7 @@ TAUDB_THREAD* taudb_query_threads_2005(TAUDB_CONNECTION* connection, TAUDB_TRIAL
     thread->context_rank = TAUDB_TOTAL;
     thread->thread_rank = TAUDB_TOTAL;
     thread->index = TAUDB_TOTAL;
-    HASH_ADD_INT(trial->threads, index, thread);
+	taudb_add_thread_to_trial(trial, thread);
     return trial->threads;
   } else {
     int i, j, k;
@@ -40,7 +40,7 @@ TAUDB_THREAD* taudb_query_threads_2005(TAUDB_CONNECTION* connection, TAUDB_TRIAL
           thread->context_rank = j;
           thread->thread_rank = k;
           thread->index = threadIndex;
-          HASH_ADD_INT(trial->threads, index, thread);
+	      taudb_add_thread_to_trial(trial, thread);
           threadIndex++;
         }
       } 
@@ -116,6 +116,10 @@ TAUDB_THREAD* taudb_query_threads_2012(TAUDB_CONNECTION* connection, TAUDB_TRIAL
   taudb_close_transaction(connection);
 
   return trial->threads;
+}
+
+void taudb_add_thread_to_trial(TAUDB_TRIAL* trial, TAUDB_THREAD* thread) {
+  HASH_ADD_INT(trial->threads, index, thread);
 }
 
 TAUDB_THREAD* taudb_query_threads(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial) {

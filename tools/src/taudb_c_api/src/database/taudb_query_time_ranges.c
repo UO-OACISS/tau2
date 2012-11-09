@@ -63,13 +63,17 @@ TAUDB_TIME_RANGE* taudb_query_time_ranges(TAUDB_CONNECTION* connection, TAUDB_TR
 	    taudb_exit_nicely(connection);
 	  }
 	} 
-	HASH_ADD_INT(time_ranges, id, time_range);
+    taudb_add_time_range_to_trial(trial, time_range);
   }
 
   taudb_clear_result(connection);
   taudb_close_transaction(connection);
 
   return (time_ranges);
+}
+
+void taudb_add_time_range_to_trial(TAUDB_TRIAL* trial, TAUDB_TIME_RANGE* time_range) {
+	HASH_ADD_INT(trial->time_ranges, id, time_range);
 }
 
 TAUDB_TIME_RANGE* taudb_get_time_range(TAUDB_TIME_RANGE* time_ranges, const int id) {

@@ -86,10 +86,9 @@ TAUDB_SECONDARY_METADATA* taudb_query_secondary_metadata(TAUDB_CONNECTION* conne
       }
     } 
 	if (secondary_metadata->key.parent != NULL) {
-	  HASH_ADD_KEYPTR(hh2, secondary_metadata->key.parent->children, &(secondary_metadata->key), sizeof(secondary_metadata->key), secondary_metadata);
+	  taudb_add_secondary_metadata_to_secondary_metadata(secondary_metadata->key.parent, secondary_metadata);
 	} else {
-	  HASH_ADD_KEYPTR(hh, trial->secondary_metadata, secondary_metadata->id, strlen(secondary_metadata->id), secondary_metadata);
-	  HASH_ADD_KEYPTR(hh2, trial->secondary_metadata, &(secondary_metadata->key), sizeof(secondary_metadata->key), secondary_metadata);
+	  taudb_add_secondary_metadata_to_trial(trial, secondary_metadata);
 	}
   }
 
@@ -99,6 +98,15 @@ TAUDB_SECONDARY_METADATA* taudb_query_secondary_metadata(TAUDB_CONNECTION* conne
   taudb_numItems = nFields;
 
   return trial->secondary_metadata;
+}
+
+void taudb_add_secondary_metadata_to_secondary_metadata(TAUDB_SECONDARY_METADATA* parent, TAUDB_SECONDARY_METADATA* child) {
+  HASH_ADD_KEYPTR(hh2, parent->children, &(child->key), sizeof(child->key), child);
+}
+
+void taudb_add_secondary_metadata_to_trial(TAUDB_TRIAL* trial, TAUDB_SECONDARY_METADATA* secondary_metadata) {
+  HASH_ADD_KEYPTR(hh, trial->secondary_metadata, secondary_metadata->id, strlen(secondary_metadata->id), secondary_metadata);
+  HASH_ADD_KEYPTR(hh2, trial->secondary_metadata, &(secondary_metadata->key), sizeof(secondary_metadata->key), secondary_metadata);
 }
 
 TAUDB_SECONDARY_METADATA* taudb_get_secondary_metadata_by_id(TAUDB_SECONDARY_METADATA* secondary_metadatas, const char* id) {

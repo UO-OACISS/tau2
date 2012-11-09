@@ -75,8 +75,7 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(TAUDB_CONNECTION* connection, 
       }
     } 
     timer_callpath->name = taudb_strdup(taudb_get_callpath_string(timer_callpath));
-    HASH_ADD(hh1, trial->timer_callpaths_by_id, id, sizeof(int), timer_callpath);
-    HASH_ADD_KEYPTR(hh2, trial->timer_callpaths_by_name, timer_callpath->name, strlen(timer_callpath->name), timer_callpath);
+	taudb_add_timer_callpath_to_trial(trial, timer_callpath);
   }
 
   taudb_clear_result(connection);
@@ -121,8 +120,7 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths_2005(TAUDB_CONNECTION* connect
     timer_callpath->name = taudb_strdup(current->name);
     taudb_trim(timer_callpath->name);
     timer_callpath->parent = NULL;
-    HASH_ADD(hh1, trial->timer_callpaths_by_id, id, sizeof(int), timer_callpath);
-    HASH_ADD_KEYPTR(hh2, trial->timer_callpaths_by_name, timer_callpath->name, strlen(timer_callpath->name), timer_callpath);
+	taudb_add_timer_callpath_to_trial(trial, timer_callpath);
     taudb_numItems++;
   }
 
@@ -199,7 +197,7 @@ TAUDB_TIMER_CALLPATH* taudb_process_callpath_timer(TAUDB_TRIAL* trial, TAUDB_TIM
       //fprintf(stderr, "Timer not found : '%s'\n", token);
 	  parent_timer = taudb_create_timers(1);
 	  parent_timer->name = taudb_strdup(token);
-      HASH_ADD_KEYPTR(hh2, trial->timers_by_name, parent_timer->name, strlen(parent_timer->name), parent_timer);
+	  taudb_add_timer_to_trial(trial, parent_timer);
     }
 
     // get the parent callpath
@@ -220,7 +218,7 @@ TAUDB_TIMER_CALLPATH* taudb_process_callpath_timer(TAUDB_TRIAL* trial, TAUDB_TIM
       if (last_parent == NULL) {
         parent_callpath->id = parent_timer->id;
       }
-      HASH_ADD_KEYPTR(hh2, trial->timer_callpaths_by_name, parent_callpath->name, strlen(parent_callpath->name), parent_callpath);
+	  taudb_add_timer_callpath_to_trial(trial, parent_callpath);
     }
     last_parent = parent_callpath;
 
@@ -245,7 +243,7 @@ TAUDB_TIMER_CALLPATH* taudb_process_callpath_timer(TAUDB_TRIAL* trial, TAUDB_TIM
     //fprintf(stderr, "Timer not found : '%s'\n", callpath);
 	leaf_timer = taudb_create_timers(1);
 	leaf_timer->name = taudb_strdup(callpath);
-    HASH_ADD_KEYPTR(hh2, trial->timers_by_name, leaf_timer->name, strlen(leaf_timer->name), leaf_timer);
+    taudb_add_timer_to_trial(trial, leaf_timer);
   }
 
   TAUDB_TIMER_CALLPATH* leaf_callpath = NULL;
@@ -264,12 +262,19 @@ TAUDB_TIMER_CALLPATH* taudb_process_callpath_timer(TAUDB_TRIAL* trial, TAUDB_TIM
     leaf_callpath->timer = leaf_timer;
     leaf_callpath->parent = last_parent;
     leaf_callpath->name = taudb_strdup(timer_callpath->name);
-    if (leaf_callpath->id > 0) {
-      HASH_ADD(hh1, trial->timer_callpaths_by_id, id, sizeof(int), leaf_callpath);
-    }
-    HASH_ADD_KEYPTR(hh2, trial->timer_callpaths_by_name, leaf_callpath->name, strlen(leaf_callpath->name), leaf_callpath);
+	taudb_add_timer_callpath_to_trial(trial, leaf_callpath);
   }
   return leaf_callpath;
+}
+
+void taudb_add_timer_callpath_to_trial(TAUDB_TRIAL* trial, TAUDB_TIMER_CALLPATH* timer_callpath) {
+  if (timer_callpath->id > 0) {
+    HASH_ADD(hh1, trial->timer_callpaths_by_id, id, sizeof(int), timer_callpath);
+  }
+  if (timer_callpath->name == NULL) {
+    timer_callpath->name = taudb_strdup(timer_callpath->timer->name);
+  }
+  HASH_ADD_KEYPTR(hh2, trial->timer_callpaths_by_name, timer_callpath->name, strlen(timer_callpath->name), timer_callpath);
 }
 
 TAUDB_TIMER_CALLPATH* taudb_get_timer_callpath_by_id(TAUDB_TIMER_CALLPATH* timer_callpaths, const int id) {

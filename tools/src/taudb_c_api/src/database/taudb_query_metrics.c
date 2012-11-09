@@ -62,14 +62,20 @@ TAUDB_METRIC* taudb_query_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* tri
 	    taudb_exit_nicely(connection);
 	  }
 	} 
-	HASH_ADD(hh1, trial->metrics_by_id, id, sizeof(int), metric);
-	HASH_ADD_KEYPTR(hh2, trial->metrics_by_name, metric->name, strlen(metric->name), metric);
+	taudb_add_metric_to_trial(trial, metric);
   }
 
   taudb_clear_result(connection);
   taudb_close_transaction(connection);
 
   return (trial->metrics_by_id);
+}
+
+void taudb_add_metric_to_trial(TAUDB_TRIAL* trial, TAUDB_METRIC* metric) {
+  if (metric->id > 0) {
+    HASH_ADD(hh1, trial->metrics_by_id, id, sizeof(int), metric);
+  }
+  HASH_ADD_KEYPTR(hh2, trial->metrics_by_name, metric->name, strlen(metric->name), metric);
 }
 
 TAUDB_METRIC* taudb_get_metric_by_name(TAUDB_METRIC* metrics, const char* name) {

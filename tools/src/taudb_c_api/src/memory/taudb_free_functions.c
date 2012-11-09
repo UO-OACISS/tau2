@@ -189,9 +189,8 @@ void taudb_delete_timer_groups(TAUDB_TIMER_GROUP* timer_groups) {
 #endif
   if (timer_groups == NULL) return;
   TAUDB_TIMER_GROUP *current, *tmp;
-  HASH_ITER(hh, timer_groups, current, tmp) {
-    HASH_DELETE(hh, timer_groups, current);
-    free(current->timers);
+  HASH_ITER(hh1, timer_groups, current, tmp) {
+    HASH_DELETE(hh1, timer_groups, current);
     free(current->name);
     free(current);
   }

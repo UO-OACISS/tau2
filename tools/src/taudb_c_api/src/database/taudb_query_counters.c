@@ -73,13 +73,19 @@ TAUDB_COUNTER* taudb_query_counters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* t
 	  }
 	  // TODO - Populate the rest properly?
 	} 
-    HASH_ADD(hh1, trial->counters_by_id, id, sizeof(int), counter);
-    HASH_ADD_KEYPTR(hh2, trial->counters_by_name, counter->name, strlen(counter->name), counter);
+    taudb_add_counter_to_trial(trial, counter);
   }
   taudb_clear_result(connection);
   taudb_close_transaction(connection);
 
   return (trial->counters_by_id);
+}
+
+void taudb_add_counter_to_trial(TAUDB_TRIAL* trial, TAUDB_COUNTER* counter) {
+  if (counter->id > 0) {
+    HASH_ADD(hh1, trial->counters_by_id, id, sizeof(int), counter);
+  }
+  HASH_ADD_KEYPTR(hh2, trial->counters_by_name, counter->name, strlen(counter->name), counter);
 }
 
 TAUDB_COUNTER* taudb_get_counter_by_id(TAUDB_COUNTER* counters, const int id) {
