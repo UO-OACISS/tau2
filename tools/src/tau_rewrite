@@ -306,8 +306,58 @@ then
   outputdir=`pwd` 
 fi
 
+# Get the list of external libs
+prologue=""
+makefile_binding=`echo $theBinding | sed -e 's@shared@@g'`
+
+isStatic=false
+lddoutput=`ldd $infile`
+if [ $? = 1 ]; then
+  echoIfShortVerbose "STATIC EXECUTABLE $infile"
+  isStatic=true
+  TAU_INST_LIBRARY=$BASEDIR/lib/libtau$makefile_binding.a
+  echoIfShortVerbose "Using: $TAU_INST_LIBRARY"
+else
+  echoIfShortVerbose "Dynamic executable $infile"
+fi
+linkcmd=`$BASEDIR/bin/tau_cc.sh -show -tau_makefile=$BASEDIR/lib/Makefile.tau$makefile_binding`
+list=`eval $linkcmd -v 2>&1`
+libdirs=`echo $list | awk '{c=split($0, s); for(n=1; n<=c; ++n) print s[n] }' | grep '^.L' | sed -e 's/-L//'`
+libs=`echo $list | awk '{c=split($0, s); for(n=1; n<=c; ++n) print s[n] }' | grep '^.l' | sed -e 's/-l//'`
+tmpfile=taulibs.out.$$
+/bin/rm -f $tmpfile
+for i in $libs
+do
+#echo "LOOKING FOR lib$i.a in "
+  for j in $libdirs
+  do
+    #echo "IN LIBS= $j"
+    if [ -r $j/lib$i.a ] ; then
+      echo "FOUND $j/lib$i.a"  >> $tmpfile
+      #echo "FOUND $j/lib$i.a"  
+      continue 2
+    fi
+  done
+done
+prologue="extlibs = {"
+for i in `cat $tmpfile | grep FOUND  | sort | uniq | sed -e 's@FOUND @@g' | grep -v libtau-`
+do 
+  #echo "\"$i\","
+  prologue="$prologue 
+\"$i\","
+done
+/bin/rm -f $tmpfile
+#echo "};"
+prologue="$prologue 
+};"
+
+if [ $isStatic = false ]; then
+  prologue=""
+fi
+
 # Now we write to the $outfile
-luafile="events = {
+luafile="$prologue
+events = {
   run_dir = \"$outputdir/\",
   functions_global_blacklist = {
           {subtype = \"stringlist\",value = {\"call_gmon_start\",\"_init\",\"_fini\",\"_start\",\"frame_dummy\"}},
@@ -452,11 +502,12 @@ else
     cat $outfile_1~ $outfile~ > $outfile
     chmod +x $outfile
     /bin/rm -f $outfile_1~ $outfile~
-    if [ $shortverbose = "false" -a $verbose = "false" ]
-    then
-      echo ""
+  fi
+  if [ $shortverbose = false -a $verbose = false ]
+  then
+    echo ""
 # Not executing /bin/rm -f instru_sessions.lua madras_trace.log tau_instr.log tau_rewrite.lua
-    fi
-    #/bin/rm -f tau_instr.log tau_empty.in
+  else 
+      /bin/rm -f tau_instr.log tau_empty.in tau_rewrite.lua
   fi
 fi
