@@ -37,9 +37,7 @@ TAUDB_TRIAL* taudb_parse_tau_profiles(const char* directory_name) {
 #endif
 
   printf("\nWarning: not fully functional. Missing support for:\n");
-  printf(" - parsing timer groups\n");
-  printf(" - parsing timer parameters\n");
-  printf(" - computing statistics \n\n");
+  printf(" - parsing timer parameters\n\n");
 
   // validate the config file name
   if (directory_name == NULL || strlen(directory_name) == 0) {
@@ -59,7 +57,8 @@ TAUDB_TRIAL* taudb_parse_tau_profiles(const char* directory_name) {
 
   process_directory(directory_name, trial);
 
-// compute stats!
+  printf("Computing Stats...\n");
+  taudb_compute_statistics(trial);
 
   taudb_consolidate_metadata (trial);
   return trial;
@@ -192,7 +191,6 @@ void taudb_parse_tau_profile_file(char* filename, TAUDB_TRIAL* trial) {
       metric = taudb_parse_tau_profile_metric(line, trial);
     } else if (strstr(line, "# Name Calls Subrs Excl Incl ProfileCalls") != NULL) {
       // parse the first line - metadata!
-      //printf("Ignoring metadata for now...\n");
 	  char* start = strstr(line, "<metadata>");
       taudb_parse_tau_metadata(trial, thread, start);
       functions = TRUE;
@@ -446,7 +444,7 @@ char * taudb_getline(FILE * f)
 
     do {
         //size += BUFSIZ; /* BUFSIZ is defined as "the optimal read size for this platform" */
-        size += 4096; /* BUFSIZ is defined as "the optimal read size for this platform" */
+        size += 8192; /* BUFSIZ is defined as "the optimal read size for this platform" */
 		//printf("Getting %ld bytes...\n", size);
         buf = realloc(buf,size); /* realloc(NULL,n) is the same as malloc(n) */            
         /* Actually do the read. Note that fgets puts a terminal '\0' on the
@@ -491,6 +489,7 @@ void taudb_process_timer_name(TAUDB_TIMER* timer) {
   const char* sampleunresolved = "[SAMPLE] UNRESOLVED";
   const char* sample = "[SAMPLE]";
   const char* intermediate = "[INTERMEDIATE]";
+  const char* throttled = "[THROTTLED]";
   const char* openmp = "[OpenMP]";
   const char* openmplocation = "[OpenMP location:";
   char* working = taudb_strdup(timer->name);
@@ -499,6 +498,13 @@ void taudb_process_timer_name(TAUDB_TIMER* timer) {
   if (strstr(timer->name, sampleunresolved) != NULL) {
     // special case, handle it
 	timer->short_name = taudb_strdup(timer->name);
+  } else if (strstr(timer->name, throttled) != NULL) {
+    // 'MPI_Irecv() [THROTTLED]'
+    // special case, handle it
+	int length = strlen(timer->name) - 11;
+	timer->name[length] = 0; // new terminator
+    taudb_process_timer_name(timer);
+	strcpy(timer->name, working);
   } else if (strstr(timer->name, sample) != NULL) {
     // '[SAMPLE] uniform_space_dist_ [{/global/u2/k/khuck/src/XGC-1_CPU/./load.F95} {244}]'
     // special case, handle it
