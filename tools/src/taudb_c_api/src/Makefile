@@ -11,7 +11,7 @@
 .SUFFIXES : .c
 
 ROOTDIR?=$(shell pwd)/..
-include $(ROOTDIR)/Makefile.inc
+include $(ROOTDIR)/Makefile.in
 
 HEADERS=${wildcard $(ROOTDIR)/include/*.h}
 SOURCES=${wildcard */*.c}
@@ -26,12 +26,12 @@ $(TARGET): $(OBJS)
 	rm -f $(TARGET)
 	$(AR) -qc $(TARGET) $(OBJS)
 
-$(OBJS): Makefile $(ROOTDIR)/Makefile.inc $(HEADERS) $(SOURCES)
+$(OBJS): Makefile $(ROOTDIR)/Makefile.in $(HEADERS) $(SOURCES)
 	mkdir -p $(ROOTDIR)/lib
-	@for i in database memory parsers ; do (cd $$i; $(MAKE) "MAKE=$(MAKE)" "ROOTDIR=$(ROOTDIR)" || exit 0); done
+	@for i in database memory parsers analysis ; do (cd $$i; $(MAKE) "MAKE=$(MAKE)" "ROOTDIR=$(ROOTDIR)" || exit 0); done
 
 clean:
-	@for i in database memory parsers ; do (cd $$i; $(MAKE) "MAKE=$(MAKE)" "ROOTDIR=$(ROOTDIR)" clean || exit 0); done
+	@for i in database memory parsers analysis ; do (cd $$i; $(MAKE) "MAKE=$(MAKE)" "ROOTDIR=$(ROOTDIR)" clean || exit 0); done
 	echo "Removing $(TARGET)"
 	rm -f $(TARGET)
 

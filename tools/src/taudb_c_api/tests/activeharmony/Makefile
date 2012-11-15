@@ -12,7 +12,7 @@
 
 PWD=$(shell pwd)
 ROOTDIR?=$(PWD)/../..
-include $(ROOTDIR)/Makefile.inc
+include $(ROOTDIR)/Makefile.in
 
 HEADERS=${wildcard *.h}
 SOURCES=${wildcard *.c}
@@ -30,7 +30,7 @@ $(TARGET): $(TAUDBLIB) $(HEADERS) $(OBJS)
 	$(CC) $(FLAGS) $@.o $(DUMP_FUNCS) -o $@ $(TAUDBLIB) $(LIBS)
 
 # rebuild everything if the headers or the makefile changes
-$(OBJS): $(HEADERS) Makefile $(ROOTDIR)/Makefile.inc
+$(OBJS): $(HEADERS) Makefile $(ROOTDIR)/Makefile.in
 
 .c.o:
 	echo "Building : $@ from $<"

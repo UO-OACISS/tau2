@@ -10,11 +10,11 @@
 
 .SUFFIXES : .c
 
-include Makefile.inc
+include Makefile.in
 
 ROOTDIR=$(shell pwd)
 
-all: Makefile Makefile.inc
+all: Makefile Makefile.in
 	mkdir -p $(ROOTDIR)/lib
 	@for i in src tests ; do (cd $$i; $(MAKE) "MAKE=$(MAKE)" "ROOTDIR=$(ROOTDIR)" || exit 0); done
 

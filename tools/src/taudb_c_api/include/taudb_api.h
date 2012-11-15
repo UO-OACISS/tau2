@@ -46,6 +46,7 @@ extern TAUDB_SECONDARY_METADATA* taudb_query_secondary_metadata(TAUDB_CONNECTION
 extern TAUDB_THREAD* taudb_query_threads(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial);
 extern TAUDB_THREAD* taudb_query_derived_threads(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial);
 extern TAUDB_THREAD* taudb_get_thread(TAUDB_THREAD* threads, int thread_index);
+extern int taudb_get_total_threads(TAUDB_THREAD* threads);
 
 /* get the metrics for a trial */
 extern TAUDB_METRIC* taudb_query_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial);
@@ -157,5 +158,8 @@ extern void taudb_add_timer_value_to_timer_call_data(TAUDB_TIMER_CALL_DATA* time
 
 /* Profile parsers */
 extern TAUDB_TRIAL* taudb_parse_tau_profiles(const char* directory_name);
+
+/* Analysis routines */
+extern void taudb_compute_statistics(TAUDB_TRIAL* trial);
 
 #endif /* TAUDB_API_H */

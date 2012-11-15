@@ -325,11 +325,11 @@ void taudb_parse_tau_profile_function(char* line, TAUDB_TRIAL* trial, TAUDB_METR
   }
   tmp = strtok(NULL, " ");
   if (tmp != NULL && (strlen(tmp) > 0)) {
-    inclusive = atof(tmp);
+    exclusive = atof(tmp);
   }
   tmp = strtok(NULL, " ");
   if (tmp != NULL && (strlen(tmp) > 0)) {
-    exclusive = atof(tmp);
+    inclusive = atof(tmp);
   }
   tmp = strtok(NULL, " ");
   if (tmp != NULL && (strlen(tmp) > 0)) {
@@ -483,7 +483,7 @@ extern TAUDB_TIMER_VALUE* taudb_create_timer_value(TAUDB_TRIAL* trial, TAUDB_TIM
   timer_value->inclusive = inclusive;
   timer_value->exclusive = exclusive;
   timer_value->metric = metric;
-  HASH_ADD(hh, timer_call_data->timer_values, metric->name, strlen(timer_value->metric->name), timer_value);
+  HASH_ADD_KEYPTR(hh, timer_call_data->timer_values, metric->name, strlen(timer_value->metric->name), timer_value);
   return timer_value;
 }
 

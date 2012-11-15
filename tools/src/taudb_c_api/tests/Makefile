@@ -10,7 +10,7 @@
 
 .SUFFIXES : .c
 
-include ../Makefile.inc
+include ../Makefile.in
 
 BUILD_TARGETS=activeharmony \
 save_trial \
@@ -35,8 +35,8 @@ taudb_query_timer_call_data_test \
 perfdmf_test \
 query_all
 
-TEST_TARGETS=activeharmony \
-#save_trial \
+TEST_TARGETS=save_trial \
+#activeharmony \
 parse_tau_profile_test \
 taudb_main\
 parse_config_test \
