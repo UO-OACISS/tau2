@@ -86,13 +86,13 @@ typedef struct taudb_connection {
 
 /* these are the derived thread indexes. */
 
-#define TAUDB_MEAN_WITHOUT_NULLS -1;
-#define TAUDB_TOTAL -2;
-#define TAUDB_STDDEV_WITHOUT_NULLS -3;
-#define TAUDB_MIN -4;
-#define TAUDB_MAX -5;
-#define TAUDB_MEAN_WITH_NULLS -6;
-#define TAUDB_STDDEV_WITH_NULLS -7;
+#define TAUDB_MEAN_WITHOUT_NULLS -1
+#define TAUDB_TOTAL -2
+#define TAUDB_STDDEV_WITHOUT_NULLS -3
+#define TAUDB_MIN -4
+#define TAUDB_MAX -5
+#define TAUDB_MEAN_WITH_NULLS -6
+#define TAUDB_STDDEV_WITH_NULLS -7
 
 /* trials are the top level structure */
 

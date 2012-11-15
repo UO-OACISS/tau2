@@ -11,7 +11,7 @@
 .SUFFIXES : .c
 
 ROOTDIR?=$(shell pwd)/../..
-MAKEFILE_INC=$(ROOTDIR)/Makefile.inc
+MAKEFILE_INC=$(ROOTDIR)/Makefile.in
 include $(MAKEFILE_INC)
 
 HEADERS=${wildcard $(ROOTDIR)/include/*.h}

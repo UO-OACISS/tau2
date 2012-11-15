@@ -10,7 +10,7 @@
 
 .SUFFIXES : .c
 
-include ../../Makefile.inc
+include ../../Makefile.in
 
 HEADERS=${wildcard *.h}
 SOURCES=${wildcard *.c}
@@ -28,7 +28,7 @@ $(TARGET): $(TAUDBLIB) $(HEADERS) $(OBJS)
 	$(CC) $(FLAGS) $@.o $(DUMP_FUNCS) -o $@ $(TAUDBLIB) $(LIBS)
 
 # rebuild everything if the headers or the makefile changes
-$(OBJS): $(HEADERS) Makefile ../../Makefile.inc
+$(OBJS): $(HEADERS) Makefile ../../Makefile.in
 
 .c.o:
 	echo "Building : $@ from $<"

@@ -417,7 +417,7 @@ void taudb_prepare_statement(TAUDB_CONNECTION* connection, const char* statement
       taudb_exit_nicely(connection);
     } else {
       PQclear(res);
-	  prepared_statement = malloc(sizeof(TAUDB_PREPARED_STATEMENT));
+	  prepared_statement = (TAUDB_PREPARED_STATEMENT*)malloc(sizeof(TAUDB_PREPARED_STATEMENT));
 	  prepared_statement->name = taudb_strdup(statement_name);
       HASH_ADD_KEYPTR(hh, connection->statements, statement_name, strlen(statement_name), prepared_statement);
     }

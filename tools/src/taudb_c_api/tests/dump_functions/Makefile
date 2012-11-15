@@ -10,7 +10,7 @@
 
 .SUFFIXES : .c
 
-include ../../Makefile.inc
+include ../../Makefile.in
 
 HEADERS=${wildcard ../../include/*.h}
 SOURCES=${wildcard *.c}

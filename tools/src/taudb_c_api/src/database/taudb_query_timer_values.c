@@ -200,7 +200,8 @@ TAUDB_TIMER_VALUE* taudb_private_query_timer_values(TAUDB_CONNECTION* connection
 }
 
 void taudb_add_timer_value_to_timer_call_data(TAUDB_TIMER_CALL_DATA* timer_call_data, TAUDB_TIMER_VALUE* timer_value) {
-      HASH_ADD(hh, timer_call_data->timer_values, metric->name, strlen(timer_value->metric->name), timer_value);
+  HASH_ADD_KEYPTR(hh, timer_call_data->timer_values, timer_value->metric->name, strlen(timer_value->metric->name), timer_value);
+  //HASH_ADD_KEYPTR(hh, timer_call_data->timer_values, timer_value->metric, sizeof(timer_value->metric), timer_value);
 }
 
 TAUDB_TIMER_VALUE* taudb_query_all_timer_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial) {
@@ -246,6 +247,7 @@ TAUDB_TIMER_VALUE* taudb_get_timer_value(TAUDB_TIMER_CALL_DATA* timer_call_data,
   
   TAUDB_TIMER_VALUE* timer_value = NULL;
   HASH_FIND(hh, timer_call_data->timer_values, metric->name, strlen(metric->name), timer_value);
+  //HASH_FIND(hh, timer_call_data->timer_values, metric, sizeof(metric), timer_value);
 #ifdef ITERATE_ON_FAILURE
   // HASH_FIND is not working so well... now we iterate. Sigh.
   if (timer_value == NULL) {

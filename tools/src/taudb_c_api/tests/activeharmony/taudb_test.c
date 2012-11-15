@@ -15,7 +15,6 @@ int main (int argc, char** argv) {
   }
   printf("Checking connection...\n");
   taudb_check_connection(connection);
-  printf("Testing inserts...\n");
 
   // create a trial
   TAUDB_TRIAL* trial = taudb_create_trials(1);
@@ -112,7 +111,12 @@ int main (int argc, char** argv) {
   timer_value->sum_exclusive_squared = 0.0;
   taudb_add_timer_value_to_timer_call_data(timer_call_data, timer_value);
 
+  // compute stats
+  printf("Computing Stats...\n");
+  taudb_compute_statistics(trial);
+
   // save the trial!
+  printf("Testing inserts...\n");
   boolean update = FALSE;
   boolean cascade = TRUE;
   taudb_save_trial(connection, trial, update, cascade);
