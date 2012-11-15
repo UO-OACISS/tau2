@@ -21,9 +21,6 @@ int main (int argc, char** argv) {
   trial->name = taudb_strdup("TEST TRIAL");
   trial->data_source = taudb_get_data_source_by_id(taudb_query_data_sources(connection), 1);
 
-  printf("Computing Stats...\n");
-  taudb_compute_statistics(trial);
-
   boolean update = FALSE;
   boolean cascade = TRUE;
   printf("Testing inserts...\n");

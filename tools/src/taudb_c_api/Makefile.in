@@ -12,7 +12,7 @@
 .SUFFIXES : .c
 .SILENT :
 
-CC=gcc
+CC=cc
 AR=ar
 RANLIB=ranlib
 #CC=tau_cc.sh -tau_makefile=${HOME}/src/tau2-master/apple/lib/Makefile.tau-pdt -optQuiet -optPreProcess
@@ -57,11 +57,11 @@ ZLIB_LIBRARIES=-lz
 FLAGS=-g -Wall
 
 # If the Hash Table is acting weird, try enabling this...
-ITERATE=-DITERATE_ON_FAILURE
+# ITERATE=-DITERATE_ON_FAILURE
 
 # Debugging levels
-DEBUG=-O2 $(ITERATE)
-#DEBUG=-O0 $(ITERATE)
+#DEBUG=-O3 $(ITERATE)
+DEBUG=-O0 $(ITERATE)
 #DEBUG=-O0 -DTAUDB_DEBUG -DHASH_DEBUG=1 $(ITERATE)
 #DEBUG=-O0 -DTAUDB_DEBUG -DTAUDB_DEBUG_DEBUG -DHASH_DEBUG=1 $(ITERATE)
 
