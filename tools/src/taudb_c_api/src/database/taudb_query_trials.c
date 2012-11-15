@@ -148,20 +148,38 @@ TAUDB_TRIAL* taudb_private_query_trials(TAUDB_CONNECTION* connection, boolean fu
       trials[i].primary_metadata = taudb_query_primary_metadata(connection, &(trials[i]));
 	}
     if (full) {
-      trials[i].threads = taudb_query_threads(connection, &(trials[i]));
-      trials[i].timers_by_id = taudb_query_timers(connection, &(trials[i]));
-      trials[i].timer_callpaths_by_id = taudb_query_all_timer_callpaths(connection, &(trials[i]));
-      //trials[i].timer_callpath_stats = taudb_query_all_timer_callpath_stats(connection, &(trials[i]));
-      //trials[i].callpath_stat_count = taudb_numItems;
-      trials[i].metrics_by_id = taudb_query_metrics(connection, &(trials[i]));
-      //trials[i].timer_values = taudb_query_all_timer_values(connection, &(trials[i]));
-      //trials[i].value_count = taudb_numItems;
-      //trials[i].counters = taudb_query_counters(&(trials[i]));
-      //trials[i].counter_count = taudb_numItems;
-      //taudb_query_counter_values(&(trials[i]));
       if (taudb_version == TAUDB_2012_SCHEMA) {
+	    printf("Threads\n");
+        taudb_query_threads(connection, &(trials[i]));
+	    printf("Metrics\n");
+        taudb_query_metrics(connection, &(trials[i]));
+        //taudb_query_time_range(connection, &(trials[i]));
+	    printf("Timers\n");
+        taudb_query_timers(connection, &(trials[i]));
+	    printf("Timer_groups\n");
+        taudb_query_timer_groups(connection, &(trials[i]));
+	    printf("Timer call paths\n");
+        taudb_query_timer_callpaths(connection, &(trials[i]), NULL);
+	    printf("Timer call data\n");
+        taudb_query_timer_call_data(connection, &(trials[i]), NULL, NULL);
+	    printf("Timer values\n");
+        taudb_query_timer_values(connection, &(trials[i]), NULL, NULL, NULL);
+	    printf("Counters \n");
+        taudb_query_counters(connection, &(trials[i]));
+	    printf("Counter values\n");
+        taudb_query_counter_values(connection, &(trials[i]));
+	    printf("Secondary metadata\n");
         trials[i].secondary_metadata = taudb_query_secondary_metadata(connection, &(trials[i]));
-      }
+      } else {
+        taudb_query_threads(connection, &(trials[i]));
+        taudb_query_timers(connection, &(trials[i]));
+        taudb_query_all_timer_callpaths(connection, &(trials[i]));
+        //taudb_query_all_timer_callpath_stats(connection, &(trials[i]));
+        taudb_query_metrics(connection, &(trials[i]));
+        //taudb_query_all_timer_values(connection, &(trials[i]));
+        //taudb_query_counters(&(trials[i]));
+        //taudb_query_counter_values(&(trials[i]));
+	  }
     }
   }
   taudb_numItems = nRows;

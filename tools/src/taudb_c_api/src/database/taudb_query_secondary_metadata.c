@@ -106,7 +106,7 @@ void taudb_add_secondary_metadata_to_secondary_metadata(TAUDB_SECONDARY_METADATA
 
 void taudb_add_secondary_metadata_to_trial(TAUDB_TRIAL* trial, TAUDB_SECONDARY_METADATA* secondary_metadata) {
   HASH_ADD_KEYPTR(hh, trial->secondary_metadata, secondary_metadata->id, strlen(secondary_metadata->id), secondary_metadata);
-  HASH_ADD_KEYPTR(hh2, trial->secondary_metadata, &(secondary_metadata->key), sizeof(secondary_metadata->key), secondary_metadata);
+  HASH_ADD_KEYPTR(hh2, trial->secondary_metadata_by_key, &(secondary_metadata->key), sizeof(secondary_metadata->key), secondary_metadata);
 }
 
 TAUDB_SECONDARY_METADATA* taudb_get_secondary_metadata_by_id(TAUDB_SECONDARY_METADATA* secondary_metadatas, const char* id) {
@@ -114,7 +114,8 @@ TAUDB_SECONDARY_METADATA* taudb_get_secondary_metadata_by_id(TAUDB_SECONDARY_MET
   printf("Calling taudb_get_secondary_metadata_by_id(%p,%s)\n", secondary_metadatas, id);
 #endif
   if (secondary_metadatas == NULL) {
-    fprintf(stderr, "Error: secondary_metadata parameter null. Please provide a valid set of secondary_metadatas.\n");
+    // not an error, the list could be empty
+    //fprintf(stderr, "Error: secondary_metadata parameter null. Please provide a valid set of secondary_metadatas.\n");
     return NULL;
   }
   if (id == NULL) {

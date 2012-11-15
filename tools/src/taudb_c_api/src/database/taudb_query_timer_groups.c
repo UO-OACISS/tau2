@@ -17,7 +17,7 @@ TAUDB_TIMER_GROUP* taudb_query_timer_groups(TAUDB_CONNECTION* connection, TAUDB_
 
   //if the Trial already has the data, return it.
   if (trial->timer_groups != NULL) {
-    taudb_numItems = HASH_CNT(hh1,trial->timer_groups);
+    taudb_numItems = HASH_CNT(trial_hash_by_name,trial->timer_groups);
     return trial->timer_groups;
   }
 
@@ -31,7 +31,7 @@ TAUDB_TIMER_GROUP* taudb_query_timer_groups(TAUDB_CONNECTION* connection, TAUDB_
     sprintf(my_query,"select group_name from interval_event where trial = %d", trial->id);
 	fprintf(stderr, "WARNING - NOT TESTED!\n");
   } else {
-    sprintf(my_query,"select distinct tg.name as name from timer_group tg inner join timer t on tg.timer = t.id where t.trial = %d", trial->id);
+    sprintf(my_query,"select distinct tg.group_name as name from timer_group tg inner join timer t on tg.timer = t.id where t.trial = %d", trial->id);
   }
 #ifdef TAUDB_DEBUG
   printf("%s\n", my_query);
@@ -62,7 +62,7 @@ TAUDB_TIMER_GROUP* taudb_query_timer_groups(TAUDB_CONNECTION* connection, TAUDB_
         taudb_exit_nicely(connection);
       }
     } 
-    HASH_ADD_KEYPTR(hh1, timer_groups, timer_group->name, strlen(timer_group->name), timer_group);
+    taudb_add_timer_group_to_trial(trial, timer_group);
   }
 
   taudb_clear_result(connection);
@@ -72,10 +72,10 @@ TAUDB_TIMER_GROUP* taudb_query_timer_groups(TAUDB_CONNECTION* connection, TAUDB_
 }
 
 void taudb_add_timer_group_to_trial(TAUDB_TRIAL* trial, TAUDB_TIMER_GROUP* timer_group) {
-    HASH_ADD_KEYPTR(hh1, trial->timer_groups, timer_group->name, strlen(timer_group->name), timer_group);
+    HASH_ADD_KEYPTR(trial_hash_by_name, trial->timer_groups, timer_group->name, strlen(timer_group->name), timer_group);
 }
 
-TAUDB_TIMER_GROUP* taudb_get_timer_group_by_name(TAUDB_TIMER_GROUP* timer_groups, const char* name) {
+TAUDB_TIMER_GROUP* taudb_get_timer_group_from_trial_by_name(TAUDB_TIMER_GROUP* timer_groups, const char* name) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_get_timer_group_by_name(%p,'%s')\n", timer_groups, name);
 #endif
@@ -89,7 +89,25 @@ TAUDB_TIMER_GROUP* taudb_get_timer_group_by_name(TAUDB_TIMER_GROUP* timer_groups
   }
 
   TAUDB_TIMER_GROUP* timer_group = NULL;
-  HASH_FIND(hh1, timer_groups, name, strlen(name), timer_group);
+  HASH_FIND(trial_hash_by_name, timer_groups, name, strlen(name), timer_group);
+  return timer_group;
+}
+
+TAUDB_TIMER_GROUP* taudb_get_timer_group_from_timer_by_name(TAUDB_TIMER_GROUP* timer_groups, const char* name) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("Calling taudb_get_timer_group_by_name(%p,'%s')\n", timer_groups, name);
+#endif
+  if (timer_groups == NULL) {
+    // the hash isn't populated yet
+    return NULL;
+  }
+  if (name == NULL) {
+    fprintf(stderr, "Error: name parameter null. Please provide a valid name.\n");
+    return NULL;
+  }
+
+  TAUDB_TIMER_GROUP* timer_group = NULL;
+  HASH_FIND(timer_hash_by_name, timer_groups, name, strlen(name), timer_group);
   return timer_group;
 }
 
@@ -99,8 +117,8 @@ void taudb_save_timer_groups(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, b
   taudb_prepare_statement(connection, statement_name, my_query, 2);
   TAUDB_TIMER_GROUP *group, *tmp;
   TAUDB_TIMER *timer, *tmp2;
-  HASH_ITER(hh1, trial->timer_groups, group, tmp) {
-    HASH_ITER(hh3, group->timers, timer, tmp2) {
+  HASH_ITER(trial_hash_by_name, trial->timer_groups, group, tmp) {
+    HASH_ITER(group_hash_by_name, group->timers, timer, tmp2) {
       // make array of 6 character pointers
       const char* paramValues[2] = {0};
       char timerid[32] = {0};
