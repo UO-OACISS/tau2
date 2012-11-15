@@ -180,11 +180,11 @@ typedef struct taudb_timer {
  int line_number_end;        /* what line does the timer end on? */
  int column_number;          /* what column number does the timer start on? */
  int column_number_end;      /* what column number does the timer end on? */
- struct taudb_timer_group* groups;   /* array of pointers to groups */
+ struct taudb_timer_group* groups;   /* hash of groups, using group hash handle hh2 */
  struct taudb_timer_parameter* parameters;   /* array of parameters */
- UT_hash_handle hh1;          /* hash key for id lookup */
- UT_hash_handle hh2;         /* hash key for name lookup in temporary hash */
- UT_hash_handle hh3;         /* hash key for name lookup in timer group */
+ UT_hash_handle trial_hash_by_id;          /* hash key for id lookup */
+ UT_hash_handle trial_hash_by_name;         /* hash key for name lookup in temporary hash */
+ UT_hash_handle group_hash_by_name;         /* hash key for name lookup in timer group */
 } TAUDB_TIMER;
 
 /*********************************************/
@@ -198,9 +198,9 @@ typedef struct taudb_timer {
 
 typedef struct taudb_timer_group {
  char* name;
- struct taudb_timer* timers;   /* hash of timers */
- UT_hash_handle hh1;  // hash handle for trial
- UT_hash_handle hh2;  // hash handle for timers
+ struct taudb_timer* timers;   /* hash of timers, using timer hash handle hh3 */
+ UT_hash_handle trial_hash_by_name;  // hash handle for trial
+ UT_hash_handle timer_hash_by_name;  // hash handle for timers
 } TAUDB_TIMER_GROUP;
 
 /* timer parameters are parameter based profile values. 

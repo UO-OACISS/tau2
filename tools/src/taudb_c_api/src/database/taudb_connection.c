@@ -49,7 +49,7 @@ TAUDB_CONNECTION* taudb_connect(char* host, char* port, char* database, char* lo
 
   /* get the data sources, if available */
   if (taudb_connection->schema_version == TAUDB_2012_SCHEMA) {
-    //taudb_query_data_sources(taudb_connection);
+    taudb_query_data_sources(taudb_connection);
   }
 
   return taudb_connection;

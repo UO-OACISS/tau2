@@ -158,8 +158,8 @@ void taudb_delete_timers(TAUDB_TIMER* timers) {
 #endif
   if (timers == NULL) return;
   TAUDB_TIMER *current, *tmp;
-  HASH_ITER(hh1, timers, current, tmp) {
-    HASH_DELETE(hh1, timers, current);
+  HASH_ITER(trial_hash_by_id, timers, current, tmp) {
+    HASH_DELETE(trial_hash_by_id, timers, current);
     taudb_delete_timer_parameters(current->parameters);
     free(current->groups); // these will be deleted by the trial, later
     free(current->name);
@@ -189,8 +189,8 @@ void taudb_delete_timer_groups(TAUDB_TIMER_GROUP* timer_groups) {
 #endif
   if (timer_groups == NULL) return;
   TAUDB_TIMER_GROUP *current, *tmp;
-  HASH_ITER(hh1, timer_groups, current, tmp) {
-    HASH_DELETE(hh1, timer_groups, current);
+  HASH_ITER(trial_hash_by_name, timer_groups, current, tmp) {
+    HASH_DELETE(trial_hash_by_name, timer_groups, current);
     free(current->name);
     free(current);
   }

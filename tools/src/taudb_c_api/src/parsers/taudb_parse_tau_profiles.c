@@ -249,7 +249,8 @@ TAUDB_THREAD* taudb_parse_tau_profile_thread(char* filename, TAUDB_TRIAL* trial)
     thread->context_rank = context;
     thread->thread_rank = thr;
     thread->index = index;
-    HASH_ADD(hh, trial->threads, index, sizeof(int), thread);
+    //HASH_ADD(hh, trial->threads, index, sizeof(int), thread);
+    taudb_add_thread_to_trial(trial, thread);
   }
   return thread;
 }
@@ -288,7 +289,8 @@ TAUDB_METRIC* taudb_parse_tau_profile_metric(char* line, TAUDB_TRIAL* trial) {
     metric = taudb_create_metrics(1);
     metric->name = taudb_strdup(tmp);
     metric->derived = 0;
-    HASH_ADD_KEYPTR(hh2, trial->metrics_by_name, metric->name, strlen(metric->name), metric);
+    //HASH_ADD_KEYPTR(hh2, trial->metrics_by_name, metric->name, strlen(metric->name), metric);
+    taudb_add_metric_to_trial(trial, metric);
   }
   
   return metric;
@@ -378,7 +380,7 @@ TAUDB_TIMER* taudb_create_timer(TAUDB_TRIAL* trial, const char* timer_name) {
 #ifdef TAUDB_DEBUG_DEBUG
 	printf("Searching for: '%s'\n", timer_name);
 #endif
-    timer = taudb_get_timer_by_name(trial->timers_by_name, timer_name);
+    timer = taudb_get_trial_timer_by_name(trial->timers_by_name, timer_name);
   }
   if (timer == NULL) {
     timer = taudb_create_timers(1);
@@ -390,7 +392,7 @@ TAUDB_TIMER* taudb_create_timer(TAUDB_TRIAL* trial, const char* timer_name) {
 #ifdef TAUDB_DEBUG_DEBUG
 	printf("Adding: '%s'\n", timer->name);
 #endif
-    HASH_ADD_KEYPTR(hh2, trial->timers_by_name, timer->name, strlen(timer->name), timer);
+    taudb_add_timer_to_trial(trial, timer);
   }
   if (timer->short_name == NULL) {
     taudb_process_timer_name(timer);
@@ -426,10 +428,11 @@ TAUDB_TIMER_CALLPATH* taudb_create_timer_callpath(TAUDB_TRIAL* trial, TAUDB_TIME
 	// it causes downstream problems.
     // taudb_trim(timer_callpath->name);
     timer_callpath->parent = parent;
-    if (timer->id > 0) {
-      HASH_ADD(hh1, trial->timer_callpaths_by_id, id, sizeof(int), timer_callpath);
-    }
-    HASH_ADD_KEYPTR(hh2, trial->timer_callpaths_by_name, timer_callpath->name, strlen(timer_callpath->name), timer_callpath);
+    //if (timer->id > 0) {
+      //HASH_ADD(hh1, trial->timer_callpaths_by_id, id, sizeof(int), timer_callpath);
+    //}
+    //HASH_ADD_KEYPTR(hh2, trial->timer_callpaths_by_name, timer_callpath->name, strlen(timer_callpath->name), timer_callpath);
+    taudb_add_timer_callpath_to_trial(trial, timer_callpath);
   }
   return timer_callpath;
 }
@@ -469,7 +472,8 @@ TAUDB_TIMER_CALL_DATA* taudb_create_timer_call_datum(TAUDB_TRIAL* trial, TAUDB_T
     timer_call_data->key.timestamp = NULL;
     timer_call_data->calls = calls;
     timer_call_data->subroutines = calls;
-    HASH_ADD(hh2, trial->timer_call_data_by_key, key, sizeof(TAUDB_TIMER_CALL_DATA_KEY), timer_call_data);
+    //HASH_ADD(hh2, trial->timer_call_data_by_key, key, sizeof(TAUDB_TIMER_CALL_DATA_KEY), timer_call_data);
+    taudb_add_timer_call_data_to_trial(trial, timer_call_data);
   //} else {
 	//printf("TIMER_CALL_DATA: %s\n", timer_call_data->key.timer_callpath->name);
   }
@@ -481,7 +485,8 @@ extern TAUDB_TIMER_VALUE* taudb_create_timer_value(TAUDB_TRIAL* trial, TAUDB_TIM
   timer_value->inclusive = inclusive;
   timer_value->exclusive = exclusive;
   timer_value->metric = metric;
-  HASH_ADD_KEYPTR(hh, timer_call_data->timer_values, metric->name, strlen(timer_value->metric->name), timer_value);
+  //HASH_ADD_KEYPTR(hh, timer_call_data->timer_values, metric->name, strlen(timer_value->metric->name), timer_value);
+  taudb_add_timer_value_to_timer_call_data(timer_call_data, timer_value);
   return timer_value;
 }
 
@@ -628,14 +633,16 @@ boolean taudb_private_secondary_metadata_from_xml(TAUDB_TRIAL * trial, TAUDB_THR
 				secondary_metadata->children = NULL;
 				secondary_metadata->value = (char**)malloc(sizeof(char*));
 				secondary_metadata->value[0] = taudb_strdup((char *)value_str);
-                HASH_ADD_KEYPTR(hh2, trial->secondary_metadata_by_key, &(secondary_metadata->key), sizeof(secondary_metadata->key), secondary_metadata);
+                //HASH_ADD_KEYPTR(hh2, trial->secondary_metadata_by_key, &(secondary_metadata->key), sizeof(secondary_metadata->key), secondary_metadata);
+                taudb_add_secondary_metadata_to_trial(trial, secondary_metadata);
 				// put it in the primary_metadata, if exists
                 TAUDB_PRIMARY_METADATA* pm = NULL;
                 if (thread->index == 0) {
                   pm = taudb_create_primary_metadata(1);
 				  pm->name  = taudb_strdup((char *)name_str);
 				  pm->value = taudb_strdup((char *)value_str);
-                  HASH_ADD_KEYPTR(hh, trial->primary_metadata, pm->name, strlen(pm->name), pm);
+                  //HASH_ADD_KEYPTR(hh, trial->primary_metadata, pm->name, strlen(pm->name), pm);
+                  taudb_add_primary_metadata_to_trial(trial, pm);
                 } else {
                   pm = taudb_get_primary_metadata_by_name(trial->primary_metadata, (const char*)name_str);
                   if (pm != NULL) {
@@ -761,7 +768,8 @@ TAUDB_COUNTER* taudb_create_counter(TAUDB_TRIAL* trial, const char* counter_name
 #ifdef TAUDB_DEBUG_DEBUG
 	printf("Adding: '%s'\n", counter->name);
 #endif
-    HASH_ADD_KEYPTR(hh2, trial->counters_by_name, counter->name, strlen(counter->name), counter);
+    //HASH_ADD_KEYPTR(hh2, trial->counters_by_name, counter->name, strlen(counter->name), counter);
+    taudb_add_counter_to_trial(trial, counter);
   }
   return counter;
 }
@@ -777,7 +785,8 @@ TAUDB_COUNTER_VALUE* taudb_create_counter_value(TAUDB_TRIAL* trial, TAUDB_COUNTE
   counter_value->minimum_value = min;
   counter_value->mean_value = mean;
   counter_value->standard_deviation = sumsqr;
-  HASH_ADD(hh1, trial->counter_values, key, sizeof(counter_value->key), counter_value);
+  //HASH_ADD(hh1, trial->counter_values, key, sizeof(counter_value->key), counter_value);
+  taudb_add_counter_value_to_trial(trial, counter_value);
   return counter_value;
 }
 

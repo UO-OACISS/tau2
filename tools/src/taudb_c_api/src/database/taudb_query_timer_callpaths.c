@@ -43,7 +43,7 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(TAUDB_CONNECTION* connection, 
   if (timer != NULL) {
     sprintf(my_query,"%s and t.id = %d", my_query, timer->id);
   }
-  sprintf(my_query,"%s order by parent", my_query);
+  sprintf(my_query,"%s order by parent desc", my_query);
 #ifdef TAUDB_DEBUG
   printf("%s\n", my_query);
 #endif
@@ -67,8 +67,12 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths(TAUDB_CONNECTION* connection, 
       } else if (strcmp(taudb_get_column_name(connection, j), "parent") == 0) {
         TAUDB_TIMER_CALLPATH* parent = NULL;
         int parent_id = atoi(taudb_get_value(connection, i, j));
-        parent = taudb_get_timer_callpath_by_id(trial->timer_callpaths_by_id, parent_id);
-		timer_callpath->parent = parent;
+		if (parent_id > 0) {
+          parent = taudb_get_timer_callpath_by_id(trial->timer_callpaths_by_id, parent_id);
+		  timer_callpath->parent = parent;
+		} else {
+		  timer_callpath->parent = NULL;
+		}
       } else {
         printf("Error: unknown column '%s'\n", taudb_get_column_name(connection, j));
         taudb_exit_nicely(connection);
@@ -113,7 +117,7 @@ TAUDB_TIMER_CALLPATH* taudb_query_timer_callpaths_2005(TAUDB_CONNECTION* connect
 
   /* iterate over the timers, and create flat profile callpaths for the timers */
   TAUDB_TIMER *current, *tmp;
-  HASH_ITER(hh1, trial->timers_by_id, current, tmp) {
+  HASH_ITER(trial_hash_by_id, trial->timers_by_id, current, tmp) {
     TAUDB_TIMER_CALLPATH* timer_callpath = taudb_create_timer_callpaths(1);
     timer_callpath->id = current->id;
     timer_callpath->timer = current;
@@ -187,7 +191,7 @@ TAUDB_TIMER_CALLPATH* taudb_process_callpath_timer(TAUDB_TRIAL* trial, TAUDB_TIM
     //taudb_trim(token);
     // find the parent timer in the hash
     //parent_timer = taudb_get_timer_by_name(trial->timers_by_name, token);
-    parent_timer = taudb_get_timer_by_name(trial->timers_by_name, token);
+    parent_timer = taudb_get_trial_timer_by_name(trial->timers_by_name, token);
     if (parent_timer != NULL) {
 #ifdef TAUDB_DEBUG
       printf("Parent timer: '%s', id: %d\n", token, parent_timer->id);
@@ -234,7 +238,7 @@ TAUDB_TIMER_CALLPATH* taudb_process_callpath_timer(TAUDB_TRIAL* trial, TAUDB_TIM
   // now, handle the leaf. The leaf timer may already exist - check for it
   TAUDB_TIMER* leaf_timer = NULL;
   // find the leaf timer in the hash
-  leaf_timer = taudb_get_timer_by_name(trial->timers_by_name, callpath);
+  leaf_timer = taudb_get_trial_timer_by_name(trial->timers_by_name, callpath);
   if (leaf_timer != NULL) {
 #ifdef TAUDB_DEBUG
     printf("Leaf timer: '%s', id: %d\n", callpath, leaf_timer->id);
@@ -286,7 +290,7 @@ TAUDB_TIMER_CALLPATH* taudb_get_timer_callpath_by_id(TAUDB_TIMER_CALLPATH* timer
     return NULL;
   }
   if (id == 0) {
-    fprintf(stderr, "Error: id parameter null. Please provide a valid name.\n");
+    fprintf(stderr, "Error: id parameter null. Please provide a valid id.\n");
     return NULL;
   }
 

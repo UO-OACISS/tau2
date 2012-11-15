@@ -30,7 +30,7 @@ TAUDB_COUNTER_VALUE* taudb_query_counter_values(TAUDB_CONNECTION* connection, TA
   if (taudb_version == TAUDB_2005_SCHEMA) {
     sprintf(my_query,"select alp.* from atomic_location_profile alp inner join atomic_event ae on ae.id = alp.atomic_event where ae.trial = %d", trial->id);
   } else {
-    sprintf(my_query,"select * from counter_value where trial = %d", trial->id);
+    sprintf(my_query,"select cv.* from counter_value cv inner join counter c on cv.counter = c.id where trial = %d", trial->id);
   }
 #ifdef TAUDB_DEBUG
   printf("'%s'\n",my_query);
@@ -60,7 +60,9 @@ TAUDB_COUNTER_VALUE* taudb_query_counter_values(TAUDB_CONNECTION* connection, TA
       } else if (strcmp(taudb_get_column_name(connection, j), "counter") == 0) {
         counter_value->key.counter = taudb_get_counter_by_id(trial->counters_by_id, atoi(taudb_get_value(connection, i, j)));
       } else if (strcmp(taudb_get_column_name(connection, j), "timer_callpath") == 0) {
-        counter_value->key.context = taudb_get_timer_callpath_by_id(trial->timer_callpaths_by_id, atoi(taudb_get_value(connection, i, j)));
+	    int id = atoi(taudb_get_value(connection, i, j));
+		if (id > 0)
+          counter_value->key.context = taudb_get_timer_callpath_by_id(trial->timer_callpaths_by_id, id);
       } else if (strcmp(taudb_get_column_name(connection, j), "node") == 0) {
         node = atoi(taudb_get_value(connection, i, j));
       } else if (strcmp(taudb_get_column_name(connection, j), "context") == 0) {

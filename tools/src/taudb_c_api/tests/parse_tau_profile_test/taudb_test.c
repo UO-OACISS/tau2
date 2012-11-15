@@ -36,13 +36,13 @@ int main (int argc, char** argv) {
   // iterate over the hash
   TAUDB_TIMER* timer;
   count = 0;
-  for (timer = timers ; timer != NULL ; timer=(TAUDB_TIMER*)timer->hh2.next) {
+  for (timer = timers ; timer != NULL ; timer=(TAUDB_TIMER*)timer->trial_hash_by_name.next) {
     //printf("TIMER: %s\n'%s', '%s', %d, %d, %d, %d\n", timer->name, timer->short_name, timer->source_file, timer->line_number, timer->line_number_end, timer->column_number, timer->column_number_end);
 	count = count + 1;
   }
   printf("%d TIMERs found\n", count);
 
-  printf("%d TIMER_GROUPs found\n", HASH_CNT(hh1, trial->timer_groups));
+  printf("%d TIMER_GROUPs found\n", HASH_CNT(trial_hash_by_name, trial->timer_groups));
 
   TAUDB_TIMER_CALLPATH* timer_callpaths = trial->timer_callpaths_by_name;
   // iterate over the hash

@@ -47,7 +47,7 @@ void dump_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter, boolean have
 
    // iterate over the hash
    TAUDB_TIMER* timer;
-   for (timer = timers ; timer != NULL ; timer=(TAUDB_TIMER*)timer->hh1.next) {
+   for (timer = timers ; timer != NULL ; timer=(TAUDB_TIMER*)timer->trial_hash_by_name.next) {
      printf("%s\n", timer->name);
    }
 

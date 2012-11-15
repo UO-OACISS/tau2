@@ -35,9 +35,9 @@ taudb_query_timer_call_data_test \
 perfdmf_test \
 query_all
 
-TEST_TARGETS=save_trial \
-#activeharmony \
-parse_tau_profile_test \
+TEST_TARGETS=parse_tau_profile_test \
+#save_trial \
+activeharmony \
 taudb_main\
 parse_config_test \
 taudb_query_trial_test \
