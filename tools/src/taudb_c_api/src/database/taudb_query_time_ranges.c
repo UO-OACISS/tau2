@@ -109,10 +109,10 @@ void taudb_save_time_ranges(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, bo
     sprintf(iend, "%d", time_range->iteration_end);
     paramValues[1] = iend;
     char tstart[32] = {0};
-    sprintf(tstart, "%lld", time_range->time_start);
+    sprintf(tstart, "%llu", (long long unsigned int)time_range->time_start);
     paramValues[2] = tstart;
     char tend[32] = {0};
-    sprintf(tend, "%lld", time_range->time_end);
+    sprintf(tend, "%llu", (long long unsigned int)time_range->time_end);
     paramValues[3] = tend;
 
     taudb_execute_statement(connection, statement_name, 4, paramValues);

@@ -55,9 +55,15 @@ TAUDB_SECONDARY_METADATA* taudb_create_secondary_metadata(int count){
  metadata->num_values = 0;
  uuid_t uuid;
  uuid_generate(uuid);
+#ifdef __X86_64_LINUX__
+ char out[37]; // 36 bytes, plus null terminator
+ uuid_unparse_upper(uuid, out);
+ metadata->id = taudb_strdup(out);
+#else
  uuid_string_t out;
  uuid_unparse_upper(uuid, out);
  metadata->id = taudb_strdup((char*)out);
+#endif
  return metadata;
 }
 
