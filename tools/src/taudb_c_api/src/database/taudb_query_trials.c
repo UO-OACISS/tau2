@@ -7,6 +7,9 @@
 #include <time.h>
 #include <sys/time.h>
 #include <math.h>
+#ifndef fmax
+#define fmax(a,b) ((a) < (b) ? (a) : (b))
+#endif
 
 xmlNodePtr taudb_private_find_xml_child_named(xmlNodePtr parent, const char * name) {
 	xmlNodePtr cur_node = parent;
