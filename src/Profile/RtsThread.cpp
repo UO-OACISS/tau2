@@ -162,7 +162,8 @@ int RtsLayer::myThread(void)
   return JavaThreadLayer::GetThreadId(); 
 	// C++ app shouldn't use this unless there's a VM
 #elif TAU_OPENMP
-  return OpenMPLayer::GetTauThreadId();
+  //return OpenMPLayer::GetTauThreadId();
+  return OpenMPLayer::GetThreadId();
 #elif TAU_PAPI_THREADS
   return PapiThreadLayer::GetThreadId();
 #else  // if no other thread package is available 
