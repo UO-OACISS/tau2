@@ -1605,7 +1605,7 @@ extern "C" void Tau_sampling_init_if_necessary(void) {
  * than thread 0. By making this region an OpenMP parallel region, we initialize
  * sampling on all (currently known) OpenMP threads. Any threads created after this
  * point may not be recognized by TAU. But this should catch the 99% case. */
-#if 0 and defined(TAU_OPENMP) and !defined(TAU_PTHREAD)
+#if defined(TAU_OPENMP) and !defined(TAU_PTHREAD)
   // if the master thread is in TAU, in a non-parallel region
   if (omp_get_num_threads() == 1) {
   /* WE HAVE TO DO THIS! Otherwise, we end up with deadlock. Don't worry,
@@ -1619,7 +1619,7 @@ extern "C" void Tau_sampling_init_if_necessary(void) {
 #pragma omp critical (creatingtopleveltimer)
       {
 	    // this will likely register the currently executing OpenMP thread.
-        int myTid = RtsLayer::myThread();
+        int myTid = RtsLayer::threadId();
         if (!thrInitialized[myTid]) {
           thrInitialized[myTid] = true;
           Tau_sampling_init(myTid);
