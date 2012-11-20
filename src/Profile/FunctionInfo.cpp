@@ -169,12 +169,14 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   
   if (InitData) {
     for (int i=0; i < TAU_MAX_THREADS; i++) {
-      NumCalls[i] = 0;
       SetAlreadyOnStack(false, i);
+      NumCalls[i] = 0;
       NumSubrs[i] = 0;
       for(int j=0;j<Tau_Global_numCounters;j++){
-	ExclTime[i][j] = 0;
-	InclTime[i][j] = 0;
+        ExclTime[i][j] = 0;
+        InclTime[i][j] = 0;
+        dumpExclusiveValues[i][j] = 0;
+        dumpInclusiveValues[i][j] = 0;
       } 
     }
   }
