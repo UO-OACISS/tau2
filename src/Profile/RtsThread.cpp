@@ -424,6 +424,8 @@ int RtsLayer::LockDB(void) {
     threadLockDB();
   }
   lockDBCount[tid]++;
+  //printf("THREAD %d HAS %d DB LOCKS (locking)\n", tid, lockDBCount[tid]);
+  //fflush(stdout);
   return lockDBCount[tid];
 }
 
@@ -433,6 +435,8 @@ int RtsLayer::UnLockDB(void) {
   if (lockDBCount[tid] == 0) {
     threadUnLockDB();
   }
+  //printf("THREAD %d HAS %d DB LOCKS\n", tid, lockDBCount[tid]);
+  //fflush(stdout);
   return lockDBCount[tid];
 }
 
@@ -491,6 +495,8 @@ int RtsLayer::LockEnv(void) {
     threadLockEnv();
   }
   lockEnvCount[tid]++;
+  //printf("THREAD %d HAS %d ENV LOCKS (locking)\n", tid, lockEnvCount[tid]);
+  //fflush(stdout);
   return lockEnvCount[tid];
 }
 
@@ -500,6 +506,8 @@ int RtsLayer::UnLockEnv(void) {
   if (lockEnvCount[tid] == 0) {
     threadUnLockEnv();
   }
+  //printf("THREAD %d HAS %d ENV LOCKS\n", tid, lockEnvCount[tid]);
+  //fflush(stdout);
   return lockEnvCount[tid];
 }
 

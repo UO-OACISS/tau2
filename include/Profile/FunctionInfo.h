@@ -148,9 +148,8 @@ private:
   TAU_MULTSTORAGE(double, ExclTime);
   TAU_MULTSTORAGE(double, InclTime);
   TAU_STORAGE(bool, AlreadyOnStack);
-
-  double dumpExclusiveValues[TAU_MAX_THREADS][TAU_MAX_COUNTERS];
-  double dumpInclusiveValues[TAU_MAX_THREADS][TAU_MAX_COUNTERS];
+  TAU_MULTSTORAGE(double, dumpExclusiveValues);
+  TAU_MULTSTORAGE(double, dumpInclusiveValues);
 
 public:
   char *Name;

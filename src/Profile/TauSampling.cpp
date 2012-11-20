@@ -1599,7 +1599,7 @@ int Tau_sampling_finalize(int tid) {
  */
 extern "C" void Tau_sampling_init_if_necessary(void) {
   static bool samplingThrInitialized[TAU_MAX_THREADS] = {false};
-  int myTid = 0;
+  int i = 0;
 
 /* Greetings, intrepid thread developer. We had a problem with OpenMP applications
  * which did not call instrumented functions or regions from an OpenMP region. In
@@ -1610,23 +1610,33 @@ extern "C" void Tau_sampling_init_if_necessary(void) {
 #if defined(TAU_OPENMP) and !defined(TAU_PTHREAD)
   // if the master thread is in TAU, in a non-parallel region
   if (omp_get_num_threads() == 1) {
+  /* FIRST! make sure that we don't process samples while in this code */
+	for (i = 0 ; i < TAU_MAX_THREADS ; i++) {
+      Tau_global_incr_insideTAU_tid(i);
+	}
   /* WE HAVE TO DO THIS! Otherwise, we end up with deadlock. Don't worry,
    * it is OK, because we know(?) there are no other active threads
    * thanks to the #define three lines above this */
-    int numLocks = RtsLayer::getNumEnvLocks();
-	int i = numLocks;
-	// This looks strange, but we want to make sure we REALLY unlock the lock
-	while (i > 0) {
-	  i = RtsLayer::UnLockEnv();
+    int numEnvLocks = RtsLayer::getNumEnvLocks();
+    int numDBLocks = RtsLayer::getNumDBLocks();
+	int tmpLocks = numEnvLocks;
+	// This looks strange, but we want to make sure we REALLY unlock the locks
+	while (tmpLocks > 0) {
+	  tmpLocks = RtsLayer::UnLockEnv();
 	}
+	tmpLocks = numDBLocks;
+	while (tmpLocks > 0) {
+	  tmpLocks = RtsLayer::UnLockDB();
+	}
+
 	// do this for all threads
-#pragma omp parallel shared (samplingThrInitialized) private(myTid) 
+#pragma omp parallel shared (samplingThrInitialized)
     {
 	  // but do it sequentially.
 #pragma omp critical (creatingtopleveltimer)
       {
 	    // this will likely register the currently executing OpenMP thread.
-        myTid = RtsLayer::threadId();
+        int myTid = RtsLayer::threadId();
         if (!samplingThrInitialized[myTid]) {
           samplingThrInitialized[myTid] = true;
           Tau_sampling_init(myTid);
@@ -1635,8 +1645,16 @@ extern "C" void Tau_sampling_init_if_necessary(void) {
     } // parallel
 	/* WE HAVE TO DO THIS! The environment was locked before we entered
 	 * this function, we unlocked it, so re-lock it for safety */
-	for (i = 0 ; i < numLocks ; i++) {
+	for (tmpLocks = 0 ; tmpLocks < numDBLocks ; tmpLocks++) {
+      RtsLayer::LockDB();
+	}
+	for (tmpLocks = 0 ; tmpLocks < numEnvLocks ; tmpLocks++) {
       RtsLayer::LockEnv();
+	}
+
+    /* we are done with TAU for now */
+	for (i = 0 ; i < TAU_MAX_THREADS ; i++) {
+      Tau_global_decr_insideTAU_tid(i);
 	}
 	/* return, because our work is done for this special case. */
 	return;
@@ -1644,11 +1662,13 @@ extern "C" void Tau_sampling_init_if_necessary(void) {
 #endif
 
 // handle all other cases!
-  myTid = RtsLayer::threadId();
-  if (!samplingThrInitialized[myTid]) {
-    samplingThrInitialized[myTid] = true;
-    Tau_sampling_init(myTid);
+  int tid = RtsLayer::myThread();
+  Tau_global_incr_insideTAU_tid(tid);
+  if (!samplingThrInitialized[tid]) {
+    samplingThrInitialized[tid] = true;
+    Tau_sampling_init(tid);
   }
+  Tau_global_decr_insideTAU_tid(tid);
 }
 
 /* *CWL* - This is a preliminary attempt to allow MPI wrappers to invoke

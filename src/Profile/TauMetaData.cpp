@@ -216,9 +216,9 @@ extern "C" void Tau_metadata_task(const char *name, const char *value, int tid) 
   Tau_metadata_value_t* tmv = NULL;
   Tau_metadata_create_value(&tmv, TAU_METADATA_TYPE_STRING);
   tmv->data.cval = strdup(value);
-  RtsLayer::LockDB();
+  RtsLayer::LockEnv();
   Tau_metadata_getMetaData(tid)[*key] = tmv;
-  RtsLayer::UnLockDB();
+  RtsLayer::UnLockEnv();
 }
 
 extern "C" void Tau_metadata(const char *name, const char *value) {
@@ -879,30 +879,28 @@ extern "C" void Tau_context_metadata(const char *name, const char *value) {
   return;
 #endif
 
-  //printf("%s, %s\n", name, value);
-  RtsLayer::LockDB();
-  // get the current calling context
-  Profiler *current = TauInternal_CurrentProfiler(RtsLayer::myThread());
   Tau_metadata_key *key = new Tau_metadata_key();
+  int tid = RtsLayer::myThread();
+  // get the current calling context
+  RtsLayer::LockEnv();
+  Profiler *current = TauInternal_CurrentProfiler(tid);
+  RtsLayer::UnLockEnv();
   // it IS possible to request metadata with no active timer.
   if (current != NULL) {
     FunctionInfo *fi = current->ThisFunction;
     char *fname = (char*)(malloc(sizeof(char)*(strlen(fi->GetName()) + strlen(fi->GetType()) + 2)));
     sprintf(fname, "%s %s", fi->GetName(), fi->GetType());
 	key->timer_context = fname;
-	key->call_number = fi->GetCalls(RtsLayer::myThread());
+	key->call_number = fi->GetCalls(tid);
 	key->timestamp = (x_uint64)current->StartTime[0];
   }
   key->name = strdup(name);
   Tau_metadata_value_t* tmv = NULL;
   Tau_metadata_create_value(&tmv, TAU_METADATA_TYPE_STRING);
   tmv->data.cval = strdup(value);
-  //printf("%p  %s:%s:%d:%d:%llu = %s\n", &(Tau_metadata_getMetaData(RtsLayer::myThread())), key->name, key->timer_context, RtsLayer::myThread(), key->call_number, key->timestamp, tmv->data.cval);
-  int before = Tau_metadata_getMetaData(RtsLayer::myThread()).size();
-  Tau_metadata_getMetaData(RtsLayer::myThread())[*key] = tmv;
-  int after = Tau_metadata_getMetaData(RtsLayer::myThread()).size();
-  //printf("before: %d items, after %d items\n", before, after);
-  RtsLayer::UnLockDB();
+  RtsLayer::LockEnv();
+  Tau_metadata_getMetaData(tid)[*key] = tmv;
+  RtsLayer::UnLockEnv();
 }
 
 extern "C" void Tau_structured_metadata(const Tau_metadata_object_t *object, bool context) {
@@ -913,7 +911,7 @@ extern "C" void Tau_structured_metadata(const Tau_metadata_object_t *object, boo
 
   Tau_metadata_key *key = new Tau_metadata_key();
   if (context) {
-    RtsLayer::LockDB();
+    RtsLayer::LockEnv();
     // get the current calling context
     Profiler *current = TauInternal_CurrentProfiler(RtsLayer::myThread());
     // it IS possible to request metadata with no active timer.
@@ -933,7 +931,7 @@ extern "C" void Tau_structured_metadata(const Tau_metadata_object_t *object, boo
     //printf("%p  %s:%s:%d:%llu = %s\n", &(Tau_metadata_getMetaData(RtsLayer::myThread())), key->name, key->timer_context, key->call_number, key->timestamp, tmv->data.cval);
     Tau_metadata_getMetaData(RtsLayer::myThread())[*key] = tmv;
   }
-  RtsLayer::UnLockDB();
+  RtsLayer::UnLockEnv();
 #endif
 }
 
@@ -961,9 +959,9 @@ extern "C" void Tau_phase_metadata(const char *name, const char *value) {
   Tau_metadata_value_t* tmv = NULL;
   Tau_create_metadata_value(&tmv, TAU_METADATA_TYPE_STRING);
   tmv->data.cval = strdup(value);
-  RtsLayer::LockDB();
+  RtsLayer::LockEnv();
   Tau_metadata_getMetaData(RtsLayer::myThread())[*key] = tmv;
-  RtsLayer::UnLockDB();
+  RtsLayer::UnLockEnv();
 #else
   Tau_context_metadata(name, value);
 #endif

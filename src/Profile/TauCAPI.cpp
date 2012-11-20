@@ -1517,13 +1517,18 @@ void Tau_pure_start_task_string(const string name, int tid)
 
 extern "C" void Tau_pure_start_task(const char *name, int tid)
 {
+  Tau_global_incr_insideTAU_tid(tid);
   string n = string(name);
   Tau_pure_start_task_string(n, tid);
+  Tau_global_decr_insideTAU_tid(tid);
 }
 
 extern "C" void Tau_pure_start(const char *name) {
+  int tid = Tau_get_tid();
+  Tau_global_incr_insideTAU_tid(tid);
   string n = string(name);
-  Tau_pure_start_task_string(n, Tau_get_tid());
+  Tau_pure_start_task_string(n, tid);
+  Tau_global_decr_insideTAU_tid(tid);
 }
 
 void Tau_pure_stop_task_string(const string name, int tid) {
@@ -1540,13 +1545,18 @@ void Tau_pure_stop_task_string(const string name, int tid) {
 }
 
 extern "C" void Tau_pure_stop_task(const char *name, int tid) {
+  Tau_global_incr_insideTAU_tid(tid);
   string n = string(name);
   Tau_pure_stop_task_string(n, tid);
+  Tau_global_decr_insideTAU_tid(tid);
 }
 
 extern "C" void Tau_pure_stop(const char *name) {
+  int tid = Tau_get_tid();
+  Tau_global_incr_insideTAU_tid(tid);
   string n = string(name);
   Tau_pure_stop_task_string(n, Tau_get_tid());
+  Tau_global_decr_insideTAU_tid(tid);
 }
 
 extern "C" void Tau_static_phase_start(char *name) {
