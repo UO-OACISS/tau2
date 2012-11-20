@@ -198,20 +198,20 @@ static map<unsigned long, CallSiteInfo *> *pc2CallSiteMap[TAU_MAX_THREADS];
 static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
 
 /* The trace for this node, mulithreaded execution currently not supported */
-FILE *ebsTrace[TAU_MAX_THREADS];
+FILE *ebsTrace[TAU_MAX_THREADS] = {NULL};
 
 /* Sample processing enabled/disabled */
-int samplingEnabled[TAU_MAX_THREADS];
+int samplingEnabled[TAU_MAX_THREADS] = {0};
 /* we need a process-wide flag for disabling sampling at program exit. */
 int collectingSamples = 0;
 /* Sample processing suspended/resumed */
-int suspendSampling[TAU_MAX_THREADS];
-long long numSamples[TAU_MAX_THREADS];
-long long samplesDroppedTau[TAU_MAX_THREADS];
-long long samplesDroppedSuspended[TAU_MAX_THREADS];
+int suspendSampling[TAU_MAX_THREADS] = {0};
+long long numSamples[TAU_MAX_THREADS] = {0LL};
+long long samplesDroppedTau[TAU_MAX_THREADS] = {0LL};
+long long samplesDroppedSuspended[TAU_MAX_THREADS] = {0LL};
 // save the previous timestamp so that we can increment the accumulator
 // each time we get a sample
-x_uint64 previousTimestamp[TAU_MAX_COUNTERS * TAU_MAX_THREADS];
+x_uint64 previousTimestamp[TAU_MAX_COUNTERS * TAU_MAX_THREADS] = {0LL};
 
 // When we register our signal handler, we have to save any existing handler,
 // so that we can call it when we are done.
@@ -1091,8 +1091,8 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
     samplingContext = profiler->ThisFunction;
   }
   /* Get the current metric values */
-  double values[TAU_MAX_COUNTERS];
-  double deltaValues[TAU_MAX_COUNTERS];
+  double values[TAU_MAX_COUNTERS] = {0.0};
+  double deltaValues[TAU_MAX_COUNTERS] = {0.0};
   TauMetrics_getMetrics(tid, values);
   int localIndex = tid*TAU_MAX_COUNTERS;
 
@@ -1181,7 +1181,7 @@ void Tau_sampling_event_start(int tid, void **addresses) {
     //         advantage of limiting the fudge factor to some factor of
     //         TAU_EBS_PERIOD.
         
-    double values[TAU_MAX_COUNTERS];
+    double values[TAU_MAX_COUNTERS] = {0.0};
     TauMetrics_getMetrics(tid, values);
     int localIndex = tid*TAU_MAX_COUNTERS;
     for (int i = 0; i < Tau_Global_numCounters; i++) {
