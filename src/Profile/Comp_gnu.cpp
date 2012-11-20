@@ -35,8 +35,9 @@
 #include <Profile/TauInit.h>
 
 #include <vector>
-#include <map>
+#include <set>
 using namespace std;
+#include <tau_internal.h>
 
 
 #include <stdio.h>
@@ -83,7 +84,15 @@ struct HashNode
 	bool excluded;			///< Is function excluded from profiling?
 };
 
-typedef std::map<unsigned long, HashNode> HashTable;
+typedef TAU_HASH_MAP<unsigned long, HashNode> HashTable;
+
+typedef std::set<unsigned long> ExcludeList;
+
+ExcludeList& TheExcludeList()
+{
+	static ExcludeList el;
+	return el;
+}
 
 HashTable& TheHashTable()
 {
@@ -113,6 +122,16 @@ void updateHashTable(unsigned long addr, const char *funcname)
 			// Tau Profile wrappers
 			|| strstr(funcname, "Tau_Profile_Wrapper")
 			);
+
+	if (funcname && (
+			// Intel compiler static initializer
+			(strcmp(funcname, "__sti__$E") == 0)
+			// Tau Profile wrappers
+			|| strstr(funcname, "Tau_Profile_Wrapper")
+			))
+	{
+		TheExcludeList().insert(addr);
+	}
 }
 
 
@@ -232,6 +251,12 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 		atexit(runOnExit);
 	}
 
+	// stop for throttled events.
+	ExcludeList::iterator it = TheExcludeList().find(addr);	
+	if (*it == addr) {
+		return;
+	}
+	
 	// prevent re-entry of this routine on a per thread basis
 	Tau_global_incr_insideTAU_tid(tid);
 	if (compInstDisabled[tid]) {
@@ -285,6 +310,14 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 			RtsLayer::UnLockDB();
 		}
 		Tau_start_timer(hn.fi, 0, tid);
+		
+		if (!(hn.fi->GetProfileGroup() & RtsLayer::TheProfileMask()))
+		{
+			//printf("COMP_GNU >>>>>>>>>> Excluding: %s, addr: %d, throttled.\n", hn.fi->GetName(), addr);
+			hn.excluded = true;
+			TheExcludeList().insert(addr);
+		}
+		
 	}
 
 	// finished in this routine, allow entry

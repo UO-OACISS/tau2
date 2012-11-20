@@ -37,6 +37,10 @@
 #define TAU_DISABLE_SYSCALL_WRAPPER
 #endif /* TAU_BGP || TAU_XLC */
 
+#ifndef TAU_PTHREAD_BARRIER_AVAILABLE
+#define TAU_PTHREAD_BARRIER_AVAILABLE
+#endif /* TAU_PTHREAD_BARRIER_AVAILABLE */
+
 typedef int (*pthread_create_call_p) 
 	(pthread_t *threadp,
 	const pthread_attr_t *attr,
@@ -104,7 +108,7 @@ void pthread_exit (void *value_ptr) {
 }
 
 #ifdef TAU_PTHREAD_BARRIER_AVAILABLE
-extern "C" int pthread_barrier_wait(pthread_barrier_t *barrier) {
+extern int pthread_barrier_wait(pthread_barrier_t *barrier) {
   int retval;
   if (_pthread_barrier_wait == NULL) {
     _pthread_barrier_wait = (int (*) (pthread_barrier_t *barrier)) dlsym(RTLD_NEXT, "pthread_barrier_wait");
