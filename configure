@@ -3595,7 +3595,6 @@ case $cxx_compiler in
 	      if [ $machine = apple ]; then
 # MPI on Apple OS X has issues with shared objects
                 fixmakeargs="$fixmakeargs NOSHARED"
-echo "HIIII -> fixmakeargs = $fixmakeargs"
               fi
               ;;
            *)
@@ -4430,11 +4429,25 @@ then
     then
     #echo "Include dir found. adding -I$mpiinc to INC"
       shmemincargs="-I$shmeminc"
+      if [ -r $shmeminc/mpp/shmem.h ]
+      then
+        shmemincargs="-I$shmeminc#-I$shmeminc/mpp"
+      fi 
       gpshmem=no
       if [ -r $shmeminc/gpshmem.h ] 
       then
         fixmakeargs="$fixmakeargs GPSHMEM"
         gpshmem=yes
+      fi
+      shmembindir=`echo $shmeminc | sed -e 's@include@bin@g'`
+      if [ -r $shmembindir/oshcc ]
+      then
+        openshmem=yes
+        fixmakeargs="$fixmakeargs OPENSHMEM"
+      fi
+      if [ -r $shmembindir/mpiexec_mpt ]
+      then
+        fixmakeargs="$fixmakeargs SGI_MPT_SHMEM"
       fi
     fi
   else
@@ -4446,8 +4459,7 @@ then
       if [ -r $openshmem_include_dir/mpp/shmem.h ] 
       then
         shmemincargs="-I$openshmem_include_dir#-I$openshmem_include_dir/mpp"
-        openshmem=yes
-        fixmakeargs="$fixmakeargs OPENSHMEM"
+        fixmakeargs="$fixmakeargs SGI_MPT_SHMEM"
       fi
     fi
     if [ $catamount = yes ] 
@@ -4532,6 +4544,18 @@ then
     #echo "Lib dir found. adding -L$shmemlib to LIB"
       shmemlibargs="$shmemlibargs -L$shmemlib"
     fi
+    shmembindir=`echo $shmemlib | sed -e 's@lib@bin@g'`
+    if [ -r $shmembindir/oshcc ]
+    then
+      openshmem=yes
+      fixmakeargs="$fixmakeargs OPENSHMEM"
+    fi
+    if [ -r $shmembindir/mpiexec_mpt ]
+    then
+      fixmakeargs="$fixmakeargs SGI_MPT_SHMEM"
+      shmemlibrary=-lsma#-lmpi
+    fi
+
   else
     if [ $catamount = yes ] 
     then
@@ -4725,6 +4749,7 @@ if [ $cxx_compiler = g++ -o $cxx_compiler = g++4 -o $cxx_compiler = egcs -o $cxx
     if [ $machine != crayxmt ] 
     then
       fixmakeargs="$fixmakeargs GNU COMPINST_GNU"
+      
     fi
     if [ $machine = ibm64 -o $machine = rs6000 -o $machine = ppc64 -o $machine = bgl -o $machine = bgp -o $machine = ibm64linux -o $machine = bgq ]
     then
