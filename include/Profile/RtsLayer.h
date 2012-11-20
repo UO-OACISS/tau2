@@ -119,11 +119,13 @@ public:
   static void RegisterFork(int nodeid, enum TauFork_t opcode);
 
   // This ensure that the FunctionDB (global) is locked while updating
-  static void LockDB(void);
-  static void UnLockDB(void);
+  static int LockDB(void);
+  static int UnLockDB(void);
+  static int getNumDBLocks(void);
 
-  static void LockEnv(void);
-  static void UnLockEnv(void);
+  static int LockEnv(void);
+  static int UnLockEnv(void);
+  static int getNumEnvLocks(void);
 
   static int getTotalThreads();
 
@@ -136,7 +138,7 @@ private:
   static void threadLockEnv(void);
   static void threadUnLockEnv(void);
 
-  static int lockDBcount[TAU_MAX_THREADS];
+  static int lockDBCount[TAU_MAX_THREADS];
   static int lockEnvCount[TAU_MAX_THREADS];
 
   static bool initLocks();

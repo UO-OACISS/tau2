@@ -47,7 +47,7 @@ void TraceCallStack(int tid, Profiler *current);
 #include <Profile/TauSampling.h>
 
 
-int RtsLayer::lockDBcount[TAU_MAX_THREADS];
+int RtsLayer::lockDBCount[TAU_MAX_THREADS];
 int RtsLayer::lockEnvCount[TAU_MAX_THREADS];
 
 //////////////////////////////////////////////////////////////////////
@@ -385,7 +385,7 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode) {
 bool RtsLayer::initLocks(void) {
   threadLockDB();
   for (int i=0; i<TAU_MAX_THREADS; i++) {
-    lockDBcount[i] = 0;
+    lockDBCount[i] = 0;
   }
   threadUnLockDB();
   return true;
@@ -412,22 +412,28 @@ extern "C" void Tau_RtsLayer_UnLockDB() {
   RtsLayer::UnLockDB();
 }
 
-void RtsLayer::LockDB(void) {
-  static bool init = initLocks();
+int RtsLayer::getNumDBLocks(void) {
   int tid=myThread();
-  if (lockDBcount[tid] == 0) {
-    threadLockDB();
-  }
-  lockDBcount[tid]++;
-  return;
+  return lockDBCount[tid];
 }
 
-void RtsLayer::UnLockDB(void) {
+int RtsLayer::LockDB(void) {
+  static bool init = initLocks();
   int tid=myThread();
-  lockDBcount[tid]--;
-  if (lockDBcount[tid] == 0) {
+  if (lockDBCount[tid] == 0) {
+    threadLockDB();
+  }
+  lockDBCount[tid]++;
+  return lockDBCount[tid];
+}
+
+int RtsLayer::UnLockDB(void) {
+  int tid=myThread();
+  lockDBCount[tid]--;
+  if (lockDBCount[tid] == 0) {
     threadUnLockDB();
   }
+  return lockDBCount[tid];
 }
 
 void RtsLayer::threadLockDB(void) {
@@ -473,22 +479,28 @@ void RtsLayer::threadUnLockDB(void) {
   return;
 }
 
-void RtsLayer::LockEnv(void) {
+int RtsLayer::getNumEnvLocks(void) {
+  int tid=myThread();
+  return lockEnvCount[tid];
+}
+
+int RtsLayer::LockEnv(void) {
   static bool init = initEnvLocks();
   int tid=myThread();
   if (lockEnvCount[tid] == 0) {
     threadLockEnv();
   }
   lockEnvCount[tid]++;
-  return;
+  return lockEnvCount[tid];
 }
 
-void RtsLayer::UnLockEnv(void) {
+int RtsLayer::UnLockEnv(void) {
   int tid=myThread();
   lockEnvCount[tid]--;
   if (lockEnvCount[tid] == 0) {
     threadUnLockEnv();
   }
+  return lockEnvCount[tid];
 }
 
 //////////////////////////////////////////////////////////////////////
