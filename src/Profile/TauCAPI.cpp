@@ -1282,7 +1282,7 @@ extern void Tau_pure_start_task_string(const string name, int tid);
  * library is used without any instrumentation in main */
 extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
 
-
+/*
   int disabled = 0;
 #ifdef TAU_VAMPIRTRACE
   disabled = 1;
@@ -1293,7 +1293,10 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
   if (disabled) {
     return;
   }
-
+*/
+#if defined(TAU_VAMPIRTRACE) || defined(TAU_EPILOG)
+	return // disabled.
+#endif
   /* After creating the ".TAU application" timer, we start it. In the
      timer start code, it will call this function, so in that case,
   	 return right away. */
