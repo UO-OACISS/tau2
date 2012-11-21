@@ -550,7 +550,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 
 	}
 	private void mainOnly(DB db) throws SQLException {
-		if (model.getMainEventOnly()) {
+		if (model.getMainEventOnly() && db.getSchemaVersion()==0) {
 			buf = new StringBuilder();
 			buf.append("select ie.name from interval_event ie ");
 			buf.append("inner join interval_mean_summary ims ");
@@ -574,7 +574,7 @@ public class GeneralChartData extends RMIGeneralChartData {
 			buf.append("and ims.inclusive = maxinclusive");
 			PreparedStatement statement = db.prepareStatement(buf.toString());
 //			 System.out.println(buf.toString());
-			//System.out.println(statement.toString());
+//			System.out.println(statement.toString());
 			ResultSet results = statement.executeQuery();
 
 			while (results.next() != false) {
@@ -584,7 +584,38 @@ public class GeneralChartData extends RMIGeneralChartData {
 			} 
 			results.close();
 			statement.close();
-		} 
+		} else if( model.getMainEventOnly()){
+			StringBuffer buffer = new StringBuffer();
+			buffer.append("select timer.name from timer");
+			buffer.append("      inner join timer_callpath on timer_callpath.timer = timer.id ");
+			buffer.append("      inner join timer_call_data on timer_call_data.timer_callpath = timer_callpath.id");
+			buffer.append("      inner join timer_value on timer_call_data.id = timer_value.timer_call_data , ");
+			buffer.append("      (select  temp_trial.id as trialid, temp_metric.id as metricid, max(timer_value.inclusive_value) as maxinc from timer");
+			buffer.append("      inner join temp_trial on timer.trial = temp_trial.id ");
+			buffer.append("      inner join timer_callpath on timer_callpath.timer = timer.id ");
+			buffer.append("      inner join timer_call_data on timer_call_data.timer_callpath = timer_callpath.id ");
+			buffer.append("      inner join thread on thread.trial = temp_trial.id ");
+			buffer.append("      inner join timer_value on timer_call_data.id = timer_value.timer_call_data ");
+			buffer.append("      inner join temp_metric on temp_metric.id=timer_value.metric ");
+			buffer.append("      where thread_rank = -2 ");
+			if (db.getDBType().compareTo("derby") == 0 || db.getDBType().compareTo("h2") == 0) {
+				buffer.append("group by temp_trial.id, temp_metric.id) mr ");
+			} else {
+				buffer.append("group by 1, 2) mr ");
+			}
+			buffer.append("      where timer_value.inclusive_value = maxinc and timer.trial = trialid and  timer_value.metric=metricid");
+			PreparedStatement statement = db.prepareStatement(buffer.toString());
+			ResultSet results = statement.executeQuery();
+
+			while (results.next() != false) {
+				// by adding these, we ensure only the main event
+				// will be selected in the next temporary table creation!
+				model.addEventName(results.getString(1));
+			} 
+			results.close();
+			statement.close();
+		
+		}
 	}
 
 	private void createPopTempMetricTable(DB db) throws SQLException {
