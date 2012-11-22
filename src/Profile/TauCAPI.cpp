@@ -1308,7 +1308,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
     if (initializing[tid]) {
       return;
     }
-    RtsLayer::LockDB();
+    RtsLayer::LockEnv();
     if (!initialized) {
 	  // whichever thread got here first, has the lock and will create the
 	  // FunctionInfo object for the top level timer.
@@ -1320,7 +1320,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
         initialized = true;
       }
     }
-    RtsLayer::UnLockDB();
+    RtsLayer::UnLockEnv();
   }
 
   if (initthread[tid] == true) {
@@ -1520,17 +1520,23 @@ void Tau_pure_start_task_string(const string name, int tid)
 
 extern "C" void Tau_pure_start_task(const char *name, int tid)
 {
+  Tau_global_incr_insideTAU_tid(tid);
   string n = string(name);
   Tau_pure_start_task_string(n, tid);
+  Tau_global_decr_insideTAU_tid(tid);
 }
 
 extern "C" void Tau_pure_start(const char *name) {
+  int tid = Tau_get_tid();
+  Tau_global_incr_insideTAU_tid(tid);
   string n = string(name);
-  Tau_pure_start_task_string(n, Tau_get_tid());
+  Tau_pure_start_task_string(n, tid);
+  Tau_global_decr_insideTAU_tid(tid);
 }
 
 void Tau_pure_stop_task_string(const string name, int tid) {
   FunctionInfo *fi;
+  // Locking the access to the FunctionInfo map
   RtsLayer::LockDB();
   TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(name);
   if (it == ThePureMap().end()) {
@@ -1538,18 +1544,24 @@ void Tau_pure_stop_task_string(const string name, int tid) {
   } else {
     fi = (*it).second;
   }
+  // releasing the FunctionInfo map
   RtsLayer::UnLockDB();
   Tau_stop_timer(fi, tid);
 }
 
 extern "C" void Tau_pure_stop_task(const char *name, int tid) {
+  Tau_global_incr_insideTAU_tid(tid);
   string n = string(name);
   Tau_pure_stop_task_string(n, tid);
+  Tau_global_decr_insideTAU_tid(tid);
 }
 
 extern "C" void Tau_pure_stop(const char *name) {
+  int tid = Tau_get_tid();
+  Tau_global_incr_insideTAU_tid(tid);
   string n = string(name);
   Tau_pure_stop_task_string(n, Tau_get_tid());
+  Tau_global_decr_insideTAU_tid(tid);
 }
 
 extern "C" void Tau_static_phase_start(char *name) {
@@ -1557,6 +1569,7 @@ extern "C" void Tau_static_phase_start(char *name) {
 //printf("Static phase: %s\n", name);
   FunctionInfo *fi = 0;
   string n = string(name);
+  RtsLayer::LockDB();
   TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
   if (it == ThePureMap().end()) {
     tauCreateFI((void**)&fi,n,"",TAU_USER,"TAU_USER");
@@ -1565,19 +1578,22 @@ extern "C" void Tau_static_phase_start(char *name) {
   } else {
     fi = (*it).second;
   }   
+  RtsLayer::UnLockDB();
   Tau_start_timer(fi,1, Tau_get_tid());
 }
 
 extern "C" void Tau_static_phase_stop(char *name) {
   FunctionInfo *fi;
   string n = string(name);
+  RtsLayer::LockDB();
   TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
   if (it == ThePureMap().end()) {
     fprintf (stderr, "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\nTAU Error: You will likely get an overlapping timer message next\n\n", name);
   } else {
     fi = (*it).second;
-    Tau_stop_timer(fi, Tau_get_tid());
   }
+  RtsLayer::UnLockDB();
+  Tau_stop_timer(fi, Tau_get_tid());
 }
 
 

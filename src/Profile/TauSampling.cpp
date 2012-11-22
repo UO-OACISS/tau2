@@ -343,9 +343,9 @@ void Tau_sampling_outputTraceCallpath(int tid) {
   Profiler *profiler = TauInternal_CurrentProfiler(tid);
   // *CWL* 2012/3/18 - EBS traces cannot handle callsites for now. Do not track.
   if ((profiler->CallPathFunction != NULL) && (TauEnv_get_callpath())) {
-    fprintf(ebsTrace[tid], "%ld", profiler->CallPathFunction->GetFunctionId());
+    fprintf(ebsTrace[tid], "%lld", profiler->CallPathFunction->GetFunctionId());
   } else if (profiler->ThisFunction != NULL) {
-    fprintf(ebsTrace[tid], "%ld", profiler->ThisFunction->GetFunctionId());
+    fprintf(ebsTrace[tid], "%lld", profiler->ThisFunction->GetFunctionId());
   }
 }
 
@@ -356,7 +356,7 @@ void Tau_sampling_flushTraceRecord(int tid, TauSamplingRecord *record,
 #ifdef TAU_EXP_DISABLE_DELTAS
   fprintf(ebsTrace[tid], "0 | 0 | ");
 #else
-  fprintf(ebsTrace[tid], "%lld | %lld | ", record->deltaStart, record->deltaStop);
+  fprintf(ebsTrace[tid], "%lu | %lu | ", record->deltaStart, record->deltaStop);
 #endif
 
   for (int i = 0; i < Tau_Global_numCounters; i++) {
@@ -1592,12 +1592,14 @@ int Tau_sampling_finalize(int tid) {
   return 0;
 }
 
+
 /* *CWL* - This is workaround code for MPI where mvapich2 on Hera was
    found to conflict with EBS sampling operations if EBS was initialized
    before MPI_Init().
  */
 extern "C" void Tau_sampling_init_if_necessary(void) {
-  static bool thrInitialized[TAU_MAX_THREADS] = {false};
+  static bool samplingThrInitialized[TAU_MAX_THREADS] = {false};
+  int i = 0;
 
 /* Greetings, intrepid thread developer. We had a problem with OpenMP applications
  * which did not call instrumented functions or regions from an OpenMP region. In
@@ -1608,38 +1610,65 @@ extern "C" void Tau_sampling_init_if_necessary(void) {
 #if defined(TAU_OPENMP) and !defined(TAU_PTHREAD)
   // if the master thread is in TAU, in a non-parallel region
   if (omp_get_num_threads() == 1) {
+  /* FIRST! make sure that we don't process samples while in this code */
+	for (i = 0 ; i < TAU_MAX_THREADS ; i++) {
+      Tau_global_incr_insideTAU_tid(i);
+	}
   /* WE HAVE TO DO THIS! Otherwise, we end up with deadlock. Don't worry,
    * it is OK, because we know(?) there are no other active threads
    * thanks to the #define three lines above this */
-    RtsLayer::UnLockEnv();
+    int numEnvLocks = RtsLayer::getNumEnvLocks();
+    int numDBLocks = RtsLayer::getNumDBLocks();
+	int tmpLocks = numEnvLocks;
+	// This looks strange, but we want to make sure we REALLY unlock the locks
+	while (tmpLocks > 0) {
+	  tmpLocks = RtsLayer::UnLockEnv();
+	}
+	tmpLocks = numDBLocks;
+	while (tmpLocks > 0) {
+	  tmpLocks = RtsLayer::UnLockDB();
+	}
+
 	// do this for all threads
-#pragma omp parallel shared (thrInitialized)
+#pragma omp parallel shared (samplingThrInitialized)
     {
 	  // but do it sequentially.
 #pragma omp critical (creatingtopleveltimer)
       {
 	    // this will likely register the currently executing OpenMP thread.
         int myTid = RtsLayer::threadId();
-        if (!thrInitialized[myTid]) {
-          thrInitialized[myTid] = true;
+        if (!samplingThrInitialized[myTid]) {
+          samplingThrInitialized[myTid] = true;
           Tau_sampling_init(myTid);
         }
       } // critical
     } // parallel
 	/* WE HAVE TO DO THIS! The environment was locked before we entered
 	 * this function, we unlocked it, so re-lock it for safety */
-    RtsLayer::LockEnv();
+	for (tmpLocks = 0 ; tmpLocks < numDBLocks ; tmpLocks++) {
+      RtsLayer::LockDB();
+	}
+	for (tmpLocks = 0 ; tmpLocks < numEnvLocks ; tmpLocks++) {
+      RtsLayer::LockEnv();
+	}
+
+    /* we are done with TAU for now */
+	for (i = 0 ; i < TAU_MAX_THREADS ; i++) {
+      Tau_global_decr_insideTAU_tid(i);
+	}
 	/* return, because our work is done for this special case. */
 	return;
   }
 #endif
 
 // handle all other cases!
-  int myTid = RtsLayer::myThread();
-  if (!thrInitialized[myTid]) {
-    thrInitialized[myTid] = true;
-    Tau_sampling_init(myTid);
+  int tid = RtsLayer::myThread();
+  Tau_global_incr_insideTAU_tid(tid);
+  if (!samplingThrInitialized[tid]) {
+    samplingThrInitialized[tid] = true;
+    Tau_sampling_init(tid);
   }
+  Tau_global_decr_insideTAU_tid(tid);
 }
 
 /* *CWL* - This is a preliminary attempt to allow MPI wrappers to invoke
