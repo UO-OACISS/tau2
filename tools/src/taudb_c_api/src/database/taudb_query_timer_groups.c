@@ -117,8 +117,17 @@ void taudb_save_timer_groups(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, b
   taudb_prepare_statement(connection, statement_name, my_query, 2);
   TAUDB_TIMER_GROUP *group, *tmp;
   TAUDB_TIMER *timer, *tmp2;
+#if 0
+  // iterate over the timer_groups
   HASH_ITER(trial_hash_by_name, trial->timer_groups, group, tmp) {
+    // iterate over the timers in the timer_group
     HASH_ITER(group_hash_by_name, group->timers, timer, tmp2) {
+#else
+  // iterate over the timers
+  HASH_ITER(trial_hash_by_name, trial->timers_by_name, timer, tmp2) {
+    // iterate over the timer_groups in the timer
+    HASH_ITER(timer_hash_by_name, timer->groups, group, tmp) {
+#endif
       // make array of 6 character pointers
       const char* paramValues[2] = {0};
       char timerid[32] = {0};

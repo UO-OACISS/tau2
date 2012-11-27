@@ -252,7 +252,9 @@ void taudb_parse_timer_group_names(TAUDB_TRIAL* trial, TAUDB_TIMER* timer, char*
 }
 
 void taudb_add_timer_to_timer_group(TAUDB_TIMER_GROUP* timer_group, TAUDB_TIMER* timer) {
-  HASH_ADD_KEYPTR(group_hash_by_name, timer_group->timers, timer->name, strlen(timer->name), timer);
+  //printf("Adding timer '%s' to group '%s', %p\n", timer->name, timer_group->name, timer->group_hash_by_name.prev);
+  //HASH_ADD_KEYPTR(group_hash_by_name, timer_group->timers, timer->name, strlen(timer->name), timer);
+  //printf("Adding group '%s' to timer '%s', %p\n", timer_group->name, timer->name, timer_group->timer_hash_by_name.prev);
   HASH_ADD_KEYPTR(timer_hash_by_name, timer->groups, timer_group->name, strlen(timer_group->name), timer_group);
 }
 
