@@ -207,26 +207,20 @@ extern "C" Profiler *TauInternal_ParentProfiler(int tid) {
 extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   Tau_global_insideTAU[tid]++;
 
+  //int tid = RtsLayer::myThread();
+  FunctionInfo *fi = (FunctionInfo *) functionInfo; 
+
+  if ( !RtsLayer::TheEnableInstrumentation() || !(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
+    Tau_global_insideTAU[tid]--;
+    return; /* disabled */
+  }
+
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_init_if_necessary();
     Tau_sampling_suspend(tid);
   }
 #endif
-
-  //int tid = RtsLayer::myThread();
-  FunctionInfo *fi = (FunctionInfo *) functionInfo; 
-
-  if ( !RtsLayer::TheEnableInstrumentation() || !(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
-#ifndef TAU_WINDOWS
-    if (TauEnv_get_ebs_enabled()) {
-      Tau_sampling_resume(tid);
-    }
-#endif
-    Tau_global_insideTAU[tid]--;
-    return; /* disabled */
-  }
-
 
 #ifdef TAU_TRACK_IDLE_THREADS
   /* If we are performing idle thread tracking, we start a top level timer */
@@ -410,26 +404,21 @@ static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   Tau_global_insideTAU[tid]++;
-#ifndef TAU_WINDOWS
-  if (TauEnv_get_ebs_enabled()) {
-    Tau_sampling_suspend(tid);
-  }
-#endif
   FunctionInfo *fi = (FunctionInfo *) function_info; 
 
   //int tid = RtsLayer::myThread();
   Profiler *profiler;
 
   if ( !RtsLayer::TheEnableInstrumentation() || !(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
-#ifndef TAU_WINDOWS
-    if (TauEnv_get_ebs_enabled()) {
-      Tau_sampling_resume(tid);
-    }
-#endif
     Tau_global_insideTAU[tid]--;
     return 0; /* disabled */
   }
 
+#ifndef TAU_WINDOWS
+  if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_suspend(tid);
+  }
+#endif
 
   /********************************************************************************/
   /*** Extras ***/
