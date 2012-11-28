@@ -204,7 +204,6 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 #endif
 	unsigned long addr = Tau_convert_ptr_to_unsigned_long(funcptr);
 
-	int tid = Tau_get_tid();
 
 	if (gnu_init) {
 		gnu_init = false;
@@ -215,6 +214,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 		}
 
 		Tau_init_initializeTAU();
+		int tid = Tau_get_tid();
 		Tau_global_incr_insideTAU_tid(tid);
 
 		//GNU has some internal routines that occur before main in entered. To
@@ -253,10 +253,11 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 
 	// stop for throttled events.
 	ExcludeList::iterator it = TheExcludeList().find(addr);	
-	if (*it == addr) {
+	if (it != TheExcludeList().end()) {
 		return;
 	}
 	
+	int tid = Tau_get_tid();
 	// prevent re-entry of this routine on a per thread basis
 	Tau_global_incr_insideTAU_tid(tid);
 	if (compInstDisabled[tid]) {
@@ -352,6 +353,17 @@ void __cyg_profile_func_exit(void* func, void* callsite)
 	issueBfdWarningIfNecessary();
 #endif /* TAU_BFD */
 
+	void * funcptr = func;
+#ifdef __ia64__
+	funcptr = *( void ** )func;
+#endif
+	unsigned long addr = Tau_convert_ptr_to_unsigned_long(funcptr);
+
+	ExcludeList::iterator it = TheExcludeList().find(addr);	
+	if (it != TheExcludeList().end()) {
+		return;
+	}
+	
 	int tid = Tau_get_tid();
 	Tau_global_incr_insideTAU_tid(tid);
 
@@ -369,12 +381,7 @@ void __cyg_profile_func_exit(void* func, void* callsite)
 		return;
 	}
 
-	void * funcptr = func;
-#ifdef __ia64__
-	funcptr = *( void ** )func;
-#endif
-
-	HashNode & hn = TheHashTable()[Tau_convert_ptr_to_unsigned_long(funcptr)];
+	HashNode & hn = TheHashTable()[addr];
 	if (!hn.excluded && hn.fi) {
 		Tau_stop_timer(hn.fi, tid);
 	}
