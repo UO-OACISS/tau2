@@ -105,27 +105,27 @@ int Tau_ignore_count[TAU_MAX_THREADS]={0};
 #pragma save_all_regs
 extern "C" void ___rouent2(struct s1 *p) {
   char routine[2048];
-  int isseen_local = p->isseen;
+//  int isseen_local = p->isseen;
 
   int tid = Tau_get_tid();
   if (p->isseen == -1) {
     Tau_ignore_count[tid] ++;  // the rouent2 shouldn't call stop
     return;
   }
-  if ((!Tau_init_check_initialized()) || (Tau_global_get_insideTAU() > 0 )) { 
+  if ((!Tau_init_check_initialized()) || (Tau_global_get_insideTAU_tid(tid) > 0 )) { 
     //dprintf("TAU not initialized /inside TAU in __rouent2. Going to ignore this one!name = p->rout %s\n", p->rout);
     Tau_ignore_count[tid] ++;  // the rouent2 shouldn't call stop
     return;
   }
 
-  /* Some routines like length__Q2_3std20char_traits__tm__2_cSFPCc are called
-     before main and get called repeatedly when <iostream> and cout are used
-     in a C++ application. We need to create a top level timer if necessary */
-  p->isseen = -1; 
-  Tau_create_top_level_timer_if_necessary(); 
-  p->isseen = isseen_local; 
+  //p->isseen = -1; 
+  //p->isseen = isseen_local; 
 
   if (!p->isseen) {
+		/* Some routines like length__Q2_3std20char_traits__tm__2_cSFPCc are called
+			 before main and get called repeatedly when <iostream> and cout are used
+			 in a C++ application. We need to create a top level timer if necessary */
+		Tau_create_top_level_timer_if_necessary_task(tid); 
     sprintf (routine, "%s [{%s} {%d,0}]", p->rout, p->file, p->lineno);
     char* modpos;
     
@@ -133,6 +133,7 @@ extern "C" void ___rouent2(struct s1 *p) {
     if ( (modpos = strstr(p->file, ".mod.")) != NULL ) {
       strcpy(modpos, modpos+4);
     }
+    int isseen_local = p->isseen;
       
 #ifdef TAU_OPENMP
     

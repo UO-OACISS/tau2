@@ -101,3 +101,12 @@ TAUDB_DATA_SOURCE* taudb_get_data_source_by_name(TAUDB_DATA_SOURCE* data_sources
 extern void taudb_save_data_sources(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
   printf("Data sources not supported yet.\n");
 }
+
+TAUDB_DATA_SOURCE* taudb_next_data_source_by_name_from_connection(TAUDB_DATA_SOURCE* current) {
+  return current->hh2.next;
+}
+
+TAUDB_DATA_SOURCE* taudb_next_data_source_by_id_from_connection(TAUDB_DATA_SOURCE* current) {
+  return current->hh2.next;
+}
+

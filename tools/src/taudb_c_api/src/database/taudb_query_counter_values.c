@@ -188,3 +188,7 @@ void taudb_save_counter_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial,
   taudb_clear_result(connection);
 }
 
+TAUDB_COUNTER_VALUE* taudb_next_counter_value_by_key_from_trial(TAUDB_COUNTER_VALUE* current) {
+  return current->hh1.next;
+}
+

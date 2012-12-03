@@ -145,3 +145,12 @@ void taudb_save_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolea
   taudb_clear_result(connection);
 }
 
+TAUDB_METRIC* taudb_next_metric_by_name_from_trial(TAUDB_METRIC* current) {
+  return current->hh2.next;
+}
+
+TAUDB_METRIC* taudb_next_metric_by_id_from_trial(TAUDB_METRIC* current) {
+  return current->hh1.next;
+}
+
+

@@ -555,12 +555,10 @@ int TauMetrics_init() {
     traceCounterEvents = new TauUserEvent *[nmetrics];
     /* We obtain the timestamp from COUNTER1, so we only need to trigger
        COUNTER2-N or i=1 through no. of active functions not through 0 */
-    RtsLayer::UnLockDB(); // mutual exclusion primitive AddEventToDB locks it
     for (i = 1; i < nmetrics; i++) {
       traceCounterEvents[i] = new TauUserEvent(metricv[i], true);
       /* the second arg is MonotonicallyIncreasing which is true (HW counters)*/
     }
-    RtsLayer::LockDB(); // We do this to prevent a deadlock. Lock it again!
   }
 
   return 0;

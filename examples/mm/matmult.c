@@ -42,6 +42,10 @@ double** allocateMatrix(int rows, int cols) {
   return matrix;
 }
 
+double multiply(double a, double b) {
+	return a * b;
+}
+
 // cols_a and rows_b are the same value
 void compute(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
   int i,j,k;
@@ -53,7 +57,7 @@ void compute(double **a, double **b, double **c, int rows_a, int cols_a, int col
     for (i=0; i<rows_a; i++) {
       for(j=0; j<cols_b; j++) {
         for (k=0; k<cols_a; k++) {
-          c[i][j] += a[i][k] * b[k][j];
+          c[i][j] += multiply(a[i][k], b[k][j]);
         }
       }
     }
@@ -70,7 +74,7 @@ void compute_interchange(double **a, double **b, double **c, int rows_a, int col
     for (i=0; i<rows_a; i++) {
       for (k=0; k<cols_a; k++) {
         for(j=0; j<cols_b; j++) {
-          c[i][j] += a[i][k] * b[k][j];
+          c[i][j] += multiply(a[i][k], b[k][j]);
         }
       }
     }

@@ -957,7 +957,7 @@ extern "C" void Tau_phase_metadata(const char *name, const char *value) {
     current = current->ParentProfiler;
   }
   Tau_metadata_value_t* tmv = NULL;
-  Tau_create_metadata_value(&tmv, TAU_METADATA_TYPE_STRING);
+  Tau_metadata_create_value(&tmv, TAU_METADATA_TYPE_STRING);
   tmv->data.cval = strdup(value);
   RtsLayer::LockEnv();
   Tau_metadata_getMetaData(RtsLayer::myThread())[*key] = tmv;
