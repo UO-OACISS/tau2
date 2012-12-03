@@ -132,12 +132,14 @@ typedef struct taudb_trial {
 /* thread represents one physical & logical location for a measurement. */
 
 typedef struct taudb_thread {
- int id; /* database id, also key to hash */
+ int id; /* database id */
  struct taudb_trial* trial;
  int node_rank;    /* which process does this thread belong to? */
  int context_rank; /* which context? USUALLY 0 */
  int thread_rank;  /* what is this thread's rank in the process */
- int index;        /* what is this threads OVERALL index? ranges from 0 to trial.thread_count-1 */
+ int index;        /* what is this threads OVERALL index? 
+                      ranges from 0 to trial.thread_count-1 
+					  also serves as hash key */
  struct taudb_secondary_metadata* secondary_metadata;
  UT_hash_handle hh;
 } TAUDB_THREAD;
@@ -258,7 +260,7 @@ typedef struct taudb_timer_value {
  double inclusive_percentage;   /* the inclusive percentage of total time of the application */
  double exclusive_percentage;   /* the exclusive percentage of total time of the application */
  double sum_exclusive_squared;  /* how much variance did we see every time we measured this timer? */
- char *key; /* hash table key - metric name */
+ //char *key; /* hash table key - metric name */
  UT_hash_handle hh;
 } TAUDB_TIMER_VALUE;
 

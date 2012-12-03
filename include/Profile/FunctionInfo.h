@@ -253,11 +253,11 @@ public:
   inline double GetInclTimeForCounter(int tid, int counter) { return InclTime[tid][counter]; }
   inline double GetExclTimeForCounter(int tid, int counter) { return ExclTime[tid][counter]; }
 
-  TauGroup_t GetProfileGroup(int tid = RtsLayer::myThread()) const {return MyProfileGroup_[tid]; }
-  void SetProfileGroup(TauGroup_t gr, int tid = RtsLayer::myThread()) {MyProfileGroup_[tid] = gr; }
+  TauGroup_t GetProfileGroup() const {return MyProfileGroup_; }
+  void SetProfileGroup(TauGroup_t gr) {MyProfileGroup_ = gr; }
 
 private:
-  TauGroup_t MyProfileGroup_[TAU_MAX_THREADS];
+  TauGroup_t MyProfileGroup_;
 };
 
 // Global variables

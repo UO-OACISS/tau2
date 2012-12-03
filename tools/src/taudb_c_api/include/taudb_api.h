@@ -164,4 +164,29 @@ extern TAUDB_TRIAL* taudb_parse_tau_profiles(const char* directory_name);
 /* Analysis routines */
 extern void taudb_compute_statistics(TAUDB_TRIAL* trial);
 
+/* iterators */
+extern TAUDB_DATA_SOURCE* taudb_next_data_source_by_name_from_connection(TAUDB_DATA_SOURCE* current);
+extern TAUDB_DATA_SOURCE* taudb_next_data_source_by_id_from_connection(TAUDB_DATA_SOURCE* current);
+extern TAUDB_THREAD* taudb_next_thread_by_index_from_trial(TAUDB_THREAD* current);
+extern TAUDB_METRIC* taudb_next_metric_by_name_from_trial(TAUDB_METRIC* current);
+extern TAUDB_METRIC* taudb_next_metric_by_id_from_trial(TAUDB_METRIC* current);
+extern TAUDB_TIME_RANGE* taudb_next_time_range_by_id_from_trial(TAUDB_TIME_RANGE* current);
+extern TAUDB_TIMER* taudb_next_timer_by_name_from_trial(TAUDB_TIMER* current);
+extern TAUDB_TIMER* taudb_next_timer_by_id_from_trial(TAUDB_TIMER* current);
+extern TAUDB_TIMER* taudb_next_timer_by_name_from_group(TAUDB_TIMER* current);
+extern TAUDB_TIMER_GROUP* taudb_next_timer_group_by_name_from_trial(TAUDB_TIMER_GROUP* current);
+extern TAUDB_TIMER_GROUP* taudb_next_timer_group_by_name_from_timer(TAUDB_TIMER_GROUP* current);
+extern TAUDB_TIMER_PARAMETER* taudb_next_timer_parameter_by_name_from_timer(TAUDB_TIMER_PARAMETER* current);
+extern TAUDB_TIMER_CALLPATH* taudb_next_timer_callpath_by_name_from_trial(TAUDB_TIMER_CALLPATH* current);
+extern TAUDB_TIMER_CALLPATH* taudb_next_timer_callpath_by_id_from_trial(TAUDB_TIMER_CALLPATH* current);
+extern TAUDB_TIMER_CALL_DATA* taudb_next_timer_call_data_by_key_from_trial(TAUDB_TIMER_CALL_DATA* current);
+extern TAUDB_TIMER_CALL_DATA* taudb_next_timer_call_data_by_id_from_trial(TAUDB_TIMER_CALL_DATA* current);
+extern TAUDB_TIMER_VALUE* taudb_next_timer_value_by_metric_from_timer_call_data(TAUDB_TIMER_VALUE* current);
+extern TAUDB_COUNTER* taudb_next_counter_by_name_from_trial(TAUDB_COUNTER* current);
+extern TAUDB_COUNTER* taudb_next_counter_by_id_from_trial(TAUDB_COUNTER* current);
+extern TAUDB_COUNTER_VALUE* taudb_next_counter_value_by_key_from_trial(TAUDB_COUNTER_VALUE* current);
+extern TAUDB_PRIMARY_METADATA* taudb_next_primary_metadata_by_name_from_trial(TAUDB_PRIMARY_METADATA* current);
+extern TAUDB_SECONDARY_METADATA* taudb_next_secondary_metadata_by_key_from_trial(TAUDB_SECONDARY_METADATA* current);
+extern TAUDB_SECONDARY_METADATA* taudb_next_secondary_metadata_by_id_from_trial(TAUDB_SECONDARY_METADATA* current);
+
 #endif /* TAUDB_API_H */

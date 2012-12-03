@@ -180,3 +180,12 @@ void taudb_save_counters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boole
   taudb_clear_result(connection);
 }
 
+TAUDB_COUNTER* taudb_next_counter_by_name_from_trial(TAUDB_COUNTER* current) {
+  return current->hh1.next;
+}
+
+TAUDB_COUNTER* taudb_next_counter_by_id_from_trial(TAUDB_COUNTER* current) {
+  return current->hh2.next;
+}
+
+

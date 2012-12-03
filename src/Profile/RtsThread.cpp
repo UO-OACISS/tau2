@@ -46,6 +46,11 @@ void TraceCallStack(int tid, Profiler *current);
 
 #include <Profile/TauSampling.h>
 
+// This is used for printing the stack trace when debugging locks
+#if 0
+#include <execinfo.h>
+#define DEBUG_LOCK_PROBLEMS
+#endif
 
 int RtsLayer::lockDBCount[TAU_MAX_THREADS];
 int RtsLayer::lockEnvCount[TAU_MAX_THREADS];
@@ -420,12 +425,39 @@ int RtsLayer::getNumDBLocks(void) {
 int RtsLayer::LockDB(void) {
   static bool init = initLocks();
   int tid=myThread();
+/* This block of code is helpful in debugging deadlocks... see the top of this file */
+#ifdef DEBUG_LOCK_PROBLEMS
+  if (lockDBCount[tid] > 0) {
+    printf("WARNING! Thread %d has DB lock, trying for another DB lock\n", tid);
+     void* callstack[128];
+     int i, frames = backtrace(callstack, 128);
+     char** strs = backtrace_symbols(callstack, frames);
+     for (i = 0; i < frames; ++i) {
+         printf("%s\n", strs[i]);
+     }
+     free(strs);
+  }
+  // check the OTHER lock
+  if (lockEnvCount[tid] > 0) {
+    printf("WARNING! Thread %d has Env lock, trying for DB lock\n", tid);
+     void* callstack[128];
+     int i, frames = backtrace(callstack, 128);
+     char** strs = backtrace_symbols(callstack, frames);
+     for (i = 0; i < frames; ++i) {
+         printf("%s\n", strs[i]);
+     }
+     free(strs);
+  }
+#endif
   if (lockDBCount[tid] == 0) {
     threadLockDB();
   }
   lockDBCount[tid]++;
-  //printf("THREAD %d HAS %d DB LOCKS (locking)\n", tid, lockDBCount[tid]);
-  //fflush(stdout);
+/* This block of code is helpful in debugging deadlocks... see the top of this file */
+#ifdef DEBUG_LOCK_PROBLEMS
+  printf("THREAD %d HAS %d DB LOCKS (locking)\n", tid, lockDBCount[tid]);
+  fflush(stdout);
+#endif
   return lockDBCount[tid];
 }
 
@@ -435,8 +467,11 @@ int RtsLayer::UnLockDB(void) {
   if (lockDBCount[tid] == 0) {
     threadUnLockDB();
   }
-  //printf("THREAD %d HAS %d DB LOCKS\n", tid, lockDBCount[tid]);
-  //fflush(stdout);
+/* This block of code is helpful in debugging deadlocks... see the top of this file */
+#ifdef DEBUG_LOCK_PROBLEMS
+  printf("THREAD %d HAS %d DB LOCKS\n", tid, lockDBCount[tid]);
+  fflush(stdout);
+#endif
   return lockDBCount[tid];
 }
 
@@ -491,12 +526,39 @@ int RtsLayer::getNumEnvLocks(void) {
 int RtsLayer::LockEnv(void) {
   static bool init = initEnvLocks();
   int tid=myThread();
+/* This block of code is helpful in debugging deadlocks... see the top of this file */
+#ifdef DEBUG_LOCK_PROBLEMS
+  if (lockEnvCount[tid] > 0) {
+    printf("WARNING! Thread %d has Env lock, trying for another Env lock\n", tid);
+     void* callstack[128];
+     int i, frames = backtrace(callstack, 128);
+     char** strs = backtrace_symbols(callstack, frames);
+     for (i = 0; i < frames; ++i) {
+         printf("%s\n", strs[i]);
+     }
+     free(strs);
+  }
+  if (lockDBCount[tid] > 0) {
+    printf("ERROR! Thread %d has DB lock, trying for Env lock\n", tid);
+     void* callstack[128];
+     int i, frames = backtrace(callstack, 128);
+     char** strs = backtrace_symbols(callstack, frames);
+     for (i = 0; i < frames; ++i) {
+         printf("%s\n", strs[i]);
+     }
+     free(strs);
+    exit(999);
+  }
+#endif
   if (lockEnvCount[tid] == 0) {
     threadLockEnv();
   }
   lockEnvCount[tid]++;
-  //printf("THREAD %d HAS %d ENV LOCKS (locking)\n", tid, lockEnvCount[tid]);
-  //fflush(stdout);
+/* This block of code is helpful in debugging deadlocks... see the top of this file */
+#ifdef DEBUG_LOCK_PROBLEMS
+  printf("THREAD %d HAS %d ENV LOCKS (locking)\n", tid, lockEnvCount[tid]);
+  fflush(stdout);
+#endif
   return lockEnvCount[tid];
 }
 
@@ -506,8 +568,11 @@ int RtsLayer::UnLockEnv(void) {
   if (lockEnvCount[tid] == 0) {
     threadUnLockEnv();
   }
-  //printf("THREAD %d HAS %d ENV LOCKS\n", tid, lockEnvCount[tid]);
-  //fflush(stdout);
+/* This block of code is helpful in debugging deadlocks... see the top of this file */
+#ifdef DEBUG_LOCK_PROBLEMS
+  printf("THREAD %d HAS %d ENV LOCKS\n", tid, lockEnvCount[tid]);
+  fflush(stdout);
+#endif
   return lockEnvCount[tid];
 }
 
