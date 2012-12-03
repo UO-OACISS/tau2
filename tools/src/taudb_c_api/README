@@ -7,19 +7,17 @@ README and LICENSE files in the uthash directory.
 Notes:
 
 - this library is only just beginning to take shape.
-- this library will only support the 2005 schema at first.
-- as 2012 schema support is added, you can expect more robust behavior.
 - only PostgreSQL is supported.
 - You will need to set the path to the PostgreSQL header and library
-  in Makefile.inc.
+  in Makefile.in.
 
 Building:
 
-- Modify the settings in Makefile.inc as necessary
+- Modify the settings in Makefile.in as necessary
 - run "make"
 
 Testing:
 
-- To use the test database, modify the Makefile.inc fields TEST_CONFIG and
+- To use the test database, modify the Makefile.in fields TEST_CONFIG and
   TEST_TRIAL_ID.
 - run "make test"

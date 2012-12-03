@@ -22,6 +22,8 @@
 #include "Profile/TauMemory.h"
 
 
+extern "C" void Tau_lite_start_timer(void *functionInfo, int phase, int tid);
+extern "C" int Tau_lite_stop_timer(void *function_info, int tid );
 
 extern "C" void Tau_pure_start(const char *name);
 extern "C" void Tau_pure_stop(const char *name);
@@ -610,13 +612,13 @@ void tau_profile_start_(void **profiler)
   printf("start_timer gets %lx\n", *profiler);
 #endif /* DEBUG_PROF */
 
-  Tau_start_timer(*profiler, 0, Tau_get_tid());
+  Tau_lite_start_timer(*profiler, 0, Tau_get_tid());
   return;
 }
 
 void tau_profile_stop_(void **profiler)
 {
-  Tau_stop_timer(*profiler, Tau_get_tid());
+  Tau_lite_stop_timer(*profiler, Tau_get_tid());
   return;
 }
 
@@ -1344,12 +1346,12 @@ void TAU_SET_INTERRUPT_INTERVAL(int* value)
 
 void tau_profile_start(int **profiler)
 {
-  Tau_start_timer((void *)*profiler, 0, Tau_get_tid());
+  Tau_lite_start_timer((void *)*profiler, 0, Tau_get_tid());
 }
 
 void tau_profile_stop(int **profiler)
 {
-  Tau_stop_timer((void *)*profiler, Tau_get_tid());
+  Tau_lite_stop_timer((void *)*profiler, Tau_get_tid());
 }
 
 void tau_profile_init(void)

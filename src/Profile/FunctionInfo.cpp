@@ -184,7 +184,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   // Make this a ptr to a list so that ~FunctionInfo doesn't destroy it.
   
   for (int i=0; i<TAU_MAX_THREADS; i++) {
-    MyProfileGroup_[i] = ProfileGroup;
+    MyProfileGroup_ = ProfileGroup;
   }
   // While accessing the global function database, lock it to ensure
   // an atomic operation in the push_back and size() operations. 
