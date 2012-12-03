@@ -325,3 +325,16 @@ void taudb_save_timer_parameters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* tria
   }
   taudb_clear_result(connection);
 }
+
+TAUDB_TIMER* taudb_next_timer_by_name_from_trial(TAUDB_TIMER* current) {
+  return current->trial_hash_by_name.next;
+}
+
+TAUDB_TIMER* taudb_next_timer_by_id_from_trial(TAUDB_TIMER* current) {
+  return current->trial_hash_by_id.next;
+}
+
+TAUDB_TIMER* taudb_next_timer_by_name_from_group(TAUDB_TIMER* current) {
+  return current->group_hash_by_name.next;
+}
+

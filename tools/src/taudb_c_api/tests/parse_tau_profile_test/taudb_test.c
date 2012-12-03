@@ -14,7 +14,8 @@ int main (int argc, char** argv) {
   TAUDB_METRIC* metrics = trial->metrics_by_name;
   // iterate over the hash
   TAUDB_METRIC* metric;
-  for (metric = metrics ; metric != NULL ; metric=(TAUDB_METRIC*)metric->hh2.next) {
+  for (metric = metrics ; metric != NULL ; 
+       metric = taudb_next_metric_by_name_from_trial(metric)) {
     printf("METRIC: %s\n", metric->name);
 	count = count + 1;
   }
@@ -24,7 +25,7 @@ int main (int argc, char** argv) {
   // iterate over the hash
   TAUDB_THREAD* thread;
   count = 0;
-  for (thread = threads ; thread != NULL ; thread=(TAUDB_THREAD*)thread->hh.next) {
+  for (thread = threads ; thread != NULL ; thread = taudb_next_thread_by_index_from_trial(thread)) {
     //printf("THREAD: %d %d %d %d\n", thread->node_rank, thread->context_rank, thread->thread_rank, thread->index);
 	count = count + 1;
   }
@@ -36,7 +37,7 @@ int main (int argc, char** argv) {
   // iterate over the hash
   TAUDB_TIMER* timer;
   count = 0;
-  for (timer = timers ; timer != NULL ; timer=(TAUDB_TIMER*)timer->trial_hash_by_name.next) {
+  for (timer = timers ; timer != NULL ; timer = taudb_next_timer_by_name_from_trial(timer)) {
     //printf("TIMER: %s\n'%s', '%s', %d, %d, %d, %d\n", timer->name, timer->short_name, timer->source_file, timer->line_number, timer->line_number_end, timer->column_number, timer->column_number_end);
 	count = count + 1;
   }
@@ -48,7 +49,7 @@ int main (int argc, char** argv) {
   // iterate over the hash
   TAUDB_TIMER_CALLPATH* timer_callpath;
   count = 0;
-  for (timer_callpath = timer_callpaths ; timer_callpath != NULL ; timer_callpath=(TAUDB_TIMER_CALLPATH*)timer_callpath->hh2.next) {
+  for (timer_callpath = timer_callpaths ; timer_callpath != NULL ; timer_callpath = taudb_next_timer_callpath_by_name_from_trial(timer_callpath)) {
     //printf("TIMER_CALLPATH: '%s'\n", timer_callpath->name);
 	count = count + 1;
   }
@@ -59,12 +60,12 @@ int main (int argc, char** argv) {
   TAUDB_TIMER_CALL_DATA* timer_call_data;
   count = 0;
   int count2 = 0;
-  for (timer_call_data = timer_call_datas ; timer_call_data != NULL ; timer_call_data=(TAUDB_TIMER_CALL_DATA*)timer_call_data->hh2.next) {
+  for (timer_call_data = timer_call_datas ; timer_call_data != NULL ; timer_call_data = taudb_next_timer_call_data_by_key_from_trial(timer_call_data)) {
 	count = count + 1;
     TAUDB_TIMER_VALUE* timer_values = timer_call_data->timer_values;
     // iterate over the hash
     TAUDB_TIMER_VALUE* timer_value;
-    for (timer_value = timer_values ; timer_value != NULL ; timer_value=(TAUDB_TIMER_VALUE*)timer_value->hh.next) {
+    for (timer_value = timer_values ; timer_value != NULL ; timer_value = taudb_next_timer_value_by_metric_from_timer_call_data(timer_value)) {
 	  count2 = count2 + 1;
     }
   }

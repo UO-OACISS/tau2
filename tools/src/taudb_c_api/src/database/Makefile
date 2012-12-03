@@ -32,6 +32,13 @@ clean:
 	echo "Removing : $(OBJS) $(TARGET)"
 	/bin/rm -f $(OBJS) $(TARGET) *.pdb *.inst.c
 
+taudb_query_timers.o: taudb_query_timers.c
+	gcc -E $(FLAGS) -I$(ROOTDIR)/include $(INCLUDE) $< > /tmp/a.c $(DEBUG)
+	egrep -v '^#' /tmp/a.c > /tmp/b.c
+	indent /tmp/b.c
+	echo "Building : $@ from $<"
+	$(CC) $(FLAGS) -c -I$(ROOTDIR)/include $(INCLUDE) /tmp/b.c -o $@ $(DEBUG)
+
 test:
 
 remake: clean all

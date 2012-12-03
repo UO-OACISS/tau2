@@ -319,3 +319,8 @@ extern void taudb_save_timer_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* t
     taudb_clear_result(connection);
   
 }
+
+TAUDB_TIMER_VALUE* taudb_next_timer_value_by_metric_from_timer_call_data(TAUDB_TIMER_VALUE* current) {
+  return current->hh.next;
+}
+

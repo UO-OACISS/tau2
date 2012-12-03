@@ -122,3 +122,7 @@ extern void taudb_save_primary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIA
   taudb_clear_result(connection);
 }
 
+TAUDB_PRIMARY_METADATA* taudb_next_primary_metadata_by_name_from_trial(TAUDB_PRIMARY_METADATA* current) {
+  return current->hh.next;
+}
+
