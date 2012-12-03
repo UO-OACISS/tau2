@@ -210,3 +210,7 @@ void taudb_save_threads(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolea
   taudb_clear_result(connection);
 }
 
+TAUDB_THREAD* taudb_next_thread_by_index_from_trial(TAUDB_THREAD* current) {
+  return current->hh.next;
+}
+

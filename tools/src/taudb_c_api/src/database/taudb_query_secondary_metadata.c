@@ -206,3 +206,12 @@ void taudb_save_secondary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIAL* tr
   }
   taudb_clear_result(connection);
 }
+
+TAUDB_SECONDARY_METADATA* taudb_next_secondary_metadata_by_key_from_trial(TAUDB_SECONDARY_METADATA* current) {
+  return current->hh2.next;
+}
+
+TAUDB_SECONDARY_METADATA* taudb_next_secondary_metadata_by_id_from_trial(TAUDB_SECONDARY_METADATA* current) {
+  return current->hh.next;
+}
+

@@ -139,3 +139,13 @@ void taudb_save_timer_groups(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, b
   }
   taudb_clear_result(connection);
 }
+
+TAUDB_TIMER_GROUP* taudb_next_timer_group_by_name_from_trial(TAUDB_TIMER_GROUP* current) {
+  return current->trial_hash_by_name.next;
+}
+
+TAUDB_TIMER_GROUP* taudb_next_timer_group_by_name_from_timer(TAUDB_TIMER_GROUP* current) {
+  return current->timer_hash_by_name.next;
+}
+
+

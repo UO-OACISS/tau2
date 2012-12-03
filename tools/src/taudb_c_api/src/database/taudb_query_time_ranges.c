@@ -129,3 +129,8 @@ void taudb_save_time_ranges(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, bo
   }
   taudb_clear_result(connection);
 }
+
+TAUDB_TIME_RANGE* taudb_next_time_range_by_id_from_trial(TAUDB_TIME_RANGE* current) {
+  return current->hh.next;
+}
+

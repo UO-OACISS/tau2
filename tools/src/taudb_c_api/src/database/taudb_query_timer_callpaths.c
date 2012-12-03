@@ -383,3 +383,12 @@ extern void taudb_save_timer_callpaths(TAUDB_CONNECTION* connection, TAUDB_TRIAL
     taudb_clear_result(connection);
   
 }
+
+TAUDB_TIMER_CALLPATH* taudb_next_timer_callpath_by_name_from_trial(TAUDB_TIMER_CALLPATH* current) {
+  return current->hh2.next;
+}
+
+TAUDB_TIMER_CALLPATH* taudb_next_timer_callpath_by_id_from_trial(TAUDB_TIMER_CALLPATH* current) {
+  return current->hh2.next;
+}
+
