@@ -494,6 +494,8 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 		if (!profiler->ThisFunction->GetProfileGroup() & RtsLayer::TheProfileMask())
 		{
 			profiler->Stop();
+			Tau_global_stackpos[tid]--; /* pop */
+
   		profiler = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
 		}
 		else {
