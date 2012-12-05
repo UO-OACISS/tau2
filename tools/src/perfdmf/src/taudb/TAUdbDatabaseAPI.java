@@ -23,8 +23,6 @@ import org.postgresql.copy.CopyManager;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import com.ziclix.python.sql.DataHandler;
-import com.ziclix.python.sql.handler.PostgresqlDataHandler;
 
 import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
 import edu.uoregon.tau.common.MetaDataMap.MetaDataValue;
@@ -46,7 +44,6 @@ import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.UserEvent;
 import edu.uoregon.tau.perfdmf.UserEventProfile;
 import edu.uoregon.tau.perfdmf.View;
-import edu.uoregon.tau.perfdmf.database.ConnectionManager;
 import edu.uoregon.tau.perfdmf.database.DB;
 //import org.h2.util.Profiler;
 
