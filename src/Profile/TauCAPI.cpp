@@ -117,10 +117,14 @@ struct Tau_thread_status_flags {
  * This is very important with timers, as all threads are entering timers
  * at the same time, and every thread will invalidate the cache line
  * otherwise. */
+#ifdef __INTEL__COMPILER
+__declspec (align(64)) static struct Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
+#else
 #ifdef __GNUC__
 static struct Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] __attribute__ ((aligned(64))) = {0};
 #else
-__declspec (align(64)) static struct Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
+static struct Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
+#endif
 #endif
 int lightsOut = 0;
 
