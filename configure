@@ -7533,8 +7533,14 @@ else
 fi
 #copy over tau_header_inst.sh
 if [ $pdt = yes ] ; then
+    if [ $opari1 = yes ] ; then
+    cat ${tauroot}/tools/src/tau_header_inst_opari1.sh | sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@ARCH@,'$architecture',' \
+	-e 's,@PDTROOTDIR@,'$pdtdir',' -e 's,@PDTARCH@, '$pdtarch',' > ${targetdir}/${architecture}/bin/tau_header_inst.sh
+    fi
+    if [ $opari = yes ] ; then
     cat ${tauroot}/tools/src/tau_header_inst.sh | sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@ARCH@,'$architecture',' \
 	-e 's,@PDTROOTDIR@,'$pdtdir',' -e 's,@PDTARCH@, '$pdtarch',' > ${targetdir}/${architecture}/bin/tau_header_inst.sh
+    fi
     chmod a+rx ${targetdir}/${architecture}/bin/tau_header_inst.sh
     if [ -x ${pdtdir}/${pdtarchcompdir}/bin/smaqao ]
     then
