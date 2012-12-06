@@ -100,7 +100,21 @@ int Tau_get_function_index_in_DB(FunctionInfo *fi) {
   return -1;
 }
 
-int Tau_ignore_count[TAU_MAX_THREADS]={0};
+struct Tau_thread_ignore_flag {
+	int count; // 4 bytes
+	int padding[15]; // remaining 60 bytes.
+};
+
+#ifdef __INTEL__COMPILER
+__declspec (align(64)) static struct Tau_thread_ignore_flag Tau_ignore[TAU_MAX_THREADS] = {0};
+#else
+#ifdef __GNUC__
+static struct Tau_thread_ignore_flag Tau_ignore[TAU_MAX_THREADS] __attribute__ ((aligned(64))) = {0};
+#else
+static struct Tau_thread_ignore_flag Tau_ignore[TAU_MAX_THREADS] = {0};
+#endif
+#endif
+
 // called at the beginning of each profiled routine
 #pragma save_all_regs
 extern "C" void ___rouent2(struct s1 *p) {
@@ -109,12 +123,12 @@ extern "C" void ___rouent2(struct s1 *p) {
 
   int tid = Tau_get_tid();
   if (p->isseen == -1) {
-    Tau_ignore_count[tid] ++;  // the rouent2 shouldn't call stop
+    Tau_ignore[tid].count ++;  // the rouent2 shouldn't call stop
     return;
   }
   if ((!Tau_init_check_initialized()) || (Tau_global_get_insideTAU_tid(tid) > 0 )) { 
     //dprintf("TAU not initialized /inside TAU in __rouent2. Going to ignore this one!name = p->rout %s\n", p->rout);
-    Tau_ignore_count[tid] ++;  // the rouent2 shouldn't call stop
+    Tau_ignore[tid].count++;  // the rouent2 shouldn't call stop
     return;
   }
 
@@ -147,7 +161,7 @@ extern "C" void ___rouent2(struct s1 *p) {
 	  TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
 	  FunctionInfo *fi = (FunctionInfo*)handle;
           if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
-	    Tau_ignore_count[tid]++; // the rouent2 shouldn't call stop
+	    Tau_ignore[tid].count++; // the rouent2 shouldn't call stop
 	    returnFromBlock = 1;
             /* return; Not allowed inside an omp critical */
           } else {
@@ -165,7 +179,7 @@ extern "C" void ___rouent2(struct s1 *p) {
       TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
       FunctionInfo *fi = (FunctionInfo*)handle;
       if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
-	Tau_ignore_count[tid]++; // the rouent2 shouldn't call stop
+	Tau_ignore[tid].count++; // the rouent2 shouldn't call stop
 	return;
       }
       Tau_start_timer(fi,0, tid);
@@ -180,7 +194,7 @@ extern "C" void ___rouent2(struct s1 *p) {
     TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
     FunctionInfo *fi = (FunctionInfo*)handle;
     if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
-      Tau_ignore_count[tid]++; // the rouent2 shouldn't call stop
+      Tau_ignore[tid].count++; // the rouent2 shouldn't call stop
       return;
     }
     Tau_start_timer(fi,0, tid);
@@ -190,7 +204,7 @@ extern "C" void ___rouent2(struct s1 *p) {
   } else {
     FunctionInfo *fi = (FunctionInfo*)(TheFunctionDB()[p->rid]);
     if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
-      Tau_ignore_count[tid]++; // the rouent2 shouldn't call stop
+      Tau_ignore[tid].count++; // the rouent2 shouldn't call stop
       return;
     }
     Tau_start_timer(fi, 0, tid);
@@ -201,11 +215,11 @@ extern "C" void ___rouent2(struct s1 *p) {
 #pragma save_all_regs
 extern "C" void ___rouret2(void) {
   int tid = Tau_get_tid();
-  if (Tau_ignore_count[tid] == 0) { 
+  if (Tau_ignore[tid].count == 0) { 
     TAU_MAPPING_PROFILE_STOP(0);
   }
   else {
-    Tau_ignore_count[tid]--;
+    Tau_ignore[tid].count--;
   }
 }
 
