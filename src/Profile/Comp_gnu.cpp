@@ -193,6 +193,8 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 		return;
 	}
 
+	int tid = Tau_get_tid();
+	Tau_global_incr_insideTAU_tid(tid);
 
 	if (gnu_init) {
 		gnu_init = false;
@@ -203,8 +205,6 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 		}
 
 		Tau_init_initializeTAU();
-		int tid = Tau_get_tid();
-		Tau_global_incr_insideTAU_tid(tid);
 
 		//GNU has some internal routines that occur before main in entered. To
 		//ensure that a single top-level timer is present start the dummy '.TAU
@@ -240,9 +240,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 		atexit(runOnExit);
 	}
 	
-	int tid = Tau_get_tid();
 	// prevent re-entry of this routine on a per thread basis
-	Tau_global_incr_insideTAU_tid(tid);
 	if (compInstDisabled[tid]) {
 		Tau_global_decr_insideTAU_tid(tid);
 		return;
@@ -348,15 +346,18 @@ void __cyg_profile_func_exit(void* func, void* callsite)
 
 	// prevent entry into cyg_profile functions while inside entry
 	if (compInstDisabled[tid]) {
+		Tau_global_decr_insideTAU_tid(tid);
 		return;
 	}
 
 	if (executionFinished) {
+		Tau_global_decr_insideTAU_tid(tid);
 		return;
 	}
 
 	//prevent entry into cyg_profile functions while still initializing TAU
 	if (Tau_init_initializingTAU()) {
+		Tau_global_decr_insideTAU_tid(tid);
 		return;
 	}
 

@@ -45,13 +45,13 @@ public:
     phase = 0;
 #endif
     if (fi != 0) {
-      Tau_start_timer(fi, phase, Tau_get_tid());
+      Tau_lite_start_timer(fi, phase);
     }
   }
 
   inline ~Tau_Profile_Wrapper() {
     if (fInfo != 0) {
-      Tau_stop_timer(fInfo, Tau_get_tid());
+      Tau_lite_stop_timer(fInfo);
     }
   }
 };
