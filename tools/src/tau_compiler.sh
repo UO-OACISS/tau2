@@ -112,7 +112,7 @@ printUsage () {
     echo -e "  -optCompile=\"\"\t\tOptions passed to the compiler by the user."
     echo -e "  -optTauDefs=\"\"\t\tOptions passed to the compiler by TAU. Typically \$(TAU_DEFS)"
     echo -e "  -optTauIncludes=\"\"\t\tOptions passed to the compiler by TAU. Typically \$(TAU_MPI_INCLUDE) \$(TAU_INCLUDE)"
-    echo -e "  -optIncludeMemory=\"\"\t\tFlags for replacement of malloc/free. Typically -I\$(TAU_DIR)/include/Memory"
+    echo -e "  -optIncludeMemory=\"\"\t\tFlags for replacement of malloc/free. Typically -I\$(TAU_DIR)/include/TauMemory"
     echo -e "  -optReset=\"\"\t\t\tReset options to the compiler to the given list"
     echo -e "  -optLinking=\"\"\t\tOptions passed to the linker. Typically \$(TAU_MPI_FLIBS) \$(TAU_LIBS) \$(TAU_CXXLIBS)"
     echo -e "  -optLinkReset=\"\"\t\tReset options to the linker to the given list"

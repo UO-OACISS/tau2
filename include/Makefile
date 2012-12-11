@@ -1095,9 +1095,7 @@ TAU_INCLUDE 	= -I$(TAU_INC_DIR)
 
 TAU_COMPILER_EXTRA_OPTIONS=$(TAU_COMPILER_EXTRA_OPTIONS1) $(TAU_COMPILER_EXTRA_OPTIONS2) 
 
-TAU_INCLUDE_MEMORY = -I$(TAU_INC_DIR)/Memory
-#IBMXLCAPPLE#TAU_INCLUDE_MEMORY = -I$(TAU_INC_DIR)/MemoryWrapper #ENDIF#
-#APPLECXX#TAU_INCLUDE_MEMORY = -I$(TAU_INC_DIR)/MemoryWrapper #ENDIF#
+TAU_INCLUDE_MEMORY = -I$(TAU_INC_DIR)/TauMemory
 
 #TAU_LIBS	= $(TAUHELPER) -L$(TAU_LIB_DIR) -ltau$(TAU_CONFIG) $(TAU_LINKER_OPTS) -L/usr/local/packages/sw1.2beta1/x86_64-unknown-linux2.4/lib -lstackwalk -lsymtabAPI -lcommon -L/usr/local/packages/libdwarf-20091230/lib -ldwarf -lelf -liberty -ldlmalloc
 

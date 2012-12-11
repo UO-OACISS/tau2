@@ -3082,14 +3082,6 @@ if [ $machine = apple ] ; then
       extradir=`which xlf90 | sed s/xlf90/../`
       fortran_compiler=yes
   fi
-  # xlc++ doesn't like include/Memory. Move this directory
-  if [ -d include/Memory -a ! -d include/MemoryWrapper ] ; then
-    mv include/Memory include/MemoryWrapper	
-  else
-    if [ -d include/Memory -a -d include/MemoryWrapper ] ; then 
-      /bin/rm -rf include/Memory
-    fi 
-  fi
 fi
 
 if [ $machine = ppc64 -o $machine = bgl -o $machine = bgp -o $machine = bgq ] ; then
