@@ -44,7 +44,6 @@ import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.UserEvent;
 import edu.uoregon.tau.perfdmf.UserEventProfile;
 import edu.uoregon.tau.perfdmf.View;
-import edu.uoregon.tau.perfdmf.database.ConnectionManager;
 import edu.uoregon.tau.perfdmf.database.DB;
 //import org.h2.util.Profiler;
 
@@ -380,6 +379,10 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			timerValueInsert.setDouble(6, fp.getExclusive(metric.getID()));
 			//TODO: Find the sum_exclusive_square values
 //						timerValueInsert.setDouble(7, fp.get)
+			if (fp.getExclusive(metric.getID()) == 3.142998606E-313){
+				System.out.println("Found it");
+
+			}
 			
 			timerValueInsert.addBatch();	
 		}
@@ -1041,12 +1044,12 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 						buf.append(timerCallDataID + "\t");
 						buf.append(metricID + "\t");
 
-						buf.append(fp.getInclusivePercent(metric.getID())
+						buf.append(checkDoubleValue(fp.getInclusivePercent(metric.getID()))
 								+ "\t");
-						buf.append(fp.getInclusive(metric.getID()) + "\t");
-						buf.append(fp.getExclusivePercent(metric.getID())
+						buf.append(checkDoubleValue(fp.getInclusive(metric.getID())) + "\t");
+						buf.append(checkDoubleValue(fp.getExclusivePercent(metric.getID()))
 								+ "\t");
-						buf.append(fp.getExclusive(metric.getID()) + "\n");
+						buf.append(checkDoubleValue(fp.getExclusive(metric.getID())) + "\n");
 					}
 				}
 				// now the aggregate threads
@@ -1058,12 +1061,12 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 						buf.append(timerCallDataID + "\t");
 						buf.append(metricID + "\t");
 
-						buf.append(fp.getInclusivePercent(metric.getID())
+						buf.append(checkDoubleValue(fp.getInclusivePercent(metric.getID()))
 								+ "\t");
-						buf.append(fp.getInclusive(metric.getID()) + "\t");
-						buf.append(fp.getExclusivePercent(metric.getID())
+						buf.append(checkDoubleValue(fp.getInclusive(metric.getID())) + "\t");
+						buf.append(checkDoubleValue(fp.getExclusivePercent(metric.getID()))
 								+ "\t");
-						buf.append(fp.getExclusive(metric.getID()) + "\n");
+						buf.append(checkDoubleValue(fp.getExclusive(metric.getID())) + "\n");
 					}
 				}
 			}
@@ -1078,6 +1081,22 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	private static double checkDoubleValue(double d){
+		/*
+		 * From the PostgreSQL Docs:
+		 * The double precision type typically has a range of around 1E-307 to 1E+308 with a precision of at least 15 digits. 
+		 * Values that are too large or too small will cause an error.
+		 * Rounding may take place if the precision of an input number is too high. 
+		 */
+		if(d<1E-307){
+			return 0;
+		}else if (d>1E+308){
+			return 9E+307;
+		}
+		return d;
+			
+		
 	}
 
 	private static void uploadFunctionProfiles(DataSource dataSource,
