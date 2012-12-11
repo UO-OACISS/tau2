@@ -1324,6 +1324,8 @@ extern void Tau_pure_start_task_string(const string name, int tid);
  * it a dummy name for the application, if just the MPI wrapper interposition
  * library is used without any instrumentation in main */
 extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
+  //This is often the first entry point into TAU.
+  Tau_thread_flags[tid].Tau_global_insideTAU++;
 
 /*
   int disabled = 0;
@@ -1367,6 +1369,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
   }
 
   if (initthread[tid] == true) {
+    Tau_thread_flags[tid].Tau_global_insideTAU--;
     return;
   }
   
@@ -1380,6 +1383,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
   }
 
   atexit(Tau_destructor_trigger);
+  Tau_thread_flags[tid].Tau_global_insideTAU--;
 }
 
 extern "C" void Tau_create_top_level_timer_if_necessary(void) {
