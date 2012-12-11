@@ -22,20 +22,12 @@
 #ifndef _TAU_MEMORY_H_
 #define _TAU_MEMORY_H_
 
-//////////////////////////////////////////////////////////////////////
-// This class allows us to convert void * to the desired type in malloc
-//////////////////////////////////////////////////////////////////////
+void TauDetectMemoryLeaks(void);
 
-class TauVoidPointer {
-  void *p;
-  public:
-    TauVoidPointer (void *pp) : p (pp) { }
-    template <class T> operator T *() { return (T *) p; }
-};
-int TauDetectMemoryLeaks(void);
-void Tau_track_memory_allocation(const char *file, int line, size_t size, TauVoidPointer ptr);
-void Tau_track_memory_deallocation(const char *file, int line, TauVoidPointer ptr);
-TauVoidPointer Tau_new(const char *file, int line, size_t size, TauVoidPointer ptr);
+void Tau_track_memory_allocation(const char *file, int line, size_t size, void* ptr);
+void Tau_track_memory_deallocation(const char *file, int line, void* ptr);
+
+void * Tau_new(const char *file, int line, size_t size, void* ptr);
 
 #endif /* _TAU_MEMORY_H_ */
 

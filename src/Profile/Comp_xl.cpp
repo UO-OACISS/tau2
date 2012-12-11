@@ -111,7 +111,7 @@ static HashTable & get_name_file_hashtable()
     return htab;
 }
 
-// Secondary source of FunctionInfo poiters.
+// Secondary source of FunctionInfo pointers.
 // Used when primary lookup fails 
 // (e.g. different fnames, but it really IS the same function)
 static HashTable & get_name_only_hashtable()
@@ -155,6 +155,7 @@ uint32_t get_hash(uint32_t hash, char const * data, int len)
         hash += (signed char)*data;
         hash ^= hash << 10;
         hash += hash >> 1;
+        break;
     }
 
     hash ^= hash << 3;

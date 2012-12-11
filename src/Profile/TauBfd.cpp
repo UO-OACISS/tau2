@@ -68,7 +68,7 @@ struct TauBfdModule
 
         // Meant for consumption by the Intel12 workaround only.
         void markLastResult(bool success) {
-	  lastResolveFailed = !success;
+            lastResolveFailed = !success;
         }
 
 	bool loadSymbolTable(char const * path) {
@@ -189,25 +189,15 @@ static int Tau_bfd_internal_getBGPJobID(const char *path, char *name);
 static void Tau_bfd_internal_updateBGPMaps(TauBfdUnit *unit);
 #endif /* TAU_BGP || TAU_BGQ */
 
-// BFD units (e.g. executables and their dynamic libraries)
-//vector<TauBfdUnit*> bfdUnits;
 //////////////////////////////////////////////////////////////////////
 // Instead of using a global var., use static inside a function  to
 // ensure that non-local static variables are initialised before being
 // used (Ref: Scott Meyers, Item 47 Eff. C++).
 //////////////////////////////////////////////////////////////////////
 std::vector<TauBfdUnit*>& ThebfdUnits(void)
-{ // FunctionDB contains pointers to each FunctionInfo static object
-
-  // we now use the above FIvector, which subclasses vector
-  //static vector<FunctionInfo*> FunctionDB;
+{
+  // BFD units (e.g. executables and their dynamic libraries)
   static std::vector<TauBfdUnit*> internal_bfd_units;
-
-  static int flag = 1;
-  if (flag) {
-    flag = 0;
-  }
-
   return internal_bfd_units;
 }
 
