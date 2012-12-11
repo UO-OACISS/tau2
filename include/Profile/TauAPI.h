@@ -410,6 +410,8 @@ int Tau_global_incr_insideTAU();
 int Tau_global_decr_insideTAU();
 int Tau_global_incr_insideTAU_tid(int tid);
 int Tau_global_decr_insideTAU_tid(int tid);
+int Tau_global_process_incr_insideTAU();
+int Tau_global_process_decr_insideTAU();
 int Tau_global_getLightsOut();
 void Tau_global_setLightsOut();
 
