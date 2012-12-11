@@ -191,6 +191,7 @@ void Tau_malloc_after(void * ptr, size_t size, user_event_t * e)
 //////////////////////////////////////////////////////////////////////
 // Tau_malloc calls the before and after routines and allocates memory
 //////////////////////////////////////////////////////////////////////
+extern "C"
 void * Tau_malloc(const char *file, int line, size_t size)
 {
   /* Get the event that is created */
@@ -213,6 +214,7 @@ void * Tau_malloc(const char *file, int line, size_t size)
 //////////////////////////////////////////////////////////////////////
 // Tau_calloc calls the before and after routines and allocates memory
 //////////////////////////////////////////////////////////////////////
+extern "C"
 void * Tau_calloc(const char *file, int line, size_t nmemb, size_t size)
 {
   /* Get the event that is created */
@@ -319,6 +321,7 @@ void Tau_free_before(const char *file, int line, void * ptr)
 //////////////////////////////////////////////////////////////////////
 // Tau_free calls Tau_free_before and free's the memory allocated 
 //////////////////////////////////////////////////////////////////////
+extern "C"
 void Tau_free(const char *file, int line, void * p)
 {
   Tau_free_before(file, line, p);
@@ -334,7 +337,8 @@ void Tau_free(const char *file, int line, void * p)
 //////////////////////////////////////////////////////////////////////
 // Tau_realloc calls free_before, realloc and memory allocation tracking routine
 //////////////////////////////////////////////////////////////////////
-void* Tau_realloc(const char *file, int line, void * p, size_t size)
+extern "C"
+void * Tau_realloc(const char *file, int line, void * p, size_t size)
 {
   Tau_free_before(file, line, p); 
   void *retval = realloc(p, size);
