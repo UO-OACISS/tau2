@@ -201,11 +201,33 @@ extern "C" int Tau_global_incr_insideTAU() {
   return Tau_thread_flags[tid].Tau_global_insideTAU;
 }
 
+extern "C" int Tau_global_process_incr_insideTAU() {
+  Tau_stack_checkInit();
+  int tid = 0;
+  while (tid < TAU_MAX_THREADS)
+  {
+    Tau_thread_flags[tid].Tau_global_insideTAU++;
+    tid++;
+  }
+  return -1;
+}
+
 extern "C" int Tau_global_decr_insideTAU() {
   Tau_stack_checkInit();
   int tid = Tau_get_tid();
   Tau_thread_flags[tid].Tau_global_insideTAU--;
   return Tau_thread_flags[tid].Tau_global_insideTAU;
+}
+
+extern "C" int Tau_global_process_decr_insideTAU() {
+  Tau_stack_checkInit();
+  int tid = 0;
+  while (tid < TAU_MAX_THREADS)
+  {
+    Tau_thread_flags[tid].Tau_global_insideTAU--;
+    tid++;
+  }
+  return -1;
 }
 
 extern "C" int Tau_global_incr_insideTAU_tid(int tid) {
@@ -1284,10 +1306,10 @@ extern "C" void Tau_event_disable_stddev(void *ue) {
 extern "C" void Tau_profile_c_timer(void **ptr, const char *name, const char *type, 
     TauGroup_t group, const char *group_name) 
 {
+  Tau_global_incr_insideTAU();
   if (*ptr == 0) {
     RtsLayer::LockEnv();
     if (*ptr == 0) {  
-      Tau_global_incr_insideTAU();
       // remove garbage characters from the end of name
       unsigned int len=0;
       while(isprint(name[len])) {
@@ -1301,10 +1323,10 @@ extern "C" void Tau_profile_c_timer(void **ptr, const char *name, const char *ty
       *ptr = Tau_get_profiler(fixedname, type, group, group_name);
 
       free((void*)fixedname);
-      Tau_global_decr_insideTAU();
     }
     RtsLayer::UnLockEnv();
   }
+  Tau_global_decr_insideTAU();
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1324,6 +1346,8 @@ extern void Tau_pure_start_task_string(const string name, int tid);
  * it a dummy name for the application, if just the MPI wrapper interposition
  * library is used without any instrumentation in main */
 extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
+  //This is often the first entry point into TAU.
+  Tau_thread_flags[tid].Tau_global_insideTAU++;
 
 /*
   int disabled = 0;
@@ -1367,6 +1391,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
   }
 
   if (initthread[tid] == true) {
+    Tau_thread_flags[tid].Tau_global_insideTAU--;
     return;
   }
   
@@ -1380,6 +1405,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
   }
 
   atexit(Tau_destructor_trigger);
+  Tau_thread_flags[tid].Tau_global_insideTAU--;
 }
 
 extern "C" void Tau_create_top_level_timer_if_necessary(void) {
@@ -1388,12 +1414,14 @@ extern "C" void Tau_create_top_level_timer_if_necessary(void) {
 
 
 extern "C" void Tau_stop_top_level_timer_if_necessary_task(int tid) {
+  Tau_global_incr_insideTAU();
   if (TauInternal_CurrentProfiler(tid) && 
       TauInternal_CurrentProfiler(tid)->ParentProfiler == NULL && 
       strcmp(TauInternal_CurrentProfiler(tid)->ThisFunction->GetName(), ".TAU application") == 0) {
     DEBUGPROFMSG("Found top level .TAU application timer"<<endl;);  
     TAU_GLOBAL_TIMER_STOP();
   }
+  Tau_global_decr_insideTAU();
 }
 
 extern "C" void Tau_stop_top_level_timer_if_necessary(void) {
@@ -1549,7 +1577,7 @@ map<string, int *>& TheIterationMap() {
 void Tau_pure_start_task_string(const string name, int tid)
 {
   FunctionInfo *fi = 0;
-  RtsLayer::LockDB();
+  RtsLayer::LockEnv();
   TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(name);
   if (it == ThePureMap().end()) {
     tauCreateFI((void**)&fi,name,"",TAU_USER,"TAU_USER");
@@ -1557,7 +1585,7 @@ void Tau_pure_start_task_string(const string name, int tid)
   } else {
     fi = (*it).second;
   }
-  RtsLayer::UnLockDB();
+  RtsLayer::UnLockEnv();
   Tau_start_timer(fi,0, tid);
 }
 
