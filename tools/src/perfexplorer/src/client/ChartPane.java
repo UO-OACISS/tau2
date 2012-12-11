@@ -1535,9 +1535,15 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			longName=longName.trim();
 			return longName;
 		}
+		int callpath = longName.indexOf("=>");
+		if(callpath < 0){
+			String shorter = longName.substring(0, codeDex).trim();
+			return shorter;
+		}
+		longName = longName.replace("[THROTTLED]","");
 
-		String shorter = longName.substring(0, codeDex).trim();
-		return shorter;
+        longName = longName.replaceAll("\\[\\{[^=>]*\\}\\]","");
+		return longName;
 	}
 
 	class MyJTextField extends javax.swing.JTextField
