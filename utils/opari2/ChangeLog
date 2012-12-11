@@ -1,3 +1,12 @@
+------------------- Released version 1.0.7-rc1------------------------
+
+- Simplify the generation the POMP2 init region file. Previously
+  opari2-config had to be called in a sequence (--egrep, --egrep,
+  --awk-cmd, --awk-script). This sequence is replaced by opari2-config
+  --region-initialization.
+
+- Comments in macros are now ignored when processing.
+
 ------------------- Released version 1.0.6 ---------------------------
 
 - Changed opari-config option --pomp2-api-version to
