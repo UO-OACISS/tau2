@@ -689,6 +689,10 @@ intelcxxlibicc=no
 intelifort=no
 intel=no
 gnu=no
+sol2cc=no
+suncc=no
+compaq=no
+open64=no
 profile=no
 profilestats=no
 profilememory=no
@@ -3427,6 +3431,7 @@ case $cxx_compiler in
       ;;
    openCC|orCC)
       echo "Default C++ compiler will ORC Open64 orCC compiler"
+			open64=yes
       fixmakeargs="$fixmakeargs OPEN64ORC"
       tauoptions="${tauoptions}-open64"
       if [ $c_compiler = default ] 
@@ -5057,6 +5062,7 @@ case $machine in
 	fi
 	if [ $cxx_compiler = CC ]  
 	  then
+			sol2cc=yes
 	    fixmakeargs="$fixmakeargs SOL2CC"
 	    if [ $openmp = yes ]
 	    then
@@ -5160,6 +5166,7 @@ case $machine in
 
 if [ $machine = x86_64 -o $machine = i386_linux -o $machine = ia64 -o $machine = suni386 -o $machine = sunx86_64 ] ; then
     if [ $cxx_compiler = CC ] ; then
+				suncc=yes
         fixmakeargs="$fixmakeargs SUNCC"
         if [ $openmp = yes ] ; then
             fixmakeargs="$fixmakeargs SUNCC_OPENMP"
@@ -6907,6 +6914,47 @@ if [ $java = yes ] ; then
 fi
 
 if [ $openmp = yes ] ; then
+
+
+#find openmp flag
+if [ "$sol2cc" = "yes" ]; then openmp_flag=-xopenmp; fi
+if [ "$suncc" = "yes" ]; then openmp_flag=-xopenmp=parallel; fi
+if [ "$compaq" = "yes" ]; then openmp_flag=-omp; fi
+if [ "$ibmxlc" = "yes" ]; then openmp_flag=-qsmp=omp; fi
+if [ "$open64" = "yes" ]; then openmp_flag=-mp; fi
+if [ "$gnu" = "yes" ]; then openmp_flag=-fopenmp; fi
+if [ "$pgi" = "yes" ]; then openmp_flag=-mp; fi
+if [ "$fujitsu" = "yes" ]; then openmp_flag=-Kopenmp; fi
+if [ "$default_fortran" = "cray" ]; then openmp_flag=-h omp; fi
+if [ "$intel" = "yes" ]; then openmp_flag=-openmp; fi
+
+
+#checking OMP compiler nested supported
+echo -n "Checking OMP NESTED support..."
+		touch omp_nested_test.c
+		cat <<EOF>omp_nested_test.c
+#include <omp.h>
+#include <stdio.h>
+int main()
+{
+ omp_get_thread_num();
+ omp_get_level();
+ omp_get_team_size(0);
+ omp_get_ancestor_thread_num(0);
+}
+EOF
+
+		$c_compiler $openmp_flag $orig_useropt omp_nested_test.c -o omp_nested_test >& /dev/null
+		./omp_nested_test >& /dev/null
+		result=$?
+		rm -f ./omp_nested_test ./omp_nested_test.c
+		if [ $result = "0" ]; then
+			echo "yes."
+    	fixmakeargs="$fixmakeargs TAU_OPENMP_NESTED"
+		else
+			echo "no"
+			echo "OpenMP nested regions is not supported by this compiler."
+		fi
     fixmakeargs="$fixmakeargs OPENMP"
     tauoptions="${tauoptions}-openmp"
 fi
@@ -7325,6 +7373,7 @@ if [ $machine = hitachi ] ; then
 fi
 
 if [ $cxx_compiler = cxx ] ; then
+	compaq=yes
   if [ $openmp = yes ] ; then
     fixmakeargs="$fixmakeargs COMPAQCXX_OPENMP"
   fi

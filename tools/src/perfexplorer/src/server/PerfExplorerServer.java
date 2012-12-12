@@ -822,13 +822,13 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @return List
 	 */
 	public List<String> getXMLFields(RMIPerfExplorerModel modelData) {
-		List<String> chartData = null;
+		List<String> listOfMetadata = null;
 		if (this.getDB().getSchemaVersion() == 0) {
-			chartData = GeneralChartData.getXMLFields(modelData);
+			listOfMetadata = PerfDMFGeneralChartData.getXMLFields(modelData);
 		} else {
-			chartData = this.getPotentialPrimaryMetadata(modelData);
+			listOfMetadata = this.getPotentialPrimaryMetadata(modelData);
 		}
-		return chartData;
+		return listOfMetadata;
 	}
 
 	/**

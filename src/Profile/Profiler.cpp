@@ -448,7 +448,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
-    Tau_sampling_event_stop(tid, CurrentTime);
+   	Tau_sampling_event_stop(tid, CurrentTime);
   }
 #endif
 
