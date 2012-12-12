@@ -35,6 +35,8 @@
 #define posix_memalign(MEMPTR, ALIGNMENT, SIZE)  Tau_posix_memalign(MEMPTR, ALIGNMENT, SIZE, __FILE__, __LINE__)
 #define realloc(BASEADR, NEWSIZE)   Tau_realloc(BASEADR, NEWSIZE, __FILE__, __LINE__)
 #define valloc(SIZE)                Tau_valloc(SIZE, __FILE__, __LINE__)
-#define pvalloc(SIZE)               Tau_valloc(SIZE, __FILE__, __LINE__)
+#if HAVE_PVALLOC
+#define pvalloc(SIZE)               Tau_pvalloc(SIZE, __FILE__, __LINE__)
+#endif
 
 #endif /* _TAU_MALLOC_H_ */

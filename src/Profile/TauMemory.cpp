@@ -447,6 +447,27 @@ void * Tau_valloc(size_t size, const char * filename, int lineno)
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
+#if HAVE_PVALLOC
+extern "C"
+void * Tau_pvalloc(size_t size, const char * filename, int lineno)
+{
+  /* Get the event that is created */
+  user_event_t * e = Tau_malloc_before(filename, lineno);
+
+  void * ptr = pvalloc(size);
+
+  /* associate the event generated and its size with the address of memory
+   * allocated by calloc. This is used later for memory leak detection and
+   * to evaluate the size of the memory freed in the Tau_free(ptr) routine. */
+  Tau_malloc_after(ptr, size, e);
+
+  return ptr;  /* what was allocated */
+}
+#endif
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
 extern "C"
 char * Tau_strdup(const char *str, const char * filename, int lineno)
 {
