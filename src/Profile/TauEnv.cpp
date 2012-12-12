@@ -140,6 +140,19 @@ using namespace std;
 
 #define TAU_MIC_OFFLOAD_DEFAULT 0
 
+// Memory debugging environment variable defaults
+#define TAU_MEMDBG_DEFAULT                0
+#define TAU_MEMDBG_ALIGNMENT_DEFAULT      sizeof(int)
+#define TAU_MEMDBG_ZERO_MALLOC_DEFAULT    0
+#define TAU_MEMDBG_PROTECT_GAP_DEFAULT    0
+#define TAU_MEMDBG_PROTECT_ABOVE_DEFAULT  1
+#define TAU_MEMDBG_PROTECT_BELOW_DEFAULT  0
+#define TAU_MEMDBG_PROTECT_FREE_DEFAULT   0
+#define TAU_MEMDBG_FILL_GAP_DEFAULT       0 // Here 0 => undefined, not zero
+#define TAU_MEMDBG_ALLOC_MIN_DEFAULT      0 // Here 0 => undefined, not zero
+#define TAU_MEMDBG_ALLOC_MAX_DEFAULT      0 // Here 0 => undefined, not zero
+#define TAU_MEMDBG_OVERHEAD_DEFAULT       0 // Here 0 => undefined, not zero
+
 // forward declartion of cuserid. need for c++ compilers on Cray.
 extern "C" char *cuserid(char *);
 
@@ -337,22 +350,22 @@ static const char *getconf(const char *key) {
 /*********************************************************************
  * Local Tau_check_dirname routine
  ********************************************************************/
-char * Tau_check_dirname(const char * dir) {
-  if (strcmp(dir, "$TAU_LOG_DIR") == 0){
+char * Tau_check_dirname(const char * dir)
+{
+  if (strcmp(dir, "$TAU_LOG_DIR") == 0) {
     TAU_VERBOSE("Using PROFILEDIR=%s\n", dir);
-    const char *logdir= getconf("TAU_LOG_PATH");
-    const char *jobid= getconf("COBALT_JOBID");
-    if (jobid == (const char *) NULL) jobid=strdup("0");
+    const char *logdir = getconf("TAU_LOG_PATH");
+    const char *jobid = getconf("COBALT_JOBID");
+    if (jobid == (const char *)NULL) jobid = strdup("0");
     TAU_VERBOSE("jobid = %s\n", jobid);
     time_t theTime = time(NULL);
     struct tm *thisTime = gmtime(&theTime);
     thisTime = localtime(&theTime);
-    char user[1024]; 
+    char user[1024];
     int ret;
 
-
-    char logfiledir[2048]; 
-    char scratchdir[2048]; 
+    char logfiledir[2048];
+    char scratchdir[2048];
 #if (defined (TAU_BGL) || defined(TAU_BGP) || defined(TAU_BGQ) || defined(__linux__))
     if (cuserid(user) == NULL) {
       sprintf(user,"unknown");
@@ -360,43 +373,40 @@ char * Tau_check_dirname(const char * dir) {
 #else
 
 #ifdef TAU_WINDOWS
-		char *temp = "unknown";
+    char *temp = "unknown";
 #else
     /*    struct passwd *pwInfo = getpwuid(geteuid());
-    if ((pwInfo != NULL) &&
-        (pwInfo->pw_name != NULL)) {
-      strcpy(user, pwInfo->pw_name);
-    */
+     if ((pwInfo != NULL) &&
+     (pwInfo->pw_name != NULL)) {
+     strcpy(user, pwInfo->pw_name);
+     */
     char *temp = getlogin();
     TAU_VERBOSE("TAU: cuserid returns %s\n", temp);
 #endif // TAU_WINDOWS
     if (temp != NULL) {
       sprintf(user, temp);
     } else {
-      sprintf(user,"unknown");
+      sprintf(user, "unknown");
     }
     free(temp);
 #endif /* TAU_BGP */
-    ret = sprintf(logfiledir, "%s/%d/%d/%d/%s_id%s_%d-%d-%d",  
-	logdir, (thisTime->tm_year+1900),(thisTime->tm_mon+1), 
-	thisTime->tm_mday, user, jobid, (thisTime->tm_mon+1), thisTime->tm_mday,
-	(thisTime->tm_hour*60*60 + thisTime->tm_min*60 + thisTime->tm_sec));
+    ret = sprintf(logfiledir, "%s/%d/%d/%d/%s_id%s_%d-%d-%d", logdir, (thisTime->tm_year + 1900),
+        (thisTime->tm_mon + 1), thisTime->tm_mday, user, jobid, (thisTime->tm_mon + 1), thisTime->tm_mday,
+        (thisTime->tm_hour * 60 * 60 + thisTime->tm_min * 60 + thisTime->tm_sec));
     TAU_VERBOSE("Using logdir = %s\n", logfiledir);
-    if (RtsLayer::myNode() < 1) { 
+    if (RtsLayer::myNode() < 1) {
 #ifdef TAU_WINDOWS
       mkdir(logfiledir);
 #else
 
       mode_t oldmode;
-      oldmode=umask(0);
+      oldmode = umask(0);
       mkdir(logdir, S_IRWXU | S_IRGRP | S_IWGRP | S_IXGRP | S_IRWXO);
-      sprintf(scratchdir, "%s/%d", logdir, (thisTime->tm_year+1900));
+      sprintf(scratchdir, "%s/%d", logdir, (thisTime->tm_year + 1900));
       mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IWGRP | S_IXGRP | S_IRWXO);
-      sprintf(scratchdir, "%s/%d/%d", logdir, (thisTime->tm_year+1900), 
-	(thisTime->tm_mon+1));
+      sprintf(scratchdir, "%s/%d/%d", logdir, (thisTime->tm_year + 1900), (thisTime->tm_mon + 1));
       mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IWGRP | S_IXGRP | S_IRWXO);
-      sprintf(scratchdir, "%s/%d/%d/%d", logdir, (thisTime->tm_year+1900), 
-	(thisTime->tm_mon+1), thisTime->tm_mday);
+      sprintf(scratchdir, "%s/%d/%d/%d", logdir, (thisTime->tm_year + 1900), (thisTime->tm_mon + 1), thisTime->tm_mday);
       mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IWGRP | S_IXGRP | S_IRWXO);
       TAU_VERBOSE("mkdir %s\n", scratchdir);
 
@@ -408,7 +418,7 @@ char * Tau_check_dirname(const char * dir) {
     return strdup(logfiledir);
   }
   return (char *)dir;
-   
+
 }
 
 
@@ -463,6 +473,28 @@ static const char *env_metrics = NULL;
 static const char *env_cupti_api = NULL;
 
 static int env_mic_offload = 0;
+
+static int env_memdbg = TAU_MEMDBG_DEFAULT;
+static unsigned int env_memdbg_alignment = TAU_MEMDBG_ALIGNMENT_DEFAULT;
+static int env_memdbg_zero_malloc = TAU_MEMDBG_ZERO_MALLOC_DEFAULT;
+static int env_memdbg_protect_gap = TAU_MEMDBG_PROTECT_GAP_DEFAULT;
+static int env_memdbg_protect_above = TAU_MEMDBG_PROTECT_ABOVE_DEFAULT;
+static int env_memdbg_protect_below = TAU_MEMDBG_PROTECT_BELOW_DEFAULT;
+static int env_memdbg_protect_free = TAU_MEMDBG_PROTECT_FREE_DEFAULT;
+// All values of env_memdbg_fill_gap_value are valid fill patterns
+static int env_memdbg_fill_gap = TAU_MEMDBG_FILL_GAP_DEFAULT;
+static unsigned char env_memdbg_fill_gap_value = 0;
+// All values of env_memdbg_alloc_min are valid limits
+static int env_memdbg_alloc_min = TAU_MEMDBG_ALLOC_MIN_DEFAULT;
+static size_t env_memdbg_alloc_min_value = 0;
+// All values of env_memdbg_alloc_max are valid limits
+static int env_memdbg_alloc_max = TAU_MEMDBG_ALLOC_MAX_DEFAULT;
+static size_t env_memdbg_alloc_max_value = 0;
+// All values of env_memdbg_overhead are valid limits
+static int env_memdbg_overhead = TAU_MEMDBG_OVERHEAD_DEFAULT;
+static size_t env_memdbg_overhead_value = 0;
+
+
 #ifdef TAU_GPI 
 #include <GPI.h>
 #include <GpiLogger.h>
@@ -694,6 +726,67 @@ int TauEnv_get_lite_enabled() {
   return env_tau_lite;
 }
 
+int TauEnv_get_memdbg() {
+  return env_memdbg;
+}
+
+unsigned int TauEnv_get_memdbg_alignment() {
+  return env_memdbg_alignment;
+}
+
+int TauEnv_get_memdbg_zero_malloc() {
+  return env_memdbg_zero_malloc;
+}
+
+int TauEnv_get_memdbg_protect_gap() {
+  return env_memdbg_protect_gap;
+}
+
+int TauEnv_get_memdbg_protect_above() {
+  return env_memdbg_protect_above;
+}
+
+int TauEnv_get_memdbg_protect_below() {
+  return env_memdbg_protect_below;
+}
+
+int TauEnv_get_memdbg_protect_free() {
+  return env_memdbg_protect_free;
+}
+
+int TauEnv_get_memdbg_fill_gap() {
+  return env_memdbg_fill_gap;
+}
+
+unsigned char TauEnv_get_memdbg_fill_gap_value() {
+  return env_memdbg_fill_gap_value;
+}
+
+int TauEnv_get_memdbg_alloc_min() {
+  return env_memdbg_alloc_min;
+}
+
+size_t TauEnv_get_memdbg_alloc_min_value() {
+  return env_memdbg_alloc_min_value;
+}
+
+int TauEnv_get_memdbg_alloc_max() {
+  return env_memdbg_alloc_max;
+}
+
+size_t TauEnv_get_memdbg_alloc_max_value() {
+  return env_memdbg_alloc_max_value;
+}
+
+int TauEnv_get_memdbg_overhead() {
+  return env_memdbg_overhead;
+}
+
+size_t TauEnv_get_memdbg_overhead_value() {
+  return env_memdbg_overhead_value;
+}
+
+
 /*********************************************************************
  * Initialize the TauEnv module, get configuration values
  ********************************************************************/
@@ -819,7 +912,7 @@ void TauEnv_initialize()
 
     tmp = getconf("TAU_TRACK_MEMORY_LEAKS");
     if (parse_bool(tmp, env_track_memory_leaks)) {
-      TAU_VERBOSE("TAU: Entry/Exit Memory tracking Enabled\n");
+      TAU_VERBOSE("TAU: Memory tracking enabled\n");
       TAU_METADATA("TAU_TRACK_MEMORY_LEAKS", "on");
       env_track_memory_leaks = 1;
       env_extras = 1;
@@ -827,6 +920,104 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_TRACK_MEMORY_LEAKS", "off");
       env_track_memory_leaks = 0;
     }
+
+    tmp = getconf("TAU_MEMDBG");
+    env_memdbg = parse_bool(tmp, env_memdbg);
+    if(env_memdbg) {
+      TAU_VERBOSE("TAU: Bounds checking memory debugger enabled\n");
+      TAU_METADATA("TAU_MEMDBG", "on");
+    } else {
+      TAU_METADATA("TAU_MEMDBG", "off");
+    }
+
+    if(env_memdbg) {
+
+      tmp = getconf("TAU_MEMDBG_ALIGNMENT");
+      if (tmp) {
+        env_memdbg_alignment = atoi(tmp);
+      }
+      TAU_VERBOSE("TAU: Memory debugging alignment: %d\n", env_memdbg_alignment);
+      sprintf(tmpstr, "%d", env_memdbg_alignment);
+      TAU_METADATA("TAU_MEMDBG_ALIGNMENT", tmpstr);
+
+      tmp = getconf("TAU_MEMDBG_ZERO_MALLOC");
+      env_memdbg_zero_malloc = parse_bool(tmp, env_memdbg_zero_malloc);
+      if(env_memdbg_zero_malloc) {
+        TAU_VERBOSE("TAU: Zero-size malloc will not be flagged as errors\n");
+        TAU_METADATA("TAU_MEMDBG_ZERO_MALLOC", "on");
+      } else {
+        TAU_METADATA("TAU_MEMDBG_ZERO_MALLOC", "off");
+      }
+
+      tmp = getconf("TAU_MEMDBG_PROTECT_GAP");
+      env_memdbg_protect_gap = parse_bool(tmp, env_memdbg_protect_gap);
+      if(env_memdbg_protect_gap) {
+        TAU_VERBOSE("TAU: Bounds checking enabled in memory gap\n");
+        TAU_METADATA("TAU_MEMDBG_PROTECT_GAP", "on");
+      } else {
+        TAU_METADATA("TAU_MEMDBG_PROTECT_GAP", "off");
+      }
+
+      tmp = getconf("TAU_MEMDBG_PROTECT_ABOVE");
+      env_memdbg_protect_above = parse_bool(tmp, env_memdbg_protect_above);
+      if(env_memdbg_protect_above) {
+        TAU_VERBOSE("TAU: Bounds checking enabled on array end\n");
+        TAU_METADATA("TAU_MEMDBG_PROTECT_ABOVE", "on");
+      } else {
+        TAU_METADATA("TAU_MEMDBG_PROTECT_ABOVE", "off");
+      }
+
+      tmp = getconf("TAU_MEMDBG_PROTECT_BELOW");
+      env_memdbg_protect_below = parse_bool(tmp, env_memdbg_protect_below);
+      if(env_memdbg_protect_below) {
+        TAU_VERBOSE("TAU: Bounds checking enabled on array beginning\n");
+        TAU_METADATA("TAU_MEMDBG_PROTECT_BELOW", "on");
+      } else {
+        TAU_METADATA("TAU_MEMDBG_PROTECT_BELOW", "off");
+      }
+
+      tmp = getconf("TAU_MEMDBG_PROTECT_FREE");
+      env_memdbg_protect_free = parse_bool(tmp, env_memdbg_protect_free);
+      if(env_memdbg_protect_free) {
+        TAU_VERBOSE("TAU: Checking for free memory reuse errors\n");
+        TAU_METADATA("TAU_MEMDBG_PROTECT_FREE", "on");
+      } else {
+        TAU_METADATA("TAU_MEMDBG_PROTECT_FREE", "off");
+      }
+
+      tmp = getconf("TAU_MEMDBG_FILL_GAP");
+      if (tmp) {
+        env_memdbg_fill_gap = 1;
+        env_memdbg_fill_gap_value = (unsigned char)atoi(tmp);
+        TAU_VERBOSE("TAU: Initializing memory gap to %d\n", tmp);
+        TAU_METADATA("TAU_MEMDBG_FILL_GAP", tmp);
+      }
+
+      tmp = getconf("TAU_MEMDBG_ALLOC_MIN");
+      if (tmp) {
+        env_memdbg_alloc_min = 1;
+        env_memdbg_alloc_min_value = atol(tmp);
+        TAU_VERBOSE("TAU: Minimum allocation size for bounds checking is %d\n", tmp);
+        TAU_METADATA("TAU_MEMDBG_ALLOC_MIN", tmp);
+      }
+
+      tmp = getconf("TAU_MEMDBG_ALLOC_MAX");
+      if (tmp) {
+        env_memdbg_alloc_max = 1;
+        env_memdbg_alloc_max_value = atol(tmp);
+        TAU_VERBOSE("TAU: Maximum allocation size for bounds checking is %d\n", tmp);
+        TAU_METADATA("TAU_MEMDBG_ALLOC_MAX", tmp);
+      }
+
+      tmp = getconf("TAU_MEMDBG_OVERHEAD");
+      if (tmp) {
+        env_memdbg_overhead = 1;
+        env_memdbg_overhead_value = atol(tmp);
+        TAU_VERBOSE("TAU: Maximum bounds checking overhead is %d\n", tmp);
+        TAU_METADATA("TAU_MEMDBG_OVERHEAD", tmp);
+      }
+
+    } /* if(env_memdbg) */
 
     if ((env_profiledir = getconf("PROFILEDIR")) == NULL) {
       env_profiledir = ".";   /* current directory */
