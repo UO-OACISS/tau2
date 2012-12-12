@@ -305,27 +305,6 @@ void taudb_save_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean
   taudb_clear_result(connection);
 }
 
-void taudb_save_timer_parameters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
-  const char* my_query = "insert into timer_parameter (timer, name, value) values ($1, $2, $3);";
-  const char* statement_name = "TAUDB_INSERT_TIMER";
-  taudb_prepare_statement(connection, statement_name, my_query, 3);
-  TAUDB_TIMER *timer, *tmp;
-  TAUDB_TIMER_PARAMETER *parameter, *tmp2;
-  HASH_ITER(trial_hash_by_name, trial->timers_by_name, timer, tmp) {
-    HASH_ITER(hh, timer->parameters, parameter, tmp2) {
-      // make array of 6 character pointers
-      const char* paramValues[3] = {0};
-      char timerid[32] = {0};
-      sprintf(timerid, "%d", timer->id);
-      paramValues[0] = timerid;
-      paramValues[1] = parameter->name;
-      paramValues[2] = parameter->value;
-      taudb_execute_statement(connection, statement_name, 3, paramValues);
-    }
-  }
-  taudb_clear_result(connection);
-}
-
 TAUDB_TIMER* taudb_next_timer_by_name_from_trial(TAUDB_TIMER* current) {
   return current->trial_hash_by_name.next;
 }
