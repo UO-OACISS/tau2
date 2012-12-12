@@ -76,6 +76,8 @@ int main (int argc, char** argv) {
   // create a timer, timer_callpath, timer_call_data, timer_value
   TAUDB_TIMER_GROUP* timer_group = taudb_create_timer_groups(1);
   TAUDB_TIMER* timer = taudb_create_timers(1);
+  // the timer parameter is optional
+  TAUDB_TIMER_PARAMETER* timer_parameter = taudb_create_timer_parameters(2);
   TAUDB_TIMER_CALLPATH* timer_callpath = taudb_create_timer_callpaths(1);
   TAUDB_TIMER_CALL_DATA* timer_call_data = taudb_create_timer_call_data(1);
   TAUDB_TIMER_VALUE* timer_value = taudb_create_timer_values(1);
@@ -92,6 +94,14 @@ int main (int argc, char** argv) {
   timer_group->name = taudb_strdup("TAU_DEFAULT");
   taudb_add_timer_group_to_trial(trial, timer_group);
   taudb_add_timer_to_timer_group(timer_group, timer);
+
+  // timer parameters are optional
+  timer_parameter[0].name = taudb_strdup("argc");
+  timer_parameter[0].value = taudb_strdup("1");
+  taudb_add_timer_parameter_to_timer(timer, (&timer_parameter[0]));
+  timer_parameter[1].name = taudb_strdup("argv");
+  timer_parameter[1].value = taudb_strdup("myProgramName");
+  taudb_add_timer_parameter_to_timer(timer, (&timer_parameter[1]));
 
   timer_callpath->timer = timer;
   timer_callpath->parent = NULL;
