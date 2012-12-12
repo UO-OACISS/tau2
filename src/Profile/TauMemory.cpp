@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 #include <Profile/Profiler.h>
+#include <tau_internal.h>
 
 #if (defined(__APPLE_CC__) || defined(TAU_APPLE_XLC) || defined(TAU_APPLE_PGI))
 #include <malloc/malloc.h>
@@ -55,14 +56,13 @@ using namespace std;
 #define get16bits(d) ((((uint32_t)(((const uint8_t *)(d))[1])) << 8)\
                        +(uint32_t)(((const uint8_t *)(d))[0]) )
 
-
 typedef unsigned long hash_t;
 typedef unsigned long address_t;
 typedef TauContextUserEvent user_event_t;
-typedef std::map<hash_t, user_event_t*> malloc_map_t;
+typedef TAU_HASH_MAP<hash_t, user_event_t*> malloc_map_t;
 typedef std::pair<size_t, user_event_t*> pointer_size_t;
-typedef std::multimap<address_t, pointer_size_t> pointer_size_map_t;
-typedef std::map<address_t, TauUserEvent*> leak_map_t;
+typedef TAU_MULTIMAP<address_t, pointer_size_t> pointer_size_map_t;
+typedef TAU_HASH_MAP<address_t, TauUserEvent*> leak_map_t;
 
 
 //////////////////////////////////////////////////////////////////////
@@ -140,31 +140,25 @@ hash_t Tau_hash(hash_t hash, char const * data)
 }
 
 
-
 //////////////////////////////////////////////////////////////////////
 // Tau_malloc_before creates/access the event associated with tracking
 // memory allocation for the specified line and file. 
 //////////////////////////////////////////////////////////////////////
-user_event_t * Tau_malloc_before(char const * file, int line, size_t size)
+user_event_t * Tau_malloc_before(char const * filename, int lineno)
 {
-#ifdef DEBUGPROF
-  printf("C++: Tau_malloc_before: file = %s, ptr=%lx,  long file = %uld\n", file, file, file_hash);
-#endif /* DEBUGPROF */
-
-  hash_t file_hash = Tau_hash(line, file);
+  hash_t file_hash = Tau_hash(lineno, filename);
 
   malloc_map_t & mallocmap = TheTauMallocMap();
   malloc_map_t::iterator it = mallocmap.find(file_hash);
   user_event_t * e;
 
   if (it == mallocmap.end()) {
-    char * s = (char*)malloc(strnlen(file, MAX_STRING_LEN)+128);
-    sprintf(s, "malloc size <file=%s, line=%d>", file, line);
+    char * s = (char*)malloc(strnlen(filename, MAX_STRING_LEN)+128);
+    sprintf(s, "malloc size <file=%s, line=%d>", filename, lineno);
 #ifdef DEBUGPROF
     printf("C++: Tau_malloc: creating new user event %s\n", s);
 #endif /* DEBUGPROF */
     e = new user_event_t(s);
-    e->TriggerEvent(size);
     mallocmap[file_hash] = e;
     free((void*)s);
   } else { /* found it */
@@ -172,10 +166,9 @@ user_event_t * Tau_malloc_before(char const * file, int line, size_t size)
     printf("Found it! Name = %s\n", it->second->GetEventName());
 #endif /* DEBUGPROF */
     e = it->second;
-    e->TriggerEvent(size);
   }
 #ifdef DEBUGPROF
-  printf("C++: Tau_malloc: %s:%d:%d\n", file, line, size);
+  printf("C++: Tau_malloc: %s:%d:%d\n", filename, lineno, size);
 #endif /* DEBUGPROF */
 
   return e; /* the event that is created in this routine */
@@ -186,78 +179,14 @@ user_event_t * Tau_malloc_before(char const * file, int line, size_t size)
 //////////////////////////////////////////////////////////////////////
 void Tau_malloc_after(void * ptr, size_t size, user_event_t * e)
 {
+  // We can't trigger the event until after the allocation because we don't know
+  // the actual size of the allocation until it is made
+  e->TriggerEvent(size);
+
   address_t addr = Tau_convert_ptr_to_unsigned_long(ptr);
   TheTauPointerSizeMap().insert(pair<address_t, pointer_size_t>(addr, pointer_size_t(size, e)));
 }
 
-//////////////////////////////////////////////////////////////////////
-// Tau_malloc calls the before and after routines and allocates memory
-//////////////////////////////////////////////////////////////////////
-extern "C"
-void * Tau_malloc(char const * file, int line, size_t size)
-{
-  /* Get the event that is created */
-   user_event_t * e = Tau_malloc_before(file, line, size);
-
-  void * ptr = malloc(size);
-
-#ifdef DEBUGPROF
-  printf("TAU_MALLOC<%d>: %s:%d ptr = %p size = %d\n", RtsLayer::myNode(), file, line, ptr, size);
-#endif /* DEBUGPROF */
-
-  /* associate the event generated and its size with the address of memory
-   * allocated by malloc. This is used later for memory leak detection and
-   * to evaluate the size of the memory freed in the Tau_free(ptr) routine. */
-  Tau_malloc_after(ptr, size, e);
-
-  return ptr;  /* what was allocated */
-}
-
-//////////////////////////////////////////////////////////////////////
-// Tau_calloc calls the before and after routines and allocates memory
-//////////////////////////////////////////////////////////////////////
-extern "C"
-void * Tau_calloc(char const * file, int line, size_t nmemb, size_t size)
-{
-  /* Get the event that is created */
-  user_event_t * e = Tau_malloc_before(file, line, nmemb * size);
-
-  void * ptr = calloc(nmemb, size);
-
-#ifdef DEBUGPROF
-  printf("TAU_CALLOC<%d>: %s:%d ptr = %p size = %d\n", RtsLayer::myNode(), file, line, ptr, size);
-#endif /* DEBUGPROF */
-
-  /* associate the event generated and its size with the address of memory
-   * allocated by calloc. This is used later for memory leak detection and
-   * to evaluate the size of the memory freed in the Tau_free(ptr) routine. */
-  Tau_malloc_after(ptr, nmemb * size, e);
-
-  return ptr;  /* what was allocated */
-}
-
-//////////////////////////////////////////////////////////////////////
-// Tau_track_memory_allocation does everything that Tau_malloc does except
-// allocate memory
-//////////////////////////////////////////////////////////////////////
-void Tau_track_memory_allocation(char const * file, int line, size_t size, void * ptr)
-{
-#ifdef DEBUGPROF
-  printf("allocation: %d, ptr = %lx\n", line, ptr);
-#endif /* DEBUGPROF */
-  Tau_malloc_after(ptr, size, Tau_malloc_before(file, line, size));
-}
-
-//////////////////////////////////////////////////////////////////////
-// Tau_new returns the expression (new[] foo) and  does everything that 
-// Tau_track_memory_allocation does
-//////////////////////////////////////////////////////////////////////
-void * Tau_new(char const * file, int line, size_t size, void * ptr)
-{
-  /* the memory is already allocated by the time we see this ptr */
-  Tau_track_memory_allocation(file, line, size, ptr);
-  return ptr;
-}
 
 //////////////////////////////////////////////////////////////////////
 // Tau_free_before does everything prior to free'ing the memory
@@ -268,17 +197,14 @@ void Tau_free_before(char const * file, int line, void * ptr)
   printf("C++: Tau_free_before: file = %s, ptr=%lx,  long file = %uld\n", file, file, file_hash);
 #endif /* DEBUGPROF */
 
-  typedef pointer_size_map_t::iterator size_iter_t;
-  typedef malloc_map_t::iterator malloc_iter_t;
-
   pointer_size_map_t & sizemap = TheTauPointerSizeMap();
   malloc_map_t & mallocmap = TheTauMallocMap();
 
   hash_t file_hash = Tau_hash(line, file);
   address_t addr = Tau_convert_ptr_to_unsigned_long(ptr);
 
-  size_t sz = 0;
-  size_iter_t size_it = sizemap.find(addr);
+  size_t sz;
+  pointer_size_map_t::iterator size_it = sizemap.find(addr);
   if (size_it != sizemap.end()) {
     // Size was found, but sometimes a single address corresponds to multiple
     // allocations, i.e. Intel compilers can do this when there's a leak.
@@ -290,11 +216,13 @@ void Tau_free_before(char const * file, int line, void * ptr)
     sz = size_it->second.first;
     // Remove the record
     sizemap.erase(size_it);
+  } else {
+    sz = 0;
   }
 
-  malloc_iter_t it = mallocmap.find(file_hash);
+  malloc_map_t::iterator it = mallocmap.find(file_hash);
   if (it == mallocmap.end()) {
-    char * s = (char*)malloc(strnlen(file, MAX_STRING_LEN)+32);
+    char * s = (char*)malloc(strnlen(file, MAX_STRING_LEN)+64);
     sprintf(s, "free size <file=%s, line=%d>", file, line);
 
 #ifdef DEBUGPROF
@@ -316,46 +244,6 @@ void Tau_free_before(char const * file, int line, void * ptr)
 #endif /* DEBUGPROF */
 }
 
-//////////////////////////////////////////////////////////////////////
-// Tau_free calls Tau_free_before and free's the memory allocated 
-//////////////////////////////////////////////////////////////////////
-extern "C"
-void Tau_free(const char *file, int line, void * p)
-{
-  Tau_free_before(file, line, p);
-
-#ifdef DEBUGPROF
-  printf("TAU_FREE  <%d>: %s:%d ptr = %p\n", RtsLayer::myNode(), file, line, p);
-#endif /* DEBUGPROF */
-
-  /* and actually free the memory */
-  free(p);
-}
-
-//////////////////////////////////////////////////////////////////////
-// Tau_realloc calls free_before, realloc and memory allocation tracking routine
-//////////////////////////////////////////////////////////////////////
-extern "C"
-void * Tau_realloc(const char *file, int line, void * p, size_t size)
-{
-  Tau_free_before(file, line, p);
-  void *retval = realloc(p, size);
-  Tau_track_memory_allocation(file, line, size, retval);
-  return retval;
-}
-
-//////////////////////////////////////////////////////////////////////
-// Tau_track_memory_deallocation does everything that Tau_free does except
-// de-allocate memory
-//////////////////////////////////////////////////////////////////////
-void Tau_track_memory_deallocation(const char *file, int line, void * ptr)
-{
-  //printf("DEallocation: %s:%d, ptr = %lx\n", file, line, ptr);
-#ifdef DEBUGPROF
-  printf("DEallocation: %d, ptr = %lx\n", line, ptr);
-#endif /* DEBUGPROF */
-  Tau_free_before(file, line, ptr);
-}
 
 //////////////////////////////////////////////////////////////////////
 // TauDetectMemoryLeaks iterates over the list of pointers and checks
@@ -364,14 +252,13 @@ void Tau_track_memory_deallocation(const char *file, int line, void * ptr)
 //////////////////////////////////////////////////////////////////////
 void TauDetectMemoryLeaks(void)
 {
-  typedef pointer_size_map_t::iterator size_iter_t;
-  typedef leak_map_t::iterator leak_iter_t;
-
   pointer_size_map_t & sizemap = TheTauPointerSizeMap();
   leak_map_t & leakmap = TheTauMemoryLeakMap();
   if (sizemap.empty()) return;
 
-  for (size_iter_t size_it = sizemap.begin(); size_it != sizemap.end(); size_it++) {
+  for (pointer_size_map_t::iterator size_it=sizemap.begin();
+       size_it != sizemap.end(); size_it++)
+  {
     size_t sz = size_it->second.first;
     user_event_t * e = size_it->second.second;
 
@@ -381,7 +268,7 @@ void TauDetectMemoryLeaks(void)
 #endif /* DEBUGPROF */
 
     address_t leak_key = Tau_convert_ptr_to_unsigned_long(e);
-    leak_iter_t leak_it = leakmap.find(leak_key);
+    leak_map_t::iterator leak_it = leakmap.find(leak_key);
     if (leak_it == leakmap.end()) {
       char * s = (char*)malloc(strnlen(e->GetEventName(), MAX_STRING_LEN)+32);
       sprintf(s, "MEMORY LEAK! %s", e->GetEventName());
@@ -396,59 +283,236 @@ void TauDetectMemoryLeaks(void)
 }
 
 
+
 //////////////////////////////////////////////////////////////////////
-// The amount of memory available for use (in MB) 
+// Tau_track_memory_allocation does everything that Tau_malloc does except
+// allocate memory
 //////////////////////////////////////////////////////////////////////
-int TauGetFreeMemory(void)
+extern "C"
+void Tau_track_memory_allocation(char const * file, int line, size_t size, void * ptr)
 {
-
-  /* Catamount has a heap_info call that returns the available memory headroom */
-#if defined(TAU_CATAMOUNT)
-  size_t fragments;
-  unsigned long total_free, largest_free, total_used;
-  if (heap_info(&fragments, &total_free, &largest_free, &total_used) == 0)
-  {  /* return free memory in MB */
-    return  (int) (total_free/(1024*1024));
-  }
-  return 0; /* if it didn't work */
-#elif defined(TAU_BGP)
-  uint32_t available_heap;
-  Kernel_GetMemorySize( KERNEL_MEMSIZE_ESTHEAPAVAIL, &available_heap );
-  return available_heap / (1024 * 1024);
-#else
-#define TAU_BLOCK_COUNT 1024
-
-  char* blocks[TAU_BLOCK_COUNT];
-  char* ptr;
-  int i,j;
-  int freemem = 0;
-  int factor = 1;
-
-  i = 0; /* initialize it */
-  while (1)
-  {
-    ptr = (char *) malloc(factor*1024*1024); /* 1MB chunk */
-    if (ptr && i < TAU_BLOCK_COUNT)
-    { /* so we don't go over the size of the blocks */
-      blocks[i] = ptr;
-      i++; /* increment the no. of elements in the blocks array */
-      freemem += factor; /* assign the MB allocated */
-      factor *= 2;  /* try with twice as much the next time */
-    }
-    else
-    {
-      if (factor == 1) break; /* out of the loop */
-      factor = 1; /* try with a smaller chunk size */
-    }
-  }
-
-  for (j=0; j < i; j++)
-    free(blocks[j]);
-
-  return freemem;
-
-#endif /* TAU_CATAMOUNT */
+  Tau_malloc_after(ptr, size, Tau_malloc_before(file, line));
 }
+
+//////////////////////////////////////////////////////////////////////
+// Tau_track_memory_deallocation does everything that Tau_free does except
+// de-allocate memory
+//////////////////////////////////////////////////////////////////////
+extern "C"
+void Tau_track_memory_deallocation(const char *file, int line, void * ptr)
+{
+  Tau_free_before(file, line, ptr);
+}
+
+//////////////////////////////////////////////////////////////////////
+// Tau_new returns the expression (new[] foo) and  does everything that
+// Tau_track_memory_allocation does
+//////////////////////////////////////////////////////////////////////
+extern "C"
+void * Tau_new(char const * file, int line, size_t size, void * ptr)
+{
+  /* the memory is already allocated by the time we see this ptr */
+  Tau_track_memory_allocation(file, line, size, ptr);
+  return ptr;
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// Tau_malloc calls the before and after routines and allocates memory
+//////////////////////////////////////////////////////////////////////
+extern "C"
+void * Tau_malloc(size_t size, const char * filename, int lineno)
+{
+  /* Get the event that is created */
+   user_event_t * e = Tau_malloc_before(filename, lineno);
+
+  void * ptr = malloc(size);
+
+  /* associate the event generated and its size with the address of memory
+   * allocated by malloc. This is used later for memory leak detection and
+   * to evaluate the size of the memory freed in the Tau_free(ptr) routine. */
+  Tau_malloc_after(ptr, size, e);
+
+  return ptr;  /* what was allocated */
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// Tau_calloc calls the before and after routines and allocates memory
+//////////////////////////////////////////////////////////////////////
+extern "C"
+void * Tau_calloc(size_t elemCount, size_t elemSize, const char * filename, int lineno)
+{
+  /* Get the event that is created */
+  user_event_t * e = Tau_malloc_before(filename, lineno);
+
+  void * ptr = calloc(elemCount, elemSize);
+
+  /* associate the event generated and its size with the address of memory
+   * allocated by calloc. This is used later for memory leak detection and
+   * to evaluate the size of the memory freed in the Tau_free(ptr) routine. */
+  Tau_malloc_after(ptr, elemCount * elemSize, e);
+
+  return ptr;  /* what was allocated */
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// Tau_free calls Tau_free_before and free's the memory allocated
+//////////////////////////////////////////////////////////////////////
+extern "C"
+void Tau_free(void * baseAdr, const char * filename, int lineno)
+{
+  Tau_free_before(filename, lineno, baseAdr);
+
+  /* and actually free the memory */
+  free(baseAdr);
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+#if HAVE_MEMALIGN
+extern "C"
+void * Tau_memalign(size_t alignment, size_t userSize, const char * filename, int lineno)
+{
+  /* Get the event that is created */
+  user_event_t * e = Tau_malloc_before(filename, lineno);
+
+  void * ptr = memalign(alignment, userSize);
+
+  /* associate the event generated and its size with the address of memory
+   * allocated by calloc. This is used later for memory leak detection and
+   * to evaluate the size of the memory freed in the Tau_free(ptr) routine. */
+  Tau_malloc_after(ptr, userSize, e);
+
+  return ptr;
+}
+#endif
+
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+extern "C"
+int Tau_posix_memalign(void **memptr, size_t alignment, size_t userSize,
+    const char * filename, int lineno)
+{
+  /* Get the event that is created */
+  user_event_t * e = Tau_malloc_before(filename, lineno);
+
+  int retval = posix_memalign(memptr, alignment, userSize);
+
+  /* associate the event generated and its size with the address of memory
+   * allocated by calloc. This is used later for memory leak detection and
+   * to evaluate the size of the memory freed in the Tau_free(ptr) routine. */
+  Tau_malloc_after(*memptr, userSize, e);
+
+  return retval;
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// Tau_realloc calls free_before, realloc and memory allocation tracking routine
+//////////////////////////////////////////////////////////////////////
+extern "C"
+void * Tau_realloc(void * baseAdr, size_t newSize, const char * filename, int lineno)
+{
+  Tau_free_before(filename, lineno, baseAdr);
+  void *retval = realloc(baseAdr, newSize);
+  Tau_track_memory_allocation(filename, lineno, newSize, retval);
+  return retval;
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+extern "C"
+void * Tau_valloc(size_t size, const char * filename, int lineno)
+{
+  /* Get the event that is created */
+  user_event_t * e = Tau_malloc_before(filename, lineno);
+
+  void * ptr = valloc(size);
+
+  /* associate the event generated and its size with the address of memory
+   * allocated by calloc. This is used later for memory leak detection and
+   * to evaluate the size of the memory freed in the Tau_free(ptr) routine. */
+  Tau_malloc_after(ptr, size, e);
+
+  return ptr;  /* what was allocated */
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+extern "C"
+char * Tau_strdup(const char *str, const char * filename, int lineno)
+{
+  size_t size = strnlen(str, MAX_STRING_LEN);
+
+  /* Get the event that is created */
+  user_event_t * e = Tau_malloc_before(filename, lineno);
+
+  char * ptr = strdup(str);
+
+  /* associate the event generated and its size with the address of memory
+   * allocated by calloc. This is used later for memory leak detection and
+   * to evaluate the size of the memory freed in the Tau_free(ptr) routine. */
+  Tau_malloc_after(ptr, size, e);
+
+  return ptr;  /* what was allocated */
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+extern "C"
+void * Tau_memcpy(void *dst, const void *src, size_t size, const char * filename, int lineno)
+{
+  return memcpy(dst, src, size);
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+extern "C"
+char * Tau_strcpy(char *dst, const char *src, const char * filename, int lineno)
+{
+  return strcpy(dst, src);
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+extern "C"
+char * Tau_strncpy(char *dst, const char *src, size_t size, const char * filename, int lineno)
+{
+  return strncpy(dst, src, size);
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+extern "C"
+char * Tau_strcat(char *dst, const char *src, const char * filename, int lineno)
+{
+  return strcat(dst, src);
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+extern "C"
+char * Tau_strncat(char *dst, const char *src, size_t size, const char * filename, int lineno)
+{
+  return strncat(dst, src, size);
+}
+
 
 /***************************************************************************
  * $RCSfile: TauMemory.cpp,v $   $Author: amorris $

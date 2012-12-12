@@ -26,15 +26,11 @@
 #define __malloc_and_calloc_defined 
 #define __need_malloc_and_calloc
 
-#define malloc(SIZE)                Tau_malloc(SIZE, __FILE__, __LINE__)
-#define calloc(ELEMCOUNT, ELEMSIZE) Tau_calloc(ELEMCOUNT, ELEMSIZE, __FILE__, __LINE__)
-#define free(BASEADR)               Tau_free(BASEADR, __FILE__, __LINE__)
-#if HAVE_MEMALIGN
-#define memalign(ALIGNMENT, SIZE)   Tau_memalign(ALIGNMENT, SIZE, __FILE__, __LINE__)
-#endif
-#define posix_memalign(MEMPTR, ALIGNMENT, SIZE)  Tau_posix_memalign(MEMPTR, ALIGNMENT, SIZE, __FILE__, __LINE__)
-#define realloc(BASEADR, NEWSIZE)   Tau_realloc(BASEADR, NEWSIZE, __FILE__, __LINE__)
-#define valloc(SIZE)                Tau_valloc(SIZE, __FILE__, __LINE__)
-#define pvalloc(SIZE)               Tau_valloc(SIZE, __FILE__, __LINE__)
+#define strdup(STR)                 Tau_strdup(STR, __FILE__, __LINE__)
+#define memcpy(DEST, SRC, SIZE)     Tau_memcpy(DEST, SRC, SIZE, __FILE__, __LINE__)
+#define strcpy(DEST, SRC)           Tau_strcpy(DEST, SRC, __FILE__, __LINE__)
+#define strncpy(DEST, SRC, SIZE)    Tau_strncpy(DEST, SRC, SIZE, __FILE__, __LINE__)
+#define strcat(DEST, SRC)           Tau_strcat(DEST, SRC, __FILE__, __LINE__)
+#define strncat(DEST, SRC, SIZE)    Tau_strncat(DEST, SRC, SIZE, __FILE__, __LINE__)
 
 #endif /* _TAU_MALLOC_H_ */
