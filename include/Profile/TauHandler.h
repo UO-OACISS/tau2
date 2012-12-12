@@ -20,6 +20,7 @@
 
 #ifndef _TAU_HANDLER_H_
 #define _TAU_HANDLER_H_
+
 int  TauEnableTrackingMemory(void);
 int  TauDisableTrackingMemory(void);
 void TauSetInterruptInterval(int interval);

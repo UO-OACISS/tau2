@@ -70,10 +70,12 @@
 
 #ifdef HAVE_TR1_HASH_MAP
 #include <tr1/unordered_map>
-#define TAU_HASH_MAP std::tr1::unordered_map
+typedef std::tr1::unordered_map TAU_HASH_MAP;
+typedef std::tr1::unordered_multimap TAU_MULTIMAP;
 #else
 #include <map>
-#define TAU_HASH_MAP std::map
+typedef std::map TAU_HASH_MAP;
+typedef std::multimap TAU_MULTIMAP;
 #endif /* HAVE_HASH_MAP */
 
 #endif /* __cplusplus */
