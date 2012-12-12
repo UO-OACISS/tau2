@@ -79,6 +79,7 @@ public:
     else return str;
   }
 
+	static void Initialize(void);
 
   static int 	SetEventCounter(void);
   static double GetEventCounter(void);
@@ -106,7 +107,12 @@ public:
   static int myThread(void);
 
   static int threadId(void);
-  
+ 
+ 	// Return the local thread id (ignoring tasks) This is a 
+	// low-overhead call but DO NOT use this call when
+	// accessing Profiler stack or the FunctionInfo DB.
+  static int localThreadId(void);
+
   static int getPid();
   static int getTid();
 

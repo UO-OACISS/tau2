@@ -47,10 +47,9 @@ void TraceCallStack(int tid, Profiler *current);
 #include <Profile/TauSampling.h>
 
 // This is used for printing the stack trace when debugging locks
-#if 0
+#ifdef DEBUG_LOCK_PROBLEMS
 #include <execinfo.h>
-#define DEBUG_LOCK_PROBLEMS
-#endif
+#endif //DEBUG_LOCK_PROBLEMS
 
 int RtsLayer::lockDBCount[TAU_MAX_THREADS];
 int RtsLayer::lockEnvCount[TAU_MAX_THREADS];
@@ -131,6 +130,28 @@ void RtsLayer::recycleThread(int id)
 	UnLockEnv();
 }
 
+int RtsLayer::localThreadId(void)
+{
+#ifdef PTHREADS
+  return PthreadLayer::GetThreadId();
+#elif  TAU_SPROC
+  return SprocLayer::GetThreadId();
+#elif  TAU_WINDOWS
+  return WindowsThreadLayer::GetThreadId();
+#elif  TULIPTHREADS
+  return TulipThreadLayer::GetThreadId();
+#elif JAVA
+  return JavaThreadLayer::GetThreadId(); 
+	// C++ app shouldn't use this unless there's a VM
+#elif TAU_OPENMP
+  return OpenMPLayer::GetThreadId();
+#elif TAU_PAPI_THREADS
+  return PapiThreadLayer::GetThreadId();
+#else  // if no other thread package is available 
+  return 0;
+#endif // PTHREADS
+}
+
 int RtsLayer::threadId(void)
 {
 #ifdef PTHREADS
@@ -145,7 +166,11 @@ int RtsLayer::threadId(void)
   return JavaThreadLayer::GetThreadId(); 
 	// C++ app shouldn't use this unless there's a VM
 #elif TAU_OPENMP
-  return OpenMPLayer::GetTauThreadId();
+	if (TauEnv_get_ebs_enabled()) {
+		return OpenMPLayer::GetThreadId();
+	} else {
+  	return OpenMPLayer::GetTauThreadId();
+	}
 #elif TAU_PAPI_THREADS
   return PapiThreadLayer::GetThreadId();
 #else  // if no other thread package is available 
@@ -167,8 +192,11 @@ int RtsLayer::myThread(void)
   return JavaThreadLayer::GetThreadId(); 
 	// C++ app shouldn't use this unless there's a VM
 #elif TAU_OPENMP
-  //return OpenMPLayer::GetTauThreadId();
-  return OpenMPLayer::GetThreadId();
+  if (TauEnv_get_ebs_enabled()) {
+		return OpenMPLayer::GetThreadId();
+	} else {
+  	return OpenMPLayer::GetTauThreadId();
+	}
 #elif TAU_PAPI_THREADS
   return PapiThreadLayer::GetThreadId();
 #else  // if no other thread package is available 
@@ -237,6 +265,9 @@ else
 // thread that is spawned off
 //////////////////////////////////////////////////////////////////////
 int RtsLayer::RegisterThread() {
+  //We are creating threads here, to be carefull register that we are in TAU in
+  //all thread
+  Tau_global_process_incr_insideTAU();
   /* Check the size of threads */
   /*
   LockEnv();
@@ -279,6 +310,7 @@ int RtsLayer::RegisterThread() {
     fprintf(stderr, "TAU Error: RtsLayer: [Max thread limit = %d] [Encountered = %d]. Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=<higher limit>\n", TAU_MAX_THREADS, numThreads);
     exit(-1);
   }
+  Tau_global_process_decr_insideTAU();
   return numThreads;
 }
 
@@ -386,6 +418,12 @@ void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode) {
    // If it is TAU_INCLUDE_PARENT_DATA then there's no need to do anything.
    // fork would copy over all the parent data as it is. 
 }
+void RtsLayer::Initialize(void) {
+#if TAU_OPENMP
+  OpenMPLayer::Initialize();
+#endif
+  return ; // do nothing if threads are not used
+}
 
 bool RtsLayer::initLocks(void) {
   threadLockDB();
@@ -427,6 +465,17 @@ int RtsLayer::LockDB(void) {
   int tid=myThread();
 /* This block of code is helpful in debugging deadlocks... see the top of this file */
 #ifdef DEBUG_LOCK_PROBLEMS
+	if (Tau_global_get_insideTAU_tid(tid) <= 0) {
+		printf("ERROR! Thread %d is trying for another DB lock. but it is not in TAU!\n", tid);
+		void* callstack[128];
+		int i, frames = backtrace(callstack, 128);
+		char** strs = backtrace_symbols(callstack, frames);
+		for (i = 0; i < frames; ++i) {
+			 printf("%s\n", strs[i]);
+		}
+		free(strs);
+    exit(999);
+	}
   if (lockDBCount[tid] > 0) {
     printf("WARNING! Thread %d has DB lock, trying for another DB lock\n", tid);
      void* callstack[128];
@@ -528,6 +577,17 @@ int RtsLayer::LockEnv(void) {
   int tid=myThread();
 /* This block of code is helpful in debugging deadlocks... see the top of this file */
 #ifdef DEBUG_LOCK_PROBLEMS
+	if (Tau_global_get_insideTAU_tid(tid) <= 0) {
+		printf("ERROR! Thread %d is trying for another Env lock. but it is not in TAU!\n", tid);
+		void* callstack[128];
+		int i, frames = backtrace(callstack, 128);
+		char** strs = backtrace_symbols(callstack, frames);
+		for (i = 0; i < frames; ++i) {
+			 printf("%s\n", strs[i]);
+		}
+		free(strs);
+    exit(999);
+	}
   if (lockEnvCount[tid] > 0) {
     printf("WARNING! Thread %d has Env lock, trying for another Env lock\n", tid);
      void* callstack[128];

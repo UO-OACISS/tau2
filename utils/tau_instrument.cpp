@@ -2227,10 +2227,10 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
         {
           if ((*iter)->item)
           { /* item's pdbItem entry is not null */
-#ifdef DEBUG_PROF
+#ifdef DEBUG
             printf("examining %s. id = %d. Current routine id = %d\n",
             (*iter)->item->name(), (*iter)->item->id(), (*rit)->id());     
-#endif /* DEBUG_PROF */
+#endif /* DEBUG */
             if ((*iter)->item->id() == (*rit)->id()) 
             { /* found it! We need to annotate this as a phase */
               if (isPhaseOrTimer == TAU_PHASE) 
