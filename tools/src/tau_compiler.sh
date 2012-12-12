@@ -1195,6 +1195,12 @@ while [ $tempCounter -lt $numFiles ]; do
         fi
         arrFileName[$tempCounter]=$base$suf
     fi
+    if [ $opari2 == $TRUE -a $passCount != 1 ]; then
+        #Opari2 has already been run, so we shouldn't run it again
+	#However, some where the .pomp was lost, so add it back
+        base=${base}.pomp
+        arrFileName[$tempCounter]=$base$suf
+    fi
     if [ $optCompInst == $FALSE ] ; then
 	newFile=${base}.inst${suf}
     else

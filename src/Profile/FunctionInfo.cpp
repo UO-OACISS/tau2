@@ -427,22 +427,22 @@ void tauCreateFI(void **ptr, const char *name, const char *type,
 		 TauGroup_t ProfileGroup , const char *ProfileGroupName) {
   if (*ptr == 0) {
 
+//Use The ENV lock here.
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::LockDB();
+      RtsLayer::LockEnv();
 #else
-    RtsLayer::LockDB();
+    RtsLayer::LockEnv();
 #endif
     if (*ptr == 0) {
       *ptr = new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
     }
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::UnLockDB();
+      RtsLayer::UnLockEnv();
 #else
-    RtsLayer::UnLockDB();
+    RtsLayer::UnLockEnv();
 #endif
-
   }
 }
 
@@ -451,18 +451,18 @@ void tauCreateFI(void **ptr, const char *name, const string& type,
   if (*ptr == 0) {
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::LockDB();
+      RtsLayer::LockEnv();
 #else
-    RtsLayer::LockDB();
+    RtsLayer::LockEnv();
 #endif
     if (*ptr == 0) {
       *ptr = new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
     }
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::UnLockDB();
+      RtsLayer::UnLockEnv();
 #else
-    RtsLayer::UnLockDB();
+    RtsLayer::UnLockEnv();
 #endif
   }
 }
@@ -472,18 +472,18 @@ void tauCreateFI(void **ptr, const string& name, const char *type,
   if (*ptr == 0) {
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::LockDB();
+      RtsLayer::LockEnv();
 #else
-    RtsLayer::LockDB();
+    RtsLayer::LockEnv();
 #endif
     if (*ptr == 0) {
       *ptr = new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
     }
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::UnLockDB();
+      RtsLayer::UnLockEnv();
 #else
-    RtsLayer::UnLockDB();
+    RtsLayer::UnLockEnv();
 #endif
   }
 }
@@ -493,18 +493,18 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
   if (*ptr == 0) {
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::LockDB();
+      RtsLayer::LockEnv();
 #else
-    RtsLayer::LockDB();
+    RtsLayer::LockEnv();
 #endif
     if (*ptr == 0) {
       *ptr = new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
     }
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::UnLockDB();
+      RtsLayer::UnLockEnv();
 #else
-    RtsLayer::UnLockDB();
+    RtsLayer::UnLockEnv();
 #endif
   }
 }
