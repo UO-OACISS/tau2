@@ -1464,9 +1464,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			if (db.getDBType().compareTo("db2") == 0) {
 				buf.append("select distinct cast (name as VARCHAR(256))");
 			} else {
-				buf.append("select distinct name ");
+				buf.append("select distinct pm.name ");
 			}
-			buf.append(" from primary_metadata pm ");
+			buf.append(" from primary_metadata pm left outer join trial t on pm.trial = t.id ");
 			Object object = modelData.getCurrentSelection();
 			if (object instanceof View) {
 				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
@@ -1476,13 +1476,13 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 					// just one selection
 					Object selection = modelData.getCurrentSelection();
 					if (selection instanceof Trial) {
-						buf.append(" where trial = ");
+						buf.append(" where t.id = ");
 						buf.append(modelData.getTrial().getID());
 					}
 				} else {
 					Object selection = modelData.getCurrentSelection();
 					if (selection instanceof Trial) {
-						buf.append(" where trial in (");
+						buf.append(" where t.id in (");
 						for (int i = 0 ; i < selections.size() ; i++) {
 							Trial trial = (Trial)selections.get(i);
 							if (i > 0)
@@ -1493,6 +1493,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 					}
 				}
 			}
+			buf.append(" order by name asc ");
 			PreparedStatement statement = db.prepareStatement(buf.toString());
 			//PerfExplorerOutput.println(statement.toString());
 			ResultSet results = statement.executeQuery();
