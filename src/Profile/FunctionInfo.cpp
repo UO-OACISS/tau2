@@ -155,6 +155,10 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   //Need to keep track of all the groups this function is a member of.
   AllGroups = strip_tau_group(ProfileGroupName);
 
+  // Necessary for signal-reentrancy to ensure the mmap memory manager
+  //   is ready at this point.
+  Tau_MemMgr_initIfNecessary(); 
+  
   RtsLayer::LockDB();
   // Use LockDB to avoid a possible race condition.
 
@@ -202,11 +206,6 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
     pathHistogram[i] = NULL;
     // create structure only if EBS is required.
     if (TauEnv_get_ebs_enabled()) {
-
-      // Necessary for signal-reentrancy to ensure the mmap memory manager
-      //   is ready at this point.
-      Tau_MemMgr_initIfNecessary(); 
-
       // Thread-safe, all (const char *) parameters. This check removes
       //   the need to create and allocate memory for EBS post-processed
       //   objects.
