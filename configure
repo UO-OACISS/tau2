@@ -2502,18 +2502,6 @@ case $machine in
          cxx_compiler=g++
      fi
 
-     # To fix the  make install  clash with INSTALL file in file systems 
-     # that are case insensitive. Move INSTALL file to INSTALL.txt 
-     if [ -f INSTALL ]
-       then
-	mv INSTALL INSTALL.txt
-     fi
-
-     # change it back for Git. Stupid Git.
-     if [ $default = true ]; then
-       mv INSTALL.txt INSTALL
-     fi
-
      if [ $c_compiler = default ]
        then
          c_compiler=gcc             
@@ -2525,13 +2513,6 @@ case $machine in
      if [ $cxx_compiler = default ]
        then
          cxx_compiler=g++
-     fi
-
-     # To fix the  make install  clash with INSTALL file in file systems 
-     # that are case insensitive. Move INSTALL file to INSTALL.txt 
-     if [ -f INSTALL ]
-       then
-	mv INSTALL INSTALL.txt
      fi
 
      if [ $c_compiler = default ]
@@ -7507,7 +7488,6 @@ else
     if [ ! -d ${tauprefix} ] ; then
 	echo "making directory $tauprefix "
 	mkdir -p ${tauprefix}
-      # Copy INSTALL README LICENSE files over there 
 	cp README LICENSE CREDITS ${tauprefix}
     fi
     if [ ! -d ${tauprefix}/${architecture} ] ; then
