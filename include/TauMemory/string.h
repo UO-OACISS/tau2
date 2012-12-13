@@ -15,16 +15,12 @@
 ***************************************************************************/
 
 
-#ifndef _TAU_MALLOC_H_
-#define _TAU_MALLOC_H_
-#define _MALLOC_H 1 
+#ifndef _TAU_STRING_H_
+#define _TAU_STRING_H_
+#define _STRING_H 1
 
 #include <stdlib.h>
-#include <TauMemory.h>
-
-/* needed for Linux stdlib.h */
-#define __malloc_and_calloc_defined 
-#define __need_malloc_and_calloc
+#include <Profile/TauMemory.h>
 
 #define strdup(STR)                 Tau_strdup(STR, __FILE__, __LINE__)
 #define memcpy(DEST, SRC, SIZE)     Tau_memcpy(DEST, SRC, SIZE, __FILE__, __LINE__)
@@ -33,4 +29,4 @@
 #define strcat(DEST, SRC)           Tau_strcat(DEST, SRC, __FILE__, __LINE__)
 #define strncat(DEST, SRC, SIZE)    Tau_strncat(DEST, SRC, SIZE, __FILE__, __LINE__)
 
-#endif /* _TAU_MALLOC_H_ */
+#endif /* _TAU_STRING_H_ */

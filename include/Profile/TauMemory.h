@@ -38,30 +38,30 @@ extern "C" {
 
 void TauDetectMemoryLeaks(void);
 
-void Tau_track_memory_allocation(const char *file, int line, size_t size, void* ptr);
-void Tau_track_memory_deallocation(const char *file, int line, void* ptr);
+void Tau_track_memory_allocation(char const * file, int line, size_t size, void* ptr);
+void Tau_track_memory_deallocation(char const * file, int line, void* ptr);
 
-void * Tau_new(const char *file, int line, size_t size, void* ptr);
+void * Tau_new(char const * file, int line, size_t size, void* ptr);
 
-void * Tau_malloc(size_t size, const char * filename, int lineno);
-void * Tau_calloc(size_t elemCount, size_t elemSize, const char * filename, int lineno);
-void   Tau_free(void * baseAdr, const char * filename, int lineno);
+void * Tau_malloc(size_t size, char const * filename, int lineno);
+void * Tau_calloc(size_t elemCount, size_t elemSize, char const * filename, int lineno);
+void   Tau_free(void * baseAdr, char const * filename, int lineno);
 #if HAVE_MEMALIGN
-void * Tau_memalign(size_t alignment, size_t userSize, const char * filename, int lineno);
+void * Tau_memalign(size_t alignment, size_t userSize, char const * filename, int lineno);
 #endif
-int    Tau_posix_memalign(void **memptr, size_t alignment, size_t userSize, const char * filename, int lineno);
-void * Tau_realloc(void * baseAdr, size_t newSize, const char * filename, int lineno);
-void * Tau_valloc(size_t size, const char * filename, int lineno);
+int    Tau_posix_memalign(void **memptr, size_t alignment, size_t userSize, char const * filename, int lineno);
+void * Tau_realloc(void * baseAdr, size_t newSize, char const * filename, int lineno);
+void * Tau_valloc(size_t size, char const * filename, int lineno);
 #if HAVE_PVALLOC
-void * Tau_pvalloc(size_t size, const char * filename, int lineno);
+void * Tau_pvalloc(size_t size, char const * filename, int lineno);
 #endif
 
-char * Tau_strdup(const char *str, const char * filename, int lineno);
-void * Tau_memcpy(void *dest, const void *src, size_t size, const char * filename, int lineno);
-char * Tau_strcpy(char *dest, const char *src, const char * filename, int lineno);
-char * Tau_strncpy(char *dest, const char *src, size_t size, const char * filename, int lineno);
-char * Tau_strcat(char *dest, const char *src, const char * filename, int lineno);
-char * Tau_strncat(char *dest, const char *src, size_t size, const char * filename, int lineno);
+char * Tau_strdup(char const * str, char const * filename, int lineno);
+void * Tau_memcpy(void * dest, void const * src, size_t size, char const * filename, int lineno);
+char * Tau_strcpy(char * dest, char const * src, char const * filename, int lineno);
+char * Tau_strncpy(char * dest, char const * src, size_t size, char const * filename, int lineno);
+char * Tau_strcat(char * dest, char const * src, char const * filename, int lineno);
+char * Tau_strncat(char * dest, char const * src, size_t size, char const * filename, int lineno);
 
 #ifdef __cplusplus
 }
