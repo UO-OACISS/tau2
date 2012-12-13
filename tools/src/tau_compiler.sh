@@ -1504,7 +1504,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	    $group_c | $group_upc)
 	    pdtCmd="$optPdtDir""/$pdtParserType"
 	    pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
-	    pdtCmd="$pdtCmd $optPdtCFlags $optPdtUser "
+	    pdtCmd="$pdtCmd $optPdtCFlags $optPdtUser $optIncludes "
         if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
 	        pdtCmd="$pdtCmd -I${arrFileNameDirectory[$tempCounter]}"
         fi
@@ -1518,7 +1518,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	    $group_C)
 	    pdtCmd="$optPdtDir""/$pdtParserType"
 	    pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
-	    pdtCmd="$pdtCmd $optPdtCxxFlags $optPdtUser "
+	    pdtCmd="$pdtCmd $optPdtCxxFlags $optPdtUser  $optIncludes "
         if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
 	        pdtCmd="$pdtCmd -I${arrFileNameDirectory[$tempCounter]}"
         fi
