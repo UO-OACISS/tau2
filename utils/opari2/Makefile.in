@@ -67,6 +67,7 @@ subdir = .
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/vendor/common/build-config/m4/ac_scorep_compiler_and_flags.m4 \
 	$(top_srcdir)/vendor/common/build-config/m4/ac_scorep_doxygen.m4 \
+	$(top_srcdir)/vendor/common/build-config/m4/ac_scorep_summary.m4 \
 	$(top_srcdir)/vendor/common/build-config/m4/ac_scorep_svn_controlled.m4 \
 	$(top_srcdir)/vendor/common/build-config/m4/ac_scorep_sys_detection.m4 \
 	$(top_srcdir)/vendor/common/build-config/m4/ac_scorep_toplevel_args.m4 \
@@ -169,6 +170,7 @@ LIBS = @LIBS@
 LTLIBOBJS = @LTLIBOBJS@
 MAKEINFO = @MAKEINFO@
 MKDIR_P = @MKDIR_P@
+OPARI2_AWK = @OPARI2_AWK@
 PACKAGE = @PACKAGE@
 PACKAGE_BUGFIX = @PACKAGE_BUGFIX@
 PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@

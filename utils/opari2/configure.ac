@@ -66,6 +66,7 @@ AC_CONFIG_SUBDIR_CUSTOM([build-frontend], [${args} ac_scorep_platform=${ac_score
 
 #sed is needed for check target
 AC_PROG_SED
+AC_SUBST([OPARI2_AWK], [`which ${AWK}`])
 
 AC_CONFIG_FILES([
     Makefile
