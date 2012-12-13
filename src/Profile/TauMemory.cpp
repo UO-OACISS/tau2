@@ -20,6 +20,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
+#include <stdint.h>
 #include <Profile/Profiler.h>
 #include <tau_internal.h>
 

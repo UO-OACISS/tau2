@@ -28,7 +28,7 @@
 #undef HAVE_PVALLOC
 #else
 #define HAVE_MEMALIGN 1
-#define HAVE_PVALLOC
+#define HAVE_PVALLOC 1
 #endif
 
 
@@ -46,13 +46,13 @@ void * Tau_new(char const * file, int line, size_t size, void* ptr);
 void * Tau_malloc(size_t size, char const * filename, int lineno);
 void * Tau_calloc(size_t elemCount, size_t elemSize, char const * filename, int lineno);
 void   Tau_free(void * baseAdr, char const * filename, int lineno);
-#if HAVE_MEMALIGN
+#ifdef HAVE_MEMALIGN
 void * Tau_memalign(size_t alignment, size_t userSize, char const * filename, int lineno);
 #endif
 int    Tau_posix_memalign(void **memptr, size_t alignment, size_t userSize, char const * filename, int lineno);
 void * Tau_realloc(void * baseAdr, size_t newSize, char const * filename, int lineno);
 void * Tau_valloc(size_t size, char const * filename, int lineno);
-#if HAVE_PVALLOC
+#ifdef HAVE_PVALLOC
 void * Tau_pvalloc(size_t size, char const * filename, int lineno);
 #endif
 
