@@ -141,17 +141,16 @@ using namespace std;
 #define TAU_MIC_OFFLOAD_DEFAULT 0
 
 // Memory debugging environment variable defaults
-#define TAU_MEMDBG_DEFAULT                0
-#define TAU_MEMDBG_ALIGNMENT_DEFAULT      sizeof(int)
-#define TAU_MEMDBG_ZERO_MALLOC_DEFAULT    0
-#define TAU_MEMDBG_PROTECT_GAP_DEFAULT    0
-#define TAU_MEMDBG_PROTECT_ABOVE_DEFAULT  1
+#define TAU_MEMDBG_PROTECT_ABOVE_DEFAULT  0
 #define TAU_MEMDBG_PROTECT_BELOW_DEFAULT  0
 #define TAU_MEMDBG_PROTECT_FREE_DEFAULT   0
-#define TAU_MEMDBG_FILL_GAP_DEFAULT       0 // Here 0 => undefined, not zero
-#define TAU_MEMDBG_ALLOC_MIN_DEFAULT      0 // Here 0 => undefined, not zero
-#define TAU_MEMDBG_ALLOC_MAX_DEFAULT      0 // Here 0 => undefined, not zero
-#define TAU_MEMDBG_OVERHEAD_DEFAULT       0 // Here 0 => undefined, not zero
+#define TAU_MEMDBG_PROTECT_GAP_DEFAULT    0
+#define TAU_MEMDBG_FILL_GAP_DEFAULT       0 // 0 => undefined, not zero
+#define TAU_MEMDBG_ALLOC_MIN_DEFAULT      0 // 0 => undefined, not zero
+#define TAU_MEMDBG_ALLOC_MAX_DEFAULT      0 // 0 => undefined, not zero
+#define TAU_MEMDBG_OVERHEAD_DEFAULT       0 // 0 => undefined, not zero
+#define TAU_MEMDBG_ALIGNMENT_DEFAULT      sizeof(int)
+#define TAU_MEMDBG_ZERO_MALLOC_DEFAULT    0
 
 // forward declartion of cuserid. need for c++ compilers on Cray.
 extern "C" char *cuserid(char *);
@@ -474,13 +473,11 @@ static const char *env_cupti_api = NULL;
 
 static int env_mic_offload = 0;
 
-static int env_memdbg = TAU_MEMDBG_DEFAULT;
-static unsigned int env_memdbg_alignment = TAU_MEMDBG_ALIGNMENT_DEFAULT;
-static int env_memdbg_zero_malloc = TAU_MEMDBG_ZERO_MALLOC_DEFAULT;
-static int env_memdbg_protect_gap = TAU_MEMDBG_PROTECT_GAP_DEFAULT;
+static int env_memdbg = 0;
 static int env_memdbg_protect_above = TAU_MEMDBG_PROTECT_ABOVE_DEFAULT;
 static int env_memdbg_protect_below = TAU_MEMDBG_PROTECT_BELOW_DEFAULT;
 static int env_memdbg_protect_free = TAU_MEMDBG_PROTECT_FREE_DEFAULT;
+static int env_memdbg_protect_gap = TAU_MEMDBG_PROTECT_GAP_DEFAULT;
 // All values of env_memdbg_fill_gap_value are valid fill patterns
 static int env_memdbg_fill_gap = TAU_MEMDBG_FILL_GAP_DEFAULT;
 static unsigned char env_memdbg_fill_gap_value = 0;
@@ -493,7 +490,8 @@ static size_t env_memdbg_alloc_max_value = 0;
 // All values of env_memdbg_overhead are valid limits
 static int env_memdbg_overhead = TAU_MEMDBG_OVERHEAD_DEFAULT;
 static size_t env_memdbg_overhead_value = 0;
-
+static unsigned int env_memdbg_alignment = TAU_MEMDBG_ALIGNMENT_DEFAULT;
+static int env_memdbg_zero_malloc = TAU_MEMDBG_ZERO_MALLOC_DEFAULT;
 
 #ifdef TAU_GPI 
 #include <GPI.h>
@@ -730,18 +728,6 @@ int TauEnv_get_memdbg() {
   return env_memdbg;
 }
 
-unsigned int TauEnv_get_memdbg_alignment() {
-  return env_memdbg_alignment;
-}
-
-int TauEnv_get_memdbg_zero_malloc() {
-  return env_memdbg_zero_malloc;
-}
-
-int TauEnv_get_memdbg_protect_gap() {
-  return env_memdbg_protect_gap;
-}
-
 int TauEnv_get_memdbg_protect_above() {
   return env_memdbg_protect_above;
 }
@@ -752,6 +738,10 @@ int TauEnv_get_memdbg_protect_below() {
 
 int TauEnv_get_memdbg_protect_free() {
   return env_memdbg_protect_free;
+}
+
+int TauEnv_get_memdbg_protect_gap() {
+  return env_memdbg_protect_gap;
 }
 
 int TauEnv_get_memdbg_fill_gap() {
@@ -784,6 +774,14 @@ int TauEnv_get_memdbg_overhead() {
 
 size_t TauEnv_get_memdbg_overhead_value() {
   return env_memdbg_overhead_value;
+}
+
+unsigned int TauEnv_get_memdbg_alignment() {
+  return env_memdbg_alignment;
+}
+
+int TauEnv_get_memdbg_zero_malloc() {
+  return env_memdbg_zero_malloc;
 }
 
 
@@ -921,33 +919,39 @@ void TauEnv_initialize()
       env_track_memory_leaks = 0;
     }
 
-    tmp = getconf("TAU_MEMDBG");
-    env_memdbg = parse_bool(tmp, env_memdbg);
-    if(env_memdbg) {
-      TAU_VERBOSE("TAU: Bounds checking memory debugger enabled\n");
-      TAU_METADATA("TAU_MEMDBG", "on");
+    // Setting TAU_MEMDBG_PROTECT_{ABOVE,BELOW,FREE} enables memory debugging.
+
+    tmp = getconf("TAU_MEMDBG_PROTECT_ABOVE");
+    env_memdbg_protect_above = parse_bool(tmp, env_memdbg_protect_above);
+    if(env_memdbg_protect_above) {
+      env_memdbg = 1;
+      TAU_VERBOSE("TAU: Bounds checking enabled on array end\n");
+      TAU_METADATA("TAU_MEMDBG_PROTECT_ABOVE", "on");
     } else {
-      TAU_METADATA("TAU_MEMDBG", "off");
+      TAU_METADATA("TAU_MEMDBG_PROTECT_ABOVE", "off");
+    }
+
+    tmp = getconf("TAU_MEMDBG_PROTECT_BELOW");
+    env_memdbg_protect_below = parse_bool(tmp, env_memdbg_protect_below);
+    if(env_memdbg_protect_below) {
+      env_memdbg = 1;
+      TAU_VERBOSE("TAU: Bounds checking enabled on array beginning\n");
+      TAU_METADATA("TAU_MEMDBG_PROTECT_BELOW", "on");
+    } else {
+      TAU_METADATA("TAU_MEMDBG_PROTECT_BELOW", "off");
+    }
+
+    tmp = getconf("TAU_MEMDBG_PROTECT_FREE");
+    env_memdbg_protect_free = parse_bool(tmp, env_memdbg_protect_free);
+    if(env_memdbg_protect_free) {
+      env_memdbg = 1;
+      TAU_VERBOSE("TAU: Checking for free memory reuse errors\n");
+      TAU_METADATA("TAU_MEMDBG_PROTECT_FREE", "on");
+    } else {
+      TAU_METADATA("TAU_MEMDBG_PROTECT_FREE", "off");
     }
 
     if(env_memdbg) {
-
-      tmp = getconf("TAU_MEMDBG_ALIGNMENT");
-      if (tmp) {
-        env_memdbg_alignment = atoi(tmp);
-      }
-      TAU_VERBOSE("TAU: Memory debugging alignment: %d\n", env_memdbg_alignment);
-      sprintf(tmpstr, "%d", env_memdbg_alignment);
-      TAU_METADATA("TAU_MEMDBG_ALIGNMENT", tmpstr);
-
-      tmp = getconf("TAU_MEMDBG_ZERO_MALLOC");
-      env_memdbg_zero_malloc = parse_bool(tmp, env_memdbg_zero_malloc);
-      if(env_memdbg_zero_malloc) {
-        TAU_VERBOSE("TAU: Zero-size malloc will not be flagged as errors\n");
-        TAU_METADATA("TAU_MEMDBG_ZERO_MALLOC", "on");
-      } else {
-        TAU_METADATA("TAU_MEMDBG_ZERO_MALLOC", "off");
-      }
 
       tmp = getconf("TAU_MEMDBG_PROTECT_GAP");
       env_memdbg_protect_gap = parse_bool(tmp, env_memdbg_protect_gap);
@@ -956,33 +960,6 @@ void TauEnv_initialize()
         TAU_METADATA("TAU_MEMDBG_PROTECT_GAP", "on");
       } else {
         TAU_METADATA("TAU_MEMDBG_PROTECT_GAP", "off");
-      }
-
-      tmp = getconf("TAU_MEMDBG_PROTECT_ABOVE");
-      env_memdbg_protect_above = parse_bool(tmp, env_memdbg_protect_above);
-      if(env_memdbg_protect_above) {
-        TAU_VERBOSE("TAU: Bounds checking enabled on array end\n");
-        TAU_METADATA("TAU_MEMDBG_PROTECT_ABOVE", "on");
-      } else {
-        TAU_METADATA("TAU_MEMDBG_PROTECT_ABOVE", "off");
-      }
-
-      tmp = getconf("TAU_MEMDBG_PROTECT_BELOW");
-      env_memdbg_protect_below = parse_bool(tmp, env_memdbg_protect_below);
-      if(env_memdbg_protect_below) {
-        TAU_VERBOSE("TAU: Bounds checking enabled on array beginning\n");
-        TAU_METADATA("TAU_MEMDBG_PROTECT_BELOW", "on");
-      } else {
-        TAU_METADATA("TAU_MEMDBG_PROTECT_BELOW", "off");
-      }
-
-      tmp = getconf("TAU_MEMDBG_PROTECT_FREE");
-      env_memdbg_protect_free = parse_bool(tmp, env_memdbg_protect_free);
-      if(env_memdbg_protect_free) {
-        TAU_VERBOSE("TAU: Checking for free memory reuse errors\n");
-        TAU_METADATA("TAU_MEMDBG_PROTECT_FREE", "on");
-      } else {
-        TAU_METADATA("TAU_MEMDBG_PROTECT_FREE", "off");
       }
 
       tmp = getconf("TAU_MEMDBG_FILL_GAP");
@@ -1017,7 +994,25 @@ void TauEnv_initialize()
         TAU_METADATA("TAU_MEMDBG_OVERHEAD", tmp);
       }
 
-    } /* if(env_memdbg) */
+      tmp = getconf("TAU_MEMDBG_ALIGNMENT");
+      if (tmp) {
+        env_memdbg_alignment = atoi(tmp);
+      }
+      TAU_VERBOSE("TAU: Memory debugging alignment: %d\n", env_memdbg_alignment);
+      sprintf(tmpstr, "%d", env_memdbg_alignment);
+      TAU_METADATA("TAU_MEMDBG_ALIGNMENT", tmpstr);
+
+      tmp = getconf("TAU_MEMDBG_ZERO_MALLOC");
+      env_memdbg_zero_malloc = parse_bool(tmp, env_memdbg_zero_malloc);
+      if(env_memdbg_zero_malloc) {
+        TAU_VERBOSE("TAU: Zero-size malloc will be accepted\n");
+        TAU_METADATA("TAU_MEMDBG_ZERO_MALLOC", "on");
+      } else {
+        TAU_VERBOSE("TAU: Zero-size malloc will be flagged as error\n");
+        TAU_METADATA("TAU_MEMDBG_ZERO_MALLOC", "off");
+      }
+
+    } // if (env_memdbg)
 
     if ((env_profiledir = getconf("PROFILEDIR")) == NULL) {
       env_profiledir = ".";   /* current directory */
