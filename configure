@@ -6944,16 +6944,16 @@ int main()
 }
 EOF
 
-		$c_compiler $openmp_flag $orig_useropt omp_nested_test.c -o omp_nested_test >& /dev/null
-		./omp_nested_test >& /dev/null
+		$c_compiler $openmp_flag $orig_useropt omp_nested_test.c -o omp_nested_test > /dev/null 2>&1
+		./omp_nested_test > /dev/null 2>&1
 		result=$?
 		rm -f ./omp_nested_test ./omp_nested_test.c
 		if [ $result = "0" ]; then
 			echo "yes."
     	fixmakeargs="$fixmakeargs TAU_OPENMP_NESTED"
 		else
-			echo "no"
-			echo "OpenMP nested regions is not supported by this compiler."
+			echo "no."
+			echo "OpenMP nested regions are not supported by this compiler."
 		fi
     fixmakeargs="$fixmakeargs OPENMP"
     tauoptions="${tauoptions}-openmp"
