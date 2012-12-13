@@ -6977,6 +6977,9 @@ if [ $opari = yes ] ; then
           if [ "x$fortran_compiler" = "xpgi" ] ; then
              oparicomp="$fortran_compiler"
           fi
+          if [ "x$fortran_compiler" = "xgfortran" ] ; then
+             oparicomp="gcc"
+          fi
     fi 
     if [ $oparicomp = no ] ; then
       oparicomp=
