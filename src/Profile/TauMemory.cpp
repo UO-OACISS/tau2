@@ -29,7 +29,7 @@
 #elif defined(TAU_FREEBSD)
 #include <stdlib.h>
 #else
-#include <malloc.h> 
+#include <malloc.h>
 #endif
 
 #ifdef TAU_DOT_H_LESS_HEADERS
@@ -40,17 +40,19 @@ using namespace std;
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
 
-#if (defined(__QK_USER__) || defined(__LIBCATAMOUNT__ ))
-#define TAU_CATAMOUNT
-#endif /* __QK_USER__ || __LIBCATAMOUNT__ */
-#ifdef TAU_CATAMOUNT
-#include <catamount/catmalloc.h>
-#endif /* TAU_CATAMOUNT */
-
 #include <stdlib.h>
 
 #ifdef TAU_BGP
 #include <kernel_interface.h>
+#endif
+
+#if defined(TAU_WINDOWS)
+#include <windows.h>
+#else
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #endif
 
 #define MAX_STRING_LEN 1024
@@ -58,13 +60,12 @@ using namespace std;
                        +(uint32_t)(((const uint8_t *)(d))[0]) )
 
 typedef unsigned long hash_t;
-typedef unsigned long address_t;
+typedef unsigned long iaddr_t;
 typedef TauContextUserEvent user_event_t;
 typedef TAU_HASH_MAP<hash_t, user_event_t*> malloc_map_t;
 typedef std::pair<size_t, user_event_t*> pointer_size_t;
-typedef TAU_MULTIMAP<address_t, pointer_size_t> pointer_size_map_t;
-typedef TAU_HASH_MAP<address_t, TauUserEvent*> leak_map_t;
-
+typedef TAU_MULTIMAP<iaddr_t, pointer_size_t> pointer_size_map_t;
+typedef TAU_HASH_MAP<iaddr_t, TauUserEvent*> leak_map_t;
 
 //////////////////////////////////////////////////////////////////////
 static malloc_map_t & TheTauMallocMap(void)
@@ -142,10 +143,208 @@ static hash_t Tau_hash(hash_t hash, char const * data)
 
 
 //////////////////////////////////////////////////////////////////////
-// Tau_malloc_before creates/access the event associated with tracking
-// memory allocation for the specified line and file. 
+// TODO: Docs
 //////////////////////////////////////////////////////////////////////
-static user_event_t * Tau_before_allocate(char const * filename, int lineno)
+size_t Tau_page_size(void)
+{
+#if defined(TAU_WINDOWS)
+  SYSTEM_INFO SystemInfo;
+  GetSystemInfo(&SystemInfo);
+  return (size_t)SystemInfo.dwPageSize;
+#elif defined(_SC_PAGESIZE)
+  return (size_t)sysconf(_SC_PAGESIZE);
+#elif defined(_SC_PAGE_SIZE)
+  return (size_t)sysconf(_SC_PAGE_SIZE);
+#else
+/* extern int getpagesize(); */
+  return getpagesize();
+#endif
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+static void * Tau_page_allocate(size_t size)
+{
+  void * ptr = NULL;
+
+#if defined(TAU_WINDOWS)
+
+  ptr = VirtualAlloc(NULL, (DWORD)size, (DWORD)MEM_COMMIT, (DWORD)PAGE_READWRITE);
+  if (!ptr) {
+    TAU_VERBOSE("TAU: ERROR - VirtualAlloc(%ld) failed\n", size);
+    return NULL;
+  }
+
+#else
+
+  static iaddr_t startAddr = NULL;
+  static int devZeroFd = -1;
+
+  if (devZeroFd == -1) {
+    devZeroFd = open("/dev/zero", O_RDWR);
+    if (devZeroFd < 0) {
+      TAU_VERBOSE("TAU: ERROR - open() on /dev/zero failed\n");
+      return NULL;
+    }
+  }
+
+  ptr = mmap((void*)startAddr, size, (PROT_READ|PROT_WRITE), MAP_PRIVATE, devZeroFd, 0);
+  if (ptr == MAP_FAILED) {
+    TAU_VERBOSE("TAU: ERROR - mmap(%ld) failed\n", size);
+    return NULL;
+  }
+  startAddr = (iaddr_t)((char*)ptr + size);
+
+#endif
+
+  return ptr;
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+static void Tau_page_allow(void * addr, size_t size)
+{
+#if defined(TAU_WINDOWS)
+
+  SIZE_T OldProtect, retQuery;
+  MEMORY_BASIC_INFORMATION MemInfo;
+  size_t tail_size;
+  BOOL ret;
+
+  while(size > 0) {
+    retQuery = VirtualQuery(addr, &MemInfo, sizeof(MemInfo));
+    if (retQuery < sizeof(MemInfo)) {
+      TAU_VERBOSE("TAU: ERROR - VirtualQuery() failed\n");
+    }
+    tail_size = (size > MemInfo.RegionSize) ? MemInfo.RegionSize : size;
+    ret = VirtualProtect((LPVOID)addr, (DWORD)tail_size, (DWORD)PAGE_READWRITE, (PDWORD) &OldProtect);
+    if (!ret) {
+      TAU_VERBOSE("TAU: ERROR - VirtualProtecct(0x%lx, %ld) failed\n", (iaddr_t)addr, tail_size);
+    }
+
+    addr = ((char*)addr) + tail_size;
+    size -= tail_size;
+  }
+
+#else
+
+  if (mprotect(addr, size, PROT_READ|PROT_WRITE) < 0) {
+    TAU_VERBOSE("TAU: ERROR - mprotect(0x%lx, %ld) failed\n", (iaddr_t)addr, size);
+  }
+
+#endif
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+static void Tau_page_deny(void * addr, size_t size)
+{
+#if defined(TAU_WINDOWS)
+
+  SIZE_T OldProtect, retQuery;
+  MEMORY_BASIC_INFORMATION MemInfo;
+  size_t tail_size;
+  BOOL ret;
+
+  while (size > 0) {
+    retQuery = VirtualQuery(addr, &MemInfo, sizeof(MemInfo));
+    if (retQuery < sizeof(MemInfo)) {
+      TAU_VERBOSE("TAU: ERROR - VirtualQuery() failed\n");
+    }
+    tail_size = (size > MemInfo.RegionSize) ? MemInfo.RegionSize : size;
+    ret = VirtualProtect((LPVOID)addr, (DWORD)tail_size, (DWORD)PAGE_NOACCESS, (PDWORD)&OldProtect);
+    if (!ret) {
+      TAU_VERBOSE("TAU: ERROR - VirtualProtecct(0x%lx, %ld) failed\n", (iaddr_t)addr, tail_size);
+    }
+
+    addr = ((char*)addr) + tail_size;
+    size -= tail_size;
+  }
+
+#else
+
+  if (mprotect(addr, size, PROT_NONE) < 0) {
+    TAU_VERBOSE("TAU: ERROR - mprotect(0x%lx, %ld) failed\n", (iaddr_t)addr, size);
+  }
+
+#endif
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+static void Tau_page_deallocate(void * addr, size_t size)
+{
+#if defined(TAU_WINDOWS)
+
+  void * alloc_addr = addr;
+  SIZE_T retQuery;
+  MEMORY_BASIC_INFORMATION MemInfo;
+  BOOL ret;
+
+  /* release physical memory commited to virtual address space */
+  while (size > 0) {
+    retQuery = VirtualQuery(addr, &MemInfo, sizeof(MemInfo));
+
+    if (retQuery < sizeof(MemInfo)) {
+      TAU_VERBOSE("TAU: ERROR - VirtualQuery() failed\n");
+    }
+
+    if (MemInfo.State == MEM_COMMIT) {
+      ret = VirtualFree((LPVOID)MemInfo.BaseAddress, (DWORD)MemInfo.RegionSize, (DWORD) MEM_DECOMMIT);
+      if (!ret) {
+        TAU_VERBOSE("TAU: ERROR - VirtualFree(0x%lx,%ld,MEM_DECOMMIT) failed\n", (iaddr_t)addr, size);
+      }
+    }
+
+    addr = ((char *)addr) + MemInfo.RegionSize;
+    size -= MemInfo.RegionSize;
+  }
+
+  /* release virtual address space */
+  ret = VirtualFree((LPVOID)alloc_addr, (DWORD)0, (DWORD)MEM_RELEASE);
+  if (!ret) {
+    TAU_VERBOSE("TAU: ERROR - VirtualFree(0x%lx,%ld,MEM_RELEASE) failed\n", (iaddr_t), size);
+  }
+
+#else
+
+  if (munmap(addr, size) < 0) {
+    TAU_VERBOSE("TAU: ERROR - munmap(0x%lx, %ld) failed.  Denying access.\n", (iaddr_t)addr, size);
+    Tau_page_deny(addr, size);
+  }
+
+#endif
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+static void * Tau_allocate(size_t alignment, size_t userSize, const char * filename, int lineno)
+{
+  return malloc(userSize);
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+static void Tau_deallocate(void * baseAddr, const char * filename, int lineno)
+{
+  free(baseAddr);
+}
+
+//////////////////////////////////////////////////////////////////////
+// Creates/accesses the event associated with tracking memory allocation
+//////////////////////////////////////////////////////////////////////
+static user_event_t * Tau_before_system_allocate(char const * filename, int lineno)
 {
   hash_t file_hash = Tau_hash(lineno, filename);
 
@@ -176,23 +375,23 @@ static user_event_t * Tau_before_allocate(char const * filename, int lineno)
 }
 
 //////////////////////////////////////////////////////////////////////
-// Tau_malloc_after associates the event and size with the address allocated
+// Triggers the event associated with the address allocated
 //////////////////////////////////////////////////////////////////////
-static void Tau_after_allocate(void * ptr, size_t size, user_event_t * e)
+static void Tau_after_system_allocate(void * ptr, size_t size, user_event_t * e)
 {
   // We can't trigger the event until after the allocation because we don't know
   // the actual size of the allocation until it is made
   e->TriggerEvent(size);
 
-  address_t addr = Tau_convert_ptr_to_unsigned_long(ptr);
-  TheTauPointerSizeMap().insert(pair<address_t, pointer_size_t>(addr, pointer_size_t(size, e)));
+  iaddr_t addr = Tau_convert_ptr_to_unsigned_long(ptr);
+  TheTauPointerSizeMap().insert(pair<iaddr_t, pointer_size_t>(addr, pointer_size_t(size, e)));
 }
 
 
 //////////////////////////////////////////////////////////////////////
-// Tau_free_before does everything prior to free'ing the memory
+// Does everything prior to free'ing the memory
 //////////////////////////////////////////////////////////////////////
-static void Tau_before_deallocate(char const * file, int line, void * ptr)
+static void Tau_before_system_deallocate(char const * file, int line, void * ptr)
 {
 #ifdef DEBUGPROF
   printf("C++: Tau_free_before: file = %s, ptr=%lx,  long file = %uld\n", file, file, file_hash);
@@ -202,7 +401,7 @@ static void Tau_before_deallocate(char const * file, int line, void * ptr)
   malloc_map_t & mallocmap = TheTauMallocMap();
 
   hash_t file_hash = Tau_hash(line, file);
-  address_t addr = Tau_convert_ptr_to_unsigned_long(ptr);
+  iaddr_t addr = Tau_convert_ptr_to_unsigned_long(ptr);
 
   size_t sz;
   pointer_size_map_t::iterator size_it = sizemap.find(addr);
@@ -269,7 +468,7 @@ void TauDetectMemoryLeaks(void)
         sz, e->GetEventName());
 #endif /* DEBUGPROF */
 
-    address_t leak_key = Tau_convert_ptr_to_unsigned_long(e);
+    iaddr_t leak_key = Tau_convert_ptr_to_unsigned_long(e);
     leak_map_t::iterator leak_it = leakmap.find(leak_key);
     if (leak_it == leakmap.end()) {
       char * s = (char*)malloc(strnlen(e->GetEventName(), MAX_STRING_LEN)+32);
@@ -293,7 +492,7 @@ void TauDetectMemoryLeaks(void)
 extern "C"
 void Tau_track_memory_allocation(char const * file, int line, size_t size, void * ptr)
 {
-  Tau_after_allocate(ptr, size, Tau_before_allocate(file, line));
+  Tau_after_system_allocate(ptr, size, Tau_before_system_allocate(file, line));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -303,7 +502,7 @@ void Tau_track_memory_allocation(char const * file, int line, size_t size, void 
 extern "C"
 void Tau_track_memory_deallocation(const char *file, int line, void * ptr)
 {
-  Tau_before_deallocate(file, line, ptr);
+  Tau_before_system_deallocate(file, line, ptr);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -327,9 +526,13 @@ void * Tau_malloc(size_t size, const char * filename, int lineno)
 {
   void * ptr;
 
-  user_event_t * e = Tau_before_allocate(filename, lineno);
-  ptr = malloc(size);
-  Tau_after_allocate(ptr, size, e);
+  if (TauEnv_get_memdbg()) {
+    ptr = Tau_allocate(0, size, filename, lineno);
+  } else {
+    user_event_t * e = Tau_before_system_allocate(filename, lineno);
+    ptr = malloc(size);
+    Tau_after_system_allocate(ptr, size, e);
+  }
 
   return ptr;
 }
@@ -342,14 +545,14 @@ extern "C"
 void * Tau_calloc(size_t elemCount, size_t elemSize, const char * filename, int lineno)
 {
   /* Get the event that is created */
-  user_event_t * e = Tau_before_allocate(filename, lineno);
+  user_event_t * e = Tau_before_system_allocate(filename, lineno);
 
   void * ptr = calloc(elemCount, elemSize);
 
   /* associate the event generated and its size with the address of memory
    * allocated by calloc. This is used later for memory leak detection and
    * to evaluate the size of the memory freed in the Tau_free(ptr) routine. */
-  Tau_after_allocate(ptr, elemCount * elemSize, e);
+  Tau_after_system_allocate(ptr, elemCount * elemSize, e);
 
   return ptr;  /* what was allocated */
 }
@@ -359,12 +562,14 @@ void * Tau_calloc(size_t elemCount, size_t elemSize, const char * filename, int 
 // Tau_free calls Tau_free_before and free's the memory allocated
 //////////////////////////////////////////////////////////////////////
 extern "C"
-void Tau_free(void * baseAdr, const char * filename, int lineno)
+void Tau_free(void * baseAddr, char const * filename, int lineno)
 {
-  Tau_before_deallocate(filename, lineno, baseAdr);
-
-  /* and actually free the memory */
-  free(baseAdr);
+  if (TauEnv_get_memdbg()) {
+    Tau_deallocate(baseAddr, filename, lineno);
+  } else {
+    Tau_before_system_deallocate(filename, lineno, baseAddr);
+    free(baseAddr);
+  }
 }
 
 
@@ -376,14 +581,14 @@ extern "C"
 void * Tau_memalign(size_t alignment, size_t userSize, const char * filename, int lineno)
 {
   /* Get the event that is created */
-  user_event_t * e = Tau_before_allocate(filename, lineno);
+  user_event_t * e = Tau_before_system_allocate(filename, lineno);
 
   void * ptr = memalign(alignment, userSize);
 
   /* associate the event generated and its size with the address of memory
    * allocated by calloc. This is used later for memory leak detection and
    * to evaluate the size of the memory freed in the Tau_free(ptr) routine. */
-  Tau_after_allocate(ptr, userSize, e);
+  Tau_after_system_allocate(ptr, userSize, e);
 
   return ptr;
 }
@@ -398,14 +603,14 @@ int Tau_posix_memalign(void **memptr, size_t alignment, size_t userSize,
     const char * filename, int lineno)
 {
   /* Get the event that is created */
-  user_event_t * e = Tau_before_allocate(filename, lineno);
+  user_event_t * e = Tau_before_system_allocate(filename, lineno);
 
   int retval = posix_memalign(memptr, alignment, userSize);
 
   /* associate the event generated and its size with the address of memory
    * allocated by calloc. This is used later for memory leak detection and
    * to evaluate the size of the memory freed in the Tau_free(ptr) routine. */
-  Tau_after_allocate(*memptr, userSize, e);
+  Tau_after_system_allocate(*memptr, userSize, e);
 
   return retval;
 }
@@ -417,7 +622,7 @@ int Tau_posix_memalign(void **memptr, size_t alignment, size_t userSize,
 extern "C"
 void * Tau_realloc(void * baseAdr, size_t newSize, const char * filename, int lineno)
 {
-  Tau_before_deallocate(filename, lineno, baseAdr);
+  Tau_before_system_deallocate(filename, lineno, baseAdr);
   void *retval = realloc(baseAdr, newSize);
   Tau_track_memory_allocation(filename, lineno, newSize, retval);
   return retval;
@@ -430,14 +635,14 @@ extern "C"
 void * Tau_valloc(size_t size, const char * filename, int lineno)
 {
   /* Get the event that is created */
-  user_event_t * e = Tau_before_allocate(filename, lineno);
+  user_event_t * e = Tau_before_system_allocate(filename, lineno);
 
   void * ptr = valloc(size);
 
   /* associate the event generated and its size with the address of memory
    * allocated by calloc. This is used later for memory leak detection and
    * to evaluate the size of the memory freed in the Tau_free(ptr) routine. */
-  Tau_after_allocate(ptr, size, e);
+  Tau_after_system_allocate(ptr, size, e);
 
   return ptr;  /* what was allocated */
 }
@@ -450,14 +655,14 @@ extern "C"
 void * Tau_pvalloc(size_t size, const char * filename, int lineno)
 {
   /* Get the event that is created */
-  user_event_t * e = Tau_before_allocate(filename, lineno);
+  user_event_t * e = Tau_before_system_allocate(filename, lineno);
 
   void * ptr = pvalloc(size);
 
   /* associate the event generated and its size with the address of memory
    * allocated by calloc. This is used later for memory leak detection and
    * to evaluate the size of the memory freed in the Tau_free(ptr) routine. */
-  Tau_after_allocate(ptr, size, e);
+  Tau_after_system_allocate(ptr, size, e);
 
   return ptr;  /* what was allocated */
 }
@@ -472,14 +677,14 @@ char * Tau_strdup(const char *str, const char * filename, int lineno)
   size_t size = strnlen(str, MAX_STRING_LEN);
 
   /* Get the event that is created */
-  user_event_t * e = Tau_before_allocate(filename, lineno);
+  user_event_t * e = Tau_before_system_allocate(filename, lineno);
 
   char * ptr = strdup(str);
 
   /* associate the event generated and its size with the address of memory
    * allocated by calloc. This is used later for memory leak detection and
    * to evaluate the size of the memory freed in the Tau_free(ptr) routine. */
-  Tau_after_allocate(ptr, size, e);
+  Tau_after_system_allocate(ptr, size, e);
 
   return ptr;  /* what was allocated */
 }

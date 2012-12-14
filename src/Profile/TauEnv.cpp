@@ -953,6 +953,10 @@ void TauEnv_initialize()
 
     if(env_memdbg) {
 
+      size_t page_size = Tau_page_size();
+      sprintf(tmpstr, "%ld", page_size);
+      TAU_METADATA("Virtual Memory Page Size", tmpstr);
+
       tmp = getconf("TAU_MEMDBG_PROTECT_GAP");
       env_memdbg_protect_gap = parse_bool(tmp, env_memdbg_protect_gap);
       if(env_memdbg_protect_gap) {
