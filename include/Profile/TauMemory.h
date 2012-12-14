@@ -36,6 +36,8 @@
 extern "C" {
 #endif /* __cplusplus */
 
+size_t Tau_page_size(void);
+
 void TauDetectMemoryLeaks(void);
 
 void Tau_track_memory_allocation(char const * file, int line, size_t size, void* ptr);
