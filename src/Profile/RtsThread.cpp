@@ -166,11 +166,7 @@ int RtsLayer::threadId(void)
   return JavaThreadLayer::GetThreadId(); 
 	// C++ app shouldn't use this unless there's a VM
 #elif TAU_OPENMP
-	if (TauEnv_get_ebs_enabled()) {
-		return OpenMPLayer::GetThreadId();
-	} else {
-  	return OpenMPLayer::GetTauThreadId();
-	}
+  return OpenMPLayer::GetTauThreadId();
 #elif TAU_PAPI_THREADS
   return PapiThreadLayer::GetThreadId();
 #else  // if no other thread package is available 
@@ -192,11 +188,7 @@ int RtsLayer::myThread(void)
   return JavaThreadLayer::GetThreadId(); 
 	// C++ app shouldn't use this unless there's a VM
 #elif TAU_OPENMP
-  if (TauEnv_get_ebs_enabled()) {
-		return OpenMPLayer::GetThreadId();
-	} else {
-  	return OpenMPLayer::GetTauThreadId();
-	}
+  return OpenMPLayer::GetTauThreadId();
 #elif TAU_PAPI_THREADS
   return PapiThreadLayer::GetThreadId();
 #else  // if no other thread package is available 
