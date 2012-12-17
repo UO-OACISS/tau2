@@ -23,7 +23,6 @@
 #include <stdint.h>
 #include <Profile/Profiler.h>
 #include <tau_internal.h>
-
 #if (defined(__APPLE_CC__) || defined(TAU_APPLE_XLC) || defined(TAU_APPLE_PGI))
 #include <malloc/malloc.h>
 #elif defined(TAU_FREEBSD)
@@ -97,7 +96,7 @@ static pointer_size_map_t & TheTauPointerSizeMap(void)
 static hash_t Tau_hash(hash_t hash, char const * data)
 {
   uint32_t tmp;
-  int len = strnlen(data, MAX_STRING_LEN);
+  int len = strlen(data);
   int rem;
 
   rem = len & 3;
@@ -154,7 +153,7 @@ static user_event_t * Tau_before_allocate(char const * filename, int lineno)
   user_event_t * e;
 
   if (it == mallocmap.end()) {
-    char * s = (char*)malloc(strnlen(filename, MAX_STRING_LEN)+128);
+    char * s = (char*)malloc(strlen(filename)+128);
     sprintf(s, "malloc size <file=%s, line=%d>", filename, lineno);
 #ifdef DEBUGPROF
     printf("C++: Tau_malloc: creating new user event %s\n", s);
@@ -223,7 +222,7 @@ static void Tau_before_deallocate(char const * file, int line, void * ptr)
 
   malloc_map_t::iterator it = mallocmap.find(file_hash);
   if (it == mallocmap.end()) {
-    char * s = (char*)malloc(strnlen(file, MAX_STRING_LEN)+64);
+    char * s = (char*)malloc(strlen(file)+64);
     sprintf(s, "free size <file=%s, line=%d>", file, line);
 
 #ifdef DEBUGPROF
@@ -272,7 +271,7 @@ void TauDetectMemoryLeaks(void)
     address_t leak_key = Tau_convert_ptr_to_unsigned_long(e);
     leak_map_t::iterator leak_it = leakmap.find(leak_key);
     if (leak_it == leakmap.end()) {
-      char * s = (char*)malloc(strnlen(e->GetEventName(), MAX_STRING_LEN)+32);
+      char * s = (char*)malloc(strlen(e->GetEventName())+32);
       sprintf(s, "MEMORY LEAK! %s", e->GetEventName());
       TauUserEvent * leakevent = new TauUserEvent(s);
       leakmap[leak_key] = leakevent;
@@ -469,7 +468,7 @@ void * Tau_pvalloc(size_t size, const char * filename, int lineno)
 extern "C"
 char * Tau_strdup(const char *str, const char * filename, int lineno)
 {
-  size_t size = strnlen(str, MAX_STRING_LEN);
+  size_t size = strlen(str);
 
   /* Get the event that is created */
   user_event_t * e = Tau_before_allocate(filename, lineno);
