@@ -490,7 +490,7 @@ static size_t env_memdbg_alloc_max_value = 0;
 // All values of env_memdbg_overhead are valid limits
 static int env_memdbg_overhead = TAU_MEMDBG_OVERHEAD_DEFAULT;
 static size_t env_memdbg_overhead_value = 0;
-static unsigned int env_memdbg_alignment = TAU_MEMDBG_ALIGNMENT_DEFAULT;
+static size_t env_memdbg_alignment = TAU_MEMDBG_ALIGNMENT_DEFAULT;
 static int env_memdbg_zero_malloc = TAU_MEMDBG_ZERO_MALLOC_DEFAULT;
 
 #ifdef TAU_GPI 
@@ -776,7 +776,7 @@ size_t TauEnv_get_memdbg_overhead_value() {
   return env_memdbg_overhead_value;
 }
 
-unsigned int TauEnv_get_memdbg_alignment() {
+size_t TauEnv_get_memdbg_alignment() {
   return env_memdbg_alignment;
 }
 
@@ -1000,10 +1000,10 @@ void TauEnv_initialize()
 
       tmp = getconf("TAU_MEMDBG_ALIGNMENT");
       if (tmp) {
-        env_memdbg_alignment = atoi(tmp);
+        env_memdbg_alignment = (size_t)atoi(tmp);
       }
-      TAU_VERBOSE("TAU: Memory debugging alignment: %d\n", env_memdbg_alignment);
-      sprintf(tmpstr, "%d", env_memdbg_alignment);
+      TAU_VERBOSE("TAU: Memory debugging alignment: %ld\n", env_memdbg_alignment);
+      sprintf(tmpstr, "%ld", env_memdbg_alignment);
       TAU_METADATA("TAU_MEMDBG_ALIGNMENT", tmpstr);
 
       tmp = getconf("TAU_MEMDBG_ZERO_MALLOC");
