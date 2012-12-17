@@ -262,7 +262,7 @@ extern "C" Profiler *TauInternal_ParentProfiler(int tid) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 	FunctionInfo *fi = (FunctionInfo *) functionInfo; 
-
+Tau_thread_flags[tid].Tau_global_insideTAU++;
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_init_if_necessary();
@@ -285,6 +285,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
     Tau_sampling_resume(tid);
   }
 #endif
+  Tau_thread_flags[tid].Tau_global_insideTAU--;
   return;
 #endif
 
@@ -300,6 +301,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
     Tau_sampling_resume(tid);
   }
 #endif
+  Tau_thread_flags[tid].Tau_global_insideTAU--;
   return;
 #endif
 
@@ -350,6 +352,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
       Tau_sampling_resume(tid);
     }
 #endif
+    Tau_thread_flags[tid].Tau_global_insideTAU--;
     return; 
   }
 #endif /* TAU_DEPTH_LIMIT */
@@ -389,6 +392,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
     Tau_sampling_event_start(tid, p->address);
   }
 #endif
+  Tau_thread_flags[tid].Tau_global_insideTAU--;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -437,9 +441,9 @@ extern "C" void Tau_lite_start_timer(void *functionInfo, int phase) {
 			return; /* disabled */
 		}
 		int tid = Tau_get_tid();
-		Tau_thread_flags[tid].Tau_global_insideTAU++;
+		
     Tau_start_timer(functionInfo, phase, tid);
-		Tau_thread_flags[tid].Tau_global_insideTAU--;
+		
   }
 }
     
@@ -457,6 +461,7 @@ static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller) {
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_stop_timer(void *function_info, int tid ) {
+	Tau_thread_flags[tid].Tau_global_insideTAU++;
 	FunctionInfo *fi = (FunctionInfo *) function_info; 
 
 	Profiler *profiler;
@@ -493,6 +498,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
       Tau_sampling_resume(tid);
     }
 #endif
+  Tau_thread_flags[tid].Tau_global_insideTAU--;
   return 0;
 #endif
 
@@ -510,6 +516,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
       Tau_sampling_resume(tid);
     }
 #endif
+  Tau_thread_flags[tid].Tau_global_insideTAU--;
   return 0;
 #endif
 
@@ -524,6 +531,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
       Tau_sampling_resume(tid);
     }
 #endif
+    Tau_thread_flags[tid].Tau_global_insideTAU--;
     return 0; 
   }
 
@@ -557,6 +565,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
       Tau_sampling_resume(tid);
     }
 #endif
+    Tau_thread_flags[tid].Tau_global_insideTAU--;
     return 0; 
   }
 #endif /* TAU_DEPTH_LIMIT */
@@ -571,7 +580,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
     Tau_sampling_resume(tid);
   }
 #endif
-
+  Tau_thread_flags[tid].Tau_global_insideTAU--;
   return 0;
 }
 
@@ -620,9 +629,9 @@ extern "C" int Tau_lite_stop_timer(void *function_info) {
 			return 1; /* disabled */
 		}
 		int tid = Tau_get_tid();
-		Tau_thread_flags[tid].Tau_global_insideTAU++;
+		
     int r = Tau_stop_timer(function_info, tid);
-		Tau_thread_flags[tid].Tau_global_insideTAU--;
+		
 		return r;
   }
 }
@@ -1362,7 +1371,8 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
   }
 */
 #if defined(TAU_VAMPIRTRACE) || defined(TAU_EPILOG)
-	return // disabled.
+  Tau_thread_flags[tid].Tau_global_insideTAU--;
+  return; // disabled.
 #endif
   /* After creating the ".TAU application" timer, we start it. In the
      timer start code, it will call this function, so in that case,
@@ -1373,6 +1383,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
 
   if (!initialized) {
     if (initializing[tid]) {
+      Tau_thread_flags[tid].Tau_global_insideTAU--;
       return;
     }
     RtsLayer::LockEnv();
@@ -1406,6 +1417,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
 
   atexit(Tau_destructor_trigger);
   Tau_thread_flags[tid].Tau_global_insideTAU--;
+  return;
 }
 
 extern "C" void Tau_create_top_level_timer_if_necessary(void) {

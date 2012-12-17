@@ -26,7 +26,7 @@ This is not a parallel implementation */
 #endif /* PTHREADS */
 
 #ifndef MATRIX_SIZE
-#define MATRIX_SIZE 500
+#define MATRIX_SIZE 1000
 #endif
 
 #define NRA MATRIX_SIZE                 /* number of rows in matrix A */
@@ -42,14 +42,36 @@ double** allocateMatrix(int rows, int cols) {
   return matrix;
 }
 
-double multiply(double a, double b) {
+__inline double multiply(double a, double b) {
 	return a * b;
+}
+
+// cols_a and rows_b are the same value
+void compute_nested(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
+  int i,j,k;
+#pragma omp parallel private(i) shared(a,b,c) num_threads(2)
+  {
+    /*** Do matrix multiply sharing iterations on outer loop ***/
+    /*** Display who does which iterations for demonstration purposes ***/
+#pragma omp for nowait
+    for (i=0; i<rows_a; i++) {
+#pragma omp parallel private(i,j,k) shared(a,b,c) num_threads(2)
+      {
+#pragma omp for nowait
+      for(j=0; j<cols_b; j++) {
+        for (k=0; k<cols_a; k++) {
+          c[i][j] += multiply(a[i][k], b[k][j]);
+        }
+      }
+      }
+    }
+  }   /*** End of parallel region ***/
 }
 
 // cols_a and rows_b are the same value
 void compute(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
   int i,j,k;
-#pragma omp parallel private(i,j,k) shared(a,b,c)
+#pragma omp parallel private(i) shared(a,b,c)
   {
     /*** Do matrix multiply sharing iterations on outer loop ***/
     /*** Display who does which iterations for demonstration purposes ***/
@@ -96,6 +118,11 @@ double do_work(void) {
   initialize(c, NRA, NCB);
 
   compute(a, b, c, NRA, NCA, NCB);
+#if defined(TAU_OPENMP)
+  if (omp_get_nested()) {
+    compute_nested(a, b, c, NRA, NCA, NCB);
+  }
+#endif
 #ifdef TAU_MPI
   if (provided == MPI_THREAD_MULTIPLE)
   { 

@@ -1634,7 +1634,9 @@ int *provided;
   Tau_signal_initialization(); 
 #endif
 #ifndef TAU_WINDOWS
-  Tau_sampling_init_if_necessary();
+  if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_init_if_necessary();
+  }
 #endif /* TAU_WINDOWS */
 
 #ifdef TAU_BGP
