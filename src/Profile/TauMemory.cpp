@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 #include <Profile/Profiler.h>
 #include <tau_internal.h>
 
@@ -55,17 +56,57 @@ using namespace std;
 #include <fcntl.h>
 #endif
 
+#if !defined(MAP_ANONYMOUS) && defined(MAP_ANON)
+#define  MAP_ANONYMOUS MAP_ANON
+#endif
+
 #define MAX_STRING_LEN 1024
 #define get16bits(d) ((((uint32_t)(((const uint8_t *)(d))[1])) << 8)\
                        +(uint32_t)(((const uint8_t *)(d))[0]) )
 
-typedef unsigned long hash_t;
+typedef unsigned char byte_t;
 typedef unsigned long iaddr_t;
+typedef unsigned long hash_t;
 typedef TauContextUserEvent user_event_t;
 typedef TAU_HASH_MAP<hash_t, user_event_t*> malloc_map_t;
 typedef std::pair<size_t, user_event_t*> pointer_size_t;
 typedef TAU_MULTIMAP<iaddr_t, pointer_size_t> pointer_size_map_t;
 typedef TAU_HASH_MAP<iaddr_t, TauUserEvent*> leak_map_t;
+
+
+class TauAllocation
+{
+public:
+
+  TauAllocation() :
+    _addr(NULL), _size(0),
+    _user_addr(NULL), _user_size(0),
+    _prot_addr(NULL), _prot_size(0),
+    _gap_addr(NULL), _gap_size(0)
+  { }
+
+  void * Allocate(size_t size, size_t alignment, bool prot_above, bool prot_below);
+
+  void Deallocate();
+
+private:
+  void _Protect(void * addr, size_t size);
+  void _Unprotect(void * addr, size_t size);
+
+  byte_t * _addr;
+  size_t _size;
+  byte_t * _user_addr;
+  size_t _user_size;
+  byte_t * _prot_addr;
+  size_t _prot_size;
+  byte_t * _gap_addr;
+  size_t _gap_size;
+
+  static size_t _page_size;
+};
+
+size_t TauAllocation::_page_size = Tau_page_size();
+
 
 //////////////////////////////////////////////////////////////////////
 static malloc_map_t & TheTauMallocMap(void)
@@ -141,72 +182,203 @@ static hash_t Tau_hash(hash_t hash, char const * data)
   return hash;
 }
 
-
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
 size_t Tau_page_size(void)
 {
+  static size_t page_size = 0;
+
+  if (!page_size) {
 #if defined(TAU_WINDOWS)
-  SYSTEM_INFO SystemInfo;
-  GetSystemInfo(&SystemInfo);
-  return (size_t)SystemInfo.dwPageSize;
+    SYSTEM_INFO SystemInfo;
+    GetSystemInfo(&SystemInfo);
+    page_size = (size_t)SystemInfo.dwPageSize;
 #elif defined(_SC_PAGESIZE)
-  return (size_t)sysconf(_SC_PAGESIZE);
+    page_size = (size_t)sysconf(_SC_PAGESIZE);
 #elif defined(_SC_PAGE_SIZE)
-  return (size_t)sysconf(_SC_PAGE_SIZE);
+    page_size = (size_t)sysconf(_SC_PAGE_SIZE);
 #else
-/* extern int getpagesize(); */
-  return getpagesize();
+    page_size = getpagesize();
 #endif
+  }
+
+  return page_size;
 }
 
 
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
-static void * Tau_page_allocate(size_t size)
+void * TauAllocation::Allocate(size_t size, size_t alignment, bool prot_above, bool prot_below)
 {
-  void * ptr = NULL;
-
-#if defined(TAU_WINDOWS)
-
-  ptr = VirtualAlloc(NULL, (DWORD)size, (DWORD)MEM_COMMIT, (DWORD)PAGE_READWRITE);
-  if (!ptr) {
-    TAU_VERBOSE("TAU: ERROR - VirtualAlloc(%ld) failed\n", size);
-    return NULL;
+  // Check size
+  if (!size) {
+    // TODO: Zero-size malloc
   }
 
-#else
+  // Alignment=0 ==> default alignment
+  // Alignment=1 ==> byte alignment (potentially sub-word)
+  if (!alignment) {
+    alignment = TauEnv_get_memdbg_alignment();
+  }
 
-  static iaddr_t startAddr = NULL;
-  static int devZeroFd = -1;
-
-  if (devZeroFd == -1) {
-    devZeroFd = open("/dev/zero", O_RDWR);
-    if (devZeroFd < 0) {
-      TAU_VERBOSE("TAU: ERROR - open() on /dev/zero failed\n");
-      return NULL;
+  // Sub-alignment allocation size
+  if (size < alignment) {
+    // Align to the next lower power of two
+    alignment = size;
+    while (alignment & (alignment-1)) {
+      alignment &= alignment-1;
     }
   }
 
-  ptr = mmap((void*)startAddr, size, (PROT_READ|PROT_WRITE), MAP_PRIVATE, devZeroFd, 0);
-  if (ptr == MAP_FAILED) {
-    TAU_VERBOSE("TAU: ERROR - mmap(%ld) failed\n", size);
+  // Alignment must be a power of two
+  if ((int)alignment != ((int)alignment & -(int)alignment)) {
+    TAU_VERBOSE("TAU: ERROR - Alignment %ld is not a power of two", alignment);
+    _addr = NULL;
+    _size = 0;
     return NULL;
   }
-  startAddr = (iaddr_t)((char*)ptr + size);
+
+  // Round up to the next page boundary
+  _size = ((size + _page_size-1) & ~(_page_size-1));
+  // Include space for protection pages
+  if (prot_above)
+    _size += _page_size;
+  if (prot_below)
+    _size += _page_size;
+  // Round to next alignment boundary
+  if (alignment > _page_size)
+    _size += alignment - _page_size;
+
+#if defined(TAU_WINDOWS)
+
+  _addr = VirtualAlloc(NULL, (DWORD)_size, (DWORD)MEM_COMMIT, (DWORD)PAGE_READWRITE);
+  if (!_addr) {
+    TAU_VERBOSE("TAU: ERROR - VirtualAlloc(%ld) failed\n", _size);
+    _addr = NULL;
+    _size = 0;
+    return NULL;
+  }
+
+#else
+
+  static void * _suggest_start;
+
+#if defined(MAP_ANONYMOUS)
+  _addr = (byte_t*)mmap(_suggest_start, _size,
+      PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+#else
+  static int fd = -1;
+  if (fd == -1) {
+    if ((fd = open("/dev/zero", O_RDWR)) < 0) {
+      TAU_VERBOSE("TAU: ERROR - open() on /dev/zero failed\n");
+      _addr = NULL;
+      _size = 0;
+      return NULL;
+    }
+  }
+  _addr = (byte_t*)mmap(_suggest_start, _size,
+      PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
+#endif
+
+  if (_addr == MAP_FAILED) {
+    TAU_VERBOSE("TAU: ERROR - mmap(%ld) failed\n", _size);
+    _addr = NULL;
+    _size = 0;
+    return NULL;
+  }
+
+  // Suggest the next allocation begin after this one
+  _suggest_start = (void*)(_addr + _size);
 
 #endif
 
-  return ptr;
+  if (prot_below) {
+    if (prot_above) {
+      // TODO
+    } else {
+      // TODO
+    }
+  } else if (prot_above) {
+    // The address to return to the user
+    _user_size = size;
+    _user_addr = (byte_t*)((size_t)(_addr + _size - _page_size - _user_size) & ~(alignment-1));
+    // The protected page address
+    _prot_addr = (byte_t*)((size_t)(_user_addr + _user_size + _page_size-1) & ~(_page_size-1));
+    _prot_size = (size_t)(_addr + _size - _prot_addr);
+    // The gap address
+    _gap_addr = _user_addr + _user_size;
+    _gap_size = _prot_addr - _gap_addr;
+
+    // Permit access to the user address range
+    _Unprotect(_addr, (size_t)(_prot_addr - _addr));
+    // Deny access to the guard page
+    _Protect(_prot_addr, _prot_size);
+  }
+
+  // All done with bookkeeping, get back to the user
+  return _user_addr;
 }
 
 
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
-static void Tau_page_allow(void * addr, size_t size)
+void TauAllocation::Deallocate()
+{
+  if(!_addr) return;
+
+#if defined(TAU_WINDOWS)
+
+  void * tmp_addr = _addr;
+  size_t tmp_size = _size;
+  SIZE_T retQuery;
+  MEMORY_BASIC_INFORMATION MemInfo;
+  BOOL ret;
+
+  /* release physical memory commited to virtual address space */
+  while (tmp_size > 0) {
+    retQuery = VirtualQuery(tmp_addr, &MemInfo, sizeof(MemInfo));
+
+    if (retQuery < sizeof(MemInfo)) {
+      TAU_VERBOSE("TAU: ERROR - VirtualQuery() failed\n");
+    }
+
+    if (MemInfo.State == MEM_COMMIT) {
+      ret = VirtualFree((LPVOID)MemInfo.BaseAddress, (DWORD)MemInfo.RegionSize, (DWORD) MEM_DECOMMIT);
+      if (!ret) {
+        TAU_VERBOSE("TAU: ERROR - VirtualFree(0x%lx,%ld,MEM_DECOMMIT) failed\n", (iaddr_t)tmp_addr, tmp_size);
+      }
+    }
+
+    tmp_addr = ((char*)tmp_addr) + MemInfo.RegionSize;
+    tmp_size -= MemInfo.RegionSize;
+  }
+
+  /* release virtual address space */
+  ret = VirtualFree((LPVOID)_addr, (DWORD)0, (DWORD)MEM_RELEASE);
+  if (!ret) {
+    TAU_VERBOSE("TAU: ERROR - VirtualFree(0x%lx,%ld,MEM_RELEASE) failed\n", (iaddr_t)_addr, _size);
+  }
+
+#else
+
+  if (munmap(_addr, _size) < 0) {
+    TAU_VERBOSE("TAU: ERROR - munmap(0x%lx, %ld) failed\n", (iaddr_t)_addr, _size);
+  }
+
+  _addr = NULL;
+  _size = 0;
+
+#endif
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void TauAllocation::_Protect(void * addr, size_t size)
 {
 #if defined(TAU_WINDOWS)
 
@@ -232,8 +404,8 @@ static void Tau_page_allow(void * addr, size_t size)
 
 #else
 
-  if (mprotect(addr, size, PROT_READ|PROT_WRITE) < 0) {
-    TAU_VERBOSE("TAU: ERROR - mprotect(0x%lx, %ld) failed\n", (iaddr_t)addr, size);
+  if (mprotect(addr, size, PROT_NONE) < 0) {
+    TAU_VERBOSE("TAU: ERROR - mprotect(0x%lx, %ld, PROT_NONE) failed\n", (iaddr_t)addr, size);
   }
 
 #endif
@@ -243,7 +415,7 @@ static void Tau_page_allow(void * addr, size_t size)
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
-static void Tau_page_deny(void * addr, size_t size)
+void TauAllocation::_Unprotect(void * addr, size_t size)
 {
 #if defined(TAU_WINDOWS)
 
@@ -269,68 +441,29 @@ static void Tau_page_deny(void * addr, size_t size)
 
 #else
 
-  if (mprotect(addr, size, PROT_NONE) < 0) {
-    TAU_VERBOSE("TAU: ERROR - mprotect(0x%lx, %ld) failed\n", (iaddr_t)addr, size);
+  if (mprotect(addr, size, PROT_READ|PROT_WRITE) < 0) {
+    TAU_VERBOSE("TAU: ERROR - mprotect(0x%lx, %ld, PROT_READ|PROT_WRITE) failed\n", (iaddr_t)addr, size);
   }
 
 #endif
 }
 
 
-//////////////////////////////////////////////////////////////////////
-// TODO: Docs
-//////////////////////////////////////////////////////////////////////
-static void Tau_page_deallocate(void * addr, size_t size)
-{
-#if defined(TAU_WINDOWS)
-
-  void * alloc_addr = addr;
-  SIZE_T retQuery;
-  MEMORY_BASIC_INFORMATION MemInfo;
-  BOOL ret;
-
-  /* release physical memory commited to virtual address space */
-  while (size > 0) {
-    retQuery = VirtualQuery(addr, &MemInfo, sizeof(MemInfo));
-
-    if (retQuery < sizeof(MemInfo)) {
-      TAU_VERBOSE("TAU: ERROR - VirtualQuery() failed\n");
-    }
-
-    if (MemInfo.State == MEM_COMMIT) {
-      ret = VirtualFree((LPVOID)MemInfo.BaseAddress, (DWORD)MemInfo.RegionSize, (DWORD) MEM_DECOMMIT);
-      if (!ret) {
-        TAU_VERBOSE("TAU: ERROR - VirtualFree(0x%lx,%ld,MEM_DECOMMIT) failed\n", (iaddr_t)addr, size);
-      }
-    }
-
-    addr = ((char *)addr) + MemInfo.RegionSize;
-    size -= MemInfo.RegionSize;
-  }
-
-  /* release virtual address space */
-  ret = VirtualFree((LPVOID)alloc_addr, (DWORD)0, (DWORD)MEM_RELEASE);
-  if (!ret) {
-    TAU_VERBOSE("TAU: ERROR - VirtualFree(0x%lx,%ld,MEM_RELEASE) failed\n", (iaddr_t), size);
-  }
-
-#else
-
-  if (munmap(addr, size) < 0) {
-    TAU_VERBOSE("TAU: ERROR - munmap(0x%lx, %ld) failed.  Denying access.\n", (iaddr_t)addr, size);
-    Tau_page_deny(addr, size);
-  }
-
-#endif
-}
-
 
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
-static void * Tau_allocate(size_t alignment, size_t userSize, const char * filename, int lineno)
+static void * Tau_allocate(size_t size, const char * filename, int lineno)
 {
-  return malloc(userSize);
+  TauAllocation alloc;
+
+  size_t alignment = TauEnv_get_memdbg_alignment();
+  bool prot_above = TauEnv_get_memdbg_protect_above();
+  bool prot_below = TauEnv_get_memdbg_protect_below();
+
+  void * ptr = alloc.Allocate(size, alignment, prot_above, prot_below);
+
+  return ptr;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -338,7 +471,7 @@ static void * Tau_allocate(size_t alignment, size_t userSize, const char * filen
 //////////////////////////////////////////////////////////////////////
 static void Tau_deallocate(void * baseAddr, const char * filename, int lineno)
 {
-  free(baseAddr);
+  // TODO
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -354,7 +487,7 @@ static user_event_t * Tau_before_system_allocate(char const * filename, int line
 
   if (it == mallocmap.end()) {
     char * s = (char*)malloc(strnlen(filename, MAX_STRING_LEN)+128);
-    sprintf(s, "malloc size <file=%s, line=%d>", filename, lineno);
+    sprintf(s, "malloc <file=%s, line=%d>", filename, lineno);
 #ifdef DEBUGPROF
     printf("C++: Tau_malloc: creating new user event %s\n", s);
 #endif /* DEBUGPROF */
@@ -423,7 +556,7 @@ static void Tau_before_system_deallocate(char const * file, int line, void * ptr
   malloc_map_t::iterator it = mallocmap.find(file_hash);
   if (it == mallocmap.end()) {
     char * s = (char*)malloc(strnlen(file, MAX_STRING_LEN)+64);
-    sprintf(s, "free size <file=%s, line=%d>", file, line);
+    sprintf(s, "free <file=%s, line=%d>", file, line);
 
 #ifdef DEBUGPROF
     printf("C++: Tau_free: creating new user event %s\n", s);
@@ -527,7 +660,7 @@ void * Tau_malloc(size_t size, const char * filename, int lineno)
   void * ptr;
 
   if (TauEnv_get_memdbg()) {
-    ptr = Tau_allocate(0, size, filename, lineno);
+    ptr = Tau_allocate(size, filename, lineno);
   } else {
     user_event_t * e = Tau_before_system_allocate(filename, lineno);
     ptr = malloc(size);
@@ -578,17 +711,17 @@ void Tau_free(void * baseAddr, char const * filename, int lineno)
 //////////////////////////////////////////////////////////////////////
 #if HAVE_MEMALIGN
 extern "C"
-void * Tau_memalign(size_t alignment, size_t userSize, const char * filename, int lineno)
+void * Tau_memalign(size_t alignment, size_t size, const char * filename, int lineno)
 {
   /* Get the event that is created */
   user_event_t * e = Tau_before_system_allocate(filename, lineno);
 
-  void * ptr = memalign(alignment, userSize);
+  void * ptr = memalign(alignment, size);
 
   /* associate the event generated and its size with the address of memory
    * allocated by calloc. This is used later for memory leak detection and
    * to evaluate the size of the memory freed in the Tau_free(ptr) routine. */
-  Tau_after_system_allocate(ptr, userSize, e);
+  Tau_after_system_allocate(ptr, size, e);
 
   return ptr;
 }
@@ -599,18 +732,18 @@ void * Tau_memalign(size_t alignment, size_t userSize, const char * filename, in
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
 extern "C"
-int Tau_posix_memalign(void **memptr, size_t alignment, size_t userSize,
+int Tau_posix_memalign(void **memptr, size_t alignment, size_t size,
     const char * filename, int lineno)
 {
   /* Get the event that is created */
   user_event_t * e = Tau_before_system_allocate(filename, lineno);
 
-  int retval = posix_memalign(memptr, alignment, userSize);
+  int retval = posix_memalign(memptr, alignment, size);
 
   /* associate the event generated and its size with the address of memory
    * allocated by calloc. This is used later for memory leak detection and
    * to evaluate the size of the memory freed in the Tau_free(ptr) routine. */
-  Tau_after_system_allocate(*memptr, userSize, e);
+  Tau_after_system_allocate(*memptr, size, e);
 
   return retval;
 }
