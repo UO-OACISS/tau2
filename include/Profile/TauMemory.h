@@ -23,7 +23,7 @@
 #define _TAU_MEMORY_H_
 
 
-#if defined(__darwin__) || defined(__APPLE__)
+#if defined(__darwin__) || defined(__APPLE__) || defined(TAU_XLC)
 #undef HAVE_MEMALIGN
 #undef HAVE_PVALLOC
 #else
