@@ -262,11 +262,14 @@ unsigned long get_pc(void *p) {
   unsigned long pc;
 
 #ifdef sun
-  issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on solaris\n");
+  issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on Solaris\n");
   return 0;
 #elif __APPLE__
-  issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on apple\n");
-  return 0;
+  issueUnavailableWarningIfNecessary("Warning, TAU Sampling works on Apple, but symbol lookup using BFD does not.\n");
+  ucontext_t *uct = (ucontext_t *)p;
+  //printf("%p\n", uct->uc_mcontext->__ss.__rip);
+  pc = uct->uc_mcontext->__ss.__rip;
+  //return 0;
 #elif _AIX
   issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on AIX\n");
   return 0;
@@ -302,14 +305,12 @@ unsigned long get_pc(void *p) {
 }
 
 extern "C" void Tau_sampling_suspend(int tid) {
-  //  int tid = RtsLayer::myThread();
   suspendSampling[tid] = 1;
   //int nid = RtsLayer::myNode();
   //TAU_VERBOSE("Tau_sampling_suspend: on thread %d:%d\n", nid, tid);
 }
 
 extern "C" void Tau_sampling_resume(int tid) {
-  //  int tid = RtsLayer::myThread();
   suspendSampling[tid] = 0;
   //int nid = RtsLayer::myNode();
   //TAU_VERBOSE("Tau_sampling_resume: on thread %d:%d\n", nid, tid);
@@ -484,9 +485,7 @@ void Tau_sampling_outputTraceDefinitions(int tid) {
 
 }
 
-void Tau_sampling_handle_sampleTrace(void *pc, ucontext_t *context) {
-  int tid = RtsLayer::myThread();
-  Tau_global_incr_insideTAU_tid(tid);
+void Tau_sampling_handle_sampleTrace(void *pc, ucontext_t *context, int tid) {
 
 #ifdef TAU_USE_HPCTOOLKIT
   // *CWL* - special case for HPCToolkit because it relies on 
@@ -539,8 +538,6 @@ void Tau_sampling_handle_sampleTrace(void *pc, ucontext_t *context) {
       profiler = (Profiler *)Tau_query_parent_event(profiler);
     }
   }
-
-  Tau_global_decr_insideTAU_tid(tid);
 }
 
 /*********************************************************************
@@ -1053,9 +1050,7 @@ void Tau_sampling_finalizeProfile(int tid) {
   TAU_METADATA(tmpname, tmpstr);
 }
 
-void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
-  int tid = RtsLayer::myThread();
-  Tau_global_incr_insideTAU_tid(tid);
+void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
 
   // *CWL* - Too "noisy" and useless a verbose output.
   //TAU_VERBOSE("[tid=%d] EBS profile sample with pc %p\n", tid, (unsigned long)pc);
@@ -1127,8 +1122,6 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context) {
     }
   }
   samplingContext->addPcSample(pcStack, tid, deltaValues);
-
-  Tau_global_decr_insideTAU_tid(tid);
 }
 
 /*********************************************************************
@@ -1224,14 +1217,14 @@ int Tau_sampling_event_stop(int tid, double *stopTime) {
  * Sample Handling
  ********************************************************************/
 void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
-  // DO THIS CHECK FIRST! otherwise, the RtsLayer::myThread() call will barf.
+  // DO THIS CHECK FIRST! otherwise, the RtsLayer::localThreadId() call will barf.
   if (collectingSamples == 0) {
     // Do not track counts when sampling is not enabled.
     //TAU_VERBOSE("Tau_sampling_handle_sample: sampling not enabled\n");
     return;
   }
 
-  int tid = RtsLayer::myThread();
+  int tid = RtsLayer::localThreadId();
   /* *CWL* too fine-grained for anything but debug.
   TAU_VERBOSE("Tau_sampling_handle_sample: tid=%d got sample [%p]\n",
   	      tid, (unsigned long)pc);
@@ -1253,18 +1246,20 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
     samplesDroppedSuspended[tid]++;
     return;
   }
+
   // disable sampling until we handle this sample
   suspendSampling[tid] = 1;
 
   Tau_global_incr_insideTAU_tid(tid);
   if (TauEnv_get_tracing()) {
-    Tau_sampling_handle_sampleTrace(pc, context);
+    Tau_sampling_handle_sampleTrace(pc, context, tid);
   }
 
   if (TauEnv_get_profiling()) {
-    Tau_sampling_handle_sampleProfile(pc, context);
+    Tau_sampling_handle_sampleProfile(pc, context, tid);
   }
   Tau_global_decr_insideTAU_tid(tid);
+
   // re-enable sampling 
   suspendSampling[tid] = 0;
 }
@@ -1312,7 +1307,7 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *context) {
  * PAPI Overflow handler
  ********************************************************************/
 void Tau_sampling_papi_overflow_handler(int EventSet, void *address, x_int64 overflow_vector, void *context) {
-  int tid = RtsLayer::myThread();
+  int tid = RtsLayer::localThreadId();
 //   fprintf(stderr,"[%d] Overflow at %p! bit=0x%llx \n", tid, address,overflow_vector);
 
   x_int64 value = (x_int64)address;
@@ -1598,6 +1593,7 @@ int Tau_sampling_finalize(int tid) {
    before MPI_Init().
  */
 extern "C" void Tau_sampling_init_if_necessary(void) {
+  if (!TauEnv_get_ebs_enabled()) return;
   static bool samplingThrInitialized[TAU_MAX_THREADS] = {false};
   int i = 0;
 
@@ -1635,7 +1631,7 @@ extern "C" void Tau_sampling_init_if_necessary(void) {
 	  // but do it sequentially.
 #pragma omp critical (creatingtopleveltimer)
       {
-	    // this will likely register the currently executing OpenMP thread.
+        // this will likely register the currently executing OpenMP thread.
         int myTid = RtsLayer::threadId();
         if (!samplingThrInitialized[myTid]) {
           samplingThrInitialized[myTid] = true;
@@ -1662,7 +1658,7 @@ extern "C" void Tau_sampling_init_if_necessary(void) {
 #endif
 
 // handle all other cases!
-  int tid = RtsLayer::myThread();
+  int tid = RtsLayer::localThreadId();
   Tau_global_incr_insideTAU_tid(tid);
   if (!samplingThrInitialized[tid]) {
     samplingThrInitialized[tid] = true;
@@ -1705,7 +1701,7 @@ extern "C" void Tau_sampling_finalize_if_necessary(void) {
     RtsLayer::UnLockEnv();
   }
 
-  //int myTid = RtsLayer::myThread();
+  //int myTid = RtsLayer::localThreadId();
 // Kevin: should we finalize all threads on this process? I think so.
   for (int i = 0; i < RtsLayer::getTotalThreads(); i++) {
     int myTid = i;

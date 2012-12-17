@@ -225,7 +225,9 @@ public class PEKeyedValues2D implements KeyedValues2D, Cloneable, Serializable {
         
         if (row >= 0) {
             final DefaultKeyedValues rowData = this.rows.get(row);
-            result = rowData.getValue(columnKey);
+            if(rowData.getKeys().contains(columnKey)){
+            	result = rowData.getValue(columnKey);
+            }
         }
         return result;
 
