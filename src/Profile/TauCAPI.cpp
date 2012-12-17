@@ -392,6 +392,7 @@ Tau_thread_flags[tid].Tau_global_insideTAU++;
     Tau_sampling_event_start(tid, p->address);
   }
 #endif
+  Tau_thread_flags[tid].Tau_global_insideTAU--;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1370,7 +1371,8 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
   }
 */
 #if defined(TAU_VAMPIRTRACE) || defined(TAU_EPILOG)
-	return // disabled.
+  Tau_thread_flags[tid].Tau_global_insideTAU--;
+  return; // disabled.
 #endif
   /* After creating the ".TAU application" timer, we start it. In the
      timer start code, it will call this function, so in that case,
@@ -1381,6 +1383,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
 
   if (!initialized) {
     if (initializing[tid]) {
+      Tau_thread_flags[tid].Tau_global_insideTAU--;
       return;
     }
     RtsLayer::LockEnv();
@@ -1414,6 +1417,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
 
   atexit(Tau_destructor_trigger);
   Tau_thread_flags[tid].Tau_global_insideTAU--;
+  return;
 }
 
 extern "C" void Tau_create_top_level_timer_if_necessary(void) {
