@@ -100,7 +100,7 @@ extern "C" {
   size_t TAUDECL TauEnv_get_memdbg_alloc_max_value();
   int TAUDECL TauEnv_get_memdbg_overhead();
   size_t TAUDECL TauEnv_get_memdbg_overhead_value();
-  unsigned int TAUDECL TauEnv_get_memdbg_alignment();
+  size_t TAUDECL TauEnv_get_memdbg_alignment();
   int TAUDECL TauEnv_get_memdbg_zero_malloc();
 
 #ifdef __cplusplus
