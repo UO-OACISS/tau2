@@ -120,26 +120,6 @@ static struct Tau_thread_ignore_flag Tau_ignore[TAU_MAX_THREADS] = {0};
 #endif
 #endif
 
-static int threadId = -1;
-#pragma omp threadprivate(threadId)
-static int threadCount = 0;
-
-int omp_thread() {
-#ifdef TAU_OPENMP
-#ifdef TAU_OPENMP_NESTED
-  if (threadId == -1) {
-#pragma omp critical(threadLock)
-    {
-      threadId = threadCount++;
-    }
-  }
-  return threadId;
-#else
- 	return omp_get_thread_num();
-#endif /* TAU_OPENMP_NESTED */
-#endif /* TAU_OPENMP */
-}
-
 // called at the beginning of each profiled routine
 #pragma save_all_regs
 extern "C" void ___rouent2(struct s1 *p) {
