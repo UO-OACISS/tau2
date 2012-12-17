@@ -262,11 +262,14 @@ unsigned long get_pc(void *p) {
   unsigned long pc;
 
 #ifdef sun
-  issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on solaris\n");
+  issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on Solaris\n");
   return 0;
 #elif __APPLE__
-  issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on apple\n");
-  return 0;
+  issueUnavailableWarningIfNecessary("Warning, TAU Sampling works on Apple, but symbol lookup using BFD does not.\n");
+  ucontext_t *uct = (ucontext_t *)p;
+  //printf("%p\n", uct->uc_mcontext->__ss.__rip);
+  pc = uct->uc_mcontext->__ss.__rip;
+  //return 0;
 #elif _AIX
   issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on AIX\n");
   return 0;
