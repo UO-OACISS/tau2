@@ -132,6 +132,8 @@ extern "C" x_uint64 TauUserEvent_GetEventId(TauUserEvent *evt) {
 
 TauUserEvent::TauUserEvent(const char * EName, bool increasing) {
   DEBUGPROFMSG("Inside ctor of TauUserEvent EName = "<< EName << endl;);
+  // because we are locking the DB, we should increment the insideTAU counter
+  Tau_global_incr_insideTAU();
 
   //EventName 	= EName;
 #ifdef TAU_PGI
@@ -157,6 +159,7 @@ TauUserEvent::TauUserEvent(const char * EName, bool increasing) {
 
   AddEventToDB();
   // Register this event in the main event database 
+  Tau_global_decr_insideTAU();
 }
 
 // Copy Constructor 
