@@ -165,8 +165,62 @@ double TauGetMaxRSS(void) {
 #  endif
 
 #endif /* TAU_HASMALLINFO */
-
 }
+
+//////////////////////////////////////////////////////////////////////
+// The amount of memory available for use (in MB)
+//////////////////////////////////////////////////////////////////////
+int TauGetFreeMemory(void)
+{
+
+  /* Catamount has a heap_info call that returns the available memory headroom */
+#if defined(TAU_CATAMOUNT)
+  size_t fragments;
+  unsigned long total_free, largest_free, total_used;
+  if (heap_info(&fragments, &total_free, &largest_free, &total_used) == 0)
+  {  /* return free memory in MB */
+    return  (int) (total_free/(1024*1024));
+  }
+  return 0; /* if it didn't work */
+#elif defined(TAU_BGP)
+  uint32_t available_heap;
+  Kernel_GetMemorySize( KERNEL_MEMSIZE_ESTHEAPAVAIL, &available_heap );
+  return available_heap / (1024 * 1024);
+#else
+#define TAU_BLOCK_COUNT 1024
+
+  char* blocks[TAU_BLOCK_COUNT];
+  char* ptr;
+  int i,j;
+  int freemem = 0;
+  int factor = 1;
+
+  i = 0; /* initialize it */
+  while (1)
+  {
+    ptr = (char *) malloc(factor*1024*1024); /* 1MB chunk */
+    if (ptr && i < TAU_BLOCK_COUNT)
+    { /* so we don't go over the size of the blocks */
+      blocks[i] = ptr;
+      i++; /* increment the no. of elements in the blocks array */
+      freemem += factor; /* assign the MB allocated */
+      factor *= 2;  /* try with twice as much the next time */
+    }
+    else
+    {
+      if (factor == 1) break; /* out of the loop */
+      factor = 1; /* try with a smaller chunk size */
+    }
+  }
+
+  for (j=0; j < i; j++)
+    free(blocks[j]);
+
+  return freemem;
+
+#endif /* TAU_CATAMOUNT */
+}
+
 
 //////////////////////////////////////////////////////////////////////
 // Set interrupt interval

@@ -2502,18 +2502,6 @@ case $machine in
          cxx_compiler=g++
      fi
 
-     # To fix the  make install  clash with INSTALL file in file systems 
-     # that are case insensitive. Move INSTALL file to INSTALL.txt 
-     if [ -f INSTALL ]
-       then
-	mv INSTALL INSTALL.txt
-     fi
-
-     # change it back for Git. Stupid Git.
-     if [ $default = true ]; then
-       mv INSTALL.txt INSTALL
-     fi
-
      if [ $c_compiler = default ]
        then
          c_compiler=gcc             
@@ -2525,13 +2513,6 @@ case $machine in
      if [ $cxx_compiler = default ]
        then
          cxx_compiler=g++
-     fi
-
-     # To fix the  make install  clash with INSTALL file in file systems 
-     # that are case insensitive. Move INSTALL file to INSTALL.txt 
-     if [ -f INSTALL ]
-       then
-	mv INSTALL INSTALL.txt
      fi
 
      if [ $c_compiler = default ]
@@ -3081,14 +3062,6 @@ if [ $machine = apple ] ; then
       fixmakeargs="$fixmakeargs IBMXLFAPPLE"
       extradir=`which xlf90 | sed s/xlf90/../`
       fortran_compiler=yes
-  fi
-  # xlc++ doesn't like include/Memory. Move this directory
-  if [ -d include/Memory -a ! -d include/MemoryWrapper ] ; then
-    mv include/Memory include/MemoryWrapper	
-  else
-    if [ -d include/Memory -a -d include/MemoryWrapper ] ; then 
-      /bin/rm -rf include/Memory
-    fi 
   fi
 fi
 
@@ -6944,16 +6917,16 @@ int main()
 }
 EOF
 
-		$c_compiler $openmp_flag $orig_useropt omp_nested_test.c -o omp_nested_test >& /dev/null
-		./omp_nested_test >& /dev/null
+		$c_compiler $openmp_flag $orig_useropt omp_nested_test.c -o omp_nested_test > /dev/null 2>&1
+		./omp_nested_test > /dev/null 2>&1
 		result=$?
 		rm -f ./omp_nested_test ./omp_nested_test.c
 		if [ $result = "0" ]; then
 			echo "yes."
     	fixmakeargs="$fixmakeargs TAU_OPENMP_NESTED"
 		else
-			echo "no"
-			echo "OpenMP nested regions is not supported by this compiler."
+			echo "no."
+			echo "OpenMP nested regions are not supported by this compiler."
 		fi
     fixmakeargs="$fixmakeargs OPENMP"
     tauoptions="${tauoptions}-openmp"
@@ -6976,6 +6949,9 @@ if [ $opari = yes ] ; then
           fi
           if [ "x$fortran_compiler" = "xpgi" ] ; then
              oparicomp="$fortran_compiler"
+          fi
+          if [ "x$fortran_compiler" = "xgfortran" ] ; then
+             oparicomp="gcc"
           fi
     fi 
     if [ $oparicomp = no ] ; then
@@ -7515,7 +7491,6 @@ else
     if [ ! -d ${tauprefix} ] ; then
 	echo "making directory $tauprefix "
 	mkdir -p ${tauprefix}
-      # Copy INSTALL README LICENSE files over there 
 	cp README LICENSE CREDITS ${tauprefix}
     fi
     if [ ! -d ${tauprefix}/${architecture} ] ; then

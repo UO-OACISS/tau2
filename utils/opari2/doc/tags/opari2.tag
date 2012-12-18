@@ -20,7 +20,7 @@
   </compound>
   <compound kind="file">
     <name>pomp2_lib.h</name>
-    <path>/home/roessel/silc/opari2/src/tags/REL-1.0.6/include/opari2/</path>
+    <path>/home/roessel/silc/opari2/src/tags/REL-1.0.7-rc1/include/opari2/</path>
     <filename>pomp2__lib_8h</filename>
     <member kind="typedef">
       <type>void *</type>
@@ -109,7 +109,7 @@
   </compound>
   <compound kind="file">
     <name>pomp2_region_info.h</name>
-    <path>/home/roessel/silc/opari2/src/tags/REL-1.0.6/src/pomp-lib-dummy/</path>
+    <path>/home/roessel/silc/opari2/src/tags/REL-1.0.7-rc1/src/pomp-lib-dummy/</path>
     <filename>pomp2__region__info_8h</filename>
     <class kind="struct">POMP2_Region_info</class>
     <member kind="enumeration">

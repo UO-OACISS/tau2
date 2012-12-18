@@ -258,7 +258,18 @@ process_c_or_cxx( istream&    is,
              * preprocessor directive continuation
              */
             preStmt.push_back( line );
-            if ( line[ line.size() - 1 ] != '\\' )
+            /* check for multiline comments in preprocessor directives */
+            if ( !inComment && line.find( "/*" ) != string::npos &&
+                 !( line.find( "*/" ) != string::npos && line.find( "/*" ) < line.find( "*/" ) ) )
+            {
+                inComment = true;
+            }
+            else if ( inComment && line.find( "*/" ) != string::npos )
+            {
+                inComment = false;
+            }
+
+            if ( line[ line.size() - 1 ] != '\\' && !inComment )
             {
                 preContLine = false;
                 if ( process_preStmt( preStmt, os, infile, lineno - preStmt.size() + 1,

@@ -49,9 +49,7 @@ opari2_print_help( char** argv )
               << "Usage: opari2-config [OPTION] ... <command>\n\n"
               << "with following commands:\n"
               << "   --nm                    Prints the nm command.\n"
-              << "   --awk-cmd               Prints the awk command.\n"
-              << "   --awk-script            Prints the awk script.\n"
-              << "   --egrep                 Prints the egrep command.\n"
+              << "   --region-initialization Prints the script used to create the pomp2_init_regions.c file.\n"
               << "   --create-pomp2-regions <object files> Prints the whole command necessary\n"
               << "                           for creating the initialization file.\n"
               << "   --cflags                Prints compiler options to include installed headers.\n"
@@ -99,6 +97,10 @@ main( int    argc,
             action = ACTION_AWK;
         }
         else if ( strcmp( argv[ i ], "--awk-script" ) == 0 )
+        {
+            action = ACTION_SCRIPT;
+        }
+        else if ( strcmp( argv[ i ], "--region-initialization" ) == 0 )
         {
             action = ACTION_SCRIPT;
         }
@@ -213,9 +215,7 @@ main( int    argc,
             {
                 std::cout << obj_files[ i ] << " ";
             }
-            std::cout << " | " << app.egrep << " -i POMP2_Init_reg | "
-                      << app.egrep << " \" [TD] \" | "
-                      << app.awk << " -f " << app.script;
+            std::cout << " | "  << app.script;
             break;
 
         case ACTION_VERSION:

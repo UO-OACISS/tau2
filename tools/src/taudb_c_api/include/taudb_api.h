@@ -151,7 +151,7 @@ extern void taudb_add_primary_metadata_to_trial(TAUDB_TRIAL* trial, TAUDB_PRIMAR
 extern void taudb_add_counter_to_trial(TAUDB_TRIAL* trial, TAUDB_COUNTER* counter);
 extern void taudb_add_counter_value_to_trial(TAUDB_TRIAL* trial, TAUDB_COUNTER_VALUE* counter_value);
 extern void taudb_add_timer_to_trial(TAUDB_TRIAL* trial, TAUDB_TIMER* timer);
-extern void taudb_add_timer_parameter_to_trial(TAUDB_TRIAL* trial, TAUDB_TIMER_PARAMETER* timer_parameter);
+extern void taudb_add_timer_parameter_to_timer(TAUDB_TIMER* timer, TAUDB_TIMER_PARAMETER* timer_parameter);
 extern void taudb_add_timer_group_to_trial(TAUDB_TRIAL* trial, TAUDB_TIMER_GROUP* timer_group);
 extern void taudb_add_timer_to_timer_group(TAUDB_TIMER_GROUP* timer_group, TAUDB_TIMER* timer);
 extern void taudb_add_timer_callpath_to_trial(TAUDB_TRIAL* trial, TAUDB_TIMER_CALLPATH* timer_callpath);
