@@ -554,7 +554,9 @@ size_t Tau_page_size(void)
 extern "C"
 void Tau_detect_memory_leaks(void)
 {
-  TauAllocation::DetectLeaks();
+  if (TauEnv_get_track_memory_leaks()) {
+    TauAllocation::DetectLeaks();
+  }
 }
 
 

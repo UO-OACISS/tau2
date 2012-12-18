@@ -848,66 +848,6 @@ void TauEnv_initialize()
       env_track_memory_headroom = 0;
     }
 
-    tmp = getconf("TAU_TRACK_IO_PARAMS");
-    if (parse_bool(tmp, env_track_memory_headroom)) {
-      TAU_VERBOSE("TAU: POSIX I/O wrapper parameter tracking enabled\n");
-      TAU_METADATA("TAU_TRACK_IO_PARAMS", "on");
-      env_track_io_params = 1;
-      env_extras = 1;
-    } else {
-      TAU_METADATA("TAU_TRACK_IO_PARAMS", "off");
-      env_track_io_params = 0;
-    }
-
-    tmp = getconf("TAU_TRACK_SIGNALS");
-    if (parse_bool(tmp, env_track_signals)) {
-      TAU_VERBOSE("TAU: Tracking SIGNALS enabled\n");
-      TAU_METADATA("TAU_TRACK_SIGNALS", "on");
-      env_track_signals = 1;
-      env_extras = 1;
-      tmp = getconf("TAU_SIGNALS_GDB");
-      if (parse_bool(tmp, env_signals_gdb)) {
-        TAU_VERBOSE("TAU: SIGNALS GDB output enabled\n");
-        TAU_METADATA("TAU_SIGNALS_GDB", "on");
-        env_signals_gdb = 1;
-      } else {
-        TAU_METADATA("TAU_SIGNALS_GDB", "off");
-        env_signals_gdb = 0;
-      }
-    } else {
-      TAU_METADATA("TAU_TRACK_SIGNALS", "off");
-      TAU_METADATA("TAU_SIGNALS_GDB", "off");
-      env_track_signals = 0;
-    }
-
-    tmp = getconf("TAU_IBM_BG_HWP_COUNTERS");
-    if (parse_bool(tmp, env_ibm_bg_hwp_counters)) {
-      TAU_VERBOSE("TAU: IBM UPC HWP counter data collection enabled\n");
-      TAU_METADATA("TAU_IBM_BG_HWP_COUNTERS", "on");
-      env_ibm_bg_hwp_counters = 1;
-    } else {
-      TAU_METADATA("TAU_IBM_BG_HWP_COUNTERS", "off");
-      env_ibm_bg_hwp_counters = 0;
-    }
-
-
-
-    /*** Options that can be used with Scalasca and VampirTrace need to go above this line ***/
-#ifdef TAU_EPILOG
-    TAU_VERBOSE("TAU: Epilog/Scalasca active! (TAU measurement disabled)\n");
-    return;
-#endif
-
-#ifdef TAU_VAMPIRTRACE
-    TAU_VERBOSE("[%d] TAU: VampirTrace active! (TAU measurement disabled)\n", getpid());
-    return;
-#endif
-
-#ifdef TAU_SCOREP
-    TAU_VERBOSE("[%d] TAU: SCOREP active! (TAU measurement disabled)\n", getpid());
-    return;
-#endif
-
     tmp = getconf("TAU_TRACK_MEMORY_LEAKS");
     if (parse_bool(tmp, env_track_memory_leaks)) {
       TAU_VERBOSE("TAU: Memory tracking enabled\n");
@@ -956,6 +896,8 @@ void TauEnv_initialize()
       size_t page_size = Tau_page_size();
       sprintf(tmpstr, "%ld", page_size);
       TAU_METADATA("Virtual Memory Page Size", tmpstr);
+
+      env_track_signals = 1;
 
       tmp = getconf("TAU_MEMDBG_PROTECT_GAP");
       env_memdbg_protect_gap = parse_bool(tmp, env_memdbg_protect_gap);
@@ -1021,6 +963,66 @@ void TauEnv_initialize()
       }
 
     } // if (env_memdbg)
+
+    tmp = getconf("TAU_TRACK_IO_PARAMS");
+    if (parse_bool(tmp, env_track_memory_headroom)) {
+      TAU_VERBOSE("TAU: POSIX I/O wrapper parameter tracking enabled\n");
+      TAU_METADATA("TAU_TRACK_IO_PARAMS", "on");
+      env_track_io_params = 1;
+      env_extras = 1;
+    } else {
+      TAU_METADATA("TAU_TRACK_IO_PARAMS", "off");
+      env_track_io_params = 0;
+    }
+
+    tmp = getconf("TAU_TRACK_SIGNALS");
+    if (parse_bool(tmp, env_track_signals)) {
+      TAU_VERBOSE("TAU: Tracking SIGNALS enabled\n");
+      TAU_METADATA("TAU_TRACK_SIGNALS", "on");
+      env_track_signals = 1;
+      env_extras = 1;
+      tmp = getconf("TAU_SIGNALS_GDB");
+      if (parse_bool(tmp, env_signals_gdb)) {
+        TAU_VERBOSE("TAU: SIGNALS GDB output enabled\n");
+        TAU_METADATA("TAU_SIGNALS_GDB", "on");
+        env_signals_gdb = 1;
+      } else {
+        TAU_METADATA("TAU_SIGNALS_GDB", "off");
+        env_signals_gdb = 0;
+      }
+    } else {
+      TAU_METADATA("TAU_TRACK_SIGNALS", "off");
+      TAU_METADATA("TAU_SIGNALS_GDB", "off");
+      env_track_signals = 0;
+    }
+
+    tmp = getconf("TAU_IBM_BG_HWP_COUNTERS");
+    if (parse_bool(tmp, env_ibm_bg_hwp_counters)) {
+      TAU_VERBOSE("TAU: IBM UPC HWP counter data collection enabled\n");
+      TAU_METADATA("TAU_IBM_BG_HWP_COUNTERS", "on");
+      env_ibm_bg_hwp_counters = 1;
+    } else {
+      TAU_METADATA("TAU_IBM_BG_HWP_COUNTERS", "off");
+      env_ibm_bg_hwp_counters = 0;
+    }
+
+
+
+    /*** Options that can be used with Scalasca and VampirTrace need to go above this line ***/
+#ifdef TAU_EPILOG
+    TAU_VERBOSE("TAU: Epilog/Scalasca active! (TAU measurement disabled)\n");
+    return;
+#endif
+
+#ifdef TAU_VAMPIRTRACE
+    TAU_VERBOSE("[%d] TAU: VampirTrace active! (TAU measurement disabled)\n", getpid());
+    return;
+#endif
+
+#ifdef TAU_SCOREP
+    TAU_VERBOSE("[%d] TAU: SCOREP active! (TAU measurement disabled)\n", getpid());
+    return;
+#endif
 
     if ((env_profiledir = getconf("PROFILEDIR")) == NULL) {
       env_profiledir = ".";   /* current directory */
