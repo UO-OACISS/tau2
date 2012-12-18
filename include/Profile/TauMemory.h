@@ -38,12 +38,12 @@ extern "C" {
 
 size_t Tau_page_size(void);
 
-void TauDetectMemoryLeaks(void);
+void Tau_detect_memory_leaks(void);
 
-void Tau_track_memory_allocation(char const * file, int line, size_t size, void* ptr);
-void Tau_track_memory_deallocation(char const * file, int line, void* ptr);
+void Tau_track_memory_allocation(void * ptr, size_t size, char const * filename, int lineno);
+void Tau_track_memory_deallocation(void * ptr, char const * filename, int lineno);
 
-void * Tau_new(char const * file, int line, size_t size, void* ptr);
+void * Tau_new(void * ptr, size_t size, char const * filename, int lineno);
 
 void * Tau_malloc(size_t size, char const * filename, int lineno);
 void * Tau_calloc(size_t elemCount, size_t elemSize, char const * filename, int lineno);
