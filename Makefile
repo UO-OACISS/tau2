@@ -111,6 +111,7 @@ CONFIGQUERY=`utils/ConfigQuery -arch`
 
 #SUNX86_64#CONFIGQUERY=`/bin/bash utils/ConfigQuery -arch` #ENDIF#
 
+.PHONY: all exports tests install clean cleandist cleaninstall cleangood
 
 all:
 	@echo "At the installation root, use \"make install\" "

@@ -23,6 +23,12 @@
 
 #include <tau_internal.h>
 
+#define TAU_FORMAT_PROFILE 1
+#define TAU_FORMAT_SNAPSHOT 2
+#define TAU_FORMAT_MERGED 3
+#define TAU_FORMAT_NONE 4
+#define TAU_MAX_RECORDS 64*1024
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -79,14 +85,24 @@ extern "C" {
   const char* TAUDECL TauEnv_get_cupti_api();
   int TAUDECL TauEnv_get_mic_offload();
 
-
-#define TAU_FORMAT_PROFILE 1
-#define TAU_FORMAT_SNAPSHOT 2
-#define TAU_FORMAT_MERGED 3
-#define TAU_FORMAT_NONE 4
-#define TAU_MAX_RECORDS 64*1024
   int  TAUDECL TauEnv_get_profile_format();
   
+  int TAUDECL TauEnv_get_memdbg();
+  int TAUDECL TauEnv_get_memdbg_protect_above();
+  int TAUDECL TauEnv_get_memdbg_protect_below();
+  int TAUDECL TauEnv_get_memdbg_protect_free();
+  int TAUDECL TauEnv_get_memdbg_protect_gap();
+  int TAUDECL TauEnv_get_memdbg_fill_gap();
+  unsigned char TAUDECL TauEnv_get_memdbg_fill_gap_value();
+  int TAUDECL TauEnv_get_memdbg_alloc_min();
+  size_t TAUDECL TauEnv_get_memdbg_alloc_min_value();
+  int TAUDECL TauEnv_get_memdbg_alloc_max();
+  size_t TAUDECL TauEnv_get_memdbg_alloc_max_value();
+  int TAUDECL TauEnv_get_memdbg_overhead();
+  size_t TAUDECL TauEnv_get_memdbg_overhead_value();
+  unsigned int TAUDECL TauEnv_get_memdbg_alignment();
+  int TAUDECL TauEnv_get_memdbg_zero_malloc();
+
 #ifdef __cplusplus
 }
 #endif
