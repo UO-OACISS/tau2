@@ -1923,7 +1923,7 @@ void tau_alloc_(void ** ptr, int* line, int *size, char *name, int slen)
 #ifdef DEBUG_PROF
   printf("ALLOCATE ptr %p *ptr %p line %d size %d\n", ptr, *ptr, *line, *size);
 #endif /* DEBUG_PROF */
-  Tau_track_memory_allocation(localname, *line, *size, ptr);
+  Tau_track_memory_allocation(ptr, *size, localname, *line);
   free(tmp);
   free(tmp2);
 }
@@ -1981,7 +1981,7 @@ void tau_dealloc_(void ** ptr, int* line, char *name, int slen)
 #ifdef DEBUG_PROF
   printf("DEALLOCATE ptr %p *ptr %p line %ld\n", ptr,  *ptr, *line);
 #endif /* DEBUG_PROF */
-  Tau_track_memory_deallocation(localname, *line, ptr);
+  Tau_track_memory_deallocation(ptr, localname, *line);
   free(tmp);
   free(tmp2);
 }

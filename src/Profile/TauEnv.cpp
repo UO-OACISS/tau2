@@ -1002,7 +1002,11 @@ void TauEnv_initialize()
       if (tmp) {
         env_memdbg_alignment = (size_t)atoi(tmp);
       }
-      TAU_VERBOSE("TAU: Memory debugging alignment: %ld\n", env_memdbg_alignment);
+      if ((int)env_memdbg_alignment != ((int)env_memdbg_alignment & -(int)env_memdbg_alignment)) {
+        TAU_VERBOSE("TAU: ERROR - Memory debugging alignment is not a power of two: %ld\n", env_memdbg_alignment);
+      } else {
+        TAU_VERBOSE("TAU: Memory debugging alignment: %ld\n", env_memdbg_alignment);
+      }
       sprintf(tmpstr, "%ld", env_memdbg_alignment);
       TAU_METADATA("TAU_MEMDBG_ALIGNMENT", tmpstr);
 
