@@ -636,7 +636,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
     /* Should we detect memory leaks here? */
     if (TheSafeToDumpData() && !RtsLayer::isCtorDtor(ThisFunction->GetName())) {
       Tau_global_callWriteHooks();
-      TauDetectMemoryLeaks(); /* the last event should be before final exit */
+      Tau_detect_memory_leaks(); /* the last event should be before final exit */
     }
 
 /* On Crays with -iowrapper, rank 0 is spawned by the clone syscall. This

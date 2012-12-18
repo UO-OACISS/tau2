@@ -903,13 +903,17 @@ void Tau_sampling_finalizeProfile(int tid) {
     string *intermediateGlobalLeafString;
     string *intermediatePathLeafString;
 
-    // STEP 2a: Locate or create Leaf Entry
+    // STEP 2a: Locate or create Leaf Entry - the INTERMEDIATE node
     sprintf(intermediateGlobalLeafName, "[INTERMEDIATE] %s",
 	    Tau_sampling_internal_stripCallPath(candidate->tauContext->GetName()));
     intermediateGlobalLeafString = new string(intermediateGlobalLeafName);
     fi_it = name2FuncInfoMap[tid]->find(*intermediateGlobalLeafString);
     if (fi_it == name2FuncInfoMap[tid]->end()) {
-      string grname = string("TAU_SAMPLE | ") + string(candidate->tauContext->GetAllGroups());
+      char sampleGroup[] = "TAU_UNWIND | ";
+      if (strstr(intermediateGlobalLeafName, "UNWIND") == NULL) {
+        strcpy(sampleGroup, "");
+      }
+      string grname = string("TAU_INTERMEDIATE | ") + /*string(sampleGroup) + */ string(candidate->tauContext->GetAllGroups());
       // Create the FunctionInfo object for the leaf Intermediate object.
       RtsLayer::LockDB();
       intermediateGlobalLeaf = 
@@ -925,13 +929,18 @@ void Tau_sampling_finalizeProfile(int tid) {
 
     // Step 2b: Locate or create Full Path Entry. Requires name
     //   information about the Leaf Entry available.
+    //   This is the TIMER => INTERMEDIATE entry.
     sprintf(intermediatePathLeafName, "%s %s => %s",
 	    candidate->tauContext->GetName(),
 	    candidate->tauContext->GetType(), intermediateGlobalLeafName);
     intermediatePathLeafString = new string(intermediatePathLeafName);
     fi_it = name2FuncInfoMap[tid]->find(*intermediatePathLeafString);
     if (fi_it == name2FuncInfoMap[tid]->end()) {
-      string grname = string("TAU_SAMPLE  | ") + string(candidate->tauContext->GetAllGroups());
+      char sampleGroup[] = "TAU_UNWIND | ";
+      if (strstr(intermediatePathLeafName, "UNWIND") == NULL) {
+        strcpy(sampleGroup, "TAU_SAMPLE | ");
+      }
+      string grname = string("TAU_INTERMEDIATE | TAU_CALLPATH ") + /*string(sampleGroup) + */ string(candidate->tauContext->GetAllGroups());
       // Create the FunctionInfo object for the leaf Intermediate object.
       RtsLayer::LockDB();
       intermediatePathLeaf = 
@@ -971,7 +980,11 @@ void Tau_sampling_finalizeProfile(int tid) {
       
       fi_it = name2FuncInfoMap[tid]->find(sampleGlobalLeafString);
       if (fi_it == name2FuncInfoMap[tid]->end()) {
-	string grname = string("TAU_SAMPLE | ") + string(candidate->tauContext->GetAllGroups());
+        char sampleGroup[] = "TAU_UNWIND | ";
+        if (strstr((const char*)sampleGlobalLeafString.c_str(), "UNWIND") == NULL) {
+          strcpy(sampleGroup, "TAU_SAMPLE | ");
+        }
+	string grname = string(sampleGroup) + string(candidate->tauContext->GetAllGroups());
 	RtsLayer::LockDB();
 	sampleGlobalLeaf = 
 	  new FunctionInfo((const char*)sampleGlobalLeafString.c_str(),
@@ -996,7 +1009,11 @@ void Tau_sampling_finalizeProfile(int tid) {
       string *callSiteKeyName = new string(call_site_key);
       fi_it = name2FuncInfoMap[tid]->find(*callSiteKeyName);
       if (fi_it == name2FuncInfoMap[tid]->end()) {
-	string grname = string("TAU_SAMPLE | ") + string(candidate->tauContext->GetAllGroups()); 
+        char sampleGroup[] = "TAU_UNWIND | ";
+        if (strstr((const char*)callSiteKeyName->c_str(), "UNWIND") == NULL) {
+          strcpy(sampleGroup, "TAU_SAMPLE | ");
+        }
+	string grname = string("TAU_CALLPATH | ") + /*string(sampleGroup) + */ string(candidate->tauContext->GetAllGroups()); 
 	RtsLayer::LockDB();
 	samplePathLeaf =
 	  new FunctionInfo((const char*)callSiteKeyName->c_str(), "",

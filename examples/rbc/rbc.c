@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #define DATA_COUNT 20
-#define OVERRUN    5
+#define OVERRUN    1
 
 int main(int argc, char ** argv)
 {
@@ -17,6 +17,8 @@ int main(int argc, char ** argv)
     tmp = data[i];
     printf("data[%d] = %d\n", i, tmp);
   }
+
+  free((void*)data);
 
   return tmp;
 }
