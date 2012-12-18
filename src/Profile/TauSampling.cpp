@@ -1593,9 +1593,13 @@ int Tau_sampling_finalize(int tid) {
    before MPI_Init().
  */
 extern "C" void Tau_sampling_init_if_necessary(void) {
+  // sanity check - does the user want sampling at all?
   if (!TauEnv_get_ebs_enabled()) return;
   static bool samplingThrInitialized[TAU_MAX_THREADS] = {false};
   int i = 0;
+  int tid = RtsLayer::localThreadId();
+  // have we initialized already?
+  if (samplingThrInitialized[tid]) return;
 
 /* Greetings, intrepid thread developer. We had a problem with OpenMP applications
  * which did not call instrumented functions or regions from an OpenMP region. In
@@ -1658,7 +1662,6 @@ extern "C" void Tau_sampling_init_if_necessary(void) {
 #endif
 
 // handle all other cases!
-  int tid = RtsLayer::localThreadId();
   Tau_global_incr_insideTAU_tid(tid);
   if (!samplingThrInitialized[tid]) {
     samplingThrInitialized[tid] = true;
@@ -1674,6 +1677,7 @@ extern "C" void Tau_sampling_init_if_necessary(void) {
 extern "C" void Tau_sampling_finalize_if_necessary(void) {
   static bool finalized = false;
   static bool thrFinalized[TAU_MAX_THREADS];
+  Tau_global_incr_insideTAU();
 
 /* Kevin: before wrapping things up, stop listening to signals. */
   sigset_t x;
@@ -1711,6 +1715,7 @@ extern "C" void Tau_sampling_finalize_if_necessary(void) {
       thrFinalized[myTid] = true;
     }
   }
+  Tau_global_decr_insideTAU();
 }
 
 #endif //TAU_WINDOWS
