@@ -19,7 +19,7 @@ COBJ = $(CSRC:.c=.o)
 CC = tau_cc.sh
 LD = tau_cc.sh
 
-CFLAGS  = 
+CFLAGS  = -optMemDbg
 LDFLAGS =
 
 MAKEFILE      	= Makefile
