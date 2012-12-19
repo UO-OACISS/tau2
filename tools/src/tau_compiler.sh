@@ -24,6 +24,7 @@ declare -i needToCleanPdbInstFiles=$TRUE
 declare -i pdbFileSpecified=$FALSE
 declare -i optResetUsed=$FALSE
 declare -i optDetectMemoryLeaks=$FALSE
+declare -i optMemDbg=$FALSE
 declare -i optFujitsu=$FALSE
 
 declare -i optPdtF95ResetSpecified=$FALSE
@@ -83,6 +84,7 @@ printUsage () {
     echo -e "Usage: tau_compiler.sh"
     echo -e "  -optVerbose\t\t\tTurn on verbose debugging message"
     echo -e "  -optDetectMemoryLeaks\t\tTrack mallocs/frees using TAU's memory wrapper"
+    echo -e "  -optMemDbg\t\tEnable TAU's runtime memory debugger"
     echo -e "  -optPdtDir=\"\"\t\t\tPDT architecture directory. Typically \$(PDTDIR)/\$(PDTARCHDIR)"
     echo -e "  -optPdtF95Opts=\"\"\t\tOptions for Fortran parser in PDT (f95parse)"
     echo -e "  -optPdtF95Reset=\"\"\t\tReset options to the Fortran parser to the given list"
@@ -567,7 +569,14 @@ for arg in "$@" ; do
 			optDetectMemoryLeaks=$TRUE
 			optIncludes="$optIncludes $optIncludeMemory"
 			optTau="-memory $optTau"
-			echoIfDebug "\Including Memory directory for malloc/free replacement and calling tau_instrumentor with -memory"
+			echoIfDebug "\Including TauMemory directory for malloc/free replacement and calling tau_instrumentor with -memory"
+			echoIfDebug "\tFrom optIncludes: $optIncludes"
+			;;
+		    -optMemDbg)
+			optMemDbg=$TRUE
+			optIncludes="$optIncludes $optIncludeMemory"
+			optTau="-memory $optTau"
+			echoIfDebug "\Including TauMemory directory for malloc/free replacement and calling tau_instrumentor with -memory"
 			echoIfDebug "\tFrom optIncludes: $optIncludes"
 			;;
 		    -optCompile*)
