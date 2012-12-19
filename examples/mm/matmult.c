@@ -71,7 +71,7 @@ void compute_nested(double **a, double **b, double **c, int rows_a, int cols_a, 
 // cols_a and rows_b are the same value
 void compute(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
   int i,j,k;
-#pragma omp parallel private(i) shared(a,b,c)
+#pragma omp parallel private(i,j,k) shared(a,b,c)
   {
     /*** Do matrix multiply sharing iterations on outer loop ***/
     /*** Display who does which iterations for demonstration purposes ***/
