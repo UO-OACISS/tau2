@@ -23,7 +23,7 @@
 #define _TAU_MEMORY_H_
 
 
-#if defined(__darwin__) || defined(__APPLE__)
+#if defined(__darwin__) || defined(__APPLE__) || defined(TAU_XLC)
 #undef HAVE_MEMALIGN
 #undef HAVE_PVALLOC
 #else
@@ -36,12 +36,14 @@
 extern "C" {
 #endif /* __cplusplus */
 
-void TauDetectMemoryLeaks(void);
+size_t Tau_page_size(void);
 
-void Tau_track_memory_allocation(char const * file, int line, size_t size, void* ptr);
-void Tau_track_memory_deallocation(char const * file, int line, void* ptr);
+void Tau_detect_memory_leaks(void);
 
-void * Tau_new(char const * file, int line, size_t size, void* ptr);
+void Tau_track_memory_allocation(void * ptr, size_t size, char const * filename, int lineno);
+void Tau_track_memory_deallocation(void * ptr, char const * filename, int lineno);
+
+void * Tau_new(void * ptr, size_t size, char const * filename, int lineno);
 
 void * Tau_malloc(size_t size, char const * filename, int lineno);
 void * Tau_calloc(size_t elemCount, size_t elemSize, char const * filename, int lineno);
