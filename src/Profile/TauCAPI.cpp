@@ -219,19 +219,8 @@ extern "C" int Tau_global_decr_insideTAU() {
   Tau_stack_checkInit();
   int tid = Tau_get_tid();
   Tau_thread_flags[tid].Tau_global_insideTAU--;
-#ifdef DEBUG_LOCK_PROBLEMS
-  if (Tau_thread_flags[tid].Tau_global_insideTAU < 0) {
-    printf("ERROR! Thread %d,%d has decremented the insideTAU counter past 0!\n", RtsLayer::myNode(), tid);
-    void* callstack[128];
-    int i, frames = backtrace(callstack, 128);
-    char** strs = backtrace_symbols(callstack, frames);
-    for (i = 0; i < frames; ++i) {
-      printf("%s\n", strs[i]);
-    }
-    free(strs);
-    exit(999);
-  }
-#endif
+	TAU_ASSERT(Tau_thread_flags[tid].Tau_global_insideTAU < 0,
+		"Thread has decremented the insideTAU counter past 0");
   return Tau_thread_flags[tid].Tau_global_insideTAU;
 }
 
@@ -241,19 +230,8 @@ extern "C" int Tau_global_process_decr_insideTAU() {
   while (tid < TAU_MAX_THREADS)
   {
     Tau_thread_flags[tid].Tau_global_insideTAU--;
-#ifdef DEBUG_LOCK_PROBLEMS
-  if (Tau_thread_flags[tid].Tau_global_insideTAU < 0) {
-    printf("ERROR! Thread %d,%d has decremented the insideTAU counter past 0!\n", RtsLayer::myNode(), tid);
-    void* callstack[128];
-    int i, frames = backtrace(callstack, 128);
-    char** strs = backtrace_symbols(callstack, frames);
-    for (i = 0; i < frames; ++i) {
-      printf("%s\n", strs[i]);
-    }
-    free(strs);
-    exit(999);
-  }
-#endif
+  	TAU_ASSERT(Tau_thread_flags[tid].Tau_global_insideTAU < 0,
+			"Thread has decremented the insideTAU counter past 0");
     tid++;
   }
   return -1;
@@ -268,19 +246,8 @@ extern "C" int Tau_global_incr_insideTAU_tid(int tid) {
 extern "C" int Tau_global_decr_insideTAU_tid(int tid) {
   Tau_stack_checkInit();
   Tau_thread_flags[tid].Tau_global_insideTAU--;
-#ifdef DEBUG_LOCK_PROBLEMS
-  if (Tau_thread_flags[tid].Tau_global_insideTAU < 0) {
-    printf("ERROR! Thread %d,%d has decremented the insideTAU counter past 0!\n", RtsLayer::myNode(), tid);
-    void* callstack[128];
-    int i, frames = backtrace(callstack, 128);
-    char** strs = backtrace_symbols(callstack, frames);
-    for (i = 0; i < frames; ++i) {
-      printf("%s\n", strs[i]);
-    }
-    free(strs);
-    exit(999);
-  }
-#endif
+  TAU_ASSERT(Tau_thread_flags[tid].Tau_global_insideTAU < 0,
+		"Thread has decremented the insideTAU counter past 0");
   return Tau_thread_flags[tid].Tau_global_insideTAU;
 }
 

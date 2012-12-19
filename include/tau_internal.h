@@ -80,4 +80,21 @@
 
 #endif /* __cplusplus */
 
+
+#ifdef DEBUG_ASSERT
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+void Tau_assert_raise_error(const char* msg);
+#ifdef __cplusplus
+}
+#endif // __cplusplus
+
+#define TAU_ASSERT(test, msg) if (! test) Tau_assert_raise_error(msg)
+
+#else /* DEBUG_ASSERT */
+#define TAU_ASSERT(test, msg)
+#endif /* DEBUG_ASSERT */
+ 
+
 #endif /* _TAU_INTERNAL_H_ */

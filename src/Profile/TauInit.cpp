@@ -512,3 +512,19 @@ extern "C" int Tau_init_check_dl_initialized() {
 	return dl_initialized;
 }
 
+extern "C" void Tau_assert_raise_error(const char* msg)
+{
+  int nid = RtsLayer::myNode();
+  int tid = RtsLayer::myThread();
+  fprintf(stderr, "TAU_ASSERT [%d:%d]: %s.\n", nid, tid, msg);
+#ifdef TAU_EXECINFO
+  void* callstack[128];
+  int i, frames = backtrace(callstack, 128);
+  char** strs = backtrace_symbols(callstack, frames);
+  for (i = 0; i < frames; ++i) {
+    fprintf(stderr, "           [%d:%d]: %s\n", nid, tid, strs[i]);
+  }
+  free(strs);
+#endif //TAU_EXECINFO
+  exit(999);
+}
