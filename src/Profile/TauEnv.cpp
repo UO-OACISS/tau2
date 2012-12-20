@@ -137,6 +137,7 @@ using namespace std;
 #endif /* TAU_MPI */
 
 #define TAU_CUPTI_API_DEFAULT "runtime"
+#define TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT ""
 
 #define TAU_MIC_OFFLOAD_DEFAULT 0
 
@@ -470,6 +471,7 @@ static const char *env_profiledir = NULL;
 static const char *env_tracedir = NULL;
 static const char *env_metrics = NULL;
 static const char *env_cupti_api = NULL;
+static const char *env_track_cuda_instructions = NULL;
 
 static int env_mic_offload = 0;
 
@@ -715,6 +717,10 @@ int TauEnv_get_child_forkdirs(){
 
 const char* TauEnv_get_cupti_api(){
   return env_cupti_api;
+}
+
+const char* TauEnv_get_cuda_instructions(){
+  return env_track_cuda_instructions;
 }
 
 int TauEnv_get_mic_offload(){
@@ -1474,6 +1480,16 @@ void TauEnv_initialize()
     else {
       TAU_VERBOSE("TAU: CUPTI API tracking: %s\n", env_cupti_api);
       TAU_METADATA("TAU_CUPTI_API", env_cupti_api);
+		}
+    env_track_cuda_instructions = getconf("TAU_TRACK_CUDA_INSTRUCTIONS");
+    if (env_track_cuda_instructions == NULL || 0 == strcasecmp(env_track_cuda_instructions, "")) {
+      env_track_cuda_instructions = TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT;
+      TAU_VERBOSE("TAU: tracking CUDA instructions: %s\n", env_track_cuda_instructions);
+      TAU_METADATA("TAU_TRACK_CUDA_INSTRUCTIONS", env_track_cuda_instructions);
+    }
+    else {
+      TAU_VERBOSE("TAU: tracking CUDA instructions: %s\n", env_track_cuda_instructions);
+      TAU_METADATA("TAU_TRACK_CUDA_INSTRUCTIONS", env_track_cuda_instructions);
 		}
 		tmp = getconf("TAU_MIC_OFFLOAD");
     if (parse_bool(tmp, TAU_MIC_OFFLOAD_DEFAULT)) {

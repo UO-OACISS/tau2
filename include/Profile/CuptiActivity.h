@@ -119,8 +119,8 @@ eventMap_t eventMap;
 
 int gpu_occupancy_available(int deviceId);
 void record_gpu_occupancy(CUpti_ActivityKernel *k, const char *name, eventMap_t *m);
-int gpu_source_locations_available();
-void record_gpu_source_locations(CUpti_ActivityGlobalAccess *ga, CUpti_ActivityKernel *k, eventMap_t *m);
+
+void record_gpu_instruction_event(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceLocator *source);
 
 std::map<uint32_t, CUpti_ActivityDevice> deviceMap;
 //std::map<uint32_t, CUpti_ActivityGlobalAccess> globalAccessMap;
