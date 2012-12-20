@@ -209,7 +209,7 @@ extern "C" void Tau_metadata_task(const char *name, const char *value, int tid) 
 #ifdef TAU_DISABLE_METADATA
   return;
 #endif // TAU_DISABLE_METADATA
-  Tau_global_incr_insideTAU_tid(tid);
+  Tau_global_incr_insideTAU();
   // make the key
   Tau_metadata_key *key = new Tau_metadata_key();
   key->name = strdup(name);
@@ -220,7 +220,7 @@ extern "C" void Tau_metadata_task(const char *name, const char *value, int tid) 
   RtsLayer::LockEnv();
   Tau_metadata_getMetaData(tid)[*key] = tmv;
   RtsLayer::UnLockEnv();
-  Tau_global_decr_insideTAU_tid(tid);
+  Tau_global_decr_insideTAU();
   return;
 }
 
@@ -877,7 +877,7 @@ extern "C" void Tau_context_metadata(const char *name, const char *value) {
   return;
 #endif
   int tid = RtsLayer::myThread();
-  Tau_global_incr_insideTAU_tid(tid);
+  Tau_global_incr_insideTAU();
   Tau_metadata_key *key = new Tau_metadata_key();
   // get the current calling context
   RtsLayer::LockEnv();
@@ -899,7 +899,7 @@ extern "C" void Tau_context_metadata(const char *name, const char *value) {
   RtsLayer::LockEnv();
   Tau_metadata_getMetaData(tid)[*key] = tmv;
   RtsLayer::UnLockEnv();
-  Tau_global_decr_insideTAU_tid(tid);
+  Tau_global_decr_insideTAU();
 }
 
 extern "C" void Tau_structured_metadata(const Tau_metadata_object_t *object, bool context) {
@@ -907,7 +907,7 @@ extern "C" void Tau_structured_metadata(const Tau_metadata_object_t *object, boo
   return;
 #endif
   int tid = RtsLayer::myThread();
-  Tau_global_incr_insideTAU_tid(tid);
+  Tau_global_incr_insideTAU();
   Tau_metadata_key *key = new Tau_metadata_key();
   if (context) {
     RtsLayer::LockEnv();
@@ -931,7 +931,7 @@ extern "C" void Tau_structured_metadata(const Tau_metadata_object_t *object, boo
     Tau_metadata_getMetaData(tid)[*key] = tmv;
   }
   RtsLayer::UnLockEnv();
-  Tau_global_decr_insideTAU_tid(tid);
+  Tau_global_decr_insideTAU();
 }
 
 extern "C" void Tau_phase_metadata(const char *name, const char *value) {
@@ -939,7 +939,7 @@ extern "C" void Tau_phase_metadata(const char *name, const char *value) {
   return;
 #endif
   int tid = RtsLayer::myThread();
-  Tau_global_incr_insideTAU_tid(tid);
+  Tau_global_incr_insideTAU();
 #ifdef TAU_PROFILEPHASE
   // get the current calling context
   Profiler *current = TauInternal_CurrentProfiler(tid);
@@ -966,7 +966,7 @@ extern "C" void Tau_phase_metadata(const char *name, const char *value) {
 #else
   Tau_context_metadata(name, value);
 #endif
-  Tau_global_decr_insideTAU_tid(tid);
+  Tau_global_decr_insideTAU();
 }
 
 
