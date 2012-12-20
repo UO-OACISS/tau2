@@ -460,6 +460,7 @@ int RtsLayer::LockDB(void) {
 		"Thread is trying for another DB lock. but it is not in TAU");
 #ifdef DEBUG_LOCK_PROBLEMS
   if (lockDBCount[tid] > 0) {
+    int nid = RtsLayer::myNode();
     fprintf(stderr,"WARNING! Thread %d,%d has DB lock, trying for another DB lock\n", nid, tid);
     if(!TauEnv_get_ebs_enabled()) {
       void* callstack[128];
@@ -569,6 +570,7 @@ int RtsLayer::LockEnv(void) {
 /* This block of code is helpful in debugging deadlocks... see the top of this file */
 #ifdef DEBUG_LOCK_PROBLEMS
   if (lockEnvCount[tid] > 0) {
+    int nid = RtsLayer::myNode();
     fprintf(stderr,"WARNING! Thread %d,%d has Env lock, trying for another Env lock\n", nid, tid);
     if(!TauEnv_get_ebs_enabled()) {
       void* callstack[128];
