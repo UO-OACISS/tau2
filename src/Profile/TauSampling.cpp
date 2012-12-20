@@ -909,11 +909,7 @@ void Tau_sampling_finalizeProfile(int tid) {
     intermediateGlobalLeafString = new string(intermediateGlobalLeafName);
     fi_it = name2FuncInfoMap[tid]->find(*intermediateGlobalLeafString);
     if (fi_it == name2FuncInfoMap[tid]->end()) {
-      char sampleGroup[] = "TAU_UNWIND | ";
-      if (strstr(intermediateGlobalLeafName, "UNWIND") == NULL) {
-        strcpy(sampleGroup, "");
-      }
-      string grname = string("TAU_INTERMEDIATE | ") + /*string(sampleGroup) + */ string(candidate->tauContext->GetAllGroups());
+      string grname = string("TAU_INTERMEDIATE | ") + string(candidate->tauContext->GetAllGroups());
       // Create the FunctionInfo object for the leaf Intermediate object.
       RtsLayer::LockDB();
       intermediateGlobalLeaf = 
@@ -936,11 +932,7 @@ void Tau_sampling_finalizeProfile(int tid) {
     intermediatePathLeafString = new string(intermediatePathLeafName);
     fi_it = name2FuncInfoMap[tid]->find(*intermediatePathLeafString);
     if (fi_it == name2FuncInfoMap[tid]->end()) {
-      char sampleGroup[] = "TAU_UNWIND | ";
-      if (strstr(intermediatePathLeafName, "UNWIND") == NULL) {
-        strcpy(sampleGroup, "TAU_SAMPLE | ");
-      }
-      string grname = string("TAU_INTERMEDIATE | TAU_CALLPATH ") + /*string(sampleGroup) + */ string(candidate->tauContext->GetAllGroups());
+      string grname = string("TAU_INTERMEDIATE | TAU_CALLPATH | ") + string(candidate->tauContext->GetAllGroups());
       // Create the FunctionInfo object for the leaf Intermediate object.
       RtsLayer::LockDB();
       intermediatePathLeaf = 
@@ -1013,7 +1005,7 @@ void Tau_sampling_finalizeProfile(int tid) {
         if (strstr((const char*)callSiteKeyName->c_str(), "UNWIND") == NULL) {
           strcpy(sampleGroup, "TAU_SAMPLE | ");
         }
-	string grname = string("TAU_CALLPATH | ") + /*string(sampleGroup) + */ string(candidate->tauContext->GetAllGroups()); 
+	string grname = string("TAU_CALLPATH | ") + string(sampleGroup) + string(candidate->tauContext->GetAllGroups()); 
 	RtsLayer::LockDB();
 	samplePathLeaf =
 	  new FunctionInfo((const char*)callSiteKeyName->c_str(), "",

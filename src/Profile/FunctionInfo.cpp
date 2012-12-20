@@ -209,7 +209,9 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
       // Thread-safe, all (const char *) parameters. This check removes
       //   the need to create and allocate memory for EBS post-processed
       //   objects.
-      if (strstr(ProfileGroupName, "TAU_SAMPLE") == NULL) {
+      if ((strstr(ProfileGroupName, "TAU_SAMPLE") == NULL) &&
+          (strstr(ProfileGroupName, "TAU_INTERMEDIATE") == NULL) &&
+          (strstr(ProfileGroupName, "TAU_UNWIND") == NULL)) {
 	pathHistogram[i] = new TauPathHashTable<TauPathAccumulator>(i);
       }
     }
