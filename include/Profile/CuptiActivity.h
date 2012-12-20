@@ -114,10 +114,18 @@ bool registered_sync = false;
 bool cupti_api_runtime();
 bool cupti_api_driver();
 
+typedef std::map<TauContextUserEvent *, TAU_EVENT_DATATYPE> eventMap_t;
+eventMap_t eventMap; 
+
 int gpu_occupancy_available(int deviceId);
-void record_gpu_occupancy(CUpti_ActivityKernel *k, const char *name, GpuEventAttributes *m);
+void record_gpu_occupancy(CUpti_ActivityKernel *k, const char *name, eventMap_t *m);
+int gpu_source_locations_available();
+void record_gpu_source_locations(CUpti_ActivityGlobalAccess *ga, CUpti_ActivityKernel *k, eventMap_t *m);
 
 std::map<uint32_t, CUpti_ActivityDevice> deviceMap;
+//std::map<uint32_t, CUpti_ActivityGlobalAccess> globalAccessMap;
+std::map<uint32_t, CUpti_ActivityKernel> kernelMap;
+std::map<uint32_t, CUpti_ActivitySourceLocator> sourceLocatorMap;
 
 #define CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(name, id, info, kind, count) \
 	if ((id) == CUPTI_RUNTIME_TRACE_CBID_##name##_v3020) \
