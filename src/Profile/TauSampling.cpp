@@ -1140,7 +1140,7 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
 /* Various unwinders might have their own implementation */
 void Tau_sampling_event_start(int tid, void **addresses) {
 
-  Tau_global_incr_insideTAU_tid(tid);
+  Tau_global_incr_insideTAU();
 
   //TAU_VERBOSE("Tau_sampling_event_start: tid = %d address = %p\n", tid, addresses);
 
@@ -1191,7 +1191,7 @@ void Tau_sampling_event_start(int tid, void **addresses) {
     }
     
   }
-  Tau_global_decr_insideTAU_tid(tid);
+  Tau_global_decr_insideTAU();
 }
 
 int Tau_sampling_event_stop(int tid, double *stopTime) {
@@ -1199,7 +1199,7 @@ int Tau_sampling_event_stop(int tid, double *stopTime) {
   return 0;
 #endif
 
-  Tau_global_incr_insideTAU_tid(tid);
+  Tau_global_incr_insideTAU();
 
   samplingEnabled[tid] = 0;
 
@@ -1218,7 +1218,7 @@ int Tau_sampling_event_stop(int tid, double *stopTime) {
   }
 
   samplingEnabled[tid] = 1;
-  Tau_global_decr_insideTAU_tid(tid);
+  Tau_global_decr_insideTAU();
   return 0;
 }
 
@@ -1259,7 +1259,7 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
   // disable sampling until we handle this sample
   suspendSampling[tid] = 1;
 
-  Tau_global_incr_insideTAU_tid(tid);
+  Tau_global_incr_insideTAU();
   if (TauEnv_get_tracing()) {
     Tau_sampling_handle_sampleTrace(pc, context, tid);
   }
@@ -1267,7 +1267,7 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
   if (TauEnv_get_profiling()) {
     Tau_sampling_handle_sampleProfile(pc, context, tid);
   }
-  Tau_global_decr_insideTAU_tid(tid);
+  Tau_global_decr_insideTAU();
 
   // re-enable sampling 
   suspendSampling[tid] = 0;
@@ -1336,7 +1336,7 @@ int Tau_sampling_init(int tid) {
 
   static struct itimerval itval;
 
-  Tau_global_incr_insideTAU_tid(tid);
+  Tau_global_incr_insideTAU();
 
   //int threshold = 1000;
   int threshold = TauEnv_get_ebs_period();
@@ -1542,7 +1542,7 @@ int Tau_sampling_init(int tid) {
 
   samplingEnabled[tid] = 1;
   collectingSamples = 1;
-  Tau_global_decr_insideTAU_tid(tid);
+  Tau_global_decr_insideTAU();
   return 0;
 }
 
@@ -1563,7 +1563,7 @@ int Tau_sampling_finalize(int tid) {
     }
   }
 
-  Tau_global_incr_insideTAU_tid(tid);
+  Tau_global_incr_insideTAU();
 
   /* Disable sampling first */
   samplingEnabled[tid] = 0;
@@ -1591,7 +1591,7 @@ int Tau_sampling_finalize(int tid) {
     Tau_sampling_finalizeProfile(tid);
   }
 
-  Tau_global_decr_insideTAU_tid(tid);
+  Tau_global_decr_insideTAU();
 
   return 0;
 }
@@ -1620,9 +1620,9 @@ extern "C" void Tau_sampling_init_if_necessary(void) {
   // if the master thread is in TAU, in a non-parallel region
   if (omp_get_num_threads() == 1) {
   /* FIRST! make sure that we don't process samples while in this code */
-	for (i = 0 ; i < TAU_MAX_THREADS ; i++) {
-      Tau_global_incr_insideTAU_tid(i);
-	}
+	
+      Tau_global_process_incr_insideTAU();
+	
   /* WE HAVE TO DO THIS! Otherwise, we end up with deadlock. Don't worry,
    * it is OK, because we know(?) there are no other active threads
    * thanks to the #define three lines above this */
@@ -1662,21 +1662,19 @@ extern "C" void Tau_sampling_init_if_necessary(void) {
 	}
 
     /* we are done with TAU for now */
-	for (i = 0 ; i < TAU_MAX_THREADS ; i++) {
-      Tau_global_decr_insideTAU_tid(i);
-	}
+	Tau_global_process_decr_insideTAU();
 	/* return, because our work is done for this special case. */
 	return;
   }
 #endif
 
 // handle all other cases!
-  Tau_global_incr_insideTAU_tid(tid);
+  Tau_global_incr_insideTAU();
   if (!samplingThrInitialized[tid]) {
     samplingThrInitialized[tid] = true;
     Tau_sampling_init(tid);
   }
-  Tau_global_decr_insideTAU_tid(tid);
+  Tau_global_decr_insideTAU();
 }
 
 /* *CWL* - This is a preliminary attempt to allow MPI wrappers to invoke

@@ -150,7 +150,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
     Tau_init_initializeTAU();
   }
 
-  Tau_global_incr_insideTAU_tid(tid);
+  Tau_global_incr_insideTAU();
 
   //Need to keep track of all the groups this function is a member of.
   AllGroups = strip_tau_group(ProfileGroupName);
@@ -285,7 +285,7 @@ if (strstr(ProfileGroupName, "TAU_PHASE") != NULL) {
   }
 #endif //RENCI_STFF
   
-  Tau_global_decr_insideTAU_tid(tid);
+  Tau_global_decr_insideTAU();
   return;
 }
 
