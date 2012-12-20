@@ -388,7 +388,7 @@ extern "C" int Tau_init_initializingTAU() {
 	return initializing - tau_initialized;
 }
 
-extern int Tau_initialize_collector_api(void);
+extern "C" int Tau_initialize_collector_api(void);
 
 extern "C" int Tau_init_initializeTAU() {
 	
