@@ -85,7 +85,13 @@ void Tau_cupti_onload()
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY);
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_KERNEL);
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_SOURCE_LOCATOR);
-	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_GLOBAL_ACCESS);
+  if (strcasecmp(TauEnv_get_cuda_instructions(), "GLOBAL_ACCESS") == 0)
+  {
+	  err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_GLOBAL_ACCESS);
+  } else if (strcasecmp(TauEnv_get_cuda_instructions(), "BRANCH") == 0)
+  {
+	  err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_BRANCH);
+  }
 	CUDA_CHECK_ERROR(err, "Cannot enqueue buffer.\n");
 
 	Tau_gpu_init();
@@ -452,44 +458,38 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       //globalAccessMap[global_access->correlationId] = *global_access;
      
       CUpti_ActivityKernel *kernel = &kernelMap[global_access->correlationId];
+      CUpti_ActivitySourceLocator *source = &sourceLocatorMap[global_access->sourceLocatorId];
 
-      const char *name;
-      if (gpu_source_locations_available() && kernel->kind != CUPTI_ACTIVITY_KIND_INVALID)
+      if (kernel->kind != CUPTI_ACTIVITY_KIND_INVALID)
       {
         eventMap.erase(eventMap.begin(), eventMap.end());
-        record_gpu_source_locations(global_access, kernel, &eventMap);
-        CUpti_ActivitySourceLocator *source = &sourceLocatorMap[global_access->sourceLocatorId];
-        stringstream file_and_line("");
-        file_and_line << demangleName(kernel->name);
-        if (source->kind != CUPTI_ACTIVITY_KIND_INVALID)
-        {
-          file_and_line << " [{" << source->fileName   << "}";
-          file_and_line <<  " {" << source->lineNumber << "}]";
-        }
-        //cout << "file and line: " << file_and_line.str() << endl;
 
-        GpuEventAttributes *map;
-        int map_size = eventMap.size();
-        map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
-        int i = 0;
-        for (eventMap_t::iterator it = eventMap.begin(); it != eventMap.end(); it++)
-        {
-          map[i].userEvent = it->first;
-          map[i].data = it->second;
-          i++;
-        }
-        uint32_t id;
-        if (cupti_api_runtime())
-        {
-          id = kernel->runtimeCorrelationId;
-        }
-        else
-        {
-          id = kernel->correlationId;
-        }
-        Tau_cupti_register_gpu_event(file_and_line.str().c_str(), kernel->deviceId,
-          kernel->streamId, kernel->contextId, id, map, map_size,
-          0, 0);
+        static TauContextUserEvent* ga;
+        Tau_get_context_userevent((void **) &ga, "Accesses to Global Memory");
+        eventMap[ga] = global_access->executed;
+        record_gpu_instruction_event(kernel, source);
+      }
+    }
+    case CUPTI_ACTIVITY_KIND_BRANCH:
+    {
+			CUpti_ActivityBranch *branch = (CUpti_ActivityBranch *)record;
+			//cerr << "global access (cor. id) (source id): " << global_access->correlationId << ", " << global_access->sourceLocatorId << ", " << global_access->threadsExecuted << ".\n" << endl;
+      //globalAccessMap[global_access->correlationId] = *global_access;
+     
+      CUpti_ActivityKernel *kernel = &kernelMap[branch->correlationId];
+      CUpti_ActivitySourceLocator *source = &sourceLocatorMap[branch->sourceLocatorId];
+
+      if (kernel->kind != CUPTI_ACTIVITY_KIND_INVALID)
+      {
+        eventMap.erase(eventMap.begin(), eventMap.end());
+
+        static TauContextUserEvent* be;
+        Tau_get_context_userevent((void **) &be, "Branches Executed");
+        eventMap[be] = branch->executed;
+        static TauContextUserEvent* de;
+        Tau_get_context_userevent((void **) &de, "Branches Diverged");
+        eventMap[de] = branch->diverged;
+        record_gpu_instruction_event(kernel, source);
       }
     }
 	}
@@ -633,14 +633,41 @@ void record_gpu_occupancy(CUpti_ActivityKernel *kernel, const char *name, eventM
 
 }
 
-void record_gpu_source_locations(CUpti_ActivityGlobalAccess *global_access, CUpti_ActivityKernel *kernel, eventMap_t *map)
-{
+void record_gpu_instruction_event(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceLocator *source)
+{         
+  const char *name;
 
-      static TauContextUserEvent* ga;
-			Tau_get_context_userevent((void **) &ga, "Number of Accesses to Global Memory");
-      (*map)[ga] = global_access->threadsExecuted;
+  stringstream file_and_line("");
+  file_and_line << demangleName(kernel->name);
+  if (source->kind != CUPTI_ACTIVITY_KIND_INVALID)
+  {
+    file_and_line << " [{" << source->fileName   << "}";
+    file_and_line <<  " {" << source->lineNumber << "}]";
+  }
+  //cout << "file and line: " << file_and_line.str() << endl;
 
-
+  GpuEventAttributes *map;
+  int map_size = eventMap.size();
+  map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
+  int i = 0;
+  for (eventMap_t::iterator it = eventMap.begin(); it != eventMap.end(); it++)
+  {
+    map[i].userEvent = it->first;
+    map[i].data = it->second;
+    i++;
+  }
+  uint32_t id;
+  if (cupti_api_runtime())
+  {
+    id = kernel->runtimeCorrelationId;
+  }
+  else
+  {
+    id = kernel->correlationId;
+  }
+  Tau_cupti_register_gpu_event(file_and_line.str().c_str(), kernel->deviceId,
+    kernel->streamId, kernel->contextId, id, map, map_size,
+    0, 0);
 }
 
 bool function_is_sync(CUpti_CallbackId id)
