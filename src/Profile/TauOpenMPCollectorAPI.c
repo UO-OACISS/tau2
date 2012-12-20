@@ -70,8 +70,8 @@ char OMP_EVENT_NAME[22][50]= {
 const int OMP_COLLECTORAPI_HEADERSIZE=4*sizeof(int);
 
 static void * handle;
-//static int (*Tau_collector_api)(OMP_COLLECTORAPI_EVENT);
-static int (*Tau_collector_api)(void *);
+static int (*Tau_collector_api)(OMP_COLLECTORAPI_EVENT);
+
 
 void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event)
 {
@@ -84,10 +84,10 @@ void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event)
   int currentid_rsz = sizeof(long);
   message = (void *) malloc(OMP_COLLECTORAPI_HEADERSIZE+currentid_rsz+sizeof(int));
   Tau_fill_header(message, OMP_COLLECTORAPI_HEADERSIZE+currentid_rsz, OMP_REQ_CURRENT_PRID, OMP_ERRCODE_OK, currentid_rsz, 1);
-  int localRegionID = (Tau_collector_api)(message);
+  int localRegionID = (Tau_collector_api)((OMP_COLLECTORAPI_EVENT)(message));
   free(message);
 
-  TAU_VERBOSE("** Thread: %d, RegionID: %d, EVENT:%s **\n", omp_get_thread_num(), localRegionID, OMP_EVENT_NAME[event-1]);
+  printf("** Thread: %d, RegionID: %d, EVENT:%s **\n", omp_get_thread_num(), localRegionID, OMP_EVENT_NAME[event-1]);
 
   switch(event) {
     case OMP_EVENT_FORK:
@@ -211,17 +211,17 @@ void Tau_fill_header(void *message, int sz, OMP_COLLECTORAPI_REQUEST rq, OMP_COL
     int *psz = (int *) message; 
    *psz = sz;
    
-   OMP_COLLECTORAPI_REQUEST *rnum = (OMP_COLLECTORAPI_REQUEST *)(message) + sizeof(int);
+   OMP_COLLECTORAPI_REQUEST *rnum = (OMP_COLLECTORAPI_REQUEST *) (message+sizeof(int));
    *rnum = rq;
    
-   OMP_COLLECTORAPI_EC *pec = (OMP_COLLECTORAPI_EC *)(message) + (sizeof(int)*2);
+   OMP_COLLECTORAPI_EC *pec = (OMP_COLLECTORAPI_EC *)(message+(sizeof(int)*2));
    *pec = ec;
 
-   int *prsz = (int *)(message) + (sizeof(int)*3);
+   int *prsz = (int *) (message+ sizeof(int)*3);
    *prsz = rsz;
 
    if(append_zero) {
-    psz = (int *)(message) + ((sizeof(int)*4)+rsz);
+    psz = (int *)(message+(sizeof(int)*4)+rsz);
    *psz =0; 
    }   
   
@@ -235,36 +235,39 @@ void Tau_fill_register(void *message, OMP_COLLECTORAPI_EVENT event, int append_f
   *pevent = event;
 
   // increment to the next parameter
-  char *mem = (char *)(message) + sizeof(OMP_COLLECTORAPI_EVENT);
+  char *mem = (char *)(message + sizeof(OMP_COLLECTORAPI_EVENT));
   if(append_func) {
-         unsigned long * lmem = (unsigned long *)(message) + sizeof(OMP_COLLECTORAPI_EVENT);
+         unsigned long * lmem = (message + sizeof(OMP_COLLECTORAPI_EVENT));
          *lmem = (unsigned long)func;
   }
 
      if(append_zero) {
        int *psz;
        if(append_func) {
-            psz = (int *)(message) + (sizeof(OMP_COLLECTORAPI_EVENT)+ sizeof(void *)); 
+            psz = (int *)(message+sizeof(OMP_COLLECTORAPI_EVENT)+ sizeof(void *)); 
    
      } else {
 
-          psz = (int *)(message) + (sizeof(OMP_COLLECTORAPI_EVENT));
+          psz = (int *)(message+sizeof(OMP_COLLECTORAPI_EVENT));
 
      }
        *psz =0;  
      } 
 }
 
+int __attribute__ ((constructor)) Tau_initialize_collector_api(void);
+
 int Tau_initialize_collector_api(void) {
+  if (Tau_collector_api != NULL) return 0;
+
   char *error;
 
-  TAU_VERBOSE("Tau_initialize_collector_api()\n");
+  printf("Tau_initialize_collector_api()\n");
 
-  handle = dlopen("libopenmp.so", RTLD_LAZY);
+  handle = dlopen("libopenmp.so", RTLD_NOW | RTLD_GLOBAL);
   if (!handle) {
-    TAU_VERBOSE("%s\n", dlerror());
-    //exit(EXIT_FAILURE);
-    return 0;
+    printf("%s\n", dlerror());
+    return -1;
   }
 
   dlerror();    /* Clear any existing error */
@@ -272,9 +275,8 @@ int Tau_initialize_collector_api(void) {
   *(void **) (&Tau_collector_api) = dlsym(handle, "__omp_collector_api");
 
   if ((error = dlerror()) != NULL)  {
-    TAU_VERBOSE("%s\n", error);
-    //exit(EXIT_FAILURE);
-    return 0;
+    printf("%s\n", error);
+    return -2;
   }
 
   omp_collector_message req;
@@ -286,8 +288,7 @@ int Tau_initialize_collector_api(void) {
   /*test: check for request start, 1 message */
   message = (void *) malloc(OMP_COLLECTORAPI_HEADERSIZE+sizeof(int));
   Tau_fill_header(message, OMP_COLLECTORAPI_HEADERSIZE, OMP_REQ_START, OMP_ERRCODE_OK, 0, 1);
-  //rc = (Tau_collector_api)((OMP_COLLECTORAPI_EVENT)(message));
-  rc = (Tau_collector_api)(message);
+  rc = (Tau_collector_api)((OMP_COLLECTORAPI_EVENT)(message));
   printf("__omp_collector_api() returned %d\n", rc);
   free(message);
 
@@ -297,23 +298,23 @@ int Tau_initialize_collector_api(void) {
   int register_sz = sizeof(OMP_COLLECTORAPI_EVENT)+sizeof(void *);
   int mes_size = OMP_COLLECTORAPI_HEADERSIZE+register_sz;
   message = (void *) malloc(num_req*mes_size+sizeof(int));
-  OMP_COLLECTORAPI_EVENT event = OMP_EVENT_FORK;
   for(i=0;i<num_req;i++) {  
-    event = (OMP_COLLECTORAPI_EVENT)(OMP_EVENT_FORK + i);
-    int * tmpPointer = (int *)(message) + (mes_size * i);
-    Tau_fill_header(tmpPointer,mes_size, OMP_REQ_REGISTER, OMP_ERRCODE_OK, 0, 0);
-    Tau_fill_register((tmpPointer)+OMP_COLLECTORAPI_HEADERSIZE,event,1, Tau_omp_event_handler, i==(num_req-1));
+    Tau_fill_header(message+mes_size*i,mes_size, OMP_REQ_REGISTER, OMP_ERRCODE_OK, 0, 0);
+    Tau_fill_register((message+mes_size*i)+OMP_COLLECTORAPI_HEADERSIZE,OMP_EVENT_FORK+i,1, Tau_omp_event_handler, i==(num_req-1));
   } 
-  //rc = (Tau_collector_api)((OMP_COLLECTORAPI_EVENT)(message));
-  rc = (Tau_collector_api)(message);
+  rc = (Tau_collector_api)((OMP_COLLECTORAPI_EVENT)(message));
   printf("__omp_collector_api() returned %d\n", rc);
   free(message);
 
-  return 1;
+  return 0;
 }
 
+int __attribute__ ((destructor)) Tau_finalize_collector_api(void);
+
 int Tau_finalize_collector_api(void) {
-  fprintf(stderr, "finalizeCollector()\n");
+  return 0;
+#if 0
+  printf("Tau_finalize_collector_api()\n");
 
   omp_collector_message req;
   void *message = (void *) malloc(4);   
@@ -324,10 +325,10 @@ int Tau_finalize_collector_api(void) {
   /*test check for request stop, 1 message */
   message = (void *) malloc(OMP_COLLECTORAPI_HEADERSIZE+sizeof(int));
   Tau_fill_header(message, OMP_COLLECTORAPI_HEADERSIZE, OMP_REQ_STOP, OMP_ERRCODE_OK, 0, 1);
-  //rc = (Tau_collector_api)((OMP_COLLECTORAPI_EVENT)(message));
-  rc = (Tau_collector_api)(message);
+  rc = (Tau_collector_api)((OMP_COLLECTORAPI_EVENT)(message));
   printf("__omp_collector_api() returned %d\n", rc);
   free(message);
+#endif
 }
 
 
