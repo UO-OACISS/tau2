@@ -16,9 +16,9 @@ TAU_MAKEFILE ?=../../include/Makefile
 
 include $(TAU_MAKEFILE)
 
-CC		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh -optKeepFiles -optTauSelectFile="./select.tau"
-CFLAGS = -g -O0 -fopenmp
-LDFLAGS = -g -O0 -fopenmp -ldl -rdynamic
+CC		= TAU_MAKEFILE=$(TAU_MAKEFILE) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/bin/tau_cc.sh -optKeepFiles -optTauSelectFile="./select.tau" -optShared
+CFLAGS = -g -O0 -fopenmp -fPIC
+LDFLAGS = -g -O0 -fopenmp -rdynamic
 
 PRINT	      	= pr
 
@@ -34,8 +34,8 @@ all:		$(TARGET)
 
 install: 	$(TARGET)
 
-$(TARGET):	$(OBJS)
-	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS)
+$(TARGET):	$(OBJS) $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib/libTAU.so
+	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(LIBS) -Wl,-rpath=/home3/khuck/src/tau2/x86_64/lib/shared$(TAU_CONFIG)
 
 matmult.o: matmult.c
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -49,6 +49,6 @@ notau:
 clean: 	
 	$(RM) $(OBJS) $(TARGET) profile.* *.trc *.edf *.z MULT* *.inst.* *.pdb Comp_gnu.o
 
-test:
+test: $(TARGET)
 	OMP_NUM_THREADS=2 ./$(TARGET) 
 ##############################################
