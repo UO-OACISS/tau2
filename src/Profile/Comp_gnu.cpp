@@ -194,7 +194,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 	}
 
 	int tid = Tau_get_tid();
-	Tau_global_incr_insideTAU_tid(tid);
+	Tau_global_incr_insideTAU();
 
 	if (gnu_init) {
 		gnu_init = false;
@@ -229,7 +229,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 		if (RtsLayer::myNode() == -1) {
 		  TAU_PROFILE_SET_NODE(0);
 		}
-		Tau_global_decr_insideTAU_tid(tid);
+		Tau_global_decr_insideTAU();
 
 		// we register this here at the end so that it is called
 		// before the VT objects are destroyed.  Objects are destroyed and atexit targets are
@@ -242,7 +242,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 	
 	// prevent re-entry of this routine on a per thread basis
 	if (compInstDisabled[tid]) {
-		Tau_global_decr_insideTAU_tid(tid);
+		Tau_global_decr_insideTAU();
 		return;
 	}
 	compInstDisabled[tid] = 1;
@@ -300,7 +300,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 		
 	// finished in this routine, allow entry
 	compInstDisabled[tid] = 0;
-	Tau_global_decr_insideTAU_tid(tid);
+	Tau_global_decr_insideTAU();
 }
 
 void _cyg_profile_func_enter(void* func, void* callsite) {
@@ -342,22 +342,22 @@ void __cyg_profile_func_exit(void* func, void* callsite)
 	}
 	
 	int tid = Tau_get_tid();
-	Tau_global_incr_insideTAU_tid(tid);
+	Tau_global_incr_insideTAU();
 
 	// prevent entry into cyg_profile functions while inside entry
 	if (compInstDisabled[tid]) {
-		Tau_global_decr_insideTAU_tid(tid);
+		Tau_global_decr_insideTAU();
 		return;
 	}
 
 	if (executionFinished) {
-		Tau_global_decr_insideTAU_tid(tid);
+		Tau_global_decr_insideTAU();
 		return;
 	}
 
 	//prevent entry into cyg_profile functions while still initializing TAU
 	if (Tau_init_initializingTAU()) {
-		Tau_global_decr_insideTAU_tid(tid);
+		Tau_global_decr_insideTAU();
 		return;
 	}
 
@@ -365,7 +365,7 @@ void __cyg_profile_func_exit(void* func, void* callsite)
 	if (hn.fi) {
 		Tau_stop_timer(hn.fi, tid);
 	}
-	Tau_global_decr_insideTAU_tid(tid);
+	Tau_global_decr_insideTAU();
 }
 
 void _cyg_profile_func_exit(void* func, void* callsite) {

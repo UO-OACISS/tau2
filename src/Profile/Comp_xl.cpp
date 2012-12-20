@@ -311,7 +311,7 @@ void __func_trace_enter(char * name, char * fname, int lno, void ** const user_d
     disabled[tid] = true;
 
     // Begin TAU region
-    Tau_global_incr_insideTAU_tid(tid);
+    Tau_global_incr_insideTAU();
 
     // Build the hashtable keys while checking for exclusion
     key_type name_key, key;
@@ -320,13 +320,13 @@ void __func_trace_enter(char * name, char * fname, int lno, void ** const user_d
     name_key = get_name_hash(0, &name, &nlen, &excluded);
     if(excluded) {
         disabled[tid] = false;
-        Tau_global_decr_insideTAU_tid(tid);
+        Tau_global_decr_insideTAU();
         return;
     }
     key = get_filename_hash(name_key, &fname, &flen, &excluded);
     if(excluded) {
         disabled[tid] = false;
-        Tau_global_decr_insideTAU_tid(tid);
+        Tau_global_decr_insideTAU();
         return;
     }
 
@@ -372,7 +372,7 @@ void __func_trace_enter(char * name, char * fname, int lno, void ** const user_d
 
     // Exit TAU region
     disabled[tid] = false;
-    Tau_global_decr_insideTAU_tid(tid);
+    Tau_global_decr_insideTAU();
 }
 
 extern "C" 
@@ -388,7 +388,7 @@ void __func_trace_exit(char * name, char * fname, int lno, void ** const user_da
     if(disabled[tid]) return;
 
     // Enter the TAU region
-    Tau_global_incr_insideTAU_tid(tid);
+    Tau_global_incr_insideTAU();
     
     // Build the hashtable key while checking for exclusion
     key_type name_key, key;
@@ -397,13 +397,13 @@ void __func_trace_exit(char * name, char * fname, int lno, void ** const user_da
     name_key = get_name_hash(0, &name, &nlen, &excluded);
     if(excluded) {
         disabled[tid] = false;
-        Tau_global_decr_insideTAU_tid(tid);
+        Tau_global_decr_insideTAU();
         return;
     }
     key = get_filename_hash(name_key, &fname, &flen, &excluded);
     if(excluded) {
         disabled[tid] = false;
-        Tau_global_decr_insideTAU_tid(tid);
+        Tau_global_decr_insideTAU();
         return;
     }
 
@@ -428,7 +428,7 @@ void __func_trace_exit(char * name, char * fname, int lno, void ** const user_da
     }
 
     // Exit the TAU region
-    Tau_global_decr_insideTAU_tid(tid);
+    Tau_global_decr_insideTAU();
 }
 
 extern "C" 
