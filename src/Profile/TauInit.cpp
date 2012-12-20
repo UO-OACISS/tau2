@@ -388,6 +388,8 @@ extern "C" int Tau_init_initializingTAU() {
 	return initializing - tau_initialized;
 }
 
+extern int Tau_initialize_collector_api(void);
+
 extern "C" int Tau_init_initializeTAU() {
 	
 	//protect against reentrancy
@@ -487,6 +489,10 @@ extern "C" int Tau_init_initializeTAU() {
 
 #ifndef TAU_DISABLE_METADATA
 	Tau_metadata_fillMetaData();
+#endif
+
+#ifdef TAU_OPENMP
+  Tau_initialize_collector_api();
 #endif
 
   tau_initialized = 1;
