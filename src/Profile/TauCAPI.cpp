@@ -199,7 +199,7 @@ extern "C" int Tau_global_get_insideTAU_tid(int tid) {
 
 extern "C" int Tau_global_incr_insideTAU() {
   Tau_stack_checkInit();
-  int tid = Tau_get_tid();
+  int tid = RtsLayer::localThreadId();
   Tau_thread_flags[tid].Tau_global_insideTAU++;
   return Tau_thread_flags[tid].Tau_global_insideTAU;
 }
@@ -449,7 +449,7 @@ extern "C" void Tau_lite_start_timer(void *functionInfo, int phase) {
 		if ( !RtsLayer::TheEnableInstrumentation() || !(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
 			return; /* disabled */
 		}
-		int tid = Tau_get_tid();
+		int tid = RtsLayer::localThreadId();//Tau_get_tid();
 		
     Tau_start_timer(functionInfo, phase, tid);
 		
@@ -637,7 +637,7 @@ extern "C" int Tau_lite_stop_timer(void *function_info) {
 		if ( !RtsLayer::TheEnableInstrumentation() || !(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
 			return 1; /* disabled */
 		}
-		int tid = Tau_get_tid();
+		int tid = RtsLayer::localThreadId();//Tau_get_tid();
 		
     int r = Tau_stop_timer(function_info, tid);
 		
