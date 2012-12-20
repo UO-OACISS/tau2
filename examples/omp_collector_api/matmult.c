@@ -11,19 +11,8 @@
 ******************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <omp.h>
 #include "matmult_initialize.h"
-
-#ifdef TAU_MPI
-int provided;
-#include <mpi.h>
-/* NOTE: MPI is just used to spawn multiple copies of the kernel to different ranks.
-This is not a parallel implementation */
-#endif /* TAU_MPI */
-
-#ifdef PTHREADS
-#include <pthread.h>
-#endif /* PTHREADS */
 
 #ifndef MATRIX_SIZE
 #define MATRIX_SIZE 100
@@ -120,21 +109,11 @@ double do_work(void) {
   initialize(c, NRA, NCB);
 
   compute(a, b, c, NRA, NCA, NCB);
-#if defined(TAU_OPENMP)
 #ifdef OMP_NESTED
   if (omp_get_nested()) {
     compute_nested(a, b, c, NRA, NCA, NCB);
   }
 #endif
-#endif
-#ifdef TAU_MPI
-  if (provided == MPI_THREAD_MULTIPLE)
-  { 
-    int rank;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-//    printf("Rank: %d: provided is MPI_THREAD_MULTIPLE\n", rank);
-  }
-#endif /* TAU_MPI */
   compute_interchange(a, b, c, NRA, NCA, NCB);
 
   return c[0][1]; 
@@ -146,72 +125,171 @@ void * threaded_func(void *data)
   return NULL;
 }
 
+// also does master test
+void do_barrier_test(void) {
+  printf("\n*** PERFORMING BARRIER TEST ***\n\n");
+  int a[5], i;
+
+#pragma omp parallel
+  {
+    // Perform some computation.
+#pragma omp for
+    for (i = 0; i < 5; i++) {
+      a[i] = i * i;
+    }
+    
+    // Print intermediate results.
+#pragma omp master
+    for (i = 0; i < 5; i++) {
+      printf("a[%d] = %d\n", i, a[i]);
+    }
+    
+    // Wait.
+#pragma omp barrier
+    
+    // Continue with the computation.
+#pragma omp for
+    for (i = 0; i < 5; i++) {
+      a[i] += i;
+    }
+  }
+}
+
+void * do_lock_test(void) {
+  printf("\n*** PERFORMING LOCK TEST ***\n\n");
+  omp_lock_t my_lock;
+  omp_init_lock(&my_lock);
+
+#pragma omp parallel 
+  {
+    int tid = omp_get_thread_num( );
+    int i, j;
+
+    for (i = 0; i < 5; ++i) {
+      omp_set_lock(&my_lock);
+      printf("Thread %d - starting locked region\n", tid);
+      printf("Thread %d - ending locked region\n", tid);
+      omp_unset_lock(&my_lock);
+    }
+  }
+  omp_destroy_lock(&my_lock);
+}
+
+void * do_critical_test(void) {
+  printf("\n*** PERFORMING CRITICAL TEST ***\n\n");
+  int i;
+  int max;
+  int a[MATRIX_SIZE];
+
+  for (i = 0; i < MATRIX_SIZE; i++) 
+  {
+    a[i] = rand();
+    //printf("%d\n", a[i]);
+  }
+
+  max = a[0];
+#pragma omp parallel for
+  for (i = 1; i < MATRIX_SIZE; i++) 
+  {
+    if (a[i] > max)
+    {
+#pragma omp critical
+      {
+// compare a[i] and max again because max 
+// could have been changed by another thread after 
+// the comparison outside the critical section
+        if (a[i] > max)
+          max = a[i];
+      }
+    }
+  }
+   
+  printf("max = %d\n", max);
+}
+
+void do_sections_test(void) {
+  printf("\n*** PERFORMING SECTIONS TEST ***\n\n");
+#pragma omp parallel sections
+  {
+    printf("Hello from thread %d\n", omp_get_thread_num());
+#pragma omp section
+    printf("Hello from thread %d\n", omp_get_thread_num());
+  }
+}
+
+void do_ordered_test(void) {
+  printf("\n*** PERFORMING ORDERED TEST ***\n\n");
+  int a[MATRIX_SIZE], i;
+#pragma omp parallel
+  {
+#pragma omp ordered
+  {
+    // Perform some computation.
+#pragma omp for
+    for (i = 0; i < omp_get_num_threads(); i++) {
+      a[i] = i * i;
+    }
+  }
+  }
+}
+
+void * do_single_test(void) {
+  printf("\n*** PERFORMING SINGLE TEST ***\n\n");
+  int a[5], i;
+
+#pragma omp parallel
+  {
+    // Perform some computation.
+#pragma omp for
+    for (i = 0; i < 5; i++) {
+      a[i] = i * i;
+    }
+    
+    // Print intermediate results.
+#pragma omp single
+    for (i = 0; i < 5; i++) {
+      printf("a[%d] = %d\n", i, a[i]);
+    }
+    
+    // Wait.
+#pragma omp barrier
+    
+    // Continue with the computation.
+#pragma omp for
+    for (i = 0; i < 5; i++) {
+      a[i] += i;
+    }
+  }
+  return (a);
+}
+
+void * do_atomic_test(void) {
+  printf("\n*** PERFORMING ATOMIC TEST ***\n\n");
+  int count = 0;
+#pragma omp parallel
+  {
+#pragma omp atomic
+    count++;
+  }
+  printf("Number of threads: %d\n", count);
+}
+
+
 int main (int argc, char *argv[]) 
 {
+  int i;
+  for (i = 0 ; i < 3 ; i++) {
+    do_work();
+  }
 
-#ifdef PTHREADS
-  int ret;
-  pthread_attr_t  attr;
-  pthread_t       tid1, tid2, tid3;
-#endif /* PTHREADS */
+  do_barrier_test();
+  do_lock_test();
+  do_critical_test();
+  do_ordered_test();
+  do_single_test();
+  do_atomic_test();
+  do_sections_test();
 
-#ifdef TAU_MPI
-#if (defined(PTHREADS) || defined(TAU_OPENMP))
-  MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
-  printf("MPI_Init_thread: provided = %d, MPI_THREAD_MULTIPLE=%d\n", provided, MPI_THREAD_MULTIPLE);
-#else
-  MPI_Init(&argc, &argv); 
-#endif /* THREADS */
-#endif /* TAU_MPI */
-
-#ifdef PTHREADS
-  if (ret = pthread_create(&tid1, NULL, threaded_func, NULL) )
-  {
-    printf("Error: pthread_create (1) fails ret = %d\n", ret);
-    exit(1);
-  }   
-
-  if (ret = pthread_create(&tid2, NULL, threaded_func, NULL) )
-  {
-    printf("Error: pthread_create (2) fails ret = %d\n", ret);
-    exit(1);
-  }   
-
-  if (ret = pthread_create(&tid3, NULL, threaded_func, NULL) )
-  {
-    printf("Error: pthread_create (3) fails ret = %d\n", ret);
-    exit(1);
-  }   
-
-#endif /* PTHREADS */
-
-/* On thread 0: */
-  do_work();
-
-#ifdef PTHREADS 
-  if (ret = pthread_join(tid1, NULL) )
-  {
-    printf("Error: pthread_join (1) fails ret = %d\n", ret);
-    exit(1);
-  }   
-
-  if (ret = pthread_join(tid2, NULL) )
-  {
-    printf("Error: pthread_join (2) fails ret = %d\n", ret);
-    exit(1);
-  }   
-
-  if (ret = pthread_join(tid3, NULL) )
-  {
-    printf("Error: pthread_join (3) fails ret = %d\n", ret);
-    exit(1);
-  }   
-
-#endif /* PTHREADS */
-
-#ifdef TAU_MPI
-  MPI_Finalize();
-#endif /* TAU_MPI */
   printf ("Done.\n");
 
   return 0;
