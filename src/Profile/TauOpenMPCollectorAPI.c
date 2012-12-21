@@ -332,18 +332,18 @@ int Tau_initialize_collector_api(void) {
   void * handle = NULL;
   handle = dlopen("libopenmp.so", RTLD_NOW | RTLD_GLOBAL);
   if (!handle) {
-    TAU_VERBOSE("%s\n", dlerror());
+    //TAU_VERBOSE("%s\n", dlerror());
     return -1;
   }
 
-  dlerror();    /* Clear any existing error */
+  //dlerror();    /* Clear any existing error */
 
   *(void **) (&Tau_collector_api) = dlsym(handle, "__omp_collector_api");
 
-  if ((error = dlerror()) != NULL)  {
-    TAU_VERBOSE("%s\n", error);
-    return -2;
-  }
+  //if ((error = dlerror()) != NULL)  {
+  //  TAU_VERBOSE("%s\n", error);
+  //  return -2;
+  //}
 
   omp_collector_message req;
   void *message = (void *) malloc(4);   
