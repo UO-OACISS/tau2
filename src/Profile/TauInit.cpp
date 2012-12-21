@@ -18,6 +18,10 @@
 **                                                                         **
 ****************************************************************************/
 
+#ifdef __APPLE__
+#define _XOPEN_SOURCE 600 /* Single UNIX Specification, Version 3 */
+#endif /* __APPLE__ */
+
 #include <TAU.h>
 #include <stdlib.h>
 #include <stdio.h>
