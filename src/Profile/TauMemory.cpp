@@ -66,14 +66,22 @@ class TauAllocation
 {
 
 public:
+
   typedef TAU_HASH_MAP<unsigned long, user_event_t*> event_map_t;
-  static event_map_t event_map;
+  static event_map_t & TheTauAllocationEventMap() {
+    static event_map_t event_map;
+    return event_map;
+  }
 
   typedef TAU_HASH_MAP<addr_t, class TauAllocation*> allocation_map_t;
-  static allocation_map_t alloc_map;
+  static allocation_map_t & TheTauAllocationMap() {
+    static allocation_map_t alloc_map;
+    return alloc_map;
+  }
 
-  static class TauAllocation * Find(allocation_map_t::key_type const & key) {
-    allocation_map_t::iterator it = alloc_map.find(key);
+  static TauAllocation * Find(allocation_map_t::key_type const & key) {
+    allocation_map_t const & alloc_map = TheTauAllocationMap();
+    allocation_map_t::const_iterator it = alloc_map.find(key);
     if (it != alloc_map.end())
       return it->second;
     return NULL;
@@ -98,13 +106,6 @@ public:
 
 private:
 
-  void ProtectPages(addr_t addr, size_t size);
-  void UnprotectPages(addr_t addr, size_t size);
-
-  void TriggerAllocationEvent(char const * filename, int lineno);
-  void TriggerDeallocationEvent(char const * filename, int lineno);
-  unsigned long LocationHash(unsigned long hash, char const * data);
-
   addr_t alloc_addr;    ///< Unadjusted address
   size_t alloc_size;    ///< Unadjusted size
   addr_t user_addr;     ///< Address presented to user
@@ -115,11 +116,15 @@ private:
   size_t gap_size;      ///< Unprotected gap size
 
   user_event_t * event; ///< Allocation event (for leak detection)
-};
 
-// Static initialization
-TauAllocation::event_map_t TauAllocation::event_map;
-TauAllocation::allocation_map_t TauAllocation::alloc_map;
+  void ProtectPages(addr_t addr, size_t size);
+  void UnprotectPages(addr_t addr, size_t size);
+
+  void TriggerAllocationEvent(char const * filename, int lineno);
+  void TriggerDeallocationEvent(char const * filename, int lineno);
+  unsigned long LocationHash(unsigned long hash, char const * data);
+
+};
 
 
 //////////////////////////////////////////////////////////////////////
@@ -127,10 +132,11 @@ TauAllocation::allocation_map_t TauAllocation::alloc_map;
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::DetectLeaks(void)
 {
-  if (alloc_map.empty()) return;
-
   typedef TAU_HASH_MAP<user_event_t*, TauUserEvent*> leak_event_map_t;
-  leak_event_map_t leak_map;
+  static leak_event_map_t leak_map;
+
+  allocation_map_t & alloc_map = TheTauAllocationMap();
+  if (alloc_map.empty()) return;
 
   for(allocation_map_t::iterator it=alloc_map.begin(); it != alloc_map.end(); it++) {
     TauAllocation * alloc = it->second;
@@ -212,6 +218,8 @@ void TauAllocation::TriggerAllocationEvent(char const * filename, int lineno)
 {
   unsigned long file_hash = LocationHash(lineno, filename);
 
+  event_map_t & event_map = TheTauAllocationEventMap();
+
   event_map_t::iterator it = event_map.find(file_hash);
   if (it == event_map.end()) {
     char * s = (char*)malloc(strlen(filename)+128);
@@ -232,6 +240,8 @@ void TauAllocation::TriggerDeallocationEvent(char const * filename, int lineno)
 {
   user_event_t * e;
   unsigned long file_hash = LocationHash(lineno, filename);
+
+  event_map_t & event_map = TheTauAllocationEventMap();
 
   event_map_t::iterator it = event_map.find(file_hash);
   if (it == event_map.end()) {
@@ -418,7 +428,7 @@ void * TauAllocation::Allocate(size_t align, size_t size, const char * filename,
     ProtectPages(prot_addr, prot_size);
   }
 
-  alloc_map[user_addr] = this;
+  TheTauAllocationMap()[user_addr] = this;
   TriggerAllocationEvent(filename, lineno);
 
   // All done with bookkeeping, get back to the user
@@ -470,7 +480,7 @@ void TauAllocation::Deallocate(const char * filename, int lineno)
   }
 
   TriggerDeallocationEvent(filename, lineno);
-  alloc_map.erase(user_addr);
+  TheTauAllocationMap().erase(user_addr);
 
   alloc_addr = NULL;
   alloc_size = 0;
@@ -497,7 +507,7 @@ void TauAllocation::TrackAllocation(void * ptr, size_t size, const char * filena
   gap_addr = NULL;
   gap_size = 0;
 
-  alloc_map[user_addr] = this;
+  TheTauAllocationMap()[user_addr] = this;
   TriggerAllocationEvent(filename, lineno);
 }
 
@@ -508,7 +518,7 @@ void TauAllocation::TrackAllocation(void * ptr, size_t size, const char * filena
 void TauAllocation::TrackDeallocation(const char * filename, int lineno)
 {
   TriggerDeallocationEvent(filename, lineno);
-  alloc_map.erase(user_addr);
+  TheTauAllocationMap().erase(user_addr);
 
   alloc_addr = NULL;
   alloc_size = 0;
@@ -589,6 +599,7 @@ void Tau_track_memory_deallocation(void * ptr, char const * filename, int lineno
   TauAllocation * alloc = TauAllocation::Find(addr);
   if (alloc) {
     alloc->TrackDeallocation(filename, lineno);
+    // TrackDeallocation triggers an event, so deleting alloc is not crazy
     delete alloc;
   } else {
     TAU_VERBOSE("TAU: WARNING - No allocation record found for %p\n", addr);

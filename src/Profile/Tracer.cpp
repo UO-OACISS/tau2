@@ -168,7 +168,7 @@ static int checkTraceFileInitialized(int tid) {
 
 /* Flush the trace buffer */
 void TauTraceFlushBuffer(int tid) {
-  Tau_global_incr_insideTAU_tid(tid);
+  Tau_global_incr_insideTAU();
   checkTraceFileInitialized(tid);
 
   int ret;
@@ -201,7 +201,7 @@ void TauTraceFlushBuffer(int tid) {
     }
   }
   TauCurrentEvent[tid] = 0;
-  Tau_global_decr_insideTAU_tid(tid);
+  Tau_global_decr_insideTAU();
 }
 
 
