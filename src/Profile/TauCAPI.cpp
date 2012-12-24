@@ -188,7 +188,7 @@ extern "C" void Tau_stack_initialization() {
 
 extern "C" int Tau_global_get_insideTAU() {
   Tau_stack_checkInit();
-  int tid = Tau_get_tid();
+  int tid = RtsLayer::localThreadId();
   return Tau_thread_flags[tid].Tau_global_insideTAU;
 }
 
@@ -199,7 +199,7 @@ extern "C" int Tau_global_get_insideTAU_tid(int tid) {
 
 extern "C" int Tau_global_incr_insideTAU() {
   Tau_stack_checkInit();
-  int tid = Tau_get_tid();
+  int tid = RtsLayer::localThreadId();
   Tau_thread_flags[tid].Tau_global_insideTAU++;
   return Tau_thread_flags[tid].Tau_global_insideTAU;
 }
@@ -209,7 +209,7 @@ extern "C" int Tau_global_process_incr_insideTAU() {
   int tid = 0;
   while (tid < TAU_MAX_THREADS)
   {
-    Tau_thread_flags[tid].Tau_global_insideTAU++;
+    Tau_global_incr_insideTAU();
     tid++;
   }
   return -1;
@@ -217,7 +217,7 @@ extern "C" int Tau_global_process_incr_insideTAU() {
 
 extern "C" int Tau_global_decr_insideTAU() {
   Tau_stack_checkInit();
-  int tid = Tau_get_tid();
+  int tid = RtsLayer::localThreadId();//Tau_get_tid();
   Tau_thread_flags[tid].Tau_global_insideTAU--;
 	TAU_ASSERT(Tau_thread_flags[tid].Tau_global_insideTAU < 0,
 		"Thread has decremented the insideTAU counter past 0");
@@ -229,28 +229,28 @@ extern "C" int Tau_global_process_decr_insideTAU() {
   int tid = 0;
   while (tid < TAU_MAX_THREADS)
   {
-    Tau_thread_flags[tid].Tau_global_insideTAU--;
+    Tau_global_decr_insideTAU();
   	TAU_ASSERT(Tau_thread_flags[tid].Tau_global_insideTAU < 0,
 			"Thread has decremented the insideTAU counter past 0");
     tid++;
   }
   return -1;
 }
-
+/*
 extern "C" int Tau_global_incr_insideTAU_tid(int tid) {
   Tau_stack_checkInit();
-  Tau_thread_flags[tid].Tau_global_insideTAU++;
+  Tau_global_incr_insideTAU();
   return Tau_thread_flags[tid].Tau_global_insideTAU;
 }
 
 extern "C" int Tau_global_decr_insideTAU_tid(int tid) {
   Tau_stack_checkInit();
-  Tau_thread_flags[tid].Tau_global_insideTAU--;
+  Tau_global_decr_insideTAU();
   TAU_ASSERT(Tau_thread_flags[tid].Tau_global_insideTAU < 0,
 		"Thread has decremented the insideTAU counter past 0");
   return Tau_thread_flags[tid].Tau_global_insideTAU;
 }
-
+*/
 extern "C" Profiler *TauInternal_CurrentProfiler(int tid) {
   int pos = Tau_thread_flags[tid].Tau_global_stackpos;
   if (pos < 0) {
@@ -271,7 +271,7 @@ extern "C" Profiler *TauInternal_ParentProfiler(int tid) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 	FunctionInfo *fi = (FunctionInfo *) functionInfo; 
-Tau_thread_flags[tid].Tau_global_insideTAU++;
+Tau_global_incr_insideTAU();
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_init_if_necessary();
@@ -294,7 +294,7 @@ Tau_thread_flags[tid].Tau_global_insideTAU++;
     Tau_sampling_resume(tid);
   }
 #endif
-  Tau_thread_flags[tid].Tau_global_insideTAU--;
+  Tau_global_decr_insideTAU();
   return;
 #endif
 
@@ -310,7 +310,7 @@ Tau_thread_flags[tid].Tau_global_insideTAU++;
     Tau_sampling_resume(tid);
   }
 #endif
-  Tau_thread_flags[tid].Tau_global_insideTAU--;
+  Tau_global_decr_insideTAU();
   return;
 #endif
 
@@ -361,7 +361,7 @@ Tau_thread_flags[tid].Tau_global_insideTAU++;
       Tau_sampling_resume(tid);
     }
 #endif
-    Tau_thread_flags[tid].Tau_global_insideTAU--;
+    Tau_global_decr_insideTAU();
     return; 
   }
 #endif /* TAU_DEPTH_LIMIT */
@@ -401,7 +401,7 @@ Tau_thread_flags[tid].Tau_global_insideTAU++;
     Tau_sampling_event_start(tid, p->address);
   }
 #endif
-  Tau_thread_flags[tid].Tau_global_insideTAU--;
+  Tau_global_decr_insideTAU();
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -449,7 +449,9 @@ extern "C" void Tau_lite_start_timer(void *functionInfo, int phase) {
 		if ( !RtsLayer::TheEnableInstrumentation() || !(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
 			return; /* disabled */
 		}
+		Tau_global_incr_insideTAU();
 		int tid = Tau_get_tid();
+		Tau_global_decr_insideTAU();
 		
     Tau_start_timer(functionInfo, phase, tid);
 		
@@ -470,7 +472,7 @@ static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller) {
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_stop_timer(void *function_info, int tid ) {
-	Tau_thread_flags[tid].Tau_global_insideTAU++;
+	Tau_global_incr_insideTAU();
 	FunctionInfo *fi = (FunctionInfo *) function_info; 
 
 	Profiler *profiler;
@@ -507,7 +509,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
       Tau_sampling_resume(tid);
     }
 #endif
-  Tau_thread_flags[tid].Tau_global_insideTAU--;
+  Tau_global_decr_insideTAU();
   return 0;
 #endif
 
@@ -525,7 +527,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
       Tau_sampling_resume(tid);
     }
 #endif
-  Tau_thread_flags[tid].Tau_global_insideTAU--;
+  Tau_global_decr_insideTAU();
   return 0;
 #endif
 
@@ -540,7 +542,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
       Tau_sampling_resume(tid);
     }
 #endif
-    Tau_thread_flags[tid].Tau_global_insideTAU--;
+    Tau_global_decr_insideTAU();
     return 0; 
   }
 
@@ -574,7 +576,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
       Tau_sampling_resume(tid);
     }
 #endif
-    Tau_thread_flags[tid].Tau_global_insideTAU--;
+    Tau_global_decr_insideTAU();
     return 0; 
   }
 #endif /* TAU_DEPTH_LIMIT */
@@ -589,7 +591,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
     Tau_sampling_resume(tid);
   }
 #endif
-  Tau_thread_flags[tid].Tau_global_insideTAU--;
+  Tau_global_decr_insideTAU();
   return 0;
 }
 
@@ -637,7 +639,9 @@ extern "C" int Tau_lite_stop_timer(void *function_info) {
 		if ( !RtsLayer::TheEnableInstrumentation() || !(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
 			return 1; /* disabled */
 		}
+		Tau_global_incr_insideTAU();
 		int tid = Tau_get_tid();
+		Tau_global_decr_insideTAU();
 		
     int r = Tau_stop_timer(function_info, tid);
 		
@@ -1365,7 +1369,7 @@ extern void Tau_pure_start_task_string(const string name, int tid);
  * library is used without any instrumentation in main */
 extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
   //This is often the first entry point into TAU.
-  Tau_thread_flags[tid].Tau_global_insideTAU++;
+  Tau_global_incr_insideTAU();
 
 /*
   int disabled = 0;
@@ -1380,7 +1384,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
   }
 */
 #if defined(TAU_VAMPIRTRACE) || defined(TAU_EPILOG)
-  Tau_thread_flags[tid].Tau_global_insideTAU--;
+  Tau_global_decr_insideTAU();
   return; // disabled.
 #endif
   /* After creating the ".TAU application" timer, we start it. In the
@@ -1392,7 +1396,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
 
   if (!initialized) {
     if (initializing[tid]) {
-      Tau_thread_flags[tid].Tau_global_insideTAU--;
+      Tau_global_decr_insideTAU();
       return;
     }
     RtsLayer::LockEnv();
@@ -1411,7 +1415,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
   }
 
   if (initthread[tid] == true) {
-    Tau_thread_flags[tid].Tau_global_insideTAU--;
+    Tau_global_decr_insideTAU();
     return;
   }
   
@@ -1425,7 +1429,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
   }
 
   atexit(Tau_destructor_trigger);
-  Tau_thread_flags[tid].Tau_global_insideTAU--;
+  Tau_global_decr_insideTAU();
   return;
 }
 
@@ -1612,18 +1616,18 @@ void Tau_pure_start_task_string(const string name, int tid)
 
 extern "C" void Tau_pure_start_task(const char *name, int tid)
 {
-  Tau_global_incr_insideTAU_tid(tid);
+  Tau_global_incr_insideTAU();
   string n = string(name);
   Tau_pure_start_task_string(n, tid);
-  Tau_global_decr_insideTAU_tid(tid);
+  Tau_global_decr_insideTAU();
 }
 
 extern "C" void Tau_pure_start(const char *name) {
   int tid = Tau_get_tid();
-  Tau_global_incr_insideTAU_tid(tid);
+  Tau_global_incr_insideTAU();
   string n = string(name);
   Tau_pure_start_task_string(n, tid);
-  Tau_global_decr_insideTAU_tid(tid);
+  Tau_global_decr_insideTAU();
 }
 
 void Tau_pure_stop_task_string(const string name, int tid) {
@@ -1642,18 +1646,18 @@ void Tau_pure_stop_task_string(const string name, int tid) {
 }
 
 extern "C" void Tau_pure_stop_task(const char *name, int tid) {
-  Tau_global_incr_insideTAU_tid(tid);
+  Tau_global_incr_insideTAU();
   string n = string(name);
   Tau_pure_stop_task_string(n, tid);
-  Tau_global_decr_insideTAU_tid(tid);
+  Tau_global_decr_insideTAU();
 }
 
 extern "C" void Tau_pure_stop(const char *name) {
   int tid = Tau_get_tid();
-  Tau_global_incr_insideTAU_tid(tid);
+  Tau_global_incr_insideTAU();
   string n = string(name);
   Tau_pure_stop_task_string(n, Tau_get_tid());
-  Tau_global_decr_insideTAU_tid(tid);
+  Tau_global_decr_insideTAU();
 }
 
 extern "C" void Tau_static_phase_start(char *name) {

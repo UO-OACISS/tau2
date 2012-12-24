@@ -768,8 +768,8 @@ bool instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name
 {
   int inbufLength, k;
   bool retval;
-  bool print_cr; 
-  int write_upto, i, space; 
+  bool print_cr;
+  int write_upto, i, space;
   string file(f->name());
   static char inbuf[INBUF_SIZE]; // to read the line
   // open outfile for instrumented version of source file
@@ -789,396 +789,352 @@ bool instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name
 #endif 
   memset(inbuf, INBUF_SIZE, 0); // reset to zero
 
-
   // initialize reference vector
   vector<itemRef *> itemvec;
-  if (!use_spec)
-  {
+  if (!use_spec) {
     /* In "spec" mode, only the file instrumentation requests are used */
     retval = getCXXReferences(itemvec, pdb, f);
-    if (!retval){
+    if (!retval) {
 #ifdef DEBUG
-    cout <<"instrumentCXXFile: propagating error from getCXXReferences..."<<endl;
+      cout <<"instrumentCXXFile: propagating error from getCXXReferences..."<<endl;
 #endif /* DEBUG */
       return retval; /* return error if we catch one */
     }
   }
   /* check if the given file has line/routine level instrumentation requests */
-  if (!isInstrumentListEmpty()) 
-  { /* there are finite instrumentation requests, add requests for this file */
+  if (!isInstrumentListEmpty()) { /* there are finite instrumentation requests, add requests for this file */
     retval = addFileInstrumentationRequests(pdb, f, itemvec);
-    if (!retval)
-      return retval;
+    if (!retval) return retval;
   }
   /* All instrumentation requests are in. Now do postprocessing. */
   postprocessInstrumentationRequests(itemvec);
 
   // put in code to insert <Profile/Profiler.h>
-  if (use_spec)
-  {
+  if (use_spec) {
     /* XXX Insert code here */
-  }
-  else if (use_perflib)
-  {
+  } else if (use_perflib) {
     /* XXX Insert code here */
+  } else {
+    ostr << "#include <" << header_file << ">" << endl;
   }
-  else
-    ostr<< "#include <"<<header_file<<">"<<endl;
-  if (memory_flag)
-    ostr<< "#include <malloc.h>"<<endl;
+  if (memory_flag) {
+    ostr << "#include <malloc.h>" << endl;
+    ostr << "#line 1 \"" << f->name() << "\"" << endl;
+  }
 
-  defineTauGroup(ostr, group_name); 
-  
+  defineTauGroup(ostr, group_name);
+
   int inputLineNo = 0;
   int lastInstrumentedLineNo = 0;
-  for(vector<itemRef *>::iterator it = itemvec.begin(); it != itemvec.end();
-	++it)
-  {
+  for (vector<itemRef *>::iterator it = itemvec.begin(); it != itemvec.end(); ++it) {
     // Read one line each till we reach the desired line no. 
 #ifdef DEBUG
     if ((*it) && (*it)->item)
-      cout <<"S: "<< (*it)->item->fullName() << " line "<< (*it)->line << " col " << (*it)->col << endl;
+    cout <<"S: "<< (*it)->item->fullName() << " line "<< (*it)->line << " col " << (*it)->col << endl;
 #endif 
     bool instrumented = false;
     /* NOTE: We need to change this for line level instrumentation. It can 
      * happen that the routine's entry line is also specified for line level
      * instrumentation */
-    if (lastInstrumentedLineNo >= (*it)->line )
-    {
+    if (lastInstrumentedLineNo >= (*it)->line) {
       // Hey! This line has already been instrumented. Go to the next
       // entry in the func
 #ifdef DEBUG
       cout <<"Entry already instrumented or brace not found - reached next routine! line = "<<(*it)->line <<endl;
 #endif
-      if ((*it)->kind == INSTRUMENTATION_POINT)
-      {
+      if ((*it)->kind == INSTRUMENTATION_POINT) {
 #ifdef DEBUG
-	cout <<"Instrumentation Point: inbuf = "<<inbuf<<endl;
+        cout <<"Instrumentation Point: inbuf = "<<inbuf<<endl;
 #endif /* DEBUG */
-	ostr << (*it)->snippet<<endl;
+        ostr << (*it)->snippet << endl;
       }
       continue; // takes you to the next iteration in the for loop
     }
 
-    while((instrumented == false) && (istr.getline(inbuf, INBUF_SIZE)) )
-    { /* This assumes only one instrumentation request per line. Not so! */
-      inputLineNo ++;
-      if (inputLineNo < (*it)->line) 
-      {
-	// write the input line in the output stream
-        ostr << inbuf <<endl;
-      }
-      else 
-      { 
-        switch((*it)->kind) {
-	  case ROUTINE: 
+    while ((instrumented == false) && (istr.getline(inbuf, INBUF_SIZE))) { /* This assumes only one instrumentation request per line. Not so! */
+      inputLineNo++;
+      if (inputLineNo < (*it)->line) {
+        // write the input line in the output stream
+        ostr << inbuf << endl;
+      } else {
+        switch ((*it)->kind) {
+        case ROUTINE:
+          ostr << "#line " << inputLineNo << "\n";
+
           // we're at the desired line no. search for an open brace
-  	  inbufLength = strlen(inbuf);
-  
-  	  for(i=0; i< inbufLength; i++)
-  	  { 
-  	    if ((inbuf[i] == '{') && (instrumented == false))
-  	    {
+          inbufLength = strlen(inbuf);
+
+          for (i = 0; i < inbufLength; i++) {
+            if ((inbuf[i] == '{') && (instrumented == false)) {
 #ifdef DEBUG
-  	      cout <<"found the *first* { on the line inputLineNo=" <<inputLineNo<< endl;
+              cout <<"found the *first* { on the line inputLineNo=" <<inputLineNo<< endl;
 #endif 
-  	      ostr << inbuf[i] <<endl; // write the open brace and '\n'
-  	      // put in instrumentation for the routine HERE
-  	      //ostr <<"/*** INSTRUMENTATION ***/\n"; 
+              ostr << inbuf[i] << endl; // write the open brace and '\n'
 #ifdef SPACES
-  	      // leave some leading spaces for formatting...
-  	      for (space = 0; space < (*it)->col ; space++) ostr << " " ; 
+              // leave some leading spaces for formatting...
+              for (space = 0; space < (*it)->col; space++) ostr << " ";
 #endif
-              if (use_spec)
-              {
+              if (use_spec) {
                 /* XXX Insert code here */
-              }
-              else if (use_perflib)
-              {
+              } else if (use_perflib) {
                 /* XXX Insert code here */
-              }
-              else {
-  	        ostr <<"  "<<getMeasurementEntity((*it))<<"(\"" << getInstrumentedName((*it)->item) ;
-  	        if (!((*it)->isTarget))
-  	        { // it is a template member. Help it by giving an additional ()
-  	        // if the item is a member function or a static member func give
-  	        // it a class name using CT
-  	          ostr <<"\", CT(*this), ";
-  	        } 
-   	        else // it is not a class member 
-  	        { 
-  	          ostr << "\", \" \", "; // null type arg to TAU_PROFILE 
-  	        }
+              } else {
+                ostr << "  " << getMeasurementEntity((*it)) << "(\"" << getInstrumentedName((*it)->item);
+                if (!((*it)->isTarget)) { // it is a template member. Help it by giving an additional ()
+                  // if the item is a member function or a static member func give
+                  // it a class name using CT
+                  ostr << "\", CT(*this), ";
+                } else {
+                  // it is not a class member
+                  ostr << "\", \" \", "; // null type arg to TAU_PROFILE
+                }
 
-  	        if (strcmp((*it)->item->name().c_str(), "main")==0) 
-  	        { /* it is main() */
-  	          ostr << "TAU_DEFAULT);" <<endl; // give an additional line 
+                if ((*it)->item->name() == "main") { /* it is main() */
+                  ostr << "TAU_DEFAULT);" << endl; // give an additional line
 #ifdef SPACES
-  	          for (space = 0; space < (*it)->col ; space++) ostr << " " ; 
+                      for (space = 0; space < (*it)->col; space++) ostr << " ";
 #endif 
-  	          // leave some leading spaces for formatting...
+                  // leave some leading spaces for formatting...
 
-  	          print_tau_profile_init(ostr, (pdbCRoutine *) (*it)->item);
-  	          ostr <<"#ifndef TAU_MPI" <<endl; // set node 0
-  	          ostr <<"#ifndef TAU_SHMEM" <<endl; // set node 0
-  	          ostr <<"  TAU_PROFILE_SET_NODE(0);" <<endl; // set node 0
-  	          ostr <<"#endif /* TAU_SHMEM */" <<endl; // set node 0
-  	          ostr <<"#endif /* TAU_MPI */" <<endl; // set node 0
-		  if (tau_language == tau_upc) {
-  	            ostr <<"  TAU_PROFILE_SET_NODE(MYTHREAD);" <<endl; // set node 0
-                  } 
-  	        }
-  	        else 
-  	        {
-  	          ostr <<group_name<<");" <<endl; // give an additional line 
-  	        }
+                  print_tau_profile_init(ostr, (pdbCRoutine *)(*it)->item);
+                  ostr << "#ifndef TAU_MPI" << endl; // set node 0
+                  ostr << "#ifndef TAU_SHMEM" << endl; // set node 0
+                  ostr << "  TAU_PROFILE_SET_NODE(0);" << endl; // set node 0
+                  ostr << "#endif /* TAU_SHMEM */" << endl; // set node 0
+                  ostr << "#endif /* TAU_MPI */" << endl; // set node 0
+                  if (tau_language == tau_upc) {
+                    ostr << "  TAU_PROFILE_SET_NODE(MYTHREAD);" << endl; // set node 0
+                  }
+                } else {
+                  ostr << group_name << ");" << endl; // give an additional line
+                }
               }
-  	      // if its a function, it already has a ()
-  	      instrumented = true;
-  	      lastInstrumentedLineNo = inputLineNo; 
-  	      // keep track of which line was instrumented last
-   	      // and then finish writing the rest of the line 
-  	      // this will be used for templates and instantiated functions
-  	    } // if open brace
-  	    else 
-  	    {  // if not open brace
-  	      // ok to write to ostr 
+              // if its a function, it already has a ()
+              instrumented = true;
+              lastInstrumentedLineNo = inputLineNo;
+              // keep track of which line was instrumented last
+              // and then finish writing the rest of the line
+              // this will be used for templates and instantiated functions
+            } // if open brace
+            else { // if not open brace
+                   // ok to write to ostr
 #ifdef DEBUG
-	      cout <<"DUMPING inbuf[i]"<<inbuf[i]<<endl;
-/* We need to check here if there are other items to be written out like
-entry instrumentation points  for the iteration right after the writing of
-the open brace. */
+            cout <<"DUMPING inbuf[i]"<<inbuf[i]<<endl;
+            /* We need to check here if there are other items to be written out like
+             entry instrumentation points  for the iteration right after the writing of
+             the open brace. */
 #endif /* DEBUG */
-  	      ostr << inbuf[i]; 
-  	      if (inbuf[i] == ';')
-  	      { // Hey! We've got a ; before seeing an open brace. That means 
-  	        // we're dealing with a template declaration. we can't instrument
-  	        // a declaration, only a definition. 
-  	        instrumented = true; 	
-  	        // by setting instrumented as true, it won't look for an open
-  	        // brace on this line 
-  	      }
+              ostr << inbuf[i];
+              if (inbuf[i] == ';') { // Hey! We've got a ; before seeing an open brace. That means
+                                     // we're dealing with a template declaration. we can't instrument
+                                     // a declaration, only a definition.
+                instrumented = true;
+                // by setting instrumented as true, it won't look for an open
+                // brace on this line
+              }
             } // if open brace 
-  	  } // for i loop
-  	  ostr <<endl;
-   	  // if we didn't find the open brace on the desired line, if its in the 
-  	  // next line go on with the while loop till we return instrumented 
-     	  // becomes true. 
+          } // for i loop
+          ostr << "#line " << inputLineNo << "\n";
+          ostr << endl;
+          // if we didn't find the open brace on the desired line, if its in the
+          // next line go on with the while loop till we return instrumented
+          // becomes true.
           break;
 
-	  case EXIT:
+        case EXIT:
+
+          ostr << "#line " << inputLineNo << "\n";
 
 #ifdef DEBUG 
-		cout <<"Exit" <<endl;
-		cout <<"using_exit_keyword = "<<using_exit_keyword<<endl;
-		cout <<"exit_keyword = "<<exit_keyword<<endl;
-		cout <<"infbuf[(*it)->col-1] = "<<inbuf[(*it)->col-1]<<endl;
+          cout <<"Exit" <<endl;
+          cout <<"using_exit_keyword = "<<using_exit_keyword<<endl;
+          cout <<"exit_keyword = "<<exit_keyword<<endl;
+          cout <<"infbuf[(*it)->col-1] = "<<inbuf[(*it)->col-1]<<endl;
 #endif /* DEBUG */
-		/* first flush out all characters till our column */
-		for (k = 0; k < (*it)->col-1; k++) ostr<<inbuf[k];
-		if ((strncmp(&inbuf[(*it)->col-1], "abort", strlen("abort")) == 0) 
-		  ||(strncmp(&inbuf[(*it)->col-1], "exit", strlen("exit")) == 0) 
-		  ||(using_exit_keyword && (strncmp(&inbuf[(*it)->col-1], 
-				exit_keyword, strlen(exit_keyword)) == 0) ))
-                {
+          /* first flush out all characters till our column */
+          for (k = 0; k < (*it)->col - 1; k++)
+            ostr << inbuf[k];
+          if ((strncmp(&inbuf[(*it)->col - 1], "abort", strlen("abort")) == 0)
+              || (strncmp(&inbuf[(*it)->col - 1], "exit", strlen("exit")) == 0)
+              || (using_exit_keyword && (strncmp(&inbuf[(*it)->col - 1], exit_keyword, strlen(exit_keyword)) == 0))) {
 #ifdef DEBUG
-		  cout <<"WRITING EXIT RECORD "<<endl;
+            cout <<"WRITING EXIT RECORD "<<endl;
 #endif /* DEBUG */
-                  ostr<<"{\n";
-                  if (!(*it)->snippet.empty())
-                    ostr<<(*it)->snippet<<endl;
-                  if (use_spec)
-                  {
-                    /* XXX Insert code here */
-                  }
-                  else if (use_perflib)
-                  {
-                    /* XXX Insert code here */
-                  }
-                  else {
-		    ostr <<"TAU_PROFILE_EXIT(\"exit\"); ";
-                  }
-		  for (k = (*it)->col-1; k < strlen(inbuf) ; k++)
-		    ostr<<inbuf[k]; 
-                  ostr <<endl<<"      }";
-		  instrumented = true; 
-		} else {
-		  fprintf (stderr, "Warning: exit was found at line %d, column %d, but wasn't found in the source code.\n",(*it)->line, (*it)->col);
-		  fprintf (stderr, "If the exit call occurs in a macro (likely), make sure you place a \"TAU_PROFILE_EXIT\" before it (note: this warning will still appear)\n");
-		  for (k = (*it)->col-1; k < strlen(inbuf); k++)
-		    ostr<<inbuf[k];
-		  instrumented = true;
-		  // write the input line in the output stream
-		}
-                ostr<<endl;
-            break;
+            ostr << "{\n";
+            if (!(*it)->snippet.empty()) ostr << (*it)->snippet << endl;
+            if (use_spec) {
+              /* XXX Insert code here */
+            } else if (use_perflib) {
+              /* XXX Insert code here */
+            } else {
+              ostr << "TAU_PROFILE_EXIT(\"exit\"); ";
+            }
+            for (k = (*it)->col - 1; k < strlen(inbuf); k++)
+              ostr << inbuf[k];
+            ostr << endl << "      }";
+            instrumented = true;
+          } else {
+            fprintf(stderr, "Warning: exit was found at line %d, column %d, but wasn't found in the source code.\n",
+                (*it)->line, (*it)->col);
+            fprintf(stderr,
+                "If the exit call occurs in a macro (likely), make sure you place a \"TAU_PROFILE_EXIT\" before it (note: this warning will still appear)\n");
+            for (k = (*it)->col - 1; k < strlen(inbuf); k++)
+              ostr << inbuf[k];
+            instrumented = true;
+            // write the input line in the output stream
+          }
+          ostr << "#line " << inputLineNo << "\n";
+          ostr << endl;
+          break;
 
-	  case START_LOOP_TIMER:
-		for (k = 0; k < (*it)->col-1; k++) ostr<<inbuf[k];
-                if (use_spec)
-                {
-                  /* XXX Insert code here */
-                }
-                else if (use_perflib)
-                {
-                  /* Insert code here */
-                }
-                else
-		  ostr<<"\n{ TAU_PROFILE(\""<<(*it)->snippet<<"\", \" \", TAU_USER);"<<endl;
-		for (k = 0; k < (*it)->col-1; k++) ostr<<" "; /* put spaces */
-		/* if there is another instrumentation request on the same line */
-		
-		instrumented = true;
-	        if ((it+1) != itemvec.end())
-	        { /* there are other instrumentation requests */
-	          if (((*it)->line == (*(it+1))->line) && ((*(it+1))->kind == STOP_LOOP_TIMER))
-		  {
-                    write_upto = (*(it+1))->col - 1 ; 
+        case START_LOOP_TIMER:
+          ostr << "#line " << inputLineNo << "\n";
+
+          for (k = 0; k < (*it)->col - 1; k++)
+            ostr << inbuf[k];
+          if (use_spec) {
+            /* XXX Insert code here */
+          } else if (use_perflib) {
+            /* Insert code here */
+          } else ostr << "\n{ TAU_PROFILE(\"" << (*it)->snippet << "\", \" \", TAU_USER);" << endl;
+          for (k = 0; k < (*it)->col - 1; k++)
+            ostr << " "; /* put spaces */
+          /* if there is another instrumentation request on the same line */
+
+          instrumented = true;
+          if ((it + 1) != itemvec.end()) { /* there are other instrumentation requests */
+            if (((*it)->line == (*(it + 1))->line) && ((*(it + 1))->kind == STOP_LOOP_TIMER)) {
+              write_upto = (*(it + 1))->col - 1;
 #ifdef DEBUG
-		    cout <<"There was a stop timer on the same line: "<<(*it)->line<<endl;
+              cout <<"There was a stop timer on the same line: "<<(*it)->line<<endl;
 #endif /* DEBUG */
-		    for (k=(*it)->col-1; k < write_upto; k++) ostr<<inbuf[k];
-                    if (use_spec)
-                    {
-                      /* XXX Insert code here */
-                    }
-                    else if (use_perflib)
-                    {
-                      /* XXX Insert code here */
-                    }
-                    else
-                    {
-		      ostr <<" } ";
-                    }
-		    for (k=write_upto; k < strlen(inbuf); k++) ostr<<inbuf[k];
-		    ostr<<endl;
-		    it++; /* increment the iterator so this request is not processed again */
-		    break; /* finish the processing for this special case */
-		  } /* there is no stop timer on the same line */
-	        } /* or there are no more instrumentation requests -- flush out */
-		for (k = (*it)->col-1; k < strlen(inbuf) ; k++)
-		  ostr<<inbuf[k]; 
-                ostr<<endl;
-	    	break;
-	  case STOP_LOOP_TIMER:
-		for (k = 0; k < (*it)->col-1; k++) ostr<<inbuf[k];
-                if (use_spec)
-                {
-                  /* XXX Insert code here */
-                }
-                else if (use_perflib)
-                {
-                  /* XXX Insert code here */
-                }
-                else
-                {
-		  ostr <<"}"<<endl;
-                }
-		for (k = (*it)->col-1; k < strlen(inbuf) ; k++)
-		  ostr<<inbuf[k]; 
-		instrumented = true;
-	    	break;
-	  case GOTO_STOP_TIMER:
-		/* first flush all the characters till we reach the goto */
-		for (k = 0; k < (*it)->col-1; k++) ostr<<inbuf[k];
+              for (k = (*it)->col - 1; k < write_upto; k++)
+                ostr << inbuf[k];
+              if (use_spec) {
+                /* XXX Insert code here */
+              } else if (use_perflib) {
+                /* XXX Insert code here */
+              } else {
+                ostr << " } ";
+              }
+              for (k = write_upto; k < strlen(inbuf); k++)
+                ostr << inbuf[k];
+              ostr << endl;
+              it++; /* increment the iterator so this request is not processed again */
+              break; /* finish the processing for this special case */
+            } /* there is no stop timer on the same line */
+          } /* or there are no more instrumentation requests -- flush out */
+          for (k = (*it)->col - 1; k < strlen(inbuf); k++)
+            ostr << inbuf[k];
+          ostr << "#line " << inputLineNo << "\n";
+          ostr << endl;
+          break;
+        case STOP_LOOP_TIMER:
+          ostr << "#line " << inputLineNo << "\n";
+          for (k = 0; k < (*it)->col - 1; k++)
+            ostr << inbuf[k];
+          if (use_spec) {
+            /* XXX Insert code here */
+          } else if (use_perflib) {
+            /* XXX Insert code here */
+          } else {
+            ostr << "}" << endl;
+          }
+          for (k = (*it)->col - 1; k < strlen(inbuf); k++)
+            ostr << inbuf[k];
+          ostr << "#line " << inputLineNo << "\n";
+          instrumented = true;
+          break;
+
+        case GOTO_STOP_TIMER:
+          ostr << "#line " << inputLineNo << "\n";
+          /* first flush all the characters till we reach the goto */
+          for (k = 0; k < (*it)->col - 1; k++)
+            ostr << inbuf[k];
 #ifdef DEBUG
-		cout <<"WRITING STOP LOOP TIMER RECORD "<<endl;
+          cout <<"WRITING STOP LOOP TIMER RECORD "<<endl;
 #endif /* DEBUG */
-                if (use_spec)
-                {
-                  /* XXX Insert code here */
-                }
-                else if (use_perflib)
-                {
-                  /* XXX Insert code here */
-                }
-                else
-                {
-		  ostr <<"{ TAU_PROFILE_STOP(lt); "; 
-                }
-		for (k = (*it)->col-1; k < strlen(inbuf) ; k++)
-		  ostr<<inbuf[k]; 
-                if (use_spec)
-                {
-                  /* XXX Insert code here */
-                }
-                else if (use_perflib)
-                {
-                  /* XXX Insert code here */
-                }
-                else
-                {
-		  ostr <<" }";
-                }
-		ostr <<endl;
-		instrumented = true; 
-	    break;
-	  case INSTRUMENTATION_POINT:
+          if (use_spec) {
+            /* XXX Insert code here */
+          } else if (use_perflib) {
+            /* XXX Insert code here */
+          } else {
+            ostr << "{ TAU_PROFILE_STOP(lt); ";
+          }
+          for (k = (*it)->col - 1; k < strlen(inbuf); k++)
+            ostr << inbuf[k];
+          if (use_spec) {
+            /* XXX Insert code here */
+          } else if (use_perflib) {
+            /* XXX Insert code here */
+          } else {
+            ostr << " }";
+          }
+          ostr << "#line " << inputLineNo << "\n";
+          ostr << endl;
+          instrumented = true;
+          break;
+        case INSTRUMENTATION_POINT:
+          ostr << "#line " << inputLineNo << "\n";
 #ifdef DEBUG
-	    cout <<"Instrumentation point -> line = "<< (*it)->line<<endl;
-	    cout <<"col = "<<(*it)->col<<endl;
-	    cout <<"inbuf = "<<inbuf<<endl;
+          cout <<"Instrumentation point -> line = "<< (*it)->line<<endl;
+          cout <<"col = "<<(*it)->col<<endl;
+          cout <<"inbuf = "<<inbuf<<endl;
 #endif /* DEBUG */
-  	    for (i = 0; i < (*it)->col-1 ; i++) ostr << inbuf[i];
-	    if ((*it)->attribute == BEFORE)
-            {
-	      ostr << (*it)->snippet<<endl;
+          for (i = 0; i < (*it)->col - 1; i++)
+            ostr << inbuf[i];
+          if ((*it)->attribute == BEFORE) {
+            ostr << (*it)->snippet << endl;
+          } else { /* after */
+            ostr << endl;
+          }
+          /* We need to add code to write the rest of the buffer */
+          if ((it + 1) != itemvec.end()) { /* there are other instrumentation requests */
+            if ((*it)->line == (*(it + 1))->line) {
+              write_upto = (*(it + 1))->col - 1;
+#ifdef DEBUG
+              cout <<"There were other requests for the same line write_upto = "<<write_upto<<endl;
+#endif /* DEBUG */
+              print_cr = true;
+              instrumented = true; /* let it get instrumented in the next round */
+            } else {
+              write_upto = strlen(inbuf);
+#ifdef DEBUG
+              cout <<"There were no other requests for the same line write_upto = "<<write_upto<<endl;
+#endif /* DEBUG */
+              print_cr = true;
+              instrumented = true; /* let it get instrumented in the next round */
             }
-	    else 
-            { /* after */
-	      ostr << endl;
-	    }
-	    /* We need to add code to write the rest of the buffer */
-	    if ((it+1) != itemvec.end())
-	    { /* there are other instrumentation requests */
-		if ((*it)->line == (*(it+1))->line)
-		{
-                  write_upto = (*(it+1))->col - 1 ; 
+          } else { /* this was the last request - flush the inbuf */
+            write_upto = strlen(inbuf);
+            print_cr = true;
+            instrumented = true;
+          }
+          for (space = 0; space < (*it)->col - 1; space++)
+            ostr << " ";
+          /* write out the snippet! */
+          if ((*it)->attribute == AFTER) {
+            ostr << (*it)->snippet << endl;
+            for (space = 0; space < (*it)->col - 1; space++)
+              ostr << " ";
+          }
 #ifdef DEBUG
-		  cout <<"There were other requests for the same line write_upto = "<<write_upto<<endl;
+          printf("it col -1 = %d, write_upto = %d\n", (*it)->col-1, write_upto);
 #endif /* DEBUG */
-		  print_cr = true;
-		  instrumented = true; /* let it get instrumented in the next round */
-		}
-                else
-		{
-                  write_upto = strlen(inbuf);
+          for (i = (*it)->col - 1; i < write_upto; i++) {
 #ifdef DEBUG
-		  cout <<"There were no other requests for the same line write_upto = "<<write_upto<<endl;
+            printf("Writing (3.1) inbuf[%d] = %c\n", i, inbuf[i]);
 #endif /* DEBUG */
-		  print_cr = true;
-		  instrumented = true; /* let it get instrumented in the next round */
-		}
-	    } 
-	    else 
-	    { /* this was the last request - flush the inbuf */
-	      write_upto = strlen(inbuf);
-	      print_cr = true;
-              instrumented = true; 
-            }
-	    for (space = 0; space < (*it)->col-1; space++) ostr <<" ";
-	    /* write out the snippet! */
-	    if ((*it)->attribute == AFTER)
-            {
-	      ostr << (*it)->snippet<<endl;
-	      for (space = 0; space < (*it)->col-1; space++) ostr <<" ";
-            }
-#ifdef DEBUG
-            printf("it col -1 = %d, write_upto = %d\n", (*it)->col-1, write_upto);
-#endif /* DEBUG */
-	    for (i = (*it)->col-1; i < write_upto; i++)
-            {
-#ifdef DEBUG
-              printf("Writing (3.1) inbuf[%d] = %c\n", i, inbuf[i]);
-#endif /* DEBUG */
-              ostr << inbuf[i]; 
-            }
-	    if (print_cr) ostr <<endl; 
-	    break;
-	  default:
-	    cout <<"Unknown option in instrumentCXXFile:"<<(*it)->kind<<endl;
-	    instrumented = true;
-	    break;
+            ostr << inbuf[i];
+          }
+          ostr << "#line " << inputLineNo << "\n";
+          if (print_cr) ostr << endl;
+          break;
+
+        default:
+          cout << "Unknown option in instrumentCXXFile:" << (*it)->kind << endl;
+          instrumented = true;
+          break;
         }
       } // else      
 
@@ -1187,9 +1143,8 @@ the open brace. */
 
   } // For loop
   // For loop is over now flush out the remaining lines to the output file
-  while (istr.getline(inbuf, INBUF_SIZE) ) 
-  { 
-    ostr << inbuf <<endl;
+  while (istr.getline(inbuf, INBUF_SIZE)) {
+    ostr << inbuf << endl;
   }
   // written everything. quit and debug!
   ostr.close();
@@ -1271,8 +1226,9 @@ void writeFortranTimer(ostream &ostr, string timername, itemRef *i) {
 /* -------------------------------------------------------------------------- */
 /* -- BodyBegin for a routine that does return some value ------------------- */
 /* -------------------------------------------------------------------------- */
-void processBodyBegin(ostream& ostr, itemRef *i, string& group_name) {
-  int space; 
+void processBodyBegin(ostream& ostr, itemRef *i, string& group_name)
+{
+  int space;
   ostr << "{\n";
   writeAdditionalDeclarations(ostr, (pdbRoutine *)(i->item));
   ostr << "\n\t";
@@ -1281,34 +1237,33 @@ void processBodyBegin(ostream& ostr, itemRef *i, string& group_name) {
     ostr << i->snippet << endl;
     /* XXX Insert code here */
   } else if (use_perflib) {
-    ostr<<"Perf_Update(\"" <<((pdbRoutine *)(i->item))->name() << "\", 1);"<<endl;
+    ostr << "Perf_Update(\"" << ((pdbRoutine *)(i->item))->name() << "\", 1);" << endl;
   } else {
-    ostr <<getCreateMeasurementEntity(i)<<"(tautimer, \""<<
-      getInstrumentedName(i->item) << "\", \" " << "\", ";
-      // ((pdbRoutine *)(i->item))->signature()->name() << "\", ";
+    ostr << getCreateMeasurementEntity(i) << "(tautimer, \"" << getInstrumentedName(i->item) << "\", \" " << "\", ";
+    // ((pdbRoutine *)(i->item))->signature()->name() << "\", ";
 
-    if (strcmp(i->item->name().c_str(), "main")==0) { 
+    if (strcmp(i->item->name().c_str(), "main") == 0) {
       /* it is main() */
-      ostr << "TAU_DEFAULT);" <<endl; // give an additional line
+      ostr << "TAU_DEFAULT);" << endl; // give an additional line
 #ifdef SPACES
-      for (space = 0; space < (*it)->col ; space++) ostr << " " ;
+          for (space = 0; space < (*it)->col; space++) ostr << " ";
 #endif
       // leave some leading spaces for formatting...
-      
-      print_tau_profile_init(ostr, (pdbCRoutine *) (i->item));
-      ostr <<"#ifndef TAU_MPI" <<endl; // set node 0
-      ostr <<"#ifndef TAU_SHMEM" <<endl; // set node 0
-      ostr <<"  TAU_PROFILE_SET_NODE(0);" <<endl; // set node 0
-      ostr <<"#endif /* TAU_SHMEM */" <<endl; // set node 0
-      ostr <<"#endif /* TAU_MPI */" <<endl; // set node 0
+
+      print_tau_profile_init(ostr, (pdbCRoutine *)(i->item));
+      ostr << "#ifndef TAU_MPI" << endl; // set node 0
+      ostr << "#ifndef TAU_SHMEM" << endl; // set node 0
+      ostr << "  TAU_PROFILE_SET_NODE(0);" << endl; // set node 0
+      ostr << "#endif /* TAU_SHMEM */" << endl; // set node 0
+      ostr << "#endif /* TAU_MPI */" << endl; // set node 0
       if (tau_language == tau_upc) {
-        ostr <<"  TAU_PROFILE_SET_NODE(MYTHREAD);" <<endl; // set node 0
+        ostr << "  TAU_PROFILE_SET_NODE(MYTHREAD);" << endl; // set node 0
       }
     } else {
-      ostr <<group_name<<");" <<endl; // give an additional line
+      ostr << group_name << ");" << endl; // give an additional line
     }
 
-    ostr <<"\t"<<getStartMeasurementEntity(i)<<"(tautimer);"<<endl;
+    ostr << "\t" << getStartMeasurementEntity(i) << "(tautimer);" << endl;
     ostr << i->snippet << endl;
   }
 }
@@ -1440,64 +1395,74 @@ void processExitExpression(ostream& ostr, string& exit_expression, itemRef *it, 
 /* -------------------------------------------------------------------------- */
 /* -- Instrumentation routine for a C program ------------------------------- */
 /* -------------------------------------------------------------------------- */
-bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, string& header_file) { 
+bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, string& header_file)
+{
   int inbufLength, i, j, space;
+
   string file(f->name());
+
   static char inbuf[INBUF_SIZE]; // to read the line
   static char exit_type[EXIT_KEYWORD_SIZE]; // to read the line
+
   string exit_expression;
+  string timercode; /* for outer-loop level timer-based instrumentation */
+
   bool abort_used = false;
-  char newline;
-  newline = '\n'; /* for C \ processing in return statements */
+
+  char newline = '\n'; /* for C \ processing in return statements */
+
   // open outfile for instrumented version of source file
   ofstream ostr(outfile.c_str());
-  string timercode; /* for outer-loop level timer-based instrumentation */
   if (!ostr) {
     cerr << "Error: Cannot open '" << outfile << "'" << endl;
     return false;
   }
+
   // open source file
   ifstream istr(file.c_str());
   if (!istr) {
     cerr << "Error: Cannot open '" << file << "'" << endl;
     return false;
   }
+
 #ifdef DEBUG
   cout << "Processing " << file << " in instrumentCFile..." << endl;
 #endif
 
-
   memset(inbuf, INBUF_SIZE, 0); // reset to zero
+
   // initialize reference vector
   vector<itemRef *> itemvec;
   if (!use_spec) {
     /* In "spec" mode, only the file instrumentation requests are used */
     getCReferences(itemvec, pdb, f);
   }
+
   /* check if the given file has line/routine level instrumentation requests */
-  if (!isInstrumentListEmpty()) { 
+  if (!isInstrumentListEmpty()) {
     /* there are finite instrumentation requests, add requests for this file */
     addFileInstrumentationRequests(pdb, f, itemvec);
   }
+
   /* All instrumentation requests are in. Now do postprocessing. */
   postprocessInstrumentationRequests(itemvec);
-
 
   // Begin Instrumentation
   // put in code to insert <Profile/Profiler.h>
   if (use_spec) {
     /* XXX Insert code here */
   } else if (use_perflib) {
-    ostr<< "void Perf_Update(char *name, int entry);"<<endl;
+    ostr << "void Perf_Update(char *name, int entry);" << endl;
   } else {
-    ostr<< "#include <"<<header_file<<">"<<endl;
+    ostr << "#include <" << header_file << ">" << endl;
   }
-  
+
   if (memory_flag) {
-    ostr<< "#include <malloc.h>"<<endl;
+    ostr << "#include <malloc.h>" << endl;
+    ostr << "#line 1 \"" << f->name() << "\"" << endl;
   }
-  
-  defineTauGroup(ostr, group_name); 
+
+  defineTauGroup(ostr, group_name);
 
   int inputLineNo = 0;
   vector<itemRef *>::iterator lit = itemvec.begin();
@@ -1509,319 +1474,334 @@ bool instrumentCFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name, 
     }
 #endif
     bool instrumented = false;
-    while((instrumented == false) && (istr.getline(inbuf, INBUF_SIZE))) {
-      inputLineNo ++;
+    while ((instrumented == false) && (istr.getline(inbuf, INBUF_SIZE))) {
+      inputLineNo++;
       if (inputLineNo < (*lit)->line) {
         // write the input line in the output stream
-        ostr << inbuf <<endl;
+        ostr << inbuf << endl;
       } else { /* We're at the desired line no. */
-        for(i=0; i< ((*lit)->col)-1; i++) { 
-	  ostr << inbuf[i];
-	}
+        for (i = 0; i < ((*lit)->col) - 1; i++) {
+          ostr << inbuf[i];
+        }
         vector<itemRef *>::iterator it;
-        for (it = lit; ((it != itemvec.end()) && ((*it)->line == (*lit)->line)); ++it) { /* it/lit */
+        for (it = lit; ((it != itemvec.end()) && ((*it)->line == (*lit)->line)); ++it) {
           inbufLength = strlen(inbuf);
-	  
-	  /* set instrumented = true after inserting instrumentation */
-	  int write_from, write_upto;
-	  int k;
-	  write_from = ((*it)->col)-1; 
-	  
-        /* Examine the instrumentation request */
-	  switch ((*it)->kind) {
-	  case BODY_BEGIN: 
-	    processBodyBegin(ostr, *it, group_name);
-	    instrumented = true; 
-	    break;
-	  case RETURN: 
-	    process_this_return = false;
-	    if (strncmp((const char *)&inbuf[((*it)->col)-1], 
-			return_void_string, strlen(return_void_string))==0) {
-	      if (!isalnum(inbuf[((*it)->col)-1 + strlen(return_void_string)])) {
-		process_this_return = true; 
-		strcpy(use_return_void, return_void_string);
-	      }
-	    }
-	    if (strncmp((const char *)&inbuf[((*it)->col)-1], 
-			return_nonvoid_string, strlen(return_nonvoid_string))==0) {
-	      if (!isalnum(inbuf[((*it)->col)-1 + strlen(return_nonvoid_string)])) {
-		process_this_return = true; 
-		strcpy(use_return_nonvoid, return_nonvoid_string);
-	      }
-	    }
-	    if (strncmp((const char *)&inbuf[((*it)->col)-1], "return", strlen("return")) == 0) {
-	      if (!isalnum(inbuf[((*it)->col)-1 + strlen("return")])) {
-		process_this_return = true;
-		strcpy(use_return_void, "return");
-		strcpy(use_return_nonvoid, "return");
-	      }
-	    }
-	    
-	    if (process_this_return) {
-	      if (isVoidRoutine((*it)->item)) {	
-		/* instrumentation code here */
-		if (use_spec) {
-		  ostr << "{ " << (*it)->snippet << " " << use_return_void << "; }" << endl;
-		  /* XXX Insert code here */
-		} else if (use_perflib) {
-		  ostr<<"{ Perf_Update(\""<< ((pdbRoutine *)((*it)->item))->name()<<"\", 0);"<<use_return_void<<";}"<<endl;
-		} else {
-		  ostr << "{ "<< (*it)->snippet << " " <<getStopMeasurementEntity(*it)<<"(tautimer); "
-		       << use_return_void<<"; }" << endl;
-		}
-		for (k=((*it)->col)-1; inbuf[k] !=';'; k++) {
-		  ;
-		}
-		write_from = k+1;
-	      } else {
-		string ret_expression; 
-		char current_char;
-		char match_char;
 
-		for (k = (*it)->col+strlen(use_return_nonvoid)-1; (inbuf[k] != ';') && (k<inbufLength) ; k++) {
-		  current_char = inbuf[k];
-		  ret_expression.append(&current_char, 1);
-		  /* what if there is a return ';' ; or return " foo;" ;  ?*/
-		  /* In that case we match till we find the matching " or ' */
-		  if ((inbuf[k] == '\'') || (inbuf[k] == '\"')) { 
+          /* set instrumented = true after inserting instrumentation */
+          int write_from, write_upto;
+          int k;
+          write_from = ((*it)->col) - 1;
+
+          /* Examine the instrumentation request */
+          switch ((*it)->kind) {
+          case BODY_BEGIN:
+            processBodyBegin(ostr, *it, group_name);
+            ostr << "#line " << inputLineNo << "\n";
+            instrumented = true;
+            break;
+          case RETURN:
+            ostr << "#line " << inputLineNo << "\n";
+            process_this_return = false;
+            if (strncmp((const char *)&inbuf[((*it)->col) - 1], return_void_string, strlen(return_void_string)) == 0) {
+              if (!isalnum(inbuf[((*it)->col) - 1 + strlen(return_void_string)])) {
+                process_this_return = true;
+                strcpy(use_return_void, return_void_string);
+              }
+            }
+            if (strncmp((const char *)&inbuf[((*it)->col) - 1], return_nonvoid_string, strlen(return_nonvoid_string)) == 0) {
+              if (!isalnum(inbuf[((*it)->col) - 1 + strlen(return_nonvoid_string)])) {
+                process_this_return = true;
+                strcpy(use_return_nonvoid, return_nonvoid_string);
+              }
+            }
+            if (strncmp((const char *)&inbuf[((*it)->col) - 1], "return", strlen("return")) == 0) {
+              if (!isalnum(inbuf[((*it)->col) - 1 + strlen("return")])) {
+                process_this_return = true;
+                strcpy(use_return_void, "return");
+                strcpy(use_return_nonvoid, "return");
+              }
+            }
+
+            if (process_this_return) {
+              if (isVoidRoutine((*it)->item)) {
+                /* instrumentation code here */
+                if (use_spec) {
+                  ostr << "{ " << (*it)->snippet << " " << use_return_void << "; }" << endl;
+                  /* XXX Insert code here */
+                } else if (use_perflib) {
+                  ostr << "{ Perf_Update(\"" << ((pdbRoutine *)((*it)->item))->name() << "\", 0);" << use_return_void
+                      << ";}" << endl;
+                } else {
+                  ostr << "{ " << (*it)->snippet << " " << getStopMeasurementEntity(*it) << "(tautimer); "
+                      << use_return_void << "; }" << endl;
+                }
+                for (k = ((*it)->col) - 1; inbuf[k] != ';'; k++) ; // Intentional
+                write_from = k + 1;
+              } else {
+                string ret_expression;
+                char current_char;
+                char match_char;
+
+                for (k = (*it)->col + strlen(use_return_nonvoid) - 1; (inbuf[k] != ';') && (k < inbufLength); k++) {
+                  current_char = inbuf[k];
+                  ret_expression.append(&current_char, 1);
+                  /* what if there is a return ';' ; or return " foo;" ;  ?*/
+                  /* In that case we match till we find the matching " or ' */
+                  if ((inbuf[k] == '\'') || (inbuf[k] == '\"')) {
                     match_char = inbuf[k];
-		    //printf("Found match_char: inbuf[k] = %c\n", inbuf[k]);
-		    k++;
+                    //printf("Found match_char: inbuf[k] = %c\n", inbuf[k]);
+                    k++;
                     if (!((inbuf[k] == '\'') || (inbuf[k] == '\"'))) {
                       do {
-		        current_char = inbuf[k];
-		        ret_expression.append(&current_char, 1);
-		        //printf("Pushing %c...\n", inbuf[k]);
+                        current_char = inbuf[k];
+                        ret_expression.append(&current_char, 1);
+                        //printf("Pushing %c...\n", inbuf[k]);
                         k++;
                       } while ((inbuf[k] != match_char) && (k < inbufLength));
                     }
-		    //printf("Now: inbuf[k] = %c\n", inbuf[k]);
-		    if (inbuf[k] == match_char) {
-		      //printf("Match: inbuf[k] = %c\n", inbuf[k]);
-		      current_char = inbuf[k];
-		      ret_expression.append(&current_char, 1);
-		      k++;
-		    }
+                    //printf("Now: inbuf[k] = %c\n", inbuf[k]);
+                    if (inbuf[k] == match_char) {
+                      //printf("Match: inbuf[k] = %c\n", inbuf[k]);
+                      current_char = inbuf[k];
+                      ret_expression.append(&current_char, 1);
+                      k++;
+                    }
                     k--; /* so k can be incremented at the end of the loop k++*/
-		    //printf("Leaving: k=%d, inbuf[k] = %c\n", k, inbuf[k]);
+                    //printf("Leaving: k=%d, inbuf[k] = %c\n", k, inbuf[k]);
                   }
-		}
-		if (inbuf[k] == ';') { /* Got the semicolon. Return expression is in one line. */
-		  write_from = k+1;
-		} else { /* return expression spans multiple lines */
-		  int l;   
-		  do {
-		    ret_expression.append("\n", 1);
-		    if (istr.getline(inbuf, INBUF_SIZE)==NULL) {
-		      perror("ERROR in reading file: looking for ;"); 
-		      exit(1); 
-		    }
-		    inbufLength = strlen(inbuf);
-		    inputLineNo ++;
-		    /* Now search for ; in the string */
-		    for(l=0; (inbuf[l] != ';') && (l < inbufLength); l++) {
-		      ret_expression.append(&inbuf[l], 1);
-		    }
-		  } while(inbuf[l] != ';');
-		  /* copy the buffer into inbuf */
-		  write_from = l+1; 
-		}
-		
+                }
+                if (inbuf[k] == ';') { /* Got the semicolon. Return expression is in one line. */
+                  write_from = k + 1;
+                } else { /* return expression spans multiple lines */
+                  int l;
+                  do {
+                    ret_expression.append("\n", 1);
+                    if (istr.getline(inbuf, INBUF_SIZE) == NULL) {
+                      perror("ERROR in reading file: looking for ;");
+                      exit(1);
+                    }
+                    inbufLength = strlen(inbuf);
+                    inputLineNo++;
+                    /* Now search for ; in the string */
+                    for (l = 0; (inbuf[l] != ';') && (l < inbufLength); l++) {
+                      ret_expression.append(&inbuf[l], 1);
+                    }
+                  } while (inbuf[l] != ';');
+                  /* copy the buffer into inbuf */
+                  write_from = l + 1;
+                }
+
 #ifdef DEBUG 
-		cout <<"ret_expression = "<<ret_expression<<endl;
+                cout <<"ret_expression = "<<ret_expression<<endl;
 #endif /* DEBUG */
 
+                processReturnExpression(ostr, ret_expression, *it, use_return_nonvoid);
+              }
+            } else {
+              /* if there was no return */
+              write_from = (*it)->col - 1;
+#ifdef DEBUG
+              cout <<"WRITE FROM (no return found) = "<<write_from<<endl;
+              cout <<"inbuf = "<<inbuf<<endl;
+#endif /* DEBUG */
+            }
 
-		processReturnExpression(ostr, ret_expression, *it, use_return_nonvoid); 
-	      }
-	    } else { 
-	      /* if there was no return */
-	      write_from =  (*it)->col - 1;
-#ifdef DEBUG
-	      cout <<"WRITE FROM (no return found) = "<<write_from<<endl;
-	      cout <<"inbuf = "<<inbuf<<endl;
-#endif /* DEBUG */
-	    }
-	    
-	    instrumented = true; 
-	    break;
-	  case BODY_END: 
+            instrumented = true;
+            break;
+          case BODY_END:
 #ifdef DEBUG 
-	    cout <<"Body End "<<endl;
+            cout <<"Body End "<<endl;
 #endif /* DEBUG */
-	    if (use_spec) {
-	      ostr << "\n}\n\t" << (*it)->snippet << endl;
-	      /* XXX Insert code here */
-	    } else if (use_perflib) {
-	      ostr<<"\n}\n\tPerf_Update(\""<< ((pdbRoutine *)((*it)->item))->name()<<"\", 0);"<<endl;
-	    } else {
-	      ostr << "\n}\n\t" << (*it)->snippet << endl;
-	      ostr<<"\t"<<getStopMeasurementEntity((*it))<<"(tautimer);\n"<<endl; 
-	    }
-	    instrumented = true; 
-	    break;
-	  case EXIT:
+            ostr << "#line " << inputLineNo << "\n";
+            if (use_spec) {
+              ostr << "\n}\n\t" << (*it)->snippet << endl;
+              /* XXX Insert code here */
+            } else if (use_perflib) {
+              ostr << "\n}\n\tPerf_Update(\"" << ((pdbRoutine *)((*it)->item))->name() << "\", 0);" << endl;
+            } else {
+              ostr << "\n}\n\t" << (*it)->snippet << endl;
+              ostr << "\t" << getStopMeasurementEntity((*it)) << "(tautimer);\n" << endl;
+            }
+            instrumented = true;
+            break;
+          case EXIT:
 #ifdef DEBUG 
-	    cout <<"Exit" <<endl;
-	    cout <<"using_exit_keyword = "<<using_exit_keyword<<endl;
-	    cout <<"exit_keyword = "<<exit_keyword<<endl;
-	    cout <<"infbuf[(*it)->col-1] = "<<inbuf[(*it)->col-1]<<endl;
+            cout <<"Exit" <<endl;
+            cout <<"using_exit_keyword = "<<using_exit_keyword<<endl;
+            cout <<"exit_keyword = "<<exit_keyword<<endl;
+            cout <<"infbuf[(*it)->col-1] = "<<inbuf[(*it)->col-1]<<endl;
 #endif /* DEBUG */
-	    memset(exit_type, EXIT_KEYWORD_SIZE, 0); // reset to zero
-	    abort_used = false; /* initialize it */
-	    if (strncmp(&inbuf[(*it)->col-1], "abort", strlen("abort")) == 0) {
-	      strcpy(exit_type, "abort");
-	      abort_used  = true; /* abort() takes void */
-	    }
-	    if (strncmp(&inbuf[(*it)->col-1], "exit", strlen("exit")) == 0) {
-	      strcpy(exit_type, "exit");
-	    }
-	    if (using_exit_keyword && (strncmp(&inbuf[(*it)->col-1], 
-					       exit_keyword, strlen(exit_keyword)) == 0)) {
-	      strcpy(exit_type, exit_keyword);
-	    }
+            ostr << "#line " << inputLineNo << "\n";
+
+            memset(exit_type, EXIT_KEYWORD_SIZE, 0); // reset to zero
+            abort_used = false; /* initialize it */
+            if (strncmp(&inbuf[(*it)->col - 1], "abort", strlen("abort")) == 0) {
+              strcpy(exit_type, "abort");
+              abort_used = true; /* abort() takes void */
+            }
+            if (strncmp(&inbuf[(*it)->col - 1], "exit", strlen("exit")) == 0) {
+              strcpy(exit_type, "exit");
+            }
+            if (using_exit_keyword && (strncmp(&inbuf[(*it)->col - 1], exit_keyword, strlen(exit_keyword)) == 0)) {
+              strcpy(exit_type, exit_keyword);
+            }
 #ifdef DEBUG 
-	    cout <<"Return for a non void routine "<<endl;
+            cout <<"Return for a non void routine "<<endl;
 #endif /* DEBUG */
-	    exit_expression.clear();
-	    if (exit_type[0] != '\0') { 
-	      /* is it null, or did we copy something into this string? */
-	      for (k = (*it)->col+strlen(exit_type)-1; (inbuf[k] != ';') && (k<inbufLength) ; k++) {
-		exit_expression.append(&inbuf[k], 1);
-	      }
-	      if (inbuf[k] == ';') { 
-		/* Got the semicolon. Return expression is in one line. */
+            exit_expression.clear();
+            if (exit_type[0] != '\0') {
+              /* is it null, or did we copy something into this string? */
+              for (k = (*it)->col + strlen(exit_type) - 1; (inbuf[k] != ';') && (k < inbufLength); k++) {
+                exit_expression.append(&inbuf[k], 1);
+              }
+              if (inbuf[k] == ';') {
+                /* Got the semicolon. Return expression is in one line. */
 #ifdef DEBUG
-		cout <<"No need to read in another line"<<endl;
+                cout <<"No need to read in another line"<<endl;
 #endif /* DEBUG */
-		write_from = k+1;
-	      } else {
-		int l;   
-		do {
+                write_from = k + 1;
+              } else {
+                int l;
+                do {
 #ifdef DEBUG
-		  cout <<"Need to read in another line to get ';' "<<endl;
+                  cout <<"Need to read in another line to get ';' "<<endl;
 #endif /* DEBUG */
-		  if (istr.getline(inbuf, INBUF_SIZE)==NULL) {   
-		    perror("ERROR in reading file: looking for ;"); 
-		    exit(1); 
-		  }
-		  inbufLength = strlen(inbuf);
-		  inputLineNo ++;
-		  /* Now search for ; in the string */
-		  for(l=0; (inbuf[l] != ';') && (l < inbufLength); l++) {
-		    exit_expression.append(&inbuf[l], 1);
-		  }
-		} while(inbuf[l] != ';');
-		/* copy the buffer into inbuf */
-		write_from = l+1; 
-	      }
-	      
+                  if (istr.getline(inbuf, INBUF_SIZE) == NULL) {
+                    perror("ERROR in reading file: looking for ;");
+                    exit(1);
+                  }
+                  inbufLength = strlen(inbuf);
+                  inputLineNo++;
+                  /* Now search for ; in the string */
+                  for (l = 0; (inbuf[l] != ';') && (l < inbufLength); l++) {
+                    exit_expression.append(&inbuf[l], 1);
+                  }
+                } while (inbuf[l] != ';');
+                /* copy the buffer into inbuf */
+                write_from = l + 1;
+              }
+
 #ifdef DEBUG 
-	      cout <<"exit_expression = "<<exit_expression<<endl;
+              cout <<"exit_expression = "<<exit_expression<<endl;
 #endif /* DEBUG */
-	      processExitExpression(ostr, exit_expression, *it, exit_type, abort_used);
-	    } else { /* exit_type was null! Couldn't find anything here */
-	      fprintf (stderr, "Warning: exit was found at line %d, column %d, but wasn't found in the source code.\n",(*it)->line, (*it)->col);
-	      fprintf (stderr, "If the exit call occurs in a macro (likely), make sure you place a \"TAU_PROFILE_EXIT\" before it (note: this warning will still appear)\n");
-	      // write the input line in the output stream
-	    }            
-	    instrumented = true;
-	    break; 
-	    
-	  case INSTRUMENTATION_POINT:
+              processExitExpression(ostr, exit_expression, *it, exit_type, abort_used);
+            } else { /* exit_type was null! Couldn't find anything here */
+              fprintf(stderr, "Warning: exit was found at line %d, column %d, but wasn't found in the source code.\n",
+                  (*it)->line, (*it)->col);
+              fprintf(stderr,
+                  "If the exit call occurs in a macro (likely), make sure you place a \"TAU_PROFILE_EXIT\" before it (note: this warning will still appear)\n");
+              // write the input line in the output stream
+            }
+
+            instrumented = true;
+            break;
+
+          case INSTRUMENTATION_POINT:
 #ifdef DEBUG
-	    cout <<"Instrumentation point in C -> line = "<< (*it)->line<<endl;
+            cout <<"Instrumentation point in C -> line = "<< (*it)->line<<endl;
 #endif /* DEBUG */
-	    if ((*it)->attribute == AFTER) ostr<<endl;
-	    ostr << (*it)->snippet<<endl;
-	    instrumented = true;
-	    break;
-	    
-	  case START_LOOP_TIMER: 
-	    if ((*it)->attribute == AFTER) ostr<<endl;
-	    if (use_spec) {
-	      /* XXX Insert code here */
-	    } else if (use_perflib) {
-	      timercode = string(string("{ Perf_Update(\"" )+(*it)->snippet+", 1); ");
-	    } else {
-	      timercode = string(string("{ TAU_PROFILE_TIMER(lt, \"")+(*it)->snippet+"\", \" \", TAU_USER); TAU_PROFILE_START(lt); ");
-	    }
+            if ((*it)->attribute == AFTER) ostr << endl;
+            ostr << (*it)->snippet << endl;
+
+            ostr << "#line " << inputLineNo << "\n";
+            instrumented = true;
+            break;
+
+          case START_LOOP_TIMER:
+            if ((*it)->attribute == AFTER) ostr << endl;
+            if (use_spec) {
+              /* XXX Insert code here */
+            } else if (use_perflib) {
+              timercode = string(string("{ Perf_Update(\"") + (*it)->snippet + ", 1); ");
+            } else {
+              timercode = string(
+                  string("{ TAU_PROFILE_TIMER(lt, \"") + (*it)->snippet
+                      + "\", \" \", TAU_USER); TAU_PROFILE_START(lt); ");
+            }
 #ifdef DEBUG
-	    cout <<"Inserting timercode: "<<timercode<<endl;
+            cout <<"Inserting timercode: "<<timercode<<endl;
 #endif /* DEBUG */
-	    ostr <<timercode <<endl;
-	    /* insert spaces to make it look better */
-	    for(space = 0; space < (*it)->col-1; space++) ostr<<" ";
-	    instrumented = true;
-	    current_timer.push_front((*it)->snippet); 
-	    /* Add this timer to the list of currently open timers */
-	    break;
-	    
-	  case STOP_LOOP_TIMER: 
-	    if ((*it)->attribute == AFTER) ostr<<endl;
-	    /* insert spaces to make it look better */
-	    for(space = 0; space < (*it)->col-1; space++) ostr<<" ";
-	    if (use_spec) {
-	      /* XXX Insert code here */
-	    } else if (use_perflib) {
-	      timercode = string(string(" Perf_Update(\"" )+(*it)->snippet+", 0); } ");
-	    } else {
-	      timercode = "TAU_PROFILE_STOP(lt); } ";
-	    }
             ostr << timercode << endl;
-	    instrumented = true;
-	    /* pop the current timer! */
-	    if (!current_timer.empty()) current_timer.pop_front();
-	    break;
-	    
-	  case GOTO_STOP_TIMER:
-	    ostr << "{ ";
-	    if (use_spec) {
-		/* XXX Insert code here */
-	    } else if (use_perflib) {
-	      /* XXX Insert code here */
-	    } else {
-	      ostr <<"TAU_PROFILE_STOP(lt);";
-	    }
-	    for (k = (*it)->col-1; k < strlen(inbuf); k++)
-	      ostr<<inbuf[k];
-	    ostr <<" }";
-	    write_from = k+1;
-	    instrumented = true;
-	    break;
-	    
-	  default:
-	    cout <<"Unknown option in instrumentCFile:"<<(*it)->kind<<endl;
-	    instrumented = true; 
-	    break;
-	  } /* Switch statement */
+            /* insert spaces to make it look better */
+            for (space = 0; space < (*it)->col - 1; space++)
+              ostr << " ";
 
-	  if (it+1 != itemvec.end()) {
-	    write_upto = (*(it+1))->line == (*it)->line ? (*(it+1))->col-1 : inbufLength; 
+            ostr << "#line " << inputLineNo << "\n";
+            instrumented = true;
+            current_timer.push_front((*it)->snippet);
+            /* Add this timer to the list of currently open timers */
+            break;
+
+          case STOP_LOOP_TIMER:
+            if ((*it)->attribute == AFTER) ostr << endl;
+            /* insert spaces to make it look better */
+            for (space = 0; space < (*it)->col - 1; space++)
+              ostr << " ";
+            if (use_spec) {
+              /* XXX Insert code here */
+            } else if (use_perflib) {
+              timercode = string(string(" Perf_Update(\"") + (*it)->snippet + ", 0); } ");
+            } else {
+              timercode = "TAU_PROFILE_STOP(lt); } ";
+            }
+            ostr << timercode << endl;
+            ostr << "#line " << inputLineNo << "\n";
+            instrumented = true;
+            /* pop the current timer! */
+            if (!current_timer.empty()) current_timer.pop_front();
+            break;
+
+          case GOTO_STOP_TIMER:
+            ostr << "{ ";
+            if (use_spec) {
+              /* XXX Insert code here */
+            } else if (use_perflib) {
+              /* XXX Insert code here */
+            } else {
+              ostr << "TAU_PROFILE_STOP(lt);";
+            }
+            for (k = (*it)->col - 1; k < strlen(inbuf); k++)
+              ostr << inbuf[k];
+            ostr << " }";
+            write_from = k + 1;
+            ostr << "#line " << inputLineNo << "\n";
+            instrumented = true;
+            break;
+
+          default:
+            cout << "Unknown option in instrumentCFile:" << (*it)->kind << endl;
+            instrumented = true;
+            break;
+          } /* Switch statement */
+
+          if (it + 1 != itemvec.end()) {
+            write_upto = (*(it + 1))->line == (*it)->line ? (*(it + 1))->col - 1 : inbufLength;
 #ifdef DEBUG
-	    cout <<"CHECKING write_from "<<write_from <<" write_upto = "<<write_upto<<endl;
-	    cout <<"it = ("<<(*it)->line<<", "<<(*it)->col<<") ;";
-	    cout <<"it+1 = ("<<(*(it+1))->line<<", "<<(*(it+1))->col<<") ;"<<endl;
+            cout <<"CHECKING write_from "<<write_from <<" write_upto = "<<write_upto<<endl;
+            cout <<"it = ("<<(*it)->line<<", "<<(*it)->col<<") ;";
+            cout <<"it+1 = ("<<(*(it+1))->line<<", "<<(*(it+1))->col<<") ;"<<endl;
 #endif /* DEBUG */
-	  } else {
-	    write_upto = inbufLength; 
-	  }
+          } else {
+            write_upto = inbufLength;
+          }
 
-	  for (j=write_from; j < write_upto; j++) {
-	    ostr <<inbuf[j];
-	  }
-	  ostr <<endl;
-	
-          } /* for it/lit */
-        lit=it; 
+          for (j = write_from; j < write_upto; j++) {
+            ostr << inbuf[j];
+          }
+          ostr << endl;
+
+        } /* for it/lit */
+        lit = it;
       } /* else line no*/
       memset(inbuf, INBUF_SIZE, 0); // reset to zero
     } /* while */
   } /* while lit != end */
+
   // For loop is over now flush out the remaining lines to the output file
   while (istr.getline(inbuf, INBUF_SIZE)) {
-    ostr << inbuf <<endl;
+    ostr << inbuf << endl;
   }
+
   // written everything. quit and debug!
   ostr.close();
 

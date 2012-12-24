@@ -225,7 +225,12 @@ JDKARCH                 = linux
 #############################################
 # OpenMP OBJECTS
 #############################################
-#OPENMP#OPENMP_O 	= OpenMPLayer.o #ENDIF#
+#OPENMP#OPENMP_O 	= OpenMPLayer.o TauOpenMPCollectorAPI.o #ENDIF#
+
+#############################################
+# OpenMP extra libraries for collector API
+#############################################
+#OPENMP#TAU_LINKER_OPT19=-ldl#ENDIF#
 
 #############################################
 # Opari OBJECTS
@@ -247,7 +252,6 @@ OPARI_O 	= TauKojakOpariDisable.o #ENDIF#
 # DYNINST DEFAULT ARCH
 #############################################
 DYNINST_PLATFORM 	= $(PLATFORM)
-
 
 ############# OpenMP Fortran Option ########
 TAU_OPENMP_OPTION = 
@@ -906,7 +910,6 @@ EXTRA_LINKER_ARGS=
 #APPLECXX#EXTRA_LINKER_ARGS = -rdynamic#ENDIF#
 TAU_LINKER_OPT14=$(EXTRA_LINKER_ARGS)
 
-
 ##############################################
 # Compiler Instrumentation
 ##############################################
@@ -1056,7 +1059,8 @@ TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
                   $(TAU_LINKER_OPT10) $(TAU_LINKER_OPT11) $(TAU_LINKER_OPT12) \
 		  $(TAU_LINKER_OPT13) $(PERFSUITELINK) $(VAMPIRTRACELIBS) $(SCOREPLIBS) $(HPCTOOLKIT_LINK) \
 		  $(TAU_LINKER_OPT14) $(TAU_LINKER_OPT15) $(TAU_LINKER_OPT16) \
-                  $(TAU_LINKER_OPT17) $(TAU_LINKER_OPT18) $(TAU_CUDA_LINKER_OPTS)
+                  $(TAU_LINKER_OPT17) $(TAU_LINKER_OPT18) $(TAU_LINKER_OPT19) \
+                  $(TAU_CUDA_LINKER_OPTS)
 
 ##############################################
 
@@ -1193,7 +1197,6 @@ TAU_SHARED_INSTALL_CMD=\
 #HITACHI#TAU_SHARED_INSTALL_CMD=@echo "NOTE: Not building TAU's preload DSO" #ENDIF#
 #CRAYXMT#TAU_SHARED_INSTALL_CMD=@echo "NOTE: Not building TAU's preload DSO" #ENDIF#
 #CRAYCC#TAU_SHARED_INSTALL_CMD=@echo "NOTE: Not building TAU's preload DSO" #ENDIF#
-#OPEN64ORC#TAU_SHARED_INSTALL_CMD=@echo "NOTE: Not building TAU's preload DSO" #ENDIF#
 #USE_NECCXX#TAU_SHARED_INSTALL_CMD=@echo "NOTE: Not building TAU's preload DSO" #ENDIF#
 #NOSHARED#TAU_SHARED_INSTALL_CMD=@echo "NOTE: Not building TAU's preload DSO" #ENDIF#
 #TAU_WINDOWS#TAU_SHARED_INSTALL_CMD=@echo "NOTE: Not building TAU's preload DSO" #ENDIF#
