@@ -50,5 +50,5 @@ clean:
 	$(RM) $(OBJS) $(TARGET) profile.* *.trc *.edf *.z MULT* *.inst.* *.pdb Comp_gnu.o
 
 test: $(TARGET)
-	OMP_NUM_THREADS=2 ./$(TARGET) 
+	TAU_THROTTLE=0 OMP_NUM_THREADS=2 ./$(TARGET) 
 ##############################################

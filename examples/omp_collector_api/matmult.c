@@ -15,7 +15,7 @@
 #include "matmult_initialize.h"
 
 #ifndef MATRIX_SIZE
-#define MATRIX_SIZE 100
+#define MATRIX_SIZE 1000
 #endif
 
 #define NRA MATRIX_SIZE                 /* number of rows in matrix A */
@@ -277,11 +277,12 @@ void * do_atomic_test(void) {
 
 int main (int argc, char *argv[]) 
 {
-  int i;
-  for (i = 0 ; i < 3 ; i++) {
+  //int i;
+  //for (i = 0 ; i < 3 ; i++) {
     do_work();
-  }
+  //}
 
+/*
   do_barrier_test();
   do_lock_test();
   do_critical_test();
@@ -289,6 +290,7 @@ int main (int argc, char *argv[])
   do_single_test();
   do_atomic_test();
   do_sections_test();
+*/
 
   printf ("Done.\n");
 
