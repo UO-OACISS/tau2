@@ -267,6 +267,10 @@ extern "C" Profiler *TauInternal_ParentProfiler(int tid) {
   return &(Tau_thread_flags[tid].Tau_global_stack[pos]);
 }
 
+extern "C" char *TauInternal_CurrentCallsiteTimerName(int tid) {
+  return TauInternal_CurrentProfiler(tid)->ThisFunction->Name;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {

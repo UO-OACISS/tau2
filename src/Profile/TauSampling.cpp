@@ -573,7 +573,7 @@ char *Tau_sampling_getShortSampleName(const char *sampleName) {
   return NULL;
 }
 
-CallSiteInfo *Tau_sampling_resolveCallSite(unsigned long address,
+extern "C" CallSiteInfo *Tau_sampling_resolveCallSite(unsigned long address,
 					   const char *tag,
 					   const char *childName,
 					   char **newShortName,
@@ -766,6 +766,14 @@ char *Tau_sampling_internal_stripCallPath(const char *callpath) {
   } while (temp != NULL);
 
   return strdup(pointer);
+}
+
+extern "C" void Tau_Sampling_register_unit() {
+#ifdef TAU_BFD
+  if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
+    bfdUnitHandle = Tau_bfd_registerUnit(TAU_BFD_KEEP_GLOBALS);
+  }
+#endif /* TAU_BFD */
 }
 
 void Tau_sampling_finalizeProfile(int tid) {
