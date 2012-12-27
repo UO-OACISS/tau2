@@ -79,6 +79,17 @@ extern "C" void Tau_cupti_register_gpu_event(
 						double start,
 						double stop);
 
+extern "C" void Tau_cupti_register_gpu_atomic_event(
+						const char *name,
+						uint32_t deviceId,
+						uint32_t streamId,
+						uint32_t contextId,
+						uint32_t correlationId,
+						GpuEventAttributes *gpu_attributes,
+						int number_of_attributes);
+
+extern "C" void Tau_pure_context_userevent(void **ptr, std::string name);
+
 uint8_t *activityBuffer;
 CUpti_SubscriberHandle subscriber;
 
@@ -120,7 +131,7 @@ eventMap_t eventMap;
 int gpu_occupancy_available(int deviceId);
 void record_gpu_occupancy(CUpti_ActivityKernel *k, const char *name, eventMap_t *m);
 
-void record_gpu_instruction_event(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceLocator *source);
+void form_context_event_name(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceLocator *source, const char *event, std::string *name);
 
 std::map<uint32_t, CUpti_ActivityDevice> deviceMap;
 //std::map<uint32_t, CUpti_ActivityGlobalAccess> globalAccessMap;

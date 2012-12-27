@@ -464,17 +464,39 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       {
         eventMap.erase(eventMap.begin(), eventMap.end());
 
-        static TauContextUserEvent* ga;
-        Tau_get_context_userevent((void **) &ga, "Accesses to Global Memory");
+        std::string name;
+        form_context_event_name(kernel, source, "Accesses to Global Memory", &name);
+        TauContextUserEvent* ga = NULL;
+        Tau_pure_context_userevent((void **) &ga, name);
+        ga->SetDisableContext(true);
         eventMap[ga] = global_access->executed;
-        record_gpu_instruction_event(kernel, source);
+        GpuEventAttributes *map;
+        int map_size = eventMap.size();
+        map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
+        int i = 0;
+        for (eventMap_t::iterator it = eventMap.begin(); it != eventMap.end(); it++)
+        {
+          map[i].userEvent = it->first;
+          map[i].data = it->second;
+          i++;
+        }
+        uint32_t id;
+        if (cupti_api_runtime())
+        {
+          id = kernel->runtimeCorrelationId;
+        }
+        else
+        {
+          id = kernel->correlationId;
+        }
+        Tau_cupti_register_gpu_atomic_event(demangleName(kernel->name), kernel->deviceId,
+          kernel->streamId, kernel->contextId, id, map, map_size);
       }
     }
     case CUPTI_ACTIVITY_KIND_BRANCH:
     {
 			CUpti_ActivityBranch *branch = (CUpti_ActivityBranch *)record;
-			//cerr << "global access (cor. id) (source id): " << global_access->correlationId << ", " << global_access->sourceLocatorId << ", " << global_access->threadsExecuted << ".\n" << endl;
-      //globalAccessMap[global_access->correlationId] = *global_access;
+			//cerr << "branch (cor. id) (source id): " << branch->correlationId << ", " << branch->sourceLocatorId << ", " << branch->threadsExecuted << ".\n" << endl;
      
       CUpti_ActivityKernel *kernel = &kernelMap[branch->correlationId];
       CUpti_ActivitySourceLocator *source = &sourceLocatorMap[branch->sourceLocatorId];
@@ -482,14 +504,41 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       if (kernel->kind != CUPTI_ACTIVITY_KIND_INVALID)
       {
         eventMap.erase(eventMap.begin(), eventMap.end());
-
-        static TauContextUserEvent* be;
-        Tau_get_context_userevent((void **) &be, "Branches Executed");
+        
+        std::string name;
+        form_context_event_name(kernel, source, "Branches Executed", &name);
+        TauContextUserEvent* be = NULL;
+        Tau_pure_context_userevent((void **) &be, name);
+        be->SetDisableContext(true);
         eventMap[be] = branch->executed;
-        static TauContextUserEvent* de;
-        Tau_get_context_userevent((void **) &de, "Branches Diverged");
+        
+        form_context_event_name(kernel, source, "Branches Diverged", &name);
+        TauContextUserEvent* de = NULL;
+        Tau_pure_context_userevent((void **) &de, name);
+        de->SetDisableContext(true);
         eventMap[de] = branch->diverged;
-        record_gpu_instruction_event(kernel, source);
+
+        GpuEventAttributes *map;
+        int map_size = eventMap.size();
+        map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
+        int i = 0;
+        for (eventMap_t::iterator it = eventMap.begin(); it != eventMap.end(); it++)
+        {
+          map[i].userEvent = it->first;
+          map[i].data = it->second;
+          i++;
+        }
+        uint32_t id;
+        if (cupti_api_runtime())
+        {
+          id = kernel->runtimeCorrelationId;
+        }
+        else
+        {
+          id = kernel->correlationId;
+        }
+        Tau_cupti_register_gpu_atomic_event(demangleName(kernel->name), kernel->deviceId,
+          kernel->streamId, kernel->contextId, id, map, map_size);
       }
     }
 	}
@@ -633,41 +682,22 @@ void record_gpu_occupancy(CUpti_ActivityKernel *kernel, const char *name, eventM
 
 }
 
-void record_gpu_instruction_event(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceLocator *source)
+void form_context_event_name(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceLocator *source, const char *event_name, std::string *name)
 {         
-  const char *name;
 
   stringstream file_and_line("");
-  file_and_line << demangleName(kernel->name);
+  file_and_line << event_name << " : ";
+  file_and_line << demangleName(kernel->name) << " => ";
   if (source->kind != CUPTI_ACTIVITY_KIND_INVALID)
   {
     file_and_line << " [{" << source->fileName   << "}";
     file_and_line <<  " {" << source->lineNumber << "}]";
   }
+
+   *name = file_and_line.str();
+
   //cout << "file and line: " << file_and_line.str() << endl;
 
-  GpuEventAttributes *map;
-  int map_size = eventMap.size();
-  map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
-  int i = 0;
-  for (eventMap_t::iterator it = eventMap.begin(); it != eventMap.end(); it++)
-  {
-    map[i].userEvent = it->first;
-    map[i].data = it->second;
-    i++;
-  }
-  uint32_t id;
-  if (cupti_api_runtime())
-  {
-    id = kernel->runtimeCorrelationId;
-  }
-  else
-  {
-    id = kernel->correlationId;
-  }
-  Tau_cupti_register_gpu_event(file_and_line.str().c_str(), kernel->deviceId,
-    kernel->streamId, kernel->contextId, id, map, map_size,
-    0, 0);
 }
 
 bool function_is_sync(CUpti_CallbackId id)
