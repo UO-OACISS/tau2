@@ -1254,7 +1254,7 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
   numSamples[tid]++;
 
   /* Never sample anything internal to TAU */
-  if (Tau_global_get_insideTAU_tid(tid) > 0) {
+  if (Tau_global_get_insideTAU() > 0) {
     samplesDroppedTau[tid]++;
     return;
   }
