@@ -456,7 +456,7 @@ int RtsLayer::LockDB(void) {
   static bool init = initLocks();
   int tid=myThread();
 /* This block of code is helpful in debugging deadlocks... see the top of this file */
-	TAU_ASSERT(Tau_global_get_insideTAU_tid(tid) <= 0,
+	TAU_ASSERT(Tau_global_get_insideTAU() <= 0,
 		"Thread is trying for another DB lock. but it is not in TAU");
 #ifdef DEBUG_LOCK_PROBLEMS
   if (lockDBCount[tid] > 0) {
@@ -565,7 +565,7 @@ int RtsLayer::getNumEnvLocks(void) {
 int RtsLayer::LockEnv(void) {
   static bool init = initEnvLocks();
   int tid=myThread();
-	TAU_ASSERT(Tau_global_get_insideTAU_tid(tid) <= 0,
+	TAU_ASSERT(Tau_global_get_insideTAU() <= 0,
 		"Thread is trying for another Env lock. but it is not in TAU");
 /* This block of code is helpful in debugging deadlocks... see the top of this file */
 #ifdef DEBUG_LOCK_PROBLEMS

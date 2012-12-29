@@ -191,11 +191,11 @@ extern "C" int Tau_global_get_insideTAU() {
   int tid = RtsLayer::localThreadId();
   return Tau_thread_flags[tid].Tau_global_insideTAU;
 }
-
+/*
 extern "C" int Tau_global_get_insideTAU_tid(int tid) {
   Tau_stack_checkInit();
   return Tau_thread_flags[tid].Tau_global_insideTAU;
-}
+}*/
 
 extern "C" int Tau_global_incr_insideTAU() {
   Tau_stack_checkInit();
