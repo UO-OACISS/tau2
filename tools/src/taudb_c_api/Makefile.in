@@ -1,0 +1,78 @@
+#****************************************************************************
+#*                      TAU Performance System (R)                          *
+#*                      http://tau.uoregon.edu                              *
+#****************************************************************************
+#*    Copyright 2012                                                       **
+#*    Department of Computer and Information Science, University of Oregon **
+#*    Juelich Supercomputing Center, NIC, Germany                          ** 
+#*    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+#****************************************************************************
+# Use gmake to build matmult
+
+.SUFFIXES : .c
+.SILENT :
+
+CC=gcc
+AR=ar
+RANLIB=ranlib
+#CC=tau_cc.sh -tau_makefile=${HOME}/src/tau2-master/apple/lib/Makefile.tau-pdt -optQuiet -optPreProcess
+#TEST_CONFIG=ccsm
+#TEST_CONFIG=sqlite
+TEST_CONFIG=taudbc
+#TEST_CONFIG=regression_taudb
+#TEST_CONFIG=alcf_working
+#TEST_CONFIG=facets
+#TEST_TRIAL_ID=1 # alcf_working
+#TEST_TRIAL_ID=25 # ccsm
+TEST_TRIAL_ID=87 # taudbc
+
+################# POSTGRESQL ####################
+TAUDB_DATABASE_DEFINE="-D__TAUDB_POSTGRESQL__"
+
+# MacBook Air
+# PQDIR=/Library/PostgreSQL/9.2
+# DB_INCLUDES=$(TAUDB_DATABASE_DEFINE) -I$(PQDIR)/include
+# DB_LIBRARIES=-L$(PQDIR)/lib -lpq
+# XML_INCLUDES=-I/usr/include/libxml2
+# XML_LIBRARIES=-L/opt/local/lib -lxml2
+# ZLIB_INCLUDES=
+# ZLIB_LIBRARIES=-lz
+# UUID_LIBRARIES=
+
+# Paratools03
+# PQDIR=/usr/local/pgsql
+# DB_INCLUDES=$(TAUDB_DATABASE_DEFINE) -I$(PQDIR)/interfaces/libpq -I$(PQDIR)/include
+# DB_LIBRARIES=-L$(PQDIR)/interfaces/libpq -lpq -Wl,-rpath=$(PQDIR)/interfaces/libpq
+
+# Mist / Tank
+PQDIR=/home/users/khuck/src/postgresql-8.4.9/src
+DB_INCLUDES=$(TAUDB_DATABASE_DEFINE) -I$(PQDIR)/interfaces/libpq -I$(PQDIR)/include
+DB_LIBRARIES=-L$(PQDIR)/interfaces/libpq -lpq -Wl,-rpath=$(PQDIR)/interfaces/libpq
+XML_INCLUDES=-I/usr/include/libxml2
+XML_LIBRARIES=-lxml2
+ZLIB_INCLUDES=
+ZLIB_LIBRARIES=-lz
+UUID_LIBRARIES=-luuid
+SYSTEM_DEFINE=-D__X86_64_LINUX__
+
+################# SQLITE ########################
+# TAUDB_DATABASE_DEFINE="-D__TAUDB_SQLITE__"
+# SQLDIR=/Users/khuck/install/sqlite
+# DB_INCLUDES=$(TAUDB_DATABASE_DEFINE) -I$(SQLDIR)/include
+# DB_LIBRARIES=-L$(SQLDIR)/lib -lsqlite3
+#################################################
+
+FLAGS=-g -Wall
+
+# If the Hash Table is acting weird, try enabling this...
+# ITERATE=-DITERATE_ON_FAILURE
+
+# Debugging levels
+#DEBUG=-O3 $(ITERATE)
+DEBUG=-O0 $(ITERATE) -DHASH_DEBUG=1 
+#DEBUG=-O0 $(ITERATE)
+#DEBUG=-O0 -DTAUDB_DEBUG -DHASH_DEBUG=1 $(ITERATE)
+#DEBUG=-O0 -DTAUDB_DEBUG -DTAUDB_DEBUG_DEBUG -DHASH_DEBUG=1 $(ITERATE)
+
+INCLUDE=$(XML_INCLUDES) $(ZLIB_INCLUDES) $(DB_INCLUDES) $(SYSTEM_DEFINE)
+LIBS=$(XML_LIBRARIES) $(ZLIB_LIBRARIES) $(DB_LIBRARIES) $(UUID_LIBRARIES)

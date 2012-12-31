@@ -22,6 +22,8 @@
 #include "Profile/TauMemory.h"
 
 
+extern "C" void Tau_lite_start_timer(void *functionInfo, int phase);
+extern "C" int Tau_lite_stop_timer(void *function_info);
 
 extern "C" void Tau_pure_start(const char *name);
 extern "C" void Tau_pure_stop(const char *name);
@@ -610,25 +612,25 @@ void tau_profile_start_(void **profiler)
   printf("start_timer gets %lx\n", *profiler);
 #endif /* DEBUG_PROF */
 
-  Tau_start_timer(*profiler, 0, Tau_get_tid());
+  Tau_lite_start_timer(*profiler, 0);
   return;
 }
 
 void tau_profile_stop_(void **profiler)
 {
-  Tau_stop_timer(*profiler, Tau_get_tid());
+  Tau_lite_stop_timer(*profiler);
   return;
 }
 
 void tau_phase_start_(void **profiler)
 {
-  Tau_start_timer(*profiler, 1, Tau_get_tid()); /* 1 indicates phase based profiling */
+  Tau_lite_start_timer(*profiler, 1); /* 1 indicates phase based profiling */
   return;
 }
 
 void tau_phase_stop_(void **profiler)
 {
-  Tau_stop_timer(*profiler, Tau_get_tid());
+  Tau_lite_stop_timer(*profiler);
   return;
 }
 
@@ -1344,12 +1346,12 @@ void TAU_SET_INTERRUPT_INTERVAL(int* value)
 
 void tau_profile_start(int **profiler)
 {
-  Tau_start_timer((void *)*profiler, 0, Tau_get_tid());
+  Tau_lite_start_timer((void *)*profiler, 0);
 }
 
 void tau_profile_stop(int **profiler)
 {
-  Tau_stop_timer((void *)*profiler, Tau_get_tid());
+  Tau_lite_stop_timer((void *)*profiler);
 }
 
 void tau_profile_init(void)
@@ -1921,7 +1923,7 @@ void tau_alloc_(void ** ptr, int* line, int *size, char *name, int slen)
 #ifdef DEBUG_PROF
   printf("ALLOCATE ptr %p *ptr %p line %d size %d\n", ptr, *ptr, *line, *size);
 #endif /* DEBUG_PROF */
-  Tau_track_memory_allocation(localname, *line, *size, ptr);
+  Tau_track_memory_allocation(ptr, *size, localname, *line);
   free(tmp);
   free(tmp2);
 }
@@ -1979,7 +1981,7 @@ void tau_dealloc_(void ** ptr, int* line, char *name, int slen)
 #ifdef DEBUG_PROF
   printf("DEALLOCATE ptr %p *ptr %p line %ld\n", ptr,  *ptr, *line);
 #endif /* DEBUG_PROF */
-  Tau_track_memory_deallocation(localname, *line, ptr);
+  Tau_track_memory_deallocation(ptr, localname, *line);
   free(tmp);
   free(tmp2);
 }

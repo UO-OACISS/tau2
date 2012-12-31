@@ -77,7 +77,7 @@ public class ParaProfMetric extends Metric implements ParaProfTreeNodeUserObject
     }
 
     public boolean dbMetric() {
-        return ppTrial.dBTrial();
-    }
+        return ppTrial.dBTrial();	
+	}
 
 }

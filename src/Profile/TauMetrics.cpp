@@ -25,10 +25,14 @@
 #include <Profile/TauTrace.h>
 #ifdef CUPTI
 #include <Profile/CuptiLayer.h>
+// Moved from header file
+using namespace std;
 #endif //CUPTI
 
 #ifdef TAUKTAU_SHCTR
 #include "Profile/KtauCounters.h"
+// Moved from header file
+using namespace std;
 #endif //TAUKTAU_SHCTR
 
 
@@ -63,8 +67,9 @@ static void metricv_add(const char *name);
 static void read_env_vars();
 static void initialize_functionArray();
 
+#ifndef TAU_MAX_METRICS
 #define TAU_MAX_METRICS 25
-
+#endif
 /* Global Variable holding the number of counters */
 int Tau_Global_numCounters = -1;
 
@@ -136,8 +141,9 @@ static int compareMetricString(char *one, const char *two) {
 static void metricv_add(const char *name) {
   int i;
   if (nmetrics >= TAU_MAX_METRICS) {
-    fprintf(stderr, "Number of counters exceeds TAU_MAX_METRICS\n");
-  } else {
+    fprintf(stderr, "Number of counters exceeds TAU_MAX_METRICS (%d), please reconfigure TAU with -useropt=-DTAU_MAX_METRICS=<higher number>.\n", TAU_MAX_METRICS);
+ 		exit(1); 
+	} else {
     for (i = 0; i < nmetrics; i++) {
       if (compareMetricString(metricv[i], name)) {
         return;
@@ -347,7 +353,7 @@ static void initialize_functionArray()
 			/* CUPTI handled separately */
 			/* setup CUPTI metrics */
 			functionArray[pos++] = metric_read_cupti;
-			Tau_CuptiLayer_register_string(metricv[i]);
+			Tau_CuptiLayer_register_string(metricv[i], pos - 1);
 #endif //CUPTI
 #ifdef TAU_PAPI
     } else if (compareMetricString(metricv[i], "P_WALL_CLOCK_TIME")) {
@@ -549,12 +555,10 @@ int TauMetrics_init() {
     traceCounterEvents = new TauUserEvent *[nmetrics];
     /* We obtain the timestamp from COUNTER1, so we only need to trigger
        COUNTER2-N or i=1 through no. of active functions not through 0 */
-    RtsLayer::UnLockDB(); // mutual exclusion primitive AddEventToDB locks it
     for (i = 1; i < nmetrics; i++) {
       traceCounterEvents[i] = new TauUserEvent(metricv[i], true);
       /* the second arg is MonotonicallyIncreasing which is true (HW counters)*/
     }
-    RtsLayer::LockDB(); // We do this to prevent a deadlock. Lock it again!
   }
 
   return 0;

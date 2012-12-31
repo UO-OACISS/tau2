@@ -33,17 +33,23 @@
 #include <stdlib.h>
 #include <string.h>
 #include <omp.h>
+#include <string>
 #include <Profile/Profiler.h>
 #ifdef TAU_OPENMP
 #ifndef _OPENMP
 #define _OPENMP
 #endif /* _OPENMP */
 #endif /* TAU_OPENMP */
+using std::string;
 
 
 
 /* These two defines specify if we want region based views or construct based
 views or both */
+#ifndef TAU_OPENMP_PARTITION_REGION
+#define TAU_OPENMP_PARTITION_REGION
+#endif
+
 #ifdef TAU_OPARI_REGION
 #define TAU_OPENMP_REGION_VIEW
 #elif TAU_OPARI_CONSTRUCT
@@ -95,8 +101,8 @@ TAU_OPARI_CONSTURCT_TIMER( ttaskwait , "taskwait begin/end", "[OpenMP]", OpenMP)
 
 #define NUM_OMP_TYPES 22
 
-static string  omp_names[22] = {"atomic enter/exit", "barrier enter/exit", "critical begin/end", 
-			     "critical enter/exit", "for enter/exit", "master begin/end",
+static char* omp_names[22] = {"atomic enter/exit", "barrier enter/exit", "critical begin/end", 
+			     "critical enter/exit", "loop body", "master begin/end",
 			     "parallel begin/end", "parallel fork/join", "section begin/end",
 			     "sections enter/exit", "single begin/end", "single enter/exit",
 			      "workshare enter/exit", "inst region begin/end", "flush enter/exit",
@@ -290,13 +296,14 @@ void TauStartOpenMPRegionTimer(my_pomp2_region *r, int index)
    start the timer. */
 
   omp_set_lock(&tau_ompregdescr_lock);
-
+if(r == NULL)
+printf("TAU WARNING: a POMP2 Region was not initialized.  Something went wrong during the creation of pompregions.c\n");
   if (!r->data) {
 #ifdef TAU_OPENMP_PARTITION_REGION
     FunctionInfo **flist = new FunctionInfo*[NUM_OMP_TYPES];
     for (int i=0; i < NUM_OMP_TYPES; i++) {
       char rname[1024], rtype[1024];
-      sprintf(rname, "%s (%s)",  r->sub_name, omp_names[i]);
+      sprintf(rname, "%s (%s)",  r->rtype, omp_names[i]);
       sprintf(rtype, "[OpenMP location: file:%s <%d, %d>]",
 	      r->start_file_name, r->start_line_1, r->end_line_1);
       

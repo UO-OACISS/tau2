@@ -11,6 +11,7 @@ SUBDIRS = $(subdirs) $(subdirs_custom)
 ACLOCAL_AMFLAGS = -I vendor/common/build-config/m4
 
 include vendor/common/build-config/Makefile.inc.am
+include vendor/common/build-config/platforms.am
 
 ## Still, sometimes there are files that must be distributed, but which are not
 ## covered in the automatic rules. These files should be listed in the 
@@ -26,9 +27,9 @@ EXTRA_DIST += $(srcdir)/src/config.h                                     \
               $(srcdir)/test/replacePaths_f77.awk                        \
               $(srcdir)/test/replacePaths_f90.awk                        \
               $(srcdir)/doc/example/example.c                            \
-	      $(srcdir)/doc/example/example.f                            \
+	      $(srcdir)/doc/example/example.f90                            \
               $(srcdir)/doc/example_user_instrumentation/example_user_instrumentation.c       \
-	      $(srcdir)/doc/example_user_instrumentation/example_user_instrumentation.f       \
+	      $(srcdir)/doc/example_user_instrumentation/example_user_instrumentation.f90       \
 	      $(srcdir)/doc/doxygen-user/opari2_usage.dox.in             \
 	      $(srcdir)/test/data
 

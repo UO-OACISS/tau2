@@ -32,8 +32,8 @@
 * 
 * Fix input for test cases 
 * 
-      n=2000
-      m=2000
+      n=200
+      m=200
       alpha=0.8
       relax=1
       tol=1e-10

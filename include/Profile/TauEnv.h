@@ -23,6 +23,12 @@
 
 #include <tau_internal.h>
 
+#define TAU_FORMAT_PROFILE 1
+#define TAU_FORMAT_SNAPSHOT 2
+#define TAU_FORMAT_MERGED 3
+#define TAU_FORMAT_NONE 4
+#define TAU_MAX_RECORDS 64*1024
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -43,6 +49,7 @@ extern "C" {
   void TAUDECL TauEnv_set_depth_limit(int value);
   int  TAUDECL TauEnv_get_comm_matrix();
   int  TAUDECL TauEnv_get_track_message();
+  int  TAUDECL TauEnv_get_lite_enabled();
   int  TAUDECL TauEnv_get_compensate();
   int  TAUDECL TauEnv_get_track_memory_heap();
   int  TAUDECL TauEnv_get_track_memory_leaks();
@@ -69,21 +76,33 @@ extern "C" {
   int TAUDECL TauEnv_get_disable_instrumentation(); 
 
   const char* TAUDECL TauEnv_get_ebs_source();
+  void TAUDECL TauEnv_override_ebs_source(const char *newName);
   double      TAUDECL TauEnv_get_throttle_numcalls();
   double      TAUDECL TauEnv_get_throttle_percall();
   const char* TAUDECL TauEnv_get_profiledir();
   const char* TAUDECL TauEnv_get_tracedir();
   const char* TAUDECL TauEnv_get_metrics();
   const char* TAUDECL TauEnv_get_cupti_api();
+  int TAUDECL TauEnv_get_mic_offload();
 
-
-#define TAU_FORMAT_PROFILE 1
-#define TAU_FORMAT_SNAPSHOT 2
-#define TAU_FORMAT_MERGED 3
-#define TAU_FORMAT_NONE 4
-#define TAU_MAX_RECORDS 64*1024
   int  TAUDECL TauEnv_get_profile_format();
   
+  int TAUDECL TauEnv_get_memdbg();
+  int TAUDECL TauEnv_get_memdbg_protect_above();
+  int TAUDECL TauEnv_get_memdbg_protect_below();
+  int TAUDECL TauEnv_get_memdbg_protect_free();
+  int TAUDECL TauEnv_get_memdbg_protect_gap();
+  int TAUDECL TauEnv_get_memdbg_fill_gap();
+  unsigned char TAUDECL TauEnv_get_memdbg_fill_gap_value();
+  int TAUDECL TauEnv_get_memdbg_alloc_min();
+  size_t TAUDECL TauEnv_get_memdbg_alloc_min_value();
+  int TAUDECL TauEnv_get_memdbg_alloc_max();
+  size_t TAUDECL TauEnv_get_memdbg_alloc_max_value();
+  int TAUDECL TauEnv_get_memdbg_overhead();
+  size_t TAUDECL TauEnv_get_memdbg_overhead_value();
+  size_t TAUDECL TauEnv_get_memdbg_alignment();
+  int TAUDECL TauEnv_get_memdbg_zero_malloc();
+
 #ifdef __cplusplus
 }
 #endif

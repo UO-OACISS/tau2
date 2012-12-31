@@ -1,9 +1,12 @@
 #include <TAU.h>
 #include <Profile/TauBfd.h>
+#include <vector>
 
 #ifdef __GNUC__
 #include <cxxabi.h>
 #endif /* __GNUC__ */
+
+using namespace std;
 
 static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
 
@@ -11,8 +14,6 @@ static const char *tau_filename;
 static const char *tau_funcname;
 static unsigned int tau_line_no;
 static int tau_symbol_found; 
-
-extern "C" int Tau_get_backtrace_off_by_one_correction(void);
 
 static void issueBfdWarningIfNecessary() {
   static bool warningIssued = false;
@@ -176,12 +177,10 @@ int Tau_Backtrace_writeMetadata(int i, char *token, unsigned long addr) {
     if (dem_name != NULL && map != NULL) {
       // Get address from gdb if possible
       TAU_VERBOSE("tauPrintAddr: Getting information from GDB instead\n");
-      sprintf(field, "[%s] [Addr=%p] [%s]", dem_name,
-	      addr+Tau_get_backtrace_off_by_one_correction(), map->name);
+      sprintf(field, "[%s] [Addr=%p] [%s]", dem_name, addr+1, map->name);
     } else {
       TAU_VERBOSE("tauPrintAddr: No Information Available\n");
-      sprintf(field, "[%s] [addr=%p]", dem_name,
-	      addr+Tau_get_backtrace_off_by_one_correction());
+      sprintf(field, "[%s] [addr=%p]", dem_name, addr+1);
     }
   }
 #else

@@ -9,19 +9,17 @@
 #****************************************************************************
 
 .SUFFIXES : .c
-.SILENT :
 
-include ../../Makefile.inc
+include ../../Makefile.in
 
 HEADERS=${wildcard *.h}
 SOURCES=${wildcard *.c}
 OBJS=${patsubst %.c, %.o, ${SOURCES}}
 
 TARGET=parse_config_test
-TAUDBLIB=../../libtaudb.a
+TAUDBLIB=../../lib/libtaudb.a
 DUMP_FUNCS=../libtaudb_dump.a
-LIBS=$(POSTGRESQL_LIBRARIES)
-INCLUDE=-I. -I../../include $(POSTGRESQL_INCLUDES) -I../dump_functions
+INCLUDE=-I. -I../../include $(INCLUDES) -I../dump_functions
 
 all: $(TARGET)
 
@@ -30,7 +28,7 @@ $(TARGET): $(TAUDBLIB) $(HEADERS) $(OBJS)
 	$(CC) $(FLAGS) $@.o $(DUMP_FUNCS) -o $@ $(TAUDBLIB) $(LIBS)
 
 # rebuild everything if the headers or the makefile changes
-$(OBJS): $(HEADERS) Makefile ../../Makefile.inc
+$(OBJS): $(HEADERS) Makefile ../../Makefile.in
 
 .c.o:
 	echo "Building : $@ from $<"

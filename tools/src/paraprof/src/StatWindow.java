@@ -107,11 +107,11 @@ public class StatWindow extends JFrame implements ActionListener, MenuListener, 
 
         String title;
         //Now set the title.
-        if (nodeID == -1) {
+        if (nodeID == -1 || nodeID == -6) {
             title = "TAU: ParaProf: Mean Data Statistics: ";
         } else if (nodeID == -2) {
             title = "TAU: ParaProf: Total Statistics: ";
-        } else if (nodeID == -3) {
+        } else if (nodeID == -3 || nodeID == -7) {
             title = "TAU: ParaProf: Standard Deviation Statistics: ";
         } else {
             title = "TAU: ParaProf: "+ ParaProfUtils.getThreadLabel(thread);//n,c,t, " + nodeID + "," + contextID + "," + threadID;

@@ -16,7 +16,10 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import edu.uoregon.tau.common.MetaDataMap;
 import edu.uoregon.tau.common.Utility;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataValue;
 
 /**
  * This class represents a data source.  After loading, data is availiable through the
@@ -58,7 +61,7 @@ public abstract class DataSource {
             "Gprof", "PSRun", "Tau pprof.dat", "Cube", "HPCToolkit", "ompP", "PERI-XML",
             "General Purpose Timing Library (GPTL)", "Paraver", "IPM", "Google PerfTools", "Cube 3 (Old parser)" };
 
-    private static boolean meanIncludeNulls = true;
+    protected static boolean meanIncludeNulls = true;
 
     private boolean userEventsPresent = false;
     private boolean callPathDataPresent = false;
@@ -97,8 +100,8 @@ public abstract class DataSource {
 
     protected volatile boolean reloading;
 
-    protected Map<String, String> metaData = new TreeMap<String, String>();
-    protected Map<String, String> uncommonMetaData = new TreeMap<String, String>();
+    protected MetaDataMap metaData = new MetaDataMap();
+    protected MetaDataMap uncommonMetaData = new MetaDataMap();
 
     private File metadataFile;
     private StringBuffer metadataString = new StringBuffer();
@@ -115,6 +118,10 @@ public abstract class DataSource {
     protected boolean derivedProvided=false;
 
 	protected boolean derivedAtomicProvided=false;
+
+	private int threadsPerConext =-1;
+
+	private int conextsPerNode = -1;
 
     public boolean isDerivedProvided() {
 		return derivedProvided;
@@ -183,8 +190,24 @@ public abstract class DataSource {
         return meanData;
     }
 
+    public Thread getMeanDataAll() {
+        return meanDataAll;
+    }
+
+    public Thread getMeanDataNoNull() {
+        return meanDataNoNull;
+    }
+
     public Thread getStdDevData() {
         return stddevData;
+    }
+
+    public Thread getStdDevDataAll() {
+        return stddevDataAll;
+    }
+
+    public Thread getStdDevDataNoNull() {
+        return stddevDataNoNull;
     }
 
     public Thread getTotalData() {
@@ -253,10 +276,20 @@ public abstract class DataSource {
         return functions.size();
     }
 
-    public Iterator<Function> getFunctions() {
-        return functions.values().iterator();
+    public List<Function> getFunctions() {
+    	return new ArrayList<Function>(functions.values());
     }
 
+    public Iterator<Function> getFunctionIterator() {
+        return functions.values().iterator();
+    }
+    
+    public Iterator<Function> getFunctionIteratorCopy() {
+    	// copy this set, so we can add to it!
+    	Set tmpValues = new HashSet(functions.values());
+        return tmpValues.iterator();
+    }
+    
     public UserEvent addUserEvent(String name) {
         Object obj = userEvents.get(name);
 
@@ -278,7 +311,11 @@ public abstract class DataSource {
         return userEvents.size();
     }
 
-    public Iterator<UserEvent> getUserEvents() {
+    public List<UserEvent> getUserEvents() {
+        return new ArrayList<UserEvent>(userEvents.values());
+    }
+
+    public Iterator<UserEvent> getUserEventIterator() {
         return userEvents.values().iterator();
     }
 
@@ -351,6 +388,35 @@ public abstract class DataSource {
         return maxNCT;
     }
 
+    public int getMaxThreadsPerContext(){
+    	if( threadsPerConext  <0){
+    		threadsPerConext = 0;
+        for (Iterator<Node> it = this.getNodes(); it.hasNext();) {
+            Node node = it.next();
+            for (Iterator<Context> it2 = node.getContexts(); it2.hasNext();) {
+                Context context = it2.next();
+                int numThreads = context.getNumberOfThreads();
+                threadsPerConext = threadsPerConext < numThreads ? numThreads: threadsPerConext;
+            }
+        }
+    	}
+        return threadsPerConext;
+    }
+    public int getMaxContextPerNode(){
+    	if( conextsPerNode   <0){
+    		conextsPerNode = 0;
+        for (Iterator<Node> it = this.getNodes(); it.hasNext();) {
+            Node node = it.next();
+            int numContext = node.getNumberOfContexts();
+            conextsPerNode = conextsPerNode < numContext ? numContext: conextsPerNode;
+            }
+    	}
+        return conextsPerNode;
+    }
+    public int getMaxNode(){
+        return nodes.size();
+    }
+
     public int getNumThreads() {
         int numThreads = 0;
         for (Iterator<Node> it = this.getNodes(); it.hasNext();) {
@@ -383,28 +449,32 @@ public abstract class DataSource {
      *            Metric to be added
      */
     public void addMetric(Metric metric) {
-        if (this.metrics == null) {
-            this.metrics = new ArrayList<Metric>();
-        } else {
-            for (Iterator<Thread> it = getAllThreads().iterator(); it.hasNext();) {
-                Thread thread = it.next();
-                thread.addMetric();
-            }
+    	if (this.metrics == null) {
+    		this.metrics = new ArrayList<Metric>();
+    	} else {
+    		for (Iterator<Thread> it = getAllThreads().iterator(); it.hasNext();) {
+    			Thread thread = it.next();
+    			thread.addMetric();
+    		}
 
-            if (meanData != null) {
-                meanData.addMetric();
-                totalData.addMetric();
-                stddevData.addMetric();
-                
-                if(maxData!=null&&minData!=null){
-                	maxData.addMetric();
-                	minData.addMetric();
-                }
-            }
-        }
+    		if (meanDataNoNull != null)
+    			meanDataNoNull.addMetric();
+    		if (totalData != null)
+    			totalData.addMetric();
+    		if(stddevDataNoNull != null)
+    			stddevDataNoNull.addMetric();
+    		if(minData!=null)
+    			minData.addMetric();
+    		if(maxData!=null)
+    			maxData.addMetric();
+    		if (meanDataAll != null)
+    			meanDataAll.addMetric();
+    		if(stddevDataAll != null)
+    			stddevDataAll.addMetric();
+    	}
 
-        metric.setID(this.getNumberOfMetrics());
-        metrics.add(metric);
+    	metric.setID(this.getNumberOfMetrics());
+    	metrics.add(metric);
     }
 
     /**
@@ -578,7 +648,7 @@ public abstract class DataSource {
 
         List<Function> functions = new ArrayList<Function>();
 
-        for (Iterator<Function> l = this.getFunctions(); l.hasNext();) {
+        for (Iterator<Function> l = this.getFunctionIterator(); l.hasNext();) {
             Function function = l.next();
             functions.add(function);
         }
@@ -637,7 +707,7 @@ public abstract class DataSource {
 
     }
 
-    private void addDerivedSnapshots(Thread thread, Thread derivedThread) {
+    protected void addDerivedSnapshots(Thread thread, Thread derivedThread) {
         if (wellBehavedSnapshots) {
 
             derivedThread.setStartTime(avgStartTime);
@@ -656,11 +726,11 @@ public abstract class DataSource {
      */
     public void generateDerivedData() {
         //long time = System.currentTimeMillis();
-
+    	
         // reset the list of all threads so that it will be recreated
         allThreads = null;
 
-        if (CallPathUtilFuncs.checkCallPathsPresent(getFunctions())) {
+        if (CallPathUtilFuncs.checkCallPathsPresent(getFunctionIterator())) {
             setCallPathDataPresent(true);
         }
 
@@ -702,13 +772,20 @@ public abstract class DataSource {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        this.meanData.setThreadDataAllMetrics();
-        this.totalData.setThreadDataAllMetrics();
-        this.stddevData.setThreadDataAllMetrics();
+        if(this.meanDataNoNull!=null)
+        	this.meanDataNoNull.setThreadDataAllMetrics();
+        if(this.totalData!=null)
+        	this.totalData.setThreadDataAllMetrics();
+        if(this.stddevDataNoNull!=null)
+        	this.stddevDataNoNull.setThreadDataAllMetrics();
         if(this.maxData!=null)
         	this.maxData.setThreadDataAllMetrics();
         if(this.minData!=null)
         	this.minData.setThreadDataAllMetrics();
+        if(this.meanDataAll!=null)
+        	this.meanDataAll.setThreadDataAllMetrics();
+        if(this.stddevDataAll!=null)
+        	this.stddevDataAll.setThreadDataAllMetrics();
 
         this.generateAtomicEventStatistics();
 
@@ -742,7 +819,7 @@ public abstract class DataSource {
         int numThreads = allThreads.size();
         int numSnapshots = meanData.getNumSnapshots();
 
-        int numProfiles[] = new int[getNumUserEvents() + 1];
+        Map<Integer, Integer> numProfiles = new HashMap<Integer, Integer>();
 
         for (int snapshot = 0; snapshot < numSnapshots; snapshot++) {
 
@@ -753,76 +830,120 @@ public abstract class DataSource {
                     UserEvent ue = uep.getUserEvent();
 
                     // get/create the userEventProfile for mean
-                    UserEventProfile meanProfile = meanData.getUserEventProfile(ue);
-                    //if (meanProfile == null) {
-                        meanProfile = new UserEventProfile(ue, numSnapshots);
-                        meanData.addUserEventProfile(meanProfile);
-                    //}
+                    UserEventProfile meanNoNullProfile = meanDataNoNull.getUserEventProfile(ue);
+                    if (meanNoNullProfile == null) {
+                        meanNoNullProfile = new UserEventProfile(ue, numSnapshots);
+                        meanDataNoNull.addUserEventProfile(meanNoNullProfile);
+                    }
 
+                    // get/create the userEventProfile for mean
+                    UserEventProfile meanAllProfile = meanDataAll.getUserEventProfile(ue);
+                    if (meanAllProfile == null) {
+                        meanAllProfile = new UserEventProfile(ue, numSnapshots);
+                        meanDataAll.addUserEventProfile(meanAllProfile);
+                    }
+                    
                     // get/create the userEventProfile for total
                     UserEventProfile totalProfile = totalData.getUserEventProfile(ue);
-                    //if (totalProfile == null) {
+                    if (totalProfile == null) {
                         totalProfile = new UserEventProfile(ue, numSnapshots);
                         totalData.addUserEventProfile(totalProfile);
-                   // }
+                    }
 
                     // get/create the userEventProfile for stddev
-                    UserEventProfile stddevProfile = stddevData.getUserEventProfile(ue);
-                   // if (stddevProfile == null) {
-                        stddevProfile = new UserEventProfile(ue, numSnapshots);
-                        stddevData.addUserEventProfile(stddevProfile);
-                   // }
+                    UserEventProfile stddevNoNullProfile = stddevDataNoNull.getUserEventProfile(ue);
+                    if (stddevNoNullProfile == null) {
+                        stddevNoNullProfile = new UserEventProfile(ue, numSnapshots);
+                        stddevDataNoNull.addUserEventProfile(stddevNoNullProfile);
+                    }
 
-                    numProfiles[ue.getID()]++;
+                    // get/create the userEventProfile for stddev
+                    UserEventProfile stddevAllProfile = stddevDataAll.getUserEventProfile(ue);
+                    if (stddevAllProfile == null) {
+                        stddevAllProfile = new UserEventProfile(ue, numSnapshots);
+                        stddevDataAll.addUserEventProfile(stddevAllProfile);
+                    }
+
+                    Integer count = numProfiles.get(ue.getID());
+                    if (count == null) count = new Integer(1);
+                    numProfiles.put(ue.getID(), count++);
 
                     totalProfile.setNumSamples(totalProfile.getNumSamples() + uep.getNumSamples(snapshot), snapshot);
                     totalProfile.setMaxValue(totalProfile.getMaxValue() + uep.getMaxValue(snapshot), snapshot);
                     totalProfile.setMinValue(totalProfile.getMinValue() + uep.getMinValue(snapshot), snapshot);
                     totalProfile.setMeanValue(totalProfile.getMeanValue() + uep.getMeanValue(snapshot), snapshot);
                     totalProfile.setStdDev(totalProfile.getStdDev() + uep.getStdDev(snapshot), snapshot);
-
-                    stddevProfile.setNumSamples(stddevProfile.getNumSamples()
+                    
+                    stddevNoNullProfile.setNumSamples(stddevNoNullProfile.getNumSamples()
                             + (uep.getNumSamples(snapshot) * uep.getNumSamples(snapshot)), snapshot);
-                    stddevProfile.setMaxValue(stddevProfile.getMaxValue()
+                    stddevNoNullProfile.setMaxValue(stddevNoNullProfile.getMaxValue()
                             + (uep.getMaxValue(snapshot) * uep.getMaxValue(snapshot)), snapshot);
-                    stddevProfile.setMinValue(stddevProfile.getMinValue()
+                    stddevNoNullProfile.setMinValue(stddevNoNullProfile.getMinValue()
                             + (uep.getMinValue(snapshot) * uep.getMinValue(snapshot)), snapshot);
-                    stddevProfile.setMeanValue(stddevProfile.getMeanValue()
+                    stddevNoNullProfile.setMeanValue(stddevNoNullProfile.getMeanValue()
                             + (uep.getMeanValue(snapshot) * uep.getMeanValue(snapshot)), snapshot);
-                    stddevProfile.setStdDev(stddevProfile.getStdDev() + (uep.getStdDev(snapshot) * uep.getStdDev(snapshot)),
+                    stddevNoNullProfile.setStdDev(stddevNoNullProfile.getStdDev() + (uep.getStdDev(snapshot) * uep.getStdDev(snapshot)),
+                            snapshot);
+
+                    stddevAllProfile.setNumSamples(stddevAllProfile.getNumSamples()
+                            + (uep.getNumSamples(snapshot) * uep.getNumSamples(snapshot)), snapshot);
+                    stddevAllProfile.setMaxValue(stddevAllProfile.getMaxValue()
+                            + (uep.getMaxValue(snapshot) * uep.getMaxValue(snapshot)), snapshot);
+                    stddevAllProfile.setMinValue(stddevAllProfile.getMinValue()
+                            + (uep.getMinValue(snapshot) * uep.getMinValue(snapshot)), snapshot);
+                    stddevAllProfile.setMeanValue(stddevAllProfile.getMeanValue()
+                            + (uep.getMeanValue(snapshot) * uep.getMeanValue(snapshot)), snapshot);
+                    stddevAllProfile.setStdDev(stddevAllProfile.getStdDev() + (uep.getStdDev(snapshot) * uep.getStdDev(snapshot)),
                             snapshot);
 
                 }
             }
 
-            for (Iterator<UserEvent> it = this.getUserEvents(); it.hasNext();) {
+            for (Iterator<UserEvent> it = this.getUserEventIterator(); it.hasNext();) {
                 UserEvent ue = it.next();
-
-                UserEventProfile meanProfile = meanData.getUserEventProfile(ue);
+                
+                UserEventProfile meanNoNullProfile = meanDataNoNull.getUserEventProfile(ue);
                 UserEventProfile totalProfile = totalData.getUserEventProfile(ue);
-                UserEventProfile stddevProfile = stddevData.getUserEventProfile(ue);
+                UserEventProfile stddevNoNullProfile = stddevDataNoNull.getUserEventProfile(ue);
+                UserEventProfile meanAllProfile = meanDataAll.getUserEventProfile(ue);
+                UserEventProfile stddevAllProfile = stddevDataAll.getUserEventProfile(ue);
 
-                int divider = numThreads;
-                if (!meanIncludeNulls) { // do we include null values as zeroes in the computation or not?
-                    divider = numProfiles[ue.getID()];
-                }
+                // for computing nonull values - the others use numThreads
+                int divider = numProfiles.get(ue.getID());
+                
+                meanNoNullProfile.setNumSamples((totalProfile.getNumSamples() / divider), snapshot);
+                meanNoNullProfile.setMaxValue(totalProfile.getMaxValue(snapshot) / divider, snapshot);
+                meanNoNullProfile.setMinValue(totalProfile.getMinValue(snapshot) / divider, snapshot);
+                meanNoNullProfile.setMeanValue(totalProfile.getMeanValue(snapshot) / divider, snapshot);
+                meanNoNullProfile.setStdDev(totalProfile.getStdDev(snapshot) / divider, snapshot);
 
-                meanProfile.setNumSamples((totalProfile.getNumSamples() / divider), snapshot);
-                meanProfile.setMaxValue(totalProfile.getMaxValue(snapshot) / divider, snapshot);
-                meanProfile.setMinValue(totalProfile.getMinValue(snapshot) / divider, snapshot);
-                meanProfile.setMeanValue(totalProfile.getMeanValue(snapshot) / divider, snapshot);
-                meanProfile.setStdDev(totalProfile.getStdDev(snapshot) / divider, snapshot);
+                meanAllProfile.setNumSamples((totalProfile.getNumSamples() / numThreads), snapshot);
+                meanAllProfile.setMaxValue(totalProfile.getMaxValue(snapshot) / numThreads, snapshot);
+                meanAllProfile.setMinValue(totalProfile.getMinValue(snapshot) / numThreads, snapshot);
+                meanAllProfile.setMeanValue(totalProfile.getMeanValue(snapshot) / numThreads, snapshot);
+                meanAllProfile.setStdDev(totalProfile.getStdDev(snapshot) / numThreads, snapshot);
 
-                stddevProfile.setNumSamples(computeStdDev(stddevProfile.getNumSamples(snapshot),
-                        meanProfile.getNumSamples(snapshot), divider), snapshot);
-                stddevProfile.setMaxValue(computeStdDev(stddevProfile.getMaxValue(snapshot), meanProfile.getMaxValue(snapshot),
+                stddevNoNullProfile.setNumSamples(computeStdDev(stddevNoNullProfile.getNumSamples(snapshot),
+                        meanNoNullProfile.getNumSamples(snapshot), divider), snapshot);
+                stddevNoNullProfile.setMaxValue(computeStdDev(stddevNoNullProfile.getMaxValue(snapshot), meanNoNullProfile.getMaxValue(snapshot),
                         divider), snapshot);
-                stddevProfile.setMinValue(computeStdDev(stddevProfile.getMinValue(snapshot), meanProfile.getMinValue(snapshot),
+                stddevNoNullProfile.setMinValue(computeStdDev(stddevNoNullProfile.getMinValue(snapshot), meanNoNullProfile.getMinValue(snapshot),
                         divider), snapshot);
-                stddevProfile.setMeanValue(computeStdDev(stddevProfile.getMeanValue(snapshot),
-                        meanProfile.getMeanValue(snapshot), divider), snapshot);
-                stddevProfile.setStdDev(
-                        computeStdDev(stddevProfile.getStdDev(snapshot), meanProfile.getStdDev(snapshot), divider), snapshot);
+                stddevNoNullProfile.setMeanValue(computeStdDev(stddevNoNullProfile.getMeanValue(snapshot),
+                        meanNoNullProfile.getMeanValue(snapshot), divider), snapshot);
+                stddevNoNullProfile.setStdDev(
+                        computeStdDev(stddevNoNullProfile.getStdDev(snapshot), meanNoNullProfile.getStdDev(snapshot), divider), snapshot);
+
+                stddevAllProfile.setNumSamples(computeStdDev(stddevAllProfile.getNumSamples(snapshot),
+                        meanAllProfile.getNumSamples(snapshot), numThreads), snapshot);
+                stddevAllProfile.setMaxValue(computeStdDev(stddevAllProfile.getMaxValue(snapshot), meanAllProfile.getMaxValue(snapshot),
+                        numThreads), snapshot);
+                stddevAllProfile.setMinValue(computeStdDev(stddevAllProfile.getMinValue(snapshot), meanAllProfile.getMinValue(snapshot),
+                        numThreads), snapshot);
+                stddevAllProfile.setMeanValue(computeStdDev(stddevAllProfile.getMeanValue(snapshot),
+                        meanAllProfile.getMeanValue(snapshot), numThreads), snapshot);
+                stddevAllProfile.setStdDev(
+                        computeStdDev(stddevAllProfile.getStdDev(snapshot), meanAllProfile.getStdDev(snapshot), numThreads), snapshot);
             }
         }
 
@@ -830,37 +951,71 @@ public abstract class DataSource {
 
     public void generateStatistics(int startMetric, int endMetric) {
 
-        /*
-         * Given, excl, incl, call, subr for each thread 
-         * 
-         * for each thread: 
-         *   for each function:
-         *     inclpercent = incl / (max(all incls for this thread)) * 100 
-         *     exclpercent = excl / (max(all incls for this thread)) * 100 
-         *     inclpercall = incl / call 
-         * 
-         * for the total: 
-         *   for each function: 
-         *     incl = sum(all threads, incl) 
-         *     excl = sum(all threads, excl) 
-         *     call = sum(all threads, call) 
-         *     subr = sum(all threads, subr) 
-         *     inclpercent = incl / (sum(max(all incls for each thread)) * 100 
-         *     exclpercent = excl / (sum(max(all incls for each thread)) * 100 
-         *     inclpercall = incl / call
-         * 
-         * for the mean: 
-         *   for each function: 
-         *     incl = total(incl) / numThreads 
-         *     excl = total(excl) / numThreads
-         *     call = total(call) / numThreads 
-         *     subr = total(subr) / numThreads
-         *     inclpercent = total.inclpercent 
-         *     exclpercent = total.exclpercent
-         *     inclpercall = total.inclpercall
-         */
+    	/*
+    	 * Given, excl, incl, call, subr for each thread 
+    	 * 
+    	 * for each thread: 
+    	 *   for each function:
+    	 *     inclpercent = incl / (max(all incls for this thread)) * 100 
+    	 *     exclpercent = excl / (max(all incls for this thread)) * 100 
+    	 *     inclpercall = incl / call 
+    	 * 
+    	 * for the total: 
+    	 *   for each function: 
+    	 *     incl = sum(all threads, incl) 
+    	 *     excl = sum(all threads, excl) 
+    	 *     call = sum(all threads, call) 
+    	 *     subr = sum(all threads, subr) 
+    	 *     inclpercent = incl / (sum(max(all incls for each thread)) * 100 
+    	 *     exclpercent = excl / (sum(max(all incls for each thread)) * 100 
+    	 *     inclpercall = incl / call
+    	 * 
+    	 * for the mean: 
+    	 *   for each function: 
+    	 *     incl = total(incl) / numThreads 
+    	 *     excl = total(excl) / numThreads
+    	 *     call = total(call) / numThreads 
+    	 *     subr = total(subr) / numThreads
+    	 *     inclpercent = total.inclpercent 
+    	 *     exclpercent = total.exclpercent
+    	 *     inclpercall = total.inclpercall
+    	 */
 
-    	if(derivedProvided){
+    	int numMetrics = this.getNumberOfMetrics();
+    	Thread firstThread = getAllThreads().get(0);
+    	if (meanDataNoNull == null) {
+    		meanDataNoNull = new Thread(-1, -1, -1, numMetrics, this);
+    		addDerivedSnapshots(firstThread, meanDataNoNull);
+    	}
+
+    	if (totalData == null) {
+    		totalData = new Thread(-2, -2, -2, numMetrics, this);
+    		addDerivedSnapshots(firstThread, totalData);
+    	}
+
+    	if (stddevDataNoNull == null) {
+    		stddevDataNoNull = new Thread(-3, -3, -3, numMetrics, this);
+    		addDerivedSnapshots(firstThread, stddevDataNoNull);
+    	}
+
+		if (minData == null) {
+			minData = new Thread(-4, -4, -4, numMetrics, this);
+			addDerivedSnapshots(firstThread, minData);
+		}
+		if (maxData == null) {
+			maxData = new Thread(-5, -5, -5, numMetrics, this);
+			addDerivedSnapshots(firstThread, maxData);
+		}
+		if (meanDataAll == null) {
+			meanDataAll = new Thread(-6, -6, -6, numMetrics, this);
+			addDerivedSnapshots(firstThread, meanDataAll);
+		}
+		if (stddevDataAll == null) {
+			stddevDataAll = new Thread(-7, -7, -7, numMetrics, this);
+			addDerivedSnapshots(firstThread, stddevDataAll);
+		}
+
+    	//if(derivedProvided && !generateTAUdbStatistics){
     		if(meanIncludeNulls){
     			meanData=meanDataAll;
     			stddevData=stddevDataAll;
@@ -868,214 +1023,281 @@ public abstract class DataSource {
     			meanData=meanDataNoNull;
     			stddevData=stddevDataNoNull;
     		}
-    			
-    	}
-    	
-        int numMetrics = this.getNumberOfMetrics();
-        Thread firstThread = getAllThreads().get(0);
-        if (meanData == null) {
-            meanData = new Thread(-1, -1, -1, numMetrics, this);
-            addDerivedSnapshots(firstThread, meanData);
-        }
+    	//}
 
-        if (totalData == null) {
-            totalData = new Thread(-2, -2, -2, numMetrics, this);
-            addDerivedSnapshots(firstThread, totalData);
-        }
+    	double[] exclSum = new double[numMetrics];
+    	double[] inclSum = new double[numMetrics];
+    	double[] exclSumSqr = new double[numMetrics];
+    	double[] inclSumSqr = new double[numMetrics];
+    	double[] exclMin = new double[numMetrics];
+    	double[] inclMin = new double[numMetrics];
+    	double[] exclMax = new double[numMetrics];
+    	double[] inclMax = new double[numMetrics];
 
-        if (stddevData == null) {
-            stddevData = new Thread(-3, -3, -3, numMetrics, this);
-            addDerivedSnapshots(firstThread, stddevData);
-        }
+    	// make sure that the allThreads list is initialized;
+    	this.initAllThreadsList();
 
-        double[] exclSum = new double[numMetrics];
-        double[] inclSum = new double[numMetrics];
-        double[] exclSumSqr = new double[numMetrics];
-        double[] inclSumSqr = new double[numMetrics];
+    	for (int snapshot = 0; snapshot < meanData.getNumSnapshots(); snapshot++) {
 
-        // make sure that the allThreads list is initialized;
-        this.initAllThreadsList();
+    		// must always iterate through all metrics regardless to find the top level timers, I think???
+    		for (int i = startMetric; i <= endMetric; i++) { // for each metric
+    			double topLevelInclSum[] = new double[numMetrics];
+    			if (derivedProvided) {
+    				// the totalData thread doesn't have max values set (yet), so let's find it
+					topLevelInclSum[i] = 0.0;
+    	    		for (Iterator<Function> l = this.getFunctionIterator(); l.hasNext();) { // for each function
+    	    			Function function = l.next();
+    	    			FunctionProfile totalProfile = totalData.getFunctionProfile(function);
+    	    			// it is possible for this timer to not exist on this thread, if the trial was reduced
+    	    			if (totalProfile != null) {
+    	    				topLevelInclSum[i] = java.lang.Math.max(topLevelInclSum[i], totalProfile.getInclusive(i));
+    	    			}
+    	    		}
+    			} else {
+	    			for (Iterator<Thread> it = allThreads.iterator(); it.hasNext();) { // for each thread
+	    				Thread thread = it.next();
+	    				if (wellBehavedSnapshots) {
+	    					topLevelInclSum[i] += thread.getMaxInclusive(i, snapshot);
+	    				} else { // pick the last from each thread
+	    					topLevelInclSum[i] += thread.getMaxInclusive(i, thread.getNumSnapshots() - 1);
+	    				}
+	    			}
+    			}
 
-        for (int snapshot = 0; snapshot < meanData.getNumSnapshots(); snapshot++) {
+    			if(totalData!=null)
+    				totalData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
+    			if(meanDataNoNull!=null)
+    				meanDataNoNull.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
+    			if(stddevDataNoNull!=null)
+    				stddevDataNoNull.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
+    			if(minData!=null)
+    				minData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
+    			if(maxData!=null)
+    				maxData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
+    			if(meanDataAll!=null)
+    				meanDataAll.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
+    			if(stddevDataAll!=null)
+    				stddevDataAll.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
+    		}
 
-            // must always iterate through all metrics regardless to find the top level timers, I think???
-            for (int i = startMetric; i <= endMetric; i++) { // for each metric
-                double topLevelInclSum[] = new double[numMetrics];
-                for (Iterator<Thread> it = allThreads.iterator(); it.hasNext();) { // for each thread
-                    Thread thread = it.next();
-                    if (wellBehavedSnapshots) {
-                        topLevelInclSum[i] += thread.getMaxInclusive(i, snapshot);
-                    } else { // pick the last from each thread
-                        topLevelInclSum[i] += thread.getMaxInclusive(i, thread.getNumSnapshots() - 1);
-                    }
-                }
+    		for (Iterator<Function> l = this.getFunctionIterator(); l.hasNext();) { // for each function
+    			Function function = l.next();
 
-                totalData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
-                meanData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
-                stddevData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
-                if(minData!=null)
-                	minData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
-                if(maxData!=null)
-                	maxData.setPercentDivider(i, snapshot, topLevelInclSum[i] / 100.0);
-            }
+    			// get/create the FunctionProfile for mean
+    			FunctionProfile meanNoNullProfile = meanDataNoNull.getFunctionProfile(function);
+    			if (meanNoNullProfile == null) {
+    				meanNoNullProfile = new FunctionProfile(function, numMetrics, meanDataNoNull.getNumSnapshots());
+    				meanDataNoNull.addFunctionProfile(meanNoNullProfile);
+    			}
+    			// this is the "no null" version...
+    			function.setMeanProfile(meanNoNullProfile);
 
-            for (Iterator<Function> l = this.getFunctions(); l.hasNext();) { // for each function
-                Function function = l.next();
+    			// get/create the FunctionProfile for total
+    			FunctionProfile totalProfile = totalData.getFunctionProfile(function);
+    			if (totalProfile == null) {
+    				totalProfile = new FunctionProfile(function, numMetrics, meanDataNoNull.getNumSnapshots());
+    				totalData.addFunctionProfile(totalProfile);
+    			}
+    			function.setTotalProfile(totalProfile);
 
-                // get/create the FunctionProfile for mean
-                FunctionProfile meanProfile = meanData.getFunctionProfile(function);
-                if (meanProfile == null) {
-                    meanProfile = new FunctionProfile(function, numMetrics, meanData.getNumSnapshots());
-                    meanData.addFunctionProfile(meanProfile);
-                }
-                function.setMeanProfile(meanProfile);
+    			// get/create the FunctionProfile for stddev
+    			FunctionProfile stddevNoNullProfile = stddevDataNoNull.getFunctionProfile(function);
+    			if (stddevNoNullProfile == null) {
+    				stddevNoNullProfile = new FunctionProfile(function, numMetrics, meanDataNoNull.getNumSnapshots());
+    				stddevDataNoNull.addFunctionProfile(stddevNoNullProfile);
+    			}
+    			// this is the "no null" version
+    			function.setStddevProfile(stddevNoNullProfile);
 
-                // get/create the FunctionProfile for total
-                FunctionProfile totalProfile = totalData.getFunctionProfile(function);
-                if (totalProfile == null) {
-                    totalProfile = new FunctionProfile(function, numMetrics, meanData.getNumSnapshots());
-                    totalData.addFunctionProfile(totalProfile);
-                }
-                function.setTotalProfile(totalProfile);
+    			FunctionProfile minProfile = null;
+    			FunctionProfile maxProfile = null;
+    			FunctionProfile meanAllProfile = null;
+    			FunctionProfile stddevAllProfile = null;
+    			if(minData!=null){
+    				minProfile = minData.getFunctionProfile(function);
+    				if (minProfile == null) {
+    					minProfile = new FunctionProfile(function, numMetrics, meanDataNoNull.getNumSnapshots());
+    					minData.addFunctionProfile(minProfile);
+    				}
+    				function.setMinProfile(minProfile);
+    			}
 
-                // get/create the FunctionProfile for stddev
-                FunctionProfile stddevProfile = stddevData.getFunctionProfile(function);
-                if (stddevProfile == null) {
-                    stddevProfile = new FunctionProfile(function, numMetrics, meanData.getNumSnapshots());
-                    stddevData.addFunctionProfile(stddevProfile);
-                }
-                function.setStddevProfile(stddevProfile);
-                
-                if(minData!=null){
-                FunctionProfile minProfile = minData.getFunctionProfile(function);
-                if (minProfile == null) {
-                    minProfile = new FunctionProfile(function, numMetrics, meanData.getNumSnapshots());
-                    minData.addFunctionProfile(minProfile);
-                }
-                function.setMinProfile(minProfile);
-                }
-                
-                if(maxData!=null){
-                FunctionProfile maxProfile = maxData.getFunctionProfile(function);
-                if (maxProfile == null) {
-                    maxProfile = new FunctionProfile(function, numMetrics, meanData.getNumSnapshots());
-                    maxData.addFunctionProfile(maxProfile);
-                }
-                function.setMaxProfile(maxProfile);
-                }
+    			if(maxData!=null){
+    				maxProfile = maxData.getFunctionProfile(function);
+    				if (maxProfile == null) {
+    					maxProfile = new FunctionProfile(function, numMetrics, meanDataNoNull.getNumSnapshots());
+    					maxData.addFunctionProfile(maxProfile);
+    				}
+    				function.setMaxProfile(maxProfile);
+    			}
 
-                if(!derivedProvided){
-                int numEvents = 0;
-                double callSum = 0;
-                double subrSum = 0;
-                double callSumSqr = 0;
-                double subrSumSqr = 0;
-                for (int i = 0; i < numMetrics; i++) {
-                    exclSum[i] = 0;
-                    inclSum[i] = 0;
-                    exclSumSqr[i] = 0;
-                    inclSumSqr[i] = 0;
-                }
+    			if(stddevDataAll!=null){
+    				stddevAllProfile = stddevDataAll.getFunctionProfile(function);
+    				if (stddevAllProfile == null) {
+    					stddevAllProfile = new FunctionProfile(function, numMetrics, meanDataNoNull.getNumSnapshots());
+    					stddevDataAll.addFunctionProfile(stddevAllProfile);
+    				}
+    				function.setStddevAllProfile(stddevAllProfile);
+    			}
 
-                int numThreads = allThreads.size();
+    			if(meanDataAll!=null){
+    				meanAllProfile = meanDataAll.getFunctionProfile(function);
+    				if (meanAllProfile == null) {
+    					meanAllProfile = new FunctionProfile(function, numMetrics, meanDataNoNull.getNumSnapshots());
+    					meanDataAll.addFunctionProfile(meanAllProfile);
+    				}
+    				function.setMeanAllProfile(meanAllProfile);
+    			}
 
-                for (int i = 0; i < numThreads; i++) { // for each thread
-                    Thread thread = allThreads.get(i);
-                    FunctionProfile functionProfile = thread.getFunctionProfile(function);
+    			if(!derivedProvided || generateTAUdbStatistics){
+    				int numEvents = 0;
+    				double callSum = 0;
+    				double subrSum = 0;
+    				double callSumSqr = 0;
+    				double subrSumSqr = 0;
+    				double callMin = Integer.MAX_VALUE;
+    				double subrMin = Integer.MAX_VALUE;
+    				double callMax = 0;
+    				double subrMax = 0;
+    				for (int i = 0; i < numMetrics; i++) {
+    					exclSum[i] = 0;
+    					inclSum[i] = 0;
+    					exclSumSqr[i] = 0;
+    					inclSumSqr[i] = 0;
+    					exclMin[i] = Integer.MAX_VALUE;
+    					inclMin[i] = Integer.MAX_VALUE;
+    					exclMax[i] = 0;
+    					inclMax[i] = 0;
+    				}
 
-                    int s = snapshot;
-                    if (!wellBehavedSnapshots) {
-                        s = thread.getNumSnapshots() - 1;
-                    }
-                    if (functionProfile != null) { // only if this function was called for this nct
-                        numEvents++;
-                        for (int m = startMetric; m <= endMetric; m++) {
+    				int numThreads = allThreads.size();
 
-                            exclSum[m] += functionProfile.getExclusive(s, m);
-                            inclSum[m] += functionProfile.getInclusive(s, m);
-                            exclSumSqr[m] += functionProfile.getExclusive(s, m) * functionProfile.getExclusive(s, m);
-                            inclSumSqr[m] += functionProfile.getInclusive(s, m) * functionProfile.getInclusive(s, m);
+    				for (int i = 0; i < numThreads; i++) { // for each thread
+    					Thread thread = allThreads.get(i);
+						FunctionProfile functionProfile = thread.getFunctionProfile(function);
 
-                            // the same for every metric
-                            if (m == 0) {
-                                callSum += functionProfile.getNumCalls(s);
-                                subrSum += functionProfile.getNumSubr(s);
-                                callSumSqr += functionProfile.getNumCalls(s) * functionProfile.getNumCalls(s);
-                                subrSumSqr += functionProfile.getNumSubr(s) * functionProfile.getNumSubr(s);
-                            }
-                        }
-                    }
-                }
+						int s = snapshot;
+						if (!wellBehavedSnapshots) {
+							s = thread.getNumSnapshots() - 1;
+						}
+						if (functionProfile != null) { // only if this function was called for this nct
+							numEvents++;
+							for (int m = startMetric; m <= endMetric; m++) {
 
-                int divider = numThreads;
-                if (!meanIncludeNulls) { // do we include null values as zeroes in the computation or not?
-                    divider = numEvents;
-                }
+								exclSum[m] += functionProfile.getExclusive(s, m);
+								inclSum[m] += functionProfile.getInclusive(s, m);
+								exclSumSqr[m] += functionProfile.getExclusive(s, m) * functionProfile.getExclusive(s, m);
+								inclSumSqr[m] += functionProfile.getInclusive(s, m) * functionProfile.getInclusive(s, m);
+								exclMin[m] = (functionProfile.getExclusive(s, m) < exclMin[m]) ? functionProfile.getExclusive(s, m) : exclMin[m];
+								inclMin[m] = (functionProfile.getInclusive(s, m) < inclMin[m]) ? functionProfile.getInclusive(s, m) : inclMin[m];
+								exclMax[m] = (functionProfile.getExclusive(s, m) > exclMax[m]) ? functionProfile.getExclusive(s, m) : exclMax[m];
+								inclMax[m] = (functionProfile.getInclusive(s, m) > inclMax[m]) ? functionProfile.getInclusive(s, m) : inclMax[m];
 
-                // we don't want to set the calls and subroutines if we're just computing mean data for a derived metric!
-                if (startMetric == 0) {
+								// the same for every metric
+								if (m == 0) {
+									callSum += functionProfile.getNumCalls(s);
+									subrSum += functionProfile.getNumSubr(s);
+									callSumSqr += functionProfile.getNumCalls(s) * functionProfile.getNumCalls(s);
+									subrSumSqr += functionProfile.getNumSubr(s) * functionProfile.getNumSubr(s);
+									callMin = (functionProfile.getNumCalls(s) < callMin) ? functionProfile.getNumCalls(s) : callMin; 
+									subrMin = (functionProfile.getNumSubr(s) < subrMin) ? functionProfile.getNumSubr(s) : subrMin; 
+									callMax = (functionProfile.getNumCalls(s) > callMax) ? functionProfile.getNumCalls(s) : callMax; 
+									subrMax = (functionProfile.getNumSubr(s) > subrMax) ? functionProfile.getNumSubr(s) : subrMax; 
+								}
+							}
+						}
+    				}
 
-                    totalProfile.setNumCalls(snapshot, callSum);
-                    totalProfile.setNumSubr(snapshot, subrSum);
+    				int allDivider = numThreads;
+    				int noNullDivider = numEvents;
 
-                    // mean is just the total / divider
-                    meanProfile.setNumCalls(snapshot, (double) callSum / divider);
-                    meanProfile.setNumSubr(snapshot, (double) subrSum / divider);
+    				// we don't want to set the calls and subroutines if we're just computing mean data for a derived metric!
+    				if (startMetric == 0) {
 
-                    double stdDev = 0;
-                    if (divider > 1) {
-                        stdDev = java.lang.Math.sqrt(java.lang.Math.abs((callSumSqr / (divider))
-                                - (meanProfile.getNumCalls(snapshot) * meanProfile.getNumCalls(snapshot))));
-                    }
-                    stddevProfile.setNumCalls(snapshot, stdDev);
+    					totalProfile.setNumCalls(snapshot, callSum);
+    					totalProfile.setNumSubr(snapshot, subrSum);
 
-                    stdDev = 0;
-                    if (divider > 1) {
-                        stdDev = java.lang.Math.sqrt(java.lang.Math.abs((subrSumSqr / (divider))
-                                - (meanProfile.getNumSubr(snapshot) * meanProfile.getNumSubr(snapshot))));
-                    }
-                    stddevProfile.setNumSubr(snapshot, stdDev);
+    					// mean is just the total / divider
+    					meanNoNullProfile.setNumCalls(snapshot, (double) callSum / noNullDivider);
+    					meanAllProfile.setNumCalls(snapshot, (double) callSum / allDivider);
+    					meanNoNullProfile.setNumSubr(snapshot, (double) subrSum / noNullDivider);
+    					meanAllProfile.setNumSubr(snapshot, (double) subrSum / allDivider);
 
-                }
+    					double stdDev = 0;
+    					if (noNullDivider > 1) {
+    						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((callSumSqr / (noNullDivider))
+    								- (meanNoNullProfile.getNumCalls(snapshot) * meanNoNullProfile.getNumCalls(snapshot))));
+    						stddevNoNullProfile.setNumCalls(snapshot, stdDev);
+    						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((subrSumSqr / (noNullDivider))
+    								- (meanNoNullProfile.getNumSubr(snapshot) * meanNoNullProfile.getNumSubr(snapshot))));
+        					stddevNoNullProfile.setNumSubr(snapshot, stdDev);
+    					} else {
+    						stddevNoNullProfile.setNumCalls(snapshot, 0.0);
+        					stddevNoNullProfile.setNumSubr(snapshot, 0.0);
+    					}
 
-                for (int m = startMetric; m <= endMetric; m++) {
+						meanAllProfile.setNumCalls(snapshot, (double) callSum / allDivider);
+						meanAllProfile.setNumSubr(snapshot, (double) subrSum / allDivider);
+						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((callSumSqr / (allDivider))
+								- (meanAllProfile.getNumCalls(snapshot) * meanAllProfile.getNumCalls(snapshot))));
+						stddevAllProfile.setNumCalls(snapshot, stdDev);
+						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((subrSumSqr / (allDivider))
+								- (meanAllProfile.getNumSubr(snapshot) * meanAllProfile.getNumSubr(snapshot))));
+						stddevAllProfile.setNumSubr(snapshot, stdDev);
+						minProfile.setNumCalls(snapshot, callMin);
+						maxProfile.setNumCalls(snapshot, callMax);
+						minProfile.setNumSubr(snapshot, subrMin);
+						maxProfile.setNumSubr(snapshot, subrMax);
+    				}
 
-                    totalProfile.setExclusive(snapshot, m, exclSum[m]);
-                    totalProfile.setInclusive(snapshot, m, inclSum[m]);
+    				for (int m = startMetric; m <= endMetric; m++) {
 
-                    // mean data computed as above in comments
-                    meanProfile.setExclusive(snapshot, m, exclSum[m] / divider);
-                    meanProfile.setInclusive(snapshot, m, inclSum[m] / divider);
+    					totalProfile.setExclusive(snapshot, m, exclSum[m]);
+    					totalProfile.setInclusive(snapshot, m, inclSum[m]);
 
-                    double stdDev = 0;
-                    if (divider > 1) {
+    					// mean data computed as above in comments
+    					meanNoNullProfile.setExclusive(snapshot, m, exclSum[m] / noNullDivider);
+    					meanNoNullProfile.setInclusive(snapshot, m, inclSum[m] / noNullDivider);
 
-                        // see http://cuwu.editthispage.com/stories/storyReader$13 for why I don't multiply by n/(n-1)
+    					double stdDev = 0;
+    					if (noNullDivider > 1) {
+    						// see http://cuwu.editthispage.com/stories/storyReader$13 for why I don't multiply by n/(n-1)
 
-                        //stdDev = java.lang.Math.sqrt(((double) divider / (divider - 1))
-                        //        * java.lang.Math.abs((exclSumSqr[i] / (divider))
-                        //                - (meanProfile.getExclusive(i) * meanProfile.getExclusive(i))));
-                        stdDev = java.lang.Math.sqrt(java.lang.Math.abs((exclSumSqr[m] / (divider))
-                                - (meanProfile.getExclusive(snapshot, m) * meanProfile.getExclusive(snapshot, m))));
-                    }
-                    stddevProfile.setExclusive(snapshot, m, stdDev);
+    						//stdDev = java.lang.Math.sqrt(((double) divider / (divider - 1))
+    						//        * java.lang.Math.abs((exclSumSqr[i] / (divider))
+    						//                - (meanProfile.getExclusive(i) * meanProfile.getExclusive(i))));
+    						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((exclSumSqr[m] / (noNullDivider))
+    								- (meanNoNullProfile.getExclusive(snapshot, m) * meanNoNullProfile.getExclusive(snapshot, m))));
+        					stddevNoNullProfile.setExclusive(snapshot, m, stdDev);
+    						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((inclSumSqr[m] / (noNullDivider))
+    								- (meanNoNullProfile.getInclusive(snapshot, m) * meanNoNullProfile.getInclusive(snapshot, m))));
+        					stddevNoNullProfile.setInclusive(snapshot, m, stdDev);
+    					} else {
+    						stddevNoNullProfile.setExclusive(snapshot, m, 0.0);
+        					stddevNoNullProfile.setInclusive(snapshot, m, 0.0);
+    					}
 
-                    stdDev = 0;
-                    if (divider > 1) {
-                        stdDev = java.lang.Math.sqrt(java.lang.Math.abs((inclSumSqr[m] / (divider))
-                                - (meanProfile.getInclusive(snapshot, m) * meanProfile.getInclusive(snapshot, m))));
-                    }
-                    stddevProfile.setInclusive(snapshot, m, stdDev);
+    					meanAllProfile.setExclusive(snapshot, m, exclSum[m] / allDivider);
+    					meanAllProfile.setInclusive(snapshot, m, inclSum[m] / allDivider);
+						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((exclSumSqr[m] / (allDivider))
+								- (meanAllProfile.getExclusive(snapshot, m) * meanAllProfile.getExclusive(snapshot, m))));
+    					stddevAllProfile.setExclusive(snapshot, m, stdDev);
+						stdDev = java.lang.Math.sqrt(java.lang.Math.abs((inclSumSqr[m] / (allDivider))
+								- (meanAllProfile.getInclusive(snapshot, m) * meanAllProfile.getInclusive(snapshot, m))));
+						stddevAllProfile.setInclusive(snapshot, m, stdDev);
+						minProfile.setExclusive(snapshot,  m, exclMin[m]);
+						minProfile.setInclusive(snapshot,  m, inclMin[m]);
+						maxProfile.setExclusive(snapshot,  m, exclMax[m]);
+						maxProfile.setInclusive(snapshot,  m, inclMax[m]);
+    				} // metrics
+    			}// if statistics not provided
+    		}  // for each function
+    	} // for each snapshot
 
-                }
-                }//statisticsprovided
-            }
-        }
-
-        // Now we count up whether we have threads and contexts or not, this is for display purposes in ParaProf
-        int[] nct = getMaxNCTNumbers();
-        hasContexts = nct[1] > 0;
-        hasThreads = nct[2] > 0;
+    	// Now we count up whether we have threads and contexts or not, this is for display purposes in ParaProf
+    	int[] nct = getMaxNCTNumbers();
+    	hasContexts = nct[1] > 0;
+    	hasThreads = nct[2] > 0;
 
     }
 
@@ -1224,6 +1446,7 @@ public abstract class DataSource {
         return thread;
     }
 
+
     private void initAllThreadsList() {
         allThreads = new ArrayList<Thread>();
         for (Iterator<Node> it = this.getNodes(); it.hasNext();) {
@@ -1241,16 +1464,22 @@ public abstract class DataSource {
     
     private void initAggThreadsList(){
     	aggThreads = new ArrayList<Thread>();
-    	aggThreads.add(meanData);
-    	aggThreads.add(stddevData);
+    	aggThreads.add(meanDataNoNull);
+    	aggThreads.add(stddevDataNoNull);
     	aggThreads.add(totalData);
     	if(maxData!=null)
     		aggThreads.add(maxData);
     	if(minData!=null)
     		aggThreads.add(minData);
+    	if(meanDataAll!=null)
+    		aggThreads.add(meanDataAll);
+    	if(stddevDataAll!=null)
+    		aggThreads.add(stddevDataAll);
     }
     
     private List<Thread> aggThreads = null;
+
+	private boolean generateTAUdbStatistics;
     public List<Thread> getAggThreads(){
     	if(aggThreads==null){
     		initAggThreadsList();
@@ -1284,7 +1513,7 @@ public abstract class DataSource {
         if (tau_phase != null) {
             phasesPresent = true;
 
-            for (Iterator<Function> it = this.getFunctions(); it.hasNext();) {
+            for (Iterator<Function> it = this.getFunctionIterator(); it.hasNext();) {
                 Function function = it.next();
 
                 if (function.isGroupMember(tau_phase)) {
@@ -1293,7 +1522,7 @@ public abstract class DataSource {
                 }
             }
 
-            for (Iterator<Function> it = this.getFunctions(); it.hasNext();) {
+            for (Iterator<Function> it = this.getFunctionIterator(); it.hasNext();) {
                 Function function = it.next();
 
                 int location = function.getName().indexOf("=>");
@@ -1322,7 +1551,7 @@ public abstract class DataSource {
             Group tau_phase = this.getGroup("TAU_PHASE");
             ArrayList<Function> phases = new ArrayList<Function>();
 
-            for (Iterator<Function> it = this.getFunctions(); it.hasNext();) {
+            for (Iterator<Function> it = this.getFunctionIterator(); it.hasNext();) {
                 Function function = it.next();
                 if (function.isGroupMember(tau_phase)) {
                     phases.add(function);
@@ -1370,11 +1599,11 @@ public abstract class DataSource {
         return reverseDataAvailable;
     }
 
-    public Map<String, String> getMetaData() {
+    public MetaDataMap getMetaData() {
         return metaData;
     }
 
-    public void setMetaData(Map<String, String> metaData) {
+    public void setMetaData(MetaDataMap metaData) {
         this.metaData = metaData;
     }
 
@@ -1403,8 +1632,8 @@ public abstract class DataSource {
 
                 // output the first thread of name / value pairs, like this:
                 // <attribute><name>xxx</name><value>yyy</value></attribute>
-                for (Iterator<String> it2 = metaData.keySet().iterator(); it2.hasNext();) {
-                    String name = it2.next();
+                for (Iterator<MetaDataKey> it2 = metaData.keySet().iterator(); it2.hasNext();) {
+                    String name = it2.next().name;
                     String value = metaData.get(name);
                     Element attribute = (Element) document.createElement("tau:attribute");
                     master.appendChild(attribute);
@@ -1432,8 +1661,8 @@ public abstract class DataSource {
 
                 boolean addit = false;
 
-                for (Iterator<String> it2 = thread.getMetaData().keySet().iterator(); it2.hasNext();) {
-                    String name = it2.next();
+                for (Iterator<MetaDataKey> it2 = thread.getMetaData().keySet().iterator(); it2.hasNext();) {
+                    String name = it2.next().name;
                     String value = (String) thread.getMetaData().get(name);
                     // if this name/value pair is not in the master, then 
                     // append it to the tree.
@@ -1465,65 +1694,72 @@ public abstract class DataSource {
             // if the user also specified an XML file on the command line
             // with XML data, then merge that tree into our tree
             if (this.metadataFile != null) {
-                Document oldDocument = builder.parse(metadataFile);
-                // get the root elements, so we can move it
-                Element oldRoot = oldDocument.getDocumentElement();
-                // here's the magic step!
-                org.w3c.dom.Node imported = document.importNode(oldRoot, true);
-                System.out.println(imported.getPrefix());
-                System.out.println(imported.getNodeName());
-                if (master != null && imported.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
-                        && imported.getNodeName().equals("tau:metadata")) {
-                    // extract it out, and add it to our tree!
-                    NodeList nodes = imported.getChildNodes();
-                    int nodeIndex = 0;
-                    for (int i = 0; i < nodes.getLength(); i++) {
-                        org.w3c.dom.Node cpa = nodes.item(i);
-                        // System.out.println("\t" + cpa.getNodeName());
-                        if (cpa.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
-                                && cpa.getNodeName().equals("tau:CommonProfileAttributes")) {
+            	String data = readFileAsString(metadataFile);
+            	if (MetaDataParserJSON.isJSON(data)) {
+            		// don't do this here! do it in the TAUdbDatabaseAPI.uploadMetadata() function
+            	} else {
+            		// put the metadata fields in the map
+            		MetaDataParser.parse(this.getMetaData(), data, null);
+            		Document oldDocument = builder.parse(metadataFile);
+            		// get the root elements, so we can move it
+            		Element oldRoot = oldDocument.getDocumentElement();
+            		// here's the magic step!
+            		org.w3c.dom.Node imported = document.importNode(oldRoot, true);
+            		//System.out.println(imported.getPrefix());
+            		//System.out.println(imported.getNodeName());
+            		if (master != null && imported.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
+            				&& imported.getNodeName().equals("tau:metadata")) {
+            			// extract it out, and add it to our tree!
+            			NodeList nodes = imported.getChildNodes();
+            			int nodeIndex = 0;
+            			for (int i = 0; i < nodes.getLength(); i++) {
+            				org.w3c.dom.Node cpa = nodes.item(i);
+            				// System.out.println("\t" + cpa.getNodeName());
+            				if (cpa.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
+            						&& cpa.getNodeName().equals("tau:CommonProfileAttributes")) {
 
-                            NodeList attrs = cpa.getChildNodes();
-                            // System.out.println("length: " + attrs.getLength());
-                            for (int j = 0; j < attrs.getLength(); j++) {
-                                // System.out.println("\t\tj:" + j);
-                                org.w3c.dom.Node tmp = attrs.item(j);
-                                if (tmp.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
-                                        && tmp.getNodeName().equals("tau:attribute")) {
-                                    // System.out.println("\t\tname:" + tmp.getNodeName());
-                                    master.appendChild(tmp);
-                                }
-                                // System.out.println("\t\tend j:" + j);
-                            }
+            					NodeList attrs = cpa.getChildNodes();
+            					// System.out.println("length: " + attrs.getLength());
+            					for (int j = 0; j < attrs.getLength(); j++) {
+            						// System.out.println("\t\tj:" + j);
+            						org.w3c.dom.Node tmp = attrs.item(j);
+            						if (tmp.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
+            								&& tmp.getNodeName().equals("tau:attribute")) {
+            							// System.out.println("\t\tname:" + tmp.getNodeName());
+            							master.appendChild(tmp);
+            						}
+            						// System.out.println("\t\tend j:" + j);
+            					}
 
-                            //root.appendChild(cpa);
-                        } else if (cpa.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
-                                && cpa.getNodeName().equals("tau:ProfileAttributes")) {
-                            Element currentDelta = nodeProfiles.get(nodeIndex);
-                            if (profilesAdded.get(nodeIndex).booleanValue()) {
+            					//root.appendChild(cpa);
+            				} else if (cpa.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
+            						&& cpa.getNodeName().equals("tau:ProfileAttributes")) {
+            					Element currentDelta = nodeProfiles.get(nodeIndex);
+            					if (profilesAdded.get(nodeIndex).booleanValue()) {
 
-                                NodeList attrs = cpa.getChildNodes();
-                                // System.out.println("length: " + attrs.getLength());
-                                for (int j = 0; j < attrs.getLength(); j++) {
-                                    // System.out.println("\t\tj:" + j);
-                                    org.w3c.dom.Node tmp = attrs.item(j);
-                                    if (tmp.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
-                                            && tmp.getNodeName().equals("tau:attribute")) {
-                                        // System.out.println("\t\tname:" + tmp.getNodeName());
-                                        currentDelta.appendChild(tmp);
-                                    }
-                                    // System.out.println("\t\tend j:" + j);
-                                }
-                            } else {
-                                root.appendChild(cpa);
-                            }
-                            nodeIndex++;
-                        }
-                    }
-                } else {
-                    // add the root of the second document to our root
-                    root.appendChild(imported);
-                }
+            						NodeList attrs = cpa.getChildNodes();
+            						// System.out.println("length: " + attrs.getLength());
+            						for (int j = 0; j < attrs.getLength(); j++) {
+            							// System.out.println("\t\tj:" + j);
+            							org.w3c.dom.Node tmp = attrs.item(j);
+            							if (tmp.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE
+            									&& tmp.getNodeName().equals("tau:attribute")) {
+            								// System.out.println("\t\tname:" + tmp.getNodeName());
+            								currentDelta.appendChild(tmp);
+            							}
+            							// System.out.println("\t\tend j:" + j);
+            						}
+            					} else {
+            						root.appendChild(cpa);
+            					}
+            					nodeIndex++;
+            				}
+            			}
+            		} else {
+            			// add the root of the second document to our root
+            			root.appendChild(imported);
+            		}
+            	}
             }
 
             // normalize all whitespace in the file
@@ -1549,7 +1785,23 @@ public abstract class DataSource {
 
     }
 
-    public void aggregateMetaData() {
+    public static String readFileAsString(File filePath)
+    throws java.io.IOException{
+        StringBuffer fileData = new StringBuffer(1000);
+        BufferedReader reader = new BufferedReader(
+                new FileReader(filePath));
+        char[] buf = new char[1024];
+        int numRead=0;
+        while((numRead=reader.read(buf)) != -1){
+            String readData = String.valueOf(buf, 0, numRead);
+            fileData.append(readData);
+            buf = new char[1024];
+        }
+        reader.close();
+        return fileData.toString();
+    }
+    
+	public void aggregateMetaData() {
         Thread node0 = getAllThreads().get(0);
 
         // must have at least one thread
@@ -1558,23 +1810,24 @@ public abstract class DataSource {
         }
 
         // First, add all name/value pairs from the first node (any node, really)
-        for (Iterator<String> it = node0.getMetaData().keySet().iterator(); it.hasNext();) {
-            String name = it.next();
-            String value = (String) node0.getMetaData().get(name);
-            metaData.put(name, value);
+//        metaData.putAll(node0.getMetaData());
+        for (Iterator<MetaDataKey> it = node0.getMetaData().keySet().iterator(); it.hasNext();) {
+            MetaDataKey key = it.next();
+            MetaDataValue value = node0.getMetaData().get(key);
+            metaData.put(key, value);
         }
 
         // Now iterate through all nodes and remove from the master set (metaData) any that differ
         for (Iterator<Thread> it = getAllThreads().iterator(); it.hasNext();) {
             Thread thread = it.next();
-            for (Iterator<String> it2 = thread.getMetaData().keySet().iterator(); it2.hasNext();) {
-                String name = it2.next();
-                String value = (String) thread.getMetaData().get(name);
+            for (Iterator<MetaDataKey> it2 = thread.getMetaData().keySet().iterator(); it2.hasNext();) {
+                MetaDataKey key = it2.next();
+                MetaDataValue value = thread.getMetaData().get(key);
 
-                String trialValue = metaData.get(name);
-                if (trialValue == null || !value.equals(trialValue)) {
-                    metaData.remove(name);
-                    uncommonMetaData.put(name, value);
+                MetaDataValue trialValue = metaData.get(key);
+                if (trialValue == null || !value.equals(trialValue) || key.timer_context != null) {
+                    metaData.remove(key);
+                    uncommonMetaData.put(key, value);
                 }
             }
         }
@@ -1582,9 +1835,9 @@ public abstract class DataSource {
         // Now remove the normalized name/value pairs from the thread-specific structures
         for (Iterator<Thread> it = getAllThreads().iterator(); it.hasNext();) {
             Thread thread = it.next();
-            for (Iterator<String> it2 = metaData.keySet().iterator(); it2.hasNext();) {
-                String name = it2.next();
-                thread.getMetaData().remove(name);
+            for (Iterator<MetaDataKey> it2 = metaData.keySet().iterator(); it2.hasNext();) {
+                MetaDataKey key = it2.next();
+                thread.getMetaData().remove(key);
             }
         }
 
@@ -1615,7 +1868,7 @@ public abstract class DataSource {
         return wellBehavedSnapshots;
     }
 
-    public Map<String, String> getUncommonMetaData() {
+    public MetaDataMap getUncommonMetaData() {
         return uncommonMetaData;
     }
 
@@ -1685,4 +1938,145 @@ public abstract class DataSource {
 
         functionToRename.setName(newName);
     }
+    
+    public File getMetadataFile() {
+    	return metadataFile;
+    }
+
+	public void setGenerateTAUdbStatistics(boolean b) {
+		this.generateTAUdbStatistics = b;
+	}
+
+	class ReductionStats {
+		public int totalTimers = 0;
+		public int reducedTimers = 0;
+		public int remainingTimers = 0;
+		public ReductionStats(int totalTimers, int reducedTimers) {
+			this.totalTimers = totalTimers;
+			this.reducedTimers = reducedTimers;
+			this.remainingTimers = totalTimers - reducedTimers;
+		}
+	}
+	
+	/*** 
+	 * Eliminate all values for timers which are less than "floor" percent
+	 * of the total runtime. The boolean type indicates whether to use 
+	 * inclusive or exclusive values.
+	 * 
+	 * @param floor
+	 */
+	public void reduceTrial(double minPercent, int metric) {
+		int reducedTimers = 0;
+		int totalTimers = 0;
+		int remainingTimers = 0;
+		// create the "other" function
+		Function otherFunction = addFunction("other");
+		otherFunction.addGroup(this.getGroup("TAU_USER"));
+		// iterate over the snapshots
+		for (int snapshot = 0; snapshot < meanData.getNumSnapshots(); snapshot++) {
+			// iterate over the threads
+			for (Thread thread : this.getAllThreads()) {
+				ReductionStats stats = reduceTrialThread(minPercent, metric, otherFunction, snapshot,
+						thread);
+				//System.out.println ("Removed " + stats.reducedTimers + " of " + stats.totalTimers +
+					//" timers from thread " + thread.getNodeID() + " leaving " + stats.remainingTimers);
+				reducedTimers += stats.reducedTimers;
+				totalTimers += stats.totalTimers;
+				remainingTimers += stats.remainingTimers;
+			}
+		}
+		System.out.println ("Removed " + reducedTimers + " of " + totalTimers +
+			" timers from all threads, leaving " + remainingTimers);
+
+		// NOTE:
+		// Don't iterate over the derived threads, because we want to retain
+		// the details in the summary statistics.
+		
+		if (meanIncludeNulls) {
+		    otherFunction.setMeanAllProfile(meanDataAll.getFunctionProfile(otherFunction));
+		    otherFunction.setStddevAllProfile(stddevDataAll.getFunctionProfile(otherFunction));
+		} else {
+		    //meanDataNoNull.getFunctionProfile(otherFunction));
+			//otherFunction.setMeanProfile(meanDataNoNull.getFunctionProfile(otherFunction));
+			otherFunction.setMeanProfile(meanDataNoNull.getFunctionProfile(otherFunction));
+		    otherFunction.setStddevProfile(stddevDataNoNull.getFunctionProfile(otherFunction));
+		}
+	    otherFunction.setTotalProfile(totalData.getFunctionProfile(otherFunction));
+	    otherFunction.setMinProfile(minData.getFunctionProfile(otherFunction));
+	    otherFunction.setMaxProfile(maxData.getFunctionProfile(otherFunction));
+		
+		return;
+	}
+
+	private ReductionStats reduceTrialThread(double minPercent, int metric,
+			Function otherFunction, int snapshot, Thread thread) {
+		double mainInclusive = 0.0;
+		// find the top level timer
+		if (wellBehavedSnapshots) {
+			mainInclusive = thread.getMaxInclusive(metric, snapshot);
+		} else { // pick the last from each thread
+			mainInclusive = thread.getMaxInclusive(metric, thread.getNumSnapshots() - 1);
+		}
+		
+		// ok, so we have the top level timer value. Let's get X% of that.
+		double minValue = mainInclusive * (minPercent / 100.0);
+		//System.out.println("Main value: " + mainInclusive + ", min value: " + minValue);
+		
+		FunctionProfile otherProfile = thread.getFunctionProfile(otherFunction);
+		if (otherProfile == null) {
+			otherProfile = new FunctionProfile(otherFunction, this.getNumberOfMetrics(), thread.getNumSnapshots());
+			thread.addFunctionProfile(otherProfile);
+		}
+		
+		int totalTimers = 0;
+		int reducedTimers = 0;
+		// now, iterate over the timers to test if they meet the standard
+		for (FunctionProfile fp : thread.getFunctionProfiles()) {
+			if (fp != null && fp.getFunction() != otherFunction) {
+				totalTimers++;
+				if (fp.getInclusive(metric) < minValue ||
+					fp.getExclusive(metric) < minValue) {
+					reducedTimers++;
+					//System.out.println("Removing function " + fp.getFunction().getName() + " on thread " + thread.getNodeID() + " with value " + fp.getInclusive(metric));
+					// add the values to "other"
+					otherProfile.setNumCalls(otherProfile.getNumCalls() + fp.getNumCalls());
+					//fp.setNumCalls(0);
+					otherProfile.setNumSubr(otherProfile.getNumSubr() + fp.getNumSubr());
+					//fp.setNumSubr(0);
+					for (int i = 0; i <= this.getNumberOfMetrics(); i++) { // for each metric
+						otherProfile.setExclusive(snapshot, i, otherProfile.getInclusive(snapshot, i) + fp.getExclusive(snapshot, i));
+						//fp.setExclusive(snapshot, i, 0.0);
+						// the inclusive is somewhat meaningless for "other"
+						otherProfile.setInclusive(snapshot, i, otherProfile.getExclusive(snapshot, i));
+						//fp.setInclusive(snapshot, i, 0.0);
+					}
+					thread.deleteFunctionProfile(fp);
+				}
+			}
+		}
+		ReductionStats stats = new ReductionStats(totalTimers, reducedTimers);
+		return stats;
+	}
+	
+	public void reduceTrial(double minPercent) {
+	    int metricIndex = 0;
+		for (Metric metric : getMetrics()) {
+			if (metric.isTimeMetric()) {
+				System.out.println("Using metric: " + metric.getName());
+				reduceTrial(minPercent, metricIndex);
+				return;
+			}
+			metricIndex++;
+		}
+		// couldn't find the TIME metric, just use the first one.
+		reduceTrial(minPercent, 0);
+		return;
+	}
+
+	public void reduceTrial() {
+		reduceTrial(1.0);
+		return;
+	}
+
+
 }

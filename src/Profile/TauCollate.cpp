@@ -38,7 +38,11 @@
 #include <strings.h>
 #include <stdarg.h>
 #include <assert.h>
-// #include <sstream>
+
+// Moved from header file
+#ifdef __cplusplus
+using namespace std;
+#endif
 
 #define DEBUG_NUM_CALLS
 #define DEBUG_FUNCTION_MAP
@@ -166,9 +170,9 @@ static double getStepValue(collate_step step, double prevValue,
     break;
   }
   case step_min: {
-    if (nextValue < 0) {
+    if (nextValue <= 0) {
       ret = prevValue;
-    } else if (prevValue < 0) {
+    } else if (prevValue <= 0) {
       ret = nextValue;
     } else {
       ret = (nextValue < prevValue)?nextValue:prevValue;

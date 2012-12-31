@@ -14,11 +14,11 @@ import javax.swing.ToolTipManager;
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.View;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.common.AnalysisType;
 import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
 import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
-import edu.uoregon.tau.perfexplorer.common.RMIView;
 import edu.uoregon.tau.perfexplorer.common.TransformationType;
 
 public class TestHarness {
@@ -100,7 +100,7 @@ public class TestHarness {
 				System.out.println("Testing views...");
 				viewList = null;
 				foundView = false;
-				getViews("0", new ArrayList<RMIView>());
+				getViews("0", new ArrayList<View>());
 				System.out.print("Selecting: ");
 				for(int i = 0 ; i < viewList.length ; i++) 
 					System.out.print(viewList[i] + ": ");
@@ -319,17 +319,17 @@ public class TestHarness {
 //public int createNewView(String name, int parent, String tableName, String columnName, String oper, String value) throws RemoteException;
 	}
 
-	public void getViews(String parent, ArrayList<RMIView> list) throws Exception {
-        java.util.List<RMIView> viewVector = connection.getViews(Integer.parseInt(parent));
-        Iterator<RMIView> views = viewVector.iterator();
+	public void getViews(String parent, ArrayList<View> list) throws Exception {
+        java.util.List<View> viewVector = connection.getViews(Integer.parseInt(parent));
+        Iterator<View> views = viewVector.iterator();
         while (views.hasNext()) {
-            RMIView view = views.next();
+            View view = views.next();
 			System.out.println("VIEW: " + view.getField("NAME"));
 			//if (view.getField("VALUE").equals("gyro-b1"))
 			//if (view.getField("VALUE").equals("B1-std.tg"))
 			if (view.getField("VALUE").equals("gyro.B1-std.HPM"))
 				foundView = true;
-			ArrayList<RMIView> newList = new ArrayList<RMIView>(list);
+			ArrayList<View> newList = new ArrayList<View>(list);
 			newList.add(view);
             getViews(view.getField("ID"), newList);
         }

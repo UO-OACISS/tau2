@@ -25,13 +25,20 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 
 import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.DBDataSource;
+import edu.uoregon.tau.perfdmf.DataSource;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.DatabaseException;
 import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.Function;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.taudb.TAUdbDataSource;
+import edu.uoregon.tau.perfdmf.taudb.TAUdbDatabaseAPI;
+import edu.uoregon.tau.perfdmf.View;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfexplorer.common.AnalysisType;
@@ -48,7 +55,6 @@ import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
 import edu.uoregon.tau.perfexplorer.common.RMIPerformanceResults;
 import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
 import edu.uoregon.tau.perfexplorer.common.RMIVarianceData;
-import edu.uoregon.tau.perfexplorer.common.RMIView;
 import edu.uoregon.tau.perfexplorer.constants.Constants;
 
 /**
@@ -73,6 +79,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	private List<DatabaseAPI> sessions = new ArrayList<DatabaseAPI>();
 	private List<String> configNames = new ArrayList<String>();
 	private List<String> sessionStrings = new ArrayList<String>();
+	private List<Integer> schemaVersions = new ArrayList<Integer>();
 	private List<Queue<RMIPerfExplorerModel>> requestQueues = new ArrayList<Queue<RMIPerfExplorerModel>>();
 	private List<Thread> timerThreads = new ArrayList<Thread>();
 	private List<TimerThread> timers = new ArrayList<TimerThread>();
@@ -152,7 +159,6 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		this.tauArch = tauArch;
 		PerfExplorerOutput.setQuiet(quiet);
 		theServer = this;
-		DatabaseAPI workerSession = null;
 		int i = 0;
 		List<String> configFiles = ConfigureFiles.getConfigurationNames();
 		if (configFile != null && configFile.length() > 0) {
@@ -179,15 +185,18 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				api = new DatabaseAPI();
 				String configName = tmpFile.replaceAll(prefix, "");
 				api.initialize(tmpFile, false);
-				workerSession = new DatabaseAPI();
-				workerSession.initialize(tmpFile, false);
+				if (api.db().getSchemaVersion() > 0) {
+					// copy the DatabaseAPI object data into a new TAUdbDatabaseAPI object
+					api = new TAUdbDatabaseAPI(api);
+				}
 				PerfExplorerOutput.println(" Connected to " + api.db().getConnectString() + ".");
 				this.sessions.add(api);
 				this.configNames.add(configName);
 				this.sessionStrings.add(api.db().getConnectString());
+				this.schemaVersions.add(api.db().getSchemaVersion());
 				Queue<RMIPerfExplorerModel> requestQueue = new LinkedList<RMIPerfExplorerModel>();
 				this.requestQueues.add(requestQueue);
-				TimerThread timer = new TimerThread(this, workerSession, i++);
+				TimerThread timer = new TimerThread(this, api, i++);
 				this.timers.add(timer);
 				java.lang.Thread timerThread = new java.lang.Thread(timer);
 				this.timerThreads.add(timerThread);
@@ -243,7 +252,11 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 //				break;
 //		}
 		File defaultConfig = new File(newConfig);
-		if (!defaultConfig.exists() && tauHome!=null && tauArch!=null && tauHome.length() > 0 && tauArch.length() > 0) {
+		if (!defaultConfig.exists() 
+				&& tauHome!=null 
+				&& tauArch!=null 
+				&& tauHome.length() > 0 
+				&& tauArch.length() > 0) {
 			try {
 				System.out.println("Default working database does not exist, creating...");
 				String dbName = System.getProperty("user.home") + 
@@ -377,18 +390,31 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			DB db = this.getDB();
 			PreparedStatement statement = null;
 			if (model.getCurrentSelection() instanceof Metric) {
-				statement = db.prepareStatement("select id from analysis_settings where application = ? and experiment = ? and trial = ? and metric = ? and method = ? order by id desc");
-				statement.setInt(1, model.getApplication().getID());
-				statement.setInt(2, model.getExperiment().getID());
-				statement.setInt(3, model.getTrial().getID());
-				statement.setInt(4, ((Metric)(model.getCurrentSelection())).getID());
-				statement.setString(5, AnalysisType.CORRELATION_ANALYSIS.toString());
+				if (db.getSchemaVersion() == 0) {
+					statement = db.prepareStatement("select id from analysis_settings where application = ? and experiment = ? and trial = ? and metric = ? and method = ? order by id desc");
+					statement.setInt(1, model.getApplication().getID());
+					statement.setInt(2, model.getExperiment().getID());
+					statement.setInt(3, model.getTrial().getID());
+					statement.setInt(4, ((Metric)(model.getCurrentSelection())).getID());
+					statement.setString(5, AnalysisType.CORRELATION_ANALYSIS.toString());
+				} else {
+					statement = db.prepareStatement("select id from analysis_settings where trial = ? and metric = ? and method = ? order by id desc");
+					statement.setInt(1, model.getTrial().getID());
+					statement.setInt(2, ((Metric)(model.getCurrentSelection())).getID());
+					statement.setString(3, AnalysisType.CORRELATION_ANALYSIS.toString());
+				}
 			}else {
-				statement = db.prepareStatement("select id from analysis_settings where application = ? and experiment = ? and trial = ? and metric is null and method = ? order by id desc");
-				statement.setInt(1, model.getApplication().getID());
-				statement.setInt(2, model.getExperiment().getID());
-				statement.setInt(3, model.getTrial().getID());
-				statement.setString(4, AnalysisType.CORRELATION_ANALYSIS.toString());
+				if (db.getSchemaVersion() == 0) {
+					statement = db.prepareStatement("select id from analysis_settings where application = ? and experiment = ? and trial = ? and metric is null and method = ? order by id desc");
+					statement.setInt(1, model.getApplication().getID());
+					statement.setInt(2, model.getExperiment().getID());
+					statement.setInt(3, model.getTrial().getID());
+					statement.setString(4, AnalysisType.CORRELATION_ANALYSIS.toString());
+				} else {
+					statement = db.prepareStatement("select id from analysis_settings where trial = ? and metric is null and method = ? order by id desc");
+					statement.setInt(1, model.getTrial().getID());
+					statement.setString(2, AnalysisType.CORRELATION_ANALYSIS.toString());			
+				}
 			}
 			//PerfExplorerOutput.println(statement.toString());
 			ResultSet results = statement.executeQuery();
@@ -510,21 +536,38 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 				qmarks.append("?");
 			}
 			if (model.getCurrentSelection() instanceof Metric) {
-				statement = db.prepareStatement("select id from analysis_settings where application = ? and experiment = ? and trial = ? and metric = ? and method in (" + qmarks.toString() + ") order by id desc");
-				statement.setInt(1, model.getApplication().getID());
-				statement.setInt(2, model.getExperiment().getID());
-				statement.setInt(3, model.getTrial().getID());
-				statement.setInt(4, ((Metric)(model.getCurrentSelection())).getID());
-				for (int i = 0 ; i < methods.length ; i++) {
-					statement.setString(5+i, methods[i].toString());
+				if (db.getSchemaVersion() == 0) {
+					statement = db.prepareStatement("select id from analysis_settings where application = ? and experiment = ? and trial = ? and metric = ? and method in (" + qmarks.toString() + ") order by id desc");
+					statement.setInt(1, model.getApplication().getID());
+					statement.setInt(2, model.getExperiment().getID());
+					statement.setInt(3, model.getTrial().getID());
+					statement.setInt(4, ((Metric)(model.getCurrentSelection())).getID());
+					for (int i = 0 ; i < methods.length ; i++) {
+						statement.setString(5+i, methods[i].toString());
+					}
+				} else {
+					statement = db.prepareStatement("select id from analysis_settings where trial = ? and metric = ? and method in (" + qmarks.toString() + ") order by id desc");
+					statement.setInt(1, model.getTrial().getID());
+					statement.setInt(2, ((Metric)(model.getCurrentSelection())).getID());
+					for (int i = 0 ; i < methods.length ; i++) {
+						statement.setString(3+i, methods[i].toString());
+					}
 				}
 			} else {
-				statement = db.prepareStatement("select id from analysis_settings where application = ? and experiment = ? and trial = ? and metric is null and method in (" + qmarks.toString() + ") order by id desc");
-				statement.setInt(1, model.getApplication().getID());
-				statement.setInt(2, model.getExperiment().getID());
-				statement.setInt(3, model.getTrial().getID());
-				for (int i = 0 ; i < methods.length ; i++) {
-					statement.setString(4+i, methods[i].toString());
+				if (db.getSchemaVersion() == 0) {
+					statement = db.prepareStatement("select id from analysis_settings where application = ? and experiment = ? and trial = ? and metric is null and method in (" + qmarks.toString() + ") order by id desc");
+					statement.setInt(1, model.getApplication().getID());
+					statement.setInt(2, model.getExperiment().getID());
+					statement.setInt(3, model.getTrial().getID());
+					for (int i = 0 ; i < methods.length ; i++) {
+						statement.setString(4+i, methods[i].toString());
+					}
+				} else {
+					statement = db.prepareStatement("select id from analysis_settings where trial = ? and metric is null and method in (" + qmarks.toString() + ") order by id desc");
+					statement.setInt(1, model.getTrial().getID());
+					for (int i = 0 ; i < methods.length ; i++) {
+						statement.setString(2+i, methods[i].toString());
+					}
 				}
 			}
 			//PerfExplorerOutput.println(statement.toString());
@@ -663,14 +706,19 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		try {
 			DB db = this.getDB();
 			PreparedStatement statement = null;
-			statement = db.prepareStatement("select id from analysis_settings where application = ? and experiment = ? and trial = ? and metric = ? and method = ? and dimension_reduction = ? and normalization = ?");
-			statement.setInt(1, modelData.getApplication().getID());
-			statement.setInt(2, modelData.getExperiment().getID());
-			statement.setInt(3, modelData.getTrial().getID());
-			statement.setInt(4, ((Metric)(modelData.getCurrentSelection())).getID());
-			statement.setString(5, modelData.getClusterMethod().toString());
-			statement.setString(6, modelData.getDimensionReduction().toString());
-			statement.setString(7, modelData.getNormalization().toString());
+			int index = 1;
+			if (db.getSchemaVersion() == 0) {
+				statement = db.prepareStatement("select id from analysis_settings where application = ? and experiment = ? and trial = ? and metric = ? and method = ? and dimension_reduction = ? and normalization = ?");
+				statement.setInt(index++, modelData.getApplication().getID());
+				statement.setInt(index++, modelData.getExperiment().getID());
+			} else {
+				statement = db.prepareStatement("select id from analysis_settings where trial = ? and metric = ? and method = ? and dimension_reduction = ? and normalization = ?");			
+			}
+			statement.setInt(index++, modelData.getTrial().getID());
+			statement.setInt(index++, ((Metric)(modelData.getCurrentSelection())).getID());
+			statement.setString(index++, modelData.getClusterMethod().toString());
+			statement.setString(index++, modelData.getDimensionReduction().toString());
+			statement.setString(index++, modelData.getNormalization().toString());
 			ResultSet results = statement.executeQuery();
 			if (results.next() != false) {
 				analysisID = results.getInt(1);
@@ -699,17 +747,22 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		try {
 			DB db = this.getDB();
 			PreparedStatement statement = null;
-			statement = db.prepareStatement("insert into analysis_settings (application, experiment, trial, metric, method, dimension_reduction, normalization) values (?, ?, ?, ?, ?, ?, ?)");
-			statement.setInt(1, modelData.getApplication().getID());
-			statement.setInt(2, modelData.getExperiment().getID());
-			statement.setInt(3, modelData.getTrial().getID());
+			int index = 1;
+			if (db.getSchemaVersion() == 0) {
+				statement = db.prepareStatement("insert into analysis_settings (application, experiment, trial, metric, method, dimension_reduction, normalization) values (?, ?, ?, ?, ?, ?, ?)");
+				statement.setInt(index++, modelData.getApplication().getID());
+				statement.setInt(index++, modelData.getExperiment().getID());
+			} else {
+				statement = db.prepareStatement("insert into analysis_settings (application, experiment, trial, metric, method, dimension_reduction, normalization) values (null, null, ?, ?, ?, ?, ?)");
+			}
+			statement.setInt(index++, modelData.getTrial().getID());
 			if (modelData.getCurrentSelection() instanceof Metric) 
-				statement.setInt(4, ((Metric)(modelData.getCurrentSelection())).getID());
+				statement.setInt(index++, ((Metric)(modelData.getCurrentSelection())).getID());
 			else
-				statement.setNull(4, java.sql.Types.INTEGER);
-			statement.setString(5, modelData.getClusterMethod().toString());
-			statement.setString(6, modelData.getDimensionReduction().toString());
-			statement.setString(7, modelData.getNormalization().toString());
+				statement.setNull(index++, java.sql.Types.INTEGER);
+			statement.setString(index++, modelData.getClusterMethod().toString());
+			statement.setString(index++, modelData.getDimensionReduction().toString());
+			statement.setString(index++, modelData.getNormalization().toString());
 			statement.execute();
 			statement.close();
 			String tmpStr = new String();
@@ -769,8 +822,13 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @return List
 	 */
 	public List<String> getXMLFields(RMIPerfExplorerModel modelData) {
-		List<String> chartData = GeneralChartData.getXMLFields(modelData);
-		return chartData;
+		List<String> listOfMetadata = null;
+		if (this.getDB().getSchemaVersion() == 0) {
+			listOfMetadata = PerfDMFGeneralChartData.getXMLFields(modelData);
+		} else {
+			listOfMetadata = this.getPotentialPrimaryMetadata(modelData);
+		}
+		return listOfMetadata;
 	}
 
 	/**
@@ -787,11 +845,16 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		try {
 			DB db = this.getDB();
 			StringBuilder buf;
-			buf = new StringBuilder("select distinct ie.group_name ");
-			buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
+			if (db.getSchemaVersion() == 0) {
+				buf = new StringBuilder("select distinct ie.group_name ");
+				buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
+			} else {
+				buf = new StringBuilder("select distinct tg.group_name ");
+				buf.append(" from timer_group tg inner join timer on tg.timer = timer.id inner join trial t on timer.trial = t.id ");
+			}
 			Object object = modelData.getCurrentSelection();
-			if (object instanceof RMIView) {
-				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
+			if (object instanceof View) {
+				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
 			} else {
 				buf.append(" inner join experiment e on t.experiment = e.id ");
 				List<Object> selections = modelData.getMultiSelection();
@@ -869,6 +932,7 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		StringBuilder buf = new StringBuilder();
 		try {
 			DB db = this.getDB();
+			if(db.getDatabase().isTAUdb()) return getPotentialMetricsTAUdb(modelData);
 			if (db.getDBType().compareTo("db2") == 0) {
 				buf.append("select distinct count(cast (m.name as VARCHAR(256))), cast (m.name as VARCHAR(256)) ");
 			} else {
@@ -876,10 +940,12 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			}
 			buf.append(" from metric m inner join trial t on m.trial = t.id ");
 			Object object = modelData.getCurrentSelection();
-			if (object instanceof RMIView) {
-				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
+			if (object instanceof View) {
+				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
 			} else {
-				buf.append(" inner join experiment e on t.experiment = e.id ");
+				if (db.getSchemaVersion() == 0) {
+					buf.append(" inner join experiment e on t.experiment = e.id ");
+				}
 				List<Object> selections = modelData.getMultiSelection();
 				if (selections == null) {
 					// just one selection
@@ -958,6 +1024,84 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		return metrics;
 	}
 	/**
+	 * Get the metrics defined in these profiles.  The client passes in a model
+	 * with one or more experiments selected, and the code will get all the
+	 * metrics which are common among all trials for those experiemnts.
+	 * 
+	 * @param modelData
+	 * @return List
+	 */
+	private List<String> getPotentialMetricsTAUdb(RMIPerfExplorerModel modelData) {
+		//PerfExplorerOutput.println("getPotentialMetrics()...");
+		List<String> metrics = new ArrayList<String>();
+		StringBuilder buf = new StringBuilder();
+		try {
+			DB db = this.getDB();
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append("select distinct count(cast (m.name as VARCHAR(256))), cast (m.name as VARCHAR(256)) ");
+			} else {
+				buf.append("select distinct count(m.name), m.name ");
+			}
+			buf.append(" from metric m inner join trial t on m.trial = t.id ");
+			Object object = modelData.getCurrentSelection();
+			if (object instanceof View) {
+				buf.append(modelData.getViewSelectionPath(false, false, db.getDBType(), db.getSchemaVersion()));
+			} else {
+				List<Object> selections = modelData.getMultiSelection();
+				if (selections == null) {
+					// just one selection
+					Object selection = modelData.getCurrentSelection();
+	
+					if (selection instanceof Trial) {
+						buf.append(" where t.id = ");
+						buf.append(modelData.getTrial().getID());
+					}
+				} else {
+					Object selection = modelData.getCurrentSelection();
+					if (selection instanceof Trial) {
+						buf.append(" where t.id in (");
+						for (int i = 0 ; i < selections.size() ; i++) {
+							Trial trial = (Trial)selections.get(i);
+							if (i > 0)
+								buf.append(",");
+							buf.append(trial.getID());
+						}
+						buf.append(")");
+					}
+				}
+			}
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append(" group by cast (m.name as VARCHAR(256)) order by 1 desc");
+			} else if (db.getDBType().compareTo("mysql") == 0) {
+				buf.append(" group by 2 order by 1 desc");
+			//} else if (db.getDBType().compareTo("mysql") == 0) {
+					//buf.append(" group by m.name order by 1 desc");
+			} else {
+				buf.append(" group by m.name order by count(m.name) desc");
+			}
+//			PerfExplorerOutput.println(buf.toString());
+			PreparedStatement statement = db.prepareStatement(buf.toString());
+			ResultSet results = statement.executeQuery();
+			// only get the metrics that are in all trials.
+			// KAH - changed - get all metrics from all trials.
+//			int trialCount = 0;
+			while (results.next() != false) {
+/*				if (trialCount == 0)
+					trialCount = results.getInt(1);
+				if (results.getInt(1) == trialCount)
+*/					metrics.add(results.getString(2));
+			}
+			results.close();
+			statement.close();
+		} catch (Exception e) {
+			String error = "ERROR: Couldn't select the metrics from the database!";
+			System.err.println(error);
+			System.err.println(buf.toString());
+			e.printStackTrace();
+		}
+		return metrics;
+	}
+	/**
 	 * Get the events defined in these profiles.  The client passes in a model
 	 * with one or more experiments selected, and the code will get all the
 	 * events which are common among all trials for those experiemnts.
@@ -967,20 +1111,28 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 */
 	public List<String> getPotentialCallPathEvents(RMIPerfExplorerModel modelData) {
 		//PerfExplorerOutput.println("getPotentialEvents()...");
+		
 		List<String> events = new ArrayList<String>();
 		try {
 			DB db = this.getDB();
+			if(db.getSchemaVersion()>0) return getPotentialCallPathEventsTAUdb(modelData);
 			StringBuilder buf = new StringBuilder();
 			if (db.getDBType().compareTo("db2") == 0) {
 				buf.append("select distinct cast (m.name as VARCHAR(256))");
 			} else {
 				buf.append("select distinct ie.name ");
 			}
-			buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
-			Object object = modelData.getCurrentSelection();
-			if (object instanceof RMIView) {
-				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
+			if (db.getSchemaVersion() == 0) {
+				buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
 			} else {
+				buf.append(" from timer ie inner join trial t on ie.trial = t.id ");
+				buf.append("inner join timer_callpath tcp on tcp.timer = ie.id and tcp.parent is not null ");
+			}
+			Object object = modelData.getCurrentSelection();
+			if (object instanceof View) {
+				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
+			} else {
+				if(db.getSchemaVersion()==0)
 				buf.append(" inner join experiment e on t.experiment = e.id ");
 				List<Object> selections = modelData.getMultiSelection();
 				if (selections == null) {
@@ -1028,7 +1180,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 					}
 				}
 			}
-			buf.append(" and (group_name is null or group_name like '%TAU_CALLPATH%') ");
+			if (db.getSchemaVersion() == 0) {
+				buf.append(" and (group_name is null or group_name like '%TAU_CALLPATH%') ");
+			}
 			PreparedStatement statement = db.prepareStatement(buf.toString());
 			//PerfExplorerOutput.println(statement.toString());
 			ResultSet results = statement.executeQuery();
@@ -1051,6 +1205,69 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param modelData
 	 * @return List
 	 */
+	public List<String> getPotentialCallPathEventsTAUdb(RMIPerfExplorerModel modelData) {
+		//PerfExplorerOutput.println("getPotentialEvents()...");
+		List<String> events = new ArrayList<String>();
+		try {
+			DB db = this.getDB();
+//			StringBuilder buf = new StringBuilder();
+//			if (db.getDBType().compareTo("db2") == 0) {
+//				buf.append("select distinct cast (m.name as VARCHAR(256))");
+//			} else {
+//				buf.append("select distinct ie.name ");
+//			}
+//			if (db.getSchemaVersion() == 0) {
+//				buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
+//			} else {
+//				buf.append(" from timer ie inner join trial t on ie.trial = t.id ");
+//				buf.append("inner join timer_callpath tcp on tcp.timer = ie.id and tcp.parent is not null ");
+//			}
+//			Object object = modelData.getCurrentSelection();
+//			if (object instanceof View) {
+//				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
+//			} else {
+
+			Set<String> keyset = null;
+				List<Object> selections = modelData.getMultiSelection();
+				if (selections == null) {
+					// just one selection
+					Object selection = modelData.getCurrentSelection();
+					if (selection instanceof Trial) {
+						keyset = TAUdbDatabaseAPI.getCallDataMap(modelData.getTrial().getID(), db).keySet();
+					}
+				} else {
+					Object selection = modelData.getCurrentSelection();
+					if (selection instanceof Trial) {
+						ArrayList<Integer> trials = new ArrayList<Integer>();
+						for (int i = 0 ; i < selections.size() ; i++) {
+							trials.add( ((Trial)selections.get(i)).getID());
+						}
+						keyset = TAUdbDatabaseAPI.getCallDataMap(trials, db).keySet();
+
+					}
+				}
+//			}
+//
+
+			for(String s: keyset){
+				events.add(s);
+			}
+		} catch (Exception e) {
+			String error = "ERROR: Couldn't select the events from the database!";
+			System.err.println(error);
+			e.printStackTrace();
+		}
+
+		return events;
+	}
+	/**
+	 * Get the events defined in these profiles.  The client passes in a model
+	 * with one or more experiments selected, and the code will get all the
+	 * events which are common among all trials for those experiemnts.
+	 * 
+	 * @param modelData
+	 * @return List
+	 */
 	public List<String> getPotentialEvents(RMIPerfExplorerModel modelData) {
 		//PerfExplorerOutput.println("getPotentialEvents()...");
 		List<String> events = new ArrayList<String>();
@@ -1062,12 +1279,19 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			} else {
 				buf.append("select distinct ie.name ");
 			}
-			buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
-			Object object = modelData.getCurrentSelection();
-			if (object instanceof RMIView) {
-				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
+			if (db.getSchemaVersion() == 0) {
+				buf.append(" from interval_event ie inner join trial t on ie.trial = t.id ");
 			} else {
-				buf.append(" inner join experiment e on t.experiment = e.id ");
+				buf.append(" from timer ie inner join trial t on ie.trial = t.id ");
+				buf.append("inner join timer_callpath tcp on tcp.timer = ie.id and tcp.parent is null ");
+			}
+			Object object = modelData.getCurrentSelection();
+			if (object instanceof View) {
+				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
+			} else {
+				if (db.getSchemaVersion() == 0) {
+					buf.append(" inner join experiment e on t.experiment = e.id ");
+				}
 				List<Object> selections = modelData.getMultiSelection();
 				if (selections == null) {
 					// just one selection
@@ -1114,7 +1338,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 					}
 				}
 			}
-			buf.append(" and (group_name is null or group_name not like '%TAU_CALLPATH%') ");
+			if (db.getSchemaVersion() == 0) {
+				buf.append(" and (group_name is null or group_name not like '%TAU_CALLPATH%') ");
+			}
 			PreparedStatement statement = db.prepareStatement(buf.toString());
 			//PerfExplorerOutput.println(statement.toString());
 			ResultSet results = statement.executeQuery();
@@ -1149,12 +1375,18 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 			} else {
 				buf.append("select distinct ae.name ");
 			}
-			buf.append(" from atomic_event ae inner join trial t on ae.trial = t.id ");
-			Object object = modelData.getCurrentSelection();
-			if (object instanceof RMIView) {
-				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
+			if (db.getSchemaVersion() == 0) {
+				buf.append(" from atomic_event ae inner join trial t on ae.trial = t.id ");
 			} else {
-				buf.append(" inner join experiment e on t.experiment = e.id ");
+				buf.append(" from counter ae inner join trial t on ae.trial = t.id ");
+			}
+			Object object = modelData.getCurrentSelection();
+			if (object instanceof View) {
+				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
+			} else {
+				if (db.getSchemaVersion() == 0) {
+					buf.append(" inner join experiment e on t.experiment = e.id ");
+				}
 				List<Object> selections = modelData.getMultiSelection();
 				if (selections == null) {
 					// just one selection
@@ -1201,6 +1433,67 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 					}
 				}
 			}
+			PreparedStatement statement = db.prepareStatement(buf.toString());
+			//PerfExplorerOutput.println(statement.toString());
+			ResultSet results = statement.executeQuery();
+			while (results.next() != false) {
+				events.add(results.getString(1));
+			}
+			statement.close();
+		} catch (Exception e) {
+			String error = "ERROR: Couldn't select the events from the database!";
+			System.err.println(error);
+			e.printStackTrace();
+		}
+		return events;
+	}
+
+	/**
+	 * Get the events defined in these profiles.  The client passes in a model
+	 * with one or more experiments selected, and the code will get all the
+	 * events which are common among all trials for those experiemnts.
+	 * 
+	 * @param modelData
+	 * @return List
+	 */
+	public List<String> getPotentialPrimaryMetadata(RMIPerfExplorerModel modelData) {
+		List<String> events = new ArrayList<String>();
+		try {
+			DB db = this.getDB();
+			StringBuilder buf = new StringBuilder();
+			if (db.getDBType().compareTo("db2") == 0) {
+				buf.append("select distinct cast (name as VARCHAR(256))");
+			} else {
+				buf.append("select distinct pm.name ");
+			}
+			buf.append(" from primary_metadata pm left outer join trial t on pm.trial = t.id ");
+			Object object = modelData.getCurrentSelection();
+			if (object instanceof View) {
+				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
+			} else {
+				List<Object> selections = modelData.getMultiSelection();
+				if (selections == null) {
+					// just one selection
+					Object selection = modelData.getCurrentSelection();
+					if (selection instanceof Trial) {
+						buf.append(" where t.id = ");
+						buf.append(modelData.getTrial().getID());
+					}
+				} else {
+					Object selection = modelData.getCurrentSelection();
+					if (selection instanceof Trial) {
+						buf.append(" where t.id in (");
+						for (int i = 0 ; i < selections.size() ; i++) {
+							Trial trial = (Trial)selections.get(i);
+							if (i > 0)
+								buf.append(",");
+							buf.append(trial.getID());
+						}
+						buf.append(")");
+					}
+				}
+			}
+			buf.append(" order by name asc ");
 			PreparedStatement statement = db.prepareStatement(buf.toString());
 			//PerfExplorerOutput.println(statement.toString());
 			ResultSet results = statement.executeQuery();
@@ -1381,49 +1674,9 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param parent
 	 * @return List of views
 	 */
-	public List<RMIView> getViews (int parent) {
-		//PerfExplorerOutput.println("getViews()...");
-		List<RMIView> views = new ArrayList<RMIView>();
-		try {
-			DB db = this.getDB();
-			Iterator<String> names = RMIView.getFieldNames(db);
-			if (!names.hasNext()) {
-				// the database is not modified to support views
-				throw new Exception ("The Database is not modified to support views.");
-			}
-			StringBuilder buf = new StringBuilder("select ");
-			// assumes at least one column...
-			buf.append(names.next());
-			while (names.hasNext()) {
-				buf.append(", ");
-				buf.append(names.next());
-			}
-			buf.append(" from trial_view");
-			if (parent == -1) { // get all views!
-				// no while clause
-			} else if (parent == 0) {
-				buf.append(" where parent is null");
-			} else {
-				buf.append(" where parent = ");
-				buf.append(parent);
-			}
-			PreparedStatement statement = db.prepareStatement(buf.toString());
-			//PerfExplorerOutput.println(statement.toString());
-			ResultSet results = statement.executeQuery();
-			while (results.next() != false) {
-				RMIView view = new RMIView();
-				for (int i = 1 ; i <= RMIView.getFieldCount() ; i++) {
-					view.addField(results.getString(i));
-				}
-				views.add(view);
-			}
-			statement.close();
-		} catch (Exception e) {
-			String error = "ERROR: Couldn't select views from the database!";
-			System.err.println(error);
-			e.printStackTrace();
-		}
-		return views;
+	public List<View> getViews (int parent) {
+		DB db = this.getDB();
+		return View.getViews(parent, db);
 	}
 
 	/**
@@ -1432,46 +1685,21 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	 * @param views
 	 * @return List
 	 */
-	public List<Trial> getTrialsForView (List<RMIView> views, boolean getXMLMetadata) {
-		//PerfExplorerOutput.println("getTrialsForView()...");
-		List<Trial> trials = new ArrayList<Trial>();
-		try {
-			DB db = this.getDB();
-			StringBuilder whereClause = new StringBuilder();
-			whereClause.append(" inner join application a on e.application = a.id WHERE ");
-			for (int i = 0 ; i < views.size() ; i++) {
-				if (i > 0) {
-					whereClause.append (" AND ");
-				}
-				RMIView view = views.get(i);
+	public List<Trial> getTrialsForView (List<View> views, boolean getXMLMetadata) {
+		DB db = this.getDB();
+		
+		return View.getTrialsForView(views, getXMLMetadata, db);
+	}
 
-				if (db.getDBType().compareTo("db2") == 0) {
-					whereClause.append(" cast (");
-				}
-				if (view.getField("TABLE_NAME").equalsIgnoreCase("Application")) {
-					whereClause.append (" a.");
-				} else if (view.getField("TABLE_NAME").equalsIgnoreCase("Experiment")) {
-					whereClause.append (" e.");
-				} else /*if (view.getField("table_name").equalsIgnoreCase("Trial")) */ {
-					whereClause.append (" t.");
-				}
-				whereClause.append (view.getField("COLUMN_NAME"));
-				if (db.getDBType().compareTo("db2") == 0) {
-					whereClause.append(" as varchar(256)) ");
-				}
-				whereClause.append (" " + view.getField("OPERATOR") + " '");
-				whereClause.append (view.getField("VALUE"));
-				whereClause.append ("' ");
-
-			}
-			//PerfExplorerOutput.println(whereClause.toString());
-			trials = Trial.getTrialList(db, whereClause.toString(), getXMLMetadata);
-		} catch (Exception e) {
-			String error = "ERROR: Couldn't select views from the database!";
-			System.err.println(error);
-			e.printStackTrace();
-		}
-		return trials;
+	/**
+	 * Get the trials which are filtered by the defined view(s).
+	 * 
+	 * @param views
+	 * @return List
+	 */
+	public List<Trial> getTrialsForTAUdbView (List<View> views) {
+		DB db = this.getDB();
+		return View.getTrialsForTAUdbView(views, db);
 	}
 
 	/* (non-Javadoc)
@@ -1779,6 +2007,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		return session.db().getConnectString();
 	}
 	
+	public List<Integer> getSchemaVersions() {
+		return this.schemaVersions;
+	}
+	
 	public List<String> getConnectionStrings() {
 		return this.sessionStrings;
 	}
@@ -1798,11 +2030,17 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		try {
 			this.session.setTrial(trialID, false);
 		} catch (DatabaseException e) {}
-		List<IntervalEvent> events = this.session.getIntervalEvents();
+        DataSource dbDataSource = null;
+		if(this.session.getDb().getSchemaVersion() >0 ){
+			dbDataSource = new TAUdbDataSource(this.session);
+		}else{
+			dbDataSource = new DBDataSource(this.session);
+		}
+		Map<Integer, Function> events = this.session.getIntervalEvents(dbDataSource, metricIndex);
 		List<RMISortableIntervalEvent> sortedEvents = new ArrayList<RMISortableIntervalEvent>();
-		for (Iterator<IntervalEvent> i = events.iterator() ; i.hasNext() ; ) {
-			IntervalEvent e = i.next();
-			sortedEvents.add(new RMISortableIntervalEvent(e, this.session, metricIndex));
+		for (Iterator<Function> i = events.values().iterator() ; i.hasNext() ; ) {
+			Function e = i.next();
+			sortedEvents.add(new RMISortableIntervalEvent(e, trialID, this.session, metricIndex));
 		}
 		Collections.sort(sortedEvents);
 		return sortedEvents;
@@ -1831,40 +2069,64 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	public List<String> getChartFieldNames() {
 		DB db = this.getDB();
 		List<String> list = new ArrayList<String>();
-		list.add ("application.id");
-		list.add ("application.name");
-		if (db != null) {
-			String[] app = Application.getFieldNames(db);
-			for (int i = 0 ; i < app.length ; i++) {
-				list.add ("application." + app[i]);
-			}
-		}
-		list.add ("experiment.id");
-		list.add ("experiment.name");
-		list.add ("experiment.applciation");
-		if (db != null) {
-			String[] exp = Experiment.getFieldNames(db);
-			for (int i = 0 ; i < exp.length ; i++) {
-				list.add ("experiment." + exp[i]);
-			}
-		}
-		list.add ("trial.id");
-		list.add ("trial.name");
-		list.add ("trial.experiment");
-		if (db != null) {
-			String[] trial = Trial.getFieldNames(db);
-			for (int i = 0 ; i < trial.length ; i++) {
-				if (trial[i].equalsIgnoreCase(Trial.XML_METADATA_GZ)) {
-					// don't add it
-				} else if (trial[i].equalsIgnoreCase("node_count") ||
-						   trial[i].equalsIgnoreCase("contexts_per_node")) {
-					// don't add it
-				} else if (trial[i].equalsIgnoreCase("threads_per_context")) {
-					list.add ("trial.threads_of_execution");
-				} else {
-					list.add ("trial." + trial[i]);
+		if (db.getSchemaVersion() == 0) {
+			list.add ("application.id");
+			list.add ("application.name");
+			if (db != null) {
+				String[] app = Application.getFieldNames(db);
+				for (int i = 0 ; i < app.length ; i++) {
+					list.add ("application." + app[i]);
 				}
 			}
+			list.add ("experiment.id");
+			list.add ("experiment.name");
+			list.add ("experiment.applciation");
+			if (db != null) {
+				String[] exp = Experiment.getFieldNames(db);
+				for (int i = 0 ; i < exp.length ; i++) {
+					list.add ("experiment." + exp[i]);
+				}
+			}
+			list.add ("trial.id");
+			list.add ("trial.name");
+			list.add ("trial.experiment");
+			if (db != null) {
+				String[] trial = Trial.getFieldNames(db);
+				for (int i = 0 ; i < trial.length ; i++) {
+					if (trial[i].equalsIgnoreCase(Trial.XML_METADATA_GZ)) {
+						// don't add it
+					} else if (trial[i].equalsIgnoreCase("node_count") ||
+							   trial[i].equalsIgnoreCase("contexts_per_node")) {
+						// don't add it
+					} else if (trial[i].equalsIgnoreCase("threads_per_context")) {
+						list.add ("trial.threads_of_execution");
+					} else {
+						list.add ("trial." + trial[i]);
+					}
+				}
+			}
+		} else {
+			list.add ("trial.id");
+			list.add ("trial.name");
+			if (db != null) {
+				String[] trial = Trial.getFieldNames(db);
+				for (int i = 0 ; i < trial.length ; i++) {
+					if (trial[i].equalsIgnoreCase("node_count") ||
+							   trial[i].equalsIgnoreCase("contexts_per_node")) {
+						// don't add it
+					} else if (trial[i].equalsIgnoreCase("data_source")) {
+						// don't add it
+					} else if (trial[i].equalsIgnoreCase("threads_per_context")) {
+						// don't add it
+					} else if (trial[i].equalsIgnoreCase("total_threads")) {
+						list.add ("trial.threads_of_execution");
+					} else {
+						list.add ("trial." + trial[i]);
+					}
+				}
+			}
+			list.add ("primary_metadata.name");
+//			list.add ("secondary_metadata.name");
 		}
 		return list;
 	}
@@ -1988,11 +2250,15 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		StringBuilder buf = new StringBuilder();
 		try {
 			DB db = this.getDB();
-			buf.append("select t.id, node_count * contexts_per_node * threads_per_context, t.experiment ");
+			if (db.getSchemaVersion() == 0) {
+				buf.append("select t.id, node_count * contexts_per_node * threads_per_context, t.experiment ");
+			} else {
+				buf.append("select t.id, t.total_threads, 0 ");
+			}
 			buf.append(" from trial t ");
 			Object object = modelData.getCurrentSelection();
-			if (object instanceof RMIView) {
-				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType()));
+			if (object instanceof View) {
+				buf.append(modelData.getViewSelectionPath(true, true, db.getDBType(), db.getSchemaVersion()));
 			} else {
 				buf.append(" inner join experiment e on t.experiment = e.id ");
 				List<Object> selections = modelData.getMultiSelection();

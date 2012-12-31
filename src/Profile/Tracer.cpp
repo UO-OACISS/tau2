@@ -66,16 +66,14 @@ static int TraceFileInitialized[TAU_MAX_THREADS] = {0};
 static double tracerValues[TAU_MAX_COUNTERS] = {0};
 
 
-double TauSyncAdjustTimeStamp(double timestamp) {
+double TauSyncAdjustTimeStamp(double timestamp) 
+{
   TauTraceOffsetInfo *offsetInfo = TheTauTraceOffsetInfo();
 
-  if (offsetInfo->enabled == 1) {
+  if (offsetInfo->enabled) {
     timestamp = timestamp - offsetInfo->beginOffset + offsetInfo->syncOffset;
-    return timestamp;
-  } else {
-    // return 0 until sync'd
-    return 0.0;
-  }
+  } 
+  return timestamp;
 }
 
 
@@ -96,12 +94,12 @@ x_uint64 TauTraceGetTimeStamp(int tid) {
   //   RtsLayer::getUSecD(tid, tracerValues);
   //   double value = tracerValues[0];
 
-  x_uint64 value = (x_uint64) TauMetrics_getTraceMetricValue(tid);
+  x_uint64 value = (x_uint64)TauMetrics_getTraceMetricValue(tid);
 
   if (TauEnv_get_synchronize_clocks()) {
-    return (x_uint64) TauSyncAdjustTimeStamp(value);
+    return (x_uint64)TauSyncAdjustTimeStamp(value);
   } else {
-    return (x_uint64) value;
+    return value;
   }
 }
 
@@ -170,14 +168,17 @@ static int checkTraceFileInitialized(int tid) {
 
 /* Flush the trace buffer */
 void TauTraceFlushBuffer(int tid) {
-  Tau_global_incr_insideTAU_tid(tid);
+  Tau_global_incr_insideTAU();
   checkTraceFileInitialized(tid);
 
   int ret;
   if (TauTraceFd[tid] == -1) {
     printf("Error: TauTraceFlush(%d): Fd is -1. Trace file not initialized \n", tid);
     if (RtsLayer::myNode() == -1) {
-      fprintf (stderr, "ERROR in configuration. Trace file not initialized. If this is an MPI application, please ensure that TAU MPI wrapper library is linked. If not, please ensure that TAU_PROFILE_SET_NODE(id); is called in the program (0 for sequential).\n");
+      fprintf (stderr, 
+          "TAU: ERROR in configuration. Trace file not initialized.\n"
+          "TAU: If this is an MPI application, please ensure that TAU MPI wrapper library is linked.\n"
+          "TAU: If not, please ensure that TAU_PROFILE_SET_NODE(id); is called in the program (0 for sequential).\n");
       exit(1);
     }
   }
@@ -200,7 +201,7 @@ void TauTraceFlushBuffer(int tid) {
     }
   }
   TauCurrentEvent[tid] = 0;
-  Tau_global_decr_insideTAU_tid(tid);
+  Tau_global_decr_insideTAU();
 }
 
 
@@ -223,10 +224,11 @@ int TauTraceInit(int tid) {
    if (!TauBufferAllocated()[tid]) {
      TauMaxTraceRecords = (unsigned long long) TauEnv_get_max_records(); 
      TauBufferSize = sizeof(TAU_EV)*TauMaxTraceRecords; 
-     //TraceBuffer[tid] = (TAU_EV*) malloc(TAU_BUFFER_SIZE);
      TraceBuffer[tid] = (TAU_EV*) malloc(TauBufferSize);
      if (TraceBuffer[tid] == (TAU_EV *) NULL) {
-       fprintf(stderr, "TAU: FATAL Error: Trace buffer malloc failed. Please rerun the application with the TAU_MAX_RECORDS environment variable set to a smaller value\n");
+       fprintf(stderr, 
+          "TAU: FATAL Error: Trace buffer malloc failed.\n"
+          "TAU: Please rerun the application with the TAU_MAX_RECORDS environment variable set to a smaller value\n");
        exit(1); 
      }
      TauBufferAllocated()[tid] = true;
@@ -404,9 +406,7 @@ void TauTraceClose(int tid) {
 // to tracing the current profiler
 //////////////////////////////////////////////////////////////////////
 void TraceCallStack(int tid, Profiler *current) {
-  if (current == 0) {
-    return;
-  } else {
+  if (current) {
     // Trace all the previous records before tracing self
     TraceCallStack(tid, current->ParentProfiler);
     TauTraceEventSimple(current->ThisFunction->GetFunctionId(), 1, tid);
@@ -472,7 +472,7 @@ int TauTraceDumpEDF(int tid) {
   
   numEvents = TheFunctionDB().size() + TheEventDB().size();
 #ifdef TAU_GPU 
-  numExtra = 13; // Added four ONESIDED msg events
+  numExtra = 14; // Added five ONESIDED msg events
 #else
   numExtra = 9; // Number of extra events
 #endif	
@@ -514,6 +514,8 @@ int TauTraceDumpEDF(int tid) {
 	TAU_ONESIDED_MESSAGE_SEND); 
   fprintf(fp,"%ld TAUEVENT 0 \"ONESIDED_MESSAGE_RECV\" TriggerValue\n", (long)
 	TAU_ONESIDED_MESSAGE_RECV); 
+  fprintf(fp,"%ld TAUEVENT 0 \"ONESIDED_MESSAGE\" TriggerValue\n", (long)
+	TAU_ONESIDED_MESSAGE_UNKNOWN); 
   fprintf(fp,"%ld TAUEVENT 0 \"ONESIDED_MESSAGE_ID_TriggerValueT1\" TriggerValue\n", (long)
 	TAU_ONESIDED_MESSAGE_ID_1); 
   fprintf(fp,"%ld TAUEVENT 0 \"ONESIDED_MESSAGE_ID_TriggerValueT2\" TriggerValue\n", (long)
@@ -597,75 +599,22 @@ int TauTraceMergeAndConvertTracesIfNecessary(void) {
 
 #ifdef TAU_GPU
 
-void TauTraceOneSidedMsg(bool type, GpuEvent *gpu, int length, int threadId)
+void TauTraceOneSidedMsg(int type, GpuEvent *gpu, int length, int threadId)
 {
 		/* there are three user events that make up a one-sided msg */
 		if (type == MESSAGE_SEND)
     	TauTraceEventSimple(TAU_ONESIDED_MESSAGE_SEND, length, threadId); 
-		else
+		else if (type == MESSAGE_RECV)
     	TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, length, threadId); 
+		else
+    	TauTraceEventSimple(TAU_ONESIDED_MESSAGE_UNKNOWN, length, threadId); 
     TauTraceEventSimple(TAU_ONESIDED_MESSAGE_ID_1, gpu->id_p1(), threadId); 
     TauTraceEventSimple(TAU_ONESIDED_MESSAGE_ID_2, gpu->id_p2(), threadId); 
 }
 
 #endif
 
-//////////////////////////////////////////////////////////////////////
-// TraceSendMsg traces the message send
-//////////////////////////////////////////////////////////////////////
-void TauTraceSendMsgOld(int type, int destination, int length) {
-  x_int64 parameter;
-  x_uint64 xother, xtype, xlength, xcomm;
 
-  if (RtsLayer::isEnabled(TAU_MESSAGE)) {
-    parameter = 0;
-    /* for send, othernode is receiver or destination */
-    xtype = type;
-    xlength = length;
-    xother = destination;
-    xcomm = 0;
-
-    /* Format for parameter is
-       63 ..... 56 55 ..... 48 47............. 32
-          other       type          length
-
-       These are the high order bits, below are the low order bits
-
-       31 ..... 24 23 ..... 16 15..............0
-          other       type          length       
-
-       e.g.
-
-       xtype = 0xAABB;
-       xother = 0xCCDD;
-       xlength = 0xDEADBEEF;
-       result = 0xccaaDEADdddbbBEEF
-
-     parameter = ((xlength >> 16) << 32) | 
-       ((xtype >> 8 & 0xFF) << 48) |
-       ((xother >> 8 & 0xFF) << 56) |
-       (xlength & 0xFFFF) | 
-       ((xtype & 0xFF)  << 16) | 
-       ((xother & 0xFF) << 24);
-
-     */
-
-    parameter = (xlength >> 16 << 54 >> 22) |
-      ((xtype >> 8 & 0xFF) << 48) |
-      ((xother >> 8 & 0xFF) << 56) |
-      (xlength & 0xFFFF) | 
-      ((xtype & 0xFF)  << 16) | 
-      ((xother & 0xFF) << 24) |
-      (xcomm << 58 >> 16);
-
-    TauTraceEventSimple(TAU_MESSAGE_SEND, parameter, RtsLayer::myThread()); 
-  } 
-}
-
-  
-//////////////////////////////////////////////////////////////////////
-// TraceRecvMsg traces the message recv
-//////////////////////////////////////////////////////////////////////
 extern "C" void TauTraceMsg(int send_or_recv, int type, int other_id, int length, x_uint64 ts, int use_ts, int node_id) {
   x_int64 parameter;
   x_uint64 xother, xtype, xlength, xcomm;
@@ -733,7 +682,7 @@ void TauTraceSendMsg(int type, int destination, int length) {
 
 
 //////////////////////////////////////////////////////////////////////
-// TauTraceRecvMsgRemote traces the message recv for a remote RMA operation
+// TauTraceRecvMsgRemote traces the message recv for an RMA operation
 //////////////////////////////////////////////////////////////////////
 void TauTraceRecvMsgRemote(int type, int source, int length, int remote_id) {
   TauTraceMsg(TAU_MESSAGE_RECV, type, source, length, 0, 0, remote_id); 
@@ -741,7 +690,7 @@ void TauTraceRecvMsgRemote(int type, int source, int length, int remote_id) {
 }
 
 //////////////////////////////////////////////////////////////////////
-// TraceSendMsgRemote traces the message send for a remote RMA operation
+// TraceSendMsgRemote traces the message send for an RMA operation
 //////////////////////////////////////////////////////////////////////
 void TauTraceSendMsgRemote(int type, int destination, int length, int remote_id) {
   TauTraceMsg(TAU_MESSAGE_SEND, type, destination, length, 0, 0, remote_id);

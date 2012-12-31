@@ -49,6 +49,7 @@ import javax.swing.event.MenuListener;
 
 import edu.uoregon.tau.common.ExternalTool;
 import edu.uoregon.tau.common.ImageExport;
+import edu.uoregon.tau.common.MetaDataMap;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.common.VectorExport;
 import edu.uoregon.tau.paraprof.barchart.BarChart;
@@ -544,7 +545,7 @@ public class ParaProfUtils {
         ActionListener fActionListener = new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 FunctionSelectorDialog fSelector = new FunctionSelectorDialog(owner, true,
-                        ppTrial.getDataSource().getFunctions(), null, false, false);
+                        ppTrial.getDataSource().getFunctionIterator(), null, false, false);
                 if (fSelector.choose()) {
                     Function selectedFunction = (Function) fSelector.getSelectedObject();
 
@@ -896,7 +897,7 @@ public class ParaProfUtils {
                         params.metric = metricName;
                         params.nodeID = thread.getNodeID();
                         params.threadID = thread.getThreadID();
-                        Map<String,String> map = new TreeMap<String,String>();
+                        MetaDataMap map = new MetaDataMap();
                         map.putAll(thread.getMetaData());
                         map.putAll(ppTrial.getDataSource().getMetaData());
                         params.metadata = map;
@@ -1095,7 +1096,7 @@ public class ParaProfUtils {
         JMenuItem jMenuItem = new JMenuItem(text);
         jMenuItem.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                Map<String,String> map = new TreeMap<String,String>();
+                MetaDataMap map = new MetaDataMap();
                 map.putAll(thread.getMetaData());
                 map.putAll(ppTrial.getDataSource().getMetaData());
                 Frame w = new MapViewer("Metadata for " + thread, map);
@@ -1185,11 +1186,11 @@ public class ParaProfUtils {
 
         String ident;
 
-        if (thread.getNodeID() == -1) {
+        if (thread.getNodeID() == -1 || thread.getNodeID() == -6) {
             ident = "Mean";
         } else if (thread.getNodeID() == -2) {
             ident = "Total";
-        } else if (thread.getNodeID() == -3) {
+        } else if (thread.getNodeID() == -3 || thread.getNodeID() == -7) {
             ident = "Standard Deviation";
         } else {
             ident = "Thread";
@@ -1340,7 +1341,7 @@ public class ParaProfUtils {
             return;
         }
 
-        FunctionSelectorDialog fSelector = new FunctionSelectorDialog(owner, true, srcPpTrial.getDataSource().getFunctions(),
+        FunctionSelectorDialog fSelector = new FunctionSelectorDialog(owner, true, srcPpTrial.getDataSource().getFunctionIterator(),
                 null, false, true);
         fSelector.setTitle("Choose Phases");
 
@@ -1516,11 +1517,11 @@ public class ParaProfUtils {
 
     public static String getThreadLabel(Thread thread) {
 
-        if (thread.getNodeID() == -1) {
+        if (thread.getNodeID() == -1 || thread.getNodeID() == -6) {
             return "Mean";
         } else if (thread.getNodeID() == -2) {
             return "Total";
-        } else if (thread.getNodeID() == -3) {
+        } else if (thread.getNodeID() == -3 || thread.getNodeID() == -7) {
             return "Std. Dev.";
         }
         else if (thread.getNodeID() == -4) {

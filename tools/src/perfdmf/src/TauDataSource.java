@@ -242,9 +242,9 @@ public class TauDataSource extends DataSource {
                                 int end = inputString.indexOf("</metadata>") + 11;
                                 String metadata = inputString.substring(start, end);
                                 try {
-                                    MetaDataParser.parse(thread.getMetaData(), metadata);
+                                    thread.setMetaData(MetaDataParser.parse(metadata, thread));
                                 } catch (Exception exception) {
-                                    //exception.printStackTrace();
+                                    exception.printStackTrace();
                                     throw new CorruptFileException("Unable to parse metadata block");
                                 }
                             }
@@ -549,12 +549,12 @@ public class TauDataSource extends DataSource {
         }
 
         //if (numcalls != 0) {
-            Function func = this.addFunction(name, 1);
+            Function func = this.addFunction(name, this.dirs.size());
 
             FunctionProfile functionProfile = thread.getFunctionProfile(func);
 
             if (functionProfile == null) {
-                functionProfile = new FunctionProfile(func);
+                functionProfile = new FunctionProfile(func, this.dirs.size());
                 thread.addFunctionProfile(functionProfile);
             }
 

@@ -71,11 +71,30 @@
 #ifdef HAVE_TR1_HASH_MAP
 #include <tr1/unordered_map>
 #define TAU_HASH_MAP std::tr1::unordered_map
+#define TAU_MULTIMAP std::tr1::unordered_multimap
 #else
 #include <map>
 #define TAU_HASH_MAP std::map
+#define TAU_MULTIMAP std::multimap
 #endif /* HAVE_HASH_MAP */
 
 #endif /* __cplusplus */
+
+
+#ifdef DEBUG_ASSERT
+#ifdef __cplusplus
+extern "C" {
+#endif // __cplusplus
+void Tau_assert_raise_error(const char* msg);
+#ifdef __cplusplus
+}
+#endif // __cplusplus
+
+#define TAU_ASSERT(test, msg) if (! test) Tau_assert_raise_error(msg)
+
+#else /* DEBUG_ASSERT */
+#define TAU_ASSERT(test, msg)
+#endif /* DEBUG_ASSERT */
+ 
 
 #endif /* _TAU_INTERNAL_H_ */

@@ -7,6 +7,9 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 
+#define TAU_MEMMGR_MAP_CREATION_FAILED -1
+#define TAU_MEMMGR_MAX_MEMBLOCKS_REACHED -2
+
 typedef struct TauMemMgrSummary {
   int numBlocks;
   unsigned long totalAllocatedMemory;
@@ -40,6 +43,10 @@ size_t Tau_MemMgr_alignRequest(size_t size) {
 
 unsigned long Tau_MemMgr_getMemUsed() {
   return TheMmapMemMgrSummary().totalAllocatedMemory;
+}
+
+unsigned long Tau_MemMgr_getBlocks() {
+  return TheMmapMemMgrSummary().numBlocks;
 }
 
 void Tau_MemMgr_initIfNecessary() {
@@ -116,8 +123,8 @@ void *Tau_MemMgr_mmap(int tid, size_t size)
   }
 
   //  printf("MMAP BLOCK acquired %ld at %p\n", size, addr);
-  TAU_VERBOSE("Tau_MemMgr_mmap: tid=%d, size = %ld, fd = %d, addr = %p\n",
-	      tid, size, fd, addr);
+  TAU_VERBOSE("Tau_MemMgr_mmap: tid=%d, size = %ld, fd = %d, addr = %p, blocks = %ld, used = %ld\n",
+	      tid, size, fd, addr, Tau_MemMgr_getBlocks(), Tau_MemMgr_getMemUsed());
   return addr;
 }
 
@@ -135,7 +142,7 @@ int Tau_MemMgr_findFit(int tid, size_t size) {
     void *addr = Tau_MemMgr_mmap(tid, blockSize);
     if (addr == NULL) {
       // return failure.
-      return -1;
+      return TAU_MEMMGR_MAP_CREATION_FAILED;
     }
     // return index to new block
     int newBlkIdx = TheMmapMemMgrSummary().numBlocks-1;
@@ -161,12 +168,12 @@ int Tau_MemMgr_findFit(int tid, size_t size) {
     void *addr = Tau_MemMgr_mmap(tid, blockSize);
     if (addr == NULL) {
       // return failure.
-      return -1;
+      return TAU_MEMMGR_MAP_CREATION_FAILED;
     }
     // return index to new block
     return TheMmapMemMgrSummary().numBlocks-1;
   } else {
-    return -1;
+    return TAU_MEMMGR_MAX_MEMBLOCKS_REACHED;
   }
 }
 
@@ -183,6 +190,12 @@ void *Tau_MemMgr_malloc(int tid, size_t size) {
   //  printf("Block returned by fit finder = %d\n", myBlock);
   if (myBlock < 0) {
     // failure.
+    switch (myBlock) {
+      case TAU_MEMMGR_MAP_CREATION_FAILED:
+        printf("MMAP FAILED!\n");
+      case TAU_MEMMGR_MAX_MEMBLOCKS_REACHED:
+        printf("MMAP MAX MEMBLOCKS REACHED!\n");
+    }
     return NULL;
   }
   
