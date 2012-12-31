@@ -17,6 +17,11 @@
 #ifndef _RTSLAYER_H_
 #define _RTSLAYER_H_
 
+#include <map>
+#include <string>
+#include <functional>
+#include <utility>
+
 //////////////////////////////////////////////////////////////////////
 //
 // class RtsLayer
@@ -29,7 +34,7 @@
 // restrained to this class. 
 //////////////////////////////////////////////////////////////////////
 
-typedef std::map<std::string, TauGroup_t, std::less<string> > ProfileMap_t;
+typedef std::map<std::string, TauGroup_t, std::less<std::string> > ProfileMap_t;
 
 
 double TauWindowsUsecD(void);
@@ -65,7 +70,7 @@ public:
   static int setAndParseProfileGroups (char *prog, char *str) ;
   static bool isEnabled(TauGroup_t  ProfileGroup) ; 
   static void ProfileInit(int& argc, char**& argv);
-  static string PrimaryGroup(const char *ProfileGroupName);
+  static std::string PrimaryGroup(const char *ProfileGroupName);
   static bool isCtorDtor(const char *name);
 
   static std::string GetRTTI(const char *name); 
@@ -74,6 +79,7 @@ public:
     else return str;
   }
 
+	static void Initialize(void);
 
   static int 	SetEventCounter(void);
   static double GetEventCounter(void);
@@ -101,7 +107,12 @@ public:
   static int myThread(void);
 
   static int threadId(void);
-  
+ 
+ 	// Return the local thread id (ignoring tasks) This is a 
+	// low-overhead call but DO NOT use this call when
+	// accessing Profiler stack or the FunctionInfo DB.
+  static int localThreadId(void);
+
   static int getPid();
   static int getTid();
 
@@ -114,11 +125,13 @@ public:
   static void RegisterFork(int nodeid, enum TauFork_t opcode);
 
   // This ensure that the FunctionDB (global) is locked while updating
-  static void LockDB(void);
-  static void UnLockDB(void);
+  static int LockDB(void);
+  static int UnLockDB(void);
+  static int getNumDBLocks(void);
 
-  static void LockEnv(void);
-  static void UnLockEnv(void);
+  static int LockEnv(void);
+  static int UnLockEnv(void);
+  static int getNumEnvLocks(void);
 
   static int getTotalThreads();
 
@@ -131,7 +144,7 @@ private:
   static void threadLockEnv(void);
   static void threadUnLockEnv(void);
 
-  static int lockDBcount[TAU_MAX_THREADS];
+  static int lockDBCount[TAU_MAX_THREADS];
   static int lockEnvCount[TAU_MAX_THREADS];
 
   static bool initLocks();

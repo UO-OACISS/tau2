@@ -9,35 +9,31 @@
 #****************************************************************************
 
 .SUFFIXES : .c
-.SILENT :
 
-include ../Makefile.inc
+ROOTDIR?=$(shell pwd)/..
+include $(ROOTDIR)/Makefile.in
 
-HEADERS=${wildcard ../include/*.h}
-SOURCES=${wildcard *.c}
+HEADERS=${wildcard $(ROOTDIR)/include/*.h}
+SOURCES=${wildcard */*.c}
 OBJS=${patsubst %.c, %.o, ${SOURCES}}
-
-TARGET=../libtaudb.a
-LIBS=$(POSTGRESQL_LIBRARIES)
-INCLUDE=-I../include $(POSTGRESQL_INCLUDES)
-
-all: $(TARGET)
-
-$(TARGET): $(OBJS) $(HEADERS)
-	echo "  Making : $@"
-	$(AR) -qc $(TARGET) $(OBJS)
+TARGET=$(ROOTDIR)/lib/libtaudb.a
 
 # rebuild everything if the headers or the makefile changes
-$(OBJS): $(HEADERS) Makefile ../Makefile.inc
+all: $(TARGET)
 
-.c.o:
-	echo "Building : $@ from $<"
-	$(CC) $(FLAGS) -c $(INCLUDE) $< -o $@ $(PERFDMF_SUPPORT) $(DEBUG)
+$(TARGET): $(OBJS)
+	echo "  Making : $@"
+	rm -f $(TARGET)
+	$(AR) -qc $(TARGET) $(OBJS)
+
+$(OBJS): Makefile $(ROOTDIR)/Makefile.in $(HEADERS) $(SOURCES)
+	mkdir -p $(ROOTDIR)/lib
+	@for i in database memory parsers analysis ; do (cd $$i; $(MAKE) "MAKE=$(MAKE)" "ROOTDIR=$(ROOTDIR)" || exit 0); done
 
 clean:
-	echo "Removing : $(OBJS) $(TARGET)"
-	/bin/rm -f $(OBJS) $(TARGET) *.pdb *.inst.c
+	@for i in database memory parsers analysis ; do (cd $$i; $(MAKE) "MAKE=$(MAKE)" "ROOTDIR=$(ROOTDIR)" clean || exit 0); done
+	echo "Removing $(TARGET)"
+	rm -f $(TARGET)
 
-test:
 
 remake: clean all

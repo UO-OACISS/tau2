@@ -11,9 +11,9 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 
-import com.sun.image.codec.jpeg.JPEGCodec;
-import com.sun.image.codec.jpeg.JPEGEncodeParam;
-import com.sun.image.codec.jpeg.JPEGImageEncoder;
+import javax.imageio.ImageIO;
+
+
 
 /**
  * This code generates a thumbnail image from a larger JPG or PNG file.
@@ -64,13 +64,15 @@ public class Thumbnail {
 			graphics2D.drawImage(image, 0, 0, thumbWidth, thumbHeight, null);
 			// save thumbnail image to OUTFILE
 			BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(outfile));
-			JPEGImageEncoder encoder = JPEGCodec.createJPEGEncoder(out);
-			JPEGEncodeParam param = encoder.getDefaultJPEGEncodeParam(thumbImage);
+			ImageIO.write(thumbImage, "jpeg", out);
+			
+//			JPEGImageEncoder encoder = JPEGCodec.createJPEGEncoder(out);
+//			JPEGEncodeParam param = encoder.getDefaultJPEGEncodeParam(thumbImage);
 			int quality = 75;
 			quality = Math.max(0, Math.min(quality, 100));
-			param.setQuality((float)quality / 100.0f, false);
-			encoder.setJPEGEncodeParam(param);
-			encoder.encode(thumbImage);
+//			param.setQuality((float)quality / 100.0f, false);
+//			encoder.setJPEGEncodeParam(param);
+//			encoder.encode(thumbImage);
 			out.close(); 
 			//PerfExplorerOutput.println("Done.");
 		} catch (Exception e) {

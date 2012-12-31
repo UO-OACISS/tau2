@@ -18,6 +18,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <Profile/Profiler.h>
 
@@ -25,19 +26,15 @@
 #include <cxxabi.h>
 #endif /* __GNUC__ */
 
-#ifdef TAU_WINDOWS
-//#include <vector>
-//#include <string>
+#include <vector>
+#include <string>
 using namespace std;
-#endif
 
-#include <stdlib.h>
 
 //#define DEBUG_PROF
 //int debugPrint = 1;
 // control debug printf statements
 //#define dprintf if (debugPrint) printf
-#define dprintf TAU_VERBOSE
 #ifdef DEBUG_PROF
 #define dprintf printf
 #else // DEBUG_PROF 
@@ -303,11 +300,32 @@ int TauRenameTimer(char *oldName, char *newName)
 
 static int tauFiniID = -1; 
 static int tauDyninstEnabled[TAU_MAX_THREADS];
-void trace_register_func(char *func, int id)
+
+char * tau_demangle_name(char **funcname) ;
+void trace_register_func(char *origname, int id)
 {
   static int invocations = 0;
   int i;
   int tid = RtsLayer::myThread();
+  int funclen;
+  char *func = origname;
+  //char *func;
+  if ((func[0] == '_') && (func[1] == 'Z')) {
+    funclen = strlen(func);
+    char *mirror=strdup(func);
+    for(i=0; i < funclen; i++) {
+      if ((mirror[i] == '[') &&(mirror[i-1] == ' ')) {
+        mirror[i-1] = '\0';
+        break; 
+      }
+    }  
+    char *dem = tau_demangle_name(&mirror);
+    char *newname = (char *) malloc(strlen(dem)+funclen-i+3); 
+    sprintf(newname, "%s %s", dem, &func[i-1]);
+    dprintf("name=%s, newname = %s\n", func, newname); 
+    free(mirror);
+    func = newname; 
+  }
   dprintf("trace_register_func: func = %s, id = %d\n", func, id); 
   if (invocations == 0) {
     if (!tauDyninstEnabled[tid]) {
@@ -509,9 +527,9 @@ void tau_dyninst_cleanup()
 char * tau_demangle_name(char **funcname) {
   std::size_t len=1024;
   int stat;
-  char *out_buf= (char *) malloc (len);
   char *dem_name = NULL; 
 #ifdef __GNUC__
+  char *out_buf= (char *) malloc (strlen(*funcname)+100);
   char *name = abi::__cxa_demangle(*funcname, out_buf, &len, &stat);
   if (stat == 0) dem_name = out_buf;
   else dem_name = *funcname;
@@ -524,27 +542,54 @@ char * tau_demangle_name(char **funcname) {
 }
 
 void  tau_register_func(char **func, char** file, int* lineno, 
-  int* id) {
+  int id) {
     if (*file == NULL){
-      dprintf("TAU: tau_register_func: name = %s, id = %d\n", *func, *id);
-      trace_register_func(tau_demangle_name(func), *id);
+      dprintf("TAU: tau_register_func: name = %s, id = %d\n", *func, id);
+      trace_register_func(tau_demangle_name(func), id);
     } else {
       char funcname[2048];
       sprintf(funcname, "%s [{%s}{%d}]", tau_demangle_name(func), *file, *lineno);
-      trace_register_func(funcname, *id);
-      dprintf("TAU : tau_register_func: name = %s, id = %d\n", funcname, *id);
+      trace_register_func(funcname, id);
+      dprintf("TAU : tau_register_func: name = %s, id = %d\n", funcname, id);
     }
 }
 
-void tau_trace_entry(int* id) {
-  dprintf("TAU: tau_trace_entry: id = %d\n", *id);
-  traceEntry(*id);
+void tau_trace_entry(int id) {
+  dprintf("TAU: tau_trace_entry: id = %d\n", id);
+  traceEntry(id);
 }
 
-void tau_trace_exit(int* id) {
-  dprintf("TAU: tau_trace_exit : id = %d\n", *id);
-  traceExit(*id);
+void tau_trace_exit(int id) {
+  dprintf("TAU: tau_trace_exit : id = %d\n", id);
+  traceExit(id);
 }
+
+#if !defined(TAU_PEBIL_DISABLE) && !defined(TAU_WINDOWS)
+#include <pthread.h>
+void* tool_thread_init(pthread_t args) {
+  dprintf("TAU: initializing thread %#lx\n", args); 
+  Tau_create_top_level_timer_if_necessary();
+}
+
+void* tool_thread_fini(pthread_t args) {
+  dprintf("TAU: finalizing thread %#lx\n", args); 
+  Tau_stop_top_level_timer_if_necessary(); 
+}
+void  tau_register_loop(char **func, char** file, int* lineno, 
+  int id) {
+
+  char lname[2048]; 
+  char *loopname;
+  if (((*file) != (char *)NULL) && (*lineno != 0)) {
+    sprintf(lname, "Loop: %s [{%s}{%d}]", *func, *file, *lineno); 
+  } else {
+    sprintf(lname, "Loop: %s ",*func);
+  }
+  loopname = strdup(lname);
+  tau_register_func(&loopname, file, lineno, id);
+
+}
+#endif /* TAU_PEBIL_DISABLE */
 
 } /* extern "C" */
   

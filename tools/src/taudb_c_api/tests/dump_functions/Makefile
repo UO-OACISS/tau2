@@ -9,24 +9,23 @@
 #****************************************************************************
 
 .SUFFIXES : .c
-.SILENT :
 
-include ../../Makefile.inc
+include ../../Makefile.in
 
 HEADERS=${wildcard ../../include/*.h}
 SOURCES=${wildcard *.c}
 OBJS=${patsubst %.c, %.o, ${SOURCES}}
 
-TAUDBLIB=../../libtaudb.a
-LIBS=$(POSTGRESQL_LIBRARIES)
-INCLUDE=-I. -I../../include $(POSTGRESQL_INCLUDES)
+TAUDBLIB=../../lib/libtaudb.a
+INCLUDE=-I. -I../../include $(INCLUDES)
 TARGET=../libtaudb_dump.a
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	echo "  Making : $(TARGET)"
-	ar -cr $(TARGET) $(OBJS)
+	$(AR) -qc $(TARGET) $(OBJS)
+	$(RANLIB) $(TARGET)
 
 # rebuild everything if the headers or the makefile changes
 $(OBJS): $(HEADERS) Makefile

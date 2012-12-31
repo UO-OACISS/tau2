@@ -198,9 +198,9 @@ public class TrialResult extends AbstractResult {
 		String group = null;
 		// find the event in the trial
 		List<RMISortableIntervalEvent> events = Utilities.getEventsForTrial(trial, 0);
-		for (IntervalEvent event : events) {
-			if (event.getName().equals(eventName)) {
-				group = event.getGroup();
+		for (RMISortableIntervalEvent event : events) {
+			if (event.getFunction().getName().equals(eventName)) {
+				group = event.getFunction().getGroupString();
 			}
 		}
 		// find the group name for the event

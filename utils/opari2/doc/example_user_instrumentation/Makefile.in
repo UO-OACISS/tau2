@@ -2,7 +2,7 @@
 #  Compiler                                          #
 ######################################################
 CC=@CC@
-FORTRAN=@F77@
+FORTRAN=@FC@
 OPENMP_C_FLAG=@OPENMP_CFLAGS@
 OPENMP_F_FLAG=@OPENMP_FFLAGS@
 
@@ -21,9 +21,7 @@ OPARI2_CONFIG=$(BINDIR)/opari2-config
 # of nm, awk and grep. opari2-config returns the right
 # commands with the necessary options.
 NM=`$(OPARI2_CONFIG) --nm`
-AWK=`$(OPARI2_CONFIG) --awk-cmd`
-AWK_SCRIPT=`$(OPARI2_CONFIG) --awk-script`
-GREP=`$(OPARI2_CONFIG) --egrep`
+AWK_SCRIPT=`$(OPARI2_CONFIG) --region-initialization`
 
 all: c fortran
 
@@ -48,7 +46,7 @@ pompregions_c.o : pompregions_c.c
 # object file of the instrumented user code. Then the 
 # awk script generates these functions.
 pompregions_c.c : example_user_instrumentation_c.mod.o
-	$(NM) example_user_instrumentation_c.mod.o | $(GREP) -i POMP2_Init_regions | $(GREP) " [TD] " | $(AWK) -f $(AWK_SCRIPT) > pompregions_c.c
+	$(NM) example_user_instrumentation_c.mod.o | $(AWK_SCRIPT) > pompregions_c.c
 
 example_user_instrumentation_c.mod.o: example_user_instrumentation.mod.c
 	$(CC) $(OPENMP_C_FLAG)  $(POMP_INC) -c $? -o $@
@@ -63,7 +61,7 @@ example_user_instrumentation.mod.c: example_user_instrumentation.c
 fortran: example_user_instrumentation_f example_user_instrumentation_f_inst
 
 # Build without instrumentation
-example_user_instrumentation_f: example_user_instrumentation.f
+example_user_instrumentation_f: example_user_instrumentation.f90
 	$(FORTRAN) $(OPENMP_F_FLAG) $? -o $@
 
 # Linking step
@@ -77,13 +75,13 @@ pompregions_f.o : pompregions_f.c
 # object file of the instrumented user code. Then the 
 # awk script generates these functions.
 pompregions_f.c : example_user_instrumentation_f.mod.o
-	$(NM) example_user_instrumentation_f.mod.o | $(GREP) -i POMP2_Init_regions | $(AWK) -f $(AWK_SCRIPT) > pompregions_f.c
+	$(NM) example_user_instrumentation_f.mod.o | $(AWK_SCRIPT) > pompregions_f.c
 
-example_user_instrumentation_f.mod.o : example_user_instrumentation.mod.F
+example_user_instrumentation_f.mod.o : example_user_instrumentation.mod.F90
 	$(FORTRAN) $(OPENMP_F_FLAG) -c -o $@ $?
 
-example_user_instrumentation.mod.F: example_user_instrumentation.f
-	$(OPARI) example_user_instrumentation.f
+example_user_instrumentation.mod.F90: example_user_instrumentation.f90
+	$(OPARI) example_user_instrumentation.f90
 
 ######################################################
 

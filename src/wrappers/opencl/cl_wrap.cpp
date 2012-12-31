@@ -7,6 +7,10 @@
 #include <Profile/Profiler.h>
 #include <Profile/TauGpuAdapterOpenCL.h>
 
+// Moved from header file
+using namespace std;
+
+
 const char * tau_orig_libname = "libOpenCL.so";
 static void *tau_handle = NULL;
 

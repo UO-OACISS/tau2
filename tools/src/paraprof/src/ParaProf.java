@@ -196,9 +196,9 @@ public class ParaProf implements ActionListener {
 			filelist.add(new File(file));
 		    }
 		}
-		paraProfManagerWindow.addTrial(app, experiment, (File[]) filelist.toArray(sourceFiles), fileType, fixNames, monitorProfiles, range);
+		paraProfManagerWindow.addTrial(experiment, (File[]) filelist.toArray(sourceFiles), fileType, fixNames, monitorProfiles, range);
 	    }else {
-		paraProfManagerWindow.addTrial(app, experiment, sourceFiles, fileType, fixNames, monitorProfiles, range);
+		paraProfManagerWindow.addTrial(experiment, sourceFiles, fileType, fixNames, monitorProfiles, range);
 	    }
 	} catch (java.security.AccessControlException ace) {
 	    // running as Java Web Start without permission
@@ -487,6 +487,25 @@ public class ParaProf implements ActionListener {
 //	    	fileTypeString="profiles";
 //	    	break;
 //	    }
+	}
+	
+	if(sourceFiles!=null&&sourceFiles.length>0){
+		if(sourceFiles[0]!=null&&sourceFiles[0].exists()){
+			if(sourceFiles[0].isDirectory()){
+				try {
+					LoadTrialWindow.lastDirectory=sourceFiles[0].getCanonicalPath();
+				} catch (IOException e) {
+				}
+			}
+			else{
+				try {
+					File pf=sourceFiles[0].getParentFile();
+					if(pf!=null&&pf.exists())
+						LoadTrialWindow.lastDirectory=pf.getCanonicalPath();
+				} catch (IOException e) {
+				}
+			}
+		}
 	}
 
 	if (fixNames != null)

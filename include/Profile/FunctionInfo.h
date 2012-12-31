@@ -17,6 +17,8 @@
 #ifndef _FUNCTIONINFO_H_
 #define _FUNCTIONINFO_H_
 
+#include <string>
+
 /////////////////////////////////////////////////////////////////////
 //
 // class FunctionInfo
@@ -59,7 +61,14 @@ extern "C" int Tau_Global_numCounters;
 #define SS_ALLOCATOR std::allocator
 #endif //TAU_SS_ALLOC_SUPPORT
 #endif //TAU_WINDOWS
-using namespace std;
+// Putting "using namespace" statements in header files can create ambiguity
+// between user-defined symbols and std symbols, creating unparsable code
+// or even changing the behavior of user codes.  This is also widely considered
+// to be bad practice.  Here's a code PDT can't parse because of this line:
+//   EX: #include <complex>
+//   EX: typedef double real;
+//
+//using namespace std;
 class TauUserEvent; 
 
 class FunctionInfo
@@ -70,15 +79,15 @@ public:
 	       TauGroup_t ProfileGroup = TAU_DEFAULT, 
 	       const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = true,
 	       int tid = RtsLayer::myThread());
-  FunctionInfo(const char* name, const string& type, 
+  FunctionInfo(const char* name, const std::string& type,
 	       TauGroup_t ProfileGroup = TAU_DEFAULT,
 	       const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = true,
 	       int tid = RtsLayer::myThread());
-  FunctionInfo(const string& name, const string& type, 
+  FunctionInfo(const std::string& name, const std::string& type,
 	       TauGroup_t ProfileGroup = TAU_DEFAULT,
 	       const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = true,
 	       int tid = RtsLayer::myThread());
-  FunctionInfo(const string& name, const char * type, 
+  FunctionInfo(const std::string& name, const char * type,
 	       TauGroup_t ProfileGroup = TAU_DEFAULT,
 	       const char *ProfileGroupName = "TAU_DEFAULT", bool InitData = true,
 	       int tid = RtsLayer::myThread());
@@ -139,17 +148,16 @@ private:
   TAU_MULTSTORAGE(double, ExclTime);
   TAU_MULTSTORAGE(double, InclTime);
   TAU_STORAGE(bool, AlreadyOnStack);
-
-  double dumpExclusiveValues[TAU_MAX_THREADS][TAU_MAX_COUNTERS];
-  double dumpInclusiveValues[TAU_MAX_THREADS][TAU_MAX_COUNTERS];
+  TAU_MULTSTORAGE(double, dumpExclusiveValues);
+  TAU_MULTSTORAGE(double, dumpInclusiveValues);
 
 public:
   char *Name;
   char *Type;
   char *GroupName;
   char *AllGroups;
+  char const * FullName;
   x_uint64 FunctionId;
-  string *FullName;
 
   /* For EBS Sampling Profiles */
   // *CWL* - these need to be per-thread structures, just like the
@@ -166,7 +174,7 @@ public:
   unsigned long callSiteKeyId;
   FunctionInfo *firstSpecializedFunction;
   char *ShortenedName;
-  void SetShortName(string& str) { ShortenedName = strdup(str.c_str()); }
+  void SetShortName(std::string& str) { ShortenedName = strdup(str.c_str()); }
   const char* GetShortName() const { return ShortenedName; }
 
   /* EBS Sampling Profiles */
@@ -182,9 +190,9 @@ public:
   }
 
   // Cough up the information about this function.
-  void SetName(string& str) { Name = strdup(str.c_str()); }
+  void SetName(std::string& str) { Name = strdup(str.c_str()); }
   const char* GetName() const { return Name; }
-  void SetType(string& str) { Type = strdup(str.c_str()); }
+  void SetType(std::string& str) { Type = strdup(str.c_str()); }
   const char* GetType() const { return Type; }
 
   const char* GetPrimaryGroup() const { return GroupName; }
@@ -193,13 +201,12 @@ public:
     GroupName = strdup(newname);
     AllGroups = strdup(newname); /* to make it to the profile */
   }
-  void SetPrimaryGroupName(string newname) { 
+  void SetPrimaryGroupName(std::string newname) {
     GroupName = strdup(newname.c_str()); 
     AllGroups = strdup(newname.c_str()); /* to make it to the profile */
   }
 
-  string *GetFullName(); /* created on demand, cached */
-
+  char const * GetFullName(); /* created on demand, cached */
 
   x_uint64 GetFunctionId() ;
   long GetCalls(int tid) { return NumCalls[tid]; }
@@ -246,11 +253,11 @@ public:
   inline double GetInclTimeForCounter(int tid, int counter) { return InclTime[tid][counter]; }
   inline double GetExclTimeForCounter(int tid, int counter) { return ExclTime[tid][counter]; }
 
-  TauGroup_t GetProfileGroup(int tid = RtsLayer::myThread()) const {return MyProfileGroup_[tid]; }
-  void SetProfileGroup(TauGroup_t gr, int tid = RtsLayer::myThread()) {MyProfileGroup_[tid] = gr; }
+  TauGroup_t GetProfileGroup() const {return MyProfileGroup_; }
+  void SetProfileGroup(TauGroup_t gr) {MyProfileGroup_ = gr; }
 
 private:
-  TauGroup_t MyProfileGroup_[TAU_MAX_THREADS];
+  TauGroup_t MyProfileGroup_;
 };
 
 // Global variables
@@ -302,11 +309,11 @@ inline bool FunctionInfo::GetAlreadyOnStack(int tid) {
 
 void tauCreateFI(void **ptr, const char *name, const char *type, 
 		 TauGroup_t ProfileGroup , const char *ProfileGroupName);
-void tauCreateFI(void **ptr, const char *name, const string& type, 
+void tauCreateFI(void **ptr, const char *name, const std::string& type,
 		 TauGroup_t ProfileGroup , const char *ProfileGroupName);
-void tauCreateFI(void **ptr, const string& name, const char *type, 
+void tauCreateFI(void **ptr, const std::string& name, const char *type,
 		 TauGroup_t ProfileGroup , const char *ProfileGroupName);
-void tauCreateFI(void **ptr, const string& name, const string& type, 
+void tauCreateFI(void **ptr, const std::string& name, const std::string& type,
 		 TauGroup_t ProfileGroup , const char *ProfileGroupName);
 
 

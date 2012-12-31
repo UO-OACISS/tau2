@@ -32,6 +32,8 @@ import javax.swing.JSplitPane;
 
 import com.graphbuilder.math.VarMap;
 
+import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
+import edu.uoregon.tau.common.MetaDataMap.MetaDataValue;
 import edu.uoregon.tau.paraprof.ThreeDeeGeneralPlotUtils.CoordMap;
 import edu.uoregon.tau.paraprof.enums.SortType;
 import edu.uoregon.tau.paraprof.enums.UserEventValueType;
@@ -362,7 +364,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 
 		float color = Float.NaN;
 
-		if (!settings.getAtomic(3)) {
+		if (settings.getDataType(3)==0) {
 			Function topoFunction = settings.getTopoFunction(3);
 			ValueType topoValueType = settings.getTopoValueType(3);
 			Metric topoMetricID = settings.getTopoMetric(3);
@@ -378,7 +380,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 					return 0;
 				}
 			}
-		} else {
+		} else if(settings.getDataType(3)==1){
 			UserEvent ue = settings.getTopoAtomic(3);
 			if (ue != null) {
 				UserEventProfile uep = thread.getUserEventProfile(ue);
@@ -390,6 +392,30 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 								ppTrial.getSelectedSnapshot());
 				}
 			}
+		}else if(settings.getDataType(3)==2){
+			MetaDataKey metaKey=settings.getTopoMetadata(3);//.toString();
+			if(metaKey!=null){
+				MetaDataValue mdVal=thread.getMetaData().get(metaKey);
+				
+				if(mdVal==null){
+					mdVal=ppTrial.getDataSource().getMetaData().get(metaKey);
+				}
+				if(mdVal==null){
+					//System.out.println(thread.getNodeID()+" null");	
+					return 0;
+				}
+				//System.out.println(mdVal.toString());		
+				
+				float tmp=Float.NaN;
+				String metaVal=mdVal.toString();
+				try{
+				tmp = Float.parseFloat(metaVal);
+				}catch(NumberFormatException e){
+					return tmp;
+				}
+				color=tmp;
+			}
+			//TODO: Handle non-numerical metadata?
 		}
 
 		return color;
@@ -684,7 +710,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 
 				float[] topoVals = { 0, 0, 0, 0 };
 				for (int i = 0; i < 4; i++) {
-					if (!settings.getAtomic(i)) {
+					if (settings.getDataType(i)==0) {
 						Function f = settings.getTopoFunction(i);
 						if (f != null) {
 							FunctionProfile fp = thread.getFunctionProfile(f);
@@ -695,7 +721,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 										ppTrial.getSelectedSnapshot());
 							}
 						}
-					} else {
+					} else if(settings.getDataType(i)==1) {
 						UserEvent ue = settings.getTopoAtomic(i);
 						if (ue != null) {
 							UserEventProfile uep = thread
@@ -708,6 +734,20 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 											ppTrial.getSelectedSnapshot());
 							}
 						}
+					}
+					else if(settings.getDataType(i)==2) {
+						MetaDataKey metaKey=settings.getTopoMetadata(i);
+						if(metaKey!=null){
+							String metaVal=thread.getMetaData().get(metaKey).toString();
+							float tmp=Float.NaN;
+							try{
+							tmp = Float.parseFloat(metaVal);
+							}catch(NumberFormatException e){
+								
+							}
+							topoVals[i]=tmp;
+						}
+						//TODO: Metadata support
 					}
 				}
 				// float[] ueVal={0,0,0,0};
@@ -729,14 +769,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 				vm = ThreeDeeGeneralPlotUtils.getEvaluation(
 						rankIndex,
 						numThreads,
-						thread.getNodeID(),
-						thread.getContextID(),
-						thread.getThreadID(),
-						ppTrial.getDataSource().getNumberOfNodes(),
-						ppTrial.getDataSource().getNumberOfContexts(
-								thread.getNodeID()),
-						ppTrial.getDataSource().getNumberOfThreads(
-								thread.getNodeID(), thread.getContextID()),
+						thread,
+						ppTrial,
 						topoVals, varMins, varMaxs, varMeans, settings
 								.getCustomTopoAxes(), expressions);
 
@@ -821,7 +855,12 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 			}
 			
 			String tsize = ppTrial.getDataSource().getMetaData().get(size_key);
-			
+			if(tsize==null)
+			{
+				System.out.println("Topology sizes not defined");
+				return values;
+			}
+				
 			
 			int[] tempsizes = ThreeDeeGeneralPlotUtils.parseTuple(tsize);
 			
@@ -829,6 +868,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 			if(tempsizes.length>3){
 				
 				calculateTSize(tempsizes,offset);
+				if(tsizes[0]<0)
+					return values;
 			}
 			else{
 				tsizes = tempsizes;
@@ -844,6 +885,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 
 
 			int threadIndex = 0;
+			int coreCoordinate=0;//Used to generate final core coordinate mapping;
 			for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads()
 					.iterator(); it.hasNext();) {
 				Thread thread = it.next();
@@ -855,26 +897,66 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 				
 				
 				int[] coords; 
+				
 				if(isBGQ){
 					coords = ThreeDeeGeneralPlotUtils.parseMPIProcName(coord);
+				}
+				else{
+					coords = ThreeDeeGeneralPlotUtils.parseTuple(coord);
+				}
+				if(coords.length<tempsizes.length){
+					int[] tempcoords=new int[tempsizes.length];
+					int i=0;
+					for(i=0;i<coords.length;i++){
+						tempcoords[i]=coords[i];
+					}
+					if(coreCoordinate==tempsizes[tempsizes.length-1])
+					{
+						coreCoordinate=0;
+					}
+					tempcoords[i]=coreCoordinate;
+					coreCoordinate++;
+					coords=tempcoords;
+				}
+				
+				
+				if(tempsizes.length==6&&isBGQ){
+					
 					values[threadIndex][0] = coords[4]*tempsizes[5]+coords[5]+offset*coords[4];
 					values[threadIndex][1] = coords[0]*tempsizes[1]+coords[1]+offset*coords[0];
 					values[threadIndex][2] = coords[2]*tempsizes[3]+coords[3]+offset*coords[2];
 					
 					for (int i = 0; i < 3; i++) {
-					maxScatterValues[i] = Math.max(maxScatterValues[i], values[threadIndex][i]);
-				}
-					
-					
-				}
-				
-				else{
-					coords = ThreeDeeGeneralPlotUtils.parseTuple(coord);
-
-					for (int i = 0; i < coords.length; i++) {
-						values[threadIndex][i] = coords[i];
+						maxScatterValues[i] = Math.max(maxScatterValues[i], values[threadIndex][i]);
 					}
 					
+					
+				}
+//				else if(tempsizes.length==5){
+//					values[threadIndex][0]=coords[4]*offset;
+//					values[threadIndex][1]=coords[0]*tempsizes[1]+coords[1]+offset*coords[0];;
+//					values[threadIndex][2]=coords[2]*tempsizes[3]+coords[3]+offset*coords[2];
+//				}else if (tempsizes.length==4){
+//					values[threadIndex][0]=coords[3]*offset;
+//					values[threadIndex][1]=coords[0]*tempsizes[1]+coords[1]+offset*coords[0];
+//					values[threadIndex][2]=coords[2]*offset;
+//				}
+				
+				else 
+					if(tempsizes.length<=3){
+					
+
+					for (int i = 0; i < coords.length; i++) {
+						
+						
+							values[threadIndex][i] = coords[i];
+						
+						
+					}
+					
+				}
+				else{
+					//System.out.println("Dimension "+coords.length+" Unsupported");
 				}
 				
 				int dex0=(int)values[threadIndex][0];
@@ -893,24 +975,44 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 				}
 
 				threadIndex++;
-			}
+			}//Values populator loop
 			}
 
 		return values;
 	}
 	
 	private void calculateTSize(int[] tempSize, int offset){
-		if(tempSize.length==6){
-			
-			tsizes[0]=tempSize[4]*tempSize[5]+tempSize[4]*offset;
-			tsizes[1]=tempSize[0]*tempSize[1]+tempSize[0]*offset;
-			tsizes[2]=tempSize[2]*tempSize[3]+tempSize[2]*offset;
-			
-		}
-		else
+		
+//		for(int i=0;i<tempSize.length;i++){
+//			tempSize[i]=tempSize[i]+1;
+//		}
+		
+//		if(tempSize.length==6){
+//			
+//			tsizes[0]=tempSize[4]*tempSize[5]+tempSize[4]*offset;
+//			tsizes[1]=tempSize[0]*tempSize[1]+tempSize[0]*offset;
+//			tsizes[2]=tempSize[2]*tempSize[3]+tempSize[2]*offset;
+//			
+//		}
+//		else if(tempSize.length==5){
+//			tsizes[0]=tempSize[4]*offset;
+//			tsizes[1]=tempSize[0]*tempSize[1]+tempSize[0]*offset;
+//			tsizes[2]=tempSize[2]*tempSize[3]+tempSize[2]*offset;
+//		}
+//		else if(tempSize.length==4){
+//			tsizes[0]=tempSize[3]*offset;
+//			tsizes[1]=tempSize[0]*tempSize[1]+tempSize[0]*offset;
+//			tsizes[2]=tempSize[2]*offset;
+//		}
+//		else 
+			if(tempSize.length<=3)
 			for(int i=0;i<3;i++){
 				tsizes[i]=tempSize[i+3];
 			}
+		else{
+			System.out.println("Dimension "+tempSize.length+" Unsupported");
+			tsizes[0]=-1;
+		}
 	}
 
 	// String[] expressions =
@@ -2036,9 +2138,9 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 
 		int units = this.units;
 		
-		boolean atomic = settings.getAtomic(3);
+		int dataType = settings.getDataType(3);
 		
-		if(!atomic){
+		if(dataType==0){
 		
 		ParaProfMetric ppMetric = (ParaProfMetric) settings.getTopoMetric(3);
 		if (!ppMetric.isTimeMetric()
@@ -2050,9 +2152,14 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 				ppMetric.isTimeDenominator()).trim()
 				+ getUnitsString(units, settings.getTopoValueType(3), ppMetric);
 		}
-		else{
+		else if(dataType==1){
 			return val+" counts";
 		}
+		else if(dataType==2){
+			//TODO: metadata support
+			return val+" counts";
+		}
+		return val+" counts";
 	}
 
 	private String getUnitsString(int units, ValueType valueType,
@@ -2193,7 +2300,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 		String low = "none";
 		String high = "none";
 		
-		if (!settings.getAtomic(3)) {//If this is an interval value
+		if (settings.getDataType(3)==0) {//If this is an interval value
 			ParaProfMetric ppMetric = (ParaProfMetric) settings
 					.getTopoMetric(3);
 			int units = settings.getTopoValueType(3).getUnits(this.units,
@@ -2224,7 +2331,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 						ppMetric.isTimeDenominator()).trim();
 				
 			} 
-		} else {//if this is an atomic value
+		} else if(settings.getDataType(3)==1){//if this is an atomic value
 			UserEventValueType colorUEVT = settings.getTopoUserEventValueType(3);
 			UserEvent colorAtom = settings.getTopoAtomic(3);
 			if(colorAtom!=null){
@@ -2237,6 +2344,20 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 				low = Float.toString(minScatterValues[3]);
 				high = Float.toString(maxScatterValues[3]);
 			}
+		}
+		else if(settings.getDataType(3)==2){			
+			MetaDataKey metaKey=settings.getTopoMetadata(3);
+		if(metaKey!=null){
+			String toDisplay = metaKey.toString();
+			if (toDisplay.length() > 30) {
+				toDisplay = toDisplay.substring(0, 30) + "...";
+			}
+			colorName = toDisplay ;//+ "\n("
+					//+ colorUEVT.toString()+ ")";
+			low = Float.toString(minScatterValues[3]);
+			high = Float.toString(maxScatterValues[3]);
+		}
+			//TODO: Metadata Support
 		}
 
 		colorScale.setStrings(low,	high, colorName);
@@ -2394,7 +2515,6 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 	 * @see java.awt.event.KeyListener#keyPressed(java.awt.event.KeyEvent)
 	 */
 	public void keyPressed(KeyEvent e) {
-		// TODO Auto-generated method stub
 
 	}
 
@@ -2404,8 +2524,6 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 	 * @see java.awt.event.KeyListener#keyReleased(java.awt.event.KeyEvent)
 	 */
 	public void keyReleased(KeyEvent e) {
-		// TODO Auto-generated method stub
-
 	}
 
 	/*
@@ -2414,7 +2532,6 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 	 * @see java.awt.event.KeyListener#keyTyped(java.awt.event.KeyEvent)
 	 */
 	public void keyTyped(KeyEvent e) {
-		// TODO Auto-generated method stub
 		try {
 			// zoom in and out on +/-
 			if (e.getKeyChar() == '+') {
@@ -2444,7 +2561,6 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 	}
 
 	public void createNewCanvas() {
-		// TODO Auto-generated method stub
 		visCanvas = new VisCanvas(visRenderer);
 
 		visCanvas.addKeyListener(this);

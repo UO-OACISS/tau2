@@ -82,17 +82,17 @@ public:
     static void
     generate_header_cxx( ostream& os );
 
-    /** generate call POMP2_Init_region_XXX function to initialize
+    /** generate call POMP2_Init_reg_XXX function to initialize
      *  all handles, in the C case*/
     static void
     generate_init_handle_calls_c( ostream& os );
 
-    /** generate call POMP2_Init_region_XXX function to initialize
+    /** generate call POMP2_Init_reg_XXX function to initialize
      *  all handles, in the C++ case*/
     static void
     generate_init_handle_calls_cxx( ostream& os );
 
-    /** generate call POMP2_Init_region_XXX function to initialize
+    /** generate call POMP2_Init_reg_XXX function to initialize
      *  all handles, in the Fortran case*/
     static void
     generate_init_handle_calls_f( ostream&    os,
@@ -121,45 +121,49 @@ public:
     finish();
 
     /** region name*/
-    string     name;
+    string name;
     /** file name*/
-    string     file_name;
+    string file_name;
     /** name of named critical sections*/
-    string     sub_name;
+    string sub_name;
+    /** name of the ctc_string variable*/
+    string ctc_string_variable;
+    /** length of the ctc_string*/
+    int ctc_string_length;
     /** pragma id */
-    int        id;
+    int id;
     /** first line of the beginning statement*/
-    int        begin_first_line;
+    int begin_first_line;
     /** last line of the beginning statement*/
-    int        begin_last_line;
+    int begin_last_line;
     /** first line of the end statement*/
-    int        end_first_line;
+    int end_first_line;
     /** last line of the end statement*/
-    int        end_last_line;
+    int end_last_line;
     /** nummber of sections, if it is a sections pragma*/
-    int        num_sections;
+    int num_sections;
     /** is a nowait added?*/
-    bool       noWaitAdded;
+    bool noWaitAdded;
     /** has untied clause */
-    bool       has_untied;
+    bool has_untied;
     /** has if clause */
-    bool       has_if;
+    bool has_if;
     /** has num_threads clause */
-    bool       has_num_threads;
+    bool has_num_threads;
     /** has reduction clause */
-    bool       has_reduction;
+    bool has_reduction;
     /** has schedule clause */
-    bool       has_schedule;
+    bool has_schedule;
     /** argument of schedule clause */
-    string     arg_schedule;
+    string arg_schedule;
     /** has collapse clause */
-    bool       has_collapse;
+    bool has_collapse;
     /** has ordered clause */
-    bool       has_ordered;
+    bool has_ordered;
     /**is this an outer region?*/
-    bool       outer_reg;
+    bool outer_reg;
     /** set of relevant region descriptors*/
-    set<int>   descrs;
+    set<int> descrs;
     /** enclosing region*/
     OMPRegion* enclosing_reg;
 
@@ -174,9 +178,9 @@ public:
      *  printed at the end*/
     static vector<int> common_block;
     /** pointer to outer region*/
-    static OMPRegion*  outer_ptr;
+    static OMPRegion* outer_ptr;
     /** max ID*/
-    static int         maxId;
+    static int maxId;
 };
 
 #endif

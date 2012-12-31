@@ -22,20 +22,52 @@
 #ifndef _TAU_MEMORY_H_
 #define _TAU_MEMORY_H_
 
-//////////////////////////////////////////////////////////////////////
-// This class allows us to convert void * to the desired type in malloc
-//////////////////////////////////////////////////////////////////////
 
-class TauVoidPointer {
-  void *p;
-  public:
-    TauVoidPointer (void *pp) : p (pp) { }
-    template <class T> operator T *() { return (T *) p; }
-};
-int TauDetectMemoryLeaks(void);
-void Tau_track_memory_allocation(const char *file, int line, size_t size, TauVoidPointer ptr);
-void Tau_track_memory_deallocation(const char *file, int line, TauVoidPointer ptr);
-TauVoidPointer Tau_new(const char *file, int line, size_t size, TauVoidPointer ptr);
+#if defined(__darwin__) || defined(__APPLE__) || defined(TAU_XLC)
+#undef HAVE_MEMALIGN
+#undef HAVE_PVALLOC
+#else
+#define HAVE_MEMALIGN 1
+#define HAVE_PVALLOC 1
+#endif
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
+size_t Tau_page_size(void);
+
+void Tau_detect_memory_leaks(void);
+
+void Tau_track_memory_allocation(void * ptr, size_t size, char const * filename, int lineno);
+void Tau_track_memory_deallocation(void * ptr, char const * filename, int lineno);
+
+void * Tau_new(void * ptr, size_t size, char const * filename, int lineno);
+
+void * Tau_malloc(size_t size, char const * filename, int lineno);
+void * Tau_calloc(size_t elemCount, size_t elemSize, char const * filename, int lineno);
+void   Tau_free(void * baseAdr, char const * filename, int lineno);
+#ifdef HAVE_MEMALIGN
+void * Tau_memalign(size_t alignment, size_t userSize, char const * filename, int lineno);
+#endif
+int    Tau_posix_memalign(void **memptr, size_t alignment, size_t userSize, char const * filename, int lineno);
+void * Tau_realloc(void * baseAdr, size_t newSize, char const * filename, int lineno);
+void * Tau_valloc(size_t size, char const * filename, int lineno);
+#ifdef HAVE_PVALLOC
+void * Tau_pvalloc(size_t size, char const * filename, int lineno);
+#endif
+
+char * Tau_strdup(char const * str, char const * filename, int lineno);
+void * Tau_memcpy(void * dest, void const * src, size_t size, char const * filename, int lineno);
+char * Tau_strcpy(char * dest, char const * src, char const * filename, int lineno);
+char * Tau_strncpy(char * dest, char const * src, size_t size, char const * filename, int lineno);
+char * Tau_strcat(char * dest, char const * src, char const * filename, int lineno);
+char * Tau_strncat(char * dest, char const * src, size_t size, char const * filename, int lineno);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* _TAU_MEMORY_H_ */
 

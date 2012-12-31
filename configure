@@ -297,7 +297,7 @@ for arg in "$@"; do
     echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
     echo "    options [CC|KCC|g++|*xlC*|cxx|pgCC|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
     echo "                                          g++4|icpc|scgcc|pathCC|orCC]."
-    echo "-useropt='<param>' ....... arguments to compilers (defaults to -g -O2)."
+    echo "-useropt='<param>' .......... arguments to compilers (defaults to -O2)."
     echo ""
     echo "Installation Options:"
     echo "-prefix=<dir> ................ Specify a target installation directory."
@@ -320,8 +320,8 @@ for arg in "$@"; do
     echo "-openmp ........................................... Use OpenMP threads."
     echo "-opari .................................................... Use Opari2."
     echo "-opari1 .................................................... Use Opari."
-    echo "-opari_region ......... Report performance data for all OpenMP regions."
-    echo "-opari_construct ... Report performance data for all OpenMP constructs."
+    echo "-opari_region ........ Only report performance data for OpenMP regions."
+    echo "-opari_construct .. Only report performance data for OpenMP constructs."
     echo "-oparicomp=<compiler>...Specify which compiler sutie to compile Opari2."
     echo "     options [gcc|ibm|intel|pathscale|pgi|studio]."
     echo ""
@@ -334,6 +334,7 @@ for arg in "$@"; do
     echo "-shmemlibrary=<library> ............ Specify a different SHMEM library."
     echo "            e.g., -shmemlibrary=-lsmac                                 "
     echo ""
+    echo "-gpi=<dir> .................. Specify use of TAU's GPI wrapper library."
     echo "GPGPU Options:"
     echo "-cuda=<dir> ................ Specify location of the top level CUDA SDK"
     echo "directory with include subdirectory. Enables OpenCL and CUDA profiling."
@@ -425,7 +426,7 @@ for arg in "$@"; do
     echo "                                          g++4|icpc|scgcc|pathCC|orCC]."
     echo "-pdtcompdir=<compilerdir> . specify a different PDT compiler directory."
     echo "-pdtarchdir=<archdir> . specify a different PDT architecture directory."
-    echo "-useropt='<param>' ....... arguments to compilers (defaults to -g -O2)."
+    echo "-useropt='<param>' .......... arguments to compilers (defaults to -O2)."
     echo "-extrashlibopts='<parameters>' ...... arguments for building libTAU.so." 
     echo "-prefix=<dir> ................ Specify a target installation directory."
     echo "-exec-prefix=<arch> .......... Specify a target architecture directory."
@@ -440,8 +441,8 @@ for arg in "$@"; do
     echo "-openmp ........................................... Use OpenMP threads."
     echo "-opari .................................................... Use Opari2."
     echo "-opari1 .................................................... Use Opari."
-    echo "-opari_region ......... Report performance data for all OpenMP regions."
-    echo "-opari_construct ... Report performance data for all OpenMP constructs."
+    echo "-opari_region .........Only report performance data for OpenMP regions."
+    echo "-opari_construct .. Only report performance data for OpenMP constructs."
     echo "-oparicomp=<compiler>...Specify which compiler sutie to compile Opari2."
     echo "     options [gcc|ibm|intel|pathscale|pgi|studio]."
     echo "-papi=<dir> ............... Specify location of PAPI (Performance API)."
@@ -473,6 +474,8 @@ for arg in "$@"; do
     echo "-nocomm  ........ Disable tracking communication events in MPI library."
     echo "-cuda=<dir> ................ Specify location of the top level CUDA SDK"
     echo "directory with include subdirectory. Enables OpenCL and CUDA profiling."
+    echo "-cudalibrary=<dir> ................ Additional options or library      "
+	  echo "            locations to add when linking to the cuda driver libraries."
     echo " "
     echo "-hpctoolkit-src-dir=<dir> .......... Specify patched HPCToolkit source."
     echo "-hpctoolkit-install-dir=<dir> . Specify patched HPCToolkit Install dir."
@@ -613,11 +616,11 @@ c_compiler=default
 cxx_compiler=default
 pdt_cxx_compiler=default
 fixmakeargs=""
-useropt=-g#-O2
+useropt=-O2
 tag=no
 pathscale=no
 tautag=
-orig_useropt="-g -O2"
+orig_useropt="-O2"
 mpi=no
 mpi2=no
 mpiio=no
@@ -632,6 +635,11 @@ mrnet_root=
 mrnet_lib=
 ibmmpi=no
 shmem=no
+gpi=no
+gpidir=
+gpiinc=
+gpilib=
+gpilibrary=no
 shmeminc=
 shmemlib=
 shmemlibrary=no
@@ -648,7 +656,7 @@ extrashlibopts=
 pthread=no
 papithread=no
 papipfm=no
-gnu_upc=no
+gupc=no
 papiperfctr=no
 papisubdir=
 charm=no
@@ -681,6 +689,10 @@ intelcxxlibicc=no
 intelifort=no
 intel=no
 gnu=no
+sol2cc=no
+suncc=no
+compaq=no
+open64=no
 profile=no
 profilestats=no
 profilememory=no
@@ -732,6 +744,7 @@ unwind_lib_flag=
 unwind_extras=
 tau_links_rt=no
 opari=no
+mpc=no
 opari1=no
 oparicomp=no
 epilog=no
@@ -804,7 +817,7 @@ for arg in "$@"; do
 
   -cc=*)
     myarg=`echo $arg | sed 's/-cc=//'`
-    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc -o $myarg = mpiicc ]
+    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = opencc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc -o $myarg = mpiicc -o $myarg = mpifcc -o $myarg = mpifccpx -o $myarg = clang -o $myarg = bgclang -o $myarg = mpc_cc -o $myarg = mpicc ]
       then
         c_compiler=$myarg
       else
@@ -812,7 +825,7 @@ for arg in "$@"; do
         testmp=`echo $myarg | sed -e 's/^mp//'`
         if [ "y$testxlc" = "y$myarg"  -a "y$testmp" = "y$myarg" ]
         then
-          echo "WARNING: valid options for cc are 'cc', 'gcc', 'gcc4', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', 'orcc', 'qk-pgcc', 'powerpc64-bgq-linux-gcc', 'powerpc-bgp-linux-gcc', 'x86_64-w64-mingw32-gcc', 'mpiicc', and 'pgcc' "
+          echo "WARNING: valid options for cc are 'cc', 'gcc', 'gcc4', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', 'orcc', 'opencc', 'qk-pgcc', 'powerpc64-bgq-linux-gcc', 'powerpc-bgp-linux-gcc', 'x86_64-w64-mingw32-gcc', 'mpiicc', 'pgcc' , 'mpc_cc', 'mpifcc', 'mpifccpx', 'clang', 'bgclang', and 'mpicc'"
 #       exit 1
         else
 	  if [ "y$testxlc" != "y$myarg" ]
@@ -828,7 +841,7 @@ for arg in "$@"; do
 
   -c++=*)
     myarg=`echo $arg | sed 's/-c++=//'`
-    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc ] 
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = openCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx -o $myarg = clang++ -o $myarg = bgclang++ -o $myarg = mpicxx ] 
       then
         cxx_compiler=$myarg
       else
@@ -836,7 +849,7 @@ for arg in "$@"; do
         testmp=`echo $myarg | sed -e 's/^mp//'`
 	if [ "y$testxlc" = "y$myarg" -a "y$testmp" = "y$myarg" ]
         then
-          echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'g++4', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'pgcpp', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'pathCC', 'c++', 'qk-pgCC', 'x86_64-w64-mingw32-g++', 'mpiicpc', and 'orCC'"
+          echo "WARNING: valid options for c++ are 'CC', 'KCC', 'g++', 'g++4', '*xlC*', 'cxx' , 'NCC', 'egcs', 'pgCC', 'pgcpp', 'FCC', 'guidec++', 'aCC', 'ecpc', 'icpc', 'pathCC', 'c++', 'qk-pgCC', 'x86_64-w64-mingw32-g++', 'mpiicpc', 'mpiFCC', 'mpiFCCpx', 'orCC', 'openCC', 'mpc_cxx', 'clang++', 'bgclang++', and 'mpicxx' "
 #       exit 1
         else
 	  if [ "y$testxlc" != "y$myarg" ]
@@ -860,26 +873,26 @@ for arg in "$@"; do
 
   -fortran=*)
     myarg=`echo $arg | sed 's/-fortran=//'`
-    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = mpiifort ] ; then
+    if [ $myarg = gnu -o $myarg = sgi -o $myarg = ibm -o $myarg = ibm64 -o $myarg = hp -o $myarg = cray -o $myarg = pgi -o $myarg = absoft -o $myarg = fujitsu -o $myarg = sun -o $myarg = compaq -o $myarg = kai -o $myarg = hitachi -o $myarg = intel -o $myarg = nec -o $myarg = absoft -o $myarg = lahey -o $myarg = nagware -o $myarg = nag -o $myarg = pathscale -o $myarg = gfortran -o $myarg = gfortran4 -o $myarg = g95 -o $myarg = open64 -o $myarg = openf90 -o $myarg = mpiifort -o $myarg = mpifrtpx -o $myarg = mpifrt -o $myarg = frt -o $myarg = mpif90 ] ; then
 	if [ $myarg = gnu ] ; then
 	    fortran_compiler=gfortran
 	else
 	    fortran_compiler=$myarg
 	fi
     else
-	echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'g95', 'open64', and 'mpiifort' "
+	echo "WARNING: valid options for fortran are 'gnu', 'sgi', 'ibm', 'ibm64', 'hp', 'cray', 'pgi', 'absoft', 'fujitsu', 'sun', 'compaq', 'kai', 'hitachi', 'intel', 'nec' , 'absoft', 'lahey', 'nag/nagware', 'pathscale', 'gfortran', 'g95', 'open64', 'openf90', 'mpiifort', 'mpifrtpx', 'frtpx', 'frt', 'mpifrt', or 'mpif90' "
 	exit 1
     fi
     shift
     ;;
   -upc=*)
     myarg=`echo $arg | sed 's/-upc=//'`
-    if [ $myarg = cc -o $myarg = upc -o $myarg = gcc -o $myarg = upcc ]
+    if [ $myarg = cc -o $myarg = upc -o $myarg = gcc -o $myarg = upcc -o $myarg = xlupc ]
       then
         upc_compiler=$myarg
         upc=yes
       else
-	echo "WARNING: valid options for upc are 'cc (Cray CCE UPC compiler)', 'upc (GNU UPC compiler)', 'upcc (Berkeley UPC compiler)', and 'gcc'"
+	echo "WARNING: valid options for upc are 'cc (Cray CCE UPC compiler)', 'upc (GNU UPC compiler)', 'upcc (Berkeley UPC compiler)', 'xlupc (IBM XL UPC compiler)', and 'gcc'"
 	exit 1
     fi
     shift
@@ -1079,6 +1092,18 @@ for arg in "$@"; do
       shift
       ;;
 
+  -gpi=*)
+      gpi=yes
+      gpidir=`echo $arg | sed -e 's/-gpi=//'`
+      if [ ! -d $gpidir ] ; then
+          echo "Error: Cannot access GPI directory $papidir"
+          exit 1
+      fi
+      fixmakeargs="$fixmakeargs GPI gpidir=$gpidir"
+      tauoptions="${tauoptions}-gpi"
+      shift
+      ;;
+
   -darshan=*)
       darshan=yes
       darshandir=`echo $arg | sed -e 's/-darshan=//'`
@@ -1220,6 +1245,7 @@ for arg in "$@"; do
 
   -opari=*)
       opari=yes
+      oparidir=`echo $arg | sed -e 's@-opari=@@' -e 's@ @#@g'`
       openmp=yes
       shift
       ;;
@@ -1287,6 +1313,25 @@ for arg in "$@"; do
           echo "Error: Cannot access SCALASCA directory $epilogdir"
           exit 1
       fi
+      if [ ! -r $epilogdir/bin/skin ]; then
+
+
+        scorepdir=`which scorep | sed -e 's@bin/scorep@@g'` 
+        echo "scorepdir=$scorepdir"
+        if [ -d $scorepdir ]; then
+          echo "Using the Score-P measurement substrate instead of Scalasca for vScalasca v2.0+"
+          echo "Using Score-P directory $scorepdir"
+          scalasca=no
+          epilog=no
+          epilogdir=no
+
+          trace=no
+
+          scorep=yes
+        else
+          echo "Please configure TAU with the Score-P measurement substrate instead of Scalasca for vScalasca v2.0+. See http://www.score-p.org"
+        fi
+      fi 
       shift
       ;;
 
@@ -1487,9 +1532,10 @@ for arg in "$@"; do
  
   -useropt=*)
 # Note you might be passed -g#-O3 which becomes -g -O3
-    orig_useropt="$orig_useropt "`echo $arg | sed -e 's/-useropt=//' -e 's/#/ /g'`
+    orig_useropt=`echo $arg | sed -e 's/-useropt=//' -e 's/#/ /g'`
 # Note you might be passed -g -O3 which becomes -g#-O3 here
-    useropt="$useropt#"`echo $arg | sed -e 's/-useropt=//' -e 's/ /#/g'`
+    useropt=`echo $arg | sed -e 's/-useropt=//' -e 's/ /#/g'`
+    echo "NOTE: Compiler optimization must be specified manually with useropt"
     shift
     ;;
 
@@ -1823,10 +1869,15 @@ for arg in "$@"; do
       echo "Error: Cannot access GPU include directory $cudainclude"
       exit 1
     fi
-		useropt="$useropt#-DTAU_MAX_THREADS=32"
+#		useropt="$useropt#-DTAU_MAX_THREADS=32"
 		cuda=yes
     shift
     ;;
+	-cudalibrary=*)
+		cudalibrary=`echo $arg | sed -e 's/-cudalibrary=//' -e 's/ /#/g'`
+		fixmakeargs="$fixmakeargs cudalibrary=$cudalibrary"
+		shift
+		;;
 
 	-DISABLE_OPENCL)
 		opencl=disable
@@ -1840,7 +1891,7 @@ for arg in "$@"; do
       exit 1
     fi
 		if [ -f "$openclinclude/CL/cl.h" ] ; then
-			useropt="$useropt#-DTAU_MAX_THREADS=32"
+#			useropt="$useropt#-DTAU_MAX_THREADS=32"
       fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$openclinclude"
 		else
 			echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
@@ -1857,6 +1908,7 @@ for arg in "$@"; do
     fi
 		if [ -f "$cupti/include/cupti_events.h" ] ; then
       fixmakeargs="$fixmakeargs CUPTI cuptiinclude=$cupti/include"
+			cupti=yes
 		else
 			echo "Error: Cannot find CUPTI headers."
       exit 1
@@ -1890,9 +1942,20 @@ for arg in "$@"; do
   esac
 done
 
-
-
-
+if [ "x$upcnetwork" = "x" ] ; then
+  if [ "$mpi" = "no" ] ; then
+    #echo "NOTE: UPC network and MPI not specified.  Assuming -upcnetwork=smp."
+    upcnetwork=smp
+  else
+    #echo "NOTE: UPC network not specified.  Assuming -upcnetwork=mpi."
+    upcnetwork=mpi
+  fi
+else
+  if [ "$upcnetwork" == mpi ] && [ "$mpi" == "no" ] ; then
+    #echo "NOTE: Assuming -mpi because -upcnetwork=mpi."
+    mpi=yes
+  fi
+fi
 
 
 # -- some functions
@@ -1914,6 +1977,9 @@ cat ${tauroot}/tools/src/perfdmf/bin/configure.skel |
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
  > ${targetdir}/${architecture}/bin/perfdmf_configure
 chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_configure
+cd ${targetdir}/${architecture}/bin
+ln -s perfdmf_configure taudb_configure
+cd ${tauroot}
 
 cat ${tauroot}/tools/src/perfdmf/bin/createapp.skel | 
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
@@ -1929,6 +1995,9 @@ cat ${tauroot}/tools/src/perfdmf/bin/loadtrial.skel |
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
  > ${targetdir}/${architecture}/bin/perfdmf_loadtrial
 chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_loadtrial
+cd ${targetdir}/${architecture}/bin
+ln -s perfdmf_loadtrial taudb_loadtrial
+cd ${tauroot}
 
 cat ${tauroot}/tools/src/perfdmf/bin/phaseconvert.skel | 
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
@@ -1983,6 +2052,7 @@ cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.db2 ${targetdir}/etc/.
 cp ${tauroot}/tools/src/perfexplorer/etc/java.policy ${targetdir}/etc/.
 if [ ! -d ${targetdir}/etc/topology ]; then
   cp -r ${tauroot}/etc/topology ${targetdir}/etc
+  cp ${tauroot}/etc/blacklist.txt ${targetdir}/etc/.
 fi
 
 # copy PerfDMF schema files
@@ -2064,6 +2134,7 @@ cp ${tauroot}/tools/src/perfexplorer/perfexplorer-1.4.jar $JARTARGET
 cp ${tauroot}/tools/src/vis/bin/vis.jar $JARTARGET
 cp ${tauroot}/tools/src/common/bin/tau-common.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/jargs.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/google-gson-2.1/gson-2.1.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/batik-combined.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/jfreechart-1.0.12.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/jcommon-1.0.15.jar $JARTARGET
@@ -2431,13 +2502,6 @@ case $machine in
          cxx_compiler=g++
      fi
 
-     # To fix the  make install  clash with INSTALL file in file systems 
-     # that are case insensitive. Move INSTALL file to INSTALL.txt 
-     if [ -f INSTALL ]
-       then
-	mv INSTALL INSTALL.txt
-     fi
-
      if [ $c_compiler = default ]
        then
          c_compiler=gcc             
@@ -2449,13 +2513,6 @@ case $machine in
      if [ $cxx_compiler = default ]
        then
          cxx_compiler=g++
-     fi
-
-     # To fix the  make install  clash with INSTALL file in file systems 
-     # that are case insensitive. Move INSTALL file to INSTALL.txt 
-     if [ -f INSTALL ]
-       then
-	mv INSTALL INSTALL.txt
      fi
 
      if [ $c_compiler = default ]
@@ -2538,13 +2595,13 @@ case $machine in
 
     elif [ $cxx_compiler = mpicxx ] ; then
       cxx_compiler=mpicxx
-      c_compiler=mpicc
-      gnu=yes
-      if [ $machine = bgp ]; then 
-        fixmakeargs="$fixmakeargs GNU BGP_GFORTRAN COMPINST_GNU"
-      else 
-        fixmakeargs="$fixmakeargs GNU BGQ_GFORTRAN COMPINST_GNU"
-      fi
+#      c_compiler=mpicc
+#      gnu=yes
+#      if [ $machine = bgp ]; then 
+#        fixmakeargs="$fixmakeargs GNU BGP_GFORTRAN COMPINST_GNU"
+#      else 
+#        fixmakeargs="$fixmakeargs GNU BGQ_GFORTRAN COMPINST_GNU GNU46PLUS"
+#      fi
     fi
 
 
@@ -2735,6 +2792,10 @@ case $machine in
      ;;
 
 esac
+
+if [ $cxx_compiler = clang++ -o $cxx_compiler = bgclang++ ]; then
+  fixmakeargs="$fixmakeargs CLANG"
+fi
 
 if [ "$machine" = "apple" ] ; then
     mkdir -p apple/lib
@@ -3002,14 +3063,6 @@ if [ $machine = apple ] ; then
       extradir=`which xlf90 | sed s/xlf90/../`
       fortran_compiler=yes
   fi
-  # xlc++ doesn't like include/Memory. Move this directory
-  if [ -d include/Memory -a ! -d include/MemoryWrapper ] ; then
-    mv include/Memory include/MemoryWrapper	
-  else
-    if [ -d include/Memory -a -d include/MemoryWrapper ] ; then 
-      /bin/rm -rf include/Memory
-    fi 
-  fi
 fi
 
 if [ $machine = ppc64 -o $machine = bgl -o $machine = bgp -o $machine = bgq ] ; then
@@ -3055,6 +3108,88 @@ if [ $debugprof = yes ] ; then
 fi
 
 
+if [ $cxx_compiler = mpicxx ]
+then 
+    cxxloaded=`which mpicxx 2>/dev/null | wc -l`
+    mpi=yes
+    if [ $cxxloaded = 1 ]
+    then
+      c_compiler=`mpicc -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+      cxx_compiler=`mpicxx -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+      f90loaded=`which mpif90 2>/dev/null | wc -l`
+      if [ $f90loaded = 1 ]
+      then 
+        fortran_compiler=`mpif90 -show | awk '{ print $1;}' | sed -e 's@/.*/@@g'`
+        if [ "x$fortran_compiler" = "xifort" ]; then 
+	  fortran_compiler=intel
+	fi
+      else
+        fortran_compiler=no
+      fi
+
+      echo "NOTE: Found mpicxx in the path"
+      if [ $machine = bgq -o $machine = bgp ]; then
+        c_compiler=mpicc
+        cxx_compiler=mpicxx
+      else 
+# All other machines besides IBM BG*
+        is_internal_compiler_loaded=`which $cxx_compiler 2>/dev/null | wc -l`
+        if [ $is_internal_compiler_loaded = 0 ]; then 
+       # Compiler is not loaded, use full path to it
+          c_compiler=`mpicc -show | awk '{ print $1;}' ` 
+          cxx_compiler=`mpicxx -show | awk '{ print $1;}' `
+          fortran_compiler=`mpif90 -show | awk '{ print $1;}' `
+        fi
+        if [ $mpilibrary = no ]; then
+          mpilibrary=`mpicc -show | cut -d' ' -f2- | sed -e 's@ @#@g'`
+        fi
+        full_cxx_compiler=`mpicxx -show | awk '{ print $1; }'`
+        full_cc_compiler=`mpicc -show | awk '{ print $1; }'`
+        fixmakeargs="$fixmakeargs fullcxx=$full_cxx_compiler fullcc=$full_cc_compiler"
+        mpi=yes
+      fi
+# Do not use the internal compiler from mpicxx when BGP/BGQ is used. 
+    else
+      echo "NOTE: Didn't find mpicxx in the path, using default values"
+      gnu=yes
+      tauoptions="${tauoptions}-gnu"
+      if [ $machine = bgq ] ; then
+        if [ -r /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx -a -r /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc ] ; then 
+          echo "NOTE: Using /bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx"
+          cxx_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx
+          c_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc
+        else
+          echo "ERROR: Please set your path to include mpicxx and reconfigure TAU." 
+	  exit 1
+        fi
+      elif [ $machine = bgp ]; then 
+        if [ -r /soft/apps/gcc-4.3.2/comm/default/bin/mpicxx -a -r /soft/apps/gcc-4.3.2/comm/default/bin/mpicc ]; then 
+          echo "NOTE: Using /soft/apps/gcc-4.3.2/comm/default/bin/mpicxx"
+          cxx_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicxx
+          c_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicc
+        else
+          echo "ERROR: Please set your path to include mpicxx and reconfigure TAU." 
+	  exit 1
+        fi
+      fi
+           
+    fi
+# Check for BG/P or BG/Q for GNU
+#    is_gnu_compiler=`$cxx_compiler -show  2>/dev/null | awk ' { print $1;}' | xargs grep g++ | wc -l'
+#    if [ "x$is_gnu_compiler" = "x1" ]; then 
+#      gnu=yes
+#      if [ $machine = bgp ]; then 
+#          fixmakeargs="$fixmakeargs GNU BGP_GFORTRAN COMPINST_GNU"
+#          tauoptions="${tauoptions}-gnu"
+#      elif [ $machine = bgq ]; then 
+#          fixmakeargs="$fixmakeargs GNU BGQ_GFORTRAN COMPINST_GNU GNU46PLUS"
+#	  NOTE: FOUND GNU configuration"
+#          tauoptions="${tauoptions}-gnu"
+#      fi
+#    fi
+   
+fi
+
 ######################################################################
 # Set default C++ compiler in all Makefiles
 case $cxx_compiler in
@@ -3062,6 +3197,14 @@ case $cxx_compiler in
       echo "Default C++ compiler will be CC"
       fixmakeargs="$fixmakeargs USE_CFRONT"
       ;;
+   *llvm*|*clang*)
+	echo "Using CLANG Compilers"
+        fixmakeargs="$fixmakeargs CLANG"
+	if [ $machine = apple ]; then
+# MPI on Apple OS X has issues with shared objects
+          fixmakeargs="$fixmakeargs NOSHARED APPLECXX"
+        fi
+        ;;
 
    *g++)
       echo "Default C++ compiler will be " \
@@ -3191,7 +3334,7 @@ case $cxx_compiler in
         fixmakeargs="$fixmakeargs PGI PGICC"
       fi
 
-      if [ $fortran_compiler = no ]
+      if [ "x$fortran_compiler" = "xno" ]
       then 
         extradir=`which pgcc | sed s/pgcc/../`
         fixmakeargs="$fixmakeargs PGI_FORTRAN"
@@ -3199,14 +3342,30 @@ case $cxx_compiler in
       fi
       ;;
 
-   FCC)
+   FCC|mpiFCCpx|mpiFCC)
       echo "Default C++ compiler will be Fujitsu C++ Compiler"	 
       fujitsu=yes
-      fixmakeargs="$fixmakeargs FUJITSU"
-      if [ $fortran_compiler = no ]
+      orig_useropt="-O2"
+      useropt="-O2"
+# -g interferes with optimizations for Fujitsu.
+      fixmakeargs="$fixmakeargs FX"
+      #mpiinc=`which mpiFCCpx | sed -e 's/\/bin\/mpiFCCpx$//'`/include
+      mpiinc=`which mpiFCCpx | sed -e 's/\/bin\/mpiFCCpx$//'`/include/mpi/fujitsu
+      if [ ! -d $mpiinc -a -r /opt/FJSVfxlang/1.2.0/include/mpi/fujitsu/mpi.h ] 
+      then
+        mpiinc=/opt/FJSVfxlang/1.2.0/include/mpi/fujitsu/
+      fi
+
+      if [ -d $mpiinc ]
+      then
+        echo "Using MPI include directory $mpiinc"
+      fi
+      fixmakeargs="$fixmakeargs mpiincargs=-I$mpiinc"
+      echo "Adding -I$mpiinc to MPI include"
+      if [ $fortran_compiler = no -o $fortran_compiler = mpifrtpx -o $fortran_compiler = fujitsu ]
       then 
-        extradir=`which FCC | sed s/FCC/../`
-        fixmakeargs="$fixmakeargs FUJITSU_FORTRAN"
+        extradir=`which mpiFCCpx | sed s/mpiFCCpx/../`
+        #fixmakeargs="$fixmakeargs FUJITSU_FORTRAN"
         fortran_compiler=yes
       fi
       if [ $machine = solaris2 -o $machine = solaris2-64 ] 
@@ -3243,10 +3402,11 @@ case $cxx_compiler in
       fi
         
       ;;
-   orCC)
+   openCC|orCC)
       echo "Default C++ compiler will ORC Open64 orCC compiler"
+			open64=yes
       fixmakeargs="$fixmakeargs OPEN64ORC"
-      tauoptions="${tauoptions}-orcc"
+      tauoptions="${tauoptions}-open64"
       if [ $c_compiler = default ] 
       then
         c_compiler=orcc
@@ -3371,25 +3531,54 @@ case $cxx_compiler in
       fi
       ;;
 
-    mpicxx)
-	if [ $machine = bgq ] ; then
-	    echo "Using GNU Compilers for BGQ"
-	    cxx_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicxx
-	    c_compiler=/bgsys/drivers/ppcfloor/comm/gcc/bin/mpicc
-	    tauoptions="${tauoptions}-gnu"
-	elif [ $machine = bgp ] ; then
-	    echo "Using GNU Compilers for BGP"
-# CWL - 4.3.2 won't quite work out of the box. Requires LD_LIBRARY_PATH to
-#       be set appropriately to account for libgmp.so.10
-#	    cxx_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicxx
-#	    c_compiler=/soft/apps/gcc-4.3.2/comm/default/bin/mpicc
-	    cxx_compiler=/bgsys/drivers/ppcfloor/comm/xl/bin/mpicxx
-	    c_compiler=/bgsys/drivers/ppcfloor/comm/xl/bin/mpicc
-	    tauoptions="${tauoptions}-gnu"
-	else
-	    echo "ERROR Unknown C++ compiler: $cxx_compiler"
-	    exit 1
-	fi
+    mpc_cxx)
+	if [ $machine = x86_64 ] ; then
+            full_cxx_compiler=`mpc_cxx -show | awk '{print $1;}'`
+            full_cc_compiler=`mpc_cc -show | awk '{ print $1;}'`
+            mpilibrary=`mpc_cxx -show | sed -e "s@$full_cxx_compiler@@g" | sed -e "s/ /#/g"`
+	    #echo "CC=$cc_compiler"
+	    #echo "CXX=$cxx_compiler"
+	    #echo "mpilibrary=$mpilibrary"
+	    tauoptions="${tauoptions}-mpc"
+            fixmakeargs="$fixmakeargs MPC"
+            mpc=yes
+        fi
+        ;;
+
+    *mpicxx)
+        internal_compiler=`$cxx_compiler -show | awk '{ print $1;}'`
+        case $internal_compiler in 
+           *g++)
+	      if [ $machine = bgq ] ; then
+	        echo "Using GNU Compilers for BGQ"
+		fixmakeargs="$fixmakeargs GNU BGQ_GFORTRAN COMPINST_GNU GNU46PLUS"
+	      elif [ $machine = bgp ] ; then
+	        echo "Using GNU Compilers for BGP"
+                fixmakeargs="$fixmakeargs GNU BGP_GFORTRAN COMPINST_GNU"
+	      else
+                echo "ERROR Unknown C++ compiler: $cxx_compiler"
+              fi
+              ;;
+           *xlC*)
+	      echo "Using IBM Compilers"
+              ibmxlc=yes
+              fixmakeargs="$fixmakeargs USE_IBMXLC COMPINST_XL"
+	      extradir=`which xlf90 | sed s/xlf90/../`
+      	      fixmakeargs="$fixmakeargs IBM_FORTRAN"
+
+              ;;
+           *clang*)
+	      echo "Using CLANG Compilers"
+              fixmakeargs="$fixmakeargs CLANG"
+	      if [ $machine = apple ]; then
+# MPI on Apple OS X has issues with shared objects
+                fixmakeargs="$fixmakeargs NOSHARED"
+              fi
+              ;;
+           *)
+              echo "ERROR Unknown C++ compiler in mpicxx: $cxx_compiler"
+              ;;
+        esac
 	;;
    *)
       echo "ERROR Unknown C++ compiler: $cxx_compiler"
@@ -3552,7 +3741,7 @@ case $fortran_compiler in
       guidef90=yes
       ;;
 
-   open64)
+   open64|openf90)
       echo "Default Fortran compiler will be ORC Open64 orf90"
       fixmakeargs="$fixmakeargs OPEN64ORC_FORTRAN"
       ;;  
@@ -3581,8 +3770,19 @@ case $fortran_compiler in
 esac
 
 # Encode the full path of the C++/C compiler in the stub Makefile
-full_cxx_compiler=`which $cxx_compiler`
-full_cc_compiler=`which $c_compiler`
+if [ "x$full_cxx_compiler" = "x" ]
+then 
+  full_cxx_compiler=`which $cxx_compiler`
+  full_cc_compiler=`which $c_compiler`
+  if [ $fujitsu = yes ]
+  then
+# Fujitsu does not want full path to point to the absolute paths due to
+# frequent updates to the compiler on that system.
+    full_cxx_compiler=$cxx_compiler
+    full_cc_compiler=$c_compiler
+  fi
+fi
+# This takes care of mpc_cxx setting this above
 if [ $shmem = yes ]
 then
   oshcc_var=`which oshcc 2>/dev/null`
@@ -3636,6 +3836,17 @@ then
           fi
           additional_mpiincs="$additional_mpiincs $mpiincf90dir"
         fi
+
+        if [ -r /opt/ibmhpc/pecurrent/pempi/include/mpi.h ]
+        then
+          mpiinc=/opt/ibmhpc/pecurrent/pempi/include
+          mpiincf90dir='-I/opt/ibmhpc/pecurrent/pempi/include/thread'
+          if [ $machine = ibm64linux ]
+          then
+            mpiincf90dir='-I/opt/ibmhpc/pecurrent/pempi/include/thread64'
+          fi
+          additional_mpiincs="$additional_mpiincs $mpiincf90dir"
+        fi
         ;;
   rs6000|ibm64)
 	mpiinc=/usr/lpp/ppe.poe/include
@@ -3656,9 +3867,15 @@ then
         ;;
   bgp)
 	mpiinc=/bgsys/drivers/ppcfloor/comm/xl/include
+        if [ $cxx_compiler = mpicxx ]; then
+	  mpiinc=/bgsys/drivers/ppcfloor/comm/include
+        fi
         ;;
   bgq)
 	mpiinc=/bgsys/drivers/ppcfloor/comm/xl/include
+        if [ $cxx_compiler = mpicxx ]; then
+	  mpiinc=/bgsys/drivers/ppcfloor/comm/include
+        fi
         ;;
   t3e|crayx1|craysv1)
 	mpiinc=/opt/ctl/mpt/mpt/include
@@ -3704,15 +3921,41 @@ then
         fi
 	;;
   *)
-        mpiinc=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/include
-        if [ -d $mpiinc ]
+        if [ $mpc = yes ]
         then
-          echo "Using MPI include directory $mpiinc"
-	else
-	  mpiinc=`which mpiexec | sed -e 's/\/bin\/mpiexec$//'`/include
-          if [ -d $mpiinc ]
+          mpiinc=`which mpcrun | sed -e 's/\/bin\/mpcrun$//' -e 's/\/bin64\/mpcrun$//'`/include
+        else
+          mpiinc=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpcrun$//'`/include
+          if [ -d $mpiinc -a -r $mpiinc/mpi.h ]
           then
             echo "Using MPI include directory $mpiinc"
+	    echo "machine is $machine"
+	  else
+	    mpiinc=`which mpiexec | sed -e 's/\/bin\/mpiexec$//' -e 's/\/bin64\/mpiexec$//'`/include
+            if [ -d $mpiinc -a -r $mpiinc/mpi.h ]
+            then
+              echo "Using MPI include directory $mpiinc"
+	    else 
+	      if [ -d $mpiinc -a ! -r $mpiinc/mpi.h ] ; then
+	        if [ -r $mpiinc/mpich2/mpi.h ] ; then
+	          mpiinc=$mpiinc/mpich2 
+                  echo "Correction: Using MPI include directory $mpiinc instead"
+                else
+                  if [ -r $mpiinc/openmpi/mpi.h ] ; then
+	            mpiinc=$mpiinc/openmpi
+                    echo "Correction: Using MPI include directory $mpiinc instead"
+                  else
+                    mpiinc=""
+                  fi
+                fi
+	    else	    
+	      mpiinc=""
+            fi
+            fi
+          fi
+          if [ ! -r $mpiinc/mpi.h -a -r $mpiinc/mpich2/mpi.h ] ; then
+            mpiinc=$mpiinc/mpich2 
+            echo "Correction: Using MPI include directory $mpiinc instead"
           fi
         fi
 	;;
@@ -3755,14 +3998,22 @@ if [ $mpi = yes -a "x$mpilib" = "x" ]
 then
   case $machine in 
   ppc64) 
+	mpilib=no
         if [ -r /opt/ibmhpc/ppe.poe/lib/libmpi/libmpi_ibm.so ] 
         then
-          additional_mpilibs='-lpoe -llapi'
           mpilib=/opt/ibmhpc/ppe.poe/lib/libmpi
+        fi
+        if [ -r /opt/ibmhpc/pecurrent/ppe.poe/lib/libmpi/libmpi_ibm.so ] 
+        then
+          mpilib=/opt/ibmhpc/pecurrent/ppe.poe/lib/libmpi
+        fi
+        if [ "x$mpilib" != "xno" ]; then
+          additional_mpilibs='-lpoe -llapi'
           mpilibrary="-lmpi_ibm $additional_mpilibs"
         fi
         ;;
   ibm64linux) 
+	mpilib=no
         if [ -r /opt/ibmhpc/ppe.poe/lib/libmpi64/libmpi_ibm.so ] 
         then
           mpilib=/opt/ibmhpc/ppe.poe/lib/libmpi64
@@ -3774,6 +4025,14 @@ then
         then
           mpilib=/opt/ibmhpc/ppe.poe/lib64/
           additional_mpilibs='-lpoe -llapi'
+        fi
+        if [ -r /opt/ibmhpc/pecurrent/pempi/gnu/lib/libmpi64/libmpi_ibm.so -a -r /opt/ibmhpc/pecurrent/base/gnu/lib64/libpami.so ]
+        then
+          mpilib=/opt/ibmhpc/pecurrent/pempi/gnu/lib/libmpi64
+          additional_mpilibs='-lpoe -L/opt/ibmhpc/pecurrent/base/gnu/lib64 -lpami'
+        fi
+
+        if [ "x$mpilib" != "xno" ]; then
           mpilibrary="-lmpi_ibm $additional_mpilibs"
           echo "Adding MPI libs from $mpilib"
           # Cases
@@ -3800,10 +4059,16 @@ then
         ;;
   bgp)
         mpilib=/bgsys/drivers/ppcfloor/comm/xl/lib
+        if [ $cxx_compiler = mpicxx ]; then
+	  mpilib=/bgsys/drivers/ppcfloor/comm/lib
+        fi
 	additional_mpilibs='-ldcmfcoll.cnk -ldcmf.cnk -lpthread -L/bgsys/drivers/ppcfloor/runtime/SPI -lSPI.cna' 
 	;;
   bgq)
         mpilib=/bgsys/drivers/ppcfloor/comm/xl/lib
+        if [ $cxx_compiler = mpicxx ]; then
+	  mpilib=/bgsys/drivers/ppcfloor/comm/lib
+        fi
 	#additional_mpilibs='-ldcmfcoll.cnk -ldcmf.cnk -lpthread -L/bgsys/drivers/ppcfloor/runtime/SPI -lSPI.cna' 
 	additional_mpilibs='-L/bgsys/drivers/ppcfloor/gnu-linux/powerpc64-bgq-linux/lib -lc -lnss_files -lnss_dns -lresolv'
 	;;
@@ -3833,13 +4098,20 @@ then
         fi
         ;;
   *)    
-        mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/lib
-        if [ ! -d $mpilib ] ; then
-         # Try the ".../lib64" directory instead of ".../lib"
-         mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//'`/lib64
-        fi
-        if [ -d $mpilib ] ; then
-          echo "Using MPI lib directory $mpilib"
+        if [ $mpc = yes ] 
+        then
+          mpilib=`which mpcrun | sed -e 's/\/bin\/mpcrun$//'`/lib
+        else
+          mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpirun$//'`/lib
+          if [ ! -d $mpilib ] ; then
+           # Try the ".../lib64" directory instead of ".../lib"
+           mpilib=`which mpirun | sed -e 's/\/bin\/mpirun$//' -e 's/\/bin64\/mpirun$//'`/lib64
+          fi
+          if [ -d $mpilib ] ; then
+            echo "Using MPI lib directory $mpilib"
+	  else
+ 	    mpilib=""
+          fi
         fi
 	;;
   esac
@@ -4106,7 +4378,7 @@ EOF
               fi  
             fi
           fi 
-	  /bin/rm -f tau_papi_test.c tau_papi_test tau_papi_test.o
+	  /bin/rm -f tau_papi_test.c tau_papi_test tau_papi_test.o libtau_papi_test.so
       fi		
 fi
 
@@ -4135,11 +4407,25 @@ then
     then
     #echo "Include dir found. adding -I$mpiinc to INC"
       shmemincargs="-I$shmeminc"
+      if [ -r $shmeminc/mpp/shmem.h ]
+      then
+        shmemincargs="-I$shmeminc#-I$shmeminc/mpp"
+      fi 
       gpshmem=no
       if [ -r $shmeminc/gpshmem.h ] 
       then
         fixmakeargs="$fixmakeargs GPSHMEM"
         gpshmem=yes
+      fi
+      shmembindir=`echo $shmeminc | sed -e 's@include@bin@g'`
+      if [ -r $shmembindir/oshcc ]
+      then
+        openshmem=yes
+        fixmakeargs="$fixmakeargs OPENSHMEM"
+      fi
+      if [ -r $shmembindir/mpiexec_mpt ]
+      then
+        fixmakeargs="$fixmakeargs SGI_MPT_SHMEM"
       fi
     fi
   else
@@ -4151,8 +4437,7 @@ then
       if [ -r $openshmem_include_dir/mpp/shmem.h ] 
       then
         shmemincargs="-I$openshmem_include_dir#-I$openshmem_include_dir/mpp"
-        openshmem=yes
-        fixmakeargs="$fixmakeargs OPENSHMEM"
+        fixmakeargs="$fixmakeargs SGI_MPT_SHMEM"
       fi
     fi
     if [ $catamount = yes ] 
@@ -4237,6 +4522,18 @@ then
     #echo "Lib dir found. adding -L$shmemlib to LIB"
       shmemlibargs="$shmemlibargs -L$shmemlib"
     fi
+    shmembindir=`echo $shmemlib | sed -e 's@lib@bin@g'`
+    if [ -r $shmembindir/oshcc ]
+    then
+      openshmem=yes
+      fixmakeargs="$fixmakeargs OPENSHMEM"
+    fi
+    if [ -r $shmembindir/mpiexec_mpt ]
+    then
+      fixmakeargs="$fixmakeargs SGI_MPT_SHMEM"
+      shmemlibrary=-lsma#-lmpi
+    fi
+
   else
     if [ $catamount = yes ] 
     then
@@ -4276,8 +4573,14 @@ fi
 
 if [ $upc_compiler = gcc -o $upc_compiler = upc ] 
 then
-  gnu_upc=yes
+  gupc=yes
 fi
+
+if [ $upc_compiler = xlupc ]
+then
+  fixmakeargs="$fixmakeargs XLUPC"
+fi
+
 if [ $c_compiler != gcc4 ]
   then
     echo Default C compiler will be $c_compiler
@@ -4424,6 +4727,7 @@ if [ $cxx_compiler = g++ -o $cxx_compiler = g++4 -o $cxx_compiler = egcs -o $cxx
     if [ $machine != crayxmt ] 
     then
       fixmakeargs="$fixmakeargs GNU COMPINST_GNU"
+      
     fi
     if [ $machine = ibm64 -o $machine = rs6000 -o $machine = ppc64 -o $machine = bgl -o $machine = bgp -o $machine = ibm64linux -o $machine = bgq ]
     then
@@ -4435,6 +4739,30 @@ if [ $cxx_compiler = g++ -o $cxx_compiler = g++4 -o $cxx_compiler = egcs -o $cxx
     echo "Using GNU stdc++ lib dir as $taugccstdcxxlibdir"
     fixmakeargs="$fixmakeargs taugcclibdir=$taugcclibdir taugccstdcxxlibdir=$taugccstdcxxlibdir" 
 fi
+######################################################################
+# Checking the availability of the LD auditor. We need glibc 2.4 or greater and
+# link.h and dlfn.h
+cat << EOF > gccAuditorTest.c
+#include <features.h>
+#include <dlfcn.h>
+#include <link.h>
+#if ((__GLIBC__ == 2 && __GLIBC_MINOR__ >= 4) || __GLIBC__ > 2)
+#else
+#error "GLIBC LD AUDITOR available."
+#endif 
+EOF
+
+$c_compiler $orig_useropt -c gccAuditorTest.c 1> /dev/null 2>&1
+if [ "$?" = "1" ]
+then
+  echo "LD AUDITOR unavailable, disabling" 
+else
+  echo "Using LD AUDITOR."
+  fixmakeargs="$fixmakeargs LD_AUDITOR_AVAILABLE"
+fi
+/bin/rm -f gccAuditorTest.*
+
+
 ######################################################################
 # TEST FOR ALL MACHINE TYPES
 case $machine in
@@ -4707,6 +5035,7 @@ case $machine in
 	fi
 	if [ $cxx_compiler = CC ]  
 	  then
+			sol2cc=yes
 	    fixmakeargs="$fixmakeargs SOL2CC"
 	    if [ $openmp = yes ]
 	    then
@@ -4810,6 +5139,7 @@ case $machine in
 
 if [ $machine = x86_64 -o $machine = i386_linux -o $machine = ia64 -o $machine = suni386 -o $machine = sunx86_64 ] ; then
     if [ $cxx_compiler = CC ] ; then
+				suncc=yes
         fixmakeargs="$fixmakeargs SUNCC"
         if [ $openmp = yes ] ; then
             fixmakeargs="$fixmakeargs SUNCC_OPENMP"
@@ -5114,6 +5444,9 @@ EOF
       echo "yes"
       if [ -r $mpilib/libmpi.so -a -r $mpilib/libmpi++.so -a -r $mpilib/libsma.so -a -r $mpilib/libxmpi.so ] ; then
 	  # Don't enable this for SGI Altix. Their MPI2 is not complete
+	  # SGI MPI2 is ok now. We can enable it. Perhaps...
+	  useropt="$useropt#-DTAU_MPI_F_STATUSES_IGNORE_ABSENT"
+	  fixmakeargs="$fixmakeargs MPI2 useropt=$useropt"
 	  echo "SGI MPI detected. Disabling MPI2 wrappers for SGI MPI"
       elif [ -r $mpilib/libfmpi.so -a -r $mpilib/libmpio.so  -a -r $mpilib/libtvscampi.so ] ; then
           # Scali does not use MPI2 PMPI interface properly. 
@@ -5224,6 +5557,15 @@ fi
 
     
 if [ $mpi = yes ] ; then
+  #Check for SGI MPI
+  mpimptloc=`which mpiexec_mpt 2>/dev/null`
+  hasMPT=$?
+  if [ $hasMPT = 0 ] ; then
+    echo "Found SGI MPT MPI"
+    fixmakeargs="$fixmakeargs SGI_MPT_MPI"
+  fi
+
+
   wrapperlib="-L$tautoplevel/$machine/lib -lTauMpi\$(TAU_CONFIG)"
 
   # Epilog
@@ -5370,26 +5712,37 @@ if [ $mpi = yes ] ; then
     # Cases
     if [ -r $mpilib/libmpi.a -o -r $mpilib/libmpi.so -o -r $mpilib/libmpi.dylib ] ; then
       #echo "libmpi.* found!!"
+	# OpenMPI
+	mpilibrary_current=""
+	if [ "x$mpilibrary" != "xno" ] ; then
+	    # *CWL* - Set a temporary variable to hold any previously set value of mpilibrary
+            mpilibrary_current="$mpilibrary"
+        fi
+
+	# *CWL* - Work only on the temporary variable in this section
+        if [ -r $mpilib/libmpi_cxx.so -o -r $mpilib/libmpi_cxx.dylib ] ; then
+            mpilibrary_current="$mpilibrary_current -lmpi -lmpi_cxx"
+        fi
+
+        if [ -r $mpilib/libmpi_f90.so -o -r $mpilib/libmpi_f90.dylib ] ; then
+            mpilibrary_current="$mpilibrary_current -lmpi_f90"
+        fi
+
+        if [ -r $mpilib/libmpi_f77.so -o -r $mpilib/libmpi_f77.dylib ] ; then
+            mpilibrary_current="$mpilibrary_current -lmpi_f77"
+        fi
+
+	# *CWL* - Propagate any changes to the temporary variable back to mpilibrary
+	if [ "x$mpilibrary_current" != "x" ] ; then
+	    mpilibrary="$mpilibrary_current"
+        fi
+
 	if [ "x$mpilibrary" = "xno" ] ; then 
 	    mpilibrary=-lmpi
 	    if [ -r $mpilib/libmpi++.so ] ; then
 		mpilibrary='-lmpi -lmpi++'
 	        # SGI MPT
 	    fi
-
-	# OpenMPI
-	if [ -r $mpilib/libmpi_cxx.so -o -r $mpilib/libmpi_cxx.dylib ] ; then 
-	    mpilibrary='-lmpi -lmpi_cxx'
-	fi
-
-	if [ -r $mpilib/libmpi_f90.so -o -r $mpilib/libmpi_f90.dylib ] ; then
-	    mpilibrary="$mpilibrary -lmpi_f90"
-	fi
-
-	if [ -r $mpilib/libmpi_f77.so -o -r $mpilib/libmpi_f77.dylib ] ; then
-	    mpilibrary="$mpilibrary -lmpi_f77"
-	fi
-
 
         if [ -r $mpilib/libopen-pal.a -a ! -r $mpilib/libmpi_cxx.so ]; then
 	   echo "NOTE: OpenMPI configured with --disable_shared"
@@ -5766,8 +6119,11 @@ fi
 ######################################################################
 # Install BFD if requested
 ######################################################################
-
-if [ "x$bfd" = "xyes" ] ; then
+if [ "x$bfddir" = xnone ]; then
+	echo "BFD disabled."
+	turnbfdoff=yes
+fi
+if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
     if [ "x$bfddir" = xdownload ] ; then
 		bfddir=${targetdir}/${architecture}/binutils-2.20
 		if [ -r "$bfddir/lib/libbfd.a" ] ; then
@@ -5836,7 +6192,7 @@ if [ "x$bfd" = "xyes" ] ; then
     bfdlink="-L$bfddir/lib -L$bfddir/lib64"
     fixmakeargs="$fixmakeargs bfdinclude=$bfdinclude"
     fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64"
-    if [ ! -d $bfddir ] ; then
+    if [ ! -d $bfddir -a "$bfddif" = 'none' ] ; then
         echo "Error: Cannot access BFD directory $bfddir"
         exit 1
     fi
@@ -6008,11 +6364,13 @@ else
 fi
 
 bfdlibs=`echo $BFDLIBS | sed -e 's/#/ /g'`
-if $c_compiler $demangle $orig_useropt $shared_opt -o conftest_bfd.so conftest_bfd.c -fPIC $bfdinclude $bfdlink $bfdlibs 1> /dev/null 2>&1 ; then
-    fixmakeargs="$fixmakeargs TAU_BFDSHAREDLINK"
-    echo "yes"
-else
-    echo "no"
+if [ "$turnbfdoff" = 'no' ]; then
+	if $c_compiler $demangle $orig_useropt $shared_opt -o conftest_bfd.so conftest_bfd.c -fPIC $bfdinclude $bfdlink $bfdlibs 1> /dev/null 2>&1 ; then
+			fixmakeargs="$fixmakeargs TAU_BFDSHAREDLINK"
+			echo "yes"
+	else
+			echo "no"
+	fi
 fi
 /bin/rm -f conftest_bfd.o conftest_bfd.c conftest_bfd.so
 ######################################################################
@@ -6023,6 +6381,7 @@ fi
   cat <<EOF > conftest_ss_alloc.cpp
 #include <Profile/TauSsAllocator.h>
 #include <map>
+#include <stddef.h>
 using namespace std;
 
 int main() {
@@ -6247,24 +6606,28 @@ if [ $python = yes ] ; then
       exit 1
     fi
 fi
-
 if [ $cuda = yes ] ; then
 	if [ -f "$cudainclude/cuda.h" ] ; then
 		fixmakeargs="$fixmakeargs CUDA TAU_USE_GPU cudainclude=$cudainclude"
-		if [ "$machine" != "craycnl" -a "$opencl" != "disable" ] ; then
+		if [ "$opencl" != "disable" ] ; then
 			if [ -f "$cudainclude/CL/cl.h" ] ; then
-				fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$cudainclude"
+				$echo "Checking $cxx_compiler compatablity with OpenCL... ${nnl}"
+				cat <<EOF>opencl.cpp
+#include "CL/cl.h"
+EOF
+				if $cxx_compiler -I$cudainclude -c opencl.cpp 1>/dev/null 2>&1 ; then
+					echo "yes"
+					fixmakeargs="$fixmakeargs OPENCL TAU_USE_GPU openclinclude=$cudainclude"
+				else
+					echo "no"
+				fi
+				rm -f opencl.cpp opencl.o
 			fi
-			if [ -f "$cudainclude/../extras/CUPTI/include/cupti_events.h" ] ; then
+			if [ $cupti = no -a -f "$cudainclude/../extras/CUPTI/include/cupti_events.h" ] ; then
 				tauoptions="${tauoptions}-cupti"
 				cupti="$cudainclude/../extras/CUPTI"
 				fixmakeargs="$fixmakeargs CUPTI cuptiinclude=$cupti/include"
 				echo "Using CUPTI library found in $cupti."
-			fi
-		else
-			if [ "$machine" == "craycnl" -a "$PE_ENV" != "GNU" ]; then
-				echo "ERROR: TAU's GPU measurement system is only available in the GNU compiler environment on CRAY. Please swap modules and reconfigure."
-				exit 1
 			fi
 		fi
 	else
@@ -6524,6 +6887,47 @@ if [ $java = yes ] ; then
 fi
 
 if [ $openmp = yes ] ; then
+
+
+#find openmp flag
+if [ "$sol2cc" = "yes" ]; then openmp_flag=-xopenmp; fi
+if [ "$suncc" = "yes" ]; then openmp_flag=-xopenmp=parallel; fi
+if [ "$compaq" = "yes" ]; then openmp_flag=-omp; fi
+if [ "$ibmxlc" = "yes" ]; then openmp_flag=-qsmp=omp; fi
+if [ "$open64" = "yes" ]; then openmp_flag=-mp; fi
+if [ "$gnu" = "yes" ]; then openmp_flag=-fopenmp; fi
+if [ "$pgi" = "yes" ]; then openmp_flag=-mp; fi
+if [ "$fujitsu" = "yes" ]; then openmp_flag=-Kopenmp; fi
+if [ "$default_fortran" = "cray" ]; then openmp_flag=-h omp; fi
+if [ "$intel" = "yes" ]; then openmp_flag=-openmp; fi
+
+
+#checking OMP compiler nested supported
+echo -n "Checking OMP NESTED support..."
+		touch omp_nested_test.c
+		cat <<EOF>omp_nested_test.c
+#include <omp.h>
+#include <stdio.h>
+int main()
+{
+ omp_get_thread_num();
+ omp_get_level();
+ omp_get_team_size(0);
+ omp_get_ancestor_thread_num(0);
+}
+EOF
+
+		$c_compiler $openmp_flag $orig_useropt omp_nested_test.c -o omp_nested_test > /dev/null 2>&1
+		./omp_nested_test > /dev/null 2>&1
+		result=$?
+		rm -f ./omp_nested_test ./omp_nested_test.c
+		if [ $result = "0" ]; then
+			echo "yes."
+    	fixmakeargs="$fixmakeargs TAU_OPENMP_NESTED"
+		else
+			echo "no."
+			echo "OpenMP nested regions are not supported by this compiler."
+		fi
     fixmakeargs="$fixmakeargs OPENMP"
     tauoptions="${tauoptions}-openmp"
 fi
@@ -6537,14 +6941,17 @@ fi
 if [ $opari = yes ] ; then
     fixmakeargs="$fixmakeargs OPARI2 oparidir=$oparidir"
     if [ $oparicomp = no ] ; then
-          if [ $fortran_compiler = intel ] ; then
+          if [ "x$fortran_compiler" = "xintel" ] ; then
              oparicomp="$fortran_compiler"
           fi
-          if [ $fortran_compiler = pathscale ] ; then
+          if [ "x$fortran_compiler" = "xpathscale" ] ; then
              oparicomp="$fortran_compiler"
           fi
-          if [ $fortran_compiler = pgi ] ; then
+          if [ "x$fortran_compiler" = "xpgi" ] ; then
              oparicomp="$fortran_compiler"
+          fi
+          if [ "x$fortran_compiler" = "xgfortran" ] ; then
+             oparicomp="gcc"
           fi
     fi 
     if [ $oparicomp = no ] ; then
@@ -6571,30 +6978,63 @@ if [ $vampirtrace = yes ] ; then
     fi
 fi
 
+#if [ $scorep = yes ] ; then
+#    fixmakeargs="$fixmakeargs SCOREP scorepdir=$scorepdir"
+#    tauoptions="${tauoptions}-scorep"
+#    scorepCommonLibs="-lbfd#-liberty#-lotf2#-lscorep_utilities"
+#    if [ $mpi = yes ] ; then 
+#      if [ $openmp = yes ] ; then
+#        fixmakeargs="$fixmakeargs SCOREPOMPI" 
+#	scorepLibs="-L${scorepdir}/lib#-lscorep_mpi#$scorepCommonLibs"
+#      else
+#        fixmakeargs="$fixmakeargs SCOREPMPI"
+#	scorepLibs="-L${scorepdir}/lib#-lscorep_mpi#$scorepCommonLibs"
+#      fi 
+#    else
+#      if [ $openmp = yes ] ; then
+#        fixmakeargs="$fixmakeargs SCOREPOMP" 
+#	scorepLibs="-L${scorepdir}/lib#-lscorep_serial#$scorepCommonLibs"
+#      else
+#	scorepLibs="-L${scorepdir}/lib#-lscorep_serial#$scorepCommonLibs"
+#      fi
+#    fi
+
+#    fixmakeargs="$fixmakeargs scorepmpilibs=$scorepLibs"
+#    fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"
+#    fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/scorep"
+
+
 if [ $scorep = yes ] ; then
     fixmakeargs="$fixmakeargs SCOREP scorepdir=$scorepdir"
     tauoptions="${tauoptions}-scorep"
-    scorepCommonLibs="-lbfd#-liberty#-lotf2#-lscorep_utilities"
     if [ $mpi = yes ] ; then 
       if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs SCOREPOMPI" 
-	scorepLibs="-L${scorepdir}/lib#-lscorep_mpi#$scorepCommonLibs"
+        scorepLibs=`${scorepdir}/bin/scorep-config --hyb --libs`
+        scorepLD=`${scorepdir}/bin/scorep-config --hyb --ldflags`
       else
         fixmakeargs="$fixmakeargs SCOREPMPI"
-	scorepLibs="-L${scorepdir}/lib#-lscorep_mpi#$scorepCommonLibs"
+        scorepLibs=`${scorepdir}/bin/scorep-config --mpi --libs`
+        scorepLD=`${scorepdir}/bin/scorep-config --mpi --ldflags`
       fi 
     else
       if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs SCOREPOMP" 
-	scorepLibs="-L${scorepdir}/lib#-lscorep_serial#$scorepCommonLibs"
+	scorepLD=`${scorepdir}/bin/scorep-config --omp --ldflags`
+        scorepLibs=`${scorepdir}/bin/scorep-config --omp --libs`
       else
-	scorepLibs="-L${scorepdir}/lib#-lscorep_serial#$scorepCommonLibs"
+        scorepLibs=`${scorepdir}/bin/scorep-config --seq --libs`
+        scorepLD=`${scorepdir}/bin/scorep-config --seq --ldflags`
       fi
     fi
+    scorepLibs="$scorepLD $scorepLibs"
+    scorepLibs=`echo $scorepLibs | sed "s/ /#/g"`
 
     fixmakeargs="$fixmakeargs scorepmpilibs=$scorepLibs"
     fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"
     fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/scorep"
+
+
 
 if [ $phase = yes ] ; then
      echo "********scorep and phase are on"
@@ -6708,19 +7148,20 @@ if [ $upc_compiler = cc -o $upc_compiler = default ]; then
 fi
 
 if [ $upc = yes ]; then
-  tauoptions="${tauoptions}-upc"
   # If MPI is used -mpi already appears in the name. If it is not, add it
-  if [ "x$upcnetwork" != "xmpi" -a $upc_compiler = upcc ]; then
+  if [ "x$upcnetwork" != "xmpi" ]; then
     tauoptions="${tauoptions}-$upcnetwork"
   fi
-  if [ $upc_compiler = upcc ] 
-  then
-    fixmakeargs="$fixmakeargs UPCC upcnetwork=$upcnetwork"
-  fi
 
-  if [ $upc_compiler = gcc -o $upc_compiler = upc ]; then
-    tauoptions="${tauoptions}-gnuupc"
-    fixmakeargs="$fixmakeargs GNU_UPC"
+  if [ "$upc_compiler" == "upcc" ] ; then
+    tauoptions="${tauoptions}-bupc"
+    fixmakeargs="$fixmakeargs BUPC upcnetwork=$upcnetwork"
+  elif [ $upc_compiler = gcc -o $upc_compiler = upc ]; then
+    tauoptions="${tauoptions}-gupc"
+    fixmakeargs="$fixmakeargs GUPC upcnetwork=$upcnetwork"
+  else
+    # default case: probably Cray upc
+    tauoptions="${tauoptions}-upc"
   fi
 fi
 
@@ -6764,7 +7205,7 @@ fi
 
 
 
-if [ $fortran_compiler = intel ] ; then
+if [ "x$fortran_compiler" = "xintel" ] ; then
     intelifort=`which ifort 2>/dev/null`
     if [ "y$intelifort" != "y" ] ; then 
 	if [ -x $intelifort ]
@@ -6908,6 +7349,7 @@ if [ $machine = hitachi ] ; then
 fi
 
 if [ $cxx_compiler = cxx ] ; then
+	compaq=yes
   if [ $openmp = yes ] ; then
     fixmakeargs="$fixmakeargs COMPAQCXX_OPENMP"
   fi
@@ -7049,7 +7491,6 @@ else
     if [ ! -d ${tauprefix} ] ; then
 	echo "making directory $tauprefix "
 	mkdir -p ${tauprefix}
-      # Copy INSTALL README LICENSE files over there 
 	cp README LICENSE CREDITS ${tauprefix}
     fi
     if [ ! -d ${tauprefix}/${architecture} ] ; then
@@ -7102,6 +7543,7 @@ cp ${tauroot}/tools/src/tauex.multiple $BINTARGET
 cp ${tauroot}/tools/src/tau_cxx.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_cc.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_rewrite $BINTARGET
+cp ${tauroot}/tools/src/tau_pebil_rewrite $BINTARGET
 cp ${tauroot}/tools/src/tau_f90.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_f77.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_upc.sh $BINTARGET
@@ -7115,8 +7557,14 @@ else
 fi
 #copy over tau_header_inst.sh
 if [ $pdt = yes ] ; then
+    if [ $opari1 = yes ] ; then
+    cat ${tauroot}/tools/src/tau_header_inst_opari1.sh | sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@ARCH@,'$architecture',' \
+	-e 's,@PDTROOTDIR@,'$pdtdir',' -e 's,@PDTARCH@, '$pdtarch',' > ${targetdir}/${architecture}/bin/tau_header_inst.sh
+    fi
+    if [ $opari = yes ] ; then
     cat ${tauroot}/tools/src/tau_header_inst.sh | sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@ARCH@,'$architecture',' \
 	-e 's,@PDTROOTDIR@,'$pdtdir',' -e 's,@PDTARCH@, '$pdtarch',' > ${targetdir}/${architecture}/bin/tau_header_inst.sh
+    fi
     chmod a+rx ${targetdir}/${architecture}/bin/tau_header_inst.sh
     if [ -x ${pdtdir}/${pdtarchcompdir}/bin/smaqao ]
     then
@@ -7128,6 +7576,12 @@ if [ $pdt = yes ] ; then
 	echo "NOTE: Found a newer tau_rewrite in PDT. Using it instead."
 	cp ${pdtdir}/${pdtarchcompdir}/bin/tau_rewrite  $BINTARGET
       fi 
+    fi
+    if [ -x ${pdtdir}/${pdtarchcompdir}/bin/pebil.static ]
+    then
+      echo "TAU: PDT: Using binary rewriting capabilities from PEBIL in tau_pebil_rewrite"
+      rm -f ${targetdir}/${architecture}/bin/pebil.static
+      ln -s ${pdtdir}/${pdtarchcompdir}/bin/pebil.static ${targetdir}/${architecture}/bin/pebil.static
     fi
 fi
 
@@ -7252,7 +7706,7 @@ pr=examples
 exampleslist="instrument/Makefile mapping/embedded/Makefile \
   mapping/external/Makefile fork/Makefile selectiveAccess/Makefile"
 
-if [ $fortran_compiler != no ] ; then
+if [ "x$fortran_compiler" != "xno" ] ; then
   exampleslist="$exampleslist fortran/Makefile f90/Makefile"
 fi
 
@@ -7279,7 +7733,7 @@ fi
 
 if [ $mpi = yes ] ; then
   exampleslist="$exampleslist pi/Makefile mpishlib/Makefile"
-  if [ $fortran_compiler != no ] ; then
+  if [ "x$fortran_compiler" != "xno" ] ; then
     exampleslist="$exampleslist NPB2.3/config/make.def"
   fi
   if [ $openmp = yes ] ; then 

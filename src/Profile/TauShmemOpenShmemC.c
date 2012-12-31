@@ -2634,6 +2634,7 @@ int shmem_version(int * a1, int * a2)  {
 }
 
 
+#ifdef TAU_OPENSHMEM_EXTENSION_1
 /**********************************************************
    shmem_malloc
  **********************************************************/
@@ -2694,6 +2695,7 @@ void * shmem_memalign(size_t a1, size_t a2)  {
   return retval;
 
 }
+#endif /* TAU_OPENSHMEM_EXTENSION_1 */
 
 
 /**********************************************************
@@ -2714,6 +2716,7 @@ char * sherror()  {
 
 
 
+#ifdef TAU_OPENSHMEM_EXTENSION_1
 /**********************************************************
    shmem_error
  **********************************************************/
@@ -2728,6 +2731,7 @@ char * shmem_error()  {
   return retval;
 
 }
+#endif /* TAU_OPENSHMEM_EXTENSION_1 */
 
 
 /**********************************************************

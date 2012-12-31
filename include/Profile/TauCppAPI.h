@@ -24,8 +24,8 @@
 #define DEBUGPROFMSG(msg) 
 #endif // DEBUG_PROF
 
-#define TAU_NEW(expr, size) 			Tau_new(__FILE__, __LINE__, size, expr)
-#define TAU_DELETE(expr, variable) 		Tau_track_memory_deallocation(__FILE__, __LINE__, variable) , expr
+#define TAU_NEW(expr, size) 			Tau_new(expr, size, __FILE__, __LINE__)
+#define TAU_DELETE(expr, variable) 		Tau_track_memory_deallocation(variable, __FILE__, __LINE__) , expr
 
 #define TAU_TYPE_STRING(profileString, str) static string profileString(str);
 
@@ -45,13 +45,13 @@ public:
     phase = 0;
 #endif
     if (fi != 0) {
-      Tau_start_timer(fi, phase, Tau_get_tid());
+      Tau_lite_start_timer(fi, phase);
     }
   }
 
   inline ~Tau_Profile_Wrapper() {
     if (fInfo != 0) {
-      Tau_stop_timer(fInfo, Tau_get_tid());
+      Tau_lite_stop_timer(fInfo);
     }
   }
 };

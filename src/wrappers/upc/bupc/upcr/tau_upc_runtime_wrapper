@@ -14,15 +14,15 @@ usage()
     echo " -upc=<dir> : specifies the upc directory"
     echo "NOTE: $cmd reads the TAU_MAKEFILE  environment variable to get PDT settings"
     echo " Example: "
-    echo " % $cmd tau_upcr.h -lm -gasnet=/usr/local/packages/gasnet-1.18.0-mpi-smp -gasnetconduit=mpi-conduit -upc=/usr/local/packages/bupc-2.14.2/opt_inst"
+    echo " % $cmd tau_upcr.h -lm -gasnet=/usr/local/packages/gasnet-1.18.0-mpi-smp -gasnetconduit=mpi -upc=/usr/local/packages/bupc-2.14.2/opt_inst"
     echo " generates a wrapper library that may be linked in using TAU_OPTIONS -optTauWrapFile=<wrapperdir>/link_options.tau"
     echo "" 
     exit 1
 }
 
-upcdir=/usr/local/packages/bupc-2.14.2/opt_inst
-gasnetdir=/usr/local/packages/gasnet-1.18.0-mpi-smp
-gasnetconduit=mpi-conduit
+upcdir=/usr/local/packages/bupc/opt_inst
+gasnetdir=/usr/local/packages/gasnet
+gasnetconduit=mpi
 runtime_specified=0;
 header_redirection_specified=0;
 headerfile=""
@@ -35,31 +35,31 @@ fi
 if [ $# -gt 1 ]; then
   headerfile=$1
   library=$2
-  shift;
-  shift;
+  shift
+  shift
 fi
 
 for arg in "$@"; do
   case $arg in 
     -r)
       runtime_specified=1; 
-      shift; 
+      shift
       ;;
     -d)
       header_redirection_specified=1; 
-      shift; 
+      shift
       ;;
     -gasnet=*)
       gasnetdir=`echo $arg | sed -e 's/-gasnet=//g'`
-      shift;
+      shift
       ;;
     -gasnetconduit=*)
-      gasnetconduit=`echo $arg | sed -e 's/-gasnetconduit=//g'`
-      shift;
+      gasnetconduit="`echo $arg | sed -e 's/-gasnetconduit=//g'`-conduit"
+      shift
       ;;
     -upc=*)
       upcdir=`echo $arg | sed -e 's/-upc=//g'`
-      shift;
+      shift
       ;;
   esac
 done
@@ -74,20 +74,35 @@ if [ ! -r $TAU_MAKEFILE ] ;then
   exit 1
 fi
 
+if [ ! -d "$upcdir" ] ; then
+  echo "ERROR: invalid UPC directory: $upcdir"
+  exit 1
+fi
 
-pdtdir=`grep PDTDIR= $TAU_MAKEFILE | sed -e 's/PDTDIR=//g' `
-tauarch=`tau-config | grep TAUARCH | sed -e 's@TAUARCH=@@g' `
-basedir=`tau-config | grep BASEDIR | sed -e 's@BASEDIR=@@g' `
+if [ ! -d "$gasnetdir" ] ; then
+  echo "ERROR: invalid GASNet directory: $gasnetdir"
+  exit 1
+fi
 
-parser=$pdtdir/$tauarch/bin/upcparse
+if [ ! -d "$gasnetdir/include/$gasnetconduit" ] ; then
+  echo "ERROR: GASNet conduit $gasnetconduit not found in $gasnetdir"
+  exit 1
+fi
+
+pdtdir="`grep PDTDIR= $TAU_MAKEFILE | sed -e 's/PDTDIR=//g' `"
+tauarch="`tau-config | grep TAUARCH | sed -e 's@TAUARCH=@@g' `"
+basedir="`tau-config | grep BASEDIR | sed -e 's@BASEDIR=@@g' `"
+
+parser="$pdtdir/$tauarch/bin/cparse"
 if [ ! -x $parser ]; then
   echo "ERROR: Can't execute $parser: Using PDT = $pdtdir, ARCH = $tauarch"
   exit 1
 fi
 baseheader=`basename $headerfile .h`
-echo $parser $headerfile -DGASNET_SEQ -I$upcdir/include -DUPCRI_BUILDING_LIBUPCR=1 -I$gasnetdir/include -I$gasnetdir/include/$gasnetconduit -DGASNETT_USE_GCC_ATTRIBUTE_MAYALIAS
-$parser $headerfile -DGASNET_SEQ -I$upcdir/include -DUPCRI_BUILDING_LIBUPCR=1 -I$gasnetdir/include -I$gasnetdir/include/$gasnetconduit -DGASNETT_USE_GCC_ATTRIBUTE_MAYALIAS
 
+# Parse the header file to create pdb file
+echo $parser $headerfile -DPLATFORM_COMPILER_GNU -DGASNET_SEQ -I$upcdir/include -DUPCRI_BUILDING_LIBUPCR=1 -I$gasnetdir/include -I$gasnetdir/include/$gasnetconduit -DGASNETT_USE_GCC_ATTRIBUTE_MAYALIAS
+$parser $headerfile -DPLATFORM_COMPILER_GNU -DGASNET_SEQ -I$upcdir/include -DUPCRI_BUILDING_LIBUPCR=1 -I$gasnetdir/include -I$gasnetdir/include/$gasnetconduit -DGASNETT_USE_GCC_ATTRIBUTE_MAYALIAS
 mv $baseheader.pdb $headerfile.pdb 
 
 if [ $runtime_specified = 1 ] ; then
@@ -100,38 +115,37 @@ else
   fi
 fi
 
-#echo "tau_wrap $headerfile.pdb $headerfile -o wr.c $runtimeopt $library $*"
 # Generate select.tau
-
-rm -f select.tau
 echo "BEGIN_INCLUDE_LIST" > select.tau
-nm -A $upcdir/lib/*.a | grep " _upcr" | awk '{ print $3;}' | sed -e 's/_upcr/"# _upcr/g' -e 's/$/(#"/g' >> select.tau
-nm -A $upcdir/lib/*.a | grep " UPCRL" | awk '{ print $3;}' | sed -e 's/UPCRL/"# UPCRL/g' -e 's/$/(#"/g' >> select.tau
-nm -A $upcdir/lib/*.a | grep " upcr" | awk '{ print $3;}' | sed -e 's/upcr/"# upcr/g' -e 's/$/(#"/g' >> select.tau
-nm -A $upcdir/lib/*.a | grep " _bupc_" | awk '{ print $3;}' | sed -e 's/_bupc_/"# _bupc_/g' -e 's/$/(#"/g' >> select.tau
-#nm -A $upcdir/lib/*.a | grep " bupc_" | awk '{ print $3;}' | sed -e 's/bupc_/"# bupc_/g' -e 's/$/(#"/g' >> select.tau
+for sym in _upcr UPCRL upcr _bupc_ ; do
+  nm -A $upcdir/lib/*.a | grep " $sym" | awk '{ print $3;}' | sed -e "s/$sym/\"# $sym/g" -e 's/$/(#"/g' >> select.tau
+done
 echo "END_INCLUDE_LIST" >> select.tau
-$basedir/bin/tau_wrap $headerfile.pdb $headerfile -o wr.c $runtimeopt $library $* -f select.tau
-dirname=`basename ${headerfile} .h`_wrapper
+
+# Generate wr.c
+echo $basedir/bin/tau_wrap $headerfile.pdb $headerfile -o wr.c $runtimeopt $library $* -f select.tau --upc berkeley
+$basedir/bin/tau_wrap $headerfile.pdb $headerfile -o wr.c $runtimeopt $library $* -f select.tau --upc berkeley
+headerbase=`basename $headerfile .h`
+dirname="${headerbase}_wrapper"
+libname="lib${headerbase}_wrap.a"
 
 # replace bupc_smemvec_t [] a with bupc_smemvec_t * a
 sed -e 's/\[\]/\*/g' ${dirname}/wr.c > ${dirname}/wr.c~
 mv ${dirname}/wr.c~ ${dirname}/wr.c 
 
-# Fix the Makefile with the correct smp args.
-sed -e "s@\$(TAU_MPI_INCLUDE)@\$(TAU_MPI_INCLUDE) -DGASNET_SEQ -I$upcdir/include -DUPCRI_BUILDING_LIBUPCR=1 -I$gasnetdir/include -I$gasnetdir/include/$gasnetconduit -DGASNETT_USE_GCC_ATTRIBUTE_MAYALIAS @g" ${dirname}/Makefile > ${dirname}/Makefile~
-mv ${dirname}/Makefile~ ${dirname}/Makefile
+# Add correct paths and arguments to Makefile
+sed -e "s@^EXTRA_FLAGS=@EXTRA_FLAGS=-DGASNET_SEQ -I$upcdir/include -DUPCRI_BUILDING_LIBUPCR=1 -I$gasnetdir/include -I$gasnetdir/include/$gasnetconduit -DGASNETT_USE_GCC_ATTRIBUTE_MAYALIAS@" $dirname/Makefile > $dirname/Makefile~
+mv $dirname/Makefile~ $dirname/Makefile
 
-sed -e 's/-Wl,-wrap/-Wl,-Wl,-wrap/g' -e 's@-L.*$@-ltau_upcr_wrap@g'  ${dirname}/link_options.tau > ${dirname}/link_options.tau~
+# Add library to link options
+sed -e "s/@@WRAPPER_LIBRARY@@/-l${headerbase}_wrap/" $dirname/link_options.tau.master > $dirname/link_options.tau
 
-mv ${dirname}/link_options.tau~  ${dirname}/link_options.tau
-cd ${dirname}
+cd $dirname
 make
 cd ..
 rm -f ${headerfile}.pdb 
-mkdir -p $basedir/lib/wrappers/upc
 mkdir -p $basedir/lib/wrappers/upc/bupc
-echo cp ${dirname}/link_options.tau $basedir/lib/wrappers/upc/bupc
-cp ${dirname}/link_options.tau $basedir/lib/wrappers/upc/bupc
-echo cp ${dirname}/libtau_upcr_wrap.a $basedir/lib/
-cp ${dirname}/libtau_upcr_wrap.a $basedir/lib/
+echo cp $dirname/link_options.tau $basedir/lib/wrappers/upc/bupc
+cp $dirname/link_options.tau $basedir/lib/wrappers/upc/bupc
+echo cp $dirname/$libname $basedir/lib/
+cp $dirname/$libname $basedir/lib/

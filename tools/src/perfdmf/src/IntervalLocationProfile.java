@@ -3,7 +3,9 @@ package edu.uoregon.tau.perfdmf;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Vector;
 
 import edu.uoregon.tau.perfdmf.database.DB;
@@ -373,147 +375,7 @@ public class IntervalLocationProfile extends Object {
         this.numSubroutines = numSubroutines;
     }
 
-    // returns a Vector of IntervalEvents
-    public static void getIntervalEventDetail(DB db, IntervalEvent intervalEvent, String whereClause)
-            throws SQLException {
-        // create a string to hit the database
-        StringBuffer buf = new StringBuffer();
-        buf.append("select ms.interval_event, ");
-        buf.append("ms.inclusive_percentage, ms.inclusive, ");
 
-        if (db.getDBType().compareTo("oracle") == 0) {
-            buf.append("ms.exclusive_percentage, ms.excl, ");
-        } else {
-            buf.append("ms.exclusive_percentage, ms.exclusive, ");
-        }
-
-        if (db.getDBType().compareTo("derby") == 0) {
-        	buf.append("ms.num_calls, ");
-        } else if (db.getDBType().compareTo("mysql") == 0) {
-        	buf.append("ms.`call`, ");
-        } else {
-        	buf.append("ms.call, ");
-		}
-        buf.append("ms.subroutines, ms.inclusive_per_call, ");
-        buf.append("ms.metric, ");
-        buf.append("ts.inclusive_percentage, ts.inclusive, ");
-
-        if (db.getDBType().compareTo("oracle") == 0) {
-            buf.append("ts.exclusive_percentage, ts.excl, ");
-        } else {
-            buf.append("ts.exclusive_percentage, ts.exclusive, ");
-        }
-        if (db.getDBType().compareTo("derby") == 0) {
-        	buf.append("ts.num_calls, ");
-        } else if (db.getDBType().compareTo("mysql") == 0) {
-        	buf.append("ts.`call`, ");
-        } else {
-        	buf.append("ts.call, ");
-		}
-        buf.append("ts.subroutines, ts.inclusive_per_call ");
-        buf.append("from " + db.getSchemaPrefix() + "interval_mean_summary ms inner join ");
-        buf.append(db.getSchemaPrefix() + "interval_total_summary ts ");
-        buf.append("on ms.interval_event = ts.interval_event ");
-        buf.append("and ms.metric = ts.metric ");
-        buf.append(whereClause);
-        buf.append(" order by ms.interval_event, ms.metric");
-        // System.out.println(buf.toString());
-
-        // get the results
-        ResultSet resultSet = db.executeQuery(buf.toString());
-        int metricIndex = 0;
-        IntervalLocationProfile eMS = new IntervalLocationProfile();
-        IntervalLocationProfile eTS = new IntervalLocationProfile();
-        while (resultSet.next() != false) {
-            // get the mean summary data
-            eMS.setIntervalEventID(resultSet.getInt(1));
-            eMS.setInclusivePercentage(metricIndex, resultSet.getDouble(2));
-            eMS.setInclusive(metricIndex, resultSet.getDouble(3));
-            eMS.setExclusivePercentage(metricIndex, resultSet.getDouble(4));
-            eMS.setExclusive(metricIndex, resultSet.getDouble(5));
-            eMS.setNumCalls(resultSet.getDouble(6));
-            eMS.setNumSubroutines(resultSet.getDouble(7));
-            eMS.setInclusivePerCall(metricIndex, resultSet.getDouble(8));
-            // get the total summary data
-            eTS.setInclusivePercentage(metricIndex, resultSet.getDouble(10));
-            eTS.setInclusive(metricIndex, resultSet.getDouble(11));
-            eTS.setExclusivePercentage(metricIndex, resultSet.getDouble(12));
-            eTS.setExclusive(metricIndex, resultSet.getDouble(13));
-            eTS.setNumCalls(resultSet.getDouble(14));
-            eTS.setNumSubroutines(resultSet.getDouble(15));
-            eTS.setInclusivePerCall(metricIndex, resultSet.getDouble(16));
-            metricIndex++;
-        }
-        intervalEvent.setMeanSummary(eMS);
-        intervalEvent.setTotalSummary(eTS);
-        resultSet.close();
-    }
-
-    public static Vector<IntervalLocationProfile> getIntervalEventData(DB db, int metricCount, String whereClause) throws SQLException {
-        StringBuffer buf = new StringBuffer();
-        buf.append("select p.interval_event, p.metric, p.node, p.context, p.thread, ");
-        buf.append("p.inclusive_percentage, ");
-
-        if (db.getDBType().compareTo("oracle") == 0) {
-            buf.append("p.inclusive, p.exclusive_percentage, p.excl, ");
-        } else {
-            buf.append("p.inclusive, p.exclusive_percentage, p.exclusive, ");
-        }
-        if (db.getDBType().compareTo("derby") == 0) {
-        	buf.append("p.num_calls, ");
-        } else if (db.getDBType().compareTo("mysql") == 0) {
-        	buf.append("p.`call`, ");
-		} else {
-        	buf.append("p.call, ");
-		}
-        buf.append("p.subroutines, p.inclusive_per_call ");
-        buf.append("from " + db.getSchemaPrefix() + "interval_event e inner join " + db.getSchemaPrefix()
-                + "interval_location_profile p ");
-        buf.append("on e.id = p.interval_event ");
-        buf.append(whereClause);
-        
-        // must be ordered this way because of the assumption that all metrics for each function come together
-        buf.append(" order by p.interval_event, p.node, p.context, p.thread, p.metric ");
-        // System.out.println(buf.toString());
-
-        Vector<IntervalLocationProfile> intervalLocationProfiles = new Vector<IntervalLocationProfile>();
-        // get the results
-        //long time = System.currentTimeMillis();
-        ResultSet resultSet = db.executeQuery(buf.toString());
-        //time = (System.currentTimeMillis()) - time;
-        //System.out.println("Query : " + time);
-        
-        while (resultSet.next() != false) {
-
-            int metricIndex = 0;
-            IntervalLocationProfile intervalLocationProfile = new IntervalLocationProfile();
-            intervalLocationProfile.setIntervalEventID(resultSet.getInt(1));
-            intervalLocationProfile.setNode(resultSet.getInt(3));
-            intervalLocationProfile.setContext(resultSet.getInt(4));
-            intervalLocationProfile.setThread(resultSet.getInt(5));
-            intervalLocationProfile.setInclusivePercentage(metricIndex, resultSet.getDouble(6));
-            intervalLocationProfile.setInclusive(metricIndex, resultSet.getDouble(7));
-            intervalLocationProfile.setExclusivePercentage(metricIndex, resultSet.getDouble(8));
-            intervalLocationProfile.setExclusive(metricIndex, resultSet.getDouble(9));
-            intervalLocationProfile.setNumCalls(resultSet.getDouble(10));
-            intervalLocationProfile.setNumSubroutines(resultSet.getDouble(11));
-            intervalLocationProfile.setInclusivePerCall(metricIndex, resultSet.getDouble(12));
-            for (int i = 1; i < metricCount; i++) {
-                if (resultSet.next() == false) {
-                    break;
-                }
-                metricIndex++;
-                intervalLocationProfile.setInclusivePercentage(metricIndex, resultSet.getDouble(6));
-                intervalLocationProfile.setInclusive(metricIndex, resultSet.getDouble(7));
-                intervalLocationProfile.setExclusivePercentage(metricIndex, resultSet.getDouble(8));
-                intervalLocationProfile.setExclusive(metricIndex, resultSet.getDouble(9));
-                intervalLocationProfile.setInclusivePerCall(metricIndex, resultSet.getDouble(12));
-            }
-            intervalLocationProfiles.addElement(intervalLocationProfile);
-        }
-        resultSet.close();
-        return (intervalLocationProfiles);
-    }
 
     public void saveMeanSummary(DB db, int intervalEventID, Hashtable<Integer, Integer> newMetHash, int saveMetricIndex)
             throws SQLException {
@@ -599,5 +461,74 @@ public class IntervalLocationProfile extends Object {
         }
     }
 
-   
+    public static FunctionProfile getIntervalEventDetail(DB db, Function function, String whereClause)
+            throws SQLException {
+        // create a string to hit the database
+        StringBuffer buf = new StringBuffer();
+    	if (db.getSchemaVersion() > 0) {
+    		buf.append("select tcd.timer_callpath, ");
+    		buf.append("tv.inclusive_percent, tv.inclusive_value, ");
+    		buf.append("tv.exclusive_percent, tv.exclusive_value, ");
+    		buf.append("tcd.calls, tcd.subroutines, ");
+    		buf.append("tv.metric from ");
+    		buf.append(db.getSchemaPrefix() + "timer_value tv left outer join ");
+    		buf.append(db.getSchemaPrefix() + "timer_call_data tcd on tv.timer_call_data = tcd.id ");
+    		buf.append("left outer join " + db.getSchemaPrefix() + "thread h on tcd.thread = h.id ");
+	        buf.append(whereClause);
+	        if (whereClause.length() > 3) {
+	        	buf.append(" and h.thread_index = -1 ");
+	        } else {
+	        	buf.append(" where h.thread_index = -1 ");
+	        }
+	        buf.append(" order by tcd.timer_callpath, tv.metric");
+    	} else {
+	        buf.append("select ms.interval_event, ");
+	        buf.append("ms.inclusive_percentage, ms.inclusive, ");
+	
+	        if (db.getDBType().compareTo("oracle") == 0) {
+	            buf.append("ms.exclusive_percentage, ms.excl, ");
+	        } else {
+	            buf.append("ms.exclusive_percentage, ms.exclusive, ");
+	        }
+	
+	        if (db.getDBType().compareTo("derby") == 0) {
+	            buf.append("ms.num_calls, ");
+	        } else if (db.getDBType().compareTo("mysql") == 0) {
+	            buf.append("ms.`call`, ");
+	        } else {
+	            buf.append("ms.call, ");
+	        }
+	        buf.append("ms.subroutines, ms.inclusive_per_call, ");
+	        buf.append("ms.metric ");
+	        buf.append("from " + db.getSchemaPrefix() + "interval_mean_summary ms ");
+	        buf.append(whereClause);
+	        buf.append(" order by ms.interval_event, ms.metric");
+    	}
+        // System.out.println(buf.toString());
+
+        // get the results
+        ResultSet resultSet = db.executeQuery(buf.toString());
+        int metricIndex = 0;
+        List<Double> inclusives = new ArrayList<Double>();
+        List<Double> exclusives = new ArrayList<Double>();
+        double calls = 0;
+        double subroutines = 0;
+        while (resultSet.next() != false) {
+            inclusives.add(resultSet.getDouble(3));
+            exclusives.add(resultSet.getDouble(5));
+            calls = resultSet.getDouble(6);
+            subroutines = resultSet.getDouble(7);
+            metricIndex++;
+        }
+        resultSet.close();
+        FunctionProfile eMS = new FunctionProfile(function, metricIndex);
+        eMS.setNumCalls(calls);
+        eMS.setNumSubr(subroutines);
+        for (int j = 0 ; j < metricIndex ; j++) {
+            eMS.setInclusive(j, inclusives.get(j));
+            eMS.setExclusive(j, exclusives.get(j));
+        }
+        return eMS;
+    }
+
 }

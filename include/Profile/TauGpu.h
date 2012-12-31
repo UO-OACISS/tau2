@@ -3,6 +3,7 @@
 
 #define MESSAGE_SEND 0
 #define MESSAGE_RECV 1
+#define MESSAGE_UNKNOWN 2
 
 enum Memcpy { MemcpyHtoD = 0, MemcpyDtoH = 1, MemcpyDtoD = 2, MemcpyUnknown = 3 };
 
@@ -15,7 +16,7 @@ enum Memcpy { MemcpyHtoD = 0, MemcpyDtoH = 1, MemcpyDtoD = 2, MemcpyUnknown = 3 
 #ifdef __cplusplus
 
 #include <Profile/Profiler.h>
-using namespace tau;
+#include <map>
 
 //typedef map<TauContextUserEvent*, TAU_EVENT_DATATYPE> TauGpuContextMap;
 
@@ -25,6 +26,13 @@ typedef struct {
 	TAU_EVENT_DATATYPE data;
 
 } GpuEventAttributes;
+
+/* Struct to contain the metadata for each GPU. */
+typedef struct {
+	char *name;
+	const char *value;
+
+} GpuMetadata;
 
 #define GPU_ATTRIBUTE(attr, event, data) \
 attr.userEvent = event; \
@@ -55,6 +63,10 @@ public:
 	//Warning: atr can be set to NULL.
 	virtual void getAttributes(GpuEventAttributes *&atr, int &numberOfAttributes) const = 0;
 
+	//GPU metadata, calling this routine should register the GPU metadata on the
+	//profile id given.
+	virtual void recordMetadata(int profile_id) const = 0;
+
 	//Synchronization offset for this GPU. 
 	virtual double syncOffset() const = 0; 
 
@@ -65,44 +77,9 @@ public:
 	//the trace files.
 	virtual x_uint64 id_p1() const = 0;
 	virtual x_uint64 id_p2() const = 0;
-
-};
-
-/*
-class gpuId {
-
-public:
-	virtual gpuId *getCopy() const = 0;
-	virtual char * printId() const = 0;
-	virtual x_uint64 id_p1() const = 0;
-	virtual x_uint64 id_p2() const = 0;
-	virtual bool less_than(const gpuId *other) const = 0;
-	virtual double syncOffset() = 0;
-	//virtual bool operator<(const gpuId& A) const;
+	
 };
 	
-typedef map<TauContextUserEvent*, TAU_EVENT_DATATYPE> TauGpuContextMap;
-
-class eventId {
-public:
-	//virtual bool operator<(const eventId& A) const;
-	gpuId *device;
-	const char *name;
-	// rountine where this gpu Kernel was launched.
-	FunctionInfo* callingSite;
-
-	//map of context event to be trigger with the kernel
-	TauGpuContextMap* contextEventMap;
-
-	eventId(const char* n, gpuId* d, FunctionInfo *s,
-	TauGpuContextMap* map) {
-		name = n;
-		device = d;
-		callingSite = s;
-		contextEventMap = map;
-	}
-};
-*/
 /************************************************************************
  * Performance Hooks. The following routines are hooks into the execution
  * of GPU applications. 
@@ -110,6 +87,9 @@ public:
 
 /* Initialization to be executed at the start of the application */
 extern "C" void Tau_gpu_init(void);
+
+/* Initialization of each gpu/device. */
+extern "C" void Tau_gpu_device_init(GpuEvent *gpu);
 
 /* Stuff to be performed at the end of the application */
 extern "C" void Tau_gpu_exit(void);
@@ -139,7 +119,7 @@ extern "C" void Tau_gpu_register_gpu_event(GpuEvent *event, double startTime, do
  * program. Times are pre-aligned to the CPU clock. */
 extern "C" void Tau_gpu_register_memcpy_event(GpuEvent *event, double startTime, double endTime, int transferSize, int memcpyType);
 
-extern "C" void TauTraceOneSidedMsg(bool type, GpuEvent *gpu, int length, int thread);
+extern "C" void TauTraceOneSidedMsg(int type, GpuEvent *gpu, int length, int thread);
 
 #endif // __cplusplus
 #endif // _TAU_GPU_INTERFACE

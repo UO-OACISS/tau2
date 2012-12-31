@@ -1,0 +1,9 @@
+*.o
+*.a
+*.so
+*.dylib
+a.out
+.all_configs
+.last_config
+.project
+.cproject

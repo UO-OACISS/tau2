@@ -2,6 +2,7 @@ package edu.uoregon.tau.perfdmf;
 
 import java.util.*;
 
+import edu.uoregon.tau.common.MetaDataMap;
 import edu.uoregon.tau.common.TauRuntimeException;
 
 /**
@@ -33,11 +34,21 @@ public class Thread implements Comparable<Thread> {
     public static final int STDDEV = -3;
     public static final int MIN = -4;
     public static final int MAX = -5;
+    public static final int MEAN_ALL = -6;
+    public static final int STDDEV_ALL = -7;
 
     private List<Snapshot> snapshots = new ArrayList<Snapshot>();
-    private Map<String,String> metaData = new TreeMap<String,String>();
+//    private Map<String,String> metaData = new TreeMap<String,String>();
+    private MetaDataMap metaData = null;
 
-    private boolean firstSnapshotFound;
+    /**
+	 * @param metaData the metaData to set
+	 */
+	public void setMetaData(MetaDataMap metaData) {
+		this.metaData = metaData;
+	}
+
+	private boolean firstSnapshotFound;
 
     // two dimensional, snapshots x metrics
     private ThreadData[][] threadData;
@@ -80,20 +91,26 @@ public class Thread implements Comparable<Thread> {
     }
 
     public String toString() {
-        if (nodeID == -1) {
+        if (nodeID == MEAN) {
             return "Mean";
         }
-        if (nodeID == -2) {
+        if (nodeID == TOTAL) {
             return "Total";
         }
-        if (nodeID == -3) {
+        if (nodeID == STDDEV) {
             return "Standard Deviation";
         }
-        if (nodeID == -4) {
+        if (nodeID == MIN) {
             return "Min";
         }
-        if (nodeID == -5) {
+        if (nodeID == MAX) {
             return "Max";
+        }
+        if (nodeID == MEAN_ALL) {
+            return "Mean, All Threads";
+        }
+        if (nodeID == STDDEV_ALL) {
+            return "Standard Deviation, All Threads";
         }
         return "n,c,t " + nodeID + "," + contextID + "," + threadID;
     }
@@ -191,10 +208,14 @@ public class Thread implements Comparable<Thread> {
         fp.setThread(this);
     }
 
+    public void deleteFunctionProfile(FunctionProfile fp) {
+        int id = fp.getFunction().getID();
+        functionProfiles.set(id, null);
+    }
+
     public void addUserEventProfile(UserEventProfile uep) {
         int id = uep.getUserEvent().getID();
         // increase the size of the userEventProfiles list if necessary
-
         userEventProfiles.put(new Integer(id), uep);
 
     }
@@ -270,9 +291,11 @@ public class Thread implements Comparable<Thread> {
         startMetric = 0;
         endMetric = getNumMetrics() - 1;
 
-        String startString = (String) getMetaData().get("Starting Timestamp");
-        if (startString != null) {
-            setStartTime(Long.parseLong(startString));
+        if (getMetaData() != null) {
+	        String startString = (String) getMetaData().get("Starting Timestamp");
+	        if (startString != null) {
+	            setStartTime(Long.parseLong(startString));
+	        }
         }
 
         for (int snapshot = startSnapshot; snapshot <= endSnapshot; snapshot++) {
@@ -337,7 +360,10 @@ public class Thread implements Comparable<Thread> {
         }
     }
 
-    public Map<String,String> getMetaData() {
+    public MetaDataMap getMetaData() {
+    	if (metaData == null) {
+    		metaData = new MetaDataMap();
+    	}
         return metaData;
     }
 

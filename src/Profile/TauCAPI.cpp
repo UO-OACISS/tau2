@@ -60,6 +60,9 @@ void esd_exit (elg_ui4 rid);
 #include <Profile/TauSCOREP.h>
 #endif
 
+#ifdef DEBUG_LOCK_PROBLEMS
+#include <execinfo.h>
+#endif
 
 extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup_t group, const char *gr_name) {
   FunctionInfo *f;
@@ -84,14 +87,48 @@ extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup
   return (void *) f;
 }
 
-
+/* An array of this struct is shared by all threads. To make sure we don't have false
+ * sharing, the struct is 64 bytes in size, so that it fits exactly in
+ * one (or two) cache lines. That way, when one thread updates its data
+ * in the array, it won't invalidate the cache line for other threads. 
+ * This is very important with timers, as all threads are entering timers
+ * at the same time, and every thread will invalidate the cache line
+ * otherwise. */
+struct Tau_thread_status_flags {
+  Profiler *Tau_global_stack; // 8 bytes
+  int Tau_global_stackdepth; // 4 bytes
+  int Tau_global_stackpos; // 4 bytes
+  int Tau_global_insideTAU; // 4 bytes
+  int Tau_is_thread_fake_for_task_api; // 4 bytes
+  // that's a total of 24 bytes. Add some padding to make sure this
+  // structure is 64 bytes.
+  // Warning! this structure alignment assumes 64 bit pointers.
+  // If you are on a 32 bit machine, change the padding array to size 11
+  // because the Profiler pointer above is only 4 bytes
+#if 1
+  int padding[10];
+#else
+  int padding[11];
+#endif
+};
 
 #define STACK_DEPTH_INCREMENT 100
-static Profiler *Tau_global_stack[TAU_MAX_THREADS];
-static int Tau_global_stackdepth[TAU_MAX_THREADS];
-static int Tau_global_stackpos[TAU_MAX_THREADS];
-static int Tau_global_insideTAU[TAU_MAX_THREADS];
-static int Tau_is_thread_fake_for_task_api[TAU_MAX_THREADS];
+/* This array is shared by all threads. To make sure we don't have false
+ * sharing, the struct is 64 bytes in size, so that it fits exactly in
+ * one (or two) cache lines. That way, when one thread updates its data
+ * in the array, it won't invalidate the cache line for other threads. 
+ * This is very important with timers, as all threads are entering timers
+ * at the same time, and every thread will invalidate the cache line
+ * otherwise. */
+#ifdef __INTEL__COMPILER
+__declspec (align(64)) static struct Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
+#else
+#ifdef __GNUC__
+static struct Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] __attribute__ ((aligned(64))) = {0};
+#else
+static struct Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
+#endif
+#endif
 int lightsOut = 0;
 
 static void (*_profile_write_hook)(void) = NULL;
@@ -118,11 +155,11 @@ static void Tau_stack_checkInit() {
   _profile_write_hook = 0;
 
   for (int i=0; i<TAU_MAX_THREADS; i++) {
-    Tau_global_stackdepth[i] = 0;
-    Tau_global_stackpos[i] = -1;
-    Tau_global_stack[i] = NULL;
-    Tau_global_insideTAU[i] = 0;
-    Tau_is_thread_fake_for_task_api[i] = 0; /* by default all threads are real*/
+    Tau_thread_flags[i].Tau_global_stackdepth = 0;
+    Tau_thread_flags[i].Tau_global_stackpos = -1;
+    Tau_thread_flags[i].Tau_global_stack = NULL;
+    Tau_thread_flags[i].Tau_global_insideTAU = 0;
+    Tau_thread_flags[i].Tau_is_thread_fake_for_task_api = 0; /* by default all threads are real*/
   }
 }
 
@@ -138,11 +175,11 @@ extern "C" void Tau_global_setLightsOut() {
 
 /* the task API does not have a real thread associated with the tid */
 extern "C" int Tau_is_thread_fake(int tid) {
-  return Tau_is_thread_fake_for_task_api[tid]; 
+  return Tau_thread_flags[tid].Tau_is_thread_fake_for_task_api; 
 }
 
 extern "C" void Tau_set_thread_fake(int tid) {
-  Tau_is_thread_fake_for_task_api[tid] = 1; 
+  Tau_thread_flags[tid].Tau_is_thread_fake_for_task_api = 1; 
 }
 
 extern "C" void Tau_stack_initialization() {
@@ -151,62 +188,94 @@ extern "C" void Tau_stack_initialization() {
 
 extern "C" int Tau_global_get_insideTAU() {
   Tau_stack_checkInit();
-  int tid = RtsLayer::myThread();
-  return Tau_global_insideTAU[tid];
+  int tid = RtsLayer::localThreadId();
+  return Tau_thread_flags[tid].Tau_global_insideTAU;
 }
-
+/*
 extern "C" int Tau_global_get_insideTAU_tid(int tid) {
   Tau_stack_checkInit();
-  return Tau_global_insideTAU[tid];
-}
+  return Tau_thread_flags[tid].Tau_global_insideTAU;
+}*/
 
 extern "C" int Tau_global_incr_insideTAU() {
   Tau_stack_checkInit();
-  int tid = RtsLayer::myThread();
-  Tau_global_insideTAU[tid]++;
-  return Tau_global_insideTAU[tid];
+  int tid = RtsLayer::localThreadId();
+  Tau_thread_flags[tid].Tau_global_insideTAU++;
+  return Tau_thread_flags[tid].Tau_global_insideTAU;
+}
+
+extern "C" int Tau_global_process_incr_insideTAU() {
+  Tau_stack_checkInit();
+  int tid = 0;
+  while (tid < TAU_MAX_THREADS)
+  {
+    Tau_global_incr_insideTAU();
+    tid++;
+  }
+  return -1;
 }
 
 extern "C" int Tau_global_decr_insideTAU() {
   Tau_stack_checkInit();
-  int tid = RtsLayer::myThread();
-  Tau_global_insideTAU[tid]--;
-  return Tau_global_insideTAU[tid];
+  int tid = RtsLayer::localThreadId();//Tau_get_tid();
+  Tau_thread_flags[tid].Tau_global_insideTAU--;
+	TAU_ASSERT(Tau_thread_flags[tid].Tau_global_insideTAU < 0,
+		"Thread has decremented the insideTAU counter past 0");
+  return Tau_thread_flags[tid].Tau_global_insideTAU;
 }
 
+extern "C" int Tau_global_process_decr_insideTAU() {
+  Tau_stack_checkInit();
+  int tid = 0;
+  while (tid < TAU_MAX_THREADS)
+  {
+    Tau_global_decr_insideTAU();
+  	TAU_ASSERT(Tau_thread_flags[tid].Tau_global_insideTAU < 0,
+			"Thread has decremented the insideTAU counter past 0");
+    tid++;
+  }
+  return -1;
+}
+/*
 extern "C" int Tau_global_incr_insideTAU_tid(int tid) {
   Tau_stack_checkInit();
-  Tau_global_insideTAU[tid]++;
-  return Tau_global_insideTAU[tid];
+  Tau_global_incr_insideTAU();
+  return Tau_thread_flags[tid].Tau_global_insideTAU;
 }
 
 extern "C" int Tau_global_decr_insideTAU_tid(int tid) {
   Tau_stack_checkInit();
-  Tau_global_insideTAU[tid]--;
-  return Tau_global_insideTAU[tid];
+  Tau_global_decr_insideTAU();
+  TAU_ASSERT(Tau_thread_flags[tid].Tau_global_insideTAU < 0,
+		"Thread has decremented the insideTAU counter past 0");
+  return Tau_thread_flags[tid].Tau_global_insideTAU;
 }
-
+*/
 extern "C" Profiler *TauInternal_CurrentProfiler(int tid) {
-  int pos = Tau_global_stackpos[tid];
+  int pos = Tau_thread_flags[tid].Tau_global_stackpos;
   if (pos < 0) {
     return NULL;
   }
-  return &(Tau_global_stack[tid][pos]);
+  return &(Tau_thread_flags[tid].Tau_global_stack[pos]);
 }
 
 extern "C" Profiler *TauInternal_ParentProfiler(int tid) {
-  int pos = Tau_global_stackpos[tid]-1;
+  int pos = Tau_thread_flags[tid].Tau_global_stackpos-1;
   if (pos < 0) {
     return NULL;
   }
-  return &(Tau_global_stack[tid][pos]);
+  return &(Tau_thread_flags[tid].Tau_global_stack[pos]);
+}
+
+extern "C" char *TauInternal_CurrentCallsiteTimerName(int tid) {
+  return TauInternal_CurrentProfiler(tid)->ThisFunction->Name;
 }
 
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
-  Tau_global_insideTAU[tid]++;
-
+	FunctionInfo *fi = (FunctionInfo *) functionInfo; 
+Tau_global_incr_insideTAU();
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_init_if_necessary();
@@ -214,24 +283,10 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
   }
 #endif
 
-  //int tid = RtsLayer::myThread();
-  FunctionInfo *fi = (FunctionInfo *) functionInfo; 
-
-  if ( !RtsLayer::TheEnableInstrumentation() || !(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
-#ifndef TAU_WINDOWS
-    if (TauEnv_get_ebs_enabled()) {
-      Tau_sampling_resume(tid);
-    }
-#endif
-    Tau_global_insideTAU[tid]--;
-    return; /* disabled */
-  }
-
-
 #ifdef TAU_TRACK_IDLE_THREADS
   /* If we are performing idle thread tracking, we start a top level timer */
   if (tid != 0) {
-    Tau_create_top_level_timer_if_necessary();
+    Tau_create_top_level_timer_if_necessary_task(tid);
   }
 #endif
 
@@ -243,7 +298,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
     Tau_sampling_resume(tid);
   }
 #endif
-  Tau_global_insideTAU[tid]--;
+  Tau_global_decr_insideTAU();
   return;
 #endif
 
@@ -259,7 +314,7 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
     Tau_sampling_resume(tid);
   }
 #endif
-  Tau_global_insideTAU[tid]--;
+  Tau_global_decr_insideTAU();
   return;
 #endif
 
@@ -269,20 +324,20 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 
 
   // move the stack pointer
-  Tau_global_stackpos[tid]++; /* push */
+  Tau_thread_flags[tid].Tau_global_stackpos++; /* push */
 
 
 
-  if (Tau_global_stackpos[tid] >= Tau_global_stackdepth[tid]) {
-    int oldDepth = Tau_global_stackdepth[tid];
+  if (Tau_thread_flags[tid].Tau_global_stackpos >= Tau_thread_flags[tid].Tau_global_stackdepth) {
+    int oldDepth = Tau_thread_flags[tid].Tau_global_stackdepth;
     int newDepth = oldDepth + STACK_DEPTH_INCREMENT;
     Profiler *newStack = (Profiler *) malloc(sizeof(Profiler)*newDepth);
-    memcpy(newStack, Tau_global_stack[tid], oldDepth*sizeof(Profiler));
-    Tau_global_stack[tid] = newStack;
-    Tau_global_stackdepth[tid] = newDepth;
+    memcpy(newStack, Tau_thread_flags[tid].Tau_global_stack, oldDepth*sizeof(Profiler));
+    Tau_thread_flags[tid].Tau_global_stack = newStack;
+    Tau_thread_flags[tid].Tau_global_stackdepth = newDepth;
   }
 
-  Profiler *p = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
+  Profiler *p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
 
   p->MyProfileGroup_ = fi->GetProfileGroup();
   p->ThisFunction = fi;
@@ -303,14 +358,14 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 
 #ifdef TAU_DEPTH_LIMIT
   static int userspecifieddepth = TauEnv_get_depth_limit();
-  int mydepth = Tau_global_stackpos[tid];
+  int mydepth = Tau_thread_flags[tid].Tau_global_stackpos;
   if (mydepth >= userspecifieddepth) { 
 #ifndef TAU_WINDOWS
     if (TauEnv_get_ebs_enabled()) {
       Tau_sampling_resume(tid);
     }
 #endif
-    Tau_global_insideTAU[tid]--;
+    Tau_global_decr_insideTAU();
     return; 
   }
 #endif /* TAU_DEPTH_LIMIT */
@@ -350,8 +405,63 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
     Tau_sampling_event_start(tid, p->address);
   }
 #endif
-  Tau_global_insideTAU[tid]--;
+  Tau_global_decr_insideTAU();
 }
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_lite_start_timer(void *functionInfo, int phase) {
+  if (TauEnv_get_lite_enabled()){
+		int tid = Tau_get_tid();
+    // move the stack pointer
+    Tau_thread_flags[tid].Tau_global_stackpos++; /* push */
+    FunctionInfo *fi = (FunctionInfo *) functionInfo;
+    Profiler *pp = TauInternal_ParentProfiler(tid);
+    if (fi) {
+      fi->IncrNumCalls(tid); // increment number of calls 
+    }
+    if (pp && pp->ThisFunction) {
+      pp->ThisFunction->IncrNumSubrs(tid); // increment parent's child calls
+    }
+
+    
+    if (Tau_thread_flags[tid].Tau_global_stackpos >= Tau_thread_flags[tid].Tau_global_stackdepth) {
+      int oldDepth = Tau_thread_flags[tid].Tau_global_stackdepth;
+      int newDepth = oldDepth + STACK_DEPTH_INCREMENT;
+      Profiler *newStack = (Profiler *) malloc(sizeof(Profiler)*newDepth);
+      memcpy(newStack, Tau_thread_flags[tid].Tau_global_stack, oldDepth*sizeof(Profiler));
+      Tau_thread_flags[tid].Tau_global_stack = newStack;
+      Tau_thread_flags[tid].Tau_global_stackdepth = newDepth;
+    }
+    Profiler *p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+    RtsLayer::getUSecD(tid, p->StartTime);
+
+    p->MyProfileGroup_ = fi->GetProfileGroup();
+    p->ThisFunction = fi;
+    p->ParentProfiler = pp; 
+
+    // if this function is not already on the callstack, put it
+    if (fi->GetAlreadyOnStack(tid) == false) {
+      p->AddInclFlag = true; 
+      fi->SetAlreadyOnStack(true,tid);
+    } else {
+      p->AddInclFlag = false;
+    }
+
+  } else { // not lite - default 
+		FunctionInfo *fi = (FunctionInfo *) functionInfo; 
+
+		if ( !RtsLayer::TheEnableInstrumentation() || !(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
+			return; /* disabled */
+		}
+		Tau_global_incr_insideTAU();
+		int tid = Tau_get_tid();
+		Tau_global_decr_insideTAU();
+		
+    Tau_start_timer(functionInfo, phase, tid);
+		
+  }
+}
+    
 
 
 
@@ -361,31 +471,20 @@ static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller) {
   fprintf(stderr, "[%d:%d-%d] TAU: Runtime overlap: found %s (%p) on the stack, but stop called on %s (%p)\n", 
 	 RtsLayer::getPid(), RtsLayer::getTid(), RtsLayer::myThread(),
 	 stack->GetName(), stack, caller->GetName(), caller);
+	 abort();
 }
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_stop_timer(void *function_info, int tid ) {
-  Tau_global_insideTAU[tid]++;
+	Tau_global_incr_insideTAU();
+	FunctionInfo *fi = (FunctionInfo *) function_info; 
+
+	Profiler *profiler;
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_suspend(tid);
   }
 #endif
-  FunctionInfo *fi = (FunctionInfo *) function_info; 
-
-  //int tid = RtsLayer::myThread();
-  Profiler *profiler;
-
-  if ( !RtsLayer::TheEnableInstrumentation() || !(fi->GetProfileGroup()) & RtsLayer::TheProfileMask()) {
-#ifndef TAU_WINDOWS
-    if (TauEnv_get_ebs_enabled()) {
-      Tau_sampling_resume(tid);
-    }
-#endif
-    Tau_global_insideTAU[tid]--;
-    return 0; /* disabled */
-  }
-
 
   /********************************************************************************/
   /*** Extras ***/
@@ -414,7 +513,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
       Tau_sampling_resume(tid);
     }
 #endif
-  Tau_global_insideTAU[tid]--;
+  Tau_global_decr_insideTAU();
   return 0;
 #endif
 
@@ -432,7 +531,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
       Tau_sampling_resume(tid);
     }
 #endif
-  Tau_global_insideTAU[tid]--;
+  Tau_global_decr_insideTAU();
   return 0;
 #endif
 
@@ -441,34 +540,47 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 #endif
 
 
-  if (Tau_global_stackpos[tid] < 0) { 
+  if (Tau_thread_flags[tid].Tau_global_stackpos < 0) { 
 #ifndef TAU_WINDOWS
     if (TauEnv_get_ebs_enabled()) {
       Tau_sampling_resume(tid);
     }
 #endif
-    Tau_global_insideTAU[tid]--;
+    Tau_global_decr_insideTAU();
     return 0; 
   }
 
-  profiler = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
+  profiler = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
   
-  if (profiler->ThisFunction != fi) { /* Check for overlapping timers */
-    reportOverlap (profiler->ThisFunction, fi);
+  while (profiler->ThisFunction != fi) { /* Check for overlapping timers */
+		/* We might have an inconstant stack because of throttling. If one thread
+		 * throttles a routine while it is on the top of the stack of another thread
+		 * it will remain there until a stop is called on its parent. Check for this
+		 * condition before printing a overlap error message. */
+		if (!profiler->ThisFunction->GetProfileGroup() & RtsLayer::TheProfileMask())
+		{
+			profiler->Stop();
+			Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
+
+  		profiler = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+		}
+		else {
+    	reportOverlap (profiler->ThisFunction, fi);
+		}
   }
 
 
 #ifdef TAU_DEPTH_LIMIT
   static int userspecifieddepth = TauEnv_get_depth_limit();
-  int mydepth = Tau_global_stackpos[tid];
+  int mydepth = Tau_thread_flags[tid].Tau_global_stackpos;
   if (mydepth >= userspecifieddepth) { 
-    Tau_global_stackpos[tid]--; /* pop */
+    Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
 #ifndef TAU_WINDOWS
     if (TauEnv_get_ebs_enabled()) {
       Tau_sampling_resume(tid);
     }
 #endif
-    Tau_global_insideTAU[tid]--;
+    Tau_global_decr_insideTAU();
     return 0; 
   }
 #endif /* TAU_DEPTH_LIMIT */
@@ -476,16 +588,69 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 
   profiler->Stop(tid);
 
-  Tau_global_stackpos[tid]--; /* pop */
+  Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
 
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_resume(tid);
   }
 #endif
-
-  Tau_global_insideTAU[tid]--;
+  Tau_global_decr_insideTAU();
   return 0;
+}
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" int Tau_lite_stop_timer(void *function_info) {
+  if (TauEnv_get_lite_enabled()) {
+		int tid = Tau_get_tid();
+    double timeStamp[TAU_MAX_COUNTERS] = {0};
+    double delta [TAU_MAX_COUNTERS] = {0}; 
+    RtsLayer::getUSecD(tid, timeStamp);   
+
+    FunctionInfo *fi = (FunctionInfo *) function_info;
+    Profiler *profiler;
+    profiler = (Profiler *) &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+
+    for (int k=0; k<Tau_Global_numCounters; k++) {
+      delta[k] = timeStamp[k] - profiler->StartTime[k];
+    }
+
+    if (profiler && profiler->ThisFunction != fi) { /* Check for overlapping timers */
+      reportOverlap (profiler->ThisFunction, fi);
+    }
+    if (profiler && profiler->AddInclFlag == true) { 
+      fi->SetAlreadyOnStack(false, tid); // while exiting 
+      fi->AddInclTime(delta, tid); // ok to add both excl and incl times
+    }
+    else {
+      //printf("Couldn't add incl time: profiler= %p, profiler->AddInclFlag=%d\n", profiler, profiler->AddInclFlag);
+    }
+    fi->AddExclTime(delta, tid); 
+    Profiler *pp = TauInternal_ParentProfiler(tid); 
+    
+    if (pp) { 
+      pp->ThisFunction->ExcludeTime(delta, tid); 
+    }
+    else {
+      //printf("Tau_lite_stop: parent profiler = 0x0: Function name = %s, StoreData?\n", fi->GetName()); 
+      TauProfiler_StoreData(tid);
+    }
+    Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
+    return 0;
+  } else {
+		FunctionInfo *fi = (FunctionInfo *) function_info; 
+
+		if ( !RtsLayer::TheEnableInstrumentation() || !(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
+			return 1; /* disabled */
+		}
+		Tau_global_incr_insideTAU();
+		int tid = Tau_get_tid();
+		Tau_global_decr_insideTAU();
+		
+    int r = Tau_stop_timer(function_info, tid);
+		
+		return r;
+  }
 }
 
 
@@ -497,9 +662,9 @@ extern "C" int Tau_stop_current_timer() {
 
   tid = RtsLayer::myThread();
 
-  if (Tau_global_stackpos[tid] < 0) return 0;
+  if (Tau_thread_flags[tid].Tau_global_stackpos < 0) return 0;
 
-  profiler = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
+  profiler = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
   functionInfo = profiler->ThisFunction;
   return Tau_stop_timer(functionInfo, Tau_get_tid());
 }
@@ -510,9 +675,13 @@ extern "C" int Tau_profile_exit_all_tasks() {
 	int tid = 1;
 	while (tid < TAU_MAX_THREADS)
 	{
-		while (Tau_global_stackpos[tid] >= 0) {
-			Profiler *p = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
-			Tau_stop_timer(p->ThisFunction, tid);
+		while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
+			Profiler *p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+			//Make sure even throttled routines are stopped.
+			if (Tau_stop_timer(p->ThisFunction, tid)) {
+				p->Stop(tid);
+  			Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
+			}
 		}
 	tid++;
 	}
@@ -525,10 +694,14 @@ extern "C" int Tau_profile_exit_all_threads() {
 	int tid = 0;
 	while (tid < TAU_MAX_THREADS)
 	{
-		while (Tau_global_stackpos[tid] >= 0) {
-			Profiler *p = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
-			Tau_stop_timer(p->ThisFunction, Tau_get_tid());
-			// DO NOT pop. It is popped in stop above: Tau_global_stackpos[tid]--;
+		while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
+			Profiler *p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+			//Make sure even throttled routines are stopped.
+			if (Tau_stop_timer(p->ThisFunction, Tau_get_tid())) {
+				p->Stop(Tau_get_tid());
+  			Tau_thread_flags[Tau_get_tid()].Tau_global_stackpos--; /* pop */
+			}
+			// DO NOT pop. It is popped in stop above: Tau_thread_flags[tid].Tau_global_stackpos--;
 		}
 	tid++;
 	}
@@ -539,10 +712,14 @@ extern "C" int Tau_profile_exit_all_threads() {
 
 extern "C" int Tau_profile_exit() {
   int tid = RtsLayer::myThread();
-	while (Tau_global_stackpos[tid] >= 0) {
-		Profiler *p = &(Tau_global_stack[tid][Tau_global_stackpos[tid]]);
-		Tau_stop_timer(p->ThisFunction, Tau_get_tid());
-		// DO NOT pop. It is popped in stop above: Tau_global_stackpos[tid]--;
+	while (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
+		Profiler *p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+		//Make sure even throttled routines are stopped.
+		if (Tau_stop_timer(p->ThisFunction, Tau_get_tid())) {
+			p->Stop(Tau_get_tid());
+			Tau_thread_flags[Tau_get_tid()].Tau_global_stackpos--; /* pop */
+		}
+		// DO NOT pop. It is popped in stop above: Tau_thread_flags[tid].Tau_global_stackpos--;
 	}
   return 0;
 }
@@ -820,15 +997,15 @@ extern "C" TauGroup_t Tau_disable_all_groups(void) {
 extern "C" int& tau_totalnodes(int set_or_get, int value)
 {
   static int nodes = 1;
-  if (set_or_get == 1)
-    {
-      nodes = value;
-    }
+  if (set_or_get == 1) {
+    nodes = value;
+  }
   return nodes;
 }
 
 
-#if (defined(TAU_MPI) || defined(TAU_SHMEM) || defined(TAU_DMAPP) )
+
+#if (defined(TAU_MPI) || defined(TAU_SHMEM) || defined(TAU_DMAPP) || defined(TAU_UPC) || defined(TAU_GPI) )
 
 
 
@@ -859,30 +1036,36 @@ TAU_GEN_EVENT(TheGatherEvent,"Message size for gather")
 TAU_GEN_EVENT(TheAllgatherEvent,"Message size for all-gather")
 TAU_GEN_CONTEXT_EVENT(TheWaitEvent,"Message size received in wait")
 
+TauContextUserEvent & TheMsgVolSendContextEvent(int tid) {
+    static TauContextUserEvent ** sendEvents = NULL;
 
-TauContextUserEvent**& TheMsgVolContextEvent() {
-  static TauContextUserEvent **u = 0; 
-  return u;
+    if(!sendEvents) {
+        sendEvents = (TauContextUserEvent**)calloc(tau_totalnodes(0,0), sizeof(TauContextUserEvent*));
+    }
+
+    if(!sendEvents[tid]) {
+        char buff[256];
+        sprintf(buff, "Message size sent to node %d", tid);
+        sendEvents[tid] = new TauContextUserEvent(buff);
+    }
+
+    return *(sendEvents[tid]);
 }
 
-int register_events(void) {
-  static int flag = 0; 
-  
-  if (flag == 0) {
+TauContextUserEvent & TheMsgVolRecvContextEvent(int tid) {
+    static TauContextUserEvent ** recvEvents = NULL;
 
-    if (TauEnv_get_comm_matrix()) {
-      char str[256];
-      int i;
-      
-      TheMsgVolContextEvent() = (TauContextUserEvent **) malloc(sizeof(TauContextUserEvent *)*tau_totalnodes(0,0));
-      for (i =0; i < tau_totalnodes(0,0); i++) {
-        sprintf(str, "Message size sent to node %d", i);
-        TheMsgVolContextEvent()[i] = (TauContextUserEvent *) new TauContextUserEvent((const char *)str);
-      }
+    if(!recvEvents) {
+        recvEvents = (TauContextUserEvent**)calloc(tau_totalnodes(0,0), sizeof(TauContextUserEvent*));
     }
-    flag = 1;
-  }
-  return 0;
+
+    if(!recvEvents[tid]) {
+        char buff[256];
+        sprintf(buff, "Message size received from node %d", tid);
+        recvEvents[tid] = new TauContextUserEvent(buff);
+    }
+
+    return *(recvEvents[tid]);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -891,11 +1074,9 @@ extern "C" int shmem_n_pes(void);
 #endif /* TAU_SHMEM */
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
+extern "C" void Tau_trace_sendmsg(int type, int destination, int length) 
+{
   if (!RtsLayer::TheEnableInstrumentation()) return; 
-  static int initialize = register_events();
-#ifdef DEBUG_PROF
-#endif /* DEBUG_PROF */
 
 #ifdef TAU_PROFILEPARAM
 #ifndef TAU_DISABLE_PROFILEPARAM_IN_MPI
@@ -907,15 +1088,18 @@ extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
 
   if (TauEnv_get_comm_matrix()) {
     if (destination >= tau_totalnodes(0,0)) {
-#if (defined (TAU_SHMEM))
+#ifdef TAU_SHMEM
       tau_totalnodes(1,shmem_n_pes());
-      register_events();
 #else /* TAU_SHMEM */
-      fprintf(stderr, "TAU Error: Comm Matrix destination %d exceeds node count %d. Was MPI_Init/shmem_init wrapper never called? Please disable TAU_COMM_MATRIX or add calls to the init function in your source code.\n", destination, tau_totalnodes(0,0));
+      fprintf(stderr, 
+          "TAU Error: Comm Matrix destination %d exceeds node count %d. "
+          "Was MPI_Init/shmem_init wrapper never called? "
+          "Please disable TAU_COMM_MATRIX or add calls to the init function in your source code.\n", 
+          destination, tau_totalnodes(0,0));
       exit(-1);
 #endif /* TAU_SHMEM */
     }
-    TheMsgVolContextEvent()[destination]->TriggerEvent(length, RtsLayer::myThread());
+    TheMsgVolSendContextEvent(destination).TriggerEvent(length, RtsLayer::myThread());
   }
 
   if (TauEnv_get_tracing()) {
@@ -944,8 +1128,8 @@ extern "C" void Tau_trace_recvmsg(int type, int source, int length) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_trace_recvmsg_remote(int type, int source, int length, int remoteid) {
-
+extern "C" void Tau_trace_recvmsg_remote(int type, int source, int length, int remoteid) 
+{
   if (!RtsLayer::TheEnableInstrumentation()) return; 
   if (TauEnv_get_tracing()) {
     if (source >= 0) {
@@ -955,7 +1139,8 @@ extern "C" void Tau_trace_recvmsg_remote(int type, int source, int length, int r
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_trace_sendmsg_remote(int type, int destination, int length, int remoteid) {
+extern "C" void Tau_trace_sendmsg_remote(int type, int destination, int length, int remoteid) 
+{
   if (!RtsLayer::TheEnableInstrumentation()) return; 
 
   if (TauEnv_get_tracing()) {
@@ -963,32 +1148,30 @@ extern "C" void Tau_trace_sendmsg_remote(int type, int destination, int length, 
       TauTraceSendMsgRemote(type, destination, length, remoteid);
     }
   }
+
   if (TauEnv_get_comm_matrix())  {
-  static int initialize = register_events();
-#ifdef DEBUG_PROF
-#endif /* DEBUG_PROF */
 
 #ifdef TAU_PROFILEPARAM
 #ifndef TAU_DISABLE_PROFILEPARAM_IN_MPI
-  TAU_PROFILE_PARAM1L(length, "message size");
+    TAU_PROFILE_PARAM1L(length, "message size");
 #endif /* TAU_DISABLE_PROFILEPARAM_IN_MPI */
 #endif  /* TAU_PROFILEPARAM */
 
-  //TAU_EVENT(TheSendEvent(), length); 
-
-  if (TauEnv_get_comm_matrix()) {
-    if (destination >= tau_totalnodes(0,0)) {
-     
-#if (defined (TAU_SHMEM))
-      tau_totalnodes(1,shmem_n_pes());
-      register_events();
+    if (TauEnv_get_comm_matrix()) {
+      if (destination >= tau_totalnodes(0,0)) {
+#ifdef TAU_SHMEM
+        tau_totalnodes(1,shmem_n_pes());
 #else /* TAU_SHMEM */
-      fprintf(stderr, "TAU Error: Comm Matrix destination %d exceeds node count %d. Was MPI_Init/shmem_init wrapper never called? Please disable TAU_COMM_MATRIX or add calls to the init function in your source code.\n", destination, tau_totalnodes(0,0));
-      exit(-1);
+        fprintf(stderr, 
+            "TAU Error: Comm Matrix destination %d exceeds node count %d. "
+            "Was MPI_Init/shmem_init wrapper never called? "
+            "Please disable TAU_COMM_MATRIX or add calls to the init function in your source code.\n", 
+            destination, tau_totalnodes(0,0));
+        exit(-1);
 #endif /* TAU_SHMEM */
+      }
+      TheMsgVolRecvContextEvent(remoteid).TriggerEvent(length, RtsLayer::myThread());
     }
-    TheMsgVolContextEvent()[remoteid]->TriggerEvent(length, RtsLayer::myThread());
-  }
 
   }
 }
@@ -1033,7 +1216,9 @@ extern "C" void Tau_scan_data(int data) {
 extern "C" void Tau_reducescatter_data(int data) {
   TAU_EVENT(TheReduceScatterEvent(), data);
 }
-#else /* !(TAU_MPI || TAU_SHMEM || TAU_DMAPP)*/
+
+#else /* !(TAU_MPI || TAU_SHMEM || TAU_DMAPP || TAU_GPI)*/
+
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_trace_sendmsg(int type, int destination, int length) {
   TauTraceSendMsg(type, destination, length);
@@ -1050,6 +1235,7 @@ extern "C" void Tau_trace_recvmsg(int type, int source, int length) {
 extern "C" void Tau_trace_recvmsg_remote(int type, int source, int length, int remoteid) {
   TauTraceRecvMsgRemote(type, source, length, remoteid);
 }
+
 #endif /* TAU_MPI || TAU_SHMEM*/
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1143,38 +1329,53 @@ extern "C" void Tau_event_disable_stddev(void *ue) {
 
 ///////////////////////////////////////////////////////////////////////////
 
-extern "C" void Tau_profile_c_timer(void **ptr, const char *name, const char *type, TauGroup_t group, 
-	const char *group_name) {
+extern "C" void Tau_profile_c_timer(void **ptr, const char *name, const char *type, 
+    TauGroup_t group, const char *group_name) 
+{
+  Tau_global_incr_insideTAU();
   if (*ptr == 0) {
     RtsLayer::LockEnv();
     if (*ptr == 0) {  
-      Tau_global_incr_insideTAU();
       // remove garbage characters from the end of name
-      char *fixedname = strdup(name);
-      for (unsigned int i=0; i<strlen(fixedname); i++) {
-	if (!isprint(fixedname[i])) {
-	  fixedname[i] = '\0';
-	  break;
-	}
+      unsigned int len=0;
+      while(isprint(name[len])) {
+        ++len;
       }
+
+      char * fixedname = (char*)malloc(len+1);
+      memcpy(fixedname, name, len);
+      fixedname[len] = '\0';
+
       *ptr = Tau_get_profiler(fixedname, type, group, group_name);
-      free (fixedname);
-      Tau_global_decr_insideTAU();
+
+      free((void*)fixedname);
     }
     RtsLayer::UnLockEnv();
   }
-  return;
+  Tau_global_decr_insideTAU();
 }
 
 ///////////////////////////////////////////////////////////////////////////
 
+//static string gTauApplication = string(".TAU application");
+
+static string& gTauApplication()
+{
+	static string g = string(".TAU application");
+	return g;
+
+}
+
+extern void Tau_pure_start_task_string(const string name, int tid);
 
 /* We need a routine that will create a top level parent profiler and give
  * it a dummy name for the application, if just the MPI wrapper interposition
  * library is used without any instrumentation in main */
 extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
+  //This is often the first entry point into TAU.
+  Tau_global_incr_insideTAU();
 
-
+/*
   int disabled = 0;
 #ifdef TAU_VAMPIRTRACE
   disabled = 1;
@@ -1185,83 +1386,75 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid) {
   if (disabled) {
     return;
   }
-
+*/
+#if defined(TAU_VAMPIRTRACE) || defined(TAU_EPILOG)
+  Tau_global_decr_insideTAU();
+  return; // disabled.
+#endif
+  /* After creating the ".TAU application" timer, we start it. In the
+     timer start code, it will call this function, so in that case,
+  	 return right away. */
   static bool initialized = false;
-  static bool initthread[TAU_MAX_THREADS];
+  static bool initthread[TAU_MAX_THREADS] = {false};
+  static bool initializing[TAU_MAX_THREADS] = {false};
+
   if (!initialized) {
-    RtsLayer::LockDB();
+    if (initializing[tid]) {
+      Tau_global_decr_insideTAU();
+      return;
+    }
+    RtsLayer::LockEnv();
     if (!initialized) {
-      for (int i=0; i<TAU_MAX_THREADS; i++) {
-	initthread[i] = false;
+	  // whichever thread got here first, has the lock and will create the
+	  // FunctionInfo object for the top level timer.
+      if (TauInternal_CurrentProfiler(tid) == NULL) {
+        initthread[tid] = true;
+		initializing[tid] = true;
+        Tau_pure_start_task_string(gTauApplication(), tid);
+		initializing[tid] = false;
+        initialized = true;
       }
     }
-    RtsLayer::UnLockDB();
-    initialized = true;
+    RtsLayer::UnLockEnv();
   }
+
   if (initthread[tid] == true) {
+    Tau_global_decr_insideTAU();
     return;
   }
   
-	FunctionInfo *ptr;
+  // if there is no top-level timer, create one - But only create one FunctionInfo object.
+  // that should be handled by the Tau_pure_start_task call.
   if (TauInternal_CurrentProfiler(tid) == NULL) {
-			printf("in create_top_level_timer.\n");
     initthread[tid] = true;
-    ptr = (FunctionInfo *) Tau_get_profiler(".TAU application", " ", TAU_DEFAULT, "TAU_DEFAULT");
-    if (ptr) {
-      Tau_start_timer(ptr, 0, tid);
-    }
+    initializing[tid] = true;
+    Tau_pure_start_task_string(gTauApplication(), tid);
+    initializing[tid] = false;
   }
+
   atexit(Tau_destructor_trigger);
+  Tau_global_decr_insideTAU();
+  return;
 }
 
 extern "C" void Tau_create_top_level_timer_if_necessary(void) {
-  int disabled = 0;
-#ifdef TAU_VAMPIRTRACE
-  disabled = 1;
-#endif
-#ifdef TAU_EPILOG
-  disabled = 1;
-#endif
-  if (disabled) {
-    return;
-  }
-
-  static bool initialized = false;
-  static bool initthread[TAU_MAX_THREADS];
-  if (!initialized) {
-    RtsLayer::LockDB();
-    if (!initialized) {
-      for (int i=0; i<TAU_MAX_THREADS; i++) {
-	initthread[i] = false;
-      }
-    }
-    RtsLayer::UnLockDB();
-    initialized = true;
-  }
-  int tid = RtsLayer::myThread();
-  if (initthread[tid] == true) {
-    return;
-  }
-  FunctionInfo *ptr;
-  if (TauInternal_CurrentProfiler(tid) == NULL) {
-    initthread[tid] = true;
-    ptr = (FunctionInfo *) Tau_get_profiler(".TAU application", " ", TAU_DEFAULT, "TAU_DEFAULT");
-    if (ptr) {
-      Tau_start_timer(ptr, 0, Tau_get_tid());
-    }
-  }
-  atexit(Tau_destructor_trigger);
+  return Tau_create_top_level_timer_if_necessary_task(Tau_get_tid());
 }
 
 
-extern "C" void Tau_stop_top_level_timer_if_necessary(void) {
-  int tid = RtsLayer::myThread();
+extern "C" void Tau_stop_top_level_timer_if_necessary_task(int tid) {
+  Tau_global_incr_insideTAU();
   if (TauInternal_CurrentProfiler(tid) && 
       TauInternal_CurrentProfiler(tid)->ParentProfiler == NULL && 
       strcmp(TauInternal_CurrentProfiler(tid)->ThisFunction->GetName(), ".TAU application") == 0) {
     DEBUGPROFMSG("Found top level .TAU application timer"<<endl;);  
     TAU_GLOBAL_TIMER_STOP();
   }
+  Tau_global_decr_insideTAU();
+}
+
+extern "C" void Tau_stop_top_level_timer_if_necessary(void) {
+   Tau_stop_top_level_timer_if_necessary_task(RtsLayer::myThread());
 }
 
 
@@ -1410,47 +1603,73 @@ map<string, int *>& TheIterationMap() {
   return iterationMap;
 }
 
-extern "C" void Tau_pure_start_task(const char *name, int tid)
+void Tau_pure_start_task_string(const string name, int tid)
 {
   FunctionInfo *fi = 0;
-  string n = string(name);
-  RtsLayer::LockDB();
-  TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
+  RtsLayer::LockEnv();
+  TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(name);
   if (it == ThePureMap().end()) {
-    tauCreateFI((void**)&fi,n,"",TAU_USER,"TAU_USER");
-    ThePureMap()[n] = fi;
+    tauCreateFI((void**)&fi,name,"",TAU_USER,"TAU_USER");
+    ThePureMap()[name] = fi;
   } else {
     fi = (*it).second;
   }
-  RtsLayer::UnLockDB();
+  RtsLayer::UnLockEnv();
   Tau_start_timer(fi,0, tid);
 }
-extern "C" void Tau_pure_start(const char *name) {
-  Tau_pure_start_task(name, Tau_get_tid());
+
+extern "C" void Tau_pure_start_task(const char *name, int tid)
+{
+  Tau_global_incr_insideTAU();
+  string n = string(name);
+  Tau_pure_start_task_string(n, tid);
+  Tau_global_decr_insideTAU();
 }
 
-extern "C" void Tau_pure_stop_task(const char *name, int tid) {
-  FunctionInfo *fi;
+extern "C" void Tau_pure_start(const char *name) {
+  int tid = Tau_get_tid();
+  Tau_global_incr_insideTAU();
   string n = string(name);
+  Tau_pure_start_task_string(n, tid);
+  Tau_global_decr_insideTAU();
+}
+
+void Tau_pure_stop_task_string(const string name, int tid) {
+  FunctionInfo *fi;
+  // Locking the access to the FunctionInfo map
   RtsLayer::LockDB();
-  TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
+  TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(name);
   if (it == ThePureMap().end()) {
-    fprintf (stderr, "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\nTAU Error: You will likely get an overlapping timer message next\n\n", name);
+    fprintf (stderr, "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\nTAU Error: You will likely get an overlapping timer message next\n\n", name.c_str());
   } else {
     fi = (*it).second;
   }
+  // releasing the FunctionInfo map
   RtsLayer::UnLockDB();
   Tau_stop_timer(fi, tid);
 }
+
+extern "C" void Tau_pure_stop_task(const char *name, int tid) {
+  Tau_global_incr_insideTAU();
+  string n = string(name);
+  Tau_pure_stop_task_string(n, tid);
+  Tau_global_decr_insideTAU();
+}
+
 extern "C" void Tau_pure_stop(const char *name) {
-  Tau_pure_stop_task(name, Tau_get_tid());
+  int tid = Tau_get_tid();
+  Tau_global_incr_insideTAU();
+  string n = string(name);
+  Tau_pure_stop_task_string(n, Tau_get_tid());
+  Tau_global_decr_insideTAU();
 }
 
 extern "C" void Tau_static_phase_start(char *name) {
 
-printf("Static phase: %s\n", name);
+//printf("Static phase: %s\n", name);
   FunctionInfo *fi = 0;
   string n = string(name);
+  RtsLayer::LockDB();
   TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
   if (it == ThePureMap().end()) {
     tauCreateFI((void**)&fi,n,"",TAU_USER,"TAU_USER");
@@ -1459,19 +1678,22 @@ printf("Static phase: %s\n", name);
   } else {
     fi = (*it).second;
   }   
+  RtsLayer::UnLockDB();
   Tau_start_timer(fi,1, Tau_get_tid());
 }
 
 extern "C" void Tau_static_phase_stop(char *name) {
   FunctionInfo *fi;
   string n = string(name);
+  RtsLayer::LockDB();
   TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(n);
   if (it == ThePureMap().end()) {
     fprintf (stderr, "\nTAU Error: Routine \"%s\" does not exist, did you misspell it with TAU_STOP()?\nTAU Error: You will likely get an overlapping timer message next\n\n", name);
   } else {
     fi = (*it).second;
-    Tau_stop_timer(fi, Tau_get_tid());
   }
+  RtsLayer::UnLockDB();
+  Tau_stop_timer(fi, Tau_get_tid());
 }
 
 
@@ -1672,6 +1894,15 @@ extern "C" void Tau_get_counter_info(const char ***counterNames, int *numCounter
 }
 
 //////////////////////////////////////////////////////////////////////
+//Fast but DO NOT use this call when calling the FunctionInfo DB
+//or Profiler stack. 
+extern "C" int Tau_get_local_tid(void) {
+  return RtsLayer::localThreadId();
+}
+
+//////////////////////////////////////////////////////////////////////
+//Slow but will correctly account for the tasks. Use when calling FunctionInfo DB
+//or Profiler stack.
 extern "C" int Tau_get_tid(void) {
   return RtsLayer::myThread();
 }
@@ -1684,7 +1915,6 @@ extern "C" int Tau_create_tid(void) {
 // ensuring that the profiles are written out while the objects are still valid
 void Tau_destructor_trigger() {
   Tau_stop_top_level_timer_if_necessary();
-  //printf ("FIvector destructor\n");
   Tau_global_setLightsOut();
   if ((TheUsingDyninst() || TheUsingCompInst()) && TheSafeToDumpData()) {
 #ifndef TAU_VAMPIRTRACE
@@ -1702,7 +1932,7 @@ extern "C" int Tau_create_task(void) {
   }
   taskid= RtsLayer::RegisterThread() - 1; /* it returns 1 .. N, we want 0 .. N-1 */
   /* specify taskid is a fake thread used in the Task API */
-  Tau_is_thread_fake_for_task_api[taskid] = 1; /* This thread is fake! */
+  Tau_thread_flags[taskid].Tau_is_thread_fake_for_task_api = 1; /* This thread is fake! */
  	//printf("create task with id: %d.\n", taskid); 
   return taskid;
 }
@@ -1726,9 +1956,9 @@ const char *Tau_query_event_name(void *event) {
 }
 
 void *Tau_query_parent_event(void *event) {
-  Profiler *profiler = (Profiler*) event;
+  //Profiler *profiler = (Profiler*) event;
   int tid = RtsLayer::myThread();
-  void *topOfStack = &(Tau_global_stack[tid][0]);
+  void *topOfStack = &(Tau_thread_flags[tid].Tau_global_stack[0]);
   if (event == topOfStack) {
     return NULL;
   } else {
