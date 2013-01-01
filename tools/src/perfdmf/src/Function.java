@@ -132,7 +132,20 @@ public class Function implements Serializable, Comparable<Function> {
     public SourceRegion getSourceLink() {
         if (this.sourceLink == null) {
             if (isCallPathFunction(name)){//(isGroupMember("TAU_CALLPATH_DERIVED")) {
-                this.sourceLink = getSourceLink(UtilFncs.getLeftSide(name));
+            	String tmpName = name;
+            	SourceRegion tmpReg = getSourceLink(UtilFncs.getRightMost(tmpName));
+            	int start = tmpReg.getStartLine();
+            	while(start<=-1){
+            		tmpReg = getSourceLink(UtilFncs.getRightMost(tmpName));
+                    start=tmpReg.getStartLine();
+                    String tmpTmpName=tmpName;
+                    tmpName=UtilFncs.getAllButRightMost(tmpName);
+                    if(tmpName.equals(tmpTmpName)){
+                    	break;
+                    }
+            	}
+                
+                this.sourceLink=tmpReg;
             } else {
                 this.sourceLink = getSourceLink(this.name);
             }
