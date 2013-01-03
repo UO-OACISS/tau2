@@ -191,11 +191,11 @@ extern "C" int Tau_global_get_insideTAU() {
   int tid = RtsLayer::localThreadId();
   return Tau_thread_flags[tid].Tau_global_insideTAU;
 }
-
+/*
 extern "C" int Tau_global_get_insideTAU_tid(int tid) {
   Tau_stack_checkInit();
   return Tau_thread_flags[tid].Tau_global_insideTAU;
-}
+}*/
 
 extern "C" int Tau_global_incr_insideTAU() {
   Tau_stack_checkInit();
@@ -209,7 +209,7 @@ extern "C" int Tau_global_process_incr_insideTAU() {
   int tid = 0;
   while (tid < TAU_MAX_THREADS)
   {
-    Tau_global_incr_insideTAU();
+    Tau_thread_flags[tid].Tau_global_insideTAU++;
     tid++;
   }
   return -1;
@@ -229,7 +229,7 @@ extern "C" int Tau_global_process_decr_insideTAU() {
   int tid = 0;
   while (tid < TAU_MAX_THREADS)
   {
-    Tau_global_decr_insideTAU();
+    Tau_thread_flags[tid].Tau_global_insideTAU--;
   	TAU_ASSERT(Tau_thread_flags[tid].Tau_global_insideTAU < 0,
 			"Thread has decremented the insideTAU counter past 0");
     tid++;

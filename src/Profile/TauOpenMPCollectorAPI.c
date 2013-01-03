@@ -120,7 +120,8 @@ char * show_backtrace (void) {
       unw_get_reg(&cursor, UNW_REG_IP, &ip);
       unw_get_reg(&cursor, UNW_REG_SP, &sp);
       char * newShort;
-      void * tmpInfo = (void*)Tau_sampling_resolveCallSite(ip, "UNWIND", NULL, &newShort, 0);
+      void * tmpInfo = (void*)Tau_sampling_resolveCallSite(ip, "OPENMP", NULL, &newShort, 0);
+      //void * tmpInfo = (void*)Tau_sampling_resolveCallSite(ip, "UNWIND", NULL, &newShort, 0);
       Tau_collector_api_CallSiteInfo * myInfo = (Tau_collector_api_CallSiteInfo*)(tmpInfo);
       location = malloc(strlen(myInfo->name)+1);
       strcpy(location, myInfo->name);
@@ -132,7 +133,7 @@ char * show_backtrace (void) {
 }
 #endif
 
-void Tau_get_current_region_context(int tid, int forking) {
+void Tau_get_current_region_context(int tid) {
   // Tau_get_region_id (tid);
   char * tmpStr = NULL;
 #if defined(TAU_UNWIND) && defined(TAU_BFD) // need them both
@@ -149,17 +150,28 @@ void Tau_get_current_region_context(int tid, int forking) {
   Tau_collector_flags[tid].timerContext = malloc(strlen(tmpStr)+1);
   strcpy(Tau_collector_flags[tid].timerContext, tmpStr);
   //printf("Got timer: %s\n", Tau_collector_flags[tid].timerContext);
-  if (forking > 0) {
   //printf("Forking with %d threads\n", omp_get_max_threads());
-    int i;
-    for (i == tid+1 ; i < omp_get_max_threads() ; i++) {
-      Tau_collector_flags[i].regionID = Tau_collector_flags[tid].regionID;
-      if (Tau_collector_flags[i].timerContext != NULL) {
-        free(Tau_collector_flags[i].timerContext);
-      }
-      Tau_collector_flags[i].timerContext = malloc(strlen(tmpStr)+1);
-      strcpy(Tau_collector_flags[i].timerContext, tmpStr);
+  int i;
+  for (i = 0 ; i < omp_get_max_threads() ; i++) {
+    if (i == tid) continue; // don't mess with yourself
+    Tau_collector_flags[i].regionID = Tau_collector_flags[tid].regionID;
+    if (Tau_collector_flags[i].timerContext != NULL) {
+      free(Tau_collector_flags[i].timerContext);
     }
+    Tau_collector_flags[i].timerContext = malloc(strlen(tmpStr)+1);
+    strcpy(Tau_collector_flags[i].timerContext, tmpStr);
+    // set the active timer context, too
+    /*
+    if (Tau_collector_flags[i].idle == 1) {
+      if (Tau_collector_flags[i].activeTimerContext != NULL) {
+        free(Tau_collector_flags[i].activeTimerContext);
+      }
+      Tau_collector_flags[i].activeTimerContext = malloc(strlen(Tau_collector_flags[tid].timerContext)+1);
+      strcpy(Tau_collector_flags[i].activeTimerContext, Tau_collector_flags[tid].timerContext);
+    }
+    printf("Thread %d Got timer: %s\n", i, Tau_collector_flags[i].timerContext);
+    printf("Thread %d Got active timer: %s\n", i, Tau_collector_flags[i].activeTimerContext);
+    */
   }
   return;
 }
@@ -172,9 +184,11 @@ void Tau_get_current_region_context(int tid, int forking) {
     regionIDstr = malloc(strlen(Tau_collector_flags[tid].timerContext) + 32);
   }
   if (use_context == 0) {
-    sprintf(regionIDstr, "OpenMP %s", state);
+    //sprintf(regionIDstr, "OpenMP %s", state);
+    sprintf(regionIDstr, "[OPENMP] : %s", state);
   } else {
-    sprintf(regionIDstr, "%s : OpenMP %s", Tau_collector_flags[tid].timerContext, state);
+    //sprintf(regionIDstr, "%s : OpenMP %s", Tau_collector_flags[tid].timerContext, state);
+    sprintf(regionIDstr, "%s : %s", Tau_collector_flags[tid].timerContext, state);
     // it is safe to set the active region ID now.
     Tau_collector_flags[tid].activeRegionID = Tau_collector_flags[tid].regionID;
     // it is safe to set the active timer context now.
@@ -197,9 +211,11 @@ void Tau_get_current_region_context(int tid, int forking) {
     regionIDstr = malloc(strlen(Tau_collector_flags[tid].activeTimerContext) + 32);
   }
   if (use_context == 0) {
-    sprintf(regionIDstr, "OpenMP %s", state);
+    //sprintf(regionIDstr, "OpenMP %s", state);
+    sprintf(regionIDstr, "[OPENMP] : %s", state);
   } else {
-    sprintf(regionIDstr, "%s : OpenMP %s", Tau_collector_flags[tid].activeTimerContext, state);
+    //sprintf(regionIDstr, "%s : OpenMP %s", Tau_collector_flags[tid].activeTimerContext, state);
+    sprintf(regionIDstr, "%s : %s", Tau_collector_flags[tid].activeTimerContext, state);
   }
   //printf("Thread %d : Stopping : %s\n", tid, regionIDstr);
   TAU_STATIC_TIMER_STOP(regionIDstr);
@@ -212,15 +228,17 @@ void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
 
   switch(event) {
     case OMP_EVENT_FORK:
-      Tau_get_current_region_context(tid, 1);
+      Tau_get_current_region_context(tid);
       Tau_omp_start_timer("PARALLEL REGION", tid, 1);
       Tau_collector_flags[tid].parallel++;
       break;
     case OMP_EVENT_JOIN:
+/*
       if (Tau_collector_flags[tid].idle == 1) {
         Tau_omp_stop_timer("IDLE", tid, 0);
         Tau_collector_flags[tid].idle = 0;
       }
+*/
       Tau_omp_stop_timer("PARALLEL REGION", tid, 1);
       Tau_collector_flags[tid].parallel--;
       break;
@@ -233,14 +251,18 @@ void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
         Tau_omp_stop_timer("PARALLEL REGION", tid, 1);
         Tau_collector_flags[tid].busy = 0;
       }
+/*
       Tau_omp_start_timer("IDLE", tid, 0);
       Tau_collector_flags[tid].idle = 1;
+*/
       break;
     case OMP_EVENT_THR_END_IDLE:
+/*
       if (Tau_collector_flags[tid].idle == 1) {
         Tau_omp_stop_timer("IDLE", tid, 0);
         Tau_collector_flags[tid].idle = 0;
       }
+*/
       // it is safe to set the active region ID now.
       Tau_collector_flags[tid].activeRegionID = Tau_collector_flags[tid].regionID;
       // it is safe to set the active timer context now.
