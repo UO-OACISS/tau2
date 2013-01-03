@@ -917,14 +917,14 @@ void Tau_sampling_finalizeProfile(int tid) {
     intermediateGlobalLeafString = new string(intermediateGlobalLeafName);
     fi_it = name2FuncInfoMap[tid]->find(*intermediateGlobalLeafString);
     if (fi_it == name2FuncInfoMap[tid]->end()) {
-      string grname = string("TAU_INTERMEDIATE | ") + string(candidate->tauContext->GetAllGroups());
+      //string grname = string("TAU_INTERMEDIATE | ") + string(candidate->tauContext->GetAllGroups());
       // Create the FunctionInfo object for the leaf Intermediate object.
       RtsLayer::LockDB();
       intermediateGlobalLeaf = 
 	new FunctionInfo((const char*)intermediateGlobalLeafName,
 			 candidate->tauContext->GetType(),
 			 candidate->tauContext->GetProfileGroup(),
-			 (const char*)grname.c_str(), true);
+			 "TAU_INTERMEDIATE", true);
       RtsLayer::UnLockDB();
       name2FuncInfoMap[tid]->insert(std::pair<string,FunctionInfo*>(*intermediateGlobalLeafString, intermediateGlobalLeaf));
     } else {
@@ -940,14 +940,14 @@ void Tau_sampling_finalizeProfile(int tid) {
     intermediatePathLeafString = new string(intermediatePathLeafName);
     fi_it = name2FuncInfoMap[tid]->find(*intermediatePathLeafString);
     if (fi_it == name2FuncInfoMap[tid]->end()) {
-      string grname = string("TAU_INTERMEDIATE | TAU_CALLPATH | ") + string(candidate->tauContext->GetAllGroups());
+      //string grname = string("TAU_INTERMEDIATE | ") + string(candidate->tauContext->GetAllGroups());
       // Create the FunctionInfo object for the leaf Intermediate object.
       RtsLayer::LockDB();
       intermediatePathLeaf = 
 	new FunctionInfo((const char*)intermediatePathLeafName,
 			 candidate->tauContext->GetType(),
 			 candidate->tauContext->GetProfileGroup(),
-			 (const char*)grname.c_str(), true);
+			 "TAU_INTERMEDIATE | TAU_CALLPATH", true);
       RtsLayer::UnLockDB();
       name2FuncInfoMap[tid]->insert(std::pair<string,FunctionInfo*>(*intermediatePathLeafString, intermediatePathLeaf));
     } else {
@@ -980,17 +980,17 @@ void Tau_sampling_finalizeProfile(int tid) {
       
       fi_it = name2FuncInfoMap[tid]->find(sampleGlobalLeafString);
       if (fi_it == name2FuncInfoMap[tid]->end()) {
-        char sampleGroup[] = "TAU_UNWIND | ";
+        char sampleGroup[] = "TAU_UNWIND";
         if (strstr((const char*)sampleGlobalLeafString.c_str(), "UNWIND") == NULL) {
-          strcpy(sampleGroup, "TAU_SAMPLE | ");
+          strcpy(sampleGroup,"TAU_SAMPLE");
         }
-	string grname = string(sampleGroup) + string(candidate->tauContext->GetAllGroups());
+	//string grname = sampleGroup + string(candidate->tauContext->GetAllGroups());
 	RtsLayer::LockDB();
 	sampleGlobalLeaf = 
 	  new FunctionInfo((const char*)sampleGlobalLeafString.c_str(),
 			   candidate->tauContext->GetType(),
 			   candidate->tauContext->GetProfileGroup(),
-			   (const char*)grname.c_str(), true);
+			   sampleGroup, true);
 	RtsLayer::UnLockDB();
 	name2FuncInfoMap[tid]->insert(std::pair<string,FunctionInfo*>(sampleGlobalLeafString, sampleGlobalLeaf));
       } else {
@@ -1009,16 +1009,16 @@ void Tau_sampling_finalizeProfile(int tid) {
       string *callSiteKeyName = new string(call_site_key);
       fi_it = name2FuncInfoMap[tid]->find(*callSiteKeyName);
       if (fi_it == name2FuncInfoMap[tid]->end()) {
-        char sampleGroup[] = "TAU_UNWIND | ";
+        char sampleGroup[] = "TAU_UNWIND | TAU_CALLPATH";
         if (strstr((const char*)callSiteKeyName->c_str(), "UNWIND") == NULL) {
-          strcpy(sampleGroup, "TAU_SAMPLE | ");
+          strcpy(sampleGroup,"TAU_SAMPLE | TAU_CALLPATH");
         }
-	string grname = string("TAU_CALLPATH | ") + string(sampleGroup) + string(candidate->tauContext->GetAllGroups()); 
+	//string grname = sampleGroup + string(candidate->tauContext->GetAllGroups()); 
 	RtsLayer::LockDB();
 	samplePathLeaf =
 	  new FunctionInfo((const char*)callSiteKeyName->c_str(), "",
 			   candidate->tauContext->GetProfileGroup(),
-			   (const char*)grname.c_str(), true);
+			   sampleGroup, true);
 	RtsLayer::UnLockDB();
 	name2FuncInfoMap[tid]->insert(std::pair<string,FunctionInfo*>(*callSiteKeyName, samplePathLeaf));
       } else {
@@ -1254,7 +1254,7 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context) {
   numSamples[tid]++;
 
   /* Never sample anything internal to TAU */
-  if (Tau_global_get_insideTAU_tid(tid) > 0) {
+  if (Tau_global_get_insideTAU() > 0) {
     samplesDroppedTau[tid]++;
     return;
   }
@@ -1613,7 +1613,6 @@ extern "C" void Tau_sampling_init_if_necessary(void) {
   // sanity check - does the user want sampling at all?
   if (!TauEnv_get_ebs_enabled()) return;
   static bool samplingThrInitialized[TAU_MAX_THREADS] = {false};
-  int i = 0;
   int tid = RtsLayer::localThreadId();
   // have we initialized already?
   if (samplingThrInitialized[tid]) return;
