@@ -19,10 +19,8 @@ OBJ = $(SRC:.cpp=.o)
 CXX = tau_cxx.sh
 LD = $(CXX)
 
-CXXFLAGS = -optMemDbg -O2 -g -optKeepFiles
+CXXFLAGS = -optMemDbg -O2 -g
 LDFLAGS =
-
-MAKEFILE      	= Makefile
 
 RM 	      	= /bin/rm -f
 
