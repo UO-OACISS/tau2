@@ -112,7 +112,8 @@ bool openOutputFile(string const & fname)
 bool getInputLine()
 {
   if (!istr.getline(inbuf, INBUF_SIZE)) {
-    cerr << "Error: Cannot read line from input file" << endl;
+    if (!istr.eof())
+      cerr << "Error: Cannot read line from input file" << endl;
     return false;
   }
   inbufLength = istr.gcount() - 1;
