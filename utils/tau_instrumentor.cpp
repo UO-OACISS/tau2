@@ -124,6 +124,9 @@ bool getInputLine()
 
 void emitLineMarker()
 {
+  // inputLineNo is 0-indexed, but line numbers are 1-indexed so
+  // adding an additional newline after corrects the offset and protects
+  // following lines from the directive
   ostr << "\n#line " << inputLineNo << '\n';
 }
 
