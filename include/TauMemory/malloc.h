@@ -22,9 +22,19 @@
 #include <stdlib.h>
 #include <Profile/TauMemory.h>
 
+#ifdef __cplusplus
+#ifdef TAU_DOT_H_LESS_HEADERS
+#include <new>
+#else
+#include <new.h>
+#endif  // TAU_DOT_H_LESS_HEADERS
+#endif  // __cplusplus
+
 /* needed for Linux stdlib.h */
 #define __malloc_and_calloc_defined 
 #define __need_malloc_and_calloc
+
+// libc bindings
 
 #define malloc(SIZE)                Tau_malloc(SIZE, __FILE__, __LINE__)
 #define calloc(ELEMCOUNT, ELEMSIZE) Tau_calloc(ELEMCOUNT, ELEMSIZE, __FILE__, __LINE__)
@@ -37,6 +47,19 @@
 #define valloc(SIZE)                Tau_valloc(SIZE, __FILE__, __LINE__)
 #if HAVE_PVALLOC
 #define pvalloc(SIZE)               Tau_pvalloc(SIZE, __FILE__, __LINE__)
+#endif
+
+// C++ bindings
+
+#if 0
+
+#ifdef __cplusplus
+
+#define new       new(__FILE__, __LINE__)
+#define delete    Tau_operator_delete_init(__FILE__, __LINE__), delete
+
+#endif
+
 #endif
 
 #endif /* _TAU_MALLOC_H_ */

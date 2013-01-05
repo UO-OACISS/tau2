@@ -20,9 +20,11 @@
 //////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <Profile/Profiler.h>
+#include <Profile/TauMemory.h>
 #include <tau_internal.h>
 #if (defined(__APPLE_CC__) || defined(TAU_APPLE_XLC) || defined(TAU_APPLE_PGI))
 #include <malloc/malloc.h>
@@ -35,12 +37,12 @@
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
 #include <map>
-using namespace std;
 #else /* TAU_DOT_H_LESS_HEADERS */
 #include <iostream.h>
+#include <map.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
 
-#include <stdlib.h>
+using namespace std;
 
 #ifdef TAU_BGP
 #include <kernel_interface.h>
@@ -59,8 +61,19 @@ using namespace std;
 #define  MAP_ANONYMOUS MAP_ANON
 #endif
 
+#ifdef TAU_WINDOWS
+int Tau_operator_new_handler(size_t size)  { return 0; }
+#else
+void Tau_operator_new_handler() { }
+#endif
+
+#define UNKNOWN_CXX_FILE  "Unknown C++ File"
+#define UNKNOWN_LINE_NUM  0
+
+
 typedef unsigned char * addr_t;
 typedef TauContextUserEvent user_event_t;
+
 
 class TauAllocation
 {
@@ -125,6 +138,33 @@ private:
   unsigned long LocationHash(unsigned long hash, char const * data);
 
 };
+
+
+
+#if 0
+struct TauDeleteFlags
+{
+  char * filename;
+  int lineno;
+};
+
+static TauDeleteFlags * Tau_operator_delete_flags()
+{
+  static TauDeleteFlags ** delete_flags = NULL;
+  if (!delete_flags) {
+    size_t const size = TAU_MAX_THREADS * sizeof(TauDeleteFlags*);
+    delete_flags = (TauDeleteFlags**)malloc(size);
+    memset(delete_flags, 0, size);
+  }
+
+  int tid = Tau_get_tid();
+  if (!delete_flags[tid]) {
+    delete_flags[tid] = new TauDeleteFlags;
+  }
+
+  return NULL;
+}
+#endif
 
 
 //////////////////////////////////////////////////////////////////////
@@ -570,10 +610,8 @@ void Tau_detect_memory_leaks(void)
 }
 
 
-
 //////////////////////////////////////////////////////////////////////
-// Tau_track_memory_allocation does everything that Tau_malloc does except
-// allocate memory
+// TODO: Docs
 //////////////////////////////////////////////////////////////////////
 extern "C"
 void Tau_track_memory_allocation(void * ptr, size_t size, char const * filename, int lineno)
@@ -589,8 +627,7 @@ void Tau_track_memory_allocation(void * ptr, size_t size, char const * filename,
 }
 
 //////////////////////////////////////////////////////////////////////
-// Tau_track_memory_deallocation does everything that Tau_free does except
-// de-allocate memory
+// TODO: Docs
 //////////////////////////////////////////////////////////////////////
 extern "C"
 void Tau_track_memory_deallocation(void * ptr, char const * filename, int lineno)
@@ -606,18 +643,111 @@ void Tau_track_memory_deallocation(void * ptr, char const * filename, int lineno
   }
 }
 
+
 //////////////////////////////////////////////////////////////////////
-// Tau_new returns the expression (new[] foo) and  does everything that
-// Tau_track_memory_allocation does
+// TODO: Docs
 //////////////////////////////////////////////////////////////////////
-extern "C"
-void * Tau_new(void * ptr, size_t size, char const * filename, int lineno)
+#if 0
+void * Tau_operator_new(size_t size, bool nothrow, const char * filename, int lineno)
 {
-  /* the memory is already allocated by the time we see this ptr */
-  Tau_track_memory_allocation(ptr, size, filename, lineno);
+  void * ptr = 0;
+  TauAllocation * alloc = new TauAllocation;
+
+  do {
+    if (TauEnv_get_memdbg()) {
+      ptr = alloc->Allocate(0, size, filename, lineno);
+    } else {
+      ptr = malloc(size);
+      addr_t addr = (addr_t)ptr;
+      if (TauAllocation::Find(addr)) {
+        TAU_VERBOSE("TAU: ERROR - Allocation record for %p already exists\n", addr);
+      }
+      alloc->TrackAllocation(ptr, size, filename, lineno);
+    }
+
+    if (!ptr) {
+      // get the current new_handler
+#ifdef TAU_WINDOWS
+      _PNH h = _set_new_handler(Tau_operator_new_handler);
+      _set_new_handler(h);
+#else
+      std::new_handler h = std::set_new_handler(Tau_operator_new_handler);
+      std::set_new_handler(h);
+#endif
+      if (h) {
+        try {
+#ifdef TAU_WINDOWS
+          int retval = h(size);
+#else
+          h();
+#endif
+        } catch (std::bad_alloc&) {
+          if (nothrow) return NULL;
+          else throw;
+        }
+      } else {
+        if (nothrow) return NULL;
+        else throw std::bad_alloc();
+      }
+    }
+  } while (!ptr);
+
   return ptr;
 }
+#endif
 
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+#if 0
+void Tau_operator_delete(void * ptr, bool nothrow, const char * filename, int lineno)
+{
+  TauDeleteFlags & flags = Tau_operator_delete_flags();
+
+  printf("delete -- %s:%d\n", flags.filename, flags.lineno);
+
+  if(flags.filename) {
+    filename = flags.filename;
+    lineno = flags.lineno;
+
+    addr_t addr = (addr_t)ptr;
+    TauAllocation * alloc = TauAllocation::Find(addr);
+
+    if (alloc) {
+      if (TauEnv_get_memdbg()) {
+        alloc->Deallocate(filename, lineno);
+      } else {
+        alloc->TrackDeallocation(filename, lineno);
+        free(ptr);
+      }
+      delete alloc;
+    } else {
+      TAU_VERBOSE("TAU: WARNING - Allocation record for %p not found\n", addr);
+      free(ptr);
+    }
+    flags.filename = NULL;
+    flags.lineno = 0;
+  } else {
+    free(ptr);
+  }
+}
+
+int Tau_operator_delete_init(const char * filename, int lineno)
+{
+  TauDeleteFlags * flags = delete_flags[Tau_get_tid()];
+
+  if(flags.filename) {
+    TAU_VERBOSE("TAU: ERROR - flags.filename was already set in Tau_operator_delete_init!\n");
+    free((void*)flags.filename);
+  }
+  flags.filename = strdup(filename);
+  flags.lineno = lineno;
+
+  printf("Preparing for delete -- %s:%d\n", filename, lineno);
+
+  return 0;
+}
+#endif
 
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
@@ -866,6 +996,258 @@ char * Tau_strncat(char *dst, const char *src, size_t size, const char * filenam
   return strncat(dst, src, size);
 }
 
+#if 0
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void * operator new(size_t size) throw(std::bad_alloc)
+{
+  return Tau_operator_new(size, false, UNKNOWN_CXX_FILE, UNKNOWN_LINE_NUM);
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void * operator new[](size_t size) throw(std::bad_alloc)
+{
+  return Tau_operator_new(size, false, UNKNOWN_CXX_FILE, UNKNOWN_LINE_NUM);
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void operator delete(void * ptr) throw()
+{
+  printf("%s\n", __PRETTY_FUNCTION__);
+  Tau_operator_delete(ptr, false, UNKNOWN_CXX_FILE, UNKNOWN_LINE_NUM);
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void operator delete[](void * ptr) throw()
+{
+  printf("%s\n", __PRETTY_FUNCTION__);
+  Tau_operator_delete(ptr, false, UNKNOWN_CXX_FILE, UNKNOWN_LINE_NUM);
+}
+
+#if 0
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void * operator new(size_t size, const std::nothrow_t & nothrow) throw()
+{
+  return Tau_operator_new(size, true, UNKNOWN_CXX_FILE, UNKNOWN_LINE_NUM);
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void * operator new[](size_t size, const std::nothrow_t & nothrow) throw()
+{
+  return Tau_operator_new(size, true, UNKNOWN_CXX_FILE, UNKNOWN_LINE_NUM);
+}
+#endif
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void operator delete(void * ptr, const std::nothrow_t & nothrow) throw()
+{
+  printf("%s\n", __PRETTY_FUNCTION__);
+  Tau_operator_delete(ptr, true, UNKNOWN_CXX_FILE, UNKNOWN_LINE_NUM);
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void operator delete[](void * ptr, const std::nothrow_t & nothrow) throw()
+{
+  printf("[][][][] %s\n", __PRETTY_FUNCTION__);
+  Tau_operator_delete(ptr, true, UNKNOWN_CXX_FILE, UNKNOWN_LINE_NUM);
+}
+
+#if 0
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void * operator new(size_t size, void * ptr) throw(std::bad_alloc)
+{
+  static bool warning = true;
+  if (warning) {
+    TAU_VERBOSE("TAU: WARNING - Placement operator new is not protected by the memory debugger!\n");
+    warning = false;
+  }
+
+  return ptr;
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void * operator new[](size_t size, void * ptr) throw(std::bad_alloc)
+{
+  static bool warning = true;
+  if (warning) {
+    TAU_VERBOSE("TAU: WARNING - Placement operator new[] is not protected by the memory debugger!\n");
+    warning = false;
+  }
+
+  return ptr;
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void operator delete(void * ptr, void * place) throw()
+{
+  static bool warning = true;
+  if (warning) {
+    TAU_VERBOSE("TAU: WARNING - Placement operator delete does nothing "
+        "and is not protected by the memory debugger!\n");
+    warning = false;
+  }
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void operator delete[](void * ptr, void * place) throw()
+{
+  static bool warning = true;
+  if (warning) {
+    TAU_VERBOSE("TAU: WARNING - Placement operator delete[] does nothing "
+        "and is not protected by the memory debugger!\n");
+    warning = false;
+  }
+}
+#endif
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void * operator new(size_t size, char const * filename, int lineno) throw(std::bad_alloc)
+{
+  return Tau_operator_new(size, false, filename, lineno);
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void * operator new[](size_t size, char const * filename, int lineno) throw(std::bad_alloc)
+{
+  return Tau_operator_new(size, false, filename, lineno);
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void operator delete(void * ptr, char const * filename, int lineno) throw()
+{
+  Tau_operator_delete(ptr, false, filename, lineno);
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void operator delete[](void * ptr, char const * filename, int lineno) throw()
+{
+  Tau_operator_delete(ptr, false, filename, lineno);
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void * operator new(size_t size, const std::nothrow_t & nothrow, char const * filename, int lineno) throw()
+{
+  return Tau_operator_new(size, true, filename, lineno);
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void * operator new[](size_t size, const std::nothrow_t & nothrow, char const * filename, int lineno) throw()
+{
+  return Tau_operator_new(size, true, filename, lineno);
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void operator delete(void * ptr, const std::nothrow_t & nothrow, char const * filename, int lineno) throw()
+{
+  Tau_operator_delete(ptr, true, filename, lineno);
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void operator delete[](void * ptr, const std::nothrow_t & nothrow, char const * filename, int lineno) throw()
+{
+  Tau_operator_delete(ptr, true, filename, lineno);
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void * operator new(size_t size, void * ptr, char const * filename, int lineno) throw(std::bad_alloc)
+{
+  static bool warning = true;
+  if (warning) {
+    TAU_VERBOSE("TAU: WARNING - At %s:%d: Placement operator new is not protected by the memory debugger!\n",
+        filename, lineno);
+    warning = false;
+  }
+
+  return ptr;
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void * operator new[](size_t size, void * ptr, char const * filename, int lineno) throw(std::bad_alloc)
+{
+  static bool warning = true;
+  if (warning) {
+    TAU_VERBOSE("TAU: WARNING - At %s:%d: Placement operator new[] is not protected by the memory debugger!\n",
+        filename, lineno);
+    warning = false;
+  }
+
+  return ptr;
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void operator delete(void * ptr, void * place, char const * filename, int lineno) throw()
+{
+  static bool warning = true;
+  if (warning) {
+    TAU_VERBOSE("TAU: WARNING - At %s:%d: Placement operator delete does nothing "
+        "and is not protected by the memory debugger!\n", filename, lineno);
+    warning = false;
+  }
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void operator delete[](void * ptr, void * place, char const * filename, int lineno) throw()
+{
+  static bool warning = true;
+  if (warning) {
+    TAU_VERBOSE("TAU: WARNING - At %s:%d: Placement operator delete[] does nothing "
+        "and is not protected by the memory debugger!\n", filename, lineno);
+    warning = false;
+  }
+}
+#endif
 
 /***************************************************************************
  * $RCSfile: TauMemory.cpp,v $   $Author: amorris $
