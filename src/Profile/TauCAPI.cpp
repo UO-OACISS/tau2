@@ -806,6 +806,46 @@ extern "C" int Tau_dump_prefix(const char *prefix) {
   return 0;
 }
 
+extern x_uint64 TauTraceGetTimeStamp(int tid);
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" int Tau_dump_callpaths() {
+  Tau_global_incr_insideTAU();
+  int tid;
+  long pos;
+  int pid = RtsLayer::myNode();
+
+  const char *dirname = TauEnv_get_profiledir();
+
+  //Create temp write to file.
+  char filename[1024];
+  sprintf(filename,"%s/callpaths.%d",dirname, pid);
+
+  FILE* fp;
+  if ((fp = fopen (filename, "a+")) == NULL) {
+    char errormsg[1024];
+    sprintf(errormsg,"Error: Could not create %s",filename);
+    perror(errormsg);
+    return 1;
+  }
+
+  fprintf(fp, "Thread\tStack\tCalls\tIncl.\tExcl.\tName\tTimestamp:\t%llu\n", TauTraceGetTimeStamp(0));
+  for (tid = 0 ; tid < RtsLayer::getTotalThreads() ; tid++) {
+    pos = Tau_thread_flags[tid].Tau_global_stackpos;
+	TauProfiler_updateIntermediateStatistics(tid);
+    while (pos >= 0) {
+	  Profiler profiler = Tau_thread_flags[tid].Tau_global_stack[pos];
+	  FunctionInfo *fi = profiler.ThisFunction;
+      fprintf(fp, "%d\t%ld\t%ld\t%.f\t%.f\t\"%s\"\n", tid, pos, fi->GetCalls(tid), fi->getDumpInclusiveValues(tid)[0], fi->getDumpExclusiveValues(tid)[0], fi->Name);
+      pos--;
+    }
+  }
+
+  fclose(fp);
+  Tau_global_decr_insideTAU();
+  return 0;
+}
+
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump_prefix_task(const char *prefix, int taskid) {
   Tau_global_incr_insideTAU();

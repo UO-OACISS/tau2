@@ -285,9 +285,18 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context)
   exit(1);
 }
 
+extern "C" int Tau_dump_callpaths();
+
 static void tauSignalHandler(int sig) {
-  fprintf (stderr, "Caught SIGUSR1, dumping TAU profile data\n");
-  TAU_DB_DUMP_PREFIX("profile");
+  if (TauEnv_get_sigusr1_action() == TAU_ACTION_DUMP_CALLPATHS) {
+    fprintf (stderr, "Caught SIGUSR1, dumping TAU callpath data\n");
+	Tau_dump_callpaths();
+  } else if (TauEnv_get_sigusr1_action() == TAU_ACTION_DUMP_BACKTRACES) {
+    fprintf (stderr, "Caught SIGUSR1, dumping backtrace data\n");
+  } else {
+    fprintf (stderr, "Caught SIGUSR1, dumping TAU profile data\n");
+    TAU_DB_DUMP_PREFIX("profile");
+  }
 }
 
 static void tauToggleInstrumentationHandler(int sig) {

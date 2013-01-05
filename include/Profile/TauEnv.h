@@ -29,6 +29,10 @@
 #define TAU_FORMAT_NONE 4
 #define TAU_MAX_RECORDS 64*1024
 
+#define TAU_ACTION_DUMP_PROFILES 1
+#define TAU_ACTION_DUMP_CALLPATHS 2
+#define TAU_ACTION_DUMP_BACKTRACES 3
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -86,6 +90,7 @@ extern "C" {
   int TAUDECL TauEnv_get_mic_offload();
 
   int  TAUDECL TauEnv_get_profile_format();
+  int  TAUDECL TauEnv_get_sigusr1_action();
   
   int TAUDECL TauEnv_get_memdbg();
   int TAUDECL TauEnv_get_memdbg_protect_above();

@@ -470,6 +470,7 @@ static const char *env_profiledir = NULL;
 static const char *env_tracedir = NULL;
 static const char *env_metrics = NULL;
 static const char *env_cupti_api = NULL;
+static int env_sigusr1_action = TAU_ACTION_DUMP_PROFILES;
 
 static int env_mic_offload = 0;
 
@@ -661,6 +662,10 @@ double TauEnv_get_throttle_percall() {
 
 int TauEnv_get_profile_format() {
   return env_profile_format;
+}
+
+int TauEnv_get_sigusr1_action() {
+  return env_sigusr1_action;
 }
 
 int TauEnv_get_ebs_keep_unresolved_addr() {
@@ -1260,6 +1265,17 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_THROTTLE_NUMCALLS", tmpstr);
     }
 		
+    const char *sigusr1Action = getconf("TAU_SIGUSR1_ACTION");
+    if (sigusr1Action != NULL && 0 == strcasecmp(sigusr1Action, "backtraces")) {
+      env_sigusr1_action = TAU_ACTION_DUMP_BACKTRACES;
+      TAU_VERBOSE("TAU: SIGUSR1 Action: dump backtraces\n");
+    } else if (sigusr1Action != NULL && 0 == strcasecmp(sigusr1Action, "callpaths")) {
+      env_sigusr1_action = TAU_ACTION_DUMP_CALLPATHS;
+      TAU_VERBOSE("TAU: SIGUSR1 Action: dump callpaths\n");
+    } else {
+      TAU_VERBOSE("TAU: SIGUSR1 Action: dump profiles\n");
+	}
+
     const char *profileFormat = getconf("TAU_PROFILE_FORMAT");
     if (profileFormat != NULL && 0 == strcasecmp(profileFormat, "snapshot")) {
       env_profile_format = TAU_FORMAT_SNAPSHOT;
