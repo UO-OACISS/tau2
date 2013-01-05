@@ -797,7 +797,11 @@ extern "C" int Tau_dump(void) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump_prefix(const char *prefix) {
   Tau_global_incr_insideTAU();
-  TauProfiler_DumpData(false, RtsLayer::myThread(), prefix);
+  //TauProfiler_DumpData(false, RtsLayer::myThread(), prefix);
+  /* Iterate over the registered threads, and dump out their profiles */
+  int i;
+  for (i = 0 ; i < RtsLayer::getTotalThreads() ; i++)
+    TauProfiler_DumpData(false, i, prefix);
   Tau_global_decr_insideTAU();
   return 0;
 }
