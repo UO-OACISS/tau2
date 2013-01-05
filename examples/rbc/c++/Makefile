@@ -13,16 +13,14 @@
  
 EXE = rbc
 
-CSRC = $(wildcard *.c)
-COBJ = $(CSRC:.c=.o)
+SRC = $(wildcard *.cpp)
+OBJ = $(SRC:.cpp=.o)
 
-CC = tau_cc.sh
-LD = tau_cc.sh
+CXX = tau_cxx.sh
+LD = $(CXX)
 
-CFLAGS  = -optMemDbg -O2 -g
+CXXFLAGS = -optMemDbg -O2 -g
 LDFLAGS =
-
-MAKEFILE      	= Makefile
 
 RM 	      	= /bin/rm -f
 
@@ -31,11 +29,12 @@ RM 	      	= /bin/rm -f
 
 all: $(EXE)
 
-$(EXE): $(COBJ)
-	$(LD) $(LDFLAGS) $(COBJ) -o $(EXE)
+$(EXE): $(OBJ)
+	$(LD) $(LDFLAGS) $(OBJ) -o $(EXE)
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean: 	
-	$(RM) $(COBJ) $(EXE)
+	$(RM) $(OBJ) $(EXE)
+	$(RM) *.inst.* *.pdb profile.*
