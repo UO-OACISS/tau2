@@ -865,7 +865,7 @@ public class ParaProfUtils {
         
         JMenuItem contextSrcItem = null;
         
-        if (sr != null) {
+        if (sr != null&&sr.getFilename()!=null) {
             contextSrcItem = new JMenuItem("Show Source Code");
             contextSrcItem.addActionListener(actionListener);
         }
