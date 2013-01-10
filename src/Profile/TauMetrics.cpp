@@ -543,8 +543,8 @@ int TauMetrics_init() {
   read_env_vars();
 
   traceMetric = 0;
-  reorder_metrics("PAPI");
-  reorder_metrics("KTAU");
+  reorder_metrics("PAPI\0");
+  reorder_metrics("KTAU\0");
 
   initialize_functionArray();
 
