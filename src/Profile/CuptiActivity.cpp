@@ -3,7 +3,6 @@
 using namespace std;
 
 #if CUPTI_API_VERSION >= 2
-
 #include <dlfcn.h>
 
 const char * tau_orig_libname = "libcuda.so";
@@ -84,6 +83,8 @@ void Tau_cupti_onload()
 	
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY);
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_KERNEL);
+
+#if CUPTI_API_VERSION >= 3
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_SOURCE_LOCATOR);
   if (strcasecmp(TauEnv_get_cuda_instructions(), "GLOBAL_ACCESS") == 0)
   {
@@ -92,6 +93,14 @@ void Tau_cupti_onload()
   {
 	  err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_BRANCH);
   }
+#else
+  if (strcasecmp(TauEnv_get_cuda_instructions(), "GLOBAL_ACCESS") == 0 ||
+      strcasecmp(TauEnv_get_cuda_instructions(), "BRANCH") == 0)
+  {
+		printf("TAU WARNING: DISABLING CUDA %s tracking. Please use CUDA 5.0 or greater.\n", TauEnv_get_cuda_instructions());
+  }
+#endif //CUPTI_API_VERSIOn >= 3
+
 	CUDA_CHECK_ERROR(err, "Cannot enqueue buffer.\n");
 
 	Tau_gpu_init();
@@ -445,6 +454,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			Tau_cupti_register_metadata(device->id, metadata, nMeta);
 			break;
 		}
+#if CUPTI_API_VERSION >= 3
     case CUPTI_ACTIVITY_KIND_SOURCE_LOCATOR:
     {
 			CUpti_ActivitySourceLocator *source = (CUpti_ActivitySourceLocator *)record;
@@ -470,9 +480,8 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
         Tau_pure_context_userevent((void **) &ga, name);
         ga->SetDisableContext(true);
         eventMap[ga] = global_access->executed;
-        GpuEventAttributes *map;
         int map_size = eventMap.size();
-        map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
+        GpuEventAttributes *map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
         int i = 0;
         for (eventMap_t::iterator it = eventMap.begin(); it != eventMap.end(); it++)
         {
@@ -541,6 +550,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
           kernel->streamId, kernel->contextId, id, map, map_size);
       }
     }
+#endif //CUPTI_API_VERSION >= 3
 	}
 }
 
@@ -682,6 +692,7 @@ void record_gpu_occupancy(CUpti_ActivityKernel *kernel, const char *name, eventM
 
 }
 
+#if CUPTI_API_VERSION >= 3
 void form_context_event_name(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceLocator *source, const char *event_name, std::string *name)
 {         
 
@@ -699,6 +710,7 @@ void form_context_event_name(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceL
   //cout << "file and line: " << file_and_line.str() << endl;
 
 }
+#endif // CUPTI_API_VERSION >= 3
 
 bool function_is_sync(CUpti_CallbackId id)
 {
@@ -883,4 +895,4 @@ bool cupti_api_driver()
 			0 == strcasecmp(TauEnv_get_cupti_api(), "both")); 
 }
 
-#endif
+#endif //CUPTI API VERSION >= 2
