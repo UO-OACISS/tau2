@@ -1984,6 +1984,17 @@ public abstract class DataSource {
 				totalTimers += stats.totalTimers;
 				remainingTimers += stats.remainingTimers;
 			}
+			/*
+			for (Thread thread : this.getAggThreads()) {
+				ReductionStats stats = reduceTrialThread(minPercent, metric, otherFunction, snapshot,
+						thread);
+				//System.out.println ("Removed " + stats.reducedTimers + " of " + stats.totalTimers +
+					//" timers from thread " + thread.getNodeID() + " leaving " + stats.remainingTimers);
+				reducedTimers += stats.reducedTimers;
+				totalTimers += stats.totalTimers;
+				remainingTimers += stats.remainingTimers;
+			}
+			*/
 		}
 		System.out.println ("Removed " + reducedTimers + " of " + totalTimers +
 			" timers from all threads, leaving " + remainingTimers);
@@ -2034,8 +2045,9 @@ public abstract class DataSource {
 		for (FunctionProfile fp : thread.getFunctionProfiles()) {
 			if (fp != null && fp.getFunction() != otherFunction) {
 				totalTimers++;
-				if (fp.getInclusive(metric) < minValue ||
-					fp.getExclusive(metric) < minValue) {
+				/*if (fp.getInclusive(metric) < minValue ||
+					fp.getExclusive(metric) < minValue) {*/
+				if (fp.getInclusive(metric) < minValue) {
 					reducedTimers++;
 					//System.out.println("Removing function " + fp.getFunction().getName() + " on thread " + thread.getNodeID() + " with value " + fp.getInclusive(metric));
 					// add the values to "other"
