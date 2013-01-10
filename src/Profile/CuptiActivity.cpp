@@ -687,10 +687,10 @@ void form_context_event_name(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceL
 
   stringstream file_and_line("");
   file_and_line << event_name << " : ";
-  file_and_line << demangleName(kernel->name) << " => ";
+  file_and_line << demangleName(kernel->name);
   if (source->kind != CUPTI_ACTIVITY_KIND_INVALID)
   {
-    file_and_line << " [{" << source->fileName   << "}";
+    file_and_line << " => [{" << source->fileName   << "}";
     file_and_line <<  " {" << source->lineNumber << "}]";
   }
 
