@@ -1303,7 +1303,12 @@ extern "C" void Tau_userevent_thread(void *ue, double data, int tid) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_get_context_userevent(void **ptr, char *name)
+// WARNING: the pointer passed into Tau_get_context_userevent must be declared
+// static or intialized to NULL otherwise it could end up pointing to a random 
+// piece of memory. See Tau_pure_context_userevent for a routine that does a
+// name lookup.
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_get_context_userevent(void **ptr, const char *name)
 {
   if (*ptr == 0) {
     RtsLayer::LockEnv();
@@ -1318,6 +1323,27 @@ extern "C" void Tau_get_context_userevent(void **ptr, char *name)
   }
   return;
 }
+
+TAU_HASH_MAP<string, TauContextUserEvent *>& ThePureAtomicMap() {
+  static TAU_HASH_MAP<string, TauContextUserEvent *> pureAtomicMap;
+  return pureAtomicMap;
+}
+
+extern "C" void Tau_pure_context_userevent(void **ptr, std::string name)
+{
+  TauContextUserEvent *ue = 0;
+  RtsLayer::LockEnv();
+  TAU_HASH_MAP<string, TauContextUserEvent *>::iterator it = ThePureAtomicMap().find(name);
+  if (it == ThePureAtomicMap().end()) {
+    ue = new TauContextUserEvent(name.c_str()); 
+    ThePureAtomicMap()[name] = ue;
+  } else {
+    ue = (*it).second;
+  }
+  RtsLayer::UnLockEnv();
+  *ptr = (void *) ue;  
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_context_userevent(void *ue, double data) {

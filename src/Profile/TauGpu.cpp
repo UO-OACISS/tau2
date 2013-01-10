@@ -450,6 +450,28 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
 	}
 
 }
+/* 
+ * Callback for GPU atomic event.
+ */
+void Tau_gpu_register_gpu_atomic_event(GpuEvent *event)
+{
+#ifdef DEBUG_PROF		
+  printf("registering atomic event.\n");
+#endif //DEBUG_PROF
+	int task = get_task(event);
+	
+  GpuEventAttributes *attr;
+	int number_of_attributes;
+	event->getAttributes(attr, number_of_attributes);
+	for (int i=0;i<number_of_attributes;i++)
+	{
+		TauContextUserEvent* e = attr[i].userEvent;
+		TAU_EVENT_DATATYPE event_data = attr[i].data;
+		TAU_CONTEXT_EVENT_THREAD(e, event_data, task);
+	}
+}
+
+
 /*
 	Initialization routine for TAU
 */
