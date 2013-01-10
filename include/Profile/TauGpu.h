@@ -119,6 +119,9 @@ extern "C" void Tau_gpu_register_gpu_event(GpuEvent *event, double startTime, do
  * program. Times are pre-aligned to the CPU clock. */
 extern "C" void Tau_gpu_register_memcpy_event(GpuEvent *event, double startTime, double endTime, int transferSize, int memcpyType);
 
+/* Callback for a GPU atomic event that is associated with this gpu event. */
+extern "C" void Tau_gpu_register_gpu_atomic_event(GpuEvent *event);
+
 extern "C" void TauTraceOneSidedMsg(int type, GpuEvent *gpu, int length, int thread);
 
 #endif // __cplusplus
