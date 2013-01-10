@@ -513,7 +513,7 @@ void Tau_dump_function_values_incr(const char **functionList, int num);
 void Tau_register_thread();
 void Tau_register_fork(int nodeid, enum TauFork_t opcode);
 void* TAUDECL Tau_get_userevent(char *name);
-void Tau_get_context_userevent(void **ptr, char *name);
+void Tau_get_context_userevent(void **ptr, const char *name);
 void Tau_userevent(void *event, double data);
 void Tau_userevent_thread(void *event, double data, int tid);
 void Tau_context_userevent(void *event, double data);
