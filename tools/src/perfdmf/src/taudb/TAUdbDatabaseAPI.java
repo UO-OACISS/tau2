@@ -481,17 +481,15 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			"timer_callpath tc inner join " +
 			db.getSchemaPrefix() +
 			"timer t on tc.timer = t.id where " +
-			"t.trial = ? and tc.parent is null" +
+			"t.trial = " + trialID + " and tc.parent is null" +
 			"UNION ALL" +
 			"SELECT d.id, d.parent, d.timer, " +
 			"concat (cp.name, ' => ', dt.name) FROM " +
 			db.getSchemaPrefix() +
 			"timer_callpath AS d JOIN cp ON (d.parent = cp.id) join " +
 			db.getSchemaPrefix() +
-			"timer dt on d.timer = dt.id where dt.trial = ? ) " +
+			"timer dt on d.timer = dt.id where dt.trial = " + trialID + " ) " +
 			"SELECT distinct * FROM cp order by parent;");
-	statement.setInt(1, trialID);
-	statement.setInt(2, trialID);
 	statement.execute();
 	ResultSet results = statement.getResultSet();
 
@@ -601,11 +599,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 				"timer_callpath tc inner join " +
 				db.getSchemaPrefix() +
 				"timer t on tc.timer = t.id where ");
-		        if (db.getDBType().compareTo("h2") == 0) {
-					sb.append("t.trial = " + trialID + " and tc.parent is null ");
-		        } else {
-					sb.append("t.trial = ? and tc.parent is null ");
-		        }
+				sb.append("t.trial = " + trialID + " and tc.parent is null ");
 				sb.append("UNION ALL SELECT d.id, d.parent, d.timer, ");
         if (db.getDBType().compareTo("h2") == 0) {
 			sb.append("concat (cp.name, ' => ', dt.name) FROM ");
@@ -615,20 +609,13 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			sb.append(db.getSchemaPrefix() +
 				"timer_callpath AS d JOIN cp ON (d.parent = cp.id) join " +
 				db.getSchemaPrefix());
-	        if (db.getDBType().compareTo("h2") == 0) {
-				sb.append("timer dt on d.timer = dt.id) ");
-	        } else {
-	        	sb.append("timer dt on d.timer = dt.id) ");
-	        }
+				sb.append("timer dt on d.timer = dt.id where dt.trial = " + trialID + ") ");
 	        	sb.append("SELECT distinct tcd.id, tcd.time_range, cp.name, h.node_rank, h.context_rank, h.thread_rank, cp.id FROM cp join ");
 		sb.append(db.getSchemaPrefix());
 		sb.append("timer_call_data tcd on tcd.timer_callpath = cp.id join ");
 		sb.append(db.getSchemaPrefix());
-		sb.append("thread h on tcd.thread = h.id");
+		sb.append("thread h on tcd.thread = h.id where h.trial = " + trialID);
 		PreparedStatement statement = db.prepareStatement(sb.toString());
-        if (db.getDBType().compareTo("h2") != 0) {
-			statement.setInt(1, trialID);
-        }
 		//System.out.println(statement);
 		statement.execute();
 		ResultSet results = statement.getResultSet();
@@ -658,15 +645,12 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 				db.getSchemaPrefix() +
 				"timer_callpath tc inner join " +
 				db.getSchemaPrefix() +
-				"timer t on tc.timer = t.id where (");
+				"timer t on tc.timer = t.id ");
 		for(int i=0; i<trials.size();i++){
-			if(i!=0) sb.append(" or ");
-		        if (db.getDBType().compareTo("h2") == 0) {
-					sb.append("t.trial = " + trials.get(i) + " ");
-		        } else {
-					sb.append("t.trial = ?  ");
-		        }
+			if(i!=0) { sb.append(" or "); } else { sb.append(" where ( "); }
+			sb.append("t.trial = " + trials.get(i) + " ");
 		}
+		if (trials.size() > 0) { sb.append(")"); }
 		sb.append(") and tc.parent is null ");
 
 				sb.append("UNION ALL SELECT d.id, d.parent, d.timer, ");
@@ -675,24 +659,26 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
         } else {
 			sb.append("cp.name || ' => ' || dt.name FROM ");
         }
-			sb.append(db.getSchemaPrefix() +
-				"timer_callpath AS d JOIN cp ON (d.parent = cp.id) join " +
-				db.getSchemaPrefix());
-	        if (db.getDBType().compareTo("h2") == 0) {
-				sb.append("timer dt on d.timer = dt.id) ");
-	        } else {
-	        	sb.append("timer dt on d.timer = dt.id) ");
-	        }
-	        	sb.append("SELECT distinct tcd.id, tcd.time_range, cp.name, h.node_rank, h.context_rank, h.thread_rank, cp.id FROM cp join ");
+			sb.append(db.getSchemaPrefix() + "timer_callpath AS d JOIN cp ON (d.parent = cp.id) join " +
+			db.getSchemaPrefix());
+			sb.append("timer dt on d.timer = dt.id ");
+		    for(int i=0; i<trials.size();i++) {
+			  if(i!=0) { sb.append(" or "); } else { sb.append(" where ( "); }
+			  sb.append("dt.trial = " + trials.get(i) + " ");
+			}
+			if (trials.size() > 0) { sb.append(")"); }
+			sb.append(")");
+	        sb.append("SELECT distinct tcd.id, tcd.time_range, cp.name, h.node_rank, h.context_rank, h.thread_rank, cp.id FROM cp join ");
 		sb.append(db.getSchemaPrefix());
 		sb.append("timer_call_data tcd on tcd.timer_callpath = cp.id join ");
 		sb.append(db.getSchemaPrefix());
 		sb.append("thread h on tcd.thread = h.id");
+	    for(int i=0; i<trials.size();i++) {
+		  if(i!=0) { sb.append(" or "); } else { sb.append(" where ( "); }
+		  sb.append("h.trial = " + trials.get(i) + " ");
+		}
+		if (trials.size() > 0) { sb.append(")"); }
 		PreparedStatement statement = db.prepareStatement(sb.toString());
-        if (db.getDBType().compareTo("h2") != 0) {
-        	for(int i = 0 ; i<trials.size();i++)
-			statement.setInt(i+1, trials.get(i));
-        }
 		//System.out.println(statement);
 		statement.execute();
 		ResultSet results = statement.getResultSet();
@@ -728,11 +714,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 				"timer_callpath tc inner join " +
 				db.getSchemaPrefix() +
 				"timer t on tc.timer = t.id where ");
-		        if (db.getDBType().compareTo("h2") == 0) {
-					sb.append("t.trial = " + trialID + " and tc.parent is null ");
-		        } else {
-					sb.append("t.trial = ? and tc.parent is null ");
-		        }
+				sb.append("t.trial = " + trialID + " and tc.parent is null ");
 				sb.append("UNION ALL SELECT d.id, d.parent, d.timer, ");
         if (db.getDBType().compareTo("h2") == 0) {
 			sb.append("concat (cp.name, ' => ', dt.name) FROM ");
@@ -742,20 +724,13 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			sb.append(db.getSchemaPrefix() +
 				"timer_callpath AS d JOIN cp ON (d.parent = cp.id) join " +
 				db.getSchemaPrefix());
-	        if (db.getDBType().compareTo("h2") == 0) {
-				sb.append("timer dt on d.timer = dt.id) ");
-	        } else {
-	        	sb.append("timer dt on d.timer = dt.id) ");
-	        }
+				sb.append("timer dt on d.timer = dt.id where dt.trial = " + trialID + ") ");
 	        	sb.append("SELECT distinct tcd.id, tcd.time_range, cp.name, h.node_rank, h.context_rank, h.thread_rank FROM cp join ");
 		sb.append(db.getSchemaPrefix());
 		sb.append("timer_call_data tcd on tcd.timer_callpath = cp.id join ");
 		sb.append(db.getSchemaPrefix());
-		sb.append("thread h on tcd.thread = h.id");
+		sb.append("thread h on tcd.thread = h.id where h.trial = " + trialID);
 		PreparedStatement statement = db.prepareStatement(sb.toString());
-        if (db.getDBType().compareTo("h2") != 0) {
-			statement.setInt(1, trialID);
-        }
 		//System.out.println(statement);
 		statement.execute();
 		ResultSet results = statement.getResultSet();
