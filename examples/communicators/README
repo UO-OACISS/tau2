@@ -1,0 +1,211 @@
+This example illustrates the use of MPI communicators. To profile with
+communicator information, please configure TAU with
+./configure -PROFILECOMMUNICATORS -mpi -pdt=<dir> ; make install
+and use the appropriate TAU_MAKEFILE:
+export TAU_MAKEFILE=<taudir>/x86_64/lib/Makefile.tau-communicators-mpi-pdt
+export PATH=<taudir>/x86_64/bin:$PATH
+make
+pprof -a
+
+Reading Profile files in profile.*
+
+NODE 0;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0         0.12        1,016           1          17    1016919 void main(int, char **) C [{main.c} {7,1}-{130,1}] 
+ 99.7        1,014        1,014           1           0    1014072 MPI_Init() 
+  0.1            1            1           1           0       1344 MPI_Finalize() 
+  0.1        0.903        0.903           1           0        903 MPI_Barrier() 
+  0.1        0.903        0.903           1           0        903 MPI_Barrier() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x7877c0> ] 
+  0.0        0.273        0.273           1           0        273 MPI_Cart_create() 
+  0.0        0.078        0.078           3           0         26 MPI_Comm_rank() 
+  0.0        0.064        0.064           3           0         21 MPI_Bcast() 
+  0.0        0.055        0.055           1           1         55 MPI_Comm_split() 
+  0.0         0.05         0.05           2           0         25 MPI_Bcast() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x7877c0> ] 
+  0.0        0.048        0.048           1           0         48 MPI_Comm_rank() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x7877c0> ] 
+  0.0        0.021        0.021           1           0         21 MPI_Comm_rank() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x1544190> ] 
+  0.0        0.014        0.014           1           0         14 MPI_Bcast() [ <comm> = <ranks: 0, 2> <addr=0x1545ce0> ] 
+  0.0        0.009        0.009           1           0          9 MPI_Comm_rank() [ <comm> = <ranks: 0, 2> <addr=0x1545ce0> ] 
+  0.0        0.004        0.004           1           0          4 MPI_Comm_free() 
+  0.0        0.002        0.002           2           0          1 MPI_Cart_shift() 
+  0.0        0.002        0.002           1           0          2 MPI_Dims_create() 
+  0.0        0.001        0.001           1           0          1 MPI_Cart_get() 
+  0.0        0.001        0.001           2           0          0 MPI_Comm_size() 
+---------------------------------------------------------------------------------------
+
+USER EVENTS Profile :NODE 0, CONTEXT 0, THREAD 0
+---------------------------------------------------------------------------------------
+NumSamples   MaxValue   MinValue  MeanValue  Std. Dev.  Event Name
+---------------------------------------------------------------------------------------
+         3          4          4          4          0  Message size for broadcast
+---------------------------------------------------------------------------------------
+
+NODE 1;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0         0.09        1,016           1          17    1016988 void main(int, char **) C [{main.c} {7,1}-{130,1}] 
+ 99.7        1,014        1,014           1           0    1014085 MPI_Init() 
+  0.1            1            1           1           0       1411 MPI_Finalize() 
+  0.1        0.892        0.892           1           0        892 MPI_Barrier() 
+  0.1        0.892        0.892           1           0        892 MPI_Barrier() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x7877c0> ] 
+  0.0        0.269        0.269           1           0        269 MPI_Cart_create() 
+  0.0        0.099        0.099           3           0         33 MPI_Bcast() 
+  0.0        0.089        0.089           3           0         30 MPI_Comm_rank() 
+  0.0        0.085        0.085           2           0         42 MPI_Bcast() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x7877c0> ] 
+  0.0        0.048        0.048           1           0         48 MPI_Comm_rank() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x7877c0> ] 
+  0.0        0.044        0.045           1           1         45 MPI_Comm_split() 
+  0.0        0.032        0.032           1           0         32 MPI_Comm_rank() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x1915190> ] 
+  0.0        0.014        0.014           1           0         14 MPI_Bcast() [ <comm> = <ranks: 1, 3> <addr=0x1916ce0> ] 
+  0.0        0.009        0.009           1           0          9 MPI_Comm_rank() [ <comm> = <ranks: 1, 3> <addr=0x1916ce0> ] 
+  0.0        0.004        0.004           1           0          4 MPI_Comm_free() 
+  0.0        0.002        0.002           1           0          2 MPI_Dims_create() 
+  0.0        0.001        0.001           1           0          1 MPI_Cart_get() 
+  0.0        0.001        0.001           2           0          0 MPI_Cart_shift() 
+  0.0        0.001        0.001           2           0          0 MPI_Comm_size() 
+---------------------------------------------------------------------------------------
+
+USER EVENTS Profile :NODE 1, CONTEXT 0, THREAD 0
+---------------------------------------------------------------------------------------
+NumSamples   MaxValue   MinValue  MeanValue  Std. Dev.  Event Name
+---------------------------------------------------------------------------------------
+         3          4          4          4          0  Message size for broadcast
+---------------------------------------------------------------------------------------
+
+NODE 2;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0        0.089        1,017           1          17    1017019 void main(int, char **) C [{main.c} {7,1}-{130,1}] 
+ 99.7        1,013        1,013           1           0    1013981 MPI_Init() 
+  0.2            1            1           1           0       1572 MPI_Finalize() 
+  0.1         0.89         0.89           1           0        890 MPI_Barrier() 
+  0.1         0.89         0.89           1           0        890 MPI_Barrier() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x7877c0> ] 
+  0.0        0.272        0.272           1           0        272 MPI_Cart_create() 
+  0.0        0.094        0.094           3           0         31 MPI_Bcast() 
+  0.0        0.079        0.079           2           0         40 MPI_Bcast() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x7877c0> ] 
+  0.0        0.064        0.064           3           0         21 MPI_Comm_rank() 
+  0.0        0.051        0.051           1           1         51 MPI_Comm_split() 
+  0.0         0.03         0.03           1           0         30 MPI_Comm_rank() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x7877c0> ] 
+  0.0        0.026        0.026           1           0         26 MPI_Comm_rank() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0xba4190> ] 
+  0.0        0.015        0.015           1           0         15 MPI_Bcast() [ <comm> = <ranks: 0, 2> <addr=0xba5cc0> ] 
+  0.0        0.008        0.008           1           0          8 MPI_Comm_rank() [ <comm> = <ranks: 0, 2> <addr=0xba5cc0> ] 
+  0.0        0.004        0.004           1           0          4 MPI_Comm_free() 
+  0.0        0.001        0.001           1           0          1 MPI_Cart_get() 
+  0.0        0.001        0.001           1           0          1 MPI_Dims_create() 
+  0.0            0            0           2           0          0 MPI_Cart_shift() 
+  0.0            0            0           2           0          0 MPI_Comm_size() 
+---------------------------------------------------------------------------------------
+
+USER EVENTS Profile :NODE 2, CONTEXT 0, THREAD 0
+---------------------------------------------------------------------------------------
+NumSamples   MaxValue   MinValue  MeanValue  Std. Dev.  Event Name
+---------------------------------------------------------------------------------------
+         3          4          4          4          0  Message size for broadcast
+---------------------------------------------------------------------------------------
+
+NODE 3;CONTEXT 0;THREAD 0:
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0        0.945        1,016           1          17    1016300 void main(int, char **) C [{main.c} {7,1}-{130,1}] 
+ 99.7        1,013        1,013           1           0    1013463 MPI_Init() 
+  0.1            1            1           1           0       1342 MPI_Finalize() 
+  0.0        0.275        0.275           3           0         92 MPI_Bcast() 
+  0.0        0.246        0.246           2           0        123 MPI_Bcast() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x7877c0> ] 
+  0.0        0.109        0.109           1           0        109 MPI_Cart_create() 
+  0.0        0.083        0.083           3           0         28 MPI_Comm_rank() 
+  0.0        0.058        0.058           1           1         58 MPI_Comm_split() 
+  0.0        0.048        0.048           1           0         48 MPI_Comm_rank() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x7877c0> ] 
+  0.0        0.029        0.029           1           0         29 MPI_Bcast() [ <comm> = <ranks: 1, 3> <addr=0x1ad9ce0> ] 
+  0.0        0.026        0.026           1           0         26 MPI_Comm_rank() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x1ad8190> ] 
+  0.0        0.018        0.018           1           0         18 MPI_Barrier() 
+  0.0        0.018        0.018           1           0         18 MPI_Barrier() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x7877c0> ] 
+  0.0        0.009        0.009           1           0          9 MPI_Comm_rank() [ <comm> = <ranks: 1, 3> <addr=0x1ad9ce0> ] 
+  0.0        0.004        0.004           1           0          4 MPI_Comm_free() 
+  0.0        0.001        0.001           2           0          0 MPI_Cart_shift() 
+  0.0        0.001        0.001           2           0          0 MPI_Comm_size() 
+  0.0        0.001        0.001           1           0          1 MPI_Dims_create() 
+  0.0            0            0           1           0          0 MPI_Cart_get() 
+---------------------------------------------------------------------------------------
+
+USER EVENTS Profile :NODE 3, CONTEXT 0, THREAD 0
+---------------------------------------------------------------------------------------
+NumSamples   MaxValue   MinValue  MeanValue  Std. Dev.  Event Name
+---------------------------------------------------------------------------------------
+         3          4          4          4          0  Message size for broadcast
+---------------------------------------------------------------------------------------
+
+FUNCTION SUMMARY (total):
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0            1        4,067           4          68    1016806 void main(int, char **) C [{main.c} {7,1}-{130,1}] 
+ 99.7        4,055        4,055           4           0    1013900 MPI_Init() 
+  0.1            5            5           4           0       1417 MPI_Finalize() 
+  0.1            2            2           4           0        676 MPI_Barrier() 
+  0.1            2            2           4           0        676 MPI_Barrier() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x7877c0> ] 
+  0.0        0.923        0.923           4           0        231 MPI_Cart_create() 
+  0.0        0.532        0.532          12           0         44 MPI_Bcast() 
+  0.0         0.46         0.46           8           0         58 MPI_Bcast() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x7877c0> ] 
+  0.0        0.314        0.314          12           0         26 MPI_Comm_rank() 
+  0.0        0.208        0.209           4           4         52 MPI_Comm_split() 
+  0.0        0.174        0.174           4           0         44 MPI_Comm_rank() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x7877c0> ] 
+  0.0        0.032        0.032           1           0         32 MPI_Comm_rank() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x1915190> ] 
+  0.0        0.029        0.029           1           0         29 MPI_Bcast() [ <comm> = <ranks: 1, 3> <addr=0x1ad9ce0> ] 
+  0.0        0.026        0.026           1           0         26 MPI_Comm_rank() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x1ad8190> ] 
+  0.0        0.026        0.026           1           0         26 MPI_Comm_rank() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0xba4190> ] 
+  0.0        0.021        0.021           1           0         21 MPI_Comm_rank() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x1544190> ] 
+  0.0        0.016        0.016           4           0          4 MPI_Comm_free() 
+  0.0        0.015        0.015           1           0         15 MPI_Bcast() [ <comm> = <ranks: 0, 2> <addr=0xba5cc0> ] 
+  0.0        0.014        0.014           1           0         14 MPI_Bcast() [ <comm> = <ranks: 0, 2> <addr=0x1545ce0> ] 
+  0.0        0.014        0.014           1           0         14 MPI_Bcast() [ <comm> = <ranks: 1, 3> <addr=0x1916ce0> ] 
+  0.0        0.009        0.009           1           0          9 MPI_Comm_rank() [ <comm> = <ranks: 0, 2> <addr=0x1545ce0> ] 
+  0.0        0.009        0.009           1           0          9 MPI_Comm_rank() [ <comm> = <ranks: 1, 3> <addr=0x1916ce0> ] 
+  0.0        0.009        0.009           1           0          9 MPI_Comm_rank() [ <comm> = <ranks: 1, 3> <addr=0x1ad9ce0> ] 
+  0.0        0.008        0.008           1           0          8 MPI_Comm_rank() [ <comm> = <ranks: 0, 2> <addr=0xba5cc0> ] 
+  0.0        0.006        0.006           4           0          2 MPI_Dims_create() 
+  0.0        0.004        0.004           8           0          0 MPI_Cart_shift() 
+  0.0        0.003        0.003           4           0          1 MPI_Cart_get() 
+  0.0        0.003        0.003           8           0          0 MPI_Comm_size() 
+
+FUNCTION SUMMARY (mean):
+---------------------------------------------------------------------------------------
+%Time    Exclusive    Inclusive       #Call      #Subrs  Inclusive Name
+              msec   total msec                          usec/call 
+---------------------------------------------------------------------------------------
+100.0        0.311        1,016           1          17    1016806 void main(int, char **) C [{main.c} {7,1}-{130,1}] 
+ 99.7        1,013        1,013           1           0    1013900 MPI_Init() 
+  0.1            1            1           1           0       1417 MPI_Finalize() 
+  0.1        0.676        0.676           1           0        676 MPI_Barrier() 
+  0.1        0.676        0.676           1           0        676 MPI_Barrier() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x7877c0> ] 
+  0.0        0.231        0.231           1           0        231 MPI_Cart_create() 
+  0.0        0.133        0.133           3           0         44 MPI_Bcast() 
+  0.0        0.115        0.115           2           0         58 MPI_Bcast() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x7877c0> ] 
+  0.0       0.0785       0.0785           3           0         26 MPI_Comm_rank() 
+  0.0        0.052       0.0522           1           1         52 MPI_Comm_split() 
+  0.0       0.0435       0.0435           1           0         44 MPI_Comm_rank() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x7877c0> ] 
+  0.0        0.008        0.008        0.25           0         32 MPI_Comm_rank() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x1915190> ] 
+  0.0      0.00725      0.00725        0.25           0         29 MPI_Bcast() [ <comm> = <ranks: 1, 3> <addr=0x1ad9ce0> ] 
+  0.0       0.0065       0.0065        0.25           0         26 MPI_Comm_rank() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x1ad8190> ] 
+  0.0       0.0065       0.0065        0.25           0         26 MPI_Comm_rank() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0xba4190> ] 
+  0.0      0.00525      0.00525        0.25           0         21 MPI_Comm_rank() [ <comm> = <ranks: 0, 1, 2, 3> <addr=0x1544190> ] 
+  0.0        0.004        0.004           1           0          4 MPI_Comm_free() 
+  0.0      0.00375      0.00375        0.25           0         15 MPI_Bcast() [ <comm> = <ranks: 0, 2> <addr=0xba5cc0> ] 
+  0.0       0.0035       0.0035        0.25           0         14 MPI_Bcast() [ <comm> = <ranks: 0, 2> <addr=0x1545ce0> ] 
+  0.0       0.0035       0.0035        0.25           0         14 MPI_Bcast() [ <comm> = <ranks: 1, 3> <addr=0x1916ce0> ] 
+  0.0      0.00225      0.00225        0.25           0          9 MPI_Comm_rank() [ <comm> = <ranks: 0, 2> <addr=0x1545ce0> ] 
+  0.0      0.00225      0.00225        0.25           0          9 MPI_Comm_rank() [ <comm> = <ranks: 1, 3> <addr=0x1916ce0> ] 
+  0.0      0.00225      0.00225        0.25           0          9 MPI_Comm_rank() [ <comm> = <ranks: 1, 3> <addr=0x1ad9ce0> ] 
+  0.0        0.002        0.002        0.25           0          8 MPI_Comm_rank() [ <comm> = <ranks: 0, 2> <addr=0xba5cc0> ] 
+  0.0       0.0015       0.0015           1           0          2 MPI_Dims_create() 
+  0.0        0.001        0.001           2           0          0 MPI_Cart_shift() 
+  0.0      0.00075      0.00075           1           0          1 MPI_Cart_get() 
+  0.0      0.00075      0.00075           2           0          0 MPI_Comm_size() 
+
