@@ -42,9 +42,8 @@
 extern "C" {
 #endif /* __cplusplus */
 
-void Tau_memory_init(void);
-int Tau_memory_enabled(void);
-int Tau_memory_passthrough(void);
+int Tau_memory_wrapper_present(void);
+void Tau_set_memory_wrapper_present(int);
 
 size_t Tau_page_size(void);
 
