@@ -26,7 +26,6 @@
 
 #include <signal.h>
 #include <Profile/Profiler.h>
-#include <TauMemoryWrap.h>
 
 #if (defined(__QK_USER__) || defined(__LIBCATAMOUNT__ ))
 #define TAU_CATAMOUNT 
@@ -126,11 +125,10 @@ int TauDisableTrackingMemoryHeadroom(void) {
 //////////////////////////////////////////////////////////////////////
 // Get memory size (max resident set size) in KB 
 //////////////////////////////////////////////////////////////////////
-double TauGetMaxRSS(void) {
-
-  // if the LD_PRELOAD wrapper is active, we will return the value that it tracks
-  if (Tau_memorywrap_getWrapperActive()) {
-    x_uint64 bytes = Tau_memorywrap_getBytesAllocated();
+double TauGetMaxRSS(void)
+{
+  if (Tau_memory_enabled()) {
+    size_t bytes = Tau_get_bytes_allocated();
     double kbytes = (double)bytes / 1024.0;
     return kbytes;
   }
@@ -143,15 +141,15 @@ double TauGetMaxRSS(void) {
 
 #ifdef TAU_HASMALLINFO
   struct mallinfo minfo = mallinfo();
-  double used = (double) ((unsigned int) minfo.hblkhd + 0.0 + (unsigned int) minfo.usmblks + (unsigned int) minfo.uordblks);
+  double used = (double)((unsigned int)minfo.hblkhd + 0.0 + (unsigned int)minfo.usmblks + (unsigned int)minfo.uordblks);
   /* This is in bytes, we need KB */
-  return used/1024.0;
+  return used / 1024.0;
 #else 
 #  ifdef TAU_CATAMOUNT
   size_t fragments;
   unsigned long total_free, largest_free, total_used;
   if (heap_info(&fragments, &total_free, &largest_free, &total_used) == 0) {
-    return  total_used/1024.0; 
+    return total_used/1024.0;
   }
 #  endif /* TAU_CATAMOUNT */
 

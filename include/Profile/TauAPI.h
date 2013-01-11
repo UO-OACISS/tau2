@@ -562,10 +562,6 @@ void Tau_track_memory_headroom_here(void);
 void Tau_profile_param1l(long data, const char *dataname);
 
 
-void Tau_global_addWriteHook(void (*hook)(void));
-void Tau_global_callWriteHooks();
-
-
 #ifdef __cplusplus
 /* Include the C++ API header */
 #include <Profile/TauCppAPI.h>
