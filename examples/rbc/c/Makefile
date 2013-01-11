@@ -15,6 +15,12 @@
 # Uncomment this line to enable those tests
 #EXTRA_TEST_FLAGS = -DHAVE_MEMALIGN -DHAVE_PVALLOC
 
+# Enable to test overrun 
+EXTRA_TEST_FLAGS = -DTEST_OVERRUN
+
+# Enable to test underrun 
+#EXTRA_TEST_FLAGS = -DTEST_UNDERRUN
+
 EXE = rbc
 
 SRC = $(wildcard *.c)

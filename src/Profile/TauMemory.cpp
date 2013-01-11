@@ -123,7 +123,8 @@ public:
     alloc_addr(NULL), alloc_size(0),
     user_addr(NULL), user_size(0),
     prot_addr(NULL), prot_size(0),
-    gap_addr(NULL), gap_size(0)
+    lgap_addr(NULL), lgap_size(0),
+    ugap_addr(NULL), ugap_size(0)
   { }
 
   void * Allocate(size_t const size, size_t align, size_t min_align, const char * filename, int lineno);
@@ -140,8 +141,10 @@ private:
   size_t user_size;     ///< Size requested by user
   addr_t prot_addr;     ///< Protected upper range address
   size_t prot_size;     ///< Protected upper range size
-  addr_t gap_addr;      ///< Unprotected gap address
-  size_t gap_size;      ///< Unprotected gap size
+  addr_t lgap_addr;     ///< Unprotected lower gap address
+  size_t lgap_size;     ///< Unprotected lower gap size
+  addr_t ugap_addr;     ///< Unprotected upper gap address
+  size_t ugap_size;     ///< Unprotected upper gap size
 
   user_event_t * event; ///< Allocation event (for leak detection)
 
@@ -512,7 +515,6 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
     alloc_size += PAGE_SIZE;
   if (PROTECT_BELOW)
     alloc_size += PAGE_SIZE;
-  // Round to next alignment boundary
   if (align > PAGE_SIZE)
     alloc_size += align - PAGE_SIZE;
 
@@ -558,22 +560,41 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
     if (PROTECT_ABOVE) {
       // TODO
     } else {
-      // TODO
+      // Address range with requested alignment and adjacent to guard page
+      user_addr = (addr_t)(((size_t)alloc_addr + PAGE_SIZE + align-1) & ~(align-1));
+      user_size = size;
+      // Guard page address and size
+      prot_addr = alloc_addr;
+      prot_size = (size_t)(user_addr - alloc_addr) & ~(PAGE_SIZE-1);
+      // Front gap address and size
+      lgap_addr = (addr_t)((size_t)user_addr & ~(PAGE_SIZE-1));
+      lgap_size = (size_t)(user_addr - lgap_addr);
+      // Back gap address and size
+      ugap_addr = user_addr + user_size;
+      ugap_size = (size_t)(alloc_addr + alloc_size - ugap_addr);
+
+      // Permit access to all except the lower guard page
+      UnprotectPages(lgap_addr, (size_t)(alloc_addr + alloc_size - lgap_addr));
+      // Deny access to the upper guard page
+      ProtectPages(prot_addr, prot_size);
     }
   } else if (PROTECT_ABOVE) {
     // Address range with requested alignment and adjacent to guard page
-    user_addr = (addr_t)((size_t)(alloc_addr + alloc_size - PAGE_SIZE - size) & ~(align-1));
+    user_addr = (addr_t)(((size_t)alloc_addr + alloc_size - PAGE_SIZE - size) & ~(align-1));
     user_size = size;
     // Guard page address and size
     prot_addr = (addr_t)((size_t)(user_addr + user_size + PAGE_SIZE-1) & ~(PAGE_SIZE-1));
     prot_size = (size_t)(alloc_addr + alloc_size - prot_addr);
-    // Gap address and size
-    gap_addr = user_addr + user_size;
-    gap_size = prot_addr - gap_addr;
+    // Front gap address and size
+    lgap_addr = alloc_addr;
+    lgap_size = (size_t)(user_addr - alloc_addr);
+    // Back gap address and size
+    ugap_addr = user_addr + user_size;
+    ugap_size = (size_t)(prot_addr - ugap_addr);
 
-    // Permit access to all except the guard page
+    // Permit access to all except the upper guard page
     UnprotectPages(alloc_addr, (size_t)(prot_addr - alloc_addr));
-    // Deny access to the guard page
+    // Deny access to the upper guard page
     ProtectPages(prot_addr, prot_size);
   }
 
@@ -581,7 +602,7 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
   AllocationMap()[user_addr] = this;
   TriggerAllocationEvent(filename, lineno);
 
-//  printf("%p, %ld, %p, %ld, %p, %ld, %p, %ld\n", alloc_addr, alloc_size, user_addr, user_size, prot_addr, prot_size, gap_addr, gap_size);
+//  printf("%p, %ld, %p, %ld, %p, %ld, %p, %ld, %p, %ld\n", alloc_addr, alloc_size, user_addr, user_size, prot_addr, prot_size, lgap_addr, lgap_size, ugap_addr, ugap_size);
 
   // All done with bookkeeping, get back to the user
   Tau_global_decr_insideTAU();
@@ -661,8 +682,10 @@ void TauAllocation::TrackAllocation(void * ptr, size_t size, const char * filena
   user_size = size;
   prot_addr = NULL;
   prot_size = 0;
-  gap_addr = NULL;
-  gap_size = 0;
+  lgap_addr = NULL;
+  lgap_size = 0;
+  ugap_addr = NULL;
+  ugap_size = 0;
 
   AllocationMap()[user_addr] = this;
   TriggerAllocationEvent(filename, lineno);
@@ -888,6 +911,7 @@ int Tau_posix_memalign(void **ptr, size_t alignment, size_t size,
   if (TauEnv_get_memdbg()) {
     TauAllocation * alloc = new TauAllocation;
     *ptr = alloc->Allocate(size, alignment, sizeof(void*), filename, lineno);
+    retval = (ptr != NULL);
   } else {
     retval = posix_memalign(ptr, alignment, size);
     Tau_track_memory_allocation(*ptr, size, filename, lineno);
