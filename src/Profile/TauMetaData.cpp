@@ -274,9 +274,10 @@ int Tau_metadata_fillMetaData()
   char buf[4096];
   strftime (buf,4096,"%Y-%m-%dT%H:%M:%S", thisTime);
 
-  char tzone[7];
+  char tzone[7]={0};
   strftime (tzone, 7, "%z", thisTime);
-  if (strlen(tzone) == 5) {
+  int tzonelen=strlen(tzone);
+  if (tzonelen == 5) {
     tzone[6] = 0;
     tzone[5] = tzone[4];
     tzone[4] = tzone[3];
