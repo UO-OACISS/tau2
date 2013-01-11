@@ -116,11 +116,11 @@ public class PerfExplorerHistogramChart extends PerfExplorerChartWindow {
     			if (max < ((double[])(doubles.get(j)))[1])
     				max = ((double[])(doubles.get(j)))[1];
     		}
-    		//double range = max - min;
+    		double range = max - min;
     		//System.out.println("Min: " + min + ", Max: " + max + ", Range: " + range);
     		for (int j = 0; j < doubles.size(); j++) {
-    			//values[j] = (((double[])(doubles.get(j)))[1]-min)/range;   
-    			values[j] = ((double[])(doubles.get(j)))[1];   
+    			values[j] = (((double[])(doubles.get(j)))[1]-min)/range;   
+    			//values[j] = ((double[])(doubles.get(j)))[1];   
     		}
 			int bins = 10;
 			if (doubles.size() >= 2098)
