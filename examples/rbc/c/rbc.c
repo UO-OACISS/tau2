@@ -137,19 +137,16 @@ void test_posix_memalign()
 {
   int i;
   int align;
+  int retval;
 
   printf("Testing posix_memalign...\n");
 
-  posix_memalign((void**)&posix_memalign_data, 2, DATA_COUNT*sizeof(int));
+  for (align=1; align<=MAX_ALIGNMENT; align *= 2) {
 
-  for (align=sizeof(void*); align<=MAX_ALIGNMENT; align *= 2) {
+    printf("Alignment = %d\n", align); fflush(stdout);
 
-    // posix_memalign only accepts alignments that are multiples of sizeof(void*)
-    if (align % sizeof(void*)) continue;
-
-    printf("Alignment = %d\n", align);
-
-    posix_memalign((void**)&posix_memalign_data, align, DATA_COUNT*sizeof(int));
+    retval = posix_memalign((void**)&posix_memalign_data, align, DATA_COUNT*sizeof(int));
+    if (retval) continue;
 
     // Check alignment
     if ((size_t)posix_memalign_data % (size_t)align) {
@@ -261,6 +258,41 @@ void test_free()
 }
 
 
+void test_overrun()
+{
+  int i;
+
+  printf("Testing overrun.  Expect a segfault.\n");
+
+  malloc_data = malloc(DATA_COUNT*sizeof(int));
+
+  // Write test
+  for(i=0; i<DATA_COUNT+OVERRUN; ++i) {
+    malloc_data[i] = i;
+  }
+
+  printf("done.\n");
+  fflush(stdout);
+}
+
+void test_underrun()
+{
+  int i;
+
+  printf("Testing underrun.  Expect a segfault.\n");
+
+  malloc_data = malloc(DATA_COUNT*sizeof(int));
+
+  // Write test
+  for(i=DATA_COUNT-1; i>=-OVERRUN; ++i) {
+    malloc_data[i] = i;
+  }
+
+  printf("done.\n");
+  fflush(stdout);
+}
+
+
 int main(int argc, char ** argv)
 {
   test_malloc();
@@ -275,6 +307,14 @@ int main(int argc, char ** argv)
   test_pvalloc();
 #endif
   test_free();
+
+#ifdef TEST_OVERRUN
+  test_overrun();
+#endif
+
+#ifdef TEST_UNDERRUN
+  test_underrun();
+#endif
 
   return 0;
 }
