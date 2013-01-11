@@ -973,11 +973,11 @@ public class ChartData extends RMIChartData {
 			} else {
 				buf.append("select ie.name, ");
 			}
-			buf.append("(p.node * t.contexts_per_node * ");
-			buf.append("t.threads_per_context) + (p.context * ");
-			buf.append("t.threads_per_context) + p.thread as thread, ");
-
 			if (db.getSchemaVersion() == 0) {
+				buf.append("(p.node * t.contexts_per_node * ");
+				buf.append("t.threads_per_context) + (p.context * ");
+				buf.append("t.threads_per_context) + p.thread as thread, ");
+
 	            if (db.getDBType().compareTo("oracle") == 0) {
 	                buf.append("p.excl ");
 	            } else {
@@ -987,10 +987,12 @@ public class ChartData extends RMIChartData {
 				buf.append(" left outer join interval_location_profile p ");
 				buf.append("on ie.id = p.interval_event ");
 			} else {
+				buf.append("h.thread_index as thread, ");
 			    buf.append("p.exclusive_value ");
 	 			buf.append("from timer ie ");
-	 			buf.append("left outer join timer_callpath tcp on ie.id = tcd.timer ");
+	 			buf.append("left outer join timer_callpath tcp on ie.id = tcp.timer ");
 	 			buf.append("left outer join timer_call_data tcd on tcp.id = tcd.timer_callpath ");
+	 			buf.append("left outer join thread h on h.id = tcd.thread ");
 				buf.append("left outer join timer_value p ");
 				buf.append("on tcd.id = p.timer_call_data ");
 			}
@@ -1001,7 +1003,8 @@ public class ChartData extends RMIChartData {
 			List<Object> selections = model.getMultiSelection();
 			if (selections == null) {
 				// just one selection
-				buf.append (model.getEvent().getFunction().getID());
+				RMISortableIntervalEvent tmpevent = (RMISortableIntervalEvent)model.getCurrentSelection();
+				buf.append (tmpevent.getFunction().getID());
 			} else {
 				for (int i = 0 ; i < selections.size() ; i++) {
 					RMISortableIntervalEvent event = (RMISortableIntervalEvent)selections.get(i);
