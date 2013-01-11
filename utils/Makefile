@@ -112,10 +112,10 @@ INSTALLTRACE2PROFILE	= $(INSTALLDEST)/trace2profile
 #DYNINST5.2#DYNLIBS 	= -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -L$(DYNINSTDIR)/src/$(DYNINST_PLATFORM)/lib -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -ldyninstAPI -lelf -lcommon -lsymtabAPI $(DWARFOPTS) -ldwarf -liberty#ENDIF#
 #DYNINST6#DYNLIBS 	= -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -L$(DYNINSTDIR)/src/$(DYNINST_PLATFORM)/lib -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -ldyninstAPI -lelf -lcommon -lsymtabAPI $(DWARFOPTS) -ldwarf -liberty -linstructionAPI #ENDIF#
 #DYNINST7#DYNLIBS 	= -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -L$(DYNINSTDIR)/src/$(DYNINST_PLATFORM)/lib -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -ldyninstAPI -lelf -lcommon -lparseAPI -lsymtabAPI $(DWARFOPTS) -ldwarf -liberty -linstructionAPI #ENDIF#
-#DYNINST8#DYNLIBS 	= -L$(DYNINSTDIR)/lib -ldyninstAPI -lelf -lcommon -lparseAPI -lsymtabAPI $(DWARFOPTS) -ldwarf -liberty -linstructionAPI -lstackwalk -lpcontrol -ldynElf -lpatchAPI -lsymLite -ldynDwarf #ENDIF#
 #SP1#DYNLIBS 	= -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -ldyninstAPI #ENDIF#
 #SGIMP#DYNLIBS 	= -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -ldyninstAPI $(DWARFOPTS) -ldwarf -lelf#ENDIF#
 # -lelf is for Solaris only
+#DYNINST8#DYNLIBS 	= -L$(DYNINSTDIR)/lib -ldyninstAPI -lelf -lcommon -lparseAPI -lsymtabAPI $(DWARFOPTS) -ldwarf -liberty -linstructionAPI -lstackwalk -lpcontrol -ldynElf -lpatchAPI -lsymLite -ldynDwarf #ENDIF#
 
 #SOL2CC#CEXTRA=-DTAU_DOT_H_LESS_HEADERS -DSOL2CC #ENDIF#
 #SUNCC#CEXTRA=-DTAU_DOT_H_LESS_HEADERS #ENDIF#
