@@ -500,19 +500,23 @@ static int env_memdbg_zero_malloc = TAU_MEMDBG_ZERO_MALLOC_DEFAULT;
 /*********************************************************************
  * Write to stderr if verbose mode is on
  ********************************************************************/
-void TAU_VERBOSE(const char *format, ...) {
+void TAU_VERBOSE(const char *format, ...)
+{
   va_list args;
   if (env_verbose != 1) {
     return;
   }
   va_start(args, format);
+
+  Tau_global_incr_insideTAU();
 #ifdef TAU_GPI
   gpi_vprintf(format, args);
 #else
   vfprintf(stderr, format, args);
 #endif
   va_end(args);
-  fflush(stderr);
+  fflush (stderr);
+  Tau_global_decr_insideTAU();
 }
 
 /*********************************************************************
