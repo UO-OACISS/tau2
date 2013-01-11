@@ -415,13 +415,6 @@ int RtsLayer::getPid() {
   #endif
 }
 
-// IA64 doesn't like this, commented out for now, it was only for debugging anyway
-// #ifdef __linux
-// #include <sys/types.h>
-// #include <linux/unistd.h>
-// _syscall0(pid_t,gettid)
-// #endif
-
 // C interface.
 extern "C" int Tau_RtsLayer_getTid()
 {
@@ -594,39 +587,43 @@ int RtsLayer::setAndParseProfileGroups(char *prog, char *str) {
 }
 
 //////////////////////////////////////////////////////////////////////
-void RtsLayer::ProfileInit(int& argc, char**& argv) {
+void RtsLayer::ProfileInit(int& argc, char**& argv)
+{
   int i;
   int ret_argc;
   char **ret_argv;
 
+  Tau_global_incr_insideTAU();
+
 #ifdef TAU_COMPENSATE
   double* tover = TauGetTimerOverhead(TauNullTimerOverhead);
-  for (i = 0; i < TAU_MAX_COUNTERS; i++) { 
+  for (i = 0; i < TAU_MAX_COUNTERS; i++) {
     /* iterate through all counters and reset null overhead to zero 
-       if necessary */
+     if necessary */
     if (tover[i] < 0) tover[i] = 0;
   }
 #endif /* TAU_COMPENSATE */
-  
+
   ret_argc = 1;
   ret_argv = new char *[argc];
-  ret_argv[0] = argv[0]; // The program name 
+  ret_argv[0] = argv[0];    // The program name
 
-  for(i=1; i < argc; i++) {
-    if ( ( strcasecmp(argv[i], "--profile") == 0 ) ) {
-        // Enable the profile groups
-        if ( (i + 1) < argc && argv[i+1][0] != '-' )  { // options follow
-           RtsLayer::resetProfileGroup(); // set it to blank
-           RtsLayer::setAndParseProfileGroups(argv[0], argv[i+1]);
-	   i++; // ignore the argv after --profile 
-        }
+  for (i = 1; i < argc; i++) {
+    if ((strcasecmp(argv[i], "--profile") == 0)) {
+      // Enable the profile groups
+      if ((i + 1) < argc && argv[i + 1][0] != '-') {    // options follow
+        RtsLayer::resetProfileGroup();    // set it to blank
+        RtsLayer::setAndParseProfileGroups(argv[0], argv[i + 1]);
+        i++;    // ignore the argv after --profile
+      }
     } else {
-	ret_argv[ret_argc++] = argv[i];
+      ret_argv[ret_argc++] = argv[i];
     }
   }
   argc = ret_argc;
   argv = ret_argv;
-  return;
+
+  Tau_global_decr_insideTAU();
 }
 
 

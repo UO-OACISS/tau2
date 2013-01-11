@@ -424,14 +424,15 @@ void FunctionInfo::ResetExclTimeIfNegative(int tid) {
 
 
 //////////////////////////////////////////////////////////////////////
-void tauCreateFI(void **ptr, const char *name, const char *type, 
-		 TauGroup_t ProfileGroup , const char *ProfileGroupName) {
+void tauCreateFI(void **ptr, const char *name, const char *type, TauGroup_t ProfileGroup, const char *ProfileGroupName)
+{
   if (*ptr == 0) {
+    Tau_global_incr_insideTAU();
 
 //Use The ENV lock here.
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::LockEnv();
+    RtsLayer::LockEnv();
 #else
     RtsLayer::LockEnv();
 #endif
@@ -440,19 +441,24 @@ void tauCreateFI(void **ptr, const char *name, const char *type,
     }
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::UnLockEnv();
+    RtsLayer::UnLockEnv();
 #else
     RtsLayer::UnLockEnv();
 #endif
+
+    Tau_global_decr_insideTAU();
   }
 }
 
-void tauCreateFI(void **ptr, const char *name, const string& type, 
-		 TauGroup_t ProfileGroup , const char *ProfileGroupName) {
+void tauCreateFI(void **ptr, const char *name, const string& type, TauGroup_t ProfileGroup,
+    const char *ProfileGroupName)
+{
   if (*ptr == 0) {
+    Tau_global_incr_insideTAU();
+
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::LockEnv();
+    RtsLayer::LockEnv();
 #else
     RtsLayer::LockEnv();
 #endif
@@ -461,19 +467,24 @@ void tauCreateFI(void **ptr, const char *name, const string& type,
     }
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::UnLockEnv();
+    RtsLayer::UnLockEnv();
 #else
     RtsLayer::UnLockEnv();
 #endif
+
+    Tau_global_decr_insideTAU();
   }
 }
 
-void tauCreateFI(void **ptr, const string& name, const char *type, 
-		 TauGroup_t ProfileGroup , const char *ProfileGroupName) {
+void tauCreateFI(void **ptr, const string& name, const char *type, TauGroup_t ProfileGroup,
+    const char *ProfileGroupName)
+{
   if (*ptr == 0) {
+    Tau_global_incr_insideTAU();
+
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::LockEnv();
+    RtsLayer::LockEnv();
 #else
     RtsLayer::LockEnv();
 #endif
@@ -482,19 +493,24 @@ void tauCreateFI(void **ptr, const string& name, const char *type,
     }
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::UnLockEnv();
+    RtsLayer::UnLockEnv();
 #else
     RtsLayer::UnLockEnv();
 #endif
+
+    Tau_global_decr_insideTAU();
   }
 }
 
-void tauCreateFI(void **ptr, const string& name, const string& type, 
-		 TauGroup_t ProfileGroup , const char *ProfileGroupName) {
+void tauCreateFI(void **ptr, const string& name, const string& type, TauGroup_t ProfileGroup,
+    const char *ProfileGroupName)
+{
   if (*ptr == 0) {
+    Tau_global_incr_insideTAU();
+
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::LockEnv();
+    RtsLayer::LockEnv();
 #else
     RtsLayer::LockEnv();
 #endif
@@ -503,25 +519,31 @@ void tauCreateFI(void **ptr, const string& name, const string& type,
     }
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::UnLockEnv();
+    RtsLayer::UnLockEnv();
 #else
     RtsLayer::UnLockEnv();
 #endif
+
+    Tau_global_decr_insideTAU();
   }
 }
 
 
-char const * FunctionInfo::GetFullName() {
+char const * FunctionInfo::GetFullName()
+{
+  if (!FullName) {
+    Tau_global_incr_insideTAU();
 
-  if (FullName == NULL) {
     ostringstream ostr;
-    if (strlen(GetType()) > 0 && strcmp(GetType()," ") != 0) {
+    if (strlen(GetType()) > 0 && strcmp(GetType(), " ") != 0) {
       ostr << GetName() << " " << GetType() << ":GROUP:" << GetAllGroups();
     } else {
       ostr << GetName() << ":GROUP:" << GetAllGroups();
     }
 
     FullName = Tau_util_removeRuns(ostr.str().c_str());
+
+    Tau_global_decr_insideTAU();
   }
   return FullName;
 }
