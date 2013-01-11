@@ -88,7 +88,7 @@ static char inbuf[INBUF_SIZE];  // Input buffer
 static int inbufLength = 0;     // Number of characters last read
 static int inputLineNo = 0;     // Input line counter
 
-bool openInputFile(string const & fname)
+static bool openInputFile(string const & fname)
 {
   istr.open(fname.c_str());
   if (!istr) {
@@ -99,7 +99,7 @@ bool openInputFile(string const & fname)
   return true;
 }
 
-bool openOutputFile(string const & fname)
+static bool openOutputFile(string const & fname)
 {
   ostr.open(fname.c_str());
   if (!ostr) {
@@ -109,7 +109,7 @@ bool openOutputFile(string const & fname)
   return true;
 }
 
-bool getInputLine()
+static bool getInputLine()
 {
   if (!istr.getline(inbuf, INBUF_SIZE)) {
     if (!istr.eof())
@@ -122,7 +122,7 @@ bool getInputLine()
   return true;
 }
 
-void emitLineMarker()
+static void emitLineMarker()
 {
   // inputLineNo is 0-indexed, but line numbers are 1-indexed so
   // adding an additional newline after corrects the offset and protects
