@@ -3,7 +3,7 @@
 using namespace std;
 
 #define DATA_COUNT 10
-#define OVERRUN    0
+#define OVERRUN    1
 
 int main(int argc, char ** argv)
 {

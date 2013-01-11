@@ -29,6 +29,9 @@ RM 	      	= /bin/rm -f
 
 all: $(EXE)
 
+run: $(EXE)
+	TAU_MEMDBG_PROTECT_ABOVE=1 tau_exec -memory -T serial $(EXE)
+
 $(EXE): $(OBJ)
 	$(LD) $(LDFLAGS) $(OBJ) -o $(EXE)
 
