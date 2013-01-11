@@ -947,7 +947,7 @@ public class ChartData extends RMIChartData {
 				statement.setInt(1, model.getTrial().getID());
 				statement.setInt(2, ((Metric)(model.getCurrentSelection())).getID());
 			} else {
-				buf.append(" thread.thread_index as thread, p.exclusive_value from timer ie "); 
+				buf.append(" h.thread_index as thread, p.exclusive_value from timer ie "); 
 				buf.append("left outer join timer_callpath tcp on ie.id = tcp.timer and tcp.parent is null  ");
 				buf.append("left outer join timer_call_data tcd on tcd.timer_callpath = tcp.id  ");
 				buf.append("left outer join timer_value p on tcd.id = p.timer_call_data  ");
@@ -958,7 +958,7 @@ public class ChartData extends RMIChartData {
 				buf.append("left outer join timer_call_data tcd on tcd.timer_callpath = tcp.id  ");
 				buf.append("left outer join timer_value p on tcd.id = p.timer_call_data  ");
 				buf.append("inner join thread h on tcd.thread = h.id and h.thread_index = -1");
-				buf.append("inner join trial t on ie.trial = t.id where ie.trial = ? and p.metric = ? and p.exclusive_value > ? ");
+				buf.append("inner join trial t on ie.trial = t.id where ie.trial = ? and p.metric = ? and p.exclusive_percent > ? ");
 				buf.append(") order by 1,2  ");
 				statement = db.prepareStatement(buf.toString());
 				statement.setInt(1, model.getTrial().getID());
