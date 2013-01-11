@@ -377,7 +377,8 @@ static x_uint64 getTimeStamp() {
 #endif /* TAU_PERFSUITE */
 
 extern "C" int TauCompensateInitialized(void);
-void Profiler::Stop(int tid, bool useLastTimeStamp) {
+void Profiler::Stop(int tid, bool useLastTimeStamp)
+{
 #ifdef DEBUG_PROF
   fprintf (stderr, "[%d:%d-%d] Profiler::Stop  for %s (%p)\n", RtsLayer::getPid(), RtsLayer::getTid(), tid, ThisFunction->GetName(), ThisFunction);
 #endif
@@ -390,9 +391,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   if (GetPhase()) {
     static int sequence=0;
     char annotation[4096];
-    sprintf (annotation, "TAU^seq^%d^phase^%s^nct^%d:%d:%d^timestamp^%lld^start^%lld^", sequence, 
-	     ThisFunction->GetName(), RtsLayer::myNode(), RtsLayer::myContext(), RtsLayer::myThread(), 
-	     getTimeStamp(), Tau_get_firstTimeStamp());
+    sprintf (annotation, "TAU^seq^%d^phase^%s^nct^%d:%d:%d^timestamp^%lld^start^%lld^", sequence,
+        ThisFunction->GetName(), RtsLayer::myNode(), RtsLayer::myContext(), RtsLayer::myThread(),
+        getTimeStamp(), Tau_get_firstTimeStamp());
     printf ("tau-perfsuite: stopping %s\n", ThisFunction->GetName());
     setenv("PS_HWPC_ANNOTATION", annotation, 1);
     char seqstring[256];
@@ -421,11 +422,9 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   /*** PerfSuite Integration Code ***/
   /********************************************************************************/
 
-
-  
   // first initialize the CurrentTime
-  double CurrentTime[TAU_MAX_COUNTERS] = {0};
-  double TotalTime[TAU_MAX_COUNTERS] = {0};
+  double CurrentTime[TAU_MAX_COUNTERS] = { 0 };
+  double TotalTime[TAU_MAX_COUNTERS] = { 0 };
 
 #ifdef TAU_TRACK_IDLE_THREADS
   int i;
@@ -433,14 +432,14 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
     /* for openmp parallel regions */
     /* .TAU Application needs to be stopped */
     for (i=0; i < TAU_MAX_COUNTERS; i++) {
-      CurrentTime[i] = TheLastTimeStamp[tid][i]; 
+      CurrentTime[i] = TheLastTimeStamp[tid][i];
     }
-  } else { 
+  } else {
     /* use the usual mechanism */
     RtsLayer::getUSecD(tid, CurrentTime);
   }
   for (i=0; i < TAU_MAX_COUNTERS; i++) {
-    TheLastTimeStamp[tid][i] = CurrentTime[i]; 
+    TheLastTimeStamp[tid][i] = CurrentTime[i];
   }
 #else
   RtsLayer::getUSecD(tid, CurrentTime);
@@ -448,7 +447,7 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
-   	Tau_sampling_event_stop(tid, CurrentTime);
+    Tau_sampling_event_stop(tid, CurrentTime);
   }
 #endif
 
@@ -458,18 +457,13 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 #endif /*KTAU_DEBUGPROF*/
   ThisKtauProfiler->Stop(this, AddInclFlag);
 #endif /* TAUKTAU */
-    
 
-
-
-  for (int k=0; k<Tau_Global_numCounters; k++) {
+  for (int k = 0; k < Tau_Global_numCounters; k++) {
     TotalTime[k] = CurrentTime[k] - StartTime[k];
   }
 
-
-  x_uint64 TimeStamp = 0L; 
-  TimeStamp = (x_uint64) CurrentTime[0]; // USE COUNTER1
-
+  x_uint64 TimeStamp = 0L;
+  TimeStamp = (x_uint64)CurrentTime[0];    // USE COUNTER1
 
   /********************************************************************************/
   /*** Extras ***/
@@ -480,22 +474,20 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
       double *tover, *tnull;
       tover = TauGetTimerOverhead(TauFullTimerOverhead);
       tnull = TauGetTimerOverhead(TauNullTimerOverhead);
-      
-      for (int k=0; k<Tau_Global_numCounters; k++) {
-	/* To compensate for timing overhead, shrink the totaltime! */
-	TotalTime[k] = TotalTime[k] - tnull[k] - GetNumChildren() * tover[k]; 
-	if (TotalTime[k] < 0 ) {
-	  TotalTime[k] = 0;
-	  DEBUGPROFMSG("TotalTime[" <<k<<"] negative in "<<ThisFunction->GetName()<<endl;);
-	}
+
+      for (int k = 0; k < Tau_Global_numCounters; k++) {
+        /* To compensate for timing overhead, shrink the totaltime! */
+        TotalTime[k] = TotalTime[k] - tnull[k] - GetNumChildren() * tover[k];
+        if (TotalTime[k] < 0) {
+          TotalTime[k] = 0;
+          DEBUGPROFMSG("TotalTime[" <<k<<"] negative in "<<ThisFunction->GetName()<<endl;);
+        }
       }
     }
   }
   /********************************************************************************/
   /*** Extras ***/
   /********************************************************************************/
-
-    
 
   /********************************************************************************/
   /*** Tracing ***/
@@ -504,19 +496,18 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
 #ifdef TAU_MPITRACE
   if (RecordEvent) {
 #endif /* TAU_MPITRACE */
-    if (TauEnv_get_tracing()) {
-      TauTraceEvent(ThisFunction->GetFunctionId(), -1 /* exit */, tid, TimeStamp, 1 /* use supplied timestamp */); 
-      TauMetrics_triggerAtomicEvents(TimeStamp, CurrentTime, tid);
-    }
-#ifdef TAU_MPITRACE
+  if (TauEnv_get_tracing()) {
+    TauTraceEvent(ThisFunction->GetFunctionId(), -1 /* exit */, tid, TimeStamp, 1 /* use supplied timestamp */);
+    TauMetrics_triggerAtomicEvents(TimeStamp, CurrentTime, tid);
   }
+#ifdef TAU_MPITRACE
+}
 #endif /* TAU_MPITRACE */
-
 
   /********************************************************************************/
   /*** Tracing ***/
   /********************************************************************************/
-    
+
   if (TauEnv_get_callpath()) {
     CallPathStop(TotalTime, tid);
   }
@@ -534,7 +525,6 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
     RenciSTFF::recordValues(ThisFunction, TimeStamp, TotalTime, tid);
   }
 #endif //RENCI_STFF
-
 #ifdef TAU_PROFILEPARAM
   ProfileParamStop(TotalTime, tid);
   if (ParentProfiler && ParentProfiler->ProfileParamFunction) {
@@ -543,36 +533,36 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   }
 #endif /* TAU_PROFILEPARAM */
 
-  if (AddInclFlag == true) { // The first time it came on call stack
-    ThisFunction->SetAlreadyOnStack(false, tid); // while exiting
-      
+  if (AddInclFlag == true) {    // The first time it came on call stack
+    ThisFunction->SetAlreadyOnStack(false, tid);    // while exiting
+
     // And its ok to add both excl and incl times
     ThisFunction->AddInclTime(TotalTime, tid);
-  } 
+  }
   // If its already on call stack, don't change AlreadyOnStack
   ThisFunction->AddExclTime(TotalTime, tid);
   // In either case we need to add time to the exclusive time.
-    
+
 #if defined(TAUKTAU) && defined(TAUKTAU_MERGE)
 #ifdef KTAU_DEBUGPROF
   /* Checking to see if kern_time < tot-time (user+kern time) */
   ThisKtauProfiler->VerifyMerge(ThisFunction);
 #endif /*KTAU_DEBUGPROF*/
 #endif /*TAUKTAU && TAUKTAU_MERGE*/
-    
+
   if (TauEnv_get_compensate()) {
-    ThisFunction->ResetExclTimeIfNegative(tid); 
-    
+    ThisFunction->ResetExclTimeIfNegative(tid);
+
     if (TauEnv_get_callpath()) {
       if (ParentProfiler != NULL) {
-	CallPathFunction->ResetExclTimeIfNegative(tid); 
+        CallPathFunction->ResetExclTimeIfNegative(tid);
       }
     }
     if (TauEnv_get_callsite()) {
       if (ParentProfiler != NULL) {
-	if (CallSiteFunction != NULL) {
-	  CallSiteFunction->ResetExclTimeIfNegative(tid);
-	}
+        if (CallSiteFunction != NULL) {
+          CallSiteFunction->ResetExclTimeIfNegative(tid);
+        }
       }
     }
 
@@ -584,12 +574,12 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   }
 
   if (ParentProfiler != NULL) {
-      ParentProfiler->ThisFunction->ExcludeTime(TotalTime, tid);
-    
-      if (TauEnv_get_compensate()) {
-	ParentProfiler->AddNumChildren(GetNumChildren()+1);
-	/* Add 1 and my children to my parents total number of children */
-      }
+    ParentProfiler->ThisFunction->ExcludeTime(TotalTime, tid);
+
+    if (TauEnv_get_compensate()) {
+      ParentProfiler->AddNumChildren(GetNumChildren() + 1);
+      /* Add 1 and my children to my parents total number of children */
+    }
   }
 
   /********************************************************************************/
@@ -597,14 +587,13 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
   /********************************************************************************/
   if (TauEnv_get_throttle()) {
     /* if the frequency of events is high, disable them */
-    double inclusiveTime; 
-    inclusiveTime = ThisFunction->GetInclTimeForCounter(tid, 0); 
+    double inclusiveTime;
+    inclusiveTime = ThisFunction->GetInclTimeForCounter(tid, 0);
     /* here we get the array of double values representing the double 
-       metrics. We choose the first counter */
-    
-    if ((ThisFunction->GetCalls(tid) > TauEnv_get_throttle_numcalls()) 
-	&& (inclusiveTime/ThisFunction->GetCalls(tid) < TauEnv_get_throttle_percall()) 
-	&& AddInclFlag) { 
+     metrics. We choose the first counter */
+
+    if ((ThisFunction->GetCalls(tid) > TauEnv_get_throttle_numcalls())
+        && (inclusiveTime / ThisFunction->GetCalls(tid) < TauEnv_get_throttle_percall()) && AddInclFlag) {
       RtsLayer::LockDB();
       /* Putting AddInclFlag means we can't throttle recursive calls */
       ThisFunction->SetProfileGroup(TAU_DISABLE);
@@ -613,36 +602,37 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
       string ftype(string("[THROTTLED]"));
       ThisFunction->SetType(ftype);
       //cout <<"TAU<"<<RtsLayer::myNode()<<">: Throttle: Disabling "<<ThisFunction->GetName()<<endl;
-      TAU_VERBOSE("TAU<%d,%d>: Throttle: Disabling %s\n", RtsLayer::myNode(), RtsLayer::myThread(), ThisFunction->GetName());
+      TAU_VERBOSE("TAU<%d,%d>: Throttle: Disabling %s\n", RtsLayer::myNode(), RtsLayer::myThread(),
+          ThisFunction->GetName());
       RtsLayer::UnLockDB();
     }
   }
   /********************************************************************************/
   /*** Throttling Code ***/
   /********************************************************************************/
-    
-  if (ParentProfiler == (Profiler *) NULL) {
+
+  if (ParentProfiler == (Profiler *)NULL) {
     //    printf("No parent profiler on stop\n");
     if (TauEnv_get_extras()) {
       /*** Profile Compensation ***/
       if (TauEnv_get_compensate()) {
-	// If I am still compensating, I do not expect a top level timer. Just pretend
-	// this never happened.
-	if (!TauCompensateInitialized()) {
-	  return;
-	}
+        // If I am still compensating, I do not expect a top level timer. Just pretend
+        // this never happened.
+        if (!TauCompensateInitialized()) {
+          return;
+        }
       }
     }
     /* Should we detect memory leaks here? */
     if (TheSafeToDumpData() && !RtsLayer::isCtorDtor(ThisFunction->GetName())) {
-      Tau_global_callWriteHooks();
-      Tau_detect_memory_leaks(); /* the last event should be before final exit */
+      Tau_detect_memory_leaks();
+      /* the last event should be before final exit */
     }
 
-/* On Crays with -iowrapper, rank 0 is spawned by the clone syscall. This
-    creates a parent thread (rank = -1) that tries to write data at the end
-    of execution and crashes. This fixes it and disables profile output from
-    rank -1. */
+    /* On Crays with -iowrapper, rank 0 is spawned by the clone syscall. This
+     creates a parent thread (rank = -1) that tries to write data at the end
+     of execution and crashes. This fixes it and disables profile output from
+     rank -1. */
 #if (defined (TAU_MPI) && defined(TAU_CRAYCNL))
     if (RtsLayer::myNode() == -1) TheSafeToDumpData() = 0;
 #endif /* TAU_MPI && TAU_CRAYCNL */
@@ -652,61 +642,59 @@ void Profiler::Stop(int tid, bool useLastTimeStamp) {
     if (strcmp(ThisFunction->GetName(), "_fini") == 0) {
       TheSafeToDumpData() = 0;
     }
-		if (tid == 0) {
-	  	Tau_profile_exit_all_tasks();
-		}
+    if (tid == 0) {
+      Tau_profile_exit_all_tasks();
+    }
 #ifdef TAU_GPU
-		//Stop all other running tasks.
-		if (tid == 0) {
-			//printf("exiting all tasks....\n");
-		  Tau_profile_exit_all_tasks();
-		}
+    //Stop all other running tasks.
+    if (tid == 0) {
+      //printf("exiting all tasks....\n");
+      Tau_profile_exit_all_tasks();
+    }
 #endif
 #ifndef TAU_WINDOWS
     if (tid == 0) {
       atexit(TauAppShutdown);
     }
 #endif //TAU_WINDOWS
-
     if (TheSafeToDumpData()) {
       if (!RtsLayer::isCtorDtor(ThisFunction->GetName())) {
-	// Not a destructor of a static object - its a function like main
+        // Not a destructor of a static object - its a function like main
 
-	// Write profile data
-	TauProfiler_StoreData(tid);
+        // Write profile data
+        TauProfiler_StoreData(tid);
 #ifndef TAU_WINDOWS
         // getpid() not available on Windows
-        TAU_VERBOSE("TAU: <Node=%d.Thread=%d>:<pid=%d>: %s initiated TauProfiler_StoreData\n",
-          RtsLayer::myNode(), RtsLayer::myThread(), getpid(), ThisFunction->GetName());
+        TAU_VERBOSE("TAU: <Node=%d.Thread=%d>:<pid=%d>: %s initiated TauProfiler_StoreData\n", RtsLayer::myNode(),
+            RtsLayer::myThread(), getpid(), ThisFunction->GetName());
 #endif
 // Be careful here, we can not disable instrumentation in multithreaded
 // application because that will cause profilers on any other stack to never get
 // stopped.
 #if defined(TAU_DMAPP) && TAU_MAX_THREADS == 1
-	if (RtsLayer::myThread() == 0) {
-		TAU_DISABLE_INSTRUMENTATION(); 
-	}
+        if (RtsLayer::myThread() == 0) {
+          TAU_DISABLE_INSTRUMENTATION();
+        }
 #endif /* TAU_DMAPP */
 
-	  
 #if defined(TAUKTAU) 
-	//AN Removed - New func inside 
-	//ThisKtauProfiler->KernProf.DumpKProfile();
-	ThisKtauProfiler->KernProf.DumpKProfileOut();
+        //AN Removed - New func inside
+        //ThisKtauProfiler->KernProf.DumpKProfile();
+        ThisKtauProfiler->KernProf.DumpKProfileOut();
 #endif /*TAUKTAU */
- 
+
 #ifdef TAU_TRACK_IDLE_THREADS /* Check if we need to shut off .TAU applications on other tids */
-	if (tid == 0) {
-	  int i; 
-	  for (i = 1; i < TAU_MAX_THREADS; i++) {  
-	    /* for all other threads */
-	    Profiler *cp = TauInternal_CurrentProfiler(i);
-	    if (cp && strncmp(cp->ThisFunction->GetName(),".TAU", 4) == 0) {
-	      bool uselasttimestamp = true;
-	      cp->Stop(i,uselasttimestamp); /* force it to write the data*/
-	    }
-	  }
-	}
+        if (tid == 0) {
+          int i;
+          for (i = 1; i < TAU_MAX_THREADS; i++) {
+            /* for all other threads */
+            Profiler *cp = TauInternal_CurrentProfiler(i);
+            if (cp && strncmp(cp->ThisFunction->GetName(),".TAU", 4) == 0) {
+              bool uselasttimestamp = true;
+              cp->Stop(i,uselasttimestamp); /* force it to write the data*/
+            }
+          }
+        }
 #endif /* TAU_TRACK_IDLE_THREADS */
       }
     }

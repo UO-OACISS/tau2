@@ -24,14 +24,6 @@
 
 #include <tau_internal.h>
 
-#ifdef __cplusplus
-#ifdef TAU_DOT_H_LESS_HEADERS
-#include <new>
-#else /* TAU_DOT_H_LESS_HEADERS */
-#include <new.h>
-#endif /* TAU_DOT_H_LESS_HEADERS */
-#endif
-
 #if defined(__darwin__) || defined(__APPLE__) || defined(TAU_XLC)
 #undef HAVE_MEMALIGN
 #undef HAVE_PVALLOC
@@ -40,18 +32,29 @@
 #define HAVE_PVALLOC 1
 #endif
 
+#define TAU_MEMORY_UNKNOWN_LINE 0
+#define TAU_MEMORY_UNKNOWN_FILE "Unknown"
+#define TAU_MEMORY_UNKNOWN_FILE_STRLEN 7
+
 // libc bindings
 
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
+void Tau_memory_init(void);
+int Tau_memory_enabled(void);
+int Tau_memory_passthrough(void);
+
 size_t Tau_page_size(void);
 
 void Tau_detect_memory_leaks(void);
+size_t Tau_get_bytes_allocated(void);
 
 void Tau_track_memory_allocation(void *, size_t, char const *, int);
 void Tau_track_memory_deallocation(void *, char const *, int);
+
+void * Tau_allocate_unprotected(size_t);
 
 void * Tau_malloc(size_t, char const *, int);
 void * Tau_calloc(size_t, size_t, char const *, int);
@@ -78,57 +81,6 @@ void * Tau_memcpy(void *, void const *, size_t, char const *, int);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-
-
-// C++ bindings
-
-#ifdef __cplusplus
-
-#if 0
-
-void * Tau_operator_new(size_t, bool, const char *, int);
-void Tau_operator_delete(void *, bool, const char *, int);
-int Tau_operator_delete_init(const char *, int);
-
-void * operator new(std::size_t) throw(std::bad_alloc);
-void * operator new[](std::size_t) throw(std::bad_alloc);
-
-void   operator delete(void *) throw();
-void   operator delete[](void *) throw();
-
-#if 0
-void * operator new(std::size_t, const std::nothrow_t &) throw();
-void * operator new[](std::size_t, const std::nothrow_t &) throw();
-#endif
-
-void   operator delete(void *, const std::nothrow_t &) throw();
-void   operator delete[](void *, const std::nothrow_t &) throw();
-
-#if 0
-void * operator new(std::size_t, void *) throw(std::bad_alloc);
-void * operator new[](std::size_t, void *) throw(std::bad_alloc);
-void   operator delete(void *, void *) throw();
-void   operator delete[](void *, void *) throw();
-#endif
-
-void * operator new(std::size_t, char const *, int) throw(std::bad_alloc);
-void * operator new[](std::size_t, char const *, int) throw(std::bad_alloc);
-void   operator delete(void *, char const *, int) throw();
-void   operator delete[](void *, char const *, int) throw();
-
-void * operator new(std::size_t, const std::nothrow_t &, char const *, int) throw();
-void * operator new[](std::size_t, const std::nothrow_t &, char const *, int) throw();
-void   operator delete(void *, const std::nothrow_t &, char const *, int) throw();
-void   operator delete[](void *, const std::nothrow_t &, char const *, int) throw();
-
-void * operator new(std::size_t, void *, char const *, int) throw(std::bad_alloc);
-void * operator new[](std::size_t, void *, char const *, int) throw(std::bad_alloc);
-void   operator delete(void *, void *, char const *, int) throw();
-void   operator delete[](void *, void *, char const *, int) throw();
-#endif
-
-#endif
-
 
 #endif /* _TAU_MEMORY_H_ */
 
