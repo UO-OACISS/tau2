@@ -79,6 +79,9 @@ struct HashNode
 	HashNode() : fi(NULL), excluded(false)
 	{ }
 
+	HashNode(const HashNode &h) : fi(NULL), excluded(false)
+	{ }
+
 	TauBfdInfo info;		///< Filename, line number, etc.
 	FunctionInfo * fi;		///< Function profile information
 	bool excluded;			///< Is function excluded from profiling?

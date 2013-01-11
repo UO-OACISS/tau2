@@ -25,8 +25,12 @@ This is not a parallel implementation */
 #include <pthread.h>
 #endif /* PTHREADS */
 
+#if defined(TAU_OPENMP)
+#include <omp.h>
+#endif /* TAU_OPENMP */
+
 #ifndef MATRIX_SIZE
-#define MATRIX_SIZE 100
+#define MATRIX_SIZE 500
 #endif
 
 #define NRA MATRIX_SIZE                 /* number of rows in matrix A */
