@@ -1978,6 +1978,7 @@ sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,
  > ${targetdir}/${architecture}/bin/perfdmf_configure
 chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_configure
 cd ${targetdir}/${architecture}/bin
+/bin/rm -f taudb_configure
 ln -s perfdmf_configure taudb_configure
 cd ${tauroot}
 
@@ -1996,6 +1997,7 @@ sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,
  > ${targetdir}/${architecture}/bin/perfdmf_loadtrial
 chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_loadtrial
 cd ${targetdir}/${architecture}/bin
+/bin/rm -f taudb_loadtrial
 ln -s perfdmf_loadtrial taudb_loadtrial
 cd ${tauroot}
 
@@ -7084,19 +7086,22 @@ fi
 if [ $dyninst = yes ] ; then
     fixmakeargs="$fixmakeargs DYNINST dyninstdir=$dyninstdir"
     if [ ! -d $dyninstdir/lib ] ; then
-	fixmakeargs="$fixmakeargs DYNINST41"
+	  fixmakeargs="$fixmakeargs DYNINST41"
     fi
     if [ `grep isStaticExecutable $dyninstdir/include/* | wc -l` = 0 ]; then
-	fixmakeargs="$fixmakeargs DYNINST_STATIC_REWRITING_UNSUPPORTED"
+	  fixmakeargs="$fixmakeargs DYNINST_STATIC_REWRITING_UNSUPPORTED"
     fi
     if [ ! -d $dyninstdir/src/include -o ! -d $dyninstdir/include ] ; then
-	fixmakeargs="$fixmakeargs DYNINST5.2"
+	  fixmakeargs="$fixmakeargs DYNINST5.2"
     fi
-    if [ -r $dyninstdir/$PLATFORM/lib/libcommon.so ] ; then
-	fixmakeargs="$fixmakeargs DYNINST6"
+    if [ -r $dyninstdir/$PLATFORM/lib/libcommon.so -o -r $dyninstdir/lib/libcommon.so ] ; then
+	  fixmakeargs="$fixmakeargs DYNINST6"
     fi
-    if [ -r $dyninstdir/$PLATFORM/lib/libparseAPI.so ] ; then
-	fixmakeargs="$fixmakeargs DYNINST7"
+    if [ -r $dyninstdir/$PLATFORM/lib/libparseAPI.so -o -r $dyninstdir/lib/libparseAPI.so ] ; then
+	  fixmakeargs="$fixmakeargs DYNINST7"
+    fi
+    if [ -r $dyninstdir/include/walker.h ] ; then
+	  fixmakeargs="$fixmakeargs DYNINST8"
     fi
 fi
 
