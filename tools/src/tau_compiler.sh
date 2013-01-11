@@ -1369,6 +1369,13 @@ if [ $numFiles == 0 ]; then
       echoIfDebug "Linking command is $linkCmd"
     fi
 
+    echoIfDebug "optMemDbg = $optMemDbg, wrappers = $optWrappersDir/memory_wrapper/link_options.tau "
+    if [ $optMemDbg == $TRUE -a -r $optWrappersDir/memory_wrapper/link_options.tau ] ; then 
+      optLinking=`echo $optLinking  | sed -e 's/Comp_gnu.o//g'`
+      linkCmd="$linkCmd `cat $optWrappersDir/memory_wrapper/link_options.tau` $optLinking"
+      echoIfDebug "Linking command is $linkCmd"
+    fi
+
     if [ $trackDMAPP == $TRUE -a -r $optWrappersDir/dmapp_wrapper/link_options.tau ] ; then 
       linkCmd="$linkCmd `cat $optWrappersDir/dmapp_wrapper/link_options.tau`"
       echoIfDebug "Linking command is $linkCmd "
@@ -1929,6 +1936,13 @@ cmdCreatePompRegions="`${optOpari2ConfigTool}   --nm` ${optIBM64}  ${objectFiles
         if [ $trackIO = $TRUE -a -r $optWrappersDir/io_wrapper/link_options.tau ] ; then
           optLinking=`echo $optLinking  | sed -e 's/Comp_gnu.o//g'`
           newCmd="$newCmd `cat $optWrappersDir/io_wrapper/link_options.tau` $optLinking"
+          echoIfDebug "Linking command is $newCmd"
+        fi
+
+        echoIfDebug "optMemDbg = $optMemDbg, wrappers = $optWrappersDir/memory_wrapper/link_options.tau "
+        if [ $optMemDbg = $TRUE -a -r $optWrappersDir/memory_wrapper/link_options.tau ] ; then
+          optLinking=`echo $optLinking  | sed -e 's/Comp_gnu.o//g'`
+          newCmd="$newCmd `cat $optWrappersDir/memory_wrapper/link_options.tau` $optLinking"
           echoIfDebug "Linking command is $newCmd"
         fi
 

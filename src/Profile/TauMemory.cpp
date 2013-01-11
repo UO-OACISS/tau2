@@ -62,11 +62,30 @@
 
 using namespace std;
 
-
-
 #if !defined(MAP_ANONYMOUS) && defined(MAP_ANON)
 #define  MAP_ANONYMOUS MAP_ANON
 #endif
+
+
+static int & TheTauMemoryWrapperPresent(void)
+{
+  static int flag = 0;
+  return flag;
+}
+
+extern "C"
+int Tau_memory_wrapper_present(void)
+{
+  return TheTauMemoryWrapperPresent();
+}
+
+extern "C"
+void Tau_set_memory_wrapper_present(int value)
+{
+  TheTauMemoryWrapperPresent() = value;
+}
+
+
 
 typedef unsigned char * addr_t;
 typedef TauContextUserEvent user_event_t;
@@ -667,50 +686,6 @@ void TauAllocation::TrackDeallocation(const char * filename, int lineno)
   Tau_global_decr_insideTAU();
 }
 
-static int & TheTauMemoryEnabled()
-{
-  static int enabled = 0;
-  return enabled;
-}
-
-//////////////////////////////////////////////////////////////////////
-// TODO: Docs
-//////////////////////////////////////////////////////////////////////
-extern "C"
-void Tau_memory_init(void)
-{
-  static bool init = false;
-  if (init) return;
-  init = true;
-
-  Tau_global_incr_insideTAU();
-  Tau_init_initializeTAU();
-  Tau_create_top_level_timer_if_necessary();
-  TheTauMemoryEnabled() = 1;
-  Tau_global_decr_insideTAU();
-}
-
-//////////////////////////////////////////////////////////////////////
-// TODO: Docs
-//////////////////////////////////////////////////////////////////////
-extern "C"
-int Tau_memory_enabled(void)
-{
-  return TheTauMemoryEnabled();
-}
-
-
-//////////////////////////////////////////////////////////////////////
-// TODO: Docs
-//////////////////////////////////////////////////////////////////////
-extern "C"
-int Tau_memory_passthrough(void)
-{
-  return Tau_global_get_insideTAU()
-      || !Tau_init_check_initialized()
-      || !Tau_init_check_dl_initialized()
-      || Tau_global_getLightsOut();
-}
 
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs

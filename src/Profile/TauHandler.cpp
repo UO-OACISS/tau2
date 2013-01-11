@@ -127,7 +127,7 @@ int TauDisableTrackingMemoryHeadroom(void) {
 //////////////////////////////////////////////////////////////////////
 double TauGetMaxRSS(void)
 {
-  if (Tau_memory_enabled()) {
+  if (Tau_memory_wrapper_present()) {
     size_t bytes = Tau_get_bytes_allocated();
     double kbytes = (double)bytes / 1024.0;
     return kbytes;
