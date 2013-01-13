@@ -75,10 +75,12 @@ realloc_t Tau_get_system_realloc()
   return __real_realloc;
 }
 
+#ifdef HAVE_MEMALIGN
 memalign_t Tau_get_system_memalign()
 {
   return __real_memalign;
 }
+#endif
 
 posix_memalign_t Tau_get_system_posix_memalign()
 {
@@ -90,10 +92,12 @@ valloc_t Tau_get_system_valloc()
   return __real_valloc;
 }
 
+#ifdef HAVE_PVALLOC
 pvalloc_t Tau_get_system_pvalloc()
 {
   return __real_pvalloc;
 }
+#endif
 
 free_t Tau_get_system_free()
 {
