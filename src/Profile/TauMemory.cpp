@@ -125,7 +125,8 @@ public:
     lguard_addr(NULL), lguard_size(0),
     uguard_addr(NULL), uguard_size(0),
     lgap_addr(NULL), lgap_size(0),
-    ugap_addr(NULL), ugap_size(0)
+    ugap_addr(NULL), ugap_size(0),
+    alloc_event(NULL)
   { }
 
   void * Allocate(size_t const size, size_t align, size_t min_align, const char * filename, int lineno);
@@ -149,7 +150,7 @@ private:
   addr_t ugap_addr;     ///< Unprotected upper gap address
   size_t ugap_size;     ///< Unprotected upper gap size
 
-  user_event_t * event; ///< Allocation event (for leak detection)
+  user_event_t * alloc_event; ///< Allocation event (for leak detection)
 
   void ProtectPages(addr_t addr, size_t size);
   void UnprotectPages(addr_t addr, size_t size);
@@ -259,18 +260,18 @@ void TauAllocation::TriggerAllocationEvent(char const * filename, int lineno)
     if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
         !(strncmp(filename, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_FILE_STRLEN)))
     {
-      event = new user_event_t("heap allocate");
+      alloc_event = new user_event_t("heap allocate");
     } else {
       char * s = (char*)malloc(strlen(filename)+128);
       sprintf(s, "heap allocate <file=%s, line=%d>", filename, lineno);
-      event = new user_event_t(s);
+      alloc_event = new user_event_t(s);
       free((void*)s);
     }
-    event_map[file_hash] = event;
+    event_map[file_hash] = alloc_event;
   } else {
-    event = it->second;
+    alloc_event = it->second;
   }
-  event->TriggerEvent(user_size);
+  alloc_event->TriggerEvent(user_size);
 
   Tau_global_decr_insideTAU();
 }
@@ -365,7 +366,7 @@ void TauAllocation::DetectLeaks(void)
   for(allocation_map_t::iterator it=alloc_map.begin(); it != alloc_map.end(); it++) {
     TauAllocation * alloc = it->second;
     size_t size = alloc->user_size;
-    user_event_t * event = alloc->event;
+    user_event_t * event = alloc->alloc_event;
 
     leak_event_map_t::iterator jt = leak_map.find(event);
     if (jt == leak_map.end()) {
@@ -535,7 +536,7 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
   static addr_t suggest_start = NULL;
 
 #if defined(MAP_ANONYMOUS)
-  alloc_addr = (addr_t)mmap((void*)suggest_start, alloc_size, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+  alloc_addr = (addr_t)mmap((void*)suggest_start, alloc_size, PROT_NONE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
 #else
   static int fd = -1;
   if (fd == -1) {
@@ -545,7 +546,7 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
       return NULL;
     }
   }
-  alloc_addr = (addr_t)mmap((void*)suggest_start, alloc_size, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
+  alloc_addr = (addr_t)mmap((void*)suggest_start, alloc_size, PROT_NONE, MAP_PRIVATE, fd, 0);
 #endif
 
   if (alloc_addr == MAP_FAILED) {
@@ -584,7 +585,6 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
       ProtectPages(lguard_addr, lguard_size);
       // Deny access to the upper guard page
       ProtectPages(uguard_addr, uguard_size);
-
     } else {
       // Upper guard page address and size
       uguard_addr = NULL;
@@ -625,9 +625,11 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
   AllocationMap()[user_addr] = this;
   TriggerAllocationEvent(filename, lineno);
 
-//  printf("%s:%d :: %p, %ld, %p, %ld, %p, %ld, %p, %ld, %p, %ld\n",
+//  printf("%s:%d :: alloc=(%p, %ld), user=(%p, %ld), "
+//      "lguard=(%p, %ld), uguard=(%p, %ld), lgap=(%p, %ld), ugap=(%p, %ld)\n",
 //      filename, lineno, alloc_addr, alloc_size, user_addr, user_size,
-//      prot_addr, prot_size, lgap_addr, lgap_size, ugap_addr, ugap_size);
+//      lguard_addr, lguard_size, uguard_addr, uguard_size,
+//      lgap_addr, lgap_size, ugap_addr, ugap_size);
 //  fflush(stdout);
 
   // All done with bookkeeping, get back to the user
@@ -828,16 +830,13 @@ void Tau_track_memory_deallocation(void * ptr, char const * filename, int lineno
 extern "C"
 void * Tau_malloc(size_t size, const char * filename, int lineno)
 {
-  //printf("%s\n", __PRETTY_FUNCTION__); fflush(stdout);
   void * ptr;
 
   Tau_global_incr_insideTAU();
   if (TauEnv_get_memdbg()) {
-    //printf("%s: alloc->Allocate\n", __PRETTY_FUNCTION__); fflush(stdout);
     TauAllocation * alloc = new TauAllocation;
     ptr = alloc->Allocate(size, 0, 0, filename, lineno);
   } else {
-    //printf("%s: malloc\n", __PRETTY_FUNCTION__); fflush(stdout);
     ptr = malloc(size);
     Tau_track_memory_allocation(ptr, size, filename, lineno);
   }
@@ -875,20 +874,15 @@ void * Tau_calloc(size_t count, size_t size, const char * filename, int lineno)
 extern "C"
 void Tau_free(void * ptr, char const * filename, int lineno)
 {
-  //printf("%s\n", __PRETTY_FUNCTION__); fflush(stdout);
-
   if (ptr) {
     addr_t addr = (addr_t)ptr;
     TauAllocation * alloc = TauAllocation::Find(addr);
 
     Tau_global_incr_insideTAU();
     if (alloc) {
-      //printf("%s: alloc found\n", __PRETTY_FUNCTION__); fflush(stdout);
       if (TauEnv_get_memdbg()) {
-        //printf("%s: alloc->Deallocate\n", __PRETTY_FUNCTION__); fflush(stdout);
         alloc->Deallocate(filename, lineno);
       } else {
-        //printf("%s: free\n", __PRETTY_FUNCTION__); fflush(stdout);
         alloc->TrackDeallocation(filename, lineno);
         free(ptr);
       }
@@ -958,10 +952,21 @@ void * Tau_realloc(void * ptr, size_t size, const char * filename, int lineno)
 {
   Tau_global_incr_insideTAU();
   if (TauEnv_get_memdbg()) {
+    TauAllocation * alloc;
     if (ptr) {
-      Tau_free(ptr, filename, lineno);
+      addr_t addr = (addr_t)ptr;
+      alloc = TauAllocation::Find(addr);
+      if (alloc) {
+        alloc->Deallocate(filename, lineno);
+      } else {
+        TAU_VERBOSE("TAU: WARNING - Allocation record for %p not found.\n", addr);
+        free(ptr);
+      }
     }
-    ptr = Tau_malloc(size, filename, lineno);
+    if (!alloc) {
+      alloc = new TauAllocation;
+    }
+    ptr = alloc->Allocate(size, 0, 0, filename, lineno);
   } else {
     if (ptr) {
       Tau_track_memory_deallocation(ptr, filename, lineno);
