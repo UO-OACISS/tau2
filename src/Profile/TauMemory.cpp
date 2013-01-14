@@ -122,7 +122,8 @@ public:
   TauAllocation() :
     alloc_addr(NULL), alloc_size(0),
     user_addr(NULL), user_size(0),
-    prot_addr(NULL), prot_size(0),
+    lguard_addr(NULL), lguard_size(0),
+    uguard_addr(NULL), uguard_size(0),
     lgap_addr(NULL), lgap_size(0),
     ugap_addr(NULL), ugap_size(0)
   { }
@@ -139,8 +140,10 @@ private:
   size_t alloc_size;    ///< Unadjusted size
   addr_t user_addr;     ///< Address presented to user
   size_t user_size;     ///< Size requested by user
-  addr_t prot_addr;     ///< Protected upper range address
-  size_t prot_size;     ///< Protected upper range size
+  addr_t lguard_addr;   ///< Protected lower range address
+  size_t lguard_size;   ///< Protected lower range size
+  addr_t uguard_addr;   ///< Protected upper range address
+  size_t uguard_size;   ///< Protected upper range size
   addr_t lgap_addr;     ///< Unprotected lower gap address
   size_t lgap_size;     ///< Unprotected lower gap size
   addr_t ugap_addr;     ///< Unprotected upper gap address
@@ -557,52 +560,75 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
 #endif
 
   if (PROTECT_BELOW) {
+    // Address range with requested alignment and adjacent to guard page
+    user_addr = (addr_t)(((size_t)alloc_addr + PAGE_SIZE + align-1) & ~(align-1));
+    user_size = size;
+    // Lower guard page address and size
+    lguard_addr = alloc_addr;
+    lguard_size = (size_t)(user_addr - alloc_addr) & ~(PAGE_SIZE-1);
+    // Front gap address and size
+    lgap_addr = (addr_t)((size_t)user_addr & ~(PAGE_SIZE-1));
+    lgap_size = (size_t)(user_addr - lgap_addr);
+
     if (PROTECT_ABOVE) {
-      // TODO
+      // Upper guard page address and size
+      uguard_addr = (addr_t)((size_t)(user_addr + user_size + PAGE_SIZE-1) & ~(PAGE_SIZE-1));
+      uguard_size = (size_t)(alloc_addr + alloc_size - uguard_addr);
+      // Back gap address and size
+      ugap_addr = user_addr + user_size;
+      ugap_size = (size_t)(uguard_addr - ugap_addr);
+
+      // Permit access to all except the upper and lower guard pages
+      UnprotectPages(lgap_addr, (size_t)(uguard_addr - lgap_addr));
+      // Deny access to the lower guard page
+      ProtectPages(lguard_addr, lguard_size);
+      // Deny access to the upper guard page
+      ProtectPages(uguard_addr, uguard_size);
+
     } else {
-      // Address range with requested alignment and adjacent to guard page
-      user_addr = (addr_t)(((size_t)alloc_addr + PAGE_SIZE + align-1) & ~(align-1));
-      user_size = size;
-      // Guard page address and size
-      prot_addr = alloc_addr;
-      prot_size = (size_t)(user_addr - alloc_addr) & ~(PAGE_SIZE-1);
-      // Front gap address and size
-      lgap_addr = (addr_t)((size_t)user_addr & ~(PAGE_SIZE-1));
-      lgap_size = (size_t)(user_addr - lgap_addr);
+      // Upper guard page address and size
+      uguard_addr = NULL;
+      uguard_size = 0;
       // Back gap address and size
       ugap_addr = user_addr + user_size;
       ugap_size = (size_t)(alloc_addr + alloc_size - ugap_addr);
 
       // Permit access to all except the lower guard page
       UnprotectPages(lgap_addr, (size_t)(alloc_addr + alloc_size - lgap_addr));
-      // Deny access to the upper guard page
-      ProtectPages(prot_addr, prot_size);
+      // Deny access to the lower guard page
+      ProtectPages(lguard_addr, lguard_size);
     }
   } else if (PROTECT_ABOVE) {
     // Address range with requested alignment and adjacent to guard page
     user_addr = (addr_t)(((size_t)alloc_addr + alloc_size - PAGE_SIZE - size) & ~(align-1));
     user_size = size;
-    // Guard page address and size
-    prot_addr = (addr_t)((size_t)(user_addr + user_size + PAGE_SIZE-1) & ~(PAGE_SIZE-1));
-    prot_size = (size_t)(alloc_addr + alloc_size - prot_addr);
+    // Lower guard page address and size
+    lguard_addr = NULL;
+    lguard_size = 0;
+    // Upper guard page address and size
+    uguard_addr = (addr_t)((size_t)(user_addr + user_size + PAGE_SIZE-1) & ~(PAGE_SIZE-1));
+    uguard_size = (size_t)(alloc_addr + alloc_size - uguard_addr);
     // Front gap address and size
     lgap_addr = alloc_addr;
     lgap_size = (size_t)(user_addr - alloc_addr);
     // Back gap address and size
     ugap_addr = user_addr + user_size;
-    ugap_size = (size_t)(prot_addr - ugap_addr);
+    ugap_size = (size_t)(uguard_addr - ugap_addr);
 
     // Permit access to all except the upper guard page
-    UnprotectPages(alloc_addr, (size_t)(prot_addr - alloc_addr));
+    UnprotectPages(alloc_addr, (size_t)(uguard_addr - alloc_addr));
     // Deny access to the upper guard page
-    ProtectPages(prot_addr, prot_size);
+    ProtectPages(uguard_addr, uguard_size);
   }
 
   BytesAllocated() += user_size;
   AllocationMap()[user_addr] = this;
   TriggerAllocationEvent(filename, lineno);
 
-//  printf("%p, %ld, %p, %ld, %p, %ld, %p, %ld, %p, %ld\n", alloc_addr, alloc_size, user_addr, user_size, prot_addr, prot_size, lgap_addr, lgap_size, ugap_addr, ugap_size);
+//  printf("%s:%d :: %p, %ld, %p, %ld, %p, %ld, %p, %ld, %p, %ld\n",
+//      filename, lineno, alloc_addr, alloc_size, user_addr, user_size,
+//      prot_addr, prot_size, lgap_addr, lgap_size, ugap_addr, ugap_size);
+//  fflush(stdout);
 
   // All done with bookkeeping, get back to the user
   Tau_global_decr_insideTAU();
@@ -676,16 +702,12 @@ void TauAllocation::TrackAllocation(void * ptr, size_t size, const char * filena
   Tau_global_incr_insideTAU();
   addr_t addr = (addr_t)ptr;
 
-  alloc_addr = addr;
-  alloc_size = size;
-  user_addr = addr;
-  user_size = size;
-  prot_addr = NULL;
-  prot_size = 0;
-  lgap_addr = NULL;
-  lgap_size = 0;
-  ugap_addr = NULL;
-  ugap_size = 0;
+  if (!alloc_addr) {
+    alloc_addr = addr;
+    alloc_size = size;
+    user_addr = addr;
+    user_size = size;
+  }
 
   AllocationMap()[user_addr] = this;
   TriggerAllocationEvent(filename, lineno);
@@ -701,11 +723,6 @@ void TauAllocation::TrackDeallocation(const char * filename, int lineno)
   Tau_global_incr_insideTAU();
   TriggerDeallocationEvent(filename, lineno);
   AllocationMap().erase(user_addr);
-
-  alloc_addr = NULL;
-  alloc_size = 0;
-  user_addr = NULL;
-  user_size = 0;
   Tau_global_decr_insideTAU();
 }
 
@@ -770,15 +787,18 @@ size_t Tau_get_bytes_allocated(void)
 extern "C"
 void Tau_track_memory_allocation(void * ptr, size_t size, char const * filename, int lineno)
 {
+  //printf("%s\n", __PRETTY_FUNCTION__); fflush(stdout);
+
   Tau_global_incr_insideTAU();
   addr_t addr = (addr_t)ptr;
   TauAllocation * alloc = TauAllocation::Find(addr);
   if (!alloc) {
+    //printf("%s: new TauAllocation for %p\n", __PRETTY_FUNCTION__, (char*)ptr); fflush(stdout);
     alloc = new TauAllocation;
+    alloc->TrackAllocation(ptr, size, filename, lineno);
   } else {
-    TAU_VERBOSE("TAU: ERROR - Allocation record for %p already exists\n", addr);
+    TAU_VERBOSE("TAU: WARNING - Allocation record for %p already exists\n", addr);
   }
-  alloc->TrackAllocation(ptr, size, filename, lineno);
   Tau_global_decr_insideTAU();
 }
 
@@ -808,13 +828,16 @@ void Tau_track_memory_deallocation(void * ptr, char const * filename, int lineno
 extern "C"
 void * Tau_malloc(size_t size, const char * filename, int lineno)
 {
+  //printf("%s\n", __PRETTY_FUNCTION__); fflush(stdout);
   void * ptr;
 
   Tau_global_incr_insideTAU();
   if (TauEnv_get_memdbg()) {
+    //printf("%s: alloc->Allocate\n", __PRETTY_FUNCTION__); fflush(stdout);
     TauAllocation * alloc = new TauAllocation;
     ptr = alloc->Allocate(size, 0, 0, filename, lineno);
   } else {
+    //printf("%s: malloc\n", __PRETTY_FUNCTION__); fflush(stdout);
     ptr = malloc(size);
     Tau_track_memory_allocation(ptr, size, filename, lineno);
   }
@@ -852,15 +875,20 @@ void * Tau_calloc(size_t count, size_t size, const char * filename, int lineno)
 extern "C"
 void Tau_free(void * ptr, char const * filename, int lineno)
 {
+  //printf("%s\n", __PRETTY_FUNCTION__); fflush(stdout);
+
   if (ptr) {
     addr_t addr = (addr_t)ptr;
     TauAllocation * alloc = TauAllocation::Find(addr);
 
     Tau_global_incr_insideTAU();
     if (alloc) {
+      //printf("%s: alloc found\n", __PRETTY_FUNCTION__); fflush(stdout);
       if (TauEnv_get_memdbg()) {
+        //printf("%s: alloc->Deallocate\n", __PRETTY_FUNCTION__); fflush(stdout);
         alloc->Deallocate(filename, lineno);
       } else {
+        //printf("%s: free\n", __PRETTY_FUNCTION__); fflush(stdout);
         alloc->TrackDeallocation(filename, lineno);
         free(ptr);
       }
