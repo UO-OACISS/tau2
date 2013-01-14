@@ -161,6 +161,7 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context)
   char gdb_in_file[256];
   char gdb_out_file[256];
 
+  // This is not decremented so that wrapper libraries cannot interfere
   Tau_global_incr_insideTAU();
 
   if (TauEnv_get_callsite()) {
@@ -218,7 +219,6 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context)
           sig);
       TAU_METADATA("SIGNAL", strsignal(sig));
 
-      Tau_global_decr_insideTAU();
       TAU_PROFILE_EXIT("none");
       sleep(4);
       exit(1);
@@ -285,7 +285,6 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context)
       sig, strsignal(sig), RtsLayer::myNode(), getpid(), Tau_get_tid());
   TAU_METADATA("SIGNAL", strsignal(sig));
 
-  Tau_global_decr_insideTAU();
   TAU_PROFILE_EXIT("none");
   sleep(4);    // give the other tasks some time to process the handler and exit
   exit(1);
