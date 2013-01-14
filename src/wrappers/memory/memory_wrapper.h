@@ -59,9 +59,6 @@ valloc_t Tau_get_system_valloc();
 pvalloc_t Tau_get_system_pvalloc();
 free_t Tau_get_system_free();
 
-// Returns true if ptr is on the bootstrap heap
-int Tau_is_bootstrap(void * ptr);
-
 int Tau_memory_wrapper_init(void);
 int Tau_memory_wrapper_passthrough(void);
 
