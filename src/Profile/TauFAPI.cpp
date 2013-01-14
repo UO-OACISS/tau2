@@ -490,7 +490,7 @@ void tau_profile_timer_(void **ptr, char *fname, int flen)
     /* See if a > appears in the function name. If it does, it separates the
        group name from the function name. Separate these two */
     TauGroup_t gr;
-    char *gr_name = NULL;
+    char const * gr_name = NULL;
     char *first, *second;
 
     first = strtok(localname, ">");
@@ -1813,45 +1813,44 @@ void TAU_METADATA(char *name, char *value, int nlen, int vlen) {
 
 void tau_alloc_(void ** ptr, int* line, int *size, char *name, int slen)
 {
-  char * localname = (char *)malloc((size_t)slen+1);
-  char * modname = (char *)malloc((size_t)slen + 1);
-  char *tmp = localname;
-  char *tmp2 = modname;
-  int skipwhite = 1;
-  int idx = 0;
-  strncpy(localname, name, slen);
-  localname[slen] = '\0';
+  if (ptr) {
+    Tau_global_incr_insideTAU();
 
-  // check for unprintable characters
-  for (int i = 0; i < strlen(localname); i++) {
-    if (!isprint(localname[i])) {
-      localname[i] = '\0';
-      break;
+    char * const modname = (char*)malloc((size_t)slen+1);
+    char * p;
+    char * q;
+    char c;
+
+    name = getFortranName(name, slen);
+
+    // check for unprintable characters
+    slen = 0;
+    p = name;
+    while(isprint(*p)) {
+      ++slen;
+      ++p;
     }
-  }
+    *p = '\0';
 
-  // fix continuation lines
-  for (int j = 0; j < strlen(localname); j++) {
-    if (localname[j] == '&') {
-      skipwhite = 1;
-    } else {
-      if (skipwhite && localname[j] == ' ') {
-        // nothing, skip over it
-      } else {
-        modname[idx++] = localname[j];
-        skipwhite = 0;
+    // fix continuation lines
+    p = name;
+    q = modname;
+    while((c = *p++)) {
+      if (c == '&') {
+        while (isspace(*p))
+          ++p;
+        continue;
       }
+      *q++ = c;
     }
-  }
-  modname[idx] = 0;
-  localname = modname;
+    *q = '\0';
 
-#ifdef DEBUG_PROF
-  printf("ALLOCATE ptr %p *ptr %p line %d size %d\n", ptr, *ptr, *line, *size);
-#endif /* DEBUG_PROF */
-  Tau_track_memory_allocation(ptr, *size, localname, *line);
-  free(tmp);
-  free(tmp2);
+    Tau_track_memory_allocation((void*)ptr, *size, modname, *line);
+    free(modname);
+    free(name);
+
+    Tau_global_decr_insideTAU();
+  }
 }
 
 void tau_alloc(void ** ptr, int* line, int *size, char *name, int slen)
@@ -1871,45 +1870,44 @@ void TAU_ALLOC(void ** ptr, int* line, int *size, char *name, int slen)
 
 void tau_dealloc_(void ** ptr, int* line, char *name, int slen)
 {
-  char *localname = (char *)malloc((size_t)slen + 1);
-  char *modname = (char *)malloc((size_t)slen + 1);
-  char *tmp = localname;
-  char *tmp2 = modname;
-  int skipwhite = 1;
-  int idx = 0;
-  strncpy(localname, name, slen);
-  localname[slen] = '\0';
+  if (ptr) {
+    Tau_global_incr_insideTAU();
 
-  // check for unprintable characters
-  for (int i = 0; i < strlen(localname); i++) {
-    if (!isprint(localname[i])) {
-      localname[i] = '\0';
-      break;
+    char * const modname = (char*)malloc((size_t)slen+1);
+    char * p;
+    char * q;
+    char c;
+
+    name = getFortranName(name, slen);
+
+    // check for unprintable characters
+    slen = 0;
+    p = name;
+    while(isprint(*p)) {
+      ++slen;
+      ++p;
     }
-  }
+    *p = '\0';
 
-  // fix continuation lines
-  for (int j = 0; j < strlen(localname); j++) {
-    if (localname[j] == '&') {
-      skipwhite = 1;
-    } else {
-      if (skipwhite && localname[j] == ' ') {
-        // nothing, skip over it
-      } else {
-        modname[idx++] = localname[j];
-        skipwhite = 0;
+    // fix continuation lines
+    p = name;
+    q = modname;
+    while((c = *p++)) {
+      if (c == '&') {
+        while (isspace(*p))
+          ++p;
+        continue;
       }
+      *q++ = c;
     }
-  }
-  modname[idx] = 0;
-  localname = modname;
+    *q = '\0';
 
-#ifdef DEBUG_PROF
-  printf("DEALLOCATE ptr %p *ptr %p line %ld\n", ptr, *ptr, *line);
-#endif /* DEBUG_PROF */
-  Tau_track_memory_deallocation(ptr, localname, *line);
-  free(tmp);
-  free(tmp2);
+    Tau_track_memory_deallocation((void*)ptr, modname, *line);
+    free(modname);
+    free(name);
+
+    Tau_global_decr_insideTAU();
+  }
 }
 
 void tau_dealloc(void ** ptr, int* line, char *name, int slen)
