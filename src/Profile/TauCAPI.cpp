@@ -13,23 +13,24 @@
 **	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
 #ifdef TAU_DOT_H_LESS_HEADERS 
 #include <iostream>
 using namespace std;
 #else /* TAU_DOT_H_LESS_HEADERS */
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
-#include "Profile/Profiler.h"
-#include <Profile/TauSampling.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <limits.h>
 
+#include <Profile/Profiler.h>
+#include <Profile/TauSampling.h>
 #include <Profile/TauMetrics.h>
 #include <Profile/TauSnapshot.h>
 #include <Profile/TauTrace.h>
 
-#if (!defined(TAU_WINDOWS)) 
+#if (!defined(TAU_WINDOWS))
 /* Needed for fork */
 #include <sys/types.h>
 #include <unistd.h>
@@ -51,9 +52,8 @@ void esd_exit (elg_ui4 rid);
 #endif /* SCALASCA */
 #endif /* TAU_EPILOG */
 
-
 #ifdef TAU_VAMPIRTRACE
-#include "Profile/TauVampirTrace.h"
+#include <Profile/TauVampirTrace.h>
 #endif /* TAU_VAMPIRTRACE */
 
 #ifdef TAU_SCOREP
@@ -770,11 +770,6 @@ extern "C" void Tau_set_context(int context) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_set_thread(int thread) {
   RtsLayer::setMyThread(thread);
-}
-
-///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_profile_callstack(void) {
-  /* removed */
 }
 
 ///////////////////////////////////////////////////////////////////////////

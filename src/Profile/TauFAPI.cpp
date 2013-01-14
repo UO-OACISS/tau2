@@ -14,89 +14,38 @@
 ***************************************************************************/
 
 /* Fortran Wrapper layer for TAU Portable Profiling */
+#ifndef TAU_FAPI
+#define TAU_FAPI
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
-#include "Profile/ProfileGroups.h"
-#include "Profile/TauMemory.h"
+
+#include <Profile/Profiler.h>
+#include <Profile/ProfileGroups.h>
+#include <Profile/TauMemory.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 
-extern "C" void Tau_lite_start_timer(void *functionInfo, int phase);
-extern "C" int Tau_lite_stop_timer(void *function_info);
-
-extern "C" void Tau_pure_start(const char *name);
-extern "C" void Tau_pure_stop(const char *name);
+//#define EXTRACT_GROUP(n, l, gr, gr_name) TauGroup_t gr; char *gr_name = NULL; tau_extract_groupinfo(n, gr, gr_name);
 
 /* Utility function to retrieve fortran strings */
-static char *getFortranName(char *name, int slen) {
-    char *fname = (char *) malloc((size_t) slen+1);
-    strncpy(fname, name, slen);
-    fname[slen] = '\0';  
-    return fname;
+static inline
+char * getFortranName(char const * name, int slen)
+{
+  char * fname = (char *)malloc((size_t)slen + 1);
+  strncpy(fname, name, slen);
+  fname[slen] = '\0';
+  return fname;
 }
 
 
-/* 
-#define DEBUG_PROF
-*/
-#define VALID_NAME_CHAR(x) (isprint(x))
 
-extern "C" {
-void * Tau_get_profiler(char *, char *, TauGroup_t, char *gr_name);
-void Tau_start_timer(void * timer, int phase, int tid);
-void Tau_stop_timer(void *, int tid);
-void Tau_exit(char *);
-void Tau_init(int, char **);
-void Tau_enable_group(TauGroup_t group);
-void Tau_disable_group(TauGroup_t group);
-void Tau_set_node(int);
-void Tau_set_context(int);
-void Tau_register_thread(void);
-void Tau_enable_instrumentation(void);
-void Tau_disable_instrumentation(void);
-void Tau_trace_sendmsg(int type, int destination, int length);
-void Tau_trace_recvmsg(int type, int source, int length);
-void * Tau_get_userevent(char *name);
-void Tau_get_context_userevent(void **ptr, char *name);
-void Tau_userevent(void *ue, double data);
-void Tau_context_userevent(void *ue, double data);
-void Tau_report_statistics(void);
-void Tau_report_thread_statistics(void);
-void Tau_dump(void);
-void Tau_purge(void);
-void Tau_dump_prefix(char *prefix);
-void tau_extract_groupinfo(char *& fname, TauGroup_t & gr, char *& gr_name);
-TauGroup_t Tau_get_profile_group(char * group) ; 
-TauGroup_t Tau_enable_all_groups(void);
-TauGroup_t Tau_disable_all_groups(void);
-TauGroup_t Tau_enable_group_name(char *group_name);
-TauGroup_t Tau_disable_group_name(char *group_name);
-void Tau_track_memory(void);
-void Tau_track_memory_here(void);
-void Tau_enable_tracking_memory(void);
-void Tau_disable_tracking_memory(void);
-void Tau_set_interrupt_interval(int value);
-void Tau_track_memory_headroom(void);
-void Tau_track_memory_headroom_here(void); 
-void Tau_enable_tracking_memory_headroom(void);
-void Tau_disable_tracking_memory_headroom(void);
-void Tau_mark_group_as_phase(void *ptr);
-void Tau_profile_callstack(void );
-void Tau_profile_snapshot(char *name);
-void Tau_profile_snapshot_1l(char *name, int number);
-void Tau_metadata(char *name, char *value);
-void Tau_static_phase_start(char *name);
-void Tau_static_phase_stop(char *name);
-void Tau_dynamic_start(char *name, int isPhase);
-void Tau_dynamic_stop(char *name, int isPhase);
-char * Tau_append_iteration_to_name(int iteration, char *name);
-int Tau_get_tid(void);
-void Tau_profile_param1l(long data, const char *dataname);
-void Tau_mon_onlineDump();
-
-
-#define EXTRACT_GROUP(n, l, gr, gr_name) TauGroup_t gr; char *gr_name = NULL; tau_extract_groupinfo(n, gr, gr_name); 
 
 /*****************************************************************************
 * The following routines are called by the Fortran program and they in turn
@@ -107,7 +56,7 @@ void tau_profile_timer_group_(void **ptr, char *infname, int *group, int slen)
 {
 
   if (*ptr == 0) {
-    char *fname = getFortranName(infname, slen);
+    char * fname = getFortranName(infname, slen);
     
 #ifdef DEBUG_PROF
     printf("Inside tau_profile_timer_group_ fname=%s\n", fname);
@@ -144,27 +93,6 @@ void tau_disable_group_name_local(char *& group_name, int len)
 
 }
 
-void tau_extract_groupinfo(char *& fname, TauGroup_t & gr, char *& gr_name)
-{
-  /* See if a > appears in the function name. If it does, it separates the
-     group name from the function name. Separate these two */
-  char *first, *second;
-
-  first = strtok(fname, ">"); 
-  if (first != 0) {
-    second = strtok(NULL,  ">");
-    if (second == NULL) {
-      fname = first; 
-      gr = TAU_USER;
-      gr_name = "TAU_DEFAULT"; 
-    } else {
-      gr = Tau_get_profile_group(first); 
-      gr_name = first;
-      fname = second;
-    }
-  }
-}
-
 
 void tau_pure_start(char *fname, int flen) {
   // make a copy so that we can null terminate it
@@ -174,7 +102,7 @@ void tau_pure_start(char *fname, int flen) {
   
   // check for unprintable characters
   for(int i=0; i<strlen(localname); i++) {
-    if (!VALID_NAME_CHAR(localname[i])) { 
+    if (!isprint(localname[i])) {
       localname[i] = '\0';
       break;
     }
@@ -202,7 +130,7 @@ void tau_pure_stop(char *fname, int flen) {
   
   // check for unprintable characters
   for(int i=0; i<strlen(localname); i++) {
-    if (!VALID_NAME_CHAR(localname[i])) { 
+    if (!isprint(localname[i])) {
       localname[i] = '\0';
       break;
     }
@@ -229,7 +157,7 @@ void tau_static_phase_start(char *fname, int flen) {
 
   // check for unprintable characters
   for(int i=0; i<strlen(localname); i++) {
-    if (!VALID_NAME_CHAR(localname[i])) {
+    if (!isprint(localname[i])) {
       localname[i] = '\0';
       break;
     }
@@ -262,7 +190,7 @@ void tau_static_phase_stop(char *fname, int flen) {
 
   // check for unprintable characters
   for(int i=0; i<strlen(localname); i++) {
-    if (!VALID_NAME_CHAR(localname[i])) {
+    if (!isprint(localname[i])) {
       localname[i] = '\0';
       break;
     }
@@ -295,7 +223,7 @@ void tau_dynamic_phase_start(void *iteration, char *fname, int flen) {
 
   // check for unprintable characters
   for(int i=0; i<strlen(localname); i++) {
-    if (!VALID_NAME_CHAR(localname[i])) {
+    if (!isprint(localname[i])) {
       localname[i] = '\0';
       break;
     }
@@ -325,7 +253,7 @@ void tau_dynamic_phase_stop(void *iteration, char *fname, int flen) {
 
   // check for unprintable characters
   for(int i=0; i<strlen(localname); i++) {
-    if (!VALID_NAME_CHAR(localname[i])) {
+    if (!isprint(localname[i])) {
       localname[i] = '\0';
       break;
     }
@@ -356,7 +284,7 @@ void tau_dynamic_timer_start(void *iteration, char *fname, int flen) {
 
   // check for unprintable characters
   for(int i=0; i<strlen(localname); i++) {
-    if (!VALID_NAME_CHAR(localname[i])) {
+    if (!isprint(localname[i])) {
       localname[i] = '\0';
       break;
     }
@@ -410,7 +338,7 @@ void tau_dynamic_timer_stop(void *iteration, char *fname, int flen) {
 
   // check for unprintable characters
   for(int i=0; i<strlen(localname); i++) {
-    if (!VALID_NAME_CHAR(localname[i])) {
+    if (!isprint(localname[i])) {
       localname[i] = '\0';
       break;
     }
@@ -537,7 +465,7 @@ void tau_profile_timer_(void **ptr, char *fname, int flen)
 
     // check for unprintable characters
     for(int i=0; i<strlen(localname); i++) {
-      if (!VALID_NAME_CHAR(localname[i])) { 
+      if (!isprint(localname[i])) {
         localname[i] = '\0';
         break;
       }
@@ -559,7 +487,25 @@ void tau_profile_timer_(void **ptr, char *fname, int flen)
     modname[idx] = 0;
     localname = modname;
 
-    EXTRACT_GROUP(localname, flen, gr, gr_name);
+    /* See if a > appears in the function name. If it does, it separates the
+       group name from the function name. Separate these two */
+    TauGroup_t gr;
+    char *gr_name = NULL;
+    char *first, *second;
+
+    first = strtok(localname, ">");
+    if (first) {
+      second = strtok(NULL,  ">");
+      if (second) {
+        gr = Tau_get_profile_group(first);
+        gr_name = first;
+        localname = second;
+      } else {
+        localname = first;
+        gr = TAU_USER;
+        gr_name = "TAU_DEFAULT";
+      }
+    }
 
     *ptr = Tau_get_profiler(localname, "", gr, gr_name);
     free(tmp); 
@@ -928,7 +874,7 @@ void tau_register_event_(void **ptr, char *name, int slen)
 
     // check for unprintable characters
     for(int i=0; i<strlen(localname); i++) {
-      if (!VALID_NAME_CHAR(localname[i])) {
+      if (!isprint(localname[i])) {
         localname[i] = '\0';
         break;
       }
@@ -979,7 +925,7 @@ void tau_register_context_event_(void **ptr, char *name, int slen)
 
     // check for unprintable characters
     for(int i=0; i<strlen(localname); i++) {
-      if (!VALID_NAME_CHAR(localname[i])) {
+      if (!isprint(localname[i])) {
         localname[i] = '\0';
         break;
       }
@@ -1240,7 +1186,7 @@ void TAU_REGISTER_EVENT(void **ptr, char *event_name, int flen)
     else
     for(int i=0; i<1024; i++)
     {
-      if (!VALID_NAME_CHAR(event_name[i]))
+      if (!isprint(event_name[i]))
       { 
         event_name[i] = '\0';
         break;
@@ -1418,7 +1364,7 @@ void tau_register_event(int **ptr, char *event_name, int flen)
   {  // remove garbage characters from the end of name
     for(int i=0; i<1024; i++)
     {
-      if (!VALID_NAME_CHAR(event_name[i]))
+      if (!isprint(event_name[i]))
       {
         event_name[i] = '\0';
         break;
@@ -1542,7 +1488,7 @@ void tau_register_event__(void **ptr, char *event_name, int flen)
     newname[flen] = '\0';
     for(int i=0; i<strlen(newname); i++)
     {
-      if (!VALID_NAME_CHAR(newname[i]))
+      if (!isprint(newname[i]))
       { 
         newname[i] = '\0';
         break;
@@ -1759,26 +1705,6 @@ void TAU_PHASE_STOP(void **profiler)
   tau_phase_stop_(profiler);
 }
 
-void tau_profile_callstack_(void)
-{
-  Tau_profile_callstack();
-}
-
-void tau_profile_callstack(void)
-{
-  tau_profile_callstack_();
-}
-
-void tau_profile_callstack__(void)
-{
-  tau_profile_callstack_();
-}
-
-void TAU_PROFILE_CALLSTACK(void)
-{
-  tau_profile_callstack_();
-}
-
 //////////////////////////////////////////////////////////////////////
 // Snapshot related routines
 //////////////////////////////////////////////////////////////////////
@@ -1885,40 +1811,40 @@ void TAU_METADATA(char *name, char *value, int nlen, int vlen) {
 
 
 
-void tau_alloc_(void ** ptr, int* line, int *size, char *name, int slen) 
+void tau_alloc_(void ** ptr, int* line, int *size, char *name, int slen)
 {
-    char *localname = (char *) malloc((size_t)slen+1);
-    char *modname = (char *) malloc((size_t)slen+1);
-    char *tmp = localname;
-    char *tmp2 = modname;
-    int skipwhite = 1;
-    int idx = 0;
-    strncpy(localname, name, slen);
-    localname[slen] = '\0';
+  char * localname = (char *)malloc((size_t)slen+1);
+  char * modname = (char *)malloc((size_t)slen + 1);
+  char *tmp = localname;
+  char *tmp2 = modname;
+  int skipwhite = 1;
+  int idx = 0;
+  strncpy(localname, name, slen);
+  localname[slen] = '\0';
 
-    // check for unprintable characters
-    for(int i=0; i<strlen(localname); i++) {
-      if (!VALID_NAME_CHAR(localname[i])) {
-        localname[i] = '\0';
-        break;
-      }
+  // check for unprintable characters
+  for (int i = 0; i < strlen(localname); i++) {
+    if (!isprint(localname[i])) {
+      localname[i] = '\0';
+      break;
     }
+  }
 
-    // fix continuation lines
-    for(int j=0; j<strlen(localname); j++) {
-      if (localname[j] == '&') {
-        skipwhite = 1;
+  // fix continuation lines
+  for (int j = 0; j < strlen(localname); j++) {
+    if (localname[j] == '&') {
+      skipwhite = 1;
+    } else {
+      if (skipwhite && localname[j] == ' ') {
+        // nothing, skip over it
       } else {
-        if (skipwhite && localname[j] == ' ') {
-          // nothing, skip over it
-        } else {
-          modname[idx++] = localname[j];
-          skipwhite = 0;
-        }
+        modname[idx++] = localname[j];
+        skipwhite = 0;
       }
     }
-    modname[idx] = 0;
-    localname = modname;
+  }
+  modname[idx] = 0;
+  localname = modname;
 
 #ifdef DEBUG_PROF
   printf("ALLOCATE ptr %p *ptr %p line %d size %d\n", ptr, *ptr, *line, *size);
@@ -1928,73 +1854,76 @@ void tau_alloc_(void ** ptr, int* line, int *size, char *name, int slen)
   free(tmp2);
 }
 
-void tau_alloc(void ** ptr, int* line, int *size, char *name, int slen) 
+void tau_alloc(void ** ptr, int* line, int *size, char *name, int slen)
 {
   tau_alloc_(ptr, line, size, name, slen);
 }
 
-void tau_alloc__(void ** ptr, int* line, int *size, char *name, int slen) 
+void tau_alloc__(void ** ptr, int* line, int *size, char *name, int slen)
 {
   tau_alloc_(ptr, line, size, name, slen);
 }
 
-void TAU_ALLOC(void ** ptr, int* line, int *size, char *name, int slen) 
+void TAU_ALLOC(void ** ptr, int* line, int *size, char *name, int slen)
 {
   tau_alloc_(ptr, line, size, name, slen);
 }
 
-void tau_dealloc_(void ** ptr, int* line, char *name, int slen) 
+void tau_dealloc_(void ** ptr, int* line, char *name, int slen)
 {
-    char *localname = (char *) malloc((size_t)slen+1);
-    char *modname = (char *) malloc((size_t)slen+1);
-    char *tmp = localname;
-    char *tmp2 = modname;
-    int skipwhite = 1;
-    int idx = 0;
-    strncpy(localname, name, slen);
-    localname[slen] = '\0';
+  char *localname = (char *)malloc((size_t)slen + 1);
+  char *modname = (char *)malloc((size_t)slen + 1);
+  char *tmp = localname;
+  char *tmp2 = modname;
+  int skipwhite = 1;
+  int idx = 0;
+  strncpy(localname, name, slen);
+  localname[slen] = '\0';
 
-    // check for unprintable characters
-    for(int i=0; i<strlen(localname); i++) {
-      if (!VALID_NAME_CHAR(localname[i])) {
-        localname[i] = '\0';
-        break;
-      }
+  // check for unprintable characters
+  for (int i = 0; i < strlen(localname); i++) {
+    if (!isprint(localname[i])) {
+      localname[i] = '\0';
+      break;
     }
+  }
 
-    // fix continuation lines
-    for(int j=0; j<strlen(localname); j++) {
-      if (localname[j] == '&') {
-        skipwhite = 1;
+  // fix continuation lines
+  for (int j = 0; j < strlen(localname); j++) {
+    if (localname[j] == '&') {
+      skipwhite = 1;
+    } else {
+      if (skipwhite && localname[j] == ' ') {
+        // nothing, skip over it
       } else {
-        if (skipwhite && localname[j] == ' ') {
-          // nothing, skip over it
-        } else {
-          modname[idx++] = localname[j];
-          skipwhite = 0;
-        }
+        modname[idx++] = localname[j];
+        skipwhite = 0;
       }
     }
-    modname[idx] = 0;
-    localname = modname;
+  }
+  modname[idx] = 0;
+  localname = modname;
 
 #ifdef DEBUG_PROF
-  printf("DEALLOCATE ptr %p *ptr %p line %ld\n", ptr,  *ptr, *line);
+  printf("DEALLOCATE ptr %p *ptr %p line %ld\n", ptr, *ptr, *line);
 #endif /* DEBUG_PROF */
   Tau_track_memory_deallocation(ptr, localname, *line);
   free(tmp);
   free(tmp2);
 }
 
-void tau_dealloc(void ** ptr, int* line, char *name, int slen) {
+void tau_dealloc(void ** ptr, int* line, char *name, int slen)
+{
   tau_dealloc_(ptr, line, name, slen);
 }
 
-void tau_dealloc__(void ** ptr, int* line, char *name, int slen) {
+void tau_dealloc__(void ** ptr, int* line, char *name, int slen)
+{
   tau_dealloc_(ptr, line, name, slen);
 }
 
-void TAU_DEALLOC(void ** ptr, int* line, char *name, int slen) {
+void TAU_DEALLOC(void ** ptr, int* line, char *name, int slen)
+{
   tau_dealloc_(ptr, line, name, slen);
 }
 
