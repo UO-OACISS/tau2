@@ -117,9 +117,7 @@ void * __wrap_calloc(size_t count, size_t size)
 
 void __wrap_free(void * ptr)
 {
-  if (ptr && !Tau_is_bootstrap(ptr)) {
-    return free_handle(ptr);
-  }
+  return free_handle(ptr);
 }
 
 #ifdef HAVE_MEMALIGN

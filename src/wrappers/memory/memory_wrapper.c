@@ -132,7 +132,8 @@ void bootstrap_free(void * ptr)
   // Bootstrap memory is deallocated on program exit
 }
 
-int Tau_is_bootstrap(void * ptr)
+static inline
+int is_bootstrap(void * ptr)
 {
   char const * const p = (char*)ptr;
   return (p < bootstrap_heap + BOOTSTRAP_HEAP_SIZE) && (bootstrap_heap < p);
@@ -216,10 +217,12 @@ void * calloc_bootstrap(size_t count, size_t size)
 
 void free_active(void * ptr)
 {
-  if (Tau_memory_wrapper_passthrough()) {
-    return free_system(ptr);
+  if (ptr && !is_bootstrap(ptr)) {
+    if (Tau_memory_wrapper_passthrough()) {
+      return free_system(ptr);
+    }
+    return Tau_free(ptr, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_LINE);
   }
-  return Tau_free(ptr, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_LINE);
 }
 
 void free_bootstrap(void * ptr)
