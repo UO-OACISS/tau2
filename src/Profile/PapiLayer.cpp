@@ -361,7 +361,7 @@ int PapiLayer::initializeThread(int tid) {
 
 /////////////////////////////////////////////////
 long long *PapiLayer::getAllCounters(int tid, int *numValues) {
-  int rc;
+  int rc=0;
   long long tmpCounters[MAX_PAPI_COUNTERS];
 
   /* Task API does not have a real thread associated with it. It is fake */

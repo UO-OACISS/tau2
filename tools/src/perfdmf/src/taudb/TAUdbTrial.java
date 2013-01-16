@@ -598,6 +598,7 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 			// System.out.println(buf.toString());
 			ResultSet resultSet = db.executeQuery(buf.toString());
 			TAUdbSession session = new TAUdbSession(db);
+			//int dex=1;
 			while (resultSet.next() != false) {
 				int pos = 1;
 
@@ -623,16 +624,22 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
                 
 
 				trials.addElement(trial);
+				//System.out.println("Added trial "+dex);
+				//dex++;
 			}
 			resultSet.close();
 			// TODO: Deal with adding the metrics to the trial
 			// get the function details
+			/*//Don't get metrics until requested.
 			Enumeration<Trial> en = trials.elements();
 			Trial trial;
+			//dex =0;
 			while (en.hasMoreElements()) {
 				trial = en.nextElement();
 				trial.getTrialMetrics(db);
-			}
+				//System.out.println("got metrics for trial "+dex++);
+				
+			}*/
 
 			Collections.sort(trials);
 

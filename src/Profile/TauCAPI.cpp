@@ -13,23 +13,24 @@
 **	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
 ***************************************************************************/
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <limits.h>
+
 #ifdef TAU_DOT_H_LESS_HEADERS 
 #include <iostream>
 using namespace std;
 #else /* TAU_DOT_H_LESS_HEADERS */
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
-#include "Profile/Profiler.h"
-#include <Profile/TauSampling.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <limits.h>
 
+#include <Profile/Profiler.h>
+#include <Profile/TauSampling.h>
 #include <Profile/TauMetrics.h>
 #include <Profile/TauSnapshot.h>
 #include <Profile/TauTrace.h>
 
-#if (!defined(TAU_WINDOWS)) 
+#if (!defined(TAU_WINDOWS))
 /* Needed for fork */
 #include <sys/types.h>
 #include <unistd.h>
@@ -51,9 +52,8 @@ void esd_exit (elg_ui4 rid);
 #endif /* SCALASCA */
 #endif /* TAU_EPILOG */
 
-
 #ifdef TAU_VAMPIRTRACE
-#include "Profile/TauVampirTrace.h"
+#include <Profile/TauVampirTrace.h>
 #endif /* TAU_VAMPIRTRACE */
 
 #ifdef TAU_SCOREP
@@ -87,29 +87,54 @@ extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup
   return (void *) f;
 }
 
-/* An array of this struct is shared by all threads. To make sure we don't have false
- * sharing, the struct is 64 bytes in size, so that it fits exactly in
- * one (or two) cache lines. That way, when one thread updates its data
- * in the array, it won't invalidate the cache line for other threads. 
- * This is very important with timers, as all threads are entering timers
- * at the same time, and every thread will invalidate the cache line
- * otherwise. */
-struct Tau_thread_status_flags {
-  Profiler *Tau_global_stack; // 8 bytes
-  int Tau_global_stackdepth; // 4 bytes
-  int Tau_global_stackpos; // 4 bytes
-  int Tau_global_insideTAU; // 4 bytes
-  int Tau_is_thread_fake_for_task_api; // 4 bytes
-  // that's a total of 24 bytes. Add some padding to make sure this
-  // structure is 64 bytes.
-  // Warning! this structure alignment assumes 64 bit pointers.
-  // If you are on a 32 bit machine, change the padding array to size 11
-  // because the Profiler pointer above is only 4 bytes
-#if 1
-  int padding[10];
-#else
-  int padding[11];
-#endif
+/* An array of this struct is shared by all threads.
+ * To make sure we don't have false sharing, the struct is 64 bytes in size,
+ * so that it fits exactly in one (or two) cache lines. That way, when one
+ * thread updates its data in the array, it won't invalidate the cache line
+ * for other threads. This is very important with timers, as all threads are
+ * entering timers at the same time, and every thread will invalidate the
+ * cache line otherwise.
+ */
+union Tau_thread_status_flags
+{
+  /* Padding structures is tricky because compilers pad unexpectedly 
+   * and word sizes differ.
+   *
+   * You can see this in this example program:
+   *   struct A {
+   *     char c;
+   *     char d;
+   *     int i;
+   *   };
+   *   struct B {
+   *     char c;
+   *     int i;
+   *     char d;
+   *   };
+   *   int main() {
+   *     cout << sizeof(A) << endl;
+   *     cout << sizeof(B) << endl;
+   *   }
+   *
+   * Depending on your compiler, you'll get two different sizes.
+   * The only sure way to see this structure padded to 64 bytes is to calculate
+   * the pad at compile time as below.
+   *
+   * Use an anonymous struct container and allow the compiler to place members
+   * where it likes.  IT IS CRITICALLY IMPORTANT that the members are ordered
+   * largest to smallest, i.e. doubles before floats.  The "int i" member of
+   * struct B in the above example could be misaligned.  This idiom is very
+   * dangerous in an I/O situation, but for this application it should be safe.
+   */
+  struct {
+    Profiler * Tau_global_stack;
+    int Tau_global_stackdepth;
+    int Tau_global_stackpos;
+    int Tau_global_insideTAU;
+    int Tau_is_thread_fake_for_task_api;
+  };
+
+  char _pad[64];
 };
 
 #define STACK_DEPTH_INCREMENT 100
@@ -121,38 +146,23 @@ struct Tau_thread_status_flags {
  * at the same time, and every thread will invalidate the cache line
  * otherwise. */
 #ifdef __INTEL__COMPILER
-__declspec (align(64)) static struct Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
+__declspec (align(64)) static union Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
 #else
 #ifdef __GNUC__
-static struct Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] __attribute__ ((aligned(64))) = {0};
+static union Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] __attribute__ ((aligned(64))) = {0};
 #else
-static struct Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
+static union Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
 #endif
 #endif
 int lightsOut = 0;
 
-static void (*_profile_write_hook)(void) = NULL;
-
-extern "C" void Tau_global_addWriteHook(void (*hook)(void)) {
-  _profile_write_hook = hook;
-}
-
-extern "C" void Tau_global_callWriteHooks() {
-  if (_profile_write_hook != NULL) {
-    _profile_write_hook();
-  }
-}
-
 
 static void Tau_stack_checkInit() {
-  static int init = 0;
-  if (init != 0) {
-    return;
-  }
-  init = 1;
+  static bool init = false;
+  if (init) return;
+  init = true;
 
   lightsOut = 0;
-  _profile_write_hook = 0;
 
   for (int i=0; i<TAU_MAX_THREADS; i++) {
     Tau_thread_flags[i].Tau_global_stackdepth = 0;
@@ -175,11 +185,11 @@ extern "C" void Tau_global_setLightsOut() {
 
 /* the task API does not have a real thread associated with the tid */
 extern "C" int Tau_is_thread_fake(int tid) {
-  return Tau_thread_flags[tid].Tau_is_thread_fake_for_task_api; 
+  return Tau_thread_flags[tid].Tau_is_thread_fake_for_task_api;
 }
 
 extern "C" void Tau_set_thread_fake(int tid) {
-  Tau_thread_flags[tid].Tau_is_thread_fake_for_task_api = 1; 
+  Tau_thread_flags[tid].Tau_is_thread_fake_for_task_api = 1;
 }
 
 extern "C" void Tau_stack_initialization() {
@@ -191,11 +201,6 @@ extern "C" int Tau_global_get_insideTAU() {
   int tid = RtsLayer::localThreadId();
   return Tau_thread_flags[tid].Tau_global_insideTAU;
 }
-/*
-extern "C" int Tau_global_get_insideTAU_tid(int tid) {
-  Tau_stack_checkInit();
-  return Tau_thread_flags[tid].Tau_global_insideTAU;
-}*/
 
 extern "C" int Tau_global_incr_insideTAU() {
   Tau_stack_checkInit();
@@ -209,7 +214,7 @@ extern "C" int Tau_global_process_incr_insideTAU() {
   int tid = 0;
   while (tid < TAU_MAX_THREADS)
   {
-    Tau_global_incr_insideTAU();
+    Tau_thread_flags[tid].Tau_global_insideTAU++;
     tid++;
   }
   return -1;
@@ -229,28 +234,14 @@ extern "C" int Tau_global_process_decr_insideTAU() {
   int tid = 0;
   while (tid < TAU_MAX_THREADS)
   {
-    Tau_global_decr_insideTAU();
+    Tau_thread_flags[tid].Tau_global_insideTAU--;
   	TAU_ASSERT(Tau_thread_flags[tid].Tau_global_insideTAU < 0,
 			"Thread has decremented the insideTAU counter past 0");
     tid++;
   }
   return -1;
 }
-/*
-extern "C" int Tau_global_incr_insideTAU_tid(int tid) {
-  Tau_stack_checkInit();
-  Tau_global_incr_insideTAU();
-  return Tau_thread_flags[tid].Tau_global_insideTAU;
-}
 
-extern "C" int Tau_global_decr_insideTAU_tid(int tid) {
-  Tau_stack_checkInit();
-  Tau_global_decr_insideTAU();
-  TAU_ASSERT(Tau_thread_flags[tid].Tau_global_insideTAU < 0,
-		"Thread has decremented the insideTAU counter past 0");
-  return Tau_thread_flags[tid].Tau_global_insideTAU;
-}
-*/
 extern "C" Profiler *TauInternal_CurrentProfiler(int tid) {
   int pos = Tau_thread_flags[tid].Tau_global_stackpos;
   if (pos < 0) {
@@ -540,7 +531,7 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 #endif
 
 
-  if (Tau_thread_flags[tid].Tau_global_stackpos < 0) { 
+  if (Tau_thread_flags[tid].Tau_global_stackpos < 0) {
 #ifndef TAU_WINDOWS
     if (TauEnv_get_ebs_enabled()) {
       Tau_sampling_resume(tid);
@@ -782,11 +773,6 @@ extern "C" void Tau_set_thread(int thread) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_profile_callstack(void) {
-  /* removed */
-}
-
-///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump(void) {
   Tau_global_incr_insideTAU();
   TauProfiler_DumpData();
@@ -797,7 +783,51 @@ extern "C" int Tau_dump(void) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_dump_prefix(const char *prefix) {
   Tau_global_incr_insideTAU();
-  TauProfiler_DumpData(false, RtsLayer::myThread(), prefix);
+  //TauProfiler_DumpData(false, RtsLayer::myThread(), prefix);
+  /* Iterate over the registered threads, and dump out their profiles */
+  int i;
+  for (i = 0 ; i < RtsLayer::getTotalThreads() ; i++)
+    TauProfiler_DumpData(false, i, prefix);
+  Tau_global_decr_insideTAU();
+  return 0;
+}
+
+extern x_uint64 TauTraceGetTimeStamp(int tid);
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" int Tau_dump_callpaths() {
+  Tau_global_incr_insideTAU();
+  int tid;
+  long pos;
+  int pid = RtsLayer::myNode();
+
+  const char *dirname = TauEnv_get_profiledir();
+
+  //Create temp write to file.
+  char filename[1024];
+  sprintf(filename,"%s/callpaths.%d",dirname, pid);
+
+  FILE* fp;
+  if ((fp = fopen (filename, "a+")) == NULL) {
+    char errormsg[1024];
+    sprintf(errormsg,"Error: Could not create %s",filename);
+    perror(errormsg);
+    return 1;
+  }
+
+  fprintf(fp, "Thread\tStack\tCalls\tIncl.\tExcl.\tName\tTimestamp:\t%llu\n", TauTraceGetTimeStamp(0));
+  for (tid = 0 ; tid < RtsLayer::getTotalThreads() ; tid++) {
+    pos = Tau_thread_flags[tid].Tau_global_stackpos;
+	TauProfiler_updateIntermediateStatistics(tid);
+    while (pos >= 0) {
+	  Profiler profiler = Tau_thread_flags[tid].Tau_global_stack[pos];
+	  FunctionInfo *fi = profiler.ThisFunction;
+      fprintf(fp, "%d\t%ld\t%ld\t%.f\t%.f\t\"%s\"\n", tid, pos, fi->GetCalls(tid), fi->getDumpInclusiveValues(tid)[0], fi->getDumpExclusiveValues(tid)[0], fi->Name);
+      pos--;
+    }
+  }
+
+  fclose(fp);
   Tau_global_decr_insideTAU();
   return 0;
 }
@@ -1259,7 +1289,12 @@ extern "C" void Tau_userevent_thread(void *ue, double data, int tid) {
 }
 
 ///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_get_context_userevent(void **ptr, char *name)
+// WARNING: the pointer passed into Tau_get_context_userevent must be declared
+// static or intialized to NULL otherwise it could end up pointing to a random 
+// piece of memory. See Tau_pure_context_userevent for a routine that does a
+// name lookup.
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_get_context_userevent(void **ptr, const char *name)
 {
   if (*ptr == 0) {
     RtsLayer::LockEnv();
@@ -1274,6 +1309,27 @@ extern "C" void Tau_get_context_userevent(void **ptr, char *name)
   }
   return;
 }
+
+TAU_HASH_MAP<string, TauContextUserEvent *>& ThePureAtomicMap() {
+  static TAU_HASH_MAP<string, TauContextUserEvent *> pureAtomicMap;
+  return pureAtomicMap;
+}
+
+extern "C" void Tau_pure_context_userevent(void **ptr, std::string name)
+{
+  TauContextUserEvent *ue = 0;
+  RtsLayer::LockEnv();
+  TAU_HASH_MAP<string, TauContextUserEvent *>::iterator it = ThePureAtomicMap().find(name);
+  if (it == ThePureAtomicMap().end()) {
+    ue = new TauContextUserEvent(name.c_str()); 
+    ThePureAtomicMap()[name] = ue;
+  } else {
+    ue = (*it).second;
+  }
+  RtsLayer::UnLockEnv();
+  *ptr = (void *) ue;  
+}
+
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_context_userevent(void *ue, double data) {
@@ -1363,7 +1419,6 @@ static string& gTauApplication()
 {
 	static string g = string(".TAU application");
 	return g;
-
 }
 
 extern void Tau_pure_start_task_string(const string name, int tid);

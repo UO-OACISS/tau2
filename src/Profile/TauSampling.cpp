@@ -1531,7 +1531,7 @@ int Tau_sampling_init(int tid) {
     TAU_VERBOSE("Tau_sampling_init: pid = %d, tid = %d Signals set up.\n", getpid(), tid);
 
     // set up the base timers
-    double values[TAU_MAX_COUNTERS];
+    double values[TAU_MAX_COUNTERS] = {0};
     /* Get the current metric values */
     //    TauMetrics_getMetrics(tid, values);
     // *CWL* - sampling_init can happen within the TAU init in the non-MPI case.
@@ -1540,10 +1540,12 @@ int Tau_sampling_init(int tid) {
     //         metric init under all possible initialization conditions.
     TauMetrics_internal_alwaysSafeToGetMetrics(tid, values);
     int localIndex = 0;
+    int shiftIndex=0;
     for (int x = 0; x < TAU_MAX_THREADS; x++) {
       localIndex = x*TAU_MAX_COUNTERS;
       for (int y = 0; y < Tau_Global_numCounters; y++) {
-        previousTimestamp[localIndex + y] = values[y];
+      	shiftIndex=localIndex+y;
+        previousTimestamp[shiftIndex] = values[y];
       }
     }
   }
