@@ -275,13 +275,22 @@ public class View implements Serializable {
 			try {
 				StringBuilder whereClause = new StringBuilder();
 				whereClause.append(" inner join application a on e.application = a.id ");
+				if(views.size()>0){
 				whereClause.append(" where ");
 				for (int i = 0 ; i < views.size() ; i++) {
 					if (i > 0) {
 						whereClause.append (" AND ");
 					}
 					View view = views.get(i);
-					whereClause.append(view.getWhereClause(db.getDBType()));
+					
+					String wclause=view.getWhereClause(db.getDBType());
+					
+					if(wclause.trim().startsWith("where")){
+						wclause=wclause.substring(wclause.indexOf("where")+5);
+					}
+					
+					whereClause.append(wclause);
+				}
 				}
 				//PerfExplorerOutput.println(whereClause.toString());
 				trials = Trial.getTrialList(db, whereClause.toString(), getXMLMetadata);
@@ -636,6 +645,10 @@ public static void deleteView(int viewID, DB db) throws SQLException{
 			return tmpWhere;
 		}
 		if (whereClause == null || whereClause.equals("")) {
+			String colName=getField("COLUMN_NAME");
+			if(colName==null||colName.length()==0){
+				return whereClause;
+			}
 			StringBuilder wc = new StringBuilder();
 			if (dbType.compareTo("db2") == 0) {
 				wc.append(" cast (");
@@ -647,7 +660,7 @@ public static void deleteView(int viewID, DB db) throws SQLException{
 			} else /*if (view.getField("table_name").equalsIgnoreCase("Trial")) */ {
 				wc.append (" t.");
 			}
-			wc.append (getField("COLUMN_NAME"));
+			wc.append (colName);
 			if (dbType.compareTo("db2") == 0) {
 				wc.append(" as varchar(256)) ");
 			}

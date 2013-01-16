@@ -43,6 +43,7 @@
 #include <Profile/TauSampling.h>
 #include <Profile/TauSnapshot.h>
 #include <Profile/TauMetaData.h>
+#include <Profile/TauInit.h>
 
 // Moved from header file
 using namespace std;
@@ -160,6 +161,9 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context)
   char gdb_in_file[256];
   char gdb_out_file[256];
 
+  // This is not decremented so that wrapper libraries cannot interfere
+  Tau_global_incr_insideTAU();
+
   if (TauEnv_get_callsite()) {
     finalizeCallSites_if_necessary();
   }
@@ -199,8 +203,7 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context)
     fclose(gdb_fp);
     //sprintf(str,"echo set logging on %s\nbt\nq > %s",gdb_out_file, gdb_in_file);
     //system(str); // create gdbcmds
-    sprintf(str, "gdb -batch -x %s %s -p %d >/dev/null\n", gdb_in_file, path,
-        (int)getpid());
+    sprintf(str, "gdb -batch -x %s %s -p %d >/dev/null\n", gdb_in_file, path, (int)getpid());
     TAU_VERBOSE("Calling: str=%s\n", str);
 
     int systemRet = 0;
@@ -215,6 +218,7 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context)
           sig, strsignal(sig), RtsLayer::myNode(), getpid(), Tau_get_tid(),
           sig);
       TAU_METADATA("SIGNAL", strsignal(sig));
+
       TAU_PROFILE_EXIT("none");
       sleep(4);
       exit(1);
@@ -280,29 +284,42 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context)
       "TAU: Caught signal %d (%s), dumping profile with stack trace: [rank=%d, pid=%d, tid=%d]... \n",
       sig, strsignal(sig), RtsLayer::myNode(), getpid(), Tau_get_tid());
   TAU_METADATA("SIGNAL", strsignal(sig));
+
   TAU_PROFILE_EXIT("none");
   sleep(4);    // give the other tasks some time to process the handler and exit
   exit(1);
 }
 
+extern "C" int Tau_dump_callpaths();
+
 static void tauSignalHandler(int sig) {
-  fprintf (stderr, "Caught SIGUSR1, dumping TAU profile data\n");
-  TAU_DB_DUMP_PREFIX("profile");
+  Tau_global_incr_insideTAU();
+  if (TauEnv_get_sigusr1_action() == TAU_ACTION_DUMP_CALLPATHS) {
+    fprintf (stderr, "Caught SIGUSR1, dumping TAU callpath data\n");
+	Tau_dump_callpaths();
+  } else if (TauEnv_get_sigusr1_action() == TAU_ACTION_DUMP_BACKTRACES) {
+    fprintf (stderr, "Caught SIGUSR1, dumping backtrace data\n");
+  } else {
+    fprintf (stderr, "Caught SIGUSR1, dumping TAU profile data\n");
+    TAU_DB_DUMP_PREFIX("profile");
+  }
+  Tau_global_decr_insideTAU();
 }
 
 static void tauToggleInstrumentationHandler(int sig) {
+  Tau_global_incr_insideTAU();
   fprintf (stderr, "Caught SIGUSR2, toggling TAU instrumentation\n");
   if (RtsLayer::TheEnableInstrumentation()) {
     RtsLayer::TheEnableInstrumentation() = false;
   } else {
     RtsLayer::TheEnableInstrumentation() = true;
   }
+  Tau_global_decr_insideTAU();
 }
 
 #endif //TAU_DISABLE_SIGUSR
 
-static int tau_initialized = 0;
-
+int tau_initialized = 0;
 extern "C" int Tau_init_check_initialized() {
   return tau_initialized;
 }
@@ -312,11 +329,12 @@ extern "C" int Tau_init_check_initialized() {
 // Initialize VampirTrace Tracing package
 //////////////////////////////////////////////////////////////////////
 int Tau_init_vampirTrace(void) {
+  Tau_global_incr_insideTAU();
   vt_open();
+  Tau_global_decr_insideTAU();
   return 0;
 }
 #endif /* TAU_VAMPIRTRACE */
-
 
 
 #ifdef TAU_EPILOG 
@@ -324,7 +342,9 @@ int Tau_init_vampirTrace(void) {
 // Initialize EPILOG Tracing package
 //////////////////////////////////////////////////////////////////////
 int Tau_init_epilog(void) {
+  Tau_global_incr_insideTAU();
   esd_open();
+  Tau_global_decr_insideTAU();
   return 0;
 }
 #endif /* TAU_EPILOG */
@@ -333,6 +353,8 @@ int Tau_init_epilog(void) {
 
 int Tau_add_signal(int sig, tau_sighandler_t handler=tauBacktraceHandler)
 {
+  Tau_global_incr_insideTAU();
+
   int ret = 0;
 
   struct sigaction act;
@@ -357,6 +379,8 @@ int Tau_add_signal(int sig, tau_sighandler_t handler=tauBacktraceHandler)
     return -1;
   }
 
+  Tau_global_decr_insideTAU();
+
   return ret;
 }
 
@@ -367,6 +391,8 @@ int Tau_add_signal(int sig, tau_sighandler_t handler=tauBacktraceHandler)
 extern "C"
 int Tau_signal_initialization()
 {
+  Tau_global_incr_insideTAU();
+
   if (TauEnv_get_track_signals()) {
     TAU_VERBOSE("TAU: Enable signal tracking\n");
 
@@ -380,6 +406,8 @@ int Tau_signal_initialization()
     Tau_add_signal(SIGSEGV);
     Tau_add_signal(SIGBUS);
   }
+
+  Tau_global_decr_insideTAU();
   return 0;
 }
 
@@ -516,18 +544,22 @@ extern "C" int Tau_init_initializeTAU() {
   return 0;
 }
 
-//Rely on the dl auditor (src/wrapper/taupreload) to set dl_initialized if the audit feature is//available (GLIBC version 2.4 or greater).
+// Rely on the dl auditor (src/wrapper/taupreload) to set dl_initialized
+// if the audit feature is available (GLIBC version 2.4 or greater).
+// DO NOT declare static!
 #ifdef TAU_TRACK_LD_LOADER
-static int dl_initialized = 0;
+int dl_initialized = 0;
 #else
-static int dl_initialized = 1;
+int dl_initialized = 1;
 #endif
 
-extern "C" void Tau_init_dl_initialized() {
-	dl_initialized = 1;
+extern "C" void Tau_init_dl_initialized()
+{
+  dl_initialized = 1;
 }
-extern "C" int Tau_init_check_dl_initialized() {
-	return dl_initialized;
+extern "C" int Tau_init_check_dl_initialized()
+{
+  return dl_initialized;
 }
 
 extern "C" void Tau_assert_raise_error(const char* msg)

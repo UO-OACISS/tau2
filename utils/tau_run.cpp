@@ -19,6 +19,9 @@
 #include "BPatch_process.h"
 #include "BPatch_snippet.h" 
 #include "BPatch_statement.h" 
+#include "BPatch_basicBlockLoop.h"
+#include "BPatch_point.h"
+#include "BPatch_addressSpace.h"
 #include <tauarch.h>
 
 //#include <iostream.h>
@@ -665,7 +668,11 @@ int getFunctionFileLineInfo(BPatch_image* mutateeAddressSpace,
   const char *typeName;
 
   baseAddr = (unsigned long)(f->getBaseAddr());
+#ifndef TAU_DYNINSTAPI_8_PLUS
   lastAddr = baseAddr + f->getSize();
+#else 
+  f->getAddressRange(baseAddr, lastAddr); 
+#endif
   BPatch_Vector< BPatch_statement > lines;
   f->getName(fname, 1024);
   
@@ -1209,7 +1216,8 @@ int main(int argc, char **argv){
     if (loadlib == true) {
 #endif /* SP1 */
       //try and load the library
-      if (appThread->loadLibrary(libname, true) == true){  
+      bool ret = appThread->loadLibrary(libname, true) ; 
+      if (ret == true){  
 	//now, check to see if the library is listed as a module in the
 	//application image
 	char name[FUNCNAMELEN];
@@ -1363,7 +1371,11 @@ int main(int argc, char **argv){
     /* check to see if we have to rewrite the binary image */ 
     if (binaryRewrite)
       {
+#ifdef TAU_DYNINSTAPI_8_PLUS
+	char * directory = "." ; // appThread->dumpImage("a.inst");
+#else
 	char * directory = appThread->dumpPatchedImage(outfile);
+#endif /* TAU_DYNINSTAPI_8_PLUS */
 	/* see if it was rewritten properly */ 
 	if (directory) 
 	  {

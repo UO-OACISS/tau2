@@ -132,7 +132,6 @@ int tau_track_pthread_barrier_wait(pthread_barrier_t *barrier);
 
 #if (defined (__cplusplus ) && !defined (TAU_USE_C_API))
 
-
 #ifdef TAU_ENABLED
 
 #include <Profile/ProfileHeaders.h>
