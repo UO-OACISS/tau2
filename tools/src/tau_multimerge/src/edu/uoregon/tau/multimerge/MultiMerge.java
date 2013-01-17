@@ -872,13 +872,13 @@ public class MultiMerge {
 				{
 					if (p.direction == ONESIDED_MESSAGE_RECV)
 					{
-						tw.sendMessage(time,  nodeToken, threadToken, remoteNode, remoteThread, (int)userEventValue, 0, 0);
+						return tw.sendMessage(time,  nodeToken, threadToken, remoteNode, remoteThread, (int)userEventValue, 0, 0);
 					}
 					else if (p.direction == ONESIDED_MESSAGE_SEND) {
-						tw.recvMessage(time,  remoteNode, remoteThread, nodeToken, threadToken, (int)userEventValue, 0, 0);
+						return tw.recvMessage(time,  remoteNode, remoteThread, nodeToken, threadToken, (int)userEventValue, 0, 0);
 					}
 					//otherwise undefined.
-					System.out.println("eventTrigger 2, recording " + p.direction + "on thread: "+threadToken);
+					System.out.println("eventTrigger 2, recording " + p.direction + " on thread: "+threadToken);
 				}
 
 				return 0;
