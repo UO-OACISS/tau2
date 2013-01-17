@@ -34,7 +34,7 @@
 #include <TAU.h>
 #include <Profile/Profiler.h>
 #include <Profile/TauMemory.h>
-#include <memory_wrapper.h>
+#include "memory_wrapper.h"
 
 // Assume 4K pages unless we know otherwise.
 // We cannot determine this at runtime because it must be known during
@@ -56,6 +56,8 @@ void * realloc_bootstrap(void * ptr, size_t size);
 void * valloc_bootstrap(size_t size);
 void * pvalloc_bootstrap(size_t size);
 
+int strcmp_bootstrap(const char *s1, const char *s2);
+
 // Handles to function implementations that are called
 // when the wrapped function is invoked.
 // Everybody starts in the bootstrap state.
@@ -68,6 +70,8 @@ realloc_t realloc_handle = realloc_bootstrap;
 valloc_t valloc_handle = valloc_bootstrap;
 pvalloc_t pvalloc_handle = pvalloc_bootstrap;
 
+strcmp_t strcmp_handle = strcmp_bootstrap;
+
 // Handles to the system implementation of the function.
 // These are initialized during bootstrap.
 malloc_t malloc_system = NULL;
@@ -78,6 +82,8 @@ posix_memalign_t posix_memalign_system = NULL;
 realloc_t realloc_system = NULL;
 valloc_t valloc_system = NULL;
 pvalloc_t pvalloc_system = NULL;
+
+strcmp_t strcmp_system = NULL;
 
 // Memory for bootstrapping.  Must not be static.
 char bootstrap_heap[BOOTSTRAP_HEAP_SIZE];
@@ -533,6 +539,54 @@ void free_bootstrap(void * ptr)
 }
 
 /*********************************************************************
+ * strcmp
+ ********************************************************************/
+
+int strcmp_init(char const * s1, char const * s2, int * retval)
+{
+  static int initializing = 0;
+  if (!initializing) {
+   initializing = 1;
+   strcmp_system = Tau_get_system_strcmp();
+  }
+
+  if (!strcmp_system) {
+    *retval = __tau_strcmp(s1, s2);
+    return 1;
+  }
+
+  return 0;
+}
+
+int strcmp_enabled(char const * s1, char const * s2)
+{
+  if (Tau_memory_wrapper_passthrough()) {
+    return strcmp_system(s1, s2);
+  }
+  return Tau_strcmp(s1, s2, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_LINE);
+}
+
+int strcmp_disabled(char const * s1, char const * s2)
+{
+  int ret;
+  if (strcmp_init(s1, s2, &ret)) return ret;
+  return strcmp_system(s1, s2);
+}
+
+int strcmp_bootstrap(char const * s1, char const * s2)
+{
+  int ret;
+  if (strcmp_init(s1, s2, &ret)) return ret;
+
+  if (Tau_memory_wrapper_init()) {
+    return strcmp_system(s1, s2);
+  }
+
+  strcmp_handle = strcmp_enabled;
+  return strcmp_enabled(s1, s2);
+}
+
+/*********************************************************************
  * Wrapper enable/disable
  ********************************************************************/
 
@@ -548,6 +602,8 @@ void Tau_memory_wrapper_enable(void)
     valloc_handle = valloc_bootstrap;
     pvalloc_handle = pvalloc_bootstrap;
     free_handle = free_bootstrap;
+
+    strcmp_handle = strcmp_bootstrap;
   }
 }
 
@@ -563,6 +619,8 @@ void Tau_memory_wrapper_disable(void)
     realloc_handle = realloc_disabled;
     valloc_handle = valloc_disabled;
     pvalloc_handle = pvalloc_disabled;
+
+    strcmp_handle = strcmp_disabled;
   }
 }
 

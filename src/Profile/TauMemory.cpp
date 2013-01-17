@@ -1079,7 +1079,30 @@ char * Tau_strncat(char *dst, const char *src, size_t size, const char * filenam
 
 char *strchr(const char *s, int c);
 
-int strcmp(const char *s1, const char *s2);
+#endif
+//int strcmp(const char *s1, const char *s2);
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+
+int __tau_strcmp(char const * s1, char const * s2)
+{
+  int x;
+  while (*s1 || *s2) {
+    if ((x = *s1++ - *s2++)) return x;
+  }
+  return 0;
+}
+int Tau_strcmp(char const * s1, char const * s2, const char * filename, int lineno)
+{
+  // Maybe do something with filename/lineno...
+  Tau_global_incr_insideTAU();
+  int retval = __tau_strcmp(s1, s2);
+  Tau_global_decr_insideTAU();
+  return retval;
+}
+
+#if 0
 
 int strcoll(const char *s1, const char *s2);
 
@@ -1106,7 +1129,7 @@ char * Tau_strncpy(char *dst, const char *src, size_t size, const char * filenam
 
 size_t strcspn(const char *s, const char *reject);
 
-//char *strdup(const char *s);
+#endif
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
@@ -1131,6 +1154,7 @@ char * Tau_strdup(const char *str, const char * filename, int lineno)
   return ptr;
 }
 
+#if 0
 char *strfry(char *string);
 
 size_t strlen(const char *s);

@@ -35,7 +35,7 @@ CXX = $(TAU_CXX)
 CFLAGS = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_INTERNAL_FLAGS) $(USER_OPT) -I$(TAUROOT)/src/wrappers/memory
 ARFLAGS = rcv
 
-DYNAMIC_OBJ = memory_wrapper.o memory_wrapper_dynamic.o
+DYNAMIC_OBJ = memory_wrapper.o memory_wrapper_dynamic.o memory_wrapper_strings.o
 STATIC_OBJ = memory_wrapper.o memory_wrapper_static.o
 
 INSTALLDEST = $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
