@@ -1456,6 +1456,7 @@ int  MPI_Finalize(  )
   int numCounters, mode, upcErr;
   x_uint64 counterVals[1024];
 
+  Tau_global_incr_insideTAU();
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
@@ -1537,6 +1538,9 @@ int  MPI_Finalize(  )
 
   Tau_stop_top_level_timer_if_necessary();
   tau_mpi_finalized = 1;
+
+  Tau_global_decr_insideTAU();
+
   return returnVal;
 }
 
@@ -1564,6 +1568,8 @@ char *** argv;
   int  size;
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
+
+  Tau_global_incr_insideTAU();
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Init()",  " ", TAU_MESSAGE); 
   Tau_create_top_level_timer_if_necessary();
@@ -1608,6 +1614,8 @@ char *** argv;
     TauSyncClocks();
   }
 
+  Tau_global_decr_insideTAU();
+
   return returnVal;
 }
 
@@ -1624,6 +1632,7 @@ int *provided;
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
 
+  Tau_global_incr_insideTAU();
  
   TAU_PROFILE_TIMER(tautimer, "MPI_Init_thread()",  " ", TAU_MESSAGE);
   Tau_create_top_level_timer_if_necessary();
@@ -1667,6 +1676,8 @@ int *provided;
     //TauSyncClocks takes no arguments.
     //TauSyncClocks(procid_0, size);
   }
+
+  Tau_global_decr_insideTAU();
 
   return returnVal;
 }
