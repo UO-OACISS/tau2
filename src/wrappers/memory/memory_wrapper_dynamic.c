@@ -30,6 +30,16 @@
 #include <Profile/TauMemory.h>
 #include <memory_wrapper.h>
 
+#ifdef strcpy
+#undef strcpy
+#endif
+
+#ifdef _MSC_VER
+/* define these functions as non-intrinsic */
+#pragma function( memcpy, strcpy, strcat )
+#endif
+
+
 // Not thread safe
 int getting_system_handle = 0;
 
@@ -62,7 +72,6 @@ int Tau_memory_wrapper_passthrough(void)
 }
 
 
-static inline
 void * get_system_function_handle(char const * name)
 {
   char const * err;
@@ -88,45 +97,10 @@ void * get_system_function_handle(char const * name)
   return handle;
 }
 
-malloc_t Tau_get_system_malloc()
-{
-  return (malloc_t)get_system_function_handle("malloc");
-}
 
-calloc_t Tau_get_system_calloc()
-{
-  return (calloc_t)get_system_function_handle("calloc");
-}
-
-realloc_t Tau_get_system_realloc()
-{
-  return (realloc_t)get_system_function_handle("realloc");
-}
-
-memalign_t Tau_get_system_memalign()
-{
-  return (memalign_t)get_system_function_handle("memalign");
-}
-
-posix_memalign_t Tau_get_system_posix_memalign()
-{
-  return (posix_memalign_t)get_system_function_handle("posix_memalign");
-}
-
-valloc_t Tau_get_system_valloc()
-{
-  return (valloc_t)get_system_function_handle("valloc");
-}
-
-pvalloc_t Tau_get_system_pvalloc()
-{
-  return (pvalloc_t)get_system_function_handle("pvalloc");
-}
-
-free_t Tau_get_system_free()
-{
-  return (free_t)get_system_function_handle("free");
-}
+/******************************************************************************
+ * libc memory allocation/deallocation wrappers
+ ******************************************************************************/
 
 
 void * malloc(size_t size)
@@ -173,6 +147,56 @@ void * pvalloc(size_t size)
 }
 #endif
 
+
+/******************************************************************************
+ *
+ ******************************************************************************/
+
+
+malloc_t Tau_get_system_malloc()
+{
+  return (malloc_t)get_system_function_handle("malloc");
+}
+
+calloc_t Tau_get_system_calloc()
+{
+  return (calloc_t)get_system_function_handle("calloc");
+}
+
+realloc_t Tau_get_system_realloc()
+{
+  return (realloc_t)get_system_function_handle("realloc");
+}
+
+memalign_t Tau_get_system_memalign()
+{
+  return (memalign_t)get_system_function_handle("memalign");
+}
+
+posix_memalign_t Tau_get_system_posix_memalign()
+{
+  return (posix_memalign_t)get_system_function_handle("posix_memalign");
+}
+
+valloc_t Tau_get_system_valloc()
+{
+  return (valloc_t)get_system_function_handle("valloc");
+}
+
+pvalloc_t Tau_get_system_pvalloc()
+{
+  return (pvalloc_t)get_system_function_handle("pvalloc");
+}
+
+free_t Tau_get_system_free()
+{
+  return (free_t)get_system_function_handle("free");
+}
+
+
+/******************************************************************************
+ * pthread wrappers to avoid problems with OpenMP and Intel
+ ******************************************************************************/
 
 
 int pthread_getattr_np(pthread_t thread, pthread_attr_t *attr)

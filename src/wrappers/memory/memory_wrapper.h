@@ -24,7 +24,7 @@
 #endif
 
 #include <stdlib.h>
-
+#include "memory_wrapper_strings.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -68,6 +68,10 @@ void * Tau_valloc(size_t, char const *, int);
 void * Tau_pvalloc(size_t, char const *, int);
 #endif
 
+int __tau_strcmp(char const *, char const *);
+int Tau_strcmp(char const *, char const *, char const *, int);
+
+#if 0
 char * Tau_strdup(char const *, char const *, int);
 char * Tau_strcpy(char *, char const *, char const *, int);
 char * Tau_strcat(char *, char const *, char const *, int);
@@ -76,6 +80,7 @@ char * Tau_strncpy(char *, char const *, size_t, char const *, int);
 char * Tau_strncat(char *, char const *, size_t, char const *, int);
 
 void * Tau_memcpy(void *, void const *, size_t, char const *, int);
+#endif
 
 #ifdef __cplusplus
 }
