@@ -30,6 +30,8 @@
 #include <Profile/TauMemory.h>
 #include <memory_wrapper.h>
 
+// Not thread safe
+int getting_system_handle = 0;
 
 int Tau_memory_wrapper_init(void)
 {
@@ -50,10 +52,13 @@ int Tau_memory_wrapper_init(void)
 
 int Tau_memory_wrapper_passthrough(void)
 {
-  return Tau_global_get_insideTAU()
+  // The order of these statements is important
+  return !Tau_init_check_dl_initialized()
+      || getting_system_handle
       || !Tau_init_check_initialized()
-      || !Tau_init_check_dl_initialized()
-      || Tau_global_getLightsOut();
+      || Tau_global_getLightsOut()
+      || Tau_global_get_insideTAU();
+
 }
 
 
@@ -62,6 +67,8 @@ void * get_system_function_handle(char const * name)
 {
   char const * err;
   void * handle;
+
+  getting_system_handle = 1;
 
   // Reset error pointer
   dlerror();
@@ -77,6 +84,7 @@ void * get_system_function_handle(char const * name)
     exit(1);
   }
 
+  getting_system_handle = 0;
   return handle;
 }
 
@@ -167,6 +175,65 @@ void * pvalloc(size_t size)
 
 
 
+int pthread_getattr_np(pthread_t thread, pthread_attr_t *attr)
+{
+  typedef int (*pthread_getattr_np_t)(pthread_t, pthread_attr_t*);
+  static pthread_getattr_np_t pthread_getattr_np_system = NULL;
+
+  int retval;
+
+  Tau_memory_wrapper_disable();
+
+  if (!pthread_getattr_np_system) {
+    pthread_getattr_np_system = (pthread_getattr_np_t)get_system_function_handle("pthread_getattr_np");
+  }
+
+  retval = pthread_getattr_np_system(thread, attr);
+  
+  Tau_memory_wrapper_enable();
+
+  return retval;
+}
+
+int pthread_attr_destroy(pthread_attr_t *attr)
+{
+  typedef int (*pthread_attr_destroy_t)(pthread_attr_t *);
+  static pthread_attr_destroy_t pthread_attr_destroy_system = NULL;
+
+  int retval;
+
+  Tau_memory_wrapper_disable();
+
+  if (!pthread_attr_destroy_system) {
+    pthread_attr_destroy_system = (pthread_attr_destroy_t)get_system_function_handle("pthread_attr_destroy");
+  }
+
+  retval = pthread_attr_destroy_system(attr);
+
+  Tau_memory_wrapper_enable();
+
+  return retval;
+}
+
+int pthread_attr_init(pthread_attr_t *attr)
+{
+  typedef int (*pthread_attr_init_t)(pthread_attr_t *);
+  static pthread_attr_init_t pthread_attr_init_system = NULL;
+
+  int retval;
+
+  Tau_memory_wrapper_disable();
+
+  if (!pthread_attr_init_system) {
+    pthread_attr_init_system = (pthread_attr_init_t)get_system_function_handle("pthread_attr_init");
+  }
+
+  retval = pthread_attr_init_system(attr);
+
+  Tau_memory_wrapper_enable();
+
+  return retval;
+}
 
 
 /*********************************************************************

@@ -36,7 +36,7 @@ CFLAGS = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_INTERNAL_FLAGS) $(USER_OPT) -I$(TAUROO
 ARFLAGS = rcv
 
 DYNAMIC_OBJ = memory_wrapper.o memory_wrapper_dynamic.o
-LINK_OBJ = memory_wrapper.o memory_wrapper_link.o
+STATIC_OBJ = memory_wrapper.o memory_wrapper_static.o
 
 INSTALLDEST = $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
@@ -53,12 +53,12 @@ install: install-static install-shared
 $(TAU_MEMORYWRAP_SHARED): $(DYNAMIC_OBJ)
 	$(CC) $(TAU_SHFLAGS) $@ $(DYNAMIC_OBJ) $(TAU_SHAREDLIBS) -ldl
 
-libTauMemoryWrap.a: $(LINK_OBJ)
-	$(TAU_AR) $(ARFLAGS) $@ $(LINK_OBJ)
+libTauMemoryWrap.a: $(STATIC_OBJ)
+	$(TAU_AR) $(ARFLAGS) $@ $(STATIC_OBJ)
 
 %.o: %.c
 	$(CC) -c $(CFLAGS) $< -o $@ 
 
 clean:
-	/bin/rm -f libTauMemoryWrap.a $(TAU_MEMORYWRAP_SHARED) $(DYNAMIC_OBJ) $(LINK_OBJ)
+	/bin/rm -f libTauMemoryWrap.a $(TAU_MEMORYWRAP_SHARED) $(DYNAMIC_OBJ) $(STATIC_OBJ)
 
