@@ -7,7 +7,7 @@
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 ****************************************************************************/
 /****************************************************************************
-**	File 		      : memory_wrapper_link.c
+**	File 		      : memory_wrapper_static.c
 **	Description 	: TAU Profiling Package
 **	Contact		    : tau-bugs@cs.uoregon.edu
 **	Documentation	: See http://www.cs.uoregon.edu/research/tau
