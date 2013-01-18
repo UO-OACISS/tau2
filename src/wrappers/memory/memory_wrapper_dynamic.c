@@ -30,6 +30,18 @@
 #include <Profile/TauMemory.h>
 #include <memory_wrapper.h>
 
+#ifdef strcpy
+#undef strcpy
+#endif
+
+#ifdef _MSC_VER
+/* define these functions as non-intrinsic */
+#pragma function( memcpy, strcpy, strcat )
+#endif
+
+
+// Not thread safe
+int getting_system_handle = 0;
 
 int Tau_memory_wrapper_init(void)
 {
@@ -50,18 +62,41 @@ int Tau_memory_wrapper_init(void)
 
 int Tau_memory_wrapper_passthrough(void)
 {
-  return Tau_global_get_insideTAU()
+#ifdef TAU_OPENMP
+  static int work_around = 0;
+  int retval;
+
+  if (work_around) return work_around;
+  ++work_around;
+
+  // The order of these statements is important
+  retval = !Tau_init_check_dl_initialized()
+      || getting_system_handle
       || !Tau_init_check_initialized()
-      || !Tau_init_check_dl_initialized()
-      || Tau_global_getLightsOut();
+      || Tau_global_getLightsOut()
+      || Tau_global_get_insideTAU();
+
+  --work_around;
+  return retval;
+
+#else
+
+  return !Tau_init_check_dl_initialized()
+      || getting_system_handle
+      || !Tau_init_check_initialized()
+      || Tau_global_getLightsOut()
+      || Tau_global_get_insideTAU();
+
+#endif
 }
 
 
-static inline
 void * get_system_function_handle(char const * name)
 {
   char const * err;
   void * handle;
+
+  getting_system_handle = 1;
 
   // Reset error pointer
   dlerror();
@@ -77,48 +112,14 @@ void * get_system_function_handle(char const * name)
     exit(1);
   }
 
+  getting_system_handle = 0;
   return handle;
 }
 
-malloc_t Tau_get_system_malloc()
-{
-  return (malloc_t)get_system_function_handle("malloc");
-}
 
-calloc_t Tau_get_system_calloc()
-{
-  return (calloc_t)get_system_function_handle("calloc");
-}
-
-realloc_t Tau_get_system_realloc()
-{
-  return (realloc_t)get_system_function_handle("realloc");
-}
-
-memalign_t Tau_get_system_memalign()
-{
-  return (memalign_t)get_system_function_handle("memalign");
-}
-
-posix_memalign_t Tau_get_system_posix_memalign()
-{
-  return (posix_memalign_t)get_system_function_handle("posix_memalign");
-}
-
-valloc_t Tau_get_system_valloc()
-{
-  return (valloc_t)get_system_function_handle("valloc");
-}
-
-pvalloc_t Tau_get_system_pvalloc()
-{
-  return (pvalloc_t)get_system_function_handle("pvalloc");
-}
-
-free_t Tau_get_system_free()
-{
-  return (free_t)get_system_function_handle("free");
-}
+/******************************************************************************
+ * libc memory allocation/deallocation wrappers
+ ******************************************************************************/
 
 
 void * malloc(size_t size)
@@ -166,7 +167,116 @@ void * pvalloc(size_t size)
 #endif
 
 
+/******************************************************************************
+ *
+ ******************************************************************************/
 
+
+malloc_t Tau_get_system_malloc()
+{
+  return (malloc_t)get_system_function_handle("malloc");
+}
+
+calloc_t Tau_get_system_calloc()
+{
+  return (calloc_t)get_system_function_handle("calloc");
+}
+
+realloc_t Tau_get_system_realloc()
+{
+  return (realloc_t)get_system_function_handle("realloc");
+}
+
+memalign_t Tau_get_system_memalign()
+{
+  return (memalign_t)get_system_function_handle("memalign");
+}
+
+posix_memalign_t Tau_get_system_posix_memalign()
+{
+  return (posix_memalign_t)get_system_function_handle("posix_memalign");
+}
+
+valloc_t Tau_get_system_valloc()
+{
+  return (valloc_t)get_system_function_handle("valloc");
+}
+
+pvalloc_t Tau_get_system_pvalloc()
+{
+  return (pvalloc_t)get_system_function_handle("pvalloc");
+}
+
+free_t Tau_get_system_free()
+{
+  return (free_t)get_system_function_handle("free");
+}
+
+
+/******************************************************************************
+ * pthread wrappers 
+ ******************************************************************************/
+
+
+int pthread_getattr_np(pthread_t thread, pthread_attr_t *attr)
+{
+  typedef int (*pthread_getattr_np_t)(pthread_t, pthread_attr_t*);
+  static pthread_getattr_np_t pthread_getattr_np_system = NULL;
+
+  int retval;
+
+  Tau_memory_wrapper_disable();
+
+  if (!pthread_getattr_np_system) {
+    pthread_getattr_np_system = (pthread_getattr_np_t)get_system_function_handle("pthread_getattr_np");
+  }
+
+  retval = pthread_getattr_np_system(thread, attr);
+  
+  Tau_memory_wrapper_enable();
+
+  return retval;
+}
+
+int pthread_attr_destroy(pthread_attr_t *attr)
+{
+  typedef int (*pthread_attr_destroy_t)(pthread_attr_t *);
+  static pthread_attr_destroy_t pthread_attr_destroy_system = NULL;
+
+  int retval;
+
+  Tau_memory_wrapper_disable();
+
+  if (!pthread_attr_destroy_system) {
+    pthread_attr_destroy_system = (pthread_attr_destroy_t)get_system_function_handle("pthread_attr_destroy");
+  }
+
+  retval = pthread_attr_destroy_system(attr);
+
+  Tau_memory_wrapper_enable();
+
+  return retval;
+}
+
+int pthread_attr_init(pthread_attr_t *attr)
+{
+  typedef int (*pthread_attr_init_t)(pthread_attr_t *);
+  static pthread_attr_init_t pthread_attr_init_system = NULL;
+
+  int retval;
+
+  Tau_memory_wrapper_disable();
+
+  if (!pthread_attr_init_system) {
+    pthread_attr_init_system = (pthread_attr_init_t)get_system_function_handle("pthread_attr_init");
+  }
+
+  retval = pthread_attr_init_system(attr);
+
+  Tau_memory_wrapper_enable();
+
+  return retval;
+}
 
 
 /*********************************************************************

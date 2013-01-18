@@ -24,6 +24,7 @@
 #endif
 
 #include <stdlib.h>
+#include "memory_wrapper_strings.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -61,6 +62,9 @@ free_t Tau_get_system_free();
 
 int Tau_memory_wrapper_init(void);
 int Tau_memory_wrapper_passthrough(void);
+
+void Tau_memory_wrapper_disable(void);
+void Tau_memory_wrapper_enable(void);
 
 #ifdef __cplusplus
 } /* extern "C" */
