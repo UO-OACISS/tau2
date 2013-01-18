@@ -1456,7 +1456,6 @@ int  MPI_Finalize(  )
   int numCounters, mode, upcErr;
   x_uint64 counterVals[1024];
 
-  Tau_global_incr_insideTAU();
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Finalize()",  " ", TAU_MESSAGE);
   TAU_PROFILE_START(tautimer);
@@ -1532,14 +1531,18 @@ int  MPI_Finalize(  )
   Tau_mon_disconnect();
 #endif /* TAU_MONITORING */
 
+  if (Tau_memory_wrapper_present()) {
+    Tau_global_incr_insideTAU();
+  }
   returnVal = PMPI_Finalize();
+  if (Tau_memory_wrapper_present()) {
+    Tau_global_decr_insideTAU();
+  }
 
   TAU_PROFILE_STOP(tautimer);
 
   Tau_stop_top_level_timer_if_necessary();
   tau_mpi_finalized = 1;
-
-  Tau_global_decr_insideTAU();
 
   return returnVal;
 }
@@ -1569,13 +1572,18 @@ char *** argv;
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
 
-  Tau_global_incr_insideTAU();
 
   TAU_PROFILE_TIMER(tautimer, "MPI_Init()",  " ", TAU_MESSAGE); 
   Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_START(tautimer);
   
+  if (Tau_memory_wrapper_present()) {
+    Tau_global_incr_insideTAU();
+  }
   returnVal = PMPI_Init( argc, argv );
+  if (Tau_memory_wrapper_present()) {
+    Tau_global_decr_insideTAU();
+  }
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_init_if_necessary();
@@ -1614,7 +1622,6 @@ char *** argv;
     TauSyncClocks();
   }
 
-  Tau_global_decr_insideTAU();
 
   return returnVal;
 }
@@ -1631,14 +1638,19 @@ int *provided;
   int  size;
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
-
-  Tau_global_incr_insideTAU();
  
   TAU_PROFILE_TIMER(tautimer, "MPI_Init_thread()",  " ", TAU_MESSAGE);
   Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_START(tautimer);
  
+  if (Tau_memory_wrapper_present()) {
+    Tau_global_incr_insideTAU();
+  }
   returnVal = PMPI_Init_thread( argc, argv, required, provided );
+  if (Tau_memory_wrapper_present()) {
+    Tau_global_decr_insideTAU();
+  }
+
 #ifndef TAU_DISABLE_SIGUSR
   Tau_signal_initialization(); 
 #endif
@@ -1676,8 +1688,6 @@ int *provided;
     //TauSyncClocks takes no arguments.
     //TauSyncClocks(procid_0, size);
   }
-
-  Tau_global_decr_insideTAU();
 
   return returnVal;
 }
