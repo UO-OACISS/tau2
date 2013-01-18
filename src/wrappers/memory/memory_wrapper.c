@@ -56,7 +56,9 @@ void * realloc_bootstrap(void * ptr, size_t size);
 void * valloc_bootstrap(size_t size);
 void * pvalloc_bootstrap(size_t size);
 
+#if 0
 int strcmp_bootstrap(const char *s1, const char *s2);
+#endif
 
 // Handles to function implementations that are called
 // when the wrapped function is invoked.
@@ -70,7 +72,9 @@ realloc_t realloc_handle = realloc_bootstrap;
 valloc_t valloc_handle = valloc_bootstrap;
 pvalloc_t pvalloc_handle = pvalloc_bootstrap;
 
+#if 0
 strcmp_t strcmp_handle = strcmp_bootstrap;
+#endif
 
 // Handles to the system implementation of the function.
 // These are initialized during bootstrap.
@@ -83,7 +87,9 @@ realloc_t realloc_system = NULL;
 valloc_t valloc_system = NULL;
 pvalloc_t pvalloc_system = NULL;
 
+#if 0
 strcmp_t strcmp_system = NULL;
+#endif
 
 // Memory for bootstrapping.  Must not be static.
 char bootstrap_heap[BOOTSTRAP_HEAP_SIZE];
@@ -512,11 +518,16 @@ void free_enabled(void * ptr)
 {
   if (!is_bootstrap(ptr)) {
     if (Tau_memory_wrapper_passthrough()) {
-      return free_system(ptr);
+      if (!Tau_global_getLightsOut()) {
+        free_system(ptr);
+      } else {
+        // TODO
+      }
+    } else {
+      Tau_free(ptr, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_LINE);
     }
-    return Tau_free(ptr, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_LINE);
   } else {
-    return bootstrap_free(ptr);
+    bootstrap_free(ptr);
   }
 }
 
@@ -542,6 +553,7 @@ void free_bootstrap(void * ptr)
  * strcmp
  ********************************************************************/
 
+#if 0
 int strcmp_init(char const * s1, char const * s2, int * retval)
 {
   static int initializing = 0;
@@ -585,6 +597,7 @@ int strcmp_bootstrap(char const * s1, char const * s2)
   strcmp_handle = strcmp_enabled;
   return strcmp_enabled(s1, s2);
 }
+#endif
 
 /*********************************************************************
  * Wrapper enable/disable
@@ -603,7 +616,9 @@ void Tau_memory_wrapper_enable(void)
     pvalloc_handle = pvalloc_bootstrap;
     free_handle = free_bootstrap;
 
+#if 0
     strcmp_handle = strcmp_bootstrap;
+#endif
   }
 }
 
@@ -620,7 +635,9 @@ void Tau_memory_wrapper_disable(void)
     valloc_handle = valloc_disabled;
     pvalloc_handle = pvalloc_disabled;
 
+#if 0
     strcmp_handle = strcmp_disabled;
+#endif
   }
 }
 

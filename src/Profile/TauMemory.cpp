@@ -1087,16 +1087,16 @@ char * Tau_strncat(char *dst, const char *src, size_t size, const char * filenam
 char *strchr(const char *s, int c);
 
 #endif
-//int strcmp(const char *s1, const char *s2);
+
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
 
 int __tau_strcmp(char const * s1, char const * s2)
 {
-  int x;
   while (*s1 || *s2) {
-    if ((x = *s1++ - *s2++)) return x;
+    if (*s1 != *s2) return *s1 - *s2;
+    ++s1, ++s2;
   }
   return 0;
 }
