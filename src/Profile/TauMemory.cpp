@@ -66,21 +66,6 @@ using namespace std;
 #define  MAP_ANONYMOUS MAP_ANON
 #endif
 
-int wrapper_present = 0;
-
-extern "C"
-int Tau_memory_wrapper_present(void)
-{
-  return wrapper_present;
-}
-
-extern "C"
-void Tau_set_memory_wrapper_present(int value)
-{
-  wrapper_present = value;
-}
-
-
 
 typedef unsigned char * addr_t;
 typedef TauContextUserEvent user_event_t;
@@ -723,6 +708,28 @@ void TauAllocation::TrackDeallocation(const char * filename, int lineno)
   Tau_global_decr_insideTAU();
 }
 
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+int wrapper_present = 0;
+extern "C"
+int Tau_memory_wrapper_present(void)
+{
+  return wrapper_present;
+}
+extern "C"
+void Tau_set_memory_wrapper_present(int value)
+{
+  wrapper_present = value;
+}
+
+extern "C"
+void Tau_memory_initialize(void)
+{
+  // Trigger the map's constructor
+  TauAllocation::AllocationMap().clear();
+}
 
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
