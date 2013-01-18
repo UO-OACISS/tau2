@@ -62,13 +62,32 @@ int Tau_memory_wrapper_init(void)
 
 int Tau_memory_wrapper_passthrough(void)
 {
+#ifdef TAU_OPENMP
+  static int work_around = 0;
+  int retval;
+
+  if (work_around) return work_around;
+  ++work_around;
+
   // The order of these statements is important
+  retval = !Tau_init_check_dl_initialized()
+      || getting_system_handle
+      || !Tau_init_check_initialized()
+      || Tau_global_getLightsOut()
+      || Tau_global_get_insideTAU();
+
+  --work_around;
+  return retval;
+
+#else
+
   return !Tau_init_check_dl_initialized()
       || getting_system_handle
       || !Tau_init_check_initialized()
       || Tau_global_getLightsOut()
       || Tau_global_get_insideTAU();
 
+#endif
 }
 
 
@@ -195,7 +214,7 @@ free_t Tau_get_system_free()
 
 
 /******************************************************************************
- * pthread wrappers to avoid problems with OpenMP and Intel
+ * pthread wrappers 
  ******************************************************************************/
 
 
