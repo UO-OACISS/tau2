@@ -45,6 +45,8 @@ extern "C" {
 int Tau_memory_wrapper_present(void);
 void Tau_set_memory_wrapper_present(int);
 
+void Tau_memory_initialize(void);
+
 size_t Tau_page_size(void);
 
 void Tau_detect_memory_leaks(void);

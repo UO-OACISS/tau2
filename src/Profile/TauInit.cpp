@@ -44,6 +44,7 @@
 #include <Profile/TauSnapshot.h>
 #include <Profile/TauMetaData.h>
 #include <Profile/TauInit.h>
+#include <Profile/TauMemory.h>
 
 // Moved from header file
 using namespace std;
@@ -433,6 +434,9 @@ extern "C" int Tau_init_initializeTAU() {
   Tau_global_incr_insideTAU();
   
   initializing = 1;
+
+  /* initialize the memory debugger */
+  Tau_memory_initialize();
 
   /* initialize the Profiler stack */
   Tau_stack_initialization();
