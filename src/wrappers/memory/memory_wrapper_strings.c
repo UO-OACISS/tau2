@@ -23,21 +23,24 @@
 #pragma function( memcpy, strcpy, strcat )
 #endif
 
-extern void * get_system_function_handle(char const * name);
-
-
 /******************************************************************************
  * libc string function wrappers
  ******************************************************************************/
 
+#if 0
 strcmp_t Tau_get_system_strcmp()
 {
   return (strcmp_t)get_system_function_handle("strcmp");
 }
+#endif
 
 int strcmp(const char *s1, const char *s2)
 {
+#if 0
   return strcmp_handle(s1, s2);
+#endif
+
+  return __tau_strcmp(s1, s2);
 }
 
 
