@@ -164,7 +164,7 @@ ProfileMap_t& RtsLayer::TheProfileMap(void) {
 
 /////////////////////////////////////////////////////////////////////////
 
-TauGroup_t RtsLayer::getProfileGroup(char * ProfileGroup) {
+TauGroup_t RtsLayer::getProfileGroup(char const * ProfileGroup) {
   ProfileMap_t::iterator it = TheProfileMap().find(string(ProfileGroup));
   TauGroup_t gr;
   if (it == TheProfileMap().end()) {
@@ -182,18 +182,20 @@ TauGroup_t RtsLayer::getProfileGroup(char * ProfileGroup) {
 
 /////////////////////////////////////////////////////////////////////////
 
-TauGroup_t RtsLayer::disableProfileGroupName(char * ProfileGroup) {
-
-  return disableProfileGroup(getProfileGroup(ProfileGroup)); 
-
+TauGroup_t RtsLayer::disableProfileGroupName(char const * ProfileGroup) {
+  Tau_global_incr_insideTAU();
+  TauGroup_t retval = disableProfileGroup(getProfileGroup(ProfileGroup));
+  Tau_global_decr_insideTAU();
+  return retval;
 }
 
 /////////////////////////////////////////////////////////////////////////
 
-TauGroup_t RtsLayer::enableProfileGroupName(char * ProfileGroup) {
-
-  return enableProfileGroup(getProfileGroup(ProfileGroup));
-
+TauGroup_t RtsLayer::enableProfileGroupName(char const * ProfileGroup) {
+  Tau_global_incr_insideTAU();
+  TauGroup_t retval = enableProfileGroup(getProfileGroup(ProfileGroup));
+  Tau_global_decr_insideTAU();
+  return retval;
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -201,7 +203,7 @@ TauGroup_t RtsLayer::enableProfileGroupName(char * ProfileGroup) {
 TauGroup_t RtsLayer::generateProfileGroup(void) {
   static TauGroup_t key =  0x00000001;
   key = key << 1;
-  if (key == 0x0) key = 0x1; // cycle
+  if (!key) key = 0x1; // cycle
   return key;
 }
 

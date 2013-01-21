@@ -40,9 +40,6 @@
 #endif
 
 
-// Not thread safe
-int getting_system_handle = 0;
-
 int Tau_memory_wrapper_init(void)
 {
   static int init = 0;
@@ -71,7 +68,6 @@ int Tau_memory_wrapper_passthrough(void)
 
   // The order of these statements is important
   retval = !Tau_init_check_dl_initialized()
-      || getting_system_handle
       || !Tau_init_check_initialized()
       || Tau_global_getLightsOut()
       || Tau_global_get_insideTAU();
@@ -82,7 +78,6 @@ int Tau_memory_wrapper_passthrough(void)
 #else
 
   return !Tau_init_check_dl_initialized()
-      || getting_system_handle
       || !Tau_init_check_initialized()
       || Tau_global_getLightsOut()
       || Tau_global_get_insideTAU();
@@ -95,8 +90,6 @@ void * get_system_function_handle(char const * name)
 {
   char const * err;
   void * handle;
-
-  getting_system_handle = 1;
 
   // Reset error pointer
   dlerror();
@@ -112,7 +105,6 @@ void * get_system_function_handle(char const * name)
     exit(1);
   }
 
-  getting_system_handle = 0;
   return handle;
 }
 
