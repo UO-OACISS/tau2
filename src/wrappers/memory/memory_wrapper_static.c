@@ -47,7 +47,7 @@ int Tau_memory_wrapper_init(void)
   Tau_global_incr_insideTAU();
   Tau_init_initializeTAU();
   Tau_create_top_level_timer_if_necessary();
-  Tau_set_memory_wrapper_present(1);
+  Tau_memory_set_wrapper_present(1);
   Tau_global_decr_insideTAU();
   return 0;
 }

@@ -66,6 +66,8 @@ using namespace std;
 #define  MAP_ANONYMOUS MAP_ANON
 #endif
 
+// True if the memory wrapper is present
+int wrapper_present = 0;
 
 typedef unsigned char * addr_t;
 typedef TauContextUserEvent user_event_t;
@@ -77,6 +79,12 @@ public:
 
   typedef TAU_HASH_MAP<addr_t, class TauAllocation*> allocation_map_t;
   static allocation_map_t & AllocationMap() {
+    Tau_global_incr_insideTAU();
+    allocation_map_t & allocMap = __allocationMap();
+    Tau_global_decr_insideTAU();
+    return allocMap;
+  }
+  static allocation_map_t & __allocationMap() {
     static allocation_map_t alloc_map;
     return alloc_map;
   }
@@ -712,23 +720,38 @@ void TauAllocation::TrackDeallocation(const char * filename, int lineno)
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
-int wrapper_present = 0;
-extern "C"
-int Tau_memory_wrapper_present(void)
-{
-  return wrapper_present;
-}
-extern "C"
-void Tau_set_memory_wrapper_present(int value)
-{
-  wrapper_present = value;
-}
-
 extern "C"
 void Tau_memory_initialize(void)
 {
   // Trigger the map's constructor
   TauAllocation::AllocationMap().clear();
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+extern "C"
+int Tau_memory_is_wrapper_present(void)
+{
+  return wrapper_present;
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+extern "C"
+void Tau_memory_set_wrapper_present(int value)
+{
+  wrapper_present = value;
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+extern "C"
+int Tau_memory_is_tau_allocated(void * ptr)
+{
+  return TauAllocation::Find((addr_t)ptr) != NULL;
 }
 
 //////////////////////////////////////////////////////////////////////
