@@ -294,8 +294,6 @@ static void tauBacktraceHandler(int sig, siginfo_t *si, void *context)
 
 static void tauMemdbgHandler(int sig, siginfo_t *si, void *context)
 {
-  char eventname[1024];
-
   // Use the backtrace handler if this SIGSEGV wasn't due to invalid memory access
   if (sig == SIGSEGV && si->si_code != SEGV_ACCERR) {
     tauBacktraceHandler(sig, si, context);
@@ -322,7 +320,7 @@ static void tauMemdbgHandler(int sig, siginfo_t *si, void *context)
     }
 
     // Trigger the event
-    TauAllocation::user_event_t * allocEvent = alloc->GetAllocationEvent();
+    char eventname[1024];
     sprintf(eventname, "Invalid memory access <address=%p>", ptr);
     TAU_REGISTER_CONTEXT_EVENT(evt, eventname);
     TAU_CONTEXT_EVENT(evt, 1);

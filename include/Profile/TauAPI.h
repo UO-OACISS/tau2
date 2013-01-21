@@ -368,10 +368,10 @@ void Tau_pure_stop_task(const char *name, int tid);
 int Tau_stop_current_timer();
 char * Tau_phase_enable(const char *group);
 
-void Tau_dynamic_start(char *name, int isPhase); 
-void Tau_dynamic_stop(char *name, int isPhase); 
-void Tau_static_phase_start(char *name);
-void Tau_static_phase_stop(char *name);
+void Tau_dynamic_start(char const * name, int isPhase);
+void Tau_dynamic_stop(char const * name, int isPhase);
+void Tau_static_phase_start(char const * name);
+void Tau_static_phase_stop(char const * name);
 
 void* Tau_get_profiler(const char *name, const char *type, TauGroup_t group, const char *gr_name);
 
@@ -455,7 +455,7 @@ void TAUDECL Tau_set_node(int node);
 void TAUDECL Tau_start_timer(void *profiler, int phase, int tid);
 int TAUDECL Tau_stop_timer(void *profiler, int tid);
 void TAUDECL Tau_lite_start_timer(void *profiler, int phase);
-int TAUDECL Tau_lite_stop_timer(void *profiler); 
+void TAUDECL Tau_lite_stop_timer(void *profiler);
 void TAUDECL Tau_pure_start(const char *name);
 void TAUDECL Tau_pure_stop(const char *name);
 
@@ -506,7 +506,7 @@ void Tau_dump_function_values(const char **functionList, int num);
 void Tau_dump_function_values_incr(const char **functionList, int num);
 void Tau_register_thread();
 void Tau_register_fork(int nodeid, enum TauFork_t opcode);
-void* TAUDECL Tau_get_userevent(char *name);
+void* TAUDECL Tau_get_userevent(char const * name);
 void Tau_get_context_userevent(void **ptr, const char *name);
 void Tau_userevent(void *event, double data);
 void Tau_userevent_thread(void *event, double data, int tid);
@@ -519,8 +519,8 @@ void Tau_event_disable_min(void *event);
 void Tau_event_disable_max(void *event);
 void Tau_event_disable_mean(void *event);
 void Tau_event_disable_stddev(void *event);
-TauGroup_t Tau_enable_group_name(char *group);
-TauGroup_t Tau_disable_group_name(char *group);
+TauGroup_t Tau_enable_group_name(char const * group);
+TauGroup_t Tau_disable_group_name(char const * group);
 TauGroup_t Tau_get_profile_group(char *group);
 void Tau_track_memory(void);
 void Tau_enable_tracking_memory(void);
@@ -543,7 +543,7 @@ void Tau_track_memory_headroom_here(void);
 void Tau_profile_param1l(long data, const char *dataname);
 
 void Tau_mark_group_as_phase(void *ptr);
-char * Tau_append_iteration_to_name(int iteration, char *name);
+char const * Tau_append_iteration_to_name(int iteration, char const * name, int slen);
 
 #ifdef __cplusplus
 /* Include the C++ API header */
