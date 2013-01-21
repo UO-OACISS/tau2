@@ -69,86 +69,6 @@ using namespace std;
 // True if the memory wrapper is present
 int wrapper_present = 0;
 
-typedef unsigned char * addr_t;
-typedef TauContextUserEvent user_event_t;
-
-class TauAllocation
-{
-
-public:
-
-  typedef TAU_HASH_MAP<addr_t, class TauAllocation*> allocation_map_t;
-  static allocation_map_t & AllocationMap() {
-    Tau_global_incr_insideTAU();
-    allocation_map_t & allocMap = __allocationMap();
-    Tau_global_decr_insideTAU();
-    return allocMap;
-  }
-  static allocation_map_t & __allocationMap() {
-    static allocation_map_t alloc_map;
-    return alloc_map;
-  }
-
-  static TauAllocation * Find(allocation_map_t::key_type const & key) {
-    static allocation_map_t const & alloc_map = AllocationMap();
-    allocation_map_t::const_iterator it = alloc_map.find(key);
-    if (it != alloc_map.end())
-      return it->second;
-    return NULL;
-  }
-
-  static size_t & BytesAllocated() {
-    // Not thread safe!
-    static size_t bytes = 0;
-    return bytes;
-  }
-
-  static void DetectLeaks(void);
-
-public:
-
-  TauAllocation() :
-    alloc_addr(NULL), alloc_size(0),
-    user_addr(NULL), user_size(0),
-    lguard_addr(NULL), lguard_size(0),
-    uguard_addr(NULL), uguard_size(0),
-    lgap_addr(NULL), lgap_size(0),
-    ugap_addr(NULL), ugap_size(0),
-    alloc_event(NULL)
-  { }
-
-  void * Allocate(size_t const size, size_t align, size_t min_align, const char * filename, int lineno);
-  void Deallocate(const char * filename, int lineno);
-
-  void TrackAllocation(void * ptr, size_t size, const char * filename, int lineno);
-  void TrackDeallocation(const char * filename, int lineno);
-
-private:
-
-  addr_t alloc_addr;    ///< Unadjusted address
-  size_t alloc_size;    ///< Unadjusted size
-  addr_t user_addr;     ///< Address presented to user
-  size_t user_size;     ///< Size requested by user
-  addr_t lguard_addr;   ///< Protected lower range address
-  size_t lguard_size;   ///< Protected lower range size
-  addr_t uguard_addr;   ///< Protected upper range address
-  size_t uguard_size;   ///< Protected upper range size
-  addr_t lgap_addr;     ///< Unprotected lower gap address
-  size_t lgap_size;     ///< Unprotected lower gap size
-  addr_t ugap_addr;     ///< Unprotected upper gap address
-  size_t ugap_size;     ///< Unprotected upper gap size
-
-  user_event_t * alloc_event; ///< Allocation event (for leak detection)
-
-  void ProtectPages(addr_t addr, size_t size);
-  void UnprotectPages(addr_t addr, size_t size);
-
-  unsigned long LocationHash(unsigned long hash, char const * data);
-  void TriggerAllocationEvent(char const * filename, int lineno);
-  void TriggerDeallocationEvent(char const * filename, int lineno);
-  void TriggerErrorEvent(char const * descript, char const * filename, int lineno);
-};
-
 
 
 // Incremental string hashing function.
@@ -369,6 +289,24 @@ void TauAllocation::DetectLeaks(void)
     }
   }
   Tau_global_decr_insideTAU();
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+TauAllocation * TauAllocation::FindContaining(void * ptr)
+{
+  Tau_global_incr_insideTAU();
+  static allocation_map_t const & allocMap = AllocationMap();
+
+  allocation_map_t::const_iterator it;
+  for(it = allocMap.begin(); it != allocMap.end(); it++) {
+    TauAllocation * const alloc = it->second;
+    if (alloc->Contains(ptr)) return alloc;
+  }
+
+  Tau_global_decr_insideTAU();
+  return NULL;
 }
 
 
@@ -716,6 +654,46 @@ void TauAllocation::TrackDeallocation(const char * filename, int lineno)
   Tau_global_decr_insideTAU();
 }
 
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void TauAllocation::EnableUpperGuard()
+{
+  if (uguard_addr) {
+    ProtectPages(uguard_addr, uguard_size);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void TauAllocation::DisableUpperGuard()
+{
+  if (uguard_addr) {
+    UnprotectPages(uguard_addr, uguard_size);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void TauAllocation::EnableLowerGuard()
+{
+  if (lguard_addr) {
+    ProtectPages(lguard_addr, lguard_size);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void TauAllocation::DisableLowerGuard()
+{
+  if (lguard_addr) {
+    UnprotectPages(lguard_addr, lguard_size);
+  }
+}
+
 
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
@@ -749,9 +727,9 @@ void Tau_memory_set_wrapper_present(int value)
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
 extern "C"
-int Tau_memory_is_tau_allocated(void * ptr)
+int Tau_memory_is_tau_allocation(void * ptr)
 {
-  return TauAllocation::Find((addr_t)ptr) != NULL;
+  return TauAllocation::Find(ptr) != NULL;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -815,13 +793,12 @@ extern "C"
 void Tau_track_memory_allocation(void * ptr, size_t size, char const * filename, int lineno)
 {
   Tau_global_incr_insideTAU();
-  addr_t addr = (addr_t)ptr;
-  TauAllocation * alloc = TauAllocation::Find(addr);
+  TauAllocation * alloc = TauAllocation::Find(ptr);
   if (!alloc) {
     alloc = new TauAllocation;
     alloc->TrackAllocation(ptr, size, filename, lineno);
   } else {
-    TAU_VERBOSE("TAU: WARNING - Allocation record for %p already exists\n", addr);
+    TAU_VERBOSE("TAU: WARNING - Allocation record for %p already exists\n", ptr);
   }
   Tau_global_decr_insideTAU();
 }
@@ -833,14 +810,13 @@ extern "C"
 void Tau_track_memory_deallocation(void * ptr, char const * filename, int lineno)
 {
   Tau_global_incr_insideTAU();
-  addr_t addr = (addr_t)ptr;
-  TauAllocation * alloc = TauAllocation::Find(addr);
+  TauAllocation * alloc = TauAllocation::Find(ptr);
   if (alloc) {
     alloc->TrackDeallocation(filename, lineno);
     // TrackDeallocation triggers an event, so deleting alloc is not crazy
     delete alloc;
   } else {
-    TAU_VERBOSE("TAU: WARNING - No allocation record found for %p\n", addr);
+    TAU_VERBOSE("TAU: WARNING - No allocation record found for %p\n", ptr);
   }
   Tau_global_decr_insideTAU();
 }
@@ -898,8 +874,7 @@ void Tau_free(void * ptr, char const * filename, int lineno)
 {
   if (ptr) {
     Tau_global_incr_insideTAU();
-    addr_t addr = (addr_t)ptr;
-    TauAllocation * alloc = TauAllocation::Find(addr);
+    TauAllocation * alloc = TauAllocation::Find(ptr);
 
     if (alloc) {
       if (TauEnv_get_memdbg()) {
@@ -910,7 +885,7 @@ void Tau_free(void * ptr, char const * filename, int lineno)
       }
       delete alloc;
     } else {
-      TAU_VERBOSE("TAU: WARNING - Allocation record for %p not found.\n", addr);
+      TAU_VERBOSE("TAU: WARNING - Allocation record for %p not found.\n", ptr);
       free(ptr);
     }
     Tau_global_decr_insideTAU();
@@ -976,12 +951,11 @@ void * Tau_realloc(void * ptr, size_t size, const char * filename, int lineno)
   if (TauEnv_get_memdbg()) {
     TauAllocation * alloc = NULL;
     if (ptr) {
-      addr_t addr = (addr_t)ptr;
-      alloc = TauAllocation::Find(addr);
+      alloc = TauAllocation::Find(ptr);
       if (alloc) {
         alloc->Deallocate(filename, lineno);
       } else {
-        TAU_VERBOSE("TAU: WARNING - Allocation record for %p not found.\n", addr);
+        TAU_VERBOSE("TAU: WARNING - Allocation record for %p not found.\n", ptr);
         free(ptr);
       }
     }

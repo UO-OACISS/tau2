@@ -1581,9 +1581,9 @@ char *** argv;
     Tau_sampling_init_if_necessary();
   }
 #endif /* TAU_WINDOWS */
-#ifndef TAU_DISABLE_SIGUSR
+
   Tau_signal_initialization(); 
-#endif
+
 #ifdef TAU_MONITORING
   Tau_mon_connect();
 #endif /* TAU_MONITORING */
@@ -1639,9 +1639,9 @@ int *provided;
   returnVal = PMPI_Init_thread( argc, argv, required, provided );
   Tau_global_decr_insideTAU();
 
-#ifndef TAU_DISABLE_SIGUSR
+
   Tau_signal_initialization(); 
-#endif
+
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_init_if_necessary();

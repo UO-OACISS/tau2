@@ -142,9 +142,7 @@ gasp_context_t gasp_init(gasp_model_t srcmodel, int *argc, char ***argv) {
         Tau_sampling_init_if_necessary();
     }
 
-#ifndef TAU_DISABLE_SIGUSR
     Tau_signal_initialization();
-#endif
 
 #ifdef TAU_MONITORING
     Tau_mon_connect();
