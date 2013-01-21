@@ -42,10 +42,11 @@
 extern "C" {
 #endif /* __cplusplus */
 
-int Tau_memory_wrapper_present(void);
-void Tau_set_memory_wrapper_present(int);
-
 void Tau_memory_initialize(void);
+
+int Tau_memory_is_wrapper_present(void);
+void Tau_memory_set_wrapper_present(int);
+int Tau_memory_is_tau_allocated(void * ptr);
 
 size_t Tau_page_size(void);
 

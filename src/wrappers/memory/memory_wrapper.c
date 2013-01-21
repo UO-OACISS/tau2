@@ -516,6 +516,19 @@ int free_init(void * ptr)
 
 void free_enabled(void * ptr)
 {
+#if 1
+  if (!Tau_global_getLightsOut()) {
+    if (Tau_memory_is_tau_allocated(ptr)) {
+      Tau_free(ptr, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_LINE);
+    } else if (is_bootstrap(ptr)) {
+      bootstrap_free(ptr);
+    } else {
+      free_system(ptr);
+    }
+  }
+
+#else
+
   if (!is_bootstrap(ptr)) {
     if (Tau_memory_wrapper_passthrough()) {
       if (!Tau_global_getLightsOut()) {
@@ -529,6 +542,7 @@ void free_enabled(void * ptr)
   } else {
     bootstrap_free(ptr);
   }
+#endif
 }
 
 void free_disabled(void * ptr)
