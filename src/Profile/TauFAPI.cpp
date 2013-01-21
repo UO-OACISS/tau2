@@ -437,7 +437,7 @@ void Tau_stop(const char *name)
 
 void tau_profile_timer_(void **ptr, char *fname, int flen)
 {
-  
+  Tau_global_incr_insideTAU();
 
 #ifdef DEBUG_PROF
   printf("Inside tau_profile_timer_ fname=%s\n", fname);
@@ -521,6 +521,7 @@ void tau_profile_timer_(void **ptr, char *fname, int flen)
   printf("get_profiler returns %lx\n", *ptr);
 #endif /* DEBUG_PROF */
 
+  Tau_global_decr_insideTAU();
   return;
 }
 
