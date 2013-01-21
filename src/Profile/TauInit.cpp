@@ -323,15 +323,11 @@ static void tauMemdbgHandler(int sig, siginfo_t *si, void *context)
 
     // Trigger the event
     TauAllocation::user_event_t * allocEvent = alloc->GetAllocationEvent();
-    if (allocEvent) {
-      sprintf(eventname, "Invalid memory access (%s)", allocEvent->GetEventName());
-    } else {
-      sprintf(eventname, "Invalid memory access (address=%p)", ptr);
-    }
+    sprintf(eventname, "Invalid memory access <address=%p>", ptr);
     TAU_REGISTER_CONTEXT_EVENT(evt, eventname);
     TAU_CONTEXT_EVENT(evt, 1);
 
-    // Dump profiles
+    // Write dump.* files
     TAU_DB_DUMP()
 
   } else {
