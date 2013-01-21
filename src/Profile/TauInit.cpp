@@ -316,22 +316,27 @@ static void tauMemdbgHandler(int sig, siginfo_t *si, void *context)
     } else {
       sprintf(eventname, "Invalid memory access (address=%p)", ptr);
     }
-    if (alloc->InUpperGuard(ptr)) {
-      alloc->DisableUpperGuard();
-    } else if (alloc->InLowerGuard(ptr)) {
-      alloc->DisableLowerGuard();
+
+    if (TauEnv_get_memdbg_attempt_continue()) {
+      if (alloc->InUpperGuard(ptr)) {
+        alloc->DisableUpperGuard();
+      } else if (alloc->InLowerGuard(ptr)) {
+        alloc->DisableLowerGuard();
+      } else {
+        TAU_VERBOSE("TAU: ERROR - invalid addr %p has allocation but isn't in a guarded range!\n");
+        tauBacktraceHandler(sig, si, context);
+      }
     } else {
-      TAU_VERBOSE("TAU: ERROR - invalid addr %p has allocation but isn't in a guarded range!\n");
+      // Not going to attempt to continue, so produce backtrace and exit
+      tauBacktraceHandler(sig, si, context);
     }
   } else {
-    sprintf(eventname, "Invalid memory access (address=%p)", ptr);
+    // No allocation info, so produce backtrace and exit
+    tauBacktraceHandler(sig, si, context);
   }
 
-  // Trigger the event
-  TAU_REGISTER_CONTEXT_EVENT(evt, eventname);
-  TAU_CONTEXT_EVENT(evt, 1);
-
   Tau_global_decr_insideTAU();
+  // Exit the handler and return to the instruction that raised the signal
 }
 
 
