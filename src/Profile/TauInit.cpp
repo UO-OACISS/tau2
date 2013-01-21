@@ -1,22 +1,22 @@
 /****************************************************************************
-**			TAU Portable Profiling Package			   **
-**			http://www.cs.uoregon.edu/research/tau	           **
-*****************************************************************************
-**    Copyright 2008  						   	   **
-**    Department of Computer and Information Science, University of Oregon **
-**    Advanced Computing Laboratory, Los Alamos National Laboratory        **
-**    Forschungszentrum Juelich                                            **
-****************************************************************************/
+ **			TAU Portable Profiling Package			   **
+ **			http://www.cs.uoregon.edu/research/tau	           **
+ *****************************************************************************
+ **    Copyright 2008  						   	   **
+ **    Department of Computer and Information Science, University of Oregon **
+ **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+ **    Forschungszentrum Juelich                                            **
+ ****************************************************************************/
 /****************************************************************************
-**	File 		: TauInit.cpp 			        	   **
-**	Description 	: TAU Profiling Package				   **
-**	Author		: Alan Morris					   **
-**	Contact		: tau-bugs@cs.uoregon.edu               	   **
-**	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
-**                                                                         **
-**      Description     : TAU initialization                               **
-**                                                                         **
-****************************************************************************/
+ **	File 		: TauInit.cpp 			        	   **
+ **	Description 	: TAU Profiling Package				   **
+ **	Author		: Alan Morris					   **
+ **	Contact		: tau-bugs@cs.uoregon.edu               	   **
+ **	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
+ **                                                                         **
+ **      Description     : TAU initialization                               **
+ **                                                                         **
+ ****************************************************************************/
 
 #ifdef __APPLE__
 #define _XOPEN_SOURCE 600 /* Single UNIX Specification, Version 3 */
@@ -36,7 +36,7 @@
 #if !defined(_AIX) && !defined(__sun) && !defined(TAU_WINDOWS)
 #include <execinfo.h>
 #define TAU_EXECINFO 1
-#endif /* _AIX */
+#endif
 
 #include <Profile/TauEnv.h>
 #include <Profile/TauMetrics.h>
@@ -45,11 +45,6 @@
 #include <Profile/TauMetaData.h>
 #include <Profile/TauInit.h>
 #include <Profile/TauMemory.h>
-
-// Moved from header file
-using namespace std;
-
-
 
 #ifdef TAU_VAMPIRTRACE 
 #include <Profile/TauVampirTrace.h>
@@ -63,38 +58,47 @@ using namespace std;
 #include <Profile/TauSCOREP.h>
 #endif
 
+using namespace std;
+
 
 #define TAU_MAXSTACK 1024
+
+typedef void (*tau_sighandler_t)(int, siginfo_t*, void*);
+
+int Tau_Backtrace_writeMetadata(int i, char *token1, unsigned long addr);
 
 extern "C" void Tau_stack_initialization();
 extern "C" int Tau_compensate_initialization();
 extern "C" int Tau_profiler_initialization();
-extern "C" int Tau_profile_exit_all_threads(); 
+extern "C" int Tau_profile_exit_all_threads();
+extern "C" void finalizeCallSites_if_necessary();
+extern "C" int Tau_dump_callpaths();
+extern "C" int Tau_initialize_collector_api(void);
 
-// **CWL** 20110912 NOTE: strsignal is NOT portable!
-//         A number of systems has strsignal declared in string.h and this 
-//         will conflict with an explicit extern declaration of this nature.
-//
-//         This is now determined at configure time.
 #if defined(TAU_STRSIGNAL_OK)
 extern "C" char *strsignal(int sig);
 #endif /* TAU_STRSIGNAL_OK */
 
-/* -- signal catching to flush event buffers ----------------- */
-#if defined (__cplusplus) || defined (__STDC__) || defined (_AIX) || (defined (__mips) && defined (_SYSTYPE_SVR4))
-#define SIGNAL_TYPE	void
-#define SIGNAL_ARG_TYPE	int
-#else	/* Not ANSI C.  */
-#define SIGNAL_TYPE	int
-#define SIGNAL_ARG_TYPE
-#endif	/* ANSI C */
-# ifndef NSIG
-#   define NSIG 32
-# endif
-static SIGNAL_TYPE (*sighdlr[NSIG])(SIGNAL_ARG_TYPE);
+// True if TAU is fully initialized
+int tau_initialized = 0;
 
-static void wrap_up(int sig) {
-  void *array[10];
+// True if TAU is initializing
+int initializing = 0;
+
+// Rely on the dl auditor (src/wrapper/taupreload) to set dl_initialized
+// if the audit feature is available (GLIBC version 2.4 or greater).
+// DO NOT declare static!
+#ifdef TAU_TRACK_LD_LOADER
+int dl_initialized = 0;
+#else
+int dl_initialized = 1;
+#endif
+
+
+
+static void wrap_up(int sig)
+{
+  void * array[10];
   size_t size;
 
 #ifdef TAU_EXECINFO
@@ -103,59 +107,62 @@ static void wrap_up(int sig) {
 #endif /* TAU_EXECINFO = !(_AIX || sun || windows) */
 
   // print out all the frames to stderr
-  fprintf (stderr, "TAU: signal %d on %d - calling TAU_PROFILE_EXIT()...\n", sig, RtsLayer::myNode());
+  fprintf(stderr, "TAU: signal %d on %d - calling TAU_PROFILE_EXIT()...\n", sig, RtsLayer::myNode());
 
 #ifdef TAU_EXECINFO
   backtrace_symbols_fd(array, size, 2);
 #endif /* TAU_EXECINFO */
   TAU_PROFILE_EXIT("signal");
-  fprintf (stderr, "TAU: done.\n");
-  exit (1);
+  fprintf(stderr, "TAU: done.\n");
+  exit(1);
 }
 
-static void TauInitialize_kill_handlers() {
-# ifdef SIGINT
-  sighdlr[SIGINT ] = signal (SIGINT , wrap_up);
-# endif
-# ifdef SIGQUIT
-  sighdlr[SIGQUIT] = signal (SIGQUIT, wrap_up);
-# endif
-# ifdef SIGILL
-  sighdlr[SIGILL ] = signal (SIGILL , wrap_up);
-# endif
-# ifdef SIGFPE
-  sighdlr[SIGFPE ] = signal (SIGFPE , wrap_up);
-# endif
-# ifdef SIGBUS
-  sighdlr[SIGBUS ] = signal (SIGBUS , wrap_up);
-# endif
-# ifdef SIGTERM
-  sighdlr[SIGTERM] = signal (SIGTERM, wrap_up);
-# endif
-# ifdef SIGABRT
-  sighdlr[SIGABRT] = signal (SIGABRT, wrap_up);
-# endif
-# ifdef SIGSEGV
-  sighdlr[SIGSEGV] = signal (SIGSEGV, wrap_up);
-# endif
-# ifdef SIGCHLD
+
+static void tauInitializeKillHandlers()
+{
+  signal(SIGINT, wrap_up);
+  signal(SIGQUIT, wrap_up);
+  signal(SIGILL, wrap_up);
+  signal(SIGFPE, wrap_up);
+  signal(SIGBUS, wrap_up);
+  signal(SIGTERM, wrap_up);
+  signal(SIGABRT, wrap_up);
+  signal(SIGSEGV, wrap_up);
 #ifndef TAU_UPC
-  sighdlr[SIGCHLD] = signal (SIGCHLD, wrap_up);
+  signal(SIGCHLD, wrap_up);
 #endif
-# endif
 }
 
+static void tauSignalHandler(int sig)
+{
+  Tau_global_incr_insideTAU();
+  if (TauEnv_get_sigusr1_action() == TAU_ACTION_DUMP_CALLPATHS) {
+    fprintf(stderr, "Caught SIGUSR1, dumping TAU callpath data\n");
+    Tau_dump_callpaths();
+  } else if (TauEnv_get_sigusr1_action() == TAU_ACTION_DUMP_BACKTRACES) {
+    fprintf(stderr, "Caught SIGUSR1, dumping backtrace data\n");
+  } else {
+    fprintf(stderr, "Caught SIGUSR1, dumping TAU profile data\n");
+    TAU_DB_DUMP_PREFIX("profile");
+  }
+  Tau_global_decr_insideTAU();
+}
 
-// **CWL** Added to be consistent for operation with Comp_gnu.cpp
-extern int Tau_Backtrace_writeMetadata(int i, char *token1, unsigned long addr);
+static void tauToggleInstrumentationHandler(int sig)
+{
+  Tau_global_incr_insideTAU();
+  fprintf(stderr, "Caught SIGUSR2, toggling TAU instrumentation\n");
+  if (RtsLayer::TheEnableInstrumentation()) {
+    RtsLayer::TheEnableInstrumentation() = false;
+  } else {
+    RtsLayer::TheEnableInstrumentation() = true;
+  }
+  Tau_global_decr_insideTAU();
+}
+
 
 #ifndef TAU_DISABLE_SIGUSR
-
-typedef void (*tau_sighandler_t)(int, siginfo_t*, void*);
-
-extern "C" void finalizeCallSites_if_necessary();
-
-void tauBacktraceHandler(int sig, siginfo_t *si, void *context)
+static void tauBacktraceHandler(int sig, siginfo_t *si, void *context)
 {
   char str[100 + 4096];
   char path[4096];
@@ -181,11 +188,7 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context)
 
   // Start by triggering a context event
   char eventname[1024];
-  if (sig == SIGBUS || (sig == SIGSEGV && si->si_code == SEGV_ACCERR)) {
-    sprintf(eventname, "Invalid memory access (address=%p)", (char*)si->si_addr);
-  } else {
-    sprintf(eventname, "TAU_SIGNAL (%s)", strsignal(sig));
-  }
+  sprintf(eventname, "TAU_SIGNAL (%s)", strsignal(sig));
   TAU_REGISTER_CONTEXT_EVENT(evt, eventname);
   TAU_CONTEXT_EVENT(evt, 1);
 
@@ -216,8 +219,7 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context)
       // give the other tasks some time to process the handler and exit
       fprintf(stderr,
           "TAU: Caught signal %d (%s), dumping profile without stack trace (GDB failure): [rank=%d, pid=%d, tid=%d]... \n",
-          sig, strsignal(sig), RtsLayer::myNode(), getpid(), Tau_get_tid(),
-          sig);
+          sig, strsignal(sig), RtsLayer::myNode(), getpid(), Tau_get_tid(), sig);
       TAU_METADATA("SIGNAL", strsignal(sig));
 
       TAU_PROFILE_EXIT("none");
@@ -226,8 +228,8 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context)
     }
   }
 
-  // Attempt to generate metadata information about backtraces if the backtrace calls are
-  //   supported on the system.
+  // Attempt to generate metadata information about backtraces
+  // if the backtrace calls are supported on the system.
 #ifdef TAU_EXECINFO
   static void *addresses[TAU_MAXSTACK];
   int n = backtrace(addresses, TAU_MAXSTACK);
@@ -281,9 +283,8 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context)
 #endif /* TAU_EXECINFO */ 
 
   // **CWL** We must always allow the handler to write out data and invoke exit.
-  fprintf(stderr,
-      "TAU: Caught signal %d (%s), dumping profile with stack trace: [rank=%d, pid=%d, tid=%d]... \n",
-      sig, strsignal(sig), RtsLayer::myNode(), getpid(), Tau_get_tid());
+  fprintf(stderr, "TAU: Caught signal %d (%s), dumping profile with stack trace: [rank=%d, pid=%d, tid=%d]... \n", sig,
+      strsignal(sig), RtsLayer::myNode(), getpid(), Tau_get_tid());
   TAU_METADATA("SIGNAL", strsignal(sig));
 
   TAU_PROFILE_EXIT("none");
@@ -291,68 +292,50 @@ void tauBacktraceHandler(int sig, siginfo_t *si, void *context)
   exit(1);
 }
 
-extern "C" int Tau_dump_callpaths();
+static void tauMemdbgHandler(int sig, siginfo_t *si, void *context)
+{
+  char eventname[1024];
 
-static void tauSignalHandler(int sig) {
-  Tau_global_incr_insideTAU();
-  if (TauEnv_get_sigusr1_action() == TAU_ACTION_DUMP_CALLPATHS) {
-    fprintf (stderr, "Caught SIGUSR1, dumping TAU callpath data\n");
-	Tau_dump_callpaths();
-  } else if (TauEnv_get_sigusr1_action() == TAU_ACTION_DUMP_BACKTRACES) {
-    fprintf (stderr, "Caught SIGUSR1, dumping backtrace data\n");
-  } else {
-    fprintf (stderr, "Caught SIGUSR1, dumping TAU profile data\n");
-    TAU_DB_DUMP_PREFIX("profile");
+  // Use the backtrace handler if this SIGSEGV wasn't due to invalid memory access
+  if (sig == SIGSEGV && si->si_code != SEGV_ACCERR) {
+    tauBacktraceHandler(sig, si, context);
+    return;
   }
-  Tau_global_decr_insideTAU();
-}
 
-static void tauToggleInstrumentationHandler(int sig) {
   Tau_global_incr_insideTAU();
-  fprintf (stderr, "Caught SIGUSR2, toggling TAU instrumentation\n");
-  if (RtsLayer::TheEnableInstrumentation()) {
-    RtsLayer::TheEnableInstrumentation() = false;
+
+  // Try to allocation information for the address
+  void * ptr = si->si_addr;
+  TauAllocation * alloc = TauAllocation::FindContaining(ptr);
+
+  // If allocation info was found, be more informative and maybe attempt to continue
+  if (alloc) {
+    TauAllocation::user_event_t * allocEvent = alloc->GetAllocationEvent();
+    if (allocEvent) {
+      sprintf(eventname, "Invalid memory access (%s)", allocEvent->GetEventName());
+    } else {
+      sprintf(eventname, "Invalid memory access (address=%p)", ptr);
+    }
+    if (alloc->InUpperGuard(ptr)) {
+      alloc->DisableUpperGuard();
+    } else if (alloc->InLowerGuard(ptr)) {
+      alloc->DisableLowerGuard();
+    } else {
+      TAU_VERBOSE("TAU: ERROR - invalid addr %p has allocation but isn't in a guarded range!\n");
+    }
   } else {
-    RtsLayer::TheEnableInstrumentation() = true;
+    sprintf(eventname, "Invalid memory access (address=%p)", ptr);
   }
+
+  // Trigger the event
+  TAU_REGISTER_CONTEXT_EVENT(evt, eventname);
+  TAU_CONTEXT_EVENT(evt, 1);
+
   Tau_global_decr_insideTAU();
 }
 
-#endif //TAU_DISABLE_SIGUSR
 
-int tau_initialized = 0;
-extern "C" int Tau_init_check_initialized() {
-  return tau_initialized;
-}
-
-#ifdef TAU_VAMPIRTRACE
-//////////////////////////////////////////////////////////////////////
-// Initialize VampirTrace Tracing package
-//////////////////////////////////////////////////////////////////////
-int Tau_init_vampirTrace(void) {
-  Tau_global_incr_insideTAU();
-  vt_open();
-  Tau_global_decr_insideTAU();
-  return 0;
-}
-#endif /* TAU_VAMPIRTRACE */
-
-
-#ifdef TAU_EPILOG 
-//////////////////////////////////////////////////////////////////////
-// Initialize EPILOG Tracing package
-//////////////////////////////////////////////////////////////////////
-int Tau_init_epilog(void) {
-  Tau_global_incr_insideTAU();
-  esd_open();
-  Tau_global_decr_insideTAU();
-  return 0;
-}
-#endif /* TAU_EPILOG */
-
-#ifndef TAU_DISABLE_SIGUSR
-
-int Tau_add_signal(int sig, tau_sighandler_t handler=tauBacktraceHandler)
+static int tauAddSignal(int sig, tau_sighandler_t handler = tauBacktraceHandler)
 {
   Tau_global_incr_insideTAU();
 
@@ -384,6 +367,53 @@ int Tau_add_signal(int sig, tau_sighandler_t handler=tauBacktraceHandler)
 
   return ret;
 }
+#endif //TAU_DISABLE_SIGUSR
+
+
+#ifdef TAU_VAMPIRTRACE
+//////////////////////////////////////////////////////////////////////
+// Initialize VampirTrace Tracing package
+//////////////////////////////////////////////////////////////////////
+int Tau_init_vampirTrace(void) {
+  vt_open();
+  return 0;
+}
+#endif /* TAU_VAMPIRTRACE */
+
+#ifdef TAU_EPILOG 
+//////////////////////////////////////////////////////////////////////
+// Initialize EPILOG Tracing package
+//////////////////////////////////////////////////////////////////////
+int Tau_init_epilog(void) {
+  esd_open();
+  return 0;
+}
+#endif /* TAU_EPILOG */
+
+extern "C"
+int Tau_init_check_initialized()
+{
+  return tau_initialized;
+}
+
+
+extern "C"
+int Tau_init_initializingTAU()
+{
+  return initializing - tau_initialized;
+}
+
+extern "C"
+void Tau_init_dl_initialized()
+{
+  dl_initialized = 1;
+}
+
+extern "C"
+int Tau_init_check_dl_initialized()
+{
+  return dl_initialized;
+}
 
 
 //////////////////////////////////////////////////////////////////////
@@ -392,48 +422,40 @@ int Tau_add_signal(int sig, tau_sighandler_t handler=tauBacktraceHandler)
 extern "C"
 int Tau_signal_initialization()
 {
+#ifndef TAU_DISABLE_SIGUSR
   Tau_global_incr_insideTAU();
 
   if (TauEnv_get_track_signals()) {
     TAU_VERBOSE("TAU: Enable signal tracking\n");
 
-    Tau_add_signal(SIGILL);
-    Tau_add_signal(SIGINT);
-    Tau_add_signal(SIGQUIT);
-    Tau_add_signal(SIGTERM);
-    Tau_add_signal(SIGPIPE);
-    Tau_add_signal(SIGABRT);
-    Tau_add_signal(SIGFPE);
-    Tau_add_signal(SIGSEGV);
-    Tau_add_signal(SIGBUS);
+    tauAddSignal(SIGILL);
+    tauAddSignal(SIGINT);
+    tauAddSignal(SIGQUIT);
+    tauAddSignal(SIGTERM);
+    tauAddSignal(SIGPIPE);
+    tauAddSignal(SIGABRT);
+    tauAddSignal(SIGFPE);
+    if (TauEnv_get_memdbg()) {
+      tauAddSignal(SIGBUS, tauMemdbgHandler);
+      tauAddSignal(SIGSEGV, tauMemdbgHandler);
+    } else {
+      tauAddSignal(SIGBUS);
+      tauAddSignal(SIGSEGV);
+    }
   }
 
   Tau_global_decr_insideTAU();
+#endif // TAU_DISABLE_SIGUSR
   return 0;
 }
 
-#endif // TAU_DISABLE_SIGUSR
-static int initializing = 0;
-
-// used if other components want to guard against operating while TAU is being
-// initialized.
-extern "C" int Tau_init_initializingTAU() {
-	return initializing - tau_initialized;
-}
-
-extern "C" int Tau_initialize_collector_api(void);
-
-extern "C" int Tau_init_initializeTAU() {
-	
-	//protect against reentrancy
-  if (initializing) {
-    return 0;
-  }
-
+extern "C" int Tau_init_initializeTAU()
+{
+  //protect against reentrancy
+  if (initializing) return 0;
+  initializing = 1;
 
   Tau_global_incr_insideTAU();
-  
-  initializing = 1;
 
   /* initialize the memory debugger */
   Tau_memory_initialize();
@@ -451,12 +473,11 @@ extern "C" int Tau_init_initializeTAU() {
   return 0;
 #endif
 
-
 #ifdef TAU_SCOREP
   /* no more initialization necessary if using SCOREP */
   initializing = 1;
   SCOREP_Tau_InitMeasurement();
-  SCOREP_Tau_RegisterExitCallback(Tau_profile_exit_all_threads); 
+  SCOREP_Tau_RegisterExitCallback(Tau_profile_exit_all_threads);
   return 0;
 #endif
 
@@ -466,12 +487,11 @@ extern "C" int Tau_init_initializeTAU() {
   Tau_init_vampirTrace();
   return 0;
 #endif
-  
+
   /* we need the timestamp of the "start" */
   Tau_snapshot_initialization();
 
 #ifndef TAU_DISABLE_SIGUSR
-  /* register SIGUSR1 handler */
   if (signal(SIGUSR1, tauSignalHandler) == SIG_ERR) {
     perror("failed to register TAU profile dump signal handler");
   }
@@ -481,24 +501,12 @@ extern "C" int Tau_init_initializeTAU() {
   }
 #endif
 
-
-
   Tau_profiler_initialization();
-
-  /********************************************/
-  /* other initialization code should go here */
-  /********************************************/
 
   /* initialize the metrics we will be counting */
   TauMetrics_init();
 
-#ifndef TAU_DISABLE_SIGUSR
   Tau_signal_initialization();
-#endif // TAU_DISABLE_SIGUSR
-
-  /* TAU must me marked as initialized BEFORE Tau_compensate_initialize is called
-     Otherwise re-entry to this function will take place and bad things will happen */
-  initializing = 1;
 
   /* initialize compensation */
   if (TauEnv_get_compensate()) {
@@ -507,24 +515,23 @@ extern "C" int Tau_init_initializeTAU() {
 
   /* initialize signal handlers to flush the trace buffer */
   if (TauEnv_get_tracing()) {
-    TauInitialize_kill_handlers();
+    tauInitializeKillHandlers();
   }
-  
+
   /* initialize sampling if requested */
-  if (TauEnv_get_ebs_enabled()) {
-    /* Work-around for MVAPHICH 2 to move sampling initialization to 
-       after MPI_Init()
-    */
 #if !defined(TAU_MPI) && !defined(TAU_WINDOWS)
+  if (TauEnv_get_ebs_enabled()) {
+    // Work-around for MVAPHICH 2 to move sampling initialization to after MPI_Init()
     Tau_sampling_init_if_necessary();
-#endif /* TAU_MPI && TAU_WINDOWS */
   }
+#endif /* TAU_MPI && TAU_WINDOWS */
+
 #ifdef TAU_PGI
   sbrk(102400);
 #endif /* TAU_PGI */
 
 #ifndef TAU_DISABLE_METADATA
-	Tau_metadata_fillMetaData();
+  Tau_metadata_fillMetaData();
 #endif
 
 #ifdef TAU_OPENMP
@@ -535,38 +542,21 @@ extern "C" int Tau_init_initializeTAU() {
   Tau_global_decr_insideTAU();
 
 #ifdef __MIC__
-	if (TauEnv_get_mic_offload())
-	{
-		TAU_PROFILE_SET_NODE(0);
-		Tau_create_top_level_timer_if_necessary();
-	}
+  if (TauEnv_get_mic_offload())
+  {
+    TAU_PROFILE_SET_NODE(0);
+    Tau_create_top_level_timer_if_necessary();
+  }
 #endif
 
-	//Initialize locks.
-	RtsLayer::Initialize();	
+  //Initialize locks.
+  RtsLayer::Initialize();
 
   return 0;
 }
 
-// Rely on the dl auditor (src/wrapper/taupreload) to set dl_initialized
-// if the audit feature is available (GLIBC version 2.4 or greater).
-// DO NOT declare static!
-#ifdef TAU_TRACK_LD_LOADER
-int dl_initialized = 0;
-#else
-int dl_initialized = 1;
-#endif
-
-extern "C" void Tau_init_dl_initialized()
-{
-  dl_initialized = 1;
-}
-extern "C" int Tau_init_check_dl_initialized()
-{
-  return dl_initialized;
-}
-
-extern "C" void Tau_assert_raise_error(const char* msg)
+extern "C"
+void Tau_assert_raise_error(const char* msg)
 {
   int nid = RtsLayer::myNode();
   int tid = RtsLayer::myThread();
