@@ -310,12 +310,8 @@ static void tauMemdbgHandler(int sig, siginfo_t *si, void *context)
 
   // If allocation info was found, be more informative and maybe attempt to continue
   if (alloc && TauEnv_get_memdbg_attempt_continue()) {
-    TauAllocation::user_event_t * allocEvent = alloc->GetAllocationEvent();
-    if (allocEvent) {
-      sprintf(eventname, "Invalid memory access (%s)", allocEvent->GetEventName());
-    } else {
-      sprintf(eventname, "Invalid memory access (address=%p)", ptr);
-    }
+
+    // Disable the guard page so we can resume
     if (alloc->InUpperGuard(ptr)) {
       alloc->DisableUpperGuard();
     } else if (alloc->InLowerGuard(ptr)) {
@@ -324,11 +320,20 @@ static void tauMemdbgHandler(int sig, siginfo_t *si, void *context)
       TAU_VERBOSE("TAU: ERROR - invalid addr %p has allocation but isn't in a guarded range!\n");
       tauBacktraceHandler(sig, si, context);
     }
+
     // Trigger the event
+    TauAllocation::user_event_t * allocEvent = alloc->GetAllocationEvent();
+    if (allocEvent) {
+      sprintf(eventname, "Invalid memory access (%s)", allocEvent->GetEventName());
+    } else {
+      sprintf(eventname, "Invalid memory access (address=%p)", ptr);
+    }
     TAU_REGISTER_CONTEXT_EVENT(evt, eventname);
     TAU_CONTEXT_EVENT(evt, 1);
+
     // Dump profiles
     TAU_DB_DUMP()
+
   } else {
     // No allocation info, so produce backtrace and exit
     tauBacktraceHandler(sig, si, context);
