@@ -51,84 +51,84 @@
 using namespace std;
 
 static char const * Tau_bfd_internal_getExecutablePath();
-static void Tau_bfd_internal_reinitializeBfd();
 
 struct TauBfdModule
 {
-	TauBfdModule() :
-		bfdImage(NULL), syms(NULL), nr_all_syms(0), bfdOpen(false),
-		lastResolveFailed(false),
-		processCode(TAU_BFD_SYMTAB_NOT_LOADED)
-	{ }
+  TauBfdModule() :
+      bfdImage(NULL), syms(NULL), nr_all_syms(0), bfdOpen(false),
+      lastResolveFailed(false), processCode(TAU_BFD_SYMTAB_NOT_LOADED)
+  { }
 
-	~TauBfdModule() {
-		free(syms);
-		delete bfdImage;
-	}
-
-        // Meant for consumption by the Intel12 workaround only.
-        void markLastResult(bool success) {
-            lastResolveFailed = !success;
-        }
-
-	bool loadSymbolTable(char const * path) {
+  ~TauBfdModule()
+  {
+    free(syms);
+    delete bfdImage;
+  }
 
 #ifdef TAU_INTEL12
-		// Nasty hack because Intel 12 is broken with Bfd 2.2x and
-		//   requires a complete reset of BFD. The latter's internals
-		//   becomes corrupted on a bad address from Intel 12 binaries.
-	  if (lastResolveFailed) {
-	    Tau_bfd_internal_reinitializeBfd();
-	    bfdOpen = false;
-	  }
+  // Meant for consumption by the Intel12 workaround only.
+  void markLastResult(bool success) {
+    lastResolveFailed = !success;
+  }
+#endif
+
+  bool loadSymbolTable(char const * path) {
+
+#ifdef TAU_INTEL12
+    // Nasty hack because Intel 12 is broken with Bfd 2.2x and
+    //   requires a complete reset of BFD. The latter's internals
+    //   becomes corrupted on a bad address from Intel 12 binaries.
+    if (lastResolveFailed) {
+      bfd_init();
+      bfdOpen = false;
+    }
 #endif /* TAU_INTEL12 */
 
-		// Executable symbol table is already loaded.
-		if (bfdOpen) return true;
+    // Executable symbol table is already loaded.
+    if (bfdOpen) return true;
 
-		Tau_bfd_initializeBfdIfNecessary();
+    Tau_bfd_initializeBfd();
 
-		if (!(bfdImage = bfd_openr(path, 0))) {
-			TAU_VERBOSE("loadSymbolTable: Failed to open [%s]\n", path);
-			return (bfdOpen = false);
-		}
+    if (!(bfdImage = bfd_openr(path, 0))) {
+      TAU_VERBOSE("loadSymbolTable: Failed to open [%s]\n", path);
+      return (bfdOpen = false);
+    }
 
-		if (!bfd_check_format(bfdImage, bfd_object)) {
-			TAU_VERBOSE("loadSymbolTable: bfd format check failed [%s]\n", path);
-			return (bfdOpen = false);
-		}
+    if (!bfd_check_format(bfdImage, bfd_object)) {
+      TAU_VERBOSE("loadSymbolTable: bfd format check failed [%s]\n", path);
+      return (bfdOpen = false);
+    }
 
-		if (!(bfd_get_file_flags(bfdImage) & HAS_SYMS)) {
-			TAU_VERBOSE("loadSymbolTable: bfd has no symbols [%s]\n", path);
-			return (bfdOpen = false);
-		}
+    if (!(bfd_get_file_flags(bfdImage) & HAS_SYMS)) {
+      TAU_VERBOSE("loadSymbolTable: bfd has no symbols [%s]\n", path);
+      return (bfdOpen = false);
+    }
 
-		size_t size = bfd_get_symtab_upper_bound(bfdImage);
-		if (size < 1) {
-			TAU_VERBOSE("loadSymbolTable: bfd_get_symtab_upper_bound() < 1 [%s]\n", path);
-			return (bfdOpen = false);
-		}
+    size_t size = bfd_get_symtab_upper_bound(bfdImage);
+    if (size < 1) {
+      TAU_VERBOSE("loadSymbolTable: bfd_get_symtab_upper_bound() < 1 [%s]\n", path);
+      return (bfdOpen = false);
+    }
 
-		syms = (asymbol **) malloc(size);
-		nr_all_syms = bfd_canonicalize_symtab(bfdImage, syms);
-		bfdOpen = nr_all_syms > 0;
+    syms = (asymbol **)malloc(size);
+    nr_all_syms = bfd_canonicalize_symtab(bfdImage, syms);
+    bfdOpen = nr_all_syms > 0;
 
-		TAU_VERBOSE("loadSymbolTable: %s contains %d canonical symbols\n",
-				path, nr_all_syms);
+    TAU_VERBOSE("loadSymbolTable: %s contains %d canonical symbols\n", path, nr_all_syms);
 
-		return bfdOpen;
-	}
+    return bfdOpen;
+  }
 
-	bfd *bfdImage;
-	asymbol **syms;
-	size_t nr_all_syms;
+  bfd *bfdImage;
+  asymbol **syms;
+  size_t nr_all_syms;
 
-	// For EBS book-keeping
-	bool bfdOpen; // once open, symtabs are loaded and never released
-        bool lastResolveFailed;
+  // For EBS book-keeping
+  bool bfdOpen;    // once open, symtabs are loaded and never released
+  bool lastResolveFailed;
 
-	// Remember the result of the last process to avoid reprocessing
-	int processCode;
+  // Remember the result of the last process to avoid reprocessing
+  int processCode;
 };
 
 
@@ -179,7 +179,6 @@ static int Tau_bfd_internal_getModuleIndex(
 		TauBfdUnit *unit, unsigned long probe_addr);
 static TauBfdModule * Tau_bfd_internal_getModuleFromIdx(
 		TauBfdUnit *unit, int moduleIndex);
-static void Tau_bfd_internal_addExeAddressMap();
 static void Tau_bfd_internal_locateAddress(
 		bfd *bfdptr, asection *section, void *data ATTRIBUTE_UNUSED);
 static void Tau_bfd_internal_updateProcSelfMaps(TauBfdUnit *unit);
@@ -194,10 +193,11 @@ static void Tau_bfd_internal_updateBGPMaps(TauBfdUnit *unit);
 // ensure that non-local static variables are initialised before being
 // used (Ref: Scott Meyers, Item 47 Eff. C++).
 //////////////////////////////////////////////////////////////////////
-std::vector<TauBfdUnit*>& ThebfdUnits(void)
+typedef std::vector<TauBfdUnit*> bfd_unit_vector_t;
+static bfd_unit_vector_t & ThebfdUnits(void)
 {
   // BFD units (e.g. executables and their dynamic libraries)
-  static std::vector<TauBfdUnit*> internal_bfd_units;
+  static bfd_unit_vector_t internal_bfd_units;
   return internal_bfd_units;
 }
 
@@ -205,11 +205,8 @@ std::vector<TauBfdUnit*>& ThebfdUnits(void)
 //
 // Main interface functions
 //
-void Tau_bfd_internal_reinitializeBfd() {
-  bfd_init();
-}
 
-void Tau_bfd_initializeBfdIfNecessary() {
+void Tau_bfd_initializeBfd() {
   static bool bfdInitialized = false;
   if (!bfdInitialized) {
     bfd_init();
@@ -337,15 +334,15 @@ static void Tau_bfd_internal_updateBGPMaps(TauBfdUnit *unit) {
 #endif /* TAU_BGP || TAU_BGQ */
 
 
-// *JCL* - Executables compiled by MinGW are strange beasts in that
-//         they use GNU debugger symbols, but are Windows executables.
-//         BFD support for windows is incomplete (e.g. dl_iterate_phdr
-//         is not implemented and probably never will be), so we must
-//         use the Windows API to walk through the PE imports directory
-//         to discover our external modules (e.g. DLLs).  However, we
-//         still need BFD to parse the GNU debugger symbols.  In fact,
-//         the DEBUG PE header of an executable produced by MinGW is
-//         just an empty table.
+// Executables compiled by MinGW are strange beasts in that
+// they use GNU debugger symbols, but are Windows executables.
+// BFD support for windows is incomplete (e.g. dl_iterate_phdr
+// is not implemented and probably never will be), so we must
+// use the Windows API to walk through the PE imports directory
+// to discover our external modules (e.g. DLLs).  However, we
+// still need BFD to parse the GNU debugger symbols.  In fact,
+// the DEBUG PE header of an executable produced by MinGW is
+// just an empty table.
 static void Tau_bfd_internal_updateWindowsMaps(TauBfdUnit *unit)
 {
 #if defined(TAU_WINDOWS) && defined(TAU_MINGW)
