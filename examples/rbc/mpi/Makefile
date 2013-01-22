@@ -11,16 +11,16 @@
 ##  Indiana University  University of Oregon  University of Rennes   ##
 #######################################################################
 
-EXE = simple
+EXE = matrix
 
-SRC = $(EXE).c
-OBJ = $(SRC:.c=.o)
+SRC = $(EXE).f90
+OBJ = $(SRC:.f90=.o)
 
-CC = tau_cc.sh
-LD = tau_cc.sh
+F90 = tau_f90.sh
+LD = tau_f90.sh
 
-CFLAGS  = -O2 -g -optKeepFiles
-LDFLAGS = 
+FFLAGS  = -O2 -g -optKeepFiles
+LDFLAGS =
 
 RM = /bin/rm -f
 
@@ -31,10 +31,10 @@ all: static dynamic
 	@echo "Please make run-static or run-dynamic"
 
 run-static: static
-	TAU_MEMDBG_PROTECT_ABOVE=1 ./$(EXE)-static
+	TAU_MEMDBG_PROTECT_ABOVE=1 mpirun -n 4 ./$(EXE)-static
 
 run-dynamic: dynamic
-	tau_exec -memory_debug -T serial,pdt ./$(EXE)-dynamic
+	mpirun -n 4 tau_exec -memory_debug -T mpi ./$(EXE)-dynamic
 
 static: $(OBJ)
 	$(LD) -optMemDbg $(LDFLAGS) $(OBJ) -o $(EXE)-static
@@ -42,9 +42,9 @@ static: $(OBJ)
 dynamic: $(OBJ)
 	$(LD) $(LDFLAGS) $(OBJ) -o $(EXE)-dynamic
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+%.o: %.f90
+	$(F90) $(FFLAGS) -c $< -o $@
 
 clean: 	
 	$(RM) $(OBJ) $(EXE)-static $(EXE)-dynamic
-	$(RM) *.inst.* *.pdb profile.*
+	$(RM) *.inst.* *.pdb *.mod profile.*

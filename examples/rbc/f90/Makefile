@@ -11,15 +11,15 @@
 ##  Indiana University  University of Oregon  University of Rennes   ##
 #######################################################################
 
-EXE = rbc
+EXE = simple
 
-SRC = $(wildcard *.f90)
+SRC = $(EXE).f90
 OBJ = $(SRC:.f90=.o)
 
 F90 = tau_f90.sh
 LD = tau_f90.sh
 
-FFLAGS  = -O2 -g -optMemDbg -optKeepFiles
+FFLAGS  = -O2 -g -optKeepFiles
 LDFLAGS =
 
 RM = /bin/rm -f
@@ -27,17 +27,24 @@ RM = /bin/rm -f
 
 ##############################################
 
-all: $(EXE)
+all: static dynamic
+	@echo "Please make run-static or run-dynamic"
 
-run: $(EXE)
-	tau_exec -memory_debug -T serial $(EXE)
+run-static: static
+	TAU_MEMDBG_PROTECT_ABOVE=1 ./$(EXE)-static
 
-$(EXE): $(OBJ)
-	$(LD) $(LDFLAGS) $(OBJ) -o $(EXE)
+run-dynamic: dynamic
+	tau_exec -memory_debug -T serial,pdt ./$(EXE)-dynamic
+
+static: $(OBJ)
+	$(LD) -optMemDbg $(LDFLAGS) $(OBJ) -o $(EXE)-static
+
+dynamic: $(OBJ)
+	$(LD) $(LDFLAGS) $(OBJ) -o $(EXE)-dynamic
 
 %.o: %.f90
 	$(F90) $(FFLAGS) -c $< -o $@
 
 clean: 	
-	$(RM) $(OBJ) $(EXE)
+	$(RM) $(OBJ) $(EXE)-static $(EXE)-dynamic
 	$(RM) *.inst.* *.pdb *.mod profile.*

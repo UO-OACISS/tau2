@@ -24,9 +24,7 @@ contains
      ! Write above A's end
      integer :: i
      write (*,*) 'Testing overflow.  Expect a segfault'
-     do i=1,N+1
-      A(i, i) = 1
-     end do
+     A(N+10, N) = 1
    end subroutine overflow_scratch
 
    subroutine underflow_scratch
@@ -48,7 +46,7 @@ program matrix
    use scratch
    call allocate_scratch( 1000 )
    call use_scratch
-   !call overflow_scratch
+   call overflow_scratch
    call underflow_scratch
    call deallocate_scratch
 end program matrix
