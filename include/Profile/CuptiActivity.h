@@ -30,6 +30,10 @@
 
 #define ACTIVITY_BUFFER_SIZE (4096 * 1024)
 
+extern "C" void Tau_cupti_find_context_event(
+						TauContextUserEvent** u, 
+						const char *name);
+
 extern "C" void Tau_cupti_register_metadata(
 						uint32_t deviceId,
 						GpuMetadata *metadata,
@@ -87,8 +91,6 @@ extern "C" void Tau_cupti_register_gpu_atomic_event(
 						uint32_t correlationId,
 						GpuEventAttributes *gpu_attributes,
 						int number_of_attributes);
-
-extern "C" void Tau_pure_context_userevent(void **ptr, std::string name);
 
 uint8_t *activityBuffer;
 CUpti_SubscriberHandle subscriber;
