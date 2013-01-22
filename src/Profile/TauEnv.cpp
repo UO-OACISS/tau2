@@ -152,6 +152,7 @@ using namespace std;
 #define TAU_MEMDBG_OVERHEAD_DEFAULT       0 // 0 => undefined, not zero
 #define TAU_MEMDBG_ALIGNMENT_DEFAULT      sizeof(int)
 #define TAU_MEMDBG_ZERO_MALLOC_DEFAULT    0
+#define TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT 1
 
 // forward declartion of cuserid. need for c++ compilers on Cray.
 extern "C" char *cuserid(char *);
@@ -495,6 +496,7 @@ static int env_memdbg_overhead = TAU_MEMDBG_OVERHEAD_DEFAULT;
 static size_t env_memdbg_overhead_value = 0;
 static size_t env_memdbg_alignment = TAU_MEMDBG_ALIGNMENT_DEFAULT;
 static int env_memdbg_zero_malloc = TAU_MEMDBG_ZERO_MALLOC_DEFAULT;
+static int env_memdbg_attempt_continue = TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT;
 
 #ifdef TAU_GPI 
 #include <GPI.h>
@@ -799,6 +801,10 @@ int TauEnv_get_memdbg_zero_malloc() {
   return env_memdbg_zero_malloc;
 }
 
+int TauEnv_get_memdbg_attempt_continue() {
+  return env_memdbg_attempt_continue;
+}
+
 
 /*********************************************************************
  * Initialize the TauEnv module, get configuration values
@@ -975,6 +981,16 @@ void TauEnv_initialize()
       } else {
         TAU_VERBOSE("TAU: Zero-size malloc will be flagged as error\n");
         TAU_METADATA("TAU_MEMDBG_ZERO_MALLOC", "off");
+      }
+
+      tmp = getconf("TAU_MEMDBG_ATTEMPT_CONTINUE");
+      env_memdbg_attempt_continue = parse_bool(tmp, env_memdbg_attempt_continue);
+      if(env_memdbg_attempt_continue) {
+        TAU_VERBOSE("TAU: Attempt to resume execution after memory error (only the first error will be recorded)\n");
+        TAU_METADATA("TAU_MEMDBG_ATTEMPT_CONTINUE", "on");
+      } else {
+        TAU_VERBOSE("TAU: The first memory error will halt execution and generate a backtrace\n");
+        TAU_METADATA("TAU_MEMDBG_ATTEMPT_CONTINUE", "off");
       }
 
     } // if (env_memdbg)

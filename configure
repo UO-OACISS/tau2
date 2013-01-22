@@ -216,7 +216,7 @@ if [ -f ${tauroot}/tools/src/contrib/CubeReader.jar ]  ; then
 echo " Copy ${tauroot}/tools/src/contrib/CubeReader.jar to $JARTARGET"
 cp ${tauroot}/tools/src/contrib/CubeReader.jar $JARTARGET
 else
-echo "ERROR: Tau doesn't have own copy of CabeReader.jar under ${tauroot}/tools/src/contrib/"
+echo "ERROR: Tau doesn't have own copy of CubeReader.jar under ${tauroot}/tools/src/contrib/"
 echo "       Please check the recent TAU distribution and report this bug to tau-bugs@cs.uoregon.edu"
 exit -1
 fi
@@ -7547,6 +7547,7 @@ cp ${tauroot}/tools/src/tauf90 $BINTARGET
 cp ${tauroot}/tools/src/tauex.multiple $BINTARGET
 cp ${tauroot}/tools/src/tau_cxx.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_cc.sh $BINTARGET
+cp ${tauroot}/tools/src/tau_show_libs $BINTARGET
 cp ${tauroot}/tools/src/tau_rewrite $BINTARGET
 cp ${tauroot}/tools/src/tau_pebil_rewrite $BINTARGET
 cp ${tauroot}/tools/src/tau_f90.sh $BINTARGET
