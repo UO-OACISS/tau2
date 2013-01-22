@@ -807,7 +807,7 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 
 		if (ShowConfirmation) {
 			int confirm = JOptionPane.showConfirmDialog(tree,
-					"Are you sure you want to permanently delete this item?",
+					"Are you sure you want to permanently delete this item from the database and all views?",
 					"Confirm Delete", JOptionPane.YES_NO_OPTION);
 
 			if (confirm != 0) {

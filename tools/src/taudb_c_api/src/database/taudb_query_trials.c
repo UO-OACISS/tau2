@@ -194,15 +194,49 @@ TAUDB_TRIAL* taudb_query_trials(TAUDB_CONNECTION* connection, boolean full, TAUD
 #ifdef TAUDB_DEBUG_DEBUG
   printf("Calling taudb_query_trials(%d, %p)\n", full, trial);
 #endif
-  char my_query[1024];
+  char my_query[4096]; // hopefully, this is long enough!
   if (trial->id > 0) { // the user wants a specific trial, so get it
     sprintf(my_query,"select * from trial where id = %d", trial->id);
-  } else {
-    sprintf(my_query,"select * from trial where");
-    if (trial->name != NULL) {
-      sprintf(my_query,"%s name = '%s'", my_query, trial->name);
-    } 
+  } else if (trial->name != NULL) {
+    sprintf(my_query,"select * from trial where name = '%s'", trial->name);
+  } else { 
+    sprintf(my_query,"select * from trial ");
+    char *where1 = "where id in (select pm0.trial from primary_metadata pm0 ";
+    char *join = "inner join primary_metadata pm%d on pm%d.trial = pm%d.trial";
+    char conjunction[128];
+	strcpy(conjunction, where1);
+	int index = 1;
+	// are there metadata fields?
+    TAUDB_PRIMARY_METADATA * current;
+    for (current = trial->primary_metadata; current != NULL;
+         current = taudb_next_primary_metadata_by_name_from_trial(current)) {
+      sprintf(my_query, "%s %s ", my_query, conjunction);
+      sprintf(conjunction, join, index, index, index-1);
+	  index = index + 1;
+    }
+	index = 0;
+    char *where2 = "where";
+    char *and = "and";
+	char *equals = "=";
+	char *like = "like";
+	char *comparison = equals;
+    char *conjunction2 = where2;
+    for (current = trial->primary_metadata; current != NULL;
+         current = taudb_next_primary_metadata_by_name_from_trial(current)) {
+      if (strstr(current->value, "%") == NULL) {
+	    comparison = equals;
+      } else {
+	    comparison = like;
+      }
+      sprintf(my_query, "%s %s pm%d.name = '%s' and pm%d.value %s '%s' ", my_query, conjunction2, index, current->name, index, comparison, current->value);
+      conjunction2 = and;
+	  index = index + 1;
+    }
+	if (conjunction2 == and) {
+      sprintf(my_query, "%s)", my_query);
+	}
   }
+  printf("%s\n", my_query);
   return taudb_private_query_trials(connection, full, my_query);
 }
 

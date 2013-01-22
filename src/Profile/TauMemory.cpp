@@ -66,100 +66,8 @@ using namespace std;
 #define  MAP_ANONYMOUS MAP_ANON
 #endif
 
-
-static int & TheTauMemoryWrapperPresent(void)
-{
-  static int flag = 0;
-  return flag;
-}
-
-extern "C"
-int Tau_memory_wrapper_present(void)
-{
-  return TheTauMemoryWrapperPresent();
-}
-
-extern "C"
-void Tau_set_memory_wrapper_present(int value)
-{
-  TheTauMemoryWrapperPresent() = value;
-}
-
-
-
-typedef unsigned char * addr_t;
-typedef TauContextUserEvent user_event_t;
-
-class TauAllocation
-{
-
-public:
-
-  typedef TAU_HASH_MAP<addr_t, class TauAllocation*> allocation_map_t;
-  static allocation_map_t & AllocationMap() {
-    static allocation_map_t alloc_map;
-    return alloc_map;
-  }
-
-  static TauAllocation * Find(allocation_map_t::key_type const & key) {
-    allocation_map_t const & alloc_map = AllocationMap();
-    allocation_map_t::const_iterator it = alloc_map.find(key);
-    if (it != alloc_map.end())
-      return it->second;
-    return NULL;
-  }
-
-  static size_t & BytesAllocated() {
-    // Not thread safe!
-    static size_t bytes = 0;
-    return bytes;
-  }
-
-  static void DetectLeaks(void);
-
-public:
-
-  TauAllocation() :
-    alloc_addr(NULL), alloc_size(0),
-    user_addr(NULL), user_size(0),
-    lguard_addr(NULL), lguard_size(0),
-    uguard_addr(NULL), uguard_size(0),
-    lgap_addr(NULL), lgap_size(0),
-    ugap_addr(NULL), ugap_size(0),
-    alloc_event(NULL)
-  { }
-
-  void * Allocate(size_t const size, size_t align, size_t min_align, const char * filename, int lineno);
-  void Deallocate(const char * filename, int lineno);
-
-  void TrackAllocation(void * ptr, size_t size, const char * filename, int lineno);
-  void TrackDeallocation(const char * filename, int lineno);
-
-private:
-
-  addr_t alloc_addr;    ///< Unadjusted address
-  size_t alloc_size;    ///< Unadjusted size
-  addr_t user_addr;     ///< Address presented to user
-  size_t user_size;     ///< Size requested by user
-  addr_t lguard_addr;   ///< Protected lower range address
-  size_t lguard_size;   ///< Protected lower range size
-  addr_t uguard_addr;   ///< Protected upper range address
-  size_t uguard_size;   ///< Protected upper range size
-  addr_t lgap_addr;     ///< Unprotected lower gap address
-  size_t lgap_size;     ///< Unprotected lower gap size
-  addr_t ugap_addr;     ///< Unprotected upper gap address
-  size_t ugap_size;     ///< Unprotected upper gap size
-
-  user_event_t * alloc_event; ///< Allocation event (for leak detection)
-
-  void ProtectPages(addr_t addr, size_t size);
-  void UnprotectPages(addr_t addr, size_t size);
-
-  unsigned long LocationHash(unsigned long hash, char const * data);
-  void TriggerAllocationEvent(char const * filename, int lineno);
-  void TriggerDeallocationEvent(char const * filename, int lineno);
-  void TriggerErrorEvent(char const * descript, char const * filename, int lineno);
-};
+// True if the memory wrapper is present
+int wrapper_present = 0;
 
 
 
@@ -370,8 +278,8 @@ void TauAllocation::DetectLeaks(void)
 
     leak_event_map_t::iterator jt = leak_map.find(event);
     if (jt == leak_map.end()) {
-      char * s = (char*)malloc(strlen(event->GetEventName())+32);
-      sprintf(s, "MEMORY LEAK! %s", event->GetEventName());
+      char * s = (char *)malloc(strlen(event->GetEventName())+128);
+      sprintf(s, "Memory Leak! %s", event->GetEventName());
       TauUserEvent * leak_event = new TauUserEvent(s);
       leak_map[event] = leak_event;
       leak_event->TriggerEvent(size);
@@ -381,6 +289,24 @@ void TauAllocation::DetectLeaks(void)
     }
   }
   Tau_global_decr_insideTAU();
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+TauAllocation * TauAllocation::FindContaining(void * ptr)
+{
+  Tau_global_incr_insideTAU();
+  static allocation_map_t const & allocMap = AllocationMap();
+
+  allocation_map_t::const_iterator it;
+  for(it = allocMap.begin(); it != allocMap.end(); it++) {
+    TauAllocation * const alloc = it->second;
+    if (alloc->Contains(ptr)) return alloc;
+  }
+
+  Tau_global_decr_insideTAU();
+  return NULL;
 }
 
 
@@ -728,6 +654,83 @@ void TauAllocation::TrackDeallocation(const char * filename, int lineno)
   Tau_global_decr_insideTAU();
 }
 
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void TauAllocation::EnableUpperGuard()
+{
+  if (uguard_addr) {
+    ProtectPages(uguard_addr, uguard_size);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void TauAllocation::DisableUpperGuard()
+{
+  if (uguard_addr) {
+    UnprotectPages(uguard_addr, uguard_size);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void TauAllocation::EnableLowerGuard()
+{
+  if (lguard_addr) {
+    ProtectPages(lguard_addr, lguard_size);
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void TauAllocation::DisableLowerGuard()
+{
+  if (lguard_addr) {
+    UnprotectPages(lguard_addr, lguard_size);
+  }
+}
+
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+extern "C"
+void Tau_memory_initialize(void)
+{
+  // Trigger the map's constructor
+  TauAllocation::AllocationMap().clear();
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+extern "C"
+int Tau_memory_is_wrapper_present(void)
+{
+  return wrapper_present;
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+extern "C"
+void Tau_memory_set_wrapper_present(int value)
+{
+  wrapper_present = value;
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+extern "C"
+int Tau_memory_is_tau_allocation(void * ptr)
+{
+  return TauAllocation::Find(ptr) != NULL;
+}
 
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
@@ -789,17 +792,13 @@ size_t Tau_get_bytes_allocated(void)
 extern "C"
 void Tau_track_memory_allocation(void * ptr, size_t size, char const * filename, int lineno)
 {
-  //printf("%s\n", __PRETTY_FUNCTION__); fflush(stdout);
-
   Tau_global_incr_insideTAU();
-  addr_t addr = (addr_t)ptr;
-  TauAllocation * alloc = TauAllocation::Find(addr);
+  TauAllocation * alloc = TauAllocation::Find(ptr);
   if (!alloc) {
-    //printf("%s: new TauAllocation for %p\n", __PRETTY_FUNCTION__, (char*)ptr); fflush(stdout);
     alloc = new TauAllocation;
     alloc->TrackAllocation(ptr, size, filename, lineno);
   } else {
-    TAU_VERBOSE("TAU: WARNING - Allocation record for %p already exists\n", addr);
+    TAU_VERBOSE("TAU: WARNING - Allocation record for %p already exists\n", ptr);
   }
   Tau_global_decr_insideTAU();
 }
@@ -811,14 +810,13 @@ extern "C"
 void Tau_track_memory_deallocation(void * ptr, char const * filename, int lineno)
 {
   Tau_global_incr_insideTAU();
-  addr_t addr = (addr_t)ptr;
-  TauAllocation * alloc = TauAllocation::Find(addr);
+  TauAllocation * alloc = TauAllocation::Find(ptr);
   if (alloc) {
     alloc->TrackDeallocation(filename, lineno);
     // TrackDeallocation triggers an event, so deleting alloc is not crazy
     delete alloc;
   } else {
-    TAU_VERBOSE("TAU: WARNING - No allocation record found for %p\n", addr);
+    TAU_VERBOSE("TAU: WARNING - No allocation record found for %p\n", ptr);
   }
   Tau_global_decr_insideTAU();
 }
@@ -875,10 +873,9 @@ extern "C"
 void Tau_free(void * ptr, char const * filename, int lineno)
 {
   if (ptr) {
-    addr_t addr = (addr_t)ptr;
-    TauAllocation * alloc = TauAllocation::Find(addr);
-
     Tau_global_incr_insideTAU();
+    TauAllocation * alloc = TauAllocation::Find(ptr);
+
     if (alloc) {
       if (TauEnv_get_memdbg()) {
         alloc->Deallocate(filename, lineno);
@@ -888,7 +885,7 @@ void Tau_free(void * ptr, char const * filename, int lineno)
       }
       delete alloc;
     } else {
-      TAU_VERBOSE("TAU: WARNING - Allocation record for %p not found.\n", addr);
+      TAU_VERBOSE("TAU: WARNING - Allocation record for %p not found.\n", ptr);
       free(ptr);
     }
     Tau_global_decr_insideTAU();
@@ -952,14 +949,13 @@ void * Tau_realloc(void * ptr, size_t size, const char * filename, int lineno)
 {
   Tau_global_incr_insideTAU();
   if (TauEnv_get_memdbg()) {
-    TauAllocation * alloc;
+    TauAllocation * alloc = NULL;
     if (ptr) {
-      addr_t addr = (addr_t)ptr;
-      alloc = TauAllocation::Find(addr);
+      alloc = TauAllocation::Find(ptr);
       if (alloc) {
         alloc->Deallocate(filename, lineno);
       } else {
-        TAU_VERBOSE("TAU: WARNING - Allocation record for %p not found.\n", addr);
+        TAU_VERBOSE("TAU: WARNING - Allocation record for %p not found.\n", ptr);
         free(ptr);
       }
     }
@@ -1031,6 +1027,113 @@ void * Tau_pvalloc(size_t size, const char * filename, int lineno)
 }
 #endif
 
+
+
+
+#if 0
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+extern "C"
+
+#undef memchr
+#undef memcmp
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+extern "C"
+void * Tau_memcpy(void *dst, const void *src, size_t size, const char * filename, int lineno)
+{
+  return memcpy(dst, src, size);
+}
+
+#undef memmove
+#undef memset
+
+int strcasecmp(const char *s1, const char *s2);
+
+int strncasecmp(const char *s1, const char *s2, size_t n);
+
+char *index(const char *s, int c);
+
+char *rindex(const char *s, int c);
+
+char *stpcpy(char *dest, const char *src);
+
+//char *strcat(char *dest, const char *src);
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+extern "C"
+char * Tau_strcat(char *dst, const char *src, const char * filename, int lineno)
+{
+  return strcat(dst, src);
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+extern "C"
+char * Tau_strncat(char *dst, const char *src, size_t size, const char * filename, int lineno)
+{
+  return strncat(dst, src, size);
+}
+
+char *strchr(const char *s, int c);
+
+#endif
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+
+int __tau_strcmp(char const * s1, char const * s2)
+{
+  while (*s1 || *s2) {
+    if (*s1 != *s2) return *s1 - *s2;
+    ++s1, ++s2;
+  }
+  return 0;
+}
+int Tau_strcmp(char const * s1, char const * s2, const char * filename, int lineno)
+{
+  // Maybe do something with filename/lineno...
+  Tau_global_incr_insideTAU();
+  int retval = __tau_strcmp(s1, s2);
+  Tau_global_decr_insideTAU();
+  return retval;
+}
+
+#if 0
+
+int strcoll(const char *s1, const char *s2);
+
+//char *strcpy(char *dest, const char *src);
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+extern "C"
+char * Tau_strcpy(char *dst, const char *src, const char * filename, int lineno)
+{
+  return strcpy(dst, src);
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+extern "C"
+char * Tau_strncpy(char *dst, const char *src, size_t size, const char * filename, int lineno)
+{
+  return strncpy(dst, src, size);
+}
+
+
+
+size_t strcspn(const char *s, const char *reject);
+
+#endif
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
@@ -1055,53 +1158,32 @@ char * Tau_strdup(const char *str, const char * filename, int lineno)
   return ptr;
 }
 
+#if 0
+char *strfry(char *string);
 
-//////////////////////////////////////////////////////////////////////
-// TODO: Docs
-//////////////////////////////////////////////////////////////////////
-extern "C"
-void * Tau_memcpy(void *dst, const void *src, size_t size, const char * filename, int lineno)
-{
-  return memcpy(dst, src, size);
-}
+size_t strlen(const char *s);
 
-//////////////////////////////////////////////////////////////////////
-// TODO: Docs
-//////////////////////////////////////////////////////////////////////
-extern "C"
-char * Tau_strcpy(char *dst, const char *src, const char * filename, int lineno)
-{
-  return strcpy(dst, src);
-}
+char *strncat(char *dest, const char *src, size_t n);
 
+int strncmp(const char *s1, const char *s2, size_t n);
 
-//////////////////////////////////////////////////////////////////////
-// TODO: Docs
-//////////////////////////////////////////////////////////////////////
-extern "C"
-char * Tau_strncpy(char *dst, const char *src, size_t size, const char * filename, int lineno)
-{
-  return strncpy(dst, src, size);
-}
+char *strncpy(char *dest, const char *src, size_t n);
 
+char *strpbrk(const char *s, const char *accept);
 
-//////////////////////////////////////////////////////////////////////
-// TODO: Docs
-//////////////////////////////////////////////////////////////////////
-extern "C"
-char * Tau_strcat(char *dst, const char *src, const char * filename, int lineno)
-{
-  return strcat(dst, src);
-}
+char *strrchr(const char *s, int c);
 
-//////////////////////////////////////////////////////////////////////
-// TODO: Docs
-//////////////////////////////////////////////////////////////////////
-extern "C"
-char * Tau_strncat(char *dst, const char *src, size_t size, const char * filename, int lineno)
-{
-  return strncat(dst, src, size);
-}
+char *strsep(char **stringp, const char *delim);
+
+size_t strspn(const char *s, const char *accept);
+
+char *strstr(const char *haystack, const char *needle);
+
+char *strtok(char *s, const char *delim);
+
+size_t strxfrm(char *dest, const char *src, size_t n);
+
+#endif
 
 /***************************************************************************
  * $RCSfile: TauMemory.cpp,v $   $Author: amorris $

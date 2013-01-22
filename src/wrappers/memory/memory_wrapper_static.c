@@ -7,7 +7,7 @@
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 ****************************************************************************/
 /****************************************************************************
-**	File 		      : memory_wrapper_link.c
+**	File 		      : memory_wrapper_static.c
 **	Description 	: TAU Profiling Package
 **	Contact		    : tau-bugs@cs.uoregon.edu
 **	Documentation	: See http://www.cs.uoregon.edu/research/tau
@@ -24,17 +24,17 @@
 #include <Profile/TauMemory.h>
 #include <memory_wrapper.h>
 
-void * __real_malloc(size_t size);
-void * __real_calloc(size_t count, size_t size);
-void __real_free(void * ptr);
+extern void * __real_malloc(size_t size);
+extern void * __real_calloc(size_t count, size_t size);
+extern void __real_free(void * ptr);
 #ifdef HAVE_MEMALIGN
-void * __real_memalign(size_t alignment, size_t size);
+extern void * __real_memalign(size_t alignment, size_t size);
 #endif
-int __real_posix_memalign(void **ptr, size_t alignment, size_t size);
-void * __real_realloc(void * ptr, size_t size);
-void * __real_valloc(size_t size);
+extern int __real_posix_memalign(void **ptr, size_t alignment, size_t size);
+extern void * __real_realloc(void * ptr, size_t size);
+extern void * __real_valloc(size_t size);
 #ifdef HAVE_PVALLOC
-void * __real_pvalloc(size_t size);
+extern void * __real_pvalloc(size_t size);
 #endif
 
 
@@ -47,16 +47,17 @@ int Tau_memory_wrapper_init(void)
   Tau_global_incr_insideTAU();
   Tau_init_initializeTAU();
   Tau_create_top_level_timer_if_necessary();
-  Tau_set_memory_wrapper_present(1);
+  Tau_memory_set_wrapper_present(1);
   Tau_global_decr_insideTAU();
   return 0;
 }
 
 int Tau_memory_wrapper_passthrough(void)
 {
-  return Tau_global_get_insideTAU()
-      || !Tau_init_check_initialized()
-      || Tau_global_getLightsOut();
+  // The order of these statements is important
+  return !Tau_init_check_initialized()
+      || Tau_global_getLightsOut()
+      || Tau_global_get_insideTAU();
 }
 
 
