@@ -10,34 +10,41 @@
 ##                  pC++/Sage++  Copyright (C) 1993,1995             ##
 ##  Indiana University  University of Oregon  University of Rennes   ##
 #######################################################################
- 
-EXE = rbc
 
-SRC = $(wildcard *.cpp)
+EXE = simple
+
+SRC = $(EXE).cpp
 OBJ = $(SRC:.cpp=.o)
 
 CXX = tau_cxx.sh
 LD = $(CXX)
 
-CXXFLAGS = -optMemDbg -O2 -g
+CXXFLAGS = -O2 -g -optKeepFiles
 LDFLAGS =
 
-RM 	      	= /bin/rm -f
+RM = /bin/rm -f
 
 
 ##############################################
 
-all: $(EXE)
+all: static dynamic
+	@echo "Please make run-static or run-dynamic"
 
-run: $(EXE)
-	TAU_MEMDBG_PROTECT_ABOVE=1 tau_exec -memory -T serial $(EXE)
+run-static: static
+	TAU_MEMDBG_PROTECT_ABOVE=1 ./$(EXE)-static
 
-$(EXE): $(OBJ)
-	$(LD) $(LDFLAGS) $(OBJ) -o $(EXE)
+run-dynamic: dynamic
+	tau_exec -memory_debug -T serial,pdt ./$(EXE)-dynamic
+
+static: $(OBJ)
+	$(LD) -optMemDbg $(LDFLAGS) $(OBJ) -o $(EXE)-static
+
+dynamic: $(OBJ)
+	$(LD) $(LDFLAGS) $(OBJ) -o $(EXE)-dynamic
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean: 	
-	$(RM) $(OBJ) $(EXE)
+	$(RM) $(OBJ) $(EXE)-static $(EXE)-dynamic
 	$(RM) *.inst.* *.pdb profile.*

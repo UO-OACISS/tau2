@@ -1,12 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
-// memalign and pvalloc tests are disabled by default
-// Uncomment these lines to enable those tests
-//#define HAVE_MEMALIGN 1
-//#define HAVE_PVALLOC 1
-
 #if defined(HAVE_MEMALIGN) || defined(HAVE_PVALLOC)
 #include <malloc.h>
 #endif
@@ -15,8 +9,8 @@
 #include <unistd.h>
 #endif
 
-#define DATA_COUNT 5
-#define OVERRUN    1
+#define DATA_COUNT 1024
+#define OVERRUN    10
 #define MAX_ALIGNMENT 16384
 
 int * malloc_data = NULL;
@@ -275,24 +269,6 @@ void test_overrun()
   fflush(stdout);
 }
 
-void test_underrun()
-{
-  int i;
-
-  printf("Testing underrun.  Expect a segfault.\n");
-
-  malloc_data = malloc(DATA_COUNT*sizeof(int));
-
-  // Write test
-  for(i=DATA_COUNT-1; i>=-OVERRUN; ++i) {
-    malloc_data[i] = i;
-  }
-
-  printf("done.\n");
-  fflush(stdout);
-}
-
-
 int main(int argc, char ** argv)
 {
   test_malloc();
@@ -308,13 +284,7 @@ int main(int argc, char ** argv)
 #endif
   test_free();
 
-#ifdef TEST_OVERRUN
   test_overrun();
-#endif
-
-#ifdef TEST_UNDERRUN
-  test_underrun();
-#endif
 
   return 0;
 }
