@@ -180,21 +180,20 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 #ifdef __ia64__
 	funcptr = *( void ** )func;
 #endif
+
+  if (executionFinished) return;
+
 	unsigned long addr = Tau_convert_ptr_to_unsigned_long(funcptr);
 
+  // Get previously hashed info, or efficiently create
+  // a new hash node if it didn't already exist
 	HashNode & hn = TheHashTable()[addr];
-	if (hn.excluded) {
-		return;
-	}
 
-	if (executionFinished) {
-		return;
-	}
+	// Skip excluded functions
+	if (hn.excluded) return;
 
 	//prevent entry into cyg_profile functions while still initializing TAU
-	if (Tau_init_initializingTAU()) {
-		return;
-	}
+	if (Tau_init_initializingTAU()) return;
 
 	int tid = Tau_get_tid();
 	Tau_global_incr_insideTAU();
@@ -232,7 +231,6 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 		if (RtsLayer::myNode() == -1) {
 		  TAU_PROFILE_SET_NODE(0);
 		}
-		Tau_global_decr_insideTAU();
 
 		// we register this here at the end so that it is called
 		// before the VT objects are destroyed.  Objects are destroyed and atexit targets are
@@ -249,10 +247,6 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 		return;
 	}
 	compInstDisabled[tid] = 1;
-
-	// Get previously hashed info, or efficiently create
-	// a new hash node if it didn't already exist
-	//HashNode & hn = TheHashTable()[addr];
 
 	// Start the timer if it's not an excluded function
 	if(hn.fi == NULL) {
@@ -295,12 +289,11 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 	}
 	Tau_start_timer(hn.fi, 0, tid);
 		
-	if (!(hn.fi->GetProfileGroup() & RtsLayer::TheProfileMask()))
-	{
+	if (!(hn.fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
 		//printf("COMP_GNU >>>>>>>>>> Excluding: %s, addr: %d, throttled.\n", hn.fi->GetName(), addr);
 		hn.excluded = true;
 	}
-		
+
 	// finished in this routine, allow entry
 	compInstDisabled[tid] = 0;
 	Tau_global_decr_insideTAU();
