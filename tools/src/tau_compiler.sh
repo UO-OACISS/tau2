@@ -567,8 +567,8 @@ for arg in "$@" ; do
 		    -optDetectMemoryLeaks|-optMemDbg)
 		  optMemDbg=$TRUE
 			optIncludes="$optIncludes $optIncludeMemory"
-			optTau="-memory $optTau"
-			echoIfDebug "\Including TauMemory directory for malloc/free replacement and calling tau_instrumentor with -memory"
+			optTau="$optTau"
+			echoIfDebug "\Including TauMemory directory for malloc/free replacement"
 			echoIfDebug "\tFrom optIncludes: $optIncludes"
 			;;
 		    -optCompile*)
