@@ -1315,14 +1315,14 @@ TAU_HASH_MAP<string, TauContextUserEvent *>& ThePureAtomicMap() {
   return pureAtomicMap;
 }
 
-extern "C" void Tau_pure_context_userevent(void **ptr, std::string name)
+extern "C" void Tau_pure_context_userevent(void **ptr, const char* name)
 {
   TauContextUserEvent *ue = 0;
   RtsLayer::LockEnv();
-  TAU_HASH_MAP<string, TauContextUserEvent *>::iterator it = ThePureAtomicMap().find(name);
+  TAU_HASH_MAP<string, TauContextUserEvent *>::iterator it = ThePureAtomicMap().find(string(name));
   if (it == ThePureAtomicMap().end()) {
-    ue = new TauContextUserEvent(name.c_str()); 
-    ThePureAtomicMap()[name] = ue;
+    ue = new TauContextUserEvent(name); 
+    ThePureAtomicMap()[string(name)] = ue;
   } else {
     ue = (*it).second;
   }
