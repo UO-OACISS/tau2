@@ -1,0 +1,48 @@
+#!/bin/sh
+
+usage()
+{
+    echo ""
+    echo "Usage: $0 <TAU_MAKEFILE>"
+    echo " lists the full path of the dependent system libraries (.a) needed to build an executable with TAU"
+    echo " e.g.,"
+    echo " $0 /usr/local/packages/tau/x86_64/lib/Makefile.tau-mpi-pdt"
+# Common options first
+}
+
+
+if [ $# = 0 ]; then
+    usage
+    exit 0;
+fi
+
+tau_makefile=$1
+config_arch=`grep ^CONFIG_ARCH $tau_makefile | sed -e 's/CONFIG_ARCH=//g'`
+tau_root=`grep ^TAU_PREFIX_INSTALL_DIR $tau_makefile | sed -e 's/TAU_PREFIX_INSTALL_DIR=//g'`
+
+linkcmd=`tau_cc.sh -show -tau_makefile=$tau_makefile `
+list=`eval $linkcmd -v 2>&1`
+libdirs=`echo $list | awk '{c=split($0, s); for(n=1; n<=c; ++n) print s[n] }' | grep '^.L' | sed -e 's/-L//'`
+libs=`echo $list | awk '{c=split($0, s); for(n=1; n<=c; ++n) print s[n] }' | grep '^.l' | sed -e 's/-l//'`
+tmpfile=taulibs.out.$$
+/bin/rm -f $tmpfile
+for i in $libs
+do
+#echo "LOOKING FOR lib$i.a in "
+  for j in $libdirs
+  do
+    #echo "IN LIBS= $j"
+    if [ -r $j/lib$i.a ] ; then
+      echo "FOUND $j/lib$i.a"  >> $tmpfile
+      #echo "FOUND $j/lib$i.a"  
+      continue 2
+    fi
+  done
+done
+prologue="extlibs = {"
+for i in `cat $tmpfile | grep FOUND  | sort | uniq | sed -e 's@FOUND @@g' | grep -v libtau-`
+do
+  echo "\"$i\"", 
+done
+
+/bin/rm -f $tmpfile
