@@ -152,7 +152,7 @@ using namespace std;
 #define TAU_MEMDBG_OVERHEAD_DEFAULT       0 // 0 => undefined, not zero
 #define TAU_MEMDBG_ALIGNMENT_DEFAULT      sizeof(int)
 #define TAU_MEMDBG_ZERO_MALLOC_DEFAULT    0
-#define TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT 1
+#define TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT 0
 
 // forward declartion of cuserid. need for c++ compilers on Cray.
 extern "C" char *cuserid(char *);
