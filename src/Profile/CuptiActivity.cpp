@@ -476,9 +476,8 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 
         std::string name;
         form_context_event_name(kernel, source, "Accesses to Global Memory", &name);
-        TauContextUserEvent* ga = NULL;
-        Tau_pure_context_userevent((void **) &ga, name);
-        ga->SetDisableContext(true);
+        TauContextUserEvent* ga;
+        Tau_cupti_find_context_event(&ga, name.c_str());
         eventMap[ga] = global_access->executed;
         int map_size = eventMap.size();
         GpuEventAttributes *map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
@@ -516,15 +515,13 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
         
         std::string name;
         form_context_event_name(kernel, source, "Branches Executed", &name);
-        TauContextUserEvent* be = NULL;
-        Tau_pure_context_userevent((void **) &be, name);
-        be->SetDisableContext(true);
+        TauContextUserEvent* be;
+        Tau_cupti_find_context_event(&be, name.c_str());
         eventMap[be] = branch->executed;
         
         form_context_event_name(kernel, source, "Branches Diverged", &name);
-        TauContextUserEvent* de = NULL;
-        Tau_pure_context_userevent((void **) &de, name);
-        de->SetDisableContext(true);
+        TauContextUserEvent* de;
+        Tau_cupti_find_context_event(&de, name.c_str());
         eventMap[de] = branch->diverged;
 
         GpuEventAttributes *map;

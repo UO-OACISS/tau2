@@ -1,5 +1,14 @@
 #include <Profile/TauGpuAdapterCupti.h>
 
+extern "C" void Tau_cupti_find_context_event(
+						TauContextUserEvent** u, 
+						const char *name
+						) {
+							Tau_pure_context_userevent((void **) u, name);
+							(*u)->SetDisableContext(true);
+						}
+      
+
 extern "C" void Tau_cupti_register_metadata(
 						uint32_t deviceId,
 						GpuMetadata *metadata, 
