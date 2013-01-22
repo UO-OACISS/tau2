@@ -518,7 +518,7 @@ void free_enabled(void * ptr)
 {
 #if 1
   if (!Tau_global_getLightsOut()) {
-    if (Tau_memory_is_tau_allocation(ptr)) {
+    if (Tau_init_check_initialized() && Tau_memory_is_tau_allocation(ptr)) {
       Tau_free(ptr, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_LINE);
     } else if (is_bootstrap(ptr)) {
       bootstrap_free(ptr);
@@ -620,39 +620,33 @@ int strcmp_bootstrap(char const * s1, char const * s2)
 // Enables for all threads (i.e. not thread safe)
 void Tau_memory_wrapper_enable(void)
 {
-  if (malloc_handle == malloc_disabled) {
-    malloc_handle = malloc_bootstrap;
-    calloc_handle = calloc_bootstrap;
-    realloc_handle = realloc_bootstrap;
-    memalign_handle = memalign_bootstrap;
-    posix_memalign_handle = posix_memalign_bootstrap;
-    valloc_handle = valloc_bootstrap;
-    pvalloc_handle = pvalloc_bootstrap;
-    free_handle = free_bootstrap;
-
+  malloc_handle = malloc_bootstrap;
+  calloc_handle = calloc_bootstrap;
+  realloc_handle = realloc_bootstrap;
+  memalign_handle = memalign_bootstrap;
+  posix_memalign_handle = posix_memalign_bootstrap;
+  valloc_handle = valloc_bootstrap;
+  pvalloc_handle = pvalloc_bootstrap;
+  free_handle = free_bootstrap;
 #if 0
     strcmp_handle = strcmp_bootstrap;
 #endif
-  }
 }
 
 // Disables for all threads (i.e. not thread safe)
 void Tau_memory_wrapper_disable(void)
 {
-  if (malloc_handle != malloc_disabled) {
-    malloc_handle = malloc_disabled;
-    calloc_handle = calloc_disabled;
-    free_handle = free_disabled;
-    memalign_handle = memalign_disabled;
-    posix_memalign_handle = posix_memalign_disabled;
-    realloc_handle = realloc_disabled;
-    valloc_handle = valloc_disabled;
-    pvalloc_handle = pvalloc_disabled;
-
+  malloc_handle = malloc_disabled;
+  calloc_handle = calloc_disabled;
+  free_handle = free_disabled;
+  memalign_handle = memalign_disabled;
+  posix_memalign_handle = posix_memalign_disabled;
+  realloc_handle = realloc_disabled;
+  valloc_handle = valloc_disabled;
+  pvalloc_handle = pvalloc_disabled;
 #if 0
     strcmp_handle = strcmp_disabled;
 #endif
-  }
 }
 
 

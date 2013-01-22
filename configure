@@ -7547,6 +7547,7 @@ cp ${tauroot}/tools/src/tauf90 $BINTARGET
 cp ${tauroot}/tools/src/tauex.multiple $BINTARGET
 cp ${tauroot}/tools/src/tau_cxx.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_cc.sh $BINTARGET
+cp ${tauroot}/tools/src/tau_show_libs $BINTARGET
 cp ${tauroot}/tools/src/tau_rewrite $BINTARGET
 cp ${tauroot}/tools/src/tau_pebil_rewrite $BINTARGET
 cp ${tauroot}/tools/src/tau_f90.sh $BINTARGET
