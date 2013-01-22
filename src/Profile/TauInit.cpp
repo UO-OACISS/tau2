@@ -170,6 +170,8 @@ static void tauMemdbgHandler(int sig, siginfo_t *si, void *context)
     return;
   }
 
+  TAU_REGISTER_CONTEXT_EVENT(evt, "Invalid memory access");
+
   Tau_global_incr_insideTAU();
 
   // Try to find allocation information for the address
@@ -191,14 +193,13 @@ static void tauMemdbgHandler(int sig, siginfo_t *si, void *context)
           RtsLayer::myNode(), getpid(), Tau_get_tid());
     }
 
-    // Record a backtrace
-    int backtraceCount = Tau_backtrace_record_backtrace(1);
-
-    // Trigger the event
-    TAU_REGISTER_CONTEXT_EVENT(evt, "Invalid memory access");
+    // Trigger the context event and record a backtrace
     TAU_CONTEXT_EVENT(evt, 1);
+    Tau_backtrace_record_backtrace(1);
 
   } else {
+    // Trigger the context event and record a backtrace
+    TAU_CONTEXT_EVENT(evt, 1);
     Tau_backtrace_exit_with_backtrace(1,
         "TAU: Memory debugger caught invalid memory access. "
         "Dumping profile with stack trace: [rank=%d, pid=%d, tid=%d]... \n",
