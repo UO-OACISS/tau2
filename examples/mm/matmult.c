@@ -26,7 +26,7 @@ This is not a parallel implementation */
 #endif /* PTHREADS */
 
 #ifndef MATRIX_SIZE
-#define MATRIX_SIZE 100
+#define MATRIX_SIZE 256
 #endif
 
 #define NRA MATRIX_SIZE                 /* number of rows in matrix A */
@@ -42,9 +42,11 @@ double** allocateMatrix(int rows, int cols) {
   return matrix;
 }
 
+#ifdef APP_USE_INLINE_MULTIPLY
 __inline double multiply(double a, double b) {
 	return a * b;
 }
+#endif /* APP_USE_INLINE_MULTIPLY */
 
 // cols_a and rows_b are the same value
 void compute_nested(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
@@ -60,7 +62,11 @@ void compute_nested(double **a, double **b, double **c, int rows_a, int cols_a, 
 #pragma omp for nowait
       for(j=0; j<cols_b; j++) {
         for (k=0; k<cols_a; k++) {
+#ifdef APP_USE_INLINE_MULTIPLY
           c[i][j] += multiply(a[i][k], b[k][j]);
+#else 
+          c[i][j] += a[i][k] * b[k][j];
+#endif 
         }
       }
       }
@@ -79,7 +85,11 @@ void compute(double **a, double **b, double **c, int rows_a, int cols_a, int col
     for (i=0; i<rows_a; i++) {
       for(j=0; j<cols_b; j++) {
         for (k=0; k<cols_a; k++) {
+#ifdef APP_USE_INLINE_MULTIPLY
           c[i][j] += multiply(a[i][k], b[k][j]);
+#else /* APP_USE_INLINE_MULTIPLY */
+          c[i][j] += a[i][k] * b[k][j];
+#endif /* APP_USE_INLINE_MULTIPLY */
         }
       }
     }
@@ -96,7 +106,11 @@ void compute_interchange(double **a, double **b, double **c, int rows_a, int col
     for (i=0; i<rows_a; i++) {
       for (k=0; k<cols_a; k++) {
         for(j=0; j<cols_b; j++) {
+#ifdef APP_USE_INLINE_MULTIPLY
           c[i][j] += multiply(a[i][k], b[k][j]);
+#else /* APP_USE_INLINE_MULTIPLY */
+          c[i][j] += a[i][k] * b[k][j];
+#endif /* APP_USE_INLINE_MULTIPLY */
         }
       }
     }
