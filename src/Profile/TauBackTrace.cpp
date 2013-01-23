@@ -17,10 +17,6 @@ using namespace std;
 #define TAU_EXECINFO 1
 #endif
 
-#if defined(TAU_STRSIGNAL_OK)
-extern "C" char *strsignal(int sig);
-#endif /* TAU_STRSIGNAL_OK */
-
 extern "C" void finalizeCallSites_if_necessary();
 
 struct BacktraceFrame

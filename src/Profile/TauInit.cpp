@@ -58,6 +58,10 @@ using namespace std;
 
 typedef void (*tau_sighandler_t)(int, siginfo_t*, void*);
 
+#if defined(TAU_STRSIGNAL_OK)
+extern "C" char *strsignal(int sig);
+#endif /* TAU_STRSIGNAL_OK */
+
 extern "C" void Tau_stack_initialization();
 extern "C" int Tau_compensate_initialization();
 extern "C" int Tau_profiler_initialization();
