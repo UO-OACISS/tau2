@@ -187,8 +187,8 @@ void taudb_save_threads(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolea
   
   TAUDB_THREAD *thread, *tmp;
   HASH_ITER(hh, trial->threads, thread, tmp) {
-    // make array of 5 character pointers
-    const char* paramValues[5] = {0};
+    // make array of 6 character pointers
+    const char* paramValues[6] = {0};
     char trialid[32] = {0};
     sprintf(trialid, "%d", trial->id);
     paramValues[0] = trialid;
