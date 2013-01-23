@@ -169,10 +169,21 @@ TAUDB_THREAD* taudb_get_thread(TAUDB_THREAD* threads, int index) {
 
 
 void taudb_save_threads(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
-  const char* my_query = "insert into thread (trial, node_rank, context_rank, thread_rank, thread_index) values ($1, $2, $3, $4, $5);";
-  const char* statement_name = "TAUDB_INSERT_THREAD";
-
-  taudb_prepare_statement(connection, statement_name, my_query, 5);
+  const char* my_query; 
+	const char* statement_name;
+  int nParams;
+	
+	if(update) {
+		nParams = 6;
+	  my_query = "update thread set trial=$1, node_rank=$2, context_rank=$3, thread_rank=$4, thread_index=$5 where id=$6;";
+	  statement_name = "TAUDB_UPDATE_THREAD";
+	} else {
+		nParams = 5;
+	  my_query = "insert into thread (trial, node_rank, context_rank, thread_rank, thread_index) values ($1, $2, $3, $4, $5);";
+	  statement_name = "TAUDB_INSERT_THREAD";
+	}
+	
+  taudb_prepare_statement(connection, statement_name, my_query, nParams);
   
   TAUDB_THREAD *thread, *tmp;
   HASH_ITER(hh, trial->threads, thread, tmp) {
@@ -194,18 +205,26 @@ void taudb_save_threads(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolea
     sprintf(thread_index, "%d", thread->index);
     paramValues[4] = thread_index;
 
-    taudb_execute_statement(connection, statement_name, 5, paramValues);
-    taudb_execute_query(connection, "select currval('thread_id_seq');");
+		if(update && thread->id > 0) {
+			char id[32] = {0};
+			sprintf(id, "%d", thread->id);
+			paramValues[5] = id;
+		}
 
-    int nRows = taudb_get_num_rows(connection);
-    if (nRows == 1) {
-      thread->id = atoi(taudb_get_value(connection, 0, 0));
-      //printf("New Thread: %d\n", thread->id);
-    } else {
-      printf("Failed.\n");
-    }
-	taudb_close_query(connection);
-  }
+    taudb_execute_statement(connection, statement_name, nParams, paramValues);
+		
+		if(!(update && thread->id >0)) {
+	    taudb_execute_query(connection, "select currval('thread_id_seq');");
+	    int nRows = taudb_get_num_rows(connection);
+	    if (nRows == 1) {
+	      thread->id = atoi(taudb_get_value(connection, 0, 0));
+	      //printf("New Thread: %d\n", thread->id);
+	    } else {
+	      printf("Failed.\n");
+	    }
+		taudb_close_query(connection);
+	  }
+	}
 
   taudb_clear_result(connection);
 }
