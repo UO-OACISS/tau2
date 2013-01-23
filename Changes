@@ -22,6 +22,13 @@ Version 2.22 changes (from 2.21):
 9. Added CUPTI support for Cray OpenACC compilers.
 10. Improved CUDA device to device communication profiling.
 11. Added support for PEBIL based binary rewriter (tau_pebil_rewrite). 
+12. Added support for DyninstAPI 8.0.
+13. Added support for runtime bounds checking (tau_exec -memory_debug, -optMemDbg)14. Throttling overhead reduced for multi-threaded code.
+15. TAU_TRACK_CUDA_INSTRUCTIONS=<instruction> added to track instructions by each GPU kernel. Uses -lineinfo passed to nvcc for enhanced source info. 
+16. ParaProf, PerfExplorer enhancements.
+17. tau_show_libs lists extra static libs that are needed to link in TAU for tau_rewrite, tau_run. 
+18. OpenMP bug fixes.
+
 
 Version 2.21 changes (from 2.20):
 1. Added support for rewriting binaries using Maqao (tau_rewrite) using PDT 3.17+.
