@@ -571,8 +571,8 @@ void TauAllocation::Deallocate(const char * filename, int lineno)
   Tau_global_incr_insideTAU();
 #if defined(TAU_WINDOWS)
 
-  addr_t tmp_addr = alloc->addr;
-  size_t tmp_size = alloc->size;
+  addr_t tmp_addr = alloc_addr;
+  size_t tmp_size = alloc_size;
   SIZE_T retQuery;
   MEMORY_BASIC_INFORMATION MemInfo;
   BOOL ret;
@@ -597,9 +597,9 @@ void TauAllocation::Deallocate(const char * filename, int lineno)
   }
 
   /* release virtual address space */
-  ret = VirtualFree((LPVOID)alloc->addr, (DWORD)0, (DWORD)MEM_RELEASE);
+  ret = VirtualFree((LPVOID)alloc_addr, (DWORD)0, (DWORD)MEM_RELEASE);
   if (!ret) {
-    TAU_VERBOSE("TAU: ERROR - VirtualFree(%p, %ld, MEM_RELEASE) failed\n", alloc->addr, alloc->size);
+    TAU_VERBOSE("TAU: ERROR - VirtualFree(%p, %ld, MEM_RELEASE) failed\n", alloc_addr, alloc_size);
   }
 
 #else
