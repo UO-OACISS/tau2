@@ -155,9 +155,11 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   //Need to keep track of all the groups this function is a member of.
   AllGroups = strip_tau_group(ProfileGroupName);
 
+#ifndef TAU_WINDOWS  
   // Necessary for signal-reentrancy to ensure the mmap memory manager
   //   is ready at this point.
   Tau_MemMgr_initIfNecessary(); 
+#endif  
   
   RtsLayer::LockDB();
   // Use LockDB to avoid a possible race condition.

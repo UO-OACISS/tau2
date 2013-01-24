@@ -26,7 +26,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <stdint.h>
+#include <tau_types.h>
 #include <Profile/Profiler.h>
 #include <Profile/TauMemory.h>
 #include <Profile/TauInit.h>
@@ -75,10 +75,10 @@ int wrapper_present = 0;
 // Uses Paul Hsieh's SuperFastHash, the same as in Google Chrome.
 unsigned long TauAllocation::LocationHash(unsigned long hash, char const * data)
 {
-#define get16bits(d) ((((uint32_t)(((const uint8_t *)(d))[1])) << 8)\
-                       +(uint32_t)(((const uint8_t *)(d))[0]) )
+#define get16bits(d) ((((x_uint32)(((const x_uint8 *)(d))[1])) << 8)\
+                       +(x_uint32)(((const x_uint8 *)(d))[0]) )
 
-  uint32_t tmp;
+  x_uint32 tmp;
   int len;
   int rem;
 
@@ -116,7 +116,7 @@ unsigned long TauAllocation::LocationHash(unsigned long hash, char const * data)
     hash += get16bits(data);
     tmp = (get16bits(data + 2) << 11) ^ hash;
     hash = (hash << 16) ^ tmp;
-    data += 2 * sizeof(uint16_t);
+    data += 2 * sizeof(x_uint16);
     hash += hash >> 11;
   }
 
@@ -124,7 +124,7 @@ unsigned long TauAllocation::LocationHash(unsigned long hash, char const * data)
   case 3:
     hash += get16bits(data);
     hash ^= hash << 16;
-    hash ^= ((signed char)data[sizeof(uint16_t)]) << 18;
+    hash ^= ((signed char)data[sizeof(x_uint16)]) << 18;
     hash += hash >> 11;
     break;
   case 2:
