@@ -69,8 +69,11 @@ using namespace std;
 // True if the memory wrapper is present
 int wrapper_present = 0;
 
-
-
+#ifdef __APPLE__
+#define HASH_PRECOMPUTE 2147483647L;
+#else
+#define HASH_PRECOMPUTE 7558261977980762395UL;
+#endif
 // Incremental string hashing function.
 // Uses Paul Hsieh's SuperFastHash, the same as in Google Chrome.
 unsigned long TauAllocation::LocationHash(unsigned long hash, char const * data)
@@ -96,7 +99,7 @@ unsigned long TauAllocation::LocationHash(unsigned long hash, char const * data)
     }
     if (len == TAU_MEMORY_UNKNOWN_FILE_STRLEN && *pu == *pd) {
       // Return the pre-computed hash.
-      return 7558261977980762395UL;
+      return HASH_PRECOMPUTE;
     } else {
       // Finish getting the length
       while (*pd) {
@@ -920,6 +923,7 @@ void * Tau_memalign(size_t alignment, size_t size, const char * filename, int li
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
+#ifndef __APPLE__
 extern "C"
 int Tau_posix_memalign(void **ptr, size_t alignment, size_t size,
     const char * filename, int lineno)
@@ -939,7 +943,7 @@ int Tau_posix_memalign(void **ptr, size_t alignment, size_t size,
 
   return retval;
 }
-#endif
+#endif //__APPLE__
 
 //////////////////////////////////////////////////////////////////////
 // Tau_realloc calls free_before, realloc and memory allocation tracking routine
