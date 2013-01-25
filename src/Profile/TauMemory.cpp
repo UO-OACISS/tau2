@@ -1092,36 +1092,12 @@ void * Tau_pvalloc(size_t size, const char * filename, int lineno)
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
-#ifdef HAVE_REALLOC
+#ifdef HAVE_REALLOCF
 extern "C"
 void * Tau_reallocf(void * ptr, size_t size, const char * filename, int lineno)
 {
-  Tau_global_incr_insideTAU();
-  if (TauEnv_get_memdbg()) {
-    TauAllocation * alloc = NULL;
-    if (ptr) {
-      alloc = TauAllocation::Find(ptr);
-      if (alloc) {
-        alloc->Deallocate(filename, lineno);
-      } else {
-        TAU_VERBOSE("TAU: WARNING - Allocation record for %p not found.\n", ptr);
-        free(ptr);
-      }
-    }
-    if (!alloc) {
-      alloc = new TauAllocation;
-    }
-    ptr = alloc->Allocate(size, 0, 0, filename, lineno);
-  } else {
-    if (ptr) {
-      Tau_track_memory_deallocation(ptr, filename, lineno);
-    }
-    ptr = realloc(ptr, size);
-    Tau_track_memory_allocation(ptr, size, filename, lineno);
-  }
-  Tau_global_decr_insideTAU();
-
-  return ptr;
+  // TODO: This needs to deallocate ptr when realloc fails
+  return Tau_realloc(ptr, size, filename, lineno);
 }
 #endif
 
