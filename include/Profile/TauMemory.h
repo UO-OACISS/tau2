@@ -22,14 +22,46 @@
 #ifndef _TAU_MEMORY_H_
 #define _TAU_MEMORY_H_
 
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
+#include <stdlib.h>
 #include <tau_internal.h>
 
-#if defined(__darwin__) || defined(__APPLE__) || defined(TAU_XLC) || defined(TAU_WINDOWS)
+#define HAVE_MALLOC 1
+#define HAVE_CALLOC 1
+#define HAVE_REALLOC 1
+#define HAVE_FREE 1
+
+#if defined(__APPLE__) || defined(TAU_XLC) || defined(TAU_WINDOWS)
 #undef HAVE_MEMALIGN
-#undef HAVE_PVALLOC
 #else
 #define HAVE_MEMALIGN 1
+#endif
+
+#if defined(TAU_WINDOWS) || (defined(__APPLE__) && (__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ + 0 < 1060))
+#undef HAVE_POSIX_MEMALIGN
+#else
+#define HAVE_POSIX_MEMALIGN 1
+#endif
+
+#if (defined(__APPLE__) && (__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ + 0 < 1060)) || defined(TAU_XLC) || defined(TAU_WINDOWS)
+#undef HAVE_VALLOC
+#else
+#define HAVE_VALLOC 1
+#endif
+
+#if defined(__APPLE__) || defined(TAU_XLC) || defined(TAU_WINDOWS)
+#undef HAVE_PVALLOC
+#else
 #define HAVE_PVALLOC 1
+#endif
+
+#if !defined(__APPLE__)
+#undef HAVE_REALLOCF
+#else
+#define HAVE_REALLOCF
 #endif
 
 #define TAU_MEMORY_UNKNOWN_LINE 0
@@ -60,9 +92,11 @@ public:
 
   static TauAllocation * Find(allocation_map_t::key_type const & key) {
     static allocation_map_t const & alloc_map = AllocationMap();
-    allocation_map_t::const_iterator it = alloc_map.find(key);
-    if (it != alloc_map.end())
-      return it->second;
+    if (key) {
+      allocation_map_t::const_iterator it = alloc_map.find(key);
+      if (it != alloc_map.end())
+        return it->second;
+    }
     return NULL;
   }
   static TauAllocation * Find(void * ptr) {
@@ -106,15 +140,13 @@ public:
     return lguard_addr && (lguard_addr <= ptr) && (ptr < (lguard_addr+lguard_size));
   }
 
-  user_event_t * GetAllocationEvent() const {
-    return alloc_event;
-  }
-
   void * Allocate(size_t const size, size_t align, size_t min_align, const char * filename, int lineno);
   void Deallocate(const char * filename, int lineno);
+  void * Reallocate(size_t const size, size_t align, size_t min_align, const char * filename, int lineno);
 
   void TrackAllocation(void * ptr, size_t size, const char * filename, int lineno);
   void TrackDeallocation(const char * filename, int lineno);
+  void TrackReallocation(void * ptr, size_t size, const char * filename, int lineno);
 
   void EnableUpperGuard();
   void DisableUpperGuard();
@@ -142,8 +174,8 @@ private:
   void UnprotectPages(addr_t addr, size_t size);
 
   unsigned long LocationHash(unsigned long hash, char const * data);
-  void TriggerAllocationEvent(char const * filename, int lineno);
-  void TriggerDeallocationEvent(char const * filename, int lineno);
+  void TriggerAllocationEvent(size_t size, char const * filename, int lineno);
+  void TriggerDeallocationEvent(size_t size, char const * filename, int lineno);
   void TriggerErrorEvent(char const * descript, char const * filename, int lineno);
 };
 #endif
@@ -167,6 +199,7 @@ size_t Tau_get_bytes_allocated(void);
 
 void Tau_track_memory_allocation(void *, size_t, char const *, int);
 void Tau_track_memory_deallocation(void *, char const *, int);
+void Tau_track_memory_reallocation(void *, void *, size_t, char const *, int);
 
 void * Tau_allocate_unprotected(size_t);
 

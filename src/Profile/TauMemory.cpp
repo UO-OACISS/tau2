@@ -19,10 +19,6 @@
 // Include Files 
 //////////////////////////////////////////////////////////////////////
 
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
-
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -69,11 +65,6 @@ using namespace std;
 // True if the memory wrapper is present
 int wrapper_present = 0;
 
-#ifdef __APPLE__
-#define HASH_PRECOMPUTE 2147483647L;
-#else
-#define HASH_PRECOMPUTE 7558261977980762395UL;
-#endif
 // Incremental string hashing function.
 // Uses Paul Hsieh's SuperFastHash, the same as in Google Chrome.
 unsigned long TauAllocation::LocationHash(unsigned long hash, char const * data)
@@ -84,6 +75,8 @@ unsigned long TauAllocation::LocationHash(unsigned long hash, char const * data)
   x_uint32 tmp;
   int len;
   int rem;
+
+  TAU_ASSERT((data != NULL), "Null string passed to TauAllocation::LocationHash");
 
   // Optimize for the common case
   if (hash == TAU_MEMORY_UNKNOWN_LINE) {
@@ -98,8 +91,9 @@ unsigned long TauAllocation::LocationHash(unsigned long hash, char const * data)
       ++len;
     }
     if (len == TAU_MEMORY_UNKNOWN_FILE_STRLEN && *pu == *pd) {
-      // Return the pre-computed hash.
-      return HASH_PRECOMPUTE;
+      // Return a portable special case hash, which is actually the hash of the
+      // null string with a zero seed, instead of the arch-dependent hash.
+      return 0;
     } else {
       // Finish getting the length
       while (*pd) {
@@ -156,10 +150,8 @@ unsigned long TauAllocation::LocationHash(unsigned long hash, char const * data)
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
-void TauAllocation::TriggerAllocationEvent(char const * filename, int lineno)
+void TauAllocation::TriggerAllocationEvent(size_t size, char const * filename, int lineno)
 {
-  Tau_global_incr_insideTAU();
-
   typedef TAU_HASH_MAP<unsigned long, user_event_t*> event_map_t;
   static event_map_t event_map;
 
@@ -182,19 +174,15 @@ void TauAllocation::TriggerAllocationEvent(char const * filename, int lineno)
   } else {
     alloc_event = it->second;
   }
-  alloc_event->TriggerEvent(user_size);
-
-  Tau_global_decr_insideTAU();
+  alloc_event->TriggerEvent(size);
 }
 
 
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
-void TauAllocation::TriggerDeallocationEvent(char const * filename, int lineno)
+void TauAllocation::TriggerDeallocationEvent(size_t size, char const * filename, int lineno)
 {
-  Tau_global_incr_insideTAU();
-
   typedef TAU_HASH_MAP<unsigned long, user_event_t*> event_map_t;
   static event_map_t event_map;
 
@@ -218,9 +206,7 @@ void TauAllocation::TriggerDeallocationEvent(char const * filename, int lineno)
   } else {
     e = it->second;
   }
-  e->TriggerEvent(user_size);
-
-  Tau_global_decr_insideTAU();
+  e->TriggerEvent(size);
 }
 
 
@@ -229,8 +215,6 @@ void TauAllocation::TriggerDeallocationEvent(char const * filename, int lineno)
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::TriggerErrorEvent(char const * descript, char const * filename, int lineno)
 {
-  Tau_global_incr_insideTAU();
-
   typedef TAU_HASH_MAP<unsigned long, user_event_t*> event_map_t;
   static event_map_t event_map;
 
@@ -245,10 +229,10 @@ void TauAllocation::TriggerErrorEvent(char const * descript, char const * filena
         !(strncmp(filename, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_FILE_STRLEN)))
     {
       s = (char*)malloc(strlen(descript)+128);
-      sprintf(s, "MEMORY ERROR! %s", descript);
+      sprintf(s, "Memory Error! %s", descript);
     } else {
       s = (char*)malloc(strlen(descript)+strlen(filename)+128);
-      sprintf(s, "MEMORY ERROR! %s <file=%s, line=%d>", descript, filename, lineno);
+      sprintf(s, "Memory Error! %s <file=%s, line=%d>", descript, filename, lineno);
     }
     e = new user_event_t(s);
     event_map[file_hash] = e;
@@ -256,9 +240,7 @@ void TauAllocation::TriggerErrorEvent(char const * descript, char const * filena
   } else {
     e = it->second;
   }
-  e->TriggerEvent(user_size);
-
-  Tau_global_decr_insideTAU();
+  e->TriggerEvent(1);
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -266,8 +248,6 @@ void TauAllocation::TriggerErrorEvent(char const * descript, char const * filena
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::DetectLeaks(void)
 {
-  Tau_global_incr_insideTAU();
-
   typedef TAU_HASH_MAP<user_event_t*, TauUserEvent*> leak_event_map_t;
   static leak_event_map_t leak_map;
 
@@ -291,7 +271,6 @@ void TauAllocation::DetectLeaks(void)
       jt->second->TriggerEvent(size);
     }
   }
-  Tau_global_decr_insideTAU();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -299,7 +278,6 @@ void TauAllocation::DetectLeaks(void)
 //////////////////////////////////////////////////////////////////////
 TauAllocation * TauAllocation::FindContaining(void * ptr)
 {
-  Tau_global_incr_insideTAU();
   static allocation_map_t const & allocMap = AllocationMap();
 
   allocation_map_t::const_iterator it;
@@ -308,7 +286,6 @@ TauAllocation * TauAllocation::FindContaining(void * ptr)
     if (alloc->Contains(ptr)) return alloc;
   }
 
-  Tau_global_decr_insideTAU();
   return NULL;
 }
 
@@ -318,7 +295,6 @@ TauAllocation * TauAllocation::FindContaining(void * ptr)
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::ProtectPages(addr_t addr, size_t size)
 {
-  Tau_global_incr_insideTAU();
 #if defined(TAU_WINDOWS)
 
   SIZE_T OldProtect, retQuery;
@@ -348,7 +324,6 @@ void TauAllocation::ProtectPages(addr_t addr, size_t size)
   }
 
 #endif
-  Tau_global_decr_insideTAU();
 }
 
 
@@ -357,7 +332,6 @@ void TauAllocation::ProtectPages(addr_t addr, size_t size)
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::UnprotectPages(addr_t addr, size_t size)
 {
-  Tau_global_incr_insideTAU();
 #if defined(TAU_WINDOWS)
 
   SIZE_T OldProtect, retQuery;
@@ -387,7 +361,6 @@ void TauAllocation::UnprotectPages(addr_t addr, size_t size)
   }
 
 #endif
-  Tau_global_decr_insideTAU();
 }
 
 
@@ -403,12 +376,9 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
   static bool const PROTECT_ABOVE = TauEnv_get_memdbg_protect_above();
   static bool const PROTECT_BELOW = TauEnv_get_memdbg_protect_below();
 
-  Tau_global_incr_insideTAU();
-
   // Check size
   if (!size && !TauEnv_get_memdbg_zero_malloc()) {
     TriggerErrorEvent("Allocation of zero bytes.", filename, lineno);
-    Tau_global_decr_insideTAU();
     return NULL;
   }
 
@@ -428,7 +398,6 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
   // Alignment must be a power of two
   if ((int)align != ((int)align & -(int)align)) {
     TriggerErrorEvent("Alignment is not a power of two", filename, lineno);
-    Tau_global_decr_insideTAU();
     return NULL;
   }
 
@@ -437,7 +406,6 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
     char s[256];
     sprintf(s, "Alignment is not a multiple of %d", min_align);
     TriggerErrorEvent(s, filename, lineno);
-    Tau_global_decr_insideTAU();
     return NULL;
   }
 
@@ -456,7 +424,6 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
   alloc_addr = (addr_t)VirtualAlloc(NULL, (DWORD)alloc_size, (DWORD)MEM_COMMIT, (DWORD)PAGE_READWRITE);
   if (!alloc_addr) {
     TAU_VERBOSE("TAU: ERROR - VirtualAlloc(%ld) failed\n", alloc_size);
-    Tau_global_decr_insideTAU();
     return NULL;
   }
 
@@ -471,7 +438,6 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
   if (fd == -1) {
     if ((fd = open("/dev/zero", O_RDWR)) < 0) {
       TAU_VERBOSE("TAU: ERROR - open() on /dev/zero failed\n");
-      Tau_global_decr_insideTAU();
       return NULL;
     }
   }
@@ -480,7 +446,6 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
 
   if (alloc_addr == MAP_FAILED) {
     TAU_VERBOSE("TAU: ERROR - mmap(%ld) failed\n", alloc_size);
-    Tau_global_decr_insideTAU();
     return NULL;
   }
 
@@ -552,7 +517,7 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
 
   BytesAllocated() += user_size;
   AllocationMap()[user_addr] = this;
-  TriggerAllocationEvent(filename, lineno);
+  TriggerAllocationEvent(user_size, filename, lineno);
 
 //  printf("%s:%d :: alloc=(%p, %ld), user=(%p, %ld), "
 //      "lguard=(%p, %ld), uguard=(%p, %ld), lgap=(%p, %ld), ugap=(%p, %ld)\n",
@@ -562,7 +527,6 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
 //  fflush(stdout);
 
   // All done with bookkeeping, get back to the user
-  Tau_global_decr_insideTAU();
   return user_addr;
 }
 
@@ -571,7 +535,6 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::Deallocate(const char * filename, int lineno)
 {
-  Tau_global_incr_insideTAU();
 #if defined(TAU_WINDOWS)
 
   addr_t tmp_addr = alloc_addr;
@@ -611,7 +574,9 @@ void TauAllocation::Deallocate(const char * filename, int lineno)
     TAU_VERBOSE("TAU: ERROR - munmap(%p, %ld) failed\n", alloc_addr, alloc_size);
   }
 
-  TriggerDeallocationEvent(filename, lineno);
+#endif
+
+  TriggerDeallocationEvent(user_size, filename, lineno);
   BytesAllocated() -= user_size;
   AllocationMap().erase(user_addr);
 
@@ -619,30 +584,45 @@ void TauAllocation::Deallocate(const char * filename, int lineno)
   alloc_size = 0;
   user_addr = NULL;
   user_size = 0;
-
-#endif
-  Tau_global_decr_insideTAU();
 }
 
 
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
+void * TauAllocation::Reallocate(size_t size, size_t align, size_t min_align,
+    const char * filename, int lineno)
+{
+  TauAllocation old_alloc = *this;
+  size_t copy_size = (size > user_size) ? user_size : size;
+
+  void * ptr = Allocate(size, align, min_align, filename, lineno);
+  if (ptr) {
+    memcpy(ptr, (void*)old_alloc.user_addr, copy_size);
+    old_alloc.Deallocate(filename, lineno);
+  }
+  return ptr;
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
 void TauAllocation::TrackAllocation(void * ptr, size_t size, const char * filename, int lineno)
 {
-  Tau_global_incr_insideTAU();
   addr_t addr = (addr_t)ptr;
 
-  if (!alloc_addr) {
-    alloc_addr = addr;
-    alloc_size = size;
-    user_addr = addr;
-    user_size = size;
+  if (size) {
+    if (!alloc_addr) {
+      alloc_addr = addr;
+      alloc_size = size;
+      user_addr = addr;
+      user_size = size;
+    }
+    AllocationMap()[user_addr] = this;
+    TriggerAllocationEvent(user_size, filename, lineno);
+  } else if (!TauEnv_get_memdbg_zero_malloc()) {
+    TriggerErrorEvent("Allocation of zero bytes.", filename, lineno);
   }
-
-  AllocationMap()[user_addr] = this;
-  TriggerAllocationEvent(filename, lineno);
-  Tau_global_decr_insideTAU();
 }
 
 
@@ -651,10 +631,40 @@ void TauAllocation::TrackAllocation(void * ptr, size_t size, const char * filena
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::TrackDeallocation(const char * filename, int lineno)
 {
-  Tau_global_incr_insideTAU();
-  TriggerDeallocationEvent(filename, lineno);
+  TriggerDeallocationEvent(user_size, filename, lineno);
   AllocationMap().erase(user_addr);
-  Tau_global_decr_insideTAU();
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void TauAllocation::TrackReallocation(void * ptr, size_t size, const char * filename, int lineno)
+{
+  addr_t addr = (addr_t)ptr;
+
+  // Don't do anything if nothing changed
+  if (user_addr == addr && user_size == size) return;
+
+  if (user_addr) {
+    if (size) {
+      if (user_addr == addr) {
+        if (user_size > size) {
+          TriggerDeallocationEvent(user_size - size, filename, lineno);
+        } else {
+          TriggerAllocationEvent(size - user_size, filename, lineno);
+        }
+        user_size = size;
+        alloc_size = size;
+      } else {
+        TrackDeallocation(filename, lineno);
+        TrackAllocation(ptr, size, filename, lineno);
+      }
+    } else {
+      TrackDeallocation(filename, lineno);
+    }
+  } else {
+    TrackAllocation(ptr, size, filename, lineno);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -824,10 +834,27 @@ void Tau_track_memory_deallocation(void * ptr, char const * filename, int lineno
   Tau_global_decr_insideTAU();
 }
 
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+extern "C"
+void Tau_track_memory_reallocation(void * newPtr, void * ptr, size_t size,
+    char const * filename, int lineno)
+{
+  Tau_global_incr_insideTAU();
+  TauAllocation * alloc = TauAllocation::Find(ptr);
+  if (!alloc) {
+    alloc = new TauAllocation;
+  }
+  alloc->TrackReallocation(newPtr, size, filename, lineno);
+  Tau_global_decr_insideTAU();
+}
+
 
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
+#ifdef HAVE_MALLOC
 extern "C"
 void * Tau_malloc(size_t size, const char * filename, int lineno)
 {
@@ -845,11 +872,13 @@ void * Tau_malloc(size_t size, const char * filename, int lineno)
 
   return ptr;
 }
+#endif
 
 
 //////////////////////////////////////////////////////////////////////
 // Tau_calloc calls the before and after routines and allocates memory
 //////////////////////////////////////////////////////////////////////
+#ifdef HAVE_CALLOC
 extern "C"
 void * Tau_calloc(size_t count, size_t size, const char * filename, int lineno)
 {
@@ -867,11 +896,13 @@ void * Tau_calloc(size_t count, size_t size, const char * filename, int lineno)
 
   return ptr;
 }
+#endif
 
 
 //////////////////////////////////////////////////////////////////////
 // Tau_free calls Tau_free_before and free's the memory allocated
 //////////////////////////////////////////////////////////////////////
+#ifdef HAVE_FREE
 extern "C"
 void Tau_free(void * ptr, char const * filename, int lineno)
 {
@@ -894,6 +925,7 @@ void Tau_free(void * ptr, char const * filename, int lineno)
     Tau_global_decr_insideTAU();
   }
 }
+#endif
 
 
 //////////////////////////////////////////////////////////////////////
@@ -919,11 +951,10 @@ void * Tau_memalign(size_t alignment, size_t size, const char * filename, int li
 }
 #endif
 
-#ifndef TAU_WINDOWS
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
-#ifndef __APPLE__
+#ifdef HAVE_POSIX_MEMALIGN
 extern "C"
 int Tau_posix_memalign(void **ptr, size_t alignment, size_t size,
     const char * filename, int lineno)
@@ -943,12 +974,12 @@ int Tau_posix_memalign(void **ptr, size_t alignment, size_t size,
 
   return retval;
 }
-#endif //__APPLE__
-#endif //TAU_WINDOWS
+#endif
 
 //////////////////////////////////////////////////////////////////////
-// Tau_realloc calls free_before, realloc and memory allocation tracking routine
+// TODO: Docs
 //////////////////////////////////////////////////////////////////////
+#ifdef HAVE_REALLOC
 extern "C"
 void * Tau_realloc(void * ptr, size_t size, const char * filename, int lineno)
 {
@@ -956,34 +987,58 @@ void * Tau_realloc(void * ptr, size_t size, const char * filename, int lineno)
   if (TauEnv_get_memdbg()) {
     TauAllocation * alloc = NULL;
     if (ptr) {
-      alloc = TauAllocation::Find(ptr);
-      if (alloc) {
-        alloc->Deallocate(filename, lineno);
+      if (size) {
+        alloc = TauAllocation::Find(ptr);
+        if (alloc) {
+          ptr = alloc->Reallocate(size, 0, 0, filename, lineno);
+        } else {
+          // Trying to resize an allocation made outside TAU
+          // Use system's realloc so we know the allocation size then copy
+          // to a guarded allocation
+          TAU_VERBOSE("TAU: WARNING - Allocation record for %p not found.\n", ptr);
+          void * tmpPtr = realloc(ptr, size);
+          if (tmpPtr) {
+            alloc = new TauAllocation;
+            void * newPtr = alloc->Allocate(size, 0, 0, filename, lineno);
+            memcpy(newPtr, tmpPtr, size);
+            free(tmpPtr);
+            ptr = newPtr;
+          } else {
+            // If the system realloc failed then we aren't going to succeed either
+            ptr = NULL;
+          }
+        }
       } else {
-        TAU_VERBOSE("TAU: WARNING - Allocation record for %p not found.\n", ptr);
-        free(ptr);
+        // Calling realloc with size == 0 is the same as calling free(ptr)
+        alloc = TauAllocation::Find(ptr);
+        if (alloc) {
+          alloc->Deallocate(filename, lineno);
+          delete alloc;
+        } else {
+          TAU_VERBOSE("TAU: WARNING - Allocation record for %p not found.\n", ptr);
+          free(ptr);
+        }
+        ptr = NULL;
       }
-    }
-    if (!alloc) {
+    } else {
       alloc = new TauAllocation;
+      ptr = alloc->Allocate(size, 0, 0, filename, lineno);
     }
-    ptr = alloc->Allocate(size, 0, 0, filename, lineno);
   } else {
-    if (ptr) {
-      Tau_track_memory_deallocation(ptr, filename, lineno);
-    }
-    ptr = realloc(ptr, size);
-    Tau_track_memory_allocation(ptr, size, filename, lineno);
+    void * newPtr = realloc(ptr, size);
+    Tau_track_memory_reallocation(newPtr, ptr, size, filename, lineno);
+    ptr = newPtr;
   }
   Tau_global_decr_insideTAU();
 
   return ptr;
 }
+#endif
 
-#ifndef TAU_WINDOWS
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
+#ifdef HAVE_VALLOC
 extern "C"
 void * Tau_valloc(size_t size, const char * filename, int lineno)
 {
@@ -1001,7 +1056,7 @@ void * Tau_valloc(size_t size, const char * filename, int lineno)
 
   return ptr;
 }
-#endif //TAU_WINDOWS
+#endif
 
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
@@ -1034,7 +1089,41 @@ void * Tau_pvalloc(size_t size, const char * filename, int lineno)
 }
 #endif
 
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+#ifdef HAVE_REALLOC
+extern "C"
+void * Tau_reallocf(void * ptr, size_t size, const char * filename, int lineno)
+{
+  Tau_global_incr_insideTAU();
+  if (TauEnv_get_memdbg()) {
+    TauAllocation * alloc = NULL;
+    if (ptr) {
+      alloc = TauAllocation::Find(ptr);
+      if (alloc) {
+        alloc->Deallocate(filename, lineno);
+      } else {
+        TAU_VERBOSE("TAU: WARNING - Allocation record for %p not found.\n", ptr);
+        free(ptr);
+      }
+    }
+    if (!alloc) {
+      alloc = new TauAllocation;
+    }
+    ptr = alloc->Allocate(size, 0, 0, filename, lineno);
+  } else {
+    if (ptr) {
+      Tau_track_memory_deallocation(ptr, filename, lineno);
+    }
+    ptr = realloc(ptr, size);
+    Tau_track_memory_allocation(ptr, size, filename, lineno);
+  }
+  Tau_global_decr_insideTAU();
 
+  return ptr;
+}
+#endif
 
 
 #if 0
@@ -1090,7 +1179,6 @@ char * Tau_strncat(char *dst, const char *src, size_t size, const char * filenam
 
 char *strchr(const char *s, int c);
 
-#endif
 
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
@@ -1113,7 +1201,6 @@ int Tau_strcmp(char const * s1, char const * s2, const char * filename, int line
   return retval;
 }
 
-#if 0
 
 int strcoll(const char *s1, const char *s2);
 
@@ -1140,7 +1227,6 @@ char * Tau_strncpy(char *dst, const char *src, size_t size, const char * filenam
 
 size_t strcspn(const char *s, const char *reject);
 
-#endif
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
@@ -1165,7 +1251,6 @@ char * Tau_strdup(const char *str, const char * filename, int lineno)
   return ptr;
 }
 
-#if 0
 char *strfry(char *string);
 
 size_t strlen(const char *s);
