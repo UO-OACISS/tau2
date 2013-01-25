@@ -115,13 +115,23 @@ TAUDB_METRIC* taudb_get_metric_by_id(TAUDB_METRIC* metrics, const int id) {
 }
 
 void taudb_save_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
-  const char* my_query = "insert into metric (trial, name, derived) values ($1, $2, $3);";
-  const char* statement_name = "TAUDB_INSERT_METRIC";
-  taudb_prepare_statement(connection, statement_name, my_query, 3);
+  const char* my_query;
+	const char* statement_name;
+	int nParams;
+  if(update) {
+		nParams = 4;
+  	my_query = "update metric set trial=$1, name=$2, derived=$3 where id=$4;";
+		statement_name = "TAUDB_UPDATE_METRIC";
+  } else {
+		nParams = 3;
+		my_query = "insert into metric (trial, name, derived) values ($1, $2, $3);";
+		statement_name = "TAUDB_INSERT_METRIC";
+  }
+  taudb_prepare_statement(connection, statement_name, my_query, nParams);
   TAUDB_METRIC *metric, *tmp;
   HASH_ITER(hh2, trial->metrics_by_name, metric, tmp) {
     // make array of 6 character pointers
-    const char* paramValues[3] = {0};
+    const char* paramValues[4] = {0};
     char trialid[32] = {0};
     sprintf(trialid, "%d", trial->id);
     paramValues[0] = trialid;
@@ -129,18 +139,27 @@ void taudb_save_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolea
     char derived[32] = {0};
     sprintf(derived, "%d", metric->derived);
     paramValues[2] = derived;
+		
+		if(update && metric->id > 0) {
+			char id[32] = {};
+			sprintf(id, "%d", metric->id);
+			paramValues[3] = id;
+		}
 
-    taudb_execute_statement(connection, statement_name, 3, paramValues);
-    taudb_execute_query(connection, "select currval('metric_id_seq');");
+    taudb_execute_statement(connection, statement_name, nParams, paramValues);
+		
+		if(!(update && metric->id > 0)) {
+    	taudb_execute_query(connection, "select currval('metric_id_seq');");
 
-    int nRows = taudb_get_num_rows(connection);
-    if (nRows == 1) {
-      metric->id = atoi(taudb_get_value(connection, 0, 0));
-      //printf("New Metric: %d\n", metric->id);
-    } else {
-      printf("Failed.\n");
-    }
-	taudb_close_query(connection);
+    	int nRows = taudb_get_num_rows(connection);
+    	if (nRows == 1) {
+     	 metric->id = atoi(taudb_get_value(connection, 0, 0));
+      	//printf("New Metric: %d\n", metric->id);
+    	} else {
+    		printf("Failed.\n");
+    	}
+			taudb_close_query(connection);
+		}
   }
   taudb_clear_result(connection);
 }

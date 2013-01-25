@@ -294,8 +294,10 @@ void TauStartOpenMPRegionTimer(my_pomp2_region *r, int index)
 {
 /* For any region, create a mapping between a region r and timer t and
    start the timer. */
-
-  omp_set_lock(&tau_ompregdescr_lock);
+  
+  Tau_global_incr_insideTAU();
+  RtsLayer::LockEnv();
+  //omp_set_lock(&tau_ompregdescr_lock);
 if(r == NULL)
 printf("TAU WARNING: a POMP2 Region was not initialized.  Something went wrong during the creation of pompregions.c\n");
   if (!r->data) {
@@ -331,8 +333,10 @@ printf("TAU WARNING: a POMP2 Region was not initialized.  Something went wrong d
 //Doesn't matter if this is called by a thread more than once 
   Tau_create_tid();
   Tau_start_timer(f, 0, Tau_get_tid());
-  
-  omp_unset_lock(&tau_ompregdescr_lock);
+ 
+  RtsLayer::UnLockEnv();
+  Tau_global_decr_insideTAU();
+  //omp_unset_lock(&tau_ompregdescr_lock);
 }
 
 

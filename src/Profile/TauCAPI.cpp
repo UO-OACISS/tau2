@@ -1407,7 +1407,7 @@ extern "C" void Tau_profile_c_timer(void **ptr, const char *name, const char *ty
 
 ///////////////////////////////////////////////////////////////////////////
 
-static char const * const gTauApplication()
+static std::string gTauApplication()
 {
   return ".TAU application";
 }
@@ -1442,7 +1442,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
       if (!TauInternal_CurrentProfiler(tid)) {
         initthread[tid] = true;
         initializing[tid] = true;
-        Tau_pure_start_task(gTauApplication(), tid);
+        Tau_pure_start_task_string(gTauApplication(), tid);
         initializing[tid] = false;
         initialized = true;
       }
@@ -1460,7 +1460,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
   if (TauInternal_CurrentProfiler(tid) == NULL) {
     initthread[tid] = true;
     initializing[tid] = true;
-    Tau_pure_start_task(gTauApplication(), tid);
+    Tau_pure_start_task_string(gTauApplication(), tid);
     initializing[tid] = false;
   }
 

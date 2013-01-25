@@ -26,7 +26,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <signal.h>
+#ifndef TAU_WINDOWS
 #include <ucontext.h>
+#endif //TAU_WINDOWS
 #include <string.h>
 
 #ifndef TAU_WINDOWS
@@ -56,7 +58,13 @@
 
 using namespace std;
 
+#ifndef TAU_WINDOWS
 typedef void (*tau_sighandler_t)(int, siginfo_t*, void*);
+#endif
+
+#if defined(TAU_STRSIGNAL_OK)
+extern "C" char *strsignal(int sig);
+#endif /* TAU_STRSIGNAL_OK */
 
 extern "C" void Tau_stack_initialization();
 extern "C" int Tau_compensate_initialization();
@@ -104,6 +112,7 @@ static void wrap_up(int sig)
 }
 
 
+#ifndef TAU_WINDOWS
 static void tauInitializeKillHandlers()
 {
   signal(SIGINT, wrap_up);
@@ -118,6 +127,7 @@ static void tauInitializeKillHandlers()
   signal(SIGCHLD, wrap_up);
 #endif
 }
+#endif
 
 #ifndef TAU_DISABLE_SIGUSR
 
@@ -388,12 +398,12 @@ extern "C" int Tau_init_initializeTAU()
   if (TauEnv_get_compensate()) {
     Tau_compensate_initialization();
   }
-
+#ifndef TAU_WINDOWS
   /* initialize signal handlers to flush the trace buffer */
   if (TauEnv_get_tracing()) {
     tauInitializeKillHandlers();
   }
-
+#endif
   /* initialize sampling if requested */
 #if !defined(TAU_MPI) && !defined(TAU_WINDOWS)
   if (TauEnv_get_ebs_enabled()) {
