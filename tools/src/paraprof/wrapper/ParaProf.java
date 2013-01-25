@@ -54,7 +54,7 @@ public class ParaProf implements ActionListener {
 	}
     }
 
-    private final static String VERSION = "Tue Jan 22 15:06:36 PST 2013";
+    private final static String VERSION = "Fri Jan 25 15:03:41 PST 2013";
 
     public static int defaultNumberPrecision = 6;
 
