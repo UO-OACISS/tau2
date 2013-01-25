@@ -113,21 +113,26 @@ void * get_system_function_handle(char const * name)
  * libc memory allocation/deallocation wrappers
  ******************************************************************************/
 
-
+#ifdef HAVE_MALLOC
 void * malloc(size_t size)
 {
   return malloc_handle(size);
 }
+#endif
 
+#ifdef HAVE_CALLOC
 void * calloc(size_t count, size_t size)
 {
   return calloc_handle(count, size);
 }
+#endif
 
+#ifdef HAVE_FREE
 void free(void * ptr)
 {
   return free_handle(ptr);
 }
+#endif
 
 #ifdef HAVE_MEMALIGN
 void * memalign(size_t alignment, size_t size)
@@ -136,20 +141,26 @@ void * memalign(size_t alignment, size_t size)
 }
 #endif
 
+#ifdef HAVE_POSIX_MEMALIGN
 int posix_memalign(void **ptr, size_t alignment, size_t size)
 {
   return posix_memalign_handle(ptr, alignment, size);
 }
+#endif
 
+#ifdef HAVE_REALLOC
 void * realloc(void * ptr, size_t size)
 {
   return realloc_handle(ptr, size);
 }
+#endif
 
+#ifdef HAVE_VALLOC
 void * valloc(size_t size)
 {
   return valloc_handle(size);
 }
+#endif
 
 #ifdef HAVE_PVALLOC
 void * pvalloc(size_t size)
@@ -163,46 +174,61 @@ void * pvalloc(size_t size)
  *
  ******************************************************************************/
 
-
+#ifdef HAVE_MALLOC
 malloc_t Tau_get_system_malloc()
 {
   return (malloc_t)get_system_function_handle("malloc");
 }
+#endif
 
+#ifdef HAVE_CALLOC
 calloc_t Tau_get_system_calloc()
 {
   return (calloc_t)get_system_function_handle("calloc");
 }
+#endif
 
+#ifdef HAVE_REALLOC
 realloc_t Tau_get_system_realloc()
 {
   return (realloc_t)get_system_function_handle("realloc");
 }
+#endif
 
+#ifdef HAVE_MEMALIGN
 memalign_t Tau_get_system_memalign()
 {
   return (memalign_t)get_system_function_handle("memalign");
 }
+#endif
 
+#ifdef HAVE_POSIX_MEMALIGN
 posix_memalign_t Tau_get_system_posix_memalign()
 {
   return (posix_memalign_t)get_system_function_handle("posix_memalign");
 }
+#endif
 
+#ifdef HAVE_VALLOC
 valloc_t Tau_get_system_valloc()
 {
   return (valloc_t)get_system_function_handle("valloc");
 }
+#endif
 
+#ifdef HAVE_PVALLOC
 pvalloc_t Tau_get_system_pvalloc()
 {
   return (pvalloc_t)get_system_function_handle("pvalloc");
 }
+#endif
 
+#ifdef HAVE_FREE
 free_t Tau_get_system_free()
 {
   return (free_t)get_system_function_handle("free");
 }
+#endif
 
 
 /******************************************************************************
