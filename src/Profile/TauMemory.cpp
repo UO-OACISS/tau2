@@ -923,7 +923,8 @@ void * Tau_memalign(size_t alignment, size_t size, const char * filename, int li
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
-#ifndef __APPLE__
+//MAC OS X version 10.6 or greater required.
+#if __ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ >= 1060
 extern "C"
 int Tau_posix_memalign(void **ptr, size_t alignment, size_t size,
     const char * filename, int lineno)
@@ -943,7 +944,7 @@ int Tau_posix_memalign(void **ptr, size_t alignment, size_t size,
 
   return retval;
 }
-#endif //__APPLE__
+#endif //__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__
 #endif //TAU_WINDOWS
 
 //////////////////////////////////////////////////////////////////////
