@@ -268,7 +268,14 @@ unsigned long get_pc(void *p) {
   issueUnavailableWarningIfNecessary("Warning, TAU Sampling works on Apple, but symbol lookup using BFD does not.\n");
   ucontext_t *uct = (ucontext_t *)p;
   //printf("%p\n", uct->uc_mcontext->__ss.__rip);
-  pc = uct->uc_mcontext->__ss.__rip;
+	//Careful here, we need to support ppc macs as well.
+#if defined(_STRUCT_X86_THREAD_STATE64) && !defined(__i386__)
+	pc = uct->uc_mcontext->__ss.__rip;
+#elif defined (__i386__)
+	pc = uct->uc_mcontext->__ss.__eip;
+#else
+	pc = uct->uc_mcontext->__ss.__srr0;
+#endif
   //return 0;
 #elif _AIX
   issueUnavailableWarningIfNecessary("Warning, TAU Sampling does not work on AIX\n");

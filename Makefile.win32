@@ -42,7 +42,6 @@ src/Profile/TauInit.cpp \
 src/Profile/TauIoWrap.cpp \
 src/Profile/TauMapping.cpp \
 src/Profile/TauMemory.cpp \
-src/Profile/TauMemoryWrap.cpp \
 src/Profile/TauMetaData.cpp \
 src/Profile/TauMetaDataMerge.cpp \
 src/Profile/TauMetrics.cpp \
@@ -71,7 +70,7 @@ all : win32 pprof tau_convert tau_reduce libs
 #all : libs
 
 java :
-	-md win32\java
+	-mkdir win32\java
 	-del $(TAU_PROFILE_OBJS) $(TAU_JAVA_OBJS)
 	nmake /f Makefile.win32 "FLAGS = -DPROFILING_ON -DJAVA /MT -I$(JDK)/include -I$(JDK)/include/win32" tau-profile.dll
 	-del win32\java\*.lib win32\java\*.exp
@@ -97,13 +96,13 @@ tau_instrumentor : win32\bin
 
 
 win32\bin : win32
-	md win32\bin
+	mkdir win32\bin
 
 win32\lib : win32
-	md win32\lib
+	mkdir win32\lib
 
 win32 :
-	md win32
+	mkdir win32
 	copy tools\src\windows\etc\tau_config.h include
 	copy tools\src\windows\etc\tauarch.h include
 	copy tools\src\windows\trace_impl.h include

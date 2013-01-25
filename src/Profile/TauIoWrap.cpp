@@ -72,7 +72,7 @@ extern "C" int Tau_iowrap_checkPassThrough() {
  * register the different events (read/write/etc) for a file descriptor
  ********************************************************************/
 extern "C" void Tau_iowrap_registerEvents(int fid, const char *pathname) {
-  RtsLayer::LockDB();
+  int le = RtsLayer::LockDB();
   dprintf ("Asked to registering %d with %s (current size=%d)\n", fid, pathname, TheIoWrapEvents()[0].size());
   fid++; // skip the "unknown" descriptor
 
@@ -101,7 +101,7 @@ extern "C" void Tau_iowrap_registerEvents(int fid, const char *pathname) {
     TheIoWrapEvents()[i][fid] = (TauUserEvent*)event;
   }
   dprintf ("Registering %d with %s\n", fid-1, pathname);
-  RtsLayer::UnLockDB();
+  int ud = RtsLayer::UnLockDB();
 }
 
 /*********************************************************************
