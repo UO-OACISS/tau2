@@ -944,6 +944,7 @@ int Tau_posix_memalign(void **ptr, size_t alignment, size_t size,
   return retval;
 }
 #endif //__APPLE__
+#endif //TAU_WINDOWS
 
 //////////////////////////////////////////////////////////////////////
 // Tau_realloc calls free_before, realloc and memory allocation tracking routine
