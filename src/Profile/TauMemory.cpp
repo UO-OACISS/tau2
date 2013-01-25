@@ -916,7 +916,7 @@ void * Tau_memalign(size_t alignment, size_t size, const char * filename, int li
 }
 #endif
 
-
+#ifndef TAU_WINDOWS
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
@@ -939,7 +939,7 @@ int Tau_posix_memalign(void **ptr, size_t alignment, size_t size,
 
   return retval;
 }
-
+#endif
 
 //////////////////////////////////////////////////////////////////////
 // Tau_realloc calls free_before, realloc and memory allocation tracking routine
@@ -975,6 +975,7 @@ void * Tau_realloc(void * ptr, size_t size, const char * filename, int lineno)
   return ptr;
 }
 
+#ifndef TAU_WINDOWS
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
@@ -995,6 +996,7 @@ void * Tau_valloc(size_t size, const char * filename, int lineno)
 
   return ptr;
 }
+#endif //TAU_WINDOWS
 
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs

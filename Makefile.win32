@@ -42,7 +42,6 @@ src/Profile/TauInit.cpp \
 src/Profile/TauIoWrap.cpp \
 src/Profile/TauMapping.cpp \
 src/Profile/TauMemory.cpp \
-src/Profile/TauMemoryWrap.cpp \
 src/Profile/TauMetaData.cpp \
 src/Profile/TauMetaDataMerge.cpp \
 src/Profile/TauMetrics.cpp \
