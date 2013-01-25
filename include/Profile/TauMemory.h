@@ -24,7 +24,7 @@
 
 #include <tau_internal.h>
 
-#if defined(__darwin__) || defined(__APPLE__) || defined(TAU_XLC)
+#if defined(__darwin__) || defined(__APPLE__) || defined(TAU_XLC) || defined(TAU_WINDOWS)
 #undef HAVE_MEMALIGN
 #undef HAVE_PVALLOC
 #else
