@@ -24,15 +24,27 @@
 #include <Profile/TauMemory.h>
 #include <memory_wrapper.h>
 
+#ifdef HAVE_MALLOC
 extern void * __real_malloc(size_t size);
+#endif
+#ifdef HAVE_CALLOC
 extern void * __real_calloc(size_t count, size_t size);
+#endif
+#ifdef HAVE_REALLOC
+extern void * __real_realloc(void * ptr, size_t size);
+#endif
+#ifdef HAVE_FREE
 extern void __real_free(void * ptr);
+#endif
 #ifdef HAVE_MEMALIGN
 extern void * __real_memalign(size_t alignment, size_t size);
 #endif
+#ifdef HAVE_POSIX_MEMALIGN
 extern int __real_posix_memalign(void **ptr, size_t alignment, size_t size);
-extern void * __real_realloc(void * ptr, size_t size);
+#endif
+#ifdef HAVE_VALLOC
 extern void * __real_valloc(size_t size);
+#endif
 #ifdef HAVE_PVALLOC
 extern void * __real_pvalloc(size_t size);
 #endif

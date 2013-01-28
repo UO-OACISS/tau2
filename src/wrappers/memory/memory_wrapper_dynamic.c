@@ -16,6 +16,7 @@
 **
 ****************************************************************************/
 
+// Must be defined before dlfcn.h to get RTLD_NEXT
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
@@ -29,15 +30,6 @@
 #include <Profile/Profiler.h>
 #include <Profile/TauMemory.h>
 #include <memory_wrapper.h>
-
-#ifdef strcpy
-#undef strcpy
-#endif
-
-#ifdef _MSC_VER
-/* define these functions as non-intrinsic */
-#pragma function( memcpy, strcpy, strcat )
-#endif
 
 
 int Tau_memory_wrapper_init(void)
