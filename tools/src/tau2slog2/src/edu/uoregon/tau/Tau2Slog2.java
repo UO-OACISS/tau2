@@ -263,7 +263,7 @@ public class Tau2Slog2
                                    + "\t [-ls max_byte_size_of_leaf_node]  "
                                    + "\t Default value is "
                                    + logformat.slog2.Const.LEAF_BYTESIZE +".\n"
-                                   + "\t [-p include papi atomic events\n"
+                                   + "\t [-p]                                    Include papi atomic events\n"
                                    + "\t [-o output_filename_with_slog2_suffix]"
                                    + "\n\n"
                                    + " note: \"max_byte_size_of_leaf_node\" "
