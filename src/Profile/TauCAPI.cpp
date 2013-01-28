@@ -371,26 +371,26 @@ Tau_global_incr_insideTAU();
   /********************************************************************************/
   /*** Extras ***/
   /********************************************************************************/
-  if (TauEnv_get_extras()) {
-    /*** Memory Profiling ***/
-    if (TauEnv_get_track_memory_heap()) {
-      TAU_REGISTER_CONTEXT_EVENT(memHeapEvent, "Heap Memory Used (KB) at Entry");
-      TAU_CONTEXT_EVENT(memHeapEvent, TauGetMaxRSS());
-    }
-    
-    if (TauEnv_get_track_memory_headroom()) {
-      TAU_REGISTER_CONTEXT_EVENT(memEvent, "Memory Headroom Available (MB) at Entry");
-      TAU_CONTEXT_EVENT(memEvent, TauGetFreeMemory());
-    }
-    
-#ifdef TAU_PROFILEMEMORY
-    p->ThisFunction->GetMemoryEvent()->TriggerEvent(TauGetMaxRSS());
-#endif /* TAU_PROFILEMEMORY */
-    
-#ifdef TAU_PROFILEHEADROOM
-    p->ThisFunction->GetHeadroomEvent()->TriggerEvent((double)TauGetFreeMemory());
-#endif /* TAU_PROFILEHEADROOM */
+
+  /*** Memory Profiling ***/
+  if (TauEnv_get_track_memory_heap()) {
+    TAU_REGISTER_CONTEXT_EVENT(memHeapEvent, "Heap Memory Used (KB) at Entry");
+    TAU_CONTEXT_EVENT(memHeapEvent, Tau_max_RSS());
   }
+
+  if (TauEnv_get_track_memory_headroom()) {
+    TAU_REGISTER_CONTEXT_EVENT(memEvent, "Memory Headroom Available (MB) at Entry");
+    TAU_CONTEXT_EVENT(memEvent, Tau_estimate_free_memory());
+  }
+
+#ifdef TAU_PROFILEMEMORY
+  p->ThisFunction->GetMemoryEvent()->TriggerEvent(Tau_max_RSS());
+#endif /* TAU_PROFILEMEMORY */
+
+#ifdef TAU_PROFILEHEADROOM
+  p->ThisFunction->GetHeadroomEvent()->TriggerEvent(Tau_estimate_free_memory());
+#endif /* TAU_PROFILEHEADROOM */
+
   /********************************************************************************/
   /*** Extras ***/
   /********************************************************************************/
@@ -401,6 +401,7 @@ Tau_global_incr_insideTAU();
     Tau_sampling_event_start(tid, p->address);
   }
 #endif
+
   Tau_global_decr_insideTAU();
 }
 
@@ -481,18 +482,18 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
   /********************************************************************************/
   /*** Extras ***/
   /********************************************************************************/
-  if (TauEnv_get_extras()) {
-    /*** Memory Profiling ***/
-    if (TauEnv_get_track_memory_heap()) {
-      TAU_REGISTER_CONTEXT_EVENT(memHeapEvent, "Heap Memory Used (KB) at Exit");
-      TAU_CONTEXT_EVENT(memHeapEvent, TauGetMaxRSS());
-    }
-    
-    if (TauEnv_get_track_memory_headroom()) {
-      TAU_REGISTER_CONTEXT_EVENT(memEvent, "Memory Headroom Available (MB) at Exit");
-      TAU_CONTEXT_EVENT(memEvent, TauGetFreeMemory());
-    }
+
+  /*** Memory Profiling ***/
+  if (TauEnv_get_track_memory_heap()) {
+    TAU_REGISTER_CONTEXT_EVENT(memHeapEvent, "Heap Memory Used (KB) at Exit");
+    TAU_CONTEXT_EVENT(memHeapEvent, Tau_max_RSS());
   }
+
+  if (TauEnv_get_track_memory_headroom()) {
+    TAU_REGISTER_CONTEXT_EVENT(memEvent, "Memory Headroom Available (MB) at Exit");
+    TAU_CONTEXT_EVENT(memEvent, Tau_estimate_free_memory());
+  }
+
   /********************************************************************************/
   /*** Extras ***/
   /********************************************************************************/
@@ -1976,8 +1977,8 @@ extern "C" int Tau_create_tid(void) {
 // this routine is called by the destructors of our static objects
 // ensuring that the profiles are written out while the objects are still valid
 void Tau_destructor_trigger() {
-  Tau_stop_top_level_timer_if_necessary();
   Tau_global_setLightsOut();
+  Tau_stop_top_level_timer_if_necessary();
   if ((TheUsingDyninst() || TheUsingCompInst()) && TheSafeToDumpData()) {
 #ifndef TAU_VAMPIRTRACE
     TAU_PROFILE_EXIT("FunctionDB destructor");
