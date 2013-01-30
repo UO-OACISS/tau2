@@ -223,39 +223,47 @@ public:
   // True if ptr is in the range tracked by this allocation
   bool Contains(void * ptr) const {
     addr_t addr = (addr_t)ptr;
-    return (alloc_addr <= ptr) && (ptr < (alloc_addr+alloc_size));
+    return (alloc_addr <= addr) && (addr < (alloc_addr+alloc_size));
   }
 
   // True if ptr is in this allocation's upper guard range
   bool InUpperGuard(void * ptr) const {
     addr_t addr = (addr_t)ptr;
-    return uguard_addr && (uguard_addr <= ptr) && (ptr < (uguard_addr+uguard_size));
+    return uguard_addr && (uguard_addr <= addr) && (addr < (uguard_addr+uguard_size));
   }
 
   // True if ptr is in this allocation's lower guard range
   bool InLowerGuard(void * ptr) const {
     addr_t addr = (addr_t)ptr;
-    return lguard_addr && (lguard_addr <= ptr) && (ptr < (lguard_addr+lguard_size));
+    return lguard_addr && (lguard_addr <= addr) && (addr < (lguard_addr+lguard_size));
   }
 
   // Enable the upper guard pages
   void EnableUpperGuard() {
-    if (uguard_addr) ProtectPages(uguard_addr, uguard_size);
+    if (uguard_addr) {
+      ProtectPages(uguard_addr, uguard_size);
+    }
   }
 
   // Disable the upper guard range
   void DisableUpperGuard() {
-    if (uguard_addr) UnprotectPages(uguard_addr, uguard_size);
+    if (uguard_addr) {
+      UnprotectPages(uguard_addr, uguard_size);
+    }
   }
 
   // Enable the lower guard range
   void EnableLowerGuard() {
-    if (lguard_addr) ProtectPages(lguard_addr, lguard_size);
+    if (lguard_addr) {
+      ProtectPages(lguard_addr, lguard_size);
+    }
   }
 
   // Disable the lower guard range
   void DisableLowerGuard() {
-    if (lguard_addr) UnprotectPages(lguard_addr, lguard_size);
+    if (lguard_addr) {
+      UnprotectPages(lguard_addr, lguard_size);
+    }
   }
 
   // Creates and tracks a new guarded allocation with specified alignment
