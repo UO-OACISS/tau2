@@ -16,6 +16,7 @@
 **
 ****************************************************************************/
 
+// Must be defined before dlfcn.h to get RTLD_NEXT
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
@@ -29,15 +30,6 @@
 #include <Profile/Profiler.h>
 #include <Profile/TauMemory.h>
 #include <memory_wrapper.h>
-
-#ifdef strcpy
-#undef strcpy
-#endif
-
-#ifdef _MSC_VER
-/* define these functions as non-intrinsic */
-#pragma function( memcpy, strcpy, strcat )
-#endif
 
 
 int Tau_memory_wrapper_init(void)
@@ -174,61 +166,77 @@ void * pvalloc(size_t size)
  *
  ******************************************************************************/
 
-#ifdef HAVE_MALLOC
 malloc_t Tau_get_system_malloc()
 {
+#ifdef HAVE_MALLOC
   return (malloc_t)get_system_function_handle("malloc");
-}
+#else
+  return NULL;
 #endif
+}
 
-#ifdef HAVE_CALLOC
 calloc_t Tau_get_system_calloc()
 {
+#ifdef HAVE_CALLOC
   return (calloc_t)get_system_function_handle("calloc");
-}
+#else
+  return NULL;
 #endif
+}
 
-#ifdef HAVE_REALLOC
 realloc_t Tau_get_system_realloc()
 {
+#ifdef HAVE_REALLOC
   return (realloc_t)get_system_function_handle("realloc");
-}
+#else
+  return NULL;
 #endif
+}
 
-#ifdef HAVE_MEMALIGN
 memalign_t Tau_get_system_memalign()
 {
+#ifdef HAVE_MEMALIGN
   return (memalign_t)get_system_function_handle("memalign");
-}
+#else
+  return NULL;
 #endif
+}
 
-#ifdef HAVE_POSIX_MEMALIGN
 posix_memalign_t Tau_get_system_posix_memalign()
 {
+#ifdef HAVE_POSIX_MEMALIGN
   return (posix_memalign_t)get_system_function_handle("posix_memalign");
-}
+#else
+  return NULL;
 #endif
+}
 
-#ifdef HAVE_VALLOC
 valloc_t Tau_get_system_valloc()
 {
+#ifdef HAVE_VALLOC
   return (valloc_t)get_system_function_handle("valloc");
-}
+#else
+  return NULL;
 #endif
+}
 
-#ifdef HAVE_PVALLOC
 pvalloc_t Tau_get_system_pvalloc()
 {
+#ifdef HAVE_PVALLOC
   return (pvalloc_t)get_system_function_handle("pvalloc");
-}
+#else
+  return NULL;
 #endif
+}
 
-#ifdef HAVE_FREE
 free_t Tau_get_system_free()
 {
+#ifdef HAVE_FREE
   return (free_t)get_system_function_handle("free");
-}
+#else
+  return NULL;
 #endif
+}
 
 
 /******************************************************************************
