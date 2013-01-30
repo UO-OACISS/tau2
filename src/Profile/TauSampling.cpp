@@ -90,6 +90,35 @@
 
 using namespace std;
 
+static std::string gTauOmpStates(int index)
+{
+  switch (index) {
+    case 1:
+      return "OMP OVERHEAD";
+    case 2:
+      return "OMP WORKING";
+    case 3:
+      return "OMP IMPLICIT BARRIER";
+    case 4:
+      return "OMP EXPLICIT BARRIER";
+    case 5:
+      return "OMP IDLE";
+    case 6:
+      return "OMP SERIAL";
+    case 7:
+      return "OMP REDUCTION";
+    case 8:
+      return "OMP LOCK WAIT";
+    case 9:
+      return "OMP CRITICAL WAIT";
+    case 10:
+      return "OMP ORDERED WAIT";
+    case 11:
+      return "OMP ATOMIC WAIT";
+  }
+  return "OMP UNKNOWN";
+}
+
 /*
    see:
    http://ftp.gnu.org/old-gnu/Manuals/glibc-2.2.3/html_node/libc_463.html#SEC473
@@ -1074,6 +1103,9 @@ void Tau_sampling_finalizeProfile(int tid) {
   TAU_METADATA(tmpname, tmpstr);
 }
 
+extern FunctionInfo * Tau_create_thread_state_if_necessary(int tid, const string & thread_state);
+extern "C" int Tau_get_thread_omp_state(int tid);
+
 void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
 
   // *CWL* - Too "noisy" and useless a verbose output.
@@ -1146,6 +1178,11 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
     }
   }
   samplingContext->addPcSample(pcStack, tid, deltaValues);
+  // get the thread state, too!
+  int thread_state = 0;
+  thread_state = Tau_get_thread_omp_state(tid);
+  FunctionInfo *stateContext = Tau_create_thread_state_if_necessary(tid, gTauOmpStates(thread_state));
+  stateContext->addPcSample(pcStack, tid, deltaValues);
 }
 
 /*********************************************************************

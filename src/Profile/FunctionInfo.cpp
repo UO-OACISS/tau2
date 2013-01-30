@@ -213,6 +213,7 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
       //   objects.
       if ((strstr(ProfileGroupName, "TAU_SAMPLE") == NULL) &&
           (strstr(ProfileGroupName, "TAU_INTERMEDIATE") == NULL) &&
+          (strstr(ProfileGroupName, "TAU_OMP_STATE") == NULL) &&
           (strstr(ProfileGroupName, "TAU_UNWIND") == NULL)) {
 	pathHistogram[i] = new TauPathHashTable<TauPathAccumulator>(i);
       }
