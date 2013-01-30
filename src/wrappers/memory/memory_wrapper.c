@@ -50,15 +50,11 @@
 void * malloc_bootstrap(size_t size);
 void * calloc_bootstrap(size_t count, size_t size);
 void   free_bootstrap(void * ptr);
-#ifdef HAVE_MEMALIGN
 void * memalign_bootstrap(size_t alignment, size_t size);
-#endif
 int    posix_memalign_bootstrap(void **ptr, size_t alignment, size_t size);
 void * realloc_bootstrap(void * ptr, size_t size);
 void * valloc_bootstrap(size_t size);
-#ifdef HAVE_PVALLOC
 void * pvalloc_bootstrap(size_t size);
-#endif
 
 #if 0
 int strcmp_bootstrap(const char *s1, const char *s2);
@@ -70,15 +66,11 @@ int strcmp_bootstrap(const char *s1, const char *s2);
 malloc_t malloc_handle = malloc_bootstrap;
 calloc_t calloc_handle = calloc_bootstrap;
 free_t free_handle = free_bootstrap;
-#ifdef HAVE_MEMALIGN
 memalign_t memalign_handle = memalign_bootstrap;
-#endif
 posix_memalign_t posix_memalign_handle = posix_memalign_bootstrap;
 realloc_t realloc_handle = realloc_bootstrap;
 valloc_t valloc_handle = valloc_bootstrap;
-#ifdef HAVE_PVALLOC
 pvalloc_t pvalloc_handle = pvalloc_bootstrap;
-#endif
 
 #if 0
 strcmp_t strcmp_handle = strcmp_bootstrap;
@@ -89,15 +81,11 @@ strcmp_t strcmp_handle = strcmp_bootstrap;
 malloc_t malloc_system = NULL;
 calloc_t calloc_system = NULL;
 free_t free_system = NULL;
-#ifdef HAVE_MEMALIGN
 memalign_t memalign_system = NULL;
-#endif
 posix_memalign_t posix_memalign_system = NULL;
 realloc_t realloc_system = NULL;
 valloc_t valloc_system = NULL;
-#ifdef HAVE_PVALLOC
 pvalloc_t pvalloc_system = NULL;
-#endif
 
 #if 0
 strcmp_t strcmp_system = NULL;
@@ -311,7 +299,6 @@ void * realloc_bootstrap(void * ptr, size_t size)
  * memalign
  ********************************************************************/
 
-#ifdef HAVE_MEMALIGN
 void * memalign_init(size_t alignment, size_t size)
 {
   static int initializing = 0;
@@ -355,7 +342,6 @@ void * memalign_bootstrap(size_t alignment, size_t size)
   memalign_handle = memalign_enabled;
   return memalign_enabled(alignment, size);
 }
-#endif
 
 /*********************************************************************
  * posix_memalign
@@ -463,7 +449,6 @@ void * valloc_bootstrap(size_t size)
  * pvalloc
  ********************************************************************/
 
-#ifdef HAVE_PVALLOC
 void * pvalloc_init(size_t size)
 {
   static int initializing = 0;
@@ -508,7 +493,6 @@ void * pvalloc_bootstrap(size_t size)
   pvalloc_handle = pvalloc_enabled;
   return pvalloc_enabled(size);
 }
-#endif
 
 /*********************************************************************
  * free
@@ -532,33 +516,13 @@ int free_init(void * ptr)
 
 void free_enabled(void * ptr)
 {
-#if 1
-  if (!Tau_global_getLightsOut()) {
-    if (Tau_init_check_initialized() && Tau_memory_is_tau_allocation(ptr)) {
-      Tau_free(ptr, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_LINE);
-    } else if (is_bootstrap(ptr)) {
-      bootstrap_free(ptr);
-    } else {
-      free_system(ptr);
-    }
-  }
-
-#else
-
-  if (!is_bootstrap(ptr)) {
-    if (Tau_memory_wrapper_passthrough()) {
-      if (!Tau_global_getLightsOut()) {
-        free_system(ptr);
-      } else {
-        // TODO
-      }
-    } else {
-      Tau_free(ptr, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_LINE);
-    }
-  } else {
+  if (Tau_init_check_initialized() && !Tau_global_getLightsOut() && Tau_memory_is_tau_allocation(ptr)) {
+    Tau_free(ptr, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_LINE);
+  } else if (is_bootstrap(ptr)) {
     bootstrap_free(ptr);
+  } else {
+    free_system(ptr);
   }
-#endif
 }
 
 void free_disabled(void * ptr)
@@ -639,14 +603,10 @@ void Tau_memory_wrapper_enable(void)
   malloc_handle = malloc_bootstrap;
   calloc_handle = calloc_bootstrap;
   realloc_handle = realloc_bootstrap;
-#ifdef HAVE_MEMALIGN
   memalign_handle = memalign_bootstrap;
-#endif
   posix_memalign_handle = posix_memalign_bootstrap;
   valloc_handle = valloc_bootstrap;
-#ifdef HAVE_PVALLOC
   pvalloc_handle = pvalloc_bootstrap;
-#endif
   free_handle = free_bootstrap;
 #if 0
     strcmp_handle = strcmp_bootstrap;
@@ -659,15 +619,11 @@ void Tau_memory_wrapper_disable(void)
   malloc_handle = malloc_disabled;
   calloc_handle = calloc_disabled;
   free_handle = free_disabled;
-#ifdef HAVE_MEMALIGN
   memalign_handle = memalign_disabled;
-#endif
   posix_memalign_handle = posix_memalign_disabled;
   realloc_handle = realloc_disabled;
   valloc_handle = valloc_disabled;
-#ifdef HAVE_PVALLOC
   pvalloc_handle = pvalloc_disabled;
-#endif
 #if 0
     strcmp_handle = strcmp_disabled;
 #endif

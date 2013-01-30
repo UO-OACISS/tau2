@@ -1531,9 +1531,7 @@ int  MPI_Finalize(  )
   Tau_mon_disconnect();
 #endif /* TAU_MONITORING */
 
-  Tau_global_incr_insideTAU();
   returnVal = PMPI_Finalize();
-  Tau_global_decr_insideTAU();
 
   TAU_PROFILE_STOP(tautimer);
 
@@ -1573,9 +1571,7 @@ char *** argv;
   Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_START(tautimer);
   
-  Tau_global_incr_insideTAU();
   returnVal = PMPI_Init( argc, argv );
-  Tau_global_decr_insideTAU();
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_init_if_necessary();
@@ -1635,9 +1631,7 @@ int *provided;
   Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_START(tautimer);
  
-  Tau_global_incr_insideTAU();
   returnVal = PMPI_Init_thread( argc, argv, required, provided );
-  Tau_global_decr_insideTAU();
 
 
   Tau_signal_initialization(); 

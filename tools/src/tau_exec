@@ -58,9 +58,9 @@ usage()
     echo ""
     echo "Memory Debugging:"
     echo "    -memory option:"
-    echo "      Loads the memory debugger but only tracks allocation/deallocation"
+    echo "      Loads the memory debugger but only tracks heap allocation/deallocation"
     echo "    -memory_debug option:"
-    echo "      Loads detects memory leaks, checks for invalid alignment, and checks for"
+    echo "      Detects memory leaks, checks for invalid alignment, and checks for"
     echo "      array overflow.  This is exactly like setting TAU_TRACK_MEMORY_LEAKS=1"
     echo "      and TAU_MEMDBG_PROTECT_ABOVE=1 and running with -memory"
     echo ""
@@ -291,6 +291,8 @@ if [ $track_memory = "true" ] || [ $memory_debug = "true" ] ; then
     TAUEX_LD_AUDITOR=$BASEDIR/lib/$theBinding/libTAU-dl-auditor$TAU_SHLIBX
     #Needed for the auditor
     export LD_BIND_NOW=1
+    # Track heap usage
+    export TAU_TRACK_HEAP=1
 fi
 if [ $track_cuda = "true" ] ; then
 		cupti_exists=`test -f $BASEDIR/lib/$theBinding/libTAU-CUpti.so -a -f $BASEDIR/lib/$theBinding/libTAU-CudaQP.so`
