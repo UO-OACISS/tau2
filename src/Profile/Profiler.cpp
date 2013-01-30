@@ -260,15 +260,11 @@ void Profiler::Start(int tid) {
   /********************************************************************************/
   /*** Extras ***/
   /********************************************************************************/
-  if (TauEnv_get_extras()) {
-    /*** Profile Compensation ***/
-    if (TauEnv_get_compensate()) {
-      SetNumChildren(0); /* for instrumentation perturbation compensation */
-    }
+
+  /*** Profile Compensation ***/
+  if (TauEnv_get_compensate()) {
+    SetNumChildren(0); /* for instrumentation perturbation compensation */
   }
-  /********************************************************************************/
-  /*** Extras ***/
-  /********************************************************************************/
 
   // An initialization of sorts. Call Paths (if any) will update this.
 #ifndef TAU_WINDOWS
@@ -468,23 +464,23 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   /********************************************************************************/
   /*** Extras ***/
   /********************************************************************************/
-  if (TauEnv_get_extras()) {
-    /*** Profile Compensation ***/
-    if (TauEnv_get_compensate()) {
-      double *tover, *tnull;
-      tover = TauGetTimerOverhead(TauFullTimerOverhead);
-      tnull = TauGetTimerOverhead(TauNullTimerOverhead);
 
-      for (int k = 0; k < Tau_Global_numCounters; k++) {
-        /* To compensate for timing overhead, shrink the totaltime! */
-        TotalTime[k] = TotalTime[k] - tnull[k] - GetNumChildren() * tover[k];
-        if (TotalTime[k] < 0) {
-          TotalTime[k] = 0;
-          DEBUGPROFMSG("TotalTime[" <<k<<"] negative in "<<ThisFunction->GetName()<<endl;);
-        }
+  /*** Profile Compensation ***/
+  if (TauEnv_get_compensate()) {
+    double *tover, *tnull;
+    tover = TauGetTimerOverhead(TauFullTimerOverhead);
+    tnull = TauGetTimerOverhead(TauNullTimerOverhead);
+
+    for (int k = 0; k < Tau_Global_numCounters; k++) {
+      /* To compensate for timing overhead, shrink the totaltime! */
+      TotalTime[k] = TotalTime[k] - tnull[k] - GetNumChildren() * tover[k];
+      if (TotalTime[k] < 0) {
+        TotalTime[k] = 0;
+        DEBUGPROFMSG("TotalTime[" <<k<<"] negative in "<<ThisFunction->GetName()<<endl;);
       }
     }
   }
+
   /********************************************************************************/
   /*** Extras ***/
   /********************************************************************************/
@@ -611,18 +607,12 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
   /*** Throttling Code ***/
   /********************************************************************************/
 
-  if (ParentProfiler == (Profiler *)NULL) {
-    //    printf("No parent profiler on stop\n");
-    if (TauEnv_get_extras()) {
-      /*** Profile Compensation ***/
-      if (TauEnv_get_compensate()) {
-        // If I am still compensating, I do not expect a top level timer. Just pretend
-        // this never happened.
-        if (!TauCompensateInitialized()) {
-          return;
-        }
-      }
-    }
+  if (!ParentProfiler) {
+    /*** Profile Compensation ***/
+    // If I am still compensating, I do not expect a top level timer. Just pretend
+    // this never happened.
+    if (TauEnv_get_compensate() && !TauCompensateInitialized()) return;
+
     /* Should we detect memory leaks here? */
     if (TheSafeToDumpData() && !RtsLayer::isCtorDtor(ThisFunction->GetName())) {
       Tau_detect_memory_leaks();

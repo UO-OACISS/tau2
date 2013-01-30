@@ -19,10 +19,6 @@
 #ifndef MEMORY_WRAPPER_H_
 #define MEMORY_WRAPPER_H_
 
-#ifndef _XOPEN_SOURCE
-#define _XOPEN_SOURCE 600 /* see: man posix_memalign */
-#endif
-
 #include <stdlib.h>
 #include "memory_wrapper_strings.h"
 
