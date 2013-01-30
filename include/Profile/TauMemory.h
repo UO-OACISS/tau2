@@ -22,63 +22,192 @@
 #ifndef _TAU_MEMORY_H_
 #define _TAU_MEMORY_H_
 
-#include <tau_internal.h>
-
-#if defined(__darwin__) || defined(__APPLE__) || defined(TAU_XLC) || defined(TAU_WINDOWS)
-#undef HAVE_MEMALIGN
-#undef HAVE_PVALLOC
-#else
-#define HAVE_MEMALIGN 1
-#define HAVE_PVALLOC 1
+#if defined(__APPLE__) || defined(TAU_XLC) || defined(TAU_WINDOWS)
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
 #endif
 
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE 600 /* see: man posix_memalign */
+#endif
+#endif
+
+#ifdef _MSC_VER
+/* define these functions as non-intrinsic */
+#pragma function( memcpy, strcpy, strcat )
+#endif
+
+#include <stdlib.h>
+#include <tau_internal.h>
+
+
+// Constants indicating unknown source location
 #define TAU_MEMORY_UNKNOWN_LINE 0
 #define TAU_MEMORY_UNKNOWN_FILE "Unknown"
 #define TAU_MEMORY_UNKNOWN_FILE_STRLEN 7
 
-#ifdef __cplusplus
 
+// Which platforms have malloc?
+#ifndef HAVE_MALLOC
+// Assume all platforms have malloc
+#define HAVE_MALLOC 1
+#endif
+
+// Which platforms have calloc?
+#ifndef HAVE_CALLOC
+// Assume all platforms have calloc
+#define HAVE_CALLOC 1
+#endif
+
+// Which platforms have realloc?
+#ifndef HAVE_REALLOC
+// Assume all platforms have realloc
+#define HAVE_REALLOC 1
+#endif
+
+// Which platforms have free?
+#ifndef HAVE_FREE
+// Assume all platforms have free
+#define HAVE_FREE 1
+#endif
+
+// Which platforms have memalign?
+#ifndef HAVE_MEMALIGN
+#if defined(__APPLE__) || defined(TAU_XLC) || defined(TAU_WINDOWS)
+#undef HAVE_MEMALIGN
+#else
+#define HAVE_MEMALIGN 1
+#endif
+#endif
+
+// Which platforms have posix_memalign?
+#ifndef HAVE_POSIX_MEMALIGN
+#if defined(TAU_WINDOWS) || (defined(__APPLE__) && (__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ +0 < 1060))
+#undef HAVE_POSIX_MEMALIGN
+#elif (_POSIX_C_SOURCE >= 200112L) || (_XOPEN_SOURCE >= 600)
+#define HAVE_POSIX_MEMALIGN 1
+#endif
+#endif
+
+// Which platforms have valloc?
+#ifndef HAVE_VALLOC
+#if (defined(__APPLE__) && (__ENVIRONMENT_MAC_OS_X_VERSION_MIN_REQUIRED__ +0 < 1060)) \
+    || defined(TAU_XLC) || defined(TAU_WINDOWS)
+#undef HAVE_VALLOC
+#elif _BSD_SOURCE || (_XOPEN_SOURCE >= 500 || _XOPEN_SOURCE && _XOPEN_SOURCE_EXTENDED) \
+      && !(_POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600)
+#define HAVE_VALLOC 1
+#endif
+#endif
+
+// Which platforms have pvalloc?
+#ifndef HAVE_PVALLOC
+#if defined(__APPLE__) || defined(TAU_XLC) || defined(TAU_WINDOWS)
+#undef HAVE_PVALLOC
+#else
+#define HAVE_PVALLOC 1
+#endif
+#endif
+
+// Which platforms have reallocf?
+#ifndef HAVE_REALLOCF
+#if !defined(__APPLE__)
+#undef HAVE_REALLOCF
+#else
+#define HAVE_REALLOCF
+#endif
+#endif
+
+// Which platforms have aligned_alloc?
+#ifndef HAVE_ALIGNED_ALLOC
+#if defined(_ISOC11_SOURCE)
+#define HAVE_ALIGNED_ALLOC 1
+#else
+#undef HAVE_ALIGNED_ALLOC
+#endif
+#endif
+
+// Which platforms have mallinfo?
+#ifndef HAVE_MALLINFO
+#if !( defined(TAU_CRAYXMT) || defined(TAU_CATAMOUNT) ) && \
+     ( defined (__linux__) || defined (_AIX) || defined(sgi) || \
+       defined (__alpha) || defined (CRAYCC) || defined(__blrts__) )
+#define HAVE_MALLINFO 1
+#endif
+#endif
+
+
+#ifdef __cplusplus
+//=============================================================================
+// Allocation record for heap allocation made by TAU or by the system.
+// Manages guarded (de)allocation and memory profiling events.
+//
 class TauAllocation
 {
 
+// ----------------------------------------------------------------------------
+// Public class members
+//
 public:
 
   typedef unsigned char * addr_t;
   typedef TauContextUserEvent user_event_t;
+  struct allocation_map_t : public TAU_HASH_MAP<addr_t, class TauAllocation*> {
+    virtual ~allocation_map_t() {
+      Tau_destructor_trigger();
+    }
+  };
 
-  typedef TAU_HASH_MAP<addr_t, class TauAllocation*> allocation_map_t;
-  static allocation_map_t & AllocationMap() {
+  // Database of allocation records (read-only outside this class)
+  static allocation_map_t const & AllocationMap() {
     Tau_global_incr_insideTAU();
-    allocation_map_t & allocMap = __allocationMap();
+    static allocation_map_t const & allocMap = __allocation_map();
     Tau_global_decr_insideTAU();
     return allocMap;
   }
-  static allocation_map_t & __allocationMap() {
-    static allocation_map_t alloc_map;
-    return alloc_map;
-  }
 
-  static TauAllocation * Find(allocation_map_t::key_type const & key) {
-    static allocation_map_t const & alloc_map = AllocationMap();
-    allocation_map_t::const_iterator it = alloc_map.find(key);
-    if (it != alloc_map.end())
-      return it->second;
-    return NULL;
-  }
-  static TauAllocation * Find(void * ptr) {
-    return Find((addr_t)ptr);
-  }
-
+  // Total bytes allocated
   static size_t & BytesAllocated() {
-    // Not thread safe!
     static size_t bytes = 0;
     return bytes;
   }
 
+  // Total bytes deallocated
+  static size_t & BytesDeallocated() {
+    static size_t bytes = 0;
+    return bytes;
+  }
+
+  // Trigger memory leak detection
   static void DetectLeaks(void);
 
+  // Search for an allocation record by address
+  static TauAllocation * Find(allocation_map_t::key_type const & key);
+  static TauAllocation * Find(void * ptr) { return Find((addr_t)ptr); }
   static TauAllocation * FindContaining(void * ptr);
 
+  // Records memory used at the current time
+  static void TriggerHeapMemoryUsageEvent(void);
+
+  // Records memory remaining at the current time
+  static void TriggerMemoryHeadroomEvent(void);
+
+
+// ----------------------------------------------------------------------------
+// Private class members
+//
+private:
+
+  // Forces Tau_global_incr_insideTAU before map's constructor is called
+  // so the memory wrapper isn't used to construct the map
+  static allocation_map_t & __allocation_map() {
+    static allocation_map_t alloc_map;
+    return alloc_map;
+  }
+
+// ----------------------------------------------------------------------------
+// Public instance members
+//
 public:
 
   TauAllocation() :
@@ -91,36 +220,73 @@ public:
     alloc_event(NULL)
   { }
 
+  // True if ptr is in the range tracked by this allocation
   bool Contains(void * ptr) const {
     addr_t addr = (addr_t)ptr;
-    return (alloc_addr <= ptr) && (ptr < (alloc_addr+alloc_size));
+    return (alloc_addr <= addr) && (addr < (alloc_addr+alloc_size));
   }
 
+  // True if ptr is in this allocation's upper guard range
   bool InUpperGuard(void * ptr) const {
     addr_t addr = (addr_t)ptr;
-    return uguard_addr && (uguard_addr <= ptr) && (ptr < (uguard_addr+uguard_size));
+    return uguard_addr && (uguard_addr <= addr) && (addr < (uguard_addr+uguard_size));
   }
 
+  // True if ptr is in this allocation's lower guard range
   bool InLowerGuard(void * ptr) const {
     addr_t addr = (addr_t)ptr;
-    return lguard_addr && (lguard_addr <= ptr) && (ptr < (lguard_addr+lguard_size));
+    return lguard_addr && (lguard_addr <= addr) && (addr < (lguard_addr+lguard_size));
   }
 
-  user_event_t * GetAllocationEvent() const {
-    return alloc_event;
+  // Enable the upper guard pages
+  void EnableUpperGuard() {
+    if (uguard_addr) {
+      ProtectPages(uguard_addr, uguard_size);
+    }
   }
 
+  // Disable the upper guard range
+  void DisableUpperGuard() {
+    if (uguard_addr) {
+      UnprotectPages(uguard_addr, uguard_size);
+    }
+  }
+
+  // Enable the lower guard range
+  void EnableLowerGuard() {
+    if (lguard_addr) {
+      ProtectPages(lguard_addr, lguard_size);
+    }
+  }
+
+  // Disable the lower guard range
+  void DisableLowerGuard() {
+    if (lguard_addr) {
+      UnprotectPages(lguard_addr, lguard_size);
+    }
+  }
+
+  // Creates and tracks a new guarded allocation with specified alignment
   void * Allocate(size_t const size, size_t align, size_t min_align, const char * filename, int lineno);
+
+  // Deallocates the tracked allocation if it was made with Allocate()
   void Deallocate(const char * filename, int lineno);
 
+  // Changes the size of the tracked guarded allocation
+  void * Reallocate(size_t const size, size_t align, size_t min_align, const char * filename, int lineno);
+
+  // Tracks an allocation made by the system and records the allocation event
   void TrackAllocation(void * ptr, size_t size, const char * filename, int lineno);
+
+  // Stops tracking an allocation made by the system and records the deallocation event
   void TrackDeallocation(const char * filename, int lineno);
 
-  void EnableUpperGuard();
-  void DisableUpperGuard();
-  void EnableLowerGuard();
-  void DisableLowerGuard();
+  // Tracks a reallocation made by the system and records the appropriate allocation or deallocation event(s)
+  void TrackReallocation(void * ptr, size_t size, const char * filename, int lineno);
 
+// ----------------------------------------------------------------------------
+// Private instance members
+//
 private:
 
   addr_t alloc_addr;    ///< Unadjusted address
@@ -138,17 +304,31 @@ private:
 
   user_event_t * alloc_event; ///< Allocation event (for leak detection)
 
+  // Uses the MMU to mark an address range as protected.
+  // Touching memory in that range will trigger a segfault or bus error
   void ProtectPages(addr_t addr, size_t size);
+
+  // Uses the MMU to mark an address range as unprotected (i.e. normal memory).
   void UnprotectPages(addr_t addr, size_t size);
 
+  // Quickly translates a filename and line number to a unique hash
   unsigned long LocationHash(unsigned long hash, char const * data);
-  void TriggerAllocationEvent(char const * filename, int lineno);
-  void TriggerDeallocationEvent(char const * filename, int lineno);
+
+  // Triggers the allocation event associated with a filename and line number
+  void TriggerAllocationEvent(size_t size, char const * filename, int lineno);
+
+  // Triggers the deallocation event associated with a filename and line number
+  void TriggerDeallocationEvent(size_t size, char const * filename, int lineno);
+
+  // Triggers the memory error event associated with a filename and line number
   void TriggerErrorEvent(char const * descript, char const * filename, int lineno);
+
 };
+// END class TauAllocation
+//=============================================================================
 #endif
 
-// libc bindings
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -161,32 +341,27 @@ void Tau_memory_set_wrapper_present(int);
 int Tau_memory_is_tau_allocation(void * ptr);
 
 size_t Tau_page_size(void);
-
+double Tau_max_RSS(void);
+int Tau_estimate_free_memory(void);
 void Tau_detect_memory_leaks(void);
-size_t Tau_get_bytes_allocated(void);
 
 void Tau_track_memory_allocation(void *, size_t, char const *, int);
 void Tau_track_memory_deallocation(void *, char const *, int);
-
-void * Tau_allocate_unprotected(size_t);
+void Tau_track_memory_reallocation(void *, void *, size_t, char const *, int);
 
 void * Tau_malloc(size_t, char const *, int);
 void * Tau_calloc(size_t, size_t, char const *, int);
 void   Tau_free(void *, char const *, int);
-#ifdef HAVE_MEMALIGN
 void * Tau_memalign(size_t, size_t, char const *, int);
-#endif
 int    Tau_posix_memalign(void **, size_t, size_t, char const *, int);
 void * Tau_realloc(void *, size_t, char const *, int);
 void * Tau_valloc(size_t, char const *, int);
-#ifdef HAVE_PVALLOC
 void * Tau_pvalloc(size_t, char const *, int);
-#endif
 
+#if 0
 int __tau_strcmp(char const *, char const *);
 int Tau_strcmp(char const *, char const *, char const *, int);
 
-#if 0
 char * Tau_strdup(char const *, char const *, int);
 char * Tau_strcpy(char *, char const *, char const *, int);
 char * Tau_strcat(char *, char const *, char const *, int);

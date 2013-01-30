@@ -452,7 +452,6 @@ static int env_track_signals = 0;
 static int env_signals_gdb = 0;
 static int env_summary_only = 0;
 static int env_ibm_bg_hwp_counters = 0;
-static int env_extras = 0;
 /* This is a malleable default */
 static int env_ebs_keep_unresolved_addr = 0;
 static int env_ebs_period = 0;
@@ -626,10 +625,6 @@ int TauEnv_get_track_memory_headroom() {
 
 int TauEnv_get_track_io_params() {
   return env_track_io_params;
-}
-
-int TauEnv_get_extras() {
-  return env_extras;
 }
 
 int TauEnv_get_summary_only() {
@@ -852,7 +847,6 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Entry/Exit Memory tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_HEAP", "on");
       env_track_memory_heap = 1;
-      env_extras = 1;
     } else {
       TAU_METADATA("TAU_TRACK_HEAP", "off");
       env_track_memory_heap = 0;
@@ -863,7 +857,6 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Entry/Exit Headroom tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_HEADROOM", "on");
       env_track_memory_headroom = 1;
-      env_extras = 1;
     } else {
       TAU_METADATA("TAU_TRACK_HEADROOM", "off");
       env_track_memory_headroom = 0;
@@ -874,7 +867,6 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Memory tracking enabled\n");
       TAU_METADATA("TAU_TRACK_MEMORY_LEAKS", "on");
       env_track_memory_leaks = 1;
-      env_extras = 1;
     } else {
       TAU_METADATA("TAU_TRACK_MEMORY_LEAKS", "off");
       env_track_memory_leaks = 0;
@@ -1000,7 +992,6 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: POSIX I/O wrapper parameter tracking enabled\n");
       TAU_METADATA("TAU_TRACK_IO_PARAMS", "on");
       env_track_io_params = 1;
-      env_extras = 1;
     } else {
       TAU_METADATA("TAU_TRACK_IO_PARAMS", "off");
       env_track_io_params = 0;
@@ -1011,7 +1002,6 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Tracking SIGNALS enabled\n");
       TAU_METADATA("TAU_TRACK_SIGNALS", "on");
       env_track_signals = 1;
-      env_extras = 1;
       tmp = getconf("TAU_SIGNALS_GDB");
       if (parse_bool(tmp, env_signals_gdb)) {
         TAU_VERBOSE("TAU: SIGNALS GDB output enabled\n");
@@ -1130,7 +1120,6 @@ void TauEnv_initialize()
       tmp = getconf("TAU_COMPENSATE");
       if (parse_bool(tmp, TAU_COMPENSATE_DEFAULT)) {
         env_compensate = 1;
-        env_extras = 1;
         TAU_VERBOSE("TAU: Overhead Compensation Enabled\n");
         TAU_METADATA("TAU_COMPENSATE", "on");
       } else {
