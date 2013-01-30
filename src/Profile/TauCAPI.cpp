@@ -264,7 +264,10 @@ extern "C" Profiler *TauInternal_ParentProfiler(int tid) {
 }
 
 extern "C" char *TauInternal_CurrentCallsiteTimerName(int tid) {
-  return TauInternal_CurrentProfiler(tid)->ThisFunction->Name;
+  if(TauInternal_CurrentProfiler(tid) != NULL)
+    if(TauInternal_CurrentProfiler(tid)->ThisFunction != NULL)
+      return TauInternal_CurrentProfiler(tid)->ThisFunction->Name;
+  return NULL;
 }
 
 
@@ -1662,6 +1665,22 @@ extern "C" void Tau_pure_start_task(const char *name, int tid)
   string n = name;
   Tau_pure_start_task_string(n, tid);
   Tau_global_decr_insideTAU();
+}
+
+// This function will return a timer for the Collector API OpenMP state, if available
+FunctionInfo * Tau_create_thread_state_if_necessary(int tid, string const & name)
+{
+  FunctionInfo *fi = 0;
+  RtsLayer::LockEnv();
+  TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(name);
+  if (it == ThePureMap().end()) {
+    tauCreateFI((void**)&fi, name, "", TAU_USER, "TAU_OMP_STATE");
+    ThePureMap()[name] = fi;
+  } else {
+    fi = (*it).second;
+  }
+  RtsLayer::UnLockEnv();
+  return fi;
 }
 
 extern "C" void Tau_pure_start(const char *name)
