@@ -215,7 +215,11 @@ void Tau_get_current_region_context(int tid) {
     sprintf(regionIDstr, "%s : %s", Tau_collector_flags[tid].activeTimerContext, state);
   }
   //printf("Thread %d : Stopping : %s\n", tid, regionIDstr);
+#if 0 
   TAU_STATIC_TIMER_STOP(regionIDstr);
+#else // this will prevent overlapping timers.
+  TAU_GLOBAL_TIMER_STOP();
+#endif
   free(regionIDstr);
 }
 
