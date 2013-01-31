@@ -1178,11 +1178,13 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid) {
     }
   }
   samplingContext->addPcSample(pcStack, tid, deltaValues);
+#ifdef TAU_OPENMP
   // get the thread state, too!
   int thread_state = 0;
   thread_state = Tau_get_thread_omp_state(tid);
   FunctionInfo *stateContext = Tau_create_thread_state_if_necessary(tid, gTauOmpStates(thread_state));
   stateContext->addPcSample(pcStack, tid, deltaValues);
+#endif
 }
 
 /*********************************************************************
