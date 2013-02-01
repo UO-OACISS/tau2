@@ -185,6 +185,7 @@ extern "C" int Tau_global_getLightsOut() {
 
 extern "C" void Tau_global_setLightsOut() {
   Tau_stack_checkInit();
+  Tau_memory_wrapper_disable();
   lightsOut = 1;
 }
 
@@ -207,42 +208,40 @@ extern "C" int Tau_global_get_insideTAU() {
   return Tau_thread_flags[tid].Tau_global_insideTAU;
 }
 
-extern "C" int Tau_global_incr_insideTAU() {
+extern "C" int Tau_global_incr_insideTAU()
+{
+  Tau_memory_wrapper_disable();
   Tau_stack_checkInit();
   int tid = RtsLayer::localThreadId();
-  Tau_thread_flags[tid].Tau_global_insideTAU++;
-  return Tau_thread_flags[tid].Tau_global_insideTAU;
+  return ++Tau_thread_flags[tid].Tau_global_insideTAU;
 }
 
-extern "C" int Tau_global_process_incr_insideTAU() {
+extern "C" int Tau_global_process_incr_insideTAU()
+{
   Tau_stack_checkInit();
-  int tid = 0;
-  while (tid < TAU_MAX_THREADS)
-  {
-    Tau_thread_flags[tid].Tau_global_insideTAU++;
-    tid++;
+  for(int tid=0; tid < TAU_MAX_THREADS; ++tid) {
+    ++Tau_thread_flags[tid].Tau_global_insideTAU;
   }
   return -1;
 }
 
-extern "C" int Tau_global_decr_insideTAU() {
+extern "C" int Tau_global_decr_insideTAU()
+{
   Tau_stack_checkInit();
-  int tid = RtsLayer::localThreadId();//Tau_get_tid();
-  Tau_thread_flags[tid].Tau_global_insideTAU--;
-	TAU_ASSERT(Tau_thread_flags[tid].Tau_global_insideTAU < 0,
-		"Thread has decremented the insideTAU counter past 0");
-  return Tau_thread_flags[tid].Tau_global_insideTAU;
+  int tid = RtsLayer::localThreadId();    //Tau_get_tid();
+  int insideTAU = --Tau_thread_flags[tid].Tau_global_insideTAU;
+  TAU_ASSERT(insideTAU < 0, "Thread has decremented the insideTAU counter past 0");
+  if (!insideTAU) Tau_memory_wrapper_enable();
+  return insideTAU;
 }
 
-extern "C" int Tau_global_process_decr_insideTAU() {
+extern "C" int Tau_global_process_decr_insideTAU()
+{
   Tau_stack_checkInit();
-  int tid = 0;
-  while (tid < TAU_MAX_THREADS)
-  {
-    Tau_thread_flags[tid].Tau_global_insideTAU--;
-  	TAU_ASSERT(Tau_thread_flags[tid].Tau_global_insideTAU < 0,
-			"Thread has decremented the insideTAU counter past 0");
-    tid++;
+  for(int tid=0; tid < TAU_MAX_THREADS; ++tid) {
+    --Tau_thread_flags[tid].Tau_global_insideTAU;
+    TAU_ASSERT(Tau_thread_flags[tid].Tau_global_insideTAU < 0,
+            "Thread has decremented the insideTAU counter past 0");
   }
   return -1;
 }
@@ -1996,8 +1995,8 @@ extern "C" int Tau_create_tid(void) {
 // this routine is called by the destructors of our static objects
 // ensuring that the profiles are written out while the objects are still valid
 void Tau_destructor_trigger() {
-  Tau_global_setLightsOut();
   Tau_stop_top_level_timer_if_necessary();
+  Tau_global_setLightsOut();
   if ((TheUsingDyninst() || TheUsingCompInst()) && TheSafeToDumpData()) {
 #ifndef TAU_VAMPIRTRACE
     TAU_PROFILE_EXIT("FunctionDB destructor");

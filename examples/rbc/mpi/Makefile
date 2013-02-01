@@ -19,7 +19,7 @@ OBJ = $(SRC:.f90=.o)
 F90 = tau_f90.sh
 LD = tau_f90.sh
 
-FFLAGS  = -O2 -g -optKeepFiles
+FFLAGS  = -O2 -g -optKeepFiles -fno-backtrace
 LDFLAGS =
 
 RM = /bin/rm -f
@@ -31,7 +31,7 @@ all: static dynamic
 	@echo "Please make run-static or run-dynamic"
 
 run-static: static
-	TAU_MEMDBG_PROTECT_ABOVE=1 mpirun -n 4 ./$(EXE)-static
+	bash -c "TAU_MEMDBG_PROTECT_ABOVE=1 TAU_TRACK_MEMORY_LEAKS=1 TAU_TRACK_HEAP=1 mpirun -n 4 ./$(EXE)-static"
 
 run-dynamic: dynamic
 	mpirun -n 4 tau_exec -memory_debug -T mpi ./$(EXE)-dynamic

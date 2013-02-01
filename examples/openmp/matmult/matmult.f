@@ -24,6 +24,8 @@ C     number of columns in matrix B
 
 C     Set loop iteration chunk size 
 
+      CONTINUE
+
 C     Spawn a parallel region explicitly scoping all variables
 !$OMP PARALLEL SHARED(A,B,C,NTHREADS) PRIVATE(TID,I,J,K)
       TID = OMP_GET_THREAD_NUM()

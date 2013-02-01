@@ -438,6 +438,7 @@ extern "C" int Tau_init_initializeTAU()
   //Initialize locks.
   RtsLayer::Initialize();
 
+  Tau_memory_wrapper_enable();
   return 0;
 }
 
