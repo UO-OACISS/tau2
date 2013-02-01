@@ -197,7 +197,7 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
   // Alignment must be a multiple of the minimum alignment (a power of two)
   if (min_align && ((align < min_align) || (align & (min_align-1)))) {
     char s[256];
-    sprintf(s, "Alignment is not a multiple of %d", min_align);
+    sprintf(s, "Alignment is not a multiple of %ld", min_align);
     TriggerErrorEvent(s, filename, lineno);
     return NULL;
   }
