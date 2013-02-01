@@ -185,7 +185,8 @@ extern "C" int Tau_global_getLightsOut() {
 
 extern "C" void Tau_global_setLightsOut() {
   Tau_stack_checkInit();
-  Tau_memory_wrapper_disable();
+  // Disable profiling from here on out
+  Tau_global_incr_insideTAU();
   lightsOut = 1;
 }
 

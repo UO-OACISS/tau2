@@ -256,7 +256,11 @@ void free_wrapper(void * ptr)
   }
 
   if (*memory_wrapper_disabled_flag()) {
-    return free_system(ptr);
+    if (is_bootstrap(ptr)) {
+      bootstrap_free(ptr);
+    } else if (!Tau_global_getLightsOut()) {
+      free_system(ptr);
+    }
   } else {
     if (Tau_memory_is_tau_allocation(ptr)) {
       Tau_free(ptr, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_LINE);
