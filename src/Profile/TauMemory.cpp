@@ -74,8 +74,10 @@ using namespace std;
 #define  MAP_ANONYMOUS MAP_ANON
 #endif
 
-// True if the memory wrapper is present
-int wrapper_present = 0;
+bool wrapper_registered = false;
+wrapper_enable_handle_t wrapper_enable_handle = NULL;
+wrapper_disable_handle_t wrapper_disable_handle = NULL;
+
 
 
 //////////////////////////////////////////////////////////////////////
@@ -753,24 +755,6 @@ void Tau_memory_initialize(void)
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
 extern "C"
-int Tau_memory_is_wrapper_present(void)
-{
-  return wrapper_present;
-}
-
-//////////////////////////////////////////////////////////////////////
-// TODO: Docs
-//////////////////////////////////////////////////////////////////////
-extern "C"
-void Tau_memory_set_wrapper_present(int value)
-{
-  wrapper_present = value;
-}
-
-//////////////////////////////////////////////////////////////////////
-// TODO: Docs
-//////////////////////////////////////////////////////////////////////
-extern "C"
 int Tau_memory_is_tau_allocation(void * ptr)
 {
   Tau_global_incr_insideTAU();
@@ -778,6 +762,49 @@ int Tau_memory_is_tau_allocation(void * ptr)
   Tau_global_decr_insideTAU();
   return alloc != NULL;
 }
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+extern "C"
+void Tau_memory_wrapper_register(wrapper_enable_handle_t enable_handle, wrapper_disable_handle_t disable_handle)
+{
+  wrapper_enable_handle = enable_handle;
+  wrapper_disable_handle = disable_handle;
+  wrapper_registered = true;
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+extern "C"
+void Tau_memory_wrapper_enable(void)
+{
+  if (wrapper_enable_handle) {
+    wrapper_enable_handle();
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+extern "C"
+void Tau_memory_wrapper_disable(void)
+{
+  if (wrapper_disable_handle) {
+    wrapper_disable_handle();
+  }
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+extern "C"
+int Tau_memory_wrapper_is_registered(void)
+{
+  return wrapper_registered;
+}
+
 
 //////////////////////////////////////////////////////////////////////
 // Get the system page size
@@ -816,7 +843,7 @@ size_t Tau_page_size(void)
 extern "C"
 double Tau_max_RSS(void)
 {
-  if (wrapper_present) {
+  if (TauAllocation::BytesAllocated()) {
     size_t bytes = TauAllocation::BytesAllocated();
     return (double)bytes / 1024.0;
   } else {
@@ -1000,7 +1027,7 @@ void * Tau_calloc(size_t count, size_t size, const char * filename, int lineno)
   if (TauEnv_get_memdbg()) {
     TauAllocation * alloc = new TauAllocation;
     ptr = alloc->Allocate(count*size, 0, 0, filename, lineno);
-    memset(ptr, 0, size);
+    if (ptr) memset(ptr, 0, size);
   } else {
     ptr = calloc(count, size);
     Tau_track_memory_allocation(ptr, count*size, filename, lineno);

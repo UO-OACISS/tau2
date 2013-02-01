@@ -329,16 +329,20 @@ private:
 #endif
 
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-void Tau_memory_initialize(void);
+typedef void (*wrapper_enable_handle_t)(void);
+typedef void (*wrapper_disable_handle_t)(void);
 
-int Tau_memory_is_wrapper_present(void);
-void Tau_memory_set_wrapper_present(int);
+void Tau_memory_initialize(void);
 int Tau_memory_is_tau_allocation(void * ptr);
+
+void Tau_memory_wrapper_register(wrapper_enable_handle_t, wrapper_disable_handle_t);
+void Tau_memory_wrapper_enable(void);
+void Tau_memory_wrapper_disable(void);
+int Tau_memory_wrapper_is_registered(void);
 
 size_t Tau_page_size(void);
 double Tau_max_RSS(void);

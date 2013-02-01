@@ -26,6 +26,16 @@
 extern "C" {
 #endif
 
+// Assume 4K pages unless we know otherwise.
+// We cannot determine this at runtime because it must be known during
+// the bootstrap process and it would be unsafe to make any system calls there.
+#ifndef PAGE_SIZE
+#define PAGE_SIZE 4096
+#endif
+
+// Size of heap memory for library wrapper bootstrapping
+#define BOOTSTRAP_HEAP_SIZE (3*PAGE_SIZE)
+
 // Types of function pointers for wrapped functions
 typedef void * (*malloc_t)(size_t);
 typedef void * (*calloc_t)(size_t, size_t);
@@ -36,31 +46,29 @@ typedef void * (*valloc_t)(size_t);
 typedef void * (*pvalloc_t)(size_t);
 typedef void   (*free_t)(void *);
 
-// Handles to an implementation of the call
-extern malloc_t malloc_handle;
-extern calloc_t calloc_handle;
-extern free_t free_handle;
-extern memalign_t memalign_handle;
-extern posix_memalign_t posix_memalign_handle;
-extern realloc_t realloc_handle;
-extern valloc_t valloc_handle;
-extern pvalloc_t pvalloc_handle;
 
 // Returns a handle to the system's implementation of the routine
-malloc_t Tau_get_system_malloc();
-calloc_t Tau_get_system_calloc();
-realloc_t Tau_get_system_realloc();
-memalign_t Tau_get_system_memalign();
-posix_memalign_t Tau_get_system_posix_memalign();
-valloc_t Tau_get_system_valloc();
-pvalloc_t Tau_get_system_pvalloc();
-free_t Tau_get_system_free();
+malloc_t get_system_malloc();
+calloc_t get_system_calloc();
+realloc_t get_system_realloc();
+memalign_t get_system_memalign();
+posix_memalign_t get_system_posix_memalign();
+valloc_t get_system_valloc();
+pvalloc_t get_system_pvalloc();
+free_t get_system_free();
 
-int Tau_memory_wrapper_init(void);
-int Tau_memory_wrapper_passthrough(void);
+int memory_wrapper_init(void);
+void memory_wrapper_enable(void);
+void memory_wrapper_disable(void);
 
-void Tau_memory_wrapper_disable(void);
-void Tau_memory_wrapper_enable(void);
+void * malloc_wrapper(size_t size);
+void * calloc_wrapper(size_t count, size_t size);
+void * realloc_wrapper(void * ptr, size_t size);
+void free_wrapper(void * ptr);
+void * memalign_wrapper(size_t alignment, size_t size);
+int posix_memalign_wrapper(void ** ptr, size_t alignment, size_t size);
+void * valloc_wrapper(size_t size);
+void * pvalloc_wrapper(size_t size);
 
 #ifdef __cplusplus
 } /* extern "C" */
