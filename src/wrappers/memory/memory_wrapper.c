@@ -446,10 +446,10 @@ int * memory_wrapper_disabled_flag(void)
 }
 #else
 
+int memory_wrapper_process_flag = 1;
 int * memory_wrapper_disabled_flag(void)
 {
-  static int flag = 1;
-  return &flag;
+  return &memory_wrapper_process_flag;
 }
 
 #endif

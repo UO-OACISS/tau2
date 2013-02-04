@@ -145,7 +145,7 @@ void * __wrap_calloc(size_t count, size_t size)
 
 void __wrap_free(void * ptr)
 {
-  return free_wrapper(ptr);
+  free_wrapper(ptr);
 }
 
 void * __wrap_memalign(size_t alignment, size_t size)

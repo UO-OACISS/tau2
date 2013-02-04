@@ -160,10 +160,7 @@ public:
 
   // Database of allocation records (read-only outside this class)
   static allocation_map_t const & AllocationMap() {
-    Tau_global_incr_insideTAU();
-    static allocation_map_t const & allocMap = __allocation_map();
-    Tau_global_decr_insideTAU();
-    return allocMap;
+    return __allocation_map();
   }
 
   // Total bytes allocated
