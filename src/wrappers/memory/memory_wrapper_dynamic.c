@@ -96,7 +96,7 @@ void * realloc(void * ptr, size_t size)
 #ifdef HAVE_FREE
 void free(void * ptr)
 {
-  return free_wrapper(ptr);
+  free_wrapper(ptr);
 }
 #endif
 
