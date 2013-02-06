@@ -15,7 +15,7 @@ void taudb_exit_nicely(TAUDB_CONNECTION* connection) {
   exit (1);
 }
 
-TAUDB_CONNECTION* taudb_connect(char* host, char* port, char* database, char* login, char* password) {
+TAUDB_CONNECTION* taudb_try_connect(char* host, char* port, char* database, char* login, char* password, taudb_error * err) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("calling taudb_connect()\n");
 #endif
@@ -32,10 +32,12 @@ TAUDB_CONNECTION* taudb_connect(char* host, char* port, char* database, char* lo
   /* Check to see that the backend connection was successfully made */
   if (PQstatus(connection) != CONNECTION_OK)
   {
+		*err = TAUDB_CONNECTION_FAILED;
     fprintf(stderr, "Connection to database failed: %s\n",
-           PQerrorMessage(connection));
-    taudb_exit_nicely(taudb_connection);
-  }
+    PQerrorMessage(connection));
+	} else {
+		*err = TAUDB_OK;
+	}
 #elif defined __TAUDB_SQLITE__
   sqlite3 *connection;
   // get HOME
@@ -54,6 +56,16 @@ TAUDB_CONNECTION* taudb_connect(char* host, char* port, char* database, char* lo
 
   return taudb_connection;
 }
+
+TAUDB_CONNECTION* taudb_connect(char* host, char* port, char* database, char* login, char* password) {
+	taudb_error err;
+	TAUDB_CONNECTION * taudb_connection = taudb_try_connect(host, port, database, login, password, &err);
+	if(err != TAUDB_OK) {
+    taudb_exit_nicely(taudb_connection);
+	}
+	return taudb_connection;
+}
+
 
 int taudb_check_connection(TAUDB_CONNECTION* connection) {
 #ifdef TAUDB_DEBUG_DEBUG
@@ -116,7 +128,7 @@ int taudb_disconnect(TAUDB_CONNECTION* connection) {
   return 0;
 }
 
-TAUDB_CONNECTION* taudb_connect_config(char* config_name) {
+TAUDB_CONNECTION* taudb_try_connect_config(char* config_name, taudb_error* err) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("calling taudb_connect_config()\n");
 #endif
@@ -124,17 +136,27 @@ TAUDB_CONNECTION* taudb_connect_config(char* config_name) {
    const char* home = getenv("HOME");
    char config_file[256];
    sprintf(config_file, "%s/.ParaProf/%s.%s", home, config_prefix, config_name);
-   return taudb_connect_config_file(config_file);
+   return taudb_try_connect_config_file(config_file, err);
 }
 
-TAUDB_CONNECTION* taudb_connect_config_file(char* config_file_name) {
+TAUDB_CONNECTION* taudb_try_connect_config_file(char* config_file_name, taudb_error *err) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("calling taudb_connect_config_file()\n");
 #endif
   TAUDB_CONFIGURATION* config = taudb_parse_config_file(config_file_name);
-  TAUDB_CONNECTION* connection = taudb_connect(config->db_hostname, config->db_portnum, config->db_dbname, config->db_username, config->db_password);
+  TAUDB_CONNECTION* connection = taudb_try_connect(config->db_hostname, config->db_portnum, config->db_dbname, config->db_username, config->db_password, err);
   connection->configuration = config;
   return connection;
+}
+
+TAUDB_CONNECTION* taudb_connect_config(char* config_name) {
+	taudb_error err;
+	return taudb_try_connect_config(config_name, &err);
+}
+
+TAUDB_CONNECTION * taudb_connect_config_file(char* config_file_name) {
+	taudb_error err;
+	return taudb_try_connect_config_file(config_file_name, &err);
 }
 
 void taudb_begin_transaction(TAUDB_CONNECTION *connection) {
@@ -442,6 +464,10 @@ void taudb_execute_statement(TAUDB_CONNECTION* connection, const char* statement
 #endif
 }
 
-
-
-
+const char * taudb_error_str(taudb_error err) {
+	switch(err) {
+		case TAUDB_OK: return "";
+		case TAUDB_CONNECTION_FAILED: return "Connection failed.";
+		default: return "Invalid error.";
+	}
+}
