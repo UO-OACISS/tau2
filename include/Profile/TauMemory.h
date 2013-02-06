@@ -160,10 +160,7 @@ public:
 
   // Database of allocation records (read-only outside this class)
   static allocation_map_t const & AllocationMap() {
-    Tau_global_incr_insideTAU();
-    static allocation_map_t const & allocMap = __allocation_map();
-    Tau_global_decr_insideTAU();
-    return allocMap;
+    return __allocation_map();
   }
 
   // Total bytes allocated
@@ -223,39 +220,47 @@ public:
   // True if ptr is in the range tracked by this allocation
   bool Contains(void * ptr) const {
     addr_t addr = (addr_t)ptr;
-    return (alloc_addr <= ptr) && (ptr < (alloc_addr+alloc_size));
+    return (alloc_addr <= addr) && (addr < (alloc_addr+alloc_size));
   }
 
   // True if ptr is in this allocation's upper guard range
   bool InUpperGuard(void * ptr) const {
     addr_t addr = (addr_t)ptr;
-    return uguard_addr && (uguard_addr <= ptr) && (ptr < (uguard_addr+uguard_size));
+    return uguard_addr && (uguard_addr <= addr) && (addr < (uguard_addr+uguard_size));
   }
 
   // True if ptr is in this allocation's lower guard range
   bool InLowerGuard(void * ptr) const {
     addr_t addr = (addr_t)ptr;
-    return lguard_addr && (lguard_addr <= ptr) && (ptr < (lguard_addr+lguard_size));
+    return lguard_addr && (lguard_addr <= addr) && (addr < (lguard_addr+lguard_size));
   }
 
   // Enable the upper guard pages
   void EnableUpperGuard() {
-    if (uguard_addr) ProtectPages(uguard_addr, uguard_size);
+    if (uguard_addr) {
+      ProtectPages(uguard_addr, uguard_size);
+    }
   }
 
   // Disable the upper guard range
   void DisableUpperGuard() {
-    if (uguard_addr) UnprotectPages(uguard_addr, uguard_size);
+    if (uguard_addr) {
+      UnprotectPages(uguard_addr, uguard_size);
+    }
   }
 
   // Enable the lower guard range
   void EnableLowerGuard() {
-    if (lguard_addr) ProtectPages(lguard_addr, lguard_size);
+    if (lguard_addr) {
+      ProtectPages(lguard_addr, lguard_size);
+    }
   }
 
   // Disable the lower guard range
   void DisableLowerGuard() {
-    if (lguard_addr) UnprotectPages(lguard_addr, lguard_size);
+    if (lguard_addr) {
+      UnprotectPages(lguard_addr, lguard_size);
+    }
   }
 
   // Creates and tracks a new guarded allocation with specified alignment
@@ -321,16 +326,20 @@ private:
 #endif
 
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-void Tau_memory_initialize(void);
+typedef void (*wrapper_enable_handle_t)(void);
+typedef void (*wrapper_disable_handle_t)(void);
 
-int Tau_memory_is_wrapper_present(void);
-void Tau_memory_set_wrapper_present(int);
+void Tau_memory_initialize(void);
 int Tau_memory_is_tau_allocation(void * ptr);
+
+void Tau_memory_wrapper_register(wrapper_enable_handle_t, wrapper_disable_handle_t);
+void Tau_memory_wrapper_enable(void);
+void Tau_memory_wrapper_disable(void);
+int Tau_memory_wrapper_is_registered(void);
 
 size_t Tau_page_size(void);
 double Tau_max_RSS(void);

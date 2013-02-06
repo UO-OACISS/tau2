@@ -3,7 +3,7 @@
 using namespace std;
 
 #define DATA_COUNT 10
-#define OVERRUN    1
+#define OVERRUN    5
 
 int main(int argc, char ** argv)
 {
@@ -20,7 +20,8 @@ int main(int argc, char ** argv)
     cout << "data[" << i << "] = " << i << endl;
   }
 
-  delete x;
+  // Example memory leak
+  //delete x;
 
   delete[] data;
 

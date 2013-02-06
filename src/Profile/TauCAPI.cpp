@@ -185,6 +185,8 @@ extern "C" int Tau_global_getLightsOut() {
 
 extern "C" void Tau_global_setLightsOut() {
   Tau_stack_checkInit();
+  // Disable profiling from here on out
+  Tau_global_incr_insideTAU();
   lightsOut = 1;
 }
 
@@ -207,42 +209,40 @@ extern "C" int Tau_global_get_insideTAU() {
   return Tau_thread_flags[tid].Tau_global_insideTAU;
 }
 
-extern "C" int Tau_global_incr_insideTAU() {
+extern "C" int Tau_global_incr_insideTAU()
+{
+  Tau_memory_wrapper_disable();
   Tau_stack_checkInit();
   int tid = RtsLayer::localThreadId();
-  Tau_thread_flags[tid].Tau_global_insideTAU++;
-  return Tau_thread_flags[tid].Tau_global_insideTAU;
+  return ++Tau_thread_flags[tid].Tau_global_insideTAU;
 }
 
-extern "C" int Tau_global_process_incr_insideTAU() {
+extern "C" int Tau_global_process_incr_insideTAU()
+{
   Tau_stack_checkInit();
-  int tid = 0;
-  while (tid < TAU_MAX_THREADS)
-  {
-    Tau_thread_flags[tid].Tau_global_insideTAU++;
-    tid++;
+  for(int tid=0; tid < TAU_MAX_THREADS; ++tid) {
+    ++Tau_thread_flags[tid].Tau_global_insideTAU;
   }
   return -1;
 }
 
-extern "C" int Tau_global_decr_insideTAU() {
+extern "C" int Tau_global_decr_insideTAU()
+{
   Tau_stack_checkInit();
-  int tid = RtsLayer::localThreadId();//Tau_get_tid();
-  Tau_thread_flags[tid].Tau_global_insideTAU--;
-	TAU_ASSERT(Tau_thread_flags[tid].Tau_global_insideTAU < 0,
-		"Thread has decremented the insideTAU counter past 0");
-  return Tau_thread_flags[tid].Tau_global_insideTAU;
+  int tid = RtsLayer::localThreadId();    //Tau_get_tid();
+  int insideTAU = --Tau_thread_flags[tid].Tau_global_insideTAU;
+  TAU_ASSERT(insideTAU < 0, "Thread has decremented the insideTAU counter past 0");
+  if (!insideTAU) Tau_memory_wrapper_enable();
+  return insideTAU;
 }
 
-extern "C" int Tau_global_process_decr_insideTAU() {
+extern "C" int Tau_global_process_decr_insideTAU()
+{
   Tau_stack_checkInit();
-  int tid = 0;
-  while (tid < TAU_MAX_THREADS)
-  {
-    Tau_thread_flags[tid].Tau_global_insideTAU--;
-  	TAU_ASSERT(Tau_thread_flags[tid].Tau_global_insideTAU < 0,
-			"Thread has decremented the insideTAU counter past 0");
-    tid++;
+  for(int tid=0; tid < TAU_MAX_THREADS; ++tid) {
+    --Tau_thread_flags[tid].Tau_global_insideTAU;
+    TAU_ASSERT(Tau_thread_flags[tid].Tau_global_insideTAU < 0,
+            "Thread has decremented the insideTAU counter past 0");
   }
   return -1;
 }
@@ -264,7 +264,10 @@ extern "C" Profiler *TauInternal_ParentProfiler(int tid) {
 }
 
 extern "C" char *TauInternal_CurrentCallsiteTimerName(int tid) {
-  return TauInternal_CurrentProfiler(tid)->ThisFunction->Name;
+  if(TauInternal_CurrentProfiler(tid) != NULL)
+    if(TauInternal_CurrentProfiler(tid)->ThisFunction != NULL)
+      return TauInternal_CurrentProfiler(tid)->ThisFunction->Name;
+  return NULL;
 }
 
 
@@ -1665,6 +1668,22 @@ extern "C" void Tau_pure_start_task(const char *name, int tid)
   Tau_global_decr_insideTAU();
 }
 
+// This function will return a timer for the Collector API OpenMP state, if available
+FunctionInfo * Tau_create_thread_state_if_necessary(int tid, string const & name)
+{
+  FunctionInfo *fi = 0;
+  RtsLayer::LockEnv();
+  TAU_HASH_MAP<string, FunctionInfo *>::iterator it = ThePureMap().find(name);
+  if (it == ThePureMap().end()) {
+    tauCreateFI((void**)&fi, name, "", TAU_USER, "TAU_OMP_STATE");
+    ThePureMap()[name] = fi;
+  } else {
+    fi = (*it).second;
+  }
+  RtsLayer::UnLockEnv();
+  return fi;
+}
+
 extern "C" void Tau_pure_start(const char *name)
 {
   Tau_global_incr_insideTAU();
@@ -1977,8 +1996,8 @@ extern "C" int Tau_create_tid(void) {
 // this routine is called by the destructors of our static objects
 // ensuring that the profiles are written out while the objects are still valid
 void Tau_destructor_trigger() {
-  Tau_global_setLightsOut();
   Tau_stop_top_level_timer_if_necessary();
+  Tau_global_setLightsOut();
   if ((TheUsingDyninst() || TheUsingCompInst()) && TheSafeToDumpData()) {
 #ifndef TAU_VAMPIRTRACE
     TAU_PROFILE_EXIT("FunctionDB destructor");
@@ -2108,4 +2127,5 @@ extern "C" void Tau_Bg_hwp_counters_output(int* numCounters, x_uint64 counters[]
  * $Revision: 1.158 $   $Date: 2010/05/28 17:45:49 $
  * VERSION: $Id: TauCAPI.cpp,v 1.158 2010/05/28 17:45:49 sameer Exp $
  ***************************************************************************/
+
 
