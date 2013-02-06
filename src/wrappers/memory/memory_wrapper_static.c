@@ -50,139 +50,128 @@ extern void * __real_pvalloc(size_t size);
 #endif
 
 
-int Tau_memory_wrapper_init(void)
+int memory_wrapper_init(void)
 {
   static int init = 0;
   if (init) return 0;
-  init = 1;
 
-  Tau_global_incr_insideTAU();
-  Tau_init_initializeTAU();
-  Tau_create_top_level_timer_if_necessary();
-  Tau_memory_set_wrapper_present(1);
-  Tau_global_decr_insideTAU();
+  Tau_memory_wrapper_register(memory_wrapper_enable, memory_wrapper_disable);
+  init = 1;
   return 0;
 }
 
-int Tau_memory_wrapper_passthrough(void)
-{
-  // The order of these statements is important
-  return !Tau_init_check_initialized()
-      || Tau_global_getLightsOut()
-      || Tau_global_get_insideTAU();
-}
 
-#ifdef HAVE_MALLOC
-malloc_t Tau_get_system_malloc()
+malloc_t get_system_malloc()
 {
+#ifdef HAVE_MALLOC
   return __real_malloc;
-}
+#else
+  return NULL;
 #endif
+}
 
+calloc_t get_system_calloc()
+{
 #ifdef HAVE_CALLOC
-calloc_t Tau_get_system_calloc()
-{
   return __real_calloc;
-}
+#else
+  return NULL;
 #endif
+}
 
+realloc_t get_system_realloc()
+{
 #ifdef HAVE_REALLOC
-realloc_t Tau_get_system_realloc()
-{
   return __real_realloc;
-}
+#else
+  return NULL;
 #endif
+}
 
+memalign_t get_system_memalign()
+{
 #ifdef HAVE_MEMALIGN
-memalign_t Tau_get_system_memalign()
-{
   return __real_memalign;
-}
+#else
+  return NULL;
 #endif
+}
 
+posix_memalign_t get_system_posix_memalign()
+{
 #ifdef HAVE_POSIX_MEMALIGN
-posix_memalign_t Tau_get_system_posix_memalign()
-{
   return __real_posix_memalign;
-}
+#else
+  return NULL;
 #endif
+}
 
+valloc_t get_system_valloc()
+{
 #ifdef HAVE_VALLOC
-valloc_t Tau_get_system_valloc()
-{
   return __real_valloc;
-}
+#else
+  return NULL;
 #endif
+}
 
+pvalloc_t get_system_pvalloc()
+{
 #ifdef HAVE_PVALLOC
-pvalloc_t Tau_get_system_pvalloc()
-{
   return __real_pvalloc;
-}
+#else
+  return NULL;
 #endif
+}
 
-#ifdef HAVE_FREE
-free_t Tau_get_system_free()
+free_t get_system_free()
 {
+#ifdef HAVE_FREE
   return __real_free;
-}
+#else
+  return NULL;
 #endif
+}
 
-#ifdef HAVE_MALLOC
 void * __wrap_malloc(size_t size)
 {
-  return malloc_handle(size);
+  return malloc_wrapper(size);
 }
-#endif
 
-#ifdef HAVE_CALLOC
 void * __wrap_calloc(size_t count, size_t size)
 {
-  return calloc_handle(count, size);
+  return calloc_wrapper(count, size);
 }
-#endif
 
-#ifdef HAVE_FREE
 void __wrap_free(void * ptr)
 {
-  return free_handle(ptr);
+  free_wrapper(ptr);
 }
-#endif
 
-#ifdef HAVE_MEMALIGN
 void * __wrap_memalign(size_t alignment, size_t size)
 {
-  return memalign_handle(alignment, size);
+  return memalign_wrapper(alignment, size);
 }
-#endif
 
-#ifdef HAVE_POSIX_MEMALIGN
 int __wrap_posix_memalign(void **ptr, size_t alignment, size_t size)
 {
-  return posix_memalign_handle(ptr, alignment, size);
+  return posix_memalign_wrapper(ptr, alignment, size);
 }
-#endif
 
-#ifdef HAVE_REALLOC
 void * __wrap_realloc(void * ptr, size_t size)
 {
-  return realloc_handle(ptr, size);
+  return realloc_wrapper(ptr, size);
 }
-#endif
 
-#ifdef HAVE_VALLOC
 void * __wrap_valloc(size_t size)
 {
-  return valloc_handle(size);
+  return valloc_wrapper(size);
 }
-#endif
 
-#ifdef HAVE_PVALLOC
 void * __wrap_pvalloc(size_t size)
 {
-  return pvalloc_handle(size);
+  return pvalloc_wrapper(size);
 }
-#endif
 
 /*********************************************************************
  * EOF

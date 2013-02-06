@@ -166,7 +166,7 @@ public class DrawMetadataGraph extends AbstractPerformanceOperation {
 	    }
 
 
-	    JFreeChart chart = ChartFactory.createStackedBarChart(
+	    JFreeChart chart = ChartFactory.createStackedBarChart3D(
 		    this.title,  // chart title
 		    this.xAxisLabel,  // domain Axis label
 		    this.yAxisLabel,  // range Axis label
