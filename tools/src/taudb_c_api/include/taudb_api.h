@@ -13,12 +13,17 @@ extern enum taudb_database_schema_version taudb_version;
 /* to connect to the database */
 extern TAUDB_CONNECTION* taudb_connect_config(char* config_name);
 extern TAUDB_CONNECTION* taudb_connect_config_file(char* config_file_name);
+extern TAUDB_CONNECTION* taudb_try_connect_config(char* config_name, taudb_error* err);
+extern TAUDB_CONNECTION* taudb_try_connect_config_file(char* config_file_name, taudb_error* err);
 
 /* test the connection status */
 extern int taudb_check_connection(TAUDB_CONNECTION* connection);
 
 /* disconnect from the database */
 extern int taudb_disconnect(TAUDB_CONNECTION* connection);
+
+/* return a string describing an error */
+extern const char * taudb_error_str(taudb_error err);
 
 /************************************************/
 /* query functions */
