@@ -1332,11 +1332,19 @@ extern "C" void Tau_pure_context_userevent(void **ptr, const char* name)
 }
 
 
+
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_context_userevent(void *ue, double data) {
   TauContextUserEvent *t = (TauContextUserEvent *) ue;
   t->TriggerEvent(data);
 } 
+
+///////////////////////////////////////////////////////////////////////////
+extern "C" void Tau_trigger_context_event(const char *name, double data) {
+  void *ue; 
+  Tau_pure_context_userevent(&ue, name);
+  Tau_context_userevent(ue, data);
+}
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_context_userevent_thread(void *ue, double data, int tid) {
