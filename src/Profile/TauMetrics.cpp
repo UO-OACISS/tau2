@@ -25,16 +25,14 @@
 #include <Profile/TauTrace.h>
 #ifdef CUPTI
 #include <Profile/CuptiLayer.h>
-// Moved from header file
-using namespace std;
 #endif //CUPTI
 
 #ifdef TAUKTAU_SHCTR
 #include "Profile/KtauCounters.h"
-// Moved from header file
-using namespace std;
 #endif //TAUKTAU_SHCTR
 
+using namespace std;
+using namespace tau;
 
 void metric_read_nullClock(int tid, int idx, double values[]);
 void metric_write_userClock(int tid, double value);
@@ -571,7 +569,7 @@ void TauMetrics_triggerAtomicEvents(unsigned long long timestamp, double *values
   int i;
 #ifndef TAU_EPILOG
   for (i = 1; i < nmetrics; i++) {
-    TauTraceEvent(traceCounterEvents[i]->GetEventId(), (long long)values[i], tid, timestamp, 1);
+    TauTraceEvent(traceCounterEvents[i]->GetId(), (long long)values[i], tid, timestamp, 1);
     // 1 in the last parameter is for use timestamp
   }
 #endif /* TAU_EPILOG */

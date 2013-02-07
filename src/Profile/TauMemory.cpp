@@ -66,8 +66,8 @@
 #include <catamount/catmalloc.h>
 #endif /* TAU_CATAMOUNT */
 
-
 using namespace std;
+using namespace tau;
 
 // MAP_ANON is a synonym for MAP_ANONYMOUS
 #if !defined(MAP_ANONYMOUS) && defined(MAP_ANON)
@@ -98,12 +98,9 @@ void TauAllocation::DetectLeaks(void)
 
     leak_event_map_t::iterator jt = leak_map.find(event);
     if (jt == leak_map.end()) {
-      char * s = (char *)malloc(strlen(event->GetEventName())+128);
-      sprintf(s, "Memory Leak! %s", event->GetEventName());
-      TauUserEvent * leak_event = new TauUserEvent(s);
+      TauUserEvent * leak_event = new TauUserEvent("Memory Leak!" + event->GetName());
       leak_map[event] = leak_event;
       leak_event->TriggerEvent(size);
-      free((void*)s);
     } else {
       jt->second->TriggerEvent(size);
     }
@@ -582,7 +579,6 @@ void TauAllocation::TriggerAllocationEvent(size_t size, char const * filename, i
 
   event_map_t::iterator it = event_map.find(file_hash);
   if (it == event_map.end()) {
-    char * s;
     if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
         !(strncmp(filename, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_FILE_STRLEN)))
     {
@@ -757,9 +753,9 @@ void Tau_memory_initialize(void)
 extern "C"
 int Tau_memory_is_tau_allocation(void * ptr)
 {
-  Tau_global_incr_insideTAU();
+  Tau_memory_wrapper_disable();
   TauAllocation * alloc = TauAllocation::Find(ptr);
-  Tau_global_decr_insideTAU();
+  Tau_memory_wrapper_enable();
   return alloc != NULL;
 }
 

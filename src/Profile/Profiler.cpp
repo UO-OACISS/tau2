@@ -765,23 +765,21 @@ void TauProfiler_getUserEventList(const char ***inPtr, int *numUserEvents) {
   *inPtr = (char const **) malloc(sizeof(char*) * *numUserEvents);
 
   for(int i=0;i<*numUserEvents;i++) {
-    (*inPtr)[i] = TheEventDB()[i]->GetEventName();
+    (*inPtr)[i] = TheEventDB()[i]->GetName().c_str();
   }
 }
 
-
 void TauProfiler_getUserEventValues(const char **inUserEvents, int numUserEvents,
-				  int **numEvents, double **max, double **min,
-				  double **mean, double **sumSqr, int tid) {
+    int **numEvents, double **max, double **min, double **mean, double **sumSqr, int tid)
+{
 
   TAU_PROFILE("TAU_GET_EVENT_VALUES()", " ", TAU_IO);
 
-
-  *numEvents = (int*) malloc (sizeof(int) * numUserEvents);
-  *max = (double *) malloc (sizeof(double) * numUserEvents);
-  *min = (double *) malloc (sizeof(double) * numUserEvents);
-  *mean = (double *) malloc (sizeof(double) * numUserEvents);
-  *sumSqr = (double *) malloc (sizeof(double) * numUserEvents);
+  *numEvents = (int*)malloc(sizeof(int) * numUserEvents);
+  *max = (double *)malloc(sizeof(double) * numUserEvents);
+  *min = (double *)malloc(sizeof(double) * numUserEvents);
+  *mean = (double *)malloc(sizeof(double) * numUserEvents);
+  *sumSqr = (double *)malloc(sizeof(double) * numUserEvents);
 
   RtsLayer::LockDB();
 
@@ -789,21 +787,21 @@ void TauProfiler_getUserEventValues(const char **inUserEvents, int numUserEvents
   vector<TauUserEvent*>::iterator eit;
 
   for (eit = TheEventDB().begin(); eit != TheEventDB().end(); eit++) {
-    for (int i=0;i<numUserEvents;i++) {
-      if ((inUserEvents != 0) && (strcmp(inUserEvents[i], (*eit)->GetEventName()) == 0)) {
-	(*numEvents)[idx] = (*eit)->GetNumEvents(tid);
-	(*max)[idx] = (*eit)->GetMax(tid);
-	(*min)[idx] = (*eit)->GetMin(tid);
-	(*mean)[idx] = (*eit)->GetMean(tid);
-	(*sumSqr)[idx] = (*eit)->GetSumSqr(tid);
-	idx++;
-	break;
+    for (int i = 0; i < numUserEvents; i++) {
+      if (inUserEvents && (*eit)->GetName() == inUserEvents[i]) {
+        (*numEvents)[idx] = (*eit)->GetNumEvents(tid);
+        (*max)[idx] = (*eit)->GetMax(tid);
+        (*min)[idx] = (*eit)->GetMin(tid);
+        (*mean)[idx] = (*eit)->GetMean(tid);
+        (*sumSqr)[idx] = (*eit)->GetSumSqr(tid);
+        idx++;
+        break;
       }
     }
   }
 
   RtsLayer::UnLockDB();
-  
+
 }
 
 double *Profiler::getStartValues() {
@@ -908,60 +906,56 @@ static void finalizeTrace(int tid) {
 #endif /* TAU_VAMPIRTRACE */
 }
 
-void TauProfiler_PurgeData(int tid) {
-  
+void TauProfiler_PurgeData(int tid)
+{
+
   vector<FunctionInfo*>::iterator it;
   vector<TauUserEvent*>::iterator eit;
   Profiler *curr;
-  
+
   DEBUGPROFMSG("Profiler::PurgeData( tid = "<<tid <<" ) "<<endl;);
   RtsLayer::LockDB();
 
   // Reset The Function Database
   for (it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
-    (*it)->SetCalls(tid,0);
-    (*it)->SetSubrs(tid,0);
+    (*it)->SetCalls(tid, 0);
+    (*it)->SetSubrs(tid, 0);
     (*it)->SetExclTimeZero(tid);
     (*it)->SetInclTimeZero(tid);
   }
-  
+
   // Reset the Atomit/User Event Database
   for (eit = TheEventDB().begin(); eit != TheEventDB().end(); eit++) {
-    (*eit)->LastValueRecorded[tid] = 0;
-    (*eit)->NumEvents[tid] = 0L;
-    (*eit)->MinValue[tid] = 9999999;
-    (*eit)->MaxValue[tid] = -9999999;
-    (*eit)->SumSqrValue[tid] = 0;
-    (*eit)->SumValue[tid] = 0;
+    (*eit)->ResetData(tid);
   }
 
   if (TauInternal_CurrentProfiler(tid) == NULL) {
     // There are no active timers, we are finished!
     RtsLayer::UnLockDB();
-    return;	
+    return;
   }
 
   // Now Re-register callstack entries
   curr = TauInternal_CurrentProfiler(tid);
   curr->ThisFunction->IncrNumCalls(tid);
 
-    for (int i=0;i<Tau_Global_numCounters;i++) {
-      curr->StartTime[i]=0;
-    }
-    RtsLayer::getUSecD(tid, curr->StartTime);	  
+  for (int i = 0; i < Tau_Global_numCounters; i++) {
+    curr->StartTime[i] = 0;
+  }
+  RtsLayer::getUSecD(tid, curr->StartTime);
 
   curr = curr->ParentProfiler;
 
   while (curr != 0) {
     curr->ThisFunction->IncrNumCalls(tid);
     curr->ThisFunction->IncrNumSubrs(tid);
-    for (int i=0;i<Tau_Global_numCounters;i++) {
-      curr->StartTime[i]=0;
+    for (int i = 0; i < Tau_Global_numCounters; i++) {
+      curr->StartTime[i] = 0;
     }
-    RtsLayer::getUSecD(tid, curr->StartTime);	  
+    RtsLayer::getUSecD(tid, curr->StartTime);
     curr = curr->ParentProfiler;
   }
-  
+
   RtsLayer::UnLockDB();
 }
 
@@ -1015,36 +1009,35 @@ void Profiler::SetPhase(bool flag) {
 
 
 // writes user events to the file
-static int writeUserEvents(FILE *fp, int tid) {
+static int writeUserEvents(FILE *fp, int tid)
+{
   vector<TauUserEvent*>::iterator it;
 
-  fprintf(fp,"0 aggregates\n"); // For now there are no aggregates
-  
+  fprintf(fp, "0 aggregates\n");    // For now there are no aggregates
+
   // Print UserEvent Data if any
   int numEvents = 0;
   for (it = TheEventDB().begin(); it != TheEventDB().end(); ++it) {
-    if ((*it) && (*it)->GetNumEvents(tid) == 0) { // skip user events with no calls
+    if ((*it) && (*it)->GetNumEvents(tid) == 0) {    // skip user events with no calls
       continue;
     }
     if ((*it)) {
       numEvents++;
     }
   }
-  
+
   if (numEvents > 0) {
     // Data format 
     // # % userevents
     // # name numsamples max min mean sumsqr 
     fprintf(fp, "%d userevents\n", numEvents);
     fprintf(fp, "# eventname numevents max min mean sumsqr\n");
-    
-    for(it = TheEventDB().begin(); it != TheEventDB().end(); ++it) {
-      if ((*it) && (*it)->GetNumEvents(tid) == 0) { // skip user events with no calls
-	continue;
-      }
+
+    for (it = TheEventDB().begin(); it != TheEventDB().end(); ++it) {
+      if ((*it) && (*it)->GetNumEvents(tid) == 0) continue;
       fprintf(fp, "\"%s\" %ld %.16G %.16G %.16G %.16G\n", 
-	      (*it)->GetEventName(), (*it)->GetNumEvents(tid), (*it)->GetMax(tid),
-	      (*it)->GetMin(tid), (*it)->GetMean(tid), (*it)->GetSumSqr(tid));
+          (*it)->GetName().c_str(), (*it)->GetNumEvents(tid), (*it)->GetMax(tid),
+          (*it)->GetMin(tid), (*it)->GetMean(tid), (*it)->GetSumSqr(tid));
     }
   }
   return 0;

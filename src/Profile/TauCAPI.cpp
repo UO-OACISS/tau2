@@ -64,6 +64,8 @@ void esd_exit (elg_ui4 rid);
 #include <execinfo.h>
 #endif
 
+using namespace tau;
+
 
 extern void Tau_pure_start_task_string(string const & name, int tid);
 
@@ -1295,13 +1297,14 @@ extern "C" void Tau_userevent_thread(void *ue, double data, int tid) {
 extern "C" void Tau_get_context_userevent(void **ptr, const char *name)
 {
   if (!*ptr) {
+    Tau_global_incr_insideTAU();
     RtsLayer::LockEnv();
     if (!*ptr) {
-      TauContextUserEvent *ue;
-      ue = new TauContextUserEvent(name);
-      *ptr = (void*) ue;
+      TauContextUserEvent * ue = new TauContextUserEvent(name);
+      *ptr = (void*)ue;
     }
     RtsLayer::UnLockEnv();
+    Tau_global_decr_insideTAU();
   }
 }
 
@@ -1344,7 +1347,7 @@ extern "C" void Tau_context_userevent_thread(void *ue, double data, int tid) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_set_event_name(void *ue, char *name) {
   TauUserEvent *t = (TauUserEvent *) ue;
-  t->SetEventName(name);
+  t->SetName(name);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1360,25 +1363,25 @@ extern "C" void Tau_report_thread_statistics(void) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_event_disable_min(void *ue) {
   TauUserEvent *t = (TauUserEvent *) ue;
-  t->SetDisableMin(true);
+  t->SetMinEnabled(false);
 } 
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_event_disable_max(void *ue) {
   TauUserEvent *t = (TauUserEvent *) ue;
-  t->SetDisableMax(true);
+  t->SetMaxEnabled(false);
 } 
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_event_disable_mean(void *ue) {
   TauUserEvent *t = (TauUserEvent *) ue;
-  t->SetDisableMean(true);
+  t->SetMeanEnabled(false);
 } 
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_event_disable_stddev(void *ue) {
   TauUserEvent *t = (TauUserEvent *) ue;
-  t->SetDisableStdDev(true);
+  t->SetStdDevEnabled(false);
 } 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1497,12 +1500,12 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void) {
 
 extern "C" void Tau_disable_context_event(void *event) {
   TauContextUserEvent *e = (TauContextUserEvent *) event;
-  e->SetDisableContext(true);
+  e->SetContextEnabled(false);
 }
 
 extern "C" void Tau_enable_context_event(void *event) {
   TauContextUserEvent *e = (TauContextUserEvent *) event;
-  e->SetDisableContext(false);
+  e->SetContextEnabled(true);
 }
 
 
