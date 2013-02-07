@@ -3451,6 +3451,7 @@ char * Tau_printRanks(void *comm_ptr) {
 
 }
 
-int Tau_setupCommunicatorInfo(MPI_Comm comm)  { 
+int Tau_setupCommunicatorInfo(MPI_Comm comm)  {
+  return 0;
 }
 /* EOF TauMpi.c */

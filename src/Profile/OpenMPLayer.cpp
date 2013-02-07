@@ -51,7 +51,6 @@ omp_lock_t OpenMPLayer::tauRegistermutex;
 #ifdef TAU_OPENMP_NESTED
 static int threadId = -1;
 #pragma omp threadprivate(threadId)
-static int threadCount = 0;
 #endif /* TAU_OPENMP_NESTED */
 
 

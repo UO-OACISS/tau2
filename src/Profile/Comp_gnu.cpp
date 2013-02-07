@@ -100,6 +100,7 @@ HashTable& TheHashTable()
 /*
  * Get symbol table by using BFD
  */
+#ifndef TAU_BFD
 static void issueBfdWarningIfNecessary() {
   static bool warningIssued = false;
   if (!warningIssued) {
@@ -108,6 +109,7 @@ static void issueBfdWarningIfNecessary() {
     warningIssued = true;
   }
 }
+#endif
 
 void updateHashTable(unsigned long addr, const char *funcname)
 {
