@@ -31,7 +31,7 @@ all: static dynamic
 	@echo "Please make run-static or run-dynamic"
 
 run-static: static
-	TAU_MEMDBG_PROTECT_ABOVE=1 ./$(EXE)-static
+	bash -c "TAU_MEMDBG_PROTECT_ABOVE=1 TAU_TRACK_MEMORY_LEAKS=1 TAU_TRACK_HEAP=1 ./$(EXE)-static"
 
 run-dynamic: dynamic
 	tau_exec -memory_debug -T serial,pdt ./$(EXE)-dynamic

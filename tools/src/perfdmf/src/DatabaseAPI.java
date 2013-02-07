@@ -51,6 +51,8 @@ public class DatabaseAPI {
     protected ConnectionManager connector;
     protected Map<Integer, Function> intervalEventHash = null;
     protected Map<Integer, UserEvent> atomicEventHash = null;
+    
+    protected boolean experimentChanged=true;
     //protected String configFileName = null;
 
     protected boolean cancelUpload = false;
@@ -108,6 +110,7 @@ public class DatabaseAPI {
 
     public void setExperiment(Experiment experiment) {
         this.experiment = experiment;
+        experimentChanged=true;
     }
 
     public DatabaseAPI() {}
@@ -217,7 +220,7 @@ public class DatabaseAPI {
 
     // returns Vector of Trial objects
 	public List<Trial> getTrialList(boolean getMetadata) {
-		if (trials == null) {
+		if (trials == null||this.experimentChanged) {
 			StringBuffer whereClause = new StringBuffer();
 			if (experiment != null) {
 				whereClause
@@ -296,6 +299,7 @@ public class DatabaseAPI {
         Vector<Experiment> experiments = Experiment.getExperimentList(db, whereClause);
         if (experiments.size() == 1) {
             this.experiment = experiments.elementAt(0);
+            this.experimentChanged = true;
             return this.experiment;
         } else {
             return null;

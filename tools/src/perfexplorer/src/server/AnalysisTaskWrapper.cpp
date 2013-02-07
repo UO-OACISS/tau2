@@ -656,7 +656,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 				dataset.addValue(centroids.getValue(x,y), (String)rowLabels.get(y), new String(Integer.toString(x)));
 			}
 		}
-        JFreeChart chart = ChartFactory.createStackedBarChart(
+        JFreeChart chart = ChartFactory.createStackedBarChart3D(
         		null, null, null,     // range axis label
             dataset,                         // data
             PlotOrientation.HORIZONTAL,        // the plot orientation
@@ -683,7 +683,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 		for (int x = 0 ; x < clusterSizes.length ; x++) {
 			dataset.addValue(clusterSizes[x], "Threads in cluster", new String(Integer.toString(x)));
 		}
-        JFreeChart chart = ChartFactory.createStackedBarChart(
+        JFreeChart chart = ChartFactory.createStackedBarChart3D(
         		null, null, null,     // range axis label
             dataset,                         // data
             PlotOrientation.HORIZONTAL,        // the plot orientation
@@ -854,7 +854,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 		for (int x = 0 ; x < clusterSizes.length ; x++) {
 			dataset.addValue(clusterSizes[x], "Threads in cluster", new String(Integer.toString(x)));
 		}
-        JFreeChart chart = ChartFactory.createStackedBarChart(
+        JFreeChart chart = ChartFactory.createStackedBarChart3D(
             modelData.toString(),  // chart title
             "Cluster Number",          // domain axis label
             "Threads in cluster",     // range axis label
@@ -896,7 +896,7 @@ public class AnalysisTaskWrapper extends TimerTask {
 		if (chartType == ChartType.CLUSTER_MINIMUMS) {
             chartTitle = chartTitle + " Minimum Values";
 		}
-        JFreeChart chart = ChartFactory.createStackedBarChart(
+        JFreeChart chart = ChartFactory.createStackedBarChart3D(
             chartTitle,  // chart title
             "Cluster Number",          // domain axis label
             "Total Runtime",     // range axis label
