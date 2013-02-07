@@ -215,7 +215,7 @@ void Profiler::CallPathStart(int tid) {
 	string *callpathname = TauFormulateNameString(this);
 	DEBUGPROFMSG("Couldn't find string in map: "<<*comparison<<endl; );
 	
-	string grname = string("TAU_CALLPATH | ") + RtsLayer::PrimaryGroup(ThisFunction->GetAllGroups());
+	string grname = string("TAU_CALLPATH|") + RtsLayer::PrimaryGroup(ThisFunction->GetAllGroups());
 	CallPathFunction = new FunctionInfo(*callpathname, "", 
 					    ThisFunction->GetProfileGroup(), 
 					    (const char*) grname.c_str(), true);
