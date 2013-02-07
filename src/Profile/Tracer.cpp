@@ -34,6 +34,7 @@
 #include <iostream>
 
 using namespace std;
+using namespace tau;
 
 /* Magic number, parameter for certain events */
 #define INIT_PARAM 3
@@ -63,7 +64,7 @@ static int TauTraceFlushEvents = 0;
 static int TauTraceInitialized[TAU_MAX_THREADS] = {0};
 static int TraceFileInitialized[TAU_MAX_THREADS] = {0};
 
-static double tracerValues[TAU_MAX_COUNTERS] = {0};
+//static double tracerValues[TAU_MAX_COUNTERS] = {0};
 
 
 double TauSyncAdjustTimeStamp(double timestamp) 
@@ -491,11 +492,8 @@ int TauTraceDumpEDF(int tid) {
   
   /* Now write the user defined event */
   for (uit = TheEventDB().begin(); uit != TheEventDB().end(); uit++) {
-    int monoInc = 0; 
-    if ((*uit)->GetMonotonicallyIncreasing()) { 
-      monoInc = 1;
-    }
-    fprintf(fp, "%ld TAUEVENT %d \"%s\" TriggerValue\n", (long)((*uit)->GetEventId()), monoInc, (*uit)->GetEventName());
+    int monoInc = (*uit)->IsMonotonicallyIncreasing() ? 1 : 0;
+    fprintf(fp, "%ld TAUEVENT %d \"%s\" TriggerValue\n", (long)(*uit)->GetId(), monoInc, (*uit)->GetName().c_str());
   }
 
   // Now add the nine extra events 
