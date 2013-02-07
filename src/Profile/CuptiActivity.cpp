@@ -85,12 +85,13 @@ void Tau_cupti_onload()
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_KERNEL);
 
 #if CUPTI_API_VERSION >= 3
-	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_SOURCE_LOCATOR);
   if (strcasecmp(TauEnv_get_cuda_instructions(), "GLOBAL_ACCESS") == 0)
   {
+	  err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_SOURCE_LOCATOR);
 	  err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_GLOBAL_ACCESS);
   } else if (strcasecmp(TauEnv_get_cuda_instructions(), "BRANCH") == 0)
   {
+	  err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_SOURCE_LOCATOR);
 	  err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_BRANCH);
   }
 #else

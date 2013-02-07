@@ -207,7 +207,7 @@ void Profiler::CallPathStart(int tid) {
 
     map<TAU_CALLPATH_MAP_TYPE>::iterator it = TheCallPathMap().find(comparison);
     if (it == TheCallPathMap().end()) {
-      RtsLayer::LockEnv();
+      int le = RtsLayer::LockEnv();
       it = TheCallPathMap().find(comparison);
 
       if (it == TheCallPathMap().end()) {

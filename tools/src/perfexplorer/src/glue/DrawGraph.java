@@ -419,7 +419,7 @@ public class DrawGraph extends AbstractPerformanceOperation {
         // set to a common style
         Utility.applyDefaultChartTheme(chart);
         } else if (chartType == STACKEDBARCHART) {
-            chart = ChartFactory.createStackedBarChart(
+            chart = ChartFactory.createStackedBarChart3D(
                 this.title,  // chart title
                 this.xAxisLabel,  // domain Axis label
                 this.yAxisLabel,  // range Axis label
