@@ -1570,7 +1570,7 @@ extern "C" void Tau_global_stop(void) {
 extern "C" char * Tau_phase_enable(const char *group) {
 #ifdef TAU_PROFILEPHASE
   char *newgroup = new char[strlen(group)+16];
-  sprintf(newgroup, "%s | TAU_PHASE", group);
+  sprintf(newgroup, "%s|TAU_PHASE", group);
   return newgroup;
 #else /* TAU_PROFILEPHASE */
   return (char *) group;

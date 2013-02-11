@@ -193,7 +193,7 @@ void Profiler::Start(int tid)
   if (ParentProfiler == (Profiler *) NULL) {
     string AllGroups = ThisFunction->AllGroups;
     if (AllGroups.find("TAU_PHASE", 0) == string::npos) {
-      AllGroups.append(" | TAU_PHASE");
+      AllGroups.append("|TAU_PHASE");
       free(ThisFunction->AllGroups);
       ThisFunction->AllGroups = strdup(AllGroups.c_str());
     }

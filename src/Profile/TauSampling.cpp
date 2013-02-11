@@ -984,7 +984,7 @@ void Tau_sampling_finalizeProfile(int tid) {
 	new FunctionInfo((const char*)intermediatePathLeafName,
 			 candidate->tauContext->GetType(),
 			 candidate->tauContext->GetProfileGroup(),
-			 "TAU_INTERMEDIATE | TAU_CALLPATH", true);
+			 "TAU_INTERMEDIATE|TAU_CALLPATH", true);
       RtsLayer::UnLockDB();
       name2FuncInfoMap[tid]->insert(std::pair<string,FunctionInfo*>(*intermediatePathLeafString, intermediatePathLeaf));
     } else {
@@ -1046,9 +1046,9 @@ void Tau_sampling_finalizeProfile(int tid) {
       string *callSiteKeyName = new string(call_site_key);
       fi_it = name2FuncInfoMap[tid]->find(*callSiteKeyName);
       if (fi_it == name2FuncInfoMap[tid]->end()) {
-        char sampleGroup[] = "TAU_UNWIND | TAU_CALLPATH";
+        char sampleGroup[] = "TAU_UNWIND|TAU_CALLPATH";
         if (strstr((const char*)callSiteKeyName->c_str(), "UNWIND") == NULL) {
-          strcpy(sampleGroup,"TAU_SAMPLE | TAU_CALLPATH");
+          strcpy(sampleGroup,"TAU_SAMPLE|TAU_CALLPATH");
         }
 	//string grname = sampleGroup + string(candidate->tauContext->GetAllGroups()); 
 	RtsLayer::LockDB();
