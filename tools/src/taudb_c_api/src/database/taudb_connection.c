@@ -447,20 +447,29 @@ void taudb_prepare_statement(TAUDB_CONNECTION* connection, const char* statement
 #endif
 }
 
-void taudb_execute_statement(TAUDB_CONNECTION* connection, const char* statement_name, int nParams, const char ** paramValues) {
+int taudb_execute_statement(TAUDB_CONNECTION* connection, const char* statement_name, int nParams, const char ** paramValues) {
 #ifdef TAUDB_DEBUG_DEBUG
   printf("calling taudb_execute_statement()\n");
+	printf("Will execute statement %s with %d parameters.\n", statement_name, nParams);
+	int i;
+	for(i = 0; i < nParams; ++i) {
+		printf("Param %d = %s\n", i+1, paramValues[i]);
+	}
 #endif
 
 #ifdef __TAUDB_POSTGRESQL__
   PGresult* res;
   res = PQexecPrepared(connection->connection, statement_name, nParams, paramValues, NULL, NULL, 0);
-  if (PQresultStatus(res) != PGRES_COMMAND_OK)
+	if (PQresultStatus(res) != PGRES_COMMAND_OK)
   {
-    fprintf(stderr, "Execucting statement failed: %s", PQerrorMessage(connection->connection));
+    fprintf(stderr, "Executing statement %s failed: %s", statement_name, PQerrorMessage(connection->connection));
     PQclear(res);
     taudb_exit_nicely(connection);
   }
+  char * rows_changed_str;
+	rows_changed_str = PQcmdTuples(res); /* PQclear frees this */
+	int rows_changed = atoi(rows_changed_str);
+	return rows_changed;
 #endif
 }
 
