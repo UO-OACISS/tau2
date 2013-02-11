@@ -1990,18 +1990,27 @@ extern "C" void Tau_get_counter_info(const char ***counterNames, int *numCounter
 //Fast but DO NOT use this call when calling the FunctionInfo DB
 //or Profiler stack. 
 extern "C" int Tau_get_local_tid(void) {
-  return RtsLayer::localThreadId();
+  Tau_global_incr_insideTAU();
+  int tid = RtsLayer::localThreadId();
+  Tau_global_decr_insideTAU();
+  return tid;
 }
 
 //////////////////////////////////////////////////////////////////////
 //Slow but will correctly account for the tasks. Use when calling FunctionInfo DB
 //or Profiler stack.
 extern "C" int Tau_get_tid(void) {
-  return RtsLayer::myThread();
+  Tau_global_incr_insideTAU();
+  int tid = RtsLayer::myThread();
+  Tau_global_decr_insideTAU();
+  return tid;
 }
 
 extern "C" int Tau_create_tid(void) {
-  return RtsLayer::threadId();
+  Tau_global_incr_insideTAU();
+  int tid = RtsLayer::threadId();
+  Tau_global_decr_insideTAU();
+  return tid;
 }
 
 // this routine is called by the destructors of our static objects
