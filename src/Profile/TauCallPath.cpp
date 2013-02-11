@@ -229,7 +229,7 @@ void Profiler::CallPathStart(int tid)
       it = pathMap.find(comparison);
       if (it == pathMap.end()) {
         string callpathname = TauFormulateNameString(this);
-        string grname = string("TAU_CALLPATH | ") + RtsLayer::PrimaryGroup(ThisFunction->GetAllGroups());
+        string grname = string("TAU_CALLPATH|") + RtsLayer::PrimaryGroup(ThisFunction->GetAllGroups());
 
         CallPathFunction = new FunctionInfo(callpathname, "", ThisFunction->GetProfileGroup(), grname.c_str(), true);
         pathMap[comparison] = CallPathFunction;
