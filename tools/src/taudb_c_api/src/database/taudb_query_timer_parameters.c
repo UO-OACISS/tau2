@@ -117,12 +117,8 @@ TAUDB_TIMER_PARAMETER* taudb_get_timer_parameter_by_name(TAUDB_TIMER_PARAMETER* 
   return timer_parameter;
 }
 
-void taudb_save_timer_parameters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
-  if(update) {
-    printf("Updating timer parameters not supported yet.");
-  }
-	
-  const char* my_query = "insert into timer_parameter (timer, parameter_name, parameter_value) values ($1, $2, $3);";
+void taudb_save_timer_parameters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {	
+  const char* my_query = "insert into timer_parameter (timer, parameter_name, parameter_value) select $1, $2::varchar, $3::varchar where not exists (select 1 from timer_parameter where timer=$1 and parameter_name=$2 and parameter_value=$3);";
   const char* statement_name = "TAUDB_INSERT_TIMER_PARAMETER";
   taudb_prepare_statement(connection, statement_name, my_query, 3);
   TAUDB_TIMER *timer, *tmp;

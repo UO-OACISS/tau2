@@ -98,14 +98,22 @@ void taudb_save_time_ranges(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, bo
   const char* my_query;
 	const char* statement_name;
 	int nParams;
+	
+	const char * update_query = "update time_range set iteration_start=$1, iteration_end=$2, time_start=$3, time_end=$4 where id=$5;";
+  const char * update_statement_name = "TAUDB_UPDATE_TIME_RANGE";
+	const int update_nParams = 5;
+	const char * insert_query = "insert into time_range (iteration_start, iteration_end, time_start, time_end) values ($1, $2, $3, $4);";
+  const char * insert_statement_name = "TAUDB_INSERT_TIME_RANGE";
+	const int insert_nParams = 4;
+	
 	if(update) {
-		my_query = "update time_range set iteration_start=$1, iteration_end=$2, time_start=$3, time_end=$4 where id=$5;";
-  	statement_name = "TAUDB_UPDATE_TIME_RANGE";
-		nParams=5;
+		my_query = update_query;
+		statement_name = update_statement_name;
+		nParams = update_nParams;
 	} else {
-		my_query = "insert into time_range (iteration_start, iteration_end, time_start, time_end) values ($1, $2, $3, $4);";
-  	statement_name = "TAUDB_INSERT_TIME_RANGE";
-		nParams=4;
+		my_query = insert_query;
+		statement_name = insert_statement_name;
+		nParams = insert_nParams;
 	}
 	
   taudb_prepare_statement(connection, statement_name, my_query, nParams);
@@ -132,7 +140,17 @@ void taudb_save_time_ranges(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, bo
 			paramValues[4] = id;
 		}
 
-    taudb_execute_statement(connection, statement_name, nParams, paramValues);
+    int rows = taudb_execute_statement(connection, statement_name, nParams, paramValues);
+		if(update && rows == 0) {
+#ifdef TAUDB_DEBUG
+			printf("Falling back to insert for update of time range.\n");
+#endif
+			/* updated row didn't exist; insert instead */
+			time_range->id = 0;
+			taudb_prepare_statement(connection, insert_statement_name, insert_query, insert_nParams);
+			taudb_execute_statement(connection, insert_statement_name, insert_nParams, paramValues);
+		}
+		
 		
 		if(!(update && time_range->id > 0)) {
 	    taudb_execute_query(connection, "select currval('time_range_id_seq');");

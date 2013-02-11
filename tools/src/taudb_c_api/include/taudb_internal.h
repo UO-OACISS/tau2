@@ -58,7 +58,7 @@ extern void taudb_clear_result(TAUDB_CONNECTION *connection);
 extern void taudb_close_transaction(TAUDB_CONNECTION *connection);
 extern void taudb_close_query(TAUDB_CONNECTION *connection);
 extern void taudb_prepare_statement(TAUDB_CONNECTION* connection, const char* statement_name, const char* statement, int nParams);
-extern void taudb_execute_statement(TAUDB_CONNECTION* connection, const char* statement_name, int nParams, const char ** paramValues);
+extern int taudb_execute_statement(TAUDB_CONNECTION* connection, const char* statement_name, int nParams, const char ** paramValues);
 extern int taudb_try_execute_statement(TAUDB_CONNECTION* connection, const char* statement_name, int nParams, const char ** paramValues);
 
 

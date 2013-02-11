@@ -264,15 +264,22 @@ void taudb_save_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean
   const char* my_query; 
 	const char* statement_name;
 	int nParams;
-  
+	
+  const char* update_query = "update timer set trial=$1, name=$2, short_name=$3, source_file=$4, line_number=$5, line_number_end=$6, column_number=$7, column_number_end=$8 where id=$9;";
+  const char* update_statement_name = "TAUDB_UPDATE_TIMER";
+	const int update_nParams = 9;
+  const char* insert_query = "insert into timer (trial, name, short_name, source_file, line_number, line_number_end, column_number, column_number_end) values ($1, $2, $3, $4, $5, $6, $7, $8);";
+  const char* insert_statement_name = "TAUDB_INSERT_TIMER";
+	const int insert_nParams = 8;
+	
 	if(update) {
-	  my_query = "update timer set trial=$1, name=$2, short_name=$3, source_file=$4, line_number=$5, line_number_end=$6, column_number=$7, column_number_end=$8 where id=$9;";
-	  statement_name = "TAUDB_UPDATE_TIMER";
-		nParams = 9;
+	  my_query = update_query;
+		statement_name = update_statement_name;
+		nParams = update_nParams;
 	} else {
-	  my_query = "insert into timer (trial, name, short_name, source_file, line_number, line_number_end, column_number, column_number_end) values ($1, $2, $3, $4, $5, $6, $7, $8);";
-	  statement_name = "TAUDB_INSERT_TIMER";
-		nParams = 8;
+	  my_query = insert_query;
+		statement_name = insert_statement_name;
+		nParams = insert_nParams;
 	}
 	
 	taudb_prepare_statement(connection, statement_name, my_query, nParams);
@@ -309,7 +316,16 @@ void taudb_save_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean
 			paramValues[8] = id;
 		}
 
-    taudb_execute_statement(connection, statement_name, nParams, paramValues);
+    int rows = taudb_execute_statement(connection, statement_name, nParams, paramValues);
+			if(update && rows == 0) {
+#ifdef TAUDB_DEBUG
+				printf("Falling back to insert for update of timer.\n");
+#endif
+				/* updated row didn't exist; insert instead */
+				timer->id = 0;
+				taudb_prepare_statement(connection, insert_statement_name, insert_query, insert_nParams);
+				taudb_execute_statement(connection, insert_statement_name, insert_nParams, paramValues);
+			}
 		
 		if(!(update && timer->id > 0)) {
 	    taudb_execute_query(connection, "select currval('timer_id_seq');");

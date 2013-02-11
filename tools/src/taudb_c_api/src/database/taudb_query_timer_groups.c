@@ -112,9 +112,11 @@ TAUDB_TIMER_GROUP* taudb_get_timer_group_from_timer_by_name(TAUDB_TIMER_GROUP* t
 }
 
 void taudb_save_timer_groups(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
-  const char* my_query = "insert into timer_group (timer, group_name) values ($1, $2);";
+  const char* my_query = "insert into timer_group (timer, group_name) select $1, $2::varchar where not exists (select 1 from timer_group where timer=$1 and group_name=$2);";
   const char* statement_name = "TAUDB_INSERT_TIMER_GROUP";
-  taudb_prepare_statement(connection, statement_name, my_query, 2);
+	int nParams = 2;
+	
+  taudb_prepare_statement(connection, statement_name, my_query, nParams);
   TAUDB_TIMER_GROUP *group, *tmp;
   TAUDB_TIMER *timer, *tmp2;
 #if 0
@@ -134,7 +136,7 @@ void taudb_save_timer_groups(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, b
       sprintf(timerid, "%d", timer->id);
       paramValues[0] = timerid;
       paramValues[1] = group->name;
-      taudb_execute_statement(connection, statement_name, 2, paramValues);
+      taudb_execute_statement(connection, statement_name, nParams, paramValues);
     }
   }
   taudb_clear_result(connection);
