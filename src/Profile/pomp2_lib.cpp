@@ -69,11 +69,19 @@ omp_lock_t tau_ompregdescr_lock;
   return ptr; \
 } 
 
-#define TAU_OPARI_CONSTURCT_TIMER_START(timer) { void *ptr = TauGlobal##timer(); \
-    Tau_start_timer(ptr, 0, Tau_get_tid()); }
+#define TAU_OPARI_CONSTURCT_TIMER_START(timer) { \
+    void * ptr; \
+    Tau_global_incr_insideTAU(); \
+    ptr = TauGlobal##timer(); \
+    Tau_start_timer(ptr, 0, Tau_get_tid()); \
+    Tau_global_decr_insideTAU(); }
 
-#define TAU_OPARI_CONSTURCT_TIMER_STOP(timer) { void *ptr = TauGlobal##timer(); \
-    Tau_stop_timer(ptr, Tau_get_tid()); }
+#define TAU_OPARI_CONSTURCT_TIMER_STOP(timer) { \
+    void * ptr; \
+    Tau_global_incr_insideTAU(); \
+    ptr = TauGlobal##timer(); \
+    Tau_stop_timer(ptr, Tau_get_tid()); \
+    Tau_global_decr_insideTAU(); }
 
 TAU_OPARI_CONSTURCT_TIMER(tatomic, "atomic enter/exit", "[OpenMP]", OpenMP); 
 TAU_OPARI_CONSTURCT_TIMER(tbarrier, "barrier enter/exit", "[OpenMP]", OpenMP); 
