@@ -30,7 +30,6 @@
 
 using namespace std;
 
-
 /////////////////////////////////////////////////////////////////////////
 // Member Function Definitions For class OpenMPLayer
 // This allows us to get thread ids from 0..N-1 and lock and unlock DB
@@ -44,7 +43,7 @@ omp_lock_t OpenMPLayer::tauDBmutex;
 omp_lock_t OpenMPLayer::tauEnvmutex;
 omp_lock_t OpenMPLayer::tauRegistermutex;
 
-struct OpenMPMap: public std::map<int, int>
+struct OpenMPMap : public std::map<int, int>
 {
   ~OpenMPMap() {
     Tau_destructor_trigger();
@@ -84,45 +83,44 @@ int OpenMPLayer::numThreads()
 int OpenMPLayer::GetTauThreadId(void)
 {
 #ifdef TAU_OPENMP
-  int threadId = omp_get_thread_num();
+
+  int omp_thread_id = omp_get_thread_num();
 
 #ifdef TAU_OPENMP_NESTED
-
   int level = omp_get_level();
   int width = omp_get_team_size(level);
   for (--level; level >= 0; --level) {
-    threadId += omp_get_ancestor_thread_num(level) * width;
+    omp_thread_id += omp_get_ancestor_thread_num(level) * width;
     width *= omp_get_team_size(level);
   }
-
 #else
   if (omp_get_nested()) {
-    //OPENMP thread identification not supported by compiler.
+    //OpenMP thread identification not supported by compiler.
     printf("ERROR: OpenMP nesting not supported. Please use a compiler that supports OMP specification >= 3.0 or rerun with OMP_NESTED=FALSE.\n");
     exit(1);
   }
 #endif /* TAU_OPENMP_NESTED */
 
   int tau_thread_id;
-  if (threadId == 0) {
-    tau_thread_id = threadId;
+  if (omp_thread_id == 0) {
+    tau_thread_id = omp_thread_id;
   } else {
     Initialize();
-
-    omp_set_lock(&OpenMPLayer::tauRegistermutex);
-
     OpenMPMap & ompMap = TheOMPMap();
-    OpenMPMap::iterator it = ompMap.find(threadId);
+    OpenMPMap::iterator it = ompMap.find(omp_thread_id);
     if (it == ompMap.end()) {
-      omp_unset_lock(&OpenMPLayer::tauRegistermutex);
-      tau_thread_id = OpenMPLayer::RegisterThread();
       omp_set_lock(&OpenMPLayer::tauRegistermutex);
-      ompMap[threadId] = tau_thread_id;
+      it = ompMap.find(omp_thread_id);
+      if (it == ompMap.end()) {
+        tau_thread_id = OpenMPLayer::RegisterThread();
+        ompMap[omp_thread_id] = tau_thread_id;
+      } else {
+        tau_thread_id = it->second;
+      }
+      omp_unset_lock(&OpenMPLayer::tauRegistermutex);
     } else {
       tau_thread_id = it->second;
     }
-
-    omp_unset_lock(&OpenMPLayer::tauRegistermutex);
   }
 
   return tau_thread_id;
@@ -134,13 +132,14 @@ int OpenMPLayer::GetTauThreadId(void)
 int OpenMPLayer::GetThreadId(void)
 {
 #ifdef TAU_OPENMP
-  int threadId = omp_get_thread_num();
+
+  int omp_thread_id = omp_get_thread_num();
 
 #ifdef TAU_OPENMP_NESTED
   int level = omp_get_level();
   int width = omp_get_team_size(level);
   for (--level; level >= 0; --level) {
-    threadId += omp_get_ancestor_thread_num(level) * width;
+    omp_thread_id += omp_get_ancestor_thread_num(level) * width;
     width *= omp_get_team_size(level);
   }
 #else
@@ -151,7 +150,7 @@ int OpenMPLayer::GetThreadId(void)
   }
 #endif /* TAU_OPENMP_NESTED */
 
-  return threadId;
+  return omp_thread_id;
 #else
   return 0;
 #endif /* TAU_OPENMP */
@@ -170,6 +169,7 @@ int OpenMPLayer::TotalThreads(void)
 #else
   return 0;
 #endif /* TAU_OPENMP */
+
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -184,13 +184,10 @@ int OpenMPLayer::InitializeThreadData(void)
 
 void OpenMPLayer::Initialize(void)
 {
-  bool flag = true;
-  if (flag) {
-    flag = false;
-    InitializeRegisterMutexData();
-    InitializeDBMutexData();
-    InitializeEnvMutexData();
-  }
+  // ONLY INITIALIZE THE LOCK ONCE!
+  static int registerInitFlag = InitializeRegisterMutexData();
+  static int dbInitFlag = InitializeDBMutexData();
+  static int envInitFlag = InitializeEnvMutexData();
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -219,8 +216,6 @@ int OpenMPLayer::InitializeRegisterMutexData(void)
 int OpenMPLayer::LockDB(void)
 {
   Initialize();
-  // Lock the functionDB mutex
-  //fprintf(stderr, "Thread %d locking DB\n", omp_get_thread_num());
   omp_set_lock(&OpenMPLayer::tauDBmutex);
   return 1;
 }
@@ -230,8 +225,6 @@ int OpenMPLayer::LockDB(void)
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::UnLockDB(void)
 {
-  // Unlock the functionDB mutex
-  //fprintf(stderr, "Thread %d unlocking DB\n", omp_get_thread_num());
   omp_unset_lock(&OpenMPLayer::tauDBmutex);
   return 1;
 }
@@ -240,9 +233,7 @@ int OpenMPLayer::UnLockDB(void)
 int OpenMPLayer::InitializeEnvMutexData(void)
 {
   // For locking functionEnv 
-  // Initialize the mutex
   omp_init_lock(&OpenMPLayer::tauEnvmutex);
-  //cout <<" Initialized the functionEnv Mutex data " <<endl;
   return 1;
 }
 
@@ -256,8 +247,6 @@ int OpenMPLayer::InitializeEnvMutexData(void)
 int OpenMPLayer::LockEnv(void)
 {
   Initialize();
-  // Lock the functionEnv mutex
-  //fprintf(stderr, "Thread %d locking Env\n", omp_get_thread_num());
   omp_set_lock(&OpenMPLayer::tauEnvmutex);
   return 1;
 }
@@ -267,8 +256,6 @@ int OpenMPLayer::LockEnv(void)
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::UnLockEnv(void)
 {
-  // Unlock the functionEnv mutex
-  //fprintf(stderr, "Thread %d unlocking Env\n", omp_get_thread_num());
   omp_unset_lock(&OpenMPLayer::tauEnvmutex);
   return 1;
 }
