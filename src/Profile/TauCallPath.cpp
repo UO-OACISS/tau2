@@ -65,7 +65,7 @@ struct CallpathMapCompare
 ///////////////////////////////////////////////////////////////////////////////
 struct CallpathMap : public std::map<long *, FunctionInfo *, CallpathMapCompare>
 {
-  ~CallpathMap() {
+  virtual ~CallpathMap() {
     Tau_destructor_trigger();
   }
 };
