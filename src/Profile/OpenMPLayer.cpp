@@ -45,7 +45,7 @@ omp_lock_t OpenMPLayer::tauRegistermutex;
 
 struct OpenMPMap : public std::map<int, int>
 {
-  ~OpenMPMap() {
+  virtual ~OpenMPMap() {
     Tau_destructor_trigger();
   }
 };
