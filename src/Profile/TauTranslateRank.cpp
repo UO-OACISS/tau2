@@ -1,6 +1,7 @@
 #include <map>
 #include <cstdlib>
 #include <mpi.h>
+#include <Profile/Profiler.h>
 
 using namespace std;
 

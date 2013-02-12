@@ -92,7 +92,7 @@ struct PhaseMap : public TAU_HASH_MAP<int, bool>
 
 struct PyFunctionDB : public TAU_HASH_MAP<string, int>
 {
-  virtual ~FunctionDB() {
+  virtual ~PyFunctionDB() {
     Tau_destructor_trigger();
   }
 };
@@ -106,7 +106,7 @@ PhaseMap & ThePhaseMap()
 
 PyFunctionDB & ThePyFunctionDB()
 {
-  struct PyFunctionDB db;
+  static PyFunctionDB db;
   return db;
 }
 
@@ -207,7 +207,7 @@ extern "C" PyObject * pytau_start(PyObject *self, PyObject *args)
   }
   FunctionInfo * f = TheFunctionDB()[id];
 
-  int phase = phaseMap[id] ? 1 : 0;
+  int phase = ThePhaseMap()[id] ? 1 : 0;
   Tau_start_timer(f, phase, RtsLayer::myThread());
 
   Py_INCREF (Py_None);
