@@ -347,4 +347,10 @@ typedef struct perfdmf_application {
  struct taudb_primary_metadata* primary_metadata;
 } PERFDMF_APPLICATION;
 
+/* Error handling */
+typedef enum taudb_error_e {
+	TAUDB_OK,
+	TAUDB_CONNECTION_FAILED
+} taudb_error;
+
 #endif /* TAUDB_STRUCTS_H */

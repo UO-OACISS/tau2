@@ -486,8 +486,8 @@ int Tau_finalize_collector_api(void) {
 }
 
 int Tau_get_thread_omp_state(int tid) {
-  // if not available, return null
-  if (Tau_collector_api == NULL) return 0;
+  // if not available, return something useful
+  if (Tau_collector_api == NULL) return -1;
   //TAU_VERBOSE("Thread %d, getting state...\n", tid);
 
   OMP_COLLECTOR_API_THR_STATE thread_state = THR_LAST_STATE;

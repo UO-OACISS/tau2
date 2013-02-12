@@ -267,14 +267,30 @@ TAUDB_TIMER_VALUE* taudb_get_timer_value(TAUDB_TIMER_CALL_DATA* timer_call_data,
 }
 
 extern void taudb_save_timer_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
-    if(update) {
-    	printf("Updating timer values not supported yet.");
-    }	
+	  const char* my_query;
+		const char* statement_name;
+		int nParams;
 	
-	const char* my_query = "insert into timer_value (timer_call_data, metric, inclusive_value, exclusive_value, "
-		"inclusive_percent, exclusive_percent, sum_exclusive_squared) values ($1, $2, $3, $4, $5, $6, $7);";
-    const char* statement_name = "TAUDB_INSERT_TIMER_VALUE";
-    taudb_prepare_statement(connection, statement_name, my_query, 7);
+		const char* insert_query = "insert into timer_value (timer_call_data, metric, inclusive_value, exclusive_value, "
+			"inclusive_percent, exclusive_percent, sum_exclusive_squared) values ($1, $2, $3, $4, $5, $6, $7);";
+    const char* insert_statement_name = "TAUDB_INSERT_TIMER_VALUE";
+		const int insert_nParams = 7;
+		const char* update_query = "update timer_value set inclusive_value=$3, exclusive_value=$4, inclusive_percent=$5, "
+			"exclusive_percent=$6, sum_exclusive_squared=$7 where timer_call_data=$1 and metric=$2";
+		const char* update_statement_name = "TAUDB_UPDATE_TIMER_VALUE";
+		const int update_nParams = 7;
+		
+		if(update) {
+			my_query = update_query;
+			statement_name = update_statement_name;
+			nParams = update_nParams;
+		} else {
+			my_query = insert_query;
+			statement_name = insert_statement_name;
+			nParams = insert_nParams;
+		}
+		
+    taudb_prepare_statement(connection, statement_name, my_query, nParams);
 	
 	/* the timer value lists are stored inside taudb_timer_call_data */
     TAUDB_TIMER_CALL_DATA *timer_call_data, *tmp;
@@ -310,8 +326,18 @@ extern void taudb_save_timer_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* t
 		  sprintf(sum_exclusive_squared, "%31.31f", timer_value->sum_exclusive_squared);
 		  paramValues[6] = sum_exclusive_squared;
 
-	      taudb_execute_statement(connection, statement_name, 7, paramValues);
+	    int rows = taudb_execute_statement(connection, statement_name, nParams, paramValues);
 		  //printf("New Timer Value: (%d, %d)\n", timer_call_data->id, timer_value->metric->id);
+			if(update && rows == 0) {
+#ifdef TAUDB_DEBUG
+				printf("Falling back to insert for update of timer value.\n");
+#endif
+				/* updated row didn't exist; insert instead */
+				taudb_prepare_statement(connection, insert_statement_name, insert_query, insert_nParams);
+				taudb_execute_statement(connection, insert_statement_name, insert_nParams, paramValues);
+			}
+
+			
 
 		  /* timer_values don't have ids, so there's nothing to update */
 	    }
