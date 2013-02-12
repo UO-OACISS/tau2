@@ -173,14 +173,21 @@ void taudb_save_threads(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolea
 	const char* statement_name;
   int nParams;
 	
+	const char * update_query = "update thread set trial=$1, node_rank=$2, context_rank=$3, thread_rank=$4, thread_index=$5 where id=$6;";
+	const char * update_statement_name = "TAUDB_UPDATE_THREAD";
+	const int update_nParams = 6;
+	const char * insert_query = "insert into thread (trial, node_rank, context_rank, thread_rank, thread_index) values ($1, $2, $3, $4, $5);";
+	const char * insert_statement_name = "TAUDB_INSERT_THREAD";
+	const int insert_nParams = 5;
+	
 	if(update) {
-		nParams = 6;
-	  my_query = "update thread set trial=$1, node_rank=$2, context_rank=$3, thread_rank=$4, thread_index=$5 where id=$6;";
-	  statement_name = "TAUDB_UPDATE_THREAD";
+		nParams = update_nParams;
+	  my_query = update_query;
+	  statement_name = update_statement_name;
 	} else {
-		nParams = 5;
-	  my_query = "insert into thread (trial, node_rank, context_rank, thread_rank, thread_index) values ($1, $2, $3, $4, $5);";
-	  statement_name = "TAUDB_INSERT_THREAD";
+		nParams = insert_nParams;
+	  my_query = insert_query;
+	  statement_name = insert_statement_name;
 	}
 	
   taudb_prepare_statement(connection, statement_name, my_query, nParams);
@@ -211,7 +218,16 @@ void taudb_save_threads(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolea
 			paramValues[5] = id;
 		}
 
-    taudb_execute_statement(connection, statement_name, nParams, paramValues);
+    int rows = taudb_execute_statement(connection, statement_name, nParams, paramValues);
+		if(update && rows == 0) {
+#ifdef TAUDB_DEBUG
+			printf("Falling back to insert for update of thread.\n");
+#endif
+			/* updated row didn't exist; insert instead */
+			thread->id = 0;
+			taudb_prepare_statement(connection, insert_statement_name, insert_query, insert_nParams);
+			taudb_execute_statement(connection, insert_statement_name, insert_nParams, paramValues);
+		}
 		
 		if(!(update && thread->id >0)) {
 	    taudb_execute_query(connection, "select currval('thread_id_seq');");

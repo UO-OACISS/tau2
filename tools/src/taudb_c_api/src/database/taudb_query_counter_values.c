@@ -147,7 +147,7 @@ TAUDB_COUNTER_VALUE* taudb_get_counter_value(TAUDB_COUNTER_VALUE* counter_values
 }
 
 void taudb_save_counter_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
-  const char* my_query = "insert into counter_value (counter, timer_callpath, thread, sample_count, maximum_value, minimum_value, mean_value, standard_deviation) values ($1, $2, $3, $4, $5, $6, $7, $8);";
+  const char* my_query = "insert into counter_value (counter, timer_callpath, thread, sample_count, maximum_value, minimum_value, mean_value, standard_deviation) select $1, $2, $3, $4, $5, $6, $7, $8 where not exists (select 1 from counter_value where counter = $1 and timer_callpath = $2 and thread = $3 and sample_count = $4 and maximum_value = $5 and minimum_value = $6 and mean_value = $7 and standard_deviation = $8);";
   const char* statement_name = "TAUDB_INSERT_COUNTER_VALUE";
   taudb_prepare_statement(connection, statement_name, my_query, 8);
   TAUDB_COUNTER_VALUE *counter_value, *tmp;
