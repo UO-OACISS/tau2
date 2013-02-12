@@ -104,11 +104,6 @@ public:
   inline bool GetAlreadyOnStack(int tid);
   inline void SetAlreadyOnStack(bool value, int tid);  
 
-  // A container of all of these.
-  // The ctor registers with this.
-        
-  //static TAU_STD_NAMESPACE vector<FunctionInfo*> FunctionDB[TAU_MAX_THREADS];
-
 #ifdef TAU_PROFILEMEMORY
   class TauUserEvent * MemoryEvent;
   class TauUserEvent * GetMemoryEvent(void) { return MemoryEvent; }
@@ -252,7 +247,7 @@ private:
 };
 
 // Global variables
-TAU_STD_NAMESPACE vector<FunctionInfo*>& TheFunctionDB(void); 
+std::vector<FunctionInfo*>& TheFunctionDB(void);
 int& TheSafeToDumpData(void);
 int& TheUsingDyninst(void);
 int& TheUsingCompInst(void);
