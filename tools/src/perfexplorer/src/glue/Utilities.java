@@ -17,6 +17,7 @@ import javax.swing.JFrame;
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfdmf.View;
 import edu.uoregon.tau.perfexplorer.client.PerfExplorerClient;
 import edu.uoregon.tau.perfexplorer.client.PerfExplorerModel;
 import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
@@ -30,7 +31,31 @@ import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
  *
  */
 public class Utilities {
-	public static Trial getTrial (String aName, String eName, String tName) {
+	public static Trial getTrialFromView (View v, String tName) {
+		boolean message = false;
+    PerfExplorerServer server = getServer();
+    List<View> views = new ArrayList();
+    views.add(v);
+  	List<Trial> trials = server.getTrialsForView(views, false);//TODO: Is this metadata ever needed?
+    for (Trial trial : trials) {
+      System.out.println(trial);
+      if (trial.getName().trim().equals(tName.trim())) {
+        if (!trial.isXmlMetaDataLoaded()) {
+          try {
+      trial.loadXMLMetadata(server.getDB());
+    } catch (SQLException e) {
+      System.err.println("Error getting metadata for trial");
+      e.printStackTrace();
+    }
+        }
+        return trial;
+      }
+    }
+		message = true;
+    return null;
+  }
+	
+  public static Trial getTrial (String aName, String eName, String tName) {
 		boolean message = false;
         PerfExplorerServer server = getServer();
 		List<Application> apps = server.getApplicationList();
@@ -69,6 +94,69 @@ public class Utilities {
         return null;
 	}
 
+	public static List<View> getViews () {
+		boolean message = false;
+
+    PerfExplorerServer server = getServer();
+    return server.getViews(0); 
+  }
+
+	public static List<View> getSubViews (View view) {
+		boolean message = false;
+
+    PerfExplorerServer server = getServer();
+    return server.getViews(view.getID()); 
+  }
+
+	public static List<View> getAllViews () {
+		boolean message = false;
+
+    PerfExplorerServer server = getServer();
+    return server.getAllSubViews(0); 
+  }
+
+	public static View getView (String name) {
+		boolean message = false;
+
+    PerfExplorerServer server = getServer();
+    List<View> views = server.getAllSubViews(0); 
+    View found = new View();
+    for (View view : views ) {
+        if (view.toString().equals(name)) {
+          found = view;
+          break;
+        }
+    }
+    return found;
+  }
+	
+  public static View getSubView (View view, String name) {
+		boolean message = false;
+
+    PerfExplorerServer server = getServer();
+    List<View> views = server.getAllSubViews(view.getID()); 
+    View found = new View();
+    for (View subView : views ) {
+        if (subView.toString().equals(name)) {
+          found = subView;
+          break;
+        }
+    }
+    return found;
+  }
+
+  public static List<Trial> getTrialsForView(View view)
+  {
+		boolean message = false;
+
+    PerfExplorerServer server = getServer();
+
+    List<View> views = new ArrayList<View>();
+    views.add(view);
+
+    return server.getTrialsForTAUdbView(views); 
+  }
+
 	public static List<Trial> getTrialsForExperiment (String aName, String eName) {
 		boolean message = false;
         PerfExplorerServer server = getServer();
@@ -104,13 +192,26 @@ public class Utilities {
         return null;
 	}
 
-	public static List<Experiment> getExperimentsForApplication (String aName) {
+	public static void  deleteTrial (Trial t) {
 		boolean message = false;
-        PerfExplorerServer server = getServer();
+    PerfExplorerServer server = getServer();
+		try {
+		t.deleteTrial(server.getDB(), t.getID());
+		} catch (SQLException e) {}
+	}
+
+	public static List<Application> getApplications () {
+		boolean message = false;
+    PerfExplorerServer server = getServer();
+		return server.getApplicationList();
+	}
+	
+	public static List<Experiment> getExperimentsForApplication (String aName) {
+		boolean message = true;
+    PerfExplorerServer server = getServer();
 		List<Application> apps = server.getApplicationList();
         for (Application app : apps ) {
             if (app.getName().equals(aName)) {
-            	//System.out.println("Found app");
             	List<Experiment> exps = server.getExperimentList(app.getID());
 				return exps;
 			}
