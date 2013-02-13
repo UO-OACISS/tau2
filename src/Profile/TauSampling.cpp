@@ -89,6 +89,7 @@
 #endif
 
 using namespace std;
+using namespace tau;
 
 static std::string gTauOmpStates(int index)
 {

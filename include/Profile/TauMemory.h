@@ -151,7 +151,7 @@ class TauAllocation
 public:
 
   typedef unsigned char * addr_t;
-  typedef TauContextUserEvent user_event_t;
+  typedef tau::TauContextUserEvent user_event_t;
   struct allocation_map_t : public TAU_HASH_MAP<addr_t, class TauAllocation*> {
     virtual ~allocation_map_t() {
       Tau_destructor_trigger();

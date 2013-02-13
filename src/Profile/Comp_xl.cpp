@@ -99,7 +99,12 @@ struct HashNode
 //  - char * fname: may be the same for multiple calls, 
 //                  may be NULL or nonsense under -O3
 typedef uint32_t key_type;
-typedef std::map<key_type, HashNode> HashTable;
+struct HashTable : public std::map<key_type, HashNode>
+{
+  virtual ~HashTable() {
+    Tau_destructor_trigger();
+  }
+};
 
 // These static functions cause the initializer to be called
 // before we start working with the data structure

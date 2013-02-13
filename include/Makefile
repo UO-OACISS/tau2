@@ -526,7 +526,7 @@ SDDF_DIR=
 
 #BGL#PROFILEOPT72 = -DTAU_BGL -I/bgl/BlueLight/ppcfloor/bglsys/include #ENDIF#
 #BGP#PROFILEOPT72 = -DTAU_BGP -I/bgsys/drivers/ppcfloor/arch/include/common -I/bgsys/drivers/ppcfloor/arch/include -I/bgsys/drivers/ppcfloor/arch/include/spi #ENDIF#
-#BGQ#PROFILEOPT72 = -DTAU_BGQ #ENDIF#
+#BGQ#PROFILEOPT72 = -DTAU_BGQ -I/bgsys/drivers/ppcfloor -I/bgsys/drivers/ppcfloor/comm/sys/include -I/bgsys/drivers/ppcfloor/spi/include -I/bgsys/drivers/ppcfloor/spi/include/kernel/cnk #ENDIF#
 
 #For F90 support for all platforms
 FWRAPPER	       = TauFMpi.o       

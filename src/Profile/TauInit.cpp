@@ -241,7 +241,11 @@ static int tauAddSignal(int sig, tau_sighandler_t handler = tauBacktraceHandler)
     return -1;
   }
   act.sa_sigaction = handler;
+#if defined(TAU_BGL) || defined(TAU_BGP) || defined(TAU_BGQ)
+  act.sa_flags = SA_SIGINFO;
+#else
   act.sa_flags = SA_SIGINFO | SA_ONSTACK;
+#endif
 
   ret = sigaction(sig, &act, NULL);
   if (ret != 0) {
