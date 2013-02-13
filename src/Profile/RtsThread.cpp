@@ -19,20 +19,19 @@
 // Include Files 
 //////////////////////////////////////////////////////////////////////
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
-using namespace std;
 #else /* TAU_DOT_H_LESS_HEADERS */
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
-#include "Profile/Profiler.h"
-#include "Profile/OpenMPLayer.h"
 
+#include <Profile/Profiler.h>
+#include <Profile/OpenMPLayer.h>
 #include <Profile/TauTrace.h>
-void TraceCallStack(int tid, Profiler *current);
-
-#include <stdio.h>
-#include <stdlib.h>
+#include <Profile/TauSampling.h>
 
 #ifdef TAUKTAU
 #include <Profile/KtauProfiler.h>
@@ -44,15 +43,20 @@ void TraceCallStack(int tid, Profiler *current);
 #endif //TAUKTAU_SHCTR
 #endif //TAUKTAU
 
-#include <Profile/TauSampling.h>
-
 // This is used for printing the stack trace when debugging locks
 #ifdef DEBUG_LOCK_PROBLEMS
 #include <execinfo.h>
 #endif //DEBUG_LOCK_PROBLEMS
 
+using namespace std;
+using namespace tau;
+
 int RtsLayer::lockDBCount[TAU_MAX_THREADS];
 int RtsLayer::lockEnvCount[TAU_MAX_THREADS];
+
+
+void TraceCallStack(int tid, Profiler *current);
+
 
 //////////////////////////////////////////////////////////////////////
 // Thread struct 

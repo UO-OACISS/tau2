@@ -146,7 +146,10 @@ TAUDB_SECONDARY_METADATA* taudb_get_secondary_metadata_by_id(TAUDB_SECONDARY_MET
 }
 
 void taudb_private_save_secondary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, TAUDB_SECONDARY_METADATA* secondary_metadata, TAUDB_SECONDARY_METADATA* parent, const char* statement_name, boolean update) {
-    // make array of 6 character pointers
+		const char* insert_query = "insert into secondary_metadata (id, trial, thread, timer_callpath, time_range, parent, name, value, is_array) values ($1, $2, $3, $4, $5, $6, $7, $8, $9);";
+  	const char* insert_statement_name = "TAUDB_INSERT_SECONDARY_METADATA";
+		const int insert_nParams = 9;
+		// make array of 6 character pointers
     const char* paramValues[9] = {0};
     paramValues[0] = secondary_metadata->id;
     char trialid[32] = {0};
@@ -188,7 +191,16 @@ void taudb_private_save_secondary_metadata(TAUDB_CONNECTION* connection, TAUDB_T
       paramValues[7] = secondary_metadata->value[0];
       paramValues[8] = "FALSE";
 	}
-    taudb_execute_statement(connection, statement_name, 9, paramValues);
+    int rows = taudb_execute_statement(connection, statement_name, 9, paramValues);
+
+		if(update && rows == 0) {
+#ifdef TAUDB_DEBUG
+			printf("Falling back to insert for update of seconday metadata.\n");
+#endif
+			/* updated row didn't exist; insert instead */
+			taudb_prepare_statement(connection, insert_statement_name, insert_query, insert_nParams);
+			taudb_execute_statement(connection, insert_statement_name, insert_nParams, paramValues);
+		}
 
     TAUDB_SECONDARY_METADATA *child, *tmp;
     HASH_ITER(hh2, secondary_metadata->children, child, tmp) {
@@ -197,9 +209,28 @@ void taudb_private_save_secondary_metadata(TAUDB_CONNECTION* connection, TAUDB_T
 }
 
 void taudb_save_secondary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
-  const char* my_query = "insert into secondary_metadata (id, trial, thread, timer_callpath, time_range, parent, name, value, is_array) values ($1, $2, $3, $4, $5, $6, $7, $8, $9);";
-  const char* statement_name = "TAUDB_INSERT_SECONDARY_METADATA";
-  taudb_prepare_statement(connection, statement_name, my_query, 9);
+  const char* my_query;
+	const char* statement_name;
+	int nParams;
+	
+	const char* insert_query = "insert into secondary_metadata (id, trial, thread, timer_callpath, time_range, parent, name, value, is_array) values ($1, $2, $3, $4, $5, $6, $7, $8, $9);";
+  const char* insert_statement_name = "TAUDB_INSERT_SECONDARY_METADATA";
+	const int insert_nParams = 9;
+	const char* update_query = "update secondary_metadata set trial=$2, thread=$3, timer_callpath=$4, time_range=$5, parent=$6, name=$7, value=$8, is_array=$9 where id=$1;";
+	const char* update_statement_name = "TAUDB_UPDATE_SECONDARY_METADATA";
+	const int update_nParams = 9;
+	
+	if(update) {
+		my_query = update_query;
+		statement_name = update_statement_name;
+		nParams = update_nParams;
+	} else {
+		my_query = insert_query;
+		statement_name = insert_statement_name;
+		nParams = insert_nParams;
+	}
+
+  taudb_prepare_statement(connection, statement_name, my_query, nParams);
   TAUDB_SECONDARY_METADATA *secondary_metadata, *tmp;
   HASH_ITER(hh2, trial->secondary_metadata_by_key, secondary_metadata, tmp) {
     taudb_private_save_secondary_metadata(connection, trial, secondary_metadata, NULL, statement_name, update);

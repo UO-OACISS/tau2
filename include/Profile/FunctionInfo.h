@@ -61,15 +61,6 @@ extern "C" int Tau_Global_numCounters;
 #define SS_ALLOCATOR std::allocator
 #endif //TAU_SS_ALLOC_SUPPORT
 #endif //TAU_WINDOWS
-// Putting "using namespace" statements in header files can create ambiguity
-// between user-defined symbols and std symbols, creating unparsable code
-// or even changing the behavior of user codes.  This is also widely considered
-// to be bad practice.  Here's a code PDT can't parse because of this line:
-//   EX: #include <complex>
-//   EX: typedef double real;
-//
-//using namespace std;
-class TauUserEvent; 
 
 class FunctionInfo
 {
@@ -113,18 +104,13 @@ public:
   inline bool GetAlreadyOnStack(int tid);
   inline void SetAlreadyOnStack(bool value, int tid);  
 
-  // A container of all of these.
-  // The ctor registers with this.
-        
-  //static TAU_STD_NAMESPACE vector<FunctionInfo*> FunctionDB[TAU_MAX_THREADS];
-
 #ifdef TAU_PROFILEMEMORY
-  TauUserEvent * MemoryEvent;
-  TauUserEvent * GetMemoryEvent(void) { return MemoryEvent; }
+  class TauUserEvent * MemoryEvent;
+  class TauUserEvent * GetMemoryEvent(void) { return MemoryEvent; }
 #endif // TAU_PROFILEMEMORY
 #ifdef TAU_PROFILEHEADROOM
-  TauUserEvent * HeadroomEvent;
-  TauUserEvent * GetHeadroomEvent(void) { return HeadroomEvent; }
+  class TauUserEvent * HeadroomEvent;
+  class TauUserEvent * GetHeadroomEvent(void) { return HeadroomEvent; }
 #endif // TAU_PROFILEHEADROOM
 
 #ifdef RENCI_STFF
@@ -261,7 +247,7 @@ private:
 };
 
 // Global variables
-TAU_STD_NAMESPACE vector<FunctionInfo*>& TheFunctionDB(void); 
+std::vector<FunctionInfo*>& TheFunctionDB(void);
 int& TheSafeToDumpData(void);
 int& TheUsingDyninst(void);
 int& TheUsingCompInst(void);

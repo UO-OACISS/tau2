@@ -54,8 +54,8 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #include <string>
 #endif//TAU_CRAYCNL
 
-// Moved from header file
 using namespace std;
+using namespace tau;
 
 
 #ifdef TAU_BGL
