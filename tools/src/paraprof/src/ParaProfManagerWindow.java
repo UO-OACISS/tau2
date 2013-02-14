@@ -65,6 +65,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
+import javax.swing.JComponent;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
@@ -74,6 +75,7 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
+import javax.swing.table.TableCellRenderer;
 
 import edu.uoregon.tau.common.TauRuntimeException;
 import edu.uoregon.tau.common.Utility;
@@ -2503,31 +2505,46 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 	}
 
 	private Component getTable(Object obj) {
-		if (obj instanceof ParaProfApplication) {
-			return (new JScrollPane(new JTable(new ApplicationTableModel(this,
-					(ParaProfApplication) obj, getTreeModel()))));
+		final JTable table = new JTable() {
+    
+      public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+        Component c = super.prepareRenderer(renderer, row, column);
+        if (c instanceof JComponent) {
+          JComponent jc = (JComponent) c;
+          Object value = getValueAt(row, column);
+          if (value != null) {
+            jc.setToolTipText(value.toString());
+          }
+        }
+        return c;
+      }
+    };
+    table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+    if (obj instanceof ParaProfApplication) {
+			table.setModel(new ApplicationTableModel(this,
+					(ParaProfApplication) obj, getTreeModel()));
 		} else if (obj instanceof ParaProfExperiment) {
-			return (new JScrollPane(new JTable(new ExperimentTableModel(this,
-					(ParaProfExperiment) obj, getTreeModel()))));
+			table.setModel(new ExperimentTableModel(this,
+					(ParaProfExperiment) obj, getTreeModel()));
 		} else if (obj instanceof ParaProfView) {
-			return (new JScrollPane(new JTable(new ViewTableModel(this,
-					(ParaProfView) obj, getTreeModel()))));
+			table.setModel(new ViewTableModel(this,
+					(ParaProfView) obj, getTreeModel()));
 		} else if (obj instanceof ParaProfTrial) {
 			ParaProfTrial ppTrial = (ParaProfTrial) obj;
 			TrialTableModel model = new TrialTableModel(this, ppTrial,
 					getTreeModel());
-			final JTable table = new JTable(model);
 
+		  table.setModel(model);
 			table.addMouseListener(model.getMouseListener(table));
 
 			table.setDefaultRenderer(Object.class, new TrialCellRenderer(
 					ppTrial.getTrial().getMetaData(), ppTrial.getTrial()
 					.getUncommonMetaData()));
-			return (new JScrollPane(table));
 		} else {
-			return (new JScrollPane(new JTable(new MetricTableModel(this,
-					(ParaProfMetric) obj, getTreeModel()))));
+			table.setModel(new MetricTableModel(this,
+					(ParaProfMetric) obj, getTreeModel()));
 		}
+    return (new JScrollPane(table));
 	}
 
 	public ParaProfApplication addApplication(boolean dBApplication,
