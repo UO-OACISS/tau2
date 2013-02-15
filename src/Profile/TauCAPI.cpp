@@ -932,6 +932,7 @@ extern "C" void Tau_disable_instrumentation(void) {
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_shutdown(void) {
+  Tau_memory_wrapper_disable();
   if (!TheUsingCompInst()) {
     RtsLayer::TheShutdown() = true;
     RtsLayer::TheEnableInstrumentation() = false;
@@ -2016,6 +2017,7 @@ extern "C" int Tau_create_tid(void) {
 // this routine is called by the destructors of our static objects
 // ensuring that the profiles are written out while the objects are still valid
 void Tau_destructor_trigger() {
+  Tau_memory_wrapper_disable();
   Tau_stop_top_level_timer_if_necessary();
   Tau_global_setLightsOut();
   if ((TheUsingDyninst() || TheUsingCompInst()) && TheSafeToDumpData()) {

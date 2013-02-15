@@ -745,6 +745,8 @@ void Tau_memory_initialize(void)
 {
   // Trigger the map's constructor
   static TauAllocation::allocation_map_t const & alloc = TauAllocation::AllocationMap();
+
+  atexit(Tau_memory_wrapper_disable);
 }
 
 //////////////////////////////////////////////////////////////////////
