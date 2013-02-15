@@ -289,10 +289,10 @@ void taudb_save_trial(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean 
   const char* paramValues[7] = {0};
   // populate the array of string values
   paramValues[0] = trial->name;
+  char data_source[32] = {0};
   if (trial->data_source == NULL) {
     paramValues[1] = NULL;
   } else {
-    char data_source[32] = {0};
     sprintf(data_source, "%d", trial->data_source->id);
     paramValues[1] = data_source;
   }
@@ -310,8 +310,8 @@ void taudb_save_trial(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean 
   paramValues[5] = total;
 
   // if we are updating, add the ID to the query
+  char id[32] = {0};
   if (update && trial->id > 0) {
-    char id[32] = {0};
     sprintf(id, "%d", trial->id);
     paramValues[6] = id;
   }

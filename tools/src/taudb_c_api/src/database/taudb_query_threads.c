@@ -212,11 +212,11 @@ void taudb_save_threads(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolea
     sprintf(thread_index, "%d", thread->index);
     paramValues[4] = thread_index;
 
-		if(update && thread->id > 0) {
-			char id[32] = {0};
-			sprintf(id, "%d", thread->id);
-			paramValues[5] = id;
-		}
+	char id[32] = {0};
+	if(update && thread->id > 0) {
+		sprintf(id, "%d", thread->id);
+		paramValues[5] = id;
+	}
 
     int rows = taudb_execute_statement(connection, statement_name, nParams, paramValues);
 		if(update && rows == 0) {

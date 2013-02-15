@@ -310,11 +310,11 @@ void taudb_save_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean
     sprintf(column_number_end, "%d", timer->column_number_end);
     paramValues[7] = column_number_end;
 		
-		if(update && timer->id > 0) {
-			char id[32] = {0};
-			sprintf(id, "%d", timer->id);
-			paramValues[8] = id;
-		}
+	char id[32] = {0};
+	if(update && timer->id > 0) {
+		sprintf(id, "%d", timer->id);
+		paramValues[8] = id;
+	}
 
     int rows = taudb_execute_statement(connection, statement_name, nParams, paramValues);
 			if(update && rows == 0) {

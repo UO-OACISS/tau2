@@ -157,13 +157,13 @@ void taudb_save_counter_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial,
     char counterid[32] = {0};
     sprintf(counterid, "%d", counter_value->key.counter->id);
     paramValues[0] = counterid;
+    char context[32] = {0};
 	if (counter_value->key.context != NULL) {
-      char context[32] = {0};
       sprintf(context, "%d", counter_value->key.context->id);
       paramValues[1] = context;
 	}
+	char thread[32] = {0};
 	if (counter_value->key.thread != NULL) {
-      char thread[32] = {0};
       sprintf(thread, "%d", counter_value->key.thread->id);
       paramValues[2] = thread;
 	}

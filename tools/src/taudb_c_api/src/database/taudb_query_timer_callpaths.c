@@ -347,26 +347,26 @@ TAUDB_TIMER_CALLPATH* taudb_get_timer_callpath_by_name(TAUDB_TIMER_CALLPATH* tim
 
 
 extern void taudb_save_timer_callpaths(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
-		const char* my_query;
-		const char* statement_name;
-		int nParams;
+	const char* my_query;
+	const char* statement_name;
+	int nParams;
 		
-		const char* insert_query = "insert into timer_callpath (timer, parent) values ($1, $2);";
+	const char* insert_query = "insert into timer_callpath (timer, parent) values ($1, $2);";
     const char* insert_statement_name = "TAUDB_INSERT_TIMER_CALLPATH";
-		const int insert_nParams = 2;
-		const char* update_query = "update timer_callpath set timer=$1, parent=$2 where id=$3;";
-		const char* update_statement_name = "TAUDB_UPDATE_TIMER_CALLPATH";
-		const int update_nParams = 3;
+	const int insert_nParams = 2;
+	const char* update_query = "update timer_callpath set timer=$1, parent=$2 where id=$3;";
+	const char* update_statement_name = "TAUDB_UPDATE_TIMER_CALLPATH";
+	const int update_nParams = 3;
 		
-		if(update) {
-			my_query = update_query;
-			statement_name = update_statement_name;
-			nParams = update_nParams;
-		} else {
-			my_query = insert_query;
-			statement_name = insert_statement_name;
-			nParams = insert_nParams;
-		}
+	if(update) {
+		my_query = update_query;
+		statement_name = update_statement_name;
+		nParams = update_nParams;
+	} else {
+		my_query = insert_query;
+		statement_name = insert_statement_name;
+		nParams = insert_nParams;
+	}
 		
     taudb_prepare_statement(connection, statement_name, my_query, nParams);
     TAUDB_TIMER_CALLPATH *timer_callpath, *tmp;
@@ -382,12 +382,12 @@ extern void taudb_save_timer_callpaths(TAUDB_CONNECTION* connection, TAUDB_TRIAL
 		  } else {
 			 paramValues[1] = NULL;
 		  }
-			
-			if(update && timer_callpath->id > 0) {
-				char id[32] = {0};
-				sprintf(id, "%d", timer_callpath->id);
-				paramValues[2] = id;
-			}
+
+		char id[32] = {0};			
+		if(update && timer_callpath->id > 0) {
+			sprintf(id, "%d", timer_callpath->id);
+			paramValues[2] = id;
+		}
 			
 	  
       int rows = taudb_execute_statement(connection, statement_name, nParams, paramValues);
