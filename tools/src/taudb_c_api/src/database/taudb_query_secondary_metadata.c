@@ -146,10 +146,10 @@ TAUDB_SECONDARY_METADATA* taudb_get_secondary_metadata_by_id(TAUDB_SECONDARY_MET
 }
 
 void taudb_private_save_secondary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, TAUDB_SECONDARY_METADATA* secondary_metadata, TAUDB_SECONDARY_METADATA* parent, const char* statement_name, boolean update) {
-		const char* insert_query = "insert into secondary_metadata (id, trial, thread, timer_callpath, time_range, parent, name, value, is_array) values ($1, $2, $3, $4, $5, $6, $7, $8, $9);";
+	const char* insert_query = "insert into secondary_metadata (id, trial, thread, timer_callpath, time_range, parent, name, value, is_array) values ($1, $2, $3, $4, $5, $6, $7, $8, $9);";
   	const char* insert_statement_name = "TAUDB_INSERT_SECONDARY_METADATA";
-		const int insert_nParams = 9;
-		// make array of 6 character pointers
+	const int insert_nParams = 9;
+	// make array of 6 character pointers
     const char* paramValues[9] = {0};
     paramValues[0] = secondary_metadata->id;
     char trialid[32] = {0};
@@ -158,13 +158,13 @@ void taudb_private_save_secondary_metadata(TAUDB_CONNECTION* connection, TAUDB_T
     char thread[32] = {0};
     sprintf(thread, "%d", secondary_metadata->key.thread->id);
     paramValues[2] = thread;
+    char timer_callpath[32] = {0};
 	if (secondary_metadata->key.timer_callpath != NULL) {
-      char timer_callpath[32] = {0};
       sprintf(timer_callpath, "%d", secondary_metadata->key.timer_callpath->id);
       paramValues[3] = timer_callpath;
 	}
+    char time_range[32] = {0};
 	if (secondary_metadata->key.time_range != NULL) {
-      char time_range[32] = {0};
       sprintf(time_range, "%d", secondary_metadata->key.time_range->id);
       paramValues[4] = time_range;
 	}
@@ -214,7 +214,7 @@ void taudb_save_secondary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIAL* tr
 	int nParams;
 	
 	const char* insert_query = "insert into secondary_metadata (id, trial, thread, timer_callpath, time_range, parent, name, value, is_array) values ($1, $2, $3, $4, $5, $6, $7, $8, $9);";
-  const char* insert_statement_name = "TAUDB_INSERT_SECONDARY_METADATA";
+  	const char* insert_statement_name = "TAUDB_INSERT_SECONDARY_METADATA";
 	const int insert_nParams = 9;
 	const char* update_query = "update secondary_metadata set trial=$2, thread=$3, timer_callpath=$4, time_range=$5, parent=$6, name=$7, value=$8, is_array=$9 where id=$1;";
 	const char* update_statement_name = "TAUDB_UPDATE_SECONDARY_METADATA";

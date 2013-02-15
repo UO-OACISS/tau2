@@ -254,22 +254,22 @@ extern void taudb_save_timer_call_data(TAUDB_CONNECTION* connection, TAUDB_TRIAL
       char timer_callpath_id[32] = {0};
       sprintf(timer_callpath_id, "%d", timer_call_data->key.timer_callpath->id);
       paramValues[0] = timer_callpath_id;
-		  char thread_id[32] = {0};
-		  sprintf(thread_id, "%d", timer_call_data->key.thread->id);
-		  paramValues[1] = thread_id;
-		  char calls[32] = {0};
-		  sprintf(calls, "%d", timer_call_data->calls);
-		  paramValues[2] = calls;
-		  char subroutines[32] = {0};
-		  sprintf(subroutines, "%d", timer_call_data->subroutines);
-		  paramValues[3] = subroutines;
-		  paramValues[4] = NULL; // TODO: Update this when support for saving time ranges is added
+		char thread_id[32] = {0};
+		sprintf(thread_id, "%d", timer_call_data->key.thread->id);
+		paramValues[1] = thread_id;
+		char calls[32] = {0};
+		sprintf(calls, "%d", timer_call_data->calls);
+		paramValues[2] = calls;
+		char subroutines[32] = {0};
+		sprintf(subroutines, "%d", timer_call_data->subroutines);
+		paramValues[3] = subroutines;
+		paramValues[4] = NULL; // TODO: Update this when support for saving time ranges is added
 	  
-			if(update && timer_call_data->id > 0) {
-				char id[32] = {0};
-				sprintf(id, "%d", timer_call_data->id);
-				paramValues[5] = id;
-			}
+		char id[32] = {0};
+		if(update && timer_call_data->id > 0) {
+			sprintf(id, "%d", timer_call_data->id);
+			paramValues[5] = id;
+		}
 		
 	    int rows = taudb_execute_statement(connection, statement_name, nParams, paramValues);
 			if(update && rows == 0) {

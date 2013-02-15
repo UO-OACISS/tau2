@@ -109,7 +109,7 @@ extern void taudb_save_primary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIA
 	int nParams;
 	
 	const char* insert_query = "insert into primary_metadata (trial, name, value) values ($1, $2, $3);";
-  const char* insert_statement_name = "TAUDB_INSERT_PRIMARY_METADATA";
+  	const char* insert_statement_name = "TAUDB_INSERT_PRIMARY_METADATA";
 	const int insert_nParams = 3;
 	const char* update_query = "update primary_metadata set value=$3 where trial=$1 and name=$2;";
 	const char* update_statement_name = "TAUDB_UPDATE_PRIMARY_METADATA";

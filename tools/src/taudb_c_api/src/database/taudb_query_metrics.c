@@ -151,37 +151,37 @@ void taudb_save_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolea
     char derived[32] = {0};
     sprintf(derived, "%d", metric->derived);
     paramValues[2] = derived;
-		
-		if(update && metric->id > 0) {
-			char id[32] = {};
-			sprintf(id, "%d", metric->id);
-			paramValues[3] = id;
-		}
+
+	char id[32] = {};		
+	if(update && metric->id > 0) {
+		sprintf(id, "%d", metric->id);
+		paramValues[3] = id;
+	}
 
     int rows = taudb_execute_statement(connection, statement_name, nParams, paramValues);
 		
-		if(update && rows == 0) {
+	if(update && rows == 0) {
 #ifdef TAUDB_DEBUG
-			printf("Falling back to insert for update of metric %d : %s.\n", metric->id, metric->name);
+		printf("Falling back to insert for update of metric %d : %s.\n", metric->id, metric->name);
 #endif
-			/* updated row didn't exist; insert instead */
-			metric->id = 0;
-			taudb_prepare_statement(connection, insert_statement_name, insert_query, insert_nParams);
-			taudb_execute_statement(connection, insert_statement_name, insert_nParams, paramValues);
-		}
+		/* updated row didn't exist; insert instead */
+		metric->id = 0;
+		taudb_prepare_statement(connection, insert_statement_name, insert_query, insert_nParams);
+		taudb_execute_statement(connection, insert_statement_name, insert_nParams, paramValues);
+	}
 		
-		if(!(update && metric->id > 0)) {
-    	taudb_execute_query(connection, "select currval('metric_id_seq');");
+	if(!(update && metric->id > 0)) {
+	taudb_execute_query(connection, "select currval('metric_id_seq');");
 
-    	int nRows = taudb_get_num_rows(connection);
-    	if (nRows == 1) {
-     	 metric->id = atoi(taudb_get_value(connection, 0, 0));
-      	//printf("New Metric: %d\n", metric->id);
-    	} else {
-    		printf("Failed.\n");
-    	}
-			taudb_close_query(connection);
-		}
+	int nRows = taudb_get_num_rows(connection);
+	if (nRows == 1) {
+ 	 metric->id = atoi(taudb_get_value(connection, 0, 0));
+  	//printf("New Metric: %d\n", metric->id);
+	} else {
+		printf("Failed.\n");
+	}
+		taudb_close_query(connection);
+	}
   }
   taudb_clear_result(connection);
 }

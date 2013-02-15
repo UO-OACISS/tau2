@@ -134,11 +134,11 @@ void taudb_save_time_ranges(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, bo
     sprintf(tend, "%llu", (long long unsigned int)time_range->time_end);
     paramValues[3] = tend;
 
-		if(update && time_range->id > 0) {
-			char id[32] = {0};
-			sprintf(id, "%d", time_range->id);
-			paramValues[4] = id;
-		}
+	char id[32] = {0};
+	if(update && time_range->id > 0) {
+		sprintf(id, "%d", time_range->id);
+		paramValues[4] = id;
+	}
 
     int rows = taudb_execute_statement(connection, statement_name, nParams, paramValues);
 		if(update && rows == 0) {

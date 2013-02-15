@@ -184,24 +184,24 @@ void taudb_save_counters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boole
     paramValues[0] = trialid;
     paramValues[1] = counter->name;
 		
-		if(update && counter->id > 0) {
-			char id[32] = {0};
-			sprintf(id, "%d", counter->id);
-			paramValues[2] = id;
-		}
+	char id[32] = {0};
+	if(update && counter->id > 0) {
+		sprintf(id, "%d", counter->id);
+		paramValues[2] = id;
+	}
 
     int rows = taudb_execute_statement(connection, statement_name, nParams, paramValues);
-		if(update && rows == 0) {
+	if(update && rows == 0) {
 #ifdef TAUDB_DEBUG
-			printf("Falling back to insert for update of counter %s.\n", counter->name);
+		printf("Falling back to insert for update of counter %s.\n", counter->name);
 #endif
-			/* updated row didn't exist; insert instead */
-			counter->id = 0;
-			taudb_prepare_statement(connection, insert_statement_name, insert_query, insert_nParams);
-			taudb_execute_statement(connection, insert_statement_name, insert_nParams, paramValues);
-		}
+		/* updated row didn't exist; insert instead */
+		counter->id = 0;
+		taudb_prepare_statement(connection, insert_statement_name, insert_query, insert_nParams);
+		taudb_execute_statement(connection, insert_statement_name, insert_nParams, paramValues);
+	}
 		
-		if(!(update && counter->id > 0)) {
+	if(!(update && counter->id > 0)) {
 	    taudb_execute_query(connection, "select currval('counter_id_seq');");
 
 	    int nRows = taudb_get_num_rows(connection);
@@ -212,7 +212,7 @@ void taudb_save_counters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boole
 	      printf("Failed.\n");
 	    }
 		taudb_close_query(connection);
-		}
+	}
   }
   taudb_clear_result(connection);
 }
