@@ -95,13 +95,32 @@ TAUDB_TIME_RANGE* taudb_get_time_range(TAUDB_TIME_RANGE* time_ranges, const int 
 }
 
 void taudb_save_time_ranges(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
-  const char* my_query = "insert into time_range (iteration_start, iteration_end, time_start, time_end) values ($1, $2, $3, $4);";
-  const char* statement_name = "TAUDB_INSERT_TIME_RANGE";
-  taudb_prepare_statement(connection, statement_name, my_query, 4);
+  const char* my_query;
+	const char* statement_name;
+	int nParams;
+	
+	const char * update_query = "update time_range set iteration_start=$1, iteration_end=$2, time_start=$3, time_end=$4 where id=$5;";
+  const char * update_statement_name = "TAUDB_UPDATE_TIME_RANGE";
+	const int update_nParams = 5;
+	const char * insert_query = "insert into time_range (iteration_start, iteration_end, time_start, time_end) values ($1, $2, $3, $4);";
+  const char * insert_statement_name = "TAUDB_INSERT_TIME_RANGE";
+	const int insert_nParams = 4;
+	
+	if(update) {
+		my_query = update_query;
+		statement_name = update_statement_name;
+		nParams = update_nParams;
+	} else {
+		my_query = insert_query;
+		statement_name = insert_statement_name;
+		nParams = insert_nParams;
+	}
+	
+  taudb_prepare_statement(connection, statement_name, my_query, nParams);
   TAUDB_TIME_RANGE *time_range, *tmp;
   HASH_ITER(hh, trial->time_ranges, time_range, tmp) {
-    // make array of 6 character pointers
-    const char* paramValues[4] = {0};
+    // make array of 5 character pointers
+    const char* paramValues[5] = {0};
     char istart[32] = {0};
     sprintf(istart, "%d", time_range->iteration_start);
     paramValues[0] = istart;
@@ -115,17 +134,36 @@ void taudb_save_time_ranges(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, bo
     sprintf(tend, "%llu", (long long unsigned int)time_range->time_end);
     paramValues[3] = tend;
 
-    taudb_execute_statement(connection, statement_name, 4, paramValues);
-    taudb_execute_query(connection, "select currval('time_range_id_seq');");
+	char id[32] = {0};
+	if(update && time_range->id > 0) {
+		sprintf(id, "%d", time_range->id);
+		paramValues[4] = id;
+	}
 
-    int nRows = taudb_get_num_rows(connection);
-    if (nRows == 1) {
-      time_range->id = atoi(taudb_get_value(connection, 0, 0));
-      //printf("New Time_Range: %d\n", time_range->id);
-    } else {
-      printf("Failed.\n");
-    }
-	taudb_close_query(connection);
+    int rows = taudb_execute_statement(connection, statement_name, nParams, paramValues);
+		if(update && rows == 0) {
+#ifdef TAUDB_DEBUG
+			printf("Falling back to insert for update of time range.\n");
+#endif
+			/* updated row didn't exist; insert instead */
+			time_range->id = 0;
+			taudb_prepare_statement(connection, insert_statement_name, insert_query, insert_nParams);
+			taudb_execute_statement(connection, insert_statement_name, insert_nParams, paramValues);
+		}
+		
+		
+		if(!(update && time_range->id > 0)) {
+	    taudb_execute_query(connection, "select currval('time_range_id_seq');");
+
+	    int nRows = taudb_get_num_rows(connection);
+	    if (nRows == 1) {
+	      time_range->id = atoi(taudb_get_value(connection, 0, 0));
+	      //printf("New Time_Range: %d\n", time_range->id);
+	    } else {
+	      printf("Failed.\n");
+	    }
+			taudb_close_query(connection);
+		}	
   }
   taudb_clear_result(connection);
 }

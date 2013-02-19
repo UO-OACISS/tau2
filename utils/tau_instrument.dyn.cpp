@@ -41,7 +41,6 @@ using namespace std;
 extern bool wildcardCompare(char *wild, char *string, char kleenestar);
 extern bool instrumentEntity(const string& function_name);
 extern bool fuzzyMatch(const string& a, const string& b);
-extern bool memory_flag;
 
 
 void replaceAll(string& str, const string& search, const string& replace);

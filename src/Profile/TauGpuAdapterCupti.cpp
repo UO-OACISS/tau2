@@ -5,7 +5,7 @@ extern "C" void Tau_cupti_find_context_event(
 						const char *name
 						) {
 							Tau_pure_context_userevent((void **) u, name);
-							(*u)->SetDisableContext(true);
+							(*u)->SetContextEnabled(false);
 						}
       
 

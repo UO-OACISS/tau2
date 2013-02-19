@@ -64,6 +64,8 @@ void esd_exit (elg_ui4 rid);
 #include <execinfo.h>
 #endif
 
+using namespace tau;
+
 
 extern void Tau_pure_start_task_string(string const & name, int tid);
 
@@ -930,6 +932,7 @@ extern "C" void Tau_disable_instrumentation(void) {
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_shutdown(void) {
+  Tau_memory_wrapper_disable();
   if (!TheUsingCompInst()) {
     RtsLayer::TheShutdown() = true;
     RtsLayer::TheEnableInstrumentation() = false;
@@ -1295,13 +1298,14 @@ extern "C" void Tau_userevent_thread(void *ue, double data, int tid) {
 extern "C" void Tau_get_context_userevent(void **ptr, const char *name)
 {
   if (!*ptr) {
+    Tau_global_incr_insideTAU();
     RtsLayer::LockEnv();
     if (!*ptr) {
-      TauContextUserEvent *ue;
-      ue = new TauContextUserEvent(name);
-      *ptr = (void*) ue;
+      TauContextUserEvent * ue = new TauContextUserEvent(name);
+      *ptr = (void*)ue;
     }
     RtsLayer::UnLockEnv();
+    Tau_global_decr_insideTAU();
   }
 }
 
@@ -1352,7 +1356,7 @@ extern "C" void Tau_context_userevent_thread(void *ue, double data, int tid) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_set_event_name(void *ue, char *name) {
   TauUserEvent *t = (TauUserEvent *) ue;
-  t->SetEventName(name);
+  t->SetName(name);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1368,25 +1372,25 @@ extern "C" void Tau_report_thread_statistics(void) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_event_disable_min(void *ue) {
   TauUserEvent *t = (TauUserEvent *) ue;
-  t->SetDisableMin(true);
+  t->SetMinEnabled(false);
 } 
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_event_disable_max(void *ue) {
   TauUserEvent *t = (TauUserEvent *) ue;
-  t->SetDisableMax(true);
+  t->SetMaxEnabled(false);
 } 
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_event_disable_mean(void *ue) {
   TauUserEvent *t = (TauUserEvent *) ue;
-  t->SetDisableMean(true);
+  t->SetMeanEnabled(false);
 } 
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_event_disable_stddev(void *ue) {
   TauUserEvent *t = (TauUserEvent *) ue;
-  t->SetDisableStdDev(true);
+  t->SetStdDevEnabled(false);
 } 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1505,12 +1509,12 @@ extern "C" void Tau_stop_top_level_timer_if_necessary(void) {
 
 extern "C" void Tau_disable_context_event(void *event) {
   TauContextUserEvent *e = (TauContextUserEvent *) event;
-  e->SetDisableContext(true);
+  e->SetContextEnabled(false);
 }
 
 extern "C" void Tau_enable_context_event(void *event) {
   TauContextUserEvent *e = (TauContextUserEvent *) event;
-  e->SetDisableContext(false);
+  e->SetContextEnabled(true);
 }
 
 
@@ -1567,7 +1571,7 @@ extern "C" void Tau_global_stop(void) {
 extern "C" char * Tau_phase_enable(const char *group) {
 #ifdef TAU_PROFILEPHASE
   char *newgroup = new char[strlen(group)+16];
-  sprintf(newgroup, "%s | TAU_PHASE", group);
+  sprintf(newgroup, "%s|TAU_PHASE", group);
   return newgroup;
 #else /* TAU_PROFILEPHASE */
   return (char *) group;
@@ -1987,23 +1991,33 @@ extern "C" void Tau_get_counter_info(const char ***counterNames, int *numCounter
 //Fast but DO NOT use this call when calling the FunctionInfo DB
 //or Profiler stack. 
 extern "C" int Tau_get_local_tid(void) {
-  return RtsLayer::localThreadId();
+  Tau_global_incr_insideTAU();
+  int tid = RtsLayer::localThreadId();
+  Tau_global_decr_insideTAU();
+  return tid;
 }
 
 //////////////////////////////////////////////////////////////////////
 //Slow but will correctly account for the tasks. Use when calling FunctionInfo DB
 //or Profiler stack.
 extern "C" int Tau_get_tid(void) {
-  return RtsLayer::myThread();
+  Tau_global_incr_insideTAU();
+  int tid = RtsLayer::myThread();
+  Tau_global_decr_insideTAU();
+  return tid;
 }
 
 extern "C" int Tau_create_tid(void) {
-  return RtsLayer::threadId();
+  Tau_global_incr_insideTAU();
+  int tid = RtsLayer::threadId();
+  Tau_global_decr_insideTAU();
+  return tid;
 }
 
 // this routine is called by the destructors of our static objects
 // ensuring that the profiles are written out while the objects are still valid
 void Tau_destructor_trigger() {
+  Tau_memory_wrapper_disable();
   Tau_stop_top_level_timer_if_necessary();
   Tau_global_setLightsOut();
   if ((TheUsingDyninst() || TheUsingCompInst()) && TheSafeToDumpData()) {
