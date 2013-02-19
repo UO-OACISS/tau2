@@ -37,7 +37,7 @@
 #include "memory_wrapper.h"
 
 #ifndef TAU_MULTITHREAD
-#if defined(TAU_OPENMP) || defined(TAU_PTHREADS)
+#if defined(TAU_OPENMP) || defined(PTHREADS)
 #define TAU_MULTITHREAD
 #endif
 #endif

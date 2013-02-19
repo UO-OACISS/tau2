@@ -20,7 +20,6 @@
 #include <TAU.h>
 
 #include <iostream>
-using namespace std;
 
 extern "C" int Tau_is_thread_fake(int t);
 
@@ -68,15 +67,16 @@ extern "C" {
 
 #ifdef CUPTI
 #include "Profile/CuptiLayer.h"
-// Moved from header file
-using namespace std;
 #endif //CUPTI
 
 #ifdef TAUKTAU_SHCTR
 #include "Profile/KtauCounters.h"
+#endif //TAUKTAU_SHCTR
+
 // Moved from header file
 using namespace std;
-#endif //TAUKTAU_SHCTR
+using namespace tau;
+
 
 #ifdef TAU_MPI
 extern TauUserEvent *TheSendEvent(void);
@@ -237,17 +237,17 @@ void metric_read_cputime(int tid, int idx, double values[]) {
 /* message size "timer" */
 void metric_read_messagesize(int tid, int idx, double values[]) {
 #ifdef TAU_MPI
-  values[idx] = TheSendEvent()->GetSumValue(tid)
-                + TheRecvEvent()->GetSumValue(tid)
-                + TheBcastEvent()->GetSumValue(tid)
-                + TheReduceEvent()->GetSumValue(tid)
-                + TheReduceScatterEvent()->GetSumValue(tid)
-                + TheScanEvent()->GetSumValue(tid)
-                + TheAllReduceEvent()->GetSumValue(tid)
-                + TheAlltoallEvent()->GetSumValue(tid)
-                + TheScatterEvent()->GetSumValue(tid)
-                + TheGatherEvent()->GetSumValue(tid)
-                + TheAllgatherEvent()->GetSumValue(tid);
+  values[idx] = TheSendEvent()->GetSum(tid)
+                + TheRecvEvent()->GetSum(tid)
+                + TheBcastEvent()->GetSum(tid)
+                + TheReduceEvent()->GetSum(tid)
+                + TheReduceScatterEvent()->GetSum(tid)
+                + TheScanEvent()->GetSum(tid)
+                + TheAllReduceEvent()->GetSum(tid)
+                + TheAlltoallEvent()->GetSum(tid)
+                + TheScatterEvent()->GetSum(tid)
+                + TheGatherEvent()->GetSum(tid)
+                + TheAllgatherEvent()->GetSum(tid);
   //Currently TAU_EVENT_DATATYPE is a double.
 #endif //TAU_MPI
 }

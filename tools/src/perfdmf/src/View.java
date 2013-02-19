@@ -362,7 +362,7 @@ public class View implements Serializable {
 			StringBuilder joinClause = new StringBuilder();
 			int currentView = 0;
 			int alias = 0;
-			String conjoin = " where ";
+			String conjoin = " where (";
 			while (results.next() != false) {
 				int viewid = results.getInt(2);
 				String tableName = results.getString(3);
@@ -372,18 +372,20 @@ public class View implements Serializable {
 				String operator = results.getString(5);
 				String value = results.getString(6);
 				if ((currentView > 0) && (currentView != viewid)) {
-					conjoin = " and ";
+					conjoin = " and (";
 				} else if (currentView == viewid) {
-					conjoin = " " + results.getString(1) + " ";
+					conjoin = " " + results.getString(1) + " (";
 				}
 				if (tableName.equalsIgnoreCase("trial")) {
 					whereClause.append(conjoin +   "t." + columnName + " " + operator + " " + "'" + value + "'");
 				} else {
 					// otherwise, we have primary_metadata or secondary_metadata
-					joinClause.append(" left outer join " + tableName + " t" + alias + " on t.id = t" + alias + ".trial");
-					whereClause.append(conjoin + "t" + alias + ".name = '" + columnName + "' ");
-					whereClause.append("and  t" + alias + ".value "+operator+" '" + value + "' ");
+					joinClause.append(" left outer join " + tableName + " t" + alias + " on t.id = t" + alias + ".trial and ");
+					// put the name column in the join to reduce the size of the join
+					joinClause.append("t" + alias + ".name = '" + columnName + "' ");
+					whereClause.append(conjoin + " t" + alias + ".value "+operator+" '" + value + "' ");
 				}
+				whereClause.append(")");
 				alias++;
 				currentView = viewid;
 				hashViews.get(currentView).setWhereClause(whereClause.toString());

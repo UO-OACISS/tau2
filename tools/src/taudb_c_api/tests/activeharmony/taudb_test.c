@@ -144,6 +144,16 @@ int main (int argc, char** argv) {
   boolean update = FALSE;
   boolean cascade = TRUE;
   taudb_save_trial(connection, trial, update, cascade);
+	
+	free(trial->name);
+	trial->name = taudb_strdup("FOO TEST TRIAL");
+  TAUDB_METRIC* metric2 = taudb_create_metrics(1);
+  metric2->name = taudb_strdup("L2_CACHE_MISS");
+  taudb_add_metric_to_trial(trial, metric2);
+	pm[4].value = taudb_strdup("aciss.uoregon.edu");
+	update = TRUE;
+	taudb_save_trial(connection, trial, update, cascade);
+	
   
   printf("Disconnecting...\n");
   taudb_disconnect(connection);

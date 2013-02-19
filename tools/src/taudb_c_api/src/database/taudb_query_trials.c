@@ -251,6 +251,10 @@ TAUDB_TRIAL* perfdmf_query_trials(TAUDB_CONNECTION* connection, PERFDMF_EXPERIME
 }
 
 void taudb_save_trial(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update, boolean cascade) {
+#ifdef TAUDB_DEBUG_DEBUG
+  printf("Calling perfdmf_save_trial()\n");
+	printf("Trial data_source id is %d.\n", trial->data_source->id);
+#endif
   const char* my_query;
   const char* statement_name;
   int nParams = 7;
@@ -267,7 +271,7 @@ void taudb_save_trial(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean 
   // Are we updating, or inserting?
   if (update && trial->id > 0) {
     nParams = 7;
-	statement_name = "TAUDB_UPDATE_TRIAL";
+	  statement_name = "TAUDB_UPDATE_TRIAL";
     my_query = "update trial set name=$1, data_source=$2, node_count=$3, contexts_per_node=$4, threads_per_context=$5, total_threads=$6 where id = $7;";
   } else {
     nParams = 6;
@@ -285,10 +289,10 @@ void taudb_save_trial(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean 
   const char* paramValues[7] = {0};
   // populate the array of string values
   paramValues[0] = trial->name;
+  char data_source[32] = {0};
   if (trial->data_source == NULL) {
     paramValues[1] = NULL;
   } else {
-    char data_source[32] = {0};
     sprintf(data_source, "%d", trial->data_source->id);
     paramValues[1] = data_source;
   }
@@ -306,12 +310,17 @@ void taudb_save_trial(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean 
   paramValues[5] = total;
 
   // if we are updating, add the ID to the query
+  char id[32] = {0};
   if (update && trial->id > 0) {
-    char id[32] = {0};
     sprintf(id, "%d", trial->id);
     paramValues[6] = id;
   }
-
+	
+#ifdef TAUDB_DEBUG_DEBUG
+	printf("Before execute, trial data_source id is %d.\n", trial->data_source->id);
+	printf("Before execute, paramValues[1] is %s\n", paramValues[1]);
+#endif
+	
   // execute the statement
   taudb_execute_statement(connection, statement_name, nParams, paramValues);
 

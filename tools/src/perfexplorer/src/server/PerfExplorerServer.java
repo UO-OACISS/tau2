@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.ListIterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -1681,6 +1682,27 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	public List<View> getViews (int parent) {
 		DB db = this.getDB();
 		return View.getViews(parent, db);
+	}
+
+	/**
+	 * Depth first search to get the all the views in the DB.
+	 * 
+	 * @param parent
+	 * @return List of views
+	 */
+	public List<View> getAllSubViews (int parent) {
+		DB db = this.getDB();
+    List<View> views = View.getViews(parent, db);
+    ListIterator<View> litr = views.listIterator();
+    while (litr.hasNext())
+    {
+      List<View> subViews = getAllSubViews(litr.next().getID());
+      for (View subView : subViews)
+      {
+        litr.add(subView);
+      }
+    }
+		return views;
 	}
 
 	/**
