@@ -932,6 +932,10 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 		StringBuilder buf = new StringBuilder();
 		try {
 			DB db = this.getDB();
+			
+			if(db.getSchemaVersion()>0){
+				db.getDatabase().setTAUdb(true);
+			}else{db.getDatabase().setTAUdb(false);}
 			if(db.getDatabase().isTAUdb()) return getPotentialMetricsTAUdb(modelData);
 			if (db.getDBType().compareTo("db2") == 0) {
 				buf.append("select distinct count(cast (m.name as VARCHAR(256))), cast (m.name as VARCHAR(256)) ");

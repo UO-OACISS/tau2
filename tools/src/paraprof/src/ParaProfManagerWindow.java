@@ -393,7 +393,12 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 							} else if (userObject instanceof Database) {
 								// standard or database
 								clickedOnObject = selectedNode;
-								if(((Database)userObject).isTAUdb()){
+								Database db = (Database)userObject;
+								DatabaseAPI dbapi = getDatabaseAPI(db);
+								if(dbapi.db().getSchemaVersion()>0){
+									db.setTAUdb(true);
+								}else{db.setTAUdb(false);}
+								if(db.isTAUdb()){
 									TAUdbPopUp.show(tree, evt.getX(), evt.getY());
 								}else{
 									databasePopUp.show(tree, evt.getX(), evt.getY());
@@ -1248,6 +1253,11 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 					} else if (clickedOnObject instanceof DefaultMutableTreeNode){
 						DefaultMutableTreeNode node = (DefaultMutableTreeNode) clickedOnObject;
 						Database database = (Database) node.getUserObject();
+						DatabaseAPI dbapi = getDatabaseAPI(database);
+						if(dbapi.db().getSchemaVersion()>0){
+							database.setTAUdb(true);
+						}else{database.setTAUdb(false);}
+						
 						if (!database.isTAUdb()) {
 							// a database
 							ParaProfApplication application = addApplication(
