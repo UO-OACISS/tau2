@@ -17,6 +17,7 @@ enum Memcpy { MemcpyHtoD = 0, MemcpyDtoH = 1, MemcpyDtoD = 2, MemcpyUnknown = 3 
 
 #include <Profile/Profiler.h>
 #include <map>
+using namespace tau;
 
 //typedef map<TauContextUserEvent*, TAU_EVENT_DATATYPE> TauGpuContextMap;
 
