@@ -16,7 +16,9 @@
 #ifndef _TAU_CPPAPI_H_
 #define _TAU_CPPAPI_H_
 
-
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #ifdef DEBUG_PROF
 #define DEBUGPROFMSG(msg) { cout<< msg; }
@@ -56,6 +58,17 @@ public:
   }
 };
 
+
+struct TauInternalFunctionGuard
+{
+  TauInternalFunctionGuard() {
+    Tau_global_incr_insideTAU();
+  }
+
+  ~TauInternalFunctionGuard() {
+    Tau_global_decr_insideTAU();
+  }
+};
 
 #define TAU_PROFILE(name, type, group) \
 	static void *tauFI = 0; \

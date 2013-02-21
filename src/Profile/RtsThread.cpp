@@ -97,6 +97,7 @@ static int nextThread = 1;
 
 int RtsLayer::createThread()
 {
+  TauInternalFunctionGuard protects_this_function;
 
   threadLockEnv();
 
@@ -125,6 +126,7 @@ extern "C" int Tau_RtsLayer_createThread() {
 
 void RtsLayer::recycleThread(int id)
 {
+  TauInternalFunctionGuard protects_this_function;
   LockEnv();
 	
 	TheThreadList().at(id-1)->active = false;
@@ -135,6 +137,12 @@ void RtsLayer::recycleThread(int id)
 }
 
 int RtsLayer::localThreadId(void)
+{
+  TauInternalFunctionGuard protects_this_function;
+  return RtsLayer::unsafeLocalThreadId();
+}
+
+int RtsLayer::unsafeLocalThreadId(void)
 {
 #ifdef PTHREADS
   return PthreadLayer::GetThreadId();
@@ -158,6 +166,12 @@ int RtsLayer::localThreadId(void)
 
 int RtsLayer::threadId(void)
 {
+  TauInternalFunctionGuard protects_this_function;
+  return RtsLayer::unsafeThreadId();
+}
+
+int RtsLayer::unsafeThreadId(void)
+{
 #ifdef PTHREADS
   return PthreadLayer::GetThreadId();
 #elif  TAU_SPROC
@@ -180,24 +194,7 @@ int RtsLayer::threadId(void)
 
 int RtsLayer::myThread(void)
 {
-#ifdef PTHREADS
-  return PthreadLayer::GetThreadId();
-#elif  TAU_SPROC
-  return SprocLayer::GetThreadId();
-#elif  TAU_WINDOWS
-  return WindowsThreadLayer::GetThreadId();
-#elif  TULIPTHREADS
-  return TulipThreadLayer::GetThreadId();
-#elif JAVA
-  return JavaThreadLayer::GetThreadId(); 
-	// C++ app shouldn't use this unless there's a VM
-#elif TAU_OPENMP
-  return OpenMPLayer::GetTauThreadId();
-#elif TAU_PAPI_THREADS
-  return PapiThreadLayer::GetThreadId();
-#else  // if no other thread package is available 
-  return 0;
-#endif // PTHREADS
+  return RtsLayer::threadId();
 }
 
 extern "C" int Tau_RtsLayer_myThread(void) {
@@ -316,6 +313,8 @@ int RtsLayer::RegisterThread() {
 // process that is forked off (child process)
 //////////////////////////////////////////////////////////////////////
 void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode) {
+  TauInternalFunctionGuard protects_this_function;
+
 #ifdef PROFILING_ON
   vector<FunctionInfo*>::iterator it;
   Profiler *current;

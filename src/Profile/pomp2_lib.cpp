@@ -101,14 +101,30 @@ TAU_OPARI_CONSTRUCT_TIMER( ttaskwait , "taskwait begin/end", "[OpenMP]", OpenMP)
 
 #define NUM_OMP_TYPES 22
 
-static char* omp_names[22] = {"atomic enter/exit", "barrier enter/exit", "critical begin/end", 
-			     "critical enter/exit", "loop body", "master begin/end",
-			     "parallel begin/end", "parallel fork/join", "section begin/end",
-			     "sections enter/exit", "single begin/end", "single enter/exit",
-			      "workshare enter/exit", "inst region begin/end", "flush enter/exit",
-			     "ordered begin/end","ordered enter/exit","task create begin/end",
-			"task begin/end","untied task create begin/end","untied task begin/end",
-			"taskwait begin/end" };
+static char const * omp_names[NUM_OMP_TYPES] = {
+    "atomic enter/exit",
+    "barrier enter/exit",
+    "critical begin/end",
+    "critical enter/exit",
+    "loop body",
+    "master begin/end",
+    "parallel begin/end",
+    "parallel fork/join",
+    "section begin/end",
+    "sections enter/exit",
+    "single begin/end",
+    "single enter/exit",
+    "workshare enter/exit",
+    "inst region begin/end",
+    "flush enter/exit",
+    "ordered begin/end",
+    "ordered enter/exit",
+    "task create begin/end",
+    "task begin/end",
+    "untied task create begin/end",
+    "untied task begin/end",
+    "taskwait begin/end"
+};
 
 
 #define TAU_OMP_ATOMIC      0
@@ -243,8 +259,7 @@ assignString( char**      destination,
               const char* source )
 {
     assert( source );
-    *destination = (char *)(malloc( strlen( source ) * sizeof( char ) + 1 ));
-    strcpy( *destination, source );
+    *destination = strdup(source);
 }
 
 
@@ -284,6 +299,9 @@ initDummyRegionFromPOMP2RegionInfo(
 /* TAU specific calls */
 int tau_openmp_init(void)
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
   omp_init_lock(&tau_ompregdescr_lock);
   return 0;
 }
@@ -295,7 +313,9 @@ void TauStartOpenMPRegionTimer(my_pomp2_region *r, int index)
 /* For any region, create a mapping between a region r and timer t and
    start the timer. */
   
-  Tau_global_incr_insideTAU();
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
   RtsLayer::LockEnv();
   //omp_set_lock(&tau_ompregdescr_lock);
 if(r == NULL)
@@ -335,7 +355,6 @@ printf("TAU WARNING: a POMP2 Region was not initialized.  Something went wrong d
   Tau_start_timer(f, 0, Tau_get_tid());
  
   RtsLayer::UnLockEnv();
-  Tau_global_decr_insideTAU();
   //omp_unset_lock(&tau_ompregdescr_lock);
 }
 
@@ -378,56 +397,55 @@ my_pomp2_region* my_pomp2_regions;
 
 
 
-void
-POMP2_Finalize()
+void POMP2_Finalize()
 {
-    static int   pomp2_finalize_called = 0;
-    size_t       i;
-    const size_t nRegions = POMP2_Get_num_regions();
+  static int pomp2_finalize_called = 0;
+  size_t i;
+  const size_t nRegions = POMP2_Get_num_regions();
 
-    if ( my_pomp2_regions )
-    {
-        for ( i = 0; i < nRegions; ++i )
-        {
-            free_my_pomp2_region_members( &my_pomp2_regions[ i ] );
-        }
-        free( my_pomp2_regions );
-        my_pomp2_regions = 0;
+  if (my_pomp2_regions) {
+    // Protect TAU from itself
+    TauInternalFunctionGuard protects_this_function;
+
+    for (i = 0; i < nRegions; ++i) {
+      free_my_pomp2_region_members(&my_pomp2_regions[i]);
     }
+    free(my_pomp2_regions);
+    my_pomp2_regions = 0;
+  }
 
-    if ( !pomp2_finalize_called )
-    {
-        pomp2_finalize_called = 1;
+  if (!pomp2_finalize_called) {
+    pomp2_finalize_called = 1;
 #ifdef DEBUG_PROF
-        fprintf( stderr, "  0: finalize\n" );
+    fprintf( stderr, "  0: finalize\n" );
 #endif /* DEBUG_PROF */
-    }
+  }
 }
 
-void
-POMP2_Init()
+void POMP2_Init()
 {
-    static int pomp2_init_called = 0;
+  static int pomp2_init_called = 0;
 
-    if ( !pomp2_init_called )
-    {
-        pomp2_init_called = 1;
+  if (!pomp2_init_called) {
+    // Protect TAU from itself
+    TauInternalFunctionGuard protects_this_function;
 
-        atexit( POMP2_Finalize );
+    pomp2_init_called = 1;
+
+    atexit(POMP2_Finalize);
 #ifdef DEBUG_PROF
-        fprintf( stderr, "  0: init  code\n" );
+    fprintf( stderr, "  0: init  code\n" );
 #endif /* DEBUG_PROF */
 
-        /* Allocate memory for your POMP2_Get_num_regions() regions */
-        my_pomp2_regions = (my_pomp2_region *)(calloc( POMP2_Get_num_regions(),
-                                   sizeof( my_pomp2_region ) ));
-        //pomp2_tpd_ = ( void* )malloc( sizeof( int ) );
-        //pomp2_tpd_ = ( long )0;
+    /* Allocate memory for your POMP2_Get_num_regions() regions */
+    my_pomp2_regions = (my_pomp2_region *)(calloc(POMP2_Get_num_regions(), sizeof(my_pomp2_region)));
+    //pomp2_tpd_ = ( void* )malloc( sizeof( int ) );
+    //pomp2_tpd_ = ( long )0;
 
-        POMP2_Init_regions();
+    POMP2_Init_regions();
 
-        pomp2_tracing = 1;
-    }
+    pomp2_tracing = 1;
+  }
 }
 
 void
@@ -442,15 +460,16 @@ POMP2_On()
     pomp2_tracing = 1;
 }
 
-void
-POMP2_Begin( POMP2_Region_handle* pomp2_handle )
+void POMP2_Begin(POMP2_Region_handle* pomp2_handle)
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
 #pragma omp critical
-    if ( *pomp2_handle == NULL )
-    {
-        POMP2_Init();
-    }
-    my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
+  if (*pomp2_handle == NULL) {
+    POMP2_Init();
+  }
+  my_pomp2_region* region = (my_pomp2_region*)*pomp2_handle;
 //my_pomp2_region* region = *pomp2_handle;
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
@@ -458,190 +477,199 @@ POMP2_Begin( POMP2_Region_handle* pomp2_handle )
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStartOpenMPRegionTimer(region, TAU_OMP_INST_BE); 
+  TauStartOpenMPRegionTimer(region, TAU_OMP_INST_BE);
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
-    if ( pomp2_tracing )
-    {
-        fprintf( stderr, "%3d: begin region %s\n",
-                 omp_get_thread_num(), region->name );
-    }
+  if ( pomp2_tracing )
+  {
+    fprintf( stderr, "%3d: begin region %s\n",
+        omp_get_thread_num(), region->name );
+  }
 #endif /* DEBUG_PROF */
-
 }
 
-void
-POMP2_End( POMP2_Region_handle* pomp2_handle )
+void POMP2_End(POMP2_Region_handle* pomp2_handle)
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
 #pragma omp critical
-    if ( *pomp2_handle == NULL )
-    {
-        POMP2_Init();
-    }
-    //my_pomp2_region* region = *pomp2_handle;
-    my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
+  if (*pomp2_handle == NULL) {
+    POMP2_Init();
+  }
+  //my_pomp2_region* region = *pomp2_handle;
+  my_pomp2_region* region = (my_pomp2_region*)*pomp2_handle;
 
 #ifdef TAU_OPENMP_REGION_VIEW
   TauStopOpenMPRegionTimer(region, TAU_OMP_INST_BE);
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
-  TAU_OPARI_CONSTRUCT_TIMER_STOP(tregion); /* global timer stop */
+  TAU_OPARI_CONSTRUCT_TIMER_STOP(tregion);
+  /* global timer stop */
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef DEBUG_PROF
-    if ( pomp2_tracing )
-    {
-        fprintf( stderr, "%3d: end   region %s\n",
-                 omp_get_thread_num(), region->name );
-    }
+  if ( pomp2_tracing )
+  {
+    fprintf( stderr, "%3d: end   region %s\n",
+        omp_get_thread_num(), region->name );
+  }
 #endif /* DEBUG_PROF */
 }
 
-void
-POMP2_Assign_handle( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
+void POMP2_Assign_handle(POMP2_Region_handle* pomp2_handle, const char ctc_string[])
 {
-    static size_t count = 0;
-    /* printf( "%d POMP2_Assign_handle: \"%s\"\n", (int)count, ctc_string ); */
+  static size_t count = 0;
+  /* printf( "%d POMP2_Assign_handle: \"%s\"\n", (int)count, ctc_string ); */
 
-    POMP2_Region_info pomp2RegionInfo;
-    ctcString2RegionInfo( ctc_string, &pomp2RegionInfo );
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
 
-    initDummyRegionFromPOMP2RegionInfo( &my_pomp2_regions[ count ], &pomp2RegionInfo );
-    my_pomp2_regions[ count ].id = count;
+  POMP2_Region_info pomp2RegionInfo;
+  ctcString2RegionInfo(ctc_string, &pomp2RegionInfo);
+
+  initDummyRegionFromPOMP2RegionInfo(&my_pomp2_regions[count], &pomp2RegionInfo);
+  my_pomp2_regions[count].id = count;
 #ifdef DEBUG_PROF
-    printf( "assign_handle %d %s\n", ( int )count, my_pomp2_regions[ count ].rtype );
+  printf( "assign_handle %d %s\n", ( int )count, my_pomp2_regions[ count ].rtype );
 #endif /* DEBUG_PROF */
 
-    *pomp2_handle = &my_pomp2_regions[ count ];
+  *pomp2_handle = &my_pomp2_regions[count];
 
-    freePOMP2RegionInfoMembers( &pomp2RegionInfo );
-    ++count;
-    assert( count <= POMP2_Get_num_regions() );
+  freePOMP2RegionInfoMembers(&pomp2RegionInfo);
+  ++count;
+  assert( count <= POMP2_Get_num_regions());
 }
 
-void
-POMP2_Atomic_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
+void POMP2_Atomic_enter(POMP2_Region_handle* pomp2_handle, const char ctc_string[])
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
 #pragma omp critical
-    if ( *pomp2_handle == NULL )
-    {
-        POMP2_Init();
-    }
+  if (*pomp2_handle == NULL) {
+    POMP2_Init();
+  }
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(tatomic);
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStartOpenMPRegionTimer(( my_pomp2_region*) *pomp2_handle,TAU_OMP_ATOMIC); 
+  TauStartOpenMPRegionTimer((my_pomp2_region*)*pomp2_handle, TAU_OMP_ATOMIC);
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
-    if ( pomp2_tracing )
-    {
-        fprintf( stderr, "%3d: enter atomic\n", omp_get_thread_num() );
-    }
+  if ( pomp2_tracing )
+  {
+    fprintf( stderr, "%3d: enter atomic\n", omp_get_thread_num() );
+  }
 #endif /* DEBUG_PROF */
 }
 
-void
-POMP2_Atomic_exit( POMP2_Region_handle* pomp2_handle )
+void POMP2_Atomic_exit(POMP2_Region_handle* pomp2_handle)
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
 #pragma omp critical
-    if ( *pomp2_handle == NULL )
-    {
-        POMP2_Init();
-    }
+  if (*pomp2_handle == NULL) {
+    POMP2_Init();
+  }
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStopOpenMPRegionTimer(( my_pomp2_region*) *pomp2_handle, TAU_OMP_ATOMIC);
+  TauStopOpenMPRegionTimer((my_pomp2_region*)*pomp2_handle, TAU_OMP_ATOMIC);
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
-  TAU_OPARI_CONSTRUCT_TIMER_STOP(tatomic); /* global timer stop */
+  TAU_OPARI_CONSTRUCT_TIMER_STOP(tatomic);
+  /* global timer stop */
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 #ifdef DEBUG_PROF
-    if ( pomp2_tracing )
-    {
-        fprintf( stderr, "%3d: exit  atomic\n", omp_get_thread_num() );
-    }
+  if ( pomp2_tracing )
+  {
+    fprintf( stderr, "%3d: exit  atomic\n", omp_get_thread_num() );
+  }
 #endif /* DEBUG_PROF */
 }
 
 
 
-void
-POMP2_Barrier_enter( POMP2_Region_handle* pomp2_handle, POMP2_Task_handle*   pomp2_old_task, const char ctc_string[] )
+void POMP2_Barrier_enter(POMP2_Region_handle* pomp2_handle, POMP2_Task_handle* pomp2_old_task, const char ctc_string[])
 {
-    *pomp2_old_task = pomp2_current_task;
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
+  *pomp2_old_task = pomp2_current_task;
 
 #pragma omp critical
-    if ( *pomp2_handle == NULL )
-    {
-        POMP2_Init();
-    }
-    //my_pomp2_region* region = *pomp2_handle;
-    my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
+  if (*pomp2_handle == NULL) {
+    POMP2_Init();
+  }
+  //my_pomp2_region* region = *pomp2_handle;
+  my_pomp2_region* region = (my_pomp2_region*)*pomp2_handle;
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(tbarrier);
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStartOpenMPRegionTimer(region, TAU_OMP_BARRIER); 
+  TauStartOpenMPRegionTimer(region, TAU_OMP_BARRIER);
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
-    if ( pomp2_tracing )
+  if ( pomp2_tracing )
+  {
+    if ( region->rtype[ 0 ] == 'b' )
     {
-        if ( region->rtype[ 0 ] == 'b' )
-        {
-            fprintf( stderr, "%3d: enter barrier\n", omp_get_thread_num() );
-        }
-        else
-        {
-            fprintf( stderr, "%3d: enter implicit barrier of %s\n",
-                     omp_get_thread_num(), region->rtype );
-        }
+      fprintf( stderr, "%3d: enter barrier\n", omp_get_thread_num() );
     }
+    else
+    {
+      fprintf( stderr, "%3d: enter implicit barrier of %s\n",
+          omp_get_thread_num(), region->rtype );
+    }
+  }
 #endif /* DEBUG_PROF */
 }
 
-void
-POMP2_Barrier_exit( POMP2_Region_handle* pomp2_handle, POMP2_Task_handle    pomp2_old_task  )
+void POMP2_Barrier_exit(POMP2_Region_handle* pomp2_handle, POMP2_Task_handle pomp2_old_task)
 {
-    pomp2_old_task = pomp2_current_task;
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
+  pomp2_old_task = pomp2_current_task;
 
 #pragma omp critical
-    if ( *pomp2_handle == NULL )
-    {
-        POMP2_Init();
-    }
-    //my_pomp2_region* region = *pomp2_handle;
-    my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
+  if (*pomp2_handle == NULL) {
+    POMP2_Init();
+  }
+  //my_pomp2_region* region = *pomp2_handle;
+  my_pomp2_region* region = (my_pomp2_region*)*pomp2_handle;
 
 #ifdef TAU_OPENMP_REGION_VIEW
   TauStopOpenMPRegionTimer(region, TAU_OMP_BARRIER);
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
-  TAU_OPARI_CONSTRUCT_TIMER_STOP(tbarrier); /* global timer stop */
+  TAU_OPARI_CONSTRUCT_TIMER_STOP(tbarrier);
+  /* global timer stop */
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef DEBUG_PROF
-    if ( pomp2_tracing )
+  if ( pomp2_tracing )
+  {
+    if ( region->rtype[ 0 ] == 'b' )
     {
-        if ( region->rtype[ 0 ] == 'b' )
-        {
-            fprintf( stderr, "%3d: exit  barrier\n", omp_get_thread_num() );
-        }
-        else
-        {
-            fprintf( stderr, "%3d: exit  implicit barrier of %s\n",
-                     omp_get_thread_num(), region->rtype );
-        }
+      fprintf( stderr, "%3d: exit  barrier\n", omp_get_thread_num() );
     }
+    else
+    {
+      fprintf( stderr, "%3d: exit  implicit barrier of %s\n",
+          omp_get_thread_num(), region->rtype );
+    }
+  }
 #endif /* DEBUG_PROF */
 }
 
@@ -656,17 +684,18 @@ POMP2_Implicit_barrier_exit( POMP2_Region_handle* pomp2_handle, POMP2_Task_handl
 {
     POMP2_Barrier_exit( pomp2_handle, pomp2_old_task );
 }
-void
-POMP2_Flush_enter( POMP2_Region_handle* pomp2_handle,
-		   const char           ctc_string[] )
-{
-#pragma omp critical
-    if ( *pomp2_handle == NULL )
-    {
-        POMP2_Init();
-    }
 
-    my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
+void POMP2_Flush_enter(POMP2_Region_handle* pomp2_handle, const char ctc_string[])
+{
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
+#pragma omp critical
+  if (*pomp2_handle == NULL) {
+    POMP2_Init();
+  }
+
+  my_pomp2_region* region = (my_pomp2_region*)*pomp2_handle;
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(tflush);
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
@@ -676,125 +705,132 @@ POMP2_Flush_enter( POMP2_Region_handle* pomp2_handle,
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
-    if ( pomp2_tracing )
-    {
-        fprintf( stderr, "%3d: enter flush\n", omp_get_thread_num() );
-    }
+  if ( pomp2_tracing )
+  {
+    fprintf( stderr, "%3d: enter flush\n", omp_get_thread_num() );
+  }
 #endif /* DEBUG_PROF */
 }
 
-void
-POMP2_Flush_exit( POMP2_Region_handle* pomp2_handle )
+void POMP2_Flush_exit(POMP2_Region_handle* pomp2_handle)
 {
-#pragma omp critical
-    if ( *pomp2_handle == NULL )
-    {
-        POMP2_Init();
-    }
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
 
-    my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
+#pragma omp critical
+  if (*pomp2_handle == NULL) {
+    POMP2_Init();
+  }
+
+  my_pomp2_region* region = (my_pomp2_region*)*pomp2_handle;
 #ifdef TAU_OPENMP_REGION_VIEW
   TauStopOpenMPRegionTimer(region, TAU_OMP_FLUSH_EE);
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   //TAU_UGLOBAL_TIMER_STOP(tflush);
-  TAU_OPARI_CONSTRUCT_TIMER_STOP(tflush); /* global timer stop */
+  TAU_OPARI_CONSTRUCT_TIMER_STOP(tflush);
+  /* global timer stop */
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef DEBUG_PROF
-    if ( pomp2_tracing )
-    {
-        fprintf( stderr, "%3d: exit  flush\n", omp_get_thread_num() );
-    }
+  if ( pomp2_tracing )
+  {
+    fprintf( stderr, "%3d: exit  flush\n", omp_get_thread_num() );
+  }
 #endif /* DEBUG_PROF */
 }
 
-void
-POMP2_Critical_begin( POMP2_Region_handle* pomp2_handle )
+void POMP2_Critical_begin(POMP2_Region_handle* pomp2_handle)
 {
-    if ( *pomp2_handle == NULL )
-    {
-        POMP2_Init();
-    }
-    //my_pomp2_region* region = *pomp2_handle;
-    my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
+  if (*pomp2_handle == NULL) {
+    POMP2_Init();
+  }
+  //my_pomp2_region* region = *pomp2_handle;
+  my_pomp2_region* region = (my_pomp2_region*)*pomp2_handle;
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(tcriticalb);
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStartOpenMPRegionTimer(region, TAU_OMP_CRITICAL_BE); 
+  TauStartOpenMPRegionTimer(region, TAU_OMP_CRITICAL_BE);
 #endif /* TAU_OPENMP_REGION_VIEW */
 #ifdef DEBUG_PROF
-    if ( pomp2_tracing )
-    {
-        fprintf( stderr, "%3d: begin critical %s\n",
-                 omp_get_thread_num(), region->rtype );
-    }
+  if ( pomp2_tracing )
+  {
+    fprintf( stderr, "%3d: begin critical %s\n",
+        omp_get_thread_num(), region->rtype );
+  }
 #endif /* DEBUG_PROF */
 }
 
-void
-POMP2_Critical_end( POMP2_Region_handle* pomp2_handle )
+void POMP2_Critical_end(POMP2_Region_handle* pomp2_handle)
 {
-    if ( *pomp2_handle == NULL )
-    {
-        POMP2_Init();
-    }
-    my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
-    //my_pomp2_region* region = *pomp2_handle;
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
+  if (*pomp2_handle == NULL) {
+    POMP2_Init();
+  }
+  my_pomp2_region* region = (my_pomp2_region*)*pomp2_handle;
+  //my_pomp2_region* region = *pomp2_handle;
 
 #ifdef TAU_OPENMP_REGION_VIEW
   TauStopOpenMPRegionTimer(region, TAU_OMP_CRITICAL_BE);
 #endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
-  TAU_OPARI_CONSTRUCT_TIMER_STOP(tcriticalb); /* global timer stop */
+  TAU_OPARI_CONSTRUCT_TIMER_STOP(tcriticalb);
+  /* global timer stop */
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
-  
 
 #ifdef DEBUG_PROF
-    if ( pomp2_tracing )
-    {
-        fprintf( stderr, "%3d: end   critical %s\n",
-                 omp_get_thread_num(), region->name );
-    }
+  if ( pomp2_tracing )
+  {
+    fprintf( stderr, "%3d: end   critical %s\n",
+        omp_get_thread_num(), region->name );
+  }
 #endif /* DEBUG_PROF */
 }
 
-void
-POMP2_Critical_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
+void POMP2_Critical_enter(POMP2_Region_handle* pomp2_handle, const char ctc_string[])
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
 #pragma omp critical
-    if ( *pomp2_handle == NULL )
-    {
-        POMP2_Init();
-    }
-    //my_pomp2_region* region = *pomp2_handle;
-    my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
+  if (*pomp2_handle == NULL) {
+    POMP2_Init();
+  }
+  //my_pomp2_region* region = *pomp2_handle;
+  my_pomp2_region* region = (my_pomp2_region*)*pomp2_handle;
 
 #ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(tcriticale);
 #endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef TAU_OPENMP_REGION_VIEW
-  TauStartOpenMPRegionTimer(region, TAU_OMP_CRITICAL_EE); 
+  TauStartOpenMPRegionTimer(region, TAU_OMP_CRITICAL_EE);
 #endif /* TAU_OPENMP_REGION_VIEW */
 
-
 #ifdef DEBUG_PROF
-    if ( pomp2_tracing )
-    {
-        fprintf( stderr, "%3d: enter critical %s\n",
-                 omp_get_thread_num(), region->name );
-    }
+  if ( pomp2_tracing )
+  {
+    fprintf( stderr, "%3d: enter critical %s\n",
+        omp_get_thread_num(), region->name );
+  }
 #endif /* DEBUG_PROF */
 }
 
 void
 POMP2_Critical_exit( POMP2_Region_handle* pomp2_handle )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
 #pragma omp critical
     if ( *pomp2_handle == NULL )
     {
@@ -825,6 +861,9 @@ POMP2_Critical_exit( POMP2_Region_handle* pomp2_handle )
 void
 POMP2_For_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
 #pragma omp critical
     if ( *pomp2_handle == NULL )
     {
@@ -850,6 +889,9 @@ POMP2_For_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
 void
 POMP2_For_exit( POMP2_Region_handle* pomp2_handle )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
 #pragma omp critical
     if ( *pomp2_handle == NULL )
     {
@@ -877,6 +919,9 @@ POMP2_For_exit( POMP2_Region_handle* pomp2_handle )
 void
 POMP2_Master_begin( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
 #pragma omp critical
     if ( *pomp2_handle == NULL )
     {
@@ -904,6 +949,9 @@ POMP2_Master_begin( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
 void
 POMP2_Master_end( POMP2_Region_handle* pomp2_handle )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
 #pragma omp critical
     if ( *pomp2_handle == NULL )
     {
@@ -930,6 +978,9 @@ POMP2_Master_end( POMP2_Region_handle* pomp2_handle )
 void
 POMP2_Parallel_begin( POMP2_Region_handle* pomp2_handle )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
 #pragma omp critical
     if ( *pomp2_handle == NULL )
     {
@@ -956,6 +1007,9 @@ POMP2_Parallel_begin( POMP2_Region_handle* pomp2_handle )
 void
 POMP2_Parallel_end( POMP2_Region_handle* pomp2_handle )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
 #pragma omp critical
     if ( *pomp2_handle == NULL )
     {
@@ -987,6 +1041,9 @@ POMP2_Parallel_fork( POMP2_Region_handle* pomp2_handle,
                      POMP2_Task_handle*   pomp2_old_task,
                      const char           ctc_string[] )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
     *pomp2_old_task = pomp2_current_task;
 
 #pragma omp critical
@@ -1015,6 +1072,9 @@ POMP2_Parallel_fork( POMP2_Region_handle* pomp2_handle,
 void
 POMP2_Parallel_join( POMP2_Region_handle* pomp2_handle, POMP2_Task_handle   pomp2_old_task )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
     pomp2_old_task = pomp2_current_task;
 
 #pragma omp critical
@@ -1043,6 +1103,9 @@ POMP2_Parallel_join( POMP2_Region_handle* pomp2_handle, POMP2_Task_handle   pomp
 void
 POMP2_Section_begin( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
 #pragma omp critical
     if ( *pomp2_handle == NULL )
     {
@@ -1069,6 +1132,9 @@ POMP2_Section_begin( POMP2_Region_handle* pomp2_handle, const char ctc_string[] 
 void
 POMP2_Section_end( POMP2_Region_handle* pomp2_handle )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
 #pragma omp critical
     if ( *pomp2_handle == NULL )
     {
@@ -1095,6 +1161,9 @@ POMP2_Section_end( POMP2_Region_handle* pomp2_handle )
 void
 POMP2_Sections_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
 #pragma omp critical
     if ( *pomp2_handle == NULL )
     {
@@ -1122,6 +1191,9 @@ POMP2_Sections_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[]
 void
 POMP2_Sections_exit( POMP2_Region_handle* pomp2_handle )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
 #pragma omp critical
     if ( *pomp2_handle == NULL )
     {
@@ -1148,6 +1220,9 @@ POMP2_Sections_exit( POMP2_Region_handle* pomp2_handle )
 void
 POMP2_Single_begin( POMP2_Region_handle* pomp2_handle )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
 #pragma omp critical
     if ( *pomp2_handle == NULL )
     {
@@ -1174,6 +1249,9 @@ POMP2_Single_begin( POMP2_Region_handle* pomp2_handle )
 void
 POMP2_Single_end( POMP2_Region_handle* pomp2_handle )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
 #pragma omp critical
     if ( *pomp2_handle == NULL )
     {
@@ -1200,6 +1278,9 @@ POMP2_Single_end( POMP2_Region_handle* pomp2_handle )
 void
 POMP2_Single_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
 #pragma omp critical
     if ( *pomp2_handle == NULL )
     {
@@ -1226,6 +1307,9 @@ POMP2_Single_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
 void
 POMP2_Single_exit( POMP2_Region_handle* pomp2_handle )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
 #pragma omp critical
     if ( *pomp2_handle == NULL )
     {
@@ -1252,6 +1336,9 @@ POMP2_Single_exit( POMP2_Region_handle* pomp2_handle )
 void
 POMP2_Workshare_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
 #pragma omp critical
     if ( *pomp2_handle == NULL )
     {
@@ -1278,6 +1365,9 @@ POMP2_Workshare_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[
 void
 POMP2_Workshare_exit( POMP2_Region_handle* pomp2_handle )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
 #pragma omp critical
     if ( *pomp2_handle == NULL )
     {
@@ -1304,6 +1394,9 @@ POMP2_Workshare_exit( POMP2_Region_handle* pomp2_handle )
 void
 POMP2_Ordered_begin( POMP2_Region_handle* pomp2_handle )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
 #pragma omp critical
     if ( *pomp2_handle == NULL )
     {
@@ -1332,6 +1425,9 @@ POMP2_Ordered_begin( POMP2_Region_handle* pomp2_handle )
 void
 POMP2_Ordered_end( POMP2_Region_handle* pomp2_handle )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
 #pragma omp critical
     if ( *pomp2_handle == NULL )
     {
@@ -1361,6 +1457,9 @@ void
 POMP2_Ordered_enter( POMP2_Region_handle* pomp2_handle,
                     const char           ctc_string[] )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
 #pragma omp critical
     if ( *pomp2_handle == NULL )
     {
@@ -1391,6 +1490,9 @@ POMP2_Ordered_enter( POMP2_Region_handle* pomp2_handle,
 void
 POMP2_Ordered_exit( POMP2_Region_handle* pomp2_handle )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
 #pragma omp critical
     if ( *pomp2_handle == NULL )
     {
@@ -1424,6 +1526,9 @@ POMP2_Task_create_begin( POMP2_Region_handle* pomp2_handle,
                          int                  pomp2_if,
                          const char           ctc_string[])
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
     *pomp2_old_task = pomp2_current_task;
     *pomp2_new_task = POMP2_Get_new_task_handle();
 
@@ -1449,6 +1554,9 @@ void
 POMP2_Task_create_end( POMP2_Region_handle* pomp2_handle,
                        POMP2_Task_handle    pomp2_old_task )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
     pomp2_current_task = pomp2_old_task;
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
 
@@ -1474,6 +1582,9 @@ void
 POMP2_Task_begin( POMP2_Region_handle* pomp2_handle,
                   POMP2_Task_handle    pomp2_task )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
     pomp2_current_task = pomp2_task;
 
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
@@ -1499,6 +1610,8 @@ POMP2_Task_begin( POMP2_Region_handle* pomp2_handle,
 void
 POMP2_Task_end( POMP2_Region_handle* pomp2_handle )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
 
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
 
@@ -1526,6 +1639,9 @@ POMP2_Untied_task_create_begin( POMP2_Region_handle* pomp2_handle,
                                 int                  pomp2_if,
                                 const char           ctc_string[] )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
     *pomp2_new_task = POMP2_Get_new_task_handle();
     *pomp2_old_task = pomp2_current_task;
 
@@ -1554,6 +1670,9 @@ void
 POMP2_Untied_task_create_end( POMP2_Region_handle* pomp2_handle,
                               POMP2_Task_handle    pomp2_old_task )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
     pomp2_current_task = pomp2_old_task;
 
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
@@ -1581,6 +1700,9 @@ void
 POMP2_Untied_task_begin( POMP2_Region_handle* pomp2_handle,
                          POMP2_Task_handle    pomp2_parent_task )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
     pomp2_current_task = POMP2_Get_new_task_handle();
 
 
@@ -1606,6 +1728,8 @@ POMP2_Untied_task_begin( POMP2_Region_handle* pomp2_handle,
 void
 POMP2_Untied_task_end( POMP2_Region_handle* pomp2_handle )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
 
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
 
@@ -1631,6 +1755,9 @@ POMP2_Taskwait_begin( POMP2_Region_handle* pomp2_handle,
                       POMP2_Task_handle*   pomp2_old_task,
                       const char           ctc_string[] )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
     *pomp2_old_task = pomp2_current_task;
 
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
@@ -1658,6 +1785,9 @@ void
 POMP2_Taskwait_end( POMP2_Region_handle* pomp2_handle,
                     POMP2_Task_handle    pomp2_old_task )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
     pomp2_current_task = pomp2_old_task;
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
 
@@ -1691,6 +1821,9 @@ POMP2_Taskwait_end( POMP2_Region_handle* pomp2_handle,
 void
 POMP2_Init_lock( omp_lock_t* s )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
   TAU_PROFILE("omp_init_lock", "[OpenMP]", OpenMP);
 
 #ifdef DEBUG_PROF
@@ -1705,6 +1838,9 @@ POMP2_Init_lock( omp_lock_t* s )
 void
 POMP2_Destroy_lock( omp_lock_t* s )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
   TAU_PROFILE("omp_destroy_lock", "[OpenMP]", OpenMP);
 
 #ifdef DEBUG_PROF
@@ -1719,6 +1855,9 @@ POMP2_Destroy_lock( omp_lock_t* s )
 void
 POMP2_Set_lock( omp_lock_t* s )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
   TAU_PROFILE("omp_set_lock", "[OpenMP]", OpenMP);
 
 #ifdef DEBUG_PROF
@@ -1733,6 +1872,9 @@ POMP2_Set_lock( omp_lock_t* s )
 void
 POMP2_Unset_lock( omp_lock_t* s )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
   TAU_PROFILE("omp_unset_lock", "[OpenMP]", OpenMP);
 
 #ifdef DEBUG_PROF
@@ -1747,6 +1889,9 @@ POMP2_Unset_lock( omp_lock_t* s )
 int
 POMP2_Test_lock( omp_lock_t* s )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
   TAU_PROFILE("omp_test_lock", "[OpenMP]", OpenMP);
 
 #ifdef DEBUG_PROF
@@ -1761,6 +1906,9 @@ POMP2_Test_lock( omp_lock_t* s )
 void
 POMP2_Init_nest_lock( omp_nest_lock_t* s )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
   TAU_PROFILE("omp_init_nest_lock", "[OpenMP]", OpenMP);
 
 #ifdef DEBUG_PROF
@@ -1775,6 +1923,9 @@ POMP2_Init_nest_lock( omp_nest_lock_t* s )
 void
 POMP2_Destroy_nest_lock( omp_nest_lock_t* s )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
   TAU_PROFILE("omp_destroy_nest_lock", "[OpenMP]", OpenMP);
 
 #ifdef DEBUG_PROF
@@ -1789,6 +1940,9 @@ POMP2_Destroy_nest_lock( omp_nest_lock_t* s )
 void
 POMP2_Set_nest_lock( omp_nest_lock_t* s )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
   TAU_PROFILE("omp_set_nest_lock", "[OpenMP]", OpenMP);
 
 #ifdef DEBUG_PROF
@@ -1803,6 +1957,9 @@ POMP2_Set_nest_lock( omp_nest_lock_t* s )
 void
 POMP2_Unset_nest_lock( omp_nest_lock_t* s )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
   TAU_PROFILE("omp_unset_nest_lock", "[OpenMP]", OpenMP);
 
 #ifdef DEBUG_PROF
@@ -1817,6 +1974,9 @@ POMP2_Unset_nest_lock( omp_nest_lock_t* s )
 int
 POMP2_Test_nest_lock( omp_nest_lock_t* s )
 {
+  // Automatically increment and decrement insideTAU
+  TauInternalFunctionGuard protects_this_function;
+
   TAU_PROFILE("omp_test_nest_lock", "[OpenMP]", OpenMP);
 
 #ifdef DEBUG_PROF

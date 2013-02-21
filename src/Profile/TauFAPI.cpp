@@ -36,7 +36,8 @@ extern "C" {
 static inline
 void getFortranName(char const ** ocname, int * oclen, char const * fname, int flen)
 {
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
 
   // Skip over leading whitespace
   while (isspace(*fname)) {
@@ -74,8 +75,6 @@ void getFortranName(char const ** ocname, int * oclen, char const * fname, int f
 
   *ocname = cname;
   *oclen = clen;
-
-  Tau_global_decr_insideTAU();
 }
 
 /*****************************************************************************
@@ -368,7 +367,8 @@ void Tau_stop(const char *name)
 
 void tau_profile_timer_(void **ptr, char const * fname, int flen)
 {
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
 
   if (!*ptr) {
 #ifdef TAU_OPENMP
@@ -408,8 +408,6 @@ void tau_profile_timer_(void **ptr, char const * fname, int flen)
     }
 #endif /* TAU_OPENMP */
   }
-
-  Tau_global_decr_insideTAU();
 }
 
 void tau_phase_create_static_(void **ptr, char *infname, int slen)

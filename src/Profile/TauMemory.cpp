@@ -815,7 +815,9 @@ size_t Tau_page_size(void)
 #else
   static size_t page_size = 0;
 
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   if (!page_size) {
 #if defined(TAU_WINDOWS)
     SYSTEM_INFO SystemInfo;
@@ -829,7 +831,6 @@ size_t Tau_page_size(void)
     page_size = getpagesize();
 #endif
   }
-  Tau_global_decr_insideTAU();
 
   return page_size;
 #endif
@@ -926,11 +927,12 @@ int Tau_estimate_free_memory(void)
 extern "C"
 void Tau_detect_memory_leaks(void)
 {
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   if (TauEnv_get_track_memory_leaks()) {
     TauAllocation::DetectLeaks();
   }
-  Tau_global_decr_insideTAU();
 }
 
 
@@ -940,7 +942,9 @@ void Tau_detect_memory_leaks(void)
 extern "C"
 void Tau_track_memory_allocation(void * ptr, size_t size, char const * filename, int lineno)
 {
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   TauAllocation * alloc = TauAllocation::Find(ptr);
   if (!alloc) {
     alloc = new TauAllocation;
@@ -948,7 +952,6 @@ void Tau_track_memory_allocation(void * ptr, size_t size, char const * filename,
   } else {
     TAU_VERBOSE("TAU: WARNING - Allocation record for %p already exists\n", ptr);
   }
-  Tau_global_decr_insideTAU();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -957,7 +960,9 @@ void Tau_track_memory_allocation(void * ptr, size_t size, char const * filename,
 extern "C"
 void Tau_track_memory_deallocation(void * ptr, char const * filename, int lineno)
 {
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   TauAllocation * alloc = TauAllocation::Find(ptr);
   if (alloc) {
     alloc->TrackDeallocation(filename, lineno);
@@ -966,7 +971,6 @@ void Tau_track_memory_deallocation(void * ptr, char const * filename, int lineno
   } else {
     TAU_VERBOSE("TAU: WARNING - No allocation record found for %p\n", ptr);
   }
-  Tau_global_decr_insideTAU();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -976,13 +980,14 @@ extern "C"
 void Tau_track_memory_reallocation(void * newPtr, void * ptr, size_t size,
     char const * filename, int lineno)
 {
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   TauAllocation * alloc = TauAllocation::Find(ptr);
   if (!alloc) {
     alloc = new TauAllocation;
   }
   alloc->TrackReallocation(newPtr, size, filename, lineno);
-  Tau_global_decr_insideTAU();
 }
 
 
@@ -995,7 +1000,9 @@ void * Tau_malloc(size_t size, const char * filename, int lineno)
 #ifdef HAVE_MALLOC
   void * ptr;
 
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   if (TauEnv_get_memdbg()) {
     TauAllocation * alloc = new TauAllocation;
     ptr = alloc->Allocate(size, 0, 0, filename, lineno);
@@ -1003,7 +1010,6 @@ void * Tau_malloc(size_t size, const char * filename, int lineno)
     ptr = malloc(size);
     Tau_track_memory_allocation(ptr, size, filename, lineno);
   }
-  Tau_global_decr_insideTAU();
 
   return ptr;
 #else
@@ -1021,7 +1027,9 @@ void * Tau_calloc(size_t count, size_t size, const char * filename, int lineno)
 #ifdef HAVE_CALLOC
   void * ptr;
 
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   if (TauEnv_get_memdbg()) {
     TauAllocation * alloc = new TauAllocation;
     ptr = alloc->Allocate(count*size, 0, 0, filename, lineno);
@@ -1030,7 +1038,6 @@ void * Tau_calloc(size_t count, size_t size, const char * filename, int lineno)
     ptr = calloc(count, size);
     Tau_track_memory_allocation(ptr, count*size, filename, lineno);
   }
-  Tau_global_decr_insideTAU();
 
   return ptr;
 #else
@@ -1046,7 +1053,9 @@ extern "C"
 void * Tau_realloc(void * ptr, size_t size, const char * filename, int lineno)
 {
 #ifdef HAVE_REALLOC
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   if (TauEnv_get_memdbg()) {
     TauAllocation * alloc = NULL;
     if (ptr) {
@@ -1094,8 +1103,6 @@ void * Tau_realloc(void * ptr, size_t size, const char * filename, int lineno)
     }
     ptr = newPtr;
   }
-  Tau_global_decr_insideTAU();
-
   return ptr;
 #else
   return NULL;
@@ -1111,9 +1118,10 @@ void Tau_free(void * ptr, char const * filename, int lineno)
 {
 #ifdef HAVE_FREE
   if (ptr) {
-    Tau_global_incr_insideTAU();
-    TauAllocation * alloc = TauAllocation::Find(ptr);
+    // Protect TAU from itself
+    TauInternalFunctionGuard protects_this_function;
 
+    TauAllocation * alloc = TauAllocation::Find(ptr);
     if (alloc) {
       if (TauEnv_get_memdbg()) {
         alloc->Deallocate(filename, lineno);
@@ -1126,7 +1134,6 @@ void Tau_free(void * ptr, char const * filename, int lineno)
       TAU_VERBOSE("TAU: WARNING - Allocation record for %p not found.\n", ptr);
       free(ptr);
     }
-    Tau_global_decr_insideTAU();
   }
 #endif
 }
@@ -1142,7 +1149,9 @@ void * Tau_memalign(size_t alignment, size_t size, const char * filename, int li
 #ifdef HAVE_MEMALIGN
   void * ptr;
 
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   if (TauEnv_get_memdbg()) {
     TauAllocation * alloc = new TauAllocation;
     ptr = alloc->Allocate(size, alignment, 0, filename, lineno);
@@ -1150,8 +1159,6 @@ void * Tau_memalign(size_t alignment, size_t size, const char * filename, int li
     ptr = memalign(alignment, size);
     Tau_track_memory_allocation(ptr, size, filename, lineno);
   }
-  Tau_global_decr_insideTAU();
-
   return ptr;
 #else
   return NULL;
@@ -1169,7 +1176,9 @@ int Tau_posix_memalign(void **ptr, size_t alignment, size_t size,
 #ifdef HAVE_POSIX_MEMALIGN
   int retval;
 
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   if (TauEnv_get_memdbg()) {
     TauAllocation * alloc = new TauAllocation;
     *ptr = alloc->Allocate(size, alignment, sizeof(void*), filename, lineno);
@@ -1178,8 +1187,6 @@ int Tau_posix_memalign(void **ptr, size_t alignment, size_t size,
     retval = posix_memalign(ptr, alignment, size);
     Tau_track_memory_allocation(*ptr, size, filename, lineno);
   }
-  Tau_global_decr_insideTAU();
-
   return retval;
 #else
   *ptr = NULL;
@@ -1197,7 +1204,9 @@ void * Tau_valloc(size_t size, const char * filename, int lineno)
 #ifdef HAVE_VALLOC
   void * ptr;
 
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   if (TauEnv_get_memdbg()) {
     TauAllocation * alloc = new TauAllocation;
     ptr = alloc->Allocate(size, Tau_page_size(), 0, filename, lineno);
@@ -1205,8 +1214,6 @@ void * Tau_valloc(size_t size, const char * filename, int lineno)
     ptr = valloc(size);
     Tau_track_memory_allocation(ptr, size, filename, lineno);
   }
-  Tau_global_decr_insideTAU();
-
   return ptr;
 #else
   return NULL;
@@ -1226,11 +1233,13 @@ void * Tau_pvalloc(size_t size, const char * filename, int lineno)
 
   void * ptr;
 
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   // pvalloc allocates the smallest set of complete pages
   // that can hold the requested number of bytes
   size = (size + PAGE_SIZE-1) & ~(PAGE_SIZE-1);
 
-  Tau_global_incr_insideTAU();
   if (TauEnv_get_memdbg()) {
     TauAllocation * alloc = new TauAllocation;
     ptr = alloc->Allocate(size, Tau_page_size(), 0, filename, lineno);
@@ -1238,8 +1247,6 @@ void * Tau_pvalloc(size_t size, const char * filename, int lineno)
     ptr = pvalloc(size);
     Tau_track_memory_allocation(ptr, size, filename, lineno);
   }
-  Tau_global_decr_insideTAU();
-
   return ptr;
 #else
   return NULL;
@@ -1253,7 +1260,9 @@ extern "C"
 void * Tau_reallocf(void * ptr, size_t size, const char * filename, int lineno)
 {
 #ifdef HAVE_REALLOCF
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   if (TauEnv_get_memdbg()) {
     TauAllocation * alloc = NULL;
     if (ptr) {
@@ -1305,8 +1314,6 @@ void * Tau_reallocf(void * ptr, size_t size, const char * filename, int lineno)
     }
     ptr = newPtr;
   }
-  Tau_global_decr_insideTAU();
-
   return ptr;
 #else
   return NULL;

@@ -101,7 +101,9 @@ AtomicEventDB & TheEventDB(void)
 // Add User Event to the EventDB
 void TauUserEvent::AddEventToDB()
 {
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   RtsLayer::LockDB();
   TheEventDB().push_back(this);
   DEBUGPROFMSG("Successfully registered event " << GetName() << endl;);
@@ -126,7 +128,6 @@ void TauUserEvent::AddEventToDB()
   eventId=handle;
 #endif
   RtsLayer::UnLockDB();
-  Tau_global_decr_insideTAU();
 }
 
 ///////////////////////////////////////////////////////////
@@ -348,7 +349,8 @@ string TauContextUserEvent::FormulateContextNameString(Profiler * current)
 ////////////////////////////////////////////////////////////////////////////
 void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timestamp, int use_ts)
 {
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
 
   if (contextEnabled) {
     TauUserEvent * contextEvent;
@@ -379,8 +381,6 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
     contextEvent->TriggerEvent(data, tid, timestamp, use_ts);
   }
   userEvent->TriggerEvent(data, tid, timestamp, use_ts);
-
-  Tau_global_decr_insideTAU();
 }
 
 } // END namespace tau

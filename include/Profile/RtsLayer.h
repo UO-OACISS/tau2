@@ -75,8 +75,8 @@ public:
 
   static std::string GetRTTI(const char *name); 
   inline static const char * CheckNotNull(const char * str) {
-    if (str == 0) return "  ";
-    else return str;
+    if (str) return str;
+    else return "  ";
   }
 
 	static void Initialize(void);
@@ -107,11 +107,13 @@ public:
   static int myThread(void);
 
   static int threadId(void);
+  static int unsafeThreadId(void);
  
  	// Return the local thread id (ignoring tasks) This is a 
 	// low-overhead call but DO NOT use this call when
 	// accessing Profiler stack or the FunctionInfo DB.
   static int localThreadId(void);
+  static int unsafeLocalThreadId(void);
 
   static int getPid();
   static int getTid();
