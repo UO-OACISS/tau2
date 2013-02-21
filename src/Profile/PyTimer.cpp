@@ -116,8 +116,6 @@ PyFunctionDB & ThePyFunctionDB()
 ///////////////////////////////////////////////////////////////////////////////
 static PyObject * createTimer(PyObject * self, PyObject * args, PyObject * kwargs, bool phase)
 {
-  Tau_global_incr_insideTAU();
-
   static char * argnames[] = { "name", "type", "group", NULL };
 
   int tauid = 0;
@@ -125,9 +123,11 @@ static PyObject * createTimer(PyObject * self, PyObject * args, PyObject * kwarg
   char * type = "";
   char * group = "TAU_PYTHON";
 
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   // Get Python arguments 
   if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|sss", argnames, &name, &type, &group)) {
-    Tau_global_decr_insideTAU();
     return NULL;
   }
 
@@ -155,7 +155,6 @@ static PyObject * createTimer(PyObject * self, PyObject * args, PyObject * kwarg
     ThePhaseMap()[tauid] = phase;
   }
 
-  Tau_global_decr_insideTAU();
   return Py_BuildValue("i", tauid);
 }
 
@@ -197,12 +196,12 @@ char pytau_start__name__[] = "start";
 char pytau_start__doc__[] = "start a TAU timer";
 extern "C" PyObject * pytau_start(PyObject *self, PyObject *args)
 {
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
 
   int id;
   if (!PyArg_ParseTuple(args, "i", &id)) {
     printf("Couldn't Parse the tuple!\n");
-    Tau_global_decr_insideTAU();
     return NULL;
   }
   FunctionInfo * f = TheFunctionDB()[id];
@@ -211,7 +210,6 @@ extern "C" PyObject * pytau_start(PyObject *self, PyObject *args)
   Tau_start_timer(f, phase, RtsLayer::myThread());
 
   Py_INCREF (Py_None);
-  Tau_global_decr_insideTAU();
   return Py_None;
 }
 

@@ -113,7 +113,9 @@ static int getBacktraceFromGDB(int trim, BacktraceFrame ** oframes)
 extern "C"
 int Tau_backtrace_record_backtrace(int trim)
 {
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   int & iter = iteration[RtsLayer::getTid()];
   ++iter;
 
@@ -138,7 +140,6 @@ int Tau_backtrace_record_backtrace(int trim)
     delete[] frames;
   }
 
-  Tau_global_decr_insideTAU();
   return iter;
 }
 
@@ -147,7 +148,8 @@ void Tau_backtrace_exit_with_backtrace(int trim, char const * fmt, ...)
 {
   va_list args;
 
-  // Don't bother to decrement this, we're about to exit
+  // Don't decrement this.  We're exiting so TAU's internal data structures
+  // are being destroyed from here on out.  Recording new events will segfault.
   Tau_global_incr_insideTAU();
 
   if (TauEnv_get_callsite()) {

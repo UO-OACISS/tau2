@@ -165,6 +165,7 @@ ProfileMap_t& RtsLayer::TheProfileMap(void) {
 /////////////////////////////////////////////////////////////////////////
 
 TauGroup_t RtsLayer::getProfileGroup(char const * ProfileGroup) {
+  TauInternalFunctionGuard protects_this_function;
   ProfileMap_t::iterator it = TheProfileMap().find(string(ProfileGroup));
   TauGroup_t gr;
   if (it == TheProfileMap().end()) {
@@ -183,19 +184,15 @@ TauGroup_t RtsLayer::getProfileGroup(char const * ProfileGroup) {
 /////////////////////////////////////////////////////////////////////////
 
 TauGroup_t RtsLayer::disableProfileGroupName(char const * ProfileGroup) {
-  Tau_global_incr_insideTAU();
-  TauGroup_t retval = disableProfileGroup(getProfileGroup(ProfileGroup));
-  Tau_global_decr_insideTAU();
-  return retval;
+  TauInternalFunctionGuard protects_this_function;
+  return disableProfileGroup(getProfileGroup(ProfileGroup));
 }
 
 /////////////////////////////////////////////////////////////////////////
 
 TauGroup_t RtsLayer::enableProfileGroupName(char const * ProfileGroup) {
-  Tau_global_incr_insideTAU();
-  TauGroup_t retval = enableProfileGroup(getProfileGroup(ProfileGroup));
-  Tau_global_decr_insideTAU();
-  return retval;
+  TauInternalFunctionGuard protects_this_function;
+  return enableProfileGroup(getProfileGroup(ProfileGroup));
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -211,8 +208,7 @@ TauGroup_t RtsLayer::generateProfileGroup(void) {
 
 TauGroup_t RtsLayer::enableProfileGroup(TauGroup_t ProfileGroup) {
   TheProfileMask() |= ProfileGroup; // Add it to the mask
-  DEBUGPROFMSG("enableProfileGroup " << ProfileGroup <<" Mask = " 
-	<< TheProfileMask() << endl;);
+  DEBUGPROFMSG("enableProfileGroup " << ProfileGroup <<" Mask = " << TheProfileMask() << endl;);
   return TheProfileMask();
 }
 
@@ -237,8 +233,7 @@ TauGroup_t RtsLayer::disableAllGroups(void) {
 TauGroup_t RtsLayer::disableProfileGroup(TauGroup_t ProfileGroup) {
   if (TheProfileMask() & ProfileGroup) { // if it is already set 
     TheProfileMask() ^= ProfileGroup; // Delete it from the mask
-    DEBUGPROFMSG("disableProfileGroup " << ProfileGroup <<" Mask = " 
-	<< TheProfileMask() << endl;);
+    DEBUGPROFMSG("disableProfileGroup " << ProfileGroup <<" Mask = " << TheProfileMask() << endl;);
   } // if it is not in the mask, disableProfileGroup does nothing 
   return TheProfileMask();
 }
@@ -251,24 +246,24 @@ TauGroup_t RtsLayer::resetProfileGroup(void) {
 }
 
 /////////////////////////////////////////////////////////////////////////
-int RtsLayer::setMyNode(int NodeId, int tid) {
-#ifndef TAU_WINDOWS
-  TAU_VERBOSE("pid [%d] RtsLayer::setMyNode: %d\n", getpid(), NodeId);
-#endif
+int RtsLayer::setMyNode(int NodeId, int tid)
+{
+  TauInternalFunctionGuard protects_this_function;
+
 #if (TAU_MAX_THREADS != 1)
   int oldid = TheNode();
   int newid = NodeId;
   if ((oldid != -1) && (oldid != newid)) {
     /* ie if SET_NODE macro was invoked twice for a threaded program : as 
-       in MPI+JAVA where JAVA initializes it with pid and then MPI_INIT is 
-       invoked several thousand events later, and TAU computes the process rank
-       and invokes the SET_NODE with the correct rank. Handshaking between multiple
-       levels of instrumentation. */
-    
+     in MPI+JAVA where JAVA initializes it with pid and then MPI_INIT is
+     invoked several thousand events later, and TAU computes the process rank
+     and invokes the SET_NODE with the correct rank. Handshaking between multiple
+     levels of instrumentation. */
+
     if (TauEnv_get_tracing()) {
-      TauTraceReinitialize(oldid, newid, tid); 
+      TauTraceReinitialize(oldid, newid, tid);
     }
-  } 
+  }
 #endif // TRACING WITH THREADS
 
   TheNode() = NodeId;
@@ -595,7 +590,8 @@ void RtsLayer::ProfileInit(int& argc, char**& argv)
   int ret_argc;
   char **ret_argv;
 
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
 
 #ifdef TAU_COMPENSATE
   double* tover = TauGetTimerOverhead(TauNullTimerOverhead);
@@ -624,8 +620,6 @@ void RtsLayer::ProfileInit(int& argc, char**& argv)
   }
   argc = ret_argc;
   argv = ret_argv;
-
-  Tau_global_decr_insideTAU();
 }
 
 

@@ -79,7 +79,9 @@ int Tau_iowrap_checkPassThrough()
 extern "C"
 void Tau_iowrap_registerEvents(int fid, const char *pathname)
 {
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   RtsLayer::LockDB();
 
   IOvector & iowrap_events = TheIoWrapEvents();
@@ -105,7 +107,6 @@ void Tau_iowrap_registerEvents(int fid, const char *pathname)
   }
   dprintf("Registering %d with %s\n", fid - 1, pathname);
   RtsLayer::UnLockDB();
-  Tau_global_decr_insideTAU();
 }
 
 /*********************************************************************
@@ -113,7 +114,9 @@ void Tau_iowrap_registerEvents(int fid, const char *pathname)
  ********************************************************************/
 extern "C" void Tau_iowrap_unregisterEvents(int fid)
 {
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   RtsLayer::LockDB();
 
   IOvector & iowrap_events = TheIoWrapEvents();
@@ -131,7 +134,6 @@ extern "C" void Tau_iowrap_unregisterEvents(int fid)
     iowrap_events[i][fid] = unknown_ptr;
   }
   RtsLayer::UnLockDB();
-  Tau_global_decr_insideTAU();
 }
 
 /*********************************************************************
@@ -140,7 +142,9 @@ extern "C" void Tau_iowrap_unregisterEvents(int fid)
  ********************************************************************/
 extern "C" void Tau_iowrap_dupEvents(int oldfid, int newfid)
 {
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   RtsLayer::LockDB();
 
   IOvector & iowrap_events = TheIoWrapEvents();
@@ -155,7 +159,6 @@ extern "C" void Tau_iowrap_dupEvents(int oldfid, int newfid)
     iowrap_events[i][newfid] = iowrap_events[i][oldfid];
   }
   RtsLayer::UnLockDB();
-  Tau_global_decr_insideTAU();
 }
 
 /*********************************************************************

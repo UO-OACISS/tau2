@@ -168,32 +168,34 @@ static int checkTraceFileInitialized(int tid) {
 }
 
 /* Flush the trace buffer */
-void TauTraceFlushBuffer(int tid) {
-  Tau_global_incr_insideTAU();
+void TauTraceFlushBuffer(int tid)
+{
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   checkTraceFileInitialized(tid);
 
   int ret;
   if (TauTraceFd[tid] == -1) {
     printf("Error: TauTraceFlush(%d): Fd is -1. Trace file not initialized \n", tid);
     if (RtsLayer::myNode() == -1) {
-      fprintf (stderr, 
-          "TAU: ERROR in configuration. Trace file not initialized.\n"
+      fprintf(stderr, "TAU: ERROR in configuration. Trace file not initialized.\n"
           "TAU: If this is an MPI application, please ensure that TAU MPI wrapper library is linked.\n"
           "TAU: If not, please ensure that TAU_PROFILE_SET_NODE(id); is called in the program (0 for sequential).\n");
       exit(1);
     }
   }
 
-  if (TauTraceGetFlushEvents()) { 
+  if (TauTraceGetFlushEvents()) {
     /* Dump the EDF file before writing trace data */
     TauTraceDumpEDF(tid);
     TauTraceSetFlushEvents(0);
   }
-  
+
   int numEventsToBeFlushed = TauCurrentEvent[tid]; /* starting from 0 */
   DEBUGPROFMSG("Tid "<<tid<<": TauTraceFlush()"<<endl;);
   if (numEventsToBeFlushed != 0) {
-    ret = write (TauTraceFd[tid], TraceBuffer[tid], (numEventsToBeFlushed) * sizeof(TAU_EV));
+    ret = write(TauTraceFd[tid], TraceBuffer[tid], (numEventsToBeFlushed) * sizeof(TAU_EV));
     if (ret < 0) {
 #ifdef DEBUG_PROF
       printf("Error: TauTraceFd[%d] = %d, numEvents = %d ", tid, TauTraceFd[tid], numEventsToBeFlushed);
@@ -202,7 +204,6 @@ void TauTraceFlushBuffer(int tid) {
     }
   }
   TauCurrentEvent[tid] = 0;
-  Tau_global_decr_insideTAU();
 }
 
 
@@ -221,7 +222,10 @@ bool *TauBufferAllocated() {
 
 /* Initialize tracing. TauTraceInit should be called in every trace routine to ensure that 
    the trace file is initialized */
-int TauTraceInit(int tid) {
+int TauTraceInit(int tid)
+{
+  TauInternalFunctionGuard protects_this_function;
+
    if (!TauBufferAllocated()[tid]) {
      TauMaxTraceRecords = (unsigned long long) TauEnv_get_max_records(); 
      TauBufferSize = sizeof(TAU_EV)*TauMaxTraceRecords; 
@@ -301,7 +305,10 @@ void TauTraceEventSimple(long int ev, x_int64 par, int tid) {
 
 
 /* Write event to buffer */
-void TauTraceEventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts, int node_id) {
+void TauTraceEventWithNodeId(long int ev, x_int64 par, int tid, x_uint64 ts, int use_ts, int node_id)
+{
+  TauInternalFunctionGuard protects_this_function;
+
   int i;
   int records_created = TauTraceInit(tid);
   x_uint64 timestamp;

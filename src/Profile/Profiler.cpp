@@ -651,6 +651,8 @@ void Profiler::Stop(int tid, bool useLastTimeStamp)
 
 void TauProfiler_theFunctionList(const char ***inPtr, int *numFuncs, bool addName, const char * inString)
 {
+  TauInternalFunctionGuard protects_this_function;
+
   static int numberOfFunctions = 0;
 
   if (addName) {
@@ -668,6 +670,7 @@ void TauProfiler_theFunctionList(const char ***inPtr, int *numFuncs, bool addNam
 
 void TauProfiler_dumpFunctionNames()
 {
+  TauInternalFunctionGuard protects_this_function;
 
   int numFuncs;
   const char ** functionList;
@@ -704,6 +707,7 @@ void TauProfiler_dumpFunctionNames()
 
 void TauProfiler_getUserEventList(const char ***inPtr, int *numUserEvents)
 {
+  TauInternalFunctionGuard protects_this_function;
 
   *numUserEvents = 0;
 
@@ -723,6 +727,7 @@ void TauProfiler_getUserEventList(const char ***inPtr, int *numUserEvents)
 void TauProfiler_getUserEventValues(const char **inUserEvents, int numUserEvents, int **numEvents, double **max,
     double **min, double **mean, double **sumSqr, int tid)
 {
+  TauInternalFunctionGuard protects_this_function;
 
   TAU_PROFILE("TAU_GET_EVENT_VALUES()", " ", TAU_IO);
 
@@ -762,6 +767,8 @@ double *Profiler::getStartValues()
 
 void TauProfiler_theCounterList(const char ***inPtr, int *numCounters)
 {
+  TauInternalFunctionGuard protects_this_function;
+
   *inPtr = (const char **)malloc(sizeof(const char **) * 1);
   const char *tmpChar = "default counter";
   (*inPtr)[0] = tmpChar;
@@ -786,6 +793,8 @@ void TauProfiler_getFunctionValues(const char **inFuncs, int numFuncs, double **
     double ***counterInclusiveValues, int **numCalls, int **numSubr, const char ***counterNames, int *numCounters,
     int tid)
 {
+  TauInternalFunctionGuard protects_this_function;
+
   TAU_PROFILE("TAU_GET_FUNC_VALS()", " ", TAU_IO);
 
   vector<FunctionInfo*>::iterator it;
@@ -853,6 +862,7 @@ static void finalizeTrace(int tid)
 
 void TauProfiler_PurgeData(int tid)
 {
+  TauInternalFunctionGuard protects_this_function;
 
   vector<FunctionInfo*>::iterator it;
   vector<TauUserEvent*>::iterator eit;
@@ -1436,6 +1446,7 @@ int TauProfiler_writeData(int tid, const char *prefix, bool increment, const cha
 
 int TauProfiler_dumpFunctionValues(const char **inFuncs, int numFuncs, bool increment, int tid, const char *prefix)
 {
+  TauInternalFunctionGuard protects_this_function;
 
   TAU_PROFILE("TAU_DUMP_FUNC_VALS()", " ", TAU_IO);
 
