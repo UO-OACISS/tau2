@@ -184,8 +184,6 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 
   if (executionFinished) return;
 
-  TauInternalFunctionGuard protects_this_function;
-
 	unsigned long addr = Tau_convert_ptr_to_unsigned_long(funcptr);
 
   // Get previously hashed info, or efficiently create
@@ -194,6 +192,8 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 
 	// Skip excluded functions
 	if (hn.excluded) return;
+
+  TauInternalFunctionGuard protects_this_function;
 
 	//prevent entry into cyg_profile functions while still initializing TAU
 	if (Tau_init_initializingTAU()) return;
@@ -332,10 +332,10 @@ void __cyg_profile_func_exit(void* func, void* callsite)
 #endif
 	unsigned long addr = Tau_convert_ptr_to_unsigned_long(funcptr);
 
-	TauInternalFunctionGuard protects_this_function;
-
 	HashNode & hn = TheHashTable()[addr];
 	if (!hn.excluded) {
+    TauInternalFunctionGuard protects_this_function;
+
 	  int tid = Tau_get_tid();
 
     // prevent entry into cyg_profile functions while inside entry
