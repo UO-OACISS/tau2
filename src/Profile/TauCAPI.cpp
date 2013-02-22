@@ -412,10 +412,10 @@ extern "C" void Tau_start_timer(void *functionInfo, int phase, int tid) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_lite_start_timer(void *functionInfo, int phase)
 {
-  // Protect TAU from itself
-  TauInternalFunctionGuard protects_this_function;
-
   if (TauEnv_get_lite_enabled()) {
+    // Protect TAU from itself
+    TauInternalFunctionGuard protects_this_function;
+
     int tid = Tau_get_tid();
     // move the stack pointer
     Tau_thread_flags[tid].Tau_global_stackpos++; /* push */
@@ -597,10 +597,10 @@ extern "C" int Tau_stop_timer(void *function_info, int tid ) {
 ///////////////////////////////////////////////////////////////////////////
 extern "C" void Tau_lite_stop_timer(void *function_info)
 {
-  // Protect TAU from itself
-  TauInternalFunctionGuard protects_this_function;
-
   if (TauEnv_get_lite_enabled()) {
+    // Protect TAU from itself
+    TauInternalFunctionGuard protects_this_function;
+
     int tid = Tau_get_tid();
     double timeStamp[TAU_MAX_COUNTERS] = { 0 };
     double delta[TAU_MAX_COUNTERS] = { 0 };
