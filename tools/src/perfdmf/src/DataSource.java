@@ -52,6 +52,7 @@ public abstract class DataSource {
     public static final int IPM = 15; // Data from IPM/NERSC
     public static final int GOOGLE = 16; //Google PerfTools
     public static final int CUBE3 = 17; // old version of cube3 parser ( own implementation ) 
+    public static final int DARSHAN = 18;
     public static final int GYRO = 100;
     public static final int GAMESS = 101; // application log data
     public static final String FILE_TYPE_INDEX = "File Type Index";
@@ -59,7 +60,7 @@ public abstract class DataSource {
 
     public static String formatTypeStrings[] = { "ParaProf Packed Profile", "TAU profiles", "TAU Snapshot", "Dynaprof", "MpiP", "HPMToolkit",
             "Gprof", "PSRun", "Tau pprof.dat", "Cube", "HPCToolkit", "ompP", "PERI-XML",
-            "General Purpose Timing Library (GPTL)", "Paraver", "IPM", "Google PerfTools", "Cube 3 (Old parser)" };
+            "General Purpose Timing Library (GPTL)", "Paraver", "IPM", "Google PerfTools", "Cube 3 (Old parser)" };//,"Darshan"
 
     protected static boolean meanIncludeNulls = true;
 
@@ -901,8 +902,16 @@ public abstract class DataSource {
 
             for (Iterator<UserEvent> it = this.getUserEventIterator(); it.hasNext();) {
                 UserEvent ue = it.next();
-                
+
                 UserEventProfile meanNoNullProfile = meanDataNoNull.getUserEventProfile(ue);
+                
+                /*
+                 * It is possible for snapshots to have event definitions without data entries for a given snapshot, in that case the data structures will be null so we skip the event altogether.
+                 */
+                if(meanNoNullProfile==null){
+                	continue;
+                }
+                
                 UserEventProfile totalProfile = totalData.getUserEventProfile(ue);
                 UserEventProfile stddevNoNullProfile = stddevDataNoNull.getUserEventProfile(ue);
                 UserEventProfile meanAllProfile = meanDataAll.getUserEventProfile(ue);
