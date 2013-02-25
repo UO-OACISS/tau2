@@ -46,11 +46,10 @@
 #include <pthread.h>
 
 // Thread-specific function handles
-pthread_key_t flags_key;
-pthread_once_t flags_once = PTHREAD_ONCE_INIT;
+pthread_once_t multithread_init_once = PTHREAD_ONCE_INIT;
+pthread_key_t flag_key;
+pthread_mutex_t flag_mutex;
 #endif
-
-int * memory_wrapper_disabled_flag(void);
 
 // Handles to the system implementation of the function
 malloc_t malloc_system;
@@ -74,7 +73,7 @@ int is_bootstrap(void * ptr)
   return (p < bootstrap_heap + BOOTSTRAP_HEAP_SIZE) && (bootstrap_heap < p);
 }
 
-static inline
+static
 void * bootstrap_alloc(size_t align, size_t size)
 {
   char * ptr;
@@ -115,6 +114,73 @@ void bootstrap_free(void * ptr)
 //  }
 }
 
+/*********************************************************************
+ * Wrapper enable/disable
+ ********************************************************************/
+
+#ifdef TAU_MULTITHREAD
+void multithread_init(void)
+{
+  pthread_key_create(&flag_key, NULL);
+  pthread_mutex_init(&flag_mutex, NULL);
+}
+
+int * memory_wrapper_disabled_flag(void)
+{
+  int * flag = (int*)pthread_getspecific(flag_key);
+  if (!flag) {
+    pthread_mutex_lock(&flag_mutex);
+    flag = (int*)bootstrap_alloc(64, sizeof(int));
+    pthread_mutex_unlock(&flag_mutex);
+    // Start disabled. TauInit will enable the wrapper when TAU initializes
+    *flag = 1;
+    // Update thread specific data
+    pthread_setspecific(flag_key, (void*)flag);
+  }
+
+  return flag;
+}
+#else
+
+int memory_wrapper_process_flag = 1;
+int * memory_wrapper_disabled_flag(void)
+{
+  return &memory_wrapper_process_flag;
+}
+#endif
+
+void memory_wrapper_enable(void)
+{
+  *memory_wrapper_disabled_flag() = 0;
+}
+
+void memory_wrapper_disable(void)
+{
+  *memory_wrapper_disabled_flag() = 1;
+}
+
+int memory_wrapper_init(void)
+{
+  static int init = 0;
+  if (init) return 0;
+
+#ifdef TAU_MULTITHREAD
+  pthread_once(&multithread_init_once, multithread_init);
+#endif
+
+#ifdef TAU_MEMORY_WRAPPER_DYNAMIC
+  if (Tau_init_check_dl_initialized()) {
+    Tau_memory_wrapper_register(memory_wrapper_enable, memory_wrapper_disable);
+    init = 1;
+    return 0;
+  }
+  return 1;
+#else
+  Tau_memory_wrapper_register(memory_wrapper_enable, memory_wrapper_disable);
+  init = 1;
+  return 0;
+#endif
+}
 
 /*********************************************************************
  * malloc
@@ -406,54 +472,6 @@ void * pvalloc_wrapper(size_t size)
     return Tau_pvalloc(size, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_LINE);
   }
 }
-
-
-/*********************************************************************
- * Wrapper enable/disable
- ********************************************************************/
-
-void memory_wrapper_enable(void)
-{
-  *memory_wrapper_disabled_flag() = 0;
-}
-
-void memory_wrapper_disable(void)
-{
-  *memory_wrapper_disabled_flag() = 1;
-}
-
-#ifdef TAU_MULTITHREAD
-void make_flags_key(void)
-{
-  pthread_key_create(&flags_key, NULL);
-}
-
-int * memory_wrapper_disabled_flag(void)
-{
-  int * flag;
-
-  pthread_once(&flags_once, make_flags_key);
-  flag = (int*)pthread_getspecific(flags_key);
-  if (!flag) {
-    flag = (int*)bootstrap_alloc(0, sizeof(int));
-    // Start disabled. TauInit will enable the wrapper when TAU initializes
-    *flag = 1;
-    // Update thread specific data
-    pthread_setspecific(flags_key, (void*)flag);
-  }
-
-  return flag;
-}
-#else
-
-int memory_wrapper_process_flag = 1;
-int * memory_wrapper_disabled_flag(void)
-{
-  return &memory_wrapper_process_flag;
-}
-
-#endif
-
 
 /*********************************************************************
  * EOF
