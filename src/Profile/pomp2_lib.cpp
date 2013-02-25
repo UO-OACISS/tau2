@@ -299,9 +299,6 @@ initDummyRegionFromPOMP2RegionInfo(
 /* TAU specific calls */
 int tau_openmp_init(void)
 {
-  // Automatically increment and decrement insideTAU
-  TauInternalFunctionGuard protects_this_function;
-
   omp_init_lock(&tau_ompregdescr_lock);
   return 0;
 }
