@@ -16,9 +16,9 @@
 #ifndef _TAU_CPPAPI_H_
 #define _TAU_CPPAPI_H_
 
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #ifdef DEBUG_PROF
 #define DEBUGPROFMSG(msg) { cout<< msg; }

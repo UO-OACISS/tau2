@@ -414,11 +414,11 @@ static void initialize_functionArray()
   TauMetrics_initializeKTAU();
 #endif
 
-  if (usingPAPI) {
 #ifdef TAU_PAPI
+  if (usingPAPI) {
     PapiLayer::initializePapiLayer();
-#endif
   }
+#endif
 	
 
   for (int i = 0; i < nmetrics; i++) {
@@ -546,7 +546,7 @@ int TauMetrics_init() {
 
   initialize_functionArray();
 
-	Tau_Global_numCounters = nmetrics;
+  Tau_Global_numCounters = nmetrics;
 
   /* Create atomic events for tracing */
   if (TauEnv_get_tracing()) {
