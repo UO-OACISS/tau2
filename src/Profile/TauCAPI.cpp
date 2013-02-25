@@ -231,7 +231,7 @@ extern "C" int Tau_global_decr_insideTAU()
   Tau_stack_checkInit();
   int tid = RtsLayer::unsafeLocalThreadId();
   int insideTAU = --Tau_thread_flags[tid].Tau_global_insideTAU;
-  TAU_ASSERT(insideTAU < 0, "Thread has decremented the insideTAU counter past 0");
+  TAU_ASSERT(insideTAU >= 0, "Thread has decremented the insideTAU counter past 0");
   if (!insideTAU) Tau_memory_wrapper_enable();
   return insideTAU;
 }
@@ -241,7 +241,7 @@ extern "C" int Tau_global_process_decr_insideTAU()
   Tau_stack_checkInit();
   for(int tid=0; tid < TAU_MAX_THREADS; ++tid) {
     --Tau_thread_flags[tid].Tau_global_insideTAU;
-    TAU_ASSERT(Tau_thread_flags[tid].Tau_global_insideTAU < 0,
+    TAU_ASSERT(Tau_thread_flags[tid].Tau_global_insideTAU >= 0,
             "Thread has decremented the insideTAU counter past 0");
   }
   if (!Tau_global_get_insideTAU()) Tau_memory_wrapper_enable();
@@ -1409,7 +1409,7 @@ extern "C" void Tau_profile_c_timer(void **ptr, const char *name, const char *ty
 {
   if (*ptr == 0) {
     TauInternalFunctionGuard protects_this_function;
-    RtsLayer::LockEnv();
+    RtsLayer::LockDB();
     if (*ptr == 0) {  
       // remove garbage characters from the end of name
       unsigned int len=0;
@@ -1425,7 +1425,7 @@ extern "C" void Tau_profile_c_timer(void **ptr, const char *name, const char *ty
 
       free((void*)fixedname);
     }
-    RtsLayer::UnLockEnv();
+    RtsLayer::UnLockDB();
   }
 }
 
