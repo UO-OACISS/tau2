@@ -59,15 +59,23 @@ views or both */
 #define TAU_OPENMP_REGION_VIEW
 #endif /* in the default mode, define both! */
 
+// DEBUGGING
+//#undef TAU_AGGREGATE_OPENMP_TIMINGS
+//#define TAU_OPENMP_REGION_VIEW
+//#define TAU_OPENMP_PARTITION_REGION
+
 omp_lock_t tau_ompregdescr_lock; 
-#define OpenMP TAU_USER
+#define OMP_GROUP TAU_USER
 #define TAU_EMBEDDED_MAPPING 1
 
-#define TAU_OPARI_CONSTRUCT_TIMER(timer, name, type, group) void *TauGlobal##timer(void) \
-{ static void *ptr = NULL; \
-  Tau_profile_c_timer(&ptr, name, type, group, #group); \
-  return ptr; \
-} 
+
+#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+
+#define TAU_OPARI_CONSTRUCT_TIMER(timer, name, type, group) \
+  void *TauGlobal##timer(void) \
+  { static void *ptr = NULL; \
+    Tau_profile_c_timer(&ptr, name, type, group, "OpenMP"); \
+    return ptr; } 
 
 #define TAU_OPARI_CONSTRUCT_TIMER_START(timer) \
     Tau_start_timer(TauGlobal##timer(), 0, Tau_get_tid());
@@ -75,28 +83,37 @@ omp_lock_t tau_ompregdescr_lock;
 #define TAU_OPARI_CONSTRUCT_TIMER_STOP(timer) \
     Tau_stop_timer(TauGlobal##timer(), Tau_get_tid());
 
-TAU_OPARI_CONSTRUCT_TIMER(tatomic, "atomic enter/exit", "[OpenMP]", OpenMP); 
-TAU_OPARI_CONSTRUCT_TIMER(tbarrier, "barrier enter/exit", "[OpenMP]", OpenMP); 
-TAU_OPARI_CONSTRUCT_TIMER(tcriticalb, "critical begin/end", "[OpenMP]", OpenMP); 
-TAU_OPARI_CONSTRUCT_TIMER(tcriticale, "critical enter/exit", "[OpenMP]", OpenMP); 
-TAU_OPARI_CONSTRUCT_TIMER(tfor, "for enter/exit", "[OpenMP]", OpenMP);
-TAU_OPARI_CONSTRUCT_TIMER(tmaster, "master begin/end", "[OpenMP]", OpenMP); 
-TAU_OPARI_CONSTRUCT_TIMER(tparallelb, "parallel begin/end", "[OpenMP]", OpenMP); 
-TAU_OPARI_CONSTRUCT_TIMER(tparallelf, "parallel fork/join", "[OpenMP]", OpenMP); 
-TAU_OPARI_CONSTRUCT_TIMER(tsectionb, "section begin/end", "[OpenMP]", OpenMP); 
-TAU_OPARI_CONSTRUCT_TIMER(tsectione, "sections enter/exit", "[OpenMP]", OpenMP); 
-TAU_OPARI_CONSTRUCT_TIMER(tsingleb, "single begin/end", "[OpenMP]", OpenMP); 
-TAU_OPARI_CONSTRUCT_TIMER(tsinglee, "single enter/exit", "[OpenMP]", OpenMP); 
-TAU_OPARI_CONSTRUCT_TIMER(tworkshare, "workshare enter/exit", "[OpenMP]", OpenMP); 
-TAU_OPARI_CONSTRUCT_TIMER(tregion, "inst region begin/end", "[OpenMP]", OpenMP); 
-TAU_OPARI_CONSTRUCT_TIMER( tflush , "flush enter/exit", "[OpenMP]", OpenMP);
-TAU_OPARI_CONSTRUCT_TIMER( torderedb , "ordered begin/end", "[OpenMP]", OpenMP);
-TAU_OPARI_CONSTRUCT_TIMER( torderede , "ordered enter/exit", "[OpenMP]", OpenMP);
-TAU_OPARI_CONSTRUCT_TIMER( ttaskcreate , "task create begin/create end", "[OpenMP]", OpenMP);
-TAU_OPARI_CONSTRUCT_TIMER( ttask , "task begin/end", "[OpenMP]", OpenMP);
-TAU_OPARI_CONSTRUCT_TIMER( tuntiedcreate , "untied task create begin/end", "[OpenMP]", OpenMP);
-TAU_OPARI_CONSTRUCT_TIMER( tuntied , "untied task begin/end", "[OpenMP]", OpenMP);
-TAU_OPARI_CONSTRUCT_TIMER( ttaskwait , "taskwait begin/end", "[OpenMP]", OpenMP);
+TAU_OPARI_CONSTRUCT_TIMER(tatomic, "atomic enter/exit", "[OpenMP]", OMP_GROUP); 
+TAU_OPARI_CONSTRUCT_TIMER(tbarrier, "barrier enter/exit", "[OpenMP]", OMP_GROUP); 
+TAU_OPARI_CONSTRUCT_TIMER(tcriticalb, "critical begin/end", "[OpenMP]", OMP_GROUP); 
+TAU_OPARI_CONSTRUCT_TIMER(tcriticale, "critical enter/exit", "[OpenMP]", OMP_GROUP); 
+TAU_OPARI_CONSTRUCT_TIMER(tfor, "for enter/exit", "[OpenMP]", OMP_GROUP);
+TAU_OPARI_CONSTRUCT_TIMER(tmaster, "master begin/end", "[OpenMP]", OMP_GROUP); 
+TAU_OPARI_CONSTRUCT_TIMER(tparallelb, "parallel begin/end", "[OpenMP]", OMP_GROUP); 
+TAU_OPARI_CONSTRUCT_TIMER(tparallelf, "parallel fork/join", "[OpenMP]", OMP_GROUP); 
+TAU_OPARI_CONSTRUCT_TIMER(tsectionb, "section begin/end", "[OpenMP]", OMP_GROUP); 
+TAU_OPARI_CONSTRUCT_TIMER(tsectione, "sections enter/exit", "[OpenMP]", OMP_GROUP); 
+TAU_OPARI_CONSTRUCT_TIMER(tsingleb, "single begin/end", "[OpenMP]", OMP_GROUP); 
+TAU_OPARI_CONSTRUCT_TIMER(tsinglee, "single enter/exit", "[OpenMP]", OMP_GROUP); 
+TAU_OPARI_CONSTRUCT_TIMER(tworkshare, "workshare enter/exit", "[OpenMP]", OMP_GROUP); 
+TAU_OPARI_CONSTRUCT_TIMER(tregion, "inst region begin/end", "[OpenMP]", OMP_GROUP); 
+TAU_OPARI_CONSTRUCT_TIMER(tflush , "flush enter/exit", "[OpenMP]", OMP_GROUP);
+TAU_OPARI_CONSTRUCT_TIMER(torderedb , "ordered begin/end", "[OpenMP]", OMP_GROUP);
+TAU_OPARI_CONSTRUCT_TIMER(torderede , "ordered enter/exit", "[OpenMP]", OMP_GROUP);
+TAU_OPARI_CONSTRUCT_TIMER(ttaskcreate , "task create begin/create end", "[OpenMP]", OMP_GROUP);
+TAU_OPARI_CONSTRUCT_TIMER(ttask , "task begin/end", "[OpenMP]", OMP_GROUP);
+TAU_OPARI_CONSTRUCT_TIMER(tuntiedcreate , "untied task create begin/end", "[OpenMP]", OMP_GROUP);
+TAU_OPARI_CONSTRUCT_TIMER(tuntied , "untied task begin/end", "[OpenMP]", OMP_GROUP);
+TAU_OPARI_CONSTRUCT_TIMER(ttaskwait , "taskwait begin/end", "[OpenMP]", OMP_GROUP);
+
+#else
+
+#define TAU_OPARI_CONSTRUCT_TIMER_START(timer)
+#define TAU_OPARI_CONSTRUCT_TIMER_STOP(timer)
+
+#endif
+
+
 
 
 #define NUM_OMP_TYPES 22
@@ -305,22 +322,24 @@ int tau_openmp_init(void)
   omp_init_lock(&tau_ompregdescr_lock);
   return 0;
 }
+int tau_openmp_initialized = tau_openmp_init();
 
 
-  int tau_openmp_initialized = tau_openmp_init();
 void TauStartOpenMPRegionTimer(my_pomp2_region *r, int index)
 {
-/* For any region, create a mapping between a region r and timer t and
-   start the timer. */
+#ifdef TAU_OPENMP_REGION_VIEW
+/* Create a mapping between a region r and timer t and start the timer. */
   
-  // Automatically increment and decrement insideTAU
-  TauInternalFunctionGuard protects_this_function;
+  if(!r) {
+    printf("TAU WARNING: a POMP2 Region was not initialized.  Something went wrong during the creation of pompregions.c\n");
+    return;
+  }
 
-  RtsLayer::LockEnv();
-  //omp_set_lock(&tau_ompregdescr_lock);
-if(r == NULL)
-printf("TAU WARNING: a POMP2 Region was not initialized.  Something went wrong during the creation of pompregions.c\n");
   if (!r->data) {
+    // Protect this region from profiling
+    TauInternalFunctionGuard protects_this_region;
+
+    RtsLayer::LockEnv();
 #ifdef TAU_OPENMP_PARTITION_REGION
     FunctionInfo **flist = new FunctionInfo*[NUM_OMP_TYPES];
     for (int i=0; i < NUM_OMP_TYPES; i++) {
@@ -328,9 +347,8 @@ printf("TAU WARNING: a POMP2 Region was not initialized.  Something went wrong d
       sprintf(rname, "%s (%s)",  r->rtype, omp_names[i]);
       sprintf(rtype, "[OpenMP location: file:%s <%d, %d>]",
 	      r->start_file_name, r->start_line_1, r->end_line_1);
-      
-      FunctionInfo *f = new FunctionInfo(rname, rtype, OpenMP, "OpenMP");
-      flist[i] = f;
+
+      flist[i] = new FunctionInfo(rname, rtype, OMP_GROUP, "OpenMP");
     }
     r->data = (void*)flist;
 #else
@@ -339,9 +357,10 @@ printf("TAU WARNING: a POMP2 Region was not initialized.  Something went wrong d
     sprintf(rtype, "[OpenMP location: file:%s <%d, %d>]",
 	    r->start_file_name, r->start_line_1, r->end_line_1);
     
-    FunctionInfo *f = new FunctionInfo(rname, rtype, OpenMP, "OpenMP");
+    FunctionInfo *f = new FunctionInfo(rname, rtype, OMP_GROUP, "OpenMP");
     r->data = (void*)f;
 #endif
+    RtsLayer::UnLockEnv();
   }
   
 #ifdef TAU_OPENMP_PARTITION_REGION
@@ -349,40 +368,22 @@ printf("TAU WARNING: a POMP2 Region was not initialized.  Something went wrong d
 #else 
   FunctionInfo *f = (FunctionInfo *)r->data;
 #endif
-//Have to register new threads with global threading framework.
-//Doesn't matter if this is called by a thread more than once 
-  Tau_create_tid();
   Tau_start_timer(f, 0, Tau_get_tid());
  
-  RtsLayer::UnLockEnv();
-  //omp_unset_lock(&tau_ompregdescr_lock);
+#endif /* TAU_OPENMP_REGION_VIEW */
 }
 
 
 void TauStopOpenMPRegionTimer(my_pomp2_region  *r, int index)
 {
-
+#ifdef TAU_OPENMP_REGION_VIEW
 #ifdef TAU_OPENMP_PARTITION_REGION
     FunctionInfo *f = ((FunctionInfo **)r->data)[index];
 #else
     FunctionInfo *f = (FunctionInfo *)r->data;
 #endif
-      Tau_stop_timer(f, Tau_get_tid());
-//This silently ignored bugs, 
-//Let the measurement layer deal with problems with the profiler
-//And report any errors
-/*    TauGroup_t gr = f->GetProfileGroup();
-
-    int tid = RtsLayer::myThread(); 
-    Profiler *p =TauInternal_CurrentProfiler(tid); 
-    if(p == NULL){
-      // nothing, it must have been disabled/throttled
-    } else if (p->ThisFunction == f) {
-
-      Tau_stop_timer(f, Tau_create_tid());
-    } else {
-      // nothing, it must have been disabled/throttled
-    }*/
+    Tau_stop_timer(f, Tau_get_tid());
+#endif /* TAU_OPENMP_REGION_VIEW */
 }
 /*
  * Global variables
@@ -470,15 +471,10 @@ void POMP2_Begin(POMP2_Region_handle* pomp2_handle)
     POMP2_Init();
   }
   my_pomp2_region* region = (my_pomp2_region*)*pomp2_handle;
-//my_pomp2_region* region = *pomp2_handle;
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(tregion);
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStartOpenMPRegionTimer(region, TAU_OMP_INST_BE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
   if ( pomp2_tracing )
@@ -501,14 +497,9 @@ void POMP2_End(POMP2_Region_handle* pomp2_handle)
   //my_pomp2_region* region = *pomp2_handle;
   my_pomp2_region* region = (my_pomp2_region*)*pomp2_handle;
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStopOpenMPRegionTimer(region, TAU_OMP_INST_BE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_STOP(tregion);
-  /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef DEBUG_PROF
   if ( pomp2_tracing )
@@ -552,13 +543,9 @@ void POMP2_Atomic_enter(POMP2_Region_handle* pomp2_handle, const char ctc_string
   if (*pomp2_handle == NULL) {
     POMP2_Init();
   }
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(tatomic);
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStartOpenMPRegionTimer((my_pomp2_region*)*pomp2_handle, TAU_OMP_ATOMIC);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
   if ( pomp2_tracing )
@@ -578,14 +565,10 @@ void POMP2_Atomic_exit(POMP2_Region_handle* pomp2_handle)
     POMP2_Init();
   }
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStopOpenMPRegionTimer((my_pomp2_region*)*pomp2_handle, TAU_OMP_ATOMIC);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_STOP(tatomic);
-  /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+
 #ifdef DEBUG_PROF
   if ( pomp2_tracing )
   {
@@ -610,13 +593,9 @@ void POMP2_Barrier_enter(POMP2_Region_handle* pomp2_handle, POMP2_Task_handle* p
   //my_pomp2_region* region = *pomp2_handle;
   my_pomp2_region* region = (my_pomp2_region*)*pomp2_handle;
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(tbarrier);
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStartOpenMPRegionTimer(region, TAU_OMP_BARRIER);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
   if ( pomp2_tracing )
@@ -648,14 +627,9 @@ void POMP2_Barrier_exit(POMP2_Region_handle* pomp2_handle, POMP2_Task_handle pom
   //my_pomp2_region* region = *pomp2_handle;
   my_pomp2_region* region = (my_pomp2_region*)*pomp2_handle;
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStopOpenMPRegionTimer(region, TAU_OMP_BARRIER);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_STOP(tbarrier);
-  /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef DEBUG_PROF
   if ( pomp2_tracing )
@@ -696,13 +670,9 @@ void POMP2_Flush_enter(POMP2_Region_handle* pomp2_handle, const char ctc_string[
   }
 
   my_pomp2_region* region = (my_pomp2_region*)*pomp2_handle;
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(tflush);
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStartOpenMPRegionTimer(region, TAU_OMP_FLUSH_EE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
   if ( pomp2_tracing )
@@ -723,15 +693,9 @@ void POMP2_Flush_exit(POMP2_Region_handle* pomp2_handle)
   }
 
   my_pomp2_region* region = (my_pomp2_region*)*pomp2_handle;
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStopOpenMPRegionTimer(region, TAU_OMP_FLUSH_EE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
-  //TAU_UGLOBAL_TIMER_STOP(tflush);
   TAU_OPARI_CONSTRUCT_TIMER_STOP(tflush);
-  /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef DEBUG_PROF
   if ( pomp2_tracing )
@@ -751,13 +715,10 @@ void POMP2_Critical_begin(POMP2_Region_handle* pomp2_handle)
   }
   //my_pomp2_region* region = *pomp2_handle;
   my_pomp2_region* region = (my_pomp2_region*)*pomp2_handle;
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(tcriticalb);
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStartOpenMPRegionTimer(region, TAU_OMP_CRITICAL_BE);
-#endif /* TAU_OPENMP_REGION_VIEW */
+
 #ifdef DEBUG_PROF
   if ( pomp2_tracing )
   {
@@ -778,14 +739,9 @@ void POMP2_Critical_end(POMP2_Region_handle* pomp2_handle)
   my_pomp2_region* region = (my_pomp2_region*)*pomp2_handle;
   //my_pomp2_region* region = *pomp2_handle;
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStopOpenMPRegionTimer(region, TAU_OMP_CRITICAL_BE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_STOP(tcriticalb);
-  /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef DEBUG_PROF
   if ( pomp2_tracing )
@@ -808,13 +764,9 @@ void POMP2_Critical_enter(POMP2_Region_handle* pomp2_handle, const char ctc_stri
   //my_pomp2_region* region = *pomp2_handle;
   my_pomp2_region* region = (my_pomp2_region*)*pomp2_handle;
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(tcriticale);
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStartOpenMPRegionTimer(region, TAU_OMP_CRITICAL_EE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
   if ( pomp2_tracing )
@@ -839,13 +791,9 @@ POMP2_Critical_exit( POMP2_Region_handle* pomp2_handle )
     //my_pomp2_region* region = *pomp2_handle;
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStopOpenMPRegionTimer(region, TAU_OMP_CRITICAL_EE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_STOP(tcriticale); /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 
 
@@ -870,13 +818,10 @@ POMP2_For_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
         POMP2_Init();
     }
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
-  TAU_OPARI_CONSTRUCT_TIMER_START(tfor); 
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
-#ifdef TAU_OPENMP_REGION_VIEW
+  TAU_OPARI_CONSTRUCT_TIMER_START(tfor); 
+
   TauStartOpenMPRegionTimer(region, TAU_OMP_FOR_EE); 
-#endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
@@ -899,13 +844,9 @@ POMP2_For_exit( POMP2_Region_handle* pomp2_handle )
     }
 
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStopOpenMPRegionTimer(region, TAU_OMP_FOR_EE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_STOP(tfor); /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
   // as in a stack. lifo
 
 #ifdef DEBUG_PROF
@@ -929,13 +870,9 @@ POMP2_Master_begin( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
     }
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(tmaster);
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStartOpenMPRegionTimer(region, TAU_OMP_MASTER_BE); 
-#endif /* TAU_OPENMP_REGION_VIEW */
 
 
 #ifdef DEBUG_PROF
@@ -959,13 +896,9 @@ POMP2_Master_end( POMP2_Region_handle* pomp2_handle )
     }
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStopOpenMPRegionTimer(region, TAU_OMP_MASTER_BE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_STOP(tmaster); /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
@@ -987,14 +920,10 @@ POMP2_Parallel_begin( POMP2_Region_handle* pomp2_handle )
         POMP2_Init();
     }
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
-
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
+ 
   TAU_OPARI_CONSTRUCT_TIMER_START(tparallelb);
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStartOpenMPRegionTimer(region, TAU_OMP_PAR_BE); 
-#endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
@@ -1017,13 +946,9 @@ POMP2_Parallel_end( POMP2_Region_handle* pomp2_handle )
     }
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStopOpenMPRegionTimer(region, TAU_OMP_PAR_BE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
-  TAU_OPARI_CONSTRUCT_TIMER_STOP(tparallelb); /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
+  TAU_OPARI_CONSTRUCT_TIMER_STOP(tparallelb);
 
 
 #ifdef DEBUG_PROF
@@ -1053,13 +978,9 @@ POMP2_Parallel_fork( POMP2_Region_handle* pomp2_handle,
     }
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(tparallelf);
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStartOpenMPRegionTimer(region, TAU_OMP_PAR_FJ); 
-#endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
@@ -1084,13 +1005,9 @@ POMP2_Parallel_join( POMP2_Region_handle* pomp2_handle, POMP2_Task_handle   pomp
     }
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStopOpenMPRegionTimer(region, TAU_OMP_PAR_FJ);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_STOP(tparallelf); /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
@@ -1113,13 +1030,9 @@ POMP2_Section_begin( POMP2_Region_handle* pomp2_handle, const char ctc_string[] 
     }
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(tsectionb);
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStartOpenMPRegionTimer(region, TAU_OMP_SECTION_BE); 
-#endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
@@ -1142,13 +1055,9 @@ POMP2_Section_end( POMP2_Region_handle* pomp2_handle )
     }
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStopOpenMPRegionTimer(region, TAU_OMP_SECTION_BE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_STOP(tsectionb); /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
@@ -1171,13 +1080,9 @@ POMP2_Sections_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[]
     }
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(tsectione);
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStartOpenMPRegionTimer(region, TAU_OMP_SECTION_EE); 
-#endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
@@ -1201,13 +1106,9 @@ POMP2_Sections_exit( POMP2_Region_handle* pomp2_handle )
     }
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStopOpenMPRegionTimer(region, TAU_OMP_SECTION_EE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_STOP(tsectione); /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
@@ -1230,13 +1131,9 @@ POMP2_Single_begin( POMP2_Region_handle* pomp2_handle )
     }
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(tsingleb);
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStartOpenMPRegionTimer(region, TAU_OMP_SINGLE_BE); 
-#endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
@@ -1259,13 +1156,9 @@ POMP2_Single_end( POMP2_Region_handle* pomp2_handle )
     }
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStopOpenMPRegionTimer(region, TAU_OMP_SINGLE_BE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_STOP(tsingleb); /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
@@ -1288,13 +1181,9 @@ POMP2_Single_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[] )
     }
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(tsinglee);
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStartOpenMPRegionTimer(region, TAU_OMP_SINGLE_EE); 
-#endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
@@ -1317,13 +1206,9 @@ POMP2_Single_exit( POMP2_Region_handle* pomp2_handle )
     }
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStopOpenMPRegionTimer(region, TAU_OMP_SINGLE_EE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_STOP(tsinglee); /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
@@ -1346,13 +1231,9 @@ POMP2_Workshare_enter( POMP2_Region_handle* pomp2_handle, const char ctc_string[
     }
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(tworkshare);
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStartOpenMPRegionTimer(region, TAU_OMP_WORK_EE); 
-#endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
@@ -1375,13 +1256,9 @@ POMP2_Workshare_exit( POMP2_Region_handle* pomp2_handle )
     }
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;    
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStopOpenMPRegionTimer(region, TAU_OMP_WORK_EE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_STOP(tworkshare); /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
@@ -1405,13 +1282,9 @@ POMP2_Ordered_begin( POMP2_Region_handle* pomp2_handle )
 
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(torderedb); /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStartOpenMPRegionTimer(region, TAU_OMP_ORDERED_BE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
 
@@ -1435,13 +1308,9 @@ POMP2_Ordered_end( POMP2_Region_handle* pomp2_handle )
     }
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStopOpenMPRegionTimer(region, TAU_OMP_ORDERED_BE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_STOP(torderedb); /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef DEBUG_PROF
 
@@ -1468,13 +1337,9 @@ POMP2_Ordered_enter( POMP2_Region_handle* pomp2_handle,
 
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(torderede); /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStartOpenMPRegionTimer(region, TAU_OMP_ORDERED_EE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
 
 #ifdef DEBUG_PROF
@@ -1501,13 +1366,9 @@ POMP2_Ordered_exit( POMP2_Region_handle* pomp2_handle )
 
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStopOpenMPRegionTimer(region, TAU_OMP_ORDERED_EE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_STOP(torderede); /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef DEBUG_PROF
 
@@ -1534,13 +1395,9 @@ POMP2_Task_create_begin( POMP2_Region_handle* pomp2_handle,
 
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(ttaskcreate); /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStartOpenMPRegionTimer(region, TAU_OMP_TASK_CREATE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
@@ -1560,13 +1417,9 @@ POMP2_Task_create_end( POMP2_Region_handle* pomp2_handle,
     pomp2_current_task = pomp2_old_task;
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStopOpenMPRegionTimer(region, TAU_OMP_TASK_CREATE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_STOP(ttaskcreate); /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef DEBUG_PROF
  
@@ -1589,13 +1442,9 @@ POMP2_Task_begin( POMP2_Region_handle* pomp2_handle,
 
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(ttaskcreate); /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStartOpenMPRegionTimer(region, TAU_OMP_TASK);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
 
@@ -1615,13 +1464,9 @@ POMP2_Task_end( POMP2_Region_handle* pomp2_handle )
 
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStopOpenMPRegionTimer(region, TAU_OMP_TASK);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_STOP(ttaskcreate); /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef DEBUG_PROF
 
@@ -1647,13 +1492,9 @@ POMP2_Untied_task_create_begin( POMP2_Region_handle* pomp2_handle,
 
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(tuntiedcreate); /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStartOpenMPRegionTimer(region, TAU_OMP_UNTIED_TASK_CREATE_BE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
 
@@ -1677,13 +1518,9 @@ POMP2_Untied_task_create_end( POMP2_Region_handle* pomp2_handle,
 
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStopOpenMPRegionTimer(region, TAU_OMP_UNTIED_TASK_CREATE_BE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_STOP(tuntiedcreate); /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef DEBUG_PROF
 
@@ -1708,13 +1545,9 @@ POMP2_Untied_task_begin( POMP2_Region_handle* pomp2_handle,
 
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(tuntied); /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStartOpenMPRegionTimer(region, TAU_OMP_UNTIED_TASK_BE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
 
@@ -1733,13 +1566,9 @@ POMP2_Untied_task_end( POMP2_Region_handle* pomp2_handle )
 
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStopOpenMPRegionTimer(region, TAU_OMP_UNTIED_TASK_BE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_STOP(tuntied); /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef DEBUG_PROF
 
@@ -1762,13 +1591,9 @@ POMP2_Taskwait_begin( POMP2_Region_handle* pomp2_handle,
 
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_START(ttaskwait); /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStartOpenMPRegionTimer(region, TAU_OMP_TASKWAIT_BE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
 #ifdef DEBUG_PROF
 
@@ -1791,13 +1616,9 @@ POMP2_Taskwait_end( POMP2_Region_handle* pomp2_handle,
     pomp2_current_task = pomp2_old_task;
     my_pomp2_region* region = ( my_pomp2_region*) *pomp2_handle;
 
-#ifdef TAU_OPENMP_REGION_VIEW
   TauStopOpenMPRegionTimer(region, TAU_OMP_TASKWAIT_BE);
-#endif /* TAU_OPENMP_REGION_VIEW */
 
-#ifdef TAU_AGGREGATE_OPENMP_TIMINGS
   TAU_OPARI_CONSTRUCT_TIMER_STOP(ttaskwait); /* global timer stop */
-#endif /* TAU_AGGREGATE_OPENMP_TIMINGS */
 
 #ifdef DEBUG_PROF
 
@@ -1824,7 +1645,7 @@ POMP2_Init_lock( omp_lock_t* s )
   // Automatically increment and decrement insideTAU
   TauInternalFunctionGuard protects_this_function;
 
-  TAU_PROFILE("omp_init_lock", "[OpenMP]", OpenMP);
+  TAU_PROFILE("omp_init_lock", "[OpenMP]", OMP_GROUP);
 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
@@ -1841,7 +1662,7 @@ POMP2_Destroy_lock( omp_lock_t* s )
   // Automatically increment and decrement insideTAU
   TauInternalFunctionGuard protects_this_function;
 
-  TAU_PROFILE("omp_destroy_lock", "[OpenMP]", OpenMP);
+  TAU_PROFILE("omp_destroy_lock", "[OpenMP]", OMP_GROUP);
 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
@@ -1858,7 +1679,7 @@ POMP2_Set_lock( omp_lock_t* s )
   // Automatically increment and decrement insideTAU
   TauInternalFunctionGuard protects_this_function;
 
-  TAU_PROFILE("omp_set_lock", "[OpenMP]", OpenMP);
+  TAU_PROFILE("omp_set_lock", "[OpenMP]", OMP_GROUP);
 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
@@ -1875,7 +1696,7 @@ POMP2_Unset_lock( omp_lock_t* s )
   // Automatically increment and decrement insideTAU
   TauInternalFunctionGuard protects_this_function;
 
-  TAU_PROFILE("omp_unset_lock", "[OpenMP]", OpenMP);
+  TAU_PROFILE("omp_unset_lock", "[OpenMP]", OMP_GROUP);
 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
@@ -1892,7 +1713,7 @@ POMP2_Test_lock( omp_lock_t* s )
   // Automatically increment and decrement insideTAU
   TauInternalFunctionGuard protects_this_function;
 
-  TAU_PROFILE("omp_test_lock", "[OpenMP]", OpenMP);
+  TAU_PROFILE("omp_test_lock", "[OpenMP]", OMP_GROUP);
 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
@@ -1909,7 +1730,7 @@ POMP2_Init_nest_lock( omp_nest_lock_t* s )
   // Automatically increment and decrement insideTAU
   TauInternalFunctionGuard protects_this_function;
 
-  TAU_PROFILE("omp_init_nest_lock", "[OpenMP]", OpenMP);
+  TAU_PROFILE("omp_init_nest_lock", "[OpenMP]", OMP_GROUP);
 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
@@ -1926,7 +1747,7 @@ POMP2_Destroy_nest_lock( omp_nest_lock_t* s )
   // Automatically increment and decrement insideTAU
   TauInternalFunctionGuard protects_this_function;
 
-  TAU_PROFILE("omp_destroy_nest_lock", "[OpenMP]", OpenMP);
+  TAU_PROFILE("omp_destroy_nest_lock", "[OpenMP]", OMP_GROUP);
 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
@@ -1943,7 +1764,7 @@ POMP2_Set_nest_lock( omp_nest_lock_t* s )
   // Automatically increment and decrement insideTAU
   TauInternalFunctionGuard protects_this_function;
 
-  TAU_PROFILE("omp_set_nest_lock", "[OpenMP]", OpenMP);
+  TAU_PROFILE("omp_set_nest_lock", "[OpenMP]", OMP_GROUP);
 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
@@ -1960,7 +1781,7 @@ POMP2_Unset_nest_lock( omp_nest_lock_t* s )
   // Automatically increment and decrement insideTAU
   TauInternalFunctionGuard protects_this_function;
 
-  TAU_PROFILE("omp_unset_nest_lock", "[OpenMP]", OpenMP);
+  TAU_PROFILE("omp_unset_nest_lock", "[OpenMP]", OMP_GROUP);
 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
@@ -1977,7 +1798,7 @@ POMP2_Test_nest_lock( omp_nest_lock_t* s )
   // Automatically increment and decrement insideTAU
   TauInternalFunctionGuard protects_this_function;
 
-  TAU_PROFILE("omp_test_nest_lock", "[OpenMP]", OpenMP);
+  TAU_PROFILE("omp_test_nest_lock", "[OpenMP]", OMP_GROUP);
 
 #ifdef DEBUG_PROF
     if ( pomp2_tracing )
