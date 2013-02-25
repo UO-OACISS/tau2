@@ -221,27 +221,19 @@ void Profiler::CallPathStart(int tid)
     }
 #endif /* TAU_WINDOWS */
 
+    RtsLayer::LockDB();
     CallpathMap & pathMap = TheCallpathMap();
     CallpathMap::iterator it = pathMap.find(comparison);
-
     if (it == pathMap.end()) {
-      RtsLayer::LockEnv();
-      it = pathMap.find(comparison);
-      if (it == pathMap.end()) {
-        string callpathname = TauFormulateNameString(this);
-        string grname = string("TAU_CALLPATH|") + RtsLayer::PrimaryGroup(ThisFunction->GetAllGroups());
-
-        CallPathFunction = new FunctionInfo(callpathname, "", ThisFunction->GetProfileGroup(), grname.c_str(), true);
-        pathMap[comparison] = CallPathFunction;
-      } else {
-        CallPathFunction = it->second;
-        delete[] comparison;    // free up memory when name is found
-      }
-      RtsLayer::UnLockEnv();
+      string callpathname = TauFormulateNameString(this);
+      string grname = string("TAU_CALLPATH|") + RtsLayer::PrimaryGroup(ThisFunction->GetAllGroups());
+      CallPathFunction = new FunctionInfo(callpathname, "", ThisFunction->GetProfileGroup(), grname.c_str(), true);
+      pathMap[comparison] = CallPathFunction;
     } else {
       CallPathFunction = it->second;
       delete[] comparison;    // free up memory when name is found
     }
+    RtsLayer::UnLockDB();
 
     // Set up metrics. Increment number of calls and subrs
     CallPathFunction->IncrNumCalls(tid);

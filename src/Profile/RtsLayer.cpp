@@ -667,23 +667,39 @@ bool RtsLayer::isCtorDtor(const char *name) {
 // This is needed in tracing as Vampir can handle only one group per
 // function. PrimaryGroup("TAU_FIELD | TAU_USER") should return "TAU_FIELD"
 //////////////////////////////////////////////////////////////////////
-string RtsLayer::PrimaryGroup(const char *ProfileGroupName) {
-  string groups = ProfileGroupName;
-  string primary = ProfileGroupName;
-  const char *separators = " |"; 
-  int start, stop, n;
+string RtsLayer::PrimaryGroup(const char *ProfileGroupName) 
+{
+  char c;
 
-  start = groups.find_first_not_of(separators, 0);
-  n = groups.length();
-  stop = groups.find_first_of(separators, start); 
+  char const * start = ProfileGroupName;
+  c = *start;
+  while (c) {
+    switch (c) {
+      case ' ':
+      case '|':
+        c = *(++start);
+        break;
+      default:
+        c = 0;
+        break;
+    }
+  }
 
-  if ((stop < 0) || (stop > n)) stop = n;
-  int end = stop - start;
+  char const * stop = start;
+  c = *stop;
+  while (c) {
+    switch (c) {
+      case ' ':
+      case '|':
+        c = 0;
+        break;
+      default:
+        c = *(++stop);
+        break;
+    }
+  }
 
-  if (end > 0 && end != stop)
-    primary = groups.substr(start, end) ;
-  return primary;
-
+  return string(start, (size_t)(stop - start));
 }
 
 
