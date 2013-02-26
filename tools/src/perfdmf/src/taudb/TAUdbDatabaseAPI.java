@@ -651,7 +651,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			sb.append("t.trial = " + trials.get(i) + " ");
 		}
 		if (trials.size() > 0) { sb.append(")"); }
-		sb.append(") and tc.parent is null ");
+		sb.append(" and tc.parent is null ");//Removed paren, may not be acceptable
 
 				sb.append("UNION ALL SELECT d.id, d.parent, d.timer, ");
         if (db.getDBType().compareTo("h2") == 0) {
@@ -680,7 +680,11 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 		if (trials.size() > 0) { sb.append(")"); }
 		PreparedStatement statement = db.prepareStatement(sb.toString());
 		//System.out.println(statement);
+		try{
 		statement.execute();
+		}catch(Exception e){
+			e.printStackTrace();
+		}
 		ResultSet results = statement.getResultSet();
 
 		while (results.next()) {
