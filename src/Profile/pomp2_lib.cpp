@@ -397,10 +397,10 @@ void POMP2_Finalize()
   size_t i;
   const size_t nRegions = POMP2_Get_num_regions();
 
-  if (my_pomp2_regions) {
-    // Protect TAU from itself
-    TauInternalFunctionGuard protects_this_function;
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
 
+  if (my_pomp2_regions) {
     for (i = 0; i < nRegions; ++i) {
       free_my_pomp2_region_members(&my_pomp2_regions[i]);
     }
@@ -420,10 +420,10 @@ void POMP2_Init()
 {
   static int pomp2_init_called = 0;
 
-  if (!pomp2_init_called) {
-    // Protect TAU from itself
-    TauInternalFunctionGuard protects_this_function;
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
 
+  if (!pomp2_init_called) {
     pomp2_init_called = 1;
 
     atexit(POMP2_Finalize);
@@ -670,13 +670,15 @@ void POMP2_Barrier_exit(POMP2_Region_handle* pomp2_handle, POMP2_Task_handle pom
 void
 POMP2_Implicit_barrier_enter( POMP2_Region_handle* pomp2_handle,POMP2_Task_handle*   pomp2_old_task )
 {
-    POMP2_Barrier_enter( pomp2_handle, pomp2_old_task,  "" );
+  TauInternalFunctionGuard protects_this_function;
+  POMP2_Barrier_enter( pomp2_handle, pomp2_old_task,  "" );
 }
 
 extern void
 POMP2_Implicit_barrier_exit( POMP2_Region_handle* pomp2_handle, POMP2_Task_handle   pomp2_old_task )
 {
-    POMP2_Barrier_exit( pomp2_handle, pomp2_old_task );
+  TauInternalFunctionGuard protects_this_function;
+  POMP2_Barrier_exit( pomp2_handle, pomp2_old_task );
 }
 
 void POMP2_Flush_enter(POMP2_Region_handle* pomp2_handle, const char ctc_string[])
