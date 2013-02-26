@@ -322,7 +322,7 @@ string TauContextUserEvent::FormulateContextNameString(Profiler * current)
 
   int depth = TauEnv_get_callpath_depth();
   if (depth) {
-    Profiler * path[depth];
+    Profiler ** path = (Profiler**)malloc(depth*sizeof(Profiler*));
 
     // Reverse the callpath to avoid string copies
     int i=depth-1;
@@ -332,11 +332,20 @@ string TauContextUserEvent::FormulateContextNameString(Profiler * current)
     }
     // Now we can construct the name string by appending rather than prepending
     buff  << " : ";
+    FunctionInfo * fi;
     for (++i; i < depth-1; ++i) {
-      FunctionInfo * fi = path[i]->ThisFunction;
-      buff << fi->GetName() << ' ' << fi->GetType() << " => ";
+      fi = path[i]->ThisFunction;
+      buff << fi->GetName();
+      if (strlen(fi->GetType()) > 0)
+        buff << " " << fi->GetType();
+      buff << " => ";
     }
-    buff << path[i]->ThisFunction->GetName() << ' ' << path[i]->ThisFunction->GetType();
+    fi = path[i]->ThisFunction;
+    buff << fi->GetName();
+    if (strlen(fi->GetType()) > 0)
+      buff << " " << fi->GetType();
+
+    free((void*)path);
   }
 
   // Return a new string object.
