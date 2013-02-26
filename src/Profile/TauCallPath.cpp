@@ -149,8 +149,9 @@ string TauFormulateNameString(Profiler * current)
   ostringstream buff;
 
   int depth = GetCallpathDepth();
-  Profiler * path[depth];
-  int i=depth-1;
+  int i;
+
+  Profiler ** path = (Profiler**)malloc(depth*sizeof(Profiler*));
 
 #ifdef TAU_PROFILEPHASE
 
@@ -167,7 +168,7 @@ string TauFormulateNameString(Profiler * current)
 #else /* TAU_PROFILEPHASE */
 
   // Reverse the callpath to avoid string copies
-  for (; current && i >= 0; --i) {
+  for (i=depth-1; current && i >= 0; --i) {
     path[i] = current;
     current = current->ParentProfiler;
   }
@@ -181,13 +182,15 @@ string TauFormulateNameString(Profiler * current)
     fi = path[i]->ThisFunction;
     buff << fi->GetName();
     if (strlen(fi->GetType()) > 0)
-      buff << ' ' << fi->GetType();
+      buff << " " << fi->GetType();
     buff << " => ";
   }
   fi = path[i]->ThisFunction;
   buff << fi->GetName();
   if (strlen(fi->GetType()) > 0)
-    buff << ' ' << fi->GetType();
+    buff << " " << fi->GetType();
+
+  free((void*)path);
 
   // Return a new string object.
   // A smart STL implementation will not allocate a new buffer.
