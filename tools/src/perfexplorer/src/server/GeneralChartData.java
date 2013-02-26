@@ -38,6 +38,10 @@ public class GeneralChartData extends RMIGeneralChartData {
 	public static GeneralChartData getChartData(RMIPerfExplorerModel model,  ChartDataType dataType) {
 		//PerfExplorerOutput.println("getChartData(" + model.toString() + ")...");
 		DB db = PerfExplorerServer.getServer().getDB();
+		
+		//System.out.println("Do just the perfdmf approach");
+		//return new PerfDMFGeneralChartData(model, dataType);
+		
 		if (db.getSchemaVersion() == 0){
 			return new PerfDMFGeneralChartData(model, dataType);
 		}else {
