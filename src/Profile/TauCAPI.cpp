@@ -99,6 +99,7 @@ extern "C" void * Tau_get_profiler(const char *fname, const char *type, TauGroup
  * entering timers at the same time, and every thread will invalidate the
  * cache line otherwise.
  */
+#ifndef CRAYCC
 union Tau_thread_status_flags
 {
   /* Padding structures is tricky because compilers pad unexpectedly 
@@ -140,6 +141,17 @@ union Tau_thread_status_flags
 
   char _pad[64];
 };
+#else
+struct Tau_thread_status_flags {
+  Profiler * Tau_global_stack;
+  int Tau_global_stackdepth;
+  int Tau_global_stackpos;
+  int Tau_global_insideTAU;
+  int Tau_is_thread_fake_for_task_api;
+  // Not as elegant, but similar effect
+  char _pad[64-sizeof(Profiler*)-4*sizeof(int)];
+};
+#endif
 
 #define STACK_DEPTH_INCREMENT 100
 /* This array is shared by all threads. To make sure we don't have false
@@ -150,12 +162,12 @@ union Tau_thread_status_flags
  * at the same time, and every thread will invalidate the cache line
  * otherwise. */
 #ifdef __INTEL__COMPILER
-__declspec (align(64)) static union Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
+__declspec (align(64)) static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
 #else
 #ifdef __GNUC__
-static union Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] __attribute__ ((aligned(64))) = {0};
+static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] __attribute__ ((aligned(64))) = {0};
 #else
-static union Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
+static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
 #endif
 #endif
 int lightsOut = 0;
