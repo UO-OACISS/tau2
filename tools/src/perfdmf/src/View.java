@@ -362,7 +362,7 @@ public class View implements Serializable {
 			StringBuilder joinClause = new StringBuilder();
 			int currentView = 0;
 			int alias = 0;
-			String conjoin = " where (";
+			String conjoin = " where ((";
 			while (results.next() != false) {
 				int viewid = results.getInt(2);
 				String tableName = results.getString(3);
@@ -372,7 +372,7 @@ public class View implements Serializable {
 				String operator = results.getString(5);
 				String value = results.getString(6);
 				if ((currentView > 0) && (currentView != viewid)) {
-					conjoin = " and (";
+					conjoin = ") and ((";
 				} else if (currentView == viewid) {
 					conjoin = " " + results.getString(1) + " (";
 				}
@@ -391,6 +391,7 @@ public class View implements Serializable {
 				hashViews.get(currentView).setWhereClause(whereClause.toString());
 				hashViews.get(currentView).setJoinClause(joinClause.toString());
 			}
+			whereClause.append(")");
 			statement.close();
 			
 			//PerfExplorerOutput.println(whereClause.toString());
