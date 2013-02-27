@@ -3123,6 +3123,10 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		// return new Database("default", config);
 	}
 
+	/*
+	 * Creating a new connection for every operation creates a lot of overhead. Cache the last created DBAPI object for reuse in batch operaitons 
+	 */
+	private DatabaseAPI tmpDBAPI=null;
 	public DatabaseAPI getDatabaseAPI(Database database) {
 		try {
 
@@ -3131,12 +3135,17 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 			}
 
 			// Basic checks done, try to access the db.
+			if(tmpDBAPI!=null&&tmpDBAPI.getDb().getDatabase().getID()==(database.getID()) && !tmpDBAPI.getDb().isClosed()){
+				return tmpDBAPI;
+			}
+			
 			DatabaseAPI databaseAPI = new DatabaseAPI();
 			databaseAPI.initialize(database);
 			if (databaseAPI.db().getSchemaVersion() > 0) {
 				// copy the DatabaseAPI object data into a new TAUdbDatabaseAPI object
 				databaseAPI = new TAUdbDatabaseAPI(databaseAPI);
 			}
+			tmpDBAPI=databaseAPI;
 
 			// // Some strangeness here, we retrieve the metadata columns for
 			// the non-db trials
