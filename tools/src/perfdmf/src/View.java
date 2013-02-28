@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -106,6 +107,17 @@ public class View implements Serializable {
 		this.viewID = view.viewID;
 	}
 
+	public static View VirtualView(View parent) {
+		View view = new View(parent);
+		
+		view.viewID=-2;
+		view.parent=parent;
+		view.fields.set(fieldNames.indexOf("NAME"), "All Trials");
+		view.fields.set(fieldNames.indexOf("PARENT"), "");
+		view.fields.set(fieldNames.indexOf("ID"), "-1");
+		view.node=null;
+		return view;
+	}
 
 	public static Iterator<String> getFieldNames(DB db) {
 		String allUpperCase = "TRIAL_VIEW";
@@ -416,7 +428,9 @@ public class View implements Serializable {
 		this.viewID = id;
 	}
 	public void setField(String name, String field){
-		setField(fieldNames.indexOf(name.toUpperCase()), field);
+		String n = name.toUpperCase();
+		int i = fieldNames.indexOf(n);
+		setField(i, field);
 	}
     public void setField(int idx, String field) {
         if (DBConnector.isIntegerType(database.getAppFieldTypes()[idx]) && field != null) {
