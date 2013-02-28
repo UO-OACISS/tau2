@@ -36,7 +36,6 @@ import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfdmf.taudb.TAUdbDatabaseAPI;
 import edu.uoregon.tau.perfexplorer.common.ChartDataType;
 import edu.uoregon.tau.perfexplorer.common.PerfExplorerOutput;
-import edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData;
 import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
 import edu.uoregon.tau.perfexplorer.common.TransformationType;
 
@@ -445,7 +444,12 @@ public class PerfDMFGeneralChartData extends GeneralChartData {
 					}
 				}
 			}
-			  Map<String, ArrayList<Integer>> callPathMap = TAUdbDatabaseAPI.getCallDataMap(getListOfTrialIDs(db),  db);
+			
+			Map<String, ArrayList<Integer>> callPathMap=null;
+			if(db.getSchemaVersion()>0){
+			List<Integer> tids = getListOfTrialIDs(db);
+			 callPathMap = TAUdbDatabaseAPI.getCallDataMap(tids,  db);
+			}
 
 			// if we want to see particular events
 			if (eventNames != null) {
@@ -491,8 +495,10 @@ public class PerfDMFGeneralChartData extends GeneralChartData {
 			}
 		}
 		// then event names...
-		if (eventNames != null) {
-			  Map<String, ArrayList<Integer>> callPathMap = TAUdbDatabaseAPI.getCallDataMap(getListOfTrialIDs(db),  db);
+		if (eventNames != null ) {
+			//If we are in taudb we have a map of event names to ids so we can use those in the query
+			if(db.getSchemaVersion()>0){
+			Map<String, ArrayList<Integer>> callPathMap = TAUdbDatabaseAPI.getCallDataMap(getListOfTrialIDs(db),  db);
 
 			for (int i = 0 ; i < eventNames.size() ; i++) {
 				String tmp = (String)eventNames.get(i);
@@ -502,6 +508,15 @@ public class PerfDMFGeneralChartData extends GeneralChartData {
 				currentParameter++;
 				}
 			}
+			
+			}
+			else{//Otherwise we just use event names directly
+				for (int i = 0 ; i < eventNames.size() ; i++) {
+					String tmp = (String)eventNames.get(i);
+					statement.setString(currentParameter, tmp);
+					currentParameter++;
+			}
+			}	
 		}
 
 //		System.out.println(buf.toString());
@@ -509,6 +524,9 @@ public class PerfDMFGeneralChartData extends GeneralChartData {
 		statement.execute();
 		statement.close();
 	}
+	
+	
+	
 
 	private List<Integer> getListOfTrialIDs(DB db) {
 		List<Integer> list = new ArrayList<Integer>();
@@ -593,7 +611,7 @@ public class PerfDMFGeneralChartData extends GeneralChartData {
 			statement.close();
 		} else if( model.getMainEventOnly()){
 			 long before = System.currentTimeMillis();
-			System.out.print("New insert...");
+			System.out.println("New insert...");
 			StringBuffer buffer = new StringBuffer();
 			buffer.append("select timer.name from timer");
 			buffer.append("      inner join timer_callpath on timer_callpath.timer = timer.id ");
@@ -611,7 +629,7 @@ public class PerfDMFGeneralChartData extends GeneralChartData {
 //			}
 			buffer.append("      where timer_value.inclusive_value = maxinc and timer.trial = trialid and  timer_value.metric=metricid");
 			 PreparedStatement statement = db.prepareStatement(buffer.toString());
-//			 System.out.println(statement);
+			 //System.out.println(statement);
 			 ResultSet results = statement.executeQuery();
 
 			while (results.next() != false) {
@@ -797,7 +815,7 @@ public class PerfDMFGeneralChartData extends GeneralChartData {
 		buf.append("(select t.* from trial t ");
 		if (db.getSchemaVersion() == 0) {
 			buf.append("inner join experiment ");
-			buf.append("on trial.experiment = experiment.id ");
+			buf.append("on t.experiment = experiment.id ");
 			buf.append("inner join application ");
 			buf.append("on experiment.application = application.id ");
 		}

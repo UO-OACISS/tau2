@@ -23,7 +23,6 @@ declare -i removeMpi=$FALSE
 declare -i needToCleanPdbInstFiles=$TRUE
 declare -i pdbFileSpecified=$FALSE
 declare -i optResetUsed=$FALSE
-declare -i optDetectMemoryLeaks=$FALSE
 declare -i optMemDbg=$FALSE
 declare -i optFujitsu=$FALSE
 
@@ -83,8 +82,8 @@ TAU_BIN_DIR="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 printUsage () {
     echo -e "Usage: tau_compiler.sh"
     echo -e "  -optVerbose\t\t\tTurn on verbose debugging message"
-    echo -e "  -optDetectMemoryLeaks\t\tTrack mallocs/frees using TAU's memory wrapper"
     echo -e "  -optMemDbg\t\tEnable TAU's runtime memory debugger"
+    echo -e "  -optDetectMemoryLeaks\t\tSynonym for -optMemDbg"
     echo -e "  -optPdtDir=\"\"\t\t\tPDT architecture directory. Typically \$(PDTDIR)/\$(PDTARCHDIR)"
     echo -e "  -optPdtF95Opts=\"\"\t\tOptions for Fortran parser in PDT (f95parse)"
     echo -e "  -optPdtF95Reset=\"\"\t\tReset options to the Fortran parser to the given list"
@@ -565,18 +564,11 @@ for arg in "$@" ; do
 			echoIfDebug "\tCompiling Include Memory Options from TAU are: $optIncludeMemory"
 			echoIfDebug "\tFrom optIncludeMemory: $optIncludeMemory"
 			;;
-		    -optDetectMemoryLeaks)
-			optDetectMemoryLeaks=$TRUE
+		    -optDetectMemoryLeaks|-optMemDbg)
+		  optMemDbg=$TRUE
 			optIncludes="$optIncludes $optIncludeMemory"
-			optTau="-memory $optTau"
-			echoIfDebug "\Including TauMemory directory for malloc/free replacement and calling tau_instrumentor with -memory"
-			echoIfDebug "\tFrom optIncludes: $optIncludes"
-			;;
-		    -optMemDbg)
-			optMemDbg=$TRUE
-			optIncludes="$optIncludes $optIncludeMemory"
-			optTau="-memory $optTau"
-			echoIfDebug "\Including TauMemory directory for malloc/free replacement and calling tau_instrumentor with -memory"
+			optTau="$optTau"
+			echoIfDebug "\Including TauMemory directory for malloc/free replacement"
 			echoIfDebug "\tFrom optIncludes: $optIncludes"
 			;;
 		    -optCompile*)
@@ -1377,6 +1369,13 @@ if [ $numFiles == 0 ]; then
       echoIfDebug "Linking command is $linkCmd"
     fi
 
+    echoIfDebug "optMemDbg = $optMemDbg, wrappers = $optWrappersDir/memory_wrapper/link_options.tau "
+    if [ $optMemDbg == $TRUE -a -r $optWrappersDir/memory_wrapper/link_options.tau ] ; then 
+      optLinking=`echo $optLinking  | sed -e 's/Comp_gnu.o//g'`
+      linkCmd="$linkCmd `cat $optWrappersDir/memory_wrapper/link_options.tau` $optLinking"
+      echoIfDebug "Linking command is $linkCmd"
+    fi
+
     if [ $trackDMAPP == $TRUE -a -r $optWrappersDir/dmapp_wrapper/link_options.tau ] ; then 
       linkCmd="$linkCmd `cat $optWrappersDir/dmapp_wrapper/link_options.tau`"
       echoIfDebug "Linking command is $linkCmd "
@@ -1937,6 +1936,13 @@ cmdCreatePompRegions="`${optOpari2ConfigTool}   --nm` ${optIBM64}  ${objectFiles
         if [ $trackIO = $TRUE -a -r $optWrappersDir/io_wrapper/link_options.tau ] ; then
           optLinking=`echo $optLinking  | sed -e 's/Comp_gnu.o//g'`
           newCmd="$newCmd `cat $optWrappersDir/io_wrapper/link_options.tau` $optLinking"
+          echoIfDebug "Linking command is $newCmd"
+        fi
+
+        echoIfDebug "optMemDbg = $optMemDbg, wrappers = $optWrappersDir/memory_wrapper/link_options.tau "
+        if [ $optMemDbg = $TRUE -a -r $optWrappersDir/memory_wrapper/link_options.tau ] ; then
+          optLinking=`echo $optLinking  | sed -e 's/Comp_gnu.o//g'`
+          newCmd="$newCmd `cat $optWrappersDir/memory_wrapper/link_options.tau` $optLinking"
           echoIfDebug "Linking command is $newCmd"
         fi
 

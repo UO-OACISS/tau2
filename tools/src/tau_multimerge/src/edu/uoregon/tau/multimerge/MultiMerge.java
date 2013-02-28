@@ -558,6 +558,7 @@ public class MultiMerge {
 		}
 
 		public int defThread(Object userData, int nodeToken, int threadToken, String threadName){
+			tw.defThread(nodeToken, threadToken, threadName);
 			return 0;
 		}
 
@@ -872,13 +873,13 @@ public class MultiMerge {
 				{
 					if (p.direction == ONESIDED_MESSAGE_RECV)
 					{
-						tw.sendMessage(time,  nodeToken, threadToken, remoteNode, remoteThread, (int)userEventValue, 0, 0);
+						return tw.sendMessage(time,  nodeToken, threadToken, remoteNode, remoteThread, (int)userEventValue, 0, 0);
 					}
 					else if (p.direction == ONESIDED_MESSAGE_SEND) {
-						tw.recvMessage(time,  remoteNode, remoteThread, nodeToken, threadToken, (int)userEventValue, 0, 0);
+						return tw.recvMessage(time,  remoteNode, remoteThread, nodeToken, threadToken, (int)userEventValue, 0, 0);
 					}
 					//otherwise undefined.
-					System.out.println("eventTrigger 2, recording " + p.direction + "on thread: "+threadToken);
+					System.out.println("eventTrigger 2, recording " + p.direction + " on thread: "+threadToken);
 				}
 
 				return 0;
@@ -888,12 +889,13 @@ public class MultiMerge {
 //			{
 //				System.out.println("Event from node!");
 //			}
+			
+			int stateid = tot.locToGlobStates.get(new Integer(userEventToken)).intValue();
 
-			tw.eventTrigger(time, nodeToken, threadToken, tot.locToGlobStates.get(new Integer(userEventToken)).intValue(), (long)userEventValue);
+			tw.eventTrigger(time, nodeToken, threadToken, stateid, (long)userEventValue);
 			return 0;}
 
 		public int endTrace(Object userData, int nodeToken, int threadToken){
-			System.out.println("ENDED!");
 			return 0;
 		}
 	}

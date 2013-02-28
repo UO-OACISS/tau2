@@ -1537,6 +1537,7 @@ int  MPI_Finalize(  )
 
   Tau_stop_top_level_timer_if_necessary();
   tau_mpi_finalized = 1;
+
   return returnVal;
 }
 
@@ -1565,6 +1566,7 @@ char *** argv;
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
 
+
   TAU_PROFILE_TIMER(tautimer, "MPI_Init()",  " ", TAU_MESSAGE); 
   Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_START(tautimer);
@@ -1575,9 +1577,9 @@ char *** argv;
     Tau_sampling_init_if_necessary();
   }
 #endif /* TAU_WINDOWS */
-#ifndef TAU_DISABLE_SIGUSR
+
   Tau_signal_initialization(); 
-#endif
+
 #ifdef TAU_MONITORING
   Tau_mon_connect();
 #endif /* TAU_MONITORING */
@@ -1608,6 +1610,7 @@ char *** argv;
     TauSyncClocks();
   }
 
+
   return returnVal;
 }
 
@@ -1623,16 +1626,16 @@ int *provided;
   int  size;
   char procname[MPI_MAX_PROCESSOR_NAME];
   int  procnamelength;
-
  
   TAU_PROFILE_TIMER(tautimer, "MPI_Init_thread()",  " ", TAU_MESSAGE);
   Tau_create_top_level_timer_if_necessary();
   TAU_PROFILE_START(tautimer);
  
   returnVal = PMPI_Init_thread( argc, argv, required, provided );
-#ifndef TAU_DISABLE_SIGUSR
+
+
   Tau_signal_initialization(); 
-#endif
+
 #ifndef TAU_WINDOWS
   if (TauEnv_get_ebs_enabled()) {
     Tau_sampling_init_if_necessary();
@@ -3448,6 +3451,7 @@ char * Tau_printRanks(void *comm_ptr) {
 
 }
 
-int Tau_setupCommunicatorInfo(MPI_Comm comm)  { 
+int Tau_setupCommunicatorInfo(MPI_Comm comm)  {
+  return 0;
 }
 /* EOF TauMpi.c */

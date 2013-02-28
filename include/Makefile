@@ -400,7 +400,7 @@ TAU_F77 = $(TAU_F90)
 #SGICC#PROFILEOPT19  	       = -DTAU_DOT_H_LESS_HEADERS   #ENDIF#
 #USE_INTELCXX#PROFILEOPT19     = -DTAU_DOT_H_LESS_HEADERS  #ENDIF#
 #USE_NECCXX#PROFILEOPT19     = -DTAU_DOT_H_LESS_HEADERS   #ENDIF#
-#PGI#PROFILEOPT19  	       = -DTAU_DOT_H_LESS_HEADERS   -fPIC -Mcache_align #ENDIF#
+#PGI#PROFILEOPT19  	       = -DTAU_DOT_H_LESS_HEADERS   -fPIC #ENDIF#
 #APPLEPGI#PROFILEOPT19  	       = -DTAU_DOT_H_LESS_HEADERS   -DTAU_APPLE_PGI #ENDIF#
 #ACC#PROFILEOPT19  	       = -AA +z -DTAU_DOT_H_LESS_HEADERS -DTAU_HPUX #ENDIF#
 #FUJITSU#PROFILEOPT19  	       = -DTAU_FUJITSU -DTAU_DOT_H_LESS_HEADERS   #ENDIF#
@@ -526,7 +526,7 @@ SDDF_DIR=
 
 #BGL#PROFILEOPT72 = -DTAU_BGL -I/bgl/BlueLight/ppcfloor/bglsys/include #ENDIF#
 #BGP#PROFILEOPT72 = -DTAU_BGP -I/bgsys/drivers/ppcfloor/arch/include/common -I/bgsys/drivers/ppcfloor/arch/include -I/bgsys/drivers/ppcfloor/arch/include/spi #ENDIF#
-#BGQ#PROFILEOPT72 = -DTAU_BGQ #ENDIF#
+#BGQ#PROFILEOPT72 = -DTAU_BGQ -I/bgsys/drivers/ppcfloor -I/bgsys/drivers/ppcfloor/comm/sys/include -I/bgsys/drivers/ppcfloor/spi/include -I/bgsys/drivers/ppcfloor/spi/include/kernel/cnk #ENDIF#
 
 #For F90 support for all platforms
 FWRAPPER	       = TauFMpi.o       
@@ -1171,6 +1171,7 @@ MIC_OFFLOAD_LINKING=$(TAUHELPER) $(MIC_OFFLOAD_FLAGS) $(MIC_OFFLOAD_LINKING_PREF
 MIC_OFFLOAD_SHARED_LINKING=$(TAUHELPER) $(MIC_OFFLOAD_FLAGS) $(MIC_OFFLOAD_LINKING_PREFIX)='-L$(TAU_PREFIX_INSTALL_DIR)/mic_linux/lib -lTAUsh$(TAU_CONFIG)' -L$(TAU_PREFIX_INSTALL_DIR)/x86_64/lib -lTAUsh$(TAU_CONFIG) $(TAU_LINKER_OPTS) $(TAU_LINKER_SHOPTS) $(TAU_MPI_LIB) $(TAU_LIBDL)
 
 TAU_MPI_COMPILE_INCLUDE=$(TAU_MPI_INCLUDE)
+#COMPINST_CRAYCC#TAU_MPI_COMPILE_INCLUDE= #ENDIF#
 #FX#TAU_MPI_COMPILE_INCLUDE= #ENDIF#
 # Fujitsu doesn't want TAU_MPI_INC to propagate to the command line
 

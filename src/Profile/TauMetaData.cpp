@@ -54,8 +54,8 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #include <string>
 #endif//TAU_CRAYCNL
 
-// Moved from header file
 using namespace std;
+using namespace tau;
 
 
 #ifdef TAU_BGL
@@ -206,10 +206,10 @@ extern "C" void Tau_metadata_object_put(Tau_metadata_value_t* tmv, const char *n
 }
 
 extern "C" void Tau_metadata_task(const char *name, const char *value, int tid) {
-#ifdef TAU_DISABLE_METADATA
-  return;
-#endif // TAU_DISABLE_METADATA
-  Tau_global_incr_insideTAU();
+#ifndef TAU_DISABLE_METADATA
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   // make the key
   Tau_metadata_key *key = new Tau_metadata_key();
   key->name = strdup(name);
@@ -220,8 +220,7 @@ extern "C" void Tau_metadata_task(const char *name, const char *value, int tid) 
   RtsLayer::LockEnv();
   Tau_metadata_getMetaData(tid)[*key] = tmv;
   RtsLayer::UnLockEnv();
-  Tau_global_decr_insideTAU();
-  return;
+#endif
 }
 
 extern "C" void Tau_metadata(const char *name, const char *value) {
@@ -274,9 +273,10 @@ int Tau_metadata_fillMetaData()
   char buf[4096];
   strftime (buf,4096,"%Y-%m-%dT%H:%M:%S", thisTime);
 
-  char tzone[7];
+  char tzone[7]={0};
   strftime (tzone, 7, "%z", thisTime);
-  if (strlen(tzone) == 5) {
+  int tzonelen=strlen(tzone);
+  if (tzonelen == 5) {
     tzone[6] = 0;
     tzone[5] = tzone[4];
     tzone[4] = tzone[3];
@@ -873,11 +873,11 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, 
 }
 
 extern "C" void Tau_context_metadata(const char *name, const char *value) {
-#ifdef TAU_DISABLE_METADATA
-  return;
-#endif
+#ifndef TAU_DISABLE_METADATA
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   int tid = RtsLayer::myThread();
-  Tau_global_incr_insideTAU();
   Tau_metadata_key *key = new Tau_metadata_key();
   // get the current calling context
   RtsLayer::LockEnv();
@@ -899,15 +899,15 @@ extern "C" void Tau_context_metadata(const char *name, const char *value) {
   RtsLayer::LockEnv();
   Tau_metadata_getMetaData(tid)[*key] = tmv;
   RtsLayer::UnLockEnv();
-  Tau_global_decr_insideTAU();
+#endif
 }
 
 extern "C" void Tau_structured_metadata(const Tau_metadata_object_t *object, bool context) {
-#ifdef TAU_DISABLE_METADATA
-  return;
-#endif
+#ifndef TAU_DISABLE_METADATA
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   int tid = RtsLayer::myThread();
-  Tau_global_incr_insideTAU();
   Tau_metadata_key *key = new Tau_metadata_key();
   if (context) {
     RtsLayer::LockEnv();
@@ -931,16 +931,16 @@ extern "C" void Tau_structured_metadata(const Tau_metadata_object_t *object, boo
     Tau_metadata_getMetaData(tid)[*key] = tmv;
   }
   RtsLayer::UnLockEnv();
-  Tau_global_decr_insideTAU();
+#endif
 }
 
 extern "C" void Tau_phase_metadata(const char *name, const char *value) {
-#ifdef TAU_DISABLE_METADATA
-  return;
-#endif
-  int tid = RtsLayer::myThread();
-  Tau_global_incr_insideTAU();
+#ifndef TAU_DISABLE_METADATA
 #ifdef TAU_PROFILEPHASE
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
+  int tid = RtsLayer::myThread();
   // get the current calling context
   Profiler *current = TauInternal_CurrentProfiler(tid);
   Tau_metadata_key *key = new Tau_metadata_key();
@@ -966,7 +966,7 @@ extern "C" void Tau_phase_metadata(const char *name, const char *value) {
 #else
   Tau_context_metadata(name, value);
 #endif
-  Tau_global_decr_insideTAU();
+#endif
 }
 
 
@@ -974,10 +974,10 @@ int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int tid) {
 
 #ifdef TAU_DISABLE_METADATA
   return 0;
-#endif
-
+#else
   //Tau_metadata_fillMetaData();
   return writeMetaData(out, true, -1, tid);
+#endif
 }
 
 int Tau_metadata_writeMetaData(Tau_util_outputDevice *out) {
@@ -987,12 +987,12 @@ int Tau_metadata_writeMetaData(Tau_util_outputDevice *out) {
 int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int counter, int tid) {
 #ifdef TAU_DISABLE_METADATA
   return 0;
-#endif
-
+#else
   //Tau_metadata_fillMetaData();
   int retval;
   retval = writeMetaData(out, false, counter, tid);
   return retval;
+#endif
 }
 
 /* helper function to write to already established file pointer */

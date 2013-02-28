@@ -115,13 +115,35 @@ TAUDB_METRIC* taudb_get_metric_by_id(TAUDB_METRIC* metrics, const int id) {
 }
 
 void taudb_save_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
-  const char* my_query = "insert into metric (trial, name, derived) values ($1, $2, $3);";
-  const char* statement_name = "TAUDB_INSERT_METRIC";
-  taudb_prepare_statement(connection, statement_name, my_query, 3);
+#ifdef TAUDB_DEBUG_DEBUG
+	printf("Calling taudb_save_metrics()\n");
+#endif
+	
+	const char* my_query;
+	const char* statement_name;
+	int nParams;
+	const char* update_query = "update metric set trial=$1, name=$2, derived=$3 where id=$4;";
+	const char* update_statement_name = "TAUDB_UPDATE_METRIC";
+	const int update_nParams = 4;
+	const char* insert_query = "insert into metric (trial, name, derived) values ($1, $2, $3);";
+	const char* insert_statement_name = "TAUDB_INSERT_METRIC";
+	const int insert_nParams = 3;
+	
+  if(update) {
+		nParams = update_nParams;
+  	my_query = update_query;
+		statement_name = update_statement_name;
+  } else {
+		nParams = insert_nParams;
+		my_query = insert_query;
+		statement_name = insert_statement_name;
+  }
+	
+  taudb_prepare_statement(connection, statement_name, my_query, nParams);
   TAUDB_METRIC *metric, *tmp;
   HASH_ITER(hh2, trial->metrics_by_name, metric, tmp) {
     // make array of 6 character pointers
-    const char* paramValues[3] = {0};
+    const char* paramValues[4] = {0};
     char trialid[32] = {0};
     sprintf(trialid, "%d", trial->id);
     paramValues[0] = trialid;
@@ -130,17 +152,36 @@ void taudb_save_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolea
     sprintf(derived, "%d", metric->derived);
     paramValues[2] = derived;
 
-    taudb_execute_statement(connection, statement_name, 3, paramValues);
-    taudb_execute_query(connection, "select currval('metric_id_seq');");
+	char id[32] = {};		
+	if(update && metric->id > 0) {
+		sprintf(id, "%d", metric->id);
+		paramValues[3] = id;
+	}
 
-    int nRows = taudb_get_num_rows(connection);
-    if (nRows == 1) {
-      metric->id = atoi(taudb_get_value(connection, 0, 0));
-      //printf("New Metric: %d\n", metric->id);
-    } else {
-      printf("Failed.\n");
-    }
-	taudb_close_query(connection);
+    int rows = taudb_execute_statement(connection, statement_name, nParams, paramValues);
+		
+	if(update && rows == 0) {
+#ifdef TAUDB_DEBUG
+		printf("Falling back to insert for update of metric %d : %s.\n", metric->id, metric->name);
+#endif
+		/* updated row didn't exist; insert instead */
+		metric->id = 0;
+		taudb_prepare_statement(connection, insert_statement_name, insert_query, insert_nParams);
+		taudb_execute_statement(connection, insert_statement_name, insert_nParams, paramValues);
+	}
+		
+	if(!(update && metric->id > 0)) {
+	taudb_execute_query(connection, "select currval('metric_id_seq');");
+
+	int nRows = taudb_get_num_rows(connection);
+	if (nRows == 1) {
+ 	 metric->id = atoi(taudb_get_value(connection, 0, 0));
+  	//printf("New Metric: %d\n", metric->id);
+	} else {
+		printf("Failed.\n");
+	}
+		taudb_close_query(connection);
+	}
   }
   taudb_clear_result(connection);
 }

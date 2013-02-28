@@ -411,10 +411,12 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		panel.add(Box.createVerticalStrut(10));
 		// series name
 		panel.add(seriesLabel);
-		series = new MyJComboBox(tableColumns.toArray());
-		series.addItem(INTERVAL_EVENT_NAME);
-		series.addItem(INTERVAL_EVENT_GROUP_NAME);
-		series.addItem(ATOMIC_EVENT_NAME);
+		series = new MyJComboBox();//tableColumns.toArray());
+//		series.addItem(INTERVAL_EVENT_NAME);
+//		series.addItem(INTERVAL_EVENT_GROUP_NAME);
+//		series.addItem(ATOMIC_EVENT_NAME);
+		populateSeriesBox();
+		
 		series.addActionListener(this);
 		panel.add(series);
 
@@ -427,6 +429,17 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 
 		return (panel);
+	}
+	
+	private void populateSeriesBox(){
+		series.removeAllItems();
+		for (Iterator<String> itr = tableColumns.iterator() ; itr.hasNext() ; ) {
+			String next = itr.next();
+			series.addItem(next);
+		}
+		series.addItem(INTERVAL_EVENT_NAME);
+		series.addItem(INTERVAL_EVENT_GROUP_NAME);
+		series.addItem(ATOMIC_EVENT_NAME);
 	}
 
 
@@ -596,6 +609,26 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		String oldXML = "";
 		String oldSXML="";
 		Object obj = null;
+		
+		
+		this.tableColumns = server.getChartFieldNames();
+		String item = (String)xaxisValue.getSelectedItem();
+		if(xaxisValue!=null){
+		xaxisValue.removeAllItems();// = new MyJComboBox(tableColumns.toArray());
+		for (Iterator<String> itr = tableColumns.iterator() ; itr.hasNext() ; ) {
+			String next = itr.next();
+			xaxisValue.addItem(next);
+			if(next.equals(item)){
+				xaxisValue.setSelectedItem(item);
+			}
+		}
+		}
+		
+		item = (String)series.getSelectedItem();
+		populateSeriesBox();
+		series.setSelectedItem(item);
+		
+		
 		if (getMetrics) {
 			obj = this.metric.getSelectedItem();
 			if (obj != null)
@@ -1027,8 +1060,10 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		} else if ((source == series) || 
 				(source == xaxisValue)) {
 			Object obj = series.getSelectedItem();
+			if(obj==null)return;
 			String tmp = (String)obj;
 			Object obj2 = xaxisValue.getSelectedItem();
+			if(obj2==null)return;
 			String tmp2 = (String)obj2;
 
 			/*

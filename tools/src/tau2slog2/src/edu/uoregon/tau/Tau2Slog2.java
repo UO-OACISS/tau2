@@ -32,6 +32,7 @@ public class Tau2Slog2
     private static String   tautrc, tauedf, out_filename;
     private static boolean  enable_endtime_check;
     private static boolean  continue_when_violation;
+    private static boolean  papiEnabled;
 
     @SuppressWarnings("unchecked")
 	public static void main( String[] args )
@@ -80,6 +81,7 @@ public class Tau2Slog2
 
         /* */    Date time1 = new Date();
         dobj_ins   = new InputLog( tautrc,tauedf );
+        dobj_ins.enablePAPI(papiEnabled);
         slog_outs  = new logformat.slog2.output.OutputLog( out_filename );
 
         //  Set Tree properties, !optional!
@@ -261,6 +263,7 @@ public class Tau2Slog2
                                    + "\t [-ls max_byte_size_of_leaf_node]  "
                                    + "\t Default value is "
                                    + logformat.slog2.Const.LEAF_BYTESIZE +".\n"
+                                   + "\t [-p]                                    Include papi atomic events\n"
                                    + "\t [-o output_filename_with_slog2_suffix]"
                                    + "\n\n"
                                    + " note: \"max_byte_size_of_leaf_node\" "
@@ -283,6 +286,7 @@ public class Tau2Slog2
         tauedf = null;
         enable_endtime_check     = false;
         continue_when_violation  = false;
+        papiEnabled				 = false;
 
         if ( argv.length == 0 ) {
             System.out.println( help_msg );
@@ -337,6 +341,11 @@ public class Tau2Slog2
                             System.err.println( "Warning: The suffix of the "
                                               + "output filename is NOT "
                                               + "\".slog2\"." );
+                    }
+                    else if ( argv[ idx ].equals( "-p" ) ) {
+                    	papiEnabled=true;
+                    	err_msg.append( "\n including papi events" );
+                    	idx++;
                     }
                     else {
                         System.err.println( "Unrecognized option, "

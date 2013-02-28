@@ -58,12 +58,12 @@ public:
   static int& TheContext(void);
   static long GenerateUniqueId(void);
   static ProfileMap_t& TheProfileMap(void);
-  static TauGroup_t getProfileGroup(char *  ProfileGroup) ;
+  static TauGroup_t getProfileGroup(char const *  ProfileGroup) ;
   static TauGroup_t enableProfileGroup(TauGroup_t  ProfileGroup) ;
   static TauGroup_t disableProfileGroup(TauGroup_t  ProfileGroup) ;
   static TauGroup_t generateProfileGroup(void) ;
-  static TauGroup_t enableProfileGroupName(char * ProfileGroup) ;
-  static TauGroup_t disableProfileGroupName(char * ProfileGroup) ;
+  static TauGroup_t enableProfileGroupName(char const * ProfileGroup) ;
+  static TauGroup_t disableProfileGroupName(char const * ProfileGroup) ;
   static TauGroup_t enableAllGroups(void) ;
   static TauGroup_t disableAllGroups(void) ;
   static TauGroup_t resetProfileGroup(void) ;
@@ -75,8 +75,8 @@ public:
 
   static std::string GetRTTI(const char *name); 
   inline static const char * CheckNotNull(const char * str) {
-    if (str == 0) return "  ";
-    else return str;
+    if (str) return str;
+    else return "  ";
   }
 
 	static void Initialize(void);
@@ -107,11 +107,13 @@ public:
   static int myThread(void);
 
   static int threadId(void);
+  static int unsafeThreadId(void);
  
  	// Return the local thread id (ignoring tasks) This is a 
 	// low-overhead call but DO NOT use this call when
 	// accessing Profiler stack or the FunctionInfo DB.
   static int localThreadId(void);
+  static int unsafeLocalThreadId(void);
 
   static int getPid();
   static int getTid();

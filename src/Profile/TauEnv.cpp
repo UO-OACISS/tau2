@@ -68,10 +68,10 @@ using namespace std;
 /* if we are doing EBS sampling, set the default sampling period */
 #define TAU_EBS_DEFAULT 0
 #define TAU_EBS_KEEP_UNRESOLVED_ADDR_DEFAULT 0
-#if (defined (TAU_BGL) || defined(TAU_BGP) || defined(TAU_BGQ))
+#if (defined (TAU_BGL) || defined(TAU_BGP))
 #define TAU_EBS_PERIOD_DEFAULT 20000 // Kevin made this bigger,
 #else
-#if (defined (TAU_CRAYCNL))
+#if (defined (TAU_CRAYCNL) || defined(TAU_BGQ))
 #define TAU_EBS_PERIOD_DEFAULT 50000 // Sameer made this bigger,
 #else 
 #define TAU_EBS_PERIOD_DEFAULT 10000 // Kevin made this bigger,
@@ -137,6 +137,7 @@ using namespace std;
 #endif /* TAU_MPI */
 
 #define TAU_CUPTI_API_DEFAULT "runtime"
+#define TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT ""
 
 #define TAU_MIC_OFFLOAD_DEFAULT 0
 
@@ -151,6 +152,7 @@ using namespace std;
 #define TAU_MEMDBG_OVERHEAD_DEFAULT       0 // 0 => undefined, not zero
 #define TAU_MEMDBG_ALIGNMENT_DEFAULT      sizeof(int)
 #define TAU_MEMDBG_ZERO_MALLOC_DEFAULT    0
+#define TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT 0
 
 // forward declartion of cuserid. need for c++ compilers on Cray.
 extern "C" char *cuserid(char *);
@@ -450,7 +452,6 @@ static int env_track_signals = 0;
 static int env_signals_gdb = 0;
 static int env_summary_only = 0;
 static int env_ibm_bg_hwp_counters = 0;
-static int env_extras = 0;
 /* This is a malleable default */
 static int env_ebs_keep_unresolved_addr = 0;
 static int env_ebs_period = 0;
@@ -471,6 +472,7 @@ static const char *env_tracedir = NULL;
 static const char *env_metrics = NULL;
 static const char *env_cupti_api = NULL;
 static int env_sigusr1_action = TAU_ACTION_DUMP_PROFILES;
+static const char *env_track_cuda_instructions = NULL;
 
 static int env_mic_offload = 0;
 
@@ -493,6 +495,7 @@ static int env_memdbg_overhead = TAU_MEMDBG_OVERHEAD_DEFAULT;
 static size_t env_memdbg_overhead_value = 0;
 static size_t env_memdbg_alignment = TAU_MEMDBG_ALIGNMENT_DEFAULT;
 static int env_memdbg_zero_malloc = TAU_MEMDBG_ZERO_MALLOC_DEFAULT;
+static int env_memdbg_attempt_continue = TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT;
 
 #ifdef TAU_GPI 
 #include <GPI.h>
@@ -501,19 +504,24 @@ static int env_memdbg_zero_malloc = TAU_MEMDBG_ZERO_MALLOC_DEFAULT;
 /*********************************************************************
  * Write to stderr if verbose mode is on
  ********************************************************************/
-void TAU_VERBOSE(const char *format, ...) {
+void TAU_VERBOSE(const char *format, ...)
+{
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   va_list args;
   if (env_verbose != 1) {
     return;
   }
   va_start(args, format);
+
 #ifdef TAU_GPI
   gpi_vprintf(format, args);
 #else
   vfprintf(stderr, format, args);
 #endif
   va_end(args);
-  fflush(stderr);
+  fflush (stderr);
 }
 
 /*********************************************************************
@@ -620,10 +628,6 @@ int TauEnv_get_track_io_params() {
   return env_track_io_params;
 }
 
-int TauEnv_get_extras() {
-  return env_extras;
-}
-
 int TauEnv_get_summary_only() {
   return env_summary_only;
 }
@@ -722,6 +726,10 @@ const char* TauEnv_get_cupti_api(){
   return env_cupti_api;
 }
 
+const char* TauEnv_get_cuda_instructions(){
+  return env_track_cuda_instructions;
+}
+
 int TauEnv_get_mic_offload(){
   return env_mic_offload;
 }
@@ -789,6 +797,10 @@ int TauEnv_get_memdbg_zero_malloc() {
   return env_memdbg_zero_malloc;
 }
 
+int TauEnv_get_memdbg_attempt_continue() {
+  return env_memdbg_attempt_continue;
+}
+
 
 /*********************************************************************
  * Initialize the TauEnv module, get configuration values
@@ -836,7 +848,6 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Entry/Exit Memory tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_HEAP", "on");
       env_track_memory_heap = 1;
-      env_extras = 1;
     } else {
       TAU_METADATA("TAU_TRACK_HEAP", "off");
       env_track_memory_heap = 0;
@@ -847,7 +858,6 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Entry/Exit Headroom tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_HEADROOM", "on");
       env_track_memory_headroom = 1;
-      env_extras = 1;
     } else {
       TAU_METADATA("TAU_TRACK_HEADROOM", "off");
       env_track_memory_headroom = 0;
@@ -858,7 +868,6 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Memory tracking enabled\n");
       TAU_METADATA("TAU_TRACK_MEMORY_LEAKS", "on");
       env_track_memory_leaks = 1;
-      env_extras = 1;
     } else {
       TAU_METADATA("TAU_TRACK_MEMORY_LEAKS", "off");
       env_track_memory_leaks = 0;
@@ -967,6 +976,16 @@ void TauEnv_initialize()
         TAU_METADATA("TAU_MEMDBG_ZERO_MALLOC", "off");
       }
 
+      tmp = getconf("TAU_MEMDBG_ATTEMPT_CONTINUE");
+      env_memdbg_attempt_continue = parse_bool(tmp, env_memdbg_attempt_continue);
+      if(env_memdbg_attempt_continue) {
+        TAU_VERBOSE("TAU: Attempt to resume execution after memory error (only the first error will be recorded)\n");
+        TAU_METADATA("TAU_MEMDBG_ATTEMPT_CONTINUE", "on");
+      } else {
+        TAU_VERBOSE("TAU: The first memory error will halt execution and generate a backtrace\n");
+        TAU_METADATA("TAU_MEMDBG_ATTEMPT_CONTINUE", "off");
+      }
+
     } // if (env_memdbg)
 
     tmp = getconf("TAU_TRACK_IO_PARAMS");
@@ -974,7 +993,6 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: POSIX I/O wrapper parameter tracking enabled\n");
       TAU_METADATA("TAU_TRACK_IO_PARAMS", "on");
       env_track_io_params = 1;
-      env_extras = 1;
     } else {
       TAU_METADATA("TAU_TRACK_IO_PARAMS", "off");
       env_track_io_params = 0;
@@ -985,7 +1003,6 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Tracking SIGNALS enabled\n");
       TAU_METADATA("TAU_TRACK_SIGNALS", "on");
       env_track_signals = 1;
-      env_extras = 1;
       tmp = getconf("TAU_SIGNALS_GDB");
       if (parse_bool(tmp, env_signals_gdb)) {
         TAU_VERBOSE("TAU: SIGNALS GDB output enabled\n");
@@ -1104,7 +1121,6 @@ void TauEnv_initialize()
       tmp = getconf("TAU_COMPENSATE");
       if (parse_bool(tmp, TAU_COMPENSATE_DEFAULT)) {
         env_compensate = 1;
-        env_extras = 1;
         TAU_VERBOSE("TAU: Overhead Compensation Enabled\n");
         TAU_METADATA("TAU_COMPENSATE", "on");
       } else {
@@ -1490,6 +1506,16 @@ void TauEnv_initialize()
     else {
       TAU_VERBOSE("TAU: CUPTI API tracking: %s\n", env_cupti_api);
       TAU_METADATA("TAU_CUPTI_API", env_cupti_api);
+		}
+    env_track_cuda_instructions = getconf("TAU_TRACK_CUDA_INSTRUCTIONS");
+    if (env_track_cuda_instructions == NULL || 0 == strcasecmp(env_track_cuda_instructions, "")) {
+      env_track_cuda_instructions = TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT;
+      TAU_VERBOSE("TAU: tracking CUDA instructions: %s\n", env_track_cuda_instructions);
+      TAU_METADATA("TAU_TRACK_CUDA_INSTRUCTIONS", env_track_cuda_instructions);
+    }
+    else {
+      TAU_VERBOSE("TAU: tracking CUDA instructions: %s\n", env_track_cuda_instructions);
+      TAU_METADATA("TAU_TRACK_CUDA_INSTRUCTIONS", env_track_cuda_instructions);
 		}
 		tmp = getconf("TAU_MIC_OFFLOAD");
     if (parse_bool(tmp, TAU_MIC_OFFLOAD_DEFAULT)) {

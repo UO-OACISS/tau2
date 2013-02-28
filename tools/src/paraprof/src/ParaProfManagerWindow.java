@@ -65,6 +65,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
+import javax.swing.JComponent;
 import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
@@ -74,6 +75,7 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
+import javax.swing.table.TableCellRenderer;
 
 import edu.uoregon.tau.common.TauRuntimeException;
 import edu.uoregon.tau.common.Utility;
@@ -393,7 +395,12 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 							} else if (userObject instanceof Database) {
 								// standard or database
 								clickedOnObject = selectedNode;
-								if(((Database)userObject).isTAUdb()){
+								Database db = (Database)userObject;
+								DatabaseAPI dbapi = getDatabaseAPI(db);
+								if(dbapi.db().getSchemaVersion()>0){
+									db.setTAUdb(true);
+								}else{db.setTAUdb(false);}
+								if(db.isTAUdb()){
 									TAUdbPopUp.show(tree, evt.getX(), evt.getY());
 								}else{
 									databasePopUp.show(tree, evt.getX(), evt.getY());
@@ -807,7 +814,7 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 
 		if (ShowConfirmation) {
 			int confirm = JOptionPane.showConfirmDialog(tree,
-					"Are you sure you want to permanently delete this item?",
+					"Are you sure you want to permanently delete this item from the database and all views?",
 					"Confirm Delete", JOptionPane.YES_NO_OPTION);
 
 			if (confirm != 0) {
@@ -1248,6 +1255,11 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 					} else if (clickedOnObject instanceof DefaultMutableTreeNode){
 						DefaultMutableTreeNode node = (DefaultMutableTreeNode) clickedOnObject;
 						Database database = (Database) node.getUserObject();
+						DatabaseAPI dbapi = getDatabaseAPI(database);
+						if(dbapi.db().getSchemaVersion()>0){
+							database.setTAUdb(true);
+						}else{database.setTAUdb(false);}
+						
 						if (!database.isTAUdb()) {
 							// a database
 							ParaProfApplication application = addApplication(
@@ -2503,31 +2515,46 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 	}
 
 	private Component getTable(Object obj) {
-		if (obj instanceof ParaProfApplication) {
-			return (new JScrollPane(new JTable(new ApplicationTableModel(this,
-					(ParaProfApplication) obj, getTreeModel()))));
+		final JTable table = new JTable() {
+    
+      public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+        Component c = super.prepareRenderer(renderer, row, column);
+        if (c instanceof JComponent) {
+          JComponent jc = (JComponent) c;
+          Object value = getValueAt(row, column);
+          if (value != null) {
+            jc.setToolTipText(value.toString());
+          }
+        }
+        return c;
+      }
+    };
+    table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+    if (obj instanceof ParaProfApplication) {
+			table.setModel(new ApplicationTableModel(this,
+					(ParaProfApplication) obj, getTreeModel()));
 		} else if (obj instanceof ParaProfExperiment) {
-			return (new JScrollPane(new JTable(new ExperimentTableModel(this,
-					(ParaProfExperiment) obj, getTreeModel()))));
+			table.setModel(new ExperimentTableModel(this,
+					(ParaProfExperiment) obj, getTreeModel()));
 		} else if (obj instanceof ParaProfView) {
-			return (new JScrollPane(new JTable(new ViewTableModel(this,
-					(ParaProfView) obj, getTreeModel()))));
+			table.setModel(new ViewTableModel(this,
+					(ParaProfView) obj, getTreeModel()));
 		} else if (obj instanceof ParaProfTrial) {
 			ParaProfTrial ppTrial = (ParaProfTrial) obj;
 			TrialTableModel model = new TrialTableModel(this, ppTrial,
 					getTreeModel());
-			final JTable table = new JTable(model);
 
+		  table.setModel(model);
 			table.addMouseListener(model.getMouseListener(table));
 
 			table.setDefaultRenderer(Object.class, new TrialCellRenderer(
 					ppTrial.getTrial().getMetaData(), ppTrial.getTrial()
 					.getUncommonMetaData()));
-			return (new JScrollPane(table));
 		} else {
-			return (new JScrollPane(new JTable(new MetricTableModel(this,
-					(ParaProfMetric) obj, getTreeModel()))));
+			table.setModel(new MetricTableModel(this,
+					(ParaProfMetric) obj, getTreeModel()));
 		}
+    return (new JScrollPane(table));
 	}
 
 	public ParaProfApplication addApplication(boolean dBApplication,
@@ -3096,6 +3123,10 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		// return new Database("default", config);
 	}
 
+	/*
+	 * Creating a new connection for every operation creates a lot of overhead. Cache the last created DBAPI object for reuse in batch operaitons 
+	 */
+	private DatabaseAPI tmpDBAPI=null;
 	public DatabaseAPI getDatabaseAPI(Database database) {
 		try {
 
@@ -3104,12 +3135,17 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 			}
 
 			// Basic checks done, try to access the db.
+			if(tmpDBAPI!=null&&tmpDBAPI.getDb().getDatabase().getID()==(database.getID()) && !tmpDBAPI.getDb().isClosed()){
+				return tmpDBAPI;
+			}
+			
 			DatabaseAPI databaseAPI = new DatabaseAPI();
 			databaseAPI.initialize(database);
 			if (databaseAPI.db().getSchemaVersion() > 0) {
 				// copy the DatabaseAPI object data into a new TAUdbDatabaseAPI object
 				databaseAPI = new TAUdbDatabaseAPI(databaseAPI);
 			}
+			tmpDBAPI=databaseAPI;
 
 			// // Some strangeness here, we retrieve the metadata columns for
 			// the non-db trials

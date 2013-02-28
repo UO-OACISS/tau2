@@ -75,7 +75,6 @@
                        +(uint32_t)(((const uint8_t *)(d))[0]) )
 
 
-static bool need_init = true;
 static bool finished = false;
 static bool disabled[TAU_MAX_THREADS];
 
@@ -99,7 +98,12 @@ struct HashNode
 //  - char * fname: may be the same for multiple calls, 
 //                  may be NULL or nonsense under -O3
 typedef uint32_t key_type;
-typedef std::map<key_type, HashNode> HashTable;
+struct HashTable : public std::map<key_type, HashNode>
+{
+  virtual ~HashTable() {
+    Tau_destructor_trigger();
+  }
+};
 
 // These static functions cause the initializer to be called
 // before we start working with the data structure
@@ -282,10 +286,10 @@ void runOnExit()
 extern "C" 
 void __func_trace_enter(char * name, char * fname, int lno, void ** const user_data)
 {
+    static bool need_init = true;
     //printf("Enter: %s [{%s} {%d,0}]\n", name, fname, lno);
     
-    if(finished) return;
-    if(Tau_init_initializingTAU()) return;
+    if(finished || Tau_init_initializingTAU()) return;
 
     if (need_init) {
         need_init = false;
@@ -311,7 +315,7 @@ void __func_trace_enter(char * name, char * fname, int lno, void ** const user_d
     disabled[tid] = true;
 
     // Begin TAU region
-    Tau_global_incr_insideTAU();
+    TauInternalFunctionGuard protects_this_function;
 
     // Build the hashtable keys while checking for exclusion
     key_type name_key, key;
@@ -320,13 +324,11 @@ void __func_trace_enter(char * name, char * fname, int lno, void ** const user_d
     name_key = get_name_hash(0, &name, &nlen, &excluded);
     if(excluded) {
         disabled[tid] = false;
-        Tau_global_decr_insideTAU();
         return;
     }
     key = get_filename_hash(name_key, &fname, &flen, &excluded);
     if(excluded) {
         disabled[tid] = false;
-        Tau_global_decr_insideTAU();
         return;
     }
 
@@ -372,7 +374,6 @@ void __func_trace_enter(char * name, char * fname, int lno, void ** const user_d
 
     // Exit TAU region
     disabled[tid] = false;
-    Tau_global_decr_insideTAU();
 }
 
 extern "C" 
@@ -380,15 +381,14 @@ void __func_trace_exit(char * name, char * fname, int lno, void ** const user_da
 {
     //printf("Exit: %s [{%s} {%d,0}]\n", name, fname, lno);
 
-    if(finished) return;
-    if(Tau_init_initializingTAU()) return;
+    if(finished || Tau_init_initializingTAU()) return;
 
     // Guard against re-entry
     int tid = Tau_get_tid();
     if(disabled[tid]) return;
 
     // Enter the TAU region
-    Tau_global_incr_insideTAU();
+    TauInternalFunctionGuard protects_this_function;
     
     // Build the hashtable key while checking for exclusion
     key_type name_key, key;
@@ -397,13 +397,11 @@ void __func_trace_exit(char * name, char * fname, int lno, void ** const user_da
     name_key = get_name_hash(0, &name, &nlen, &excluded);
     if(excluded) {
         disabled[tid] = false;
-        Tau_global_decr_insideTAU();
         return;
     }
     key = get_filename_hash(name_key, &fname, &flen, &excluded);
     if(excluded) {
         disabled[tid] = false;
-        Tau_global_decr_insideTAU();
         return;
     }
 
@@ -426,9 +424,6 @@ void __func_trace_exit(char * name, char * fname, int lno, void ** const user_da
             TAU_VERBOSE("Warning: unmached __func_trace_exit: %s [{%s} {%d,0}]\n", name, fname, lno);
         }
     }
-
-    // Exit the TAU region
-    Tau_global_decr_insideTAU();
 }
 
 extern "C" 

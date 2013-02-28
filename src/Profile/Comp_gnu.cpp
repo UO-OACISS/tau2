@@ -61,9 +61,6 @@ using namespace std;
 #endif /* __APPLE__ */
 
 
-/* Initialization flag */
-static bool gnu_init = true;
-
 static int compInstDisabled[TAU_MAX_THREADS];
 
 static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
@@ -100,6 +97,7 @@ HashTable& TheHashTable()
 /*
  * Get symbol table by using BFD
  */
+#ifndef TAU_BFD
 static void issueBfdWarningIfNecessary() {
   static bool warningIssued = false;
   if (!warningIssued) {
@@ -108,6 +106,7 @@ static void issueBfdWarningIfNecessary() {
     warningIssued = true;
   }
 }
+#endif
 
 void updateHashTable(unsigned long addr, const char *funcname)
 {
@@ -172,6 +171,8 @@ void profile_func_exit(void*, void*);
 #endif /* SICORTEX || TAU_SCOREP */
 void __cyg_profile_func_enter(void* func, void* callsite)
 {
+  static bool gnu_init = true;
+
 #ifndef TAU_BFD
 	issueBfdWarningIfNecessary();
 #endif /* TAU_BFD */
@@ -180,24 +181,24 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 #ifdef __ia64__
 	funcptr = *( void ** )func;
 #endif
+
+  if (executionFinished) return;
+
 	unsigned long addr = Tau_convert_ptr_to_unsigned_long(funcptr);
 
+  // Get previously hashed info, or efficiently create
+  // a new hash node if it didn't already exist
 	HashNode & hn = TheHashTable()[addr];
-	if (hn.excluded) {
-		return;
-	}
 
-	if (executionFinished) {
-		return;
-	}
+	// Skip excluded functions
+	if (hn.excluded) return;
+
+  TauInternalFunctionGuard protects_this_function;
 
 	//prevent entry into cyg_profile functions while still initializing TAU
-	if (Tau_init_initializingTAU()) {
-		return;
-	}
+	if (Tau_init_initializingTAU()) return;
 
 	int tid = Tau_get_tid();
-	Tau_global_incr_insideTAU();
 
 	if (gnu_init) {
 		gnu_init = false;
@@ -232,7 +233,6 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 		if (RtsLayer::myNode() == -1) {
 		  TAU_PROFILE_SET_NODE(0);
 		}
-		Tau_global_decr_insideTAU();
 
 		// we register this here at the end so that it is called
 		// before the VT objects are destroyed.  Objects are destroyed and atexit targets are
@@ -245,14 +245,9 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 	
 	// prevent re-entry of this routine on a per thread basis
 	if (compInstDisabled[tid]) {
-		Tau_global_decr_insideTAU();
 		return;
 	}
 	compInstDisabled[tid] = 1;
-
-	// Get previously hashed info, or efficiently create
-	// a new hash node if it didn't already exist
-	//HashNode & hn = TheHashTable()[addr];
 
 	// Start the timer if it's not an excluded function
 	if(hn.fi == NULL) {
@@ -295,15 +290,13 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 	}
 	Tau_start_timer(hn.fi, 0, tid);
 		
-	if (!(hn.fi->GetProfileGroup() & RtsLayer::TheProfileMask()))
-	{
+	if (!(hn.fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
 		//printf("COMP_GNU >>>>>>>>>> Excluding: %s, addr: %d, throttled.\n", hn.fi->GetName(), addr);
 		hn.excluded = true;
 	}
-		
+
 	// finished in this routine, allow entry
 	compInstDisabled[tid] = 0;
-	Tau_global_decr_insideTAU();
 }
 
 void _cyg_profile_func_enter(void* func, void* callsite) {
@@ -340,35 +333,21 @@ void __cyg_profile_func_exit(void* func, void* callsite)
 	unsigned long addr = Tau_convert_ptr_to_unsigned_long(funcptr);
 
 	HashNode & hn = TheHashTable()[addr];
-	if (hn.excluded) {
-		return;
-	}
-	
-	int tid = Tau_get_tid();
-	Tau_global_incr_insideTAU();
+	if (!hn.excluded) {
+    TauInternalFunctionGuard protects_this_function;
 
-	// prevent entry into cyg_profile functions while inside entry
-	if (compInstDisabled[tid]) {
-		Tau_global_decr_insideTAU();
-		return;
-	}
+	  int tid = Tau_get_tid();
 
-	if (executionFinished) {
-		Tau_global_decr_insideTAU();
-		return;
-	}
+    // prevent entry into cyg_profile functions while inside entry
+	  //prevent entry into cyg_profile functions while still initializing TAU
+    if (compInstDisabled[tid] || executionFinished || Tau_init_initializingTAU()) {
+      return;
+    }
 
-	//prevent entry into cyg_profile functions while still initializing TAU
-	if (Tau_init_initializingTAU()) {
-		Tau_global_decr_insideTAU();
-		return;
+    if (hn.fi) {
+      Tau_stop_timer(hn.fi, tid);
+    }
 	}
-
-	//HashNode & hn = TheHashTable()[addr];
-	if (hn.fi) {
-		Tau_stop_timer(hn.fi, tid);
-	}
-	Tau_global_decr_insideTAU();
 }
 
 void _cyg_profile_func_exit(void* func, void* callsite) {
