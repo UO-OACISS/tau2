@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.ArrayList;
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
+import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
 public class PerfExplorerJTree extends JTree {
 
@@ -135,12 +136,21 @@ public class PerfExplorerJTree extends JTree {
 			View view = views.next();
 			DefaultMutableTreeNode node = new PerfExplorerTreeNode(view);
 			parentNode.add(node);
-			addViewNodes(node, view.getID());
+			//addViewNodes(node, view.getID());
 		}
-		//if (viewVector.size() == 0) {
-			leafViews.add(parentNode);
+		leafViews.add(parentNode);
+		
+		if (viewVector.size() == 0) {
 			addTrialsForView(parentNode);
-		//}
+		}
+		else{
+			//TODO: Add All Trials virtual leaf view
+			View parentView = (View)parentNode.getUserObject();
+			View view = View.VirtualView(parentView);
+			
+			DefaultMutableTreeNode node = new PerfExplorerTreeNode(view);
+			parentNode.add(node);
+		}
 	}
 
     public static void addApplicationNodes (DefaultMutableTreeNode parent, boolean getExperiments) {
@@ -219,10 +229,10 @@ public class PerfExplorerJTree extends JTree {
 
 	    addTAUdbViewNodes(node, view.getID());
 	}
-	if (viewVector.size() == 0) {
-	    leafViews.add(parentNode);
-	    addTrialsForView(parentNode);
-	}
+//	if (viewVector.size() == 0) {
+//	    leafViews.add(parentNode);
+//	    addTrialsForView(parentNode);
+//	}
     }
 
     public static void addTrialsForViews () {
@@ -243,6 +253,7 @@ public class PerfExplorerJTree extends JTree {
 				views.add((View) objects[i]);
 			}
 		}
+		
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the trials
 		if (views.size() > 0) {
@@ -266,6 +277,10 @@ public class PerfExplorerJTree extends JTree {
 	//System.out.println("metric nodes...");
 	// get the metrics
 	List<Metric> metricVector = trial.getMetrics();
+	if(metricVector==null){
+		trial.getTrialMetrics(PerfExplorerServer.getServer().getDB());
+		metricVector = trial.getMetrics();
+	}
 	int metricIndex = 0;
 	if (metricVector != null) {
 	    ListIterator<Metric> metrics = metricVector.listIterator();

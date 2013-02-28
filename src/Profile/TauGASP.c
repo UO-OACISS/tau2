@@ -142,9 +142,7 @@ gasp_context_t gasp_init(gasp_model_t srcmodel, int *argc, char ***argv) {
         Tau_sampling_init_if_necessary();
     }
 
-#ifndef TAU_DISABLE_SIGUSR
     Tau_signal_initialization();
-#endif
 
 #ifdef TAU_MONITORING
     Tau_mon_connect();
@@ -220,18 +218,18 @@ void gasp_event_notifyVA(gasp_context_t context, unsigned int evttag,
     int remote_rank; \
     GASPI_UPCALL(context, remote_rank=gaspu_upcall_threadof(src)); \
     switch(evttype) { \
-    case GASP_START: TAU_TRACE_SENDMSG_REMOTE(TAU_UPC_TAGID_NEXT, context->mythread, n, remote_rank); break; \
-    case GASP_END: TAU_TRACE_RECVMSG(TAU_UPC_TAGID, remote_rank, n); break; \
-    case GASP_ATOMIC: TAU_REGISTER_EVENT(variable, tagstr); TAU_EVENT(variable, n); break; \
+    case GASP_START: { TAU_TRACE_SENDMSG_REMOTE(TAU_UPC_TAGID_NEXT, context->mythread, n, remote_rank); } break; \
+    case GASP_END: { TAU_TRACE_RECVMSG(TAU_UPC_TAGID, remote_rank, n); } break; \
+    case GASP_ATOMIC: { TAU_REGISTER_EVENT(variable, tagstr); TAU_EVENT(variable, n); } break; \
     } } while(0)
 
 #define TAU_TRACE_GASPI_PUT(dst, n) do { \
     int remote_rank; \
     GASPI_UPCALL(context, remote_rank=gaspu_upcall_threadof(dst)); \
     switch(evttype) { \
-    case GASP_START: TAU_TRACE_SENDMSG(TAU_UPC_TAGID_NEXT, remote_rank, n); break; \
-    case GASP_END: TAU_TRACE_RECVMSG_REMOTE(TAU_UPC_TAGID, context->mythread, n, remote_rank); break; \
-    case GASP_ATOMIC: TAU_REGISTER_EVENT(variable, tagstr); TAU_EVENT(variable, n); break; \
+    case GASP_START: { TAU_TRACE_SENDMSG(TAU_UPC_TAGID_NEXT, remote_rank, n); } break; \
+    case GASP_END: { TAU_TRACE_RECVMSG_REMOTE(TAU_UPC_TAGID, context->mythread, n, remote_rank); } break; \
+    case GASP_ATOMIC: { TAU_REGISTER_EVENT(variable, tagstr); TAU_EVENT(variable, n); } break; \
     } } while(0)
 
     switch (evttag) {

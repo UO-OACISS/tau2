@@ -77,6 +77,24 @@ void compute(double **a, double **b, double **c, int rows_a, int cols_a, int col
   }   /*** End of parallel region ***/
 }
 
+// cols_a and rows_b are the same value
+void compute_triangular(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
+  int i,j,k;
+#pragma omp parallel private(i,j,k) shared(a,b,c)
+  {
+    /*** Do matrix multiply sharing iterations on outer loop ***/
+    /*** Display who does which iterations for demonstration purposes ***/
+#pragma omp for nowait
+    for (i=0; i<rows_a; i++) {
+      for(j=i; j<cols_b; j++) {
+        for (k=j; k<cols_a; k++) {
+          c[i][j] += a[i][k] * b[k][j];
+        }
+      }
+    }
+  }   /*** End of parallel region ***/
+}
+
 void compute_interchange(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
   int i,j,k;
 #pragma omp parallel private(i,j,k) shared(a,b,c)
@@ -108,13 +126,19 @@ double do_work(void) {
   initialize(b, NCA, NCB);
   initialize(c, NRA, NCB);
 
+  printf("Compute...\n");
   compute(a, b, c, NRA, NCA, NCB);
 #ifdef OMP_NESTED
   if (omp_get_nested()) {
     compute_nested(a, b, c, NRA, NCA, NCB);
   }
 #endif
+  printf("Compute with interchange...\n");
   compute_interchange(a, b, c, NRA, NCA, NCB);
+  printf("Sleep 1 second...\n");
+  sleep(1);
+  printf("Compute triangular...\n");
+  compute_triangular(a, b, c, NRA, NCA, NCB);
 
   return c[0][1]; 
 }
@@ -282,7 +306,6 @@ int main (int argc, char *argv[])
     do_work();
   //}
 
-/*
   do_barrier_test();
   do_lock_test();
   do_critical_test();
@@ -290,7 +313,6 @@ int main (int argc, char *argv[])
   do_single_test();
   do_atomic_test();
   do_sections_test();
-*/
 
   printf ("Done.\n");
 

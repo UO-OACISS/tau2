@@ -82,19 +82,33 @@
 
 
 #ifdef DEBUG_ASSERT
-#ifdef __cplusplus
-extern "C" {
-#endif // __cplusplus
-void Tau_assert_raise_error(const char* msg);
-#ifdef __cplusplus
+#ifdef TAU_EXECINFO
+#include <execinfo.h>
+
+#define TAU_ASSERT(test, fmt, ...) if (!(test)) { \
+  void * callstack[128]; \
+  int nid = RtsLayer::myNode(); \
+  int tid = RtsLayer::unsafeThreadId(); \
+  fprintf(stderr, "TAU_ASSERT [%d:%d](%s:%d): " fmt "\n", nid, tid, __FILE__, __LINE__, #__VA_ARGS__); \
+  fflush(stderr); \
+  int frames = backtrace(callstack, 128); \
+  char ** strs = backtrace_symbols(callstack, frames); \
+  for (int i=0; i<frames; ++i) \
+    fprintf(stderr, "           [%d:%d]: %s\n", nid, tid, strs[i]); \
+  free(strs); \
+  exit(999); \
 }
-#endif // __cplusplus
-
-#define TAU_ASSERT(test, msg) if (! test) Tau_assert_raise_error(msg)
-
-#else /* DEBUG_ASSERT */
-#define TAU_ASSERT(test, msg)
+#else /* !defined(TAU_EXECINFO) */
+#define TAU_ASSERT(test, fmt, ...) if (!(test)) { \
+  int nid = RtsLayer::myNode(); \
+  int tid = RtsLayer::unsafeThreadId(); \
+  fprintf(stderr, "TAU_ASSERT [%d:%d](%s:%d): " fmt "\n", nid, tid, __FILE__, __LINE__, #__VA_ARGS__); \
+  fflush(stderr); \
+  exit(999); \
+}
+#endif
+#else /* !defined(DEBUG_ASSERT) */
+#define TAU_ASSERT(test, fmt, ...)
 #endif /* DEBUG_ASSERT */
  
-
 #endif /* _TAU_INTERNAL_H_ */

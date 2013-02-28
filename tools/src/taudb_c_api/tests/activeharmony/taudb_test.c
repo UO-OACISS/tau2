@@ -125,11 +125,35 @@ int main (int argc, char** argv) {
   printf("Computing Stats...\n");
   taudb_compute_statistics(trial);
 
+  // create secondary metadata, specific to this thread
+  TAUDB_SECONDARY_METADATA * sm = taudb_create_secondary_metadata(1);
+  sm->key.timer_callpath = NULL; // no timer call associated with this value
+  sm->key.thread = thread;
+  sm->key.parent = NULL; // no nested metadata in this example
+  sm->key.time_range = NULL; // no time range in this example
+  sm->key.name  = taudb_strdup("HOSTNAME");
+  sm->num_values = 1;
+  sm->child_count = 0; // no nested metadata in this example
+  sm->children = NULL; // no nested metadata in this example
+  sm->value = (char**)malloc(sizeof(char*)); // allocate an array of 1 char*
+  sm->value[0] = taudb_strdup("cn114");
+  taudb_add_secondary_metadata_to_trial(trial, sm);
+
   // save the trial!
   printf("Testing inserts...\n");
   boolean update = FALSE;
   boolean cascade = TRUE;
   taudb_save_trial(connection, trial, update, cascade);
+	
+	free(trial->name);
+	trial->name = taudb_strdup("FOO TEST TRIAL");
+  TAUDB_METRIC* metric2 = taudb_create_metrics(1);
+  metric2->name = taudb_strdup("L2_CACHE_MISS");
+  taudb_add_metric_to_trial(trial, metric2);
+	pm[4].value = taudb_strdup("aciss.uoregon.edu");
+	update = TRUE;
+	taudb_save_trial(connection, trial, update, cascade);
+	
   
   printf("Disconnecting...\n");
   taudb_disconnect(connection);

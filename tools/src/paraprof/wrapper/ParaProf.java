@@ -54,7 +54,7 @@ public class ParaProf implements ActionListener {
 	}
     }
 
-    private final static String VERSION = "Thu Nov  8 14:55:17 PST 2012";
+    private final static String VERSION = "Mon Feb 25 17:25:41 PST 2013";
 
     public static int defaultNumberPrecision = 6;
 
@@ -71,6 +71,8 @@ public class ParaProf implements ActionListener {
     private static int numWindowsOpen = 0;
 
     private static int fileType = DataSource.TAUPROFILE;
+    //If this is set to true then the user has specified snapshot format and we may have a series of snapshots from one trial.
+    private static boolean seriesSnap = false;
     private static File sourceFiles[] = new File[0];
     private static boolean fixNames = false;
     private static boolean monitorProfiles;
@@ -197,7 +199,16 @@ public class ParaProf implements ActionListener {
 		    }
 		}
 		paraProfManagerWindow.addTrial(experiment, (File[]) filelist.toArray(sourceFiles), fileType, fixNames, monitorProfiles, range);
-	    }else {
+	    }
+	    //If it's not a series but it is a snapshot then open the files successively.
+	    else if(!seriesSnap&&fileType==DataSource.SNAP){
+	    	for (int i = 0; i < sourceFiles.length; i++) {
+			    File files[] = new File[1];
+			    files[0] = sourceFiles[i];
+			    paraProfManagerWindow.addTrial(app, experiment, files, fileType, fixNames, monitorProfiles);
+			}
+	    }
+	    else {
 		paraProfManagerWindow.addTrial(experiment, sourceFiles, fileType, fixNames, monitorProfiles, range);
 	    }
 	} catch (java.security.AccessControlException ace) {
@@ -535,7 +546,8 @@ public class ParaProf implements ActionListener {
 	    } else if (fileTypeString.equals("snapshot")) {
 		ParaProf.fileType = DataSource.SNAP;
 	    } else if (fileTypeString.equals("snap")) {
-		ParaProf.fileType = DataSource.SNAP;
+	    	seriesSnap=true;
+	    	ParaProf.fileType = DataSource.SNAP;
 	    } else if (fileTypeString.equals("ompp")) {
 		ParaProf.fileType = DataSource.OMPP;
 	    } else if (fileTypeString.equals("perixml")) {

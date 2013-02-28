@@ -20,30 +20,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <vector>
+#include <string>
+
 #include <Profile/Profiler.h>
 
 #ifdef __GNUC__
 #include <cxxabi.h>
-#endif /* __GNUC__ */
+#endif
 
-#include <vector>
-#include <string>
 using namespace std;
+using namespace tau;
 
 
-//#define DEBUG_PROF
-//int debugPrint = 1;
-// control debug printf statements
-//#define dprintf if (debugPrint) printf
 #ifdef DEBUG_PROF
 #define dprintf printf
 #else // DEBUG_PROF 
 #define dprintf TAU_VERBOSE
 #endif
 
-//#define ORIGINAL_HEAVY_IMPLEMENTATION_USING_MAP 1
 #define TAUDYNVEC 1
-//extern "C" void Tau_get_func_name(long addr, char * fname, char *filename);
+
 
 extern "C" void tau_dyninst_init(int isMPI);
 
@@ -56,6 +54,7 @@ vector<int> TheFlag(TAU_MAX_THREADS);
 #define TAU_MONITOR_ENTER(tid)  if (TheFlag[tid] == 0) {TheFlag[tid] = 1;}  else {return; } 
 #define TAU_MONITOR_EXIT(tid) TheFlag[tid] = 0
 #endif /* IA64 */
+
 
 vector<string> TauFuncNameVec; /* holds just names */
 vector<FunctionInfo*>& TheTauDynFI(void)

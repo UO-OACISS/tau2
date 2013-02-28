@@ -216,7 +216,7 @@ if [ -f ${tauroot}/tools/src/contrib/CubeReader.jar ]  ; then
 echo " Copy ${tauroot}/tools/src/contrib/CubeReader.jar to $JARTARGET"
 cp ${tauroot}/tools/src/contrib/CubeReader.jar $JARTARGET
 else
-echo "ERROR: Tau doesn't have own copy of CabeReader.jar under ${tauroot}/tools/src/contrib/"
+echo "ERROR: Tau doesn't have own copy of CubeReader.jar under ${tauroot}/tools/src/contrib/"
 echo "       Please check the recent TAU distribution and report this bug to tau-bugs@cs.uoregon.edu"
 exit -1
 fi
@@ -1978,6 +1978,7 @@ sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,
  > ${targetdir}/${architecture}/bin/perfdmf_configure
 chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_configure
 cd ${targetdir}/${architecture}/bin
+/bin/rm -f taudb_configure
 ln -s perfdmf_configure taudb_configure
 cd ${tauroot}
 
@@ -1996,6 +1997,7 @@ sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,
  > ${targetdir}/${architecture}/bin/perfdmf_loadtrial
 chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_loadtrial
 cd ${targetdir}/${architecture}/bin
+/bin/rm -f taudb_loadtrial
 ln -s perfdmf_loadtrial taudb_loadtrial
 cd ${tauroot}
 
@@ -7084,19 +7086,22 @@ fi
 if [ $dyninst = yes ] ; then
     fixmakeargs="$fixmakeargs DYNINST dyninstdir=$dyninstdir"
     if [ ! -d $dyninstdir/lib ] ; then
-	fixmakeargs="$fixmakeargs DYNINST41"
+	  fixmakeargs="$fixmakeargs DYNINST41"
     fi
     if [ `grep isStaticExecutable $dyninstdir/include/* | wc -l` = 0 ]; then
-	fixmakeargs="$fixmakeargs DYNINST_STATIC_REWRITING_UNSUPPORTED"
+	  fixmakeargs="$fixmakeargs DYNINST_STATIC_REWRITING_UNSUPPORTED"
     fi
     if [ ! -d $dyninstdir/src/include -o ! -d $dyninstdir/include ] ; then
-	fixmakeargs="$fixmakeargs DYNINST5.2"
+	  fixmakeargs="$fixmakeargs DYNINST5.2"
     fi
-    if [ -r $dyninstdir/$PLATFORM/lib/libcommon.so ] ; then
-	fixmakeargs="$fixmakeargs DYNINST6"
+    if [ -r $dyninstdir/$PLATFORM/lib/libcommon.so -o -r $dyninstdir/lib/libcommon.so ] ; then
+	  fixmakeargs="$fixmakeargs DYNINST6"
     fi
-    if [ -r $dyninstdir/$PLATFORM/lib/libparseAPI.so ] ; then
-	fixmakeargs="$fixmakeargs DYNINST7"
+    if [ -r $dyninstdir/$PLATFORM/lib/libparseAPI.so -o -r $dyninstdir/lib/libparseAPI.so ] ; then
+	  fixmakeargs="$fixmakeargs DYNINST7"
+    fi
+    if [ -r $dyninstdir/include/walker.h ] ; then
+	  fixmakeargs="$fixmakeargs DYNINST8"
     fi
 fi
 
@@ -7542,6 +7547,7 @@ cp ${tauroot}/tools/src/tauf90 $BINTARGET
 cp ${tauroot}/tools/src/tauex.multiple $BINTARGET
 cp ${tauroot}/tools/src/tau_cxx.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_cc.sh $BINTARGET
+cp ${tauroot}/tools/src/tau_show_libs $BINTARGET
 cp ${tauroot}/tools/src/tau_rewrite $BINTARGET
 cp ${tauroot}/tools/src/tau_pebil_rewrite $BINTARGET
 cp ${tauroot}/tools/src/tau_f90.sh $BINTARGET

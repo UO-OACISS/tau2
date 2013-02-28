@@ -17,13 +17,14 @@ enum Memcpy { MemcpyHtoD = 0, MemcpyDtoH = 1, MemcpyDtoD = 2, MemcpyUnknown = 3 
 
 #include <Profile/Profiler.h>
 #include <map>
+using namespace tau;
 
 //typedef map<TauContextUserEvent*, TAU_EVENT_DATATYPE> TauGpuContextMap;
 
 /* Struct to contain the user event data for each GPU event. */
 typedef struct {
-	TauContextUserEvent *userEvent;
-	TAU_EVENT_DATATYPE data;
+	tau::TauContextUserEvent *userEvent;
+	tau::TAU_EVENT_DATATYPE data;
 
 } GpuEventAttributes;
 
@@ -118,6 +119,9 @@ extern "C" void Tau_gpu_register_gpu_event(GpuEvent *event, double startTime, do
 /* Callback for a Memcpy event that occurred earlier in the execution of the
  * program. Times are pre-aligned to the CPU clock. */
 extern "C" void Tau_gpu_register_memcpy_event(GpuEvent *event, double startTime, double endTime, int transferSize, int memcpyType);
+
+/* Callback for a GPU atomic event that is associated with this gpu event. */
+extern "C" void Tau_gpu_register_gpu_atomic_event(GpuEvent *event);
 
 extern "C" void TauTraceOneSidedMsg(int type, GpuEvent *gpu, int length, int thread);
 

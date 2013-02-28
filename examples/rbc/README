@@ -1,0 +1,95 @@
+
+Here is a summary of TAU's memory instrumentation options.  
+Memory calls can be instrumented statically or dynamically.
+
+Static (compile-time) options:
+
+-optMemDbg: 
+  * Pass to linker, i.e. tau_cc.sh -optMemDbg  *.o -o simple.exe
+  * Uses the linker's function wrapping features to intercept libc functions 
+    like malloc and free.  Memory allocations and deallocations appear in the
+    application profile as context events.
+  * By default, runtime bounds checking and memory leak tracking is disabled.
+    Set the TAU_MEMDBG_* or TAU_TRACK_MEMORY_LEAKS environment variables to
+    enable these features.
+
+-optTrackMemoryLeaks: 
+  * Pass to linker, i.e. tau_cc.sh -optTrackMemoryLeaks  *.o -o simple.exe
+  * Backwards compatibility synonym for -optMemDbg.
+
+Dynamic (run-time) options:
+
+-memory: 
+  * Pass to tau_exec, i.e. tau_exec -memory ./simple.exe
+  * Uses library preloading to intercept libc functions like malloc and free.
+    Memory allocations and deallocations appear in the application profile as
+    context events.
+  * By default, runtime bounds checking and memory leak tracking is disabled.
+    Set the TAU_MEMDBG_* or TAU_TRACK_MEMORY_LEAKS environment variables to
+    enable these features.
+
+-memory_debug: 
+  * Pass to tau_exec, i.e. tau_exec -memory_debug ./simple.exe
+  * Uses library preloading to intercept libc functions like malloc and free.
+    Memory allocations and deallocations appear in the application profile as
+    context events.
+  * By default, runtime bounds checking on the end of arrays and memory leak
+    tracking is ENABLED.  This option is identical to setting the
+    TAU_TRACK_MEMORY_LEAKS and TAU_MEMDBG_PROTECT_ABOVE environment variables
+    and then passing the -memory option to tau_exec.
+
+Static via sourcecode rewriting:
+
+TAU can rewrite the memory alloction and deallocation calls in C and Fortran
+source codes.  This provides fine-grained control on memory instrumentation.
+To enable, specify the files to be instrumented in the TAU select file and
+pass the select file to the TAU compiler with the -optTauSelectFile option.
+
+Example select.tau file:
+
+BEGIN_INSTRUMENT_SECTION
+memory file="foo.f90" routine="#"
+END_INSTRUMENT_SECTION
+
+Compile the source files to be instrumeted and link normally:
+tau_f90.sh -c -optTauSelectFile=select.tau foo.f90
+tau_f90.sh *.o -o foo.exe
+
+Environment variables:
+
+Static and dynamic instrumentation use the same environment variables to
+enable and control optional features.  The variables are:
+
+TAU_TRACK_MEMORY_LEAKS = {0, 1}, (default=0 unless -memory_debug)
+  * Enable memory leak detection.
+
+TAU_MEMDBG_PROTECT_ABOVE = {0, 1}, (default=0 unless -memory_debug)
+  * Enable runtime bounds checking after array end.
+
+TAU_MEMDBG_PROTECT_BELOW = {0, 1}, (default=0)
+  * Enable runtime bounds checking before array beginning
+
+TAU_MEMDBG_ALIGNMENT = INTEGER, (default=sizeof(long))
+  * Set the default byte alignment for allocations when
+    TAU_MEMDBG_PROTECT_* is set
+
+TAU_MEMDBG_ZERO_MALLOC = {0, 1}, (default=0)
+  * Set to 1 to allow zero-sized malloc
+
+TAU_MEMDBG_ATTEMPT_CONTINUE = {0, 1}, (default=0)
+  * Set to 1 to attempt to resume program execution if a memory error causes
+    a segmentation fault or bus error.
+  * This is useful for finding multiple memory errors in the same program run.
+  * The default is to halt the program and dump profiles on the first error.
+
+Mixing instrumentation methods:
+
+ * Dynamic instrumentation via tau_exec -memory or tau_exec -memory_debug
+   MUST NOT be used with static instrumentation via -optMemDbg or 
+   -optTrackMemoryLeaks.  The instrumented application will hang or crash.
+ * Static instrumentation via select.tau may be used along with dynamic 
+   instrumentation via tau_exec -memory or tau_exec -memory_debug.
+ * Static instrumentation via select.tau may be used along with static
+   instrumentation via the -optMemDbg or -optTrackMemoryLeaks compiler
+   options.
+
