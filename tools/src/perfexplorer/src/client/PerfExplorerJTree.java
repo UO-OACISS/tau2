@@ -136,12 +136,21 @@ public class PerfExplorerJTree extends JTree {
 			View view = views.next();
 			DefaultMutableTreeNode node = new PerfExplorerTreeNode(view);
 			parentNode.add(node);
-			addViewNodes(node, view.getID());
+			//addViewNodes(node, view.getID());
 		}
-		//if (viewVector.size() == 0) {
-			leafViews.add(parentNode);
+		leafViews.add(parentNode);
+		
+		if (viewVector.size() == 0) {
 			addTrialsForView(parentNode);
-		//}
+		}
+		else{
+			//TODO: Add All Trials virtual leaf view
+			View parentView = (View)parentNode.getUserObject();
+			View view = View.VirtualView(parentView);
+			
+			DefaultMutableTreeNode node = new PerfExplorerTreeNode(view);
+			parentNode.add(node);
+		}
 	}
 
     public static void addApplicationNodes (DefaultMutableTreeNode parent, boolean getExperiments) {
