@@ -68,10 +68,10 @@ using namespace std;
 /* if we are doing EBS sampling, set the default sampling period */
 #define TAU_EBS_DEFAULT 0
 #define TAU_EBS_KEEP_UNRESOLVED_ADDR_DEFAULT 0
-#if (defined (TAU_BGL) || defined(TAU_BGP) || defined(TAU_BGQ))
+#if (defined (TAU_BGL) || defined(TAU_BGP))
 #define TAU_EBS_PERIOD_DEFAULT 20000 // Kevin made this bigger,
 #else
-#if (defined (TAU_CRAYCNL))
+#if (defined (TAU_CRAYCNL) || defined(TAU_BGQ))
 #define TAU_EBS_PERIOD_DEFAULT 50000 // Sameer made this bigger,
 #else 
 #define TAU_EBS_PERIOD_DEFAULT 10000 // Kevin made this bigger,
@@ -506,13 +506,15 @@ static int env_memdbg_attempt_continue = TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT;
  ********************************************************************/
 void TAU_VERBOSE(const char *format, ...)
 {
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   va_list args;
   if (env_verbose != 1) {
     return;
   }
   va_start(args, format);
 
-  Tau_global_incr_insideTAU();
 #ifdef TAU_GPI
   gpi_vprintf(format, args);
 #else
@@ -520,7 +522,6 @@ void TAU_VERBOSE(const char *format, ...)
 #endif
   va_end(args);
   fflush (stderr);
-  Tau_global_decr_insideTAU();
 }
 
 /*********************************************************************

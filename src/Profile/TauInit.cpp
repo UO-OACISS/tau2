@@ -133,7 +133,9 @@ static void tauInitializeKillHandlers()
 
 static void tauSignalHandler(int sig)
 {
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   if (TauEnv_get_sigusr1_action() == TAU_ACTION_DUMP_CALLPATHS) {
     fprintf(stderr, "Caught SIGUSR1, dumping TAU callpath data\n");
     Tau_dump_callpaths();
@@ -143,23 +145,26 @@ static void tauSignalHandler(int sig)
     fprintf(stderr, "Caught SIGUSR1, dumping TAU profile data\n");
     TAU_DB_DUMP_PREFIX("profile");
   }
-  Tau_global_decr_insideTAU();
 }
 
 static void tauToggleInstrumentationHandler(int sig)
 {
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   fprintf(stderr, "Caught SIGUSR2, toggling TAU instrumentation\n");
   if (RtsLayer::TheEnableInstrumentation()) {
     RtsLayer::TheEnableInstrumentation() = false;
   } else {
     RtsLayer::TheEnableInstrumentation() = true;
   }
-  Tau_global_decr_insideTAU();
 }
 
 static void tauBacktraceHandler(int sig, siginfo_t *si, void *context)
 {
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   // Trigger a context event and record metadata
   char eventname[1024];
   sprintf(eventname, "TAU_SIGNAL (%s)", strsignal(sig));
@@ -174,6 +179,9 @@ static void tauBacktraceHandler(int sig, siginfo_t *si, void *context)
 
 static void tauMemdbgHandler(int sig, siginfo_t *si, void *context)
 {
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   // Use the backtrace handler if this SIGSEGV wasn't due to invalid memory access
   if (sig == SIGSEGV && si->si_code != SEGV_ACCERR) {
     tauBacktraceHandler(sig, si, context);
@@ -181,8 +189,6 @@ static void tauMemdbgHandler(int sig, siginfo_t *si, void *context)
   }
 
   TAU_REGISTER_CONTEXT_EVENT(evt, "Invalid memory access");
-
-  Tau_global_incr_insideTAU();
 
   // Try to find allocation information for the address
   void * ptr = si->si_addr;
@@ -216,15 +222,12 @@ static void tauMemdbgHandler(int sig, siginfo_t *si, void *context)
         RtsLayer::myNode(), getpid(), Tau_get_tid());
   }
 
-  Tau_global_decr_insideTAU();
   // Exit the handler and return to the instruction that raised the signal
 }
 
 
 static int tauAddSignal(int sig, tau_sighandler_t handler = tauBacktraceHandler)
 {
-  Tau_global_incr_insideTAU();
-
   int ret = 0;
 
   struct sigaction act;
@@ -241,15 +244,17 @@ static int tauAddSignal(int sig, tau_sighandler_t handler = tauBacktraceHandler)
     return -1;
   }
   act.sa_sigaction = handler;
+#if defined(TAU_BGL) || defined(TAU_BGP) || defined(TAU_BGQ)
+  act.sa_flags = SA_SIGINFO;
+#else
   act.sa_flags = SA_SIGINFO | SA_ONSTACK;
+#endif
 
   ret = sigaction(sig, &act, NULL);
   if (ret != 0) {
     printf("TAU: error adding signal in sigaction: %s\n", strerror(ret));
     return -1;
   }
-
-  Tau_global_decr_insideTAU();
 
   return ret;
 }
@@ -309,7 +314,8 @@ extern "C"
 int Tau_signal_initialization()
 {
 #ifndef TAU_DISABLE_SIGUSR
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
 
   if (TauEnv_get_track_signals()) {
     TAU_VERBOSE("TAU: Enable signal tracking\n");
@@ -330,7 +336,6 @@ int Tau_signal_initialization()
     }
   }
 
-  Tau_global_decr_insideTAU();
 #endif // TAU_DISABLE_SIGUSR
   return 0;
 }
@@ -341,7 +346,8 @@ extern "C" int Tau_init_initializeTAU()
   if (initializing) return 0;
   initializing = 1;
 
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
 
   /* initialize the memory debugger */
   Tau_memory_initialize();
@@ -425,7 +431,6 @@ extern "C" int Tau_init_initializeTAU()
 #endif
 
   tau_initialized = 1;
-  Tau_global_decr_insideTAU();
 
 #ifdef __MIC__
   if (TauEnv_get_mic_offload())
@@ -438,24 +443,8 @@ extern "C" int Tau_init_initializeTAU()
   //Initialize locks.
   RtsLayer::Initialize();
 
+  // FIXME: No so sure this is a good idea...
   Tau_memory_wrapper_enable();
-  return 0;
-}
 
-extern "C"
-void Tau_assert_raise_error(const char* msg)
-{
-  int nid = RtsLayer::myNode();
-  int tid = RtsLayer::myThread();
-  fprintf(stderr, "TAU_ASSERT [%d:%d]: %s.\n", nid, tid, msg);
-#ifdef TAU_EXECINFO
-  void* callstack[128];
-  int i, frames = backtrace(callstack, 128);
-  char** strs = backtrace_symbols(callstack, frames);
-  for (i = 0; i < frames; ++i) {
-    fprintf(stderr, "           [%d:%d]: %s\n", nid, tid, strs[i]);
-  }
-  free(strs);
-#endif //TAU_EXECINFO
-  exit(999);
+  return 0;
 }

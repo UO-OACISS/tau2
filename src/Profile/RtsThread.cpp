@@ -19,20 +19,19 @@
 // Include Files 
 //////////////////////////////////////////////////////////////////////
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
-using namespace std;
 #else /* TAU_DOT_H_LESS_HEADERS */
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
-#include "Profile/Profiler.h"
-#include "Profile/OpenMPLayer.h"
 
+#include <Profile/Profiler.h>
+#include <Profile/OpenMPLayer.h>
 #include <Profile/TauTrace.h>
-void TraceCallStack(int tid, Profiler *current);
-
-#include <stdio.h>
-#include <stdlib.h>
+#include <Profile/TauSampling.h>
 
 #ifdef TAUKTAU
 #include <Profile/KtauProfiler.h>
@@ -44,15 +43,20 @@ void TraceCallStack(int tid, Profiler *current);
 #endif //TAUKTAU_SHCTR
 #endif //TAUKTAU
 
-#include <Profile/TauSampling.h>
-
 // This is used for printing the stack trace when debugging locks
 #ifdef DEBUG_LOCK_PROBLEMS
 #include <execinfo.h>
 #endif //DEBUG_LOCK_PROBLEMS
 
+using namespace std;
+using namespace tau;
+
 int RtsLayer::lockDBCount[TAU_MAX_THREADS];
 int RtsLayer::lockEnvCount[TAU_MAX_THREADS];
+
+
+void TraceCallStack(int tid, Profiler *current);
+
 
 //////////////////////////////////////////////////////////////////////
 // Thread struct 
@@ -93,6 +97,7 @@ static int nextThread = 1;
 
 int RtsLayer::createThread()
 {
+  TauInternalFunctionGuard protects_this_function;
 
   threadLockEnv();
 
@@ -121,6 +126,7 @@ extern "C" int Tau_RtsLayer_createThread() {
 
 void RtsLayer::recycleThread(int id)
 {
+  TauInternalFunctionGuard protects_this_function;
   LockEnv();
 	
 	TheThreadList().at(id-1)->active = false;
@@ -131,6 +137,12 @@ void RtsLayer::recycleThread(int id)
 }
 
 int RtsLayer::localThreadId(void)
+{
+  TauInternalFunctionGuard protects_this_function;
+  return RtsLayer::unsafeLocalThreadId();
+}
+
+int RtsLayer::unsafeLocalThreadId(void)
 {
 #ifdef PTHREADS
   return PthreadLayer::GetThreadId();
@@ -154,6 +166,12 @@ int RtsLayer::localThreadId(void)
 
 int RtsLayer::threadId(void)
 {
+  TauInternalFunctionGuard protects_this_function;
+  return RtsLayer::unsafeThreadId();
+}
+
+int RtsLayer::unsafeThreadId(void)
+{
 #ifdef PTHREADS
   return PthreadLayer::GetThreadId();
 #elif  TAU_SPROC
@@ -176,24 +194,7 @@ int RtsLayer::threadId(void)
 
 int RtsLayer::myThread(void)
 {
-#ifdef PTHREADS
-  return PthreadLayer::GetThreadId();
-#elif  TAU_SPROC
-  return SprocLayer::GetThreadId();
-#elif  TAU_WINDOWS
-  return WindowsThreadLayer::GetThreadId();
-#elif  TULIPTHREADS
-  return TulipThreadLayer::GetThreadId();
-#elif JAVA
-  return JavaThreadLayer::GetThreadId(); 
-	// C++ app shouldn't use this unless there's a VM
-#elif TAU_OPENMP
-  return OpenMPLayer::GetTauThreadId();
-#elif TAU_PAPI_THREADS
-  return PapiThreadLayer::GetThreadId();
-#else  // if no other thread package is available 
-  return 0;
-#endif // PTHREADS
+  return RtsLayer::threadId();
 }
 
 extern "C" int Tau_RtsLayer_myThread(void) {
@@ -312,6 +313,8 @@ int RtsLayer::RegisterThread() {
 // process that is forked off (child process)
 //////////////////////////////////////////////////////////////////////
 void RtsLayer::RegisterFork(int nodeid, enum TauFork_t opcode) {
+  TauInternalFunctionGuard protects_this_function;
+
 #ifdef PROFILING_ON
   vector<FunctionInfo*>::iterator it;
   Profiler *current;
@@ -456,8 +459,7 @@ int RtsLayer::LockDB(void) {
   static bool init = initLocks();
   int tid=myThread();
 /* This block of code is helpful in debugging deadlocks... see the top of this file */
-	TAU_ASSERT(Tau_global_get_insideTAU() > 0,
-		"Thread is trying for another DB lock. but it is not in TAU");
+	TAU_ASSERT(Tau_global_get_insideTAU() > 0, "Thread is trying for DB lock but it is not in TAU");
 #ifdef DEBUG_LOCK_PROBLEMS
   if (lockDBCount[tid] > 0) {
     int nid = RtsLayer::myNode();
@@ -565,8 +567,7 @@ int RtsLayer::getNumEnvLocks(void) {
 int RtsLayer::LockEnv(void) {
   static bool init = initEnvLocks();
   int tid=myThread();
-	TAU_ASSERT(Tau_global_get_insideTAU() > 0,
-		"Thread is trying for another Env lock. but it is not in TAU");
+	TAU_ASSERT(Tau_global_get_insideTAU() > 0, "Thread is trying for Env lock but it is not in TAU");
 /* This block of code is helpful in debugging deadlocks... see the top of this file */
 #ifdef DEBUG_LOCK_PROBLEMS
   if (lockEnvCount[tid] > 0) {
@@ -583,8 +584,7 @@ int RtsLayer::LockEnv(void) {
     }
   }
 #endif
-  TAU_ASSERT(lockDBCount[tid] == 0,
-		"Thread has DB lock, trying for Env lock");
+  //TAU_ASSERT(lockDBCount[tid] == 0, "Thread has DB lock, trying for Env lock");
 	if (lockEnvCount[tid] == 0) {
     threadLockEnv();
   }

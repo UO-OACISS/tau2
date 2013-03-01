@@ -611,7 +611,7 @@ public class PerfDMFGeneralChartData extends GeneralChartData {
 			statement.close();
 		} else if( model.getMainEventOnly()){
 			 long before = System.currentTimeMillis();
-			System.out.print("New insert...");
+			System.out.println("New insert...");
 			StringBuffer buffer = new StringBuffer();
 			buffer.append("select timer.name from timer");
 			buffer.append("      inner join timer_callpath on timer_callpath.timer = timer.id ");
@@ -629,7 +629,7 @@ public class PerfDMFGeneralChartData extends GeneralChartData {
 //			}
 			buffer.append("      where timer_value.inclusive_value = maxinc and timer.trial = trialid and  timer_value.metric=metricid");
 			 PreparedStatement statement = db.prepareStatement(buffer.toString());
-//			 System.out.println(statement);
+			 //System.out.println(statement);
 			 ResultSet results = statement.executeQuery();
 
 			while (results.next() != false) {

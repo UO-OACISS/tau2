@@ -104,9 +104,28 @@ TAUDB_PRIMARY_METADATA* taudb_get_primary_metadata_by_name(TAUDB_PRIMARY_METADAT
 
 
 extern void taudb_save_primary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIAL* trial, boolean update) {
-  const char* my_query = "insert into primary_metadata (trial, name, value) values ($1, $2, $3);";
-  const char* statement_name = "TAUDB_INSERT_PRIMARY_METADATA";
-  taudb_prepare_statement(connection, statement_name, my_query, 3);
+  const char* my_query;
+	const char* statement_name;
+	int nParams;
+	
+	const char* insert_query = "insert into primary_metadata (trial, name, value) values ($1, $2, $3);";
+  	const char* insert_statement_name = "TAUDB_INSERT_PRIMARY_METADATA";
+	const int insert_nParams = 3;
+	const char* update_query = "update primary_metadata set value=$3 where trial=$1 and name=$2;";
+	const char* update_statement_name = "TAUDB_UPDATE_PRIMARY_METADATA";
+	const int update_nParams = 3;
+	
+	if(update) {
+		my_query = update_query;
+		statement_name = update_statement_name;
+		nParams = update_nParams;
+	} else {
+		my_query = insert_query;
+		statement_name = insert_statement_name;
+		nParams = insert_nParams;
+	}
+	
+  taudb_prepare_statement(connection, statement_name, my_query, nParams);
   TAUDB_PRIMARY_METADATA *primary_metadata, *tmp;
   HASH_ITER(hh, trial->primary_metadata, primary_metadata, tmp) {
     // make array of 6 character pointers
@@ -117,7 +136,17 @@ extern void taudb_save_primary_metadata(TAUDB_CONNECTION* connection, TAUDB_TRIA
     paramValues[1] = primary_metadata->name;
     paramValues[2] = primary_metadata->value;
 
-    taudb_execute_statement(connection, statement_name, 3, paramValues);
+    int rows = taudb_execute_statement(connection, statement_name, 3, paramValues);
+		if(update && rows == 0) {
+#ifdef TAUDB_DEBUG
+			printf("Falling back to insert for update of primary metadata %s.\n", primary_metadata->name);
+#endif
+			/* updated row didn't exist; insert instead */
+			taudb_prepare_statement(connection, insert_statement_name, insert_query, insert_nParams);
+			taudb_execute_statement(connection, insert_statement_name, insert_nParams, paramValues);
+		}
+		
+		
   }
   taudb_clear_result(connection);
 }

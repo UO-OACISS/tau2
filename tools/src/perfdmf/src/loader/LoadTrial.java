@@ -340,6 +340,7 @@ public class LoadTrial {
         String sourceFiles[] = parser.getRemainingArgs();
         
         boolean multippk=false;
+        LoadTrial tmpLT = new LoadTrial(configFile, sourceFiles);
         if (trialName == null) {
         	
         	if(sourceFiles!=null&&sourceFiles.length>0){
@@ -356,7 +357,7 @@ public class LoadTrial {
             LoadTrial.usage();
             System.exit(-1);
         	}
-        } else if (experimentID == null && expName == null) {
+        } else if (experimentID == null && expName == null && tmpLT.getDatabaseAPI().getDb().getSchemaVersion()==0) {
             System.err.println("Error: Missing experiment id or name\n");
             LoadTrial.usage();
             System.exit(-1);
@@ -466,7 +467,7 @@ public class LoadTrial {
         if (trans.databaseAPI.db().getSchemaVersion()==0) {
             trans.checkForExp(experimentID, appName, expName);
         } else {
-        	System.err.println("Warning - this is the TAUdb schema, there is no Experiment table");
+        	//System.err.println("Warning - this is the TAUdb schema, there is no Experiment table");
         }
         if (trialID != null) {
             trans.checkForTrial(trialID);
