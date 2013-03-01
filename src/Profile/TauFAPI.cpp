@@ -532,6 +532,11 @@ void tau_profile_exit_(char *msg)
   Tau_exit(msg);
 }
 
+void tau_db_dump_incr_(void)
+{
+  Tau_dump_incr();
+}
+
 void tau_db_dump_(void)
 {
   Tau_dump();
@@ -1092,6 +1097,11 @@ void tau_profile_set_node(int *node)
 void tau_profile_exit(char *msg)
 {
   Tau_exit(msg);
+}
+
+void tau_db_dump_incr(void)
+{
+  Tau_dump_incr();
 }
 
 void tau_db_dump(void)
