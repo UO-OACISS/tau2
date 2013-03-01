@@ -193,9 +193,9 @@ static int Tau_snapshot_writeSnapshot(const char *name, int to_buffer) {
    Tau_util_output (out, "</name>\n");
 
 #ifdef TAU_WINDOWS
-   Tau_util_output (out, "<timestamp>%I64d</timestamp>\n", TauMetrics_getInitialTimeStamp());
+   Tau_util_output (out, "<timestamp>%I64d</timestamp>\n", TauMetrics_getTimeOfDay());
 #else
-   Tau_util_output (out, "<timestamp>%lld</timestamp>\n", TauMetrics_getInitialTimeStamp());
+   Tau_util_output (out, "<timestamp>%lld</timestamp>\n", TauMetrics_getTimeOfDay());
 #endif
 
    char metricList[4096];
@@ -290,9 +290,9 @@ int Tau_snapshot_writeUnifiedBuffer(int tid) {
    Tau_util_output (out, "\n<profile thread=\"%s\">\n", threadid);
 
 #ifdef TAU_WINDOWS
-   Tau_util_output (out, "<timestamp>%I64d</timestamp>\n", TauMetrics_getInitialTimeStamp());
+   Tau_util_output (out, "<timestamp>%I64d</timestamp>\n", TauMetrics_getTimeOfDay());
 #else
-   Tau_util_output (out, "<timestamp>%lld</timestamp>\n", TauMetrics_getInitialTimeStamp());
+   Tau_util_output (out, "<timestamp>%lld</timestamp>\n", TauMetrics_getTimeOfDay());
 #endif
 
    char metricList[4096];
