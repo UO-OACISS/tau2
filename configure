@@ -2276,6 +2276,18 @@ esac
 
 }
 
+
+if [ $tauarch = "i386_linux" || 
+     $tauarch = "i386_solaris" ||
+     $tauarch = "mpis32" ||
+     $tauarch = "ppc64" ]; then
+
+	fixmakeargs="$fixmakeargs arch_width=32bit"
+else
+	fixmakeargs="$fixmakeargs arch_width=64bit"
+fi
+
+
 make_directories () {
     if [ $tauprefix = unknown ] ; then 
 	fixmakeargs="$fixmakeargs tauprefix=$tauroot"
