@@ -32,18 +32,6 @@
 #include <memory_wrapper.h>
 
 
-int memory_wrapper_init(void)
-{
-  static int init = 0;
-  if (init) return 0;
-
-  if (Tau_init_check_dl_initialized()) {
-    Tau_memory_wrapper_register(memory_wrapper_enable, memory_wrapper_disable);
-    init = 1;
-    return 0;
-  }
-  return 1;
-}
 
 void * get_system_function_handle(char const * name)
 {

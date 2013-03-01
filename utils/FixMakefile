@@ -56,6 +56,15 @@ case $1 in
 	echo "s/^CONFIG_ARCH=\(.*\)/CONFIG_ARCH=$config_arch/g" >> $sedout
 	echo "s/^TAU_ARCH=\(.*\)/TAU_ARCH=$config_arch/g" >> $sedout
 	;;
+    arch_width=32bit)
+        echo "s/#ARCH_WIDTH_32#\(.*\)/$bs\1#ARCH_WIDTH_32#/g" >> $sedout
+		
+  ;;
+
+    arch_width=64bit)
+        echo "s/#ARCH_WIDTH_64#\(.*\)/$bs\1#ARCH_WIDTH_64#/g" >> $sedout
+		
+  ;;
 
      ptdir=*)
         ptdir=`echo $1 | sed -e 's/^ptdir=//'`

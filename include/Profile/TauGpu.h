@@ -17,13 +17,14 @@ enum Memcpy { MemcpyHtoD = 0, MemcpyDtoH = 1, MemcpyDtoD = 2, MemcpyUnknown = 3 
 
 #include <Profile/Profiler.h>
 #include <map>
+using namespace tau;
 
 //typedef map<TauContextUserEvent*, TAU_EVENT_DATATYPE> TauGpuContextMap;
 
 /* Struct to contain the user event data for each GPU event. */
 typedef struct {
-	TauContextUserEvent *userEvent;
-	TAU_EVENT_DATATYPE data;
+	tau::TauContextUserEvent *userEvent;
+	tau::TAU_EVENT_DATATYPE data;
 
 } GpuEventAttributes;
 

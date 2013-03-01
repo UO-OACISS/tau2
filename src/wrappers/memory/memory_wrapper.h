@@ -57,10 +57,6 @@ valloc_t get_system_valloc();
 pvalloc_t get_system_pvalloc();
 free_t get_system_free();
 
-int memory_wrapper_init(void);
-void memory_wrapper_enable(void);
-void memory_wrapper_disable(void);
-
 void * malloc_wrapper(size_t size);
 void * calloc_wrapper(size_t count, size_t size);
 void * realloc_wrapper(void * ptr, size_t size);

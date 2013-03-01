@@ -50,16 +50,6 @@ extern void * __real_pvalloc(size_t size);
 #endif
 
 
-int memory_wrapper_init(void)
-{
-  static int init = 0;
-  if (init) return 0;
-
-  Tau_memory_wrapper_register(memory_wrapper_enable, memory_wrapper_disable);
-  init = 1;
-  return 0;
-}
-
 
 malloc_t get_system_malloc()
 {

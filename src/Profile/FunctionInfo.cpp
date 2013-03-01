@@ -149,7 +149,11 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
     Tau_init_initializeTAU();
   }
 
-  Tau_global_incr_insideTAU();
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
+  // Use LockDB to avoid a possible race condition.
+  RtsLayer::LockDB();
 
   //Need to keep track of all the groups this function is a member of.
   AllGroups = strip_tau_group(ProfileGroupName);
@@ -159,9 +163,6 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   //   is ready at this point.
   Tau_MemMgr_initIfNecessary();
 #endif  
-
-  RtsLayer::LockDB();
-  // Use LockDB to avoid a possible race condition.
 
   GroupName = strdup(RtsLayer::PrimaryGroup(AllGroups).c_str());
 
@@ -261,9 +262,6 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   }
 #endif
 
-  TauTraceSetFlushEvents(1);
-  RtsLayer::UnLockDB();
-
   DEBUGPROFMSG("nct "<< RtsLayer::myNode() <<","
       << RtsLayer::myContext() << ", " << tid
       << " FunctionInfo::FunctionInfo(n,t) : Name : "<< GetName()
@@ -291,7 +289,8 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   }
 #endif //RENCI_STFF
 
-  Tau_global_decr_insideTAU();
+  TauTraceSetFlushEvents(1);
+  RtsLayer::UnLockDB();
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -429,7 +428,8 @@ void FunctionInfo::ResetExclTimeIfNegative(int tid) {
 void tauCreateFI(void **ptr, const char *name, const char *type, TauGroup_t ProfileGroup, const char *ProfileGroupName)
 {
   if (*ptr == 0) {
-    Tau_global_incr_insideTAU();
+    // Protect TAU from itself
+    TauInternalFunctionGuard protects_this_function;
 
 //Use The ENV lock here.
 #ifdef TAU_CHARM
@@ -447,8 +447,6 @@ void tauCreateFI(void **ptr, const char *name, const char *type, TauGroup_t Prof
 #else
     RtsLayer::UnLockEnv();
 #endif
-
-    Tau_global_decr_insideTAU();
   }
 }
 
@@ -456,7 +454,8 @@ void tauCreateFI(void **ptr, const char *name, const string& type, TauGroup_t Pr
     const char *ProfileGroupName)
 {
   if (*ptr == 0) {
-    Tau_global_incr_insideTAU();
+    // Protect TAU from itself
+    TauInternalFunctionGuard protects_this_function;
 
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
@@ -474,7 +473,6 @@ void tauCreateFI(void **ptr, const char *name, const string& type, TauGroup_t Pr
     RtsLayer::UnLockEnv();
 #endif
 
-    Tau_global_decr_insideTAU();
   }
 }
 
@@ -482,7 +480,8 @@ void tauCreateFI(void **ptr, const string& name, const char *type, TauGroup_t Pr
     const char *ProfileGroupName)
 {
   if (*ptr == 0) {
-    Tau_global_incr_insideTAU();
+    // Protect TAU from itself
+    TauInternalFunctionGuard protects_this_function;
 
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
@@ -499,8 +498,6 @@ void tauCreateFI(void **ptr, const string& name, const char *type, TauGroup_t Pr
 #else
     RtsLayer::UnLockEnv();
 #endif
-
-    Tau_global_decr_insideTAU();
   }
 }
 
@@ -508,7 +505,8 @@ void tauCreateFI(void **ptr, const string& name, const string& type, TauGroup_t 
     const char *ProfileGroupName)
 {
   if (*ptr == 0) {
-    Tau_global_incr_insideTAU();
+    // Protect TAU from itself
+    TauInternalFunctionGuard protects_this_function;
 
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
@@ -525,8 +523,6 @@ void tauCreateFI(void **ptr, const string& name, const string& type, TauGroup_t 
 #else
     RtsLayer::UnLockEnv();
 #endif
-
-    Tau_global_decr_insideTAU();
   }
 }
 
@@ -534,7 +530,8 @@ void tauCreateFI(void **ptr, const string& name, const string& type, TauGroup_t 
 char const * FunctionInfo::GetFullName()
 {
   if (!FullName) {
-    Tau_global_incr_insideTAU();
+    // Protect TAU from itself
+    TauInternalFunctionGuard protects_this_function;
 
     ostringstream ostr;
     if (strlen(GetType()) > 0 && strcmp(GetType(), " ") != 0) {
@@ -544,8 +541,6 @@ char const * FunctionInfo::GetFullName()
     }
 
     FullName = Tau_util_removeRuns(ostr.str().c_str());
-
-    Tau_global_decr_insideTAU();
   }
   return FullName;
 }

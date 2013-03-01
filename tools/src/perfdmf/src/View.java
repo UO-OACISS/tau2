@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -106,6 +107,17 @@ public class View implements Serializable {
 		this.viewID = view.viewID;
 	}
 
+	public static View VirtualView(View parent) {
+		View view = new View(parent);
+		
+		view.viewID=-2;
+		view.parent=parent;
+		view.fields.set(fieldNames.indexOf("NAME"), "All Trials");
+		view.fields.set(fieldNames.indexOf("PARENT"), "");
+		view.fields.set(fieldNames.indexOf("ID"), "-1");
+		view.node=null;
+		return view;
+	}
 
 	public static Iterator<String> getFieldNames(DB db) {
 		String allUpperCase = "TRIAL_VIEW";
@@ -362,7 +374,7 @@ public class View implements Serializable {
 			StringBuilder joinClause = new StringBuilder();
 			int currentView = 0;
 			int alias = 0;
-			String conjoin = " where ";
+			String conjoin = " where ((";
 			while (results.next() != false) {
 				int viewid = results.getInt(2);
 				String tableName = results.getString(3);
@@ -372,23 +384,26 @@ public class View implements Serializable {
 				String operator = results.getString(5);
 				String value = results.getString(6);
 				if ((currentView > 0) && (currentView != viewid)) {
-					conjoin = " and ";
+					conjoin = ") and ((";
 				} else if (currentView == viewid) {
-					conjoin = " " + results.getString(1) + " ";
+					conjoin = " " + results.getString(1) + " (";
 				}
 				if (tableName.equalsIgnoreCase("trial")) {
 					whereClause.append(conjoin +   "t." + columnName + " " + operator + " " + "'" + value + "'");
 				} else {
 					// otherwise, we have primary_metadata or secondary_metadata
-					joinClause.append(" left outer join " + tableName + " t" + alias + " on t.id = t" + alias + ".trial");
-					whereClause.append(conjoin + "t" + alias + ".name = '" + columnName + "' ");
-					whereClause.append("and  t" + alias + ".value "+operator+" '" + value + "' ");
+					joinClause.append(" left outer join " + tableName + " t" + alias + " on t.id = t" + alias + ".trial and ");
+					// put the name column in the join to reduce the size of the join
+					joinClause.append("t" + alias + ".name = '" + columnName + "' ");
+					whereClause.append(conjoin + " t" + alias + ".value "+operator+" '" + value + "' ");
 				}
+				whereClause.append(")");
 				alias++;
 				currentView = viewid;
 				hashViews.get(currentView).setWhereClause(whereClause.toString());
 				hashViews.get(currentView).setJoinClause(joinClause.toString());
 			}
+			whereClause.append(")");
 			statement.close();
 			
 			//PerfExplorerOutput.println(whereClause.toString());
@@ -413,7 +428,9 @@ public class View implements Serializable {
 		this.viewID = id;
 	}
 	public void setField(String name, String field){
-		setField(fieldNames.indexOf(name.toUpperCase()), field);
+		String n = name.toUpperCase();
+		int i = fieldNames.indexOf(n);
+		setField(i, field);
 	}
     public void setField(int idx, String field) {
         if (DBConnector.isIntegerType(database.getAppFieldTypes()[idx]) && field != null) {

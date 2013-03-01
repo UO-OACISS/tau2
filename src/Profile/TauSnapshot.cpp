@@ -25,9 +25,8 @@
 #include <TauXML.h>
 #include <TauUnify.h>
 
-// Moved from header file
 using namespace std;
-
+using namespace tau;
 
 static int Tau_snapshot_writeSnapshot(const char *name, int to_buffer);
 static int startNewSnapshotFile(char *threadid, int tid, int to_buffer);
@@ -59,7 +58,7 @@ static void writeEventXML(Tau_util_outputDevice *out, int id, FunctionInfo *fi) 
 
 static void writeUserEventXML(Tau_util_outputDevice *out, int id, TauUserEvent *ue) {
   Tau_util_output (out, "<userevent id=\"%d\"><name>", id);
-  Tau_XML_writeString(out, ue->GetEventName());
+  Tau_XML_writeString(out, ue->GetName().c_str());
   Tau_util_output (out, "</name></userevent>\n");
   return;
 }

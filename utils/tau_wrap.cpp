@@ -754,7 +754,7 @@ void printRoutineInOutputFile(pdbRoutine *r, ofstream& header, ofstream& impl, s
   } /* if (runtime == RUNTIME_INTERCEPT) */
 
   if (!isVoid) {
-    impl<<"  "<<sig.returntypename<< " retval = 0;"<<endl;
+    impl<<"  "<<sig.returntypename<< " retval;"<<endl;
   }
 
   /* Now put in the body of the routine */

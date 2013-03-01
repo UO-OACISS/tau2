@@ -383,7 +383,7 @@ void Tau_CuptiLayer_Initialize_Map()
 	for (int i=0; i<deviceCount; i++)
 	{
 		er = cuDeviceGet(&currDevice, i);
-		//printf("looping, i=%d, currDevice=%d.\n", i, currDevice);
+		printf("looping, i=%d, currDevice=%d.\n", i, currDevice);
 		CHECK_CU_ERROR( er, "cuDeviceGet" );
 		err = cuptiDeviceGetNumEventDomains(currDevice, &domainCount );
 		CHECK_CUPTI_ERROR( err, "cuptiDeviceGetNumEventDomains" );
@@ -391,13 +391,14 @@ void Tau_CuptiLayer_Initialize_Map()
 			printf( "No domain is exposed by dev = %d\n", i );
 			exit(1);
 		}
+		//printf("found %d domains.\n", domainCount);
 	
 		for (int j=0; j<domainCount; j++)
 		{
 			
 			er = cuDeviceGet(&currDevice, i);
 			CHECK_CU_ERROR( er, "cuDeviceGet" );
-			//printf("looping, j=%d.\n", j);
+			//printf("looping, j=%d. domainCount=%d \n", j, domainCount);
 			//printf("(1) currDevice=%d.\n", currDevice);
 			err = cuptiDeviceGetNumEventDomains(currDevice, &num_domains );
 			CHECK_CUPTI_ERROR( err, "cuptiDeviceGetNumEventDomains" );
@@ -424,7 +425,11 @@ void Tau_CuptiLayer_Initialize_Map()
 				//ev->print();
 				Tau_CuptiLayer_Counter_Map.insert(std::make_pair(ev->tag, ev));
 			}
+		
+			err = cuptiDeviceGetNumEventDomains(currDevice, &domainCount );
+			CHECK_CUPTI_ERROR( err, "cuptiDeviceGetNumEventDomains" );
 		}
+		cuDeviceGetCount(&deviceCount);
 	}
 	//CuptiCounterEvent* ev = new CuptiCounterEvent(1,1,7);
 	//Tau_CuptiLayer_Counter_Map.insert(std::make_pair(ev->tag, ev));
