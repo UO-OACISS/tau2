@@ -1,5 +1,7 @@
 package edu.uoregon.tau.perfexplorer.client;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ListIterator;
 import javax.swing.*;
 import javax.swing.tree.*;
@@ -8,11 +10,12 @@ import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
+
 import edu.uoregon.tau.perfdmf.*;
 import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
 import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
-public class PerfExplorerJTree extends JTree {
+public class PerfExplorerJTree extends JTree{
 
     /**
      * 
@@ -461,5 +464,7 @@ public class PerfExplorerJTree extends JTree {
 	    collapsePath(parent);
 	}
     }
+
+	
 
 }

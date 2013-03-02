@@ -109,7 +109,9 @@ public class View implements Serializable {
 
 	public static View VirtualView(View parent) {
 		View view = new View(parent);
-		
+		/*
+		 * 0 results in checking the fields, -1 returns all views, -2 provides the desired behavior
+		 */
 		view.viewID=-2;
 		view.parent=parent;
 		view.fields.set(fieldNames.indexOf("NAME"), "All Trials");

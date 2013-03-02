@@ -31,6 +31,7 @@ import java.util.Set;
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.DBDataSource;
 import edu.uoregon.tau.perfdmf.DataSource;
+import edu.uoregon.tau.perfdmf.Database;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.DatabaseException;
 import edu.uoregon.tau.perfdmf.Experiment;
@@ -101,6 +102,19 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	
 	public DatabaseAPI getSession() {
 		return session;
+	}
+	
+	public DatabaseAPI getSession(Database database){
+		if(database==null)
+			return null;
+		
+		Iterator<DatabaseAPI> sit = sessions.iterator();
+		while(sit.hasNext()){
+			DatabaseAPI next = sit.next();
+			if(next.getDb().getDatabase().getID()==database.getID())
+				return next;
+		}
+		return null;
 	}
 
 	/**
