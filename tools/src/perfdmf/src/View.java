@@ -435,7 +435,12 @@ public class View implements Serializable {
 		setField(i, field);
 	}
     public void setField(int idx, String field) {
-        if (DBConnector.isIntegerType(database.getAppFieldTypes()[idx]) && field != null) {
+    	int[] types = database.getAppFieldTypes();
+    	if(types.length<=idx){
+    		System.err.println("Warning: Invalid Index for App Field Types");
+    		return;
+    	}
+        if (DBConnector.isIntegerType(types[idx]) && field != null) {
             try {
                 //int test = 
                 	Integer.parseInt(field);
