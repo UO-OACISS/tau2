@@ -5,7 +5,6 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.sql.SQLException;
-import java.util.Enumeration;
 
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
@@ -17,7 +16,6 @@ import javax.swing.tree.TreePath;
 
 import edu.uoregon.tau.common.TreeUI;
 import edu.uoregon.tau.perfdmf.Application;
-import edu.uoregon.tau.perfdmf.Database;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.DatabaseException;
 import edu.uoregon.tau.perfdmf.Experiment;
@@ -32,6 +30,7 @@ public class PerfExplorerTreeMouseListener implements MouseListener,
 	private PerfExplorerJTree tree;
 	private Object clickedOnObject = null;
 	private DefaultMutableTreeNode selectedNode = null;
+	private TreePath fullPathNode = null;
 	JPopupMenu perfExPopup = null;
 	JPopupMenu multiPopup = null;
 
@@ -43,33 +42,24 @@ public class PerfExplorerTreeMouseListener implements MouseListener,
 				String arg = evt.getActionCommand();
 
 				if (arg.equals("Delete")) {
-					 handleDelete(clickedOnObject,true);
+					handleDelete(clickedOnObject, true);
 				} else if (arg.equals("Rename")) {
+					if (clickedOnObject instanceof Application) {
+						tree.startEditingAtPath(fullPathNode);
+					} else if (clickedOnObject instanceof Experiment) {
+						tree.startEditingAtPath(fullPathNode);
+					} else if (clickedOnObject instanceof Trial) {
+						tree.startEditingAtPath(fullPathNode);
+					} else if (clickedOnObject instanceof View) {
+						tree.startEditingAtPath(new TreePath(
+								((View) clickedOnObject).getDMTN().getPath()));
+					} else if (clickedOnObject instanceof Metric) {
+						tree.startEditingAtPath(fullPathNode);
+					}
 
-					// if (clickedOnObject instanceof ParaProfApplication) {
-					// this.startEditingAtPath(new TreePath(
-					// ((ParaProfApplication) clickedOnObject).getDMTN()
-					// .getPath()));
-					// } else if (clickedOnObject instanceof ParaProfExperiment)
-					// {
-					// this.startEditingAtPath(new TreePath(
-					// ((ParaProfExperiment) clickedOnObject).getDMTN()
-					// .getPath()));
-					// } else if (clickedOnObject instanceof ParaProfTrial) {
-					// this.startEditingAtPath(new TreePath(
-					// ((ParaProfTrial) clickedOnObject).getDMTN()
-					// .getPath()));
-					// } else if (clickedOnObject instanceof ParaProfView) {
-					// this.startEditingAtPath(new TreePath(
-					// ((ParaProfView) clickedOnObject).getDMTN()
-					// .getPath()));
-					// } else if (clickedOnObject instanceof ParaProfMetric) {
-					// this.startEditingAtPath(new TreePath(
-					// ((ParaProfMetric) clickedOnObject).getDMTN()
-					// .getPath()));
-					// }
-					//
 				}
+				clickedOnObject = null;
+				fullPathNode = null;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -137,11 +127,11 @@ public class PerfExplorerTreeMouseListener implements MouseListener,
 			}
 		} else if (paths.length == 1) { // only one item is selected
 			TreePath path = paths[0];
-			selectedNode = (DefaultMutableTreeNode) path
-					.getLastPathComponent();
+			fullPathNode = path;
+			selectedNode = (DefaultMutableTreeNode) path.getLastPathComponent();
 			Object userObject = selectedNode.getUserObject();
 
-			//System.out.println(userObject.getClass());
+			// System.out.println(userObject.getClass());
 
 			if (userObject instanceof Application) {
 				clickedOnObject = userObject;
@@ -249,148 +239,154 @@ public class PerfExplorerTreeMouseListener implements MouseListener,
 
 	}
 
-	
-	private void handleDelete(Object object, boolean ShowConfirmation) throws SQLException,DatabaseException {
+	private void handleDelete(Object object, boolean ShowConfirmation)
+			throws SQLException, DatabaseException {
 
 		if (ShowConfirmation) {
-			int confirm = JOptionPane.showConfirmDialog(tree,
-					"Are you sure you want to permanently delete this item from the database and all views?",
-					"Confirm Delete", JOptionPane.YES_NO_OPTION);
+			int confirm = JOptionPane
+					.showConfirmDialog(
+							tree,
+							"Are you sure you want to permanently delete this item from the database and all views?",
+							"Confirm Delete", JOptionPane.YES_NO_OPTION);
 
 			if (confirm != 0) {
 				return;
 			}
 		}
-		
-		
+
 		if (object instanceof TreePath[]) {
 			TreePath[] paths = (TreePath[]) object;
 			for (int i = 0; i < paths.length; i++) {
 				DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) paths[i]
-				                                                                     .getLastPathComponent();
+						.getLastPathComponent();
 				Object userObject = selectedNode.getUserObject();
 				handleDelete(userObject, false);
 			}
 
 		} else if (object instanceof Application) {
 			Application application = (Application) object;
-			
-				DatabaseAPI databaseAPI = PerfExplorerServer.getServer().getSession(application.getDatabase());
-						
-				if (databaseAPI != null) {
-					databaseAPI.deleteApplication(application.getID());
-					deleteTreeItem(application);
-					//databaseAPI.terminate();
-					// Remove any loaded trials associated with this
-					// application.
-//					for (Enumeration<ParaProfTrial> e = loadedDBTrials
-//							.elements(); e.hasMoreElements();) {
-//						ParaProfTrial loadedTrial = e.nextElement();
-//						if (loadedTrial.getApplicationID() == application
-//								.getID() && loadedTrial.loading() == false) {
-//							loadedDBTrials.remove(loadedTrial);
-//						}
-//					}
-//					if (application.getDMTN() != null)
-//						getTreeModel().removeNodeFromParent(
-//								application.getDMTN());
-//				}
-				}
-			
+
+			DatabaseAPI databaseAPI = PerfExplorerServer.getServer()
+					.getSession(application.getDatabase());
+
+			if (databaseAPI != null) {
+				databaseAPI.deleteApplication(application.getID());
+				deleteTreeItem(application);
+				// databaseAPI.terminate();
+				// Remove any loaded trials associated with this
+				// application.
+				// for (Enumeration<ParaProfTrial> e = loadedDBTrials
+				// .elements(); e.hasMoreElements();) {
+				// ParaProfTrial loadedTrial = e.nextElement();
+				// if (loadedTrial.getApplicationID() == application
+				// .getID() && loadedTrial.loading() == false) {
+				// loadedDBTrials.remove(loadedTrial);
+				// }
+				// }
+				// if (application.getDMTN() != null)
+				// getTreeModel().removeNodeFromParent(
+				// application.getDMTN());
+				// }
+			}
+
 		} else if (object instanceof Experiment) {
 			Experiment experiment = (Experiment) object;
-			//if (experiment.dBExperiment()) {
+			// if (experiment.dBExperiment()) {
 
-				//DatabaseAPI databaseAPI = this.getDatabaseAPI(experiment.getDatabase());
-				DatabaseAPI databaseAPI = PerfExplorerServer.getServer().getSession(experiment.getDatabase());
-				if (databaseAPI != null) {
-					databaseAPI.deleteExperiment(experiment.getID());
-					deleteTreeItem(experiment);
-					//databaseAPI.terminate();
-					// Remove any loaded trials associated with this
-					// application.
-//					for (Enumeration<ParaProfTrial> e = loadedDBTrials
-//							.elements(); e.hasMoreElements();) {
-//						ParaProfTrial loadedTrial = e.nextElement();
-//						if (loadedTrial.getApplicationID() == experiment
-//								.getApplicationID()
-//								&& loadedTrial.getExperimentID() == experiment
-//								.getID()
-//								&& loadedTrial.loading() == false) {
-//							loadedDBTrials.remove(loadedTrial);
-//						}
-//					}
-//					if (experiment.getDMTN() != null) {
-//						getTreeModel().removeNodeFromParent(
-//								experiment.getDMTN());
-//					}
-				//}
-			} 
-//				else {
-//				experiment.getApplication().removeExperiment(experiment);
-//				getTreeModel().removeNodeFromParent(experiment.getDMTN());
-//			}
+			// DatabaseAPI databaseAPI =
+			// this.getDatabaseAPI(experiment.getDatabase());
+			DatabaseAPI databaseAPI = PerfExplorerServer.getServer()
+					.getSession(experiment.getDatabase());
+			if (databaseAPI != null) {
+				databaseAPI.deleteExperiment(experiment.getID());
+				deleteTreeItem(experiment);
+				// databaseAPI.terminate();
+				// Remove any loaded trials associated with this
+				// application.
+				// for (Enumeration<ParaProfTrial> e = loadedDBTrials
+				// .elements(); e.hasMoreElements();) {
+				// ParaProfTrial loadedTrial = e.nextElement();
+				// if (loadedTrial.getApplicationID() == experiment
+				// .getApplicationID()
+				// && loadedTrial.getExperimentID() == experiment
+				// .getID()
+				// && loadedTrial.loading() == false) {
+				// loadedDBTrials.remove(loadedTrial);
+				// }
+				// }
+				// if (experiment.getDMTN() != null) {
+				// getTreeModel().removeNodeFromParent(
+				// experiment.getDMTN());
+				// }
+				// }
+			}
+			// else {
+			// experiment.getApplication().removeExperiment(experiment);
+			// getTreeModel().removeNodeFromParent(experiment.getDMTN());
+			// }
 
 		} else if (object instanceof Trial) {
 			Trial trial = (Trial) object;
-			//if (ppTrial.dBTrial()) {
-			DatabaseAPI databaseAPI = PerfExplorerServer.getServer().getSession(trial.getDatabase());
-				//DatabaseAPI databaseAPI = this.getDatabaseAPI(ppTrial.getDatabase());
-				if (databaseAPI != null) {
-					databaseAPI.deleteTrial(trial.getID());
-					deleteTreeItem(trial);
-					//databaseAPI.terminate();
-					// Remove any loaded trials associated with this
-					// application.
-//					for (Enumeration<ParaProfTrial> e = loadedDBTrials
-//							.elements(); e.hasMoreElements();) {
-//						ParaProfTrial loadedTrial = e.nextElement();
-//						if (loadedTrial.getApplicationID() == ppTrial
-//								.getApplicationID()
-//								&& loadedTrial.getExperimentID() == ppTrial
-//								.getID()
-//								&& loadedTrial.getID() == ppTrial.getID()
-//								&& loadedTrial.loading() == false) {
-//							loadedDBTrials.remove(loadedTrial);
-//						}
-//					}
-//					getTreeModel().removeNodeFromParent(ppTrial.getDMTN());
-				}
-//			} else {
-//				ppTrial.getExperiment().removeTrial(ppTrial);
-//				getTreeModel().removeNodeFromParent(ppTrial.getDMTN());
+			// if (ppTrial.dBTrial()) {
+			DatabaseAPI databaseAPI = PerfExplorerServer.getServer()
+					.getSession(trial.getDatabase());
+			// DatabaseAPI databaseAPI =
+			// this.getDatabaseAPI(ppTrial.getDatabase());
+			if (databaseAPI != null) {
+				databaseAPI.deleteTrial(trial.getID());
+				deleteTreeItem(trial);
+				// databaseAPI.terminate();
+				// Remove any loaded trials associated with this
+				// application.
+				// for (Enumeration<ParaProfTrial> e = loadedDBTrials
+				// .elements(); e.hasMoreElements();) {
+				// ParaProfTrial loadedTrial = e.nextElement();
+				// if (loadedTrial.getApplicationID() == ppTrial
+				// .getApplicationID()
+				// && loadedTrial.getExperimentID() == ppTrial
+				// .getID()
+				// && loadedTrial.getID() == ppTrial.getID()
+				// && loadedTrial.loading() == false) {
+				// loadedDBTrials.remove(loadedTrial);
+				// }
+				// }
+				// getTreeModel().removeNodeFromParent(ppTrial.getDMTN());
 			}
-		 
-//	else if (object instanceof ParaProfMetric) {
-//			ParaProfMetric ppMetric = (ParaProfMetric) object;
-//			deleteMetric(ppMetric);
-//		} else if (object instanceof DefaultMutableTreeNode){
-//			
-//			View view = (View) ((DefaultMutableTreeNode)object).getUserObject();
-//			deleteView(view);
-//		} 
-		else if (object instanceof View){
-			
+			// } else {
+			// ppTrial.getExperiment().removeTrial(ppTrial);
+			// getTreeModel().removeNodeFromParent(ppTrial.getDMTN());
+		}
+
+		// else if (object instanceof ParaProfMetric) {
+		// ParaProfMetric ppMetric = (ParaProfMetric) object;
+		// deleteMetric(ppMetric);
+		// } else if (object instanceof DefaultMutableTreeNode){
+		//
+		// View view = (View) ((DefaultMutableTreeNode)object).getUserObject();
+		// deleteView(view);
+		// }
+		else if (object instanceof View) {
+
 			View view = (View) object;
 			deleteView(view);
 		}
-		
+
 	}
-	
-	private void deleteTreeItem(Object target){
-		if(selectedNode!=null && selectedNode.getUserObject().equals(target))
-		{
-			DefaultTreeModel dtm = (DefaultTreeModel)tree.getModel();
-			
+
+	private void deleteTreeItem(Object target) {
+		if (selectedNode != null && selectedNode.getUserObject().equals(target)) {
+			DefaultTreeModel dtm = (DefaultTreeModel) tree.getModel();
+
 			TreeNode parent = selectedNode.getParent();
-			selectedNode.removeFromParent();	
+			selectedNode.removeFromParent();
 			dtm.reload(parent);
 		}
 	}
-	
-	private void deleteView(View view)  {
-		DatabaseAPI dbAPI = PerfExplorerServer.getServer().getSession(view.getDatabase());
-	
+
+	private void deleteView(View view) {
+		DatabaseAPI dbAPI = PerfExplorerServer.getServer().getSession(
+				view.getDatabase());
+
 		try {
 			View.deleteView(view.getID(), dbAPI.getDb());
 			deleteTreeItem(view);
