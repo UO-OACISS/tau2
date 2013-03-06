@@ -62,5 +62,5 @@ libTauMemoryWrap.a: $(STATIC_OBJ)
 	$(CC) -c $(CFLAGS) $< -o $@ 
 
 clean:
-	/bin/rm -f libTauMemoryWrap.a $(TAU_MEMORYWRAP_SHARED) $(DYNAMIC_OBJ) $(STATIC_OBJ)
+	/bin/rm -f libTauMemoryWrap.a $(TAU_MEMORYWRAP_SHARED) $(DYNAMIC_OBJ) $(STATIC_OBJ) memory_wrapper.o 
 
