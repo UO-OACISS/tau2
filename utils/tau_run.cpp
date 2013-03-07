@@ -745,7 +745,9 @@ char * getGCCHOME(void) {
 
 bool loadDependentLibraries(BPatch_binaryEdit *bedit, char *bindings) {
   //old:    const string GCCHOME = "/usr/lib/gcc/i586-redhat-linux/4.4.1";
+#ifdef OLD
   const string GCCHOME = string(getGCCHOME());
+#endif /* OLD */
 
   // Order of load matters, just like command line arguments to a standalone linker
 

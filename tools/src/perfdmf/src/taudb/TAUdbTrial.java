@@ -1,11 +1,9 @@
 package edu.uoregon.tau.perfdmf.taudb;
 
-import java.io.InputStream;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -13,7 +11,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
-import edu.uoregon.tau.common.Gzip;
 import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
 import edu.uoregon.tau.perfdmf.DataSource;
 import edu.uoregon.tau.perfdmf.Function;
@@ -28,6 +25,10 @@ import edu.uoregon.tau.perfdmf.database.DB;
 public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 	// public class TAUdbTrial {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8756722915938384030L;
 	public static final String[] TRIAL_COLUMNS = { "name", "data_source",
 			"node_count", "contexts_per_node", "threads_per_context",
 			"total_threads" };
@@ -478,7 +479,7 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 		PreparedStatement statement;
 		try {
 			statement = db.prepareStatement(sql);
-			statement.setString(1, name);
+			statement.setString(1, newName);
 			statement.setInt(2, trialID);
 			statement.executeUpdate();
 			statement.close();
