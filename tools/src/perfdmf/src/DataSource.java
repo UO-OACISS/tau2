@@ -60,7 +60,7 @@ public abstract class DataSource {
 
     public static String formatTypeStrings[] = { "ParaProf Packed Profile", "TAU profiles", "TAU Snapshot", "Dynaprof", "MpiP", "HPMToolkit",
             "Gprof", "PSRun", "Tau pprof.dat", "Cube", "HPCToolkit", "ompP", "PERI-XML",
-            "General Purpose Timing Library (GPTL)", "Paraver", "IPM", "Google PerfTools", "Cube 3 (Old parser)" };//,"Darshan"
+            "General Purpose Timing Library (GPTL)", "Paraver", "IPM", "Google PerfTools", "Cube 3 (Old parser)", "Darshan" };
 
     protected static boolean meanIncludeNulls = true;
 
