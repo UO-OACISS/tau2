@@ -3556,6 +3556,12 @@ case $cxx_compiler in
     *mpicxx)
         internal_compiler=`$cxx_compiler -show | awk '{ print $1;}'`
         case $internal_compiler in 
+           *bgclang++)
+              tauoptions="${tauoptions}-clang"
+	      if [ $machine = bgq ] ; then
+                 fixmakeargs="$fixmakeargs CLANG BGCLANG"
+	      fi
+	      ;;
            *g++)
 	      if [ $machine = bgq ] ; then
 	        echo "Using GNU Compilers for BGQ"
@@ -3576,6 +3582,7 @@ case $cxx_compiler in
 
               ;;
            *clang*)
+              tauoptions="${tauoptions}-clang"
 	      echo "Using CLANG Compilers"
               fixmakeargs="$fixmakeargs CLANG"
 	      if [ $machine = apple ]; then

@@ -109,7 +109,9 @@ public class View implements Serializable {
 
 	public static View VirtualView(View parent) {
 		View view = new View(parent);
-		
+		/*
+		 * 0 results in checking the fields, -1 returns all views, -2 provides the desired behavior
+		 */
 		view.viewID=-2;
 		view.parent=parent;
 		view.fields.set(fieldNames.indexOf("NAME"), "All Trials");
@@ -433,7 +435,12 @@ public class View implements Serializable {
 		setField(i, field);
 	}
     public void setField(int idx, String field) {
-        if (DBConnector.isIntegerType(database.getAppFieldTypes()[idx]) && field != null) {
+    	int[] types = database.getAppFieldTypes();
+    	if(types.length<=idx){
+    		System.err.println("Warning: Invalid Index for App Field Types");
+    		return;
+    	}
+        if (DBConnector.isIntegerType(types[idx]) && field != null) {
             try {
                 //int test = 
                 	Integer.parseInt(field);
