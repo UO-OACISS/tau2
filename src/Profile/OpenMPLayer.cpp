@@ -83,7 +83,6 @@ int OpenMPLayer::numThreads()
 int OpenMPLayer::GetTauThreadId(void)
 {
 #ifdef TAU_OPENMP
-
   int omp_thread_id = omp_get_thread_num();
 
 #ifdef TAU_OPENMP_NESTED
@@ -101,6 +100,8 @@ int OpenMPLayer::GetTauThreadId(void)
   }
 #endif /* TAU_OPENMP_NESTED */
 
+#if 0
+  /* omp_set_lock leading to deadlocks from RtsLayer::LockEnv().  This block disabled for now. */
   int tau_thread_id;
   if (omp_thread_id == 0) {
     tau_thread_id = omp_thread_id;
@@ -124,6 +125,10 @@ int OpenMPLayer::GetTauThreadId(void)
   }
 
   return tau_thread_id;
+#else
+  return omp_thread_id;
+#endif /* Disabled code */
+
 #else
   return 0;
 #endif /* TAU_OPENMP */

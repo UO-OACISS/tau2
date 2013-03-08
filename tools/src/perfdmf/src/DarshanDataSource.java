@@ -18,17 +18,15 @@ public class DarshanDataSource extends DataSource {
 	private int nprocs = 1;
 
 	public static void main(String[] args){
-		String filename = "/Users/khuck/src/darshan-2.2.4/darshan-util/darshan.log";
+		String filename = "/home/wspear/Code/darshan-2.2.4/darshan-util/darshan.log";
 		File[] files = new File[1];
 		files[0] = new File(filename);
 		DarshanDataSource ds = new DarshanDataSource(files);
 		try {
 			ds.load();
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -36,6 +34,14 @@ public class DarshanDataSource extends DataSource {
 	public DarshanDataSource(File[] files) {
 		super();
 		this.files = files;
+	}
+	
+	public DarshanDataSource(File file) {
+		super();
+		if(files==null){
+			files=new File[1];
+		}
+		this.files[0] = file;
 	}
 
 	private File files[];
@@ -86,8 +92,8 @@ public class DarshanDataSource extends DataSource {
 		this.generateDerivedData();
 
 		time = (System.currentTimeMillis()) - time;
-		//System.out.println("Done processing data!");
-		//System.out.println("Time to process (in milliseconds): " + time);
+		System.out.println("Done processing data!");
+		System.out.println("Time to process (in milliseconds): " + time);
 	}
 
 	private void processComment(String inputString) {

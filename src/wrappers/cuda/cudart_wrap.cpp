@@ -56,7 +56,7 @@ void tau_track_memory(int kind, int count)
 
 //cudaThreadExit is depercated to be replaced with cudaDeviceReset.
 
-#if CUDART_VERSION == 4000
+#if CUDART_VERSION >= 4000
 cudaError_t cudaDeviceReset() {
 
   typedef cudaError_t (*cudaDeviceReset_p) ();

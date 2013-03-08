@@ -152,6 +152,9 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
 
+  // Use LockDB to avoid a possible race condition.
+  RtsLayer::LockDB();
+
   //Need to keep track of all the groups this function is a member of.
   AllGroups = strip_tau_group(ProfileGroupName);
 
@@ -160,9 +163,6 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   //   is ready at this point.
   Tau_MemMgr_initIfNecessary();
 #endif  
-
-  RtsLayer::LockDB();
-  // Use LockDB to avoid a possible race condition.
 
   GroupName = strdup(RtsLayer::PrimaryGroup(AllGroups).c_str());
 
@@ -262,9 +262,6 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
   }
 #endif
 
-  TauTraceSetFlushEvents(1);
-  RtsLayer::UnLockDB();
-
   DEBUGPROFMSG("nct "<< RtsLayer::myNode() <<","
       << RtsLayer::myContext() << ", " << tid
       << " FunctionInfo::FunctionInfo(n,t) : Name : "<< GetName()
@@ -291,6 +288,9 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *Profile
     }
   }
 #endif //RENCI_STFF
+
+  TauTraceSetFlushEvents(1);
+  RtsLayer::UnLockDB();
 }
 
 //////////////////////////////////////////////////////////////////////
