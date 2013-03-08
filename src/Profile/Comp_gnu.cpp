@@ -166,6 +166,11 @@ void profile_func_enter(void*, void*);
 __attribute__((no_instrument_function))
 void profile_func_exit(void*, void*);
 
+
+//#endif
+
+static bool in_hash = false;
+
 #if (defined(TAU_SICORTEX) || defined(TAU_SCOREP))
 #pragma weak __cyg_profile_func_enter
 #endif /* SICORTEX || TAU_SCOREP */
@@ -186,20 +191,26 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 
 	unsigned long addr = Tau_convert_ptr_to_unsigned_long(funcptr);
 
+  //protect aginst reentrancy.
+  if (in_hash) return;
+  in_hash = true;
+  
   // Get previously hashed info, or efficiently create
   // a new hash node if it didn't already exist
 	HashNode & hn = TheHashTable()[addr];
+  in_hash = false;
 
 	// Skip excluded functions
 	if (hn.excluded) return;
 
+  if (Tau_global_get_insideTAU() > 0) return;
   TauInternalFunctionGuard protects_this_function;
 
 	//prevent entry into cyg_profile functions while still initializing TAU
 	if (Tau_init_initializingTAU()) return;
 
 	int tid = Tau_get_tid();
-
+			
 	if (gnu_init) {
 		gnu_init = false;
 
@@ -210,10 +221,6 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 
 		Tau_init_initializeTAU();
 
-		//GNU has some internal routines that occur before main in entered. To
-		//ensure that a single top-level timer is present start the dummy '.TAU
-		//application' timer. -SB
-		Tau_create_top_level_timer_if_necessary();
 		if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
 			bfdUnitHandle = Tau_bfd_registerUnit();
 		}
@@ -249,6 +256,8 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 	}
 	compInstDisabled[tid] = 1;
 
+  Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, hn.info);
+
 	// Start the timer if it's not an excluded function
 	if(hn.fi == NULL) {
 		RtsLayer::LockDB(); // lock, then check again
@@ -259,6 +268,16 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 			if(hn.info.probeAddr == 0) {
 				Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, hn.info);
 			}
+
+      //We can remove these functions from the profile as well if we choose.
+      //strncmp(hn.info.funcname, "std::", 5)  == 0||
+      //strncmp(hn.info.funcname, "__gnu_cxx::", 11) == 0)
+      //
+      //Do not profile this routine, causes crashes with the intel compilers.
+      if (strcmp(hn.info.funcname, "__sti__$E") == 0)
+      {
+        hn.excluded = true;
+      }
 
 			// Tau_bfd_resolveBfdInfo should have made all fields non-NULL,
 			// but we're going to be extra safe in case something changes
@@ -288,8 +307,14 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 		}
 		RtsLayer::UnLockDB();
 	}
-	Tau_start_timer(hn.fi, 0, tid);
-		
+  if (hn.excluded == false)
+  {
+		//GNU has some internal routines that occur before main in entered. To
+		//ensure that a single top-level timer is present start the dummy '.TAU
+		//application' timer. -SB
+		Tau_create_top_level_timer_if_necessary();
+	  Tau_start_timer(hn.fi, 0, tid);
+	}	
 	if (!(hn.fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
 		//printf("COMP_GNU >>>>>>>>>> Excluding: %s, addr: %d, throttled.\n", hn.fi->GetName(), addr);
 		hn.excluded = true;
@@ -332,8 +357,16 @@ void __cyg_profile_func_exit(void* func, void* callsite)
 #endif
 	unsigned long addr = Tau_convert_ptr_to_unsigned_long(funcptr);
 
-	HashNode & hn = TheHashTable()[addr];
-	if (!hn.excluded) {
+  //protect aginst reentrancy.
+  if (in_hash) return;
+  in_hash = true;
+	
+  HashNode & hn = TheHashTable()[addr];
+  in_hash = false;
+	
+  if (!hn.excluded) {
+
+    if (Tau_global_get_insideTAU() > 0) return;
     TauInternalFunctionGuard protects_this_function;
 
 	  int tid = Tau_get_tid();
