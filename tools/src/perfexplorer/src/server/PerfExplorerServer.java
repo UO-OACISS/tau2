@@ -21,9 +21,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.ListIterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -31,17 +31,17 @@ import java.util.Set;
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.DBDataSource;
 import edu.uoregon.tau.perfdmf.DataSource;
+import edu.uoregon.tau.perfdmf.Database;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.DatabaseException;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Function;
-import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfdmf.View;
+import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfdmf.taudb.TAUdbDataSource;
 import edu.uoregon.tau.perfdmf.taudb.TAUdbDatabaseAPI;
-import edu.uoregon.tau.perfdmf.View;
-import edu.uoregon.tau.perfdmf.Trial;
-import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfexplorer.common.AnalysisType;
 import edu.uoregon.tau.perfexplorer.common.ChartDataType;
 import edu.uoregon.tau.perfexplorer.common.ChartType;
@@ -101,6 +101,19 @@ public class PerfExplorerServer extends UnicastRemoteObject implements RMIPerfEx
 	
 	public DatabaseAPI getSession() {
 		return session;
+	}
+	
+	public DatabaseAPI getSession(Database database){
+		if(database==null)
+			return null;
+		
+		Iterator<DatabaseAPI> sit = sessions.iterator();
+		while(sit.hasNext()){
+			DatabaseAPI next = sit.next();
+			if(next.getDb().getDatabase().getID()==database.getID())
+				return next;
+		}
+		return null;
 	}
 
 	/**

@@ -987,13 +987,14 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 //			tempSize[i]=tempSize[i]+1;
 //		}
 		
-//		if(tempSize.length==6){
-//			
-//			tsizes[0]=tempSize[4]*tempSize[5]+tempSize[4]*offset;
-//			tsizes[1]=tempSize[0]*tempSize[1]+tempSize[0]*offset;
-//			tsizes[2]=tempSize[2]*tempSize[3]+tempSize[2]*offset;
-//			
-//		}
+		if(tempSize.length==6){
+			
+			tsizes[0]=tempSize[4]*tempSize[5]+tempSize[4]*offset;
+			tsizes[1]=tempSize[0]*tempSize[1]+tempSize[0]*offset;
+			tsizes[2]=tempSize[2]*tempSize[3]+tempSize[2]*offset;
+			
+		}
+		else
 //		else if(tempSize.length==5){
 //			tsizes[0]=tempSize[4]*offset;
 //			tsizes[1]=tempSize[0]*tempSize[1]+tempSize[0]*offset;
