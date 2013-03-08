@@ -149,8 +149,9 @@ string TauFormulateNameString(Profiler * current)
   ostringstream buff;
 
   int depth = GetCallpathDepth();
-  Profiler * path[depth];
-  int i=depth-1;
+  int i;
+
+  Profiler ** path = (Profiler**)malloc(depth*sizeof(Profiler*));
 
 #ifdef TAU_PROFILEPHASE
 
@@ -167,7 +168,7 @@ string TauFormulateNameString(Profiler * current)
 #else /* TAU_PROFILEPHASE */
 
   // Reverse the callpath to avoid string copies
-  for (; current && i >= 0; --i) {
+  for (i=depth-1; current && i >= 0; --i) {
     path[i] = current;
     current = current->ParentProfiler;
   }
@@ -181,13 +182,15 @@ string TauFormulateNameString(Profiler * current)
     fi = path[i]->ThisFunction;
     buff << fi->GetName();
     if (strlen(fi->GetType()) > 0)
-      buff << ' ' << fi->GetType();
+      buff << " " << fi->GetType();
     buff << " => ";
   }
   fi = path[i]->ThisFunction;
   buff << fi->GetName();
   if (strlen(fi->GetType()) > 0)
-    buff << ' ' << fi->GetType();
+    buff << " " << fi->GetType();
+
+  free((void*)path);
 
   // Return a new string object.
   // A smart STL implementation will not allocate a new buffer.
@@ -221,27 +224,19 @@ void Profiler::CallPathStart(int tid)
     }
 #endif /* TAU_WINDOWS */
 
+    RtsLayer::LockDB();
     CallpathMap & pathMap = TheCallpathMap();
     CallpathMap::iterator it = pathMap.find(comparison);
-
     if (it == pathMap.end()) {
-      RtsLayer::LockEnv();
-      it = pathMap.find(comparison);
-      if (it == pathMap.end()) {
-        string callpathname = TauFormulateNameString(this);
-        string grname = string("TAU_CALLPATH|") + RtsLayer::PrimaryGroup(ThisFunction->GetAllGroups());
-
-        CallPathFunction = new FunctionInfo(callpathname, "", ThisFunction->GetProfileGroup(), grname.c_str(), true);
-        pathMap[comparison] = CallPathFunction;
-      } else {
-        CallPathFunction = it->second;
-        delete[] comparison;    // free up memory when name is found
-      }
-      RtsLayer::UnLockEnv();
+      string callpathname = TauFormulateNameString(this);
+      string grname = string("TAU_CALLPATH|") + RtsLayer::PrimaryGroup(ThisFunction->GetAllGroups());
+      CallPathFunction = new FunctionInfo(callpathname, "", ThisFunction->GetProfileGroup(), grname.c_str(), true);
+      pathMap[comparison] = CallPathFunction;
     } else {
       CallPathFunction = it->second;
       delete[] comparison;    // free up memory when name is found
     }
+    RtsLayer::UnLockDB();
 
     // Set up metrics. Increment number of calls and subrs
     CallPathFunction->IncrNumCalls(tid);
