@@ -68,10 +68,10 @@ using namespace std;
 /* if we are doing EBS sampling, set the default sampling period */
 #define TAU_EBS_DEFAULT 0
 #define TAU_EBS_KEEP_UNRESOLVED_ADDR_DEFAULT 0
-#if (defined (TAU_BGL) || defined(TAU_BGP) || defined(TAU_BGQ))
+#if (defined (TAU_BGL) || defined(TAU_BGP))
 #define TAU_EBS_PERIOD_DEFAULT 20000 // Kevin made this bigger,
 #else
-#if (defined (TAU_CRAYCNL))
+#if (defined (TAU_CRAYCNL) || defined(TAU_BGQ))
 #define TAU_EBS_PERIOD_DEFAULT 50000 // Sameer made this bigger,
 #else 
 #define TAU_EBS_PERIOD_DEFAULT 10000 // Kevin made this bigger,

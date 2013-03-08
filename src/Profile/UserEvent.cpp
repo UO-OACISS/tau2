@@ -373,9 +373,15 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
       RtsLayer::LockEnv();
       it = contextMap.find(comparison);
       if (it == contextMap.end()) {
-        contextEvent = new TauUserEvent(
+        if (current != NULL) {
+          contextEvent = new TauUserEvent(
             FormulateContextNameString(current),
             userEvent->IsMonotonicallyIncreasing());
+        } else {
+          contextEvent = new TauUserEvent(
+            string(""),
+            userEvent->IsMonotonicallyIncreasing());
+        }
         contextMap[comparison] = contextEvent;
       } else {
         contextEvent = it->second;
