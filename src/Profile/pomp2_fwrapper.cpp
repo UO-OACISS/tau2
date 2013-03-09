@@ -136,7 +136,7 @@ void FSUB(POMP2_Parallel_fork)(POMP2_Region_handle* regionHandle,
                                int*                 num_threads,
                                POMP2_Task_handle*   pomp2_old_task,
                                char*                ctc_string) {
-  POMP2_Parallel_fork(regionHandle, *if_clause, *num_threads, pomp2_old_task, "dummy");
+  POMP2_Parallel_fork(regionHandle, *if_clause, *num_threads, pomp2_old_task, ctc_string); 
 }
 
 void FSUB(POMP2_Parallel_join)(POMP2_Region_handle* regionHandle,
