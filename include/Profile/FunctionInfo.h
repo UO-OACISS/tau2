@@ -110,12 +110,12 @@ public:
   //static TAU_STD_NAMESPACE vector<FunctionInfo*> FunctionDB[TAU_MAX_THREADS];
 
 #ifdef TAU_PROFILEMEMORY
-  class TauUserEvent * MemoryEvent;
-  class TauUserEvent * GetMemoryEvent(void) { return MemoryEvent; }
+  class tau::TauUserEvent * MemoryEvent;
+  class tau::TauUserEvent * GetMemoryEvent(void) { return MemoryEvent; }
 #endif // TAU_PROFILEMEMORY
 #ifdef TAU_PROFILEHEADROOM
-  class TauUserEvent * HeadroomEvent;
-  class TauUserEvent * GetHeadroomEvent(void) { return HeadroomEvent; }
+  class tau::TauUserEvent * HeadroomEvent;
+  class tau::TauUserEvent * GetHeadroomEvent(void) { return HeadroomEvent; }
 #endif // TAU_PROFILEHEADROOM
 
 #ifdef RENCI_STFF

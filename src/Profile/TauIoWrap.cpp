@@ -22,6 +22,7 @@
 
 #include <vector>
 using namespace std;
+using namespace tau;
 
 #define dprintf TAU_VERBOSE
 
