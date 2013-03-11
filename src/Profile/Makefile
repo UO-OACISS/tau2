@@ -21,6 +21,8 @@ include $(TAUROOT)/include/Makefile
 CXX = $(TAU_CXX)
 CC  = $(TAU_CC)
 
+MKDIR = mkdir -p
+
 #This includes all profile options in $(PROFILEOPTS).
 
 
@@ -285,7 +287,7 @@ TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB)
 TAU_MAKE_SYMLINKS= $(RM) $(INSTALLDEST)/libTAU$(TAU_SHLIBX); \
 		cd $(INSTALLDEST) ;  ln -s $(TAU_SHLIB) libTAU$(TAU_SHLIBX); \
 		if [ -d $(TAU_SHAREDDIR) ] ; then true; \
-                    else mkdir $(TAU_SHAREDDIR); fi ; \
+                    else $(MKDIR) $(TAU_SHAREDDIR); fi ; \
                 cd $(TAU_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX) ; \
                 cd $(TAU_SHAREDDIR) ; \
 		ln -s ../libTAU$(TAU_SHLIBX) libTAU$(TAU_SHLIBX) ;  \
@@ -447,18 +449,18 @@ libTauShmem$(TAU_CONFIG)$(LSX):
 $(INSTALLDEST)/$(TAU_TARGET): $(TAU_TARGET)
 		@echo Installing $? in $(INSTALLDEST)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
-                   else mkdir $(INSTALLDEST) ;fi
+                   else $(MKDIR) $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
 		$(TAU_INSTALL) $(TAUROOT)/include/Makefile $(INSTALLDEST)/Makefile.tau$(TAU_CONFIG)
 
 $(INSTALLDEST)/$(TAU_DISABLE): $(TAU_DISABLE) $(TAU_DISABLE_SHARED)
 		@echo Installing $? in $(INSTALLDEST)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
-                   else mkdir $(INSTALLDEST) ;fi
+                   else $(MKDIR) $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
 		cd $(INSTALLDEST)
 		@if [ -d $(TAU_DISABLE_SHAREDDIR) ] ; then true; \
-		    else mkdir $(TAU_DISABLE_SHAREDDIR); fi
+		    else $(MKDIR) $(TAU_DISABLE_SHAREDDIR); fi
 		cd $(TAU_DISABLE_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX) TAU.dll
 		cd $(TAU_DISABLE_SHAREDDIR) ; ln -s ../$(TAU_DISABLE_SHARED) libTAU$(TAU_SHLIBX)
 		cd $(TAU_DISABLE_SHAREDDIR) ; ln -s ../$(TAU_DISABLE_SHARED) TAU.dll
@@ -466,37 +468,37 @@ $(INSTALLDEST)/$(TAU_DISABLE): $(TAU_DISABLE) $(TAU_DISABLE_SHARED)
 $(TAU_SHAREDDIR)/$(TAU_CUDA_LIB): $(TAU_CUDA_LIB)
 		@echo Installing $? in $(TAU_SHAREDDIR)
 		@if [ -d $(TAU_SHAREDDIR) ] ; then true; \
-			else mkdir -p $(TAU_SHAREDDIR) ;fi
+			else $(MKDIR) $(TAU_SHAREDDIR) ;fi
 		@if [ -e "$?" ]; then $(TAU_INSTALL) $? $(TAU_SHAREDDIR) ;fi
 
 $(INSTALLDEST)/$(TAU_CUDA_LIB): $(TAU_CUDA_LIB)
 		@echo Installing $? in $(INSTALLDEST)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
-			else mkdir -p $(INSTALLDEST) ;fi
+			else $(MKDIR) $(INSTALLDEST) ;fi
 		@if [ -e "$?" ]; then $(TAU_INSTALL) $? $(INSTALLDEST) ;fi
 
 $(INSTALLDEST)/$(TAU_PYCUDA_LIB): $(TAU_PYCUDA_LIB)
 		@echo Installing $? in $(INSTALLDEST)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
-			else mkdir -p $(INSTALLDEST) ;fi
+			else $(MKDIR) $(INSTALLDEST) ;fi
 		@if [ -e "$?" ]; then $(TAU_INSTALL) $? $(INSTALLDEST) ;fi
 
 $(TAU_SHAREDDIR)/$(TAU_OPENCL_LIB): $(TAU_OPENCL_LIB) 
 		@echo Installing $? in $(TAU_SHAREDDIR)
 		@if [ -d $(TAU_SHAREDDIR) ] ; then true; \
-			else mkdir -p $(TAU_SHAREDDIR) ;fi
+			else $(MKDIR) $(TAU_SHAREDDIR) ;fi
 		@if [ -e "$?" ]; then $(TAU_INSTALL) $? $(TAU_SHAREDDIR) ;fi 
 
 $(TAU_SHAREDDIR)/$(TAU_CUPTI_LIB): $(TAU_CUPTI_LIB)
 		@echo Installing $? in $(TAU_SHAREDDIR)
 		@if [ -d $(TAU_SHAREDDIR) ] ; then true; \
-			else mkdir -p $(TAU_SHAREDDIR) ;fi
+			else $(MKDIR) $(TAU_SHAREDDIR) ;fi
 		@if [ -e "$?" ]; then $(TAU_INSTALL) $? $(TAU_SHAREDDIR) ;fi
 
 $(TAU_SHAREDDIR)/$(TAU_CUPTI_ACTIVITY_LIB): $(TAU_CUPTI_ACTIVITY_LIB)
 		@echo Installing $? in $(TAU_SHAREDDIR)
 		@if [ -d $(TAU_SHAREDDIR) ] ; then true; \
-			else mkdir -p $(TAU_SHAREDDIR) ;fi
+			else $(MKDIR) $(TAU_SHAREDDIR) ;fi
 		@if [ -e "$?" ]; then $(TAU_INSTALL) $? $(TAU_SHAREDDIR) ;fi
 
 $(INSTALLDEST)/$(TAU_SHLIB): $(TAU_SHLIB) 
@@ -508,7 +510,7 @@ $(INSTALLDEST)/$(TAU_SHLIB): $(TAU_SHLIB)
 		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) libTAU$(TAU_SHLIBX)
 		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) TAU.dll
 		@if [ -d $(TAU_SHAREDDIR) ] ; then true; \
-		    else mkdir $(TAU_SHAREDDIR); fi
+		    else $(MKDIR) $(TAU_SHAREDDIR); fi
 		cd $(TAU_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX) TAU.dll
 		cd $(TAU_SHAREDDIR) ; ln -s ../$(TAU_SHLIB) libTAU$(TAU_SHLIBX)
 		cd $(TAU_SHAREDDIR) ; ln -s ../$(TAU_SHLIB) TAU.dll
@@ -523,19 +525,19 @@ $(INSTALLDEST)/libTauShmem$(TAU_CONFIG)$(LSX): libTauShmem$(TAU_CONFIG)$(LSX)
 $(INSTALLDEST)/$(TAU_GPU_LIB): $(TAU_GPU_LIB)
 		@echo Installing $? in $(TAU_SHAREDDIR)
 		@if [ -d $(TAU_SHAREDDIR) ] ; then true; \
-                   else mkdir $(TAU_SHAREDDIR) ;fi
+                   else $(MKDIR) $(TAU_SHAREDDIR) ;fi
 		$(TAU_INSTALL) $? $(TAU_SHAREDDIR)
 
 $(TAU_JAVA_INSTALLDIR)/Profile.class: Profile.class
 		@echo Installing $? in $(TAU_JAVA_INSTALLDIR)
 		@if [ -d $(TAU_JAVA_INSTALLDIR) ] ; then true; \
-                   else mkdir -p $(TAU_JAVA_INSTALLDIR) ;fi
+                   else $(MKDIR) $(TAU_JAVA_INSTALLDIR) ;fi
 		$(TAU_INSTALL) $? $(TAU_JAVA_INSTALLDIR)
 
 $(TAU_JAVA_INSTALLDIR)/TauJVMTI.jar: TauJVMTI.jar
 		@echo Installing $? in $(INSTALLDEST)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
-                   else mkdir -p $(INSTALLDEST) ;fi
+                   else $(MKDIR) $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
 		@if [ -f $(INSTALLDEST)/libTAU.jnilib ] ; then true; \
 									 else cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) libTAU.jnilib; fi
@@ -543,7 +545,7 @@ $(TAU_JAVA_INSTALLDIR)/TauJVMTI.jar: TauJVMTI.jar
 $(TAU_SHAREDDIR)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
 		@echo Installing $(TAUPYTHON), ltau.py, and tau.py in $(INSTALLDEST)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
-		   else mkdir $(INSTALLDEST) ;fi
+		   else $(MKDIR) $(INSTALLDEST) ;fi
 		$(RM) $(INSTALLDEST)/$(TAUPYTHON) $(INSTALLDEST)/ctau_impl$(TAU_SHLIBX)
 		$(TAU_INSTALL) tau.py $(INSTALLDEST)
 		$(TAU_INSTALL) ltau.py $(INSTALLDEST)
@@ -551,7 +553,7 @@ $(TAU_SHAREDDIR)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
 		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) ctau_impl$(TAU_SHLIBX)
 		@echo Installing $(TAUPYTHON), ltau.py, and tau.py in $(TAU_SHAREDDIR)
 		@if [ -d $(TAU_SHAREDDIR) ] ; then true; \
-		    else mkdir $(TAU_SHAREDDIR); fi
+		    else $(MKDIR) $(TAU_SHAREDDIR); fi
 		$(RM) $(TAU_SHAREDDIR)/*
 		cd $(TAU_SHAREDDIR) && ln -s ../$(TAU_SHLIB) $(TAUPYTHON) && ln -s ../$(TAU_SHLIB) ctau_impl$(TAU_SHLIBX)
 		cd $(TAU_SHAREDDIR) && ln -s ../tau.py . && ln -s ../ltau.py .
@@ -568,20 +570,20 @@ $(INSTALLDEST)/libpgnod_prof.a :
 epilog_breakup: 
 	@echo Breaking up libelg.mpi.a
 	$(RM) $(BITS)
-	mkdir -p $(BITS)/tau
+	$(MKDIR) $(BITS)/tau
 	cd $(BITS)/tau ; ar -X $(BITS) xv $(EPILOGLIBDIR)/libelg.mpi.a
 
 # place TAU objects into libmpi_r.a for tau_poe (AIX)
 tau_breakup: $(TAU_SHLIB) $(MPI_WRAPPER)
 	$(RM) $(BITS)
-	mkdir -p $(BITS)/tau
+	$(MKDIR) $(BITS)/tau
 	cp $(TAU_TARGET) libTauMpi$(TAU_CONFIG)$(LSX) $(BITS)/tau
 
 # break apart vampirtrace to build into libmpi_r.a for tau_poe (AIX)
 vampirtrace_breakup:
 	@echo Breaking up VampirTrace
 	$(RM) $(BITS)
-	mkdir -p $(BITS)/tau
+	$(MKDIR) $(BITS)/tau
 	cd $(BITS)/tau ; for i in $(VAMPIRTRACEDIR)/lib/*.a ; do ar -X $(BITS) xv $$i ; done
 
 
@@ -599,9 +601,9 @@ libmpi_r.a: $(MPI_BREAKUP_PREREQ)
 $(INSTALLDEST)/libmpi_r.a: libmpi_r.a
 	echo Installing libmpi_r.a in $(TAU_SHAREDDIR)
 	if [ -d $(INSTALLDEST) ] ; then true; \
-	   else mkdir $(INSTALLDEST) ;fi
+	   else $(MKDIR) $(INSTALLDEST) ;fi
 	if [ -d $(TAU_SHAREDDIR) ] ; then true; \
-	    else mkdir $(TAU_SHAREDDIR); fi
+	    else $(MKDIR) $(TAU_SHAREDDIR); fi
 	$(RM) $(TAU_SHAREDDIR)/libmpi_r.a
 	$(RM) -f $(TAU_SHAREDDIR)/libmpi_r.a
 	$(RM) -f $(INSTALLDEST)/libmpi_r.a
@@ -892,7 +894,7 @@ TauJVMTI.o :	TauJVMTI.cpp TauJVMTI.jar
 
 TauJVMTI.jar:  TauJVMTI.java
 	rm -f -r classes
-	mkdir -p classes
+	$(MKDIR) classes
 	$(JDKBINDIR)/javac -d classes TauJVMTI.java
 	(cd classes; $(JDKBINDIR)/jar cf ../$@ *)
 
