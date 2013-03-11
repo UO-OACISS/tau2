@@ -83,9 +83,9 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Observer, Prin
                     if (uep != null && uep.getNumSamples(ppTrial.getSelectedSnapshot()) > 0) {
                         String event = uep.getName();
                         if (event.startsWith("Message size") && event.indexOf("=>") == -1) {
-                            foundData = true;
+                            //foundData = true;
                             // split the string
-                            extractData(uep, threadID, event, event, allPaths);
+                            foundData = extractData(uep, threadID, event, event, allPaths);
                         } else if (event.startsWith("Message size") && event.indexOf("=>") >= 0) {
                             foundData = true;
                             StringTokenizer st = new StringTokenizer(event, ":");
@@ -129,10 +129,18 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Observer, Prin
 
         return window;
     }
-
-    private void extractData(UserEventProfile uep, int thread, String event, String first, String path) {
+/**
+ * Returns true if valid data is found, otherwise false.
+ * @param uep
+ * @param thread
+ * @param event
+ * @param first
+ * @param path
+ * @return
+ */
+    private boolean extractData(UserEventProfile uep, int thread, String event, String first, String path) {
     	if(first.contains("all nodes")){
-    		return;
+    		return false;
     	}
     	int receiver;
      	int sender;
@@ -145,23 +153,25 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Observer, Prin
         		readInt =st.nextInt();
         	}
         }
-        if(readInt ==-1) return;
+        if(readInt ==-1) return false;
 if(readInt>=size)
 {
 	System.err.printf("Warning: %s but there is no node %d.\n",event,readInt);
-	return;
+	return false;
 }
         if(first.contains("sent")){
         	receiver = readInt;
         	sender = thread; 
             addMapData(uep,sender,receiver, path);
+            return true;
         }else if (first.contains("received")){
         	sender = readInt;
         	receiver = thread;
             addMapData(uep,sender,receiver, path);
+            return true;
 
         }   
-
+        return false;
     }
     private void addMapData(UserEventProfile uep, int sender, int receiver, String function){
     	   double numEvents, eventMax, eventMin, eventMean, eventSumSqr,volume = 0;// stdev
