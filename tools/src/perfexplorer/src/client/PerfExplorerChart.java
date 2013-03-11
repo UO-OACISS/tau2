@@ -24,12 +24,14 @@ import org.jfree.data.xy.DefaultTableXYDataset;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.chart.renderer.category.CategoryItemRenderer;
 
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfexplorer.common.ChartDataType;
 import edu.uoregon.tau.perfexplorer.common.CustomChartFactory;
 import edu.uoregon.tau.perfexplorer.common.RMIChartData;
 import edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData;
+import edu.uoregon.tau.perfexplorer.common.PEChartColor;
 
 public class PerfExplorerChart extends PerfExplorerChartWindow {
 
@@ -895,6 +897,12 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		return new PerfExplorerChart(chart, "Total " + PerfExplorerModel.getModel().getMetricName() + " Breakdown");
 	}
 
+    public static void customizeColors (CategoryItemRenderer renderer) {
+	  Color[] colors = PEChartColor.createDefaultColorArray();
+	  for (int i = 0 ; i < colors.length ; i++) {
+	    renderer.setSeriesPaint(i, colors[i]);
+	  }
+	}
 
 	static void customizeChart (JFreeChart chart, int rows, boolean lastLineIdeal) {
 		// set the chart to a common style
@@ -945,6 +953,8 @@ public class PerfExplorerChart extends PerfExplorerChartWindow {
 		Utility.applyDefaultChartTheme(chart);
 
 		CategoryPlot plot = (CategoryPlot)chart.getPlot();
+		CategoryItemRenderer renderer = plot.getRenderer();
+		customizeColors(renderer);
 
 		// change the auto tick unit selection to integer units only...
 		NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
