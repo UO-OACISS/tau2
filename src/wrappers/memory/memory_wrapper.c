@@ -127,7 +127,11 @@ void multithread_init(void)
 
 int * memory_wrapper_disabled_flag(void)
 {
-  int * flag = (int*)pthread_getspecific(flag_key);
+  int * flag;
+
+  pthread_once(&multithread_init_once, multithread_init);
+
+  flag = (int*)pthread_getspecific(flag_key);
   if (!flag) {
     pthread_mutex_lock(&flag_mutex);
     flag = (int*)bootstrap_alloc(64, sizeof(int));
