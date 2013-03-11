@@ -1,4 +1,4 @@
-TAUROOT=/home/jlinford/workspace/tau2
+TAUROOT=
 include $(TAUROOT)/include/Makefile
 
 TAU_MEMORYWRAP_SHARED   = libTAU-memorywrap$(TAU_SHLIBX)
