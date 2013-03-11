@@ -94,8 +94,8 @@ static ContextEventMap & TheContextMap(void)
 
 AtomicEventDB & TheEventDB(void)
 {
-  static AtomicEventDB EventDB;
-  return EventDB;
+  static AtomicEventDB eventDB;
+  return eventDB;
 }
 
 // Add User Event to the EventDB
@@ -306,7 +306,7 @@ long * TauContextUserEvent::FormulateContextComparisonArray(Profiler * current)
     current = current->ParentProfiler;
     --depth;
   }
-  ary[i] = Tau_convert_ptr_to_long(this);
+  ary[i] = Tau_convert_ptr_to_long(userEvent);
   ary[0] = i; // set the depth
 
   return ary;
@@ -393,6 +393,7 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
       delete[] comparison;
     }
 
+    contextName = contextEvent->GetName();
     contextEvent->TriggerEvent(data, tid, timestamp, use_ts);
   }
   userEvent->TriggerEvent(data, tid, timestamp, use_ts);
