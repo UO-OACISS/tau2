@@ -503,7 +503,7 @@ $(INSTALLDEST)/$(TAU_SHLIB): $(TAU_SHLIB)
 		@echo Installing $? in $(INSTALLDEST)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
-		$(TAU_INSTALL) $? $(INSTALLDEST)
+		$(TAU_INSTALL) $? $(INSTALLDEST)/
 		$(RM) $(INSTALLDEST)/libTAU$(TAU_SHLIBX) $(INSTALLDEST)/TAU.dll
 		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) libTAU$(TAU_SHLIBX)
 		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) TAU.dll
