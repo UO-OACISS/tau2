@@ -4,7 +4,7 @@
  * TODO To change the template for this generated file go to
  * Window - Preferences - Java - Code Style - Code Templates
  */
-package edu.uoregon.tau.perfexplorer.server;
+package edu.uoregon.tau.perfexplorer.common;
 
 import java.awt.Color;
 

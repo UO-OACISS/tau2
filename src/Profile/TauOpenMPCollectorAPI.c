@@ -407,6 +407,7 @@ void Tau_fill_register(void *message, OMP_COLLECTORAPI_EVENT event, int append_f
 int __attribute__ ((constructor)) Tau_initialize_collector_api(void);
 
 int Tau_initialize_collector_api(void) {
+  printf("HERE I AM!!! \n");
   if (Tau_collector_api != NULL) return 0;
 
   char *error;
@@ -414,12 +415,22 @@ int Tau_initialize_collector_api(void) {
   void * handle = NULL;
   handle = dlopen("libopenmp.so", RTLD_NOW | RTLD_GLOBAL);
   if (!handle) {
-    return -1;
+    dlerror();    /* Clear any existing error */
+    printf("libopenmp.so not found... \n");
+    handle = dlopen("liblibgomp_g_wrap.so", RTLD_NOW | RTLD_GLOBAL);
+    if (!handle) {
+      printf("liblibgomp_g_wrap.so not found... collector API not enabled. \n");
+      return -1;
+    }
   }
 
   //dlerror();    /* Clear any existing error */
 
   *(void **) (&Tau_collector_api) = dlsym(handle, "__omp_collector_api");
+  if (Tau_collector_api == NULL) {
+    printf("__omp_collector_api symbol not found... collector API not enabled. \n");
+    return -1;
+  }
 
   omp_collector_message req;
   void *message = (void *) malloc(4);   
