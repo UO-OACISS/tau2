@@ -481,9 +481,9 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
                     if (uep != null && uep.getNumSamples() > 0) {
                         String event = uep.getName();
                         if (event.startsWith("Message size") && event.indexOf("=>") == -1) {
-                            foundData = true;
+                            //foundData = true;
                             // split the string
-                            extractData(mapData, uep, selectedSnapshot, threadID, event, event, allPaths);
+                            foundData = extractData(mapData, uep, selectedSnapshot, threadID, event, event, allPaths);
                         } else if (event.startsWith("Message size") && event.indexOf("=>") >= 0) {
                             foundData = true;
                             StringTokenizer st = new StringTokenizer(event, ":");
@@ -513,11 +513,11 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         return mapData;
     }
 
-    private static void extractData(HeatMapData mapData, UserEventProfile uep, int selectedSnapshot, int thread, String event, String first, String path) {
+    private static boolean extractData(HeatMapData mapData, UserEventProfile uep, int selectedSnapshot, int thread, String event, String first, String path) {
 
 
     	if(first.contains("all nodes")){
-    		return;
+    		return false;
     	}
     	int receiver;
      	int sender;
@@ -530,22 +530,24 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         		readInt =st.nextInt();
         	}
         }
-        if (readInt == -1) return; 
+        if (readInt == -1) return false; 
         if(readInt>=mapData.getSize())
         {
         	System.err.printf("Warning: %s but there is no node %d.\n",event,readInt);
-        	return;
+        	return false;
         }
         if(first.contains("sent")){
         	receiver = readInt;
         	sender = thread; 
         	addHeadMapData(mapData,uep,sender,receiver, path, selectedSnapshot);
+        	return true;
         }else if (first.contains("received")){
         	sender = readInt;
         	receiver = thread;
         	addHeadMapData(mapData,uep,sender,receiver, path, selectedSnapshot);
+        	return true;
         }   
-
+        return false;
     }
 
     private static void addHeadMapData(HeatMapData mapData, UserEventProfile uep,int sender,int receiver, String path, int selectedSnapshot) {

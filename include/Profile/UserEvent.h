@@ -88,13 +88,6 @@ public:
     AddEventToDB();
   }
 
-  TauUserEvent(char const * name, bool increasing=false) :
-      eventId(0), name(name), minEnabled(true), maxEnabled(true),
-      meanEnabled(true), stdDevEnabled(true), monoIncreasing(increasing)
-  {
-    AddEventToDB();
-  }
-
   ~TauUserEvent(void) {
     Tau_destructor_trigger();
   }
@@ -258,12 +251,16 @@ public:
 #endif
   { }
 
+  ~TauContextUserEvent() {
+    delete userEvent;
+  }
+
   void SetContextEnabled(bool value) {
     contextEnabled = value;
   }
 
   std::string const & GetName() const {
-    return userEvent->GetName();
+    return contextName;
   }
 
   void TriggerEvent(TAU_EVENT_DATATYPE data) {
@@ -280,8 +277,8 @@ private:
   std::string FormulateContextNameString(Profiler * current);
 
   bool contextEnabled;
+  std::string contextName;
   TauUserEvent * userEvent;
-
 };
 
 
