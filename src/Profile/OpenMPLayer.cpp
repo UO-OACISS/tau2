@@ -100,8 +100,6 @@ int OpenMPLayer::GetTauThreadId(void)
   }
 #endif /* TAU_OPENMP_NESTED */
 
-#if 0
-  /* omp_set_lock leading to deadlocks from RtsLayer::LockEnv().  This block disabled for now. */
   int tau_thread_id;
   if (omp_thread_id == 0) {
     tau_thread_id = omp_thread_id;
@@ -113,7 +111,8 @@ int OpenMPLayer::GetTauThreadId(void)
       omp_set_lock(&OpenMPLayer::tauRegistermutex);
       it = ompMap.find(omp_thread_id);
       if (it == ompMap.end()) {
-        tau_thread_id = OpenMPLayer::RegisterThread();
+      /* Process is already locked, call the unsafe thread creation routine. */
+        tau_thread_id = RtsLayer::_createThread();
         ompMap[omp_thread_id] = tau_thread_id;
       } else {
         tau_thread_id = it->second;
@@ -125,9 +124,6 @@ int OpenMPLayer::GetTauThreadId(void)
   }
 
   return tau_thread_id;
-#else
-  return omp_thread_id;
-#endif /* Disabled code */
 
 #else
   return 0;
