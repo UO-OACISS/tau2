@@ -63,7 +63,7 @@ int PthreadLayer::RegisterThread(void)
     id = new int;
     pthread_setspecific(tauPthreadId, id);
     pthread_mutex_lock(&tauThreadcountMutex);
-    *id = RtsLayer::createThread();
+    *id = RtsLayer::_createThread();
     pthread_mutex_unlock(&tauThreadcountMutex);
   }
   return 0;
@@ -198,7 +198,9 @@ typedef void * (*start_routine_p)(void *);
 typedef int (*pthread_create_p)(pthread_t *, const pthread_attr_t *, start_routine_p, void *arg);
 typedef void (*pthread_exit_p)(void *);
 typedef int (*pthread_join_p)(pthread_t, void **);
+#ifdef TAU_PTHREAD_BARRIER_AVAILABLE
 typedef int (*pthread_barrier_wait_p)(pthread_barrier_t *);
+#endif
 
 struct tau_pthread_pack
 {
@@ -303,6 +305,7 @@ void tau_pthread_exit_wrapper(pthread_exit_p pthread_exit_call, void * value_ptr
   }
 }
 
+#ifdef TAU_PTHREAD_BARRIER_AVAILABLE
 extern "C"
 int tau_pthread_barrier_wait_wrapper(pthread_barrier_wait_p pthread_barrier_wait_call,
     pthread_barrier_t * barrier)
@@ -330,6 +333,7 @@ int tau_pthread_barrier_wait_wrapper(pthread_barrier_wait_p pthread_barrier_wait
   }
   return retval;
 }
+#endif
 
 extern "C"
 int tau_pthread_create(pthread_t * threadp, const pthread_attr_t * attr,
