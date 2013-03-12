@@ -30,7 +30,6 @@ import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.dnd.Autoscroll;
 import java.awt.dnd.DnDConstants;
-import java.awt.dnd.DragSource;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -66,9 +65,8 @@ import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
+import javax.swing.JComponent;
 import javax.swing.event.TreeExpansionEvent;
-import javax.swing.event.TreeModelEvent;
-import javax.swing.event.TreeModelListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.event.TreeWillExpandListener;
@@ -77,14 +75,17 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
+import javax.swing.table.TableCellRenderer;
 
 import edu.uoregon.tau.common.TauRuntimeException;
+import edu.uoregon.tau.common.TreeUI;
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.paraprof.tablemodel.ApplicationTableModel;
 import edu.uoregon.tau.paraprof.tablemodel.ExperimentTableModel;
 import edu.uoregon.tau.paraprof.tablemodel.MetricTableModel;
 import edu.uoregon.tau.paraprof.tablemodel.TrialCellRenderer;
 import edu.uoregon.tau.paraprof.tablemodel.TrialTableModel;
+import edu.uoregon.tau.paraprof.tablemodel.ViewTableModel;
 import edu.uoregon.tau.paraprof.treetable.TreeDragSource;
 import edu.uoregon.tau.paraprof.treetable.TreeDropTarget;
 import edu.uoregon.tau.perfdmf.Application;
@@ -97,13 +98,17 @@ import edu.uoregon.tau.perfdmf.DatabaseAPI;
 import edu.uoregon.tau.perfdmf.DatabaseException;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.taudb.TAUdbDataSource;
+import edu.uoregon.tau.perfdmf.taudb.TAUdbDatabaseAPI;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfdmf.UtilFncs;
+import edu.uoregon.tau.perfdmf.View;
 import edu.uoregon.tau.perfdmf.database.DBConnector;
 import edu.uoregon.tau.perfdmf.database.DBManagerListener;
 import edu.uoregon.tau.perfdmf.database.DatabaseManagerWindow;
 import edu.uoregon.tau.perfdmf.database.ParseConfig;
 import edu.uoregon.tau.perfdmf.database.PasswordCallback;
+import edu.uoregon.tau.perfdmf.taudb.ViewCreatorGUI;
 
 public class ParaProfManagerWindow extends JFrame implements ActionListener,
 TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
@@ -133,15 +138,18 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 	// private boolean metaDataRetrieved;
 
 	// Popup menu stuff.
-	private JPopupMenu popup1 = new JPopupMenu();
-	private JPopupMenu stdAppPopup = new JPopupMenu();
+	private JPopupMenu databasePopUp = null;//new JPopupMenu();
+	private JPopupMenu TAUdbPopUp = null;// new JPopupMenu();
+	private JPopupMenu ViewPopUp = null;//new JPopupMenu();
+
+	private JPopupMenu stdAppPopup = null;// = new JPopupMenu();
 	private JPopupMenu stdExpPopup = new JPopupMenu();
 	private JPopupMenu stdTrialPopup = new JPopupMenu();
-	private JPopupMenu dbAppPopup = new JPopupMenu();
+	private JPopupMenu dbAppPopup = null;//new JPopupMenu();
 	private JPopupMenu dbExpPopup = new JPopupMenu();
 	private JPopupMenu dbTrialPopup = new JPopupMenu();
 	private JPopupMenu metricPopup = new JPopupMenu();
-	private JPopupMenu multiPopup = new JPopupMenu();
+	private JPopupMenu multiPopup = null;//new JPopupMenu();
 
 	private JPopupMenu runtimePopup = new JPopupMenu();
 
@@ -314,7 +322,7 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 			public void mousePressed(MouseEvent evt) {
 				try {
 
-					if (ParaProfUtils.rightClick(evt)) {
+					if (TreeUI.rightClick(evt)) {
 						int row = tree
 						.getRowForLocation(evt.getX(), evt.getY());
 						int rows[] = tree.getSelectionRows();
@@ -339,7 +347,7 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 
 					if (paths.length > 1) {
 						clickedOnObject = paths;
-						if (ParaProfUtils.rightClick(evt)) {
+						if (TreeUI.rightClick(evt)) {
 							// TreePath path = paths[0];
 							multiPopup.show(tree, evt.getX(), evt.getY());
 						}
@@ -351,7 +359,7 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 						.getLastPathComponent();
 						Object userObject = selectedNode.getUserObject();
 
-						if (ParaProfUtils.rightClick(evt)) {
+						if (TreeUI.rightClick(evt)) {
 							if (userObject instanceof ParaProfApplication) {
 								clickedOnObject = userObject;
 								if (((ParaProfApplication) userObject)
@@ -388,15 +396,27 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 							} else if (userObject instanceof Database) {
 								// standard or database
 								clickedOnObject = selectedNode;
-								popup1.show(tree, evt.getX(), evt.getY());
-
+								Database db = (Database)userObject;
+								DatabaseAPI dbapi = getDatabaseAPI(db);
+								if(dbapi.db().getSchemaVersion()>0){
+									db.setTAUdb(true);
+								}else{db.setTAUdb(false);}
+								if(db.isTAUdb()){
+									TAUdbPopUp.show(tree, evt.getX(), evt.getY());
+								}else{
+									databasePopUp.show(tree, evt.getX(), evt.getY());
+								}
+							
 							} else if (userObject instanceof String) {
 								// standard or database
 								clickedOnObject = selectedNode;
 								if (((String) userObject).indexOf("Standard") != -1) {
-									popup1.show(tree, evt.getX(), evt.getY());
+									databasePopUp.show(tree, evt.getX(), evt.getY());
 								}
 
+							} else if (userObject instanceof View){
+								clickedOnObject = selectedNode;
+								ViewPopUp.show(tree,  evt.getX(), evt.getY());
 							}
 						} else {
 
@@ -514,16 +534,33 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 
 			} else if (aNode.getUserObject() instanceof ParaProfTrial) {
 				ParaProfTrial ppTrial = (ParaProfTrial) aNode.getUserObject();
-				ppTrial.getTrial().setName(name);
+				
 				if (ppTrial.dBTrial()) {
 					DatabaseAPI databaseAPI = getDatabaseAPI(ppTrial
 							.getDatabase());
-					if (databaseAPI != null) {
-						databaseAPI.saveTrial(ppTrial.getTrial());
-						databaseAPI.terminate();
-					}
+					ppTrial.setDatabaseAPI(databaseAPI);
 				}
+				ppTrial.rename(name);
+
+			} else if (aNode.getUserObject() instanceof ParaProfMetric) {
+				ParaProfMetric metric = (ParaProfMetric) aNode.getUserObject();
+				if (metric.dbMetric()) {
+					DatabaseAPI databaseAPI = getDatabaseAPI(metric.getParaProfTrial()
+							.getDatabase());
+					metric.rename(databaseAPI.db(), name);
+				}
+				
+			} else if (aNode.getUserObject() instanceof ParaProfView) {
+				ParaProfView view = (ParaProfView) aNode.getUserObject();
+				DatabaseAPI databaseAPI = getDatabaseAPI(view.getDatabase());
+				DefaultMutableTreeNode DMT = view.getDMTN();
+
+				view.rename(databaseAPI.db(), name);
+				view.getDMTN();
+				
+
 			}
+
 		}
 
 	}
@@ -587,54 +624,20 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		mainMenu.add(helpMenu);
 		setJMenuBar(mainMenu);
 
-		// popup menus
-		JMenuItem jMenuItem = new JMenuItem("Add Application");
-		jMenuItem.addActionListener(this);
-		popup1.add(jMenuItem);
-		jMenuItem = new JMenuItem("Add Experiment");
-		jMenuItem.addActionListener(this);
-		popup1.add(jMenuItem);
-		jMenuItem = new JMenuItem("Add Trial");
-		jMenuItem.addActionListener(this);
-		popup1.add(jMenuItem);
-
+		databasePopUp=TreeUI.getDatabasePopup(this);
+		TAUdbPopUp=TreeUI.getTauDBPopUp(this);
+		ViewPopUp=TreeUI.getViewPopUp(this);
+		
+		JMenuItem jMenuItem;
+		
 		jMenuItem = new JMenuItem("Monitor Application");
 		jMenuItem.addActionListener(this);
 		runtimePopup.add(jMenuItem);
+		
+		stdAppPopup = TreeUI.getStdAppPopUp(this);
 
-		// Standard application popup
-		jMenuItem = new JMenuItem("Add Experiment");
-		jMenuItem.addActionListener(this);
-		stdAppPopup.add(jMenuItem);
-		jMenuItem = new JMenuItem("Add Trial");
-		jMenuItem.addActionListener(this);
-		stdAppPopup.add(jMenuItem);
-		jMenuItem = new JMenuItem("Upload Application to DB");
-		jMenuItem.addActionListener(this);
-		stdAppPopup.add(jMenuItem);
-		jMenuItem = new JMenuItem("Delete");
-		jMenuItem.addActionListener(this);
-		stdAppPopup.add(jMenuItem);
-		jMenuItem = new JMenuItem("Rename");
-		jMenuItem.addActionListener(this);
-		stdAppPopup.add(jMenuItem);
+		dbAppPopup = TreeUI.getDbAppPopUp(this);
 
-		// DB application popup
-		jMenuItem = new JMenuItem("Add Experiment");
-		jMenuItem.addActionListener(this);
-		dbAppPopup.add(jMenuItem);
-		jMenuItem = new JMenuItem("Add Trial");
-		jMenuItem.addActionListener(this);
-		dbAppPopup.add(jMenuItem);
-		// jMenuItem = new JMenuItem("Export Application to Filesystem");
-		// jMenuItem.addActionListener(this);
-		// dbAppPopup.add(jMenuItem);
-		jMenuItem = new JMenuItem("Delete");
-		jMenuItem.addActionListener(this);
-		dbAppPopup.add(jMenuItem);
-		jMenuItem = new JMenuItem("Rename");
-		jMenuItem.addActionListener(this);
-		dbAppPopup.add(jMenuItem);
 
 		// Standard experiment popup
 		jMenuItem = new JMenuItem("Upload Experiment to DB");
@@ -724,21 +727,11 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		jMenuItem.addActionListener(this);
 		dbTrialPopup.add(jMenuItem);
 
-		// jMenuItem = new JMenuItem("Copy");
-		// jMenuItem.addActionListener(this);
-		// multiPopup.add(jMenuItem);
-		//
-		// jMenuItem = new JMenuItem("Cut");
-		// jMenuItem.addActionListener(this);
-		// multiPopup.add(jMenuItem);
-		//
-		// jMenuItem = new JMenuItem("Paste");
-		// jMenuItem.addActionListener(this);
-		// multiPopup.add(jMenuItem);
 
-		jMenuItem = new JMenuItem("Delete");
-		jMenuItem.addActionListener(this);
-		multiPopup.add(jMenuItem);
+
+		multiPopup = TreeUI.getMultiPopUp(this);
+		
+		
 
 	}
 
@@ -749,14 +742,21 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		}
 	}
 
-	public void handleDelete(Object object) throws SQLException,
-	DatabaseException {
+	public void handleDelete(Object object) throws SQLException,DatabaseException {
+			handleDelete(object, true);
+	}
+	private void handleDelete(Object object, boolean ShowConfirmation) throws SQLException,DatabaseException {
 
-		int confirm = JOptionPane.showConfirmDialog(tree, "Are you sure you want to permanently delete this item?", "Confirm Delete", JOptionPane.YES_NO_OPTION);
-		
-		if(confirm!=0){
-			return;
+		if (ShowConfirmation) {
+			int confirm = JOptionPane.showConfirmDialog(tree,
+					"Are you sure you want to permanently delete this item from the database and all views?",
+					"Confirm Delete", JOptionPane.YES_NO_OPTION);
+
+			if (confirm != 0) {
+				return;
+			}
 		}
+		
 		
 		if (object instanceof TreePath[]) {
 			TreePath[] paths = (TreePath[]) object;
@@ -764,7 +764,7 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 				DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) paths[i]
 				                                                                     .getLastPathComponent();
 				Object userObject = selectedNode.getUserObject();
-				handleDelete(userObject);
+				handleDelete(userObject, false);
 			}
 
 		} else if (object instanceof ParaProfApplication) {
@@ -859,7 +859,16 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		} else if (object instanceof ParaProfMetric) {
 			ParaProfMetric ppMetric = (ParaProfMetric) object;
 			deleteMetric(ppMetric);
+		} else if (object instanceof DefaultMutableTreeNode){
+			
+			View view = (View) ((DefaultMutableTreeNode)object).getUserObject();
+			deleteView(view);
+		} else if (object instanceof View){
+			
+			View view = (View) object;
+			deleteView(view);
 		}
+		
 	}
 
 	private boolean isLoaded(ParaProfTrial ppTrial) {
@@ -1068,16 +1077,24 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 				} else if (arg.equals("Rename")) {
 					if (clickedOnObject instanceof ParaProfApplication) {
 						tree.startEditingAtPath(new TreePath(
-								((ParaProfApplication) clickedOnObject)
-								.getDMTN().getPath()));
+								((ParaProfApplication) clickedOnObject).getDMTN()
+										.getPath()));
 					} else if (clickedOnObject instanceof ParaProfExperiment) {
 						tree.startEditingAtPath(new TreePath(
-								((ParaProfExperiment) clickedOnObject)
-								.getDMTN().getPath()));
+								((ParaProfExperiment) clickedOnObject).getDMTN()
+										.getPath()));
 					} else if (clickedOnObject instanceof ParaProfTrial) {
 						tree.startEditingAtPath(new TreePath(
 								((ParaProfTrial) clickedOnObject).getDMTN()
-								.getPath()));
+										.getPath()));
+					} else if (clickedOnObject instanceof ParaProfView) {
+						tree.startEditingAtPath(new TreePath(
+								((ParaProfView) clickedOnObject).getDMTN()
+										.getPath()));
+					} else if (clickedOnObject instanceof ParaProfMetric) {
+						tree.startEditingAtPath(new TreePath(
+								((ParaProfMetric) clickedOnObject).getDMTN()
+										.getPath()));
 					}
 				} else if (arg.equals("Add Application")) {
 					if (clickedOnObject == standard) {
@@ -1170,25 +1187,81 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 						ParaProfExperiment experiment = (ParaProfExperiment) clickedOnObject;
 						(new LoadTrialWindow(this, null, experiment, false,
 								false)).setVisible(true);
-					} else {
-						// a database
-						ParaProfApplication application = addApplication(true,
-								(DefaultMutableTreeNode) clickedOnObject);
-						if (application != null) {
-							this.expandApplicationType(2, application.getID(),
-									application);
-							ParaProfExperiment experiment = addExperiment(true,
-									application);
-							if (experiment != null) {
-								this.expandApplication(2, application,
-										experiment);
-								(new LoadTrialWindow(this, application,
-										experiment, true, true))
-										.setVisible(true);
+					} else if (clickedOnObject instanceof DefaultMutableTreeNode){
+						DefaultMutableTreeNode node = (DefaultMutableTreeNode) clickedOnObject;
+						Database database = (Database) node.getUserObject();
+						DatabaseAPI dbapi = getDatabaseAPI(database);
+						if(dbapi.db().getSchemaVersion()>0){
+							database.setTAUdb(true);
+						}else{database.setTAUdb(false);}
+						
+						if (!database.isTAUdb()) {
+							// a database
+							ParaProfApplication application = addApplication(
+									true,
+									(DefaultMutableTreeNode) clickedOnObject);
+							if (application != null) {
+								this.expandApplicationType(2,
+										application.getID(), application);
+								ParaProfExperiment experiment = addExperiment(
+										true, application);
+								if (experiment != null) {
+									this.expandApplication(2, application,
+											experiment);
+									(new LoadTrialWindow(this, application,
+											experiment, true, true))
+											.setVisible(true);
+								}
 							}
+						}else{
+//							new TAUdbLoadTrialWindow(this).setVisible(true);
+							TAUdbDatabaseAPI api = (TAUdbDatabaseAPI) getDatabaseAPI(database);
+							
+							
+							
+							
+							new LoadTrialWindow(this, api.getView(1)).setVisible(true);
+							
 						}
 
 					}
+					
+					
+					
+					
+				}else if (arg.equals("Add View")) {
+
+					Database database = (Database) ((DefaultMutableTreeNode) clickedOnObject)
+							.getUserObject();
+					DatabaseAPI dbAPI = this.getDatabaseAPI(database);
+					if(dbAPI instanceof TAUdbDatabaseAPI){
+						ViewCreatorGUI frame = new ViewCreatorGUI((TAUdbDatabaseAPI) dbAPI);
+
+						// Display the window.
+						frame.pack();
+						frame.setVisible(true);
+
+						}else{
+							System.out.println("Error: Cannot create a view on a non TAUdb database.");
+						}
+					
+				}else if (arg.equals("Add Sub-View")) {
+					View view = (View) ((DefaultMutableTreeNode) clickedOnObject)
+							.getUserObject();
+
+					Database database = view.getDatabase();
+					DatabaseAPI dbAPI = this.getDatabaseAPI(database);
+					if(dbAPI instanceof TAUdbDatabaseAPI){
+					ViewCreatorGUI frame = new ViewCreatorGUI((TAUdbDatabaseAPI) dbAPI, view.getID());
+
+					// Display the window.
+					frame.pack();
+					frame.setVisible(true);
+
+					}else{
+						System.out.println("Error: Cannot create a view on a non TAUdb database.");
+					}
+
 				} else if (arg.equals("Upload Application to DB")) {
 
 					java.lang.Thread thread = new java.lang.Thread(
@@ -1373,6 +1446,18 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 				}
 			}
 		} catch (Exception e) {
+			ParaProfUtils.handleException(e);
+		}
+	}
+
+	private void deleteView(View view)  {
+		Database database = view.getDatabase();
+		DatabaseAPI dbAPI = this.getDatabaseAPI(database);
+	
+		try {
+			View.deleteView(view.getID(), dbAPI.getDb());
+			getTreeModel().removeNodeFromParent(view.getDMTN());		
+		} catch (SQLException e) {
 			ParaProfUtils.handleException(e);
 		}
 	}
@@ -1892,8 +1977,8 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 					jSplitInnerPane.setRightComponent(getPanelHelpMessage(2));
 				} else {
 					jSplitInnerPane.setRightComponent(getPanelHelpMessage(3));
-
-					// refresh the application list
+					
+					// refresh the application/trial list
 					for (int i = selectedNode.getChildCount(); i > 0; i--) {
 						getTreeModel().removeNodeFromParent(
 								((DefaultMutableTreeNode) selectedNode
@@ -1903,6 +1988,20 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 					Database database = (Database) userObject;
 					DatabaseAPI databaseAPI = getDatabaseAPI(database);
 					if (databaseAPI != null) {
+						if (databaseAPI.db().getSchemaVersion() > 0) {
+							// oh, this is so ugly. Create a TAUdbDatabase object
+							TAUdbDatabaseAPI api = new TAUdbDatabaseAPI(databaseAPI);
+							// get the views
+							ListIterator<View> l = api.getViewList().listIterator();
+							while (l.hasNext()) {
+								ParaProfView view = new ParaProfView((View) l.next());
+								DefaultMutableTreeNode viewNode = new DefaultMutableTreeNode(
+										view);
+								view.setDMTN(viewNode);
+								getTreeModel().insertNodeInto(viewNode,
+										selectedNode, selectedNode.getChildCount());
+							}
+						} else {
 						ListIterator<Application> l = databaseAPI
 						.getApplicationList().listIterator();
 						while (l.hasNext()) {
@@ -1914,6 +2013,8 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 							application.setDMTN(applicationNode);
 							getTreeModel().insertNodeInto(applicationNode,
 									selectedNode, selectedNode.getChildCount());
+						}
+						
 						}
 						databaseAPI.terminate();
 					}
@@ -2032,6 +2133,49 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 				jSplitInnerPane.setRightComponent(getTable(userObject));
 				jSplitInnerPane.setDividerLocation(location);
 			}
+			if (userObject instanceof ParaProfView) {
+				ParaProfView parentView = (ParaProfView) userObject;
+				// refresh the views/trials list
+				for (int i = selectedNode.getChildCount(); i > 0; i--) {
+					getTreeModel().removeNodeFromParent(
+							((DefaultMutableTreeNode) selectedNode
+									.getChildAt(i - 1)));
+				}
+//				parentView.setParent((ParaProfView) parentNode
+//						.getUserObject());
+				TAUdbDatabaseAPI databaseAPI = (TAUdbDatabaseAPI) this.getDatabaseAPI(parentView
+						.getDatabase());
+				if (databaseAPI != null) {
+					databaseAPI.setView(parentView);
+					ListIterator<View> l = databaseAPI.getViewList().listIterator();
+					while (l.hasNext()) {
+						ParaProfView view = new ParaProfView((View) l.next());
+						DefaultMutableTreeNode viewNode = new DefaultMutableTreeNode(
+								view);
+						view.setDMTN(viewNode);
+						getTreeModel().insertNodeInto(viewNode,
+								selectedNode, selectedNode.getChildCount());
+					}
+					List<Trial> l2 = databaseAPI.getTrialList(
+							true);// TODO: Is xml
+					          // metadata required here?
+					for(Trial trial:l2){
+						ParaProfTrial ppTrial = new ParaProfTrial( trial);
+						ppTrial.setDBTrial(true);
+						ppTrial.setView(parentView);
+						DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(
+								ppTrial);
+						ppTrial.setDMTN(trialNode);
+						getTreeModel().insertNodeInto(trialNode,
+								selectedNode,
+								selectedNode.getChildCount());
+					}
+					databaseAPI.terminate();
+				}
+				int location = jSplitInnerPane.getDividerLocation();
+				jSplitInnerPane.setRightComponent(getTable(userObject));
+				jSplitInnerPane.setDividerLocation(location);
+			}
 			if (userObject instanceof ParaProfTrial) {
 				trialWillExpand(selectedNode);
 			}
@@ -2083,12 +2227,17 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 					// metadata
 					// required
 					// here?
-
-					DBDataSource dbDataSource = new DBDataSource(databaseAPI);
+					DataSource dbDataSource;
+					if(databaseAPI.getDb().getSchemaVersion() >0 ){
+						dbDataSource = new TAUdbDataSource(databaseAPI);
+					}else{
+					dbDataSource = new DBDataSource(databaseAPI);
+					}
 					dbDataSource
 					.setGenerateIntermediateCallPathData(ParaProf.preferences
 							.getGenerateIntermediateCallPathData());
 					ppTrial.getTrial().setDataSource(dbDataSource);
+				
 					final DataSource dataSource = dbDataSource;
 					final ParaProfTrial theTrial = ppTrial;
 					java.lang.Thread thread = new java.lang.Thread(
@@ -2301,28 +2450,46 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 	}
 
 	private Component getTable(Object obj) {
-		if (obj instanceof ParaProfApplication) {
-			return (new JScrollPane(new JTable(new ApplicationTableModel(this,
-					(ParaProfApplication) obj, getTreeModel()))));
+		final JTable table = new JTable() {
+    
+      public Component prepareRenderer(TableCellRenderer renderer, int row, int column) {
+        Component c = super.prepareRenderer(renderer, row, column);
+        if (c instanceof JComponent) {
+          JComponent jc = (JComponent) c;
+          Object value = getValueAt(row, column);
+          if (value != null) {
+            jc.setToolTipText(value.toString());
+          }
+        }
+        return c;
+      }
+    };
+    table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+    if (obj instanceof ParaProfApplication) {
+			table.setModel(new ApplicationTableModel(this,
+					(ParaProfApplication) obj, getTreeModel()));
 		} else if (obj instanceof ParaProfExperiment) {
-			return (new JScrollPane(new JTable(new ExperimentTableModel(this,
-					(ParaProfExperiment) obj, getTreeModel()))));
+			table.setModel(new ExperimentTableModel(this,
+					(ParaProfExperiment) obj, getTreeModel()));
+		} else if (obj instanceof ParaProfView) {
+			table.setModel(new ViewTableModel(this,
+					(ParaProfView) obj, getTreeModel()));
 		} else if (obj instanceof ParaProfTrial) {
 			ParaProfTrial ppTrial = (ParaProfTrial) obj;
 			TrialTableModel model = new TrialTableModel(this, ppTrial,
 					getTreeModel());
-			final JTable table = new JTable(model);
 
+		  table.setModel(model);
 			table.addMouseListener(model.getMouseListener(table));
 
 			table.setDefaultRenderer(Object.class, new TrialCellRenderer(
 					ppTrial.getTrial().getMetaData(), ppTrial.getTrial()
 					.getUncommonMetaData()));
-			return (new JScrollPane(table));
 		} else {
-			return (new JScrollPane(new JTable(new MetricTableModel(this,
-					(ParaProfMetric) obj, getTreeModel()))));
+			table.setModel(new MetricTableModel(this,
+					(ParaProfMetric) obj, getTreeModel()));
 		}
+    return (new JScrollPane(table));
 	}
 
 	public ParaProfApplication addApplication(boolean dBApplication,
@@ -2374,8 +2541,15 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		return experiment;
 	}
 
-	public void addTrial(ParaProfApplication application,
-			ParaProfExperiment experiment, File files[], int fileType,
+	public void addTrial(ParaProfExperiment experiment, File files[], int fileType,
+			boolean fixGprofNames, boolean monitorProfiles, String range) {
+		addTrial(experiment,null, files, fileType, fixGprofNames, monitorProfiles, range);
+	}
+	public void addTrial(ParaProfView view, File files[], int fileType,
+			boolean fixGprofNames, boolean monitorProfiles, String range) {
+		addTrial(null, view, files, fileType, fixGprofNames, monitorProfiles, range);
+	}
+	private void addTrial(ParaProfExperiment experiment, ParaProfView view,  File files[], int fileType,
 			boolean fixGprofNames, boolean monitorProfiles, String range) {
 		ParaProfTrial ppTrial = null;
 		DataSource dataSource = null;
@@ -2405,10 +2579,13 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		ppTrial.setLoading(true);
 		dataSource.setMonitored(monitorProfiles);
 		ppTrial.setMonitored(monitorProfiles);
-
-		ppTrial.setExperiment(experiment);
-		ppTrial.setApplicationID(experiment.getApplicationID());
-		ppTrial.setExperimentID(experiment.getID());
+		if (experiment != null) {
+			ppTrial.setExperiment(experiment);
+			ppTrial.setApplicationID(experiment.getApplicationID());
+			ppTrial.setExperimentID(experiment.getID());
+		}
+		if(view != null)
+		ppTrial.setView(view);
 		if (files.length != 0) {
 			ppTrial.setPaths(files[0].getPath());
 		} else {
@@ -2420,7 +2597,7 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		} else {
 			ppTrial.getTrial().setName(ppTrial.getPathReverse());
 		}
-		if (experiment.dBExperiment()) {
+		if (experiment == null || experiment.dBExperiment()) {
 			loadedDBTrials.add(ppTrial);
 			ppTrial.setUpload(true); // This trial is not set to a db trial
 			// until after it has finished loading.
@@ -2428,29 +2605,19 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 			experiment.addTrial(ppTrial);
 		}
 
-		// if (experiment.dBExperiment()) // Check needs to occur on the
-		// experiment as trial
-		// // not yet a recognized db trial.
-		// this.expandTrial(2, ppTrial.getApplicationID(),
-		// ppTrial.getExperimentID(), ppTrial.getID(),
-		// application, experiment, ppTrial);
-		// else
-		// this.expandTrial(0, ppTrial.getApplicationID(),
-		// ppTrial.getExperimentID(), ppTrial.getID(),
-		// application, experiment, ppTrial);
-		//
-		//
 		LoadTrialProgressWindow lpw = new LoadTrialProgressWindow(this,
 				dataSource, ppTrial, false);
 		lpw.setVisible(true);
 	}
 
+
 	public void addTrial(ParaProfApplication application,
 			ParaProfExperiment experiment, File files[], int fileType,
 			boolean fixGprofNames, boolean monitorProfiles) {
 
-		addTrial(application, experiment, files, fileType, fixGprofNames,
+		addTrial(experiment, files, fileType, fixGprofNames,
 				monitorProfiles, null);
+		
 
 	}
 
@@ -2729,6 +2896,7 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		return null;
 	}
 
+
 	public DefaultMutableTreeNode expandExperiment(int type, int applicationID,
 			int experimentID, int trialID, ParaProfApplication application,
 			ParaProfExperiment experiment, ParaProfTrial ppTrial) {
@@ -2761,14 +2929,89 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 	}
 
 	public void expandTrial(ParaProfTrial ppTrial) {
-		DefaultMutableTreeNode trialNode = this.expandExperiment(
-				ppTrial.getExperiment(), ppTrial);
+		DefaultMutableTreeNode trialNode = null;
+		if (ppTrial.getView() != null) {
+			trialNode = this.expandView(ppTrial.getView(), ppTrial);
+		} else {
+			trialNode = this.expandExperiment(ppTrial.getExperiment(), ppTrial);
+		}
 		// Expand the trial.
 		if (trialNode != null) {
 			if (tree.isExpanded(new TreePath(trialNode.getPath())))
 				tree.collapsePath(new TreePath(trialNode.getPath()));
 			tree.expandPath(new TreePath(trialNode.getPath()));
 		}
+	}
+
+	private DefaultMutableTreeNode expandView(ParaProfView view) {
+		DefaultMutableTreeNode dbNode = null;
+		// Database db = null;
+		try {
+			for (int i = 0; i < root.getChildCount(); i++) {
+				DefaultMutableTreeNode node = (DefaultMutableTreeNode) root
+				.getChildAt(i);
+				if (node.getUserObject() == view.getDatabase()) {
+					dbNode = node;
+					// db = (Database)
+					node.getUserObject();
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		// Test to see if dbApps is expanded, if not, expand it.
+		if (!(tree.isExpanded(new TreePath(dbNode.getPath()))))
+			tree.expandPath(new TreePath(dbNode.getPath()));
+
+		// Try and find the required view node.
+		for (int i = dbNode.getChildCount(); i > 0; i--) {
+			DefaultMutableTreeNode defaultMutableTreeNode = (DefaultMutableTreeNode) dbNode
+			.getChildAt(i - 1);
+			if (view.getID() == ((ParaProfView) defaultMutableTreeNode
+					.getUserObject()).getID())
+				return defaultMutableTreeNode;
+		}
+		// Required view node was not found, try adding it.
+		if (view != null) {
+			DefaultMutableTreeNode viewNode = new DefaultMutableTreeNode(
+					view);
+			view.setDMTN(viewNode);
+			getTreeModel().insertNodeInto(viewNode, dbNode,
+					dbNode.getChildCount());
+			return viewNode;
+		}
+		return null;
+	}
+	
+	private DefaultMutableTreeNode expandView(ParaProfView view,
+			ParaProfTrial ppTrial) {
+		DefaultMutableTreeNode viewNode = this.expandView(view);
+		if (viewNode != null) {
+			// Expand the experiment.
+			tree.expandPath(new TreePath(viewNode.getPath()));
+
+			// Try and find the required trial node.
+			for (int i = viewNode.getChildCount(); i > 0; i--) {
+				DefaultMutableTreeNode defaultMutableTreeNode = (DefaultMutableTreeNode) viewNode
+				.getChildAt(i - 1);
+				if( defaultMutableTreeNode.getUserObject() instanceof ParaProfTrial)
+				if (ppTrial.getID() == ((ParaProfTrial) defaultMutableTreeNode
+						.getUserObject()).getID())
+					return defaultMutableTreeNode;
+			}
+			// Required trial node was not found, try adding it.
+			if (ppTrial != null) {
+				DefaultMutableTreeNode trialNode = new DefaultMutableTreeNode(
+						ppTrial);
+				ppTrial.setDMTN(trialNode);
+				getTreeModel().insertNodeInto(trialNode, viewNode,
+						viewNode.getChildCount());
+				return trialNode;
+			}
+			return null;
+		}
+		return null;
 	}
 
 	public void expandTrial(int type, int applicationID, int experimentID,
@@ -2815,6 +3058,10 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 		// return new Database("default", config);
 	}
 
+	/*
+	 * Creating a new connection for every operation creates a lot of overhead. Cache the last created DBAPI object for reuse in batch operaitons 
+	 */
+	private DatabaseAPI tmpDBAPI=null;
 	public DatabaseAPI getDatabaseAPI(Database database) {
 		try {
 
@@ -2823,8 +3070,17 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 			}
 
 			// Basic checks done, try to access the db.
+			if(tmpDBAPI!=null&&tmpDBAPI.getDb().getDatabase().getID()==(database.getID()) && !tmpDBAPI.getDb().isClosed()){
+				return tmpDBAPI;
+			}
+			
 			DatabaseAPI databaseAPI = new DatabaseAPI();
 			databaseAPI.initialize(database);
+			if (databaseAPI.db().getSchemaVersion() > 0) {
+				// copy the DatabaseAPI object data into a new TAUdbDatabaseAPI object
+				databaseAPI = new TAUdbDatabaseAPI(databaseAPI);
+			}
+			tmpDBAPI=databaseAPI;
 
 			// // Some strangeness here, we retrieve the metadata columns for
 			// the non-db trials

@@ -23,7 +23,7 @@ declare -i removeMpi=$FALSE
 declare -i needToCleanPdbInstFiles=$TRUE
 declare -i pdbFileSpecified=$FALSE
 declare -i optResetUsed=$FALSE
-declare -i optDetectMemoryLeaks=$FALSE
+declare -i optMemDbg=$FALSE
 declare -i optFujitsu=$FALSE
 
 declare -i optPdtF95ResetSpecified=$FALSE
@@ -82,7 +82,8 @@ TAU_BIN_DIR="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 printUsage () {
     echo -e "Usage: tau_compiler.sh"
     echo -e "  -optVerbose\t\t\tTurn on verbose debugging message"
-    echo -e "  -optDetectMemoryLeaks\t\tTrack mallocs/frees using TAU's memory wrapper"
+    echo -e "  -optMemDbg\t\tEnable TAU's runtime memory debugger"
+    echo -e "  -optDetectMemoryLeaks\t\tSynonym for -optMemDbg"
     echo -e "  -optPdtDir=\"\"\t\t\tPDT architecture directory. Typically \$(PDTDIR)/\$(PDTARCHDIR)"
     echo -e "  -optPdtF95Opts=\"\"\t\tOptions for Fortran parser in PDT (f95parse)"
     echo -e "  -optPdtF95Reset=\"\"\t\tReset options to the Fortran parser to the given list"
@@ -112,7 +113,7 @@ printUsage () {
     echo -e "  -optCompile=\"\"\t\tOptions passed to the compiler by the user."
     echo -e "  -optTauDefs=\"\"\t\tOptions passed to the compiler by TAU. Typically \$(TAU_DEFS)"
     echo -e "  -optTauIncludes=\"\"\t\tOptions passed to the compiler by TAU. Typically \$(TAU_MPI_INCLUDE) \$(TAU_INCLUDE)"
-    echo -e "  -optIncludeMemory=\"\"\t\tFlags for replacement of malloc/free. Typically -I\$(TAU_DIR)/include/Memory"
+    echo -e "  -optIncludeMemory=\"\"\t\tFlags for replacement of malloc/free. Typically -I\$(TAU_DIR)/include/TauMemory"
     echo -e "  -optReset=\"\"\t\t\tReset options to the compiler to the given list"
     echo -e "  -optLinking=\"\"\t\tOptions passed to the linker. Typically \$(TAU_MPI_FLIBS) \$(TAU_LIBS) \$(TAU_CXXLIBS)"
     echo -e "  -optLinkReset=\"\"\t\tReset options to the linker to the given list"
@@ -131,6 +132,7 @@ printUsage () {
     echo -e "  -optOpari2ConfigTool=\"<path/opari2-config>\"\tSpecifies the location of the Opari tool"
     echo -e "  -optOpari2Opts=\"\"\t\tSpecifies optional arguments to the Opari tool"
     echo -e "  -optOpari2Reset=\"\"\t\tResets options passed to the Opari tool"
+    echo -e "  -optOpari2Dir=\"<path>\"\t\tSpecifies the location of the Opari directory"
     echo -e "  -optNoMpi\t\t\tRemoves -l*mpi* libraries during linking"
     echo -e "  -optMpi\t\t\tDoes not remove -l*mpi* libraries during linking (default)"
     echo -e "  -optNoRevert\t\t\tExit on error. Does not revert to the original compilation rule on error."
@@ -562,11 +564,11 @@ for arg in "$@" ; do
 			echoIfDebug "\tCompiling Include Memory Options from TAU are: $optIncludeMemory"
 			echoIfDebug "\tFrom optIncludeMemory: $optIncludeMemory"
 			;;
-		    -optDetectMemoryLeaks)
-			optDetectMemoryLeaks=$TRUE
+		    -optDetectMemoryLeaks|-optMemDbg)
+		  optMemDbg=$TRUE
 			optIncludes="$optIncludes $optIncludeMemory"
-			optTau="-memory $optTau"
-			echoIfDebug "\Including Memory directory for malloc/free replacement and calling tau_instrumentor with -memory"
+			optTau="$optTau"
+			echoIfDebug "\Including TauMemory directory for malloc/free replacement"
 			echoIfDebug "\tFrom optIncludes: $optIncludes"
 			;;
 		    -optCompile*)
@@ -667,10 +669,6 @@ for arg in "$@" ; do
                         opari2init=$FALSE
                         echoIfDebug "\tDon't make pompregions."
                         ;;
-		    -optOpari2Dir*)
-			optOpari2Dir="${arg#"-optOpari2Dir="}"
-			echoIfDebug "\tOpari2 Dir used: $optOpari2Dir"
-			;;
 		    -optOpari2Tool*)
 			optOpari2Tool="${arg#"-optOpari2Tool="}"
 			echoIfDebug "\tOpari2 Tool used: $optOpari2Tool"
@@ -689,6 +687,15 @@ for arg in "$@" ; do
 			    opari2=$TRUE
 			fi
 			;;
+                    -optOpari2Dir*)
+                        optOpari2Dir="${arg#"-optOpari2Dir="}"
+                        echoIfDebug "\tOpari Dir used: $optOpari2Dir"
+                        if [ "x$optOpari2Dir" != "x" ] ; then
+			    optOpari2Tool="$optOpari2Dir/bin/opari2"
+			    optOpari2ConfigTool="$optOpari2Dir/bin/opari2-config"
+                        echoIfDebug "\tOpari Tool used: $optOpari2Tool"
+                        fi
+                        ;;
 		    -optIBM64*)
 			currentopt="${arg#"-optIBM64="}"
 			optIBM64="$currentopt $optIBM64"
@@ -843,7 +850,7 @@ for arg in "$@" ; do
                 optTau=" "
                 ;;
 
-	    *.f|*.F|*.f90|*.F90|*.f77|*.F77|*.f95|*.F95|*.for|*.FOR)
+	    *.f|*.F|*.f90|*.F90|*.f77|*.F77|*.f95|*.F95|*.for|*.FOR|*.cuf)
 		fileName=$arg
 		arrFileName[$numFiles]=$arg
 		arrFileNameDirectory[$numFiles]=`dirname $arg`
@@ -1189,6 +1196,12 @@ while [ $tempCounter -lt $numFiles ]; do
         fi
         arrFileName[$tempCounter]=$base$suf
     fi
+    if [ $opari2 == $TRUE -a $passCount != 1 ]; then
+        #Opari2 has already been run, so we shouldn't run it again
+	#However, some where the .pomp was lost, so add it back
+        base=${base}.pomp
+        arrFileName[$tempCounter]=$base$suf
+    fi
     if [ $optCompInst == $FALSE ] ; then
 	newFile=${base}.inst${suf}
     else
@@ -1207,6 +1220,9 @@ while [ $tempCounter -lt $numFiles ]; do
             newFile=${arrFileName[$tempCounter]}.pdb
         fi
         if [ "x$groupType" = "x$group_f_F" -a "x$suf" = "x.FOR" ] ; then
+            newFile=${arrFileName[$tempCounter]}.pdb
+        fi
+        if [ "x$groupType" = "x$group_f_F" -a "x$suf" = "x.F95" ] ; then
             newFile=${arrFileName[$tempCounter]}.pdb
         fi
 
@@ -1235,8 +1251,9 @@ if [ $optCompInst == $TRUE ]; then
 fi
 
 if [ $upc == "berkeley" ]; then
-   optLinking=`echo $optLinking| sed -e 's@-Wl@-Wl,-Wl@g'`
-   echoIfDebug "optLinking modified to accomodate -Wl,-Wl for upcc. optLinking=$optLinking"
+    # Make any number of "-Wl," into exactly two "-Wl,"
+    optLinking=`echo $optLinking | sed -e 's@\(-Wl,\)\+@-Wl,@g' -e 's@-Wl,@-Wl,-Wl,@g'`
+    echoIfDebug "optLinking modified to accomodate -Wl,-Wl for upcc. optLinking=$optLinking"
 fi
 
 if [ $optMICOffload == $TRUE ]; then
@@ -1337,7 +1354,7 @@ if [ $numFiles == 0 ]; then
     #If this is the second pass, opari was already used, don't do it again`
     if [ $opari2 == $TRUE -a $passCount == 1 -a  $opari2init == $TRUE  ]; then
         evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
-        cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${optIBM64} ${listOfObjectFiles} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_regions |  `${optOpari2ConfigTool} --awk-cmd` -f ${TAU_BIN_DIR}/pomp2-parse-init-regions.awk > pompregions.c"
+        cmdCreatePompRegions="`${optOpari2ConfigTool} --nm` ${optIBM64} ${listOfObjectFiles} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_reg |  `${optOpari2ConfigTool} --awk-cmd` -f ${TAU_BIN_DIR}/pomp2-parse-init-regions.awk > pompregions.c"
         evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
         cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
         evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
@@ -1349,6 +1366,13 @@ if [ $numFiles == 0 ]; then
     if [ $trackIO == $TRUE -a -r $optWrappersDir/io_wrapper/link_options.tau ] ; then 
       optLinking=`echo $optLinking  | sed -e 's/Comp_gnu.o//g'`
       linkCmd="$linkCmd `cat $optWrappersDir/io_wrapper/link_options.tau` $optLinking"
+      echoIfDebug "Linking command is $linkCmd"
+    fi
+
+    echoIfDebug "optMemDbg = $optMemDbg, wrappers = $optWrappersDir/memory_wrapper/link_options.tau "
+    if [ $optMemDbg == $TRUE -a -r $optWrappersDir/memory_wrapper/link_options.tau ] ; then 
+      optLinking=`echo $optLinking  | sed -e 's/Comp_gnu.o//g'`
+      linkCmd="$linkCmd `cat $optWrappersDir/memory_wrapper/link_options.tau` $optLinking"
       echoIfDebug "Linking command is $linkCmd"
     fi
 
@@ -1408,6 +1432,7 @@ if [ $numFiles == 0 ]; then
     fi
 
     if [ "x$tauWrapFile" != "x" ]; then
+      linkCmd="$linkCmd `cat $tauWrapFile` "
       echoIfDebug "Linking command is $linkCmd"
     fi 
 
@@ -1487,28 +1512,28 @@ if [ $gotoNextStep == $TRUE ]; then
 	    $group_c | $group_upc)
 	    pdtCmd="$optPdtDir""/$pdtParserType"
 	    pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
-	    pdtCmd="$pdtCmd $optPdtCFlags $optPdtUser "
-            if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
-	       pdtCmd="$pdtCmd -I${arrFileNameDirectory[$tempCounter]}"
-            fi
+	    pdtCmd="$pdtCmd $optPdtCFlags $optPdtUser $optIncludes "
+        if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
+	        pdtCmd="$pdtCmd -I${arrFileNameDirectory[$tempCounter]}"
+        fi
 	    optCompile="$optCompile $optDefs $optIncludes"
 
-            if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]} ]; then
-		evalWithDebugMessage "mv ${arrFileName[$tempCounter]} ${arrFileName[$tempCounter]}~; sed -e 's@return\([ \t]*\);@{return \1;}@g' ${arrFileName[$tempCounter]}~ > ${arrFileName[$tempCounter]};" "Making temporary file for parsing with ROSE"
+        if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]} ]; then
+		    evalWithDebugMessage "mv ${arrFileName[$tempCounter]} ${arrFileName[$tempCounter]}.$$; sed -e  's@\(\s*\)[^-a-zA-Z0-9_\$]return\(\s*\);@\1{ return \2;}@g' -e 's@^return\(\s*\);@{ return \1;}@g' ${arrFileName[$tempCounter]}.$$ > ${arrFileName[$tempCounter]};" "Making temporary file for parsing with ROSE"
 	    fi
 	    ;;
 
 	    $group_C)
 	    pdtCmd="$optPdtDir""/$pdtParserType"
 	    pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
-	    pdtCmd="$pdtCmd $optPdtCxxFlags $optPdtUser "
-            if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
-	       pdtCmd="$pdtCmd -I${arrFileNameDirectory[$tempCounter]}"
-            fi
+	    pdtCmd="$pdtCmd $optPdtCxxFlags $optPdtUser  $optIncludes "
+        if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
+	        pdtCmd="$pdtCmd -I${arrFileNameDirectory[$tempCounter]}"
+        fi
 	    optCompile="$optCompile $optDefs $optIncludes"
 
-            if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]} ]; then
-		evalWithDebugMessage "mv ${arrFileName[$tempCounter]} ${arrFileName[$tempCounter]}~; sed -e 's@return\([ \t]*\);@{return \1;}@g' ${arrFileName[$tempCounter]}~ > ${arrFileName[$tempCounter]};" "Making temporary file for parsing with ROSE"
+        if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]} ]; then
+		  evalWithDebugMessage "mv ${arrFileName[$tempCounter]} ${arrFileName[$tempCounter]}.$$; sed -e 's@\(\s*\)[^-a-zA-Z0-9_\$]return\(\s*\);@\1{ return \2;}@g' -e 's@^return\(\s*\);@{ return \1;}@g' ${arrFileName[$tempCounter]}.$$ > ${arrFileName[$tempCounter]};" "Making temporary file for parsing with ROSE"
 	    fi
 	    ;;
 
@@ -1578,8 +1603,8 @@ if [ $gotoNextStep == $TRUE -a $optCompInst == $FALSE ]; then
 
 	if [ $disablePdtStep == $FALSE ]; then
 	    evalWithDebugMessage "$tauCmd" "Instrumenting with TAU"
-	    if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]}~ ]; then
-	      evalWithDebugMessage "mv ${arrFileName[$tempCounter]}~ ${arrFileName[$tempCounter]}" "Moving temporary file"
+	    if [ $roseUsed == $TRUE -a -w ${arrFileName[$tempCounter]}.$$ ]; then
+	      evalWithDebugMessage "mv ${arrFileName[$tempCounter]}.$$ ${arrFileName[$tempCounter]}" "Moving temporary file"
             fi
 	else
 	    echoIfDebug "Not instrumenting source code. PDT not available."
@@ -1890,7 +1915,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	if [ $opari2 == $TRUE -a $opari2init == $TRUE ]; then
             evalWithDebugMessage "/bin/rm -f pompregions.c" "Removing pompregions.c"
       
-cmdCreatePompRegions="`${optOpari2ConfigTool}   --nm` ${optIBM64}  ${objectFilesForLinking} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_regions |  `${optOpari2ConfigTool} --awk-cmd` -f ${TAU_BIN_DIR}/pomp2-parse-init-regions.awk > pompregions.c"
+cmdCreatePompRegions="`${optOpari2ConfigTool}   --nm` ${optIBM64}  ${objectFilesForLinking} ${optOpariLibs} | `${optOpari2ConfigTool} --egrep` -i POMP2_Init_reg |  `${optOpari2ConfigTool} --awk-cmd` -f ${TAU_BIN_DIR}/pomp2-parse-init-regions.awk > pompregions.c"
         evalWithDebugMessage "$cmdCreatePompRegions" "Creating pompregions.c"
         cmdCompileOpariTab="${optTauCC} -c ${optIncludeDefs} ${optIncludes} ${optDefs} pompregions.c"
         evalWithDebugMessage "$cmdCompileOpariTab" "Compiling pompregions.c"
@@ -1911,6 +1936,13 @@ cmdCreatePompRegions="`${optOpari2ConfigTool}   --nm` ${optIBM64}  ${objectFiles
         if [ $trackIO = $TRUE -a -r $optWrappersDir/io_wrapper/link_options.tau ] ; then
           optLinking=`echo $optLinking  | sed -e 's/Comp_gnu.o//g'`
           newCmd="$newCmd `cat $optWrappersDir/io_wrapper/link_options.tau` $optLinking"
+          echoIfDebug "Linking command is $newCmd"
+        fi
+
+        echoIfDebug "optMemDbg = $optMemDbg, wrappers = $optWrappersDir/memory_wrapper/link_options.tau "
+        if [ $optMemDbg = $TRUE -a -r $optWrappersDir/memory_wrapper/link_options.tau ] ; then
+          optLinking=`echo $optLinking  | sed -e 's/Comp_gnu.o//g'`
+          newCmd="$newCmd `cat $optWrappersDir/memory_wrapper/link_options.tau` $optLinking"
           echoIfDebug "Linking command is $newCmd"
         fi
 

@@ -216,7 +216,7 @@ if [ -f ${tauroot}/tools/src/contrib/CubeReader.jar ]  ; then
 echo " Copy ${tauroot}/tools/src/contrib/CubeReader.jar to $JARTARGET"
 cp ${tauroot}/tools/src/contrib/CubeReader.jar $JARTARGET
 else
-echo "ERROR: Tau doesn't have own copy of CabeReader.jar under ${tauroot}/tools/src/contrib/"
+echo "ERROR: Tau doesn't have own copy of CubeReader.jar under ${tauroot}/tools/src/contrib/"
 echo "       Please check the recent TAU distribution and report this bug to tau-bugs@cs.uoregon.edu"
 exit -1
 fi
@@ -334,6 +334,7 @@ for arg in "$@"; do
     echo "-shmemlibrary=<library> ............ Specify a different SHMEM library."
     echo "            e.g., -shmemlibrary=-lsmac                                 "
     echo ""
+    echo "-gpi=<dir> .................. Specify use of TAU's GPI wrapper library."
     echo "GPGPU Options:"
     echo "-cuda=<dir> ................ Specify location of the top level CUDA SDK"
     echo "directory with include subdirectory. Enables OpenCL and CUDA profiling."
@@ -634,6 +635,11 @@ mrnet_root=
 mrnet_lib=
 ibmmpi=no
 shmem=no
+gpi=no
+gpidir=
+gpiinc=
+gpilib=
+gpilibrary=no
 shmeminc=
 shmemlib=
 shmemlibrary=no
@@ -683,6 +689,10 @@ intelcxxlibicc=no
 intelifort=no
 intel=no
 gnu=no
+sol2cc=no
+suncc=no
+compaq=no
+open64=no
 profile=no
 profilestats=no
 profilememory=no
@@ -1082,6 +1092,18 @@ for arg in "$@"; do
       shift
       ;;
 
+  -gpi=*)
+      gpi=yes
+      gpidir=`echo $arg | sed -e 's/-gpi=//'`
+      if [ ! -d $gpidir ] ; then
+          echo "Error: Cannot access GPI directory $papidir"
+          exit 1
+      fi
+      fixmakeargs="$fixmakeargs GPI gpidir=$gpidir"
+      tauoptions="${tauoptions}-gpi"
+      shift
+      ;;
+
   -darshan=*)
       darshan=yes
       darshandir=`echo $arg | sed -e 's/-darshan=//'`
@@ -1223,6 +1245,7 @@ for arg in "$@"; do
 
   -opari=*)
       opari=yes
+      oparidir=`echo $arg | sed -e 's@-opari=@@' -e 's@ @#@g'`
       openmp=yes
       shift
       ;;
@@ -1290,6 +1313,25 @@ for arg in "$@"; do
           echo "Error: Cannot access SCALASCA directory $epilogdir"
           exit 1
       fi
+      if [ ! -r $epilogdir/bin/skin ]; then
+
+
+        scorepdir=`which scorep | sed -e 's@bin/scorep@@g'` 
+        echo "scorepdir=$scorepdir"
+        if [ -d $scorepdir ]; then
+          echo "Using the Score-P measurement substrate instead of Scalasca for vScalasca v2.0+"
+          echo "Using Score-P directory $scorepdir"
+          scalasca=no
+          epilog=no
+          epilogdir=no
+
+          trace=no
+
+          scorep=yes
+        else
+          echo "Please configure TAU with the Score-P measurement substrate instead of Scalasca for vScalasca v2.0+. See http://www.score-p.org"
+        fi
+      fi 
       shift
       ;;
 
@@ -1902,7 +1944,7 @@ done
 
 if [ "x$upcnetwork" = "x" ] ; then
   if [ "$mpi" = "no" ] ; then
-    echo "NOTE: UPC network and MPI not specified.  Assuming -upcnetwork=smp."
+    #echo "NOTE: UPC network and MPI not specified.  Assuming -upcnetwork=smp."
     upcnetwork=smp
   else
     #echo "NOTE: UPC network not specified.  Assuming -upcnetwork=mpi."
@@ -1910,7 +1952,7 @@ if [ "x$upcnetwork" = "x" ] ; then
   fi
 else
   if [ "$upcnetwork" == mpi ] && [ "$mpi" == "no" ] ; then
-    echo "NOTE: Assuming -mpi because -upcnetwork=mpi."
+    #echo "NOTE: Assuming -mpi because -upcnetwork=mpi."
     mpi=yes
   fi
 fi
@@ -1935,6 +1977,10 @@ cat ${tauroot}/tools/src/perfdmf/bin/configure.skel |
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
  > ${targetdir}/${architecture}/bin/perfdmf_configure
 chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_configure
+cd ${targetdir}/${architecture}/bin
+/bin/rm -f taudb_configure
+ln -s perfdmf_configure taudb_configure
+cd ${tauroot}
 
 cat ${tauroot}/tools/src/perfdmf/bin/createapp.skel | 
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
@@ -1950,6 +1996,10 @@ cat ${tauroot}/tools/src/perfdmf/bin/loadtrial.skel |
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
  > ${targetdir}/${architecture}/bin/perfdmf_loadtrial
 chmod a+rx ${targetdir}/${architecture}/bin/perfdmf_loadtrial
+cd ${targetdir}/${architecture}/bin
+/bin/rm -f taudb_loadtrial
+ln -s perfdmf_loadtrial taudb_loadtrial
+cd ${tauroot}
 
 cat ${tauroot}/tools/src/perfdmf/bin/phaseconvert.skel | 
 sed -e 's,@TAUROOTDIR@,'$targetdir','  -e 's,@SHELL@,'$taushell',' -e 's,@ARCH@,'$architecture',' \
@@ -2004,6 +2054,7 @@ cp ${tauroot}/tools/src/perfexplorer/etc/dbschema.db2 ${targetdir}/etc/.
 cp ${tauroot}/tools/src/perfexplorer/etc/java.policy ${targetdir}/etc/.
 if [ ! -d ${targetdir}/etc/topology ]; then
   cp -r ${tauroot}/etc/topology ${targetdir}/etc
+  cp ${tauroot}/etc/blacklist.txt ${targetdir}/etc/.
 fi
 
 # copy PerfDMF schema files
@@ -2085,6 +2136,7 @@ cp ${tauroot}/tools/src/perfexplorer/perfexplorer-1.4.jar $JARTARGET
 cp ${tauroot}/tools/src/vis/bin/vis.jar $JARTARGET
 cp ${tauroot}/tools/src/common/bin/tau-common.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/jargs.jar $JARTARGET
+cp ${tauroot}/tools/src/contrib/google-gson-2.1/gson-2.1.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/batik-combined.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/jfreechart-1.0.12.jar $JARTARGET
 cp ${tauroot}/tools/src/contrib/jcommon-1.0.15.jar $JARTARGET
@@ -2298,6 +2350,12 @@ if [ "x$detectarch" = "x" ] ; then
 fi
 
 
+if [ "$tauarch" = "i386_linux" -o "$tauarch" = "i386_solaris" -o "$tauarch" = "mpis32" -o "$tauarch" = "ppc64" ]; then
+	fixmakeargs="$fixmakeargs arch_width=32bit"
+else
+	fixmakeargs="$fixmakeargs arch_width=64bit"
+fi
+
 
 
 
@@ -2452,13 +2510,6 @@ case $machine in
          cxx_compiler=g++
      fi
 
-     # To fix the  make install  clash with INSTALL file in file systems 
-     # that are case insensitive. Move INSTALL file to INSTALL.txt 
-     if [ -f INSTALL ]
-       then
-	mv INSTALL INSTALL.txt
-     fi
-
      if [ $c_compiler = default ]
        then
          c_compiler=gcc             
@@ -2470,13 +2521,6 @@ case $machine in
      if [ $cxx_compiler = default ]
        then
          cxx_compiler=g++
-     fi
-
-     # To fix the  make install  clash with INSTALL file in file systems 
-     # that are case insensitive. Move INSTALL file to INSTALL.txt 
-     if [ -f INSTALL ]
-       then
-	mv INSTALL INSTALL.txt
      fi
 
      if [ $c_compiler = default ]
@@ -3027,14 +3071,6 @@ if [ $machine = apple ] ; then
       extradir=`which xlf90 | sed s/xlf90/../`
       fortran_compiler=yes
   fi
-  # xlc++ doesn't like include/Memory. Move this directory
-  if [ -d include/Memory -a ! -d include/MemoryWrapper ] ; then
-    mv include/Memory include/MemoryWrapper	
-  else
-    if [ -d include/Memory -a -d include/MemoryWrapper ] ; then 
-      /bin/rm -rf include/Memory
-    fi 
-  fi
 fi
 
 if [ $machine = ppc64 -o $machine = bgl -o $machine = bgp -o $machine = bgq ] ; then
@@ -3376,6 +3412,7 @@ case $cxx_compiler in
       ;;
    openCC|orCC)
       echo "Default C++ compiler will ORC Open64 orCC compiler"
+			open64=yes
       fixmakeargs="$fixmakeargs OPEN64ORC"
       tauoptions="${tauoptions}-open64"
       if [ $c_compiler = default ] 
@@ -3519,6 +3556,12 @@ case $cxx_compiler in
     *mpicxx)
         internal_compiler=`$cxx_compiler -show | awk '{ print $1;}'`
         case $internal_compiler in 
+           *bgclang++)
+              tauoptions="${tauoptions}-clang"
+	      if [ $machine = bgq ] ; then
+                 fixmakeargs="$fixmakeargs CLANG BGCLANG"
+	      fi
+	      ;;
            *g++)
 	      if [ $machine = bgq ] ; then
 	        echo "Using GNU Compilers for BGQ"
@@ -3539,12 +3582,12 @@ case $cxx_compiler in
 
               ;;
            *clang*)
+              tauoptions="${tauoptions}-clang"
 	      echo "Using CLANG Compilers"
               fixmakeargs="$fixmakeargs CLANG"
 	      if [ $machine = apple ]; then
 # MPI on Apple OS X has issues with shared objects
                 fixmakeargs="$fixmakeargs NOSHARED"
-echo "HIIII -> fixmakeargs = $fixmakeargs"
               fi
               ;;
            *)
@@ -4379,11 +4422,25 @@ then
     then
     #echo "Include dir found. adding -I$mpiinc to INC"
       shmemincargs="-I$shmeminc"
+      if [ -r $shmeminc/mpp/shmem.h ]
+      then
+        shmemincargs="-I$shmeminc#-I$shmeminc/mpp"
+      fi 
       gpshmem=no
       if [ -r $shmeminc/gpshmem.h ] 
       then
         fixmakeargs="$fixmakeargs GPSHMEM"
         gpshmem=yes
+      fi
+      shmembindir=`echo $shmeminc | sed -e 's@include@bin@g'`
+      if [ -r $shmembindir/oshcc ]
+      then
+        openshmem=yes
+        fixmakeargs="$fixmakeargs OPENSHMEM"
+      fi
+      if [ -r $shmembindir/mpiexec_mpt ]
+      then
+        fixmakeargs="$fixmakeargs SGI_MPT_SHMEM"
       fi
     fi
   else
@@ -4395,8 +4452,7 @@ then
       if [ -r $openshmem_include_dir/mpp/shmem.h ] 
       then
         shmemincargs="-I$openshmem_include_dir#-I$openshmem_include_dir/mpp"
-        openshmem=yes
-        fixmakeargs="$fixmakeargs OPENSHMEM"
+        fixmakeargs="$fixmakeargs SGI_MPT_SHMEM"
       fi
     fi
     if [ $catamount = yes ] 
@@ -4481,6 +4537,18 @@ then
     #echo "Lib dir found. adding -L$shmemlib to LIB"
       shmemlibargs="$shmemlibargs -L$shmemlib"
     fi
+    shmembindir=`echo $shmemlib | sed -e 's@lib@bin@g'`
+    if [ -r $shmembindir/oshcc ]
+    then
+      openshmem=yes
+      fixmakeargs="$fixmakeargs OPENSHMEM"
+    fi
+    if [ -r $shmembindir/mpiexec_mpt ]
+    then
+      fixmakeargs="$fixmakeargs SGI_MPT_SHMEM"
+      shmemlibrary=-lsma#-lmpi
+    fi
+
   else
     if [ $catamount = yes ] 
     then
@@ -4674,6 +4742,7 @@ if [ $cxx_compiler = g++ -o $cxx_compiler = g++4 -o $cxx_compiler = egcs -o $cxx
     if [ $machine != crayxmt ] 
     then
       fixmakeargs="$fixmakeargs GNU COMPINST_GNU"
+      
     fi
     if [ $machine = ibm64 -o $machine = rs6000 -o $machine = ppc64 -o $machine = bgl -o $machine = bgp -o $machine = ibm64linux -o $machine = bgq ]
     then
@@ -4981,6 +5050,7 @@ case $machine in
 	fi
 	if [ $cxx_compiler = CC ]  
 	  then
+			sol2cc=yes
 	    fixmakeargs="$fixmakeargs SOL2CC"
 	    if [ $openmp = yes ]
 	    then
@@ -5084,6 +5154,7 @@ case $machine in
 
 if [ $machine = x86_64 -o $machine = i386_linux -o $machine = ia64 -o $machine = suni386 -o $machine = sunx86_64 ] ; then
     if [ $cxx_compiler = CC ] ; then
+				suncc=yes
         fixmakeargs="$fixmakeargs SUNCC"
         if [ $openmp = yes ] ; then
             fixmakeargs="$fixmakeargs SUNCC_OPENMP"
@@ -6831,6 +6902,47 @@ if [ $java = yes ] ; then
 fi
 
 if [ $openmp = yes ] ; then
+
+
+#find openmp flag
+if [ "$sol2cc" = "yes" ]; then openmp_flag=-xopenmp; fi
+if [ "$suncc" = "yes" ]; then openmp_flag=-xopenmp=parallel; fi
+if [ "$compaq" = "yes" ]; then openmp_flag=-omp; fi
+if [ "$ibmxlc" = "yes" ]; then openmp_flag=-qsmp=omp; fi
+if [ "$open64" = "yes" ]; then openmp_flag=-mp; fi
+if [ "$gnu" = "yes" ]; then openmp_flag=-fopenmp; fi
+if [ "$pgi" = "yes" ]; then openmp_flag=-mp; fi
+if [ "$fujitsu" = "yes" ]; then openmp_flag=-Kopenmp; fi
+if [ "$default_fortran" = "cray" ]; then openmp_flag=-h omp; fi
+if [ "$intel" = "yes" ]; then openmp_flag=-openmp; fi
+
+
+#checking OMP compiler nested supported
+echo -n "Checking OMP NESTED support..."
+		touch omp_nested_test.c
+		cat <<EOF>omp_nested_test.c
+#include <omp.h>
+#include <stdio.h>
+int main()
+{
+ omp_get_thread_num();
+ omp_get_level();
+ omp_get_team_size(0);
+ omp_get_ancestor_thread_num(0);
+}
+EOF
+
+		$c_compiler $openmp_flag $orig_useropt omp_nested_test.c -o omp_nested_test > /dev/null 2>&1
+		./omp_nested_test > /dev/null 2>&1
+		result=$?
+		rm -f ./omp_nested_test ./omp_nested_test.c
+		if [ $result = "0" ]; then
+			echo "yes."
+    	fixmakeargs="$fixmakeargs TAU_OPENMP_NESTED"
+		else
+			echo "no."
+			echo "OpenMP nested regions are not supported by this compiler."
+		fi
     fixmakeargs="$fixmakeargs OPENMP"
     tauoptions="${tauoptions}-openmp"
 fi
@@ -6852,6 +6964,9 @@ if [ $opari = yes ] ; then
           fi
           if [ "x$fortran_compiler" = "xpgi" ] ; then
              oparicomp="$fortran_compiler"
+          fi
+          if [ "x$fortran_compiler" = "xgfortran" ] ; then
+             oparicomp="gcc"
           fi
     fi 
     if [ $oparicomp = no ] ; then
@@ -6911,21 +7026,25 @@ if [ $scorep = yes ] ; then
       if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs SCOREPOMPI" 
         scorepLibs=`${scorepdir}/bin/scorep-config --hyb --libs`
+        scorepLD=`${scorepdir}/bin/scorep-config --hyb --ldflags`
       else
         fixmakeargs="$fixmakeargs SCOREPMPI"
         scorepLibs=`${scorepdir}/bin/scorep-config --mpi --libs`
+        scorepLD=`${scorepdir}/bin/scorep-config --mpi --ldflags`
       fi 
     else
       if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs SCOREPOMP" 
+	scorepLD=`${scorepdir}/bin/scorep-config --omp --ldflags`
         scorepLibs=`${scorepdir}/bin/scorep-config --omp --libs`
       else
         scorepLibs=`${scorepdir}/bin/scorep-config --seq --libs`
+        scorepLD=`${scorepdir}/bin/scorep-config --seq --ldflags`
       fi
     fi
+    scorepLibs="$scorepLD $scorepLibs"
     scorepLibs=`echo $scorepLibs | sed "s/ /#/g"`
-    scorepLibs=`echo $scorepLibs | sed "s/,//g"`
-echo $scorepLibs
+
     fixmakeargs="$fixmakeargs scorepmpilibs=$scorepLibs"
     fixmakeargs="$fixmakeargs scoreplibs=$scorepLibs"
     fixmakeargs="$fixmakeargs scorepincs=-I$scorepdir/include#-I$scorepdir/include/scorep"
@@ -6980,19 +7099,22 @@ fi
 if [ $dyninst = yes ] ; then
     fixmakeargs="$fixmakeargs DYNINST dyninstdir=$dyninstdir"
     if [ ! -d $dyninstdir/lib ] ; then
-	fixmakeargs="$fixmakeargs DYNINST41"
+	  fixmakeargs="$fixmakeargs DYNINST41"
     fi
     if [ `grep isStaticExecutable $dyninstdir/include/* | wc -l` = 0 ]; then
-	fixmakeargs="$fixmakeargs DYNINST_STATIC_REWRITING_UNSUPPORTED"
+	  fixmakeargs="$fixmakeargs DYNINST_STATIC_REWRITING_UNSUPPORTED"
     fi
     if [ ! -d $dyninstdir/src/include -o ! -d $dyninstdir/include ] ; then
-	fixmakeargs="$fixmakeargs DYNINST5.2"
+	  fixmakeargs="$fixmakeargs DYNINST5.2"
     fi
-    if [ -r $dyninstdir/$PLATFORM/lib/libcommon.so ] ; then
-	fixmakeargs="$fixmakeargs DYNINST6"
+    if [ -r $dyninstdir/$PLATFORM/lib/libcommon.so -o -r $dyninstdir/lib/libcommon.so ] ; then
+	  fixmakeargs="$fixmakeargs DYNINST6"
     fi
-    if [ -r $dyninstdir/$PLATFORM/lib/libparseAPI.so ] ; then
-	fixmakeargs="$fixmakeargs DYNINST7"
+    if [ -r $dyninstdir/$PLATFORM/lib/libparseAPI.so -o -r $dyninstdir/lib/libparseAPI.so ] ; then
+	  fixmakeargs="$fixmakeargs DYNINST7"
+    fi
+    if [ -r $dyninstdir/include/walker.h ] ; then
+	  fixmakeargs="$fixmakeargs DYNINST8"
     fi
 fi
 
@@ -7245,6 +7367,7 @@ if [ $machine = hitachi ] ; then
 fi
 
 if [ $cxx_compiler = cxx ] ; then
+	compaq=yes
   if [ $openmp = yes ] ; then
     fixmakeargs="$fixmakeargs COMPAQCXX_OPENMP"
   fi
@@ -7386,7 +7509,6 @@ else
     if [ ! -d ${tauprefix} ] ; then
 	echo "making directory $tauprefix "
 	mkdir -p ${tauprefix}
-      # Copy INSTALL README LICENSE files over there 
 	cp README LICENSE CREDITS ${tauprefix}
     fi
     if [ ! -d ${tauprefix}/${architecture} ] ; then
@@ -7438,7 +7560,9 @@ cp ${tauroot}/tools/src/tauf90 $BINTARGET
 cp ${tauroot}/tools/src/tauex.multiple $BINTARGET
 cp ${tauroot}/tools/src/tau_cxx.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_cc.sh $BINTARGET
+cp ${tauroot}/tools/src/tau_show_libs $BINTARGET
 cp ${tauroot}/tools/src/tau_rewrite $BINTARGET
+cp ${tauroot}/tools/src/tau_pebil_rewrite $BINTARGET
 cp ${tauroot}/tools/src/tau_f90.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_f77.sh $BINTARGET
 cp ${tauroot}/tools/src/tau_upc.sh $BINTARGET
@@ -7452,8 +7576,14 @@ else
 fi
 #copy over tau_header_inst.sh
 if [ $pdt = yes ] ; then
+    if [ $opari1 = yes ] ; then
+    cat ${tauroot}/tools/src/tau_header_inst_opari1.sh | sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@ARCH@,'$architecture',' \
+	-e 's,@PDTROOTDIR@,'$pdtdir',' -e 's,@PDTARCH@, '$pdtarch',' > ${targetdir}/${architecture}/bin/tau_header_inst.sh
+    fi
+    if [ $opari = yes ] ; then
     cat ${tauroot}/tools/src/tau_header_inst.sh | sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@ARCH@,'$architecture',' \
 	-e 's,@PDTROOTDIR@,'$pdtdir',' -e 's,@PDTARCH@, '$pdtarch',' > ${targetdir}/${architecture}/bin/tau_header_inst.sh
+    fi
     chmod a+rx ${targetdir}/${architecture}/bin/tau_header_inst.sh
     if [ -x ${pdtdir}/${pdtarchcompdir}/bin/smaqao ]
     then
@@ -7465,6 +7595,12 @@ if [ $pdt = yes ] ; then
 	echo "NOTE: Found a newer tau_rewrite in PDT. Using it instead."
 	cp ${pdtdir}/${pdtarchcompdir}/bin/tau_rewrite  $BINTARGET
       fi 
+    fi
+    if [ -x ${pdtdir}/${pdtarchcompdir}/bin/pebil.static ]
+    then
+      echo "TAU: PDT: Using binary rewriting capabilities from PEBIL in tau_pebil_rewrite"
+      rm -f ${targetdir}/${architecture}/bin/pebil.static
+      ln -s ${pdtdir}/${pdtarchcompdir}/bin/pebil.static ${targetdir}/${architecture}/bin/pebil.static
     fi
 fi
 

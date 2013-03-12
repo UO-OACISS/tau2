@@ -482,7 +482,7 @@ public class ExternalTool {
 		public String metric = null;
 		public int nodeID = 0;
 		public int threadID = 0;
-		public Map<String,String> metadata = null;
+		public MetaDataMap metadata = null;
 	}
 }
 

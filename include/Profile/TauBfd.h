@@ -117,7 +117,7 @@ struct TauBfdInfo
 //
 
 // Initialize TauBFD
-void Tau_bfd_initializeBfdIfNecessary();
+void Tau_bfd_initializeBfd();
 
 // Register a BFD unit (i.e. an executable and its shared libraries)
 tau_bfd_handle_t Tau_bfd_registerUnit();

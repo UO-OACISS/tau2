@@ -156,7 +156,7 @@ template <class T> class TauPathHashTable {
     
     table = (struct HashElement **)Tau_MemMgr_malloc(tid, 
 						     sizeof(struct HashElement *)*tableSize);
-    //    printf("Table created %p at size %d\n", table, tableSize);
+    //TAU_VERBOSE("Table created %p at size %d\n", table, tableSize);
     for (int i=0; i<tableSize; i++) {
       table[i] = NULL;
     }

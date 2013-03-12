@@ -266,6 +266,8 @@ public void endElement(String url, String name, String qname) {
 		    	buf.delete(0, buf.toString().length());
 				if (getDB().getDBType().compareTo("mysql") == 0)
 		    		buf.append("select LAST_INSERT_ID();");
+                else if (getDB().getDBType().compareTo("sqlite") == 0)
+                    buf.append("select seq from sqlite_sequence where name = 'experiment'");
 				else if (getDB().getDBType().compareTo("db2") == 0)
 		    		buf.append("select IDENTITY_VAL_LOCAL() from experiment ");
 				else if (getDB().getDBType().compareTo("derby") == 0)

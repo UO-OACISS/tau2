@@ -71,13 +71,13 @@ public class ContextEventWindow extends JFrame implements Observer, ParaProfWind
 
         setLocation(WindowPlacer.getNewLocation(this, invoker));
 
-        if (thread.getNodeID() == -1) {
+        if (thread.getNodeID() == -1 || thread.getNodeID() == -6) {
             this.setTitle("TAU: ParaProf: Mean Context Events - "
                     + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         } else if (thread.getNodeID() == -2) {
             this.setTitle("TAU: ParaProf: Total Context Events - "
                     + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
-        } else if (thread.getNodeID() == -3) {
+        } else if (thread.getNodeID() == -3 || thread.getNodeID() == -7) {
             this.setTitle("TAU: ParaProf: Std. Dev. Context Events - "
                     + ppTrial.getTrialIdentifier(ParaProf.preferences.getShowPathTitleInReverse()));
         } else {

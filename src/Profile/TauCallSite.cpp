@@ -1,6 +1,12 @@
+
 #ifdef __APPLE__
 #define _XOPEN_SOURCE 600 /* Single UNIX Specification, Version 3 */
 #endif /* __APPLE__ */
+
+#include <stdlib.h>
+#include <ctype.h>
+#include <map>
+#include <vector>
 
 #include <Profile/TauSampling.h>
 #include <Profile/Profiler.h>
@@ -14,11 +20,9 @@
 #define TAU_EXECINFO 1
 #endif /* _AIX */
 
-#include <stdlib.h>
-#include <ctype.h>
-#include <map>
-#include <vector>
 using namespace std;
+using namespace tau;
+
 
 // For BFD-based name resolution
 static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;

@@ -1,16 +1,16 @@
 /****************************************************************************
-**			TAU Portable Profiling Package			   **
-**			http://www.cs.uoregon.edu/research/tau	           **
+**            TAU Portable Profiling Package               **
+**            http://www.cs.uoregon.edu/research/tau               **
 *****************************************************************************
-**    Copyright 2010  						   	   **
+**    Copyright 2010                                    **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 ****************************************************************************/
 /****************************************************************************
-**	File 		: TauMetaData.h  				   **
-**	Description 	: TAU Profiling Package				   **
-**	Contact		: tau-bugs@cs.uoregon.edu               	   **
-**	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
+**    File         : TauMetaData.h                     **
+**    Description     : TAU Profiling Package                   **
+**    Contact        : tau-bugs@cs.uoregon.edu                      **
+**    Documentation    : See http://www.cs.uoregon.edu/research/tau       **
 **                                                                         **
 **      Description     : This file contains metadata related routines     **
 **                                                                         **
@@ -20,30 +20,75 @@
 #ifndef _TAU_METADATA_H_
 #define _TAU_METADATA_H_
 
-
+#include <TauMetaDataTypes.h>
 #include <TauUtil.h>
 #include <map>
+#include <string.h>
+#include <sstream>
+using namespace std;
 
-// Note: using std::string in a std::map is dangerous 
-// for some libstdc++ implementations.  The risky code is:
-//     std::map<std::string, std::string> mymap;
-//     mymap["hello"] = "world";
-// You need to remember to use:
-//     mymap["hello"] = string("world");
-// It's faster, safer, and easier to use a char*, especially
-// since TAU (over)uses strdup on most function arguments.
-typedef std::map<char const *, char const *> metadata_map_t;
+// the actual metadata key structure, can be nested.
+class Tau_metadata_key {
+  public:
+  char* name;
+  char* timer_context;
+  int call_number;
+  x_uint64 timestamp;
+  Tau_metadata_key() {
+    name = NULL;
+    timer_context = NULL;
+    call_number = 0;
+    timestamp = 0;
+  }
+};
 
-metadata_map_t & Tau_metadata_getMetaData();
+
+struct Tau_Metadata_Compare: std::binary_function<Tau_metadata_key,Tau_metadata_key,bool>
+{
+  bool operator()(const Tau_metadata_key& lhs, const Tau_metadata_key& rhs) const { 
+    
+    char *left;
+    char *right;
+    int allocate_left = 0;
+    int allocate_right = 0;
+
+	// we are using C methods, because the C++ methods didn't work with PGI on Cray XK6.
+
+    if (lhs.timer_context == NULL) {
+        left = lhs.name;
+    } else {
+	    allocate_left = strlen(lhs.name)+strlen(lhs.timer_context)+64;
+        left = (char *) calloc(allocate_left, sizeof(char));
+        sprintf(left, "%s%s%d:%d", lhs.name, lhs.timer_context, lhs.call_number, lhs.timestamp);
+    }
+    if (rhs.timer_context == NULL) {
+        right = rhs.name;
+    } else {
+        allocate_right = strlen(rhs.name)+strlen(rhs.timer_context)+64;
+        right = (char *) calloc(allocate_right, sizeof(char));
+        sprintf(right, "%s%s%d:%d", rhs.name, rhs.timer_context, rhs.call_number, rhs.timestamp);
+    }
+    bool result = strcmp(left, right) < 0;
+	if (allocate_left > 0) {
+        free(left);
+	}
+	if (allocate_right > 0) {
+        free(right);
+	}
+    return result;
+  }
+};
+
+map<Tau_metadata_key,Tau_metadata_value_t*,Tau_Metadata_Compare> &Tau_metadata_getMetaData(int tid);
 int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int counter, int tid);
 int Tau_metadata_writeMetaData(FILE *fp, int counter, int tid);
 int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int tid);
-int Tau_metadata_writeMetaData(Tau_util_outputDevice *out);
+
 int Tau_metadata_fillMetaData();
 Tau_util_outputDevice *Tau_metadata_generateMergeBuffer();
 void Tau_metadata_removeDuplicates(char *buffer, int buflen);
 
-void Tau_metadata_register(char *name, int value);
+void Tau_metadata_register(const char *name, int value);
 int Tau_metadata_mergeMetaData();
 
 #endif /* _TAU_METADATA_H_ */

@@ -29,7 +29,7 @@ import org.jfree.data.general.SeriesException;
 
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.perfdmf.Experiment;
-import edu.uoregon.tau.perfexplorer.common.RMIView;
+import edu.uoregon.tau.perfdmf.View;
 import edu.uoregon.tau.perfexplorer.common.TransformationType;
 
 /**
@@ -359,7 +359,7 @@ public class ChartGUI extends JFrame implements ActionListener {
 				PerfExplorerModel theModel = PerfExplorerModel.getModel();
 				Object selection = theModel.getCurrentSelection();
 				// allow Experiments or Trials or 1 view
-				if (!(selection instanceof Experiment) && !(selection instanceof RMIView)) {
+				if (!(selection instanceof Experiment) && !(selection instanceof View)) {
 					JOptionPane.showMessageDialog(PerfExplorerClient.getMainFrame(), "Please select one or more Experiments or one View.",
 						"Selection Error", JOptionPane.ERROR_MESSAGE);
 					return;

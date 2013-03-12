@@ -7,289 +7,474 @@
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 ****************************************************************************/
 /****************************************************************************
-**	File 		: TauMemoryWrap.cpp  				   **
-**	Description 	: TAU Profiling Package				   **
-**	Contact		: tau-bugs@cs.uoregon.edu               	   **
-**	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
-**                                                                         **
-**      Description     : LD_PRELOAD memory wrapper                        **
-**                                                                         **
+**	File 		      : memory_wrapper.cpp
+**	Description 	: TAU Profiling Package
+**	Contact		    : tau-bugs@cs.uoregon.edu
+**	Documentation	: See http://www.cs.uoregon.edu/research/tau
+**
+**  Description   : TAU memory profiler and debugger
+**
 ****************************************************************************/
 
-#define _GNU_SOURCE
-#include <dlfcn.h>
-
-#define _XOPEN_SOURCE 600 /* see: man posix_memalign */
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
 #include <unistd.h>
   
-#include <stdarg.h>
 #include <memory.h>
+#if (defined(__APPLE_CC__) || defined(TAU_APPLE_XLC) || defined(TAU_APPLE_PGI))
+#include <malloc/malloc.h>
+#elif defined(TAU_FREEBSD)
+#include <stdlib.h>
+#else
+#include <malloc.h>
+#endif
 
-  
 #include <TAU.h>
 #include <Profile/Profiler.h>
-#include <Profile/TauMemoryWrap.h>
+#include <Profile/TauMemory.h>
+#include "memory_wrapper.h"
 
+#ifndef TAU_MULTITHREAD
+#if defined(TAU_OPENMP) || defined(PTHREADS)
+#define TAU_MULTITHREAD
+#endif
+#endif
+
+#ifdef TAU_MULTITHREAD
+#include <pthread.h>
+
+// Thread-specific function handles
+pthread_once_t multithread_init_once = PTHREAD_ONCE_INIT;
+pthread_key_t flag_key;
+pthread_mutex_t flag_mutex;
+#endif
+
+// Handles to the system implementation of the function
+malloc_t malloc_system;
+calloc_t calloc_system;
+realloc_t realloc_system;
+free_t free_system;
+memalign_t memalign_system;
+posix_memalign_t posix_memalign_system;
+valloc_t valloc_system;
+pvalloc_t pvalloc_system;
+
+// Memory for bootstrapping.  Must not be static.
+char bootstrap_heap[BOOTSTRAP_HEAP_SIZE];
+char * bootstrap_base = bootstrap_heap;
+
+
+static inline
+int is_bootstrap(void * ptr)
+{
+  char const * const p = (char*)ptr;
+  return (p < bootstrap_heap + BOOTSTRAP_HEAP_SIZE) && (bootstrap_heap < p);
+}
+
+static
+void * bootstrap_alloc(size_t align, size_t size)
+{
+  char * ptr;
+
+  // Check alignment.  Default alignment is sizeof(long)
+  if(!align) {
+    align = sizeof(long);
+
+    if (size < align) {
+      // Align to the next lower power of two
+      align = size;
+      while (align & (align-1)) {
+        align &= align-1;
+      }
+    }
+  }
+
+  // Calculate address
+  ptr = (char*)(((size_t)bootstrap_base + (align-1)) & ~(align-1));
+  bootstrap_base = ptr + size;
+
+  // Check for overflow
+  if (bootstrap_base >= (bootstrap_heap + BOOTSTRAP_HEAP_SIZE)) {
+    // These calls are unsafe, but we're about to die anyway.
+    printf("TAU bootstreap heap exceeded.  Increase BOOTSTRAP_HEAP_SIZE in " __FILE__ " and try again.\n");
+    fflush(stdout);
+    exit(1);
+  }
+
+  return (void*)ptr;
+}
+
+static inline
+void bootstrap_free(void * ptr)
+{
+//  if (is_bootstrap(ptr)) {
+//    // Do nothing: bootstrap memory is deallocated on program exit
+//  }
+}
+
+/*********************************************************************
+ * Wrapper enable/disable
+ ********************************************************************/
+
+#ifdef TAU_MULTITHREAD
+void multithread_init(void)
+{
+  pthread_key_create(&flag_key, NULL);
+  pthread_mutex_init(&flag_mutex, NULL);
+}
+
+int * memory_wrapper_disabled_flag(void)
+{
+  int * flag;
+
+  pthread_once(&multithread_init_once, multithread_init);
+
+  flag = (int*)pthread_getspecific(flag_key);
+  if (!flag) {
+    pthread_mutex_lock(&flag_mutex);
+    flag = (int*)bootstrap_alloc(64, sizeof(int));
+    pthread_mutex_unlock(&flag_mutex);
+    // Start disabled. TauInit will enable the wrapper when TAU initializes
+    *flag = 1;
+    // Update thread specific data
+    pthread_setspecific(flag_key, (void*)flag);
+  }
+
+  return flag;
+}
+#else
+
+int memory_wrapper_process_flag = 1;
+int * memory_wrapper_disabled_flag(void)
+{
+  return &memory_wrapper_process_flag;
+}
+#endif
+
+void memory_wrapper_enable(void)
+{
+  *memory_wrapper_disabled_flag() = 0;
+}
+
+void memory_wrapper_disable(void)
+{
+  *memory_wrapper_disabled_flag() = 1;
+}
+
+int memory_wrapper_init(void)
+{
+  static int init = 0;
+  if (init) return 0;
+
+#ifdef TAU_MULTITHREAD
+  pthread_once(&multithread_init_once, multithread_init);
+#endif
+
+#ifdef TAU_MEMORY_WRAPPER_DYNAMIC
+  if (Tau_init_check_dl_initialized()) {
+    Tau_memory_wrapper_register(memory_wrapper_enable, memory_wrapper_disable);
+    init = 1;
+    return 0;
+  }
+  return 1;
+#else
+  Tau_memory_wrapper_register(memory_wrapper_enable, memory_wrapper_disable);
+  init = 1;
+  return 0;
+#endif
+}
 
 /*********************************************************************
  * malloc
  ********************************************************************/
-void *malloc (size_t size) {
-  static void* (*_malloc)(size_t size) = NULL;
 
-  if (_malloc == NULL) {
-    _malloc = ( void* (*)(size_t size)) dlsym(RTLD_NEXT, "malloc");
+void * malloc_wrapper(size_t size)
+{
+  static int initializing = 0;
+  static int bootstrapped = 0;
+
+  if (!bootstrapped) {
+    if (!initializing) {
+      initializing = 1;
+      malloc_system = get_system_malloc();
+    }
+
+    if (!malloc_system) {
+      return bootstrap_alloc(0, size);
+    }
+
+    if (memory_wrapper_init()) {
+      return malloc_system(size);
+    }
+
+    bootstrapped = 1;
   }
 
-  if (Tau_memorywrap_checkPassThrough()) {
-    return _malloc(size);
+  if (*memory_wrapper_disabled_flag()) {
+    return malloc_system(size);
+  } else {
+    return Tau_malloc(size, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_LINE);
   }
-
-  Tau_memorywrap_checkInit();
-  Tau_global_incr_insideTAU();
-  void *ptr = _malloc(size);
-  Tau_memorywrap_add_ptr(ptr, size);
-  Tau_global_decr_insideTAU();
-  return ptr;
-}
-
-/*********************************************************************
- * valloc
- ********************************************************************/
-void *valloc (size_t size) {
-  static void* (*_valloc)(size_t size) = NULL;
-
-  if (_valloc == NULL) {
-    _valloc = ( void* (*)(size_t size)) dlsym(RTLD_NEXT, "valloc");
-  }
-
-  if (Tau_memorywrap_checkPassThrough()) {
-    return _valloc(size);
-  }
-
-  Tau_memorywrap_checkInit();
-  Tau_global_incr_insideTAU();
-  void *ptr = _valloc(size);
-  Tau_memorywrap_add_ptr(ptr, size);
-  Tau_global_decr_insideTAU();
-  return ptr;
-}
-
-/*********************************************************************
- * memalign
- ********************************************************************/
-void * memalign (size_t alignment, size_t size) {
-  static void * (*_memalign)(size_t alignment, size_t size) = NULL;
-  static void *ret; 
-
-  if (_memalign == NULL) {
-    _memalign = ( void * (*)(size_t alignment, size_t size)) dlsym(RTLD_NEXT, "memalign");
-  }
-
-  if (Tau_memorywrap_checkPassThrough()) {
-    return _memalign(alignment, size);
-  }
-
-  Tau_memorywrap_checkInit();
-  Tau_global_incr_insideTAU();
-
-  ret = _memalign(alignment, size);
-  if (ret != NULL) {
-    Tau_memorywrap_add_ptr(ret, size);
-  }
-
-  Tau_global_decr_insideTAU();
-  return ret;
 }
 
 
 /*********************************************************************
  * calloc
  ********************************************************************/
-#define TAU_EXTRA_MEM_SIZE 2048
-static char tau_calloc_mem[TAU_EXTRA_MEM_SIZE]; 
-static int tau_calloc_mem_size = 0;
-static int tau_calloc_used = 0;
-static int tau_calloc_freed = 0;
 
-void *calloc (size_t nmemb, size_t size) {
-   static void* (*_calloc)(size_t nmemb, size_t size) = NULL;
+void * calloc_wrapper(size_t count, size_t size)
+{
+  static int initializing = 0;
+  static int bootstrapped = 0;
 
+  if (!bootstrapped) {
+    if (!initializing) {
+      initializing = 1;
+      calloc_system = get_system_calloc();
+    }
 
-   static int checkinit = 0;
-   static int numcalls = 0;
+    if (!calloc_system) {
+      char * ptr = (char*)bootstrap_alloc(0, size*count);
+      char const * const end = ptr + size*count;
+      char * p = ptr;
+      while (p < end) {
+        *p = (char)0;
+        ++p;
+      }
+      return (void *)ptr;
+    }
 
+    if (memory_wrapper_init()) {
+      return calloc_system(count, size);
+    }
 
-   if(Tau_memorywrap_checkPassThrough()){
-      if (checkinit == 0) {
-         checkinit = 1;
-         _calloc = ( void* (*)(size_t nmemb, size_t size)) dlsym(RTLD_NEXT, "calloc");
-       }       
+    bootstrapped = 1;
+  }
 
-       /* *CWL* Work-around for the fact that dlsym makes exactly 1 calloc call.
-       As a result, TAU needs to manage the memory for that one call.
-       */
-     if (_calloc == NULL && tau_calloc_used == 0  && size < TAU_EXTRA_MEM_SIZE) {
-     /* if (size > ) { */
-     /*   printf("TAU: Error: Static array exceeds initial allocation request in calloc: size = %d\n", (int) size); */
-     /*   exit(1); */
-     /* } */
-     tau_calloc_used = 1;
-     memset (tau_calloc_mem, 0, size); 
-     tau_calloc_mem_size = nmemb * size;
-
-     /* Tau_memorywrap_add_ptr(tau_calloc_mem, nmemb * size); */
-     return (void *) tau_calloc_mem;  
-   }
-   return _calloc(nmemb, size);
-
-   }
-   else{
-   
-
-
-   numcalls++;
-   if (checkinit == 0) {
-     checkinit = 1;
-
-    Tau_global_incr_insideTAU();
-
-     _calloc = ( void* (*)(size_t nmemb, size_t size)) dlsym(RTLD_NEXT, "calloc");
-
-    Tau_global_decr_insideTAU();
-   }
-
-   /* *CWL* Work-around for the fact that dlsym makes exactly 1 calloc call.
-      As a result, TAU needs to manage the memory for that one call.
-    */
-   if (_calloc == NULL && tau_calloc_used == 0  && size < TAU_EXTRA_MEM_SIZE) {
-     /* if (size > ) { */
-     /*   printf("TAU: Error: Static array exceeds initial allocation request in calloc: size = %d\n", (int) size); */
-     /*   exit(1); */
-     /* } */
-     Tau_global_incr_insideTAU();
-     tau_calloc_used = 1;
-     memset (tau_calloc_mem, 0, size); 
-     tau_calloc_mem_size = nmemb * size;
-
-     /* Tau_memorywrap_add_ptr(tau_calloc_mem, nmemb * size); */
-     Tau_global_decr_insideTAU();
-     return (void *) tau_calloc_mem;  
-   }
-   
-   if (Tau_memorywrap_checkPassThrough()) {
-     return _calloc(nmemb, size);
-   }
-
-   Tau_memorywrap_checkInit();
-
-
-   Tau_global_incr_insideTAU();
-
-   void *ptr = _calloc(nmemb, size);
-
-   /* *CWL* Work-around for an unusual scenario where deadlock is introduced by
-      the intel compilers. Somehow some lock is acquired when _init() is 
-      invoked, encounters a calloc call,
-      and proceeds to enter a deadlock situation when the same (?)
-      lock is attempted on any initialization of function static variables
-      in TAU. This happens after the memory wrappers for TAU have been
-      preloaded and initialized. Our current solution avoids tracking the
-      memory used (and hence entering TAU code) on the single calloc call
-      invoked in _init().
-   */
-   if (!(numcalls == 3 && size == 1040)) {
-     Tau_memorywrap_add_ptr(ptr, nmemb * size);
-   }
-   Tau_global_decr_insideTAU(); 
-   return ptr;
-   }
-   
-   
+  if (*memory_wrapper_disabled_flag()) {
+    return calloc_system(count, size);
+  } else {
+    return Tau_calloc(count, size, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_LINE);
+  }
 }
-
 
 /*********************************************************************
  * realloc
  ********************************************************************/
-void *realloc (void *ptr, size_t size) {
-  static void* (*_realloc)(void *ptr, size_t size) = NULL;
 
-  if (_realloc == NULL) {
-    _realloc = ( void* (*)(void *ptr, size_t size)) dlsym(RTLD_NEXT, "realloc");
+void * realloc_wrapper(void * ptr, size_t size)
+{
+  static int initializing = 0;
+  static int bootstrapped = 0;
+
+  if (!bootstrapped) {
+    if (!initializing) {
+      initializing = 1;
+      realloc_system = get_system_realloc();
+    }
+
+    if (!realloc_system) {
+      return bootstrap_alloc(0, size);
+    }
+
+    if (memory_wrapper_init()) {
+      return realloc_system(ptr, size);
+    }
+
+    bootstrapped = 1;
   }
 
-  if (Tau_memorywrap_checkPassThrough()) {
-    return _realloc(ptr, size);
+  if (*memory_wrapper_disabled_flag()) {
+    return realloc_system(ptr, size);
+  } else {
+    return Tau_realloc(ptr, size, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_LINE);
   }
-
-  Tau_memorywrap_checkInit();
-  Tau_global_incr_insideTAU();
-
-  void *ret_ptr = _realloc(ptr, size);
-
-  Tau_memorywrap_remove_ptr(ptr);
-  Tau_memorywrap_add_ptr(ret_ptr, size);
-
-  Tau_global_decr_insideTAU();
-  return ret_ptr;
 }
-
-
-/*********************************************************************
- * posix_memalign
- ********************************************************************/
-int posix_memalign (void **memptr, size_t alignment, size_t size) {
-  static int (*_posix_memalign)(void **memptr, size_t alignment, size_t size) = NULL;
-
-  if (_posix_memalign == NULL) {
-    _posix_memalign = ( int (*)(void **memptr, size_t alignment, size_t size)) dlsym(RTLD_NEXT, "posix_memalign");
-  }
-
-  if (Tau_memorywrap_checkPassThrough()) {
-    return _posix_memalign(memptr, alignment, size);
-  }
-
-  Tau_memorywrap_checkInit();
-  Tau_global_incr_insideTAU();
-
-  int ret = _posix_memalign(memptr, alignment, size);
-  if (ret == 0) {
-    Tau_memorywrap_add_ptr(*memptr, size);
-  }
-
-  Tau_global_decr_insideTAU();
-  return ret;
-}
-
 
 /*********************************************************************
  * free
  ********************************************************************/
-void free (void *ptr) {
-  static void (*_free)(void *ptr) = NULL;
 
-  if (ptr == tau_calloc_mem) {
-    /* Tau_memorywrap_remove_ptr(ptr); */
-    return;
+void free_wrapper(void * ptr)
+{
+  static int initializing = 0;
+  static int bootstrapped = 0;
+
+  if (!bootstrapped) {
+    if (!initializing) {
+     initializing = 1;
+     free_system = get_system_free();
+    }
+
+    if (!free_system) {
+      bootstrap_free(ptr);
+      return;
+    }
+
+    if (memory_wrapper_init()) {
+      if (is_bootstrap(ptr)) {
+        bootstrap_free(ptr);
+      } else {
+        free_system(ptr);
+      }
+      return;
+    }
+
+    bootstrapped = 1;
   }
 
-  if (_free == NULL) {
-    _free = ( void (*)(void *ptr)) dlsym(RTLD_NEXT, "free");
+  if (*memory_wrapper_disabled_flag()) {
+    if (is_bootstrap(ptr)) {
+      bootstrap_free(ptr);
+    } else if (!Tau_global_getLightsOut()) {
+      free_system(ptr);
+    }
+  } else {
+    if (Tau_memory_is_tau_allocation(ptr)) {
+      Tau_free(ptr, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_LINE);
+    } else if (is_bootstrap(ptr)) {
+      bootstrap_free(ptr);
+    } else {
+      free_system(ptr);
+    }
+  }
+}
+
+
+/*********************************************************************
+ * memalign
+ ********************************************************************/
+
+void * memalign_wrapper(size_t alignment, size_t size)
+{
+  static int initializing = 0;
+  static int bootstrapped = 0;
+
+  if (!bootstrapped) {
+    if (!initializing) {
+      initializing = 1;
+      memalign_system = get_system_memalign();
+    }
+
+    if (!memalign_system) {
+      return bootstrap_alloc(0, size);
+    }
+
+    if (memory_wrapper_init()) {
+      return memalign_system(alignment, size);
+    }
+
+    bootstrapped = 1;
   }
 
-  if (Tau_memorywrap_checkPassThrough()) {
-    _free(ptr);
-    return;
+  if (*memory_wrapper_disabled_flag()) {
+    return memalign_system(alignment, size);
+  } else {
+    return Tau_memalign(alignment, size, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_LINE);
+  }
+}
+
+/*********************************************************************
+ * posix_memalign
+ ********************************************************************/
+
+int posix_memalign_wrapper(void ** ptr, size_t alignment, size_t size)
+{
+  static int initializing = 0;
+  static int bootstrapped = 0;
+
+  if (!bootstrapped) {
+    if (!initializing) {
+      initializing = 1;
+      posix_memalign_system = get_system_posix_memalign();
+    }
+
+    if (!posix_memalign_system) {
+      *ptr = bootstrap_alloc(0, size);
+      return 0;
+    }
+
+    if (memory_wrapper_init()) {
+      return posix_memalign_system(ptr, alignment, size);
+    }
+
+    bootstrapped = 1;
   }
 
-  Tau_memorywrap_checkInit();
-  Tau_global_incr_insideTAU();
-  _free(ptr);
-  Tau_memorywrap_remove_ptr(ptr);
-  Tau_global_decr_insideTAU();
+  if (*memory_wrapper_disabled_flag()) {
+    return posix_memalign_system(ptr, alignment, size);
+  } else {
+    return Tau_posix_memalign(ptr, alignment, size, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_LINE);
+  }
+}
+
+/*********************************************************************
+ * valloc
+ ********************************************************************/
+
+void * valloc_wrapper(size_t size)
+{
+  static int initializing = 0;
+  static int bootstrapped = 0;
+
+  if (!bootstrapped) {
+    if (!initializing) {
+      initializing = 1;
+      valloc_system = get_system_valloc();
+    }
+
+    if (!valloc_system) {
+      return bootstrap_alloc(PAGE_SIZE, size);
+    }
+
+    if (memory_wrapper_init()) {
+      return valloc_system(size);
+    }
+
+    bootstrapped = 1;
+  }
+
+  if (*memory_wrapper_disabled_flag()) {
+    return valloc_system(size);
+  } else {
+    return Tau_valloc(size, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_LINE);
+  }
+}
+
+/*********************************************************************
+ * pvalloc
+ ********************************************************************/
+
+void * pvalloc_wrapper(size_t size)
+{
+  static int initializing = 0;
+  static int bootstrapped = 0;
+
+  if (!bootstrapped) {
+    if (!initializing) {
+      initializing = 1;
+      pvalloc_system = get_system_pvalloc();
+    }
+
+    if (!pvalloc_system) {
+      size = (size + PAGE_SIZE-1) & ~(PAGE_SIZE-1);
+      return bootstrap_alloc(PAGE_SIZE, size);
+    }
+
+    if (memory_wrapper_init()) {
+      return pvalloc_system(size);
+    }
+
+    bootstrapped = 1;
+  }
+
+  if (*memory_wrapper_disabled_flag()) {
+    return pvalloc_system(size);
+  } else {
+    return Tau_pvalloc(size, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_LINE);
+  }
 }
 
 /*********************************************************************

@@ -174,15 +174,17 @@ is_sub_unit_header( string& lowline, bool inHeader, Language lang )
                   ( isalnum( lline[ lline.find( "function" ) + 8 ] ) ||
                     ( lline[ lline.find( "function" ) + 8 ] == '_' ) ) )     &&
                !( ( lline.find( "function" ) != 0 )                       &&
-                  ( isalnum( lline[ lline.find( "function" ) - 1 ] ) ) ||
-                  ( lline[ lline.find( "function" ) - 1 ] == '_' ) ) )             ||
+                  ( isalnum( lline[ lline.find( "function" ) - 1 ] )      ||
+                    ( lline[ lline.find( "function" ) - 1 ] == '_' ) ) )  &&
+               ( isalpha( line[ line.find( "function" ) + 8 ] ) ) )       ||
              ( ( lline.find( "subroutine" )   != string::npos )                 &&
                !( lline.length() >= ( lline.find( "subroutine" ) + 10 )     &&
                   ( isalnum( lline[ lline.find( "subroutine" ) + 10 ] ) ||
                     ( lline[ lline.find( "subroutine" ) + 10 ] == '_' ) ) )  &&
                !( ( lline.find( "subroutine" ) != 0 )                     &&
-                  ( isalnum( lline[ lline.find( "subroutine" ) - 1 ] ) ) ||
-                  ( lline[ lline.find( "subroutine" ) - 1 ] == '_' ) ) )           ||
+                  ( isalnum( lline[ lline.find( "subroutine" ) - 1 ] )   ||
+                    ( lline[ lline.find( "subroutine" ) - 1 ] == '_' ) ) ) &&
+               ( isalpha( line[ line.find( "subroutine" ) + 10 ] ) ) )          ||
              ( line.find( "save" )     == 0 && inHeader )                       ||
              ( line.find( "result" )   == 0 && inHeader )                       ||
              ( line.find( "implicit" ) == 0 && inHeader )                       ||
@@ -220,7 +222,7 @@ is_sub_unit_header( string& lowline, bool inHeader, Language lang )
     //Check if we leave an contains block
     inContains = inContains && line.find( "endmodule" ) == string::npos;
 
-    if ( line[ line.length() - 1 ] == '&' || line.find( "&!" ) != string::npos )
+    if ( line[ line.length() - 1 ] == '&' )
     {
         continuation = true;
     }
@@ -272,26 +274,55 @@ is_comment_line( string & lowline,
                  string & line,
                  Language lang )
 {
-    if ( lowline[ 0 ] == '!' ||
-         ( ( lang & L_F77 ) && ( lowline[ 0 ] == '*' || lowline[ 0 ] == 'c' ) ) )
+    if ( lang & L_F77 )
     {
-        // fixed form comment
-
-        if ( lowline[ 1 ] == '$' &&
-             lowline.find_first_not_of( " \t0123456789", 2 ) > 5 )
+        if ( lowline[ 0 ] == '!' ||
+             ( ( lang & L_F77 ) && ( lowline[ 0 ] == '*' || lowline[ 0 ] == 'c' ) ) )
         {
-            // OpenMP Conditional Compilation
-            lowline[ 0 ] = ' ';
-            lowline[ 1 ] = ' ';
+            // fixed form comment
+
+            if ( lowline[ 1 ] == '$' &&
+                 lowline.find_first_not_of( " \t0123456789", 2 ) > 5 )
+            {
+                // OpenMP Conditional Compilation for fixed form
+                lowline[ 0 ] = ' ';
+                lowline[ 1 ] = ' ';
+                return false;
+            }
+            else if ( lowline[ 1 ] == 'p' && lowline[ 2 ] == '$' &&
+                      lowline.find_first_not_of( " \t0123456789", 3 ) > 5 )
+            {
+                // POMP Conditional Compilation for fixed form
+                lowline[ 0 ] = line[ 0 ] = ' ';
+                lowline[ 1 ] = line[ 1 ] = ' ';
+                lowline[ 2 ] = line[ 2 ] = ' ';
+                return false;
+            }
+            else
+            {
+                return true;
+            }
+        }
+    }
+    // free form comment
+    int first_char = lowline.find_first_not_of( " \t" );
+    if ( lowline[ first_char ] == '!' )
+    {
+        if ( lowline[ first_char + 1 ] == '$' &&
+             ( lowline[ first_char + 2 ] == ' ' || lowline[ first_char + 2 ] == '\t' ) )
+        {
+            // OpenMP Conditional Compilation for free form
+            lowline[ first_char ]     = ' ';
+            lowline[ first_char + 1 ] = ' ';
             return false;
         }
-        else if ( lowline[ 1 ] == 'p' && lowline[ 2 ] == '$' &&
-                  lowline.find_first_not_of( " \t0123456789", 3 ) > 5 )
+        else if ( lowline[ first_char + 1 ] == 'p' && lowline[ first_char + 2 ] == '$' &&
+                  ( lowline[ first_char + 3 ] == ' ' || lowline[ first_char + 3 ] == '\t' ) )
         {
-            // POMP Conditional Compilation
-            lowline[ 0 ] = line[ 0 ] = ' ';
-            lowline[ 1 ] = line[ 1 ] = ' ';
-            lowline[ 2 ] = line[ 2 ] = ' ';
+            // POMP Conditional Compilation for free form
+            lowline[ first_char ]     = line[ first_char ] = ' ';
+            lowline[ first_char + 1 ] = line[ first_char + 1 ] = ' ';
+            lowline[ first_char + 2 ] = line[ first_char + 2 ] = ' ';
             return false;
         }
         else
@@ -299,6 +330,8 @@ is_comment_line( string & lowline,
             return true;
         }
     }
+
+
 
     string::size_type s = lowline.find_first_not_of( " \n" );
     if ( s != string::npos && lowline[ s ] == '!' )
@@ -326,7 +359,7 @@ is_comment_line( string & lowline,
     }
     return false;
 }
-/**@brief check if this line startes a do loop*/
+/**@brief check if this line starts a do loop*/
 bool
 is_loop_start( string & lowline,
                string & line,
@@ -689,7 +722,8 @@ process_fortran( istream &   is,
                  ostream &   os,
                  bool        addSharedDecl,
                  char*       incfile,
-                 Language    lang )
+                 Language    lang,
+                 bool        keepSrcInfo )
 {
     string            line;
     int               lineno     = 0;
@@ -764,6 +798,10 @@ process_fortran( istream &   is,
             {
                 inHeader = false;
                 os << "      include \'" << incfile << "\'" << std::endl;
+                if ( keepSrcInfo )
+                {
+                    os << "#line " << lineno << " \"" << infile << "\"" << "\n";
+                }
             }
 
             int pomp = ( ( lowline[ 1 ] == 'p' ) || ( lowline[ 2 ] == 'p' ) );
@@ -819,6 +857,10 @@ process_fortran( istream &   is,
             {
                 inHeader = false;
                 os << "      include \'" << incfile << "\'" << std::endl;
+                if ( keepSrcInfo )
+                {
+                    os << "#line " << lineno << " \"" << infile << "\"" << "\n";
+                }
             }
 
             /*
@@ -926,6 +968,10 @@ process_fortran( istream &   is,
                 {
                     inHeader = false;
                     os << "      include \'" << incfile << "\'" << std::endl;
+                    if ( keepSrcInfo )
+                    {
+                        os << "#line " << lineno << " \"" << infile << "\"" << "\n";
+                    }
                 }
                 if ( instrument_locks() )
                 {

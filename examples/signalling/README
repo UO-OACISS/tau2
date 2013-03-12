@@ -1,0 +1,13 @@
+This example can be used on one or more cores using MPI, pthread, OpenMP or
+with a hybrid MPI+<thread> runtime. It features a selective instrumentation
+file that uses outer-loop level instrumentation in two routines. 
+
+The tau.conf configuration file contains the environment variable settings
+necessary to configure TAU at runtime to dump the current timer stack state
+and timer values for the timers on the state.
+
+The signalling script is used to launch the program, get its process id, and
+periodically signal the process to dump the callstack. The callstack values
+are dumped to callstack.* files, indexed by process index. All threads within
+the process, including GPU threads, are dumped to the same file.
+

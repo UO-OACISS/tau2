@@ -388,9 +388,13 @@ public static boolean validate(String expression){
         //Done with this metric, compute the mean values.
         trial.setMeanData(metric);
 
-        trial.getDataSource().getMeanData().setThreadData(metric);
+        trial.getDataSource().getMeanDataNoNull().setThreadData(metric);
         trial.getDataSource().getTotalData().setThreadData(metric);
-        trial.getDataSource().getStdDevData().setThreadData(metric);
+        trial.getDataSource().getStdDevDataNoNull().setThreadData(metric);
+        trial.getDataSource().getMinData().setThreadData(metric);
+        trial.getDataSource().getMaxData().setThreadData(metric);
+        trial.getDataSource().getMeanDataAll().setThreadData(metric);
+        trial.getDataSource().getStdDevDataAll().setThreadData(metric);
         
 
         return newMetric;

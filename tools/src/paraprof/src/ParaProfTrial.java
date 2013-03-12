@@ -27,6 +27,7 @@ import java.util.Vector;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
 
+import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
 import edu.uoregon.tau.paraprof.script.ParaProfScript;
 import edu.uoregon.tau.paraprof.script.ParaProfTrialScript;
 import edu.uoregon.tau.paraprof.util.FileMonitor;
@@ -50,6 +51,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
     private DatabaseAPI dbAPI;
     private ParaProfExperiment experiment = null;
+    private ParaProfView view = null;
     private DefaultMutableTreeNode defaultMutableTreeNode = null;
     private TreePath treePath = null;
     private boolean dBTrial = false;
@@ -98,7 +100,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
     public Iterator<Function> getFunctions() {
-        return getDataSource().getFunctions();
+        return getDataSource().getFunctionIterator();
     }
 
     public Thread getMeanThread() {
@@ -132,6 +134,16 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     public void setID(int id) {
         trial.setID(id);
     }
+    
+    public void rename(String newName){
+    	if(dBTrial){
+			DatabaseAPI databaseAPI = getDatabaseAPI();
+			if (databaseAPI != null) {
+				this.trial.rename(databaseAPI.getDb(), newName);
+			}
+		}
+		trial.setName(newName);
+    }
 
     public String getName() {
         return trial.getName();
@@ -143,6 +155,14 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 
     public void setExperiment(ParaProfExperiment experiment) {
         this.experiment = experiment;
+    }
+
+    public void setView(ParaProfView view) {
+        this.view = view;
+    }
+
+    public ParaProfView getView() {
+        return view;
     }
 
     public ParaProfExperiment getExperiment() {
@@ -192,6 +212,8 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     public String getIDString() {
         if (experiment != null) {
             return (experiment.getIDString()) + ":" + (trial.getID());
+        } else if (view != null) {
+            return (view.getIDString()) + ":" + (trial.getID());
         } else {
             return ":" + (trial.getID());
         }
@@ -345,14 +367,20 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
     public void setMeanData(int metricID) {
+    	// save the old derived provided state
+    	boolean tmpVal = trial.getDataSource().isDerivedProvided();
+    	// set to false, so we compute new statistics for the new metric
+    	trial.getDataSource().setDerivedProvided(false);
         trial.getDataSource().generateStatistics(metricID, metricID);
+        // restore the old value
+    	trial.getDataSource().setDerivedProvided(tmpVal);
     }
 
     // return a vector of only those functions that are currently "displayed" (i.e. group masks, etc)
     public List<Function> getDisplayedFunctions() {
         List<Function> displayedFunctions = new ArrayList<Function>();
 
-        for (Iterator<Function> it = this.getDataSource().getFunctions(); it.hasNext();) {
+        for (Iterator<Function> it = this.getDataSource().getFunctionIterator(); it.hasNext();) {
             Function function = it.next();
             if (this.displayFunction(function)) {
                 displayedFunctions.add(function);
@@ -370,7 +398,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
     public void showGroup(Group group) {
-        for (Iterator<Function> it = getDataSource().getFunctions(); it.hasNext();) {
+        for (Iterator<Function> it = getDataSource().getFunctionIterator(); it.hasNext();) {
             Function function = it.next();
             if (function.isGroupMember(group)) {
                 functionMask[function.getID()] = true;
@@ -382,7 +410,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
     public void hideGroup(Group group) {
-        for (Iterator<Function> it = getDataSource().getFunctions(); it.hasNext();) {
+        for (Iterator<Function> it = getDataSource().getFunctionIterator(); it.hasNext();) {
             Function function = it.next();
             if (function.isGroupMember(group)) {
                 functionMask[function.getID()] = false;
@@ -394,7 +422,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
     public void showGroupOnly(Group group) {
-        for (Iterator<Function> it = getDataSource().getFunctions(); it.hasNext();) {
+        for (Iterator<Function> it = getDataSource().getFunctionIterator(); it.hasNext();) {
             Function function = it.next();
             if (function.isGroupMember(group)) {
                 functionMask[function.getID()] = true;
@@ -408,7 +436,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
     public void showAllExcept(Group group) {
-        for (Iterator<Function> it = getDataSource().getFunctions(); it.hasNext();) {
+        for (Iterator<Function> it = getDataSource().getFunctionIterator(); it.hasNext();) {
             Function function = it.next();
             if (function.isGroupMember(group)) {
                 functionMask[function.getID()] = false;
@@ -458,7 +486,7 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
             }
         }
 
-        for (Iterator<Function> it = getDataSource().getFunctions(); it.hasNext();) {
+        for (Iterator<Function> it = getDataSource().getFunctionIterator(); it.hasNext();) {
             Function function = it.next();
             String name = function.getName();
             if (caseSensitive) {
@@ -738,10 +766,12 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
     public Database getDatabase() {
-        if (experiment == null) {
-            return null;
+        if (experiment != null) {
+        	return experiment.getDatabase();
+        } else if (view != null) {
+            return view.getDatabase();
         }
-        return experiment.getDatabase();
+        return null;
     }
 
     public List<Thread> getThreads() {
@@ -801,14 +831,29 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
     }
 
 	public Vector<String> getTopologyArray() {
-		Set<String> keys = getDataSource().getMetaData().keySet();
+		Set<MetaDataKey> keys = getDataSource().getMetaData().keySet();
 		Vector<String> topos = new Vector<String>();
-		for(Iterator<String> it = keys.iterator(); it.hasNext();){
-			String key = it.next();
-			if(key.contains(" isTorus")||key.contains(" Period")){
+		boolean foundTopo=false;
+		for(Iterator<MetaDataKey> it = keys.iterator(); it.hasNext();){
+			String key = it.next().name;
+			if(key.contains(" isTorus")||key.contains(" Period")||key.contains(" Dimension")){
 				topos.add(key.split(" ")[0]);
+				foundTopo=true;
 			}
 		}
+		
+		if(!foundTopo){
+			keys = getDataSource().getThread(0, 0, 0).getMetaData().keySet();
+			for(Iterator<MetaDataKey> it = keys.iterator(); it.hasNext();){
+				String key = it.next().name;
+				if((key.startsWith("Cray")&&key.contains("Nodename")))
+				{
+					topos.add(key.split(" ")[0]);
+					foundTopo=true;
+				}
+			}
+		}
+		
 //		if(topos.size()==0){
 //			return new String[]{null};
 //		}

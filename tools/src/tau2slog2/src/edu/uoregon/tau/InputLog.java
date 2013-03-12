@@ -161,6 +161,8 @@ public class InputLog implements base.drawable.InputAPI
 	private static boolean eventReady;
 	private static boolean doneReading;
 	
+	private static Set<Integer> papiEvents = new HashSet<Integer>();
+	
 	private static ArrayList<DobjDef> categories;
 	//private static int numcats;
 	//private static int maxcats;
@@ -179,6 +181,8 @@ public class InputLog implements base.drawable.InputAPI
 	private static HashMap<ComSource, List<MessageEvent>> msgSenStack;
 	//private static int[] offset;
 	
+	private static boolean papiEnabled=false;
+	
 	private static Random getcolors;
 	private static Set<Integer> msgtags;
 	/**
@@ -193,6 +197,10 @@ public class InputLog implements base.drawable.InputAPI
 	private long arch_read;
 	private long count_read=0;
 	private long stepsize=0;
+	
+	public void enablePAPI(boolean enable){
+		papiEnabled=enable;
+	}
 	
 	private static int GlobalID(int tid, int nid){
 		//System.out.println("n: "+nid+ " t: "+tid);
@@ -513,7 +521,14 @@ public class InputLog implements base.drawable.InputAPI
 			return 0;
 		}
 		
+		static final String PAPI="PAPI_";
+		
 		public int defUserEvent(Object userData, int userEventToken, String userEventName, int monotonicallyIncreasing){
+			
+			if(!papiEnabled&&userEventName.startsWith(PAPI)){
+				papiEvents.add(userEventToken);
+				return 0;
+			}
 			
 			if(userEventToken==7004){
 				return 0;
@@ -564,7 +579,7 @@ public class InputLog implements base.drawable.InputAPI
 		public int enterState(Object userData, long time, int nodeToken, int threadToken, int stateToken){
 			//System.out.println("Entered state "+stateToken+" time "+time+" nid "+nodeToken+" tid "+threadToken);
 			//eventstack[nodeToken][threadToken];
-			System.out.println("enter "+stateToken);
+			//System.out.println("enter "+stateToken);
 			if(stateToken==1521){
 				badEnter+=1;
 			}
@@ -578,7 +593,7 @@ public class InputLog implements base.drawable.InputAPI
 		
 		public int leaveState(Object userData, long time, int nodeToken, int threadToken, int stateToken){
 			//System.out.println("Leaving state "+stateToken+" time "+time+" nid "+nodeToken+" tid "+threadToken);
-			System.out.println("exit "+stateToken);
+			//System.out.println("exit "+stateToken);
 			if(stateToken==1521){
 				badExit+=1;
 			}
@@ -769,6 +784,10 @@ public class InputLog implements base.drawable.InputAPI
 		
 		public int eventTrigger(Object userData, long time, int nodeToken, int threadToken, int userEventToken,
 				double userEventValue){
+			
+			if(!papiEnabled&&papiEvents.contains(userEventToken)){
+				return 0;
+			}
 			
 			if(userEventToken==7004){
 				remoteThread=(int) userEventValue;

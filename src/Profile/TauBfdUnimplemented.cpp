@@ -37,7 +37,7 @@ static void Tau_bfd_internal_issueBfdWarningIfNecessary() {
   }
 }
 
-void Tau_bfd_initializeBfdIfNecessary() {
+void Tau_bfd_initializeBfd() {
   Tau_bfd_internal_issueBfdWarningIfNecessary();
 }
 

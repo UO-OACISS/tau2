@@ -1,0 +1,23 @@
+This is the C API to the TAUdb database.
+
+The uthash data structures are used in this library.
+Please see http://uthash.sourceforge.net/ or the 
+README and LICENSE files in the uthash directory.
+
+Notes:
+
+- this library is only just beginning to take shape.
+- only PostgreSQL is supported.
+- You will need to set the path to the PostgreSQL header and library
+  in Makefile.in.
+
+Building:
+
+- Modify the settings in Makefile.in as necessary
+- run "make"
+
+Testing:
+
+- To use the test database, modify the Makefile.in fields TEST_CONFIG and
+  TEST_TRIAL_ID.
+- run "make test"

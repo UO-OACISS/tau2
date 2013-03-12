@@ -3,6 +3,7 @@
 
 #define MESSAGE_SEND 0
 #define MESSAGE_RECV 1
+#define MESSAGE_UNKNOWN 2
 
 enum Memcpy { MemcpyHtoD = 0, MemcpyDtoH = 1, MemcpyDtoD = 2, MemcpyUnknown = 3 };
 
@@ -16,13 +17,14 @@ enum Memcpy { MemcpyHtoD = 0, MemcpyDtoH = 1, MemcpyDtoD = 2, MemcpyUnknown = 3 
 
 #include <Profile/Profiler.h>
 #include <map>
+using namespace tau;
 
 //typedef map<TauContextUserEvent*, TAU_EVENT_DATATYPE> TauGpuContextMap;
 
 /* Struct to contain the user event data for each GPU event. */
 typedef struct {
-	TauContextUserEvent *userEvent;
-	TAU_EVENT_DATATYPE data;
+	tau::TauContextUserEvent *userEvent;
+	tau::TAU_EVENT_DATATYPE data;
 
 } GpuEventAttributes;
 
@@ -118,7 +120,10 @@ extern "C" void Tau_gpu_register_gpu_event(GpuEvent *event, double startTime, do
  * program. Times are pre-aligned to the CPU clock. */
 extern "C" void Tau_gpu_register_memcpy_event(GpuEvent *event, double startTime, double endTime, int transferSize, int memcpyType);
 
-extern "C" void TauTraceOneSidedMsg(bool type, GpuEvent *gpu, int length, int thread);
+/* Callback for a GPU atomic event that is associated with this gpu event. */
+extern "C" void Tau_gpu_register_gpu_atomic_event(GpuEvent *event);
+
+extern "C" void TauTraceOneSidedMsg(int type, GpuEvent *gpu, int length, int thread);
 
 #endif // __cplusplus
 #endif // _TAU_GPU_INTERFACE

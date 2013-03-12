@@ -192,7 +192,7 @@ class DoublePair{
 
 
 class ToFrom{
-	public int toNode,toThread,fromNode,fromThread;
+	public int toNode,toThread,fromNode,fromThread, direction;
 
 	public ToFrom(int toNode, int toThread, int fromNode, int fromThread) {
 		super();
@@ -210,6 +210,7 @@ public class MultiMerge {
 
 	private static final int ONESIDED_MESSAGE_SEND=70000;
 	private static final int ONESIDED_MESSAGE_RECV=70001;
+	private static final int ONESIDED_MESSAGE_UNKNOWN=70004;
 	private static final int ONESIDED_MESSAGE_ID_TriggerValueT1=70002;
 	private static final int ONESIDED_MESSAGE_ID_TriggerValueT2=70003;
 	
@@ -557,6 +558,7 @@ public class MultiMerge {
 		}
 
 		public int defThread(Object userData, int nodeToken, int threadToken, String threadName){
+			tw.defThread(nodeToken, threadToken, threadName);
 			return 0;
 		}
 
@@ -655,7 +657,10 @@ public class MultiMerge {
 
 		public int eventTrigger(Object userData, long time, int nodeToken, int threadToken, int userEventToken, double userEventValue) {
 			TotID tot = (TotID)userData;
-
+			if(userEventToken==ONESIDED_MESSAGE_SEND||userEventToken==ONESIDED_MESSAGE_RECV) {
+				tot.oneSideType = userEventToken;	
+			  //System.out.println("eventTrigger, recording: " + userEventToken + " on thread: " + threadToken);
+			}
 			if(userEventToken==ONESIDED_MESSAGE_ID_TriggerValueT1){
 				tot.dp.l1=userEventValue;
 			}
@@ -671,6 +676,7 @@ public class MultiMerge {
 					p.fromNode=nodeToken;
 					p.fromThread=threadToken;
 				}
+				p.direction = tot.oneSideType;
 			}
 			
 			/*
@@ -817,7 +823,7 @@ public class MultiMerge {
 			if(synch){
 				time+=tot.offset;
 			}
-			if(userEventToken==ONESIDED_MESSAGE_SEND||userEventToken==ONESIDED_MESSAGE_RECV){
+			if(userEventToken==ONESIDED_MESSAGE_SEND||userEventToken==ONESIDED_MESSAGE_RECV||userEventToken==ONESIDED_MESSAGE_UNKNOWN){
 				tot.oneSideType=userEventToken;
 				tot.size=(int)userEventValue;
 				return 0;
@@ -859,8 +865,21 @@ public class MultiMerge {
 				{
 					tw.sendMessage(time,  nodeToken, threadToken, remoteNode, remoteThread, (int)userEventValue, 0, 0);
 				}
-				else{
+				else if (tot.oneSideType==ONESIDED_MESSAGE_RECV)
+				{
 					tw.recvMessage(time,  remoteNode, remoteThread, nodeToken, threadToken, (int)userEventValue, 0, 0);
+				}
+				else
+				{
+					if (p.direction == ONESIDED_MESSAGE_RECV)
+					{
+						return tw.sendMessage(time,  nodeToken, threadToken, remoteNode, remoteThread, (int)userEventValue, 0, 0);
+					}
+					else if (p.direction == ONESIDED_MESSAGE_SEND) {
+						return tw.recvMessage(time,  remoteNode, remoteThread, nodeToken, threadToken, (int)userEventValue, 0, 0);
+					}
+					//otherwise undefined.
+					System.out.println("eventTrigger 2, recording " + p.direction + " on thread: "+threadToken);
 				}
 
 				return 0;
@@ -870,12 +889,13 @@ public class MultiMerge {
 //			{
 //				System.out.println("Event from node!");
 //			}
+			
+			int stateid = tot.locToGlobStates.get(new Integer(userEventToken)).intValue();
 
-			tw.eventTrigger(time, nodeToken, threadToken, tot.locToGlobStates.get(new Integer(userEventToken)).intValue(), (long)userEventValue);
+			tw.eventTrigger(time, nodeToken, threadToken, stateid, (long)userEventValue);
 			return 0;}
 
 		public int endTrace(Object userData, int nodeToken, int threadToken){
-			System.out.println("ENDED!");
 			return 0;
 		}
 	}

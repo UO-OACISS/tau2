@@ -11,7 +11,6 @@ TAU_MEMORYWRAP_SHARED   = libTAU-memorywrap$(TAU_SHLIBX)
 #HITACHI#TAU_MEMORYWRAP_SHARED= #ENDIF#
 #CRAYXMT#TAU_MEMORYWRAP_SHARED= #ENDIF#
 #CRAYCC#TAU_MEMORYWRAP_SHARED= #ENDIF#
-#OPEN64ORC#TAU_MEMORYWRAP_SHARED= #ENDIF#
 #USE_NECCXX#TAU_MEMORYWRAP_SHARED= #ENDIF#
 #NOSHARED#TAU_MEMORYWRAP_SHARED= #ENDIF#
 #TAU_WINDOWS#TAU_MEMORYWRAP_SHARED= #ENDIF#
@@ -26,7 +25,6 @@ TAU_MEMORYWRAP_INSTALL_CMD=cp $(TAU_MEMORYWRAP_SHARED) $(INSTALLDEST)/shared$(TA
 #HITACHI#TAU_MEMORYWRAP_INSTALL_CMD=@echo "NOTE: Not building TAU's memory wrapper DSO" #ENDIF#
 #CRAYXMT#TAU_MEMORYWRAP_INSTALL_CMD=@echo "NOTE: Not building TAU's memory wrapper DSO" #ENDIF#
 #CRAYCC#TAU_MEMORYWRAP_INSTALL_CMD=@echo "NOTE: Not building TAU's memory wrapper DSO" #ENDIF#
-#OPEN64ORC#TAU_MEMORYWRAP_INSTALL_CMD=@echo "NOTE: Not building TAU's memory wrapper DSO" #ENDIF#
 #USE_NECCXX#TAU_MEMORYWRAP_INSTALL_CMD=@echo "NOTE: Not building TAU's memory wrapper DSO" #ENDIF#
 #NOSHARED#TAU_MEMORYWRAP_INSTALL_CMD=@echo "NOTE: Not building TAU's memory wrapper DSO" #ENDIF#
 #TAU_WINDOWS#TAU_MEMORYWRAP_INSTALL_CMD=@echo "NOTE: Not building TAU's memory wrapper DSO" #ENDIF#
@@ -34,20 +32,39 @@ TAU_MEMORYWRAP_INSTALL_CMD=cp $(TAU_MEMORYWRAP_SHARED) $(INSTALLDEST)/shared$(TA
 
 CC = $(TAU_CC)
 CXX = $(TAU_CXX)
-CFLAGS = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_INTERNAL_FLAGS) $(USER_OPT)
+CFLAGS = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_INTERNAL_FLAGS) $(USER_OPT) -I$(TAUROOT)/src/wrappers/memory
 ARFLAGS = rcv
+
+DYNAMIC_OBJ = dynamic.o memory_wrapper_dynamic.o
+STATIC_OBJ = static.o memory_wrapper_static.o
 
 INSTALLDEST = $(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 
-install: $(TAU_MEMORYWRAP_SHARED)
-	$(TAU_MEMORYWRAP_INSTALL_CMD)
+install-static: libTauMemoryWrap.a
+	$(TAU_STATIC_INSTALL_CMD)
 
-memory_wrapper.o: memory_wrapper.c
-	$(CC) $(CFLAGS) -c memory_wrapper.c
+install-shared: $(TAU_MEMORYWRAP_SHARED)
+	$(TAU_SHARED_INSTALL_CMD)
 
-libTAU-memorywrap$(TAU_SHLIBX): memory_wrapper.o
-	$(CC) $(TAU_SHFLAGS) libTAU-memorywrap$(TAU_SHLIBX) memory_wrapper.o $(TAU_SHAREDLIBS) -ldl
+install: install-static install-shared
+	mkdir -p $(INSTALLDEST)/wrappers/memory_wrapper
+	cp link_options.tau $(INSTALLDEST)/wrappers/memory_wrapper
+
+$(TAU_MEMORYWRAP_SHARED): $(DYNAMIC_OBJ)
+	$(CC) $(TAU_SHFLAGS) $@ $(DYNAMIC_OBJ) $(TAU_SHAREDLIBS) -ldl
+
+libTauMemoryWrap.a: $(STATIC_OBJ)
+	$(TAU_AR) $(ARFLAGS) $@ $(STATIC_OBJ)
+
+static.o: memory_wrapper.c
+	$(CC) -c $(CFLAGS) $< -o $@
+
+dynamic.o: memory_wrapper.c
+	$(CC) -c $(CFLAGS) -DTAU_MEMORY_WRAPPER_DYNAMIC=1 $< -o $@
+
+%.o: %.c
+	$(CC) -c $(CFLAGS) $< -o $@ 
 
 clean:
-	/bin/rm -f *.so *.o
+	/bin/rm -f libTauMemoryWrap.a $(TAU_MEMORYWRAP_SHARED) $(DYNAMIC_OBJ) $(STATIC_OBJ) 
 

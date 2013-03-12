@@ -25,16 +25,14 @@
 #include <Profile/TauTrace.h>
 #ifdef CUPTI
 #include <Profile/CuptiLayer.h>
-// Moved from header file
-using namespace std;
 #endif //CUPTI
 
 #ifdef TAUKTAU_SHCTR
 #include "Profile/KtauCounters.h"
-// Moved from header file
-using namespace std;
 #endif //TAUKTAU_SHCTR
 
+using namespace std;
+using namespace tau;
 
 void metric_read_nullClock(int tid, int idx, double values[]);
 void metric_write_userClock(int tid, double value);
@@ -416,11 +414,11 @@ static void initialize_functionArray()
   TauMetrics_initializeKTAU();
 #endif
 
-  if (usingPAPI) {
 #ifdef TAU_PAPI
+  if (usingPAPI) {
     PapiLayer::initializePapiLayer();
-#endif
   }
+#endif
 	
 
   for (int i = 0; i < nmetrics; i++) {
@@ -543,24 +541,22 @@ int TauMetrics_init() {
   read_env_vars();
 
   traceMetric = 0;
-  reorder_metrics("PAPI");
-  reorder_metrics("KTAU");
+  reorder_metrics("PAPI\0");
+  reorder_metrics("KTAU\0");
 
   initialize_functionArray();
 
-	Tau_Global_numCounters = nmetrics;
+  Tau_Global_numCounters = nmetrics;
 
   /* Create atomic events for tracing */
   if (TauEnv_get_tracing()) {
     traceCounterEvents = new TauUserEvent *[nmetrics];
     /* We obtain the timestamp from COUNTER1, so we only need to trigger
        COUNTER2-N or i=1 through no. of active functions not through 0 */
-    RtsLayer::UnLockDB(); // mutual exclusion primitive AddEventToDB locks it
     for (i = 1; i < nmetrics; i++) {
       traceCounterEvents[i] = new TauUserEvent(metricv[i], true);
       /* the second arg is MonotonicallyIncreasing which is true (HW counters)*/
     }
-    RtsLayer::LockDB(); // We do this to prevent a deadlock. Lock it again!
   }
 
   return 0;
@@ -573,7 +569,7 @@ void TauMetrics_triggerAtomicEvents(unsigned long long timestamp, double *values
   int i;
 #ifndef TAU_EPILOG
   for (i = 1; i < nmetrics; i++) {
-    TauTraceEvent(traceCounterEvents[i]->GetEventId(), (long long)values[i], tid, timestamp, 1);
+    TauTraceEvent(traceCounterEvents[i]->GetId(), (long long)values[i], tid, timestamp, 1);
     // 1 in the last parameter is for use timestamp
   }
 #endif /* TAU_EPILOG */

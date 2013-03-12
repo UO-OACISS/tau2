@@ -74,6 +74,7 @@ TRACE2PROFILE=utils/trace2profile
 
 #IOWRAPPER#IOWRAPPER=src/wrappers/posixio#ENDIF#
 #DMAPP#DMAPPWRAPPER=src/wrappers/dmapp#ENDIF#
+#GPI#GPIWRAPPER=src/wrappers/gpi#ENDIF#
 
 #ARMCI#ARMCIWRAPPER=src/wrappers/armci#ENDIF#
 
@@ -100,7 +101,8 @@ MEMORYWRAPPER=src/wrappers/memory
 SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(VTFCONVERTER) \
           $(ELGCONVERTER) $(TRACE2PROFILE) $(IOWRAPPER) $(TAUPRELOAD) \
 	  $(MEMORYWRAPPER) $(TAUCUDA) $(TAU_CUPTI_AVAIL) $(TAUOPENCL) \
-		$(ARMCIWRAPPER) $(DMAPPWRAPPER) $(UPCWRAPPER) $(PTHREAD_WRAPPER)
+	  $(GPIWRAPPER) $(ARMCIWRAPPER) $(DMAPPWRAPPER) $(UPCWRAPPER) \
+	  $(PTHREAD_WRAPPER)
 
 
 CONFIGQUERY=`utils/ConfigQuery -arch`
@@ -109,6 +111,7 @@ CONFIGQUERY=`utils/ConfigQuery -arch`
 
 #SUNX86_64#CONFIGQUERY=`/bin/bash utils/ConfigQuery -arch` #ENDIF#
 
+.PHONY: all exports tests install clean cleandist cleaninstall cleangood
 
 all:
 	@echo "At the installation root, use \"make install\" "
