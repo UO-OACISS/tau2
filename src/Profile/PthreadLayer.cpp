@@ -25,6 +25,11 @@
 
 #include <stdlib.h>
 
+// FIXME: Duplicated in pthread_wrap.c
+#if !defined(__APPLE__)
+#define TAU_PTHREAD_BARRIER_AVAILABLE
+#endif
+
 using namespace std;
 using namespace tau;
 
