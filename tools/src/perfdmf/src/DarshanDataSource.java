@@ -6,7 +6,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.StringTokenizer;
 
 import edu.uoregon.tau.common.MetaDataMap;
@@ -82,7 +81,11 @@ public class DarshanDataSource extends DataSource {
 					continue;
 				} else if (inputString.startsWith("#")) {
 					processComment(inputString);
-				} else if (inData) {
+				}
+				else if (inputString.startsWith("t")){
+					processTotal(inputString);
+				}
+				else if (inData) {
 					processCounter(inputString);
 				}
 				linenumber++;
@@ -103,10 +106,22 @@ public class DarshanDataSource extends DataSource {
 		return;
 	}
 
+	private void processTotal(String inputString) {
+
+		return;
+	}
+
+	
 	private void processCounter(String inputString) {
 		//#<rank> <file>  <counter>   <value> <name suffix>   <mount pt>  <fs type>
 		StringTokenizer tokenizer = new StringTokenizer(inputString, "\t");
-		Integer nodeID = Integer.parseInt(tokenizer.nextToken());
+		Integer nodeID;
+		try{
+		nodeID = Integer.parseInt(tokenizer.nextToken());
+		}catch(NumberFormatException e){
+			System.out.println("Darshan Data Source Could Not Process: "+inputString);
+			return;
+		}
 		String file = tokenizer.nextToken();
 		String counter = tokenizer.nextToken();
 		Double value = Double.parseDouble(tokenizer.nextToken());
