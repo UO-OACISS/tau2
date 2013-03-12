@@ -95,12 +95,8 @@ vector<RtsThread*>& TheThreadList(void)
 
 static int nextThread = 1;
 
-int RtsLayer::createThread()
+int RtsLayer::_createThread()
 {
-  TauInternalFunctionGuard protects_this_function;
-
-  threadLockEnv();
-
 	RtsThread* newThread;
 	
 	if (nextThread > TheThreadList().size())
@@ -115,9 +111,21 @@ int RtsLayer::createThread()
 		newThread->active = true;
 		nextThread = newThread->next_available;
 	}
-	threadUnLockEnv();
 
 	return newThread->thread_rank;
+}
+
+int RtsLayer::createThread()
+{
+  TauInternalFunctionGuard protects_this_function;
+
+  threadLockEnv();
+
+	int tid = RtsLayer::_createThread();
+	
+  threadUnLockEnv();
+
+  return tid;
 }
 
 extern "C" int Tau_RtsLayer_createThread() {

@@ -46,6 +46,7 @@ public:
   RtsLayer () { }  // defaults
   ~RtsLayer () { } 
 
+	static int _createThread(void);
 	static int createThread(void);
 	static void destroyThread(int id);
 	static void recycleThread(int id);
