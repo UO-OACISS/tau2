@@ -111,7 +111,6 @@ int RtsLayer::_createThread()
 		newThread->active = true;
 		nextThread = newThread->next_available;
 	}
-	threadUnLockEnv();
 
 	return newThread->thread_rank;
 }
@@ -122,7 +121,11 @@ int RtsLayer::createThread()
 
   threadLockEnv();
 
-	return RtsLayer::_createThread();
+	int tid = RtsLayer::_createThread();
+	
+  threadUnLockEnv();
+
+  return tid;
 }
 
 extern "C" int Tau_RtsLayer_createThread() {
