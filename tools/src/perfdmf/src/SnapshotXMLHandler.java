@@ -131,7 +131,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
                 data.userEventMap = unifiedDefinitions.userEventMap;
                 data.metricMap = unifiedDefinitions.metricMap;
     		}
-    		data.thread = dataSource.meanDataAll = new Thread(-1, -1, -1, dataSource.getNumberOfMetrics(), dataSource); //dataSource.addThread(-1, -1, -1);
+    		data.thread = dataSource.meanDataAll = new Thread(-6, -6, -6, dataSource.getNumberOfMetrics(), dataSource); //dataSource.addThread(-1, -1, -1);
             threadMap.put(entityName, data);
             currentThread = data;
             mSet=true;
@@ -172,7 +172,7 @@ public class SnapshotXMLHandler extends DefaultHandler {
                     data.userEventMap = unifiedDefinitions.userEventMap;
                     data.metricMap = unifiedDefinitions.metricMap;
         		}
-        		data.thread = dataSource.stddevDataAll = new Thread(-3, -3, -3, dataSource.getNumberOfMetrics(), dataSource); //dataSource.addThread(-3, -3, -3);
+        		data.thread = dataSource.stddevDataAll = new Thread(-7, -7, -7, dataSource.getNumberOfMetrics(), dataSource); //dataSource.addThread(-3, -3, -3);
                 threadMap.put(entityName, data);
                 currentThread = data;
                 sDSet=true;

@@ -1,18 +1,28 @@
 package edu.uoregon.tau.perfexplorer.client;
 
-import java.util.ListIterator;
-import javax.swing.*;
-import javax.swing.tree.*;
-
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ArrayList;
-import edu.uoregon.tau.perfdmf.*;
-import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
-import edu.uoregon.tau.perfexplorer.common.RMIView;
+import java.util.ListIterator;
 
-public class PerfExplorerJTree extends JTree {
+import javax.swing.JTree;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.MutableTreeNode;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
+
+import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.DatabaseAPI;
+import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfdmf.View;
+import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
+import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
+
+public class PerfExplorerJTree extends JTree{
 
     /**
      * 
@@ -44,14 +54,90 @@ public class PerfExplorerJTree extends JTree {
 
     public static PerfExplorerJTree getTree() {
 	if (theTree == null) {
-	    DefaultTreeModel model = new DefaultTreeModel(createNodes());
+	    DefaultTreeModel model = new DefaultTreeModel(createNodes()){
+
+			private static final long serialVersionUID = 1L;
+
+			public void valueForPathChanged(TreePath path, Object newValue) {
+				MutableTreeNode aNode = (MutableTreeNode) path
+				.getLastPathComponent();
+				handleRename((DefaultMutableTreeNode) aNode, newValue);
+				nodeChanged(aNode);
+
+			}
+		};
+	    
+	    
 	    model.setAsksAllowsChildren(true);
 	    theTree = new PerfExplorerJTree(model);
 	    theModel = model;
+	    theTree.setEditable(true);
 	    //addTrialsForViews();
 	}
 	return theTree;
     }
+    
+    protected static void handleRename(DefaultMutableTreeNode aNode, Object newValue) {
+		if (newValue instanceof String) {
+			String name = (String) newValue;
+			if (aNode.getUserObject() instanceof Application) {
+				Application application = (Application) aNode
+				.getUserObject();
+				application.setName(name);
+
+				//if (application.dBApplication()) {
+					DatabaseAPI databaseAPI = PerfExplorerServer.getServer().getSession(application
+							.getDatabase());
+					if (databaseAPI != null) {
+						databaseAPI.saveApplication(application);
+						//databaseAPI.terminate();
+					}
+				//}
+
+			} else if (aNode.getUserObject() instanceof Experiment) {
+				Experiment experiment = (Experiment) aNode
+				.getUserObject();
+				experiment.setName(name);
+
+				//if (experiment.dBExperiment()) {
+					DatabaseAPI databaseAPI = PerfExplorerServer.getServer().getSession(experiment
+							.getDatabase());
+					if (databaseAPI != null) {
+						databaseAPI.saveExperiment(experiment);
+						//databaseAPI.terminate();
+					}
+				//}
+
+			} else if (aNode.getUserObject() instanceof Trial) {
+				Trial ppTrial = (Trial) aNode.getUserObject();
+				
+				//if (ppTrial.dBTrial()) {
+					DatabaseAPI databaseAPI = PerfExplorerServer.getServer().getSession(ppTrial
+							.getDatabase());
+					//ppTrial.setDatabaseAPI(databaseAPI);
+				//}
+				ppTrial.rename(databaseAPI.db(),name);
+
+//			} else if (aNode.getUserObject() instanceof Metric) {
+//				Metric metric = (Metric) aNode.getUserObject();
+//				//if (metric.dbMetric()) {
+//					DatabaseAPI databaseAPI = PerfExplorerServer.getServer().getSession(metric..getParaProfTrial()
+//							.getDatabase());
+//					metric.rename(databaseAPI.db(), name);
+//				//}
+				
+			} else if (aNode.getUserObject() instanceof View) {
+				View view = (View) aNode.getUserObject();
+				DatabaseAPI databaseAPI = PerfExplorerServer.getServer().getSession(view.getDatabase());
+
+				view.rename(databaseAPI.db(), name);
+				
+
+			}
+
+		}
+
+	}
 
     public static void nodeChanged(DefaultMutableTreeNode node) {
 	if (theModel != null && theTree != null) {
@@ -125,23 +211,33 @@ public class PerfExplorerJTree extends JTree {
 	node.add(viewTop);	
     }
 
-    public static void addViewNodes (DefaultMutableTreeNode parentNode, String parent) {
-	setConnectionIndex(parentNode);
-	// get the top level views
-	PerfExplorerConnection server = PerfExplorerConnection.getConnection();
-	List<RMIView> viewVector = server.getViews(Integer.parseInt(parent));
-	Iterator<RMIView> views = viewVector.iterator();
-	while (views.hasNext()) {
-	    RMIView view = views.next();
-	    DefaultMutableTreeNode node = new PerfExplorerTreeNode (view);
-	    addViewNodes(node, view.getField("ID"));
-	    parentNode.add(node);
+	public static void addViewNodes(DefaultMutableTreeNode parentNode,
+			int parent) {
+		setConnectionIndex(parentNode);
+		// get the top level views
+		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
+		List<View> viewVector = server.getViews(parent);
+		Iterator<View> views = viewVector.iterator();
+		while (views.hasNext()) {
+			View view = views.next();
+			DefaultMutableTreeNode node = new PerfExplorerTreeNode(view);
+			parentNode.add(node);
+			//addViewNodes(node, view.getID());
+		}
+		leafViews.add(parentNode);
+		
+		if (viewVector.size() == 0) {
+			addTrialsForView(parentNode);
+		}
+		else{
+			//TODO: Add All Trials virtual leaf view
+			View parentView = (View)parentNode.getUserObject();
+			View view = View.VirtualView(parentView);
+			
+			DefaultMutableTreeNode node = new PerfExplorerTreeNode(view);
+			parentNode.add(node);
+		}
 	}
-	if (viewVector.size() == 0) {
-	    leafViews.add(parentNode);
-	    addTrialsForView(parentNode);
-	}
-    }
 
     public static void addApplicationNodes (DefaultMutableTreeNode parent, boolean getExperiments) {
 	setConnectionIndex(parent);
@@ -203,6 +299,28 @@ public class PerfExplorerJTree extends JTree {
 	}
     }
 
+    public static void addTAUdbViewNodes (DefaultMutableTreeNode parentNode, int parent) {
+	setConnectionIndex(parentNode);
+	if (parentNode.getUserObject() instanceof ConnectionNodeObject) {
+		leafViews = new ArrayList<DefaultMutableTreeNode>();
+	}
+	// get the top level views
+	PerfExplorerConnection server = PerfExplorerConnection.getConnection();
+	List<View> viewVector = server.getViews(parent);
+	Iterator<View> views = viewVector.iterator();
+	while (views.hasNext()) {
+	    View view = views.next();
+	    DefaultMutableTreeNode node = new PerfExplorerTreeNode (view);
+	    parentNode.add(node);
+
+	    addTAUdbViewNodes(node, view.getID());
+	}
+//	if (viewVector.size() == 0) {
+//	    leafViews.add(parentNode);
+//	    addTrialsForView(parentNode);
+//	}
+    }
+
     public static void addTrialsForViews () {
 	Iterator<DefaultMutableTreeNode> e = leafViews.iterator();
 	while (e.hasNext()) {
@@ -211,32 +329,32 @@ public class PerfExplorerJTree extends JTree {
 	}
     }
 
-    public static void addTrialsForView (DefaultMutableTreeNode node) {
-	setConnectionIndex(node);
-	//System.out.println("trial nodes...");
-	Object[] objects = node.getUserObjectPath();
-	List<RMIView> views = new ArrayList<RMIView>();
-	for (int i = 0 ; i < objects.length ; i++) {
-	    if (objects[i] instanceof RMIView) {
-		views.add((RMIView)objects[i]);
-	    }
+	public static void addTrialsForView(DefaultMutableTreeNode node) {
+		setConnectionIndex(node);
+		// System.out.println("trial nodes...");
+		Object[] objects = node.getUserObjectPath();
+		List<View> views = new ArrayList<View>();
+		for (int i = 0; i < objects.length; i++) {
+			if (objects[i] instanceof View) {
+				views.add((View) objects[i]);
+			}
+		}
+		
+		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
+		// get the trials
+		if (views.size() > 0) {
+			ListIterator<Trial> trials = server.getTrialsForView(views, false);
+			Trial trial = null;
+			DefaultMutableTreeNode trialNode = null;
+			// loop through all the trials, and print out some info
+			while (trials.hasNext()) {
+				trial = trials.next();
+				trialNode = new PerfExplorerTreeNode(trial);
+				node.add(trialNode);
+				trialNode.getParent();
+			}
+		}
 	}
-	PerfExplorerConnection server = PerfExplorerConnection.getConnection();
-	// get the trials
-	if (views.size() > 0) {
-	    ListIterator<Trial> trials = server.getTrialsForView(views,false);
-	    Trial trial = null;
-	    DefaultMutableTreeNode trialNode = null;
-	    // loop through all the trials, and print out some info
-	    while(trials.hasNext())
-	    {
-		trial = trials.next();
-		trialNode = new PerfExplorerTreeNode (trial);
-		//addMetricNodes(trialNode, trial);
-		node.add(trialNode);
-	    }
-	}
-    }
 
 
     @SuppressWarnings("unchecked") // for trial.getMetrics() call
@@ -245,6 +363,10 @@ public class PerfExplorerJTree extends JTree {
 	//System.out.println("metric nodes...");
 	// get the metrics
 	List<Metric> metricVector = trial.getMetrics();
+	if(metricVector==null){
+		trial.getTrialMetrics(PerfExplorerServer.getServer().getDB());
+		metricVector = trial.getMetrics();
+	}
 	int metricIndex = 0;
 	if (metricVector != null) {
 	    ListIterator<Metric> metrics = metricVector.listIterator();
@@ -267,7 +389,7 @@ public class PerfExplorerJTree extends JTree {
 	PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 	// get the events
 	ListIterator<RMISortableIntervalEvent> events = server.getEventList(trial.getID(), metricIndex);
-	IntervalEvent event = null;
+	RMISortableIntervalEvent event = null;
 	DefaultMutableTreeNode eventNode = null;
 	// loop through all the events, and print out some info
 	while(events.hasNext())
@@ -279,7 +401,8 @@ public class PerfExplorerJTree extends JTree {
     }
 
     public static int getConnectionIndex(DefaultMutableTreeNode node) {
-	int index = 0;
+    	//Don't silent ignore if the connection index is not found
+	
 	// find the connection node for this subtree
 	DefaultMutableTreeNode parent = node;
 	Object obj = parent.getUserObject();
@@ -292,9 +415,9 @@ public class PerfExplorerJTree extends JTree {
 
 	if (obj != null && obj instanceof ConnectionNodeObject) {
 	    ConnectionNodeObject conn = (ConnectionNodeObject)obj;
-	    index = conn.index;
+	    return conn.index;
 	}
-	return index;
+	return -1;
     }
 
     public static void setConnectionIndex(DefaultMutableTreeNode node) {
@@ -399,7 +522,7 @@ public class PerfExplorerJTree extends JTree {
 	    if (trial == null || trial.getID() != current.getID()) {
 		return;  // this isn't our current path, so don't expand
 	    }
-	} else if (obj instanceof RMIView) {
+	} else if (obj instanceof View) {
 	    return;  // this isn't our current path, so don't expand
 	} else if (obj instanceof Metric) {
 	    return;  // don't expand that deep
@@ -424,5 +547,7 @@ public class PerfExplorerJTree extends JTree {
 	    collapsePath(parent);
 	}
     }
+
+	
 
 }

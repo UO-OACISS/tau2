@@ -11,6 +11,7 @@ import javax.swing.JOptionPane;
 
 import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.View;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.common.ChartDataType;
 import edu.uoregon.tau.perfexplorer.common.RMIChartData;
@@ -21,7 +22,6 @@ import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
 import edu.uoregon.tau.perfexplorer.common.RMIPerformanceResults;
 import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
 import edu.uoregon.tau.perfexplorer.common.RMIVarianceData;
-import edu.uoregon.tau.perfexplorer.common.RMIView;
 import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
 
 public class PerfExplorerConnection {
@@ -34,6 +34,7 @@ public class PerfExplorerConnection {
 	private static String tauHome = null;
 	private static String tauArch = null;
 	private int connectionIndex = 0;
+	private static List<Integer> schemaVersion = null;
 
 	private PerfExplorerConnection () {
 		makeConnection();
@@ -287,8 +288,8 @@ public class PerfExplorerConnection {
 		}
 	}
 
-	public List<RMIView> getViews(int parent) {
-		List<RMIView> views = null;
+	public List<View> getViews(int parent) {
+		List<View> views = null;
 		try {
 			views = server.getViews(parent);
 		} catch (RemoteException e) {
@@ -297,7 +298,7 @@ public class PerfExplorerConnection {
 		return views;
 	}
 
-	public ListIterator<Trial> getTrialsForView(List<RMIView> views, boolean getXMLMetadata) {
+	public ListIterator<Trial> getTrialsForView(List<View> views, boolean getXMLMetadata) {
 		ListIterator<Trial> trials = null;
 		try {
 			trials = server.getTrialsForView(views,getXMLMetadata).listIterator();
@@ -454,6 +455,17 @@ public class PerfExplorerConnection {
 			handleError(e, "getUserEventData(" + model.toString() + ")");
 		}
 		return userEvents;
+	}
+
+	public int getSchemaVersion(int index) {
+		if (schemaVersion == null) {
+			try {
+				schemaVersion = server.getSchemaVersions();
+			} catch (RemoteException e) {
+				handleError(e, "getSchemaVersions(" + index + ")");
+			}
+		}
+		return schemaVersion.get(index);
 	}
 
 }

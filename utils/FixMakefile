@@ -56,6 +56,15 @@ case $1 in
 	echo "s/^CONFIG_ARCH=\(.*\)/CONFIG_ARCH=$config_arch/g" >> $sedout
 	echo "s/^TAU_ARCH=\(.*\)/TAU_ARCH=$config_arch/g" >> $sedout
 	;;
+    arch_width=32bit)
+        echo "s/#ARCH_WIDTH_32#\(.*\)/$bs\1#ARCH_WIDTH_32#/g" >> $sedout
+		
+  ;;
+
+    arch_width=64bit)
+        echo "s/#ARCH_WIDTH_64#\(.*\)/$bs\1#ARCH_WIDTH_64#/g" >> $sedout
+		
+  ;;
 
      ptdir=*)
         ptdir=`echo $1 | sed -e 's/^ptdir=//'`
@@ -70,6 +79,11 @@ case $1 in
      papidir=*)
         papidir=`echo $1 | sed -e 's/^papidir=//'`
 	echo "s,^PAPIDIR=.*$,PAPIDIR=$papidir,g" >> $sedout
+	;;
+
+     gpidir=*)
+        gpidir=`echo $1 | sed -e 's/^gpidir=//'`
+	echo "s,^GPIDIR=.*$,GPIDIR=$gpidir,g" >> $sedout
 	;;
 
      bfdlink=*)
@@ -172,13 +186,13 @@ case $1 in
 	;;
 
      scoreplibs=*)
-	scoreplibs=`echo $1 | sed -e 's/^scoreplibs=//' -e 's/#/ /g'`
-	echo "s,^SCOREPLIBS=.*$,SCOREPLIBS=$scoreplibs,g" >> $sedout
+       scoreplibs=`echo $1 | sed -e 's+^scoreplibs=++' -e 's+#+ +g'`
+       echo "s+^SCOREPLIBS=.*$+SCOREPLIBS=$scoreplibs+g" >> $sedout
 	;;
 
      scorepmpilibs=*)
-	scorepmpilibs=`echo $1 | sed -e 's/^scorepmpilibs=//' -e 's/#/ /g'`
-	echo "s,^SCOREPMPILIBS=.*$,SCOREPMPILIBS=$scorepmpilibs,g" >> $sedout
+       scorepmpilibs=`echo $1 | sed -e 's+^scorepmpilibs=++' -e 's+#+ +g'`
+       echo "s+^SCOREPMPILIBS=.*$+SCOREPMPILIBS=$scorepmpilibs+g" >> $sedout
 	;;
 
      scorepdir=*)
@@ -670,6 +684,11 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;
 
+     GPI)
+        echo "NOTE: Using the TAU's GPI Wrapper Interface "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
+
      OPENSHMEM)
         echo NOTE: Using the TAU OpenSHMEM Profiling Interface 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -933,6 +952,10 @@ case $1 in
 	;;
      CLANG)
 	echo NOTE: Using CLANG C++ compiler 
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     BGCLANG)
+	echo NOTE: Using IBM BlueGene CLANG LLVM C++ compiler 
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      CRAYCC)
@@ -1248,6 +1271,10 @@ case $1 in
 	echo "NOTE: Using newer version DYNINST 7+ "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     DYNINST8)
+	echo "NOTE: Using newer version DYNINST 8+ "
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      DYNINST5.2)
 	echo "NOTE: Using newer version DYNINST 5.2 "
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1269,7 +1296,7 @@ case $1 in
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      OPARI2)
-	echo "NOTE: Using Opari2 OpenMP directive rewriting tooln ***"
+	echo "NOTE: Using Opari2 OpenMP directive rewriting tool ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      KOJAKOPARI)
@@ -1825,6 +1852,9 @@ case $1 in
 	echo "NOTE: Disabling building of shared objects"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     TAU_OPENMP_NESTED)
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+        ;;
      SGI_MPT_MPI)
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
         ;;

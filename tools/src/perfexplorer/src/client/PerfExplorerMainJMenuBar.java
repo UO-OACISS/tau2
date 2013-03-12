@@ -21,7 +21,8 @@ public class PerfExplorerMainJMenuBar extends JMenuBar {
 		super();
 		createFileMenu(listener);
 		createAnalysisMenu(listener);
-		createViewMenu(listener);
+		//View menu disabled until views are functional in PerfExplorer
+		//createViewMenu(listener);
 		createChartMenu(listener);
 		createVisualizationMenu(listener);
 		createHelpMenu(listener);

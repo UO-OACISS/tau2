@@ -17,12 +17,15 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.renderer.category.CategoryItemRenderer;
 
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.common.VectorExport;
 import edu.uoregon.tau.perfdmf.Trial;
 import edu.uoregon.tau.perfexplorer.client.PerfExplorerChart;
 import edu.uoregon.tau.perfexplorer.server.TauNamespaceContext;
+import edu.uoregon.tau.perfexplorer.client.PerfExplorerChart;
 
 /**
  * <p>
@@ -166,7 +169,7 @@ public class DrawMetadataGraph extends AbstractPerformanceOperation {
 	    }
 
 
-	    JFreeChart chart = ChartFactory.createStackedBarChart(
+	    JFreeChart chart = ChartFactory.createStackedBarChart3D(
 		    this.title,  // chart title
 		    this.xAxisLabel,  // domain Axis label
 		    this.yAxisLabel,  // range Axis label
@@ -177,6 +180,9 @@ public class DrawMetadataGraph extends AbstractPerformanceOperation {
 		    false                            // urls
 	    );
 	    Utility.applyDefaultChartTheme(chart);
+		CategoryPlot plot = (CategoryPlot)chart.getPlot();
+		CategoryItemRenderer renderer = plot.getRenderer();
+		PerfExplorerChart.customizeColors(renderer);
 	    chart.removeLegend();
 	    this.chartWindow = new PerfExplorerChart(chart, "General Chart");
 	}

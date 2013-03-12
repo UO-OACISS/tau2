@@ -58,6 +58,14 @@ void Tau_profileMerge_writeDefinitions(int *globalEventMap, int
 
   Tau_util_output (&out, "\n<definitions thread=\"*\">\n");
 
+	for (int i=0; i<Tau_Global_numCounters; i++) {
+      const char *tmpChar = RtsLayer::getCounterName(i);
+      Tau_util_output (&out, "<metric id=\"%d\">", i);
+      Tau_XML_writeTag(&out, "name", tmpChar, true);
+      Tau_XML_writeTag(&out, "units", "unknown", true);
+      Tau_util_output (&out, "</metric>\n");
+  }
+
   for (int i=0; i<functionUnifier->globalNumItems; i++) {
     Tau_util_output (&out, "<event id=\"%d\"><name>", i);
 
@@ -91,7 +99,11 @@ void Tau_profileMerge_writeDefinitions(int *globalEventMap, int
 #endif
 
 
-int Tau_mergeProfiles() {
+int Tau_mergeProfiles()
+{
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   int rank, size, tid, i, buflen;
   FILE *f;
   char *buf;
@@ -99,7 +111,6 @@ int Tau_mergeProfiles() {
   x_uint64 start, end;
   const char *profiledir = TauEnv_get_profiledir();
 
-  Tau_global_incr_insideTAU();
 #ifdef TAU_UNIFY
   Tau_unify_unifyDefinitions();
 
@@ -111,11 +122,6 @@ int Tau_mergeProfiles() {
 #endif
 
   tid = Tau_RtsLayer_myThread();
-
-  if (tid != 0) {
-    fprintf (stderr, "TAU: Merged file format does not support threads yet!\n");
-    return 0;
-  }
 
   // temp: write regular profiles too, for comparison
   //TauProfiler_DumpData(false, 0, "profile");
@@ -291,9 +297,17 @@ int Tau_mergeProfiles() {
     } else {
       TAU_METADATA("TAU_PRECOMPUTE", "off");
     }
-    Tau_snapshot_writeMetaDataBlock();
-
-    buflen = Tau_snapshot_getBufferLength()+1;
+    if (TauEnv_get_summary_only()) { /* write only rank one metadata for summary
+		profile */
+			if (rank == 0) {
+    		Tau_snapshot_writeMetaDataBlock();
+			}
+	  }
+		else {
+    	Tau_snapshot_writeMetaDataBlock();
+		}
+    
+		buflen = Tau_snapshot_getBufferLength()+1;
 		buf = (char *) malloc(buflen);
     Tau_snapshot_getBuffer(buf);
     fwrite (buf, buflen, 1, f);
@@ -406,7 +420,6 @@ int Tau_mergeProfiles() {
     PMPI_Send(buf, buflen, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
   }
 	free(buf);
-  Tau_global_decr_insideTAU();  
   return 0;
 }
 

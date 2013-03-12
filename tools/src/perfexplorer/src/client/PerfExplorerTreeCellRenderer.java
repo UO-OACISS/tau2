@@ -9,6 +9,7 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 
 import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.Trial;
 
 public class PerfExplorerTreeCellRenderer extends DefaultTreeCellRenderer{
 	/**
@@ -39,6 +40,11 @@ public class PerfExplorerTreeCellRenderer extends DefaultTreeCellRenderer{
 		ImageIcon icon = createImageIcon("blue-ball.gif");
 		this.setIcon(icon);
 	}
+	if (userObject instanceof Trial){
+		ImageIcon icon = createImageIcon("yellow-ball.gif");
+		this.setIcon(icon);
+	}
+	
 	return this;
 	}
 

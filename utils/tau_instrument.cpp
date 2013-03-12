@@ -19,18 +19,13 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <fstream>
+#include <algorithm>
+#include <list>
+#include <map>
 using namespace std;
+
 #include "tau_instrument.h"
-#ifdef _OLD_HEADER_
-# include <fstream.h>
-# include <algo.h>
-# include <list.h>
-#else
-# include <fstream>
-# include <algorithm>
-# include <list>
-# include <map>
-#endif
 #include "pdbAll.h"
 
 //#define DEBUG 1
@@ -2227,10 +2222,10 @@ bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator&
         {
           if ((*iter)->item)
           { /* item's pdbItem entry is not null */
-#ifdef DEBUG_PROF
+#ifdef DEBUG
             printf("examining %s. id = %d. Current routine id = %d\n",
             (*iter)->item->name(), (*iter)->item->id(), (*rit)->id());     
-#endif /* DEBUG_PROF */
+#endif /* DEBUG */
             if ((*iter)->item->id() == (*rit)->id()) 
             { /* found it! We need to annotate this as a phase */
               if (isPhaseOrTimer == TAU_PHASE) 
@@ -2689,54 +2684,59 @@ bool addMoreInvocations(int routine_id, string& snippet)
 // Generate itemvec entries for instrumentation commands 
 ///////////////////////////////////////////////////////////////////////////
 
-
 /* implementation of struct itemRef */
-itemRef::itemRef(const pdbItem *i, bool isT) : item(i), isTarget(isT) {
-    line = i->location().line();
-    col  = i->location().col();
-    kind = ROUTINE; /* for C++, only routines are listed */ 
-    attribute = NOT_APPLICABLE;
-    isPhase = false; /* timer by default */ 
-    isDynamic = false; /* static by default */ 
-  }
-itemRef::itemRef(const pdbItem *i, itemKind_t k, int l, int c) : 
-	line (l), col(c), item(i), kind(k) {
+itemRef::itemRef(const pdbItem *i, bool isT) :
+    item(i), isTarget(isT)
+{
+  line = i->location().line();
+  col = i->location().col();
+  kind = ROUTINE; /* for C++, only routines are listed */
+  attribute = NOT_APPLICABLE;
+  isPhase = false; /* timer by default */
+  isDynamic = false; /* static by default */
+}
+itemRef::itemRef(const pdbItem *i, itemKind_t k, int l, int c) :
+    line(l), col(c), item(i), kind(k)
+{
 #ifdef DEBUG
-    cout <<"Added: "<<i->name() <<" line " << l << " col "<< c <<" kind " 
-	 << k <<endl;
+  cout <<"Added: "<<i->name() <<" line " << l << " col "<< c <<" kind "
+  << k <<endl;
 #endif /* DEBUG */
-    isTarget = true; 
-    attribute = NOT_APPLICABLE;
-    isPhase = false; /* timer by default */ 
-    isDynamic = false; /* static by default */ 
-  }
-itemRef::itemRef(const pdbItem *i, itemKind_t k, int l, int c, string code, itemAttr_t a) : 
-	line (l), col(c), item(i), kind(k), snippet(code), attribute(a) {
+  isTarget = true;
+  attribute = NOT_APPLICABLE;
+  isPhase = false; /* timer by default */
+  isDynamic = false; /* static by default */
+}
+itemRef::itemRef(const pdbItem *i, itemKind_t k, int l, int c, string code, itemAttr_t a) :
+    line(l), col(c), item(i), kind(k), snippet(code), attribute(a)
+{
 #ifdef DEBUG
-    if (i)
-      cout <<"Added: "<<i->name() <<" line " << l << " col "<< c <<" kind " 
-	 << k << " snippet " << snippet << endl;
-    if (a == BEFORE) cout <<"BEFORE"<<endl;
+  if (i)
+  cout <<"Added: "<<i->name() <<" line " << l << " col "<< c <<" kind "
+  << k << " snippet " << snippet << endl;
+  if (a == BEFORE) cout <<"BEFORE"<<endl;
 #endif /* DEBUG */
-    isTarget = true; 
-    isPhase = false; /* timer by default */ 
-    isDynamic = false; /* static by default */ 
-  }
-itemRef::itemRef(const pdbItem *i, bool isT, int l, int c)
-         : item(i), isTarget(isT), line(l), col(c) {
-    kind = ROUTINE; 
-    attribute = NOT_APPLICABLE;
-    isPhase = false; /* timer by default */ 
-    isDynamic = false; /* static by default */ 
-  }
-itemRef::itemRef(const pdbItem *i, itemKind_t k, pdbLoc start, pdbLoc stop)
-   : item(i), kind(k), begin(start), end(stop) {
-    attribute = NOT_APPLICABLE;  
-    line = begin.line();
-    col = begin.col();
-    isPhase = false; /* timer by default */ 
-    isDynamic = false; /* static by default */ 
-  }
+  isTarget = true;
+  isPhase = false; /* timer by default */
+  isDynamic = false; /* static by default */
+}
+itemRef::itemRef(const pdbItem *i, bool isT, int l, int c) :
+    item(i), isTarget(isT), line(l), col(c)
+{
+  kind = ROUTINE;
+  attribute = NOT_APPLICABLE;
+  isPhase = false; /* timer by default */
+  isDynamic = false; /* static by default */
+}
+itemRef::itemRef(const pdbItem *i, itemKind_t k, pdbLoc start, pdbLoc stop) :
+    item(i), kind(k), begin(start), end(stop)
+{
+  attribute = NOT_APPLICABLE;
+  line = begin.line();
+  col = begin.col();
+  isPhase = false; /* timer by default */
+  isDynamic = false; /* static by default */
+}
 
 /* -------------------------------------------------------------------------- */
 /* -- Returns true is string is void else returns false --------------------- */

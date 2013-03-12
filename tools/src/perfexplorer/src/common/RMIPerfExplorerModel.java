@@ -10,6 +10,7 @@ import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.IntervalEvent;
 import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.View;
 import edu.uoregon.tau.perfdmf.Trial;
 
 /**
@@ -58,7 +59,7 @@ public class RMIPerfExplorerModel implements Serializable {
 	protected boolean chartHorizontal = false;
 	protected boolean showZero = true;
 	protected String chartUnits = null;
-
+	protected boolean categoricalXAxis = false;
 
 	// more cluster settings
 	protected AnalysisType clusterMethod = null;
@@ -71,9 +72,9 @@ public class RMIPerfExplorerModel implements Serializable {
 	protected Application application = null;
 	protected Experiment experiment = null;
 	protected Trial trial = null;
-	protected RMIView view = null;
+	protected View view = null;
 	protected Metric metric = null;
-	protected IntervalEvent event = null;
+	protected RMISortableIntervalEvent event = null;
 	protected int analysisID = 0;
 	protected Object[] fullPath = null;
 	protected int connectionIndex = 0;
@@ -199,7 +200,7 @@ public class RMIPerfExplorerModel implements Serializable {
 	 * 
 	 * @return
 	 */
-	public IntervalEvent getEvent() {
+	public RMISortableIntervalEvent getEvent() {
 		return event;
 	}
 
@@ -265,12 +266,12 @@ public class RMIPerfExplorerModel implements Serializable {
 			experiment = (Experiment)currentSelection;
 		} else if (currentSelection instanceof Trial) {
 			trial = (Trial)currentSelection;
-		} else if (currentSelection instanceof RMIView) {
-			view = (RMIView)currentSelection;
+		} else if (currentSelection instanceof View) {
+			view = (View)currentSelection;
 		} else if (currentSelection instanceof Metric) {
 			metric = (Metric)currentSelection;
 		} else if (currentSelection instanceof IntervalEvent) {
-			event = (IntervalEvent)currentSelection;
+			event = (RMISortableIntervalEvent)currentSelection;
 		}
 		this.currentSelection = currentSelection;
 	}
@@ -300,12 +301,12 @@ public class RMIPerfExplorerModel implements Serializable {
 				experiment = (Experiment)objectPath[i];
 			} else if (objectPath[i] instanceof Trial) {
 				trial = (Trial)objectPath[i];
-			} else if (objectPath[i] instanceof RMIView) {
-				view = (RMIView)objectPath[i];
+			} else if (objectPath[i] instanceof View) {
+				view = (View)objectPath[i];
 			} else if (objectPath[i] instanceof Metric) {
 				metric = (Metric)objectPath[i];
 			} else if (objectPath[i] instanceof IntervalEvent) {
-				event = (IntervalEvent)objectPath[i];
+				event = (RMISortableIntervalEvent)objectPath[i];
 			}
 			currentSelection = objectPath[i];
 		}
@@ -379,7 +380,7 @@ public class RMIPerfExplorerModel implements Serializable {
 			return tmpStr;
 		} else if (multiSelectionType == SelectionType.TRIAL) {
 			String tmpStr1 = (application == null) ? "" : application.getName();
-			String tmpStr2 = experiment.getName();
+			String tmpStr2 = (experiment == null) ? "" : experiment.getName();
 			String tmpStr = tmpStr1 + ":" + tmpStr2;
 			return tmpStr;
 		} else if (multiSelectionType == SelectionType.METRIC) {
@@ -396,13 +397,13 @@ public class RMIPerfExplorerModel implements Serializable {
 			return tmpStr;
 		} else if (multiSelectionType == SelectionType.VIEW) {
 			return "Custom View";
-		} else if (currentSelection instanceof IntervalEvent) {
-			IntervalEvent event = (IntervalEvent)currentSelection;
+		} else if (currentSelection instanceof RMISortableIntervalEvent) {
+			RMISortableIntervalEvent event = (RMISortableIntervalEvent)currentSelection;
 			String tmpStr1 = (application == null) ? "" : application.getName();
 			String tmpStr2 = (experiment == null) ? "" : experiment.getName();
 			String tmpStr3 = (trial == null) ? "" : trial.getName();
 			String tmpStr4 = (metric == null) ? "" : metric.getName();
-			String tmpStr5 = event.getName();
+			String tmpStr5 = event.getFunction().getName();
 			String tmpStr = tmpStr1 + ":" + tmpStr2 + ":" + tmpStr3 + ":" + tmpStr4 + ":" + tmpStr5;
 			return tmpStr;
 		} else if (currentSelection instanceof Metric) {
@@ -430,8 +431,8 @@ public class RMIPerfExplorerModel implements Serializable {
 			Application application = (Application)currentSelection;
 			String tmpStr = application.getName();
 			return tmpStr;
-		} else if (currentSelection instanceof RMIView) {
-			RMIView view = (RMIView)currentSelection;
+		} else if (currentSelection instanceof View) {
+			View view = (View)currentSelection;
 			String tmpStr = view.getField("NAME");
 			return tmpStr;
 		}
@@ -445,13 +446,13 @@ public class RMIPerfExplorerModel implements Serializable {
      * @return
      */
 	public String toShortString() {
-		if (currentSelection instanceof IntervalEvent) {
-			IntervalEvent event = (IntervalEvent)currentSelection;
+		if (currentSelection instanceof RMISortableIntervalEvent) {
+			RMISortableIntervalEvent event = (RMISortableIntervalEvent)currentSelection;
 			String tmpStr1 = (application == null) ? "" : "" + application.getID();
 			String tmpStr2 = (experiment == null) ? "" : "" + experiment.getID();
 			String tmpStr3 = (trial == null) ? "" : "" + trial.getID();
 			String tmpStr4 = (metric == null) ? "" : "" + metric.getID();
-			String tmpStr5 = "" + event.getID();
+			String tmpStr5 = "" + event.getFunction().getID();
 			String tmpStr = tmpStr1 + ":" + tmpStr2 + ":" + tmpStr3 + ":" + tmpStr4 + ":" + tmpStr5;
 			return tmpStr;
 		}
@@ -484,8 +485,8 @@ public class RMIPerfExplorerModel implements Serializable {
 			String tmpStr = "" + application.getID();
 			return tmpStr;
 		}
-		if (currentSelection instanceof RMIView) {
-			RMIView view = (RMIView)currentSelection;
+		if (currentSelection instanceof View) {
+			View view = (View)currentSelection;
 			String tmpStr = view.getField("NAME");
 			return tmpStr;
 		}
@@ -544,7 +545,7 @@ public class RMIPerfExplorerModel implements Serializable {
 					multiSelectionType != SelectionType.NO_MULTI)
 					return false;
 				multiSelectionType = SelectionType.METRIC;
-			} else if (objects.get(i) instanceof RMIView) {
+			} else if (objects.get(i) instanceof View) {
 				if (multiSelectionType != SelectionType.VIEW &&
 					multiSelectionType != SelectionType.NO_MULTI)
 					return false;
@@ -782,35 +783,24 @@ public class RMIPerfExplorerModel implements Serializable {
      * @param dbType
      * @return
      */
-	public String getViewSelectionPath (boolean joinApp, boolean joinExp, String dbType) {
+	public String getViewSelectionPath (boolean joinApp, boolean joinExp, String dbType, int dbVersion) {
+		if(dbVersion >0 ) 		return ((View)fullPath[fullPath.length-1]).getJoinClause() + " " + ((View)fullPath[fullPath.length-1]).getWhereClause(dbType);
+
 		StringBuilder buf = new StringBuilder();
-		if (joinExp)
+		if (joinExp && dbVersion == 0)
 			buf.append(" inner join experiment e on t.experiment = e.id ");
-		if (joinApp)
+		if (joinApp && dbVersion == 0)
 			buf.append(" inner join application a on e.application = a.id ");
-		buf.append(" WHERE ");
 		boolean doAnd = false;
 		for (int i = 0 ; i < fullPath.length ; i++) {
-			if (i > 0 && doAnd) {
-				buf.append (" AND ");
-			}
-			if (fullPath[i] instanceof RMIView) {
-				RMIView view = (RMIView) fullPath[i];
-				if (dbType.equalsIgnoreCase("db2"))
-					buf.append(" cast (");
-				if (view.getField("table_name").equalsIgnoreCase("Application")) {
-					buf.append (" a.");
-				} else if (view.getField("table_name").equalsIgnoreCase("Experiment")) {
-					buf.append (" e.");
-				} else /*if (view.getField("table_name").equalsIgnoreCase("Trial")) */ {
-					buf.append (" t.");
+			if (fullPath[i] instanceof View) {
+				View view = (View) fullPath[i];
+				if (i > 0 && doAnd) {
+					buf.append (" AND ");
+				} else if (view.getWhereClause(dbType) != "" && !(view.getWhereClause(dbType).contains("where")) ){
+					buf.append(" WHERE ");
 				}
-				buf.append (view.getField("column_name"));
-				if (dbType.equalsIgnoreCase("db2"))
-					buf.append(" as varchar(256)) ");
-				buf.append (" " + view.getField("operator") + " '");
-				buf.append (view.getField("value"));
-				buf.append ("' ");
+				buf.append(view.getWhereClause(dbType));
 				doAnd = true;
 			}
 		}
@@ -818,6 +808,7 @@ public class RMIPerfExplorerModel implements Serializable {
 		return buf.toString();
 	}
 
+   
     /**
      * Based on the current selection path, build the SQL where clause
      * to select the current trials.
@@ -828,7 +819,7 @@ public class RMIPerfExplorerModel implements Serializable {
 	public String getViewSelectionString (String dbType) {
 		StringBuilder buf = new StringBuilder();
 		int i = fullPath.length - 1;
-		RMIView view = (RMIView) fullPath[i];
+		View view = (View) fullPath[i];
 		if (//(view.getField("operator").equalsIgnoreCase("like")) || //{
 			//buf.append(" '" + view.getField("value").replaceAll("%","") + "'");
 		/*} else if*/ (view.getField("operator").equals("="))) {
@@ -858,7 +849,7 @@ public class RMIPerfExplorerModel implements Serializable {
      */
 	public String getViewID () {
 		int i = fullPath.length - 1;
-		RMIView view = (RMIView) fullPath[i];
+		View view = (View) fullPath[i];
 		return view.getField("id");
 	}
 	
@@ -1230,4 +1221,20 @@ public class RMIPerfExplorerModel implements Serializable {
 	public void setChartSeriesXML(boolean chartSeriesXML) {
 		this.chartSeriesXML = chartSeriesXML;
 	}
+
+
+	/**
+	 * @return the categoricalXAxis
+	 */
+	public boolean isCategoricalXAxis() {
+		return categoricalXAxis;
+	}
+
+	/**
+	 * @param categoricalXAxis the categoricalXAxis to set
+	 */
+	public void setCategoricalXAxis(boolean categoricalXAxis) {
+		this.categoricalXAxis = categoricalXAxis;
+	}
+	
 }

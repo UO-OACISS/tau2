@@ -61,6 +61,7 @@ import edu.uoregon.tau.perfdmf.Application;
 import edu.uoregon.tau.perfdmf.DataSource;
 import edu.uoregon.tau.perfdmf.Experiment;
 import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfdmf.View;
 import edu.uoregon.tau.perfexplorer.common.ChartDataType;
 import edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData;
 import edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData.CategoryDataRow;
@@ -124,10 +125,10 @@ public class ChartPane extends JScrollPane implements ActionListener {
 	private JComboBox metric = new MyJComboBox();
 	private JLabel unitsLabel = new JLabel("Units:");
 	private JComboBox units = new MyJComboBox();
-	private JLabel seriesXmlNameLabel = new JLabel("Series XML Field:");
+	private JLabel seriesXmlNameLabel = new JLabel("Series Metadata Field:");
 	private JComboBox seriesXmlName = new MyJComboBox();
 
-	private JLabel xmlNameLabel = new JLabel("X Axis XML Field:");
+	private JLabel xmlNameLabel = new JLabel("X Axis Metadata Field:");
 	private JComboBox xmlName = new MyJComboBox();
 
 	private JCheckBox angleXLabels= new JCheckBox("Angle X Axis Labels");
@@ -410,10 +411,12 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		panel.add(Box.createVerticalStrut(10));
 		// series name
 		panel.add(seriesLabel);
-		series = new MyJComboBox(tableColumns.toArray());
-		series.addItem(INTERVAL_EVENT_NAME);
-		series.addItem(INTERVAL_EVENT_GROUP_NAME);
-		series.addItem(ATOMIC_EVENT_NAME);
+		series = new MyJComboBox();//tableColumns.toArray());
+//		series.addItem(INTERVAL_EVENT_NAME);
+//		series.addItem(INTERVAL_EVENT_GROUP_NAME);
+//		series.addItem(ATOMIC_EVENT_NAME);
+		populateSeriesBox();
+		
 		series.addActionListener(this);
 		panel.add(series);
 
@@ -426,6 +429,17 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 
 		return (panel);
+	}
+	
+	private void populateSeriesBox(){
+		series.removeAllItems();
+		for (Iterator<String> itr = tableColumns.iterator() ; itr.hasNext() ; ) {
+			String next = itr.next();
+			series.addItem(next);
+		}
+		series.addItem(INTERVAL_EVENT_NAME);
+		series.addItem(INTERVAL_EVENT_GROUP_NAME);
+		series.addItem(ATOMIC_EVENT_NAME);
 	}
 
 
@@ -595,6 +609,26 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		String oldXML = "";
 		String oldSXML="";
 		Object obj = null;
+		
+		
+		this.tableColumns = server.getChartFieldNames();
+		String item = (String)xaxisValue.getSelectedItem();
+		if(xaxisValue!=null){
+		xaxisValue.removeAllItems();// = new MyJComboBox(tableColumns.toArray());
+		for (Iterator<String> itr = tableColumns.iterator() ; itr.hasNext() ; ) {
+			String next = itr.next();
+			xaxisValue.addItem(next);
+			if(next.equals(item)){
+				xaxisValue.setSelectedItem(item);
+			}
+		}
+		}
+		
+		item = (String)series.getSelectedItem();
+		populateSeriesBox();
+		series.setSelectedItem(item);
+		
+		
 		if (getMetrics) {
 			obj = this.metric.getSelectedItem();
 			if (obj != null)
@@ -615,6 +649,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		}
 		if ((selection instanceof Application) ||
 				(selection instanceof Experiment) ||
+				(selection instanceof View) ||
 				(selection instanceof Trial)) {
 			if (getMetrics) {
 				List<String> metrics = server.getPotentialMetrics(theModel);
@@ -657,7 +692,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				String tmpX = (String)xaxisValue.getSelectedItem();
 				List<String> xmlEvents = null;
 
-				if (tmpX.equalsIgnoreCase("trial.xml_metadata")) {
+				if (tmpX.equalsIgnoreCase("trial.xml_metadata") ||tmpX.equalsIgnoreCase("primary_metadata.name")) {
 					xmlEvents = server.getXMLFields(theModel);
 					for (Iterator<String> itr = xmlEvents.iterator(); itr.hasNext();) {
 						String next = itr.next();
@@ -670,7 +705,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 					//this.xmlName.setSelectedIndex(0);
 				}
 
-				if (tmpSer.equalsIgnoreCase("trial.xml_metadata")) {
+				if (tmpSer.equalsIgnoreCase("trial.xml_metadata") ||tmpSer.equalsIgnoreCase("primary_metadata.name")) {
 					if(xmlEvents==null)
 						xmlEvents = server.getXMLFields(theModel);
 					for (Iterator<String> itr = xmlEvents.iterator(); itr.hasNext();) {
@@ -827,6 +862,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			
 		}
 		facade.setChartTitle(title);
+		facade.setCategoricalXAxis(this.alwaysCategory.isSelected());
 
 		// series name
 		Object obj = series.getSelectedItem();
@@ -841,7 +877,13 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			facade.setChartMetadataFieldName(tmp2);
 			tmp=tmp2;
 			facade.setChartSeriesXML(true);
-
+		} else if (tmp.equalsIgnoreCase("primary_metadata.name")) {
+			tmp = "primary_metadata.value";
+			Object obj2 = seriesXmlName.getSelectedItem();
+			String tmp2 = (String)obj2;
+			facade.setChartMetadataFieldName(tmp2);
+			tmp=tmp2;
+			facade.setChartSeriesXML(true);
 		}
 		facade.setChartSeriesName(tmp);//TODO: Should this be tmp1?
 
@@ -857,10 +899,16 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			tmp2 = (String)obj2;
 			facade.setChartMetadataFieldName(tmp2);
 			facade.setChartMetadataFieldValue(null);
+		} else if (tmp.equalsIgnoreCase("primary_metadata.name")) {
+			tmp = "primary_metadata.value";
+			Object obj2 = xmlName.getSelectedItem();
+			tmp2 = (String)obj2;
+			facade.setChartMetadataFieldName(tmp2);
+			facade.setChartMetadataFieldValue(null);
 		}
 		String label = xaxisName.getText();
 		if (label == null || label.length() == 0) {
-			if (tmp.equalsIgnoreCase("temp_xml_metadata.metadata_value")) {
+			if (tmp.equalsIgnoreCase("temp_xml_metadata.metadata_value") || tmp.equalsIgnoreCase("primary_metadata.value")) {
 				label = tmp2;
 			} else {
 				label = tmp;
@@ -966,6 +1014,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			Object selection = theModel.getCurrentSelection();
 			if ((selection instanceof Application) ||
 					(selection instanceof Experiment) ||
+					(selection instanceof View) ||
 					(selection instanceof Trial)) {
 				updateChart();
 			} else {
@@ -1011,8 +1060,10 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		} else if ((source == series) || 
 				(source == xaxisValue)) {
 			Object obj = series.getSelectedItem();
+			if(obj==null)return;
 			String tmp = (String)obj;
 			Object obj2 = xaxisValue.getSelectedItem();
+			if(obj2==null)return;
 			String tmp2 = (String)obj2;
 
 			/*
@@ -1020,7 +1071,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			 * one for the x-axis.  Only enable/disable the correct one.
 			 */
 			if(source==series){
-				if(tmp.equalsIgnoreCase("trial.xml_metadata")){
+				if(tmp.equalsIgnoreCase("trial.xml_metadata") || tmp.equalsIgnoreCase("primary_metadata.name")){
 					this.seriesXmlNameLabel.setEnabled(true);
 					this.seriesXmlName.setEnabled(true);
 					refreshDynamicControls(false, false, true);
@@ -1030,7 +1081,7 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				}
 			}
 			else if(source==xaxisValue){
-				if(tmp2.equalsIgnoreCase("trial.xml_metadata")){
+				if(tmp2.equalsIgnoreCase("trial.xml_metadata") || tmp2.equalsIgnoreCase("primary_metadata.name")){
 					this.xmlNameLabel.setEnabled(true);
 					this.xmlName.setEnabled(true);
 					refreshDynamicControls(false, false, true);
@@ -1040,27 +1091,6 @@ public class ChartPane extends JScrollPane implements ActionListener {
 				}
 			}
 
-
-			//			if (tmp.equalsIgnoreCase("trial.xml_metadata") ||
-			//				tmp2.equalsIgnoreCase("trial.xml_metadata")) {
-			//				if(source==xaxisValue){
-			//					this.xmlNameLabel.setEnabled(true);
-			//					this.xmlName.setEnabled(true);
-			//				}else{
-			//					this.seriesXmlNameLabel.setEnabled(true);
-			//					this.seriesXmlName.setEnabled(true);
-			//				}
-			//				
-			//				refreshDynamicControls(false, false, true);
-			//			} else {
-			//				if(source==xaxisValue){
-			//					this.xmlNameLabel.setEnabled(false);
-			//					this.xmlName.setEnabled(false);
-			//				}else{
-			//					this.seriesXmlNameLabel.setEnabled(false);
-			//					this.seriesXmlName.setEnabled(false);
-			//				}
-			//			}
 			if (tmp.equalsIgnoreCase(INTERVAL_EVENT_NAME) ||
 					tmp.equalsIgnoreCase(INTERVAL_EVENT_GROUP_NAME)) {
 				refreshDynamicControls(false, true, false);
@@ -1148,15 +1178,10 @@ public class ChartPane extends JScrollPane implements ActionListener {
 		JFreeChart chart = null;
 		XYSeries ideal=null;
 		Map<String,XYSeries> labelMap=new HashMap<String,XYSeries>();
-		if (rawData.getCategoryType() == Integer.class) 
+		if (rawData.getCategoryType() == Integer.class || rawData.getCategoryType() == Double.class) 
 		{
 
 			if (model.getChartScalability()) {
-
-				// create an "ideal" line.
-				//dataset.addValue(1.0, IDEAL, new Integer(rawData.getMinimum()));
-				//				dataset.addValue(rawData.getMaximum()/rawData.getMinimum(),IDEAL, 
-				//						new Integer(rawData.getMaximum()));
 
 				// get the baseline values
 				edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData.CategoryDataRow baseline = rawData.getRowData(0);
@@ -1239,18 +1264,21 @@ public class ChartPane extends JScrollPane implements ActionListener {
 
 			} else {
 
-				for (int y = 0 ; y < rawData.getRows() ; y++) {
-					CategoryDataRow row = rawData.getRowData(y);
+				// iterate through the values
+				for (int i = 0 ; i < rawData.getRows() ; i++) {
+					edu.uoregon.tau.perfexplorer.common.RMIGeneralChartData.CategoryDataRow row = rawData.getRowData(i);
 					XYSeries s = labelMap.get(row.series);
 					if(s==null){
 						s=new XYSeries(shortName(row.series), true, false);
 						labelMap.put(row.series, s);
-
 					}
-					dataset.addValue(row.value / conversion, shortName(row.series), row.categoryInteger);
-
-					s.add(row.categoryInteger.doubleValue(), row.value/conversion);
-
+					if (row.categoryInteger != null) {
+						dataset.addValue(row.value/conversion, shortName(row.series), row.categoryInteger);
+						s.add(row.categoryInteger.doubleValue(), row.value/conversion);
+					} else {
+						dataset.addValue(new Double(row.value)/conversion, shortName(row.series), Double.parseDouble(row.categoryString));
+						s.add(Double.parseDouble(row.categoryString), row.value/conversion);
+					}
 				}
 
 			}
@@ -1542,9 +1570,15 @@ public class ChartPane extends JScrollPane implements ActionListener {
 			longName=longName.trim();
 			return longName;
 		}
+		int callpath = longName.indexOf("=>");
+		if(callpath < 0){
+			String shorter = longName.substring(0, codeDex).trim();
+			return shorter;
+		}
+		longName = longName.replace("[THROTTLED]","");
 
-		String shorter = longName.substring(0, codeDex).trim();
-		return shorter;
+        longName = longName.replaceAll("\\[\\{[^=>]*\\}\\]","");
+		return longName;
 	}
 
 	class MyJTextField extends javax.swing.JTextField

@@ -58,6 +58,10 @@ TAU_CUDA_CXX=g++
 ##SC_PATHSCALE#TAU_CC_FE=gcc #ENDIF#
 ##SC_PATHSCALE#TAU_CXX_FE=g++ #ENDIF#
 
+#ARCH_WIDTH_32#TAU_LIBEX=lib #ENDIF#
+#ARCH_WIDTH_64#TAU_LIBEX=lib64 #ENDIF#
+
+
 
 USER_OPT=-g
 EXTRADIR=
@@ -72,6 +76,7 @@ IFORTLIBDIR=
 PERFSUITELINK=
 TAUGFORTRANLIBDIR=
 PAPIDIR=
+GPIDIR=
 PAPISUBDIR=
 CHARMDIR=
 PDTDIR=
@@ -136,7 +141,6 @@ UNWIND_EXTRAS=
 #OPARI#TAU_OPARI_TOOL=$(TAU_BIN_DIR)/opari        #ENDIF#
 #OPARI2#TAU_OPARI2_TOOL=$(TAU_BIN_DIR)/opari2        #ENDIF#
 #OPARI2#TAU_OPARI_CONFIG_TOOL=$(TAU_BIN_DIR)/opari2-config        #ENDIF#
-#OPARI2#OPARIINCDIR=-I$(TAUROOT)/utils/opari2/include #ENDIF#
 #IBM64#TAU_IBM64= -X 64 		  #ENDIF#
 #ENABLE64BIT#ABI 	     = -mabi=64		  #ENDIF#
 #ENABLEN32BIT#ABI 	     = -mabi=n32	  #ENDIF#
@@ -225,7 +229,12 @@ JDKARCH                 = linux
 #############################################
 # OpenMP OBJECTS
 #############################################
-#OPENMP#OPENMP_O 	= OpenMPLayer.o #ENDIF#
+#OPENMP#OPENMP_O 	= OpenMPLayer.o TauOpenMPCollectorAPI.o #ENDIF#
+
+#############################################
+# OpenMP extra libraries for collector API
+#############################################
+#OPENMP#TAU_LINKER_OPT19=-ldl#ENDIF#
 
 #############################################
 # Opari OBJECTS
@@ -247,7 +256,6 @@ OPARI_O 	= TauKojakOpariDisable.o #ENDIF#
 # DYNINST DEFAULT ARCH
 #############################################
 DYNINST_PLATFORM 	= $(PLATFORM)
-
 
 ############# OpenMP Fortran Option ########
 TAU_OPENMP_OPTION = 
@@ -351,6 +359,7 @@ TAU_F77 = $(TAU_F90)
 #RTTI#PROFILEOPT9              = -DRTTI                #ENDIF#
 #USE_CC#PROFILEOPT10           = -DTAU_DOT_H_LESS_HEADERS #ENDIF#
 #CLANG#PROFILEOPT10           = -DTAU_CLANG -DTAU_DOT_H_LESS_HEADERS -fPIC #ENDIF#
+#BGCLANG#PROFILEOPT10           = -O2 -DMPICH2_CONST= -DTAU_CLANG -DTAU_DOT_H_LESS_HEADERS -fPIC #ENDIF#
 #CRAYCNL_SHARED#PROFILEOPT10           = -DTAU_DOT_H_LESS_HEADERS -fPIC #ENDIF#
 #GNU#PROFILEOPT10              = -DTAU_GNU -DTAU_DOT_H_LESS_HEADERS #ENDIF#
 #MPC#PROFILEOPT10              = -DTAU_MPC -DTAU_DOT_H_LESS_HEADERS -DTAU_MPI_F_STATUSES_IGNORE_ABSENT -fPIC #ENDIF#
@@ -522,7 +531,7 @@ SDDF_DIR=
 
 #BGL#PROFILEOPT72 = -DTAU_BGL -I/bgl/BlueLight/ppcfloor/bglsys/include #ENDIF#
 #BGP#PROFILEOPT72 = -DTAU_BGP -I/bgsys/drivers/ppcfloor/arch/include/common -I/bgsys/drivers/ppcfloor/arch/include -I/bgsys/drivers/ppcfloor/arch/include/spi #ENDIF#
-#BGQ#PROFILEOPT72 = -DTAU_BGQ #ENDIF#
+#BGQ#PROFILEOPT72 = -DTAU_BGQ -I/bgsys/drivers/ppcfloor -I/bgsys/drivers/ppcfloor/comm/sys/include -I/bgsys/drivers/ppcfloor/spi/include -I/bgsys/drivers/ppcfloor/spi/include/kernel/cnk #ENDIF#
 
 #For F90 support for all platforms
 FWRAPPER	       = TauFMpi.o       
@@ -681,6 +690,7 @@ TAU_LINKER_OPT2 = $(LEXTRA)
 #LAHEY_FORTRAN#TAU_CXXLIBS		= $(TAU_GNUCXXLIBS) -lc #ENDIF#
 #NAGWARE_FORTRAN#TAU_CXXLIBS		= $(TAUGCCSTDCXXLIBDIR)/libstdc++.a #ENDIF#
 #CLANG#TAU_CXXLIBS		= -lstdc++ -ldl #ENDIF#
+#BGCLANG#TAU_CXXLIBS		= -lstdc++ -ldl -lc -lnss_files -lnss_dns -lresolv -lm #ENDIF#
 #PGI#TAU_CXXLIBS        	= -lstd -lC        #ENDIF#
 #APPLEPGI#TAU_CXXLIBS        	= -lstd -lcpp       #ENDIF#
 #PGI_FORTRAN#TAU_CXXLIBS_PGI_CNL       	= -L$(EXTRADIR)/lib -lstd -lC -lstdc++     #ENDIF#
@@ -745,7 +755,6 @@ TAU_SGI_INIT = /usr/lib32/c++init.o
 #INTEL10FIX#TAU_CXXLIBS_INTEL        = -L$(TAUGCCLIBDIR) $(TAUGCCLIBOPTS) -lstdc++ $(TAU_GCCLIB) #ENDIF#
 #INTELCXXLIBICC#TAU_CXXLIBS_INTEL        = -lcprts #ENDIF#
 #USE_INTELCXX#TAU_CXXLIBS        = $(TAU_CXXLIBS_INTEL) #ENDIF#
-#APPLECXX#TAU_CXXLIBS 		= -lstdc++ -L$(TAUGCCLIBDIR)  $(TAUGCCLIBOPTS) -lgcc_s.1 -lSystemStubs #ENDIF#
 #APPLECXX#TAU_CXXLIBS 		= -lstdc++ -L$(TAUGCCLIBDIR)  $(TAUGCCLIBOPTS) -lgcc_s.1 #ENDIF#
 
 # EXTERNAL PACKAGES: EPILOG
@@ -907,7 +916,6 @@ EXTRA_LINKER_ARGS=
 #APPLECXX#EXTRA_LINKER_ARGS = -rdynamic#ENDIF#
 TAU_LINKER_OPT14=$(EXTRA_LINKER_ARGS)
 
-
 ##############################################
 # Compiler Instrumentation
 ##############################################
@@ -978,14 +986,16 @@ EBS_CLOCK_RES=
 ##############################################
 #BUPC#PROFILEOPT89= -DTAU_UPC -DTAU_BUPC
 #GUPC#PROFILEOPT89= -DTAU_UPC -DTAU_GPUC
-#CRAY_UPC#PROFILEOPT89= -DTAU_UPC -DTAU_CRAY_UPC
+PROFILEOPT89= -DTAU_UPC -DTAU_CRAY_UPC#CRAY_UPC#
 
 
 ##############################################
 
 #SGI_MPT_MPI#PROFILEOPT90= -DTAU_SGI_MPT_MPI -DTAU_MPI_F_STATUSES_IGNORE_ABSENT #ENDIF#
+#GPI#PROFILEOPT91 = -DTAU_GPI -I$(GPIDIR)/include #ENDIF#
+#GPI#TAU_EXTRA_WRAPPER_OPTIONS=-optTauWrapFile=$(TAU_LIB_DIR)/wrappers/gpi/link_options.tau #ENDIF#
 
-
+#TAU_OPENMP_NESTED#PROFILEOPT92=-DTAU_OPENMP_NESTED#ENDIF#
 
 PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT5)  $(PROFILEOPT6)  $(PROFILEOPT7)  $(PROFILEOPT8)  \
@@ -1009,7 +1019,8 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
 	      $(PROFILEOPT77) $(PROFILEOPT78) $(PROFILEOPT79) $(PROFILEOPT80) \
               $(PROFILEOPT81) $(PROFILEOPT82) $(PROFILEOPT83) $(PROFILEOPT84) \
               $(PROFILEOPT85) $(PROFILEOPT86) $(PROFILEOPT87) $(PROFILEOPT88)\
-              $(PROFILEOPT89) $(PROFILEOPT90)  $(TRACEOPT)
+              $(PROFILEOPT89) $(PROFILEOPT90) $(PROFILEOPT91) $(PROFILEOPT92) \
+							$(TRACEOPT)
 
 
 ##############################################
@@ -1040,7 +1051,7 @@ TAU_OPENCL_INC=
 TAU_CUPTI_INC=
 #CUDA#TAU_CUDA_INCLUDE=-I$(TAU_CUDA_INC)#ENDIF#
 #CUPTI#TAU_CUPTI_INCLUDE=-I$(TAU_CUPTI_INC)#ENDIF#
-#CUPTI#TAU_CUDA_LINKER_OPTS=-L$(TAU_CUPTI_INC)/../lib -L$(TAU_CUPTI_INC)/../lib64 -lcupti#ENDIF#
+#CUPTI#TAU_CUDA_LINKER_OPTS=-L$(TAU_CUPTI_INC)/../$(TAU_LIBEX) -lcupti#ENDIF#
 TAU_CUDA_LIBRARY=
 #############################################
 
@@ -1054,7 +1065,8 @@ TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
                   $(TAU_LINKER_OPT10) $(TAU_LINKER_OPT11) $(TAU_LINKER_OPT12) \
 		  $(TAU_LINKER_OPT13) $(PERFSUITELINK) $(VAMPIRTRACELIBS) $(SCOREPLIBS) $(HPCTOOLKIT_LINK) \
 		  $(TAU_LINKER_OPT14) $(TAU_LINKER_OPT15) $(TAU_LINKER_OPT16) \
-                  $(TAU_LINKER_OPT17) $(TAU_LINKER_OPT18) $(TAU_CUDA_LINKER_OPTS)
+                  $(TAU_LINKER_OPT17) $(TAU_LINKER_OPT18) $(TAU_LINKER_OPT19) \
+                  $(TAU_CUDA_LINKER_OPTS)
 
 ##############################################
 
@@ -1080,6 +1092,7 @@ TAUMPIFLIBS	= $(TAU_MPI_FLIB)
 TAU_DEFS	= $(TAUDEFS)
 
 TAU_INCLUDE 	= -I$(TAU_INC_DIR)
+#GPI#TAU_GPI_INC=-I$(GPIDIR)/include #ENDIF#
 #PERFLIB#TAU_INCLUDE = -I$(PERFINCDIR) #ENDIF#
 #PERFLIB#TAU_DEFS = #ENDIF#
 #PERFLIB#TAU_COMPILER_EXTRA_OPTIONS1=-optTau=-p #ENDIF#
@@ -1091,9 +1104,7 @@ TAU_INCLUDE 	= -I$(TAU_INC_DIR)
 
 TAU_COMPILER_EXTRA_OPTIONS=$(TAU_COMPILER_EXTRA_OPTIONS1) $(TAU_COMPILER_EXTRA_OPTIONS2) 
 
-TAU_INCLUDE_MEMORY = -I$(TAU_INC_DIR)/Memory
-#IBMXLCAPPLE#TAU_INCLUDE_MEMORY = -I$(TAU_INC_DIR)/MemoryWrapper #ENDIF#
-#APPLECXX#TAU_INCLUDE_MEMORY = -I$(TAU_INC_DIR)/MemoryWrapper #ENDIF#
+TAU_INCLUDE_MEMORY = -I$(TAU_INC_DIR)/TauMemory
 
 #TAU_LIBS	= $(TAUHELPER) -L$(TAU_LIB_DIR) -ltau$(TAU_CONFIG) $(TAU_LINKER_OPTS) -L/usr/local/packages/sw1.2beta1/x86_64-unknown-linux2.4/lib -lstackwalk -lsymtabAPI -lcommon -L/usr/local/packages/libdwarf-20091230/lib -ldwarf -lelf -liberty -ldlmalloc
 
@@ -1166,6 +1177,7 @@ MIC_OFFLOAD_LINKING=$(TAUHELPER) $(MIC_OFFLOAD_FLAGS) $(MIC_OFFLOAD_LINKING_PREF
 MIC_OFFLOAD_SHARED_LINKING=$(TAUHELPER) $(MIC_OFFLOAD_FLAGS) $(MIC_OFFLOAD_LINKING_PREFIX)='-L$(TAU_PREFIX_INSTALL_DIR)/mic_linux/lib -lTAUsh$(TAU_CONFIG)' -L$(TAU_PREFIX_INSTALL_DIR)/x86_64/lib -lTAUsh$(TAU_CONFIG) $(TAU_LINKER_OPTS) $(TAU_LINKER_SHOPTS) $(TAU_MPI_LIB) $(TAU_LIBDL)
 
 TAU_MPI_COMPILE_INCLUDE=$(TAU_MPI_INCLUDE)
+#COMPINST_CRAYCC#TAU_MPI_COMPILE_INCLUDE= #ENDIF#
 #FX#TAU_MPI_COMPILE_INCLUDE= #ENDIF#
 # Fujitsu doesn't want TAU_MPI_INC to propagate to the command line
 
@@ -1192,7 +1204,6 @@ TAU_SHARED_INSTALL_CMD=\
 #HITACHI#TAU_SHARED_INSTALL_CMD=@echo "NOTE: Not building TAU's preload DSO" #ENDIF#
 #CRAYXMT#TAU_SHARED_INSTALL_CMD=@echo "NOTE: Not building TAU's preload DSO" #ENDIF#
 #CRAYCC#TAU_SHARED_INSTALL_CMD=@echo "NOTE: Not building TAU's preload DSO" #ENDIF#
-#OPEN64ORC#TAU_SHARED_INSTALL_CMD=@echo "NOTE: Not building TAU's preload DSO" #ENDIF#
 #USE_NECCXX#TAU_SHARED_INSTALL_CMD=@echo "NOTE: Not building TAU's preload DSO" #ENDIF#
 #NOSHARED#TAU_SHARED_INSTALL_CMD=@echo "NOTE: Not building TAU's preload DSO" #ENDIF#
 #TAU_WINDOWS#TAU_SHARED_INSTALL_CMD=@echo "NOTE: Not building TAU's preload DSO" #ENDIF#
@@ -1204,7 +1215,7 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
         -optPdtCxxOpts="$(TAU_INCLUDE) $(TAU_DEFS) $(TAU_MPI_INCLUDE) $(TAU_SHMEM_INCLUDE) $(OPARIINCDIR)"\
         -optTauInstr="$(TAU_BIN_DIR)/tau_instrumentor" \
         -optNoMpi \
-	-optOpariDir="$(OPARIDIR)" -optOpari2Tool="$(TAU_OPARI2_TOOL)" -optOpari2ConfigTool="$(TAU_OPARI_CONFIG_TOOL)"  \
+	-optOpari2Tool="$(TAU_OPARI2_TOOL)" -optOpari2ConfigTool="$(TAU_OPARI_CONFIG_TOOL)" -optOpari2Dir="$(OPARIDIR)" \
 	-optIBM64="$(TAU_IBM64)" -optOpari2Opts="$(TAU_OPARI2_OPTION)" \
 	-optOpariTool="$(TAU_OPARI_TOOL)"  \
 	-optTauCC="$(TAU_CCOMPILER)" \

@@ -672,9 +672,32 @@ public class UtilFncs {
             break;
 
         case DataSource.GPTL:
-            dataSource = new GPTLDataSource(sourceFiles[0]);
-            break;
+            FileList fileList;
+            
+           	fileList = new FileList();
 
+            if (sourceFiles.length < 1) {
+                v = fileList.helperFindGPTLProfiles(System.getProperty("user.dir"));
+                if (v.size() == 0) {
+                    throw new DataSourceException("GPTL: no profiles specified");
+                }
+            } else {
+                if (sourceFiles[0].isDirectory()) {
+                    if (sourceFiles.length > 1) {
+                        throw new DataSourceException("GPTL: you can only specify one directory");
+                    }
+
+                    v = fileList.helperFindGPTLProfiles(sourceFiles[0].toString());
+                    if (v.size() == 0) {
+                        throw new DataSourceException("No profiles found in directory: " + sourceFiles[0]);
+                    }
+                } else {
+                    v.add(sourceFiles);
+                }
+            }
+            dataSource = new GPTLDataSource(v);
+            break;
+            
         case DataSource.IPM:
             dataSource = new IPMDataSource(sourceFiles[0]);
             break;
@@ -686,6 +709,10 @@ public class UtilFncs {
         case DataSource.GAMESS:
             dataSource = new GAMESSDataSource(sourceFiles[0]);
             break;
+            
+        case DataSource.DARSHAN:
+        	dataSource =  new DarshanDataSource(sourceFiles[0]);
+        	break;
 
         default:
             throw new RuntimeException("Programming error: unknown format id = " + fileType);

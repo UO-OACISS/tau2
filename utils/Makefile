@@ -86,8 +86,8 @@ CWARNING	= $(WARNINGSOPT)
 SELECTFILE 	= tau_selectfile
 #OPARI#TAUOMPCHECK    = $(PDTOMPCHECK) #ENDIF#
 #DYNINST#TAURUN 	= tau_run #ENDIF#
-#TRACE#TRACE2PROFILE	= trace2profile/trace2profile #ENDIF#
-#TRACE#INSTALLTRACE2PROFILE	= $(INSTALLDEST)/trace2profile #ENDIF#
+TRACE2PROFILE	= trace2profile/trace2profile 
+INSTALLTRACE2PROFILE	= $(INSTALLDEST)/trace2profile 
 #TRACE#TAU_TIMECORRECT	= tau_timecorrect #ENDIF#
 #TRACE#INSTALLTAU_TIMECORRECT	= $(INSTALLDEST)/tau_timecorrect #ENDIF#
 #VTF#TAU2VTF 	= tau2vtf #ENDIF#
@@ -115,6 +115,7 @@ SELECTFILE 	= tau_selectfile
 #SP1#DYNLIBS 	= -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -ldyninstAPI #ENDIF#
 #SGIMP#DYNLIBS 	= -L$(DYNINSTDIR)/$(DYNINST_PLATFORM)/lib -L$(DYNINSTDIR)/lib/$(DYNINST_PLATFORM) -ldyninstAPI $(DWARFOPTS) -ldwarf -lelf#ENDIF#
 # -lelf is for Solaris only
+#DYNINST8#DYNLIBS 	= -L$(DYNINSTDIR)/lib -ldyninstAPI -lelf -lcommon -lparseAPI -lsymtabAPI $(DWARFOPTS) -ldwarf -liberty -linstructionAPI -lstackwalk -lpcontrol -ldynElf -lpatchAPI -lsymLite -ldynDwarf #ENDIF#
 
 #SOL2CC#CEXTRA=-DTAU_DOT_H_LESS_HEADERS -DSOL2CC #ENDIF#
 #SUNCC#CEXTRA=-DTAU_DOT_H_LESS_HEADERS #ENDIF#
@@ -148,7 +149,9 @@ PDT_CFLAGS = $(PDTCFLAGS) $(PDT_COMPILE_FLAGS)
 #PDTSGICC#PDT_CFLAGS = -LANG:std -D__SGIMP__ $(PDT_COMPILE_FLAGS) #ENDIF#
 #PDTALPHACXX#PDT_CFLAGS = -x c++ -D__USE_STD_IOSTREAM $(PDT_COMPILE_FLAGS) #ENDIF#
 #PDTHPACC#PDT_CFLAGS = -AA $(PDT_COMPILE_FLAGS) #ENDIF#
-#DYNINST41##PKGOPT = -DTAU_DYNINST -DTAU_DYNINST41PLUS #ENDIF#
+#DYNINST41##DYN_PKG_OPT = -DTAU_DYNINST -DTAU_DYNINST41PLUS #ENDIF#
+#DYNINST8#DYN_PKG_OPT = -DTAU_DYNINSTAPI_8_PLUS #ENDIF#
+#DYNINST8#DYNINST_PLATFORM= #ENDIF#
 
 #DEBUGPROF#DEBUGOPT = -DDEBUG #ENDIF#
 
@@ -292,7 +295,7 @@ tau_run: 	tau_run.o tau_selective_dyn.o  tau_instrument.dyn.o
 		$(CXX) $(CFLAGS) tau_run.o tau_selective_dyn.o tau_instrument.dyn.o -o $@ $(DYNLIBS) $(LEXTRA) 
 
 tau_run.o: 	tau_run.cpp
-		$(CXX) $(CFLAGS) $(DYNINC) -DTAU_DYNINST -DTAU_DYNINST41PLUS -c tau_run.cpp
+		$(CXX) $(CFLAGS) $(DYNINC) -DTAU_DYNINST -DTAU_DYNINST41PLUS $(DYN_PKG_OPT) -c tau_run.cpp
 
 tau_wrap: tau_wrap.o tau_selective.o tau_instrument.o $(PDTDIR)/$(PDTARCHDIR)/lib/libpdb.a 
 		$(PDT_CXX_COMP) $(PDT_CFLAGS) tau_wrap.o tau_selective.o tau_instrument.o -o $@ $(PDTOPTS) -lm $(LEXTRA) 

@@ -12,7 +12,33 @@ public class CallPathUtilFuncs {
 
     private CallPathUtilFuncs() {
     }
-
+/**
+ * This function takes a callpath string such as A => B => C and returns
+ * the direct parent of the leaf function. In this case, it's C.
+ * @param callpath String representing a call path
+ * @return The name of the direct parent.  If there is no parent it returns the empty string.
+ */
+//    public static String getDirectParentName(String callpath) {
+//    	String parent = "";
+//    	if(callpath.contains("=>")){
+//    		int lastLink = callpath.lastIndexOf("=>");
+//    		parent = callpath.substring(lastLink+2);
+//    		if(parent.contains("=>")){
+//    			int index = parent.lastIndexOf("=>");
+//    			return parent.substring(index+2);
+//    		}
+//    	}
+//    	return parent;
+//	}
+  public static String getParentName(String callpath) {
+	String parent = "";
+	if(callpath.contains("=>")){
+		int lastLink = callpath.lastIndexOf("=>");
+	
+		parent = callpath.substring(0,lastLink);
+	}
+	return parent;
+}
     public static boolean checkCallPathsPresent(Iterator<Function> l) {
         while (l.hasNext()) {
             Function function = l.next();
