@@ -230,7 +230,6 @@ public class PerfExplorerJTree extends JTree{
 			addTrialsForView(parentNode);
 		}
 		else{
-			//TODO: Add All Trials virtual leaf view
 			View parentView = (View)parentNode.getUserObject();
 			View view = View.VirtualView(parentView);
 			

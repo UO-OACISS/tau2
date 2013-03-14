@@ -2148,6 +2148,7 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 				if (databaseAPI != null) {
 					databaseAPI.setView(parentView);
 					ListIterator<View> l = databaseAPI.getViewList().listIterator();
+					if(l.hasNext()){
 					while (l.hasNext()) {
 						ParaProfView view = new ParaProfView((View) l.next());
 						DefaultMutableTreeNode viewNode = new DefaultMutableTreeNode(
@@ -2156,6 +2157,15 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 						getTreeModel().insertNodeInto(viewNode,
 								selectedNode, selectedNode.getChildCount());
 					}
+					
+					View allView = View.VirtualView(parentView);
+					ParaProfView view = new ParaProfView(allView);
+					DefaultMutableTreeNode viewNode = new DefaultMutableTreeNode(view);
+					view.setDMTN(viewNode);
+					getTreeModel().insertNodeInto(viewNode,	selectedNode, selectedNode.getChildCount());
+					
+					}
+					else{
 					List<Trial> l2 = databaseAPI.getTrialList(
 							true);// TODO: Is xml
 					          // metadata required here?
@@ -2169,6 +2179,7 @@ TreeSelectionListener, TreeWillExpandListener, DBManagerListener {
 						getTreeModel().insertNodeInto(trialNode,
 								selectedNode,
 								selectedNode.getChildCount());
+					}
 					}
 					databaseAPI.terminate();
 				}
