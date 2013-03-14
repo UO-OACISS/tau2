@@ -27,9 +27,9 @@
 #include <signal.h>
 #include <Profile/TauEnv.h>
 
-#ifndef TAU_PTHREAD_BARRIER_AVAILABLE
+#if !defined(__APPLE__)
 #define TAU_PTHREAD_BARRIER_AVAILABLE
-#endif // TAU_PTHREAD_BARRIER_AVAILABLE
+#endif
 
 typedef void * (*start_routine_p)(void *);
 typedef int (*pthread_create_p)(pthread_t *, const pthread_attr_t *, start_routine_p, void *arg);
