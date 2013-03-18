@@ -565,7 +565,9 @@ bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle,
 					Tau_bfd_internal_locateAddress, &data);
 		}
 	}
-TAU_VERBOSE("Address %p resolved to %s %s %d\n", probeAddr, info.funcname, info.filename, info.lineno);
+
+	// This can really slow things down!
+	//TAU_VERBOSE("Address %p resolved to %s %s %d\n", probeAddr, info.funcname, info.filename, info.lineno);
 
 	bool resolved = data.found && (info.funcname != NULL);
 	if (resolved) {
