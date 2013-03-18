@@ -506,13 +506,12 @@ static int env_memdbg_attempt_continue = TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT;
  ********************************************************************/
 void TAU_VERBOSE(const char *format, ...)
 {
-  // Protect TAU from itself
-  TauInternalFunctionGuard protects_this_function;
+  // Check first to minimize runtime overhead
+  if (env_verbose != 1) return;
+
+  Tau_global_incr_insideTAU();
 
   va_list args;
-  if (env_verbose != 1) {
-    return;
-  }
   va_start(args, format);
 
 #ifdef TAU_GPI
@@ -522,6 +521,8 @@ void TAU_VERBOSE(const char *format, ...)
 #endif
   va_end(args);
   fflush (stderr);
+
+  Tau_global_decr_insideTAU();
 }
 
 /*********************************************************************
