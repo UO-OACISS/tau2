@@ -808,7 +808,7 @@ extern "C" void Tau_Sampling_register_unit() {
 }
 
 void Tau_sampling_finalizeProfile(int tid) {
-  TAU_VERBOSE("Tau_sampling_finalizeProfile with tid=%d\n", tid);
+  TAU_VERBOSE("[%d]: Tau_sampling_finalizeProfile\n", tid);
 
   // Resolve all unresolved PC values.
   //
@@ -842,8 +842,7 @@ void Tau_sampling_finalizeProfile(int tid) {
 	(parentTauContext->pathHistogram[tid]->size() == 0)) {
       // No samples encountered in this TAU context.
       //   Continue to next TAU context.
-      TAU_VERBOSE("Tau Context %s has no samples.\n",
-		  parentTauContext->GetName());
+      TAU_VERBOSE("[%d]: Tau Context %s has no samples.\n", tid, parentTauContext->GetName());
       continue;
     }
     /*
@@ -866,7 +865,7 @@ void Tau_sampling_finalizeProfile(int tid) {
       */
       candidate->sampleCount = item->second.count;
       candidate->tauContext = parentTauContext;
-      TAU_VERBOSE("Tau Context %s has %d samples.\n", candidate->tauContext->GetName(), candidate->sampleCount);
+      TAU_VERBOSE("[%d]: Tau Context %s has %d samples.\n", tid, candidate->tauContext->GetName(), candidate->sampleCount);
       for (int i = 0 ; i < Tau_Global_numCounters ; i++) {
         candidate->counters[i] = item->second.accumulator[i];
         //TAU_VERBOSE("%s[%d] = %f ", candidate->tauContext->GetName(), i, item->second.accumulator[i]);
@@ -1380,7 +1379,6 @@ int Tau_sampling_init(int tid)
   TauInternalFunctionGuard protects_this_function;
 
   int threshold = TauEnv_get_ebs_period();
-  TAU_VERBOSE("Tau_sampling_init: tid = %d with threshold %d\n", tid, threshold);
 
   samplingEnabled[tid] = 0;
   suspendSampling[tid] = 0;
@@ -1390,13 +1388,13 @@ int Tau_sampling_init(int tid)
 
   itval.it_interval.tv_usec = itval.it_value.tv_usec = threshold % 1000000;
   itval.it_interval.tv_sec = itval.it_value.tv_sec = threshold / 1000000;
-  TAU_VERBOSE("Tau_sampling_init: tid = %d itimer values %d %d\n", tid, itval.it_interval.tv_usec,
-      itval.it_interval.tv_sec);
+
+  TAU_VERBOSE("[%d] Tau_sampling_init: threshold=%d, itimer=(%d, %d)\n", 
+      tid, threshold, itval.it_interval.tv_usec, itval.it_interval.tv_sec);
 
   const char *profiledir = TauEnv_get_profiledir();
 
   int node = RtsLayer::myNode();
-  node = 0;
   char filename[4096];
 
   if (TauEnv_get_tracing()) {
@@ -1423,11 +1421,14 @@ int Tau_sampling_init(int tid)
    enable sample handling for each thread after init(tid) completes.
    See Tau_sampling_handle_sample().
    */
-  // only thread 0 sets up the timer interrupts.
+#ifndef TAU_BGQ
   if (strcmp(TauEnv_get_ebs_source(), "itimer") == 0 ||
       strcmp(TauEnv_get_ebs_source(), "TIME") == 0)
   {
+    // only thread 0 sets up the timer interrupts.
     if (tid == 0) {
+#endif // TAU_BGQ
+
       struct sigaction act;
 
       // If TIME isn't on the list of TAU_METRICS, then do not sample.
@@ -1519,7 +1520,7 @@ int Tau_sampling_init(int tid)
           fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
           return -1;
         }
-        TAU_VERBOSE("Tau_sampling_init: pid = %d, tid = %d sigaction called.\n", getpid(), tid);
+        TAU_VERBOSE("[%d] Tau_sampling_init: sigaction called.\n", tid);
         // the old handler was just the default or ignore.
         memset(&application_sa, 0, sizeof(struct sigaction));
         sigemptyset(&application_sa.sa_mask);
@@ -1527,19 +1528,21 @@ int Tau_sampling_init(int tid)
       } else {
         // FIRST! check if this is us! (i.e. we got initialized twize)
         if (query_action.sa_sigaction == Tau_sampling_handler) {
-          TAU_VERBOSE("WARNING! Tau_sampling_init called twice!\n");
+          TAU_VERBOSE("[%d] WARNING! Tau_sampling_init called twice!\n", tid);
         } else {
-          TAU_VERBOSE("WARNING! Tau_sampling_init found another handler!\n");
+          TAU_VERBOSE("[%d] WARNING! Tau_sampling_init found another handler!\n", tid);
           // install our handler, and save the old handler
           ret = sigaction(TAU_ALARM_TYPE, &act, &application_sa);
           if (ret != 0) {
             fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
             return -1;
           }
-          TAU_VERBOSE("Tau_sampling_init: pid = %d, tid = %d sigaction called.\n", getpid(), tid);
+          TAU_VERBOSE("[%d] Tau_sampling_init: sigaction called.\n", tid);
         }
       }
-    }
+#ifndef TAU_BGQ
+    } // if (tid == 0)
+#endif
 
     struct itimerval ovalue, pvalue;
     getitimer(TAU_ITIMER_TYPE, &pvalue);
@@ -1549,7 +1552,7 @@ int Tau_sampling_init(int tid)
       fprintf(stderr, "TAU: Sampling error: %s\n", strerror(ret));
       return -1;
     }
-    TAU_VERBOSE("Tau_sampling_init: pid = %d, tid = %d setitimer called.\n", getpid(), tid);
+    TAU_VERBOSE("[%d] Tau_sampling_init: setitimer called.\n", tid);
 
     /*
      *CWL* - 8/18/2012. I think this is an unnecessarily strict check.
@@ -1562,7 +1565,6 @@ int Tau_sampling_init(int tid)
      return -1;
      }
      */
-    TAU_VERBOSE("Tau_sampling_init: pid = %d, tid = %d Signals set up.\n", getpid(), tid);
 
     // set up the base timers
     double values[TAU_MAX_COUNTERS] = { 0 };
@@ -1582,7 +1584,9 @@ int Tau_sampling_init(int tid)
         previousTimestamp[shiftIndex] = values[y];
       }
     }
-  }
+#ifndef TAU_BGQ
+  } //(TauEnv_get_ebs_source() == "itimer" || "TIME")
+#endif
 
   samplingEnabled[tid] = 1;
   collectingSamples = 1;

@@ -95,12 +95,8 @@ vector<RtsThread*>& TheThreadList(void)
 
 static int nextThread = 1;
 
-int RtsLayer::createThread()
+int RtsLayer::_createThread()
 {
-  TauInternalFunctionGuard protects_this_function;
-
-  threadLockEnv();
-
 	RtsThread* newThread;
 	
 	if (nextThread > TheThreadList().size())
@@ -115,9 +111,21 @@ int RtsLayer::createThread()
 		newThread->active = true;
 		nextThread = newThread->next_available;
 	}
-	threadUnLockEnv();
 
 	return newThread->thread_rank;
+}
+
+int RtsLayer::createThread()
+{
+  TauInternalFunctionGuard protects_this_function;
+
+  threadLockEnv();
+
+	int tid = RtsLayer::_createThread();
+	
+  threadUnLockEnv();
+
+  return tid;
 }
 
 extern "C" int Tau_RtsLayer_createThread() {
@@ -272,12 +280,6 @@ int RtsLayer::RegisterThread() {
   UnLockEnv();
   */
 
-#ifndef TAU_WINDOWS 
-  if (TauEnv_get_ebs_enabled()) {
-    Tau_sampling_init_if_necessary();
-  }
-#endif
-
 #ifdef PTHREADS
   PthreadLayer::RegisterThread();
 #elif TAU_SPROC
@@ -303,6 +305,13 @@ int RtsLayer::RegisterThread() {
     fprintf(stderr, "TAU Error: RtsLayer: [Max thread limit = %d] [Encountered = %d]. Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=<higher limit>\n", TAU_MAX_THREADS, numThreads);
     exit(-1);
   }
+
+#ifndef TAU_WINDOWS 
+  if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_init_if_necessary();
+  }
+#endif
+
   Tau_global_process_decr_insideTAU();
   return numThreads;
 }

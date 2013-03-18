@@ -744,10 +744,12 @@ public abstract class DataSource {
         
         
         // initialize to the first thread
-        int numDerivedSnapshots = this.getAllThreads().get(0).getNumSnapshots();
+        List<Thread> allThreads=this.getAllThreads();
+        Thread t0=allThreads.get(0);
+        int numDerivedSnapshots = t0.getNumSnapshots();
 
         long sumStartTime = 0;
-        for (Iterator<Thread> it = this.getAllThreads().iterator(); it.hasNext();) {
+        for (Iterator<Thread> it = allThreads.iterator(); it.hasNext();) {
             Thread thread = it.next();
             thread.setThreadDataAllMetrics();
 
@@ -765,7 +767,7 @@ public abstract class DataSource {
             // only true when all threads have the same number of snapshots
             // otherwise we make no derived snapshots
             wellBehavedSnapshots = true;
-            avgStartTime = (long) ((double) sumStartTime / this.getAllThreads().size());
+            avgStartTime = (long) ((double) sumStartTime / allThreads.size());
         }
 
         try {

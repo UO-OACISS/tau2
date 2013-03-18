@@ -42,7 +42,13 @@
 #endif /* TAU_OPENMP */
 using std::string;
 
-
+/* Define these weakly linked routines so the even if the pompregions.o file is
+ * missing the TAU libraries will be able to resolve all undefined symbols.
+ * */
+void POMP2_Init_regions() {}
+size_t POMP2_Get_num_regions() { return 0; }
+#pragma weak POMP2_Init_regions
+#pragma weak POMP2_Get_num_regions
 
 /* These two defines specify if we want region based views or construct based
 views or both */
