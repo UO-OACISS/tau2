@@ -60,9 +60,6 @@ using namespace std;
 #include <mach-o/dyld.h>
 #endif /* __APPLE__ */
 
-
-static int compInstDisabled[TAU_MAX_THREADS];
-
 static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
 
 /*
@@ -97,16 +94,17 @@ HashTable& TheHashTable()
 /*
  * Get symbol table by using BFD
  */
-#ifndef TAU_BFD
 static void issueBfdWarningIfNecessary() {
+#ifndef TAU_BFD
   static bool warningIssued = false;
   if (!warningIssued) {
     fprintf(stderr,"TAU Warning: Comp_gnu - "
     		"BFD is not available during TAU build. Symbols may not be resolved!\n");
     warningIssued = true;
   }
-}
 #endif
+}
+
 
 void updateHashTable(unsigned long addr, const char *funcname)
 {
@@ -169,8 +167,6 @@ void profile_func_exit(void*, void*);
 
 //#endif
 
-static bool in_hash = false;
-
 #if (defined(TAU_SICORTEX) || defined(TAU_SCOREP))
 #pragma weak __cyg_profile_func_enter
 #endif /* SICORTEX || TAU_SCOREP */
@@ -178,46 +174,41 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 {
   static bool gnu_init = true;
 
-#ifndef TAU_BFD
+  // These checks must be done before anything else.
+
+  // Don't profile if we're done executing.
+  if (executionFinished) return;
+
+  // Don't profile if we're still initializing.
+  if (Tau_init_initializingTAU()) return;
+
+  // Don't profile TAU internals
+  if (Tau_global_get_insideTAU() > 0) return;
+
+  // Protect TAU from itself.  This MUST occur here before we query the TID or
+  // use the hash table.  Any later and TAU's memory wrapper will profile TAU
+  // and crash or deadlock.
+  // Note that this also prevents reentrency into this routine.
+  Tau_global_incr_insideTAU();
+
 	issueBfdWarningIfNecessary();
-#endif /* TAU_BFD */
 
 	void * funcptr = func;
 #ifdef __ia64__
 	funcptr = *( void ** )func;
 #endif
 
-  if (executionFinished) return;
-
 	unsigned long addr = Tau_convert_ptr_to_unsigned_long(funcptr);
 
-  //protect aginst reentrancy.
-  if (in_hash) return;
-  in_hash = true;
-  
   // Get previously hashed info, or efficiently create
   // a new hash node if it didn't already exist
 	HashNode & hn = TheHashTable()[addr];
-  in_hash = false;
 
 	// Skip excluded functions
 	if (hn.excluded) return;
 
-  if (Tau_global_get_insideTAU() > 0) return;
-  TauInternalFunctionGuard protects_this_function;
-
-	//prevent entry into cyg_profile functions while still initializing TAU
-	if (Tau_init_initializingTAU()) return;
-
-	int tid = Tau_get_tid();
-			
 	if (gnu_init) {
 		gnu_init = false;
-
-		// initialize array of flags that prevent re-entry
-		for (int i = 0; i < TAU_MAX_THREADS; i++) {
-			compInstDisabled[i] = 0;
-		}
 
 		Tau_init_initializeTAU();
 
@@ -233,10 +224,8 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 		Tau_bfd_processBfdExecInfo(bfdUnitHandle, updateHashTable);
 
 		TheUsingCompInst() = 1;
-		// *CWL* - CompGnu's interactions with UPC originally blew away UPC's
-		//         settings. Unfortunately, it cannot also be removed. The
-		//         compromise is to check that the value is -1 (uninitialized)
-		//         and set it to 0 if so.
+
+		// For UPC: Initialize the node
 		if (RtsLayer::myNode() == -1) {
 		  TAU_PROFILE_SET_NODE(0);
 		}
@@ -244,38 +233,24 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 		// we register this here at the end so that it is called
 		// before the VT objects are destroyed.  Objects are destroyed and atexit targets are
 		// called in the opposite order in which they are created and registered.
-
 		// Note: This doesn't work work VT with MPI, they re-register their atexit routine
 		//       During MPI_Init.
 		atexit(runOnExit);
 	}
-	
-	// prevent re-entry of this routine on a per thread basis
-	if (compInstDisabled[tid]) {
-		return;
-	}
-	compInstDisabled[tid] = 1;
 
   Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, hn.info);
 
 	// Start the timer if it's not an excluded function
 	if(hn.fi == NULL) {
 		RtsLayer::LockDB(); // lock, then check again
-		// *CWL* - why? Because another thread could be creating this now.
-		//         Lock-and-check-again is more efficient than Lock-first-check-later.
 		if (hn.fi == NULL) {
 			// Resolve function info if it hasn't already been retrieved
 			if(hn.info.probeAddr == 0) {
 				Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, hn.info);
 			}
 
-      //We can remove these functions from the profile as well if we choose.
-      //strncmp(hn.info.funcname, "std::", 5)  == 0||
-      //strncmp(hn.info.funcname, "__gnu_cxx::", 11) == 0)
-      //
       //Do not profile this routine, causes crashes with the intel compilers.
-      if (strcmp(hn.info.funcname, "__sti__$E") == 0)
-      {
+      if (strcmp(hn.info.funcname, "__sti__$E") == 0) {
         hn.excluded = true;
       }
 
@@ -291,11 +266,9 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 			}
 
 			// Build routine name for TAU function info
-			unsigned int size = strlen(hn.info.funcname) +
-					strlen(hn.info.filename) + 128;
+			unsigned int size = strlen(hn.info.funcname) + strlen(hn.info.filename) + 128;
 			char * routine = (char*)malloc(size);
-			sprintf(routine, "%s [{%s} {%d,0}]", hn.info.funcname,
-					hn.info.filename, hn.info.lineno);
+			sprintf(routine, "%s [{%s} {%d,0}]", hn.info.funcname, hn.info.filename, hn.info.lineno);
 
 			// Create function info
 			void *handle = NULL;
@@ -307,21 +280,20 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 		}
 		RtsLayer::UnLockDB();
 	}
-  if (hn.excluded == false)
-  {
+  if (hn.excluded == false) {
 		//GNU has some internal routines that occur before main in entered. To
 		//ensure that a single top-level timer is present start the dummy '.TAU
 		//application' timer. -SB
 		Tau_create_top_level_timer_if_necessary();
-	  Tau_start_timer(hn.fi, 0, tid);
+	  Tau_start_timer(hn.fi, 0, Tau_get_tid());
 	}	
 	if (!(hn.fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
 		//printf("COMP_GNU >>>>>>>>>> Excluding: %s, addr: %d, throttled.\n", hn.fi->GetName(), addr);
 		hn.excluded = true;
 	}
 
-	// finished in this routine, allow entry
-	compInstDisabled[tid] = 0;
+	// All done, leave TAU region.
+	Tau_global_decr_insideTAU();
 }
 
 void _cyg_profile_func_enter(void* func, void* callsite) {
@@ -347,9 +319,24 @@ void ___cyg_profile_func_enter(void* func, void* callsite) {
 #endif /* SICORTEX || TAU_SCOREP */
 void __cyg_profile_func_exit(void* func, void* callsite)
 {
-#ifndef TAU_BFD
+  // These checks must be done before anything else.
+
+  // Don't profile if we're done executing.
+  if (executionFinished) return;
+
+  // Don't profile if we're still initializing.
+  if (Tau_init_initializingTAU()) return;
+
+  // Don't profile TAU internals
+  if (Tau_global_get_insideTAU() > 0) return;
+
+  // Protect TAU from itself.  This MUST occur here before we query the TID or
+  // use the hash table.  Any later and TAU's memory wrapper will profile TAU
+  // and crash or deadlock.
+  // Note that this also prevents reentrency into this routine.
+  Tau_global_incr_insideTAU();
+
 	issueBfdWarningIfNecessary();
-#endif /* TAU_BFD */
 
 	void * funcptr = func;
 #ifdef __ia64__
@@ -357,30 +344,13 @@ void __cyg_profile_func_exit(void* func, void* callsite)
 #endif
 	unsigned long addr = Tau_convert_ptr_to_unsigned_long(funcptr);
 
-  //protect aginst reentrancy.
-  if (in_hash) return;
-  in_hash = true;
-	
   HashNode & hn = TheHashTable()[addr];
-  in_hash = false;
-	
-  if (!hn.excluded) {
-
-    if (Tau_global_get_insideTAU() > 0) return;
-    TauInternalFunctionGuard protects_this_function;
-
-	  int tid = Tau_get_tid();
-
-    // prevent entry into cyg_profile functions while inside entry
-	  //prevent entry into cyg_profile functions while still initializing TAU
-    if (compInstDisabled[tid] || executionFinished || Tau_init_initializingTAU()) {
-      return;
-    }
-
-    if (hn.fi) {
-      Tau_stop_timer(hn.fi, tid);
-    }
+	if (!hn.excluded && hn.fi) {
+    Tau_stop_timer(hn.fi, Tau_get_tid());
 	}
+
+  // All done, leave TAU region.
+  Tau_global_decr_insideTAU();
 }
 
 void _cyg_profile_func_exit(void* func, void* callsite) {
