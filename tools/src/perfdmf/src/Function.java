@@ -247,9 +247,13 @@ public class Function implements Serializable, Comparable<Function> {
         filename = filename.substring(filename.lastIndexOf("/") + 1);
 
         sourceLink.setFilename(filename);
-
+        
         if (openbracket1 == -1) {
             return sourceLink;
+        }
+        
+        if(comma1>closebracket1){
+        	return sourceLink;
         }
 
         if (dash == -1) {
@@ -264,7 +268,9 @@ public class Function implements Serializable, Comparable<Function> {
                     return sourceLink;
                 }
             }
-            int linenumber = Integer.parseInt(name.substring(openbracket1 + 1, comma1));
+            
+            String lineno=name.substring(openbracket1 + 1, comma1);
+            int linenumber = Integer.parseInt(lineno);
             sourceLink.setStartLine(linenumber);
             sourceLink.setEndLine(linenumber);
             return sourceLink;
