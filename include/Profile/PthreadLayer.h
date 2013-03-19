@@ -37,12 +37,15 @@ class PthreadLayer
 {    // Layer for RtsLayer to interact with pthreads
 public:
 
+  PthreadLayer() {
+    InitializeThreadData();
+  }
+
   static int RegisterThread(void);    // called before any profiling code
   static int InitializeThreadData(void);     // init thread mutexes
   static int InitializeDBMutexData(void);     // init tauDB mutex
   static int InitializeEnvMutexData(void);     // init tauEnv mutex
   static int GetThreadId(void); 	 // gets 0..N-1 thread id
-  static void SetThreadId(int); 	 // gets 0..N-1 thread id
   static int LockDB(void);    // locks the tauDBMutex
   static int UnLockDB(void);    // unlocks the tauDBMutex
   static int LockEnv(void);    // locks the tauEnvMutex
