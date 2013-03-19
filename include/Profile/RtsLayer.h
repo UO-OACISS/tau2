@@ -93,8 +93,6 @@ public:
 
   static int setMyContext(int ContextId);
 
-  static int setMyThread(int tid);
-
   static const char* getSingleCounterName(); 
   static const char* getCounterName(int i); 
 
