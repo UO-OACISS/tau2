@@ -193,6 +193,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 	// Skip excluded functions
 	if (hn.excluded) return;
 
+  if (Tau_global_get_insideTAU() > 0) return;
   TauInternalFunctionGuard protects_this_function;
 
 	//prevent entry into cyg_profile functions while still initializing TAU
@@ -210,10 +211,6 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 
 		Tau_init_initializeTAU();
 
-		//GNU has some internal routines that occur before main in entered. To
-		//ensure that a single top-level timer is present start the dummy '.TAU
-		//application' timer. -SB
-		Tau_create_top_level_timer_if_necessary();
 		if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
 			bfdUnitHandle = Tau_bfd_registerUnit();
 		}
@@ -260,6 +257,16 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 				Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, hn.info);
 			}
 
+      //We can remove these functions from the profile as well if we choose.
+      //strncmp(hn.info.funcname, "std::", 5)  == 0||
+      //strncmp(hn.info.funcname, "__gnu_cxx::", 11) == 0)
+      //
+      //Do not profile this routine, causes crashes with the intel compilers.
+      if (strcmp(hn.info.funcname, "__sti__$E") == 0)
+      {
+        hn.excluded = true;
+      }
+
 			// Tau_bfd_resolveBfdInfo should have made all fields non-NULL,
 			// but we're going to be extra safe in case something changes
 			if(hn.info.funcname == NULL) {
@@ -288,8 +295,14 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 		}
 		RtsLayer::UnLockDB();
 	}
-	Tau_start_timer(hn.fi, 0, tid);
-		
+  if (hn.excluded == false)
+  {
+		//GNU has some internal routines that occur before main in entered. To
+		//ensure that a single top-level timer is present start the dummy '.TAU
+		//application' timer. -SB
+		Tau_create_top_level_timer_if_necessary();
+	  Tau_start_timer(hn.fi, 0, tid);
+	}	
 	if (!(hn.fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
 		//printf("COMP_GNU >>>>>>>>>> Excluding: %s, addr: %d, throttled.\n", hn.fi->GetName(), addr);
 		hn.excluded = true;
