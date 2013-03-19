@@ -322,7 +322,7 @@ string TauContextUserEvent::FormulateContextNameString(Profiler * current)
 
   int depth = TauEnv_get_callpath_depth();
   if (depth) {
-    Profiler ** path = (Profiler**)malloc(depth*sizeof(Profiler*));
+    Profiler ** path = new Profiler*[depth];
 
     // Reverse the callpath to avoid string copies
     int i=depth-1;
@@ -345,7 +345,7 @@ string TauContextUserEvent::FormulateContextNameString(Profiler * current)
     if (strlen(fi->GetType()) > 0)
       buff << " " << fi->GetType();
 
-    free((void*)path);
+    delete[] path;
   }
 
   // Return a new string object.
@@ -362,7 +362,6 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
   TauInternalFunctionGuard protects_this_function;
 
   if (contextEnabled) {
-    TauUserEvent * contextEvent;
     Profiler * current = TauInternal_CurrentProfiler(tid);
     long * comparison = FormulateContextComparisonArray(current);
 
@@ -374,13 +373,10 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
       it = contextMap.find(comparison);
       if (it == contextMap.end()) {
         if (current != NULL) {
-          contextEvent = new TauUserEvent(
-            FormulateContextNameString(current),
-            userEvent->IsMonotonicallyIncreasing());
+          contextEvent = new TauUserEvent(FormulateContextNameString(current),
+              userEvent->IsMonotonicallyIncreasing());
         } else {
-          contextEvent = new TauUserEvent(
-            string(""),
-            userEvent->IsMonotonicallyIncreasing());
+          contextEvent = new TauUserEvent("", userEvent->IsMonotonicallyIncreasing());
         }
         contextMap[comparison] = contextEvent;
       } else {
@@ -392,8 +388,6 @@ void TauContextUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double 
       contextEvent = it->second;
       delete[] comparison;
     }
-
-    contextName = contextEvent->GetName();
     contextEvent->TriggerEvent(data, tid, timestamp, use_ts);
   }
   userEvent->TriggerEvent(data, tid, timestamp, use_ts);
