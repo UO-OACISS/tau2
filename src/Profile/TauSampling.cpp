@@ -91,33 +91,27 @@
 using namespace std;
 using namespace tau;
 
+static std::string _gTauOmpStatesArray[12] = {
+  "OMP UNKNOWN",
+  "OMP OVERHEAD",
+  "OMP WORKING",
+  "OMP IMPLICIT BARRIER",
+  "OMP EXPLICIT BARRIER",
+  "OMP IDLE",
+  "OMP SERIAL",
+  "OMP REDUCTION",
+  "OMP LOCK WAIT",
+  "OMP CRITICAL WAIT",
+  "OMP ORDERED WAIT",
+  "OMP ATOMIC WAIT",
+};
+
 static std::string gTauOmpStates(int index)
 {
-  switch (index) {
-    case 1:
-      return "OMP OVERHEAD";
-    case 2:
-      return "OMP WORKING";
-    case 3:
-      return "OMP IMPLICIT BARRIER";
-    case 4:
-      return "OMP EXPLICIT BARRIER";
-    case 5:
-      return "OMP IDLE";
-    case 6:
-      return "OMP SERIAL";
-    case 7:
-      return "OMP REDUCTION";
-    case 8:
-      return "OMP LOCK WAIT";
-    case 9:
-      return "OMP CRITICAL WAIT";
-    case 10:
-      return "OMP ORDERED WAIT";
-    case 11:
-      return "OMP ATOMIC WAIT";
+  if (index >= 1 && index <= 11) {
+    return _gTauOmpStatesArray[index];
   }
-  return "OMP UNKNOWN";
+  return _gTauOmpStatesArray[0];
 }
 
 /*
@@ -1693,6 +1687,8 @@ extern "C" void Tau_sampling_init_if_necessary(void)
       tmpLocks = RtsLayer::UnLockDB();
     }
 
+    // CAUTION! we need to GLOBALLY (within the process) prevent reentrancy!
+    Tau_global_process_incr_insideTAU();
     // do this for all threads
 #pragma omp parallel shared (samplingThrInitialized)
     {
@@ -1707,6 +1703,8 @@ extern "C" void Tau_sampling_init_if_necessary(void)
         }
       }    // critical
     }    // parallel
+    // CAUTION! we need to GLOBALLY (within the process) prevent reentrancy!
+    Tau_global_process_decr_insideTAU();
     /* WE HAVE TO DO THIS! The environment was locked before we entered
      * this function, we unlocked it, so re-lock it for safety */
     for (tmpLocks = 0; tmpLocks < numDBLocks; tmpLocks++) {
