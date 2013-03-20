@@ -107,14 +107,40 @@ void TauAllocation::DetectLeaks(void)
   }
 }
 
+//////////////////////////////////////////////////////////////////////
+// Read/write allocation map
+//////////////////////////////////////////////////////////////////////
+TauAllocation::allocation_map_t & TauAllocation::__allocation_map()
+{
+  static allocation_map_t alloc_map;
+  return alloc_map;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Total bytes allocated
+//////////////////////////////////////////////////////////////////////
+size_t & TauAllocation::__bytes_allocated()
+{
+  static size_t bytes = 0;
+  return bytes;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Total bytes deallocated
+//////////////////////////////////////////////////////////////////////
+size_t & TauAllocation::__bytes_deallocated()
+{
+  static size_t bytes = 0;
+  return bytes;
+}
 
 //////////////////////////////////////////////////////////////////////
 // Search for an allocation record by base address
 //////////////////////////////////////////////////////////////////////
-TauAllocation * TauAllocation::Find(allocation_map_t::key_type const & key) {
-  static allocation_map_t const & alloc_map = AllocationMap();
-
+TauAllocation * TauAllocation::Find(allocation_map_t::key_type const & key)
+{
   if (key) {
+    allocation_map_t const & alloc_map = AllocationMap();
     allocation_map_t::const_iterator it = alloc_map.find(key);
     if (it != alloc_map.end()) return it->second;
   }
@@ -126,9 +152,8 @@ TauAllocation * TauAllocation::Find(allocation_map_t::key_type const & key) {
 //////////////////////////////////////////////////////////////////////
 TauAllocation * TauAllocation::FindContaining(void * ptr)
 {
-  static allocation_map_t const & allocMap = AllocationMap();
-
   if (ptr) {
+    allocation_map_t const & allocMap = AllocationMap();
     allocation_map_t::const_iterator it;
     for(it = allocMap.begin(); it != allocMap.end(); it++) {
       TauAllocation * const alloc = it->second;
@@ -305,10 +330,10 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
     ProtectPages(uguard_addr, uguard_size);
   }
 
-  RtsLayer::LockEnv();
-  BytesAllocated() += user_size;
+  RtsLayer::LockDB();
+  __bytes_allocated() += user_size;
   __allocation_map()[user_addr] = this;
-  RtsLayer::UnLockEnv();
+  RtsLayer::UnLockDB();
 
   TriggerAllocationEvent(user_size, filename, lineno);
   TriggerHeapMemoryUsageEvent();
@@ -370,10 +395,10 @@ void TauAllocation::Deallocate(const char * filename, int lineno)
 
 #endif
 
-  RtsLayer::LockEnv();
-  BytesDeallocated() += user_size;
+  RtsLayer::LockDB();
+  __bytes_deallocated() += user_size;
   __allocation_map().erase(user_addr);
-  RtsLayer::UnLockEnv();
+  RtsLayer::UnLockDB();
 
   TriggerDeallocationEvent(user_size, filename, lineno);
   TriggerHeapMemoryUsageEvent();
@@ -421,10 +446,10 @@ void TauAllocation::TrackAllocation(void * ptr, size_t size, const char * filena
       user_addr = addr;
       user_size = size;
     }
-    RtsLayer::LockEnv();
-    BytesAllocated() += user_size;
+    RtsLayer::LockDB();
+    __bytes_allocated() += user_size;
     __allocation_map()[user_addr] = this;
-    RtsLayer::UnLockEnv();
+    RtsLayer::UnLockDB();
 
     TriggerAllocationEvent(user_size, filename, lineno);
     TriggerHeapMemoryUsageEvent();
@@ -439,10 +464,10 @@ void TauAllocation::TrackAllocation(void * ptr, size_t size, const char * filena
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::TrackDeallocation(const char * filename, int lineno)
 {
-  RtsLayer::LockEnv();
-  BytesDeallocated() += user_size;
+  RtsLayer::LockDB();
+  __bytes_deallocated() += user_size;
   __allocation_map().erase(user_addr);
-  RtsLayer::UnLockEnv();
+  RtsLayer::UnLockDB();
 
   TriggerDeallocationEvent(user_size, filename, lineno);
   TriggerHeapMemoryUsageEvent();
@@ -743,6 +768,8 @@ void TauAllocation::UnprotectPages(addr_t addr, size_t size)
 extern "C"
 void Tau_memory_initialize(void)
 {
+  TauInternalFunctionGuard protects_this_function;
+
   // Trigger the map's constructor
   static TauAllocation::allocation_map_t const & alloc = TauAllocation::AllocationMap();
 

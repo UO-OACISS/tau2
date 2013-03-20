@@ -209,19 +209,12 @@ extern "C" int Tau_RtsLayer_myThread(void) {
 	return RtsLayer::myThread();
 }
 
-int RtsLayer::setMyThread(int i) { 
-#ifdef PTHREADS
-	PthreadLayer::SetThreadId(i);
-#endif
-	return 0;
-}
-
-// int* RtsLayer::numThreads() { static int i = 1; return &i; } 
-int RtsLayer::getTotalThreads() {
-  int numThreads = 1;
+int RtsLayer::getTotalThreads()
+{
+  TauInternalFunctionGuard protects_this_function;
   LockEnv();
   // *CWL* - The Thread vector does NOT include the main thread!!
-  numThreads = TheThreadList().size() + 1;
+  int numThreads = TheThreadList().size() + 1;
   UnLockEnv();
   return numThreads;
 }
@@ -265,21 +258,8 @@ else
 // RegisterThread is called before any other profiling function in a 
 // thread that is spawned off
 //////////////////////////////////////////////////////////////////////
-int RtsLayer::RegisterThread() {
-  //We are creating threads here, to be carefull register that we are in TAU in
-  //all thread
-  Tau_global_process_incr_insideTAU();
-  /* Check the size of threads */
-  /*
-  LockEnv();
-  int numthreads = *(RtsLayer::numThreads());
-  numthreads ++;
-  if (numthreads >= TAU_MAX_THREADS) {
-    fprintf(stderr, "TAU: RtsLayer: Max thread limit (%d) exceeded. Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=<higher limit>\n", numthreads);
-  }
-  UnLockEnv();
-  */
-
+int RtsLayer::RegisterThread()
+{
 #ifdef PTHREADS
   PthreadLayer::RegisterThread();
 #elif TAU_SPROC
@@ -293,7 +273,7 @@ int RtsLayer::RegisterThread() {
 #elif TAU_PAPI_THREADS
   PapiThreadLayer::RegisterThread();
 #endif // PTHREADS
-// Note: Java thread registration is done at the VM layer in TauJava.cpp
+  // Note: Java thread registration is done at the VM layer in TauJava.cpp
 
   // *CWL* - This is a fuzzy report. What is guaranteed is that AT LEAST ONE thread has
   //         pushed us over the limit with the last registration.
@@ -302,7 +282,9 @@ int RtsLayer::RegisterThread() {
   //         rather than suffer a random segfault later.
   int numThreads = getTotalThreads();
   if (numThreads > TAU_MAX_THREADS) {
-    fprintf(stderr, "TAU Error: RtsLayer: [Max thread limit = %d] [Encountered = %d]. Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=<higher limit>\n", TAU_MAX_THREADS, numThreads);
+    fprintf(stderr,
+        "TAU Error: RtsLayer: [Max thread limit = %d] [Encountered = %d]. Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=<higher limit>\n",
+        TAU_MAX_THREADS, numThreads);
     exit(-1);
   }
 
@@ -312,7 +294,6 @@ int RtsLayer::RegisterThread() {
   }
 #endif
 
-  Tau_global_process_decr_insideTAU();
   return numThreads;
 }
 
