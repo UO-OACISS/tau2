@@ -1687,15 +1687,16 @@ extern "C" void Tau_sampling_init_if_necessary(void)
       tmpLocks = RtsLayer::UnLockDB();
     }
 
-    // CAUTION! we need to GLOBALLY (within the process) prevent reentrancy!
-    Tau_global_process_incr_insideTAU();
     // do this for all threads
 #pragma omp parallel shared (samplingThrInitialized)
     {
       // but do it sequentially.
 #pragma omp critical (creatingtopleveltimer)
       {
-        // this will likely register the currently executing OpenMP thread.
+        // Register the currently executing OpenMP thread.
+        TAU_REGISTER_THREAD();
+        // Protect TAU from itself
+        TauInternalFunctionGuard protects_this_function;
         int myTid = RtsLayer::threadId();
         if (!samplingThrInitialized[myTid]) {
           samplingThrInitialized[myTid] = true;
@@ -1703,8 +1704,6 @@ extern "C" void Tau_sampling_init_if_necessary(void)
         }
       }    // critical
     }    // parallel
-    // CAUTION! we need to GLOBALLY (within the process) prevent reentrancy!
-    Tau_global_process_decr_insideTAU();
     /* WE HAVE TO DO THIS! The environment was locked before we entered
      * this function, we unlocked it, so re-lock it for safety */
     for (tmpLocks = 0; tmpLocks < numDBLocks; tmpLocks++) {
