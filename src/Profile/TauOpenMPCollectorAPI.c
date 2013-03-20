@@ -466,10 +466,6 @@ int Tau_initialize_collector_api(void) {
     Tau_fill_header(Tau_collector_flags[i].signal_message, OMP_COLLECTORAPI_HEADERSIZE+state_rsz, OMP_REQ_STATE, OMP_ERRCODE_OK, state_rsz, 1);
   }
 
-#ifdef TAU_UNWIND
-  Tau_Sampling_register_unit();
-#endif
-
   return 0;
 }
 
