@@ -193,8 +193,6 @@ void profile_func_enter(void*, void*);
 __attribute__((no_instrument_function))
 void profile_func_exit(void*, void*);
 
-//#endif
-
 #if (defined(TAU_SICORTEX) || defined(TAU_SCOREP))
 #pragma weak __cyg_profile_func_enter
 #endif /* SICORTEX || TAU_SCOREP */
@@ -273,8 +271,6 @@ void __cyg_profile_func_enter(void* func, void* callsite)
       //       During MPI_Init.
       atexit(runOnExit);
     }
-
-    Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, hn.info);
 
     // Start the timer if it's not an excluded function
     if (!hn.fi) {

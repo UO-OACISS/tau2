@@ -6622,7 +6622,8 @@ if [ $python = yes ] ; then
     fi
 fi
 if [ $cuda = yes ] ; then
-	if [ -f "$cudainclude/cuda.h" ] ; then
+  if [ $disableshared = no ] ; then
+    if [ -f "$cudainclude/cuda.h" ] ; then
 		fixmakeargs="$fixmakeargs CUDA TAU_USE_GPU cudainclude=$cudainclude"
 		if [ "$opencl" != "disable" ] ; then
 			if [ -f "$cudainclude/CL/cl.h" ] ; then
@@ -6647,7 +6648,11 @@ EOF
 		fi
 	else
 		echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
-	fi
+    fi
+  else
+    echo "Error: Cannot configure CUDA with DISABLESHARED set!"
+    exit 1
+  fi
 fi
 
 if [ $python = yes -a $cuda = yes ] ; then
