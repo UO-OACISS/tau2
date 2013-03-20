@@ -447,7 +447,7 @@ int RtsLayer::getNumDBLocks(void) {
 
 int RtsLayer::LockDB(void) {
   static bool init = initLocks();
-  int tid=myThread();
+  int tid=localThreadId();
 /* This block of code is helpful in debugging deadlocks... see the top of this file */
 	TAU_ASSERT(Tau_global_get_insideTAU() > 0, "Thread is trying for DB lock but it is not in TAU");
 #ifdef DEBUG_LOCK_PROBLEMS
@@ -493,7 +493,7 @@ int RtsLayer::LockDB(void) {
 }
 
 int RtsLayer::UnLockDB(void) {
-  int tid=myThread();
+  int tid=localThreadId();
   lockDBCount[tid]--;
   if (lockDBCount[tid] == 0) {
     threadUnLockDB();
@@ -550,13 +550,13 @@ void RtsLayer::threadUnLockDB(void) {
 }
 
 int RtsLayer::getNumEnvLocks(void) {
-  int tid=myThread();
+  int tid=localThreadId();
   return lockEnvCount[tid];
 }
 
 int RtsLayer::LockEnv(void) {
   static bool init = initEnvLocks();
-  int tid=myThread();
+  int tid=localThreadId();
 	TAU_ASSERT(Tau_global_get_insideTAU() > 0, "Thread is trying for Env lock but it is not in TAU");
 /* This block of code is helpful in debugging deadlocks... see the top of this file */
 #ifdef DEBUG_LOCK_PROBLEMS
@@ -588,7 +588,7 @@ int RtsLayer::LockEnv(void) {
 }
 
 int RtsLayer::UnLockEnv(void) {
-  int tid=myThread();
+  int tid=localThreadId();
   lockEnvCount[tid]--;
   if (lockEnvCount[tid] == 0) {
     threadUnLockEnv();
