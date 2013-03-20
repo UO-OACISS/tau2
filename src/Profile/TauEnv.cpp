@@ -280,52 +280,56 @@ extern int Tau_util_readFullLine(char *line, FILE *fp);
 /*********************************************************************
  * Get executable directory name: /usr/local/foo will return /usr/local
  ********************************************************************/
-int Tau_get_cwd_of_exe(string& dirname) {
-  FILE *f;
-  f = fopen("/proc/self/cmdline", "r");
+static char const * Tau_get_cwd_of_exe()
+{
+  char * retval = NULL;
+
+  FILE * f = fopen("/proc/self/cmdline", "r");
   if (f) {
-    char line[4096];
+    char * line = (char*)malloc(4096);
     if (Tau_util_readFullLine(line, f)) {
-      string fullpath = string(line);
-      int loc = fullpath.find_last_of("/\\");
-      dirname = fullpath.substr(0,loc);
-    //  dirname.append("/");
-      return 1; 
-    } else {
-      dirname=string("unknown");
-      return 0;
+      int pos = strlen(line) - 1;
+      while(pos >= 0) {
+        char c = line[pos];
+        if (c == '/' || c == '\\') break;
+        --pos;
+      }
+      if (pos >= 0) {
+        line[pos] = '\0';
+        retval = strdup(line);
+      }
+      free((void*)line);
     }
-  } else {
-    dirname = string("unknown");
-    return 0;
   }
+  fclose(f);
+  return retval;
 }
 
 /*********************************************************************
  * Read configuration file
  ********************************************************************/
-static int TauConf_read() {
+static int TauConf_read()
+{
   const char *tmp;
-  char conf_file_name[1024]; 
+  char conf_file_name[1024];
 
   tmp = getenv("TAU_CONF");
   if (tmp == NULL) {
     tmp = "tau.conf";
   }
-  FILE *cfgFile = fopen(tmp, "r");
-  if (! cfgFile) {
-    string exedir; 
-    Tau_get_cwd_of_exe(exedir);  
-    sprintf(conf_file_name, "%s/tau.conf", exedir.c_str()); 
+  FILE * cfgFile = fopen(tmp, "r");
+  if (!cfgFile) {
+    char const * exedir = Tau_get_cwd_of_exe();
+    if (!exedir) exedir = ".";
+    sprintf(conf_file_name, "%s/tau.conf", exedir);
     TAU_VERBOSE("Trying %s\n", conf_file_name);
     cfgFile = fopen(conf_file_name, "r");
   }
   if (cfgFile) {
     TauConf_parse(cfgFile, tmp);
     fclose(cfgFile);
-  }
-  else {
-    sprintf(conf_file_name,"%s/tau_system_defaults/tau.conf", TAUROOT);
+  } else {
+    sprintf(conf_file_name, "%s/tau_system_defaults/tau.conf", TAUROOT);
     cfgFile = fopen(conf_file_name, "r");
     if (cfgFile) {
       TauConf_parse(cfgFile, tmp);
@@ -506,22 +510,22 @@ static int env_memdbg_attempt_continue = TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT;
  ********************************************************************/
 void TAU_VERBOSE(const char *format, ...)
 {
-  // Protect TAU from itself
-  TauInternalFunctionGuard protects_this_function;
+  if (env_verbose != 1) return;
 
-  va_list args;
-  if (env_verbose != 1) {
-    return;
-  }
-  va_start(args, format);
+  {
+    TauInternalFunctionGuard protects_this_function;
+    va_list args;
+    va_start(args, format);
 
 #ifdef TAU_GPI
-  gpi_vprintf(format, args);
+    gpi_vprintf(format, args);
 #else
-  vfprintf(stderr, format, args);
+    vfprintf(stderr, format, args);
 #endif
-  va_end(args);
-  fflush (stderr);
+    va_end(args);
+    fflush (stderr);
+
+  } // END inside TAU
 }
 
 /*********************************************************************
@@ -1051,11 +1055,10 @@ void TauEnv_initialize()
 #ifdef TAU_GPI
       // if exe is /usr/local/foo, this will return /usr/local where profiles
       // may be stored if PROFILEDIR is not specified
-      string cwd; 
-      int ret = Tau_get_cwd_of_exe(cwd);
-      if (ret) {
-	env_profiledir = strdup(cwd.c_str());
-	TAU_VERBOSE("ENV_PROFILEDIR = %s\n", env_profiledir); 
+      char const * cwd = Tau_get_cwd_of_exe();
+      if (cwd) {
+        env_profiledir = strdup(cwd);
+        TAU_VERBOSE("ENV_PROFILEDIR = %s\n", env_profiledir);
       }
 #endif /* TAU_GPI */
     }
@@ -1066,11 +1069,10 @@ void TauEnv_initialize()
 #ifdef TAU_GPI
       // if exe is /usr/local/foo, this will return /usr/local where profiles
       // may be stored if PROFILEDIR is not specified
-      string cwd; 
-      int ret = Tau_get_cwd_of_exe(cwd);
-      if (ret) {
-	env_tracedir = strdup(cwd.c_str());
-	TAU_VERBOSE("ENV_TRACEDIR = %s\n", env_tracedir); 
+      char const * cwd = Tau_get_cwd_of_exe();
+      if (cwd) {
+        env_tracedir = strdup(cwd);
+        TAU_VERBOSE("ENV_TRACEDIR = %s\n", env_tracedir);
       }
 #endif /* TAU_GPI */
     }

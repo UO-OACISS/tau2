@@ -408,11 +408,12 @@ my_pomp2_region* my_pomp2_regions;
 void POMP2_Finalize()
 {
   static int pomp2_finalize_called = 0;
-  size_t i;
-  const size_t nRegions = POMP2_Get_num_regions();
 
   // Protect TAU from itself
   TauInternalFunctionGuard protects_this_function;
+
+  size_t i;
+  const size_t nRegions = POMP2_Get_num_regions();
 
   if (my_pomp2_regions) {
     for (i = 0; i < nRegions; ++i) {

@@ -96,18 +96,6 @@ int PthreadLayer::GetThreadId(void)
   return 0; // main() thread
 }
 
-void PthreadLayer::SetThreadId(int tid)
-{
-  InitializeThreadData();
-
-  int * id = (int*)pthread_getspecific(tauPthreadId);
-  if (!id) {
-    RegisterThread();
-    id = (int*)pthread_getspecific(tauPthreadId);
-  }
-  *id = tid;
-}
-
 ////////////////////////////////////////////////////////////////////////
 // InitializeThreadData is called before any thread operations are performed. 
 // It sets the default values for static private data members of the 
@@ -118,6 +106,8 @@ void init_once(void)
 {
   pthread_key_create(&PthreadLayer::tauPthreadId, NULL);
   pthread_mutex_init(&PthreadLayer::tauThreadcountMutex, NULL);
+  pthread_mutex_init(&PthreadLayer::tauDBMutex, NULL);
+  pthread_mutex_init(&PthreadLayer::tauEnvMutex, NULL);
   // FIXME: This is completely unrelated to PthreadLayer
   pthread_key_create(&wrapper_flags_key, NULL);
 }
@@ -133,7 +123,7 @@ int PthreadLayer::InitializeThreadData(void)
 ////////////////////////////////////////////////////////////////////////
 int PthreadLayer::InitializeDBMutexData(void)
 {
-  pthread_mutex_init(&tauDBMutex, NULL);
+  // Initialized in init_once
   return 1;
 }
 
@@ -146,7 +136,7 @@ int PthreadLayer::InitializeDBMutexData(void)
 ////////////////////////////////////////////////////////////////////////
 int PthreadLayer::LockDB(void)
 {
-  static int initflag = InitializeDBMutexData();
+  InitializeThreadData();
   pthread_mutex_lock(&tauDBMutex);
   return 1;
 }
@@ -163,7 +153,7 @@ int PthreadLayer::UnLockDB(void)
 ////////////////////////////////////////////////////////////////////////
 int PthreadLayer::InitializeEnvMutexData(void)
 {
-  pthread_mutex_init(&tauEnvMutex, NULL);
+  // Initialized in init_once
   return 1;
 }
 
@@ -176,7 +166,7 @@ int PthreadLayer::InitializeEnvMutexData(void)
 ////////////////////////////////////////////////////////////////////////
 int PthreadLayer::LockEnv(void)
 {
-  static int initflag = InitializeEnvMutexData();
+  InitializeThreadData();
   pthread_mutex_lock(&tauEnvMutex);
   return 1;
 }
@@ -189,8 +179,6 @@ int PthreadLayer::UnLockEnv(void)
   pthread_mutex_unlock(&tauEnvMutex);
   return 1;
 }
-
-
 
 
 ///////////////////////////////////////////////////////////////////////////////
