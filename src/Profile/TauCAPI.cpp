@@ -216,14 +216,14 @@ extern "C" void Tau_stack_initialization() {
 
 extern "C" int Tau_global_get_insideTAU() {
   Tau_stack_checkInit();
-  int tid = RtsLayer::unsafeThreadId();
+  int tid = RtsLayer::unsafeLocalThreadId();
   return Tau_thread_flags[tid].Tau_global_insideTAU;
 }
 
 extern "C" int Tau_global_incr_insideTAU()
 {
   Tau_stack_checkInit();
-  int tid = RtsLayer::unsafeThreadId();
+  int tid = RtsLayer::unsafeLocalThreadId();
 
   volatile int * insideTAU = &Tau_thread_flags[tid].Tau_global_insideTAU;
   if (*insideTAU == 0) Tau_memory_wrapper_disable();
@@ -234,7 +234,7 @@ extern "C" int Tau_global_incr_insideTAU()
 extern "C" int Tau_global_decr_insideTAU()
 {
   Tau_stack_checkInit();
-  int tid = RtsLayer::unsafeThreadId();
+  int tid = RtsLayer::unsafeLocalThreadId();
 
   volatile int * insideTAU = &Tau_thread_flags[tid].Tau_global_insideTAU;
   *insideTAU = *insideTAU - 1;
@@ -1953,7 +1953,7 @@ extern "C" void Tau_get_counter_info(const char ***counterNames, int *numCounter
 //or Profiler stack. 
 extern "C" int Tau_get_local_tid(void) {
   TauInternalFunctionGuard protects_this_function;
-  return RtsLayer::localThreadId();
+  return RtsLayer::unsafeLocalThreadId();
 }
 
 //////////////////////////////////////////////////////////////////////

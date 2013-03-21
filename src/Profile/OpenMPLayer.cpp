@@ -105,10 +105,10 @@ int OpenMPLayer::GetTauThreadId(void)
     tau_thread_id = omp_thread_id;
   } else {
     Initialize();
+    omp_set_lock(&OpenMPLayer::tauRegistermutex);
     OpenMPMap & ompMap = TheOMPMap();
     OpenMPMap::iterator it = ompMap.find(omp_thread_id);
     if (it == ompMap.end()) {
-      omp_set_lock(&OpenMPLayer::tauRegistermutex);
       it = ompMap.find(omp_thread_id);
       if (it == ompMap.end()) {
       /* Process is already locked, call the unsafe thread creation routine. */
@@ -117,10 +117,10 @@ int OpenMPLayer::GetTauThreadId(void)
       } else {
         tau_thread_id = it->second;
       }
-      omp_unset_lock(&OpenMPLayer::tauRegistermutex);
     } else {
       tau_thread_id = it->second;
     }
+    omp_unset_lock(&OpenMPLayer::tauRegistermutex);
   }
 
   return tau_thread_id;
