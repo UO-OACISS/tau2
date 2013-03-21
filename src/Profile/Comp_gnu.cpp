@@ -194,12 +194,6 @@ __attribute__((no_instrument_function))
 void profile_func_exit(void*, void*);
 
 
-/* Both Sampling and Memory wrapper require us to protect TAU imediately upon
- * entering the compiler wrappers. Sampling becuase it can interrupt the
- * applicat anywhere and Memory because the hash table lookup allocates memory.
- */
-bool early_guard_needed = TauEnv_get_ebs_enabled() || Tau_memory_wrapper_is_registered();
-
 #if (defined(TAU_SICORTEX) || defined(TAU_SCOREP))
 #pragma weak __cyg_profile_func_enter
 #endif /* SICORTEX || TAU_SCOREP */
@@ -220,7 +214,10 @@ void __cyg_profile_func_enter(void* func, void* callsite)
   // and crash or deadlock.
   // Note that this also prevents reentrency into this routine.
   {
-    if (early_guard_needed)
+    // Both Sampling and Memory wrapper require us to protect TAU immediately upon
+    // entering the compiler wrappers. Sampling because it can interrupt the
+    // application anywhere and memory because the hash table lookup allocates memory.
+    if (TauEnv_get_ebs_enabled() || Tau_memory_wrapper_is_registered())
     {
       TauInternalFunctionGuard protects_this_function;
     }
@@ -369,7 +366,7 @@ void __cyg_profile_func_exit(void* func, void* callsite)
   // and crash or deadlock.
   // Note that this also prevents reentrency into this routine.
   {
-    if (early_guard_needed)
+    if (TauEnv_get_ebs_enabled() || Tau_memory_wrapper_is_registered())
     {
       TauInternalFunctionGuard protects_this_function;
     }
