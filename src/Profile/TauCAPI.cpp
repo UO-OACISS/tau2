@@ -223,10 +223,10 @@ extern "C" int Tau_global_get_insideTAU() {
 extern "C" int Tau_global_incr_insideTAU()
 {
   Tau_stack_checkInit();
+  Tau_memory_wrapper_disable();
   int tid = RtsLayer::unsafeThreadId();
 
   volatile int * insideTAU = &Tau_thread_flags[tid].Tau_global_insideTAU;
-  if (*insideTAU == 0) Tau_memory_wrapper_disable();
   *insideTAU = *insideTAU + 1;
   return *insideTAU;
 }
