@@ -448,9 +448,9 @@ static char const * Tau_bfd_internal_tryDemangle(bfd * bfdImage, char const * fu
     }
 
     // Sampling sometimes gives the names as a long branch offset
-    char const * substr = strstr(funcname, "long_branch_r2off");
+    char const * substr = strstr(funcname, ".long_branch_r2off.");
     if (substr) {
-      char * tmp = strdup(substr+18);
+      char * tmp = strdup(substr+19);
       // Trim offset address from end of name
       char * p = tmp + strlen(tmp) - 1;
       while (p != tmp && isdigit(*p)) --p;
