@@ -1566,10 +1566,9 @@ extern "C" void Tau_sampling_init_if_necessary(void)
       // but do it sequentially.
 #pragma omp critical (creatingtopleveltimer)
       {
-        // Register the currently executing OpenMP thread.
-        TAU_REGISTER_THREAD();
         // Protect TAU from itself
         TauInternalFunctionGuard protects_this_function;
+        // Getting the thread ID registers the OpenMP thread.
         int myTid = RtsLayer::threadId();
         if (!samplingThrInitialized[myTid]) {
           samplingThrInitialized[myTid] = true;

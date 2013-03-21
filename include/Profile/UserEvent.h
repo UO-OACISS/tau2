@@ -244,7 +244,7 @@ public:
 
   TauContextUserEvent(char const * name, bool monoIncr=false) :
 #ifdef TAU_SCOREP
-      contextEnabled(true)
+      contextEnabled(true),
 #else
       contextEnabled(TauEnv_get_callpath_depth() != 0),
 #endif
