@@ -193,6 +193,13 @@ void profile_func_enter(void*, void*);
 __attribute__((no_instrument_function))
 void profile_func_exit(void*, void*);
 
+
+/* Both Sampling and Memory wrapper require us to protect TAU imediately upon
+ * entering the compiler wrappers. Sampling becuase it can interrupt the
+ * applicat anywhere and Memory because the hash table lookup allocates memory.
+ */
+bool early_guard_needed = TauEnv_get_ebs_enabled() || Tau_memory_wrapper_is_registered();
+
 #if (defined(TAU_SICORTEX) || defined(TAU_SCOREP))
 #pragma weak __cyg_profile_func_enter
 #endif /* SICORTEX || TAU_SCOREP */
@@ -208,17 +215,15 @@ void __cyg_profile_func_enter(void* func, void* callsite)
   // Don't profile if we're still initializing.
   if (Tau_init_initializingTAU()) return;
 
-  // Don't profile TAU internals
-  if (Tau_global_get_insideTAU() > 0) return;
-
   // Protect TAU from itself.  This MUST occur here before we query the TID or
   // use the hash table.  Any later and TAU's memory wrapper will profile TAU
   // and crash or deadlock.
   // Note that this also prevents reentrency into this routine.
   {
-    TauInternalFunctionGuard protects_this_function;
-
-    issueBfdWarningIfNecessary();
+    if (early_guard_needed)
+    {
+      TauInternalFunctionGuard protects_this_function;
+    }
 
     void * funcptr = func;
 #ifdef __ia64__
@@ -241,7 +246,14 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 
     // Skip excluded functions
     if (hn.excluded) return;
+  
+    // Don't profile TAU internals
+    if (Tau_global_get_insideTAU() > 0) return;
 
+    TauInternalFunctionGuard protects_this_function;
+    
+    issueBfdWarningIfNecessary();
+    
     // Get BFD handle
     tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
 
@@ -351,17 +363,16 @@ void __cyg_profile_func_exit(void* func, void* callsite)
   // Don't profile if we're still initializing.
   if (Tau_init_initializingTAU()) return;
 
-  // Don't profile TAU internals
-  if (Tau_global_get_insideTAU() > 0) return;
 
   // Protect TAU from itself.  This MUST occur here before we query the TID or
   // use the hash table.  Any later and TAU's memory wrapper will profile TAU
   // and crash or deadlock.
   // Note that this also prevents reentrency into this routine.
   {
-    TauInternalFunctionGuard protects_this_function;
-
-    issueBfdWarningIfNecessary();
+    if (early_guard_needed)
+    {
+      TauInternalFunctionGuard protects_this_function;
+    }
 
     void * funcptr = func;
 #ifdef __ia64__
@@ -371,6 +382,10 @@ void __cyg_profile_func_exit(void* func, void* callsite)
 
     HashNode * hn = TheHashTable()[addr];
     if (hn && !hn->excluded && hn->fi) {
+      // Don't profile TAU internals
+      if (Tau_global_get_insideTAU() > 0) return;
+      TauInternalFunctionGuard protects_this_function;
+      issueBfdWarningIfNecessary();
       Tau_stop_timer(hn->fi, Tau_get_tid());
     }
   }    // END inside TAU
