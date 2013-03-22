@@ -212,15 +212,13 @@ void __cyg_profile_func_enter(void* func, void* callsite)
   // Protect TAU from itself.  This MUST occur here before we query the TID or
   // use the hash table.  Any later and TAU's memory wrapper will profile TAU
   // and crash or deadlock.
-  // Note that this also prevents reentrency into this routine.
-  {
+  { // BEGIN inside TAU
+
     // Both Sampling and Memory wrapper require us to protect TAU immediately upon
     // entering the compiler wrappers. Sampling because it can interrupt the
     // application anywhere and memory because the hash table lookup allocates memory.
-    if (TauEnv_get_ebs_enabled() || Tau_memory_wrapper_is_registered())
-    {
-      TauInternalFunctionGuard protects_this_function;
-    }
+    TauInternalFunctionGuard protects_this_function(
+        TauEnv_get_ebs_enabled() || Tau_memory_wrapper_is_registered());
 
     void * funcptr = func;
 #ifdef __ia64__
@@ -245,85 +243,90 @@ void __cyg_profile_func_enter(void* func, void* callsite)
     if (hn.excluded) return;
   
     // Don't profile TAU internals
-    if (Tau_global_get_insideTAU() > 0) return;
-
-    TauInternalFunctionGuard protects_this_function;
-    
-    issueBfdWarningIfNecessary();
-    
-    // Get BFD handle
-    tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
-
-    if (gnu_init) {
-      gnu_init = false;
-
-      Tau_init_initializeTAU();
-
-      // Create hashtable entries for all symbols in the executable
-      // via a fast scan of the executable's symbol table.
-      // It makes sense to load the entire symbol table because all
-      // symbols in the executable are likely to be encountered
-      // during the run
-      Tau_bfd_processBfdExecInfo(bfdUnitHandle, updateHashTable);
-
-      TheUsingCompInst() = 1;
-
-      // For UPC: Initialize the node
-      if (RtsLayer::myNode() == -1) {
-        TAU_PROFILE_SET_NODE(0);
-      }
-
-      // we register this here at the end so that it is called
-      // before the VT objects are destroyed.  Objects are destroyed and atexit targets are
-      // called in the opposite order in which they are created and registered.
-      // Note: This doesn't work work VT with MPI, they re-register their atexit routine
-      //       During MPI_Init.
-      atexit(runOnExit);
+    // Note that this also prevents reentrency into this routine.
+    if (Tau_global_get_insideTAU() > 0) {
+      return;
     }
 
-    // Start the timer if it's not an excluded function
-    if (!hn.fi) {
-      RtsLayer::LockDB();    // lock, then check again
+    { // BEGIN inside TAU
+      TauInternalFunctionGuard protects_this_function;
+      
+      // Get BFD handle
+      tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
+
+      if (gnu_init) {
+        gnu_init = false;
+
+        Tau_init_initializeTAU();
+
+        issueBfdWarningIfNecessary();
+
+        // Create hashtable entries for all symbols in the executable
+        // via a fast scan of the executable's symbol table.
+        // It makes sense to load the entire symbol table because all
+        // symbols in the executable are likely to be encountered
+        // during the run
+        Tau_bfd_processBfdExecInfo(bfdUnitHandle, updateHashTable);
+
+        TheUsingCompInst() = 1;
+
+        // For UPC: Initialize the node
+        if (RtsLayer::myNode() == -1) {
+          TAU_PROFILE_SET_NODE(0);
+        }
+
+        // we register this here at the end so that it is called
+        // before the VT objects are destroyed.  Objects are destroyed and atexit targets are
+        // called in the opposite order in which they are created and registered.
+        // Note: This doesn't work work VT with MPI, they re-register their atexit routine
+        //       During MPI_Init.
+        atexit(runOnExit);
+      }
+
+      // Start the timer if it's not an excluded function
       if (!hn.fi) {
-        // Resolve function info if it hasn't already been retrieved
-        if (!hn.info.probeAddr) {
-          Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, hn.info);
+        RtsLayer::LockDB();    // lock, then check again
+        if (!hn.fi) {
+          // Resolve function info if it hasn't already been retrieved
+          if (!hn.info.probeAddr) {
+            Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, hn.info);
+          }
+
+          //Do not profile this routine, causes crashes with the intel compilers.
+          if (isExcluded(hn.info.funcname)) {
+            hn.excluded = true;
+          }
+
+          // Build routine name for TAU function info
+          unsigned int size = strlen(hn.info.funcname) + strlen(hn.info.filename) + 128;
+          char * routine = (char*)malloc(size);
+          sprintf(routine, "%s [{%s} {%d,0}]", hn.info.funcname, hn.info.filename, hn.info.lineno);
+
+          // Create function info
+          void *handle = NULL;
+          TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
+          hn.fi = (FunctionInfo*)handle;
+
+          // Cleanup
+          free((void*)routine);
         }
-
-        //Do not profile this routine, causes crashes with the intel compilers.
-        if (isExcluded(hn.info.funcname)) {
-          hn.excluded = true;
-        }
-
-        // Build routine name for TAU function info
-        unsigned int size = strlen(hn.info.funcname) + strlen(hn.info.filename) + 128;
-        char * routine = (char*)malloc(size);
-        sprintf(routine, "%s [{%s} {%d,0}]", hn.info.funcname, hn.info.filename, hn.info.lineno);
-
-        // Create function info
-        void *handle = NULL;
-        TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
-        hn.fi = (FunctionInfo*)handle;
-
-        // Cleanup
-        free((void*)routine);
+        RtsLayer::UnLockDB();
       }
-      RtsLayer::UnLockDB();
-    }
 
-    if (hn.excluded == false) {
-      //GNU has some internal routines that occur before main in entered. To
-      //ensure that a single top-level timer is present start the dummy '.TAU
-      //application' timer. -SB
-      Tau_create_top_level_timer_if_necessary();
-      Tau_start_timer(hn.fi, 0, Tau_get_tid());
-    }
+      if (!hn.excluded) {
+        //GNU has some internal routines that occur before main in entered. To
+        //ensure that a single top-level timer is present start the dummy '.TAU
+        //application' timer. -SB
+        Tau_create_top_level_timer_if_necessary();
+        Tau_start_timer(hn.fi, 0, Tau_get_tid());
+      }
 
-    if (!(hn.fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
-      //printf("COMP_GNU >>>>>>>>>> Excluding: %s, addr: %d, throttled.\n", hn.fi->GetName(), addr);
-      hn.excluded = true;
-    }
-  }    // END inside TAU
+      if (!(hn.fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
+        //printf("COMP_GNU >>>>>>>>>> Excluding: %s, addr: %d, throttled.\n", hn.fi->GetName(), addr);
+        hn.excluded = true;
+      }
+    }    // END inside TAU (late check)
+  }    // END inside TAU (early check)
 }
 
 void _cyg_profile_func_enter(void* func, void* callsite)
