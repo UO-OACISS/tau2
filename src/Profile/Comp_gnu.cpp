@@ -370,7 +370,7 @@ void __cyg_profile_func_exit(void* func, void* callsite)
   // Note that this also prevents reentrency into this routine.
   {
     TauInternalFunctionGuard protects_this_function(
-        TauEnv_get_ebs_enabled() || Tau_memory_wrapper_is_registered())
+        TauEnv_get_ebs_enabled() || Tau_memory_wrapper_is_registered());
 
     void * funcptr = func;
 #ifdef __ia64__
