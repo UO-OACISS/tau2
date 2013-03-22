@@ -369,10 +369,8 @@ void __cyg_profile_func_exit(void* func, void* callsite)
   // and crash or deadlock.
   // Note that this also prevents reentrency into this routine.
   {
-    if (TauEnv_get_ebs_enabled() || Tau_memory_wrapper_is_registered())
-    {
-      TauInternalFunctionGuard protects_this_function;
-    }
+    TauInternalFunctionGuard protects_this_function(
+        TauEnv_get_ebs_enabled() || Tau_memory_wrapper_is_registered())
 
     void * funcptr = func;
 #ifdef __ia64__
