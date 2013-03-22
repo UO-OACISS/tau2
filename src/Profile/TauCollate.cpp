@@ -37,6 +37,8 @@
 #include <math.h>
 #include <strings.h>
 #include <stdarg.h>
+
+#define NDEBUG  // Disable to enable assertions
 #include <assert.h>
 
 using namespace std;

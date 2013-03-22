@@ -1425,7 +1425,9 @@ int Tau_sampling_init(int tid)
   } else {
     // FIRST! check if this is us! (i.e. we got initialized twice)
     if (query_action.sa_sigaction == Tau_sampling_handler) {
+#ifndef TAU_BGQ // It's ok to have multiple init on BGQ
       TAU_VERBOSE("[%d] WARNING! Tau_sampling_init called twice!\n", tid);
+#endif
     } else {
       TAU_VERBOSE("[%d] WARNING! Tau_sampling_init found another handler!\n", tid);
       // install our handler, and save the old handler
