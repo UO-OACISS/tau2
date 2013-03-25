@@ -1011,18 +1011,15 @@ void Tau_sampling_finalizeProfile(int tid)
 void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid)
 {
 
-  Profiler *profiler = TauInternal_CurrentProfiler(tid);
+  Profiler * profiler = TauInternal_CurrentProfiler(tid);
   if (profiler == NULL) {
     Tau_create_top_level_timer_if_necessary();
     profiler = TauInternal_CurrentProfiler(tid);
   }
-  FunctionInfo *samplingContext;
 
   // ok to be temporary. Hash table on the other end will copy the details.
-  unsigned long pcStack[TAU_SAMP_NUM_ADDRESSES + 1];
-  for (int i = 0; i < TAU_SAMP_NUM_ADDRESSES + 1; i++) {
-    pcStack[i] = 0;
-  }
+  unsigned long pcStack[TAU_SAMP_NUM_ADDRESSES + 1] = { 0 };
+
 #ifdef TAU_UNWIND
   if (TauEnv_get_ebs_unwind() == 1) {
     Tau_sampling_unwind(tid, profiler, pc, context, pcStack);
@@ -1035,6 +1032,7 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid)
   pcStack[1] = (unsigned long)pc;
 #endif /* TAU_UNWIND */
 
+  FunctionInfo * samplingContext;
   if (TauEnv_get_callsite() && (profiler->CallSiteFunction != NULL)) {
     samplingContext = profiler->CallSiteFunction;
   } else if (TauEnv_get_callpath() && (profiler->CallPathFunction != NULL)) {
@@ -1042,6 +1040,9 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid)
   } else {
     samplingContext = profiler->ThisFunction;
   }
+
+  TAU_ASSERT(samplingContext != NULL, "samplingContext == NULL!");
+
   /* Get the current metric values */
   double values[TAU_MAX_COUNTERS] = { 0.0 };
   double deltaValues[TAU_MAX_COUNTERS] = { 0.0 };
@@ -1049,7 +1050,6 @@ void Tau_sampling_handle_sampleProfile(void *pc, ucontext_t *context, int tid)
   int localIndex = tid * TAU_MAX_COUNTERS;
 
   int ebsSourceMetricIndex = TauMetrics_getMetricIndexFromName(TauEnv_get_ebs_source());
-  //  printf("%s\n", TauMetrics_getMetricName(ebsSourceMetricIndex));
   int ebsPeriod = TauEnv_get_ebs_period();
   for (int i = 0; i < Tau_Global_numCounters; i++) {
     /*
