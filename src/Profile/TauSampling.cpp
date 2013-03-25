@@ -1177,7 +1177,6 @@ int Tau_sampling_event_stop(int tid, double *stopTime)
 void Tau_sampling_handle_sample(void *pc, ucontext_t *context)
 {
   if (collectingSamples) {
-
     int tid = Tau_get_local_tid();
     if (samplingEnabled[tid]) {
       numSamples[tid]++;
@@ -1194,22 +1193,20 @@ void Tau_sampling_handle_sample(void *pc, ucontext_t *context)
       }
 
       // disable sampling until we handle this sample
-      suspendSampling[tid] = 1;
+      {
+        TauInternalFunctionGuard protects_this_region;
+        suspendSampling[tid] = 1;
+        if (TauEnv_get_tracing()) {
+          Tau_sampling_handle_sampleTrace(pc, context, tid);
+        }
 
-      Tau_global_incr_insideTAU();
-      if (TauEnv_get_tracing()) {
-        Tau_sampling_handle_sampleTrace(pc, context, tid);
-      }
-
-      if (TauEnv_get_profiling()) {
-        Tau_sampling_handle_sampleProfile(pc, context, tid);
-      }
-      Tau_global_decr_insideTAU();
-
-      // re-enable sampling
-      suspendSampling[tid] = 0;
-    }
-  }
+        if (TauEnv_get_profiling()) {
+          Tau_sampling_handle_sampleProfile(pc, context, tid);
+        }
+        suspendSampling[tid] = 0;
+      } // insideTAU
+    } // samplingEnabled
+  } // collectingSamples
 }
 
 extern "C" void TauMetrics_internal_alwaysSafeToGetMetrics(int tid, double values[]);
@@ -1247,7 +1244,6 @@ void Tau_sampling_handler(int signum, siginfo_t *si, void *context)
   TauMetrics_internal_alwaysSafeToGetMetrics(0, values2);
   printf("Sampling took %f usec\n", values2[0] - values[0]);
 #endif // DEBUG_PROF
-  return;
 }
 
 /*********************************************************************
