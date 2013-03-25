@@ -99,7 +99,6 @@ void TauUserEvent::AddEventToDB()
   TauInternalFunctionGuard protects_this_function;
 
   RtsLayer::LockDB();
-  TAU_ASSERT(this != NULL, "Somebody created a TauUserEvent strangely!");
   TheEventDB().push_back(this);
   DEBUGPROFMSG("Successfully registered event " << GetName() << endl;);
   DEBUGPROFMSG("Size of eventDB is " << TheEventDB().size() <<endl);
@@ -182,7 +181,7 @@ void TauUserEvent::TriggerEvent(TAU_EVENT_DATATYPE data, int tid, double timesta
   SCOREP_Tau_TriggerMetricDouble( eventId, data );
 #endif /*TAU_SCOREP*/
 
-  TAU_ASSERT(this != NULL, "this == NULL in TauUserEvent::TriggerEvent!\n");
+  TAU_ASSERT(this != NULL, "this == NULL in TauUserEvent::TriggerEvent!  Make sure all databases are appropriately locked.\n");
 
 #ifdef PROFILING_ON
   Data & d = ThreadData(tid);

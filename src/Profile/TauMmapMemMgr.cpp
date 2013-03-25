@@ -27,13 +27,6 @@ struct TauMemMgrInfo
 TauMemMgrSummary memSummary[TAU_MAX_THREADS];
 TauMemMgrInfo memInfo[TAU_MAX_THREADS][TAU_MEMMGR_MAX_MEMBLOCKS];
 
-// *CWL* - No intention to support memory freeing just yet
-
-size_t Tau_MemMgr_alignRequest(size_t size)
-{
-  int offset = size % TAU_MEMMGR_ALIGN;
-  return size + offset;
-}
 
 void Tau_MemMgr_initIfNecessary()
 {
@@ -129,8 +122,7 @@ int Tau_MemMgr_findFit(int tid, size_t size)
 
   // Didn't find any suitable block. Attempt to acquire a new one.
   if (numBlocks < TAU_MEMMGR_MAX_MEMBLOCKS) {
-    void * addr = Tau_MemMgr_mmap(tid, blockSize);
-    if (!addr) {
+    if (!Tau_MemMgr_mmap(tid, blockSize)) {
       return TAU_MEMMGR_MAP_CREATION_FAILED;
     }
     // return index to new block
@@ -142,16 +134,12 @@ int Tau_MemMgr_findFit(int tid, size_t size)
 
 void * Tau_MemMgr_malloc(int tid, size_t size)
 {
-  void * addr;
-
   // Always ensure the system is ready for a malloc
   Tau_MemMgr_initIfNecessary();
 
   // Find (and attempt to create) a suitably sized memory block
-  size_t myRequest = Tau_MemMgr_alignRequest(size);
-  //  printf("I am requesting %ld bytes\n", myRequest);
+  size_t myRequest = (size + (TAU_MEMMGR_ALIGN-1)) & ~(TAU_MEMMGR_ALIGN-1);
   int myBlock = Tau_MemMgr_findFit(tid, myRequest);
-  //  printf("Block returned by fit finder = %d\n", myBlock);
   if (myBlock < 0) {
     // failure.
     switch (myBlock) {
@@ -169,8 +157,10 @@ void * Tau_MemMgr_malloc(int tid, size_t size)
     return NULL;
   }
 
-  addr = (void *)memInfo[tid][myBlock].low;
+  void * addr = (void *)((memInfo[tid][myBlock].low + (TAU_MEMMGR_ALIGN-1)) & ~(TAU_MEMMGR_ALIGN-1));
   memInfo[tid][myBlock].low += myRequest;
+
+  TAU_ASSERT(addr != NULL, "Tau_MemMgr_malloc unexpectedly returning NULL!");
 
   return addr;
 }
