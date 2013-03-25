@@ -13,5 +13,4 @@
 void Tau_MemMgr_initIfNecessary();
 void *Tau_MemMgr_mmap(int tid, size_t size);
 void *Tau_MemMgr_malloc(int tid, size_t size);
-unsigned long Tau_MemMgr_getMemUsed();
 #endif /* TAU_MMAP_MEM_MGR_H */

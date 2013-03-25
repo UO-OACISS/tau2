@@ -240,9 +240,7 @@ void Tau_metadata_register(const char *name, const char *value) {
 
 int Tau_metadata_fillMetaData() 
 {
-#ifdef TAU_DISABLE_METADATA
-  return 0;
-#endif
+#ifndef TAU_DISABLE_METADATA
 
   static int filled = 0;
   if (filled) {
@@ -743,6 +741,8 @@ vector<string> result;
   if (user != NULL) {
     Tau_metadata_register("username", user);
   }
+
+#endif // TAU_DISABLE_METADATA
 
   return 0;
 }
