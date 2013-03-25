@@ -217,7 +217,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
     // Both Sampling and Memory wrapper require us to protect TAU immediately upon
     // entering the compiler wrappers. Sampling because it can interrupt the
     // application anywhere and memory because the hash table lookup allocates memory.
-    TauInternalFunctionGuard protects_this_function(
+    TauInternalFunctionGuard protects_this_region(
         TauEnv_get_ebs_enabled() || Tau_memory_wrapper_is_registered());
 
     void * funcptr = func;
@@ -229,6 +229,9 @@ void __cyg_profile_func_enter(void* func, void* callsite)
 
     HashNode * node = TheHashTable()[addr];
     if (!node) {
+      // We must be inside TAU before we lock the database
+      TauInternalFunctionGuard protects_this_region;
+
       RtsLayer::LockDB();
       node = TheHashTable()[addr];
       if (!node) {
@@ -249,7 +252,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
     }
 
     { // BEGIN inside TAU
-      TauInternalFunctionGuard protects_this_function;
+      TauInternalFunctionGuard protects_this_region;
       
       // Get BFD handle
       tau_bfd_handle_t & bfdUnitHandle = TheBfdUnitHandle();
