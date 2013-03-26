@@ -7036,17 +7036,17 @@ if [ $scorep = yes ] ; then
         scorepLD=`${scorepdir}/bin/scorep-config --hyb --ldflags`
       else
         fixmakeargs="$fixmakeargs SCOREPMPI"
-        scorepLibs=`${scorepdir}/bin/scorep-config --mpi --libs`
-        scorepLD=`${scorepdir}/bin/scorep-config --mpi --ldflags`
+        scorepLibs=`${scorepdir}/bin/scorep-config --mpi --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+        scorepLD=`${scorepdir}/bin/scorep-config --mpi --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
       fi 
     else
       if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs SCOREPOMP" 
-	scorepLD=`${scorepdir}/bin/scorep-config --omp --ldflags`
-        scorepLibs=`${scorepdir}/bin/scorep-config --omp --libs`
+	scorepLD=`${scorepdir}/bin/scorep-config --omp --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+        scorepLibs=`${scorepdir}/bin/scorep-config --omp --libs  | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
       else
-        scorepLibs=`${scorepdir}/bin/scorep-config --seq --libs`
-        scorepLD=`${scorepdir}/bin/scorep-config --seq --ldflags`
+        scorepLibs=`${scorepdir}/bin/scorep-config --seq --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+        scorepLD=`${scorepdir}/bin/scorep-config --seq --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
       fi
     fi
     scorepLibs="$scorepLD $scorepLibs"
