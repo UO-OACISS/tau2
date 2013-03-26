@@ -37,6 +37,8 @@
 #include <math.h>
 #include <strings.h>
 #include <stdarg.h>
+
+#define NDEBUG  // Disable to enable assertions
 #include <assert.h>
 
 using namespace std;
@@ -90,8 +92,7 @@ static double calculateMean(int count, double sum) {
 
 static double calculateStdDev(int count, double sumsqr, double mean) {
   double ret = 0.0;
-  TAU_VERBOSE("Collate calculateStdDev count [%d] sumsqr [%.16G] meansqr [%.16G]\n", 
-	      count, sumsqr, mean*mean);
+  //printf("Collate calculateStdDev count [%d] sumsqr [%.16G] meansqr [%.16G]\n", count, sumsqr, mean*mean);
   if (count <= 0) return 0.0;
   /*
   assert(count > 0);

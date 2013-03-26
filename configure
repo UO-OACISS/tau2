@@ -284,9 +284,9 @@ for arg in "$@"; do
     echo "Compiler Options:"
     echo "-c++=<compiler>  ............................ specify the C++ compiler."
     echo "    options [CC|KCC|g++|*xlC*|cxx|pgCC|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
-    echo "                                 g++4|icpc|scgcc|scpathCC|pathCC|orCC]."
+    echo "               clang++|bgclang++|g++4|icpc|scgcc|scpathCC|pathCC|orCC]."
     echo "-cc=<compiler> ................................ specify the C compiler."
-    echo "     options [cc|gcc|gcc4|scgcc|KCC|pgcc|guidec|*xlc*|ecc|pathcc|orcc]."
+    echo "     options [cc|gcc|clang|bgclang|gcc4|scgcc|KCC|pgcc|guidec|*xlc*|ecc|pathcc|orcc]."
     echo "-fortran=<compiler> ..................... specify the Fortran compiler."
     echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
     echo "       g95|open64|kai|nec|hitachi|intel|absoft|lahey|nagware|pathscale}"
@@ -411,9 +411,9 @@ for arg in "$@"; do
     echo "  where [OPTIONS] are:"
     echo "-c++=<compiler>  ............................ specify the C++ compiler."
     echo "    options [CC|KCC|g++|*xlC*|cxx|pgCC|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
-    echo "                                 g++4|icpc|scgcc|scpathCC|pathCC|orCC]."
+    echo "               clang++|bgclang++|g++4|icpc|scgcc|scpathCC|pathCC|orCC]."
     echo "-cc=<compiler> ................................ specify the C compiler."
-    echo "     options [cc|gcc|gcc4|scgcc|KCC|pgcc|guidec|*xlc*|ecc|pathcc|orcc]."
+    echo "   options [cc|gcc|gcc4|scgcc|clang|pgcc|guidec|*xlc*|ecc|pathcc|orcc]."
     echo "-fortran=<compiler> ..................... specify the Fortran compiler."
     echo "   options    [gnu|sgi|ibm|ibm64|hp|cray|pgi|absoft|fujitsu|sun|compaq|"
     echo "   g95|open64|kai|nec|hitachi|intel|absoft|lahey|nag|nagware|pathscale}"
@@ -423,7 +423,7 @@ for arg in "$@"; do
     echo "-pdt=<dir> ........ Specify location of PDT (Program Database Toolkit)."
     echo "-pdt_c++=<compiler>  ............ specify a different PDT C++ compiler."
     echo "    options [CC|KCC|g++|*xlC*|cxx|pgCC|pgcpp|FCC|guidec++|aCC|c++|ecpc|"
-    echo "                                          g++4|icpc|scgcc|pathCC|orCC]."
+    echo "                        clang++|bgclang++|g++4|icpc|scgcc|pathCC|orCC]."
     echo "-pdtcompdir=<compilerdir> . specify a different PDT compiler directory."
     echo "-pdtarchdir=<archdir> . specify a different PDT architecture directory."
     echo "-useropt='<param>' .......... arguments to compilers (defaults to -O2)."
@@ -3139,6 +3139,8 @@ then
       if [ $machine = bgq -o $machine = bgp ]; then
         c_compiler=mpicc
         cxx_compiler=mpicxx
+      gnu=yes
+      tauoptions="${tauoptions}-gnu"
       else 
 # All other machines besides IBM BG*
         is_internal_compiler_loaded=`which $cxx_compiler 2>/dev/null | wc -l`
@@ -6622,7 +6624,8 @@ if [ $python = yes ] ; then
     fi
 fi
 if [ $cuda = yes ] ; then
-	if [ -f "$cudainclude/cuda.h" ] ; then
+  if [ $disableshared = no ] ; then
+    if [ -f "$cudainclude/cuda.h" ] ; then
 		fixmakeargs="$fixmakeargs CUDA TAU_USE_GPU cudainclude=$cudainclude"
 		if [ "$opencl" != "disable" ] ; then
 			if [ -f "$cudainclude/CL/cl.h" ] ; then
@@ -6647,7 +6650,11 @@ EOF
 		fi
 	else
 		echo "Error: Cannot find GPU headers, TAU currently supports either CUDA or OpenCL"
-	fi
+    fi
+  else
+    echo "Error: Cannot configure CUDA with DISABLESHARED set!"
+    exit 1
+  fi
 fi
 
 if [ $python = yes -a $cuda = yes ] ; then

@@ -59,16 +59,32 @@ public:
 };
 
 
-struct TauInternalFunctionGuard
+class TauInternalFunctionGuard
 {
-  TauInternalFunctionGuard() {
+public:
+
+  TauInternalFunctionGuard() : enabled(true) {
     Tau_global_incr_insideTAU();
   }
 
-  ~TauInternalFunctionGuard() {
-    Tau_global_decr_insideTAU();
+  TauInternalFunctionGuard(bool flag) : enabled(flag) {
+    if (enabled) {
+      Tau_global_incr_insideTAU();
+    }
   }
+
+  ~TauInternalFunctionGuard() {
+    if (enabled) {
+      Tau_global_decr_insideTAU();
+    }
+  }
+
+private:
+
+  // If false then the guard has no effect
+  bool enabled;
 };
+
 
 #define TAU_PROFILE(name, type, group) \
 	static void *tauFI = 0; \

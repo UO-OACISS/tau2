@@ -40,6 +40,10 @@
 #include <stdlib.h>
 #include <tau_internal.h>
 
+// PAGESIZE can be a synonym for PAGE_SIZE
+#if !defined(PAGE_SIZE) && defined(PAGESIZE)
+#define PAGE_SIZE PAGESIZE
+#endif
 
 // Constants indicating unknown source location
 #define TAU_MEMORY_UNKNOWN_LINE 0
@@ -152,8 +156,21 @@ public:
 
   typedef unsigned char * addr_t;
   typedef tau::TauContextUserEvent user_event_t;
+
   struct allocation_map_t : public TAU_HASH_MAP<addr_t, class TauAllocation*> {
+    allocation_map_t() {
+      Tau_init_initializeTAU();
+    }
     virtual ~allocation_map_t() {
+      Tau_destructor_trigger();
+    }
+  };
+
+  struct event_map_t : public TAU_HASH_MAP<unsigned long, user_event_t*> {
+    event_map_t() {
+      Tau_init_initializeTAU();
+    }
+    virtual ~event_map_t() {
       Tau_destructor_trigger();
     }
   };
@@ -164,15 +181,13 @@ public:
   }
 
   // Total bytes allocated
-  static size_t & BytesAllocated() {
-    static size_t bytes = 0;
-    return bytes;
+  static size_t BytesAllocated() {
+    return __bytes_allocated();
   }
 
   // Total bytes deallocated
-  static size_t & BytesDeallocated() {
-    static size_t bytes = 0;
-    return bytes;
+  static size_t BytesDeallocated() {
+    return __bytes_deallocated();
   }
 
   // Trigger memory leak detection
@@ -195,12 +210,15 @@ public:
 //
 private:
 
-  // Forces Tau_global_incr_insideTAU before map's constructor is called
-  // so the memory wrapper isn't used to construct the map
-  static allocation_map_t & __allocation_map() {
-    static allocation_map_t alloc_map;
-    return alloc_map;
-  }
+  // Read/write allocation map
+  static allocation_map_t & __allocation_map();
+
+  // Read/write bytes allocated
+  static size_t & __bytes_allocated();
+
+  // Read/write bytes deallocated
+  static size_t & __bytes_deallocated();
+
 
 // ----------------------------------------------------------------------------
 // Public instance members

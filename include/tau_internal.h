@@ -71,11 +71,9 @@
 #ifdef HAVE_TR1_HASH_MAP
 #include <tr1/unordered_map>
 #define TAU_HASH_MAP std::tr1::unordered_map
-#define TAU_MULTIMAP std::tr1::unordered_multimap
 #else
 #include <map>
 #define TAU_HASH_MAP std::map
-#define TAU_MULTIMAP std::multimap
 #endif /* HAVE_HASH_MAP */
 
 #endif /* __cplusplus */
@@ -96,7 +94,7 @@
   for (int i=0; i<frames; ++i) \
     fprintf(stderr, "           [%d:%d]: %s\n", nid, tid, strs[i]); \
   free(strs); \
-  exit(999); \
+  abort(); \
 }
 #else /* !defined(TAU_EXECINFO) */
 #define TAU_ASSERT(test, fmt, ...) if (!(test)) { \
@@ -104,7 +102,7 @@
   int tid = RtsLayer::unsafeThreadId(); \
   fprintf(stderr, "TAU_ASSERT [%d:%d](%s:%d): " fmt "\n", nid, tid, __FILE__, __LINE__, #__VA_ARGS__); \
   fflush(stderr); \
-  exit(999); \
+  abort(); \
 }
 #endif
 #else /* !defined(DEBUG_ASSERT) */

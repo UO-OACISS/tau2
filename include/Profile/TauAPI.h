@@ -405,13 +405,8 @@ const char *Tau_profile_get_type(void *ptr);
 TauGroup_t Tau_profile_get_group(void *ptr);
 
 int Tau_global_get_insideTAU();
-int Tau_global_get_insideTAU_tid(int tid);
 int Tau_global_incr_insideTAU();
 int Tau_global_decr_insideTAU();
-int Tau_global_incr_insideTAU_tid(int tid);
-int Tau_global_decr_insideTAU_tid(int tid);
-int Tau_global_process_incr_insideTAU();
-int Tau_global_process_decr_insideTAU();
 int Tau_global_getLightsOut();
 void Tau_global_setLightsOut();
 
