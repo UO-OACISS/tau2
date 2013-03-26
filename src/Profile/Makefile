@@ -532,15 +532,16 @@ $(TAU_JAVA_INSTALLDIR)/Profile.class: Profile.class
 		@echo Installing $? in $(TAU_JAVA_INSTALLDIR)
 		@if [ -d $(TAU_JAVA_INSTALLDIR) ] ; then true; \
                    else $(MKDIR) $(TAU_JAVA_INSTALLDIR) ;fi
-		$(TAU_INSTALL) $? $(TAU_JAVA_INSTALLDIR)
+		@if [ ! -r $(INSTALLDEST)/Profile.class ] ; then \
+		$(TAU_INSTALL) $? $(TAU_JAVA_INSTALLDIR) ; fi
 
 $(TAU_JAVA_INSTALLDIR)/TauJVMTI.jar: TauJVMTI.jar
 		@echo Installing $? in $(INSTALLDEST)
-		@if [ -d $(INSTALLDEST) ] ; then true; \
-                   else $(MKDIR) $(INSTALLDEST) ;fi
-		$(TAU_INSTALL) $? $(INSTALLDEST)
-		@if [ -f $(INSTALLDEST)/libTAU.jnilib ] ; then true; \
-									 else cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) libTAU.jnilib; fi
+		@if [ -d $(INSTALLDEST) ] ; then true;  else $(MKDIR) $(INSTALLDEST) ;fi 
+		@if [ ! -r $(INSTALLDEST)/TauJVMTI.jar ] ; then \
+		$(TAU_INSTALL) $? $(INSTALLDEST) ; fi 
+		@if [ ! -r $(INSTALLDEST)/libTAU.jnilib ] ; then \
+		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) libTAU.jnilib; fi
 
 $(TAU_SHAREDDIR)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
 		@echo Installing $(TAUPYTHON), ltau.py, and tau.py in $(INSTALLDEST)
