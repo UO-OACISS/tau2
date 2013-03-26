@@ -850,6 +850,10 @@ int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, cha
     assert(result1);
   }else{
     bool result = mutateeAddressSpace->loadLibrary(libname);
+    if (!result) {
+      printf("Error: loadLibrary(%s) failed. Please ensure that TAU's lib directory is in your LD_LIBRARY_PATH environment variable and retry.\n", libname);
+      printf("You may also want to use tau_exec while launching the rewritten binary. If TAU relies on some external libraries (Score-P, MPI), these may need to be added to the LD_PRELOAD environment variable prior to launching the application.\n");
+    }
     assert(result);
   }
 
