@@ -196,9 +196,9 @@ extern "C" int Tau_global_getLightsOut() {
 }
 
 extern "C" void Tau_global_setLightsOut() {
+  Tau_stack_checkInit();
   // Disable profiling from here on out
   Tau_global_incr_insideTAU();
-  Tau_stack_checkInit();
   lightsOut = 1;
 }
 
@@ -217,48 +217,32 @@ extern "C" void Tau_stack_initialization() {
 
 extern "C" int Tau_global_get_insideTAU() {
   Tau_stack_checkInit();
-  int tid = RtsLayer::localThreadId();
+  int tid = RtsLayer::unsafeLocalThreadId();
   return Tau_thread_flags[tid].Tau_global_insideTAU;
 }
 
 extern "C" int Tau_global_incr_insideTAU()
 {
-  Tau_memory_wrapper_disable();
   Tau_stack_checkInit();
+  Tau_memory_wrapper_disable();
   int tid = RtsLayer::unsafeLocalThreadId();
-  return ++Tau_thread_flags[tid].Tau_global_insideTAU;
-}
 
-extern "C" int Tau_global_process_incr_insideTAU()
-{
-  Tau_memory_wrapper_disable();
-  Tau_stack_checkInit();
-  for(int tid=0; tid < TAU_MAX_THREADS; ++tid) {
-    ++Tau_thread_flags[tid].Tau_global_insideTAU;
-  }
-  return -1;
+  volatile int * insideTAU = &Tau_thread_flags[tid].Tau_global_insideTAU;
+  *insideTAU = *insideTAU + 1;
+  return *insideTAU;
 }
 
 extern "C" int Tau_global_decr_insideTAU()
 {
   Tau_stack_checkInit();
   int tid = RtsLayer::unsafeLocalThreadId();
-  int insideTAU = --Tau_thread_flags[tid].Tau_global_insideTAU;
-  TAU_ASSERT(insideTAU >= 0, "Thread has decremented the insideTAU counter past 0");
-  if (!insideTAU) Tau_memory_wrapper_enable();
-  return insideTAU;
-}
 
-extern "C" int Tau_global_process_decr_insideTAU()
-{
-  Tau_stack_checkInit();
-  for(int tid=0; tid < TAU_MAX_THREADS; ++tid) {
-    --Tau_thread_flags[tid].Tau_global_insideTAU;
-    TAU_ASSERT(Tau_thread_flags[tid].Tau_global_insideTAU >= 0,
-            "Thread has decremented the insideTAU counter past 0");
-  }
-  if (!Tau_global_get_insideTAU()) Tau_memory_wrapper_enable();
-  return -1;
+  volatile int * insideTAU = &Tau_thread_flags[tid].Tau_global_insideTAU;
+  *insideTAU = *insideTAU - 1;
+  TAU_ASSERT(*insideTAU >= 0, "Thread has decremented the insideTAU counter past 0");
+
+  if (*insideTAU == 0) Tau_memory_wrapper_enable();
+  return *insideTAU;
 }
 
 extern "C" Profiler *TauInternal_CurrentProfiler(int tid) {
@@ -801,12 +785,6 @@ extern "C" int Tau_get_context(void) {
 extern "C" void Tau_set_context(int context) {
   TauInternalFunctionGuard protects_this_function;
   RtsLayer::setMyContext(context);
-}
-
-///////////////////////////////////////////////////////////////////////////
-extern "C" void Tau_set_thread(int thread) {
-  TauInternalFunctionGuard protects_this_function;
-  RtsLayer::setMyThread(thread);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1475,9 +1453,7 @@ extern void Tau_pure_start_task_string(const string name, int tid);
  * library is used without any instrumentation in main */
 extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
 {
-#if defined(TAU_VAMPIRTRACE) || defined(TAU_EPILOG)
-  return;    // disabled.
-#else
+#if ! (defined(TAU_VAMPIRTRACE) || defined(TAU_EPILOG))
   TauInternalFunctionGuard protects_this_function;
 
   /* After creating the ".TAU application" timer, we start it. In the
@@ -2044,7 +2020,7 @@ extern "C" void Tau_get_counter_info(const char ***counterNames, int *numCounter
 //or Profiler stack. 
 extern "C" int Tau_get_local_tid(void) {
   TauInternalFunctionGuard protects_this_function;
-  return RtsLayer::localThreadId();
+  return RtsLayer::unsafeLocalThreadId();
 }
 
 //////////////////////////////////////////////////////////////////////

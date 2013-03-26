@@ -19,6 +19,7 @@
 * The following routines are called by the Fortran program and they in turn
 * invoke the corresponding C routines. 
 *****************************************************************************/
+#include <stdio.h>
 
 typedef unsigned int TauGroup_t;
 
@@ -697,6 +698,46 @@ void Tau_exit(char *)
 {
 }
 
+void traceEntry(int id) {
+  printf("TAU: traceEntry: id = %d\n", id);
+}
+
+void traceExit(int id) {
+  printf("TAU: traceExit: id = %d\n", id);
+}
+
+void tau_trace_entry(int id) {
+  printf("TAU: tau_trace_entry: id = %d\n", id);
+}
+
+void tau_trace_exit(int id) {
+  printf("TAU: tau_trace_exit : id = %d\n", id);
+}
+
+void trace_register_func(char *origname, int id) {
+  printf("TAU: trace_register_func : name = %s, id = %d\n", origname, id);
+}
+
+void tau_dyninst_cleanup() {
+  printf("TAU: Inside tau_dyninst_cleanup\n");
+}
+
+void tau_dyninst_init(int isMPI) {
+  printf("TAU: tau_dyninst_init: isMPI = %d\n", isMPI);
+}
+
+void  tau_register_func(char **func, char** file, int* lineno, 
+  int id) {
+  printf("TAU: tau_register_func : name = %s, file = %s, line no = %d, id = %d\n", 
+	*func, *file, *lineno, id);
+}
+
+void  tau_register_loop(char **func, char** file, int* lineno, 
+  int id) {
+  printf("TAU: tau_register_loop : name = %s, file = %s, line no = %d, id = %d\n", 
+	*func, *file, *lineno, id);
+}
+  
 ////////////////////////////////////////////////////////////////////////////
 } /* extern "C" */
 

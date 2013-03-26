@@ -7,3 +7,11 @@ a.out
 .last_config
 .project
 .cproject
+.gitignore
+.ptp-sync
+x86_64
+bgl
+bgp
+bgq
+craycnl
+apple
