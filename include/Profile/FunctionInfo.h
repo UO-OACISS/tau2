@@ -301,6 +301,8 @@ void tauCreateFI(void **ptr, const std::string& name, const char *type,
 		 TauGroup_t ProfileGroup , const char *ProfileGroupName);
 void tauCreateFI(void **ptr, const std::string& name, const std::string& type,
 		 TauGroup_t ProfileGroup , const char *ProfileGroupName);
+void tauCreateFI_signalSafe(void **ptr, const std::string& name, const char *type, 
+         TauGroup_t ProfileGroup, const char *ProfileGroupName);
 
 
 #endif /* _FUNCTIONINFO_H_ */
