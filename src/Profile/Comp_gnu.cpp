@@ -373,14 +373,22 @@ void __cyg_profile_func_exit(void* func, void* callsite)
     unsigned long addr = Tau_convert_ptr_to_unsigned_long(funcptr);
 
     HashNode * hn = TheHashTable()[addr];
-    if (hn && !hn->excluded && hn->fi) {
-      // Don't profile TAU internals
-      if (Tau_global_get_insideTAU() > 0) return;
+
+     // Don't profile TAU internals
+     if (!hn || hn->excluded || !hn->fi) return;
+   } //end protection region
+
+   if (Tau_global_get_insideTAU() > 0) {
+    return;
+   }
+
+   // This region always needs to be protected.
+   {
       TauInternalFunctionGuard protects_this_function;
       issueBfdWarningIfNecessary();
       Tau_stop_timer(hn->fi, Tau_get_tid());
-    }
-  }    // END inside TAU
+   } // END inside TAU
+  }   
 }
 
 void _cyg_profile_func_exit(void* func, void* callsite)
