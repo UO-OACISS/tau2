@@ -25,7 +25,7 @@ extern "C" {
 #include <pthread.h>
 #endif
 
-extern "C" void init_once(void);
+extern "C" void pthread_init_once(void);
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -60,7 +60,7 @@ private:
   static pthread_mutex_t tauDBMutex;    // to protect TheFunctionDB
   static pthread_mutex_t tauEnvMutex;    // to protect TheFunctionDB
 
-  friend void init_once(void);
+  friend void pthread_init_once(void);
 };
 
 #endif // PTHREADS 

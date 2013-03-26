@@ -576,7 +576,8 @@ int RtsLayer::getNumEnvLocks(void) {
   return lockEnvCount[tid];
 }
 
-int RtsLayer::LockEnv(void) {
+int RtsLayer::LockEnv(void)
+{
   static bool init = initEnvLocks();
   int tid=localThreadId();
 	TAU_ASSERT(Tau_global_get_insideTAU() > 0, "Thread is trying for Env lock but it is not in TAU");
@@ -655,7 +656,9 @@ void RtsLayer::threadLockEnv(void)
 //////////////////////////////////////////////////////////////////////
 void RtsLayer::threadUnLockEnv(void)
 {
-#ifdef PTHREADS
+#ifdef TAU_MPC
+  MPCThreadLayer::UnLockEnv();
+#elif PTHREADS
   PthreadLayer::UnLockEnv();
 #elif TAU_SPROC
   SprocLayer::UnLockEnv();
