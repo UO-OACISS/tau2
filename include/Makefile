@@ -391,6 +391,7 @@ TAU_F77 = $(TAU_F90)
 #KTAU_SHCTR#KTAU_SHCTR_O      	= KtauCounters.o  #ENDIF#
 #MPITRACE#TRACEOPT	 = -DTAU_MPITRACE -DTRACING_ON #ENDIF#
 #PTHREAD_AVAILABLE#THR_O       = PthreadLayer.o TauWrapSyscalls.o        #ENDIF#
+#MPC#THR_O       = MPCThreadLayer.o #ENDIF#
 #TAU_PAPI_THREADS#THR_O       = PapiThreadLayer.o        #ENDIF#
 #TAU_SPROC#THR_O       	       = SprocLayer.o        #ENDIF#
 #JAVA#THR_O       	       = JavaThreadLayer.o     #ENDIF#

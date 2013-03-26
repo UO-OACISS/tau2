@@ -7,37 +7,24 @@
  **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
  ****************************************************************************/
 /***************************************************************************
- **	File 		: PthreadLayer.h				  **
- **	Description 	: TAU Profiling Package Pthread Support Layer	  **
+ **	File 		: MPCThreadLayer.h				  **
+ **	Description 	: TAU Profiling Package MPC Support Layer	  **
  *	Contact		: tau-team@cs.uoregon.edu 		 	  **
  **	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
  ***************************************************************************/
 
-#ifndef _PTHREADLAYER_H_
-#define _PTHREADLAYER_H_
-#ifdef PTHREADS
+#ifndef _MPCTHREADLAYER_H_
+#define _MPCTHREADLAYER_H_
 
-#ifdef TAU_CHARM
-extern "C" {
-#include <cpthreads.h>
-}
-#else 
-#include <pthread.h>
-#endif
+#include <mpc.h>
 
-extern "C" void pthread_init_once(void);
+extern "C" void mpc_init_once(void);
 
-//////////////////////////////////////////////////////////////////////
-//
-// class PthreadLayer
-//
-// This class is used for supporting pthreads in RtsLayer class.
-//////////////////////////////////////////////////////////////////////
-class PthreadLayer
-{    // Layer for RtsLayer to interact with pthreads
+class MPCThreadLayer
+{
 public:
 
-  PthreadLayer() {
+  MPCThreadLayer() {
     InitializeThreadData();
   }
 
@@ -52,23 +39,21 @@ public:
   static int UnLockEnv(void);    // unlocks the tauEnvMutex
 
 private:
-  static int tauThreadCount;     // counter
-  static pthread_once_t initFlag;
-  static pthread_key_t tauPthreadId;    // tid
-  // flag to protect against multiple wrappers wrapping pthread_create.
-  static pthread_mutex_t tauThreadcountMutex;    // to protect counter
-  static pthread_mutex_t tauDBMutex;    // to protect TheFunctionDB
-  static pthread_mutex_t tauEnvMutex;    // to protect TheFunctionDB
+  static int tauThreadCount;
+  static mpc_thread_once_t initFlag;
+  static pthread_key_t tauThreadId;
+  static mpc_thread_mutex_t tauThreadCountMutex;
+  static mpc_thread_mutex_t tauDBMutex;
+  static mpc_thread_mutex_t tauEnvMutex;
 
-  friend void pthread_init_once(void);
+  friend void mpc_init_once(void);
 };
 
-#endif // PTHREADS 
-#endif // _PTHREADLAYER_H_
+#endif /* _MPCTHREADLAYER_H_ */
 
 /***************************************************************************
- * $RCSfile: PthreadLayer.h,v $   $Author: amorris $
+ * $RCSfile: MPCThreadLayer.h,v $   $Author: amorris $
  * $Revision: 1.9 $   $Date: 2009/01/16 00:46:32 $
- * POOMA_VERSION_ID: $Id: PthreadLayer.h,v 1.9 2009/01/16 00:46:32 amorris Exp $
+ * POOMA_VERSION_ID: $Id: MPCThreadLayer.h,v 1.9 2009/01/16 00:46:32 amorris Exp $
  ***************************************************************************/
 
