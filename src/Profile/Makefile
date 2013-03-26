@@ -644,7 +644,7 @@ TauShmemSgiF.o  : TauShmemSgiF.c $(HDRS)
 	$(CC) $(CFLAGS) $(TAU_SHMEM_INC) -c $(@:.o=.c)
 
 TauOpenMPCollectorAPI.o  : TauOpenMPCollectorAPI.c $(HDRS)
-	$(CC) $(CFLAGS) -c $(@:.o=.c)
+	$(CC) $(CFLAGS) $(OPENMPOPTS) -c $(@:.o=.c)
 
 TauXML.o 	: TauXML.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
@@ -836,6 +836,9 @@ TauCompensate.o : TauCompensate.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauHandler.o : TauHandler.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+MPCThreadLayer.o   : MPCThreadLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauMemory.o : TauMemory.cpp $(HDRS)

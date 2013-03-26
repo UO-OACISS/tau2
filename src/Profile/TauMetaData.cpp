@@ -240,9 +240,7 @@ void Tau_metadata_register(const char *name, const char *value) {
 
 int Tau_metadata_fillMetaData() 
 {
-#ifdef TAU_DISABLE_METADATA
-  return 0;
-#endif
+#ifndef TAU_DISABLE_METADATA
 
   static int filled = 0;
   if (filled) {
@@ -726,24 +724,13 @@ vector<string> result;
   if (f) {
     char line[4096];
 
-    /* *CWL* - STL cannot be used in PGI init sections???
-       std::ostringstream os;
-
-       while (Tau_util_readFullLine(line, f)) {
-       if (os.str().length() != 0) {
-       os << " ";
-       }
-       os << line;
-       }
-       Tau_metadata_register("Command Line", os.str().c_str());
-     */
     string os;
     // *CWL* - The following loop performs newline to space conversions
     while (Tau_util_readFullLine(line, f)) {
       if (os.length() != 0) {
         os.append(" ");
       }
-      os.append(string(line));
+      os.append(line);
     }    
     Tau_metadata_register("Command Line", os.c_str());
     fclose(f);
@@ -754,6 +741,8 @@ vector<string> result;
   if (user != NULL) {
     Tau_metadata_register("username", user);
   }
+
+#endif // TAU_DISABLE_METADATA
 
   return 0;
 }

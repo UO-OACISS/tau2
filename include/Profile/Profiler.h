@@ -85,7 +85,7 @@ int tau_pthread_barrier_wait(pthread_barrier_t *barrier);
 #define TAU_MAX_COUNTERS 10
 #endif
 
-#if (defined(PTHREADS) || defined(TULIPTHREADS) || defined(JAVA) || defined(TAU_WINDOWS) || defined (TAU_OPENMP) || defined (TAU_SPROC) || defined(TAU_PAPI_THREADS))
+#if (defined(PTHREADS) || defined(TAU_MPC) || defined(TULIPTHREADS) || defined(JAVA) || defined(TAU_WINDOWS) || defined (TAU_OPENMP) || defined (TAU_SPROC) || defined(TAU_PAPI_THREADS))
 
 
 #ifndef TAU_MAX_THREADS
@@ -96,7 +96,7 @@ int tau_pthread_barrier_wait(pthread_barrier_t *barrier);
 #endif
 #endif /* TAU_MAX_THREADS */
 
-#else
+#else /* not using threads? */
 #ifndef TAU_MAX_THREADS
 /* *CWL* - If useropt is not specified, then GPUs need to override the non-threaded default of 1. 
          - If thread packages are used, their defaults (> 32) are used.

@@ -96,7 +96,6 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 			results.close();
 			statement.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		if (trial != null & complete) {
@@ -140,7 +139,6 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 			results.close();
 			statement.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -444,7 +442,6 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 			results.close();
 			statement.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return trials;
@@ -484,7 +481,6 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 			statement.executeUpdate();
 			statement.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 

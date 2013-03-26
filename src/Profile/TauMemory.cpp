@@ -107,18 +107,49 @@ void TauAllocation::DetectLeaks(void)
   }
 }
 
+//////////////////////////////////////////////////////////////////////
+// Read/write allocation map
+//////////////////////////////////////////////////////////////////////
+TauAllocation::allocation_map_t & TauAllocation::__allocation_map()
+{
+  static allocation_map_t alloc_map;
+  return alloc_map;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Total bytes allocated
+//////////////////////////////////////////////////////////////////////
+size_t & TauAllocation::__bytes_allocated()
+{
+  static size_t bytes = 0;
+  return bytes;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Total bytes deallocated
+//////////////////////////////////////////////////////////////////////
+size_t & TauAllocation::__bytes_deallocated()
+{
+  static size_t bytes = 0;
+  return bytes;
+}
 
 //////////////////////////////////////////////////////////////////////
 // Search for an allocation record by base address
 //////////////////////////////////////////////////////////////////////
-TauAllocation * TauAllocation::Find(allocation_map_t::key_type const & key) {
-  static allocation_map_t const & alloc_map = AllocationMap();
-
+TauAllocation * TauAllocation::Find(allocation_map_t::key_type const & key)
+{
+  TauAllocation * found = NULL;
   if (key) {
+    RtsLayer::LockDB();
+    allocation_map_t const & alloc_map = AllocationMap();
     allocation_map_t::const_iterator it = alloc_map.find(key);
-    if (it != alloc_map.end()) return it->second;
+    if (it != alloc_map.end()) {
+      found = it->second;
+    }
+    RtsLayer::UnLockDB();
   }
-  return NULL;
+  return found;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -126,34 +157,23 @@ TauAllocation * TauAllocation::Find(allocation_map_t::key_type const & key) {
 //////////////////////////////////////////////////////////////////////
 TauAllocation * TauAllocation::FindContaining(void * ptr)
 {
-  static allocation_map_t const & allocMap = AllocationMap();
-
+  TauAllocation * found = NULL;
   if (ptr) {
+    RtsLayer::LockDB();
+    allocation_map_t const & allocMap = AllocationMap();
     allocation_map_t::const_iterator it;
     for(it = allocMap.begin(); it != allocMap.end(); it++) {
       TauAllocation * const alloc = it->second;
-      if (alloc->Contains(ptr)) return alloc;
+      if (alloc->Contains(ptr)) {
+        found = alloc;
+        break;
+      }
     }
+    RtsLayer::UnLockDB();
   }
-  return NULL;
+  return found;
 }
 
-
-//////////////////////////////////////////////////////////////////////
-// TODO: Docs
-//////////////////////////////////////////////////////////////////////
-void TauAllocation::TriggerHeapMemoryUsageEvent() {
-  static TauUserEvent evt("Heap Memory Usage (KB)");
-  evt.TriggerEvent(Tau_max_RSS());
-}
-
-//////////////////////////////////////////////////////////////////////
-// TODO: Docs
-//////////////////////////////////////////////////////////////////////
-void TauAllocation::TriggerMemoryHeadroomEvent(void) {
-  static TauContextUserEvent evt("Memory Headroom Left (MB)");
-  evt.TriggerEvent(Tau_estimate_free_memory());
-}
 
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
@@ -305,10 +325,10 @@ void * TauAllocation::Allocate(size_t size, size_t align, size_t min_align,
     ProtectPages(uguard_addr, uguard_size);
   }
 
-  RtsLayer::LockEnv();
-  BytesAllocated() += user_size;
+  RtsLayer::LockDB();
+  __bytes_allocated() += user_size;
   __allocation_map()[user_addr] = this;
-  RtsLayer::UnLockEnv();
+  RtsLayer::UnLockDB();
 
   TriggerAllocationEvent(user_size, filename, lineno);
   TriggerHeapMemoryUsageEvent();
@@ -370,10 +390,10 @@ void TauAllocation::Deallocate(const char * filename, int lineno)
 
 #endif
 
-  RtsLayer::LockEnv();
-  BytesDeallocated() += user_size;
+  RtsLayer::LockDB();
+  __bytes_deallocated() += user_size;
   __allocation_map().erase(user_addr);
-  RtsLayer::UnLockEnv();
+  RtsLayer::UnLockDB();
 
   TriggerDeallocationEvent(user_size, filename, lineno);
   TriggerHeapMemoryUsageEvent();
@@ -421,10 +441,10 @@ void TauAllocation::TrackAllocation(void * ptr, size_t size, const char * filena
       user_addr = addr;
       user_size = size;
     }
-    RtsLayer::LockEnv();
-    BytesAllocated() += user_size;
+    RtsLayer::LockDB();
+    __bytes_allocated() += user_size;
     __allocation_map()[user_addr] = this;
-    RtsLayer::UnLockEnv();
+    RtsLayer::UnLockDB();
 
     TriggerAllocationEvent(user_size, filename, lineno);
     TriggerHeapMemoryUsageEvent();
@@ -439,10 +459,10 @@ void TauAllocation::TrackAllocation(void * ptr, size_t size, const char * filena
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::TrackDeallocation(const char * filename, int lineno)
 {
-  RtsLayer::LockEnv();
-  BytesDeallocated() += user_size;
+  RtsLayer::LockDB();
+  __bytes_deallocated() += user_size;
   __allocation_map().erase(user_addr);
-  RtsLayer::UnLockEnv();
+  RtsLayer::UnLockDB();
 
   TriggerDeallocationEvent(user_size, filename, lineno);
   TriggerHeapMemoryUsageEvent();
@@ -570,13 +590,29 @@ unsigned long TauAllocation::LocationHash(unsigned long hash, char const * data)
 //////////////////////////////////////////////////////////////////////
 // TODO: Docs
 //////////////////////////////////////////////////////////////////////
+void TauAllocation::TriggerHeapMemoryUsageEvent() {
+  TAU_REGISTER_EVENT(evt, "Heap Memory Used (KB)");
+  TAU_EVENT(evt, Tau_max_RSS());
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
+void TauAllocation::TriggerMemoryHeadroomEvent(void) {
+  TAU_REGISTER_CONTEXT_EVENT(evt, "Memory Headroom Left (MB)");
+  TAU_CONTEXT_EVENT(evt, Tau_estimate_free_memory());
+}
+
+//////////////////////////////////////////////////////////////////////
+// TODO: Docs
+//////////////////////////////////////////////////////////////////////
 void TauAllocation::TriggerAllocationEvent(size_t size, char const * filename, int lineno)
 {
-  typedef TAU_HASH_MAP<unsigned long, user_event_t*> event_map_t;
   static event_map_t event_map;
 
   unsigned long file_hash = LocationHash(lineno, filename);
 
+  RtsLayer::LockDB();
   event_map_t::iterator it = event_map.find(file_hash);
   if (it == event_map.end()) {
     if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
@@ -584,15 +620,17 @@ void TauAllocation::TriggerAllocationEvent(size_t size, char const * filename, i
     {
       alloc_event = new user_event_t("Heap Allocate");
     } else {
-      char * s = (char*)malloc(strlen(filename)+128);
-      sprintf(s, "Heap Allocate <file=%s, line=%d>", filename, lineno);
-      alloc_event = new user_event_t(s);
-      free((void*)s);
+      char * name = new char[strlen(filename)+128];
+      sprintf(name, "Heap Allocate <file=%s, line=%d>", filename, lineno);
+      alloc_event = new user_event_t(name);
+      delete[] name;
     }
     event_map[file_hash] = alloc_event;
   } else {
     alloc_event = it->second;
   }
+  RtsLayer::UnLockDB();
+
   alloc_event->TriggerEvent(size);
 }
 
@@ -602,13 +640,12 @@ void TauAllocation::TriggerAllocationEvent(size_t size, char const * filename, i
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::TriggerDeallocationEvent(size_t size, char const * filename, int lineno)
 {
-  typedef TAU_HASH_MAP<unsigned long, user_event_t*> event_map_t;
   static event_map_t event_map;
 
   unsigned long file_hash = LocationHash(lineno, filename);
-
   user_event_t * e;
 
+  RtsLayer::LockDB();
   event_map_t::iterator it = event_map.find(file_hash);
   if (it == event_map.end()) {
     if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
@@ -616,15 +653,17 @@ void TauAllocation::TriggerDeallocationEvent(size_t size, char const * filename,
     {
       e = new user_event_t("Heap Free");
     } else {
-      char * s = (char*)malloc(strlen(filename)+128);
-      sprintf(s, "Heap Free <file=%s, line=%d>", filename, lineno);
-      e = new user_event_t(s);
-      free((void*)s);
+      char * name = new char[strlen(filename)+128];
+      sprintf(name, "Heap Free <file=%s, line=%d>", filename, lineno);
+      e = new user_event_t(name);
+      delete[] name;
     }
     event_map[file_hash] = e;
   } else {
     e = it->second;
   }
+  RtsLayer::UnLockDB();
+
   e->TriggerEvent(size);
 }
 
@@ -634,31 +673,32 @@ void TauAllocation::TriggerDeallocationEvent(size_t size, char const * filename,
 //////////////////////////////////////////////////////////////////////
 void TauAllocation::TriggerErrorEvent(char const * descript, char const * filename, int lineno)
 {
-  typedef TAU_HASH_MAP<unsigned long, user_event_t*> event_map_t;
   static event_map_t event_map;
 
   unsigned long file_hash = LocationHash(lineno, filename);
-
   user_event_t * e;
 
+  RtsLayer::LockDB();
   event_map_t::iterator it = event_map.find(file_hash);
   if (it == event_map.end()) {
-    char * s;
+    char * name;
     if ((lineno == TAU_MEMORY_UNKNOWN_LINE) &&
         !(strncmp(filename, TAU_MEMORY_UNKNOWN_FILE, TAU_MEMORY_UNKNOWN_FILE_STRLEN)))
     {
-      s = (char*)malloc(strlen(descript)+128);
-      sprintf(s, "Memory Error! %s", descript);
+      name = new char[strlen(descript)+128];
+      sprintf(name, "Memory Error! %s", descript);
     } else {
-      s = (char*)malloc(strlen(descript)+strlen(filename)+128);
-      sprintf(s, "Memory Error! %s <file=%s, line=%d>", descript, filename, lineno);
+      name = new char[strlen(descript)+strlen(filename)+128];
+      sprintf(name, "Memory Error! %s <file=%s, line=%d>", descript, filename, lineno);
     }
-    e = new user_event_t(s);
+    e = new user_event_t(name);
     event_map[file_hash] = e;
-    free((void*)s);
+    delete[] name;
   } else {
     e = it->second;
   }
+  RtsLayer::UnLockDB();
+
   e->TriggerEvent(1);
 }
 
@@ -743,6 +783,8 @@ void TauAllocation::UnprotectPages(addr_t addr, size_t size)
 extern "C"
 void Tau_memory_initialize(void)
 {
+  TauInternalFunctionGuard protects_this_function;
+
   // Trigger the map's constructor
   static TauAllocation::allocation_map_t const & alloc = TauAllocation::AllocationMap();
 
