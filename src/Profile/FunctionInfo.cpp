@@ -476,6 +476,41 @@ void tauCreateFI(void **ptr, const char *name, const string& type, TauGroup_t Pr
   }
 }
 
+void tauCreateFI_signalSafe(void **ptr, const string& name, const char *type, TauGroup_t ProfileGroup,
+    const char *ProfileGroupName)
+{
+  if (*ptr == 0) {
+    // Protect TAU from itself
+    TauInternalFunctionGuard protects_this_function;
+
+#ifdef TAU_CHARM
+    if (RtsLayer::myNode() != -1)
+    RtsLayer::LockEnv();
+#else
+    RtsLayer::LockEnv();
+#endif
+    if (*ptr == 0) {
+    /* KAH - Whoops!! We can't call "new" here, because malloc is not
+     * safe in signal handling. therefore, use the special memory
+     * allocation routines */
+      //*ptr = new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
+    *ptr = Tau_MemMgr_malloc(1, sizeof(FunctionInfo));
+    /*  now, use the pacement new function to create a object in
+     *  pre-allocated memory. NOTE - this memory needs to be explicitly
+     *  deallocated by explicitly calling the destructor. 
+     *  I think the best place for that is in the destructor for
+     *  the hash table. */
+    new(*ptr) FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
+    }
+#ifdef TAU_CHARM
+    if (RtsLayer::myNode() != -1)
+    RtsLayer::UnLockEnv();
+#else
+    RtsLayer::UnLockEnv();
+#endif
+  }
+}
+
 void tauCreateFI(void **ptr, const string& name, const char *type, TauGroup_t ProfileGroup,
     const char *ProfileGroupName)
 {

@@ -368,6 +368,7 @@ void Tau_stop(const char *name);
 void Tau_pure_start_task(const char *name, int tid);
 void Tau_pure_stop_task(const char *name, int tid);
 int Tau_stop_current_timer();
+int Tau_stop_current_timer_task(int tid);
 char * Tau_phase_enable(const char *group);
 
 void Tau_dynamic_start(char const * name, int isPhase);
@@ -469,6 +470,7 @@ void TAUDECL Tau_trace_sendmsg_remote(int type, int destination, int length, int
 void TAUDECL Tau_create_top_level_timer_if_necessary(void);
 void TAUDECL Tau_create_top_level_timer_if_necessary_task(int task);
 void TAUDECL Tau_stop_top_level_timer_if_necessary(void);
+void TAUDECL Tau_create_thread_state_if_necessary(char* name);
 
 // metadata functions
 void TAUDECL Tau_metadata(const char *name, const char *value);
