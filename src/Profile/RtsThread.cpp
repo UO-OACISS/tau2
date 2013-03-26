@@ -43,6 +43,10 @@
 #endif //TAUKTAU_SHCTR
 #endif //TAUKTAU
 
+#ifdef TAU_MPC 
+#include <Profile/MPCThreadLayer.h>
+#endif /* TAU_MPC */
+
 // This is used for printing the stack trace when debugging locks
 #ifdef DEBUG_LOCK_PROBLEMS
 #include <execinfo.h>
@@ -152,7 +156,9 @@ int RtsLayer::localThreadId(void)
 
 int RtsLayer::unsafeLocalThreadId(void)
 {
-#ifdef PTHREADS
+#ifdef TAU_MPC
+  return MPCThreadLayer::GetThreadId();
+#elif PTHREADS
   return PthreadLayer::GetThreadId();
 #elif  TAU_SPROC
   return SprocLayer::GetThreadId();
@@ -180,7 +186,9 @@ int RtsLayer::threadId(void)
 
 int RtsLayer::unsafeThreadId(void)
 {
-#ifdef PTHREADS
+#ifdef TAU_MPC
+  return MPCThreadLayer::GetThreadId();
+#elif PTHREADS
   return PthreadLayer::GetThreadId();
 #elif  TAU_SPROC
   return SprocLayer::GetThreadId();
@@ -209,28 +217,29 @@ extern "C" int Tau_RtsLayer_myThread(void) {
 	return RtsLayer::myThread();
 }
 
-int RtsLayer::setMyThread(int i) { 
-#ifdef PTHREADS
-	PthreadLayer::SetThreadId(i);
-#endif
-	return 0;
-}
-
-// int* RtsLayer::numThreads() { static int i = 1; return &i; } 
-int RtsLayer::getTotalThreads() {
-  int numThreads = 1;
+int RtsLayer::getTotalThreads()
+{
+  TauInternalFunctionGuard protects_this_function;
   LockEnv();
   // *CWL* - The Thread vector does NOT include the main thread!!
-  numThreads = TheThreadList().size() + 1;
+  int numThreads = TheThreadList().size() + 1;
   UnLockEnv();
   return numThreads;
 }
+
+#ifdef TAU_MPC
+extern "C" int TauGetMpiRank(void);
+#endif /* TAU_MPC */
 
 //////////////////////////////////////////////////////////////////////
 // myNode() returns the current node id (0..N-1)
 //////////////////////////////////////////////////////////////////////
 int RtsLayer::myNode(void)
 {
+#ifdef TAU_MPC
+  return TauGetMpiRank();
+#endif /* TAU_MPC */
+
 #ifdef TAU_PID_AS_NODE
   return getpid();
 #endif
@@ -265,22 +274,11 @@ else
 // RegisterThread is called before any other profiling function in a 
 // thread that is spawned off
 //////////////////////////////////////////////////////////////////////
-int RtsLayer::RegisterThread() {
-  //We are creating threads here, to be carefull register that we are in TAU in
-  //all thread
-  Tau_global_process_incr_insideTAU();
-  /* Check the size of threads */
-  /*
-  LockEnv();
-  int numthreads = *(RtsLayer::numThreads());
-  numthreads ++;
-  if (numthreads >= TAU_MAX_THREADS) {
-    fprintf(stderr, "TAU: RtsLayer: Max thread limit (%d) exceeded. Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=<higher limit>\n", numthreads);
-  }
-  UnLockEnv();
-  */
-
-#ifdef PTHREADS
+int RtsLayer::RegisterThread()
+{
+#ifdef TAU_MPC
+  MPCThreadLayer::RegisterThread();
+#elif PTHREADS
   PthreadLayer::RegisterThread();
 #elif TAU_SPROC
   SprocLayer::RegisterThread();
@@ -293,7 +291,7 @@ int RtsLayer::RegisterThread() {
 #elif TAU_PAPI_THREADS
   PapiThreadLayer::RegisterThread();
 #endif // PTHREADS
-// Note: Java thread registration is done at the VM layer in TauJava.cpp
+  // Note: Java thread registration is done at the VM layer in TauJava.cpp
 
   // *CWL* - This is a fuzzy report. What is guaranteed is that AT LEAST ONE thread has
   //         pushed us over the limit with the last registration.
@@ -302,7 +300,9 @@ int RtsLayer::RegisterThread() {
   //         rather than suffer a random segfault later.
   int numThreads = getTotalThreads();
   if (numThreads > TAU_MAX_THREADS) {
-    fprintf(stderr, "TAU Error: RtsLayer: [Max thread limit = %d] [Encountered = %d]. Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=<higher limit>\n", TAU_MAX_THREADS, numThreads);
+    fprintf(stderr,
+        "TAU Error: RtsLayer: [Max thread limit = %d] [Encountered = %d]. Please re-configure TAU with -useropt=-DTAU_MAX_THREADS=<higher limit>\n",
+        TAU_MAX_THREADS, numThreads);
     exit(-1);
   }
 
@@ -312,7 +312,6 @@ int RtsLayer::RegisterThread() {
   }
 #endif
 
-  Tau_global_process_decr_insideTAU();
   return numThreads;
 }
 
@@ -466,7 +465,7 @@ int RtsLayer::getNumDBLocks(void) {
 
 int RtsLayer::LockDB(void) {
   static bool init = initLocks();
-  int tid=myThread();
+  int tid=localThreadId();
 /* This block of code is helpful in debugging deadlocks... see the top of this file */
 	TAU_ASSERT(Tau_global_get_insideTAU() > 0, "Thread is trying for DB lock but it is not in TAU");
 #ifdef DEBUG_LOCK_PROBLEMS
@@ -512,7 +511,7 @@ int RtsLayer::LockDB(void) {
 }
 
 int RtsLayer::UnLockDB(void) {
-  int tid=myThread();
+  int tid=localThreadId();
   lockDBCount[tid]--;
   if (lockDBCount[tid] == 0) {
     threadUnLockDB();
@@ -526,7 +525,9 @@ int RtsLayer::UnLockDB(void) {
 }
 
 void RtsLayer::threadLockDB(void) {
-#ifdef PTHREADS
+#ifdef TAU_MPC
+  MPCThreadLayer::LockDB();
+#elif PTHREADS
   PthreadLayer::LockDB();
 #elif TAU_SPROC
   SprocLayer::LockDB();
@@ -550,7 +551,9 @@ void RtsLayer::threadLockDB(void) {
 // This ensure that the FunctionDB (global) is locked while updating
 //////////////////////////////////////////////////////////////////////
 void RtsLayer::threadUnLockDB(void) {
-#ifdef PTHREADS
+#ifdef TAU_MPC
+  MPCThreadLayer::UnLockDB();
+#elif PTHREADS
   PthreadLayer::UnLockDB();
 #elif TAU_SPROC
   SprocLayer::UnLockDB();
@@ -569,13 +572,14 @@ void RtsLayer::threadUnLockDB(void) {
 }
 
 int RtsLayer::getNumEnvLocks(void) {
-  int tid=myThread();
+  int tid=localThreadId();
   return lockEnvCount[tid];
 }
 
-int RtsLayer::LockEnv(void) {
+int RtsLayer::LockEnv(void)
+{
   static bool init = initEnvLocks();
-  int tid=myThread();
+  int tid=localThreadId();
 	TAU_ASSERT(Tau_global_get_insideTAU() > 0, "Thread is trying for Env lock but it is not in TAU");
 /* This block of code is helpful in debugging deadlocks... see the top of this file */
 #ifdef DEBUG_LOCK_PROBLEMS
@@ -607,7 +611,7 @@ int RtsLayer::LockEnv(void) {
 }
 
 int RtsLayer::UnLockEnv(void) {
-  int tid=myThread();
+  int tid=localThreadId();
   lockEnvCount[tid]--;
   if (lockEnvCount[tid] == 0) {
     threadUnLockEnv();
@@ -626,7 +630,9 @@ int RtsLayer::UnLockEnv(void) {
 
 void RtsLayer::threadLockEnv(void)
 {
-#ifdef PTHREADS
+#ifdef TAU_MPC
+  MPCThreadLayer::LockEnv();
+#elif PTHREADS
   PthreadLayer::LockEnv();
 #elif TAU_SPROC
   SprocLayer::LockEnv();
@@ -650,7 +656,9 @@ void RtsLayer::threadLockEnv(void)
 //////////////////////////////////////////////////////////////////////
 void RtsLayer::threadUnLockEnv(void)
 {
-#ifdef PTHREADS
+#ifdef TAU_MPC
+  MPCThreadLayer::UnLockEnv();
+#elif PTHREADS
   PthreadLayer::UnLockEnv();
 #elif TAU_SPROC
   SprocLayer::UnLockEnv();
