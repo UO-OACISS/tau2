@@ -839,6 +839,9 @@ TauCompensate.o : TauCompensate.cpp $(HDRS)
 TauHandler.o : TauHandler.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
+MPCThreadLayer.o   : MPCThreadLayer.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
 TauMemory.o : TauMemory.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 

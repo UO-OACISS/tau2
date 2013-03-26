@@ -102,7 +102,7 @@ int PthreadLayer::GetThreadId(void)
 // PthreadLayer class.
 ////////////////////////////////////////////////////////////////////////
 extern "C"
-void init_once(void)
+void pthread_init_once(void)
 {
   pthread_key_create(&PthreadLayer::tauPthreadId, NULL);
   pthread_mutex_init(&PthreadLayer::tauThreadcountMutex, NULL);
@@ -116,14 +116,14 @@ int PthreadLayer::InitializeThreadData(void)
 {
   // Do this exactly once.  Checking a static flag is a race condition so
   // use pthread_once with a callback friend function.
-  pthread_once(&initFlag, init_once);
+  pthread_once(&initFlag, pthread_init_once);
   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////
 int PthreadLayer::InitializeDBMutexData(void)
 {
-  // Initialized in init_once
+  // Initialized in pthread_init_once
   return 1;
 }
 
@@ -153,7 +153,7 @@ int PthreadLayer::UnLockDB(void)
 ////////////////////////////////////////////////////////////////////////
 int PthreadLayer::InitializeEnvMutexData(void)
 {
-  // Initialized in init_once
+  // Initialized in pthread_init_once
   return 1;
 }
 
