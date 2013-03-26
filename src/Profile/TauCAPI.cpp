@@ -63,6 +63,7 @@ void esd_exit (elg_ui4 rid);
 #ifdef DEBUG_LOCK_PROBLEMS
 #include <execinfo.h>
 #endif
+#include <execinfo.h>
 
 using namespace tau;
 
@@ -462,6 +463,15 @@ static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller) {
   fprintf(stderr, "[%d:%d-%d] TAU: Runtime overlap: found %s (%p) on the stack, but stop called on %s (%p)\n", 
 	 RtsLayer::getPid(), RtsLayer::getTid(), RtsLayer::myThread(),
 	 stack->GetName(), stack, caller->GetName(), caller);
+     if(!TauEnv_get_ebs_enabled()) {
+       void* callstack[128];
+       int i, frames = backtrace(callstack, 128);
+       char** strs = backtrace_symbols(callstack, frames);
+       for (i = 0; i < frames; ++i) {
+         fprintf(stderr,"%s\n", strs[i]);
+       }
+       free(strs);
+     }
 	 abort();
 }
 
@@ -634,6 +644,19 @@ extern "C" void Tau_lite_stop_timer(void *function_info)
   }
 }
 
+///////////////////////////////////////////////////////////////////////////
+extern "C" int Tau_stop_current_timer_task(int tid) 
+{
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
+  if (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
+    Profiler * profiler = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+    FunctionInfo * functionInfo = profiler->ThisFunction;
+    return Tau_stop_timer(functionInfo, tid);
+  }
+  return 0;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 extern "C" int Tau_stop_current_timer() 
@@ -642,15 +665,10 @@ extern "C" int Tau_stop_current_timer()
   TauInternalFunctionGuard protects_this_function;
 
   int tid = RtsLayer::myThread();
-  if (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
-    Profiler * profiler = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
-    FunctionInfo * functionInfo = profiler->ThisFunction;
-    return Tau_stop_timer(functionInfo, tid);
-  }
-  return 0;
+  return Tau_stop_current_timer_task(tid);
 }
-///////////////////////////////////////////////////////////////////////////
 
+///////////////////////////////////////////////////////////////////////////
 
 extern "C" int Tau_profile_exit_all_tasks() {
 	int tid = 1;
@@ -1421,10 +1439,14 @@ extern "C" void Tau_profile_c_timer(void **ptr, const char *name, const char *ty
 
 ///////////////////////////////////////////////////////////////////////////
 
-static char const * gTauApplication()
+static string& gTauApplication()
 {
-  return ".TAU application";
+  static string g = string(".TAU application");
+  return g;
 }
+
+// forward declare the function we need to use - it's defined later
+extern void Tau_pure_start_task_string(const string name, int tid);
 
 /* We need a routine that will create a top level parent profiler and give
  * it a dummy name for the application, if just the MPI wrapper interposition
@@ -1452,7 +1474,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
       if (!TauInternal_CurrentProfiler(tid)) {
         initthread[tid] = true;
         initializing[tid] = true;
-        Tau_pure_start_task(gTauApplication(), tid);
+        Tau_pure_start_task_string(gTauApplication(), tid);
         initializing[tid] = false;
         initialized = true;
       }
@@ -1469,7 +1491,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
   if (TauInternal_CurrentProfiler(tid) == NULL) {
     initthread[tid] = true;
     initializing[tid] = true;
-    Tau_pure_start_task(gTauApplication(), tid);
+    Tau_pure_start_task_string(gTauApplication(), tid);
     initializing[tid] = false;
   }
 
@@ -1658,10 +1680,36 @@ map<string, int *>& TheIterationMap() {
   return iterationMap;
 }
 
+/* DON'T REMOVE THIS FUNCTION! 
+ * When processing samples, you cannot allocate memory!
+ * That means you can't create strings!
+ * Some compilers call the std::string() constructor, which then calls malloc.
+ * Therefore, we need gTauApplication to be a static string.
+ * I realize this duplicates code, but that's just too bad.
+ * Everything that signalling support touches has to be signal safe...
+ */
+void Tau_pure_start_task_string(const string name, int tid)
+{
+  TauInternalFunctionGuard protects_this_function;
+  FunctionInfo *fi = 0;
+  RtsLayer::LockDB();
+  PureMap & pure = ThePureMap();
+  PureMap::iterator it = pure.find(name);
+  if (it == pure.end()) {
+    tauCreateFI((void**)&fi, name, "", TAU_USER, "TAU_USER");
+    pure[name] = fi;
+  } else {
+    fi = it->second;
+  }
+  RtsLayer::UnLockDB();
+  Tau_start_timer(fi,0, tid);
+}
+
+
 extern "C" void Tau_pure_start_task(const char * n, int tid)
 {
   TauInternalFunctionGuard protects_this_function;
-  string name = n;
+  string name = n; // this is VERY bad if called from signalling! see above ^
   FunctionInfo * fi = NULL;
 
   RtsLayer::LockEnv();
@@ -1678,7 +1726,26 @@ extern "C" void Tau_pure_start_task(const char * n, int tid)
 }
 
 // This function will return a timer for the Collector API OpenMP state, if available
-FunctionInfo * Tau_create_thread_state_if_necessary(int tid, string const & name)
+// This is called by the OpenMP collector API wrapper initialization...
+extern "C" void Tau_create_thread_state_if_necessary(char *name)
+{
+  TauInternalFunctionGuard protects_this_function;
+  FunctionInfo *fi = NULL;
+  std::string n = name;
+  RtsLayer::LockEnv();
+  PureMap & pure = ThePureMap();
+  PureMap::iterator it = pure.find(n);
+  if (it == pure.end()) {
+    tauCreateFI((void**)&fi, n, "", TAU_USER, "TAU_OMP_STATE");
+    pure[n] = fi;
+  } else {
+    fi = it->second;
+  }
+  RtsLayer::UnLockEnv();
+}
+
+// This function will return a timer for the Collector API OpenMP state, if available
+FunctionInfo * Tau_create_thread_state_if_necessary(string const & name)
 {
   TauInternalFunctionGuard protects_this_function;
   FunctionInfo *fi = NULL;
@@ -1687,7 +1754,7 @@ FunctionInfo * Tau_create_thread_state_if_necessary(int tid, string const & name
   PureMap & pure = ThePureMap();
   PureMap::iterator it = pure.find(name);
   if (it == pure.end()) {
-    tauCreateFI((void**)&fi, name, "", TAU_USER, "TAU_OMP_STATE");
+    tauCreateFI_signalSafe((void**)&fi, name, "", TAU_USER, "TAU_OMP_STATE");
     pure[name] = fi;
   } else {
     fi = it->second;
@@ -1993,7 +2060,18 @@ extern "C" int Tau_create_task(void) {
   return taskid;
 }
 
+/* because the OpenMP runtime collector API is a C file, and because
+ * there are times when the main thread starts timers for the other
+ * threads, we need to be able to lock the environment from C.
+ */
 
+extern "C" void Tau_lock_environment() {
+  RtsLayer::LockEnv();
+}
+
+extern "C" void Tau_unlock_environment() {
+  RtsLayer::UnLockEnv();
+}
 
 /**************************************************************************
  Query API allowing a program/library to query the TAU callstack
