@@ -389,7 +389,7 @@ char * Tau_check_dirname(const char * dir)
     TAU_VERBOSE("TAU: cuserid returns %s\n", temp);
 #endif // TAU_WINDOWS
     if (temp != NULL) {
-      sprintf(user, temp);
+      sprintf(user, "%s", temp);
     } else {
       sprintf(user, "unknown");
     }

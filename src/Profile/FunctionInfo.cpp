@@ -493,8 +493,7 @@ void tauCreateFI_signalSafe(void **ptr, const string& name, const char *type, Ta
     /* KAH - Whoops!! We can't call "new" here, because malloc is not
      * safe in signal handling. therefore, use the special memory
      * allocation routines */
-      //*ptr = new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
-    *ptr = Tau_MemMgr_malloc(1, sizeof(FunctionInfo));
+    *ptr = Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(FunctionInfo));
     /*  now, use the pacement new function to create a object in
      *  pre-allocated memory. NOTE - this memory needs to be explicitly
      *  deallocated by explicitly calling the destructor. 
