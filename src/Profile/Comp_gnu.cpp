@@ -358,6 +358,7 @@ void __cyg_profile_func_exit(void* func, void* callsite)
   if (Tau_init_initializingTAU()) return;
 
 
+  HashNode * hn;
   // Protect TAU from itself.  This MUST occur here before we query the TID or
   // use the hash table.  Any later and TAU's memory wrapper will profile TAU
   // and crash or deadlock.
@@ -372,7 +373,7 @@ void __cyg_profile_func_exit(void* func, void* callsite)
 #endif
     unsigned long addr = Tau_convert_ptr_to_unsigned_long(funcptr);
 
-    HashNode * hn = TheHashTable()[addr];
+    hn = TheHashTable()[addr];
 
      // Don't profile TAU internals
      if (!hn || hn->excluded || !hn->fi) return;
@@ -388,8 +389,8 @@ void __cyg_profile_func_exit(void* func, void* callsite)
       issueBfdWarningIfNecessary();
       Tau_stop_timer(hn->fi, Tau_get_tid());
    } // END inside TAU
-  }   
-}
+}   
+
 
 void _cyg_profile_func_exit(void* func, void* callsite)
 {
