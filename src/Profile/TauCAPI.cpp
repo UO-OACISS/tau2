@@ -1467,7 +1467,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
     if (initializing[tid]) {
       return;
     }
-    RtsLayer::LockEnv();
+    RtsLayer::LockDB();
     if (!initialized) {
       // whichever thread got here first, has the lock and will create the
       // FunctionInfo object for the top level timer.
@@ -1479,7 +1479,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
         initialized = true;
       }
     }
-    RtsLayer::UnLockEnv();
+    RtsLayer::UnLockDB();
   }
 
   if (initthread[tid] == true) {
@@ -1686,7 +1686,7 @@ map<string, int *>& TheIterationMap() {
  * Some compilers call the std::string() constructor, which then calls malloc.
  * Therefore, we need gTauApplication to be a static string.
  * I realize this duplicates code, but that's just too bad.
- * Everything that signalling support touches has to be signal safe...
+ * Everything that signaling support touches has to be signal safe...
  */
 void Tau_pure_start_task_string(const string name, int tid)
 {
