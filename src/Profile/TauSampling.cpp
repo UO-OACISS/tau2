@@ -285,11 +285,11 @@ static struct sigaction application_sa;
 
 #define PPC_REG_PC 32
 
-static void issueUnavailableWarning(char *text)
+static void issueUnavailableWarning(const char *text)
 {
   static bool warningIssued = false;
   if (!warningIssued) {
-    fprintf(stderr, text);
+    fprintf(stderr, "%s", text);
     warningIssued = true;
   }
 }
@@ -375,7 +375,7 @@ void Tau_sampling_outputTraceHeader(int tid)
   fprintf(ebsTrace[tid],
       "# $ | <timestamp> | <delta-begin> | <delta-end> | <metric 1> ... <metric N> | <tau callpath> | <location> [ PC callstack ]\n");
   fprintf(ebsTrace[tid],
-      "# % | <delta-begin metric 1> ... <delta-begin metric N> | <delta-end metric 1> ... <delta-end metric N> | <tau callpath>\n");
+      "# %% | <delta-begin metric 1> ... <delta-begin metric N> | <delta-end metric 1> ... <delta-end metric N> | <tau callpath>\n");
   fprintf(ebsTrace[tid], "# Metrics:");
   for (int i = 0; i < Tau_Global_numCounters; i++) {
     const char *name = TauMetrics_getMetricName(i);
@@ -414,7 +414,7 @@ void Tau_sampling_flushTraceRecord(int tid, TauSamplingRecord *record, void *pc,
   /* *CWL* - consider a check for TauEnv_get_callpath() here */
   Tau_sampling_outputTraceCallpath(tid);
 
-  fprintf(ebsTrace[tid], " | %p", record->pc);
+  fprintf(ebsTrace[tid], " | %p", (void*)(record->pc));
 
 #ifdef TAU_UNWIND
   if (TauEnv_get_ebs_unwind() == 1) {
@@ -476,7 +476,7 @@ int Tau_sampling_write_maps(int tid, int restart)
     sscanf(line, "%lx-%lx %s %lx %*s %*u %[^\n]", &start, &end, perms, &offset, module);
 
     if (*module && ((strcmp(perms, "r-xp") == 0) || (strcmp(perms, "rwxp") == 0))) {
-      fprintf(output, "%s %p %p %d\n", module, start, end, offset);
+      fprintf(output, "%s %p %p %lu\n", module, (void*)start, (void*)end, offset);
     }
   }
   fclose(output);
@@ -500,16 +500,16 @@ void Tau_sampling_outputTraceDefinitions(int tid)
   for (vector<FunctionInfo *>::iterator it = TheFunctionDB().begin(); it != TheFunctionDB().end(); it++) {
     FunctionInfo *fi = *it;
     if (strlen(fi->GetType()) > 0) {
-      fprintf(def, "%ld | %s %s\n", fi->GetFunctionId(), fi->GetName(), fi->GetType());
+      fprintf(def, "%lld | %s %s\n", fi->GetFunctionId(), fi->GetName(), fi->GetType());
     } else {
-      fprintf(def, "%ld | %s\n", fi->GetFunctionId(), fi->GetName());
+      fprintf(def, "%lld | %s\n", fi->GetFunctionId(), fi->GetName());
     }
   }
   fclose(def);
 
   /* write out the executable name at the end */
   char buffer[4096];
-  bzero(buffer, 4096);
+  memset(buffer, 0, 4096);
   int rc = readlink("/proc/self/exe", buffer, 4096);
   if (rc == -1) {
     fprintf(stderr, "TAU Sampling: Error, unable to read /proc/self/exe\n");
@@ -687,15 +687,15 @@ char *Tau_sampling_getPathName(int index, CallStackInfo *callStack) {
     exit(-1);
   }
   if (index >= sites.size()) {
-    fprintf(stderr, "ERROR: EBS attempted to access index %d of vector of length %d\n", index, sites.size());
+    fprintf(stderr, "ERROR: EBS attempted to access index %d of vector of length %ld\n", index, sites.size());
     exit(-1);
   }
   
-  startIdx = sites->size()-1;
-  std::string buffer = ((*sites)[startIdx])->name;
+  startIdx = sites.size() - 1;
+  std::string buffer = (sites[startIdx])->name;
   for (int i=startIdx-1; i>=index; i--) {
 	buffer += " => ";
-    buffer += ((*sites)[startIdx])->name;
+    buffer += (sites[startIdx])->name;
   }
   // copy the string so it doesn't go out of scope
   ret = strdup(buffer.c_str());
@@ -886,7 +886,7 @@ void Tau_sampling_finalizeProfile(int tid)
 			 candidate->tauContext->GetProfileGroup(),
 			 "TAU_INTERMEDIATE", true);
       RtsLayer::UnLockDB();
-      name2FuncInfoMap[tid]->insert(std::pair<string, FunctionInfo*>(intermediateGlobalLeafName, intermediateGlobalLeaf));
+      name2FuncInfoMap[tid]->insert(std::pair<string, FunctionInfo*>(intermediateGlobalLeafString->c_str(), intermediateGlobalLeaf));
     } else {
       intermediateGlobalLeaf = (FunctionInfo *)fi_it->second;
     }
@@ -909,7 +909,7 @@ void Tau_sampling_finalizeProfile(int tid)
 			 candidate->tauContext->GetProfileGroup(),
 			 "TAU_INTERMEDIATE|TAU_CALLPATH", true);
       RtsLayer::UnLockDB();
-      name2FuncInfoMap[tid]->insert(std::pair<string, FunctionInfo*>(intermediatePathLeafName, intermediatePathLeaf));
+      name2FuncInfoMap[tid]->insert(std::pair<string, FunctionInfo*>(intermediatePathLeafString->c_str(), intermediatePathLeaf));
     } else {
       intermediatePathLeaf = (FunctionInfo *)fi_it->second;
     }
@@ -962,14 +962,14 @@ void Tau_sampling_finalizeProfile(int tid)
       fi_it = name2FuncInfoMap[tid]->find(*callSiteKeyName);
       if (fi_it == name2FuncInfoMap[tid]->end()) {
         char const * sampleGroup = "TAU_UNWIND|TAU_CALLPATH";
-        if (callSiteKeyName.find("UNWIND") == string::npos) {
+        if (callSiteKeyName->find("UNWIND") == string::npos) {
           sampleGroup = "TAU_SAMPLE|TAU_CALLPATH";
         }
         RtsLayer::LockDB();
-        samplePathLeaf = new FunctionInfo(callSiteKeyName, "",
+        samplePathLeaf = new FunctionInfo(*callSiteKeyName, "",
             candidate->tauContext->GetProfileGroup(), sampleGroup, true);
         RtsLayer::UnLockDB();
-        name2FuncInfoMap[tid]->insert(std::pair<string, FunctionInfo*>(callSiteKeyName, samplePathLeaf));
+        name2FuncInfoMap[tid]->insert(std::pair<string, FunctionInfo*>(callSiteKeyName->c_str(), samplePathLeaf));
       } else {
         samplePathLeaf = (FunctionInfo*)fi_it->second;
       }
