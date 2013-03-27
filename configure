@@ -7032,8 +7032,8 @@ if [ $scorep = yes ] ; then
     if [ $mpi = yes ] ; then 
       if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs SCOREPOMPI" 
-        scorepLibs=`${scorepdir}/bin/scorep-config --hyb --libs`
-        scorepLD=`${scorepdir}/bin/scorep-config --hyb --ldflags`
+        scorepLibs=`${scorepdir}/bin/scorep-config --hyb --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+        scorepLD=`${scorepdir}/bin/scorep-config --hyb --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
       else
         fixmakeargs="$fixmakeargs SCOREPMPI"
         scorepLibs=`${scorepdir}/bin/scorep-config --mpi --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
