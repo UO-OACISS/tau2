@@ -46,13 +46,6 @@ static struct Tau_collector_status_flags Tau_collector_flags[TAU_MAX_THREADS] __
 static struct Tau_collector_status_flags Tau_collector_flags[TAU_MAX_THREADS] = {0};
 #endif
 
-// we need a lock for the region context. The region context has to be
-// set by the main thread, but sometimes the workers can enter the 
-// region before the master is done setting it up. That is because
-// our callback function for GOMP forking gets called AFTER the 
-// parallel region is started. Bummer, I know.
-//omp_lock_t regionContextLock;
-
 extern void Tau_fill_header(void *message, int sz, OMP_COLLECTORAPI_REQUEST rq, OMP_COLLECTORAPI_EC ec, int rsz, int append_zero);
   
 extern const int OMP_COLLECTORAPI_HEADERSIZE;
@@ -271,16 +264,9 @@ void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
 
   Tau_global_incr_insideTAU();
 
-  /* I hate having to serialize access to the collector API, but
-   * I have to make sure the region context is set up before
-   * worker threads start doing things. Them's the breaks.
-   */
-  //omp_set_lock(&regionContextLock);
-
   int tid = omp_get_thread_num();
-  //printf("locked %d\n", tid);
-  //printf("** Thread: %d, EVENT:%s **\n", tid, OMP_EVENT_NAME[event-1]);
-  //fflush(stdout);
+  printf("** Thread: %d, EVENT:%s **\n", tid, OMP_EVENT_NAME[event-1]);
+  fflush(stdout);
 
   switch(event) {
     case OMP_EVENT_FORK:
@@ -397,8 +383,6 @@ void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
       Tau_omp_stop_timer("ATOMIC REGION WAIT", tid, 1, 0);
       break;
   }
-  //printf("unlocking %d\n", tid);
-  //omp_unset_lock(&regionContextLock);
   //printf("** Thread: %d, EVENT:%s handled. **\n", tid, OMP_EVENT_NAME[event-1]);
   //fflush(stdout);
   Tau_global_decr_insideTAU();
@@ -465,10 +449,10 @@ int Tau_initialize_collector_api(void) {
   handle = dlopen("libopenmp.so", RTLD_NOW | RTLD_GLOBAL);
   if (!handle) {
     //dlerror();    /* Clear any existing error */
-    TAU_VERBOSE("libopenmp.so not found... \n");
-    handle = dlopen("liblibgomp_g_wrap.so", RTLD_NOW | RTLD_GLOBAL);
+    TAU_VERBOSE("libopenmp.so not found... trying for GOMP wrapper...\n");
+    handle = dlopen("libgomp_g_wrap.so", RTLD_NOW | RTLD_GLOBAL);
     if (!handle) {
-      TAU_VERBOSE("liblibgomp_g_wrap.so not found... collector API not enabled. \n");
+      TAU_VERBOSE("libgomp_g_wrap.so not found... collector API not enabled. \n");
       return -1;
     } else {
 	  tmpUsingGOMP=1;
@@ -520,15 +504,8 @@ int Tau_initialize_collector_api(void) {
   }
 
 #ifdef TAU_UNWIND
-  Tau_Sampling_register_unit();
+  //Tau_Sampling_register_unit(); // not necessary now?
 #endif
-
-  // we need a lock for the region context. The region context has to be
-  // set by the main thread, but sometimes the workers can enter the 
-  // region before the master is done setting it up. That is because
-  // our callback function for GOMP forking gets called AFTER the 
-  // parallel region is started. Bummer, I know.
-  //omp_init_lock(&regionContextLock);
 
   // now, for the collector API support, create the 12 OpenMP states.
   // preallocate State timers. If we create them now, we won't run into
@@ -552,7 +529,6 @@ int Tau_initialize_collector_api(void) {
 int __attribute__ ((destructor)) Tau_finalize_collector_api(void);
 
 int Tau_finalize_collector_api(void) {
-  //omp_destroy_lock(&regionContextLock);
   return 0;
 #if 0
   TAU_VERBOSE("Tau_finalize_collector_api()\n");
