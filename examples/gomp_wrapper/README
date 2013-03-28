@@ -1,0 +1,21 @@
+*** NOTE: requires GNU 4.7.2.
+
+To use the GOMP wrapper, do the following:
+
+WITH PDT INSTRUMENTATION:
+------------------------
+
+- configure and build tau with: -openmp -pdt=<path-to-pdt>
+- cd examples/gomp_wrapper (this directory)
+- make
+- tau_exec -T pdt,openmp,serial -v -loadlib=libgomp_g_wrapper/libgomp_g_wrap.so ./matmult
+
+WITHOUT PDT INSTRUMENTATION:
+---------------------------
+
+- configure and build tau with: -openmp -bfd=download -unwind_inc=<path-to-libunwind>/include -unwind_lib=<path-to-libunwind>/lib -unwinder=libunwind
+- cd examples/gomp_wrapper (this directory)
+- make
+- tau_exec -T pdt,openmp,serial -v -loadlib=libgomp_g_wrapper/libgomp_g_wrap.so ./matmult
+
+

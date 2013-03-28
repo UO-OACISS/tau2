@@ -607,7 +607,7 @@ void Profiler::CallSiteStart(int tid)
       // sanity check
       if (CallSiteFunction != NULL) {
         if (CallSiteFunction->callSiteKeyId != callsiteKeyId) {
-          fprintf(stderr, "WARNING: Something is wrong. FI has Id %d from Unwind %d\n", CallSiteFunction->callSiteKeyId,
+          fprintf(stderr, "WARNING: Something is wrong. FI has Id %lu from Unwind %lu\n", CallSiteFunction->callSiteKeyId,
               callsiteKeyId);
         }
       }

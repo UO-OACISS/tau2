@@ -171,7 +171,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
             
 			System.out.print("Inserting threads...");
             uploadThreads(newTrialID, dataSource, db);
-            threadMap = getThreadsMap(newTrialID, dataSource, db);
+            threadMap = getThreadsMap(newTrialID, dataSource, db, false);
 			after = System.currentTimeMillis();
 			System.out.println(" done. (" + (after - before) / 1000.0 + " seconds)");
 			before = after;
@@ -784,7 +784,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
         return map;
 	}
 
-	private static Map<Thread, Integer> getThreadsMap(int trialID,DataSource dataSource, DB db) throws SQLException {
+	public static Map<Thread, Integer> getThreadsMap(int trialID,DataSource dataSource, DB db, boolean createIfNotFound) throws SQLException {
 		Map<Thread, Integer> map = new HashMap<Thread, Integer>();
 		PreparedStatement statement = db.prepareStatement("SELECT node_rank, context_rank, thread_rank, id FROM "
 						+ db.getSchemaPrefix()
@@ -800,6 +800,9 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			int thread = results.getInt(3);
 			int id = results.getInt(4);
 			Thread t = dataSource.getThread(node, context, thread);
+			if (t == null && createIfNotFound && node >= 0) {
+				dataSource.addThread(node, context, thread);
+			}
 			map.put(t, id);
 		}
 		statement.close();

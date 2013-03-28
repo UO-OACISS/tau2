@@ -313,14 +313,14 @@ void __cyg_profile_func_enter(void* func, void* callsite)
       //ensure that a single top-level timer is present start the dummy '.TAU
       //application' timer. -SB
       Tau_create_top_level_timer_if_necessary();
-      Tau_start_timer(node->fi, 0, Tau_get_tid());
+      Tau_start_timer(node->fi, 0, RtsLayer::myThread());
     }
 
     if (!(node->fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
       //printf("COMP_GNU >>>>>>>>>> Excluding: %s, addr: %d, throttled.\n", node->fi->GetName(), addr);
       node->excluded = true;
     }
-  }    // END inside TAU (late check)
+  } // END protected region
 }
 
 void _cyg_profile_func_enter(void* func, void* callsite)
@@ -357,13 +357,15 @@ void __cyg_profile_func_exit(void* func, void* callsite)
   // Don't profile if we're still initializing.
   if (Tau_init_initializingTAU()) return;
 
+  HashNode * hn;
 
-  // Protect TAU from itself.  This MUST occur here before we query the TID or
-  // use the hash table.  Any later and TAU's memory wrapper will profile TAU
-  // and crash or deadlock.
-  // Note that this also prevents reentrency into this routine.
+  // Quickly get the hash node and discover if this is an excluded function.
+  // Sampling and the memory wrapper require us to protect this region,
+  // but otherwise we don't pay that overhead. (Sampling because it can
+  // interrupt the application anywhere and memory because the hash table
+  // lookup allocates memory).
   {
-    TauInternalFunctionGuard protects_this_function(
+    TauInternalFunctionGuard protects_this_region(
         TauEnv_get_ebs_enabled() || Tau_memory_wrapper_is_registered());
 
     void * funcptr = func;
@@ -372,16 +374,20 @@ void __cyg_profile_func_exit(void* func, void* callsite)
 #endif
     unsigned long addr = Tau_convert_ptr_to_unsigned_long(funcptr);
 
-    HashNode * hn = TheHashTable()[addr];
-    if (hn && !hn->excluded && hn->fi) {
-      // Don't profile TAU internals
-      if (Tau_global_get_insideTAU() > 0) return;
-      TauInternalFunctionGuard protects_this_function;
-      issueBfdWarningIfNecessary();
-      Tau_stop_timer(hn->fi, Tau_get_tid());
-    }
-  }    // END inside TAU
-}
+    // Get the hash node
+    hn = TheHashTable()[addr];
+
+    // Skip excluded functions or functions we didn't enter
+    if (!hn || hn->excluded || !hn->fi) return;
+  } // END protected region
+
+  // Don't profile TAU internals. This also prevents reentrancy.
+  if (Tau_global_get_insideTAU() > 0) return;
+
+  // Stop the timer.  This routine is protected so we don't need another guard.
+  Tau_stop_timer(hn->fi, RtsLayer::myThread());
+}   
+
 
 void _cyg_profile_func_exit(void* func, void* callsite)
 {
