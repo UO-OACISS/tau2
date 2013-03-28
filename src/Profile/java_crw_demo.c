@@ -2266,10 +2266,10 @@ inject_class(struct CrwClassImage *ci,
     classfileMinorVersion = copyU2(ci);
     /* major version number not used */
     classfileMajorVersion = copyU2(ci);
-    CRW_ASSERT(ci,  (classfileMajorVersion <= JVM_CLASSFILE_MAJOR_VERSION) ||
+/*    CRW_ASSERT(ci,  (classfileMajorVersion <= JVM_CLASSFILE_MAJOR_VERSION) ||
                    ((classfileMajorVersion == JVM_CLASSFILE_MAJOR_VERSION) &&
                     (classfileMinorVersion <= JVM_CLASSFILE_MINOR_VERSION)));
-
+*/
     cpool_setup(ci);
 
     ci->access_flags        = copyU2(ci);

@@ -450,6 +450,7 @@ for arg in "$@"; do
     echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
     echo "-dyninst=<dir> ................... Specify location of DynInst Package."
     echo "-dwarf=<dir> ................ Specify location of the libdwarf Package."
+    echo "-dwarflib=<dir> ... Specify location of the libdwarf library directory."
     echo "-bfd=<dir | download> ............ Specify a BFD directory or download."
     echo "-cube=<dir> | own.| ext..... Specify location of CUBE or use TAU's jar."
     echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
@@ -1482,6 +1483,18 @@ for arg in "$@"; do
         echo "Error: Cannot access libdwarf directory $dwarfdir"
         exit 1
       fi
+    shift
+    ;;
+
+  -dwarflib=*)
+      dwarfdir=`echo $arg | sed -e 's/-dwarflib=//'`
+      if [ ! -d $dwarfdir ]
+      then
+        echo "Error: Cannot access libdwarf directory $dwarfdir"
+        exit 1
+      fi
+      fixmakeargs="$fixmakeargs dwarfopts=-L$dwarfdir"
+      dwarfdir=""
     shift
     ;;
 
@@ -7032,21 +7045,21 @@ if [ $scorep = yes ] ; then
     if [ $mpi = yes ] ; then 
       if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs SCOREPOMPI" 
-        scorepLibs=`${scorepdir}/bin/scorep-config --hyb --libs`
-        scorepLD=`${scorepdir}/bin/scorep-config --hyb --ldflags`
+        scorepLibs=`${scorepdir}/bin/scorep-config --hyb --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+        scorepLD=`${scorepdir}/bin/scorep-config --hyb --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
       else
         fixmakeargs="$fixmakeargs SCOREPMPI"
-        scorepLibs=`${scorepdir}/bin/scorep-config --mpi --libs`
-        scorepLD=`${scorepdir}/bin/scorep-config --mpi --ldflags`
+        scorepLibs=`${scorepdir}/bin/scorep-config --mpi --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+        scorepLD=`${scorepdir}/bin/scorep-config --mpi --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
       fi 
     else
       if [ $openmp = yes ] ; then
         fixmakeargs="$fixmakeargs SCOREPOMP" 
-	scorepLD=`${scorepdir}/bin/scorep-config --omp --ldflags`
-        scorepLibs=`${scorepdir}/bin/scorep-config --omp --libs`
+	scorepLD=`${scorepdir}/bin/scorep-config --omp --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+        scorepLibs=`${scorepdir}/bin/scorep-config --omp --libs  | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
       else
-        scorepLibs=`${scorepdir}/bin/scorep-config --seq --libs`
-        scorepLD=`${scorepdir}/bin/scorep-config --seq --ldflags`
+        scorepLibs=`${scorepdir}/bin/scorep-config --seq --libs | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
+        scorepLD=`${scorepdir}/bin/scorep-config --seq --ldflags | sed -e 's@-Wl,-rpath -Wl,/@-Wl,-rpath,/@g'`
       fi
     fi
     scorepLibs="$scorepLD $scorepLibs"

@@ -1,0 +1,395 @@
+/******************************************************************************
+*   OpenMp Example - Matrix Multiply - C Version
+*   Demonstrates a matrix multiply using OpenMP. 
+*
+*   Modified from here:
+*   https://computing.llnl.gov/tutorials/openMP/samples/C/omp_mm.c
+*
+*   For  PAPI_FP_INS, the exclusive count for the event: 
+*   for (null) [OpenMP location: file:matmult.c ]
+*   should be  2E+06 / Number of Threads 
+******************************************************************************/
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <omp.h>
+#include <math.h>
+
+#ifndef MATRIX_SIZE
+#define MATRIX_SIZE 512
+#endif
+
+#define NRA MATRIX_SIZE                 /* number of rows in matrix A */
+#define NCA MATRIX_SIZE                 /* number of columns in matrix A */
+#define NCB MATRIX_SIZE                 /* number of columns in matrix B */
+
+void initialize(double **matrix, int rows, int cols) {
+  int i,j;
+  printf("Initialize...\n");
+  fflush(stdout);
+#pragma omp parallel private(i,j) shared(matrix)
+  {
+    //set_num_threads();
+    /*** Initialize matrices ***/
+#pragma omp for nowait
+    for (i=0; i<rows; i++) {
+      for (j=0; j<cols; j++) {
+        matrix[i][j]= i+j;
+      }
+    }
+  }
+}
+
+double** allocateMatrix(int rows, int cols) {
+  int i;
+  printf("Allocate matrix...\n");
+  fflush(stdout);
+  double **matrix = (double**)malloc((sizeof(double*)) * rows);
+  for (i=0; i<rows; i++) {
+    matrix[i] = (double*)malloc((sizeof(double)) * cols);
+  }
+  return matrix;
+}
+
+#ifdef APP_USE_INLINE_MULTIPLY
+__inline double multiply(double a, double b) {
+	return a * b;
+}
+#endif /* APP_USE_INLINE_MULTIPLY */
+
+// cols_a and rows_b are the same value
+void compute(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
+  int i,j,k;
+  printf("Compute...\n");
+  fflush(stdout);
+#pragma omp parallel private(i,j,k) shared(a,b,c)
+  {
+    /*** Do matrix multiply sharing iterations on outer loop ***/
+    /*** Display who does which iterations for demonstration purposes ***/
+#pragma omp for nowait
+    for (i=0; i<rows_a; i++) {
+      for(j=0; j<cols_b; j++) {
+        for (k=0; k<cols_a; k++) {
+#ifdef APP_USE_INLINE_MULTIPLY
+          c[i][j] += multiply(a[i][k], b[k][j]);
+#else /* APP_USE_INLINE_MULTIPLY */
+          c[i][j] += a[i][k] * b[k][j];
+#endif /* APP_USE_INLINE_MULTIPLY */
+        }
+      }
+    }
+  }   /*** End of parallel region ***/
+}
+
+// cols_a and rows_b are the same value
+void compute_triangular(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
+  int i,j,k;
+  printf("Compute triangular...\n");
+  fflush(stdout);
+#pragma omp parallel private(i,j,k) shared(a,b,c)
+  {
+    /*** Do matrix multiply sharing iterations on outer loop ***/
+    /*** Display who does which iterations for demonstration purposes ***/
+#pragma omp for nowait
+    for (i=0; i<rows_a; i++) {
+      for(j=0; j<cols_b-i; j++) {
+        for (k=0; k<cols_a-j; k++) {
+#ifdef APP_USE_INLINE_MULTIPLY
+          c[i][j] += multiply(a[i][k], b[k][j]);
+#else /* APP_USE_INLINE_MULTIPLY */
+          c[i][j] += a[i][k] * b[k][j];
+#endif /* APP_USE_INLINE_MULTIPLY */
+        }
+      }
+    }
+  }   /*** End of parallel region ***/
+}
+
+void compute_interchange(double **a, double **b, double **c, int rows_a, int cols_a, int cols_b) {
+  int i,j,k;
+  printf("Compute interchange...\n");
+  fflush(stdout);
+#pragma omp parallel private(i,j,k) shared(a,b,c)
+  {
+    /*** Do matrix multiply sharing iterations on outer loop ***/
+    /*** Display who does which iterations for demonstration purposes ***/
+#pragma omp for nowait
+    for (i=0; i<rows_a; i++) {
+      for (k=0; k<cols_a; k++) {
+        for(j=0; j<cols_b; j++) {
+#ifdef APP_USE_INLINE_MULTIPLY
+          c[i][j] += multiply(a[i][k], b[k][j]);
+#else /* APP_USE_INLINE_MULTIPLY */
+          c[i][j] += a[i][k] * b[k][j];
+#endif /* APP_USE_INLINE_MULTIPLY */
+        }
+      }
+    }
+  }   /*** End of parallel region ***/
+}
+
+double do_work(void) {
+  double **a,           /* matrix A to be multiplied */
+  **b,           /* matrix B to be multiplied */
+  **c;           /* result matrix C */
+  printf("Do work...\n");
+  fflush(stdout);
+  a = allocateMatrix(NRA, NCA);
+  b = allocateMatrix(NCA, NCB);
+  c = allocateMatrix(NRA, NCB);  
+
+/*** Spawn a parallel region explicitly scoping all variables ***/
+
+  initialize(a, NRA, NCA);
+  initialize(b, NCA, NCB);
+  initialize(c, NRA, NCB);
+
+  compute(a, b, c, NRA, NCA, NCB);
+  compute_interchange(a, b, c, NRA, NCA, NCB);
+  compute_triangular(a, b, c, NRA, NCA, NCB);
+
+  return c[0][1]; 
+}
+
+int atomic () {
+  int count = 0;
+  int max = 2;
+  #pragma omp parallel
+  {
+    #pragma omp atomic
+    count++;
+  }
+  return count;
+}
+
+int barrier () {
+  int count = 0;
+  int max = 4;
+  #pragma omp parallel num_threads(max)
+  {
+    sleep(omp_get_thread_num());
+    #pragma omp barrier
+  }
+  return count;
+}
+
+#define CRITICAL_SIZE 10
+
+int critical() {
+  int i;
+  int max;
+  int a[CRITICAL_SIZE];
+
+  for (i = 0; i < CRITICAL_SIZE; i++) {
+    a[i] = rand();
+  }
+
+  max = a[0];
+  #pragma omp parallel for num_threads(4)
+  for (i = 1; i < CRITICAL_SIZE; i++) {
+    if (a[i] > max) {
+      #pragma omp critical
+      {
+        // compare a[i] and max again because max 
+        // could have been changed by another thread after 
+        // the comparison outside the critical section
+        if (a[i] > max) {
+          max = a[i];
+        }
+      }
+    }
+  }
+  return max;
+}
+
+void myread(int *data) {
+  *data = 1;
+}
+
+void process(int *data) {
+  (*data)++;
+}
+
+int flush() {
+  int data;
+  int flag = 0;
+
+  #pragma omp parallel sections num_threads(2)
+  {
+    #pragma omp section
+    {
+      myread(&data);
+      #pragma omp flush(data)
+      flag = 1;
+      #pragma omp flush(flag)
+      // Do more work.
+    }
+    #pragma omp section 
+    {
+      while (!flag) {
+        #pragma omp flush(flag)
+      }
+      #pragma omp flush(data)
+      process(&data);
+    }
+  }
+  return data;
+}
+
+int fortest() {
+   int i, nRet = 0, nSum = 0, nStart = 0, nEnd = 10;
+   int nThreads = 0, nTmp = 10;
+   unsigned uTmp = 55;
+   int nSumCalc = uTmp;
+
+   if (nTmp < 0)
+      nSumCalc = -nSumCalc;
+
+   #pragma omp parallel default(none) private(i) shared(nSum, nThreads, nStart, nEnd)
+   {
+      #pragma omp master
+      nThreads = omp_get_num_threads();
+
+      #pragma omp for
+      for (i=nStart; i<=nEnd; ++i) {
+            #pragma omp atomic
+            nSum += i;
+      }
+   }
+   return nSum;
+}
+
+int master( ) 
+{
+  int a[5], i;
+
+   #pragma omp parallel
+   {
+     // Perform some computation.
+     #pragma omp for
+     for (i = 0; i < 5; i++)
+       a[i] = i * i;
+        
+     // Print intermediate results.
+     #pragma omp master
+     for (i = 0; i < 5; i++) {
+       printf("a[%d] = %d\n", i, a[i]);
+	   fflush(stdout);
+	 }
+        
+     // Wait.
+     #pragma omp barrier
+        
+     // Continue with the computation.
+     #pragma omp for
+     for (i = 0; i < 5; i++)
+       a[i] += i;
+  }
+  return a[3];
+}
+
+static float a[1000], b[1000], c[1000];
+
+void test(int first, int last) 
+{
+  int i;
+  #pragma omp for schedule(static) ordered
+  for (i = first; i <= last; ++i) {
+    // Do something here.
+    if (i % 2) 
+    {
+      #pragma omp ordered 
+      printf("test() iteration %d, thread %d\n", i, omp_get_thread_num());
+	  fflush(stdout);
+    }
+  }
+}
+
+void test2(int iter) 
+{
+  #pragma omp ordered
+  printf("test2() iteration %d, thread %d\n", iter, omp_get_thread_num());
+  fflush(stdout);
+}
+
+int ordered( ) 
+{
+  int i;
+  #pragma omp parallel
+  {
+    test(1, 8);
+    #pragma omp for ordered
+    for (i = 0 ; i < 5 ; i++)
+      test2(i);
+  }
+  return i;
+}
+
+int sections() {
+  #pragma omp parallel sections
+  {
+    printf("Hello from thread %d\n", omp_get_thread_num());
+    fflush(stdout);
+    #pragma omp section
+	{
+    printf("Hello from thread %d\n", omp_get_thread_num());
+    fflush(stdout);
+	}
+  }
+  return 1;
+}
+
+int single( ) 
+{
+  int a[5], i;
+
+   #pragma omp parallel
+   {
+     // Perform some computation.
+     #pragma omp for
+     for (i = 0; i < 5; i++)
+       a[i] = i * i;
+        
+     // Print intermediate results.
+     #pragma omp single
+     for (i = 0; i < 5; i++) {
+       printf("a[%d] = %d\n", i, a[i]);
+       fflush(stdout);
+     }
+        
+     // Wait.
+     #pragma omp barrier
+        
+     // Continue with the computation.
+     #pragma omp for
+     for (i = 0; i < 5; i++)
+       a[i] += i;
+  }
+  return a[3];
+}
+
+int main (int argc, char *argv[]) 
+{
+  printf("Main...\n");
+  fflush(stdout);
+  do_work();
+#if 0
+#endif
+  printf ("Doing atomic: %d\n\n", atomic());
+  printf ("Doing barrier: %d\n\n", barrier());
+  printf ("Doing critical: %d\n\n", critical());
+  printf ("Doing fortest: %d\n\n", fortest());
+  printf ("Doing flush: %d\n\n", flush());
+  printf ("Doing master: %d\n\n", master());
+  printf ("Doing ordered: %d\n\n", ordered());
+  printf ("Doing sections: %d\n\n", sections());
+  printf ("Doing single: %d\n\n", single());
+#if 0
+#endif
+
+  printf ("Done.\n");
+  fflush(stdout);
+
+  return 0;
+}
+
