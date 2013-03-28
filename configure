@@ -450,6 +450,7 @@ for arg in "$@"; do
     echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
     echo "-dyninst=<dir> ................... Specify location of DynInst Package."
     echo "-dwarf=<dir> ................ Specify location of the libdwarf Package."
+    echo "-dwarflib=<dir> ... Specify location of the libdwarf library directory."
     echo "-bfd=<dir | download> ............ Specify a BFD directory or download."
     echo "-cube=<dir> | own.| ext..... Specify location of CUBE or use TAU's jar."
     echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
@@ -1482,6 +1483,18 @@ for arg in "$@"; do
         echo "Error: Cannot access libdwarf directory $dwarfdir"
         exit 1
       fi
+    shift
+    ;;
+
+  -dwarflib=*)
+      dwarfdir=`echo $arg | sed -e 's/-dwarflib=//'`
+      if [ ! -d $dwarfdir ]
+      then
+        echo "Error: Cannot access libdwarf directory $dwarfdir"
+        exit 1
+      fi
+      fixmakeargs="$fixmakeargs dwarfopts=-L$dwarfdir"
+      dwarfdir=""
     shift
     ;;
 
