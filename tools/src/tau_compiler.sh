@@ -1,4 +1,4 @@
-#!/bin/bash  
+#!/bin/bash
 
 declare -i FALSE=-1
 declare -i TRUE=1
@@ -463,6 +463,11 @@ for arg in "$@" ; do
 			pdtParserType=$defaultParser
 			if [ $pdtParserType = roseparse -o $pdtParserType = upcparse ] ; then
 			  roseUsed=$TRUE
+# roseUsed uses the ReturnFix.
+			fi
+			if [ $pdtParserType = edg44-upcparse -a ! -x $optPdtDir/edg44-upcparse -a -x $optPdtDir/upcparse ] ; then
+			  pdtParserType=upcparse; 
+			  roseUsed=$TRUE
 			fi
 
 			if [ $pdtParserType = cxxparse ] ; then
@@ -839,7 +844,11 @@ for arg in "$@" ; do
 		;;
 	    
 	    *.upc)
-		pdtParserType=upcparse
+		if [ -x $optPdtDir/edg44-upcparse ]; then 
+		  pdtParserType=edg44-upcparse
+                else 
+		  pdtParserType=upcparse
+                fi 
 		fileName=$arg
 		arrFileName[$numFiles]=$arg
 		arrFileNameDirectory[$numFiles]=`dirname $arg`
