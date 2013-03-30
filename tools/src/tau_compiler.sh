@@ -459,7 +459,9 @@ for arg in "$@" ; do
 			;;
 
 		    -optDefaultParser=*)
-		        defaultParser="${arg#"-optDefaultParser="}"
+			if [ $defaultParser = "noparser" ]; then 
+		          defaultParser="${arg#"-optDefaultParser="}"
+			fi 
 			pdtParserType=$defaultParser
 			if [ $pdtParserType = roseparse -o $pdtParserType = upcparse ] ; then
 			  roseUsed=$TRUE
@@ -844,11 +846,13 @@ for arg in "$@" ; do
 		;;
 	    
 	    *.upc)
-		if [ -x $optPdtDir/edg44-upcparse ]; then 
-		  pdtParserType=edg44-upcparse
-                else 
-		  pdtParserType=upcparse
-                fi 
+		if [ $defaultParser = "noparser" ]; then 
+		  if [ -x $optPdtDir/edg44-upcparse ]; then 
+		    pdtParserType=edg44-upcparse
+                  else 
+		    pdtParserType=upcparse
+                  fi 
+ 		fi
 		fileName=$arg
 		arrFileName[$numFiles]=$arg
 		arrFileNameDirectory[$numFiles]=`dirname $arg`
