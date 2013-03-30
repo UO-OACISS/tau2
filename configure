@@ -5829,7 +5829,11 @@ if [ $mpi = yes ] ; then
 		  # For BG/P
 		  mpilibrary="-lmpich.cnk $additional_mpilibs"
 	        else
-		  mpilibrary="-lmpich $additional_mpilibs"
+                  if [ $machine = craycnl -a -r $mpilib/libmpich_cray.a ]; then 
+		    mpilibrary="-lmpich_cray $additional_mpilibs"
+                  else
+		    mpilibrary="-lmpich $additional_mpilibs"
+                  fi
 	        fi
               fi
 	  fi
@@ -5839,10 +5843,15 @@ if [ $mpi = yes ] ; then
 	      mpilibrary="-lpmpich++ $mpilibrary"
 	  fi
 	  
-	  if [ -r $mpilib/libmpichcxx.a -o -r $mpilib/libmpichcxx.so ] ; then 
+          if [ $machine = craycnl -a -r $mpilib/libmpichcxx_cray.a ]; then 
+              #echo "mpichcxx found"
+	      mpilibrary="-lmpichcxx_cray $mpilibrary"
+          else
+	    if [ -r $mpilib/libmpichcxx.a -o -r $mpilib/libmpichcxx.so ] ; then 
               #echo "mpichcxx found"
 	      mpilibrary="-lmpichcxx $mpilibrary"
-	  fi
+	    fi
+          fi
 	  
 	  if [ -r $mpilib/libpmpich.a -o -r $mpilib/libpmpich.so ] ; then 
               #echo "pmpich found"
