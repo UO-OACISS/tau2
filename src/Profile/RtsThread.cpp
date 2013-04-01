@@ -52,6 +52,13 @@
 #include <execinfo.h>
 #endif //DEBUG_LOCK_PROBLEMS
 
+// This is a hack for all the deadlocks in TAU.
+// A new threading layer is being built that will do away with
+// this locking model and make this hack obsolete.
+#ifndef TAU_ENVLOCK_IS_DBLOCK
+#define TAU_ENVLOCK_IS_DBLOCK 
+#endif
+
 using namespace std;
 using namespace tau;
 
