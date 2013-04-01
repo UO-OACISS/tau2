@@ -578,6 +578,9 @@ int RtsLayer::getNumEnvLocks(void) {
 
 int RtsLayer::LockEnv(void)
 {
+#ifdef TAU_ENVLOCK_IS_DBLOCK 
+  return LockDB();
+#else
   static bool init = initEnvLocks();
   int tid=localThreadId();
 	TAU_ASSERT(Tau_global_get_insideTAU() > 0, "Thread is trying for Env lock but it is not in TAU");
@@ -608,9 +611,14 @@ int RtsLayer::LockEnv(void)
   fflush(stdout);
 #endif
   return lockEnvCount[tid];
+#endif
 }
 
-int RtsLayer::UnLockEnv(void) {
+int RtsLayer::UnLockEnv(void) 
+{
+#ifdef TAU_ENVLOCK_IS_DBLOCK 
+  return UnLockDB();
+#else
   int tid=localThreadId();
   lockEnvCount[tid]--;
   if (lockEnvCount[tid] == 0) {
@@ -622,6 +630,7 @@ int RtsLayer::UnLockEnv(void) {
   fflush(stdout);
 #endif
   return lockEnvCount[tid];
+#endif
 }
 
 //////////////////////////////////////////////////////////////////////
