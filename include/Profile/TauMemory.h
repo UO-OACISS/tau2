@@ -27,6 +27,10 @@
 #define _GNU_SOURCE
 #endif
 
+#ifdef TAU_WINDOWS
+#define ENOMEM 0
+#endif
+
 #ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE 600 /* see: man posix_memalign */
 #endif

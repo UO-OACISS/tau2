@@ -493,6 +493,7 @@ void tauCreateFI_signalSafe(void **ptr, const string& name, const char *type, Ta
     /* KAH - Whoops!! We can't call "new" here, because malloc is not
      * safe in signal handling. therefore, use the special memory
      * allocation routines */
+#ifndef TAU_WINDOWS
     *ptr = Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(FunctionInfo));
     /*  now, use the pacement new function to create a object in
      *  pre-allocated memory. NOTE - this memory needs to be explicitly
@@ -500,6 +501,9 @@ void tauCreateFI_signalSafe(void **ptr, const string& name, const char *type, Ta
      *  I think the best place for that is in the destructor for
      *  the hash table. */
     new(*ptr) FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
+#else
+    new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
+#endif
     }
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
