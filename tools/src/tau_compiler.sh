@@ -271,7 +271,7 @@ echoIfDebug "The compiler being read is $CMD \n"
 # Initialize optOpariOpts 
 ####################################################################
 optOpariOpts="-nosrc -table opari.tab.c"
-optOpari2Opts="--nosrc "
+optOpari2Opts="--nosrc --tpd "
 
 ####################################################################
 #Parsing all the Tokens of the Command passed
