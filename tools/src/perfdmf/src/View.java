@@ -385,11 +385,13 @@ public class View implements Serializable {
 			int currentView = 0;
 			int alias = 0;
 			String conjoin = " where ((";
+			boolean conditions = false;
 			while (results.next() != false) {
 				int viewid = results.getInt(2);
 				String tableName = results.getString(3);
 				if (tableName == null) 
 					break;
+				conditions = true;
 				String columnName = results.getString(4);
 				String operator = results.getString(5);
 				String value = results.getString(6);
@@ -413,7 +415,9 @@ public class View implements Serializable {
 				hashViews.get(currentView).setWhereClause(whereClause.toString());
 				hashViews.get(currentView).setJoinClause(joinClause.toString());
 			}
-			whereClause.append(")");
+			if (conditions) {
+				whereClause.append(")");
+			}
 			statement.close();
 			
 			//PerfExplorerOutput.println(whereClause.toString());

@@ -63,7 +63,9 @@ void esd_exit (elg_ui4 rid);
 #ifdef DEBUG_LOCK_PROBLEMS
 #include <execinfo.h>
 #endif
+#ifndef TAU_WINDOWS
 #include <execinfo.h>
+#endif
 
 using namespace tau;
 
@@ -463,6 +465,7 @@ static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller) {
   fprintf(stderr, "[%d:%d-%d] TAU: Runtime overlap: found %s (%p) on the stack, but stop called on %s (%p)\n", 
 	 RtsLayer::getPid(), RtsLayer::getTid(), RtsLayer::myThread(),
 	 stack->GetName(), stack, caller->GetName(), caller);
+#ifndef TAU_WINDOWS
      if(!TauEnv_get_ebs_enabled()) {
        void* callstack[128];
        int i, frames = backtrace(callstack, 128);
@@ -472,6 +475,7 @@ static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller) {
        }
        free(strs);
      }
+#endif
 	 abort();
 }
 
@@ -1467,7 +1471,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
     if (initializing[tid]) {
       return;
     }
-    RtsLayer::LockEnv();
+    RtsLayer::LockDB();
     if (!initialized) {
       // whichever thread got here first, has the lock and will create the
       // FunctionInfo object for the top level timer.
@@ -1479,7 +1483,7 @@ extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
         initialized = true;
       }
     }
-    RtsLayer::UnLockEnv();
+    RtsLayer::UnLockDB();
   }
 
   if (initthread[tid] == true) {
@@ -1686,7 +1690,7 @@ map<string, int *>& TheIterationMap() {
  * Some compilers call the std::string() constructor, which then calls malloc.
  * Therefore, we need gTauApplication to be a static string.
  * I realize this duplicates code, but that's just too bad.
- * Everything that signalling support touches has to be signal safe...
+ * Everything that signaling support touches has to be signal safe...
  */
 void Tau_pure_start_task_string(const string name, int tid)
 {
