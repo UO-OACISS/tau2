@@ -800,7 +800,7 @@ public class TAUdbDatabaseAPI extends DatabaseAPI {
 			int thread = results.getInt(3);
 			int id = results.getInt(4);
 			Thread t = dataSource.getThread(node, context, thread);
-			if (t == null && createIfNotFound) {
+			if (t == null && createIfNotFound && node >= 0) {
 				dataSource.addThread(node, context, thread);
 			}
 			map.put(t, id);

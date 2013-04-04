@@ -169,7 +169,12 @@ public class Function implements Serializable, Comparable<Function> {
             int right = name.indexOf(">");
 
             sourceLink.setShortName(name.substring(0,fileIndex));
-            sourceLink.setFilename(name.substring(fileIndex + 5, left).trim());
+            String filename = name.substring(fileIndex + 5, left).trim();
+            if(filename.contains("/"))
+            {
+            	filename = filename.substring(filename.lastIndexOf("/") + 1);
+            }
+            sourceLink.setFilename(filename);
             sourceLink.setStartLine(Integer.parseInt(name.substring(left + 1, comma).trim()));
             sourceLink.setEndLine(Integer.parseInt(name.substring(comma + 1, right).trim()));
         }
@@ -253,7 +258,10 @@ public class Function implements Serializable, Comparable<Function> {
         }
         
         if(comma1>closebracket1){
-        	return sourceLink;
+        	comma1=-1;
+        }
+        if(dash>closebracket2){
+        	dash=-1;
         }
 
         if (dash == -1) {
