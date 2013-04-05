@@ -450,6 +450,7 @@ for arg in "$@"; do
     echo "-jdk=<dir>  Build a library for profiling Java code with specified jdk."
     echo "-dyninst=<dir> ................... Specify location of DynInst Package."
     echo "-dwarf=<dir> ................ Specify location of the libdwarf Package."
+    echo "-dwarflib=<dir> ... Specify location of the libdwarf library directory."
     echo "-bfd=<dir | download> ............ Specify a BFD directory or download."
     echo "-cube=<dir> | own.| ext..... Specify location of CUBE or use TAU's jar."
     echo "-vtf=<dir> ......... Specify location of VTF3 Trace Generation Package."
@@ -1482,6 +1483,18 @@ for arg in "$@"; do
         echo "Error: Cannot access libdwarf directory $dwarfdir"
         exit 1
       fi
+    shift
+    ;;
+
+  -dwarflib=*)
+      dwarfdir=`echo $arg | sed -e 's/-dwarflib=//'`
+      if [ ! -d $dwarfdir ]
+      then
+        echo "Error: Cannot access libdwarf directory $dwarfdir"
+        exit 1
+      fi
+      fixmakeargs="$fixmakeargs dwarfopts=-L$dwarfdir"
+      dwarfdir=""
     shift
     ;;
 
@@ -5816,7 +5829,11 @@ if [ $mpi = yes ] ; then
 		  # For BG/P
 		  mpilibrary="-lmpich.cnk $additional_mpilibs"
 	        else
-		  mpilibrary="-lmpich $additional_mpilibs"
+                  if [ $machine = craycnl -a -r $mpilib/libmpich_cray.a ]; then 
+		    mpilibrary="-lmpich_cray $additional_mpilibs"
+                  else
+		    mpilibrary="-lmpich $additional_mpilibs"
+                  fi
 	        fi
               fi
 	  fi
@@ -5826,10 +5843,15 @@ if [ $mpi = yes ] ; then
 	      mpilibrary="-lpmpich++ $mpilibrary"
 	  fi
 	  
-	  if [ -r $mpilib/libmpichcxx.a -o -r $mpilib/libmpichcxx.so ] ; then 
+          if [ $machine = craycnl -a -r $mpilib/libmpichcxx_cray.a ]; then 
+              #echo "mpichcxx found"
+	      mpilibrary="-lmpichcxx_cray $mpilibrary"
+          else
+	    if [ -r $mpilib/libmpichcxx.a -o -r $mpilib/libmpichcxx.so ] ; then 
               #echo "mpichcxx found"
 	      mpilibrary="-lmpichcxx $mpilibrary"
-	  fi
+	    fi
+          fi
 	  
 	  if [ -r $mpilib/libpmpich.a -o -r $mpilib/libpmpich.so ] ; then 
               #echo "pmpich found"
