@@ -48,6 +48,13 @@ static struct Tau_collector_status_flags Tau_collector_flags[TAU_MAX_THREADS] = 
 
 extern void Tau_fill_header(void *message, int sz, OMP_COLLECTORAPI_REQUEST rq, OMP_COLLECTORAPI_EC ec, int rsz, int append_zero);
   
+void TauOpenMPCollectorAPISetNumThreads(int numThreads) {
+  int tid = Tau_get_tid();
+  Tau_collector_flags[tid].numThreadsInTeam = numThreads;
+}
+
+static char* __UNKNOWN__ = "UNKNOWN";
+
 extern const int OMP_COLLECTORAPI_HEADERSIZE;
 char OMP_EVENT_NAME[22][50]= {
   "OMP_EVENT_FORK",
@@ -201,7 +208,7 @@ void Tau_get_current_region_context(int tid) {
     Tau_collector_flags[tid].activeTimerContext = malloc(strlen(Tau_collector_flags[tid].timerContext)+1);
     strcpy(Tau_collector_flags[tid].activeTimerContext, Tau_collector_flags[tid].timerContext);
   }
-  //printf("Thread %d : Starting : %s\n", tid, regionIDstr);
+  //printf("Thread %d : Starting : %s\n", tid, regionIDstr); fflush(stdout);
   //TAU_STATIC_TIMER_START(regionIDstr);
   Tau_pure_start_task(regionIDstr, tid);
 #if 0
@@ -209,10 +216,11 @@ void Tau_get_current_region_context(int tid) {
     //printf("FORKING!\n");
     // let's hope that the master thread can fork this timer for all threads in the team
 	int index;
-	Tau_collector_flags[tid].numThreadsInTeam = omp_get_num_threads();
+	//Tau_collector_flags[tid].numThreadsInTeam = omp_get_num_threads();
 	for (index = 0 ; index < Tau_collector_flags[tid].numThreadsInTeam ; index++) {
-      //printf("FORK...\n");
+      //printf("FORK... %d\n", index);
 	  if (index != tid) {
+            //Tau_create_top_level_timer_if_necessary_task(index);
 	    Tau_pure_start_task(regionIDstr, index);
 	  }
 	}
@@ -222,6 +230,7 @@ void Tau_get_current_region_context(int tid) {
 }
 
 /*__inline*/ void Tau_omp_stop_timer(const char * state, int tid, int use_context, int joining) {
+#if 1
   char * regionIDstr = NULL;
   if (Tau_collector_flags[tid].activeTimerContext == NULL) {
     regionIDstr = malloc(32);
@@ -235,12 +244,14 @@ void Tau_get_current_region_context(int tid) {
     //sprintf(regionIDstr, "%s : OpenMP %s", Tau_collector_flags[tid].activeTimerContext, state);
     sprintf(regionIDstr, "%s : %s", Tau_collector_flags[tid].activeTimerContext, state);
   }
-  //printf("Thread %d : Stopping : %s\n", tid, regionIDstr);
-#if 0 
-  TAU_STATIC_TIMER_STOP(regionIDstr);
+  //printf("Thread %d : Stopping : %s\n", tid, regionIDstr); fflush(stdout);
+  //TAU_STATIC_TIMER_STOP(regionIDstr);
+  Tau_pure_stop_task(regionIDstr, tid);
+  free(regionIDstr);
 #else // this will prevent overlapping timers.
   //TAU_GLOBAL_TIMER_STOP();
   Tau_stop_current_timer();
+#endif
 #if 0
   if (joining > 0 && Tau_collector_flags[tid].usingGOMP > 0) {
     // let's hope that the master thread can fork this timer for all threads in the team
@@ -252,8 +263,6 @@ void Tau_get_current_region_context(int tid) {
 	}
   }
 #endif
-#endif
-  free(regionIDstr);
 }
 
 void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
@@ -264,9 +273,8 @@ void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
 
   Tau_global_incr_insideTAU();
 
-  int tid = omp_get_thread_num();
-  printf("** Thread: %d, EVENT:%s **\n", tid, OMP_EVENT_NAME[event-1]);
-  fflush(stdout);
+  int tid = Tau_get_tid();
+  //printf("** Thread: %d, EVENT:%s **\n", tid, OMP_EVENT_NAME[event-1]); fflush(stdout);
 
   switch(event) {
     case OMP_EVENT_FORK:
@@ -308,6 +316,10 @@ void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
       // it is safe to set the active timer context now.
       if (Tau_collector_flags[tid].activeTimerContext != NULL) {
         free(Tau_collector_flags[tid].activeTimerContext);
+      }
+      if (Tau_collector_flags[tid].timerContext == NULL) {
+        Tau_collector_flags[tid].timerContext = malloc(strlen(__UNKNOWN__)+1);
+        strcpy(Tau_collector_flags[tid].timerContext, __UNKNOWN__);
       }
       Tau_collector_flags[tid].activeTimerContext = malloc(strlen(Tau_collector_flags[tid].timerContext)+1);
       strcpy(Tau_collector_flags[tid].activeTimerContext, Tau_collector_flags[tid].timerContext);

@@ -233,7 +233,13 @@ struct CallSiteCacheNode {
   bool resolved;
   TauBfdInfo info;
 };
+
 typedef TAU_HASH_MAP<unsigned long, CallSiteCacheNode*> CallSiteCacheMap;
+static CallSiteCacheMap & TheCallSiteCacheWithLines() {
+  static CallSiteCacheMap map;
+  return map;
+}
+
 static CallSiteCacheMap & TheCallSiteCache() {
   static CallSiteCacheMap map;
   return map;
@@ -609,7 +615,7 @@ char *Tau_sampling_getShortSampleName(const char *sampleName)
 
 extern "C"
 CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag,
-    char const * childName, char ** newShortName, bool addAddress)
+    char const * childName, char ** newShortName, bool addAddress, bool useLineNumber)
 {
   if (strcmp(tag, "UNWIND") == 0) {
     // if we are dealing with callsites, adjust for the fact that the
@@ -618,7 +624,14 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
   }
   CallSiteInfo * callsite = new CallSiteInfo(addr);
 
+  // we are using two caches - one for the location with line numbers,
+  // and one without. This is somewhat inefficient(?), but it works.
   CallSiteCacheMap & callSiteCache = TheCallSiteCache();
+  if (useLineNumber) {
+    callSiteCache = TheCallSiteCacheWithLines();
+  }
+
+  // does the node exist in the cache? if not, look it up
   CallSiteCacheNode * node = callSiteCache[addr];
   if (!node) {
     RtsLayer::LockDB();
@@ -632,17 +645,34 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
   }
 
   char buff[4096];
+
+  // if the node was found by BFD, populate the callsite node
   if (node->resolved) {
     TauBfdInfo & resolvedInfo = node->info;
-    if (childName) {
-      sprintf(buff, "[%s] %s [@] %s [{%s} {%d}]",
-          tag, childName, resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
+    if (useLineNumber) {
+      if (childName) {
+        sprintf(buff, "[%s] %s [@] %s [{%s} {%d}]",
+            tag, childName, resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
+      } else {
+        sprintf(buff, "[%s] %s [{%s} {%d}]",
+            tag, resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
+      }
+      // TODO: Leak?
+      char lineno[32];
+      sprintf(lineno, "%d", resolvedInfo.lineno);
+      *newShortName = (char*)malloc(strlen(resolvedInfo.funcname) + strlen(lineno) + 2);
+      sprintf(*newShortName, "%s.%d", resolvedInfo.funcname, resolvedInfo.lineno);
     } else {
-      sprintf(buff, "[%s] %s [{%s} {%d}]",
-          tag, resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
+      if (childName) {
+        sprintf(buff, "[%s] %s [@] %s [{%s}]",
+            tag, childName, resolvedInfo.funcname, resolvedInfo.filename);
+      } else {
+        sprintf(buff, "[%s] %s [{%s}]",
+            tag, resolvedInfo.funcname, resolvedInfo.filename);
+      }
+      // TODO: Leak?
+      *newShortName = strdup(resolvedInfo.funcname);
     }
-    // TODO: Leak?
-    *newShortName = strdup(resolvedInfo.funcname);
   } else {
     char const * mapName = "UNKNOWN";
     TauBfdAddrMap const * addressMap = Tau_bfd_getAddressMap(TheBfdUnitHandle(), addr);
@@ -674,6 +704,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
 
   // TODO: Leak?
   callsite->name = strdup(buff);
+  TAU_VERBOSE("Name %s, Address %p resolved to %s\n", *newShortName, (void*)addr, buff);
   return callsite;
 }
 
@@ -695,7 +726,7 @@ char *Tau_sampling_getPathName(int index, CallStackInfo *callStack) {
   std::string buffer = (sites[startIdx])->name;
   for (int i=startIdx-1; i>=index; i--) {
 	buffer += " => ";
-    buffer += (sites[startIdx])->name;
+    buffer += (sites[i])->name;
   }
   // copy the string so it doesn't go out of scope
   ret = strdup(buffer.c_str());
@@ -715,16 +746,26 @@ CallStackInfo * Tau_sampling_resolveCallSites(const unsigned long * addresses)
       char * prevShortName = NULL;
       char * newShortName = NULL;
       callStack->callSites.push_back(Tau_sampling_resolveCallSite(
-          addresses[1], "SAMPLE", NULL, &newShortName, addAddress));
+          addresses[1], "SAMPLE", NULL, &newShortName, addAddress, true));
       // move the pointers
       if (newShortName) {
         prevShortName = newShortName;
         newShortName = NULL;
       }
+      // resolve it again, without the line number
+      callStack->callSites.push_back(Tau_sampling_resolveCallSite(
+          addresses[1], "SAMPLE", NULL, &newShortName, addAddress, false));
+      // free the previous short name now.
+      if (prevShortName) {
+        free(prevShortName);
+        if (newShortName) {
+          prevShortName = newShortName;
+        }
+      }
       for (int i = 2; i < length; ++i) {
         unsigned long address = addresses[i];
         callStack->callSites.push_back(Tau_sampling_resolveCallSite(
-            address, "UNWIND", prevShortName, &newShortName, addAddress));
+            address, "UNWIND", prevShortName, &newShortName, addAddress, 1));
         // free the previous short name now.
         if (prevShortName) {
           free(prevShortName);
@@ -1580,11 +1621,12 @@ extern "C" void Tau_sampling_init_if_necessary(void)
     // do this for all threads
 #pragma omp parallel shared (samplingThrInitialized)
     {
+      // Protect TAU from itself
+      TauInternalFunctionGuard protects_this_function;
+
       // but do it sequentially.
 #pragma omp critical (creatingtopleveltimer)
       {
-        // Protect TAU from itself
-        TauInternalFunctionGuard protects_this_function;
         // Getting the thread ID registers the OpenMP thread.
         int myTid = RtsLayer::threadId();
         if (!samplingThrInitialized[myTid]) {

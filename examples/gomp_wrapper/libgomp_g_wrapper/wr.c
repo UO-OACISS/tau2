@@ -4,8 +4,10 @@
 
 #include <dlfcn.h>
 #include "omp_collector_util.h"
+#include <stdlib.h>
 
-#if 1
+
+#if 0
 #define DEBUGPRINT(format, args...) \
 { printf(format, ## args); fflush(stdout); }
 #else
@@ -24,6 +26,15 @@ struct Tau_gomp_wrapper_status_flags {
   int single; // 4 bytes
   char _pad[64-(3*sizeof(int))];
 };
+
+// void  GOMP_parallel_start(void (*a1)(void *), void * a2, unsigned int a3) ;
+typedef struct Tau_gomp_region_wrapper {
+// The function pointer
+  void (*a1)(void *);
+// The argument pointer
+  void *a2;
+//
+} TAU_GOMP_REGION_WRAPPER;
 
 /* This array is shared by all threads. To make sure we don't have false
  * sharing, the struct is 64 bytes in size, so that it fits exactly in
@@ -51,7 +62,7 @@ void  GOMP_barrier()  {
 
   static void (*GOMP_barrier_h) () = NULL;
   TAU_PROFILE_TIMER(t,"void GOMP_barrier()", "", TAU_USER1);
-  DEBUGPRINT("GOMP_barrier %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_barrier %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -67,17 +78,17 @@ void  GOMP_barrier()  {
     }
 	// make the collector API callback
     if (Tau_global_get_insideTAU() == 0) { 
-      Tau_lock_environment();
+      // KEVIN Tau_lock_environment();
       __ompc_event_callback(OMP_EVENT_THR_BEGIN_EBAR);
-      Tau_unlock_environment();
-	  TAU_PROFILE_START(t); 
+      // KEVIN Tau_unlock_environment();
+	  Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); 
 	}
     (*GOMP_barrier_h)();
     if (Tau_global_get_insideTAU() == 0) { 
-      Tau_lock_environment();
-	  Tau_stop_current_timer(); 
+      // KEVIN Tau_lock_environment();
+	  Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); 
       __ompc_event_callback(OMP_EVENT_THR_END_EBAR);
-      Tau_unlock_environment();
+      // KEVIN Tau_unlock_environment();
 	}
   }
 
@@ -92,7 +103,7 @@ void  GOMP_critical_start()  {
 
   static void (*GOMP_critical_start_h) () = NULL;
   TAU_PROFILE_TIMER(t,"void GOMP_critical_start()", "", TAU_USER1);
-  DEBUGPRINT("GOMP_critical_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_critical_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -108,18 +119,18 @@ void  GOMP_critical_start()  {
     }
     if (Tau_global_get_insideTAU() == 0) { 
 	  // protect this from the GOMP_parallel_start 
-	  Tau_lock_environment();
-	  TAU_PROFILE_START(t); 
+	  // KEVIN Tau_lock_environment();
+	  Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); 
 	  // ok, safe to continue
-	  Tau_unlock_environment();
+	  // KEVIN Tau_unlock_environment();
 	}
     (*GOMP_critical_start_h)();
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_lock_environment();
-	  Tau_stop_current_timer();
+	  // KEVIN Tau_lock_environment();
+	  Tau_pure_stop_task(__FUNCTION__, Tau_get_tid());
       __ompc_event_callback(OMP_EVENT_THR_BEGIN_CTWT);
 	  // ok, safe to continue
-	  Tau_unlock_environment();
+	  // KEVIN Tau_unlock_environment();
 	}
   }
 
@@ -134,7 +145,7 @@ void  GOMP_critical_end()  {
 
   static void (*GOMP_critical_end_h) () = NULL;
   TAU_PROFILE_TIMER(t,"void GOMP_critical_end()", "", TAU_USER1);
-  DEBUGPRINT("GOMP_critical_end %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_critical_end %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -149,16 +160,16 @@ void  GOMP_critical_end()  {
       return;
     }
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_lock_environment();
+	  // KEVIN Tau_lock_environment();
       __ompc_event_callback(OMP_EVENT_THR_END_CTWT);
-	  TAU_PROFILE_START(t); 
-	  Tau_unlock_environment();
+	  Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); 
+	  // KEVIN Tau_unlock_environment();
 	}
     (*GOMP_critical_end_h)();
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_lock_environment();
-	  Tau_stop_current_timer();
-	  Tau_unlock_environment();
+	  // KEVIN Tau_lock_environment();
+	  Tau_pure_stop_task(__FUNCTION__, Tau_get_tid());
+	  // KEVIN Tau_unlock_environment();
 	}
   }
 
@@ -173,7 +184,7 @@ void  GOMP_critical_name_start(void ** a1)  {
 
   static void (*GOMP_critical_name_start_h) (void **) = NULL;
   TAU_PROFILE_TIMER(t,"void GOMP_critical_name_start(void **)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_critical_name_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_critical_name_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -189,16 +200,16 @@ void  GOMP_critical_name_start(void ** a1)  {
     }
     if (Tau_global_get_insideTAU() == 0) { 
 	  // protect this from the GOMP_parallel_start 
-	  Tau_lock_environment();
-	  TAU_PROFILE_START(t); 
-	  Tau_unlock_environment();
-	}
+	  // KEVIN Tau_lock_environment();
+	  Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); 
+	  // KEVIN Tau_unlock_environment();
+	} else { DEBUGPRINT("not measuring TAU\n"); }
     (*GOMP_critical_name_start_h)( a1);
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_lock_environment();
-	  Tau_stop_current_timer(); 
+	  // KEVIN Tau_lock_environment();
+	  Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); 
       __ompc_event_callback(OMP_EVENT_THR_BEGIN_CTWT);
-	  Tau_unlock_environment();
+	  // KEVIN Tau_unlock_environment();
 	}
   }
 
@@ -213,7 +224,7 @@ void  GOMP_critical_name_end(void ** a1)  {
 
   static void (*GOMP_critical_name_end_h) (void **) = NULL;
   TAU_PROFILE_TIMER(t,"void GOMP_critical_name_end(void **)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_critical_name_end %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_critical_name_end %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -228,16 +239,16 @@ void  GOMP_critical_name_end(void ** a1)  {
       return;
     }
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_lock_environment();
+	  // KEVIN Tau_lock_environment();
       __ompc_event_callback(OMP_EVENT_THR_END_CTWT);
-	  TAU_PROFILE_START(t); 
-	  Tau_unlock_environment();
-	}
+	  Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); 
+	  // KEVIN Tau_unlock_environment();
+	} else { DEBUGPRINT("not measuring TAU\n"); }
     (*GOMP_critical_name_end_h)( a1);
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_lock_environment();
-	  Tau_stop_current_timer();
-	  Tau_unlock_environment();
+	  // KEVIN Tau_lock_environment();
+	  Tau_pure_stop_task(__FUNCTION__, Tau_get_tid());
+	  // KEVIN Tau_unlock_environment();
 	}
   }
 
@@ -252,7 +263,7 @@ void  GOMP_atomic_start()  {
 
   static void (*GOMP_atomic_start_h) () = NULL;
   TAU_PROFILE_TIMER(t,"void GOMP_atomic_start()", "", TAU_USER1);
-  DEBUGPRINT("GOMP_atomic_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_atomic_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -268,17 +279,17 @@ void  GOMP_atomic_start()  {
     }
     if (Tau_global_get_insideTAU() == 0) {
 	  // protect this from the GOMP_parallel_start 
-	  Tau_lock_environment();
-	  TAU_PROFILE_START(t); 
-	  Tau_unlock_environment();
+	  // KEVIN Tau_lock_environment();
+	  Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); 
+	  // KEVIN Tau_unlock_environment();
 	}
     (*GOMP_atomic_start_h)();
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_lock_environment();
-	  Tau_stop_current_timer();
+	  // KEVIN Tau_lock_environment();
+	  Tau_pure_stop_task(__FUNCTION__, Tau_get_tid());
       __ompc_event_callback(OMP_EVENT_THR_BEGIN_ATWT);
 	  // ok, safe to continue
-	  Tau_unlock_environment();
+	  // KEVIN Tau_unlock_environment();
 	}
   }
 
@@ -293,7 +304,7 @@ void  GOMP_atomic_end()  {
 
   static void (*GOMP_atomic_end_h) () = NULL;
   TAU_PROFILE_TIMER(t,"void GOMP_atomic_end()", "", TAU_USER1);
-  DEBUGPRINT("GOMP_atomic_end %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_atomic_end %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -307,13 +318,13 @@ void  GOMP_atomic_end()  {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     (*GOMP_atomic_end_h)();
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_lock_environment();
-	  Tau_stop_current_timer();
+	  // KEVIN Tau_lock_environment();
+	  Tau_pure_stop_task(__FUNCTION__, Tau_get_tid());
       __ompc_event_callback(OMP_EVENT_THR_END_ATWT);
-	  Tau_unlock_environment();
+	  // KEVIN Tau_unlock_environment();
 	}
   }
 
@@ -329,7 +340,7 @@ bool  GOMP_loop_static_start(long a1, long a2, long a3, long a4, long * a5, long
   static bool (*GOMP_loop_static_start_h) (long, long, long, long, long *, long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_static_start(long, long, long, long, long *, long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_static_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_static_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -345,14 +356,14 @@ bool  GOMP_loop_static_start(long a1, long a2, long a3, long a4, long * a5, long
     }
     if (Tau_global_get_insideTAU() == 0) { 
 	  // protect this from the GOMP_parallel_start
-	  Tau_lock_environment();
-      __ompc_event_callback(OMP_EVENT_THR_END_IDLE);
-	  TAU_PROFILE_START(t); 
-	  Tau_unlock_environment();
+	  // KEVIN Tau_lock_environment();
+      //__ompc_event_callback(OMP_EVENT_THR_END_IDLE);
+	  Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); 
+	  // KEVIN Tau_unlock_environment();
 	}
     retval  =  (*GOMP_loop_static_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_stop_current_timer(); 
+	  Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); 
 	}
   }
   return retval;
@@ -369,7 +380,7 @@ bool  GOMP_loop_dynamic_start(long a1, long a2, long a3, long a4, long * a5, lon
   static bool (*GOMP_loop_dynamic_start_h) (long, long, long, long, long *, long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_dynamic_start(long, long, long, long, long *, long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_dynamic_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_dynamic_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -385,14 +396,14 @@ bool  GOMP_loop_dynamic_start(long a1, long a2, long a3, long a4, long * a5, lon
     }
     if (Tau_global_get_insideTAU() == 0) { 
 	  // protect this from the GOMP_parallel_start
-	  Tau_lock_environment();
-      __ompc_event_callback(OMP_EVENT_THR_END_IDLE);
-	  TAU_PROFILE_START(t); 
-	  Tau_unlock_environment();
+	  // KEVIN Tau_lock_environment();
+      //__ompc_event_callback(OMP_EVENT_THR_END_IDLE);
+	  Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); 
+	  // KEVIN Tau_unlock_environment();
 	}
     retval  =  (*GOMP_loop_dynamic_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_stop_current_timer(); 
+	  Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); 
 	}
   }
   return retval;
@@ -409,7 +420,7 @@ bool  GOMP_loop_guided_start(long a1, long a2, long a3, long a4, long * a5, long
   static bool (*GOMP_loop_guided_start_h) (long, long, long, long, long *, long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_guided_start(long, long, long, long, long *, long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_guided_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_guided_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -425,14 +436,14 @@ bool  GOMP_loop_guided_start(long a1, long a2, long a3, long a4, long * a5, long
     }
     if (Tau_global_get_insideTAU() == 0) { 
 	  // protect this from the GOMP_parallel_start
-	  Tau_lock_environment();
-      __ompc_event_callback(OMP_EVENT_THR_END_IDLE);
-	  TAU_PROFILE_START(t); 
-	  Tau_unlock_environment();
+	  // KEVIN Tau_lock_environment();
+      //__ompc_event_callback(OMP_EVENT_THR_END_IDLE);
+	  Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); 
+	  // KEVIN Tau_unlock_environment();
 	}
     retval  =  (*GOMP_loop_guided_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_stop_current_timer(); 
+	  Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); 
 	}
   }
   return retval;
@@ -449,7 +460,7 @@ bool  GOMP_loop_runtime_start(long a1, long a2, long a3, long * a4, long * a5)  
   static bool (*GOMP_loop_runtime_start_h) (long, long, long, long *, long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_runtime_start(long, long, long, long *, long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_runtime_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_runtime_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -465,14 +476,14 @@ bool  GOMP_loop_runtime_start(long a1, long a2, long a3, long * a4, long * a5)  
     }
     if (Tau_global_get_insideTAU() == 0) { 
 	  // protect this from the GOMP_parallel_start
-	  Tau_lock_environment();
-      __ompc_event_callback(OMP_EVENT_THR_END_IDLE);
-	  TAU_PROFILE_START(t); 
-	  Tau_unlock_environment();
+	  // KEVIN Tau_lock_environment();
+      //__ompc_event_callback(OMP_EVENT_THR_END_IDLE);
+	  Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); 
+	  // KEVIN Tau_unlock_environment();
 	}
     retval  =  (*GOMP_loop_runtime_start_h)( a1,  a2,  a3,  a4,  a5);
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_stop_current_timer(); 
+	  Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); 
 	}
   }
   return retval;
@@ -489,7 +500,7 @@ bool  GOMP_loop_ordered_static_start(long a1, long a2, long a3, long a4, long * 
   static bool (*GOMP_loop_ordered_static_start_h) (long, long, long, long, long *, long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_ordered_static_start(long, long, long, long, long *, long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_ordered_static_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_ordered_static_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -505,18 +516,18 @@ bool  GOMP_loop_ordered_static_start(long a1, long a2, long a3, long a4, long * 
     }
     if (Tau_global_get_insideTAU() == 0) { 
 	  // protect this from the GOMP_parallel_start
-	  Tau_lock_environment();
-	  TAU_PROFILE_START(t); 
-	  Tau_unlock_environment();
+	  // KEVIN Tau_lock_environment();
+	  Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); 
+	  // KEVIN Tau_unlock_environment();
 	}
     retval  =  (*GOMP_loop_ordered_static_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_lock_environment();
-	  Tau_stop_current_timer(); 
-	  Tau_gomp_flags[omp_get_thread_num()].ordered = 1;
+	  // KEVIN Tau_lock_environment();
+	  Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); 
+	  Tau_gomp_flags[Tau_get_tid()].ordered = 1;
       __ompc_event_callback(OMP_EVENT_THR_BEGIN_ORDERED);
       //__ompc_event_callback(OMP_EVENT_THR_BEGIN_ODWT);
-	  Tau_unlock_environment();
+	  // KEVIN Tau_unlock_environment();
 	}
   }
   return retval;
@@ -533,7 +544,7 @@ bool  GOMP_loop_ordered_dynamic_start(long a1, long a2, long a3, long a4, long *
   static bool (*GOMP_loop_ordered_dynamic_start_h) (long, long, long, long, long *, long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_ordered_dynamic_start(long, long, long, long, long *, long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_ordered_dynamic_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_ordered_dynamic_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -549,18 +560,18 @@ bool  GOMP_loop_ordered_dynamic_start(long a1, long a2, long a3, long a4, long *
     }
     if (Tau_global_get_insideTAU() == 0) { 
 	  // protect this from the GOMP_parallel_start
-	  Tau_lock_environment();
-	  TAU_PROFILE_START(t); 
-	  Tau_unlock_environment();
+	  // KEVIN Tau_lock_environment();
+	  Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); 
+	  // KEVIN Tau_unlock_environment();
 	}
     retval  =  (*GOMP_loop_ordered_dynamic_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_lock_environment();
-	  Tau_stop_current_timer(); 
-	  Tau_gomp_flags[omp_get_thread_num()].ordered = 1;
+	  // KEVIN Tau_lock_environment();
+	  Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); 
+	  Tau_gomp_flags[Tau_get_tid()].ordered = 1;
       __ompc_event_callback(OMP_EVENT_THR_BEGIN_ORDERED);
       //__ompc_event_callback(OMP_EVENT_THR_BEGIN_ODWT);
-	  Tau_unlock_environment();
+	  // KEVIN Tau_unlock_environment();
 	}
   }
   return retval;
@@ -577,7 +588,7 @@ bool  GOMP_loop_ordered_guided_start(long a1, long a2, long a3, long a4, long * 
   static bool (*GOMP_loop_ordered_guided_start_h) (long, long, long, long, long *, long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_ordered_guided_start(long, long, long, long, long *, long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_ordered_guided_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_ordered_guided_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -593,18 +604,18 @@ bool  GOMP_loop_ordered_guided_start(long a1, long a2, long a3, long a4, long * 
     }
     if (Tau_global_get_insideTAU() == 0) { 
 	  // protect this from the GOMP_parallel_start
-	  Tau_lock_environment();
-	  TAU_PROFILE_START(t); 
-	  Tau_unlock_environment();
+	  // KEVIN Tau_lock_environment();
+	  Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); 
+	  // KEVIN Tau_unlock_environment();
 	}
     retval  =  (*GOMP_loop_ordered_guided_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_lock_environment();
-	  Tau_stop_current_timer(); 
-	  Tau_gomp_flags[omp_get_thread_num()].ordered = 1;
+	  // KEVIN Tau_lock_environment();
+	  Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); 
+	  Tau_gomp_flags[Tau_get_tid()].ordered = 1;
       __ompc_event_callback(OMP_EVENT_THR_BEGIN_ORDERED);
       //__ompc_event_callback(OMP_EVENT_THR_BEGIN_ODWT);
-	  Tau_unlock_environment();
+	  // KEVIN Tau_unlock_environment();
 	}
   }
   return retval;
@@ -621,7 +632,7 @@ bool  GOMP_loop_ordered_runtime_start(long a1, long a2, long a3, long * a4, long
   static bool (*GOMP_loop_ordered_runtime_start_h) (long, long, long, long *, long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_ordered_runtime_start(long, long, long, long *, long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_ordered_runtime_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_ordered_runtime_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -637,18 +648,18 @@ bool  GOMP_loop_ordered_runtime_start(long a1, long a2, long a3, long * a4, long
     }
     if (Tau_global_get_insideTAU() == 0) { 
 	  // protect this from the GOMP_parallel_start
-	  Tau_lock_environment();
-	  TAU_PROFILE_START(t); 
-	  Tau_unlock_environment();
+	  // KEVIN Tau_lock_environment();
+	  Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); 
+	  // KEVIN Tau_unlock_environment();
 	}
     retval  =  (*GOMP_loop_ordered_runtime_start_h)( a1,  a2,  a3,  a4,  a5);
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_lock_environment();
-	  Tau_stop_current_timer(); 
-	  Tau_gomp_flags[omp_get_thread_num()].ordered = 1;
+	  // KEVIN Tau_lock_environment();
+	  Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); 
+	  Tau_gomp_flags[Tau_get_tid()].ordered = 1;
       __ompc_event_callback(OMP_EVENT_THR_BEGIN_ORDERED);
       //__ompc_event_callback(OMP_EVENT_THR_BEGIN_ODWT);
-	  Tau_unlock_environment();
+	  // KEVIN Tau_unlock_environment();
 	}
   }
   return retval;
@@ -665,7 +676,7 @@ bool  GOMP_loop_static_next(long * a1, long * a2)  {
   static bool (*GOMP_loop_static_next_h) (long *, long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_static_next(long *, long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_static_next %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_static_next %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -679,9 +690,9 @@ bool  GOMP_loop_static_next(long * a1, long * a2)  {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     retval  =  (*GOMP_loop_static_next_h)( a1,  a2);
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
   return retval;
 
@@ -697,7 +708,7 @@ bool  GOMP_loop_dynamic_next(long * a1, long * a2)  {
   static bool (*GOMP_loop_dynamic_next_h) (long *, long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_dynamic_next(long *, long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_dynamic_next %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_dynamic_next %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -711,9 +722,9 @@ bool  GOMP_loop_dynamic_next(long * a1, long * a2)  {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     retval  =  (*GOMP_loop_dynamic_next_h)( a1,  a2);
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
   return retval;
 
@@ -729,7 +740,7 @@ bool  GOMP_loop_guided_next(long * a1, long * a2)  {
   static bool (*GOMP_loop_guided_next_h) (long *, long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_guided_next(long *, long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_guided_next %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_guided_next %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -743,9 +754,9 @@ bool  GOMP_loop_guided_next(long * a1, long * a2)  {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     retval  =  (*GOMP_loop_guided_next_h)( a1,  a2);
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
   return retval;
 
@@ -761,7 +772,7 @@ bool  GOMP_loop_runtime_next(long * a1, long * a2)  {
   static bool (*GOMP_loop_runtime_next_h) (long *, long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_runtime_next(long *, long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_runtime_next %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_runtime_next %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -775,9 +786,9 @@ bool  GOMP_loop_runtime_next(long * a1, long * a2)  {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     retval  =  (*GOMP_loop_runtime_next_h)( a1,  a2);
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
   return retval;
 
@@ -793,7 +804,7 @@ bool  GOMP_loop_ordered_static_next(long * a1, long * a2)  {
   static bool (*GOMP_loop_ordered_static_next_h) (long *, long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_ordered_static_next(long *, long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_ordered_static_next %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_ordered_static_next %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -807,9 +818,9 @@ bool  GOMP_loop_ordered_static_next(long * a1, long * a2)  {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     retval  =  (*GOMP_loop_ordered_static_next_h)( a1,  a2);
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
   return retval;
 
@@ -825,7 +836,7 @@ bool  GOMP_loop_ordered_dynamic_next(long * a1, long * a2)  {
   static bool (*GOMP_loop_ordered_dynamic_next_h) (long *, long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_ordered_dynamic_next(long *, long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_ordered_dynamic_next %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_ordered_dynamic_next %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -839,9 +850,9 @@ bool  GOMP_loop_ordered_dynamic_next(long * a1, long * a2)  {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     retval  =  (*GOMP_loop_ordered_dynamic_next_h)( a1,  a2);
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
   return retval;
 
@@ -857,7 +868,7 @@ bool  GOMP_loop_ordered_guided_next(long * a1, long * a2)  {
   static bool (*GOMP_loop_ordered_guided_next_h) (long *, long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_ordered_guided_next(long *, long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_ordered_guided_next %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_ordered_guided_next %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -871,9 +882,9 @@ bool  GOMP_loop_ordered_guided_next(long * a1, long * a2)  {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     retval  =  (*GOMP_loop_ordered_guided_next_h)( a1,  a2);
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
   return retval;
 
@@ -889,7 +900,7 @@ bool  GOMP_loop_ordered_runtime_next(long * a1, long * a2)  {
   static bool (*GOMP_loop_ordered_runtime_next_h) (long *, long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_ordered_runtime_next(long *, long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_ordered_runtime_next %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_ordered_runtime_next %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -903,9 +914,9 @@ bool  GOMP_loop_ordered_runtime_next(long * a1, long * a2)  {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     retval  =  (*GOMP_loop_ordered_runtime_next_h)( a1,  a2);
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
   return retval;
 
@@ -920,7 +931,7 @@ void  GOMP_parallel_loop_static_start(void (*a1)(void *), void * a2, unsigned in
 
   static void (*GOMP_parallel_loop_static_start_h) (void (*)(void *), void *, unsigned int, long, long, long, long) = NULL;
   TAU_PROFILE_TIMER(t,"void GOMP_parallel_loop_static_start(void (*)(void *), void *, unsigned int, long, long, long, long)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_parallel_loop_static_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_parallel_loop_static_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -934,9 +945,9 @@ void  GOMP_parallel_loop_static_start(void (*a1)(void *), void * a2, unsigned in
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     (*GOMP_parallel_loop_static_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
 
 }
@@ -950,7 +961,7 @@ void  GOMP_parallel_loop_dynamic_start(void (*a1)(void *), void * a2, unsigned i
 
   static void (*GOMP_parallel_loop_dynamic_start_h) (void (*)(void *), void *, unsigned int, long, long, long, long) = NULL;
   TAU_PROFILE_TIMER(t,"void GOMP_parallel_loop_dynamic_start(void (*)(void *), void *, unsigned int, long, long, long, long)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_parallel_loop_dynamic_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_parallel_loop_dynamic_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -965,14 +976,14 @@ void  GOMP_parallel_loop_dynamic_start(void (*a1)(void *), void * a2, unsigned i
       return;
     }
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_lock_environment();
-      __ompc_event_callback(OMP_EVENT_THR_END_IDLE);
-	  TAU_PROFILE_START(t); 
-	  Tau_unlock_environment();
+	  // KEVIN Tau_lock_environment();
+      //__ompc_event_callback(OMP_EVENT_THR_END_IDLE);
+	  Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); 
+	  // KEVIN Tau_unlock_environment();
 	}
     (*GOMP_parallel_loop_dynamic_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_stop_current_timer(); 
+	  Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); 
 	}
   }
 
@@ -987,7 +998,7 @@ void  GOMP_parallel_loop_guided_start(void (*a1)(void *), void * a2, unsigned in
 
   static void (*GOMP_parallel_loop_guided_start_h) (void (*)(void *), void *, unsigned int, long, long, long, long) = NULL;
   TAU_PROFILE_TIMER(t,"void GOMP_parallel_loop_guided_start(void (*)(void *), void *, unsigned int, long, long, long, long)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_parallel_loop_guided_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_parallel_loop_guided_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1002,14 +1013,14 @@ void  GOMP_parallel_loop_guided_start(void (*a1)(void *), void * a2, unsigned in
       return;
     }
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_lock_environment();
-      __ompc_event_callback(OMP_EVENT_THR_END_IDLE);
-	  TAU_PROFILE_START(t); 
-	  Tau_unlock_environment();
+	  // KEVIN Tau_lock_environment();
+      //__ompc_event_callback(OMP_EVENT_THR_END_IDLE);
+	  Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); 
+	  // KEVIN Tau_unlock_environment();
 	}
     (*GOMP_parallel_loop_guided_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_stop_current_timer(); 
+	  Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); 
 	}
   }
 
@@ -1024,7 +1035,7 @@ void  GOMP_parallel_loop_runtime_start(void (*a1)(void *), void * a2, unsigned i
 
   static void (*GOMP_parallel_loop_runtime_start_h) (void (*)(void *), void *, unsigned int, long, long, long) = NULL;
   TAU_PROFILE_TIMER(t,"void GOMP_parallel_loop_runtime_start(void (*)(void *), void *, unsigned int, long, long, long)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_parallel_loop_runtime_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_parallel_loop_runtime_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1039,14 +1050,14 @@ void  GOMP_parallel_loop_runtime_start(void (*a1)(void *), void * a2, unsigned i
       return;
     }
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_lock_environment();
-      __ompc_event_callback(OMP_EVENT_THR_END_IDLE);
-	  TAU_PROFILE_START(t); 
-	  Tau_unlock_environment();
+	  // KEVIN Tau_lock_environment();
+      //__ompc_event_callback(OMP_EVENT_THR_END_IDLE);
+	  Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); 
+	  // KEVIN Tau_unlock_environment();
 	}
     (*GOMP_parallel_loop_runtime_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_stop_current_timer(); 
+	  Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); 
 	}
   }
 
@@ -1061,7 +1072,7 @@ void  GOMP_loop_end()  {
 
   static void (*GOMP_loop_end_h) () = NULL;
   TAU_PROFILE_TIMER(t,"void GOMP_loop_end()", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_end %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_end %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1076,16 +1087,16 @@ void  GOMP_loop_end()  {
       return;
     }
     if (Tau_global_get_insideTAU() == 0) { 
-	  if (Tau_gomp_flags[omp_get_thread_num()].ordered) {
+	  if (Tau_gomp_flags[Tau_get_tid()].ordered) {
         ////__ompc_event_callback(OMP_EVENT_THR_END_ODWT);
         __ompc_event_callback(OMP_EVENT_THR_END_ORDERED);
-	    Tau_gomp_flags[omp_get_thread_num()].ordered = 0;
+	    Tau_gomp_flags[Tau_get_tid()].ordered = 0;
 	  }
-	  TAU_PROFILE_START(t); 
+	  Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); 
 	}
     (*GOMP_loop_end_h)();
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_stop_current_timer();
+	  Tau_pure_stop_task(__FUNCTION__, Tau_get_tid());
 	}
   }
 
@@ -1100,7 +1111,7 @@ void  GOMP_loop_end_nowait()  {
 
   static void (*GOMP_loop_end_nowait_h) () = NULL;
   TAU_PROFILE_TIMER(t,"void GOMP_loop_end_nowait()", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_end_nowait %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_end_nowait %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1115,16 +1126,16 @@ void  GOMP_loop_end_nowait()  {
       return;
     }
     if (Tau_global_get_insideTAU() == 0) { 
-	  if (Tau_gomp_flags[omp_get_thread_num()].ordered) {
+	  if (Tau_gomp_flags[Tau_get_tid()].ordered) {
         //__ompc_event_callback(OMP_EVENT_THR_END_ODWT);
         __ompc_event_callback(OMP_EVENT_THR_END_ORDERED);
-	    Tau_gomp_flags[omp_get_thread_num()].ordered = 0;
+	    Tau_gomp_flags[Tau_get_tid()].ordered = 0;
 	  }
-	  TAU_PROFILE_START(t); 
+	  Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); 
 	}
     (*GOMP_loop_end_nowait_h)();
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_stop_current_timer();
+	  Tau_pure_stop_task(__FUNCTION__, Tau_get_tid());
 	}
   }
 }
@@ -1139,7 +1150,7 @@ bool  GOMP_loop_ull_static_start(bool a1, unsigned long long a2, unsigned long l
   static bool (*GOMP_loop_ull_static_start_h) (bool, unsigned long long, unsigned long long, unsigned long long, unsigned long long, unsigned long long *, unsigned long long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_ull_static_start(bool, unsigned long long, unsigned long long, unsigned long long, unsigned long long, unsigned long long *, unsigned long long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_ull_static_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_ull_static_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1153,9 +1164,9 @@ bool  GOMP_loop_ull_static_start(bool a1, unsigned long long a2, unsigned long l
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     retval  =  (*GOMP_loop_ull_static_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
   return retval;
 
@@ -1171,7 +1182,7 @@ bool  GOMP_loop_ull_dynamic_start(bool a1, unsigned long long a2, unsigned long 
   static bool (*GOMP_loop_ull_dynamic_start_h) (bool, unsigned long long, unsigned long long, unsigned long long, unsigned long long, unsigned long long *, unsigned long long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_ull_dynamic_start(bool, unsigned long long, unsigned long long, unsigned long long, unsigned long long, unsigned long long *, unsigned long long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_ull_dynamic_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_ull_dynamic_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1185,9 +1196,9 @@ bool  GOMP_loop_ull_dynamic_start(bool a1, unsigned long long a2, unsigned long 
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     retval  =  (*GOMP_loop_ull_dynamic_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
   return retval;
 
@@ -1203,7 +1214,7 @@ bool  GOMP_loop_ull_guided_start(bool a1, unsigned long long a2, unsigned long l
   static bool (*GOMP_loop_ull_guided_start_h) (bool, unsigned long long, unsigned long long, unsigned long long, unsigned long long, unsigned long long *, unsigned long long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_ull_guided_start(bool, unsigned long long, unsigned long long, unsigned long long, unsigned long long, unsigned long long *, unsigned long long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_ull_guided_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_ull_guided_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1217,9 +1228,9 @@ bool  GOMP_loop_ull_guided_start(bool a1, unsigned long long a2, unsigned long l
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     retval  =  (*GOMP_loop_ull_guided_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
   return retval;
 
@@ -1235,7 +1246,7 @@ bool  GOMP_loop_ull_runtime_start(bool a1, unsigned long long a2, unsigned long 
   static bool (*GOMP_loop_ull_runtime_start_h) (bool, unsigned long long, unsigned long long, unsigned long long, unsigned long long *, unsigned long long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_ull_runtime_start(bool, unsigned long long, unsigned long long, unsigned long long, unsigned long long *, unsigned long long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_ull_runtime_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_ull_runtime_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1249,9 +1260,9 @@ bool  GOMP_loop_ull_runtime_start(bool a1, unsigned long long a2, unsigned long 
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     retval  =  (*GOMP_loop_ull_runtime_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
   return retval;
 
@@ -1267,7 +1278,7 @@ bool  GOMP_loop_ull_ordered_static_start(bool a1, unsigned long long a2, unsigne
   static bool (*GOMP_loop_ull_ordered_static_start_h) (bool, unsigned long long, unsigned long long, unsigned long long, unsigned long long, unsigned long long *, unsigned long long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_ull_ordered_static_start(bool, unsigned long long, unsigned long long, unsigned long long, unsigned long long, unsigned long long *, unsigned long long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_ull_ordered_static_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_ull_ordered_static_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1281,9 +1292,9 @@ bool  GOMP_loop_ull_ordered_static_start(bool a1, unsigned long long a2, unsigne
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     retval  =  (*GOMP_loop_ull_ordered_static_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
   return retval;
 
@@ -1299,7 +1310,7 @@ bool  GOMP_loop_ull_ordered_dynamic_start(bool a1, unsigned long long a2, unsign
   static bool (*GOMP_loop_ull_ordered_dynamic_start_h) (bool, unsigned long long, unsigned long long, unsigned long long, unsigned long long, unsigned long long *, unsigned long long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_ull_ordered_dynamic_start(bool, unsigned long long, unsigned long long, unsigned long long, unsigned long long, unsigned long long *, unsigned long long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_ull_ordered_dynamic_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_ull_ordered_dynamic_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1313,9 +1324,9 @@ bool  GOMP_loop_ull_ordered_dynamic_start(bool a1, unsigned long long a2, unsign
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     retval  =  (*GOMP_loop_ull_ordered_dynamic_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
   return retval;
 
@@ -1331,7 +1342,7 @@ bool  GOMP_loop_ull_ordered_guided_start(bool a1, unsigned long long a2, unsigne
   static bool (*GOMP_loop_ull_ordered_guided_start_h) (bool, unsigned long long, unsigned long long, unsigned long long, unsigned long long, unsigned long long *, unsigned long long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_ull_ordered_guided_start(bool, unsigned long long, unsigned long long, unsigned long long, unsigned long long, unsigned long long *, unsigned long long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_ull_ordered_guided_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_ull_ordered_guided_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1345,9 +1356,9 @@ bool  GOMP_loop_ull_ordered_guided_start(bool a1, unsigned long long a2, unsigne
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     retval  =  (*GOMP_loop_ull_ordered_guided_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
   return retval;
 
@@ -1363,7 +1374,7 @@ bool  GOMP_loop_ull_ordered_runtime_start(bool a1, unsigned long long a2, unsign
   static bool (*GOMP_loop_ull_ordered_runtime_start_h) (bool, unsigned long long, unsigned long long, unsigned long long, unsigned long long *, unsigned long long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_ull_ordered_runtime_start(bool, unsigned long long, unsigned long long, unsigned long long, unsigned long long *, unsigned long long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_ull_ordered_runtime_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_ull_ordered_runtime_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1377,9 +1388,9 @@ bool  GOMP_loop_ull_ordered_runtime_start(bool a1, unsigned long long a2, unsign
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     retval  =  (*GOMP_loop_ull_ordered_runtime_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
   return retval;
 
@@ -1395,7 +1406,7 @@ bool  GOMP_loop_ull_static_next(unsigned long long * a1, unsigned long long * a2
   static bool (*GOMP_loop_ull_static_next_h) (unsigned long long *, unsigned long long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_ull_static_next(unsigned long long *, unsigned long long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_ull_static_next %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_ull_static_next %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1409,9 +1420,9 @@ bool  GOMP_loop_ull_static_next(unsigned long long * a1, unsigned long long * a2
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     retval  =  (*GOMP_loop_ull_static_next_h)( a1,  a2);
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
   return retval;
 
@@ -1427,7 +1438,7 @@ bool  GOMP_loop_ull_dynamic_next(unsigned long long * a1, unsigned long long * a
   static bool (*GOMP_loop_ull_dynamic_next_h) (unsigned long long *, unsigned long long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_ull_dynamic_next(unsigned long long *, unsigned long long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_ull_dynamic_next %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_ull_dynamic_next %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1441,9 +1452,9 @@ bool  GOMP_loop_ull_dynamic_next(unsigned long long * a1, unsigned long long * a
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     retval  =  (*GOMP_loop_ull_dynamic_next_h)( a1,  a2);
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
   return retval;
 
@@ -1459,7 +1470,7 @@ bool  GOMP_loop_ull_guided_next(unsigned long long * a1, unsigned long long * a2
   static bool (*GOMP_loop_ull_guided_next_h) (unsigned long long *, unsigned long long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_ull_guided_next(unsigned long long *, unsigned long long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_ull_guided_next %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_ull_guided_next %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1473,9 +1484,9 @@ bool  GOMP_loop_ull_guided_next(unsigned long long * a1, unsigned long long * a2
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     retval  =  (*GOMP_loop_ull_guided_next_h)( a1,  a2);
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
   return retval;
 
@@ -1491,7 +1502,7 @@ bool  GOMP_loop_ull_runtime_next(unsigned long long * a1, unsigned long long * a
   static bool (*GOMP_loop_ull_runtime_next_h) (unsigned long long *, unsigned long long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_ull_runtime_next(unsigned long long *, unsigned long long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_ull_runtime_next %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_ull_runtime_next %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1505,9 +1516,9 @@ bool  GOMP_loop_ull_runtime_next(unsigned long long * a1, unsigned long long * a
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     retval  =  (*GOMP_loop_ull_runtime_next_h)( a1,  a2);
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
   return retval;
 
@@ -1523,7 +1534,7 @@ bool  GOMP_loop_ull_ordered_static_next(unsigned long long * a1, unsigned long l
   static bool (*GOMP_loop_ull_ordered_static_next_h) (unsigned long long *, unsigned long long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_ull_ordered_static_next(unsigned long long *, unsigned long long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_ull_ordered_static_next %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_ull_ordered_static_next %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1537,9 +1548,9 @@ bool  GOMP_loop_ull_ordered_static_next(unsigned long long * a1, unsigned long l
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     retval  =  (*GOMP_loop_ull_ordered_static_next_h)( a1,  a2);
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
   return retval;
 
@@ -1555,7 +1566,7 @@ bool  GOMP_loop_ull_ordered_dynamic_next(unsigned long long * a1, unsigned long 
   static bool (*GOMP_loop_ull_ordered_dynamic_next_h) (unsigned long long *, unsigned long long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_ull_ordered_dynamic_next(unsigned long long *, unsigned long long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_ull_ordered_dynamic_next %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_ull_ordered_dynamic_next %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1569,9 +1580,9 @@ bool  GOMP_loop_ull_ordered_dynamic_next(unsigned long long * a1, unsigned long 
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     retval  =  (*GOMP_loop_ull_ordered_dynamic_next_h)( a1,  a2);
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
   return retval;
 
@@ -1587,7 +1598,7 @@ bool  GOMP_loop_ull_ordered_guided_next(unsigned long long * a1, unsigned long l
   static bool (*GOMP_loop_ull_ordered_guided_next_h) (unsigned long long *, unsigned long long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_ull_ordered_guided_next(unsigned long long *, unsigned long long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_ull_ordered_guided_next %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_ull_ordered_guided_next %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1601,9 +1612,9 @@ bool  GOMP_loop_ull_ordered_guided_next(unsigned long long * a1, unsigned long l
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     retval  =  (*GOMP_loop_ull_ordered_guided_next_h)( a1,  a2);
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
   return retval;
 
@@ -1619,7 +1630,7 @@ bool  GOMP_loop_ull_ordered_runtime_next(unsigned long long * a1, unsigned long 
   static bool (*GOMP_loop_ull_ordered_runtime_next_h) (unsigned long long *, unsigned long long *) = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_loop_ull_ordered_runtime_next(unsigned long long *, unsigned long long *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_loop_ull_ordered_runtime_next %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_loop_ull_ordered_runtime_next %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1633,9 +1644,9 @@ bool  GOMP_loop_ull_ordered_runtime_next(unsigned long long * a1, unsigned long 
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     retval  =  (*GOMP_loop_ull_ordered_runtime_next_h)( a1,  a2);
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
   return retval;
 
@@ -1650,7 +1661,7 @@ void  GOMP_ordered_start()  {
 
   static void (*GOMP_ordered_start_h) () = NULL;
   TAU_PROFILE_TIMER(t,"void GOMP_ordered_start()", "", TAU_USER1);
-  DEBUGPRINT("GOMP_ordered_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_ordered_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1667,10 +1678,10 @@ void  GOMP_ordered_start()  {
     if (Tau_global_get_insideTAU() == 0) { 
 	  // our turn to work in the ordered region!
       //__ompc_event_callback(OMP_EVENT_THR_END_ODWT);
-	  TAU_PROFILE_START(t); 
+	  Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); 
 	}
     (*GOMP_ordered_start_h)();
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
 
 }
@@ -1684,7 +1695,7 @@ void  GOMP_ordered_end()  {
 
   static void (*GOMP_ordered_end_h) () = NULL;
   TAU_PROFILE_TIMER(t,"void GOMP_ordered_end()", "", TAU_USER1);
-  DEBUGPRINT("GOMP_ordered_end %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_ordered_end %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1698,10 +1709,10 @@ void  GOMP_ordered_end()  {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     (*GOMP_ordered_end_h)();
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_stop_current_timer();
+	  Tau_pure_stop_task(__FUNCTION__, Tau_get_tid());
 	  // wait for those after us to handle the ordered region...
       //__ompc_event_callback(OMP_EVENT_THR_BEGIN_ODWT);
 	}
@@ -1709,6 +1720,13 @@ void  GOMP_ordered_end()  {
 
 }
 
+void Tau_gomp_proxy_function(void * a2) {
+  DEBUGPRINT("Proxy %d!\n", Tau_get_tid());
+  TAU_GOMP_REGION_WRAPPER * proxy = (TAU_GOMP_REGION_WRAPPER*)(a2);
+  __ompc_event_callback(OMP_EVENT_THR_END_IDLE);
+  (proxy->a1)(proxy->a2);
+  __ompc_event_callback(OMP_EVENT_THR_BEGIN_IDLE);
+}
 
 /**********************************************************
    GOMP_parallel_start
@@ -1717,7 +1735,8 @@ void  GOMP_ordered_end()  {
 void  GOMP_parallel_start(void (*a1)(void *), void * a2, unsigned int a3)  {
   static void (*GOMP_parallel_start_h) (void (*)(void *), void *, unsigned int) = NULL;
   TAU_PROFILE_TIMER(t,"void GOMP_parallel_start(void (*)(void *), void *, unsigned int)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_parallel_start %d of %d\n", omp_get_thread_num(), omp_get_num_threads());
+  int numThreads = a3 == 0 ? omp_get_max_threads() : 1;
+  DEBUGPRINT("GOMP_parallel_start %d of %d\n", Tau_get_tid(), numThreads);
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1737,17 +1756,23 @@ void  GOMP_parallel_start(void (*a1)(void *), void * a2, unsigned int a3)  {
 	// make sure those threads don't start timers before then, or else we will have
 	// overlapping timers.
     if (Tau_global_get_insideTAU() == 0) { 
-      Tau_lock_environment();
-	  TAU_PROFILE_START(t); 
-	}
-    (*GOMP_parallel_start_h)( a1,  a2,  a3);
-    if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_stop_current_timer(); 
-      DEBUGPRINT("GOMP_parallel_start %d of %d (on exit)\n", omp_get_thread_num(), omp_get_num_threads());
-      // do this AFTER the start, so we know how many threads there are.
+      // KEVIN Tau_lock_environment();
+      TauOpenMPCollectorAPISetNumThreads(numThreads);
       __ompc_event_callback(OMP_EVENT_FORK);
+      Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); 
+    }
+    TAU_GOMP_REGION_WRAPPER * proxy = (TAU_GOMP_REGION_WRAPPER*)(malloc(sizeof(TAU_GOMP_REGION_WRAPPER)));
+    proxy->a1 = a1;
+    proxy->a2 = a2;
+    //(*GOMP_parallel_start_h)( a1,  a2,  a3);
+    (*GOMP_parallel_start_h)( &Tau_gomp_proxy_function, proxy,  a3);
+    if (Tau_global_get_insideTAU() == 0) { 
+	  Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); 
+      DEBUGPRINT("GOMP_parallel_start %d of %d (on exit)\n", Tau_get_tid(), omp_get_num_threads());
+      // do this AFTER the start, so we know how many threads there are.
+      //__ompc_event_callback(OMP_EVENT_FORK);
 	  // unlock the environment to let other threads progress
-      Tau_unlock_environment();
+      // KEVIN Tau_unlock_environment();
 	}
   }
 
@@ -1762,7 +1787,7 @@ void  GOMP_parallel_end()  {
 
   static void (*GOMP_parallel_end_h) () = NULL;
   TAU_PROFILE_TIMER(t,"void GOMP_parallel_end()", "", TAU_USER1);
-  DEBUGPRINT("GOMP_parallel_end %d of %d\n", omp_get_thread_num(), omp_get_num_threads());
+  DEBUGPRINT("GOMP_parallel_end %d of %d\n", Tau_get_tid(), omp_get_num_threads());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1777,15 +1802,15 @@ void  GOMP_parallel_end()  {
       return;
     }
     if (Tau_global_get_insideTAU() == 0) { 
-	  TAU_PROFILE_START(t); 
+	  Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); 
 	}
     (*GOMP_parallel_end_h)();
     if (Tau_global_get_insideTAU() == 0) { 
-      Tau_lock_environment();
-	  Tau_stop_current_timer(); 
+      // KEVIN Tau_lock_environment();
+	  Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); 
 	  // do this at the end, so we can join all the threads.
       __ompc_event_callback(OMP_EVENT_JOIN);
-      Tau_unlock_environment();
+      // KEVIN Tau_unlock_environment();
 	}
   }
 
@@ -1800,7 +1825,7 @@ void  GOMP_task(void (*a1)(void *), void * a2, void (*a3)(void *, void *), long 
 
   static void (*GOMP_task_h) (void (*)(void *), void *, void (*)(void *, void *), long, long, bool, unsigned int) = NULL;
   TAU_PROFILE_TIMER(t,"void GOMP_task(void (*)(void *), void *, void (*)(void *, void *), long, long, bool, unsigned int)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_task %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_task %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1814,9 +1839,9 @@ void  GOMP_task(void (*a1)(void *), void * a2, void (*a3)(void *, void *), long 
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return;
     }
-  if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+  if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
   (*GOMP_task_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
-  if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+  if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
 
 }
@@ -1830,7 +1855,7 @@ void  GOMP_taskwait()  {
 
   static void (*GOMP_taskwait_h) () = NULL;
   TAU_PROFILE_TIMER(t,"void GOMP_taskwait()", "", TAU_USER1);
-  DEBUGPRINT("GOMP_taskwait %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_taskwait %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1844,9 +1869,9 @@ void  GOMP_taskwait()  {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return;
     }
-  if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+  if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
   (*GOMP_taskwait_h)();
-  if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+  if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
 
 }
@@ -1860,7 +1885,7 @@ void  GOMP_taskyield()  {
 
   static void (*GOMP_taskyield_h) () = NULL;
   TAU_PROFILE_TIMER(t,"void GOMP_taskyield()", "", TAU_USER1);
-  DEBUGPRINT("GOMP_taskyield %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_taskyield %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1874,9 +1899,9 @@ void  GOMP_taskyield()  {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return;
     }
-  if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+  if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
   (*GOMP_taskyield_h)();
-  if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+  if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
 
 }
@@ -1891,7 +1916,7 @@ unsigned int  GOMP_sections_start(unsigned int a1)  {
   static unsigned int (*GOMP_sections_start_h) (unsigned int) = NULL;
   unsigned int retval = 0;
   TAU_PROFILE_TIMER(t,"unsigned int GOMP_sections_start(unsigned int)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_sections_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_sections_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1905,9 +1930,9 @@ unsigned int  GOMP_sections_start(unsigned int a1)  {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     retval  =  (*GOMP_sections_start_h)( a1);
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
   return retval;
 
@@ -1923,7 +1948,7 @@ unsigned int  GOMP_sections_next()  {
   static unsigned int (*GOMP_sections_next_h) () = NULL;
   unsigned int retval = 0;
   TAU_PROFILE_TIMER(t,"unsigned int GOMP_sections_next()", "", TAU_USER1);
-  DEBUGPRINT("GOMP_sections_next %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_sections_next %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1937,9 +1962,9 @@ unsigned int  GOMP_sections_next()  {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return retval;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     retval  =  (*GOMP_sections_next_h)();
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
   return retval;
 
@@ -1954,7 +1979,7 @@ void  GOMP_parallel_sections_start(void (*a1)(void *), void * a2, unsigned int a
 
   static void (*GOMP_parallel_sections_start_h) (void (*)(void *), void *, unsigned int, unsigned int) = NULL;
   TAU_PROFILE_TIMER(t,"void GOMP_parallel_sections_start(void (*)(void *), void *, unsigned int, unsigned int)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_parallel_sections_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_parallel_sections_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -1969,15 +1994,15 @@ void  GOMP_parallel_sections_start(void (*a1)(void *), void * a2, unsigned int a
       return;
     }
     if (Tau_global_get_insideTAU() == 0) { 
-      Tau_lock_environment();
-	  TAU_PROFILE_START(t); 
+      // KEVIN Tau_lock_environment();
+	  Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); 
 	}
     (*GOMP_parallel_sections_start_h)( a1,  a2,  a3,  a4);
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_stop_current_timer(); 
+	  Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); 
       // do this AFTER the start, so we know how many threads there are.
       __ompc_event_callback(OMP_EVENT_FORK);
-      Tau_unlock_environment();
+      // KEVIN Tau_unlock_environment();
 	}
   }
 
@@ -1992,7 +2017,7 @@ void  GOMP_sections_end()  {
 
   static void (*GOMP_sections_end_h) () = NULL;
   TAU_PROFILE_TIMER(t,"void GOMP_sections_end()", "", TAU_USER1);
-  DEBUGPRINT("GOMP_sections_end %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_sections_end %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2006,9 +2031,9 @@ void  GOMP_sections_end()  {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     (*GOMP_sections_end_h)();
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
 
 }
@@ -2022,7 +2047,7 @@ void  GOMP_sections_end_nowait()  {
 
   static void (*GOMP_sections_end_nowait_h) () = NULL;
   TAU_PROFILE_TIMER(t,"void GOMP_sections_end_nowait()", "", TAU_USER1);
-  DEBUGPRINT("GOMP_sections_end_nowait %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_sections_end_nowait %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2036,9 +2061,9 @@ void  GOMP_sections_end_nowait()  {
       perror("Error obtaining symbol info from dlopen'ed lib"); 
       return;
     }
-    if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
     (*GOMP_sections_end_nowait_h)();
-    if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
 
 }
@@ -2053,7 +2078,7 @@ bool  GOMP_single_start()  {
   static bool (*GOMP_single_start_h) () = NULL;
   bool retval = 0;
   TAU_PROFILE_TIMER(t,"bool GOMP_single_start()", "", TAU_USER1);
-  DEBUGPRINT("GOMP_single_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_single_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2070,11 +2095,11 @@ bool  GOMP_single_start()  {
     if (Tau_global_get_insideTAU() == 0) { 
 	  // in this case, the single region is entered and executed
       __ompc_event_callback(OMP_EVENT_THR_BEGIN_SINGLE);
-      TAU_PROFILE_START(t); 
+      Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); 
 	}
     retval  =  (*GOMP_single_start_h)();
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_stop_current_timer(); 
+	  Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); 
 	  // the code is done, so fire the callback end event
       __ompc_event_callback(OMP_EVENT_THR_END_SINGLE);
 	}
@@ -2093,7 +2118,7 @@ void *  GOMP_single_copy_start()  {
   static void * (*GOMP_single_copy_start_h) () = NULL;
   void * retval = 0;
   TAU_PROFILE_TIMER(t,"void *GOMP_single_copy_start()", "", TAU_USER1);
-  DEBUGPRINT("GOMP_single_copy_start %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_single_copy_start %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2108,12 +2133,12 @@ void *  GOMP_single_copy_start()  {
       return retval;
     }
     if (Tau_global_get_insideTAU() == 0) { 
-	  TAU_PROFILE_START(t); 
+	  Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); 
       __ompc_event_callback(OMP_EVENT_THR_BEGIN_SINGLE);
 	}
     retval  =  (*GOMP_single_copy_start_h)();
     if (Tau_global_get_insideTAU() == 0) { 
-	  Tau_stop_current_timer(); 
+	  Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); 
 	}
   }
   return retval;
@@ -2129,7 +2154,7 @@ void  GOMP_single_copy_end(void * a1)  {
 
   static void (*GOMP_single_copy_end_h) (void *) = NULL;
   TAU_PROFILE_TIMER(t,"void GOMP_single_copy_end(void *)", "", TAU_USER1);
-  DEBUGPRINT("GOMP_single_copy_end %d\n", omp_get_thread_num());
+  DEBUGPRINT("GOMP_single_copy_end %d\n", Tau_get_tid());
   if (tau_handle == NULL) 
     tau_handle = (void *) dlopen(tau_orig_libname, RTLD_NOW); 
 
@@ -2144,9 +2169,9 @@ void  GOMP_single_copy_end(void * a1)  {
       return;
     }
   __ompc_event_callback(OMP_EVENT_THR_END_SINGLE);
-  if (Tau_global_get_insideTAU() == 0) { TAU_PROFILE_START(t); }
+  if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
   (*GOMP_single_copy_end_h)( a1);
-  if (Tau_global_get_insideTAU() == 0) { Tau_stop_current_timer(); }
+  if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
   }
 
 }

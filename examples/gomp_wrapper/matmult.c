@@ -164,7 +164,7 @@ int atomic () {
 
 int barrier () {
   int count = 0;
-  int max = 4;
+  int max = 2;
   #pragma omp parallel num_threads(max)
   {
     sleep(omp_get_thread_num());
@@ -185,7 +185,7 @@ int critical() {
   }
 
   max = a[0];
-  #pragma omp parallel for num_threads(4)
+  #pragma omp parallel for num_threads(2)
   for (i = 1; i < CRITICAL_SIZE; i++) {
     if (a[i] > max) {
       #pragma omp critical
@@ -372,18 +372,18 @@ int main (int argc, char *argv[])
 {
   printf("Main...\n");
   fflush(stdout);
-  do_work();
 #if 0
 #endif
-  printf ("Doing atomic: %d\n\n", atomic());
-  printf ("Doing barrier: %d\n\n", barrier());
-  printf ("Doing critical: %d\n\n", critical());
-  printf ("Doing fortest: %d\n\n", fortest());
-  printf ("Doing flush: %d\n\n", flush());
-  printf ("Doing master: %d\n\n", master());
-  printf ("Doing ordered: %d\n\n", ordered());
-  printf ("Doing sections: %d\n\n", sections());
-  printf ("Doing single: %d\n\n", single());
+  do_work();
+  printf ("\n\nDoing atomic: %d\n\n", atomic());
+  printf ("\n\nDoing barrier: %d\n\n", barrier());
+  printf ("\n\nDoing critical: %d\n\n", critical());
+  printf ("\n\nDoing fortest: %d\n\n", fortest());
+  printf ("\n\nDoing flush: %d\n\n", flush());
+  printf ("\n\nDoing master: %d\n\n", master());
+  printf ("\n\nDoing ordered: %d\n\n", ordered());
+  printf ("\n\nDoing sections: %d\n\n", sections());
+  printf ("\n\nDoing single: %d\n\n", single());
 #if 0
 #endif
 
