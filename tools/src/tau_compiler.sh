@@ -8,8 +8,6 @@ declare -i group_f_F=1
 declare -i group_c=2
 declare -i group_C=3
 declare -i group_upc=4
-# Replaced with more flexible "upc" variable
-#declare -i berkeley_upcc=$FALSE
 
 declare -i disablePdtStep=$FALSE
 declare -i hasAnOutputFile=$FALSE
@@ -271,7 +269,7 @@ echoIfDebug "The compiler being read is $CMD \n"
 # Initialize optOpariOpts 
 ####################################################################
 optOpariOpts="-nosrc -table opari.tab.c"
-optOpari2Opts="--nosrc --tpd "
+optOpari2Opts="--nosrc"
 
 ####################################################################
 #Parsing all the Tokens of the Command passed
