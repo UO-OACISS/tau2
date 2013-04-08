@@ -208,6 +208,21 @@ public class Function implements Serializable, Comparable<Function> {
             name = name.substring(name.lastIndexOf("=>") + 2);
         }
 
+        if(name.startsWith("!$omp")){
+        	int at = name.lastIndexOf('@');
+        	int colon = name.lastIndexOf(':');
+        	if(at<0||colon<0||colon<at){
+        		return sourceLink;
+        	}
+        	String filename = name.substring(at+1, colon);
+        	String lineString = name.substring(colon+1);
+        	sourceLink.setFilename(filename);
+        	int linenumber = Integer.parseInt(lineString);
+        	sourceLink.setStartLine(linenumber);
+        	sourceLink.setEndLine(linenumber);
+        	return sourceLink;
+        }
+        
         // check for parameter based profile name
     	List<Parameter> parameters = new ArrayList<Parameter>();
         int parameterStart = name.indexOf("[ <");
