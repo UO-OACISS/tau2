@@ -752,6 +752,7 @@ CallStackInfo * Tau_sampling_resolveCallSites(const unsigned long * addresses)
         prevShortName = newShortName;
         newShortName = NULL;
       }
+#if 0
       // resolve it again, without the line number
       callStack->callSites.push_back(Tau_sampling_resolveCallSite(
           addresses[1], "SAMPLE", NULL, &newShortName, addAddress, false));
@@ -762,6 +763,7 @@ CallStackInfo * Tau_sampling_resolveCallSites(const unsigned long * addresses)
           prevShortName = newShortName;
         }
       }
+#endif
       for (int i = 2; i < length; ++i) {
         unsigned long address = addresses[i];
         callStack->callSites.push_back(Tau_sampling_resolveCallSite(
