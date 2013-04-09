@@ -29,6 +29,7 @@
 #include "omp_collector_api.h"
 #include <assert.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <Profile/Profiler.h>
 #include "omp.h"
 
@@ -190,6 +191,7 @@ int __omp_collector_api(void *arg)
     }
 #endif
     while((int)(*traverse)!=0) {
+	  printf("Message!\n"); fflush(stdout);
       omp_collector_message req;
       req.sz = (int)(*traverse); // todo: add check for consistency    
       traverse+=sizeof(int);

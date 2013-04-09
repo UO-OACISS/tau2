@@ -186,7 +186,7 @@ void Tau_get_current_region_context(int tid) {
   return;
 }
 
-/*__inline*/ void Tau_omp_start_timer(const char * state, int tid, int use_context, int forking) {
+/*__inline*/ void Tau_omp_start_timer(const char * state, int tid, int use_context) {
   char * regionIDstr = NULL;
   /* turns out the master thread wasn't updating it - so unlock and continue. */
   if (Tau_collector_flags[tid].timerContext == NULL) {
@@ -208,29 +208,11 @@ void Tau_get_current_region_context(int tid) {
     Tau_collector_flags[tid].activeTimerContext = malloc(strlen(Tau_collector_flags[tid].timerContext)+1);
     strcpy(Tau_collector_flags[tid].activeTimerContext, Tau_collector_flags[tid].timerContext);
   }
-  //printf("Thread %d : Starting : %s\n", tid, regionIDstr); fflush(stdout);
-  //TAU_STATIC_TIMER_START(regionIDstr);
   Tau_pure_start_task(regionIDstr, tid);
-#if 0
-  if (forking > 0 && Tau_collector_flags[tid].usingGOMP > 0) {
-    //printf("FORKING!\n");
-    // let's hope that the master thread can fork this timer for all threads in the team
-	int index;
-	//Tau_collector_flags[tid].numThreadsInTeam = omp_get_num_threads();
-	for (index = 0 ; index < Tau_collector_flags[tid].numThreadsInTeam ; index++) {
-      //printf("FORK... %d\n", index);
-	  if (index != tid) {
-            //Tau_create_top_level_timer_if_necessary_task(index);
-	    Tau_pure_start_task(regionIDstr, index);
-	  }
-	}
-  }
-#endif
   free(regionIDstr);
 }
 
-/*__inline*/ void Tau_omp_stop_timer(const char * state, int tid, int use_context, int joining) {
-#if 1
+/*__inline*/ void Tau_omp_stop_timer(const char * state, int tid, int use_context) {
   char * regionIDstr = NULL;
   if (Tau_collector_flags[tid].activeTimerContext == NULL) {
     regionIDstr = malloc(32);
@@ -244,25 +226,8 @@ void Tau_get_current_region_context(int tid) {
     //sprintf(regionIDstr, "%s : OpenMP %s", Tau_collector_flags[tid].activeTimerContext, state);
     sprintf(regionIDstr, "%s : %s", Tau_collector_flags[tid].activeTimerContext, state);
   }
-  //printf("Thread %d : Stopping : %s\n", tid, regionIDstr); fflush(stdout);
-  //TAU_STATIC_TIMER_STOP(regionIDstr);
   Tau_pure_stop_task(regionIDstr, tid);
   free(regionIDstr);
-#else // this will prevent overlapping timers.
-  //TAU_GLOBAL_TIMER_STOP();
-  Tau_stop_current_timer();
-#endif
-#if 0
-  if (joining > 0 && Tau_collector_flags[tid].usingGOMP > 0) {
-    // let's hope that the master thread can fork this timer for all threads in the team
-	int index;
-	for (index = 0 ; index < Tau_collector_flags[tid].numThreadsInTeam ; index++) {
-	  if (index != tid) {
-	    Tau_stop_current_timer_task(index);
-	  }
-	}
-  }
-#endif
 }
 
 void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
@@ -279,7 +244,7 @@ void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
   switch(event) {
     case OMP_EVENT_FORK:
       Tau_get_current_region_context(tid);
-      Tau_omp_start_timer("PARALLEL REGION", tid, 1, 1);
+      Tau_omp_start_timer("PARALLEL REGION", tid, 1);
       Tau_collector_flags[tid].parallel++;
       break;
     case OMP_EVENT_JOIN:
@@ -289,7 +254,7 @@ void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
         Tau_collector_flags[tid].idle = 0;
       }
 */
-      Tau_omp_stop_timer("PARALLEL REGION", tid, 1, 1);
+      Tau_omp_stop_timer("PARALLEL REGION", tid, 1);
       Tau_collector_flags[tid].parallel--;
       break;
     case OMP_EVENT_THR_BEGIN_IDLE:
@@ -298,7 +263,7 @@ void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
         break;
       }
       if (Tau_collector_flags[tid].busy == 1) {
-        Tau_omp_stop_timer("PARALLEL REGION", tid, 1, 0);
+        Tau_omp_stop_timer("PARALLEL REGION", tid, 1);
         Tau_collector_flags[tid].busy = 0;
       }
 /*
@@ -323,76 +288,76 @@ void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
       }
       Tau_collector_flags[tid].activeTimerContext = malloc(strlen(Tau_collector_flags[tid].timerContext)+1);
       strcpy(Tau_collector_flags[tid].activeTimerContext, Tau_collector_flags[tid].timerContext);
-      Tau_omp_start_timer("PARALLEL REGION", tid, 1, 0);
+      Tau_omp_start_timer("PARALLEL REGION", tid, 1);
       Tau_collector_flags[tid].busy = 1;
       break;
     case OMP_EVENT_THR_BEGIN_IBAR:
-      Tau_omp_start_timer("IMPLICIT BARRIER", tid, 1, 0);
+      Tau_omp_start_timer("IMPLICIT BARRIER", tid, 1);
       break;
     case OMP_EVENT_THR_END_IBAR:
-      Tau_omp_stop_timer("IMPLICIT BARRIER", tid, 1, 0);
+      Tau_omp_stop_timer("IMPLICIT BARRIER", tid, 1);
       break;
     case OMP_EVENT_THR_BEGIN_EBAR:
-      Tau_omp_start_timer("EXPLICIT BARRIER", tid, 1, 0);
+      Tau_omp_start_timer("EXPLICIT BARRIER", tid, 1);
       break;
     case OMP_EVENT_THR_END_EBAR:
-      Tau_omp_stop_timer("EXPLICIT BARRIER", tid, 1, 0);
+      Tau_omp_stop_timer("EXPLICIT BARRIER", tid, 1);
       break;
     case OMP_EVENT_THR_BEGIN_LKWT:
-      Tau_omp_start_timer("LOCK WAIT", tid, 1, 0);
+      Tau_omp_start_timer("LOCK WAIT", tid, 1);
       break;
     case OMP_EVENT_THR_END_LKWT:
-      Tau_omp_stop_timer("LOCK WAIT", tid, 1, 0);
+      Tau_omp_stop_timer("LOCK WAIT", tid, 1);
       break;
     case OMP_EVENT_THR_BEGIN_CTWT:
-      Tau_omp_start_timer("CRITICAL SECTION WAIT", tid, 1, 0);
+      Tau_omp_start_timer("CRITICAL SECTION WAIT", tid, 1);
       break;
     case OMP_EVENT_THR_END_CTWT:
-      Tau_omp_stop_timer("CRITICAL SECTION WAIT", tid, 1, 0);
+      Tau_omp_stop_timer("CRITICAL SECTION WAIT", tid, 1);
       break;
     case OMP_EVENT_THR_BEGIN_ODWT:
       // for some reason, the ordered region wait is entered twice for some threads.
       if (Tau_collector_flags[tid].ordered_region_wait == 0) {
-        Tau_omp_start_timer("ORDERED REGION WAIT", tid, 1, 0);
+        Tau_omp_start_timer("ORDERED REGION WAIT", tid, 1);
       }
       Tau_collector_flags[tid].ordered_region_wait = 1;
       break;
     case OMP_EVENT_THR_END_ODWT:
       if (Tau_collector_flags[tid].ordered_region_wait == 1) {
-        Tau_omp_stop_timer("ORDERED REGION WAIT", tid, 1, 0);
+        Tau_omp_stop_timer("ORDERED REGION WAIT", tid, 1);
       }
       Tau_collector_flags[tid].ordered_region_wait = 0;
       break;
     case OMP_EVENT_THR_BEGIN_MASTER:
-      Tau_omp_start_timer("MASTER REGION", tid, 1, 0);
+      Tau_omp_start_timer("MASTER REGION", tid, 1);
       break;
     case OMP_EVENT_THR_END_MASTER:
-      Tau_omp_stop_timer("MASTER REGION", tid, 1, 0);
+      Tau_omp_stop_timer("MASTER REGION", tid, 1);
       break;
     case OMP_EVENT_THR_BEGIN_SINGLE:
-      Tau_omp_start_timer("SINGLE REGION", tid, 1, 0);
+      Tau_omp_start_timer("SINGLE REGION", tid, 1);
       break;
     case OMP_EVENT_THR_END_SINGLE:
-      Tau_omp_stop_timer("SINGLE REGION", tid, 1, 0);
+      Tau_omp_stop_timer("SINGLE REGION", tid, 1);
       break;
     case OMP_EVENT_THR_BEGIN_ORDERED:
       // for some reason, the ordered region is entered twice for some threads.
       if (Tau_collector_flags[tid].ordered_region == 0) {
-        Tau_omp_start_timer("ORDERED REGION", tid, 1, 0);
+        Tau_omp_start_timer("ORDERED REGION", tid, 1);
         Tau_collector_flags[tid].ordered_region = 1;
       }
       break;
     case OMP_EVENT_THR_END_ORDERED:
       if (Tau_collector_flags[tid].ordered_region == 1) {
-        Tau_omp_stop_timer("ORDERED REGION", tid, 1, 0);
+        Tau_omp_stop_timer("ORDERED REGION", tid, 1);
       }
       Tau_collector_flags[tid].ordered_region = 0;
       break;
     case OMP_EVENT_THR_BEGIN_ATWT:
-      Tau_omp_start_timer("ATOMIC REGION WAIT", tid, 1, 0);
+      Tau_omp_start_timer("ATOMIC REGION WAIT", tid, 1);
       break;
     case OMP_EVENT_THR_END_ATWT:
-      Tau_omp_stop_timer("ATOMIC REGION WAIT", tid, 1, 0);
+      Tau_omp_stop_timer("ATOMIC REGION WAIT", tid, 1);
       break;
   }
   //printf("** Thread: %d, EVENT:%s handled. **\n", tid, OMP_EVENT_NAME[event-1]);
@@ -457,23 +422,32 @@ int Tau_initialize_collector_api(void) {
   char *error;
   int tmpUsingGOMP = 0;
 
-  void * handle = NULL;
-  handle = dlopen("libopenmp.so", RTLD_NOW | RTLD_GLOBAL);
-  if (!handle) {
-    //dlerror();    /* Clear any existing error */
-    TAU_VERBOSE("libopenmp.so not found... trying for GOMP wrapper...\n");
-    handle = dlopen("libgomp_g_wrap.so", RTLD_NOW | RTLD_GLOBAL);
-    if (!handle) {
-      TAU_VERBOSE("libgomp_g_wrap.so not found... collector API not enabled. \n");
-      return -1;
-    } else {
-	  tmpUsingGOMP=1;
-	}
+#if 0
+  void * handle = dlopen("libopenmp.so", RTLD_NOW | RTLD_GLOBAL);
+  char const * err = dlerror();
+  if (err) { 
+	TAU_VERBOSE("Error loading libopenmp.so: %s\n", err);
+	char libname[32] = "libgomp_g_wrap.";
+#ifdef TAU_USE_DYLIB
+	strcat (libname, "dylib");
+#else
+	strcat (libname, "so");
+#endif
+	TAU_VERBOSE("Looking for library: %s\n", libname, err);
+    handle = dlopen(libname, RTLD_NOW | RTLD_GLOBAL);
+    err = dlerror();
+    if (err) { 
+	  TAU_VERBOSE("Error loading library: %s\n", libname, err);
+	  return -1;
+    }
   }
-
-  //dlerror();    /* Clear any existing error */
-
-  *(void **) (&Tau_collector_api) = dlsym(handle, "__omp_collector_api");
+#endif
+  *(void **) (&Tau_collector_api) = dlsym(RTLD_DEFAULT, "__omp_collector_api");
+  char const * err = dlerror();
+  if (err) { 
+	TAU_VERBOSE("Error getting '__omp_collector_api' handle: %s\n", err);
+	return -1;
+  }
   if (Tau_collector_api == NULL) {
     TAU_VERBOSE("__omp_collector_api symbol not found... collector API not enabled. \n");
     return -1;

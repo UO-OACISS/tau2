@@ -9,12 +9,12 @@ ARFLAGS=rcv
 LDFLAGS=-fopenmp -g 
 CFLAGS=-fopenmp -g 
 TARGET=matmult
-WRAPPER=libgomp_g_wrapper/libgomp_g_wrap.so
+WRAPPER=./libgomp_g_wrapper/libgomp_g_wrap$(TAU_APPLE_SHLIBX)
 
 OBJS=$(TARGET).o 
 $(TARGET): $(OBJS) 
 	# to link the wrapper in directly, do this (CXX should be tau_cxx.sh):
-	# $(LD) $(TARGET).o $(WRAPPER) -o $@ $(LDFLAGS) 
+	#$(LD) $(TARGET).o $(WRAPPER) -o $@ $(LDFLAGS) 
 	# otherwise, just link normally
 	$(LD) -g $(TARGET).o -o $@ $(LDFLAGS) 
 
@@ -31,7 +31,7 @@ $(WRAPPER):
 	cd libgomp_g_wrapper ; $(MAKE)
 
 testlib: $(TARGET) $(WRAPPER)
-	tau_exec -v -T pdt,mpi,papi,openmp -loadlib=$(WRAPPER) ./matmult
+	tau_exec -v -T pdt,serial,openmp -loadlib=$(WRAPPER) ./matmult
 
 clean:
 	/bin/rm -rf $(OBJS) $(TARGET) profile.* MULT* core.*
