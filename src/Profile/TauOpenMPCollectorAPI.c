@@ -1,9 +1,13 @@
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #include "omp_collector_api.h"
 #include "omp.h"
 #include <stdlib.h>
 #include <stdio.h> 
 #include <string.h> 
-#include <dlfcn.h> // for dynamic loading of symbols
+#include "dlfcn.h" // for dynamic loading of symbols
 #include "Profiler.h"
 #ifdef TAU_USE_LIBUNWIND
 #define UNW_LOCAL_ONLY
@@ -420,7 +424,11 @@ int Tau_initialize_collector_api(void) {
   if (Tau_collector_api != NULL) return 0;
 
   char *error;
+#if defined (__GNUC__) && defined (__GNUC_MINOR__) && defined (__GNUC_PATCHLEVEL__)
+  int tmpUsingGOMP = 1;
+#else
   int tmpUsingGOMP = 0;
+#endif
 
 #if 0
   void * handle = dlopen("libopenmp.so", RTLD_NOW | RTLD_GLOBAL);
