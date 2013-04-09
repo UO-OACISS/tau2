@@ -133,7 +133,7 @@ TAU_LIB_DIR=$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 UNWIND_FLAG=
 UNWIND_INC=
 UNWIND_LIB=
-UNWIND_LIB_FLAG=
+#UNWIND_LIB_FLAG=-lunwind
 UNWIND_EXTRAS=
 
 #######################################################################
@@ -1264,6 +1264,9 @@ TAU_SHLIBX              = .so
 #APPLECXX#TAU_APPLE_SHLIBX  = .dylib            #ENDIF#
 #PYTHON#TAU_APPLE_SHLIBX    = .so               #ENDIF#
 #APPLECXX#TAU_SHLIBX    = $(TAU_APPLE_SHLIBX)   #ENDIF#
+
+# For loading the collector API on Apple
+#APPLECXX#TAU_USE_DYLIB = -DTAU_USE_DYLIB            #ENDIF#
 
 #############################################
 
