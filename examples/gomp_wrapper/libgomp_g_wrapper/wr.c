@@ -12,7 +12,7 @@
 
 #include "gomp_wrapper_types.h"
 
-#if 1
+#if 0
 #define DEBUGPRINT(format, args...) \
 { printf(format, ## args); fflush(stdout); }
 #else

@@ -644,7 +644,7 @@ TauShmemSgiF.o  : TauShmemSgiF.c $(HDRS)
 	$(CC) $(CFLAGS) $(TAU_SHMEM_INC) -c $(@:.o=.c)
 
 TauOpenMPCollectorAPI.o  : TauOpenMPCollectorAPI.c $(HDRS)
-	$(CC) $(CFLAGS) $(OPENMPOPTS) $(TAU_USE_DYLIB) -c $(@:.o=.c)
+	$(CC) $(CFLAGS) $(OPENMPOPTS) -c $(@:.o=.c)
 
 TauXML.o 	: TauXML.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
