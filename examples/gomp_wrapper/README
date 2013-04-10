@@ -1,4 +1,4 @@
-*** NOTE: requires GNU 4.7.2.
+*** NOTE: Tested with GNU 4.7.2.
 
 To use the GOMP wrapper, do the following:
 
