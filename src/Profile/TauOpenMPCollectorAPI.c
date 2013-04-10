@@ -27,12 +27,11 @@ struct Tau_collector_status_flags {
   int parallel; // 4 bytes
   int ordered_region_wait; // 4 bytes
   int ordered_region; // 4 bytes
-  int usingGOMP; // 4 bytes
   int numThreadsInTeam; // 4 bytes
   char *timerContext; // 8 bytes(?)
   char *activeTimerContext; // 8 bytes(?)
   void *signal_message; // preallocated message for signal handling, 8 bytes
-  char _pad[64-((sizeof(void*))+(2*sizeof(char*))+(7*sizeof(int)))];
+  char _pad[64-((sizeof(void*))+(2*sizeof(char*))+(6*sizeof(int)))];
 };
 
 /* This array is shared by all threads. To make sure we don't have false
@@ -86,7 +85,7 @@ char OMP_EVENT_NAME[22][50]= {
 
 const int OMP_COLLECTORAPI_HEADERSIZE=4*sizeof(int);
 
-static int (*Tau_collector_api)(OMP_COLLECTORAPI_EVENT);
+static int (*Tau_collector_api)(void*);
 
 extern char * TauInternal_CurrentCallsiteTimerName(int tid);
 
@@ -97,7 +96,7 @@ void Tau_get_region_id(int tid) {
   void * message = (void *) calloc(OMP_COLLECTORAPI_HEADERSIZE+currentid_rsz+sizeof(int), sizeof(char));
   Tau_fill_header(message, OMP_COLLECTORAPI_HEADERSIZE+currentid_rsz, OMP_REQ_CURRENT_PRID, OMP_ERRCODE_OK, currentid_rsz, 1);
   long * rid = message + OMP_COLLECTORAPI_HEADERSIZE;
-  int rc = (Tau_collector_api)((OMP_COLLECTORAPI_EVENT)(message));
+  int rc = (Tau_collector_api)(message);
   TAU_VERBOSE("Thread %d, region ID : %ld\n", tid, *rid);
   free(message);
   return;
@@ -121,7 +120,11 @@ char * show_backtrace (int tid) {
   unw_getcontext(&uc);
   unw_init_local(&cursor, &uc);
   int index = 0;
-  int depth = (Tau_collector_flags[tid].usingGOMP > 0 ? 4 : 3);
+#if defined (__GNUC__) && defined (__GNUC_MINOR__) && defined (__GNUC_PATCHLEVEL__)
+  int depth = 4;
+#else /* assume we are using OpenUH */
+  int depth = 3;
+#endif /* (__GNUC__) && defined (__GNUC_MINOR__) && defined (__GNUC_PATCHLEVEL__) */
   while (unw_step(&cursor) > 0) {
     // we want to pop 3 or 4 levels of the stack:
     // - Tau_get_current_region_context()
@@ -425,33 +428,28 @@ int Tau_initialize_collector_api(void) {
 
   char *error;
 #if defined (__GNUC__) && defined (__GNUC_MINOR__) && defined (__GNUC_PATCHLEVEL__)
-  int tmpUsingGOMP = 1;
-#else
-  int tmpUsingGOMP = 0;
-#endif
 
-#if 0
-  void * handle = dlopen("libopenmp.so", RTLD_NOW | RTLD_GLOBAL);
+#ifdef __APPLE__
+  char * libname = "libgomp_g_wrap.dylib";
+#else /* __APPLE__ */
+  char * libname = "libgomp_g_wrap.so";
+#endif /* __APPLE__ */
+
+#else /* assume we are using OpenUH */
+  char * libname = "libopenmp.so";
+#endif /* __GNUC__ __GNUC_MINOR__ __GNUC_PATCHLEVEL__ */
+
+  TAU_VERBOSE("Looking for library: %s\n", libname);
+  void * handle = dlopen(libname, RTLD_NOW | RTLD_GLOBAL);
   char const * err = dlerror();
   if (err) { 
-	TAU_VERBOSE("Error loading libopenmp.so: %s\n", err);
-	char libname[32] = "libgomp_g_wrap.";
-#ifdef TAU_USE_DYLIB
-	strcat (libname, "dylib");
-#else
-	strcat (libname, "so");
-#endif
-	TAU_VERBOSE("Looking for library: %s\n", libname, err);
-    handle = dlopen(libname, RTLD_NOW | RTLD_GLOBAL);
-    err = dlerror();
-    if (err) { 
-	  TAU_VERBOSE("Error loading library: %s\n", libname, err);
-	  return -1;
-    }
+	TAU_VERBOSE("Error loading library: %s\n", libname, err);
+	/* don't quit, because it might have been preloaded... */
+	//return -1;
   }
-#endif
+
   *(void **) (&Tau_collector_api) = dlsym(RTLD_DEFAULT, "__omp_collector_api");
-  char const * err = dlerror();
+  err = dlerror();
   if (err) { 
 	TAU_VERBOSE("Error getting '__omp_collector_api' handle: %s\n", err);
 	return -1;
@@ -470,7 +468,7 @@ int Tau_initialize_collector_api(void) {
   /*test: check for request start, 1 message */
   message = (void *) malloc(OMP_COLLECTORAPI_HEADERSIZE+sizeof(int));
   Tau_fill_header(message, OMP_COLLECTORAPI_HEADERSIZE, OMP_REQ_START, OMP_ERRCODE_OK, 0, 1);
-  rc = (Tau_collector_api)((OMP_COLLECTORAPI_EVENT)(message));
+  rc = (Tau_collector_api)(message);
   TAU_VERBOSE("__omp_collector_api() returned %d\n", rc);
   free(message);
 
@@ -484,7 +482,7 @@ int Tau_initialize_collector_api(void) {
     Tau_fill_header(message+mes_size*i,mes_size, OMP_REQ_REGISTER, OMP_ERRCODE_OK, 0, 0);
     Tau_fill_register((message+mes_size*i)+OMP_COLLECTORAPI_HEADERSIZE,OMP_EVENT_FORK+i,1, Tau_omp_event_handler, i==(num_req-1));
   } 
-  rc = (Tau_collector_api)((OMP_COLLECTORAPI_EVENT)(message));
+  rc = (Tau_collector_api)(message);
   TAU_VERBOSE("__omp_collector_api() returned %d\n", rc);
   free(message);
 
@@ -494,7 +492,6 @@ int Tau_initialize_collector_api(void) {
   for(i=0;i<omp_get_max_threads();i++) {  
     Tau_collector_flags[i].signal_message = malloc(OMP_COLLECTORAPI_HEADERSIZE+state_rsz);
     Tau_fill_header(Tau_collector_flags[i].signal_message, OMP_COLLECTORAPI_HEADERSIZE+state_rsz, OMP_REQ_STATE, OMP_ERRCODE_OK, state_rsz, 1);
-	Tau_collector_flags[i].usingGOMP = tmpUsingGOMP;
   }
 
 #ifdef TAU_UNWIND
@@ -536,7 +533,7 @@ int Tau_finalize_collector_api(void) {
   /*test check for request stop, 1 message */
   message = (void *) malloc(OMP_COLLECTORAPI_HEADERSIZE+sizeof(int));
   Tau_fill_header(message, OMP_COLLECTORAPI_HEADERSIZE, OMP_REQ_STOP, OMP_ERRCODE_OK, 0, 1);
-  rc = (Tau_collector_api)((OMP_COLLECTORAPI_EVENT)(message));
+  rc = (Tau_collector_api)(message);
   TAU_VERBOSE("__omp_collector_api() returned %d\n", rc);
   free(message);
 #endif
@@ -549,7 +546,7 @@ int Tau_get_thread_omp_state(int tid) {
 
   OMP_COLLECTOR_API_THR_STATE thread_state = THR_LAST_STATE;
   // query the thread state
-  (Tau_collector_api)((OMP_COLLECTORAPI_EVENT)(Tau_collector_flags[tid].signal_message));
+  (Tau_collector_api)(Tau_collector_flags[tid].signal_message);
   int * rid = Tau_collector_flags[tid].signal_message + OMP_COLLECTORAPI_HEADERSIZE;
   thread_state = *rid;
   TAU_VERBOSE("Thread %d, state : %d\n", tid, thread_state);
