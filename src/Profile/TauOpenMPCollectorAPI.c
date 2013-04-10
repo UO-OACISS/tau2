@@ -444,7 +444,8 @@ int Tau_initialize_collector_api(void) {
   char const * err = dlerror();
   if (err) { 
 	TAU_VERBOSE("Error loading library: %s\n", libname, err);
-	return -1;
+	/* don't quit, because it might have been preloaded... */
+	//return -1;
   }
 
   *(void **) (&Tau_collector_api) = dlsym(RTLD_DEFAULT, "__omp_collector_api");
