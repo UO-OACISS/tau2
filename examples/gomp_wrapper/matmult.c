@@ -202,6 +202,33 @@ int critical() {
   return max;
 }
 
+int critical_named() {
+  int i;
+  int max;
+  int a[CRITICAL_SIZE];
+
+  for (i = 0; i < CRITICAL_SIZE; i++) {
+    a[i] = rand();
+  }
+
+  max = a[0];
+  #pragma omp parallel for num_threads(2)
+  for (i = 1; i < CRITICAL_SIZE; i++) {
+    if (a[i] > max) {
+      #pragma omp critical (accumulator)
+      {
+        // compare a[i] and max again because max 
+        // could have been changed by another thread after 
+        // the comparison outside the critical section
+        if (a[i] > max) {
+          max = a[i];
+        }
+      }
+    }
+  }
+  return max;
+}
+
 void myread(int *data) {
   *data = 1;
 }
@@ -257,6 +284,47 @@ int fortest() {
       }
    }
    return nSum;
+}
+
+void foo() {
+  printf("%d In foo\n", omp_get_thread_num());
+}
+
+int parallelfor() {
+   int i, nStart = 0, nEnd = 10;
+   #pragma omp parallel for
+   for (i=nStart; i<=nEnd; ++i) {
+     foo();
+   }
+   return 0;
+}
+
+int parallelfor_static() {
+   int i, nStart = 0, nEnd = 10;
+   // the ordered parameter forces the static scheduler
+   #pragma omp parallel for schedule(static) ordered
+   for (i=nStart; i<=nEnd; ++i) {
+     foo();
+   }
+   return 0;
+}
+
+int parallelfor_dynamic() {
+   int i, nStart = 0, nEnd = 10;
+   #pragma omp parallel for schedule(dynamic)
+   for (i=nStart; i<=nEnd; ++i) {
+     foo();
+   }
+   return 0;
+}
+
+int parallelfor_runtime() {
+   int i, nStart = 0, nEnd = 10;
+   #pragma omp parallel for schedule(runtime)
+   for (i=nStart; i<=nEnd; ++i) {
+     foo();
+   }
+   return 0;
 }
 
 int master( ) 
@@ -368,12 +436,23 @@ int single( )
   return a[3];
 }
 
+int fib(int n) {
+  int x,y;
+  if (n<2) return n;
+  #pragma omp task shared(x)
+  { x = fib(n-1); }
+  #pragma omp task shared(y)
+  { y = fib(n-2); }
+  #pragma omp taskwait
+  return x+y;
+}
+
+
 int main (int argc, char *argv[]) 
 {
   printf("Main...\n");
   fflush(stdout);
 #if 0
-#endif
   do_work();
   printf ("\n\nDoing atomic: %d\n\n", atomic());
   printf ("\n\nDoing barrier: %d\n\n", barrier());
@@ -384,6 +463,13 @@ int main (int argc, char *argv[])
   printf ("\n\nDoing ordered: %d\n\n", ordered());
   printf ("\n\nDoing sections: %d\n\n", sections());
   printf ("\n\nDoing single: %d\n\n", single());
+  printf ("\n\nDoing critical named: %d\n\n", critical_named());
+  printf ("\n\nDoing parallelfor: %d\n\n", parallelfor());
+  printf ("\n\nDoing parallelfor_static: %d\n\n", parallelfor_static());
+  printf ("\n\nDoing parallelfor_dynamic: %d\n\n", parallelfor_dynamic());
+  printf ("\n\nDoing parallelfor_runtime: %d\n\n", parallelfor_runtime());
+#endif
+  printf ("\n\nDoing tasks: %d\n\n", fib(20));
 #if 0
 #endif
 
