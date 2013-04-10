@@ -3555,10 +3555,12 @@ case $cxx_compiler in
       ;;
 
     mpc_cxx)
-	if [ $machine = x86_64 ] ; then
+	if [ $machine = x86_64 -o $machine = mic_linux ] ; then
             full_cxx_compiler=`mpc_cxx -show | awk '{print $1;}'`
             full_cc_compiler=`mpc_cc -show | awk '{ print $1;}'`
             mpilibrary=`mpc_cxx -show | sed -e "s@$full_cxx_compiler@@g" | sed -e "s/ /#/g"`
+            full_cxx_compiler=`mpc_cxx -show -Dmain=mpc_user_main__ | sed -e "s@-fmpc-privatize@@g" -e "s/ /#/g"`  
+            full_cc_compiler=`mpc_cc -show -Dmain=mpc_user_main__ | sed -e "s@-fmpc-privatize@@g" -e "s/ /#/g"`
 	    #echo "CC=$cc_compiler"
 	    #echo "CXX=$cxx_compiler"
 	    #echo "mpilibrary=$mpilibrary"
@@ -7608,12 +7610,13 @@ if [ $pdt = yes ] ; then
     if [ $opari1 = yes ] ; then
     cat ${tauroot}/tools/src/tau_header_inst_opari1.sh | sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@ARCH@,'$architecture',' \
 	-e 's,@PDTROOTDIR@,'$pdtdir',' -e 's,@PDTARCH@, '$pdtarch',' > ${targetdir}/${architecture}/bin/tau_header_inst.sh
+    chmod a+rx ${targetdir}/${architecture}/bin/tau_header_inst.sh
     fi
     if [ $opari = yes ] ; then
     cat ${tauroot}/tools/src/tau_header_inst.sh | sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@ARCH@,'$architecture',' \
 	-e 's,@PDTROOTDIR@,'$pdtdir',' -e 's,@PDTARCH@, '$pdtarch',' > ${targetdir}/${architecture}/bin/tau_header_inst.sh
-    fi
     chmod a+rx ${targetdir}/${architecture}/bin/tau_header_inst.sh
+    fi
     if [ -x ${pdtdir}/${pdtarchcompdir}/bin/smaqao ]
     then
       echo "TAU: PDT: Using binary rewriting capabilities from MAQAO in tau_rewrite"
