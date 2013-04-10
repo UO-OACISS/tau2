@@ -1189,24 +1189,31 @@ for arg in "$@"; do
       shift
       ;;
 
-  -unwind_dir=*)
-      unwind_dir=`echo $arg | sed -e 's/-unwind_dir=//'`
+  -unwind=*)
+      unwind_dir=`echo $arg | sed -e 's/-unwind=//'`
       unwind_inc="$unwind_dir/include"
       unwind_lib="$unwind_dir/lib"
+	  # So that the user doesn't have to specify the unwinder,
+	  # use libunwind as the default.
+      if [ "x$unwinder" = "xnone" ] ; then
+          unwinder="libunwind"
+          unwind_flag="-DTAU_USE_LIBUNWIND"
+          unwind_lib_flag="-lunwind"
+	  fi
       shift
       ;;
 
-  -unwind_inc=*)
+  -unwindinc=*)
       unwind_inc=`echo $arg | sed -e 's/-unwind_inc=//'`
       shift
       ;;
 
-  -unwind_lib=*)
+  -unwindlib=*)
       unwind_lib=`echo $arg | sed -e 's/-unwind_lib=//'`
       shift
       ;;
 
-  -unwind_extras=*)
+  -unwindextras=*)
       unwind_extras=`echo $arg | sed -e 's/-unwind_extras=//'`
       shift
       ;;

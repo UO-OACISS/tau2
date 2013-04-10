@@ -137,7 +137,7 @@ TAU_LIB_DIR=$(TAU_PREFIX_INSTALL_DIR)/$(CONFIG_ARCH)/lib
 UNWIND_FLAG=
 UNWIND_INC=
 UNWIND_LIB=
-#UNWIND_LIB_FLAG=-lunwind
+UNWIND_LIB_FLAG=
 UNWIND_EXTRAS=
 
 #######################################################################
