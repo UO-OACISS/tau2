@@ -15,9 +15,9 @@ WRAPPER=$(WRAPPER_PATH)/libgomp_g_wrap$(TAU_SHLIBX)
 OBJS=$(TARGET).o 
 $(TARGET): $(OBJS) 
 	# to link the wrapper in directly, do this (CXX should be tau_cxx.sh):
-	$(LD) $(TARGET).o $(WRAPPER) -o $@ $(LDFLAGS) 
+	#$(LD) $(TARGET).o $(WRAPPER) -o $@ $(LDFLAGS) 
 	# otherwise, just link normally
-	#$(LD) -g $(TARGET).o -o $@ $(LDFLAGS) 
+	$(LD) -g $(TARGET).o -o $@ $(LDFLAGS) 
 
 .c.o:
 	# to make a high overhead multiply call, do this:
