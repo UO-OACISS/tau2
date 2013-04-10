@@ -1189,6 +1189,13 @@ for arg in "$@"; do
       shift
       ;;
 
+  -unwind_dir=*)
+      unwind_dir=`echo $arg | sed -e 's/-unwind_dir=//'`
+      unwind_inc="$unwind_dir/include"
+      unwind_lib="$unwind_dir/lib"
+      shift
+      ;;
+
   -unwind_inc=*)
       unwind_inc=`echo $arg | sed -e 's/-unwind_inc=//'`
       shift
