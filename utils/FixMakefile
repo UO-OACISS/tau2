@@ -361,13 +361,13 @@ case $1 in
 	;;
 
      fullcxx=*)
-        fullcxx=`echo $1 | sed -e 's/^fullcxx=//'`
-	echo "s,^FULL_CXX=.*$,FULL_CXX=$fullcxx,g" >> $sedout
+        fullcxx=`echo $1 | sed -e 's@^fullcxx=@@' -e 's@#@ @g'`
+	echo "s@^FULL_CXX=.*@FULL_CXX=$fullcxx@g" >> $sedout
 	;;
 
      fullcc=*)
-        fullcc=`echo $1 | sed -e 's/^fullcc=//'`
-	echo "s,^FULL_CC=.*$,FULL_CC=$fullcc,g" >> $sedout
+        fullcc=`echo $1 | sed -e 's@^fullcc=@@' -e 's@#@ @g'`
+	echo "s@^FULL_CC=.*@FULL_CC=$fullcc@g" >> $sedout
 	;;
 
      dyninstdir=*)

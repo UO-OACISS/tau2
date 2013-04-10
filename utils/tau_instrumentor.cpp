@@ -72,6 +72,7 @@ static char const * return_nonvoid_string = "return";
 extern bool use_spec;
 /* For Pooma, add a -noinline flag */
 extern bool noinline_flag;
+extern bool nolinemarker_flag = false; /* by default, emit line marker */
 
 list<string> current_timer; /* for Fortran loop level instrumentation. */
 
@@ -127,7 +128,9 @@ static void emitLineMarker()
   // inputLineNo is 0-indexed, but line numbers are 1-indexed so
   // adding an additional newline after corrects the offset and protects
   // following lines from the directive
-  ostr << "\n#line " << inputLineNo << '\n';
+  if (nolinemarker_flag == false) { 
+    ostr << "\n#line " << inputLineNo << '\n';
+  }
 }
 
 
@@ -893,6 +896,7 @@ bool instrumentCXXFile(PDB& pdb, pdbFile* f, string& outfile, string& group_name
             ostr << inbuf[i] << endl; // write the open brace and '\n'
 
             emitLineMarker();
+
             if (use_spec) {
               /* XXX Insert code here */
             } else if (use_perflib) {
@@ -3969,7 +3973,7 @@ int main(int argc, char **argv)
 
   if (argc < 3) {
     cout << "Usage : " << argv[0]
-         << " <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-noinit] [-memory] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] [-rn <return_keyword>] [-rv <return_void_keyword>] [-e <exit_keyword>] [-p] [-check <filename>]"
+         << " <pdbfile> <sourcefile> [-o <outputfile>] [-noinline] [-noinit] [-memory] [-g groupname] [-i headerfile] [-c|-c++|-fortran] [-f <instr_req_file> ] [-rn <return_keyword>] [-rv <return_void_keyword>] [-e <exit_keyword>] [-p] [-check <filename>] [-nolinemarker]"
          << endl
          << "----------------------------------------------------------------------------------------------------------"
          << endl
@@ -4031,6 +4035,12 @@ int main(int argc, char **argv)
         printf("Noinline flag\n");
 #endif /* DEBUG */
         noinline_flag = true;
+      }
+      if (strcmp(argv[i], "-nolinemarker") == 0) {
+#ifdef DEBUG
+        printf("Nolinemarker flag\n");
+#endif /* DEBUG */
+        nolinemarker_flag = true; /* do not emit line marker */
       }
       if (strcmp(argv[i], "-noinit") == 0) {
 #ifdef DEBUG
