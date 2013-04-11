@@ -369,6 +369,14 @@ case $1 in
         fullcc=`echo $1 | sed -e 's@^fullcc=@@' -e 's@#@ @g'`
 	echo "s@^FULL_CC=.*@FULL_CC=$fullcc@g" >> $sedout
 	;;
+     tau_build_cc=*)
+        tau_build_cc=`echo $1 | sed -e 's@^tau_build_cc=@@' -e 's@#@ @g'`
+	echo "s@^TAU_BUILD_CC=.*@TAU_BUILD_CC=$tau_build_cc@g" >> $sedout
+	;;
+     tau_build_cxx=*)
+        tau_build_cxx=`echo $1 | sed -e 's@^tau_build_cxx=@@' -e 's@#@ @g'`
+	echo "s@^TAU_BUILD_CXX=.*@TAU_BUILD_CXX=$tau_build_cxx@g" >> $sedout
+	;;
 
      dyninstdir=*)
         dyninstdir=`echo $1 | sed -e 's/^dyninstdir=//'`
