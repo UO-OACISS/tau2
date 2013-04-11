@@ -3572,6 +3572,7 @@ case $cxx_compiler in
 	if [ $machine = x86_64 -o $machine = mic_linux ] ; then
             full_cxx_compiler=`mpc_cxx -show | awk '{print $1;}'`
             full_cc_compiler=`mpc_cc -show | awk '{ print $1;}'`
+            fixmakeargs="tau_build_cc=$full_cc_compiler tau_build_cxx=$full_cxx_compiler $fixmakeargs"
             mpilibrary=`mpc_cxx -show | sed -e "s@$full_cxx_compiler@@g" | sed -e "s/ /#/g"`
             full_cxx_compiler=`mpc_cxx -show -Dmain=mpc_user_main__ | sed -e "s@-fmpc-privatize@@g" -e "s/ /#/g"`  
             full_cc_compiler=`mpc_cc -show -Dmain=mpc_user_main__ | sed -e "s@-fmpc-privatize@@g" -e "s/ /#/g"`

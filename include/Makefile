@@ -37,6 +37,8 @@ TAU_CXX_FE=$(CONFIG_CXX)
 
 TAU_CUDA_CXX=g++
 
+TAU_BUILD_CC=
+TAU_BUILD_CXX=
 # Front end C/C++ Compilers
 #BGL#TAU_CC_FE=gcc #ENDIF#
 #BGL#TAU_CXX_FE=g++ #ENDIF#
@@ -206,12 +208,12 @@ F90_ABI	= $(ABI)
 TAU_CC = $(CONFIG_CC) $(ABI) $(ISA)
 TAU_CXX = $(CONFIG_CXX) $(ABI) $(ISA)
 TAU_RUN_CC = $(FULL_CC) $(ABI) $(ISA)
-#MPC#TAU_RUN_CC = mpc_cc -lz $(ABI) $(ISA) #ENDIF#
+#MPC#TAU_RUN_CC = $(TAU_BUILD_CC) -fmpc-privatize -lz $(ABI) $(ISA) #ENDIF#
 #XLUPC#TAU_RUN_CC = xlupc $(ABI) $(ISA) #ENDIF#
 #BUPC#TAU_RUN_CC = $(TAU_UPCC) #ENDIF#
 #GUPC#TAU_RUN_CC = $(TAU_UPCC) #ENDIF#
 TAU_RUN_CXX = $(FULL_CXX) $(ABI) $(ISA)
-#MPC#TAU_RUN_CXX = mpc_cxx -lz $(ABI) $(ISA) #ENDIF#
+#MPC#TAU_RUN_CXX = $(TAU_BUILD_CXX) -fmpc-privatize -lz -ldl $(ABI) $(ISA) #ENDIF#
 TAU_INSTALL = /bin/cp
 TAU_SHELL = /bin/sh
 LSX = .a
