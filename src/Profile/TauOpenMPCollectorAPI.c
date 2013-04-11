@@ -492,6 +492,7 @@ int Tau_initialize_collector_api(void) {
   //Tau_Sampling_register_unit(); // not necessary now?
 #endif
 
+#if 0
   // now, for the collector API support, create the 12 OpenMP states.
   // preallocate State timers. If we create them now, we won't run into
   // malloc issues later when they are required during signal handling.
@@ -507,6 +508,7 @@ int Tau_initialize_collector_api(void) {
   Tau_create_thread_state_if_necessary("OMP CRITICAL WAIT");
   Tau_create_thread_state_if_necessary("OMP ORDERED WAIT");
   Tau_create_thread_state_if_necessary("OMP ATOMIC WAIT");
+#endif
 
   return 0;
 }

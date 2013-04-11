@@ -1621,7 +1621,7 @@ extern "C" void Tau_sampling_init_if_necessary(void)
     }
 
     // do this for all threads
-#pragma omp parallel shared (samplingThrInitialized)
+#pragma omp ordered 
     {
       // Protect TAU from itself
       TauInternalFunctionGuard protects_this_function;
