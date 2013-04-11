@@ -439,37 +439,52 @@ int single( )
 int fib(int n) {
   int x,y;
   if (n<2) return n;
-  #pragma omp task shared(x)
+  #pragma omp task untied shared(x)
   { x = fib(n-1); }
-  #pragma omp task shared(y)
+  #pragma omp task untied shared(y)
   { y = fib(n-2); }
   #pragma omp taskwait
+  printf("%d: fib(%d)=%d\n", omp_get_thread_num(), n, x+y); fflush(stdout);
   return x+y;
 }
 
+int fibouter(int n) {
+  int answer = 0;
+  #pragma omp parallel shared(answer)
+  {
+    #pragma omp single 
+    {
+      #pragma omp task shared(answer) 
+      {
+	    answer = fib(n);
+      }
+    }
+  }
+  return answer;
+}
 
 int main (int argc, char *argv[]) 
 {
   printf("Main...\n");
   fflush(stdout);
 #if 0
-  do_work();
-  printf ("\n\nDoing atomic: %d\n\n", atomic());
-  printf ("\n\nDoing barrier: %d\n\n", barrier());
-  printf ("\n\nDoing critical: %d\n\n", critical());
-  printf ("\n\nDoing fortest: %d\n\n", fortest());
-  printf ("\n\nDoing flush: %d\n\n", flush());
-  printf ("\n\nDoing master: %d\n\n", master());
-  printf ("\n\nDoing ordered: %d\n\n", ordered());
-  printf ("\n\nDoing sections: %d\n\n", sections());
-  printf ("\n\nDoing single: %d\n\n", single());
-  printf ("\n\nDoing critical named: %d\n\n", critical_named());
-  printf ("\n\nDoing parallelfor: %d\n\n", parallelfor());
-  printf ("\n\nDoing parallelfor_static: %d\n\n", parallelfor_static());
-  printf ("\n\nDoing parallelfor_dynamic: %d\n\n", parallelfor_dynamic());
-  printf ("\n\nDoing parallelfor_runtime: %d\n\n", parallelfor_runtime());
 #endif
-  printf ("\n\nDoing tasks: %d\n\n", fib(20));
+  do_work();
+  printf ("\n\nDoing atomic: %d\n\n", atomic()); fflush(stdout);
+  printf ("\n\nDoing barrier: %d\n\n", barrier()); fflush(stdout);
+  printf ("\n\nDoing critical: %d\n\n", critical()); fflush(stdout);
+  printf ("\n\nDoing fortest: %d\n\n", fortest()); fflush(stdout);
+  printf ("\n\nDoing flush: %d\n\n", flush()); fflush(stdout);
+  printf ("\n\nDoing master: %d\n\n", master()); fflush(stdout);
+  printf ("\n\nDoing ordered: %d\n\n", ordered()); fflush(stdout);
+  printf ("\n\nDoing sections: %d\n\n", sections()); fflush(stdout);
+  printf ("\n\nDoing single: %d\n\n", single()); fflush(stdout);
+  printf ("\n\nDoing critical named: %d\n\n", critical_named()); fflush(stdout);
+  printf ("\n\nDoing parallelfor: %d\n\n", parallelfor()); fflush(stdout);
+  printf ("\n\nDoing parallelfor_static: %d\n\n", parallelfor_static()); fflush(stdout);
+  printf ("\n\nDoing parallelfor_dynamic: %d\n\n", parallelfor_dynamic()); fflush(stdout);
+  printf ("\n\nDoing parallelfor_runtime: %d\n\n", parallelfor_runtime()); fflush(stdout);
+  printf ("\n\nDoing tasks: %d\n\n", fibouter(10)); fflush(stdout);
 #if 0
 #endif
 

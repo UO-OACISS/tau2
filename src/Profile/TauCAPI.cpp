@@ -1700,7 +1700,7 @@ void Tau_pure_start_task_string(const string name, int tid)
   PureMap & pure = ThePureMap();
   PureMap::iterator it = pure.find(name);
   if (it == pure.end()) {
-    tauCreateFI((void**)&fi, name, "", TAU_USER, "TAU_USER");
+    tauCreateFI_signalSafe((void**)&fi, name, "", TAU_USER, "TAU_USER");
     pure[name] = fi;
   } else {
     fi = it->second;
