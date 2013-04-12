@@ -67,6 +67,7 @@ int processInstrumentationRequests(char *fname)
 #ifdef DEBUG
   printf("Inside processInstrumentationRequests\n");
 #endif /* DEBUG */
+
   while (input.getline(line, INBUF_SIZE) || input.gcount()) {
     lineno++;
     /* Skip whitespaces at the beginning of line */
@@ -270,22 +271,8 @@ bool areFileIncludeExcludeListsEmpty(void)
 /* -------------------------------------------------------------------------- */
 bool matchName(const string& str1, const string& str2)
 {
-  /* OLD int size_to_compare;
-  const char *s1;
-  int length1, length2;
-  length1 = str1.length();
-  length2 = str2.length();
-
-  size_to_compare = (length1 < length2) ? length1 : length2;
- 
-  if (strncmp(str1.c_str(), str2.c_str(), size_to_compare) == 0) */
-
-
   /* Use '#' as the wildcard kleene star operator character */
-  if (wildcardCompare((char *)(str1.c_str()), (char *)(str2.c_str()), '#'))
-    return true;
-  else 
-    return false;
+  return wildcardCompare((char *)(str1.c_str()), (char *)(str2.c_str()), '#');
 }
 
 /* -------------------------------------------------------------------------- */
@@ -293,6 +280,11 @@ bool matchName(const string& str1, const string& str2)
 /* -------------------------------------------------------------------------- */
 bool instrumentEntity(const string& function_name) {
   list<string>::iterator it;
+
+  // Hack: never instrument POMP2_Init_reg functions
+  // This is a sloppy fix to a silly problem
+  if (matchName("POMP2_INIT_#", function_name)) return false;
+
 #ifdef DEBUG
   cout <<"instrument "<<function_name<<" ?"<<endl;
 #endif /* DEBUG */
