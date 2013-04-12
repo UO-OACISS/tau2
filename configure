@@ -1134,43 +1134,6 @@ for arg in "$@"; do
       shift
       ;;
 
-# deprecated. Please see (and use) -unwinder
-  -ebs_unwinder=*)
-      unwinder=`echo $arg | sed -e 's/-ebs_unwinder=//'`
-      if [ "x$unwinder" = "xlibunwind" ] ; then
-          unwind_flag="-DTAU_USE_LIBUNWIND"
-          unwind_lib_flag="-lunwind"
-      elif [ "x$unwinder" = "xstackwalker" ] ; then
-          unwind_flag="-DTAU_USE_STACKWALKER"
-          unwind_lib_flag="-lstackwalk"
-      elif [ "x$unwinder" = "xnone" ] ; then
-          echo "No Unwinding Support."
-      else
-          echo "Error: Invalid Stack Unwinder $unwinder. Valid options are:"
-          echo "libunwind, stackwalker, none (default)."
-          exit 1
-      fi
-      shift
-      ;;
-
-# deprecated. Please see (and use) -unwinder_inc
-  -ebs_unwind_inc=*)
-      unwind_inc=`echo $arg | sed -e 's/-ebs_unwind_inc=//'`
-      shift
-      ;;
-
-# deprecated. Please see (and use) -unwinder_inc
-  -ebs_unwind_lib=*)
-      unwind_lib=`echo $arg | sed -e 's/-ebs_unwind_lib=//'`
-      shift
-      ;;
-
-# deprecated. Please see (and use) -unwinder_inc
-  -ebs_unwind_extras=*)
-      unwind_extras=`echo $arg | sed -e 's/-ebs_unwind_extras=//'`
-      shift
-      ;;
-
   -unwinder=*)
       unwinder=`echo $arg | sed -e 's/-unwinder=//'`
       if [ "x$unwinder" = "xlibunwind" ] ; then
@@ -5163,6 +5126,16 @@ case $machine in
         fi
         ;;
 
+     apple)
+		  if [ "x$unwind_lib_flag" = "x-lunwind" ] ; then
+            unwind_inc="/usr/include"
+            unwind_lib="/usr/lib/system"
+            unwind_lib_flag="-framework System"
+			echo "Using Apple's system provided libunwind umbrella framework..."
+		  fi
+	fixmakeargs="arch=$machine  $fixmakeargs"
+        ;;
+
      unknown)
         echo unknown architecture.
 	fixmakeargs="arch=$machine $fixmakeargs"
@@ -6245,9 +6218,15 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
 		fi
     fi
     bfdinclude="-I$bfddir/include"
-    bfdlink="-L$bfddir/lib -L$bfddir/lib64"
     fixmakeargs="$fixmakeargs bfdinclude=$bfdinclude"
-    fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64"
+    bfdlink="-L$bfddir/lib -L$bfddir/lib64"
+	# The libintl.dylib library is in /opt/local/lib... is that everywhere?
+	if [ "x$machine" == "xapple" ] ; then
+      bfdlink="$bfdlink -L/opt/local/lib"
+      fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64#-L/opt/local/lib"
+	else
+      fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64"
+	fi
     if [ ! -d $bfddir -a "$bfddif" = 'none' ] ; then
         echo "Error: Cannot access BFD directory $bfddir"
         exit 1
@@ -6264,10 +6243,10 @@ fi
 ######################################################################
   cat <<EOF > conftest_bfd.c
 #include <bfd.h>
-#ifdef __APPLE__
-#include <crt_externs.h>
-char *** environ(void) { return (*_NSGetEnviron()); }
-#endif
+//#ifdef __APPLE__
+//#include <crt_externs.h>
+//char *** environ(void) { return (*_NSGetEnviron()); }
+//#endif
 
 void foo() {
    bfd_init();
@@ -6771,6 +6750,9 @@ fi
 
 if [ "x$unwinder" != "xnone" ] ; then
   if [ "x$unwinder" = "xlibunwind" ] ; then
+		  if [ $machine = apple ] ; then
+            unwind_lib_flag="-framework#System"
+		  fi
     fixmakeargs="$fixmakeargs TAU_UNWIND TAU_UNWIND_LIBUNWIND unwind_flag=$unwind_flag unwind_inc=$unwind_inc unwind_lib=$unwind_lib unwind_lib_flag=$unwind_lib_flag unwind_extras=$unwind_extras"
   else
     fixmakeargs="$fixmakeargs TAU_UNWIND TAU_UNWIND_STACKWALKER unwind_flag=$unwind_flag unwind_inc=$unwind_inc unwind_lib=$unwind_lib unwind_lib_flag=$unwind_lib_flag unwind_extras=$unwind_extras"

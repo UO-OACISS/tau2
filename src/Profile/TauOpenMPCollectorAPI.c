@@ -435,19 +435,24 @@ int Tau_initialize_collector_api(void) {
 
   TAU_VERBOSE("Looking for library: %s\n", libname);
   void * handle = dlopen(libname, RTLD_NOW | RTLD_GLOBAL);
-  char const * err = dlerror();
+#if 0
+  char * err = dlerror();
   if (err) { 
+  if (!handle) { 
 	TAU_VERBOSE("Error loading library: %s\n", libname, err);
 	/* don't quit, because it might have been preloaded... */
 	//return -1;
   }
+#endif
 
   *(void **) (&Tau_collector_api) = dlsym(RTLD_DEFAULT, "__omp_collector_api");
+#if 0
   err = dlerror();
   if (err) { 
 	TAU_VERBOSE("Error getting '__omp_collector_api' handle: %s\n", err);
 	return -1;
   }
+#endif
   if (Tau_collector_api == NULL) {
     TAU_VERBOSE("__omp_collector_api symbol not found... collector API not enabled. \n");
     return -1;
