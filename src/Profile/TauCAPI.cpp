@@ -1457,6 +1457,10 @@ extern void Tau_pure_start_task_string(const string name, int tid);
  * library is used without any instrumentation in main */
 extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
 {
+#ifdef TAU_SCOREP
+//  printf("Returning from Tau_create_top_level_timer_if_necessary_task");
+  return;
+#endif /* TAU_SCOREP */
 #if ! (defined(TAU_VAMPIRTRACE) || defined(TAU_EPILOG))
   TauInternalFunctionGuard protects_this_function;
 
@@ -1510,6 +1514,10 @@ extern "C" void Tau_create_top_level_timer_if_necessary(void) {
 
 extern "C" void Tau_stop_top_level_timer_if_necessary_task(int tid)
 {
+#ifdef TAU_SCOREP
+//  printf("Returning from Tau_stop_top_level_timer_if_necessary_task");
+  return;
+#endif /* TAU_SCOREP */
   TauInternalFunctionGuard protects_this_function;
 
   if (TauInternal_CurrentProfiler(tid)
