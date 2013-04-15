@@ -28,7 +28,7 @@ using namespace std;
 #include "tau_instrument.h"
 #include "pdbAll.h"
 
-#define DEBUG 1
+//#define DEBUG 1
 #ifdef DEBUG
 #define DEBUG_MSG(fmt, ...) printf(fmt, ##__VA_ARGS__); fflush(stdout)
 #else
