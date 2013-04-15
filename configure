@@ -6318,8 +6318,8 @@ if [ $cxx_compiler = x86_64-w64-mingw32-g++ ]; then
 fi
 
 if [ $bfd_worked = "no" ] ; then
-    echo "failed"
-    BFDLIBS="-lbfd -liberty"
+    echo "failed. Using -lbfd -liberty -lz."
+    BFDLIBS="-lbfd -liberty -lz"
     if [ $tauarch = i386_linux ]; then 
       BFDLIBS=""
     fi
