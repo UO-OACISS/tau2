@@ -57,6 +57,12 @@ list<pair<int, list<string> > > additionalInvocations;
 bool noinline_flag = false; /* instrument inlined functions by default */
 bool use_spec = false; /* by default, do not use code from specification file */
 
+// Loop instrumentation level
+static int loopLevel = 1;
+void setLoopInstrumentationLevel(int value) {
+  loopLevel = value;
+}
+
 ///////////////////////////////////////////////////////////////////////////
 
 /* -------------------------------------------------------------------------- */
@@ -527,8 +533,11 @@ void parseInstrumentationCommand(char *line, int lineno)
   char plineno[INBUF_SIZE]; /* parsed lineno */
   char pcode[INBUF_SIZE]; /* parsed code */
   char plang[INBUF_SIZE]; /* parsed language */
+  char plevel[INBUF_SIZE]; /* parsed loop level */
   int language = tauInstrument::LA_ANY;
   int startlineno, stoplineno;
+  int level = 1; // Default loop instrumentation level
+
   startlineno = stoplineno = 0;
   instrumentKind_t kind = TAU_NOT_SPECIFIED;
 
@@ -952,7 +961,55 @@ void parseInstrumentationCommand(char *line, int lineno)
   } /* static || dynamic specified */
 
   switch (kind) {
-  case TAU_LOOPS:   // Fall through
+  case TAU_LOOPS: {
+    WSPACE(line);
+    if (strncmp(line, "file", 4) == 0) {
+      line += 4;
+      WSPACE(line);
+      TOKEN('=');
+      WSPACE(line);
+      TOKEN('"');
+      RETRIEVESTRING(pfile, line);
+      WSPACE(line);
+      filespecified = true;
+      DEBUG_MSG("GOT file = %s\n", pfile);
+    }
+    if (strncmp(line, "routine", 7) == 0) {
+      line += 7;
+      /* found routine */
+      WSPACE(line);
+      TOKEN('=');
+      WSPACE(line);
+      TOKEN('"');
+      RETRIEVESTRING(pname, line);
+      WSPACE(line);
+      DEBUG_MSG("got routine = %s\n", pname);
+      if (filespecified) {
+        instrumentList.push_back(new tauInstrument(string(pfile), string(pname), kind));
+      } else {
+        instrumentList.push_back(new tauInstrument(string(pname), kind));
+      }
+    } else {
+      parseError("<routine> token not found", line, lineno, line - original);
+    }
+    if (strncmp(line, "level", 5) == 0) {
+      line += 5;
+      WSPACE(line);
+      TOKEN('=');
+      WSPACE(line);
+      RETRIEVENUMBERATEOL(plevel, line);
+      ret = sscanf(plevel, "%d", &level);
+      WSPACE(line);
+      DEBUG_MSG("GOT loop level = %d, line = %s\n", level, line);
+      if (level > 0) {
+        setLoopInstrumentationLevel(level);
+      } else {
+        parseError("Invalid loop level: must be greater than 0\n", line, lineno, line - original);
+      }
+    }
+  }
+  break; // END case TAU_LOOPS
+
   case TAU_IO:      // Fall through
   case TAU_MEMORY:  // Fall through
   case TAU_FORALL:  // Fall through
@@ -1329,10 +1386,9 @@ void addRequestForUPCInstrumentation(const char *entityName, const pdbRoutine *r
 }
 
 /* Add request for instrumentation for C/C++ loops */
-void addRequestForLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start, const pdbLoc& stop,
-    vector<itemRef *>& itemvec)
+void addRequestForLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start, const pdbLoc& stop, vector<itemRef *>& itemvec)
 {
-  const pdbFile *f = start.file();
+  const pdbFile * f = start.file();
   char lines[256];
   sprintf(lines, "{%d,%d}-{%d,%d}", start.line(), start.col(), stop.line(), stop.col());
 
@@ -1341,12 +1397,12 @@ void addRequestForLoopInstrumentation(const pdbRoutine *ro, const pdbLoc& start,
     filename = strchr(filename, TAU_DIR_CHARACTER) + 1;
   }
 
-  string *timername = new string(string("Loop: " + ro->fullName() + " [{" + string(filename) + "} " + lines + "]"));
+  string timername = string("Loop: ") + ro->fullName() + " [{" + filename + "} " + lines + "]";
 
   DEBUG_MSG("Adding instrumentation at %s\n", timername->c_str());
 
-  itemvec.push_back(new itemRef((const pdbItem *)ro, START_LOOP_TIMER, start.line(), start.col(), *timername, BEFORE));
-  itemvec.push_back(new itemRef((const pdbItem *)ro, STOP_LOOP_TIMER, stop.line(), stop.col() + 1, *timername, AFTER));
+  itemvec.push_back(new itemRef((const pdbItem *)ro, START_LOOP_TIMER, start.line(), start.col(), timername, BEFORE));
+  itemvec.push_back(new itemRef((const pdbItem *)ro, STOP_LOOP_TIMER, stop.line(), stop.col() + 1, timername, AFTER));
 }
 
 /* Process Block to examine the routine */
@@ -1607,8 +1663,9 @@ int processBlockStatements(const pdbStmt *s, const pdbRoutine *ro, vector<itemRe
 
 
   DEBUG_MSG("INSIDE PROCESS BLOCK for LOOP: inst_request = %d!\n", inst_request);
-  if (parentDO)
-  DEBUG_MSG("Examining statement parentDo line=%d\n", parentDO->stmtEnd().line());
+  if (parentDO) {
+    DEBUG_MSG("Examining statement parentDo line=%d\n", parentDO->stmtEnd().line());
+  }
 
   /* NOTE: We currently do not support goto in C/C++ to close the timer.
    * This needs to be added at some point -- similar to Fortran */
@@ -1629,7 +1686,7 @@ int processBlockStatements(const pdbStmt *s, const pdbRoutine *ro, vector<itemRe
     DEBUG_MSG("start=<%d:%d> - end=<%d:%d>\n",
         start.line(), start.col(), stop.line(), stop.col());
 
-    if (level == 1 && inst_request == TAU_LOOPS) {
+    if (level <= loopLevel && inst_request == TAU_LOOPS) {
       /* C++/C or Fortran instrumentation? */
 #ifndef PDT_NOFSTMTS
       if (k == pdbStmt::ST_FDO)
@@ -1650,23 +1707,19 @@ int processBlockStatements(const pdbStmt *s, const pdbRoutine *ro, vector<itemRe
 #ifndef PDT_NO_UPC
   case pdbStmt::ST_UPC_FORALL:
     if (inst_request == TAU_FORALL)
-      addRequestForUPCInstrumentation("UPC_FORALL: ", ro, s->stmtBegin(), s->stmtEnd().line(), s->stmtEnd().col(),
-          itemvec);
+      addRequestForUPCInstrumentation("UPC_FORALL: ", ro, s->stmtBegin(), s->stmtEnd().line(), s->stmtEnd().col(), itemvec);
     break;
   case pdbStmt::ST_UPC_BARRIER:
     if (inst_request == TAU_BARRIER)
-      addRequestForUPCInstrumentation("UPC_BARRIER: ", ro, s->stmtBegin(), s->stmtEnd().line(), s->stmtEnd().col(),
-          itemvec);
+      addRequestForUPCInstrumentation("UPC_BARRIER: ", ro, s->stmtBegin(), s->stmtEnd().line(), s->stmtEnd().col(), itemvec);
     break;
   case pdbStmt::ST_UPC_FENCE:
     if (inst_request == TAU_FENCE)
-      addRequestForUPCInstrumentation("UPC_FENCE: ", ro, s->stmtBegin(), s->stmtEnd().line(), s->stmtEnd().col(),
-          itemvec);
+      addRequestForUPCInstrumentation("UPC_FENCE: ", ro, s->stmtBegin(), s->stmtEnd().line(), s->stmtEnd().col(), itemvec);
     break;
   case pdbStmt::ST_UPC_NOTIFY:
     if (inst_request == TAU_NOTIFY)
-      addRequestForUPCInstrumentation("UPC_NOTIFY: ", ro, s->stmtBegin(), s->stmtEnd().line(), s->stmtEnd().col(),
-          itemvec);
+      addRequestForUPCInstrumentation("UPC_NOTIFY: ", ro, s->stmtBegin(), s->stmtEnd().line(), s->stmtEnd().col(), itemvec);
     break;
 #endif /* PDT_NO_UPC */
   case pdbStmt::ST_GOTO:
@@ -1696,9 +1749,7 @@ int processBlockStatements(const pdbStmt *s, const pdbRoutine *ro, vector<itemRe
         string timertoclose;
         getLoopTimerVariableName(timertoclose, parentDO->stmtBegin().line());
         //string stopsnippet (string("        call TAU_PROFILE_STOP(") +timertoclose+")");
-        itemvec.push_back(
-            new itemRef((const pdbItem *)ro, GOTO_STOP_TIMER, s->stmtBegin().line(), s->stmtBegin().col(), timertoclose,
-                BEFORE));
+        itemvec.push_back(new itemRef((const pdbItem *)ro, GOTO_STOP_TIMER, s->stmtBegin().line(), s->stmtBegin().col(), timertoclose, BEFORE));
         /* stop the timer right before writing the go statement */
         DEBUG_MSG("LABEL IS OUTSIDE PARENT DO BOUNDARY! level - 1 \n");
         DEBUG_MSG("close timer: %s\n", timertoclose.c_str());
@@ -1722,7 +1773,6 @@ int processBlockStatements(const pdbStmt *s, const pdbRoutine *ro, vector<itemRe
     return processBlockStatements(s->nextStmt(), ro, itemvec, level, parentDO, inst_request);
   else
     return 1;
-
 }
 /* Process list of C routines */
 bool processCRoutinesInstrumentation(PDB & p, vector<tauInstrument *>::iterator& it, vector<itemRef *>& itemvec,
