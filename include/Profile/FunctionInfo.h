@@ -62,12 +62,10 @@ extern "C" int Tau_Global_numCounters;
 #endif //TAU_SS_ALLOC_SUPPORT
 #endif //TAU_WINDOWS
 
-#ifdef TAU_PROFILEMEMORY
 // Forward declaration
 namespace tau {
   class TauUserEvent;
 }
-#endif // TAU_PROFILEMEMORY
 
 
 class FunctionInfo
