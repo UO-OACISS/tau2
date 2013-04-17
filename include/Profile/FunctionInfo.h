@@ -62,6 +62,14 @@ extern "C" int Tau_Global_numCounters;
 #endif //TAU_SS_ALLOC_SUPPORT
 #endif //TAU_WINDOWS
 
+#ifdef TAU_PROFILEMEMORY
+// Forward declaration
+namespace tau {
+  class TauUserEvent;
+}
+#endif // TAU_PROFILEMEMORY
+
+
 class FunctionInfo
 {
 public:
@@ -105,12 +113,12 @@ public:
   inline void SetAlreadyOnStack(bool value, int tid);  
 
 #ifdef TAU_PROFILEMEMORY
-  class tau::TauUserEvent * MemoryEvent;
-  class tau::TauUserEvent * GetMemoryEvent(void) { return MemoryEvent; }
+  tau::TauUserEvent * MemoryEvent;
+  tau::TauUserEvent * GetMemoryEvent(void) { return MemoryEvent; }
 #endif // TAU_PROFILEMEMORY
 #ifdef TAU_PROFILEHEADROOM
-  class tau::TauUserEvent * HeadroomEvent;
-  class tau::TauUserEvent * GetHeadroomEvent(void) { return HeadroomEvent; }
+  tau::TauUserEvent * HeadroomEvent;
+  tau::TauUserEvent * GetHeadroomEvent(void) { return HeadroomEvent; }
 #endif // TAU_PROFILEHEADROOM
 
 #ifdef RENCI_STFF
