@@ -420,7 +420,7 @@ int __attribute__ ((constructor)) Tau_initialize_collector_api(void);
 int Tau_initialize_collector_api(void) {
   if (Tau_collector_api != NULL) return 0;
 
-#if defined (BGL) || defined (BGP) || defined (BGQ) || defined (TAU_CRAYCNL)
+#if defined (TAU_BGP) || defined (TAU_BGQ) || defined (TAU_CRAYCNL)
   // these special systems don't support dynamic symbol loading.
   *(void **) (&Tau_collector_api) = NULL;
 
