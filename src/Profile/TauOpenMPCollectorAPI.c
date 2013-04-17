@@ -421,7 +421,7 @@ int Tau_initialize_collector_api(void) {
   if (Tau_collector_api != NULL) return 0;
 
 #if !defined (BGL) && !defined (BGP) && !defined (BGQ) && !defined (TAU_CRAYCNL)
-  // these annoying systems don't support dynamic symbol loading.
+  // these special systems don't support dynamic symbol loading.
   *(void **) (&Tau_collector_api) = NULL;
 
 #else
