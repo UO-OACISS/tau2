@@ -420,11 +420,14 @@ int __attribute__ ((constructor)) Tau_initialize_collector_api(void);
 int Tau_initialize_collector_api(void) {
   if (Tau_collector_api != NULL) return 0;
 
-#if defined (BGL) || defined (BGP) || defined (BGQ) || defined (TAU_CRAYCNL)
-  return 0;  // these annoying systems don't support dynamic symbol loading.
-#endif
+#if !defined (BGL) && !defined (BGP) && !defined (BGQ) && !defined (TAU_CRAYCNL)
+  // these annoying systems don't support dynamic symbol loading.
+  *(void **) (&Tau_collector_api) = NULL;
+
+#else
 
   char *error;
+
 #if defined (__GNUC__) && defined (__GNUC_MINOR__) && defined (__GNUC_PATCHLEVEL__)
 
 #ifdef __APPLE__
@@ -457,6 +460,7 @@ int Tau_initialize_collector_api(void) {
 	return -1;
   }
 #endif
+#endif //if defined (BGL) || defined (BGP) || defined (BGQ) || defined (TAU_CRAYCNL)
   if (Tau_collector_api == NULL) {
     TAU_VERBOSE("__omp_collector_api symbol not found... collector API not enabled. \n");
     return -1;
