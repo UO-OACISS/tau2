@@ -420,6 +420,10 @@ int __attribute__ ((constructor)) Tau_initialize_collector_api(void);
 int Tau_initialize_collector_api(void) {
   if (Tau_collector_api != NULL) return 0;
 
+#if defined (BGL) || defined (BGP) || defined (BGQ) || defined (TAU_CRAYCNL)
+  return 0;  // these annoying systems don't support dynamic symbol loading.
+#endif
+
   char *error;
 #if defined (__GNUC__) && defined (__GNUC_MINOR__) && defined (__GNUC_PATCHLEVEL__)
 
