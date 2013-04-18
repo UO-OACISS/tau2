@@ -32,7 +32,8 @@
 
 extern "C" void Tau_cupti_find_context_event(
 						TauContextUserEvent** u, 
-						const char *name);
+						const char *name,
+            bool context);
 
 extern "C" void Tau_cupti_register_metadata(
 						uint32_t deviceId,
@@ -42,6 +43,11 @@ extern "C" void Tau_cupti_register_metadata(
 extern "C" void Tau_cupti_register_calling_site(
 						uint32_t correlationId,
 						FunctionInfo *current_function);
+
+extern "C" void Tau_cupti_register_sync_site(
+						uint32_t correlationId, 
+            uint64_t *counters,
+            int number_of_counters);
 
 extern "C" void Tau_cupti_enter_memcpy_event(
 						const char *name,
@@ -132,6 +138,8 @@ eventMap_t eventMap;
 
 int gpu_occupancy_available(int deviceId);
 void record_gpu_occupancy(CUpti_ActivityKernel *k, const char *name, eventMap_t *m);
+void record_gpu_launch(int cId, FunctionInfo *f);
+void record_gpu_counters(uint32_t id, eventMap_t *m);
 
 #if CUPTI_API_VERSION >= 3
 void form_context_event_name(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceLocator *source, const char *event, std::string *name);
@@ -142,6 +150,22 @@ std::map<uint32_t, CUpti_ActivitySourceLocator> sourceLocatorMap;
 std::map<uint32_t, CUpti_ActivityDevice> deviceMap;
 //std::map<uint32_t, CUpti_ActivityGlobalAccess> globalAccessMap;
 std::map<uint32_t, CUpti_ActivityKernel> kernelMap;
+
+struct K { 
+  int number_of_counters;
+  uint64_t *counters;
+/*
+  K(FunctionInfo *i, int n): functionInfo(i), number_of_counters(n)  { 
+    counters = (uint64_t *) malloc(number_of_counters*sizeof(uint64_t));
+  }
+  ~K()
+  {
+    free(counters);
+  }
+*/
+  } typedef kernel_struct;
+
+std::map<uint32_t, kernel_struct> kernelInfoMap;
 
 #define CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(name, id, info, kind, count) \
 	if ((id) == CUPTI_RUNTIME_TRACE_CBID_##name##_v3020) \

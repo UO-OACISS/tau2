@@ -2,10 +2,10 @@
 
 extern "C" void Tau_cupti_find_context_event(
 						TauContextUserEvent** u, 
-						const char *name
+						const char *name, bool context
 						) {
 							Tau_pure_context_userevent((void **) u, name);
-							(*u)->SetContextEnabled(false);
+							(*u)->SetContextEnabled(context);
 						}
       
 
@@ -23,8 +23,15 @@ extern "C" void Tau_cupti_register_calling_site(
 						uint32_t correlationId,
 						FunctionInfo *current_function
 						) {
-							functionInfoMap[correlationId] = current_function;	
+              kernelContextMap[correlationId] = current_function;
 						}	
+extern "C" void Tau_cupti_register_sync_site(
+						uint32_t correlationId, 
+            uint64_t *counters,
+            int number_of_counters
+						) {
+						}	
+
 
 extern "C" void Tau_cupti_enter_memcpy_event(
 						const char *name,
