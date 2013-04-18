@@ -127,6 +127,10 @@ extern counter_id_map_t interal_id_map();
 
 extern "C" int Tau_CuptiLayer_get_num_events();
 
+extern "C" const char *Tau_CuptiLayer_get_event_name(int metric_n);
+
+extern "C" void Tau_CuptiLayer_read_counters(uint64_t *cb);
+
 extern "C" uint64_t Tau_CuptiLayer_read_counter(int metric_n);
 
 extern "C" bool Tau_CuptiLayer_is_cupti_counter(char *str);

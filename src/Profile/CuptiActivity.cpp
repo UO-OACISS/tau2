@@ -170,7 +170,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 					count, getMemcpyType(kind)
 				);
 				FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->ThisFunction;
-				Tau_cupti_register_calling_site(cbInfo->correlationId, p);
+				record_gpu_launch(cbInfo->correlationId, p);
 				/*
 				CuptiGpuEvent new_id = CuptiGpuEvent(TAU_GPU_USE_DEFAULT_NAME, (uint32_t)0, cbInfo->contextUid, cbInfo->correlationId, NULL, 0);
 				Tau_gpu_enter_memcpy_event(
@@ -219,17 +219,18 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 				Tau_gpu_enter_event(cbInfo->functionName);
 				if (function_is_launch(id))
 				{
+          Tau_CuptiLayer_init();
+
+          //printf("[at call (enter), %d] name: %s.\n", cbInfo->correlationId, cbInfo->functionName);
 					FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->ThisFunction;
-					Tau_cupti_register_calling_site(cbInfo->correlationId, p);
-					//functionInfoMap[cbInfo->correlationId] = p;	
-					//printf("at launch id: %d.\n", cbInfo->correlationId);
-					Tau_CuptiLayer_init();
+				  record_gpu_launch(cbInfo->correlationId, p);
 				}
 				//cerr << "callback for " << cbInfo->functionName << ", enter." << endl;
 			}
 			else if (cbInfo->callbackSite == CUPTI_API_EXIT)
 			{
 				//cerr << "callback for " << cbInfo->functionName << ", exit." << endl;
+        //printf("[at call (exit), %d] name: %s.\n", cbInfo->correlationId, cbInfo->functionName);
 				Tau_gpu_exit_event(cbInfo->functionName);
 				if (function_is_sync(id))
 				{
@@ -237,7 +238,6 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 					Tau_CuptiLayer_disable();
 					cuCtxSynchronize();
 					Tau_CuptiLayer_enable();
-					Tau_cupti_register_sync_event(cbInfo->context, 0);
 				}
 			}
 		}
@@ -368,6 +368,19 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			{
 				record_gpu_occupancy(kernel, name, &eventMap);
 			}
+
+			uint32_t id;
+			if (cupti_api_runtime())
+			{
+				id = kernel->runtimeCorrelationId;
+			}
+			else
+			{
+				id = kernel->correlationId;
+			}
+      //TODO: make this conditional
+      record_gpu_counters(id, &eventMap);
+
 			static TauContextUserEvent* bs;
 			static TauContextUserEvent* dm;
 			static TauContextUserEvent* sm;
@@ -396,18 +409,16 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
         i++;
       }
 			
-			uint32_t id;
-			if (cupti_api_runtime())
-			{
-				id = kernel->runtimeCorrelationId;
-			}
-			else
-			{
-				id = kernel->correlationId;
-			}
 			Tau_cupti_register_gpu_event(name, kernel->deviceId,
 				kernel->streamId, kernel->contextId, id, map, map_size,
 				kernel->start / 1e3, kernel->end / 1e3);
+      //testing counter array
+      uint64_t * counters = (uint64_t *) malloc(Tau_CuptiLayer_get_num_events() * sizeof(uint64_t));
+      Tau_CuptiLayer_read_counters(counters);
+      Tau_cupti_register_sync_site(id, counters, Tau_CuptiLayer_get_num_events());
+      //int n = 2;
+      //uint64_t c[] = { 1900, 8550 };
+      //Tau_cupti_register_sync_site(id, c, n);
 			/*
 			CuptiGpuEvent gId = CuptiGpuEvent(name, kernel->streamId, kernel->contextId, id, map, map_size);
 			//cuptiGpuEvent cuRec = cuptiGpuEvent(name, &gId, &map);
@@ -478,7 +489,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
         std::string name;
         form_context_event_name(kernel, source, "Accesses to Global Memory", &name);
         TauContextUserEvent* ga;
-        Tau_cupti_find_context_event(&ga, name.c_str());
+        Tau_cupti_find_context_event(&ga, name.c_str(), false);
         eventMap[ga] = global_access->executed;
         int map_size = eventMap.size();
         GpuEventAttributes *map = (GpuEventAttributes *) malloc(sizeof(GpuEventAttributes) * map_size);
@@ -517,12 +528,12 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
         std::string name;
         form_context_event_name(kernel, source, "Branches Executed", &name);
         TauContextUserEvent* be;
-        Tau_cupti_find_context_event(&be, name.c_str());
+        Tau_cupti_find_context_event(&be, name.c_str(), false);
         eventMap[be] = branch->executed;
         
         form_context_event_name(kernel, source, "Branches Diverged", &name);
         TauContextUserEvent* de;
-        Tau_cupti_find_context_event(&de, name.c_str());
+        Tau_cupti_find_context_event(&de, name.c_str(), false);
         eventMap[de] = branch->diverged;
 
         GpuEventAttributes *map;
@@ -582,6 +593,40 @@ int gpu_source_locations_available()
 {
   //always available. 
   return 1;
+}
+void record_gpu_launch(int correlationId, FunctionInfo *current_function)
+{
+  int n_counters = Tau_CuptiLayer_get_num_events();
+  if (n_counters > 0)
+  {
+    Tau_cupti_register_calling_site(correlationId, current_function);	
+    //printf("putting in %d.\n", correlationId);
+    kernelInfoMap[correlationId].counters = (uint64_t *) malloc(n_counters*sizeof(uint64_t));
+    Tau_CuptiLayer_read_counters(kernelInfoMap[correlationId].counters);
+    //printf("[at launch, %d] counter 0: %llu.\n", correlationId, kernelInfoMap[correlationId].counters[0]);
+  }
+}
+void record_gpu_counters(uint32_t correlationId, eventMap_t *m)
+{
+  //this to get around a bug in CUPTI.
+  if (kernelInfoMap.count(correlationId) == 0) {
+    correlationId--;
+  }
+  //printf("looking for %d.\n", correlationId);
+  if (kernelInfoMap.count(correlationId) > 0)
+  {
+    uint64_t *counters = (uint64_t *) malloc(Tau_CuptiLayer_get_num_events()*sizeof(uint64_t));
+    Tau_CuptiLayer_read_counters(counters);
+    //print difference
+    for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++)
+    {
+      //printf("[at sync, %d] counter %d: %llu.\n", correlationId, n, counters[n] - kernelInfoMap[correlationId].counters[n]);
+      TauContextUserEvent* c;
+      Tau_cupti_find_context_event(&c, Tau_CuptiLayer_get_event_name(n), true);
+      eventMap[c] = counters[n] - kernelInfoMap[correlationId].counters[n];
+    }
+    free(counters);
+  }
 }
 void record_gpu_occupancy(CUpti_ActivityKernel *kernel, const char *name, eventMap_t *map)
 {
@@ -709,6 +754,7 @@ void form_context_event_name(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceL
 
 }
 #endif // CUPTI_API_VERSION >= 3
+
 
 bool function_is_sync(CUpti_CallbackId id)
 {

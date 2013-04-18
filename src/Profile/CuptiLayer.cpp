@@ -266,9 +266,11 @@ void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev)
 {	
 		Tau_CuptiLayer_Added_counters.push_back(ev);	
 }
-uint64_t Tau_CuptiLayer_read_counter(int id)
+
+/* read all the counters. */
+void Tau_CuptiLayer_read_counters(uint64_t * counterDataBuffer)
 { 
-	uint64_t * counterDataBuffer = (uint64_t *) malloc(Tau_CuptiLayer_get_num_events() * sizeof(uint64_t));
+	//uint64_t * counterDataBuffer = (uint64_t *) malloc(Tau_CuptiLayer_get_num_events() * sizeof(uint64_t));
 	if (Tau_CuptiLayer_is_initialized())
 	{
 		CUresult cuErr;
@@ -326,22 +328,28 @@ uint64_t Tau_CuptiLayer_read_counter(int id)
 		//counterDataBuffer[0]);
 		
 	}
-	else
-	{ 
-		return 0;
-		
-		//for (int i=0; i<Tau_CuptiLayer_get_num_events(); i++)
-		//{
-			//counterDataBuffer[i] = 0;
-		//}
-		
-	}
+  else {
+    for (int i=0; i<Tau_CuptiLayer_get_num_events(); i++)
+    {
+      counterDataBuffer[i] = 0;
+    }
+  }
 	//printf("[%d] cupti actual value: %llu.\n", internal_id_map[id], counterDataBuffer[internal_id_map[id]]);
-	uint64_t cb = counterDataBuffer[internal_id_map[id]];
+}
+uint64_t Tau_CuptiLayer_read_counter(int id)
+{ 
+	uint64_t * counterDataBuffer = (uint64_t *) malloc(Tau_CuptiLayer_get_num_events() * sizeof(uint64_t));
+  Tau_CuptiLayer_read_counters(counterDataBuffer);
+  uint64_t cb;
+  if (counterDataBuffer != NULL) {
+    cb = counterDataBuffer[internal_id_map[id]];
+  } else {
+    cb = 0;
+  }
 	free(counterDataBuffer);
 	return cb;
-	
 }
+
 int Tau_CuptiLayer_Initialize_callbacks()
 {
 	typedef void (*Tau_cupti_onload_p) ();
@@ -383,7 +391,7 @@ void Tau_CuptiLayer_Initialize_Map()
 	for (int i=0; i<deviceCount; i++)
 	{
 		er = cuDeviceGet(&currDevice, i);
-		printf("looping, i=%d, currDevice=%d.\n", i, currDevice);
+		//printf("looping, i=%d, currDevice=%d.\n", i, currDevice);
 		CHECK_CU_ERROR( er, "cuDeviceGet" );
 		err = cuptiDeviceGetNumEventDomains(currDevice, &domainCount );
 		CHECK_CUPTI_ERROR( err, "cuptiDeviceGetNumEventDomains" );
@@ -426,6 +434,7 @@ void Tau_CuptiLayer_Initialize_Map()
 				Tau_CuptiLayer_Counter_Map.insert(std::make_pair(ev->tag, ev));
 			}
 		
+			er = cuDeviceGet(&currDevice, i);
 			err = cuptiDeviceGetNumEventDomains(currDevice, &domainCount );
 			CHECK_CUPTI_ERROR( err, "cuptiDeviceGetNumEventDomains" );
 		}
@@ -450,5 +459,11 @@ void Tau_CuptiLayer_register_string(char *str, int metric_n)
 	internal_id_map[metric_n] = Tau_CuptiLayer_Added_counters.size() - 1;
 	//printf("adding counter with id: %d.\n", metric_n);
 }
+
+const char *Tau_CuptiLayer_get_event_name(int metric_n)
+{
+  return Tau_CuptiLayer_Added_counters[metric_n]->event_name.c_str();
+}
+
 
 #endif
