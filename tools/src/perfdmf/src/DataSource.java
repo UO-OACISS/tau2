@@ -745,8 +745,11 @@ public abstract class DataSource {
         
         // initialize to the first thread
         List<Thread> allThreads=this.getAllThreads();
-        Thread t0=allThreads.get(0);
-        int numDerivedSnapshots = t0.getNumSnapshots();
+        int numDerivedSnapshots = 1;
+        if (allThreads != null && !allThreads.isEmpty()) {
+            Thread t0=allThreads.get(0);
+            numDerivedSnapshots = t0.getNumSnapshots();
+        }
 
         long sumStartTime = 0;
         for (Iterator<Thread> it = allThreads.iterator(); it.hasNext();) {
@@ -993,7 +996,13 @@ public abstract class DataSource {
     	 */
 
     	int numMetrics = this.getNumberOfMetrics();
-    	Thread firstThread = getAllThreads().get(0);
+    	Thread firstThread = null;
+        // initialize to the first thread
+        List<Thread> allThreads=this.getAllThreads();
+        if (allThreads != null && !allThreads.isEmpty()) {
+            firstThread=allThreads.get(0);
+        }
+
     	if (meanDataNoNull == null) {
     		meanDataNoNull = new Thread(-1, -1, -1, numMetrics, this);
     		addDerivedSnapshots(firstThread, meanDataNoNull);
@@ -1813,8 +1822,12 @@ public abstract class DataSource {
     }
     
 	public void aggregateMetaData() {
+        // must have at least one thread
+		if (getAllThreads() == null || getAllThreads().isEmpty()) {
+			return;
+		}
+		
         Thread node0 = getAllThreads().get(0);
-
         // must have at least one thread
         if (node0 == null) {
             return;

@@ -29,6 +29,7 @@
 #include "omp_collector_api.h"
 #include <assert.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <Profile/Profiler.h>
 #include "omp.h"
 
@@ -168,27 +169,6 @@ int __omp_collector_api(void *arg)
 
     message_queue_init(&pending_requests);
  
-#if 0
-    while((int)(*traverse)!=0) {
-      omp_collector_message* req = message_queue_push(&pending_requests);
-      req->sz = (int)(*traverse); // todo: add check for consistency    
-      traverse+=sizeof(int);
-      req->r = (OMP_COLLECTORAPI_REQUEST)(*traverse);  // todo: add check for a valid request
-      traverse+=sizeof(int);      
-      req->ec= (OMP_COLLECTORAPI_EC *) traverse;  // copy address for response of error code
-      traverse+=sizeof(int);    
-      req->rsz = (int *)(traverse);
-      traverse+=sizeof(int);
-      req->mem = traverse;
-      traverse+=req->sz-(4*sizeof(int));
-    } 
-
-    while(!message_queue_empty(&pending_requests)) {
-      omp_collector_message pop_req;
-      message_queue_pop(&pending_requests, &pop_req);
-      process_top_request(&pop_req);  
-    }
-#endif
     while((int)(*traverse)!=0) {
       omp_collector_message req;
       req.sz = (int)(*traverse); // todo: add check for consistency    

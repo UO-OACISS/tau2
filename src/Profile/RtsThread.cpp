@@ -52,6 +52,13 @@
 #include <execinfo.h>
 #endif //DEBUG_LOCK_PROBLEMS
 
+// This is a hack for all the deadlocks in TAU.
+// A new threading layer is being built that will do away with
+// this locking model and make this hack obsolete.
+#ifndef TAU_ENVLOCK_IS_DBLOCK
+#define TAU_ENVLOCK_IS_DBLOCK 
+#endif
+
 using namespace std;
 using namespace tau;
 
@@ -228,7 +235,7 @@ int RtsLayer::getTotalThreads()
 }
 
 #ifdef TAU_MPC
-extern "C" int TauGetMpiRank(void);
+extern "C" int TauGetMPCProcessRank(void);
 #endif /* TAU_MPC */
 
 //////////////////////////////////////////////////////////////////////
@@ -237,7 +244,7 @@ extern "C" int TauGetMpiRank(void);
 int RtsLayer::myNode(void)
 {
 #ifdef TAU_MPC
-  return TauGetMpiRank();
+  return TauGetMPCProcessRank();
 #endif /* TAU_MPC */
 
 #ifdef TAU_PID_AS_NODE
@@ -578,6 +585,9 @@ int RtsLayer::getNumEnvLocks(void) {
 
 int RtsLayer::LockEnv(void)
 {
+#ifdef TAU_ENVLOCK_IS_DBLOCK 
+  return LockDB();
+#else
   static bool init = initEnvLocks();
   int tid=localThreadId();
 	TAU_ASSERT(Tau_global_get_insideTAU() > 0, "Thread is trying for Env lock but it is not in TAU");
@@ -608,9 +618,14 @@ int RtsLayer::LockEnv(void)
   fflush(stdout);
 #endif
   return lockEnvCount[tid];
+#endif
 }
 
-int RtsLayer::UnLockEnv(void) {
+int RtsLayer::UnLockEnv(void) 
+{
+#ifdef TAU_ENVLOCK_IS_DBLOCK 
+  return UnLockDB();
+#else
   int tid=localThreadId();
   lockEnvCount[tid]--;
   if (lockEnvCount[tid] == 0) {
@@ -622,6 +637,7 @@ int RtsLayer::UnLockEnv(void) {
   fflush(stdout);
 #endif
   return lockEnvCount[tid];
+#endif
 }
 
 //////////////////////////////////////////////////////////////////////

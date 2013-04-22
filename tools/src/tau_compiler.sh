@@ -1,4 +1,4 @@
-#!/bin/bash  
+#!/bin/bash
 
 declare -i FALSE=-1
 declare -i TRUE=1
@@ -8,8 +8,6 @@ declare -i group_f_F=1
 declare -i group_c=2
 declare -i group_C=3
 declare -i group_upc=4
-# Replaced with more flexible "upc" variable
-#declare -i berkeley_upcc=$FALSE
 
 declare -i disablePdtStep=$FALSE
 declare -i hasAnOutputFile=$FALSE
@@ -271,7 +269,7 @@ echoIfDebug "The compiler being read is $CMD \n"
 # Initialize optOpariOpts 
 ####################################################################
 optOpariOpts="-nosrc -table opari.tab.c"
-optOpari2Opts="--nosrc "
+optOpari2Opts="--nosrc"
 
 ####################################################################
 #Parsing all the Tokens of the Command passed
@@ -459,9 +457,16 @@ for arg in "$@" ; do
 			;;
 
 		    -optDefaultParser=*)
-		        defaultParser="${arg#"-optDefaultParser="}"
+			if [ $defaultParser = "noparser" ]; then 
+		          defaultParser="${arg#"-optDefaultParser="}"
+			fi 
 			pdtParserType=$defaultParser
 			if [ $pdtParserType = roseparse -o $pdtParserType = upcparse ] ; then
+			  roseUsed=$TRUE
+# roseUsed uses the ReturnFix.
+			fi
+			if [ $pdtParserType = edg44-upcparse -a ! -x $optPdtDir/edg44-upcparse -a -x $optPdtDir/upcparse ] ; then
+			  pdtParserType=upcparse; 
 			  roseUsed=$TRUE
 			fi
 
@@ -839,7 +844,13 @@ for arg in "$@" ; do
 		;;
 	    
 	    *.upc)
-		pdtParserType=upcparse
+		if [ $defaultParser = "noparser" ]; then 
+		  if [ -x $optPdtDir/edg44-upcparse ]; then 
+		    pdtParserType=edg44-upcparse
+                  else 
+		    pdtParserType=upcparse
+                  fi 
+ 		fi
 		fileName=$arg
 		arrFileName[$numFiles]=$arg
 		arrFileNameDirectory[$numFiles]=`dirname $arg`

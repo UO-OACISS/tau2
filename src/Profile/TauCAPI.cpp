@@ -63,7 +63,9 @@ void esd_exit (elg_ui4 rid);
 #ifdef DEBUG_LOCK_PROBLEMS
 #include <execinfo.h>
 #endif
+#ifndef TAU_WINDOWS
 #include <execinfo.h>
+#endif
 
 using namespace tau;
 
@@ -463,6 +465,7 @@ static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller) {
   fprintf(stderr, "[%d:%d-%d] TAU: Runtime overlap: found %s (%p) on the stack, but stop called on %s (%p)\n", 
 	 RtsLayer::getPid(), RtsLayer::getTid(), RtsLayer::myThread(),
 	 stack->GetName(), stack, caller->GetName(), caller);
+#ifndef TAU_WINDOWS
      if(!TauEnv_get_ebs_enabled()) {
        void* callstack[128];
        int i, frames = backtrace(callstack, 128);
@@ -472,6 +475,7 @@ static void reportOverlap (FunctionInfo *stack, FunctionInfo *caller) {
        }
        free(strs);
      }
+#endif
 	 abort();
 }
 
@@ -1453,6 +1457,10 @@ extern void Tau_pure_start_task_string(const string name, int tid);
  * library is used without any instrumentation in main */
 extern "C" void Tau_create_top_level_timer_if_necessary_task(int tid)
 {
+#ifdef TAU_SCOREP
+//  printf("Returning from Tau_create_top_level_timer_if_necessary_task");
+  return;
+#endif /* TAU_SCOREP */
 #if ! (defined(TAU_VAMPIRTRACE) || defined(TAU_EPILOG))
   TauInternalFunctionGuard protects_this_function;
 
@@ -1506,6 +1514,10 @@ extern "C" void Tau_create_top_level_timer_if_necessary(void) {
 
 extern "C" void Tau_stop_top_level_timer_if_necessary_task(int tid)
 {
+#ifdef TAU_SCOREP
+//  printf("Returning from Tau_stop_top_level_timer_if_necessary_task");
+  return;
+#endif /* TAU_SCOREP */
   TauInternalFunctionGuard protects_this_function;
 
   if (TauInternal_CurrentProfiler(tid)
@@ -1696,7 +1708,7 @@ void Tau_pure_start_task_string(const string name, int tid)
   PureMap & pure = ThePureMap();
   PureMap::iterator it = pure.find(name);
   if (it == pure.end()) {
-    tauCreateFI((void**)&fi, name, "", TAU_USER, "TAU_USER");
+    tauCreateFI_signalSafe((void**)&fi, name, "", TAU_USER, "TAU_USER");
     pure[name] = fi;
   } else {
     fi = it->second;

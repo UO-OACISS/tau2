@@ -265,6 +265,28 @@ void test_overrun()
     malloc_data[i] = i;
   }
 
+  free((void*)malloc_data);
+
+  printf("done.\n");
+  fflush(stdout);
+}
+
+void test_touch_deallocated()
+{
+  int i;
+
+  printf("Testing touching deallocated memory.  Expect a segfault.\n");
+
+  malloc_data = malloc(DATA_COUNT*sizeof(int));
+
+  for(i=0; i<DATA_COUNT; ++i) {
+    malloc_data[i] = i;
+  }
+
+  free((void*)malloc_data);
+
+  malloc_data[2] = 2;
+
   printf("done.\n");
   fflush(stdout);
 }
@@ -284,6 +306,9 @@ int main(int argc, char ** argv)
 #endif
   test_free();
 
+  test_touch_deallocated();
+
+  // export TAU_MEMDBG_ATTEMPT_CONTINUE to get both errors
   test_overrun();
 
   return 0;
