@@ -93,6 +93,7 @@ using namespace tau;
 extern FunctionInfo * Tau_create_thread_state_if_necessary(int tid, const string & thread_state);
 extern "C" int Tau_get_thread_omp_state(int tid);
 
+#if 0 // disabled for now -- no state tracking
 static char const * _gTauOmpStatesArray[12] = {
   "OMP UNKNOWN",
   "OMP OVERHEAD",
@@ -115,6 +116,7 @@ static std::string gTauOmpStates(int index)
   }
   return _gTauOmpStatesArray[0];
 }
+#endif
 
 /*
  see:
@@ -233,7 +235,13 @@ struct CallSiteCacheNode {
   bool resolved;
   TauBfdInfo info;
 };
+
 typedef TAU_HASH_MAP<unsigned long, CallSiteCacheNode*> CallSiteCacheMap;
+static CallSiteCacheMap & TheCallSiteCacheWithLines() {
+  static CallSiteCacheMap map;
+  return map;
+}
+
 static CallSiteCacheMap & TheCallSiteCache() {
   static CallSiteCacheMap map;
   return map;
@@ -609,7 +617,7 @@ char *Tau_sampling_getShortSampleName(const char *sampleName)
 
 extern "C"
 CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag,
-    char const * childName, char ** newShortName, bool addAddress)
+    char const * childName, char ** newShortName, bool addAddress, bool useLineNumber)
 {
   if (strcmp(tag, "UNWIND") == 0) {
     // if we are dealing with callsites, adjust for the fact that the
@@ -618,7 +626,14 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
   }
   CallSiteInfo * callsite = new CallSiteInfo(addr);
 
+  // we are using two caches - one for the location with line numbers,
+  // and one without. This is somewhat inefficient(?), but it works.
   CallSiteCacheMap & callSiteCache = TheCallSiteCache();
+  if (useLineNumber) {
+    callSiteCache = TheCallSiteCacheWithLines();
+  }
+
+  // does the node exist in the cache? if not, look it up
   CallSiteCacheNode * node = callSiteCache[addr];
   if (!node) {
     RtsLayer::LockDB();
@@ -632,17 +647,34 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
   }
 
   char buff[4096];
+
+  // if the node was found by BFD, populate the callsite node
   if (node->resolved) {
     TauBfdInfo & resolvedInfo = node->info;
-    if (childName) {
-      sprintf(buff, "[%s] %s [@] %s [{%s} {%d}]",
-          tag, childName, resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
+    if (useLineNumber) {
+      if (childName) {
+        sprintf(buff, "[%s] %s [@] %s [{%s} {%d}]",
+            tag, childName, resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
+      } else {
+        sprintf(buff, "[%s] %s [{%s} {%d}]",
+            tag, resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
+      }
+      // TODO: Leak?
+      char lineno[32];
+      sprintf(lineno, "%d", resolvedInfo.lineno);
+      *newShortName = (char*)malloc(strlen(resolvedInfo.funcname) + strlen(lineno) + 2);
+      sprintf(*newShortName, "%s.%d", resolvedInfo.funcname, resolvedInfo.lineno);
     } else {
-      sprintf(buff, "[%s] %s [{%s} {%d}]",
-          tag, resolvedInfo.funcname, resolvedInfo.filename, resolvedInfo.lineno);
+      if (childName) {
+        sprintf(buff, "[%s] %s [@] %s [{%s}]",
+            tag, childName, resolvedInfo.funcname, resolvedInfo.filename);
+      } else {
+        sprintf(buff, "[%s] %s [{%s}]",
+            tag, resolvedInfo.funcname, resolvedInfo.filename);
+      }
+      // TODO: Leak?
+      *newShortName = strdup(resolvedInfo.funcname);
     }
-    // TODO: Leak?
-    *newShortName = strdup(resolvedInfo.funcname);
   } else {
     char const * mapName = "UNKNOWN";
     TauBfdAddrMap const * addressMap = Tau_bfd_getAddressMap(TheBfdUnitHandle(), addr);
@@ -674,6 +706,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
 
   // TODO: Leak?
   callsite->name = strdup(buff);
+  TAU_VERBOSE("Name %s, Address %p resolved to %s\n", *newShortName, (void*)addr, buff);
   return callsite;
 }
 
@@ -695,7 +728,7 @@ char *Tau_sampling_getPathName(int index, CallStackInfo *callStack) {
   std::string buffer = (sites[startIdx])->name;
   for (int i=startIdx-1; i>=index; i--) {
 	buffer += " => ";
-    buffer += (sites[startIdx])->name;
+    buffer += (sites[i])->name;
   }
   // copy the string so it doesn't go out of scope
   ret = strdup(buffer.c_str());
@@ -715,16 +748,28 @@ CallStackInfo * Tau_sampling_resolveCallSites(const unsigned long * addresses)
       char * prevShortName = NULL;
       char * newShortName = NULL;
       callStack->callSites.push_back(Tau_sampling_resolveCallSite(
-          addresses[1], "SAMPLE", NULL, &newShortName, addAddress));
+          addresses[1], "SAMPLE", NULL, &newShortName, addAddress, true));
       // move the pointers
       if (newShortName) {
         prevShortName = newShortName;
         newShortName = NULL;
       }
+#if 0
+      // resolve it again, without the line number
+      callStack->callSites.push_back(Tau_sampling_resolveCallSite(
+          addresses[1], "SAMPLE", NULL, &newShortName, addAddress, false));
+      // free the previous short name now.
+      if (prevShortName) {
+        free(prevShortName);
+        if (newShortName) {
+          prevShortName = newShortName;
+        }
+      }
+#endif
       for (int i = 2; i < length; ++i) {
         unsigned long address = addresses[i];
         callStack->callSites.push_back(Tau_sampling_resolveCallSite(
-            address, "UNWIND", prevShortName, &newShortName, addAddress));
+            address, "UNWIND", prevShortName, &newShortName, addAddress, 1));
         // free the previous short name now.
         if (prevShortName) {
           free(prevShortName);
@@ -1556,8 +1601,12 @@ extern "C" void Tau_sampling_init_if_necessary(void)
    * those cases, TAU does not get a chance to initialize sampling on any thread other
    * than thread 0. By making this region an OpenMP parallel region, we initialize
    * sampling on all (currently known) OpenMP threads. Any threads created after this
-   * point may not be recognized by TAU. But this should catch the 99% case. */
-#if defined(TAU_OPENMP) && !defined(TAU_PTHREAD)
+   * point may not be recognized by TAU. But this should catch the 99% case.
+   * By the way, this doesn't work on PGI. the master thread does all the work,
+   * and the other threads don't get initialized. Just hope that with PGI, there
+   * are instrumented functions inside the parallel regions, otherwise sampling
+   * will only work on thread 0.  */
+#if defined(TAU_OPENMP) && !defined(TAU_PTHREAD) && !defined(__PGI)
   // if the master thread is in TAU, in a non-parallel region
   if (omp_get_num_threads() == 1) {
     /* FIRST! make sure that we don't process samples while in this code */
@@ -1578,22 +1627,28 @@ extern "C" void Tau_sampling_init_if_necessary(void)
     }
 
     // do this for all threads
-#pragma omp parallel shared (samplingThrInitialized)
-    {
-      // but do it sequentially.
-#pragma omp critical (creatingtopleveltimer)
+	int dummy = 0;
+	int all_threads = omp_get_max_threads();
+#pragma omp parallel for ordered 
+    for (dummy = 0 ; dummy < all_threads ; dummy++) {
+        // but do it sequentially.
+#pragma omp ordered 
       {
         // Protect TAU from itself
         TauInternalFunctionGuard protects_this_function;
-        // Getting the thread ID registers the OpenMP thread.
-        int myTid = RtsLayer::threadId();
-        if (!samplingThrInitialized[myTid]) {
-          TAU_VERBOSE("Thread %d initialized sampling\n", myTid);
-          Tau_sampling_init(myTid);
-          samplingThrInitialized[myTid] = true;
-        }
-      }    // critical
-    }    // parallel
+
+#pragma omp critical (creatingtopleveltimer)
+        {
+          // Getting the thread ID registers the OpenMP thread.
+          int myTid = RtsLayer::threadId();
+          if (!samplingThrInitialized[myTid]) {
+            Tau_sampling_init(myTid);
+            samplingThrInitialized[myTid] = true;
+            TAU_VERBOSE("Thread %d, %d initialized sampling\n", tid, myTid);
+          }
+        }    // critical
+      }    // ordered
+    }    // for
     /* WE HAVE TO DO THIS! The environment was locked before we entered
      * this function, we unlocked it, so re-lock it for safety */
     for (tmpLocks = 0; tmpLocks < numDBLocks; tmpLocks++) {
@@ -1609,6 +1664,7 @@ extern "C" void Tau_sampling_init_if_necessary(void)
   if (!samplingThrInitialized[tid]) {
     samplingThrInitialized[tid] = true;
     Tau_sampling_init(tid);
+    TAU_VERBOSE("Thread %d initialized sampling\n", tid);
   }
 #endif
 }

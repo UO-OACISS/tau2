@@ -397,6 +397,7 @@ for arg in "$@"; do
     echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
     echo "-noex .................. Use no exceptions while compiling the library."
     echo "-DISABLESHARED .................. Do not build libTAU.so shared object."
+    echo "-ENABLE_EXPORT_DYNAMIC .................... Force -Wl,--export-dynamic."
     echo "-help ...................................... display this help message."
     echo "-fullhelp .............................. display the full help message."
     echo ""
@@ -536,6 +537,7 @@ for arg in "$@"; do
     echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
     echo "-noex .................. Use no exceptions while compiling the library."
     echo "-DISABLESHARED .................. Do not build libTAU.so shared object."
+    echo "-ENABLE_EXPORT_DYNAMIC .................... Force -Wl,--export-dynamic."
     echo "-zeptodir=<dir> ............................. ZeptoOS install location."
     echo "                              See http://www-unix.mcs.anl.gov/zeptoos/." 
     echo "-help ...................................... display this help message."
@@ -670,6 +672,7 @@ compensate=no
 smarts=no
 papi=no
 darshan=no
+enable_export_dynamic=no
 perfsuite=no
 perfsuitedir=
 bfd=no
@@ -1134,43 +1137,6 @@ for arg in "$@"; do
       shift
       ;;
 
-# deprecated. Please see (and use) -unwinder
-  -ebs_unwinder=*)
-      unwinder=`echo $arg | sed -e 's/-ebs_unwinder=//'`
-      if [ "x$unwinder" = "xlibunwind" ] ; then
-          unwind_flag="-DTAU_USE_LIBUNWIND"
-          unwind_lib_flag="-lunwind"
-      elif [ "x$unwinder" = "xstackwalker" ] ; then
-          unwind_flag="-DTAU_USE_STACKWALKER"
-          unwind_lib_flag="-lstackwalk"
-      elif [ "x$unwinder" = "xnone" ] ; then
-          echo "No Unwinding Support."
-      else
-          echo "Error: Invalid Stack Unwinder $unwinder. Valid options are:"
-          echo "libunwind, stackwalker, none (default)."
-          exit 1
-      fi
-      shift
-      ;;
-
-# deprecated. Please see (and use) -unwinder_inc
-  -ebs_unwind_inc=*)
-      unwind_inc=`echo $arg | sed -e 's/-ebs_unwind_inc=//'`
-      shift
-      ;;
-
-# deprecated. Please see (and use) -unwinder_inc
-  -ebs_unwind_lib=*)
-      unwind_lib=`echo $arg | sed -e 's/-ebs_unwind_lib=//'`
-      shift
-      ;;
-
-# deprecated. Please see (and use) -unwinder_inc
-  -ebs_unwind_extras=*)
-      unwind_extras=`echo $arg | sed -e 's/-ebs_unwind_extras=//'`
-      shift
-      ;;
-
   -unwinder=*)
       unwinder=`echo $arg | sed -e 's/-unwinder=//'`
       if [ "x$unwinder" = "xlibunwind" ] ; then
@@ -1189,17 +1155,31 @@ for arg in "$@"; do
       shift
       ;;
 
-  -unwind_inc=*)
+  -unwind=*)
+      unwind_dir=`echo $arg | sed -e 's/-unwind=//'`
+      unwind_inc="$unwind_dir/include"
+      unwind_lib="$unwind_dir/lib"
+	  # So that the user doesn't have to specify the unwinder,
+	  # use libunwind as the default.
+      if [ "x$unwinder" = "xnone" ] ; then
+          unwinder="libunwind"
+          unwind_flag="-DTAU_USE_LIBUNWIND"
+          unwind_lib_flag="-lunwind"
+	  fi
+      shift
+      ;;
+
+  -unwindinc=*)
       unwind_inc=`echo $arg | sed -e 's/-unwind_inc=//'`
       shift
       ;;
 
-  -unwind_lib=*)
+  -unwindlib=*)
       unwind_lib=`echo $arg | sed -e 's/-unwind_lib=//'`
       shift
       ;;
 
-  -unwind_extras=*)
+  -unwindextras=*)
       unwind_extras=`echo $arg | sed -e 's/-unwind_extras=//'`
       shift
       ;;
@@ -1835,6 +1815,12 @@ for arg in "$@"; do
   -DISABLESHARED)
     # Disable shared library creation
     disableshared=yes
+    shift
+    ;;
+
+  -ENABLE_EXPORT_DYNAMIC)
+    # Turn on -Wl,--export-dynamic flag during linking
+    enable_export_dynamic=yes
     shift
     ;;
 
@@ -2832,6 +2818,20 @@ if [ "$machine" = "apple" ] ; then
     fi
 fi
 
+if [ $machine = craycnl -o $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
+  config_compiler=`which $cxx_compiler`
+  comp_minus_darshan=`echo $config_compiler | sed -e 's/darshan//g'` 
+  
+  if [ $config_compiler = $comp_minus_darshan ] ; then
+    echo "NOTE: Darshan test successful"
+  else
+    echo "NOTE: --------------------------------------------------------------"
+    echo "NOTE: Darshan may not be used with TAU. Please use module unload darshan and re-configure TAU."
+    echo "Darshan's wrapper libraries will clash with TAU wrappers. Exiting..."
+    echo "NOTE: --------------------------------------------------------------"
+    exit 1;
+  fi
+fi
 
 if [ $machine = craycnl ] ; then
 
@@ -3555,10 +3555,13 @@ case $cxx_compiler in
       ;;
 
     mpc_cxx)
-	if [ $machine = x86_64 ] ; then
+	if [ $machine = x86_64 -o $machine = mic_linux ] ; then
             full_cxx_compiler=`mpc_cxx -show | awk '{print $1;}'`
             full_cc_compiler=`mpc_cc -show | awk '{ print $1;}'`
+            fixmakeargs="tau_build_cc=$full_cc_compiler tau_build_cxx=$full_cxx_compiler $fixmakeargs"
             mpilibrary=`mpc_cxx -show | sed -e "s@$full_cxx_compiler@@g" | sed -e "s/ /#/g"`
+            full_cxx_compiler=`mpc_cxx -show -Dmain=mpc_user_main__ | sed -e "s@-fmpc-privatize@@g" -e "s/ /#/g"`  
+            full_cc_compiler=`mpc_cc -show -Dmain=mpc_user_main__ | sed -e "s@-fmpc-privatize@@g" -e "s/ /#/g"`
 	    #echo "CC=$cc_compiler"
 	    #echo "CXX=$cxx_compiler"
 	    #echo "mpilibrary=$mpilibrary"
@@ -5146,6 +5149,16 @@ case $machine in
         fi
         ;;
 
+     apple)
+		  if [ "x$unwind_lib_flag" = "x-lunwind" ] ; then
+            unwind_inc="/usr/include"
+            unwind_lib="/usr/lib/system"
+            unwind_lib_flag="-framework System"
+			echo "Using Apple's system provided libunwind umbrella framework..."
+		  fi
+	fixmakeargs="arch=$machine  $fixmakeargs"
+        ;;
+
      unknown)
         echo unknown architecture.
 	fixmakeargs="arch=$machine $fixmakeargs"
@@ -5829,7 +5842,22 @@ if [ $mpi = yes ] ; then
 		  # For BG/P
 		  mpilibrary="-lmpich.cnk $additional_mpilibs"
 	        else
-		  mpilibrary="-lmpich $additional_mpilibs"
+                  if [ $machine = craycnl ]; then 
+	      	    if [ -r $mpilib/libmpich_cray.a ] ; then
+	              mpilibrary="-lmpich_cray $additional_mpilibs"
+                    elif [ -r $mpilib/libmpich_intel.a ]; then
+	              mpilibrary="-lmpich_intel $additional_mpilibs"
+                    elif [ -r $mpilib/libmpich_gnu.a ]; then
+	              mpilibrary="-lmpich_gnu $additional_mpilibs"
+	            elif [ -r $mpilib/libmpich_pgi.a ]; then 
+	              mpilibrary="-lmpich_pgi $additional_mpilibs"
+		    else
+	              mpilibrary="-lmpich $additional_mpilibs"
+	            fi
+		    echo "Using mpilibrary=$mpilibrary"
+                  else
+		    mpilibrary="-lmpich $additional_mpilibs"
+                  fi
 	        fi
               fi
 	  fi
@@ -5839,10 +5867,23 @@ if [ $mpi = yes ] ; then
 	      mpilibrary="-lpmpich++ $mpilibrary"
 	  fi
 	  
-	  if [ -r $mpilib/libmpichcxx.a -o -r $mpilib/libmpichcxx.so ] ; then 
+	
+          if [ $machine = craycnl ]; then 
+	      if [ -r $mpilib/libmpichcxx_cray.a ] ; then
+	        mpilibrary="-lmpichcxx_cray $mpilibrary"
+              elif [ -r $mpilib/libmpichcxx_intel.a ]; then
+	        mpilibrary="-lmpichcxx_intel $mpilibrary"
+              elif [ -r $mpilib/libmpichcxx_gnu.a ]; then
+	        mpilibrary="-lmpichcxx_gnu $mpilibrary"
+	      elif [ -r $mpilib/libmpichcxx_pgi.a ]; then 
+	        mpilibrary="-lmpichcxx_pgi $mpilibrary"
+	      fi
+          else
+	    if [ -r $mpilib/libmpichcxx.a -o -r $mpilib/libmpichcxx.so ] ; then 
               #echo "mpichcxx found"
 	      mpilibrary="-lmpichcxx $mpilibrary"
-	  fi
+	    fi
+          fi
 	  
 	  if [ -r $mpilib/libpmpich.a -o -r $mpilib/libpmpich.so ] ; then 
               #echo "pmpich found"
@@ -6219,9 +6260,15 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
 		fi
     fi
     bfdinclude="-I$bfddir/include"
-    bfdlink="-L$bfddir/lib -L$bfddir/lib64"
     fixmakeargs="$fixmakeargs bfdinclude=$bfdinclude"
-    fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64"
+    bfdlink="-L$bfddir/lib -L$bfddir/lib64"
+	# The libintl.dylib library is in /opt/local/lib... is that everywhere?
+	if [ "x$machine" == "xapple" ] ; then
+      bfdlink="$bfdlink -L/opt/local/lib"
+      fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64#-L/opt/local/lib"
+	else
+      fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64"
+	fi
     if [ ! -d $bfddir -a "$bfddif" = 'none' ] ; then
         echo "Error: Cannot access BFD directory $bfddir"
         exit 1
@@ -6238,10 +6285,10 @@ fi
 ######################################################################
   cat <<EOF > conftest_bfd.c
 #include <bfd.h>
-#ifdef __APPLE__
-#include <crt_externs.h>
-char *** environ(void) { return (*_NSGetEnviron()); }
-#endif
+//#ifdef __APPLE__
+//#include <crt_externs.h>
+//char *** environ(void) { return (*_NSGetEnviron()); }
+//#endif
 
 void foo() {
    bfd_init();
@@ -6313,8 +6360,8 @@ if [ $cxx_compiler = x86_64-w64-mingw32-g++ ]; then
 fi
 
 if [ $bfd_worked = "no" ] ; then
-    echo "failed"
-    BFDLIBS="-lbfd -liberty"
+    echo "failed. Using -lbfd -liberty -lz."
+    BFDLIBS="-lbfd -liberty -lz"
     if [ $tauarch = i386_linux ]; then 
       BFDLIBS=""
     fi
@@ -6745,6 +6792,9 @@ fi
 
 if [ "x$unwinder" != "xnone" ] ; then
   if [ "x$unwinder" = "xlibunwind" ] ; then
+		  if [ $machine = apple ] ; then
+            unwind_lib_flag="-framework#System"
+		  fi
     fixmakeargs="$fixmakeargs TAU_UNWIND TAU_UNWIND_LIBUNWIND unwind_flag=$unwind_flag unwind_inc=$unwind_inc unwind_lib=$unwind_lib unwind_lib_flag=$unwind_lib_flag unwind_extras=$unwind_extras"
   else
     fixmakeargs="$fixmakeargs TAU_UNWIND TAU_UNWIND_STACKWALKER unwind_flag=$unwind_flag unwind_inc=$unwind_inc unwind_lib=$unwind_lib unwind_lib_flag=$unwind_lib_flag unwind_extras=$unwind_extras"
@@ -7479,7 +7529,7 @@ if [ $mrnet = yes ] ; then
   fi
 fi
 
-if [ $machine = ia64 -o $machine = x86_64 -o $machine = i386_linux -o $machine = craycnl -o $machine = bgp -o $machine = bgq -o $machine = mips -o $machine = mips32 -o $machine = ibm64linux -o $machine = ppc64 ] ; then
+if [ $machine = ia64 -o $machine = x86_64 -o $machine = i386_linux -o $machine = bgp -o $machine = bgq -o $machine = mips -o $machine = mips32 -o $machine = ibm64linux -o $machine = ppc64 -o $enable_export_dynamic = yes ] ; then
     extra_linker_args="${extralinker_args}#-Wl,--export-dynamic"
 else 
   if [ $machine = apple ]; then 
@@ -7599,12 +7649,13 @@ if [ $pdt = yes ] ; then
     if [ $opari1 = yes ] ; then
     cat ${tauroot}/tools/src/tau_header_inst_opari1.sh | sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@ARCH@,'$architecture',' \
 	-e 's,@PDTROOTDIR@,'$pdtdir',' -e 's,@PDTARCH@, '$pdtarch',' > ${targetdir}/${architecture}/bin/tau_header_inst.sh
+    chmod a+rx ${targetdir}/${architecture}/bin/tau_header_inst.sh
     fi
     if [ $opari = yes ] ; then
     cat ${tauroot}/tools/src/tau_header_inst.sh | sed -e 's,@TAUROOTDIR@,'$targetdir',' -e 's,@ARCH@,'$architecture',' \
 	-e 's,@PDTROOTDIR@,'$pdtdir',' -e 's,@PDTARCH@, '$pdtarch',' > ${targetdir}/${architecture}/bin/tau_header_inst.sh
-    fi
     chmod a+rx ${targetdir}/${architecture}/bin/tau_header_inst.sh
+    fi
     if [ -x ${pdtdir}/${pdtarchcompdir}/bin/smaqao ]
     then
       echo "TAU: PDT: Using binary rewriting capabilities from MAQAO in tau_rewrite"

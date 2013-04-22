@@ -98,10 +98,12 @@ x_uint64 TauTraceGetTimeStamp(int tid) {
   x_uint64 value = (x_uint64)TauMetrics_getTraceMetricValue(tid);
 
   if (TauEnv_get_synchronize_clocks()) {
-    return (x_uint64)TauSyncAdjustTimeStamp(value);
-  } else {
-    return value;
+    value = (x_uint64)TauSyncAdjustTimeStamp(value);
   }
+  
+  TAU_ASSERT(value > 0, "Zero timestamp value found.");
+
+  return value;
 }
 
 
