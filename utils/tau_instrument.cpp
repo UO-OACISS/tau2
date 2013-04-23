@@ -961,6 +961,8 @@ void parseInstrumentationCommand(char *line, int lineno)
   } /* static || dynamic specified */
 
   switch (kind) {
+  case TAU_NOT_SPECIFIED:
+    break;  // Some instrumentation directives don't have a specific kind
   case TAU_LOOPS: {
     WSPACE(line);
     if (strncmp(line, "file", 4) == 0) {
