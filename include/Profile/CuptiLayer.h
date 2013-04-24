@@ -35,7 +35,14 @@ printf ("[%s:%d] Error %d for CUPTI API function '%s'. cuptiQuery failed\n", __F
 
 #define TAU_CUPTI_MAX_NAME 40
 #define TAU_CUPTI_MAX_DESCRIPTION 480
-		
+
+//This setting will aggregate the event values collected across all event
+//domains. Thus the event results will report values as if all SM had an event
+//domain available to collect this value. WARNING: If the kernel being measured
+//is not large enough to utilize all the available SMs on a device this
+//aggregation will result in skewed data.
+#define TAU_CUPTI_NORMALIZE_EVENTS_ACROSS_ALL_SMS
+
 //#define DISABLE_CUPTI
 
 class CuptiCounterEvent
@@ -129,7 +136,7 @@ extern "C" int Tau_CuptiLayer_get_num_events();
 
 extern "C" const char *Tau_CuptiLayer_get_event_name(int metric_n);
 
-extern "C" void Tau_CuptiLayer_read_counters(uint64_t *cb);
+extern "C" void Tau_CuptiLayer_read_counters(CUdevice d, uint64_t *cb);
 
 extern "C" uint64_t Tau_CuptiLayer_read_counter(int metric_n);
 

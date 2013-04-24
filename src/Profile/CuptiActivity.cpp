@@ -170,7 +170,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 					count, getMemcpyType(kind)
 				);
 				FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->ThisFunction;
-				record_gpu_launch(cbInfo->correlationId, p);
+				//record_gpu_launch(cbInfo->correlationId, p);
 				/*
 				CuptiGpuEvent new_id = CuptiGpuEvent(TAU_GPU_USE_DEFAULT_NAME, (uint32_t)0, cbInfo->contextUid, cbInfo->correlationId, NULL, 0);
 				Tau_gpu_enter_memcpy_event(
@@ -229,6 +229,15 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 			}
 			else if (cbInfo->callbackSite == CUPTI_API_EXIT)
 			{
+      /* for testing only. 
+				if (function_is_launch(id))
+				{
+          printf("synthetic sync point.\n");
+          cuCtxSynchronize();
+					FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->ThisFunction;
+				  record_gpu_launch(cbInfo->correlationId, p);
+        }
+      */
 				//cerr << "callback for " << cbInfo->functionName << ", exit." << endl;
         //printf("[at call (exit), %d] name: %s.\n", cbInfo->correlationId, cbInfo->functionName);
 				Tau_gpu_exit_event(cbInfo->functionName);
@@ -379,7 +388,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 				id = kernel->correlationId;
 			}
       //TODO: make this conditional
-      record_gpu_counters(id, &eventMap);
+      record_gpu_counters(kernel->deviceId, id, &eventMap);
 
 			static TauContextUserEvent* bs;
 			static TauContextUserEvent* dm;
@@ -413,9 +422,11 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 				kernel->streamId, kernel->contextId, id, map, map_size,
 				kernel->start / 1e3, kernel->end / 1e3);
       //testing counter array
-      uint64_t * counters = (uint64_t *) malloc(Tau_CuptiLayer_get_num_events() * sizeof(uint64_t));
-      Tau_CuptiLayer_read_counters(counters);
-      Tau_cupti_register_sync_site(id, counters, Tau_CuptiLayer_get_num_events());
+      //uint64_t * counters = (uint64_t *) malloc(Tau_CuptiLayer_get_num_events() * sizeof(uint64_t));
+      //CUdevice device;
+      //cuDeviceGet(&device, kernel->deviceId);
+      //Tau_CuptiLayer_read_counters(device, counters);
+      //Tau_cupti_register_sync_site(id, counters, Tau_CuptiLayer_get_num_events());
       //int n = 2;
       //uint64_t c[] = { 1900, 8550 };
       //Tau_cupti_register_sync_site(id, c, n);
@@ -600,32 +611,53 @@ void record_gpu_launch(int correlationId, FunctionInfo *current_function)
   if (n_counters > 0)
   {
     Tau_cupti_register_calling_site(correlationId, current_function);	
-    //printf("putting in %d.\n", correlationId);
-    kernelInfoMap[correlationId].counters = (uint64_t *) malloc(n_counters*sizeof(uint64_t));
-    Tau_CuptiLayer_read_counters(kernelInfoMap[correlationId].counters);
-    //printf("[at launch, %d] counter 0: %llu.\n", correlationId, kernelInfoMap[correlationId].counters[0]);
+    printf("putting in %d.\n", correlationId);
+    int device_count;
+    cuDeviceGetCount(&device_count);
+    //kernelInfoMap[correlationId].counters = (uint64_t **) malloc(n_counters*device_count*sizeof(uint64_t));
+    for (int i=0; i<device_count; i++)
+    {
+      CUdevice device;
+      cuDeviceGet(&device, i);
+      //uint64_t *tmpCounters = (uint64_t*)  malloc(Tau_CuptiLayer_get_num_events()*sizeof(uint64_t));
+      uint64_t *tmpCounters;
+      K *tmp = new K();
+      tmpCounters = tmp->counters(i);
+      Tau_CuptiLayer_read_counters(device, tmpCounters);
+      //memcpy(kernelInfoMap[correlationId].counters(i), tmpCounters, Tau_CuptiLayer_get_num_events()*sizeof(uint64_t)); 
+      kernelInfoMap[correlationId] = *tmp;
+      printf("[at launch, %d] device 0, counter 0: %llu.\n", correlationId, tmpCounters[0]);
+    }
   }
 }
-void record_gpu_counters(uint32_t correlationId, eventMap_t *m)
+void record_gpu_counters(int device_id, uint32_t correlationId, eventMap_t *m)
 {
   //this to get around a bug in CUPTI.
   if (kernelInfoMap.count(correlationId) == 0) {
     correlationId--;
   }
-  //printf("looking for %d.\n", correlationId);
+  printf("looking for %d.\n", correlationId);
   if (kernelInfoMap.count(correlationId) > 0)
   {
-    uint64_t *counters = (uint64_t *) malloc(Tau_CuptiLayer_get_num_events()*sizeof(uint64_t));
-    Tau_CuptiLayer_read_counters(counters);
-    //print difference
+    //uint64_t *counters = (uint64_t *) malloc(Tau_CuptiLayer_get_num_events()*sizeof(uint64_t));
+    CUdevice device;
+    cuDeviceGet(&device, device_id);
+    K *k = new K();
+    uint64_t * tmpCounters;
+    tmpCounters = k->counters(device_id);
+    Tau_CuptiLayer_read_counters(device, tmpCounters);
     for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++)
     {
-      //printf("[at sync, %d] counter %d: %llu.\n", correlationId, n, counters[n] - kernelInfoMap[correlationId].counters[n]);
+      printf("tmp: %llu.\n", tmpCounters[n]);
       TauContextUserEvent* c;
       Tau_cupti_find_context_event(&c, Tau_CuptiLayer_get_event_name(n), true);
-      eventMap[c] = counters[n] - kernelInfoMap[correlationId].counters[n];
+      kernelInfoMap[correlationId].difference(*k);
+      tmpCounters = kernelInfoMap[correlationId].counters(device_id);
+      eventMap[c] = tmpCounters[n];
+      cout << "final number: " << setprecision(16) << eventMap[c] << endl;
+      //printf("final number: %f.\n", eventMap[c]);
     }
-    free(counters);
+    //free(counters);
   }
 }
 void record_gpu_occupancy(CUpti_ActivityKernel *kernel, const char *name, eventMap_t *map)

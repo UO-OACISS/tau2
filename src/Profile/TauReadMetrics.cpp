@@ -354,9 +354,9 @@ void metric_read_cupti(int tid, int idx, double values[])
 
 	//printf("is the cupti layer is initialized? %d\n", Tau_CuptiLayer_is_initialized());
 	//printf("requesting counter id: %d.\n", idx);
-	uint64_t counterData = Tau_CuptiLayer_read_counter(idx);
+	//uint64_t counterData = Tau_CuptiLayer_read_counter(idx);
 
-	values[idx] = (double) counterData;
+	//values[idx] = (double) counterData;
 	//printf("cupti value %d is: %lf.\n", idx, values[idx]);
 }
 #endif //CUPTI
