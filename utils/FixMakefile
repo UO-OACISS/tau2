@@ -117,7 +117,7 @@ case $1 in
         ;;
 
      unwind_lib_flag=*)
-        unwind_lib_flag=`echo $1 | sed -e 's/^unwind_lib_flag=//'`
+        unwind_lib_flag=`echo $1 | sed -e 's/^unwind_lib_flag=//' -e 's/#/ /g'`
        echo "s,^UNWIND_LIB_FLAG=.*$,UNWIND_LIB_FLAG=$unwind_lib_flag,g" >> $sedout
         ;;
 
@@ -361,13 +361,21 @@ case $1 in
 	;;
 
      fullcxx=*)
-        fullcxx=`echo $1 | sed -e 's/^fullcxx=//'`
-	echo "s,^FULL_CXX=.*$,FULL_CXX=$fullcxx,g" >> $sedout
+        fullcxx=`echo $1 | sed -e 's@^fullcxx=@@' -e 's@#@ @g'`
+	echo "s@^FULL_CXX=.*@FULL_CXX=$fullcxx@g" >> $sedout
 	;;
 
      fullcc=*)
-        fullcc=`echo $1 | sed -e 's/^fullcc=//'`
-	echo "s,^FULL_CC=.*$,FULL_CC=$fullcc,g" >> $sedout
+        fullcc=`echo $1 | sed -e 's@^fullcc=@@' -e 's@#@ @g'`
+	echo "s@^FULL_CC=.*@FULL_CC=$fullcc@g" >> $sedout
+	;;
+     tau_build_cc=*)
+        tau_build_cc=`echo $1 | sed -e 's@^tau_build_cc=@@' -e 's@#@ @g'`
+	echo "s@^TAU_BUILD_CC=.*@TAU_BUILD_CC=$tau_build_cc@g" >> $sedout
+	;;
+     tau_build_cxx=*)
+        tau_build_cxx=`echo $1 | sed -e 's@^tau_build_cxx=@@' -e 's@#@ @g'`
+	echo "s@^TAU_BUILD_CXX=.*@TAU_BUILD_CXX=$tau_build_cxx@g" >> $sedout
 	;;
 
      dyninstdir=*)
@@ -1336,6 +1344,14 @@ case $1 in
 	;;
      SCOREPMPI)
 	echo "NOTE: Using SCOREPMPI Tracing Package ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     SCOREPOMPI)
+	echo "NOTE: Using SCOREPOMPI Options ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     SCOREPOMP)
+	echo "NOTE: Using SCOREPOMP Options ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      VAMPIRTRACE_5_7_API)

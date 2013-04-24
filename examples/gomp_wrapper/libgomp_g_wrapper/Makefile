@@ -1,7 +1,7 @@
 TAU_MAKEFILE ?=../../../include/Makefile
 include $(TAU_MAKEFILE)
 
-TARGET=libgomp_g_wrap$(TAU_APPLE_SHLIBX)
+TARGET=libgomp_g_wrap$(TAU_SHLIBX)
 CC=$(TAU_CC) 
 CFLAGS=$(TAU_DEFS)  $(TAU_INCLUDE) $(TAU_MPI_INCLUDE)
 EXTRA_FLAGS=-I. -fPIC -g -fopenmp

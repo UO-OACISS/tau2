@@ -150,7 +150,11 @@ using namespace std;
 #define TAU_MEMDBG_ALLOC_MIN_DEFAULT      0 // 0 => undefined, not zero
 #define TAU_MEMDBG_ALLOC_MAX_DEFAULT      0 // 0 => undefined, not zero
 #define TAU_MEMDBG_OVERHEAD_DEFAULT       0 // 0 => undefined, not zero
-#define TAU_MEMDBG_ALIGNMENT_DEFAULT      sizeof(int)
+#ifdef TAU_BGQ
+#define TAU_MEMDBG_ALIGNMENT_DEFAULT      64
+#else
+#define TAU_MEMDBG_ALIGNMENT_DEFAULT      sizeof(long)
+#endif
 #define TAU_MEMDBG_ZERO_MALLOC_DEFAULT    0
 #define TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT 0
 
@@ -487,7 +491,7 @@ static int env_memdbg_protect_free = TAU_MEMDBG_PROTECT_FREE_DEFAULT;
 static int env_memdbg_protect_gap = TAU_MEMDBG_PROTECT_GAP_DEFAULT;
 // All values of env_memdbg_fill_gap_value are valid fill patterns
 static int env_memdbg_fill_gap = TAU_MEMDBG_FILL_GAP_DEFAULT;
-static unsigned char env_memdbg_fill_gap_value = 0;
+static unsigned char env_memdbg_fill_gap_value = 0xAB;
 // All values of env_memdbg_alloc_min are valid limits
 static int env_memdbg_alloc_min = TAU_MEMDBG_ALLOC_MIN_DEFAULT;
 static size_t env_memdbg_alloc_min_value = 0;
@@ -938,7 +942,7 @@ void TauEnv_initialize()
       if (tmp) {
         env_memdbg_alloc_min = 1;
         env_memdbg_alloc_min_value = atol(tmp);
-        TAU_VERBOSE("TAU: Minimum allocation size for bounds checking is %d\n", tmp);
+        TAU_VERBOSE("TAU: Minimum allocation size for bounds checking is %d\n", env_memdbg_alloc_min_value);
         TAU_METADATA("TAU_MEMDBG_ALLOC_MIN", tmp);
       }
 
@@ -946,7 +950,7 @@ void TauEnv_initialize()
       if (tmp) {
         env_memdbg_alloc_max = 1;
         env_memdbg_alloc_max_value = atol(tmp);
-        TAU_VERBOSE("TAU: Maximum allocation size for bounds checking is %d\n", tmp);
+        TAU_VERBOSE("TAU: Maximum allocation size for bounds checking is %d\n", env_memdbg_alloc_max_value);
         TAU_METADATA("TAU_MEMDBG_ALLOC_MAX", tmp);
       }
 
@@ -954,7 +958,7 @@ void TauEnv_initialize()
       if (tmp) {
         env_memdbg_overhead = 1;
         env_memdbg_overhead_value = atol(tmp);
-        TAU_VERBOSE("TAU: Maximum bounds checking overhead is %d\n", tmp);
+        TAU_VERBOSE("TAU: Maximum bounds checking overhead is %d\n", env_memdbg_overhead_value);
         TAU_METADATA("TAU_MEMDBG_OVERHEAD", tmp);
       }
 
@@ -983,7 +987,7 @@ void TauEnv_initialize()
       tmp = getconf("TAU_MEMDBG_ATTEMPT_CONTINUE");
       env_memdbg_attempt_continue = parse_bool(tmp, env_memdbg_attempt_continue);
       if(env_memdbg_attempt_continue) {
-        TAU_VERBOSE("TAU: Attempt to resume execution after memory error (only the first error will be recorded)\n");
+        TAU_VERBOSE("TAU: Attempt to resume execution after memory error\n");
         TAU_METADATA("TAU_MEMDBG_ATTEMPT_CONTINUE", "on");
       } else {
         TAU_VERBOSE("TAU: The first memory error will halt execution and generate a backtrace\n");

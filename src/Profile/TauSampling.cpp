@@ -93,6 +93,7 @@ using namespace tau;
 extern FunctionInfo * Tau_create_thread_state_if_necessary(int tid, const string & thread_state);
 extern "C" int Tau_get_thread_omp_state(int tid);
 
+#if 0 // disabled for now -- no state tracking
 static char const * _gTauOmpStatesArray[12] = {
   "OMP UNKNOWN",
   "OMP OVERHEAD",
@@ -115,6 +116,7 @@ static std::string gTauOmpStates(int index)
   }
   return _gTauOmpStatesArray[0];
 }
+#endif
 
 /*
  see:
@@ -1599,8 +1601,12 @@ extern "C" void Tau_sampling_init_if_necessary(void)
    * those cases, TAU does not get a chance to initialize sampling on any thread other
    * than thread 0. By making this region an OpenMP parallel region, we initialize
    * sampling on all (currently known) OpenMP threads. Any threads created after this
-   * point may not be recognized by TAU. But this should catch the 99% case. */
-#if defined(TAU_OPENMP) && !defined(TAU_PTHREAD)
+   * point may not be recognized by TAU. But this should catch the 99% case.
+   * By the way, this doesn't work on PGI. the master thread does all the work,
+   * and the other threads don't get initialized. Just hope that with PGI, there
+   * are instrumented functions inside the parallel regions, otherwise sampling
+   * will only work on thread 0.  */
+#if defined(TAU_OPENMP) && !defined(TAU_PTHREAD) && !defined(__PGI)
   // if the master thread is in TAU, in a non-parallel region
   if (omp_get_num_threads() == 1) {
     /* FIRST! make sure that we don't process samples while in this code */
@@ -1621,23 +1627,28 @@ extern "C" void Tau_sampling_init_if_necessary(void)
     }
 
     // do this for all threads
-#pragma omp parallel shared (samplingThrInitialized)
-    {
-      // Protect TAU from itself
-      TauInternalFunctionGuard protects_this_function;
-
-      // but do it sequentially.
-#pragma omp critical (creatingtopleveltimer)
+	int dummy = 0;
+	int all_threads = omp_get_max_threads();
+#pragma omp parallel for ordered 
+    for (dummy = 0 ; dummy < all_threads ; dummy++) {
+        // but do it sequentially.
+#pragma omp ordered 
       {
-        // Getting the thread ID registers the OpenMP thread.
-        int myTid = RtsLayer::threadId();
-        if (!samplingThrInitialized[myTid]) {
-          TAU_VERBOSE("Thread %d initialized sampling\n", myTid);
-          Tau_sampling_init(myTid);
-          samplingThrInitialized[myTid] = true;
-        }
-      }    // critical
-    }    // parallel
+        // Protect TAU from itself
+        TauInternalFunctionGuard protects_this_function;
+
+#pragma omp critical (creatingtopleveltimer)
+        {
+          // Getting the thread ID registers the OpenMP thread.
+          int myTid = RtsLayer::threadId();
+          if (!samplingThrInitialized[myTid]) {
+            Tau_sampling_init(myTid);
+            samplingThrInitialized[myTid] = true;
+            TAU_VERBOSE("Thread %d, %d initialized sampling\n", tid, myTid);
+          }
+        }    // critical
+      }    // ordered
+    }    // for
     /* WE HAVE TO DO THIS! The environment was locked before we entered
      * this function, we unlocked it, so re-lock it for safety */
     for (tmpLocks = 0; tmpLocks < numDBLocks; tmpLocks++) {
@@ -1653,6 +1664,7 @@ extern "C" void Tau_sampling_init_if_necessary(void)
   if (!samplingThrInitialized[tid]) {
     samplingThrInitialized[tid] = true;
     Tau_sampling_init(tid);
+    TAU_VERBOSE("Thread %d initialized sampling\n", tid);
   }
 #endif
 }

@@ -152,7 +152,7 @@ TAU_BFD_SHARED_O = TauBfdUnimplemented.o
 STATIC_OBJS   = $(TAU_BFD_STATIC_O) $(PGIACC_STATIC_O)
 SHARED_OBJS   = $(TAU_BFD_SHARED_O) $(PGIACC_O)
 #SICORTEX#SHARED_OBJS = TauBfd.o #ENDIF#
-#TAU_BFDSHAREDLINK#SHARED_LIBS = $(BFDLINK) $(BFDLIBS) -liberty #ENDIF#
+#TAU_BFDSHAREDLINK#SHARED_LIBS = $(BFDLINK) $(BFDLIBS) #ENDIF#
 
 #CUPTI#SHARED_LIBS = -L$(TAU_CUDA_INC)/../lib -L$(TAU_CUDA_INC)/../$(TAU_LIBEX) -lcudart -L$(TAU_CUPTI_INC)/../$(TAU_LIBEX) -lcupti #ENDIF#
 
@@ -644,7 +644,7 @@ TauShmemSgiF.o  : TauShmemSgiF.c $(HDRS)
 	$(CC) $(CFLAGS) $(TAU_SHMEM_INC) -c $(@:.o=.c)
 
 TauOpenMPCollectorAPI.o  : TauOpenMPCollectorAPI.c $(HDRS)
-	$(CC) $(CFLAGS) $(OPENMPOPTS) $(TAU_USE_DYLIB) -c $(@:.o=.c)
+	$(CC) $(CFLAGS) $(OPENMPOPTS) -c $(@:.o=.c)
 
 TauXML.o 	: TauXML.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
