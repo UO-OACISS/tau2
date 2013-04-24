@@ -27,10 +27,11 @@ struct Tau_collector_status_flags {
   int parallel; // 4 bytes
   int ordered_region_wait; // 4 bytes
   int ordered_region; // 4 bytes
+  int task_exec; // 4 bytes
   char *timerContext; // 8 bytes(?)
   char *activeTimerContext; // 8 bytes(?)
   void *signal_message; // preallocated message for signal handling, 8 bytes
-  char _pad[64-((sizeof(void*))+(2*sizeof(char*))+(5*sizeof(int)))];
+  char _pad[64-((sizeof(void*))+(2*sizeof(char*))+(6*sizeof(int)))];
 };
 
 /* This array is shared by all threads. To make sure we don't have false
@@ -53,7 +54,7 @@ extern void Tau_fill_header(void *message, int sz, OMP_COLLECTORAPI_REQUEST rq, 
 static char* __UNKNOWN__ = "UNKNOWN";
 
 extern const int OMP_COLLECTORAPI_HEADERSIZE;
-char OMP_EVENT_NAME[22][50]= {
+char OMP_EVENT_NAME[35][50]= {
   "OMP_EVENT_FORK",
   "OMP_EVENT_JOIN",
   "OMP_EVENT_THR_BEGIN_IDLE",
@@ -75,7 +76,22 @@ char OMP_EVENT_NAME[22][50]= {
   "OMP_EVENT_THR_BEGIN_ORDERED",
   "OMP_EVENT_THR_END_ORDERED",
   "OMP_EVENT_THR_BEGIN_ATWT",
-  "OMP_EVENT_THR_END_ATWT" };
+  "OMP_EVENT_THR_END_ATWT",
+/* new events created by UH */
+  "OMP_EVENT_THR_BEGIN_CREATE_TASK",
+  "OMP_EVENT_THR_END_CREATE_TASK_IMM",
+  "OMP_EVENT_THR_END_CREATE_TASK_DEL",
+  "OMP_EVENT_THR_BEGIN_SCHD_TASK",
+  "OMP_EVENT_THR_END_SCHD_TASK",
+  "OMP_EVENT_THR_BEGIN_SUSPEND_TASK",
+  "OMP_EVENT_THR_END_SUSPEND_TASK",
+  "OMP_EVENT_THR_BEGIN_STEAL_TASK",
+  "OMP_EVENT_THR_END_STEAL_TASK",
+  "OMP_EVENT_THR_FETCHED_TASK",
+  "OMP_EVENT_THR_BEGIN_EXEC_TASK",
+  "OMP_EVENT_THR_BEGIN_FINISH_TASK",
+  "OMP_EVENT_THR_END_FINISH_TASK"
+ };
 
 const int OMP_COLLECTORAPI_HEADERSIZE=4*sizeof(int);
 
@@ -114,10 +130,11 @@ char * show_backtrace (int tid) {
   unw_getcontext(&uc);
   unw_init_local(&cursor, &uc);
   int index = 0;
-#if defined (__GNUC__) && defined (__GNUC_MINOR__) && defined (__GNUC_PATCHLEVEL__)
+#if defined (TAU_OPEN64ORC)
+  int depth = 1;
+#else /* assume we are using gcc */
+//#if defined (__GNUC__) && defined (__GNUC_MINOR__) && defined (__GNUC_PATCHLEVEL__)
   int depth = 4;
-#else /* assume we are using OpenUH */
-  int depth = 3;
 #endif /* (__GNUC__) && defined (__GNUC_MINOR__) && defined (__GNUC_PATCHLEVEL__) */
   while (unw_step(&cursor) > 0) {
     // we want to pop 3 or 4 levels of the stack:
@@ -133,7 +150,7 @@ char * show_backtrace (int tid) {
       void * tmpInfo = (void*)Tau_sampling_resolveCallSite(ip, "OPENMP", NULL, &newShort, 0);
       //void * tmpInfo = (void*)Tau_sampling_resolveCallSite(ip, "UNWIND", NULL, &newShort, 0);
       Tau_collector_api_CallSiteInfo * myInfo = (Tau_collector_api_CallSiteInfo*)(tmpInfo);
-      //printf ("ip = %lx, sp = %lx, name= %s\n", (long) ip, (long) sp, myInfo->name);
+      //TAU_VERBOSE ("ip = %lx, sp = %lx, name= %s\n", (long) ip, (long) sp, myInfo->name);
       location = malloc(strlen(myInfo->name)+1);
       strcpy(location, myInfo->name);
       break;
@@ -161,8 +178,8 @@ void Tau_get_current_region_context(int tid) {
   }
   Tau_collector_flags[tid].timerContext = malloc(strlen(tmpStr)+1);
   strcpy(Tau_collector_flags[tid].timerContext, tmpStr);
-  //printf("Got timer: %s\n", Tau_collector_flags[tid].timerContext);
-  //printf("Forking with %d threads\n", omp_get_max_threads());
+  //TAU_VERBOSE("Got timer: %s\n", Tau_collector_flags[tid].timerContext);
+  //TAU_VERBOSE("Forking with %d threads\n", omp_get_max_threads());
   int i;
   for (i = 0 ; i < omp_get_max_threads() ; i++) {
     if (i == tid) continue; // don't mess with yourself
@@ -180,8 +197,8 @@ void Tau_get_current_region_context(int tid) {
       Tau_collector_flags[i].activeTimerContext = malloc(strlen(Tau_collector_flags[tid].timerContext)+1);
       strcpy(Tau_collector_flags[i].activeTimerContext, Tau_collector_flags[tid].timerContext);
     }
-    printf("Thread %d Got timer: %s\n", i, Tau_collector_flags[i].timerContext);
-    printf("Thread %d Got active timer: %s\n", i, Tau_collector_flags[i].activeTimerContext);
+    TAU_VERBOSE("Thread %d Got timer: %s\n", i, Tau_collector_flags[i].timerContext);
+    TAU_VERBOSE("Thread %d Got active timer: %s\n", i, Tau_collector_flags[i].activeTimerContext);
     */
   }
   return;
@@ -197,7 +214,7 @@ void Tau_get_current_region_context(int tid) {
   }
   if (use_context == 0) {
     //sprintf(regionIDstr, "OpenMP %s", state);
-    sprintf(regionIDstr, "OPENMP_%s", state);
+    sprintf(regionIDstr, "OpenMP_%s", state);
   } else {
     //sprintf(regionIDstr, "%s : OpenMP %s", Tau_collector_flags[tid].timerContext, state);
     sprintf(regionIDstr, "OpenMP_%s: %s", state, Tau_collector_flags[tid].timerContext);
@@ -205,10 +222,11 @@ void Tau_get_current_region_context(int tid) {
     if (Tau_collector_flags[tid].activeTimerContext != NULL) {
       free(Tau_collector_flags[tid].activeTimerContext);
     }
-	TAU_VERBOSE("region ID: '%s'\n", regionIDstr);
+	//TAU_VERBOSE("region ID: '%s'\n", regionIDstr);
     Tau_collector_flags[tid].activeTimerContext = malloc(strlen(Tau_collector_flags[tid].timerContext)+1);
     strcpy(Tau_collector_flags[tid].activeTimerContext, Tau_collector_flags[tid].timerContext);
   }
+  //TAU_VERBOSE("%d starting: %s\n", tid, regionIDstr); fflush(stdout);
   Tau_pure_start_task(regionIDstr, tid);
   free(regionIDstr);
 }
@@ -227,6 +245,7 @@ void Tau_get_current_region_context(int tid) {
     //sprintf(regionIDstr, "%s : OpenMP %s", Tau_collector_flags[tid].activeTimerContext, state);
     sprintf(regionIDstr, "OpenMP_%s: %s", state, Tau_collector_flags[tid].activeTimerContext);
   }
+  //TAU_VERBOSE("%d stopping: %s\n", tid, regionIDstr); fflush(stdout);
   Tau_pure_stop_task(regionIDstr, tid);
   free(regionIDstr);
 }
@@ -240,7 +259,7 @@ void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
   Tau_global_incr_insideTAU();
 
   int tid = Tau_get_tid();
-  //printf("** Thread: %d, EVENT:%s **\n", tid, OMP_EVENT_NAME[event-1]); fflush(stdout);
+  //TAU_VERBOSE("** Thread: %d, EVENT:%s **\n", tid, OMP_EVENT_NAME[event-1]); fflush(stdout);
 
   switch(event) {
     case OMP_EVENT_FORK:
@@ -260,7 +279,8 @@ void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
       break;
     case OMP_EVENT_THR_BEGIN_IDLE:
       // sometimes IDLE can be called twice in a row
-      if (Tau_collector_flags[tid].idle == 1) {
+      if (Tau_collector_flags[tid].idle == 1 && 
+          Tau_collector_flags[tid].busy == 0) {
         break;
       }
       if (Tau_collector_flags[tid].busy == 1) {
@@ -271,6 +291,7 @@ void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
       Tau_omp_start_timer("IDLE", tid, 0);
       Tau_collector_flags[tid].idle = 1;
 */
+      Tau_collector_flags[tid].idle = 1;
       break;
     case OMP_EVENT_THR_END_IDLE:
 /*
@@ -291,6 +312,7 @@ void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
       strcpy(Tau_collector_flags[tid].activeTimerContext, Tau_collector_flags[tid].timerContext);
       Tau_omp_start_timer("PARALLEL_REGION", tid, 1);
       Tau_collector_flags[tid].busy = 1;
+      Tau_collector_flags[tid].idle = 0;
       break;
     case OMP_EVENT_THR_BEGIN_IBAR:
       Tau_omp_start_timer("IMPLICIT_BARRIER", tid, 1);
@@ -360,8 +382,61 @@ void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
     case OMP_EVENT_THR_END_ATWT:
       Tau_omp_stop_timer("ATOMIC_REGION_WAIT", tid, 1);
       break;
+    case OMP_EVENT_THR_BEGIN_CREATE_TASK:
+      // Open64 doesn't actually create a task if there is just one thread.
+      // In that case, there won't be an END_CREATE.
+#if defined (TAU_OPEN64ORC)
+      if (omp_get_num_threads() > 1) {
+        Tau_omp_start_timer("CREATE_TASK", tid, 1);
+      }
+#else
+      Tau_omp_start_timer("CREATE_TASK", tid, 1);
+#endif
+      break;
+    case OMP_EVENT_THR_END_CREATE_TASK_IMM:
+      Tau_omp_stop_timer("CREATE_TASK", tid, 1);
+      break;
+    case OMP_EVENT_THR_END_CREATE_TASK_DEL:
+      Tau_omp_stop_timer("CREATE_TASK", tid, 1);
+      break;
+    case OMP_EVENT_THR_BEGIN_SCHD_TASK:
+      Tau_omp_start_timer("SCHEDULE_TASK", tid, 1);
+      break;
+    case OMP_EVENT_THR_END_SCHD_TASK:
+      Tau_omp_stop_timer("SCHEDULE_TASK", tid, 1);
+      break;
+    case OMP_EVENT_THR_BEGIN_SUSPEND_TASK:
+      Tau_omp_start_timer("SUSPEND_TASK", tid, 1);
+      break;
+    case OMP_EVENT_THR_END_SUSPEND_TASK:
+      Tau_omp_stop_timer("SUSPEND_TASK", tid, 1);
+      break;
+    case OMP_EVENT_THR_BEGIN_STEAL_TASK:
+      Tau_omp_start_timer("STEAL_TASK", tid, 1);
+      break;
+    case OMP_EVENT_THR_END_STEAL_TASK:
+      Tau_omp_stop_timer("STEAL_TASK", tid, 1);
+      break;
+    case OMP_EVENT_THR_FETCHED_TASK:
+      break;
+    case OMP_EVENT_THR_BEGIN_EXEC_TASK:
+      Tau_omp_start_timer("EXECUTE_TASK", tid, 1);
+      Tau_collector_flags[tid].task_exec += 1;
+      break;
+    case OMP_EVENT_THR_BEGIN_FINISH_TASK:
+      // When we get a "finish task", there might be a task executing...
+      // or there might not.
+      if (Tau_collector_flags[tid].task_exec > 0) {
+        Tau_omp_stop_timer("EXECUTE_TASK", tid, 1);
+        Tau_collector_flags[tid].task_exec -= 1;
+      }
+      Tau_omp_start_timer("FINISH_TASK", tid, 1);
+      break;
+    case OMP_EVENT_THR_END_FINISH_TASK:
+      Tau_omp_stop_timer("FINISH_TASK", tid, 1);
+      break;
   }
-  //printf("** Thread: %d, EVENT:%s handled. **\n", tid, OMP_EVENT_NAME[event-1]);
+  //TAU_VERBOSE("** Thread: %d, EVENT:%s handled. **\n", tid, OMP_EVENT_NAME[event-1]);
   //fflush(stdout);
   Tau_global_decr_insideTAU();
   return;
@@ -473,7 +548,7 @@ int Tau_initialize_collector_api(void) {
 
   /*test for request of all events*/
   int i;
-  int num_req=OMP_EVENT_THR_END_ATWT; /* last event */
+  int num_req=OMP_EVENT_THR_END_FINISH_TASK; /* last event */
   int register_sz = sizeof(OMP_COLLECTORAPI_EVENT)+sizeof(void *);
   int mes_size = OMP_COLLECTORAPI_HEADERSIZE+register_sz;
   message = (void *) malloc(num_req*mes_size+sizeof(int));

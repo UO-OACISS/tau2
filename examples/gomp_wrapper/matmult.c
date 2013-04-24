@@ -164,7 +164,7 @@ int atomic () {
 
 int barrier () {
   int count = 0;
-  int max = 2;
+  int max = omp_get_num_threads() == 1 ? 1 : 2;
   #pragma omp parallel num_threads(max)
   {
     sleep(omp_get_thread_num());
@@ -185,7 +185,8 @@ int critical() {
   }
 
   max = a[0];
-  #pragma omp parallel for num_threads(2)
+  int maxthreads = omp_get_num_threads() == 1 ? 1 : 2;
+  #pragma omp parallel for num_threads(maxthreads)
   for (i = 1; i < CRITICAL_SIZE; i++) {
     if (a[i] > max) {
       #pragma omp critical
@@ -212,7 +213,8 @@ int critical_named() {
   }
 
   max = a[0];
-  #pragma omp parallel for num_threads(2)
+  int maxthreads = omp_get_num_threads() == 1 ? 1 : 2;
+  #pragma omp parallel for num_threads(maxthreads)
   for (i = 1; i < CRITICAL_SIZE; i++) {
     if (a[i] > max) {
       #pragma omp critical (accumulator)
@@ -241,7 +243,8 @@ int flush() {
   int data;
   int flag = 0;
 
-  #pragma omp parallel sections num_threads(2)
+  int maxthreads = omp_get_num_threads() == 1 ? 1 : 2;
+  #pragma omp parallel sections num_threads(maxthreads)
   {
     #pragma omp section
     {
@@ -361,14 +364,14 @@ static float a[1000], b[1000], c[1000];
 void test(int first, int last) 
 {
   int i;
-  #pragma omp for schedule(static) ordered
+#pragma omp for ordered schedule(dynamic) 
   for (i = first; i <= last; ++i) {
     // Do something here.
     if (i % 2) 
     {
-      #pragma omp ordered 
+#pragma omp ordered 
       printf("test() iteration %d, thread %d\n", i, omp_get_thread_num());
-	  fflush(stdout);
+      fflush(stdout);
     }
   }
 }
@@ -383,10 +386,10 @@ void test2(int iter)
 int ordered( ) 
 {
   int i;
-  #pragma omp parallel
+#pragma omp parallel
   {
     test(1, 8);
-    #pragma omp for ordered
+#pragma omp for ordered schedule(dynamic) 
     for (i = 0 ; i < 5 ; i++)
       test2(i);
   }
@@ -476,7 +479,9 @@ int main (int argc, char *argv[])
   printf ("\n\nDoing fortest: %d\n\n", fortest()); fflush(stdout);
   printf ("\n\nDoing flush: %d\n\n", flush()); fflush(stdout);
   printf ("\n\nDoing master: %d\n\n", master()); fflush(stdout);
+#ifndef TAU_OPEN64ORC
   printf ("\n\nDoing ordered: %d\n\n", ordered()); fflush(stdout);
+#endif
   printf ("\n\nDoing sections: %d\n\n", sections()); fflush(stdout);
   printf ("\n\nDoing single: %d\n\n", single()); fflush(stdout);
   printf ("\n\nDoing critical named: %d\n\n", critical_named()); fflush(stdout);
@@ -484,11 +489,13 @@ int main (int argc, char *argv[])
   printf ("\n\nDoing parallelfor_static: %d\n\n", parallelfor_static()); fflush(stdout);
   printf ("\n\nDoing parallelfor_dynamic: %d\n\n", parallelfor_dynamic()); fflush(stdout);
   printf ("\n\nDoing parallelfor_runtime: %d\n\n", parallelfor_runtime()); fflush(stdout);
-  printf ("\n\nDoing tasks: %d\n\n", fibouter(10)); fflush(stdout);
+  printf ("\n\nDoing tasks: %d\n\n", fibouter(20)); fflush(stdout);
 #if 0
 #endif
 
   printf ("Done.\n");
+  // sleep, so the other threads can finish.
+  sleep(1);
   fflush(stdout);
 
   return 0;

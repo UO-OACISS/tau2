@@ -1,4 +1,6 @@
 TAU_MAKEFILE ?=../../include/Makefile
+#TAU_MAKEFILE ?=../../x86_64/lib/Makefile.tau-open64-pdt-openmp
+
 include $(TAU_MAKEFILE)
 
 #CXX=gcc
@@ -33,7 +35,7 @@ $(WRAPPER):
 
 testlib: $(TARGET) $(WRAPPER)
 	#LD_LIBRARY_PATH=\$LD_LIBRARY_PATH:$(WRAPPER_PATH) tau_exec -v -T pdt,serial,openmp -loadlib=$(WRAPPER) ./matmult
-	tau_exec -v -T pdt,serial,openmp -loadlib=$(WRAPPER) ./matmult
+	tau_exec -v -T serial,openmp -loadlib=$(WRAPPER) ./matmult
 
 clean:
 	/bin/rm -rf $(OBJS) $(TARGET) profile.* MULT* core.*
