@@ -202,6 +202,33 @@ int critical() {
   return max;
 }
 
+int critical_named() {
+  int i;
+  int max;
+  int a[CRITICAL_SIZE];
+
+  for (i = 0; i < CRITICAL_SIZE; i++) {
+    a[i] = rand();
+  }
+
+  max = a[0];
+  #pragma omp parallel for num_threads(2)
+  for (i = 1; i < CRITICAL_SIZE; i++) {
+    if (a[i] > max) {
+      #pragma omp critical (accumulator)
+      {
+        // compare a[i] and max again because max 
+        // could have been changed by another thread after 
+        // the comparison outside the critical section
+        if (a[i] > max) {
+          max = a[i];
+        }
+      }
+    }
+  }
+  return max;
+}
+
 void myread(int *data) {
   *data = 1;
 }
@@ -257,6 +284,47 @@ int fortest() {
       }
    }
    return nSum;
+}
+
+void foo() {
+  printf("%d In foo\n", omp_get_thread_num());
+}
+
+int parallelfor() {
+   int i, nStart = 0, nEnd = 10;
+   #pragma omp parallel for
+   for (i=nStart; i<=nEnd; ++i) {
+     foo();
+   }
+   return 0;
+}
+
+int parallelfor_static() {
+   int i, nStart = 0, nEnd = 10;
+   // the ordered parameter forces the static scheduler
+   #pragma omp parallel for schedule(static) ordered
+   for (i=nStart; i<=nEnd; ++i) {
+     foo();
+   }
+   return 0;
+}
+
+int parallelfor_dynamic() {
+   int i, nStart = 0, nEnd = 10;
+   #pragma omp parallel for schedule(dynamic)
+   for (i=nStart; i<=nEnd; ++i) {
+     foo();
+   }
+   return 0;
+}
+
+int parallelfor_runtime() {
+   int i, nStart = 0, nEnd = 10;
+   #pragma omp parallel for schedule(runtime)
+   for (i=nStart; i<=nEnd; ++i) {
+     foo();
+   }
+   return 0;
 }
 
 int master( ) 
@@ -368,6 +436,33 @@ int single( )
   return a[3];
 }
 
+int fib(int n) {
+  int x,y;
+  if (n<2) return n;
+  #pragma omp task untied shared(x)
+  { x = fib(n-1); }
+  #pragma omp task untied shared(y)
+  { y = fib(n-2); }
+  #pragma omp taskwait
+  printf("%d: fib(%d)=%d\n", omp_get_thread_num(), n, x+y); fflush(stdout);
+  return x+y;
+}
+
+int fibouter(int n) {
+  int answer = 0;
+  #pragma omp parallel shared(answer)
+  {
+    #pragma omp single 
+    {
+      #pragma omp task shared(answer) 
+      {
+	    answer = fib(n);
+      }
+    }
+  }
+  return answer;
+}
+
 int main (int argc, char *argv[]) 
 {
   printf("Main...\n");
@@ -375,15 +470,21 @@ int main (int argc, char *argv[])
 #if 0
 #endif
   do_work();
-  printf ("\n\nDoing atomic: %d\n\n", atomic());
-  printf ("\n\nDoing barrier: %d\n\n", barrier());
-  printf ("\n\nDoing critical: %d\n\n", critical());
-  printf ("\n\nDoing fortest: %d\n\n", fortest());
-  printf ("\n\nDoing flush: %d\n\n", flush());
-  printf ("\n\nDoing master: %d\n\n", master());
-  printf ("\n\nDoing ordered: %d\n\n", ordered());
-  printf ("\n\nDoing sections: %d\n\n", sections());
-  printf ("\n\nDoing single: %d\n\n", single());
+  printf ("\n\nDoing atomic: %d\n\n", atomic()); fflush(stdout);
+  printf ("\n\nDoing barrier: %d\n\n", barrier()); fflush(stdout);
+  printf ("\n\nDoing critical: %d\n\n", critical()); fflush(stdout);
+  printf ("\n\nDoing fortest: %d\n\n", fortest()); fflush(stdout);
+  printf ("\n\nDoing flush: %d\n\n", flush()); fflush(stdout);
+  printf ("\n\nDoing master: %d\n\n", master()); fflush(stdout);
+  printf ("\n\nDoing ordered: %d\n\n", ordered()); fflush(stdout);
+  printf ("\n\nDoing sections: %d\n\n", sections()); fflush(stdout);
+  printf ("\n\nDoing single: %d\n\n", single()); fflush(stdout);
+  printf ("\n\nDoing critical named: %d\n\n", critical_named()); fflush(stdout);
+  printf ("\n\nDoing parallelfor: %d\n\n", parallelfor()); fflush(stdout);
+  printf ("\n\nDoing parallelfor_static: %d\n\n", parallelfor_static()); fflush(stdout);
+  printf ("\n\nDoing parallelfor_dynamic: %d\n\n", parallelfor_dynamic()); fflush(stdout);
+  printf ("\n\nDoing parallelfor_runtime: %d\n\n", parallelfor_runtime()); fflush(stdout);
+  printf ("\n\nDoing tasks: %d\n\n", fibouter(10)); fflush(stdout);
 #if 0
 #endif
 
