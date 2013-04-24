@@ -178,3 +178,10 @@ extern "C" void MPC_Task_hook(int rank)
 {
   MPCThreadLayer::RegisterThread();
 }
+
+extern "C" int TauGetMPCProcessRank(void) {
+  int rank;
+  MPC_Process_rank(&rank);
+  return rank;
+}
+

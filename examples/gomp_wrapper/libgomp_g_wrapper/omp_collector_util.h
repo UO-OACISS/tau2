@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-extern char OMP_EVENT_NAME[22][50];
+extern char OMP_EVENT_NAME[35][50];
 extern char OMP_STATE_NAME[11][50];
 
 int __omp_collector_api(void *arg);

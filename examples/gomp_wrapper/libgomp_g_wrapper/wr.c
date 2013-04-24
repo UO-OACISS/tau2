@@ -12,7 +12,7 @@
 
 #include "gomp_wrapper_types.h"
 
-#if 0
+#if 1
 #define DEBUGPRINT(format, args...) \
 { printf(format, ## args); fflush(stdout); }
 #else
@@ -1586,14 +1586,18 @@ void  GOMP_task(void (*a1)(void *), void * a2, void (*a3)(void *, void *), long 
       Tau_pure_stop_task(__FUNCTION__, tid);
 	} else {
       Tau_pure_start_task(__FUNCTION__, tid);
+      __ompc_event_callback(OMP_EVENT_THR_BEGIN_CREATE_TASK);
       (*GOMP_task_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
+      __ompc_event_callback(OMP_EVENT_THR_END_CREATE_TASK_IMM);
       Tau_pure_stop_task(__FUNCTION__, tid);
 	}
 #else
 /* just call the task creation, for now */
+    __ompc_event_callback(OMP_EVENT_THR_BEGIN_CREATE_TASK);
     Tau_pure_start_task(__FUNCTION__, tid);
     (*GOMP_task_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
     Tau_pure_stop_task(__FUNCTION__, tid);
+    __ompc_event_callback(OMP_EVENT_THR_END_CREATE_TASK_IMM);
 #endif
   } else {
     (*GOMP_task_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
@@ -1615,9 +1619,13 @@ void  GOMP_taskwait()  {
     GOMP_taskwait_h = (GOMP_taskwait_p)get_system_function_handle("GOMP_taskwait",(void*)GOMP_taskwait);
   }
 
-  if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); }
+  if (Tau_global_get_insideTAU() == 0) { 
+    Tau_pure_start_task(__FUNCTION__, Tau_get_tid()); 
+  }
   (*GOMP_taskwait_h)();
-  if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); }
+  if (Tau_global_get_insideTAU() == 0) { 
+    Tau_pure_stop_task(__FUNCTION__, Tau_get_tid()); 
+  }
 
 }
 
