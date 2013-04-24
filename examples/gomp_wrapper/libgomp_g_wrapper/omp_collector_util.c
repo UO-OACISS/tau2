@@ -35,7 +35,7 @@
 
 typedef void (*callback) (OMP_COLLECTORAPI_EVENT e);
 
-char OMP_EVENT_NAME[22][50]= {
+char OMP_EVENT_NAME[35][50]= {
   "OMP_EVENT_FORK",
   "OMP_EVENT_JOIN",
   "OMP_EVENT_THR_BEGIN_IDLE",
@@ -57,7 +57,21 @@ char OMP_EVENT_NAME[22][50]= {
   "OMP_EVENT_THR_BEGIN_ORDERED",
   "OMP_EVENT_THR_END_ORDERED",
   "OMP_EVENT_THR_BEGIN_ATWT",
-  "OMP_EVENT_THR_END_ATWT" };
+  "OMP_EVENT_THR_END_ATWT",
+  "OMP_EVENT_THR_BEGIN_CREATE_TASK",
+  "OMP_EVENT_THR_END_CREATE_TASK_IMM",
+  "OMP_EVENT_THR_END_CREATE_TASK_DEL",
+  "OMP_EVENT_THR_BEGIN_SCHD_TASK",
+  "OMP_EVENT_THR_END_SCHD_TASK",
+  "OMP_EVENT_THR_BEGIN_SUSPEND_TASK",
+  "OMP_EVENT_THR_END_SUSPEND_TASK",
+  "OMP_EVENT_THR_BEGIN_STEAL_TASK",
+  "OMP_EVENT_THR_END_STEAL_TASK",
+  "OMP_EVENT_THR_FETCHED_TASK",
+  "OMP_EVENT_THR_BEGIN_EXEC_TASK",
+  "OMP_EVENT_THR_BEGIN_FINISH_TASK",
+  "OMP_EVENT_THR_END_FINISH_TASK"
+ };
 
 
 char OMP_STATE_NAME[11][50]= {
@@ -73,7 +87,7 @@ char OMP_STATE_NAME[11][50]= {
   "THR_ODWT_STATE",          /* Waiting to execute an ordered region */
   "THR_ATWT_STATE"};         /* Waiting to enter an atomic region */
 
-static callback callbacks[OMP_EVENT_THR_END_ATWT+1];
+static callback callbacks[OMP_EVENT_THR_END_FINISH_TASK+1];
 
 union __gomp_collector_status_flags {
   struct {
@@ -194,7 +208,7 @@ void __ompc_req_start(omp_collector_message *req)
   int i;
   
   if(!collector_initialized) {
-    for (i=0; i< OMP_EVENT_THR_END_ATWT+1; i++) {
+    for (i=0; i< OMP_EVENT_THR_END_FINISH_TASK+1; i++) {
       omp_set_lock(&event_lock);
       callbacks[i]= NULL;
       omp_unset_lock(&event_lock);
@@ -220,7 +234,7 @@ void __ompc_req_stop(omp_collector_message *req)
     collector_initialized = 0;
     omp_unset_lock(&init_lock);
     omp_set_lock(&event_lock);
-    for (i=0; i< OMP_EVENT_THR_END_ATWT+1; i++) {
+    for (i=0; i< OMP_EVENT_THR_END_FINISH_TASK+1; i++) {
       callbacks[i]= NULL;
     } 
     omp_unset_lock(&event_lock);
@@ -314,7 +328,7 @@ int process_top_request(omp_collector_message *req)
 int event_is_valid(OMP_COLLECTORAPI_EVENT e)
 {
   /* this needs to be improved with something more portable when we extend the events in the runtime */
-  if (e>=OMP_EVENT_FORK && e<=OMP_EVENT_THR_END_ATWT)
+  if (e>=OMP_EVENT_FORK && e<=OMP_EVENT_THR_END_FINISH_TASK)
     return 1; 
   else
     return 0;
@@ -325,7 +339,7 @@ int event_is_supported(OMP_COLLECTORAPI_EVENT e)
   int event_supported=1;
   switch (e) {
   case OMP_EVENT_THR_BEGIN_ATWT:
-  case OMP_EVENT_THR_END_ATWT:
+  case OMP_EVENT_THR_END_FINISH_TASK:
     event_supported=0;
     break;
 
