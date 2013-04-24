@@ -139,7 +139,7 @@ eventMap_t eventMap;
 int gpu_occupancy_available(int deviceId);
 void record_gpu_occupancy(CUpti_ActivityKernel *k, const char *name, eventMap_t *m);
 void record_gpu_launch(int cId, FunctionInfo *f);
-void record_gpu_counters(uint32_t id, eventMap_t *m);
+void record_gpu_counters(int device_id, uint32_t id, eventMap_t *m);
 
 #if CUPTI_API_VERSION >= 3
 void form_context_event_name(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceLocator *source, const char *event, std::string *name);
@@ -151,18 +151,49 @@ std::map<uint32_t, CUpti_ActivityDevice> deviceMap;
 //std::map<uint32_t, CUpti_ActivityGlobalAccess> globalAccessMap;
 std::map<uint32_t, CUpti_ActivityKernel> kernelMap;
 
-struct K { 
-  int number_of_counters;
-  uint64_t *counters;
-/*
-  K(FunctionInfo *i, int n): functionInfo(i), number_of_counters(n)  { 
-    counters = (uint64_t *) malloc(number_of_counters*sizeof(uint64_t));
+class K { 
+
+  //structure: device 0: counters....
+  //           device 1: counters....
+  uint64_t *c;
+  int device_count;
+  int n_counters;
+  public:
+  K() { 
+    n_counters = Tau_CuptiLayer_get_num_events();
+    device_count;
+    cuDeviceGetCount(&device_count);
+    c = (uint64_t *) malloc(n_counters*(device_count+1)*sizeof(uint64_t));
   }
+  /*
   ~K()
   {
-    free(counters);
+    free(c);
   }
-*/
+  */
+  uint64_t *counters(int device_id)
+  {
+    return &c[device_id*n_counters];
+  }
+  //take the end counts to get a difference.
+  void difference(K o)
+  {
+    //print difference
+    for (int d = 0; d < device_count; d++)
+    {
+      uint64_t *o_counters;
+      o_counters = o.counters(d);
+      uint64_t *my_counters;
+      my_counters = counters(d);
+      for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++)
+      {
+        printf("counter %d: start: %llu end: %llu diff: %llu.\n", n, my_counters[n], o_counters[n], o_counters[n] - my_counters[n]);
+        my_counters[n] = o_counters[n] - my_counters[n]; 
+      }
+    }    
+
+  }
+
   } typedef kernel_struct;
 
 std::map<uint32_t, kernel_struct> kernelInfoMap;
