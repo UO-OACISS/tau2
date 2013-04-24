@@ -374,17 +374,17 @@ for arg in "$@"; do
     echo "-pythoninc=<dir> ........ Specify location of Python include directory."
     echo "-pythonlib=<dir> ............ Specify location of Python lib directory."
     echo "-tag=<unique name> ........ Specify a tag to identify the installation."
-    echo "-TRACE ..................................... Generate TAU event traces."
+#    echo "-TRACE ..................................... Generate TAU event traces."
 #    echo "-MPITRACE ... Generate event traces for MPI events and their ancestors."
-    echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
-    echo "-PROFILECALLPATH ......................... Generate call path profiles."
+#    echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
+#    echo "-PROFILECALLPATH ......................... Generate call path profiles."
     echo "-PROFILEPARAM .... Generate profiles with parameter mapped event data ."
     echo "-PROFILECOMMUNICATORS ... Generate profiles with MPI communicator info."
     echo "-PROFILEPHASE .......................... Generate phase based profiles."
-    echo "-DEPTHLIMIT ........... Disable instrumentation beyond a certain depth."
-    echo "-PROFILEMEMORY .. Track heap memory utilization at each function entry."
-    echo "-PROFILEHEADROOM .. Track memory free (or headroom) at each func entry."
-    echo "-COMPENSATE ........ Compensate for profiling measurement perturbation."
+#    echo "-DEPTHLIMIT ........... Disable instrumentation beyond a certain depth."
+#    echo "-PROFILEMEMORY .. Track heap memory utilization at each function entry."
+#    echo "-PROFILEHEADROOM .. Track memory free (or headroom) at each func entry."
+#    echo "-COMPENSATE ........ Compensate for profiling measurement perturbation."
     echo "-BGLTIMERS .... Use fast low-overhead timers on IBM BlueGene/L systems."
     echo "-BGPTIMERS .... Use fast low-overhead timers on IBM BlueGene/P systems."
     echo "-BGQTIMERS .... Use fast low-overhead timers on IBM BlueGene/Q systems."
@@ -397,6 +397,7 @@ for arg in "$@"; do
     echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
     echo "-noex .................. Use no exceptions while compiling the library."
     echo "-DISABLESHARED .................. Do not build libTAU.so shared object."
+    echo "-ENABLE_EXPORT_DYNAMIC .................... Force -Wl,--export-dynamic."
     echo "-help ...................................... display this help message."
     echo "-fullhelp .............................. display the full help message."
     echo ""
@@ -513,17 +514,17 @@ for arg in "$@"; do
     echo "                                                          Symbol Table."
     echo "-stff=<dir> .... Location of RENCI Scalable Time-series filter library."
     echo "-sddf=<dir> ...... SDDF library location; Only required for RENCI STFF."
-    echo "-TRACE ..................................... Generate TAU event traces."
+#    echo "-TRACE ..................................... Generate TAU event traces."
 #    echo "-MPITRACE ... Generate event traces for MPI events and their ancestors."
-    echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
-    echo "-PROFILECALLPATH ......................... Generate call path profiles."
+#    echo "-PROFILE ............ Generate profiles (summary statistics) (default)."
+#    echo "-PROFILECALLPATH ......................... Generate call path profiles."
     echo "-PROFILEPARAM .... Generate profiles with parameter mapped event data ."
     echo "-PROFILECOMMUNICATORS ... Generate profiles with MPI communicator info."
     echo "-PROFILEPHASE .......................... Generate phase based profiles."
-    echo "-DEPTHLIMIT ........... Disable instrumentation beyond a certain depth."
-    echo "-PROFILEMEMORY .. Track heap memory utilization at each function entry."
-    echo "-PROFILEHEADROOM .. Track memory free (or headroom) at each func entry."
-    echo "-COMPENSATE ........ Compensate for profiling measurement perturbation."
+#    echo "-DEPTHLIMIT ........... Disable instrumentation beyond a certain depth."
+#    echo "-PROFILEMEMORY .. Track heap memory utilization at each function entry."
+#    echo "-PROFILEHEADROOM .. Track memory free (or headroom) at each func entry."
+#    echo "-COMPENSATE ........ Compensate for profiling measurement perturbation."
     echo "-BGLTIMERS .... Use fast low-overhead timers on IBM BlueGene/L systems."
     echo "-BGPTIMERS .... Use fast low-overhead timers on IBM BlueGene/P systems."
     echo "-BGQTIMERS .... Use fast low-overhead timers on IBM BlueGene/Q systems."
@@ -536,6 +537,7 @@ for arg in "$@"; do
     echo "-INTELCXXLIBICC   ......... Use Intel -cxxlib-icc option for compiling."
     echo "-noex .................. Use no exceptions while compiling the library."
     echo "-DISABLESHARED .................. Do not build libTAU.so shared object."
+    echo "-ENABLE_EXPORT_DYNAMIC .................... Force -Wl,--export-dynamic."
     echo "-zeptodir=<dir> ............................. ZeptoOS install location."
     echo "                              See http://www-unix.mcs.anl.gov/zeptoos/." 
     echo "-help ...................................... display this help message."
@@ -670,6 +672,7 @@ compensate=no
 smarts=no
 papi=no
 darshan=no
+enable_export_dynamic=no
 perfsuite=no
 perfsuitedir=
 bfd=no
@@ -1815,6 +1818,12 @@ for arg in "$@"; do
     shift
     ;;
 
+  -ENABLE_EXPORT_DYNAMIC)
+    # Turn on -Wl,--export-dynamic flag during linking
+    enable_export_dynamic=yes
+    shift
+    ;;
+
   -setnode0)
     # When this option is invoked, TAU sets the default node no to 0 instead 
     # of using -1. So, profile.0.0.0 is created even if TAU_PROFILE_SET_NODE(0)
@@ -2809,6 +2818,20 @@ if [ "$machine" = "apple" ] ; then
     fi
 fi
 
+if [ $machine = craycnl -o $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
+  config_compiler=`which $cxx_compiler`
+  comp_minus_darshan=`echo $config_compiler | sed -e 's/darshan//g'` 
+  
+  if [ $config_compiler = $comp_minus_darshan ] ; then
+    echo "NOTE: Darshan test successful"
+  else
+    echo "NOTE: --------------------------------------------------------------"
+    echo "NOTE: Darshan may not be used with TAU. Please use module unload darshan and re-configure TAU."
+    echo "Darshan's wrapper libraries will clash with TAU wrappers. Exiting..."
+    echo "NOTE: --------------------------------------------------------------"
+    exit 1;
+  fi
+fi
 
 if [ $machine = craycnl ] ; then
 
@@ -5819,8 +5842,19 @@ if [ $mpi = yes ] ; then
 		  # For BG/P
 		  mpilibrary="-lmpich.cnk $additional_mpilibs"
 	        else
-                  if [ $machine = craycnl -a -r $mpilib/libmpich_cray.a ]; then 
-		    mpilibrary="-lmpich_cray $additional_mpilibs"
+                  if [ $machine = craycnl ]; then 
+	      	    if [ -r $mpilib/libmpich_cray.a ] ; then
+	              mpilibrary="-lmpich_cray $additional_mpilibs"
+                    elif [ -r $mpilib/libmpich_intel.a ]; then
+	              mpilibrary="-lmpich_intel $additional_mpilibs"
+                    elif [ -r $mpilib/libmpich_gnu.a ]; then
+	              mpilibrary="-lmpich_gnu $additional_mpilibs"
+	            elif [ -r $mpilib/libmpich_pgi.a ]; then 
+	              mpilibrary="-lmpich_pgi $additional_mpilibs"
+		    else
+	              mpilibrary="-lmpich $additional_mpilibs"
+	            fi
+		    echo "Using mpilibrary=$mpilibrary"
                   else
 		    mpilibrary="-lmpich $additional_mpilibs"
                   fi
@@ -5833,9 +5867,17 @@ if [ $mpi = yes ] ; then
 	      mpilibrary="-lpmpich++ $mpilibrary"
 	  fi
 	  
-          if [ $machine = craycnl -a -r $mpilib/libmpichcxx_cray.a ]; then 
-              #echo "mpichcxx found"
-	      mpilibrary="-lmpichcxx_cray $mpilibrary"
+	
+          if [ $machine = craycnl ]; then 
+	      if [ -r $mpilib/libmpichcxx_cray.a ] ; then
+	        mpilibrary="-lmpichcxx_cray $mpilibrary"
+              elif [ -r $mpilib/libmpichcxx_intel.a ]; then
+	        mpilibrary="-lmpichcxx_intel $mpilibrary"
+              elif [ -r $mpilib/libmpichcxx_gnu.a ]; then
+	        mpilibrary="-lmpichcxx_gnu $mpilibrary"
+	      elif [ -r $mpilib/libmpichcxx_pgi.a ]; then 
+	        mpilibrary="-lmpichcxx_pgi $mpilibrary"
+	      fi
           else
 	    if [ -r $mpilib/libmpichcxx.a -o -r $mpilib/libmpichcxx.so ] ; then 
               #echo "mpichcxx found"
@@ -7487,7 +7529,7 @@ if [ $mrnet = yes ] ; then
   fi
 fi
 
-if [ $machine = ia64 -o $machine = x86_64 -o $machine = i386_linux -o $machine = craycnl -o $machine = bgp -o $machine = bgq -o $machine = mips -o $machine = mips32 -o $machine = ibm64linux -o $machine = ppc64 ] ; then
+if [ $machine = ia64 -o $machine = x86_64 -o $machine = i386_linux -o $machine = bgp -o $machine = bgq -o $machine = mips -o $machine = mips32 -o $machine = ibm64linux -o $machine = ppc64 -o $enable_export_dynamic = yes ] ; then
     extra_linker_args="${extralinker_args}#-Wl,--export-dynamic"
 else 
   if [ $machine = apple ]; then 
