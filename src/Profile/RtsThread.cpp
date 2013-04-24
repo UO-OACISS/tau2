@@ -235,7 +235,7 @@ int RtsLayer::getTotalThreads()
 }
 
 #ifdef TAU_MPC
-extern "C" int TauGetMpiRank(void);
+extern "C" int TauGetMPCProcessRank(void);
 #endif /* TAU_MPC */
 
 //////////////////////////////////////////////////////////////////////
@@ -244,7 +244,7 @@ extern "C" int TauGetMpiRank(void);
 int RtsLayer::myNode(void)
 {
 #ifdef TAU_MPC
-  return TauGetMpiRank();
+  return TauGetMPCProcessRank();
 #endif /* TAU_MPC */
 
 #ifdef TAU_PID_AS_NODE
