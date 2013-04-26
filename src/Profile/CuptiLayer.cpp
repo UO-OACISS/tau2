@@ -32,7 +32,7 @@ counter_id_map_t internal_id_map() {return internal_id_map;}
 counter_map_t Tau_CuptiLayer_Counter_Map;
 counter_id_map_t internal_id_map; 
 counter_vec_t Tau_CuptiLayer_Added_counters;
-CUpti_EventGroup eventGroup;	
+CUpti_EventGroup* eventGroup;	
 
 int Tau_CuptiLayer_num_events;
 
@@ -184,39 +184,59 @@ void CuptiCounterEvent::print()
 					endl << endl;
 }
 
+bool *initialized = NULL;
+
+
 /* lifted from PAPI. */
 void Tau_CuptiLayer_init()
 {
-	//printf("in Tau_CuptiLayer_init.\n");
+  int device_count;
+  cuDeviceGetCount(&device_count);
+  if (initialized == NULL)
+  {
+    initialized = (bool*) malloc (device_count*sizeof(bool));
+    eventGroup = (CUpti_EventGroup *) malloc (device_count*sizeof(CUpti_EventGroup));
+  }
 	//No counters set, nothing to initialize
-	if (!Tau_CuptiLayer_Added_counters.empty() && !Tau_CuptiLayer_is_initialized())
+	//if (!Tau_CuptiLayer_Added_counters.empty() && !Tau_CuptiLayer_is_initialized())
+	CUdevice device;
+  cuCtxGetDevice(&device);
+  if (!initialized[device])
 	{
+	  printf("in Tau_CuptiLayer_init.\n");
 		CUptiResult cuptiErr = CUPTI_SUCCESS;
 		CUresult cuErr = CUDA_SUCCESS;
 
-		// want create a CUDA context for either the default device or
-			 //the device specified with cudaSetDevice() in user code 
-		int currentDeviceID;
-		if ( CUDA_SUCCESS != cudaGetDevice( &currentDeviceID ) ) {
-			printf( "There is no device supporting CUDA.\n" );
+    //int device_count;
+    //cuDeviceGetCount(&device_count);
+	  //for (int currentDeviceID = 0; currentDeviceID < device_count; currentDeviceID++)
+    //{
+		  // want create a CUDA context for either the default device or
+			//the device specified with cudaSetDevice() in user code 
+		//if ( CUDA_SUCCESS != cudaGetDevice( &currentDeviceID ) ) {
+			//printf( "There is no device supporting CUDA.\n" );
 			//exit( EXIT_FAILURE );
-		}
+		//}
 		//printf("in Tau_CuptiLayer_init 2.\n");
 		//printf( "DEVICE USED: %s (%d)\n", device[currentDeviceID].name,
 				//currentDeviceID );
 		
 		// get the CUDA context from the calling CPU thread 
-		CUcontext cuCtx;
+    
+    CUcontext cuCtx;
 		cuErr = cuCtxGetCurrent( &cuCtx );
 
 		// if no CUDA context is bound to the calling CPU thread yet, create one
 		//printf("in Tau_CuptiLayer_init 3.\n");
 		if ( cuErr != CUDA_SUCCESS || cuCtx == NULL ) {
-			cuErr = cuCtxCreate( &cuCtx, 0, currentDeviceID );
-			CHECK_CU_ERROR( cuErr, "cuCtxCreate" );
+      printf("[WARNING] creating context.\n");
+			//cuErr = cuCtxCreate( &cuCtx, 0, currentDeviceID );
+			//CHECK_CU_ERROR( cuErr, "cuCtxCreate" );
 		}
 		//printf("in Tau_CuptiLayer_init 4.\n");
-		cuptiErr = cuptiEventGroupCreate( cuCtx, &eventGroup, 0 );
+    
+
+		cuptiErr = cuptiEventGroupCreate( cuCtx, &eventGroup[device], 0 );
 		CHECK_CUPTI_ERROR( cuptiErr, "cuptiEventGroupCreate" );
 
 		//printf("in Tau_CuptiLayer_init 5.\n");
@@ -224,19 +244,20 @@ void Tau_CuptiLayer_init()
 		for (counter_vec_t::iterator it = Tau_CuptiLayer_Added_counters.begin(); it !=
 					Tau_CuptiLayer_Added_counters.end(); it++)
 		{
-			cuptiErr = cuptiEventGroupAddEvent( eventGroup,
+			cuptiErr = cuptiEventGroupAddEvent( eventGroup[device],
 									(*it)->event );
 			CHECK_CUPTI_ERROR( cuptiErr, "cuptiEventGroupAddEvent" );
-			Tau_CuptiLayer_num_events++;
 		}
+    //record the fact the events have been added.
+		Tau_CuptiLayer_num_events = Tau_CuptiLayer_Added_counters.size();
 		//printf("in Tau_CuptiLayer_init 6.\n");
     //enable all domains
 #ifdef TAU_CUPTI_NORMALIZE_EVENTS_ACROSS_ALL_SMS
     uint32_t all = 1;
-    cuptiEventGroupSetAttribute(eventGroup, 
+    cuptiEventGroupSetAttribute(eventGroup[device], 
                                 CUPTI_EVENT_GROUP_ATTR_PROFILE_ALL_DOMAIN_INSTANCES,                                           sizeof(all), &all);
 #endif
-		cuptiErr = cuptiEventGroupEnable(eventGroup);
+		cuptiErr = cuptiEventGroupEnable(eventGroup[device]);
 		CHECK_CUPTI_ERROR( cuptiErr, "cuptiEventGroupEnable" );
 		if (cuptiErr == CUPTI_ERROR_HARDWARE)
 		{
@@ -256,6 +277,7 @@ void Tau_CuptiLayer_init()
 		}
 		
 		//printf("in Tau_CuptiLayer_init 8.\n");
+    initialized[device] = true;
 		Tau_CuptiLayer_initialized = true;
 	}
 }
@@ -277,7 +299,8 @@ void Tau_CuptiLayer_register_counter(CuptiCounterEvent* ev)
 
 /* read all the counters. */
 void Tau_CuptiLayer_read_counters(CUdevice device, uint64_t * counterDataBuffer)
-{ 
+{
+  cuCtxGetDevice(&device);
 	//uint64_t * counterDataBuffer = (uint64_t *) malloc(Tau_CuptiLayer_get_num_events() * sizeof(uint64_t));
 	if (Tau_CuptiLayer_is_initialized())
 	{
@@ -308,7 +331,7 @@ void Tau_CuptiLayer_read_counters(CUdevice device, uint64_t * counterDataBuffer)
       numTotalInstancesSize = sizeof(numTotalInstances);
       numInstancesSize = sizeof(numInstances);
 
-      cuptiErr = cuptiEventGroupGetAttribute(eventGroup,
+      cuptiErr = cuptiEventGroupGetAttribute(eventGroup[device],
                            CUPTI_EVENT_GROUP_ATTR_EVENT_DOMAIN_ID,
                            &groupDomainSize, &groupDomain);
 			CHECK_CUPTI_ERROR( cuptiErr, "cuptiEventGroupGetAttribute" );
@@ -319,7 +342,7 @@ void Tau_CuptiLayer_read_counters(CUdevice device, uint64_t * counterDataBuffer)
                            &numTotalInstancesSize, &numTotalInstances);
 			CHECK_CUPTI_ERROR( cuptiErr, "cuptiEventDomainGetAttribute" );
       
-      cuptiErr = cuptiEventGroupGetAttribute(eventGroup, 
+      cuptiErr = cuptiEventGroupGetAttribute(eventGroup[device], 
                            CUPTI_EVENT_GROUP_ATTR_INSTANCE_COUNT,
                            &numInstancesSize, &numInstances);
 			CHECK_CUPTI_ERROR( cuptiErr, "cuptiEventDomainGetAttribute 2" );
@@ -332,7 +355,7 @@ void Tau_CuptiLayer_read_counters(CUdevice device, uint64_t * counterDataBuffer)
 			eventIDArray = ( CUpti_EventID * ) malloc( arraySizeBytes );
 
 			// read counter data for the specified event from the CuPTI eventGroup 
-			cuptiErr = cuptiEventGroupReadAllEvents( eventGroup,
+			cuptiErr = cuptiEventGroupReadAllEvents( eventGroup[device],
 													 CUPTI_EVENT_READ_FLAG_NONE,
 													 &bufferSizeBytes,
 													 instanceDataBuffer, &arraySizeBytes,
@@ -376,7 +399,7 @@ void Tau_CuptiLayer_read_counters(CUdevice device, uint64_t * counterDataBuffer)
 			eventIDArray = ( CUpti_EventID * ) malloc( arraySizeBytes );
 
 			// read counter data for the specified event from the CuPTI eventGroup 
-			cuptiErr = cuptiEventGroupReadAllEvents( eventGroup,
+			cuptiErr = cuptiEventGroupReadAllEvents( eventGroup[device],
 													 CUPTI_EVENT_READ_FLAG_NONE,
 													 &bufferSizeBytes,
 													 counterDataBuffer, &arraySizeBytes,

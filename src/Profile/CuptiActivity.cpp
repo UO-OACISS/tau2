@@ -615,19 +615,19 @@ void record_gpu_launch(int correlationId, FunctionInfo *current_function)
     int device_count;
     cuDeviceGetCount(&device_count);
     //kernelInfoMap[correlationId].counters = (uint64_t **) malloc(n_counters*device_count*sizeof(uint64_t));
-    for (int i=0; i<device_count; i++)
-    {
+    //for (int i=0; i<device_count; i++)
+    //{
       CUdevice device;
-      cuDeviceGet(&device, i);
+      cuCtxGetDevice(&device);
       //uint64_t *tmpCounters = (uint64_t*)  malloc(Tau_CuptiLayer_get_num_events()*sizeof(uint64_t));
       uint64_t *tmpCounters;
       K *tmp = new K();
-      tmpCounters = tmp->counters(i);
+      tmpCounters = tmp->counters(device);
       Tau_CuptiLayer_read_counters(device, tmpCounters);
       //memcpy(kernelInfoMap[correlationId].counters(i), tmpCounters, Tau_CuptiLayer_get_num_events()*sizeof(uint64_t)); 
       kernelInfoMap[correlationId] = *tmp;
       printf("[at launch, %d] device 0, counter 0: %llu.\n", correlationId, tmpCounters[0]);
-    }
+    //}
   }
 }
 void record_gpu_counters(int device_id, uint32_t correlationId, eventMap_t *m)
