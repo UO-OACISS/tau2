@@ -194,7 +194,7 @@ void Tau_CuptiLayer_init()
   cuDeviceGetCount(&device_count);
   if (initialized == NULL)
   {
-    initialized = (bool*) malloc (device_count*sizeof(bool));
+    initialized = (bool*) calloc (device_count,sizeof(bool));
     eventGroup = (CUpti_EventGroup *) malloc (device_count*sizeof(CUpti_EventGroup));
   }
 	//No counters set, nothing to initialize
