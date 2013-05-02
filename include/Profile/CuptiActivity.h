@@ -3,6 +3,7 @@
 #include <cuda.h>
 #include <cupti.h>
 #include <math.h>
+#include <iostream>
 
 #if CUPTI_API_VERSION >= 2
 
@@ -151,31 +152,76 @@ std::map<uint32_t, CUpti_ActivityDevice> deviceMap;
 //std::map<uint32_t, CUpti_ActivityGlobalAccess> globalAccessMap;
 std::map<uint32_t, CUpti_ActivityKernel> kernelMap;
 
-class K { 
+struct GpuState {
 
-  //structure: device 0: counters....
-  //           device 1: counters....
-  uint64_t *c;
-  int device_count;
-  int n_counters;
-  public:
-  K() { 
+  int kernels_encountered;
+  //structure: counter 1,2,3...
+  uint64_t *counters_last_recorded;
+  static int device_count;
+  static int n_counters;
+public:
+  int device_num;
+  GpuState() {
     n_counters = Tau_CuptiLayer_get_num_events();
-    device_count;
     cuDeviceGetCount(&device_count);
-    c = (uint64_t *) malloc(n_counters*(device_count+1)*sizeof(uint64_t));
+    cuCtxGetDevice(&device_num);
+    kernels_encountered = 0;
+    counters_last_recorded = (uint64_t *) calloc(n_counters, sizeof(uint64_t));
   }
-  /*
-  ~K()
-  {
-    free(c);
+  GpuState(int n) { 
+    n_counters = Tau_CuptiLayer_get_num_events();
+    cuDeviceGetCount(&device_count);
+    device_num = n;
+    kernels_encountered = 0;
+    counters_last_recorded = (uint64_t *) calloc(n_counters, sizeof(uint64_t));
   }
-  */
-  uint64_t *counters(int device_id)
+  uint64_t *counters()
   {
-    return &c[device_id*n_counters];
+    return counters_last_recorded;
+  }
+
+  void clear() {
+    for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++)
+    {
+      counters_last_recorded[n] = 0;
+    }
+  }
+
+  void record_gpu_counters_at_launch()
+  {
+    kernels_encountered++;
+    n_counters = Tau_CuptiLayer_get_num_events();
+    if (n_counters > 0 && counters_last_recorded[0] == 0) {
+    //kernelInfoMap[correlationId].counters = (uint64_t **) malloc(n_counters*device_count*sizeof(uint64_t));
+    //for (int i=0; i<device_count; i++)
+    //{
+      Tau_CuptiLayer_read_counters(device_num, counters_last_recorded);
+      printf("[at launch] device 0, counter 0: %llu.\n", counters_last_recorded[0]);
+
+    }
+  }
+  uint64_t *gpu_counters_at_sync()
+  {
+    kernels_encountered--;
+    uint64_t *tmpCounters = (uint64_t*) calloc(n_counters, sizeof(uint64_t));
+    Tau_CuptiLayer_read_counters(device_num, tmpCounters);
+    for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++)
+    {
+      printf("counter %d: start: %llu end: %llu diff: %llu.\n", n, counters_last_recorded[n], tmpCounters[n], tmpCounters[n] - counters_last_recorded[n]);
+      tmpCounters[n] = tmpCounters[n] - counters_last_recorded[n]; 
+      std::cout << "final number: " << std::setprecision(16) << tmpCounters[n] << std::endl;
+      std::cout << "number kernel: " << kernels_encountered << std::endl;
+    }
+
+    if (kernels_encountered == 0) {
+     printf("clearing the times counter: %d.\n", kernels_encountered);
+     clear();
+    }
+
+    return tmpCounters;
   }
   //take the end counts to get a difference.
+  /*
   void difference(K o)
   {
     //print difference
@@ -191,12 +237,13 @@ class K {
         my_counters[n] = o_counters[n] - my_counters[n]; 
       }
     }    
+    */
+};
+int GpuState::device_count = 0;
+int GpuState::n_counters = 0;
 
-  }
-
-  } typedef kernel_struct;
-
-std::map<uint32_t, kernel_struct> kernelInfoMap;
+//std::vector<int> CurrentState::kernels_encountered;
+std::map<uint32_t, GpuState> CurrentGpuState;
 
 #define CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(name, id, info, kind, count) \
 	if ((id) == CUPTI_RUNTIME_TRACE_CBID_##name##_v3020) \
