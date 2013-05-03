@@ -146,23 +146,19 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 		uint32_t stream;
 		CUptiResult err;
 		//Global Buffer
-		Tau_cupti_register_sync_event(NULL, 0);
-    //setting times to zero.
     int device_count;
     cuDeviceGetCount(&device_count);
+    for (int i=0; i<device_count; i++) {
+      CurrentGpuState[i].record_gpu_counters_at_sync();
+    }
+		Tau_cupti_register_sync_event(NULL, 0);
+    
 		err = cuptiGetStreamId(sync->context, sync->stream, &stream);
 		Tau_cupti_register_sync_event(sync->context, stream);
 		for (int s=0; s<number_of_streams; s++)
 		{
 			Tau_cupti_register_sync_event(sync->context, streamIds.at(s));
 		}
-    /*
-    for (int i=0; i<device_count; i++) {
-      CurrentGpuState[i].kernels_encountered = 0;
-      CurrentGpuState[i].clear();
-      printf("clearing the times counter: %d.\n", CurrentGpuState[i].kernels_encountered);
-    }
-    */
 	}
 	else if (domain == CUPTI_CB_DOMAIN_DRIVER_API ||
 					 domain == CUPTI_CB_DOMAIN_RUNTIME_API)
@@ -213,6 +209,11 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 					//Tau_CuptiLayer_disable();
 					cuCtxSynchronize();
 					//Tau_CuptiLayer_enable();
+          int device_count;
+          cuDeviceGetCount(&device_count);
+          for (int i=0; i<device_count; i++) {
+            CurrentGpuState[i].record_gpu_counters_at_sync();
+          }
 					Tau_cupti_register_sync_event(cbInfo->context, 0);
 				}
 			}
@@ -677,13 +678,15 @@ void record_gpu_counters(int device_id, uint32_t correlationId, eventMap_t *m)
     //CurrentGpuState[device_id].kernels_encountered++;
     //uint64_t *counters = (uint64_t *) malloc(Tau_CuptiLayer_get_num_events()*sizeof(uint64_t));
     //K *k = new K();
-    uint64_t * tmpCounters;
-    tmpCounters = CurrentGpuState[device_id].gpu_counters_at_sync();
     for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
       TauContextUserEvent* c;
       Tau_cupti_find_context_event(&c, Tau_CuptiLayer_get_event_name(n), true);
-      eventMap[c] = tmpCounters[n];
+      eventMap[c] = CurrentGpuState[device_id].counters()[n];
+      std::cout << "final number: " << std::setprecision(16) << eventMap[c] << std::endl;
+      std::cout << "number kernel: " << CurrentGpuState[device_id].kernels_encountered << std::endl;
     }
+    CurrentGpuState[device_id].clear();
+    printf("clearing the times counter: %d.\n", CurrentGpuState[device_id].kernels_encountered);
     //tmpCounters = CurrentGpuState[device_id].counters();
     //Tau_CuptiLayer_read_counters(device, tmpCounters);
     /*for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++)
