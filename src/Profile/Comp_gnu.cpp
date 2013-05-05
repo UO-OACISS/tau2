@@ -231,6 +231,7 @@ void __cyg_profile_func_enter(void* func, void* callsite)
       node = TheHashTable()[addr];
       if (!node) {
         node = new HashNode;
+        node->fi = NULL;
         TheHashTable()[addr] = node;
       }
       RtsLayer::UnLockDB();
