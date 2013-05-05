@@ -7,10 +7,8 @@ void __attribute__ ((destructor)) taupreload_fini(void);
 #include <stdlib.h>
 
 void taupreload_init() {
-  if (Tau_init_check_dl_initialized()) {
-    Tau_create_top_level_timer_if_necessary();
-    TAU_PROFILE_SET_NODE(0);
-  }
+  Tau_create_top_level_timer_if_necessary();
+  TAU_PROFILE_SET_NODE(0);
 }
 
 void taupreload_fini() {

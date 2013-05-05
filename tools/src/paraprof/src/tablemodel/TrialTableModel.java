@@ -5,8 +5,6 @@ import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
@@ -15,15 +13,14 @@ import javax.swing.tree.DefaultTreeModel;
 
 import edu.uoregon.tau.common.MetaDataMap;
 import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
-import edu.uoregon.tau.paraprof.ParaProf;
 import edu.uoregon.tau.paraprof.ParaProfManagerWindow;
 import edu.uoregon.tau.paraprof.ParaProfTrial;
 import edu.uoregon.tau.paraprof.ParaProfUtils;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
-import edu.uoregon.tau.perfdmf.Function;
-import edu.uoregon.tau.perfdmf.SourceRegion;
 import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfdmf.database.DB;
 import edu.uoregon.tau.perfdmf.database.DBConnector;
+import edu.uoregon.tau.perfdmf.taudb.TAUdbTrial;
 
 public class TrialTableModel extends AbstractTableModel {
 
@@ -123,21 +120,39 @@ public class TrialTableModel extends AbstractTableModel {
             return;
         }
         String string = (String) obj;
-
+        String key = null;
         if (r == 0) {
+        	key="NAME";
             ppTrial.getTrial().setName(string);
         } else {
 
             int field = r - 4;
             if (field < trial.getNumFields()) {
+            	key=ppTrial.getTrial().getFieldName(r-4);
                 ppTrial.getTrial().setField(r - 4, string);
             } else {
+            	key=fieldNames.get(r);
                 metaData.put(fieldNames.get(r), string);
                 trial.getMetaData().put(fieldNames.get(r), string);
             }
         }
-
-        this.updateDB();
+        
+        DB db=  paraProfManager.getDatabaseAPI(ppTrial.getDatabase()).db();
+        if(this.ppTrial.getDatabase().isTAUdb() || db.getSchemaVersion()>0){
+        	//TAUdbTrial dbTrial = (TAUdbTrial) ppTrial.getTrial();
+        	
+        	int id= ppTrial.getID();
+        	if(r-4 < trial.getNumFields())
+        	{
+        		TAUdbTrial.updateFields(db, id, key ,string);
+        	}
+        	else{
+        		TAUdbTrial.updatePrimaryMetadataField(db,id,key,string);
+        	}
+        }
+        else{
+        	this.updateDB();
+        }
         defaultTreeModel.nodeChanged(ppTrial.getDMTN());
     }
 
