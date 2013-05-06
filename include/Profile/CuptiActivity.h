@@ -140,7 +140,7 @@ eventMap_t eventMap;
 int gpu_occupancy_available(int deviceId);
 void record_gpu_occupancy(CUpti_ActivityKernel *k, const char *name, eventMap_t *m);
 void record_gpu_launch(int cId, FunctionInfo *f);
-void record_gpu_counters(int device_id, uint32_t id, eventMap_t *m);
+void record_gpu_counters(int device_id, const char *name, uint32_t id, eventMap_t *m);
 
 #if CUPTI_API_VERSION >= 3
 void form_context_event_name(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceLocator *source, const char *event, std::string *name);
@@ -152,9 +152,13 @@ std::map<uint32_t, CUpti_ActivityDevice> deviceMap;
 //std::map<uint32_t, CUpti_ActivityGlobalAccess> globalAccessMap;
 std::map<uint32_t, CUpti_ActivityKernel> kernelMap;
 
+bool counters_avereged_warning_issued = 0;
+bool counters_bounded_warning_issued = 0;
+
 struct GpuState {
 
   int kernels_encountered;
+  int kernels_recorded;
   //structure: counter 1,2,3...
   uint64_t *counters_at_last_launch;
   uint64_t *current_counters;
@@ -167,6 +171,7 @@ public:
     cuDeviceGetCount(&device_count);
     cuCtxGetDevice(&device_num);
     kernels_encountered = 0;
+    kernels_recorded = 0;
     counters_at_last_launch = (uint64_t *) calloc(n_counters, sizeof(uint64_t));
     current_counters = (uint64_t *) calloc(n_counters, sizeof(uint64_t));
   }
@@ -175,6 +180,7 @@ public:
     cuDeviceGetCount(&device_count);
     device_num = n;
     kernels_encountered = 0;
+    kernels_recorded = 0;
     counters_at_last_launch = (uint64_t *) calloc(n_counters, sizeof(uint64_t));
     current_counters = (uint64_t *) calloc(n_counters, sizeof(uint64_t));
   }
@@ -188,19 +194,24 @@ public:
     {
       counters_at_last_launch[n] = 0;
       kernels_encountered = 0;
+      kernels_recorded = 0;
     }
   }
 
   void record_gpu_counters_at_launch()
   {
     kernels_encountered++;
+    if (!counters_avereged_warning_issued && kernels_encountered > 1) {
+      TAU_VERBOSE("Warning: CUPTI events will be avereged, multiple kernel deteched between synchronization points.\n");
+      counters_avereged_warning_issued = true;
+    }
     n_counters = Tau_CuptiLayer_get_num_events();
     if (n_counters > 0 && counters_at_last_launch[0] == 0) {
     //kernelInfoMap[correlationId].counters = (uint64_t **) malloc(n_counters*device_count*sizeof(uint64_t));
     //for (int i=0; i<device_count; i++)
     //{
       Tau_CuptiLayer_read_counters(device_num, counters_at_last_launch);
-      printf("[at launch] device 0, counter 0: %llu.\n", counters_at_last_launch[0]);
+      //printf("[at launch] device 0, counter 0: %llu.\n", counters_at_last_launch[0]);
 
     }
   }
@@ -217,7 +228,7 @@ public:
     }*/
     for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++)
     {
-      printf("counter %d: start: %llu end: %llu diff: %llu.\n", n, counters_at_last_launch[n], current_counters[n], current_counters[n] - counters_at_last_launch[n]);
+      //printf("counter %d: start: %llu end: %llu diff: %llu.\n", n, counters_at_last_launch[n], current_counters[n], current_counters[n] - counters_at_last_launch[n]);
       current_counters[n] = (current_counters[n] - counters_at_last_launch[n]) / kernels_encountered; 
     }
   }
@@ -245,6 +256,8 @@ int GpuState::n_counters = 0;
 
 //std::vector<int> CurrentState::kernels_encountered;
 std::map<uint32_t, GpuState> CurrentGpuState;
+
+const char *last_recorded_kernel_name;
 
 #define CAST_TO_RUNTIME_MEMCPY_TYPE_AND_CALL(name, id, info, kind, count) \
 	if ((id) == CUPTI_RUNTIME_TRACE_CBID_##name##_v3020) \
