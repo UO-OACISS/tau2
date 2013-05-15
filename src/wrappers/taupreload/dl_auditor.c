@@ -2,6 +2,9 @@
 
 #define _GNU_SOURCE
 #include <dlfcn.h>
+#ifdef MERCURIUM_EXTRA
+#define LM_ID_BASE 0
+#endif
 #include <link.h>
 #include <stdio.h>
 

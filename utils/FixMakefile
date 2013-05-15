@@ -810,6 +810,10 @@ case $1 in
 	echo NOTE: Using the Open64 C++ compiler
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     MERCURIUM)
+	echo NOTE: Using the Mercurium C++ compiler
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      HITACHI)
 	echo NOTE: Using the HITACHI SR8000 MPP options
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
@@ -1297,6 +1301,10 @@ case $1 in
 	;;
      OPENMP)
 	echo "NOTE: Using OpenMP Threads ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     GOMP_AVAILABLE)
+	echo "NOTE: Using GOMP OpenMP Library Wrapper ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
      OPARI)
