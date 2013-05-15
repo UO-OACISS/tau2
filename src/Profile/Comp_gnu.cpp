@@ -233,6 +233,13 @@ void __cyg_profile_func_enter(void* func, void* callsite)
       node = TheHashTable()[addr];
       if (!node) {
         node = new HashNode;
+        // This is a work around for an elusive bug observed at LLNL.
+        // Sometimes the new node was not initialized when -optShared was used so
+        // TAU_PROFILER_CREATE would not get called and TAU was crashing inside a
+        // fi->GetProfileGroup() call because fi was not a valid address.
+        // We explicitly initialize the node to work around this.
+        node->fi = NULL;
+        node->excluded = false;
         TheHashTable()[addr] = node;
       }
       RtsLayer::UnLockDB();
