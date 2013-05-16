@@ -97,12 +97,34 @@ public class SourceManager extends JFrame {
     private boolean searchLocations(SourceRegion region, File[] list, boolean recurse) {
     	if(list==null)
     		return false;
+    	String name = region.getFilename();
         for (int j = 0; j < list.length; j++) {
-            if (matchFiles(region.getFilename(), list[j].getName())) {
+            if (matchFiles(name, list[j].getName())) {
                 //System.out.println("found it");
             	launchSourceViewer(list[j],region);
                 return true;
             }
+        }
+        /*
+         * Check if we use unix or windows separators
+         */
+        char separator = '/';
+        if(!name.startsWith("/")){
+        	separator='\\';
+        }
+        /*
+         *Check the file name by itself instead of the full path. We don't continue if we get 0 because it already failed to find that. 
+         */
+        int last = name.lastIndexOf(separator)+1;
+        if(last>1&&last<name.length()){
+        name=region.getFilename().substring(last);
+        for (int j = 0; j < list.length; j++) {
+            if (matchFiles(name, list[j].getName())) {
+                //System.out.println("found it");
+            	launchSourceViewer(list[j],region);
+                return true;
+            }
+        }
         }
 
         if (recurse) {

@@ -821,7 +821,7 @@ for arg in "$@"; do
 
   -cc=*)
     myarg=`echo $arg | sed 's/-cc=//'`
-    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = opencc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc -o $myarg = mpiicc -o $myarg = mpifcc -o $myarg = mpifccpx -o $myarg = clang -o $myarg = bgclang -o $myarg = mpc_cc -o $myarg = mpicc ]
+    if [ $myarg = cc -o $myarg = gcc -o $myarg = gcc4 -o $myarg = KCC -o $myarg = pgcc -o $myarg = guidec -o $myarg = xlc -o $myarg = ecc -o $myarg = icc -o $myarg = powerpc64-linux-gcc -o $myarg = pathcc -o $myarg = fcc -o $myarg = orcc -o $myarg = opencc -o $myarg = qk-pgcc -o $myarg = scgcc -o $myarg = scpathcc -o $myarg = mips64el-gentoo-linux-gnu-gcc -o $myarg = powerpc64-bgq-linux-gcc -o $myarg = powerpc-bgp-linux-gcc -o $myarg = x86_64-w64-mingw32-gcc -o $myarg = mpiicc -o $myarg = mpifcc -o $myarg = mpifccpx -o $myarg = clang -o $myarg = bgclang -o $myarg = mpc_cc -o $myarg = mpicc -o $myarg = mcc ]
       then
         c_compiler=$myarg
       else
@@ -829,7 +829,7 @@ for arg in "$@"; do
         testmp=`echo $myarg | sed -e 's/^mp//'`
         if [ "y$testxlc" = "y$myarg"  -a "y$testmp" = "y$myarg" ]
         then
-          echo "WARNING: valid options for cc are 'cc', 'gcc', 'gcc4', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', 'orcc', 'opencc', 'qk-pgcc', 'powerpc64-bgq-linux-gcc', 'powerpc-bgp-linux-gcc', 'x86_64-w64-mingw32-gcc', 'mpiicc', 'pgcc' , 'mpc_cc', 'mpifcc', 'mpifccpx', 'clang', 'bgclang', and 'mpicc'"
+          echo "WARNING: valid options for cc are 'cc', 'gcc', 'gcc4', 'KCC', 'guidec', '*xlc*', 'ecc', 'icc', 'pathcc', 'fcc', 'orcc', 'opencc', 'qk-pgcc', 'powerpc64-bgq-linux-gcc', 'powerpc-bgp-linux-gcc', 'x86_64-w64-mingw32-gcc', 'mcc', 'mpiicc', 'pgcc' , 'mpc_cc', 'mpifcc', 'mpifccpx', 'clang', 'bgclang', and 'mpicc'"
 #       exit 1
         else
 	  if [ "y$testxlc" != "y$myarg" ]
@@ -845,7 +845,7 @@ for arg in "$@"; do
 
   -c++=*)
     myarg=`echo $arg | sed 's/-c++=//'`
-    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = openCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx -o $myarg = clang++ -o $myarg = bgclang++ -o $myarg = mpicxx ] 
+    if [ $myarg = CC -o $myarg = KCC -o $myarg = g++ -o $myarg = g++4 -o $myarg = cxx  -o $myarg = NCC -o $myarg = pgCC  -o $myarg = pgcpp -o $myarg = egcs -o $myarg = FCC -o $myarg = guidec++ -o $myarg = aCC -o $myarg = c++ -o $myarg = ecpc -o $myarg = icpc -o $myarg = powerpc64-linux-g++ -o $myarg = pathCC -o $myarg = orCC -o $myarg = openCC -o $myarg = qk-pgCC -o $myarg = scg++ -o $myarg = scpathCC -o $myarg = mips64el-gentoo-linux-gnu-g++ -o $myarg = powerpc-bgp-linux-g++ -o $myarg = powerpc64-bgq-linux-g++ -o $myarg = mpicxx  -o $myarg = x86_64-w64-mingw32-g++  -o $myarg = mpiicpc -o $myarg = mpiFCC -o $myarg = mpiFCCpx -o $myarg = mpc_cxx -o $myarg = clang++ -o $myarg = bgclang++ -o $myarg = mpicxx -o $myarg = mcxx ] 
       then
         cxx_compiler=$myarg
       else
@@ -2687,7 +2687,7 @@ case $machine in
 	    intel=yes
 	    tauoptions="${tauoptions}-intel"
 	    default_fortran=intel
-	    turnbfdoff=yes
+	    #turnbfdoff=yes
 	    fixmakeargs="$fixmakeargs COMPINST_INTEL9"
 	elif [ "x$PE_ENV" = xCRAY ] ; then
 	    tauoptions="${tauoptions}-cray"
@@ -3069,7 +3069,8 @@ fi
 
 if [ $machine = mic_linux ] ; then
     fixmakeargs="$fixmakeargs MIC_LINUX"
-    turnbfdoff=yes
+    #turnbfdoff=yes
+    orig_useropt="-mmic -O2"
 fi
     
 if [ $machine = apple ] ; then
@@ -3340,6 +3341,13 @@ case $cxx_compiler in
       echo "Default C++ compiler will be KAI KCC C++ Compiler"
       kai=yes
       fixmakeargs="$fixmakeargs KAI"
+      ;;
+
+   mcxx)
+      echo "Default C++ compiler will be Mercurium C++ Compiler"
+	  gnu=yes
+	  shared_opt="-shared -fPIC"
+      fixmakeargs="$fixmakeargs MERCURIUM"
       ;;
 
    pgCC|pgcpp)
@@ -6323,7 +6331,7 @@ cat <<EOF > conftest_bfd.c
 int main(int argc, char **argv) {
    bfd_init();
    bfd *BfdImage = bfd_openr("/proc/self/exe", 0);
-   return;
+   return 0;
 }
 EOF
 $echo "Checking for linking dependencies for libbfd... ${nnl}"
@@ -6639,6 +6647,12 @@ fi
 if [ $pthread = yes ] ; then
     fixmakeargs="$fixmakeargs PTHREAD_AVAILABLE ptdir=$ptdir"
     tauoptions="${tauoptions}-pthread"
+fi
+
+if [ $openmp = yes ] ; then
+  if [ $c_compiler = gcc ] ; then
+    fixmakeargs="$fixmakeargs GOMP_AVAILABLE ptdir=$ptdir"
+  fi
 fi
 
 if [ $papithread = yes ] ; then
