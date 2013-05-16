@@ -167,16 +167,6 @@ string TauFormulateNameString(Profiler * current)
     } 
     it = it ->ParentProfiler;
   }
-     
-#ifdef NOTWORKING
-    
-  if (!current->ParentProfiler || current->GetPhase()) {
-    path[0] = current->ParentProfiler;
-    i = 0; // Include path[0] in the name string
-  } else {
-    i = 1;  // Exclude path[0] from the name string
-  }
-#endif /* NOTWORKING */
 
 #else /* TAU_PROFILEPHASE */
 
