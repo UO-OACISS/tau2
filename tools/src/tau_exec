@@ -93,6 +93,7 @@ qsub_mode=false
 TAU_PAPI_DEFAULT_DOMAIN=PAPI_DOM_USER
 extraloadlibs=""
 track_pthread=false
+track_gomp=false
 
 for arg in "$@" ; do
   # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
@@ -133,6 +134,10 @@ for arg in "$@" ; do
 	      ;;
 	  -opencl)
 	      track_opencl=true
+	      shift
+	      ;;
+	  -gomp)
+	      track_gomp=true
 	      shift
 	      ;;
 	  -armci)
@@ -273,6 +278,10 @@ fi
 isPthread=`echo $theBinding | grep pthread`
 if [ ! "x$isPthread" == "x" -a -r $BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX ]; then
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+fi
+
+if [ $track_gomp = "true" -a -r $BASEDIR/lib/$theBinding/libTAU-gomp$TAU_SHLIBX ]; then
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-gomp$TAU_SHLIBX:$TAUEX_LD_PRELOAD
 fi
 
 if [ $track_io = "true" ] ; then

@@ -1,0 +1,19 @@
+# exports_so.txt #
+
+VERSION {
+
+    global: # Exported symbols.
+
+        #
+        # "Normal" symbols.
+        #
+        GOMP_*;    # ORA collector API
+        __omp_collector_*;    # ORA collector API
+
+    local: # Non-exported symbols.
+
+        *;         # All other symbols are not exported.
+
+}; # VERSION
+
+# end of file #
