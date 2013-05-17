@@ -10,6 +10,7 @@
 #include <map>
 #include <string>
 #include <vector>
+
 // Putting "using namespace" statements in header files can create ambiguity
 // between user-defined symbols and std symbols, creating unparsable code
 // or even changing the behavior of user codes.  This is also widely considered
@@ -35,6 +36,10 @@ printf ("[%s:%d] Error %d for CUPTI API function '%s'. cuptiQuery failed\n", __F
 
 #define TAU_CUPTI_MAX_NAME 40
 #define TAU_CUPTI_MAX_DESCRIPTION 480
+
+#define TAU_CUPTI_COUNTER_ACTUAL 0
+#define TAU_CUPTI_COUNTER_BOUNDED 1
+#define TAU_CUPTI_COUNTER_AVERAGED 2
 
 //This setting will aggregate the event values collected across all event
 //domains. Thus the event results will report values as if all SM had an event
@@ -134,7 +139,7 @@ extern counter_id_map_t interal_id_map();
 
 extern "C" int Tau_CuptiLayer_get_num_events();
 
-extern "C" const char *Tau_CuptiLayer_get_event_name(int metric_n);
+extern "C" char *Tau_CuptiLayer_get_event_name(int metric_n, int type);
 
 extern "C" void Tau_CuptiLayer_read_counters(CUdevice d, uint64_t *cb);
 

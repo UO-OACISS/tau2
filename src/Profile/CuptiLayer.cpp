@@ -201,7 +201,7 @@ void Tau_CuptiLayer_init()
 	//if (!Tau_CuptiLayer_Added_counters.empty() && !Tau_CuptiLayer_is_initialized())
 	CUdevice device;
   cuCtxGetDevice(&device);
-  if (!initialized[device])
+  if (!initialized[device] && Tau_CuptiLayer_Added_counters.size() > 0)
 	{
 	  printf("in Tau_CuptiLayer_init.\n");
 		CUptiResult cuptiErr = CUPTI_SUCCESS;
@@ -255,7 +255,7 @@ void Tau_CuptiLayer_init()
 #ifdef TAU_CUPTI_NORMALIZE_EVENTS_ACROSS_ALL_SMS
     uint32_t all = 1;
     cuptiEventGroupSetAttribute(eventGroup[device], 
-                                CUPTI_EVENT_GROUP_ATTR_PROFILE_ALL_DOMAIN_INSTANCES,                                           sizeof(all), &all);
+                                CUPTI_EVENT_GROUP_ATTR_PROFILE_ALL_DOMAIN_INSTANCES, sizeof(all), &all);
 #endif
 		cuptiErr = cuptiEventGroupEnable(eventGroup[device]);
 		CHECK_CUPTI_ERROR( cuptiErr, "cuptiEventGroupEnable" );
@@ -561,9 +561,18 @@ void Tau_CuptiLayer_register_string(char *str, int metric_n)
 	//printf("adding counter with id: %d.\n", metric_n);
 }
 
-const char *Tau_CuptiLayer_get_event_name(int metric_n)
+char *Tau_CuptiLayer_get_event_name(int metric_n, int type)
 {
-  return Tau_CuptiLayer_Added_counters[metric_n]->event_name.c_str();
+  string counter_string = Tau_CuptiLayer_Added_counters[metric_n]->event_name;
+  if (type == TAU_CUPTI_COUNTER_BOUNDED) {
+    counter_string += " (upper bound)";
+  } else if (type == TAU_CUPTI_COUNTER_AVERAGED) {
+    counter_string += " (averaged)";
+  }
+  //std::cout << "counter string: " << counter_string << std::endl;
+  char *name = (char*) malloc(sizeof(char) *(counter_string.length()+1));
+  memcpy(name, counter_string.c_str(), sizeof(char) * (counter_string.length()+1));
+  return name;
 }
 
 
