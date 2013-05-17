@@ -251,7 +251,19 @@ public:
       userEvent(new TauUserEvent(name, monoIncr)),
       contextEvent(NULL)
   { }
+  
+  TauContextUserEvent(const TauContextUserEvent &c) :
+      userEvent(c.userEvent),
+      contextEvent(c.contextEvent), contextEnabled(c.contextEnabled)
+  { }
 
+  TauContextUserEvent & operator=(const TauContextUserEvent &rhs) {
+      userEvent = rhs.userEvent;
+      contextEvent = rhs.contextEvent; 
+      contextEnabled = rhs.contextEnabled;
+      return *this;
+  }
+  
   ~TauContextUserEvent() {
     delete userEvent;
   }
@@ -260,8 +272,46 @@ public:
     contextEnabled = value;
   }
 
+  std::string const & GetUserEventName() const {
+    return userEvent->GetName();
+  }
+  
+  void SetAllEventName(std::string const & value) {
+    userEvent->SetName(value);
+    if (contextEvent != NULL)
+    {
+      int sep_pos = contextEvent->GetName().find(':');
+      if (sep_pos != std::string::npos)
+      {
+        std::string context_portion = contextEvent->GetName().substr(sep_pos, contextEvent->GetName().length()-sep_pos);
+        //form new string
+        //contextEvent = userEvent;
+        std::string new_context = userEvent->GetName();
+        new_context += std::string(" ");
+        new_context += context_portion;
+        contextEvent->SetName(new_context);
+      }
+      else {
+        contextEvent->SetName(value);
+      }
+    }
+
+  }
+
   std::string const & GetName() const {
     return contextEvent->GetName();
+  }
+  
+  void SetName(std::string const & value) {
+    contextEvent->SetName(value);
+  }
+
+  TauUserEvent *getContextUserEvent() {
+    return contextEvent;
+  }
+
+  TauUserEvent *getUserEvent() {
+    return userEvent;
   }
 
   void TriggerEvent(TAU_EVENT_DATATYPE data) {
