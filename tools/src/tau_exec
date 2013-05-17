@@ -342,11 +342,11 @@ if [ $track_cupti = "true" ] ; then
 		cupti_api_driver=`ldd $exe | grep libcuda.so`
 		cupti_api_runtime=`ldd $exe | grep libcudart.so`
 		if [ -z "$TAU_CUPTI_API" ]; then
-			if [ -n "$cupti_api_driver" ]; then 
-					export TAU_CUPTI_API=driver
-			else
-				if [ -n "$cupti_api_runtime" ]; then
+			if [ -n "$cupti_api_runtime" ]; then 
 					export TAU_CUPTI_API=runtime
+			else
+				if [ -n "$cupti_api_driver" ]; then
+					export TAU_CUPTI_API=driver
 				fi
 			fi
 		fi
