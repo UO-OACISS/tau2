@@ -96,6 +96,7 @@ extern "C" void Tau_ompt_task_create(
       parent_frame->exit_runtime_frame, parent_frame->reenter_runtime_frame,
       0);
   #endif
+  TAU_START("OMPT task");
 }
 
 extern "C" void Tau_ompt_task_exit(ompt_data_t *data)
@@ -103,6 +104,7 @@ extern "C" void Tau_ompt_task_exit(ompt_data_t *data)
   #if DEBUG
     PRINTF("##m task exit: data %Ld\n", data->value);
   #endif
+  TAU_STOP("OMPT task");
 }
 
 extern "C" void Tau_ompt_thread_create(ompt_data_t *data)								   
@@ -112,6 +114,7 @@ extern "C" void Tau_ompt_thread_create(ompt_data_t *data)
     data->value = tau_ompt.GetNewThreadId();
     PRINTF("##m thread create: data %Ld\n", data->value);
   #endif
+  //TAU_START("OMPT thread");
 }
 
 extern "C" void Tau_ompt_thread_exit(ompt_data_t *data)								   
@@ -119,6 +122,7 @@ extern "C" void Tau_ompt_thread_exit(ompt_data_t *data)
   #if DEBUG
     PRINTF("##m thread exit: data %Ld\n", data->value);
   #endif
+  //TAU_STOP("OMPT thread");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -129,6 +133,7 @@ extern "C" void Tau_ompt_idle_begin(ompt_data_t *data)
   #if DEBUG
     PRINTF("##b idle begin: data %Ld\n", data->value);
   #endif
+  //TAU_START("OMPT idle");
 }
 
 extern "C" void Tau_ompt_idle_end(ompt_data_t *data)
@@ -136,6 +141,7 @@ extern "C" void Tau_ompt_idle_end(ompt_data_t *data)
   #if DEBUG
     PRINTF("##b idle end: data %Ld\n", data->value);
   #endif
+  //TAU_STOP("OMPT idle");
 }
 
 extern "C" void Tau_ompt_wait_barrier_begin(ompt_data_t *data, ompt_parallel_id_t parallel_id)
@@ -159,6 +165,7 @@ extern "C" void Tau_ompt_wait_taskwait_begin(ompt_data_t *data, ompt_parallel_id
   #if DEBUG
     PRINTF("##b wait taskwait begin: id %Ld, data %Ld\n", parallel_id, data->value);
   #endif
+  TAU_START("OMPT taskwait");
 }
 
 extern "C" void Tau_ompt_wait_taskwait_end(ompt_data_t *data, ompt_parallel_id_t parallel_id)
@@ -166,6 +173,7 @@ extern "C" void Tau_ompt_wait_taskwait_end(ompt_data_t *data, ompt_parallel_id_t
   #if DEBUG
     PRINTF("##b wait taskwait end: id %Ld, data %Ld\n", parallel_id, data->value);
   #endif
+  TAU_STOP("OMPT taskwait");
 }
 
 extern "C" void Tau_ompt_release_lock(ompt_wait_id_t waitId)
@@ -213,6 +221,7 @@ extern "C" void Tau_ompt_implicit_task_create(ompt_data_t *data, ompt_parallel_i
     data->value = tau_ompt.GetNewTaskId();
     PRINTF("##m implicit task create: id %Ld, data %Ld\n", parallel_id, data->value);
   #endif
+  TAU_START("OMPT implicit task");
 }
 
 extern "C" void Tau_ompt_implicit_task_exit(ompt_data_t *data, ompt_parallel_id_t parallel_id)								   
@@ -220,6 +229,7 @@ extern "C" void Tau_ompt_implicit_task_exit(ompt_data_t *data, ompt_parallel_id_
   #if DEBUG
   PRINTF("##m implicit task exit: id %Ld, data %Ld\n", parallel_id, data->value);
   #endif
+  TAU_STOP("OMPT implicit task");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
