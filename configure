@@ -2853,6 +2853,7 @@ if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
 	  echo "NOTE: Found LOMP include directory $lompinc"
 	  echo "NOTE: Found LOMP lib directory $lomplib"
           omptenabled=yes
+          tauoptions="${tauoptions}-ompt"
 	  fixmakeargs="$fixmakeargs IBMOMPT lompinc=$lompinc lomplib=$lomplib"
         else
           echo "NOTE: Did not find lomp/omp.h or lib64/libxllomp.a in the xlsmp subdirectory. Not enabling OMPT support for IBM compilers."
