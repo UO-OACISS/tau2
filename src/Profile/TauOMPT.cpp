@@ -60,6 +60,7 @@ extern "C" void Tau_ompt_parallel_create(
       parent_frame->exit_runtime_frame, parent_frame->reenter_runtime_frame,
       0);
   #endif
+  TAU_START("OMPT parallel");
 
 }
 
@@ -76,6 +77,7 @@ extern "C" void Tau_ompt_parallel_exit(
       parent_frame->exit_runtime_frame, parent_frame->reenter_runtime_frame,
       0);
   #endif
+  TAU_STOP("OMPT parallel");
 }
 
 extern "C" void Tau_ompt_task_create(
@@ -141,6 +143,7 @@ extern "C" void Tau_ompt_wait_barrier_begin(ompt_data_t *data, ompt_parallel_id_
   #if DEBUG
     PRINTF("##b wait barrier begin: id %Ld, data %Ld\n", parallel_id, data->value);
   #endif
+  TAU_START("OMPT barrier");
 }
 
 extern "C" void Tau_ompt_wait_barrier_end(ompt_data_t *data, ompt_parallel_id_t parallel_id)
@@ -148,6 +151,7 @@ extern "C" void Tau_ompt_wait_barrier_end(ompt_data_t *data, ompt_parallel_id_t 
   #if DEBUG
     PRINTF("##b wait barrier end: id %Ld, data %Ld\n", parallel_id, data->value);
   #endif
+  TAU_STOP("OMPT barrier");
 }
 
 extern "C" void Tau_ompt_wait_taskwait_begin(ompt_data_t *data, ompt_parallel_id_t parallel_id)
