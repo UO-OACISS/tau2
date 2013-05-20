@@ -2,6 +2,10 @@
 #define _GNU_SOURCE
 #endif
 
+#ifdef TAU_IBM_OMPT
+#include <lomp/omp.h>
+#endif /* TAU_IBM_OMPT */
+
 #include "omp_collector_api.h"
 #include "omp.h"
 #include <stdlib.h>
@@ -684,7 +688,9 @@ int Tau_get_thread_omp_state(int tid) {
  * relevant information.
  */
 
+#ifndef TAU_IBM_OMPT
 #include <ompt.h>
+#endif /* TAU_IBM_OMPT */
 
 void Tau_ompt_start_timer(const char * state, ompt_parallel_id_t regionid) {
     char * regionIDstr = NULL;
@@ -936,7 +942,9 @@ int ompt_initialize() {
   CHECK(ompt_event_thread_create, my_thread_create, "thread_create");
   CHECK(ompt_event_thread_exit, my_thread_exit, "thread_exit");
   CHECK(ompt_event_control, my_control, "event_control");
+#ifndef TAU_IBM_OMPT
   CHECK(ompt_event_runtime_shutdown, my_shutdown, "runtime_shutdown");
+#endif /* TAU_IBM_OMPT */
 
   /* optional events, "blameshifting" */
   CHECK(ompt_event_idle_begin, my_idle_begin, "idle_begin");
