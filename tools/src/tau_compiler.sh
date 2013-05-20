@@ -24,6 +24,7 @@ declare -i optResetUsed=$FALSE
 declare -i optMemDbg=$FALSE
 declare -i optFujitsu=$FALSE
 
+declare -i cleanUpOpariFileLater=$FALSE
 declare -i optPdtF95ResetSpecified=$FALSE
 
 declare -i isVerbose=$FALSE
@@ -1825,6 +1826,10 @@ if [ $gotoNextStep == $TRUE ]; then
 	    printError "$CMD" "$newCmd"
 	    break
 	    else
+
+            if [ $cleanUpOpariFileLater == $TRUE ]; then
+	      evalWithDebugMessage "/bin/rm -f ${arrFileName[$tempCounter]}" "cleaning opari file after failed PDT stage"
+            fi
 	    echoIfVerbose "Looking for file: $outputFile "
 	    if [ $hasAnOutputFile == $TRUE ]; then
 		if [  ! -e $passedOutputFile ]; then
@@ -2071,7 +2076,10 @@ if [ $needToCleanPdbInstFiles == $TRUE ]; then
 	    fi
 	fi
 	if [ $opari == $TRUE -o $opari2 == $TRUE ]; then
-	    evalWithDebugMessage "/bin/rm -f ${arrFileName[$tempCounter]}" "cleaning opari file"
+            if [ $errorStatus == $FALSE ]; then
+	      evalWithDebugMessage "/bin/rm -f ${arrFileName[$tempCounter]}" "cleaning opari file"
+            fi
+	    cleanUpOpariFileLater=$TRUE
 	fi
 	tempCounter=tempCounter+1
     done

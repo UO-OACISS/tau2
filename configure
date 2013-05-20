@@ -6305,7 +6305,6 @@ void foo() {
 }
 EOF
 $echo "Checking for bfd.h... ${nnl}"
-echo "$c_compiler $orig_useropt -c conftest_bfd.c $bfdinclude"
 if $c_compiler $orig_useropt -c conftest_bfd.c $bfdinclude 1> /dev/null 2>&1 ; then
     if [ "$turnbfdoff" = "yes" ] ; then
       # *CWL* this is for systems where BFD cannot be supported because
@@ -6340,7 +6339,6 @@ $echo "Checking for linking dependencies for libbfd... ${nnl}"
 BFDLIBS="-lbfd"
 
 bfd_worked="no"
-echo "$c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS"
 if $c_compiler $orig_useropt -o conftest_bfd conftest_bfd.c $bfdinclude $bfdlink $BFDLIBS 1> /dev/null 2>&1 ; then
     bfd_worked="yes"
 else
