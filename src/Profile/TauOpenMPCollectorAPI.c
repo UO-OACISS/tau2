@@ -673,3 +673,274 @@ int Tau_get_thread_omp_state(int tid) {
 }
 
 
+/********************************************************
+ * The functions below are for the OMPT 4.0 interface.
+ * ******************************************************/
+
+/* 
+ * This header file implements a dummy tool which will execute all
+ * of the implemented callbacks in the OMPT framework. When a supported
+ * callback function is executed, it will print a message with some
+ * relevant information.
+ */
+
+#include <ompt.h>
+
+void Tau_ompt_start_timer(const char * state, ompt_parallel_id_t regionid) {
+    char * regionIDstr = NULL;
+    regionIDstr = malloc(32);
+	if (regionid > 0)
+      sprintf(regionIDstr, "OpenMP_%s %llx", state, regionid);
+	else
+      sprintf(regionIDstr, "OpenMP_%s", state);
+    Tau_pure_start_task(regionIDstr, Tau_get_tid());
+    free(regionIDstr);
+}
+
+void Tau_ompt_stop_timer(const char * state, ompt_parallel_id_t regionid) {
+    char * regionIDstr = NULL;
+    regionIDstr = malloc(32);
+    sprintf(regionIDstr, "OpenMP_%s %llx", state, regionid);
+    Tau_pure_stop_task(regionIDstr, Tau_get_tid());
+    free(regionIDstr);
+}
+
+#define TAU_OMPT_COMMON_ENTRY \
+    /* Never process anything internal to TAU */ \
+    if (Tau_global_get_insideTAU() > 0) { \
+        return; \
+    } \
+    Tau_global_incr_insideTAU(); \
+	int tid = Tau_get_tid(); \
+
+#define TAU_OMPT_COMMON_EXIT \
+    Tau_global_decr_insideTAU(); \
+
+
+/* Entering a parallel region */
+void my_parallel_region_create (
+  ompt_data_t  *parent_task_data,   /* tool data for parent task   */
+  ompt_frame_t *parent_task_frame,  /* frame data of parent task   */
+  ompt_parallel_id_t parallel_id)   /* id of parallel region       */
+{
+  TAU_OMPT_COMMON_ENTRY;
+  //TAU_VERBOSE("OpenMP Parallel Region Create: %llx\n", parallel_id); fflush(stdout);
+  //Tau_omp_start_timer("PARALLEL_REGION", tid, 1);
+  Tau_ompt_start_timer("PARALLEL_REGION", parallel_id);
+  Tau_collector_flags[tid].parallel++;
+  TAU_OMPT_COMMON_EXIT;
+}
+
+/* Exiting a parallel region */
+void my_parallel_region_exit (
+  ompt_data_t  *parent_task_data,   /* tool data for parent task   */
+  ompt_frame_t *parent_task_frame,  /* frame data of parent task   */
+  ompt_parallel_id_t parallel_id)   /* id of parallel region       */
+{
+  TAU_OMPT_COMMON_ENTRY;
+  //TAU_VERBOSE("OpenMP Parallel Region Exit: %llx\n", parallel_id); fflush(stdout);
+  if (Tau_collector_flags[tid].parallel>0) {
+    //Tau_omp_stop_timer("PARALLEL_REGION", tid, 1);
+    Tau_ompt_stop_timer("PARALLEL_REGION", parallel_id);
+    Tau_collector_flags[tid].parallel--;
+  }
+  TAU_OMPT_COMMON_EXIT;
+}
+
+/* Task creation */
+void my_task_create (
+  ompt_data_t *task_data)            /* tool data for task          */
+{
+  TAU_OMPT_COMMON_ENTRY;
+  //TAU_VERBOSE("OpenMP Task Create: %llx\n", task_data); fflush(stdout);
+  //Tau_omp_start_timer("TASK", tid, 1);
+  Tau_ompt_start_timer("TASK", 0);
+  TAU_OMPT_COMMON_EXIT;
+}
+
+/* Task exit */
+void my_task_exit (
+  ompt_data_t *task_data)            /* tool data for task          */
+{
+  TAU_OMPT_COMMON_ENTRY;
+  //TAU_VERBOSE("OpenMP Task Exit: %llx\n", task_data); fflush(stdout);
+  //Tau_omp_stop_timer("TASK", tid, 1);
+  Tau_ompt_stop_timer("TASK", 0);
+  TAU_OMPT_COMMON_EXIT;
+}
+
+/* Thread creation */
+void my_thread_create(
+  ompt_data_t *thread_data)           /* tool data for thread       */
+{
+  TAU_OMPT_COMMON_ENTRY;
+  //TAU_VERBOSE("OpenMP Thread Create: %llx\n", thread_data); fflush(stdout);
+  //TAU_REGISTER_THREAD();
+  Tau_create_top_level_timer_if_necessary();
+  TAU_OMPT_COMMON_EXIT;
+}
+
+/* Thread exit */
+void my_thread_exit(
+  ompt_data_t *thread_data)           /* tool data for thread       */
+{
+  TAU_OMPT_COMMON_ENTRY;
+  //TAU_VERBOSE("OpenMP Thread Exit: %llx\n", thread_data); fflush(stdout);
+  Tau_stop_top_level_timer_if_necessary();
+  TAU_OMPT_COMMON_EXIT;
+}
+
+/* Some control event happened */
+void my_control(
+  uint64_t command,                /* command of control call      */
+  uint64_t modifier)                /* modifier of control call     */
+{
+  TAU_OMPT_COMMON_ENTRY;
+  TAU_VERBOSE("OpenMP Control: %llx, %llx\n", command, modifier); fflush(stdout);
+  TAU_OMPT_COMMON_EXIT;
+}
+
+/* Shutting down the OpenMP runtime */
+void my_shutdown()
+{
+  TAU_OMPT_COMMON_ENTRY;
+  //TAU_VERBOSE("OpenMP Shutdown.\n"); fflush(stdout);
+  TAU_OMPT_COMMON_EXIT;
+}
+
+/* Wait for atomic lock */
+void my_atomic_wait (
+  ompt_wait_id_t *waitid)            /* address of atomic variable          */
+{
+  TAU_OMPT_COMMON_ENTRY;
+  TAU_VERBOSE("OpenMP Atomic Wait: %llx\n", waitid); fflush(stdout);
+  TAU_OMPT_COMMON_EXIT;
+}
+
+/* Acquired atomic lock */
+void my_atomic_acquired (
+  ompt_wait_id_t *waitid)            /* address of atomic variable          */
+{
+  TAU_OMPT_COMMON_ENTRY;
+  TAU_VERBOSE("OpenMP Atomic Acquired: %llx\n", waitid); fflush(stdout);
+  TAU_OMPT_COMMON_EXIT;
+}
+
+/* Released atomic lock */
+void my_atomic_released (
+  ompt_wait_id_t *waitid)            /* address of atomic variable          */
+{
+  TAU_OMPT_COMMON_ENTRY;
+  TAU_VERBOSE("OpenMP Atomic Released: %llx\n", waitid); fflush(stdout);
+  TAU_OMPT_COMMON_EXIT;
+}
+
+/* Entering a barrier */
+void my_barrier_begin (
+  ompt_data_t  *parent_task_data,   /* tool data for parent task   */
+  ompt_parallel_id_t parallel_id)   /* id of parallel region       */
+{
+  TAU_OMPT_COMMON_ENTRY;
+  //TAU_VERBOSE("OpenMP Barrier begin: %llx\n", parallel_id); fflush(stdout);
+  //Tau_omp_start_timer("BARRIER", tid, 1);
+  Tau_ompt_start_timer("BARRIER", parallel_id);
+  TAU_OMPT_COMMON_EXIT;
+}
+
+/* Exiting a barrier */
+void my_barrier_end (
+  ompt_data_t  *parent_task_data,   /* tool data for parent task   */
+  ompt_parallel_id_t parallel_id)   /* id of parallel region       */
+{
+  TAU_OMPT_COMMON_ENTRY;
+  //TAU_VERBOSE("OpenMP Barrier end: %llx\n", parallel_id); fflush(stdout);
+  //Tau_omp_stop_timer("BARRIER", tid, 1);
+  Tau_ompt_stop_timer("BARRIER", parallel_id);
+  TAU_OMPT_COMMON_EXIT;
+}
+
+/* Entering a master */
+void my_master_begin (
+  ompt_data_t  *parent_task_data,   /* tool data for parent task   */
+  ompt_parallel_id_t parallel_id)   /* id of parallel region       */
+{
+  TAU_OMPT_COMMON_ENTRY;
+  TAU_VERBOSE("%d: OpenMP Master begin: %llx\n", omp_get_thread_num(), parallel_id); fflush(stdout);
+  TAU_OMPT_COMMON_EXIT;
+}
+
+/* Exiting a master */
+void my_master_end (
+  ompt_data_t  *parent_task_data,   /* tool data for parent task   */
+  ompt_parallel_id_t parallel_id)   /* id of parallel region       */
+{
+  TAU_OMPT_COMMON_ENTRY;
+  TAU_VERBOSE("%d: OpenMP Master end: %llx\n", omp_get_thread_num(), parallel_id); fflush(stdout);
+  TAU_OMPT_COMMON_EXIT;
+}
+
+/* Wait for ordered */
+void my_ordered_wait (
+  ompt_wait_id_t *waitid)            /* address of ordered variable          */
+{
+  TAU_OMPT_COMMON_ENTRY;
+  TAU_VERBOSE("%d: OpenMP Ordered Wait: %llx\n", omp_get_thread_num(), waitid); fflush(stdout);
+  TAU_OMPT_COMMON_EXIT;
+}
+
+/* Acquired ordered lock */
+void my_ordered_acquired (
+  ompt_wait_id_t *waitid)            /* address of ordered variable          */
+{
+  TAU_OMPT_COMMON_ENTRY;
+  TAU_VERBOSE("%d: OpenMP Ordered Acquired: %llx\n", omp_get_thread_num(), waitid); fflush(stdout);
+  TAU_OMPT_COMMON_EXIT;
+}
+
+/* Released ordered lock */
+void my_ordered_released (
+  ompt_wait_id_t *waitid)            /* address of ordered variable          */
+{
+  TAU_OMPT_COMMON_ENTRY;
+  TAU_VERBOSE("%d: OpenMP Ordered Released: %llx\n", omp_get_thread_num(), waitid); fflush(stdout);
+  TAU_OMPT_COMMON_EXIT;
+}
+
+#undef TAU_OMPT_COMMON_ENTRY
+#undef TAU_OMPT_COMMON_EXIT
+
+#define CHECK(RC) \
+  if (RC != 0) { TAU_VERBOSE("Failed to register OMPT callbacks!\n"); return 0; }
+
+int ompt_initialize() {
+  int rc = 0;
+  /* required events */
+  CHECK(ompt_set_callback(ompt_event_parallel_create, my_parallel_region_create));
+  CHECK(ompt_set_callback(ompt_event_parallel_exit, my_parallel_region_exit));
+  CHECK(ompt_set_callback(ompt_event_task_create, my_task_create));
+  CHECK(ompt_set_callback(ompt_event_task_exit, my_task_exit));
+  CHECK(ompt_set_callback(ompt_event_thread_create, my_thread_create));
+  CHECK(ompt_set_callback(ompt_event_thread_exit, my_thread_exit));
+  CHECK(ompt_set_callback(ompt_event_control, my_control));
+  CHECK(ompt_set_callback(ompt_event_runtime_shutdown, my_shutdown));
+  /* optional events */
+  CHECK(ompt_set_callback(ompt_event_wait_atomic, my_atomic_wait));
+  CHECK(ompt_set_callback(ompt_event_acquired_atomic, my_atomic_acquired));
+  CHECK(ompt_set_callback(ompt_event_release_atomic, my_atomic_released));
+  CHECK(ompt_set_callback(ompt_event_barrier_begin, my_barrier_begin));
+  CHECK(ompt_set_callback(ompt_event_barrier_end, my_barrier_end));
+  CHECK(ompt_set_callback(ompt_event_master_begin, my_master_begin));
+  CHECK(ompt_set_callback(ompt_event_master_end, my_master_end));
+  CHECK(ompt_set_callback(ompt_event_wait_ordered, my_ordered_wait));
+  CHECK(ompt_set_callback(ompt_event_acquired_ordered, my_ordered_acquired));
+  CHECK(ompt_set_callback(ompt_event_release_ordered, my_ordered_released));
+  return 1;
+}
+
+/* THESE ARE OTHER WEAK IMPLEMENTATIONS, IN CASE OMPT SUPPORT IS NONEXISTENT */
+
+/* initialization */
+#ifndef TAU_USE_OMPT
+extern __attribute__ (( weak ))
+  int ompt_set_callback(ompt_event_t evid, ompt_callback_t cb) { return -1; };
+#endif
