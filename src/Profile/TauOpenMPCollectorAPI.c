@@ -720,7 +720,7 @@ void Tau_ompt_stop_timer(const char * state, ompt_parallel_id_t regionid) {
     } \
     Tau_global_incr_insideTAU(); \
 	int tid = Tau_get_tid(); \
-    TAU_VERBOSE("%d: %s\n", tid, __func__); \
+    TAU_VERBOSE("%d %d: %s\n", tid, omp_get_thread_num(), __func__); \
 	fflush(stdout);
 
 #define TAU_OMPT_COMMON_EXIT \
@@ -787,9 +787,10 @@ void my_thread_create(ompt_data_t *thread_data) {
 /* Thread exit */
 void my_thread_exit(ompt_data_t *thread_data) {
   if (!Tau_RtsLayer_TheEnableInstrumentation()) return;
-  //TAU_OMPT_COMMON_ENTRY;
-  //Tau_create_top_level_timer_if_necessary();
-  //TAU_OMPT_COMMON_EXIT;
+  //TAU_VERBOSE("%s\n", __func__); fflush(stdout);
+  TAU_OMPT_COMMON_ENTRY;
+  //Tau_stop_top_level_timer_if_necessary();
+  TAU_OMPT_COMMON_EXIT;
 }
 
 /* Some control event happened */
@@ -946,7 +947,9 @@ int ompt_initialize() {
   CHECK(ompt_event_parallel_exit, my_parallel_region_exit, "parallel_exit");
   CHECK(ompt_event_task_create, my_task_create, "task_create");
   CHECK(ompt_event_task_exit, my_task_exit, "task_exit");
+//#ifndef TAU_IBM_OMPT
   CHECK(ompt_event_thread_create, my_thread_create, "thread_create");
+//#endif
   CHECK(ompt_event_thread_exit, my_thread_exit, "thread_exit");
   CHECK(ompt_event_control, my_control, "event_control");
 #ifndef TAU_IBM_OMPT
@@ -954,8 +957,10 @@ int ompt_initialize() {
 #endif /* TAU_IBM_OMPT */
 
   /* optional events, "blameshifting" */
+//#ifndef TAU_IBM_OMPT
   CHECK(ompt_event_idle_begin, my_idle_begin, "idle_begin");
   CHECK(ompt_event_idle_end, my_idle_end, "idle_end");
+//#endif
   //CHECK(ompt_event_wait_barrier_begin, my_wait_barrier_begin, "wait_barrier_begin");
   //CHECK(ompt_event_wait_barrier_end, my_wait_barrier_end, "wait_barrier_end");
   //CHECK(ompt_event_wait_taskwait_begin, my_wait_taskwait_begin, "wait_taskwait_begin");
