@@ -780,15 +780,16 @@ void my_task_exit (ompt_data_t *task_data) {
 /* Thread creation */
 void my_thread_create(ompt_data_t *thread_data) {
   TAU_OMPT_COMMON_ENTRY;
-  Tau_create_top_level_timer_if_necessary();
+  //Tau_create_top_level_timer_if_necessary();
   TAU_OMPT_COMMON_EXIT;
 }
 
 /* Thread exit */
 void my_thread_exit(ompt_data_t *thread_data) {
-  TAU_OMPT_COMMON_ENTRY;
-  Tau_stop_top_level_timer_if_necessary();
-  TAU_OMPT_COMMON_EXIT;
+  if (!Tau_RtsLayer_TheEnableInstrumentation()) return;
+  //TAU_OMPT_COMMON_ENTRY;
+  //Tau_create_top_level_timer_if_necessary();
+  //TAU_OMPT_COMMON_EXIT;
 }
 
 /* Some control event happened */
@@ -801,6 +802,7 @@ void my_control(uint64_t command, uint64_t modifier) {
 
 /* Shutting down the OpenMP runtime */
 void my_shutdown() {
+  if (!Tau_RtsLayer_TheEnableInstrumentation()) return;
   TAU_OMPT_COMMON_ENTRY;
   TAU_VERBOSE("OpenMP Shutdown.\n"); fflush(stdout);
   Tau_profile_exit_all_tasks();
@@ -852,14 +854,14 @@ TAU_OMPT_WAIT_ACQUIRE_RELEASE(my_wait_lock,my_acquired_lock,my_release_lock,"LOC
 void BEGIN_FUNCTION (ompt_data_t  *parent_task_data, ompt_parallel_id_t parallel_id) { \
   TAU_OMPT_COMMON_ENTRY; \
   /*Tau_ompt_start_timer(NAME, parallel_id); */ \
-  Tau_omp_start_timer(NAME, tid, 1); \
+  Tau_omp_start_timer(NAME, tid, 0); \
   TAU_OMPT_COMMON_EXIT; \
 } \
 \
 void END_FUNCTION (ompt_data_t  *parent_task_data, ompt_parallel_id_t parallel_id) { \
   TAU_OMPT_COMMON_ENTRY; \
   /*Tau_ompt_stop_timer(NAME, parallel_id); */ \
-  Tau_omp_stop_timer(NAME, tid, 1); \
+  Tau_omp_stop_timer(NAME, tid, 0); \
   TAU_OMPT_COMMON_EXIT; \
 }
 
@@ -883,10 +885,12 @@ TAU_OMPT_SIMPLE_BEGIN_AND_END(my_wait_taskgroup_begin,my_wait_taskgroup_end,"WAI
 
 /* Thread end idle */
 void my_idle_end(ompt_data_t *thread_data) {
+  if (!Tau_RtsLayer_TheEnableInstrumentation()) return;
   TAU_OMPT_COMMON_ENTRY;
   Tau_omp_stop_timer("IDLE", tid, 0);
   // if this thread is not the master of a team, then assume this 
   // thread is entering a new parallel region
+#if 0
   if (Tau_collector_flags[tid].parallel==0) {
     if (Tau_collector_flags[tid].activeTimerContext != NULL) {
         free(Tau_collector_flags[tid].activeTimerContext);
@@ -901,6 +905,7 @@ void my_idle_end(ompt_data_t *thread_data) {
     Tau_collector_flags[tid].busy = 1;
     Tau_collector_flags[tid].idle = 0;
   }
+#endif
   TAU_OMPT_COMMON_EXIT;
 }
 
@@ -909,6 +914,7 @@ void my_idle_begin(ompt_data_t *thread_data) {
   TAU_OMPT_COMMON_ENTRY;
   // if this thread is not the master of a team, then assume this 
   // thread is exiting a parallel region
+#if 0
   if (Tau_collector_flags[tid].parallel==0) {
     if (Tau_collector_flags[tid].idle == 1 && 
         Tau_collector_flags[tid].busy == 0) {
@@ -920,6 +926,7 @@ void my_idle_begin(ompt_data_t *thread_data) {
     }
     Tau_collector_flags[tid].idle = 1;
   }
+#endif
   Tau_omp_start_timer("IDLE", tid, 0);
   TAU_OMPT_COMMON_EXIT;
 }
