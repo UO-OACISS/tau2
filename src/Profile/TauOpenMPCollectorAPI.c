@@ -957,10 +957,10 @@ int ompt_initialize() {
 #endif /* TAU_IBM_OMPT */
 
   /* optional events, "blameshifting" */
-//#ifndef TAU_IBM_OMPT
+#ifndef TAU_IBM_OMPT
   CHECK(ompt_event_idle_begin, my_idle_begin, "idle_begin");
   CHECK(ompt_event_idle_end, my_idle_end, "idle_end");
-//#endif
+#endif
   //CHECK(ompt_event_wait_barrier_begin, my_wait_barrier_begin, "wait_barrier_begin");
   //CHECK(ompt_event_wait_barrier_end, my_wait_barrier_end, "wait_barrier_end");
   //CHECK(ompt_event_wait_taskwait_begin, my_wait_taskwait_begin, "wait_taskwait_begin");
