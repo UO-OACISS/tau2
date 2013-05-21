@@ -935,11 +935,15 @@ void my_idle_begin(ompt_data_t *thread_data) {
 #undef TAU_OMPT_COMMON_ENTRY
 #undef TAU_OMPT_COMMON_EXIT
 
+#ifdef TAU_IBM_OMPT
+#define CHECK(EVENT,FUNCTION,NAME) ompt_set_callback(EVENT, FUNCTION)
+#else 
 #define CHECK(EVENT,FUNCTION,NAME) \
   if (ompt_set_callback(EVENT, FUNCTION) != 0) { \
     fprintf(stderr,"Failed to register OMPT callback %s!\n",NAME); \
 	fflush(stderr); \
   }
+#endif /* TAU_IBM_OMPT */
 
 int ompt_initialize() {
   /* required events */
