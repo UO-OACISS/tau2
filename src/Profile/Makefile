@@ -898,8 +898,8 @@ jVMTIThreadLayer.o: JVMTIThreadLayer.cpp
 TauJVMTI.o :	TauJVMTI.cpp TauJVMTI.jar
 	$(CXX) $(CXXFLAGS) -c TauJVMTI.cpp
 
-TauOMPT.o 	: TauOMPT.c $(HDRS)
-	$(CC) $(CFLAGS) $(OPENMPOPTS) -c $(@:.o=.c) $(TAU_DISABLE_SHARED_GOMP)
+TauOMPT.o 	: TauOMPT.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauJVMTI.jar:  TauJVMTI.java
 	rm -f -r classes
