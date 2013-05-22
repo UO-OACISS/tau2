@@ -619,6 +619,7 @@ extern "C"
 CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag,
     char const * childName, char ** newShortName, bool addAddress, bool useLineNumber)
 {
+  int printMessage=0;
   if (strcmp(tag, "UNWIND") == 0) {
     // if we are dealing with callsites, adjust for the fact that the
     //   return address is the next instruction.
@@ -629,10 +630,11 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
   // we are using two caches - one for the location with line numbers,
   // and one without. This is somewhat inefficient(?), but it works.
   CallSiteCacheMap & callSiteCache = TheCallSiteCache();
+#if 0
   if (useLineNumber) {
     callSiteCache = TheCallSiteCacheWithLines();
   }
-
+#endif
   // does the node exist in the cache? if not, look it up
   CallSiteCacheNode * node = callSiteCache[addr];
   if (!node) {
@@ -644,6 +646,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
       callSiteCache[addr] = node;
     }
     RtsLayer::UnLockDB();
+    printMessage=1;
   }
 
   char buff[4096];
@@ -664,6 +667,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
       sprintf(lineno, "%d", resolvedInfo.lineno);
       *newShortName = (char*)malloc(strlen(resolvedInfo.funcname) + strlen(lineno) + 2);
       sprintf(*newShortName, "%s.%d", resolvedInfo.funcname, resolvedInfo.lineno);
+#if 0
     } else {
       if (childName) {
         sprintf(buff, "[%s] %s [@] %s [{%s}]",
@@ -674,6 +678,7 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
       }
       // TODO: Leak?
       *newShortName = strdup(resolvedInfo.funcname);
+#endif
     }
   } else {
     char const * mapName = "UNKNOWN";
@@ -706,7 +711,8 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
 
   // TODO: Leak?
   callsite->name = strdup(buff);
-  TAU_VERBOSE("Name %s, Address %p resolved to %s\n", *newShortName, (void*)addr, buff);
+  // only print this for new addresses
+  if (printMessage==1) TAU_VERBOSE("Name %s, Address %p resolved to %s\n", *newShortName, (void*)addr, buff);
   return callsite;
 }
 
