@@ -58,6 +58,16 @@ static struct Tau_collector_status_flags Tau_collector_flags[TAU_MAX_THREADS] __
 static struct Tau_collector_status_flags Tau_collector_flags[TAU_MAX_THREADS] = {0};
 #endif
 
+static omp_lock_t writelock;
+
+int Tau_collector_enabled = 0;
+
+extern void Tau_disable_collector_api() {
+  omp_set_lock(&writelock);
+  Tau_collector_enabled = 0;
+  omp_unset_lock(&writelock);
+}
+
 extern void Tau_fill_header(void *message, int sz, OMP_COLLECTORAPI_REQUEST rq, OMP_COLLECTORAPI_EC ec, int rsz, int append_zero);
 
 static char* __UNKNOWN__ = "UNKNOWN";
@@ -235,7 +245,7 @@ void Tau_get_current_region_context(int tid) {
         Tau_collector_flags[tid].activeTimerContext = malloc(strlen(Tau_collector_flags[tid].timerContext)+1);
         strcpy(Tau_collector_flags[tid].activeTimerContext, Tau_collector_flags[tid].timerContext);
     }
-    //TAU_VERBOSE("%d starting: %s\n", tid, regionIDstr); fflush(stdout);
+    //TAU_VERBOSE("\t\t\t%d starting: %s\n", tid, regionIDstr); fflush(stdout);
     Tau_pure_start_task(regionIDstr, tid);
     free(regionIDstr);
 }
@@ -254,12 +264,23 @@ void Tau_get_current_region_context(int tid) {
         //sprintf(regionIDstr, "%s : OpenMP %s", Tau_collector_flags[tid].activeTimerContext, state);
         sprintf(regionIDstr, "OpenMP_%s: %s", state, Tau_collector_flags[tid].activeTimerContext);
     }
-    //TAU_VERBOSE("%d stopping: %s\n", tid, regionIDstr); fflush(stdout);
-    Tau_pure_stop_task(regionIDstr, tid);
+    //TAU_VERBOSE("\t\t\t%d stopping: %s\n", tid, regionIDstr); fflush(stdout);
+    omp_set_lock(&writelock);
+    if (Tau_collector_enabled) {
+      Tau_pure_stop_task(regionIDstr, tid);
+    }
+    omp_unset_lock(&writelock);
     free(regionIDstr);
 }
 
 void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
+    // THIS is here in case the very last statement in the
+    // program is a parallel region - the worker threads
+    // may exit AFTER thread 0 has exited, which triggered
+    // the worker threads to stop all timers and dump.
+    if (!Tau_collector_enabled || 
+        !Tau_RtsLayer_TheEnableInstrumentation()) return;
+
     /* Never process anything internal to TAU */
     if (Tau_global_get_insideTAU() > 0) {
         return;
@@ -515,6 +536,8 @@ int Tau_initialize_collector_api(void) {
     if (initialized || initializing) return 0;
     initializing = true;
 
+    omp_init_lock(&writelock);
+
 #if TAU_DISABLE_SHARED
     *(void **) (&Tau_collector_api) = __omp_collector_api;
 #else
@@ -635,6 +658,7 @@ int Tau_initialize_collector_api(void) {
     Tau_create_thread_state_if_necessary("OMP ATOMIC WAIT");
 #endif
 
+    Tau_collector_enabled = 1;
     initializing = false;
     return 0;
 }
