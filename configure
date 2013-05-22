@@ -6701,9 +6701,13 @@ if [ $openmp = yes ] ; then
   if [ $c_compiler = gcc ] ; then
 # GOMP wrapping is not compatible with Opari.
     if [ $opari = no ] ; then
-	  if [ $opari2 = no ] ; then
+	  if [ $opari1 = no ] ; then
         fixmakeargs="$fixmakeargs GOMP_AVAILABLE ptdir=$ptdir"
+	  else
+	    echo "NOT using GOMP wrapper (Opari1)"
       fi
+	else
+	  echo "NOT using GOMP wrapper (Opari2)"
     fi
   fi
 fi
