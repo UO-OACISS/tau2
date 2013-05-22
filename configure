@@ -6695,9 +6695,16 @@ if [ $pthread = yes ] ; then
     tauoptions="${tauoptions}-pthread"
 fi
 
+# GOMP wrapping is only available for openmp
 if [ $openmp = yes ] ; then
+# GOMP wrapping is only available for GCC
   if [ $c_compiler = gcc ] ; then
-    fixmakeargs="$fixmakeargs GOMP_AVAILABLE ptdir=$ptdir"
+# GOMP wrapping is not compatible with Opari.
+    if [ $opari = no ] ; then
+	  if [ $opari2 = no ] ; then
+        fixmakeargs="$fixmakeargs GOMP_AVAILABLE ptdir=$ptdir"
+      fi
+    fi
   fi
 fi
 
