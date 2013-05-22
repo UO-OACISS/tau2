@@ -156,6 +156,7 @@ private:
 
 extern "C" int Tau_RtsLayer_getTid();
 extern "C" int Tau_RtsLayer_createThread();
+extern "C" int Tau_RtsLayer_TheEnableInstrumentation();
 
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************

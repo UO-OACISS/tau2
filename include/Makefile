@@ -126,6 +126,8 @@ TAU_MPI_NOWRAP_FLIB=
 TAU_GASNET_DIR=
 FULL_CXX=
 FULL_CC=
+LOMPINC=
+LOMPLIB=
 #MPC#TAU_CC_FE=$(FULL_CC)#ENDIF#
 #MPC#CONFIG_CC=$(FULL_CC)#ENDIF#
 #MPC#TAU_CXX_FE=$(FULL_CXX)#ENDIF#
@@ -213,6 +215,8 @@ TAU_RUN_CC = $(FULL_CC) $(ABI) $(ISA)
 #BUPC#TAU_RUN_CC = $(TAU_UPCC) #ENDIF#
 #GUPC#TAU_RUN_CC = $(TAU_UPCC) #ENDIF#
 TAU_RUN_CXX = $(FULL_CXX) $(ABI) $(ISA)
+#IBMOMPT#TAU_RUN_CXX = CXX=$(EXTRADIRCXX)/bin/bgxlc++_r $(FULL_CXX) $(ABI) $(ISA) #ENDIF#
+#IBMOMPT#TAU_RUN_CC = CC=$(EXTRADIRCXX)/bin/bgxlc_r $(FULL_CC) $(ABI) $(ISA) #ENDIF#
 #MPC#TAU_RUN_CXX = mpc_cxx #ENDIF#
 TAU_INSTALL = /bin/cp
 TAU_SHELL = /bin/sh
@@ -243,6 +247,8 @@ JDKARCH                 = linux
 # OpenMP extra libraries for collector API
 #############################################
 #OPENMP#TAU_LINKER_OPT19=-ldl#ENDIF#
+
+#IBMOMPT#TAU_LINKER_OPT20=-L$(LOMPLIB) -lxllomp #ENDIF#
 
 #############################################
 # Opari OBJECTS
@@ -301,6 +307,7 @@ TAU_OPENMP_OPTION =
 #BGP#TAU_F90         = /bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #BGP_GFORTRAN#TAU_F90         = mpif90    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #BGQ#TAU_F90         = /bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
+#IBMOMPT#TAU_F90         = F77=$(EXTRADIR)/bin/bgxlf90_r /bgsys/drivers/ppcfloor/comm/xl/bin/mpixlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #BGQ_GFORTRAN#TAU_F90         = /bgsys/drivers/ppcfloor/comm/gcc/bin/mpif90    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #BGL#TAU_F90         = blrts_xlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
 #IBM64_FORTRAN#TAU_F90       = xlf90$(TAU_R)    $(F90_ABI) $(TAU_F90_OPT)   #ENDIF#
@@ -1016,6 +1023,10 @@ EBS_CLOCK_RES=
 
 #TAU_OPENMP_NESTED#PROFILEOPT92=-DTAU_OPENMP_NESTED#ENDIF#
 
+#IBMOMPT#PROFILEOPT93=-DTAU_IBM_OMPT -I$(LOMPINC) -qdebug=lompinterface #ENDIF#
+#IBMOMPT#TAU_OMPT_O=TauOMPT.o #ENDIF#
+
+
 PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT5)  $(PROFILEOPT6)  $(PROFILEOPT7)  $(PROFILEOPT8)  \
 	      $(PROFILEOPT9)  $(PROFILEOPT10) $(PROFILEOPT11) $(PROFILEOPT12) \
@@ -1039,7 +1050,7 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT81) $(PROFILEOPT82) $(PROFILEOPT83) $(PROFILEOPT84) \
               $(PROFILEOPT85) $(PROFILEOPT86) $(PROFILEOPT87) $(PROFILEOPT88)\
               $(PROFILEOPT89) $(PROFILEOPT90) $(PROFILEOPT91) $(PROFILEOPT92) \
-							$(TRACEOPT)
+		$(PROFILEOPT93) $(TRACEOPT)
 
 
 ##############################################
@@ -1086,7 +1097,7 @@ TAU_LINKER_OPTS = $(TAU_LINKER_OPT1) $(TAU_LINKER_OPT2) $(TAU_LINKER_OPT3) \
 		  $(TAU_LINKER_OPT13) $(PERFSUITELINK) $(VAMPIRTRACELIBS) $(SCOREPLIBS) $(HPCTOOLKIT_LINK) \
 		  $(TAU_LINKER_OPT14) $(TAU_LINKER_OPT15) $(TAU_LINKER_OPT16) \
                   $(TAU_LINKER_OPT17) $(TAU_LINKER_OPT18) $(TAU_LINKER_OPT19) \
-                  $(TAU_CUDA_LINKER_OPTS)
+                  $(TAU_LINKER_OPT20) $(TAU_CUDA_LINKER_OPTS)
 
 ##############################################
 
