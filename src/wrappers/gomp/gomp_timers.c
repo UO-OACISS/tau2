@@ -19,6 +19,15 @@
 { }
 #endif
 
+#if 0
+#define TAU_TIMER_START_ENABLED(NAME,TID) Tau_pure_start_task(NAME,TID)
+#define TAU_TIMER_STOP_ENABLED(NAME,TID)  TAU_TIMER_STOP_ENABLED(NAME,TID)
+#else
+#define TAU_TIMER_START_ENABLED(NAME,TID)
+#define TAU_TIMER_STOP_ENABLED(NAME,TID)
+#endif
+
+
 extern int Tau_global_get_insideTAU();
 
 struct Tau_gomp_wrapper_status_flags {
@@ -75,9 +84,9 @@ void Tau_gomp_parallel_start_proxy(void * a2) {
     TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(a2);
 
     __ompc_event_callback(OMP_EVENT_THR_END_IDLE);
-    //Tau_pure_start_task(proxy->name, Tau_get_tid()); 
+    //TAU_TIMER_START_ENABLED(proxy->name, Tau_get_tid()); 
     (proxy->a1)(proxy->a2);
-    //Tau_pure_stop_task(proxy->name, Tau_get_tid()); 
+    //TAU_TIMER_STOP_ENABLED(proxy->name, Tau_get_tid()); 
     __ompc_event_callback(OMP_EVENT_THR_BEGIN_IDLE);
 }
 
@@ -88,9 +97,9 @@ void Tau_gomp_task_proxy(void * a2) {
     TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(a2);
 
     //__ompc_event_callback(OMP_EVENT_THR_END_IDLE);
-    //if(proxy->name != NULL) Tau_pure_start_task(proxy->name, Tau_get_tid()); 
+    //if(proxy->name != NULL) TAU_TIMER_START_ENABLED(proxy->name, Tau_get_tid()); 
     (proxy->a1)(proxy->a2);
-    //if(proxy->name != NULL) Tau_pure_stop_task(proxy->name, Tau_get_tid()); 
+    //if(proxy->name != NULL) TAU_TIMER_STOP_ENABLED(proxy->name, Tau_get_tid()); 
     //__ompc_event_callback(OMP_EVENT_THR_BEGIN_IDLE);
 }
 
@@ -103,13 +112,13 @@ void  tau_GOMP_barrier(GOMP_barrier_p GOMP_barrier_h)  {
 
     if (Tau_global_get_insideTAU() == 0) { 
         __ompc_event_callback(OMP_EVENT_THR_BEGIN_EBAR);
-        Tau_pure_start_task("GOMP_barrier", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_barrier", Tau_get_tid()); 
     }
 
     (*GOMP_barrier_h)();
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_barrier", Tau_get_tid()); 
+        TAU_TIMER_STOP_ENABLED("GOMP_barrier", Tau_get_tid()); 
         __ompc_event_callback(OMP_EVENT_THR_END_EBAR);
     }
 }
@@ -122,13 +131,13 @@ void  tau_GOMP_critical_start(GOMP_critical_start_p GOMP_critical_start_h)  {
     DEBUGPRINT("GOMP_critical_start %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_start_task("GOMP_critical_start", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_critical_start", Tau_get_tid()); 
     }
 
     (*GOMP_critical_start_h)();
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_critical_start", Tau_get_tid());
+        TAU_TIMER_STOP_ENABLED("GOMP_critical_start", Tau_get_tid());
         __ompc_event_callback(OMP_EVENT_THR_BEGIN_CTWT);
     }
 }
@@ -143,13 +152,13 @@ void  tau_GOMP_critical_end(GOMP_critical_end_p GOMP_critical_end_h)  {
 
     if (Tau_global_get_insideTAU() == 0) { 
         __ompc_event_callback(OMP_EVENT_THR_END_CTWT);
-        Tau_pure_start_task("GOMP_critical_end", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_critical_end", Tau_get_tid()); 
     }
 
     (*GOMP_critical_end_h)();
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_critical_end", Tau_get_tid());
+        TAU_TIMER_STOP_ENABLED("GOMP_critical_end", Tau_get_tid());
     }
 }
 
@@ -162,13 +171,13 @@ void  tau_GOMP_critical_name_start(GOMP_critical_name_start_p GOMP_critical_name
     DEBUGPRINT("GOMP_critical_name_start %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_start_task("GOMP_critical_name_start", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_critical_name_start", Tau_get_tid()); 
     } else { DEBUGPRINT("not measuring TAU\n"); }
 
     (*GOMP_critical_name_start_h)( a1);
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_critical_name_start", Tau_get_tid()); 
+        TAU_TIMER_STOP_ENABLED("GOMP_critical_name_start", Tau_get_tid()); 
         __ompc_event_callback(OMP_EVENT_THR_BEGIN_CTWT);
     }
 
@@ -185,13 +194,13 @@ void  tau_GOMP_critical_name_end(GOMP_critical_name_end_p GOMP_critical_name_end
 
     if (Tau_global_get_insideTAU() == 0) { 
         __ompc_event_callback(OMP_EVENT_THR_END_CTWT);
-        Tau_pure_start_task("GOMP_critical_name_end", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_critical_name_end", Tau_get_tid()); 
     } else { DEBUGPRINT("not measuring TAU\n"); }
 
     (*GOMP_critical_name_end_h)( a1);
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_critical_name_end", Tau_get_tid());
+        TAU_TIMER_STOP_ENABLED("GOMP_critical_name_end", Tau_get_tid());
     }
 
 }
@@ -206,13 +215,13 @@ void  tau_GOMP_atomic_start(GOMP_atomic_start_p GOMP_atomic_start_h)  {
     DEBUGPRINT("GOMP_atomic_start %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) {
-        Tau_pure_start_task("GOMP_atomic_start", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_atomic_start", Tau_get_tid()); 
     }
 
     (*GOMP_atomic_start_h)();
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_atomic_start", Tau_get_tid());
+        TAU_TIMER_STOP_ENABLED("GOMP_atomic_start", Tau_get_tid());
         __ompc_event_callback(OMP_EVENT_THR_BEGIN_ATWT);
     }
 
@@ -228,13 +237,13 @@ void  tau_GOMP_atomic_end(GOMP_atomic_end_p GOMP_atomic_end_h)  {
     DEBUGPRINT("GOMP_atomic_end %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_start_task("GOMP_atomic_end", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_atomic_end", Tau_get_tid()); 
     }
 
     (*GOMP_atomic_end_h)();
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_atomic_end", Tau_get_tid());
+        TAU_TIMER_STOP_ENABLED("GOMP_atomic_end", Tau_get_tid());
         __ompc_event_callback(OMP_EVENT_THR_END_ATWT);
     }
 
@@ -251,13 +260,13 @@ bool  tau_GOMP_loop_static_start(GOMP_loop_static_start_p GOMP_loop_static_start
     DEBUGPRINT("GOMP_loop_static_start %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_start_task("GOMP_loop_static_start", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_loop_static_start", Tau_get_tid()); 
     }
 
     retval  =  (*GOMP_loop_static_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_loop_static_start", Tau_get_tid()); 
+        TAU_TIMER_STOP_ENABLED("GOMP_loop_static_start", Tau_get_tid()); 
     }
     return retval;
 
@@ -274,13 +283,13 @@ bool tau_GOMP_loop_dynamic_start(GOMP_loop_dynamic_start_p GOMP_loop_dynamic_sta
     DEBUGPRINT("GOMP_loop_dynamic_start %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_start_task("GOMP_loop_dynamic_start", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_loop_dynamic_start", Tau_get_tid()); 
     }
 
     retval  =  (*GOMP_loop_dynamic_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_loop_dynamic_start", Tau_get_tid()); 
+        TAU_TIMER_STOP_ENABLED("GOMP_loop_dynamic_start", Tau_get_tid()); 
     }
     return retval;
 
@@ -297,13 +306,13 @@ bool tau_GOMP_loop_guided_start(GOMP_loop_guided_start_p GOMP_loop_guided_start_
     DEBUGPRINT("GOMP_loop_guided_start %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_start_task("GOMP_loop_guided_start", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_loop_guided_start", Tau_get_tid()); 
     }
 
     retval  =  (*GOMP_loop_guided_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_loop_guided_start", Tau_get_tid()); 
+        TAU_TIMER_STOP_ENABLED("GOMP_loop_guided_start", Tau_get_tid()); 
     }
 
     return retval;
@@ -321,13 +330,13 @@ bool tau_GOMP_loop_runtime_start(GOMP_loop_runtime_start_p GOMP_loop_runtime_sta
     DEBUGPRINT("GOMP_loop_runtime_start %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_start_task("GOMP_loop_runtime_start", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_loop_runtime_start", Tau_get_tid()); 
     }
 
     retval  =  (*GOMP_loop_runtime_start_h)( a1,  a2,  a3,  a4,  a5);
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_loop_runtime_start", Tau_get_tid()); 
+        TAU_TIMER_STOP_ENABLED("GOMP_loop_runtime_start", Tau_get_tid()); 
     }
 
     return retval;
@@ -345,13 +354,13 @@ bool tau_GOMP_loop_ordered_static_start(GOMP_loop_ordered_static_start_p GOMP_lo
     DEBUGPRINT("GOMP_loop_ordered_static_start %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_start_task("GOMP_loop_ordered_static_start", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_loop_ordered_static_start", Tau_get_tid()); 
     }
 
     retval  =  (*GOMP_loop_ordered_static_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_loop_ordered_static_start", Tau_get_tid()); 
+        TAU_TIMER_STOP_ENABLED("GOMP_loop_ordered_static_start", Tau_get_tid()); 
         Tau_gomp_flags[Tau_get_tid()].ordered = 1;
         __ompc_event_callback(OMP_EVENT_THR_BEGIN_ORDERED);
         //__ompc_event_callback(OMP_EVENT_THR_BEGIN_ODWT);
@@ -372,13 +381,13 @@ bool tau_GOMP_loop_ordered_dynamic_start(GOMP_loop_ordered_dynamic_start_p GOMP_
     DEBUGPRINT("GOMP_loop_ordered_dynamic_start %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_start_task("GOMP_loop_ordered_dynamic_start", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_loop_ordered_dynamic_start", Tau_get_tid()); 
     }
 
     retval  =  (*GOMP_loop_ordered_dynamic_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_loop_ordered_dynamic_start", Tau_get_tid()); 
+        TAU_TIMER_STOP_ENABLED("GOMP_loop_ordered_dynamic_start", Tau_get_tid()); 
         Tau_gomp_flags[Tau_get_tid()].ordered = 1;
         __ompc_event_callback(OMP_EVENT_THR_BEGIN_ORDERED);
         //__ompc_event_callback(OMP_EVENT_THR_BEGIN_ODWT);
@@ -398,13 +407,13 @@ bool tau_GOMP_loop_ordered_guided_start(GOMP_loop_ordered_guided_start_p GOMP_lo
     DEBUGPRINT("GOMP_loop_ordered_guided_start %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_start_task("GOMP_loop_ordered_guided_start", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_loop_ordered_guided_start", Tau_get_tid()); 
     }
 
     retval  =  (*GOMP_loop_ordered_guided_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_loop_ordered_guided_start", Tau_get_tid()); 
+        TAU_TIMER_STOP_ENABLED("GOMP_loop_ordered_guided_start", Tau_get_tid()); 
         Tau_gomp_flags[Tau_get_tid()].ordered = 1;
         __ompc_event_callback(OMP_EVENT_THR_BEGIN_ORDERED);
         //__ompc_event_callback(OMP_EVENT_THR_BEGIN_ODWT);
@@ -425,13 +434,13 @@ bool tau_GOMP_loop_ordered_runtime_start(GOMP_loop_ordered_runtime_start_p GOMP_
     DEBUGPRINT("GOMP_loop_ordered_runtime_start %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_start_task("GOMP_loop_ordered_runtime_start", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_loop_ordered_runtime_start", Tau_get_tid()); 
     }
 
     retval  =  (*GOMP_loop_ordered_runtime_start_h)( a1,  a2,  a3,  a4,  a5);
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_loop_ordered_runtime_start", Tau_get_tid()); 
+        TAU_TIMER_STOP_ENABLED("GOMP_loop_ordered_runtime_start", Tau_get_tid()); 
         Tau_gomp_flags[Tau_get_tid()].ordered = 1;
         __ompc_event_callback(OMP_EVENT_THR_BEGIN_ORDERED);
         //__ompc_event_callback(OMP_EVENT_THR_BEGIN_ODWT);
@@ -451,9 +460,9 @@ bool tau_GOMP_loop_static_next(GOMP_loop_static_next_p GOMP_loop_static_next_h, 
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_static_next %d\n", Tau_get_tid());
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task("GOMP_loop_static_next", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_START_ENABLED("GOMP_loop_static_next", Tau_get_tid()); }
     retval  =  (*GOMP_loop_static_next_h)( a1,  a2);
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task("GOMP_loop_static_next", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_STOP_ENABLED("GOMP_loop_static_next", Tau_get_tid()); }
     return retval;
 
 }
@@ -469,13 +478,13 @@ bool tau_GOMP_loop_dynamic_next(GOMP_loop_dynamic_next_p GOMP_loop_dynamic_next_
     DEBUGPRINT("GOMP_loop_dynamic_next %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_start_task("GOMP_loop_dynamic_next", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_loop_dynamic_next", Tau_get_tid()); 
     }
 
     retval  =  (*GOMP_loop_dynamic_next_h)( a1,  a2);
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_loop_dynamic_next", Tau_get_tid()); 
+        TAU_TIMER_STOP_ENABLED("GOMP_loop_dynamic_next", Tau_get_tid()); 
     }
 
     return retval;
@@ -493,13 +502,13 @@ bool tau_GOMP_loop_guided_next(GOMP_loop_guided_next_p GOMP_loop_guided_next_h, 
     DEBUGPRINT("GOMP_loop_guided_next %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_start_task("GOMP_loop_guided_next", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_loop_guided_next", Tau_get_tid()); 
     }
 
     retval  =  (*GOMP_loop_guided_next_h)( a1,  a2);
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_loop_guided_next", Tau_get_tid()); 
+        TAU_TIMER_STOP_ENABLED("GOMP_loop_guided_next", Tau_get_tid()); 
     }
 
     return retval;
@@ -517,13 +526,13 @@ bool tau_GOMP_loop_runtime_next(GOMP_loop_runtime_next_p GOMP_loop_runtime_next_
     DEBUGPRINT("GOMP_loop_runtime_next %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_start_task("GOMP_loop_runtime_next", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_loop_runtime_next", Tau_get_tid()); 
     }
 
     retval  =  (*GOMP_loop_runtime_next_h)( a1,  a2);
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_loop_runtime_next", Tau_get_tid()); 
+        TAU_TIMER_STOP_ENABLED("GOMP_loop_runtime_next", Tau_get_tid()); 
     }
 
     return retval;
@@ -541,13 +550,13 @@ bool tau_GOMP_loop_ordered_static_next(GOMP_loop_ordered_static_next_p GOMP_loop
     DEBUGPRINT("GOMP_loop_ordered_static_next %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_start_task("GOMP_loop_ordered_static_next", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_loop_ordered_static_next", Tau_get_tid()); 
     }
 
     retval  =  (*GOMP_loop_ordered_static_next_h)( a1,  a2);
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_loop_ordered_static_next", Tau_get_tid()); 
+        TAU_TIMER_STOP_ENABLED("GOMP_loop_ordered_static_next", Tau_get_tid()); 
     }
 
     return retval;
@@ -565,13 +574,13 @@ bool tau_GOMP_loop_ordered_dynamic_next(GOMP_loop_ordered_dynamic_next_p GOMP_lo
     DEBUGPRINT("GOMP_loop_ordered_dynamic_next %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_start_task("GOMP_loop_ordered_dynamic_next", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_loop_ordered_dynamic_next", Tau_get_tid()); 
     }
 
     retval  =  (*GOMP_loop_ordered_dynamic_next_h)( a1,  a2);
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_loop_ordered_dynamic_next", Tau_get_tid()); 
+        TAU_TIMER_STOP_ENABLED("GOMP_loop_ordered_dynamic_next", Tau_get_tid()); 
     }
 
     return retval;
@@ -589,13 +598,13 @@ bool tau_GOMP_loop_ordered_guided_next(GOMP_loop_ordered_guided_next_p GOMP_loop
     DEBUGPRINT("GOMP_loop_ordered_guided_next %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_start_task("GOMP_loop_ordered_guided_next", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_loop_ordered_guided_next", Tau_get_tid()); 
     }
 
     retval  =  (*GOMP_loop_ordered_guided_next_h)( a1,  a2);
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_loop_ordered_guided_next", Tau_get_tid()); 
+        TAU_TIMER_STOP_ENABLED("GOMP_loop_ordered_guided_next", Tau_get_tid()); 
     }
 
     return retval;
@@ -613,13 +622,13 @@ bool tau_GOMP_loop_ordered_runtime_next(GOMP_loop_ordered_runtime_next_p GOMP_lo
     DEBUGPRINT("GOMP_loop_ordered_runtime_next %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_start_task("GOMP_loop_ordered_runtime_next", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_loop_ordered_runtime_next", Tau_get_tid()); 
     }
 
     retval  =  (*GOMP_loop_ordered_runtime_next_h)( a1,  a2);
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_loop_ordered_runtime_next", Tau_get_tid()); 
+        TAU_TIMER_STOP_ENABLED("GOMP_loop_ordered_runtime_next", Tau_get_tid()); 
     }
 
     return retval;
@@ -637,7 +646,7 @@ void tau_GOMP_parallel_loop_static_start(GOMP_parallel_loop_static_start_p GOMP_
 
     if (Tau_global_get_insideTAU() == 0) { 
         int tid = Tau_get_tid();
-        Tau_pure_start_task("GOMP_parallel_loop_static_start", tid); 
+        TAU_TIMER_START_ENABLED("GOMP_parallel_loop_static_start", tid); 
 
         /* 
          * Don't actually pass in the work for the parallel region, but a pointer
@@ -653,7 +662,7 @@ void tau_GOMP_parallel_loop_static_start(GOMP_parallel_loop_static_start_p GOMP_
         Tau_gomp_flags[tid].proxy[Tau_gomp_flags[tid].depth] = proxy;
         Tau_gomp_flags[tid].depth = Tau_gomp_flags[tid].depth + 1;
 
-        Tau_pure_stop_task("GOMP_parallel_loop_static_start", tid); 
+        TAU_TIMER_STOP_ENABLED("GOMP_parallel_loop_static_start", tid); 
     } else {
         (*GOMP_parallel_loop_static_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
     }
@@ -671,7 +680,7 @@ void tau_GOMP_parallel_loop_dynamic_start(GOMP_parallel_loop_dynamic_start_p GOM
 
     if (Tau_global_get_insideTAU() == 0) { 
         int tid = Tau_get_tid();
-        Tau_pure_start_task("GOMP_parallel_loop_dynamic_start", tid); 
+        TAU_TIMER_START_ENABLED("GOMP_parallel_loop_dynamic_start", tid); 
 
         /* 
          * Don't actually pass in the work for the parallel region, but a pointer
@@ -687,7 +696,7 @@ void tau_GOMP_parallel_loop_dynamic_start(GOMP_parallel_loop_dynamic_start_p GOM
         Tau_gomp_flags[tid].proxy[Tau_gomp_flags[tid].depth] = proxy;
         Tau_gomp_flags[tid].depth = Tau_gomp_flags[tid].depth + 1;
 
-        Tau_pure_stop_task("GOMP_parallel_loop_dynamic_start", tid); 
+        TAU_TIMER_STOP_ENABLED("GOMP_parallel_loop_dynamic_start", tid); 
     } else {
         (*GOMP_parallel_loop_dynamic_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
     }
@@ -705,7 +714,7 @@ void tau_GOMP_parallel_loop_guided_start(GOMP_parallel_loop_guided_start_p GOMP_
 
     if (Tau_global_get_insideTAU() == 0) { 
         int tid = Tau_get_tid();
-        Tau_pure_start_task("GOMP_parallel_loop_guided_start", tid); 
+        TAU_TIMER_START_ENABLED("GOMP_parallel_loop_guided_start", tid); 
 
         /* 
          * Don't actually pass in the work for the parallel region, but a pointer
@@ -721,7 +730,7 @@ void tau_GOMP_parallel_loop_guided_start(GOMP_parallel_loop_guided_start_p GOMP_
         Tau_gomp_flags[tid].proxy[Tau_gomp_flags[tid].depth] = proxy;
         Tau_gomp_flags[tid].depth = Tau_gomp_flags[tid].depth + 1;
 
-        Tau_pure_stop_task("GOMP_parallel_loop_guided_start", tid); 
+        TAU_TIMER_STOP_ENABLED("GOMP_parallel_loop_guided_start", tid); 
     } else {
         (*GOMP_parallel_loop_guided_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
     }
@@ -739,7 +748,7 @@ void tau_GOMP_parallel_loop_runtime_start(GOMP_parallel_loop_runtime_start_p GOM
 
     if (Tau_global_get_insideTAU() == 0) { 
         int tid = Tau_get_tid();
-        Tau_pure_start_task("GOMP_parallel_loop_runtime_start", tid); 
+        TAU_TIMER_START_ENABLED("GOMP_parallel_loop_runtime_start", tid); 
 
         /* 
          * Don't actually pass in the work for the parallel region, but a pointer
@@ -755,7 +764,7 @@ void tau_GOMP_parallel_loop_runtime_start(GOMP_parallel_loop_runtime_start_p GOM
         Tau_gomp_flags[tid].proxy[Tau_gomp_flags[tid].depth] = proxy;
         Tau_gomp_flags[tid].depth = Tau_gomp_flags[tid].depth + 1;
 
-        Tau_pure_stop_task("GOMP_parallel_loop_runtime_start", tid); 
+        TAU_TIMER_STOP_ENABLED("GOMP_parallel_loop_runtime_start", tid); 
     } else {
         (*GOMP_parallel_loop_runtime_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
     }
@@ -777,13 +786,13 @@ void tau_GOMP_loop_end(GOMP_loop_end_p GOMP_loop_end_h)  {
             __ompc_event_callback(OMP_EVENT_THR_END_ORDERED);
             Tau_gomp_flags[Tau_get_tid()].ordered = 0;
         }
-        Tau_pure_start_task("GOMP_loop_end", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_loop_end", Tau_get_tid()); 
     }
 
     (*GOMP_loop_end_h)();
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_loop_end", Tau_get_tid());
+        TAU_TIMER_STOP_ENABLED("GOMP_loop_end", Tau_get_tid());
     }
 
 }
@@ -803,13 +812,13 @@ void tau_GOMP_loop_end_nowait(GOMP_loop_end_nowait_p GOMP_loop_end_nowait_h)  {
             __ompc_event_callback(OMP_EVENT_THR_END_ORDERED);
             Tau_gomp_flags[Tau_get_tid()].ordered = 0;
         }
-        Tau_pure_start_task("GOMP_loop_end_nowait", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_loop_end_nowait", Tau_get_tid()); 
     }
 
     (*GOMP_loop_end_nowait_h)();
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_loop_end_nowait", Tau_get_tid());
+        TAU_TIMER_STOP_ENABLED("GOMP_loop_end_nowait", Tau_get_tid());
     }
 
 }
@@ -825,13 +834,13 @@ bool tau_GOMP_loop_ull_static_start(GOMP_loop_ull_static_start_p GOMP_loop_ull_s
     DEBUGPRINT("GOMP_loop_ull_static_start %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_start_task("GOMP_loop_ull_static_start", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_loop_ull_static_start", Tau_get_tid()); 
     }
 
     retval  =  (*GOMP_loop_ull_static_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_loop_ull_static_start", Tau_get_tid()); 
+        TAU_TIMER_STOP_ENABLED("GOMP_loop_ull_static_start", Tau_get_tid()); 
     }
     return retval;
 
@@ -848,13 +857,13 @@ bool tau_GOMP_loop_ull_dynamic_start(GOMP_loop_ull_dynamic_start_p GOMP_loop_ull
     DEBUGPRINT("GOMP_loop_ull_dynamic_start %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_start_task("GOMP_loop_ull_dynamic_start", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_loop_ull_dynamic_start", Tau_get_tid()); 
     }
 
     retval  =  (*GOMP_loop_ull_dynamic_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_loop_ull_dynamic_start", Tau_get_tid()); 
+        TAU_TIMER_STOP_ENABLED("GOMP_loop_ull_dynamic_start", Tau_get_tid()); 
     }
 
     return retval;
@@ -872,13 +881,13 @@ bool tau_GOMP_loop_ull_guided_start(GOMP_loop_ull_guided_start_p GOMP_loop_ull_g
     DEBUGPRINT("GOMP_loop_ull_guided_start %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_start_task("GOMP_loop_ull_guided_start", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_loop_ull_guided_start", Tau_get_tid()); 
     }
 
     retval  =  (*GOMP_loop_ull_guided_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_loop_ull_guided_start", Tau_get_tid()); 
+        TAU_TIMER_STOP_ENABLED("GOMP_loop_ull_guided_start", Tau_get_tid()); 
     }
 
     return retval;
@@ -895,11 +904,11 @@ bool tau_GOMP_loop_ull_runtime_start(GOMP_loop_ull_runtime_start_p GOMP_loop_ull
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_runtime_start %d\n", Tau_get_tid());
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task("GOMP_loop_ull_runtime_start", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_START_ENABLED("GOMP_loop_ull_runtime_start", Tau_get_tid()); }
 
     retval  =  (*GOMP_loop_ull_runtime_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task("GOMP_loop_ull_runtime_start", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_STOP_ENABLED("GOMP_loop_ull_runtime_start", Tau_get_tid()); }
 
     return retval;
 
@@ -915,11 +924,11 @@ bool tau_GOMP_loop_ull_ordered_static_start(GOMP_loop_ull_ordered_static_start_p
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_ordered_static_start %d\n", Tau_get_tid());
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task("GOMP_loop_ull_ordered_static_start", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_START_ENABLED("GOMP_loop_ull_ordered_static_start", Tau_get_tid()); }
 
     retval  =  (*GOMP_loop_ull_ordered_static_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task("GOMP_loop_ull_ordered_static_start", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_STOP_ENABLED("GOMP_loop_ull_ordered_static_start", Tau_get_tid()); }
 
     return retval;
 
@@ -935,11 +944,11 @@ bool tau_GOMP_loop_ull_ordered_dynamic_start(GOMP_loop_ull_ordered_dynamic_start
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_ordered_dynamic_start %d\n", Tau_get_tid());
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task("GOMP_loop_ull_ordered_dynamic_start", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_START_ENABLED("GOMP_loop_ull_ordered_dynamic_start", Tau_get_tid()); }
 
     retval  =  (*GOMP_loop_ull_ordered_dynamic_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task("GOMP_loop_ull_ordered_dynamic_start", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_STOP_ENABLED("GOMP_loop_ull_ordered_dynamic_start", Tau_get_tid()); }
 
     return retval;
 
@@ -955,11 +964,11 @@ bool tau_GOMP_loop_ull_ordered_guided_start(GOMP_loop_ull_ordered_guided_start_p
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_ordered_guided_start %d\n", Tau_get_tid());
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task("GOMP_loop_ull_ordered_guided_start", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_START_ENABLED("GOMP_loop_ull_ordered_guided_start", Tau_get_tid()); }
 
     retval  =  (*GOMP_loop_ull_ordered_guided_start_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task("GOMP_loop_ull_ordered_guided_start", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_STOP_ENABLED("GOMP_loop_ull_ordered_guided_start", Tau_get_tid()); }
 
     return retval;
 
@@ -975,11 +984,11 @@ bool tau_GOMP_loop_ull_ordered_runtime_start(GOMP_loop_ull_ordered_runtime_start
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_ordered_runtime_start %d\n", Tau_get_tid());
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task("GOMP_loop_ull_ordered_runtime_start", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_START_ENABLED("GOMP_loop_ull_ordered_runtime_start", Tau_get_tid()); }
 
     retval  =  (*GOMP_loop_ull_ordered_runtime_start_h)( a1,  a2,  a3,  a4,  a5,  a6);
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task("GOMP_loop_ull_ordered_runtime_start", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_STOP_ENABLED("GOMP_loop_ull_ordered_runtime_start", Tau_get_tid()); }
 
     return retval;
 
@@ -995,11 +1004,11 @@ bool tau_GOMP_loop_ull_static_next(GOMP_loop_ull_static_next_p GOMP_loop_ull_sta
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_static_next %d\n", Tau_get_tid());
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task("GOMP_loop_ull_static_next", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_START_ENABLED("GOMP_loop_ull_static_next", Tau_get_tid()); }
 
     retval  =  (*GOMP_loop_ull_static_next_h)( a1,  a2);
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task("GOMP_loop_ull_static_next", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_STOP_ENABLED("GOMP_loop_ull_static_next", Tau_get_tid()); }
 
     return retval;
 
@@ -1015,11 +1024,11 @@ bool tau_GOMP_loop_ull_dynamic_next(GOMP_loop_ull_dynamic_next_p GOMP_loop_ull_d
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_dynamic_next %d\n", Tau_get_tid());
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task("GOMP_loop_ull_dynamic_next", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_START_ENABLED("GOMP_loop_ull_dynamic_next", Tau_get_tid()); }
 
     retval  =  (*GOMP_loop_ull_dynamic_next_h)( a1,  a2);
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task("GOMP_loop_ull_dynamic_next", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_STOP_ENABLED("GOMP_loop_ull_dynamic_next", Tau_get_tid()); }
 
     return retval;
 
@@ -1035,11 +1044,11 @@ bool tau_GOMP_loop_ull_guided_next(GOMP_loop_ull_guided_next_p GOMP_loop_ull_gui
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_guided_next %d\n", Tau_get_tid());
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task("GOMP_loop_ull_guided_next", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_START_ENABLED("GOMP_loop_ull_guided_next", Tau_get_tid()); }
 
     retval  =  (*GOMP_loop_ull_guided_next_h)( a1,  a2);
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task("GOMP_loop_ull_guided_next", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_STOP_ENABLED("GOMP_loop_ull_guided_next", Tau_get_tid()); }
 
     return retval;
 
@@ -1055,11 +1064,11 @@ bool tau_GOMP_loop_ull_runtime_next(GOMP_loop_ull_runtime_next_p GOMP_loop_ull_r
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_runtime_next %d\n", Tau_get_tid());
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task("GOMP_loop_ull_runtime_next", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_START_ENABLED("GOMP_loop_ull_runtime_next", Tau_get_tid()); }
 
     retval  =  (*GOMP_loop_ull_runtime_next_h)( a1,  a2);
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task("GOMP_loop_ull_runtime_next", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_STOP_ENABLED("GOMP_loop_ull_runtime_next", Tau_get_tid()); }
 
     return retval;
 
@@ -1075,11 +1084,11 @@ bool tau_GOMP_loop_ull_ordered_static_next(GOMP_loop_ull_ordered_static_next_p G
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_ordered_static_next %d\n", Tau_get_tid());
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task("GOMP_loop_ull_ordered_static_next", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_START_ENABLED("GOMP_loop_ull_ordered_static_next", Tau_get_tid()); }
 
     retval  =  (*GOMP_loop_ull_ordered_static_next_h)( a1,  a2);
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task("GOMP_loop_ull_ordered_static_next", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_STOP_ENABLED("GOMP_loop_ull_ordered_static_next", Tau_get_tid()); }
 
     return retval;
 
@@ -1095,11 +1104,11 @@ bool tau_GOMP_loop_ull_ordered_dynamic_next(GOMP_loop_ull_ordered_dynamic_next_p
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_ordered_dynamic_next %d\n", Tau_get_tid());
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task("GOMP_loop_ull_ordered_dynamic_next", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_START_ENABLED("GOMP_loop_ull_ordered_dynamic_next", Tau_get_tid()); }
 
     retval  =  (*GOMP_loop_ull_ordered_dynamic_next_h)( a1,  a2);
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task("GOMP_loop_ull_ordered_dynamic_next", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_STOP_ENABLED("GOMP_loop_ull_ordered_dynamic_next", Tau_get_tid()); }
 
     return retval;
 
@@ -1115,11 +1124,11 @@ bool tau_GOMP_loop_ull_ordered_guided_next(GOMP_loop_ull_ordered_guided_next_p G
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_ordered_guided_next %d\n", Tau_get_tid());
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task("GOMP_loop_ull_ordered_guided_next", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_START_ENABLED("GOMP_loop_ull_ordered_guided_next", Tau_get_tid()); }
 
     retval  =  (*GOMP_loop_ull_ordered_guided_next_h)( a1,  a2);
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task("GOMP_loop_ull_ordered_guided_next", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_STOP_ENABLED("GOMP_loop_ull_ordered_guided_next", Tau_get_tid()); }
 
     return retval;
 
@@ -1135,9 +1144,9 @@ bool tau_GOMP_loop_ull_ordered_runtime_next(GOMP_loop_ull_ordered_runtime_next_p
     bool retval = 0;
     DEBUGPRINT("GOMP_loop_ull_ordered_runtime_next %d\n", Tau_get_tid());
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task("GOMP_loop_ull_ordered_runtime_next", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_START_ENABLED("GOMP_loop_ull_ordered_runtime_next", Tau_get_tid()); }
     retval  =  (*GOMP_loop_ull_ordered_runtime_next_h)( a1,  a2);
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task("GOMP_loop_ull_ordered_runtime_next", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_STOP_ENABLED("GOMP_loop_ull_ordered_runtime_next", Tau_get_tid()); }
     return retval;
 
 }
@@ -1154,10 +1163,10 @@ void tau_GOMP_ordered_start(GOMP_ordered_start_p GOMP_ordered_start_h)  {
     if (Tau_global_get_insideTAU() == 0) { 
         // our turn to work in the ordered region!
         //__ompc_event_callback(OMP_EVENT_THR_END_ODWT);
-        Tau_pure_start_task("GOMP_ordered_start", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_ordered_start", Tau_get_tid()); 
     }
     (*GOMP_ordered_start_h)();
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task("GOMP_ordered_start", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_STOP_ENABLED("GOMP_ordered_start", Tau_get_tid()); }
 
 }
 
@@ -1170,10 +1179,10 @@ void tau_GOMP_ordered_end(GOMP_ordered_end_p GOMP_ordered_end_h)  {
 
     DEBUGPRINT("GOMP_ordered_end %d\n", Tau_get_tid());
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task("GOMP_ordered_end", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_START_ENABLED("GOMP_ordered_end", Tau_get_tid()); }
     (*GOMP_ordered_end_h)();
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_ordered_end", Tau_get_tid());
+        TAU_TIMER_STOP_ENABLED("GOMP_ordered_end", Tau_get_tid());
         // wait for those after us to handle the ordered region...
         //__ompc_event_callback(OMP_EVENT_THR_BEGIN_ODWT);
     }
@@ -1204,9 +1213,9 @@ void tau_GOMP_parallel_start(GOMP_parallel_start_p GOMP_parallel_start_h, void (
         Tau_gomp_flags[tid].depth = Tau_gomp_flags[tid].depth + 1;
 
         // time the call
-        Tau_pure_start_task("GOMP_parallel_start", tid); 
+        TAU_TIMER_START_ENABLED("GOMP_parallel_start", tid); 
         (*GOMP_parallel_start_h)( &Tau_gomp_parallel_start_proxy, proxy,  a3);
-        Tau_pure_stop_task("GOMP_parallel_start", tid); 
+        TAU_TIMER_STOP_ENABLED("GOMP_parallel_start", tid); 
 
         DEBUGPRINT("GOMP_parallel_start %d of %d (on exit)\n", Tau_get_tid(), omp_get_num_threads());
     } else {
@@ -1226,9 +1235,9 @@ void tau_GOMP_parallel_end(GOMP_parallel_end_p GOMP_parallel_end_h)  {
 
     if (Tau_global_get_insideTAU() == 0) { 
         int tid = Tau_get_tid();
-        Tau_pure_start_task("GOMP_parallel_end", tid); 
+        TAU_TIMER_START_ENABLED("GOMP_parallel_end", tid); 
         (*GOMP_parallel_end_h)();
-        Tau_pure_stop_task("GOMP_parallel_end", tid); 
+        TAU_TIMER_STOP_ENABLED("GOMP_parallel_end", tid); 
         // do this at the end, so we can join all the threads.
         __ompc_event_callback(OMP_EVENT_JOIN);
         // free the proxy wrapper, and reduce the depth
@@ -1283,22 +1292,22 @@ void tau_GOMP_task(GOMP_task_p GOMP_task_h, void (*a1)(void *), void * a2, void 
         Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
         if (proxy->name != NULL) {
             DEBUGPRINT("GOMP_task %s\n", proxy->name);
-            Tau_pure_start_task("GOMP_task", tid);
+            TAU_TIMER_START_ENABLED("GOMP_task", tid);
             (*GOMP_task_h)( Tau_gomp_task_proxy, proxy,  a3,  a4,  a5,  a6, a7);
-            Tau_pure_stop_task("GOMP_task", tid);
+            TAU_TIMER_STOP_ENABLED("GOMP_task", tid);
         } else {
-            Tau_pure_start_task("GOMP_task", tid);
+            TAU_TIMER_START_ENABLED("GOMP_task", tid);
             __ompc_event_callback(OMP_EVENT_THR_BEGIN_CREATE_TASK);
             (*GOMP_task_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
             __ompc_event_callback(OMP_EVENT_THR_END_CREATE_TASK_IMM);
-            Tau_pure_stop_task("GOMP_task", tid);
+            TAU_TIMER_STOP_ENABLED("GOMP_task", tid);
         }
 #else
         /* just call the task creation, for now */
         __ompc_event_callback(OMP_EVENT_THR_BEGIN_CREATE_TASK);
-        Tau_pure_start_task("GOMP_task", tid);
+        TAU_TIMER_START_ENABLED("GOMP_task", tid);
         (*GOMP_task_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
-        Tau_pure_stop_task("GOMP_task", tid);
+        TAU_TIMER_STOP_ENABLED("GOMP_task", tid);
         __ompc_event_callback(OMP_EVENT_THR_END_CREATE_TASK_IMM);
 #endif
     } else {
@@ -1317,11 +1326,11 @@ void tau_GOMP_taskwait(GOMP_taskwait_p GOMP_taskwait_h)  {
     DEBUGPRINT("GOMP_taskwait %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_start_task("GOMP_taskwait", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_taskwait", Tau_get_tid()); 
     }
     (*GOMP_taskwait_h)();
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_taskwait", Tau_get_tid()); 
+        TAU_TIMER_STOP_ENABLED("GOMP_taskwait", Tau_get_tid()); 
     }
 
 }
@@ -1329,17 +1338,17 @@ void tau_GOMP_taskwait(GOMP_taskwait_p GOMP_taskwait_h)  {
 
 /**********************************************************
   GOMP_taskyield - only exists in gcc 4.7 and greater, and only as a stub
- **********************************************************/
 
 void tau_GOMP_taskyield(GOMP_taskyield_p GOMP_taskyield_h)  {
 
     DEBUGPRINT("GOMP_taskyield %d\n", Tau_get_tid());
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task("GOMP_taskyield", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_START_ENABLED("GOMP_taskyield", Tau_get_tid()); }
     (*GOMP_taskyield_h)();
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task("GOMP_taskyield", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_STOP_ENABLED("GOMP_taskyield", Tau_get_tid()); }
 
 }
+ **********************************************************/
 
 
 /**********************************************************
@@ -1351,9 +1360,9 @@ unsigned int tau_GOMP_sections_start(GOMP_sections_start_p GOMP_sections_start_h
     unsigned int retval = 0;
     DEBUGPRINT("GOMP_sections_start %d\n", Tau_get_tid());
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task("GOMP_sections_start", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_START_ENABLED("GOMP_sections_start", Tau_get_tid()); }
     retval  =  (*GOMP_sections_start_h)( a1);
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task("GOMP_sections_start", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_STOP_ENABLED("GOMP_sections_start", Tau_get_tid()); }
     return retval;
 
 }
@@ -1368,9 +1377,9 @@ unsigned int tau_GOMP_sections_next(GOMP_sections_next_p GOMP_sections_next_h)  
     unsigned int retval = 0;
     DEBUGPRINT("GOMP_sections_next %d\n", Tau_get_tid());
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task("GOMP_sections_next", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_START_ENABLED("GOMP_sections_next", Tau_get_tid()); }
     retval  =  (*GOMP_sections_next_h)();
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task("GOMP_sections_next", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_STOP_ENABLED("GOMP_sections_next", Tau_get_tid()); }
     return retval;
 
 }
@@ -1385,11 +1394,11 @@ void tau_GOMP_parallel_sections_start(GOMP_parallel_sections_start_p GOMP_parall
     DEBUGPRINT("GOMP_parallel_sections_start %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_start_task("GOMP_parallel_sections_start", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_parallel_sections_start", Tau_get_tid()); 
     }
     (*GOMP_parallel_sections_start_h)( a1,  a2,  a3,  a4);
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_parallel_sections_start", Tau_get_tid()); 
+        TAU_TIMER_STOP_ENABLED("GOMP_parallel_sections_start", Tau_get_tid()); 
         // do this AFTER the start, so we know how many threads there are.
         __ompc_event_callback(OMP_EVENT_FORK);
     }
@@ -1405,9 +1414,9 @@ void tau_GOMP_sections_end(GOMP_sections_end_p GOMP_sections_end_h)  {
 
     DEBUGPRINT("GOMP_sections_end %d\n", Tau_get_tid());
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task("GOMP_sections_end", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_START_ENABLED("GOMP_sections_end", Tau_get_tid()); }
     (*GOMP_sections_end_h)();
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task("GOMP_sections_end", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_STOP_ENABLED("GOMP_sections_end", Tau_get_tid()); }
 
 }
 
@@ -1420,9 +1429,9 @@ void tau_GOMP_sections_end_nowait(GOMP_sections_end_nowait_p GOMP_sections_end_n
 
     DEBUGPRINT("GOMP_sections_end_nowait %d\n", Tau_get_tid());
 
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task("GOMP_sections_end_nowait", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_START_ENABLED("GOMP_sections_end_nowait", Tau_get_tid()); }
     (*GOMP_sections_end_nowait_h)();
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task("GOMP_sections_end_nowait", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_STOP_ENABLED("GOMP_sections_end_nowait", Tau_get_tid()); }
 
 }
 
@@ -1439,11 +1448,11 @@ bool tau_GOMP_single_start(GOMP_single_start_p GOMP_single_start_h)  {
     if (Tau_global_get_insideTAU() == 0) { 
         // in this case, the single region is entered and executed
         __ompc_event_callback(OMP_EVENT_THR_BEGIN_SINGLE);
-        Tau_pure_start_task("GOMP_single_start", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_single_start", Tau_get_tid()); 
     }
     retval  =  (*GOMP_single_start_h)();
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_single_start", Tau_get_tid()); 
+        TAU_TIMER_STOP_ENABLED("GOMP_single_start", Tau_get_tid()); 
         // the code is done, so fire the callback end event
         __ompc_event_callback(OMP_EVENT_THR_END_SINGLE);
     }
@@ -1463,12 +1472,12 @@ void * tau_GOMP_single_copy_start(GOMP_single_copy_start_p GOMP_single_copy_star
     DEBUGPRINT("GOMP_single_copy_start %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_start_task("GOMP_single_copy_start", Tau_get_tid()); 
+        TAU_TIMER_START_ENABLED("GOMP_single_copy_start", Tau_get_tid()); 
         __ompc_event_callback(OMP_EVENT_THR_BEGIN_SINGLE);
     }
     retval  =  (*GOMP_single_copy_start_h)();
     if (Tau_global_get_insideTAU() == 0) { 
-        Tau_pure_stop_task("GOMP_single_copy_start", Tau_get_tid()); 
+        TAU_TIMER_STOP_ENABLED("GOMP_single_copy_start", Tau_get_tid()); 
     }
     return retval;
 
@@ -1484,9 +1493,9 @@ void tau_GOMP_single_copy_end(GOMP_single_copy_end_p GOMP_single_copy_end_h, voi
     DEBUGPRINT("GOMP_single_copy_end %d\n", Tau_get_tid());
 
     __ompc_event_callback(OMP_EVENT_THR_END_SINGLE);
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_start_task("GOMP_single_copy_end", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_START_ENABLED("GOMP_single_copy_end", Tau_get_tid()); }
     (*GOMP_single_copy_end_h)( a1);
-    if (Tau_global_get_insideTAU() == 0) { Tau_pure_stop_task("GOMP_single_copy_end", Tau_get_tid()); }
+    if (Tau_global_get_insideTAU() == 0) { TAU_TIMER_STOP_ENABLED("GOMP_single_copy_end", Tau_get_tid()); }
 
 }
 

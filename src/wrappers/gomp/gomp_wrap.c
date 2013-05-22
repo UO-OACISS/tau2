@@ -717,7 +717,6 @@ void  GOMP_taskwait()  {
 
 /**********************************************************
   GOMP_taskyield - only exists in gcc 4.7 and greater, and only as a stub
- **********************************************************/
 
 void  GOMP_taskyield()  {
     static GOMP_taskyield_p GOMP_taskyield_h = NULL;
@@ -726,6 +725,7 @@ void  GOMP_taskyield()  {
     }
     tau_GOMP_taskyield(GOMP_taskyield_h);
 }
+ **********************************************************/
 
 
 
@@ -1094,12 +1094,13 @@ void __wrap_GOMP_taskwait () {
 /* taskyield only exists in 4.7 or greater */
 #ifndef GOMP_taskyield
 void GOMP_taskyield () {};
-#endif
+#else
 
 void __real_GOMP_taskyield ();
 void __wrap_GOMP_taskyield () {
     tau_GOMP_taskyield (__real_GOMP_taskyield);
 }
+#endif
 
 unsigned int __real_GOMP_sections_start (unsigned int);
 unsigned int __wrap_GOMP_sections_start (unsigned int a1) {
