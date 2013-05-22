@@ -140,7 +140,8 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o \
 		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) $(TAU_SAMPLING_O) \
 		TauIoWrap.o TauCompensate.o $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
 		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_CUPTI_COUNTER_OBJS) \
-		$(TAU_WINDOWS_OBJ) $(TAU_SHMEM_OBJS) $(TAU_IBM_BG_HWP_OBJS)
+		$(TAU_WINDOWS_OBJ) $(TAU_SHMEM_OBJS) $(TAU_IBM_BG_HWP_OBJS) \
+		$(TAU_OMPT_O)
 
 # CWL - BFD Functionality for libTAU.so is faked if no shared BFD object can
 #       be built. The same is true for static builds of TAU if BFD is 
@@ -896,6 +897,9 @@ jVMTIThreadLayer.o: JVMTIThreadLayer.cpp
 
 TauJVMTI.o :	TauJVMTI.cpp TauJVMTI.jar
 	$(CXX) $(CXXFLAGS) -c TauJVMTI.cpp
+
+TauOMPT.o 	: TauOMPT.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) $(OPENMPOPTS) -c $(@:.o=.cpp)
 
 TauJVMTI.jar:  TauJVMTI.java
 	rm -f -r classes

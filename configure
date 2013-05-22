@@ -778,6 +778,9 @@ dyninst=no
 dwarf=no
 java=no
 openmp=no
+ompt=no
+omptenabled=no
+xlsmp=no
 ibmxlc=no
 ibmxlc_r=no 
 fortran_compiler=no
@@ -1480,6 +1483,20 @@ for arg in "$@"; do
 
   -openmp)
       openmp=yes
+    shift
+    ;;
+  -ompt*)
+      ompt=yes
+    shift
+    ;;
+  -xlsmp=*)
+      xlsmp=yes
+      xlsmpdir=`echo $arg | sed -e 's/-xlsmp=//'`
+      if [ ! -d $xlsmpdir ]
+      then
+        echo "Error: Cannot access xlsmp directory $xlsmpdir"
+        exit 1
+      fi 
     shift
     ;;
 
@@ -2817,6 +2834,35 @@ if [ "$machine" = "apple" ] ; then
 	exit 0
     fi
 fi
+
+if [ $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
+  if [ $ompt = yes -o $xlsmp = yes ]; then
+    comp=`which bgxlc_r`
+    if [ "x$xlsmpdir" = "x" ]; then 
+        if [ -x $comp ]; then 
+          xlsmpdir=`echo $comp | sed -e 's@bgxlc_r@../../../../xlsmp@' `
+          if [ ! -d $xlsmpdir ]; then 
+            echo "NOTE: Could not locate the xlsmp directory using the location of bgxlc_r in your path."
+            echo "To enable ompt support in TAU using IBM XL compilers, please configure with -xlsmp=<dir> option to specify the full path to the xlsmp directory inside the compiler directory".
+	    exit 1; 
+          fi
+        fi
+        if [ -d $xlsmpdir -a -r $xlsmpdir/bg/*/bglib64/libxllomp.a -a -r $xlsmpdir/bg/*/include/lomp/omp.h ]; then
+          lompinc=`echo $xlsmpdir/bg/*/include `
+	  lomplib=`echo $xlsmpdir/bg/*/bglib64 `
+	  echo "NOTE: Found LOMP include directory $lompinc"
+	  echo "NOTE: Found LOMP lib directory $lomplib"
+          omptenabled=yes
+          tauoptions="${tauoptions}-ompt"
+	  fixmakeargs="$fixmakeargs IBMOMPT lompinc=$lompinc lomplib=$lomplib"
+        else
+          echo "NOTE: Did not find lomp/omp.h or lib64/libxllomp.a in the xlsmp subdirectory. Not enabling OMPT support for IBM compilers."
+        fi 
+    else
+      echo "bgxlc_r not found in the path. Cannot test for OMPT support."
+    fi
+  fi
+fi 
 
 if [ $machine = craycnl -o $machine = bgq -o $machine = bgp -o $machine = bgl ] ; then
   config_compiler=`which $cxx_compiler`

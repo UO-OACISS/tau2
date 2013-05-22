@@ -674,7 +674,15 @@ extern "C" int Tau_stop_current_timer()
 
 ///////////////////////////////////////////////////////////////////////////
 
+extern "C" void Tau_disable_collector_api();
+
 extern "C" int Tau_profile_exit_all_tasks() {
+	// Stop the collector API. The main thread may exit with running
+	// worker threads. When those threads try to exit, they will 
+	// try to stop timers that aren't running.
+#ifdef TAU_OPENMP
+	Tau_disable_collector_api();
+#endif
 	int tid = 1;
 	while (tid < TAU_MAX_THREADS)
 	{
