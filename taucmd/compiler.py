@@ -35,6 +35,12 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
+import sys
+import logging
+import subprocess
+from taucmd import environment
+from taucmd import TauNotImplementedError
+
 TAU_CC = 'tau_cc.sh'
 TAU_CXX = 'tau_cxx.sh'
 TAU_F77 = 'tau_f90.sh'     # Yes, f90 not f77
@@ -119,7 +125,31 @@ MPI_COMPILERS = [MPI_CC, MPI_CXX, MPI_F77, MPI_F90]
 
 ALL_COMPILERS = [cc for family in [GNU_COMPILERS, MPI_COMPILERS] for cc in family]
 
-def identify(command):
+def known_compiler_commands():
     for cc in ALL_COMPILERS:
-        if command in cc.COMMANDS:
+        for cmd in cc.COMMANDS:
+            yield cmd
+
+def identify(cmd):
+    for cc in ALL_COMPILERS:
+        if cmd in cc.COMMANDS:
             return cc
+        
+def compile(args):
+    """
+    Loads a TAU configuration and launches the compiler wrapper script.
+    """
+    cmd = args['<command>']
+    cmd_args = args['<args>']
+    cc = identify(cmd)
+    if cc:
+        logging.info('Recognized %r as compiler command (%s)' % (cmd, cc.NAME))
+        proc_args = [cc.TAU_COMMAND] + cmd_args
+        proc_env = environment.tau_environment()
+        logging.debug('Creating subprocess.\n\targuments=%s\n\tenvironment=%s' % (proc_args, proc_env))
+        proc = subprocess.Popen(proc_args, env=proc_env, stdout=sys.stdout, stderr=sys.stderr)
+        return proc.wait()
+    else:
+        raise TauNotImplementedError("%r: unknown compiler command. Try 'tau --help'." % cmd, cmd) 
+                                     
+

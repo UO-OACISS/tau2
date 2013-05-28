@@ -43,14 +43,13 @@ import logging
 import traceback
 import pkgutil
 import signal
-import subprocess
+import textwrap
 from docopt import docopt
 from taucmd import LOGGING_LEVEL, EXPECT_PYTHON_VERSION, TAU_ROOT_DIR
 from taucmd import TauConfigurationError, TauNotImplementedError
-from taucmd import compilers, environment
-
-SIGNAL_NAMES = dict((getattr(signal, n), n) for n in dir(signal) 
-                    if n.startswith('SIG') and '_' not in n)
+from taucmd import commands
+from taucmd import compiler
+from taucmd import environment
 
 USAGE = """
 ================================================================================
@@ -58,7 +57,7 @@ The Tau Performance System (version %(tau_version)s)
 http://tau.uoregon.edu/
 
 Usage:
-  tau [-h | --help] [--version] [--verbose=<level>] [--config=<file>] <command> [<args>...]
+  tau [--help] [--version] [--verbose=<level>] [--config=<name>] <command> [<args>...]
 
 Options:
   --config=<file>   Specify a Tau configuration file.
@@ -66,18 +65,19 @@ Options:
   --help            Show usage.
   --version         Show version.
   
-  <command> may be a compiler (e.g. gcc, ifort) or an application (e.g. my_app) 
+  <command> may be a compiler (e.g. gcc, mpif90) or a subcommand
+  
+Known Compilers:
+%(compilers)s 
 
-Commands:
+Subcommands:
 %(commands)s
 ================================================================================
 """
 
 # configure     Tell Tau about your environment.
-#   build         Build your application with Tau.
 #   execute       Execute your application with Tau.
 #   display       Show performance data.
-#   advise        Get advice from Tau.
 #   help          Get help about a Tau command.
 
 def lookup_tau_version():
@@ -95,11 +95,14 @@ def lookup_tau_version():
     return '(unknown)'
 
 
+def get_known_compilers():
+    known = ', '.join(compiler.known_compiler_commands())
+    return textwrap.fill(known, width=70, initial_indent='  ', subsequent_indent='  ')
+
 def get_command_list():
     """
     Builds listing of command names with short description
     """
-    from taucmd import commands
     parts = []
     for module in [name for _, name, _ in pkgutil.walk_packages(path=commands.__path__, prefix=commands.__name__+'.')]:
         __import__(module)
@@ -109,6 +112,7 @@ def get_command_list():
         name = '{:<12}'.format(module.split('.')[-1])
         parts.append('  %s  %s' % (name, descr))
     return '\n'.join(parts)
+
 
 
 def taucmd_excepthook(etype, e, tb):
@@ -143,7 +147,7 @@ def taucmd_excepthook(etype, e, tb):
         print '! Please contact <tau-bugs@cs.uoregon.edu> for assistance.'
         print '! If possible, please include the output of this command:'
         print '!'
-        print '! %s -l DEBUG' % ' '.join(sys.argv)
+        print '! tau --verbose=4 %s' % ' '.join(sys.argv[1:])
         print '!'
         print '!'*80
         print
@@ -171,13 +175,15 @@ def main():
         
     # Get tau version
     tau_version = lookup_tau_version()
+    
+    # Get known compilers
+    
    
     # Parse command line arguments
     usage = USAGE % {'tau_version': tau_version,
+                     'compilers': get_known_compilers(),
                      'commands': get_command_list()}
     args = docopt(usage, version=tau_version, options_first=True)
-    cmd = args['<command>']
-    cmd_args = args['<args>']
 
     # Set logging level
     verblevel = int(args['--verbose'])
@@ -197,37 +203,38 @@ def main():
     logging.debug('Arguments: %s' % args)
 
     # Try to execute as a tau command
+    cmd = args['<command>']
+    cmd_args = args['<args>']
     cmd_module = 'taucmd.commands.%s' % cmd
     try:
         __import__(cmd_module)
-        logging.info('Recognized %s as tau subcommand' % cmd)
-        sys.modules[cmd_module].main([cmd] + cmd_args)
+        logging.info('Recognized %r as tau subcommand' % cmd)
+        retval = sys.modules[cmd_module].main([cmd] + cmd_args)
+        exit(retval)
     except ImportError:
         # It wasn't a tau command, but that's OK
-        logging.debug('%s not recognized as tau subcommand' % cmd)
-        pass
+        logging.debug('%r not recognized as tau subcommand' % cmd)
 
     # Try to execute as a compiler command
-    cc = compilers.identify(args['<command>'])
-    if cc:
-        logging.info('Recognized %s as compiler command (%s)' % (cmd, cc.NAME))
-        proc_args = [cc.TAU_COMMAND] + cmd_args
-        proc_env = environment.tau_environment()
-        logging.debug('Creating subprocess.\n\targuments=%s\n\tenvironment=%s' % (proc_args, proc_env))
-        proc = subprocess.Popen(proc_args, env=proc_env, stdout=sys.stdout, stderr=sys.stderr)
-        proc.wait()
-        if proc.returncode == 0:
+    try:
+        retval = compiler.compile(args)
+        if retval == 0:
             logging.info('Compilation successful')
-        elif proc.returncode > 0:
-            print '!' * 80
-            print 'tau: Compilation failed'
-            print '!' * 80
-            exit(proc.returncode)
+        elif retval > 0:
+            logging.critical('Compilation failed')
         elif proc.returncode < 0:
-            message('Compilation aborted by signal %s' % SIGNAL_NAMES[-proc.returncode])
-            exit(proc.returncode)
-    else:
-        exit("%r: unknown command. See 'tau --help'." % args['<command>'])
+            signal_names = dict((getattr(signal, n), n) for n in dir(signal) 
+                                if n.startswith('SIG') and '_' not in n)
+            logging.critical('Compilation aborted by signal %s' % signal_names[-proc.returncode])
+        exit(retval)
+    except TauNotImplementedError:
+        # It wasn't a compiler command, but that's OK
+        logging.debug('%r not recognized as a compiler command' % cmd)
+        
+    # Not sure what to do at this point, so advise the user and exit
+    logging.debug("Can't classify %r.  Calling 'tau help' to get advice." % cmd)
+    exit(commands.help.main(['help', cmd] + cmd_args))
+
 
 # Command line execution
 if __name__ == "__main__":
