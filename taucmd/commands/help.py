@@ -43,36 +43,78 @@ from docopt import docopt
 USAGE = """
 Usage:
   tau help <command>
-  
+
+
 """
 
-SHORT_DESCRIPTION = "Get help with a Tau command."
+SHORT_DESCRIPTION = "Get help with a command."
 
 HELP = """
 Prints the help page for a specified command.
 """
 
-# logging.basicConfig(level=LOGGING_LEVEL)
-# LOGGER = logging.getLogger('taucmd.help')
-# print '%s: %s' % (__name__, LOGGING_LEVEL)
+MAKE_ADVICE = """
+'make' is not a Tau command.
+
+--- Did you try to build your codebase by typing 'tau make'?  
+
+Tau cannot rewrite your makefiles for you, but it's fairly easy to do yourself.
+All you need to do is put the 'tau' command before your compiler invocation.  
+So, if your makefile contains lines something like this:
+    CC = gcc
+you'll change it to:
+    CC = tau gcc
+Be sure to do this for all instances of CC, CXX, F90, etc.
+Sometimes you can override CC, CXX, etc. from the command line like this:
+> make CC="tau gcc" CXX="tau g++" F90="tau gfortran"
+Don't forget the double quotes!
+
+--- Did you want to gather performance information on the 'make' command?
+
+If you typed 'tau make' to get performance data on the make command, you should
+choose the kind of data you want to gather and use the appropriate subcommand.
+For example, to gather profiling data type:
+    tau profile make <args>
+
+Type 'tau --help' to see a complete list of subcommands.
+"""
+
+def advise(cmd):
+    """
+    Print some advice about a system command.
+    """
+    
+    if cmd == 'make':
+        print MAKE_ADVICE
+        return 0 
+    else:
+        print "%r: Unknown command. Try 'tau --help'." % cmd
+        return 1
 
 def main(argv):
     """
     Program entry point
     """
-
+    
     # Parse command line arguments
     args = docopt(USAGE, argv=argv)
     logging.debug('Arguments: %s' % args)
     
-    # Look up command's built-in help page
-    command = 'taucmd.commands.%s' % args['<command>']
+    # Try to look up a Tau command's built-in help page
+    cmd = args['<command>']
+    cmd_module = 'taucmd.commands.%s' % cmd
     try:
-        __import__(command)
+        __import__(cmd_module)
+        logging.info('Recognized %r as tau subcommand' % cmd)
+        print sys.modules[cmd_module].HELP
+        return 0
     except ImportError:
-        exit("%r is not a tau command. See 'tau --help'." % args['<command>'])
-    print sys.modules[command].HELP
+        # It wasn't a tau command, but that's OK
+        logging.debug('%r not recognized as tau subcommand' % cmd)
+
+    # Do our best to give advice about this strange command
+    return advise(cmd)
 
 
 if __name__ == '__main__':
-    main(None)
+    exit(main(['help'] + sys.argv))
