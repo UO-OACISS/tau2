@@ -2,6 +2,7 @@
 *.a
 *.so
 *.dylib
+*.pyc
 a.out
 .all_configs
 .last_config
@@ -9,6 +10,7 @@ a.out
 .cproject
 .gitignore
 .ptp-sync
+.pydevproject
 x86_64
 bgl
 bgp
