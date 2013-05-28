@@ -71,25 +71,22 @@ Don't forget the double quotes!
 
 --- Did you want to gather performance information on the 'make' command?
 
-If you typed 'tau make' to get performance data on the make command, you should
-choose the kind of data you want to gather and use the appropriate subcommand.
+Choose the kind of data you want to gather and use the appropriate subcommand.
 For example, to gather profiling data type:
     tau profile make <args>
 
-Type 'tau --help' to see a complete list of subcommands.
+Type 'tau --help' to see a complete list of valid commands.
 """
 
 def advise(cmd):
     """
     Print some advice about a system command.
     """
-    
     if cmd == 'make':
         print MAKE_ADVICE
-        return 0 
     else:
         print "%r: Unknown command. Try 'tau --help'." % cmd
-        return 1
+    return 1
 
 def main(argv):
     """
@@ -114,7 +111,3 @@ def main(argv):
 
     # Do our best to give advice about this strange command
     return advise(cmd)
-
-
-if __name__ == '__main__':
-    exit(main(['help'] + sys.argv))
