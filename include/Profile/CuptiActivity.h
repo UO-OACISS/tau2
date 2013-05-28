@@ -30,6 +30,19 @@
 
 #define ACTIVITY_BUFFER_SIZE (4096 * 1024)
 
+/* Some API calls deprecated in 5.5
+ */
+#if CUDA_VERSION >= 5050
+
+#define runtimeCorrelationId correlationId
+#define CUpti_ActivityKernel CUpti_ActivityKernel2
+
+#endif
+
+extern "C" void Tau_cupti_set_offset(
+            uint64_t timestamp
+            );
+
 extern "C" void Tau_cupti_find_context_event(
 						TauContextUserEvent** u, 
 						const char *name);
@@ -78,6 +91,7 @@ extern "C" void Tau_cupti_register_gpu_event(
 						uint32_t streamId,
 						uint32_t contextId,
 						uint32_t correlationId,
+            bool cdp,
 						GpuEventAttributes *gpu_attributes,
 						int number_of_attributes,
 						double start,
@@ -91,6 +105,8 @@ extern "C" void Tau_cupti_register_gpu_atomic_event(
 						uint32_t correlationId,
 						GpuEventAttributes *gpu_attributes,
 						int number_of_attributes);
+
+extern x_uint64 TauTraceGetTimeStamp(int tid);
 
 uint8_t *activityBuffer;
 CUpti_SubscriberHandle subscriber;
@@ -131,7 +147,15 @@ typedef std::map<TauContextUserEvent *, TAU_EVENT_DATATYPE> eventMap_t;
 eventMap_t eventMap; 
 
 int gpu_occupancy_available(int deviceId);
-void record_gpu_occupancy(CUpti_ActivityKernel *k, const char *name, eventMap_t *m);
+
+void record_gpu_occupancy(int32_t blockX, 
+                          int32_t blockY,
+                          int32_t blockZ,
+			                    uint16_t registersPerThread,
+		                      int32_t staticSharedMemory,
+                          uint32_t deviceId,
+                          const char *name, 
+                          eventMap_t *map);
 
 #if CUPTI_API_VERSION >= 3
 void form_context_event_name(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceLocator *source, const char *event, std::string *name);
