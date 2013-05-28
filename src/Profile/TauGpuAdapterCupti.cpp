@@ -1,5 +1,11 @@
 #include <Profile/TauGpuAdapterCupti.h>
 
+extern "C" void Tau_cupti_set_offset(
+            double timestamp
+            ) {
+              CuptiGpuEvent::beginTimestamp = timestamp;
+            }
+
 extern "C" void Tau_cupti_find_context_event(
 						TauContextUserEvent** u, 
 						const char *name
@@ -80,6 +86,7 @@ extern "C" void Tau_cupti_register_gpu_event(
 						uint32_t streamId,
 						uint32_t contextId,
 						uint32_t correlationId,
+            bool cdp,
 						GpuEventAttributes *gpu_attributes,
 						int number_of_attributes,
 						double start,
@@ -87,6 +94,10 @@ extern "C" void Tau_cupti_register_gpu_event(
 						) {
 							CuptiGpuEvent gpu_event = CuptiGpuEvent(name, 
 								deviceId, streamId, contextId, correlationId, gpu_attributes, number_of_attributes);
+              if (cdp) {
+                printf("setting CDP flag.\n");
+							  gpu_event.setCdp();
+              }
 							Tau_gpu_register_gpu_event(&gpu_event, start, stop);
 						}
 

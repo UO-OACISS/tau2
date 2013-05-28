@@ -82,7 +82,7 @@ void Tau_cupti_onload()
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONTEXT);
 	
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY);
-	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_KERNEL);
+	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL);
 
 #if CUPTI_API_VERSION >= 3
   if (strcasecmp(TauEnv_get_cuda_instructions(), "GLOBAL_ACCESS") == 0)
@@ -103,6 +103,14 @@ void Tau_cupti_onload()
 #endif //CUPTI_API_VERSIOn >= 3
 
 	CUDA_CHECK_ERROR(err, "Cannot enqueue buffer.\n");
+
+  uint64_t timestamp;
+  err = cuptiGetTimestamp(&timestamp);
+	CUDA_CHECK_ERROR(err, "Cannot get timestamp.\n");
+  Tau_cupti_set_offset(TauTraceGetTimeStamp(0) - ((double)timestamp / 1e3));
+  //Tau_cupti_set_offset((-1) * timestamp / 1e3);
+	//cerr << "begining timestamp: " << TauTraceGetTimeStamp(0) - ((double)timestamp/1e3) << "ms.\n" << endl;
+  //Tau_cupti_set_offset(0);
 
 	Tau_gpu_init();
 }
@@ -353,20 +361,83 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 				break;
 		}
   	case CUPTI_ACTIVITY_KIND_KERNEL:
-		{
-			//find FunctionInfo object from FunctionInfoMap
-      CUpti_ActivityKernel *kernel = (CUpti_ActivityKernel *)record;
+  	case CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL:
+#if CUDA_VERSION >= 5050
+  	case CUPTI_ACTIVITY_KIND_CDP_KERNEL:
+#endif
+    {
+      const char *name;
+      uint32_t deviceId;
+      uint32_t streamId;
+      uint32_t contextId;
+      uint32_t correlationId;
+      uint64_t start;
+      uint64_t end;
+      uint32_t blockX;
+      uint32_t blockY; 
+      uint32_t blockZ;
+      uint32_t dynamicSharedMemory;
+      uint32_t staticSharedMemory;
+      uint32_t localMemoryPerThread;
+      uint32_t registersPerThread;
+
+#if CUDA_VERSION >= 5050
+      if (record->kind == CUPTI_ACTIVITY_KIND_CDP_KERNEL) {
+        CUpti_ActivityCdpKernel *kernel = (CUpti_ActivityCdpKernel *)record;
+        name = kernel->name;
+        deviceId = kernel->deviceId;
+        streamId = kernel->streamId;
+        contextId = kernel->contextId;
+        correlationId = kernel->correlationId;
+        start = kernel->start;
+        end = kernel->end;
+        blockX = kernel->blockX;
+        blockY = kernel->blockY; 
+        blockZ = kernel->blockZ;
+        dynamicSharedMemory = kernel->dynamicSharedMemory;
+        staticSharedMemory = kernel->staticSharedMemory;
+        localMemoryPerThread = kernel->localMemoryPerThread;
+        registersPerThread = kernel->registersPerThread;
+      }
+      else {
+#endif
+        CUpti_ActivityKernel *kernel = (CUpti_ActivityKernel *)record;
+        name = kernel->name;
+        deviceId = kernel->deviceId;
+        streamId = kernel->streamId;
+        contextId = kernel->contextId;
+        correlationId = kernel->correlationId;
+        start = kernel->start;
+        end = kernel->end;
+        blockX = kernel->blockX;
+        blockY = kernel->blockY; 
+        blockZ = kernel->blockZ;
+        dynamicSharedMemory = kernel->dynamicSharedMemory;
+        staticSharedMemory = kernel->staticSharedMemory;
+        localMemoryPerThread = kernel->localMemoryPerThread;
+        registersPerThread = kernel->registersPerThread;
+        //find FunctionInfo object from FunctionInfoMap
+        kernelMap[kernel->correlationId] = *kernel;
+#if CUDA_VERSION >= 5050
+      }
+#endif
+			//cerr << "recording kernel (device, stream, context, correlation, name): " << kernel->deviceId << ", " << kernel->streamId << ", " << kernel->contextId << ", " << kernel->correlationId << ", " << kernel->name << ", "<< kernel->start << "-" << kernel->end << "ns.\n" << endl;
 			//cerr << "recording kernel (id): "  << kernel->correlationId << ", " << kernel->name << ", "<< kernel->end - kernel->start << "ns.\n" << endl;
       
-      kernelMap[kernel->correlationId] = *kernel;
 
-      const char* name;
-			name = demangleName(kernel->name);
+			name = demangleName(name);
 
       eventMap.erase(eventMap.begin(), eventMap.end());
-			if (gpu_occupancy_available(kernel->deviceId))
+			if (gpu_occupancy_available(deviceId))
 			{
-				record_gpu_occupancy(kernel, name, &eventMap);
+        record_gpu_occupancy(blockX, 
+                            blockY,
+                            blockZ,
+                            registersPerThread,
+                            staticSharedMemory,
+                            deviceId,
+                            name, 
+                            &eventMap);
 			}
 			static TauContextUserEvent* bs;
 			static TauContextUserEvent* dm;
@@ -379,11 +450,11 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			Tau_get_context_userevent((void **) &lm, "Local Memory (bytes per thread)");
 			Tau_get_context_userevent((void **) &lr, "Local Registers (per thread)");
 
-      eventMap[bs] = kernel->blockX * kernel->blockY * kernel->blockZ;
-      eventMap[dm] = kernel->dynamicSharedMemory;
-      eventMap[sm] = kernel->staticSharedMemory;
-      eventMap[lm] = kernel->localMemoryPerThread;
-      eventMap[lr] = kernel->registersPerThread;
+      eventMap[bs] = blockX * blockY * blockZ;
+      eventMap[dm] = dynamicSharedMemory;
+      eventMap[sm] = staticSharedMemory;
+      eventMap[lm] = localMemoryPerThread;
+      eventMap[lr] = registersPerThread;
       
       GpuEventAttributes *map;
 			int map_size = eventMap.size();
@@ -399,15 +470,25 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			uint32_t id;
 			if (cupti_api_runtime())
 			{
-				id = kernel->runtimeCorrelationId;
+				id = runtimeCorrelationId;
 			}
 			else
 			{
-				id = kernel->correlationId;
+				id = correlationId;
 			}
-			Tau_cupti_register_gpu_event(name, kernel->deviceId,
-				kernel->streamId, kernel->contextId, id, map, map_size,
-				kernel->start / 1e3, kernel->end / 1e3);
+#if CUDA_VERSION >= 5050
+      if (record->kind == CUPTI_ACTIVITY_KIND_CDP_KERNEL) {
+        Tau_cupti_register_gpu_event(name, deviceId,
+          streamId, contextId, id, true, map, map_size,
+          start / 1e3, end / 1e3);
+      } else {
+#endif
+        Tau_cupti_register_gpu_event(name, deviceId,
+          streamId, contextId, id, false, map, map_size,
+          start / 1e3, end / 1e3);
+#if CUDA_VERSION >= 5050
+      }
+#endif
 			/*
 			CuptiGpuEvent gId = CuptiGpuEvent(name, kernel->streamId, kernel->contextId, id, map, map_size);
 			//cuptiGpuEvent cuRec = cuptiGpuEvent(name, &gId, &map);
@@ -418,7 +499,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			*/	
 
 			break;
-		}
+    }
   	case CUPTI_ACTIVITY_KIND_DEVICE:
 		{
 			CUpti_ActivityDevice *device = (CUpti_ActivityDevice *)record;
@@ -583,13 +664,20 @@ int gpu_source_locations_available()
   //always available. 
   return 1;
 }
-void record_gpu_occupancy(CUpti_ActivityKernel *kernel, const char *name, eventMap_t *map)
+void record_gpu_occupancy(int32_t blockX, 
+                          int32_t blockY,
+                          int32_t blockZ,
+			                    uint16_t registersPerThread,
+		                      int32_t staticSharedMemory,
+                          uint32_t deviceId,
+                          const char *name, 
+                          eventMap_t *map)
 {
-	CUpti_ActivityDevice device = deviceMap[kernel->deviceId];
+	CUpti_ActivityDevice device = deviceMap[deviceId];
 
 
 	int myWarpsPerBlock = ceil(
-				(kernel->blockX * kernel->blockY * kernel->blockZ)/
+				(blockX * blockY * blockZ)/
 				device.numThreadsPerWarp
 			); 
 
@@ -613,12 +701,12 @@ void record_gpu_occupancy(CUpti_ActivityKernel *kernel, const char *name, eventM
 			ceil(
 				(float)myWarpsPerBlock, 2	
 			)*
-			kernel->registersPerThread*
+			registersPerThread*
 			device.numThreadsPerWarp,
 			device.computeCapabilityMinor < 2 ? 256 : 512
 		) :
 		ceil(
-			kernel->registersPerThread*
+			registersPerThread*
 			device.numThreadsPerWarp,
 			device.computeCapabilityMajor < 3 ? 128 : 256
 		)*
@@ -649,7 +737,7 @@ void record_gpu_occupancy(CUpti_ActivityKernel *kernel, const char *name, eventM
 		case 3: sharedMemoryUnit = 256; break;
 	}
 	int mySharedMemoryPerBlock = ceil(
-		kernel->staticSharedMemory,
+		staticSharedMemory,
 		sharedMemoryUnit
 	);
 

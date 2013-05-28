@@ -104,7 +104,7 @@ int tau_pthread_barrier_wait(pthread_barrier_t *barrier);
          each component value (e.g., PTHREADS + GPU = 128 + 32 = 160).
 */
 #ifdef TAU_GPU
-#define TAU_MAX_THREADS 32
+#define TAU_MAX_THREADS 512 
 #else /* TAU_GPU */
 #define TAU_MAX_THREADS 1
 #endif /* TAU_GPU */

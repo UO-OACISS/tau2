@@ -22,6 +22,11 @@ public:
 	uint32_t deviceId;
 	uint32_t correlationId;
 
+  //CDP kernels can overlap with other kernels so each one needs to be in a
+  //seperate 'thread' of execution.
+  uint32_t cdpId;
+  static uint32_t cdpCount;
+
 	//This event is tied to the entire deivce not a particular stream or context.
 	//Used for recording device metadata.
 	bool deviceContainer;
@@ -30,6 +35,8 @@ public:
 	//FunctionInfo *callingSite;
 	GpuEventAttributes *gpu_event_attributes;
 	int number_of_gpu_attributes;
+
+  static double beginTimestamp;
 
 	/*CuptiGpuEvent(uint32_t s, uint32_t cn, uint32_t c) { streamId = s; contextId = cn ; correlationId = c; };*/
 	CuptiGpuEvent *getCopy() const { 
@@ -41,11 +48,15 @@ public:
 		streamId = 0;
 		contextId = 0;
 		correlationId = -1;
+    cdpId = 0;
 	};
 	CuptiGpuEvent(const char* n, uint32_t device, uint32_t stream, uint32_t context, uint32_t correlation, GpuEventAttributes *m, int m_size) : name(n), deviceId(device), streamId(stream), contextId(context), correlationId(correlation), gpu_event_attributes(m), number_of_gpu_attributes(m_size) {
 		deviceContainer = false;
+    cdpId = 0;
 	};
 
+  void setCdp() { cdpId = ++cdpCount; }
+  
 	const char* getName() const { return name; }
 
 	const char* gpuIdentifier() const {
@@ -66,7 +77,11 @@ public:
 		}
 		else {
 			if (contextId == ((CuptiGpuEvent *)other)->context()) {
-				return streamId < ((CuptiGpuEvent *)other)->stream();
+        if (streamId == ((CuptiGpuEvent *)other)->stream()) {
+          return cdpId < ((CuptiGpuEvent *)other)->cdp();
+        } else {
+				  return streamId < ((CuptiGpuEvent *)other)->stream();
+        }
 			} else {
 				return contextId < ((CuptiGpuEvent *)other)->context();
 			}
@@ -99,9 +114,13 @@ public:
 		}
 	}
 
-	double syncOffset() const { return 0; };
+	double syncOffset() const 
+  { 
+    return (double) beginTimestamp; 
+  };
 	uint32_t stream() { return streamId; };
 	uint32_t context() { return contextId; };
+	uint32_t cdp() { return cdpId; };
 	FunctionInfo* getCallingSite() const
 	{
 		FunctionInfo *funcInfo = NULL;
@@ -119,3 +138,6 @@ public:
 	}
 
 };
+
+uint32_t CuptiGpuEvent::cdpCount = 0;
+double CuptiGpuEvent::beginTimestamp = 0;
