@@ -1,0 +1,234 @@
+"""
+@file
+@author John C. Linford (jlinford@paratools.com)
+@version 1.0
+
+@brief
+
+This file is part of the TAU Performance System
+
+@section COPYRIGHT
+
+Copyright (c) 2013, ParaTools, Inc.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without 
+modification, are permitted provided that the following conditions are met:
+ (1) Redistributions of source code must retain the above copyright notice, 
+     this list of conditions and the following disclaimer.
+ (2) Redistributions in binary form must reproduce the above copyright notice, 
+     this list of conditions and the following disclaimer in the documentation 
+     and/or other materials provided with the distribution.
+ (3) Neither the name of ParaTools, Inc. nor the names of its contributors may 
+     be used to endorse or promote products derived from this software without 
+     specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE 
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE 
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL 
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR 
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER 
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, 
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE 
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+"""
+
+import os
+import sys
+import re
+import types
+import logging
+import traceback
+import pkgutil
+import signal
+import subprocess
+from docopt import docopt
+from taucmd import LOGGING_LEVEL, EXPECT_PYTHON_VERSION, TAU_ROOT_DIR
+from taucmd import TauConfigurationError, TauNotImplementedError
+from taucmd import compilers, environment
+
+SIGNAL_NAMES = dict((getattr(signal, n), n) for n in dir(signal) 
+                    if n.startswith('SIG') and '_' not in n)
+
+USAGE = """
+================================================================================
+The Tau Performance System (version %(tau_version)s)
+http://tau.uoregon.edu/
+
+Usage:
+  tau [-h | --help] [--version] [--verbose=<level>] [--config=<file>] <command> [<args>...]
+
+Options:
+  --config=<file>   Specify a Tau configuration file.
+  --verbose=<0-4>   Verbosity level.  [default: 1]
+  --help            Show usage.
+  --version         Show version.
+  
+  <command> may be a compiler (e.g. gcc, ifort) or an application (e.g. my_app) 
+
+Commands:
+%(commands)s
+================================================================================
+"""
+
+# configure     Tell Tau about your environment.
+#   build         Build your application with Tau.
+#   execute       Execute your application with Tau.
+#   display       Show performance data.
+#   advise        Get advice from Tau.
+#   help          Get help about a Tau command.
+
+def lookup_tau_version():
+    """
+    Opens TAU.h to get the TAU version
+    """
+    if not TAU_ROOT_DIR:
+        return '(unknown)'
+    with open('%s/include/TAU.h' % TAU_ROOT_DIR, 'r') as tau_h:
+        pattern = re.compile('#define\s+TAU_VERSION\s+"(.*)"')
+        for line in tau_h:
+            match = pattern.match(line) 
+            if match:
+                return match.group(1)
+    return '(unknown)'
+
+
+def get_command_list():
+    """
+    Builds listing of command names with short description
+    """
+    from taucmd import commands
+    parts = []
+    for module in [name for _, name, _ in pkgutil.walk_packages(path=commands.__path__, prefix=commands.__name__+'.')]:
+        __import__(module)
+        descr = sys.modules[module].SHORT_DESCRIPTION
+#        _temp = __import__(module, globals(), locals(), ['SHORT_DESCRIPTION'], -1)
+#        descr = _temp.SHORT_DESCRIPTION
+        name = '{:<12}'.format(module.split('.')[-1])
+        parts.append('  %s  %s' % (name, descr))
+    return '\n'.join(parts)
+
+
+def taucmd_excepthook(etype, e, tb):
+    """
+    Exception handler for any uncaught exception (except SystemExit).
+    """
+    if etype == TauConfigurationError:
+        print
+        print 'ERROR: %s' % e.value
+        if e.hint:
+            print 'Hint: %s' % e.hint
+        print
+        print 'Tau cannot proceed with the given inputs.'
+        print 'Please review the input files and command line parameters or contact <tau-bugs@cs.uoregon.com> for assistance.'
+        sys.exit(-1)
+    elif etype == TauNotImplementedError:
+        print
+        print 'ERROR: Unimplemented feature "%s": %s' % (e.missing, e.value)
+        if e.hint:
+            print 'Hint: %s' % e.hint
+        print
+        print 'Sorry, you have requested a feature that is not yet implemented.'
+        print 'Please contact <tau-bugs@cs.uoregon.edu> for assistance.'
+        sys.exit(-1)
+    else:
+        traceback.print_exception(etype, e, tb)
+        print
+        print '!'*80
+        print '! ERROR:'
+        print '! An unexpected %s exception was raised.  ' % etype.__name__
+        print '!'
+        print '! Please contact <tau-bugs@cs.uoregon.edu> for assistance.'
+        print '! If possible, please include the output of this command:'
+        print '!'
+        print '! %s -l DEBUG' % ' '.join(sys.argv)
+        print '!'
+        print '!'*80
+        print
+
+        
+def main():
+    """
+    Program entry point
+    """
+
+    # Set the default exception handler
+    sys.excepthook = taucmd_excepthook
+
+    # Check Python version
+    if sys.version_info < EXPECT_PYTHON_VERSION:
+        version = '.'.join(map(str, sys.version_info[0:3]))
+        expected = '.'.join(map(str, EXPECT_PYTHON_VERSION))
+        print
+        print '!'*80
+        print "! WARNING:"
+        print "! Your Python version is %s, but Tau expects Python %s or later." % (version, expected)
+        print "! Please update Python."
+        print '!'*80
+        print
+        
+    # Get tau version
+    tau_version = lookup_tau_version()
+   
+    # Parse command line arguments
+    usage = USAGE % {'tau_version': tau_version,
+                     'commands': get_command_list()}
+    args = docopt(usage, version=tau_version, options_first=True)
+    cmd = args['<command>']
+    cmd_args = args['<args>']
+
+    # Set logging level
+    verblevel = int(args['--verbose'])
+    if verblevel <= 0:
+        LOGGING_LEVEL = logging.CRITICAL
+    elif verblevel == 1:
+        LOGGING_LEVEL = logging.ERROR
+    elif verblevel == 2:
+        LOGGING_LEVEL = logging.WARNING
+    elif verblevel == 3:
+        LOGGING_LEVEL = logging.INFO
+    elif verblevel >= 4:
+        LOGGING_LEVEL = logging.DEBUG
+        environment.TAU_OPTIONS.append('-optVerbose')
+    logging.basicConfig(level=LOGGING_LEVEL)
+    logging.info('Verbosity level: %s' % logging.getLevelName(LOGGING_LEVEL))
+    logging.debug('Arguments: %s' % args)
+
+    # Try to execute as a tau command
+    cmd_module = 'taucmd.commands.%s' % cmd
+    try:
+        __import__(cmd_module)
+        logging.info('Recognized %s as tau subcommand' % cmd)
+        sys.modules[cmd_module].main([cmd] + cmd_args)
+    except ImportError:
+        # It wasn't a tau command, but that's OK
+        logging.debug('%s not recognized as tau subcommand' % cmd)
+        pass
+
+    # Try to execute as a compiler command
+    cc = compilers.identify(args['<command>'])
+    if cc:
+        logging.info('Recognized %s as compiler command (%s)' % (cmd, cc.NAME))
+        proc_args = [cc.TAU_COMMAND] + cmd_args
+        proc_env = environment.tau_environment()
+        logging.debug('Creating subprocess.\n\targuments=%s\n\tenvironment=%s' % (proc_args, proc_env))
+        proc = subprocess.Popen(proc_args, env=proc_env, stdout=sys.stdout, stderr=sys.stderr)
+        proc.wait()
+        if proc.returncode == 0:
+            logging.info('Compilation successful')
+        elif proc.returncode > 0:
+            print '!' * 80
+            print 'tau: Compilation failed'
+            print '!' * 80
+            exit(proc.returncode)
+        elif proc.returncode < 0:
+            message('Compilation aborted by signal %s' % SIGNAL_NAMES[-proc.returncode])
+            exit(proc.returncode)
+    else:
+        exit("%r: unknown command. See 'tau --help'." % args['<command>'])
+
+# Command line execution
+if __name__ == "__main__":
+    main()
