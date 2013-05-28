@@ -209,8 +209,7 @@ def main():
     try:
         __import__(cmd_module)
         logging.info('Recognized %r as tau subcommand' % cmd)
-        retval = sys.modules[cmd_module].main([cmd] + cmd_args)
-        exit(retval)
+        return sys.modules[cmd_module].main([cmd] + cmd_args)
     except ImportError:
         # It wasn't a tau command, but that's OK
         logging.debug('%r not recognized as tau subcommand' % cmd)
@@ -226,16 +225,16 @@ def main():
             signal_names = dict((getattr(signal, n), n) for n in dir(signal) 
                                 if n.startswith('SIG') and '_' not in n)
             logging.critical('Compilation aborted by signal %s' % signal_names[-proc.returncode])
-        exit(retval)
+        return retval
     except TauNotImplementedError:
         # It wasn't a compiler command, but that's OK
         logging.debug('%r not recognized as a compiler command' % cmd)
         
     # Not sure what to do at this point, so advise the user and exit
     logging.debug("Can't classify %r.  Calling 'tau help' to get advice." % cmd)
-    exit(commands.help.main(['help', cmd] + cmd_args))
+    return commands.help.main(['help', cmd] + cmd_args)
 
 
 # Command line execution
 if __name__ == "__main__":
-    main()
+    exit(main())

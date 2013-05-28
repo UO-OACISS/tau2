@@ -138,6 +138,3 @@ def main(argv):
     config_file = os.path.join(args['--prefix'], 'config')
     with open(config_file, 'wb') as f:
         config.write(f)
-
-if __name__ == '__main__':
-    main(None)
