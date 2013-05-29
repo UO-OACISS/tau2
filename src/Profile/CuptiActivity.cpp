@@ -82,6 +82,9 @@ void Tau_cupti_onload()
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONTEXT);
 	
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY);
+#if CUDA_VERSION >= 5050
+	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_MEMCPY2);
+#endif
 	err = cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL);
 
 #if CUPTI_API_VERSION >= 3
@@ -314,39 +317,103 @@ void Tau_cupti_register_sync_event(CUcontext context, uint32_t stream)
 void Tau_cupti_record_activity(CUpti_Activity *record)
 {
 
-	
+  
 	//printf("in record activity.\n");
   switch (record->kind) {
   	case CUPTI_ACTIVITY_KIND_MEMCPY:
+#if CUDA_VERSION >= 5050
+	  case CUPTI_ACTIVITY_KIND_MEMCPY2:
+#endif
 		{	
-      CUpti_ActivityMemcpy *memcpy = (CUpti_ActivityMemcpy *)record;
-			//cerr << "recording memcpy: " << memcpy->end - memcpy->start << "ns.\n" << endl;
-		  //cerr << "recording memcpy on device: " << memcpy->streamId << "/" << memcpy->runtimeCorrelationId << endl;
-		  //cerr << "recording memcpy kind: " << getMemcpyType(memcpy->copyKind) << endl;
+      uint32_t deviceId;
+      uint32_t streamId;
+      uint32_t contextId;
+      uint64_t start;
+      uint64_t end;
+      uint64_t bytes;
+      uint8_t copyKind;
 			int id;
-			if (cupti_api_runtime())
-			{
-				id = memcpy->runtimeCorrelationId;
-			}
-			else
-			{
-				id = memcpy->correlationId;
-			}
+      int direction = MESSAGE_UNKNOWN;
+
+#if CUDA_VERSION >= 5050
+      if (record->kind == CUPTI_ACTIVITY_KIND_MEMCPY2) {
+        CUpti_ActivityMemcpy2 *memcpy = (CUpti_ActivityMemcpy2 *)record;
+        deviceId = memcpy->deviceId;
+        streamId = memcpy->streamId;
+        contextId = memcpy->contextId;
+        start = memcpy->start;
+        end = memcpy->end;
+        bytes = memcpy->bytes;
+        copyKind = memcpy->copyKind;
+        id = memcpy->correlationId;
+        cerr << "recording memcpy (device, stream, context, correlation): " << memcpy->deviceId << ", " << memcpy->streamId << ", " << memcpy->contextId << ", " << memcpy->correlationId << ", " << memcpy->start << "-" << memcpy->end << "ns.\n" << endl;
+		    cerr << "recording memcpy src: " << memcpy->srcDeviceId << "/" << memcpy->srcContextId << endl;
+		    cerr << "recording memcpy dst: " << memcpy->dstDeviceId << "/" << memcpy->dstContextId << endl;
+        Tau_cupti_register_memcpy_event(
+          TAU_GPU_USE_DEFAULT_NAME,
+          memcpy->srcDeviceId,
+          streamId,
+          memcpy->srcContextId,
+          id,
+          start / 1e3,
+          end / 1e3,
+          bytes,
+          getMemcpyType(copyKind),
+          MESSAGE_RECIPROCAL_SEND
+        );
+        Tau_cupti_register_memcpy_event(
+          TAU_GPU_USE_DEFAULT_NAME,
+          memcpy->dstDeviceId,
+          streamId,
+          memcpy->dstContextId,
+          id,
+          start / 1e3,
+          end / 1e3,
+          bytes,
+          getMemcpyType(copyKind),
+          MESSAGE_RECIPROCAL_RECV
+        );
+} else {
+#endif
+        CUpti_ActivityMemcpy *memcpy = (CUpti_ActivityMemcpy *)record;
+        deviceId = memcpy->deviceId;
+        streamId = memcpy->streamId;
+        contextId = memcpy->contextId;
+        start = memcpy->start;
+        end = memcpy->end;
+        bytes = memcpy->bytes;
+        copyKind = memcpy->copyKind;
+        if (cupti_api_runtime())
+        {
+          id = memcpy->runtimeCorrelationId;
+        }
+        else
+        {
+          id = memcpy->correlationId;
+        }
+        if (getMemcpyType(copyKind) == MemcpyHtoD) {
+          direction = MESSAGE_RECV;
+        } else if (getMemcpyType(copyKind) == MemcpyDtoH) {
+          direction = MESSAGE_SEND;
+        }
+			//cerr << "recording memcpy: " << end - start << "ns.\n" << endl;
+		  //cerr << "recording memcpy on device: " << id << endl;
+		  //cerr << "recording memcpy kind: " << copyKind << endl;
 			//We do not always know on the corresponding host event on
 			//the CPU what type of copy we have so we need to register 
 			//the bytes copied here. Be careful we only want to record 
 			//the bytes copied once.
-			int bytes = memcpy->bytes; //record bytes on this device.
 			Tau_cupti_register_memcpy_event(
 				TAU_GPU_USE_DEFAULT_NAME,
-				memcpy->deviceId,
-				memcpy->streamId,
-				memcpy->contextId,
+				deviceId,
+				streamId,
+				contextId,
 				id,
-				memcpy->start / 1e3,
-				memcpy->end / 1e3,
+				start / 1e3,
+				end / 1e3,
 				bytes,
-				getMemcpyType(memcpy->copyKind)
+				getMemcpyType(copyKind),
+        direction
 			);
 			/*
 			CuptiGpuEvent gId = CuptiGpuEvent(TAU_GPU_USE_DEFAULT_NAME, memcpy->streamId, memcpy->contextId, id, NULL, 0);
@@ -358,6 +425,10 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 				TAU_GPU_UNKNOW_TRANSFER_SIZE, 
 				getMemcpyType(memcpy->copyKind));
 			*/	
+#if CUDA_VERSION >= 5050
+  }
+#endif
+      
 				break;
 		}
   	case CUPTI_ACTIVITY_KIND_KERNEL:
@@ -421,7 +492,7 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 #if CUDA_VERSION >= 5050
       }
 #endif
-			//cerr << "recording kernel (device, stream, context, correlation, name): " << kernel->deviceId << ", " << kernel->streamId << ", " << kernel->contextId << ", " << kernel->correlationId << ", " << kernel->name << ", "<< kernel->start << "-" << kernel->end << "ns.\n" << endl;
+      //cerr << "recording kernel (device, stream, context, correlation, name): " << deviceId << ", " << streamId << ", " << contextId << ", " << correlationId << ", " << name << ", "<< start << "-" << end << "ns.\n" << endl;
 			//cerr << "recording kernel (id): "  << kernel->correlationId << ", " << kernel->name << ", "<< kernel->end - kernel->start << "ns.\n" << endl;
       
 

@@ -83,7 +83,8 @@ extern "C" void Tau_cupti_register_memcpy_event(
 						double start,
 						double stop,
 						int bytes_copied,
-						int memcpy_type);
+						int memcpy_type,
+            int direction);
 
 extern "C" void Tau_cupti_register_gpu_event(
 						const char *name,

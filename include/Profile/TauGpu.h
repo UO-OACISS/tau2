@@ -4,6 +4,8 @@
 #define MESSAGE_SEND 0
 #define MESSAGE_RECV 1
 #define MESSAGE_UNKNOWN 2
+#define MESSAGE_RECIPROCAL_SEND 3
+#define MESSAGE_RECIPROCAL_RECV 4
 
 enum Memcpy { MemcpyHtoD = 0, MemcpyDtoH = 1, MemcpyDtoD = 2, MemcpyUnknown = 3 };
 
@@ -118,7 +120,7 @@ extern "C" void Tau_gpu_register_gpu_event(GpuEvent *event, double startTime, do
 
 /* Callback for a Memcpy event that occurred earlier in the execution of the
  * program. Times are pre-aligned to the CPU clock. */
-extern "C" void Tau_gpu_register_memcpy_event(GpuEvent *event, double startTime, double endTime, int transferSize, int memcpyType);
+extern "C" void Tau_gpu_register_memcpy_event(GpuEvent *event, double startTime, double endTime, int transferSize, int memcpyType, int direction);
 
 /* Callback for a GPU atomic event that is associated with this gpu event. */
 extern "C" void Tau_gpu_register_gpu_atomic_event(GpuEvent *event);
