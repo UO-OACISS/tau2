@@ -251,6 +251,7 @@ void Tau_get_current_region_context(int tid) {
 }
 
 /*__inline*/ void Tau_omp_stop_timer(const char * state, int tid, int use_context) {
+#if 0
     char * regionIDstr = NULL;
     if (Tau_collector_flags[tid].activeTimerContext == NULL) {
         regionIDstr = malloc(32);
@@ -271,6 +272,13 @@ void Tau_get_current_region_context(int tid) {
     }
     omp_unset_lock(&writelock);
     free(regionIDstr);
+#else
+    omp_set_lock(&writelock);
+    if (Tau_collector_enabled) {
+      Tau_stop_current_timer_task(tid);
+    }
+    omp_unset_lock(&writelock);
+#endif
 }
 
 void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
