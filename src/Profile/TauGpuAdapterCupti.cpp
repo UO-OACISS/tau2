@@ -3,6 +3,7 @@
 extern "C" void Tau_cupti_set_offset(
             double timestamp
             ) {
+              printf("setting timestamp.\n");
               CuptiGpuEvent::beginTimestamp = timestamp;
             }
 
@@ -71,13 +72,14 @@ extern "C" void Tau_cupti_register_memcpy_event(
 						double start,
 						double stop,
 						int bytes_copied,
-						int memcpy_type
+						int memcpy_type,
+            int direction
 						) {
 							//Empty list of gpu attributes
 							CuptiGpuEvent gpu_event = CuptiGpuEvent(name, 
 								deviceId, streamId, contextId, correlationId, NULL, 0);
 							Tau_gpu_register_memcpy_event(&gpu_event, 
-								start, stop, bytes_copied, memcpy_type);
+								start, stop, bytes_copied, memcpy_type, direction);
 						}
 
 extern "C" void Tau_cupti_register_gpu_event(
