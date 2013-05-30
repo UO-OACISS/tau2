@@ -48,9 +48,13 @@ PACKAGE_HOME = os.path.dirname(os.path.realpath(__file__))
 # Search paths for included files
 INCLUDE_PATH = [ os.path.realpath('.') ]
 
-# Default logging level
-LOGGING_LEVEL = logging.WARNING
+# Tau configuration home
+HOME = os.path.join(os.path.expanduser('~'), '.tau')
 
+# Current Tau configuration
+CONFIG = 'simple'
+
+# Tau source code root directory
 try:
     TAU_ROOT_DIR = os.environ['TAU_ROOT_DIR']
 except KeyError:

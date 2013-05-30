@@ -44,8 +44,9 @@ import traceback
 import pkgutil
 import signal
 import textwrap
+import taucmd
 from docopt import docopt
-from taucmd import LOGGING_LEVEL, EXPECT_PYTHON_VERSION, TAU_ROOT_DIR
+from taucmd import EXPECT_PYTHON_VERSION, TAU_ROOT_DIR 
 from taucmd import TauConfigurationError, TauNotImplementedError
 from taucmd import commands
 from taucmd import compiler
@@ -57,10 +58,11 @@ The Tau Performance System (version %(tau_version)s)
 http://tau.uoregon.edu/
 
 Usage:
-  tau [--help] [--version] [--verbose=<level>] [--config=<name>] <command> [<args>...]
+  tau [--help] [--version] [--verbose=<level>] [--home=<path>] [--config=<name>] <command> [<args>...]
 
 Options:
-  --config=<file>   Specify a Tau configuration file.
+  --home=<path>     Set Tau configuration home. [default: %(home_default)s]
+  --config=<name>   Specify a Tau configuration. [default: %(config_default)s]
   --verbose=<0-4>   Verbosity level.  [default: 1]
   --help            Show usage.
   --version         Show version.
@@ -75,10 +77,6 @@ Subcommands:
 ================================================================================
 """
 
-# configure     Tell Tau about your environment.
-#   execute       Execute your application with Tau.
-#   display       Show performance data.
-#   help          Get help about a Tau command.
 
 def lookup_tau_version():
     """
@@ -176,11 +174,10 @@ def main():
     # Get tau version
     tau_version = lookup_tau_version()
     
-    # Get known compilers
-    
-   
     # Parse command line arguments
     usage = USAGE % {'tau_version': tau_version,
+                     'home_default': taucmd.HOME,
+                     'config_default': taucmd.CONFIG,
                      'compilers': get_known_compilers(),
                      'commands': get_command_list()}
     args = docopt(usage, version=tau_version, options_first=True)
@@ -188,19 +185,25 @@ def main():
     # Set logging level
     verblevel = int(args['--verbose'])
     if verblevel <= 0:
-        LOGGING_LEVEL = logging.CRITICAL
+        level = logging.CRITICAL
     elif verblevel == 1:
-        LOGGING_LEVEL = logging.ERROR
+        level = logging.ERROR
     elif verblevel == 2:
-        LOGGING_LEVEL = logging.WARNING
+        level = logging.WARNING
     elif verblevel == 3:
-        LOGGING_LEVEL = logging.INFO
+        level = logging.INFO
     elif verblevel >= 4:
-        LOGGING_LEVEL = logging.DEBUG
+        level = logging.DEBUG
         environment.TAU_OPTIONS.append('-optVerbose')
-    logging.basicConfig(level=LOGGING_LEVEL)
-    logging.info('Verbosity level: %s' % logging.getLevelName(LOGGING_LEVEL))
+    logging.basicConfig(level=level)
+    logging.info('Verbosity level: %s' % logging.getLevelName(level))
     logging.debug('Arguments: %s' % args)
+    
+    # Get installation home
+    taucmd.HOME = args['--home']
+    
+    # Get Tau configuration name
+    taucmd.CONFIG = args['--config']
 
     # Try to execute as a tau command
     cmd = args['<command>']

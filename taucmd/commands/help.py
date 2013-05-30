@@ -43,8 +43,6 @@ from docopt import docopt
 USAGE = """
 Usage:
   tau help <command>
-
-
 """
 
 SHORT_DESCRIPTION = "Get help with a command."
@@ -88,13 +86,16 @@ def advise(cmd):
         print "%r: Unknown command. Try 'tau --help'." % cmd
     return 1
 
+def get_usage():
+    return USAGE
+
 def main(argv):
     """
     Program entry point
     """
     
     # Parse command line arguments
-    args = docopt(USAGE, argv=argv)
+    args = docopt(get_usage(), argv=argv)
     logging.debug('Arguments: %s' % args)
     
     # Try to look up a Tau command's built-in help page
@@ -103,7 +104,12 @@ def main(argv):
     try:
         __import__(cmd_module)
         logging.info('Recognized %r as tau subcommand' % cmd)
+        print '-'*80
+        print sys.modules[cmd_module].get_usage()
+        print '-'*80
+        print '\nHelp:',
         print sys.modules[cmd_module].HELP
+        print '-'*80
         return 0
     except ImportError:
         # It wasn't a tau command, but that's OK

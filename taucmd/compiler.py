@@ -39,7 +39,9 @@ import sys
 import logging
 import subprocess
 from taucmd import environment
+from taucmd import configuration
 from taucmd import TauNotImplementedError
+
 
 TAU_CC = 'tau_cc.sh'
 TAU_CXX = 'tau_cxx.sh'
@@ -141,15 +143,16 @@ def compile(args):
     """
     cmd = args['<command>']
     cmd_args = args['<args>']
+    config_name = args['--config']
     cc = identify(cmd)
-    if cc:
-        logging.info('Recognized %r as compiler command (%s)' % (cmd, cc.NAME))
-        proc_args = [cc.TAU_COMMAND] + cmd_args
-        proc_env = environment.tau_environment()
-        logging.debug('Creating subprocess.\n\targuments=%s\n\tenvironment=%s' % (proc_args, proc_env))
-        proc = subprocess.Popen(proc_args, env=proc_env, stdout=sys.stdout, stderr=sys.stderr)
-        return proc.wait()
-    else:
-        raise TauNotImplementedError("%r: unknown compiler command. Try 'tau --help'." % cmd, cmd) 
-                                     
-
+    if not cc:
+        raise TauNotImplementedError("%r: unknown compiler command. Try 'tau --help'." % cmd, cmd)
+    
+    configuration.build(None)
+        
+    logging.info('Recognized %r as compiler command (%s)' % (cmd, cc.NAME))
+    proc_args = [cc.TAU_COMMAND] + cmd_args
+    proc_env = environment.tau_environment()
+    logging.debug('Creating subprocess.\n\targuments=%s\n\tenvironment=%s' % (proc_args, proc_env))
+    proc = subprocess.Popen(proc_args, env=proc_env, stdout=sys.stdout, stderr=sys.stderr)
+    return proc.wait()

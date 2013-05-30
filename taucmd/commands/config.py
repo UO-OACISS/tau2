@@ -36,105 +36,121 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import os
-import sys
-import errno
 import logging
-import ConfigParser
+import taucmd
 from docopt import docopt
+from taucmd import configuration
 
 USAGE = """
 Usage:
   tau config [options]
 
-Installation Options:
-  --prefix=<path>                   Tau installation path. [default: %(prefix_default)s]
-  --arch=<arch>                     Target architecture. [default: %(arch_default)s]
-  --shared=(yes|no)                 Enable/disable Tau shared library. [default: yes]
+Configuration Options:
+  --name=<name>                     Configuration name. [default: %(name_default)s]
+  --default=<name>                  Set the default configuration name.
+  --delete=<name>                   Delete a configuration.
+  --list                            Show all configurations.
 
 Assisting Library Options:
-  --pdt=(auto|download|<path>)      Program Database Toolkit (PDT) installation path. [default: auto]
-  --bfd=(auto|download|<path>)      GNU Binutils installation path. [default: download]
-  --dyninst=(auto|download|<path>)  DyninstAPI installation path. [default: auto]
-  --papi=(auto|<path>)              Performance API (PAPI) installation path. [default: auto]
-  --jdk=(auto|<path>)               Java Development Toolkit (JDK) installation path. [default: auto]
-  --scorep=<path>                   Score-P installation path.
-
-Multithreading:
-  --threads=<library>               Set threading library.  One of:
-                                      pthreads: POSIX threads library
-                                      openmp:   Compiler's OpenMP library
+  --pdt=(download|<path>)           Program Database Toolkit (PDT) installation path. [default: download]
+  --bfd=(download|<path>)           GNU Binutils installation path. [default: download]
+  --dyninst=(download|<path>)       DyninstAPI installation path. [default: download]
+  --papi=<path>                     Performance API (PAPI) installation path.
+  
+Multithreading Options:
+  --threads=(openmp|pthread)        Select multithreading library.
+                                    openmp: Use the compiler's OpenMP libraries.
+                                    pthread: Use POSIX threads.
 
 Message Passing Interface (MPI) Options:
-  --mpi=<path>                      MPI installation path. [default: auto]
+  --mpi=<path>                      MPI installation path.
   --mpi-include=<path>              MPI header files installation path.
   --mpi-lib=<path>                  MPI library files installation path.
-  --mpi-track-comm=(yes|no)         Enable/disable communication event tracking. [default: yes]
 
 NVIDIA CUDA Options:
-  --cuda=(auto|<path>)              NVIDIA CUDA SDK installation path. [default: auto]
-  --cuda-libs=<libraries>           Additional linker options used when linking to the CUDA driver libraries [default: None]     
+  --cuda=<path>                     NVIDIA CUDA SDK installation path.
+  --cuda-libs=<libraries>           Additional linker options used when linking to the CUDA driver libraries.     
 
 Universal Parallel C (UPC) Options:
   --upc-gasnet=<path>               GASNET installation path.
-  --upc-network=(auto|mpi|smp)      Specify UPC network. [default: auto]
+  --upc-network=(auto|mpi|smp)      Specify UPC network.
 """
 
-SHORT_DESCRIPTION = "Create a new Tau configuration file."
+SHORT_DESCRIPTION = "Create and manage Tau configurations."
 
 HELP = """
 Help page to be written.
 """
 
-def detect_host_arch():
-    """
-    Tries to autodetect the host architecture.
-    """
-    
-    # For now, just for x86_64
-    return 'x86_64'
+COMMANDS = ['--default', '--delete', '--list']
 
-def detect_host_compiler():
+def get_usage():
     """
-    Tries to autodetect the host compiler suite.
+    Returns a string describing subcommand usage
     """
-    
-    # Just GNU for now
-    return 'gnu'
-
+    return USAGE % {'name_default':  taucmd.CONFIG}
 
 def main(argv):
     """
     Program entry point
     """
 
-    # Get some default values
-    prefix_default = os.path.join(os.path.expanduser('~'), '.tau')
-    arch_default = detect_host_arch()
-    compiler_default = detect_host_compiler()
-    
     # Parse command line arguments
-    usage = USAGE % {'prefix_default': prefix_default,
-                     'arch_default': arch_default,
-                     'compiler_default': compiler_default}
-    args = docopt(usage, argv=argv)
+    args = docopt(get_usage(), argv=argv)
     logging.debug('Arguments: %s' % args)
-    
-    # Translate command line arguments to configuration file
-    config = ConfigParser.SafeConfigParser()
-    default_section = 'tau'
-    config.add_section(default_section)
+
+    # Load configuration registry
+    registry = configuration.Registry.load(taucmd.HOME, taucmd.CONFIG)
+
+    # Check for --list command
+    if args['--list']:
+        print registry
+        return 0
+
+    # Check for --set-default command
+    name = args['--default']
+    if name:
+        try:
+            registry.set_default(name)
+            registry.save()
+            return 0
+        except KeyError:
+            print 'There is no configuration named %r at %r' % (name, registry.prefix)
+            print 'Valid names are:'
+            for name in registry:
+                print name
+            return 1
+
+    # Check for --delete command
+    name = args['--delete']
+    if name:
+        try:
+            registry.unregister(name)
+            registry.save()
+            return 0
+        except KeyError:
+            print 'There is no configuration named %r at %r' % (name, registry.prefix)
+            print 'Valid names are:'
+            for name in registry:
+                print name
+            return 1
+
+    # Translate command line arguments to configuration data
+    config = dict()
     for key, val in args.iteritems():
-        if key[0:2] == '--':
-            config.set(default_section, key[2:], str(val))
+        if key[0:2] == '--' and not key in COMMANDS:
+            config[key[2:]] = val
 
-    # Create installation prefix
+    # Add configuration to registry
     try:
-        os.makedirs(args['--prefix'])
-    except OSError as exc:
-        if exc.errno == errno.EEXIST and os.path.isdir(args['--prefix']): pass
-        else: raise
-
-    # Save configuration file
-    config_file = os.path.join(args['--prefix'], 'config')
-    with open(config_file, 'wb') as f:
-        config.write(f)
+        registry.register(config)
+        registry.save()
+        return 0
+    except KeyError:
+        print 'A configuration named %r already exists.' % config['name']
+        print 'Use the --name option to specify a different name, '
+        print 'or use the --delete option to remove the existing configuration.'
+        print 'See tau config --help for more information.'
+        return 1
+    
+        
