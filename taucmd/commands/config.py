@@ -36,25 +36,30 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import os
-import logging
+import subprocess
 import taucmd
 from docopt import docopt
-from taucmd import configuration
+from taucmd import configuration, TauConfigurationError
+
+LOGGER = taucmd.getLogger(__name__)
 
 USAGE = """
 Usage:
   tau config [options]
 
 Configuration Options:
-  --name=<name>                     Configuration name. [default: %(name_default)s]
+  --new=<name>                      Create new configuration. [default: %(name_default)s]
   --default=<name>                  Set the default configuration name.
   --delete=<name>                   Delete a configuration.
   --list                            Show all configurations.
 
+Target Options:
+  --target=<name>                   Set target. [default: %(target_default)s]
+
 Assisting Library Options:
-  --pdt=(download|<path>)           Program Database Toolkit (PDT) installation path. [default: download]
+  --pdt=<path>                      Program Database Toolkit (PDT) installation path.
   --bfd=(download|<path>)           GNU Binutils installation path. [default: download]
-  --dyninst=(download|<path>)       DyninstAPI installation path. [default: download]
+  --dyninst=<path>                  DyninstAPI installation path.
   --papi=<path>                     Performance API (PAPI) installation path.
   
 Multithreading Options:
@@ -68,8 +73,7 @@ Message Passing Interface (MPI) Options:
   --mpi-lib=<path>                  MPI library files installation path.
 
 NVIDIA CUDA Options:
-  --cuda=<path>                     NVIDIA CUDA SDK installation path.
-  --cuda-libs=<libraries>           Additional linker options used when linking to the CUDA driver libraries.     
+  --cuda=<path>                     NVIDIA CUDA SDK installation path.     
 
 Universal Parallel C (UPC) Options:
   --upc-gasnet=<path>               GASNET installation path.
@@ -82,13 +86,44 @@ HELP = """
 Help page to be written.
 """
 
-COMMANDS = ['--default', '--delete', '--list']
+def detect_target():
+    """
+    Use TAU's archfind script to detect the target architecture
+    """
+    cmd = os.path.join(taucmd.TAU_ROOT_DIR, 'utils', 'archfind')
+    return subprocess.check_output(cmd).strip()
+
+def buildConfiguration(args):
+    """
+    Create a TauConfiguration object from command line arguments
+    """
+    commands = ['--new', '--default', '--delete', '--list']
+    path_args = ['--pdt', '--bfd', '--dyninst', '--papi', '--mpi', 
+                 '--mpi-include', '--mpi-lib', '--cuda', '--upc-gasnet']
+
+    # Check for invalid paths
+    for arg in path_args:
+        path = args[arg]
+        if path and path != 'download':
+            path = args[arg] = os.path.expanduser(path)
+            if not (os.path.exists(path) and os.path.isdir(path)):
+                raise TauConfigurationError('Invalid argument: %s=%s: Path does not exist or is not a directory.' % (arg, path))
+    # Populate configuration data
+    config = configuration.TauConfiguration()
+    config['name'] = args['--new']
+    for key, val in args.iteritems():
+        if key[0:2] == '--' and not key in commands:
+            config[key[2:]] = val
+    # Everything looks good
+    return config
+    
 
 def get_usage():
     """
     Returns a string describing subcommand usage
     """
-    return USAGE % {'name_default':  taucmd.CONFIG}
+    return USAGE % {'name_default': taucmd.CONFIG,
+                    'target_default': detect_target()}
 
 def main(argv):
     """
@@ -97,10 +132,10 @@ def main(argv):
 
     # Parse command line arguments
     args = docopt(get_usage(), argv=argv)
-    logging.debug('Arguments: %s' % args)
+    LOGGER.debug('Arguments: %s' % args)
 
     # Load configuration registry
-    registry = configuration.Registry.load(taucmd.HOME, taucmd.CONFIG)
+    registry = configuration.Registry.load()
 
     # Check for --list command
     if args['--list']:
@@ -136,10 +171,7 @@ def main(argv):
             return 1
 
     # Translate command line arguments to configuration data
-    config = dict()
-    for key, val in args.iteritems():
-        if key[0:2] == '--' and not key in COMMANDS:
-            config[key[2:]] = val
+    config = buildConfiguration(args)
 
     # Add configuration to registry
     try:
@@ -148,8 +180,7 @@ def main(argv):
         return 0
     except KeyError:
         print 'A configuration named %r already exists.' % config['name']
-        print 'Use the --name option to specify a different name, '
-        print 'or use the --delete option to remove the existing configuration.'
+        print 'Use the --new option to create a new configuration, or use the --delete option to remove the existing configuration.'
         print 'See tau config --help for more information.'
         return 1
     
