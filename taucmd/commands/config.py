@@ -48,7 +48,7 @@ Usage:
   tau config [options]
 
 Configuration Options:
-  --new=<name>                      Create new configuration. [default: %(name_default)s]
+  --new=<name>                      Create new configuration.
   --default=<name>                  Set the default configuration name.
   --delete=<name>                   Delete a configuration.
   --list                            Show all configurations.
@@ -86,14 +86,14 @@ HELP = """
 Help page to be written.
 """
 
-def detect_target():
+def detectTarget():
     """
     Use TAU's archfind script to detect the target architecture
     """
     cmd = os.path.join(taucmd.TAU_ROOT_DIR, 'utils', 'archfind')
     return subprocess.check_output(cmd).strip()
 
-def buildConfiguration(args):
+def getConfiguration(args):
     """
     Create a TauConfiguration object from command line arguments
     """
@@ -118,12 +118,12 @@ def buildConfiguration(args):
     return config
     
 
-def get_usage():
+def getUsage():
     """
     Returns a string describing subcommand usage
     """
     return USAGE % {'name_default': taucmd.CONFIG,
-                    'target_default': detect_target()}
+                    'target_default': detectTarget()}
 
 def main(argv):
     """
@@ -131,7 +131,7 @@ def main(argv):
     """
 
     # Parse command line arguments
-    args = docopt(get_usage(), argv=argv)
+    args = docopt(getUsage(), argv=argv)
     LOGGER.debug('Arguments: %s' % args)
 
     # Load configuration registry
@@ -146,15 +146,13 @@ def main(argv):
     name = args['--default']
     if name:
         try:
-            registry.set_default(name)
+            registry.setDefault(name)
             registry.save()
             return 0
         except KeyError:
-            print 'There is no configuration named %r at %r' % (name, registry.prefix)
-            print 'Valid names are:'
-            for name in registry:
-                print name
-            return 1
+            msg = 'There is no configuration named %r at %r' % (name, registry.prefix)
+            hint = 'Valid names are: %s' % ', '.join([name for name in registry])
+            raise TauConfigurationError(msg, hint)
 
     # Check for --delete command
     name = args['--delete']
@@ -164,24 +162,24 @@ def main(argv):
             registry.save()
             return 0
         except KeyError:
-            print 'There is no configuration named %r at %r' % (name, registry.prefix)
-            print 'Valid names are:'
-            for name in registry:
-                print name
-            return 1
+            msg = 'There is no configuration named %r at %r' % (name, registry.prefix)
+            hint = 'Valid names are: %s' % ', '.join([name for name in registry])
+            raise TauConfigurationError(msg, hint)
 
-    # Translate command line arguments to configuration data
-    config = buildConfiguration(args)
+    # Check for --new command
+    if args['--new']:
+        # Translate command line arguments to configuration data
+        config = getConfiguration(args)
+        # Add configuration to registry
+        try:
+            registry.register(config)
+            registry.save()
+            return 0
+        except KeyError:
+            msg = 'A configuration named %r already exists.' % config['name']
+            hint = 'Use the --new option to create a new named configuration.'
+            raise TauConfigurationError(msg, hint)
 
-    # Add configuration to registry
-    try:
-        registry.register(config)
-        registry.save()
-        return 0
-    except KeyError:
-        print 'A configuration named %r already exists.' % config['name']
-        print 'Use the --new option to create a new configuration, or use the --delete option to remove the existing configuration.'
-        print 'See tau config --help for more information.'
-        return 1
-    
+    # Don't know what you want so show usage
+    print getUsage()
         

@@ -55,7 +55,7 @@ INCLUDE_PATH = [ os.path.realpath('.') ]
 # Tau configuration home
 HOME = os.path.join(os.path.expanduser('~'), '.tau')
 
-# Current Tau configuration
+# Default Tau configuration
 CONFIG = 'simple'
 
 # Logging level
@@ -133,4 +133,4 @@ def setLogLevel(level):
     global LOG_LEVEL
     LOG_LEVEL = level.upper()
     for logger in _loggers:
-        logger.setLevel(LOG_LEVEL)    
+        logger.setLevel(LOG_LEVEL)

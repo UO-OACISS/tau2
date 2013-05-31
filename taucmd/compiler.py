@@ -41,7 +41,7 @@ import subprocess
 import taucmd
 import inspect
 from taucmd import configuration
-from taucmd import TauNotImplementedError
+from taucmd import TauNotImplementedError, TauConfigurationError
 
 LOGGER = taucmd.getLogger(__name__)
 
@@ -135,26 +135,21 @@ def compile(args):
     cc = identify(cmd)
     if not cc:
         raise TauNotImplementedError("%r: unknown compiler command. Try 'tau --help'." % cmd, cmd)
-    LOGGER.info('Recognized %r as compiler command (%s)' % (cmd, cc.NAME))
+    LOGGER.info('Recognized %r as %s' % (cmd, cc.NAME))
     
     # Load the configuration registry
     registry = configuration.Registry.load()
     if not len(registry):
-        print "No Tau configurations have been created.  Use the 'config' subcommand to create a configuration."
-        print "See tau config --help for more info."
-        return 1
-    
+        raise TauConfigurationError("No Tau configurations have been created.",
+                                    "Use the 'config' subcommand to create a configuration.")
+
     # Load a configuration
     try:
-        config = registry.loadDefault()
+        config = registry[taucmd.CONFIG]
     except KeyError:
-        print 'There is no configuration named %r at %r' % (taucmd.CONFIG, registry.prefix)
-        print 'Valid names are:'
-        for name in registry:
-            print name
-        print "Use the --config argument to specify the configuration name or the 'config' subcommand to create a new configuration."
-        print "See tau --help for more info."
-        return 1
+        message = 'There is no configuration named %r at %r' % (taucmd.CONFIG, registry.prefix)
+        hint = 'Valid names are: %s.' % ', '.join([name for name in registry])
+        raise TauConfigurationError(message, hint)
     LOGGER.info('Selected configuration %r' % taucmd.CONFIG)
     LOGGER.debug('Configuration details:\n%s' % config)
     
@@ -168,5 +163,9 @@ def compile(args):
     cmd = [cc.TAU_COMMAND] + cmd_args
     env = compiled.getEnvironment()
     LOGGER.debug('Creating subprocess: cmd=%r, env=%r' % (cmd, env))
-    proc = subprocess.Popen(cmd, env=env, stdout=sys.stdout, stderr=sys.stderr)
+    if taucmd.LOG_LEVEL == 'DEBUG':
+        proc = subprocess.Popen(cmd, env=env, stdout=sys.stdout, stderr=sys.stderr)
+    else:
+        with open(os.devnull, 'w') as devnull:
+            proc = subprocess.Popen(cmd, env=env, stdout=devnull, stderr=devnull)
     return proc.wait()
