@@ -88,7 +88,7 @@ def advise(cmd):
         print "%r: Unknown command. Try 'tau --help'." % cmd
     return 1
 
-def get_usage():
+def getUsage():
     return USAGE
 
 def main(argv):
@@ -97,7 +97,7 @@ def main(argv):
     """
     
     # Parse command line arguments
-    args = docopt(get_usage(), argv=argv)
+    args = docopt(getUsage(), argv=argv)
     LOGGER.debug('Arguments: %s' % args)
     
     # Try to look up a Tau command's built-in help page
@@ -107,7 +107,7 @@ def main(argv):
         __import__(cmd_module)
         LOGGER.info('Recognized %r as tau subcommand' % cmd)
         print '-'*80
-        print sys.modules[cmd_module].get_usage()
+        print sys.modules[cmd_module].getUsage()
         print '-'*80
         print '\nHelp:',
         print sys.modules[cmd_module].HELP

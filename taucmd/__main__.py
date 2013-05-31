@@ -51,6 +51,7 @@ from taucmd import EXPECT_PYTHON_VERSION, TAU_ROOT_DIR
 from taucmd import TauConfigurationError, TauNotImplementedError
 from taucmd import commands
 from taucmd import compiler
+from taucmd import configuration
 
 USAGE = """
 ================================================================================
@@ -94,6 +95,15 @@ def lookup_tau_version():
                 return match.group(1)
     return '(unknown)'
 
+def lookup_default_config():
+    """
+    Loads the registry to get the default config.
+    """
+    registry = configuration.Registry.load()
+    if not len(registry):
+        return taucmd.CONFIG
+    else:
+        return registry.default
 
 def get_known_compilers():
     known = ', '.join(compiler.known_compiler_commands())
@@ -119,14 +129,17 @@ def taucmd_excepthook(etype, e, tb):
     """
     Exception handler for any uncaught exception (except SystemExit).
     """
-    if etype == TauConfigurationError:
+    if etype == KeyboardInterrupt:
+        LOGGER.info('Received keyboard interrupt.  Exiting.')
+        sys.exit(1)
+    elif etype == TauConfigurationError:
         hint = 'Hint: %s\n' % e.hint if e.hint else ''
         message = dedent("""
         %(value)s
         %(hint)s
         Tau cannot proceed with the given inputs.
-        Please review the input files and command line parameters or contact %(contact)s for assistance.
-        """ % {'value': e.value, 'hint': hint, 'contact': taucmd.HELP_CONTACT})
+        Please review the input files and command line parameters
+        or contact %(contact)s for assistance.""" % {'value': e.value, 'hint': hint, 'contact': taucmd.HELP_CONTACT})
         LOGGER.critical(message)
         sys.exit(-1)
     elif etype == TauNotImplementedError:
@@ -173,7 +186,7 @@ def main():
     # Parse command line arguments
     usage = USAGE % {'tau_version': tau_version,
                      'home_default': taucmd.HOME,
-                     'config_default': taucmd.CONFIG,
+                     'config_default': lookup_default_config(),
                      'log_default': taucmd.LOG_LEVEL,
                      'compilers': get_known_compilers(),
                      'commands': get_command_list()}

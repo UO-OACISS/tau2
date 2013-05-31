@@ -209,12 +209,6 @@ class Registry(object):
             LOGGER.info('Set default configuration to %r' % self.default)
         else:
             raise KeyError
-        
-    def loadDefault(self):
-        """
-        Returns the default configuration
-        """
-        return self.data[self.default]
 
 class TauConfiguration(object):
     """
@@ -319,7 +313,6 @@ class TauConfiguration(object):
         cfg.__dict__.update(self.__dict__)
         cfg.family = family
         cfg.prefix = os.path.join(taucmd.HOME, os.path.join(family.TAG, cfg.data['id']))
-        LOGGER.info('Building configuration %r for use with %r' % (cfg.data['name'], family.NAME))
         return cfg
 
     def build(self, cc):
@@ -333,29 +326,40 @@ class TauConfiguration(object):
             LOGGER.debug('Configuration %r is already built.' % compiled.data['name'])
             return compiled
         LOGGER.debug('Configuration will be installed at %r' % compiled.prefix)
-        LOGGER.info('The %r configuration will be compiled.  This will only be done once.' % compiled.data['name'])
 
         # Prepare the TAU source code
         srcdir = os.path.join(taucmd.HOME, 'src')
         clone_tau_source(srcdir)
         
+        # Choose to display configure/build output
+        devnull = None
+        if taucmd.LOG_LEVEL == 'DEBUG':
+            stdout = sys.stdout
+            stderr = sys.stderr
+        else:
+            devnull = open(os.devnull, 'w')
+            stdout = devnull
+            stderr = devnull
+
+        LOGGER.info('Building TAU configuration %r for use with %r. This will only be done once.' % (compiled.data['name'], cc.FAMILY.NAME))
+
         # Configure the source code for this configuration
         cmd = compiled._get_configure_command()
         LOGGER.debug('Creating configure subprocess in %r: %r' % (srcdir, cmd))
-        proc = subprocess.Popen(cmd, cwd=srcdir, stdout=sys.stdout, stderr=sys.stderr)
+        proc = subprocess.Popen(cmd, cwd=srcdir, stdout=stdout, stderr=stderr)
         if proc.wait():
-            LOGGER.critical('TAU configure failed.')
             raise TauError('TAU configure failed.')
         
         # Execute make
         cmd = ['make', '-j', 'install']
         LOGGER.debug('Creating make subprocess in %r: %r' % (srcdir, cmd))
-        proc = subprocess.Popen(cmd, cwd=srcdir, stdout=sys.stdout, stderr=sys.stderr)
+        proc = subprocess.Popen(cmd, cwd=srcdir, stdout=stdout, stderr=stderr)
         if proc.wait():
-            LOGGER.critical('TAU compilation failed.')
             raise TauError('TAU compilation failed.')
         
         # Mark this configuration as built
+        if devnull:
+            devnull.close() 
         self.built = True
         return compiled
     
