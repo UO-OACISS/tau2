@@ -45,12 +45,12 @@ import pkgutil
 import signal
 import textwrap
 import taucmd
+from textwrap import dedent
 from docopt import docopt
 from taucmd import EXPECT_PYTHON_VERSION, TAU_ROOT_DIR 
 from taucmd import TauConfigurationError, TauNotImplementedError
 from taucmd import commands
 from taucmd import compiler
-from taucmd import environment
 
 USAGE = """
 ================================================================================
@@ -58,14 +58,15 @@ The Tau Performance System (version %(tau_version)s)
 http://tau.uoregon.edu/
 
 Usage:
-  tau [--help] [--version] [--verbose=<level>] [--home=<path>] [--config=<name>] <command> [<args>...]
+  tau [--help] [--version] [--log=<level>] [--home=<path>] [--config=<name>] <command> [<args>...]
 
 Options:
-  --home=<path>     Set Tau configuration home. [default: %(home_default)s]
-  --config=<name>   Specify a Tau configuration. [default: %(config_default)s]
-  --verbose=<0-4>   Verbosity level.  [default: 1]
-  --help            Show usage.
-  --version         Show version.
+  --home=<path>      Tau configuration home. [default: %(home_default)s]
+  --config=<name>    Tau configuration. [default: %(config_default)s]
+  --log=<level>      Output level.  [default: %(log_default)s]
+                     <level> can be CRITICAL, ERRROR, WARNING, INFO, or DEBUG
+  --help             Show usage.
+  --version          Show version.
   
   <command> may be a compiler (e.g. gcc, mpif90) or a subcommand
   
@@ -77,6 +78,7 @@ Subcommands:
 ================================================================================
 """
 
+LOGGER = taucmd.getLogger(__name__)
 
 def lookup_tau_version():
     """
@@ -118,37 +120,37 @@ def taucmd_excepthook(etype, e, tb):
     Exception handler for any uncaught exception (except SystemExit).
     """
     if etype == TauConfigurationError:
-        print
-        print 'ERROR: %s' % e.value
-        if e.hint:
-            print 'Hint: %s' % e.hint
-        print
-        print 'Tau cannot proceed with the given inputs.'
-        print 'Please review the input files and command line parameters or contact <tau-bugs@cs.uoregon.com> for assistance.'
+        hint = 'Hint: %s\n' % e.hint if e.hint else ''
+        message = dedent("""
+        %(value)s
+        %(hint)s
+        Tau cannot proceed with the given inputs.
+        Please review the input files and command line parameters or contact %(contact)s for assistance.
+        """ % {'value': e.value, 'hint': hint, 'contact': taucmd.HELP_CONTACT})
+        LOGGER.critical(message)
         sys.exit(-1)
     elif etype == TauNotImplementedError:
-        print
-        print 'ERROR: Unimplemented feature "%s": %s' % (e.missing, e.value)
-        if e.hint:
-            print 'Hint: %s' % e.hint
-        print
-        print 'Sorry, you have requested a feature that is not yet implemented.'
-        print 'Please contact <tau-bugs@cs.uoregon.edu> for assistance.'
+        hint = 'Hint: %s\n' % e.hint if e.hint else ''
+        message = dedint("""
+        Unimplemented feature %(missing)r: %(value)s
+        %(hint)s
+        Sorry, you have requested a feature that is not yet implemented.
+        Please contact %(contact)s for assistance.
+        """ % {'missing': e.missing, 'value': e.value, 'hint': hint, 'contact': taucmd.HELP_CONTACT})
+        LOGGER.critical(message)
         sys.exit(-1)
     else:
         traceback.print_exception(etype, e, tb)
-        print
-        print '!'*80
-        print '! ERROR:'
-        print '! An unexpected %s exception was raised.  ' % etype.__name__
-        print '!'
-        print '! Please contact <tau-bugs@cs.uoregon.edu> for assistance.'
-        print '! If possible, please include the output of this command:'
-        print '!'
-        print '! tau --verbose=4 %s' % ' '.join(sys.argv[1:])
-        print '!'
-        print '!'*80
-        print
+        args = [arg for arg in sys.argv[1:] if not '--log' in arg] 
+        message = dedent("""
+        An unexpected %(typename)s exception was raised.
+        Please contact <tau-bugs@cs.uoregon.edu> for assistance.
+        If possible, please include the output of this command:
+
+        tau --log=DEBUG %(cmd)s
+        """ % {'typename': etype.__name__, 'cmd': ' '.join(args)})
+        LOGGER.critical(message)
+        sys.exit(-1)
 
         
 def main():
@@ -163,14 +165,8 @@ def main():
     if sys.version_info < EXPECT_PYTHON_VERSION:
         version = '.'.join(map(str, sys.version_info[0:3]))
         expected = '.'.join(map(str, EXPECT_PYTHON_VERSION))
-        print
-        print '!'*80
-        print "! WARNING:"
-        print "! Your Python version is %s, but Tau expects Python %s or later." % (version, expected)
-        print "! Please update Python."
-        print '!'*80
-        print
-        
+        LOGGER.warning("Your Python version is %s, but 'tau' expects Python %s or later.  Please update Python." % (version, expected))
+
     # Get tau version
     tau_version = lookup_tau_version()
     
@@ -178,64 +174,51 @@ def main():
     usage = USAGE % {'tau_version': tau_version,
                      'home_default': taucmd.HOME,
                      'config_default': taucmd.CONFIG,
+                     'log_default': taucmd.LOG_LEVEL,
                      'compilers': get_known_compilers(),
                      'commands': get_command_list()}
     args = docopt(usage, version=tau_version, options_first=True)
 
-    # Set logging level
-    verblevel = int(args['--verbose'])
-    if verblevel <= 0:
-        level = logging.CRITICAL
-    elif verblevel == 1:
-        level = logging.ERROR
-    elif verblevel == 2:
-        level = logging.WARNING
-    elif verblevel == 3:
-        level = logging.INFO
-    elif verblevel >= 4:
-        level = logging.DEBUG
-        environment.TAU_OPTIONS.append('-optVerbose')
-    logging.basicConfig(level=level)
-    logging.info('Verbosity level: %s' % logging.getLevelName(level))
-    logging.debug('Arguments: %s' % args)
+    # Set log level
+    taucmd.setLogLevel(args['--log'])
+    LOGGER.debug('Arguments: %s' % args)
+    LOGGER.debug('Verbosity level: %s' % taucmd.LOG_LEVEL)
     
-    # Get installation home
+    # Record global arguments
     taucmd.HOME = args['--home']
-    
-    # Get Tau configuration name
     taucmd.CONFIG = args['--config']
-
+    
     # Try to execute as a tau command
     cmd = args['<command>']
     cmd_args = args['<args>']
     cmd_module = 'taucmd.commands.%s' % cmd
     try:
         __import__(cmd_module)
-        logging.info('Recognized %r as tau subcommand' % cmd)
+        LOGGER.debug('Recognized %r as tau subcommand' % cmd)
         return sys.modules[cmd_module].main([cmd] + cmd_args)
     except ImportError:
         # It wasn't a tau command, but that's OK
-        logging.debug('%r not recognized as tau subcommand' % cmd)
+        LOGGER.debug('%r not recognized as tau subcommand' % cmd)
 
     # Try to execute as a compiler command
     try:
         retval = compiler.compile(args)
         if retval == 0:
-            logging.info('Compilation successful')
+            LOGGER.info('Compilation successful')
         elif retval > 0:
-            logging.critical('Compilation failed')
+            LOGGER.critical('Compilation failed')
         elif proc.returncode < 0:
             signal_names = dict((getattr(signal, n), n) for n in dir(signal) 
                                 if n.startswith('SIG') and '_' not in n)
-            logging.critical('Compilation aborted by signal %s' % signal_names[-proc.returncode])
+            LOGGER.critical('Compilation aborted by signal %s' % signal_names[-proc.returncode])
         return retval
     except TauNotImplementedError:
         # It wasn't a compiler command, but that's OK
-        logging.debug('%r not recognized as a compiler command' % cmd)
+        LOGGER.debug('%r not recognized as a compiler command' % cmd)
         
     # Not sure what to do at this point, so advise the user and exit
-    logging.debug("Can't classify %r.  Calling 'tau help' to get advice." % cmd)
-    return commands.help.main(['help', cmd] + cmd_args)
+    LOGGER.debug("Can't classify %r.  Calling 'tau help' to get advice." % cmd)
+    return commands.help.main(['help', cmd])
 
 
 # Command line execution

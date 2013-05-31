@@ -37,8 +37,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
 import sys
-import logging
+import taucmd
 from docopt import docopt
+
+LOGGER = taucmd.getLogger(__name__)
 
 USAGE = """
 Usage:
@@ -96,14 +98,14 @@ def main(argv):
     
     # Parse command line arguments
     args = docopt(get_usage(), argv=argv)
-    logging.debug('Arguments: %s' % args)
+    LOGGER.debug('Arguments: %s' % args)
     
     # Try to look up a Tau command's built-in help page
     cmd = args['<command>']
     cmd_module = 'taucmd.commands.%s' % cmd
     try:
         __import__(cmd_module)
-        logging.info('Recognized %r as tau subcommand' % cmd)
+        LOGGER.info('Recognized %r as tau subcommand' % cmd)
         print '-'*80
         print sys.modules[cmd_module].get_usage()
         print '-'*80
@@ -113,7 +115,7 @@ def main(argv):
         return 0
     except ImportError:
         # It wasn't a tau command, but that's OK
-        logging.debug('%r not recognized as tau subcommand' % cmd)
+        LOGGER.debug('%r not recognized as tau subcommand' % cmd)
 
     # Do our best to give advice about this strange command
     return advise(cmd)

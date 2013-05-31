@@ -38,9 +38,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import os
 import sys
 import logging
+#import textwrap
+
+# Contact for bugs, etc.
+HELP_CONTACT = '<tau-bugs@cs.uoregon.edu>'
         
 #Expected Python version
-EXPECT_PYTHON_VERSION = (2, 6)
+EXPECT_PYTHON_VERSION = (2, 7)
 
 # Path to this package
 PACKAGE_HOME = os.path.dirname(os.path.realpath(__file__))
@@ -53,6 +57,9 @@ HOME = os.path.join(os.path.expanduser('~'), '.tau')
 
 # Current Tau configuration
 CONFIG = 'simple'
+
+# Logging level
+LOG_LEVEL = 'INFO'
 
 # Tau source code root directory
 try:
@@ -80,3 +87,50 @@ class TauNotImplementedError(TauError):
         super(TauNotImplementedError,self).__init__(value)
         self.missing = missing
         self.hint = hint
+
+class LogFormatter(logging.Formatter):
+    """
+    Custom log message formatter.
+    """
+    
+    #critical_format = textwrap.TextWrapper(initial_indent='! ', subsequent_indent='! ')
+    
+    def __init__(self):
+        super(LogFormatter, self).__init__()
+        
+    def msgbox(self, record, marker):
+        hline = marker*80
+        parts = [hline, marker, '%s %s' % (marker, record.levelname)]
+        for line in record.getMessage().split('\n'):
+            parts.append('%s %s' % (marker, line))
+        parts.append(marker)
+        parts.append(hline)
+        return '\n'.join(parts)
+
+    def format(self, record):
+        if record.levelno == logging.CRITICAL:
+            return self.msgbox(record, '!')
+        elif record.levelno == logging.ERROR:
+            return self.msgbox(record, '!')
+        elif record.levelno == logging.WARNING:
+            return self.msgbox(record, '!')
+        elif record.levelno == logging.INFO:
+            return record.getMessage()
+        else:
+            return '%s:%s:%s' % (record.levelname, record.module, record.getMessage())
+        
+_loggers = list()
+def getLogger(name):
+    handler = logging.StreamHandler(sys.stderr)
+    handler.setFormatter(LogFormatter())
+    logger = logging.getLogger(name)
+    logger.setLevel(LOG_LEVEL)
+    logger.handlers = [handler]
+    _loggers.append(logger)
+    return logger
+
+def setLogLevel(level):
+    global LOG_LEVEL
+    LOG_LEVEL = level.upper()
+    for logger in _loggers:
+        logger.setLevel(LOG_LEVEL)    
