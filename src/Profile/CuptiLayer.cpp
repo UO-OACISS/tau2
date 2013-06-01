@@ -203,7 +203,7 @@ void Tau_CuptiLayer_init()
   cuCtxGetDevice(&device);
   if (!initialized[device] && Tau_CuptiLayer_Added_counters.size() > 0)
 	{
-	  printf("in Tau_CuptiLayer_init.\n");
+	  //printf("in Tau_CuptiLayer_init.\n");
 		CUptiResult cuptiErr = CUPTI_SUCCESS;
 		CUresult cuErr = CUDA_SUCCESS;
 

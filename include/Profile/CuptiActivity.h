@@ -182,6 +182,7 @@ public:
     current_counters = (uint64_t *) calloc(n_counters, sizeof(uint64_t));
     counters_averaged_warning_issued = false;
     counters_bounded_warning_issued = false;
+    clear();
   }
   GpuState(int n) { 
     n_counters = Tau_CuptiLayer_get_num_events();
@@ -193,6 +194,7 @@ public:
     current_counters = (uint64_t *) calloc(n_counters, sizeof(uint64_t));
     counters_averaged_warning_issued = false;
     counters_bounded_warning_issued = false;
+    clear();
   }
   uint64_t *counters()
   {
@@ -202,7 +204,7 @@ public:
   void clear() {
     for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++)
     {
-      counters_at_last_launch[n] = 0;
+      counters_at_last_launch[n] = -1;
       kernels_encountered = 0;
       kernels_recorded = 0;
     }
@@ -217,7 +219,7 @@ public:
       counters_averaged_warning_issued = true;
     }
     n_counters = Tau_CuptiLayer_get_num_events();
-    if (n_counters > 0 && counters_at_last_launch[0] == 0) {
+    if (n_counters > 0 && counters_at_last_launch[0] == -1) {
     //kernelInfoMap[correlationId].counters = (uint64_t **) malloc(n_counters*device_count*sizeof(uint64_t));
     //for (int i=0; i<device_count; i++)
     //{
