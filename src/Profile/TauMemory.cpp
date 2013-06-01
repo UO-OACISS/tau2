@@ -977,7 +977,7 @@ double Tau_max_RSS(void)
     struct mallinfo minfo = mallinfo();
     double used = minfo.hblkhd + minfo.usmblks + minfo.uordblks;
     return used / 1024.0;
-#elif defined(TAU_BGP)
+#elif (defined(TAU_BGP) || defined(TAU_BGQ))
     uint32_t heap_size;
     Kernel_GetMemorySize( KERNEL_MEMSIZE_HEAP, &heap_size );
     return (double)heap_size / 1024.0;
