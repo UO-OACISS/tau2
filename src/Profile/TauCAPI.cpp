@@ -40,7 +40,6 @@ using namespace std;
 #include <Profile/KtauProfiler.h>
 #endif //TAUKTAU
 
-
 #ifdef TAU_EPILOG
 #include "elg_trc.h"
 
@@ -164,7 +163,7 @@ struct Tau_thread_status_flags {
  * This is very important with timers, as all threads are entering timers
  * at the same time, and every thread will invalidate the cache line
  * otherwise. */
-#ifdef __INTEL__COMPILER
+#if defined(__INTEL_COMPILER)
 __declspec (align(64)) static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
 #else
 #ifdef __GNUC__
@@ -173,6 +172,11 @@ static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] __attribute__ (
 static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
 #endif
 #endif
+
+#ifdef TAU_USE_FAST_THREADID
+__thread int _Tau_global_insideTAU = 0;
+#endif
+
 int lightsOut = 0;
 
 
@@ -218,6 +222,9 @@ extern "C" void Tau_stack_initialization() {
 }
 
 extern "C" int Tau_global_get_insideTAU() {
+#ifdef TAU_USE_FAST_THREADID
+  return _Tau_global_insideTAU;
+#endif
   Tau_stack_checkInit();
   int tid = RtsLayer::unsafeLocalThreadId();
   return Tau_thread_flags[tid].Tau_global_insideTAU;
@@ -225,6 +232,9 @@ extern "C" int Tau_global_get_insideTAU() {
 
 extern "C" int Tau_global_incr_insideTAU()
 {
+#ifdef TAU_USE_FAST_THREADID
+  return ++_Tau_global_insideTAU;
+#endif
   Tau_stack_checkInit();
   Tau_memory_wrapper_disable();
   int tid = RtsLayer::unsafeLocalThreadId();
@@ -236,6 +246,9 @@ extern "C" int Tau_global_incr_insideTAU()
 
 extern "C" int Tau_global_decr_insideTAU()
 {
+#ifdef TAU_USE_FAST_THREADID
+  return --_Tau_global_insideTAU;
+#endif
   Tau_stack_checkInit();
   int tid = RtsLayer::unsafeLocalThreadId();
 
@@ -1711,6 +1724,7 @@ map<string, int *>& TheIterationMap() {
 void Tau_pure_start_task_string(const string name, int tid)
 {
   TauInternalFunctionGuard protects_this_function;
+
   FunctionInfo *fi = 0;
   RtsLayer::LockDB();
   PureMap & pure = ThePureMap();
@@ -2192,6 +2206,11 @@ extern "C" void Tau_Bg_hwp_counters_output(int* numCounters, x_uint64 counters[]
 }
 #endif /* TAU_BGP */
                     
+#if 0
+extern "C" __attribute__ (( weak )) int Tau_initialize_collector_api(){};
+extern "C" __attribute__ (( weak )) void Tau_disable_collector_api(){};
+#endif
+
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
