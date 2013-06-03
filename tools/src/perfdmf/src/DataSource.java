@@ -708,6 +708,98 @@ public abstract class DataSource {
 
     }
 
+    private void generateAggregateSampleData() {
+        /*
+         * When samples are collected, they are measured down to the
+		 * source line. We want to include an aggregate measurement
+		 * which shows the total samples in a function.
+		 * For example:
+		 * [SAMPLE] foo(float) [{filename.c} {134}]
+		 * should also generate
+		 * [SAMPLE] foo(float) [{filename.c}]
+         */
+        if (!getCallPathDataPresent()) {
+            return;
+        }
+
+        List<Function> functions = new ArrayList<Function>();
+
+        for (Iterator<Function> l = this.getFunctionIterator(); l.hasNext();) {
+            Function function = l.next();
+			if (function.getName().contains("SAMPLE")) {
+              functions.add(function);
+			}
+
+			// check if we have already done this process... in which case, return
+            int end = function.getName().lastIndexOf("} {");
+			if (end == -1) continue;
+            String tmpName = function.getName().substring(0, end);
+			// truncate it
+			tmpName += "}]";
+            Function bonusFunction = this.getFunction(tmpName);
+            if (bonusFunction != null) {
+			  return;
+			}
+        }
+
+        // make sure that the allThreads list is initialized;
+        this.initAllThreadsList();
+
+        int numThreads = allThreads.size();
+
+        Group callpathDerivedGroup = this.addGroup("TAU_CALLPATH_DERIVED");
+        Group derivedGroup = this.addGroup("TAU_DERIVED");
+
+        for (Iterator<Function> l = functions.iterator(); l.hasNext();) {
+            Function function = l.next();
+
+            String bonusName = function.getName();
+			// search for "} {1234}]" at the end of the string
+            int end = bonusName.lastIndexOf("} {");
+			// if this sample doesn't have a line number, skip it.
+			if (end == -1) continue;
+            bonusName = bonusName.substring(0, end);
+			// truncate it
+			bonusName += "}]";
+            Function bonusFunction = this.getFunction(bonusName);
+            if (bonusFunction == null) {
+                bonusFunction = addFunction(bonusName);
+                for (Iterator<Group> g = function.getGroups().iterator(); g.hasNext();) {
+                   bonusFunction.addGroup(g.next());
+                }
+            }
+            bonusFunction.addGroup(derivedGroup);
+            for (int i = 0; i < numThreads; i++) {
+                Thread thread = allThreads.get(i);
+
+                FunctionProfile functionProfile = thread.getFunctionProfile(function);
+                if (functionProfile != null) {
+                    FunctionProfile bfp = thread.getFunctionProfile(bonusFunction);
+                    if (bfp == null) {
+                        bfp = new FunctionProfile(bonusFunction, getNumberOfMetrics(), thread.getNumSnapshots());
+                        thread.addFunctionProfile(bfp);
+                    }
+
+                    for (int metric = 0; metric < this.getNumberOfMetrics(); metric++) {
+
+                        bfp.setExclusive(metric, bfp.getExclusive(metric) + functionProfile.getExclusive(metric));
+                        bfp.setInclusive(metric, bfp.getInclusive(metric) + functionProfile.getInclusive(metric));
+                    }
+                    bfp.setNumCalls(bfp.getNumCalls() + functionProfile.getNumCalls());
+                    bfp.setNumSubr(bfp.getNumSubr() + functionProfile.getNumSubr());
+
+                }
+            }
+			// now, insert the aggregate value into the callpath tree by renaming the function
+            end = function.getName().lastIndexOf(" => ");
+			// if this is not a callpath sample, skip it.
+			if (end == -1) continue;
+            bonusFunction.addGroup(callpathDerivedGroup);
+			String appendix = bonusName + function.getName().substring(end);
+			function.setName(appendix);
+        }
+    }
+
     protected void addDerivedSnapshots(Thread thread, Thread derivedThread) {
         if (wellBehavedSnapshots) {
 
@@ -738,6 +830,9 @@ public abstract class DataSource {
         if (generateIntermediateCallPathData) {
             generateBonusCallPathData();
         }
+		
+		// generate the intermediate sample aggregation data
+        generateAggregateSampleData();
 
         checkForPhases();
 
