@@ -651,6 +651,9 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
 
   char buff[4096];
 
+  char *newName = NULL;
+
+
   // if the node was found by BFD, populate the callsite node
   if (node->resolved) {
     TauBfdInfo & resolvedInfo = node->info;
@@ -665,8 +668,12 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
       // TODO: Leak?
       char lineno[32];
       sprintf(lineno, "%d", resolvedInfo.lineno);
-      *newShortName = (char*)malloc(strlen(resolvedInfo.funcname) + strlen(lineno) + 2);
-      sprintf(*newShortName, "%s.%d", resolvedInfo.funcname, resolvedInfo.lineno);
+//      *newShortName = (char*)malloc(strlen(resolvedInfo.funcname) + strlen(lineno) + 2);
+//      sprintf(*newShortName, "%s.%d", resolvedInfo.funcname, resolvedInfo.lineno);
+      newName = (char*)malloc(strlen(resolvedInfo.funcname) + strlen(lineno) + 2);
+      sprintf(newName, "%s.%d", resolvedInfo.funcname, resolvedInfo.lineno);
+      newShortName = &newName; 
+      TAU_VERBOSE("resolved function name (newName in TauSampling.cpp) = %s\n", newName);
 #if 0
     } else {
       if (childName) {

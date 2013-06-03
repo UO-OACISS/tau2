@@ -67,7 +67,7 @@ struct TauBfdInfo
 	void secure(unsigned long addr) {
 		probeAddr = addr;
 		if(!funcname) {
-			char * tmp = (char*)malloc(64);
+			char * tmp = (char*)malloc(256);
 			sprintf(tmp, "addr=<%p>", (void*)(addr));
 			funcname = tmp;
 		}
