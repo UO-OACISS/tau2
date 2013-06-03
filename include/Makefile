@@ -242,6 +242,7 @@ JDKARCH                 = linux
 # OpenMP OBJECTS
 #############################################
 #OPENMP#OPENMP_O 	= OpenMPLayer.o TauOpenMPCollectorAPI.o #ENDIF#
+#OPARI#OPENMP_O 	= OpenMPLayer.o #ENDIF#
 
 #############################################
 # OpenMP extra libraries for collector API
