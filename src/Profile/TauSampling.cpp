@@ -1612,7 +1612,7 @@ extern "C" void Tau_sampling_init_if_necessary(void)
    * and the other threads don't get initialized. Just hope that with PGI, there
    * are instrumented functions inside the parallel regions, otherwise sampling
    * will only work on thread 0.  */
-#if defined(TAU_OPENMP) && !defined(TAU_PTHREAD) && !defined(__PGI)
+#if 0 && defined(TAU_OPENMP) && !defined(TAU_PTHREAD) && !defined(__PGI)
   // if the master thread is in TAU, in a non-parallel region
   if (omp_get_num_threads() == 1) {
     /* FIRST! make sure that we don't process samples while in this code */
@@ -1638,15 +1638,16 @@ extern "C" void Tau_sampling_init_if_necessary(void)
 #pragma omp parallel for ordered 
     for (dummy = 0 ; dummy < all_threads ; dummy++) {
         // but do it sequentially.
-#pragma omp ordered 
-      {
+		//
         // Protect TAU from itself
         TauInternalFunctionGuard protects_this_function;
-
+#pragma omp ordered 
+      {
 #pragma omp critical (creatingtopleveltimer)
         {
           // Getting the thread ID registers the OpenMP thread.
-          int myTid = RtsLayer::threadId();
+          //int myTid = RtsLayer::threadId();
+          int myTid = Tau_get_tid ();
           if (!samplingThrInitialized[myTid]) {
             Tau_sampling_init(myTid);
             samplingThrInitialized[myTid] = true;
