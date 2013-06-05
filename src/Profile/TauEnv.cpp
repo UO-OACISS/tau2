@@ -482,9 +482,9 @@ static double env_throttle_percall = 0;
 static const char *env_profiledir = NULL;
 static const char *env_tracedir = NULL;
 static const char *env_metrics = NULL;
-static const char *env_cupti_api = NULL;
+static const char *env_cupti_api = TAU_CUPTI_API_DEFAULT; 
 static int env_sigusr1_action = TAU_ACTION_DUMP_PROFILES;
-static const char *env_track_cuda_instructions = NULL;
+static const char *env_track_cuda_instructions = TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT;
 
 static int env_mic_offload = 0;
 
