@@ -63,6 +63,8 @@ static omp_lock_t writelock;
 int Tau_collector_enabled = 0;
 
 extern void Tau_disable_collector_api() {
+  // if we didn't initialize the lock, we will crash...
+  if (!TauEnv_get_collector_api_enabled()) return;
   omp_set_lock(&writelock);
   Tau_collector_enabled = 0;
   omp_unset_lock(&writelock);
@@ -524,6 +526,8 @@ extern int __omp_collector_api(void *);
 int Tau_initialize_collector_api(void) {
     //if (Tau_collector_api != NULL || initializing) return 0;
     if (initialized || initializing) return 0;
+    if (!TauEnv_get_collector_api_enabled()) return;
+
     initializing = true;
 
     omp_init_lock(&writelock);

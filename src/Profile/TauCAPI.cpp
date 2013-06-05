@@ -2206,11 +2206,6 @@ extern "C" void Tau_Bg_hwp_counters_output(int* numCounters, x_uint64 counters[]
 }
 #endif /* TAU_BGP */
                     
-#if 0
-extern "C" __attribute__ (( weak )) int Tau_initialize_collector_api(){};
-extern "C" __attribute__ (( weak )) void Tau_disable_collector_api(){};
-#endif
-
 
 /***************************************************************************
  * $RCSfile: TauCAPI.cpp,v $   $Author: sameer $
