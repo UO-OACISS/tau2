@@ -38,6 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import os
 import sys
 import taucmd
+from taucmd import TauUnknownCommandError
 from docopt import docopt
 
 LOGGER = taucmd.getLogger(__name__)
@@ -53,7 +54,7 @@ HELP = """
 Prints the help page for a specified command.
 """
 
-MAKE_ADVICE = """
+ADVICE = {'make': """
 'make' is not a Tau command.
 
 --- Did you try to build your codebase by typing 'tau make'?  
@@ -76,17 +77,17 @@ For example, to gather profiling data type:
     tau profile make <args>
 
 Type 'tau --help' to see a complete list of valid commands.
-"""
+"""}
 
 def advise(cmd):
     """
     Print some advice about a system command.
     """
-    if cmd == 'make':
-        print MAKE_ADVICE
-    else:
-        print "%r: Unknown command. Try 'tau --help'." % cmd
-    return 1
+    try:
+        print ADVICE[cmd]
+    except KeyError:
+        LOGGER.debug('I have no advice for command %r' % cmd)
+        raise TauUnknownCommandError(cmd)
 
 def getUsage():
     return USAGE
@@ -105,7 +106,7 @@ def main(argv):
     cmd_module = 'taucmd.commands.%s' % cmd
     try:
         __import__(cmd_module)
-        LOGGER.info('Recognized %r as tau subcommand' % cmd)
+        LOGGER.debug('Recognized %r as tau subcommand' % cmd)
         print '-'*80
         print sys.modules[cmd_module].getUsage()
         print '-'*80
@@ -118,4 +119,4 @@ def main(argv):
         LOGGER.debug('%r not recognized as tau subcommand' % cmd)
 
     # Do our best to give advice about this strange command
-    return advise(cmd)
+    advise(cmd)

@@ -35,23 +35,18 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import os
 import sys
 import re
-import types
-import logging
-import traceback
-import pkgutil
+#import types
 import signal
 import textwrap
 import taucmd
-from textwrap import dedent
 from docopt import docopt
-from taucmd import EXPECT_PYTHON_VERSION, TAU_ROOT_DIR 
-from taucmd import TauConfigurationError, TauNotImplementedError
+from pkgutil import walk_packages
+from taucmd import TauNotImplementedError
 from taucmd import commands
 from taucmd import compiler
-from taucmd import configuration
+from taucmd.registry import Registry 
 
 USAGE = """
 ================================================================================
@@ -59,35 +54,35 @@ The Tau Performance System (version %(tau_version)s)
 http://tau.uoregon.edu/
 
 Usage:
-  tau [--help] [--version] [--log=<level>] [--home=<path>] [--config=<name>] <command> [<args>...]
+  tau [options] <command> [<args>...]
+  tau --version
+  tau --help
+  
+  <command> may be a subcommand or compiler.  See tau --help.
+  
+Subcommands:
+%(commands)s
 
-Options:
-  --home=<path>      Tau configuration home. [default: %(home_default)s]
-  --config=<name>    Tau configuration. [default: %(config_default)s]
-  --log=<level>      Output level.  [default: %(log_default)s]
-                     <level> can be CRITICAL, ERRROR, WARNING, INFO, or DEBUG
-  --help             Show usage.
-  --version          Show version.
-  
-  <command> may be a compiler (e.g. gcc, mpif90) or a subcommand
-  
 Known Compilers:
 %(compilers)s 
 
-Subcommands:
-%(commands)s
+Options:
+  --config=<name>  Tau configuration. %(config_default)s
+  --home=<path>    Tau configuration home. [default: %(home_default)s]
+  --log=<level>    Output level.  [default: %(log_default)s]
+                     <level> can be CRITICAL, ERRROR, WARNING, INFO, or DEBUG
 ================================================================================
 """
 
 LOGGER = taucmd.getLogger(__name__)
 
-def lookup_tau_version():
+def lookupTauVersion():
     """
     Opens TAU.h to get the TAU version
     """
-    if not TAU_ROOT_DIR:
+    if not taucmd.TAU_ROOT_DIR:
         return '(unknown)'
-    with open('%s/include/TAU.h' % TAU_ROOT_DIR, 'r') as tau_h:
+    with open('%s/include/TAU.h' % taucmd.TAU_ROOT_DIR, 'r') as tau_h:
         pattern = re.compile('#define\s+TAU_VERSION\s+"(.*)"')
         for line in tau_h:
             match = pattern.match(line) 
@@ -95,75 +90,35 @@ def lookup_tau_version():
                 return match.group(1)
     return '(unknown)'
 
-def lookup_default_config():
+def lookupDefaultConfig():
     """
     Loads the registry to get the default config.
     """
-    registry = configuration.Registry.load()
+    registry = Registry.load()
     if not len(registry):
-        return taucmd.CONFIG
+        return ''
     else:
-        return registry.default
+        return '[default: %s]' % registry.default
 
-def get_known_compilers():
-    known = ', '.join(compiler.known_compiler_commands())
+def getKnownCompilers():
+    """
+    Returns a string listing known compiler commands
+    """
+    known = ', '.join(compiler.knownCompilerCommands())
     return textwrap.fill(known, width=70, initial_indent='  ', subsequent_indent='  ')
 
-def get_command_list():
+def getCommandList():
     """
     Builds listing of command names with short description
     """
     parts = []
-    for module in [name for _, name, _ in pkgutil.walk_packages(path=commands.__path__, prefix=commands.__name__+'.')]:
+    for module in [name for _, name, _ in walk_packages(path=commands.__path__, prefix=commands.__name__+'.')]:
         __import__(module)
         descr = sys.modules[module].SHORT_DESCRIPTION
-#        _temp = __import__(module, globals(), locals(), ['SHORT_DESCRIPTION'], -1)
-#        descr = _temp.SHORT_DESCRIPTION
-        name = '{:<12}'.format(module.split('.')[-1])
+        name = '{:<15}'.format(module.split('.')[-1])
         parts.append('  %s  %s' % (name, descr))
     return '\n'.join(parts)
 
-
-
-def taucmd_excepthook(etype, e, tb):
-    """
-    Exception handler for any uncaught exception (except SystemExit).
-    """
-    if etype == KeyboardInterrupt:
-        LOGGER.info('Received keyboard interrupt.  Exiting.')
-        sys.exit(1)
-    elif etype == TauConfigurationError:
-        hint = 'Hint: %s\n' % e.hint if e.hint else ''
-        message = dedent("""
-        %(value)s
-        %(hint)s
-        Tau cannot proceed with the given inputs.
-        Please review the input files and command line parameters
-        or contact %(contact)s for assistance.""" % {'value': e.value, 'hint': hint, 'contact': taucmd.HELP_CONTACT})
-        LOGGER.critical(message)
-        sys.exit(-1)
-    elif etype == TauNotImplementedError:
-        hint = 'Hint: %s\n' % e.hint if e.hint else ''
-        message = dedint("""
-        Unimplemented feature %(missing)r: %(value)s
-        %(hint)s
-        Sorry, you have requested a feature that is not yet implemented.
-        Please contact %(contact)s for assistance.
-        """ % {'missing': e.missing, 'value': e.value, 'hint': hint, 'contact': taucmd.HELP_CONTACT})
-        LOGGER.critical(message)
-        sys.exit(-1)
-    else:
-        traceback.print_exception(etype, e, tb)
-        args = [arg for arg in sys.argv[1:] if not '--log' in arg] 
-        message = dedent("""
-        An unexpected %(typename)s exception was raised.
-        Please contact <tau-bugs@cs.uoregon.edu> for assistance.
-        If possible, please include the output of this command:
-
-        tau --log=DEBUG %(cmd)s
-        """ % {'typename': etype.__name__, 'cmd': ' '.join(args)})
-        LOGGER.critical(message)
-        sys.exit(-1)
 
         
 def main():
@@ -172,24 +127,24 @@ def main():
     """
 
     # Set the default exception handler
-    sys.excepthook = taucmd_excepthook
+    sys.excepthook = taucmd.excepthook
 
     # Check Python version
-    if sys.version_info < EXPECT_PYTHON_VERSION:
+    if sys.version_info < taucmd.EXPECT_PYTHON_VERSION:
         version = '.'.join(map(str, sys.version_info[0:3]))
-        expected = '.'.join(map(str, EXPECT_PYTHON_VERSION))
+        expected = '.'.join(map(str, taucmd.EXPECT_PYTHON_VERSION))
         LOGGER.warning("Your Python version is %s, but 'tau' expects Python %s or later.  Please update Python." % (version, expected))
 
     # Get tau version
-    tau_version = lookup_tau_version()
+    tau_version = lookupTauVersion()
     
     # Parse command line arguments
     usage = USAGE % {'tau_version': tau_version,
                      'home_default': taucmd.HOME,
-                     'config_default': lookup_default_config(),
+                     'config_default': lookupDefaultConfig(),
                      'log_default': taucmd.LOG_LEVEL,
-                     'compilers': get_known_compilers(),
-                     'commands': get_command_list()}
+                     'compilers': getKnownCompilers(),
+                     'commands': getCommandList()}
     args = docopt(usage, version=tau_version, options_first=True)
 
     # Set log level

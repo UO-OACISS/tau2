@@ -38,11 +38,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import os
 import sys
 import logging
-#import textwrap
+import traceback
+import textwrap
 
 # Contact for bugs, etc.
 HELP_CONTACT = '<tau-bugs@cs.uoregon.edu>'
-        
+
 #Expected Python version
 EXPECT_PYTHON_VERSION = (2, 7)
 
@@ -69,32 +70,43 @@ except KeyError:
 
 
 class TauError(Exception):
-    """Base class for errors in Tau"""
+    """
+    Base class for errors in Tau
+    """
     def __init__(self, value):
         self.value = value
     def __str__(self):
         return repr(self.value)
 
 class TauConfigurationError(TauError):
-    """Indicates that Tau cannot succeed with the given program parameters"""
-    def __init__(self, value, hint=None):
+    """
+    Indicates that Tau cannot succeed with the given parameters
+    """
+    def __init__(self, value, hint="Try 'tau --help'."):
         super(TauConfigurationError,self).__init__(value)
         self.hint = hint
 
 class TauNotImplementedError(TauError):
-    """Indicates that a promised feature has not been implemented yet"""
-    def __init__(self, value, missing, hint=None):
+    """
+    Indicates that a promised feature has not been implemented yet
+    """
+    def __init__(self, value, missing, hint="Try 'tau --help'."):
         super(TauNotImplementedError,self).__init__(value)
         self.missing = missing
+        self.hint = hint
+
+class TauUnknownCommandError(TauError):
+    """
+    Indicates that a specified command is unknown
+    """
+    def __init__(self, value, hint="Try 'tau --help'."):
+        super(TauUnknownCommandError,self).__init__(value)
         self.hint = hint
 
 class LogFormatter(logging.Formatter):
     """
     Custom log message formatter.
-    """
-    
-    #critical_format = textwrap.TextWrapper(initial_indent='! ', subsequent_indent='! ')
-    
+    """    
     def __init__(self):
         super(LogFormatter, self).__init__()
         
@@ -118,19 +130,75 @@ class LogFormatter(logging.Formatter):
             return record.getMessage()
         else:
             return '%s:%s:%s' % (record.levelname, record.module, record.getMessage())
-        
-_loggers = list()
+
+_loggers = set()
+_handler = logging.StreamHandler(sys.stderr)
+_handler.setFormatter(LogFormatter())
+
 def getLogger(name):
-    handler = logging.StreamHandler(sys.stderr)
-    handler.setFormatter(LogFormatter())
+    """
+    Returns a customized logging object by name
+    """
     logger = logging.getLogger(name)
     logger.setLevel(LOG_LEVEL)
-    logger.handlers = [handler]
-    _loggers.append(logger)
+    logger.handlers = [_handler]
+    _loggers.add(logger)
     return logger
 
 def setLogLevel(level):
+    """
+    Sets the output level for all logging objects
+    """
     global LOG_LEVEL
     LOG_LEVEL = level.upper()
     for logger in _loggers:
         logger.setLevel(LOG_LEVEL)
+
+def excepthook(etype, e, tb):
+    """
+    Exception handler for any uncaught exception (except SystemExit).
+    """
+    logger = getLogger(__name__)
+    if etype == KeyboardInterrupt:
+        logger.info('Received keyboard interrupt.  Exiting.')
+        sys.exit(1)
+    elif etype == TauConfigurationError:
+        hint = 'Hint: %s\n' % e.hint if e.hint else ''
+        message = textwrap.dedent("""
+        %(value)s
+        %(hint)s
+        Tau cannot proceed with the given inputs.
+        Please review the input files and command line parameters
+        or contact %(contact)s for assistance.""" % {'value': e.value, 'hint': hint, 'contact': HELP_CONTACT})
+        logger.critical(message)
+        sys.exit(-1)
+    elif etype == TauNotImplementedError:
+        hint = 'Hint: %s\n' % e.hint if e.hint else ''
+        message = textwrap.dedent("""
+        Unimplemented feature %(missing)r: %(value)s
+        %(hint)s
+        Sorry, you have requested a feature that is not yet implemented.
+        Please contact %(contact)s for assistance.
+        """ % {'missing': e.missing, 'value': e.value, 'hint': hint, 'contact': HELP_CONTACT})
+        logger.critical(message)
+        sys.exit(-1)
+    elif etype == TauUnknownCommandError:
+        hint = 'Hint: %s' % e.hint if e.hint else ''
+        message = textwrap.dedent("""
+        Unknown Command: %(value)r
+        %(hint)s
+        """ % {'value': e.value, 'hint': hint, 'contact': HELP_CONTACT})
+        logger.info(message)
+        sys.exit(-1)
+    else:
+        traceback.print_exception(etype, e, tb)
+        args = [arg for arg in sys.argv[1:] if not '--log' in arg] 
+        message = textwrap.dedent("""
+        An unexpected %(typename)s exception was raised.
+        Please contact <tau-bugs@cs.uoregon.edu> for assistance.
+        If possible, please include the output of this command:
+
+        tau --log=DEBUG %(cmd)s
+        """ % {'typename': etype.__name__, 'cmd': ' '.join(args)})
+        logger.critical(message)
+        sys.exit(-1)

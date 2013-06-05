@@ -40,8 +40,9 @@ import sys
 import subprocess
 import taucmd
 import inspect
-from taucmd import configuration
 from taucmd import TauNotImplementedError, TauConfigurationError
+from taucmd import configuration
+from taucmd.registry import Registry
 
 LOGGER = taucmd.getLogger(__name__)
 
@@ -53,67 +54,59 @@ TAU_F77 = 'tau_f90.sh'     # Yes, f90 not f77
 TAU_F90 = 'tau_f90.sh'
 TAU_UPC = 'tau_upc.sh'
 
-# List of all compiler classes
-ALL_COMPILERS = list()
+# Map compiler tags to Tau compiler wrapper scripts
+TAU_COMPILERS = {'CC':  ('C', TAU_CC),
+                 'CXX': ('C++', TAU_CXX),
+                 'F77': ('FORTRAN77', TAU_F77),
+                 'F90': ('Fortran90', TAU_F90),
+                 'UPC': ('Universal Parallel C', TAU_UPC)}
 
+ALL_COMPILERS = set()
+ALL_FAMILIES = set()
 
 class Compiler(object):
     """
-    Base class for all compiler classes
+    A compiler
     """
-    
-    @classmethod
-    def create(cls, family, tag, language, tau_cmd, commands):
-        newcc = type('%s_%s' % (family.TAG, tag), (Compiler,),
-                     dict(FAMILY=family,
-                          NAME='%s %s Compiler' % (family.NAME, language),
-                          TAG=tag,
-                          LANGUAGE=language,
-                          TAU_COMMAND=tau_cmd,
-                          COMMANDS=commands))
-        ALL_COMPILERS.append(newcc)
-        return newcc
+    def __init__(self, tag, family, language, tau_cmd, commands):
+        self.tag = tag
+        self.family = family
+        self.language = language
+        self.tau_command = tau_cmd
+        self.commands = commands
+        self.name = '%s %s Compiler' % (family.name, language)
+        ALL_COMPILERS.add(self)
 
 
 class Family(object):
     """
-    Base class for all compiler families
+    A compiler family
     """
-    
-    @classmethod
-    def add(cls, tag, language, tau_cmd, commands):
-        setattr(cls, tag, Compiler.create(cls, tag, language, tau_cmd, commands))
-
-    @classmethod
-    def populate(cls, **kwargs):
-        compilers = {'CC': ('C', TAU_CC),
-                     'CXX': ('C++', TAU_CXX),
-                     'F77': ('FORTRAN77', TAU_F77),
-                     'F90': ('Fortran90', TAU_F90),
-                     'UPC': ('Universal Parallel C', TAU_UPC)}
+    def __init__(self, tag, name, **kwargs):
+        self.tag = tag
+        self.name = name
         for tag, commands in kwargs.iteritems():
-            cls.add(tag, compilers[tag][0], compilers[tag][1], commands)
-    
-    @classmethod
-    def create(cls, tag, name, **kwargs):
-        newfamily = type('%s_Family' % tag, (Family,), dict(NAME=name, TAG=tag))
-        newfamily.populate(**kwargs)
-        return newfamily
-
-GNU_COMPILERS = Family.create('GNU', 'GNU Compiler Collection', 
-                              CC=['gcc'], CXX=['g++'], F77=['gfortran'], F90=['gfortran'], UPC=['gupc'])
-
-MPI_COMPILERS = Family.create('MPI', 'MPI Compiler Wrappers', 
-                              CC=['mpicc'], CXX=['mpicxx', 'mpic++'], F77=['mpif77'], F90=['mpif90'])
+            setattr(self, tag, Compiler(tag, self, TAU_COMPILERS[tag][0], 
+                                        TAU_COMPILERS[tag][1], commands))
+        ALL_FAMILIES.add(self)
 
 
-def known_compiler_commands():
+GNU_COMPILERS = Family('GNU', 'GNU Compiler Collection', 
+                       CC=['gcc'], CXX=['g++'], F77=['gfortran'], 
+                       F90=['gfortran'], UPC=['gupc'])
+
+MPI_COMPILERS = Family('MPI', 'MPI Compiler Wrappers', 
+                       CC=['mpicc'], CXX=['mpicxx', 'mpic++'], 
+                       F77=['mpif77'], F90=['mpif90'])
+
+
+def knownCompilerCommands():
     """
     Returns the known compiler commands
     """
     known = list()
     for cc in ALL_COMPILERS:
-        for cmd in cc.COMMANDS:
+        for cmd in cc.commands:
             if not cmd in known:
                 known.append(cmd)
                 yield cmd
@@ -123,7 +116,7 @@ def identify(cmd):
     Looks up the compliler class for a given compiler command
     """
     for cc in ALL_COMPILERS:
-        if cmd in cc.COMMANDS:
+        if cmd in cc.commands:
             return cc
         
 def compile(args):
@@ -135,10 +128,10 @@ def compile(args):
     cc = identify(cmd)
     if not cc:
         raise TauNotImplementedError("%r: unknown compiler command. Try 'tau --help'." % cmd, cmd)
-    LOGGER.info('Recognized %r as %s' % (cmd, cc.NAME))
+    LOGGER.info('Recognized %r as %s' % (cmd, cc.name))
     
     # Load the configuration registry
-    registry = configuration.Registry.load()
+    registry = Registry.load()
     if not len(registry):
         raise TauConfigurationError("No Tau configurations have been created.",
                                     "Use the 'config' subcommand to create a configuration.")
@@ -153,19 +146,20 @@ def compile(args):
     LOGGER.info('Selected configuration %r' % taucmd.CONFIG)
     LOGGER.debug('Configuration details:\n%s' % config)
     
-    # Build the configuration
-    compiled = config.build(cc)
-    
+    # Build the configuration for use with a compiler
+    config.build(cc)
+
     # Record in the registry that the configuration is built
     registry.save()
     
-    # Invoke the TAU compiler wrapper script
-    cmd = [cc.TAU_COMMAND] + cmd_args
-    env = compiled.getEnvironment()
+    # Invoke the command
+    if cmd_args:
+        cmd = [cc.tau_command] + cmd_args
+    env = config.getEnvironment()
     LOGGER.debug('Creating subprocess: cmd=%r, env=%r' % (cmd, env))
-    if taucmd.LOG_LEVEL == 'DEBUG':
-        proc = subprocess.Popen(cmd, env=env, stdout=sys.stdout, stderr=sys.stderr)
-    else:
-        with open(os.devnull, 'w') as devnull:
-            proc = subprocess.Popen(cmd, env=env, stdout=devnull, stderr=devnull)
+#    if taucmd.LOG_LEVEL == 'DEBUG':
+    proc = subprocess.Popen(cmd, env=env, stdout=sys.stdout, stderr=sys.stderr)
+#    else:
+#        with open(os.devnull, 'w') as devnull:
+#            proc = subprocess.Popen(cmd, env=env, stdout=devnull, stderr=devnull)
     return proc.wait()
