@@ -39,19 +39,29 @@ import os
 import subprocess
 import taucmd
 from docopt import docopt
-from taucmd import configuration, TauConfigurationError
+from hashlib import md5
+from taucmd import configuration, compiler, TauConfigurationError
+from taucmd.registry import Registry
 
 LOGGER = taucmd.getLogger(__name__)
 
 USAGE = """
 Usage:
-  tau config [options]
+  tau config new [<name>] --compiler=<family> [options]
+  tau config default <name>
+  tau config delete <name>
+  tau config list
+  tau config --help
+  
+Subcommands:
+  new                               Create a new configuration. 
+  default                           Set the default configuration.
+  delete                            Delete a configuration.
+  list                              List all configurations.
 
-Configuration Options:
-  --new=<name>                      Create new configuration.
-  --default=<name>                  Set the default configuration name.
-  --delete=<name>                   Delete a configuration.
-  --list                            Show all configurations.
+Compiler Options:
+  --compiler=<family>               Set the compiler family.  One of:
+                                    %(families)s
 
 Target Options:
   --target=<name>                   Set target. [default: %(target_default)s]
@@ -80,7 +90,7 @@ Universal Parallel C (UPC) Options:
   --upc-network=(auto|mpi|smp)      Specify UPC network.
 """
 
-SHORT_DESCRIPTION = "Create and manage Tau configurations."
+SHORT_DESCRIPTION = "Manage Tau configurations."
 
 HELP = """
 Help page to be written.
@@ -93,28 +103,55 @@ def detectTarget():
     cmd = os.path.join(taucmd.TAU_ROOT_DIR, 'utils', 'archfind')
     return subprocess.check_output(cmd).strip()
 
+def getConfigurationName(args):
+    """
+    Builds a name for the configuration
+    """
+    if args['<name>']:
+        return args['<name>']
+    else:
+        nameparts = ['--pdt', '--bfd', '--dyninst', '--papi', '--mpi', '--cuda']
+        valueparts = ['--compiler', '--target', '--threads']
+        parts = [args[part].lower() for part in valueparts if args[part]]
+        parts.extend([part[2:].lower() for part in nameparts if args[part]])
+        return '-'.join(parts)
+
 def getConfiguration(args):
     """
     Create a TauConfiguration object from command line arguments
     """
-    commands = ['--new', '--default', '--delete', '--list']
     path_args = ['--pdt', '--bfd', '--dyninst', '--papi', '--mpi', 
                  '--mpi-include', '--mpi-lib', '--cuda', '--upc-gasnet']
+    
+    # Check for invalid compiler families
+    family_tags = [family.tag for family in compiler.ALL_FAMILIES]
+    if not args['--compiler'].upper() in family_tags:
+        msg = 'Unrecognized compiler family: %r' % args['--compiler']
+        hint = 'Known families: %s' % ', '.join(family_tags)
+        raise TauConfigurationError(msg, hint)
 
     # Check for invalid paths
     for arg in path_args:
         path = args[arg]
         if path and path != 'download':
-            path = args[arg] = os.path.expanduser(path)
+            path = args[arg] = os.path.abspath(os.path.expanduser(path))
             if not (os.path.exists(path) and os.path.isdir(path)):
-                raise TauConfigurationError('Invalid argument: %s=%s: Path does not exist or is not a directory.' % (arg, path))
+                raise TauConfigurationError("Invalid argument: %s=%s: '%s' does not exist or is not a directory." % (arg, path, path),
+                                            'Check the command arguments and try again.')
+
     # Populate configuration data
-    config = configuration.TauConfiguration()
-    config['name'] = args['--new']
+    config = configuration.TauConfiguration() 
+    config['name'] = getConfigurationName(args)
     for key, val in args.iteritems():
-        if key[0:2] == '--' and not key in commands:
+        if key[0:2] == '--':
             config[key[2:]] = val
-    # Everything looks good
+
+    # Calculate configuration ID
+    hash = md5()
+    for item in sorted(config.data.iteritems()):
+        hash.update(repr(item))
+    config['id'] = hash.hexdigest()
+    config['prefix'] = os.path.join(taucmd.HOME, config['id'])
     return config
     
 
@@ -122,7 +159,11 @@ def getUsage():
     """
     Returns a string describing subcommand usage
     """
-    return USAGE % {'name_default': taucmd.CONFIG,
+    parts = list()
+    for family in compiler.ALL_FAMILIES:
+        parts.append('  %s  (%s)' % ('{:<6}'.format(family.tag), family.name))
+    families = ('\n'+' '*36).join(parts)
+    return USAGE % {'families': families,
                     'target_default': detectTarget()}
 
 def main(argv):
@@ -132,42 +173,50 @@ def main(argv):
 
     # Parse command line arguments
     args = docopt(getUsage(), argv=argv)
+    if args['--compiler']:
+        args['--compiler'] = args['--compiler'].upper()
     LOGGER.debug('Arguments: %s' % args)
 
     # Load configuration registry
-    registry = configuration.Registry.load()
+    registry = Registry.load()
 
     # Check for --list command
-    if args['--list']:
+    if args['list']:
         print registry
         return 0
 
     # Check for --set-default command
-    name = args['--default']
-    if name:
+    if args['default']:
+        name = args['<name>']
         try:
             registry.setDefault(name)
             registry.save()
             return 0
         except KeyError:
             msg = 'There is no configuration named %r at %r' % (name, registry.prefix)
-            hint = 'Valid names are: %s' % ', '.join([name for name in registry])
+            if len(registry):
+                hint = 'Valid names are: %s' % ', '.join([name for name in registry])
+            else:
+                hint = 'No configurations have been defined.'
             raise TauConfigurationError(msg, hint)
 
     # Check for --delete command
-    name = args['--delete']
-    if name:
+    if args['delete']:
+        name = args['<name>']
         try:
             registry.unregister(name)
             registry.save()
             return 0
         except KeyError:
             msg = 'There is no configuration named %r at %r' % (name, registry.prefix)
-            hint = 'Valid names are: %s' % ', '.join([name for name in registry])
+            if len(registry):
+                hint = 'Valid names are: %s' % ', '.join([name for name in registry])
+            else:
+                hint = 'No configurations have been defined.'
             raise TauConfigurationError(msg, hint)
 
     # Check for --new command
-    if args['--new']:
+    if args['new']:
         # Translate command line arguments to configuration data
         config = getConfiguration(args)
         # Add configuration to registry
@@ -177,9 +226,9 @@ def main(argv):
             return 0
         except KeyError:
             msg = 'A configuration named %r already exists.' % config['name']
-            hint = 'Use the --new option to create a new named configuration.'
+            hint = "Use 'tau config new <name>' name the configuration. See tau config --help for more info."
             raise TauConfigurationError(msg, hint)
 
     # Don't know what you want so show usage
-    print getUsage()
+    #print getUsage()
         
