@@ -241,7 +241,7 @@ public:
 
     for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++)
     {
-      //printf("counter %d: start: %llu end: %llu diff: %llu.\n", n, counters_at_last_launch[n], current_counters[n], current_counters[n] - counters_at_last_launch[n]);
+      //printf("counter %d: start: %llu end: %llu diff: %llu num: %d.\n", n, counters_at_last_launch[n], current_counters[n], current_counters[n] - counters_at_last_launch[n], kernels_encountered);
       current_counters[n] = (current_counters[n] - counters_at_last_launch[n]) / kernels_encountered; 
     }
   }

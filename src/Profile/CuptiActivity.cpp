@@ -203,11 +203,13 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 				);
 				*/
 				if (function_is_sync(id))
-				{
+				{ 
+          
 					//cerr << "sync function name: " << cbInfo->functionName << endl;
 					//Disable counter tracking during the sync.
 					//Tau_CuptiLayer_disable();
-					cuCtxSynchronize();
+					//cuCtxSynchronize();
+					cudaDeviceSynchronize();
 					//Tau_CuptiLayer_enable();
           int device_count;
           cuDeviceGetCount(&device_count);
@@ -215,6 +217,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
             CurrentGpuState[i].record_gpu_counters_at_sync();
           }
 					Tau_cupti_register_sync_event(cbInfo->context, 0);
+          
 				}
 			}
 		}
@@ -246,7 +249,6 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
           printf("synthetic sync point.\n");
           cuCtxSynchronize();
 					FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->ThisFunction;
-				  record_gpu_launch(cbInfo->correlationId, p);
         }
       */
 				//cerr << "callback for " << cbInfo->functionName << ", exit." << endl;
@@ -322,12 +324,13 @@ void Tau_cupti_register_sync_event(CUcontext context, uint32_t stream)
 		CUDA_CHECK_ERROR(err, "Cannot requeue buffer.\n");
    
     for (int i=0; i < device_count; i++) {
+      //printf("Kernels encountered/recorded: %d/%d.\n", CurrentGpuState[i].kernels_encountered, CurrentGpuState[0].kernels_recorded);
       if (CurrentGpuState[i].kernels_recorded == CurrentGpuState[i].kernels_encountered)
       {
         CurrentGpuState[i].clear();
         last_recorded_kernel_name = NULL;
       } else if (CurrentGpuState[i].kernels_recorded > CurrentGpuState[i].kernels_encountered) {
-        printf("TAU: Recorded more counters than were launched, exiting.\n");
+        printf("TAU: Recorded more kernels than were launched, exiting.\n");
         exit(1);
       }
     }
