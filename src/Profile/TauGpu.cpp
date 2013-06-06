@@ -391,7 +391,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
 			//TAU_EVENT(MemoryCopyEventHtoD(), transferSize);
 		//TauTraceEventSimple(TAU_ONESIDED_MESSAGE_RECV, transferSize, RtsLayer::myThread()); 
 #ifdef DEBUG_PROF		
-		printf("[%f] onesided event mem recv: %f, id: %s.\n", startTime, transferSize,
+		printf("[%f] onesided event mem recv: %d, id: %s.\n", startTime, transferSize,
 		id->gpuIdentifier());
 #endif
 		}
@@ -414,7 +414,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
 			TAU_CONTEXT_EVENT_THREAD(MemoryCopyEventDtoH, transferSize, task);
 			//TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
 #ifdef DEBUG_PROF		
-		printf("[%f] onesided event mem send: %f, id: %s\n", startTime, transferSize,
+		printf("[%f] onesided event mem send: %d, id: %s\n", startTime, transferSize,
 		id->gpuIdentifier());
 #endif
 		}
@@ -438,7 +438,7 @@ void Tau_gpu_register_memcpy_event(GpuEvent *id, double startTime, double endTim
 			TAU_CONTEXT_EVENT_THREAD(MemoryCopyEventDtoD, transferSize, task);
 			//TAU_EVENT(MemoryCopyEventDtoH(), transferSize);
 #ifdef DEBUG_PROF		
-		printf("[%f] onesided event mem send: %f, id: %s\n", startTime, transferSize,
+		printf("[%f] onesided event mem send: %d, id: %s\n", startTime, transferSize,
 		id->gpuIdentifier());
 #endif
 		}

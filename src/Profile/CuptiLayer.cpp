@@ -265,8 +265,16 @@ void Tau_CuptiLayer_init()
 			exit(1);
 		}
 		//printf("in Tau_CuptiLayer_init 7.\n");
-    //
-    cuptiSetEventCollectionMode(cuCtx, CUPTI_EVENT_COLLECTION_MODE_KERNEL);
+    int major;
+    cuDeviceGetAttribute(&major, CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR, device);
+    if (major < 2)
+    {
+        //Events are reset on kernel launch for compute < 2.0.
+        printf("TAU ERROR: CUDA Event collection not available for devices with compute capability less than 2.0.\n");
+    }
+    
+    
+    cuptiSetEventCollectionMode(cuCtx, CUPTI_EVENT_COLLECTION_MODE_CONTINUOUS);
 		
 		lastDataBuffer = (uint64_t*) malloc
 			(Tau_CuptiLayer_get_num_events()*sizeof(uint64_t)); 
