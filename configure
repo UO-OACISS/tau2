@@ -6244,13 +6244,16 @@ fi
 ######################################################################
 # Install BFD if requested
 ######################################################################
+binutils=binutils-2.23.1
+binutilstgz=$binutils.tar.gz
+binutilsurl=http://ftp.gnu.org/gnu/binutils/$binutilstgz
 if [ "x$bfddir" = xnone ]; then
 	echo "BFD disabled."
 	turnbfdoff=yes
 fi
 if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
     if [ "x$bfddir" = xdownload ] ; then
-		bfddir=${targetdir}/${architecture}/binutils-2.20
+		bfddir=${targetdir}/${architecture}/$binutils
 		if [ -r "$bfddir/lib/libbfd.a" ] ; then
 			echo "BFD download already found, skipping"
 		else
@@ -6258,41 +6261,25 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
 			mkdir $tempdir
 			cd $tempdir
 			if [ "$machine" = "apple" ] ; then
-                                # this is a little tricky - we WANT it to be called 2.20 for now.
-                                #   after untar, we will want to rename the package to 2.20 too.
-				curl http://www.cs.uoregon.edu/Research/paracomp/tau/tauprofile/dist/binutils-2.22.tar.gz > binutils-2.20.tar.gz
-			elif    [ "x$pgi" = "xyes" ] ; then
-				wget http://www.cs.uoregon.edu/Research/paracomp/tau/tauprofile/dist/binutils-2.22.tar.gz
-				mv binutils-2.22.tar.gz  binutils-2.20.tar.gz 
+                            curl $binutilsurl > $binutilstgz
 			else 
-				wget http://www.cs.uoregon.edu/Research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz
+                            wget $binutilsurl
 			fi
-			if [ ! -f binutils-2.20.tar.gz ] ; then
-				echo "The BFD tarball did not download.  Please download it manually from: "
-				echo "http://www.cs.uoregon.edu/Research/paracomp/tau/tauprofile/dist/binutils-2.20.tar.gz"
+			if [ ! -f $binutilstgz ] ; then
+				echo "$binutilstgz did not download.  Please download it manually from: "
+                                echo "$binutilsurl"
 				echo "Please enter the directory containing the tarball: ${nnl}" 
 				read RESPONSE
-				cp $RESPONSE/binutils-2.20.tar.gz .
+				cp $RESPONSE/$binutilstgz .
 			fi
-			tar -xzf binutils-2.20.tar.gz
-			if [ "$machine" = "apple" -o "x$pgi" = "xyes" ] ; then
-			    mv binutils-2.22 binutils-2.20
-			fi
-			cd binutils-2.20
+			tar -xzf $binutilstgz
+			cd $binutils
 			if [ $machine = "bgp" ] ; then
 				./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-gcc CXX=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc-bgp-linux-g++ --disable-nls --disable-werror
-				# have to run make twice, first one dies with illegal instruction
-				make
-				make
-				make install
-
-
+				make && make install
 			elif [ $machine = "bgq" ]; then
 				./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-gcc CXX=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-g++ --disable-nls --disable-werror
-				# have to run make twice, first one dies with illegal instruction
-				make
-				make
-				make install
+				make && make install
 			elif [ $machine = "rs6000" -o  $machine = "ibm64" ]; then
 				./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir --disable-nls --disable-werror  --disable-largefile
 				make && make install
@@ -6300,16 +6287,19 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
 				./configure CFLAGS=-fPIC CXXFLAGS=-fPIC --prefix=$bfddir --disable-nls --disable-werror
 				make && make install
                         fi
-			cp include/demangle.h $bfddir/include
-			cp include/libiberty.h $bfddir/include
+                        cp bfd/*.h $bfddir/include
+			cp -R include/* $bfddir/include
+
+                        # Fix bfd.h
+                        sed -e 's/#if !defined PACKAGE && !defined PACKAGE_VERSION/#if 0/' $bfddir/include/bfd.h > /tmp/bfd.h
+                        mv /tmp/bfd.h $bfddir/include
 			
 			# snow leopard
 			if [ -r "$bfddir/lib/x86_64/libiberty.a" ] ; then
 				mv $bfddir/lib/x86_64/libiberty.a $bfddir/lib/libiberty.a
 			fi
 
-			cd ..
-			cd ..
+			cd ../..
 			rm -rf $tempdir
 		fi
     fi
