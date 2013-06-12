@@ -651,6 +651,9 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
 
   char buff[4096];
 
+  char *newName = NULL;
+
+
   // if the node was found by BFD, populate the callsite node
   if (node->resolved) {
     TauBfdInfo & resolvedInfo = node->info;
@@ -665,8 +668,12 @@ CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long addr, char const * tag
       // TODO: Leak?
       char lineno[32];
       sprintf(lineno, "%d", resolvedInfo.lineno);
-      *newShortName = (char*)malloc(strlen(resolvedInfo.funcname) + strlen(lineno) + 2);
-      sprintf(*newShortName, "%s.%d", resolvedInfo.funcname, resolvedInfo.lineno);
+//      *newShortName = (char*)malloc(strlen(resolvedInfo.funcname) + strlen(lineno) + 2);
+//      sprintf(*newShortName, "%s.%d", resolvedInfo.funcname, resolvedInfo.lineno);
+      newName = (char*)malloc(strlen(resolvedInfo.funcname) + strlen(lineno) + 2);
+      sprintf(newName, "%s.%d", resolvedInfo.funcname, resolvedInfo.lineno);
+      newShortName = &newName; 
+      TAU_VERBOSE("resolved function name (newName in TauSampling.cpp) = %s\n", newName);
 #if 0
     } else {
       if (childName) {
@@ -1612,7 +1619,7 @@ extern "C" void Tau_sampling_init_if_necessary(void)
    * and the other threads don't get initialized. Just hope that with PGI, there
    * are instrumented functions inside the parallel regions, otherwise sampling
    * will only work on thread 0.  */
-#if defined(TAU_OPENMP) && !defined(TAU_PTHREAD) && !defined(__PGI)
+#if 0 && defined(TAU_OPENMP) && !defined(TAU_PTHREAD) && !defined(__PGI)
   // if the master thread is in TAU, in a non-parallel region
   if (omp_get_num_threads() == 1) {
     /* FIRST! make sure that we don't process samples while in this code */
@@ -1638,15 +1645,16 @@ extern "C" void Tau_sampling_init_if_necessary(void)
 #pragma omp parallel for ordered 
     for (dummy = 0 ; dummy < all_threads ; dummy++) {
         // but do it sequentially.
-#pragma omp ordered 
-      {
+		//
         // Protect TAU from itself
         TauInternalFunctionGuard protects_this_function;
-
+#pragma omp ordered 
+      {
 #pragma omp critical (creatingtopleveltimer)
         {
           // Getting the thread ID registers the OpenMP thread.
-          int myTid = RtsLayer::threadId();
+          //int myTid = RtsLayer::threadId();
+          int myTid = Tau_get_tid ();
           if (!samplingThrInitialized[myTid]) {
             Tau_sampling_init(myTid);
             samplingThrInitialized[myTid] = true;
