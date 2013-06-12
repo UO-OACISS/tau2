@@ -65,6 +65,9 @@ using namespace std;
 #define TAU_CALLSITE_DEFAULT 0
 #define TAU_CALLSITE_LIMIT_DEFAULT 1 /* default to be local */
 
+/* If we are using OpenMP and the collector API */
+#define TAU_COLLECTOR_API_DEFAULT 1
+
 /* if we are doing EBS sampling, set the default sampling period */
 #define TAU_EBS_DEFAULT 0
 #define TAU_EBS_KEEP_UNRESOLVED_ADDR_DEFAULT 0
@@ -464,6 +467,7 @@ static int env_ibm_bg_hwp_counters = 0;
 static int env_ebs_keep_unresolved_addr = 0;
 static int env_ebs_period = 0;
 static int env_ebs_inclusive = 0;
+static int env_collector_api_enabled = 0;
 static int env_ebs_enabled = 0;
 static const char *env_ebs_source = "itimer";
 static int env_ebs_unwind_enabled = 0;
@@ -478,9 +482,9 @@ static double env_throttle_percall = 0;
 static const char *env_profiledir = NULL;
 static const char *env_tracedir = NULL;
 static const char *env_metrics = NULL;
-static const char *env_cupti_api = NULL;
+static const char *env_cupti_api = TAU_CUPTI_API_DEFAULT; 
 static int env_sigusr1_action = TAU_ACTION_DUMP_PROFILES;
-static const char *env_track_cuda_instructions = NULL;
+static const char *env_track_cuda_instructions = TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT;
 
 static int env_mic_offload = 0;
 
@@ -703,6 +707,10 @@ int TauEnv_get_ebs_inclusive() {
 
 int TauEnv_get_ebs_enabled() {
   return env_ebs_enabled;
+}
+
+int TauEnv_get_collector_api_enabled() {
+  return env_collector_api_enabled;
 }
 
 int TauEnv_get_ebs_unwind() {
@@ -1347,6 +1355,17 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: METRICS is not set\n", env_metrics);
     } else {
       TAU_VERBOSE("TAU: METRICS is \"%s\"\n", env_metrics);
+    }
+
+    tmp = getconf("TAU_COLLECTOR_API");
+    if (parse_bool(tmp, TAU_COLLECTOR_API_DEFAULT)) {
+      env_collector_api_enabled = 1;
+      TAU_VERBOSE("TAU: Sampling Enabled\n");
+      TAU_METADATA("TAU_COLLECTOR_API", "on");
+    } else {
+      env_collector_api_enabled = 0;
+      TAU_VERBOSE("TAU: Sampling Disabled\n");
+      TAU_METADATA("TAU_COLLECTOR_API", "off");
     }
 
     tmp = getconf("TAU_SAMPLING");

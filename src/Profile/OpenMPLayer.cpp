@@ -56,6 +56,13 @@ OpenMPMap & TheOMPMap()
   return omp_map;
 }
 
+/* This is Thread Local Storage (TLS) for the thread ID.
+ * Using this is MUCH faster than computing it every time we need it.
+ * HOWEVER, it might not be supported everywhere. */
+#if defined (TAU_OPENMP) && defined(TAU_USE_FAST_THREADID)
+__thread int _tau_thread_id = -1;
+#endif
+
 ////////////////////////////////////////////////////////////////////////
 // RegisterThread() should be called before any profiling routines are
 // invoked. This routine sets the thread id that is used by the code in
@@ -83,6 +90,13 @@ int OpenMPLayer::numThreads()
 int OpenMPLayer::GetTauThreadId(void)
 {
 #ifdef TAU_OPENMP
+
+#ifdef TAU_USE_FAST_THREADID
+  // if this thread has been registered, then it has a TLS value for the ID
+  if (_tau_thread_id > -1)
+    return _tau_thread_id;
+#endif
+
   int omp_thread_id = omp_get_thread_num();
 
 #ifdef TAU_OPENMP_NESTED
@@ -117,8 +131,17 @@ int OpenMPLayer::GetTauThreadId(void)
     }
     omp_unset_lock(&OpenMPLayer::tauRegistermutex);
 
+// do this now so the thread ID is set before starting timers
+#ifdef TAU_USE_FAST_THREADID
+    _tau_thread_id = tau_thread_id;
+#endif
+
     Tau_create_top_level_timer_if_necessary_task(tau_thread_id);
   }
+
+#ifdef TAU_USE_FAST_THREADID
+  _tau_thread_id = tau_thread_id;
+#endif
 
   return tau_thread_id;
 #else
@@ -129,6 +152,16 @@ int OpenMPLayer::GetTauThreadId(void)
 int OpenMPLayer::GetThreadId(void)
 {
 #ifdef TAU_OPENMP
+
+#ifdef TAU_USE_FAST_THREADID
+  if (_tau_thread_id == -1) {
+	// call the function above, which will register the thread
+	// and assign the TLS value which we will use henceforth
+    return GetTauThreadId();  
+  } else {
+	return _tau_thread_id;
+  }
+#endif
 
   int omp_thread_id = omp_get_thread_num();
 
