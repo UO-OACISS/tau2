@@ -1360,11 +1360,11 @@ void TauEnv_initialize()
     tmp = getconf("TAU_COLLECTOR_API");
     if (parse_bool(tmp, TAU_COLLECTOR_API_DEFAULT)) {
       env_collector_api_enabled = 1;
-      TAU_VERBOSE("TAU: Sampling Enabled\n");
+      TAU_VERBOSE("TAU: Collector API Enabled\n");
       TAU_METADATA("TAU_COLLECTOR_API", "on");
     } else {
       env_collector_api_enabled = 0;
-      TAU_VERBOSE("TAU: Sampling Disabled\n");
+      TAU_VERBOSE("TAU: Collector API Disabled\n");
       TAU_METADATA("TAU_COLLECTOR_API", "off");
     }
 

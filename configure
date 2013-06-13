@@ -6862,6 +6862,9 @@ else
 fi
 
 if [ "x$unwinder" != "xnone" ] ; then
+  if [ $c_compiler = gcc ] ; then
+    unwind_extras="-Wl\,-rpath=$unwind_lib"
+  fi
   if [ "x$unwinder" = "xlibunwind" ] ; then
 		  if [ $machine = apple ] ; then
             unwind_lib_flag="-framework#System"

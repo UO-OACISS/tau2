@@ -55,6 +55,30 @@ static void * get_system_function_handle(char const * name, void * caller)
 }
 
 /**********************************************************
+  omp_set_lock
+ **********************************************************/
+
+void omp_set_lock(omp_lock_t *lock)  {
+    static omp_set_lock_p omp_set_lock_h = NULL;
+    if (omp_set_lock_h == NULL) {
+        omp_set_lock_h = (omp_set_lock_p)get_system_function_handle("omp_set_lock",(void*)omp_set_lock);
+    }
+    tau_omp_set_lock(omp_set_lock_h, lock);
+}
+
+/**********************************************************
+  omp_set_nest_lock
+ **********************************************************/
+
+void omp_set_nest_lock(omp_nest_lock_t *nest_lock) {
+    static omp_set_nest_lock_p omp_set_nest_lock_h = NULL;
+    if (omp_set_nest_lock_h == NULL) {
+        omp_set_nest_lock_h = (omp_set_nest_lock_p)get_system_function_handle("omp_set_nest_lock",(void*)omp_set_nest_lock);
+    }
+    tau_omp_set_nest_lock(omp_set_nest_lock_h, nest_lock);
+}
+
+/**********************************************************
   GOMP_barrier
  **********************************************************/
 
@@ -835,6 +859,16 @@ void  GOMP_single_copy_end(void * a1)  {
 #else // not TAU_PRELOAD_LIB
 /**************** this section is for static linking and wrapping ****************** */
 
+
+void __real_omp_set_lock(omp_lock_t *lock);
+void __wrap_omp_set_lock(omp_lock_t *lock) {
+    tau_omp_set_lock(__real_omp_set_lock, lock);
+}
+
+void __real_omp_set_nest_lock(omp_nest_lock_t *lock);
+void __wrap_omp_set_nest_lock(omp_nest_lock_t *lock) {
+    tau_omp_set_nest_lock(__real_omp_set_nest_lock, lock);
+}
 
 void __real_GOMP_barrier();
 void __wrap_GOMP_barrier() {
