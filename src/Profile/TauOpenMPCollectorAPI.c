@@ -155,7 +155,13 @@ char * show_backtrace (int tid) {
     int depth = 1;
 #else /* assume we are using gcc */
     //#if defined (__GNUC__) && defined (__GNUC_MINOR__) && defined (__GNUC_PATCHLEVEL__)
-    int depth = 5;
+    int depth = 6;
+//ip = 7f735e98ad00, sp = 7fff7cd55c90, name= [OPENMP] Tau_get_current_region_context
+//ip = 7f735e98b515, sp = 7fff7cd55cd0, name= [OPENMP] Tau_omp_event_handler
+//ip = 7f735ed029b0, sp = 7fff7cd55d00, name= [OPENMP] __ompc_event_callback
+//ip = 7f735ed03d38, sp = 7fff7cd55d20, name= [OPENMP] tau_GOMP_parallel_start
+//ip = 7f735ed01c91, sp = 7fff7cdd9c60, name= [OPENMP] GOMP_parallel_start
+
 #endif /* (__GNUC__) && defined (__GNUC_MINOR__) && defined (__GNUC_PATCHLEVEL__) */
     while (unw_step(&cursor) > 0) {
         // we want to pop 3 or 4 levels of the stack:
@@ -164,14 +170,14 @@ char * show_backtrace (int tid) {
         // - __ompc_event_callback() or fork()
         // - GOMP_parallel_begin() * maybe - only if using GOMP *
         // - ?? <- the source location we want
-        if (index++ == depth) {
+        if (++index >= depth) {
             unw_get_reg(&cursor, UNW_REG_IP, &ip);
             unw_get_reg(&cursor, UNW_REG_SP, &sp);
             char * newShort;
             void * tmpInfo = (void*)Tau_sampling_resolveCallSite(ip, "OPENMP", NULL, &newShort, 0);
             //void * tmpInfo = (void*)Tau_sampling_resolveCallSite(ip, "UNWIND", NULL, &newShort, 0);
             Tau_collector_api_CallSiteInfo * myInfo = (Tau_collector_api_CallSiteInfo*)(tmpInfo);
-            //TAU_VERBOSE ("ip = %lx, sp = %lx, name= %s\n", (long) ip, (long) sp, myInfo->name);
+            //TAU_VERBOSE ("index = %d, ip = %lx, sp = %lx, name= %s\n", index, (long) ip, (long) sp, myInfo->name);
             location = malloc(strlen(myInfo->name)+1);
             strcpy(location, myInfo->name);
             break;
@@ -195,9 +201,10 @@ void Tau_get_current_region_context(int tid) {
     if (tmpStr == NULL)
         tmpStr = "";
     if (Tau_collector_flags[tid].timerContext != NULL) {
-        free(Tau_collector_flags[tid].timerContext);
+        Tau_collector_flags[tid].timerContext = realloc(Tau_collector_flags[tid].timerContext, strlen(tmpStr)+1);
+    } else {
+        Tau_collector_flags[tid].timerContext = malloc(strlen(tmpStr)+1);
     }
-    Tau_collector_flags[tid].timerContext = malloc(strlen(tmpStr)+1);
     strcpy(Tau_collector_flags[tid].timerContext, tmpStr);
     //TAU_VERBOSE("Got timer: %s\n", Tau_collector_flags[tid].timerContext);
     //TAU_VERBOSE("Forking with %d threads\n", omp_get_max_threads());
@@ -205,9 +212,10 @@ void Tau_get_current_region_context(int tid) {
     for (i = 0 ; i < omp_get_max_threads() ; i++) {
         if (i == tid) continue; // don't mess with yourself
         if (Tau_collector_flags[i].timerContext != NULL) {
-            free(Tau_collector_flags[i].timerContext);
+            Tau_collector_flags[i].timerContext = realloc(Tau_collector_flags[i].timerContext, strlen(tmpStr)+1);
+        } else {
+            Tau_collector_flags[i].timerContext = malloc(strlen(tmpStr)+1);
         }
-        Tau_collector_flags[i].timerContext = malloc(strlen(tmpStr)+1);
         strcpy(Tau_collector_flags[i].timerContext, tmpStr);
     }
     return;
@@ -227,9 +235,10 @@ void Tau_get_current_region_context(int tid) {
       sprintf(regionIDstr, "%s: %s", state, Tau_collector_flags[tid].timerContext);
       // it is safe to set the active timer context now.
       if (Tau_collector_flags[tid].activeTimerContext != NULL) {
-        free(Tau_collector_flags[tid].activeTimerContext);
+          Tau_collector_flags[tid].activeTimerContext = realloc(Tau_collector_flags[tid].activeTimerContext, strlen(Tau_collector_flags[tid].timerContext)+1);
+      } else {
+          Tau_collector_flags[tid].activeTimerContext = malloc(strlen(Tau_collector_flags[tid].timerContext)+1);
       }
-      Tau_collector_flags[tid].activeTimerContext = malloc(strlen(Tau_collector_flags[tid].timerContext)+1);
       strcpy(Tau_collector_flags[tid].activeTimerContext, Tau_collector_flags[tid].timerContext);
       Tau_pure_start_task(regionIDstr, tid);
       free(regionIDstr);
@@ -325,14 +334,15 @@ void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
                }
                */
             // it is safe to set the active timer context now.
-            if (Tau_collector_flags[tid].activeTimerContext != NULL) {
-                free(Tau_collector_flags[tid].activeTimerContext);
-            }
             if (Tau_collector_flags[tid].timerContext == NULL) {
                 Tau_collector_flags[tid].timerContext = malloc(strlen(__UNKNOWN__)+1);
                 strcpy(Tau_collector_flags[tid].timerContext, __UNKNOWN__);
             }
-            Tau_collector_flags[tid].activeTimerContext = malloc(strlen(Tau_collector_flags[tid].timerContext)+1);
+            if (Tau_collector_flags[tid].activeTimerContext != NULL) {
+                Tau_collector_flags[tid].activeTimerContext = realloc(Tau_collector_flags[tid].activeTimerContext, strlen(Tau_collector_flags[tid].timerContext)+1);
+            } else {
+                Tau_collector_flags[tid].activeTimerContext = malloc(strlen(Tau_collector_flags[tid].timerContext)+1);
+            }
             strcpy(Tau_collector_flags[tid].activeTimerContext, Tau_collector_flags[tid].timerContext);
             Tau_omp_start_timer("OpenMP_PARALLEL_REGION", tid, 1);
             Tau_collector_flags[tid].busy = 1;
@@ -454,10 +464,10 @@ void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
                 Tau_omp_stop_timer("OpenMP_EXECUTE_TASK", tid, 0);
                 Tau_collector_flags[tid].task_exec -= 1;
             }
-            Tau_omp_start_timer("OpenMP_FINISH_TASK", tid, 0);
+            //Tau_omp_start_timer("OpenMP_FINISH_TASK", tid, 0);
             break;
         case OMP_EVENT_THR_END_FINISH_TASK:
-            Tau_omp_stop_timer("OpenMP_FINISH_TASK", tid, 0);
+            //Tau_omp_stop_timer("OpenMP_FINISH_TASK", tid, 0);
             break;
     }
     //TAU_VERBOSE("** Thread: %d, EVENT:%s handled. **\n", tid, OMP_EVENT_NAME[event-1]);
@@ -543,23 +553,25 @@ int Tau_initialize_collector_api(void) {
 #else
 
     char *error;
+    *(void **) (&Tau_collector_api) = dlsym(RTLD_DEFAULT, "__omp_collector_api");
+    if (Tau_collector_api == NULL) {
 
 #if defined (__INTEL_COMPILER)
-    char * libname = "libiomp5.so";
+        char * libname = "libiomp5.so";
 #elif defined (__GNUC__) && defined (__GNUC_MINOR__) && defined (__GNUC_PATCHLEVEL__)
 
 #ifdef __APPLE__
-    char * libname = "libgomp_g_wrap.dylib";
+        char * libname = "libgomp_g_wrap.dylib";
 #else /* __APPLE__ */
-    char * libname = "libTAU-gomp.so";
+        char * libname = "libTAU-gomp.so";
 #endif /* __APPLE__ */
 
 #else /* assume we are using OpenUH */
-    char * libname = "libopenmp.so";
+        char * libname = "libopenmp.so";
 #endif /* __GNUC__ __GNUC_MINOR__ __GNUC_PATCHLEVEL__ */
 
-    TAU_VERBOSE("Looking for library: %s\n", libname); fflush(stdout); fflush(stderr);
-    void * handle = dlopen(libname, RTLD_NOW | RTLD_GLOBAL);
+        TAU_VERBOSE("Looking for library: %s\n", libname); fflush(stdout); fflush(stderr);
+        void * handle = dlopen(libname, RTLD_NOW | RTLD_GLOBAL);
 #if 0
     char * err = dlerror();
     if (err) { 
@@ -571,11 +583,10 @@ int Tau_initialize_collector_api(void) {
     }
 #endif
 
-    if (handle != NULL) {
-        TAU_VERBOSE("Looking for symbol in library: %s\n", libname); fflush(stdout); fflush(stderr);
-        *(void **) (&Tau_collector_api) = dlsym(handle, "__omp_collector_api");
-    } else {
-        *(void **) (&Tau_collector_api) = dlsym(RTLD_DEFAULT, "__omp_collector_api");
+        if (handle != NULL) {
+            TAU_VERBOSE("Looking for symbol in library: %s\n", libname); fflush(stdout); fflush(stderr);
+            *(void **) (&Tau_collector_api) = dlsym(handle, "__omp_collector_api");
+        }
     }
 	// set this now, either it's there or it isn't.
     initialized = true;
@@ -594,6 +605,7 @@ int Tau_initialize_collector_api(void) {
         return -1;
     }
 #endif // TAU_DISABLE_SHARED
+    TAU_VERBOSE("__omp_collector_api symbol found! Collector API enabled. \n"); fflush(stdout); fflush(stderr);
 
     omp_collector_message req;
     void *message = (void *) malloc(4);   

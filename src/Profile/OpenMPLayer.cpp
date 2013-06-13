@@ -159,7 +159,7 @@ int OpenMPLayer::GetThreadId(void)
 	// and assign the TLS value which we will use henceforth
     return GetTauThreadId();  
   } else {
-	return _tau_thread_id;
+    return _tau_thread_id;
   }
 #endif
 
@@ -179,6 +179,10 @@ int OpenMPLayer::GetThreadId(void)
     exit(1);
   }
 #endif /* TAU_OPENMP_NESTED */
+
+#ifdef TAU_USE_FAST_THREADID
+  _tau_thread_id = omp_thread_id;
+#endif
 
   return omp_thread_id;
 #else
