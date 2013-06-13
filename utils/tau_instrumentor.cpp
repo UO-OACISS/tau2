@@ -794,7 +794,7 @@ void print_tau_profile_init(ostream& ostr, pdbCRoutine *main_routine)
 /* -------------------------------------------------------------------------- */
 void defineTauGroup(string& group_name)
 {
-  if (group_name == "TAU_USER") {
+  if (group_name != "TAU_USER") {
     // Write the following lines only when -DTAU_GROUP=string is defined
     ostr << "#ifndef " << group_name << endl;
     ostr << "#define " << group_name << " TAU_GET_PROFILE_GROUP(\"" << group_name << "\")" << endl;

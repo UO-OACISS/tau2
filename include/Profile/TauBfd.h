@@ -79,6 +79,7 @@ struct TauBfdInfo
 	char const * filename;
 	char const * funcname;
 	int lineno;
+        unsigned int discriminator;
 };
 
 
