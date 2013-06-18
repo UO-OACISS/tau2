@@ -6307,7 +6307,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
     fixmakeargs="$fixmakeargs bfdinclude=$bfdinclude"
     bfdlink="-L$bfddir/lib -L$bfddir/lib64"
 	# The libintl.dylib library is in /opt/local/lib... is that everywhere?
-	if [ "x$machine" == "xapple" ] ; then
+	if [ "x$machine" = "xapple" ] ; then
       bfdlink="$bfdlink -L/opt/local/lib"
       fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64#-L/opt/local/lib"
 	else
