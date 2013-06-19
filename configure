@@ -6677,6 +6677,27 @@ EOF
   /bin/rm -f conftest_pthread.o conftest_pthread.c
 fi
 
+######################################################################
+# Check for TLS, or Thread Local Storage
+######################################################################
+if [ $openmp = yes ] ; then
+  cat <<EOF > conftest_tls.cc
+__thread int number = -1;
+int main() {
+  return number;
+}
+EOF
+  $echo "Checking for thread local storage support... ${nnl}"
+  if $cxx_compiler $orig_useropt -c conftest_tls.cc 1> /dev/null 2>&1 ; then
+      fixmakeargs="$fixmakeargs TLS_AVAILABLE"
+      echo "yes"
+  else
+      echo "no"
+  fi
+
+  /bin/rm -f conftest_tls.o conftest_tls.cc
+fi
+
 
 ######################################################################
 
