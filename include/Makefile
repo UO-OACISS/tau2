@@ -1021,7 +1021,7 @@ EBS_CLOCK_RES=
 #SGI_MPT_MPI#PROFILEOPT90= -DTAU_SGI_MPT_MPI -DTAU_MPI_F_STATUSES_IGNORE_ABSENT #ENDIF#
 #GPI#PROFILEOPT91 = -DTAU_GPI -I$(GPIDIR)/include #ENDIF#
 #GPI#TAU_EXTRA_WRAPPER_OPTIONS=-optTauWrapFile=$(TAU_LIB_DIR)/wrappers/gpi/link_options.tau #ENDIF#
-#GOMP_AVAILABLE#TAU_EXTRA_WRAPPER_OPTIONS=-optTauWrapFile=$(TAU_LIB_DIR)/wrappers/gomp_wrapper/link_options.tau -ltau$(TAU_CONFIG) $(TAU_LINKER_OPTS) #ENDIF#
+#GOMP_AVAILABLE#TAU_EXTRA_WRAPPER_OPTIONS=-optTauWrapFile=$(TAU_LIB_DIR)/wrappers/gomp_wrapper/link_options.tau #ENDIF#
 
 #TAU_OPENMP_NESTED#PROFILEOPT92=-DTAU_OPENMP_NESTED#ENDIF#
 
@@ -1265,6 +1265,7 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
 	-optCompInstOption="$(TAU_COMPINST_OPTION) $(TAU_COMPINST_PTHREAD_OPTIONS)"\
 	-optCompInstFortranOption="$(TAU_FORTRAN_COMPINST_OPTION) $(TAU_COMPINST_PTHREAD_OPTIONS)"\
 	-optCompInstLinking="$(TAU_COMPINST_LINKING)"\
+	-optVerbose \
 	-optWrappersDir="$(TAU_LIB_DIR)/wrappers" $(TAU_EXTRA_WRAPPER_OPTIONS)
 #############################################
 
