@@ -173,7 +173,7 @@ static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
 #endif
 #endif
 
-#ifdef TAU_USE_FAST_THREADID
+#ifdef TAU_USE_TLS
 __thread int _Tau_global_insideTAU = 0;
 #endif
 
@@ -222,7 +222,7 @@ extern "C" void Tau_stack_initialization() {
 }
 
 extern "C" int Tau_global_get_insideTAU() {
-#ifdef TAU_USE_FAST_THREADID
+#ifdef TAU_USE_TLS
   return _Tau_global_insideTAU;
 #endif
   Tau_stack_checkInit();
@@ -232,7 +232,7 @@ extern "C" int Tau_global_get_insideTAU() {
 
 extern "C" int Tau_global_incr_insideTAU()
 {
-#ifdef TAU_USE_FAST_THREADID
+#ifdef TAU_USE_TLS
   return ++_Tau_global_insideTAU;
 #endif
   Tau_stack_checkInit();
@@ -246,7 +246,7 @@ extern "C" int Tau_global_incr_insideTAU()
 
 extern "C" int Tau_global_decr_insideTAU()
 {
-#ifdef TAU_USE_FAST_THREADID
+#ifdef TAU_USE_TLS
   return --_Tau_global_insideTAU;
 #endif
   Tau_stack_checkInit();
