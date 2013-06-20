@@ -693,6 +693,7 @@ extern "C" int Tau_profile_exit_all_tasks() {
 	// Stop the collector API. The main thread may exit with running
 	// worker threads. When those threads try to exit, they will 
 	// try to stop timers that aren't running.
+    RtsLayer::LockDB();
 #ifdef TAU_OPENMP
 	Tau_disable_collector_api();
 #endif
@@ -703,6 +704,7 @@ extern "C" int Tau_profile_exit_all_tasks() {
 			Profiler *p = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
 			//Make sure even throttled routines are stopped.
 			if (Tau_stop_timer(p->ThisFunction, tid)) {
+	            TAU_VERBOSE("Stopping timer on thread %d: %s\n",tid,p->ThisFunction->Name);
 				p->Stop(tid);
   			Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
 			}
@@ -710,6 +712,7 @@ extern "C" int Tau_profile_exit_all_tasks() {
 	tid++;
 	}
   Tau_disable_instrumentation();
+    RtsLayer::UnLockDB();
   return 0;
 }
 
