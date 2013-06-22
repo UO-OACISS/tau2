@@ -34,6 +34,8 @@
 extern "C" void Tau_set_context_event_name(void *ue, char *name);
 extern "C" void * Tau_return_context_userevent(const char *name);
 
+extern "C" void metric_set_gpu_timestamp(int tid, int idx, double value);
+
 extern "C" void Tau_cupti_find_context_event(
 						TauContextUserEvent** u, 
 						const char *name,
@@ -90,8 +92,9 @@ extern "C" void Tau_cupti_register_gpu_event(
 						uint32_t correlationId,
 						GpuEventAttributes *gpu_attributes,
 						int number_of_attributes,
-						double start,
-						double stop);
+						double *start,
+						double *stop,
+            int number_of_metrics);
 
 extern "C" void Tau_cupti_register_gpu_atomic_event(
 						const char *name,
@@ -145,7 +148,7 @@ eventMap_t eventMap;
 int gpu_occupancy_available(int deviceId);
 void record_gpu_occupancy(CUpti_ActivityKernel *k, const char *name, eventMap_t *m);
 void record_gpu_launch(int cId, FunctionInfo *f);
-void record_gpu_counters(int device_id, const char *name, uint32_t id, eventMap_t *m);
+void record_gpu_counters(int device_id, const char *name, uint32_t id, double *s_metrics, double* e_metrics);
 
 #if CUPTI_API_VERSION >= 3
 void form_context_event_name(CUpti_ActivityKernel *kernel, CUpti_ActivitySourceLocator *source, const char *event, std::string *name);
@@ -196,7 +199,12 @@ public:
     counters_bounded_warning_issued = false;
     clear();
   }
-  uint64_t *counters()
+  uint64_t *start_counters()
+  {
+    return counters_at_last_launch;
+  }
+
+  uint64_t *end_counters()
   {
     return current_counters;
   }
@@ -214,7 +222,9 @@ public:
   {
     kernels_encountered++;
     //std::cout << "kernel encountered." << std::endl;
-    if (!counters_averaged_warning_issued && kernels_encountered > 1) {
+    if (Tau_CuptiLayer_get_num_events() > 0 &&
+        !counters_averaged_warning_issued && 
+        kernels_encountered > 1) {
       TAU_VERBOSE("Warning: CUPTI events will be avereged, multiple kernel deteched between synchronization points.\n");
       counters_averaged_warning_issued = true;
     }
@@ -242,7 +252,8 @@ public:
     for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++)
     {
       //printf("counter %d: start: %llu end: %llu diff: %llu num: %d.\n", n, counters_at_last_launch[n], current_counters[n], current_counters[n] - counters_at_last_launch[n], kernels_encountered);
-      current_counters[n] = (current_counters[n] - counters_at_last_launch[n]) / kernels_encountered; 
+      //current_counters[n] = (current_counters[n] - counters_at_last_launch[n]) / kernels_encountered; 
+      current_counters[n] = current_counters[n] / kernels_encountered; 
     }
   }
   //take the end counts to get a difference.

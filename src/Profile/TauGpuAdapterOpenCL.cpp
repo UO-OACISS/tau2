@@ -213,7 +213,9 @@ double stop)
 	lock_callback();
 	//printf("locked for: %s.\n", name);
 	//eventId evId = Tau_gpu_create_gpu_event(name, gId, parent, map);
-	Tau_gpu_register_gpu_event(evId, start/1e3, stop/1e3);
+  start = start / 1e3;
+  stop = stop / 1e3;
+	Tau_gpu_register_gpu_event(evId, &start, &stop, 1);
 	//printf("released for: %s.\n", name);
 	release_callback();
 }

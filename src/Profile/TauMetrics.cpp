@@ -351,6 +351,7 @@ static void initialize_functionArray()
 			/* CUPTI handled separately */
 			/* setup CUPTI metrics */
 			//functionArray[pos++] = metric_read_cupti;
+      functionArray[pos++] = metric_read_cudatime;
 			Tau_CuptiLayer_register_string(metricv[i], pos - 1);
 #endif //CUPTI
 #ifdef TAU_PAPI
