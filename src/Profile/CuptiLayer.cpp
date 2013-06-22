@@ -1,5 +1,6 @@
 
 #include "Profile/CuptiLayer.h"
+#include "Profile/TauEnv.h"
 #include <dlfcn.h>
 
 // Moved from header file
@@ -244,9 +245,15 @@ void Tau_CuptiLayer_init()
 		for (counter_vec_t::iterator it = Tau_CuptiLayer_Added_counters.begin(); it !=
 					Tau_CuptiLayer_Added_counters.end(); it++)
 		{
-			cuptiErr = cuptiEventGroupAddEvent( eventGroup[device],
-									(*it)->event );
-			CHECK_CUPTI_ERROR( cuptiErr, "cuptiEventGroupAddEvent" );
+      if ((*it)->device == device) 
+      {
+        cuptiErr = cuptiEventGroupAddEvent( eventGroup[device],
+                    (*it)->event );
+        CHECK_CUPTI_ERROR( cuptiErr, "cuptiEventGroupAddEvent" );
+      } else {
+        //TAU_VERBOSE("TAU Warning: Cannot add event: %s to GPU device: %s.\n", (*it)->event_name, (*it)->device_name);
+        return;
+      }
 		}
     //record the fact the events have been added.
 		Tau_CuptiLayer_num_events = Tau_CuptiLayer_Added_counters.size();
@@ -310,7 +317,7 @@ void Tau_CuptiLayer_read_counters(CUdevice device, uint64_t * counterDataBuffer)
 {
   cuCtxGetDevice(&device);
 	//uint64_t * counterDataBuffer = (uint64_t *) malloc(Tau_CuptiLayer_get_num_events() * sizeof(uint64_t));
-	if (Tau_CuptiLayer_is_initialized())
+	if (Tau_CuptiLayer_is_initialized() && initialized[device])
 	{
 		CUresult cuErr;
 		CUcontext cuCtx;

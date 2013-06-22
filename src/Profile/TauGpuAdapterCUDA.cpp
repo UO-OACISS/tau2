@@ -307,9 +307,11 @@ void Tau_cuda_register_sync_event()
 		f2 = s.find(')');
 		if (f1 != string::npos && f2 != string::npos)	
 		{
+      double start = ((double) start_sec + lastEventTime)*1e3;
+      double stop = ((double) stop_sec + lastEventTime)*1e3;
 			Tau_gpu_register_gpu_event(kernel, 
-																 ((double) start_sec + lastEventTime)*1e3,
-																 ((double) stop_sec + lastEventTime)*1e3);
+																 &start,
+																 &stop, 1);
 		}
 	  //printf("in tau_cuda_register_sync_event #2");
 		//Tau_cuda_register_gpu_event(kernel.name, kernel.id, 

@@ -321,17 +321,22 @@ void metric_read_ktau(int tid, int idx, double values[]) {
 
 #define CPU_THREAD 0
 
-double gpu_timestamp[TAU_MAX_THREADS];
+double gpu_timestamp[TAU_MAX_THREADS][TAU_MAX_COUNTERS];
 
-extern "C" void metric_set_gpu_timestamp(int tid, double value)
+extern "C" void metric_set_gpu_timestamp(int tid, int idx, double value)
 {
-	gpu_timestamp[tid] = value;
+	gpu_timestamp[tid][idx] = value;
+}
+
+extern "C" int metric_get_gpu_num_counters()
+{
+  return Tau_CuptiLayer_get_num_events() + 1;
 }
 
 void metric_read_cudatime(int tid, int idx, double values[]) {
 
   //get time from the CPU clock
-  if (!Tau_is_thread_fake(tid))
+  if (!Tau_is_thread_fake(tid) && idx == 0)
   { 
 #ifdef TAU_WINDOWS
     values[idx] = TauWindowsUsecD();
@@ -344,7 +349,7 @@ void metric_read_cudatime(int tid, int idx, double values[]) {
   // get time from the callback API 
   else
   {
-    values[idx] = gpu_timestamp[tid];
+    values[idx] = gpu_timestamp[tid][idx];
   }
 }
 

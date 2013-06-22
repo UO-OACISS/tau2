@@ -421,8 +421,10 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 			{
 				id = kernel->correlationId;
 			}
-      //TODO: make this conditional
-      record_gpu_counters(kernel->deviceId, name, id, &eventMap);
+      int number_of_metrics = Tau_CuptiLayer_get_num_events() + 1;
+      double metrics_start[number_of_metrics];
+      double metrics_end[number_of_metrics];
+      record_gpu_counters(kernel->deviceId, name, id, metrics_start, metrics_end);
 
 			static TauContextUserEvent* bs;
 			static TauContextUserEvent* dm;
@@ -451,10 +453,13 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
         map[i].data = it->second;
         i++;
       }
-			
+		
+      metrics_start[0] = kernel->start / 1e3;
+      metrics_end[0] = kernel->end / 1e3;
+
 			Tau_cupti_register_gpu_event(name, kernel->deviceId,
 				kernel->streamId, kernel->contextId, id, map, map_size,
-				kernel->start / 1e3, kernel->end / 1e3);
+				metrics_start, metrics_end, number_of_metrics);
       //testing counter array
       //uint64_t * counters = (uint64_t *) malloc(Tau_CuptiLayer_get_num_events() * sizeof(uint64_t));
       //CUdevice device;
@@ -675,13 +680,16 @@ void record_gpu_launch(int correlationId, FunctionInfo *current_function)
     //}
   }*/
 }
-void record_gpu_counters(int device_id, const char *name, uint32_t correlationId, eventMap_t *m)
+void record_gpu_counters(int device_id, const char *name, uint32_t correlationId, double * metrics_start, double *metrics_end)
 {
   //std::cout << "              kernel name " << name << std::endl;
   if ( last_recorded_kernel_name ) {
   //std::cout << "last recorded kernel name " << last_recorded_kernel_name << std::endl;
   }
-  if (!CurrentGpuState[device_id].counters_bounded_warning_issued && last_recorded_kernel_name != NULL && strcmp(last_recorded_kernel_name, name) != 0) {
+  if (Tau_CuptiLayer_get_num_events() > 0 &&
+      !CurrentGpuState[device_id].counters_bounded_warning_issued && 
+      last_recorded_kernel_name != NULL && 
+      strcmp(last_recorded_kernel_name, name) != 0) {
     TAU_VERBOSE("Warning: CUPTI events will be bounded, multiple different kernel deteched between synchronization points.\n");
     CurrentGpuState[device_id].counters_bounded_warning_issued = true;
   }
@@ -698,10 +706,9 @@ void record_gpu_counters(int device_id, const char *name, uint32_t correlationId
     //increment kernel count.
     
     //CurrentGpuState[device_id].kernels_encountered++;
-    //uint64_t *counters = (uint64_t *) malloc(Tau_CuptiLayer_get_num_events()*sizeof(uint64_t));
+    //uint64_t *metrics = (uint64_t *) malloc((Tau_CuptiLayer_get_num_events()+1)*sizeof(uint64_t));
     //K *k = new K();
     for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
-      TauContextUserEvent* c;
       char *name;
       if (CurrentGpuState[device_id].counters_bounded_warning_issued) {
         //std::cout << "counters are bounded.\n" << std::endl;
@@ -713,21 +720,18 @@ void record_gpu_counters(int device_id, const char *name, uint32_t correlationId
       } else {
         //std::cout << "counters are actual.\n" << std::endl;
         name = Tau_CuptiLayer_get_event_name(n, TAU_CUPTI_COUNTER_ACTUAL); 
+     
       }
-      if (n >= counterEvents.size()) {
-        c = (TauContextUserEvent *) Tau_return_context_userevent(name);
-        counterEvents.push_back(c);
-      } else {
-        c = counterEvents[n];
-      }
-      Tau_set_context_event_name(c, name);
-      
+      metrics_start[n+1] = CurrentGpuState[device_id].start_counters()[n];
+
       if (CurrentGpuState[device_id].counters_bounded_warning_issued) {
-        eventMap[c] = CurrentGpuState[device_id].counters()[n] *
+        metrics_end[n+1] = CurrentGpuState[device_id].end_counters()[n] *
           CurrentGpuState[device_id].kernels_encountered;
       } else {
-        eventMap[c] = CurrentGpuState[device_id].counters()[n];
+        metrics_end[n+1] = CurrentGpuState[device_id].end_counters()[n];
       }
+      //plus one since
+      
       //std::cout << "kernel name: " << name << std::endl;
       //std::cout << "final number: " << std::setprecision(16) << eventMap[c] << std::endl;
       //std::cout << "number kernel: " << CurrentGpuState[device_id].kernels_encountered << std::endl;
