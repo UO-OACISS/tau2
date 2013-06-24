@@ -244,6 +244,7 @@ JDKARCH                 = linux
 #OPENMP#OPENMP_O 	= OpenMPLayer.o TauOpenMPCollectorAPI.o #ENDIF#
 #OPARI#OPENMP_O 	= OpenMPLayer.o TauOpenMPCollectorAPIDisable.o #ENDIF#
 #OPARI2#OPENMP_O 	= OpenMPLayer.o TauOpenMPCollectorAPIDisable.o #ENDIF#
+#PGS_AVAILABLE#OPENMP_PGS_O 	= TauPthreadGlobal.o  #ENDIF#
 
 #############################################
 # OpenMP extra libraries for collector API
@@ -1028,6 +1029,8 @@ EBS_CLOCK_RES=
 #IBMOMPT#PROFILEOPT93=-DTAU_IBM_OMPT -I$(LOMPINC) -qdebug=lompinterface #ENDIF#
 #IBMOMPT#TAU_OMPT_O=TauOMPT.o #ENDIF#
 #TLS_AVAILABLE#PROFILEOPT94=-DTAU_USE_TLS #ENDIF#
+#DTLS_AVAILABLE#PROFILEOPT94=-DTAU_USE_DTLS #ENDIF#
+#PGS_AVAILABLE#PROFILEOPT94=-DTAU_USE_PGS #ENDIF#
 
 
 PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
