@@ -459,7 +459,12 @@ static void initialize_functionArray()
  * Returns metric name for an index
  ********************************************************************/
 extern "C" const char *TauMetrics_getMetricName(int metric) {
-  return metricv[metric];
+  if (Tau_CuptiLayer_is_cupti_counter(metricv[metric])) {
+    return Tau_CuptiLayer_get_event_name(Tau_CuptiLayer_get_cupti_event_id(metric)).c_str();
+  }
+  else {
+    return metricv[metric];
+  }
 }
 
 /*********************************************************************

@@ -571,24 +571,36 @@ bool Tau_CuptiLayer_is_cupti_counter(char* str)
 
 void Tau_CuptiLayer_register_string(char *str, int metric_n)
 {
-	Tau_CuptiLayer_register_counter(Tau_CuptiLayer_Counter_Map[str]);
+	Tau_CuptiLayer_register_counter(Tau_CuptiLayer_Counter_Map.at(str));
 	internal_id_map[metric_n] = Tau_CuptiLayer_Added_counters.size() - 1;
-	//printf("adding counter with id: %d.\n", metric_n);
 }
 
-char *Tau_CuptiLayer_get_event_name(int metric_n, int type)
-{
-  string counter_string = Tau_CuptiLayer_Added_counters[metric_n]->event_name;
+void Tau_CuptiLayer_set_event_name(int metric_n, int type)
+{ 
+  string counter_string = Tau_CuptiLayer_Added_counters[metric_n]->tag;
   if (type == TAU_CUPTI_COUNTER_BOUNDED) {
     counter_string += " (upper bound)";
   } else if (type == TAU_CUPTI_COUNTER_AVERAGED) {
     counter_string += " (averaged)";
   }
+  Tau_CuptiLayer_Added_counters.at(metric_n)->tag = counter_string;
   //std::cout << "counter string: " << counter_string << std::endl;
-  char *name = (char*) malloc(sizeof(char) *(counter_string.length()+1));
-  memcpy(name, counter_string.c_str(), sizeof(char) * (counter_string.length()+1));
-  return name;
+  
 }
 
+string Tau_CuptiLayer_get_event_name(int metric_n)
+{
+  string counter_string = Tau_CuptiLayer_Added_counters.at(metric_n)->tag;
+  //std::cout << "counter string: " << counter_string << std::endl;
+  return counter_string;
+  //char *name = (char*) malloc(sizeof(char) *(counter_string.length()+1));
+  //memcpy(name, counter_string.c_str(), sizeof(char) * (counter_string.length()+1));
+  //return name;
+}
+
+int Tau_CuptiLayer_get_cupti_event_id(int metric_id)
+{
+  return internal_id_map.at(metric_id);
+}
 
 #endif
