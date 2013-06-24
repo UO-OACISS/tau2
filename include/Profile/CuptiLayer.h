@@ -139,7 +139,11 @@ extern counter_id_map_t interal_id_map();
 
 extern "C" int Tau_CuptiLayer_get_num_events();
 
-extern "C" char *Tau_CuptiLayer_get_event_name(int metric_n, int type);
+extern "C" void Tau_CuptiLayer_set_event_name(int metric_n, int type);
+
+std::string Tau_CuptiLayer_get_event_name(int metric_n);
+
+extern "C" int Tau_CuptiLayer_get_cupti_event_id(int metric_n);
 
 extern "C" void Tau_CuptiLayer_read_counters(CUdevice d, uint64_t *cb);
 

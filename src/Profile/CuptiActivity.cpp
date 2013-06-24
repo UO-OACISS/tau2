@@ -709,17 +709,16 @@ void record_gpu_counters(int device_id, const char *name, uint32_t correlationId
     //uint64_t *metrics = (uint64_t *) malloc((Tau_CuptiLayer_get_num_events()+1)*sizeof(uint64_t));
     //K *k = new K();
     for (int n = 0; n < Tau_CuptiLayer_get_num_events(); n++) {
-      char *name;
       if (CurrentGpuState[device_id].counters_bounded_warning_issued) {
         //std::cout << "counters are bounded.\n" << std::endl;
-        name = Tau_CuptiLayer_get_event_name(n, TAU_CUPTI_COUNTER_BOUNDED); 
+        Tau_CuptiLayer_set_event_name(n, TAU_CUPTI_COUNTER_BOUNDED); 
       }
       else if (CurrentGpuState[device_id].counters_averaged_warning_issued) {
         //std::cout << "counters are averaged.\n" << std::endl;
-        name = Tau_CuptiLayer_get_event_name(n, TAU_CUPTI_COUNTER_AVERAGED); 
+        Tau_CuptiLayer_set_event_name(n, TAU_CUPTI_COUNTER_AVERAGED); 
       } else {
         //std::cout << "counters are actual.\n" << std::endl;
-        name = Tau_CuptiLayer_get_event_name(n, TAU_CUPTI_COUNTER_ACTUAL); 
+        Tau_CuptiLayer_set_event_name(n, TAU_CUPTI_COUNTER_ACTUAL); 
      
       }
       metrics_start[n+1] = CurrentGpuState[device_id].start_counters()[n];
