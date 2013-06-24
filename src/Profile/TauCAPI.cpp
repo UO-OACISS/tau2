@@ -684,6 +684,18 @@ extern "C" int Tau_stop_current_timer_task(int tid)
 
   if (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
     Profiler * profiler = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+    /* We might have an inconstant stack because of throttling. If one thread
+     * throttles a routine while it is on the top of the stack of another thread
+     * it will remain there until a stop is called on its parent. Check for this
+     * condition before printing a overlap error message. */
+    while (!profiler->ThisFunction->GetProfileGroup() & RtsLayer::TheProfileMask() && 
+          (Tau_thread_flags[tid].Tau_global_stackpos >= 0))
+    {
+      profiler->Stop();
+      Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
+      profiler = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+    }
+
     FunctionInfo * functionInfo = profiler->ThisFunction;
     return Tau_stop_timer(functionInfo, tid);
   }
