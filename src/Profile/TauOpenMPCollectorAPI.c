@@ -290,7 +290,7 @@ void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
     Tau_global_incr_insideTAU();
 
     int tid = Tau_get_tid();
-    //TAU_VERBOSE("** Thread: %d, EVENT:%s **\n", tid, OMP_EVENT_NAME[event-1]); fflush(stdout); fflush(stderr);
+    //TAU_VERBOSE("** Thread: %d, (i:%d b:%d p:%d w:%d o:%d t:%d) EVENT:%s **\n", tid, Tau_collector_flags[tid].idle, Tau_collector_flags[tid].busy, Tau_collector_flags[tid].parallel, Tau_collector_flags[tid].ordered_region_wait, Tau_collector_flags[tid].ordered_region, Tau_collector_flags[tid].task_exec, OMP_EVENT_NAME[event-1]); fflush(stdout); fflush(stderr);
 
     switch(event) {
         case OMP_EVENT_FORK:
