@@ -52,9 +52,13 @@ extern "C" void Tau_cupti_register_metadata(
 						GpuMetadata *metadata,
 						int metadata_size);
 
-extern "C" void Tau_cupti_register_calling_site(
+extern "C" void Tau_cupti_register_host_calling_site(
 						uint32_t correlationId,
 						FunctionInfo *current_function);
+
+extern "C" void Tau_cupti_register_device_calling_site(
+						int64_t correlationId,
+						const char *name);
 
 extern "C" void Tau_cupti_enter_memcpy_event(
 						const char *name,
@@ -92,6 +96,7 @@ extern "C" void Tau_cupti_register_gpu_event(
 						uint32_t streamId,
 						uint32_t contextId,
 						uint32_t correlationId,
+            int64_t parentGridId,
             bool cdp,
 						GpuEventAttributes *gpu_attributes,
 						int number_of_attributes,

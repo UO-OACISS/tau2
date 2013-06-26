@@ -1692,6 +1692,19 @@ map<string, int *>& TheIterationMap() {
   return iterationMap;
 }
 
+void *Tau_pure_search_for_function(const char *name)
+{
+  FunctionInfo *fi = 0;
+  RtsLayer::LockDB();
+  PureMap & pure = ThePureMap();
+  PureMap::iterator it = pure.find(name);
+  if (it != pure.end()) {
+    fi = it->second;
+  }
+  RtsLayer::UnLockDB();
+  return (void *) fi;
+}
+
 /* DON'T REMOVE THIS FUNCTION! 
  * When processing samples, you cannot allocate memory!
  * That means you can't create strings!

@@ -10,7 +10,8 @@ struct {
 	int length;
 	} typedef metadata_struct;
 
-std::map<uint32_t, FunctionInfo*> functionInfoMap;
+std::map<uint32_t, FunctionInfo*> functionInfoMap_hostLaunch;
+std::map<int64_t, FunctionInfo*> functionInfoMap_deviceLaunch;
 
 std::map<uint32_t, metadata_struct> deviceInfoMap;
 
@@ -21,6 +22,7 @@ public:
 	uint32_t contextId;
 	uint32_t deviceId;
 	uint32_t correlationId;
+  int64_t parentGridId;
 
   //CDP kernels can overlap with other kernels so each one needs to be in a
   //seperate 'thread' of execution.
@@ -49,8 +51,9 @@ public:
 		contextId = 0;
 		correlationId = -1;
     cdpId = 0;
+    parentGridId = 0;
 	};
-	CuptiGpuEvent(const char* n, uint32_t device, uint32_t stream, uint32_t context, uint32_t correlation, GpuEventAttributes *m, int m_size) : name(n), deviceId(device), streamId(stream), contextId(context), correlationId(correlation), gpu_event_attributes(m), number_of_gpu_attributes(m_size) {
+	CuptiGpuEvent(const char* n, uint32_t device, uint32_t stream, uint32_t context, uint32_t correlation, int64_t pId, GpuEventAttributes *m, int m_size) : name(n), deviceId(device), streamId(stream), contextId(context), correlationId(correlation), parentGridId(pId), gpu_event_attributes(m), number_of_gpu_attributes(m_size) {
 		deviceContainer = false;
     cdpId = 0;
 	};
@@ -123,13 +126,25 @@ public:
 	uint32_t cdp() { return cdpId; };
 	FunctionInfo* getCallingSite() const
 	{
-		FunctionInfo *funcInfo = NULL;
-		std::map<uint32_t, FunctionInfo*>::iterator it = functionInfoMap.find(correlationId);
-		if (it != functionInfoMap.end())
-		{
-			funcInfo = it->second;
-		}
-		return funcInfo;
+    //printf("cdp id is: %d.\n", cdpId);
+    FunctionInfo *funcInfo = NULL;
+    if (cdpId != 0)
+    {
+      std::map<int64_t, FunctionInfo*>::iterator it = functionInfoMap_deviceLaunch.find(parentGridId);
+      if (it != functionInfoMap_deviceLaunch.end())
+      { 
+        funcInfo = it->second;
+        //printf("found device launch site: %s.\n", funcInfo->GetName());
+      }
+    } else {
+      std::map<uint32_t, FunctionInfo*>::iterator it = functionInfoMap_hostLaunch.find(correlationId);
+      if (it != functionInfoMap_hostLaunch.end())
+      {
+        funcInfo = it->second;
+        //printf("found host launch site: %s.\n", funcInfo->GetName());
+      }
+    }
+    return funcInfo;
 	};
 
 	~CuptiGpuEvent()
