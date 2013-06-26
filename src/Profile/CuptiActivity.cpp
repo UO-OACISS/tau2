@@ -181,7 +181,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 					count, getMemcpyType(kind)
 				);
 				FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->ThisFunction;
-				Tau_cupti_register_calling_site(cbInfo->correlationId, p);
+				Tau_cupti_register_host_calling_site(cbInfo->correlationId, p);
 				/*
 				CuptiGpuEvent new_id = CuptiGpuEvent(TAU_GPU_USE_DEFAULT_NAME, (uint32_t)0, cbInfo->contextUid, cbInfo->correlationId, NULL, 0);
 				Tau_gpu_enter_memcpy_event(
@@ -231,7 +231,7 @@ void Tau_cupti_callback_dispatch(void *ud, CUpti_CallbackDomain domain, CUpti_Ca
 				if (function_is_launch(id))
 				{
 					FunctionInfo *p = TauInternal_CurrentProfiler(Tau_RtsLayer_getTid())->ThisFunction;
-					Tau_cupti_register_calling_site(cbInfo->correlationId, p);
+					Tau_cupti_register_host_calling_site(cbInfo->correlationId, p);
 					//functionInfoMap[cbInfo->correlationId] = p;	
 					//printf("at launch id: %d.\n", cbInfo->correlationId);
 					Tau_CuptiLayer_init();
@@ -442,8 +442,13 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
       uint32_t streamId;
       uint32_t contextId;
       uint32_t correlationId;
+#if CUDA_VERSION < 5050
+      uint32_t runtimeCorrelationId;
+#endif
       uint64_t start;
       uint64_t end;
+      int64_t gridId;
+      int64_t parentGridId;
       uint32_t blockX;
       uint32_t blockY; 
       uint32_t blockZ;
@@ -460,6 +465,8 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
         streamId = kernel->streamId;
         contextId = kernel->contextId;
         correlationId = kernel->correlationId;
+        gridId = kernel->gridId;
+        parentGridId = kernel->parentGridId;
         start = kernel->start;
         end = kernel->end;
         blockX = kernel->blockX;
@@ -478,6 +485,12 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
         streamId = kernel->streamId;
         contextId = kernel->contextId;
         correlationId = kernel->correlationId;
+        runtimeCorrelationId = kernel->runtimeCorrelationId;
+#if CUDA_VERSION >= 5050
+        gridId = kernel->gridId;
+#else
+        gridId = 0;
+#endif
         start = kernel->start;
         end = kernel->end;
         blockX = kernel->blockX;
@@ -492,7 +505,10 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 #if CUDA_VERSION >= 5050
       }
 #endif
-      //cerr << "recording kernel (device, stream, context, correlation, name): " << deviceId << ", " << streamId << ", " << contextId << ", " << correlationId << ", " << name << ", "<< start << "-" << end << "ns.\n" << endl;
+      //cerr << "recording kernel (device, stream, context, correlation, grid, name): " << deviceId << ", " << streamId << ", " << contextId << ", " << correlationId << ", " << gridId << ", " << name << ", "<< start << "-" << end << "ns.\n" << endl;
+      /*if (record->kind == CUPTI_ACTIVITY_KIND_CDP_KERNEL) {
+        cerr << "CDP kernel, parent is: " << parentGridId << endl;
+      }*/
 			//cerr << "recording kernel (id): "  << kernel->correlationId << ", " << kernel->name << ", "<< kernel->end - kernel->start << "ns.\n" << endl;
       
 
@@ -550,16 +566,17 @@ void Tau_cupti_record_activity(CUpti_Activity *record)
 #if CUDA_VERSION >= 5050
       if (record->kind == CUPTI_ACTIVITY_KIND_CDP_KERNEL) {
         Tau_cupti_register_gpu_event(name, deviceId,
-          streamId, contextId, id, true, map, map_size,
+          streamId, contextId, id, parentGridId, true, map, map_size,
           start / 1e3, end / 1e3);
       } else {
 #endif
         Tau_cupti_register_gpu_event(name, deviceId,
-          streamId, contextId, id, false, map, map_size,
+          streamId, contextId, id, 0, false, map, map_size,
           start / 1e3, end / 1e3);
 #if CUDA_VERSION >= 5050
       }
 #endif
+        Tau_cupti_register_device_calling_site(gridId, name);
 			/*
 			CuptiGpuEvent gId = CuptiGpuEvent(name, kernel->streamId, kernel->contextId, id, map, map_size);
 			//cuptiGpuEvent cuRec = cuptiGpuEvent(name, &gId, &map);
