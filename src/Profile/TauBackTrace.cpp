@@ -1,6 +1,8 @@
 #include <TAU.h>
 #include <Profile/TauBfd.h>
+#include <Profile/TauBacktrace.h>
 #include <vector>
+#include <cstdarg>
 
 #ifdef __GNUC__
 #include <cxxabi.h>
@@ -8,190 +10,169 @@
 
 using namespace std;
 
-static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
+#define TAU_MAX_STACK 1024
 
-static const char *tau_filename;
-static const char *tau_funcname;
-static unsigned int tau_line_no;
-static int tau_symbol_found; 
+#if !defined(_AIX) && !defined(__sun) && !defined(TAU_WINDOWS)
+#include <execinfo.h>
+#define TAU_EXECINFO 1
+#endif
 
-extern "C" int Tau_get_backtrace_off_by_one_correction(void);
+extern "C" void finalizeCallSites_if_necessary();
 
-static void issueBfdWarningIfNecessary() {
-  static bool warningIssued = false;
-  if (!warningIssued) {
-    fprintf(stderr,"TAU Warning: TauBackTrace - "
-    		"BFD is not available during TAU build. Symbols may not be resolved!\n");
-    warningIssued = true;
-  }
-}
-
-static TauBfdAddrMap * getAddressMap(unsigned long addr)
+struct BacktraceFrame
 {
+  char const * funcname;
+  char const * filename;
+  char const * mapname;
+  int lineno;
+};
+
+static int iteration[TAU_MAX_THREADS] = { 0 };
+
+static int getBacktraceFromExecinfo(int trim, BacktraceFrame ** oframes)
+{
+#ifdef TAU_EXECINFO
+
+  static tau_bfd_handle_t bfdUnitHandle = TAU_BFD_NULL_HANDLE;
+
+  // Initialize BFD
   if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
     bfdUnitHandle = Tau_bfd_registerUnit();
   }
 
-  // if Tau_bfd_registerUnit has been called, maps have been loaded
-  vector<TauBfdAddrMap*> const & addressMap =
-    Tau_bfd_getAddressMaps(bfdUnitHandle);
-  for (size_t i = 0; i < addressMap.size(); i++) {
-    if (addr >= addressMap[i]->start && addr <= addressMap[i]->end) {
-      return addressMap[i];
-    }
-  }
-  
-  // Wasn't found in any ranges, try updating the maps.
-  // NOTE: *CWL* - This simplified means of detecting epoch changes will
-  //       suffer from pathological cases where a function's address in
-  //       one dynamically loaded module can coincide with another
-  //       function's address in another dynamically loaded module.
-  //
-  //       Sampling CANNOT take this approach to epoch changes. It must
-  //       rely on traps to dlopen calls.
-  
-  Tau_bfd_updateAddressMaps(bfdUnitHandle);
-  
-  for (size_t i = 0; i < addressMap.size(); i++) {
-    if (addr >= addressMap[i]->start && addr <= addressMap[i]->end) {
-      return addressMap[i];
-    }
-  }
-  
-  TAU_VERBOSE("TauBackTrace: getAddressMap - "
-	      "failed to find address [%p] after 2 tries\n", addr);
-  // Still not found?  Give up
-  return NULL;
-}
+  // Get the backtrace
+  BacktraceFrame * frames = NULL;
+  void * addrs[TAU_MAX_STACK];
+  int naddrs = backtrace(addrs, TAU_MAX_STACK);
+  if (naddrs) {
+    TAU_VERBOSE("TAU: Backtrace has %d addresses:\n", naddrs);
+    frames = (BacktraceFrame*)calloc(naddrs, sizeof(BacktraceFrame));
 
-bool tauGetFilenameAndLineNo(unsigned long addr)
-{
-  TAU_VERBOSE("TauBackTrace: tauGetFilenameAndLineNo: addr=%p\n", addr);
-  
-  if (bfdUnitHandle == TAU_BFD_NULL_HANDLE) {
-    bfdUnitHandle = Tau_bfd_registerUnit();
-  }
+    for (int i=trim+1, j=0; i<naddrs; ++i, ++j) {
+      unsigned long addr = (unsigned long)addrs[i];
 
-  // Use BFD to resolve address info
-  TauBfdInfo info;
-  tau_symbol_found = Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, info);
-  
-  if (tau_symbol_found) {
-    tau_line_no = info.lineno;
-    if (info.funcname) {
-      // TODO: Is this leaking memory?
-      tau_funcname = strdup(info.funcname);
-    } else {
-      tau_funcname = NULL;
-    }
-    if (info.filename) {
-      // TODO: Is this leaking memory?
-      tau_filename = strdup(info.filename);
-    } else {
-      tau_filename = NULL;
+      // Get source information from BFD
+      TauBfdInfo info;
+      Tau_bfd_resolveBfdInfo(bfdUnitHandle, addr, info);
+
+      // Try to get the name of the memory map containing the address
+      TauBfdAddrMap const * map = Tau_bfd_getAddressMap(bfdUnitHandle, addr);
+      char const * mapname = map ? map->name : "unknown";
+
+      // Record information
+      frames[j].funcname = info.funcname;
+      frames[j].filename = info.filename;
+      frames[j].mapname = mapname;
+      frames[j].lineno = info.lineno;
     }
   } else {
-    tau_line_no = 0;
-    tau_funcname = NULL;
-    tau_filename = NULL;
+    TAU_VERBOSE("TAU: ERROR: Backtrace not available!\n");
   }
-  return tau_symbol_found;
-}
+  *oframes = frames;
+  return naddrs - (trim+1);
 
-int Tau_Backtrace_writeMetadata(int i, char *token, unsigned long addr) {
-  static int flag = 0;
-  if (flag == 0) {
-    flag = 1;
-  }
-  char field[2048];
-  char metadata[256];
-  char *dem_name = NULL;
-  char demangled_name[2048], line_info[2048];
-  char cmd[2048];
-  FILE *pipe_fp;
-  TauBfdAddrMap *map = getAddressMap(addr);
-  line_info[0]=0;
-
-  /* Do we have a demangled name? */
-  // Do not attempt to demangle via these means if using XLC. Use only BFD where
-  //    available.
-#ifndef TAU_XLC
-  if (dem_name == (char *) NULL)  {
-    char *subtoken=token;
-    int i = 0;
-    while (*subtoken!= '(' && i  < strlen(token)) {
-      subtoken++; i++;
-    }
-    subtoken--; /* move the pointer to before the ( so we can use strtok */
-    TAU_VERBOSE("Subtoken=%s\n", subtoken);
-    char *subs=strtok(subtoken,"(+");
-    subs = strtok(NULL,"+");
-    if (subs == (char *) NULL) subs = token;
-#ifndef __GNUC__
-    sprintf(cmd, "c++filt %s", subs);
-    TAU_VERBOSE("popen %s\n", cmd);
-    pipe_fp = popen(cmd, "r");
-    //fscanf(pipe_fp,"%s", demangled_name);
-    int ret = fread(demangled_name, 1, 1024, pipe_fp);
-    TAU_VERBOSE("name = %s, Demangled name = %s, ret = %d\n", token, demangled_name, ret);
-    pclose(pipe_fp);
-    dem_name = demangled_name;
-#else /* __GNUC__ */
-    std::size_t len=1024;
-    int stat;
-    char *out_buf= (char *) malloc (len);
-    char *name = abi::__cxa_demangle(subs, out_buf, &len, &stat);
-    if (stat == 0) dem_name = out_buf;
-    else dem_name = subs;
-    TAU_VERBOSE("DEM_NAME subs= %s dem_name= %s, name = %s, len = %d, stat=%d\n", subs, dem_name, name, len, stat);
-#endif /* __GNUC__ */
-
-  }
-  if (dem_name == (char *) NULL) dem_name = token;
-  TAU_VERBOSE("tauPrintAddr: final demangled name [%s]\n", dem_name);
-
-#ifdef TAU_EXE
-  if (map != NULL) {
-    sprintf(cmd, "addr2line -e %s 0x%lx", map->name, addr);
-    TAU_VERBOSE("popen %s\n", cmd);
-    pipe_fp = popen(cmd, "r");
-    fscanf(pipe_fp,"%s", line_info);
-    TAU_VERBOSE("cmd = %s, line number = %s\n", cmd, line_info);
-    pclose(pipe_fp);
-    sprintf(field, "[%s] [%s] [%s]", dem_name, line_info, map->name);
-  }
-#endif /* TAU_EXE */
-#endif /* TAU_XLC */
-
-  /* The reason the TAU_BFD tag is still here is to allow for alternatives */
-#ifdef TAU_BFD
-  tauGetFilenameAndLineNo(addr);
-  if (tau_symbol_found) {
-    if (map != NULL) {
-      TAU_VERBOSE("TauBackTrace: tauPrintAddr: Symbol found for [addr=%p] [name=%s] [file=%s] [line=%d] [map=%s]\n", addr, tau_funcname, tau_filename, tau_line_no, map->name);
-      sprintf(field, "[%s] [%s:%d] [%s]", tau_funcname, tau_filename, tau_line_no, map->name);
-    } else {
-      TAU_VERBOSE("TauBackTrace: tauPrintAddr: Symbol found for [addr=%p] [name=%s] [file=%s] [line=%d] [map=%s]\n", addr, tau_funcname, tau_filename, tau_line_no, "unknown");
-      sprintf(field, "[%s] [%s:%d] [%s]", tau_funcname, tau_filename, tau_line_no, "unknown");
-    }
-  } else {
-    TAU_VERBOSE("TauBackTrace: tauPrintAddr: Symbol for [addr=%p] not found\n", addr);
-    if (dem_name != NULL && map != NULL) {
-      // Get address from gdb if possible
-      TAU_VERBOSE("tauPrintAddr: Getting information from GDB instead\n");
-      sprintf(field, "[%s] [Addr=%p] [%s]", dem_name,
-	      addr+Tau_get_backtrace_off_by_one_correction(), map->name);
-    } else {
-      TAU_VERBOSE("tauPrintAddr: No Information Available\n");
-      sprintf(field, "[%s] [addr=%p]", dem_name,
-	      addr+Tau_get_backtrace_off_by_one_correction());
-    }
-  }
 #else
-  issueBfdWarningIfNecessary();
-#endif /* TAU_BFD */
-  sprintf(metadata, "BACKTRACE %3d", i-1);
-  TAU_METADATA(metadata, field);
+  TAU_VERBOSE("TAU: ERROR: execinfo not available for backtrace\n");
+  *oframes = NULL;
+  return 0;
+#endif
+}
+
+static int getBacktraceFromGDB(int trim, BacktraceFrame ** oframes)
+{
+  // This obviously needs work...
+
+  char cmd[8192];
+  char path[4096];
+  char gdb_in_file[128];
+  char gdb_out_file[128];
+
+  path[readlink("/proc/self/exe", path, sizeof(path)-1)] = '\0';
+
+  sprintf(gdb_in_file, "tau_gdb_cmds_%d.txt", getpid());
+  sprintf(gdb_out_file, "tau_gdb_out_%d.txt", getpid());
+
+  FILE * gdb_fp = fopen(gdb_in_file, "w+");
+  fprintf(gdb_fp, "set logging on %s\nbt\nq\n", gdb_out_file);
+  fclose(gdb_fp);
+
+  sprintf(cmd, "gdb -batch -x %s %s -p %d >/dev/null\n", gdb_in_file, path, getpid());
+  TAU_VERBOSE("Calling: str=%s\n", cmd);
+  int systemRet = system(cmd);
+
+  // Success returns the pid. We check for failure (-1) here.
+  if (systemRet == -1) {
+    TAU_VERBOSE("TAU: ERROR - Call failed executing %s\n", cmd);
+  }
+
+  * oframes = NULL;
   return 0;
 }
 
+
+extern "C"
+int Tau_backtrace_record_backtrace(int trim)
+{
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
+  int & iter = iteration[RtsLayer::getTid()];
+  ++iter;
+
+  BacktraceFrame * frames;
+  int nframes;
+
+  if (TauEnv_get_signals_gdb()) {
+    nframes = getBacktraceFromGDB(trim+1, &frames);
+  } else {
+    nframes = getBacktraceFromExecinfo(trim+1, &frames);
+  }
+
+  if (nframes) {
+    char metadata[128];
+    char field[4096];
+    for (int i=0; i<nframes; ++i) {
+      BacktraceFrame const & info = frames[i];
+      sprintf(metadata, "BACKTRACE(%d) %3d", iter, i+1);
+      sprintf(field, "[%s] [%s:%d] [%s]", info.funcname, info.filename, info.lineno, info.mapname);
+      TAU_METADATA(metadata, field);
+    }
+    delete[] frames;
+  }
+
+  return iter;
+}
+
+extern "C"
+void Tau_backtrace_exit_with_backtrace(int trim, char const * fmt, ...)
+{
+  va_list args;
+
+  // Don't decrement this.  We're exiting so TAU's internal data structures
+  // are being destroyed from here on out.  Recording new events will segfault.
+  Tau_global_incr_insideTAU();
+
+  if (TauEnv_get_callsite()) {
+    finalizeCallSites_if_necessary();
+  }
+
+#ifndef TAU_WINDOWS
+  if (TauEnv_get_ebs_enabled()) {
+    Tau_sampling_finalize_if_necessary();
+  }
+#endif
+
+  // Increment trim to exclude this function from the backtrace
+  Tau_backtrace_record_backtrace(trim+1);
+
+  // Record profiles
+  TAU_PROFILE_EXIT("BACKTRACE");
+
+  // Print the message
+  va_start(args, fmt);
+  vfprintf(stderr, fmt, args);
+
+  // Give the other tasks some time to process the handler and exit
+  sleep(5);
+  exit(1);
+}

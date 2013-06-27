@@ -9,7 +9,7 @@ steps as shown in this example:
    CFLAGS = $(TAU_INCLUDE) $(TAU_INCLUDE_MEMORY) $(TAU_DEFS)
    LDFLAGS  = $(TAU_LIBS)
 
-   We substitute malloc.h from TAU's include/Memory directory by specifying this
+   We substitute malloc.h from TAU's include/TauMemory directory by specifying this
    flag
 4) Execute the application. 
 For a sample run, we see at the end of pprof output:

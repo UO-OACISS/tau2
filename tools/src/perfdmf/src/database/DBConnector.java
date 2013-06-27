@@ -18,6 +18,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+
+//import common.Logger;
+
 import edu.uoregon.tau.perfdmf.Database;
 
 /*******************************************************
@@ -88,6 +91,11 @@ public class DBConnector implements DB {
         public boolean jdbcCompliant() {
             return this.driver.jdbcCompliant();
         }
+        public java.util.logging.Logger getParentLogger(){
+        	//throw new Exception();
+        	return null;
+        }
+
     }
 
     // it should be "org.postgresql.Driver" in PostgreSQL.

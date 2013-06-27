@@ -2,8 +2,8 @@ include $(TAU_TEST_MAKEFILE)
 
 CXX             = $(TAU_CXX)
 CC              = $(TAU_CC)
-CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS)
-LIBS            = $(TAU_LIBS) $(TAU_MPI_LIBS) $(TAU_LIBS) $(LEXTRA1) $(EXTRALIBS) 
+CFLAGS          = $(TAU_INCLUDE) $(TAU_DEFS) $(TAU_SHMEM_INC)
+LIBS            = $(TAU_LIBS) $(TAU_MPI_LIBS) $(TAU_SHMEM_LIB) $(TAU_LIBS) $(LEXTRA1) $(EXTRALIBS) 
 LDFLAGS         = $(USER_OPT)
 RM              = /bin/rm -f
 TARGET          = simple

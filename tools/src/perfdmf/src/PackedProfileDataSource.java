@@ -119,7 +119,10 @@ public class PackedProfileDataSource extends DataSource {
 					+ "2");
 		}
 
-		metaData = new MetaDataMap();
+		if(metaData!=null&&metaData.size()==0)
+		{
+			metaData = new MetaDataMap();
+		}
 		if (version >= 2) {
 			//int metadataHeaderSize = 
 			p.readInt(); // older versions will skip over this many bytes

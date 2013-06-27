@@ -32,8 +32,14 @@
 //
 //////////////////////////////////////////////////////////////////////
 
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+extern int Tau_Global_numCounters;
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
-extern "C" int Tau_Global_numCounters;
 #define TAU_STORAGE(type, variable) type variable[TAU_MAX_THREADS]
 #define TAU_MULTSTORAGE(type, variable) type variable[TAU_MAX_THREADS][TAU_MAX_COUNTERS]
 
@@ -61,15 +67,12 @@ extern "C" int Tau_Global_numCounters;
 #define SS_ALLOCATOR std::allocator
 #endif //TAU_SS_ALLOC_SUPPORT
 #endif //TAU_WINDOWS
-// Putting "using namespace" statements in header files can create ambiguity
-// between user-defined symbols and std symbols, creating unparsable code
-// or even changing the behavior of user codes.  This is also widely considered
-// to be bad practice.  Here's a code PDT can't parse because of this line:
-//   EX: #include <complex>
-//   EX: typedef double real;
-//
-//using namespace std;
-class TauUserEvent; 
+
+// Forward declaration
+namespace tau {
+  class TauUserEvent;
+}
+
 
 class FunctionInfo
 {
@@ -113,18 +116,13 @@ public:
   inline bool GetAlreadyOnStack(int tid);
   inline void SetAlreadyOnStack(bool value, int tid);  
 
-  // A container of all of these.
-  // The ctor registers with this.
-        
-  //static TAU_STD_NAMESPACE vector<FunctionInfo*> FunctionDB[TAU_MAX_THREADS];
-
 #ifdef TAU_PROFILEMEMORY
-  TauUserEvent * MemoryEvent;
-  TauUserEvent * GetMemoryEvent(void) { return MemoryEvent; }
+  tau::TauUserEvent * MemoryEvent;
+  tau::TauUserEvent * GetMemoryEvent(void) { return MemoryEvent; }
 #endif // TAU_PROFILEMEMORY
 #ifdef TAU_PROFILEHEADROOM
-  TauUserEvent * HeadroomEvent;
-  TauUserEvent * GetHeadroomEvent(void) { return HeadroomEvent; }
+  tau::TauUserEvent * HeadroomEvent;
+  tau::TauUserEvent * GetHeadroomEvent(void) { return HeadroomEvent; }
 #endif // TAU_PROFILEHEADROOM
 
 #ifdef RENCI_STFF
@@ -148,9 +146,8 @@ private:
   TAU_MULTSTORAGE(double, ExclTime);
   TAU_MULTSTORAGE(double, InclTime);
   TAU_STORAGE(bool, AlreadyOnStack);
-
-  double dumpExclusiveValues[TAU_MAX_THREADS][TAU_MAX_COUNTERS];
-  double dumpInclusiveValues[TAU_MAX_THREADS][TAU_MAX_COUNTERS];
+  TAU_MULTSTORAGE(double, dumpExclusiveValues);
+  TAU_MULTSTORAGE(double, dumpInclusiveValues);
 
 public:
   char *Name;
@@ -254,15 +251,15 @@ public:
   inline double GetInclTimeForCounter(int tid, int counter) { return InclTime[tid][counter]; }
   inline double GetExclTimeForCounter(int tid, int counter) { return ExclTime[tid][counter]; }
 
-  TauGroup_t GetProfileGroup(int tid = RtsLayer::myThread()) const {return MyProfileGroup_[tid]; }
-  void SetProfileGroup(TauGroup_t gr, int tid = RtsLayer::myThread()) {MyProfileGroup_[tid] = gr; }
+  TauGroup_t GetProfileGroup() const {return MyProfileGroup_; }
+  void SetProfileGroup(TauGroup_t gr) {MyProfileGroup_ = gr; }
 
 private:
-  TauGroup_t MyProfileGroup_[TAU_MAX_THREADS];
+  TauGroup_t MyProfileGroup_;
 };
 
 // Global variables
-TAU_STD_NAMESPACE vector<FunctionInfo*>& TheFunctionDB(void); 
+std::vector<FunctionInfo*>& TheFunctionDB(void);
 int& TheSafeToDumpData(void);
 int& TheUsingDyninst(void);
 int& TheUsingCompInst(void);
@@ -316,6 +313,8 @@ void tauCreateFI(void **ptr, const std::string& name, const char *type,
 		 TauGroup_t ProfileGroup , const char *ProfileGroupName);
 void tauCreateFI(void **ptr, const std::string& name, const std::string& type,
 		 TauGroup_t ProfileGroup , const char *ProfileGroupName);
+void tauCreateFI_signalSafe(void **ptr, const std::string& name, const char *type, 
+         TauGroup_t ProfileGroup, const char *ProfileGroupName);
 
 
 #endif /* _FUNCTIONINFO_H_ */

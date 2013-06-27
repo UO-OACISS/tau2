@@ -174,7 +174,10 @@ public class TreeTableNode extends DefaultMutableTreeNode implements Comparable<
                     } else {
                         node = new TreeTableNode((FunctionProfile) obj, model, null);
                     }
-                    children.add(node);
+                    /*
+                     * SOM This is causing problem with view CUBE callpaths. 
+                     */
+                   // children.add(node);
                 }
             }
         }

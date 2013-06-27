@@ -20,15 +20,16 @@ usage()
 # Common options first
     echo "Options:"
 
-    echo "        -v       verbose mode"
-    echo "        -qsub    Use qsub mode (BG/P only, see below)"
-    echo "        -io      track I/O"
-    echo "        -memory  track memory"
-    echo "        -cuda    track GPU events via CUDA"
-    echo "        -cupti   track GPU events via CUPTI (Also see env. variable TAU_CUPTI_API)"
-    echo "        -opencl  track GPU events via OpenCL"
-    echo "        -armci   track ARMCI events via PARMCI"
-    echo "        -ebs     enable Event-based sampling"
+    echo "        -v            verbose mode"
+    echo "        -qsub         Use qsub mode (BG/P only, see below)"
+    echo "        -io           track I/O"
+    echo "        -memory       track memory allocation/deallocation"
+    echo "        -memory_debug enable memory debugger"
+    echo "        -cuda         track GPU events via CUDA"
+    echo "        -cupti        track GPU events via CUPTI (Also see env. variable TAU_CUPTI_API)"
+    echo "        -opencl       track GPU events via OpenCL"
+    echo "        -armci        track ARMCI events via PARMCI"
+    echo "        -ebs          enable Event-based sampling"
     echo "        -ebs_period=<count> sampling period (default 1000)"
     echo "        -ebs_source=<counter> counter (default itimer)"
     options=`tau-config --list-options`
@@ -55,6 +56,14 @@ usage()
     echo "    With TAU:"
     echo "      tau_exec -qsub -io -memory -- qsub -n 1 --mode smp -t 10 ./a.out"
     echo ""
+    echo "Memory Debugging:"
+    echo "    -memory option:"
+    echo "      Loads the memory debugger but only tracks heap allocation/deallocation"
+    echo "    -memory_debug option:"
+    echo "      Detects memory leaks, checks for invalid alignment, and checks for"
+    echo "      array overflow.  This is exactly like setting TAU_TRACK_MEMORY_LEAKS=1"
+    echo "      and TAU_MEMDBG_PROTECT_ABOVE=1 and running with -memory"
+    echo ""
     exit
 }
 
@@ -72,6 +81,7 @@ binding_specified=""
 binding_options=""
 track_io=false
 track_memory=false
+memory_debug=false
 track_cuda=false
 track_cupti=false
 track_opencl=false
@@ -83,6 +93,7 @@ qsub_mode=false
 TAU_PAPI_DEFAULT_DOMAIN=PAPI_DOM_USER
 extraloadlibs=""
 track_pthread=false
+track_gomp=false
 
 for arg in "$@" ; do
   # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
@@ -109,6 +120,10 @@ for arg in "$@" ; do
 	      track_memory=true
 	      shift
 	      ;;
+	  -memory_debug)
+	      memory_debug=true
+	      shift
+	      ;;
 	  -cuda)
 	      track_cuda=true
 	      shift
@@ -119,6 +134,10 @@ for arg in "$@" ; do
 	      ;;
 	  -opencl)
 	      track_opencl=true
+	      shift
+	      ;;
+	  -gomp)
+	      track_gomp=true
 	      shift
 	      ;;
 	  -armci)
@@ -261,6 +280,10 @@ if [ ! "x$isPthread" == "x" -a -r $BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SH
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-pthread$TAU_SHLIBX:$TAUEX_LD_PRELOAD
 fi
 
+if [ $track_gomp = "true" -a -r $BASEDIR/lib/$theBinding/libTAU-gomp$TAU_SHLIBX ]; then
+    TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-gomp$TAU_SHLIBX:$TAUEX_LD_PRELOAD
+fi
+
 if [ $track_io = "true" ] ; then
     # Add the io wrapper library to the LD_PRELOAD list
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-iowrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
@@ -270,14 +293,15 @@ if [ $track_io = "true" ] ; then
     export LD_BIND_NOW=1
 fi
 
-if [ $track_memory = "true" ] ; then
+if [ $track_memory = "true" ] || [ $memory_debug = "true" ] ; then
     # Add the memory wrapper library to the LD_PRELOAD list
     TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-memorywrap$TAU_SHLIBX:$TAUEX_LD_PRELOAD
-    export TAU_MEMORY_WRAPPER_ENABLED=1
     #use the auditor
     TAUEX_LD_AUDITOR=$BASEDIR/lib/$theBinding/libTAU-dl-auditor$TAU_SHLIBX
     #Needed for the auditor
     export LD_BIND_NOW=1
+    # Track heap usage
+    export TAU_TRACK_HEAP=1
 fi
 if [ $track_cuda = "true" ] ; then
 		cupti_exists=`test -f $BASEDIR/lib/$theBinding/libTAU-CUpti.so -a -f $BASEDIR/lib/$theBinding/libTAU-CudaQP.so`
@@ -302,7 +326,7 @@ if [ $track_cupti = "true" ] ; then
 			echo "ERROR: CUPTI library not found. Please ensure that 'cupti' is on the list of bindings specified with the '-T' option."
 			exit
 		else
-			# Add the memory wrapper library to the LD_PRELOAD list
+			# Add the wrapper library to the LD_PRELOAD list
 			TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUact.so:$TAUEX_LD_PRELOAD
 			TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CUpti.so:$TAUEX_LD_PRELOAD
 			TAUEX_LD_PRELOAD=$BASEDIR/lib/$theBinding/libTAU-CudaQP.so:$TAUEX_LD_PRELOAD
@@ -315,7 +339,6 @@ if [ $track_cupti = "true" ] ; then
 		
 		#Attempt to find the CUPTI API type:
 		IFS=' ' && exe=($@)
-		echo "executable: $exe"
 		cupti_api_driver=`ldd $exe | grep libcuda.so`
 		cupti_api_runtime=`ldd $exe | grep libcudart.so`
 		if [ -z "$TAU_CUPTI_API" ]; then
@@ -445,41 +468,49 @@ if [ $qsub_mode = true ] ; then
     else
 	qsub $env_option $newCmd
     fi
+    
 else
 
     if [ $dryrun = "true" ]; then
-	if [ $track_memory = "true" ] ; then
-	    echo "export TAU_MEMORY_WRAPPER_ENABLED=1"
-			echo "export LD_BIND_NOW=1"
-	fi
-	if [ $track_io = "true" ] ; then
-			echo "export LD_BIND_NOW=1"
-	fi
-
-	if [ $apple = 1 ]; then
-	    echo "export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH"
-	    echo "export DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD"
-	    echo "export DYLD_FORCE_FLAT_NAMESPACE="
-	else
-	    echo "export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH"
-	    echo "export LD_AUDIT=$TAUEX_LD_AUDITOR"
-	    echo "export LD_PRELOAD=$TAUEX_LD_PRELOAD"
-	fi
-	echo "$@"
-	exit 0;
+      if [ $track_memory = "true" ] || [ $memory_debug = "true" ] ; then
+        echo "export LD_BIND_NOW=1"
+      fi
+      if [ $track_io = "true" ] ; then
+        echo "export LD_BIND_NOW=1"
+      fi
+      if [ $apple = 1 ]; then
+        echo "export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH"
+        echo "export DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD"
+        echo "export DYLD_FORCE_FLAT_NAMESPACE="
+      else
+        echo "export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH"
+        echo "export LD_AUDIT=$TAUEX_LD_AUDITOR"
+        echo "export LD_PRELOAD=$TAUEX_LD_PRELOAD"
+      fi
+      if [ $memory_debug = "true" ] ; then
+        echo "export TAU_TRACK_MEMORY_LEAKS=1"
+        echo "export TAU_MEMDBG_PROTECT_ABOVE=1"
+      fi
+      echo "$@"
+      exit 0;
+    elif [ $apple = 1 ]; then
+      export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
+      export DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD
+      export DYLD_FORCE_FLAT_NAMESPACE=""
     else
-	if [ $apple = 1 ]; then
-	    export DYLD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
-	    export DYLD_INSERT_LIBRARIES=$TAUEX_LD_PRELOAD
-	    export DYLD_FORCE_FLAT_NAMESPACE=""
-	else
-	    export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
-	    export LD_AUDIT=$TAUEX_LD_AUDITOR
-	    export LD_PRELOAD=$TAUEX_LD_PRELOAD
-	fi
-	"$@"
-	retval=$?
-	unset LD_PRELOAD
-	exit $retval
+      export LD_LIBRARY_PATH=$TAUEX_LD_LIBRARY_PATH
+      export LD_AUDIT=$TAUEX_LD_AUDITOR
+      export LD_PRELOAD=$TAUEX_LD_PRELOAD
     fi
+    if [ $memory_debug = "true" ] ; then
+      export TAU_TRACK_MEMORY_LEAKS=1
+      export TAU_MEMDBG_PROTECT_ABOVE=1
+    fi
+    
+    $@
+    retval=$?
+    unset LD_PRELOAD
+    exit $retval
+fi
+
 fi

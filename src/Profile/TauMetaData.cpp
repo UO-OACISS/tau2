@@ -54,8 +54,8 @@ double TauWindowsUsecD(); // from RtsLayer.cpp
 #include <string>
 #endif//TAU_CRAYCNL
 
-// Moved from header file
 using namespace std;
+using namespace tau;
 
 
 #ifdef TAU_BGL
@@ -206,9 +206,10 @@ extern "C" void Tau_metadata_object_put(Tau_metadata_value_t* tmv, const char *n
 }
 
 extern "C" void Tau_metadata_task(const char *name, const char *value, int tid) {
-#ifdef TAU_DISABLE_METADATA
-  return;
-#endif // TAU_DISABLE_METADATA
+#ifndef TAU_DISABLE_METADATA
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   // make the key
   Tau_metadata_key *key = new Tau_metadata_key();
   key->name = strdup(name);
@@ -216,13 +217,14 @@ extern "C" void Tau_metadata_task(const char *name, const char *value, int tid) 
   Tau_metadata_value_t* tmv = NULL;
   Tau_metadata_create_value(&tmv, TAU_METADATA_TYPE_STRING);
   tmv->data.cval = strdup(value);
-  RtsLayer::LockDB();
+  RtsLayer::LockEnv();
   Tau_metadata_getMetaData(tid)[*key] = tmv;
-  RtsLayer::UnLockDB();
+  RtsLayer::UnLockEnv();
+#endif
 }
 
 extern "C" void Tau_metadata(const char *name, const char *value) {
-	Tau_metadata_task(name, value, RtsLayer::myThread()); 
+  Tau_metadata_task(name, value, RtsLayer::myThread()); 
 }
 
 void Tau_metadata_register(const char *name, int value) {
@@ -232,17 +234,13 @@ void Tau_metadata_register(const char *name, int value) {
 }
 
 void Tau_metadata_register(const char *name, const char *value) {
-  Tau_global_incr_insideTAU();
   Tau_metadata(name, value);
-  Tau_global_decr_insideTAU();
 }
 
 
 int Tau_metadata_fillMetaData() 
 {
-#ifdef TAU_DISABLE_METADATA
-  return 0;
-#else
+#ifndef TAU_DISABLE_METADATA
 
   static int filled = 0;
   if (filled) {
@@ -273,9 +271,10 @@ int Tau_metadata_fillMetaData()
   char buf[4096];
   strftime (buf,4096,"%Y-%m-%dT%H:%M:%S", thisTime);
 
-  char tzone[7];
+  char tzone[7]={0};
   strftime (tzone, 7, "%z", thisTime);
-  if (strlen(tzone) == 5) {
+  int tzonelen=strlen(tzone);
+  if (tzonelen == 5) {
     tzone[6] = 0;
     tzone[5] = tzone[4];
     tzone[4] = tzone[3];
@@ -725,24 +724,13 @@ vector<string> result;
   if (f) {
     char line[4096];
 
-    /* *CWL* - STL cannot be used in PGI init sections???
-       std::ostringstream os;
-
-       while (Tau_util_readFullLine(line, f)) {
-       if (os.str().length() != 0) {
-       os << " ";
-       }
-       os << line;
-       }
-       Tau_metadata_register("Command Line", os.str().c_str());
-     */
     string os;
     // *CWL* - The following loop performs newline to space conversions
     while (Tau_util_readFullLine(line, f)) {
       if (os.length() != 0) {
         os.append(" ");
       }
-      os.append(string(line));
+      os.append(line);
     }    
     Tau_metadata_register("Command Line", os.c_str());
     fclose(f);
@@ -754,9 +742,9 @@ vector<string> result;
     Tau_metadata_register("username", user);
   }
 
-  return 0;
 #endif // TAU_DISABLE_METADATA
 
+  return 0;
 }
 
 extern "C" int writeMetaDataAfterMPI_Init(void) {
@@ -874,55 +862,53 @@ static int writeMetaData(Tau_util_outputDevice *out, bool newline, int counter, 
 }
 
 extern "C" void Tau_context_metadata(const char *name, const char *value) {
+#ifndef TAU_DISABLE_METADATA
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
 
-#ifdef TAU_DISABLE_METADATA
-  return;
-#endif
-
-  //printf("%s, %s\n", name, value);
-  RtsLayer::LockDB();
-  // get the current calling context
-  Profiler *current = TauInternal_CurrentProfiler(RtsLayer::myThread());
+  int tid = RtsLayer::myThread();
   Tau_metadata_key *key = new Tau_metadata_key();
+  // get the current calling context
+  RtsLayer::LockEnv();
+  Profiler *current = TauInternal_CurrentProfiler(tid);
+  RtsLayer::UnLockEnv();
   // it IS possible to request metadata with no active timer.
   if (current != NULL) {
     FunctionInfo *fi = current->ThisFunction;
     char *fname = (char*)(malloc(sizeof(char)*(strlen(fi->GetName()) + strlen(fi->GetType()) + 2)));
     sprintf(fname, "%s %s", fi->GetName(), fi->GetType());
 	key->timer_context = fname;
-	key->call_number = fi->GetCalls(RtsLayer::myThread());
+	key->call_number = fi->GetCalls(tid);
 	key->timestamp = (x_uint64)current->StartTime[0];
   }
   key->name = strdup(name);
   Tau_metadata_value_t* tmv = NULL;
   Tau_metadata_create_value(&tmv, TAU_METADATA_TYPE_STRING);
   tmv->data.cval = strdup(value);
-  //printf("%p  %s:%s:%d:%d:%llu = %s\n", &(Tau_metadata_getMetaData(RtsLayer::myThread())), key->name, key->timer_context, RtsLayer::myThread(), key->call_number, key->timestamp, tmv->data.cval);
-  int before = Tau_metadata_getMetaData(RtsLayer::myThread()).size();
-  Tau_metadata_getMetaData(RtsLayer::myThread())[*key] = tmv;
-  int after = Tau_metadata_getMetaData(RtsLayer::myThread()).size();
-  //printf("before: %d items, after %d items\n", before, after);
-  RtsLayer::UnLockDB();
+  RtsLayer::LockEnv();
+  Tau_metadata_getMetaData(tid)[*key] = tmv;
+  RtsLayer::UnLockEnv();
+#endif
 }
 
 extern "C" void Tau_structured_metadata(const Tau_metadata_object_t *object, bool context) {
+#ifndef TAU_DISABLE_METADATA
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
 
-#ifdef TAU_DISABLE_METADATA
-  return;
-#else
-
+  int tid = RtsLayer::myThread();
   Tau_metadata_key *key = new Tau_metadata_key();
   if (context) {
-    RtsLayer::LockDB();
+    RtsLayer::LockEnv();
     // get the current calling context
-    Profiler *current = TauInternal_CurrentProfiler(RtsLayer::myThread());
+    Profiler *current = TauInternal_CurrentProfiler(tid);
     // it IS possible to request metadata with no active timer.
     if (current != NULL) {
       FunctionInfo *fi = current->ThisFunction;
       char *fname = (char*)(malloc(sizeof(char)*(strlen(fi->GetName()) + strlen(fi->GetType()) + 2)));
       sprintf(fname, "%s %s", fi->GetName(), fi->GetType());
 	  key->timer_context = fname;
-	  key->call_number = fi->GetCalls(RtsLayer::myThread());
+	  key->call_number = fi->GetCalls(tid);
 	  key->timestamp = (x_uint64)current->StartTime[0];
     }
   }
@@ -931,19 +917,21 @@ extern "C" void Tau_structured_metadata(const Tau_metadata_object_t *object, boo
     key->name = strdup(object->names[i]);
     Tau_metadata_value_t* tmv = object->values[i];
     //printf("%p  %s:%s:%d:%llu = %s\n", &(Tau_metadata_getMetaData(RtsLayer::myThread())), key->name, key->timer_context, key->call_number, key->timestamp, tmv->data.cval);
-    Tau_metadata_getMetaData(RtsLayer::myThread())[*key] = tmv;
+    Tau_metadata_getMetaData(tid)[*key] = tmv;
   }
-  RtsLayer::UnLockDB();
+  RtsLayer::UnLockEnv();
 #endif
 }
 
 extern "C" void Tau_phase_metadata(const char *name, const char *value) {
-#ifdef TAU_DISABLE_METADATA
-  return;
-#else
+#ifndef TAU_DISABLE_METADATA
 #ifdef TAU_PROFILEPHASE
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
+  int tid = RtsLayer::myThread();
   // get the current calling context
-  Profiler *current = TauInternal_CurrentProfiler(RtsLayer::myThread());
+  Profiler *current = TauInternal_CurrentProfiler(tid);
   Tau_metadata_key *key = new Tau_metadata_key();
   key->name = strdup(name);
   while (current != NULL) {
@@ -952,18 +940,18 @@ extern "C" void Tau_phase_metadata(const char *name, const char *value) {
       char *fname = (char*)(malloc(sizeof(char)*(strlen(fi->GetName()) + strlen(fi->GetType()) + 2)));
       sprintf(fname, "%s %s", fi->GetName(), fi->GetType());
 	  key->timer_context = fname;
-	  key->call_number = fi->GetCalls(RtsLayer::myThread());
+	  key->call_number = fi->GetCalls(tid);
 	  key->timestamp = (x_uint64)current->StartTime[0];
 	  break;
     }    
     current = current->ParentProfiler;
   }
   Tau_metadata_value_t* tmv = NULL;
-  Tau_create_metadata_value(&tmv, TAU_METADATA_TYPE_STRING);
+  Tau_metadata_create_value(&tmv, TAU_METADATA_TYPE_STRING);
   tmv->data.cval = strdup(value);
-  RtsLayer::LockDB();
-  Tau_metadata_getMetaData(RtsLayer::myThread())[*key] = tmv;
-  RtsLayer::UnLockDB();
+  RtsLayer::LockEnv();
+  Tau_metadata_getMetaData(tid)[*key] = tmv;
+  RtsLayer::UnLockEnv();
 #else
   Tau_context_metadata(name, value);
 #endif
@@ -975,10 +963,10 @@ int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int tid) {
 
 #ifdef TAU_DISABLE_METADATA
   return 0;
-#endif
-
+#else
   //Tau_metadata_fillMetaData();
   return writeMetaData(out, true, -1, tid);
+#endif
 }
 
 int Tau_metadata_writeMetaData(Tau_util_outputDevice *out) {
@@ -988,12 +976,12 @@ int Tau_metadata_writeMetaData(Tau_util_outputDevice *out) {
 int Tau_metadata_writeMetaData(Tau_util_outputDevice *out, int counter, int tid) {
 #ifdef TAU_DISABLE_METADATA
   return 0;
-#endif
-
+#else
   //Tau_metadata_fillMetaData();
   int retval;
   retval = writeMetaData(out, false, counter, tid);
   return retval;
+#endif
 }
 
 /* helper function to write to already established file pointer */

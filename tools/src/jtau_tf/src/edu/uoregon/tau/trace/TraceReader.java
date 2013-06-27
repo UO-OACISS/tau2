@@ -282,6 +282,7 @@ public class TraceReader extends TraceFile{
 			if(linebuf==null){
 				int c = i-1;
 				System.out.println("Warning: Expected "+numevents+" event definitions. Found "+c);
+				edf.close();
 				return false;
 			}
 			
@@ -369,14 +370,17 @@ public class TraceReader extends TraceFile{
 			if ( (localEventId < 0) || eventname==null )
 			{
 				System.out.println("Blurb error?");
+				edf.close();
 				return false;
 			}
 		} /* for loop */
+		edf.close();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
 		return true;
 	}//REFRESHTABLES
 	
@@ -541,6 +545,10 @@ public class TraceReader extends TraceFile{
 			//parameter = traceBuffer[i].getParameter();//event_GetPar(traceBuffer, i);
 			/* Get param entry from EventIdMap */
 			
+//			if(evt.evid>60001){
+//				System.out.println("Built In Event");
+//			}
+			
 			EventDescr eventDescr = EventIdMap.get(new Integer(evt.evid));
 			if(eventDescr==null){
 				System.out.println("Warning: no event definiton for event ID "+evt.evid);
@@ -624,20 +632,21 @@ public class TraceReader extends TraceFile{
 					}
 				}
 			}
-			if ((evt.parameter == 0) && (eventDescr.getEventName()!= null) &&(eventDescr.getEventName().equals("\"FLUSH_CLOSE\""))) {
+			if ((evt.parameter == 0) && (eventDescr.getEventName()!= null) &&(eventDescr.getEventName().equals("\"FLUSH_CLOSE\"")||eventDescr.getEventName().equals("FLUSH_CLOSE"))) {
 				/* reset the flag in NidTidMap to 0 (from 1) */
 				nidTidDone.add(nidtid);//NidTidMap.put(nidtid,zero);
+				//callbacks.eventTrigger(userData, evt.time, evt.nid, evt.tid, evt.evid, evt.parameter);
 				/* setting this flag to 0 tells us that a flush close has taken place 
 				 * on this node, thread */
 			} 
 			else 
 			{/* see if it is a WALL_CLOCK record */
 				if ((evt.parameter != 1) && (evt.parameter != -1) && (eventDescr.getEventName() != null) 
-						&& (eventDescr.getEventName().equals("\"WALL_CLOCK\""))) {
+						&& (eventDescr.getEventName().equals("\"WALL_CLOCK\"")||eventDescr.getEventName().equals("WALL_CLOCK"))) {
 			/* ok, it is a wallclock event alright. But is it the *last* wallclock event?
 			 * We can confirm that it is if the NidTidMap flag has been set to 0 by a 
 			 * previous FLUSH_CLOSE call */
-			
+					//callbacks.eventTrigger(userData, evt.time, evt.nid, evt.tid, evt.evid, evt.parameter);
 					//if (NidTidMap.containsKey(nidtid))
 					//{/*printf("LAST WALL_CLOCK! End of trace file detected \n");*/
 						/* see if an end of the trace callback is registered and 

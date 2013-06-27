@@ -29,8 +29,7 @@
 #include <unistd.h>
 
 #undef fork
-#define fork() \
-        tau_fork()
+#define fork() tau_fork()
 
 #ifdef __cplusplus
 extern "C" 
@@ -39,19 +38,19 @@ pid_t tau_fork (void);
 
 #ifdef PTHREADS
 /* pthread_create wrapper */
-
 #include <pthread.h>
-#ifndef TAU_MPC
-#undef pthread_create
-#define pthread_create(thread, attr, function, arg) \
-        tau_pthread_create(thread, attr, function, arg)
 
-#define pthread_exit(arg) \
-        tau_pthread_exit(arg)
+#ifndef TAU_MPC
+
+#undef pthread_create
+#define pthread_create(thread, attr, function, arg) tau_pthread_create(thread, attr, function, arg)
+
+#define pthread_join(thread, retval) tau_pthread_join(thread, retval)
+
+#define pthread_exit(arg) tau_pthread_exit(arg)
 
 #ifdef TAU_PTHREAD_BARRIER_AVAILABLE
-#define pthread_barrier_wait(barrier) \
-  tau_track_pthread_barrier_wait(barrier)
+#define pthread_barrier_wait(barrier) tau_pthread_barrier_wait(barrier)
 #endif /* TAU_PTHREAD_BARRIER_AVAILABLE */
 
 #endif /* TAU_MPC */
@@ -59,19 +58,14 @@ pid_t tau_fork (void);
 #ifdef __cplusplus
 extern "C" {
 #endif
-int tau_pthread_create (pthread_t *threadp,
-			const pthread_attr_t *attr,
-			void *(*start_routine) (void *),
-			void *arg);
+int tau_pthread_create (pthread_t *threadp, const pthread_attr_t *attr, void *(*start_routine) (void *), void *arg);
 
-int tau_track_pthread_create (pthread_t *threadp,
-			const pthread_attr_t *attr,
-			void *(*start_routine) (void *),
-			      void *arg, int id);
+int tau_pthread_join(pthread_t thread, void ** retval);
+
 void tau_pthread_exit (void *arg);
 
 #ifdef TAU_PTHREAD_BARRIER_AVAILABLE 
-int tau_track_pthread_barrier_wait(pthread_barrier_t *barrier);
+int tau_pthread_barrier_wait(pthread_barrier_t *barrier);
 #endif /* TAU_PTHREAD_BARRIER_AVAILABLE */
 
 #ifdef __cplusplus
@@ -91,18 +85,18 @@ int tau_track_pthread_barrier_wait(pthread_barrier_t *barrier);
 #define TAU_MAX_COUNTERS 10
 #endif
 
-#if (defined(PTHREADS) || defined(TULIPTHREADS) || defined(JAVA) || defined(TAU_WINDOWS) || defined (TAU_OPENMP) || defined (TAU_SPROC) || defined(TAU_PAPI_THREADS))
+#if (defined(PTHREADS) || defined(TAU_MPC) || defined(TULIPTHREADS) || defined(JAVA) || defined(TAU_WINDOWS) || defined (TAU_OPENMP) || defined (TAU_SPROC) || defined(TAU_PAPI_THREADS))
 
 
 #ifndef TAU_MAX_THREADS
-#ifdef TAU_CHARM
+#if defined(TAU_CHARM) || defined(TAU_MIC_LINUX)
 #define TAU_MAX_THREADS 512
-#else /* TAU_CHARM */
+#else /* TAU_CHARM || TAU_MIC_LINUX */
 #define TAU_MAX_THREADS 128
 #endif
 #endif /* TAU_MAX_THREADS */
 
-#else
+#else /* not using threads? */
 #ifndef TAU_MAX_THREADS
 /* *CWL* - If useropt is not specified, then GPUs need to override the non-threaded default of 1. 
          - If thread packages are used, their defaults (> 32) are used.
@@ -131,7 +125,6 @@ int tau_track_pthread_barrier_wait(pthread_barrier_t *barrier);
 #include <Profile/TauAPI.h>
 
 #if (defined (__cplusplus ) && !defined (TAU_USE_C_API))
-
 
 #ifdef TAU_ENABLED
 

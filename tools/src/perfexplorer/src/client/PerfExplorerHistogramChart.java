@@ -12,6 +12,7 @@ import java.net.URL;
 import java.util.List;
 
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -26,6 +27,8 @@ import org.jfree.data.xy.IntervalXYDataset;
 import org.jfree.data.xy.XYDataset;
 
 import edu.uoregon.tau.common.Utility;
+import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.View;
 import edu.uoregon.tau.perfexplorer.common.ChartDataType;
 import edu.uoregon.tau.perfexplorer.common.RMIChartData;
 import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
@@ -59,6 +62,10 @@ public class PerfExplorerHistogramChart extends PerfExplorerChartWindow {
 
 		// build the chart
         IntervalXYDataset dataset = createDataset(data);
+        if(dataset==null)
+        {
+        	return null;
+        }
         JFreeChart chart = createChart(dataset);
         
 		ChartPanel panel = new ChartPanel(chart);
@@ -107,6 +114,13 @@ public class PerfExplorerHistogramChart extends PerfExplorerChartWindow {
         double[] values = null;
 		for (int i = 0 ; i < inData.getRows(); i++) {
 			List<double[]> doubles = inData.getRowData(i);
+			
+			if (doubles.size()<2) {
+				JOptionPane.showMessageDialog(PerfExplorerClient.getMainFrame(), "Please select a trial with more than one process.",
+					"Selection Error", JOptionPane.ERROR_MESSAGE);
+				return null;
+			}
+			
 			values = new double[doubles.size()];
     		double min = ((double[])(doubles.get(0)))[1];
      		double max = min;  
@@ -116,11 +130,11 @@ public class PerfExplorerHistogramChart extends PerfExplorerChartWindow {
     			if (max < ((double[])(doubles.get(j)))[1])
     				max = ((double[])(doubles.get(j)))[1];
     		}
-    		//double range = max - min;
+    		double range = max - min;
     		//System.out.println("Min: " + min + ", Max: " + max + ", Range: " + range);
     		for (int j = 0; j < doubles.size(); j++) {
-    			//values[j] = (((double[])(doubles.get(j)))[1]-min)/range;   
-    			values[j] = ((double[])(doubles.get(j)))[1];   
+    			values[j] = (((double[])(doubles.get(j)))[1]-min)/range;   
+    			//values[j] = ((double[])(doubles.get(j)))[1];   
     		}
 			int bins = 10;
 			if (doubles.size() >= 2098)

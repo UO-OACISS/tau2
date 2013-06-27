@@ -721,6 +721,7 @@ AC_SUBST([am__untar])
 
 m4_include([vendor/common/build-config/m4/ac_scorep_compiler_and_flags.m4])
 m4_include([vendor/common/build-config/m4/ac_scorep_doxygen.m4])
+m4_include([vendor/common/build-config/m4/ac_scorep_summary.m4])
 m4_include([vendor/common/build-config/m4/ac_scorep_svn_controlled.m4])
 m4_include([vendor/common/build-config/m4/ac_scorep_sys_detection.m4])
 m4_include([vendor/common/build-config/m4/ac_scorep_toplevel_args.m4])

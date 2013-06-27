@@ -1,4 +1,4 @@
-/* remove whatever indexes and tables are there already, in reverse order */
+/*NNNNNNNNNN remove whatever indexes and tables are there already, in reverse order */
 
 /* indexes */
 DROP INDEX IF EXISTS counter_value_index;
@@ -51,8 +51,9 @@ CREATE TABLE schema_version (
 /* IF THE SCHEMA IS MODIFIED, INCREMENT THIS VALUE */
 /* 0 = PERFDMF (ORIGINAL) */
 /* 1 = TAUDB (APRIL, 2012) */
+/*VALUES (1, 'TAUdb redesign from Spring, 2012');*/
 INSERT INTO schema_version (version, description) 
-  VALUES (1, 'TAUdb redesign from Spring, 2012');
+  VALUES (2, 'Changes after Nov. 9, 2012 release');
 
 /* These are our supported parsers. */
 CREATE TABLE data_source (

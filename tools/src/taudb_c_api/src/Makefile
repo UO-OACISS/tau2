@@ -10,32 +10,30 @@
 
 .SUFFIXES : .c
 
-include ../Makefile.inc
+ROOTDIR?=$(shell pwd)/..
+include $(ROOTDIR)/Makefile.in
 
-HEADERS=${wildcard ../include/*.h}
-SOURCES=${wildcard *.c}
+HEADERS=${wildcard $(ROOTDIR)/include/*.h}
+SOURCES=${wildcard */*.c}
 OBJS=${patsubst %.c, %.o, ${SOURCES}}
+TARGET=$(ROOTDIR)/lib/libtaudb.a
 
-TARGET=../lib/libtaudb.a
-
+# rebuild everything if the headers or the makefile changes
 all: $(TARGET)
 
-$(TARGET): $(OBJS) $(HEADERS)
+$(TARGET): $(OBJS)
 	echo "  Making : $@"
 	rm -f $(TARGET)
 	$(AR) -qc $(TARGET) $(OBJS)
 
-# rebuild everything if the headers or the makefile changes
-$(OBJS): $(HEADERS) Makefile ../Makefile.inc
-
-.c.o:
-	echo "Building : $@ from $<"
-	$(CC) $(FLAGS) -c -I../include $(INCLUDE) $< -o $@ $(DEBUG)
+$(OBJS): Makefile $(ROOTDIR)/Makefile.in $(HEADERS) $(SOURCES)
+	mkdir -p $(ROOTDIR)/lib
+	@for i in database memory parsers analysis ; do (cd $$i; $(MAKE) "MAKE=$(MAKE)" "ROOTDIR=$(ROOTDIR)" || exit 0); done
 
 clean:
-	echo "Removing : $(OBJS) $(TARGET)"
-	/bin/rm -f $(OBJS) $(TARGET) *.pdb *.inst.c
+	@for i in database memory parsers analysis ; do (cd $$i; $(MAKE) "MAKE=$(MAKE)" "ROOTDIR=$(ROOTDIR)" clean || exit 0); done
+	echo "Removing $(TARGET)"
+	rm -f $(TARGET)
 
-test:
 
 remake: clean all

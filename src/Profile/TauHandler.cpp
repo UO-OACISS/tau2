@@ -26,47 +26,7 @@
 
 #include <signal.h>
 #include <Profile/Profiler.h>
-#include <TauMemoryWrap.h>
-
-#if (defined(__QK_USER__) || defined(__LIBCATAMOUNT__ ))
-#define TAU_CATAMOUNT 
-#endif /* __QK_USER__ || __LIBCATAMOUNT__ */
-#ifdef TAU_CATAMOUNT
-#include <catamount/catmalloc.h>
-#endif /* TAU_CATAMOUNT */
-
-
-#ifdef TAU_BGP
-#include <kernel_interface.h>
-#endif
-
-/* Which platforms support mallinfo? */
-#ifndef TAU_HASMALLINFO
-#if (defined (__linux__) || defined (_AIX) || defined(sgi) || \
-    defined (__alpha) || defined (CRAYCC) || defined(__blrts__))
-#ifndef TAU_CATAMOUNT
-#ifndef TAU_CRAYXMT
-#define TAU_HASMALLINFO 1 
-#endif /* TAU_CRAYXMT does not have mallinfo */
-#endif /* TAU_CATAMOUNT does not have mallinfo */
-#endif /* platforms */
-#endif 
-
-/* TAU_HASMALLINFO: if your platform is not listed here and you know that
-   it supports mallinfo system call, please configure with 
-   -useropt=-DTAU_HASMALLINFO */
-     
-
-#ifdef TAU_HASMALLINFO
-#include <malloc.h>
-#endif /* TAU_HASMALLINFO */
-
-#ifdef TAU_DOT_H_LESS_HEADERS
-#include <iostream>
-using namespace std;
-#else /* TAU_DOT_H_LESS_HEADERS */
-#include <iostream.h>
-#endif /* TAU_DOT_H_LESS_HEADERS */
+#include <Profile/TauMemory.h>
 
 
 //////////////////////////////////////////////////////////////////////
@@ -124,51 +84,6 @@ int TauDisableTrackingMemoryHeadroom(void) {
 }
 
 //////////////////////////////////////////////////////////////////////
-// Get memory size (max resident set size) in KB 
-//////////////////////////////////////////////////////////////////////
-double TauGetMaxRSS(void) {
-
-  // if the LD_PRELOAD wrapper is active, we will return the value that it tracks
-  if (Tau_memorywrap_getWrapperActive()) {
-    x_uint64 bytes = Tau_memorywrap_getBytesAllocated();
-    double kbytes = (double)bytes / 1024.0;
-    return kbytes;
-  }
-
-#ifdef TAU_BGP
-  uint32_t heap_size;
-  Kernel_GetMemorySize( KERNEL_MEMSIZE_HEAP, &heap_size );
-  return heap_size / 1024;
-#endif
-
-#ifdef TAU_HASMALLINFO
-  struct mallinfo minfo = mallinfo();
-  double used = (double) ((unsigned int) minfo.hblkhd + 0.0 + (unsigned int) minfo.usmblks + (unsigned int) minfo.uordblks);
-  /* This is in bytes, we need KB */
-  return used/1024.0;
-#else 
-#  ifdef TAU_CATAMOUNT
-  size_t fragments;
-  unsigned long total_free, largest_free, total_used;
-  if (heap_info(&fragments, &total_free, &largest_free, &total_used) == 0) {
-    return  total_used/1024.0; 
-  }
-#  endif /* TAU_CATAMOUNT */
-
-#  if (! (defined (TAU_WINDOWS) || defined (CRAYCC)))
-  /* if not, use getrusage */
-  struct rusage res;
-  getrusage(RUSAGE_SELF, &res);
-  return (double) res.ru_maxrss; /* max resident set size */
-#  else
-  return 0;
-#  endif
-
-#endif /* TAU_HASMALLINFO */
-
-}
-
-//////////////////////////////////////////////////////////////////////
 // Set interrupt interval
 //////////////////////////////////////////////////////////////////////
 int& TheTauInterruptInterval(void) { 
@@ -185,34 +100,16 @@ void TauSetInterruptInterval(int interval) {
 }
 
 //////////////////////////////////////////////////////////////////////
-// Get user defined event
-//////////////////////////////////////////////////////////////////////
-TauUserEvent& TheTauMemoryEvent(void) {
-  static TauUserEvent mem("Memory Utilization (heap, in KB)");
-  return mem;
-}
-
-//////////////////////////////////////////////////////////////////////
-// Get user defined event
-//////////////////////////////////////////////////////////////////////
-TauContextUserEvent& TheTauMemoryHeadroomEvent(void) {
-  static TauContextUserEvent mem("Memory Headroom Left (in MB)");
-  return mem;
-}
-
-//////////////////////////////////////////////////////////////////////
 // TAU's alarm signal handler
 //////////////////////////////////////////////////////////////////////
 void TauAlarmHandler(int signum) {
    /* Check and see if we're tracking memory events */
   if (TheIsTauTrackingMemory()) {
-    /* trigger an event with the memory used */
-    TheTauMemoryEvent().TriggerEvent(TauGetMaxRSS());
+    TauAllocation::TriggerHeapMemoryUsageEvent();
   }
 
   if (TheIsTauTrackingMemoryHeadroom()) {
-    /* trigger an event with the memory headroom available */
-    TheTauMemoryHeadroomEvent().TriggerEvent((double)TauGetFreeMemory());
+    TauAllocation::TriggerMemoryHeadroomEvent();
   }
 
   /* Set alarm for the next interrupt */
@@ -255,6 +152,7 @@ void TauTrackMemoryUtilization(bool allocated) {
   alarm(TheTauInterruptInterval());
 #endif
 }
+
 //////////////////////////////////////////////////////////////////////
 // Track Memory events at this location in the source code
 //////////////////////////////////////////////////////////////////////
@@ -264,8 +162,7 @@ void TauTrackMemoryHere(void) {
  
   /* Check and see if we're *still* tracking memory events */
   if (TheIsTauTrackingMemory()) {
-    /* trigger an event with the memory used */
-    TheTauMemoryEvent().TriggerEvent(TauGetMaxRSS());
+    TauAllocation::TriggerHeapMemoryUsageEvent();
   }
 }
 
@@ -278,8 +175,7 @@ void TauTrackMemoryHeadroomHere(void) {
  
   /* Check and see if we're *still* tracking memory events */
   if (TheIsTauTrackingMemoryHeadroom()) {
-    /* trigger an event with the memory headroom available */
-    TheTauMemoryHeadroomEvent().TriggerEvent((double)TauGetFreeMemory());
+    TauAllocation::TriggerMemoryHeadroomEvent();
   }
 }
 

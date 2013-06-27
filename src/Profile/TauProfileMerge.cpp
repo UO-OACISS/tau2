@@ -99,7 +99,11 @@ void Tau_profileMerge_writeDefinitions(int *globalEventMap, int
 #endif
 
 
-int Tau_mergeProfiles() {
+int Tau_mergeProfiles()
+{
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   int rank, size, tid, i, buflen;
   FILE *f;
   char *buf;
@@ -107,7 +111,6 @@ int Tau_mergeProfiles() {
   x_uint64 start, end;
   const char *profiledir = TauEnv_get_profiledir();
 
-  Tau_global_incr_insideTAU();
 #ifdef TAU_UNIFY
   Tau_unify_unifyDefinitions();
 
@@ -417,7 +420,6 @@ int Tau_mergeProfiles() {
     PMPI_Send(buf, buflen, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
   }
 	free(buf);
-  Tau_global_decr_insideTAU();  
   return 0;
 }
 

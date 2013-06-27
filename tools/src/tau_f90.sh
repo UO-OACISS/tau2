@@ -140,7 +140,7 @@ done
 if [ $makefile_specified = no ] ; then
     MAKEFILE=$TAU_MAKEFILE
     if [ "x$MAKEFILE" != "x" ] ; then
-	if [[ ! -r $MAKEFILE ]] ; then
+	if [ ! -r "$MAKEFILE" ] ; then
 	    echo "ERROR: environment variable TAU_MAKEFILE is set but the file is not readable"
 	    exit 1
         fi

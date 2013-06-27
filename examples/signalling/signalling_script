@@ -1,0 +1,20 @@
+#!/bin/bash
+
+PROGRAM=$@
+PROGBASE=`basename ${PROGRAM}`
+ME=`basename $0`
+
+${PROGRAM} &
+
+pid=`ps | grep "${PROGBASE}" | grep -v "grep" | grep -v "${ME}" | awk '{print $1}'`
+
+for i in {1..100} ; do
+  sleep 1
+  stillrunning=`ps | grep "${PROGBASE}" | grep -v "grep" | grep -v "${ME}" | wc | awk '{print $1}'`
+  if [ ${stillrunning} -eq 0 ] ; then
+    exit
+  fi
+  kill -SIGUSR1 ${pid}
+done
+
+kill -9 ${pid}

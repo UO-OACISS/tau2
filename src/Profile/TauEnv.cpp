@@ -65,13 +65,16 @@ using namespace std;
 #define TAU_CALLSITE_DEFAULT 0
 #define TAU_CALLSITE_LIMIT_DEFAULT 1 /* default to be local */
 
+/* If we are using OpenMP and the collector API */
+#define TAU_COLLECTOR_API_DEFAULT 1
+
 /* if we are doing EBS sampling, set the default sampling period */
 #define TAU_EBS_DEFAULT 0
 #define TAU_EBS_KEEP_UNRESOLVED_ADDR_DEFAULT 0
-#if (defined (TAU_BGL) || defined(TAU_BGP) || defined(TAU_BGQ))
+#if (defined (TAU_BGL) || defined(TAU_BGP))
 #define TAU_EBS_PERIOD_DEFAULT 20000 // Kevin made this bigger,
 #else
-#if (defined (TAU_CRAYCNL))
+#if (defined (TAU_CRAYCNL) || defined(TAU_BGQ))
 #define TAU_EBS_PERIOD_DEFAULT 50000 // Sameer made this bigger,
 #else 
 #define TAU_EBS_PERIOD_DEFAULT 10000 // Kevin made this bigger,
@@ -137,8 +140,26 @@ using namespace std;
 #endif /* TAU_MPI */
 
 #define TAU_CUPTI_API_DEFAULT "runtime"
+#define TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT ""
 
 #define TAU_MIC_OFFLOAD_DEFAULT 0
+
+// Memory debugging environment variable defaults
+#define TAU_MEMDBG_PROTECT_ABOVE_DEFAULT  0
+#define TAU_MEMDBG_PROTECT_BELOW_DEFAULT  0
+#define TAU_MEMDBG_PROTECT_FREE_DEFAULT   0
+#define TAU_MEMDBG_PROTECT_GAP_DEFAULT    0
+#define TAU_MEMDBG_FILL_GAP_DEFAULT       0 // 0 => undefined, not zero
+#define TAU_MEMDBG_ALLOC_MIN_DEFAULT      0 // 0 => undefined, not zero
+#define TAU_MEMDBG_ALLOC_MAX_DEFAULT      0 // 0 => undefined, not zero
+#define TAU_MEMDBG_OVERHEAD_DEFAULT       0 // 0 => undefined, not zero
+#ifdef TAU_BGQ
+#define TAU_MEMDBG_ALIGNMENT_DEFAULT      64
+#else
+#define TAU_MEMDBG_ALIGNMENT_DEFAULT      sizeof(long)
+#endif
+#define TAU_MEMDBG_ZERO_MALLOC_DEFAULT    0
+#define TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT 0
 
 // forward declartion of cuserid. need for c++ compilers on Cray.
 extern "C" char *cuserid(char *);
@@ -266,52 +287,56 @@ extern int Tau_util_readFullLine(char *line, FILE *fp);
 /*********************************************************************
  * Get executable directory name: /usr/local/foo will return /usr/local
  ********************************************************************/
-int Tau_get_cwd_of_exe(string& dirname) {
-  FILE *f;
-  f = fopen("/proc/self/cmdline", "r");
+static char const * Tau_get_cwd_of_exe()
+{
+  char * retval = NULL;
+
+  FILE * f = fopen("/proc/self/cmdline", "r");
   if (f) {
-    char line[4096];
+    char * line = (char*)malloc(4096);
     if (Tau_util_readFullLine(line, f)) {
-      string fullpath = string(line);
-      int loc = fullpath.find_last_of("/\\");
-      dirname = fullpath.substr(0,loc);
-    //  dirname.append("/");
-      return 1; 
-    } else {
-      dirname=string("unknown");
-      return 0;
+      int pos = strlen(line) - 1;
+      while(pos >= 0) {
+        char c = line[pos];
+        if (c == '/' || c == '\\') break;
+        --pos;
+      }
+      if (pos >= 0) {
+        line[pos] = '\0';
+        retval = strdup(line);
+      }
+      free((void*)line);
     }
-  } else {
-    dirname = string("unknown");
-    return 0;
   }
+  fclose(f);
+  return retval;
 }
 
 /*********************************************************************
  * Read configuration file
  ********************************************************************/
-static int TauConf_read() {
+static int TauConf_read()
+{
   const char *tmp;
-  char conf_file_name[1024]; 
+  char conf_file_name[1024];
 
   tmp = getenv("TAU_CONF");
   if (tmp == NULL) {
     tmp = "tau.conf";
   }
-  FILE *cfgFile = fopen(tmp, "r");
-  if (! cfgFile) {
-    string exedir; 
-    Tau_get_cwd_of_exe(exedir);  
-    sprintf(conf_file_name, "%s/tau.conf", exedir.c_str()); 
+  FILE * cfgFile = fopen(tmp, "r");
+  if (!cfgFile) {
+    char const * exedir = Tau_get_cwd_of_exe();
+    if (!exedir) exedir = ".";
+    sprintf(conf_file_name, "%s/tau.conf", exedir);
     TAU_VERBOSE("Trying %s\n", conf_file_name);
     cfgFile = fopen(conf_file_name, "r");
   }
   if (cfgFile) {
     TauConf_parse(cfgFile, tmp);
     fclose(cfgFile);
-  }
-  else {
-    sprintf(conf_file_name,"%s/tau_system_defaults/tau.conf", TAUROOT);
+  } else {
+    sprintf(conf_file_name, "%s/tau_system_defaults/tau.conf", TAUROOT);
     cfgFile = fopen(conf_file_name, "r");
     if (cfgFile) {
       TauConf_parse(cfgFile, tmp);
@@ -327,7 +352,7 @@ static int TauConf_read() {
  ********************************************************************/
 static const char *getconf(const char *key) {
   const char *val = TauConf_getval(key);
-  TAU_VERBOSE("%s=%s\n", key, val);
+  //TAU_VERBOSE("%s=%s\n", key, val);
   if (val) {
     return val;
   }
@@ -337,22 +362,22 @@ static const char *getconf(const char *key) {
 /*********************************************************************
  * Local Tau_check_dirname routine
  ********************************************************************/
-char * Tau_check_dirname(const char * dir) {
-  if (strcmp(dir, "$TAU_LOG_DIR") == 0){
+char * Tau_check_dirname(const char * dir)
+{
+  if (strcmp(dir, "$TAU_LOG_DIR") == 0) {
     TAU_VERBOSE("Using PROFILEDIR=%s\n", dir);
-    const char *logdir= getconf("TAU_LOG_PATH");
-    const char *jobid= getconf("COBALT_JOBID");
-    if (jobid == (const char *) NULL) jobid=strdup("0");
+    const char *logdir = getconf("TAU_LOG_PATH");
+    const char *jobid = getconf("COBALT_JOBID");
+    if (jobid == (const char *)NULL) jobid = strdup("0");
     TAU_VERBOSE("jobid = %s\n", jobid);
     time_t theTime = time(NULL);
     struct tm *thisTime = gmtime(&theTime);
     thisTime = localtime(&theTime);
-    char user[1024]; 
+    char user[1024];
     int ret;
 
-
-    char logfiledir[2048]; 
-    char scratchdir[2048]; 
+    char logfiledir[2048];
+    char scratchdir[2048];
 #if (defined (TAU_BGL) || defined(TAU_BGP) || defined(TAU_BGQ) || defined(__linux__))
     if (cuserid(user) == NULL) {
       sprintf(user,"unknown");
@@ -360,43 +385,40 @@ char * Tau_check_dirname(const char * dir) {
 #else
 
 #ifdef TAU_WINDOWS
-		char *temp = "unknown";
+    char *temp = "unknown";
 #else
     /*    struct passwd *pwInfo = getpwuid(geteuid());
-    if ((pwInfo != NULL) &&
-        (pwInfo->pw_name != NULL)) {
-      strcpy(user, pwInfo->pw_name);
-    */
+     if ((pwInfo != NULL) &&
+     (pwInfo->pw_name != NULL)) {
+     strcpy(user, pwInfo->pw_name);
+     */
     char *temp = getlogin();
     TAU_VERBOSE("TAU: cuserid returns %s\n", temp);
 #endif // TAU_WINDOWS
     if (temp != NULL) {
-      sprintf(user, temp);
+      sprintf(user, "%s", temp);
     } else {
-      sprintf(user,"unknown");
+      sprintf(user, "unknown");
     }
     free(temp);
 #endif /* TAU_BGP */
-    ret = sprintf(logfiledir, "%s/%d/%d/%d/%s_id%s_%d-%d-%d",  
-	logdir, (thisTime->tm_year+1900),(thisTime->tm_mon+1), 
-	thisTime->tm_mday, user, jobid, (thisTime->tm_mon+1), thisTime->tm_mday,
-	(thisTime->tm_hour*60*60 + thisTime->tm_min*60 + thisTime->tm_sec));
+    ret = sprintf(logfiledir, "%s/%d/%d/%d/%s_id%s_%d-%d-%d", logdir, (thisTime->tm_year + 1900),
+        (thisTime->tm_mon + 1), thisTime->tm_mday, user, jobid, (thisTime->tm_mon + 1), thisTime->tm_mday,
+        (thisTime->tm_hour * 60 * 60 + thisTime->tm_min * 60 + thisTime->tm_sec));
     TAU_VERBOSE("Using logdir = %s\n", logfiledir);
-    if (RtsLayer::myNode() < 1) { 
+    if (RtsLayer::myNode() < 1) {
 #ifdef TAU_WINDOWS
       mkdir(logfiledir);
 #else
 
       mode_t oldmode;
-      oldmode=umask(0);
+      oldmode = umask(0);
       mkdir(logdir, S_IRWXU | S_IRGRP | S_IWGRP | S_IXGRP | S_IRWXO);
-      sprintf(scratchdir, "%s/%d", logdir, (thisTime->tm_year+1900));
+      sprintf(scratchdir, "%s/%d", logdir, (thisTime->tm_year + 1900));
       mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IWGRP | S_IXGRP | S_IRWXO);
-      sprintf(scratchdir, "%s/%d/%d", logdir, (thisTime->tm_year+1900), 
-	(thisTime->tm_mon+1));
+      sprintf(scratchdir, "%s/%d/%d", logdir, (thisTime->tm_year + 1900), (thisTime->tm_mon + 1));
       mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IWGRP | S_IXGRP | S_IRWXO);
-      sprintf(scratchdir, "%s/%d/%d/%d", logdir, (thisTime->tm_year+1900), 
-	(thisTime->tm_mon+1), thisTime->tm_mday);
+      sprintf(scratchdir, "%s/%d/%d/%d", logdir, (thisTime->tm_year + 1900), (thisTime->tm_mon + 1), thisTime->tm_mday);
       mkdir(scratchdir, S_IRWXU | S_IRGRP | S_IWGRP | S_IXGRP | S_IRWXO);
       TAU_VERBOSE("mkdir %s\n", scratchdir);
 
@@ -408,7 +430,7 @@ char * Tau_check_dirname(const char * dir) {
     return strdup(logfiledir);
   }
   return (char *)dir;
-   
+
 }
 
 
@@ -433,7 +455,7 @@ static int env_depth_limit = 0;
 static int env_track_message = 0;
 static int env_comm_matrix = 0;
 static int env_track_memory_heap = 0;
-static int tau_env_lite = 0;
+static int env_tau_lite = 0;
 static int env_track_memory_leaks = 0;
 static int env_track_memory_headroom = 0;
 static int env_track_io_params = 0;
@@ -441,11 +463,11 @@ static int env_track_signals = 0;
 static int env_signals_gdb = 0;
 static int env_summary_only = 0;
 static int env_ibm_bg_hwp_counters = 0;
-static int env_extras = 0;
 /* This is a malleable default */
 static int env_ebs_keep_unresolved_addr = 0;
 static int env_ebs_period = 0;
 static int env_ebs_inclusive = 0;
+static int env_collector_api_enabled = 0;
 static int env_ebs_enabled = 0;
 static const char *env_ebs_source = "itimer";
 static int env_ebs_unwind_enabled = 0;
@@ -460,9 +482,33 @@ static double env_throttle_percall = 0;
 static const char *env_profiledir = NULL;
 static const char *env_tracedir = NULL;
 static const char *env_metrics = NULL;
-static const char *env_cupti_api = NULL;
+static const char *env_cupti_api = TAU_CUPTI_API_DEFAULT; 
+static int env_sigusr1_action = TAU_ACTION_DUMP_PROFILES;
+static const char *env_track_cuda_instructions = TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT;
 
 static int env_mic_offload = 0;
+
+static int env_memdbg = 0;
+static int env_memdbg_protect_above = TAU_MEMDBG_PROTECT_ABOVE_DEFAULT;
+static int env_memdbg_protect_below = TAU_MEMDBG_PROTECT_BELOW_DEFAULT;
+static int env_memdbg_protect_free = TAU_MEMDBG_PROTECT_FREE_DEFAULT;
+static int env_memdbg_protect_gap = TAU_MEMDBG_PROTECT_GAP_DEFAULT;
+// All values of env_memdbg_fill_gap_value are valid fill patterns
+static int env_memdbg_fill_gap = TAU_MEMDBG_FILL_GAP_DEFAULT;
+static unsigned char env_memdbg_fill_gap_value = 0xAB;
+// All values of env_memdbg_alloc_min are valid limits
+static int env_memdbg_alloc_min = TAU_MEMDBG_ALLOC_MIN_DEFAULT;
+static size_t env_memdbg_alloc_min_value = 0;
+// All values of env_memdbg_alloc_max are valid limits
+static int env_memdbg_alloc_max = TAU_MEMDBG_ALLOC_MAX_DEFAULT;
+static size_t env_memdbg_alloc_max_value = 0;
+// All values of env_memdbg_overhead are valid limits
+static int env_memdbg_overhead = TAU_MEMDBG_OVERHEAD_DEFAULT;
+static size_t env_memdbg_overhead_value = 0;
+static size_t env_memdbg_alignment = TAU_MEMDBG_ALIGNMENT_DEFAULT;
+static int env_memdbg_zero_malloc = TAU_MEMDBG_ZERO_MALLOC_DEFAULT;
+static int env_memdbg_attempt_continue = TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT;
+
 #ifdef TAU_GPI 
 #include <GPI.h>
 #include <GpiLogger.h>
@@ -470,19 +516,24 @@ static int env_mic_offload = 0;
 /*********************************************************************
  * Write to stderr if verbose mode is on
  ********************************************************************/
-void TAU_VERBOSE(const char *format, ...) {
-  va_list args;
-  if (env_verbose != 1) {
-    return;
-  }
-  va_start(args, format);
+void TAU_VERBOSE(const char *format, ...)
+{
+  if (env_verbose != 1) return;
+
+  {
+    TauInternalFunctionGuard protects_this_function;
+    va_list args;
+    va_start(args, format);
+
 #ifdef TAU_GPI
-  gpi_vprintf(format, args);
+    gpi_vprintf(format, args);
 #else
-  vfprintf(stderr, format, args);
+    vfprintf(stderr, format, args);
 #endif
-  va_end(args);
-  fflush(stderr);
+    va_end(args);
+    fflush (stderr);
+
+  } // END inside TAU
 }
 
 /*********************************************************************
@@ -573,10 +624,6 @@ int TauEnv_get_track_message() {
   return env_track_message;
 }
 
-int TauEnv_get_lite() {
-  return tau_env_lite;
-}
-
 int TauEnv_get_track_memory_heap() {
   return env_track_memory_heap;
 }
@@ -591,10 +638,6 @@ int TauEnv_get_track_memory_headroom() {
 
 int TauEnv_get_track_io_params() {
   return env_track_io_params;
-}
-
-int TauEnv_get_extras() {
-  return env_extras;
 }
 
 int TauEnv_get_summary_only() {
@@ -637,6 +680,10 @@ int TauEnv_get_profile_format() {
   return env_profile_format;
 }
 
+int TauEnv_get_sigusr1_action() {
+  return env_sigusr1_action;
+}
+
 int TauEnv_get_ebs_keep_unresolved_addr() {
   return env_ebs_keep_unresolved_addr;
 }
@@ -660,6 +707,10 @@ int TauEnv_get_ebs_inclusive() {
 
 int TauEnv_get_ebs_enabled() {
   return env_ebs_enabled;
+}
+
+int TauEnv_get_collector_api_enabled() {
+  return env_collector_api_enabled;
 }
 
 int TauEnv_get_ebs_unwind() {
@@ -691,12 +742,81 @@ const char* TauEnv_get_cupti_api(){
   return env_cupti_api;
 }
 
+const char* TauEnv_get_cuda_instructions(){
+  return env_track_cuda_instructions;
+}
+
 int TauEnv_get_mic_offload(){
   return env_mic_offload;
 }
 int TauEnv_get_lite_enabled() {
-  return tau_env_lite;
+  return env_tau_lite;
 }
+
+int TauEnv_get_memdbg() {
+  return env_memdbg;
+}
+
+int TauEnv_get_memdbg_protect_above() {
+  return env_memdbg_protect_above;
+}
+
+int TauEnv_get_memdbg_protect_below() {
+  return env_memdbg_protect_below;
+}
+
+int TauEnv_get_memdbg_protect_free() {
+  return env_memdbg_protect_free;
+}
+
+int TauEnv_get_memdbg_protect_gap() {
+  return env_memdbg_protect_gap;
+}
+
+int TauEnv_get_memdbg_fill_gap() {
+  return env_memdbg_fill_gap;
+}
+
+unsigned char TauEnv_get_memdbg_fill_gap_value() {
+  return env_memdbg_fill_gap_value;
+}
+
+int TauEnv_get_memdbg_alloc_min() {
+  return env_memdbg_alloc_min;
+}
+
+size_t TauEnv_get_memdbg_alloc_min_value() {
+  return env_memdbg_alloc_min_value;
+}
+
+int TauEnv_get_memdbg_alloc_max() {
+  return env_memdbg_alloc_max;
+}
+
+size_t TauEnv_get_memdbg_alloc_max_value() {
+  return env_memdbg_alloc_max_value;
+}
+
+int TauEnv_get_memdbg_overhead() {
+  return env_memdbg_overhead;
+}
+
+size_t TauEnv_get_memdbg_overhead_value() {
+  return env_memdbg_overhead_value;
+}
+
+size_t TauEnv_get_memdbg_alignment() {
+  return env_memdbg_alignment;
+}
+
+int TauEnv_get_memdbg_zero_malloc() {
+  return env_memdbg_zero_malloc;
+}
+
+int TauEnv_get_memdbg_attempt_continue() {
+  return env_memdbg_attempt_continue;
+}
+
 
 /*********************************************************************
  * Initialize the TauEnv module, get configuration values
@@ -726,17 +846,17 @@ void TauEnv_initialize()
 
     /*** Options that can be used with Scalasca and VampirTrace ***/
     tmp = getconf("TAU_LITE");
-    if (parse_bool(tmp,tau_env_lite)) {
+    if (parse_bool(tmp,env_tau_lite)) {
       TAU_VERBOSE("TAU: LITE measurement enabled\n");
       TAU_METADATA("TAU_LITE", "on");
-      tau_env_lite = 1;
+      env_tau_lite = 1;
     }
 
     tmp = getconf("TAU_VERBOSE");
-    if (parse_bool(tmp,tau_env_lite)) {
-      env_verbose = 1;
+    if (parse_bool(tmp,env_verbose)) {
       TAU_VERBOSE("TAU: VERBOSE enabled\n");
       TAU_METADATA("TAU_VERBOSE", "on");
+      env_verbose = 1;
     }
 
     tmp = getconf("TAU_TRACK_HEAP");
@@ -744,7 +864,6 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Entry/Exit Memory tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_HEAP", "on");
       env_track_memory_heap = 1;
-      env_extras = 1;
     } else {
       TAU_METADATA("TAU_TRACK_HEAP", "off");
       env_track_memory_heap = 0;
@@ -755,18 +874,141 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Entry/Exit Headroom tracking Enabled\n");
       TAU_METADATA("TAU_TRACK_HEADROOM", "on");
       env_track_memory_headroom = 1;
-      env_extras = 1;
     } else {
       TAU_METADATA("TAU_TRACK_HEADROOM", "off");
       env_track_memory_headroom = 0;
     }
+
+    tmp = getconf("TAU_TRACK_MEMORY_LEAKS");
+    if (parse_bool(tmp, env_track_memory_leaks)) {
+      TAU_VERBOSE("TAU: Memory tracking enabled\n");
+      TAU_METADATA("TAU_TRACK_MEMORY_LEAKS", "on");
+      env_track_memory_leaks = 1;
+    } else {
+      TAU_METADATA("TAU_TRACK_MEMORY_LEAKS", "off");
+      env_track_memory_leaks = 0;
+    }
+
+    // Setting TAU_MEMDBG_PROTECT_{ABOVE,BELOW,FREE} enables memory debugging.
+
+    tmp = getconf("TAU_MEMDBG_PROTECT_ABOVE");
+    env_memdbg_protect_above = parse_bool(tmp, env_memdbg_protect_above);
+    if(env_memdbg_protect_above) {
+      env_memdbg = 1;
+      TAU_VERBOSE("TAU: Bounds checking enabled on array end\n");
+      TAU_METADATA("TAU_MEMDBG_PROTECT_ABOVE", "on");
+    } else {
+      TAU_METADATA("TAU_MEMDBG_PROTECT_ABOVE", "off");
+    }
+
+    tmp = getconf("TAU_MEMDBG_PROTECT_BELOW");
+    env_memdbg_protect_below = parse_bool(tmp, env_memdbg_protect_below);
+    if(env_memdbg_protect_below) {
+      env_memdbg = 1;
+      TAU_VERBOSE("TAU: Bounds checking enabled on array beginning\n");
+      TAU_METADATA("TAU_MEMDBG_PROTECT_BELOW", "on");
+    } else {
+      TAU_METADATA("TAU_MEMDBG_PROTECT_BELOW", "off");
+    }
+
+    tmp = getconf("TAU_MEMDBG_PROTECT_FREE");
+    env_memdbg_protect_free = parse_bool(tmp, env_memdbg_protect_free);
+    if(env_memdbg_protect_free) {
+      env_memdbg = 1;
+      TAU_VERBOSE("TAU: Checking for free memory reuse errors\n");
+      TAU_METADATA("TAU_MEMDBG_PROTECT_FREE", "on");
+    } else {
+      TAU_METADATA("TAU_MEMDBG_PROTECT_FREE", "off");
+    }
+
+    if(env_memdbg) {
+
+      size_t page_size = Tau_page_size();
+      sprintf(tmpstr, "%ld", page_size);
+      TAU_METADATA("Virtual Memory Page Size", tmpstr);
+
+      env_track_signals = 1;
+
+      tmp = getconf("TAU_MEMDBG_PROTECT_GAP");
+      env_memdbg_protect_gap = parse_bool(tmp, env_memdbg_protect_gap);
+      if(env_memdbg_protect_gap) {
+        TAU_VERBOSE("TAU: Bounds checking enabled in memory gap\n");
+        TAU_METADATA("TAU_MEMDBG_PROTECT_GAP", "on");
+      } else {
+        TAU_METADATA("TAU_MEMDBG_PROTECT_GAP", "off");
+      }
+
+      tmp = getconf("TAU_MEMDBG_FILL_GAP");
+      if (tmp) {
+        env_memdbg_fill_gap = 1;
+        env_memdbg_fill_gap_value = (unsigned char)atoi(tmp);
+        TAU_VERBOSE("TAU: Initializing memory gap to %d\n", tmp);
+        TAU_METADATA("TAU_MEMDBG_FILL_GAP", tmp);
+      }
+
+      tmp = getconf("TAU_MEMDBG_ALLOC_MIN");
+      if (tmp) {
+        env_memdbg_alloc_min = 1;
+        env_memdbg_alloc_min_value = atol(tmp);
+        TAU_VERBOSE("TAU: Minimum allocation size for bounds checking is %d\n", env_memdbg_alloc_min_value);
+        TAU_METADATA("TAU_MEMDBG_ALLOC_MIN", tmp);
+      }
+
+      tmp = getconf("TAU_MEMDBG_ALLOC_MAX");
+      if (tmp) {
+        env_memdbg_alloc_max = 1;
+        env_memdbg_alloc_max_value = atol(tmp);
+        TAU_VERBOSE("TAU: Maximum allocation size for bounds checking is %d\n", env_memdbg_alloc_max_value);
+        TAU_METADATA("TAU_MEMDBG_ALLOC_MAX", tmp);
+      }
+
+      tmp = getconf("TAU_MEMDBG_OVERHEAD");
+      if (tmp) {
+        env_memdbg_overhead = 1;
+        env_memdbg_overhead_value = atol(tmp);
+        TAU_VERBOSE("TAU: Maximum bounds checking overhead is %d\n", env_memdbg_overhead_value);
+        TAU_METADATA("TAU_MEMDBG_OVERHEAD", tmp);
+      }
+
+      tmp = getconf("TAU_MEMDBG_ALIGNMENT");
+      if (tmp) {
+        env_memdbg_alignment = (size_t)atoi(tmp);
+      }
+      if ((int)env_memdbg_alignment != ((int)env_memdbg_alignment & -(int)env_memdbg_alignment)) {
+        TAU_VERBOSE("TAU: ERROR - Memory debugging alignment is not a power of two: %ld\n", env_memdbg_alignment);
+      } else {
+        TAU_VERBOSE("TAU: Memory debugging alignment: %ld\n", env_memdbg_alignment);
+      }
+      sprintf(tmpstr, "%ld", env_memdbg_alignment);
+      TAU_METADATA("TAU_MEMDBG_ALIGNMENT", tmpstr);
+
+      tmp = getconf("TAU_MEMDBG_ZERO_MALLOC");
+      env_memdbg_zero_malloc = parse_bool(tmp, env_memdbg_zero_malloc);
+      if(env_memdbg_zero_malloc) {
+        TAU_VERBOSE("TAU: Zero-size malloc will be accepted\n");
+        TAU_METADATA("TAU_MEMDBG_ZERO_MALLOC", "on");
+      } else {
+        TAU_VERBOSE("TAU: Zero-size malloc will be flagged as error\n");
+        TAU_METADATA("TAU_MEMDBG_ZERO_MALLOC", "off");
+      }
+
+      tmp = getconf("TAU_MEMDBG_ATTEMPT_CONTINUE");
+      env_memdbg_attempt_continue = parse_bool(tmp, env_memdbg_attempt_continue);
+      if(env_memdbg_attempt_continue) {
+        TAU_VERBOSE("TAU: Attempt to resume execution after memory error\n");
+        TAU_METADATA("TAU_MEMDBG_ATTEMPT_CONTINUE", "on");
+      } else {
+        TAU_VERBOSE("TAU: The first memory error will halt execution and generate a backtrace\n");
+        TAU_METADATA("TAU_MEMDBG_ATTEMPT_CONTINUE", "off");
+      }
+
+    } // if (env_memdbg)
 
     tmp = getconf("TAU_TRACK_IO_PARAMS");
     if (parse_bool(tmp, env_track_memory_headroom)) {
       TAU_VERBOSE("TAU: POSIX I/O wrapper parameter tracking enabled\n");
       TAU_METADATA("TAU_TRACK_IO_PARAMS", "on");
       env_track_io_params = 1;
-      env_extras = 1;
     } else {
       TAU_METADATA("TAU_TRACK_IO_PARAMS", "off");
       env_track_io_params = 0;
@@ -777,7 +1019,6 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: Tracking SIGNALS enabled\n");
       TAU_METADATA("TAU_TRACK_SIGNALS", "on");
       env_track_signals = 1;
-      env_extras = 1;
       tmp = getconf("TAU_SIGNALS_GDB");
       if (parse_bool(tmp, env_signals_gdb)) {
         TAU_VERBOSE("TAU: SIGNALS GDB output enabled\n");
@@ -821,27 +1062,15 @@ void TauEnv_initialize()
     return;
 #endif
 
-    tmp = getconf("TAU_TRACK_MEMORY_LEAKS");
-    if (parse_bool(tmp, env_track_memory_leaks)) {
-      TAU_VERBOSE("TAU: Entry/Exit Memory tracking Enabled\n");
-      TAU_METADATA("TAU_TRACK_MEMORY_LEAKS", "on");
-      env_track_memory_leaks = 1;
-      env_extras = 1;
-    } else {
-      TAU_METADATA("TAU_TRACK_MEMORY_LEAKS", "off");
-      env_track_memory_leaks = 0;
-    }
-
     if ((env_profiledir = getconf("PROFILEDIR")) == NULL) {
       env_profiledir = ".";   /* current directory */
 #ifdef TAU_GPI
       // if exe is /usr/local/foo, this will return /usr/local where profiles
       // may be stored if PROFILEDIR is not specified
-      string cwd; 
-      int ret = Tau_get_cwd_of_exe(cwd);
-      if (ret) {
-	env_profiledir = strdup(cwd.c_str());
-	TAU_VERBOSE("ENV_PROFILEDIR = %s\n", env_profiledir); 
+      char const * cwd = Tau_get_cwd_of_exe();
+      if (cwd) {
+        env_profiledir = strdup(cwd);
+        TAU_VERBOSE("ENV_PROFILEDIR = %s\n", env_profiledir);
       }
 #endif /* TAU_GPI */
     }
@@ -852,11 +1081,10 @@ void TauEnv_initialize()
 #ifdef TAU_GPI
       // if exe is /usr/local/foo, this will return /usr/local where profiles
       // may be stored if PROFILEDIR is not specified
-      string cwd; 
-      int ret = Tau_get_cwd_of_exe(cwd);
-      if (ret) {
-	env_tracedir = strdup(cwd.c_str());
-	TAU_VERBOSE("ENV_TRACEDIR = %s\n", env_tracedir); 
+      char const * cwd = Tau_get_cwd_of_exe();
+      if (cwd) {
+        env_tracedir = strdup(cwd);
+        TAU_VERBOSE("ENV_TRACEDIR = %s\n", env_tracedir);
       }
 #endif /* TAU_GPI */
     }
@@ -907,7 +1135,6 @@ void TauEnv_initialize()
       tmp = getconf("TAU_COMPENSATE");
       if (parse_bool(tmp, TAU_COMPENSATE_DEFAULT)) {
         env_compensate = 1;
-        env_extras = 1;
         TAU_VERBOSE("TAU: Overhead Compensation Enabled\n");
         TAU_METADATA("TAU_COMPENSATE", "on");
       } else {
@@ -1068,6 +1295,17 @@ void TauEnv_initialize()
       TAU_METADATA("TAU_THROTTLE_NUMCALLS", tmpstr);
     }
 		
+    const char *sigusr1Action = getconf("TAU_SIGUSR1_ACTION");
+    if (sigusr1Action != NULL && 0 == strcasecmp(sigusr1Action, "backtraces")) {
+      env_sigusr1_action = TAU_ACTION_DUMP_BACKTRACES;
+      TAU_VERBOSE("TAU: SIGUSR1 Action: dump backtraces\n");
+    } else if (sigusr1Action != NULL && 0 == strcasecmp(sigusr1Action, "callpaths")) {
+      env_sigusr1_action = TAU_ACTION_DUMP_CALLPATHS;
+      TAU_VERBOSE("TAU: SIGUSR1 Action: dump callpaths\n");
+    } else {
+      TAU_VERBOSE("TAU: SIGUSR1 Action: dump profiles\n");
+	}
+
     const char *profileFormat = getconf("TAU_PROFILE_FORMAT");
     if (profileFormat != NULL && 0 == strcasecmp(profileFormat, "snapshot")) {
       env_profile_format = TAU_FORMAT_SNAPSHOT;
@@ -1117,6 +1355,17 @@ void TauEnv_initialize()
       TAU_VERBOSE("TAU: METRICS is not set\n", env_metrics);
     } else {
       TAU_VERBOSE("TAU: METRICS is \"%s\"\n", env_metrics);
+    }
+
+    tmp = getconf("TAU_COLLECTOR_API");
+    if (parse_bool(tmp, TAU_COLLECTOR_API_DEFAULT)) {
+      env_collector_api_enabled = 1;
+      TAU_VERBOSE("TAU: Collector API Enabled\n");
+      TAU_METADATA("TAU_COLLECTOR_API", "on");
+    } else {
+      env_collector_api_enabled = 0;
+      TAU_VERBOSE("TAU: Collector API Disabled\n");
+      TAU_METADATA("TAU_COLLECTOR_API", "off");
     }
 
     tmp = getconf("TAU_SAMPLING");
@@ -1282,6 +1531,16 @@ void TauEnv_initialize()
     else {
       TAU_VERBOSE("TAU: CUPTI API tracking: %s\n", env_cupti_api);
       TAU_METADATA("TAU_CUPTI_API", env_cupti_api);
+		}
+    env_track_cuda_instructions = getconf("TAU_TRACK_CUDA_INSTRUCTIONS");
+    if (env_track_cuda_instructions == NULL || 0 == strcasecmp(env_track_cuda_instructions, "")) {
+      env_track_cuda_instructions = TAU_TRACK_CUDA_INSTRUCTIONS_DEFAULT;
+      TAU_VERBOSE("TAU: tracking CUDA instructions: %s\n", env_track_cuda_instructions);
+      TAU_METADATA("TAU_TRACK_CUDA_INSTRUCTIONS", env_track_cuda_instructions);
+    }
+    else {
+      TAU_VERBOSE("TAU: tracking CUDA instructions: %s\n", env_track_cuda_instructions);
+      TAU_METADATA("TAU_TRACK_CUDA_INSTRUCTIONS", env_track_cuda_instructions);
 		}
 		tmp = getconf("TAU_MIC_OFFLOAD");
     if (parse_bool(tmp, TAU_MIC_OFFLOAD_DEFAULT)) {

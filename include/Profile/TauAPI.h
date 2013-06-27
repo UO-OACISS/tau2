@@ -16,10 +16,11 @@
 #ifndef _TAU_API_H_
 #define _TAU_API_H_
 
-
 #ifdef TAU_ENABLED
+
 #include <Profile/tau_types.h>
 #include <Profile/TauMetaDataTypes.h>
+#include <Profile/TauMon.h>
 #include <string.h>
 
 #if (defined(TAU_WINDOWS))
@@ -29,19 +30,32 @@
 #define TAUDECL
 #endif /* TAU_WINDOWS */
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+/* The Fortran API uses function bindings instead of macro bindings.
+ * Really, the following #ifndef block should be moved to a new TauCAPI.h file
+ * since it only applies to C/C++.
+ */
+#ifndef TAU_FAPI
 
+#ifndef TAU_DISABLE_API
 
+/* define the easy to use API */
+#define TAU_START(name) Tau_start(name)
+#define TAU_STOP(name) Tau_stop(name)
 
-
+/* easy API with tasks */
+#define TAU_START_TASK(name, tid) Tau_pure_start_task(name, tid)
+#define TAU_STOP_TASK(name, tid) Tau_pure_stop_task(name, tid)
 
 /* for consistency, we provide the long form */
 #define TAU_STATIC_TIMER_START TAU_START
 #define TAU_STATIC_TIMER_STOP TAU_STOP
 
+#else /* TAU_DISABLE_API is defined! Define these two to nulls */
 
+#define TAU_START(name)
+#define TAU_STOP(name)
+
+#endif /* TAU_DISABLE_API */
 
 
 #define TAU_PROFILE_TIMER(var,name, type, group) static void *var=NULL; Tau_profile_c_timer(&var, name, type, group, #group);
@@ -50,11 +64,9 @@ extern "C" {
 #define TAU_PROFILE_DECLARE_TIMER(var) static void *var=NULL;
 #define TAU_PROFILE_CREATE_TIMER(var,name,type,group) Tau_profile_c_timer(&var, name, type, group, #group);
 
-
-#define TAU_PROFILE_START(var) Tau_lite_start_timer(var, 0, Tau_get_tid());
-#define TAU_PROFILE_STOP(var) Tau_lite_stop_timer(var, Tau_get_tid());
+#define TAU_PROFILE_START(var) Tau_lite_start_timer(var, 0);
+#define TAU_PROFILE_STOP(var) Tau_lite_stop_timer(var);
 #define TAU_PROFILE_STMT(stmt) stmt;
-
 
 /* TAU_PROFILE_CREATE_DYNAMIC_AUTO embeds the counter in the name. isPhase = 0 implies a timer */
 #define TAU_PROFILE_CREATE_DYNAMIC_AUTO(var, name, type, group)  \
@@ -71,29 +83,20 @@ extern "C" {
           Tau_profile_dynamic_auto(tau_dy_timer_counter++, &var##finfo, name, type, group, #group, 0); \
         }
 
-
-
 #define TAU_DYNAMIC_TIMER_START(name) Tau_dynamic_start(name, 0);
 #define TAU_DYNAMIC_TIMER_STOP(name) Tau_dynamic_stop(name, 0);
 #define TAU_DYNAMIC_PHASE_START(name) Tau_dynamic_start(name, 1);
 #define TAU_DYNAMIC_PHASE_STOP(name) Tau_dynamic_stop(name, 1);
 
-
 #define TAU_STATIC_PHASE_START(name) Tau_static_phase_start(name)
 #define TAU_STATIC_PHASE_STOP(name)  Tau_static_phase_stop(name)
 
-
-
 #define TAU_PHASE_CREATE_STATIC(var, name, type, group) static void *var##finfo = NULL; Tau_profile_c_timer(&var##finfo, name, type, group, Tau_phase_enable_once(#group, &var##finfo))
-
 
 #define TAU_PHASE_CREATE_DYNAMIC(var, name, type, group) void *var##finfo = NULL; Tau_profile_c_timer(&var##finfo, name, type, group, Tau_phase_enable_once(#group, &var##finfo))
 
-
 #define TAU_PHASE_START(var) Tau_start_timer(var##finfo, 1, Tau_get_tid())
 #define TAU_PHASE_STOP(var) Tau_stop_timer(var##finfo, Tau_get_tid())
-
-
 
 #define TAU_ENABLE_GROUP(group)			Tau_enable_group(group);
 #define TAU_DISABLE_GROUP(group)		Tau_disable_group(group);
@@ -103,9 +106,6 @@ extern "C" {
 #define TAU_DISABLE_ALL_GROUPS()            	Tau_disable_all_groups() 
 #define TAU_DISABLE_GROUP_NAME(group)           Tau_disable_group_name(group)
 #define TAU_GET_PROFILE_GROUP(group)            Tau_get_profile_group(group)
-
-
-
 
 #define TAU_SET_USER_CLOCK_THREAD(value, tid)   Tau_set_user_clock_thread(value, tid);
 #define TAU_SET_USER_CLOCK(value)               Tau_set_user_clock(value);
@@ -121,6 +121,16 @@ extern "C" {
 #define TAU_PROFILE_SET_THREAD(thread)          Tau_set_thread(thread);
 #define TAU_PROFILE_GET_THREAD()                Tau_get_tid();
 
+#define TAU_PROFILE_SET_GROUP_NAME(newname) Tau_profile_set_group_name(tauFI,newname);
+#define TAU_PROFILE_TIMER_SET_NAME(t, newname)  Tau_profile_set_name(t,newname);
+#define TAU_PROFILE_TIMER_SET_TYPE(t, newname)  Tau_profile_set_type(t,newname);
+#define TAU_PROFILE_TIMER_SET_GROUP(t, id) Tau_profile_set_group(t,id);
+#define TAU_PROFILE_TIMER_SET_GROUP_NAME(t, newname) Tau_profile_set_group_name(t,newname);
+
+#define TAU_PROFILE_TIMER_GET_NAME(timer) Tau_profile_get_name(timer)
+#define TAU_PROFILE_TIMER_GET_TYPE(timer) Tau_profile_get_type(timer)
+#define TAU_PROFILE_TIMER_GET_GROUP(timer) Tau_profile_get_group(timer)
+#define TAU_PROFILE_TIMER_GET_GROUP_NAME(timer) Tau_profile_get_group_name(timer)
 
 #define TAU_REGISTER_THREAD()			Tau_register_thread();	
 #define TAU_REGISTER_FORK(nodeid, op) 		Tau_register_fork(nodeid, op);
@@ -149,8 +159,6 @@ extern "C" {
 #define TAU_QUERY_GET_EVENT_NAME(event, str)      str = Tau_query_event_name(event);
 #define TAU_QUERY_GET_PARENT_EVENT(event)         event = Tau_query_parent_event(event);
 
-
-
 /* Atomic Events */
 #define TAU_REGISTER_EVENT(event, name)	static void *event = 0; \
                                  if (event == 0) event = Tau_get_userevent(name);
@@ -159,6 +167,8 @@ extern "C" {
  
 #define TAU_REGISTER_CONTEXT_EVENT(event, name)	static void *event = 0; \
                                  if (event == 0) Tau_get_context_userevent(&event, name);  
+
+#define TAU_TRIGGER_CONTEXT_EVENT(eventname, eventvalue) Tau_trigger_context_event(eventname, eventvalue)
 #define TAU_EVENT(event, data)			Tau_userevent(event, data);
 #define TAU_EVENT_THREAD(event, data, tid)				Tau_userevent_thread(event, data, tid)
 #define TAU_CONTEXT_EVENT(event, data)		Tau_context_userevent(event, data);
@@ -171,12 +181,8 @@ extern "C" {
 #define TAU_EVENT_DISABLE_MEAN(event)	Tau_event_disable_mean(event);
 #define TAU_EVENT_DISABLE_STDDEV(event) Tau_event_disable_stddev(event);
 
-
-
 #define TAU_DISABLE_CONTEXT_EVENT(event) Tau_disable_context_event(event);
 #define TAU_ENABLE_CONTEXT_EVENT(event) Tau_enable_context_event(event);
-
-
 
 #define TAU_ENABLE_TRACKING_MEMORY()	        Tau_enable_tracking_memory()
 #define TAU_DISABLE_TRACKING_MEMORY()	        Tau_disable_tracking_memory()
@@ -187,12 +193,7 @@ extern "C" {
 #define TAU_ENABLE_TRACKING_MEMORY_HEADROOM()	Tau_enable_tracking_memory_headroom()
 #define TAU_DISABLE_TRACKING_MEMORY_HEADROOM()	Tau_disable_tracking_memory_headroom()
 
-
 #define TAU_SET_INTERRUPT_INTERVAL(value)	Tau_set_interrupt_interval(value)
-
-
-
-
 
 #define TAU_GLOBAL_TIMER(timer, name, type, group) void *TauGlobal##timer(void) \
 { static void *ptr = NULL; \
@@ -203,7 +204,6 @@ extern "C" {
     Tau_start_timer(ptr, 0, Tau_get_tid()); }
 #define TAU_GLOBAL_TIMER_STOP()  Tau_global_stop();
 #define TAU_GLOBAL_TIMER_EXTERNAL(timer)  extern void* TauGlobal##timer(void);
-
 
 #define TAU_GLOBAL_PHASE(timer, name, type, group) void * TauGlobalPhase##timer(void) \
 { static void *ptr = NULL; \
@@ -227,7 +227,6 @@ extern "C" {
 
 #define TAU_PROFILE_SNAPSHOT(name)              Tau_profile_snapshot(name);
 #define TAU_PROFILE_SNAPSHOT_1L(name, expr)     Tau_profile_snapshot_1l(name, expr);
-
 
 // metadata functions
 
@@ -288,13 +287,11 @@ extern "C" {
 
 #define TAU_METADATA_OBJECT_PUT(object, name, value) Tau_metadata_object_put(object, name, value);
 
-
 #ifdef TAU_PROFILEPARAM
 #define TAU_PROFILE_PARAM1L(data,name)  	Tau_profile_param1l(data,name)
 #else  /* TAU_PROFILEPARAM */
 #define TAU_PROFILE_PARAM1L(data,name)  	
 #endif /* TAU_PROFILEPARAM */
-
 
 #define TAU_TRACE_SENDMSG(type, destination, length) \
         Tau_trace_sendmsg(type, destination, length);
@@ -306,10 +303,6 @@ extern "C" {
 #define TAU_TRACE_RECVMSG_REMOTE(type, source, length, remoteid) \
         Tau_trace_recvmsg_remote(type, source, length, remoteid);
 
-
-
-
-
 #define TAU_PROFILER_CREATE(handle, name, type, group)  handle=Tau_get_profiler(name, type, group, #group);
 #define TAU_PROFILER_START(handle) Tau_start_timer(handle, 0, Tau_get_tid());
 #define TAU_PROFILER_STOP(handle) Tau_stop_timer(handle, Tau_get_tid());
@@ -318,7 +311,6 @@ extern "C" {
 #define TAU_PROFILER_GET_CALLS(handle, number) Tau_get_calls(handle, number, Tau_get_tid())
 #define TAU_PROFILER_GET_CHILD_CALLS(handle, number) Tau_get_child_calls(handle, number, Tau_get_tid());
 #define TAU_PROFILER_GET_COUNTER_INFO(counters, numcounters) Tau_get_counter_info((const char ***)counters, numcounters);
-
 
 #define TAU_CREATE_TASK(taskid) taskid = Tau_create_task()
 #define TAU_PROFILER_START_TASK(handle, taskid) Tau_start_timer(handle, 0, taskid);
@@ -333,7 +325,6 @@ extern "C" {
 #define TAU_PROFILER_SET_CALLS_TASK(handle, number, taskid) Tau_set_calls(handle, number, taskid)
 #define TAU_PROFILER_SET_CHILD_CALLS_TASK(handle, number, taskid) Tau_set_child_calls(handle, number, taskid)
 
-
 #define TAU_BCAST_DATA(data)  	                Tau_bcast_data(data)
 #define TAU_REDUCE_DATA(data)  	                Tau_reduce_data(data)
 #define TAU_ALLTOALL_DATA(data)                 Tau_alltoall_data(data) 
@@ -345,8 +336,6 @@ extern "C" {
 #define TAU_REDUCESCATTER_DATA(data)  	        Tau_reducescatter_data(data)
 #define TAU_SCAN_DATA(data)  		        Tau_scan_data(data)
 
-
-
 /* dead macros */
 #define TAU_PROFILE_CALLSTACK()
 #define PROFILED_BLOCK(name, type)
@@ -354,12 +343,20 @@ extern "C" {
 #define TAU_DISABLE_TRACKING_MUSE_EVENTS()
 #define TAU_TRACK_MUSE_EVENTS()
 
+#endif /* TAU_FAPI */
+
+#endif /* TAU_ENABLED */
 
 
+/******************************************************************************
+* Function prototypes
+******************************************************************************/
 
-/****************************
-* Forward declarations
-*****************************/
+
+#ifdef __cplusplus
+extern "C" {
+#endif /* __cplusplus */
+
 
 TauGroup_t Tau_enable_all_groups(void);
 TauGroup_t Tau_disable_all_groups(void);
@@ -368,14 +365,19 @@ void Tau_enable_group(TauGroup_t group);
 
 void Tau_start(const char *name);
 void Tau_stop(const char *name);
+void Tau_pure_start_task(const char *name, int tid);
+void Tau_pure_stop_task(const char *name, int tid);
 int Tau_stop_current_timer();
+int Tau_stop_current_timer_task(int tid);
 char * Tau_phase_enable(const char *group);
 
-void Tau_dynamic_start(char *name, int isPhase); 
-void Tau_dynamic_stop(char *name, int isPhase); 
-void Tau_static_phase_start(char *name);
-void Tau_static_phase_stop(char *name);
+void Tau_dynamic_start(char const * name, int isPhase);
+void Tau_dynamic_stop(char const * name, int isPhase);
+void Tau_static_phase_start(char const * name);
+void Tau_static_phase_stop(char const * name);
+
 void* Tau_get_profiler(const char *name, const char *type, TauGroup_t group, const char *gr_name);
+
 void Tau_get_calls(void *handle, long* values, int tid);
 void Tau_set_calls(void *handle, long values, int tid);
 void Tau_get_child_calls(void *handle, long* values, int tid);
@@ -385,8 +387,9 @@ void Tau_set_inclusive_values(void *handle, double* values, int tid);
 void Tau_get_exclusive_values(void *handle, double* values, int tid);
 void Tau_set_exclusive_values(void *handle, double* values, int tid);
 void Tau_get_counter_info(const char ***counterlist, int *numcounters);
+
+int TAUDECL Tau_get_local_tid(void);
 int TAUDECL Tau_get_tid(void);
-int TAUDECL Tau_create_tid(void);
 int TAUDECL Tau_get_node(void);
 int  Tau_create_task(void);
 void Tau_destructor_trigger();
@@ -401,29 +404,24 @@ const char *Tau_profile_get_name(void *ptr);
 const char *Tau_profile_get_type(void *ptr);
 TauGroup_t Tau_profile_get_group(void *ptr);
 
-
-
 int Tau_global_get_insideTAU();
-int Tau_global_get_insideTAU_tid(int tid);
 int Tau_global_incr_insideTAU();
 int Tau_global_decr_insideTAU();
-int Tau_global_incr_insideTAU_tid(int tid);
-int Tau_global_decr_insideTAU_tid(int tid);
 int Tau_global_getLightsOut();
 void Tau_global_setLightsOut();
 
 long Tau_convert_ptr_to_long(void *ptr);
 unsigned long Tau_convert_ptr_to_unsigned_long(void *ptr);
 
-
 /* Runtime "context" access */
 void *Tau_query_current_event();
 const char *Tau_query_event_name(void *event);
 void *Tau_query_parent_event(void *event);
 
-
 void Tau_disable_context_event(void *event);
 void Tau_enable_context_event(void *event);
+
+void Tau_pure_context_userevent(void **u, const char *n);
 
 void Tau_the_function_list(const char ***functionList, int *num);
 int Tau_dump_prefix(const char *prefix);
@@ -434,16 +432,10 @@ void Tau_get_event_vals(const char **inUserEvents, int numUserEvents,
 				  int **numEvents, double **max, double **min,
 				   double **mean, double **sumSqr);
 
-
 void Tau_profile_dynamic_auto(int iteration, void **ptr, char *fname, char *type, TauGroup_t group, char *group_name, int isPhase);
 void Tau_exit(const char *msg);
 
-void Tau_start(const char *name);
-void Tau_stop(const char *name);
 void Tau_specify_mapping_data1(long data, const char *name);
-
-void *Tau_get_profiler(const char *name, const char *type, TauGroup_t group, const char *gr_name);
-
 
 void TAUDECL Tau_profile_c_timer(void **ptr, const char *fname, const char *type, TauGroup_t group, const char *group_name);
 
@@ -458,16 +450,22 @@ void TAUDECL Tau_wait_data(int data);
 void TAUDECL Tau_reducescatter_data(int data);
 void TAUDECL Tau_scan_data(int data);
 void TAUDECL Tau_set_node(int node);
+
 void TAUDECL Tau_start_timer(void *profiler, int phase, int tid);
-void TAUDECL Tau_lite_start_timer(void *profiler, int phase, int tid);
-int TAUDECL Tau_stop_timer(void *profiler, int tid); 
-int TAUDECL Tau_lite_stop_timer(void *profiler, int tid); 
+int TAUDECL Tau_stop_timer(void *profiler, int tid);
+void TAUDECL Tau_lite_start_timer(void *profiler, int phase);
+void TAUDECL Tau_lite_stop_timer(void *profiler);
+void TAUDECL Tau_pure_start(const char *name);
+void TAUDECL Tau_pure_stop(const char *name);
+
 void TAUDECL Tau_trace_sendmsg(int type, int destination, int length);
 void TAUDECL Tau_trace_recvmsg(int type, int source, int length);
 void TAUDECL Tau_trace_recvmsg_remote(int type, int source, int length, int remoteid);
 void TAUDECL Tau_trace_sendmsg_remote(int type, int destination, int length, int remoteid);
 void TAUDECL Tau_create_top_level_timer_if_necessary(void);
+void TAUDECL Tau_create_top_level_timer_if_necessary_task(int task);
 void TAUDECL Tau_stop_top_level_timer_if_necessary(void);
+void TAUDECL Tau_create_thread_state_if_necessary(char* name);
 
 // metadata functions
 void TAUDECL Tau_metadata(const char *name, const char *value);
@@ -508,8 +506,9 @@ void Tau_dump_function_values(const char **functionList, int num);
 void Tau_dump_function_values_incr(const char **functionList, int num);
 void Tau_register_thread();
 void Tau_register_fork(int nodeid, enum TauFork_t opcode);
-void* TAUDECL Tau_get_userevent(char *name);
-void Tau_get_context_userevent(void **ptr, char *name);
+void* TAUDECL Tau_get_userevent(char const * name);
+void Tau_get_context_userevent(void **ptr, const char *name);
+void Tau_trigger_context_event(const char *name, double data);
 void Tau_userevent(void *event, double data);
 void Tau_userevent_thread(void *event, double data, int tid);
 void Tau_context_userevent(void *event, double data);
@@ -521,8 +520,8 @@ void Tau_event_disable_min(void *event);
 void Tau_event_disable_max(void *event);
 void Tau_event_disable_mean(void *event);
 void Tau_event_disable_stddev(void *event);
-TauGroup_t Tau_enable_group_name(char *group);
-TauGroup_t Tau_disable_group_name(char *group);
+TauGroup_t Tau_enable_group_name(char const * group);
+TauGroup_t Tau_disable_group_name(char const * group);
 TauGroup_t Tau_get_profile_group(char *group);
 void Tau_track_memory(void);
 void Tau_enable_tracking_memory(void);
@@ -537,19 +536,6 @@ void Tau_profile_snapshot(const char *name);
 void Tau_profile_snapshot_1l(const char *name, int number);
 void Tau_collate_onlineDump();
 
-void Tau_dynamic_start(char *name, int isPhase); 
-void Tau_dynamic_stop(char *name, int isPhase); 
-void Tau_static_phase_start(char *name);
-void Tau_static_phase_stop(char *name);
-void Tau_profile_dynamic_auto(int iteration, void **ptr, char *fname, char *type, TauGroup_t group, char *group_name, int isPhase);
-
-void Tau_get_calls(void *handle, long* values, int tid);
-void Tau_get_child_calls(void *handle, long* values, int tid);
-void Tau_get_inclusive_values(void *handle, double* values, int tid);
-void Tau_get_exclusive_values(void *handle, double* values, int tid);
-void Tau_get_counter_info(const char ***counterlist, int *numcounters);
-
-
 void Tau_enable_tracking_memory_headroom();
 void Tau_disable_tracking_memory_headroom();
 void Tau_track_memory_here(void);
@@ -557,10 +543,8 @@ void Tau_track_memory_headroom(void);
 void Tau_track_memory_headroom_here(void);
 void Tau_profile_param1l(long data, const char *dataname);
 
-
-void Tau_global_addWriteHook(void (*hook)(void));
-void Tau_global_callWriteHooks();
-
+void Tau_mark_group_as_phase(void *ptr);
+char const * Tau_append_iteration_to_name(int iteration, char const * name, int slen);
 
 #ifdef __cplusplus
 /* Include the C++ API header */
@@ -578,35 +562,7 @@ void Tau_global_callWriteHooks();
 } /* for extern "C" */
 #endif /* __cplusplus */
 
-
-
-
-
-
-#define TAU_PROFILE_SET_GROUP_NAME(newname) Tau_profile_set_group_name(tauFI,newname);
-#define TAU_PROFILE_TIMER_SET_NAME(t, newname)	Tau_profile_set_name(t,newname);
-#define TAU_PROFILE_TIMER_SET_TYPE(t, newname)  Tau_profile_set_type(t,newname);
-#define TAU_PROFILE_TIMER_SET_GROUP(t, id) Tau_profile_set_group(t,id); 
-#define TAU_PROFILE_TIMER_SET_GROUP_NAME(t, newname) Tau_profile_set_group_name(t,newname);
-
-#define TAU_PROFILE_TIMER_GET_NAME(timer) Tau_profile_get_name(timer)
-#define TAU_PROFILE_TIMER_GET_TYPE(timer) Tau_profile_get_type(timer)
-#define TAU_PROFILE_TIMER_GET_GROUP(timer) Tau_profile_get_group(timer)
-#define TAU_PROFILE_TIMER_GET_GROUP_NAME(timer) Tau_profile_get_group_name(timer)
-
-
 /**************************************************************************/
-
-
-
-
-
-
-
-
-
-#endif /* TAU_ENABLED */
-
 
 #endif /* _TAU_API_H_ */
 /***************************************************************************

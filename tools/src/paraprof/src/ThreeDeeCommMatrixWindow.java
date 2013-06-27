@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Scanner;
 import java.util.StringTokenizer;
 
 import javax.swing.BorderFactory;
@@ -479,11 +480,11 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
                     UserEventProfile uep = it2.next();
                     if (uep != null && uep.getNumSamples() > 0) {
                         String event = uep.getName();
-                        if (event.startsWith("Message size sent to node ") && event.indexOf("=>") == -1) {
-                            foundData = true;
+                        if (event.startsWith("Message size") && event.indexOf("=>") == -1) {
+                            //foundData = true;
                             // split the string
-                            extractData(mapData, uep, selectedSnapshot, threadID, event, event, allPaths);
-                        } else if (event.startsWith("Message size sent to node ") && event.indexOf("=>") >= 0) {
+                            foundData = extractData(mapData, uep, selectedSnapshot, threadID, event, event, allPaths);
+                        } else if (event.startsWith("Message size") && event.indexOf("=>") >= 0) {
                             foundData = true;
                             StringTokenizer st = new StringTokenizer(event, ":");
                             String first = st.nextToken().trim();
@@ -512,47 +513,78 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         return mapData;
     }
 
-    private static void extractData(HeatMapData mapData, UserEventProfile uep, int selectedSnapshot, int thread, String event, String first, String path) {
-        double numEvents, eventMax, eventMin, eventMean, eventSumSqr, volume = 0;// stdev,
-        double[] empty = { 0, 0, 0, 0, 0, 0 };
+    private static boolean extractData(HeatMapData mapData, UserEventProfile uep, int selectedSnapshot, int thread, String event, String first, String path) {
 
-        StringTokenizer st = new StringTokenizer(first, "Message size sent to node ");
-        if (st.hasMoreTokens()) {
-            int receiver = Integer.parseInt(st.nextToken());
 
-            double[] pointData = mapData.get(thread, receiver, path);
-            if (pointData == null) {
-                pointData = empty;
-            }
-
-            numEvents = uep.getNumSamples(selectedSnapshot);
-            pointData[CALLS] += numEvents;
-
-            eventMax = uep.getMaxValue(selectedSnapshot);
-            pointData[MAX] = Math.max(eventMax, pointData[MAX]);
-
-            eventMin = uep.getMinValue(selectedSnapshot);
-            if (pointData[MIN] > 0) {
-                pointData[MIN] = Math.min(pointData[MIN], eventMin);
-            } else {
-                pointData[MIN] = eventMin;
-            }
-
-            // we'll recompute this later.
-            eventMean = uep.getMeanValue(selectedSnapshot);
-            pointData[MEAN] += eventMean;
-
-            // we'll recompute this later.
-            eventSumSqr = uep.getStdDev(selectedSnapshot);
-            pointData[STDDEV] += eventSumSqr;
-
-            volume = numEvents * eventMean;
-            pointData[VOLUME] += volume;
-            mapData.put(thread, receiver, path, pointData);
+    	if(first.contains("all nodes")){
+    		return false;
+    	}
+    	int receiver;
+     	int sender;
+        Scanner st = new Scanner(first);
+        int readInt = -1;
+        while(st.hasNext()){
+        	if(!st.hasNextInt()){
+        		st.next();
+        	}else{
+        		readInt =st.nextInt();
+        	}
         }
+        if (readInt == -1) return false; 
+        if(readInt>=mapData.getSize())
+        {
+        	System.err.printf("Warning: %s but there is no node %d.\n",event,readInt);
+        	return false;
+        }
+        if(first.contains("sent")){
+        	receiver = readInt;
+        	sender = thread; 
+        	addHeadMapData(mapData,uep,sender,receiver, path, selectedSnapshot);
+        	return true;
+        }else if (first.contains("received")){
+        	sender = readInt;
+        	receiver = thread;
+        	addHeadMapData(mapData,uep,sender,receiver, path, selectedSnapshot);
+        	return true;
+        }   
+        return false;
     }
 
-    private void copyMatrix(float[][] dest, float[][] src, int size) {
+    private static void addHeadMapData(HeatMapData mapData, UserEventProfile uep,int sender,int receiver, String path, int selectedSnapshot) {
+        double numEvents, eventMax, eventMin, eventMean, eventSumSqr, volume = 0;// stdev,
+        double[] empty = { 0, 0, 0, 0, 0, 0 };
+        double[] pointData = mapData.get(sender, receiver,path);
+        if (pointData == null) {
+            pointData = empty;
+        }
+
+        numEvents = uep.getNumSamples(selectedSnapshot);
+        pointData[CALLS] += numEvents;
+
+        eventMax = uep.getMaxValue(selectedSnapshot);
+        pointData[MAX] = Math.max(eventMax, pointData[MAX]);
+
+        eventMin = uep.getMinValue(selectedSnapshot);
+        if (pointData[MIN] > 0) {
+            pointData[MIN] = Math.min(pointData[MIN], eventMin);
+        } else {
+            pointData[MIN] = eventMin;
+        }
+
+        // we'll recompute this later.
+        eventMean = uep.getMeanValue(selectedSnapshot);
+        pointData[MEAN] += eventMean;
+
+        // we'll recompute this later.
+        eventSumSqr = uep.getStdDev(selectedSnapshot);
+        pointData[STDDEV] += eventSumSqr;
+
+        volume = numEvents * eventMean;
+        pointData[VOLUME] += volume;
+        mapData.put(sender, receiver, path, pointData);		
+	}
+
+	private void copyMatrix(float[][] dest, float[][] src, int size) {
         for (int x = 0; x < size; x++) {
             for (int y = 0; y < size; y++) {
                 dest[x][y] = src[x][y];
@@ -633,8 +665,8 @@ public class ThreeDeeCommMatrixWindow extends JFrame implements ParaProfWindow, 
         VisTools.addCompItem(selectionPanel, new JLabel("Height value"), gbc, 0, 2, 1, 1);
         VisTools.addCompItem(selectionPanel, new JLabel("Color value"), gbc, 0, 3, 1, 1);
 
-        JPanel functionSelectorPanel = createSelectorPanel(-1, threadNames.size(), threadNames, 0);
-        JPanel nodeSelectorPanel = createSelectorPanel(0, threadNames.size(), threadNames, 1);
+        JPanel functionSelectorPanel = createSelectorPanel(-1, threadNames.size(), threadNames, 1);
+        JPanel nodeSelectorPanel = createSelectorPanel(0, threadNames.size(), threadNames, 0);
 
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weightx = 1.0;

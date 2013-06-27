@@ -53,7 +53,7 @@ public class CubeDataSource extends DataSource
 
 
 	private Map<scalasca.cubex.cube.Cnode, Function> cube2tau_cnodes = new HashMap<scalasca.cubex.cube.Cnode, Function>();
-	private Map<scalasca.cubex.cube.Thread, Thread> cube2tau_threads = new HashMap<scalasca.cubex.cube.Thread, Thread>();
+	private Map<scalasca.cubex.cube.Location, Thread> cube2tau_threads = new HashMap<scalasca.cubex.cube.Location, Thread>();
 	private Map<scalasca.cubex.cube.Metric, Metric> cube2tau_metrics = new HashMap<scalasca.cubex.cube.Metric, Metric>();
 
 
@@ -107,8 +107,8 @@ public class CubeDataSource extends DataSource
 			ArrayList<scalasca.cubex.cube.Cnode> root_cnodes = cube.get_root_cnodev();
 			ArrayList<scalasca.cubex.cube.Machine> machines = cube.get_machv();
 			ArrayList<scalasca.cubex.cube.Node> nodes = cube.get_nodev();
-			ArrayList<scalasca.cubex.cube.Process> processes = cube.get_procv();
-			ArrayList<scalasca.cubex.cube.Thread> threads = cube.get_thrdv();
+			ArrayList<scalasca.cubex.cube.LocationGroup> lgs = cube.get_location_groupv();
+			ArrayList<scalasca.cubex.cube.Location> locations = cube.get_locationv();
 			ArrayList<scalasca.cubex.cube.Cartesian> topologies = cube.get_cartv();
 
 			ArrayList<scalasca.cubex.cube.Metric> context_events = new ArrayList<scalasca.cubex.cube.Metric>(); // collect metrics from cube, which carries context events for further processing.
@@ -130,9 +130,9 @@ public class CubeDataSource extends DataSource
 
 			progress_message = "Construct TAU threads out of CUBE system tree...";
 			progress_value = 0.36; // sofar 36% done
-			for (scalasca.cubex.cube.Process process : processes)
+			for (scalasca.cubex.cube.LocationGroup lg : lgs)
 			{
-				addProcess(process);
+				addProcess(lg);
 			}
 
 			progress_message = "Construct TAU topologies out of CUBE topologies...";
@@ -154,9 +154,9 @@ public class CubeDataSource extends DataSource
 				getMetaData().put(prefix+" Size", createDimString(cart.get_dimv()));
 				getMetaData().put(prefix+" isTorus", createPeriodicityString(cart.get_periodv()));
 
-				for (scalasca.cubex.cube.Thread thread : threads)
+				for (scalasca.cubex.cube.Location loc : locations)
 				{
-					addThreadCoordinates(prefix, cart, thread);
+					addThreadCoordinates(prefix, cart, loc);
 				}
 				num++;
 			}
@@ -171,11 +171,12 @@ public class CubeDataSource extends DataSource
 
 				for (scalasca.cubex.cube.Cnode cnode : cnodes)
 				{
-					for (scalasca.cubex.cube.Thread thread : threads)
+					for (scalasca.cubex.cube.Location loc : locations)
 					{
-						double value = cube.get_sev(met, cnode, thread);
-
-						Thread _thread  = cube2tau_threads.get(thread);
+						double value = cube.get_sev(met, cnode, loc);
+						Thread _thread  = cube2tau_threads.get(loc);
+						if (_thread == null)
+                            continue;
 						Function _function  = cube2tau_cnodes.get(cnode);
 						FunctionProfile _fp = _thread.getFunctionProfile(_function);
 						Metric _met  = cube2tau_metrics.get(met);
@@ -199,11 +200,13 @@ public class CubeDataSource extends DataSource
 				progress_message = "Create visits for TAU (becuse Cube is missing the metric \"Visits\")";
 				for (scalasca.cubex.cube.Cnode cnode : cnodes)
 				{
-					for (scalasca.cubex.cube.Thread thread : threads)
+                    for (scalasca.cubex.cube.Location loc : locations)
 					{
 						double value = 1.;
 
-						Thread _thread  = cube2tau_threads.get(thread);
+						Thread _thread  = cube2tau_threads.get(loc);
+                        if (_thread == null)
+                            continue;
 						Function _function  = cube2tau_cnodes.get(cnode);
 						FunctionProfile _fp = _thread.getFunctionProfile(_function);
 
@@ -228,14 +231,14 @@ public class CubeDataSource extends DataSource
 				progress_message = "Load context events "+context_event.getDisplayName() +" from CUBE to TAU :  ( " + metric_number+ "/"+context_events.size() +  ")";
 				for (scalasca.cubex.cube.Cnode cnode : cnodes)
 				{
-					for (scalasca.cubex.cube.Thread thread : threads)
+                    for (scalasca.cubex.cube.Location loc : locations)
 					{
-						CubeTauAtomicMetric value = (CubeTauAtomicMetric)cube.get_sev_adv(context_event, cnode, thread);
+						CubeTauAtomicMetric value = (CubeTauAtomicMetric)cube.get_sev_adv(context_event, cnode, loc);
 
 						if (value.getN() != 0)
 						{
 
-							Thread _thread  = cube2tau_threads.get(thread);
+							Thread _thread  = cube2tau_threads.get(loc);
 							Function _function  = cube2tau_cnodes.get(cnode);
 
 							String name =  context_event.getDisplayName() + " : " + _function.toString();
@@ -270,8 +273,8 @@ public class CubeDataSource extends DataSource
 			root_cnodes = null;
 			machines = null;
 			nodes = null;
-			processes = null;
-			threads = null;
+			lgs = null;
+			locations = null;
 			topologies = null;
 			cube2tau_cnodes=null;
 			cube2tau_metrics=null;
@@ -561,22 +564,26 @@ public class CubeDataSource extends DataSource
 	}
 
 
-	private void addProcess(scalasca.cubex.cube.Process process)
+	private void addProcess(scalasca.cubex.cube.LocationGroup lg)
 	{
-		Node node = addNode((int)process.getRank());
+        if (lg.getType() != LocationGroupType.PROCESS)
+            return;
+		Node node = addNode((int)lg.getRank());
 		Context context = node.addContext(0);
 		int threadID=0;
-		for (Object _thread: process.getAllChildren().toArray())
+		for (Object _thread: lg.getAllChildren().toArray())
 		{
-			addThread((scalasca.cubex.cube.Thread)_thread, context,threadID);
+			addThread((scalasca.cubex.cube.Location)_thread, context,threadID);
 			threadID++;
 		}
 	}
 
-	private void addThread(scalasca.cubex.cube.Thread thread, Context context, int threadID)
+	private void addThread(scalasca.cubex.cube.Location location, Context context, int threadID)
 	{
+        if (location.getType() != LocationType.CPU_THREAD)
+            return;
 		Thread tau_thread = context.addThread(threadID, getNumberOfMetrics());
-		cube2tau_threads.put(thread, tau_thread);
+		cube2tau_threads.put(location, tau_thread);
 // 		System.out.println("         Added "+ thread.getName());
 	}
 
@@ -629,10 +636,12 @@ public class CubeDataSource extends DataSource
 	}
 
 
-	private void addThreadCoordinates(String prefix, scalasca.cubex.cube.Cartesian cart, scalasca.cubex.cube.Thread _cube_thread)
+	private void addThreadCoordinates(String prefix, scalasca.cubex.cube.Cartesian cart, scalasca.cubex.cube.Location _cube_thread)
 	{
 		ArrayList<Integer> _coords = cart.get_coordv (_cube_thread);
 		Thread	_tau_thread = cube2tau_threads.get(_cube_thread);
+		if (_tau_thread == null)
+            return;
 		if (_coords.size() == 0)
 		{
                     	_tau_thread.getMetaData().put(prefix+" Coords", "()");

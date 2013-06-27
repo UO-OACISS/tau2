@@ -1,16 +1,16 @@
 /****************************************************************************
-**			TAU Portable Profiling Package			   **
-**			http://www.cs.uoregon.edu/research/tau	           **
+**            TAU Portable Profiling Package               **
+**            http://www.cs.uoregon.edu/research/tau               **
 *****************************************************************************
-**    Copyright 2010  						   	   **
+**    Copyright 2010                                    **
 **    Department of Computer and Information Science, University of Oregon **
 **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
 ****************************************************************************/
 /****************************************************************************
-**	File 		: TauMetaData.h  				   **
-**	Description 	: TAU Profiling Package				   **
-**	Contact		: tau-bugs@cs.uoregon.edu               	   **
-**	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
+**    File         : TauMetaData.h                     **
+**    Description     : TAU Profiling Package                   **
+**    Contact        : tau-bugs@cs.uoregon.edu                      **
+**    Documentation    : See http://www.cs.uoregon.edu/research/tau       **
 **                                                                         **
 **      Description     : This file contains metadata related routines     **
 **                                                                         **
@@ -42,24 +42,40 @@ class Tau_metadata_key {
   }
 };
 
+
 struct Tau_Metadata_Compare: std::binary_function<Tau_metadata_key,Tau_metadata_key,bool>
 {
   bool operator()(const Tau_metadata_key& lhs, const Tau_metadata_key& rhs) const { 
-    stringstream left;
-    stringstream right;
-	// what happens if timer_context is null? I guess it works...
+    
+    char *left;
+    char *right;
+    int allocate_left = 0;
+    int allocate_right = 0;
+
+	// we are using C methods, because the C++ methods didn't work with PGI on Cray XK6.
+
     if (lhs.timer_context == NULL) {
-      left << lhs.name;
+        left = lhs.name;
     } else {
-      left << lhs.name << lhs.timer_context << lhs.call_number << ":" << lhs.timestamp;
+	    allocate_left = strlen(lhs.name)+strlen(lhs.timer_context)+64;
+        left = (char *) calloc(allocate_left, sizeof(char));
+        sprintf(left, "%s%s%d:%llu", lhs.name, lhs.timer_context, lhs.call_number, lhs.timestamp);
     }
     if (rhs.timer_context == NULL) {
-      right << rhs.name ;
+        right = rhs.name;
     } else {
-      right << rhs.name << rhs.timer_context << rhs.call_number << ":" << rhs.timestamp;
+        allocate_right = strlen(rhs.name)+strlen(rhs.timer_context)+64;
+        right = (char *) calloc(allocate_right, sizeof(char));
+        sprintf(right, "%s%s%d:%llu", rhs.name, rhs.timer_context, rhs.call_number, rhs.timestamp);
     }
-    if (strcmp(left.str().c_str(), right.str().c_str()) < 0) return true;
-	return false;
+    bool result = strcmp(left, right) < 0;
+	if (allocate_left > 0) {
+        free(left);
+	}
+	if (allocate_right > 0) {
+        free(right);
+	}
+    return result;
   }
 };
 

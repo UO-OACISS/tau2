@@ -24,22 +24,6 @@ extern PERFDMF_EXPERIMENT*       perfdmf_create_experiments(int count);
 extern TAUDB_CONFIGURATION*      taudb_create_configuration();
 extern TAUDB_CONNECTION*         taudb_create_connection();
 extern TAUDB_DATA_SOURCE*        taudb_create_data_sources(int count);
-extern TAUDB_METRIC*             taudb_create_metrics(int count);
-extern TAUDB_TIME_RANGE*         taudb_create_time_ranges(int count);
-extern TAUDB_THREAD*             taudb_create_threads(int count);
-extern TAUDB_SECONDARY_METADATA* taudb_create_secondary_metadata(int count);
-extern TAUDB_PRIMARY_METADATA*   taudb_create_primary_metadata(int count);
-extern TAUDB_PRIMARY_METADATA*   taudb_resize_primary_metadata(int count, TAUDB_PRIMARY_METADATA* old_primary_metadata);
-extern TAUDB_COUNTER*            taudb_create_counters(int count);
-extern TAUDB_COUNTER_VALUE*      taudb_create_counter_values(int count);
-extern TAUDB_TIMER*              taudb_create_timers(int count);
-extern TAUDB_TIMER_PARAMETER*    taudb_create_timer_parameters(int count);
-extern TAUDB_TIMER_GROUP*        taudb_create_timer_groups(int count);
-extern TAUDB_TIMER_GROUP*        taudb_resize_timer_groups(int count, TAUDB_TIMER_GROUP* old_groups);
-extern TAUDB_TIMER_CALLPATH*     taudb_create_timer_callpaths(int count);
-extern TAUDB_TIMER_CALL_DATA*    taudb_create_timer_call_data(int count);
-extern TAUDB_TIMER_VALUE*        taudb_create_timer_values(int count);
-extern char*                     taudb_create_and_copy_string(const char* in_string);
 extern char*                     taudb_create_hash_key_2(int thread, const char* timer);
 extern char*                     taudb_create_hash_key_3(int thread, const char* timer, const char* metric);
 
@@ -72,5 +56,10 @@ extern char* taudb_get_value(TAUDB_CONNECTION *connection, int row, int column);
 extern char* taudb_get_binary_value(TAUDB_CONNECTION *connection, int row, int column);
 extern void taudb_clear_result(TAUDB_CONNECTION *connection);
 extern void taudb_close_transaction(TAUDB_CONNECTION *connection);
+extern void taudb_close_query(TAUDB_CONNECTION *connection);
+extern void taudb_prepare_statement(TAUDB_CONNECTION* connection, const char* statement_name, const char* statement, int nParams);
+extern int taudb_execute_statement(TAUDB_CONNECTION* connection, const char* statement_name, int nParams, const char ** paramValues);
+extern int taudb_try_execute_statement(TAUDB_CONNECTION* connection, const char* statement_name, int nParams, const char ** paramValues);
+
 
 #endif /* TAUDB_INTERNAL_H */

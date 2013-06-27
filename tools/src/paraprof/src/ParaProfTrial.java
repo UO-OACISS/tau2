@@ -843,7 +843,25 @@ public class ParaProfTrial extends Observable implements ParaProfTreeNodeUserObj
 		}
 		
 		if(!foundTopo){
-			keys = getDataSource().getThread(0, 0, 0).getMetaData().keySet();
+			Thread base =getDataSource().getThread(0, 0, 0);
+			if(base==null){
+				/*
+				 * If we don't have 0,0,0 get a list of all the threads. If any thread has more metadata than the first we assume that's the one with the core metadata. If any has less than the first we assume the first has the core metadata.
+				 */
+				List<Thread> threads = getDataSource().getThreads();
+				int num=threads.get(0).getMetaData().keySet().size();
+				for(int i=1;i<threads.size();i++){
+					int tmp =threads.get(i).getMetaData().keySet().size();
+					if(tmp>num){
+						base=threads.get(i);
+						break;
+					}else if(tmp<num){
+						base=threads.get(0);
+						break;
+					}
+				}
+			}
+			keys = base.getMetaData().keySet();
 			for(Iterator<MetaDataKey> it = keys.iterator(); it.hasNext();){
 				String key = it.next().name;
 				if((key.startsWith("Cray")&&key.contains("Nodename")))

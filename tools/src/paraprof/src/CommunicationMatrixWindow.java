@@ -12,6 +12,7 @@ import javax.swing.JFrame;
 import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 
+
 import edu.uoregon.tau.common.Utility;
 import edu.uoregon.tau.paraprof.interfaces.ParaProfWindow;
 import edu.uoregon.tau.perfdmf.DataSource;
@@ -81,11 +82,11 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Observer, Prin
                     UserEventProfile uep = it2.next();
                     if (uep != null && uep.getNumSamples(ppTrial.getSelectedSnapshot()) > 0) {
                         String event = uep.getName();
-                        if (event.startsWith("Message size sent to node ") && event.indexOf("=>") == -1) {
-                            foundData = true;
+                        if (event.startsWith("Message size") && event.indexOf("=>") == -1) {
+                            //foundData = true;
                             // split the string
-                            extractData(uep, threadID, event, event, allPaths);
-                        } else if (event.startsWith("Message size sent to node ") && event.indexOf("=>") >= 0) {
+                            foundData = extractData(uep, threadID, event, event, allPaths);
+                        } else if (event.startsWith("Message size") && event.indexOf("=>") >= 0) {
                             foundData = true;
                             StringTokenizer st = new StringTokenizer(event, ":");
                             String first = st.nextToken().trim();
@@ -128,45 +129,82 @@ public class CommunicationMatrixWindow implements ParaProfWindow, Observer, Prin
 
         return window;
     }
-
-    private void extractData(UserEventProfile uep, int thread, String event, String first, String path) {
-        double numEvents, eventMax, eventMin, eventMean, eventSumSqr,volume = 0;// stdev
-        double[] empty = { 0, 0, 0, 0, 0, 0 };
-
-        StringTokenizer st = new StringTokenizer(first, "Message size sent to node ");
-        if (st.hasMoreTokens()) {
-            int receiver = Integer.parseInt(st.nextToken());
-
-            double[] pointData = mapData.get(thread, receiver, path);
-            if (pointData == null) {
-                pointData = empty;
-            }
-
-            numEvents = uep.getNumSamples(ppTrial.getSelectedSnapshot());
-            pointData[COUNT] += numEvents;
-
-            eventMax = uep.getMaxValue(ppTrial.getSelectedSnapshot());
-            pointData[MAX] = Math.max(eventMax, pointData[MAX]);
-
-            eventMin = uep.getMinValue(ppTrial.getSelectedSnapshot());
-            if (pointData[MIN] > 0) {
-                pointData[MIN] = Math.min(pointData[MIN], eventMin);
-            } else {
-                pointData[MIN] = eventMin;
-            }
-
-            // we'll recompute this later.
-            eventMean = uep.getMeanValue(ppTrial.getSelectedSnapshot());
-            pointData[MEAN] += eventMean;
-
-            // we'll recompute this later.
-            eventSumSqr = uep.getStdDev(ppTrial.getSelectedSnapshot());
-            pointData[STDDEV] += eventSumSqr;
-
-            volume = numEvents * eventMean;
-            pointData[VOLUME] += volume;
-            mapData.put(thread, receiver, path, pointData);
+/**
+ * Returns true if valid data is found, otherwise false.
+ * @param uep
+ * @param thread
+ * @param event
+ * @param first
+ * @param path
+ * @return
+ */
+    private boolean extractData(UserEventProfile uep, int thread, String event, String first, String path) {
+    	if(first.contains("all nodes")){
+    		return false;
+    	}
+    	int receiver;
+     	int sender;
+        Scanner st = new Scanner(first);
+        int readInt = -1;
+        while(st.hasNext()){
+        	if(!st.hasNextInt()){
+        		st.next();
+        	}else{
+        		readInt =st.nextInt();
+        	}
         }
+        if(readInt ==-1) return false;
+if(readInt>=size)
+{
+	System.err.printf("Warning: %s but there is no node %d.\n",event,readInt);
+	return false;
+}
+        if(first.contains("sent")){
+        	receiver = readInt;
+        	sender = thread; 
+            addMapData(uep,sender,receiver, path);
+            return true;
+        }else if (first.contains("received")){
+        	sender = readInt;
+        	receiver = thread;
+            addMapData(uep,sender,receiver, path);
+            return true;
+
+        }   
+        return false;
+    }
+    private void addMapData(UserEventProfile uep, int sender, int receiver, String function){
+    	   double numEvents, eventMax, eventMin, eventMean, eventSumSqr,volume = 0;// stdev
+           double[] empty = { 0, 0, 0, 0, 0, 0 };
+    	 double[] pointData = mapData.get(sender, receiver, function);
+         if (pointData == null) {
+             pointData = empty;
+         }
+
+         numEvents = uep.getNumSamples(ppTrial.getSelectedSnapshot());
+         pointData[COUNT] += numEvents;
+
+         eventMax = uep.getMaxValue(ppTrial.getSelectedSnapshot());
+         pointData[MAX] = Math.max(eventMax, pointData[MAX]);
+
+         eventMin = uep.getMinValue(ppTrial.getSelectedSnapshot());
+         if (pointData[MIN] > 0) {
+             pointData[MIN] = Math.min(pointData[MIN], eventMin);
+         } else {
+             pointData[MIN] = eventMin;
+         }
+
+         // we'll recompute this later.
+         eventMean = uep.getMeanValue(ppTrial.getSelectedSnapshot());
+         pointData[MEAN] += eventMean;
+
+         // we'll recompute this later.
+         eventSumSqr = uep.getStdDev(ppTrial.getSelectedSnapshot());
+         pointData[STDDEV] += eventSumSqr;
+
+         volume = numEvents * eventMean;
+         pointData[VOLUME] += volume;
+         mapData.put(sender, receiver, function, pointData);
     }
 
     public JFrame getWindow() {

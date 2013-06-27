@@ -1,0 +1,5 @@
+# Specify exclude/include lists in this file.
+BEGIN_EXCLUDE_LIST
+"#multiply#"
+"#report_num_threads#"
+END_EXCLUDE_LIST

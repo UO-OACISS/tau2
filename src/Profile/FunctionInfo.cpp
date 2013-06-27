@@ -140,50 +140,57 @@ static char *strip_tau_group(const char *ProfileGroupName) {
 //////////////////////////////////////////////////////////////////////
 // FunctionInfoInit is called by all four forms of FunctionInfo ctor
 //////////////////////////////////////////////////////////////////////
-void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, 
-	const char *ProfileGroupName, bool InitData, int tid) {
-
+void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup, const char *ProfileGroupName, bool InitData, int tid)
+{
   /* Make sure TAU is initialized */
-  static int flag = 1;
+  static bool flag = true;
   if (flag) {
-    flag = 0;
+    flag = false;
     Tau_init_initializeTAU();
   }
 
-  Tau_global_incr_insideTAU_tid(tid);
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
+  // Use LockDB to avoid a possible race condition.
+  RtsLayer::LockDB();
 
   //Need to keep track of all the groups this function is a member of.
   AllGroups = strip_tau_group(ProfileGroupName);
 
-  RtsLayer::LockDB();
-  // Use LockDB to avoid a possible race condition.
+#ifndef TAU_WINDOWS
+  // Necessary for signal-reentrancy to ensure the mmap memory manager
+  //   is ready at this point.
+  Tau_MemMgr_initIfNecessary();
+#endif  
 
   GroupName = strdup(RtsLayer::PrimaryGroup(AllGroups).c_str());
 
   // Since FunctionInfo constructor is called once for each function (static)
   // we know that it couldn't be already on the call stack.
 
-  
   //Add function name to the name list.
   TauProfiler_theFunctionList(NULL, NULL, true, (const char *)GetName());
-  
+
   if (InitData) {
-    for (int i=0; i < TAU_MAX_THREADS; i++) {
-      NumCalls[i] = 0;
+    for (int i = 0; i < TAU_MAX_THREADS; i++) {
       SetAlreadyOnStack(false, i);
+      NumCalls[i] = 0;
       NumSubrs[i] = 0;
-      for(int j=0;j<Tau_Global_numCounters;j++){
-	ExclTime[i][j] = 0;
-	InclTime[i][j] = 0;
-      } 
+      for (int j = 0; j < Tau_Global_numCounters; j++) {
+        ExclTime[i][j] = 0;
+        InclTime[i][j] = 0;
+        dumpExclusiveValues[i][j] = 0;
+        dumpInclusiveValues[i][j] = 0;
+      }
     }
   }
-  
+
   // Make this a ptr to a list so that ~FunctionInfo doesn't destroy it.
-  
-  for (int i=0; i<TAU_MAX_THREADS; i++) {
-    MyProfileGroup_[i] = ProfileGroup;
+  for (int i = 0; i < TAU_MAX_THREADS; i++) {
+    MyProfileGroup_ = ProfileGroup;
   }
+
   // While accessing the global function database, lock it to ensure
   // an atomic operation in the push_back and size() operations. 
   // Important in the presence of concurrent threads.
@@ -196,21 +203,22 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
   //         requires the use of an actual malloc
   //         while in the middle of some other malloc call.
 #ifndef TAU_WINDOWS
-  for (int i=0; i<TAU_MAX_THREADS; i++) {
-    pathHistogram[i] = NULL;
-    // create structure only if EBS is required.
-    if (TauEnv_get_ebs_enabled()) {
-
-      // Necessary for signal-reentrancy to ensure the mmap memory manager
-      //   is ready at this point.
-      Tau_MemMgr_initIfNecessary(); 
-
-      // Thread-safe, all (const char *) parameters. This check removes
-      //   the need to create and allocate memory for EBS post-processed
-      //   objects.
-      if (strstr(ProfileGroupName, "TAU_SAMPLE") == NULL) {
-	pathHistogram[i] = new TauPathHashTable<TauPathAccumulator>(i);
-      }
+  // create structure only if EBS is required.
+  // Thread-safe, all (const char *) parameters. This check removes
+  //   the need to create and allocate memory for EBS post-processed
+  //   objects.
+  if (TauEnv_get_ebs_enabled() &&
+      !strstr(ProfileGroupName, "TAU_SAMPLE") &&
+      !strstr(ProfileGroupName, "TAU_INTERMEDIATE") &&
+      !strstr(ProfileGroupName, "TAU_OMP_STATE") &&
+      !strstr(ProfileGroupName, "TAU_UNWIND"))
+  {
+    for (int i = 0; i < TAU_MAX_THREADS; i++) {
+      pathHistogram[i] = new TauPathHashTable<TauPathAccumulator>(i);
+    }
+  } else {
+    for (int i = 0; i < TAU_MAX_THREADS; i++) {
+      pathHistogram[i] = NULL;
     }
   }
 
@@ -222,58 +230,57 @@ void FunctionInfo::FunctionInfoInit(TauGroup_t ProfileGroup,
 
 #endif // TAU_WINDOWS
 
-#ifdef TAU_VAMPIRTRACE
+#if defined(TAU_VAMPIRTRACE)
   string tau_vt_name(string(Name)+" "+string(Type));
   FunctionId = TAU_VT_DEF_REGION(tau_vt_name.c_str(), VT_NO_ID, VT_NO_LNO,
-			     VT_NO_LNO, GroupName, VT_FUNCTION);
+      VT_NO_LNO, GroupName, VT_FUNCTION);
   DEBUGPROFMSG("vt_def_region: "<<tau_vt_name<<": returns "<<FunctionId<<endl;);
-#else /* TAU_VAMPIRTRACE */
-#ifdef TAU_EPILOG
+#elif defined(TAU_EPILOG)
   string tau_elg_name(string(Name)+" "+string(Type));
   FunctionId = esd_def_region(tau_elg_name.c_str(), ELG_NO_ID, ELG_NO_LNO,
-			      ELG_NO_LNO, GroupName, ELG_FUNCTION);
+      ELG_NO_LNO, GroupName, ELG_FUNCTION);
   DEBUGPROFMSG("elg_def_region: "<<tau_elg_name<<": returns "<<FunctionId<<endl;);
-#else
-#ifdef TAU_SCOREP
+#elif defined(TAU_SCOREP)
   string tau_silc_name(string(Name)+" "+string(Type));
-if (strstr(ProfileGroupName, "TAU_PHASE") != NULL) {
-  FunctionId =  SCOREP_Tau_DefineRegion( tau_silc_name.c_str(),
-				   SCOREP_TAU_INVALID_SOURCE_FILE,
-				   SCOREP_TAU_INVALID_LINE_NO,
-				   SCOREP_TAU_INVALID_LINE_NO,
-				   SCOREP_TAU_ADAPTER_COMPILER,
-                                   SCOREP_TAU_REGION_PHASE
-				   );
+  if (strstr(ProfileGroupName, "TAU_PHASE") != NULL) {
+    FunctionId = SCOREP_Tau_DefineRegion( tau_silc_name.c_str(),
+        SCOREP_TAU_INVALID_SOURCE_FILE,
+        SCOREP_TAU_INVALID_LINE_NO,
+        SCOREP_TAU_INVALID_LINE_NO,
+        SCOREP_TAU_ADAPTER_COMPILER,
+        SCOREP_TAU_REGION_PHASE
+    );
 
-}else{
-  FunctionId =  SCOREP_Tau_DefineRegion( tau_silc_name.c_str(),
-				   SCOREP_TAU_INVALID_SOURCE_FILE,
-				   SCOREP_TAU_INVALID_LINE_NO,
-				   SCOREP_TAU_INVALID_LINE_NO,
-				   SCOREP_TAU_ADAPTER_COMPILER,
-				   SCOREP_TAU_REGION_FUNCTION
-				   );
-}
-#endif /* TAU_SCOREP */
-#endif /* TAU_EPILOG */
-#endif /* TAU_VAMPIRTRACE */
-  TauTraceSetFlushEvents(1);
-  RtsLayer::UnLockDB();
-  
-  DEBUGPROFMSG("nct "<< RtsLayer::myNode() <<"," 
-	       << RtsLayer::myContext() << ", " << tid 
-	       << " FunctionInfo::FunctionInfo(n,t) : Name : "<< GetName() 
-	       << " Group :  " << GetProfileGroup()
-	       << " Type : " << GetType() << endl;);
-  
+  } else {
+    FunctionId = SCOREP_Tau_DefineRegion( tau_silc_name.c_str(),
+        SCOREP_TAU_INVALID_SOURCE_FILE,
+        SCOREP_TAU_INVALID_LINE_NO,
+        SCOREP_TAU_INVALID_LINE_NO,
+        SCOREP_TAU_ADAPTER_COMPILER,
+        SCOREP_TAU_REGION_FUNCTION
+    );
+  }
+#endif
+
+  DEBUGPROFMSG("nct "<< RtsLayer::myNode() <<","
+      << RtsLayer::myContext() << ", " << tid
+      << " FunctionInfo::FunctionInfo(n,t) : Name : "<< GetName()
+      << " Group :  " << GetProfileGroup()
+      << " Type : " << GetType() << endl;);
+
 #ifdef TAU_PROFILEMEMORY
-  MemoryEvent = new TauUserEvent(string(string(Name)+" "+Type+" - Heap Memory Used (KB)").c_str());
-#endif /* TAU_PROFILEMEMORY */
-  
+  {
+    char * buff = new char[strlen(Name)+strlen(Type)+100];
+    sprintf(buff, "%s %s - Heap Memory Used (KB)", Name, Type);
+    MemoryEvent = new TauUserEvent(buff);
+    delete buff;
+  }
+#endif
+
 #ifdef TAU_PROFILEHEADROOM
   HeadroomEvent = new TauUserEvent(string(string(Name)+" "+Type+" - Memory Headroom Available (MB)").c_str());
 #endif /* TAU_PROFILEHEADROOM */
-  
+
 #ifdef RENCI_STFF
   for (int t=0; t < TAU_MAX_THREADS; t++) {
     for (int i=0; i < TAU_MAX_COUNTERS; i++) {
@@ -281,33 +288,30 @@ if (strstr(ProfileGroupName, "TAU_PHASE") != NULL) {
     }
   }
 #endif //RENCI_STFF
-  
-  Tau_global_decr_insideTAU_tid(tid);
-  return;
+
+  TauTraceSetFlushEvents(1);
+  RtsLayer::UnLockDB();
 }
 
 //////////////////////////////////////////////////////////////////////
-FunctionInfo::FunctionInfo(const char *name, const char *type, 
-	TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData,
-	int tid) {
-  DEBUGPROFMSG("FunctionInfo::FunctionInfo: MyProfileGroup_ = " << ProfileGroup 
-	       << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
+FunctionInfo::FunctionInfo(const char *name, const char *type, TauGroup_t ProfileGroup,
+    const char *ProfileGroupName, bool InitData, int tid)
+{
+  DEBUGPROFMSG("FunctionInfo::FunctionInfo: MyProfileGroup_ = " << ProfileGroup << " Mask = " << RtsLayer::TheProfileMask() <<endl;);
   Name = strdup(name);
   Type = strdup(type);
   FullName = NULL;
-  
   FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
 }
 
 //////////////////////////////////////////////////////////////////////
 
-FunctionInfo::FunctionInfo(const char *name, const string& type, 
-			   TauGroup_t ProfileGroup , const char *ProfileGroupName, bool InitData,
-			   int tid) {
+FunctionInfo::FunctionInfo(const char *name, const string& type, TauGroup_t ProfileGroup,
+    const char *ProfileGroupName, bool InitData, int tid)
+{
   Name = strdup(name);
   Type = strdup(type.c_str());
   FullName = NULL;
-  
   FunctionInfoInit(ProfileGroup, ProfileGroupName, InitData, tid);
 }
 
@@ -421,98 +425,154 @@ void FunctionInfo::ResetExclTimeIfNegative(int tid) {
 
 
 //////////////////////////////////////////////////////////////////////
-void tauCreateFI(void **ptr, const char *name, const char *type, 
-		 TauGroup_t ProfileGroup , const char *ProfileGroupName) {
+void tauCreateFI(void **ptr, const char *name, const char *type, TauGroup_t ProfileGroup, const char *ProfileGroupName)
+{
   if (*ptr == 0) {
+    // Protect TAU from itself
+    TauInternalFunctionGuard protects_this_function;
 
+//Use The ENV lock here.
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::LockDB();
+    RtsLayer::LockEnv();
 #else
-    RtsLayer::LockDB();
+    RtsLayer::LockEnv();
 #endif
     if (*ptr == 0) {
       *ptr = new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
     }
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::UnLockDB();
+    RtsLayer::UnLockEnv();
 #else
-    RtsLayer::UnLockDB();
+    RtsLayer::UnLockEnv();
 #endif
-
   }
 }
 
-void tauCreateFI(void **ptr, const char *name, const string& type, 
-		 TauGroup_t ProfileGroup , const char *ProfileGroupName) {
+void tauCreateFI(void **ptr, const char *name, const string& type, TauGroup_t ProfileGroup,
+    const char *ProfileGroupName)
+{
   if (*ptr == 0) {
+    // Protect TAU from itself
+    TauInternalFunctionGuard protects_this_function;
+
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::LockDB();
+    RtsLayer::LockEnv();
 #else
-    RtsLayer::LockDB();
+    RtsLayer::LockEnv();
 #endif
     if (*ptr == 0) {
       *ptr = new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
     }
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::UnLockDB();
+    RtsLayer::UnLockEnv();
 #else
-    RtsLayer::UnLockDB();
+    RtsLayer::UnLockEnv();
+#endif
+
+  }
+}
+
+void tauCreateFI_signalSafe(void **ptr, const string& name, const char *type, TauGroup_t ProfileGroup,
+    const char *ProfileGroupName)
+{
+  if (*ptr == 0) {
+    // Protect TAU from itself
+    TauInternalFunctionGuard protects_this_function;
+
+#ifdef TAU_CHARM
+    if (RtsLayer::myNode() != -1)
+    RtsLayer::LockEnv();
+#else
+    RtsLayer::LockEnv();
+#endif
+    if (*ptr == 0) {
+    /* KAH - Whoops!! We can't call "new" here, because malloc is not
+     * safe in signal handling. therefore, use the special memory
+     * allocation routines */
+#ifndef TAU_WINDOWS
+    *ptr = Tau_MemMgr_malloc(RtsLayer::unsafeThreadId(), sizeof(FunctionInfo));
+    /*  now, use the pacement new function to create a object in
+     *  pre-allocated memory. NOTE - this memory needs to be explicitly
+     *  deallocated by explicitly calling the destructor. 
+     *  I think the best place for that is in the destructor for
+     *  the hash table. */
+    new(*ptr) FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
+#else
+    new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
+#endif
+    }
+#ifdef TAU_CHARM
+    if (RtsLayer::myNode() != -1)
+    RtsLayer::UnLockEnv();
+#else
+    RtsLayer::UnLockEnv();
 #endif
   }
 }
 
-void tauCreateFI(void **ptr, const string& name, const char *type, 
-		 TauGroup_t ProfileGroup , const char *ProfileGroupName) {
+void tauCreateFI(void **ptr, const string& name, const char *type, TauGroup_t ProfileGroup,
+    const char *ProfileGroupName)
+{
   if (*ptr == 0) {
+    // Protect TAU from itself
+    TauInternalFunctionGuard protects_this_function;
+
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::LockDB();
+    RtsLayer::LockEnv();
 #else
-    RtsLayer::LockDB();
+    RtsLayer::LockEnv();
 #endif
     if (*ptr == 0) {
       *ptr = new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
     }
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::UnLockDB();
+    RtsLayer::UnLockEnv();
 #else
-    RtsLayer::UnLockDB();
+    RtsLayer::UnLockEnv();
 #endif
   }
 }
 
-void tauCreateFI(void **ptr, const string& name, const string& type, 
-		 TauGroup_t ProfileGroup , const char *ProfileGroupName) {
+void tauCreateFI(void **ptr, const string& name, const string& type, TauGroup_t ProfileGroup,
+    const char *ProfileGroupName)
+{
   if (*ptr == 0) {
+    // Protect TAU from itself
+    TauInternalFunctionGuard protects_this_function;
+
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::LockDB();
+    RtsLayer::LockEnv();
 #else
-    RtsLayer::LockDB();
+    RtsLayer::LockEnv();
 #endif
     if (*ptr == 0) {
       *ptr = new FunctionInfo(name, type, ProfileGroup, ProfileGroupName);
     }
 #ifdef TAU_CHARM
     if (RtsLayer::myNode() != -1)
-      RtsLayer::UnLockDB();
+    RtsLayer::UnLockEnv();
 #else
-    RtsLayer::UnLockDB();
+    RtsLayer::UnLockEnv();
 #endif
   }
 }
 
 
-char const * FunctionInfo::GetFullName() {
+char const * FunctionInfo::GetFullName()
+{
+  if (!FullName) {
+    // Protect TAU from itself
+    TauInternalFunctionGuard protects_this_function;
 
-  if (FullName == NULL) {
     ostringstream ostr;
-    if (strlen(GetType()) > 0 && strcmp(GetType()," ") != 0) {
+    if (strlen(GetType()) > 0 && strcmp(GetType(), " ") != 0) {
       ostr << GetName() << " " << GetType() << ":GROUP:" << GetAllGroups();
     } else {
       ostr << GetName() << ":GROUP:" << GetAllGroups();
@@ -526,49 +586,37 @@ char const * FunctionInfo::GetFullName() {
 /* EBS Sampling Profiles */
 
 #ifndef TAU_WINDOWS
-void FunctionInfo::addPcSample(unsigned long *pcStack, int tid, double interval[TAU_MAX_COUNTERS]) {
-  //  static int numSamples = 0;
-  if (!TauEnv_get_ebs_enabled()) {
-    // This should be an error! We'll ignore it for now!
-    return;
-  }
-  // *CWL* - pcHistogram should never be NULL but ...
-  if (pathHistogram[tid] == NULL) {
-    // *CWL* - For the use of the PathHash, we *cannot* initialize the
-    //         mmap memory manager here! That risks signal safety issues.
-    pathHistogram[tid] = new TauPathHashTable<TauPathAccumulator>(tid);
-  }
+void FunctionInfo::addPcSample(unsigned long *pcStack, int tid, double interval[TAU_MAX_COUNTERS])
+{
   // Add to the mmap-ed histogram. We start with a temporary conversion. This
   //   becomes unnecessary once we stop using the vector.
-  //TAU_VERBOSE("TAU<%d,%d>: addPcSample()\n", RtsLayer::myNode(), RtsLayer::myThread());
-  TauPathAccumulator *accumulator;
-  accumulator = pathHistogram[tid]->get(pcStack);
+  TauPathAccumulator * accumulator = pathHistogram[tid]->get(pcStack);
   if (accumulator == NULL) {
     /* KAH - Whoops!! We can't call "new" here, because malloc is not
      * safe in signal handling. therefore, use the special memory
      * allocation routines */
-    //accumulator = new TauPathAccumulator(1,interval);
-    accumulator = (TauPathAccumulator*)Tau_MemMgr_malloc(1, sizeof(TauPathAccumulator));
-    /*  now, use the pacement new function to create a object in
-     *  pre-allocated memory. NOTE - this memory needs to be explicitly
-     *  deallocated by explicitly calling the destructor. 
-     *  I think the best place for that is in the destructor for
-     *  the hash table. */
-    new(accumulator) TauPathAccumulator(1,interval);
+    // accumulator = new TauPathAccumulator(1,interval);
+
+    /* Use placement new to create a object in pre-allocated memory.
+     * NOTE - this memory needs to be explicitly deallocated by calling the
+     * destructor. I think the best place for that is in the destructor for
+     * the hash table. */
+    accumulator = (TauPathAccumulator*)Tau_MemMgr_malloc(tid, sizeof(TauPathAccumulator));
+    new (accumulator) TauPathAccumulator(1, interval);
 
     bool success = pathHistogram[tid]->insert(pcStack, *accumulator);
     if (!success) {
-      fprintf(stderr,"addPcSample: Failed to insert sample.\n");
+      fprintf(stderr, "addPcSample: Failed to insert sample.\n");
     }
   } else {
-    (accumulator->count)++;
-    int i;
-    for (i = 0; i < Tau_Global_numCounters; i++) {
+    accumulator->count++;
+    for (int i = 0; i < Tau_Global_numCounters; i++) {
       accumulator->accumulator[i] += interval[i];
     }
   }
 }
 #endif // TAU_WINDOWS
+
 /***************************************************************************
  * $RCSfile: FunctionInfo.cpp,v $   $Author: amorris $
  * $Revision: 1.84 $   $Date: 2010/04/27 23:13:55 $

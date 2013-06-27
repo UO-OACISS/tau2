@@ -784,7 +784,7 @@ public class RMIPerfExplorerModel implements Serializable {
      * @return
      */
 	public String getViewSelectionPath (boolean joinApp, boolean joinExp, String dbType, int dbVersion) {
-		if(dbVersion >0 ) 		return ((View)fullPath[fullPath.length-1]).getWhereClause(dbType);
+		if(dbVersion >0 ) 		return ((View)fullPath[fullPath.length-1]).getJoinClause() + " " + ((View)fullPath[fullPath.length-1]).getWhereClause(dbType);
 
 		StringBuilder buf = new StringBuilder();
 		if (joinExp && dbVersion == 0)

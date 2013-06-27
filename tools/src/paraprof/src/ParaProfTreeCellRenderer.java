@@ -51,6 +51,11 @@ public class ParaProfTreeCellRenderer extends DefaultTreeCellRenderer {
             if (url != null) {
               this.setIcon(new ImageIcon(url));
             }
+        }else if (userObject instanceof ParaProfTrial) {
+            URL url = Utility.getResource("yellow-ball.gif");
+            if (url != null) {
+              this.setIcon(new ImageIcon(url));
+            }
         }
         return this;
     }

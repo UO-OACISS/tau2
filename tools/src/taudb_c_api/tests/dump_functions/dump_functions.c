@@ -5,20 +5,21 @@
 
 void dump_metadata(TAUDB_PRIMARY_METADATA *metadata) {
    printf("%d metadata fields:\n", HASH_COUNT(metadata));
-   TAUDB_PRIMARY_METADATA * cur;
-   for(cur = metadata; cur != NULL; cur = (TAUDB_PRIMARY_METADATA*)cur->hh.next) {
-     printf("  %s = %s\n", cur->name, cur->value);
+   TAUDB_PRIMARY_METADATA * current;
+   for (current = metadata; current != NULL; 
+		current = taudb_next_primary_metadata_by_name_from_trial(current)) {
+     printf("  %s = %s\n", current->name, current->value);
    }
 }
 
 void dump_secondary_metadata(TAUDB_SECONDARY_METADATA *metadata) {
    printf("%d secondary metadata fields:\n", HASH_COUNT(metadata));
-   TAUDB_SECONDARY_METADATA * cur;
-   for(cur = metadata; cur != NULL; cur = (TAUDB_SECONDARY_METADATA*)cur->hh.next) {
-     printf("  %s = %s\n", cur->name, cur->value[0]);
+   TAUDB_SECONDARY_METADATA * current;
+   for (current = metadata; current != NULL; 
+	    current = taudb_next_secondary_metadata_by_key_from_trial(current)) {
+     printf("  %s = %s\n", current->key.name, current->value[0]);
    }
 }
-
 
 void dump_trial(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter, boolean haveTrial) {
    TAUDB_TRIAL* trial;
@@ -47,7 +48,8 @@ void dump_timers(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter, boolean have
 
    // iterate over the hash
    TAUDB_TIMER* timer;
-   for (timer = timers ; timer != NULL ; timer=(TAUDB_TIMER*)timer->hh1.next) {
+   for (timer = timers; timer != NULL; 
+        timer = taudb_next_timer_by_name_from_trial(timer)) {
      printf("%s\n", timer->name);
    }
 
@@ -69,7 +71,8 @@ void dump_counters(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter, boolean ha
 
    // iterate over the hash
    TAUDB_COUNTER* counter;
-   for (counter = counters ; counter != NULL ; counter=(TAUDB_COUNTER*)counter->hh1.next) {
+   for (counter = counters ; counter != NULL ; 
+        counter = taudb_next_counter_by_name_from_trial(counter)) {
      printf("%s\n", counter->name);
    }
 
@@ -96,9 +99,11 @@ void dump_counter_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter, bool
    // iterate over the hash
    TAUDB_COUNTER* counter;
    TAUDB_THREAD* thread;
-   for (thread = threads ; thread != NULL ; thread=(TAUDB_THREAD*)thread->hh.next) {
+   for (thread = threads ; thread != NULL ; 
+        thread = taudb_next_thread_by_index_from_trial(thread)) {
      printf("\n\n");
-     for (counter = counters ; counter != NULL ; counter=(TAUDB_COUNTER*)counter->hh1.next) {
+     for (counter = counters ; counter != NULL ; 
+          counter = taudb_next_counter_by_name_from_trial(counter)) {
        TAUDB_COUNTER_VALUE* counter_value = taudb_get_counter_value(counter_values, counter, thread, NULL, NULL);
        printf("Thread %d, %s, %f\n", thread->index, counter->name, counter_value->mean_value);
      }
@@ -122,7 +127,8 @@ void dump_metrics(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter, boolean hav
 
    // iterate over the hash
    TAUDB_METRIC* metric;
-   for (metric = metrics ; metric != NULL ; metric=(TAUDB_METRIC*)metric->hh1.next) {
+   for (metric = metrics ; metric != NULL ; 
+        metric = taudb_next_metric_by_name_from_trial(metric)) {
      printf("%s\n", metric->name);
    }
 
@@ -144,7 +150,8 @@ void dump_threads(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter, boolean hav
 
    // iterate over the hash
    TAUDB_THREAD* thread;
-   for (thread = threads ; thread != NULL ; thread=(TAUDB_THREAD*)thread->hh.next) {
+   for (thread = threads ; thread != NULL ; 
+        thread = taudb_next_thread_by_index_from_trial(thread)) {
      printf("%d %d %d %d\n", thread->index, thread->node_rank, thread->context_rank, thread->thread_rank);
    }
 
@@ -169,7 +176,8 @@ void dump_timer_callpaths(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter, boo
 
    int total = 0;
    TAUDB_TIMER_CALLPATH* callpath;
-   for (callpath = callpaths ; callpath != NULL ; callpath=(TAUDB_TIMER_CALLPATH*)callpath->hh1.next) {
+   for (callpath = callpaths ; callpath != NULL ; 
+        callpath = taudb_next_timer_callpath_by_name_from_trial(callpath)) {
      if (callpath->parent == NULL) {
        printf("timer '%s', parent: (nil)\n", callpath->timer->name);
      } else {
@@ -209,8 +217,10 @@ void dump_timer_call_data(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter, boo
    TAUDB_TIMER_CALLPATH* callpath;
    TAUDB_TIMER_CALL_DATA* call_data;
    printf("Calls, Subroutines, Callpath\n");
-   for (thread = trial->threads ; thread != NULL ; thread=(TAUDB_THREAD*)thread->hh.next) {
-     for (callpath = trial->timer_callpaths_by_id ; callpath != NULL ; callpath=(TAUDB_TIMER_CALLPATH*)callpath->hh1.next) {
+   for (thread = trial->threads ; thread != NULL ; 
+        thread = taudb_next_thread_by_index_from_trial(thread)) {
+     for (callpath = trial->timer_callpaths_by_name ; callpath != NULL ; 
+          callpath = taudb_next_timer_callpath_by_name_from_trial(callpath)) {
        call_data = taudb_get_timer_call_data_by_key(trial->timer_call_data_by_key, callpath, thread, NULL);
        if (call_data != NULL) {
          printf("%d, %d, %d, '%s'\n", call_data->id, call_data->calls, call_data->subroutines, callpath->name);
@@ -254,11 +264,14 @@ void dump_timer_values(TAUDB_CONNECTION* connection, TAUDB_TRIAL* filter, boolea
    TAUDB_TIMER_VALUE* value;
    TAUDB_METRIC* metric;
    printf("Thread, Calls, Subroutines, Metric, Inclusive, Exclusive, Callpath\n");
-   for (thread = trial->threads ; thread != NULL ; thread=(TAUDB_THREAD*)thread->hh.next) {
-     for (callpath = trial->timer_callpaths_by_id ; callpath != NULL ; callpath=(TAUDB_TIMER_CALLPATH*)callpath->hh1.next) {
+   for (thread = trial->threads ; thread != NULL ; 
+        thread = taudb_next_thread_by_index_from_trial(thread)) {
+     for (callpath = trial->timer_callpaths_by_name ; callpath != NULL ; 
+          callpath = taudb_next_timer_callpath_by_name_from_trial(callpath)) {
        call_data = taudb_get_timer_call_data_by_key(trial->timer_call_data_by_id, callpath, thread, NULL);
        if (call_data != NULL) {
-         for (metric = trial->metrics_by_id ; metric != NULL ; metric=(TAUDB_METRIC*)metric->hh1.next) {
+         for (metric = trial->metrics_by_name ; metric != NULL ; 
+              metric = taudb_next_metric_by_name_from_trial(metric)) {
            value = taudb_get_timer_value(call_data, metric);
 		   if (value != NULL) {
              printf("%d, %d, %d, %s, %f, %f, '%s'\n", thread->index, call_data->calls, call_data->subroutines, metric->name, value->inclusive, value->exclusive, callpath->name);

@@ -10,6 +10,26 @@
 
 Change log:
 ------------
+Version 2.22 changes (from 2.21):
+1. Added support for TAUdb (formerly PerfDMF).
+2. Added support for GPI (www.gpi-site.com).
+3. Enhanced ParaProf 3D window configuration for Mac OS X, AMD64 architectures.
+4. Updated to OPARI2 1.0.6. 
+5. Updated Score-P's interface with TAU. 
+6. Updated communication matrix display for one-sided calls. 
+7. Improved TAU_SUMMARY=1 for tracking totals, max, and mean.
+8. Improved support for topology visualization in ParaProf
+9. Added CUPTI support for Cray OpenACC compilers.
+10. Improved CUDA device to device communication profiling.
+11. Added support for PEBIL based binary rewriter (tau_pebil_rewrite). 
+12. Added support for DyninstAPI 8.0.
+13. Added support for runtime bounds checking (tau_exec -memory_debug, -optMemDbg)14. Throttling overhead reduced for multi-threaded code.
+15. TAU_TRACK_CUDA_INSTRUCTIONS=<instruction> added to track instructions by each GPU kernel. Uses -lineinfo passed to nvcc for enhanced source info. 
+16. ParaProf, PerfExplorer enhancements.
+17. tau_show_libs lists extra static libs that are needed to link in TAU for tau_rewrite, tau_run. 
+18. OpenMP bug fixes.
+
+
 Version 2.21 changes (from 2.20):
 1. Added support for rewriting binaries using Maqao (tau_rewrite) using PDT 3.17+.
 2. Added support for event based sampling based on unwinding (TAU_EBS_UNWIND=1).
@@ -26,7 +46,7 @@ Version 2.21 changes (from 2.20):
 13. Added TAU_SUMMARY=1 and pprof -f profile.Min/Max with paraprof -dumpsummary to generate just min/max/stddev/mean statistics instead of per-node data.
 14. Added support for systemwide tracking using tau.conf. 
 15. Added support for MINGW compiler to create binaries for Windows.
-16. Added support for Cray XK6 CUDA with Cray CCE compilers v8.0.x.
+16. Added CUDA Occupancy calculator.
 17. Added support for UPC compiler scripts (tau_upc.sh, tauupc).
 18. Updated Opari2. 
 19. Added EBS based on callstack unwinding.
@@ -59,6 +79,7 @@ Version 2.21 changes (from 2.20):
 45. Opari support for multiple libraries in tau_compiler.sh (-optOpariLibs) for POMP2 registrations.
 46. CUPTI updates. 
 47. Added support for GPI wrapper [www.gpi-site.com]. 
+48. Added support for CUDA and CUPTI v5.0 for NVIDIA. 
 
 
 

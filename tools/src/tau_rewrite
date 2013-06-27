@@ -306,8 +306,31 @@ then
   outputdir=`pwd` 
 fi
 
+# Get the list of external libs
+prologue=""
+makefile_binding=`echo $theBinding | sed -e 's@shared@@g'`
+
+isStatic=false
+lddoutput=`ldd $infile`
+if [ $? = 1 ]; then
+  echoIfShortVerbose "STATIC EXECUTABLE $infile"
+  isStatic=true
+  TAU_INST_LIBRARY=$BASEDIR/lib/libtau$makefile_binding.a
+  echoIfShortVerbose "Using: $TAU_INST_LIBRARY"
+else
+  echoIfShortVerbose "Dynamic executable $infile"
+fi
+prologue="extlibs = { 
+`eval $BASEDIR/bin/tau_show_libs $BASEDIR/lib/Makefile.tau$makefile_binding`  
+};"
+
+if [ $isStatic = false ]; then
+  prologue=""
+fi
+
 # Now we write to the $outfile
-luafile="events = {
+luafile="$prologue
+events = {
   run_dir = \"$outputdir/\",
   functions_global_blacklist = {
           {subtype = \"stringlist\",value = {\"call_gmon_start\",\"_init\",\"_fini\",\"_start\",\"frame_dummy\"}},
@@ -322,7 +345,6 @@ luafile="events = {
   main_bin = {
         properties={
           enable_function_instrumentation = true, 
-          enable_demangling = true, 
           distinguish_inlined_functions = true,
           distinguish_suffix = \"_omp\", 
           generate_runfile   = true
@@ -453,11 +475,12 @@ else
     cat $outfile_1~ $outfile~ > $outfile
     chmod +x $outfile
     /bin/rm -f $outfile_1~ $outfile~
-    if [ $shortverbose = "false" -a $verbose = "false" ]
-    then
-      echo ""
+  fi
+  if [ $shortverbose = false -a $verbose = false ]
+  then
+    echo ""
 # Not executing /bin/rm -f instru_sessions.lua madras_trace.log tau_instr.log tau_rewrite.lua
-    fi
-    #/bin/rm -f tau_instr.log tau_empty.in
+  else 
+      /bin/rm -f tau_instr.log tau_empty.in tau_rewrite.lua
   fi
 fi

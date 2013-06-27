@@ -92,7 +92,7 @@ public class BarChart extends JPanel implements MouseListener, MouseMotionListen
     private boolean stacked = true;
 
     // normalized or not
-    private boolean normalized = true;
+    private boolean normalized = false;
     
     
 
