@@ -69,173 +69,171 @@
 //
 // 
 
+#include <stdio.h>
+#include <Python.h>
+#include <string>
+#include <map>
+
+#include <Profile/Profiler.h>
+
 #ifdef TAU_HPUX
 #include <limits>
 #endif /* TAU_HPUX */
-#include <Python.h>
 
-// Tau includes
-
-#include "Profile/Profiler.h"
-#include <stdio.h>
-#include <map>
 using namespace std;
 
+// tells whether a FunctionInfo object is a phase or not
+struct PhaseMap : public TAU_HASH_MAP<int, bool>
+{
+  virtual ~PhaseMap() {
+    Tau_destructor_trigger();
+  }
+};
 
-
-// Utility routines
-struct ltstr{
-	  bool operator()(const char* s1, const char* s2) const{
-		      return strcmp(s1, s2) < 0;
-		        }//operator()
+struct PyFunctionDB : public TAU_HASH_MAP<string, int>
+{
+  virtual ~PyFunctionDB() {
+    Tau_destructor_trigger();
+  }
 };
 
 
-// tells whether a FunctionInfo object is a phase or not
-static map<int, bool> phaseMap;
+PhaseMap & ThePhaseMap()
+{
+  static PhaseMap map;
+  return map;
+}
 
-static PyObject *createTimer(PyObject *self, PyObject *args, PyObject *kwargs, bool phase) {
-  // Extract name, type and group strings and return the id of the routine
-  int tauid = 0; 
-  char *name = "None";
-  char *type = "";
-  char *group = "TAU_PYTHON"; 
-  static char *argnames[] = { "name", "type", "group", NULL}; 
-  /* GLOBAL database of function names */
-  static map<const char*, int, ltstr> funcDB;
-  map<const char *, int, ltstr>::iterator it;
-  
+PyFunctionDB & ThePyFunctionDB()
+{
+  static PyFunctionDB db;
+  return db;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// Extract name, type and group strings and return the id of the routine
+///////////////////////////////////////////////////////////////////////////////
+static PyObject * createTimer(PyObject * self, PyObject * args, PyObject * kwargs, bool phase)
+{
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
+  static char * argnames[] = { "name", "type", "group", NULL };
+
+  int tauid = 0;
+  char * name = "None";
+  char * type = "";
+  char * group = "TAU_PYTHON";
+
   // Get Python arguments 
-  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|sss", argnames, 
-				   &name, &type, &group)) {
+  if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|sss", argnames, &name, &type, &group)) {
     return NULL;
   }
-#ifdef DEBUG
-  printf("Got Name = %s, Type = %s, Group = %s, tauid = %d\n", name, type, group, tauid);
-#endif /* DEBUG */
-  
-  char * functionName = new char[strlen(name) + strlen(type) +5]; // create a new storage - STL req.
-  sprintf (functionName,"%s %s",name,type);
-  if (( it = funcDB.find((const char *)functionName)) != funcDB.end()) {
-#ifdef DEBUG
-    printf("Found the name %s\n", functionName); 
-#endif /* DEBUG */
-    
-    tauid = (*it).second;
-    delete functionName; // don't need this if its already there.
-  } else {
 
+  // Format function name
+  char * buff = new char[strlen(name) + strlen(type) + 5];
+  sprintf(buff, "%s %s", name, type);
+  string functionName(buff);
+  delete buff;
+
+  PyFunctionDB & funcDB = ThePyFunctionDB();
+  PyFunctionDB::iterator it = funcDB.find(functionName);
+
+  if (it != funcDB.end()) {
+    tauid = it->second;
+  } else {
     if (phase) {
       // Add TAU_PHASE to the group
       group = Tau_phase_enable(group);
     }
-    TauGroup_t groupid = RtsLayer::getProfileGroup(group);
-    FunctionInfo *f = new FunctionInfo(functionName, "", groupid, group, true); 
-    tauid = TheFunctionDB().size() - 1;
-    // These two need to be an atomic operation if threads are involved. LockDB happens
-    // inside FunctionInfoInit()
-    
-    // Store the id in our map
-    funcDB[(const char *)functionName] = tauid; 
-    // Do not delete functionName, STL requirement!
 
-    if (phase) {
-      phaseMap[tauid] = true;
-    } else {
-      phaseMap[tauid] = false;
-    }
+    TauGroup_t groupid = RtsLayer::getProfileGroup(group);
+    FunctionInfo * f = new FunctionInfo(functionName, "", groupid, group, true);
+    tauid = TheFunctionDB().size() - 1;
+    funcDB[functionName] = tauid;
+    ThePhaseMap()[tauid] = phase;
   }
 
   return Py_BuildValue("i", tauid);
 }
 
+static int tau_check_and_set_nodeid(void)
+{
+  if (RtsLayer::myNode() == -1) {
+#ifndef TAU_MPI
+    TAU_PROFILE_SET_NODE(0);
+#endif /* TAU_MPI */
+  }
+  return 0;
+}
 
+
+///////////////////////////////////////////////////////////////////////////////
+// create non-phase timer
+///////////////////////////////////////////////////////////////////////////////
 char pytau_profileTimer__name__[] = "profileTimer";
 char pytau_profileTimer__doc__[] = "access or create a TAU timer";
-extern "C"
-PyObject * pytau_profileTimer(PyObject *self, PyObject *args, PyObject *kwargs)
+extern "C" PyObject * pytau_profileTimer(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-  // create non-phase timer
   return createTimer(self, args, kwargs, false);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// create phase timer
+///////////////////////////////////////////////////////////////////////////////
 char pytau_phase__name__[] = "phase";
 char pytau_phase__doc__[] = "access or create a TAU phase";
-extern "C"
-PyObject * pytau_phase(PyObject *self, PyObject *args, PyObject *kwargs)
+extern "C" PyObject * pytau_phase(PyObject *self, PyObject *args, PyObject *kwargs)
 {
-  // create phase timer
   return createTimer(self, args, kwargs, true);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// start timer
+///////////////////////////////////////////////////////////////////////////////
 char pytau_start__name__[] = "start";
 char pytau_start__doc__[] = "start a TAU timer";
-extern "C"
-PyObject * pytau_start(PyObject *self, PyObject *args)
+extern "C" PyObject * pytau_start(PyObject *self, PyObject *args)
 {
-    int id;
-    if (!PyArg_ParseTuple(args, "i", &id)) {
-      printf("Couldn't Parse the tuple!\n"); 
-      return NULL;
-    }
-    
-    FunctionInfo *f = TheFunctionDB()[id];
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
 
-#ifdef DEBUG
-    printf("Received timer Named %s, id = %d\n", f->GetName(), id);
-#endif /* DEBUG */
-    int tid = RtsLayer::myThread();
-    /* Get the FunctionInfo object */
+  int id;
+  if (!PyArg_ParseTuple(args, "i", &id)) {
+    printf("Couldn't Parse the tuple!\n");
+    return NULL;
+  }
+  FunctionInfo * f = TheFunctionDB()[id];
 
-    bool isPhase = phaseMap[id];
-    int phase = 0;
-    if (isPhase) {
-      phase = 1;
-    }
+  int phase = ThePhaseMap()[id] ? 1 : 0;
+  Tau_start_timer(f, phase, RtsLayer::myThread());
 
-    Tau_start_timer(f, phase, Tau_get_tid());
-
-    Py_INCREF(Py_None);
-    return Py_None;
-
+  Py_INCREF (Py_None);
+  return Py_None;
 }
 
-int tau_check_and_set_nodeid(void)
-{
-    if (RtsLayer::myNode() == -1)
-    {
-#ifndef TAU_MPI
-      TAU_PROFILE_SET_NODE(0);
-#endif /* TAU_MPI */
-    }
-    return 0;
-}
-
+///////////////////////////////////////////////////////////////////////////////
+// stop timer
+///////////////////////////////////////////////////////////////////////////////
 char pytau_stop__name__[] = "stop";
 char pytau_stop__doc__[] = "stop a TAU timer";
-extern "C"
-PyObject * pytau_stop(PyObject *self, PyObject *args)
+extern "C" PyObject * pytau_stop(PyObject *self, PyObject *args)
 {
-    int tid = RtsLayer::myThread();
-    static int taunode = tau_check_and_set_nodeid();
+  int tid = RtsLayer::myThread();
+  Profiler * p = TauInternal_CurrentProfiler(tid);
+  if (!p) {
+    printf("pytau_stop: Stack error. Profiler is NULL!");
+    return NULL;
+  }
 
-    Profiler *p = TauInternal_CurrentProfiler(tid);
-
-    if (p != (Profiler *) NULL) {
-      Tau_stop_timer(p->ThisFunction, Tau_get_tid());
-      Py_INCREF(Py_None);
-      return Py_None;
-    } else {
-      printf("pytau_stop: Stack error. Profiler is NULL!");
-      return NULL;
-    }
-
-    Py_INCREF(Py_None);
-    return Py_None;
+  Tau_stop_timer(p->ThisFunction, tid);
+  Py_INCREF (Py_None);
+  return Py_None;
 }
 
 // version
 // $Id: PyTimer.cpp,v 1.11 2009/03/26 19:15:39 sameer Exp $
 
 // End of file
-  
+

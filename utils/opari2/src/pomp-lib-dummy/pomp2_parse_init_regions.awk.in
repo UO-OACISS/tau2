@@ -1,3 +1,4 @@
+#!@OPARI2_AWK@ -f
 ##
 ## This file is part of the Score-P software (http://www.score-p.org)
 ##
@@ -39,40 +40,38 @@
 # Author: Christian Roessel <c.roessel@fz-juelich.de>
 #
 
-/_[0-9][0-9]*_[0-9][0-9]*_?_?$/ {  
-  for (i = 1; i <= NF; i++)
-  {
-    if (index($i,"POMP2_Init_reg") != 0)
+/_[0-9][0-9]*_[0-9][0-9]*_?_?$/ {
+  if (tolower($0) ~ /pomp2_init_reg/ && $0 ~ /[TD]/ )
+  {  
+    for (i = 1; i <= NF; i++)
     {
-      separator = "POMP2_Init_reg";
-    }
-    else if (index($i,"pomp2_init_reg") != 0)
-    {
-      separator = "pomp2_init_reg";
-    }
-    else if (index($i,"POMP2_INIT_REG") != 0)
-    {
-      separator = "POMP2_INIT_REG";
-    }
-    else
-    {
-      continue;
-    }
-
-    # $i looks like "POMP2_Init_reg_uniqueId_nRegions" or
-    # like "pomp2_init_reg_uniqueId_nRegions" or
-    # like "POMP2_INIT_REG_uniqueId_nRegions"
-    split ($i,splitResult,separator);
-    _uniqueId_nRegions = splitResult[2];
-    if (!(_uniqueId_nRegions in regions))
-    {
-      split(_uniqueId_nRegions, tokens, "_");
-
-      number_regions = tokens[3];
-      if( number_regions != 0 )
+      if (index($i,"POMP2_Init_reg") != 0)
       {
-         regions[_uniqueId_nRegions] = $i;
-         nRegions += number_regions;
+        separator = "POMP2_Init_reg";
+      }
+      else if (index($i,"pomp2_init_reg") != 0)
+      {
+        separator = "pomp2_init_reg";
+      }
+      else if (index($i,"POMP2_INIT_REG") != 0)
+      {
+        separator = "POMP2_INIT_REG";
+      }
+      else
+      {
+        continue;
+      }
+
+      # $i looks like "POMP2_Init_reg_uniqueId_nRegions" or
+      # like "pomp2_init_reg_uniqueId_nRegions" or
+      # like "POMP2_INIT_REG_uniqueId_nRegions"
+      split ($i,splitResult,separator);
+      _uniqueId_nRegions = splitResult[2];
+      if (!(_uniqueId_nRegions in regions))
+      {
+        regions[_uniqueId_nRegions] = $i;
+        split(_uniqueId_nRegions, tokens, "_");
+        nRegions += tokens[3];
       }
     }
   }

@@ -9,8 +9,8 @@ library interface version:
 
 package.major=1
 package.minor=0
-package.bugfix=6
-package.suffix=
+package.bugfix=7
+package.suffix=rc1
 
 # In the POMP2 case library.revision makes no sense as opari2 just provides
 # the interface definition and no (installed) implementation. So, set

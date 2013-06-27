@@ -1,0 +1,328 @@
+#!/bin/bash 
+
+LANG="C"
+export LANG
+
+eval `tau-config`
+
+if [ "x$PEBIL_BINARY" = "x" ]; then
+  pebil_bin=$BASEDIR/bin/pebil.static
+else
+  pebil_bin=$PEBIL_BINARY
+  echo "tau_rewrite: Using PEBIL binary from PEBIL_BINARY environment variable: $pebil_bin"
+fi
+
+if [ ! -x $pebil_bin ] 
+then
+  echo "$0: Couldn't locate pebil.static in PDT"
+  if [ -x $BASEDIR/bin/tau_run ]
+  then 
+    echo "$0: Using DyinstAPI for binary rewriting" 
+    arglist=""
+    lastarg=""
+    output_file_specified=false
+    for arg in "$@"
+    do 
+      arglist="$arglist $lastarg"
+      lastarg=$arg
+      if [ $arg = "-o" ]
+      then
+        output_file_specified=true
+      fi
+    done
+    if [ $output_file_specified = false ] 
+    then
+      arglist="$arglist -o"
+    fi
+    arglist="$arglist $lastarg" 
+    $BASEDIR/bin/tau_run $arglist
+    exit 1;
+  else
+    echo "$0: To use TAU's binary rewriting capabilities, please install PEBIL from PDT v3.19+ (x86_64 only at present) or DyninstAPI"
+    exit 1; 
+  fi
+fi
+
+
+echoIfVerbose () {
+    if [ $verbose = "true" ] ; then
+	echo -e "$1"
+    fi
+}
+
+echoIfShortVerbose () {
+    if [ $shortverbose = "true" ] ; then
+	echo -e "$1"
+    fi
+}
+
+usage()
+{
+    echo ""
+    echo "Usage: tau_pebil_rewrite [options] [--] <exe> <exe options>"
+    echo ""
+# Common options first
+    echo "Options:"
+
+    echo "        -o <outfile>       : specify instrumented output file"
+    options=`tau-config --list-options`
+    echo "        -T <$options> : specify TAU option"
+    echo "        -f <file>: Specify selective instrumentation file"
+    echo "        -loadlib=<file.so>   : specify additional load library"
+    echo "        -s : Dryrun without executing"
+    echo "        -v       : long verbose mode"
+    echo "        -v1       : short verbose mode"
+    echo "        -XrunTAUsh-<options> : specify TAU library directly"
+    echo ""
+    echo "Notes:"
+    echo "	Defaults if unspecified: -T MPI"
+    echo "	MPI is assumed unless SERIAL is specified"
+    echo ""
+    echo "Example:"
+    echo "    tau_pebil_rewrite -T papi,pdt a.out -o a.inst"
+    echo "    mpirun -np 4 ./a.inst"
+    echo ""
+    exit
+}
+
+if [ $# = 0 ] ; then
+    usage
+fi
+
+
+dryrun=false
+processT=false
+TauOptions=""
+TauOptionsExclude=""
+verbose=false
+shortverbose=false
+binding_specified=""
+binding_options=""
+extraloadlibs=""
+tauluafile="tau_rewrite.lua"
+processf="false"
+
+for arg in "$@" ; do
+  # Thanks to Bernd Mohr for the following that handles quotes and spaces (see configure for explanation)
+  modarg=`echo "x$arg" | sed -e 's/^x//' -e 's/"/\\\"/g' -e s,\',%@%\',g -e 's/%@%/\\\/g' -e 's/ /\\\ /g'`
+
+  if [ "$processT" = true ] ; then
+      binding_options=`echo $binding_options $arg | sed -e 's/,/ /g' | tr '[A-Z]' '[a-z]'`
+      processT="false"
+      shift
+  else
+    if [ "$processf" = true ] 
+    then
+      selectfile=$arg
+      selectopt="--inp $arg"
+      processf="false"
+      shift
+    else
+      case $arg in 
+	  -v|-d|-verbose|--verbose)
+	      verbose=true
+	      shift
+	      ;;
+	  -v1)
+	      shortverbose=true
+	      shift
+	      ;;
+	  -h|-help|--help)
+	      usage
+	      ;;
+	  -s)
+	      dryrun=true
+	      shift
+	      ;;
+	  -V)
+	      echo '$Id: tau_exec,v 1.19 2012/11/07 18:11:25 sameer Exp $';
+	      exit 0;
+	      ;;
+	  -T)
+	      processT=true
+	      shift
+	      ;;
+	  -tau:*)
+              binding_options="$binding_options `echo $arg | sed -e 's/-tau://' -e 's/,/ /g'`"
+	      shift
+              ;;
+	  -f)
+          processf=true
+          shift;;
+	  -loadlib=*)
+	      myarg=`echo $arg | sed 's/-loadlib=//'`
+              if [ "x$extraloadlibs" = "x" ]
+              then
+                extraloadlibs="$myarg"
+              else
+                extraloadlibs="$myarg $extraloadlibs"
+              fi
+	      shift
+              ;;
+	  -XrunTAU-*)
+	      myarg=`echo $arg | sed 's/-XrunTAU-//'`
+	      binding_specified="shared-$myarg"
+	      shift
+	      ;;
+	  -XrunTAUsh-*)
+	      myarg=`echo $arg | sed 's/-XrunTAUsh-//'`
+	      binding_specified="shared-$myarg"
+	      shift
+	      ;;
+	  --)
+	      shift
+	      break
+	      ;;
+	  -*)
+	      echo "Unknown option: $arg" >&2
+	      exit 1
+# First non-option signifies end of options. This would be much easier with getopt()
+	      ;;
+	  *)
+	      break
+	      ;;
+      esac
+    fi
+  fi
+done
+
+
+# choose TAU library
+new_binding_options=""
+if [ "x$binding_options" != "x" ]; then
+    for i in $binding_options ; do
+      case $i in 
+	  *)
+	      new_binding_options="$new_binding_options $i"
+	      ;;
+      esac
+    done
+fi
+binding_options="$new_binding_options"
+
+
+if [ "x$binding_specified" = "x" ] ; then
+    if [ "x$binding_options" = "x" ]; then
+	binding_options=$DEFAULT_BINDING
+    else
+        # Add MPI by default
+	serial=`echo $binding_options | grep serial`
+	if [ $? != 0 ] ; then
+           # add mpi if shmem is not specified
+	    shmem=`echo $binding_options | grep shmem`
+	    if [ $? != 0 ] ; then
+	        binding_options="$binding_options mpi"
+            fi
+	fi
+    fi
+    theBinding=`tau-config --binding $binding_options`
+    if [ $? != 0 ] ; then
+	exit 1
+    fi
+else
+    theBinding=$binding_specified
+fi
+
+
+
+    echoIfVerbose ""
+    echoIfVerbose "Program to run : $@"
+    echoIfVerbose ""
+
+if [ `uname -s ` = Darwin ]; then
+  apple=1
+  TAU_SHLIBX=.dylib
+else
+  apple=0
+  TAU_SHLIBX=.so
+fi
+
+TAUEX_LD_LIBRARY_PATH=$BASEDIR/lib/$theBinding:$LD_LIBRARY_PATH
+TAU_INST_LIBRARY=$BASEDIR/lib/$theBinding/libTAU$TAU_SHLIBX
+
+
+# add libraries specified by -loadlib=<foo.so>
+#TAU_INST_LIBRARY=${TAU_INST_LIBRARY}${extraloadlibs}
+
+# remove double colons
+#TAU_INST_LIBRARY=`echo $TAU_INST_LIBRARY | sed -e "s/::/:/g" -e "s/:$//"`
+
+if [ $apple = 1 ]; then
+  TAU_LDD='otool -L'
+else
+  TAU_LDD=ldd
+fi
+
+
+
+if [ $verbose = "true" ] ; then
+    echo "Matching bindings:"
+    tau-config --list-matching $binding_options
+    echo ""
+    echo "Using:"
+    echo "$theBinding"
+    echo ""
+    echo "Configuration:"
+    echo ""
+    echo "Setting LD_LIBRARY_PATH to $TAUEX_LD_LIBRARY_PATH"
+    echo "Using instrumentation library $TAU_INST_LIBRARY"
+    echo ""
+fi
+
+echoIfShortVerbose "Using: $TAU_INST_LIBRARY"
+echoIfShortVerbose "Additional libs = ${extraloadlibs}"
+
+processOutputFile=false
+# First argument is the executable
+infile="$arg"
+for arg in "$@" ; do
+  if [ "$processOutputFile" = true ]
+  then 
+    outfile=$arg
+    processOutputFile=false
+  else  
+    echoIfShortVerbose "arg  = $arg"
+    case $arg in 
+        -o) processOutputFile="true"
+	        shift;;
+        *) 
+	        shift;;
+    esac;
+  fi
+done
+
+echoIfShortVerbose "infile=$infile"
+if [ "x$selectopt" != "x" ] 
+then
+  echoIfShortVerbose "selectfile=$selectfile"
+fi
+
+if [ "x$outfile" = "x" ] 
+then
+  echoIfShortVerbose "infile=$infile, arg = $arg"
+  if [ "x$infile" = "x$arg" ] 
+  then 
+    outfile="$infile.tau_inst"
+    echo "$0: Output file written to $outfile"
+  else
+    outfile=$arg
+  fi
+fi
+
+echoIfShortVerbose "outfile=$outfile"
+
+commandline="$pebil_bin --tool TauFunctionTrace $selectopt --lnc $TAU_INST_LIBRARY --fbl $TAUROOT/etc/blacklist.txt --app $infile --out $outfile"
+
+if [ "$dryrun" = true ]
+then
+  echo "$commandline"
+else
+  eval `$commandline &> tau_instr.log `
+  echo "tau_rewrite: Binary instrumentation done using PEBIL technology"
+  if [ $verbose = true ] 
+  then
+    echo "$commandline"
+    cat tau_instr.log
+  fi
+
+fi

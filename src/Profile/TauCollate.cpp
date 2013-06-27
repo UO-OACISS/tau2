@@ -37,12 +37,12 @@
 #include <math.h>
 #include <strings.h>
 #include <stdarg.h>
+
+#define NDEBUG  // Disable to enable assertions
 #include <assert.h>
 
-// Moved from header file
-#ifdef __cplusplus
 using namespace std;
-#endif
+using namespace tau;
 
 #define DEBUG_NUM_CALLS
 #define DEBUG_FUNCTION_MAP
@@ -92,8 +92,7 @@ static double calculateMean(int count, double sum) {
 
 static double calculateStdDev(int count, double sumsqr, double mean) {
   double ret = 0.0;
-  TAU_VERBOSE("Collate calculateStdDev count [%d] sumsqr [%.16G] meansqr [%.16G]\n", 
-	      count, sumsqr, mean*mean);
+  //printf("Collate calculateStdDev count [%d] sumsqr [%.16G] meansqr [%.16G]\n", count, sumsqr, mean*mean);
   if (count <= 0) return 0.0;
   /*
   assert(count > 0);
@@ -400,8 +399,6 @@ int Tau_collate_get_local_threads(int id, bool isAtomic){
 					numThreadsLocal += 1;
 				}
 			}
-			DEBUG_NUM_CALLS("TAU: %d threads register event: %s.\n",
-			numThreadsLocal, userEvent->GetEventName());
     }
     else{/*It is a function*/
         FunctionInfo *fi = TheFunctionDB()[id];
@@ -588,7 +585,7 @@ void Tau_collate_compute_atomicStatistics(Tau_unify_object_t *atomicUnifier,
 			 globalNumThreads, numEventThreads);
 		
 			DEBUG_NUM_CALLS("TAU: %d threads call function: %s.\n",
-			numEventThreads[i], event->EventName.c_str());
+			numEventThreads[i], event->GetName().c_str());
     }    
   }
   PMPI_Op_free(&min_op);

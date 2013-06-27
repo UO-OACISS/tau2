@@ -1,5 +1,14 @@
 #include <Profile/TauGpuAdapterCupti.h>
 
+extern "C" void Tau_cupti_find_context_event(
+						TauContextUserEvent** u, 
+						const char *name
+						) {
+							Tau_pure_context_userevent((void **) u, name);
+							(*u)->SetContextEnabled(false);
+						}
+      
+
 extern "C" void Tau_cupti_register_metadata(
 						uint32_t deviceId,
 						GpuMetadata *metadata, 
@@ -79,4 +88,18 @@ extern "C" void Tau_cupti_register_gpu_event(
 							CuptiGpuEvent gpu_event = CuptiGpuEvent(name, 
 								deviceId, streamId, contextId, correlationId, gpu_attributes, number_of_attributes);
 							Tau_gpu_register_gpu_event(&gpu_event, start, stop);
+						}
+
+extern "C" void Tau_cupti_register_gpu_atomic_event(
+						const char *name,
+						uint32_t deviceId,
+						uint32_t streamId,
+						uint32_t contextId,
+						uint32_t correlationId,
+						GpuEventAttributes *gpu_attributes,
+						int number_of_attributes
+						) {
+							CuptiGpuEvent gpu_event = CuptiGpuEvent(name, 
+								deviceId, streamId, contextId, correlationId, gpu_attributes, number_of_attributes);
+							Tau_gpu_register_gpu_atomic_event(&gpu_event);
 						}

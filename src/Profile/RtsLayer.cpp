@@ -123,6 +123,10 @@ bool& RtsLayer::TheEnableInstrumentation(void) {
   return EnableInstrumentation;
 }
 
+extern "C" int Tau_RtsLayer_TheEnableInstrumentation(void) {
+  return (int)RtsLayer::TheEnableInstrumentation();
+}
+
 /////////////////////////////////////////////////////////////////////////
 long RtsLayer::GenerateUniqueId(void) {
   /* This routine is called in a locked region (RtsLayer::LockDB/UnLockDB)*/
@@ -164,7 +168,8 @@ ProfileMap_t& RtsLayer::TheProfileMap(void) {
 
 /////////////////////////////////////////////////////////////////////////
 
-TauGroup_t RtsLayer::getProfileGroup(char * ProfileGroup) {
+TauGroup_t RtsLayer::getProfileGroup(char const * ProfileGroup) {
+  TauInternalFunctionGuard protects_this_function;
   ProfileMap_t::iterator it = TheProfileMap().find(string(ProfileGroup));
   TauGroup_t gr;
   if (it == TheProfileMap().end()) {
@@ -182,18 +187,16 @@ TauGroup_t RtsLayer::getProfileGroup(char * ProfileGroup) {
 
 /////////////////////////////////////////////////////////////////////////
 
-TauGroup_t RtsLayer::disableProfileGroupName(char * ProfileGroup) {
-
-  return disableProfileGroup(getProfileGroup(ProfileGroup)); 
-
+TauGroup_t RtsLayer::disableProfileGroupName(char const * ProfileGroup) {
+  TauInternalFunctionGuard protects_this_function;
+  return disableProfileGroup(getProfileGroup(ProfileGroup));
 }
 
 /////////////////////////////////////////////////////////////////////////
 
-TauGroup_t RtsLayer::enableProfileGroupName(char * ProfileGroup) {
-
+TauGroup_t RtsLayer::enableProfileGroupName(char const * ProfileGroup) {
+  TauInternalFunctionGuard protects_this_function;
   return enableProfileGroup(getProfileGroup(ProfileGroup));
-
 }
 
 /////////////////////////////////////////////////////////////////////////
@@ -201,7 +204,7 @@ TauGroup_t RtsLayer::enableProfileGroupName(char * ProfileGroup) {
 TauGroup_t RtsLayer::generateProfileGroup(void) {
   static TauGroup_t key =  0x00000001;
   key = key << 1;
-  if (key == 0x0) key = 0x1; // cycle
+  if (!key) key = 0x1; // cycle
   return key;
 }
 
@@ -209,8 +212,7 @@ TauGroup_t RtsLayer::generateProfileGroup(void) {
 
 TauGroup_t RtsLayer::enableProfileGroup(TauGroup_t ProfileGroup) {
   TheProfileMask() |= ProfileGroup; // Add it to the mask
-  DEBUGPROFMSG("enableProfileGroup " << ProfileGroup <<" Mask = " 
-	<< TheProfileMask() << endl;);
+  DEBUGPROFMSG("enableProfileGroup " << ProfileGroup <<" Mask = " << TheProfileMask() << endl;);
   return TheProfileMask();
 }
 
@@ -235,8 +237,7 @@ TauGroup_t RtsLayer::disableAllGroups(void) {
 TauGroup_t RtsLayer::disableProfileGroup(TauGroup_t ProfileGroup) {
   if (TheProfileMask() & ProfileGroup) { // if it is already set 
     TheProfileMask() ^= ProfileGroup; // Delete it from the mask
-    DEBUGPROFMSG("disableProfileGroup " << ProfileGroup <<" Mask = " 
-	<< TheProfileMask() << endl;);
+    DEBUGPROFMSG("disableProfileGroup " << ProfileGroup <<" Mask = " << TheProfileMask() << endl;);
   } // if it is not in the mask, disableProfileGroup does nothing 
   return TheProfileMask();
 }
@@ -249,24 +250,24 @@ TauGroup_t RtsLayer::resetProfileGroup(void) {
 }
 
 /////////////////////////////////////////////////////////////////////////
-int RtsLayer::setMyNode(int NodeId, int tid) {
-#ifndef TAU_WINDOWS
-  TAU_VERBOSE("pid [%d] RtsLayer::setMyNode: %d\n", getpid(), NodeId);
-#endif
+int RtsLayer::setMyNode(int NodeId, int tid)
+{
+  TauInternalFunctionGuard protects_this_function;
+
 #if (TAU_MAX_THREADS != 1)
   int oldid = TheNode();
   int newid = NodeId;
   if ((oldid != -1) && (oldid != newid)) {
     /* ie if SET_NODE macro was invoked twice for a threaded program : as 
-       in MPI+JAVA where JAVA initializes it with pid and then MPI_INIT is 
-       invoked several thousand events later, and TAU computes the process rank
-       and invokes the SET_NODE with the correct rank. Handshaking between multiple
-       levels of instrumentation. */
-    
+     in MPI+JAVA where JAVA initializes it with pid and then MPI_INIT is
+     invoked several thousand events later, and TAU computes the process rank
+     and invokes the SET_NODE with the correct rank. Handshaking between multiple
+     levels of instrumentation. */
+
     if (TauEnv_get_tracing()) {
-      TauTraceReinitialize(oldid, newid, tid); 
+      TauTraceReinitialize(oldid, newid, tid);
     }
-  } 
+  }
 #endif // TRACING WITH THREADS
 
   TheNode() = NodeId;
@@ -414,13 +415,6 @@ int RtsLayer::getPid() {
   return getpid();
   #endif
 }
-
-// IA64 doesn't like this, commented out for now, it was only for debugging anyway
-// #ifdef __linux
-// #include <sys/types.h>
-// #include <linux/unistd.h>
-// _syscall0(pid_t,gettid)
-// #endif
 
 // C interface.
 extern "C" int Tau_RtsLayer_getTid()
@@ -594,39 +588,42 @@ int RtsLayer::setAndParseProfileGroups(char *prog, char *str) {
 }
 
 //////////////////////////////////////////////////////////////////////
-void RtsLayer::ProfileInit(int& argc, char**& argv) {
+void RtsLayer::ProfileInit(int& argc, char**& argv)
+{
   int i;
   int ret_argc;
   char **ret_argv;
 
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
 #ifdef TAU_COMPENSATE
   double* tover = TauGetTimerOverhead(TauNullTimerOverhead);
-  for (i = 0; i < TAU_MAX_COUNTERS; i++) { 
+  for (i = 0; i < TAU_MAX_COUNTERS; i++) {
     /* iterate through all counters and reset null overhead to zero 
-       if necessary */
+     if necessary */
     if (tover[i] < 0) tover[i] = 0;
   }
 #endif /* TAU_COMPENSATE */
-  
+
   ret_argc = 1;
   ret_argv = new char *[argc];
-  ret_argv[0] = argv[0]; // The program name 
+  ret_argv[0] = argv[0];    // The program name
 
-  for(i=1; i < argc; i++) {
-    if ( ( strcasecmp(argv[i], "--profile") == 0 ) ) {
-        // Enable the profile groups
-        if ( (i + 1) < argc && argv[i+1][0] != '-' )  { // options follow
-           RtsLayer::resetProfileGroup(); // set it to blank
-           RtsLayer::setAndParseProfileGroups(argv[0], argv[i+1]);
-	   i++; // ignore the argv after --profile 
-        }
+  for (i = 1; i < argc; i++) {
+    if ((strcasecmp(argv[i], "--profile") == 0)) {
+      // Enable the profile groups
+      if ((i + 1) < argc && argv[i + 1][0] != '-') {    // options follow
+        RtsLayer::resetProfileGroup();    // set it to blank
+        RtsLayer::setAndParseProfileGroups(argv[0], argv[i + 1]);
+        i++;    // ignore the argv after --profile
+      }
     } else {
-	ret_argv[ret_argc++] = argv[i];
+      ret_argv[ret_argc++] = argv[i];
     }
   }
   argc = ret_argc;
   argv = ret_argv;
-  return;
 }
 
 
@@ -674,23 +671,39 @@ bool RtsLayer::isCtorDtor(const char *name) {
 // This is needed in tracing as Vampir can handle only one group per
 // function. PrimaryGroup("TAU_FIELD | TAU_USER") should return "TAU_FIELD"
 //////////////////////////////////////////////////////////////////////
-string RtsLayer::PrimaryGroup(const char *ProfileGroupName) {
-  string groups = ProfileGroupName;
-  string primary = ProfileGroupName;
-  const char *separators = " |"; 
-  int start, stop, n;
+string RtsLayer::PrimaryGroup(const char *ProfileGroupName) 
+{
+  char c;
 
-  start = groups.find_first_not_of(separators, 0);
-  n = groups.length();
-  stop = groups.find_first_of(separators, start); 
+  char const * start = ProfileGroupName;
+  c = *start;
+  while (c) {
+    switch (c) {
+      case ' ':
+      case '|':
+        c = *(++start);
+        break;
+      default:
+        c = 0;
+        break;
+    }
+  }
 
-  if ((stop < 0) || (stop > n)) stop = n;
-  int end = stop - start;
+  char const * stop = start;
+  c = *stop;
+  while (c) {
+    switch (c) {
+      case ' ':
+      case '|':
+        c = 0;
+        break;
+      default:
+        c = *(++stop);
+        break;
+    }
+  }
 
-  if (end > 0 && end != stop)
-    primary = groups.substr(start, end) ;
-  return primary;
-
+  return string(start, (size_t)(stop - start));
 }
 
 

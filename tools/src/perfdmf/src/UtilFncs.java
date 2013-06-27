@@ -709,6 +709,10 @@ public class UtilFncs {
         case DataSource.GAMESS:
             dataSource = new GAMESSDataSource(sourceFiles[0]);
             break;
+            
+        case DataSource.DARSHAN:
+        	dataSource =  new DarshanDataSource(sourceFiles[0]);
+        	break;
 
         default:
             throw new RuntimeException("Programming error: unknown format id = " + fileType);

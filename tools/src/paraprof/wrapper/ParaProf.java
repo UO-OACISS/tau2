@@ -54,7 +54,7 @@ public class ParaProf implements ActionListener {
 	}
     }
 
-    private final static String VERSION = "Tue Oct  9 17:26:16 PDT 2012";
+    private final static String VERSION = "Wed May 15 12:29:08 PDT 2013";
 
     public static int defaultNumberPrecision = 6;
 
@@ -71,6 +71,8 @@ public class ParaProf implements ActionListener {
     private static int numWindowsOpen = 0;
 
     private static int fileType = DataSource.TAUPROFILE;
+    //If this is set to true then the user has specified snapshot format and we may have a series of snapshots from one trial.
+    private static boolean seriesSnap = false;
     private static File sourceFiles[] = new File[0];
     private static boolean fixNames = false;
     private static boolean monitorProfiles;
@@ -126,7 +128,7 @@ public class ParaProf implements ActionListener {
 		+ "  -f, --filetype <filetype>       Specify type of performance data, options are:\n"
 		+ "                                    profiles (default), pprof, dynaprof, mpip,\n"
 		+ "                                    gprof, psrun, hpm, packed, cube, hpc, ompp\n"
-		+ "                                    snap, perixml, gptl, ipm, google\n"
+		+ "                                    snap, perixml, gptl, ipm, google, darshan\n"
 		+ "  --range a-b:c                   Load only profiles from the given range(s) of processes\n"
 		+ "                                    Seperate individual ids or dash-defined ranges with colons\n"
 		+ "  -h, --help                      Display this help message\n" + "\n"
@@ -196,9 +198,18 @@ public class ParaProf implements ActionListener {
 			filelist.add(new File(file));
 		    }
 		}
-		paraProfManagerWindow.addTrial(app, experiment, (File[]) filelist.toArray(sourceFiles), fileType, fixNames, monitorProfiles, range);
-	    }else {
-		paraProfManagerWindow.addTrial(app, experiment, sourceFiles, fileType, fixNames, monitorProfiles, range);
+		paraProfManagerWindow.addTrial(experiment, (File[]) filelist.toArray(sourceFiles), fileType, fixNames, monitorProfiles, range);
+	    }
+	    //If it's not a series but it is a snapshot then open the files successively.
+	    else if(!seriesSnap&&fileType==DataSource.SNAP){
+	    	for (int i = 0; i < sourceFiles.length; i++) {
+			    File files[] = new File[1];
+			    files[0] = sourceFiles[i];
+			    paraProfManagerWindow.addTrial(app, experiment, files, fileType, fixNames, monitorProfiles);
+			}
+	    }
+	    else {
+		paraProfManagerWindow.addTrial(experiment, sourceFiles, fileType, fixNames, monitorProfiles, range);
 	    }
 	} catch (java.security.AccessControlException ace) {
 	    // running as Java Web Start without permission
@@ -535,7 +546,8 @@ public class ParaProf implements ActionListener {
 	    } else if (fileTypeString.equals("snapshot")) {
 		ParaProf.fileType = DataSource.SNAP;
 	    } else if (fileTypeString.equals("snap")) {
-		ParaProf.fileType = DataSource.SNAP;
+	    	seriesSnap=true;
+	    	ParaProf.fileType = DataSource.SNAP;
 	    } else if (fileTypeString.equals("ompp")) {
 		ParaProf.fileType = DataSource.OMPP;
 	    } else if (fileTypeString.equals("perixml")) {
@@ -548,7 +560,10 @@ public class ParaProf implements ActionListener {
 		ParaProf.fileType = DataSource.IPM;
 	    } else if (fileTypeString.equals("google")) {
 		ParaProf.fileType = DataSource.GOOGLE;
-	    } else {
+	    } else if (fileTypeString.equals("darshan")){
+	    ParaProf.fileType = DataSource.DARSHAN;
+	    }
+	    else {
 		System.err.println("Please enter a valid file type.");
 		ParaProf.usage();
 		System.exit(-1);

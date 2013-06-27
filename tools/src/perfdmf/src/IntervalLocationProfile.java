@@ -3,7 +3,9 @@ package edu.uoregon.tau.perfdmf;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Vector;
 
 import edu.uoregon.tau.perfdmf.database.DB;
@@ -463,45 +465,69 @@ public class IntervalLocationProfile extends Object {
             throws SQLException {
         // create a string to hit the database
         StringBuffer buf = new StringBuffer();
-        buf.append("select ms.interval_event, ");
-        buf.append("ms.inclusive_percentage, ms.inclusive, ");
-
-        if (db.getDBType().compareTo("oracle") == 0) {
-            buf.append("ms.exclusive_percentage, ms.excl, ");
-        } else {
-            buf.append("ms.exclusive_percentage, ms.exclusive, ");
-        }
-
-        if (db.getDBType().compareTo("derby") == 0) {
-            buf.append("ms.num_calls, ");
-        } else if (db.getDBType().compareTo("mysql") == 0) {
-            buf.append("ms.`call`, ");
-        } else {
-            buf.append("ms.call, ");
-        }
-        buf.append("ms.subroutines, ms.inclusive_per_call, ");
-        buf.append("ms.metric ");
-        buf.append("from " + db.getSchemaPrefix() + "interval_mean_summary ms ");
-        buf.append(whereClause);
-        buf.append(" order by ms.interval_event, ms.metric");
+    	if (db.getSchemaVersion() > 0) {
+    		buf.append("select tcd.timer_callpath, ");
+    		buf.append("tv.inclusive_percent, tv.inclusive_value, ");
+    		buf.append("tv.exclusive_percent, tv.exclusive_value, ");
+    		buf.append("tcd.calls, tcd.subroutines, ");
+    		buf.append("tv.metric from ");
+    		buf.append(db.getSchemaPrefix() + "timer_value tv left outer join ");
+    		buf.append(db.getSchemaPrefix() + "timer_call_data tcd on tv.timer_call_data = tcd.id ");
+    		buf.append("left outer join " + db.getSchemaPrefix() + "thread h on tcd.thread = h.id ");
+	        buf.append(whereClause);
+	        if (whereClause.length() > 3) {
+	        	buf.append(" and h.thread_index = -1 ");
+	        } else {
+	        	buf.append(" where h.thread_index = -1 ");
+	        }
+	        buf.append(" order by tcd.timer_callpath, tv.metric");
+    	} else {
+	        buf.append("select ms.interval_event, ");
+	        buf.append("ms.inclusive_percentage, ms.inclusive, ");
+	
+	        if (db.getDBType().compareTo("oracle") == 0) {
+	            buf.append("ms.exclusive_percentage, ms.excl, ");
+	        } else {
+	            buf.append("ms.exclusive_percentage, ms.exclusive, ");
+	        }
+	
+	        if (db.getDBType().compareTo("derby") == 0) {
+	            buf.append("ms.num_calls, ");
+	        } else if (db.getDBType().compareTo("mysql") == 0) {
+	            buf.append("ms.`call`, ");
+	        } else {
+	            buf.append("ms.call, ");
+	        }
+	        buf.append("ms.subroutines, ms.inclusive_per_call, ");
+	        buf.append("ms.metric ");
+	        buf.append("from " + db.getSchemaPrefix() + "interval_mean_summary ms ");
+	        buf.append(whereClause);
+	        buf.append(" order by ms.interval_event, ms.metric");
+    	}
         // System.out.println(buf.toString());
 
         // get the results
         ResultSet resultSet = db.executeQuery(buf.toString());
         int metricIndex = 0;
-        FunctionProfile eMS = new FunctionProfile(function);
+        List<Double> inclusives = new ArrayList<Double>();
+        List<Double> exclusives = new ArrayList<Double>();
+        double calls = 0;
+        double subroutines = 0;
         while (resultSet.next() != false) {
-            // get the mean summary data
-            //eMS.setInclusivePercent(metricIndex, resultSet.getDouble(2));
-            eMS.setInclusive(metricIndex, resultSet.getDouble(3));
-            //eMS.setExclusivePercent(metricIndex, resultSet.getDouble(4));
-            eMS.setExclusive(metricIndex, resultSet.getDouble(5));
-            eMS.setNumCalls(resultSet.getDouble(6));
-            eMS.setNumSubr(resultSet.getDouble(7));
-            //eMS.setInclPerCall(metricIndex, resultSet.getDouble(8));
+            inclusives.add(resultSet.getDouble(3));
+            exclusives.add(resultSet.getDouble(5));
+            calls = resultSet.getDouble(6);
+            subroutines = resultSet.getDouble(7);
             metricIndex++;
         }
         resultSet.close();
+        FunctionProfile eMS = new FunctionProfile(function, metricIndex);
+        eMS.setNumCalls(calls);
+        eMS.setNumSubr(subroutines);
+        for (int j = 0 ; j < metricIndex ; j++) {
+            eMS.setInclusive(j, inclusives.get(j));
+            eMS.setExclusive(j, exclusives.get(j));
+        }
         return eMS;
     }
 

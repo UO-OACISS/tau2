@@ -6,6 +6,7 @@ import java.awt.Toolkit;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.List;
+import java.util.Scanner;
 import java.util.StringTokenizer;
 
 import javax.swing.JFrame;
@@ -53,11 +54,11 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 					// don't process if this thread doesn't have this event
 					if (input.getUsereventNumevents(thread, event) == 0) continue;
 					
-					if (event.startsWith("Message size sent to node ") && !event.contains("=>")) {
+					if (event.startsWith("Message size") && !event.contains("=>")) {
 						foundData = true;
 						// split the string
 						extractData(input, thread, event, event, allPaths);
-					} else if (event.startsWith("Message size sent to node ") && event.contains("=>")) {
+					} else if (event.startsWith("Message size") && event.contains("=>")) {
 						foundData = true;
 						StringTokenizer st = new StringTokenizer(event, ":");
 						String first = st.nextToken().trim();
@@ -97,24 +98,55 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 	}
 
 	private void extractData(PerformanceResult input, Integer thread, String event, String first, String path) {
+		if(first.contains("all nodes")){
+    		return;
+    	}
+    	int receiver;
+     	int sender;
+        Scanner st = new Scanner(first);
+        int readInt = -1;
+        while(st.hasNext()){
+        	if(!st.hasNextInt()){
+        		st.next();
+        	}else{
+        		readInt =st.nextInt();
+        	}
+        }
+        if(readInt ==-1) return;
+        if(readInt>=mapData.getSize())
+        {
+        	System.err.printf("Warning: %s but there is no node %d.\n",event,readInt);
+        	return;
+        }
+        if(first.contains("sent")){
+        	receiver = readInt;
+        	sender = thread; 
+            addHeatMapData(input,sender,receiver,event, path);
+        }else if (first.contains("received")){
+        	sender = readInt;
+        	receiver = thread;
+            addHeatMapData(input,sender,receiver,event, path);
+
+        }   
+
+	}
+	private void addHeatMapData(PerformanceResult input, int sender, int receiver, String event, String path) {
 		double numEvents, eventMax, eventMin, eventMean, eventSumSqr, volume = 0;//stdev, 
 		double[] empty = {0,0,0,0,0,0};
 
-		StringTokenizer st = new StringTokenizer(first, "Message size sent to node ");
-		if (st.hasMoreTokens()) {
-			int receiver = Integer.parseInt(st.nextToken());
-			double[] pointData = mapData.get(thread, receiver, path);
+
+			double[] pointData = mapData.get(sender, receiver, path);
 			if (pointData == null) {
 				pointData = empty;
 			}
 
-			numEvents = input.getUsereventNumevents(thread, event);
+			numEvents = input.getUsereventNumevents(sender, event);
 			pointData[COUNT] += numEvents;
 			
-			eventMax = input.getUsereventMax(thread, event);
+			eventMax = input.getUsereventMax(sender, event);
 			pointData[MAX] = Math.max(eventMax, pointData[MAX]);
 			
-			eventMin = input.getUsereventMin(thread, event);
+			eventMin = input.getUsereventMin(sender, event);
 			if (pointData[MIN] > 0) {
 				pointData[MIN] = Math.min(pointData[MIN],eventMin);
 			} else {
@@ -122,16 +154,16 @@ public class BuildMessageHeatMap extends AbstractPerformanceOperation {
 			}
 			
 			// we'll recompute this later.
-			eventMean = input.getUsereventMean(thread, event);
+			eventMean = input.getUsereventMean(sender, event);
 			pointData[MEAN] += eventMean;
 			
-			eventSumSqr = input.getUsereventSumsqr(thread, event);
+			eventSumSqr = input.getUsereventSumsqr(sender, event);
 			pointData[STDDEV] += eventSumSqr;
 			
 			volume = numEvents * eventMean;
 			pointData[VOLUME] += volume;
-			mapData.put(thread, receiver, path, pointData);
-		}
+			mapData.put(sender, receiver, path, pointData);
+		
 	}
 
 	public static void centerFrame(JFrame frame) {

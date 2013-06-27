@@ -94,6 +94,7 @@ public class Trial implements Serializable, Comparable<Trial> {
     }
 
     private static AlphanumComparator alphanum = new AlphanumComparator();
+    
 
     private static class XMLParser extends DefaultHandler {
         private StringBuffer accumulator = new StringBuffer();
@@ -681,7 +682,7 @@ public class Trial implements Serializable, Comparable<Trial> {
                 trial.getTrialMetrics(db);
             }
 
-            Collections.sort(trials);
+           Collections.sort(trials);
 
             return trials;
 
@@ -1226,7 +1227,10 @@ public class Trial implements Serializable, Comparable<Trial> {
     }
 
     public int compareTo(Trial arg0) {
-        return alphanum.compare(this.getName(),  arg0.getName());
+    	Integer me = Integer.valueOf(this.getID());
+    	Integer other = Integer.valueOf(arg0.getID());
+    	return me.compareTo(other);
+        
     }
 
 	public boolean hasMetadata() {

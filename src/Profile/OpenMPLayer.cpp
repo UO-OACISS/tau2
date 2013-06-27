@@ -1,41 +1,39 @@
 /****************************************************************************
-**			TAU Portable Profiling Package			   **
-**			http://www.cs.uoregon.edu/research/tau	           **
-*****************************************************************************
-**    Copyright 1997  						   	   **
-**    Department of Computer and Information Science, University of Oregon **
-**    Advanced Computing Laboratory, Los Alamos National Laboratory        **
-****************************************************************************/
+ **			TAU Portable Profiling Package			   **
+ **			http://www.cs.uoregon.edu/research/tau	           **
+ *****************************************************************************
+ **    Copyright 1997  						   	   **
+ **    Department of Computer and Information Science, University of Oregon **
+ **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+ ****************************************************************************/
 /***************************************************************************
-**	File 		: OpenMPLayer.cpp				  **
-**	Description 	: TAU Profiling Package RTS Layer definitions     **
-**			  for supporting OpenMP Threads			  **
-**	Contact		: tau-team@cs.uoregon.edu 		 	  **
-**	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
-***************************************************************************/
-
+ **	File 		: OpenMPLayer.cpp				  **
+ **	Description 	: TAU Profiling Package RTS Layer definitions     **
+ **			  for supporting OpenMP Threads			  **
+ **	Contact		: tau-team@cs.uoregon.edu 		 	  **
+ **	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
+ ***************************************************************************/
 
 //////////////////////////////////////////////////////////////////////
 // Include Files 
 //////////////////////////////////////////////////////////////////////
 
-//#define DEBUG_PROF
 #ifdef TAU_DOT_H_LESS_HEADERS
 #include <iostream>
-using namespace std;
 #else /* TAU_DOT_H_LESS_HEADERS */
 #include <iostream.h>
 #endif /* TAU_DOT_H_LESS_HEADERS */
-#include "Profile/Profiler.h"
-#include "Profile/OpenMPLayer.h"
 
+#include <math.h>
+#include <Profile/Profiler.h>
+#include <Profile/OpenMPLayer.h>
 
+using namespace std;
 
 /////////////////////////////////////////////////////////////////////////
 // Member Function Definitions For class OpenMPLayer
 // This allows us to get thread ids from 0..N-1 and lock and unlock DB
 /////////////////////////////////////////////////////////////////////////
-
 
 /////////////////////////////////////////////////////////////////////////
 // Define the static private members of OpenMPLayer  
@@ -45,12 +43,34 @@ omp_lock_t OpenMPLayer::tauDBmutex;
 omp_lock_t OpenMPLayer::tauEnvmutex;
 omp_lock_t OpenMPLayer::tauRegistermutex;
 
-#ifdef TAU_OPENMP_NESTED
-static int threadId = -1;
-#pragma omp threadprivate(threadId)
-static int threadCount = 0;
-#endif /* TAU_OPENMP_NESTED */
+struct OpenMPMap : public std::map<int, int>
+{
+  virtual ~OpenMPMap() {
+    Tau_destructor_trigger();
+  }
+};
 
+OpenMPMap & TheOMPMap()
+{
+  static OpenMPMap omp_map;
+  return omp_map;
+}
+
+/* This is Thread Local Storage (TLS) for the thread ID.
+ * Using this is MUCH faster than computing it every time we need it.
+ * HOWEVER, it might not be supported everywhere. */
+#if defined (TAU_OPENMP)
+#if defined (TAU_USE_TLS)
+__thread int _tau_thread_id = -1;
+int _thread_count = 0;
+#elif defined(TAU_USE_DTLS)
+__declspec(thread) int _tau_thread_id = -1;
+int _thread_count = 0;
+#elif defined(TAU_USE_PGS)
+#include "TauPthreadGlobal.h"
+int _thread_count = 0;
+#endif
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 // RegisterThread() should be called before any profiling routines are
@@ -61,22 +81,12 @@ static int threadCount = 0;
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::RegisterThread(void)
 {
-	int id = RtsLayer::createThread();
-	//printf("OpenMP: registering thread, id = %d.\n", id);
-	return id;
-  // Not needed for OpenMP programs! 
-  //return 0;
+  return RtsLayer::createThread();
 }
 
 int OpenMPLayer::numThreads()
 {
-	return omp_get_max_threads(); 
-}
-
-map<int, int>& TheOMPMap()
-{
-	static map<int, int> omp_map;
-	return omp_map;
+  return omp_get_max_threads();
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -86,64 +96,133 @@ map<int, int>& TheOMPMap()
 // main thread that lets us identify it as thread 0. It is the only 
 // thread that doesn't do a OpenMPLayer::RegisterThread(). 
 ////////////////////////////////////////////////////////////////////////
-int OpenMPLayer::GetTauThreadId(void) 
+int OpenMPLayer::GetTauThreadId(void)
 {
-	int omp_thread_id, tau_thread_id;
 #ifdef TAU_OPENMP
-#ifdef TAU_OPENMP_NESTED
-  if (threadId == -1) {
-#pragma omp critical(threadLock)
-    {
-      threadId = threadCount++;
+
+#if defined (TAU_USE_TLS) || defined (TAU_USE_DTLS)
+  // if this thread has not been registered, then it does not have a TLS value for the ID
+  if (_tau_thread_id == -1) {
+    Tau_global_incr_insideTAU();
+    omp_set_lock(&OpenMPLayer::tauRegistermutex);
+    if (_thread_count > 0) {
+      Initialize();
+      /* Process is already locked, call the unsafe thread creation routine. */
+      _tau_thread_id = RtsLayer::_createThread();
+    } else {
+      _tau_thread_id = 0;
     }
+    _thread_count = _thread_count + 1;
+    omp_unset_lock(&OpenMPLayer::tauRegistermutex);
+    Tau_global_decr_insideTAU();
   }
-  omp_thread_id = threadId;
+  return _tau_thread_id;
+#elif defined (TAU_USE_PGS)
+  struct _tau_global_data *tmp = TauGlobal::getInstance().getValue();
+  // if this thread has not been registered, then it does not have a TLS value for the ID
+  if (tmp->threadID == -1) {
+    Tau_global_incr_insideTAU();
+    omp_set_lock(&OpenMPLayer::tauRegistermutex);
+    if (_thread_count > 0) {
+      Initialize();
+      /* Process is already locked, call the unsafe thread creation routine. */
+      tmp->threadID = RtsLayer::_createThread();
+    } else {
+      tmp->threadID = 0;
+    }
+    _thread_count = _thread_count + 1;
+    omp_unset_lock(&OpenMPLayer::tauRegistermutex);
+    Tau_global_decr_insideTAU();
+  }
+  return tmp->threadID;
+#endif // TAU_USE_TLS
+
+  int omp_thread_id = omp_get_thread_num();
+
+#ifdef TAU_OPENMP_NESTED
+  int level = omp_get_level();
+  int width = omp_get_team_size(level);
+  for (--level; level >= 0; --level) {
+    omp_thread_id += omp_get_ancestor_thread_num(level) * width;
+    width *= omp_get_team_size(level);
+  }
 #else
-  omp_thread_id = omp_get_thread_num();
-	//printf("omp thread id = %d.\n", omp_thread_id);
-
-	if (omp_thread_id == 0)
-	{
-		tau_thread_id = omp_thread_id;
-	}
-	else
-	{
-		// ONLY INITIALIZE THE LOCK ONCE!
-        static int registerInitFlag = InitializeRegisterMutexData();
-        omp_set_lock(&OpenMPLayer::tauRegistermutex);
-
-		map<int, int>::iterator it = TheOMPMap().find(omp_thread_id);
-		if (it == TheOMPMap().end())
-		{
-			TheOMPMap()[omp_thread_id] = OpenMPLayer::RegisterThread();
-			tau_thread_id = TheOMPMap()[omp_thread_id];
-		}	
-		else
-		{
-			tau_thread_id = it->second;
-		}
-		
-        omp_unset_lock(&OpenMPLayer::tauRegistermutex);
-	}
+  if (omp_get_nested()) {
+    //OpenMP thread identification not supported by compiler.
+    printf("ERROR: OpenMP nesting not supported. Please use a compiler that supports OMP specification >= 3.0 or rerun with OMP_NESTED=FALSE.\n");
+    exit(1);
+  }
 #endif /* TAU_OPENMP_NESTED */
-	return omp_thread_id;
+
+  int tau_thread_id;
+  if (omp_thread_id == 0) {
+    tau_thread_id = omp_thread_id;
+  } else {
+    Initialize();
+    omp_set_lock(&OpenMPLayer::tauRegistermutex);
+    OpenMPMap & ompMap = TheOMPMap();
+    OpenMPMap::iterator it = ompMap.find(omp_thread_id);
+    if (it == ompMap.end()) {
+    /* Process is already locked, call the unsafe thread creation routine. */
+      tau_thread_id = RtsLayer::_createThread();
+      ompMap[omp_thread_id] = tau_thread_id;
+    } else {
+      tau_thread_id = it->second;
+    }
+    omp_unset_lock(&OpenMPLayer::tauRegistermutex);
+
+    Tau_create_top_level_timer_if_necessary_task(tau_thread_id);
+  }
+
+  return tau_thread_id;
+#else
+  return 0;
 #endif /* TAU_OPENMP */
 }
 
-int OpenMPLayer::GetThreadId(void) 
+int OpenMPLayer::GetThreadId(void)
 {
 #ifdef TAU_OPENMP
-#ifdef TAU_OPENMP_NESTED
-  if (threadId == -1) {
-#pragma omp critical(threadLock)
-    {
-      threadId = threadCount++;
-    }
+
+#if defined (TAU_USE_TLS) || defined (TAU_USE_DTLS)
+  if (_tau_thread_id == -1) {
+	// call the function above, which will register the thread
+	// and assign the TLS value which we will use henceforth
+    return GetTauThreadId();  
+  } else {
+    return _tau_thread_id;
   }
-  return threadId;
+#elif defined (TAU_USE_PGS)
+  struct _tau_global_data *tmp = TauGlobal::getInstance().getValue();
+  if (tmp->threadID == -1) {
+	// call the function above, which will register the thread
+	// and assign the TLS value which we will use henceforth
+    return GetTauThreadId();  
+  } else {
+    return tmp->threadID;
+  }
+#endif //TAU_USE_TLS
+
+  int omp_thread_id = omp_get_thread_num();
+
+#ifdef TAU_OPENMP_NESTED
+  int level = omp_get_level();
+  int width = omp_get_team_size(level);
+  for (--level; level >= 0; --level) {
+    omp_thread_id += omp_get_ancestor_thread_num(level) * width;
+    width *= omp_get_team_size(level);
+  }
 #else
- 	return omp_get_thread_num();
+  if (omp_get_nested()) {
+    //OPENMP thread identification not supported by compiler.
+    printf("ERROR: OpenMP nesting not supported. Please use a compiler that supports OMP specification >= 3.0 or rerun with OMP_NESTED=FALSE.\n");
+    exit(1);
+  }
 #endif /* TAU_OPENMP_NESTED */
+
+  return omp_thread_id;
+#else
+  return 0;
 #endif /* TAU_OPENMP */
 }
 
@@ -152,11 +231,13 @@ int OpenMPLayer::GetThreadId(void)
 // The user typically sets this by setting the environment variable 
 // OMP_NUM_THREADS or by using the routine omp_set_num_threads(int);
 ////////////////////////////////////////////////////////////////////////
-int OpenMPLayer::TotalThreads(void) 
+int OpenMPLayer::TotalThreads(void)
 {
 #ifdef TAU_OPENMP
   // Note: this doesn't work for nested parallelism
   return omp_get_num_threads();
+#else
+  return 0;
 #endif /* TAU_OPENMP */
 
 }
@@ -171,13 +252,19 @@ int OpenMPLayer::InitializeThreadData(void)
   return 1;
 }
 
+void OpenMPLayer::Initialize(void)
+{
+  // ONLY INITIALIZE THE LOCK ONCE!
+  static int registerInitFlag = InitializeRegisterMutexData();
+  static int dbInitFlag = InitializeDBMutexData();
+  static int envInitFlag = InitializeEnvMutexData();
+}
+
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::InitializeDBMutexData(void)
 {
   // For locking functionDB 
-  // Initialize the mutex
   omp_init_lock(&OpenMPLayer::tauDBmutex);
-  //cout <<" Initialized the functionDB Mutex data " <<endl;
   return 1;
 }
 
@@ -185,7 +272,6 @@ int OpenMPLayer::InitializeDBMutexData(void)
 int OpenMPLayer::InitializeRegisterMutexData(void)
 {
   // For locking thread registration process 
-  // Initialize the mutex
   omp_init_lock(&OpenMPLayer::tauRegistermutex);
   return 1;
 }
@@ -199,8 +285,7 @@ int OpenMPLayer::InitializeRegisterMutexData(void)
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::LockDB(void)
 {
-  static int initflag=InitializeDBMutexData();
-  // Lock the functionDB mutex
+  Initialize();
   omp_set_lock(&OpenMPLayer::tauDBmutex);
   return 1;
 }
@@ -210,18 +295,15 @@ int OpenMPLayer::LockDB(void)
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::UnLockDB(void)
 {
-  // Unlock the functionDB mutex
   omp_unset_lock(&OpenMPLayer::tauDBmutex);
   return 1;
-}  
+}
 
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::InitializeEnvMutexData(void)
 {
   // For locking functionEnv 
-  // Initialize the mutex
   omp_init_lock(&OpenMPLayer::tauEnvmutex);
-  //cout <<" Initialized the functionEnv Mutex data " <<endl;
   return 1;
 }
 
@@ -234,8 +316,7 @@ int OpenMPLayer::InitializeEnvMutexData(void)
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::LockEnv(void)
 {
-  static int initflag=InitializeEnvMutexData();
-  // Lock the functionEnv mutex
+  Initialize();
   omp_set_lock(&OpenMPLayer::tauEnvmutex);
   return 1;
 }
@@ -245,16 +326,13 @@ int OpenMPLayer::LockEnv(void)
 ////////////////////////////////////////////////////////////////////////
 int OpenMPLayer::UnLockEnv(void)
 {
-  // Unlock the functionEnv mutex
   omp_unset_lock(&OpenMPLayer::tauEnvmutex);
   return 1;
-}  
-
+}
 
 /***************************************************************************
  * $RCSfile: OpenMPLayer.cpp,v $   $Author: amorris $
  * $Revision: 1.6 $   $Date: 2009/01/16 00:46:52 $
  * POOMA_VERSION_ID: $Id: OpenMPLayer.cpp,v 1.6 2009/01/16 00:46:52 amorris Exp $
  ***************************************************************************/
-
 

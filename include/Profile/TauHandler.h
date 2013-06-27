@@ -20,16 +20,17 @@
 
 #ifndef _TAU_HANDLER_H_
 #define _TAU_HANDLER_H_
+
+void TauSetInterruptInterval(int interval);
+
 int  TauEnableTrackingMemory(void);
 int  TauDisableTrackingMemory(void);
-void TauSetInterruptInterval(int interval);
 void TauTrackMemoryUtilization(bool allocated);
 void TauTrackMemoryHere(void);
-double TauGetMaxRSS(void);
-int  TauGetFreeMemory(void);
-void TauTrackMemoryHeadroomHere(void);
+
 int TauEnableTrackingMemoryHeadroom(void);
 int TauDisableTrackingMemoryHeadroom(void);
+void TauTrackMemoryHeadroomHere(void);
 
 #endif /* _TAU_HANDLER_H_ */
   

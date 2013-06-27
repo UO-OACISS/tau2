@@ -396,12 +396,18 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 			MetaDataKey metaKey=settings.getTopoMetadata(3);//.toString();
 			if(metaKey!=null){
 				MetaDataValue mdVal=thread.getMetaData().get(metaKey);
+				
 				if(mdVal==null){
 					mdVal=ppTrial.getDataSource().getMetaData().get(metaKey);
 				}
-						
-				String metaVal=mdVal.toString();
+				if(mdVal==null){
+					//System.out.println(thread.getNodeID()+" null");	
+					return 0;
+				}
+				//System.out.println(mdVal.toString());		
+				
 				float tmp=Float.NaN;
+				String metaVal=mdVal.toString();
 				try{
 				tmp = Float.parseFloat(metaVal);
 				}catch(NumberFormatException e){
@@ -838,32 +844,6 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 
 			else {
 				
-			if(prefix.contains("Cray")){
-				String node_key=prefix+" Nodename";
-				
-				List<Integer>[] sizes = new List[5];
-				for(int i=0;i<5;i++){
-					sizes[i]=new ArrayList();
-				}
-				int[] dimension = new int[5];
-				//String lastcoord=null;//Potentially used to check when moving to a new node
-				int numCores=24;
-				
-				for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads()
-						.iterator(); it.hasNext();) {
-					Thread thread = it.next();
-
-					String coord = thread.getMetaData().get(node_key).trim();
-					if (coord == null) {
-						continue;
-					}
-					System.out.println(ThreeDeeGeneralPlotUtils.parseCrayNodeID(coord));
-				}
-				
-				
-			}//Cray Topology
-			else
-			{
 			String coord_key = prefix + " Coords";
 			String size_key = prefix + " Size";
 			
@@ -875,7 +855,12 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 			}
 			
 			String tsize = ppTrial.getDataSource().getMetaData().get(size_key);
-			
+			if(tsize==null)
+			{
+				System.out.println("Topology sizes not defined");
+				return values;
+			}
+				
 			
 			int[] tempsizes = ThreeDeeGeneralPlotUtils.parseTuple(tsize);
 			
@@ -883,6 +868,8 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 			if(tempsizes.length>3){
 				
 				calculateTSize(tempsizes,offset);
+				if(tsizes[0]<0)
+					return values;
 			}
 			else{
 				tsizes = tempsizes;
@@ -898,6 +885,7 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 
 
 			int threadIndex = 0;
+			int coreCoordinate=0;//Used to generate final core coordinate mapping;
 			for (Iterator<Thread> it = ppTrial.getDataSource().getAllThreads()
 					.iterator(); it.hasNext();) {
 				Thread thread = it.next();
@@ -909,8 +897,31 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 				
 				
 				int[] coords; 
+				
 				if(isBGQ){
 					coords = ThreeDeeGeneralPlotUtils.parseMPIProcName(coord);
+				}
+				else{
+					coords = ThreeDeeGeneralPlotUtils.parseTuple(coord);
+				}
+				if(coords.length<tempsizes.length){
+					int[] tempcoords=new int[tempsizes.length];
+					int i=0;
+					for(i=0;i<coords.length;i++){
+						tempcoords[i]=coords[i];
+					}
+					if(coreCoordinate==tempsizes[tempsizes.length-1])
+					{
+						coreCoordinate=0;
+					}
+					tempcoords[i]=coreCoordinate;
+					coreCoordinate++;
+					coords=tempcoords;
+				}
+				
+				
+				if(tempsizes.length==6&&isBGQ){
+					
 					values[threadIndex][0] = coords[4]*tempsizes[5]+coords[5]+offset*coords[4];
 					values[threadIndex][1] = coords[0]*tempsizes[1]+coords[1]+offset*coords[0];
 					values[threadIndex][2] = coords[2]*tempsizes[3]+coords[3]+offset*coords[2];
@@ -921,14 +932,31 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 					
 					
 				}
+//				else if(tempsizes.length==5){
+//					values[threadIndex][0]=coords[4]*offset;
+//					values[threadIndex][1]=coords[0]*tempsizes[1]+coords[1]+offset*coords[0];;
+//					values[threadIndex][2]=coords[2]*tempsizes[3]+coords[3]+offset*coords[2];
+//				}else if (tempsizes.length==4){
+//					values[threadIndex][0]=coords[3]*offset;
+//					values[threadIndex][1]=coords[0]*tempsizes[1]+coords[1]+offset*coords[0];
+//					values[threadIndex][2]=coords[2]*offset;
+//				}
 				
-				else{
-					coords = ThreeDeeGeneralPlotUtils.parseTuple(coord);
+				else 
+					if(tempsizes.length<=3){
+					
 
 					for (int i = 0; i < coords.length; i++) {
-						values[threadIndex][i] = coords[i];
+						
+						
+							values[threadIndex][i] = coords[i];
+						
+						
 					}
 					
+				}
+				else{
+					//System.out.println("Dimension "+coords.length+" Unsupported");
 				}
 				
 				int dex0=(int)values[threadIndex][0];
@@ -948,13 +976,17 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 
 				threadIndex++;
 			}//Values populator loop
-			}//Non-Cray Topology
 			}
 
 		return values;
 	}
 	
 	private void calculateTSize(int[] tempSize, int offset){
+		
+//		for(int i=0;i<tempSize.length;i++){
+//			tempSize[i]=tempSize[i]+1;
+//		}
+		
 		if(tempSize.length==6){
 			
 			tsizes[0]=tempSize[4]*tempSize[5]+tempSize[4]*offset;
@@ -963,9 +995,25 @@ public class ThreeDeeWindow extends JFrame implements ActionListener,
 			
 		}
 		else
+//		else if(tempSize.length==5){
+//			tsizes[0]=tempSize[4]*offset;
+//			tsizes[1]=tempSize[0]*tempSize[1]+tempSize[0]*offset;
+//			tsizes[2]=tempSize[2]*tempSize[3]+tempSize[2]*offset;
+//		}
+//		else if(tempSize.length==4){
+//			tsizes[0]=tempSize[3]*offset;
+//			tsizes[1]=tempSize[0]*tempSize[1]+tempSize[0]*offset;
+//			tsizes[2]=tempSize[2]*offset;
+//		}
+//		else 
+			if(tempSize.length<=3)
 			for(int i=0;i<3;i++){
 				tsizes[i]=tempSize[i+3];
 			}
+		else{
+			System.out.println("Dimension "+tempSize.length+" Unsupported");
+			tsizes[0]=-1;
+		}
 	}
 
 	// String[] expressions =

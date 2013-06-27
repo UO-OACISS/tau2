@@ -25,9 +25,8 @@
 #include <TauXML.h>
 #include <TauUnify.h>
 
-// Moved from header file
 using namespace std;
-
+using namespace tau;
 
 static int Tau_snapshot_writeSnapshot(const char *name, int to_buffer);
 static int startNewSnapshotFile(char *threadid, int tid, int to_buffer);
@@ -59,7 +58,7 @@ static void writeEventXML(Tau_util_outputDevice *out, int id, FunctionInfo *fi) 
 
 static void writeUserEventXML(Tau_util_outputDevice *out, int id, TauUserEvent *ue) {
   Tau_util_output (out, "<userevent id=\"%d\"><name>", id);
-  Tau_XML_writeString(out, ue->GetEventName());
+  Tau_XML_writeString(out, ue->GetName().c_str());
   Tau_util_output (out, "</name></userevent>\n");
   return;
 }
@@ -193,9 +192,9 @@ static int Tau_snapshot_writeSnapshot(const char *name, int to_buffer) {
    Tau_util_output (out, "</name>\n");
 
 #ifdef TAU_WINDOWS
-   Tau_util_output (out, "<timestamp>%I64d</timestamp>\n", TauMetrics_getInitialTimeStamp());
+   Tau_util_output (out, "<timestamp>%I64d</timestamp>\n", TauMetrics_getTimeOfDay());
 #else
-   Tau_util_output (out, "<timestamp>%lld</timestamp>\n", TauMetrics_getInitialTimeStamp());
+   Tau_util_output (out, "<timestamp>%lld</timestamp>\n", TauMetrics_getTimeOfDay());
 #endif
 
    char metricList[4096];
@@ -290,9 +289,9 @@ int Tau_snapshot_writeUnifiedBuffer(int tid) {
    Tau_util_output (out, "\n<profile thread=\"%s\">\n", threadid);
 
 #ifdef TAU_WINDOWS
-   Tau_util_output (out, "<timestamp>%I64d</timestamp>\n", TauMetrics_getInitialTimeStamp());
+   Tau_util_output (out, "<timestamp>%I64d</timestamp>\n", TauMetrics_getTimeOfDay());
 #else
-   Tau_util_output (out, "<timestamp>%lld</timestamp>\n", TauMetrics_getInitialTimeStamp());
+   Tau_util_output (out, "<timestamp>%lld</timestamp>\n", TauMetrics_getTimeOfDay());
 #endif
 
    char metricList[4096];

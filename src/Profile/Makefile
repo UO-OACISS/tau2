@@ -21,6 +21,8 @@ include $(TAUROOT)/include/Makefile
 CXX = $(TAU_CXX)
 CC  = $(TAU_CC)
 
+MKDIR = mkdir -p
+
 #This includes all profile options in $(PROFILEOPTS).
 
 
@@ -88,7 +90,7 @@ HDRS	      = $(INCDIR)/Profiler.h 	 $(INCDIR)/ProfileGroups.h    \
 		$(INCDIR)/TauSnapshot.h  $(INCDIR)/TauGASP.h          \
 	 	$(INCDIR)/TauUtil.h $(INCDIR)/TauXML.h $(INCDIR)/TauUnify.h $(INCDIR)/TauCollate.h \
 		$(INCDIR)/TauMonMrnet.h $(INCDIR)/TauMon.h \
-		$(INCDIR)/TauMemoryWrap.h $(INCDIR)/TauIoWrap.h		\
+		$(INCDIR)/TauMemory.h $(INCDIR)/TauIoWrap.h		\
 		$(INCDIR)/TauBfd.h \
 		$(INCDIR)/TauMmapMemMgr.h $(INCDIR)/TauPathHash.h \
 		$(INCDIR)/agent_util.h	$(INCDIR)/java_crw_demo.h \
@@ -126,7 +128,7 @@ TAU_SAMPLING_O = TauSampling.o TauSampling_hpctoolkit.o TauSampling_stackwalker.
 #CUPTI_ACTIVITY#TAU_CUPTI_COUNTER_OBJS=CuptiLayer.o #ENDIF#
 
 
-OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauMemoryWrap.o \
+OBJS	      = Profiler.o UserEvent.o FunctionInfo.o \
 		RtsLayer.o RtsThread.o TauCAPI.o TauFAPI.o TauMapping.o \
 		TauHooks.o TauHandler.o TauMemory.o TauMetaData.o TauEnv.o \
 		TauInit.o Comp_intel9.o Comp_pgi.o Comp_xl.o Comp_gnu.o \
@@ -134,11 +136,12 @@ OBJS	      = Profiler.o UserEvent.o FunctionInfo.o TauMemoryWrap.o \
                 TauXML.o TauUtil.o TauSnapshot.o TauUnify.o TauCollate.o \
 		TauMonCommon.o TauMonMrnet.o TauCallSite.o \
 		$(PARAM_O) Tracer.o TauMetrics.o TauReadMetrics.o $(THR_O) \
-		$(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPARI_O) \
+		$(PAPI_O) $(TAU_JAVA_O) $(OPENMP_O) $(OPENMP_PGS_O) $(OPARI_O) \
 		$(MULT_O) $(PLATFORM_O) $(PYTHON_O) $(TAU_SAMPLING_O) \
 		TauIoWrap.o TauCompensate.o $(KTAU_O) $(KTAU_MERGE_O) $(KTAU_SHCTR_O) \
 		$(RENCI_STFF_O) $(TAU_GASP_O) $(TAU_CUPTI_COUNTER_OBJS) \
-		$(TAU_WINDOWS_OBJ) $(TAU_SHMEM_OBJS) $(TAU_IBM_BG_HWP_OBJS)
+		$(TAU_WINDOWS_OBJ) $(TAU_SHMEM_OBJS) $(TAU_IBM_BG_HWP_OBJS) \
+		$(TAU_OMPT_O)
 
 # CWL - BFD Functionality for libTAU.so is faked if no shared BFD object can
 #       be built. The same is true for static builds of TAU if BFD is 
@@ -150,9 +153,9 @@ TAU_BFD_SHARED_O = TauBfdUnimplemented.o
 STATIC_OBJS   = $(TAU_BFD_STATIC_O) $(PGIACC_STATIC_O)
 SHARED_OBJS   = $(TAU_BFD_SHARED_O) $(PGIACC_O)
 #SICORTEX#SHARED_OBJS = TauBfd.o #ENDIF#
-#TAU_BFDSHAREDLINK#SHARED_LIBS = $(BFDLINK) $(BFDLIBS) -liberty #ENDIF#
+#TAU_BFDSHAREDLINK#SHARED_LIBS = $(BFDLINK) $(BFDLIBS) #ENDIF#
 
-#CUPTI#SHARED_LIBS = -L$(TAU_CUDA_INC)/../lib -L$(TAU_CUDA_INC)/../lib -L$(TAU_CUDA_INC)/../lib64 -lcudart -L$(TAU_CUPTI_INC)/../lib -L$(TAU_CUPTI_INC)/../lib64 -lcupti #ENDIF#
+#CUPTI#SHARED_LIBS = -L$(TAU_CUDA_INC)/../lib -L$(TAU_CUDA_INC)/../$(TAU_LIBEX) -lcudart -L$(TAU_CUPTI_INC)/../$(TAU_LIBEX) -lcupti #ENDIF#
 
 PRINT	      = pr
 
@@ -254,11 +257,10 @@ TAU_SHLIB	= libTAUsh$(TAU_CONFIG)$(TAU_SHLIBX)
 #CRAYX1CC#TAU_NULL=X#ENDIF#
 #USE_NECCXX#TAU_SHLIB	= #ENDIF#
 #USE_NECCXX#TAU_DISABLE_SHARED	= #ENDIF#
-#OPEN64ORC#TAU_SHLIB	= #ENDIF#
-#OPEN64ORC#TAU_DISABLE_SHARED	= #ENDIF#
 #NOSHARED#TAU_NULL=X #ENDIF#
 #NOSHARED#TAU_SHLIB	= #ENDIF#
 #NOSHARED#TAU_DISABLE_SHARED	= #ENDIF#
+#GOMP_AVAILABLE#TAU_DISABLE_SHARED_GOMP	= -DTAU_DISABLE_SHARED#ENDIF#
 #BGL#TAU_SHLIB	= #ENDIF#
 #BGL#TAU_DISABLE_SHARED = #ENDIF#
 #SOL2CC#EXTRA_LIBS   = -lCstd -liostream -lCrun  #ENDIF#
@@ -287,7 +289,7 @@ TAU_SHLIB_INSTALL = $(INSTALLDEST)/$(TAU_SHLIB)
 TAU_MAKE_SYMLINKS= $(RM) $(INSTALLDEST)/libTAU$(TAU_SHLIBX); \
 		cd $(INSTALLDEST) ;  ln -s $(TAU_SHLIB) libTAU$(TAU_SHLIBX); \
 		if [ -d $(TAU_SHAREDDIR) ] ; then true; \
-                    else mkdir $(TAU_SHAREDDIR); fi ; \
+                    else $(MKDIR) $(TAU_SHAREDDIR); fi ; \
                 cd $(TAU_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX) ; \
                 cd $(TAU_SHAREDDIR) ; \
 		ln -s ../libTAU$(TAU_SHLIBX) libTAU$(TAU_SHLIBX) ;  \
@@ -449,18 +451,18 @@ libTauShmem$(TAU_CONFIG)$(LSX):
 $(INSTALLDEST)/$(TAU_TARGET): $(TAU_TARGET)
 		@echo Installing $? in $(INSTALLDEST)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
-                   else mkdir $(INSTALLDEST) ;fi
+                   else $(MKDIR) $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
 		$(TAU_INSTALL) $(TAUROOT)/include/Makefile $(INSTALLDEST)/Makefile.tau$(TAU_CONFIG)
 
 $(INSTALLDEST)/$(TAU_DISABLE): $(TAU_DISABLE) $(TAU_DISABLE_SHARED)
 		@echo Installing $? in $(INSTALLDEST)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
-                   else mkdir $(INSTALLDEST) ;fi
+                   else $(MKDIR) $(INSTALLDEST) ;fi
 		$(TAU_INSTALL) $? $(INSTALLDEST)
 		cd $(INSTALLDEST)
 		@if [ -d $(TAU_DISABLE_SHAREDDIR) ] ; then true; \
-		    else mkdir $(TAU_DISABLE_SHAREDDIR); fi
+		    else $(MKDIR) $(TAU_DISABLE_SHAREDDIR); fi
 		cd $(TAU_DISABLE_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX) TAU.dll
 		cd $(TAU_DISABLE_SHAREDDIR) ; ln -s ../$(TAU_DISABLE_SHARED) libTAU$(TAU_SHLIBX)
 		cd $(TAU_DISABLE_SHAREDDIR) ; ln -s ../$(TAU_DISABLE_SHARED) TAU.dll
@@ -468,49 +470,49 @@ $(INSTALLDEST)/$(TAU_DISABLE): $(TAU_DISABLE) $(TAU_DISABLE_SHARED)
 $(TAU_SHAREDDIR)/$(TAU_CUDA_LIB): $(TAU_CUDA_LIB)
 		@echo Installing $? in $(TAU_SHAREDDIR)
 		@if [ -d $(TAU_SHAREDDIR) ] ; then true; \
-			else mkdir -p $(TAU_SHAREDDIR) ;fi
+			else $(MKDIR) $(TAU_SHAREDDIR) ;fi
 		@if [ -e "$?" ]; then $(TAU_INSTALL) $? $(TAU_SHAREDDIR) ;fi
 
 $(INSTALLDEST)/$(TAU_CUDA_LIB): $(TAU_CUDA_LIB)
 		@echo Installing $? in $(INSTALLDEST)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
-			else mkdir -p $(INSTALLDEST) ;fi
+			else $(MKDIR) $(INSTALLDEST) ;fi
 		@if [ -e "$?" ]; then $(TAU_INSTALL) $? $(INSTALLDEST) ;fi
 
 $(INSTALLDEST)/$(TAU_PYCUDA_LIB): $(TAU_PYCUDA_LIB)
 		@echo Installing $? in $(INSTALLDEST)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
-			else mkdir -p $(INSTALLDEST) ;fi
+			else $(MKDIR) $(INSTALLDEST) ;fi
 		@if [ -e "$?" ]; then $(TAU_INSTALL) $? $(INSTALLDEST) ;fi
 
 $(TAU_SHAREDDIR)/$(TAU_OPENCL_LIB): $(TAU_OPENCL_LIB) 
 		@echo Installing $? in $(TAU_SHAREDDIR)
 		@if [ -d $(TAU_SHAREDDIR) ] ; then true; \
-			else mkdir -p $(TAU_SHAREDDIR) ;fi
+			else $(MKDIR) $(TAU_SHAREDDIR) ;fi
 		@if [ -e "$?" ]; then $(TAU_INSTALL) $? $(TAU_SHAREDDIR) ;fi 
 
 $(TAU_SHAREDDIR)/$(TAU_CUPTI_LIB): $(TAU_CUPTI_LIB)
 		@echo Installing $? in $(TAU_SHAREDDIR)
 		@if [ -d $(TAU_SHAREDDIR) ] ; then true; \
-			else mkdir -p $(TAU_SHAREDDIR) ;fi
+			else $(MKDIR) $(TAU_SHAREDDIR) ;fi
 		@if [ -e "$?" ]; then $(TAU_INSTALL) $? $(TAU_SHAREDDIR) ;fi
 
 $(TAU_SHAREDDIR)/$(TAU_CUPTI_ACTIVITY_LIB): $(TAU_CUPTI_ACTIVITY_LIB)
 		@echo Installing $? in $(TAU_SHAREDDIR)
 		@if [ -d $(TAU_SHAREDDIR) ] ; then true; \
-			else mkdir -p $(TAU_SHAREDDIR) ;fi
+			else $(MKDIR) $(TAU_SHAREDDIR) ;fi
 		@if [ -e "$?" ]; then $(TAU_INSTALL) $? $(TAU_SHAREDDIR) ;fi
 
 $(INSTALLDEST)/$(TAU_SHLIB): $(TAU_SHLIB) 
 		@echo Installing $? in $(INSTALLDEST)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
                    else mkdir $(INSTALLDEST) ;fi
-		$(TAU_INSTALL) $? $(INSTALLDEST)
+		$(TAU_INSTALL) $? $(INSTALLDEST)/
 		$(RM) $(INSTALLDEST)/libTAU$(TAU_SHLIBX) $(INSTALLDEST)/TAU.dll
 		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) libTAU$(TAU_SHLIBX)
 		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) TAU.dll
 		@if [ -d $(TAU_SHAREDDIR) ] ; then true; \
-		    else mkdir $(TAU_SHAREDDIR); fi
+		    else $(MKDIR) $(TAU_SHAREDDIR); fi
 		cd $(TAU_SHAREDDIR) ; rm -f libTAU$(TAU_SHLIBX) TAU.dll
 		cd $(TAU_SHAREDDIR) ; ln -s ../$(TAU_SHLIB) libTAU$(TAU_SHLIBX)
 		cd $(TAU_SHAREDDIR) ; ln -s ../$(TAU_SHLIB) TAU.dll
@@ -525,27 +527,28 @@ $(INSTALLDEST)/libTauShmem$(TAU_CONFIG)$(LSX): libTauShmem$(TAU_CONFIG)$(LSX)
 $(INSTALLDEST)/$(TAU_GPU_LIB): $(TAU_GPU_LIB)
 		@echo Installing $? in $(TAU_SHAREDDIR)
 		@if [ -d $(TAU_SHAREDDIR) ] ; then true; \
-                   else mkdir $(TAU_SHAREDDIR) ;fi
+                   else $(MKDIR) $(TAU_SHAREDDIR) ;fi
 		$(TAU_INSTALL) $? $(TAU_SHAREDDIR)
 
 $(TAU_JAVA_INSTALLDIR)/Profile.class: Profile.class
 		@echo Installing $? in $(TAU_JAVA_INSTALLDIR)
 		@if [ -d $(TAU_JAVA_INSTALLDIR) ] ; then true; \
-                   else mkdir -p $(TAU_JAVA_INSTALLDIR) ;fi
-		$(TAU_INSTALL) $? $(TAU_JAVA_INSTALLDIR)
+                   else $(MKDIR) $(TAU_JAVA_INSTALLDIR) ;fi
+		@if [ ! -r $(INSTALLDEST)/Profile.class ] ; then \
+		$(TAU_INSTALL) $? $(TAU_JAVA_INSTALLDIR) ; fi
 
 $(TAU_JAVA_INSTALLDIR)/TauJVMTI.jar: TauJVMTI.jar
 		@echo Installing $? in $(INSTALLDEST)
-		@if [ -d $(INSTALLDEST) ] ; then true; \
-                   else mkdir -p $(INSTALLDEST) ;fi
-		$(TAU_INSTALL) $? $(INSTALLDEST)
-		@if [ -f $(INSTALLDEST)/libTAU.jnilib ] ; then true; \
-									 else cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) libTAU.jnilib; fi
+		@if [ -d $(INSTALLDEST) ] ; then true;  else $(MKDIR) $(INSTALLDEST) ;fi 
+		@if [ ! -r $(INSTALLDEST)/TauJVMTI.jar ] ; then \
+		$(TAU_INSTALL) $? $(INSTALLDEST) ; fi 
+		@if [ ! -r $(INSTALLDEST)/libTAU.jnilib ] ; then \
+		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) libTAU.jnilib; fi
 
 $(TAU_SHAREDDIR)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
 		@echo Installing $(TAUPYTHON), ltau.py, and tau.py in $(INSTALLDEST)
 		@if [ -d $(INSTALLDEST) ] ; then true; \
-		   else mkdir $(INSTALLDEST) ;fi
+		   else $(MKDIR) $(INSTALLDEST) ;fi
 		$(RM) $(INSTALLDEST)/$(TAUPYTHON) $(INSTALLDEST)/ctau_impl$(TAU_SHLIBX)
 		$(TAU_INSTALL) tau.py $(INSTALLDEST)
 		$(TAU_INSTALL) ltau.py $(INSTALLDEST)
@@ -553,7 +556,7 @@ $(TAU_SHAREDDIR)/pytau$(TAU_SHLIBX): $(TAU_SHLIB)
 		cd $(INSTALLDEST) && ln -s $(TAU_SHLIB) ctau_impl$(TAU_SHLIBX)
 		@echo Installing $(TAUPYTHON), ltau.py, and tau.py in $(TAU_SHAREDDIR)
 		@if [ -d $(TAU_SHAREDDIR) ] ; then true; \
-		    else mkdir $(TAU_SHAREDDIR); fi
+		    else $(MKDIR) $(TAU_SHAREDDIR); fi
 		$(RM) $(TAU_SHAREDDIR)/*
 		cd $(TAU_SHAREDDIR) && ln -s ../$(TAU_SHLIB) $(TAUPYTHON) && ln -s ../$(TAU_SHLIB) ctau_impl$(TAU_SHLIBX)
 		cd $(TAU_SHAREDDIR) && ln -s ../tau.py . && ln -s ../ltau.py .
@@ -570,20 +573,20 @@ $(INSTALLDEST)/libpgnod_prof.a :
 epilog_breakup: 
 	@echo Breaking up libelg.mpi.a
 	$(RM) $(BITS)
-	mkdir -p $(BITS)/tau
+	$(MKDIR) $(BITS)/tau
 	cd $(BITS)/tau ; ar -X $(BITS) xv $(EPILOGLIBDIR)/libelg.mpi.a
 
 # place TAU objects into libmpi_r.a for tau_poe (AIX)
 tau_breakup: $(TAU_SHLIB) $(MPI_WRAPPER)
 	$(RM) $(BITS)
-	mkdir -p $(BITS)/tau
+	$(MKDIR) $(BITS)/tau
 	cp $(TAU_TARGET) libTauMpi$(TAU_CONFIG)$(LSX) $(BITS)/tau
 
 # break apart vampirtrace to build into libmpi_r.a for tau_poe (AIX)
 vampirtrace_breakup:
 	@echo Breaking up VampirTrace
 	$(RM) $(BITS)
-	mkdir -p $(BITS)/tau
+	$(MKDIR) $(BITS)/tau
 	cd $(BITS)/tau ; for i in $(VAMPIRTRACEDIR)/lib/*.a ; do ar -X $(BITS) xv $$i ; done
 
 
@@ -601,9 +604,9 @@ libmpi_r.a: $(MPI_BREAKUP_PREREQ)
 $(INSTALLDEST)/libmpi_r.a: libmpi_r.a
 	echo Installing libmpi_r.a in $(TAU_SHAREDDIR)
 	if [ -d $(INSTALLDEST) ] ; then true; \
-	   else mkdir $(INSTALLDEST) ;fi
+	   else $(MKDIR) $(INSTALLDEST) ;fi
 	if [ -d $(TAU_SHAREDDIR) ] ; then true; \
-	    else mkdir $(TAU_SHAREDDIR); fi
+	    else $(MKDIR) $(TAU_SHAREDDIR); fi
 	$(RM) $(TAU_SHAREDDIR)/libmpi_r.a
 	$(RM) -f $(TAU_SHAREDDIR)/libmpi_r.a
 	$(RM) -f $(INSTALLDEST)/libmpi_r.a
@@ -642,6 +645,15 @@ TauShmemSgiC.o  : TauShmemSgiC.c $(HDRS)
 
 TauShmemSgiF.o  : TauShmemSgiF.c $(HDRS)
 	$(CC) $(CFLAGS) $(TAU_SHMEM_INC) -c $(@:.o=.c)
+
+TauOpenMPCollectorAPI.o  : TauOpenMPCollectorAPI.c $(HDRS)
+	$(CC) $(CFLAGS) $(OPENMPOPTS) -c $(@:.o=.c) $(TAU_DISABLE_SHARED_GOMP)
+
+TauPthreadGlobal.o  : TauPthreadGlobal.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
+
+TauOpenMPCollectorAPIDisable.o  : TauOpenMPCollectorAPIDisable.c $(HDRS)
+	$(CC) $(CFLAGS) $(OPENMPOPTS) -c $(@:.o=.c) $(TAU_DISABLE_SHARED_GOMP)
 
 TauXML.o 	: TauXML.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
@@ -835,7 +847,7 @@ TauCompensate.o : TauCompensate.cpp $(HDRS)
 TauHandler.o : TauHandler.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
-TauMemoryWrap.o : TauMemoryWrap.cpp $(HDRS)
+MPCThreadLayer.o   : MPCThreadLayer.cpp $(HDRS)
 	$(CXX) $(CXXFLAGS) -c $(@:.o=.cpp)
 
 TauMemory.o : TauMemory.cpp $(HDRS)
@@ -892,9 +904,12 @@ jVMTIThreadLayer.o: JVMTIThreadLayer.cpp
 TauJVMTI.o :	TauJVMTI.cpp TauJVMTI.jar
 	$(CXX) $(CXXFLAGS) -c TauJVMTI.cpp
 
+TauOMPT.o 	: TauOMPT.cpp $(HDRS)
+	$(CXX) $(CXXFLAGS) $(OPENMPOPTS) -c $(@:.o=.cpp)
+
 TauJVMTI.jar:  TauJVMTI.java
 	rm -f -r classes
-	mkdir -p classes
+	$(MKDIR) classes
 	$(JDKBINDIR)/javac -d classes TauJVMTI.java
 	(cd classes; $(JDKBINDIR)/jar cf ../$@ *)
 

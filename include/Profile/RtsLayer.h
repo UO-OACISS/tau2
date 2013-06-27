@@ -46,6 +46,7 @@ public:
   RtsLayer () { }  // defaults
   ~RtsLayer () { } 
 
+	static int _createThread(void);
 	static int createThread(void);
 	static void destroyThread(int id);
 	static void recycleThread(int id);
@@ -58,12 +59,12 @@ public:
   static int& TheContext(void);
   static long GenerateUniqueId(void);
   static ProfileMap_t& TheProfileMap(void);
-  static TauGroup_t getProfileGroup(char *  ProfileGroup) ;
+  static TauGroup_t getProfileGroup(char const *  ProfileGroup) ;
   static TauGroup_t enableProfileGroup(TauGroup_t  ProfileGroup) ;
   static TauGroup_t disableProfileGroup(TauGroup_t  ProfileGroup) ;
   static TauGroup_t generateProfileGroup(void) ;
-  static TauGroup_t enableProfileGroupName(char * ProfileGroup) ;
-  static TauGroup_t disableProfileGroupName(char * ProfileGroup) ;
+  static TauGroup_t enableProfileGroupName(char const * ProfileGroup) ;
+  static TauGroup_t disableProfileGroupName(char const * ProfileGroup) ;
   static TauGroup_t enableAllGroups(void) ;
   static TauGroup_t disableAllGroups(void) ;
   static TauGroup_t resetProfileGroup(void) ;
@@ -75,10 +76,11 @@ public:
 
   static std::string GetRTTI(const char *name); 
   inline static const char * CheckNotNull(const char * str) {
-    if (str == 0) return "  ";
-    else return str;
+    if (str) return str;
+    else return "  ";
   }
 
+	static void Initialize(void);
 
   static int 	SetEventCounter(void);
   static double GetEventCounter(void);
@@ -87,11 +89,12 @@ public:
 
   static void getCurrentValues(int tid, double *values);
 
+  // Return the number of the 'current' thread. 0..TAU_MAX_THREADS-1
+  static int myThread(void);
+
   static int setMyNode(int NodeId, int tid=RtsLayer::myThread());
 
   static int setMyContext(int ContextId);
-
-  static int setMyThread(int tid);
 
   static const char* getSingleCounterName(); 
   static const char* getCounterName(int i); 
@@ -102,11 +105,15 @@ public:
   // Return the number of the 'current' context.
   static int myContext(void);
 
-  // Return the number of the 'current' thread. 0..TAU_MAX_THREADS-1
-  static int myThread(void);
-
   static int threadId(void);
-  
+  static int unsafeThreadId(void);
+ 
+ 	// Return the local thread id (ignoring tasks) This is a 
+	// low-overhead call but DO NOT use this call when
+	// accessing Profiler stack or the FunctionInfo DB.
+  static int localThreadId(void);
+  static int unsafeLocalThreadId(void);
+
   static int getPid();
   static int getTid();
 
@@ -119,11 +126,13 @@ public:
   static void RegisterFork(int nodeid, enum TauFork_t opcode);
 
   // This ensure that the FunctionDB (global) is locked while updating
-  static void LockDB(void);
-  static void UnLockDB(void);
+  static int LockDB(void);
+  static int UnLockDB(void);
+  static int getNumDBLocks(void);
 
-  static void LockEnv(void);
-  static void UnLockEnv(void);
+  static int LockEnv(void);
+  static int UnLockEnv(void);
+  static int getNumEnvLocks(void);
 
   static int getTotalThreads();
 
@@ -136,7 +145,7 @@ private:
   static void threadLockEnv(void);
   static void threadUnLockEnv(void);
 
-  static int lockDBcount[TAU_MAX_THREADS];
+  static int lockDBCount[TAU_MAX_THREADS];
   static int lockEnvCount[TAU_MAX_THREADS];
 
   static bool initLocks();
@@ -147,6 +156,7 @@ private:
 
 extern "C" int Tau_RtsLayer_getTid();
 extern "C" int Tau_RtsLayer_createThread();
+extern "C" int Tau_RtsLayer_TheEnableInstrumentation();
 
 #endif /* _RTSLAYER_H_  */
 /***************************************************************************

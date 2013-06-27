@@ -1,22 +1,18 @@
 /****************************************************************************
-**			TAU Portable Profiling Package			   **
-**			http://www.cs.uoregon.edu/research/tau	           **
-*****************************************************************************
-**    Copyright 1997  						   	   **
-**    Department of Computer and Information Science, University of Oregon **
-**    Advanced Computing Laboratory, Los Alamos National Laboratory        **
-****************************************************************************/
+ **			TAU Portable Profiling Package			   **
+ **			http://www.cs.uoregon.edu/research/tau	           **
+ *****************************************************************************
+ **    Copyright 1997  						   	   **
+ **    Department of Computer and Information Science, University of Oregon **
+ **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+ ****************************************************************************/
 /***************************************************************************
-**	File 		: pthread_wrap.c				  **
-**	Description 	: TAU Profiling Package RTS Layer definitions     **
-**			  for wrapping syscalls like exit                 **
-**	Contact		: tau-team@cs.uoregon.edu 		 	  **
-**	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
-***************************************************************************/
-
-
-// Include Files 
-//////////////////////////////////////////////////////////////////////
+ **	File 		: pthread_wrap.c				  **
+ **	Description 	: TAU Profiling Package RTS Layer definitions     **
+ **			  for wrapping syscalls like exit                 **
+ **	Contact		: tau-team@cs.uoregon.edu 		 	  **
+ **	Documentation	: See http://www.cs.uoregon.edu/research/tau      **
+ ***************************************************************************/
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -31,154 +27,140 @@
 #include <signal.h>
 #include <Profile/TauEnv.h>
 
-#define dprintf TAU_VERBOSE 
+#if !defined(__APPLE__)
+#define TAU_PTHREAD_BARRIER_AVAILABLE
+#endif
 
-#if (defined (TAU_BGP) || defined(TAU_XLC))
-#define TAU_DISABLE_SYSCALL_WRAPPER
-#endif /* TAU_BGP || TAU_XLC */
+typedef void * (*start_routine_p)(void *);
+typedef int (*pthread_create_p)(pthread_t *, const pthread_attr_t *, start_routine_p, void *arg);
+typedef void (*pthread_exit_p)(void *);
+typedef int (*pthread_join_p)(pthread_t, void **);
+typedef int (*pthread_barrier_wait_p)(pthread_barrier_t *);
 
-typedef int (*pthread_create_call_p) 
-	(pthread_t *threadp,
-	const pthread_attr_t *attr,
-	void *(*start_routine) (void *),
-	void *arg);
+extern int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
+    pthread_t * threadp, const pthread_attr_t * attr, start_routine_p, void * arg);
+extern int tau_pthread_join_wrapper(pthread_join_p pthread_join_call, pthread_t thread, void **retval);
+extern void tau_pthread_exit_wrapper(pthread_exit_p pthread_exit_call, void * value_ptr);
+extern int tau_pthread_barrier_wait_wrapper(pthread_barrier_wait_p pthread_barrier_wait_call,
+    pthread_barrier_t * barrier);
 
-extern int tau_pthread_create_wrapper (pthread_create_call_p pthread_create_call,
-pthread_t *threadp, const pthread_attr_t *attr, void *(*start_routine) (void *),
-void *arg);
 
+#ifdef TAU_PRELOAD_LIB
 /********************************/
 /* LD_PRELOAD wrapper functions */
 /********************************/
 
-#ifdef TAU_PRELOAD_LIB
-static int (*_pthread_create) (pthread_t* thread, const pthread_attr_t* attr, 
-			       void *(*start_routine)(void*), void* arg) = NULL;
-static void (*_pthread_exit) (void *value_ptr) = NULL;
-static int (*_pthread_join) (pthread_t thread, void ** retval) = NULL;
-extern void *tau_pthread_function (void *arg);
-typedef struct tau_pthread_pack {
-  void *(*start_routine) (void *);
-  void *arg;
-  int id;
-} tau_pthread_pack;
+#define RESET_DLERROR() dlerror()
+#define CHECK_DLERROR() { \
+  char const * err = dlerror(); \
+  if (err) { \
+    printf("Error getting %s handle: %s\n", name, err); \
+    fflush(stdout); \
+    exit(1); \
+  } \
+}
 
+static
+void * get_system_function_handle(char const * name, void * caller)
+{
+  char const * err;
+  void * handle;
 
-#ifdef TAU_PTHREAD_BARRIER_AVAILABLE
-static int (*_pthread_barrier_wait) (pthread_barrier_t *barrier) = NULL;
-#endif /* TAU_PTHREAD_BARRIER_AVAILABLE */
+  // Reset error pointer
+  RESET_DLERROR();
 
-int pthread_create (pthread_t* thread, const pthread_attr_t* attr, 
-		    void *(*start_routine)(void*), void* arg) {
-  if (_pthread_create == NULL) {
-    _pthread_create = (int (*) (pthread_t* thread, const pthread_attr_t* attr, void *(*start_routine)(void*), void* arg)) dlsym(RTLD_NEXT, "pthread_create");
+  // Attempt to get the function handle
+  handle = dlsym(RTLD_NEXT, name);
+
+  // Detect errors
+  CHECK_DLERROR();
+
+  // Prevent recursion if more than one wrapping approach has been loaded.
+  // This happens because we support wrapping pthreads three ways at once:
+  // #defines in Profiler.h, -Wl,-wrap on the link line, and LD_PRELOAD.
+  if (handle == caller) {
+    RESET_DLERROR();
+    void * syms = dlopen(NULL, RTLD_NOW);
+    CHECK_DLERROR();
+    do {
+      RESET_DLERROR();
+      handle = dlsym(syms, name);
+      CHECK_DLERROR();
+    } while (handle == caller);
   }
-	/*
-  tau_pthread_pack *pack = (tau_pthread_pack*) malloc (sizeof(tau_pthread_pack));
-  pack->start_routine = start_routine;
-  pack->arg = arg;
-  pack->id = -1;
-	*/
+
+  return handle;
+}
+
+int pthread_create(pthread_t* thread, const pthread_attr_t* attr,
+    start_routine_p start_routine, void* arg)
+{
+  static pthread_create_p _pthread_create = NULL;
+  if (!_pthread_create) {
+    _pthread_create = (pthread_create_p)get_system_function_handle(
+        "pthread_create", (void*)pthread_create);
+  }
   return tau_pthread_create_wrapper(_pthread_create, thread, attr, start_routine, arg);
 }
 
-int pthread_join (pthread_t thread, void **retval) {
-  int ret;
-  if (_pthread_join == NULL) {
-    _pthread_join = (int (*) (pthread_t, void **)) dlsym(RTLD_NEXT, "pthread_join"); 
+int pthread_join(pthread_t thread, void ** retval)
+{
+  static pthread_join_p _pthread_join = NULL;
+  if (!_pthread_join) {
+    _pthread_join = (pthread_join_p)get_system_function_handle(
+        "pthread_join", (void*)pthread_join);
   }
-   TAU_PROFILE_TIMER(timer, "pthread_join()", "", TAU_DEFAULT);
-   TAU_PROFILE_START(timer);
-   ret= _pthread_join(thread, retval); 
-   TAU_PROFILE_STOP(timer);
-   return ret;
+  return tau_pthread_join_wrapper(_pthread_join, thread, retval);
 }
-void pthread_exit (void *value_ptr) {
 
-  if (_pthread_exit == NULL) {
-    _pthread_exit = (void (*) (void *value_ptr)) dlsym(RTLD_NEXT, "pthread_exit");
+void pthread_exit(void * value_ptr)
+{
+  static pthread_exit_p _pthread_exit = NULL;
+  if (!_pthread_exit) {
+    _pthread_exit = (pthread_exit_p)get_system_function_handle(
+        "pthread_exit", (void*)pthread_exit);
   }
-
-  TAU_PROFILE_EXIT("pthread_exit");
-  _pthread_exit(value_ptr);
+  tau_pthread_exit_wrapper(_pthread_exit, value_ptr);
 }
 
 #ifdef TAU_PTHREAD_BARRIER_AVAILABLE
-extern "C" int pthread_barrier_wait(pthread_barrier_t *barrier) {
-  int retval;
-  if (_pthread_barrier_wait == NULL) {
-    _pthread_barrier_wait = (int (*) (pthread_barrier_t *barrier)) dlsym(RTLD_NEXT, "pthread_barrier_wait");
+int pthread_barrier_wait(pthread_barrier_t * barrier)
+{
+  static pthread_barrier_wait_p _pthread_barrier_wait = NULL;
+  if (!_pthread_barrier_wait) {
+    _pthread_barrier_wait = (pthread_barrier_wait_p)get_system_function_handle(
+        "pthread_barrier_wait", (void*)pthread_barrier_wait);
   }
-  TAU_PROFILE_TIMER(timer, "pthread_barrier_wait", "", TAU_DEFAULT);
-  TAU_PROFILE_START(timer);
-  retval = _pthread_barrier_wait (barrier);
-  TAU_PROFILE_STOP(timer);
-  return retval;
+  return tau_pthread_barrier_wait_wrapper(_pthread_barrier_wait, barrier);
 }
 #endif /* TAU_PTHREAD_BARRIER_AVAILABLE */
 
-#else // Wra via the the link line.
-/*********************************/
-/* LD wrappers                   */
-/*********************************/
-/////////////////////////////////////////////////////////////////////////
-// Define PTHREAD wrappers
-/////////////////////////////////////////////////////////////////////////
+#else // Wrap via the the link line.
 
-extern void *tau_pthread_function (void *arg);
-typedef struct tau_pthread_pack {
-  void *(*start_routine) (void *);
-  void *arg;
-  int id;
-} tau_pthread_pack;
-
-
-int __real_pthread_create (pthread_t* thread, const pthread_attr_t* attr, 
-		    void *(*start_routine)(void*), void* arg);
-extern int __wrap_pthread_create (pthread_t* thread, const pthread_attr_t* attr, 
-		    void *(*start_routine)(void*), void* arg) {
-	/*
-  tau_pthread_pack *pack = (tau_pthread_pack*) malloc (sizeof(tau_pthread_pack));
-  pack->start_routine = start_routine;
-  pack->arg = arg;
-  pack->id = -1;
-	*/
+int __real_pthread_create(pthread_t *, const pthread_attr_t *, start_routine_p, void *);
+int __wrap_pthread_create(pthread_t * thread, const pthread_attr_t * attr, start_routine_p start_routine, void * arg)
+{
   return tau_pthread_create_wrapper(__real_pthread_create, thread, attr, start_routine, arg);
 }
 
-int __real_pthread_join (pthread_t thread, void **retval);
-extern int __wrap_pthread_join (pthread_t thread, void **retval) {
-  int ret;
-   TAU_PROFILE_TIMER(timer, "pthread_join()", "", TAU_DEFAULT);
-   TAU_PROFILE_START(timer);
-   ret= __real_pthread_join(thread, retval); 
-   TAU_PROFILE_STOP(timer);
-   return ret;
+int __real_pthread_join(pthread_t, void **);
+int __wrap_pthread_join(pthread_t thread, void **retval)
+{
+  return tau_pthread_join_wrapper(__real_pthread_join, thread, retval);
 }
-void __real_pthread_exit (void *value_ptr);
-extern void __wrap_pthread_exit (void *value_ptr) {
 
-  TAU_PROFILE_EXIT("pthread_exit");
-  __real_pthread_exit(value_ptr);
+void __real_pthread_exit(void *);
+void __wrap_pthread_exit(void * value_ptr)
+{
+  tau_pthread_exit_wrapper(__real_pthread_exit, value_ptr);
 }
 
 #ifdef TAU_PTHREAD_BARRIER_AVAILABLE
-int __real_pthread_barrier_wait(pthread_barrier_t *barrier);
-int __wrap_pthread_barrier_wait(pthread_barrier_t *barrier) {
-  int retval;
-  TAU_PROFILE_TIMER(timer, "pthread_barrier_wait", "", TAU_DEFAULT);
-  TAU_PROFILE_START(timer);
-  retval = __real_pthread_barrier_wait (barrier);
-  TAU_PROFILE_STOP(timer);
-  return retval;
+int __real_pthread_barrier_wait(pthread_barrier_t *);
+int __wrap_pthread_barrier_wait(pthread_barrier_t * barrier)
+{
+  return tau_pthread_barrier_wait_wrapper(__real_pthread_barrier_wait, barrier);
 }
 #endif /* TAU_PTHREAD_BARRIER_AVAILABLE */
 
 #endif //TAU_PRELOAD_LIB
-
-
-/***************************************************************************
- * $RCSfile: TauWrapSyscalls.cpp,v $   $Author: sameer $
- * $Revision: 1.6 $   $Date: 2010/06/10 12:46:53 $
- * TAU_VERSION_ID: $Id: TauWrapSyscalls.cpp,v 1.6 2010/06/10 12:46:53 sameer Exp $
- ***************************************************************************/

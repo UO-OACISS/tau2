@@ -1,11 +1,9 @@
 package edu.uoregon.tau.perfdmf.taudb;
 
-import java.io.InputStream;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -13,7 +11,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 
-import edu.uoregon.tau.common.Gzip;
 import edu.uoregon.tau.common.MetaDataMap.MetaDataKey;
 import edu.uoregon.tau.perfdmf.DataSource;
 import edu.uoregon.tau.perfdmf.Function;
@@ -28,6 +25,10 @@ import edu.uoregon.tau.perfdmf.database.DB;
 public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 	// public class TAUdbTrial {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8756722915938384030L;
 	public static final String[] TRIAL_COLUMNS = { "name", "data_source",
 			"node_count", "contexts_per_node", "threads_per_context",
 			"total_threads" };
@@ -95,7 +96,6 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 			results.close();
 			statement.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		if (trial != null & complete) {
@@ -139,7 +139,6 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 			results.close();
 			statement.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -417,21 +416,7 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 		this.secondaryMetadata = secondaryMetadata;
 	}
 
-	public String toString() {
-//		StringBuilder b = new StringBuilder();
-//		b.append("id = " + trialID + ", ");
-//		b.append("name = " + name + ", ");
-//		b.append("dataSource = " + dataSourceType + ", ");
-//		b.append("nodeCount = " + nodeCount + ", ");
-//		b.append("contextsPerNode = " + contextsPerNode + ", ");
-//		b.append("threadsPerContext = " + threadsPerContext + ", ");
-//		b.append("totalThreads = " + totalThreads + "\n");
-//		for (String key : primaryMetadata.keySet()) {
-//			b.append(key + ": " + primaryMetadata.get(key) + "\n");
-//		}
-//		return b.toString();
-		return name;
-	}
+
 
 	public static Map<Integer, TAUdbTrial> getTrials(TAUdbSession session) {
 		Map<Integer, TAUdbTrial> trials = new HashMap<Integer, TAUdbTrial>();
@@ -457,7 +442,6 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 			results.close();
 			statement.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return trials;
@@ -492,12 +476,11 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 		PreparedStatement statement;
 		try {
 			statement = db.prepareStatement(sql);
-			statement.setString(1, name);
+			statement.setString(1, newName);
 			statement.setInt(2, trialID);
 			statement.executeUpdate();
 			statement.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -605,12 +588,14 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 			// create a string to hit the database
 			String buf = "SELECT t.id, t.name, t.data_source, t.node_count, t.contexts_per_node, "
 					+ "t.threads_per_context, t.total_threads FROM "
-					+ db.getSchemaPrefix() + "trial t " + whereClause;
+					+ db.getSchemaPrefix() + "trial t " + whereClause
+					+" order by t.id";
 			Vector<Trial> trials = new Vector<Trial>();
 
 			// System.out.println(buf.toString());
 			ResultSet resultSet = db.executeQuery(buf.toString());
 			TAUdbSession session = new TAUdbSession(db);
+			//int dex=1;
 			while (resultSet.next() != false) {
 				int pos = 1;
 
@@ -636,16 +621,22 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
                 
 
 				trials.addElement(trial);
+				//System.out.println("Added trial "+dex);
+				//dex++;
 			}
 			resultSet.close();
 			// TODO: Deal with adding the metrics to the trial
 			// get the function details
+			/*//Don't get metrics until requested.
 			Enumeration<Trial> en = trials.elements();
 			Trial trial;
+			//dex =0;
 			while (en.hasMoreElements()) {
 				trial = en.nextElement();
 				trial.getTrialMetrics(db);
-			}
+				//System.out.println("got metrics for trial "+dex++);
+				
+			}*/
 
 			Collections.sort(trials);
 
@@ -804,6 +795,51 @@ public class TAUdbTrial extends edu.uoregon.tau.perfdmf.Trial {
 				+ "trial WHERE id = ?");
 		statement.setInt(1, trialID);
 		statement.execute();
+	}
+	
+	public static void updatePrimaryMetadataField(DB db, int trialID, String name, String value){
+		try {
+			PreparedStatement statement = db.prepareStatement("update primary_metadata set value=? where trial=? and name=?;");
+			statement.setString(1, value);
+			statement.setInt(2, trialID);
+			statement.setString(3, name);
+			statement.execute();
+			statement.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	public static void updateFields(DB db,int trialID, String field,String value){
+//	int node_count = dataSource.getMaxNode();
+//	int contexts_per_node = dataSource.getMaxContextPerNode();
+//	int threads_per_context = dataSource.getMaxThreadsPerContext();
+//	int datasource_id = dataSource.getFileType();
+//	int total_threads = dataSource.getNumThreads();
+
+//	String sql = "UPDATE "
+//			+ db.getSchemaPrefix()
+//			+ "trial (name, data_source,  node_count, contexts_per_node, threads_per_context, total_threads)"
+//			+ "VALUES (?,?,?,?,?,?" + ") ";
+	String sql = "update trial set "+field+"=? where ID="+trialID;
+	PreparedStatement statement;
+	try {
+		statement = db.prepareStatement(sql);
+		statement.setString(1, value);
+//		statement.setString(1, name);
+//
+//		statement.setInt(2, datasource_id);
+//
+//		statement.setInt(3, node_count);
+//		statement.setInt(4, contexts_per_node);
+//		statement.setInt(5, threads_per_context);
+//		statement.setInt(6, total_threads);
+
+		statement.executeUpdate();
+		statement.close();
+	} catch (SQLException e) {
+		e.printStackTrace();
+	}
+
 	}
 
 	public void loadXMLMetadata(DB db, Map<Integer, Function> ieMap) {

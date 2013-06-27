@@ -20,35 +20,35 @@ AC_DEFUN([AC_SCOREP_REVISION],
 [
 AC_REQUIRE([AC_SCOREP_PACKAGE_AND_LIBRARY_VERSION])
 
-    # When working with a svn checkout, write a REVISION file. The REVISION
-    # file is updated during each configure call and also at make doxygen-user
-    # and make dist.
+# When in a working copy, write REVISION* files. The REVISION* files
+# are updated during each configure call and also at make
+# doxygen-user.
 
-    # When working with a make-dist-generated tarball, REVISION is already
-    # there.
+# When working with a make-dist-generated tarball, the REVISION* files
+# are provided.
 
-    component_revision="invalid"
-    common_revision="invalid"
-    which svnversion > /dev/null; \
-    if test $? -eq 0; then
-        component_revision=`svnversion $srcdir`
-        common_revision=`svnversion $srcdir/vendor/common`
-        if test "x$component_revision" != "xexported"; then
-            echo $component_revision > $srcdir/build-config/REVISION
-        fi
-        if test "x$common_revision" != "xexported"; then
-            echo $common_revision > $srcdir/build-config/REVISION_COMMON
-        fi
-    fi
+component_revision="invalid"
+common_revision="invalid"
+which svnversion > /dev/null
+AS_IF([test $? -eq 0],
+      [component_revision=`svnversion $srcdir`
+       common_revision=`svnversion $srcdir/vendor/common`
+       # If we are in a working copy, update the REVISION* files.
+       AS_IF([test "x$component_revision" != "xexported" && \
+              test "x$component_revision" != "xUnversioned directory"],
+             [echo $component_revision > $srcdir/build-config/REVISION])
+       AS_IF([test "x$common_revision" != "xexported" && \
+              test "x$component_revision" != "xUnversioned directory"],
+             [echo $common_revision > $srcdir/build-config/REVISION_COMMON])])
 
-    if grep -E [[A-Z]] $srcdir/build-config/REVISION > /dev/null || \
+# Warn if the REVISION* files contain anything but plain numbers.
+AS_IF([grep -E [[A-Z]] $srcdir/build-config/REVISION > /dev/null || \
        grep ":" $srcdir/build-config/REVISION > /dev/null ||
        grep -E [[A-Z]] $srcdir/build-config/REVISION_COMMON > /dev/null || \
-       grep ":" $srcdir/build-config/REVISION_COMMON > /dev/null; then
-        component_revision=`cat $srcdir/build-config/REVISION`
-        common_revision=`cat $srcdir/build-config/REVISION_COMMON`
-        AC_MSG_WARN([distribution does not match a single, unmodified revision, but $component_revision (${PACKAGE_NAME}) and $common_revision (common).])
-    fi
+       grep ":" $srcdir/build-config/REVISION_COMMON > /dev/null],
+      [component_revision=`cat $srcdir/build-config/REVISION`
+       common_revision=`cat $srcdir/build-config/REVISION_COMMON`
+       AC_MSG_WARN([distribution does not match a single, unmodified revision, but $component_revision (${PACKAGE_NAME}) and $common_revision (common).])])
 ])
 
 

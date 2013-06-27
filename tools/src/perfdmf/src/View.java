@@ -42,11 +42,29 @@ public class View implements Serializable {
     private int viewID = 0;
     private String whereClause = "";
     private String joinClause = "";
+    private String trialID = "";
 
     /**
+	 * @return the trialID
+	 */
+	public String getTrialID() {
+		return trialID;
+	}
+
+	/**
+	 * @param trialID the trialID to set
+	 */
+	public void setTrialID(String trialID) {
+		this.trialID = trialID;
+	}
+
+	/**
 	 * @return the joinClause
 	 */
 	public String getJoinClause() {
+		if (trialID.length() > 0) {
+			return "";
+		}
 		return joinClause;
 	}
 
@@ -88,6 +106,19 @@ public class View implements Serializable {
 		this.viewID = view.viewID;
 	}
 
+	public static View VirtualView(View parent) {
+		View view = new View(parent);
+		/*
+		 * 0 results in checking the fields, -1 returns all views, -2 provides the desired behavior
+		 */
+		view.viewID=-2;
+		view.parent=parent;
+		view.fields.set(fieldNames.indexOf("NAME"), "All Trials");
+		view.fields.set(fieldNames.indexOf("PARENT"), "");
+		view.fields.set(fieldNames.indexOf("ID"), "-1");
+		view.node=null;
+		return view;
+	}
 
 	public static Iterator<String> getFieldNames(DB db) {
 		String allUpperCase = "TRIAL_VIEW";
@@ -174,7 +205,7 @@ public class View implements Serializable {
 	}
 
 	public String toString() {
-		return "View: " + getField("NAME");
+		return getField("NAME");
 	}
 
 	public void setDMTN(DefaultMutableTreeNode node) {
@@ -248,29 +279,58 @@ public class View implements Serializable {
 	 * @return List
 	 */
 	public static List<Trial> getTrialsForView (List<View> views, boolean getXMLMetadata, DB db) {
-		if (db.getSchemaVersion() > 0) {
-			return View.getTrialsForTAUdbView(views, db);
-		}
-
 		//PerfExplorerOutput.println("getTrialsForView()...");
-		List<Trial> trials = new ArrayList<Trial>();
-		try {
-			StringBuilder whereClause = new StringBuilder();
-			whereClause.append(" inner join application a on e.application = a.id ");
-			whereClause.append(" where ");
-			for (int i = 0 ; i < views.size() ; i++) {
-				if (i > 0) {
-					whereClause.append (" AND ");
+		List<Trial> trials = null;
+		if (db.getSchemaVersion() > 0) {
+			trials = View.getTrialsForTAUdbView(views, db);
+		} else {
+			trials = new ArrayList<Trial>();
+			try {
+				StringBuilder whereClause = new StringBuilder();
+				whereClause.append(" inner join application a on e.application = a.id ");
+				if(views.size()>0){
+				whereClause.append(" where ");
+				for (int i = 0 ; i < views.size() ; i++) {
+					if (i > 0) {
+						whereClause.append (" AND ");
+					}
+					View view = views.get(i);
+					
+					String wclause=view.getWhereClause(db.getDBType());
+					
+					if(wclause.trim().startsWith("where")){
+						wclause=wclause.substring(wclause.indexOf("where")+5);
+					}
+					
+					whereClause.append(wclause);
 				}
-				View view = views.get(i);
-				whereClause.append(view.getWhereClause(db.getDBType()));
+				}
+				//PerfExplorerOutput.println(whereClause.toString());
+				trials = Trial.getTrialList(db, whereClause.toString(), getXMLMetadata);
+			} catch (Exception e) {
+				String error = "ERROR: Couldn't select views from the database!";
+				System.err.println(error);
+				e.printStackTrace();
 			}
-			//PerfExplorerOutput.println(whereClause.toString());
-			trials = Trial.getTrialList(db, whereClause.toString(), getXMLMetadata);
-		} catch (Exception e) {
-			String error = "ERROR: Couldn't select views from the database!";
-			System.err.println(error);
-			e.printStackTrace();
+		}
+		StringBuilder sb = new StringBuilder();
+		boolean started = false;
+		for (Trial trial : trials) {
+			if (started) {
+				sb.append(",");
+			} else {
+				sb.append("(");
+			}
+			sb.append(trial.trialID);
+			started = true;
+		}
+		if (started) {
+			sb.append(")");
+		}
+		for (View view : views) {
+			// this is overkill for the sub-views, but this string will be updated if/when
+			// they are expanded/selected
+			view.setTrialID(sb.toString());
 		}
 		return trials;
 	}
@@ -283,8 +343,17 @@ public class View implements Serializable {
 	 */
 	public static List<Trial> getTrialsForTAUdbView (List<View> views, DB db) {
 		//PerfExplorerOutput.println("getTrialsForView()...");
-		List<Trial> trials = new ArrayList<Trial>();
+		//List<Trial> trials = new ArrayList<Trial>();
 		HashMap<Integer, View> hashViews = new HashMap<Integer, View>();
+		if(views.size()==0){
+			List<View> topViews = getViews(0,db);
+			if(topViews.size()>0){
+				views.add(topViews.get(0));
+			}else
+			{
+			 return null;
+			}
+		}
 		for(View view: views){
 			hashViews.put(view.getID(), view);
 		}
@@ -315,32 +384,39 @@ public class View implements Serializable {
 			StringBuilder joinClause = new StringBuilder();
 			int currentView = 0;
 			int alias = 0;
-			String conjoin = " where ";
+			String conjoin = " where ((";
+			boolean conditions = false;
 			while (results.next() != false) {
 				int viewid = results.getInt(2);
 				String tableName = results.getString(3);
 				if (tableName == null) 
 					break;
+				conditions = true;
 				String columnName = results.getString(4);
 				String operator = results.getString(5);
 				String value = results.getString(6);
 				if ((currentView > 0) && (currentView != viewid)) {
-					conjoin = " and ";
+					conjoin = ") and ((";
 				} else if (currentView == viewid) {
-					conjoin = " " + results.getString(1) + " ";
+					conjoin = " " + results.getString(1) + " (";
 				}
 				if (tableName.equalsIgnoreCase("trial")) {
 					whereClause.append(conjoin +   "t." + columnName + " " + operator + " " + "'" + value + "'");
 				} else {
 					// otherwise, we have primary_metadata or secondary_metadata
-					joinClause.append(" left outer join " + tableName + " t" + alias + " on t.id = t" + alias + ".trial");
-					whereClause.append(conjoin + "t" + alias + ".name = '" + columnName + "' ");
-					whereClause.append("and  t" + alias + ".value "+operator+" '" + value + "' ");
+					joinClause.append(" left outer join " + tableName + " t" + alias + " on t.id = t" + alias + ".trial and ");
+					// put the name column in the join to reduce the size of the join
+					joinClause.append("t" + alias + ".name = '" + columnName + "' ");
+					whereClause.append(conjoin + " t" + alias + ".value "+operator+" '" + value + "' ");
 				}
+				whereClause.append(")");
 				alias++;
 				currentView = viewid;
 				hashViews.get(currentView).setWhereClause(whereClause.toString());
 				hashViews.get(currentView).setJoinClause(joinClause.toString());
+			}
+			if (conditions) {
+				whereClause.append(")");
 			}
 			statement.close();
 			
@@ -366,10 +442,17 @@ public class View implements Serializable {
 		this.viewID = id;
 	}
 	public void setField(String name, String field){
-		setField(fieldNames.indexOf(name.toUpperCase()), field);
+		String n = name.toUpperCase();
+		int i = fieldNames.indexOf(n);
+		setField(i, field);
 	}
     public void setField(int idx, String field) {
-        if (DBConnector.isIntegerType(database.getAppFieldTypes()[idx]) && field != null) {
+    	int[] types = database.getAppFieldTypes();
+    	if(types.length<=idx){
+    		System.err.println("Warning: Invalid Index for App Field Types");
+    		return;
+    	}
+        if (DBConnector.isIntegerType(types[idx]) && field != null) {
             try {
                 //int test = 
                 	Integer.parseInt(field);
@@ -593,7 +676,15 @@ public static void deleteView(int viewID, DB db) throws SQLException{
 	}
 
 	public String getWhereClause(String dbType) {
+		if (trialID.length() > 0) {
+			String tmpWhere = " where t.id in " + trialID;
+			return tmpWhere;
+		}
 		if (whereClause == null || whereClause.equals("")) {
+			String colName=getField("COLUMN_NAME");
+			if(colName==null||colName.length()==0){
+				return whereClause;
+			}
 			StringBuilder wc = new StringBuilder();
 			if (dbType.compareTo("db2") == 0) {
 				wc.append(" cast (");
@@ -605,7 +696,7 @@ public static void deleteView(int viewID, DB db) throws SQLException{
 			} else /*if (view.getField("table_name").equalsIgnoreCase("Trial")) */ {
 				wc.append (" t.");
 			}
-			wc.append (getField("COLUMN_NAME"));
+			wc.append (colName);
 			if (dbType.compareTo("db2") == 0) {
 				wc.append(" as varchar(256)) ");
 			}

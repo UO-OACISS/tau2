@@ -19,6 +19,9 @@
 #include "BPatch_process.h"
 #include "BPatch_snippet.h" 
 #include "BPatch_statement.h" 
+#include "BPatch_basicBlockLoop.h"
+#include "BPatch_point.h"
+#include "BPatch_addressSpace.h"
 #include <tauarch.h>
 
 //#include <iostream.h>
@@ -665,7 +668,11 @@ int getFunctionFileLineInfo(BPatch_image* mutateeAddressSpace,
   const char *typeName;
 
   baseAddr = (unsigned long)(f->getBaseAddr());
+#ifndef TAU_DYNINSTAPI_8_PLUS
   lastAddr = baseAddr + f->getSize();
+#else 
+  f->getAddressRange(baseAddr, lastAddr); 
+#endif
   BPatch_Vector< BPatch_statement > lines;
   f->getName(fname, 1024);
   
@@ -736,12 +743,44 @@ char * getGCCHOME(void) {
   pclose(fp);
 }
 
-bool loadDependentLibraries(BPatch_binaryEdit *bedit) {
+bool loadDependentLibraries(BPatch_binaryEdit *bedit, char *bindings) {
   //old:    const string GCCHOME = "/usr/lib/gcc/i586-redhat-linux/4.4.1";
+#ifdef OLD
   const string GCCHOME = string(getGCCHOME());
+#endif /* OLD */
 
   // Order of load matters, just like command line arguments to a standalone linker
 
+  char deplibs[1024];
+  char bindir[]=TAU_BIN_DIR; 
+  char cmd[1024]; 
+  dprintf("Inside loadDependentLibraries: bindings=%s\n", bindings);
+  sprintf(cmd, "%s/tau_show_libs %s/../lib/Makefile.tau%s", bindir, bindir, bindings);
+  dprintf("cmd = %s\n", cmd);
+  FILE *fp; 
+  fp = popen(cmd, "r"); 
+  
+  if (fp == NULL) {
+    perror("tau_run: Error launching tau_show_libs to get list of dependent static libraries for static binary");
+    return 1;
+  }
+
+  while ((fgets(deplibs, 1024, fp)) != NULL) {
+    
+    int len = strlen(deplibs);
+    if (deplibs[len-2] == ',' && deplibs[len-3] == '"' && deplibs[0] == '"') {
+      deplibs[len-3]='\0';
+      dprintf("LOADING %s\n", &deplibs[1]);
+      if( !bedit->loadLibrary(&deplibs[1]) ) {
+        fprintf(stderr, "Failed to load dependent library: %s\n", &deplibs[1]);
+        return false;
+      }
+    } else {
+      printf("WARNING: tau_show_libs in tau_run: Comma not found! deplibs = %s\n", deplibs);
+    }
+  }
+        
+#ifdef OLD
   // Load C++ Library
   string cpplib = GCCHOME + "/libstdc++.a";
   if( !bedit->loadLibrary(cpplib.c_str()) ) {
@@ -772,11 +811,12 @@ bool loadDependentLibraries(BPatch_binaryEdit *bedit) {
     return false;
   }
 
+#endif /* OLD */
   return true;
 }
 
 
-int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, char* libname, char *staticlibname, char *staticmpilibname)
+int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, char* libname, char *staticlibname, char *staticmpilibname, char *bindings)
 {
   using namespace std;
   BPatch_Vector<BPatch_point *> mpiinit;
@@ -810,6 +850,10 @@ int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, cha
     assert(result1);
   }else{
     bool result = mutateeAddressSpace->loadLibrary(libname);
+    if (!result) {
+      printf("Error: loadLibrary(%s) failed. Please ensure that TAU's lib directory is in your LD_LIBRARY_PATH environment variable and retry.\n", libname);
+      printf("You may also want to use tau_exec while launching the rewritten binary. If TAU relies on some external libraries (Score-P), these may need to specified as tau_exec -loadlib=/path/to/library <mutatee> \n");
+    }
     assert(result);
   }
 
@@ -970,7 +1014,7 @@ int tauRewriteBinary(BPatch *bpatch, const char *mutateeName, char *outfile, cha
   mutateeAddressSpace->finalizeInsertionSet(false, NULL);
 
   if( isStaticExecutable) {
-    bool loadResult = loadDependentLibraries(mutateeAddressSpace);
+    bool loadResult = loadDependentLibraries(mutateeAddressSpace, bindings);
     if( !loadResult ) {
       fprintf(stderr, "Failed to load dependent libraries need for binary rewrite\n");
       return -1;
@@ -1081,7 +1125,7 @@ int main(int argc, char **argv){
       dprintf ("Non-option argument %s\n", argv[index]);
   }
 
-  char bindings[1024]; 
+  char * bindings = (char *) malloc (1024); 
   char cmd[1024]; 
   char bindir[]=TAU_BIN_DIR; 
   dprintf("mutatee name = %s\n", mutname);
@@ -1176,7 +1220,7 @@ int main(int argc, char **argv){
   // removed for DyninstAPI 4.0
 
   if (binaryRewrite) {
-    tauRewriteBinary(bpatch, mutname, outfile, (char *)libname, (char *)staticlibname, (char *)staticmpilibname);
+    tauRewriteBinary(bpatch, mutname, outfile, (char *)libname, (char *)staticlibname, (char *)staticmpilibname, bindings);
     return 0; // exit from the application 
   }
 #ifdef TAU_DYNINST41PLUS
@@ -1209,7 +1253,8 @@ int main(int argc, char **argv){
     if (loadlib == true) {
 #endif /* SP1 */
       //try and load the library
-      if (appThread->loadLibrary(libname, true) == true){  
+      bool ret = appThread->loadLibrary(libname, true) ; 
+      if (ret == true){  
 	//now, check to see if the library is listed as a module in the
 	//application image
 	char name[FUNCNAMELEN];
@@ -1363,7 +1408,11 @@ int main(int argc, char **argv){
     /* check to see if we have to rewrite the binary image */ 
     if (binaryRewrite)
       {
+#ifdef TAU_DYNINSTAPI_8_PLUS
+	char * directory = "." ; // appThread->dumpImage("a.inst");
+#else
 	char * directory = appThread->dumpPatchedImage(outfile);
+#endif /* TAU_DYNINSTAPI_8_PLUS */
 	/* see if it was rewritten properly */ 
 	if (directory) 
 	  {

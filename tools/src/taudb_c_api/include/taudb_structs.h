@@ -17,6 +17,11 @@
 typedef int boolean;
 #endif
 
+typedef struct taudb_prepared_statement {
+ char* name;
+ UT_hash_handle hh; /* hash index for hashing by name */
+} TAUDB_PREPARED_STATEMENT;
+
 /* forward declarations to ease objects that need to know about each other 
  * and have doubly-linked relationships */
 
@@ -66,6 +71,7 @@ typedef struct taudb_connection {
 #if defined __TAUDB_POSTGRESQL__
   PGconn *connection;
   PGresult *res;
+  TAUDB_PREPARED_STATEMENT *statements;
 #elif defined __TAUDB_SQLITE__
   sqlite3 *connection;
   sqlite3_stmt *ppStmt;
@@ -73,19 +79,20 @@ typedef struct taudb_connection {
 #endif
   TAUDB_SCHEMA_VERSION schema_version;
   boolean inTransaction;
+  boolean inPortal;
   TAUDB_DATA_SOURCE* data_sources_by_id;
   TAUDB_DATA_SOURCE* data_sources_by_name;
 } TAUDB_CONNECTION;
 
 /* these are the derived thread indexes. */
 
-#define TAUDB_MEAN_WITHOUT_NULLS -1;
-#define TAUDB_TOTAL -2;
-#define TAUDB_STDDEV_WITHOUT_NULLS -3;
-#define TAUDB_MIN -4;
-#define TAUDB_MAX -5;
-#define TAUDB_MEAN_WITH_NULLS -6;
-#define TAUDB_STDDEV_WITH_NULLS -7;
+#define TAUDB_MEAN_WITHOUT_NULLS -1
+#define TAUDB_TOTAL -2
+#define TAUDB_STDDEV_WITHOUT_NULLS -3
+#define TAUDB_MIN -4
+#define TAUDB_MAX -5
+#define TAUDB_MEAN_WITH_NULLS -6
+#define TAUDB_STDDEV_WITH_NULLS -7
 
 /* trials are the top level structure */
 
@@ -115,6 +122,7 @@ typedef struct taudb_trial {
  struct taudb_counter_value* counter_values;
  struct taudb_primary_metadata* primary_metadata;
  struct taudb_secondary_metadata* secondary_metadata;
+ struct taudb_secondary_metadata* secondary_metadata_by_key;
 } TAUDB_TRIAL;
 
 /*********************************************/
@@ -124,12 +132,14 @@ typedef struct taudb_trial {
 /* thread represents one physical & logical location for a measurement. */
 
 typedef struct taudb_thread {
- int id; /* database id, also key to hash */
+ int id; /* database id */
  struct taudb_trial* trial;
  int node_rank;    /* which process does this thread belong to? */
  int context_rank; /* which context? USUALLY 0 */
  int thread_rank;  /* what is this thread's rank in the process */
- int index;        /* what is this threads OVERALL index? ranges from 0 to trial.thread_count-1 */
+ int index;        /* what is this threads OVERALL index? 
+                      ranges from 0 to trial.thread_count-1 
+					  also serves as hash key */
  struct taudb_secondary_metadata* secondary_metadata;
  UT_hash_handle hh;
 } TAUDB_THREAD;
@@ -172,11 +182,11 @@ typedef struct taudb_timer {
  int line_number_end;        /* what line does the timer end on? */
  int column_number;          /* what column number does the timer start on? */
  int column_number_end;      /* what column number does the timer end on? */
- int group_count;
- struct taudb_timer_group** groups;   /* array of pointers to groups */
+ struct taudb_timer_group* groups;   /* hash of groups, using group hash handle hh2 */
  struct taudb_timer_parameter* parameters;   /* array of parameters */
- UT_hash_handle hh1;          /* hash key for id lookup */
- UT_hash_handle hh2;         /* hash key for name lookup in temporary hash */
+ UT_hash_handle trial_hash_by_id;          /* hash key for id lookup */
+ UT_hash_handle trial_hash_by_name;         /* hash key for name lookup in temporary hash */
+ UT_hash_handle group_hash_by_name;         /* hash key for name lookup in timer group */
 } TAUDB_TIMER;
 
 /*********************************************/
@@ -190,9 +200,9 @@ typedef struct taudb_timer {
 
 typedef struct taudb_timer_group {
  char* name;
- int timer_count;    /* how many timers are in this group? */
- struct taudb_timer** timers;   /* array of timer pointers */
- UT_hash_handle hh; 
+ struct taudb_timer* timers;   /* hash of timers, using timer hash handle hh3 */
+ UT_hash_handle trial_hash_by_name;  // hash handle for trial
+ UT_hash_handle timer_hash_by_name;  // hash handle for timers
 } TAUDB_TIMER_GROUP;
 
 /* timer parameters are parameter based profile values. 
@@ -204,7 +214,6 @@ typedef struct taudb_timer_group {
 */
 
 typedef struct taudb_timer_parameter {
- int id; /* database reference, and hash key */
  char* name;
  char* value;
  UT_hash_handle hh;
@@ -251,7 +260,7 @@ typedef struct taudb_timer_value {
  double inclusive_percentage;   /* the inclusive percentage of total time of the application */
  double exclusive_percentage;   /* the exclusive percentage of total time of the application */
  double sum_exclusive_squared;  /* how much variance did we see every time we measured this timer? */
- char *key; /* hash table key - metric name */
+ //char *key; /* hash table key - metric name */
  UT_hash_handle hh;
 } TAUDB_TIMER_VALUE;
 
@@ -305,19 +314,23 @@ typedef struct taudb_primary_metadata {
 /* primary metadata is metadata that could be nested, could
    contain unique data for each thread, and could be an array. */
 
-typedef struct taudb_secondary_metadata {
- char* id; /* link back to database */
- struct taudb_timer_callpath* timer_callpath; 
- struct taudb_thread* thread; 
+typedef struct taudb_secondary_metadata_key {
+ struct taudb_timer_callpath *timer_callpath; /* link back to database */
+ struct taudb_thread *thread; /* link back to database, roundabout way */
  struct taudb_secondary_metadata* parent; /* self-referencing */
  struct taudb_time_range* time_range;
- int num_values; /* can have arrays of data */
  char* name;
+} TAUDB_SECONDARY_METADATA_KEY;
+
+typedef struct taudb_secondary_metadata {
+ char* id; /* link back to database */
+ TAUDB_SECONDARY_METADATA_KEY key;
+ int num_values; /* can have arrays of data */
  char** value;
  int child_count;
  struct taudb_secondary_metadata* children; /* self-referencing  */
- char* key;
- UT_hash_handle hh; /* uses the key as a compound key */
+ UT_hash_handle hh; /* uses the id as a compound key */
+ UT_hash_handle hh2; /* uses the key as a compound key */
 } TAUDB_SECONDARY_METADATA;
 
 /* these are for supporting the older schema */
@@ -333,5 +346,11 @@ typedef struct perfdmf_application {
  char* name;
  struct taudb_primary_metadata* primary_metadata;
 } PERFDMF_APPLICATION;
+
+/* Error handling */
+typedef enum taudb_error_e {
+	TAUDB_OK,
+	TAUDB_CONNECTION_FAILED
+} taudb_error;
 
 #endif /* TAUDB_STRUCTS_H */

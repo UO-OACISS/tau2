@@ -8,7 +8,8 @@
       parameter (MSIZE = 1000) 
       contains
       subroutine allocate_matrices
-        allocate( A(MSIZE,MSIZE), B(MSIZE,MSIZE), C(MSIZE,MSIZE) )
+        allocate( A(MSIZE,MSIZE))
+        allocate( B(MSIZE,MSIZE), C(MSIZE,MSIZE) )
         return
       end subroutine allocate_matrices
       subroutine deallocate_matrices
@@ -31,6 +32,8 @@
             B(j,i) = i 
           end do
         end do
+        A(MSIZE+10,MSIZE) = 100
+        A(MSIZE,MSIZE+10) = 100
 
       end subroutine initialize
       

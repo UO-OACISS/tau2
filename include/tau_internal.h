@@ -78,4 +78,35 @@
 
 #endif /* __cplusplus */
 
+
+#ifdef DEBUG_ASSERT
+#ifdef TAU_EXECINFO
+#include <execinfo.h>
+
+#define TAU_ASSERT(test, fmt, ...) if (!(test)) { \
+  void * callstack[128]; \
+  int nid = RtsLayer::myNode(); \
+  int tid = RtsLayer::unsafeThreadId(); \
+  fprintf(stderr, "TAU_ASSERT [%d:%d](%s:%d): " fmt "\n", nid, tid, __FILE__, __LINE__, #__VA_ARGS__); \
+  fflush(stderr); \
+  int frames = backtrace(callstack, 128); \
+  char ** strs = backtrace_symbols(callstack, frames); \
+  for (int i=0; i<frames; ++i) \
+    fprintf(stderr, "           [%d:%d]: %s\n", nid, tid, strs[i]); \
+  free(strs); \
+  abort(); \
+}
+#else /* !defined(TAU_EXECINFO) */
+#define TAU_ASSERT(test, fmt, ...) if (!(test)) { \
+  int nid = RtsLayer::myNode(); \
+  int tid = RtsLayer::unsafeThreadId(); \
+  fprintf(stderr, "TAU_ASSERT [%d:%d](%s:%d): " fmt "\n", nid, tid, __FILE__, __LINE__, #__VA_ARGS__); \
+  fflush(stderr); \
+  abort(); \
+}
+#endif
+#else /* !defined(DEBUG_ASSERT) */
+#define TAU_ASSERT(test, fmt, ...)
+#endif /* DEBUG_ASSERT */
+ 
 #endif /* _TAU_INTERNAL_H_ */

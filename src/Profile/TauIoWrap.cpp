@@ -1,41 +1,50 @@
 /****************************************************************************
-**			TAU Portable Profiling Package			   **
-**			http://www.cs.uoregon.edu/research/tau	           **
-*****************************************************************************
-**    Copyright 2010  						   	   **
-**    Department of Computer and Information Science, University of Oregon **
-**    Advanced Computing Laboratory, Los Alamos National Laboratory        **
-****************************************************************************/
+ **			TAU Portable Profiling Package			   **
+ **			http://www.cs.uoregon.edu/research/tau	           **
+ *****************************************************************************
+ **    Copyright 2010  						   	   **
+ **    Department of Computer and Information Science, University of Oregon **
+ **    Advanced Computing Laboratory, Los Alamos National Laboratory        **
+ ****************************************************************************/
 /****************************************************************************
-**	File 		: TauIoWrap.cpp  				   **
-**	Description 	: TAU Profiling Package				   **
-**	Contact		: tau-bugs@cs.uoregon.edu               	   **
-**	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
-**                                                                         **
-**      Description     : io wrapper                                       **
-**                                                                         **
-****************************************************************************/
+ **	File 		: TauIoWrap.cpp  				   **
+ **	Description 	: TAU Profiling Package				   **
+ **	Contact		: tau-bugs@cs.uoregon.edu               	   **
+ **	Documentation	: See http://www.cs.uoregon.edu/research/tau       **
+ **                                                                         **
+ **      Description     : io wrapper                                       **
+ **                                                                         **
+ ****************************************************************************/
 #include <TAU.h>
 #include <Profile/TauInit.h>
 #include <Profile/TauIoWrap.h>
 #include <stdio.h>
-
 #include <vector>
+
 using namespace std;
+using namespace tau;
 
 #define dprintf TAU_VERBOSE
 
+const char * iowrap_event_names[NUM_EVENTS] = {
+    "Write Bandwidth (MB/s)",
+    "Bytes Written",
+    "Read Bandwidth (MB/s)",
+    "Bytes Read"
+};
 
-const char *iowrap_event_names[NUM_EVENTS] = {"Write Bandwidth (MB/s)", "Bytes Written", "Read Bandwidth (MB/s)", "Bytes Read"};
-
+void * global_write_bandwidth = 0;
+void * global_read_bandwidth = 0;
+void * global_bytes_written = 0;
+void * global_bytes_read = 0;
 
 /*********************************************************************
  * IOvector subclasses vector to provide custom constructor/destructor 
  * to enable/disable wrapping
  ********************************************************************/
 static int lightsOut = 0;
-class IOvector : public vector<vector<TauUserEvent*> > {
-public:
+struct IOvector : public vector<vector<TauUserEvent*> >
+{
   IOvector(int farg) : vector<vector<TauUserEvent*> >(farg) {
     lightsOut = 0;
   }
@@ -49,118 +58,122 @@ public:
  * the wrapped routines may be called during the initializers of other
  * shared libraries and may be before our global_ctors_aux() call
  ********************************************************************/
-static IOvector &TheIoWrapEvents() {
+static IOvector & TheIoWrapEvents()
+{
   static IOvector iowrap_events(4);
   return iowrap_events;
 }
 
-void *global_write_bandwidth=0, *global_read_bandwidth=0, *global_bytes_written=0, *global_bytes_read=0;
-
-
 /*********************************************************************
  * return whether we should pass through and not track the IO
  ********************************************************************/
-extern "C" int Tau_iowrap_checkPassThrough() {
-  if (Tau_global_get_insideTAU() > 0 || lightsOut) {
-    return 1;
-  } else {
-    return 0;
-  }
+extern "C"
+int Tau_iowrap_checkPassThrough()
+{
+  return lightsOut || Tau_init_initializingTAU() || !Tau_init_check_initialized() || (Tau_global_get_insideTAU() > 0);
 }
 
 /*********************************************************************
  * register the different events (read/write/etc) for a file descriptor
  ********************************************************************/
-extern "C" void Tau_iowrap_registerEvents(int fid, const char *pathname) {
-  RtsLayer::LockDB();
-  dprintf ("Asked to registering %d with %s (current size=%d)\n", fid, pathname, TheIoWrapEvents()[0].size());
-  fid++; // skip the "unknown" descriptor
+extern "C"
+void Tau_iowrap_registerEvents(int fid, const char *pathname)
+{
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
 
-  for (int i=0; i<NUM_EVENTS; i++) {
+  RtsLayer::LockDB();
+
+  IOvector & iowrap_events = TheIoWrapEvents();
+  dprintf("Asked to register %d with %s (current size=%d)\n", fid, pathname, TheIoWrapEvents()[0].size());
+  fid++;    // skip the "unknown" descriptor
+
+  for (int i = 0; i < NUM_EVENTS; i++) {
     TauUserEvent *unknown_ptr = 0;
-    if (TheIoWrapEvents()[i].size() >= 1) {
-      unknown_ptr = TheIoWrapEvents()[i][0];
+    if (iowrap_events[i].size() > 0) {
+      unknown_ptr = iowrap_events[i][0];
     }
-    while (TheIoWrapEvents()[i].size() <= fid) {
-      TheIoWrapEvents()[i].push_back(unknown_ptr);
-      if (TheIoWrapEvents()[i].size()-1 != fid) {
-	dprintf ("Registering %d with unknown\n", TheIoWrapEvents()[i].size()-2);
+    while (iowrap_events[i].size() <= fid) {
+      iowrap_events[i].push_back(unknown_ptr);
+      if (iowrap_events[i].size() - 1 != fid) {
+        dprintf("Registering %d with unknown\n", iowrap_events[i].size() - 2);
       }
     }
     void *event = 0;
-#ifdef TAU_PGI
-    char ename[1024];
+    char ename[4096];
     sprintf(ename,"%s <file=%s>", iowrap_event_names[i], pathname);
-    Tau_get_context_userevent(&event, (char*)ename);
-#else
-    //    string name = string(iowrap_event_names[i]) + " <file=\"" + pathname + "\">";
-    string name = string(iowrap_event_names[i]) + " <file=" + pathname + ">";
-    Tau_get_context_userevent(&event, strdup((char*)name.c_str()));
-#endif /* TAU_PGI */
-
-    TheIoWrapEvents()[i][fid] = (TauUserEvent*)event;
+    Tau_get_context_userevent(&event, ename);
+    iowrap_events[i][fid] = (TauUserEvent*)event;
   }
-  dprintf ("Registering %d with %s\n", fid-1, pathname);
+  dprintf("Registering %d with %s\n", fid - 1, pathname);
   RtsLayer::UnLockDB();
 }
 
 /*********************************************************************
  * unregister events for a file descriptor
  ********************************************************************/
-extern "C" void Tau_iowrap_unregisterEvents(int fid) {
-  RtsLayer::LockDB();
-  dprintf ("Un-registering %d\n", fid);
-  fid++; // skip the "unknown" descriptor
+extern "C" void Tau_iowrap_unregisterEvents(int fid)
+{
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
 
-  for (int i=0; i<NUM_EVENTS; i++) {
+  RtsLayer::LockDB();
+
+  IOvector & iowrap_events = TheIoWrapEvents();
+  dprintf("Un-registering %d\n", fid);
+  fid++;    // skip the "unknown" descriptor
+
+  for (int i = 0; i < NUM_EVENTS; i++) {
     TauUserEvent *unknown_ptr = 0;
-    if (TheIoWrapEvents()[i].size() >= 1) {
-      unknown_ptr = TheIoWrapEvents()[i][0];
+    if (iowrap_events[i].size() >= 1) {
+      unknown_ptr = iowrap_events[i][0];
     }
-    while (TheIoWrapEvents()[i].size() <= fid) {
-      TheIoWrapEvents()[i].push_back(unknown_ptr);
+    while (iowrap_events[i].size() <= fid) {
+      iowrap_events[i].push_back(unknown_ptr);
     }
-    TheIoWrapEvents()[i][fid] = unknown_ptr;
+    iowrap_events[i][fid] = unknown_ptr;
   }
   RtsLayer::UnLockDB();
 }
-
 
 /*********************************************************************
  * Tau_iowrap_dupEvents takes care of the associating the events with the 
  * new file descriptor obtained by using dup/dup2 calls.
  ********************************************************************/
-extern "C" void Tau_iowrap_dupEvents(int oldfid, int newfid) {
+extern "C" void Tau_iowrap_dupEvents(int oldfid, int newfid)
+{
+  // Protect TAU from itself
+  TauInternalFunctionGuard protects_this_function;
+
   RtsLayer::LockDB();
-  dprintf ("dup (old=%d, new=%d)\n", oldfid, newfid);
-  oldfid++; // skip the "unknown" descriptor
+
+  IOvector & iowrap_events = TheIoWrapEvents();
+  dprintf("dup (old=%d, new=%d)\n", oldfid, newfid);
+  oldfid++;    // skip the "unknown" descriptor
   newfid++;
 
-  for (int i=0; i<NUM_EVENTS; i++) {
-    while (TheIoWrapEvents()[i].size() <= newfid) {
-      TheIoWrapEvents()[i].push_back(0);
+  for (int i = 0; i < NUM_EVENTS; i++) {
+    while (iowrap_events[i].size() <= newfid) {
+      iowrap_events[i].push_back(0);
     }
-    TheIoWrapEvents()[i][newfid] = TheIoWrapEvents()[i][oldfid];
+    iowrap_events[i][newfid] = iowrap_events[i][oldfid];
   }
   RtsLayer::UnLockDB();
 }
 
-
-
 /*********************************************************************
  * initializer
  ********************************************************************/
-extern "C" void Tau_iowrap_checkInit() {
+extern "C" void Tau_iowrap_checkInit()
+{
   static int init = 0;
-  if (init == 1) {
-    return;
-  }
+  if (init) return;
   init = 1;
 
-  global_write_bandwidth=0;
-  global_read_bandwidth=0;
-  global_bytes_written=0;
-  global_bytes_read=0;
+  global_write_bandwidth = 0;
+  global_read_bandwidth = 0;
+  global_bytes_written = 0;
+  global_bytes_read = 0;
 
   Tau_init_initializeTAU();
   Tau_iowrap_registerEvents(-1, "unknown");
@@ -174,15 +187,17 @@ extern "C" void Tau_iowrap_checkInit() {
   Tau_create_top_level_timer_if_necessary();
 }
 
-
 /*********************************************************************
  * Get the user event for the given type of event and file descriptor
  ********************************************************************/
-extern "C" void *Tau_iowrap_getEvent(event_type type, int fid) {
-  fid++; // skip the "unknown" descriptor
-  if (fid >= TheIoWrapEvents()[(int)type].size()) {
-    dprintf ("************** unknown fid! %d\n", fid-1);
-    fid = 0; // use the "unknown" descriptor
+extern "C" void *Tau_iowrap_getEvent(event_type type, int fid)
+{
+  IOvector const & iowrap_events = TheIoWrapEvents();
+  fid++;    // skip the "unknown" descriptor
+
+  if (fid >= iowrap_events[(int)type].size()) {
+    dprintf("************** unknown fid! %d\n", fid - 1);
+    fid = 0;    // use the "unknown" descriptor
   }
-  return TheIoWrapEvents()[(int)type][fid];
+  return iowrap_events[(int)type][fid];
 }

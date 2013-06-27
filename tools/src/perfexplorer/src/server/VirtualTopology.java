@@ -15,6 +15,7 @@ import javax.swing.JPanel;
 import edu.uoregon.tau.perfexplorer.clustering.ClusterInterface;
 import edu.uoregon.tau.perfexplorer.common.RMIPerfExplorerModel;
 import edu.uoregon.tau.perfexplorer.constants.Constants;
+import edu.uoregon.tau.perfexplorer.common.PEChartColor;
 
 /**
  * This class takes the Weka or R cluster results, and creates a virtual

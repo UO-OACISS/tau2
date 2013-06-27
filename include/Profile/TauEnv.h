@@ -23,6 +23,16 @@
 
 #include <tau_internal.h>
 
+#define TAU_FORMAT_PROFILE 1
+#define TAU_FORMAT_SNAPSHOT 2
+#define TAU_FORMAT_MERGED 3
+#define TAU_FORMAT_NONE 4
+#define TAU_MAX_RECORDS 64*1024
+
+#define TAU_ACTION_DUMP_PROFILES 1
+#define TAU_ACTION_DUMP_CALLPATHS 2
+#define TAU_ACTION_DUMP_BACKTRACES 3
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -51,7 +61,7 @@ extern "C" {
   int  TAUDECL TauEnv_get_track_io_params();
   int  TAUDECL TauEnv_get_track_signals();
   int  TAUDECL TauEnv_get_signals_gdb();
-  int  TAUDECL TauEnv_get_extras();
+  int  TAUDECL TauEnv_get_collector_api_enabled();
   int  TAUDECL TauEnv_get_ebs_enabled();
   int  TAUDECL TauEnv_get_ebs_keep_unresolved_addr();
   void  TAUDECL TauEnv_force_set_ebs_period(int period);
@@ -77,16 +87,29 @@ extern "C" {
   const char* TAUDECL TauEnv_get_tracedir();
   const char* TAUDECL TauEnv_get_metrics();
   const char* TAUDECL TauEnv_get_cupti_api();
+  const char* TAUDECL TauEnv_get_cuda_instructions();
   int TAUDECL TauEnv_get_mic_offload();
 
-
-#define TAU_FORMAT_PROFILE 1
-#define TAU_FORMAT_SNAPSHOT 2
-#define TAU_FORMAT_MERGED 3
-#define TAU_FORMAT_NONE 4
-#define TAU_MAX_RECORDS 64*1024
   int  TAUDECL TauEnv_get_profile_format();
+  int  TAUDECL TauEnv_get_sigusr1_action();
   
+  int TAUDECL TauEnv_get_memdbg();
+  int TAUDECL TauEnv_get_memdbg_protect_above();
+  int TAUDECL TauEnv_get_memdbg_protect_below();
+  int TAUDECL TauEnv_get_memdbg_protect_free();
+  int TAUDECL TauEnv_get_memdbg_protect_gap();
+  int TAUDECL TauEnv_get_memdbg_fill_gap();
+  unsigned char TAUDECL TauEnv_get_memdbg_fill_gap_value();
+  int TAUDECL TauEnv_get_memdbg_alloc_min();
+  size_t TAUDECL TauEnv_get_memdbg_alloc_min_value();
+  int TAUDECL TauEnv_get_memdbg_alloc_max();
+  size_t TAUDECL TauEnv_get_memdbg_alloc_max_value();
+  int TAUDECL TauEnv_get_memdbg_overhead();
+  size_t TAUDECL TauEnv_get_memdbg_overhead_value();
+  size_t TAUDECL TauEnv_get_memdbg_alignment();
+  int TAUDECL TauEnv_get_memdbg_zero_malloc();
+  int TAUDECL TauEnv_get_memdbg_attempt_continue();
+
 #ifdef __cplusplus
 }
 #endif

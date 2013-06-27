@@ -16,42 +16,8 @@
 #ifndef _TAU_H_
 #define _TAU_H_
 
-#define TAU_VERSION "2.21.4-git"
+#define TAU_VERSION "2.22.2-git"
 #define TAU_MAKEFILE "default"
-
-
-#ifndef TAU_DISABLE_API
-#ifdef __cplusplus
-extern "C" {
-#endif
-extern void Tau_start(const char *name);
-extern void Tau_stop(const char *name);
-extern void Tau_pure_start_task(const char *name, int tid);
-extern void Tau_pure_stop_task(const char *name, int tid);
-#ifdef __cplusplus
-}
-#endif
-
-/* define the easy to use API */
-#define TAU_START(name) Tau_start(name)
-#define TAU_STOP(name) Tau_stop(name)
-
-/* easy API with tasks */
-#define TAU_START_TASK(name, tid) Tau_pure_start_task(name, tid)
-#define TAU_STOP_TASK(name, tid) Tau_pure_stop_task(name, tid)
-
-/* for consistency, we provide the long form */
-#define TAU_STATIC_TIMER_START TAU_START
-#define TAU_STATIC_TIMER_STOP TAU_STOP
-#else /* TAU_DISABLE_API is defined! Define these two to nulls */
-#define TAU_START(name) 
-#define TAU_STOP(name)
-#endif /* TAU_DISABLE_API */
-
-/* for consistency, we provide the long form */
-#define TAU_STATIC_TIMER_START TAU_START
-#define TAU_STATIC_TIMER_STOP TAU_STOP
-
 
 #if (defined(PROFILING_ON) || defined(TRACING_ON))
 #define TAU_ENABLED
@@ -229,16 +195,13 @@ extern void Tau_pure_stop_task(const char *name, int tid);
 #define TAU_QUERY_GET_EVENT_NAME(event, str)
 #define TAU_QUERY_GET_PARENT_EVENT(event)
 
-
 #define TAU_SET_USER_CLOCK(value)
 
-#endif /* TAU_ENABLED */
-
-
 /* Old/Dead API calls */
-#define TAU_ENABLE_TRACKING_MUSE_EVENTS()	
+#define TAU_ENABLE_TRACKING_MUSE_EVENTS()
 #define TAU_DISABLE_TRACKING_MUSE_EVENTS()
-#define TAU_TRACK_MUSE_EVENTS()		
+#define TAU_TRACK_MUSE_EVENTS()
 
+#endif /* TAU_ENABLED */
 
 #endif /* _TAU_H_ */

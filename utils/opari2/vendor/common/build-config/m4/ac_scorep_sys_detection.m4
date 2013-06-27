@@ -128,10 +128,12 @@ AC_DEFUN([AC_SCOREP_DETECT_PLATFORMS],
             AC_MSG_RESULT([$ac_scorep_platform, please contact <AC_PACKAGE_BUGREPORT> if you encounter any problems.])
         else
             AC_MSG_RESULT([$ac_scorep_platform (auto detected)])
+            AC_SCOREP_SUMMARY([Platform], [$ac_scorep_platform (auto detected)])
         fi
     elif test "x${ac_scorep_platform_detection}" = "xno"; then
         AC_MSG_CHECKING([for platform])
         AC_MSG_RESULT([$ac_scorep_platform (user selected)])
+        AC_SCOREP_SUMMARY([Platform], [$ac_scorep_platform (user selected)])
         if test "x${build_alias}" != "x" || test "x${host_alias}" != "x"; then
             if test "x$$ac_scorep_platform" = "xunknown"; then
                 AC_MSG_ERROR([providing --host and/or --build without --with-platform is erroneous.])
@@ -142,12 +144,13 @@ AC_DEFUN([AC_SCOREP_DETECT_PLATFORMS],
     fi
     AC_MSG_CHECKING([for cross compilation])
     AC_MSG_RESULT([$ac_scorep_cross_compiling])
+    AC_SCOREP_SUMMARY([Cross compiling], [$ac_scorep_cross_compiling])
     ac_scorep_compilers_frontend="${path_to_compiler_files}platform-frontend-${ac_scorep_platform}"
     ac_scorep_compilers_backend="${path_to_compiler_files}platform-backend-${ac_scorep_platform}"
     ac_scorep_compilers_mpi="${path_to_compiler_files}platform-mpi-${ac_scorep_platform}"
 ])
 
-# This macro is called also by the build-backend/frondend/mpi configures
+# This macro is called also by the build-backend/frontend/mpi configures
 AC_DEFUN([AC_SCOREP_PLATFORM_SETTINGS],
 [
     AC_REQUIRE([AC_CANONICAL_BUILD])

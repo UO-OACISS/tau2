@@ -1,1 +1,3 @@
-# Specify exclude/include lists in this file.
+BEGIN_INSTRUMENT_SECTION
+loops routine="#"
+END_INSTRUMENT_SECTION

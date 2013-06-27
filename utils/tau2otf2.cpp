@@ -83,9 +83,10 @@ check_pointer
 static inline void
 check_status
 (
-    SCOREP_Error_Code status,
+    OTF2_ErrorCode status,
     char*             description
 );
+
 
 static OTF2_FlushType
 pre_flush
@@ -136,6 +137,7 @@ map< int,int, less<int > > numthreads;
 int EndOfTrace = 0;  /* false */
 int location_count = 0;
 
+
 /* empty string definition */
 enum
 {
@@ -153,7 +155,27 @@ enum
     MPI_COMM_MPI_COMM_SELF
 };
 
+/* definition IDs for Groups */
+enum
+{
+    GROUP_MPI_LOCATIONS,
+    GROUP_MPI_COMM_WORLD,
+    GROUP_MPI_COMM_SELF,
+    GROUP_ALL_LOCATIONS
+};
 
+
+/* definition IDs for metric classes and instances */
+enum
+{
+    METRIC_CLASS_1,
+    METRIC_CLASS_2,
+    METRIC_CLASS_3,
+    METRIC_CLASS_4,
+    METRIC_INSTANCE_1,
+
+    NUM_OF_CLASSES
+};
 
 /* Define limits of sample data (user defined events) */
 struct {
@@ -292,6 +314,7 @@ const char *threadName )
   EOF_Trace[pair<int,int> (nodeToken,threadToken) ] = 0; /* initialize it */
   numthreads[nodeToken] = numthreads[nodeToken] + 1; 
   if (threadToken > 0) multiThreaded = true; 
+
   location_count++;
   return 0;
 }
@@ -340,15 +363,15 @@ int DefStateGroup( void *userData, unsigned int stateGroupToken,
   OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, stateGroupToken, stateGroupToken, OTF2_GROUP_TYPE_REGIONS,0,0);
   return 0;
 }
-SCOREP_Error_Code status;
+OTF2_ErrorCode status;
 static inline void
 check_status
 (
-    SCOREP_Error_Code status,
+		OTF2_ErrorCode status,
     char*             description
 )
 {
-    if ( status != SCOREP_SUCCESS )
+    if ( status != OTF2_SUCCESS )
     {
         printf( "\nERROR: %s\n\n", description );
         exit( EXIT_FAILURE );
@@ -390,7 +413,10 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
                                              stateToken,
                                              stateToken,
                                              stateToken,
-                                             OTF2_REGION_TYPE_FUNCTION,
+                                             stateToken,
+                                             OTF2_REGION_ROLE_UNKNOWN,
+                                             OTF2_PARADIGM_UNKNOWN,
+                                             OTF2_REGION_FLAG_NONE,
                                              STRING_EMPTY,  //Source
                                              0,  //Begin
                                              0 );  //End
@@ -400,7 +426,7 @@ int DefState( void *userData, unsigned int stateToken, const char *stateName,
 
   return 0;
 }
-int NUM_OF_CLASSES = 1;
+//int NUM_OF_CLASSES = 1;
 /***************************************************************************
  * Description: DefUserEvent is called to register the name and a token of the
  *  		user defined event (or a sample event in Vampir terminology).
@@ -450,8 +476,17 @@ int DefUserEvent( void *userData, unsigned int userEventToken,
     /* NOTE: WE DO NOT HAVE THE DO DIFFERENTIATION PARAMETER YET IN OTF */
   } 
 
-NUM_OF_CLASSES+=1;
+  /*
+  //TODO: Check this out
+  status = OTF2_GlobalDefWriter_WriteMetricClass( glob_def_writer,
+                                                      METRIC_CLASS_1,
+                                                      number_of_members_in_class_1,
+                                                      metric_members_of_class_1,
+                                                      OTF2_METRIC_SYNCHRONOUS_STRICT );
+      check_status( status, "Write metric class definition." );
 
+NUM_OF_CLASSES+=1;
+*/
 
   return 0;
 }
@@ -740,7 +775,7 @@ int main(int argc, char **argv)
 
   check_pointer( archive, "Create archive" );
 
-  SCOREP_Error_Code status;
+  OTF2_ErrorCode status;
 
   flush_callbacks.otf2_pre_flush  = pre_flush;
   flush_callbacks.otf2_post_flush = post_flush;
@@ -1067,7 +1102,14 @@ status = OTF2_GlobalDefWriter_WriteString( glob_def_writer,
                                        name_buffer );
 check_status( status, "Write string definition." );
 int COMM_STRING=string;
-status =OTF2_GlobalDefWriter_WriteMpiComm (glob_def_writer, TAU_DEFAULT_COMMUNICATOR, COMM_STRING, OTF2_GROUP_TYPE_MPI_GROUP, OTF2_UNDEFINED_UINT32 );
+
+
+
+/*TODO: Need to define mpi ranks and rank-rank mapping*/
+OTF2_GlobalDefWriter_WriteGroup(glob_def_writer, GROUP_MPI_COMM_WORLD, STRING_EMPTY, OTF2_GROUP_TYPE_MPI_GROUP,nodes,mpi_ranks);
+
+
+status =OTF2_GlobalDefWriter_WriteMpiComm (glob_def_writer, TAU_DEFAULT_COMMUNICATOR, COMM_STRING, GROUP_MPI_COMM_WORLD, OTF2_UNDEFINED_UINT32 );
 check_status( status, "Write communicator." );
 
 

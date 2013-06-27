@@ -1,4 +1,4 @@
-#!/bin/bash  
+#!/bin/bash
 
 declare -i FALSE=-1
 declare -i TRUE=1
@@ -8,8 +8,6 @@ declare -i group_f_F=1
 declare -i group_c=2
 declare -i group_C=3
 declare -i group_upc=4
-# Replaced with more flexible "upc" variable
-#declare -i berkeley_upcc=$FALSE
 
 declare -i disablePdtStep=$FALSE
 declare -i hasAnOutputFile=$FALSE
@@ -23,9 +21,10 @@ declare -i removeMpi=$FALSE
 declare -i needToCleanPdbInstFiles=$TRUE
 declare -i pdbFileSpecified=$FALSE
 declare -i optResetUsed=$FALSE
-declare -i optDetectMemoryLeaks=$FALSE
+declare -i optMemDbg=$FALSE
 declare -i optFujitsu=$FALSE
 
+declare -i cleanUpOpariFileLater=$FALSE
 declare -i optPdtF95ResetSpecified=$FALSE
 
 declare -i isVerbose=$FALSE
@@ -82,7 +81,8 @@ TAU_BIN_DIR="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 printUsage () {
     echo -e "Usage: tau_compiler.sh"
     echo -e "  -optVerbose\t\t\tTurn on verbose debugging message"
-    echo -e "  -optDetectMemoryLeaks\t\tTrack mallocs/frees using TAU's memory wrapper"
+    echo -e "  -optMemDbg\t\tEnable TAU's runtime memory debugger"
+    echo -e "  -optDetectMemoryLeaks\t\tSynonym for -optMemDbg"
     echo -e "  -optPdtDir=\"\"\t\t\tPDT architecture directory. Typically \$(PDTDIR)/\$(PDTARCHDIR)"
     echo -e "  -optPdtF95Opts=\"\"\t\tOptions for Fortran parser in PDT (f95parse)"
     echo -e "  -optPdtF95Reset=\"\"\t\tReset options to the Fortran parser to the given list"
@@ -112,7 +112,7 @@ printUsage () {
     echo -e "  -optCompile=\"\"\t\tOptions passed to the compiler by the user."
     echo -e "  -optTauDefs=\"\"\t\tOptions passed to the compiler by TAU. Typically \$(TAU_DEFS)"
     echo -e "  -optTauIncludes=\"\"\t\tOptions passed to the compiler by TAU. Typically \$(TAU_MPI_INCLUDE) \$(TAU_INCLUDE)"
-    echo -e "  -optIncludeMemory=\"\"\t\tFlags for replacement of malloc/free. Typically -I\$(TAU_DIR)/include/Memory"
+    echo -e "  -optIncludeMemory=\"\"\t\tFlags for replacement of malloc/free. Typically -I\$(TAU_DIR)/include/TauMemory"
     echo -e "  -optReset=\"\"\t\t\tReset options to the compiler to the given list"
     echo -e "  -optLinking=\"\"\t\tOptions passed to the linker. Typically \$(TAU_MPI_FLIBS) \$(TAU_LIBS) \$(TAU_CXXLIBS)"
     echo -e "  -optLinkReset=\"\"\t\tReset options to the linker to the given list"
@@ -270,7 +270,7 @@ echoIfDebug "The compiler being read is $CMD \n"
 # Initialize optOpariOpts 
 ####################################################################
 optOpariOpts="-nosrc -table opari.tab.c"
-optOpari2Opts="--nosrc "
+optOpari2Opts="--nosrc"
 
 ####################################################################
 #Parsing all the Tokens of the Command passed
@@ -458,9 +458,16 @@ for arg in "$@" ; do
 			;;
 
 		    -optDefaultParser=*)
-		        defaultParser="${arg#"-optDefaultParser="}"
+			if [ $defaultParser = "noparser" ]; then 
+		          defaultParser="${arg#"-optDefaultParser="}"
+			fi 
 			pdtParserType=$defaultParser
 			if [ $pdtParserType = roseparse -o $pdtParserType = upcparse ] ; then
+			  roseUsed=$TRUE
+# roseUsed uses the ReturnFix.
+			fi
+			if [ $pdtParserType = edg44-upcparse -a ! -x $optPdtDir/edg44-upcparse -a -x $optPdtDir/upcparse ] ; then
+			  pdtParserType=upcparse; 
 			  roseUsed=$TRUE
 			fi
 
@@ -563,11 +570,11 @@ for arg in "$@" ; do
 			echoIfDebug "\tCompiling Include Memory Options from TAU are: $optIncludeMemory"
 			echoIfDebug "\tFrom optIncludeMemory: $optIncludeMemory"
 			;;
-		    -optDetectMemoryLeaks)
-			optDetectMemoryLeaks=$TRUE
+		    -optDetectMemoryLeaks|-optMemDbg)
+		  optMemDbg=$TRUE
 			optIncludes="$optIncludes $optIncludeMemory"
-			optTau="-memory $optTau"
-			echoIfDebug "\Including Memory directory for malloc/free replacement and calling tau_instrumentor with -memory"
+			optTau="$optTau"
+			echoIfDebug "\Including TauMemory directory for malloc/free replacement"
 			echoIfDebug "\tFrom optIncludes: $optIncludes"
 			;;
 		    -optCompile*)
@@ -838,7 +845,13 @@ for arg in "$@" ; do
 		;;
 	    
 	    *.upc)
-		pdtParserType=upcparse
+		if [ $defaultParser = "noparser" ]; then 
+		  if [ -x $optPdtDir/edg44-upcparse ]; then 
+		    pdtParserType=edg44-upcparse
+                  else 
+		    pdtParserType=upcparse
+                  fi 
+ 		fi
 		fileName=$arg
 		arrFileName[$numFiles]=$arg
 		arrFileNameDirectory[$numFiles]=`dirname $arg`
@@ -849,7 +862,7 @@ for arg in "$@" ; do
                 optTau=" "
                 ;;
 
-	    *.f|*.F|*.f90|*.F90|*.f77|*.F77|*.f95|*.F95|*.for|*.FOR)
+	    *.f|*.F|*.f90|*.F90|*.f77|*.F77|*.f95|*.F95|*.for|*.FOR|*.cuf)
 		fileName=$arg
 		arrFileName[$numFiles]=$arg
 		arrFileNameDirectory[$numFiles]=`dirname $arg`
@@ -1195,6 +1208,12 @@ while [ $tempCounter -lt $numFiles ]; do
         fi
         arrFileName[$tempCounter]=$base$suf
     fi
+    if [ $opari2 == $TRUE -a $passCount != 1 ]; then
+        #Opari2 has already been run, so we shouldn't run it again
+	#However, some where the .pomp was lost, so add it back
+        base=${base}.pomp
+        arrFileName[$tempCounter]=$base$suf
+    fi
     if [ $optCompInst == $FALSE ] ; then
 	newFile=${base}.inst${suf}
     else
@@ -1362,6 +1381,13 @@ if [ $numFiles == 0 ]; then
       echoIfDebug "Linking command is $linkCmd"
     fi
 
+    echoIfDebug "optMemDbg = $optMemDbg, wrappers = $optWrappersDir/memory_wrapper/link_options.tau "
+    if [ $optMemDbg == $TRUE -a -r $optWrappersDir/memory_wrapper/link_options.tau ] ; then 
+      optLinking=`echo $optLinking  | sed -e 's/Comp_gnu.o//g'`
+      linkCmd="$linkCmd `cat $optWrappersDir/memory_wrapper/link_options.tau` $optLinking"
+      echoIfDebug "Linking command is $linkCmd"
+    fi
+
     if [ $trackDMAPP == $TRUE -a -r $optWrappersDir/dmapp_wrapper/link_options.tau ] ; then 
       linkCmd="$linkCmd `cat $optWrappersDir/dmapp_wrapper/link_options.tau`"
       echoIfDebug "Linking command is $linkCmd "
@@ -1498,7 +1524,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	    $group_c | $group_upc)
 	    pdtCmd="$optPdtDir""/$pdtParserType"
 	    pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
-	    pdtCmd="$pdtCmd $optPdtCFlags $optPdtUser "
+	    pdtCmd="$pdtCmd $optPdtCFlags $optPdtUser $optIncludes "
         if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
 	        pdtCmd="$pdtCmd -I${arrFileNameDirectory[$tempCounter]}"
         fi
@@ -1512,7 +1538,7 @@ if [ $gotoNextStep == $TRUE ]; then
 	    $group_C)
 	    pdtCmd="$optPdtDir""/$pdtParserType"
 	    pdtCmd="$pdtCmd ${arrFileName[$tempCounter]} "
-	    pdtCmd="$pdtCmd $optPdtCxxFlags $optPdtUser "
+	    pdtCmd="$pdtCmd $optPdtCxxFlags $optPdtUser  $optIncludes "
         if [ "${arrFileNameDirectory[$tempCounter]}x" != ".x" ]; then
 	        pdtCmd="$pdtCmd -I${arrFileNameDirectory[$tempCounter]}"
         fi
@@ -1800,6 +1826,10 @@ if [ $gotoNextStep == $TRUE ]; then
 	    printError "$CMD" "$newCmd"
 	    break
 	    else
+
+            if [ $cleanUpOpariFileLater == $TRUE ]; then
+	      evalWithDebugMessage "/bin/rm -f ${arrFileName[$tempCounter]}" "cleaning opari file after failed PDT stage"
+            fi
 	    echoIfVerbose "Looking for file: $outputFile "
 	    if [ $hasAnOutputFile == $TRUE ]; then
 		if [  ! -e $passedOutputFile ]; then
@@ -1925,6 +1955,13 @@ cmdCreatePompRegions="`${optOpari2ConfigTool}   --nm` ${optIBM64}  ${objectFiles
           echoIfDebug "Linking command is $newCmd"
         fi
 
+        echoIfDebug "optMemDbg = $optMemDbg, wrappers = $optWrappersDir/memory_wrapper/link_options.tau "
+        if [ $optMemDbg = $TRUE -a -r $optWrappersDir/memory_wrapper/link_options.tau ] ; then
+          optLinking=`echo $optLinking  | sed -e 's/Comp_gnu.o//g'`
+          newCmd="$newCmd `cat $optWrappersDir/memory_wrapper/link_options.tau` $optLinking"
+          echoIfDebug "Linking command is $newCmd"
+        fi
+
         if [ $trackDMAPP == $TRUE -a -r $optWrappersDir/dmapp_wrapper/link_options.tau ] ; then 
           newCmd="$newCmd `cat $optWrappersDir/dmapp_wrapper/link_options.tau`"
           echoIfDebug "Linking command is $linkCmd"
@@ -2039,7 +2076,10 @@ if [ $needToCleanPdbInstFiles == $TRUE ]; then
 	    fi
 	fi
 	if [ $opari == $TRUE -o $opari2 == $TRUE ]; then
-	    evalWithDebugMessage "/bin/rm -f ${arrFileName[$tempCounter]}" "cleaning opari file"
+            if [ $errorStatus == $FALSE ]; then
+	      evalWithDebugMessage "/bin/rm -f ${arrFileName[$tempCounter]}" "cleaning opari file"
+            fi
+	    cleanUpOpariFileLater=$TRUE
 	fi
 	tempCounter=tempCounter+1
     done

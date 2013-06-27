@@ -1,17 +1,28 @@
 package edu.uoregon.tau.perfexplorer.client;
 
-import java.util.ListIterator;
-import javax.swing.*;
-import javax.swing.tree.*;
-
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ArrayList;
-import edu.uoregon.tau.perfdmf.*;
-import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
+import java.util.ListIterator;
 
-public class PerfExplorerJTree extends JTree {
+import javax.swing.JTree;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.MutableTreeNode;
+import javax.swing.tree.TreeNode;
+import javax.swing.tree.TreePath;
+
+import edu.uoregon.tau.perfdmf.Application;
+import edu.uoregon.tau.perfdmf.DatabaseAPI;
+import edu.uoregon.tau.perfdmf.Experiment;
+import edu.uoregon.tau.perfdmf.Metric;
+import edu.uoregon.tau.perfdmf.Trial;
+import edu.uoregon.tau.perfdmf.View;
+import edu.uoregon.tau.perfexplorer.common.RMISortableIntervalEvent;
+import edu.uoregon.tau.perfexplorer.server.PerfExplorerServer;
+
+public class PerfExplorerJTree extends JTree{
 
     /**
      * 
@@ -43,14 +54,90 @@ public class PerfExplorerJTree extends JTree {
 
     public static PerfExplorerJTree getTree() {
 	if (theTree == null) {
-	    DefaultTreeModel model = new DefaultTreeModel(createNodes());
+	    DefaultTreeModel model = new DefaultTreeModel(createNodes()){
+
+			private static final long serialVersionUID = 1L;
+
+			public void valueForPathChanged(TreePath path, Object newValue) {
+				MutableTreeNode aNode = (MutableTreeNode) path
+				.getLastPathComponent();
+				handleRename((DefaultMutableTreeNode) aNode, newValue);
+				nodeChanged(aNode);
+
+			}
+		};
+	    
+	    
 	    model.setAsksAllowsChildren(true);
 	    theTree = new PerfExplorerJTree(model);
 	    theModel = model;
+	    theTree.setEditable(true);
 	    //addTrialsForViews();
 	}
 	return theTree;
     }
+    
+    protected static void handleRename(DefaultMutableTreeNode aNode, Object newValue) {
+		if (newValue instanceof String) {
+			String name = (String) newValue;
+			if (aNode.getUserObject() instanceof Application) {
+				Application application = (Application) aNode
+				.getUserObject();
+				application.setName(name);
+
+				//if (application.dBApplication()) {
+					DatabaseAPI databaseAPI = PerfExplorerServer.getServer().getSession(application
+							.getDatabase());
+					if (databaseAPI != null) {
+						databaseAPI.saveApplication(application);
+						//databaseAPI.terminate();
+					}
+				//}
+
+			} else if (aNode.getUserObject() instanceof Experiment) {
+				Experiment experiment = (Experiment) aNode
+				.getUserObject();
+				experiment.setName(name);
+
+				//if (experiment.dBExperiment()) {
+					DatabaseAPI databaseAPI = PerfExplorerServer.getServer().getSession(experiment
+							.getDatabase());
+					if (databaseAPI != null) {
+						databaseAPI.saveExperiment(experiment);
+						//databaseAPI.terminate();
+					}
+				//}
+
+			} else if (aNode.getUserObject() instanceof Trial) {
+				Trial ppTrial = (Trial) aNode.getUserObject();
+				
+				//if (ppTrial.dBTrial()) {
+					DatabaseAPI databaseAPI = PerfExplorerServer.getServer().getSession(ppTrial
+							.getDatabase());
+					//ppTrial.setDatabaseAPI(databaseAPI);
+				//}
+				ppTrial.rename(databaseAPI.db(),name);
+
+//			} else if (aNode.getUserObject() instanceof Metric) {
+//				Metric metric = (Metric) aNode.getUserObject();
+//				//if (metric.dbMetric()) {
+//					DatabaseAPI databaseAPI = PerfExplorerServer.getServer().getSession(metric..getParaProfTrial()
+//							.getDatabase());
+//					metric.rename(databaseAPI.db(), name);
+//				//}
+				
+			} else if (aNode.getUserObject() instanceof View) {
+				View view = (View) aNode.getUserObject();
+				DatabaseAPI databaseAPI = PerfExplorerServer.getServer().getSession(view.getDatabase());
+
+				view.rename(databaseAPI.db(), name);
+				
+
+			}
+
+		}
+
+	}
 
     public static void nodeChanged(DefaultMutableTreeNode node) {
 	if (theModel != null && theTree != null) {
@@ -135,12 +222,20 @@ public class PerfExplorerJTree extends JTree {
 			View view = views.next();
 			DefaultMutableTreeNode node = new PerfExplorerTreeNode(view);
 			parentNode.add(node);
-			addViewNodes(node, view.getID());
+			//addViewNodes(node, view.getID());
 		}
-		//if (viewVector.size() == 0) {
-			leafViews.add(parentNode);
+		leafViews.add(parentNode);
+		
+		if (viewVector.size() == 0) {
 			addTrialsForView(parentNode);
-		//}
+		}
+		else{
+			View parentView = (View)parentNode.getUserObject();
+			View view = View.VirtualView(parentView);
+			
+			DefaultMutableTreeNode node = new PerfExplorerTreeNode(view);
+			parentNode.add(node);
+		}
 	}
 
     public static void addApplicationNodes (DefaultMutableTreeNode parent, boolean getExperiments) {
@@ -219,10 +314,10 @@ public class PerfExplorerJTree extends JTree {
 
 	    addTAUdbViewNodes(node, view.getID());
 	}
-	if (viewVector.size() == 0) {
-	    leafViews.add(parentNode);
-	    addTrialsForView(parentNode);
-	}
+//	if (viewVector.size() == 0) {
+//	    leafViews.add(parentNode);
+//	    addTrialsForView(parentNode);
+//	}
     }
 
     public static void addTrialsForViews () {
@@ -243,6 +338,7 @@ public class PerfExplorerJTree extends JTree {
 				views.add((View) objects[i]);
 			}
 		}
+		
 		PerfExplorerConnection server = PerfExplorerConnection.getConnection();
 		// get the trials
 		if (views.size() > 0) {
@@ -266,6 +362,10 @@ public class PerfExplorerJTree extends JTree {
 	//System.out.println("metric nodes...");
 	// get the metrics
 	List<Metric> metricVector = trial.getMetrics();
+	if(metricVector==null){
+		trial.getTrialMetrics(PerfExplorerServer.getServer().getDB());
+		metricVector = trial.getMetrics();
+	}
 	int metricIndex = 0;
 	if (metricVector != null) {
 	    ListIterator<Metric> metrics = metricVector.listIterator();
@@ -446,5 +546,7 @@ public class PerfExplorerJTree extends JTree {
 	    collapsePath(parent);
 	}
     }
+
+	
 
 }

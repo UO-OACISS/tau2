@@ -42,6 +42,8 @@
 #  include <omp.h>
 #endif
 
+enum RoutineState { ROUTINE_CREATED = 1, ROUTINE_THROTTLED = 2 };
+
 using namespace std;
 
 
@@ -50,7 +52,7 @@ struct s1 {
   long l2;
   double d1;
   double d2;
-  long isseen;
+  long isseen; //status of this routine.
   char *c;
   void *p1;
   long lineno;
@@ -88,124 +90,102 @@ extern "C" void __rouinit() {
 }
 
 int Tau_get_function_index_in_DB(FunctionInfo *fi) {
+	RtsLayer::LockDB();
   int i = TheFunctionDB().size();
+	int v = -1;
   for (vector<FunctionInfo*>::iterator it = TheFunctionDB().end();
       it != TheFunctionDB().begin(); it--, i--) {
     if (*it == fi)
     {
       dprintf("MATCH! i=%d, TheFunctionDB()[%d]->GetName() = %s, fi->GetName() = %s\n", i, i, TheFunctionDB()[i]->GetName(), fi->GetName());
-      return i;
+      v = i;
     }
   }
-  return -1;
+	RtsLayer::UnLockDB();
+  return v;
 }
 
-int Tau_ignore_count[TAU_MAX_THREADS]={0};
+struct Tau_thread_ignore_flag {
+	int count; // 4 bytes
+	int padding[15]; // remaining 60 bytes.
+};
+
+#ifdef __INTEL__COMPILER
+__declspec (align(64)) static struct Tau_thread_ignore_flag Tau_ignore[TAU_MAX_THREADS] = {0};
+#else
+#ifdef __GNUC__
+static struct Tau_thread_ignore_flag Tau_ignore[TAU_MAX_THREADS] __attribute__ ((aligned(64))) = {0};
+#else
+static struct Tau_thread_ignore_flag Tau_ignore[TAU_MAX_THREADS] = {0};
+#endif
+#endif
+
 // called at the beginning of each profiled routine
 #pragma save_all_regs
 extern "C" void ___rouent2(struct s1 *p) {
-  char routine[2048];
-  int isseen_local = p->isseen;
 
-  int tid = Tau_get_tid();
-  if (p->isseen == -1) {
-    Tau_ignore_count[tid] ++;  // the rouent2 shouldn't call stop
-    return;
-  }
-  if ((!Tau_init_check_initialized()) || (Tau_global_get_insideTAU() > 0 )) { 
-    //dprintf("TAU not initialized /inside TAU in __rouent2. Going to ignore this one!name = p->rout %s\n", p->rout);
-    Tau_ignore_count[tid] ++;  // the rouent2 shouldn't call stop
-    return;
-  }
-
-  /* Some routines like length__Q2_3std20char_traits__tm__2_cSFPCc are called
-     before main and get called repeatedly when <iostream> and cout are used
-     in a C++ application. We need to create a top level timer if necessary */
-  p->isseen = -1; 
-  Tau_create_top_level_timer_if_necessary(); 
-  p->isseen = isseen_local; 
-
+  int tid = Tau_get_local_tid();
+  
   if (!p->isseen) {
-    sprintf (routine, "%s [{%s} {%d,0}]", p->rout, p->file, p->lineno);
+		RtsLayer::LockEnv();
+		/* Some routines like length__Q2_3std20char_traits__tm__2_cSFPCc are called
+			 before main and get called repeatedly when <iostream> and cout are used
+			 in a C++ application. We need to create a top level timer if necessary */
+  	char routine[2048];
+    sprintf (routine, "%s [{%s} {%ld,0}]", p->rout, p->file, p->lineno);
     char* modpos;
     
     /* fix opari output file names */
     if ( (modpos = strstr(p->file, ".mod.")) != NULL ) {
       strcpy(modpos, modpos+4);
     }
-      
-#ifdef TAU_OPENMP
-    
-    if (omp_in_parallel()) {
-      int returnFromBlock = 0;
-#pragma omp critical (tau_comp_pgi_1)
-      {
-	if (!p->isseen) {	
-	  void *handle=NULL;
-	  p->isseen ++;
-	  TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
-	  FunctionInfo *fi = (FunctionInfo*)handle;
-          if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
-	    Tau_ignore_count[tid]++; // the rouent2 shouldn't call stop
-	    returnFromBlock = 1;
-            /* return; Not allowed inside an omp critical */
-          } else {
-	    Tau_start_timer(fi,0, tid);
-	    p->rid = Tau_get_function_index_in_DB(fi);
-	  }
-	}
-      }
-      if (returnFromBlock == 1) {
-	return;
-      }
-    } else {
-      void *handle=NULL;
-      p->isseen = -1;
-      TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
-      FunctionInfo *fi = (FunctionInfo*)handle;
-      if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
-	Tau_ignore_count[tid]++; // the rouent2 shouldn't call stop
-	return;
-      }
-      Tau_start_timer(fi,0, tid);
-      p->rid = Tau_get_function_index_in_DB(fi);
-      p->isseen = isseen_local+1;
-    }
-#else
-    void *handle=NULL;
-    p->isseen = -1; // hold on, this is in the middle of creating a profiler
-    // if we re-enter this routine, just return so we can continue in the right
-    // place. 
-    TAU_PROFILER_CREATE(handle, routine, "", TAU_DEFAULT);
-    FunctionInfo *fi = (FunctionInfo*)handle;
-    if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
-      Tau_ignore_count[tid]++; // the rouent2 shouldn't call stop
+		void *vp;
+		if (!p->isseen) {
+			Tau_create_top_level_timer_if_necessary_task(tid); 
+			TAU_PROFILER_CREATE(vp, routine, "", TAU_DEFAULT);
+			FunctionInfo *fi = (FunctionInfo *)vp;
+			p->rid = Tau_get_function_index_in_DB(fi);
+			Tau_start_timer(fi, 0, Tau_get_tid());
+			if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
+				Tau_ignore[tid].count++; // the rouent2 shouldn't call stop
+				p->isseen = ROUTINE_THROTTLED;	
+			}
+			else {
+				p->isseen = ROUTINE_CREATED;
+			}
+		}
+		RtsLayer::UnLockEnv();
+	} // seen this routine before, no need to create another FunctionInfo object.
+	else 
+	{
+    if (p->isseen == ROUTINE_THROTTLED) {
+      Tau_ignore[tid].count++; // the rouent2 shouldn't call stop
       return;
     }
-    Tau_start_timer(fi,0, tid);
-    p->rid = Tau_get_function_index_in_DB(fi);
-    p->isseen = isseen_local+1;
-#endif
-  } else {
+		RtsLayer::LockDB();
     FunctionInfo *fi = (FunctionInfo*)(TheFunctionDB()[p->rid]);
-    if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
-      Tau_ignore_count[tid]++; // the rouent2 shouldn't call stop
-      return;
-    }
-    Tau_start_timer(fi, 0, tid);
-  }
+		RtsLayer::UnLockDB();
+	  Tau_start_timer(fi, 0, Tau_get_tid());
+		if (!(fi->GetProfileGroup() & RtsLayer::TheProfileMask())) {
+			Tau_ignore[tid].count++; // the rouent2 shouldn't call stop
+			p->isseen = ROUTINE_THROTTLED;	
+		}
+	}
 }
+
 
 // called at the end of each profiled routine
 #pragma save_all_regs
 extern "C" void ___rouret2(void) {
-  int tid = Tau_get_tid();
-  if (Tau_ignore_count[tid] == 0) { 
-    TAU_MAPPING_PROFILE_STOP(0);
-  }
-  else {
-    Tau_ignore_count[tid]--;
-  }
+  
+	int tid = Tau_get_local_tid();
+	
+	if (Tau_ignore[tid].count == 0)
+	{
+  	TAU_MAPPING_PROFILE_STOP(0);
+	} else {
+    Tau_ignore[tid].count--;
+	}
 }
 
 #pragma save_used_gp_regs

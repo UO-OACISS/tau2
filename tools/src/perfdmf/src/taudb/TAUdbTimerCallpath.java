@@ -134,7 +134,7 @@ public class TAUdbTimerCallpath {
 				sb.append(db.getSchemaPrefix() +
 				"timer_callpath AS d JOIN cp ON (d.parent = cp.id) join " +
 				db.getSchemaPrefix() +
-				"timer dt on d.timer = dt.id) " +
+				"timer dt on d.timer = dt.id where dt.trial = " + trial.getID() + " ) " +
 				"SELECT distinct cp.id, cp.parent, cp.timer, cp.name FROM cp order by parent ");
 		try {
 			PreparedStatement statement = session.getDB().prepareStatement(sb.toString());

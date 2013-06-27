@@ -5,7 +5,10 @@ import jargs.gnu.CmdLineParser;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.util.HashMap;
+import java.util.Map;
 
+import edu.uoregon.tau.common.MetaDataMap;
 import edu.uoregon.tau.perfdmf.DataSource;
 import edu.uoregon.tau.perfdmf.DataSourceException;
 import edu.uoregon.tau.perfdmf.DatabaseAPI;
@@ -20,6 +23,7 @@ public class LoadTrial {
 
     private String sourceFiles[];
     private String metadataFile;
+    private String metadataString;
     private Experiment exp;
     private boolean fixNames;
     private boolean summaryOnly;
@@ -65,7 +69,9 @@ public class LoadTrial {
                 + "  -i, --fixnames                  Use the fixnames option for gprof\n"
                 + "  -z, --usenull                   Include NULL values as 0 for mean calculation\n"
                 + "  -r, --reduce <percentage>       Aggregate all timers less than percentage as \"other\"\n"
-                + "  -m, --metadata <filename>       XML metadata for the trial\n\n" + "Notes:\n"
+                + "  -d, --metadata-file <filename>  XML metadata for the trial\n" 
+                + "  -m, --metadata                  Colon seperated metadata name/value pairs \n" 
+                + "                                  <foo1=bar1:foo2=bar2>\n\n" + "Notes:\n"
                 + "  For the TAU profiles type, you can specify either a specific set of profile\n"
                 + "files on the commandline, or you can specify a directory (by default the current\n"
                 + "directory).  The specified directory will be searched for profile.*.*.* files,\n"
@@ -166,6 +172,18 @@ public class LoadTrial {
         // set the metadata file name before loading the data, because
         // aggregateData() is called at the end of the dataSource.load()
         // and this file has to be set before then.
+        
+        if(metadataString!=null&&metadataString.length()>0){
+        	MetaDataMap mdMap = new MetaDataMap();
+        	String[] pairs = metadataString.split(":");
+        	for(int i=0;i<pairs.length;i++){
+        		String[] pair = pairs[i].split("=");
+        		if(pair.length==2)
+        			mdMap.put(pair[0], pair[1]);
+        	}
+        	dataSource.setMetaData(mdMap);
+        }
+        
         try {
             if (metadataFile != null) {
                 dataSource.setMetadataFile(metadataFile);
@@ -291,6 +309,7 @@ public class LoadTrial {
         CmdLineParser.Option trialOpt = parser.addStringOption('t', "trialid");
         CmdLineParser.Option typeOpt = parser.addStringOption('f', "filetype");
         CmdLineParser.Option fixOpt = parser.addBooleanOption('i', "fixnames");
+        CmdLineParser.Option metadataFileOpt = parser.addStringOption('l', "metadataFile");
         CmdLineParser.Option metadataOpt = parser.addStringOption('m', "metadata");
         CmdLineParser.Option appNameOpt = parser.addStringOption('a', "applicationname");
         CmdLineParser.Option expNameOpt = parser.addStringOption('x', "experimentname");
@@ -320,7 +339,8 @@ public class LoadTrial {
         String trialID = (String) parser.getOptionValue(trialOpt);
         String fileTypeString = (String) parser.getOptionValue(typeOpt);
         Boolean fixNames = (Boolean) parser.getOptionValue(fixOpt);
-        String metadataFile = (String) parser.getOptionValue(metadataOpt);
+        String metadataFile = (String) parser.getOptionValue(metadataFileOpt);
+        String metadataString = (String) parser.getOptionValue(metadataOpt);
         Boolean summaryOnly = (Boolean) parser.getOptionValue(summaryOpt);
         Boolean useNull = (Boolean) parser.getOptionValue(useNullOpt);
 
@@ -340,6 +360,7 @@ public class LoadTrial {
         String sourceFiles[] = parser.getRemainingArgs();
         
         boolean multippk=false;
+        LoadTrial tmpLT = new LoadTrial(configFile, sourceFiles);
         if (trialName == null) {
         	
         	if(sourceFiles!=null&&sourceFiles.length>0){
@@ -356,7 +377,7 @@ public class LoadTrial {
             LoadTrial.usage();
             System.exit(-1);
         	}
-        } else if (experimentID == null && expName == null) {
+        } else if (experimentID == null && expName == null && tmpLT.getDatabaseAPI().getDb().getSchemaVersion()==0) {
             System.err.println("Error: Missing experiment id or name\n");
             LoadTrial.usage();
             System.exit(-1);
@@ -455,6 +476,7 @@ public class LoadTrial {
             //trans.problemFile = problemFile;
             trans.fixNames = fixNames.booleanValue();
             trans.metadataFile = metadataFile;
+            trans.metadataString = metadataString;
             trans.summaryOnly = summaryOnly.booleanValue();
             trans.reducePercentage = percentage;
             trans.loadTrial(fileType);
@@ -466,7 +488,7 @@ public class LoadTrial {
         if (trans.databaseAPI.db().getSchemaVersion()==0) {
             trans.checkForExp(experimentID, appName, expName);
         } else {
-        	System.err.println("Warning - this is the TAUdb schema, there is no Experiment table");
+        	//System.err.println("Warning - this is the TAUdb schema, there is no Experiment table");
         }
         if (trialID != null) {
             trans.checkForTrial(trialID);
@@ -477,6 +499,7 @@ public class LoadTrial {
         //trans.problemFile = problemFile;
         trans.fixNames = fixNames.booleanValue();
         trans.metadataFile = metadataFile;
+        trans.metadataString = metadataString;
         trans.summaryOnly = summaryOnly.booleanValue();
         trans.appName = appName;
         trans.expName = expName;
@@ -489,6 +512,10 @@ public class LoadTrial {
 
     public void setMetadataFile(String metadataFile) {
         this.metadataFile = metadataFile;
+    }
+    
+    public void setMetadataString(String metadataString) {
+        this.metadataString = metadataString;
     }
 
     public void setFixNames(boolean fixNames) {

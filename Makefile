@@ -95,6 +95,7 @@ MEMORYWRAPPER=src/wrappers/memory
 #COMPINST_CRAYCC#UPCWRAPPER=src/wrappers/upc/crayupc #ENDIF#
 
 #TAU_PTHREAD_WRAP#PTHREAD_WRAPPER=src/wrappers/pthread #ENDIF#
+#GOMP_AVAILABLE#GOMP_WRAPPER=src/wrappers/gomp #ENDIF#
 #MPC#PTHREAD_WRAPPER=src/wrappers/mpcthread #ENDIF#
 
 # Subdirectories to make resursively
@@ -102,7 +103,7 @@ SUBDIR  = $(TRACEINPUT) $(BASIC) $(PCXX) $(HPCXX) $(ANSIC) $(VTFCONVERTER) \
           $(ELGCONVERTER) $(TRACE2PROFILE) $(IOWRAPPER) $(TAUPRELOAD) \
 	  $(MEMORYWRAPPER) $(TAUCUDA) $(TAU_CUPTI_AVAIL) $(TAUOPENCL) \
 	  $(GPIWRAPPER) $(ARMCIWRAPPER) $(DMAPPWRAPPER) $(UPCWRAPPER) \
-	  $(PTHREAD_WRAPPER)
+	  $(PTHREAD_WRAPPER) $(GOMP_WRAPPER)
 
 
 CONFIGQUERY=`utils/ConfigQuery -arch`
@@ -111,6 +112,7 @@ CONFIGQUERY=`utils/ConfigQuery -arch`
 
 #SUNX86_64#CONFIGQUERY=`/bin/bash utils/ConfigQuery -arch` #ENDIF#
 
+.PHONY: all exports tests install clean cleandist cleaninstall cleangood
 
 all:
 	@echo "At the installation root, use \"make install\" "

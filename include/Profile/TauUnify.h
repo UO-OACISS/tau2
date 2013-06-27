@@ -73,6 +73,10 @@ private:
   double duration;
 
 public:
+
+  virtual ~EventLister(void)
+  { }
+
   /** retuns the number of events */
   virtual int getNumEvents() = 0;
 
@@ -104,10 +108,10 @@ class FunctionEventLister : public EventLister {
 /** Adapter class for the atomic event database */
 class AtomicEventLister : public EventLister {
   int getNumEvents() {
-    return TheEventDB().size();
+    return tau::TheEventDB().size();
   }
   const char *getEvent(int id) {
-    return TheEventDB()[id]->GetEventName();
+    return tau::TheEventDB()[id]->GetName().c_str();
   }
 };
 

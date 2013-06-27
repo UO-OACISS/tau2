@@ -20,6 +20,8 @@ import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.general.Dataset;
 import org.jfree.data.xy.DefaultTableXYDataset;
 import org.jfree.data.xy.XYSeries;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.renderer.category.CategoryItemRenderer;
 
 
 import edu.uoregon.tau.common.Utility;
@@ -419,7 +421,7 @@ public class DrawGraph extends AbstractPerformanceOperation {
         // set to a common style
         Utility.applyDefaultChartTheme(chart);
         } else if (chartType == STACKEDBARCHART) {
-            chart = ChartFactory.createStackedBarChart(
+            chart = ChartFactory.createStackedBarChart3D(
                 this.title,  // chart title
                 this.xAxisLabel,  // domain Axis label
                 this.yAxisLabel,  // range Axis label
@@ -431,6 +433,9 @@ public class DrawGraph extends AbstractPerformanceOperation {
             );
             // set to a common style
             Utility.applyDefaultChartTheme(chart);
+			CategoryPlot plot = (CategoryPlot)chart.getPlot();
+			CategoryItemRenderer renderer = plot.getRenderer();
+			PerfExplorerChart.customizeColors(renderer);
          } else {
             chart = ChartFactory.createLineChart(
                 this.title,  // chart title
