@@ -226,20 +226,26 @@ void Tau_get_current_region_context(int tid) {
       Tau_pure_start_task(state, tid);
 	} else {
       char * regionIDstr = NULL;
+      int contextLength = 10;
       /* turns out the master thread wasn't updating it - so unlock and continue. */
       if (Tau_collector_flags[tid].timerContext == NULL) {
           regionIDstr = malloc(32);
       } else {
-          regionIDstr = malloc(strlen(Tau_collector_flags[tid].timerContext) + 32);
+          contextLength = strlen(Tau_collector_flags[tid].timerContext);
+          regionIDstr = malloc(contextLength + 32);
       }
       sprintf(regionIDstr, "%s: %s", state, Tau_collector_flags[tid].timerContext);
       // it is safe to set the active timer context now.
       if (Tau_collector_flags[tid].activeTimerContext != NULL) {
-          Tau_collector_flags[tid].activeTimerContext = realloc(Tau_collector_flags[tid].activeTimerContext, strlen(Tau_collector_flags[tid].timerContext)+1);
+          Tau_collector_flags[tid].activeTimerContext = realloc(Tau_collector_flags[tid].activeTimerContext, contextLength+1);
       } else {
-          Tau_collector_flags[tid].activeTimerContext = malloc(strlen(Tau_collector_flags[tid].timerContext)+1);
+          Tau_collector_flags[tid].activeTimerContext = malloc(contextLength+1);
       }
-      strcpy(Tau_collector_flags[tid].activeTimerContext, Tau_collector_flags[tid].timerContext);
+      if (Tau_collector_flags[tid].timerContext == NULL) {
+          strcpy(Tau_collector_flags[tid].activeTimerContext, "(null)");
+      } else {
+          strcpy(Tau_collector_flags[tid].activeTimerContext, Tau_collector_flags[tid].timerContext);
+      }
       Tau_pure_start_task(regionIDstr, tid);
       free(regionIDstr);
     }
@@ -424,7 +430,7 @@ void Tau_omp_event_handler(OMP_COLLECTORAPI_EVENT event) {
                 Tau_omp_start_timer("OpenMP_CREATE_TASK", tid, 0);
             }
 #else
-            Tau_omp_start_timer("OpenMP_CREATE_TASK", tid, 0);
+            Tau_omp_start_timer("OpenMP_CREATE_TASK", tid, 1);
 #endif
             break;
         case OMP_EVENT_THR_END_CREATE_TASK_IMM:
