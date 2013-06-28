@@ -167,6 +167,7 @@ void  GOMP_atomic_end()  {
     tau_GOMP_atomic_end(GOMP_atomic_end_h);
 }
 
+#ifdef TAU_GOMP_WRAP_EVERYTHING
 
 /**********************************************************
   GOMP_loop_static_start
@@ -219,6 +220,7 @@ bool  GOMP_loop_runtime_start(long a1, long a2, long a3, long * a4, long * a5)  
     return tau_GOMP_loop_runtime_start(GOMP_loop_runtime_start_h, a1,  a2,  a3,  a4,  a5);
 }
 
+#endif
 
 /**********************************************************
   GOMP_loop_ordered_static_start
@@ -271,6 +273,7 @@ bool  GOMP_loop_ordered_runtime_start(long a1, long a2, long a3, long * a4, long
     return tau_GOMP_loop_ordered_runtime_start(GOMP_loop_ordered_runtime_start_h, a1,  a2,  a3,  a4,  a5);
 }
 
+#ifdef TAU_GOMP_WRAP_EVERYTHING
 
 /**********************************************************
   GOMP_loop_static_next
@@ -375,6 +378,7 @@ bool  GOMP_loop_ordered_runtime_next(long * a1, long * a2)  {
     return tau_GOMP_loop_ordered_runtime_next (GOMP_loop_ordered_runtime_next_h, a1,  a2);
 }
 
+#endif
 
 /**********************************************************
   GOMP_parallel_loop_static_start
@@ -453,6 +457,7 @@ void  GOMP_loop_end_nowait()  {
     tau_GOMP_loop_end_nowait(GOMP_loop_end_nowait_h);
 }
 
+#ifdef TAU_GOMP_WRAP_EVERYTHING
 
 /**********************************************************
   GOMP_loop_ull_static_start
@@ -661,6 +666,7 @@ bool  GOMP_loop_ull_ordered_runtime_next(unsigned long long * a1, unsigned long 
     return tau_GOMP_loop_ull_ordered_runtime_next(GOMP_loop_ull_ordered_runtime_next_h, a1,  a2);
 }
 
+#endif
 
 /**********************************************************
   GOMP_ordered_start
@@ -765,6 +771,7 @@ unsigned int  GOMP_sections_start(unsigned int a1)  {
     return tau_GOMP_sections_start(GOMP_sections_start_h, a1);
 }
 
+#ifdef TAU_TIME_GOMP_NEXT
 
 /**********************************************************
   GOMP_sections_next
@@ -778,6 +785,7 @@ unsigned int  GOMP_sections_next()  {
     return tau_GOMP_sections_next(GOMP_sections_next_h);
 }
 
+#endif
 
 /**********************************************************
   GOMP_parallel_sections_start
@@ -905,6 +913,8 @@ void __wrap_GOMP_atomic_end () {
     tau_GOMP_atomic_end (__real_GOMP_atomic_end);
 }
 
+#ifdef TAU_GOMP_WRAP_EVERYTHING
+
 bool __real_GOMP_loop_static_start (long, long, long, long, long *, long *);
 bool __wrap_GOMP_loop_static_start (long a1, long a2, long a3, long a4, long * a5, long * a6) {
     tau_GOMP_loop_static_start (__real_GOMP_loop_static_start, a1, a2, a3, a3, a4, a5, a6);
@@ -924,6 +934,8 @@ bool __real_GOMP_loop_runtime_start (long, long, long, long *, long *);
 bool __wrap_GOMP_loop_runtime_start (long a1, long a2, long a3, long * a4, long * a5) {
     tau_GOMP_loop_runtime_start (__real_GOMP_loop_runtime_start, a1, a2, a3, a4, a5);
 }
+
+#endif
 
 bool __real_GOMP_loop_ordered_static_start (long, long, long, long, long *, long *);
 bool __wrap_GOMP_loop_ordered_static_start (long a1, long a2, long a3, long a4, long * a5, long * a6) {
@@ -945,6 +957,7 @@ bool __wrap_GOMP_loop_ordered_runtime_start (long a1, long a2, long a3, long * a
     tau_GOMP_loop_ordered_runtime_start (__real_GOMP_loop_ordered_runtime_start, a1, a2, a3, a4, a5);
 }
 
+#ifdef TAU_GOMP_WRAP_EVERYTHING
 bool __real_GOMP_loop_static_next (long *, long *);
 bool __wrap_GOMP_loop_static_next (long * a1, long * a2) {
     tau_GOMP_loop_static_next (__real_GOMP_loop_static_next, a1, a2);
@@ -984,6 +997,7 @@ bool __real_GOMP_loop_ordered_runtime_next (long *, long *);
 bool __wrap_GOMP_loop_ordered_runtime_next (long * a1, long * a2) {
     tau_GOMP_loop_ordered_runtime_next (__real_GOMP_loop_ordered_runtime_next, a1, a2);
 }
+#endif
 
 void __real_GOMP_parallel_loop_static_start (void(*)(void *), void *, unsigned int, long, long, long, long);
 void __wrap_GOMP_parallel_loop_static_start (void(*a1)(void *), void * a2, unsigned int a3, long a4, long a5, long a6, long a7) {
@@ -1015,6 +1029,7 @@ void __wrap_GOMP_loop_end_nowait () {
     tau_GOMP_loop_end_nowait (__real_GOMP_loop_end_nowait);
 }
 
+#ifdef TAU_GOMP_WRAP_EVERYTHING
 bool __real_GOMP_loop_ull_static_start (bool, unsigned long long, unsigned long long, unsigned long long, unsigned long long, unsigned long long *, unsigned long long *);
 bool __wrap_GOMP_loop_ull_static_start (bool a1, unsigned long long a2, unsigned long long a3, unsigned long long a4, unsigned long long a5, unsigned long long * a6, unsigned long long * a7) {
     tau_GOMP_loop_ull_static_start (__real_GOMP_loop_ull_static_start, a1, a2, a3, a4, a5, a6, a7);
@@ -1094,6 +1109,7 @@ bool __real_GOMP_loop_ull_ordered_runtime_next (unsigned long long *, unsigned l
 bool __wrap_GOMP_loop_ull_ordered_runtime_next (unsigned long long * a1, unsigned long long * a2) {
     tau_GOMP_loop_ull_ordered_runtime_next (__real_GOMP_loop_ull_ordered_runtime_next, a1, a2);
 }
+#endif
 
 void __real_GOMP_ordered_start ();
 void __wrap_GOMP_ordered_start () {
@@ -1134,7 +1150,6 @@ void __real_GOMP_taskyield ();
 void __wrap_GOMP_taskyield () {
     tau_GOMP_taskyield (__real_GOMP_taskyield);
 }
-#endif
 
 unsigned int __real_GOMP_sections_start (unsigned int);
 unsigned int __wrap_GOMP_sections_start (unsigned int a1) {
@@ -1145,21 +1160,25 @@ unsigned int __real_GOMP_sections_next ();
 unsigned int __wrap_GOMP_sections_next () {
     tau_GOMP_sections_next (__real_GOMP_sections_next);
 }
+#endif
 
 void __real_GOMP_parallel_sections_start (void(*)(void *), void *, unsigned int, unsigned int);
 void __wrap_GOMP_parallel_sections_start (void(*a1)(void *), void * a2, unsigned int a3, unsigned int a4) {
     tau_GOMP_parallel_sections_start (__real_GOMP_parallel_sections_start, a1, a2, a3, a4);
 }
 
+#ifdef TAU_GOMP_WRAP_EVERYTHING
+
 void __real_GOMP_sections_end ();
 void __wrap_GOMP_sections_end () {
     tau_GOMP_sections_end (__real_GOMP_sections_end);
 }
-
 void __real_GOMP_sections_end_nowait ();
 void __wrap_GOMP_sections_end_nowait () {
     tau_GOMP_sections_end_nowait (__real_GOMP_sections_end_nowait);
 }
+
+#endif
 
 bool __real_GOMP_single_start ();
 bool __wrap_GOMP_single_start () {
