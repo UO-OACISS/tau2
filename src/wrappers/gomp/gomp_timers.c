@@ -80,9 +80,9 @@ void Tau_gomp_parallel_start_proxy(void * a2) {
     TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(a2);
 
     __ompc_event_callback(OMP_EVENT_THR_END_IDLE);
-    //TAU_TIMER_START_ENABLED(proxy->name, Tau_get_tid()); 
+    if(proxy->name != NULL) TAU_TIMER_START_ENABLED(proxy->name, Tau_get_tid()); 
     (proxy->a1)(proxy->a2);
-    //TAU_TIMER_STOP_ENABLED(proxy->name, Tau_get_tid()); 
+    if(proxy->name != NULL) TAU_TIMER_STOP_ENABLED(proxy->name, Tau_get_tid()); 
     __ompc_event_callback(OMP_EVENT_THR_BEGIN_IDLE);
 }
 
@@ -93,9 +93,9 @@ void Tau_gomp_task_proxy(void * a2) {
     TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(a2);
 
     __ompc_event_callback(OMP_EVENT_THR_BEGIN_EXEC_TASK);
-    //if(proxy->name != NULL) TAU_TIMER_START_ENABLED(proxy->name, Tau_get_tid()); 
+    if(proxy->name != NULL) TAU_TIMER_START_ENABLED(proxy->name, Tau_get_tid()); 
     (proxy->a1)(proxy->a2);
-    //if(proxy->name != NULL) TAU_TIMER_STOP_ENABLED(proxy->name, Tau_get_tid()); 
+    if(proxy->name != NULL) TAU_TIMER_STOP_ENABLED(proxy->name, Tau_get_tid()); 
     __ompc_event_callback(OMP_EVENT_THR_BEGIN_FINISH_TASK);
     __ompc_event_callback(OMP_EVENT_THR_END_FINISH_TASK);
 }
@@ -700,6 +700,7 @@ void tau_GOMP_parallel_loop_static_start(GOMP_parallel_loop_static_start_p GOMP_
         TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(malloc(sizeof(TAU_GOMP_PROXY_WRAPPER)));
         proxy->a1 = a1;
         proxy->a2 = a2;
+        proxy->name = NULL;
         //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
         (*GOMP_parallel_loop_static_start_h)( Tau_gomp_parallel_start_proxy,  proxy,  a3,  a4,  a5,  a6,  a7);
         // save the pointer so we can free it later
@@ -736,6 +737,7 @@ void tau_GOMP_parallel_loop_dynamic_start(GOMP_parallel_loop_dynamic_start_p GOM
         TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(malloc(sizeof(TAU_GOMP_PROXY_WRAPPER)));
         proxy->a1 = a1;
         proxy->a2 = a2;
+        proxy->name = NULL;
         //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
         (*GOMP_parallel_loop_dynamic_start_h)( Tau_gomp_parallel_start_proxy,  proxy,  a3,  a4,  a5,  a6,  a7);
         // save the pointer so we can free it later
@@ -772,6 +774,7 @@ void tau_GOMP_parallel_loop_guided_start(GOMP_parallel_loop_guided_start_p GOMP_
         TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(malloc(sizeof(TAU_GOMP_PROXY_WRAPPER)));
         proxy->a1 = a1;
         proxy->a2 = a2;
+        proxy->name = NULL;
         //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
         (*GOMP_parallel_loop_guided_start_h)( Tau_gomp_parallel_start_proxy,  proxy,  a3,  a4,  a5,  a6,  a7);
         // save the pointer so we can free it later
@@ -808,6 +811,7 @@ void tau_GOMP_parallel_loop_runtime_start(GOMP_parallel_loop_runtime_start_p GOM
         TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(malloc(sizeof(TAU_GOMP_PROXY_WRAPPER)));
         proxy->a1 = a1;
         proxy->a2 = a2;
+        proxy->name = NULL;
         //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
         (*GOMP_parallel_loop_runtime_start_h)( Tau_gomp_parallel_start_proxy,  proxy,  a3,  a4,  a5,  a6);
         // save the pointer so we can free it later
@@ -1263,6 +1267,7 @@ void tau_GOMP_parallel_start(GOMP_parallel_start_p GOMP_parallel_start_h, void (
         TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(malloc(sizeof(TAU_GOMP_PROXY_WRAPPER)));
         proxy->a1 = a1;
         proxy->a2 = a2;
+        proxy->name = NULL;
         //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
         // save the pointer so we can free it later
         Tau_gomp_flags[tid].proxy[Tau_gomp_flags[tid].depth] = proxy;
