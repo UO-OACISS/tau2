@@ -6689,7 +6689,7 @@ int main() {
 EOF
   $echo "Checking for thread local storage support... ${nnl}"
   if $cxx_compiler $orig_useropt -c conftest_tls.cc 1> /dev/null 2>&1 ; then
-      #fixmakeargs="$fixmakeargs TLS_AVAILABLE"
+      fixmakeargs="$fixmakeargs TLS_AVAILABLE"
       echo "yes"
   else
       echo "no"
@@ -6710,7 +6710,7 @@ int main() {
 EOF
   $echo "Checking for __declspec(thread) support... ${nnl}"
   if $cxx_compiler $orig_useropt -c conftest_dtls.cc 1> /dev/null 2>&1 ; then
-      #fixmakeargs="$fixmakeargs DSTLS_AVAILABLE"
+      fixmakeargs="$fixmakeargs DSTLS_AVAILABLE"
       echo "yes"
   else
       echo "no"
