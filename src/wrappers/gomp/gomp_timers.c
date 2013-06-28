@@ -20,7 +20,7 @@
 { }
 #endif
 
-#if 1
+#if 0
 #define TAU_TIMER_START_ENABLED(NAME,TID) Tau_pure_start_task(NAME,TID)
 #define TAU_TIMER_STOP_ENABLED(NAME,TID)  Tau_pure_stop_task(NAME,TID)
 #else
@@ -844,6 +844,7 @@ void tau_GOMP_loop_end(GOMP_loop_end_p GOMP_loop_end_h)  {
             Tau_gomp_flags[Tau_get_tid()].ordered[Tau_gomp_flags[Tau_get_tid()].depth] = 0;
             //_ordered[_depth] = 0;
         }
+        __ompc_event_callback(OMP_EVENT_THR_BEGIN_IBAR);
         TAU_TIMER_START_ENABLED("GOMP_loop_end", Tau_get_tid()); 
     }
 
@@ -851,6 +852,7 @@ void tau_GOMP_loop_end(GOMP_loop_end_p GOMP_loop_end_h)  {
 
     if (Tau_global_get_insideTAU() == 0) { 
         TAU_TIMER_STOP_ENABLED("GOMP_loop_end", Tau_get_tid());
+        __ompc_event_callback(OMP_EVENT_THR_END_IBAR);
     }
 
 }
