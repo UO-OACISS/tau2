@@ -214,7 +214,7 @@ bool IsDynamicProfiling(char *filename) {
     printf("Error: fscanf returns EOF file %s", filename);
     return false;
   }//if
-  fclose(fp); // thats all we wanted to read
+  //fclose(fp); // thats all we wanted to read
   if (strcmp(version,"templated_functions") == 0  || (strstr(version,"MULTI") != NULL)) { // correct version
     if(strstr(version,"MULTI") != NULL){
       multipleCounters = true;
