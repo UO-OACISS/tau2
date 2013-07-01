@@ -6244,9 +6244,9 @@ fi
 ######################################################################
 # Install BFD if requested
 ######################################################################
-binutils=binutils-2.23.1
+binutils=binutils-2.23.2
 binutilstgz=$binutils.tar.gz
-binutilsurl=http://ftp.gnu.org/gnu/binutils/$binutilstgz
+binutilsurl=http://www.cs.uoregon.edu/Research/paracomp/tau/tauprofile/dist/$binutilstgz
 if [ "x$bfddir" = xnone ]; then
 	echo "BFD disabled."
 	turnbfdoff=yes
