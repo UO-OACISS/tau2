@@ -59,8 +59,17 @@ OpenMPMap & TheOMPMap()
 /* This is Thread Local Storage (TLS) for the thread ID.
  * Using this is MUCH faster than computing it every time we need it.
  * HOWEVER, it might not be supported everywhere. */
-#if defined (TAU_OPENMP) && defined(TAU_USE_FAST_THREADID)
+#if defined (TAU_OPENMP)
+#if defined (TAU_USE_TLS)
 __thread int _tau_thread_id = -1;
+int _thread_count = 0;
+#elif defined(TAU_USE_DTLS)
+__declspec(thread) int _tau_thread_id = -1;
+int _thread_count = 0;
+#elif defined(TAU_USE_PGS)
+#include "TauPthreadGlobal.h"
+int _thread_count = 0;
+#endif
 #endif
 
 ////////////////////////////////////////////////////////////////////////
@@ -91,11 +100,42 @@ int OpenMPLayer::GetTauThreadId(void)
 {
 #ifdef TAU_OPENMP
 
-#ifdef TAU_USE_FAST_THREADID
-  // if this thread has been registered, then it has a TLS value for the ID
-  if (_tau_thread_id > -1)
-    return _tau_thread_id;
-#endif
+#if defined (TAU_USE_TLS) || defined (TAU_USE_DTLS)
+  // if this thread has not been registered, then it does not have a TLS value for the ID
+  if (_tau_thread_id == -1) {
+    Tau_global_incr_insideTAU();
+    omp_set_lock(&OpenMPLayer::tauRegistermutex);
+    if (_thread_count > 0) {
+      Initialize();
+      /* Process is already locked, call the unsafe thread creation routine. */
+      _tau_thread_id = RtsLayer::_createThread();
+    } else {
+      _tau_thread_id = 0;
+    }
+    _thread_count = _thread_count + 1;
+    omp_unset_lock(&OpenMPLayer::tauRegistermutex);
+    Tau_global_decr_insideTAU();
+  }
+  return _tau_thread_id;
+#elif defined (TAU_USE_PGS)
+  struct _tau_global_data *tmp = TauGlobal::getInstance().getValue();
+  // if this thread has not been registered, then it does not have a TLS value for the ID
+  if (tmp->threadID == -1) {
+    Tau_global_incr_insideTAU();
+    omp_set_lock(&OpenMPLayer::tauRegistermutex);
+    if (_thread_count > 0) {
+      Initialize();
+      /* Process is already locked, call the unsafe thread creation routine. */
+      tmp->threadID = RtsLayer::_createThread();
+    } else {
+      tmp->threadID = 0;
+    }
+    _thread_count = _thread_count + 1;
+    omp_unset_lock(&OpenMPLayer::tauRegistermutex);
+    Tau_global_decr_insideTAU();
+  }
+  return tmp->threadID;
+#endif // TAU_USE_TLS
 
   int omp_thread_id = omp_get_thread_num();
 
@@ -131,17 +171,8 @@ int OpenMPLayer::GetTauThreadId(void)
     }
     omp_unset_lock(&OpenMPLayer::tauRegistermutex);
 
-// do this now so the thread ID is set before starting timers
-#ifdef TAU_USE_FAST_THREADID
-    _tau_thread_id = tau_thread_id;
-#endif
-
     Tau_create_top_level_timer_if_necessary_task(tau_thread_id);
   }
-
-#ifdef TAU_USE_FAST_THREADID
-  _tau_thread_id = tau_thread_id;
-#endif
 
   return tau_thread_id;
 #else
@@ -153,15 +184,24 @@ int OpenMPLayer::GetThreadId(void)
 {
 #ifdef TAU_OPENMP
 
-#ifdef TAU_USE_FAST_THREADID
+#if defined (TAU_USE_TLS) || defined (TAU_USE_DTLS)
   if (_tau_thread_id == -1) {
 	// call the function above, which will register the thread
 	// and assign the TLS value which we will use henceforth
     return GetTauThreadId();  
   } else {
-	return _tau_thread_id;
+    return _tau_thread_id;
   }
-#endif
+#elif defined (TAU_USE_PGS)
+  struct _tau_global_data *tmp = TauGlobal::getInstance().getValue();
+  if (tmp->threadID == -1) {
+	// call the function above, which will register the thread
+	// and assign the TLS value which we will use henceforth
+    return GetTauThreadId();  
+  } else {
+    return tmp->threadID;
+  }
+#endif //TAU_USE_TLS
 
   int omp_thread_id = omp_get_thread_num();
 

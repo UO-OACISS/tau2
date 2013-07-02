@@ -244,6 +244,7 @@ JDKARCH                 = linux
 #OPENMP#OPENMP_O 	= OpenMPLayer.o TauOpenMPCollectorAPI.o #ENDIF#
 #OPARI#OPENMP_O 	= OpenMPLayer.o TauOpenMPCollectorAPIDisable.o #ENDIF#
 #OPARI2#OPENMP_O 	= OpenMPLayer.o TauOpenMPCollectorAPIDisable.o #ENDIF#
+#PGS_AVAILABLE#OPENMP_PGS_O 	= TauPthreadGlobal.o  #ENDIF#
 
 #############################################
 # OpenMP extra libraries for collector API
@@ -1027,6 +1028,9 @@ EBS_CLOCK_RES=
 
 #IBMOMPT#PROFILEOPT93=-DTAU_IBM_OMPT -I$(LOMPINC) -qdebug=lompinterface #ENDIF#
 #IBMOMPT#TAU_OMPT_O=TauOMPT.o #ENDIF#
+#TLS_AVAILABLE#PROFILEOPT94=-DTAU_USE_TLS #ENDIF#
+#DTLS_AVAILABLE#PROFILEOPT94=-DTAU_USE_DTLS #ENDIF#
+#PGS_AVAILABLE#PROFILEOPT94=-DTAU_USE_PGS #ENDIF#
 
 
 PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
@@ -1052,7 +1056,7 @@ PROFILEOPTS = $(PROFILEOPT1)  $(PROFILEOPT2)  $(PROFILEOPT3)  $(PROFILEOPT4)  \
               $(PROFILEOPT81) $(PROFILEOPT82) $(PROFILEOPT83) $(PROFILEOPT84) \
               $(PROFILEOPT85) $(PROFILEOPT86) $(PROFILEOPT87) $(PROFILEOPT88)\
               $(PROFILEOPT89) $(PROFILEOPT90) $(PROFILEOPT91) $(PROFILEOPT92) \
-		$(PROFILEOPT93) $(TRACEOPT)
+              $(PROFILEOPT93) $(PROFILEOPT94) $(TRACEOPT)
 
 
 ##############################################
@@ -1265,6 +1269,7 @@ TAUCOMPILEROPTS=  -optPdtDir="$(PDTDIR)/${PDTARCHDIR}"\
 	-optCompInstOption="$(TAU_COMPINST_OPTION) $(TAU_COMPINST_PTHREAD_OPTIONS)"\
 	-optCompInstFortranOption="$(TAU_FORTRAN_COMPINST_OPTION) $(TAU_COMPINST_PTHREAD_OPTIONS)"\
 	-optCompInstLinking="$(TAU_COMPINST_LINKING)"\
+	-optVerbose \
 	-optWrappersDir="$(TAU_LIB_DIR)/wrappers" $(TAU_EXTRA_WRAPPER_OPTIONS)
 #############################################
 

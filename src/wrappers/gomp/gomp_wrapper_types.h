@@ -1,3 +1,6 @@
+#include "omp.h"
+typedef void (*omp_set_lock_p) (omp_lock_t*);
+typedef void (*omp_set_nest_lock_p) (omp_nest_lock_t*);
 typedef void (*GOMP_barrier_p) ();
 typedef void (*GOMP_critical_start_p) ();
 typedef void (*GOMP_critical_end_p) ();

@@ -173,8 +173,12 @@ static Tau_thread_status_flags Tau_thread_flags[TAU_MAX_THREADS] = {0};
 #endif
 #endif
 
-#ifdef TAU_USE_FAST_THREADID
+#if defined (TAU_USE_TLS)
 __thread int _Tau_global_insideTAU = 0;
+#elif defined (TAU_USE_DTLS)
+__declspec(thread) int _Tau_global_insideTAU = 0;
+#elif defined (TAU_USE_PGS)
+#include "TauPthreadGlobal.h"
 #endif
 
 int lightsOut = 0;
@@ -222,19 +226,25 @@ extern "C" void Tau_stack_initialization() {
 }
 
 extern "C" int Tau_global_get_insideTAU() {
-#ifdef TAU_USE_FAST_THREADID
+#if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
   return _Tau_global_insideTAU;
-#endif
+#elif defined(TAU_USE_PGS)
+  return (TauGlobal::getInstance().getValue())->insideTAU;
+#else
   Tau_stack_checkInit();
   int tid = RtsLayer::unsafeLocalThreadId();
   return Tau_thread_flags[tid].Tau_global_insideTAU;
+#endif
 }
 
 extern "C" int Tau_global_incr_insideTAU()
 {
-#ifdef TAU_USE_FAST_THREADID
+#if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
   return ++_Tau_global_insideTAU;
-#endif
+#elif defined(TAU_USE_PGS)
+  struct _tau_global_data *tmp = TauGlobal::getInstance().getValue();
+  return ++(tmp->insideTAU);
+#else
   Tau_stack_checkInit();
   Tau_memory_wrapper_disable();
   int tid = RtsLayer::unsafeLocalThreadId();
@@ -242,13 +252,17 @@ extern "C" int Tau_global_incr_insideTAU()
   volatile int * insideTAU = &Tau_thread_flags[tid].Tau_global_insideTAU;
   *insideTAU = *insideTAU + 1;
   return *insideTAU;
+#endif
 }
 
 extern "C" int Tau_global_decr_insideTAU()
 {
-#ifdef TAU_USE_FAST_THREADID
+#if defined (TAU_USE_TLS) || (TAU_USE_DTLS)
   return --_Tau_global_insideTAU;
-#endif
+#elif defined(TAU_USE_PGS)
+  struct _tau_global_data *tmp = TauGlobal::getInstance().getValue();
+  return --(tmp->insideTAU);
+#else
   Tau_stack_checkInit();
   int tid = RtsLayer::unsafeLocalThreadId();
 
@@ -258,6 +272,7 @@ extern "C" int Tau_global_decr_insideTAU()
 
   if (*insideTAU == 0) Tau_memory_wrapper_enable();
   return *insideTAU;
+#endif
 }
 
 extern "C" Profiler *TauInternal_CurrentProfiler(int tid) {
@@ -669,6 +684,18 @@ extern "C" int Tau_stop_current_timer_task(int tid)
 
   if (Tau_thread_flags[tid].Tau_global_stackpos >= 0) {
     Profiler * profiler = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+    /* We might have an inconstant stack because of throttling. If one thread
+     * throttles a routine while it is on the top of the stack of another thread
+     * it will remain there until a stop is called on its parent. Check for this
+     * condition before printing a overlap error message. */
+    while (!profiler->ThisFunction->GetProfileGroup() & RtsLayer::TheProfileMask() && 
+          (Tau_thread_flags[tid].Tau_global_stackpos >= 0))
+    {
+      profiler->Stop();
+      Tau_thread_flags[tid].Tau_global_stackpos--; /* pop */
+      profiler = &(Tau_thread_flags[tid].Tau_global_stack[Tau_thread_flags[tid].Tau_global_stackpos]);
+    }
+
     FunctionInfo * functionInfo = profiler->ThisFunction;
     return Tau_stop_timer(functionInfo, tid);
   }

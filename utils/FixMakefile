@@ -1319,6 +1319,18 @@ case $1 in
 	echo "NOTE: Using GOMP OpenMP Library Wrapper ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
 	;;
+     TLS_AVAILABLE)
+	echo "NOTE: __thread Using Thread Local Storage (TLS) ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     DTLS_AVAILABLE)
+	echo "NOTE: Using __declspec(thread) Thread Local Storage (TLS) ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
+     PGS_AVAILABLE)
+	echo "NOTE: Using pthread_getspecific() Thread Local Storage (TLS) ***"
+        echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout
+	;;
      OPARI)
 	echo "NOTE: Using Opari OpenMP directive rewriting tool ***"
         echo "s/#$1#\(.*\)/$bs\1#$1#/g" >> $sedout

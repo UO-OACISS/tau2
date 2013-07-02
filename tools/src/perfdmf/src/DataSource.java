@@ -726,7 +726,7 @@ public abstract class DataSource {
 
         for (Iterator<Function> l = this.getFunctionIterator(); l.hasNext();) {
             Function function = l.next();
-			if (function.getName().contains("SAMPLE")) {
+			if (function.getName().contains("SAMPLE") && !function.getName().contains("UNRESOLVED")) {
               functions.add(function);
 			}
 
