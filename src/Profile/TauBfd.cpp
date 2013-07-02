@@ -845,7 +845,7 @@ static void Tau_bfd_internal_locateAddress(bfd * bfdptr, asection * section, voi
   if (data.found) return;
 
   // Skip this section if it isn't a debug info section
-  //if ((bfd_get_section_flags(bfdptr, section) & SEC_ALLOC) == 0) return;
+  if ((bfd_get_section_flags(bfdptr, section) & SEC_ALLOC) == 0) return;
 
   // Skip this section if the address is before the section start
   bfd_vma vma = bfd_get_section_vma(bfdptr, section);

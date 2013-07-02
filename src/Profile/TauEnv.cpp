@@ -161,6 +161,9 @@ using namespace std;
 #define TAU_MEMDBG_ZERO_MALLOC_DEFAULT    0
 #define TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT 0
 
+// pthread stack size default
+#define TAU_PTHREAD_STACK_SIZE_DEFAULT    0
+
 // forward declartion of cuserid. need for c++ compilers on Cray.
 extern "C" char *cuserid(char *);
 
@@ -509,6 +512,8 @@ static size_t env_memdbg_alignment = TAU_MEMDBG_ALIGNMENT_DEFAULT;
 static int env_memdbg_zero_malloc = TAU_MEMDBG_ZERO_MALLOC_DEFAULT;
 static int env_memdbg_attempt_continue = TAU_MEMDBG_ATTEMPT_CONTINUE_DEFAULT;
 
+static int env_pthread_stack_size = TAU_PTHREAD_STACK_SIZE_DEFAULT;
+
 #ifdef TAU_GPI 
 #include <GPI.h>
 #include <GpiLogger.h>
@@ -817,6 +822,10 @@ int TauEnv_get_memdbg_attempt_continue() {
   return env_memdbg_attempt_continue;
 }
 
+int TauEnv_get_pthread_stack_size() {
+  return env_pthread_stack_size;
+}
+
 
 /*********************************************************************
  * Initialize the TauEnv module, get configuration values
@@ -1003,6 +1012,15 @@ void TauEnv_initialize()
       }
 
     } // if (env_memdbg)
+
+    tmp = getconf("TAU_PTHREAD_STACK_SIZE");
+    if (tmp) {
+      env_pthread_stack_size = atoi(tmp);
+      if (env_pthread_stack_size) {
+        TAU_VERBOSE("TAU: pthread stack size = %d\n", env_pthread_stack_size);
+        TAU_METADATA("TAU_PTHREAD_STACK_SIZE", tmp);
+      }
+    }
 
     tmp = getconf("TAU_TRACK_IO_PARAMS");
     if (parse_bool(tmp, env_track_memory_headroom)) {
