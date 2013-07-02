@@ -6246,7 +6246,7 @@ fi
 ######################################################################
 binutils=binutils-2.23.2
 binutilstgz=$binutils.tar.gz
-binutilsurl=http://ftp.gnu.org/gnu/binutils/$binutilstgz
+binutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$binutilstgz
 if [ "x$bfddir" = xnone ]; then
 	echo "BFD disabled."
 	turnbfdoff=yes
@@ -6261,7 +6261,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
 			mkdir $tempdir
 			cd $tempdir
 			if [ "$machine" = "apple" ] ; then
-                            curl $binutilsurl > $binutilstgz
+                            curl -L $binutilsurl > $binutilstgz
 			else 
                             wget $binutilsurl
 			fi
@@ -6307,7 +6307,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
     fixmakeargs="$fixmakeargs bfdinclude=$bfdinclude"
     bfdlink="-L$bfddir/lib -L$bfddir/lib64"
 	# The libintl.dylib library is in /opt/local/lib... is that everywhere?
-	if [ "x$machine" == "xapple" ] ; then
+	if [ "x$machine" = "xapple" ] ; then
       bfdlink="$bfdlink -L/opt/local/lib"
       fixmakeargs="$fixmakeargs bfdlink=-L$bfddir/lib#-L$bfddir/lib64#-L/opt/local/lib"
 	else
@@ -6677,6 +6677,76 @@ EOF
   /bin/rm -f conftest_pthread.o conftest_pthread.c
 fi
 
+######################################################################
+# Check for TLS, or Thread Local Storage
+######################################################################
+if [ $openmp = yes ] ; then
+  cat <<EOF > conftest_tls.cc
+__thread int number = -1;
+int main() {
+  return number;
+}
+EOF
+  $echo "Checking for thread local storage support... ${nnl}"
+  if $cxx_compiler $orig_useropt -c conftest_tls.cc 1> /dev/null 2>&1 ; then
+      fixmakeargs="$fixmakeargs TLS_AVAILABLE"
+      echo "yes"
+  else
+      echo "no"
+  fi
+
+  /bin/rm -f conftest_tls.o conftest_tls.cc
+fi
+
+######################################################################
+# Check for declspec(thread) support
+######################################################################
+if [ $openmp = yes ] ; then
+  cat <<EOF > conftest_dtls.cc
+__declspec(thread) int number = -1;
+int main() {
+  return number;
+}
+EOF
+  $echo "Checking for __declspec(thread) support... ${nnl}"
+  if $cxx_compiler $orig_useropt -c conftest_dtls.cc 1> /dev/null 2>&1 ; then
+      fixmakeargs="$fixmakeargs DSTLS_AVAILABLE"
+      echo "yes"
+  else
+      echo "no"
+  fi
+
+  /bin/rm -f conftest_dtls.o conftest_dtls.cc
+fi
+
+######################################################################
+# Check for pthread_getspecific() support
+######################################################################
+if [ $openmp = yes ] ; then
+  cat <<EOF > conftest_pgs.cc
+#include "pthread.h"
+static pthread_key_t key;
+int number = 1;
+
+int main() {
+  pthread_key_create(&key, NULL);
+  pthread_setspecific(key, &number);
+  int *newnum;
+  newnum = (int*)pthread_getspecific(key);
+  return *newnum;
+}
+EOF
+  $echo "Checking for pthread_getspecific() support... ${nnl}"
+  if $cxx_compiler $orig_useropt -c conftest_pgs.cc 1> /dev/null 2>&1 ; then
+      fixmakeargs="$fixmakeargs PGS_AVAILABLE"
+      echo "yes"
+  else
+      echo "no"
+  fi
+
+  /bin/rm -f conftest_pgs.o conftest_pgs.cc
+fi
+
 
 ######################################################################
 
@@ -6852,6 +6922,9 @@ else
 fi
 
 if [ "x$unwinder" != "xnone" ] ; then
+  if [ $c_compiler = gcc ] ; then
+    unwind_extras="-Wl\,-rpath=$unwind_lib"
+  fi
   if [ "x$unwinder" = "xlibunwind" ] ; then
 		  if [ $machine = apple ] ; then
             unwind_lib_flag="-framework#System"

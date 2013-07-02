@@ -10,6 +10,7 @@
 #include <stdlib.h>
 
 #include "gomp_wrapper_types.h"
+#include "omp.h"
 
 #if 0
 #define DEBUGPRINT(format, args...) \
@@ -21,7 +22,7 @@
 
 #if 0
 #define TAU_TIMER_START_ENABLED(NAME,TID) Tau_pure_start_task(NAME,TID)
-#define TAU_TIMER_STOP_ENABLED(NAME,TID)  TAU_TIMER_STOP_ENABLED(NAME,TID)
+#define TAU_TIMER_STOP_ENABLED(NAME,TID)  Tau_pure_stop_task(NAME,TID)
 #else
 #define TAU_TIMER_START_ENABLED(NAME,TID)
 #define TAU_TIMER_STOP_ENABLED(NAME,TID)
@@ -31,12 +32,9 @@
 extern int Tau_global_get_insideTAU();
 
 struct Tau_gomp_wrapper_status_flags {
-    int ordered; // 4 bytes
-    int critical; // 4 bytes
-    int single; // 4 bytes
     int depth; // 4 bytes
-    void * proxy[6]; // should be enough?
-    char _pad[64-(4*sizeof(int) + 6*sizeof(void*))];
+    int ordered[10];  // 40 bytes
+    void * proxy[10]; // 80 bytes
 };
 
 /* This structure is designed to wrap the outlined functions
@@ -66,13 +64,11 @@ typedef struct Tau_gomp_proxy_wrapper {
  * This is very important with timers, as all threads are entering timers
  * at the same time, and every thread will invalidate the cache line
  * otherwise. */
-#if defined __INTEL__COMPILER
-__declspec (align(64)) static struct Tau_gomp_wrapper_status_flags Tau_gomp_flags[TAU_MAX_THREADS] = {0};
-#elif defined __GNUC__
-static struct Tau_gomp_wrapper_status_flags Tau_gomp_flags[TAU_MAX_THREADS] __attribute__ ((aligned(64))) = {0};
-#else
-static struct Tau_gomp_wrapper_status_flags Tau_gomp_flags[TAU_MAX_THREADS] = {0};
-#endif
+static struct Tau_gomp_wrapper_status_flags Tau_gomp_flags[TAU_MAX_THREADS] __attribute__ ((aligned(128))) = {0};
+//__thread struct Tau_gomp_wrapper_status_flags Tau_gomp_flags = {0};
+//__thread int _ordered[10] = {0}; // 4 bytes
+//__thread int _depth = 0; // 4 bytes
+//__thread void * _proxy[10] = {0}; // should be enough?
 
 extern struct CallSiteInfo * Tau_sampling_resolveCallSite(unsigned long address,
         const char *tag, const char *childName, char **newShortName, char addAddress);
@@ -84,9 +80,9 @@ void Tau_gomp_parallel_start_proxy(void * a2) {
     TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(a2);
 
     __ompc_event_callback(OMP_EVENT_THR_END_IDLE);
-    //TAU_TIMER_START_ENABLED(proxy->name, Tau_get_tid()); 
+    if(proxy->name != NULL) TAU_TIMER_START_ENABLED(proxy->name, Tau_get_tid()); 
     (proxy->a1)(proxy->a2);
-    //TAU_TIMER_STOP_ENABLED(proxy->name, Tau_get_tid()); 
+    if(proxy->name != NULL) TAU_TIMER_STOP_ENABLED(proxy->name, Tau_get_tid()); 
     __ompc_event_callback(OMP_EVENT_THR_BEGIN_IDLE);
 }
 
@@ -96,11 +92,53 @@ void Tau_gomp_task_proxy(void * a2) {
     DEBUGPRINT("Task Proxy %d!\n", Tau_get_tid());
     TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(a2);
 
-    //__ompc_event_callback(OMP_EVENT_THR_END_IDLE);
-    //if(proxy->name != NULL) TAU_TIMER_START_ENABLED(proxy->name, Tau_get_tid()); 
+    __ompc_event_callback(OMP_EVENT_THR_BEGIN_EXEC_TASK);
+    if(proxy->name != NULL) TAU_TIMER_START_ENABLED(proxy->name, Tau_get_tid()); 
     (proxy->a1)(proxy->a2);
-    //if(proxy->name != NULL) TAU_TIMER_STOP_ENABLED(proxy->name, Tau_get_tid()); 
-    //__ompc_event_callback(OMP_EVENT_THR_BEGIN_IDLE);
+    if(proxy->name != NULL) TAU_TIMER_STOP_ENABLED(proxy->name, Tau_get_tid()); 
+    __ompc_event_callback(OMP_EVENT_THR_BEGIN_FINISH_TASK);
+    __ompc_event_callback(OMP_EVENT_THR_END_FINISH_TASK);
+}
+
+/**********************************************************
+  omp_set_lock
+ **********************************************************/
+
+void  tau_omp_set_lock(omp_set_lock_p omp_set_lock_h, omp_lock_t *lock)  {
+    DEBUGPRINT("omp_set_lock %d\n", Tau_get_tid());
+
+    if (Tau_global_get_insideTAU() == 0) { 
+        __ompc_event_callback(OMP_EVENT_THR_BEGIN_LKWT);
+        //TAU_TIMER_START_ENABLED("omp_set_lock", Tau_get_tid()); 
+    }
+
+    (*omp_set_lock_h)(lock);
+
+    if (Tau_global_get_insideTAU() == 0) { 
+        //TAU_TIMER_STOP_ENABLED("omp_set_lock", Tau_get_tid()); 
+        __ompc_event_callback(OMP_EVENT_THR_END_LKWT);
+    }
+}
+
+
+/**********************************************************
+  omp_set_nest_lock
+ **********************************************************/
+
+void  tau_omp_set_nest_lock(omp_set_nest_lock_p omp_set_nest_lock_h, omp_nest_lock_t *nest_lock)  {
+    DEBUGPRINT("omp_set_nest_lock %d\n", Tau_get_tid());
+
+    if (Tau_global_get_insideTAU() == 0) { 
+        __ompc_event_callback(OMP_EVENT_THR_BEGIN_LKWT);
+        //TAU_TIMER_START_ENABLED("omp_set_nest_lock", Tau_get_tid()); 
+    }
+
+    (*omp_set_nest_lock_h)(nest_lock);
+
+    if (Tau_global_get_insideTAU() == 0) { 
+        //TAU_TIMER_STOP_ENABLED("omp_set_nest_lock", Tau_get_tid()); 
+        __ompc_event_callback(OMP_EVENT_THR_END_LKWT);
+    }
 }
 
 /**********************************************************
@@ -215,6 +253,7 @@ void  tau_GOMP_atomic_start(GOMP_atomic_start_p GOMP_atomic_start_h)  {
     DEBUGPRINT("GOMP_atomic_start %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) {
+        __ompc_event_callback(OMP_EVENT_THR_BEGIN_ATWT);
         TAU_TIMER_START_ENABLED("GOMP_atomic_start", Tau_get_tid()); 
     }
 
@@ -222,6 +261,7 @@ void  tau_GOMP_atomic_start(GOMP_atomic_start_p GOMP_atomic_start_h)  {
 
     if (Tau_global_get_insideTAU() == 0) { 
         TAU_TIMER_STOP_ENABLED("GOMP_atomic_start", Tau_get_tid());
+        __ompc_event_callback(OMP_EVENT_THR_END_ATWT);
         __ompc_event_callback(OMP_EVENT_THR_BEGIN_ATWT);
     }
 
@@ -361,7 +401,8 @@ bool tau_GOMP_loop_ordered_static_start(GOMP_loop_ordered_static_start_p GOMP_lo
 
     if (Tau_global_get_insideTAU() == 0) { 
         TAU_TIMER_STOP_ENABLED("GOMP_loop_ordered_static_start", Tau_get_tid()); 
-        Tau_gomp_flags[Tau_get_tid()].ordered = 1;
+        Tau_gomp_flags[Tau_get_tid()].ordered[Tau_gomp_flags[Tau_get_tid()].depth] = 1;
+        //_ordered[_depth] = 1;
         __ompc_event_callback(OMP_EVENT_THR_BEGIN_ORDERED);
         //__ompc_event_callback(OMP_EVENT_THR_BEGIN_ODWT);
     }
@@ -388,7 +429,8 @@ bool tau_GOMP_loop_ordered_dynamic_start(GOMP_loop_ordered_dynamic_start_p GOMP_
 
     if (Tau_global_get_insideTAU() == 0) { 
         TAU_TIMER_STOP_ENABLED("GOMP_loop_ordered_dynamic_start", Tau_get_tid()); 
-        Tau_gomp_flags[Tau_get_tid()].ordered = 1;
+        Tau_gomp_flags[Tau_get_tid()].ordered[Tau_gomp_flags[Tau_get_tid()].depth] = 1;
+        //_ordered[_depth] = 1;
         __ompc_event_callback(OMP_EVENT_THR_BEGIN_ORDERED);
         //__ompc_event_callback(OMP_EVENT_THR_BEGIN_ODWT);
     }
@@ -414,7 +456,8 @@ bool tau_GOMP_loop_ordered_guided_start(GOMP_loop_ordered_guided_start_p GOMP_lo
 
     if (Tau_global_get_insideTAU() == 0) { 
         TAU_TIMER_STOP_ENABLED("GOMP_loop_ordered_guided_start", Tau_get_tid()); 
-        Tau_gomp_flags[Tau_get_tid()].ordered = 1;
+        Tau_gomp_flags[Tau_get_tid()].ordered[Tau_gomp_flags[Tau_get_tid()].depth] = 1;
+        //_ordered[_depth] = 1;
         __ompc_event_callback(OMP_EVENT_THR_BEGIN_ORDERED);
         //__ompc_event_callback(OMP_EVENT_THR_BEGIN_ODWT);
     }
@@ -441,7 +484,8 @@ bool tau_GOMP_loop_ordered_runtime_start(GOMP_loop_ordered_runtime_start_p GOMP_
 
     if (Tau_global_get_insideTAU() == 0) { 
         TAU_TIMER_STOP_ENABLED("GOMP_loop_ordered_runtime_start", Tau_get_tid()); 
-        Tau_gomp_flags[Tau_get_tid()].ordered = 1;
+        Tau_gomp_flags[Tau_get_tid()].ordered[Tau_gomp_flags[Tau_get_tid()].depth] = 1;
+        //_ordered[_depth] = 1;
         __ompc_event_callback(OMP_EVENT_THR_BEGIN_ORDERED);
         //__ompc_event_callback(OMP_EVENT_THR_BEGIN_ODWT);
     }
@@ -656,11 +700,14 @@ void tau_GOMP_parallel_loop_static_start(GOMP_parallel_loop_static_start_p GOMP_
         TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(malloc(sizeof(TAU_GOMP_PROXY_WRAPPER)));
         proxy->a1 = a1;
         proxy->a2 = a2;
+        proxy->name = NULL;
         //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
         (*GOMP_parallel_loop_static_start_h)( Tau_gomp_parallel_start_proxy,  proxy,  a3,  a4,  a5,  a6,  a7);
         // save the pointer so we can free it later
         Tau_gomp_flags[tid].proxy[Tau_gomp_flags[tid].depth] = proxy;
+        //_proxy[_depth] = proxy;
         Tau_gomp_flags[tid].depth = Tau_gomp_flags[tid].depth + 1;
+        //_depth = _depth + 1;
 
         TAU_TIMER_STOP_ENABLED("GOMP_parallel_loop_static_start", tid); 
     } else {
@@ -690,11 +737,14 @@ void tau_GOMP_parallel_loop_dynamic_start(GOMP_parallel_loop_dynamic_start_p GOM
         TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(malloc(sizeof(TAU_GOMP_PROXY_WRAPPER)));
         proxy->a1 = a1;
         proxy->a2 = a2;
+        proxy->name = NULL;
         //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
         (*GOMP_parallel_loop_dynamic_start_h)( Tau_gomp_parallel_start_proxy,  proxy,  a3,  a4,  a5,  a6,  a7);
         // save the pointer so we can free it later
         Tau_gomp_flags[tid].proxy[Tau_gomp_flags[tid].depth] = proxy;
         Tau_gomp_flags[tid].depth = Tau_gomp_flags[tid].depth + 1;
+        //_proxy[_depth] = proxy;
+        //_depth = _depth + 1;
 
         TAU_TIMER_STOP_ENABLED("GOMP_parallel_loop_dynamic_start", tid); 
     } else {
@@ -724,11 +774,14 @@ void tau_GOMP_parallel_loop_guided_start(GOMP_parallel_loop_guided_start_p GOMP_
         TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(malloc(sizeof(TAU_GOMP_PROXY_WRAPPER)));
         proxy->a1 = a1;
         proxy->a2 = a2;
+        proxy->name = NULL;
         //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
         (*GOMP_parallel_loop_guided_start_h)( Tau_gomp_parallel_start_proxy,  proxy,  a3,  a4,  a5,  a6,  a7);
         // save the pointer so we can free it later
         Tau_gomp_flags[tid].proxy[Tau_gomp_flags[tid].depth] = proxy;
         Tau_gomp_flags[tid].depth = Tau_gomp_flags[tid].depth + 1;
+        //_proxy[_depth] = proxy;
+        //_depth = _depth + 1;
 
         TAU_TIMER_STOP_ENABLED("GOMP_parallel_loop_guided_start", tid); 
     } else {
@@ -758,11 +811,14 @@ void tau_GOMP_parallel_loop_runtime_start(GOMP_parallel_loop_runtime_start_p GOM
         TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(malloc(sizeof(TAU_GOMP_PROXY_WRAPPER)));
         proxy->a1 = a1;
         proxy->a2 = a2;
+        proxy->name = NULL;
         //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
         (*GOMP_parallel_loop_runtime_start_h)( Tau_gomp_parallel_start_proxy,  proxy,  a3,  a4,  a5,  a6);
         // save the pointer so we can free it later
         Tau_gomp_flags[tid].proxy[Tau_gomp_flags[tid].depth] = proxy;
         Tau_gomp_flags[tid].depth = Tau_gomp_flags[tid].depth + 1;
+        //_proxy[_depth] = proxy;
+        //_depth = _depth + 1;
 
         TAU_TIMER_STOP_ENABLED("GOMP_parallel_loop_runtime_start", tid); 
     } else {
@@ -781,11 +837,14 @@ void tau_GOMP_loop_end(GOMP_loop_end_p GOMP_loop_end_h)  {
     DEBUGPRINT("GOMP_loop_end %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) { 
-        if (Tau_gomp_flags[Tau_get_tid()].ordered) {
+        //if (_ordered[_depth]) {
+        if (Tau_gomp_flags[Tau_get_tid()].ordered[Tau_gomp_flags[Tau_get_tid()].depth]) {
             ////__ompc_event_callback(OMP_EVENT_THR_END_ODWT);
             __ompc_event_callback(OMP_EVENT_THR_END_ORDERED);
-            Tau_gomp_flags[Tau_get_tid()].ordered = 0;
+            Tau_gomp_flags[Tau_get_tid()].ordered[Tau_gomp_flags[Tau_get_tid()].depth] = 0;
+            //_ordered[_depth] = 0;
         }
+        __ompc_event_callback(OMP_EVENT_THR_BEGIN_IBAR);
         TAU_TIMER_START_ENABLED("GOMP_loop_end", Tau_get_tid()); 
     }
 
@@ -793,6 +852,7 @@ void tau_GOMP_loop_end(GOMP_loop_end_p GOMP_loop_end_h)  {
 
     if (Tau_global_get_insideTAU() == 0) { 
         TAU_TIMER_STOP_ENABLED("GOMP_loop_end", Tau_get_tid());
+        __ompc_event_callback(OMP_EVENT_THR_END_IBAR);
     }
 
 }
@@ -807,10 +867,12 @@ void tau_GOMP_loop_end_nowait(GOMP_loop_end_nowait_p GOMP_loop_end_nowait_h)  {
     DEBUGPRINT("GOMP_loop_end_nowait %d\n", Tau_get_tid());
 
     if (Tau_global_get_insideTAU() == 0) { 
-        if (Tau_gomp_flags[Tau_get_tid()].ordered) {
+        if (Tau_gomp_flags[Tau_get_tid()].ordered[Tau_gomp_flags[Tau_get_tid()].depth]) {
+        //if (_ordered[_depth]) {
             //__ompc_event_callback(OMP_EVENT_THR_END_ODWT);
             __ompc_event_callback(OMP_EVENT_THR_END_ORDERED);
-            Tau_gomp_flags[Tau_get_tid()].ordered = 0;
+            Tau_gomp_flags[Tau_get_tid()].ordered[Tau_gomp_flags[Tau_get_tid()].depth] = 0;
+            //_ordered[_depth] = 0;
         }
         TAU_TIMER_START_ENABLED("GOMP_loop_end_nowait", Tau_get_tid()); 
     }
@@ -1207,10 +1269,13 @@ void tau_GOMP_parallel_start(GOMP_parallel_start_p GOMP_parallel_start_h, void (
         TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(malloc(sizeof(TAU_GOMP_PROXY_WRAPPER)));
         proxy->a1 = a1;
         proxy->a2 = a2;
+        proxy->name = NULL;
         //Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
         // save the pointer so we can free it later
         Tau_gomp_flags[tid].proxy[Tau_gomp_flags[tid].depth] = proxy;
         Tau_gomp_flags[tid].depth = Tau_gomp_flags[tid].depth + 1;
+        //_proxy[_depth] = proxy;
+        //_depth = _depth + 1;
 
         // time the call
         TAU_TIMER_START_ENABLED("GOMP_parallel_start", tid); 
@@ -1244,14 +1309,21 @@ void tau_GOMP_parallel_end(GOMP_parallel_end_p GOMP_parallel_end_h)  {
         int depth = Tau_gomp_flags[tid].depth;
         if (Tau_gomp_flags[tid].proxy[depth] != NULL) {
             TAU_GOMP_PROXY_WRAPPER * proxy = Tau_gomp_flags[tid].proxy[depth];
+        //int depth = _depth;
+        //if (_proxy[depth] != NULL) {
+            //TAU_GOMP_PROXY_WRAPPER * proxy = _proxy[depth];
             //free(proxy->name);
             free(proxy);
             Tau_gomp_flags[tid].proxy[depth] = NULL;
             Tau_gomp_flags[tid].depth = depth - 1;
+            //_proxy[depth] = NULL;
+            //_depth = depth - 1;
         } else {
             // assume the worst...
             Tau_gomp_flags[tid].depth = 0;
             Tau_gomp_flags[tid].proxy[0] = NULL;
+            //_depth = 0;
+            //_proxy[0] = NULL;
         }
     } else {
         (*GOMP_parallel_end_h)();
@@ -1280,7 +1352,7 @@ void tau_GOMP_task(GOMP_task_p GOMP_task_h, void (*a1)(void *), void * a2, void 
          * the task.
          */
 
-#if 0
+#if 1
         /* 
          * Don't actually pass in the work for the parallel region, but a pointer
          * to our proxy function with the data for the parallel region outlined function.
@@ -1289,25 +1361,31 @@ void tau_GOMP_task(GOMP_task_p GOMP_task_h, void (*a1)(void *), void * a2, void 
         TAU_GOMP_PROXY_WRAPPER * proxy = (TAU_GOMP_PROXY_WRAPPER*)(malloc(sizeof(TAU_GOMP_PROXY_WRAPPER)));
         proxy->a1 = a1;
         proxy->a2 = a2;
+        proxy->name = NULL;
+#ifdef TAU_UNWIND
+// this doesn't use unwind, but unwind support would include bfd, most likely
         Tau_sampling_resolveCallSite((unsigned long)(a1), "OPENMP", NULL, &(proxy->name), 0);
+#endif
         if (proxy->name != NULL) {
             DEBUGPRINT("GOMP_task %s\n", proxy->name);
-            TAU_TIMER_START_ENABLED("GOMP_task", tid);
+            TAU_TIMER_START_ENABLED(proxy->name, tid);
+            __ompc_event_callback(OMP_EVENT_THR_BEGIN_CREATE_TASK);
             (*GOMP_task_h)( Tau_gomp_task_proxy, proxy,  a3,  a4,  a5,  a6, a7);
-            TAU_TIMER_STOP_ENABLED("GOMP_task", tid);
+            __ompc_event_callback(OMP_EVENT_THR_END_CREATE_TASK_IMM);
+            TAU_TIMER_STOP_ENABLED(proxy->name, tid);
         } else {
-            TAU_TIMER_START_ENABLED("GOMP_task", tid);
+            TAU_TIMER_START_ENABLED("OpenMP_TASK", tid);
             __ompc_event_callback(OMP_EVENT_THR_BEGIN_CREATE_TASK);
             (*GOMP_task_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
             __ompc_event_callback(OMP_EVENT_THR_END_CREATE_TASK_IMM);
-            TAU_TIMER_STOP_ENABLED("GOMP_task", tid);
+            TAU_TIMER_STOP_ENABLED("OpenMP_TASK", tid);
         }
 #else
         /* just call the task creation, for now */
         __ompc_event_callback(OMP_EVENT_THR_BEGIN_CREATE_TASK);
-        TAU_TIMER_START_ENABLED("GOMP_task", tid);
+        //TAU_TIMER_START_ENABLED("GOMP_task", tid);
         (*GOMP_task_h)( a1,  a2,  a3,  a4,  a5,  a6,  a7);
-        TAU_TIMER_STOP_ENABLED("GOMP_task", tid);
+        //TAU_TIMER_STOP_ENABLED("GOMP_task", tid);
         __ompc_event_callback(OMP_EVENT_THR_END_CREATE_TASK_IMM);
 #endif
     } else {
