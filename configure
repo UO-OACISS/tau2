@@ -6246,7 +6246,7 @@ fi
 ######################################################################
 binutils=binutils-2.23.2
 binutilstgz=$binutils.tar.gz
-binutilsurl=http://www.cs.uoregon.edu/Research/paracomp/tau/tauprofile/dist/$binutilstgz
+binutilsurl=http://www.cs.uoregon.edu/research/paracomp/tau/tauprofile/dist/$binutilstgz
 if [ "x$bfddir" = xnone ]; then
 	echo "BFD disabled."
 	turnbfdoff=yes
@@ -6261,7 +6261,7 @@ if [ "x$bfd" = "xyes" -a ! "$turnbfdoff" = yes ] ; then
 			mkdir $tempdir
 			cd $tempdir
 			if [ "$machine" = "apple" ] ; then
-                            curl $binutilsurl > $binutilstgz
+                            curl -L $binutilsurl > $binutilstgz
 			else 
                             wget $binutilsurl
 			fi
