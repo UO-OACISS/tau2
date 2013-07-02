@@ -54,15 +54,10 @@ struct TauBfdAddrMap
 struct TauBfdInfo
 {
 	TauBfdInfo() :
-		probeAddr(0), filename(NULL), funcname(NULL), lineno(-1)
+		probeAddr(0), filename(NULL), funcname(NULL), 
+                lineno(-1), discriminator(0)
 	{ }
-
-	TauBfdInfo(unsigned long _probeAddr, char const * _filename,
-			char const * _funcname, int _lineno) :
-		probeAddr(_probeAddr), filename(_filename),
-		funcname(_funcname), lineno(_lineno)
-	{ }
-
+        
 	// Makes all fields safe to query
 	void secure(unsigned long addr) {
 		probeAddr = addr;
