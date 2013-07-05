@@ -17,6 +17,9 @@
 #include <TAU.h>
 #include <Profile/TauBfd.h>
 #include <bfd.h>
+#if TAU_BFD >= 022300
+#include <elf-bfd.h>
+#endif
 #include <dirent.h>
 #include <stdint.h>
 
@@ -54,7 +57,7 @@ static char const * Tau_bfd_internal_getExecutablePath();
 struct TauBfdModule
 {
   TauBfdModule() :
-      bfdImage(NULL), syms(NULL), nr_all_syms(0), bfdOpen(false),
+      bfdImage(NULL), syms(NULL), nr_all_syms(0), dynamic(false), bfdOpen(false),
       lastResolveFailed(false), processCode(TAU_BFD_SYMTAB_NOT_LOADED)
   { }
 
@@ -92,9 +95,27 @@ struct TauBfdModule
       return (bfdOpen = false);
     }
 
+#if TAU_BFD >= 022200
+    // Decompress sections
+    bfdImage->flags |= BFD_DECOMPRESS;
+#endif
+
     if (!bfd_check_format(bfdImage, bfd_object)) {
       TAU_VERBOSE("loadSymbolTable: bfd format check failed [%s]\n", path);
       return (bfdOpen = false);
+    }
+
+    char **matching;
+    if (!bfd_check_format_matches(bfdImage, bfd_object, &matching)) {
+      TAU_VERBOSE("loadSymbolTable: bfd format mismatch [%s]\n", path);
+      if (bfd_get_error() == bfd_error_file_ambiguously_recognized) {
+        TAU_VERBOSE("loadSymbolTable: Matching formats:");
+        for (char ** p = matching; *p; ++p) {
+          TAU_VERBOSE(" %s", *p);
+        }
+        TAU_VERBOSE("\n");
+      }
+      free(matching);
     }
 
     if (!(bfd_get_file_flags(bfdImage) & HAS_SYMS)) {
@@ -103,13 +124,22 @@ struct TauBfdModule
     }
 
     size_t size = bfd_get_symtab_upper_bound(bfdImage);
-    if (size < 1) {
-      TAU_VERBOSE("loadSymbolTable: bfd_get_symtab_upper_bound() < 1 [%s]\n", path);
-      return (bfdOpen = false);
+    if (!size) {
+      TAU_VERBOSE("loadSymbolTable: Retrying with dynamic\n");
+      size = bfd_get_dynamic_symtab_upper_bound(bfdImage);
+      dynamic = true;
+      if (!size) {
+        TAU_VERBOSE("loadSymbolTable: Cannot get symbol table size [%s]\n", path);
+        return (bfdOpen = false);
+      } 
     }
 
     syms = (asymbol **)malloc(size);
-    nr_all_syms = bfd_canonicalize_symtab(bfdImage, syms);
+    if (dynamic) {
+      nr_all_syms = bfd_canonicalize_dynamic_symtab(bfdImage, syms);
+    } else {
+      nr_all_syms = bfd_canonicalize_symtab(bfdImage, syms);
+    }
     bfdOpen = nr_all_syms > 0;
 
     TAU_VERBOSE("loadSymbolTable: %s contains %d canonical symbols\n", path, nr_all_syms);
@@ -120,6 +150,7 @@ struct TauBfdModule
   bfd *bfdImage;
   asymbol **syms;
   size_t nr_all_syms;
+  bool dynamic;
 
   // For EBS book-keeping
   bool bfdOpen;    // once open, symtabs are loaded and never released
@@ -497,6 +528,20 @@ static char const * Tau_bfd_internal_tryDemangle(bfd * bfdImage, char const * fu
   return funcname;
 }
 
+static unsigned long getProbeAddr(bfd * bfdImage, unsigned long pc) {
+#if TAU_BFD >= 022300
+  if (bfd_get_flavour(bfdImage) == bfd_target_elf_flavour) {
+    const struct elf_backend_data * bed = get_elf_backend_data(bfdImage);
+    bfd_vma sign = (bfd_vma) 1 << (bed->s->arch_size - 1);
+    pc &= (sign << 1) - 1;
+    if (bed->sign_extend_vma) {
+      pc = (pc ^ sign) - sign;
+    }
+  }
+#endif
+  return pc;
+}
+
 // Probe for BFD information given a single address.
 bool Tau_bfd_resolveBfdInfo(tau_bfd_handle_t handle, unsigned long probeAddr, TauBfdInfo & info)
 {
@@ -545,69 +590,92 @@ printf("%p: matchingIdx: %d\n", probeAddr, matchingIdx);
     addr1 = 0;
   }
 
-  // Convert address to something bfd can use.
-  char hex_pc_string[100];
-  sprintf(hex_pc_string, "%p", addr0);
-
   // Search BFD sections for address
+  info.probeAddr = getProbeAddr(module->bfdImage, addr0);
   LocateAddressData data(module, info);
-  info.probeAddr = bfd_scan_vma(hex_pc_string, NULL, 16);
   bfd_map_over_sections(module->bfdImage, Tau_bfd_internal_locateAddress, &data);
 
   // If the data wasn't found where we expected and we are searching
   // in a module, try a few more addresses
   if (!data.found && (module != unit->executableModule)) {
     // Try the second address
-    if (addr0 != addr1) {
-      sprintf(hex_pc_string, "%p", addr1);
-      info.probeAddr = bfd_scan_vma(hex_pc_string, NULL, 16);
+    if (addr1 && addr0 != addr1) {
+      info.probeAddr = getProbeAddr(module->bfdImage, addr1);
       bfd_map_over_sections(module->bfdImage, Tau_bfd_internal_locateAddress, &data);
     }
     // Try the executable
     if (!data.found && Tau_bfd_internal_loadExecSymTab(unit)) {
-      sprintf(hex_pc_string, "%p", probeAddr);
-      info.probeAddr = bfd_scan_vma(hex_pc_string, NULL, 16);
+      info.probeAddr = getProbeAddr(module->bfdImage, probeAddr);
       bfd_map_over_sections(unit->executableModule->bfdImage, Tau_bfd_internal_locateAddress, &data);
     }
   }
 
-  bool resolved = data.found && (info.funcname != NULL);
-  if (resolved) {
+  // We may have the function name but not the file name
+  if (info.funcname && !info.filename) {
+    if (matchingIdx != -1) {
+      info.filename = unit->addressMaps[matchingIdx]->name;
+    } else {
+      info.filename = unit->executablePath;
+    }
+  }
+
+  if (data.found && info.funcname) {
 #ifdef TAU_INTEL12
     // For Intel 12 workaround. Inform the module that the previous resolve was successful.
     module->markLastResult(true);
 #endif /* TAU_INTEL12 */
     info.funcname = Tau_bfd_internal_tryDemangle(module->bfdImage, info.funcname);
-    if (info.filename == NULL) {
-      info.filename = "(unknown)";
+    return true;
+  } 
+
+  // Data wasn't found, so check every symbol's address directly to see if it matches.  
+  // If so, try to get the function name from the symbol name.
+  for (asymbol ** s = module->syms; *s; s++) {
+    asymbol const & asym = **s;
+     // Skip useless symbols (e.g. line numbers)
+    if (asym.name && asym.section->size) {
+      // See if the addresses match
+      unsigned long addr = asym.section->vma + asym.value;
+      if (addr == probeAddr) {
+        // Get symbol name and massage it
+        char const * name = asym.name;
+        if (name[0] == '.') {
+          char const * mark = strchr((char*)name, '$');
+          if (mark) name = mark + 1;
+        }
+        info.funcname = Tau_bfd_internal_tryDemangle(module->bfdImage, name);
 #ifdef TAU_INTEL12
-      module->markLastResult(false);
+        // For Intel 12 workaround. Inform the module that the previous resolve was successful.
+        module->markLastResult(true);
 #endif /* TAU_INTEL12 */
-    }
-  } else {
-printf("Couldn't resolve %p\n", probeAddr);
-#ifdef TAU_INTEL12
-    // For Intel 12 workaround. Inform the module that the previous resolve failed.
-    module->markLastResult(false);
-#endif /* TAU_INTEL12 */
-    // Couldn't resolve the address.
-    // Fill in fields as best we can.
-    if (info.funcname == NULL) {
-      info.funcname = (char*)malloc(128);
-      sprintf((char*)info.funcname, "addr=<%p>", probeAddr);
-    }
-    if (info.filename == NULL) {
-      if (matchingIdx != -1) {
-        info.filename = unit->addressMaps[matchingIdx]->name;
-      } else {
-        info.filename = unit->executablePath;
+        return true;
       }
     }
-    info.probeAddr = probeAddr;
-    info.lineno = 0;
   }
 
-  return resolved;
+  // At this point we were unable to resolve the symbol.
+
+#ifdef TAU_INTEL12
+  // For Intel 12 workaround. Inform the module that the previous resolve failed.
+  module->markLastResult(false);
+#endif /* TAU_INTEL12 */
+
+  // Couldn't resolve the address so fill in fields as best we can.
+  if (info.funcname == NULL) {
+    info.funcname = (char*)malloc(128);
+    sprintf((char*)info.funcname, "addr=<%p>", probeAddr);
+  }
+  if (info.filename == NULL) {
+    if (matchingIdx != -1) {
+      info.filename = unit->addressMaps[matchingIdx]->name;
+    } else {
+      info.filename = unit->executablePath;
+    }
+  }
+  info.probeAddr = probeAddr;
+  info.lineno = 0;
+
+  return false;
 }
 
 static void Tau_bfd_internal_iterateOverSymtab(TauBfdModule * module, TauBfdIterFn fn, unsigned long offset)
@@ -831,10 +899,17 @@ static void Tau_bfd_internal_locateAddress(bfd * bfdptr, asection * section, voi
   // TauBfdInfo fields without an extra copy.  This also means
   // that the pointers in TauBfdInfo must never be deleted
   // since they point directly into the module's BFD.
+#if TAU_BFD >= 022200
+  data.found = bfd_find_nearest_line_discriminator(bfdptr, section,
+      data.module->syms, (data.info.probeAddr - vma),
+      &data.info.filename, &data.info.funcname,
+      (unsigned int*)&data.info.lineno, &data.info.discriminator);
+#else
   data.found = bfd_find_nearest_line(bfdptr, section,
       data.module->syms, (data.info.probeAddr - vma),
       &data.info.filename, &data.info.funcname,
       (unsigned int*)&data.info.lineno);
+#endif
 }
 
 #endif /* TAU_BFD */

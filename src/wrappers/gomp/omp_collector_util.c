@@ -35,7 +35,7 @@
 
 typedef void (*callback) (OMP_COLLECTORAPI_EVENT e);
 
-char OMP_EVENT_NAME[35][50]= {
+char GOMP_OMP_EVENT_NAME[35][50]= {
   "OMP_EVENT_FORK",
   "OMP_EVENT_JOIN",
   "OMP_EVENT_THR_BEGIN_IDLE",
@@ -114,75 +114,11 @@ int return_state(omp_collector_message *req);
 int return_current_prid(omp_collector_message *req);
 int return_parent_prid(omp_collector_message *req);
 
-struct message_queue_node_s {
-  omp_collector_message message;
-  struct message_queue_node_s* next;
-};
-typedef struct message_queue_node_s message_queue_node_t;
-
-typedef struct {
-  message_queue_node_t* head;
-  message_queue_node_t* tail;
-} message_queue_t;
-
-static inline void message_queue_init(message_queue_t* queue)
-{
-  queue->head = queue->tail = NULL;
-}
-
-/*
-static inline void message_queue_destroy(message_queue_t* queue)
-{
-  message_queue_node_t* head = queue->head;
-  message_queue_node_t* last_head;
-  while (head) {
-    last_head = head;
-    head = head->next;
-    free(last_head);
-  }
-}
-*/
-
-static inline omp_collector_message* message_queue_push(message_queue_t* queue)
-{
-  message_queue_node_t* new_node = (message_queue_node_t*) malloc(sizeof(message_queue_node_t));
-  new_node->next = NULL;
-  if (queue->tail) {
-    queue->tail->next = new_node;
-  } else {
-    queue->head = new_node;
-  }
-  queue->tail = new_node;
-  return &(new_node->message);
-}
-
-static inline void message_queue_pop(message_queue_t* queue, omp_collector_message* msg)
-{
-  message_queue_node_t* cur_node;
-  assert(queue->head);
-  cur_node = queue->head;
-  *msg = cur_node->message;
-  queue->head = cur_node->next;
-  if (!queue->head) {
-    queue->tail = NULL;
-  }
-  free(cur_node);
-}
-
-static inline int message_queue_empty(message_queue_t* queue)
-{
-  return queue->head == NULL;
-}
-
-
 int __omp_collector_api(void *arg)
 {
   if(arg!=NULL) {
-    message_queue_t pending_requests;
     char *traverse = (char *) arg;
 
-    message_queue_init(&pending_requests);
- 
     while((int)(*traverse)!=0) {
       omp_collector_message req;
       req.sz = (int)(*traverse); // todo: add check for consistency    
