@@ -170,30 +170,12 @@ static bool locCmp(const itemRef* r1, const itemRef* r2) {
 
 static bool itemEqual(const itemRef* r1, const itemRef* r2)
 {
-#if 0
-#ifdef DEBUG
-  printf("Comparing <%d:%d> with <%d:%d> kind = %d vs %d, target %d vs %d, attribute %d vs %d\n",
-      r1->line, r1->col, r2->line, r2->col, r1->kind, r2->kind, r1->isTarget, r2->isTarget, r1->attribute, r2->attribute);
-#endif /* DEBUG */
-  /* two loops on the same line shouldn't be instrumented twice -- happens with templates with different instantiations. */
-  if ((r1->line == r2->line) && (r1->col == r2->col) && (r1->kind == r2->kind) && (r1->isTarget == r2->isTarget)
-      && (r1->attribute == r2->attribute) && ((r1->kind == START_LOOP_TIMER) || (r1->kind == STOP_LOOP_TIMER))) {
-#ifdef DEBUG
-    printf("Items are equal returning true!\n");
-#endif /* DEBUG */
-    return true; /* they are equal -- don't bother checking the snippet part.*/
-  } else {
-    return ((r1->line == r2->line) && (r1->col == r2->col) && (r1->kind == r2->kind) && (r1->isTarget == r2->isTarget)
-        && (r1->attribute == r2->attribute) && (r1->snippet == r2->snippet));
-  }
-#else
   return ((r1->line == r2->line) &&
           (r1->col == r2->col) &&
           (r1->kind == r2->kind) &&
           (r1->isTarget == r2->isTarget) &&
           (r1->attribute == r2->attribute) &&
           (r1->snippet == r2->snippet));
-#endif
 }
  
 
@@ -322,31 +304,39 @@ const char * getStopMeasurementEntity(itemRef *i)
 /* -------------------------------------------------------------------------- */
 void mergeInstrumentationRequests(vector<itemRef *>& itemvec)
 {
-  /* Now merge objects of the same kind at the same location */
-  if (itemvec.size() > 1) {
-    vector<itemRef *>::iterator iter = itemvec.begin() + 1;
-    while (iter != itemvec.end()) {
-      itemRef * item1 = *(iter - 1);
-      itemRef * item2 = *iter;
+  vector<itemRef *>::iterator i = itemvec.begin()+1;
+  while (i < itemvec.end()) {
+    itemRef * item1 = *i;
+    itemRef * item2 = *(i-1);
 
-      if (item1->kind == item2->kind &&
-          item1->line == item2->line &&
-          item1->col == item2->col &&
-          item1->snippet == item2->snippet)
-      {
-        cout << "item1: " << item1->snippet << endl;
-        cout << "item2: " << item2->snippet << endl;
-
+    if (item1->kind == item2->kind && item1->line == item2->line && item1->col == item2->col) {
+      switch(item1->kind) {
+      // Fall-through cases for kinds that require snippets match, e.g.
+      //case TAU_A:
+      //case TAU_B:
+      case STOP_LOOP_TIMER:
+        if (item1->snippet == item2->snippet) {
+          if (!item1->snippet.empty()) {
+            item2->snippet += "\n\t" + item1->snippet;
+          }
+          i = itemvec.erase(i);
+          continue;
+        } 
+        break;
+      // The default case doesn't require snippets to match.
+      default:
         if (item1->snippet.empty()) {
           item1->snippet = item2->snippet;
         } else if (!item2->snippet.empty()) {
           item1->snippet += "\n\t" + item2->snippet;
         }
-        iter = itemvec.erase(iter);
-      } else {
-        ++iter;
-      }
+        i = itemvec.erase(i);
+        continue;
+      } // end switch
     }
+
+    // Items don't match, proceed to next
+    ++i;
   }
 }
 
@@ -804,7 +794,7 @@ void print_tau_profile_init(ostream& ostr, pdbCRoutine *main_routine)
 /* -------------------------------------------------------------------------- */
 void defineTauGroup(string& group_name)
 {
-  if (group_name == "TAU_USER") {
+  if (group_name != "TAU_USER") {
     // Write the following lines only when -DTAU_GROUP=string is defined
     ostr << "#ifndef " << group_name << endl;
     ostr << "#define " << group_name << " TAU_GET_PROFILE_GROUP(\"" << group_name << "\")" << endl;

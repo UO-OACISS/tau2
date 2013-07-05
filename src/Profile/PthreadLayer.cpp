@@ -238,6 +238,12 @@ int tau_pthread_create_wrapper(pthread_create_p pthread_create_call,
     pack->start_routine = start_routine;
     pack->arg = arg;
 
+    int stackSize = TauEnv_get_pthread_stack_size();
+    if (stackSize) {
+      TAU_VERBOSE("TAU: set pthread stack size to %d\n", stackSize);
+      pthread_attr_setstacksize(const_cast<pthread_attr_t*>(attr), stackSize);
+    }
+
     TAU_PROFILE_TIMER(timer, "pthread_create", "", TAU_DEFAULT);
     TAU_PROFILE_START(timer);
     retval = pthread_create_call(threadp, attr, tau_pthread_function, (void*)pack);

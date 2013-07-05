@@ -163,6 +163,7 @@ extern "C"
 // It's highly unlikely because you'd have to compile TAU with
 // -finstrument-functions, but better safe than sorry.
 
+#ifndef MERCURIUM_EXTRA
 __attribute__((no_instrument_function))
 void __cyg_profile_func_enter(void*, void*);
 
@@ -192,6 +193,7 @@ void profile_func_enter(void*, void*);
 
 __attribute__((no_instrument_function))
 void profile_func_exit(void*, void*);
+#endif
 
 
 #if (defined(TAU_SICORTEX) || defined(TAU_SCOREP))
